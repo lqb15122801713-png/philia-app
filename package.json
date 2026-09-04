@@ -1,0 +1,22 @@
+{
+  "name": "philia",
+  "private": true,
+  "version": "0.0.0",
+  "description": "菲丽亚宠物 Philia — 宠物服务平台三端 PWA Monorepo",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:customer": "npm run dev -w @philia/customer",
+    "dev:merchant": "npm run dev -w @philia/merchant",
+    "dev:staff": "npm run dev -w @philia/staff",
+    "build": "npm run build -w @philia/customer && npm run build -w @philia/merchant && npm run build -w @philia/staff",
+    "build:customer": "npm run build -w @philia/customer",
+    "build:merchant": "npm run build -w @philia/merchant",
+    "build:staff": "npm run build -w @philia/staff"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
