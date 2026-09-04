@@ -1,13 +1,66 @@
 # Philia Server
 
-菲丽亚宠物后端服务。P1 阶段已完成数据库层（T1.1：Drizzle ORM schema + 迁移 + 种子）。
+菲丽亚宠物后端服务。P1 已完成：数据库层（T1.1）、tRPC 基座与认证（T1.2）、业务
+router（T1.3）、实时推送（T1.4）、上传存储（T1.5）、Hono 入口集成与全链路验收（T1.6）。
 
 技术栈：
 
-- **Hono** — 轻量 Web 框架（P1 后续任务接入）
-- **tRPC** — 端到端类型安全 API（P1 后续任务接入）
+- **Hono 4** — 轻量 Web 框架（@hono/node-server）
+- **tRPC 11**（@hono/trpc-server + superjson）— 端到端类型安全 API
 - **Drizzle ORM 0.44** — 类型安全 ORM
 - **嵌入式 SQLite（@libsql/client）** — v1 本地开发数据库
+- **jimp** — 图片解码/缩放/缩略图
+
+## 启动与验收
+
+```bash
+npm run dev          # 开发启动（tsx watch，默认端口 7200，PORT 环境变量可覆盖）
+npm run db:migrate   # 应用迁移到 data/philia.db（幂等）
+npm run db:seed      # 写入种子数据（幂等：重跑先清业务表再重插）
+npm run test:e2e     # 全链路验收（独立临时库，不动种子库；退出码 0 = 全绿）
+npm run typecheck    # tsc --noEmit 类型检查
+node scripts/verify-db.mjs   # 数据库层冒烟：表/约束/行数
+```
+
+全新初始化：`npm run db:generate && npm run db:migrate && npm run db:seed`。
+
+> Windows 下 bash 环境若找不到 node：`export PATH="/d/kimi/resources/resources/runtime:$PATH"`；
+> 或直跑 `node node_modules/tsx/dist/cli.mjs <script>`（不经 npm.cmd）。
+
+## 端点清单
+
+### Hono 原生端点
+
+| 方法 | 路径 | 说明 |
+| --- | --- | --- |
+| GET | `/api/health` | 健康检查 → `{ ok: true, ts }` |
+| POST | `/api/auth/dev-login` | 开发登录（仅种子用户），签发 httpOnly 会话 cookie ⚠️ 禁上生产 |
+| POST | `/api/auth/logout` | 清除会话 cookie |
+| GET | `/api/events` | SSE 实时推送（需登录 + `client_id` 已登记；支持 `watch=<aid>`、`Last-Event-ID` 续传） |
+| POST | `/api/upload` | 图片上传（multipart：file + relDir，登录必填）→ 签名 `{ url, thumbUrl }` |
+| GET | `/api/img/*` | 签名图片访问（`?sig=&exp=` 验签，过期 410） |
+
+### tRPC 命名空间（`/trpc/*`，前端以 `AppRouter` 类型对齐，`src/routers/index.ts` 导出）
+
+| 命名空间 | 主要 procedure |
+| --- | --- |
+| `auth` | me / bindStaff / bindStore |
+| `pet` | list / upsert / get |
+| `store` | listNearby / getWithServices / upsertService / staffList / inviteStaff / setSchedule |
+| `appointment` | create / listMine / get / getCode / confirm / assign / cancel / reviewCancel / checkin / markPaid / review / listForStore / listTodayForStaff |
+| `serviceStep` | list / addPhotos / confirmStep / flagForRedo / progressSummary |
+| `boarding` | 寄养入住登记 / 每日打卡 / 退住结算等 |
+| `push` | subscribe / unsubscribe / listNotifications / markRead |
+
+## 环境变量
+
+| 变量 | 缺省 | 说明 |
+| --- | --- | --- |
+| `PORT` | `7200` | HTTP 监听端口 |
+| `PHILIA_DB_URL` | `file:<server>/data/philia.db` | libsql 连接 URL（e2e/多实例用临时库覆盖） |
+| `SESSION_SECRET` | ⚠️ dev 缺省值 | 会话 cookie HMAC 密钥，生产必须显式设置 |
+| `BOOKING_CODE_SECRET` | ⚠️ dev 缺省值 | 预约二维码 HMAC 密钥，生产必须显式设置 |
+| `IMG_SECRET` | ⚠️ dev 缺省值 | 图片签名 URL HMAC 密钥，生产必须显式设置 |
 
 ## 目录结构
 
@@ -15,30 +68,25 @@
 server/
 ├── drizzle.config.ts        # drizzle-kit 配置（dialect: sqlite）
 ├── drizzle/                 # drizzle-kit generate 产出的迁移 SQL + meta
-│   └── 0000_boring_stature.sql
 ├── src/
-│   └── db/
-│       ├── schema.ts        # 18 张表完整 schema（字段级中文注释）
-│       ├── index.ts         # 连接单点：client + db + schema 导出
-│       ├── migrate.ts       # 迁移执行器（drizzle migrate helper，幂等）
-│       └── seed.ts          # 幂等种子脚本
-├── scripts/
-│   └── verify-db.mjs        # 冒烟验证：表/约束/行数
-└── data/
-    └── philia.db            # SQLite 库文件（运行时生成，勿提交）
+│   ├── index.ts             # Hono 入口（T1.6）：CORS/会话/tRPC/SSE/上传挂载 + 优雅退出
+│   ├── trpc.ts              # tRPC 基座：Context / RBAC procedure / assertAppointmentAccess
+│   ├── auth/                # 会话签发校验、Hono 会话中间件、dev-login
+│   ├── db/                  # schema（18 表）/ 连接单点 / 迁移 / 种子
+│   ├── realtime/            # 事件总线（outbox + 通知）、内存 Hub、SSE 事件常量、清扫器
+│   ├── storage/             # 图片处理（jimp）、签名 URL、清理
+│   ├── routers/             # 7 个业务 router + index.ts（appRouter 合并，导出 AppRouter 类型）
+│   ├── routes/              # Hono 原生路由：events(SSE) / upload / images
+│   └── __tests__/e2e.ts     # T1.6 全链路验收（41 项断言，临时库隔离）
+├── scripts/verify-db.mjs    # 数据库层冒烟
+├── data/philia.db           # SQLite 库文件（运行时生成，勿提交）
+└── uploads/                 # 图片存储根（签名 URL 访问，运行时生成）
 ```
 
-## 常用命令
+## CORS（开发期）
 
-```bash
-npm run db:generate   # 依据 schema 生成迁移 SQL（产出到 drizzle/）
-npm run db:migrate    # 应用迁移到 data/philia.db（幂等，可重复执行）
-npm run db:seed       # 写入种子数据（幂等：重跑先清业务表再重插，数据不翻倍）
-npm run typecheck     # tsc --noEmit 类型检查
-node scripts/verify-db.mjs   # 冒烟验证 18 表 / 约束 / 种子行数
-```
-
-全新初始化：`npm run db:generate && npm run db:migrate && npm run db:seed`。
+允许三端 dev 端口 `7100/7101/7102`（localhost 与 127.0.0.1 两种宿主）携带凭证
+跨域（`credentials: true`）；生产部署应收敛为正式域名。
 
 ## 数据库决策：v1 用嵌入式 SQLite，未来切 MySQL
 

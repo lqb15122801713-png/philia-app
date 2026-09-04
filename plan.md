@@ -36,8 +36,26 @@ Monorepo（npm workspaces）：apps/customer、apps/merchant、apps/staff（Reac
 - React 18.3 + react-router-dom v6.30（模板原为 React 19/RRv7，已按方案降级）
 - npm 安装需 `--registry=https://registry.npmmirror.com`（npmjs 直连超时）
 
-## P1 — 后端与数据模型 〔未开始〕
-（Drizzle schema 16 表 / 认证与 RBAC / appointment+serviceStep router / SSE Hub+outbox / 上传管线）
+## P1 — 后端与数据模型 〔已完成 ✅ 2026-09-05〕
+
+里程碑 M1：真实后端可用。**全部达成。**（本地适配：libsql/SQLite 嵌入式替代 MySQL，dev-login 会话替代 Kimi 登录，结构保留切换路径，见 server/README.md 与 CONTRACTS.md）
+
+- [x] T1.1 `coder-db`：Drizzle schema 18 表（libsql/SQLite dialect）+ 迁移（幂等）+ 种子（1 门店/3 员工/10 服务/10 商品/154 槽位）；scripts/verify-db.mjs
+- [x] T1.2 `coder-auth`：dev-login 签名会话（SESSION_SECRET）、RBAC procedure 四件套、assertAppointmentAccess、auth.me/bindStaff（24h 单次邀请码）/bindStore；冒烟 5 组全过
+- [x] T1.3a `coder-appt`：appointment router 全 13 过程（槽位事务防超卖、滚动时间窗二维码 tw±1、checkin 限流 5/min 锁 10min、核销认领、type 分支初始化六步/boarding_stays、markPaid 幂等）；71 断言全过
+- [x] T1.3b `coder-step`：serviceStep router 5 过程（状态机规则 1-5 服务端强制、active 唯一不变量事务守护、flagForRedo 唯一回退边+照片失效化）；53 断言全过
+- [x] T1.3c `coder-domain`：pet/store/boarding router（邀请码 24h、寄养打卡 UPSERT+事件、退房幂等、在店看板超期标记）；5 组全过
+- [x] T1.4 `coder-realtime`：EventType 18 常量、emitEvent/broadcastNow/频道解析、内存 SSE Hub、outbox 30s 重投+7 天归档、/api/events（Last-Event-ID 续传+watch 动态订阅）、push router；30+13 断言全过
+- [x] T1.5 `coder-upload`：/api/upload（jimp 管线：≤10MB、最长边 2000、400px 缩略图、jpeg q82）、签名 URL（IMG_SECRET）、孤儿回收 cleanup；26 断言全过
+- [x] T1.6 `coder-integration`：Hono 入口（7200，CORS 三端、sessionMiddleware、/trpc、/api/events、/api/upload、/api/img、health、outboxSweeper、优雅退出）+ appRouter 7 域合并；**e2e 40 断言全绿**：三角色登录→建单→确认→派单→扫码核销→六步（含真实上传）→completed→markPaid→review；SSE 实收事件序列与期望精确一致（confirmed→assigned→checkedin→step_updated×6→completed）；权限负例 401/403；种子库零污染
+- 集成期真 bug 修复：末步 confirm 事件发射序（completed 挪到 step_updated 之后，保证 outbox id 单调序=广播序，修复续传去重误吞 completed）
+
+### P1 遗留事项
+- `appointment.paid` 已入 EventType（T1.6 补）；emitEvent 形参收窄为事务兼容类型待 T1.4 后续重构（现各调用点局部 cast，运行时无差异）
+- webp 只进不出（jimp 缺解码器；客户端本就走 canvas→jpeg，影响为零）
+- 核销限流/SSE Hub 为单实例内存方案（v1 明确边界）
+- CORS 白名单硬编码开发端口，生产前改环境变量
+- dev-login 仅限种子用户，生产必须移除并配置 SESSION_SECRET
 
 ## P2 — 客户端 〔未开始〕
 ## P3 — 员工端与六步流 〔未开始〕
@@ -53,3 +71,8 @@ Monorepo（npm workspaces）：apps/customer、apps/merchant、apps/staff（Reac
 - 2026-09-04 17:30 并行派出 T0.1/T0.2/T0.3 三个子代理。
 - 2026-09-04 18:10 三子代理全部完成；派 T0.4 组件集成子代理。
 - 2026-09-04 18:40 T0.5 集成冒烟完成（三端构建 + CDP 截图验证），修复 2 处集成问题。**P0 收官（M0 达成）**，GitHub 建仓待用户确认，待指令进入 P1。
+- 2026-09-04 18:49 用户确认建 GitHub 仓库 + 进入 P1。建私有仓库 `lqb15122801713-png/philia-app`；本机 git 无凭证，推送改走 GitHub MCP push_files 小批量方案。
+- 2026-09-04 晚 首轮子代理（gitops/coder-db）双超时 2h 零产出；调整策略：主代理预装依赖 + 硬超时 + 小批次。
+- 2026-09-05 00:10 coder-db 完成 T1.1（libsql 选型验证：18 表/迁移/种子/幂等）。
+- 2026-09-05 00:20 gitops 完成推送：main 全量文本 19 批 + dev 分支（PR 模板 + docs/BRANCHING.md）。**遗留：package-lock.json 超 MCP 通道上限未推 + 24 个二进制资产待本机 git 凭证补推；本地与远端 git 历史不同源（远端以批次 commit 为准），本机 git 通后以远端为基准 rebase/重克隆。**
+- 2026-09-05 00:30-01:10 T1.2/T1.4/T1.5 并行完成 → T1.3a/b/c 并行完成 → T1.6 集成 + e2e 40 断言全绿。**P1 收官（M1 达成）**。
