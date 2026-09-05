@@ -63,7 +63,7 @@ export function AppointmentRow({
           <span className="font-normal">{item.serviceName ?? '服务'}</span>
         </p>
         <p className="mt-0.5 truncate text-caption text-ink-secondary">
-          客户·{item.customerId.slice(-4)}
+          客户 {item.customerId.slice(-4)}
           <span className="mx-1 text-line-strong">|</span>
           {item.type === 'boarding' ? '寄养' : '洗护'}
           <span className="mx-1 text-line-strong">|</span>

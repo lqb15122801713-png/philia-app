@@ -62,7 +62,7 @@ export function DetailSummary({
         />
         <Field label="宠物" value={item.petName ?? '—'} />
         <Field label="服务" value={`${item.serviceName ?? '—'}（${item.type === 'boarding' ? '寄养' : '洗护'}）`} />
-        <Field label="客户" value={`客户·${item.customerId.slice(-4)}`} />
+        <Field label="客户" value={`客户 ${item.customerId.slice(-4)}`} />
         <Field label="员工" value={item.staffName ?? '未指派'} />
         <Field label="收款方式" value={paymentModeLabel(item.paymentMode)} />
         {item.note ? <Field label="备注" value={item.note} /> : null}

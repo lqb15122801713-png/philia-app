@@ -24,11 +24,11 @@ interface SeedUser {
 
 // 种子用户（与 server/src/db/seed.ts 对应；ID 为当前开发库实际值，重跑 seed 后会变）
 const SEED_USERS: SeedUser[] = [
-  { userId: '01M1PG9Q2NCSP8K04QQCCWFRAQ', nickname: '示例客户', roleLabel: '客户' },
-  { userId: '01M1PG9Q2MHG5YDEWY2YWJKKVP', nickname: '菲丽亚店主', roleLabel: '店主' },
-  { userId: '01M1PG9Q2M3S7JNRGHNF7HCMGA', nickname: '小美', roleLabel: '员工 · 洗护/美容' },
-  { userId: '01M1PG9Q2MNQRGQG8Z5M81W9KF', nickname: '阿强', roleLabel: '员工 · 洗护/寄养' },
-  { userId: '01M1PG9Q2NGMYWS0DS5CEJKW4S', nickname: '丽丽', roleLabel: '员工 · 美容/寄养' },
+  { userId: '01M1RH3FFNEV4CZM3FJZ4JA7AY', nickname: '示例客户', roleLabel: '客户' },
+  { userId: '01M1RH3FFM815Q3QJNRZ4MD1NH', nickname: '菲丽亚店主', roleLabel: '店主' },
+  { userId: '01M1RH3FFNDCPTR1H3EA09JPYT', nickname: '小美', roleLabel: '员工 · 洗护/美容' },
+  { userId: '01M1RH3FFNRNWFTNVWJZ6ZR6XM', nickname: '阿强', roleLabel: '员工 · 洗护/寄养' },
+  { userId: '01M1RH3FFN9T5S6D8XJAJXE856', nickname: '丽丽', roleLabel: '员工 · 美容/寄养' },
 ]
 
 export default function DevLoginPage() {

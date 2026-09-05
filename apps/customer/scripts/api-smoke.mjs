@@ -19,7 +19,7 @@ import superjson from 'superjson';
 
 const BASE = process.env.API_BASE ?? 'http://localhost:7200';
 // 种子客户（server/src/db/seed.ts 的 seed_kimi_customer；当前开发库实际 ID）
-const SEED_CUSTOMER_ID = '01M1PG9Q2NCSP8K04QQCCWFRAQ';
+const SEED_CUSTOMER_ID = '01M1RH3FFNEV4CZM3FJZ4JA7AY';
 const CLIENT_ID = `smoke-${Date.now()}`;
 
 let failures = 0;

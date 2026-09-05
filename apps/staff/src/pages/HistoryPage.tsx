@@ -119,8 +119,8 @@ export default function HistoryPage() {
         提成明细以门店结算为准（提成统计功能建设中）
       </p>
 
-      {/* 状态筛选 */}
-      <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+      {/* 状态筛选（可横滑：全宽出血 + 隐藏滚动条，末枚 chip 不被页边裁切） */}
+      <div className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar">
         {STATUS_FILTERS.map((f) => (
           <button
             key={f.value}

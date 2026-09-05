@@ -16,7 +16,8 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { and, eq, inArray, lt } from 'drizzle-orm';
 import { db, schema } from '../db';
-import { toEnvelope } from './events';
+import { broadcastNow, emitEvent } from './bus';
+import { EventType, toEnvelope } from './events';
 import * as hub from './hub';
 
 /** 归档文件：server/data/outbox-archive.jsonl（相对本文件定位，与 CWD 无关） */
@@ -91,14 +92,67 @@ export async function archiveOutbox(
   return rows.length;
 }
 
-/** 启动后台清扫（默认重投 30s / 归档每日）。返回停止函数。 */
+/**
+ * 寄养超期每日提醒（开发方案 §3.1 / §7.3 · T6.3 补齐 D3 缺口）：
+ * in_boarding 且 scheduled_end < now 的预约，按（预约 × 自然日）幂等发射
+ * boarding.overdue → store:{storeId}，并即时广播。返回本轮新发射条数。
+ * 幂等依据：event_outbox 中当日已存在同 appointmentId 的 boarding.overdue 事件。
+ */
+export async function emitBoardingOverdue(
+  d: typeof db = db,
+  now: Date = new Date(),
+): Promise<number> {
+  const overdueList = await d
+    .select()
+    .from(schema.appointments)
+    .where(
+      and(eq(schema.appointments.status, 'in_boarding'), lt(schema.appointments.scheduledEnd, now)),
+    )
+    .all();
+  if (overdueList.length === 0) return 0;
+
+  const dayStart = new Date(now);
+  dayStart.setHours(0, 0, 0, 0);
+
+  let emitted = 0;
+  for (const appt of overdueList) {
+    const rows = await d
+      .select()
+      .from(schema.eventOutbox)
+      .where(
+        and(
+          eq(schema.eventOutbox.channel, `store:${appt.storeId}`),
+          eq(schema.eventOutbox.eventType, EventType.BoardingOverdue),
+        ),
+      )
+      .all();
+    const alreadyToday = rows.some((e) => {
+      const payload = e.payload as Record<string, unknown> | null;
+      return payload?.appointmentId === appt.id && e.createdAt >= dayStart;
+    });
+    if (alreadyToday) continue;
+
+    const outboxId = await emitEvent(d, `store:${appt.storeId}`, EventType.BoardingOverdue, {
+      appointmentId: appt.id,
+      scheduledEnd: appt.scheduledEnd,
+      note: '寄养已超期，请尽快安排退房',
+    });
+    broadcastNow(outboxId);
+    emitted++;
+  }
+  return emitted;
+}
+
+/** 启动后台清扫（默认重投 30s / 归档每日 / 超期检查 30min）。返回停止函数。 */
 export function startOutboxSweeper(opts?: {
   sweepIntervalMs?: number;
   archiveIntervalMs?: number;
+  overdueIntervalMs?: number;
   archiveFile?: string;
 }): { stop(): void } {
   const sweepIntervalMs = opts?.sweepIntervalMs ?? 30_000;
   const archiveIntervalMs = opts?.archiveIntervalMs ?? 24 * 3600 * 1000;
+  const overdueIntervalMs = opts?.overdueIntervalMs ?? 30 * 60 * 1000;
 
   const sweepTimer = setInterval(() => {
     sweepOnce().catch((err) => console.error('[realtime] outbox 重投失败:', err));
@@ -112,10 +166,18 @@ export function startOutboxSweeper(opts?: {
   }, archiveIntervalMs);
   archiveTimer.unref?.();
 
+  // 寄养超期：启动即查一次，之后每 30min 幂等轮查（同一预约每天至多一条）
+  emitBoardingOverdue().catch((err) => console.error('[realtime] 寄养超期检查失败:', err));
+  const overdueTimer = setInterval(() => {
+    emitBoardingOverdue().catch((err) => console.error('[realtime] 寄养超期检查失败:', err));
+  }, overdueIntervalMs);
+  overdueTimer.unref?.();
+
   return {
     stop() {
       clearInterval(sweepTimer);
       clearInterval(archiveTimer);
+      clearInterval(overdueTimer);
     },
   };
 }

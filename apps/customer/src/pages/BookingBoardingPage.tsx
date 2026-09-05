@@ -271,6 +271,17 @@ export default function BookingBoardingPage() {
           <div className="mt-2 space-y-2">
             {servicesQ.isPending ? (
               [1, 2].map((i) => <div key={i} className="h-20 animate-pulse rounded-card bg-sunken" />)
+            ) : servicesQ.isError ? (
+              <div className="rounded-card bg-sunken px-4 py-8 text-center">
+                <p className="text-caption text-ink-secondary">房型加载失败，请检查网络</p>
+                <button
+                  type="button"
+                  onClick={() => void servicesQ.refetch()}
+                  className="mt-2 text-caption font-semibold text-brand-primary"
+                >
+                  重新加载
+                </button>
+              </div>
             ) : boardingServices.length === 0 ? (
               <p className="rounded-card bg-sunken px-4 py-8 text-center text-caption text-ink-secondary">
                 该门店暂无寄养房型，换一家看看

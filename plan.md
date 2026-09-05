@@ -125,7 +125,19 @@ Monorepo（npm workspaces）：apps/customer、apps/merchant、apps/staff（Reac
 - 商城空态复用预约空态插画；商城收入 financeStats 结构已预留未接实
 - 跨店下单 BAD_REQUEST（v1 单店限制，orders.store_id 单列）
 
-## P6 — 推送联调、打磨与发布准备 〔未开始〕
+## P6 — 推送联调、打磨与发布准备 〔进行中〕
+
+里程碑 M6：可发布。**发布动作（main 合并与 tag 之后的正式发布）由用户手动确认。**
+
+- [x] T6.1 `reviewer-acceptance`：第 11 章全量验收 → docs/ACCEPTANCE.md。**30✅ + 4⚠️ + 1❌（35 条）**；6 套冒烟+e2e 重跑全 EXIT=0（appointment 81 / serviceStep 54 / realtime 30+14 / storage 26 / domain 5 / mall 58 / e2e 41 断言）；**C5 三端 SSE 延迟实测最大 0ms**（远优于 ≤3s 门槛）；LCP /home 1264ms（无节流 dev 口径）；PWA manifest+SW+icons 三端齐全；E2 员工互操作补测 FORBIDDEN 通过
+- [x] T6.2 `fix-polish`：种子商品图 10 张暖色 SVG 占位图重生成（三端 public/products + seed 重跑）+ 空/加载/错误态补缺 4 处 + 员工历史 chips 横滑 + 客户兜底文案 + 三端 favicon 补齐 + seed 清表顺序补 payments + DevLoginPage 同步新种子 ID；三端构建全绿
+- [x] T6.3a D3 缺口修复（主代理）：`emitBoardingOverdue` 每日幂等发射器（outboxSweeper 同进程，启动即查+30min 轮查，按预约×自然日幂等）→ 冒烟 7 断言全过（首扫发射/同日跳过/次日再发/商家站内通知）
+- [ ] T6.3b 主代理：dev→main PR + 合并 + tag v1.0.0 发布候选 → **停下等用户确认发布**
+
+### P6 遗留（验收 ⚠️ 项，不阻塞发布候选）
+- C1/C3：断网补传与 kill 崩溃重投的自动化注入测试未做（实现已存在且有局部测试：offlineQueue 22/22、sweeper 重投已测）→ 建议真机阶段补
+- E4/E5/11.6：Lighthouse PWA 审计、4G 节流 LCP、真机添加主屏幕与 60fps → 需真机走查
+- Windows 临时库目录 EPERM 残留（测试环境 cosmetic）
 
 ---
 
