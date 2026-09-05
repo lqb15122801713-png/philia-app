@@ -20,7 +20,9 @@ import {
   LayoutDashboard,
   Package,
   PawPrint,
+  Settings,
   ShoppingBag,
+  Users,
   Wallet,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -35,11 +37,13 @@ const tabs = [
   { to: '/finance', label: '财务', icon: Wallet },
 ]
 
-/** 「管理」下拉菜单项（T5.2：商品管理 / 商城订单由此进入） */
+/** 「管理」下拉菜单项（T5.2：商品管理 / 商城订单由此进入；v1.1-b1 补员工/设置入口） */
 const manageEntries = [
   { to: '/boarding', label: '寄养管理', icon: PawPrint },
   { to: '/products', label: '商品管理', icon: Package },
   { to: '/orders', label: '商城订单', icon: ShoppingBag },
+  { to: '/staff', label: '员工管理', icon: Users },
+  { to: '/settings', label: '门店设置', icon: Settings },
 ]
 const managePaths = manageEntries.map((e) => e.to)
 

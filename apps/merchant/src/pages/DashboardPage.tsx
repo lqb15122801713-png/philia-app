@@ -15,7 +15,9 @@
 
 import { EventType, usePhiliaClient } from '@philia/shared'
 import { useQuery } from '@tanstack/react-query'
+import { Settings, UserRoundPlus } from 'lucide-react'
 import { useCallback, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider'
 import StatCards from '@/components/dashboard/StatCards'
@@ -133,6 +135,30 @@ export default function DashboardPage() {
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <TodoSection stats={statsQuery.data} />
         <TodayTimeline items={todayQuery.data ?? []} loading={todayQuery.isPending} />
+      </div>
+
+      {/* 快捷入口：邀请员工 / 门店设置（新店无从下手场景兜底，v1.1-b1） */}
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <Link
+          to="/staff"
+          className="flex items-center gap-2.5 rounded-card bg-card px-4 py-3.5 shadow-card transition active:scale-[0.99]"
+        >
+          <UserRoundPlus className="h-5 w-5 shrink-0 text-brand-primary" strokeWidth={1.5} />
+          <span className="min-w-0">
+            <span className="block text-body font-medium">邀请员工</span>
+            <span className="block text-caption text-ink-secondary">生成邀请码，员工扫码加入</span>
+          </span>
+        </Link>
+        <Link
+          to="/settings"
+          className="flex items-center gap-2.5 rounded-card bg-card px-4 py-3.5 shadow-card transition active:scale-[0.99]"
+        >
+          <Settings className="h-5 w-5 shrink-0 text-brand-primary" strokeWidth={1.5} />
+          <span className="min-w-0">
+            <span className="block text-body font-medium">门店设置</span>
+            <span className="block text-caption text-ink-secondary">营业时间 / 门店信息</span>
+          </span>
+        </Link>
       </div>
     </div>
   )
