@@ -15,6 +15,7 @@ import { router } from '../trpc';
 import { appointmentRouter } from './appointment';
 import { authRouter } from './auth';
 import { boardingRouter } from './boarding';
+import { mallRouter } from './mall';
 import { petRouter } from './pet';
 import { pushRouter } from './push';
 import { serviceStepRouter } from './serviceStep';
@@ -28,6 +29,7 @@ export const appRouter = router({
   serviceStep: serviceStepRouter,
   boarding: boardingRouter,
   push: pushRouter,
+  mall: mallRouter, // P5 T5.1 商城（coder-mall-server 追加）
 });
 
 /** 前端 tRPC client 的类型锚点（仅类型导出，无运行时开销） */

@@ -146,6 +146,8 @@ function notificationCopy(
       return { title: '寄养结束', body: `${pet}寄养已退住结算` };
     case EventType.OrderCreated:
       return { title: '新订单提醒', body: '收到一条新的商城订单，请及时处理' };
+    case EventType.OrderPaid:
+      return { title: '订单支付成功', body: '您的订单已支付成功，商家将尽快发货' };
     case EventType.OrderShipped:
       return { title: '订单已发货', body: '您的订单已发货，请注意查收' };
     case EventType.OrderReceived:

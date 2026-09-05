@@ -25,6 +25,7 @@ export const EventType = {
   BoardingCompleted:     'boarding.completed',       // → 相关方
   // 商城
   OrderCreated:          'order.created',            // → store
+  OrderPaid:             'order.paid',               // → customer（支付回调成功，P5 T5.1 追加）
   OrderShipped:          'order.shipped',            // → customer
   OrderReceived:         'order.received',           // → store
 } as const;

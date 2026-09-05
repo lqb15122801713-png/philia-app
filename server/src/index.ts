@@ -27,7 +27,9 @@ import { authHttpRoutes } from './auth/devLogin';
 import { sessionMiddleware, type AuthVariables } from './auth/middleware';
 import { eventsRoute } from './routes/events';
 import { imagesRoute } from './routes/images';
+import { payCallbackRoute } from './routes/payCallback';
 import { uploadRoute } from './routes/upload';
+import { assertPaymentConfig } from './payments/provider';
 import { startOutboxSweeper } from './realtime/outboxSweeper';
 import { appRouter } from './routers';
 import type { Context as TrpcContext } from './trpc';
@@ -70,6 +72,7 @@ export function createApp(): Hono<{ Variables: AppVariables }> {
   app.route('/api/events', eventsRoute); // GET /api/events（SSE）
   app.route('/', uploadRoute); // POST /api/upload
   app.route('/', imagesRoute); // GET /api/img/*
+  app.route('/', payCallbackRoute); // POST /api/pay/callback、/api/pay/mock-callback（mock 模式）
 
   // 5) tRPC：context 取会话中间件注入的 sessionUser
   app.use(
@@ -101,6 +104,8 @@ const isMain = (() => {
 })();
 
 if (isMain) {
+  // 支付配置启动校验：生产环境 mock / wechat 缺配置直接报错，不静默降级（§4.7）
+  assertPaymentConfig();
   const port = Number(process.env.PORT ?? 7200);
   const app = createApp();
   const sweeper = startOutboxSweeper();

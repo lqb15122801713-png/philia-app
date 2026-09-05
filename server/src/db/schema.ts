@@ -478,6 +478,37 @@ export const orders = sqliteTable('orders', {
   ...auditColumns,
 });
 
+/**
+ * 支付流水表（P5 T5.1 追加 · coder-mall-server 名下）
+ *
+ * 记录每笔成功支付/退款流水：payCallback 验签 + 金额核对通过后，与订单
+ * pending→paid 同事务写入；raw_callback 留回调原文供审计对账。
+ * 幂等靠「订单条件更新影响行数」保证（见 routes/payCallback.ts），重复投递
+ * 不会产生重复流水。
+ */
+export const payments = sqliteTable(
+  'payments',
+  {
+    id: id(),
+    /** 订单 ID -> orders.id */
+    orderId: text('order_id')
+      .notNull()
+      .references(() => orders.id),
+    /** 支付渠道，取值：mock | wechat */
+    provider: text('provider').notNull(),
+    /** 渠道侧支付单号（PaymentProvider.createPayment 返回的 paymentId） */
+    paymentId: text('payment_id').notNull(),
+    /** 支付金额（分） */
+    amountFen: integer('amount_fen').notNull(),
+    /** 流水状态，取值：paid | refunded */
+    status: text('status').notNull().default('paid'),
+    /** 回调原文 JSON（审计/对账用） */
+    rawCallback: text('raw_callback', { mode: 'json' }).$type<Record<string, unknown>>(),
+    ...auditColumns,
+  },
+  (t) => [index('ix_payments_order_id').on(t.orderId)],
+);
+
 /* ------------------------------------------------------------------ */
 /* 5.5 实时推送 / 事件 / 通知                                          */
 /* ------------------------------------------------------------------ */
