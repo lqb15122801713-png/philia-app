@@ -124,8 +124,11 @@ function notificationCopy(
       return { title: '已到店签到', body: `${pet}已到店，服务即将开始` };
     case EventType.StepUpdated:
       return { title: '服务进度更新', body: `${pet}「${step}」步骤已更新` };
-    case EventType.StepFlagged:
-      return { title: '步骤需重拍', body: `${pet}「${step}」被商家标记，请重新拍照上传` };
+    case EventType.StepFlagged: {
+      // v1.1 P1-4：商家打标可填原因（AppointmentMonitorPage 弹层已传 reason，服务端透传进通知文案）
+      const reason = typeof data.reason === 'string' && data.reason ? `（原因：${data.reason}）` : '';
+      return { title: '步骤需重拍', body: `${pet}「${step}」被商家标记，请重新拍照上传${reason}` };
+    }
     case EventType.AppointmentCompleted:
       return { title: '服务已完成', body: `${pet}服务已完成，欢迎评价` };
     case EventType.AppointmentCancelRequested:
