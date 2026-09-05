@@ -109,7 +109,22 @@ Monorepo（npm workspaces）：apps/customer、apps/merchant、apps/staff（Reac
 - 员工技能/在职状态编辑、merchant 寄养历史打卡端点、下架服务项全量列表、提成规则字段 → v2 评估
 - 商城收入结构已预留（P5 接 orders）
 
-## P5 — 商城后端与全链路 〔进行中〕
+## P5 — 商城后端与全链路 〔已完成 ✅ 2026-09-05〕
+
+里程碑 M5：三业务线齐备。**达成。**
+
+- [x] T5.1 `coder-mall-server`：mall router 9 过程（listProducts/getProduct/upsertProduct/createOrder/createPayment/listMyOrders/shipOrder/receiveOrder/listStoreOrders）+ PaymentProvider 适配层（§4.7 逐字接口；MockPayProvider 演示实现；WechatPayProvider 生产骨架缺配置即抛错；生产+mock 启动报错不静默降级）+ `payments` 流水表迁移（0001）+ 双回调端点（/api/pay/callback + mock 演示端点）；**库存条件更新防超卖、回调幂等闸、金额/签名校验**；57 断言全过。发现并规避 libsql 单连接并发事务中毒（进程内写锁）
+- [x] T5.2 `coder-mall-merchant`：商品管理（含下架列表 `mall.listProductsForStore` 新增、元分严格转换、多图上传+封面、上下架 optimistic 回滚）+ 订单三队列（待发货红点/发货弹层/售后）+ TabBar 管理下拉
+- [x] T5.3 `coder-mall-front`：商城列表（分类/搜索/无限滚动）/详情（多图横滑/库存警示）/购物车（context+useReducer 零依赖、localStorage 持久化、**单店限制冲突确认流**）/结算（地址表单+三步 mock 收银台演示流）/订单五 Tab（待支付继续支付/物流展示/确认收货）
+- [x] T5.4 集成（主代理）：payCallbackRoute 挂载+assertPaymentConfig 启动校验、shared EventType 补 order.paid、**order.paid 加投 store 频道**（商家待发货实时可达）、libsql `PRAGMA busy_timeout=5000`、三端构建全绿
+- [x] 全链路实测（真实种子库）：下单 ¥367 → mock 支付 SUCCESS → **回调二次投递幂等（idempotent=true，流水仍 1 条）→ 篡改签名 400 拒绝** → 商家待发货队列可见 → 发货 → 客户确认收货；双端 5 页截图（商城列表/详情/我的订单已完成 badge/商家订单队列/商品管理）
+
+### P5 遗留事项
+- 种子商品图指向 /brand/ 不存在路径（客户端降级爪印占位、商家端表格缩略图破图）→ P6 打磨：重新生成商品占位图或修正种子
+- `order.received` 后订单移出商家队列（无 received 留痕队列）→ v2 评估
+- 商城空态复用预约空态插画；商城收入 financeStats 结构已预留未接实
+- 跨店下单 BAD_REQUEST（v1 单店限制，orders.store_id 单列）
+
 ## P6 — 推送联调、打磨与发布准备 〔未开始〕
 
 ---
@@ -129,3 +144,4 @@ Monorepo（npm workspaces）：apps/customer、apps/merchant、apps/staff（Reac
 - 2026-09-05 11:00 进入 P2：T2.0 共享层 → T2.1/T2.2/T2.3 并行 → T2.4 运行时联调（demo-live 演示单 + CDP 登录态 8 页截图）。**P2 收官（M2 达成）**。
 - 2026-09-05 12:51 用户确认合并 PR #2 + 进入 P3。T3.1-T3.4 四代理并行完成；主代理集成（扫码接线/TabBar current/Toaster//api 代理）+ 运行时联调（洗护单走完六步 completed + 寄养单入住打卡，7 页截图）。**P3 收官（M3 达成，业务闭环跑通）**。
 - 2026-09-05 14:34 用户确认合并 PR #3 + 进入 P4 + **授权「后续自动继续」**（每阶段完成后自动合并 PR 并进入下一阶段，仅方案级决策/生产发布前停下确认）。T4.1-T4.4 四代理并行完成；主代理联调 8 页截图 + API 实测 markPaid/flagForRedo 三规则路径。**P4 收官（M4 达成）**。
+- 2026-09-05 15:40 自动继续 P5：T5.1 mall 后端+支付适配层 → T5.2/T5.3 并行 → T5.4 集成修正 + 全链路实测（幂等/拒签/收发全通 + 5 页截图）。PR #4 已按授权自动合并。**P5 收官（M5 达成，三业务线齐备）**。

@@ -28,6 +28,7 @@ export const EventType = {
   BoardingCompleted:     'boarding.completed',       // → 相关方
   // 商城
   OrderCreated:          'order.created',            // → store
+  OrderPaid:             'order.paid',               // → customer + store（T5.4 同步服务端 events.ts）
   OrderShipped:          'order.shipped',            // → customer
   OrderReceived:         'order.received',           // → store
 } as const;
