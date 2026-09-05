@@ -342,7 +342,7 @@ export default function BookingBoardingPage() {
                       <span className="block font-number text-price text-brand-primary">
                         {fenToYuan(s.priceFen)}
                       </span>
-                      <span className="text-caption text-ink-placeholder">/ 次</span>
+                      <span className="text-caption text-ink-placeholder">/ 晚</span>
                     </span>
                   </button>
                 );
@@ -424,9 +424,19 @@ export default function BookingBoardingPage() {
           />
 
           {service ? (
-            <div className="mt-4 flex items-center justify-between rounded-card bg-card px-4 py-3 shadow-card">
-              <span className="text-body text-ink-secondary">合计</span>
-              <span className="font-number text-price text-brand-primary">{fenToYuan(service.priceFen)}</span>
+            <div className="mt-4 rounded-card bg-card px-4 py-3 shadow-card">
+              {/* v1.1-b1：寄养按晚计费（服务端 priceFen=单晚价×ceil((end-start)/24h)），合计区明示口径 */}
+              <div className="flex items-center justify-between">
+                <span className="text-body text-ink-secondary">合计</span>
+                <span className="font-number text-caption text-ink-secondary">
+                  单价 {fenToYuan(service.priceFen)}/晚 × {nights} 晚
+                </span>
+              </div>
+              <div className="mt-1 flex items-center justify-end">
+                <span className="font-number text-price text-brand-primary">
+                  = {fenToYuan(service.priceFen * Math.max(nights, 1))}
+                </span>
+              </div>
             </div>
           ) : null}
         </section>
