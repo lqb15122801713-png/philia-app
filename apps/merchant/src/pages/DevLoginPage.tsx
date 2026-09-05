@@ -24,7 +24,7 @@ interface SeedUser {
 
 // 店主种子用户（与 server/src/db/seed.ts 对应；ID 为当前开发库实际值，重跑 seed 后会变）
 const SEED_USERS: SeedUser[] = [
-  { userId: '01M1PG9Q2MHG5YDEWY2YWJKKVP', nickname: '菲丽亚店主', roleLabel: '店主 · merchant_owner' },
+  { userId: '01M1RH3FFM815Q3QJNRZ4MD1NH', nickname: '菲丽亚店主', roleLabel: '店主 · merchant_owner' },
 ]
 
 export default function DevLoginPage() {

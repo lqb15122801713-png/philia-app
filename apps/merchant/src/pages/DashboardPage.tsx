@@ -113,6 +113,22 @@ export default function DashboardPage() {
         <StatCards stats={statsQuery.data} loading={statsQuery.isPending} />
       </div>
 
+      {(statsQuery.isError || todayQuery.isError) && (
+        <div className="mt-4 flex items-center justify-between rounded-card bg-card px-4 py-3 shadow-card">
+          <p className="text-caption text-ink-secondary">数据加载失败，请检查网络</p>
+          <button
+            type="button"
+            onClick={() => {
+              void statsQuery.refetch()
+              void todayQuery.refetch()
+            }}
+            className="text-caption font-semibold text-brand-primary"
+          >
+            重新加载
+          </button>
+        </div>
+      )}
+
       {/* 横屏双栏：左待办右时间轴；手机单列 */}
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <TodoSection stats={statsQuery.data} />

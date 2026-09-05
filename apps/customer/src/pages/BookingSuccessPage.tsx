@@ -120,6 +120,17 @@ export default function BookingSuccessPage() {
             </div>
           </dl>
         </section>
+      ) : detailQ.isError ? (
+        <div className="mt-5 rounded-card bg-sunken px-4 py-6 text-center">
+          <p className="text-caption text-ink-secondary">预约摘要加载失败</p>
+          <button
+            type="button"
+            onClick={() => void detailQ.refetch()}
+            className="mt-2 text-caption font-semibold text-brand-primary"
+          >
+            重新加载
+          </button>
+        </div>
       ) : (
         <div className="mt-5 h-32 animate-pulse rounded-card bg-sunken" />
       )}
