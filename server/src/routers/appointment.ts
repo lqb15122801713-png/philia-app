@@ -716,6 +716,104 @@ export const appointmentRouter = router({
     }),
 
   /**
+   * 8.5 reschedule（merchant 本店 · P4 T4.2 授权追加，契约 docs/MERCHANT-CONTRACTS.md）：改期。
+   * 校验本店 + 状态 pending/confirmed；新时间复用 assertBookableTime（未来 / 30min 对齐 /
+   * 营业时间内 / grooming 不超打烊）。事务内：旧槽位回减 booked_count → 新槽位校验
+   * （booked_count < capacity，无行则按默认容量建行）并 +1 → 写新时间；新槽已满抛
+   * CONFLICT，事务整体回滚（旧槽回减一并撤销）。改到原时段为净零操作，安全幂等。
+   * emitEvent appointment.rescheduled → user:{customerId} + staff:{staffId}（若已指派）。
+   */
+  reschedule: merchantProcedure
+    .input(
+      z.object({
+        appointmentId: z.string().min(1),
+        scheduledStart: z.date(),
+        scheduledEnd: z.date().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const appt = await getAppointmentOrThrow(ctx.db, input.appointmentId);
+      if (appt.storeId !== ctx.user.storeId) forbidden('非本店预约，无权操作');
+      if (appt.status !== 'pending' && appt.status !== 'confirmed') {
+        badRequest(`当前状态（${appt.status}）不可改期，仅 pending/confirmed 可改期`);
+      }
+      const store = await ctx.db
+        .select()
+        .from(schema.stores)
+        .where(eq(schema.stores.id, appt.storeId))
+        .get();
+      if (!store) throw new TRPCError({ code: 'NOT_FOUND', message: '门店不存在' });
+      const service = await ctx.db
+        .select()
+        .from(schema.services)
+        .where(eq(schema.services.id, appt.serviceId))
+        .get();
+      // 缺省结束时间：与 create 同口径（grooming=服务时长，boarding=24h）
+      const start = input.scheduledStart;
+      const end =
+        input.scheduledEnd ??
+        new Date(
+          start.getTime() +
+            (appt.type === 'grooming' ? (service?.durationMin ?? 60) : 24 * 60) * 60_000,
+        );
+      assertBookableTime(store, appt.type as 'grooming' | 'boarding', start, end);
+
+      const petName = await petNameOf(ctx.db, appt.petId);
+      const outboxIds: string[] = [];
+      const updated = await ctx.db.transaction(async (tx) => {
+        // 旧槽位回减（幂等安全）→ 新槽位校验并 +1 —— 同一事务，冲突整体回滚
+        await releaseSlot(txDb(tx), appt.storeId, appt.scheduledStart);
+        const slot = await tx
+          .select()
+          .from(schema.storeSlots)
+          .where(
+            and(eq(schema.storeSlots.storeId, appt.storeId), eq(schema.storeSlots.slotStart, start)),
+          )
+          .get();
+        if (slot) {
+          if (slot.bookedCount >= slot.capacity) {
+            throw new TRPCError({ code: 'CONFLICT', message: '该时段已约满，请换个时间' });
+          }
+          await tx
+            .update(schema.storeSlots)
+            .set({ bookedCount: slot.bookedCount + 1, updatedAt: new Date() })
+            .where(eq(schema.storeSlots.id, slot.id));
+        } else {
+          await tx.insert(schema.storeSlots).values({
+            storeId: appt.storeId,
+            slotStart: start,
+            capacity: DEFAULT_SLOT_CAPACITY,
+            bookedCount: 1,
+          });
+        }
+        const row = await tx
+          .update(schema.appointments)
+          .set({ scheduledStart: start, scheduledEnd: end, updatedAt: new Date() })
+          .where(eq(schema.appointments.id, appt.id))
+          .returning()
+          .then((r) => r[0]!);
+        const payload = {
+          appointmentId: appt.id,
+          petName,
+          scheduledStart: start.toISOString(),
+          scheduledEnd: end.toISOString(),
+        };
+        // → 客户端 + 员工端（若已指派）
+        outboxIds.push(
+          await emitEvent(txDb(tx), `user:${appt.customerId}`, EventType.AppointmentRescheduled, payload),
+        );
+        if (appt.staffId) {
+          outboxIds.push(
+            await emitEvent(txDb(tx), `staff:${appt.staffId}`, EventType.AppointmentRescheduled, payload),
+          );
+        }
+        return row;
+      });
+      outboxIds.forEach(broadcastNow);
+      return updated;
+    }),
+
+  /**
    * 9. checkin（staff）★ 扫码 / 人工码核销：
    * 限流 → 验签（滚动时间窗 HMAC）→ 状态 confirmed → 门店归属 → 核销归属
    * （已指派仅本人；未指派事务内认领并补发 assigned）→ 幂等 → type 分支事务。

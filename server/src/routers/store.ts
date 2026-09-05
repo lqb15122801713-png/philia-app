@@ -13,10 +13,17 @@
  * - store.inviteStaff：merchant 本店。生成 8 位去混淆字符邀请码落 staff_invites，
  *   expires_at=+24h，明文仅此一次返回；同店同 staff_name 有未使用未过期码则复用。
  * - store.setSchedule：merchant 本店。写 staff.schedule 周模板 JSON。
+ * - store.financeStats（T4.4 · MERCHANT-CONTRACTS）：merchant 本店。入参 {from,to}；
+ *   区间服务收入（appointments paid_fen 按 paid_at 合计）/ 商城收入（v1 恒 0，P5 接
+ *   orders）/ 按日分组序列 / 收款方式拆分 / 员工维度（完成单数·服务金额·平均评分·
+ *   好评率）/ 待收款（completed 未 paid 明细+合计）。
+ *   对账一致性：区间服务收入 = 按日序列 serviceFen 之和 = 员工维度 serviceFen 之和
+ *   = 收款方式拆分两桶之和——四者全部由同一份「区间内已收款预约」行集在内存聚合，
+ *   无二次查询，天然相等。
  */
 
 import { TRPCError } from '@trpc/server';
-import { and, eq, gt, isNull, lt } from 'drizzle-orm';
+import { and, desc, eq, gt, gte, isNull, lt } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import { merchantProcedure, publicProcedure, router, type Context } from '../trpc';
@@ -28,6 +35,17 @@ const SLOT_MS = 30 * 60 * 1000;
 const INVITE_CHARSET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const INVITE_LEN = 8;
 const INVITE_TTL_MS = 24 * 3600 * 1000;
+
+/** 预约状态取值（dashboardStats 分状态计数用；与 appointment.ts 的应用层枚举一致） */
+const DASHBOARD_STATUSES = [
+  'pending',
+  'confirmed',
+  'in_service',
+  'in_boarding',
+  'completed',
+  'cancel_requested',
+  'cancelled',
+] as const;
 
 function genInviteCode(): string {
   let code = '';
@@ -55,6 +73,18 @@ const scheduleInput = z.object({
   fri: dayValue,
   sat: dayValue,
   sun: dayValue,
+});
+
+const openHourRange = z.object({ open: timeStr, close: timeStr });
+/** 营业时间周模板：{ mon: {open,close} | null, ... }，null 表示当日休息 */
+const openHoursInput = z.object({
+  mon: openHourRange.nullable().optional(),
+  tue: openHourRange.nullable().optional(),
+  wed: openHourRange.nullable().optional(),
+  thu: openHourRange.nullable().optional(),
+  fri: openHourRange.nullable().optional(),
+  sat: openHourRange.nullable().optional(),
+  sun: openHourRange.nullable().optional(),
 });
 
 export const storeRouter = router({
@@ -363,5 +393,314 @@ export const storeRouter = router({
         .where(eq(schema.staff.id, staffRow.id))
         .returning();
       return { staff: updated };
+    }),
+
+  /**
+   * 财务报表统计（merchant 本店 · T4.4）。
+   *
+   * 口径（前端汇总卡/趋势图/员工表共用同一口径，保证对账一致）：
+   * - 收入按「收款时间 paid_at」归属区间 [from, to)；金额取 paid_fen（markPaid 必写，
+   *   ?? price_fen 兜底历史脏数据）。
+   * - 「完成单数」= 区间内完成并收款的单数（与收入同源，可直接对账）。
+   * - 员工维度：同一行集按 staff_id 聚合；未指派员工的已收款单归入「未指派」虚拟行
+   *   （staffId=null），故员工金额之和恒等于区间服务收入。
+   * - 收款方式拆分：pass_deduct 进次卡桶，其余（含 payment_mode 为 NULL 的历史单）
+   *   进到店付桶——两桶互斥且穷尽，合计恒等于服务收入。
+   * - 商城收入 v1 恒 0（商城属 P5，orders 尚无 paid_at 口径），结构预留 shopFen。
+   * - 待收款：时点待办（completed 且未 paid），与区间无关，全量返回（上限 100 条）。
+   */
+  financeStats: merchantProcedure
+    .input(
+      z.object({
+        from: z.date(),
+        to: z.date(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
+      const { from, to } = input;
+      if (!(from.getTime() < to.getTime())) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '时间区间无效：from 必须早于 to' });
+      }
+      const MAX_RANGE_MS = 400 * 24 * 3600 * 1000;
+      if (to.getTime() - from.getTime() > MAX_RANGE_MS) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '统计区间最长 400 天' });
+      }
+
+      // 同一份数据：区间内已收款预约（服务收入/按日序列/员工维度/收款方式四者共同来源）
+      const paidRows = await ctx.db
+        .select({
+          id: schema.appointments.id,
+          staffId: schema.appointments.staffId,
+          paidAt: schema.appointments.paidAt,
+          paidFen: schema.appointments.paidFen,
+          priceFen: schema.appointments.priceFen,
+          paymentMode: schema.appointments.paymentMode,
+          rating: schema.appointments.rating,
+        })
+        .from(schema.appointments)
+        .where(
+          and(
+            eq(schema.appointments.storeId, storeId),
+            gte(schema.appointments.paidAt, from),
+            lt(schema.appointments.paidAt, to),
+          ),
+        );
+
+      /** 本地日期键 YYYY-MM-DD（服务端时区，与前端周期切换同为本地口径） */
+      const dayKey = (d: Date): string => {
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${d.getFullYear()}-${m}-${day}`;
+      };
+
+      // 按日序列：先把 [from, to) 每一天铺 0，再累加，保证序列连续无洞
+      const byDayMap = new Map<string, { date: string; serviceFen: number; shopFen: number }>();
+      for (const d = new Date(from.getFullYear(), from.getMonth(), from.getDate()); d < to; d.setDate(d.getDate() + 1)) {
+        const key = dayKey(d);
+        byDayMap.set(key, { date: key, serviceFen: 0, shopFen: 0 });
+      }
+
+      const payAtStore = { count: 0, totalFen: 0 };
+      const passDeduct = { count: 0, totalFen: 0 };
+      const staffAgg = new Map<
+        string | null,
+        { completedCount: number; serviceFen: number; ratedCount: number; goodCount: number; ratingSum: number }
+      >();
+
+      let serviceTotalFen = 0;
+      for (const row of paidRows) {
+        const fen = row.paidFen ?? row.priceFen;
+        serviceTotalFen += fen;
+
+        if (row.paidAt) {
+          const key = dayKey(row.paidAt);
+          const cell = byDayMap.get(key);
+          // 区间边界防御：paidAt 必在 [from,to) 内，正常必命中；不命中则跳过该日格（总额不受影响）
+          if (cell) cell.serviceFen += fen;
+        }
+
+        if (row.paymentMode === 'pass_deduct') {
+          passDeduct.count += 1;
+          passDeduct.totalFen += fen;
+        } else {
+          // 'pay_at_store' 或 NULL（历史单缺省按到店付口径）
+          payAtStore.count += 1;
+          payAtStore.totalFen += fen;
+        }
+
+        const s = staffAgg.get(row.staffId) ?? {
+          completedCount: 0,
+          serviceFen: 0,
+          ratedCount: 0,
+          goodCount: 0,
+          ratingSum: 0,
+        };
+        s.completedCount += 1;
+        s.serviceFen += fen;
+        if (row.rating !== null) {
+          s.ratedCount += 1;
+          s.ratingSum += row.rating;
+          if (row.rating >= 4) s.goodCount += 1;
+        }
+        staffAgg.set(row.staffId, s);
+      }
+
+      // 员工姓名解析（本店全员；未指派行 staffId=null 在前端显示「未指派」）
+      const staffRows = await ctx.db
+        .select({ id: schema.staff.id, name: schema.staff.name })
+        .from(schema.staff)
+        .where(eq(schema.staff.storeId, storeId));
+      const staffNameById = new Map(staffRows.map((r) => [r.id, r.name]));
+
+      const byStaff = [...staffAgg.entries()]
+        .map(([staffId, s]) => ({
+          staffId,
+          staffName: staffId === null ? '未指派' : (staffNameById.get(staffId) ?? '已离职员工'),
+          completedCount: s.completedCount,
+          serviceFen: s.serviceFen,
+          avgRating: s.ratedCount > 0 ? s.ratingSum / s.ratedCount : null,
+          /** 好评率：评分≥4 占比；无评分 null */
+          goodRate: s.ratedCount > 0 ? s.goodCount / s.ratedCount : null,
+        }))
+        .sort((a, b) => b.serviceFen - a.serviceFen);
+
+      // 待收款：completed 未 paid（时点待办，与统计区间无关）
+      const pendingRows = await ctx.db
+        .select({
+          id: schema.appointments.id,
+          code: schema.appointments.code,
+          scheduledStart: schema.appointments.scheduledStart,
+          completedAt: schema.appointments.completedAt,
+          priceFen: schema.appointments.priceFen,
+          paymentMode: schema.appointments.paymentMode,
+          petName: schema.pets.name,
+          serviceName: schema.services.name,
+        })
+        .from(schema.appointments)
+        .innerJoin(schema.pets, eq(schema.appointments.petId, schema.pets.id))
+        .innerJoin(schema.services, eq(schema.appointments.serviceId, schema.services.id))
+        .where(
+          and(
+            eq(schema.appointments.storeId, storeId),
+            eq(schema.appointments.status, 'completed'),
+            isNull(schema.appointments.paidAt),
+          ),
+        )
+        .orderBy(desc(schema.appointments.completedAt))
+        .limit(100);
+
+      const pendingPaymentFen = pendingRows.reduce((sum, r) => sum + r.priceFen, 0);
+
+      // 商城收入：v1 恒 0（P5 商城落地后接 orders 实口径，结构已预留）
+      const shopTotalFen = 0;
+
+      return {
+        range: { from, to },
+        totals: {
+          serviceFen: serviceTotalFen,
+          shopFen: shopTotalFen,
+          totalFen: serviceTotalFen + shopTotalFen,
+          /** 完成单数：区间内完成并收款单数（与收入同源） */
+          paidCount: paidRows.length,
+          pendingPaymentFen,
+          pendingPaymentCount: pendingRows.length,
+        },
+        /** 按日分组序列（[from,to) 每日一格，无收款日为 0；shopFen v1 恒 0） */
+        byDay: [...byDayMap.values()],
+        /** 收款方式拆分（两桶互斥穷尽，合计 = 服务收入） */
+        paymentSplit: { payAtStore, passDeduct },
+        /** 员工维度（同一行集聚合；serviceFen 之和 = 区间服务收入） */
+        byStaff,
+        /** 待收款明细（completed 未 paid，按完成时间倒序，上限 100 条） */
+        pendingPayments: pendingRows,
+      };
+    }),
+
+  /**
+   * 更新本店基础信息（merchant 本店 · T4.3 · MERCHANT-CONTRACTS）。
+   * 入参 {name?, address?, lat?, lng?, openHours?}，仅写本店（ctx.user.storeId）字段；
+   * 未提供的字段不动；updated_at 显式写（SQLite 无 ON UPDATE）。
+   */
+  update: merchantProcedure
+    .input(
+      z.object({
+        name: z.string().trim().min(1, '门店名称不能为空').max(64).optional(),
+        address: z.string().trim().max(255).optional(),
+        lat: z.number().min(-90).max(90).nullable().optional(),
+        lng: z.number().min(-180).max(180).nullable().optional(),
+        openHours: openHoursInput.optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // 营业时间段校验：非休息日的 open 必须早于 close
+      if (input.openHours) {
+        for (const [day, range] of Object.entries(input.openHours)) {
+          if (range && range.open >= range.close) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: `${day} 的开门时间须早于关门时间`,
+            });
+          }
+        }
+      }
+
+      const set: {
+        name?: string;
+        address?: string;
+        lat?: number | null;
+        lng?: number | null;
+        openHours?: schema.StoreOpenHours;
+        updatedAt: Date;
+      } = { updatedAt: new Date() };
+      if (input.name !== undefined) set.name = input.name;
+      if (input.address !== undefined) set.address = input.address;
+      if (input.lat !== undefined) set.lat = input.lat;
+      if (input.lng !== undefined) set.lng = input.lng;
+      if (input.openHours !== undefined) set.openHours = input.openHours as schema.StoreOpenHours;
+
+      const [updated] = await ctx.db
+        .update(schema.stores)
+        .set(set)
+        .where(eq(schema.stores.id, ctx.user.storeId!))
+        .returning();
+      return { store: updated };
+    }),
+
+  /**
+   * 仪表盘统计（merchant 本店 · T4.1 · MERCHANT-CONTRACTS）：
+   * - 今日预约：scheduled_start 落在统计日 [0点, 次日0点) 的预约，分状态计数 + 总数；
+   * - 服务中：in_service + in_boarding 当前在单数（不限今日，寄养可跨天）；
+   * - 今日营业额：paid_at 落在统计日的 paid_fen 合计（到店付收款登记口径，单位分）；
+   * - 待办（本店全量未处理项，不限今日）：待确认 pending 数 / 待派单 confirmed 且无 staff_id 数 /
+   *   取消申请 cancel_requested 数 / 待收款 completed 且未 paid 数，附四项合计 total；
+   * - 异常：超期寄养数（status=in_boarding 且 scheduled_end 已过，应退未退）。
+   * 实现：本店预约一次取出在应用层聚合（与 staffList 同模式，v1 数据量级无压力）。
+   */
+  dashboardStats: merchantProcedure
+    .input(z.object({ date: z.date().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
+      const now = new Date();
+      const dayStart = new Date(input?.date ?? now);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000);
+
+      const rows = await ctx.db
+        .select({
+          status: schema.appointments.status,
+          staffId: schema.appointments.staffId,
+          scheduledStart: schema.appointments.scheduledStart,
+          scheduledEnd: schema.appointments.scheduledEnd,
+          paidAt: schema.appointments.paidAt,
+          paidFen: schema.appointments.paidFen,
+        })
+        .from(schema.appointments)
+        .where(eq(schema.appointments.storeId, storeId));
+
+      const byStatus = Object.fromEntries(
+        DASHBOARD_STATUSES.map((s) => [s, 0]),
+      ) as Record<(typeof DASHBOARD_STATUSES)[number], number>;
+      let inServiceCount = 0;
+      let todayRevenueFen = 0;
+      const todo = { pending: 0, unassigned: 0, cancelRequested: 0, unpaid: 0 };
+      let overdueBoardingCount = 0;
+
+      for (const r of rows) {
+        const s = r.status as (typeof DASHBOARD_STATUSES)[number];
+        if (r.scheduledStart >= dayStart && r.scheduledStart < dayEnd && s in byStatus) {
+          byStatus[s] += 1;
+        }
+        if (s === 'in_service' || s === 'in_boarding') inServiceCount += 1;
+        if (r.paidAt && r.paidAt >= dayStart && r.paidAt < dayEnd) {
+          todayRevenueFen += r.paidFen ?? 0;
+        }
+        if (s === 'pending') todo.pending += 1;
+        else if (s === 'confirmed' && r.staffId === null) todo.unassigned += 1;
+        else if (s === 'cancel_requested') todo.cancelRequested += 1;
+        else if (s === 'completed' && r.paidAt === null) todo.unpaid += 1;
+        if (s === 'in_boarding' && r.scheduledEnd < now) overdueBoardingCount += 1;
+      }
+
+      const todayCount = DASHBOARD_STATUSES.reduce((n, s) => n + byStatus[s], 0);
+      return {
+        /** 统计日 0 点（本地时区） */
+        date: dayStart,
+        /** 今日预约总数（全部状态合计） */
+        todayCount,
+        /** 今日预约分状态计数 */
+        byStatus,
+        /** 服务中数量（in_service + in_boarding，不限今日） */
+        inServiceCount,
+        /** 今日营业额（分）：paid_at 落在统计日的 paid_fen 合计 */
+        todayRevenueFen,
+        /** 待办：四项明细 + 合计 */
+        todo: {
+          ...todo,
+          total: todo.pending + todo.unassigned + todo.cancelRequested + todo.unpaid,
+        },
+        /** 异常：超期寄养数（应退未退） */
+        overdueBoardingCount,
+      };
     }),
 });

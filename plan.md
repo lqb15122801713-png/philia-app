@@ -93,8 +93,23 @@ Monorepo（npm workspaces）：apps/customer、apps/merchant、apps/staff（Reac
 - 员工端收不到 store 频道事件（v1 频道设计如此）
 - 退房入口在商家端（P4），员工端仅提示
 
-## P4 — 商家端 〔未开始〕
-## P5 — 商城后端与全链路 〔未开始〕
+## P4 — 商家端 〔已完成 ✅ 2026-09-05〕
+
+里程碑 M4：门店可运营。**达成。**
+
+- [x] T4.1 `coder-dash`：商家端基建（Providers/RequireMerchant/dev-login 店主版/MerchantEventsProvider 全端单条 SSE）+ 仪表盘（`store.dashboardStats` 新增：今日预约/服务中/营业额/待办五件套/超期寄养）+ 待办红点区 + 今日时间轴 + TabBar 预约红点
+- [x] T4.2 `coder-appt-admin`：预约管理（日历+列表双视图、状态/日期筛选、行内一键确认 ≤30 秒路径、SSE 新预约红点 toast）+ 详情操作（确认/派单弹层技能匹配排序+当日单数/改期槽位选择/取消审核）+ 监视页（StepTimeline+PhotoWall 只读+SSE 刷新、**打标重拍按钮镜像规则 5 禁用逻辑**、寄养变体）；`appointment.reschedule` 新增（事务：旧槽回减→新槽校验+1→写新时间，事件三端）
+- [x] T4.3 `coder-staff-admin`：员工表格（技能/排班/绩效聚合）+ 邀请码弹层（明文一次展示+24h 提示+复用徽标）+ 排班周模板编辑器 + 寄养看板（在店卡片网格/超期红色标记/退房结算弹层含应收金额与待收款提示）+ 门店设置（信息/营业时间/服务项上下架与定价）；`store.update` 新增。缺口：员工技能/在职编辑无接口（只读+v2 注明）、merchant 无寄养历史打卡端点（留接入位）
+- [x] T4.4 `coder-finance`：财务报表（日/周/月切换+翻页、服务收入/商城(恒0)/合计/完成单数/待收款五卡、按日堆叠柱状趋势图（纯 CSS）、收款方式拆分、员工维度明细、待收款列表行内 markPaid 闭环）；`store.financeStats` 新增（**对账一致性结构性保证**：区间合计=按日之和=员工之和=收款方式之和，同一次查询单循环聚合）
+- [x] T4.5 集成验证（主代理）：构建全绿；运行时联调（新进行中洗护单）：8 页截图走查（仪表盘实时数字+红点、预约列表三单状态、监视页打标按钮禁用逻辑正确、财务/员工/寄养/设置）+ **API 实测三规则路径**：markPaid 收款入账（财务页 ¥88 营收+趋势柱）、flagForRedo(active)=成功且监视页显示"已打标，等待重拍"、flagForRedo(非最新 done)=FORBIDDEN 正确拒绝
+
+### P4 遗留事项
+- 客户昵称无 merchant 可读入口（列表显示 客户·id 后4位兜底）→ 建议 appointment.get/listForStore 补 customer.nickname
+- pending「拒绝」无服务端入口（reviewCancel 仅受理 cancel_requested）→ 评估放宽或新增 merchant cancel
+- 员工技能/在职状态编辑、merchant 寄养历史打卡端点、下架服务项全量列表、提成规则字段 → v2 评估
+- 商城收入结构已预留（P5 接 orders）
+
+## P5 — 商城后端与全链路 〔进行中〕
 ## P6 — 推送联调、打磨与发布准备 〔未开始〕
 
 ---
@@ -113,3 +128,4 @@ Monorepo（npm workspaces）：apps/customer、apps/merchant、apps/staff（Reac
 - 2026-09-05 上午 feat/p1-backend 推送 + PR #1（feat/p1-backend→dev）；用户确认合并，dev 已更新。
 - 2026-09-05 11:00 进入 P2：T2.0 共享层 → T2.1/T2.2/T2.3 并行 → T2.4 运行时联调（demo-live 演示单 + CDP 登录态 8 页截图）。**P2 收官（M2 达成）**。
 - 2026-09-05 12:51 用户确认合并 PR #2 + 进入 P3。T3.1-T3.4 四代理并行完成；主代理集成（扫码接线/TabBar current/Toaster//api 代理）+ 运行时联调（洗护单走完六步 completed + 寄养单入住打卡，7 页截图）。**P3 收官（M3 达成，业务闭环跑通）**。
+- 2026-09-05 14:34 用户确认合并 PR #3 + 进入 P4 + **授权「后续自动继续」**（每阶段完成后自动合并 PR 并进入下一阶段，仅方案级决策/生产发布前停下确认）。T4.1-T4.4 四代理并行完成；主代理联调 8 页截图 + API 实测 markPaid/flagForRedo 三规则路径。**P4 收官（M4 达成）**。
