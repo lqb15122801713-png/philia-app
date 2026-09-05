@@ -30,6 +30,7 @@ import { imagesRoute } from './routes/images';
 import { payCallbackRoute } from './routes/payCallback';
 import { uploadRoute } from './routes/upload';
 import { assertPaymentConfig } from './payments/provider';
+import { assertSecretsConfigured } from './config/secrets';
 import { startOutboxSweeper } from './realtime/outboxSweeper';
 import { appRouter } from './routers';
 import type { Context as TrpcContext } from './trpc';
@@ -104,6 +105,9 @@ const isMain = (() => {
 })();
 
 if (isMain) {
+  // 生产密钥闸门（v1.1 P0-1）：三处 HMAC 密钥缺省/仍为 dev 值即拒绝启动，
+  // 先于支付校验执行，保证密钥缺失首先暴露
+  assertSecretsConfigured();
   // 支付配置启动校验：生产环境 mock / wechat 缺配置直接报错，不静默降级（§4.7）
   assertPaymentConfig();
   const port = Number(process.env.PORT ?? 7200);
