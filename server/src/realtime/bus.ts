@@ -152,6 +152,10 @@ function notificationCopy(
       return { title: '订单已发货', body: '您的订单已发货，请注意查收' };
     case EventType.OrderReceived:
       return { title: '订单已签收', body: '客户已确认收货' };
+    case EventType.OrderCancelled:
+      return data.by === 'system_timeout'
+        ? { title: '订单已关闭', body: '一笔待支付订单超时未支付，已自动取消并回补库存' }
+        : { title: '订单已取消', body: '客户取消了待支付订单，库存已回补' };
     default:
       return { title: '消息提醒', body: '您有一条新消息' };
   }
