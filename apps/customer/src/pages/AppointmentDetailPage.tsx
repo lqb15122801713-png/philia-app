@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
 import BookingCode from '@/components/booking/BookingCode';
+import { ErrorState } from '@/components/home/common';
 import { friendlyError, useToast } from '@/components/booking/Toast';
 import {
   APPT_STATUS_META,
@@ -121,6 +122,16 @@ export default function AppointmentDetailPage() {
         {[1, 2, 3].map((i) => (
           <div key={i} className="h-32 animate-pulse rounded-card bg-sunken" />
         ))}
+      </div>
+    );
+  }
+  if (detailQ.isError) {
+    return (
+      <div className="px-4 py-6">
+        <ErrorState
+          message="预约详情加载失败，请检查网络后重试"
+          onRetry={() => void detailQ.refetch()}
+        />
       </div>
     );
   }

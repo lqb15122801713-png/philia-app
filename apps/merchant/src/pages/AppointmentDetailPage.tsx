@@ -5,7 +5,7 @@
  *   备注 / 核销时间 / 人工码 / 支付状态。
  *   客户昵称：现有 merchant 可读接口（appointment.get / listForStore）均未返回 customer
  *   昵称（仅 boarding.stayBoard 对 in_boarding 单返回 customer），故非寄养在住单显示
- *   「客户·{id后4位}」兜底——已在汇报中标注，建议后续 appointment.get 补 customer 字段。
+ *   「客户 {id后4位}」兜底——已在汇报中标注，建议后续 appointment.get 补 customer 字段。
  * - 操作区按状态出按钮：
  *   pending → 确认预约 / 拒绝（说明见下）；confirmed → 指派员工 / 改期；
  *   cancel_requested → 批准取消 / 拒绝取消（二次确认）。
@@ -86,7 +86,7 @@ export default function AppointmentDetailPage() {
   const customerDisplay = boardEntry?.customer.nickname?.trim()
     ? boardEntry.customer.nickname
     : appt
-      ? `客户·${appt.customerId.slice(-4)}`
+      ? `客户 ${appt.customerId.slice(-4)}`
       : '—';
 
   /* ---------------- 操作 ---------------- */
