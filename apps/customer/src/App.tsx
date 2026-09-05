@@ -8,14 +8,18 @@ import BookingBoardingPage from './pages/BookingBoardingPage'
 import BookingGroomingPage from './pages/BookingGroomingPage'
 import BookingPage from './pages/BookingPage'
 import BookingSuccessPage from './pages/BookingSuccessPage'
+import CartPage from './pages/CartPage'
+import CheckoutPage from './pages/CheckoutPage'
 import DevLoginPage from './pages/DevLoginPage'
 import HomePage from './pages/HomePage'
+import MallOrdersPage from './pages/MallOrdersPage'
 import MallPage from './pages/MallPage'
 import MePage from './pages/MePage'
 import MemberPage from './pages/MemberPage'
 import MomentsPage from './pages/MomentsPage'
 import PetsPage from './pages/PetsPage'
 import PhiliaPage from './pages/PhiliaPage'
+import ProductDetailPage from './pages/ProductDetailPage'
 
 // 受登录保护的主内容路由（P0 路由表原样保留）
 function ProtectedRoutes() {
@@ -24,6 +28,11 @@ function ProtectedRoutes() {
       <Route path="/" element={<Navigate to="/home" replace />} />
       <Route path="/home" element={<HomePage />} />
       <Route path="/mall" element={<MallPage />} />
+      {/* T5.3 商城子路由（契约允许新增子路由，已向主代理汇报） */}
+      <Route path="/mall/product/:id" element={<ProductDetailPage />} />
+      <Route path="/mall/cart" element={<CartPage />} />
+      <Route path="/mall/checkout" element={<CheckoutPage />} />
+      <Route path="/mall/orders" element={<MallOrdersPage />} />
       <Route path="/philia" element={<PhiliaPage />} />
       <Route path="/philia/pets" element={<PetsPage />} />
       <Route path="/philia/member" element={<MemberPage />} />
