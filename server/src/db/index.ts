@@ -32,6 +32,10 @@ if (url.startsWith('file:')) {
 /** 底层 libsql client（执行原生 SQL / 事务脚本时使用） */
 export const client = createClient({ url });
 
+// 写锁等待 5s：libsql 单连接并发写事务会 SQLITE_BUSY 并可能中毒连接（T5.1 实测）。
+// busy_timeout 让并发写串行等待而非立即失败；配合应用层串行锁（mall 域已用）双保险。
+await client.execute('PRAGMA busy_timeout = 5000');
+
 /** drizzle 实例（携带全量 schema，查询构建入口） */
 export const db = drizzle(client, { schema });
 
