@@ -10,7 +10,7 @@
  *   wash/groom/boarding）+ 1 客户用户（customer）
  * - 2 宠物（1 狗 1 猫，含疫苗有效期）
  * - 10 服务项（grooming 6 + boarding 4，boarding 含房型）
- * - 10 商品（分类覆盖 主粮/零食/玩具/清洁，images 用 /brand/ 占位路径）
+ * - 10 商品（分类覆盖 主粮/零食/玩具/清洁，images 用 /products/*.svg 占位图（scripts/gen-product-placeholders.mjs 生成））
  * - store_slots：明天起未来 7 天，30min 粒度，09:00-19:30，capacity=2（154 条）
  *
  * 结束打印各表行数。
@@ -30,6 +30,7 @@ const CLEAR_ORDER = [
   schema.boardingStays,
   schema.appointments,
   schema.storeSlots,
+  schema.payments,
   schema.orders,
   schema.products,
   schema.services,
@@ -196,18 +197,18 @@ async function main() {
       { storeId: store.id, type: 'boarding', name: '豪华猫别墅寄养', boardingRoomType: '豪华猫别墅', priceFen: 35900 },
     ]);
 
-    /* ---- 商品：主粮/零食/玩具/清洁（images 先用 /brand/ 占位路径） ---- */
+    /* ---- 商品：主粮/零食/玩具/清洁（images 用 /products/*.svg 占位图） ---- */
     await tx.insert(schema.products).values([
-      { storeId: store.id, category: '主粮', name: '全价成犬粮 2kg', description: '鸡肉味全价犬粮', images: ['/brand/staple-1.png'], priceFen: 12900, stock: 50 },
-      { storeId: store.id, category: '主粮', name: '全价成猫粮 1.5kg', description: '三文鱼配方', images: ['/brand/staple-2.png'], priceFen: 11900, stock: 60 },
-      { storeId: store.id, category: '主粮', name: '幼犬奶糕粮 1kg', description: '离乳期幼犬适用', images: ['/brand/staple-3.png'], priceFen: 9900, stock: 40 },
-      { storeId: store.id, category: '零食', name: '风干鸡肉干 100g', description: '纯鸡肉低温风干', images: ['/brand/snack-1.png'], priceFen: 4900, stock: 100 },
-      { storeId: store.id, category: '零食', name: '猫条混合装 12 支', description: '金枪鱼+鸡肉', images: ['/brand/snack-2.png'], priceFen: 2900, stock: 120 },
-      { storeId: store.id, category: '零食', name: '洁齿磨牙棒 7 支', description: '犬用洁齿零食', images: ['/brand/snack-3.png'], priceFen: 3900, stock: 80 },
-      { storeId: store.id, category: '玩具', name: '发声橡胶球', description: '耐咬发声玩具', images: ['/brand/toy-1.png'], priceFen: 1900, stock: 70 },
-      { storeId: store.id, category: '玩具', name: '羽毛逗猫棒', description: '可替换羽毛头', images: ['/brand/toy-2.png'], priceFen: 1500, stock: 90 },
-      { storeId: store.id, category: '清洁', name: '宠物通用香波 500ml', description: '温和低敏配方', images: ['/brand/clean-1.png'], priceFen: 5900, stock: 45 },
-      { storeId: store.id, category: '清洁', name: '豆腐猫砂 6L', description: '低尘可冲厕', images: ['/brand/clean-2.png'], priceFen: 4900, stock: 55 },
+      { storeId: store.id, category: '主粮', name: '全价成犬粮 2kg', description: '鸡肉味全价犬粮', images: ['/products/staple-1.svg'], priceFen: 12900, stock: 50 },
+      { storeId: store.id, category: '主粮', name: '全价成猫粮 1.5kg', description: '三文鱼配方', images: ['/products/staple-2.svg'], priceFen: 11900, stock: 60 },
+      { storeId: store.id, category: '主粮', name: '幼犬奶糕粮 1kg', description: '离乳期幼犬适用', images: ['/products/staple-3.svg'], priceFen: 9900, stock: 40 },
+      { storeId: store.id, category: '零食', name: '风干鸡肉干 100g', description: '纯鸡肉低温风干', images: ['/products/snack-1.svg'], priceFen: 4900, stock: 100 },
+      { storeId: store.id, category: '零食', name: '猫条混合装 12 支', description: '金枪鱼+鸡肉', images: ['/products/snack-2.svg'], priceFen: 2900, stock: 120 },
+      { storeId: store.id, category: '零食', name: '洁齿磨牙棒 7 支', description: '犬用洁齿零食', images: ['/products/snack-3.svg'], priceFen: 3900, stock: 80 },
+      { storeId: store.id, category: '玩具', name: '发声橡胶球', description: '耐咬发声玩具', images: ['/products/toy-1.svg'], priceFen: 1900, stock: 70 },
+      { storeId: store.id, category: '玩具', name: '羽毛逗猫棒', description: '可替换羽毛头', images: ['/products/toy-2.svg'], priceFen: 1500, stock: 90 },
+      { storeId: store.id, category: '清洁', name: '宠物通用香波 500ml', description: '温和低敏配方', images: ['/products/clean-1.svg'], priceFen: 5900, stock: 45 },
+      { storeId: store.id, category: '清洁', name: '豆腐猫砂 6L', description: '低尘可冲厕', images: ['/products/clean-2.svg'], priceFen: 4900, stock: 55 },
     ]);
 
     /* ---- 时段库存：未来 7 天 × 22 个 30min 时段 = 154 条，capacity=2 ---- */
