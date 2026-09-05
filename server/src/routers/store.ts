@@ -13,6 +13,8 @@
  * - store.inviteStaff：merchant 本店。生成 8 位去混淆字符邀请码落 staff_invites，
  *   expires_at=+24h，明文仅此一次返回；同店同 staff_name 有未使用未过期码则复用。
  * - store.setSchedule：merchant 本店。写 staff.schedule 周模板 JSON。
+ * - store.setStaffStatus（v1.1 P1-2 追加）：merchant 本店。停职/恢复员工
+ *   （staff.status=active|suspended），停职由 staffProcedure 每请求校验即时生效。
  * - store.financeStats（T4.4 · MERCHANT-CONTRACTS）：merchant 本店。入参 {from,to}；
  *   区间服务收入（appointments paid_fen 按 paid_at 合计）/ 商城收入（v1 恒 0，P5 接
  *   orders）/ 按日分组序列 / 收款方式拆分 / 员工维度（完成单数·服务金额·平均评分·
@@ -396,6 +398,33 @@ export const storeRouter = router({
     }),
 
   /**
+   * 停职/恢复员工（merchant 本店 · v1.1 P1-2）：写 staff.status（active|suspended），
+   * updated_at 显式写。停职即时生效——staffProcedure 每请求校验在职状态，
+   * 同会话下一请求即 403。现状没有任何停职入口，本接口是让「停职」可发生的最小接口。
+   */
+  setStaffStatus: merchantProcedure
+    .input(z.object({ staffId: z.string().min(1), status: z.enum(['active', 'suspended']) }))
+    .mutation(async ({ ctx, input }) => {
+      const staffRow = await ctx.db
+        .select()
+        .from(schema.staff)
+        .where(eq(schema.staff.id, input.staffId))
+        .limit(1)
+        .then((r) => r[0]);
+      if (!staffRow) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: '员工不存在' });
+      }
+      assertOwnStore(ctx, staffRow.storeId); // 越店停职 FORBIDDEN
+
+      const [updated] = await ctx.db
+        .update(schema.staff)
+        .set({ status: input.status, updatedAt: new Date() })
+        .where(eq(schema.staff.id, staffRow.id))
+        .returning();
+      return { staff: updated };
+    }),
+
+  /**
    * 财务报表统计（merchant 本店 · T4.4）。
    *
    * 口径（前端汇总卡/趋势图/员工表共用同一口径，保证对账一致）：
@@ -538,8 +567,8 @@ export const storeRouter = router({
           serviceName: schema.services.name,
         })
         .from(schema.appointments)
-        .innerJoin(schema.pets, eq(schema.appointments.petId, schema.pets.id))
-        .innerJoin(schema.services, eq(schema.appointments.serviceId, schema.services.id))
+        .innerJoin(schema.pets, eq(schema.pets.id, schema.appointments.petId))
+        .innerJoin(schema.services, eq(schema.services.id, schema.appointments.serviceId))
         .where(
           and(
             eq(schema.appointments.storeId, storeId),
