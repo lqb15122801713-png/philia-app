@@ -77,3 +77,13 @@
       "Source Han Sans SC", "Segoe UI", Roboto, sans-serif;
   }
 }
+@layer utilities {
+  /* 横滑 chips 隐藏滚动条（历史页状态筛选等） */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}

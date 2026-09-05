@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+  <rect width="800" height="800" rx="48" fill="#FBEBD3"/>
+  <rect x="24" y="24" width="752" height="752" rx="36" fill="none" stroke="#C98A3D" stroke-width="3" opacity="0.35"/>
+  
+  <g transform="translate(120 130) scale(1.6)" fill="#C98A3D" opacity="0.18">
+    <ellipse cx="0" cy="10" rx="16" ry="13"/>
+    <circle cx="-17" cy="-6" r="7"/><circle cx="-6" cy="-13" r="7"/>
+    <circle cx="6" cy="-13" r="7"/><circle cx="17" cy="-6" r="7"/>
+  </g>
+  
+  <g transform="translate(660 640) scale(2.2)" fill="#C98A3D" opacity="0.14">
+    <ellipse cx="0" cy="10" rx="16" ry="13"/>
+    <circle cx="-17" cy="-6" r="7"/><circle cx="-6" cy="-13" r="7"/>
+    <circle cx="6" cy="-13" r="7"/><circle cx="17" cy="-6" r="7"/>
+  </g>
+  
+  <g transform="translate(680 150) scale(1.2)" fill="#C98A3D" opacity="0.16">
+    <ellipse cx="0" cy="10" rx="16" ry="13"/>
+    <circle cx="-17" cy="-6" r="7"/><circle cx="-6" cy="-13" r="7"/>
+    <circle cx="6" cy="-13" r="7"/><circle cx="17" cy="-6" r="7"/>
+  </g>
+  
+    <g fill="none" stroke="#C98A3D" stroke-width="14" stroke-linecap="round">
+      <path d="M322 372 L478 322"/>
+      <circle cx="308" cy="352" r="26"/><circle cx="300" cy="394" r="26"/>
+      <circle cx="492" cy="302" r="26"/><circle cx="500" cy="344" r="26"/>
+    </g>
+  <text x="400" y="560" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="44" font-weight="600" fill="#3D3229">猫条混合装 12 支</text>
+  <text x="400" y="618" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="26" fill="#8A7A6B">菲丽亚精选 · 零食</text>
+  <text x="400" y="716" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="22" letter-spacing="6" fill="#A66F2A" opacity="0.8">PHILIA PET</text>
+</svg>

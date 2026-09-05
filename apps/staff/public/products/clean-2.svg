@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+  <rect width="800" height="800" rx="48" fill="#E4EFEA"/>
+  <rect x="24" y="24" width="752" height="752" rx="36" fill="none" stroke="#6FA08F" stroke-width="3" opacity="0.35"/>
+  
+  <g transform="translate(120 130) scale(1.6)" fill="#6FA08F" opacity="0.18">
+    <ellipse cx="0" cy="10" rx="16" ry="13"/>
+    <circle cx="-17" cy="-6" r="7"/><circle cx="-6" cy="-13" r="7"/>
+    <circle cx="6" cy="-13" r="7"/><circle cx="17" cy="-6" r="7"/>
+  </g>
+  
+  <g transform="translate(660 640) scale(2.2)" fill="#6FA08F" opacity="0.14">
+    <ellipse cx="0" cy="10" rx="16" ry="13"/>
+    <circle cx="-17" cy="-6" r="7"/><circle cx="-6" cy="-13" r="7"/>
+    <circle cx="6" cy="-13" r="7"/><circle cx="17" cy="-6" r="7"/>
+  </g>
+  
+  <g transform="translate(680 150) scale(1.2)" fill="#6FA08F" opacity="0.16">
+    <ellipse cx="0" cy="10" rx="16" ry="13"/>
+    <circle cx="-17" cy="-6" r="7"/><circle cx="-6" cy="-13" r="7"/>
+    <circle cx="6" cy="-13" r="7"/><circle cx="17" cy="-6" r="7"/>
+  </g>
+  
+    <circle cx="370" cy="360" r="70" fill="none" stroke="#6FA08F" stroke-width="14"/>
+    <circle cx="470" cy="300" r="34" fill="none" stroke="#6FA08F" stroke-width="11" opacity="0.75"/>
+    <circle cx="462" cy="402" r="22" fill="none" stroke="#6FA08F" stroke-width="9" opacity="0.6"/>
+    <circle cx="346" cy="336" r="16" fill="#6FA08F" opacity="0.35"/>
+  <text x="400" y="560" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="44" font-weight="600" fill="#3D3229">豆腐猫砂 6L</text>
+  <text x="400" y="618" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="26" fill="#8A7A6B">菲丽亚精选 · 清洁</text>
+  <text x="400" y="716" text-anchor="middle" font-family="'PingFang SC','Microsoft YaHei',sans-serif" font-size="22" letter-spacing="6" fill="#54826F" opacity="0.8">PHILIA PET</text>
+</svg>
