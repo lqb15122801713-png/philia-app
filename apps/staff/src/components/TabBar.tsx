@@ -19,7 +19,7 @@ export default function TabBar() {
             to={to}
             className={({ isActive }) =>
               `flex flex-col items-center gap-1 py-3 text-xs transition-colors ${
-                isActive ? 'font-medium text-primary' : 'text-muted-foreground'
+                isActive ? 'font-medium text-brand-primary' : 'text-ink-secondary'
               }`
             }
           >
