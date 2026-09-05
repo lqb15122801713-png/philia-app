@@ -241,7 +241,10 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
         case EventType.StepFlagged: {
           void queryClient.invalidateQueries({ queryKey: ['serviceStep', 'list', aid] })
           const key = typeof data.stepKey === 'string' ? data.stepKey : ''
-          showToast(`商家要求重拍：${getStepDef(key)?.name ?? '某步骤'}`)
+          // v1.1-b1：商家打标可填重拍原因，原文展示
+          const reason =
+            typeof data.reason === 'string' && data.reason ? `（原因：${data.reason}）` : ''
+          showToast(`商家要求重拍：${getStepDef(key)?.name ?? '某步骤'}${reason}`)
           break
         }
         case EventType.AppointmentCancelled:
@@ -349,8 +352,27 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
   })
 
   const photoTapHint = useCallback(() => {
-    showToast('v1 暂不支持删除照片，如需重拍请联系商家在监视页打标')
+    showToast('点照片右上角 × 可删除当前步骤照片；已完成步骤请联系商家在监视页打标重拍')
   }, [showToast])
+
+  /* ---------------- v1.1-b1：active 步删除单张照片（二次确认 → deletePhoto） ---------------- */
+  const [deleteTarget, setDeleteTarget] = useState<{ photoId: string; stepKey: string } | null>(null)
+  const deletePhotoMutation = useMutation({
+    mutationFn: (t: { photoId: string; stepKey: string }) =>
+      trpc.serviceStep.deletePhoto.mutate({
+        appointmentId: aid,
+        stepKey: t.stepKey as ServiceStepKey,
+        photoId: t.photoId,
+      }),
+    onSuccess: () => {
+      showToast('照片已删除')
+      void queryClient.invalidateQueries({ queryKey: ['serviceStep', 'list', aid] })
+    },
+    onError: (err) => {
+      showToast(err instanceof Error ? err.message : '删除失败，请稍后重试')
+    },
+    onSettled: () => setDeleteTarget(null),
+  })
 
   /* ================= 渲染分支 ================= */
 
@@ -568,12 +590,46 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
                 onFiles={(files) => void enqueueFiles(def.stepKey, undefined, files)}
                 onSlotFiles={(tag, files) => void enqueueFiles(def.stepKey, tag, files)}
                 onPhotoTap={photoTapHint}
+                onDeletePhoto={(photoId) => setDeleteTarget({ photoId, stepKey: def.stepKey })}
                 onConfirm={() => confirmMutation.mutate(def.stepKey)}
               />
             </div>
           )
         })}
       </div>
+
+      {/* v1.1-b1：删除照片二次确认弹层 */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-8" role="dialog" aria-modal="true" aria-label="删除这张照片？">
+          <button
+            type="button"
+            aria-label="取消"
+            className="absolute inset-0 bg-ink/40"
+            onClick={() => setDeleteTarget(null)}
+          />
+          <div className="relative w-full max-w-xs rounded-card bg-card p-5 shadow-elevated">
+            <p className="text-title text-ink">删除这张照片？</p>
+            <p className="mt-2 text-body text-ink-secondary">删除后不可恢复，如影响步骤照片数下限需补拍。</p>
+            <div className="mt-5 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setDeleteTarget(null)}
+                className="h-11 flex-1 rounded-full bg-sunken text-body text-ink-secondary active:scale-95"
+              >
+                再想想
+              </button>
+              <button
+                type="button"
+                disabled={deletePhotoMutation.isPending}
+                onClick={() => deletePhotoMutation.mutate(deleteTarget)}
+                className="h-11 flex-1 rounded-full bg-danger text-body font-semibold text-white active:scale-95 disabled:opacity-60"
+              >
+                {deletePhotoMutation.isPending ? '删除中…' : '确认删除'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ExecuteToast message={toast} />
       {celebrating && (
