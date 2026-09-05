@@ -992,6 +992,49 @@ export const appointmentRouter = router({
       }),
     );
   }),
+
+  /**
+   * 14. listForStaff（staff）：员工端历史页数据源（T3.1 追加，唯一一处服务端小改授权）。
+   * 范围 = 本店且（指派给本人 或 本人执行过）的预约：指派（assign）与核销认领
+   * （checkin 未指派单事务内写 staff_id）都会落 staff_id，故两种情形统一收敛为
+   * staff_id = 本人；按 scheduled_start 倒序，联 pet/service/store 名称直显。
+   * 入参 from/to 过滤 scheduledStart 闭区间，status 精确过滤。
+   */
+  listForStaff: staffProcedure
+    .input(
+      z
+        .object({
+          from: z.date().optional(), // scheduledStart >= from
+          to: z.date().optional(), // scheduledStart <= to
+          status: z.enum(APPOINTMENT_STATUSES).optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const conds = [
+        eq(schema.appointments.storeId, ctx.user.storeId!),
+        eq(schema.appointments.staffId, ctx.user.staffId!),
+      ];
+      if (input?.from) conds.push(gte(schema.appointments.scheduledStart, input.from));
+      if (input?.to) conds.push(lte(schema.appointments.scheduledStart, input.to));
+      if (input?.status) conds.push(eq(schema.appointments.status, input.status));
+      const rows = await ctx.db
+        .select()
+        .from(schema.appointments)
+        .innerJoin(schema.pets, eq(schema.pets.id, schema.appointments.petId))
+        .innerJoin(schema.services, eq(schema.services.id, schema.appointments.serviceId))
+        .innerJoin(schema.stores, eq(schema.stores.id, schema.appointments.storeId))
+        .where(and(...conds))
+        .orderBy(desc(schema.appointments.scheduledStart));
+      return rows.map(
+        (r): ListItem => ({
+          ...r.appointments,
+          petName: r.pets.name,
+          serviceName: r.services.name,
+          storeName: r.stores.name,
+        }),
+      );
+    }),
 });
 
 export type AppointmentRouter = typeof appointmentRouter;

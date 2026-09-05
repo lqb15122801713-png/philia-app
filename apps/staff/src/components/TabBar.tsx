@@ -1,11 +1,11 @@
 import { NavLink } from 'react-router-dom'
 import { CalendarCheck, History, PlayCircle } from 'lucide-react'
 
-// 最简底部 TabBar 占位（手机竖屏单手优先）
-// 「执行」暂指向 /execute/demo 占位，待任务流接入后由今日任务列表进入
+// 员工端三栏 TabBar（手机竖屏单手优先）
+// 「执行」指向 /execute/current：ExecutePage 会解析为今日首个 in_service 单，无则显示引导页
 const tabs = [
   { to: '/today', label: '今日', icon: CalendarCheck },
-  { to: '/execute/demo', label: '执行', icon: PlayCircle },
+  { to: '/execute/current', label: '执行', icon: PlayCircle },
   { to: '/history', label: '记录', icon: History },
 ]
 

@@ -75,7 +75,24 @@ Monorepo（npm workspaces）：apps/customer、apps/merchant、apps/staff（Reac
 - 日记/相册为 N+1 复合查询（≤12 条逐个 serviceStep.list），后续可加 listBatch
 - sseClientId 用 localStorage（多 tab 共享，v1 可接受）
 
-## P3 — 员工端与六步流 〔未开始〕
+## P3 — 员工端与六步流 〔已完成 ✅ 2026-09-05〕★ 核心阶段
+
+里程碑 M3：业务闭环跑通。**达成。**
+
+- [x] T3.1 `coder-today`：员工端基建（Providers/RequireStaff/dev-login 员工版）+ 今日任务时间轴（四状态卡片+扫码大按钮+SSE assigned/flagged）+ 历史（`appointment.listForStaff` 新增）+ 我的（排班/消息/登出）
+- [x] T3.2 `coder-scan`：QrScanner（BarcodeDetector 优先 / jsQR+canvas 5fps 降级 / 权限拒绝态）、ManualCodeInput（6 位大写）、useCheckin（429/FORBIDDEN/过期/幂等错误映射）；jsQR 解码冒烟通过（21.8ms/帧）
+- [x] T3.3 `coder-sixstep`：六步执行页（一步一屏横滑、6 段进度条、拍照九宫格、before/after 双卡槽、禁用链"上传中→还差 N 张→可确认"、flagged 横幅、完成庆祝）+ IndexedDB 弱网队列（upload→register→remove 三段保序、退避 2/5/15/60s、永久拒绝防毒化；冒烟 22/22）
+- [x] T3.4 `coder-boarding-staff`：寄养两段式页（入住登记：房间/称重/物品拍照清单 → checkinStay；每日打卡：喂食多顿/遛弯/备注/≤6 照片 UPSERT 明示 + 历史列表 + 超期横幅）；`boarding.stayForStaff` 新增
+- [x] T3.5 集成与联调（主代理）：QrScanner 接线恢复、TabBar「执行」→/execute/current（ExecutePage 包装解析）、/me 入口（今日页头）、sonner Toaster 挂载、staff tsconfig 补 node 类型、修 ref 类型错 1 处、**三端 vite 加 /api 开发代理**（签名图片相对路径统一转发，生产同源反代）；构建全绿
+- [x] 运行时验证：演示洗护单（第 4 步续跑 → 六步走完 completed）+ 寄养演示单（核销→入住登记 A-102→今日打卡带照片）真实数据 CDP 截图 7 页：今日任务（双单状态正确）/ 六步执行（进度条+禁用链）/ 寄养打卡（已入住+UPSERT 提示）/ 历史 / 我的 / 客户端 live 完成态（全步骤打勾+照片墙+时间戳推进）/ 服务相册（after 封面成册）
+
+### P3 遗留事项
+- iOS 真机扫码验证（Safari/微信 WebView jsQR 降级路径、playsinline、授权弹窗）→ P6 清单
+- `boarding.daily_update` 不发 appointment 频道，员工端收不到他人代打卡（60s 轮询兜底）；根治：dailyLog 加发 appointment 频道或 staff 订 store 频道
+- `boarding.overdue` 事件无发射源（超期提醒任务未实现）→ P4 商家端或后台任务补
+- 员工端收不到 store 频道事件（v1 频道设计如此）
+- 退房入口在商家端（P4），员工端仅提示
+
 ## P4 — 商家端 〔未开始〕
 ## P5 — 商城后端与全链路 〔未开始〕
 ## P6 — 推送联调、打磨与发布准备 〔未开始〕
@@ -95,3 +112,4 @@ Monorepo（npm workspaces）：apps/customer、apps/merchant、apps/staff（Reac
 - 2026-09-05 00:30-01:10 T1.2/T1.4/T1.5 并行完成 → T1.3a/b/c 并行完成 → T1.6 集成 + e2e 40 断言全绿。**P1 收官（M1 达成）**。
 - 2026-09-05 上午 feat/p1-backend 推送 + PR #1（feat/p1-backend→dev）；用户确认合并，dev 已更新。
 - 2026-09-05 11:00 进入 P2：T2.0 共享层 → T2.1/T2.2/T2.3 并行 → T2.4 运行时联调（demo-live 演示单 + CDP 登录态 8 页截图）。**P2 收官（M2 达成）**。
+- 2026-09-05 12:51 用户确认合并 PR #2 + 进入 P3。T3.1-T3.4 四代理并行完成；主代理集成（扫码接线/TabBar current/Toaster//api 代理）+ 运行时联调（洗护单走完六步 completed + 寄养单入住打卡，7 页截图）。**P3 收官（M3 达成，业务闭环跑通）**。

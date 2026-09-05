@@ -12,6 +12,9 @@
  * - boarding.stayBoard：merchant 本店。在店宠物看板（in_boarding 的 stays
  *   join appointment/pet/customer，含最近一次打卡日期与超期标记：
  *   scheduled_end < now 且未退房）。
+ * - boarding.stayForStaff：staff 本店（P3 T3.4 员工端寄养打卡页数据源）。
+ *   员工查看单个寄养单现状（stay + 每日打卡按 log_date 升序）；myStay 是
+ *   customerProcedure、stayBoard 是 merchantProcedure，员工均不可用，故增设。
  */
 
 import { TRPCError } from '@trpc/server';
@@ -364,6 +367,36 @@ export const boardingRouter = router({
       if (appt.type !== 'boarding') {
         throw new TRPCError({ code: 'BAD_REQUEST', message: '该预约不是寄养单' });
       }
+
+      const stay = await ctx.db
+        .select()
+        .from(schema.boardingStays)
+        .where(eq(schema.boardingStays.appointmentId, appt.id))
+        .limit(1)
+        .then((r) => r[0]);
+      if (!stay) {
+        return { stay: null, logs: [] };
+      }
+
+      const logs = await ctx.db
+        .select()
+        .from(schema.boardingDailyLogs)
+        .where(eq(schema.boardingDailyLogs.stayId, stay.id))
+        .orderBy(asc(schema.boardingDailyLogs.logDate));
+      return { stay, logs };
+    }),
+
+  /**
+   * 员工看寄养单现状（staff 本店 · P3 T3.4 员工端寄养打卡页数据源）：
+   * 校验预约属本店且 type=boarding（复用 getBoardingAppointment 的归属/类型校验），
+   * 返回 boarding_stays + 该 stay 的 boarding_daily_logs（按 log_date 升序；
+   * log_date 为 ISO 文本，字典序即时间序）。
+   * 尚未入住登记（stay 未创建）时返回 { stay: null, logs: [] }，不视为错误。
+   */
+  stayForStaff: staffProcedure
+    .input(z.object({ appointmentId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const appt = await getBoardingAppointment(ctx, input.appointmentId);
 
       const stay = await ctx.db
         .select()
