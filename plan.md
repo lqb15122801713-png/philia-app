@@ -7,15 +7,15 @@
 
 | 项 | 原文档 | 本地执行 | 原因 |
 |---|---|---|---|
-| 后端运行环境 | backend-building-swarm + MySQL + Kimi 登录 | P1 阶段再定（本地无该 swarm；MySQL/Kimi 登录需适配，可能用本地 MySQL/SQLite 或 docker + 会话 stub） | 平台技能本地不可用 |
-| GitHub 仓库 | P0 建 philia-app 仓库 | 先本地 git init；推送 GitHub 需用户确认后执行 | 外部可见操作需确认 |
+| 后端运行环境 | backend-building-swarm + MySQL + Kimi 登录 | libsql/SQLite 嵌入式 + dev-login 会话（结构保留 MySQL/Kimi 切换路径） | 平台技能本地不可用 |
+| GitHub 仓库 | P0 建 philia-app 仓库 | 已建私有仓 lqb15122801713-png/philia-app；本机 git 无凭证走 MCP push_files | 外部可见操作需确认 |
 | 视觉资产 | image_generation 插件 | 用 openart-agent MCP 生成 | 本地可用插件 |
 | 预览 | website_version_manager 版本卡 | Kimi Work 本地预览卡（dev server，customer 端口 7100） | 平台能力差异 |
-| 端口约定 | — | customer=7100 / merchant=7101 / staff=7102 | 客户端预览规则 |
+| 端口约定 | — | customer=7100 / merchant=7101 / staff=7102 / server=7200 | 客户端预览规则 |
 
 ## 技术栈（锁定）
 
-Monorepo（npm workspaces）：apps/customer、apps/merchant、apps/staff（React18+Vite+TS+Tailwind3.4+shadcn/ui+vite-plugin-pwa+React Router），packages/shared（tokens/组件/常量/类型），packages/config（共享 tsconfig/tailwind preset），server/（P1 建：Hono+tRPC+Drizzle）。
+Monorepo（npm workspaces）：apps/customer、apps/merchant、apps/staff（React18+Vite+TS+Tailwind3.4+shadcn/ui+vite-plugin-pwa+React Router），packages/shared（tokens/组件/常量/类型），packages/config（共享 tsconfig/tailwind preset），server/（Hono+tRPC+Drizzle+libsql，端口 7200）。
 
 ---
 
@@ -28,7 +28,7 @@ Monorepo（npm workspaces）：apps/customer、apps/merchant、apps/staff（Reac
 - [x] T0.3 `designer-assets`：4/4 资产落盘 assets/（logo-512 / tab-icon-256 / 空状态插画 / 首页 banner），Seedream 4.5 生成+本地去水印；OpenArt CDN 需走本机 SOCKS5 127.0.0.1:1081 下载（后续代理沿用）
 - [x] T0.4 `coder-tabbar`：ConvexTabBar（SVG 凹口+64px 凸起按钮+呼吸光环+按下回弹）、StepTimeline、PhotoWall（packages/shared），接入客户端壳；四张资产拷入 customer/public/brand/
 - [x] T0.5 集成冒烟：三端构建通过；CDP 真机视口截图验证（shots/）。修复项：①三端 tailwind content 未扫描 packages/shared 导致共享组件样式缺失；②员工端 TabBar flex 布局改 grid-cols-3。⚠️ 本机 Chrome `--screenshot` 受系统 120% DPI 影响会右偏裁切，截图须走 CDP setDeviceMetricsOverride（shots/cdp-shot.mjs）
-- [ ] （待用户确认）GitHub 建仓库 + main/dev 分支 + PR 模板
+- [x] GitHub 建仓 philia-app + main/dev 分支 + PR 模板（2026-09-05 完成）
 
 ### P0 遗留偏差记录
 - staff「执行」Tab 暂指向 /execute/demo 占位，P3 改由今日任务进入
@@ -70,9 +70,10 @@ Monorepo（npm workspaces）：apps/customer、apps/merchant、apps/staff（Reac
 - 2026-09-04 17:18 主代理读取开发方案全文（1117 行），建立 plan.md，启动 P0。
 - 2026-09-04 17:30 并行派出 T0.1/T0.2/T0.3 三个子代理。
 - 2026-09-04 18:10 三子代理全部完成；派 T0.4 组件集成子代理。
-- 2026-09-04 18:40 T0.5 集成冒烟完成（三端构建 + CDP 截图验证），修复 2 处集成问题。**P0 收官（M0 达成）**，GitHub 建仓待用户确认，待指令进入 P1。
+- 2026-09-04 18:40 T0.5 集成冒烟完成（三端构建 + CDP 截图验证），修复 2 处集成问题。**P0 收官（M0 达成）**。
 - 2026-09-04 18:49 用户确认建 GitHub 仓库 + 进入 P1。建私有仓库 `lqb15122801713-png/philia-app`；本机 git 无凭证，推送改走 GitHub MCP push_files 小批量方案。
 - 2026-09-04 晚 首轮子代理（gitops/coder-db）双超时 2h 零产出；调整策略：主代理预装依赖 + 硬超时 + 小批次。
 - 2026-09-05 00:10 coder-db 完成 T1.1（libsql 选型验证：18 表/迁移/种子/幂等）。
-- 2026-09-05 00:20 gitops 完成推送：main 全量文本 19 批 + dev 分支（PR 模板 + docs/BRANCHING.md）。**遗留：package-lock.json 超 MCP 通道上限未推 + 24 个二进制资产待本机 git 凭证补推；本地与远端 git 历史不同源（远端以批次 commit 为准），本机 git 通后以远端为基准 rebase/重克隆。**
+- 2026-09-05 00:20 gitops 完成推送：main 全量文本 19 批 + dev 分支（PR 模板 + docs/BRANCHING.md）。**遗留：根与 server 的 package-lock.json 超 MCP 通道上限未推 + 24 个二进制资产待本机 git 凭证补推；本地与远端 git 历史不同源，本机 git 通后以远端为基准。**
 - 2026-09-05 00:30-01:10 T1.2/T1.4/T1.5 并行完成 → T1.3a/b/c 并行完成 → T1.6 集成 + e2e 40 断言全绿。**P1 收官（M1 达成）**。
+- 2026-09-05 上午 feat/p1-backend 分支推送 server 全量代码并建 PR 到 dev（合并需用户确认）。
