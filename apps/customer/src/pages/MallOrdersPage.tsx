@@ -74,11 +74,13 @@ function OrderCard({
   order,
   onContinuePay,
   onReceive,
+  onCancel,
   receiving,
 }: {
   order: OrderRow;
   onContinuePay: (o: OrderRow) => void;
   onReceive: (o: OrderRow) => void;
+  onCancel: (o: OrderRow) => void;
   receiving: boolean;
 }) {
   const meta = STATUS_META[order.status] ?? { label: order.status, pill: 'bg-sunken text-ink-secondary' };
@@ -149,7 +151,14 @@ function OrderCard({
 
       {/* 操作区 */}
       {order.status === 'pending' ? (
-        <div className="mt-3 flex justify-end">
+        <div className="mt-3 flex justify-end gap-2">
+          <button
+            type="button"
+            onClick={() => onCancel(order)}
+            className="h-9 rounded-full bg-sunken px-5 text-body text-ink-secondary transition-transform duration-120 ease-philia-spring active:scale-92"
+          >
+            取消订单
+          </button>
           <button
             type="button"
             onClick={() => onContinuePay(order)}
@@ -186,6 +195,7 @@ export default function MallOrdersPage() {
   const [tab, setTab] = useState<(typeof TABS)[number]['key']>('pending');
   const [payOrder, setPayOrder] = useState<CashierOrder | null>(null);
   const [receiveTarget, setReceiveTarget] = useState<OrderRow | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<OrderRow | null>(null);
 
   const ordersQ = useQuery({
     queryKey: ['mall', 'listMyOrders'],
@@ -224,6 +234,17 @@ export default function MallOrdersPage() {
     },
     onError: (err) => showToast(friendlyError(err, '确认收货失败')),
     onSettled: () => setReceiveTarget(null),
+  });
+
+  /* ---- v1.1-b1：待支付取消订单（服务端回补库存，失败原文 toast） ---- */
+  const cancelM = useMutation({
+    mutationFn: (orderId: string) => trpc.mall.cancelOrder.mutate({ orderId }),
+    onSuccess: () => {
+      showToast('订单已取消，库存已释放', 'info');
+      invalidateOrders();
+    },
+    onError: (err) => showToast(friendlyError(err, '取消失败，请稍后再试')),
+    onSettled: () => setCancelTarget(null),
   });
 
   const active = TABS.find((t) => t.key === tab)!;
@@ -316,6 +337,7 @@ export default function MallOrdersPage() {
                     setPayOrder({ id: order.id, orderNo: order.orderNo, totalFen: order.totalFen })
                   }
                   onReceive={(order) => setReceiveTarget(order)}
+                  onCancel={(order) => setCancelTarget(order)}
                 />
               ))
             )}
@@ -346,6 +368,19 @@ export default function MallOrdersPage() {
         onCancel={() => setReceiveTarget(null)}
         onConfirm={() => {
           if (receiveTarget) receiveM.mutate(receiveTarget.id);
+        }}
+      />
+
+      {/* v1.1-b1：取消订单二次确认 */}
+      <ConfirmSheet
+        open={!!cancelTarget}
+        title="取消该订单？"
+        desc="取消后库存将释放，订单不可恢复。"
+        confirmText="确认取消"
+        danger
+        onCancel={() => setCancelTarget(null)}
+        onConfirm={() => {
+          if (cancelTarget) cancelM.mutate(cancelTarget.id);
         }}
       />
     </div>
