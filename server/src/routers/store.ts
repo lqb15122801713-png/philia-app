@@ -153,6 +153,22 @@ export const storeRouter = router({
       return { store, services, slots: available };
     }),
 
+  /**
+   * 门店在职员工公开列表（public，T2.2 追加）：客户端预约「选员工」用。
+   * 现状 staffList 为 merchantProcedure 客户调不了，故开此只读公开过程，
+   * 仅暴露 id/name/skills（不含排班、绩效、userId 等内部字段）。
+   */
+  listStaffPublic: publicProcedure
+    .input(z.object({ storeId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const staffRows = await ctx.db
+        .select({ id: schema.staff.id, name: schema.staff.name, skills: schema.staff.skills })
+        .from(schema.staff)
+        .where(and(eq(schema.staff.storeId, input.storeId), eq(schema.staff.status, 'active')))
+        .orderBy(schema.staff.createdAt);
+      return { staff: staffRows };
+    }),
+
   /** 新增/编辑服务项或寄养房型（merchant 本店） */
   upsertService: merchantProcedure
     .input(
