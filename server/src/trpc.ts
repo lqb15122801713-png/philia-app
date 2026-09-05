@@ -59,10 +59,26 @@ export const customerProcedure = publicProcedure.use(({ ctx, next }) => {
   return next();
 });
 
-/** 员工：publicProcedure + staffId 存在（staffId/storeId 由会话中间件组装时已填） */
-export const staffProcedure = publicProcedure.use(({ ctx, next }) => {
+/**
+ * 员工：publicProcedure + staffId 存在（staffId/storeId 由会话中间件组装时已填）
+ * + 每请求校验在职状态（v1.1 P1-2）：staff.status 必须为 active——
+ * 每请求都查库，保证停职即时生效（不等 7 天会话过期）；
+ * suspended 或 staff 记录被删一律 FORBIDDEN。
+ */
+export const staffProcedure = publicProcedure.use(async ({ ctx, next }) => {
   if (!ctx.user.staffId || !ctx.user.storeId) {
     throw new TRPCError({ code: 'FORBIDDEN', message: '需要员工身份（未绑定 staff 记录）' });
+  }
+  const staffRow = await ctx.db
+    .select({ status: schema.staff.status })
+    .from(schema.staff)
+    .where(eq(schema.staff.id, ctx.user.staffId))
+    .get();
+  if (staffRow?.status !== 'active') {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: '员工已停职，操作权限已即时冻结，请联系门店负责人',
+    });
   }
   return next();
 });
