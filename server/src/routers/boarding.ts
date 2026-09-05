@@ -15,12 +15,13 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import { emitEvent, broadcastNow, type Db as BusDb } from '../realtime/bus';
 import { EventType } from '../realtime/events';
 import {
+  customerProcedure,
   merchantProcedure,
   publicProcedure,
   router,
@@ -338,4 +339,47 @@ export const boardingRouter = router({
     );
     return { board };
   }),
+
+  /**
+   * 我的寄养进度（customer 本人 · T2.3 客户端 live 页寄养变体数据源）：
+   * 校验预约属本人且 type=boarding，返回 boarding_stays + 该 stay 的
+   * boarding_daily_logs（按 log_date 升序；log_date 为 ISO 文本，字典序即时间序）。
+   * 尚未入住登记（stay 未创建）时返回 { stay: null, logs: [] }，不视为错误。
+   */
+  myStay: customerProcedure
+    .input(z.object({ appointmentId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const appt = await ctx.db
+        .select()
+        .from(schema.appointments)
+        .where(eq(schema.appointments.id, input.appointmentId))
+        .limit(1)
+        .then((r) => r[0]);
+      if (!appt) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: '预约不存在' });
+      }
+      if (appt.customerId !== ctx.user.id) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: '只能查看本人名下的寄养单' });
+      }
+      if (appt.type !== 'boarding') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '该预约不是寄养单' });
+      }
+
+      const stay = await ctx.db
+        .select()
+        .from(schema.boardingStays)
+        .where(eq(schema.boardingStays.appointmentId, appt.id))
+        .limit(1)
+        .then((r) => r[0]);
+      if (!stay) {
+        return { stay: null, logs: [] };
+      }
+
+      const logs = await ctx.db
+        .select()
+        .from(schema.boardingDailyLogs)
+        .where(eq(schema.boardingDailyLogs.stayId, stay.id))
+        .orderBy(asc(schema.boardingDailyLogs.logDate));
+      return { stay, logs };
+    }),
 });

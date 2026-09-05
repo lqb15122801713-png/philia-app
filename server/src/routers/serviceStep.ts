@@ -31,7 +31,6 @@ import {
   publicProcedure,
   router,
   staffProcedure,
-  type Db,
 } from '../trpc';
 
 /* ------------------------------------------------------------------ */
