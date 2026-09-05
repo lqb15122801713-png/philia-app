@@ -26,6 +26,8 @@ export interface StepScreenProps {
   onFiles: (files: FileList) => void
   onSlotFiles: (tag: 'before' | 'after', files: FileList) => void
   onPhotoTap: () => void
+  /** v1.1-b1：active 步照片删除（仅服务端已落库照片） */
+  onDeletePhoto?: (photoId: string) => void
   onConfirm: () => void
 }
 
@@ -50,6 +52,7 @@ export default function StepScreen(props: StepScreenProps) {
     onFiles,
     onSlotFiles,
     onPhotoTap,
+    onDeletePhoto,
     onConfirm,
   } = props
 
@@ -143,7 +146,11 @@ export default function StepScreen(props: StepScreenProps) {
               />
             ) : (
               <>
-                <PhotoGrid photos={[...serverPhotos, ...queuedPhotos]} onPhotoTap={onPhotoTap} />
+                <PhotoGrid
+                  photos={[...serverPhotos, ...queuedPhotos]}
+                  onPhotoTap={onPhotoTap}
+                  onDeletePhoto={status === 'active' ? onDeletePhoto : undefined}
+                />
                 {status === 'active' && (
                   <CameraButton
                     disabled={cameraFull}
