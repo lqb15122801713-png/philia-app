@@ -19,10 +19,10 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, gte, like, or, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, gte, like, lt, or, sql, type SQL } from 'drizzle-orm';
 import { randomInt } from 'node:crypto';
 import { z } from 'zod';
-import { schema } from '../db';
+import { db, schema } from '../db';
 import { customerProcedure, merchantProcedure, publicProcedure, router } from '../trpc';
 import { broadcastNow, emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
@@ -109,6 +109,95 @@ type OrderListItem = OrderRow & { storeName: string | null; customerNickname?: s
 
 const groupOrders = (statuses: readonly string[]) =>
   Object.fromEntries(statuses.map((s) => [s, [] as OrderListItem[]])) as Record<string, OrderListItem[]>;
+
+/* ------------------------------------------------------------------ */
+/* 待支付取消 / 超时关单（v1.1 批次1 · P0-8）                               */
+/* ------------------------------------------------------------------ */
+
+/** 取消来源：customer 客户主动取消 / system_timeout 超时自动关单（事件 payload 用） */
+type OrderCancelBy = 'customer' | 'system_timeout';
+
+/** 待支付订单超时阈值：30 分钟未支付自动关单 */
+export const PENDING_ORDER_TTL_MS = 30 * 60 * 1000;
+
+/**
+ * 待支付订单取消事务（mall.cancelOrder 与 expirePendingOrders 共用同一路径）。
+ * 串行写锁 + 事务内重读状态：
+ * - 已 cancelled → 幂等返回现状（不重复回补库存、不重复发事件）；
+ * - 非 pending（已支付/已发货等）→ BAD_REQUEST；
+ * - pending → 逐商品回补 stock（stock += qty，与 createOrder 扣减互逆）
+ *   → status=cancelled → emitEvent(store:{storeId}, order.cancelled) → 提交后 broadcastNow。
+ */
+async function cancelPendingOrderWithLock(
+  d: DbHandle,
+  orderId: string,
+  by: OrderCancelBy,
+): Promise<{ order: OrderRow; idempotent: boolean }> {
+  return withOrderWriteLock(async () => {
+    let outboxId = '';
+    const result = await d.transaction(async (tx) => {
+      // 锁内事务重读：与并发取消/支付回调串行，状态以事务内读到的为准
+      const order = await tx
+        .select()
+        .from(schema.orders)
+        .where(eq(schema.orders.id, orderId))
+        .get();
+      if (!order) throw new TRPCError({ code: 'NOT_FOUND', message: '订单不存在' });
+      if (order.status === 'cancelled') return { order, idempotent: true }; // 幂等：不重复回补
+      if (order.status !== 'pending') {
+        badRequest(`当前状态（${order.status}）不可取消，仅待支付（pending）订单可取消`);
+      }
+      const now = new Date();
+      // 逐商品回补库存（商品行必然存在——下单时校验过；无条件更新，取消必回补成功）
+      for (const item of order.items) {
+        await tx
+          .update(schema.products)
+          .set({ stock: sql`${schema.products.stock} + ${item.quantity}`, updatedAt: now })
+          .where(eq(schema.products.id, item.product_id));
+      }
+      const updated = await tx
+        .update(schema.orders)
+        .set({ status: 'cancelled', updatedAt: now })
+        .where(eq(schema.orders.id, order.id))
+        .returning()
+        .then((r) => r[0]!);
+      outboxId = await emitEvent(txDb(tx), `store:${order.storeId}`, EventType.OrderCancelled, {
+        orderId: order.id,
+        orderNo: order.orderNo,
+        storeId: order.storeId,
+        totalFen: order.totalFen,
+        itemCount: order.items.length,
+        by,
+      });
+      return { order: updated, idempotent: false };
+    });
+    if (outboxId) broadcastNow(outboxId); // 幂等路径无事件，不广播
+    return result;
+  });
+}
+
+/**
+ * 超时关单（P0-8）：pending 且 createdAt < now - ttlMs 的订单逐个走与
+ * cancelOrder 相同的取消事务（回补库存 + order.cancelled 事件，by=system_timeout）。
+ * 返回本轮新取消的订单数（被并发取消的单幂等跳过，不重复计入/回补）。
+ * 由服务入口以 60s 间隔调用（见 src/index.ts，模式同 outboxSweeper）。
+ */
+export async function expirePendingOrders(
+  now: Date = new Date(),
+  ttlMs: number = PENDING_ORDER_TTL_MS,
+): Promise<number> {
+  const cutoff = new Date(now.getTime() - ttlMs);
+  const stale = await db
+    .select({ id: schema.orders.id })
+    .from(schema.orders)
+    .where(and(eq(schema.orders.status, 'pending'), lt(schema.orders.createdAt, cutoff)));
+  let cancelled = 0;
+  for (const row of stale) {
+    const r = await cancelPendingOrderWithLock(db, row.id, 'system_timeout');
+    if (!r.idempotent) cancelled++;
+  }
+  return cancelled;
+}
 
 /* ------------------------------------------------------------------ */
 /* router                                                               */
@@ -444,6 +533,26 @@ export const mallRouter = router({
     }
     return { groups };
   }),
+
+  /**
+   * 6b. cancelOrder（customer 本人 · v1.1 P0-8）：待支付订单取消。
+   * 仅本人 + 仅 status=pending；事务内（withOrderWriteLock 串行）逐商品回补
+   * stock → status=cancelled → emitEvent(store:{storeId}, order.cancelled)。
+   * 幂等：已 cancelled 返回现状（idempotent=true，不重复回补/发事件）；
+   * 已支付等其他状态 BAD_REQUEST。超时自动关单走 expirePendingOrders 同一事务。
+   */
+  cancelOrder: customerProcedure
+    .input(z.object({ orderId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const order = await getOrderOrThrow(ctx.db, input.orderId);
+      if (order.customerId !== ctx.user.id) forbidden('只能取消本人订单');
+      if (order.status === 'cancelled') return { order, idempotent: true }; // 幂等快路径
+      if (order.status !== 'pending') {
+        badRequest(`当前状态（${order.status}）不可取消，仅待支付（pending）订单可取消`);
+      }
+      // 状态在锁内事务里再校验一次（防与支付回调/并发取消竞态）
+      return cancelPendingOrderWithLock(ctx.db, order.id, 'customer');
+    }),
 
   /**
    * 7. shipOrder（merchant 本店）：paid → shipped + 填物流单号；
