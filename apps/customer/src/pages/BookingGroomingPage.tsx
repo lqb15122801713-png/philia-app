@@ -67,8 +67,12 @@ export default function BookingGroomingPage() {
   const petsQ = useQuery({
     queryKey: ['pet', 'list'],
     queryFn: () => trpc.pet.list.query(),
-    enabled: step >= 4,
+    // v1.1-b1：首屏即查（空宠物 → 建档岔路卡），不再等确认屏
+    enabled: true,
   });
+  /** 空宠物：第一屏显示建档岔路卡；「随便看看」仅浏览，确认屏不可达 */
+  const noPets = petsQ.isSuccess && (petsQ.data?.length ?? 0) === 0;
+  const [forkDismissed, setForkDismissed] = useState(false);
 
   const groomingServices = useMemo(
     () => (servicesQ.data?.services ?? []).filter((s) => s.type === 'grooming'),
@@ -132,7 +136,8 @@ export default function BookingGroomingPage() {
   const canNext =
     (step === 1 && (serviceId !== null || noServices)) ||
     (step === 2 && effStoreId !== null) ||
-    (step === 3 && slot !== null);
+    // v1.1-b1：空宠物不得进确认屏（屏4 选宠物为空也无法提交，双保险）
+    (step === 3 && slot !== null && !noPets);
 
   /* ---- 渲染 ---- */
   return (
@@ -175,6 +180,28 @@ export default function BookingGroomingPage() {
       {/* 屏1：选服务项 */}
       {step === 1 ? (
         <section className="mt-4">
+          {/* v1.1-b1：空宠物建档岔路卡（可跳过浏览，但确认屏不可达） */}
+          {noPets && !forkDismissed ? (
+            <div className="mb-4 flex flex-col items-center rounded-card bg-card px-4 py-6 text-center shadow-card">
+              <img src="/brand/empty-appointments-800.png" alt="还没有宠物档案" className="w-40 max-w-full rounded-card" />
+              <p className="mt-3 text-title">还没有宠物档案</p>
+              <p className="mt-1 text-caption text-ink-secondary">预约前需要先为毛孩子建立档案</p>
+              <button
+                type="button"
+                onClick={() => navigate('/philia/pets')}
+                className="mt-4 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-semibold text-white transition-transform duration-120 ease-philia-spring active:scale-92"
+              >
+                先建立宠物档案
+              </button>
+              <button
+                type="button"
+                onClick={() => setForkDismissed(true)}
+                className="mt-3 text-caption text-ink-secondary underline-offset-2 hover:underline"
+              >
+                随便看看
+              </button>
+            </div>
+          ) : null}
           {servicesQ.isPending ? (
             <div className="space-y-2">{[1, 2].map((i) => <div key={i} className="h-20 animate-pulse rounded-card bg-sunken" />)}</div>
           ) : groomingServices.length === 0 ? (

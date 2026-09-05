@@ -87,8 +87,12 @@ export default function BookingBoardingPage() {
   const petsQ = useQuery({
     queryKey: ['pet', 'list'],
     queryFn: () => trpc.pet.list.query(),
-    enabled: step >= 3,
+    // v1.1-b1：首屏即查（空宠物 → 建档岔路卡），不再等选宠屏
+    enabled: true,
   });
+  /** 空宠物：第一屏显示建档岔路卡；「随便看看」仅浏览，确认屏不可达 */
+  const noPets = petsQ.isSuccess && (petsQ.data?.length ?? 0) === 0;
+  const [forkDismissed, setForkDismissed] = useState(false);
 
   /* ---- 日期栅格 ---- */
   const today = new Date();
@@ -218,6 +222,28 @@ export default function BookingBoardingPage() {
       {/* 屏1：入住 / 退房日期 */}
       {step === 1 ? (
         <section className="mt-4">
+          {/* v1.1-b1：空宠物建档岔路卡（可跳过浏览，但确认屏不可达） */}
+          {noPets && !forkDismissed ? (
+            <div className="mb-4 flex flex-col items-center rounded-card bg-card px-4 py-6 text-center shadow-card">
+              <img src="/brand/empty-appointments-800.png" alt="还没有宠物档案" className="w-40 max-w-full rounded-card" />
+              <p className="mt-3 text-title">还没有宠物档案</p>
+              <p className="mt-1 text-caption text-ink-secondary">预约寄养前需要先为毛孩子建立档案</p>
+              <button
+                type="button"
+                onClick={() => navigate('/philia/pets')}
+                className="mt-4 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-semibold text-white transition-transform duration-120 ease-philia-spring active:scale-92"
+              >
+                先建立宠物档案
+              </button>
+              <button
+                type="button"
+                onClick={() => setForkDismissed(true)}
+                className="mt-3 text-caption text-ink-secondary underline-offset-2 hover:underline"
+              >
+                随便看看
+              </button>
+            </div>
+          ) : null}
           {store ? (
             <p className="mb-3 text-caption text-ink-secondary">
               寄养门店：<span className="font-medium text-ink">{store.name}</span>
