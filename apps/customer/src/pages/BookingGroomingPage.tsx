@@ -11,7 +11,7 @@
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
 import PetPicker from '@/components/booking/PetPicker';
@@ -32,7 +32,8 @@ export default function BookingGroomingPage() {
 
   const [step, setStep] = useState(1);
   const [storeId, setStoreId] = useState<string | null>(searchParams.get('storeId'));
-  const [serviceId, setServiceId] = useState<string | null>(null);
+  // v1.1-b1：?serviceId= 预填（首页推荐服务 / philia 一键复购链接均带该参数）
+  const [serviceId, setServiceId] = useState<string | null>(searchParams.get('serviceId'));
   const [staffId, setStaffId] = useState<string | null>(null); // null = 随缘
   const [slot, setSlot] = useState<Date | null>(null);
   const [petId, setPetId] = useState<string | null>(null);
@@ -74,6 +75,13 @@ export default function BookingGroomingPage() {
     [servicesQ.data],
   );
   const service = groomingServices.find((s) => s.id === serviceId) ?? null;
+
+  // v1.1-b1：URL 预填的 serviceId 若不属于该店洗护服务项则清掉（避免看不见的选中态放行下一步）
+  useEffect(() => {
+    if (servicesQ.isSuccess && serviceId && !groomingServices.some((s) => s.id === serviceId)) {
+      setServiceId(null);
+    }
+  }, [servicesQ.isSuccess, groomingServices, serviceId]);
   const store = servicesQ.data?.store ?? nearbyQ.data?.stores.find((s) => s.id === effStoreId) ?? null;
   const staffName = staffQ.data?.staff.find((s) => s.id === staffId)?.name ?? null;
 

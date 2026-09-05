@@ -7,7 +7,7 @@
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
 import PetPicker from '@/components/booking/PetPicker';
@@ -52,7 +52,8 @@ export default function BookingBoardingPage() {
   const [storeId, setStoreId] = useState<string | null>(searchParams.get('storeId'));
   const [checkin, setCheckin] = useState<Date | null>(null);
   const [checkout, setCheckout] = useState<Date | null>(null);
-  const [serviceId, setServiceId] = useState<string | null>(null);
+  // v1.1-b1：?serviceId= 预填（首页推荐服务 / philia 一键复购链接均带该参数）
+  const [serviceId, setServiceId] = useState<string | null>(searchParams.get('serviceId'));
   const [petId, setPetId] = useState<string | null>(null);
   const [paymentMode, setPaymentMode] = useState<'pay_at_store' | 'pass_deduct'>('pay_at_store');
   const [note, setNote] = useState('');
@@ -75,6 +76,13 @@ export default function BookingBoardingPage() {
     [servicesQ.data],
   );
   const service = boardingServices.find((s) => s.id === serviceId) ?? null;
+
+  // v1.1-b1：URL 预填的 serviceId 若不属于该店寄养房型则清掉（避免看不见的选中态放行下一步）
+  useEffect(() => {
+    if (servicesQ.isSuccess && serviceId && !boardingServices.some((s) => s.id === serviceId)) {
+      setServiceId(null);
+    }
+  }, [servicesQ.isSuccess, boardingServices, serviceId]);
 
   const petsQ = useQuery({
     queryKey: ['pet', 'list'],
