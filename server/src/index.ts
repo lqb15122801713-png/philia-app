@@ -32,6 +32,7 @@ import { uploadRoute } from './routes/upload';
 import { assertPaymentConfig } from './payments/provider';
 import { assertSecretsConfigured } from './config/secrets';
 import { startOutboxSweeper } from './realtime/outboxSweeper';
+import { expirePendingOrders } from './routers/mall';
 import { appRouter } from './routers';
 import type { Context as TrpcContext } from './trpc';
 
@@ -113,6 +114,13 @@ if (isMain) {
   const port = Number(process.env.PORT ?? 7200);
   const app = createApp();
   const sweeper = startOutboxSweeper();
+  // 商城超时关单（v1.1 P0-8）：启动即扫一次，之后每 60s 把超 30 分钟未支付的
+  // pending 订单走取消事务（回补库存 + order.cancelled 事件）；unref 不阻塞退出
+  expirePendingOrders().catch((err) => console.error('[mall] 超时关单扫描失败:', err));
+  const orderExpiryTimer = setInterval(() => {
+    expirePendingOrders().catch((err) => console.error('[mall] 超时关单扫描失败:', err));
+  }, 60_000);
+  orderExpiryTimer.unref?.();
 
   const server: ServerType = serve({ fetch: app.fetch, port }, (info) => {
     console.log(`[philia-server] 已启动: http://localhost:${info.port} （tRPC: /trpc/*, SSE: /api/events）`);
@@ -124,6 +132,7 @@ if (isMain) {
     shuttingDown = true;
     console.log(`[philia-server] 收到 ${signal}，正在优雅退出…`);
     sweeper.stop();
+    clearInterval(orderExpiryTimer);
     server.close(() => {
       client.close();
       console.log('[philia-server] 已退出');
