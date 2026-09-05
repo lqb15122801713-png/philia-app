@@ -4,32 +4,31 @@
  * ⚠️ 仅开发环境：Kimi 登录是线上平台能力，本地用 dev-login 适配
  * （服务端仅允许种子用户，见 server/src/auth/devLogin.ts）。
  *
- * - 列出种子用户（userId 抄自当前 server/data/philia.db 种子数据，
- *   对应 server/src/db/seed.ts 五个用户；重跑 db:seed 后 ULID 会重新生成，
- *   届时请用底部「手动输入 userId」或更新本列表）。
+ * - 种子用户列表：启动时 fetch GET /api/auth/dev-seed-users 动态渲染（v1.1-b1，
+ *   不再硬编码 ULID——重跑 db:seed 后 ID 变化也能直接登录）；
+ *   fetch 失败/为空 → 错误提示 + 手动输入兜底。
  * - 点击调 devLogin(baseUrl, userId) → 失效全部查询缓存 → 跳回 from 或 /home。
  */
 
 import { devLogin, getApiBase, logout, useMe, usePhiliaClient } from '@philia/shared'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 interface SeedUser {
-  userId: string
+  id: string
   nickname: string
-  roleLabel: string
+  roles: string[]
 }
 
-// 种子用户（与 server/src/db/seed.ts 对应；ID 为当前开发库实际值，重跑 seed 后会变）
-const SEED_USERS: SeedUser[] = [
-  { userId: '01M1RH3FFNEV4CZM3FJZ4JA7AY', nickname: '示例客户', roleLabel: '客户' },
-  { userId: '01M1RH3FFM815Q3QJNRZ4MD1NH', nickname: '菲丽亚店主', roleLabel: '店主' },
-  { userId: '01M1RH3FFNDCPTR1H3EA09JPYT', nickname: '小美', roleLabel: '员工 · 洗护/美容' },
-  { userId: '01M1RH3FFNRNWFTNVWJZ6ZR6XM', nickname: '阿强', roleLabel: '员工 · 洗护/寄养' },
-  { userId: '01M1RH3FFN9T5S6D8XJAJXE856', nickname: '丽丽', roleLabel: '员工 · 美容/寄养' },
-]
+const ROLE_LABEL: Record<string, string> = {
+  merchant_owner: '店主',
+  merchant_admin: '店员管理',
+  staff: '员工',
+  customer: '客户',
+}
+const roleLabel = (roles: string[]) => roles.map((r) => ROLE_LABEL[r] ?? r).join(' / ')
 
 export default function DevLoginPage() {
   const navigate = useNavigate()
@@ -41,6 +40,27 @@ export default function DevLoginPage() {
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [manualId, setManualId] = useState('')
   const [error, setError] = useState<string | null>(null)
+
+  /* ---- v1.1-b1：动态拉取种子用户（客户端展示全部角色，便于切换身份调试） ---- */
+  const [seeds, setSeeds] = useState<SeedUser[] | null>(null)
+  const [seedsError, setSeedsError] = useState<string | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    fetch(`${getApiBase()}/api/auth/dev-seed-users`)
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json() as Promise<{ users?: SeedUser[] }>
+      })
+      .then((d) => {
+        if (!cancelled) setSeeds(d.users ?? [])
+      })
+      .catch((e) => {
+        if (!cancelled) setSeedsError(e instanceof Error ? e.message : '拉取失败')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const doLogin = async (userId: string) => {
     setPendingId(userId)
@@ -95,26 +115,40 @@ export default function DevLoginPage() {
 
       <section className="mt-6">
         <h2 className="text-title">选择种子用户登录</h2>
-        <ul className="mt-3 space-y-2">
-          {SEED_USERS.map((u) => (
-            <li key={u.userId}>
-              <button
-                type="button"
-                disabled={pendingId !== null}
-                onClick={() => void doLogin(u.userId)}
-                className="flex w-full items-center justify-between rounded-card bg-white px-4 py-3 text-left shadow-card transition active:scale-[0.99] disabled:opacity-60"
-              >
-                <span>
-                  <span className="block text-body font-semibold">{u.nickname}</span>
-                  <span className="block text-caption text-ink-secondary">{u.roleLabel}</span>
-                </span>
-                <span className="text-caption text-ink-secondary">
-                  {pendingId === u.userId ? '登录中…' : '登录 →'}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
+        {seeds === null && seedsError === null ? (
+          <ul className="mt-3 space-y-2">
+            {[1, 2, 3].map((i) => (
+              <li key={i} className="h-14 animate-pulse rounded-card bg-sunken" />
+            ))}
+          </ul>
+        ) : seeds && seeds.length > 0 ? (
+          <ul className="mt-3 space-y-2">
+            {seeds.map((u) => (
+              <li key={u.id}>
+                <button
+                  type="button"
+                  disabled={pendingId !== null}
+                  onClick={() => void doLogin(u.id)}
+                  className="flex w-full items-center justify-between rounded-card bg-white px-4 py-3 text-left shadow-card transition active:scale-[0.99] disabled:opacity-60"
+                >
+                  <span>
+                    <span className="block text-body font-semibold">{u.nickname}</span>
+                    <span className="block text-caption text-ink-secondary">{roleLabel(u.roles)}</span>
+                  </span>
+                  <span className="text-caption text-ink-secondary">
+                    {pendingId === u.id ? '登录中…' : '登录 →'}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-3 rounded-card bg-red-50 px-4 py-3 text-caption text-red-600">
+            {seedsError
+              ? `种子用户拉取失败（${seedsError}），请确认 server 已启动，或手动输入 userId`
+              : '未拉到种子用户，请重跑 server 的 db:seed，或手动输入 userId'}
+          </p>
+        )}
       </section>
 
       <section className="mt-6">
