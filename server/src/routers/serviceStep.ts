@@ -525,6 +525,18 @@ export const serviceStepRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const appt = await assertAppointmentAccess(ctx, input.appointmentId); // merchant 本店
+      // v1.1 A-P0-9 死局止血：completed/cancelled 预约禁止打标重拍——
+      // completed 单打标会把 done 步拉回 active，但 confirmStep 要求预约 in_service，
+      // 重新 confirm 必被拒，形成不可逆死局；cancelled 单打标无业务意义。
+      if (appt.status === 'completed') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: '预约已完成，不可打标重拍；如需处理请联系门店线下协商',
+        });
+      }
+      if (appt.status === 'cancelled') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '预约已取消，不可打标重拍' });
+      }
       await loadStep(ctx.db, input.appointmentId, input.stepKey); // NOT_FOUND 早退
       const petName = await petNameOf(ctx.db, appt.petId);
       const now = new Date();
