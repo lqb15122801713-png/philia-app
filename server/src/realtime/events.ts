@@ -28,6 +28,7 @@ export const EventType = {
   OrderPaid:             'order.paid',               // → customer（支付回调成功，P5 T5.1 追加）
   OrderShipped:          'order.shipped',            // → customer
   OrderReceived:         'order.received',           // → store
+  OrderCancelled:        'order.cancelled',          // → store（待支付取消/超时关单，库存已回补；v1.1 P0-8）
 } as const;
 
 export type EventTypeValue = (typeof EventType)[keyof typeof EventType];
