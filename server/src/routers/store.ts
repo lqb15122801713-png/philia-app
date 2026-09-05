@@ -567,8 +567,8 @@ export const storeRouter = router({
           serviceName: schema.services.name,
         })
         .from(schema.appointments)
-        .innerJoin(schema.pets, eq(schema.pets.id, schema.appointments.petId))
-        .innerJoin(schema.services, eq(schema.services.id, schema.appointments.serviceId))
+        .innerJoin(schema.pets, eq(schema.appointments.petId, schema.pets.id))
+        .innerJoin(schema.services, eq(schema.appointments.serviceId, schema.services.id))
         .where(
           and(
             eq(schema.appointments.storeId, storeId),
