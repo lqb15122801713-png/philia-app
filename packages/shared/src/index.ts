@@ -12,6 +12,17 @@ export * from './tokens';
 // 六步服务流程常量
 export * from './constants/steps';
 
+// 实时事件常量（与服务端 server/src/realtime/events.ts 同步）
+export * from './constants/events';
+
+// 客户端共享 API 层（契约 docs/CLIENT-CONTRACTS.md · T2.0）
+export * from './api/client';
+export * from './api/upload';
+export * from './api/devAuth';
+// hooks 显式导出：EventEnvelope 以契约形（data: any）覆盖 constants/events 的同名导出
+export { useMe, useEventSource, SSE_BACKOFF_DELAYS, backoffDelay } from './api/hooks';
+export type { EventEnvelope } from './api/hooks';
+
 // 共享组件
 export { default as ConvexTabBar } from './components/ConvexTabBar';
 export type { ConvexTabBarItem, ConvexTabBarProps } from './components/ConvexTabBar';
