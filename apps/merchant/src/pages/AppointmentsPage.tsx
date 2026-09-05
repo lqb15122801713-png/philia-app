@@ -16,7 +16,7 @@ import { EventType, usePhiliaClient, type EventEnvelope } from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { CalendarDays, List } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppointmentRow } from '../components/appointments/AppointmentRow';
 import { buildDayStats, CalendarView } from '../components/appointments/CalendarView';
 import { DetailSummary } from '../components/appointments/DetailSummary';
@@ -28,11 +28,18 @@ import {
   localDayKey,
   RANGE_LABEL,
   rangeToDates,
+  STATUS_ORDER,
   type ApptStatus,
   type RangeKey,
 } from '../components/appointments/appt-utils';
 
 const RANGE_KEYS: RangeKey[] = ['today', 'tomorrow', 'week', 'custom'];
+
+/** v1.1-b1：?status= 深链初始化（仪表盘待办「去处理」）；非法值忽略回全部 */
+function initStatus(raw: string | null): StatusFilter {
+  if (raw === 'all') return 'all';
+  return (STATUS_ORDER as string[]).includes(raw ?? '') ? (raw as StatusFilter) : 'all';
+}
 
 /** 需要列表静默 invalidate 的预约状态事件（store 频道可达） */
 const QUIET_INVALIDATE = new Set<string>([
@@ -51,9 +58,10 @@ const todayStr = () => localDayKey(new Date());
 export default function AppointmentsPage() {
   const { trpc, queryClient } = usePhiliaClient();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [view, setView] = useState<'list' | 'calendar'>('list');
-  const [status, setStatus] = useState<StatusFilter>('all');
+  const [status, setStatus] = useState<StatusFilter>(() => initStatus(searchParams.get('status')));
   const [rangeKey, setRangeKey] = useState<RangeKey>('today');
   const [customFrom, setCustomFrom] = useState(todayStr);
   const [customTo, setCustomTo] = useState(todayStr);
