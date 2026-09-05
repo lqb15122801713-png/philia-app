@@ -60,7 +60,8 @@ export default function TodoSection({ stats }: { stats: DashboardStats | undefin
       label: '待收款',
       desc: '服务已完成，未登记收款',
       count: stats?.todo.unpaid ?? 0,
-      to: '/appointments?status=completed',
+      // v1.1-b1：跳财务页待收款锚点（原 /appointments?status=completed 页无收款按钮）
+      to: '/finance#pending-payments',
     },
     {
       key: 'overdue',

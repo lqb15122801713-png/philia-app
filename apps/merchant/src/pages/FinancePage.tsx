@@ -15,7 +15,8 @@
 
 import { EventType, usePhiliaClient, type EventEnvelope } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import EmptyState from '@/components/finance/EmptyState';
 import PaymentSplit from '@/components/finance/PaymentSplit';
 import PendingPayments from '@/components/finance/PendingPayments';
@@ -85,6 +86,16 @@ export default function FinancePage() {
   useMerchantEvents({ onEvent, onReconnect: invalidateFinance });
 
   const data = statsQuery.data;
+
+  // v1.1-b1：/finance#pending-payments 深链——数据就绪后滚动到待收款区块
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (hash !== '#pending-payments' || !data) return;
+    const id = window.setTimeout(() => {
+      document.getElementById('pending-payments')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+    return () => window.clearTimeout(id);
+  }, [hash, data]);
   /** 空周期：区间内无收款（待收款为时点待办，不影响空态判定） */
   const isEmptyPeriod = data !== undefined && data.totals.paidCount === 0;
 
