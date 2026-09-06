@@ -390,13 +390,27 @@ export const appointmentRouter = router({
 
       /* ---- 校验 4：时间（未来 / 30min 对齐 / 营业时间内） ---- */
       const start = input.scheduledStart;
+      // v1.1 A-P0-10：寄养按晚计费——scheduledEnd（退房时间）必填且必须晚于入住时间，
+      // 否则无法计算晚数（缺省时旧逻辑默认 +24h 会导致少收/错收）
+      if (
+        input.type === 'boarding' &&
+        (!input.scheduledEnd || input.scheduledEnd.getTime() <= start.getTime())
+      ) {
+        badRequest('寄养必须选择退房日期且晚于入住日期');
+      }
       const end =
         input.scheduledEnd ??
-        new Date(
-          start.getTime() +
-            (input.type === 'grooming' ? (service.durationMin ?? 60) : 24 * 60) * 60_000,
-        );
+        // 仅 grooming 可缺省（按服务时长）；boarding 上面已强制 scheduledEnd 必填
+        new Date(start.getTime() + (service.durationMin ?? 60) * 60_000);
       assertBookableTime(store, input.type, start, end);
+
+      // v1.1 A-P0-10：寄养金额 = 单晚价 × 晚数（晚数 = ceil((end−start)/24h)，快照入 price_fen）；
+      // grooming 保持单次服务价不变
+      const nights =
+        input.type === 'boarding'
+          ? Math.ceil((end.getTime() - start.getTime()) / (24 * 3600 * 1000))
+          : 1;
+      const priceFen = service.priceFen * nights;
 
       /* ---- 事务占位 + 建单（人工码撞唯一索引时整体重试） ---- */
       const MAX_CODE_RETRIES = 5;
@@ -445,7 +459,7 @@ export const appointmentRouter = router({
                 scheduledStart: start,
                 scheduledEnd: end,
                 status: 'pending',
-                priceFen: service.priceFen,
+                priceFen, // 金额快照（A-P0-10：寄养=单晚价×晚数，grooming=单次价）
                 paymentMode: input.paymentMode, // 收款方式快照（§3.1 结算规则）
                 note: input.note ?? null,
               })

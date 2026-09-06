@@ -311,6 +311,63 @@ export const serviceStepRouter = router({
     }),
 
   /**
+   * 删除单张照片（员工 · v1.1 P1-4）。
+   * - 仅该预约**当前 active 步**的照片可删：步骤非 active（locked/done）一律
+   *   FORBIDDEN「仅当前进行中的步骤可删除照片」（与规则 2 同口径）；
+   * - 照片须属该步且未失效（invalidated_at IS NULL），否则 NOT_FOUND；
+   * - 归属校验复用 assertAppointmentAccess（staff 分支：本店且未指派或指派给自己）；
+   * - 删除方式 = 硬删行（step_photos DELETE）；磁盘文件留由既有孤儿回收
+   *   （storage/cleanup.ts：无表记录引用且 mtime 超 24h 的文件自动清理），此处不动文件系统。
+   * 返回删除后的未失效张数统计，供端上即时刷新进度。
+   */
+  deletePhoto: staffProcedure
+    .input(
+      z.object({
+        appointmentId: z.string().min(1),
+        stepKey: StepKeySchema,
+        photoId: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertAppointmentAccess(ctx, input.appointmentId);
+      const def = defOf(input.stepKey);
+      const step = await loadStep(ctx.db, input.appointmentId, input.stepKey);
+
+      // 仅当前 active 步可删
+      if (step.status !== 'active') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: `「${StepLabel[input.stepKey]}」步骤当前为 ${step.status} 状态，仅当前进行中的步骤可删除照片`,
+        });
+      }
+      const photo = await ctx.db
+        .select()
+        .from(schema.stepPhotos)
+        .where(
+          and(
+            eq(schema.stepPhotos.id, input.photoId),
+            eq(schema.stepPhotos.stepId, step.id),
+            isNull(schema.stepPhotos.invalidatedAt), // 已失效照片不可再删（保持审计语义）
+          ),
+        )
+        .get();
+      if (!photo) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: '照片不存在、不属于该步骤或已失效' });
+      }
+
+      // 硬删行；磁盘文件由既有孤儿回收（storage/cleanup.ts）清理
+      await ctx.db.delete(schema.stepPhotos).where(eq(schema.stepPhotos.id, photo.id));
+      const remaining = await validPhotosOf(ctx.db, step.id);
+      return {
+        stepId: step.id,
+        deletedPhotoId: photo.id,
+        totalValid: remaining.length,
+        minPhotos: def.minPhotos,
+        maxPhotos: def.maxPhotos,
+      };
+    }),
+
+  /**
    * 确认本步完成（员工）。
    * 规则 3：未失效照片张数 ∈ [min,max]，before_after 步 before/after 各 ≥1；
    * 事务：本步 done（写 done_at、清 flagged）→ 下一步 locked→active（写 started_at）；
@@ -468,6 +525,18 @@ export const serviceStepRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const appt = await assertAppointmentAccess(ctx, input.appointmentId); // merchant 本店
+      // v1.1 A-P0-9 死局止血：completed/cancelled 预约禁止打标重拍——
+      // completed 单打标会把 done 步拉回 active，但 confirmStep 要求预约 in_service，
+      // 重新 confirm 必被拒，形成不可逆死局；cancelled 单打标无业务意义。
+      if (appt.status === 'completed') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: '预约已完成，不可打标重拍；如需处理请联系门店线下协商',
+        });
+      }
+      if (appt.status === 'cancelled') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '预约已取消，不可打标重拍' });
+      }
       await loadStep(ctx.db, input.appointmentId, input.stepKey); // NOT_FOUND 早退
       const petName = await petNameOf(ctx.db, appt.petId);
       const now = new Date();

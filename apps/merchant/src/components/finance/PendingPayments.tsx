@@ -48,7 +48,7 @@ export default function PendingPayments({
   });
 
   return (
-    <section className="rounded-card bg-card p-4 shadow-card">
+    <section id="pending-payments" className="scroll-mt-4 rounded-card bg-card p-4 shadow-card">
       <div className="flex items-center justify-between">
         <h2 className="flex items-center gap-2 text-title text-ink">
           待收款
