@@ -1,10 +1,11 @@
 /**
  * 预约列表行（T4.2）：紧凑单行卡片 —— 时间 / 宠物 / 服务 / 客户 / 员工 / 状态 / 金额。
  * 待确认行整行品牌色高亮边框 + 行内「确认」快捷按钮（≤30 秒操作路径关键：
- * SSE 红点 toast → 点行内确认 → 完成，无需进详情页）。
+ * SSE 红点 toast → 点行内确认 → 完成，无需进详情页）；
+ * v1.1-b3 B3-3：待确认行追加「婉拒」次按钮（弹层填原因 → appointment.reject）。
  */
 
-import { Check } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import {
   fenToYuan,
   fmtDate,
@@ -20,12 +21,14 @@ export function AppointmentRow({
   confirming = false,
   onOpen,
   onConfirm,
+  onReject,
 }: {
   item: ListForStoreItem;
   selected?: boolean;
   confirming?: boolean;
   onOpen: () => void;
   onConfirm: (id: string) => void;
+  onReject: (id: string) => void;
 }) {
   const pending = item.status === 'pending';
   const start = item.scheduledStart;
@@ -81,20 +84,33 @@ export function AppointmentRow({
         </span>
       </div>
 
-      {/* 待确认：行内一键确认（≤30 秒操作路径） */}
+      {/* 待确认：行内一键确认（≤30 秒操作路径）+ 婉拒次按钮（B3-3，弹层填原因） */}
       {pending ? (
-        <button
-          type="button"
-          disabled={confirming}
-          onClick={(e) => {
-            e.stopPropagation();
-            onConfirm(item.id);
-          }}
-          className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-brand-primary px-3 text-caption font-semibold text-white transition-colors hover:bg-brand-primary-hover disabled:opacity-50"
-        >
-          <Check className="h-4 w-4" strokeWidth={1.5} />
-          {confirming ? '确认中…' : '确认'}
-        </button>
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          <button
+            type="button"
+            disabled={confirming}
+            onClick={(e) => {
+              e.stopPropagation();
+              onConfirm(item.id);
+            }}
+            className="flex h-9 items-center gap-1 rounded-full bg-brand-primary px-3 text-caption font-semibold text-white transition-colors hover:bg-brand-primary-hover disabled:opacity-50"
+          >
+            <Check className="h-4 w-4" strokeWidth={1.5} />
+            {confirming ? '确认中…' : '确认'}
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onReject(item.id);
+            }}
+            className="flex h-8 items-center gap-1 rounded-full border border-line bg-card px-3 text-caption text-ink-secondary transition-colors hover:bg-sunken"
+          >
+            <X className="h-3.5 w-3.5" strokeWidth={1.5} />
+            婉拒
+          </button>
+        </div>
       ) : null}
     </div>
   );

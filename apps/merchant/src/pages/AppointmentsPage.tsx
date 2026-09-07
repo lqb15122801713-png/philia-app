@@ -23,6 +23,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppointmentRow } from '../components/appointments/AppointmentRow';
 import { buildDayStats, CalendarView } from '../components/appointments/CalendarView';
 import { DetailSummary } from '../components/appointments/DetailSummary';
+import { Modal } from '../components/appointments/Modal';
 import { StatusChips, type StatusFilter } from '../components/appointments/StatusChips';
 import { showToast, ToastHost } from '../components/appointments/Toast';
 import { useMerchantEvents } from '../components/appointments/useMerchantEvents';
@@ -56,6 +57,7 @@ const QUIET_INVALIDATE = new Set<string>([
   EventType.AppointmentCheckedIn,
   EventType.AppointmentCompleted,
   EventType.AppointmentCancelled,
+  EventType.AppointmentRejected, // v1.1-b3 B3-3：他端拒单后本端列表静默对齐
   EventType.AppointmentRescheduled,
   EventType.AppointmentPaid,
   EventType.AppointmentReviewed,
@@ -147,6 +149,40 @@ export default function AppointmentsPage() {
     onError: (err) =>
       showToast(err instanceof Error ? err.message : '确认失败，请稍后再试', 'error'),
   });
+
+  /* ---------------- 婉拒（v1.1-b3 B3-3）：弹层填原因 → appointment.reject ---------------- */
+
+  const [rejectTarget, setRejectTarget] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const rejectMut = useMutation({
+    mutationFn: (args: { appointmentId: string; reason: string }) =>
+      trpc.appointment.reject.mutate(args),
+    onSuccess: () => {
+      showToast('已婉拒该预约，客户将收到通知', 'success');
+      setRejectTarget(null);
+      setRejectReason('');
+      invalidateLists();
+    },
+    onError: (err) =>
+      showToast(err instanceof Error ? err.message : '婉拒失败，请稍后再试', 'error'),
+  });
+  const openReject = (id: string) => {
+    setRejectTarget(id);
+    setRejectReason('');
+  };
+  const trimmedReason = rejectReason.trim();
+  const submitReject = () => {
+    if (!rejectTarget) return;
+    if (trimmedReason.length === 0) {
+      showToast('请填写婉拒原因', 'error');
+      return;
+    }
+    if (trimmedReason.length > 100) {
+      showToast('婉拒原因不能超过 100 字', 'error');
+      return;
+    }
+    rejectMut.mutate({ appointmentId: rejectTarget, reason: trimmedReason });
+  };
 
   /* ---------------- SSE：store 频道 ---------------- */
 
@@ -316,6 +352,7 @@ export default function AppointmentsPage() {
                   confirming={confirmingId === item.id}
                   onOpen={() => openItem(item.id)}
                   onConfirm={(id) => confirmMut.mutate(id)}
+                  onReject={openReject}
                 />
               ))
             )}
@@ -331,6 +368,51 @@ export default function AppointmentsPage() {
           </aside>
         </div>
       )}
+
+      {/* 婉拒弹层（v1.1-b3 B3-3）：必填原因 1~100 字，提交后客户详情页可见 */}
+      <Modal
+        open={rejectTarget !== null}
+        title="婉拒该预约？"
+        onClose={() => {
+          if (!rejectMut.isPending) setRejectTarget(null);
+        }}
+        widthClass="sm:max-w-sm"
+      >
+        <p className="text-caption text-ink-secondary">
+          婉拒后预约将取消并释放槽位，客户会看到此处填写的原因。
+        </p>
+        <textarea
+          value={rejectReason}
+          onChange={(e) => setRejectReason(e.target.value)}
+          maxLength={100}
+          rows={3}
+          autoFocus
+          placeholder="请填写婉拒原因（必填，100 字以内），如：该时段已约满"
+          className="mt-3 w-full rounded-input border border-line bg-card px-3.5 py-3 text-body placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
+          aria-label="婉拒原因"
+        />
+        <p className="mt-1 text-right font-number text-caption text-ink-placeholder">
+          {trimmedReason.length}/100
+        </p>
+        <div className="mt-2 flex gap-2">
+          <button
+            type="button"
+            disabled={rejectMut.isPending}
+            onClick={() => setRejectTarget(null)}
+            className="h-11 flex-1 rounded-full bg-sunken text-body font-medium text-ink"
+          >
+            再想想
+          </button>
+          <button
+            type="button"
+            disabled={rejectMut.isPending || trimmedReason.length === 0}
+            onClick={submitReject}
+            className="h-11 flex-1 rounded-full bg-danger text-body font-medium text-white disabled:opacity-60"
+          >
+            {rejectMut.isPending ? '提交中…' : '确认婉拒'}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

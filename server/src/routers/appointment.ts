@@ -10,7 +10,9 @@
  *   次卡（v1.1-b2 B2-7 资损红标）：paymentMode=pass_deduct 时 create 事务内先校验
  *   （本人名下该店 active + remain_times>0 + 未过期，否则「暂无可用次卡」）并扣 -1、
  *   写 -1 流水，占槽/建单失败整体回滚；所有置 cancelled 路径（cancel >4h 直消、
- *   reviewCancel 批准）同事务回补 +1 并写 +1 流水（幂等）；改期不退次。
+ *   reviewCancel 批准、B3-3 商家拒单 reject）同事务回补 +1 并写 +1 流水（幂等）；改期不退次。
+ *   拒单（v1.1-b3 B3-3）：reject 仅 pending 可拒，同事务 置 cancelled + 释放槽位
+ *   + 次卡回补 + 记 cancel_reason/cancel_source=merchant_reject + 双频道 rejected 事件。
  *
  * 关键规则落点：
  * - 占座防超卖（§3.1 序 1）：create 事务内 UPSERT store_slots 行并校验
@@ -800,6 +802,62 @@ export const appointmentRouter = router({
         return row;
       });
       broadcastNow(outboxId);
+      return updated;
+    }),
+
+  /**
+   * 5.5 reject（merchant 本店 · v1.1-b3 B3-3 P1-1）：商家拒单。
+   * 仅 status='pending' 可拒（已确认/服务中/已取消等一律 BAD_REQUEST，零副作用）。
+   * 同一事务：status→cancelled + 释放槽位（releaseAppointmentSlots；寄养走 B3-2
+   * 全晚释放 releaseBoardingSlots，幂等）+ B2-7 联动：paymentMode=pass_deduct 且已
+   * 扣次时 refundPassIfDeducted 同事务回补（幂等，重复拒单不会重复回补）+
+   * 记 cancelReason/cancelSource='merchant_reject'（列由 0004 迁移落地，B3-5 W-14 复用）。
+   * 事件 appointment.rejected 双频道：user:{customerId}（客户端详情页文案）+
+   * store:{storeId}（商家端列表刷新），payload 含 reason。
+   */
+  reject: merchantProcedure
+    .input(
+      z.object({
+        appointmentId: z.string().min(1),
+        reason: z
+          .string()
+          .trim()
+          .min(1, '请填写婉拒原因')
+          .max(100, '婉拒原因不能超过 100 字'),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const appt = await getAppointmentOrThrow(ctx.db, input.appointmentId);
+      if (appt.storeId !== ctx.user.storeId) forbidden('非本店预约，无权操作');
+      if (appt.status !== 'pending') badRequest(`当前状态（${appt.status}）不可拒单，仅待确认（pending）可婉拒`);
+      const petName = await petNameOf(ctx.db, appt.petId);
+      const outboxIds: string[] = [];
+      const updated = await ctx.db.transaction(async (tx) => {
+        // B3-2：寄养拒单释放住宿区间全部晚；grooming 释放 30min 时段槽（均幂等）
+        await releaseAppointmentSlots(txDb(tx), appt);
+        // B2-7 联动（验收门禁 3）：已扣次单同事务回补，幂等不重复回补
+        await refundPassIfDeducted(txDb(tx), appt);
+        const row = await tx
+          .update(schema.appointments)
+          .set({
+            status: 'cancelled',
+            cancelReason: input.reason,
+            cancelSource: 'merchant_reject',
+            updatedAt: new Date(),
+          })
+          .where(eq(schema.appointments.id, appt.id))
+          .returning()
+          .then((r) => r[0]!);
+        const payload = { appointmentId: appt.id, petName, reason: input.reason };
+        outboxIds.push(
+          await emitEvent(txDb(tx), `user:${appt.customerId}`, EventType.AppointmentRejected, payload),
+        );
+        outboxIds.push(
+          await emitEvent(txDb(tx), `store:${appt.storeId}`, EventType.AppointmentRejected, payload),
+        );
+        return row;
+      });
+      outboxIds.forEach(broadcastNow);
       return updated;
     }),
 

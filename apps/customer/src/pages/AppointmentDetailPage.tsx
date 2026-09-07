@@ -13,9 +13,9 @@
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { usePhiliaClient } from '@philia/shared';
+import { EventType, getApiBase, useEventSource, useMe, usePhiliaClient, type EventEnvelope } from '@philia/shared';
 import BookingCode from '@/components/booking/BookingCode';
 import SlotPicker from '@/components/booking/SlotPicker';
 import { ErrorState } from '@/components/home/common';
@@ -34,6 +34,22 @@ import {
 
 /** 客户免费取消阈值（秒）：开始前 4 小时（与 server CANCEL_FREE_BEFORE_SEC 同步） */
 const CANCEL_FREE_BEFORE_SEC = 4 * 3600;
+
+const CLIENT_ID_KEY = 'philia.sseClientId';
+
+/** SSE clientId：localStorage 持久化（契约 · push.subscribe 与 /api/events 共用，同 live 页口径） */
+function getClientId(): string {
+  try {
+    let id = window.localStorage.getItem(CLIENT_ID_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      window.localStorage.setItem(CLIENT_ID_KEY, id);
+    }
+    return id;
+  } catch {
+    return crypto.randomUUID();
+  }
+}
 
 /** 门店导航外链（高德 / 腾讯 URI；有坐标用坐标，无坐标按地址关键词） */
 function navLinks(store: { name: string; address: string | null; lat: number | null; lng: number | null }) {
@@ -157,6 +173,77 @@ export default function AppointmentDetailPage() {
     onError: (err) => showToast(friendlyError(err, '改期失败，请稍后再试')),
   });
 
+  /* ---------------- SSE（v1.1-b3 B3-3）：user 频道收 appointment.rejected → 刷新详情 ---------------- */
+  // 现有订阅模式（同 live 页）：先 push.subscribe 登记，再连 /api/events；
+  // rejected 走 user:{customerId} 频道（基础频道，无需 watch 参数）。
+  const { user } = useMe();
+  const [clientId] = useState(getClientId);
+  const [subscribed, setSubscribed] = useState(false);
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    let timer: number | undefined;
+    const attempt = () => {
+      trpc.push.subscribe
+        .mutate({ clientId, appType: 'customer' })
+        .then(() => {
+          if (!cancelled) setSubscribed(true);
+        })
+        .catch(() => {
+          if (!cancelled) timer = window.setTimeout(attempt, 5000);
+        });
+    };
+    attempt();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [trpc, clientId, user]);
+
+  // 事件去重（重连补发/多端同事件会重复到达）
+  const seenRef = useRef<{ set: Set<string>; queue: string[] }>({ set: new Set(), queue: [] });
+  const markSeen = useCallback((eid: string): boolean => {
+    const s = seenRef.current;
+    if (s.set.has(eid)) return false;
+    s.set.add(eid);
+    s.queue.push(eid);
+    if (s.queue.length > 500) {
+      const oldest = s.queue.shift();
+      if (oldest) s.set.delete(oldest);
+    }
+    return true;
+  }, []);
+
+  const invalidateRef = useRef(invalidate);
+  invalidateRef.current = invalidate;
+  const showToastRef = useRef(showToast);
+  showToastRef.current = showToast;
+
+  const onEvent = useCallback(
+    (envelope: EventEnvelope) => {
+      if (!markSeen(envelope.id)) return;
+      const data = (envelope.data ?? {}) as Record<string, unknown>;
+      // user 频道会混进其他预约的事件，只处理本预约
+      if (typeof data.appointmentId === 'string' && data.appointmentId !== id) return;
+      if (envelope.type === EventType.AppointmentRejected) {
+        invalidateRef.current();
+        showToastRef.current(
+          `商家已婉拒${typeof data.reason === 'string' && data.reason ? `：${data.reason}` : ''}`,
+          'info',
+        );
+      }
+    },
+    [id, markSeen],
+  );
+
+  const sseUrl =
+    subscribed && id ? `${getApiBase()}/api/events?client_id=${encodeURIComponent(clientId)}` : null;
+  useEventSource({
+    url: sseUrl,
+    onEvent,
+    onReconnect: () => invalidateRef.current(), // 断线重连全量对齐
+  });
+
   if (detailQ.isPending) {
     return (
       <div className="space-y-3 px-4 py-6">
@@ -253,6 +340,13 @@ export default function AppointmentDetailPage() {
       {appt.status === 'cancel_requested' ? (
         <p className="mt-4 rounded-card bg-danger-light px-4 py-3 text-body text-danger-deep">
           取消申请审核中，门店处理后会通知你；审核通过前预约仍然有效。
+        </p>
+      ) : null}
+
+      {/* 商家婉拒（v1.1-b3 B3-3）：已取消 + 来源 merchant_reject 时展示拒单原因 */}
+      {appt.status === 'cancelled' && appt.cancelSource === 'merchant_reject' ? (
+        <p className="mt-4 rounded-card bg-danger-light px-4 py-3 text-body text-danger-deep">
+          商家已婉拒{appt.cancelReason ? `：${appt.cancelReason}` : ''}
         </p>
       ) : null}
 

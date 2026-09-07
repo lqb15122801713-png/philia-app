@@ -291,6 +291,16 @@ export const appointments = sqliteTable('appointments', {
   paidFen: integer('paid_fen'),
   /** 备注 */
   note: text('note'),
+  /**
+   * 取消原因（v1.1-b3 B3-3 起落地，B3-5 W-14 客户取消原因复用本列）。
+   * NULL = 未取消或取消时未填写原因。
+   */
+  cancelReason: text('cancel_reason'),
+  /**
+   * 取消来源标记，取值：merchant_reject（B3-3 商家拒单） | customer（客户自助取消，
+   * W-14 起填） | merchant_review（商家批准 ≤4h 取消申请）。NULL = 未取消/历史数据。
+   */
+  cancelSource: text('cancel_source'),
   /** 到店签到时间 */
   checkedInAt: integer('checked_in_at', { mode: 'timestamp' }),
   /** 服务完成时间 */
