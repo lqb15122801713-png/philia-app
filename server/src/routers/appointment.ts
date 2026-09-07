@@ -5,6 +5,12 @@
  *   create → confirm → assign → checkin（二维码 / 6 位人工码）→ 六步流 / 寄养（T1.3b/c）
  *   → completed → markPaid（到店付收款登记）/ review（评价）
  *   取消：开始前 >4h 直接取消并回减槽位；≤4h 转 cancel_requested 由商家 reviewCancel 审批。
+ *   改期（reschedule）：商家（本店）改期保持状态/指派；客户（本人，v1.1-b2 B2-6）仅 >4h 可自助改，
+ *   与取消同阈值，事务内回退 pending + 清空 staffId + 旧槽释放/新槽校验。
+ *   次卡（v1.1-b2 B2-7 资损红标）：paymentMode=pass_deduct 时 create 事务内先校验
+ *   （本人名下该店 active + remain_times>0 + 未过期，否则「暂无可用次卡」）并扣 -1、
+ *   写 -1 流水，占槽/建单失败整体回滚；所有置 cancelled 路径（cancel >4h 直消、
+ *   reviewCancel 批准）同事务回补 +1 并写 +1 流水（幂等）；改期不退次。
  *
  * 关键规则落点：
  * - 占座防超卖（§3.1 序 1）：create 事务内 UPSERT store_slots 行并校验
@@ -40,6 +46,7 @@ import {
 } from '../trpc';
 import { broadcastNow, emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
+import { StepLabel, type StepKey } from './serviceStep';
 
 /* ------------------------------------------------------------------ */
 /* 常量与类型                                                            */
@@ -259,6 +266,39 @@ async function releaseSlot(tx: DbHandle, storeId: string, slotStart: Date): Prom
   }
 }
 
+/**
+ * B2-7 资损红标：取消回补次卡（必须与「状态置 cancelled」同一事务，调用方保证）。
+ * 该单若走过扣次（存在 delta=-1 流水）且尚未回补，则 remain_times +1 并写 +1 回补流水；
+ * 幂等：已有 +1 回补流水则跳过，重复取消不会重复回补。
+ * 注意：改期（reschedule）不退次——扣次随单走，仅最终取消才回补。
+ */
+async function refundPassIfDeducted(tx: DbHandle, appt: AppointmentRow): Promise<void> {
+  if (appt.paymentMode !== 'pass_deduct') return;
+  const deductLog = await tx
+    .select()
+    .from(schema.passDeductLogs)
+    .where(and(eq(schema.passDeductLogs.appointmentId, appt.id), eq(schema.passDeductLogs.delta, -1)))
+    .get();
+  if (!deductLog) return; // 未扣过次（历史单/数据缺失），无需回补
+  const already = await tx
+    .select({ id: schema.passDeductLogs.id })
+    .from(schema.passDeductLogs)
+    .where(and(eq(schema.passDeductLogs.appointmentId, appt.id), eq(schema.passDeductLogs.delta, 1)))
+    .get();
+  if (already) return; // 幂等：已回补过
+  const pass = await tx
+    .select()
+    .from(schema.memberPasses)
+    .where(eq(schema.memberPasses.id, deductLog.passId))
+    .get();
+  if (!pass) return; // 外键保证不会发生，防御性跳过
+  await tx
+    .update(schema.memberPasses)
+    .set({ remainTimes: pass.remainTimes + 1, updatedAt: new Date() })
+    .where(eq(schema.memberPasses.id, pass.id));
+  await tx.insert(schema.passDeductLogs).values({ passId: pass.id, appointmentId: appt.id, delta: 1 });
+}
+
 /** 营业时间校验：开始时间须在未来、按 30min 粒度对齐、落在当日营业区间内；grooming 还要求当日打烊前服务得完 */
 function assertBookableTime(
   store: StoreRow,
@@ -344,6 +384,12 @@ export const appointmentRouter = router({
    * 1. create（customer）：宠物归属 / 服务项有效且 type 一致 / 门店营业时间内 /
    * payment_mode 快照；事务内 UPSERT store_slots 占位（防超卖）+ 建 pending 预约
    * （生成 6 位人工核销码）+ emitEvent(store, appointment.created)。
+   * paymentMode=pass_deduct（B2-7）：同事务内先校验本人名下该店次卡
+   * （active + remain_times>0 + 未过期，否则 BAD_REQUEST「暂无可用次卡」）并
+   * remain_times-1、写 -1 扣次流水——扣次先于占槽，占槽 CONFLICT/建单失败时
+   * 事务整体回滚，扣次随之还原（资损红标验收④）。
+   * B2-7R（产品裁定A）：次卡仅洗护可用——boarding + pass_deduct 在查卡前
+   * 直接 BAD_REQUEST（拒绝路径对 member_pass / pass_deduct_log 零副作用）。
    */
   create: customerProcedure
     .input(
@@ -420,6 +466,39 @@ export const appointmentRouter = router({
         try {
           let outboxId = '';
           const created = await ctx.db.transaction(async (tx) => {
+            // B2-7 资损红标：次卡扣次——先校验并扣减（同一事务），后续占槽/建单
+            // 任一步失败（如该时段已约满 CONFLICT）整体回滚，remain_times 随之还原。
+            let deductedPassId: string | null = null;
+            if (input.paymentMode === 'pass_deduct') {
+              // B2-7R（产品裁定A）：次卡仅洗护可用——寄养+次卡最前置硬拒绝；
+              // 拒绝路径不查卡、不写流水，member_pass / pass_deduct_log 零触碰
+              if (input.type === 'boarding') {
+                badRequest('寄养订单暂不支持次卡支付，请选择到店支付');
+              }
+              const pass = await tx
+                .select()
+                .from(schema.memberPasses)
+                .where(
+                  and(
+                    eq(schema.memberPasses.userId, ctx.user.id),
+                    eq(schema.memberPasses.storeId, input.storeId),
+                  ),
+                )
+                .get();
+              if (
+                !pass ||
+                pass.status !== 'active' ||
+                pass.remainTimes <= 0 ||
+                (pass.expiresAt !== null && pass.expiresAt.getTime() <= Date.now())
+              ) {
+                badRequest('暂无可用次卡：请改选到店支付，或联系门店充次后再预约');
+              }
+              await tx
+                .update(schema.memberPasses)
+                .set({ remainTimes: pass.remainTimes - 1, updatedAt: new Date() })
+                .where(eq(schema.memberPasses.id, pass.id));
+              deductedPassId = pass.id;
+            }
             // SQLite 单写者：事务即行锁（等价 SELECT ... FOR UPDATE），杜绝同槽并发超卖
             const slot = await tx
               .select()
@@ -465,6 +544,14 @@ export const appointmentRouter = router({
               })
               .returning()
               .then((r) => r[0]!);
+            // B2-7：扣次流水（同事务；若上面占槽已抛 CONFLICT，此处不会执行且扣减已回滚）
+            if (deductedPassId) {
+              await tx.insert(schema.passDeductLogs).values({
+                passId: deductedPassId,
+                appointmentId: appt.id,
+                delta: -1,
+              });
+            }
             outboxId = await emitEvent(txDb(tx), `store:${input.storeId}`, EventType.AppointmentCreated, {
               appointmentId: appt.id,
               storeId: input.storeId,
@@ -635,8 +722,9 @@ export const appointmentRouter = router({
     }),
 
   /**
-   * 7. cancel（customer 本人）：开始前 >4h 直接 cancelled（事务内回减槽位）；
-   * ≤4h 转 cancel_requested 待商家审核；in_service / in_boarding 服务中锁定拒绝。
+   * 7. cancel（customer 本人）：开始前 >4h 直接 cancelled（事务内回减槽位 +
+   * B2-7 同事务回补次卡扣次）；≤4h 转 cancel_requested 待商家审核；
+   * in_service / in_boarding 服务中锁定拒绝。
    */
   cancel: customerProcedure
     .input(z.object({ appointmentId: z.string().min(1) }))
@@ -654,10 +742,11 @@ export const appointmentRouter = router({
       const petName = await petNameOf(ctx.db, appt.petId);
 
       if (secondsToStart > CANCEL_FREE_BEFORE_SEC) {
-        // >4h：直接取消 + 事务内回减槽位
+        // >4h：直接取消 + 事务内回减槽位（B2-7：同事务回补次卡扣次）
         let outboxId = '';
         const updated = await ctx.db.transaction(async (tx) => {
           await releaseSlot(txDb(tx), appt.storeId, appt.scheduledStart);
+          await refundPassIfDeducted(txDb(tx), appt);
           const row = await tx
             .update(schema.appointments)
             .set({ status: 'cancelled', updatedAt: now })
@@ -695,7 +784,8 @@ export const appointmentRouter = router({
     }),
 
   /**
-   * 8. reviewCancel（merchant 本店）：批准 → cancelled + 回减槽位 + 事件；
+   * 8. reviewCancel（merchant 本店）：批准 → cancelled + 回减槽位 +
+   * B2-7 同事务回补次卡扣次 + 事件；
    * 拒绝 → 回 confirmed + 事件（沿用 appointment.confirmed 语义「预约维持有效」，
    * payload.cancelRejected=true 供端上区分话术）。
    */
@@ -708,7 +798,10 @@ export const appointmentRouter = router({
       const petName = await petNameOf(ctx.db, appt.petId);
       let outboxId = '';
       const updated = await ctx.db.transaction(async (tx) => {
-        if (input.approve) await releaseSlot(txDb(tx), appt.storeId, appt.scheduledStart);
+        if (input.approve) {
+          await releaseSlot(txDb(tx), appt.storeId, appt.scheduledStart);
+          await refundPassIfDeducted(txDb(tx), appt); // B2-7：批准取消同事务回补次卡
+        }
         const row = await tx
           .update(schema.appointments)
           .set({ status: input.approve ? 'cancelled' : 'confirmed', updatedAt: new Date() })
@@ -730,14 +823,21 @@ export const appointmentRouter = router({
     }),
 
   /**
-   * 8.5 reschedule（merchant 本店 · P4 T4.2 授权追加，契约 docs/MERCHANT-CONTRACTS.md）：改期。
-   * 校验本店 + 状态 pending/confirmed；新时间复用 assertBookableTime（未来 / 30min 对齐 /
-   * 营业时间内 / grooming 不超打烊）。事务内：旧槽位回减 booked_count → 新槽位校验
-   * （booked_count < capacity，无行则按默认容量建行）并 +1 → 写新时间；新槽已满抛
-   * CONFLICT，事务整体回滚（旧槽回减一并撤销）。改到原时段为净零操作，安全幂等。
-   * emitEvent appointment.rescheduled → user:{customerId} + staff:{staffId}（若已指派）。
+   * 8.5 reschedule（改期 · 登录后按角色分派）：
+   * - 商家（本店 · P4 T4.2 授权追加，契约 docs/MERCHANT-CONTRACTS.md）：
+   *   校验本店 + 状态 pending/confirmed；新时间复用 assertBookableTime（未来 / 30min 对齐 /
+   *   营业时间内 / grooming 不超打烊）。事务内：旧槽位回减 booked_count → 新槽位校验
+   *   （booked_count < capacity，无行则按默认容量建行）并 +1 → 写新时间；新槽已满抛
+   *   CONFLICT，事务整体回滚（旧槽回减一并撤销）。改到原时段为净零操作，安全幂等。
+   *   emitEvent appointment.rescheduled → user:{customerId} + staff:{staffId}（若已指派）。
+   * - 客户（本人 · v1.1-b2 B2-6）：状态 pending/confirmed 且距原开始 >4h
+   *   （与取消同阈值 CANCEL_FREE_BEFORE_SEC，不足 4 小时明确报错）才可自助改期。
+   *   与商家分支同一事务结构：旧槽位回减 → 新槽位校验并 +1 → 写新时间，
+   *   且 status 回退 pending + staffId 置空（重新走商家确认流）；新槽已满抛 CONFLICT，
+   *   事务整体回滚（状态回退、staffId 清空、旧槽回减一并撤销，三者与槽位校验同生共死）。
+   *   emitEvent appointment.rescheduled → appointment:{aid} + store:{storeId}（by:'customer'）。
    */
-  reschedule: merchantProcedure
+  reschedule: publicProcedure
     .input(
       z.object({
         appointmentId: z.string().min(1),
@@ -747,9 +847,20 @@ export const appointmentRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const appt = await getAppointmentOrThrow(ctx.db, input.appointmentId);
-      if (appt.storeId !== ctx.user.storeId) forbidden('非本店预约，无权操作');
+      const isMerchant =
+        (ctx.user.roles.includes('merchant_owner') || ctx.user.roles.includes('merchant_manager')) &&
+        ctx.user.storeId === appt.storeId;
+      const isOwnerCustomer = ctx.user.roles.includes('customer') && appt.customerId === ctx.user.id;
+      if (!isMerchant && !isOwnerCustomer) forbidden('无权改期该预约');
       if (appt.status !== 'pending' && appt.status !== 'confirmed') {
         badRequest(`当前状态（${appt.status}）不可改期，仅 pending/confirmed 可改期`);
+      }
+      // B2-6：客户自助改期与取消同规则——距原开始 >4h；商家代客改期不受此限
+      if (isOwnerCustomer && !isMerchant) {
+        const secondsToStart = Math.floor((appt.scheduledStart.getTime() - Date.now()) / 1000);
+        if (secondsToStart <= CANCEL_FREE_BEFORE_SEC) {
+          badRequest('距预约开始不足 4 小时，不可自助改期，如需调整请联系门店');
+        }
       }
       const store = await ctx.db
         .select()
@@ -800,9 +911,21 @@ export const appointmentRouter = router({
             bookedCount: 1,
           });
         }
+        // B2-6：客户改期同事务内 status 回退 pending + staffId 置空（重新走商家确认流）；
+        // 商家改期保持状态与指派不变。新槽满槽抛 CONFLICT 时此处一并回滚。
         const row = await tx
           .update(schema.appointments)
-          .set({ scheduledStart: start, scheduledEnd: end, updatedAt: new Date() })
+          .set(
+            isMerchant
+              ? { scheduledStart: start, scheduledEnd: end, updatedAt: new Date() }
+              : {
+                  scheduledStart: start,
+                  scheduledEnd: end,
+                  status: 'pending',
+                  staffId: null,
+                  updatedAt: new Date(),
+                },
+          )
           .where(eq(schema.appointments.id, appt.id))
           .returning()
           .then((r) => r[0]!);
@@ -812,13 +935,29 @@ export const appointmentRouter = router({
           scheduledStart: start.toISOString(),
           scheduledEnd: end.toISOString(),
         };
-        // → 客户端 + 员工端（若已指派）
-        outboxIds.push(
-          await emitEvent(txDb(tx), `user:${appt.customerId}`, EventType.AppointmentRescheduled, payload),
-        );
-        if (appt.staffId) {
+        if (isMerchant) {
+          // 商家改期 → 客户端 + 员工端（若已指派）
           outboxIds.push(
-            await emitEvent(txDb(tx), `staff:${appt.staffId}`, EventType.AppointmentRescheduled, payload),
+            await emitEvent(txDb(tx), `user:${appt.customerId}`, EventType.AppointmentRescheduled, payload),
+          );
+          if (appt.staffId) {
+            outboxIds.push(
+              await emitEvent(txDb(tx), `staff:${appt.staffId}`, EventType.AppointmentRescheduled, payload),
+            );
+          }
+        } else {
+          // B2-6 客户改期 → appointment 频道（客户/商家/原员工可见）+ store 频道（商家待办刷新）
+          outboxIds.push(
+            await emitEvent(txDb(tx), `appointment:${appt.id}`, EventType.AppointmentRescheduled, {
+              ...payload,
+              by: 'customer',
+            }),
+          );
+          outboxIds.push(
+            await emitEvent(txDb(tx), `store:${appt.storeId}`, EventType.AppointmentRescheduled, {
+              ...payload,
+              by: 'customer',
+            }),
           );
         }
         return row;
@@ -945,13 +1084,19 @@ export const appointmentRouter = router({
           outboxIds.push(await emitEvent(txDb(tx), `staff:${staffId}`, EventType.AppointmentAssigned, payload));
           outboxIds.push(await emitEvent(txDb(tx), `user:${appt.customerId}`, EventType.AppointmentAssigned, payload));
         }
+        // B2-8（A-P1-12）：checkedin 增发 store:{storeId} 频道，payload 与 appointment 频道一致，
+        // 商家不逐个打开详情页（watch appointment 频道）也能感知到店签到。
+        const checkedInPayload = {
+          appointmentId: appt.id,
+          petName,
+          type: appt.type,
+          staffId: row.staffId,
+        };
         outboxIds.push(
-          await emitEvent(txDb(tx), `appointment:${appt.id}`, EventType.AppointmentCheckedIn, {
-            appointmentId: appt.id,
-            petName,
-            type: appt.type,
-            staffId: row.staffId,
-          }),
+          await emitEvent(txDb(tx), `appointment:${appt.id}`, EventType.AppointmentCheckedIn, checkedInPayload),
+        );
+        outboxIds.push(
+          await emitEvent(txDb(tx), `store:${appt.storeId}`, EventType.AppointmentCheckedIn, checkedInPayload),
         );
         return { appointment: row, steps, boardingStay, claimed: willClaim };
       });
@@ -1065,6 +1210,67 @@ export const appointmentRouter = router({
           staffName: r.staff?.name ?? null,
         }),
       );
+    }),
+
+  /**
+   * 15. serviceAlbum（customer 本人 · v1.1-b2 B2-4）：服务相册。
+   * 返回洗护六步 stepKey/stepName/status/photos[{url,tag}]（仅未失效照片，
+   * 张数口径与 serviceStep 一致：invalidated_at IS NULL，按 taken_at 升序）；
+   * 寄养单无六步流 → steps 为空数组。
+   * 越权红线：严格本人校验——不回落 staff/merchant 归属分支，预约非本人
+   * 一律 FORBIDDEN，不存在 NOT_FOUND，杜绝泄漏其他客户数据。
+   */
+  serviceAlbum: customerProcedure
+    .input(z.object({ appointmentId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const appt = await ctx.db
+        .select()
+        .from(schema.appointments)
+        .where(eq(schema.appointments.id, input.appointmentId))
+        .get();
+      if (!appt) throw new TRPCError({ code: 'NOT_FOUND', message: '预约不存在' });
+      if (appt.customerId !== ctx.user.id) forbidden('无权查看该预约的服务相册');
+
+      const steps = await ctx.db
+        .select()
+        .from(schema.appointmentSteps)
+        .where(eq(schema.appointmentSteps.appointmentId, appt.id))
+        .orderBy(asc(schema.appointmentSteps.stepOrder));
+      const stepIds = steps.map((s) => s.id);
+      const photos =
+        stepIds.length === 0
+          ? []
+          : await ctx.db
+              .select({
+                stepId: schema.stepPhotos.stepId,
+                url: schema.stepPhotos.url,
+                tag: schema.stepPhotos.tag,
+              })
+              .from(schema.stepPhotos)
+              .where(
+                and(
+                  inArray(schema.stepPhotos.stepId, stepIds),
+                  isNull(schema.stepPhotos.invalidatedAt), // 仅未失效照片
+                ),
+              )
+              .orderBy(asc(schema.stepPhotos.takenAt), asc(schema.stepPhotos.id));
+
+      const byStep = new Map<string, typeof photos>();
+      for (const p of photos) {
+        const arr = byStep.get(p.stepId);
+        if (arr) arr.push(p);
+        else byStep.set(p.stepId, [p]);
+      }
+      return {
+        appointmentId: appt.id,
+        status: appt.status,
+        steps: steps.map((s) => ({
+          stepKey: s.stepKey as StepKey,
+          stepName: StepLabel[s.stepKey as StepKey] ?? s.stepKey,
+          status: s.status,
+          photos: (byStep.get(s.id) ?? []).map((p) => ({ url: p.url, tag: p.tag })),
+        })),
+      };
     }),
 
   /**

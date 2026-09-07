@@ -52,10 +52,14 @@ export default function BookingBoardingPage() {
   const [storeId, setStoreId] = useState<string | null>(searchParams.get('storeId'));
   const [checkin, setCheckin] = useState<Date | null>(null);
   const [checkout, setCheckout] = useState<Date | null>(null);
+  // v1.1-b2 B2-5：两阶段选日期——选定入住后入住网格收起为摘要 chip，点 chip 返回重选
+  const [reselectingCheckin, setReselectingCheckin] = useState(false);
   // v1.1-b1：?serviceId= 预填（首页推荐服务 / philia 一键复购链接均带该参数）
   const [serviceId, setServiceId] = useState<string | null>(searchParams.get('serviceId'));
-  const [petId, setPetId] = useState<string | null>(null);
-  const [paymentMode, setPaymentMode] = useState<'pay_at_store' | 'pass_deduct'>('pay_at_store');
+  // v1.1-b2：?petId= 预填（B2-3 完成单「再次预约」链接带该参数，与 serviceId 预填同模式）
+  const [petId, setPetId] = useState<string | null>(searchParams.get('petId'));
+  // B2-7R（产品裁定A）：次卡仅洗护可用，寄养固定到店付（不再渲染次卡扣次选项）
+  const paymentMode = 'pay_at_store' as const;
   const [note, setNote] = useState('');
 
   /* ---- 数据 ---- */
@@ -94,6 +98,13 @@ export default function BookingBoardingPage() {
   const noPets = petsQ.isSuccess && (petsQ.data?.length ?? 0) === 0;
   const [forkDismissed, setForkDismissed] = useState(false);
 
+  // v1.1-b2：URL 预填的 petId 若不在本人宠物列表则清掉（避免看不见的选中态直接放行提交）
+  useEffect(() => {
+    if (petsQ.isSuccess && petId && !(petsQ.data ?? []).some((p) => p.id === petId)) {
+      setPetId(null);
+    }
+  }, [petsQ.isSuccess, petsQ.data, petId]);
+
   /* ---- 日期栅格 ---- */
   const today = new Date();
   const checkinDays = useMemo(
@@ -111,6 +122,7 @@ export default function BookingBoardingPage() {
 
   const pickCheckin = (d: Date) => {
     setCheckin(d);
+    setReselectingCheckin(false);
     if (checkout && checkout <= d) setCheckout(null);
   };
 
@@ -252,13 +264,30 @@ export default function BookingBoardingPage() {
           ) : null}
 
           <h2 className="text-title">入住日期</h2>
-          <div className="mt-2 grid grid-cols-4 gap-2">
-            {checkinDays.map((d) =>
-              dayBtn(d, checkin?.getTime() === d.getTime(), isClosed(store, d), () => pickCheckin(d)),
-            )}
-          </div>
+          {checkin === null || reselectingCheckin ? (
+            <div className="mt-2 grid grid-cols-4 gap-2">
+              {checkinDays.map((d) =>
+                dayBtn(d, checkin?.getTime() === d.getTime(), isClosed(store, d), () => pickCheckin(d)),
+              )}
+            </div>
+          ) : (
+            // 两阶段：入住已定 → 收起为摘要 chip，页面只留退房网格，杜绝误触改入住
+            <button
+              type="button"
+              onClick={() => {
+                setReselectingCheckin(true);
+                setCheckout(null); // 返回重选入住：退房选择随之清空
+              }}
+              className="mt-2 flex w-full items-center justify-between rounded-card bg-card px-4 py-3 text-body shadow-card transition active:scale-[0.99]"
+            >
+              <span>
+                入住 <span className="font-number font-semibold">{fmtMD(checkin)}</span> {weekCN(checkin)}
+              </span>
+              <span className="text-caption font-medium text-brand-primary">点击修改</span>
+            </button>
+          )}
 
-          {checkin ? (
+          {checkin && !reselectingCheckin ? (
             <>
               <h2 className="mt-5 text-title">退房日期</h2>
               <div className="mt-2 grid grid-cols-4 gap-2">
@@ -398,19 +427,13 @@ export default function BookingBoardingPage() {
 
           <h2 className="mt-5 text-title">收款方式</h2>
           <div className="mt-2 grid grid-cols-2 gap-2">
-            {(['pay_at_store', 'pass_deduct'] as const).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setPaymentMode(m)}
-                className={`rounded-card bg-card p-3.5 text-left shadow-card transition active:scale-[0.99] ${paymentMode === m ? 'ring-2 ring-brand-primary' : ''}`}
-              >
-                <span className="block text-body font-semibold">{PAYMENT_MODE_META[m].label}</span>
-                <span className="mt-0.5 block text-caption text-ink-secondary">
-                  {PAYMENT_MODE_META[m].hint}
-                </span>
-              </button>
-            ))}
+            {/* B2-7R（产品裁定A）：次卡仅洗护可用，寄养固定到店付，不渲染次卡扣次入口 */}
+            <div className="rounded-card bg-card p-3.5 text-left shadow-card ring-2 ring-brand-primary">
+              <span className="block text-body font-semibold">{PAYMENT_MODE_META.pay_at_store.label}</span>
+              <span className="mt-0.5 block text-caption text-ink-secondary">
+                {PAYMENT_MODE_META.pay_at_store.hint}
+              </span>
+            </div>
           </div>
 
           <h2 className="mt-5 text-title">备注</h2>

@@ -36,7 +36,7 @@ export default function TodoSection({ stats }: { stats: DashboardStats | undefin
       label: '待确认',
       desc: '新预约等待门店确认',
       count: stats?.todo.pending ?? 0,
-      to: '/appointments?status=pending',
+      to: '/appointments?status=pending&from=todo',
     },
     {
       key: 'unassigned',
@@ -44,7 +44,7 @@ export default function TodoSection({ stats }: { stats: DashboardStats | undefin
       label: '待派单',
       desc: '已确认但尚未指派员工',
       count: stats?.todo.unassigned ?? 0,
-      to: '/appointments?status=confirmed',
+      to: '/appointments?status=confirmed&from=todo',
     },
     {
       key: 'cancelRequested',
@@ -52,7 +52,7 @@ export default function TodoSection({ stats }: { stats: DashboardStats | undefin
       label: '取消审核',
       desc: '客户申请取消，待审批',
       count: stats?.todo.cancelRequested ?? 0,
-      to: '/appointments?status=cancel_requested',
+      to: '/appointments?status=cancel_requested&from=todo',
     },
     {
       key: 'unpaid',

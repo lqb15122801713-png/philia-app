@@ -21,6 +21,7 @@ import DashboardPage from './pages/DashboardPage'
 import DevLoginPage from './pages/DevLoginPage'
 import FinancePage from './pages/FinancePage'
 import OrdersPage from './pages/OrdersPage'
+import PassPage from './pages/PassPage'
 import ProductsPage from './pages/ProductsPage'
 import SettingsPage from './pages/SettingsPage'
 import StaffPage from './pages/StaffPage'
@@ -35,6 +36,7 @@ function ProtectedRoutes() {
       <Route path="/appointments/:id" element={<AppointmentDetailPage />} />
       <Route path="/appointments/:id/monitor" element={<AppointmentMonitorPage />} />
       <Route path="/boarding" element={<BoardingPage />} />
+      <Route path="/passes" element={<PassPage />} />
       <Route path="/staff" element={<StaffPage />} />
       <Route path="/products" element={<ProductsPage />} />
       <Route path="/orders" element={<OrdersPage />} />

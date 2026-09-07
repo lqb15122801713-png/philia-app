@@ -157,18 +157,20 @@ export const weekStart = (d: Date): Date => {
 /* 日期范围筛选                                                        */
 /* ------------------------------------------------------------------ */
 
-export type RangeKey = 'today' | 'tomorrow' | 'week' | 'custom';
+export type RangeKey = 'today' | 'tomorrow' | 'week' | 'custom' | 'all';
 
 export const RANGE_LABEL: Record<RangeKey, string> = {
   today: '今天',
   tomorrow: '明天',
   week: '本周',
   custom: '自定义',
+  all: '全部',
 };
 
 /**
  * 范围 → [from, to]（服务端 from=gte / to=lte，故 to 取结束日 23:59:59.999）。
  * custom 传入 'yyyy-MM-dd' 起止。
+ * all（v1.1-b2 B2-1，待办深链「全部」）：调用方应省略 from/to；此处兜底返回超宽范围。
  */
 export function rangeToDates(
   key: RangeKey,
@@ -176,6 +178,9 @@ export function rangeToDates(
   customTo?: string,
 ): { from: Date; to: Date } {
   const now = new Date();
+  if (key === 'all') {
+    return { from: new Date(2000, 0, 1), to: new Date(2099, 11, 31, 23, 59, 59, 999) };
+  }
   if (key === 'today') {
     const s = dayStart(now);
     return { from: s, to: new Date(addDays(s, 1).getTime() - 1) };

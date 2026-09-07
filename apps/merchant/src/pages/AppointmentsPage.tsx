@@ -4,7 +4,10 @@
  * - 视图切换：列表视图（默认）/ 日历视图（月历，日格预约数+状态点，今天高亮，
  *   点日格 → 切列表视图并按当日过滤）。
  * - 筛选：状态 chips（全部/待确认/已确认/服务中/寄养中/取消申请/已完成/已取消）
- *   + 日期范围（今天/明天/本周/自定义起止）。
+ *   + 日期范围（今天/明天/本周/自定义起止/全部）。
+ * - 深链：?status= 初始化状态档（v1.1-b1）；?from=todo 或 ?date=all 时日期档
+ *   初始化「全部」（v1.1-b2 B2-1，待办「去处理」不再被默认「今天」过滤吞单）。
+ *   无参数入口（TabBar 等）日期档仍默认「今天」。
  * - 列表行紧凑（时间/宠物/服务/客户/员工/状态/金额）；待确认行品牌色高亮边框
  *   + 行内「确认」一键 confirm（≤30 秒操作路径关键）。
  * - 横屏双栏（lg+）：左列表右选中详情摘要；手机点行进详情页。
@@ -33,12 +36,17 @@ import {
   type RangeKey,
 } from '../components/appointments/appt-utils';
 
-const RANGE_KEYS: RangeKey[] = ['today', 'tomorrow', 'week', 'custom'];
+const RANGE_KEYS: RangeKey[] = ['today', 'tomorrow', 'week', 'custom', 'all'];
 
 /** v1.1-b1：?status= 深链初始化（仪表盘待办「去处理」）；非法值忽略回全部 */
 function initStatus(raw: string | null): StatusFilter {
   if (raw === 'all') return 'all';
   return (STATUS_ORDER as string[]).includes(raw ?? '') ? (raw as StatusFilter) : 'all';
+}
+
+/** v1.1-b2 B2-1：?from=todo / ?date=all 深链 → 日期档置「全部」；其余入口维持默认「今天」 */
+function initRange(p: URLSearchParams): RangeKey {
+  return p.get('from') === 'todo' || p.get('date') === 'all' ? 'all' : 'today';
 }
 
 /** 需要列表静默 invalidate 的预约状态事件（store 频道可达） */
@@ -62,7 +70,7 @@ export default function AppointmentsPage() {
 
   const [view, setView] = useState<'list' | 'calendar'>('list');
   const [status, setStatus] = useState<StatusFilter>(() => initStatus(searchParams.get('status')));
-  const [rangeKey, setRangeKey] = useState<RangeKey>('today');
+  const [rangeKey, setRangeKey] = useState<RangeKey>(() => initRange(searchParams));
   const [customFrom, setCustomFrom] = useState(todayStr);
   const [customTo, setCustomTo] = useState(todayStr);
   const [month, setMonth] = useState(() => new Date());
@@ -70,8 +78,9 @@ export default function AppointmentsPage() {
 
   /* ---------------- 列表查询 ---------------- */
 
+  /** 'all' 档不传 from/to（服务端默认按 scheduledStart 升序），其余档走 rangeToDates */
   const range = useMemo(
-    () => rangeToDates(rangeKey, customFrom, customTo),
+    () => (rangeKey === 'all' ? null : rangeToDates(rangeKey, customFrom, customTo)),
     [rangeKey, customFrom, customTo],
   );
 
@@ -79,12 +88,13 @@ export default function AppointmentsPage() {
     queryKey: [
       'appointment',
       'listForStore',
-      { from: range.from.toISOString(), to: range.to.toISOString(), status },
+      range
+        ? { from: range.from.toISOString(), to: range.to.toISOString(), status }
+        : { all: true, status },
     ],
     queryFn: () =>
       trpc.appointment.listForStore.query({
-        from: range.from,
-        to: range.to,
+        ...(range ? { from: range.from, to: range.to } : {}),
         ...(status === 'all' ? {} : { status: status as ApptStatus }),
       }),
     enabled: view === 'list',
