@@ -280,6 +280,21 @@ export default function AppointmentDetailPage() {
         ) : null}
       </section>
 
+      {/* 再次预约（completed 主按钮）：跳对应向导并预填 serviceId/storeId/petId（v1.1-b2 B2-3） */}
+      {appt.status === 'completed' ? (
+        <button
+          type="button"
+          onClick={() =>
+            navigate(
+              `${appt.type === 'boarding' ? '/booking/boarding' : '/booking/grooming'}?serviceId=${encodeURIComponent(appt.serviceId)}&storeId=${encodeURIComponent(appt.storeId)}&petId=${encodeURIComponent(appt.petId)}`,
+            )
+          }
+          className="mt-4 h-12 w-full rounded-full bg-brand-primary text-body font-semibold text-white shadow-card transition-transform duration-120 ease-philia-spring active:scale-92"
+        >
+          再次预约
+        </button>
+      ) : null}
+
       {/* 门店与导航 */}
       {d.store ? (
         <section className="mt-4 rounded-card bg-card p-4 shadow-card">

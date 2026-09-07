@@ -54,7 +54,8 @@ export default function BookingBoardingPage() {
   const [checkout, setCheckout] = useState<Date | null>(null);
   // v1.1-b1：?serviceId= 预填（首页推荐服务 / philia 一键复购链接均带该参数）
   const [serviceId, setServiceId] = useState<string | null>(searchParams.get('serviceId'));
-  const [petId, setPetId] = useState<string | null>(null);
+  // v1.1-b2：?petId= 预填（B2-3 完成单「再次预约」链接带该参数，与 serviceId 预填同模式）
+  const [petId, setPetId] = useState<string | null>(searchParams.get('petId'));
   const [paymentMode, setPaymentMode] = useState<'pay_at_store' | 'pass_deduct'>('pay_at_store');
   const [note, setNote] = useState('');
 
@@ -93,6 +94,13 @@ export default function BookingBoardingPage() {
   /** 空宠物：第一屏显示建档岔路卡；「随便看看」仅浏览，确认屏不可达 */
   const noPets = petsQ.isSuccess && (petsQ.data?.length ?? 0) === 0;
   const [forkDismissed, setForkDismissed] = useState(false);
+
+  // v1.1-b2：URL 预填的 petId 若不在本人宠物列表则清掉（避免看不见的选中态直接放行提交）
+  useEffect(() => {
+    if (petsQ.isSuccess && petId && !(petsQ.data ?? []).some((p) => p.id === petId)) {
+      setPetId(null);
+    }
+  }, [petsQ.isSuccess, petsQ.data, petId]);
 
   /* ---- 日期栅格 ---- */
   const today = new Date();

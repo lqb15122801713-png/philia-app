@@ -36,7 +36,8 @@ export default function BookingGroomingPage() {
   const [serviceId, setServiceId] = useState<string | null>(searchParams.get('serviceId'));
   const [staffId, setStaffId] = useState<string | null>(null); // null = 随缘
   const [slot, setSlot] = useState<Date | null>(null);
-  const [petId, setPetId] = useState<string | null>(null);
+  // v1.1-b2：?petId= 预填（B2-3 完成单「再次预约」链接带该参数，与 serviceId 预填同模式）
+  const [petId, setPetId] = useState<string | null>(searchParams.get('petId'));
   const [paymentMode, setPaymentMode] = useState<'pay_at_store' | 'pass_deduct'>('pay_at_store');
   const [note, setNote] = useState('');
 
@@ -73,6 +74,13 @@ export default function BookingGroomingPage() {
   /** 空宠物：第一屏显示建档岔路卡；「随便看看」仅浏览，确认屏不可达 */
   const noPets = petsQ.isSuccess && (petsQ.data?.length ?? 0) === 0;
   const [forkDismissed, setForkDismissed] = useState(false);
+
+  // v1.1-b2：URL 预填的 petId 若不在本人宠物列表则清掉（避免看不见的选中态直接放行提交）
+  useEffect(() => {
+    if (petsQ.isSuccess && petId && !(petsQ.data ?? []).some((p) => p.id === petId)) {
+      setPetId(null);
+    }
+  }, [petsQ.isSuccess, petsQ.data, petId]);
 
   const groomingServices = useMemo(
     () => (servicesQ.data?.services ?? []).filter((s) => s.type === 'grooming'),
