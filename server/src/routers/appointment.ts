@@ -1077,13 +1077,19 @@ export const appointmentRouter = router({
           outboxIds.push(await emitEvent(txDb(tx), `staff:${staffId}`, EventType.AppointmentAssigned, payload));
           outboxIds.push(await emitEvent(txDb(tx), `user:${appt.customerId}`, EventType.AppointmentAssigned, payload));
         }
+        // B2-8（A-P1-12）：checkedin 增发 store:{storeId} 频道，payload 与 appointment 频道一致，
+        // 商家不逐个打开详情页（watch appointment 频道）也能感知到店签到。
+        const checkedInPayload = {
+          appointmentId: appt.id,
+          petName,
+          type: appt.type,
+          staffId: row.staffId,
+        };
         outboxIds.push(
-          await emitEvent(txDb(tx), `appointment:${appt.id}`, EventType.AppointmentCheckedIn, {
-            appointmentId: appt.id,
-            petName,
-            type: appt.type,
-            staffId: row.staffId,
-          }),
+          await emitEvent(txDb(tx), `appointment:${appt.id}`, EventType.AppointmentCheckedIn, checkedInPayload),
+        );
+        outboxIds.push(
+          await emitEvent(txDb(tx), `store:${appt.storeId}`, EventType.AppointmentCheckedIn, checkedInPayload),
         );
         return { appointment: row, steps, boardingStay, claimed: willClaim };
       });

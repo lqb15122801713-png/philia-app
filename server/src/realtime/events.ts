@@ -10,10 +10,10 @@ export const EventType = {
   AppointmentCreated:    'appointment.created',      // → store 频道
   AppointmentConfirmed:  'appointment.confirmed',    // → customer user 频道
   AppointmentAssigned:   'appointment.assigned',     // → staff + customer
-  AppointmentCheckedIn:  'appointment.checkedin',    // → appointment 频道（三端）
+  AppointmentCheckedIn:  'appointment.checkedin',    // → appointment 频道（三端）+ store 频道（B2-8）
   StepUpdated:           'step_updated',             // → appointment 频道（照片+状态）
   StepFlagged:           'step_flagged',             // 商家打标重拍 → staff + appointment
-  AppointmentCompleted:  'appointment.completed',    // → appointment 频道（三端）
+  AppointmentCompleted:  'appointment.completed',    // → appointment 频道（三端）+ store 频道（B2-8）
   AppointmentCancelRequested: 'appointment.cancel_requested', // → store
   AppointmentCancelled:  'appointment.cancelled',    // → 相关方
   AppointmentRescheduled:'appointment.rescheduled',  // → 相关方

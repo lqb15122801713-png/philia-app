@@ -488,14 +488,20 @@ export const serviceStepRouter = router({
           },
         );
         // 末步：step_updated 之后发射 completed（保持 outbox id 单调序 = 广播序）
-        const completedOutboxId = isFinalStep
-          ? await emitEvent(txBus(tx), `appointment:${appt.id}`, EventType.AppointmentCompleted, {
-              appointmentId: appt.id,
-              petName,
-              status: 'completed',
-            })
-          : null;
-        return completedOutboxId ? [stepUpdatedId, completedOutboxId] : [stepUpdatedId];
+        // B2-8（A-P1-12）：completed 增发 store:{storeId} 频道，payload 与 appointment 频道一致；
+        // step_updated 维持仅 appointment 频道（防刷屏），不改。
+        const completedPayload = {
+          appointmentId: appt.id,
+          petName,
+          status: 'completed' as const,
+        };
+        const completedOutboxIds = isFinalStep
+          ? [
+              await emitEvent(txBus(tx), `appointment:${appt.id}`, EventType.AppointmentCompleted, completedPayload),
+              await emitEvent(txBus(tx), `store:${appt.storeId}`, EventType.AppointmentCompleted, completedPayload),
+            ]
+          : [];
+        return [stepUpdatedId, ...completedOutboxIds];
       });
 
       for (const id of outboxIds) broadcastNow(id); // 事务提交后即时广播（fire-and-forget）
