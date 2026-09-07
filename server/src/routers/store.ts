@@ -25,10 +25,11 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, gt, gte, isNull, lt } from 'drizzle-orm';
+import { and, desc, eq, gt, gte, inArray, isNull, lt } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import { merchantProcedure, publicProcedure, router, type Context } from '../trpc';
+import { boardingNightDates, DEFAULT_BOARDING_ROOM_COUNT } from './appointment';
 
 /** 时间槽粒度：30min（与 seed 的 store_slots 生成粒度一致） */
 const SLOT_MS = 30 * 60 * 1000;
@@ -183,6 +184,71 @@ export const storeRouter = router({
       });
 
       return { store, services, slots: available };
+    }),
+
+  /**
+   * 寄养房型逐晚余量（public · v1.1-b3 B3-2 W-12）：入参 from/to（晚 = from 日
+   * 到 to 日前一日，本地日界，与 appointment.create 的 boarding 占晚口径一致），
+   * 返回该店全部在架寄养房型的逐晚 remaining（capacity − booked_count；
+   * 无槽位行 = 该晚尚未被订，按房型房间数满额计）。
+   * 客户端寄养向导房型卡据此展示「剩余 N 间」（已选区间取最小剩余 /
+   * 未选日期取今晚）。区间上限 31 晚（向导最长 14 晚，留余量防爆量查询）。
+   */
+  boardingAvailability: publicProcedure
+    .input(z.object({ storeId: z.string().min(1), from: z.date(), to: z.date() }))
+    .query(async ({ ctx, input }) => {
+      const store = await ctx.db
+        .select()
+        .from(schema.stores)
+        .where(eq(schema.stores.id, input.storeId))
+        .limit(1)
+        .then((r) => r[0]);
+      if (!store) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: '门店不存在' });
+      }
+      const nights = boardingNightDates(input.from, input.to);
+      if (nights.length === 0) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '查询区间须至少覆盖 1 晚（to 须晚于 from）' });
+      }
+      if (nights.length > 31) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '查询区间最长 31 晚' });
+      }
+      const boardingServices = await ctx.db
+        .select({ id: schema.services.id, roomCount: schema.services.roomCount })
+        .from(schema.services)
+        .where(
+          and(
+            eq(schema.services.storeId, store.id),
+            eq(schema.services.type, 'boarding'),
+            eq(schema.services.active, true),
+          ),
+        )
+        .orderBy(schema.services.createdAt);
+      const rows = await ctx.db
+        .select()
+        .from(schema.boardingSlots)
+        .where(
+          and(
+            eq(schema.boardingSlots.storeId, store.id),
+            inArray(schema.boardingSlots.nightDate, nights),
+          ),
+        );
+      const byKey = new Map(rows.map((r) => [`${r.serviceId}|${r.nightDate}`, r]));
+      return {
+        nights,
+        services: boardingServices.map((s) => {
+          const full = s.roomCount ?? DEFAULT_BOARDING_ROOM_COUNT;
+          return {
+            serviceId: s.id,
+            roomCount: full,
+            /** 与 nights 等长逐晚剩余间数 */
+            remaining: nights.map((n) => {
+              const row = byKey.get(`${s.id}|${n}`);
+              return row ? row.capacity - row.bookedCount : full;
+            }),
+          };
+        }),
+      };
     }),
 
   /**

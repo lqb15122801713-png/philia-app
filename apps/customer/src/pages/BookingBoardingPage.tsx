@@ -81,6 +81,31 @@ export default function BookingBoardingPage() {
   );
   const service = boardingServices.find((s) => s.id === serviceId) ?? null;
 
+  // v1.1-b3 B3-2（W-12）：房型逐晚余量——已选日期区间时查区间（卡片显示区间内
+  // 最小剩余）；未选日期（如切店后日期被清空）时查「今晚」
+  const availRange = useMemo(() => {
+    if (checkin && checkout) return { from: checkin, to: checkout, tonight: false };
+    const now = new Date();
+    const t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return { from: t0, to: new Date(t0.getFullYear(), t0.getMonth(), t0.getDate() + 1), tonight: true };
+  }, [checkin, checkout]);
+  const availQ = useQuery({
+    queryKey: ['store', 'boardingAvailability', effStoreId, availRange.from.getTime(), availRange.to.getTime()],
+    queryFn: () =>
+      trpc.store.boardingAvailability.query({
+        storeId: effStoreId!,
+        from: availRange.from,
+        to: availRange.to,
+      }),
+    enabled: effStoreId !== null && step >= 2,
+  });
+  /** 房型卡剩余间数：已选区间取区间内逐晚最小剩余；未选日期取今晚剩余 */
+  const remainingOf = (sid: string): number | null => {
+    const row = availQ.data?.services.find((a) => a.serviceId === sid);
+    if (!row || row.remaining.length === 0) return null;
+    return Math.min(...row.remaining);
+  };
+
   // v1.1-b1：URL 预填的 serviceId 若不属于该店寄养房型则清掉（避免看不见的选中态放行下一步）
   useEffect(() => {
     if (servicesQ.isSuccess && serviceId && !boardingServices.some((s) => s.id === serviceId)) {
@@ -155,6 +180,8 @@ export default function BookingBoardingPage() {
     },
     onSuccess: (appt) => {
       void queryClient.invalidateQueries({ queryKey: ['appointment'] });
+      // B3-2：下单占晚后余量变化，使余量缓存失效（返回向导时重取）
+      void queryClient.invalidateQueries({ queryKey: ['store', 'boardingAvailability'] });
       navigate(`/booking/success?aid=${encodeURIComponent(appt.id)}`, { replace: true });
     },
     onError: (err) => showToast(friendlyError(err, '预约失败，请稍后再试')),
@@ -352,6 +379,7 @@ export default function BookingBoardingPage() {
             ) : (
               boardingServices.map((s) => {
                 const active = s.id === serviceId;
+                const remaining = remainingOf(s.id);
                 return (
                   <button
                     key={s.id}
@@ -365,6 +393,16 @@ export default function BookingBoardingPage() {
                       </span>
                       {s.boardingRoomType ? (
                         <span className="mt-0.5 block text-caption text-ink-secondary">{s.name}</span>
+                      ) : null}
+                      {/* v1.1-b3 B3-2（W-12）：剩余间数透出——已选区间=区间内最小剩余；未选日期=今晚剩余 */}
+                      {remaining !== null ? (
+                        <span
+                          className={`mt-0.5 block text-caption ${
+                            remaining === 0 ? 'text-danger-deep' : 'text-success-deep'
+                          }`}
+                        >
+                          {availRange.tonight ? `今晚剩余 ${remaining} 间` : `剩余 ${remaining} 间`}
+                        </span>
                       ) : null}
                     </span>
                     <span className="text-right">

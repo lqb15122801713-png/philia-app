@@ -17,6 +17,9 @@
  *    服务中锁定；markPaid 幂等；review 落库
  * 5b. B2-7 次卡：无卡 pass_deduct 拒绝；B2-7R（产品裁定A）寄养+次卡硬拒绝且
  *    余额/流水零副作用；grooming+次卡建单扣 1 次、取消回补 +1
+ * 5c. B3-2（A-P1-11 红标）寄养容量按晚占用：逐晚 UPSERT boarding_slots；
+ *    任一晚满员 CONFLICT 且整体回滚（失败单无部分占用/无预约记录）；room_count=2
+ *    房型同晚两单成功、第三单拦截且 booked 不超限；取消释放全部晚；0 晚区间拒绝
  * 6. listMine 分组 / get 归属 / listForStore 过滤 / listTodayForStaff 今日时间轴
  * 7. 事件总账：每个关键动作后 event_outbox 有对应事件且 channel 正确
  */
@@ -63,6 +66,10 @@ const at = (dayOffset: number, h: number, m = 0): Date => {
   d.setHours(h, m, 0, 0);
   return d;
 };
+
+/** 本地日界 ISO 日期 'YYYY-MM-DD'（与 boardingNightDates 口径一致） */
+const isoDay = (d: Date): string =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 /* ------------------------------ 主流程 ------------------------------ */
 
@@ -133,6 +140,8 @@ try {
   await db.insert(schema.services).values([
     { id: 'sv-g1', storeId: 's-1', type: 'grooming', name: '基础洗护', durationMin: 60, priceFen: 8800 },
     { id: 'sv-b1', storeId: 's-1', type: 'boarding', name: '标准间寄养', boardingRoomType: '标准间', priceFen: 19900 },
+    // B3-2：多间房房型（room_count=2），验证容量>1 的同晚多单与第三单满房拦截
+    { id: 'sv-b2', storeId: 's-1', type: 'boarding', name: '豪华间寄养', boardingRoomType: '豪华间', roomCount: 2, priceFen: 29900 },
   ]);
 
   // 时间槽：T1 capacity=1（打满测超卖）、T2 capacity=2、T3 不建行（测 UPSERT 默认容量）
@@ -536,9 +545,22 @@ try {
     .where(and(eq(schema.storeSlots.storeId, 's-1'), eq(schema.storeSlots.slotStart, T3)))
     .get();
   check(
-    '无槽位行时事务内 UPSERT 创建（默认容量 2，booked=1）',
-    slotT3?.capacity === 2 && slotT3?.bookedCount === 1,
+    'B3-2：boarding 不再占用洗护 30min 时段槽（T3 无 store_slots 行）',
+    slotT3 === undefined,
     slotT3,
+  );
+  // B3-2：appt3（boarding，T3=明天 14:00 → 后天 14:00）按「晚」占 boarding_slots 1 行
+  const appt3Nights = await db
+    .select()
+    .from(schema.boardingSlots)
+    .where(and(eq(schema.boardingSlots.storeId, 's-1'), eq(schema.boardingSlots.serviceId, 'sv-b1')));
+  check(
+    'B3-2：boarding create 按晚占用（入住日晚 1 行；room_count 空 → 默认容量 1，booked=1）',
+    appt3Nights.length === 1 &&
+      appt3Nights[0]?.nightDate === isoDay(T3) &&
+      appt3Nights[0]?.capacity === 1 &&
+      appt3Nights[0]?.bookedCount === 1,
+    appt3Nights,
   );
   await m1.confirm({ appointmentId: appt3.id });
   const ck3 = await aStaff.checkin({ code: appt3.code });
@@ -592,13 +614,15 @@ try {
   const asg4 = await m1.assign({ appointmentId: appt4.id, staffId: 'st-b' });
   check('assign 成功（B 持 wash 技能、同时段无冲突）', asg4.staffId === 'st-b');
   // assign：无排班
+  // B3-2：boarding 按晚占用后，appt5 须避开 appt3 已占晚（sv-b1 默认容量 1），
+  // 取 D+3 15:00 → D+4 15:00（晚 D+3 空闲）
   const appt5 = await c1.create({
     storeId: 's-1',
     petId: 'p-1',
     serviceId: 'sv-b1',
     type: 'boarding',
-    scheduledStart: T3,
-    scheduledEnd: at(2, 15),
+    scheduledStart: at(3, 15),
+    scheduledEnd: at(4, 15),
     paymentMode: 'pay_at_store',
   });
   check(
@@ -606,19 +630,25 @@ try {
     await rejects(m1.assign({ appointmentId: appt5.id, staffId: 'st-d' }), 'BAD_REQUEST', /排班/),
   );
 
-  // cancel >4h：直接取消 + 回减槽位（T3 槽位 2→1）
+  // cancel >4h：直接取消 + 释放槽位（B3-2：boarding 释放住宿区间全部晚——晚 D+3 booked 1→0）
   const cc5 = await c1.cancel({ appointmentId: appt5.id });
   check(
     '>4h 取消 → cancelled',
     cc5.outcome === 'cancelled' && cc5.appointment.status === 'cancelled',
     cc5.appointment.status,
   );
-  const slotT3After = await db
+  const appt5Night = await db
     .select()
-    .from(schema.storeSlots)
-    .where(and(eq(schema.storeSlots.storeId, 's-1'), eq(schema.storeSlots.slotStart, T3)))
+    .from(schema.boardingSlots)
+    .where(
+      and(
+        eq(schema.boardingSlots.storeId, 's-1'),
+        eq(schema.boardingSlots.serviceId, 'sv-b1'),
+        eq(schema.boardingSlots.nightDate, isoDay(at(3, 15))),
+      ),
+    )
     .get();
-  check('取消后槽位回减（booked_count 2→1）', slotT3After?.bookedCount === 1, slotT3After);
+  check('B3-2：寄养取消后各晚释放（晚 D+3 booked_count 1→0）', appt5Night?.bookedCount === 0, appt5Night);
   check(
     'appointment.cancelled → store 频道',
     (await countOutbox('store:s-1', 'appointment.cancelled')) === 1,
@@ -734,6 +764,144 @@ try {
     await rejects(c1.review({ appointmentId: appt7.id, rating: 5 }), 'BAD_REQUEST'),
   );
 
+  /* ==================== 5c. B3-2 寄养容量按「晚」占用（A-P1-11 红标） ==================== */
+  console.log('\n[5c] B3-2：寄养逐晚占用 / 满晚 CONFLICT 整体回滚 / 取消全晚释放 / 多间容量');
+  const nightRows = async (serviceId: string) =>
+    db
+      .select()
+      .from(schema.boardingSlots)
+      .where(and(eq(schema.boardingSlots.storeId, 's-1'), eq(schema.boardingSlots.serviceId, serviceId)))
+      .orderBy(asc(schema.boardingSlots.nightDate));
+
+  // ① 两晚区间逐晚占用：D+5 入住 D+7 退房 → 晚 D+5 / D+6 各占 1 格
+  const b31 = await c1.create({
+    storeId: 's-1',
+    petId: 'p-1',
+    serviceId: 'sv-b1',
+    type: 'boarding',
+    scheduledStart: at(5, 10),
+    scheduledEnd: at(7, 10),
+    paymentMode: 'pay_at_store',
+  });
+  check('两晚寄养建单成功（priceFen = 单晚价 × 2 晚）', b31.priceFen === 19900 * 2, b31.priceFen);
+  const b31Nights = await nightRows('sv-b1');
+  check(
+    '逐晚占用：晚 D+5 / D+6 各 1 行（booked=1，capacity=1）',
+    [isoDay(at(5, 10)), isoDay(at(6, 10))].every((d) =>
+      b31Nights.some((r) => r.nightDate === d && r.bookedCount === 1 && r.capacity === 1),
+    ),
+    b31Nights,
+  );
+
+  // ② 任一晚满员 → 整体 CONFLICT 回滚：D+6 入住 D+8 退房（晚 D+6 已被 b31 占满）；
+  //    失败单不得在晚 D+7 产生任何部分占用，各晚 booked 与建单前逐行一致（回滚实证）
+  const beforeFailed = await nightRows('sv-b1');
+  check(
+    '任一晚满员 → 第二单 CONFLICT「已订满」',
+    await rejects(
+      c2.create({
+        storeId: 's-1',
+        petId: 'p-2',
+        serviceId: 'sv-b1',
+        type: 'boarding',
+        scheduledStart: at(6, 10),
+        scheduledEnd: at(8, 10),
+        paymentMode: 'pay_at_store',
+      }),
+      'CONFLICT',
+      /已订满/,
+    ),
+  );
+  const rollbackNights = await nightRows('sv-b1');
+  check(
+    '回滚实证：失败单不产生部分占用（各晚快照与建单前逐行一致，晚 D+7 无槽位行）',
+    rollbackNights.length === beforeFailed.length &&
+      !rollbackNights.some((r) => r.nightDate === isoDay(at(7, 10))) &&
+      rollbackNights.every((r, i) => {
+        const b = beforeFailed[i];
+        return b?.nightDate === r.nightDate && b.bookedCount === r.bookedCount && b.capacity === r.capacity;
+      }),
+    { before: beforeFailed.map((r) => [r.nightDate, r.bookedCount]), after: rollbackNights.map((r) => [r.nightDate, r.bookedCount]) },
+  );
+  check(
+    '回滚实证：失败单不产生预约记录（u-c2 名下仍 0 单）',
+    (await db.select().from(schema.appointments).where(eq(schema.appointments.customerId, 'u-c2'))).length === 0,
+  );
+
+  // ③ 多间房房型（sv-b2 room_count=2）：同晚两单成功、第三单 CONFLICT 且 booked 不超限
+  await c1.create({
+    storeId: 's-1',
+    petId: 'p-1',
+    serviceId: 'sv-b2',
+    type: 'boarding',
+    scheduledStart: at(5, 10),
+    scheduledEnd: at(6, 10),
+    paymentMode: 'pay_at_store',
+  });
+  await c2.create({
+    storeId: 's-1',
+    petId: 'p-2',
+    serviceId: 'sv-b2',
+    type: 'boarding',
+    scheduledStart: at(5, 10),
+    scheduledEnd: at(6, 10),
+    paymentMode: 'pay_at_store',
+  });
+  const b2Nights = await nightRows('sv-b2');
+  check(
+    'room_count=2 房型：同晚两单均成功（capacity=2，booked=2）',
+    b2Nights.length === 1 &&
+      b2Nights[0]?.nightDate === isoDay(at(5, 10)) &&
+      b2Nights[0]?.capacity === 2 &&
+      b2Nights[0]?.bookedCount === 2,
+    b2Nights,
+  );
+  check(
+    '同晚第三单 CONFLICT 且 booked_count 不超限（仍 2）',
+    (await rejects(
+      c1.create({
+        storeId: 's-1',
+        petId: 'p-1',
+        serviceId: 'sv-b2',
+        type: 'boarding',
+        scheduledStart: at(5, 10),
+        scheduledEnd: at(6, 10),
+        paymentMode: 'pay_at_store',
+      }),
+      'CONFLICT',
+    )) && (await nightRows('sv-b2'))[0]?.bookedCount === 2,
+  );
+
+  // ④ 取消释放全部晚：b31（晚 D+5 / D+6 两晚）>4h 直消 → 两晚 booked 归零（行保留）
+  const ccB31 = await c1.cancel({ appointmentId: b31.id });
+  check('寄养 >4h 取消 → cancelled', ccB31.outcome === 'cancelled');
+  const afterCancelNights = await nightRows('sv-b1');
+  check(
+    '取消释放全部晚（晚 D+5 / D+6 booked_count 1→0）',
+    [isoDay(at(5, 10)), isoDay(at(6, 10))].every((d) =>
+      afterCancelNights.some((r) => r.nightDate === d && r.bookedCount === 0),
+    ),
+    afterCancelNights,
+  );
+
+  // ⑤ assertBookableTime 全住宿区间校验：住退同一日（0 晚）→ BAD_REQUEST
+  check(
+    '寄养 0 晚（住退同一日）→ BAD_REQUEST「退房日期且晚于入住日期」',
+    await rejects(
+      c1.create({
+        storeId: 's-1',
+        petId: 'p-1',
+        serviceId: 'sv-b1',
+        type: 'boarding',
+        scheduledStart: at(8, 10),
+        scheduledEnd: at(8, 18),
+        paymentMode: 'pay_at_store',
+      }),
+      'BAD_REQUEST',
+      /退房日期/,
+    ),
+  );
+
   /* ==================== 6. 列表与详情 ==================== */
   console.log('\n[6] listMine 分组 / get 归属 / listForStore 过滤 / listTodayForStaff');
   const mine = await c1.listMine();
@@ -807,8 +975,8 @@ try {
   /* ==================== 7. 事件总账 ==================== */
   console.log('\n[7] 事件总账（event_outbox 按频道+类型核对）');
   check(
-    'appointment.created → store 频道共 7 条（7 次成功 create，含 B2-7R 回归 apptPass 与回补用例 appt5b；寄养拒绝单不产生事件）',
-    (await countOutbox('store:s-1', 'appointment.created')) === 7,
+    'appointment.created → store 频道共 10 条（原 7 次成功 create + B3-2 三节 b31 与 sv-b2 两单；CONFLICT/拒绝单不产生事件）',
+    (await countOutbox('store:s-1', 'appointment.created')) === 10,
   );
   check(
     'appointment.assigned 计数正确（st-a：派单 appt2 + 认领 appt3；st-b：认领 appt1 + 派单 appt4；user:u-c1 共 4 条）',

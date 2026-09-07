@@ -16,6 +16,11 @@
  * - 占座防超卖（§3.1 序 1）：create 事务内 UPSERT store_slots 行并校验
  *   booked_count < capacity 后 +1。SQLite 单写者模型下事务即行锁（等价
  *   SELECT ... FOR UPDATE），保留事务结构，未来切 MySQL 语义直接成立。
+ * - B3-2（A-P1-11 红标）：寄养容量按「晚」占用——boarding 改走 boarding_slots
+ *   （房型 service_id × 住宿晚 night_date，本地日界，入住日到退房日前一日），
+ *   create 事务内逐晚校验占用（任一晚满员 CONFLICT 整体回滚）；取消/拒单/改期
+ *   经 releaseAppointmentSlots → releaseBoardingSlots 释放全部晚（幂等）。
+ *   grooming 维持 store_slots 30min 时段槽不变。
  * - 预约码（§3.3）：二维码 payload { v:2, aid, tw, exp, sig }，
  *   sig = HMAC_SHA256(`${aid}|${tw}|${exp}`, BOOKING_CODE_SECRET)；tw 为 5min 滚动
  *   时间窗编号，验签接受当前窗口与上一窗口；exp = scheduled_start + 4h（覆盖迟到）。
@@ -103,6 +108,9 @@ const TYPE_ACCEPT_SKILLS: Record<'grooming' | 'boarding', string[]> = {
 
 /** store_slots UPSERT 新行时的默认容量（与种子数据 capacity=2 对齐） */
 const DEFAULT_SLOT_CAPACITY = 2;
+
+/** boarding_slots 新行默认容量：services.room_count 为空时按 1 间（防超卖兜底） */
+export const DEFAULT_BOARDING_ROOM_COUNT = 1;
 
 /** emitEvent 首参类型（全局 db；事务 handle 运行时接口一致，类型上做显式断言） */
 type DbHandle = Parameters<typeof emitEvent>[0];
@@ -266,6 +274,115 @@ async function releaseSlot(tx: DbHandle, storeId: string, slotStart: Date): Prom
   }
 }
 
+/* ---- B3-2（A-P1-11 红标）：寄养容量按「晚」占用（房型 × 本地日界） ---- */
+
+/**
+ * 住宿区间 → 占用晚列表（本地日界 'YYYY-MM-DD'，入住日到退房日前一日）。
+ * 例：9/14 入住、9/17 退房 → ['2026-09-14','2026-09-15','2026-09-16']。
+ * 与 priceFen 的 ceil((end-start)/24h) 晚数口径在「住退同一时刻」下天然一致；
+ * 同一本地日内的日间寄存（0 晚）由 assertBookableTime 拒绝（寄养须 ≥1 晚）。
+ */
+export function boardingNightDates(start: Date, end: Date): string[] {
+  const dates: string[] = [];
+  const cur = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+  while (cur.getTime() < endDay.getTime()) {
+    dates.push(`${cur.getFullYear()}-${pad2(cur.getMonth() + 1)}-${pad2(cur.getDate())}`);
+    cur.setDate(cur.getDate() + 1);
+  }
+  return dates;
+}
+
+/**
+ * B3-2：寄养占容量——对住宿区间每一晚各占 1 格（调用方保证在同一事务内）。
+ * 行按需创建（capacity 快照自 services.room_count，空则默认 1 间）；任一晚满员抛
+ * CONFLICT，事务整体回滚（已占晚随之撤销，不产生部分占用）。
+ * B3-4 寄养改期复用：释放全部旧晚（releaseBoardingSlots）+ 占用全部新晚（本函数）。
+ */
+async function occupyBoardingSlots(
+  tx: DbHandle,
+  args: { storeId: string; serviceId: string; roomCount: number | null; start: Date; end: Date },
+): Promise<void> {
+  const capacity = args.roomCount ?? DEFAULT_BOARDING_ROOM_COUNT;
+  for (const night of boardingNightDates(args.start, args.end)) {
+    const row = await tx
+      .select()
+      .from(schema.boardingSlots)
+      .where(
+        and(
+          eq(schema.boardingSlots.storeId, args.storeId),
+          eq(schema.boardingSlots.serviceId, args.serviceId),
+          eq(schema.boardingSlots.nightDate, night),
+        ),
+      )
+      .get();
+    if (row) {
+      if (row.bookedCount >= row.capacity) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: `该房型 ${night} 晚已订满，请调整入住/退房日期`,
+        });
+      }
+      await tx
+        .update(schema.boardingSlots)
+        .set({ bookedCount: row.bookedCount + 1, updatedAt: new Date() })
+        .where(eq(schema.boardingSlots.id, row.id));
+    } else {
+      await tx.insert(schema.boardingSlots).values({
+        storeId: args.storeId,
+        serviceId: args.serviceId,
+        nightDate: night,
+        capacity,
+        bookedCount: 1,
+      });
+    }
+  }
+}
+
+/**
+ * B3-2：寄养释放——释放住宿区间全部晚的占用（各晚 -1；调用方保证在同一事务内）。
+ * 幂等安全（槽位行不存在或已为 0 则不动）。客户 >4h 直消、reviewCancel 批准、
+ * B3-3 商家拒单、B3-4 寄养改期统一复用本函数。
+ */
+async function releaseBoardingSlots(
+  tx: DbHandle,
+  args: { storeId: string; serviceId: string; start: Date; end: Date },
+): Promise<void> {
+  for (const night of boardingNightDates(args.start, args.end)) {
+    const row = await tx
+      .select()
+      .from(schema.boardingSlots)
+      .where(
+        and(
+          eq(schema.boardingSlots.storeId, args.storeId),
+          eq(schema.boardingSlots.serviceId, args.serviceId),
+          eq(schema.boardingSlots.nightDate, night),
+        ),
+      )
+      .get();
+    if (row && row.bookedCount > 0) {
+      await tx
+        .update(schema.boardingSlots)
+        .set({ bookedCount: row.bookedCount - 1, updatedAt: new Date() })
+        .where(eq(schema.boardingSlots.id, row.id));
+    }
+  }
+}
+
+/** 取消/改期释放槽位统一入口：grooming 释放 30min 时段槽；boarding 释放住宿区间全部晚（B3-2） */
+async function releaseAppointmentSlots(tx: DbHandle, appt: AppointmentRow): Promise<void> {
+  if (appt.type === 'boarding') {
+    await releaseBoardingSlots(tx, {
+      storeId: appt.storeId,
+      serviceId: appt.serviceId,
+      start: appt.scheduledStart,
+      end: appt.scheduledEnd,
+    });
+  } else {
+    await releaseSlot(tx, appt.storeId, appt.scheduledStart);
+  }
+}
+
 /**
  * B2-7 资损红标：取消回补次卡（必须与「状态置 cancelled」同一事务，调用方保证）。
  * 该单若走过扣次（存在 delta=-1 流水）且尚未回补，则 remain_times +1 并写 +1 回补流水；
@@ -325,6 +442,18 @@ function assertBookableTime(
   if (type === 'grooming') {
     const durMin = Math.round((end.getTime() - start.getTime()) / 60_000);
     if (startMin + durMin > closeMin) badRequest('服务时长超出当日打烊时间，请改约更早时段');
+  } else {
+    // B3-2（A-P1-11）：寄养校验全住宿区间——按日界须 ≥1 晚（退房日晚于入住日），
+    // 且每一晚都落在门店营业日（休息日照看不可承接，与容量按晚占用同口径）
+    const nights = boardingNightDates(start, end);
+    if (nights.length === 0) badRequest('寄养必须选择退房日期且晚于入住日期');
+    for (const night of nights) {
+      const [y = 0, m = 1, d = 1] = night.split('-').map(Number);
+      const nightDay = DAY_KEYS[new Date(y, m - 1, d).getDay()]!;
+      if (!store.openHours?.[nightDay]) {
+        badRequest(`住宿区间包含门店休息日（${night}），请调整入住/退房日期`);
+      }
+    }
   }
 }
 
@@ -382,8 +511,10 @@ type ListItem = AppointmentRow & {
 export const appointmentRouter = router({
   /**
    * 1. create（customer）：宠物归属 / 服务项有效且 type 一致 / 门店营业时间内 /
-   * payment_mode 快照；事务内 UPSERT store_slots 占位（防超卖）+ 建 pending 预约
-   * （生成 6 位人工核销码）+ emitEvent(store, appointment.created)。
+   * payment_mode 快照；事务内占槽（防超卖）+ 建 pending 预约（生成 6 位人工核销码）
+   * + emitEvent(store, appointment.created)。占槽按 type 分路：grooming UPSERT
+   * store_slots（30min 时段槽）；boarding（B3-2）逐晚 UPSERT boarding_slots
+   * （房型×晚），任一晚满员 CONFLICT 整体回滚。
    * paymentMode=pass_deduct（B2-7）：同事务内先校验本人名下该店次卡
    * （active + remain_times>0 + 未过期，否则 BAD_REQUEST「暂无可用次卡」）并
    * remain_times-1、写 -1 扣次流水——扣次先于占槽，占槽 CONFLICT/建单失败时
@@ -500,31 +631,44 @@ export const appointmentRouter = router({
               deductedPassId = pass.id;
             }
             // SQLite 单写者：事务即行锁（等价 SELECT ... FOR UPDATE），杜绝同槽并发超卖
-            const slot = await tx
-              .select()
-              .from(schema.storeSlots)
-              .where(
-                and(
-                  eq(schema.storeSlots.storeId, input.storeId),
-                  eq(schema.storeSlots.slotStart, start),
-                ),
-              )
-              .get();
-            if (slot) {
-              if (slot.bookedCount >= slot.capacity) {
-                throw new TRPCError({ code: 'CONFLICT', message: '该时段已约满，请换个时间' });
-              }
-              await tx
-                .update(schema.storeSlots)
-                .set({ bookedCount: slot.bookedCount + 1, updatedAt: new Date() })
-                .where(eq(schema.storeSlots.id, slot.id));
-            } else {
-              await tx.insert(schema.storeSlots).values({
+            if (input.type === 'boarding') {
+              // B3-2（A-P1-11 红标）：寄养按「晚」占容量——住宿区间每一晚各占 1 格
+              // （boarding_slots：房型 × 本地日界）；任一晚满员抛 CONFLICT，事务整体回滚，
+              // 不产生部分占用。寄养不再占用洗护 30min 时段槽（store_slots）。
+              await occupyBoardingSlots(txDb(tx), {
                 storeId: input.storeId,
-                slotStart: start,
-                capacity: DEFAULT_SLOT_CAPACITY,
-                bookedCount: 1,
+                serviceId: input.serviceId,
+                roomCount: service.roomCount,
+                start,
+                end,
               });
+            } else {
+              const slot = await tx
+                .select()
+                .from(schema.storeSlots)
+                .where(
+                  and(
+                    eq(schema.storeSlots.storeId, input.storeId),
+                    eq(schema.storeSlots.slotStart, start),
+                  ),
+                )
+                .get();
+              if (slot) {
+                if (slot.bookedCount >= slot.capacity) {
+                  throw new TRPCError({ code: 'CONFLICT', message: '该时段已约满，请换个时间' });
+                }
+                await tx
+                  .update(schema.storeSlots)
+                  .set({ bookedCount: slot.bookedCount + 1, updatedAt: new Date() })
+                  .where(eq(schema.storeSlots.id, slot.id));
+              } else {
+                await tx.insert(schema.storeSlots).values({
+                  storeId: input.storeId,
+                  slotStart: start,
+                  capacity: DEFAULT_SLOT_CAPACITY,
+                  bookedCount: 1,
+                });
+              }
             }
             const appt = await tx
               .insert(schema.appointments)
@@ -742,10 +886,11 @@ export const appointmentRouter = router({
       const petName = await petNameOf(ctx.db, appt.petId);
 
       if (secondsToStart > CANCEL_FREE_BEFORE_SEC) {
-        // >4h：直接取消 + 事务内回减槽位（B2-7：同事务回补次卡扣次）
+        // >4h：直接取消 + 事务内回减槽位（B3-2：寄养释放住宿区间全部晚；
+        // B2-7：同事务回补次卡扣次）
         let outboxId = '';
         const updated = await ctx.db.transaction(async (tx) => {
-          await releaseSlot(txDb(tx), appt.storeId, appt.scheduledStart);
+          await releaseAppointmentSlots(txDb(tx), appt);
           await refundPassIfDeducted(txDb(tx), appt);
           const row = await tx
             .update(schema.appointments)
@@ -799,7 +944,8 @@ export const appointmentRouter = router({
       let outboxId = '';
       const updated = await ctx.db.transaction(async (tx) => {
         if (input.approve) {
-          await releaseSlot(txDb(tx), appt.storeId, appt.scheduledStart);
+          // B3-2：寄养批准取消释放住宿区间全部晚（releaseBoardingSlots，幂等）
+          await releaseAppointmentSlots(txDb(tx), appt);
           await refundPassIfDeducted(txDb(tx), appt); // B2-7：批准取消同事务回补次卡
         }
         const row = await tx
@@ -886,30 +1032,42 @@ export const appointmentRouter = router({
       const petName = await petNameOf(ctx.db, appt.petId);
       const outboxIds: string[] = [];
       const updated = await ctx.db.transaction(async (tx) => {
-        // 旧槽位回减（幂等安全）→ 新槽位校验并 +1 —— 同一事务，冲突整体回滚
-        await releaseSlot(txDb(tx), appt.storeId, appt.scheduledStart);
-        const slot = await tx
-          .select()
-          .from(schema.storeSlots)
-          .where(
-            and(eq(schema.storeSlots.storeId, appt.storeId), eq(schema.storeSlots.slotStart, start)),
-          )
-          .get();
-        if (slot) {
-          if (slot.bookedCount >= slot.capacity) {
-            throw new TRPCError({ code: 'CONFLICT', message: '该时段已约满，请换个时间' });
-          }
-          await tx
-            .update(schema.storeSlots)
-            .set({ bookedCount: slot.bookedCount + 1, updatedAt: new Date() })
-            .where(eq(schema.storeSlots.id, slot.id));
-        } else {
-          await tx.insert(schema.storeSlots).values({
+        // 旧槽位回减（幂等安全）→ 新槽位校验并 +1 —— 同一事务，冲突整体回滚。
+        // B3-2：boarding 走「释放全部旧晚 + 逐晚校验占用全部新晚」（boarding_slots），
+        // grooming 维持 30min 时段槽（store_slots）。
+        await releaseAppointmentSlots(txDb(tx), appt);
+        if (appt.type === 'boarding') {
+          await occupyBoardingSlots(txDb(tx), {
             storeId: appt.storeId,
-            slotStart: start,
-            capacity: DEFAULT_SLOT_CAPACITY,
-            bookedCount: 1,
+            serviceId: appt.serviceId,
+            roomCount: service?.roomCount ?? null,
+            start,
+            end,
           });
+        } else {
+          const slot = await tx
+            .select()
+            .from(schema.storeSlots)
+            .where(
+              and(eq(schema.storeSlots.storeId, appt.storeId), eq(schema.storeSlots.slotStart, start)),
+            )
+            .get();
+          if (slot) {
+            if (slot.bookedCount >= slot.capacity) {
+              throw new TRPCError({ code: 'CONFLICT', message: '该时段已约满，请换个时间' });
+            }
+            await tx
+              .update(schema.storeSlots)
+              .set({ bookedCount: slot.bookedCount + 1, updatedAt: new Date() })
+              .where(eq(schema.storeSlots.id, slot.id));
+          } else {
+            await tx.insert(schema.storeSlots).values({
+              storeId: appt.storeId,
+              slotStart: start,
+              capacity: DEFAULT_SLOT_CAPACITY,
+              bookedCount: 1,
+            });
+          }
         }
         // B2-6：客户改期同事务内 status 回退 pending + staffId 置空（重新走商家确认流）；
         // 商家改期保持状态与指派不变。新槽满槽抛 CONFLICT 时此处一并回滚。
