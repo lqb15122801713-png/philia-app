@@ -4,7 +4,7 @@
  * 前置：server dev 已监听 7200、customer dev 已监听 7100（脚本只做可达性检查，不自起服务）。
  * 流程：
  *   1. 起 Chrome headless（remote-debugging-port=9223，390x844 移动视口）；
- *   2. dev-login 种子客户 → 导航 /me；
+ *   2. GET /api/auth/dev-seed-users 动态取种子客户（禁止硬编码 ULID）→ dev-login → 导航 /me；
  *   3. Runtime.evaluate 断言 DOM：
  *      - 用户卡渲染（昵称非空 + 加入天数文案）；
  *      - 5 个功能入口 Link href 逐一存在（对照 App.tsx 路由表）；
@@ -19,7 +19,7 @@
  */
 
 import { spawn, spawnSync } from 'node:child_process';
-import { readFileSync, rmSync, mkdirSync } from 'node:fs';
+import { readFileSync, rmSync, mkdirSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
@@ -31,10 +31,30 @@ const SHOTS_DIR = resolve(PHILIA_ROOT, 'shots');
 const APP_PORT = 7100;
 const API_PORT = 7200;
 const DEBUG_PORT = 9223;
-const SEED_USER_ID = '01M1RH3FFNEV4CZM3FJZ4JA7AY'; // 示例客户（与 DevLoginPage 硬编码一致）
-const CHROME = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+// 浏览器自动探测：优先 Chrome，缺失时回退 Edge（同为 Chromium，CDP 行为一致）
+const BROWSER_CANDIDATES = [
+  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+  'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+  process.env.LOCALAPPDATA ? `${process.env.LOCALAPPDATA}\\Google\\Chrome\\Application\\chrome.exe` : '',
+  'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+].filter(Boolean);
+const CHROME = BROWSER_CANDIDATES.find((p) => existsSync(p));
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/**
+ * v1.1-b2 B2-0：种子客户 userId 不再硬编码（reseed 后 ULID 全变）。
+ * 一律先调 GET /api/auth/dev-seed-users 动态取角色含 customer 的种子用户。
+ */
+async function fetchSeedCustomerId() {
+  const res = await fetch(`http://localhost:${API_PORT}/api/auth/dev-seed-users`);
+  if (!res.ok) return null;
+  const data = await res.json().catch(() => null);
+  const users = data?.users ?? [];
+  const customer = users.find((u) => (u.roles ?? []).includes('customer')) ?? users[0];
+  return customer?.id ?? null;
+}
 const results = [];
 function assert(name, ok, detail = '') {
   results.push({ name, ok, detail });
@@ -76,7 +96,9 @@ async function main() {
   }
   mkdirSync(SHOTS_DIR, { recursive: true });
 
-  /* ---------- 起 Chrome headless ---------- */
+  /* ---------- 起浏览器 headless（Chrome，缺失时 Edge） ---------- */
+  if (!CHROME) throw new Error('未找到 Chrome/Edge 可执行文件，无法跑 CDP e2e');
+  console.log(`browser: ${CHROME}`);
   chrome = spawn(CHROME, [
     '--headless=new',
     `--remote-debugging-port=${DEBUG_PORT}`,
@@ -127,14 +149,17 @@ async function main() {
     return r.result.value;
   };
 
-  /* ---------- dev-login ---------- */
+  /* ---------- dev-login（先动态取种子客户，再登录） ---------- */
+  const seedUserId = await fetchSeedCustomerId();
   await send('Page.navigate', { url: `http://localhost:${APP_PORT}/dev-login` });
   await sleep(2500);
-  const loginStatus = await evalJs(`fetch('http://localhost:${API_PORT}/api/auth/dev-login', {
+  const loginStatus = seedUserId
+    ? await evalJs(`fetch('http://localhost:${API_PORT}/api/auth/dev-login', {
     method: 'POST', headers: {'content-type': 'application/json'},
-    body: JSON.stringify({ userId: '${SEED_USER_ID}' }), credentials: 'include'
-  }).then(r => r.status)`);
-  assert('dev-login 种子客户登录', loginStatus === 200, `HTTP ${loginStatus}`);
+    body: JSON.stringify({ userId: '${seedUserId}' }), credentials: 'include'
+  }).then(r => r.status)`)
+    : 0;
+  assert('dev-seed-users 动态取数 + dev-login 种子客户登录', seedUserId !== null && loginStatus === 200, `userId=${seedUserId ?? '（未取到）'} HTTP ${loginStatus}`);
 
   /* ---------- 导航 /me ---------- */
   await send('Page.navigate', { url: `http://localhost:${APP_PORT}/me` });
