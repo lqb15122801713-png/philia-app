@@ -1,7 +1,7 @@
 /**
  * 我的预约（T2.2）：listMine 按状态分组 Tab：
  *   待确认(pending) / 已确认(confirmed + cancel_requested) / 服务中(in_service + in_boarding)
- *   / 已完成(completed + cancelled 合并展示)。
+ *   / 已完成(completed) / 已取消(cancelled)。五 Tab 过滤互斥无交叉。
  * 卡片：门店 / 服务 / 宠物 / 时间 / 状态胶囊 / 价格；服务中卡片带呼吸光环角标；点进详情。
  */
 
@@ -29,7 +29,8 @@ const TABS: TabDef[] = [
   { key: 'pending', label: '待确认', statuses: ['pending'] },
   { key: 'confirmed', label: '已确认', statuses: ['confirmed', 'cancel_requested'] },
   { key: 'serving', label: '服务中', statuses: ['in_service', 'in_boarding'] },
-  { key: 'history', label: '已完成', statuses: ['completed', 'cancelled'] },
+  { key: 'history', label: '已完成', statuses: ['completed'] },
+  { key: 'cancelled', label: '已取消', statuses: ['cancelled'] },
 ];
 
 const SERVING = new Set(['in_service', 'in_boarding']);
