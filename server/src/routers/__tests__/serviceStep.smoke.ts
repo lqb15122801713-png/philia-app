@@ -13,6 +13,9 @@
  * 5. before_after 步：tag normal → 拒；只传 before → 拒；before+after 各 1 → 过
  * 6. 全程走完到 step6 confirm：预约 completed、completed_at 写入、appointment.completed
  *    事件；全程任意时点 active 步数 ≤1（规则 1 不变量）
+ * 7. v1.1-b3 B3-1（A-P0-9 结构性）：completed 单打标 → 同事务重开（in_service + 清
+ *    completed_at + 末步 reactivate）+ appointment.reopened 三频道事件 + 二次完成
+ *    （completed_at 重写、completed 事件再发）；cancelled/pending 维持拒绝且无写库副作用
  *
  * 使用独立临时库（PHILIA_DB_URL 指向 %TMP%），跑完清场，不污染 server/data/philia.db。
  */
@@ -213,14 +216,15 @@ try {
       .where(eq(schema.stepPhotos.stepId, stepId))
       .orderBy(asc(schema.stepPhotos.takenAt), asc(schema.stepPhotos.id));
 
-  async function lastOutbox(eventType: string) {
-    return db
+  async function lastOutbox(eventType: string, channel?: string) {
+    const rows = await db
       .select()
       .from(schema.eventOutbox)
       .where(eq(schema.eventOutbox.eventType, eventType))
       .orderBy(desc(schema.eventOutbox.id))
-      .limit(1)
-      .then((r) => r[0]);
+      .limit(8);
+    // B2-8 起 completed 等事件双频道落库：desc 首行可能是 store 频道，按频道过滤取最新
+    return channel ? rows.find((r) => r.channel === channel) : rows[0];
   }
 
   /* ============================== [1] locked 步拒绝 + 归属校验 ============================== */
@@ -559,7 +563,7 @@ try {
     { status: apptFinal?.status, completedAt: apptFinal?.completedAt },
   );
   check('step6 done', (await stepOf('confirm')).status === 'done');
-  const evtDone = await lastOutbox(EventType.AppointmentCompleted);
+  const evtDone = await lastOutbox(EventType.AppointmentCompleted, `appointment:${APPT}`);
   check(
     'appointment.completed 事件落 outbox（频道 appointment:{aid}）',
     evtDone?.channel === `appointment:${APPT}` && evtDone.payload?.appointmentId === APPT,
@@ -587,6 +591,151 @@ try {
     '完成后再 confirmStep（done 步）',
     staffCaller.confirmStep({ appointmentId: APPT, stepKey: 'confirm' }),
     'FORBIDDEN',
+  );
+
+  /* ============================== [7] B3-1：completed 单打标 → 事务重开 ============================== */
+  console.log('\n[7] B3-1：completed 打标 → in_service + reopened 三频道事件 + 二次完成全链路');
+  const APPT_CANCELLED = 'appt-ss00002';
+  const APPT_PENDING = 'appt-ss00003';
+  await db.insert(schema.appointments).values([
+    {
+      id: APPT_CANCELLED,
+      code: '483922',
+      customerId: CUSTOMER,
+      storeId: STORE,
+      petId: PET,
+      serviceId: SERVICE,
+      type: 'grooming',
+      scheduledStart: start,
+      scheduledEnd: new Date(start.getTime() + 3600_000),
+      status: 'cancelled',
+      priceFen: 12800,
+    },
+    {
+      id: APPT_PENDING,
+      code: '483923',
+      customerId: CUSTOMER,
+      storeId: STORE,
+      petId: PET,
+      serviceId: SERVICE,
+      type: 'grooming',
+      scheduledStart: start,
+      scheduledEnd: new Date(start.getTime() + 3600_000),
+      status: 'pending',
+      priceFen: 12800,
+    },
+  ]);
+  // 其余状态维持拒绝：cancelled 显式拒、pending 未初始化六步流 NOT_FOUND 拒
+  await expectErr(
+    'cancelled 单打标',
+    merchantCaller.flagForRedo({ appointmentId: APPT_CANCELLED, stepKey: 'confirm' }),
+    'BAD_REQUEST',
+    '已取消',
+  );
+  await expectErr(
+    'pending 单打标（六步流未初始化）',
+    merchantCaller.flagForRedo({ appointmentId: APPT_PENDING, stepKey: 'confirm' }),
+    'NOT_FOUND',
+  );
+
+  // 失败路径回滚实证：拒绝后 cancelled/pending 单状态与 outbox 均无变化
+  const cancelledRow = await db
+    .select({ status: schema.appointments.status })
+    .from(schema.appointments)
+    .where(eq(schema.appointments.id, APPT_CANCELLED))
+    .get();
+  check('cancelled 单打标被拒后状态仍 cancelled（无写库副作用）', cancelledRow?.status === 'cancelled');
+
+  const firstCompletedAt = apptFinal!.completedAt!;
+  // completed 单打标：放行 → 同一事务重开（预约回 in_service + 清 completed_at + 末步 reactivate）
+  const flagReopen = await merchantCaller.flagForRedo({
+    appointmentId: APPT,
+    stepKey: 'confirm',
+    reason: '家长反馈收尾照片有误',
+  });
+  check(
+    'completed 打标返回 reopened=true、reactivated=true、作废 0 张（confirm 步无照片）',
+    flagReopen.reopened === true && flagReopen.reactivated === true && flagReopen.invalidatedCount === 0,
+    flagReopen,
+  );
+  const apptReopened = await db
+    .select()
+    .from(schema.appointments)
+    .where(eq(schema.appointments.id, APPT))
+    .get();
+  check(
+    '重开后预约 completed→in_service 且 completed_at 清空',
+    apptReopened?.status === 'in_service' && apptReopened.completedAt === null,
+    { status: apptReopened?.status, completedAt: apptReopened?.completedAt },
+  );
+  const step6Reopened = await stepOf('confirm');
+  check(
+    '末步 done→active、flagged=1、done_at 清空',
+    step6Reopened.status === 'active' && step6Reopened.flagged === true && step6Reopened.doneAt === null,
+    { status: step6Reopened.status, flagged: step6Reopened.flagged, doneAt: step6Reopened.doneAt },
+  );
+  const activesAfterReopen = (await stepsOf()).filter((s) => s.status === 'active');
+  check(
+    '重开后恰好 1 个 active 步（=confirm，规则 1 不变量）',
+    activesAfterReopen.length === 1 && activesAfterReopen[0]!.stepKey === 'confirm',
+    activesAfterReopen.map((s) => s.stepKey),
+  );
+  // appointment.reopened：appointment + store + user 三频道，payload 含 appointmentId/stepKey/by
+  const reopenedRows = await db
+    .select()
+    .from(schema.eventOutbox)
+    .where(eq(schema.eventOutbox.eventType, EventType.AppointmentReopened));
+  const reopenedChannels = new Set(reopenedRows.map((r) => r.channel));
+  check(
+    'appointment.reopened 落 outbox ×3（appointment + store + user 三频道）且载荷齐全',
+    reopenedRows.length === 3 &&
+      reopenedChannels.has(`appointment:${APPT}`) &&
+      reopenedChannels.has(`store:${STORE}`) &&
+      reopenedChannels.has(`user:${CUSTOMER}`) &&
+      reopenedRows.every(
+        (r) =>
+          r.payload?.appointmentId === APPT &&
+          r.payload?.stepKey === 'confirm' &&
+          r.payload?.by === OWNER,
+      ),
+    reopenedRows.map((r) => [r.channel, r.payload]),
+  );
+
+  // 二次完成全链路：重开后员工 confirmStep 末步 → completedAt 重写 + completed 事件再发一次
+  const conf6Again = await staffCaller.confirmStep({ appointmentId: APPT, stepKey: 'confirm' });
+  check(
+    '重开后 confirmStep(confirm) 再次返回 appointmentCompleted=true',
+    conf6Again.appointmentCompleted === true && conf6Again.nextStepKey === null,
+    conf6Again,
+  );
+  const apptFinal2 = await db
+    .select()
+    .from(schema.appointments)
+    .where(eq(schema.appointments.id, APPT))
+    .get();
+  check(
+    '二次完成：预约回 completed 且 completed_at 重写（不早于首次）',
+    apptFinal2?.status === 'completed' &&
+      apptFinal2.completedAt instanceof Date &&
+      apptFinal2.completedAt.getTime() >= firstCompletedAt.getTime(),
+    { status: apptFinal2?.status, first: firstCompletedAt, second: apptFinal2?.completedAt },
+  );
+  const completedRows2 = await db
+    .select()
+    .from(schema.eventOutbox)
+    .where(eq(schema.eventOutbox.eventType, EventType.AppointmentCompleted));
+  const completedApptChannel = completedRows2.filter((r) => r.channel === `appointment:${APPT}`);
+  const completedStoreChannel = completedRows2.filter((r) => r.channel === `store:${STORE}`);
+  check(
+    'appointment.completed 事件再发一次（appointment 频道 ×2、store 频道 ×2，口径与现有一致）',
+    completedApptChannel.length === 2 && completedStoreChannel.length === 2,
+    { appointment: completedApptChannel.length, store: completedStoreChannel.length },
+  );
+  const summaryFinal = await customerCaller.progressSummary({ appointmentId: APPT });
+  check(
+    '二次完成后 progressSummary 回到完成态（doneCount=6、status=completed）',
+    summaryFinal.doneCount === 6 && summaryFinal.status === 'completed',
+    summaryFinal,
   );
 
   client.close();

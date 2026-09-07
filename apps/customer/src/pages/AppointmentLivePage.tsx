@@ -342,11 +342,17 @@ export default function AppointmentLivePage() {
         case EventType.AppointmentCancelled:
           void queryClient.invalidateQueries({ queryKey: ['appointment', 'get', aid] })
           break
+        case EventType.AppointmentReopened:
+          // v1.1-b3 B3-1：completed 单打标重开 → 从完成态回退到服务中，全量对齐
+          setCelebrating(false)
+          showToast('商家重新开启了本次服务，可继续查看进度')
+          alignAll()
+          break
         default:
           break
       }
     },
-    [aid, markSeen, queryClient, pet?.name, showToast],
+    [aid, markSeen, queryClient, pet?.name, showToast, alignAll],
   )
 
   const { connected } = useEventSource({ url: sseUrl, onEvent, onReconnect: alignAll })
