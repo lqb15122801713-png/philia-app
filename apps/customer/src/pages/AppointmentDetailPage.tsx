@@ -5,9 +5,12 @@
  * - 取消规则：>4h confirm 后直接 cancel（outcome=cancelled）；≤4h 提示「需商家审核」，
  *   提交后转 cancel_requested 展示；in_service/in_boarding 禁用自助取消
  *   （「服务中，如需取消请联系门店」+ tel: 联系门店）；
- * - 改期（v1.1-b2 B2-6）：pending/confirmed 且距开始 >4h 的洗护单显示「改期」按钮，
- *   展开复用预约向导的 SlotPicker 选新时段（服务/宠物沿用原单）→ appointment.reschedule
- *   → toast「改期已提交，等待商家重新确认」（状态回退 pending，重新走商家确认流）；
+ * - 改期（v1.1-b2 B2-6 / v1.1-b3 B3-4）：pending/confirmed 且距开始 >4h 的单显示「改期」按钮
+ *   （B3-4 起对寄养开放；寄养以入住日首晚计 4h 阈值）。
+ *   洗护：展开复用预约向导的 SlotPicker 选新时段；寄养：复用 B2-5 两阶段日期组件
+ *   （BoardingDateRangePicker）重选入住/退房（预填当前区间）→ appointment.reschedule
+ *   （寄养必传 scheduledStart+scheduledEnd）→ toast「改期已提交，等待商家重新确认」
+ *   （状态回退 pending，重新走商家确认流）；
  * - completed：评价入口（星级 + 文字 → appointment.review；已评价则展示）；
  * - in_service/in_boarding：显著入口跳 /appointments/:id/live。
  */
@@ -17,6 +20,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { EventType, getApiBase, useEventSource, useMe, usePhiliaClient, type EventEnvelope } from '@philia/shared';
 import BookingCode from '@/components/booking/BookingCode';
+import BoardingDateRangePicker, { checkinAt } from '@/components/booking/BoardingDateRangePicker';
 import SlotPicker from '@/components/booking/SlotPicker';
 import { ErrorState } from '@/components/home/common';
 import { friendlyError, useToast } from '@/components/booking/Toast';
@@ -114,11 +118,14 @@ export default function AppointmentDetailPage() {
   // v1.1-b2 B2-6：改期面板状态 + 新选时段
   const [rescheduling, setRescheduling] = useState(false);
   const [newSlot, setNewSlot] = useState<Date | null>(null);
+  // v1.1-b3 B3-4：寄养改期——重选入住/退房日（打开面板时预填当前区间）
+  const [newCheckin, setNewCheckin] = useState<Date | null>(null);
+  const [newCheckout, setNewCheckout] = useState<Date | null>(null);
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
 
-  // 改期槽位数据源：与预约向导同源（store.getWithServices 带当前 serviceId，
-  // 槽位按该服务时长过滤连续槽），展开改期面板时才拉取
+  // 改期槽位数据源（仅洗护）：与预约向导同源（store.getWithServices 带当前 serviceId，
+  // 槽位按该服务时长过滤连续槽），展开改期面板时才拉取；寄养改期走两阶段日期重选，无需槽位
   const rescheduleSlotsQ = useQuery({
     queryKey: ['store', 'getWithServices', appt?.storeId ?? '', appt?.serviceId ?? '', 'reschedule'],
     queryFn: () =>
@@ -126,7 +133,7 @@ export default function AppointmentDetailPage() {
         storeId: appt!.storeId,
         serviceId: appt!.serviceId,
       }),
-    enabled: rescheduling && !!appt,
+    enabled: rescheduling && !!appt && appt.type === 'grooming',
   });
 
   const invalidate = () => {
@@ -160,14 +167,27 @@ export default function AppointmentDetailPage() {
     onError: (err) => showToast(friendlyError(err, '评价提交失败')),
   });
 
-  // v1.1-b2 B2-6：客户自助改期（服务端校验：本人 + pending/confirmed + 距原开始 >4h）
+  // v1.1-b2 B2-6 / v1.1-b3 B3-4：客户自助改期（服务端校验：本人 + pending/confirmed +
+  // 距原开始 >4h，寄养以入住日首晚计）。寄养必传 scheduledStart+scheduledEnd
+  // （入住/退房日按门店开店时刻对齐，与寄养向导 checkinAt 同口径）；洗护传 scheduledStart。
   const rescheduleM = useMutation({
-    mutationFn: () =>
-      trpc.appointment.reschedule.mutate({ appointmentId: id, scheduledStart: newSlot! }),
+    mutationFn: () => {
+      if (appt?.type === 'boarding') {
+        if (!d?.store || !newCheckin || !newCheckout) throw new Error('请选择新的入住/退房日期');
+        return trpc.appointment.reschedule.mutate({
+          appointmentId: id,
+          scheduledStart: checkinAt(d.store, newCheckin),
+          scheduledEnd: checkinAt(d.store, newCheckout),
+        });
+      }
+      return trpc.appointment.reschedule.mutate({ appointmentId: id, scheduledStart: newSlot! });
+    },
     onSuccess: () => {
       invalidate();
       setRescheduling(false);
       setNewSlot(null);
+      setNewCheckin(null);
+      setNewCheckout(null);
       showToast('改期已提交，等待商家重新确认', 'info');
     },
     onError: (err) => showToast(friendlyError(err, '改期失败，请稍后再试')),
@@ -277,9 +297,9 @@ export default function AppointmentDetailPage() {
   const cancellable = appt.status === 'pending' || appt.status === 'confirmed';
   const secondsToStart = Math.floor((appt.scheduledStart.getTime() - Date.now()) / 1000);
   const freeCancel = secondsToStart > CANCEL_FREE_BEFORE_SEC;
-  // v1.1-b2 B2-6：自助改期入口——与取消同 >4h 阈值；洗护单复用向导 SlotPicker
-  // （寄养改期涉及退房晚数重选，本批次由商家端代改，客户端入口仅洗护）
-  const reschedulable = cancellable && freeCancel && appt.type === 'grooming';
+  // v1.1-b2 B2-6 / v1.1-b3 B3-4：自助改期入口——与取消同 >4h 阈值（寄养以入住日首晚
+  // 即 scheduledStart 计）；B3-4 起对寄养开放（两阶段日期组件重选入住/退房）
+  const reschedulable = cancellable && freeCancel;
   // stores 表暂无 phone 字段：有则渲染 tel:，无则提示到店/商家端联系
   const storePhone = (d.store as { phone?: string | null } | null)?.phone ?? null;
 
@@ -532,12 +552,24 @@ export default function AppointmentDetailPage() {
         <section className="mt-4">
           {rescheduling ? (
             <div className="rounded-card bg-card p-4 shadow-card">
-              <p className="text-body font-semibold">选择新时间</p>
+              <p className="text-body font-semibold">
+                {appt.type === 'boarding' ? '重选入住 / 退房日期' : '选择新时间'}
+              </p>
               <p className="mt-1 text-caption text-ink-secondary">
                 {d.service?.name ?? '服务'} · {d.pet?.name ?? '宠物'}（改期后需商家重新确认）
               </p>
               <div className="mt-3">
-                {rescheduleSlotsQ.data?.store ? (
+                {appt.type === 'boarding' ? (
+                  // B3-4：寄养改期复用 B2-5 两阶段日期组件（打开时已预填当前区间），
+                  // 任一新晚满员由服务端 CONFLICT 拦截并原文 toast
+                  <BoardingDateRangePicker
+                    store={d.store ?? null}
+                    checkin={newCheckin}
+                    checkout={newCheckout}
+                    onCheckinChange={setNewCheckin}
+                    onCheckoutChange={setNewCheckout}
+                  />
+                ) : rescheduleSlotsQ.data?.store ? (
                   <SlotPicker
                     store={rescheduleSlotsQ.data.store}
                     slots={rescheduleSlotsQ.data.slots ?? []}
@@ -557,6 +589,8 @@ export default function AppointmentDetailPage() {
                   onClick={() => {
                     setRescheduling(false);
                     setNewSlot(null);
+                    setNewCheckin(null);
+                    setNewCheckout(null);
                   }}
                   className="h-11 flex-1 rounded-full bg-sunken text-body font-medium text-ink"
                 >
@@ -564,7 +598,10 @@ export default function AppointmentDetailPage() {
                 </button>
                 <button
                   type="button"
-                  disabled={!newSlot || rescheduleM.isPending}
+                  disabled={
+                    (appt.type === 'boarding' ? !newCheckin || !newCheckout : !newSlot) ||
+                    rescheduleM.isPending
+                  }
                   onClick={() => rescheduleM.mutate()}
                   className="h-11 flex-1 rounded-full bg-brand-primary text-body font-medium text-white disabled:opacity-60"
                 >
@@ -605,7 +642,26 @@ export default function AppointmentDetailPage() {
               {reschedulable ? (
                 <button
                   type="button"
-                  onClick={() => setRescheduling(true)}
+                  onClick={() => {
+                    // B3-4：寄养改期面板预填当前住宿区间（按本地日界取入住/退房日）
+                    if (appt.type === 'boarding') {
+                      setNewCheckin(
+                        new Date(
+                          appt.scheduledStart.getFullYear(),
+                          appt.scheduledStart.getMonth(),
+                          appt.scheduledStart.getDate(),
+                        ),
+                      );
+                      setNewCheckout(
+                        new Date(
+                          appt.scheduledEnd.getFullYear(),
+                          appt.scheduledEnd.getMonth(),
+                          appt.scheduledEnd.getDate(),
+                        ),
+                      );
+                    }
+                    setRescheduling(true);
+                  }}
                   className="h-11 flex-1 rounded-full bg-brand-primary text-body font-medium text-white shadow-card"
                 >
                   改期

@@ -24,6 +24,11 @@
  *    reason 必填 1~100 字；客户/非本店 FORBIDDEN；同事务置 cancelled + 释放槽位
  *    （寄养全晚释放）+ cancelReason/cancelSource=merchant_reject 落库 + rejected 双频道
  *    事件（payload 含 reason）；门禁 3：pass_deduct 单拒单同事务回补 +1、重复拒单幂等
+ * 5e. B3-4 寄养改期：boarding 必传 scheduledEnd（缺省/不晚于入住日均 BAD_REQUEST）；
+ *    改期事务内释放全部旧晚 + 逐晚占用全部新晚 + status 回退 pending + staffId 置空 +
+ *    rescheduled 双频道（appointment+store，by=customer）；满员晚 CONFLICT 整体回滚
+ *    （预约行与各晚快照逐项一致）；<4h（入住日首晚计）/in_boarding 拒绝；不触碰卡表；
+ *    B2-6 洗护改期回归
  * 6. listMine 分组 / get 归属 / listForStore 过滤 / listTodayForStaff 今日时间轴
  * 7. 事件总账：每个关键动作后 event_outbox 有对应事件且 channel 正确
  */
@@ -1062,6 +1067,188 @@ try {
     { remain: await remainOf(), deltas: r3LogsAfter.map((l) => l.delta) },
   );
 
+  /* ==================== 5e. B3-4 寄养改期（reschedule 扩展至 boarding） ==================== */
+  console.log('\n[5e] B3-4：寄养改期——必传 scheduledEnd / 全晚释放+逐晚占用 / 回退 pending / 双频道事件 / 满晚回滚 / 边界');
+  // ① happy path：b41 两晚（D+11 入住 D+13 退房）→ 商家确认 + 派单 st-b → 客户改期 D+13→D+15
+  const b41 = await c1.create({
+    storeId: 's-1',
+    petId: 'p-1',
+    serviceId: 'sv-b1',
+    type: 'boarding',
+    scheduledStart: at(11, 10),
+    scheduledEnd: at(13, 10),
+    paymentMode: 'pay_at_store',
+  });
+  await m1.confirm({ appointmentId: b41.id });
+  await m1.assign({ appointmentId: b41.id, staffId: 'st-b' }); // st-b 持 boarding 技能
+  // 寄养必传 scheduledEnd：缺省 / 不晚于入住日均 BAD_REQUEST（拒绝静默 24h 缺省压晚）
+  check(
+    'B3-4：寄养改期缺 scheduledEnd → BAD_REQUEST「退房日期」',
+    await rejects(c1.reschedule({ appointmentId: b41.id, scheduledStart: at(13, 10) }), 'BAD_REQUEST', /退房日期/),
+  );
+  check(
+    'B3-4：寄养改期 scheduledEnd 不晚于入住日 → BAD_REQUEST「退房日期」',
+    await rejects(
+      c1.reschedule({ appointmentId: b41.id, scheduledStart: at(13, 10), scheduledEnd: at(13, 18) }),
+      'BAD_REQUEST',
+      /退房日期/,
+    ),
+  );
+  const rs41 = await c1.reschedule({ appointmentId: b41.id, scheduledStart: at(13, 10), scheduledEnd: at(15, 10) });
+  check(
+    'B3-4：寄养改期 → status 回退 pending + staffId 置空 + 新区间落库',
+    rs41.status === 'pending' &&
+      rs41.staffId === null &&
+      rs41.scheduledStart.getTime() === at(13, 10).getTime() &&
+      rs41.scheduledEnd.getTime() === at(15, 10).getTime(),
+    { status: rs41.status, staffId: rs41.staffId },
+  );
+  const b41Nights = await nightRows('sv-b1');
+  check(
+    'B3-4：旧晚 D+11/D+12 全部释放（booked 1→0），新晚 D+13/D+14 逐晚占用（0→1）',
+    [isoDay(at(11, 10)), isoDay(at(12, 10))].every((d) =>
+      b41Nights.some((r) => r.nightDate === d && r.bookedCount === 0),
+    ) &&
+      [isoDay(at(13, 10)), isoDay(at(14, 10))].every((d) =>
+        b41Nights.some((r) => r.nightDate === d && r.bookedCount === 1 && r.capacity === 1),
+      ),
+    b41Nights.map((r) => [r.nightDate, r.bookedCount]),
+  );
+  check(
+    'B3-4：rescheduled 双频道（appointment:{aid} + store:s-1，by=customer，payload 含新区间）',
+    (await countOutbox(`appointment:${b41.id}`, 'appointment.rescheduled')) === 1 &&
+      (await countOutbox('store:s-1', 'appointment.rescheduled')) === 1,
+  );
+  const rs41Evt = await db
+    .select()
+    .from(schema.eventOutbox)
+    .where(and(eq(schema.eventOutbox.channel, 'store:s-1'), eq(schema.eventOutbox.eventType, 'appointment.rescheduled')))
+    .get();
+  check(
+    'B3-4：rescheduled payload 含 appointmentId/scheduledStart/scheduledEnd/by=customer',
+    rs41Evt?.payload?.appointmentId === b41.id &&
+      rs41Evt?.payload?.scheduledStart === at(13, 10).toISOString() &&
+      rs41Evt?.payload?.scheduledEnd === at(15, 10).toISOString() &&
+      rs41Evt?.payload?.by === 'customer',
+    rs41Evt?.payload,
+  );
+  // 寄养本无次卡路径（B2-7R）：改期后卡表零触碰（该单无流水）
+  check(
+    'B3-4：寄养改期不触碰卡表（该单 pass_deduct_log 0 条）',
+    (await db.select().from(schema.passDeductLogs).where(eq(schema.passDeductLogs.appointmentId, b41.id))).length === 0,
+  );
+
+  // ② 满员晚拒绝回滚实证：b42（c2）占满 D+16/D+17（sv-b1 capacity=1）；
+  //    b41 改期到 D+16→D+18 → CONFLICT；旧晚/新晚/status/staffId 与改期前逐项一致
+  const b42 = await c2.create({
+    storeId: 's-1',
+    petId: 'p-2',
+    serviceId: 'sv-b1',
+    type: 'boarding',
+    scheduledStart: at(16, 10),
+    scheduledEnd: at(18, 10),
+    paymentMode: 'pay_at_store',
+  });
+  const b41RowBefore = await db.select().from(schema.appointments).where(eq(schema.appointments.id, b41.id)).get();
+  const nightsBeforeConflict = await nightRows('sv-b1');
+  check(
+    'B3-4：满员晚前置——b42 已占满 D+16/D+17（capacity=1，booked=1）',
+    b42.status === 'pending' &&
+      [isoDay(at(16, 10)), isoDay(at(17, 10))].every((d) =>
+        nightsBeforeConflict.some((r) => r.nightDate === d && r.bookedCount === 1 && r.capacity === 1),
+      ),
+    nightsBeforeConflict.map((r) => [r.nightDate, r.bookedCount]),
+  );
+  check(
+    'B3-4：新区间含满员晚 → CONFLICT「已订满」',
+    await rejects(
+      c1.reschedule({ appointmentId: b41.id, scheduledStart: at(16, 10), scheduledEnd: at(18, 10) }),
+      'CONFLICT',
+      /已订满/,
+    ),
+  );
+  const b41RowAfter = await db.select().from(schema.appointments).where(eq(schema.appointments.id, b41.id)).get();
+  const nightsAfterConflict = await nightRows('sv-b1');
+  check(
+    'B3-4 回滚实证：预约行逐项一致（pending/staffId=null/区间 D+13→D+15 不变）',
+    b41RowAfter?.status === b41RowBefore?.status &&
+      b41RowAfter?.staffId === null &&
+      b41RowAfter?.scheduledStart.getTime() === b41RowBefore?.scheduledStart.getTime() &&
+      b41RowAfter?.scheduledEnd.getTime() === b41RowBefore?.scheduledEnd.getTime(),
+    { before: b41RowBefore?.scheduledStart, after: b41RowAfter?.scheduledStart },
+  );
+  check(
+    'B3-4 回滚实证：各晚快照与改期前逐行一致（旧晚未释放、满员晚未超占）',
+    nightsAfterConflict.length === nightsBeforeConflict.length &&
+      nightsAfterConflict.every((r, i) => {
+        const b = nightsBeforeConflict[i];
+        return b?.nightDate === r.nightDate && b.bookedCount === r.bookedCount && b.capacity === r.capacity;
+      }),
+    {
+      before: nightsBeforeConflict.map((r) => [r.nightDate, r.bookedCount]),
+      after: nightsAfterConflict.map((r) => [r.nightDate, r.bookedCount]),
+    },
+  );
+
+  // ③ 边界：<4h（以入住日首晚 scheduledStart 计）/ 进行中（in_boarding）不可自助改期
+  const b43 = await insertDirectAppt({
+    code: 'SMKB43',
+    status: 'confirmed',
+    type: 'boarding',
+    start: new Date(Date.now() + 2 * 3600_000),
+  });
+  check(
+    'B3-4：距入住日首晚不足 4 小时 → BAD_REQUEST「不足 4 小时」',
+    await rejects(
+      c1.reschedule({ appointmentId: b43.id, scheduledStart: at(20, 10), scheduledEnd: at(21, 10) }),
+      'BAD_REQUEST',
+      /不足 4 小时/,
+    ),
+  );
+  const b44 = await insertDirectAppt({ code: 'SMKB44', status: 'in_boarding', type: 'boarding', start: at(5, 10) });
+  check(
+    'B3-4：in_boarding 进行中改期 → BAD_REQUEST「不可改期」',
+    await rejects(
+      c1.reschedule({ appointmentId: b44.id, scheduledStart: at(20, 10), scheduledEnd: at(21, 10) }),
+      'BAD_REQUEST',
+      /不可改期/,
+    ),
+  );
+
+  // ④ B2-6 回归：洗护改期不受影响（时段槽释放/占用 + 回退 pending + 事件）
+  const g41 = await c1.create({
+    storeId: 's-1',
+    petId: 'p-1',
+    serviceId: 'sv-g1',
+    type: 'grooming',
+    scheduledStart: at(4, 9),
+    paymentMode: 'pay_at_store',
+  });
+  await m1.confirm({ appointmentId: g41.id });
+  const rsG41 = await c1.reschedule({ appointmentId: g41.id, scheduledStart: at(4, 10) });
+  check(
+    'B3-4 回归：洗护改期 → pending + 新时段落库（end 按服务时长补齐）',
+    rsG41.status === 'pending' &&
+      rsG41.scheduledStart.getTime() === at(4, 10).getTime() &&
+      rsG41.scheduledEnd.getTime() === at(4, 11).getTime(),
+    { status: rsG41.status, end: rsG41.scheduledEnd },
+  );
+  const g41OldSlot = await db
+    .select()
+    .from(schema.storeSlots)
+    .where(and(eq(schema.storeSlots.storeId, 's-1'), eq(schema.storeSlots.slotStart, at(4, 9))))
+    .get();
+  const g41NewSlot = await db
+    .select()
+    .from(schema.storeSlots)
+    .where(and(eq(schema.storeSlots.storeId, 's-1'), eq(schema.storeSlots.slotStart, at(4, 10))))
+    .get();
+  check(
+    'B3-4 回归：洗护旧时段槽释放（1→0）+ 新时段槽占用（0→1）',
+    g41OldSlot?.bookedCount === 0 && g41NewSlot?.bookedCount === 1,
+    { old: g41OldSlot?.bookedCount, new: g41NewSlot?.bookedCount },
+  );
+
   /* ==================== 6. 列表与详情 ==================== */
   console.log('\n[6] listMine 分组 / get 归属 / listForStore 过滤 / listTodayForStaff');
   const mine = await c1.listMine();
@@ -1135,8 +1322,8 @@ try {
   /* ==================== 7. 事件总账 ==================== */
   console.log('\n[7] 事件总账（event_outbox 按频道+类型核对）');
   check(
-    'appointment.created → store 频道共 13 条（原 7 次成功 create + B3-2 三节 b31 与 sv-b2 两单 + B3-3 拒单三单；CONFLICT/拒绝单不产生事件）',
-    (await countOutbox('store:s-1', 'appointment.created')) === 13,
+    'appointment.created → store 频道共 16 条（原 7 次成功 create + B3-2 三节 b31 与 sv-b2 两单 + B3-3 拒单三单 + B3-4 改期三节 b41/b42/g41；CONFLICT/拒绝单不产生事件）',
+    (await countOutbox('store:s-1', 'appointment.created')) === 16,
   );
   check(
     'appointment.rejected → 双频道各 3 条（B3-3：洗护/寄养/次卡三单）',
@@ -1144,10 +1331,10 @@ try {
       (await countOutbox('store:s-1', 'appointment.rejected')) === 3,
   );
   check(
-    'appointment.assigned 计数正确（st-a：派单 appt2 + 认领 appt3；st-b：认领 appt1 + 派单 appt4；user:u-c1 共 4 条）',
+    'appointment.assigned 计数正确（st-a：派单 appt2 + 认领 appt3；st-b：认领 appt1 + 派单 appt4 + 派单 b41（B3-4）；user:u-c1 共 5 条）',
     (await countOutbox('staff:st-a', 'appointment.assigned')) === 2 &&
-      (await countOutbox('staff:st-b', 'appointment.assigned')) === 2 &&
-      (await countOutbox('user:u-c1', 'appointment.assigned')) === 4,
+      (await countOutbox('staff:st-b', 'appointment.assigned')) === 3 &&
+      (await countOutbox('user:u-c1', 'appointment.assigned')) === 5,
   );
   check(
     'appointment.checkedin 仅 2 条（appt1/appt3 各 1，幂等重扫无新增）',

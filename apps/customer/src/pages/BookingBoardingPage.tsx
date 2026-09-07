@@ -10,19 +10,12 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
+import BoardingDateRangePicker, { checkinAt } from '@/components/booking/BoardingDateRangePicker';
 import PetPicker from '@/components/booking/PetPicker';
 import StepIndicator from '@/components/booking/StepIndicator';
 import SummaryChips from '@/components/booking/SummaryChips';
 import { friendlyError, useToast } from '@/components/booking/Toast';
-import {
-  dayLabel,
-  fenToYuan,
-  fmtMD,
-  nightsBetween,
-  PAYMENT_MODE_META,
-  toISODate,
-  weekCN,
-} from '@/components/booking/format';
+import { fenToYuan, fmtMD, nightsBetween, PAYMENT_MODE_META, toISODate, weekCN } from '@/components/booking/format';
 import type { StoreItem } from '@/components/booking/types';
 
 const STEPS = ['选日期', '选房型', '选宠物', '确认'];
@@ -31,16 +24,6 @@ const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 /** 门店某日是否休息 */
 const isClosed = (store: StoreItem | null, d: Date) =>
   !store?.openHours?.[DAY_KEYS[d.getDay()]!];
-
-/** 入住时刻：当日开店时间，向上对齐 30min 粒度（服务端强校验） */
-function checkinAt(store: StoreItem, d: Date): Date {
-  const hours = store.openHours?.[DAY_KEYS[d.getDay()]!];
-  const [oh = 10, om = 0] = (hours?.open ?? '10:00').split(':').map(Number);
-  const t = new Date(d.getFullYear(), d.getMonth(), d.getDate(), oh, om, 0, 0);
-  const rem = t.getMinutes() % 30;
-  if (rem !== 0) t.setMinutes(t.getMinutes() + (30 - rem));
-  return t;
-}
 
 export default function BookingBoardingPage() {
   const navigate = useNavigate();
@@ -52,8 +35,6 @@ export default function BookingBoardingPage() {
   const [storeId, setStoreId] = useState<string | null>(searchParams.get('storeId'));
   const [checkin, setCheckin] = useState<Date | null>(null);
   const [checkout, setCheckout] = useState<Date | null>(null);
-  // v1.1-b2 B2-5：两阶段选日期——选定入住后入住网格收起为摘要 chip，点 chip 返回重选
-  const [reselectingCheckin, setReselectingCheckin] = useState(false);
   // v1.1-b1：?serviceId= 预填（首页推荐服务 / philia 一键复购链接均带该参数）
   const [serviceId, setServiceId] = useState<string | null>(searchParams.get('serviceId'));
   // v1.1-b2：?petId= 预填（B2-3 完成单「再次预约」链接带该参数，与 serviceId 预填同模式）
@@ -130,27 +111,6 @@ export default function BookingBoardingPage() {
     }
   }, [petsQ.isSuccess, petsQ.data, petId]);
 
-  /* ---- 日期栅格 ---- */
-  const today = new Date();
-  const checkinDays = useMemo(
-    () => Array.from({ length: 14 }, (_, i) => new Date(today.getFullYear(), today.getMonth(), today.getDate() + i)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
-  const checkoutDays = useMemo(() => {
-    if (!checkin) return [];
-    return Array.from(
-      { length: 14 },
-      (_, i) => new Date(checkin.getFullYear(), checkin.getMonth(), checkin.getDate() + i + 1),
-    );
-  }, [checkin]);
-
-  const pickCheckin = (d: Date) => {
-    setCheckin(d);
-    setReselectingCheckin(false);
-    if (checkout && checkout <= d) setCheckout(null);
-  };
-
   const pickStore = (id: string) => {
     if (id === effStoreId) return;
     setStoreId(id);
@@ -192,30 +152,6 @@ export default function BookingBoardingPage() {
     (step === 1 && checkin !== null && checkout !== null) ||
     (step === 2 && serviceId !== null) ||
     (step === 3 && petId !== null);
-
-  const dayBtn = (
-    d: Date,
-    active: boolean,
-    disabled: boolean,
-    onClick: () => void,
-  ) => (
-    <button
-      key={d.getTime()}
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      className={`rounded-input px-1 py-2 text-center transition ${
-        active
-          ? 'bg-brand-primary font-semibold text-white shadow-card'
-          : disabled
-            ? 'cursor-not-allowed bg-sunken text-ink-placeholder'
-            : 'bg-card text-ink shadow-card active:scale-95'
-      }`}
-    >
-      <span className="block text-caption">{d.getTime() === checkinDays[0]?.getTime() ? '今天' : weekCN(d)}</span>
-      <span className="block font-number text-body">{fmtMD(d)}</span>
-    </button>
-  );
 
   return (
     <div className="px-4 py-6">
@@ -290,49 +226,14 @@ export default function BookingBoardingPage() {
             </p>
           ) : null}
 
-          <h2 className="text-title">入住日期</h2>
-          {checkin === null || reselectingCheckin ? (
-            <div className="mt-2 grid grid-cols-4 gap-2">
-              {checkinDays.map((d) =>
-                dayBtn(d, checkin?.getTime() === d.getTime(), isClosed(store, d), () => pickCheckin(d)),
-              )}
-            </div>
-          ) : (
-            // 两阶段：入住已定 → 收起为摘要 chip，页面只留退房网格，杜绝误触改入住
-            <button
-              type="button"
-              onClick={() => {
-                setReselectingCheckin(true);
-                setCheckout(null); // 返回重选入住：退房选择随之清空
-              }}
-              className="mt-2 flex w-full items-center justify-between rounded-card bg-card px-4 py-3 text-body shadow-card transition active:scale-[0.99]"
-            >
-              <span>
-                入住 <span className="font-number font-semibold">{fmtMD(checkin)}</span> {weekCN(checkin)}
-              </span>
-              <span className="text-caption font-medium text-brand-primary">点击修改</span>
-            </button>
-          )}
-
-          {checkin && !reselectingCheckin ? (
-            <>
-              <h2 className="mt-5 text-title">退房日期</h2>
-              <div className="mt-2 grid grid-cols-4 gap-2">
-                {checkoutDays.map((d) =>
-                  dayBtn(d, checkout?.getTime() === d.getTime(), isClosed(store, d), () => setCheckout(d)),
-                )}
-              </div>
-            </>
-          ) : null}
-
-          {checkin && checkout ? (
-            <p className="mt-3 rounded-card bg-brand-primary-light px-4 py-2.5 text-body text-brand-primary-pressed">
-              {dayLabel(checkin)}入住 · {fmtMD(checkout)} {weekCN(checkout)}退房 · 共{' '}
-              <span className="font-number font-semibold">{nights}</span> 晚
-            </p>
-          ) : (
-            <p className="mt-3 text-caption text-ink-placeholder">先选入住日，再选退房日（须晚于入住日）</p>
-          )}
+          {/* 两阶段日期选择（B2-5 交互，B3-4 抽为共用组件 BoardingDateRangePicker） */}
+          <BoardingDateRangePicker
+            store={store}
+            checkin={checkin}
+            checkout={checkout}
+            onCheckinChange={setCheckin}
+            onCheckoutChange={setCheckout}
+          />
         </section>
       ) : null}
 

@@ -6,7 +6,8 @@
  *   → completed → markPaid（到店付收款登记）/ review（评价）
  *   取消：开始前 >4h 直接取消并回减槽位；≤4h 转 cancel_requested 由商家 reviewCancel 审批。
  *   改期（reschedule）：商家（本店）改期保持状态/指派；客户（本人，v1.1-b2 B2-6）仅 >4h 可自助改，
- *   与取消同阈值，事务内回退 pending + 清空 staffId + 旧槽释放/新槽校验。
+ *   与取消同阈值，事务内回退 pending + 清空 staffId + 旧槽释放/新槽校验；
+ *   B3-4 起对 boarding 开放（scheduledEnd 必传，逐晚释放/占用走 B3-2 函数，不退次不动卡表）。
  *   次卡（v1.1-b2 B2-7 资损红标）：paymentMode=pass_deduct 时 create 事务内先校验
  *   （本人名下该店 active + remain_times>0 + 未过期，否则「暂无可用次卡」）并扣 -1、
  *   写 -1 流水，占槽/建单失败整体回滚；所有置 cancelled 路径（cancel >4h 直消、
@@ -1035,11 +1036,16 @@ export const appointmentRouter = router({
    *   CONFLICT，事务整体回滚（旧槽回减一并撤销）。改到原时段为净零操作，安全幂等。
    *   emitEvent appointment.rescheduled → user:{customerId} + staff:{staffId}（若已指派）。
    * - 客户（本人 · v1.1-b2 B2-6）：状态 pending/confirmed 且距原开始 >4h
-   *   （与取消同阈值 CANCEL_FREE_BEFORE_SEC，不足 4 小时明确报错）才可自助改期。
+   *   （与取消同阈值 CANCEL_FREE_BEFORE_SEC，不足 4 小时明确报错；寄养以入住日首晚
+   *   即 scheduledStart 计，B3-4）才可自助改期。
    *   与商家分支同一事务结构：旧槽位回减 → 新槽位校验并 +1 → 写新时间，
    *   且 status 回退 pending + staffId 置空（重新走商家确认流）；新槽已满抛 CONFLICT，
    *   事务整体回滚（状态回退、staffId 清空、旧槽回减一并撤销，三者与槽位校验同生共死）。
    *   emitEvent appointment.rescheduled → appointment:{aid} + store:{storeId}（by:'customer'）。
+   * - B3-4（寄养改期）：type=boarding 放开客户自助改期——scheduledEnd 必传且须晚于
+   *   scheduledStart（重选退房日，拒绝静默 24h 缺省）；事务内 releaseAppointmentSlots
+   *   释放全部旧晚 + occupyBoardingSlots 逐晚校验占用全部新晚（B3-2 函数，任一新晚
+   *   满员 CONFLICT 整体回滚）。寄养本无次卡路径（B2-7R 裁定A），改期不触碰卡表、不退次。
    */
   reschedule: publicProcedure
     .input(
@@ -1077,14 +1083,18 @@ export const appointmentRouter = router({
         .from(schema.services)
         .where(eq(schema.services.id, appt.serviceId))
         .get();
-      // 缺省结束时间：与 create 同口径（grooming=服务时长，boarding=24h）
       const start = input.scheduledStart;
+      // B3-4（寄养改期）：boarding 必传 scheduledEnd（重选退房日）且须晚于入住时间——
+      // 缺省 24h 会把多晚单静默压成 1 晚而金额快照不变（晚数/金额错位，见 B3-4 复现记录）；
+      // grooming 的 scheduledEnd 可缺省，按服务时长补齐（与 create 同口径）
+      if (
+        appt.type === 'boarding' &&
+        (!input.scheduledEnd || input.scheduledEnd.getTime() <= start.getTime())
+      ) {
+        badRequest('寄养改期必须选择新的退房日期且晚于入住日期');
+      }
       const end =
-        input.scheduledEnd ??
-        new Date(
-          start.getTime() +
-            (appt.type === 'grooming' ? (service?.durationMin ?? 60) : 24 * 60) * 60_000,
-        );
+        input.scheduledEnd ?? new Date(start.getTime() + (service?.durationMin ?? 60) * 60_000);
       assertBookableTime(store, appt.type as 'grooming' | 'boarding', start, end);
 
       const petName = await petNameOf(ctx.db, appt.petId);
