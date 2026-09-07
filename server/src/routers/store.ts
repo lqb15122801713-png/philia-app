@@ -4,9 +4,10 @@
  * - store.listNearby：public。入参 lat/lng 可选：有则按 (lat差²+lng差²) 平面近似
  *   粗排（v1 不做球面距离，城区尺度误差可接受），无坐标门店排最后；无则按创建序。
  *   仅 status=active，取前 20。
- * - store.getWithServices：public。门店详情 + active 服务项 + 未来 7 天可约时间槽
- *   （store_slots booked_count < capacity，按 slot_start 升序；传 serviceId 则按
- *   服务时长过滤——需 duration 覆盖的连续 30min 槽位全部有余量才算可约）。
+ * - store.getWithServices：public。门店详情 + active 服务项 + 可约时间槽（今天起 7 天
+ *   按营业时间合成 30min 栅格，合并 store_slots 既有行的占用/容量；统一剔除
+ *   「当前时间 +1h 缓冲」内时段与满槽——B3-5 W-2，与 assertBookableTime 同口径；
+ *   传 serviceId 则按服务时长过滤——需 duration 覆盖的连续 30min 槽位全部有余量才算可约）。
  * - store.upsertService：merchant 本店。新增/编辑服务项（含寄养房型）；越店写 FORBIDDEN。
  * - store.staffList：merchant 本店。员工 + 技能 + 排班 + 绩效（完成单数/好评率，
  *   从 appointments 聚合）。
@@ -29,10 +30,12 @@ import { and, desc, eq, gt, gte, inArray, isNull, lt } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import { merchantProcedure, publicProcedure, router, type Context } from '../trpc';
-import { boardingNightDates, DEFAULT_BOARDING_ROOM_COUNT } from './appointment';
+import { boardingNightDates, BOOKING_LEAD_BUFFER_MS, DEFAULT_BOARDING_ROOM_COUNT, DEFAULT_SLOT_CAPACITY } from './appointment';
 
 /** 时间槽粒度：30min（与 seed 的 store_slots 生成粒度一致） */
 const SLOT_MS = 30 * 60 * 1000;
+
+const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 
 /** 邀请码字符集：去除易混淆字符（0/O/1/I/L） */
 const INVITE_CHARSET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
@@ -159,19 +162,56 @@ export const storeRouter = router({
       }
 
       const now = new Date();
-      const weekLater = new Date(now.getTime() + 7 * 24 * 3600 * 1000);
-      const openSlots = await ctx.db
+      /**
+       * B3-5（W-2 今天可约口径统一）：可约槽不再依赖 store_slots 预建行——
+       * 按门店营业时间合成「今天起 7 天」30min 栅格，合并既有槽位行取占用/容量
+       * （无行 = 尚未被订，按默认容量视为可约，与 appointment.create 的 UPSERT 同口径）；
+       * 统一剔除「当前时间 +1h 缓冲」内的时段（与 assertBookableTime 同一条线，
+       * 前后端同拦），满槽剔除。休息日（openHours 为 null）整天不产生槽位。
+       */
+      const day0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const gridEnd = new Date(day0.getTime() + 7 * 24 * 3600 * 1000);
+      const existingRows = await ctx.db
         .select()
         .from(schema.storeSlots)
         .where(
           and(
             eq(schema.storeSlots.storeId, store.id),
-            gt(schema.storeSlots.slotStart, now),
-            lt(schema.storeSlots.slotStart, weekLater),
-            lt(schema.storeSlots.bookedCount, schema.storeSlots.capacity),
+            gte(schema.storeSlots.slotStart, day0),
+            lt(schema.storeSlots.slotStart, gridEnd),
           ),
         )
         .orderBy(schema.storeSlots.slotStart);
+      const byStart = new Map(existingRows.map((r) => [r.slotStart.getTime(), r]));
+
+      const earliest = now.getTime() + BOOKING_LEAD_BUFFER_MS;
+      const openSlots: (typeof schema.storeSlots.$inferSelect)[] = [];
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(day0.getTime() + i * 24 * 3600 * 1000);
+        const hours = store.openHours?.[DAY_KEYS[date.getDay()]!];
+        if (!hours) continue;
+        const [oh = 0, om = 0] = hours.open.split(':').map(Number);
+        const [ch = 0, cm = 0] = hours.close.split(':').map(Number);
+        for (let min = oh * 60 + om; min < ch * 60 + cm; min += 30) {
+          const t = new Date(date.getTime() + min * 60_000);
+          if (t.getTime() < earliest) continue; // +1h 缓冲内（含已过期）时段不可约
+          const row = byStart.get(t.getTime());
+          if (row) {
+            if (row.bookedCount < row.capacity) openSlots.push(row);
+          } else {
+            // 无槽位行 = 空场：按默认容量合成可约槽（id 以 virtual: 前缀标识非持久行）
+            openSlots.push({
+              id: `virtual:${store.id}:${t.getTime()}`,
+              storeId: store.id,
+              slotStart: t,
+              capacity: DEFAULT_SLOT_CAPACITY,
+              bookedCount: 0,
+              createdAt: now,
+              updatedAt: now,
+            });
+          }
+        }
+      }
 
       // duration 过滤：从候选起始槽起，后续 slotsNeeded-1 个连续槽（步长 30min）也须有余量
       const openSet = new Map(openSlots.map((s) => [s.slotStart.getTime(), s]));

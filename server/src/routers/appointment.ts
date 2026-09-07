@@ -110,7 +110,14 @@ const TYPE_ACCEPT_SKILLS: Record<'grooming' | 'boarding', string[]> = {
 };
 
 /** store_slots UPSERT 新行时的默认容量（与种子数据 capacity=2 对齐） */
-const DEFAULT_SLOT_CAPACITY = 2;
+export const DEFAULT_SLOT_CAPACITY = 2;
+
+/**
+ * 可约时段前瞻缓冲（v1.1-b3 B3-5 W-2 产品裁定：允许当天预约）：
+ * 仅可约「当前时间 +1h 缓冲」之后的时段——create / reschedule（洗护+寄养）统一
+ * 走 assertBookableTime 强校验；getWithServices 可约槽查询与三端栅格置灰同口径。
+ */
+export const BOOKING_LEAD_BUFFER_MS = 60 * 60 * 1000;
 
 /** boarding_slots 新行默认容量：services.room_count 为空时按 1 间（防超卖兜底） */
 export const DEFAULT_BOARDING_ROOM_COUNT = 1;
@@ -419,14 +426,18 @@ async function refundPassIfDeducted(tx: DbHandle, appt: AppointmentRow): Promise
   await tx.insert(schema.passDeductLogs).values({ passId: pass.id, appointmentId: appt.id, delta: 1 });
 }
 
-/** 营业时间校验：开始时间须在未来、按 30min 粒度对齐、落在当日营业区间内；grooming 还要求当日打烊前服务得完 */
+/** 营业时间校验：开始时间须超过「当前时间 +1h 缓冲」（B3-5 W-2）、按 30min 粒度对齐、落在当日营业区间内；grooming 还要求当日打烊前服务得完 */
 function assertBookableTime(
   store: StoreRow,
   type: 'grooming' | 'boarding',
   start: Date,
   end: Date,
 ): void {
-  if (start.getTime() <= Date.now()) badRequest('预约时间必须晚于当前时间');
+  // B3-5（W-2 产品裁定：允许当天预约）：统一「当前时间 +1h 缓冲」口径——
+  // 过期与临近（+1h 内）时段前后端同拦；该检查置于营业时间之前，报错文案不被覆盖
+  if (start.getTime() < Date.now() + BOOKING_LEAD_BUFFER_MS) {
+    badRequest('仅可预约 1 小时之后的时段，请改约稍晚时间');
+  }
   if (end.getTime() <= start.getTime()) badRequest('结束时间必须晚于开始时间');
   if (start.getSeconds() !== 0 || start.getMilliseconds() !== 0 || start.getMinutes() % 30 !== 0) {
     badRequest('预约开始时间须按 30 分钟粒度对齐（如 10:00 / 10:30）');
@@ -505,6 +516,9 @@ type ListItem = AppointmentRow & {
   serviceName: string | null;
   storeName?: string | null;
   staffName?: string | null;
+  /** B3-5 W-4：客户标识（仅本店订单可见）——昵称 + 手机号后 4 位 */
+  customerName?: string | null;
+  customerPhoneTail?: string | null;
 };
 
 /* ------------------------------------------------------------------ */
@@ -748,7 +762,9 @@ export const appointmentRouter = router({
     return { groups };
   }),
 
-  /** 3. get（customer/staff/merchant）：详情（归属校验由 assertAppointmentAccess 强制） */
+  /** 3. get（customer/staff/merchant）：详情（归属校验由 assertAppointmentAccess 强制；
+   *  B3-5 W-4：附 customer{ nickname, phoneTail }——仅本人/本店员工/本店商家可达本接口，
+   *  手机号只回后 4 位） */
   get: publicProcedure.input(z.object({ appointmentId: z.string().min(1) })).query(async ({ ctx, input }) => {
     const appt = await assertAppointmentAccess(ctx, input.appointmentId);
     const pet = await ctx.db.select().from(schema.pets).where(eq(schema.pets.id, appt.petId)).get();
@@ -758,8 +774,24 @@ export const appointmentRouter = router({
       .where(eq(schema.services.id, appt.serviceId))
       .get();
     const store = await ctx.db.select().from(schema.stores).where(eq(schema.stores.id, appt.storeId)).get();
+    const customerRow = await ctx.db
+      .select({ nickname: schema.users.nickname, phone: schema.users.phone })
+      .from(schema.users)
+      .where(eq(schema.users.id, appt.customerId))
+      .get();
     const { steps, boardingStay } = await progressOf(ctx.db, appt);
-    return { appointment: appt, pet: pet ?? null, service: service ?? null, store: store ?? null, steps, boardingStay };
+    return {
+      appointment: appt,
+      pet: pet ?? null,
+      service: service ?? null,
+      store: store ?? null,
+      steps,
+      boardingStay,
+      customer: {
+        nickname: customerRow?.nickname ?? null,
+        phoneTail: customerRow?.phone ? customerRow.phone.slice(-4) : null,
+      },
+    };
   }),
 
   /**
@@ -928,9 +960,19 @@ export const appointmentRouter = router({
    * 7. cancel（customer 本人）：开始前 >4h 直接 cancelled（事务内回减槽位 +
    * B2-7 同事务回补次卡扣次）；≤4h 转 cancel_requested 待商家审核；
    * in_service / in_boarding 服务中锁定拒绝。
+   * B3-5（W-14）：入参加选填 reason（客户端原因 chips+自由文本合成，≤100 字）；
+   * 两分支均落 cancelReason + cancelSource='customer'（客户侧口径），商家端
+   * 取消审核/已取消列表透出；reviewCancel 批准不改写原因/来源（审核动作由
+   * appointment.cancelled 事件 payload.by='merchant_review' 承载）。
    */
   cancel: customerProcedure
-    .input(z.object({ appointmentId: z.string().min(1) }))
+    .input(
+      z.object({
+        appointmentId: z.string().min(1),
+        // B3-5 W-14：取消原因（选填；chips 标签 + 自由文本由客户端合成后传入）
+        reason: z.string().trim().max(100, '取消原因不能超过 100 字').optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const appt = await assertAppointmentAccess(ctx, input.appointmentId); // customer 分支已保证本人
       if (appt.status === 'in_service' || appt.status === 'in_boarding') {
@@ -946,14 +988,19 @@ export const appointmentRouter = router({
 
       if (secondsToStart > CANCEL_FREE_BEFORE_SEC) {
         // >4h：直接取消 + 事务内回减槽位（B3-2：寄养释放住宿区间全部晚；
-        // B2-7：同事务回补次卡扣次）
+        // B2-7：同事务回补次卡扣次；B3-5 W-14：落客户取消原因/来源）
         let outboxId = '';
         const updated = await ctx.db.transaction(async (tx) => {
           await releaseAppointmentSlots(txDb(tx), appt);
           await refundPassIfDeducted(txDb(tx), appt);
           const row = await tx
             .update(schema.appointments)
-            .set({ status: 'cancelled', updatedAt: now })
+            .set({
+              status: 'cancelled',
+              cancelReason: input.reason?.trim() || null,
+              cancelSource: 'customer',
+              updatedAt: now,
+            })
             .where(eq(schema.appointments.id, appt.id))
             .returning()
             .then((r) => r[0]!);
@@ -968,12 +1015,18 @@ export const appointmentRouter = router({
         return { appointment: updated, outcome: 'cancelled' as const };
       }
 
-      // ≤4h：转商家审核（槽位待 reviewCancel 批准时才回减）
+      // ≤4h：转商家审核（槽位待 reviewCancel 批准时才回减；
+      // B3-5 W-14：取消原因/来源随申请落库，批准时保留透出）
       let outboxId = '';
       const updated = await ctx.db.transaction(async (tx) => {
         const row = await tx
           .update(schema.appointments)
-          .set({ status: 'cancel_requested', updatedAt: now })
+          .set({
+            status: 'cancel_requested',
+            cancelReason: input.reason?.trim() || null,
+            cancelSource: 'customer',
+            updatedAt: now,
+          })
           .where(eq(schema.appointments.id, appt.id))
           .returning()
           .then((r) => r[0]!);
@@ -1404,7 +1457,9 @@ export const appointmentRouter = router({
       return updated;
     }),
 
-  /** 12. listForStore（merchant 本店）：按日期范围 / 状态过滤（日历 / 列表视图数据源） */
+  /** 12. listForStore（merchant 本店）：按日期范围 / 状态过滤（日历 / 列表视图数据源）。
+   *  B3-5 W-4：联 users 补 customerName（昵称）/customerPhoneTail（手机号后 4 位）——
+   *  查询条件恒含 storeId=当前商家门店，客户标识只随本店订单出参，手机号仅回尾号。 */
   listForStore: merchantProcedure
     .input(
       z
@@ -1425,6 +1480,7 @@ export const appointmentRouter = router({
         .from(schema.appointments)
         .innerJoin(schema.pets, eq(schema.pets.id, schema.appointments.petId))
         .innerJoin(schema.services, eq(schema.services.id, schema.appointments.serviceId))
+        .innerJoin(schema.users, eq(schema.users.id, schema.appointments.customerId))
         .leftJoin(schema.staff, eq(schema.staff.id, schema.appointments.staffId))
         .where(and(...conds))
         .orderBy(asc(schema.appointments.scheduledStart));
@@ -1434,6 +1490,8 @@ export const appointmentRouter = router({
           petName: r.pets.name,
           serviceName: r.services.name,
           staffName: r.staff?.name ?? null,
+          customerName: r.users.nickname,
+          customerPhoneTail: r.users.phone ? r.users.phone.slice(-4) : null,
         }),
       );
     }),

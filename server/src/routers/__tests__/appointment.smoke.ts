@@ -29,6 +29,12 @@
  *    rescheduled 双频道（appointment+store，by=customer）；满员晚 CONFLICT 整体回滚
  *    （预约行与各晚快照逐项一致）；<4h（入住日首晚计）/in_boarding 拒绝；不触碰卡表；
  *    B2-6 洗护改期回归
+ * 5f. B3-5 P2 打包：W-2 今天可约口径——+1h 缓冲内时段 BAD_REQUEST（缓冲检查先于
+ *    营业时间），≥+1h 的营业时段建单成功（运行时在营业时间内则命中「今天晚些时候」）；
+ *    W-14 取消原因——>4h 直消/≤4h 申请均落 cancelReason+cancelSource=customer，
+ *    原因选填（缺省 null）、超 100 字 BAD_REQUEST，reviewCancel 批准保留客户原因；
+ *    W-4 客户标识——listForStore 行带 customerName/customerPhoneTail、
+ *    appointment.get 带 customer{nickname, phoneTail}
  * 6. listMine 分组 / get 归属 / listForStore 过滤 / listTodayForStaff 今日时间轴
  * 7. 事件总账：每个关键动作后 event_outbox 有对应事件且 channel 正确
  */
@@ -97,7 +103,8 @@ try {
   /* ---------- 夹具数据 ---------- */
   // 用户：u-c1/u-c2 客户，u-m 店主，u-a/u-b/u-d 本店员工，u-c 他店员工
   await db.insert(schema.users).values([
-    { id: 'u-c1', kimiId: 'k-c1', nickname: '客户一号' },
+    // B3-5（W-4）：u-c1 带手机号，供 listForStore/get 的手机尾号断言（尾号 1111）
+    { id: 'u-c1', kimiId: 'k-c1', nickname: '客户一号', phone: '13800001111' },
     { id: 'u-c2', kimiId: 'k-c2', nickname: '客户二号' },
     { id: 'u-m', kimiId: 'k-m', nickname: '店主' },
     { id: 'u-a', kimiId: 'k-a', nickname: '员工A' },
@@ -928,10 +935,12 @@ try {
   );
   const appt7After = await db.select().from(schema.appointments).where(eq(schema.appointments.id, appt7.id)).get();
   check(
-    '非 pending 拒单零副作用：appt7 仍 confirmed、无 cancelReason/cancelSource、无新增 outbox',
+    // B3-5（W-14）兼容：appt7 此前走过客户取消申请被拒，cancelSource='customer' 留痕属预期；
+    // 本断言口径改为「拒单尝试前后逐项一致」（零副作用），不再要求 cancelReason/Source 为 null
+    '非 pending 拒单零副作用：appt7 仍 confirmed、cancelReason/cancelSource 与尝试前一致、无新增 outbox',
     appt7After?.status === 'confirmed' &&
-      appt7After?.cancelReason === null &&
-      appt7After?.cancelSource === null &&
+      appt7After?.cancelReason === appt7Before?.cancelReason &&
+      appt7After?.cancelSource === appt7Before?.cancelSource &&
       appt7Before?.updatedAt?.getTime() === appt7After?.updatedAt?.getTime() &&
       (await totalOutbox()) === outboxBeforeNonPending,
     { status: appt7After?.status, cancelSource: appt7After?.cancelSource },
@@ -1249,6 +1258,128 @@ try {
     { old: g41OldSlot?.bookedCount, new: g41NewSlot?.bookedCount },
   );
 
+  /* ==================== 5f. B3-5 P2 打包：W-2 今天可约 / W-14 取消原因 ==================== */
+  console.log('\n[5f] B3-5：W-2 +1h 缓冲前后端同拦 / W-14 取消原因落库（含 ≤4h 审核链）');
+  /** 向上对齐 30min 粒度（秒/毫秒清零） */
+  const alignedCeil = (d: Date): Date => {
+    const t = new Date(d.getTime());
+    t.setSeconds(0, 0);
+    const rem = t.getMinutes() % 30;
+    if (rem !== 0) t.setMinutes(t.getMinutes() + (30 - rem));
+    return t;
+  };
+  // W-2：+1h 缓冲内的对齐时段 → BAD_REQUEST「1 小时」（缓冲检查先于营业时间，与旧
+  // 「必须晚于当前时间」/「营业时间」文案可区分；now+15m 起对齐保证严格落在缓冲内）
+  const nearSlot = alignedCeil(new Date(Date.now() + 15 * 60_000));
+  check(
+    'W-2：当前时间 +1h 内的时段 → BAD_REQUEST「1 小时」（过期/临近同拦）',
+    await rejects(
+      c1.create({
+        storeId: 's-1',
+        petId: 'p-1',
+        serviceId: 'sv-g1',
+        type: 'grooming',
+        scheduledStart: nearSlot,
+        paymentMode: 'pay_at_store',
+      }),
+      'BAD_REQUEST',
+      /1 小时/,
+    ),
+    nearSlot,
+  );
+  // W-2：≥now+1h 的最近营业时段可约（OPEN_ALL 09:00-20:00，60min 服务须打烊前完成）；
+  // 运行时刻在营业日内则该时段就是「今天晚些时候」
+  let laterSlot: Date | null = null;
+  for (
+    let t = alignedCeil(new Date(Date.now() + 60 * 60_000));
+    t.getTime() < Date.now() + 48 * 3600_000;
+    t = new Date(t.getTime() + 30 * 60_000)
+  ) {
+    const mins = t.getHours() * 60 + t.getMinutes();
+    if (mins >= 9 * 60 && mins + 60 <= 20 * 60) {
+      laterSlot = t;
+      break;
+    }
+  }
+  check('W-2：48h 内总能找到 ≥now+1h 且在营业时间的对齐时段', laterSlot !== null);
+  const w2Appt = laterSlot
+    ? await c1.create({
+        storeId: 's-1',
+        petId: 'p-1',
+        serviceId: 'sv-g1',
+        type: 'grooming',
+        scheduledStart: laterSlot,
+        paymentMode: 'pay_at_store',
+      })
+    : null;
+  check(
+    `W-2：≥now+1h 时段建单成功（命中${
+      laterSlot && laterSlot.getDate() === new Date().getDate() ? '今天晚些时候' : '下一营业日'
+    } ${laterSlot?.toLocaleString('zh-CN', { hour12: false }) ?? '-'}）`,
+    !!w2Appt && w2Appt.status === 'pending',
+  );
+
+  // W-14：>4h 直消带原因 → cancelled + cancelReason + cancelSource='customer'
+  const w14a = await c1.create({
+    storeId: 's-1',
+    petId: 'p-1',
+    serviceId: 'sv-g1',
+    type: 'grooming',
+    scheduledStart: at(2, 16),
+    paymentMode: 'pay_at_store',
+  });
+  const cc14a = await c1.cancel({ appointmentId: w14a.id, reason: '行程有变：临时要出差' });
+  check(
+    'W-14：>4h 直消带原因 → cancelled + cancelReason/cancelSource=customer 落库',
+    cc14a.outcome === 'cancelled' &&
+      cc14a.appointment.cancelReason === '行程有变：临时要出差' &&
+      cc14a.appointment.cancelSource === 'customer',
+    { reason: cc14a.appointment.cancelReason, source: cc14a.appointment.cancelSource },
+  );
+  // W-14：原因选填——不传原因仍可取消（reason=null，source 仍为客户侧口径）
+  const w14b = await c1.create({
+    storeId: 's-1',
+    petId: 'p-1',
+    serviceId: 'sv-g1',
+    type: 'grooming',
+    scheduledStart: at(2, 18),
+    paymentMode: 'pay_at_store',
+  });
+  const cc14b = await c1.cancel({ appointmentId: w14b.id });
+  check(
+    'W-14：原因选填（不传 → cancelReason=null、cancelSource=customer）',
+    cc14b.outcome === 'cancelled' &&
+      cc14b.appointment.cancelReason === null &&
+      cc14b.appointment.cancelSource === 'customer',
+    { reason: cc14b.appointment.cancelReason, source: cc14b.appointment.cancelSource },
+  );
+  // W-14：≤4h 取消申请带原因 → cancel_requested 落库；reviewCancel 批准保留客户原因/来源
+  const w14c = await insertDirectAppt({
+    code: 'SMKC14',
+    status: 'confirmed',
+    start: new Date(Date.now() + 2 * 3600_000),
+  });
+  const cc14c = await c1.cancel({ appointmentId: w14c.id, reason: '时间不合适' });
+  check(
+    'W-14：≤4h 取消申请带原因 → cancel_requested + 原因落库',
+    cc14c.outcome === 'cancel_requested' &&
+      cc14c.appointment.cancelReason === '时间不合适' &&
+      cc14c.appointment.cancelSource === 'customer',
+  );
+  const rc14c = await m1.reviewCancel({ appointmentId: w14c.id, approve: true });
+  check(
+    'W-14：商家批准取消后保留客户原因/来源（cancelled + customer，审核动作由事件 by 承载）',
+    rc14c.appointment.status === 'cancelled' &&
+      rc14c.appointment.cancelReason === '时间不合适' &&
+      rc14c.appointment.cancelSource === 'customer',
+    { status: rc14c.appointment.status, source: rc14c.appointment.cancelSource },
+  );
+  // W-14：reason 入参上限 100 字（与客户端合成口径一致）
+  check(
+    'W-14：reason 超 100 字 → BAD_REQUEST',
+    await rejects(c1.cancel({ appointmentId: appt7.id, reason: '长'.repeat(101) }), 'BAD_REQUEST'),
+  );
+
   /* ==================== 6. 列表与详情 ==================== */
   console.log('\n[6] listMine 分组 / get 归属 / listForStore 过滤 / listTodayForStaff');
   const mine = await c1.listMine();
@@ -1285,9 +1416,22 @@ try {
   const dayTo = at(1, 23, 59);
   const storeList = await m1.listForStore({ from: dayFrom, to: dayTo });
   check(
-    'listForStore：日期范围过滤（明天 5 单全部在范围内）',
+    'listForStore：日期范围过滤（明天 ≥5 单全部在范围内）',
     storeList.length >= 5 && storeList.every((a) => a.scheduledStart >= dayFrom && a.scheduledStart <= dayTo),
     storeList.length,
+  );
+  // B3-5（W-4）：商家列表携客户标识——昵称 + 手机号后 4 位（仅本店订单出参）
+  const w4Row = storeList.find((a) => a.id === appt1.id);
+  check(
+    'W-4：listForStore 行带 customerName/customerPhoneTail（昵称「客户一号」+ 尾号 1111）',
+    !!w4Row && w4Row.customerName === '客户一号' && w4Row.customerPhoneTail === '1111',
+    w4Row && { name: w4Row.customerName, tail: w4Row.customerPhoneTail },
+  );
+  const w4Get = await m1.get({ appointmentId: appt1.id });
+  check(
+    'W-4：appointment.get 带 customer{nickname, phoneTail}',
+    w4Get.customer.nickname === '客户一号' && w4Get.customer.phoneTail === '1111',
+    w4Get.customer,
   );
   const confirmedOnly = await m1.listForStore({ status: 'confirmed' });
   check(
@@ -1322,8 +1466,8 @@ try {
   /* ==================== 7. 事件总账 ==================== */
   console.log('\n[7] 事件总账（event_outbox 按频道+类型核对）');
   check(
-    'appointment.created → store 频道共 16 条（原 7 次成功 create + B3-2 三节 b31 与 sv-b2 两单 + B3-3 拒单三单 + B3-4 改期三节 b41/b42/g41；CONFLICT/拒绝单不产生事件）',
-    (await countOutbox('store:s-1', 'appointment.created')) === 16,
+    'appointment.created → store 频道共 19 条（原 7 次成功 create + B3-2 三节 b31 与 sv-b2 两单 + B3-3 拒单三单 + B3-4 改期三节 b41/b42/g41 + B3-5 5f 三单 w2Appt/w14a/w14b；CONFLICT/拒绝单不产生事件）',
+    (await countOutbox('store:s-1', 'appointment.created')) === 19,
   );
   check(
     'appointment.rejected → 双频道各 3 条（B3-3：洗护/寄养/次卡三单）',
@@ -1342,8 +1486,8 @@ try {
       (await countOutbox(`appointment:${appt3.id}`, 'appointment.checkedin')) === 1,
   );
   check(
-    'appointment.cancel_requested → store 频道共 2 条（appt6/appt7）',
-    (await countOutbox('store:s-1', 'appointment.cancel_requested')) === 2,
+    'appointment.cancel_requested → store 频道共 3 条（appt6/appt7 + B3-5 W-14 的 w14c）',
+    (await countOutbox('store:s-1', 'appointment.cancel_requested')) === 3,
   );
 
   await sleep(150); // 让 fire-and-forget 的 broadcastNow 读完落库行，避免关闭后噪音

@@ -6,7 +6,9 @@
  *   幂等——已登记则更新（boarding_stays.appointment_id 唯一）。
  * - boarding.dailyLog：staff 本店。每日打卡 UPSERT by (stay_id, log_date)；
  *   写后 emitEvent(user:{customerId} + store:{storeId}, boarding.daily_update)。
- * - boarding.checkout：staff/merchant 本店。退房核销：stay.checkout_at=now +
+ * - boarding.checkout：staff 本店（v1.1-b3 B3-5 A-P2-14 基类修正：publicProcedure →
+ *   staffProcedure，未绑定 staff 记录/已停职即时 FORBIDDEN；getBoardingAppointment
+ *   手工守卫保留兜底）。退房核销：stay.checkout_at=now +
  *   预约 in_boarding→completed（completed_at）+ emitEvent(appointment:{aid},
  *   boarding.completed)；幂等（已退房直接返回现状）。
  * - boarding.stayBoard：merchant 本店。在店宠物看板（in_boarding 的 stays
@@ -26,7 +28,6 @@ import { EventType } from '../realtime/events';
 import {
   customerProcedure,
   merchantProcedure,
-  publicProcedure,
   router,
   staffProcedure,
   type AppointmentRow,
@@ -240,8 +241,15 @@ export const boardingRouter = router({
       return { log };
     }),
 
-  /** 退房核销（staff/merchant 本店；幂等） */
-  checkout: publicProcedure
+  /**
+   * 退房核销（staff 本店；幂等）。
+   * B3-5（A-P2-14 基类修正）：publicProcedure → staffProcedure——基类直接表达
+   * 「员工操作」意图，未绑定 staff 记录的角色（含商家/客户）在中间件层即
+   * FORBIDDEN/UNAUTHORIZED；getBoardingAppointment 的本店/指派手工守卫保留兜底
+   * （其 merchant 分支自此不可达，仅作防御性保留）。商家端不再提供退房按钮，
+   * 收款仍走 appointment.markPaid（completed 后商家在财务页确认）。
+   */
+  checkout: staffProcedure
     .input(z.object({ appointmentId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       const appt = await getBoardingAppointment(ctx, input.appointmentId);

@@ -5,13 +5,16 @@
  *
  * 覆盖：
  * 1. pet upsert/list/get 归属校验（他人宠物 FORBIDDEN；有关联预约的 staff 可读）
- * 2. store listNearby 只回 active 门店；getWithServices 返回服务与可约槽且满槽不出现、
- *    按服务 duration 过滤连续占用
+ * 2. store listNearby 只回 active 门店；getWithServices 可约槽 = 营业时间合成栅格
+ *    （B3-5 W-2：今天起 7 天，无预建行按默认容量视为可约）合并既有占用行——
+ *    满槽不出现、≥当前时间 +1h 缓冲、按服务 duration 过滤连续占用
  * 3. upsertService 越店写 → FORBIDDEN
  * 4. inviteStaff 生成 24h 码；同人复用不重复建行；staffList 聚合返回
  * 5. boarding：in_boarding 夹具 → checkinStay（幂等更新）→ dailyLog 同日两次为 UPSERT
  *    （一行）→ outbox 有 boarding.daily_update → checkout 幂等且 appointment completed；
- *    stayBoard 超期标记正确
+ *    stayBoard 超期标记正确；
+ *    B3-5 A-P2-14：checkout 基类修正为 staffProcedure——未登录 UNAUTHORIZED、
+ *    客户/商家 FORBIDDEN（中间件层拦截、零副作用），员工正常退房（原有断言回归）
  *
  * 所有夹具均为脚本自建（不动种子数据），finally 里按子表→父表清场，跑完种子原样。
  */
@@ -145,7 +148,23 @@ async function main() {
 
   const [storeA] = await db
     .insert(schema.stores)
-    .values({ ownerId: merchant1, name: '烟雾门店A', lat: 30.27, lng: 120.15, status: 'active' })
+    // B3-5（W-2）：getWithServices 可约槽改为按营业时间合成栅格，夹具门店补 openHours
+    .values({
+      ownerId: merchant1,
+      name: '烟雾门店A',
+      lat: 30.27,
+      lng: 120.15,
+      status: 'active',
+      openHours: {
+        mon: { open: '09:00', close: '20:00' },
+        tue: { open: '09:00', close: '20:00' },
+        wed: { open: '09:00', close: '20:00' },
+        thu: { open: '09:00', close: '20:00' },
+        fri: { open: '09:00', close: '20:00' },
+        sat: { open: '09:00', close: '20:00' },
+        sun: { open: '09:00', close: '20:00' },
+      },
+    })
     .returning();
   const [storeB] = await db
     .insert(schema.stores)
@@ -261,21 +280,41 @@ async function main() {
   assert.equal(gws.store.id, storeA.id);
   assert.ok(gws.services.some((s) => s.id === svcGroom.id), '应返回 active 服务项');
   const slotStarts = gws.slots.map((s) => s.slotStart.getTime());
-  assert.ok(!slotStarts.includes(base.getTime() + 2 * 30 * 60e3), '满槽不应出现');
-  assert.deepEqual(
-    slotStarts,
-    [0, 1, 3, 4].map((i) => base.getTime() + i * 30 * 60e3),
-    '无服务过滤时应返回 4 个有余量槽（升序）',
+  // B3-5（W-2 统一口径）：可约槽 =「今天起 7 天 × 营业时间」合成栅格合并既有占用行——
+  // 不再只回传预建行；全部 ≥ 当前时间 +1h 缓冲、按升序、满槽剔除
+  assert.ok(slotStarts.length > 4, '合成栅格应覆盖 7 天营业时段（远多于 4 个预建行）');
+  assert.ok(
+    slotStarts.every((t) => t >= Date.now() + 60 * 60e3 - 5000),
+    'W-2：可约槽全部落在「当前时间 +1h 缓冲」之后（与 assertBookableTime 同线）',
+  );
+  assert.ok(
+    slotStarts.every((t, i) => i === 0 || t > slotStarts[i - 1]!),
+    '可约槽按 slotStart 升序',
+  );
+  assert.ok(!slotStarts.includes(base.getTime() + 2 * 30 * 60e3), '满槽（明天 11:00）不应出现');
+  for (const i of [0, 1, 3, 4]) {
+    assert.ok(
+      slotStarts.includes(base.getTime() + i * 30 * 60e3),
+      `明天 10:00+${i * 30}min 有余量槽应出现`,
+    );
+  }
+  // 合成栅格：无 store_slots 预建行的营业时段按默认容量视为可约（如明天 09:00）
+  const tomorrow0900 = new Date(base);
+  tomorrow0900.setHours(9, 0, 0, 0);
+  assert.ok(
+    slotStarts.includes(tomorrow0900.getTime()),
+    'W-2：无预建行时段（明天 09:00）合成可约槽（与 create UPSERT 同口径）',
   );
 
-  // 按服务 duration=60min 过滤：需要 2 个连续有余量槽 → 只剩 10:00 与 11:30 两个起始槽
+  // 按服务 duration=60min 过滤：需要 2 个连续有余量槽 → 10:30 起始因 11:00 满槽被剔除，
+  // 10:00 / 11:30 起始仍可约（11:30 起覆盖 11:30/12:00 两槽）
   const gws60 = await storeAnon.getWithServices({ storeId: storeA.id, serviceId: svcGroom.id });
-  assert.deepEqual(
-    gws60.slots.map((s) => s.slotStart.getTime()),
-    [base.getTime(), base.getTime() + 3 * 30 * 60e3],
-    '60min 服务只剩 10:00 / 11:30 两个可约起始槽',
-  );
-  console.log('✅ 2. store listNearby 仅 active + geo 粗排；getWithServices 满槽剔除、按 duration 过滤连续占用');
+  const starts60 = gws60.slots.map((s) => s.slotStart.getTime());
+  assert.ok(starts60.includes(base.getTime()), '60min：10:00 起始可约');
+  assert.ok(starts60.includes(base.getTime() + 3 * 30 * 60e3), '60min：11:30 起始可约');
+  assert.ok(!starts60.includes(base.getTime() + 1 * 30 * 60e3), '60min：10:30 起始因 11:00 满槽被剔除');
+  assert.ok(!starts60.includes(base.getTime() + 2 * 30 * 60e3), '60min：11:00 满槽不出现');
+  console.log('✅ 2. store listNearby 仅 active + geo 粗排；getWithServices 合成栅格（W-2 +1h 缓冲/无行默认可约）、满槽剔除、按 duration 过滤连续占用');
 
   /* ===== 3. upsertService 越店写 → FORBIDDEN ===== */
   const svcB = (
@@ -441,12 +480,19 @@ async function main() {
   assert.ok(co1.stay.checkoutAt, 'checkout_at 应写入');
   assert.equal(co1.appointment.status, 'completed');
   assert.ok(co1.appointment.completedAt, 'completed_at 应写入');
+  // B3-5：事件计数按本夹具频道收敛（脚本跑在种子库上，历史验收证据产生过他单
+  // boarding.completed 事件；本脚本只对自身频道负责）
+  const board1Channel = `appointment:${apptBoard1}`;
   const completedEvents = await db
     .select()
     .from(schema.eventOutbox)
-    .where(eq(schema.eventOutbox.eventType, 'boarding.completed'));
+    .where(
+      and(
+        eq(schema.eventOutbox.eventType, 'boarding.completed'),
+        eq(schema.eventOutbox.channel, board1Channel),
+      ),
+    );
   assert.equal(completedEvents.length, 1);
-  assert.equal(completedEvents[0]!.channel, `appointment:${apptBoard1}`);
 
   const co2 = await boardingStaff.checkout({ appointmentId: apptBoard1 });
   assert.equal(co2.alreadyCompleted, true, '重复退房应幂等返回');
@@ -454,7 +500,12 @@ async function main() {
   const completedEvents2 = await db
     .select()
     .from(schema.eventOutbox)
-    .where(eq(schema.eventOutbox.eventType, 'boarding.completed'));
+    .where(
+      and(
+        eq(schema.eventOutbox.eventType, 'boarding.completed'),
+        eq(schema.eventOutbox.channel, board1Channel),
+      ),
+    );
   assert.equal(completedEvents2.length, 1, '幂等：不重复发事件');
 
   // 超期夹具：scheduled_end 已过、未退房 → stayBoard overdue=true；已退房的 apptBoard1 不再上板
@@ -467,6 +518,32 @@ async function main() {
     appointmentId: apptBoard2, checkinWeightKg: 4.3, belongings: [], roomNo: 'B03',
   });
   created.stayIds.push(ciOver.stay.id);
+
+  // B3-5（A-P2-14 基类修正）：checkout 由 publicProcedure 改为 staffProcedure——
+  // 非员工角色在中间件层被拒（不进业务逻辑、对库零副作用）；员工正常退房见上方 co1/co2 回归
+  const boardingAnon = boardingRouter.createCaller({ db, user: null });
+  const boardingCustA = boardingRouter.createCaller(ctxA);
+  await assert.rejects(
+    boardingAnon.checkout({ appointmentId: apptBoard2 }),
+    (e) => errCode(e) === 'UNAUTHORIZED',
+    '未登录调 checkout 应 UNAUTHORIZED',
+  );
+  await assert.rejects(
+    boardingCustA.checkout({ appointmentId: apptBoard2 }),
+    (e) => errCode(e) === 'FORBIDDEN' && /员工身份/.test((e as Error).message),
+    '客户（未绑定 staff 记录）调 checkout 应 FORBIDDEN',
+  );
+  await assert.rejects(
+    boardingM1.checkout({ appointmentId: apptBoard2 }),
+    (e) => errCode(e) === 'FORBIDDEN' && /员工身份/.test((e as Error).message),
+    '商家（本店但未绑定 staff 记录）调 checkout 应 FORBIDDEN',
+  );
+  const apptBoard2AfterReject = await db
+    .select()
+    .from(schema.appointments)
+    .where(eq(schema.appointments.id, apptBoard2))
+    .then((r) => r[0]);
+  assert.equal(apptBoard2AfterReject.status, 'in_boarding', '非员工调用零副作用：预约仍 in_boarding');
 
   const boardAfter = await boardingM1.stayBoard();
   assert.ok(!boardAfter.board.some((b) => b.appointment.id === apptBoard1), '已退房不应再出现在看板');
