@@ -5,6 +5,8 @@
  *   create → confirm → assign → checkin（二维码 / 6 位人工码）→ 六步流 / 寄养（T1.3b/c）
  *   → completed → markPaid（到店付收款登记）/ review（评价）
  *   取消：开始前 >4h 直接取消并回减槽位；≤4h 转 cancel_requested 由商家 reviewCancel 审批。
+ *   改期（reschedule）：商家（本店）改期保持状态/指派；客户（本人，v1.1-b2 B2-6）仅 >4h 可自助改，
+ *   与取消同阈值，事务内回退 pending + 清空 staffId + 旧槽释放/新槽校验。
  *
  * 关键规则落点：
  * - 占座防超卖（§3.1 序 1）：create 事务内 UPSERT store_slots 行并校验
@@ -731,14 +733,21 @@ export const appointmentRouter = router({
     }),
 
   /**
-   * 8.5 reschedule（merchant 本店 · P4 T4.2 授权追加，契约 docs/MERCHANT-CONTRACTS.md）：改期。
-   * 校验本店 + 状态 pending/confirmed；新时间复用 assertBookableTime（未来 / 30min 对齐 /
-   * 营业时间内 / grooming 不超打烊）。事务内：旧槽位回减 booked_count → 新槽位校验
-   * （booked_count < capacity，无行则按默认容量建行）并 +1 → 写新时间；新槽已满抛
-   * CONFLICT，事务整体回滚（旧槽回减一并撤销）。改到原时段为净零操作，安全幂等。
-   * emitEvent appointment.rescheduled → user:{customerId} + staff:{staffId}（若已指派）。
+   * 8.5 reschedule（改期 · 登录后按角色分派）：
+   * - 商家（本店 · P4 T4.2 授权追加，契约 docs/MERCHANT-CONTRACTS.md）：
+   *   校验本店 + 状态 pending/confirmed；新时间复用 assertBookableTime（未来 / 30min 对齐 /
+   *   营业时间内 / grooming 不超打烊）。事务内：旧槽位回减 booked_count → 新槽位校验
+   *   （booked_count < capacity，无行则按默认容量建行）并 +1 → 写新时间；新槽已满抛
+   *   CONFLICT，事务整体回滚（旧槽回减一并撤销）。改到原时段为净零操作，安全幂等。
+   *   emitEvent appointment.rescheduled → user:{customerId} + staff:{staffId}（若已指派）。
+   * - 客户（本人 · v1.1-b2 B2-6）：状态 pending/confirmed 且距原开始 >4h
+   *   （与取消同阈值 CANCEL_FREE_BEFORE_SEC，不足 4 小时明确报错）才可自助改期。
+   *   与商家分支同一事务结构：旧槽位回减 → 新槽位校验并 +1 → 写新时间，
+   *   且 status 回退 pending + staffId 置空（重新走商家确认流）；新槽已满抛 CONFLICT，
+   *   事务整体回滚（状态回退、staffId 清空、旧槽回减一并撤销，三者与槽位校验同生共死）。
+   *   emitEvent appointment.rescheduled → appointment:{aid} + store:{storeId}（by:'customer'）。
    */
-  reschedule: merchantProcedure
+  reschedule: publicProcedure
     .input(
       z.object({
         appointmentId: z.string().min(1),
@@ -748,9 +757,20 @@ export const appointmentRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const appt = await getAppointmentOrThrow(ctx.db, input.appointmentId);
-      if (appt.storeId !== ctx.user.storeId) forbidden('非本店预约，无权操作');
+      const isMerchant =
+        (ctx.user.roles.includes('merchant_owner') || ctx.user.roles.includes('merchant_manager')) &&
+        ctx.user.storeId === appt.storeId;
+      const isOwnerCustomer = ctx.user.roles.includes('customer') && appt.customerId === ctx.user.id;
+      if (!isMerchant && !isOwnerCustomer) forbidden('无权改期该预约');
       if (appt.status !== 'pending' && appt.status !== 'confirmed') {
         badRequest(`当前状态（${appt.status}）不可改期，仅 pending/confirmed 可改期`);
+      }
+      // B2-6：客户自助改期与取消同规则——距原开始 >4h；商家代客改期不受此限
+      if (isOwnerCustomer && !isMerchant) {
+        const secondsToStart = Math.floor((appt.scheduledStart.getTime() - Date.now()) / 1000);
+        if (secondsToStart <= CANCEL_FREE_BEFORE_SEC) {
+          badRequest('距预约开始不足 4 小时，不可自助改期，如需调整请联系门店');
+        }
       }
       const store = await ctx.db
         .select()
@@ -801,9 +821,21 @@ export const appointmentRouter = router({
             bookedCount: 1,
           });
         }
+        // B2-6：客户改期同事务内 status 回退 pending + staffId 置空（重新走商家确认流）；
+        // 商家改期保持状态与指派不变。新槽满槽抛 CONFLICT 时此处一并回滚。
         const row = await tx
           .update(schema.appointments)
-          .set({ scheduledStart: start, scheduledEnd: end, updatedAt: new Date() })
+          .set(
+            isMerchant
+              ? { scheduledStart: start, scheduledEnd: end, updatedAt: new Date() }
+              : {
+                  scheduledStart: start,
+                  scheduledEnd: end,
+                  status: 'pending',
+                  staffId: null,
+                  updatedAt: new Date(),
+                },
+          )
           .where(eq(schema.appointments.id, appt.id))
           .returning()
           .then((r) => r[0]!);
@@ -813,13 +845,29 @@ export const appointmentRouter = router({
           scheduledStart: start.toISOString(),
           scheduledEnd: end.toISOString(),
         };
-        // → 客户端 + 员工端（若已指派）
-        outboxIds.push(
-          await emitEvent(txDb(tx), `user:${appt.customerId}`, EventType.AppointmentRescheduled, payload),
-        );
-        if (appt.staffId) {
+        if (isMerchant) {
+          // 商家改期 → 客户端 + 员工端（若已指派）
           outboxIds.push(
-            await emitEvent(txDb(tx), `staff:${appt.staffId}`, EventType.AppointmentRescheduled, payload),
+            await emitEvent(txDb(tx), `user:${appt.customerId}`, EventType.AppointmentRescheduled, payload),
+          );
+          if (appt.staffId) {
+            outboxIds.push(
+              await emitEvent(txDb(tx), `staff:${appt.staffId}`, EventType.AppointmentRescheduled, payload),
+            );
+          }
+        } else {
+          // B2-6 客户改期 → appointment 频道（客户/商家/原员工可见）+ store 频道（商家待办刷新）
+          outboxIds.push(
+            await emitEvent(txDb(tx), `appointment:${appt.id}`, EventType.AppointmentRescheduled, {
+              ...payload,
+              by: 'customer',
+            }),
+          );
+          outboxIds.push(
+            await emitEvent(txDb(tx), `store:${appt.storeId}`, EventType.AppointmentRescheduled, {
+              ...payload,
+              by: 'customer',
+            }),
           );
         }
         return row;

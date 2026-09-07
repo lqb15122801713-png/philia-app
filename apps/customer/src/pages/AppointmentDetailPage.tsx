@@ -5,6 +5,9 @@
  * - 取消规则：>4h confirm 后直接 cancel（outcome=cancelled）；≤4h 提示「需商家审核」，
  *   提交后转 cancel_requested 展示；in_service/in_boarding 禁用自助取消
  *   （「服务中，如需取消请联系门店」+ tel: 联系门店）；
+ * - 改期（v1.1-b2 B2-6）：pending/confirmed 且距开始 >4h 的洗护单显示「改期」按钮，
+ *   展开复用预约向导的 SlotPicker 选新时段（服务/宠物沿用原单）→ appointment.reschedule
+ *   → toast「改期已提交，等待商家重新确认」（状态回退 pending，重新走商家确认流）；
  * - completed：评价入口（星级 + 文字 → appointment.review；已评价则展示）；
  * - in_service/in_boarding：显著入口跳 /appointments/:id/live。
  */
@@ -14,6 +17,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
 import BookingCode from '@/components/booking/BookingCode';
+import SlotPicker from '@/components/booking/SlotPicker';
 import { ErrorState } from '@/components/home/common';
 import { friendlyError, useToast } from '@/components/booking/Toast';
 import {
@@ -91,8 +95,23 @@ export default function AppointmentDetailPage() {
   });
 
   const [confirmingCancel, setConfirmingCancel] = useState(false);
+  // v1.1-b2 B2-6：改期面板状态 + 新选时段
+  const [rescheduling, setRescheduling] = useState(false);
+  const [newSlot, setNewSlot] = useState<Date | null>(null);
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
+
+  // 改期槽位数据源：与预约向导同源（store.getWithServices 带当前 serviceId，
+  // 槽位按该服务时长过滤连续槽），展开改期面板时才拉取
+  const rescheduleSlotsQ = useQuery({
+    queryKey: ['store', 'getWithServices', appt?.storeId ?? '', appt?.serviceId ?? '', 'reschedule'],
+    queryFn: () =>
+      trpc.store.getWithServices.query({
+        storeId: appt!.storeId,
+        serviceId: appt!.serviceId,
+      }),
+    enabled: rescheduling && !!appt,
+  });
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ['appointment'] });
@@ -123,6 +142,19 @@ export default function AppointmentDetailPage() {
       showToast('感谢评价！', 'info');
     },
     onError: (err) => showToast(friendlyError(err, '评价提交失败')),
+  });
+
+  // v1.1-b2 B2-6：客户自助改期（服务端校验：本人 + pending/confirmed + 距原开始 >4h）
+  const rescheduleM = useMutation({
+    mutationFn: () =>
+      trpc.appointment.reschedule.mutate({ appointmentId: id, scheduledStart: newSlot! }),
+    onSuccess: () => {
+      invalidate();
+      setRescheduling(false);
+      setNewSlot(null);
+      showToast('改期已提交，等待商家重新确认', 'info');
+    },
+    onError: (err) => showToast(friendlyError(err, '改期失败，请稍后再试')),
   });
 
   if (detailQ.isPending) {
@@ -158,6 +190,9 @@ export default function AppointmentDetailPage() {
   const cancellable = appt.status === 'pending' || appt.status === 'confirmed';
   const secondsToStart = Math.floor((appt.scheduledStart.getTime() - Date.now()) / 1000);
   const freeCancel = secondsToStart > CANCEL_FREE_BEFORE_SEC;
+  // v1.1-b2 B2-6：自助改期入口——与取消同 >4h 阈值；洗护单复用向导 SlotPicker
+  // （寄养改期涉及退房晚数重选，本批次由商家端代改，客户端入口仅洗护）
+  const reschedulable = cancellable && freeCancel && appt.type === 'grooming';
   // stores 表暂无 phone 字段：有则渲染 tel:，无则提示到店/商家端联系
   const storePhone = (d.store as { phone?: string | null } | null)?.phone ?? null;
 
@@ -398,10 +433,52 @@ export default function AppointmentDetailPage() {
         </section>
       ) : null}
 
-      {/* 取消规则 */}
+      {/* 改期 / 取消规则 */}
       {cancellable ? (
         <section className="mt-4">
-          {confirmingCancel ? (
+          {rescheduling ? (
+            <div className="rounded-card bg-card p-4 shadow-card">
+              <p className="text-body font-semibold">选择新时间</p>
+              <p className="mt-1 text-caption text-ink-secondary">
+                {d.service?.name ?? '服务'} · {d.pet?.name ?? '宠物'}（改期后需商家重新确认）
+              </p>
+              <div className="mt-3">
+                {rescheduleSlotsQ.data?.store ? (
+                  <SlotPicker
+                    store={rescheduleSlotsQ.data.store}
+                    slots={rescheduleSlotsQ.data.slots ?? []}
+                    selected={newSlot}
+                    onSelect={setNewSlot}
+                    loading={rescheduleSlotsQ.isPending || rescheduleSlotsQ.isFetching}
+                  />
+                ) : (
+                  <p className="rounded-card bg-sunken px-4 py-6 text-center text-caption text-ink-secondary">
+                    {rescheduleSlotsQ.isError ? '可约时段加载失败，请关闭后重试' : '正在加载可约时段…'}
+                  </p>
+                )}
+              </div>
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRescheduling(false);
+                    setNewSlot(null);
+                  }}
+                  className="h-11 flex-1 rounded-full bg-sunken text-body font-medium text-ink"
+                >
+                  再想想
+                </button>
+                <button
+                  type="button"
+                  disabled={!newSlot || rescheduleM.isPending}
+                  onClick={() => rescheduleM.mutate()}
+                  className="h-11 flex-1 rounded-full bg-brand-primary text-body font-medium text-white disabled:opacity-60"
+                >
+                  {rescheduleM.isPending ? '提交中…' : '确认改期'}
+                </button>
+              </div>
+            </div>
+          ) : confirmingCancel ? (
             <div className="rounded-card bg-card p-4 shadow-card">
               <p className="text-body font-semibold">
                 {freeCancel ? '确认取消这次预约吗？' : '距开始不足 4 小时，取消需商家审核'}
@@ -430,13 +507,24 @@ export default function AppointmentDetailPage() {
               </div>
             </div>
           ) : (
-            <button
-              type="button"
-              onClick={() => setConfirmingCancel(true)}
-              className="h-11 w-full rounded-full bg-card text-body font-medium text-danger-deep shadow-card"
-            >
-              {freeCancel ? '取消预约' : '申请取消（4 小时内需商家审核）'}
-            </button>
+            <div className="flex gap-2">
+              {reschedulable ? (
+                <button
+                  type="button"
+                  onClick={() => setRescheduling(true)}
+                  className="h-11 flex-1 rounded-full bg-brand-primary text-body font-medium text-white shadow-card"
+                >
+                  改期
+                </button>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setConfirmingCancel(true)}
+                className={`h-11 rounded-full bg-card text-body font-medium text-danger-deep shadow-card ${reschedulable ? 'flex-1' : 'w-full'}`}
+              >
+                {freeCancel ? '取消预约' : '申请取消（4 小时内需商家审核）'}
+              </button>
+            </div>
           )}
         </section>
       ) : null}
