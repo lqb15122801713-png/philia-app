@@ -40,6 +40,7 @@ import {
 } from '../trpc';
 import { broadcastNow, emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
+import { StepLabel, type StepKey } from './serviceStep';
 
 /* ------------------------------------------------------------------ */
 /* 常量与类型                                                            */
@@ -1065,6 +1066,67 @@ export const appointmentRouter = router({
           staffName: r.staff?.name ?? null,
         }),
       );
+    }),
+
+  /**
+   * 15. serviceAlbum（customer 本人 · v1.1-b2 B2-4）：服务相册。
+   * 返回洗护六步 stepKey/stepName/status/photos[{url,tag}]（仅未失效照片，
+   * 张数口径与 serviceStep 一致：invalidated_at IS NULL，按 taken_at 升序）；
+   * 寄养单无六步流 → steps 为空数组。
+   * 越权红线：严格本人校验——不回落 staff/merchant 归属分支，预约非本人
+   * 一律 FORBIDDEN，不存在 NOT_FOUND，杜绝泄漏其他客户数据。
+   */
+  serviceAlbum: customerProcedure
+    .input(z.object({ appointmentId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const appt = await ctx.db
+        .select()
+        .from(schema.appointments)
+        .where(eq(schema.appointments.id, input.appointmentId))
+        .get();
+      if (!appt) throw new TRPCError({ code: 'NOT_FOUND', message: '预约不存在' });
+      if (appt.customerId !== ctx.user.id) forbidden('无权查看该预约的服务相册');
+
+      const steps = await ctx.db
+        .select()
+        .from(schema.appointmentSteps)
+        .where(eq(schema.appointmentSteps.appointmentId, appt.id))
+        .orderBy(asc(schema.appointmentSteps.stepOrder));
+      const stepIds = steps.map((s) => s.id);
+      const photos =
+        stepIds.length === 0
+          ? []
+          : await ctx.db
+              .select({
+                stepId: schema.stepPhotos.stepId,
+                url: schema.stepPhotos.url,
+                tag: schema.stepPhotos.tag,
+              })
+              .from(schema.stepPhotos)
+              .where(
+                and(
+                  inArray(schema.stepPhotos.stepId, stepIds),
+                  isNull(schema.stepPhotos.invalidatedAt), // 仅未失效照片
+                ),
+              )
+              .orderBy(asc(schema.stepPhotos.takenAt), asc(schema.stepPhotos.id));
+
+      const byStep = new Map<string, typeof photos>();
+      for (const p of photos) {
+        const arr = byStep.get(p.stepId);
+        if (arr) arr.push(p);
+        else byStep.set(p.stepId, [p]);
+      }
+      return {
+        appointmentId: appt.id,
+        status: appt.status,
+        steps: steps.map((s) => ({
+          stepKey: s.stepKey as StepKey,
+          stepName: StepLabel[s.stepKey as StepKey] ?? s.stepKey,
+          status: s.status,
+          photos: (byStep.get(s.id) ?? []).map((p) => ({ url: p.url, tag: p.tag })),
+        })),
+      };
     }),
 
   /**

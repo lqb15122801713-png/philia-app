@@ -87,8 +87,8 @@ const txBus = (tx: Q): BusDb => tx as unknown as BusDb;
 /** 事务 handle 类型（供 insertInitialSteps 给 T1.3a appointment.checkin 复用） */
 export type StepTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-/** 步骤中文名（报错文案用，与 realtime/events.ts StepKeyLabel 对齐） */
-const StepLabel: Record<StepKey, string> = {
+/** 步骤中文名（报错文案用，与 realtime/events.ts StepKeyLabel 对齐；导出供 appointment.serviceAlbum 相册分组名复用） */
+export const StepLabel: Record<StepKey, string> = {
   disinfection: '消毒',
   precheck: '预检',
   grooming: '洗护',

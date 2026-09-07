@@ -81,6 +81,15 @@ export default function AppointmentDetailPage() {
   const d = detailQ.data;
   const appt = d?.appointment;
 
+  // 服务相册（v1.1-b2 B2-4）：洗护单 completed / in_service 时加载，按步骤分组展示
+  const albumEnabled =
+    !!appt && appt.type === 'grooming' && (appt.status === 'completed' || appt.status === 'in_service');
+  const albumQ = useQuery({
+    queryKey: ['appointment', 'serviceAlbum', id],
+    queryFn: () => trpc.appointment.serviceAlbum.query({ appointmentId: id }),
+    enabled: albumEnabled,
+  });
+
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
@@ -151,6 +160,12 @@ export default function AppointmentDetailPage() {
   const freeCancel = secondsToStart > CANCEL_FREE_BEFORE_SEC;
   // stores 表暂无 phone 字段：有则渲染 tel:，无则提示到店/商家端联系
   const storePhone = (d.store as { phone?: string | null } | null)?.phone ?? null;
+
+  // 服务相册分组：completed 展示全部六步；进行中订单只显示已确认（done）步骤的照片
+  const albumRawSteps = albumQ.data?.steps ?? [];
+  const albumSteps =
+    appt.status === 'completed' ? albumRawSteps : albumRawSteps.filter((s) => s.status === 'done');
+  const albumPhotoCount = albumSteps.reduce((n, s) => n + s.photos.length, 0);
 
   return (
     <div className="px-4 py-6">
@@ -279,6 +294,57 @@ export default function AppointmentDetailPage() {
           </p>
         ) : null}
       </section>
+
+      {/* 服务相册（v1.1-b2 B2-4）：按六步分组网格展示，before/after 打标；
+          completed 展示全部六步分组，进行中订单只显示已确认步骤的照片 */}
+      {albumEnabled && albumSteps.length > 0 ? (
+        <section className="mt-4 rounded-card bg-card p-4 shadow-card">
+          <h2 className="text-title">服务相册</h2>
+          <p className="mt-0.5 text-caption text-ink-secondary">
+            共 {albumPhotoCount} 张照片，服务全程透明可查
+          </p>
+          <div className="mt-3 space-y-4">
+            {albumSteps.map((step) => (
+              <div key={step.stepKey}>
+                <h3 className="flex items-baseline gap-1.5 text-body font-medium">
+                  {step.stepName}
+                  <span className="text-caption text-ink-placeholder">
+                    {step.photos.length > 0 ? `${step.photos.length} 张` : '无需照片'}
+                  </span>
+                </h3>
+                {step.photos.length > 0 ? (
+                  <div className="mt-1.5 grid grid-cols-3 gap-1">
+                    {step.photos.map((p, i) => (
+                      <div
+                        key={`${step.stepKey}-${i}`}
+                        className="relative aspect-square overflow-hidden rounded-tag bg-sunken"
+                      >
+                        <img
+                          src={p.url}
+                          alt={`${step.stepName}照片 ${i + 1}`}
+                          loading="lazy"
+                          className="h-full w-full object-cover"
+                        />
+                        {p.tag === 'before' || p.tag === 'after' ? (
+                          <span
+                            className={`absolute left-1 top-1 rounded-tag px-1.5 py-0.5 text-caption ${
+                              p.tag === 'before'
+                                ? 'bg-brand-secondary-light text-ink'
+                                : 'bg-brand-primary text-white'
+                            }`}
+                          >
+                            {p.tag === 'before' ? '服务前' : '服务后'}
+                          </span>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {/* 再次预约（completed 主按钮）：跳对应向导并预填 serviceId/storeId/petId（v1.1-b2 B2-3） */}
       {appt.status === 'completed' ? (
