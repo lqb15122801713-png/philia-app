@@ -1,0 +1,49 @@
+{
+  "status": "completed",
+  "type": "grooming",
+  "stepCountInGet": 6,
+  "getHasPhotos": false,
+  "photoCountInDb": 10,
+  "stepPhotoBreakdown": [
+    {
+      "stepKey": "disinfection",
+      "status": "done",
+      "photos": 1
+    },
+    {
+      "stepKey": "precheck",
+      "status": "done",
+      "photos": 2
+    },
+    {
+      "stepKey": "grooming",
+      "status": "done",
+      "photos": 3
+    },
+    {
+      "stepKey": "detail",
+      "status": "done",
+      "photos": 2
+    },
+    {
+      "stepKey": "before_after",
+      "status": "done",
+      "photos": 2
+    },
+    {
+      "stepKey": "confirm",
+      "status": "done",
+      "photos": 0
+    }
+  ],
+  "page": {
+    "statusText": true,
+    "hasAlbum": false,
+    "imgCount": 1,
+    "sections": [
+      "预约信息",
+      "门店",
+      "服务评价"
+    ]
+  }
+}

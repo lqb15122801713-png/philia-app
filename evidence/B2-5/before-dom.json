@@ -1,0 +1,141 @@
+{
+  "step0": {
+    "checkinGrid": [
+      {
+        "label": "今天9月7日",
+        "disabled": false
+      },
+      {
+        "label": "周二9月8日",
+        "disabled": false
+      },
+      {
+        "label": "周三9月9日",
+        "disabled": false
+      },
+      {
+        "label": "周四9月10日",
+        "disabled": false
+      },
+      {
+        "label": "周五9月11日",
+        "disabled": false
+      },
+      {
+        "label": "周六9月12日",
+        "disabled": false
+      },
+      {
+        "label": "周日9月13日",
+        "disabled": false
+      },
+      {
+        "label": "周一9月14日",
+        "disabled": false
+      },
+      {
+        "label": "周二9月15日",
+        "disabled": false
+      },
+      {
+        "label": "周三9月16日",
+        "disabled": false
+      },
+      {
+        "label": "周四9月17日",
+        "disabled": false
+      },
+      {
+        "label": "周五9月18日",
+        "disabled": false
+      },
+      {
+        "label": "周六9月19日",
+        "disabled": false
+      },
+      {
+        "label": "周日9月20日",
+        "disabled": false
+      }
+    ],
+    "checkoutGridExists": false,
+    "summary": true
+  },
+  "pickedCheckin1": "周三9月9日",
+  "step1": {
+    "checkinGridStillVisible": true,
+    "checkoutGrid": [
+      {
+        "label": "周四9月10日",
+        "disabled": false
+      },
+      {
+        "label": "周五9月11日",
+        "disabled": false
+      },
+      {
+        "label": "周六9月12日",
+        "disabled": false
+      },
+      {
+        "label": "周日9月13日",
+        "disabled": false
+      },
+      {
+        "label": "周一9月14日",
+        "disabled": false
+      },
+      {
+        "label": "周二9月15日",
+        "disabled": false
+      },
+      {
+        "label": "周三9月16日",
+        "disabled": false
+      },
+      {
+        "label": "周四9月17日",
+        "disabled": false
+      },
+      {
+        "label": "周五9月18日",
+        "disabled": false
+      },
+      {
+        "label": "周六9月19日",
+        "disabled": false
+      },
+      {
+        "label": "周日9月20日",
+        "disabled": false
+      },
+      {
+        "label": "周一9月21日",
+        "disabled": false
+      },
+      {
+        "label": "周二9月22日",
+        "disabled": false
+      },
+      {
+        "label": "周三9月23日",
+        "disabled": false
+      }
+    ]
+  },
+  "pickedCheckout": "周六9月12日",
+  "step2": {
+    "nights": "3",
+    "checkinGridStillVisible": true
+  },
+  "mistouchClick": "周五9月11日",
+  "step3": {
+    "activeDays": [
+      "周五9月11日",
+      "周六9月12日",
+      "下一步"
+    ],
+    "nightsLine": "共 1 晚",
+    "hint": false
+  }
+}

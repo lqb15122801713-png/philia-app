@@ -1,0 +1,14 @@
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const q = (t) => [...document.querySelectorAll('button')].find(b => b.innerText.trim().includes(t));
+window.scrollTo(0, document.body.scrollHeight);
+await sleep(500);
+q('改期').click();
+await sleep(2000);
+q('9月10日')?.click() || q('9月9日')?.click();
+await sleep(800);
+const slot = [...document.querySelectorAll('button')].find(b => b.innerText.trim() === '14:00' && !b.disabled);
+slot?.click();
+await sleep(400);
+document.querySelector('section:last-of-type')?.scrollIntoView({block:'center'});
+await sleep(300);
+return 'panel-open';

@@ -1,0 +1,7 @@
+=== r1) 回归：商家改期路径（原有契约）——状态/指派应保持不变 ===
+merchant reschedule -> confirmed staffId= 01M1WVC76NT2WWE5KPC6PTXM3H 2026-09-09T03:00:00.000Z
+=== r2) 回归：>4h 直接取消（aid2） ===
+cancel -> cancelled cancelled
+=== r3) 清理：取消两张占槽单 ===
+cancel -> cancelled 01M1X4X4
+cancel -> cancelled 01M1X4X4

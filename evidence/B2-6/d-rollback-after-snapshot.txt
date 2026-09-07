@@ -1,0 +1,32 @@
+### 回滚后快照（CONFLICT 之后）
+appointment: {
+  "id": "01M1X4X4ME4VFSZRK52W28Q6GQ",
+  "status": "confirmed",
+  "staffId": "01M1WVC76NT2WWE5KPC6PTXM3H",
+  "scheduledStart": "2026-09-08T07:00:00.000Z",
+  "scheduledEnd": "2026-09-08T08:00:00.000Z",
+  "checkedInAt": null
+}
+slots: [
+  {
+    "slotStart": "2026-09-08T06:00:00.000Z",
+    "capacity": 2,
+    "bookedCount": 0
+  },
+  {
+    "slotStart": "2026-09-08T07:00:00.000Z",
+    "capacity": 2,
+    "bookedCount": 2
+  },
+  {
+    "slotStart": "2026-09-09T02:00:00.000Z",
+    "capacity": 2,
+    "bookedCount": 2
+  },
+  {
+    "slotStart": "2026-09-09T06:00:00.000Z",
+    "capacity": 2,
+    "bookedCount": 1
+  }
+]
+rescheduled events: []

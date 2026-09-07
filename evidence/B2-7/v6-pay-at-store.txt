@@ -1,0 +1,11 @@
+regression booking G=01M1X88PNNB2DP3E7ETCJ99VQQ code=FD6E53
+confirm status= confirmed
+assign staffId= 01M1WVC76NT2WWE5KPC6PTXM3H
+checkin status= in_service steps= 6 nextRoute= /execute/01M1X88PNNB2DP3E7ETCJ99VQQ
+[
+ {
+  "status": "in_service",
+  "payment_mode": "pay_at_store",
+  "paid_at": null
+ }
+]

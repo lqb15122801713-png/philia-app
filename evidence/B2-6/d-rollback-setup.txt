@@ -1,0 +1,5 @@
+=== d0) 把 9/9 10:00 槽位占满（capacity=2，造 2 单） ===
+filled: 01M1X4X4HB110VG2EG0ZVY6FVR
+filled: 01M1X4X4JX1GSZ154S9KAZ3DBF
+=== d1) 造 aid2：明天15:00，确认+派单（小美） ===
+AID2=01M1X4X4ME4VFSZRK52W28Q6GQ

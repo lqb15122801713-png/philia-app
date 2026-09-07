@@ -1,0 +1,22 @@
+{
+  "checks": {
+    "grooming.zeroEntry": {
+      "ok": true,
+      "search": "",
+      "activeCards": 0,
+      "nextDisabled": true
+    },
+    "grooming.zeroFlowReachesConfirm": {
+      "ok": true,
+      "atConfirm": true,
+      "petCards": true,
+      "submitBtn": true
+    },
+    "boarding.zeroEntry": {
+      "ok": true,
+      "search": "",
+      "activeDays": 0,
+      "nextDisabled": true
+    }
+  }
+}

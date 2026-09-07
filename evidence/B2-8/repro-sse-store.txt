@@ -1,0 +1,80 @@
+event: appointment.created
+data: {"id":"01M1X9EAZWQEHF7YY7XG2R21Z8","type":"appointment.created","channel":"store:01M1WVC76NH73BZSP1KQ6SXBAC","data":{"appointmentId":"01M1X9EAZTEK0JYB1MYNRH3W0W","storeId":"01M1WVC76NH73BZSP1KQ6SXBAC","petName":"旺财","serviceName":"基础洗护（小型犬）"},"ts":1788763122000}
+id: 01M1X9EAZWQEHF7YY7XG2R21Z8
+
+: hb 1788763145437
+
+event: appointment.cancelled
+data: {"id":"01M1X61R4NMNF4GPCB4J6HM2M2","type":"appointment.cancelled","channel":"store:01M1WVC76NH73BZSP1KQ6SXBAC","data":{"appointmentId":"01M1X61B4P1S7R98T5VM60BRF8","petName":"����","by":"customer"},"ts":1788759564000}
+id: 01M1X61R4NMNF4GPCB4J6HM2M2
+
+event: appointment.created
+data: {"id":"01M1X7S3T3XGWMZQ8K1AWZW44X","type":"appointment.created","channel":"store:01M1WVC76NH73BZSP1KQ6SXBAC","data":{"appointmentId":"01M1X7S3T2EY9VN8WHV8NSMVKM","storeId":"01M1WVC76NH73BZSP1KQ6SXBAC","petName":"旺财","serviceName":"快速洗+吹干"},"ts":1788761378000}
+id: 01M1X7S3T3XGWMZQ8K1AWZW44X
+
+event: appointment.cancelled
+data: {"id":"01M1X7SXKCXXMDWSSX8CX6THNV","type":"appointment.cancelled","channel":"store:01M1WVC76NH73BZSP1KQ6SXBAC","data":{"appointmentId":"01M1X7S3T2EY9VN8WHV8NSMVKM","petName":"旺财","by":"customer"},"ts":1788761405000}
+id: 01M1X7SXKCXXMDWSSX8CX6THNV
+
+event: appointment.created
+data: {"id":"01M1X7SYNZVQ4XM63MQ5PH1C4D","type":"appointment.created","channel":"store:01M1WVC76NH73BZSP1KQ6SXBAC","data":{"appointmentId":"01M1X7SYNYH2RHY0PNND420K67","storeId":"01M1WVC76NH73BZSP1KQ6SXBAC","petName":"旺财","serviceName":"快速洗+吹干"},"ts":1788761406000}
+id: 01M1X7SYNZVQ4XM63MQ5PH1C4D
+
+event: appointment.created
+data: {"id":"01M1X7SYPXF477TKX5RR1GW8MQ","type":"appointment.created","channel":"store:01M1WVC76NH73BZSP1KQ6SXBAC","data":{"appointmentId":"01M1X7SYPWF24QD6KSTJW00ZB6","storeId":"01M1WVC76NH73BZSP1KQ6SXBAC","petName":"咪咪","serviceName":"快速洗+吹干"},"ts":1788761406000}
+id: 01M1X7SYPXF477TKX5RR1GW8MQ
+
+event: appointment.cancelled
+data: {"id":"01M1X7T0BCSBT2EZQAPQSESFGN","type":"appointment.cancelled","channel":"store:01M1WVC76NH73BZSP1KQ6SXBAC","data":{"appointmentId":"01M1X7SYNYH2RHY0PNND420K67","petName":"旺财","by":"customer"},"ts":1788761407000}
+id: 01M1X7T0BCSBT2EZQAPQSESFGN
+
+event: appointment.cancelled
+data: {"id":"01M1X7T0DV427DMJTR7F2EBW3K","type":"appointment.cancelled","channel":"store:01M1WVC76NH73BZSP1KQ6SXBAC","data":{"appointmentId":"01M1X7SYPWF24QD6KSTJW00ZB6","petName":"咪咪","by":"customer"},"ts":1788761407000}
+id: 01M1X7T0DV427DMJTR7F2EBW3K
+
+event: appointment.created
+data: {"id":"01M1X7TBGF8Z4KT4KXKV34QGV9","type":"appointment.created","channel":"store:01M1WVC76NH73BZSP1KQ6SXBAC","data":{"appointmentId":"01M1X7TBGE6X3X15FY641KQ3PQ","storeId":"01M1WVC76NH73BZSP1KQ6SXBAC","petName":"旺财","serviceName":"快速洗+吹干"},"ts":1788761419000}
+id: 01M1X7TBGF8Z4KT4KXKV34QGV9
+
+event: appointment.created
+data: {"id":"01M1X87F244X2BF3MJ9WHGE4GS","type":"appointment.created","channel":"store:01M1WVC76NH73BZSP1KQ6SXBAC","data":{"appointmentId":"01M1X87F22AXND6JBR5J4Y6YQG","storeId":"01M1WVC76NH73BZSP1KQ6SXBAC","petName":"旺财","serviceName":"快速洗+吹干"},"ts":1788761848000}
+id: 01M1X87F244X2BF3MJ9WHGE4GS
+
+event: appointment.cancelled
+data: {"id":"01M1X888PM3WH833ABHWTCE4G8","type":"appointment.cancelled","channel":"store:01M1WVC76NH73BZSP1KQ6SXBAC","data":{"appointmentId":"01M1X87F22AXND6JBR5J4Y6YQG","petName":"旺财","by":"customer"},"ts":1788761875000}
+id: 01M1X888PM3WH833ABHWTCE4G8
+
+event: appointment.created
+data: {"id":"01M1X889T7QZJR11S0D5G6SRGM","type":"appointment.created","channel":"store:01M1WVC76NH73BZSP1KQ6SXBAC","data":{"appointmentId":"01M1X889T6ACY5TZ34RZ0S85XH","storeId":"01M1WVC76NH73BZSP1KQ6SXBAC","petName":"旺财","serviceName":"快速洗+吹干"},"ts":1788761876000}
+id: 01M1X889T7QZJR11S0D5G6SRGM
+
+event: appointment.created
+data: {"id":"01M1X889V5DQENBVWNK1CTQ5FB","type":"appointment.created","channel":"store:01M1WVC76NH73BZSP1KQ6SXBAC","data":{"appointmentId":"01M1X889V59KK37FPA053052RH","storeId":"01M1WVC76NH73BZSP1KQ6SXBAC","petName":"咪咪","serviceName":"快速洗+吹干"},"ts":1788761876000}
+id: 01M1X889V5DQENBVWNK1CTQ5FB
+
+event: appointment.cancelled
+data: {"id":"01M1X88BGBS6G8C6SHEG9H44H1","type":"appointment.cancelled","channel":"store:01M1WVC76NH73BZSP1KQ6SXBAC","data":{"appointmentId":"01M1X889T6ACY5TZ34RZ0S85XH","petName":"旺财","by":"customer"},"ts":1788761878000}
+id: 01M1X88BGBS6G8C6SHEG9H44H1
+
+event: appointment.cancelled
+data: {"id":"01M1X88BJQ4SZM7VHNW8J1H5TS","type":"appointment.cancelled","channel":"store:01M1WVC76NH73BZSP1KQ6SXBAC","data":{"appointmentId":"01M1X889V59KK37FPA053052RH","petName":"咪咪","by":"customer"},"ts":1788761878000}
+id: 01M1X88BJQ4SZM7VHNW8J1H5TS
+
+event: appointment.created
+data: {"id":"01M1X88PNPGRKB369PRVVZZMQT","type":"appointment.created","channel":"store:01M1WVC76NH73BZSP1KQ6SXBAC","data":{"appointmentId":"01M1X88PNNB2DP3E7ETCJ99VQQ","storeId":"01M1WVC76NH73BZSP1KQ6SXBAC","petName":"旺财","serviceName":"快速洗+吹干"},"ts":1788761889000}
+id: 01M1X88PNPGRKB369PRVVZZMQT
+
+event: appointment.created
+data: {"id":"01M1X88S22CYQPQ9BFYNVFH2R3","type":"appointment.created","channel":"store:01M1WVC76NH73BZSP1KQ6SXBAC","data":{"appointmentId":"01M1X88S21RVTNPC933JFZKY9M","storeId":"01M1WVC76NH73BZSP1KQ6SXBAC","petName":"旺财","serviceName":"快速洗+吹干"},"ts":1788761891000}
+id: 01M1X88S22CYQPQ9BFYNVFH2R3
+
+event: appointment.rescheduled
+data: {"id":"01M1X88S4NCTQWRVK7JE1P4R9P","type":"appointment.rescheduled","channel":"store:01M1WVC76NH73BZSP1KQ6SXBAC","data":{"appointmentId":"01M1X88S21RVTNPC933JFZKY9M","petName":"旺财","scheduledStart":"2026-09-09T07:00:00.000Z","scheduledEnd":"2026-09-09T07:45:00.000Z","by":"customer"},"ts":1788761891000}
+id: 01M1X88S4NCTQWRVK7JE1P4R9P
+
+event: appointment.cancelled
+data: {"id":"01M1X88TRRHTBGH4AD4FAGHZXE","type":"appointment.cancelled","channel":"store:01M1WVC76NH73BZSP1KQ6SXBAC","data":{"appointmentId":"01M1X88S21RVTNPC933JFZKY9M","petName":"旺财","by":"customer"},"ts":1788761893000}
+id: 01M1X88TRRHTBGH4AD4FAGHZXE
+
+: hb 1788763170451
+

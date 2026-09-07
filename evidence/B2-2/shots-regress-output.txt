@@ -1,0 +1,13 @@
+customer: 示例客户 01M1WVC76KZT68V813WA4E15Q0
+login HTTP 200
+tabs: ["待确认1","已确认","服务中","已完成2","已取消1"]
+待确认 {"cards":["基础洗护（小型犬）待确认菲丽亚宠物·示例店·旺财9月8日周二13:00¥88"],"badges":["待确认"],"emptyText":false}
+saved D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\evidence\B2-2\regress-tab-待确认.png
+已确认 {"cards":[],"badges":[],"emptyText":true}
+saved D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\evidence\B2-2\regress-tab-已确认.png
+服务中 {"cards":[],"badges":[],"emptyText":true}
+saved D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\evidence\B2-2\regress-tab-服务中.png
+已完成 {"cards":["基础洗护（小型犬）已完成菲丽亚宠物·示例店·旺财9月8日周二13:30¥88","基础洗护（小型犬）已完成菲丽亚宠物·示例店·旺财9月8日周二13:00¥88"],"badges":["已完成","已完成"],"emptyText":false}
+saved D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\evidence\B2-2\regress-tab-已完成.png
+已取消 {"cards":["基础洗护（小型犬）已取消菲丽亚宠物·示例店·旺财9月8日周二14:00¥88"],"badges":["已取消"],"emptyText":false}
+saved D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\evidence\B2-2\regress-tab-已取消.png

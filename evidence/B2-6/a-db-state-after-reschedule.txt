@@ -1,0 +1,51 @@
+appointment: {
+  "id": "01M1X4KRJ4REMMPVHWEY4QWWEY",
+  "status": "pending",
+  "staffId": null,
+  "scheduledStart": "2026-09-09T06:00:00.000Z",
+  "scheduledEnd": "2026-09-09T07:00:00.000Z",
+  "checkedInAt": null
+}
+slots: [
+  {
+    "slotStart": "2026-09-08T06:00:00.000Z",
+    "capacity": 2,
+    "bookedCount": 0
+  },
+  {
+    "slotStart": "2026-09-09T02:00:00.000Z",
+    "capacity": 2,
+    "bookedCount": 0
+  },
+  {
+    "slotStart": "2026-09-09T06:00:00.000Z",
+    "capacity": 2,
+    "bookedCount": 1
+  }
+]
+rescheduled events: [
+  {
+    "id": "01M1X4N267WQ7670SR2D07TSBC",
+    "channel": "appointment:01M1X4KRJ4REMMPVHWEY4QWWEY",
+    "type": "appointment.rescheduled",
+    "payload": {
+      "appointmentId": "01M1X4KRJ4REMMPVHWEY4QWWEY",
+      "petName": "旺财",
+      "scheduledStart": "2026-09-09T06:00:00.000Z",
+      "scheduledEnd": "2026-09-09T07:00:00.000Z",
+      "by": "customer"
+    }
+  },
+  {
+    "id": "01M1X4N267WQ7670SR2D07TSBD",
+    "channel": "store:01M1WVC76NH73BZSP1KQ6SXBAC",
+    "type": "appointment.rescheduled",
+    "payload": {
+      "appointmentId": "01M1X4KRJ4REMMPVHWEY4QWWEY",
+      "petName": "旺财",
+      "scheduledStart": "2026-09-09T06:00:00.000Z",
+      "scheduledEnd": "2026-09-09T07:00:00.000Z",
+      "by": "customer"
+    }
+  }
+]

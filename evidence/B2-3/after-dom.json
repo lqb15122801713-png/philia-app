@@ -1,0 +1,56 @@
+{
+  "checks": {
+    "grooming.detail.hasRebook": {
+      "ok": true,
+      "hasRebook": true,
+      "statusCompleted": true
+    },
+    "grooming.wizard.url": {
+      "ok": true,
+      "path": "/booking/grooming",
+      "serviceId": "01M1WVC76PTJ5SMQ7F7Q3X3XAH",
+      "storeId": "01M1WVC76NH73BZSP1KQ6SXBAC",
+      "petId": "01M1WVC76P42RKN6W2TD52MMEB"
+    },
+    "grooming.wizard.servicePreselected": {
+      "ok": true,
+      "activeCards": [
+        "基础洗护（小型犬）约60分钟¥88"
+      ]
+    },
+    "grooming.wizard.petPreselected": {
+      "ok": true,
+      "activeCards": [
+        "🐶旺财狗狗·金毛寻回犬·28.5kg",
+        "到店付服务完成后到店支付"
+      ],
+      "petName": "旺财"
+    },
+    "boarding.detail.hasRebook": {
+      "ok": true,
+      "hasRebook": true,
+      "statusCompleted": true
+    },
+    "boarding.wizard.url": {
+      "ok": true,
+      "path": "/booking/boarding",
+      "serviceId": "01M1WVC76P8P19PCAKJHBDM985",
+      "storeId": "01M1WVC76NH73BZSP1KQ6SXBAC",
+      "petId": "01M1WVC76P42RKN6W2TD52MMEB"
+    },
+    "boarding.wizard.roomPreselected": {
+      "ok": true,
+      "activeCards": [
+        "标准间标准间寄养（犬）¥199/晚"
+      ],
+      "roomType": "标准间"
+    },
+    "boarding.wizard.petPreselected": {
+      "ok": true,
+      "activeCards": [
+        "🐶旺财狗狗·金毛寻回犬·28.5kg·疫苗至2027-03-01"
+      ],
+      "petName": "旺财"
+    }
+  }
+}

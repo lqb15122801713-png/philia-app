@@ -1,0 +1,3 @@
+B created: 01M1WZ7NJ94RBDRJ3C5PGZSXR5 Tue Sep 08 2026 14:00:00 GMT+0800 (中国标准时间)
+B cancel outcome: cancelled
+groups: {"pending":["01M1WYH9QB9Z5PPH6N1S7FZMFM"],"confirmed":[],"in_service":[],"in_boarding":[],"completed":["01M1WZ4AGPAHCGNGH86BSJ07PB"],"cancel_requested":[],"cancelled":["01M1WZ7NJ94RBDRJ3C5PGZSXR5"]}

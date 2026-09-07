@@ -1,0 +1,24 @@
+customer: 示例客户 | merchant: 菲丽亚店主
+staff: 小美 01M1WVC76NT2WWE5KPC6PTXM3H
+A created: 01M1WZ4AGPAHCGNGH86BSJ07PB Tue Sep 08 2026 13:00:00 GMT+0800 (中国标准时间)
+A confirmed
+A assigned -> 小美
+A checkedin (in_service)
+A step done: disinfection
+A step done: precheck
+A step done: grooming
+A step done: detail
+A step done: before_after
+A completed
+file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/evidence/_lib/phil.mjs:50
+  if (first?.error) throw new Error(`${proc} -> ${JSON.stringify(first.error)}`);
+                          ^
+
+Error: appointment.create -> {"json":{"message":"服务时长超出当日打烊时间，请改约更早时段","code":-32600,"data":{"code":"BAD_REQUEST","httpStatus":400,"stack":"TRPCError: 服务时长超出当日打烊时间，请改约更早时段\n    at badRequest (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\src\\routers\\appointment.ts:116:9)\n    at assertBookableTime (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\src\\routers\\appointment.ts:287:39)\n    at <anonymous> (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\src\\routers\\appointment.ts:405:7)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async resolveMiddleware (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\node_modules\\@trpc\\server\\src\\unstable-core-do-not-import\\procedureBuilder.ts:576:22)\n    at async callRecursive (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\node_modules\\@trpc\\server\\src\\unstable-core-do-not-import\\procedureBuilder.ts:642:20)\n    at async callRecursive (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\node_modules\\@trpc\\server\\src\\unstable-core-do-not-import\\procedureBuilder.ts:642:20)\n    at async callRecursive (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\node_modules\\@trpc\\server\\src\\unstable-core-do-not-import\\procedureBuilder.ts:642:20)\n    at async callRecursive (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\node_modules\\@trpc\\server\\src\\unstable-core-do-not-import\\procedureBuilder.ts:642:20)\n    at async procedure (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\node_modules\\@trpc\\server\\src\\unstable-core-do-not-import\\procedureBuilder.ts:682:20)","path":"appointment.create"}}}
+    at unwrap (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/evidence/_lib/phil.mjs:50:27)
+    at trpcMutate (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/evidence/_lib/phil.mjs:73:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async createAppt (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/evidence/B2-2/setup-data.mjs:51:13)
+    at async file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/evidence/B2-2/setup-data.mjs:92:15
+
+Node.js v24.15.0

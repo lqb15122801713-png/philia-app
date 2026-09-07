@@ -1,0 +1,38 @@
+[
+ {
+  "delta": 10,
+  "appointment_id": null,
+  "code": null,
+  "created_at": 1788761848
+ },
+ {
+  "delta": -1,
+  "appointment_id": "01M1X87F22AXND6JBR5J4Y6YQG",
+  "code": "X7RBC7",
+  "created_at": 1788761848
+ },
+ {
+  "delta": 1,
+  "appointment_id": "01M1X87F22AXND6JBR5J4Y6YQG",
+  "code": "X7RBC7",
+  "created_at": 1788761875
+ },
+ {
+  "delta": 5,
+  "appointment_id": null,
+  "code": null,
+  "created_at": 1788761886
+ },
+ {
+  "delta": -1,
+  "appointment_id": "01M1X88S21RVTNPC933JFZKY9M",
+  "code": "49XSGC",
+  "created_at": 1788761891
+ },
+ {
+  "delta": 1,
+  "appointment_id": "01M1X88S21RVTNPC933JFZKY9M",
+  "code": "49XSGC",
+  "created_at": 1788761893
+ }
+]

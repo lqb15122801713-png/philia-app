@@ -1,0 +1,7 @@
+customer: 示例客户 01M1WVC76KZT68V813WA4E15Q0
+login HTTP 200
+tabs: ["待确认1","已确认","服务中","已完成2"]
+待确认1 {"cards":["基础洗护（小型犬）待确认菲丽亚宠物·示例店·旺财9月8日周二13:00¥88"],"badges":["待确认"],"emptyText":false}
+已确认 {"cards":[],"badges":[],"emptyText":true}
+服务中 {"cards":[],"badges":[],"emptyText":true}
+已完成2 {"cards":["基础洗护（小型犬）已完成菲丽亚宠物·示例店·旺财9月8日周二13:00¥88","基础洗护（小型犬）已取消菲丽亚宠物·示例店·旺财9月8日周二14:00¥88"],"badges":["已完成","已取消"],"emptyText":false}

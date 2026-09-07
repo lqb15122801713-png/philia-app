@@ -1,0 +1,62 @@
+[
+ {
+  "name": "__drizzle_migrations"
+ },
+ {
+  "name": "appointment_steps"
+ },
+ {
+  "name": "appointments"
+ },
+ {
+  "name": "boarding_daily_logs"
+ },
+ {
+  "name": "boarding_stays"
+ },
+ {
+  "name": "event_outbox"
+ },
+ {
+  "name": "notifications"
+ },
+ {
+  "name": "orders"
+ },
+ {
+  "name": "payments"
+ },
+ {
+  "name": "pets"
+ },
+ {
+  "name": "products"
+ },
+ {
+  "name": "push_subscriptions"
+ },
+ {
+  "name": "services"
+ },
+ {
+  "name": "staff"
+ },
+ {
+  "name": "staff_invites"
+ },
+ {
+  "name": "step_photos"
+ },
+ {
+  "name": "store_slots"
+ },
+ {
+  "name": "stores"
+ },
+ {
+  "name": "user_roles"
+ },
+ {
+  "name": "users"
+ }
+]

@@ -1,0 +1,12 @@
+customer: 示例客户 | merchant: 菲丽亚店主 | staff: 小美 01M1WVC76NT2WWE5KPC6PTXM3H
+C created: 01M1X07YDKEMGQ5GSRZDHVGF1G Tue Sep 08 2026 13:30:00 GMT+0800 (中国标准时间)
+C confirmed
+C assigned -> 小美
+C checkedin
+C step done: disinfection
+C step done: precheck
+C step done: grooming
+C step done: detail
+C step done: before_after
+C completed
+final: {"inGroups":["completed"],"counts":{"pending":1,"confirmed":0,"in_service":0,"in_boarding":0,"completed":2,"cancel_requested":0,"cancelled":1}}

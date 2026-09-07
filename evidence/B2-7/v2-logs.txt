@@ -1,0 +1,14 @@
+[
+ {
+  "pass_id": "01M1X87EG2B07MQ34F21Z5D0VJ",
+  "appointment_id": null,
+  "delta": 10,
+  "created_at": 1788761848
+ },
+ {
+  "pass_id": "01M1X87EG2B07MQ34F21Z5D0VJ",
+  "appointment_id": "01M1X87F22AXND6JBR5J4Y6YQG",
+  "delta": -1,
+  "created_at": 1788761848
+ }
+]

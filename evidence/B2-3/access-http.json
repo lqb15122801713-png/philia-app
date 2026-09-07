@@ -1,0 +1,25 @@
+{
+  "guest": {
+    "ok": true,
+    "error": "Error: appointment.get -> {\"json\":{\"message\":\"未登录或会话已过期\",\"code\":-32001,\"data\":{\"code\":\"UNAUTHORIZED\",\"httpStatus\":401,\"stack\":\"TRPCError: 未登录或会话已过期\\n    at <anonymous> (D:\\\\KimiData\\\\kimi\\\\tasks\\\\2026"
+  },
+  "stranger": {
+    "ok": true,
+    "error": "Error: appointment.get -> {\"json\":{\"message\":\"无权访问该预约\",\"code\":-32003,\"data\":{\"code\":\"FORBIDDEN\",\"httpStatus\":403,\"stack\":\"TRPCError: 无权访问该预约\\n    at assertAppointmentAccess (D:\\\\KimiData\\\\kimi\\\\tasks\\"
+  },
+  "owner": {
+    "ok": true
+  },
+  "guestPage": {
+    "ok": true,
+    "path": "/dev-login",
+    "hasRebook": false,
+    "text": "开发登录\n\n仅开发环境 · 生产环境请移除\n\n选择种子用户登录\n菲丽亚店主\n店主\n登录 →\n小美\n员工\n登录 →\n阿强\n员工\n登录 →\n丽丽\n员工\n登录 →\n示例客户\n客户\n登录 →\n路人客户\n客户\n登录 →\n手动输入 userId\n\n重跑"
+  },
+  "strangerPage": {
+    "ok": true,
+    "hasRebook": false,
+    "notFound": true,
+    "leakedInfo": false
+  }
+}

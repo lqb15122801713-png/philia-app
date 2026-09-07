@@ -1,0 +1,32 @@
+{
+  "ranges": {
+    "今天": {
+      "empty": true,
+      "hasWangcai": false,
+      "dateInputs": 0
+    },
+    "明天": {
+      "empty": false,
+      "hasWangcai": true,
+      "dateInputs": 0
+    },
+    "本周": {
+      "empty": false,
+      "hasWangcai": true,
+      "dateInputs": 0
+    },
+    "自定义": {
+      "empty": true,
+      "hasWangcai": false,
+      "dateInputs": 2
+    }
+  },
+  "direct": {
+    "url": "http://localhost:7101/appointments",
+    "activeRange": [
+      "全部",
+      "今天"
+    ],
+    "empty": true
+  }
+}

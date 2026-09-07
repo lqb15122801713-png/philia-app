@@ -1,0 +1,61 @@
+{
+  "apptC": "01M1X07YDKEMGQ5GSRZDHVGF1G",
+  "stages": {
+    "C.created_expect_pending": {
+      "inGroups": [
+        "pending"
+      ],
+      "counts": {
+        "pending": 2,
+        "confirmed": 0,
+        "in_service": 0,
+        "in_boarding": 0,
+        "completed": 1,
+        "cancel_requested": 0,
+        "cancelled": 1
+      }
+    },
+    "C.confirmed_expect_confirmed": {
+      "inGroups": [
+        "confirmed"
+      ],
+      "counts": {
+        "pending": 1,
+        "confirmed": 1,
+        "in_service": 0,
+        "in_boarding": 0,
+        "completed": 1,
+        "cancel_requested": 0,
+        "cancelled": 1
+      }
+    },
+    "C.checkedin_expect_in_service": {
+      "inGroups": [
+        "in_service"
+      ],
+      "counts": {
+        "pending": 1,
+        "confirmed": 0,
+        "in_service": 1,
+        "in_boarding": 0,
+        "completed": 1,
+        "cancel_requested": 0,
+        "cancelled": 1
+      }
+    },
+    "C.completed_expect_completed": {
+      "inGroups": [
+        "completed"
+      ],
+      "counts": {
+        "pending": 1,
+        "confirmed": 0,
+        "in_service": 0,
+        "in_boarding": 0,
+        "completed": 2,
+        "cancel_requested": 0,
+        "cancelled": 1
+      }
+    }
+  }
+}

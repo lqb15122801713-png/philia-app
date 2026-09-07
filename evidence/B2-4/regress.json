@@ -1,0 +1,11 @@
+{
+  "checks": {
+    "addPhotosOk": true,
+    "lockedRejected": true,
+    "confirmStepOk": true,
+    "step1PhotoVisible": true,
+    "step2Active": true,
+    "albumInService": true
+  },
+  "appointmentId": "01M1X3GECCJMN3PW1JKH2GX8Z9"
+}

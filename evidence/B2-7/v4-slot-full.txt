@@ -1,0 +1,7 @@
+[
+ {
+  "slot_start": 1788840000,
+  "capacity": 2,
+  "booked_count": 2
+ }
+]

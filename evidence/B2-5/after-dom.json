@@ -1,0 +1,38 @@
+{
+  "checks": {
+    "phase2.chipOnly": {
+      "ok": true,
+      "checkinGridButtons": 0,
+      "chipText": "入住9月14日周一点击修改",
+      "checkoutGridButtons": 14,
+      "checkoutActive": [],
+      "nights": null
+    },
+    "phase2.instantNights": {
+      "ok": true,
+      "checkinGridButtons": 0,
+      "chipText": "入住9月14日周一点击修改",
+      "checkoutGridButtons": 14,
+      "checkoutActive": [
+        "周四9月17日"
+      ],
+      "nights": "3"
+    },
+    "phase1.reselect": {
+      "ok": true,
+      "checkinGridButtons": 14,
+      "chipText": null,
+      "checkoutGridButtons": 0,
+      "checkoutActive": [],
+      "nights": null
+    },
+    "phase2.repicked": {
+      "ok": true,
+      "checkinGridButtons": 0,
+      "chipText": "入住9月15日周二点击修改",
+      "checkoutGridButtons": 14,
+      "checkoutActive": [],
+      "nights": null
+    }
+  }
+}

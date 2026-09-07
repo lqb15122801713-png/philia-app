@@ -1,0 +1,32 @@
+{
+  "grooming": {
+    "url": "/appointments/01M1X07YDKEMGQ5GSRZDHVGF1G",
+    "hasReviewSection": true,
+    "hasRebook": false,
+    "statusCompleted": true,
+    "buttons": [
+      "高德导航",
+      "腾讯地图",
+      "提交评价",
+      "首页",
+      "商城",
+      "预约",
+      "我的"
+    ]
+  },
+  "boarding": {
+    "url": "/appointments/01M1X1AVHS6535VF9V0EEVBZAG",
+    "hasReviewSection": true,
+    "hasRebook": false,
+    "statusCompleted": true,
+    "buttons": [
+      "高德导航",
+      "腾讯地图",
+      "提交评价",
+      "首页",
+      "商城",
+      "预约",
+      "我的"
+    ]
+  }
+}

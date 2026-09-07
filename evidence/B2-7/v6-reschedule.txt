@@ -1,0 +1,34 @@
+R=01M1X88S21RVTNPC933JFZKY9M 建单后 remain（15→14）：
+[
+ {
+  "remain_times": 14
+ }
+]
+-- 改期到后天 15:00 --
+status= pending staffId= null start= 2026-09-09T07:00:00.000Z
+改期后 remain（应仍 14，改期不退次）：
+[
+ {
+  "remain_times": 14
+ }
+]
+改期后该单流水（应只有 -1，无 +1）：
+[
+ {
+  "delta": -1
+ }
+]
+-- 取消改期后的单（应回补 14→15） --
+[
+ {
+  "remain_times": 15
+ }
+]
+[
+ {
+  "delta": -1
+ },
+ {
+  "delta": 1
+ }
+]

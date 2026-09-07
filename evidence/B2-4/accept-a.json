@@ -1,0 +1,134 @@
+{
+  "checks": {
+    "midOnlyDonePhotos": true,
+    "finalSixGroups": true,
+    "finalTenPhotos": true,
+    "beforeAfterTags": true,
+    "imgLink200": true,
+    "pageSixGroups": true,
+    "pageTenImgsLoaded": true
+  },
+  "appointmentId": "01M1X3CQSREWJM4RAQTKRZS5NY",
+  "midStatus": "in_service",
+  "midSteps": [
+    {
+      "stepKey": "disinfection",
+      "status": "done",
+      "photos": 1
+    },
+    {
+      "stepKey": "precheck",
+      "status": "done",
+      "photos": 2
+    },
+    {
+      "stepKey": "grooming",
+      "status": "done",
+      "photos": 3
+    },
+    {
+      "stepKey": "detail",
+      "status": "active",
+      "photos": 1
+    },
+    {
+      "stepKey": "before_after",
+      "status": "locked",
+      "photos": 0
+    },
+    {
+      "stepKey": "confirm",
+      "status": "locked",
+      "photos": 0
+    }
+  ],
+  "midPage": {
+    "hasAlbum": true,
+    "draftLeaked": false,
+    "albumImgs": 6,
+    "groups": [
+      "消毒\n1 张",
+      "预检\n2 张",
+      "洗护\n3 张"
+    ]
+  },
+  "finalStatus": "completed",
+  "finalSteps": [
+    {
+      "stepKey": "disinfection",
+      "stepName": "消毒",
+      "status": "done",
+      "photos": 1,
+      "tags": [
+        "normal"
+      ]
+    },
+    {
+      "stepKey": "precheck",
+      "stepName": "预检",
+      "status": "done",
+      "photos": 2,
+      "tags": [
+        "normal",
+        "normal"
+      ]
+    },
+    {
+      "stepKey": "grooming",
+      "stepName": "洗护",
+      "status": "done",
+      "photos": 3,
+      "tags": [
+        "normal",
+        "normal",
+        "normal"
+      ]
+    },
+    {
+      "stepKey": "detail",
+      "stepName": "精修",
+      "status": "done",
+      "photos": 2,
+      "tags": [
+        "normal",
+        "normal"
+      ]
+    },
+    {
+      "stepKey": "before_after",
+      "stepName": "前后对比照",
+      "status": "done",
+      "photos": 2,
+      "tags": [
+        "after",
+        "before"
+      ]
+    },
+    {
+      "stepKey": "confirm",
+      "stepName": "完成确认",
+      "status": "done",
+      "photos": 0,
+      "tags": []
+    }
+  ],
+  "imgProbe": {
+    "url": "/api/img/appointment/01M1X3CQSREWJM4RAQTKRZS5NY/disinfection/4ab59ac1-95d0-4be5-",
+    "status": 200
+  },
+  "finalPage": {
+    "hasAlbum": true,
+    "groupTitles": [
+      "消毒\n1 张",
+      "预检\n2 张",
+      "洗护\n3 张",
+      "精修\n2 张",
+      "前后对比照\n2 张",
+      "完成确认\n无需照片"
+    ],
+    "albumImgs": 10,
+    "loadedImgs": 10,
+    "hasBeforeBadge": true,
+    "hasAfterBadge": true
+  }
+}

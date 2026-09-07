@@ -1,0 +1,14 @@
+[
+ {
+  "delta": 10,
+  "appointment_id": null
+ },
+ {
+  "delta": -1,
+  "appointment_id": "01M1X87F22AXND6JBR5J4Y6YQG"
+ },
+ {
+  "delta": 1,
+  "appointment_id": "01M1X87F22AXND6JBR5J4Y6YQG"
+ }
+]

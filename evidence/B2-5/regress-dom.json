@@ -1,0 +1,31 @@
+{
+  "checks": {
+    "confirm.totalText": {
+      "ok": true,
+      "match": {
+        "unit": "¥199",
+        "nights": "3",
+        "total": "¥597"
+      },
+      "hasSubmit": true
+    },
+    "confirm.totalMath": {
+      "ok": true,
+      "unitFen": 19900,
+      "totalFen": 59700
+    },
+    "success.page": {
+      "ok": true,
+      "path": "/booking/success",
+      "aid": "01M1X2C7PF0KP75W9JSC14FSRR",
+      "successText": true
+    },
+    "server.price": {
+      "ok": true,
+      "priceFen": 59700,
+      "unitFen": 19900,
+      "status": "pending",
+      "type": "boarding"
+    }
+  }
+}

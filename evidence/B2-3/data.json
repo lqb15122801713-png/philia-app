@@ -1,0 +1,20 @@
+{
+  "customerId": "01M1WVC76KZT68V813WA4E15Q0",
+  "groomingDone": {
+    "id": "01M1X07YDKEMGQ5GSRZDHVGF1G",
+    "serviceId": "01M1WVC76PTJ5SMQ7F7Q3X3XAH",
+    "storeId": "01M1WVC76NH73BZSP1KQ6SXBAC",
+    "petId": "01M1WVC76P42RKN6W2TD52MMEB",
+    "serviceName": "基础洗护（小型犬）",
+    "petName": "旺财"
+  },
+  "boardingDone": {
+    "id": "01M1X1AVHS6535VF9V0EEVBZAG",
+    "serviceId": "01M1WVC76P8P19PCAKJHBDM985",
+    "storeId": "01M1WVC76NH73BZSP1KQ6SXBAC",
+    "petId": "01M1WVC76P42RKN6W2TD52MMEB",
+    "serviceName": "标准间寄养（犬）",
+    "roomType": "标准间",
+    "petName": "旺财"
+  }
+}

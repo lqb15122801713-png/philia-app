@@ -1,0 +1,17 @@
+{
+  "apptA_completed": [
+    "01M1WZ4AGPAHCGNGH86BSJ07PB"
+  ],
+  "apptB_cancelled": [
+    "01M1WZ7NJ94RBDRJ3C5PGZSXR5"
+  ],
+  "counts": {
+    "pending": 1,
+    "confirmed": 0,
+    "in_service": 0,
+    "in_boarding": 0,
+    "completed": 1,
+    "cancel_requested": 0,
+    "cancelled": 1
+  }
+}

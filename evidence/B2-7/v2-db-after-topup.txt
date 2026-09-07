@@ -1,0 +1,10 @@
+[
+ {
+  "user_id": "01M1WVC76KZT68V813WA4E15Q0",
+  "store_id": "01M1WVC76NH73BZSP1KQ6SXBAC",
+  "total_times": 10,
+  "remain_times": 10,
+  "status": "active",
+  "expires_at": null
+ }
+]

@@ -1,0 +1,132 @@
+event: appointment.confirmed
+data: {"id":"01M1X9QE6K3KB0073CQE2CZS25","type":"appointment.confirmed","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X9QCGW49SCA8MYA3MVR6HY","petName":"旺财"},"ts":1788763420000}
+id: 01M1X9QE6K3KB0073CQE2CZS25
+
+event: appointment.assigned
+data: {"id":"01M1X9QF7MB4NQ1JNGGTVJB4CN","type":"appointment.assigned","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X9QCGW49SCA8MYA3MVR6HY","staffId":"01M1WVC76NT2WWE5KPC6PTXM3H","staffName":"小美","petName":"旺财"},"ts":1788763421000}
+id: 01M1X9QF7MB4NQ1JNGGTVJB4CN
+
+event: appointment.checkedin
+data: {"id":"01M1X9QG8YRND8P4CMQXKFCTH2","type":"appointment.checkedin","channel":"appointment:01M1X9QCGW49SCA8MYA3MVR6HY","data":{"appointmentId":"01M1X9QCGW49SCA8MYA3MVR6HY","petName":"旺财","type":"grooming","staffId":"01M1WVC76NT2WWE5KPC6PTXM3H"},"ts":1788763423000}
+id: 01M1X9QG8YRND8P4CMQXKFCTH2
+
+event: step_updated
+data: {"id":"01M1X9QKAN6C1VZRE2JWF1E8WD","type":"step_updated","channel":"appointment:01M1X9QCGW49SCA8MYA3MVR6HY","data":{"appointmentId":"01M1X9QCGW49SCA8MYA3MVR6HY","petName":"旺财","stepKey":"disinfection","status":"done","photos":[{"url":"/api/img/b2-8/disinfection-1.jpg","thumbUrl":null}],"nextStepKey":"precheck"},"ts":1788763426000}
+id: 01M1X9QKAN6C1VZRE2JWF1E8WD
+
+event: step_updated
+data: {"id":"01M1X9QNCWSBS576PRX9CE9Z2M","type":"step_updated","channel":"appointment:01M1X9QCGW49SCA8MYA3MVR6HY","data":{"appointmentId":"01M1X9QCGW49SCA8MYA3MVR6HY","petName":"旺财","stepKey":"precheck","status":"done","photos":[{"url":"/api/img/b2-8/precheck-1.jpg","thumbUrl":null},{"url":"/api/img/b2-8/precheck-2.jpg","thumbUrl":null}],"nextStepKey":"grooming"},"ts":1788763428000}
+id: 01M1X9QNCWSBS576PRX9CE9Z2M
+
+event: step_updated
+data: {"id":"01M1X9QQFPGWWEZJ82Z7DVHX3R","type":"step_updated","channel":"appointment:01M1X9QCGW49SCA8MYA3MVR6HY","data":{"appointmentId":"01M1X9QCGW49SCA8MYA3MVR6HY","petName":"旺财","stepKey":"grooming","status":"done","photos":[{"url":"/api/img/b2-8/grooming-1.jpg","thumbUrl":null},{"url":"/api/img/b2-8/grooming-2.jpg","thumbUrl":null},{"url":"/api/img/b2-8/grooming-3.jpg","thumbUrl":null}],"nextStepKey":"detail"},"ts":1788763430000}
+id: 01M1X9QQFPGWWEZJ82Z7DVHX3R
+
+event: step_updated
+data: {"id":"01M1X9QSHWPZHSKVPDCNFB9EX2","type":"step_updated","channel":"appointment:01M1X9QCGW49SCA8MYA3MVR6HY","data":{"appointmentId":"01M1X9QCGW49SCA8MYA3MVR6HY","petName":"旺财","stepKey":"detail","status":"done","photos":[{"url":"/api/img/b2-8/detail-1.jpg","thumbUrl":null},{"url":"/api/img/b2-8/detail-2.jpg","thumbUrl":null}],"nextStepKey":"before_after"},"ts":1788763432000}
+id: 01M1X9QSHWPZHSKVPDCNFB9EX2
+
+event: step_updated
+data: {"id":"01M1X9QVM4KYJ5KEBES7MM41TC","type":"step_updated","channel":"appointment:01M1X9QCGW49SCA8MYA3MVR6HY","data":{"appointmentId":"01M1X9QCGW49SCA8MYA3MVR6HY","petName":"旺财","stepKey":"before_after","status":"done","photos":[{"url":"/api/img/b2-8/before_after-2.jpg","thumbUrl":null},{"url":"/api/img/b2-8/before_after-1.jpg","thumbUrl":null}],"nextStepKey":"confirm"},"ts":1788763434000}
+id: 01M1X9QVM4KYJ5KEBES7MM41TC
+
+event: step_updated
+data: {"id":"01M1X9QWN7Z92FMGKQDJSPZAHA","type":"step_updated","channel":"appointment:01M1X9QCGW49SCA8MYA3MVR6HY","data":{"appointmentId":"01M1X9QCGW49SCA8MYA3MVR6HY","petName":"旺财","stepKey":"confirm","status":"done","photos":[],"nextStepKey":null},"ts":1788763435000}
+id: 01M1X9QWN7Z92FMGKQDJSPZAHA
+
+event: appointment.completed
+data: {"id":"01M1X9QWN8B7NSFVDRT6AQGNVA","type":"appointment.completed","channel":"appointment:01M1X9QCGW49SCA8MYA3MVR6HY","data":{"appointmentId":"01M1X9QCGW49SCA8MYA3MVR6HY","petName":"旺财","status":"completed"},"ts":1788763435000}
+id: 01M1X9QWN8B7NSFVDRT6AQGNVA
+
+: hb 1788763441936
+
+event: appointment.assigned
+data: {"id":"01M1WZ4AHC53PSTHX585YAQXFF","type":"appointment.assigned","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1WZ4AGPAHCGNGH86BSJ07PB","staffId":"01M1WVC76NT2WWE5KPC6PTXM3H","staffName":"小美","petName":"旺财"},"ts":1788752308000}
+id: 01M1WZ4AHC53PSTHX585YAQXFF
+
+event: appointment.confirmed
+data: {"id":"01M1X07YE0E0ZHPT2SZ4ME4MN9","type":"appointment.confirmed","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X07YDKEMGQ5GSRZDHVGF1G","petName":"旺财"},"ts":1788753476000}
+id: 01M1X07YE0E0ZHPT2SZ4ME4MN9
+
+event: appointment.assigned
+data: {"id":"01M1X07YEB6P24MQ182RGN32NZ","type":"appointment.assigned","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X07YDKEMGQ5GSRZDHVGF1G","staffId":"01M1WVC76NT2WWE5KPC6PTXM3H","staffName":"小美","petName":"旺财"},"ts":1788753476000}
+id: 01M1X07YEB6P24MQ182RGN32NZ
+
+event: appointment.confirmed
+data: {"id":"01M1X1AVJ38EY9VJMWDPZDQH7S","type":"appointment.confirmed","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X1AVHS6535VF9V0EEVBZAG","petName":"旺财"},"ts":1788754619000}
+id: 01M1X1AVJ38EY9VJMWDPZDQH7S
+
+event: appointment.assigned
+data: {"id":"01M1X1AVJE8J9NC2CNVT4C8AYZ","type":"appointment.assigned","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X1AVHS6535VF9V0EEVBZAG","staffId":"01M1WVC76NMSWXXBABXA56E8NF","staffName":"阿强","petName":"旺财"},"ts":1788754619000}
+id: 01M1X1AVJE8J9NC2CNVT4C8AYZ
+
+event: appointment.confirmed
+data: {"id":"01M1X3CQT39FCT5DQ9EW9H53G9","type":"appointment.confirmed","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X3CQSREWJM4RAQTKRZS5NY","petName":"旺财"},"ts":1788756778000}
+id: 01M1X3CQT39FCT5DQ9EW9H53G9
+
+event: appointment.assigned
+data: {"id":"01M1X3CQTC8HKK0KHTHYY35HTG","type":"appointment.assigned","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X3CQSREWJM4RAQTKRZS5NY","staffId":"01M1WVC76NT2WWE5KPC6PTXM3H","staffName":"小美","petName":"旺财"},"ts":1788756778000}
+id: 01M1X3CQTC8HKK0KHTHYY35HTG
+
+event: appointment.confirmed
+data: {"id":"01M1X3GECM7HSCGEYSXNGJG1GR","type":"appointment.confirmed","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X3GECCJMN3PW1JKH2GX8Z9","petName":"旺财"},"ts":1788756900000}
+id: 01M1X3GECM7HSCGEYSXNGJG1GR
+
+event: appointment.assigned
+data: {"id":"01M1X3GECW0M7ZE77CXVNK9ZFP","type":"appointment.assigned","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X3GECCJMN3PW1JKH2GX8Z9","staffId":"01M1WVC76NT2WWE5KPC6PTXM3H","staffName":"小美","petName":"旺财"},"ts":1788756900000}
+id: 01M1X3GECW0M7ZE77CXVNK9ZFP
+
+event: appointment.confirmed
+data: {"id":"01M1X4M36KG7E0TGW1YB1CZ95D","type":"appointment.confirmed","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X4KRJ4REMMPVHWEY4QWWEY","petName":"旺财"},"ts":1788758068000}
+id: 01M1X4M36KG7E0TGW1YB1CZ95D
+
+event: appointment.confirmed
+data: {"id":"01M1X4TWN8PJBS1E5VEMWGARBY","type":"appointment.confirmed","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X4KRJ4REMMPVHWEY4QWWEY","petName":"旺财"},"ts":1788758291000}
+id: 01M1X4TWN8PJBS1E5VEMWGARBY
+
+event: appointment.assigned
+data: {"id":"01M1X4TWP7NQ68TBRH6KKQ5M7Z","type":"appointment.assigned","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X4KRJ4REMMPVHWEY4QWWEY","staffId":"01M1WVC76NT2WWE5KPC6PTXM3H","staffName":"小美","petName":"旺财"},"ts":1788758291000}
+id: 01M1X4TWP7NQ68TBRH6KKQ5M7Z
+
+event: appointment.cancelled
+data: {"id":"01M1X4W4NDVQZY8W0ZWZH7C7A5","type":"appointment.cancelled","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X4VHDZ7FNREZQJG3DV946T","petName":"旺财","by":"merchant_review"},"ts":1788758332000}
+id: 01M1X4W4NDVQZY8W0ZWZH7C7A5
+
+event: appointment.confirmed
+data: {"id":"01M1X4Y3ZPX50RKTK9PG9F7TJX","type":"appointment.confirmed","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X4X4ME4VFSZRK52W28Q6GQ","petName":"旺财"},"ts":1788758396000}
+id: 01M1X4Y3ZPX50RKTK9PG9F7TJX
+
+event: appointment.assigned
+data: {"id":"01M1X4Y40N2GCQVVTMAME6CT8F","type":"appointment.assigned","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X4X4ME4VFSZRK52W28Q6GQ","staffId":"01M1WVC76NT2WWE5KPC6PTXM3H","staffName":"小美","petName":"旺财"},"ts":1788758396000}
+id: 01M1X4Y40N2GCQVVTMAME6CT8F
+
+event: appointment.rescheduled
+data: {"id":"01M1X51QZGVEFPSA04S2G9JZDX","type":"appointment.rescheduled","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X4X4ME4VFSZRK52W28Q6GQ","petName":"旺财","scheduledStart":"2026-09-09T03:00:00.000Z","scheduledEnd":"2026-09-09T04:00:00.000Z"},"ts":1788758515000}
+id: 01M1X51QZGVEFPSA04S2G9JZDX
+
+event: appointment.confirmed
+data: {"id":"01M1X7TBMCNZXP18TDDXHCMR6N","type":"appointment.confirmed","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X7TBGE6X3X15FY641KQ3PQ","petName":"旺财"},"ts":1788761419000}
+id: 01M1X7TBMCNZXP18TDDXHCMR6N
+
+event: appointment.assigned
+data: {"id":"01M1X7TBNGR4WV2HPB5ZJTCM8G","type":"appointment.assigned","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X7TBGE6X3X15FY641KQ3PQ","staffId":"01M1WVC76NT2WWE5KPC6PTXM3H","staffName":"小美","petName":"旺财"},"ts":1788761419000}
+id: 01M1X7TBNGR4WV2HPB5ZJTCM8G
+
+event: appointment.confirmed
+data: {"id":"01M1X88PSJVC39XQR7N6WAE4E7","type":"appointment.confirmed","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X88PNNB2DP3E7ETCJ99VQQ","petName":"旺财"},"ts":1788761889000}
+id: 01M1X88PSJVC39XQR7N6WAE4E7
+
+event: appointment.assigned
+data: {"id":"01M1X88PTGDFQPB51A99M1XJ6C","type":"appointment.assigned","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X88PNNB2DP3E7ETCJ99VQQ","staffId":"01M1WVC76NT2WWE5KPC6PTXM3H","staffName":"小美","petName":"旺财"},"ts":1788761889000}
+id: 01M1X88PTGDFQPB51A99M1XJ6C
+
+event: appointment.confirmed
+data: {"id":"01M1X9ECP39WMSK9M05ZD0WN0Z","type":"appointment.confirmed","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X9EAZTEK0JYB1MYNRH3W0W","petName":"旺财"},"ts":1788763124000}
+id: 01M1X9ECP39WMSK9M05ZD0WN0Z
+
+event: appointment.assigned
+data: {"id":"01M1X9EDQ8B44PTX2D0VXN429H","type":"appointment.assigned","channel":"user:01M1WVC76KZT68V813WA4E15Q0","data":{"appointmentId":"01M1X9EAZTEK0JYB1MYNRH3W0W","staffId":"01M1WVC76NT2WWE5KPC6PTXM3H","staffName":"小美","petName":"旺财"},"ts":1788763125000}
+id: 01M1X9EDQ8B44PTX2D0VXN429H
+
+: hb 1788763466945
+
