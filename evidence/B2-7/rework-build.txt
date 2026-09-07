@@ -1,0 +1,13 @@
+# B2-7R 全绿验证（2026-09-07）
+## 1. server tsc --noEmit
+exit=0
+
+## 2. appointment.smoke.ts（tsx）
+exit=0
+全部冒烟验证通过 ✅
+## 3. customer build
+exit=0
+  dist/workbox-9c191d2f.js
+## 4. merchant build
+exit=0
+  dist/workbox-9c191d2f.js

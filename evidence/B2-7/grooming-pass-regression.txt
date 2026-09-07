@@ -1,0 +1,29 @@
+### 洗护 + pass_deduct 建单（appointment.create type=grooming）→ 200
+[{"result":{"data":{"json":{"id":"01M1XNMCSDEHVQTFS846K1WAPR","code":"MNNQM3","customerId":"01M1WVC76KZT68V813WA4E15Q0","storeId":"01M1WVC76NH73BZSP1KQ6SXBAC","staffId":null,"petId":"01M1WVC76P42RKN6W2TD52MMEB","serviceId":"01M1WVC76P95PWDMCXJNFVWHVR","type":"grooming","scheduledStart":"2026-09-08T08:00:00.000Z","scheduledEnd":"2026-09-08T08:45:00.000Z","status":"pending","priceFen":6800,"paymentMode":"pass_deduct","paidAt":null,"paidFen":null,"note":"B27R-REG","checkedInAt":null,"completedAt":n
+### 建单后查库：remainTimes 10→9、流水 -1
+[
+ {
+  "total_times": 10,
+  "remain_times": 9
+ }
+]
+[
+ {
+  "delta": -1,
+  "appointment_id": "01M1XNMCSDEHVQTFS846K1WAPR"
+ }
+]
+### 收尾：取消该单回补（remain 9→10，保持现场整洁）
+[
+ {
+  "remain_times": 10
+ }
+]
+[
+ {
+  "delta": -1
+ },
+ {
+  "delta": 1
+ }
+]

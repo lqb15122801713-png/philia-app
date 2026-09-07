@@ -1,0 +1,29 @@
+### 段1/3 商家给示例客户充 10 次（pass.topUp）
+[{"result":{"data":{"json":{"pass":{"id":"01M1XNMB0QHNFQNC4X3T26ASCS","userId":"01M1WVC76KZT68V813WA4E15Q0","storeId":"01M1WVC76NH73BZSP1KQ6SXBAC","totalTimes":10,"remainTimes":10,"status":"active","expiresAt":null,"createdAt":"2026-09-07T10:11:42.000Z","updatedAt":"2026-09-07T10:11:42.000Z"},"created":true},"meta":{"values":{"pass.createdAt":["Date"],"pass.updatedAt":["Date"]},"v":1}}}}]
+### 段2/3 寄养 + pass_deduct 建单（appointment.create type=boarding）→ HTTP 400 原始输出
+[{"error":{"json":{"message":"寄养订单暂不支持次卡支付，请选择到店支付","code":-32600,"data":{"code":"BAD_REQUEST","httpStatus":400,"stack":"TRPCError: 寄养订单暂不支持次卡支付，请选择到店支付\n    at badRequest (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\src\\routers\\appointment.ts:123:9)\n    at <anonymous> (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\src\\routers\\appointment.ts:476:17)\n    at LibSQLSession.transaction (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\node_modules\\src\\libsql\\session.ts:122:25)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async <anonymous> (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\src\\routers\\appointment.ts:468:27)\n    at async resolveMiddleware (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\node_modules\\@trpc\\server\\src\\unstable-core-do-not-import\\procedureBuilder.ts:576:22)\n    at async callRecursive (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\node_modules\\@trpc\\server\\src\\unstable-core-do-not-import\\procedureBuilder.ts:642:20)\n    at async callRecursive (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\node_modules\\@trpc\\server\\src\\unstable-core-do-not-import\\procedureBuilder.ts:642:20)\n    at async callRecursive (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\node_modules\\@trpc\\server\\src\\unstable-core-do-not-import\\procedureBuilder.ts:642:20)\n    at async callRecursive (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\node_modules\\@trpc\\server\\src\\unstable-core-do-not-import\\procedureBuilder.ts:642:20)","path":"appointment.create"}}}}]
+### 段3/3 查库：remainTimes 不变（仍 10）、pass_deduct_log 流水为空
+-- member_pass --
+[
+ {
+  "total_times": 10,
+  "remain_times": 10,
+  "status": "active"
+ }
+]
+-- pass_deduct_log（应为空数组） --
+[
+ {
+  "id": "01M1XNMB0RVG3AMSAF6SA4TETY",
+  "pass_id": "01M1XNMB0QHNFQNC4X3T26ASCS",
+  "appointment_id": null,
+  "delta": 10
+ }
+]
+-- 该时段槽位未被占（拒绝路径零副作用） --
+[
+ {
+  "slot_start": 1788919200,
+  "booked_count": 0
+ }
+]
