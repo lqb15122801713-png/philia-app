@@ -1,0 +1,29 @@
+now = 2026/9/7 22:47:46
+store_slots count = 154
+slot range: 2026/9/8 09:00:00 → 2026/9/14 19:30:00
+today slot rows = 0
+appointments count = 14
+  01M1XZ7RRS14Q63DNN4RN4TB67 grooming confirmed start=2026/9/8 10:00:00 staff=- cancelReason=- source=-
+  01M1Y0FCQJ3KD0N9YCFK0P716F grooming cancelled start=2026/9/9 14:00:00 staff=- cancelReason=��ʱ����Լ�����鷳��Լ����ʱ�� source=merchant_reject
+  01M1Y0J69QV4A4FHNSZXXVH7SG grooming cancelled start=2026/9/9 15:30:00 staff=- cancelReason=该时段已约满，麻烦改约其他时间 source=merchant_reject
+  01M1Y0MZZS0A70980RRKV4RBXJ boarding cancelled start=2026/9/11 12:00:00 staff=- cancelReason=寄养位已满，近期无法接待 source=merchant_reject
+  01M1Y0QFN69JPJ718X9B4KB16C grooming cancelled start=2026/9/8 16:00:00 staff=- cancelReason=门店临时休业，敬请谅解 source=merchant_reject
+  01M1Y1RZV5Z1XDFR8N1FNZRZM1 boarding pending start=2026/9/12 10:00:00 staff=- cancelReason=- source=-
+  01M1Y30T35EHRHBXWET7GWVS3V boarding in_boarding start=2026/9/17 10:00:00 staff=01M1XYKBJG24R5Y451T2CYVC3F cancelReason=- source=-
+  01M1Y33CY7SNE8HZZJHH9K4Z1B boarding pending start=2026/9/21 10:00:00 staff=- cancelReason=- source=-
+  01M1Y33CZSSWXGTYQJYCV0PBVC boarding confirmed start=2026/9/25 10:00:00 staff=- cancelReason=- source=-
+  01M1Y36354R2EY8KN1TA7YKVBY boarding confirmed start=2026/9/8 00:08:35 staff=- cancelReason=- source=-
+  01M1Y36355FXP01DX4Z7BCPC4C boarding in_boarding start=2026/9/12 22:08:35 staff=- cancelReason=- source=-
+  01M1Y3AA7EJ9XGNGF98JMHS2Y0 grooming pending start=2026/9/11 11:00:00 staff=- cancelReason=- source=-
+  01M1Y3B0848XKYB0E2GG879MZ1 boarding pending start=2026/9/22 09:00:00 staff=- cancelReason=- source=-
+  01M1Y3GE6Z4EXA82FEE8QFX9TC boarding pending start=2026/9/23 09:00:00 staff=- cancelReason=- source=-
+boarding_stays count = 1
+  stay 01M1Y3992R8G8XA5SMSJGYDMWE appt=01M1Y30T35EHRHBXWET7GWVS3V checkoutAt=-
+  user 01M1XYKBJDS6Q087CB4CNRGHW5 nick=菲丽亚店主 phone=13900000001
+  user 01M1XYKBJEG8S5KD6GYNMV7V14 nick=小美 phone=13900000002
+  user 01M1XYKBJEDRTWJY7NMBC6SZM7 nick=阿强 phone=13900000003
+  user 01M1XYKBJE7KSRVN4SZV4J046B nick=丽丽 phone=13900000004
+  user 01M1XYKBJER5W7SXT254ACXDTB nick=示例客户 phone=13800000000
+  staff 01M1XYKBJGANH9ZNQYDZJKV4NT name=小美 user=01M1XYKBJEG8S5KD6GYNMV7V14 store=01M1XYKBJFPDAKXQM3EVAMG5N2 status=active
+  staff 01M1XYKBJG24R5Y451T2CYVC3F name=阿强 user=01M1XYKBJEDRTWJY7NMBC6SZM7 store=01M1XYKBJFPDAKXQM3EVAMG5N2 status=active
+  staff 01M1XYKBJGE3KNN7K5G5VSGZWW name=丽丽 user=01M1XYKBJE7KSRVN4SZV4J046B store=01M1XYKBJFPDAKXQM3EVAMG5N2 status=active

@@ -1,0 +1,16 @@
+{
+  "appointmentId": "01M1Y81JXJYY74555CTQ5VB1TR",
+  "anon": {
+    "httpStatus": 401,
+    "message": "未登录或会话已过期"
+  },
+  "customer": {
+    "httpStatus": 403,
+    "message": "需要员工身份（未绑定 staff 记录）"
+  },
+  "merchant": {
+    "httpStatus": 403,
+    "message": "需要员工身份（未绑定 staff 记录）"
+  },
+  "note": "员工 200 退房回归在 verify-shots 之后由 verify-checkout.mjs 执行（先留 in_boarding 供 UI 截图）"
+}

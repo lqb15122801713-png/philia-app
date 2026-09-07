@@ -1,0 +1,23 @@
+== cancel_reason / cancel_source 快照 ==
+orderD 01M1Y81JWTS1KMAH4QRPW0G82P
+  status=cancelled source=customer reason=行程有变：临时要出差
+  staff=- checkedInAt=- completedAt=-
+orderE 01M1Y81JX2GTH1HF9JA6H0HR23
+  status=cancelled source=customer reason=时间不合适：临时加班赶不过来
+  staff=- checkedInAt=- completedAt=-
+orderF 01M1Y81JXJYY74555CTQ5VB1TR
+  status=completed source=- reason=-
+  staff=01M1XYKBJG24R5Y451T2CYVC3F checkedInAt=2026/9/7 23:33:30 completedAt=2026/9/7 23:51:51
+orderF stay: room=A01 checkoutAt=2026/9/7 23:51:51
+
+== 清理 A-P2-13 live 夹具（appointment + 六步，无 outbox 事件） ==
+live fixture deleted: true
+
+appointments total = 21
+by status: {
+  confirmed: 5,
+  cancelled: 7,
+  pending: 6,
+  completed: 2,
+  in_boarding: 1
+}

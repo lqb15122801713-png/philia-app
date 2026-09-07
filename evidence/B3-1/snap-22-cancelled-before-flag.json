@@ -1,0 +1,38 @@
+{
+  "appointment": {
+    "id": "01M1XTJHBGG162JH9GDX9HCF5M",
+    "status": "cancelled",
+    "completedAt": null,
+    "staffId": null,
+    "updatedAt": "2026-09-07T11:38:51.000Z"
+  },
+  "steps": [],
+  "photos": {
+    "total": 0,
+    "valid": 0,
+    "invalidated": 0
+  },
+  "outbox": [
+    {
+      "id": "01M1XTKXVBFF07V0SQVHP75822",
+      "eventType": "appointment.cancelled",
+      "channel": "store:01M1WVC76NH73BZSP1KQ6SXBAC",
+      "payload": {
+        "appointmentId": "01M1XTJHBGG162JH9GDX9HCF5M",
+        "petName": "旺财",
+        "by": "customer"
+      }
+    },
+    {
+      "id": "01M1XTJHBHZKSBFD7X0NAVY8H5",
+      "eventType": "appointment.created",
+      "channel": "store:01M1WVC76NH73BZSP1KQ6SXBAC",
+      "payload": {
+        "appointmentId": "01M1XTJHBGG162JH9GDX9HCF5M",
+        "storeId": "01M1WVC76NH73BZSP1KQ6SXBAC",
+        "petName": "旺财",
+        "serviceName": "基础洗护（小型犬）"
+      }
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "targetSlot": "2026-09-07 23:00",
+  "httpStatus": 400,
+  "body": [
+    {
+      "error": {
+        "json": {
+          "message": "仅可预约 1 小时之后的时段，请改约稍晚时间",
+          "code": -32600,
+          "data": {
+            "code": "BAD_REQUEST",
+            "httpStatus": 400,
+            "stack": "TRPCError: 仅可预约 1 小时之后的时段，请改约稍晚时间\n    at badRequest (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\src\\routers\\appointment.ts:141:9)\n    at assertBookableTime (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\src\\routers\\appointment.ts:439:5)\n    at <anonymous> (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\src\\routers\\appointment.ts:599:7)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async resolveMiddleware (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\node_modules\\@trpc\\server\\src\\unstable-core-do-not-import\\procedureBuilder.ts:576:22)\n    at async callRecursive (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\node_modules\\@trpc\\server\\src\\unstable-core-do-not-import\\procedureBuilder.ts:642:20)\n    at async callRecursive (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\node_modules\\@trpc\\server\\src\\unstable-core-do-not-import\\procedureBuilder.ts:642:20)\n    at async callRecursive (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\node_modules\\@trpc\\server\\src\\unstable-core-do-not-import\\procedureBuilder.ts:642:20)\n    at async callRecursive (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\node_modules\\@trpc\\server\\src\\unstable-core-do-not-import\\procedureBuilder.ts:642:20)\n    at async procedure (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\node_modules\\@trpc\\server\\src\\unstable-core-do-not-import\\procedureBuilder.ts:682:20)",
+            "path": "appointment.create"
+          }
+        }
+      }
+    }
+  ]
+}

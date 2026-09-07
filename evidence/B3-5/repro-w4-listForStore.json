@@ -1,0 +1,49 @@
+{
+  "count": 14,
+  "firstRowKeys": [
+    "id",
+    "code",
+    "customerId",
+    "storeId",
+    "staffId",
+    "petId",
+    "serviceId",
+    "type",
+    "scheduledStart",
+    "scheduledEnd",
+    "status",
+    "priceFen",
+    "paymentMode",
+    "paidAt",
+    "paidFen",
+    "note",
+    "cancelReason",
+    "cancelSource",
+    "checkedInAt",
+    "completedAt",
+    "rating",
+    "review",
+    "createdAt",
+    "updatedAt",
+    "petName",
+    "serviceName",
+    "staffName"
+  ],
+  "sample": [
+    {
+      "id": "01M1Y36354R2EY8KN1TA7YKVBY",
+      "status": "confirmed",
+      "customerId": "01M1XYKBJER5W7SXT254ACXDTB"
+    },
+    {
+      "id": "01M1XZ7RRS14Q63DNN4RN4TB67",
+      "status": "confirmed",
+      "customerId": "01M1XYKBJER5W7SXT254ACXDTB"
+    },
+    {
+      "id": "01M1Y0QFN69JPJ718X9B4KB16C",
+      "status": "cancelled",
+      "customerId": "01M1XYKBJER5W7SXT254ACXDTB"
+    }
+  ]
+}

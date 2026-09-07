@@ -1,0 +1,17 @@
+{
+  "chips": [
+    {
+      "chip": "行程有变",
+      "present": false
+    },
+    {
+      "chip": "时间不合适",
+      "present": false
+    },
+    {
+      "chip": "价格因素",
+      "present": false
+    }
+  ],
+  "hasReasonTextarea": false
+}

@@ -1,0 +1,16 @@
+{
+  "customer": {
+    "id": "01M1XYKBJER5W7SXT254ACXDTB",
+    "nickname": "示例客户",
+    "roles": [
+      "customer"
+    ]
+  },
+  "merchant": {
+    "id": "01M1XYKBJDS6Q087CB4CNRGHW5",
+    "nickname": "菲丽亚店主",
+    "roles": [
+      "merchant_owner"
+    ]
+  }
+}

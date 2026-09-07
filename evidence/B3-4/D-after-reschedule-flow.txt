@@ -1,0 +1,9 @@
+confirm http=200
+assign http=200
+[{"error":{"json":{"message":"该预约已指派给其他员工，仅被指派人可核销","code":-32003,"data":{"code":"FORBIDDEN","httpStatus":403,"stack":"TRPCError: 该预约已指派给其他员工，仅被指派人可核销\n    at fail (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc56
+（首次错用小美账号核销 403 已略，改用被指派人阿强）
+[{"result":{"data":{"json":{"appointment":{"id":"01M1Y30T35EHRHBXWET7GWVS3V","code":"8PAQGR","customerId":"01M1XYKBJER5W7SXT254ACXDTB","storeId":"01M1XYKBJFPDAKXQM3EVAMG5N2","staffId":"01M1XYKBJG24R5Y451T2CYVC3F","petId":"01M1XYKBJGYJ0NP9941XX01JWE","serviceId":"01M1XYKBJHMT12JR173WZ37FSW","type":"boarding","scheduledStart":"2026-09-17T02:00:00.000Z","scheduledEnd":"2026-09-20T02:00:00.000Z","stat
+  "status": "in_boarding",
+  "staffId": "01M1XYKBJG24R5Y451T2CYVC3F",
+  "scheduledStart": "2026-09-17T02:00:00.000Z",
+  "scheduledEnd": "2026-09-20T02:00:00.000Z",

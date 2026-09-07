@@ -1,0 +1,124 @@
+{
+  "dayBtns": [
+    {
+      "t": "今天",
+      "cls": "gray"
+    },
+    {
+      "t": "明天",
+      "cls": "normal"
+    },
+    {
+      "t": "9月9日 周三",
+      "cls": "normal"
+    },
+    {
+      "t": "9月10日 周四",
+      "cls": "normal"
+    },
+    {
+      "t": "9月11日 周五",
+      "cls": "normal"
+    },
+    {
+      "t": "9月12日 周六",
+      "cls": "normal"
+    },
+    {
+      "t": "9月13日 周日",
+      "cls": "normal"
+    }
+  ],
+  "todaySlotCells": [
+    {
+      "t": "09:00",
+      "disabled": false
+    },
+    {
+      "t": "09:30",
+      "disabled": false
+    },
+    {
+      "t": "10:00",
+      "disabled": false
+    },
+    {
+      "t": "10:30",
+      "disabled": false
+    },
+    {
+      "t": "11:00",
+      "disabled": false
+    },
+    {
+      "t": "11:30",
+      "disabled": false
+    },
+    {
+      "t": "12:00",
+      "disabled": false
+    },
+    {
+      "t": "12:30",
+      "disabled": false
+    },
+    {
+      "t": "13:00",
+      "disabled": false
+    },
+    {
+      "t": "13:30",
+      "disabled": false
+    },
+    {
+      "t": "14:00",
+      "disabled": false
+    },
+    {
+      "t": "14:30",
+      "disabled": false
+    },
+    {
+      "t": "15:00",
+      "disabled": false
+    },
+    {
+      "t": "15:30",
+      "disabled": false
+    },
+    {
+      "t": "16:00",
+      "disabled": false
+    },
+    {
+      "t": "16:30",
+      "disabled": false
+    },
+    {
+      "t": "17:00",
+      "disabled": false
+    },
+    {
+      "t": "17:30",
+      "disabled": false
+    },
+    {
+      "t": "18:00",
+      "disabled": false
+    },
+    {
+      "t": "18:30",
+      "disabled": false
+    },
+    {
+      "t": "19:00",
+      "disabled": false
+    },
+    {
+      "t": "19:30",
+      "disabled": true
+    }
+  ],
+  "enabledToday": 21,
+  "todayLabelInGrid": false
+}

@@ -1,0 +1,6 @@
+== store_slots (booked_count>0) ==
+  (无占用行)
+== boarding_slots (全部行) ==
+  night_date=2026-09-10 service=01M1XXTX9DSAMXZ1YSY8CQRDEA capacity=1 booked_count=0
+  night_date=2026-09-11 service=01M1XXTX9DSAMXZ1YSY8CQRDEA capacity=1 booked_count=0
+== appointments (非 cancelled) ==

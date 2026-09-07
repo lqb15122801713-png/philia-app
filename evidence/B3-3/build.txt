@@ -1,0 +1,11 @@
+# B3-3 全绿退出码记录（2026-09-07 21:32:30）
+## server tsc --noEmit
+exit=0
+## appointment.smoke.ts
+exit=0
+## apps/customer build
+exit=0
+## apps/merchant build
+exit=0
+## apps/staff build
+exit=0

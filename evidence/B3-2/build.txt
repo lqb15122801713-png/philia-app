@@ -1,0 +1,17 @@
+== server tsc --noEmit ==
+exit=0
+== appointment.smoke ==
+exit=0
+== domain.smoke ==
+exit=0
+== serviceStep.smoke ==
+exit=0
+== mall.smoke ==
+exit=0
+
+== customer build ==
+exit=0
+== merchant build ==
+exit=0
+== staff build ==
+exit=0

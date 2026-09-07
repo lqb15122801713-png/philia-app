@@ -1,0 +1,28 @@
+{
+  "count": 18,
+  "fields": [
+    "customerId",
+    "customerName",
+    "customerPhoneTail"
+  ],
+  "sample": [
+    {
+      "id": "01M1Y36354R2EY8KN1TA7YKVBY",
+      "status": "confirmed",
+      "customerName": "示例客户",
+      "customerPhoneTail": "0000"
+    },
+    {
+      "id": "01M1Y81JT97VXWNZP3W921QFWQ",
+      "status": "confirmed",
+      "customerName": "示例客户",
+      "customerPhoneTail": "0000"
+    },
+    {
+      "id": "01M1XZ7RRS14Q63DNN4RN4TB67",
+      "status": "confirmed",
+      "customerName": "示例客户",
+      "customerPhoneTail": "0000"
+    }
+  ]
+}

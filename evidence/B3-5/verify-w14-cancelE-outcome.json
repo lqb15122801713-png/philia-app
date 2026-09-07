@@ -1,0 +1,6 @@
+{
+  "outcome": "cancel_requested",
+  "status": "cancel_requested",
+  "cancelReason": "时间不合适：临时加班赶不过来",
+  "cancelSource": "customer"
+}

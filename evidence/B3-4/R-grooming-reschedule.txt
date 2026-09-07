@@ -1,0 +1,4 @@
+### 回归：洗护改期（B2-6 路径）
+grooming appt=01M1Y3AA7EJ9XGNGF98JMHS2Y0
+confirm http=200
+[{"result":{"data":{"json":{"id":"01M1Y3AA7EJ9XGNGF98JMHS2Y0","code":"KD4MYB","customerId":"01M1XYKBJER5W7SXT254ACXDTB","storeId":"01M1XYKBJFPDAKXQM3EVAMG5N2","staffId":null,"petId":"01M1XYKBJGYJ0NP9941XX01JWE","serviceId":"01M1XYKBJHJ7XWN7BH5WTKV53N","type":"

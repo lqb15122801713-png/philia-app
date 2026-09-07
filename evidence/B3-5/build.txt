@@ -1,0 +1,17 @@
+# B3-5 全绿验证（2026-09-08 00:01:06）
+## server tsc --noEmit
+exit=0
+## appointment.smoke
+exit=0
+
+全部冒烟验证通过 ✅
+## domain.smoke
+exit=0
+
+[domain.smoke] 全部 5 项通过 🎉
+## build:customer
+exit=0
+## build:merchant
+exit=0
+## build:staff
+exit=0

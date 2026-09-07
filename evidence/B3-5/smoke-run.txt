@@ -1,0 +1,189 @@
+
+[1] create：占槽 / 防超卖 / 各类校验
+  ✓ create 成功：pending + 6 位去混淆人工码 + payment_mode 快照 + 价格快照
+  ✓ 事务占槽：booked_count 0→1
+  ✓ appointment.created → store 频道落 outbox
+  ✓ 同槽 capacity=1 打满 → 第二单 CONFLICT（不超卖）
+  ✓ 宠物非本人 → FORBIDDEN
+  ✓ type 与服务项不一致 → BAD_REQUEST
+  ✓ pass_deduct 无可用次卡 → BAD_REQUEST「暂无可用次卡」
+  ✓ 非营业时间（23:00）→ BAD_REQUEST
+  ✓ 过去时间 → BAD_REQUEST
+
+[2] getCode 签名与 verifyCode 窗口/过期规则
+  ✓ confirm：pending → confirmed
+  ✓ appointment.confirmed → user 频道
+  ✓ payload 结构 {v:2, aid, tw, exp, sig} 正确
+  ✓ exp = scheduled_start + 4h
+  ✓ verifyCode：原样 payload 验签通过
+  ✓ verifyCode：篡改 aid → 拒绝
+  ✓ verifyCode：篡改 exp → 拒绝
+  ✓ verifyCode：tw-1 上一窗口接受
+  ✓ verifyCode：tw-2 窗口拒绝
+  ✓ verifyCode：过期 exp 拒绝（即便签名自洽）
+
+[3] checkin：认领 / 归属 / 幂等 / 防爆破限流
+  ✓ 未指派单：B 扫码核销成功 → in_service 且自动认领（staff_id=st-b）
+  ✓ grooming 核销 → nextRoute=/execute/:id
+  ✓ 认领补发 appointment.assigned → staff + user 频道
+  ✓ appointment.checkedin → appointment 频道
+  ✓ 已指派 A 的单被 B 核销 → FORBIDDEN
+  ✓ 非同店员工核销 → FORBIDDEN
+  ✓ 重复扫码幂等：返回当前进度（in_service + 6 步）
+  ✓ 幂等不产生新事件 / 新记录
+  ✓ 连续 5 次核销失败均按 NOT_FOUND 正常报错
+  ✓ 第 6 次（即便持有效码）→ TOO_MANY_REQUESTS（锁 10 分钟）
+
+[4] type 分支：grooming 六步初始化 / boarding 住宿单
+  ✓ grooming 核销后初始化 6 条 appointment_steps
+  ✓ step1 disinfection=active，step2-6=locked
+  ✓ required_photos 快照 1/2/3/2/2/0 且 step_order=1..6
+  ✓ boarding create：type/end/payment_mode 快照正确
+  ✓ boarding + pass_deduct → BAD_REQUEST「寄养订单暂不支持次卡支付」
+  ✓ 寄养拒绝后 remainTimes 不变（仍 5）
+  ✓ 寄养拒绝后无新增 pass_deduct_log 行
+  ✓ grooming + pass_deduct 建单仍成功（200）
+  ✓ pass_deduct 建单同事务扣次（remain 5→4）
+  ✓ 扣次流水 delta=-1 挂在该单上
+  ✓ B3-2：boarding 不再占用洗护 30min 时段槽（T3 无 store_slots 行）
+  ✓ B3-2：boarding create 按晚占用（入住日晚 1 行；room_count 空 → 默认容量 1，booked=1）
+  ✓ boarding 人工码核销 → in_boarding + 认领 + nextRoute=/boarding/:id/checkin
+  ✓ boarding_stays 已建（room_no 空，待入住登记）
+  ✓ boarding 不初始化六步
+  ✓ appointment.checkedin → appointment 频道（boarding）
+
+[5] assign 技能·排班·冲突 / cancel 4h 两分支 / markPaid 幂等 / review
+  ✓ assign 技能不匹配（grooming 单派给仅 boarding 技能的 D）→ BAD_REQUEST
+  ✓ assign 时间冲突（A 同时段已有 confirmed 单）→ CONFLICT
+  ✓ assign 非同店员工 → BAD_REQUEST
+  ✓ assign 成功（B 持 wash 技能、同时段无冲突）
+  ✓ assign 无排班（D 的 schedule 为空）→ BAD_REQUEST
+  ✓ >4h 取消 → cancelled
+  ✓ B3-2：寄养取消后各晚释放（晚 D+3 booked_count 1→0）
+  ✓ appointment.cancelled → store 频道
+  ✓ pass_deduct 建单扣次（remain 4→3）
+  ✓ pass_deduct 单 >4h 取消 → cancelled
+  ✓ 取消同事务回补（remain 3→4）
+  ✓ 该单流水两条：-1 扣次 + +1 回补
+  ✓ ≤4h 取消 → cancel_requested
+  ✓ appointment.cancel_requested → store 频道
+  ✓ reviewCancel 批准 → cancelled
+  ✓ 批准事件 appointment.cancelled → user 频道
+  ✓ reviewCancel 拒绝 → 回 confirmed
+  ✓ 拒绝事件 appointment.confirmed → user 频道（累计 4 条：confirm×3 + 拒绝×1）
+  ✓ 服务中锁定：in_service 取消 → BAD_REQUEST
+  ✓ 未 completed 不可收款 → BAD_REQUEST
+  ✓ markPaid 写 paid_at / paid_fen（缺省=订单金额）
+  ✓ markPaid 幂等：已 paid 返回现状（不改写 paid_fen/paid_at）
+  ✓ appointment.paid → store 频道（仅 1 次）
+  ✓ review 落库 rating/review
+  ✓ appointment.reviewed → store + staff 频道
+  ✓ 非本人评价 → FORBIDDEN
+  ✓ 重复评价 → BAD_REQUEST
+  ✓ 未 completed 评价 → BAD_REQUEST
+
+[5c] B3-2：寄养逐晚占用 / 满晚 CONFLICT 整体回滚 / 取消全晚释放 / 多间容量
+  ✓ 两晚寄养建单成功（priceFen = 单晚价 × 2 晚）
+  ✓ 逐晚占用：晚 D+5 / D+6 各 1 行（booked=1，capacity=1）
+  ✓ 任一晚满员 → 第二单 CONFLICT「已订满」
+  ✓ 回滚实证：失败单不产生部分占用（各晚快照与建单前逐行一致，晚 D+7 无槽位行）
+  ✓ 回滚实证：失败单不产生预约记录（u-c2 名下仍 0 单）
+  ✓ room_count=2 房型：同晚两单均成功（capacity=2，booked=2）
+  ✓ 同晚第三单 CONFLICT 且 booked_count 不超限（仍 2）
+  ✓ 寄养 >4h 取消 → cancelled
+  ✓ 取消释放全部晚（晚 D+5 / D+6 booked_count 1→0）
+  ✓ 寄养 0 晚（住退同一日）→ BAD_REQUEST「退房日期且晚于入住日期」
+
+[5d] B3-3：reject 状态门禁 / 槽位释放 / 次卡回补幂等 / 双频道事件 / 入参与归属校验
+  ✓ confirmed 单拒单 → BAD_REQUEST「仅待确认（pending）可婉拒」
+  ✓ in_service 单拒单 → BAD_REQUEST
+  ✓ 非 pending 拒单零副作用：appt7 仍 confirmed、cancelReason/cancelSource 与尝试前一致、无新增 outbox
+  ✓ reason 为空 → BAD_REQUEST（zod 必填）
+  ✓ reason 超 100 字 → BAD_REQUEST
+  ✓ 客户角色调 reject → FORBIDDEN（merchantProcedure）
+  ✓ 非本店商家调 reject → FORBIDDEN
+  ✓ 拒单前置：洗护时段槽已占（booked_count=1）
+  ✓ 拒单 → cancelled + cancelReason/cancelSource=merchant_reject 落库
+  ✓ 拒单同事务释放洗护时段槽（booked_count 1→0）
+  ✓ appointment.rejected → user + store 双频道各 1 条，payload 含 reason
+  ✓ rejected payload 含 appointmentId/petName/reason
+  ✓ 寄养拒单前置：晚 D+8 / D+9 各占 1
+  ✓ 寄养拒单 → cancelled（来源 merchant_reject）
+  ✓ 寄养拒单同事务全晚释放（晚 D+8 / D+9 booked_count 1→0）
+  ✓ pass_deduct 建单扣次（remain 4→3）
+  ✓ 门禁3：拒单同事务回补次卡（remain 3→4）
+  ✓ 门禁3：该单流水两条（-1 扣次 + +1 拒单回补）
+  ✓ 幂等：已取消单再拒 → BAD_REQUEST（仅待确认可婉拒）
+  ✓ 幂等：重复拒单不重复回补（remain 仍 4，+1 流水仍 1 条）
+
+[5e] B3-4：寄养改期——必传 scheduledEnd / 全晚释放+逐晚占用 / 回退 pending / 双频道事件 / 满晚回滚 / 边界
+  ✓ B3-4：寄养改期缺 scheduledEnd → BAD_REQUEST「退房日期」
+  ✓ B3-4：寄养改期 scheduledEnd 不晚于入住日 → BAD_REQUEST「退房日期」
+  ✓ B3-4：寄养改期 → status 回退 pending + staffId 置空 + 新区间落库
+  ✓ B3-4：旧晚 D+11/D+12 全部释放（booked 1→0），新晚 D+13/D+14 逐晚占用（0→1）
+  ✓ B3-4：rescheduled 双频道（appointment:{aid} + store:s-1，by=customer，payload 含新区间）
+  ✓ B3-4：rescheduled payload 含 appointmentId/scheduledStart/scheduledEnd/by=customer
+  ✓ B3-4：寄养改期不触碰卡表（该单 pass_deduct_log 0 条）
+  ✓ B3-4：满员晚前置——b42 已占满 D+16/D+17（capacity=1，booked=1）
+  ✓ B3-4：新区间含满员晚 → CONFLICT「已订满」
+  ✓ B3-4 回滚实证：预约行逐项一致（pending/staffId=null/区间 D+13→D+15 不变）
+  ✓ B3-4 回滚实证：各晚快照与改期前逐行一致（旧晚未释放、满员晚未超占）
+  ✓ B3-4：距入住日首晚不足 4 小时 → BAD_REQUEST「不足 4 小时」
+  ✓ B3-4：in_boarding 进行中改期 → BAD_REQUEST「不可改期」
+  ✓ B3-4 回归：洗护改期 → pending + 新时段落库（end 按服务时长补齐）
+  ✓ B3-4 回归：洗护旧时段槽释放（1→0）+ 新时段槽占用（0→1）
+
+[5f] B3-5：W-2 +1h 缓冲前后端同拦 / W-14 取消原因落库（含 ≤4h 审核链）
+  ✓ W-2：当前时间 +1h 内的时段 → BAD_REQUEST「1 小时」（过期/临近同拦）
+  ✓ W-2：48h 内总能找到 ≥now+1h 且在营业时间的对齐时段
+  ✓ W-2：≥now+1h 时段建单成功（命中今天晚些时候 2026/9/8 09:00:00）
+  ✓ W-14：>4h 直消带原因 → cancelled + cancelReason/cancelSource=customer 落库
+  ✓ W-14：原因选填（不传 → cancelReason=null、cancelSource=customer）
+  ✓ W-14：≤4h 取消申请带原因 → cancel_requested + 原因落库
+  ✓ W-14：商家批准取消后保留客户原因/来源（cancelled + customer，审核动作由事件 by 承载）
+  ✓ W-14：reason 超 100 字 → BAD_REQUEST
+
+[6] listMine 分组 / get 归属 / listForStore 过滤 / listTodayForStaff
+  ✓ listMine：in_service 含 appt1
+  ✓ listMine：in_boarding 含 appt3
+  ✓ listMine：cancelled 含 appt5/appt6，completed 含 appt2，confirmed 含 appt7
+  ✓ listMine：带关联名称（petName/serviceName/storeName）
+  ✓ get：本人可查（含六步进度）
+  ✓ get：他人客户 → FORBIDDEN
+  ✓ get：被指员工可查
+  ✓ get：本店未指派员工查已指派单 → FORBIDDEN
+  ✓ get：本店商家可查
+  ✓ get：不存在 → NOT_FOUND
+  ✓ listForStore：日期范围过滤（明天 ≥5 单全部在范围内）
+  ✓ W-4：listForStore 行带 customerName/customerPhoneTail（昵称「客户一号」+ 尾号 1111）
+  ✓ W-4：appointment.get 带 customer{nickname, phoneTail}
+  ✓ listForStore：状态过滤（含 confirmed 的 appt7，不含 in_service 的 appt1）
+  ✓ listTodayForStaff：本人单按 scheduled_start 升序 + 含未指派待承接单
+  ✓ listTodayForStaff：已取消单不进时间轴
+  ✓ listTodayForStaff：他人（B）只见未指派单，不见 A 的单
+
+[7] 事件总账（event_outbox 按频道+类型核对）
+  ✓ appointment.created → store 频道共 19 条（原 7 次成功 create + B3-2 三节 b31 与 sv-b2 两单 + B3-3 拒单三单 + B3-4 改期三节 b41/b42/g41 + B3-5 5f 三单 w2Appt/w14a/w14b；CONFLICT/拒绝单不产生事件）
+  ✓ appointment.rejected → 双频道各 3 条（B3-3：洗护/寄养/次卡三单）
+  ✓ appointment.assigned 计数正确（st-a：派单 appt2 + 认领 appt3；st-b：认领 appt1 + 派单 appt4 + 派单 b41（B3-4）；user:u-c1 共 5 条）
+  ✓ appointment.checkedin 仅 2 条（appt1/appt3 各 1，幂等重扫无新增）
+  ✓ appointment.cancel_requested → store 频道共 3 条（appt6/appt7 + B3-5 W-14 的 w14c）
+[smoke] 临时目录清理失败（不影响验证结果，系统临时目录会自行回收）: C:\Users\lqb15\AppData\Local\Temp\philia-appt-smoke-0YvtIR Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-appt-smoke-0YvtIR '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-appt-smoke-0YvtIR'
+    at rmSync (node:fs:1222:18)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\routers\__tests__\appointment.smoke.ts:1502:5) {
+  errno: 1,
+  code: 'EPERM',
+  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-appt-smoke-0YvtIR',
+  syscall: 'rm'
+}
+
+全部冒烟验证通过 ✅
+
+===== domain.smoke =====
+✅ 1. pet upsert/list/get：归属校验正确（他人 FORBIDDEN；关联预约 staff 可读；zod 拦截非法物种）
+✅ 2. store listNearby 仅 active + geo 粗排；getWithServices 合成栅格（W-2 +1h 缓冲/无行默认可约）、满槽剔除、按 duration 过滤连续占用
+✅ 3. upsertService 越店写 FORBIDDEN 且未生效；本店新增（含寄养房型）正常
+✅ 4. inviteStaff 24h 码 + 同名复用不建行；staffList 绩效聚合正确；setSchedule 越店 FORBIDDEN
+✅ 5. boarding：checkinStay 幂等 / dailyLog UPSERT+事件 / checkout 幂等+completed / stayBoard 超期标记正确
+
+[domain.smoke] 全部 5 项通过 🎉

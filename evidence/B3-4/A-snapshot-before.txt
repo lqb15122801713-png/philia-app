@@ -1,0 +1,20 @@
+== appointment ==
+{
+  "id": "01M1Y30T35EHRHBXWET7GWVS3V",
+  "type": "boarding",
+  "status": "confirmed",
+  "staffId": "01M1XYKBJG24R5Y451T2CYVC3F",
+  "scheduledStart": "2026-09-14T02:00:00.000Z",
+  "scheduledEnd": "2026-09-16T02:00:00.000Z",
+  "priceFen": 39800,
+  "paymentMode": "pay_at_store",
+  "updatedAt": "2026-09-07T14:05:56.000Z"
+}
+== boarding_slots (service 01M1XYKBJHMT12JR173WZ37FSW ) ==
+2026-09-09  booked=0/2
+2026-09-10  booked=0/2
+2026-09-11  booked=0/2
+2026-09-12  booked=1/2
+2026-09-14  booked=1/2
+2026-09-15  booked=1/2
+== pass_deduct_log (该单) == 0 条（未触碰卡表）

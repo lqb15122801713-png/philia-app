@@ -1,0 +1,7 @@
+== store_slots (booked_count>0) ==
+  (无占用行)
+== boarding_slots (全部行) ==
+  night_date=2026-09-10 service=01M1XXTX9DSAMXZ1YSY8CQRDEA capacity=1 booked_count=1
+  night_date=2026-09-11 service=01M1XXTX9DSAMXZ1YSY8CQRDEA capacity=1 booked_count=1
+== appointments (非 cancelled) ==
+  id=01M1XXYBZK8KYEV06W5F9BW6W1 type=boarding status=pending start=2026-09-10T01:00:00.000Z end=2026-09-12T01:00:00.000Z svc=01M1XXTX9DSAMXZ1YSY8CQRDEA

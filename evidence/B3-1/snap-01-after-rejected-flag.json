@@ -1,0 +1,261 @@
+{
+  "appointment": {
+    "id": "01M1XSQM5NQXE6S4QERMX49VFN",
+    "status": "completed",
+    "completedAt": "2026-09-07T11:23:24.000Z",
+    "staffId": "01M1WVC76NT2WWE5KPC6PTXM3H",
+    "updatedAt": "2026-09-07T11:23:24.000Z"
+  },
+  "steps": [
+    {
+      "stepKey": "disinfection",
+      "status": "done",
+      "flagged": false,
+      "doneAt": "2026-09-07T11:23:24.000Z"
+    },
+    {
+      "stepKey": "precheck",
+      "status": "done",
+      "flagged": false,
+      "doneAt": "2026-09-07T11:23:24.000Z"
+    },
+    {
+      "stepKey": "grooming",
+      "status": "done",
+      "flagged": false,
+      "doneAt": "2026-09-07T11:23:24.000Z"
+    },
+    {
+      "stepKey": "detail",
+      "status": "done",
+      "flagged": false,
+      "doneAt": "2026-09-07T11:23:24.000Z"
+    },
+    {
+      "stepKey": "before_after",
+      "status": "done",
+      "flagged": false,
+      "doneAt": "2026-09-07T11:23:24.000Z"
+    },
+    {
+      "stepKey": "confirm",
+      "status": "done",
+      "flagged": false,
+      "doneAt": "2026-09-07T11:23:24.000Z"
+    }
+  ],
+  "photos": {
+    "total": 10,
+    "valid": 10,
+    "invalidated": 0
+  },
+  "outbox": [
+    {
+      "id": "01M1XSQM9AG1GKA7ZTG68TBH6N",
+      "eventType": "appointment.completed",
+      "channel": "store:01M1WVC76NH73BZSP1KQ6SXBAC",
+      "payload": {
+        "appointmentId": "01M1XSQM5NQXE6S4QERMX49VFN",
+        "petName": "旺财",
+        "status": "completed"
+      }
+    },
+    {
+      "id": "01M1XSQM9AG1GKA7ZTG68TBH6M",
+      "eventType": "appointment.completed",
+      "channel": "appointment:01M1XSQM5NQXE6S4QERMX49VFN",
+      "payload": {
+        "appointmentId": "01M1XSQM5NQXE6S4QERMX49VFN",
+        "petName": "旺财",
+        "status": "completed"
+      }
+    },
+    {
+      "id": "01M1XSQM99JT0GW1M48F74Q9RJ",
+      "eventType": "step_updated",
+      "channel": "appointment:01M1XSQM5NQXE6S4QERMX49VFN",
+      "payload": {
+        "appointmentId": "01M1XSQM5NQXE6S4QERMX49VFN",
+        "petName": "旺财",
+        "stepKey": "confirm",
+        "status": "done",
+        "photos": [],
+        "nextStepKey": null
+      }
+    },
+    {
+      "id": "01M1XSQM91FSWFW1Z18E2FTBFB",
+      "eventType": "step_updated",
+      "channel": "appointment:01M1XSQM5NQXE6S4QERMX49VFN",
+      "payload": {
+        "appointmentId": "01M1XSQM5NQXE6S4QERMX49VFN",
+        "petName": "旺财",
+        "stepKey": "before_after",
+        "status": "done",
+        "photos": [
+          {
+            "url": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/before_after-0.jpg",
+            "thumbUrl": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/before_after-0_t.jpg"
+          },
+          {
+            "url": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/before_after-1.jpg",
+            "thumbUrl": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/before_after-1_t.jpg"
+          }
+        ],
+        "nextStepKey": "confirm"
+      }
+    },
+    {
+      "id": "01M1XSQM8JK2QE76TK5QZFKTDM",
+      "eventType": "step_updated",
+      "channel": "appointment:01M1XSQM5NQXE6S4QERMX49VFN",
+      "payload": {
+        "appointmentId": "01M1XSQM5NQXE6S4QERMX49VFN",
+        "petName": "旺财",
+        "stepKey": "detail",
+        "status": "done",
+        "photos": [
+          {
+            "url": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/detail-0.jpg",
+            "thumbUrl": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/detail-0_t.jpg"
+          },
+          {
+            "url": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/detail-1.jpg",
+            "thumbUrl": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/detail-1_t.jpg"
+          }
+        ],
+        "nextStepKey": "before_after"
+      }
+    },
+    {
+      "id": "01M1XSQM83YYKD5WNE3JE3Z4QP",
+      "eventType": "step_updated",
+      "channel": "appointment:01M1XSQM5NQXE6S4QERMX49VFN",
+      "payload": {
+        "appointmentId": "01M1XSQM5NQXE6S4QERMX49VFN",
+        "petName": "旺财",
+        "stepKey": "grooming",
+        "status": "done",
+        "photos": [
+          {
+            "url": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/grooming-0.jpg",
+            "thumbUrl": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/grooming-0_t.jpg"
+          },
+          {
+            "url": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/grooming-1.jpg",
+            "thumbUrl": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/grooming-1_t.jpg"
+          },
+          {
+            "url": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/grooming-2.jpg",
+            "thumbUrl": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/grooming-2_t.jpg"
+          }
+        ],
+        "nextStepKey": "detail"
+      }
+    },
+    {
+      "id": "01M1XSQM7MHWHYQ35PTX75G5CZ",
+      "eventType": "step_updated",
+      "channel": "appointment:01M1XSQM5NQXE6S4QERMX49VFN",
+      "payload": {
+        "appointmentId": "01M1XSQM5NQXE6S4QERMX49VFN",
+        "petName": "旺财",
+        "stepKey": "precheck",
+        "status": "done",
+        "photos": [
+          {
+            "url": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/precheck-1.jpg",
+            "thumbUrl": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/precheck-1_t.jpg"
+          },
+          {
+            "url": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/precheck-0.jpg",
+            "thumbUrl": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/precheck-0_t.jpg"
+          }
+        ],
+        "nextStepKey": "grooming"
+      }
+    },
+    {
+      "id": "01M1XSQM75DA51XF681B355SG8",
+      "eventType": "step_updated",
+      "channel": "appointment:01M1XSQM5NQXE6S4QERMX49VFN",
+      "payload": {
+        "appointmentId": "01M1XSQM5NQXE6S4QERMX49VFN",
+        "petName": "旺财",
+        "stepKey": "disinfection",
+        "status": "done",
+        "photos": [
+          {
+            "url": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/disinfection-0.jpg",
+            "thumbUrl": "/api/img/b3-1/01M1XSQM5NQXE6S4QERMX49VFN/disinfection-0_t.jpg"
+          }
+        ],
+        "nextStepKey": "precheck"
+      }
+    },
+    {
+      "id": "01M1XSQM6PAH7VFWX04A5FBWWE",
+      "eventType": "appointment.checkedin",
+      "channel": "store:01M1WVC76NH73BZSP1KQ6SXBAC",
+      "payload": {
+        "appointmentId": "01M1XSQM5NQXE6S4QERMX49VFN",
+        "petName": "旺财",
+        "type": "grooming",
+        "staffId": "01M1WVC76NT2WWE5KPC6PTXM3H"
+      }
+    },
+    {
+      "id": "01M1XSQM6NX4DVQM6CG0BSYF2D",
+      "eventType": "appointment.checkedin",
+      "channel": "appointment:01M1XSQM5NQXE6S4QERMX49VFN",
+      "payload": {
+        "appointmentId": "01M1XSQM5NQXE6S4QERMX49VFN",
+        "petName": "旺财",
+        "type": "grooming",
+        "staffId": "01M1WVC76NT2WWE5KPC6PTXM3H"
+      }
+    },
+    {
+      "id": "01M1XSQM6ANVWZJTGM5W9FGJAY",
+      "eventType": "appointment.assigned",
+      "channel": "user:01M1WVC76KZT68V813WA4E15Q0",
+      "payload": {
+        "appointmentId": "01M1XSQM5NQXE6S4QERMX49VFN",
+        "staffId": "01M1WVC76NT2WWE5KPC6PTXM3H",
+        "staffName": "小美",
+        "petName": "旺财"
+      }
+    },
+    {
+      "id": "01M1XSQM69TH0PV3GN3M7AX90M",
+      "eventType": "appointment.assigned",
+      "channel": "staff:01M1WVC76NT2WWE5KPC6PTXM3H",
+      "payload": {
+        "appointmentId": "01M1XSQM5NQXE6S4QERMX49VFN",
+        "staffId": "01M1WVC76NT2WWE5KPC6PTXM3H",
+        "staffName": "小美",
+        "petName": "旺财"
+      }
+    },
+    {
+      "id": "01M1XSQM62X46TPNAZ7TJTP0KG",
+      "eventType": "appointment.confirmed",
+      "channel": "user:01M1WVC76KZT68V813WA4E15Q0",
+      "payload": {
+        "appointmentId": "01M1XSQM5NQXE6S4QERMX49VFN",
+        "petName": "旺财"
+      }
+    },
+    {
+      "id": "01M1XSQM5PZSP8YVD8BX3AK1BW",
+      "eventType": "appointment.created",
+      "channel": "store:01M1WVC76NH73BZSP1KQ6SXBAC",
+      "payload": {
+        "appointmentId": "01M1XSQM5NQXE6S4QERMX49VFN",
+        "storeId": "01M1WVC76NH73BZSP1KQ6SXBAC",
+        "petName": "旺财",
+        "serviceName": "基础洗护（小型犬）"
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+### C1 <4h（入住日首晚距现在 2h）改期
+[{"error":{"json":{"message":"距预约开始不足 4 小时，不可自助改期，如需调整请联系门店","code":-32600,"data":{"code":"BAD_REQUEST","httpStatus":400,"stack":"TRPCError: 距预约开始不足 4 小时，不可自助改期，如需调整请联系门店\n    at badRequest (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\src\\routers\\appointment.ts:134:9)\n    at <anonymous> (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\serv
+
+### C2 in_boarding 进行中改期
+[{"error":{"json":{"message":"当前状态（in_boarding）不可改期，仅 pending/confirmed 可改期","code":-32600,"data":{"code":"BAD_REQUEST","httpStatus":400,"stack":"TRPCError: 当前状态（in_boarding）不可改期，仅 pending/confirmed 可改期\n    at badRequest (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\src\\routers\\appointment.ts:134:9)\n    at <anonymous> (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-
+
+### C3 寄养改期缺 scheduledEnd（修复后应拒绝）
+[{"error":{"json":{"message":"寄养改期必须选择新的退房日期且晚于入住日期","code":-32600,"data":{"code":"BAD_REQUEST","httpStatus":400,"stack":"TRPCError: 寄养改期必须选择新的退房日期且晚于入住日期\n    at badRequest (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\src\\routers\\appointment.ts:134:9)\n    at <anonymous> (D:\\KimiData\\kimi\\tasks\\2026-09-07\\02-22-13-267fc560\\philia-app\\server\\src\\routers
+### HTTP 状态码复核
+01M1Y36354R2EY8KN1TA7YKVBY http=400
+01M1Y36355FXP01DX4Z7BCPC4C http=400
+01M1Y33CZSSWXGTYQJYCV0PBVC http=409

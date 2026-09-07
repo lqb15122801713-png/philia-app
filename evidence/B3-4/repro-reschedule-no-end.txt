@@ -1,0 +1,18 @@
+# 修复前：boarding 单直接调 reschedule 且不传 scheduledEnd（curl 原始输出节选）
+POST /trpc/appointment.reschedule?batch=1
+body: {"0":{"json":{"appointmentId":"01M1Y1RZV5Z1XDFR8N1FNZRZM1","scheduledStart":"2026-09-12T02:00:00.000Z"},"meta":{"values":{"scheduledStart":["Date"]}}}}
+
+响应（未报错，静默放行）：
+{"scheduledStart":"2026-09-12T02:00:00.000Z","scheduledEnd":"2026-09-13T02:00:00.000Z","status":"pending","priceFen":39800,"paymentMode":"pay_at_store"}
+→ scheduledEnd 被服务端静默缺省为 start+24h（原单为 9/9→9/11 两晚）
+
+# 查库快照对比（server/scripts/b34-snapshot.mts 输出）
+--- 改期前 ---
+status=confirmed scheduledStart=2026-09-09T02:00:00.000Z scheduledEnd=2026-09-11T02:00:00.000Z priceFen=39800
+boarding_slots(标准间寄养（犬）): 2026-09-09 booked=1/2 ; 2026-09-10 booked=1/2 ; 2026-09-11 booked=0/2 ; 2026-09-12 booked=0/2
+pass_deduct_log: 0 条
+
+--- 缺省改期后 ---
+status=pending scheduledStart=2026-09-12T02:00:00.000Z scheduledEnd=2026-09-13T02:00:00.000Z priceFen=39800
+boarding_slots: 2026-09-09 booked=0/2 ; 2026-09-10 booked=0/2 ; 2026-09-11 booked=0/2 ; 2026-09-12 booked=1/2
+→ 旧晚已释放，但新区间被压成 1 晚（9/12），priceFen 仍为 2 晚价 39800

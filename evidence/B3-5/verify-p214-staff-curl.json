@@ -1,0 +1,47 @@
+{
+  "staffRepeat": {
+    "stay": {
+      "id": "01M1Y81JYEDY0M7ZPD6R17GY18",
+      "appointmentId": "01M1Y81JXJYY74555CTQ5VB1TR",
+      "roomNo": "A01",
+      "checkinWeightKg": 28.5,
+      "belongings": [
+        {
+          "name": "狗粮",
+          "note": "每日两餐"
+        }
+      ],
+      "checkoutAt": "2026-09-07T15:51:51.000Z",
+      "createdAt": "2026-09-07T15:33:30.000Z",
+      "updatedAt": "2026-09-07T15:51:51.000Z"
+    },
+    "appointment": {
+      "id": "01M1Y81JXJYY74555CTQ5VB1TR",
+      "code": "8W8ZFG",
+      "customerId": "01M1XYKBJER5W7SXT254ACXDTB",
+      "storeId": "01M1XYKBJFPDAKXQM3EVAMG5N2",
+      "staffId": "01M1XYKBJG24R5Y451T2CYVC3F",
+      "petId": "01M1XYKBJGYJ0NP9941XX01JWE",
+      "serviceId": "01M1XYKBJHMT12JR173WZ37FSW",
+      "type": "boarding",
+      "scheduledStart": "2026-09-08T01:00:00.000Z",
+      "scheduledEnd": "2026-09-10T01:00:00.000Z",
+      "status": "completed",
+      "priceFen": 39800,
+      "paymentMode": "pay_at_store",
+      "paidAt": null,
+      "paidFen": null,
+      "note": null,
+      "cancelReason": null,
+      "cancelSource": null,
+      "checkedInAt": "2026-09-07T15:33:30.000Z",
+      "completedAt": "2026-09-07T15:51:51.000Z",
+      "rating": null,
+      "review": null,
+      "createdAt": "2026-09-07T15:33:30.000Z",
+      "updatedAt": "2026-09-07T15:51:51.000Z"
+    },
+    "alreadyCompleted": true
+  },
+  "otherStaff": "Error: boarding.checkout -> {\"json\":{\"message\":\"无权操作该寄养单\",\"code\":-32003,\"data\":{\"code\":\"FORBIDDEN\",\"httpStatus\":403,\"stack\":\"TRPCError: 无权操作该寄养单\\n    at getBoar"
+}

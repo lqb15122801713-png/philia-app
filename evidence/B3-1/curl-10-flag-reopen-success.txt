@@ -1,0 +1,2 @@
+$ curl -X POST /trpc/serviceStep.flagForRedo (completed 单打标 stepKey=confirm · 修复后)
+[{"result":{"data":{"json":{"stepKey":"confirm","flagged":true,"reactivated":true,"invalidatedCount":0,"reopened":true}}}}]

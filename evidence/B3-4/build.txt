@@ -1,0 +1,11 @@
+== server tsc --noEmit ==
+exit=0
+
+== appointment.smoke ==
+exit=0
+138
+全部冒烟验证通过 ✅
+
+== customer npm run build ==
+exit=0
+✓ built in 2.98s

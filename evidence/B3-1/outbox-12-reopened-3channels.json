@@ -1,0 +1,87 @@
+{
+  "appointment": {
+    "id": "01M1XSQM5NQXE6S4QERMX49VFN",
+    "status": "in_service",
+    "completedAt": null,
+    "staffId": "01M1WVC76NT2WWE5KPC6PTXM3H",
+    "updatedAt": "2026-09-07T11:36:06.000Z"
+  },
+  "steps": [
+    {
+      "stepKey": "disinfection",
+      "status": "done",
+      "flagged": false,
+      "doneAt": "2026-09-07T11:23:24.000Z"
+    },
+    {
+      "stepKey": "precheck",
+      "status": "done",
+      "flagged": false,
+      "doneAt": "2026-09-07T11:23:24.000Z"
+    },
+    {
+      "stepKey": "grooming",
+      "status": "done",
+      "flagged": false,
+      "doneAt": "2026-09-07T11:23:24.000Z"
+    },
+    {
+      "stepKey": "detail",
+      "status": "done",
+      "flagged": false,
+      "doneAt": "2026-09-07T11:23:24.000Z"
+    },
+    {
+      "stepKey": "before_after",
+      "status": "done",
+      "flagged": false,
+      "doneAt": "2026-09-07T11:23:24.000Z"
+    },
+    {
+      "stepKey": "confirm",
+      "status": "active",
+      "flagged": true,
+      "doneAt": null
+    }
+  ],
+  "photos": {
+    "total": 10,
+    "valid": 10,
+    "invalidated": 0
+  },
+  "outbox": [
+    {
+      "id": "01M1XTEWG67ZHZ1QG6MVMAFFRY",
+      "eventType": "appointment.reopened",
+      "channel": "user:01M1WVC76KZT68V813WA4E15Q0",
+      "payload": {
+        "appointmentId": "01M1XSQM5NQXE6S4QERMX49VFN",
+        "petName": "旺财",
+        "stepKey": "confirm",
+        "by": "01M1WVC76K0965CKVMDS3YEAWM"
+      }
+    },
+    {
+      "id": "01M1XTEWG55XV6VNY6BTS6ZN69",
+      "eventType": "appointment.reopened",
+      "channel": "store:01M1WVC76NH73BZSP1KQ6SXBAC",
+      "payload": {
+        "appointmentId": "01M1XSQM5NQXE6S4QERMX49VFN",
+        "petName": "旺财",
+        "stepKey": "confirm",
+        "by": "01M1WVC76K0965CKVMDS3YEAWM"
+      }
+    },
+    {
+      "id": "01M1XTEWG55XV6VNY6BTS6ZN68",
+      "eventType": "appointment.reopened",
+      "channel": "appointment:01M1XSQM5NQXE6S4QERMX49VFN",
+      "payload": {
+        "appointmentId": "01M1XSQM5NQXE6S4QERMX49VFN",
+        "petName": "旺财",
+        "stepKey": "confirm",
+        "by": "01M1WVC76K0965CKVMDS3YEAWM"
+      }
+    }
+  ]
+}

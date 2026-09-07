@@ -1,0 +1,7 @@
+{
+  "createdId": "01M1Y5KX49M8CVPVFRQDM3C560",
+  "outcome": "cancelled",
+  "cancelReason": null,
+  "cancelSource": null,
+  "note": "旧版 cancel 无 reason 入参：即便客户端传了也被静默丢弃"
+}

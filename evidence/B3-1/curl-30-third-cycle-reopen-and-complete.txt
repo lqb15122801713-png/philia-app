@@ -1,0 +1,4 @@
+$ flagForRedo（第三轮 · completed 单打标）
+[{"result":{"data":{"json":{"stepKey":"confirm","flagged":true,"reactivated":true,"invalidatedCount":0,"reopened":true}}}}]
+$ confirmStep(confirm)（第三轮 · 二次完成接口输出）
+[{"result":{"data":{"json":{"stepKey":"confirm","status":"done","nextStepKey":null,"appointmentCompleted":true}}}}]
