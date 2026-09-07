@@ -7,6 +7,8 @@
 import { Check, ChevronRight, MonitorPlay } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
+  cancelSourceLabel,
+  customerLabel,
   fenToYuan,
   fmtDateWeek,
   fmtTime,
@@ -62,10 +64,19 @@ export function DetailSummary({
         />
         <Field label="宠物" value={item.petName ?? '—'} />
         <Field label="服务" value={`${item.serviceName ?? '—'}（${item.type === 'boarding' ? '寄养' : '洗护'}）`} />
-        <Field label="客户" value={`客户 ${item.customerId.slice(-4)}`} />
+        {/* B3-5 W-4：客户 = 昵称（空则「客户」）+ 手机号后 4 位 */}
+        <Field label="客户" value={customerLabel(item.customerName, item.customerPhoneTail)} />
         <Field label="员工" value={item.staffName ?? '未指派'} />
         <Field label="收款方式" value={paymentModeLabel(item.paymentMode)} />
         {item.note ? <Field label="备注" value={item.note} /> : null}
+        {/* B3-5（W-14）：已取消/取消审核透出取消来源与原因 */}
+        {(item.status === 'cancelled' || item.status === 'cancel_requested') &&
+        (item.cancelReason || item.cancelSource) ? (
+          <Field
+            label="取消信息"
+            value={`${cancelSourceLabel(item.cancelSource)}${item.cancelReason ? `：${item.cancelReason}` : ''}`}
+          />
+        ) : null}
       </div>
 
       <div className="mt-3 flex flex-col gap-2">

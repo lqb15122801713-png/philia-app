@@ -13,6 +13,9 @@ import type { StoreWithHours } from './types';
 
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 
+/** B3-5（W-2 统一口径）：入住时刻落在「当前时间 +1h 缓冲」内的日期禁选（与 assertBookableTime 同拦） */
+const LEAD_BUFFER_MS = 60 * 60 * 1000;
+
 /** 门店某日是否休息 */
 const isClosed = (store: Pick<StoreWithHours, 'openHours'> | null, d: Date) =>
   !store?.openHours?.[DAY_KEYS[d.getDay()]!];
@@ -66,6 +69,10 @@ export default function BoardingDateRangePicker({
     if (checkout && checkout <= d) onCheckoutChange(null);
   };
 
+  /** B3-5（W-2）：入住日过近禁选——该日入住时刻（开店时刻对齐 30min）须 ≥ 当前时间 +1h */
+  const checkinTooSoon = (d: Date): boolean =>
+    store != null && checkinAt(store, d).getTime() < Date.now() + LEAD_BUFFER_MS;
+
   const nights = checkin && checkout ? nightsBetween(checkin, checkout) : 0;
 
   const dayBtn = (d: Date, active: boolean, disabled: boolean, onClick: () => void) => (
@@ -93,7 +100,7 @@ export default function BoardingDateRangePicker({
       {checkin === null || reselectingCheckin ? (
         <div className="mt-2 grid grid-cols-4 gap-2">
           {checkinDays.map((d) =>
-            dayBtn(d, checkin?.getTime() === d.getTime(), isClosed(store, d), () => pickCheckin(d)),
+            dayBtn(d, checkin?.getTime() === d.getTime(), isClosed(store, d) || checkinTooSoon(d), () => pickCheckin(d)),
           )}
         </div>
       ) : (

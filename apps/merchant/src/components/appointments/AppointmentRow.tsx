@@ -7,6 +7,8 @@
 
 import { Check, X } from 'lucide-react';
 import {
+  cancelSourceLabel,
+  customerLabel,
   fenToYuan,
   fmtDate,
   fmtTime,
@@ -58,7 +60,7 @@ export function AppointmentRow({
         <p className="font-number text-caption text-ink-secondary">{fmtDate(start)}</p>
       </div>
 
-      {/* 主信息：宠物+服务 / 客户+员工 */}
+      {/* 主信息：宠物+服务 / 客户+员工（B3-5 W-4：客户=昵称+手机尾号） */}
       <div className="min-w-0 flex-1">
         <p className="truncate text-body font-semibold text-ink">
           {item.petName ?? '宠物'}
@@ -66,12 +68,18 @@ export function AppointmentRow({
           <span className="font-normal">{item.serviceName ?? '服务'}</span>
         </p>
         <p className="mt-0.5 truncate text-caption text-ink-secondary">
-          客户 {item.customerId.slice(-4)}
+          {customerLabel(item.customerName, item.customerPhoneTail)}
           <span className="mx-1 text-line-strong">|</span>
           {item.type === 'boarding' ? '寄养' : '洗护'}
           <span className="mx-1 text-line-strong">|</span>
           {item.staffName ? `员工 ${item.staffName}` : '未指派'}
         </p>
+        {/* B3-5（W-14）：已取消/取消审核行透出客户取消原因 */}
+        {(item.status === 'cancelled' || item.status === 'cancel_requested') && item.cancelReason ? (
+          <p className="mt-0.5 truncate text-caption text-ink-placeholder">
+            {cancelSourceLabel(item.cancelSource)}：{item.cancelReason}
+          </p>
+        ) : null}
       </div>
 
       {/* 状态 + 金额 */}

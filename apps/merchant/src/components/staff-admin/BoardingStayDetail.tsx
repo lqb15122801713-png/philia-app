@@ -31,10 +31,8 @@ function InfoRow({ label, value, danger }: { label: string; value: string; dange
 
 export default function BoardingStayDetail({
   row,
-  onCheckout,
 }: {
   row: StayBoardRow;
-  onCheckout: () => void;
 }) {
   const { stay, appointment, pet, customer } = row;
   return (
@@ -112,7 +110,8 @@ export default function BoardingStayDetail({
         ) : null}
       </div>
 
-      {/* 结算区 */}
+      {/* 结算区（B3-5 A-P2-14：boarding.checkout 已改 staffProcedure，商家端不再办理退房；
+          保留金额快照展示，收款仍由财务页 markPaid 完成） */}
       <div className="border-t border-line-divider px-4 py-3">
         <div className="mb-2 flex items-baseline justify-between">
           <span className="text-caption text-ink-secondary">
@@ -122,9 +121,13 @@ export default function BoardingStayDetail({
             {fmtMoney(appointment.priceFen)}
           </span>
         </div>
-        <Btn variant="primary" className="w-full" onClick={onCheckout}>
+        <Btn variant="primary" className="w-full" disabled title="退房核销由员工办理">
           退房结算
         </Btn>
+        <p className="mt-1.5 text-caption text-ink-placeholder">
+          退房核销由员工在员工端办理（v1.1 起）；员工退房后本单转入「已完成」，
+          {appointment.paymentMode === 'pay_at_store' ? '到店付请到财务页「待收款」确认收款。' : '款项以店内结算为准。'}
+        </p>
       </div>
     </div>
   );

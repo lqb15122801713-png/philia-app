@@ -7,8 +7,8 @@
  * 功能：
  * - 卡片网格看板（头像/名/房间号/入住日期/预计退房/最近打卡；超期红色标记）；
  * - 点卡进详情（lg 横屏右侧栏 / 手机下方展开）：入住信息 + 物品清单 + 结算区；
- * - 「退房结算」→ 确认弹层（应收金额=预约快照价）→ boarding.checkout →
- *   toast + invalidate；到店付单额外提示去财务「待收款」确认收款；
+ * - 结算区（v1.1-b3 B3-5 A-P2-14）：boarding.checkout 已修正为 staffProcedure，
+ *   商家端不再办理退房（按钮禁用并说明）；到店付收款仍走财务页 markPaid；
  * - 「只看超期」筛选开关；
  * - SSE（store:{storeId} 频道）：boarding.daily_update / boarding.completed /
  *   appointment.checkedin / boarding.overdue → invalidate 看板。
@@ -19,7 +19,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import BoardingStayCard from '../components/staff-admin/BoardingStayCard';
 import BoardingStayDetail from '../components/staff-admin/BoardingStayDetail';
-import CheckoutDialog from '../components/staff-admin/CheckoutDialog';
 import { useMerchantEvents } from '../components/staff-admin/useMerchantEvents';
 import type { StayBoardRow } from '../components/staff-admin/types';
 import { Empty, Loading, Switch, ToasterMount, toast } from '../components/staff-admin/ui';
@@ -32,7 +31,6 @@ export default function BoardingPage() {
   });
   const [onlyOverdue, setOnlyOverdue] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [checkoutFor, setCheckoutFor] = useState<StayBoardRow | null>(null);
 
   const invalidateBoard = () =>
     void queryClient.invalidateQueries({ queryKey: ['boarding', 'stayBoard'] });
@@ -116,7 +114,7 @@ export default function BoardingPage() {
           {/* 详情：lg 右侧栏 */}
           <div className="sticky top-4 hidden max-h-[calc(100vh-6rem)] lg:block">
             {selected ? (
-              <BoardingStayDetail row={selected} onCheckout={() => setCheckoutFor(selected)} />
+              <BoardingStayDetail row={selected} />
             ) : (
               <div className="flex h-64 items-center justify-center rounded-card bg-card text-body text-ink-placeholder shadow-card">
                 点选左侧卡片查看入住详情
@@ -127,18 +125,11 @@ export default function BoardingPage() {
           {/* 详情：手机选中后下方展开 */}
           {selected ? (
             <div className="mt-3 lg:hidden">
-              <BoardingStayDetail row={selected} onCheckout={() => setCheckoutFor(selected)} />
+              <BoardingStayDetail row={selected} />
             </div>
           ) : null}
         </div>
       )}
-
-      <CheckoutDialog
-        row={checkoutFor}
-        open={checkoutFor !== null}
-        onClose={() => setCheckoutFor(null)}
-        onCheckedOut={invalidateBoard}
-      />
     </div>
   );
 }

@@ -5,6 +5,10 @@
  *   屏3 选员工（随缘 + listStaffPublic 横滑）+ 选时间（SlotPicker 日分组 30min 槽格，满槽灰显）
  *   屏4 确认（选宠物 / 收款方式 / 备注 → appointment.create → /booking/success?aid=）
  * 顶部步骤条 + 已选条件摘要胶囊（点击回跳修改）；提交 loading；冲突/满槽友好 toast。
+ * v1.1-b3 B3-5（W-1）：仅 1 家门店时自动选中并跳过屏2（屏1→屏3、屏3 返回直回屏1），
+ * 摘要胶囊「门店」chip 仍可点回屏2 修改。
+ * v1.1-b3 B3-5（W-2）：屏3 时间槽允许当天——可约口径「当前时间 +1h 缓冲」之后，
+ * 由 getWithServices 服务端统一供给，过期/临近/满槽格灰显禁用（前后端同拦）。
  *
  * 说明：appointment.create 暂无 staffId 入参，指定员工以备注前缀「【希望洗护师：X】」
  * 传达门店，待服务端加字段后可无损迁移。
@@ -48,6 +52,9 @@ export default function BookingGroomingPage() {
   });
   // URL ?storeId= 优先，否则最近门店（无坐标时列表第一家）
   const effStoreId = storeId ?? nearbyQ.data?.stores[0]?.id ?? null;
+  // v1.1-b3 B3-5（W-1 单店跳步）：仅 1 家门店时自动选中并跳过屏2（选门店）；
+  // 已选摘要胶囊的「门店」chip 仍可点回屏2 修改（保留可返回修改）
+  const singleStore = (nearbyQ.data?.stores.length ?? 0) === 1;
 
   const servicesQ = useQuery({
     queryKey: ['store', 'getWithServices', effStoreId, serviceId],
@@ -170,7 +177,11 @@ export default function BookingGroomingPage() {
       <header className="flex items-center gap-3">
         <button
           type="button"
-          onClick={() => (step > 1 ? setStep(step - 1) : navigate(-1))}
+          onClick={() => {
+            if (step <= 1) return navigate(-1);
+            // W-1 单店跳步：屏3 返回时越过屏2（选门店）
+            setStep(singleStore && step === 3 ? 1 : step - 1);
+          }}
           aria-label="返回"
           className="flex h-9 w-9 items-center justify-center rounded-full bg-card shadow-card active:scale-92"
         >
@@ -381,7 +392,10 @@ export default function BookingGroomingPage() {
           <button
             type="button"
             disabled={!canNext}
-            onClick={() => setStep(step + 1)}
+            onClick={() => {
+              // W-1 单店跳步：屏1 直进屏3（门店已自动选中）
+              setStep(singleStore && step === 1 ? 3 : step + 1);
+            }}
             className="h-12 w-full rounded-full bg-brand-primary text-body font-semibold text-white shadow-card transition-transform duration-120 ease-philia-spring active:scale-92 disabled:bg-line disabled:text-ink-placeholder"
           >
             下一步

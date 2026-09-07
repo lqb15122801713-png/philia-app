@@ -39,6 +39,9 @@ import {
 /** 客户免费取消阈值（秒）：开始前 4 小时（与 server CANCEL_FREE_BEFORE_SEC 同步） */
 const CANCEL_FREE_BEFORE_SEC = 4 * 3600;
 
+/** v1.1-b3 B3-5（W-14）：取消原因快捷选项（选填，可再补充自由文本） */
+const CANCEL_REASON_CHIPS = ['行程有变', '时间不合适', '价格因素', '其他'] as const;
+
 const CLIENT_ID_KEY = 'philia.sseClientId';
 
 /** SSE clientId：localStorage 持久化（契约 · push.subscribe 与 /api/events 共用，同 live 页口径） */
@@ -115,6 +118,9 @@ export default function AppointmentDetailPage() {
   });
 
   const [confirmingCancel, setConfirmingCancel] = useState(false);
+  // B3-5（W-14）：取消原因——chips 单选（选填）+ 自由文本；合成后随 cancel 提交
+  const [cancelChip, setCancelChip] = useState<string | null>(null);
+  const [cancelNote, setCancelNote] = useState('');
   // v1.1-b2 B2-6：改期面板状态 + 新选时段
   const [rescheduling, setRescheduling] = useState(false);
   const [newSlot, setNewSlot] = useState<Date | null>(null);
@@ -141,10 +147,16 @@ export default function AppointmentDetailPage() {
   };
 
   const cancelM = useMutation({
-    mutationFn: () => trpc.appointment.cancel.mutate({ appointmentId: id }),
+    // B3-5（W-14）：原因合成「chip：自由文本」，均为空则不传（选填）；服务端上限 100 字
+    mutationFn: () => {
+      const reason = [cancelChip, cancelNote.trim()].filter(Boolean).join('：');
+      return trpc.appointment.cancel.mutate({ appointmentId: id, ...(reason ? { reason } : {}) });
+    },
     onSuccess: (r) => {
       invalidate();
       setConfirmingCancel(false);
+      setCancelChip(null);
+      setCancelNote('');
       showToast(
         r.outcome === 'cancelled' ? '预约已取消' : '已提交取消申请，待门店审核',
         'info',
@@ -619,6 +631,34 @@ export default function AppointmentDetailPage() {
                   ? '开始前 4 小时以上可免费取消，槽位将立即释放。'
                   : '提交后预约转为「取消审核中」，门店审核通过才会取消并释放槽位。'}
               </p>
+              {/* B3-5（W-14）：取消原因收集（选填 chips + 自由文本，商家端透出） */}
+              <div className="mt-3">
+                <p className="text-caption text-ink-secondary">取消原因（选填，告诉我们为什么）</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {CANCEL_REASON_CHIPS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setCancelChip((cur) => (cur === c ? null : c))}
+                      className={`h-9 rounded-full px-3.5 text-caption transition ${
+                        cancelChip === c
+                          ? 'bg-brand-primary font-semibold text-white'
+                          : 'bg-sunken text-ink-secondary'
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  value={cancelNote}
+                  onChange={(e) => setCancelNote(e.target.value)}
+                  maxLength={100}
+                  rows={2}
+                  placeholder="补充说明（选填，100 字以内）"
+                  className="mt-2 w-full rounded-input border border-line bg-card px-3.5 py-2.5 text-body placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
+                />
+              </div>
               <div className="mt-3 flex gap-2">
                 <button
                   type="button"

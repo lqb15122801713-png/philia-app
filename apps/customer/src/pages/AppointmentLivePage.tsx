@@ -70,7 +70,8 @@ const ACTIVE_HINT: Record<string, string> = {
   grooming: '正在洗护美容，新照片会实时出现在这里',
   detail: '细节精修中，快要变美啦',
   before_after: '正在拍摄前后对比照',
-  confirm: '等待家长确认接回',
+  // v1.1-b3 B3-5（A-P2-13）：确认步由洗护师完成核销确认，删除「等待家长确认接回」歧义表述
+  confirm: '洗护师正在为您完成最后确认',
 }
 
 const fmtTime = (d: Date) => format(d, 'HH:mm')

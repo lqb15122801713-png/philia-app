@@ -84,6 +84,23 @@ export const statusBadge = (s: string): string =>
   STATUS_BADGE[s as ApptStatus] ?? 'bg-sunken text-ink-secondary';
 
 /* ------------------------------------------------------------------ */
+/* 客户标识 / 取消来源（v1.1-b3 B3-5）                                    */
+/* ------------------------------------------------------------------ */
+
+/** B3-5（W-4）：客户标识——昵称（空则「客户」）+ 手机号后 4 位（无尾号则省略） */
+export const customerLabel = (name?: string | null, phoneTail?: string | null): string =>
+  `${name?.trim() ? name.trim() : '客户'}${phoneTail ? ` · 尾号 ${phoneTail}` : ''}`;
+
+/** B3-5（W-14）：取消来源标记 → 中文 */
+export const CANCEL_SOURCE_LABEL: Record<string, string> = {
+  merchant_reject: '商家婉拒',
+  customer: '客户取消',
+  merchant_review: '商家批准取消',
+};
+export const cancelSourceLabel = (s: string | null): string =>
+  (s && CANCEL_SOURCE_LABEL[s]) || '取消';
+
+/* ------------------------------------------------------------------ */
 /* 技能匹配（与服务端 TYPE_ACCEPT_SKILLS 同口径）                        */
 /* ------------------------------------------------------------------ */
 

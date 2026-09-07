@@ -2,7 +2,10 @@
  * 时间槽选择器（T2.2 · 洗护第 3 屏）：
  * - 顶部日分组条（今天 / 明天 / M月D日 周x），未来 7 天；
  * - 选中日后展示 30min 槽格：可约槽（getWithServices 返回，已按服务时长过滤连续槽）
- *   高亮可选；其余（已约满 / 无库存 / 已过 / 时长覆盖不到）灰显禁用；
+ *   高亮可选；其余（已约满 / 已过 / 「当前时间 +1h 缓冲」内 / 时长覆盖不到）灰显禁用；
+ * - v1.1-b3 B3-5（W-2 产品裁定：允许当天预约）：服务端可约槽已含今天
+ *   （合成栅格 + 统一 +1h 缓冲剔除），前端不再整列灰置「今天」；
+ *   今天未完全过期的栅格保留展示（+1h 内 / 已满 → 灰显禁用，与后端同口径）；
  * - 门店当日休息（openHours 该日为 null）显示休息提示。
  */
 
@@ -42,7 +45,9 @@ export default function SlotPicker({
   // 可约槽起始时刻集合（ms epoch）
   const availableSet = useMemo(() => new Set(slots.map((s) => s.slotStart.getTime())), [slots]);
 
-  // 未来 7 天：按营业时间生成 30min 栅格；今天已过的栅格剔除
+  // 未来 7 天：按营业时间生成 30min 栅格；
+  // B3-5（W-2）：已完全过期的栅格剔除；「当前时间 +1h 缓冲」内的保留展示但灰显禁用
+  // （服务端可约槽已按同口径剔除，availableSet 之外的格子一律不可点）
   const days = useMemo<DayColumn[]>(() => {
     const out: DayColumn[] = [];
     const today = new Date();
@@ -56,7 +61,7 @@ export default function SlotPicker({
       const grid: Date[] = [];
       for (let min = hmToMin(hours.open); min < hmToMin(hours.close); min += 30) {
         const t = new Date(date.getTime() + min * 60_000);
-        if (t.getTime() > now) grid.push(t);
+        if (t.getTime() + 30 * 60_000 > now) grid.push(t);
       }
       out.push({ date, grid, closed: false });
     }
@@ -136,7 +141,7 @@ export default function SlotPicker({
             })}
           </div>
         )}
-        <p className="mt-2 text-caption text-ink-placeholder">灰色为已约满或不可约时段</p>
+        <p className="mt-2 text-caption text-ink-placeholder">灰色为已约满或 1 小时内的临近时段</p>
       </div>
     </div>
   );
