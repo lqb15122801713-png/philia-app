@@ -142,6 +142,18 @@ try {
     { storeId: 's-1', slotStart: T2, capacity: 2, bookedCount: 0 },
   ]);
 
+  // B2-7：pass_deduct 建单须先有次卡——给 u-c1 在 s-1 置 5 次卡（u-c2 无卡，用于拒绝用例）
+  await db.insert(schema.memberPasses).values({
+    id: 'mp-c1',
+    userId: 'u-c1',
+    storeId: 's-1',
+    totalTimes: 5,
+    remainTimes: 5,
+    status: 'active',
+  });
+  const remainOf = async () =>
+    (await db.select().from(schema.memberPasses).where(eq(schema.memberPasses.id, 'mp-c1')).get())?.remainTimes;
+
   /* ---------- Context 直注（参考 auth smoke 做法） ---------- */
   const ctxCustomer = (id: string): Context => ({ db, user: { id, nickname: null, roles: ['customer'] } });
   const ctxStaff = (id: string, staffId: string, storeId: string): Context => ({
@@ -266,6 +278,22 @@ try {
         paymentMode: 'pay_at_store',
       }),
       'BAD_REQUEST',
+    ),
+  );
+  // B2-7：无卡客户 pass_deduct → 明确报错（不扣次、不占槽、不发事件）
+  check(
+    'pass_deduct 无可用次卡 → BAD_REQUEST「暂无可用次卡」',
+    await rejects(
+      c2.create({
+        storeId: 's-1',
+        petId: 'p-2',
+        serviceId: 'sv-g1',
+        type: 'grooming',
+        scheduledStart: T2,
+        paymentMode: 'pass_deduct',
+      }),
+      'BAD_REQUEST',
+      /暂无可用次卡/,
     ),
   );
   check(
@@ -455,6 +483,13 @@ try {
       appt3.scheduledEnd.getTime() === at(2, 14).getTime() &&
       appt3.paymentMode === 'pass_deduct',
   );
+  // B2-7：pass_deduct 建单同事务扣次（remain 5→4）+ 写 -1 扣次流水
+  check('pass_deduct 建单同事务扣次（remain 5→4）', (await remainOf()) === 4, await remainOf());
+  const appt3Logs = await db
+    .select()
+    .from(schema.passDeductLogs)
+    .where(eq(schema.passDeductLogs.appointmentId, appt3.id));
+  check('扣次流水 delta=-1 挂在该单上', appt3Logs.length === 1 && appt3Logs[0]?.delta === -1, appt3Logs);
   const slotT3 = await db
     .select()
     .from(schema.storeSlots)
@@ -547,6 +582,30 @@ try {
   check(
     'appointment.cancelled → store 频道',
     (await countOutbox('store:s-1', 'appointment.cancelled')) === 1,
+  );
+
+  // B2-7：pass_deduct 单取消回补（>4h 直消路径）——建单扣 4→3，取消同事务回补 3→4
+  // （用全新时段 at(1,16) 走 UPSERT 默认容量，避免挤占 T1/T2/T3 既有断言口径）
+  const appt5b = await c1.create({
+    storeId: 's-1',
+    petId: 'p-1',
+    serviceId: 'sv-g1',
+    type: 'grooming',
+    scheduledStart: at(1, 16),
+    paymentMode: 'pass_deduct',
+  });
+  check('pass_deduct 建单扣次（remain 4→3）', (await remainOf()) === 3, await remainOf());
+  const cc5b = await c1.cancel({ appointmentId: appt5b.id });
+  check('pass_deduct 单 >4h 取消 → cancelled', cc5b.outcome === 'cancelled');
+  check('取消同事务回补（remain 3→4）', (await remainOf()) === 4, await remainOf());
+  const appt5bLogs = await db
+    .select()
+    .from(schema.passDeductLogs)
+    .where(eq(schema.passDeductLogs.appointmentId, appt5b.id));
+  check(
+    '该单流水两条：-1 扣次 + +1 回补',
+    appt5bLogs.length === 2 && appt5bLogs.some((l) => l.delta === -1) && appt5bLogs.some((l) => l.delta === 1),
+    appt5bLogs.map((l) => l.delta),
   );
 
   // cancel ≤4h：转 cancel_requested → reviewCancel 批准 / 拒绝
@@ -708,8 +767,8 @@ try {
   /* ==================== 7. 事件总账 ==================== */
   console.log('\n[7] 事件总账（event_outbox 按频道+类型核对）');
   check(
-    'appointment.created → store 频道共 5 条（5 次成功 create）',
-    (await countOutbox('store:s-1', 'appointment.created')) === 5,
+    'appointment.created → store 频道共 6 条（6 次成功 create，含 B2-7 回补用例 appt5b）',
+    (await countOutbox('store:s-1', 'appointment.created')) === 6,
   );
   check(
     'appointment.assigned 计数正确（st-a：派单 appt2 + 认领 appt3；st-b：认领 appt1 + 派单 appt4；user:u-c1 共 4 条）',

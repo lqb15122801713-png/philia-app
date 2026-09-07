@@ -9,6 +9,7 @@
  *   serviceStep  洗护六步状态机（T1.3b）
  *   boarding     寄养打卡（T1.3c）
  *   push         推送订阅登记 / 站内通知（T1.4）
+ *   pass         次卡充次 / 扣次流水（v1.1-b2 B2-7）
  */
 
 import { router } from '../trpc';
@@ -16,6 +17,7 @@ import { appointmentRouter } from './appointment';
 import { authRouter } from './auth';
 import { boardingRouter } from './boarding';
 import { mallRouter } from './mall';
+import { passRouter } from './pass';
 import { petRouter } from './pet';
 import { pushRouter } from './push';
 import { serviceStepRouter } from './serviceStep';
@@ -30,6 +32,7 @@ export const appRouter = router({
   boarding: boardingRouter,
   push: pushRouter,
   mall: mallRouter, // P5 T5.1 商城（coder-mall-server 追加）
+  pass: passRouter, // v1.1-b2 B2-7 次卡（充次/扣次/回补闭环）
 });
 
 /** 前端 tRPC client 的类型锚点（仅类型导出，无运行时开销） */

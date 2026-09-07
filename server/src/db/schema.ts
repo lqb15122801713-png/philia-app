@@ -425,6 +425,57 @@ export const boardingDailyLogs = sqliteTable(
 );
 
 /* ------------------------------------------------------------------ */
+/* 5.3b 次卡（v1.1-b2 B2-7 · 资损红标：扣减/回补与建单/取消同事务）        */
+/* ------------------------------------------------------------------ */
+
+/** 会员次卡表：按「客户 × 门店」一卡（唯一索引），记录累计充次与剩余次数 */
+export const memberPasses = sqliteTable(
+  'member_pass',
+  {
+    id: id(),
+    /** 持卡人用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 发卡门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 累计充次总数（商家充次累加） */
+    totalTimes: integer('total_times').notNull().default(0),
+    /** 剩余可扣次数（建单扣次 -1 / 取消回补 +1 / 充次 +N） */
+    remainTimes: integer('remain_times').notNull().default(0),
+    /** 状态，取值：active | disabled */
+    status: text('status').notNull().default('active'),
+    /** 过期时间（NULL = 长期有效） */
+    expiresAt: integer('expires_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [uniqueIndex('uq_member_pass_user_store').on(t.userId, t.storeId)],
+);
+
+/** 次卡流水表（只增不改的审计账：-1 扣次 / +1 取消回补 / +N 商家充次） */
+export const passDeductLogs = sqliteTable(
+  'pass_deduct_log',
+  {
+    id: id(),
+    /** 次卡 ID -> member_pass.id */
+    passId: text('pass_id')
+      .notNull()
+      .references(() => memberPasses.id),
+    /** 关联预约单 ID -> appointments.id（NULL = 商家充次等无单操作） */
+    appointmentId: text('appointment_id').references(() => appointments.id),
+    /** 次数变动：-1 扣次 / +1 取消回补 / +N 商家充次 */
+    delta: integer('delta').notNull(),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_pass_deduct_log_pass').on(t.passId),
+    index('ix_pass_deduct_log_appointment').on(t.appointmentId),
+  ],
+);
+
+/* ------------------------------------------------------------------ */
 /* 5.4 商城                                                            */
 /* ------------------------------------------------------------------ */
 

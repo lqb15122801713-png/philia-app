@@ -97,6 +97,20 @@ export default function BookingBoardingPage() {
   const noPets = petsQ.isSuccess && (petsQ.data?.length ?? 0) === 0;
   const [forkDismissed, setForkDismissed] = useState(false);
 
+  // v1.1-b2 B2-7：本人该店次卡（确认屏「次卡扣次」剩余次数/置灰的数据源；一店一卡，取首张）
+  const passQ = useQuery({
+    queryKey: ['pass', 'mine', effStoreId],
+    queryFn: () => trpc.pass.mine.query({ storeId: effStoreId! }),
+    enabled: effStoreId !== null,
+  });
+  const usablePass = (passQ.data ?? []).find((p) => p.usable) ?? null;
+  // 次卡不可用（无卡/余额不足/已过期）时若仍选中 pass_deduct → 强制回退到店付
+  useEffect(() => {
+    if (paymentMode === 'pass_deduct' && passQ.isSuccess && !usablePass) {
+      setPaymentMode('pay_at_store');
+    }
+  }, [paymentMode, passQ.isSuccess, usablePass]);
+
   // v1.1-b2：URL 预填的 petId 若不在本人宠物列表则清掉（避免看不见的选中态直接放行提交）
   useEffect(() => {
     if (petsQ.isSuccess && petId && !(petsQ.data ?? []).some((p) => p.id === petId)) {
@@ -154,6 +168,7 @@ export default function BookingBoardingPage() {
     },
     onSuccess: (appt) => {
       void queryClient.invalidateQueries({ queryKey: ['appointment'] });
+      void queryClient.invalidateQueries({ queryKey: ['pass'] }); // B2-7：扣次后刷新次卡余额
       navigate(`/booking/success?aid=${encodeURIComponent(appt.id)}`, { replace: true });
     },
     onError: (err) => showToast(friendlyError(err, '预约失败，请稍后再试')),
@@ -426,19 +441,30 @@ export default function BookingBoardingPage() {
 
           <h2 className="mt-5 text-title">收款方式</h2>
           <div className="mt-2 grid grid-cols-2 gap-2">
-            {(['pay_at_store', 'pass_deduct'] as const).map((m) => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setPaymentMode(m)}
-                className={`rounded-card bg-card p-3.5 text-left shadow-card transition active:scale-[0.99] ${paymentMode === m ? 'ring-2 ring-brand-primary' : ''}`}
-              >
-                <span className="block text-body font-semibold">{PAYMENT_MODE_META[m].label}</span>
-                <span className="mt-0.5 block text-caption text-ink-secondary">
-                  {PAYMENT_MODE_META[m].hint}
-                </span>
-              </button>
-            ))}
+            {(['pay_at_store', 'pass_deduct'] as const).map((m) => {
+              // B2-7（W-6）：次卡扣次需可用次卡；无卡/余额不足/过期 → 置灰 + 明确提示
+              const passDisabled = m === 'pass_deduct' && passQ.isSuccess && !usablePass;
+              const hint =
+                m === 'pass_deduct'
+                  ? passQ.isPending
+                    ? '正在查询次卡余额…'
+                    : usablePass
+                      ? `剩余 ${usablePass.remainTimes} 次 · 预约确认后扣 1 次`
+                      : '暂无可用次卡'
+                  : PAYMENT_MODE_META[m].hint;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  disabled={passDisabled}
+                  onClick={() => setPaymentMode(m)}
+                  className={`rounded-card bg-card p-3.5 text-left shadow-card transition active:scale-[0.99] ${paymentMode === m ? 'ring-2 ring-brand-primary' : ''} ${passDisabled ? 'cursor-not-allowed opacity-50' : ''}`}
+                >
+                  <span className="block text-body font-semibold">{PAYMENT_MODE_META[m].label}</span>
+                  <span className="mt-0.5 block text-caption text-ink-secondary">{hint}</span>
+                </button>
+              );
+            })}
           </div>
 
           <h2 className="mt-5 text-title">备注</h2>

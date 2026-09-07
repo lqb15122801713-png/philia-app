@@ -1,11 +1,11 @@
 /**
  * MemberPage · /philia/member 会员卡页（T2.1）
  *
- * ⚠️ 后端缺口（已记录）：方案 §2.1 有会员卡页，但第 5 章数据模型无
- * 积分 / 次卡 / 优惠券表——本页顶部只展示可由现有接口聚合的真实数据
- * （昵称 / 加入天数 / 累计完成服务次数 / 累计消费，来自 auth.me + listMine
- * 的 completed 组 priceFen 聚合，前端计算）；
- * 等级 / 积分 / 次卡 / 优惠券四区一律「即将上线（v2）」占位卡，禁止编造数据。
+ * 顶部只展示可由现有接口聚合的真实数据（昵称 / 加入天数 / 累计完成服务次数 /
+ * 累计消费，来自 auth.me + listMine 的 completed 组 priceFen 聚合，前端计算）。
+ * 次卡（v1.1-b2 B2-7）：member_pass 已落地——次卡区展示 pass.mine 真实余额
+ * （按门店列出 剩余/总次数 + 有效期），空态显示「暂无次卡」。
+ * 等级 / 积分 / 优惠券三区仍为「即将上线（v2）」占位卡，禁止编造数据。
  */
 
 import { useQuery } from '@tanstack/react-query'
@@ -109,6 +109,67 @@ function ComingSoonCard({
   )
 }
 
+/** 次卡余额有效期展示：YYYY/M/D */
+const fmtPassDate = (d: Date | string) => {
+  const t = new Date(d)
+  return `${t.getFullYear()}/${t.getMonth() + 1}/${t.getDate()}`
+}
+
+/** 次卡余额卡（v1.1-b2 B2-7）：pass.mine 真实数据，按门店列「剩余 N 次 / 共 M 次」 */
+function PassCard() {
+  const { trpc } = usePhiliaClient()
+  const passQuery = useQuery({
+    queryKey: ['pass', 'mine'],
+    queryFn: () => trpc.pass.mine.query(),
+  })
+
+  if (passQuery.isPending) return <LoadingBlock lines={2} />
+  if (passQuery.isError) {
+    return <ErrorState message="次卡余额加载失败" onRetry={() => void passQuery.refetch()} />
+  }
+
+  const passes = passQuery.data ?? []
+  return (
+    <div className="rounded-card bg-card p-4 shadow-card">
+      <div className="flex items-center gap-2">
+        <Ticket className="h-5 w-5 text-brand-primary" strokeWidth={1.5} />
+        <p className="text-body font-semibold">次卡</p>
+        {passes.length > 0 ? (
+          <span className="ml-auto font-number text-caption text-ink-secondary" style={tabularNums}>
+            剩余 {passes.reduce((s, p) => s + p.remainTimes, 0)} 次
+          </span>
+        ) : null}
+      </div>
+      {passes.length === 0 ? (
+        <p className="mt-2 text-caption text-ink-placeholder">
+          暂无次卡，可联系门店充次；充次后预约洗护/寄养可选「次卡扣次」。
+        </p>
+      ) : (
+        <div className="mt-3 flex flex-col gap-2">
+          {passes.map((p) => (
+            <div key={p.id} className="flex items-center justify-between rounded-input bg-sunken px-3 py-2.5">
+              <div>
+                <p className="text-body font-medium">{p.storeName}</p>
+                <p className="mt-0.5 text-caption text-ink-secondary">
+                  {p.status !== 'active'
+                    ? '已停用'
+                    : p.expiresAt
+                      ? `有效期至 ${fmtPassDate(p.expiresAt)}`
+                      : '长期有效'}
+                </p>
+              </div>
+              <p className="font-number text-price text-brand-primary" style={tabularNums}>
+                {p.remainTimes}
+                <span className="text-caption font-normal text-ink-secondary"> / 共 {p.totalTimes} 次</span>
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function MemberPage() {
   return (
     <div className="px-4 pb-6">
@@ -136,11 +197,7 @@ export default function MemberPage() {
           title="积分"
           desc="消费得积分、积分兑好礼，积分账户随 v2 版本开放。"
         />
-        <ComingSoonCard
-          icon={Ticket}
-          title="次卡"
-          desc="洗护次卡套餐（买 N 赠 1）正在筹备，届时支持次卡抵扣预约。"
-        />
+        <PassCard />
         <ComingSoonCard
           icon={Sparkles}
           title="优惠券"

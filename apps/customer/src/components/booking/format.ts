@@ -71,7 +71,8 @@ export const statusLabel = (s: string) => APPT_STATUS_META[s]?.label ?? s;
 
 export const PAYMENT_MODE_META: Record<string, { label: string; hint: string }> = {
   pay_at_store: { label: '到店付', hint: '服务完成后到店支付' },
-  pass_deduct: { label: '次卡扣次', hint: '服务完成时自动扣次' },
+  // B2-7：扣次时点为「预约确认（建单成功）」而非服务完成——与 appointment.create 事务扣减一致
+  pass_deduct: { label: '次卡扣次', hint: '预约确认后自动扣 1 次' },
 };
 
 export const paymentModeLabel = (m: string | null) =>
