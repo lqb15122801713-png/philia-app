@@ -207,7 +207,7 @@ export default function PassPage() {
         <div>
           <h1 className="text-title-lg font-semibold text-ink">次卡管理</h1>
           <p className="mt-0.5 text-caption text-ink-secondary">
-            共 {passes.length} 张卡 · 预约扣次自动记账，取消自动回补
+            共 {passes.length} 张卡 · 预约扣次自动记账，取消自动回补 · 次卡仅适用于洗护服务
           </p>
         </div>
         <Btn variant="primary" onClick={() => openTopUp(null)}>

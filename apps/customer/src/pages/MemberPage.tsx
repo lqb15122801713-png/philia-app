@@ -166,6 +166,8 @@ function PassCard() {
           ))}
         </div>
       )}
+      {/* B2-7R（产品裁定A）：适用范围明示，防「寄养不能用」客诉 */}
+      <p className="mt-3 text-caption text-ink-placeholder">次卡仅适用于洗护服务</p>
     </div>
   )
 }

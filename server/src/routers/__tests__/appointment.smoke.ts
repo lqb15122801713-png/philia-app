@@ -15,6 +15,8 @@
  *    boarding checkin 建 boarding_stays 且无 steps
  * 5. assign 技能/排班/时间冲突检测；cancel 4h 边界两分支 + reviewCancel 批准/拒绝；
  *    服务中锁定；markPaid 幂等；review 落库
+ * 5b. B2-7 次卡：无卡 pass_deduct 拒绝；B2-7R（产品裁定A）寄养+次卡硬拒绝且
+ *    余额/流水零副作用；grooming+次卡建单扣 1 次、取消回补 +1
  * 6. listMine 分组 / get 归属 / listForStore 过滤 / listTodayForStaff 今日时间轴
  * 7. 事件总账：每个关键动作后 event_outbox 有对应事件且 channel 正确
  */
@@ -475,21 +477,59 @@ try {
     type: 'boarding',
     scheduledStart: T3,
     scheduledEnd: at(2, 14),
-    paymentMode: 'pass_deduct',
+    paymentMode: 'pay_at_store',
   });
   check(
     'boarding create：type/end/payment_mode 快照正确',
     appt3.type === 'boarding' &&
       appt3.scheduledEnd.getTime() === at(2, 14).getTime() &&
-      appt3.paymentMode === 'pass_deduct',
+      appt3.paymentMode === 'pay_at_store',
   );
-  // B2-7：pass_deduct 建单同事务扣次（remain 5→4）+ 写 -1 扣次流水
+
+  // B2-7R-4（产品裁定A）：寄养 + pass_deduct → 硬拒绝（次卡仅洗护可用）；
+  // 拒绝路径零副作用——remainTimes 不变、无新增 pass_deduct_log 行（连槽位都不占）
+  const passLogsBefore = (await db.select().from(schema.passDeductLogs)).length;
+  check(
+    'boarding + pass_deduct → BAD_REQUEST「寄养订单暂不支持次卡支付」',
+    await rejects(
+      c1.create({
+        storeId: 's-1',
+        petId: 'p-1',
+        serviceId: 'sv-b1',
+        type: 'boarding',
+        scheduledStart: at(2, 16),
+        scheduledEnd: at(3, 16),
+        paymentMode: 'pass_deduct',
+      }),
+      'BAD_REQUEST',
+      /寄养订单暂不支持次卡支付/,
+    ),
+  );
+  check('寄养拒绝后 remainTimes 不变（仍 5）', (await remainOf()) === 5, await remainOf());
+  check(
+    '寄养拒绝后无新增 pass_deduct_log 行',
+    (await db.select().from(schema.passDeductLogs)).length === passLogsBefore,
+  );
+
+  // B2-7R-4 回归：grooming + pass_deduct 仍 200，同事务扣 1 次（remain 5→4）+ -1 流水
+  const apptPass = await c1.create({
+    storeId: 's-1',
+    petId: 'p-1',
+    serviceId: 'sv-g1',
+    type: 'grooming',
+    scheduledStart: at(2, 17),
+    paymentMode: 'pass_deduct',
+  });
+  check(
+    'grooming + pass_deduct 建单仍成功（200）',
+    apptPass.status === 'pending' && apptPass.paymentMode === 'pass_deduct',
+  );
   check('pass_deduct 建单同事务扣次（remain 5→4）', (await remainOf()) === 4, await remainOf());
-  const appt3Logs = await db
+  const apptPassLogs = await db
     .select()
     .from(schema.passDeductLogs)
-    .where(eq(schema.passDeductLogs.appointmentId, appt3.id));
-  check('扣次流水 delta=-1 挂在该单上', appt3Logs.length === 1 && appt3Logs[0]?.delta === -1, appt3Logs);
+    .where(eq(schema.passDeductLogs.appointmentId, apptPass.id));
+  check('扣次流水 delta=-1 挂在该单上', apptPassLogs.length === 1 && apptPassLogs[0]?.delta === -1, apptPassLogs);
   const slotT3 = await db
     .select()
     .from(schema.storeSlots)
@@ -767,8 +807,8 @@ try {
   /* ==================== 7. 事件总账 ==================== */
   console.log('\n[7] 事件总账（event_outbox 按频道+类型核对）');
   check(
-    'appointment.created → store 频道共 6 条（6 次成功 create，含 B2-7 回补用例 appt5b）',
-    (await countOutbox('store:s-1', 'appointment.created')) === 6,
+    'appointment.created → store 频道共 7 条（7 次成功 create，含 B2-7R 回归 apptPass 与回补用例 appt5b；寄养拒绝单不产生事件）',
+    (await countOutbox('store:s-1', 'appointment.created')) === 7,
   );
   check(
     'appointment.assigned 计数正确（st-a：派单 appt2 + 认领 appt3；st-b：认领 appt1 + 派单 appt4；user:u-c1 共 4 条）',

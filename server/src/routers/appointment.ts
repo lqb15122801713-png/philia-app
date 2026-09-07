@@ -388,6 +388,8 @@ export const appointmentRouter = router({
    * （active + remain_times>0 + 未过期，否则 BAD_REQUEST「暂无可用次卡」）并
    * remain_times-1、写 -1 扣次流水——扣次先于占槽，占槽 CONFLICT/建单失败时
    * 事务整体回滚，扣次随之还原（资损红标验收④）。
+   * B2-7R（产品裁定A）：次卡仅洗护可用——boarding + pass_deduct 在查卡前
+   * 直接 BAD_REQUEST（拒绝路径对 member_pass / pass_deduct_log 零副作用）。
    */
   create: customerProcedure
     .input(
@@ -468,6 +470,11 @@ export const appointmentRouter = router({
             // 任一步失败（如该时段已约满 CONFLICT）整体回滚，remain_times 随之还原。
             let deductedPassId: string | null = null;
             if (input.paymentMode === 'pass_deduct') {
+              // B2-7R（产品裁定A）：次卡仅洗护可用——寄养+次卡最前置硬拒绝；
+              // 拒绝路径不查卡、不写流水，member_pass / pass_deduct_log 零触碰
+              if (input.type === 'boarding') {
+                badRequest('寄养订单暂不支持次卡支付，请选择到店支付');
+              }
               const pass = await tx
                 .select()
                 .from(schema.memberPasses)
