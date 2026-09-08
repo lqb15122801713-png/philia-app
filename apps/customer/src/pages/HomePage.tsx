@@ -4,6 +4,7 @@
  * 保留 P0 品牌头 / banner / 快捷入口；
  * 「附近好店」接 trpc.store.listNearby（浏览器 geolocation 拿坐标，拒绝授权则不带坐标调）；
  * 「推荐服务」取最近门店 store.getWithServices 的 active 服务项（横滑卡片）。
+ * B4-5：推荐服务上方插入复购提醒卡（GroomingReminder，completed 洗护单 ≥14 天条件渲染）。
  * 三态：loading / error / empty 均有（见 components/home）。
  */
 
@@ -13,6 +14,7 @@ import { Link } from 'react-router-dom'
 import { usePhiliaClient } from '@philia/shared'
 import NearbyStores from '../components/home/NearbyStores'
 import RecommendedServices from '../components/home/RecommendedServices'
+import GroomingReminder from '../components/home/GroomingReminder'
 import { SectionShell } from '../components/home/common'
 import { useGeolocation } from '../components/home/useGeolocation'
 
@@ -77,6 +79,9 @@ export default function HomePage() {
           geoDenied={denied}
         />
       </SectionShell>
+
+      {/* B4-5 复购提醒卡（completed 洗护单 ≥14 天条件渲染，推荐服务上方） */}
+      <GroomingReminder />
 
       {/* 推荐服务（最近门店 getWithServices） */}
       <SectionShell title="推荐服务">
