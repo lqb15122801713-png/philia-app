@@ -32,7 +32,7 @@ interface Album {
 function PhotoViewer({ photo, onClose }: { photo: PhotoWallPhoto; onClose: () => void }) {
   return (
     <div
-      className="fixed inset-0 z-modal flex items-center justify-center bg-[rgba(61,50,41,0.9)] p-4"
+      className="fixed inset-0 z-modal flex items-center justify-center bg-ink/90 p-4"
       onClick={onClose}
       role="dialog"
       aria-label="查看照片"
@@ -103,7 +103,7 @@ function AlbumCard({ album }: { album: Album }) {
           className="aspect-[4/3] w-full object-cover"
           loading="lazy"
         />
-        <span className="absolute inset-x-0 bottom-0 flex items-end justify-between bg-gradient-to-t from-[rgba(61,50,41,0.65)] to-transparent p-3 text-left">
+        <span className="absolute inset-x-0 bottom-0 flex items-end justify-between bg-gradient-to-t from-ink/65 to-transparent p-3 text-left">
           <span>
             <span className="block text-body font-semibold text-white">
               {album.petName ?? '毛孩子'} · {album.serviceName ?? '洗护服务'}
@@ -214,7 +214,7 @@ export default function MomentsPage() {
             action={
               <Link
                 to="/booking/grooming"
-                className="mt-2 rounded-full bg-brand-primary px-5 py-2 text-body text-white"
+                className="mt-2 rounded-full bg-brand-primary px-5 py-2 text-body text-ink"
               >
                 去预约洗护
               </Link>

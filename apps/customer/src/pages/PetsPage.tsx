@@ -342,7 +342,7 @@ function PetForm({
           type="checkbox"
           checked={form.neutered}
           onChange={(e) => set('neutered', e.target.checked)}
-          className="h-4 w-4 accent-[#D98E5F]"
+          className="h-4 w-4 accent-brand-primary"
         />
         已绝育
       </label>
@@ -412,7 +412,7 @@ function PetForm({
           type="button"
           disabled={saveMutation.isPending}
           onClick={onSubmit}
-          className="flex-1 rounded-full bg-brand-primary py-2.5 text-body text-white transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
+          className="flex-1 rounded-full bg-brand-primary py-2.5 text-body text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
         >
           {saveMutation.isPending ? '保存中…' : '保存档案'}
         </button>
@@ -512,7 +512,7 @@ export default function PetsPage() {
               <button
                 type="button"
                 onClick={openCreate}
-                className="mt-2 rounded-full bg-brand-primary px-5 py-2 text-body text-white"
+                className="mt-2 rounded-full bg-brand-primary px-5 py-2 text-body text-ink"
               >
                 建立档案
               </button>
