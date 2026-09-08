@@ -59,7 +59,7 @@ function Thumb({
         onLoad={(e) => e.currentTarget.classList.remove('opacity-0')}
       />
       {photo.tag ? (
-        <span className="absolute left-1 top-1 rounded-tag bg-[rgba(61,50,41,0.45)] px-1.5 py-0.5 text-caption text-white">
+        <span className="absolute left-1 top-1 rounded-tag bg-ink/45 px-1.5 py-0.5 text-caption text-white">
           {photo.tag}
         </span>
       ) : null}
@@ -82,7 +82,7 @@ function BeforeAfterWall({
   const slots: { photo: PhotoWallPhoto; label: string; badgeClass: string; index: number }[] = [
     // 服务前：奶杏浅底 + 暖深棕字；服务后：品牌色底 + 白字
     { photo: before, label: '服务前', badgeClass: 'bg-brand-secondary-light text-ink', index: 0 },
-    { photo: after, label: '服务后', badgeClass: 'bg-brand-primary text-white', index: 1 },
+    { photo: after, label: '服务后', badgeClass: 'bg-brand-primary text-ink', index: 1 },
   ];
 
   return (
@@ -110,7 +110,7 @@ function BeforeAfterWall({
         ))}
       </div>
       {/* 中央接缝：24px 白圆箭头，暗示 前 → 后 的变化方向 */}
-      <span className="pointer-events-none absolute left-1/2 top-1/2 flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-card">
+      <span className="pointer-events-none absolute left-1/2 top-1/2 flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-card shadow-card">
         <ArrowRight className="h-3.5 w-3.5 text-brand-primary" strokeWidth={1.5} />
       </span>
     </div>
@@ -139,7 +139,7 @@ export default function PhotoWall({ photos, stepKey, onPhotoClick }: PhotoWallPr
               <button
                 type="button"
                 onClick={() => onPhotoClick?.(photo, index)}
-                className="absolute inset-0 flex items-center justify-center rounded-tag bg-[rgba(61,50,41,0.45)] text-title text-white"
+                className="absolute inset-0 flex items-center justify-center rounded-tag bg-ink/45 text-title text-white"
                 aria-label={`还有 ${overflow} 张照片`}
               >
                 +{overflow}

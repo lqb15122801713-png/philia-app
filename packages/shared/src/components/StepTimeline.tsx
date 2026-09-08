@@ -46,7 +46,7 @@ function StepNode({ status }: { status: ServiceStepStatus }) {
   if (status === 'done') {
     return (
       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-primary">
-        <Check className="h-3.5 w-3.5 text-white" strokeWidth={1.5} />
+        <Check className="h-3.5 w-3.5 text-ink" strokeWidth={1.5} />
       </span>
     );
   }
@@ -54,7 +54,7 @@ function StepNode({ status }: { status: ServiceStepStatus }) {
     // 呼吸光环与 philia 按钮同一母题；同屏光环不超过 2 处（DESIGN §5）
     return (
       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-primary animate-halo">
-        <span className="h-2 w-2 rounded-full bg-white" />
+        <span className="h-2 w-2 rounded-full bg-ink" />
       </span>
     );
   }

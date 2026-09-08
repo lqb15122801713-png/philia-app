@@ -17,6 +17,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
 import defaultPhiliaIcon from '../assets/philia-tab-icon.png';
+import { colors } from '../tokens';
 
 /** 常规 tab 项（共 4 个，philia 按钮独占中间槽位、不在此列）。 */
 export interface ConvexTabBarItem {
@@ -114,12 +115,12 @@ export default function ConvexTabBar({
           >
             <path
               d="M0 0 C 20 0 32 14 56 14 C 80 14 92 0 112 0 L112 56 L0 56 Z"
-              fill="#FFFFFF"
+              fill={colors.bg.card}
             />
             <path
               d="M0 0 C 20 0 32 14 56 14 C 80 14 92 0 112 0"
               fill="none"
-              stroke="#F0EBE5"
+              stroke={colors.border.divider}
               strokeWidth="1"
             />
           </svg>

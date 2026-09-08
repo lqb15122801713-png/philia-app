@@ -96,7 +96,7 @@ export default function ReviewPanel({
             type="button"
             disabled={rating === 0 || submitting}
             onClick={() => onSubmit(rating, text.trim())}
-            className="mt-3 h-11 w-full rounded-full bg-brand-primary text-body font-semibold text-white transition hover:bg-brand-primary-hover active:bg-brand-primary-pressed disabled:opacity-50"
+            className="mt-3 h-11 w-full rounded-full bg-brand-primary text-body font-semibold text-ink transition hover:bg-brand-primary-hover active:bg-brand-primary-pressed disabled:opacity-50"
           >
             {submitting ? '提交中…' : '提交评价'}
           </button>

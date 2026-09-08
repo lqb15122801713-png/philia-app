@@ -33,7 +33,7 @@ export default function PhotoViewer({ photos, index, onClose, onNavigate }: Phot
 
   return (
     <div
-      className="fixed inset-0 z-modal flex flex-col bg-[rgba(61,50,41,0.9)]"
+      className="fixed inset-0 z-modal flex flex-col bg-ink/90"
       onClick={onClose}
       role="dialog"
       aria-label="查看照片"
@@ -63,7 +63,7 @@ export default function PhotoViewer({ photos, index, onClose, onNavigate }: Phot
           <button
             type="button"
             aria-label="上一张"
-            className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white"
+            className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-card/15 text-white"
             onClick={(e) => {
               e.stopPropagation()
               onNavigate(index - 1)
@@ -76,7 +76,7 @@ export default function PhotoViewer({ photos, index, onClose, onNavigate }: Phot
           <button
             type="button"
             aria-label="下一张"
-            className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white"
+            className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-card/15 text-white"
             onClick={(e) => {
               e.stopPropagation()
               onNavigate(index + 1)

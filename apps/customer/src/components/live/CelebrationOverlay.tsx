@@ -15,7 +15,7 @@ export default function CelebrationOverlay({
 }) {
   if (!visible) return null
   return (
-    <div className="fixed inset-0 z-modal flex items-center justify-center bg-[rgba(61,50,41,0.35)] px-8">
+    <div className="fixed inset-0 z-modal flex items-center justify-center bg-ink/35 px-8">
       {/* 一次性 pop：0.4 → 1.12 → 1，ease 用品牌 philia-spring */}
       <style>{`@keyframes live-pop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.12);opacity:1}100%{transform:scale(1);opacity:1}}`}</style>
       <div className="flex w-full max-w-xs flex-col items-center rounded-card bg-card px-6 py-8 shadow-elevated">
