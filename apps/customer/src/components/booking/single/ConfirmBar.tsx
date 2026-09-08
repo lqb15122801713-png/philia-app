@@ -1,7 +1,8 @@
 /**
  * B4-1 单屏 · 吸底确认条：
  * 三态 —— 可点（「确认预约 · ¥X · 约 N 分钟」）/ 置灰点名缺项（如「请选择时间」）/
- * 提交中（「提交中…」）。fixed 吸底于 TabBar（56px）上方，带渐变衬底；
+ * 提交中（「提交中…」）。B4-R1：单屏页为沉浸式下单流（App.tsx 按路由隐藏 TabBar），
+ * fixed 落底 bottom: env(safe-area-inset-bottom)，带渐变衬底；
  * 页面底部需留 padding 避免内容被遮（单屏页 pb-36）。
  */
 
@@ -32,7 +33,7 @@ export default function ConfirmBar({
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-[calc(56px+env(safe-area-inset-bottom))] z-sticky"
+      className="pointer-events-none fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-sticky"
       data-testid="gs-confirm-bar"
     >
       <div className="mx-auto max-w-lg bg-gradient-to-t from-canvas via-canvas to-transparent px-4 pb-3 pt-6">

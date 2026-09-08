@@ -4,7 +4,8 @@
  * 疫苗硬校验不满足时：按钮置灰（保留晚数总价文案）+ 按钮上方红条
  * 「{宠物}的疫苗将于 X 到期，请先补录 ▸」（点击跳 /philia/pets 补录）；
  * 无疫苗记录时红条文案为「还没有疫苗有效期记录」。
- * fixed 吸底于 TabBar（56px）上方；页面底部需留 padding（单屏页 pb-36）。
+ * fixed 落底 bottom: env(safe-area-inset-bottom)（B4-R1：单屏页隐藏 TabBar）；
+ * 页面底部需留 padding（单屏页 pb-36）。
  */
 
 import { Link } from 'react-router-dom';
@@ -40,7 +41,7 @@ export default function BoardingConfirmBar({
 
   return (
     <div
-      className="pointer-events-none fixed inset-x-0 bottom-[calc(56px+env(safe-area-inset-bottom))] z-sticky"
+      className="pointer-events-none fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-sticky"
       data-testid="bs-confirm-bar"
     >
       <div className="mx-auto max-w-lg bg-gradient-to-t from-canvas via-canvas to-transparent px-4 pb-3 pt-6">

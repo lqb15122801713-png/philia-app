@@ -59,6 +59,9 @@ function ProtectedRoutes() {
 export default function App() {
   const { pathname } = useLocation()
   const isDevLogin = pathname === '/dev-login'
+  // B4-R1：洗护/寄养单屏为沉浸式下单流，隐藏底部 TabBar（凸起中按钮会遮挡吸底确认条）；
+  // 旧向导 /wizard、成功页 /booking/success 及其余页面维持现状不变。
+  const isBookingSingle = pathname === '/booking/grooming' || pathname === '/booking/boarding'
 
   return (
     <div className="min-h-screen bg-canvas text-ink">
@@ -76,7 +79,7 @@ export default function App() {
           />
         </Routes>
       </main>
-      {!isDevLogin && <TabBar />}
+      {!isDevLogin && !isBookingSingle && <TabBar />}
     </div>
   )
 }
