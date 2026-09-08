@@ -195,9 +195,6 @@ async function main() {
       { storeId: store.id, type: 'grooming', name: '深层清洁 SPA', durationMin: 120, priceFen: 25800 },
       { storeId: store.id, type: 'grooming', name: '快速洗+吹干', durationMin: 45, priceFen: 6800 },
       { storeId: store.id, type: 'boarding', name: '标准间寄养（犬）', boardingRoomType: '标准间', roomCount: 2, priceFen: 19900 },
-      { storeId: store.id, type: 'boarding', name: '豪华间寄养（犬）', boardingRoomType: '豪华间', roomCount: 1, priceFen: 29900 },
-      { storeId: store.id, type: 'boarding', name: '猫专属间寄养', boardingRoomType: '猫别墅', roomCount: 2, priceFen: 25900 },
-      { storeId: store.id, type: 'boarding', name: '豪华猫别墅寄养', boardingRoomType: '豪华猫别墅', roomCount: 1, priceFen: 35900 },
     ]);
 
     /* ---- 商品：主粮/零食/玩具/清洁（images 用 /products/*.svg 占位图） ---- */
