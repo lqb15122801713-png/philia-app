@@ -14,7 +14,7 @@ import { fenToYuan } from '../components/mall/format';
 import { useMallToast } from '../components/mall/MallToast';
 import ProductImage from '../components/mall/ProductImage';
 
-/** 圆形勾选钮：品牌色实心圆 + 白 ✓（设计手册状态勾选口径） */
+/** 圆形勾选钮：品牌色实心圆 + 深棕墨 ✓（v1.1 冻结 on-primary 语义） */
 function CheckDot({ checked, onToggle, label }: { checked: boolean; onToggle: () => void; label: string }) {
   return (
     <button
@@ -27,7 +27,7 @@ function CheckDot({ checked, onToggle, label }: { checked: boolean; onToggle: ()
         checked ? 'bg-brand-primary' : 'border-[1.5px] border-line-strong bg-card'
       }`}
     >
-      {checked ? <Check className="h-3.5 w-3.5 text-white" strokeWidth={2.5} /> : null}
+      {checked ? <Check className="h-3.5 w-3.5 text-ink" strokeWidth={2.5} /> : null}
     </button>
   );
 }
@@ -127,7 +127,7 @@ function CartInner() {
           <p className="mt-1 text-body text-ink-secondary">给毛孩子挑点好吃的、好玩的吧</p>
           <Link
             to="/mall"
-            className="mt-6 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-white transition-transform duration-120 ease-philia-spring active:scale-92"
+            className="mt-6 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             去逛逛
           </Link>
@@ -164,7 +164,7 @@ function CartInner() {
                 type="button"
                 disabled={cart.checkedItems.length === 0}
                 onClick={handleCheckout}
-                className="h-11 rounded-full bg-philia-gradient px-7 text-body font-medium text-white shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
+                className="h-11 rounded-full bg-philia-gradient px-7 text-body font-medium text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
               >
                 去结算{cart.checkedItems.length > 0 ? `（${cart.checkedItems.reduce((n, it) => n + it.qty, 0)}）` : ''}
               </button>

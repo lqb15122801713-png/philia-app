@@ -68,7 +68,7 @@ export default function BookingPage() {
           {meta.points.map((p) => (
             <li key={p} className="flex items-center gap-2 text-caption text-ink-secondary">
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-success-light">
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#649160" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-success-deep" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 6 9 17l-5-5" />
                 </svg>
               </span>
@@ -78,7 +78,7 @@ export default function BookingPage() {
         </ul>
         <Link
           to={`${meta.to}${storeQuery}`}
-          className="mt-5 flex h-12 items-center justify-center rounded-full bg-philia-gradient text-body font-semibold text-white shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="mt-5 flex h-12 items-center justify-center rounded-full bg-philia-gradient text-body font-semibold text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           {meta.cta}
         </Link>

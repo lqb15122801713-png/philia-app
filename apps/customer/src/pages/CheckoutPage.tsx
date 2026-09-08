@@ -155,7 +155,7 @@ function CheckoutInner() {
         <div className="mt-8 flex gap-3">
           <Link
             to="/mall/orders"
-            className="flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-white transition-transform duration-120 ease-philia-spring active:scale-92"
+            className="flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             查看订单
           </Link>
@@ -180,7 +180,7 @@ function CheckoutInner() {
         <div className="mt-6 flex gap-3">
           <Link
             to="/mall"
-            className="flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-white transition-transform duration-120 ease-philia-spring active:scale-92"
+            className="flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             去逛逛
           </Link>
@@ -289,7 +289,7 @@ function CheckoutInner() {
             type="button"
             disabled={createOrderM.isPending}
             onClick={handleSubmit}
-            className="h-11 rounded-full bg-philia-gradient px-8 text-body font-medium text-white shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
+            className="h-11 rounded-full bg-philia-gradient px-8 text-body font-medium text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
           >
             {createOrderM.isPending ? '提交中…' : '提交订单'}
           </button>
