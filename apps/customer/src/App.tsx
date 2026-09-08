@@ -8,9 +8,11 @@ import BookingBoardingPage from './pages/BookingBoardingPage'
 import BookingGroomingPage from './pages/BookingGroomingPage'
 import BookingPage from './pages/BookingPage'
 import BookingSuccessPage from './pages/BookingSuccessPage'
+import BoardingSinglePage from './pages/BoardingSinglePage'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import DevLoginPage from './pages/DevLoginPage'
+import GroomingSinglePage from './pages/GroomingSinglePage'
 import HomePage from './pages/HomePage'
 import MallOrdersPage from './pages/MallOrdersPage'
 import MallPage from './pages/MallPage'
@@ -38,8 +40,12 @@ function ProtectedRoutes() {
       <Route path="/philia/member" element={<MemberPage />} />
       <Route path="/philia/moments" element={<MomentsPage />} />
       <Route path="/booking" element={<BookingPage />} />
-      <Route path="/booking/grooming" element={<BookingGroomingPage />} />
-      <Route path="/booking/boarding" element={<BookingBoardingPage />} />
+      {/* B4-1：默认路由换新单屏；旧 4 屏向导保留隐藏路由 /wizard（回滚保障，下批次再删） */}
+      <Route path="/booking/grooming" element={<GroomingSinglePage />} />
+      <Route path="/booking/grooming/wizard" element={<BookingGroomingPage />} />
+      {/* B4-2：寄养同上——默认路由换单屏，旧向导保留隐藏路由 /booking/boarding/wizard */}
+      <Route path="/booking/boarding" element={<BoardingSinglePage />} />
+      <Route path="/booking/boarding/wizard" element={<BookingBoardingPage />} />
       <Route path="/booking/success" element={<BookingSuccessPage />} />
       <Route path="/appointments" element={<AppointmentsPage />} />
       <Route path="/appointments/:id" element={<AppointmentDetailPage />} />
@@ -53,6 +59,9 @@ function ProtectedRoutes() {
 export default function App() {
   const { pathname } = useLocation()
   const isDevLogin = pathname === '/dev-login'
+  // B4-R1：洗护/寄养单屏为沉浸式下单流，隐藏底部 TabBar（凸起中按钮会遮挡吸底确认条）；
+  // 旧向导 /wizard、成功页 /booking/success 及其余页面维持现状不变。
+  const isBookingSingle = pathname === '/booking/grooming' || pathname === '/booking/boarding'
 
   return (
     <div className="min-h-screen bg-canvas text-ink">
@@ -70,7 +79,7 @@ export default function App() {
           />
         </Routes>
       </main>
-      {!isDevLogin && <TabBar />}
+      {!isDevLogin && !isBookingSingle && <TabBar />}
     </div>
   )
 }
