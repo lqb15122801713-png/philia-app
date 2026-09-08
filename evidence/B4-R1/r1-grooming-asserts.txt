@@ -1,0 +1,8 @@
+PASS  dev-login 种子客户  — HTTP 200
+prep {"petId":"01M20EDD8GXKWWCB3BGNA8V87Z","storeId":"01M20EDD8FQ5K9X22WACHWSXN4","serviceId":"01M20EDD8GHGYFMHF2ZKE4T9D1"}
+picked slot: 09:00
+PASS  单屏页无 TabBar
+PASS  确认条可点态  — state=ready
+PASS  elementFromPoint(中央)===确认按钮  — {"center":true,"text":"确认预约 · ¥88 · 约 60 分钟","top":784,"bottom":832,"vh":844}
+PASS  中央点击后落成功页  — /booking/success
+PASS  成功页 TabBar 保留（现状不动）
