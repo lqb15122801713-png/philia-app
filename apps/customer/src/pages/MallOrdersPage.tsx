@@ -162,7 +162,7 @@ function OrderCard({
           <button
             type="button"
             onClick={() => onContinuePay(order)}
-            className="h-9 rounded-full bg-philia-gradient px-6 text-body font-medium text-white shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92"
+            className="h-9 rounded-full bg-philia-gradient px-6 text-body font-medium text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             继续支付
           </button>
@@ -174,7 +174,7 @@ function OrderCard({
             type="button"
             disabled={receiving}
             onClick={() => onReceive(order)}
-            className="h-9 rounded-full bg-brand-primary px-6 text-body font-medium text-white transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
+            className="h-9 rounded-full bg-brand-primary px-6 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
           >
             确认收货
           </button>
@@ -280,7 +280,7 @@ export default function MallOrdersPage() {
           <button
             type="button"
             onClick={() => void ordersQ.refetch()}
-            className="mt-4 rounded-full bg-brand-primary px-6 py-2.5 text-body text-white transition-transform duration-120 ease-philia-spring active:scale-92"
+            className="mt-4 rounded-full bg-brand-primary px-6 py-2.5 text-body text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             重新加载
           </button>
@@ -293,7 +293,7 @@ export default function MallOrdersPage() {
           <p className="mt-1 text-body text-ink-secondary">去商城给毛孩子挑点好物吧</p>
           <Link
             to="/mall"
-            className="mt-6 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-white transition-transform duration-120 ease-philia-spring active:scale-92"
+            className="mt-6 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             去逛逛
           </Link>
@@ -311,7 +311,7 @@ export default function MallOrdersPage() {
                   onClick={() => setTab(t.key)}
                   className={`shrink-0 rounded-full px-4 py-2 text-body transition ${
                     tab === t.key
-                      ? 'bg-brand-primary font-semibold text-white'
+                      ? 'bg-brand-primary font-semibold text-ink'
                       : 'bg-card text-ink-secondary shadow-card'
                   }`}
                 >

@@ -255,7 +255,7 @@ export default function GroomingSinglePage() {
           aria-label="返回"
           className="flex h-9 w-9 items-center justify-center rounded-full bg-card shadow-card active:scale-92"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A7A6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ink-secondary" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m15 18-6-6 6-6" />
           </svg>
         </button>
