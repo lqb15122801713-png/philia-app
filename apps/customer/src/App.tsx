@@ -11,6 +11,7 @@ import BookingSuccessPage from './pages/BookingSuccessPage'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import DevLoginPage from './pages/DevLoginPage'
+import GroomingSinglePage from './pages/GroomingSinglePage'
 import HomePage from './pages/HomePage'
 import MallOrdersPage from './pages/MallOrdersPage'
 import MallPage from './pages/MallPage'
@@ -38,7 +39,9 @@ function ProtectedRoutes() {
       <Route path="/philia/member" element={<MemberPage />} />
       <Route path="/philia/moments" element={<MomentsPage />} />
       <Route path="/booking" element={<BookingPage />} />
-      <Route path="/booking/grooming" element={<BookingGroomingPage />} />
+      {/* B4-1：默认路由换新单屏；旧 4 屏向导保留隐藏路由 /wizard（回滚保障，下批次再删） */}
+      <Route path="/booking/grooming" element={<GroomingSinglePage />} />
+      <Route path="/booking/grooming/wizard" element={<BookingGroomingPage />} />
       <Route path="/booking/boarding" element={<BookingBoardingPage />} />
       <Route path="/booking/success" element={<BookingSuccessPage />} />
       <Route path="/appointments" element={<AppointmentsPage />} />

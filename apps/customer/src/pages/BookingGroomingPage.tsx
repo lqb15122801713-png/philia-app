@@ -1,4 +1,8 @@
 /**
+ * 【批次 4 起为旧版向导】B4-1 后默认路由 /booking/grooming 已切换为单屏页
+ * （GroomingSinglePage）；本文件整体保留于隐藏路由 /booking/grooming/wizard
+ * 作回滚保障，验收通过后下批次再删。以下历史注释保留原样。
+ *
  * 洗护预约（T2.2 · ≤4 屏硬指标）：
  *   屏1 选服务项（getWithServices 的 grooming 卡：名称/时长/价格）
  *   屏2 选门店（listNearby 卡；切换联动刷新服务与槽位）
