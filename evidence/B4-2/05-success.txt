@@ -1,0 +1,5 @@
+{
+  "url": "/booking/success?aid=01M20EZEDG0T0GYMJPP1GHP2HW",
+  "onSuccess": true,
+  "bodyHasCode": true
+}

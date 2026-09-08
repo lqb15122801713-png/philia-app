@@ -1,0 +1,20 @@
+{
+  "open": true,
+  "isBottomSheet": true,
+  "months": [
+    "bs-month-2026-09",
+    "bs-month-2026-10"
+  ],
+  "phaseCheckinActive": "true",
+  "hint": "点选入住日期 · 选定两日自动应用",
+  "noConfirmButton": true,
+  "dayCount": 61,
+  "todayDisabled": [
+    "bs-day-2026-09-08"
+  ],
+  "sampleDisabled": [
+    "bs-day-2026-09-01",
+    "bs-day-2026-09-02",
+    "bs-day-2026-09-03"
+  ]
+}

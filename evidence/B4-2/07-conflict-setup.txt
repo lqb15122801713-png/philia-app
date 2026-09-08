@@ -1,0 +1,8 @@
+{
+  "storeId": "01M20EDD8FQ5K9X22WACHWSXN4",
+  "serviceId": "01M20EDD8G2J911Q9PMP8EAF64",
+  "petId": "01M20EDD8GXKWWCB3BGNA8V87Z",
+  "r1ok": true,
+  "r2ok": true,
+  "r3conflict": "该房型 2026-09-15 晚已订满，请调整入住/退房日期"
+}

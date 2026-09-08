@@ -1,0 +1,9 @@
+B4-5 cdp-home-check  mode=home tag=state2-card-present expectCard=yes
+time=2026-09-08T12:40:00.593Z
+PASS  dev-login 种子客户登录  — HTTP 200
+PASS  首页渲染（推荐服务模块出现）
+PASS  首页既有模块在位（品牌头/附近好店/推荐服务）  — {"stores":true,"services":true,"banner":true}
+PASS  提醒卡渲染（data-testid=grooming-reminder）
+PASS  卡片文案含「该洗澡啦 ▸ 一键预约」  — 距上次洗护已 20 天旺财该洗澡啦 ▸ 一键预约
+PASS  卡片链接带三参预填（serviceId+storeId+petId）  — /booking/grooming?serviceId=01M20EDD8GHGYFMHF2ZKE4T9D1&storeId=01M20EDD8FQ5K9X22WACHWSXN4&petId=01M20EDD8GXKWWCB3BGNA8V87Z
+SUMMARY: ALL PASS

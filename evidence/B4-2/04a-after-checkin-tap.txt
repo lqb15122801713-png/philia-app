@@ -1,0 +1,5 @@
+{
+  "sheetStillOpen": true,
+  "phaseNow": "true",
+  "checkinChip": "入住\n9月9日 周三"
+}

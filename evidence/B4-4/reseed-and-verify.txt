@@ -1,0 +1,27 @@
+
+[seed] 开始（先清空业务表，保证幂等）…
+[seed] 完成，各表行数：
+  users                  5
+  user_roles             5
+  stores                 1
+  staff                  3
+  staff_invites          0
+  pets                   2
+  services               7
+  appointments           0
+  store_slots            154
+  boarding_slots         0
+  appointment_steps      0
+  step_photos            0
+  boarding_stays         0
+  boarding_daily_logs    0
+  products               10
+  orders                 0
+  push_subscriptions     0
+  event_outbox           0
+  notifications          0
+
+=== verify ===
+boarding services rows: 1
+  {"name":"标准间寄养（犬）","roomType":"标准间","roomCount":2,"priceFen":19900}
+PASS: 仅剩 1 条寄养房型（标准间寄养（犬）roomCount=2）

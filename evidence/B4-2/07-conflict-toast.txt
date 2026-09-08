@@ -1,0 +1,7 @@
+{
+  "toastShown": true,
+  "toastText": "该房型 2026-09-15 晚已订满，请调整入住/退房日期",
+  "stillSingle": true,
+  "url": "/booking/boarding",
+  "remainAfterRefetch": "标准间\n标准间寄养（犬）\n剩余 0 间\n¥199\n/ 晚"
+}

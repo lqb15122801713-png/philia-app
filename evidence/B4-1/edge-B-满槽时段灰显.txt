@@ -1,0 +1,3 @@
+明日 09:00 已被 2 单（capacity=2）打满: 01M20CMJTCQSMH949W3N0TEZAR, 01M20CMJTMQ4WFMT5BP8MHS8S7
+gs-slot-09:00: {"avail":"false","disabled":true,"cls":"rounded-input py-2.5 text-center font-number text-body transition cursor-not-allowed bg-sunken text-ink-placeholder line-through"}
+灰显槽数量: 3

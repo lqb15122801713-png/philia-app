@@ -1,0 +1,8 @@
+{
+  "sheetOpen": true,
+  "petOptions": [
+    "",
+    "🐶",
+    "🐱"
+  ]
+}

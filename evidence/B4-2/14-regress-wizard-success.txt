@@ -1,0 +1,4 @@
+{
+  "url": "/booking/success?aid=01M20FDY59VECCMZEH27ZJVAYR",
+  "success": true
+}

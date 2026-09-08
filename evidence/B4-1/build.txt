@@ -1,0 +1,25 @@
+# B4-1 构建与冒烟回归
+
+时间：2026-09-08 · 分支 feat/b4-booking-redesign
+
+## customer npm run build（tsc -b && vite build）
+
+exit code: 0（零错误；仅既有 chunk >500kB 体积提示，与本次改动无关）
+完整日志末段：
+
+```
+✓ built in 6.41s
+PWA v1.3.0
+precache  7 entries (785.39 KiB)
+```
+
+## appointment.smoke（服务端零改动硬证明）
+
+运行：cd server && npx tsx src/routers/__tests__/appointment.smoke.ts
+exit code: 0，输出末行「全部冒烟验证通过 ✅」
+（其后 EPERM 为 Windows 临时目录清理告警，发生在断言全过之后，不影响 exit code）
+
+## 向导回归（regression.mjs，4/4 通过）
+
+- 旧 4 屏向导 /booking/grooming/wizard：步骤条 4 步渲染、屏1→屏3→屏4 逐步走通（截图 regression-wizard-屏1/屏3/屏4.png）
+- 寄养向导 /booking/boarding：正常打开，文件零改动（git status 无该行；截图 regression-boarding.png）

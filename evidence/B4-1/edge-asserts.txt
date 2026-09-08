@@ -1,0 +1,17 @@
+PASS  A. 空宠物客户 dev-login  — HTTP 200
+PASS  A. 「先建档」岔路卡渲染（还没有宠物档案/先建立宠物档案）  — 还没有宠物档案预约前需要先为毛孩子建立档案先建立宠物档案随便看看
+PASS  A. 空宠物确认按钮置灰点名「请先建立宠物档案」  — 请先建立宠物档案
+PASS  B. 已建 2 单把明日 09:00 打满（capacity=2）  — 01M20CMJTCQSMH949W3N0TEZAR,01M20CMJTMQ4WFMT5BP8MHS8S7
+PASS  B. 满槽 09:00 灰显禁用（data-available=false）  — {"avail":"false","disabled":true,"cls":"rounded-input py-2.5 text-center font-number text-body transition cursor-not-allowed bg-sunken text-ink-placeholder line-through"}
+PASS  B. 灰显槽存在（含满槽）  — grey=3
+PASS  C1. 换店弹底部半屏（不跳页）  — {"shown":true,"options":1,"text":"选择门店菲丽亚宠物·示例店当前选择杭州市西湖区文三路 100"}
+PASS  C2. 「更多服务 ▸」展开全部 6 项  — chips=6
+PASS  C2. 收款方式展开：两行单选  — {"payOptions":2}
+PASS  C2. 有可用次卡（余 8 次）→ 次卡扣次可选且显示余量  — 次卡扣次剩余 8 次 · 预约确认后扣 1 次
+PASS  C2. 有可用次卡 → 单行选择器默认次卡并显示余量（设计方案）  — 收款次卡扣次 · 余 8 次 ▾
+PASS  C2. 添加备注展开 textarea
+PASS  C2. 指定洗护师展开横滑卡（默认随缘）
+PASS  C3. 整月日历展开（7 天窗口内可点）  — {"shown":true,"months":1,"inWindow":7}
+PASS  C4. 提交前为可点态  — ready
+PASS  C4. 提交中态「提交中…」禁用  — {"state":"submitting","text":"提交中…","disabled":true}
+PASS  C4. 提交成功进现有成功页 /booking/success?aid=  — /booking/success?aid=01M20CMVQRTM5S119Y3VZGRP3T

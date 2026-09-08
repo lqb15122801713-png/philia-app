@@ -1,0 +1,17 @@
+PASS  ① 下单成功写入 localStorage 记忆（storeId/serviceId/petId 三参齐）  — {"storeId":"01M1XYKBJFPDAKXQM3EVAMG5N2","serviceId":"01M1XYKBJHJ7XWN7BH5WTKV53N","petId":"01M1XYKBJGYJ0NP9941XX01JWE"}
+PASS  ① 记忆预填：服务 chip 选中 = 记忆 serviceId  — 01M1XYKBJHJ7XWN7BH5WTKV53N vs 01M1XYKBJHJ7XWN7BH5WTKV53N
+PASS  ① 记忆预填：宠物卡已选（旺财）  — 🐶旺财狗狗 · 金毛寻回犬上次洗护 9.8 · 基础洗护（
+PASS  ① 记忆预填：门店 = 记忆门店（菲丽亚宠物·示例店）  — 菲丽亚宠物·示例店杭州市西湖区文三路 100 号更换 ▸
+PASS  ① 预填已齐 → 按钮仅缺时间（「请选择时间」）  — 请选择时间
+PASS  ② URL 优先：服务选中 = URL 的 基础洗护（中型犬）（非记忆项）  — 基础洗护（中型犬）约 90 分钟 · ¥128
+PASS  ② URL 优先：宠物选中 = URL 的 咪咪（非记忆宠物）  — 🐱咪咪猫咪 · 英国短毛猫4.2kg · 英国短毛猫更换 
+PASS  ③ 无历史：门店 = 最近门店（listNearby 第一家）  — 菲丽亚宠物·示例店杭州市西湖区文三路 100 号更换 ▸
+PASS  ③ 无历史：服务 = 该店首个在架洗护项（基础洗护（小型犬））  — 基础洗护（小型犬）约 60 分钟 · ¥88
+PASS  ③ 无历史：多宠物不替选（「请选择宠物」）  — 🐾请选择宠物点按选择要洗护的毛孩子选择 ▸
+PASS  ③ 临时用户登录  — HTTP 200
+PASS  ③ 临时用户恰有 1 只宠物（唯一宠物直选前提）  — pets=0
+PASS  ③ 无历史：唯一宠物直选（宠物卡显示「独苗」）  — 🐶独苗狗狗 · 柯基12kg · 柯基更换 ▸
+PASS  ④ 存在 completed 洗护单（再次预约入口前提）  — 01M1Y81JT97VXWNZP3W921QFWQ
+PASS  ④ 完成单「再次预约」落点 = 新单屏 /booking/grooming（带三参预填）  — {"path":"/booking/grooming","search":"?serviceId=01M1XYKBJHJ7XWN7BH5WTKV53N&storeId=01M1XYKBJFPDAKXQM3EVAMG5N2&petId=01M1XYKBJGYJ0NP9941XX01
+PASS  ④ 落点预填生效（服务已选 + 宠物已选）  — {"chip":true,"pet":"🐶旺财狗狗 · 金毛寻回犬上次洗护 9"}
+PASS  ④ Philia 中按钮长按一键预约落点 = 新单屏（交互不变）  — {"path":"/booking/grooming","single":true}

@@ -1,0 +1,5 @@
+{
+  "panelShown": true,
+  "hasCheckinGrid": true,
+  "twoPhasePicker": true
+}

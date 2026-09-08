@@ -1,0 +1,8 @@
+{
+  "url": "/booking/grooming",
+  "isGroomingSingle": true,
+  "petCard": true,
+  "storeLine": true,
+  "confirmBar": true,
+  "extras": true
+}

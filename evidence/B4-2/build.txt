@@ -1,0 +1,29 @@
+=== customer build ===
+dist/assets/index-DRqUSJ6z.css             94.79 kB │ gzip:  15.77 kB
+dist/assets/index-D17U8c44.js             729.89 kB │ gzip: 205.00 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 3.46s
+
+PWA v1.3.0
+mode      generateSW
+precache  7 entries (806.21 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js
+
+=== appointment.smoke ===
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\routers\__tests__\appointment.smoke.ts:1502:5) {
+  errno: 1,
+  code: 'EPERM',
+  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-appt-smoke-03M3p4',
+  syscall: 'rm'
+}
+
+全部冒烟验证通过 ✅
+
+=== smoke 复跑显式退出码 ===
+appointment.smoke exit=0（复跑确认；EPERM 为临时目录收尾清理的 Windows 已知抖动，脚本 catch 后不影响断言与退出码）

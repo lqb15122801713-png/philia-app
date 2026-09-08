@@ -1,0 +1,10 @@
+{
+  "vaccineBarShown": true,
+  "vaccineBarText": "旺财的疫苗将于 2026-09-10 到期，请先补录\n▸",
+  "vaccineBarHref": "/philia/pets",
+  "confirmState": "disabled",
+  "blockReason": "vaccine",
+  "confirmDisabled": true,
+  "confirmLabel": "确认预约 · 共 2 晚 ¥398",
+  "nightsLine": "共 2 晚 · 单晚 ¥199"
+}

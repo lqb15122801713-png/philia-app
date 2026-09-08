@@ -1,0 +1,8 @@
+localStorage philia:lastBooking = {"storeId":"01M1XYKBJFPDAKXQM3EVAMG5N2","serviceId":"01M1XYKBJHJ7XWN7BH5WTKV53N","petId":"01M1XYKBJGYJ0NP9941XX01JWE"}
+重进单屏: {
+  "petText": "🐶旺财狗狗 · 金毛寻回犬上次洗护 9.8 · 基础洗护（小型犬）更换 ▸",
+  "chipId": "01M1XYKBJHJ7XWN7BH5WTKV53N",
+  "chipText": "基础洗护（小型犬）约 60 分钟 · ¥88",
+  "storeText": "菲丽亚宠物·示例店杭州市西湖区文三路 100 号更换 ▸",
+  "btn": "请选择时间"
+}

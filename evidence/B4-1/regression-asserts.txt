@@ -1,0 +1,4 @@
+PASS  旧向导 4 步步骤条渲染（/wizard 路由）  — 选服务→2→选门店→3→选时间→4→确认
+PASS  旧向导屏3（选员工+选时间）可达
+PASS  旧向导屏4（确认）可达，全链走通
+PASS  寄养向导 /booking/boarding 正常打开（本任务未动）  — {"hasContent":true,"path":"/booking/boarding"}

@@ -1,0 +1,4 @@
+{
+  "path": "/booking/grooming",
+  "single": true
+}

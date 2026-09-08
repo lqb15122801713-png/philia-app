@@ -1,0 +1,16 @@
+{
+  "url": "/booking/boarding",
+  "isSinglePage": true,
+  "noStepIndicator": true,
+  "petCardShowsSelect": true,
+  "roomReadonly": true,
+  "roomReadonlyText": "标准间\n标准间寄养（犬）\n今晚剩余 2 间\n¥199\n/ 晚",
+  "roomReadonlyIsNotButton": true,
+  "storeLine": "菲丽亚宠物·示例店\n杭州市西湖区文三路 100 号\n更换 ▸",
+  "confirmState": "disabled",
+  "confirmLabel": "请选择宠物",
+  "confirmDisabled": true,
+  "hasNoPaymentSelector": true,
+  "checkinCell": "入住\n请选择",
+  "nightsLine": "点按选择入住与退房日期（退房须晚于入住）"
+}

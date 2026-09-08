@@ -1,0 +1,2 @@
+提交中按钮: {"state":"submitting","text":"提交中…","disabled":true}
+（Network 节流 2500ms 截取）

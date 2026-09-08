@@ -1,0 +1,10 @@
+{
+  "sheetAutoClosed": true,
+  "checkinCell": "入住\n9月9日周三",
+  "checkoutCell": "退房\n9月11日周五",
+  "nightsLine": "共 2 晚 · 单晚 ¥199",
+  "confirmState": "ready",
+  "confirmLabel": "确认预约 · 共 2 晚 ¥398",
+  "roomStillReadonly": true,
+  "roomRemainText": "标准间\n标准间寄养（犬）\n剩余 2 间\n¥199\n/ 晚"
+}
