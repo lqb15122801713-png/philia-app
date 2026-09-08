@@ -91,7 +91,7 @@ export default function SlotPicker({
               onClick={() => setDayIdx(i)}
               className={`shrink-0 rounded-full px-3.5 py-2 text-caption transition ${
                 i === dayIdx
-                  ? 'bg-brand-primary font-semibold text-white'
+                  ? 'bg-brand-primary font-semibold text-ink'
                   : d.closed || !hasAny
                     ? 'bg-sunken text-ink-placeholder'
                     : 'bg-card text-ink shadow-card'
@@ -129,7 +129,7 @@ export default function SlotPicker({
                   onClick={() => onSelect(t)}
                   className={`rounded-input py-2.5 text-center font-number text-body transition ${
                     active
-                      ? 'bg-brand-primary font-semibold text-white shadow-card'
+                      ? 'bg-brand-primary font-semibold text-ink shadow-card'
                       : ok
                         ? 'bg-card text-ink shadow-card active:scale-95'
                         : 'cursor-not-allowed bg-sunken text-ink-placeholder line-through'

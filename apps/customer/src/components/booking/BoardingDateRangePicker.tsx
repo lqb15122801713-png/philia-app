@@ -83,7 +83,7 @@ export default function BoardingDateRangePicker({
       onClick={onClick}
       className={`rounded-input px-1 py-2 text-center transition ${
         active
-          ? 'bg-brand-primary font-semibold text-white shadow-card'
+          ? 'bg-brand-primary font-semibold text-ink shadow-card'
           : disabled
             ? 'cursor-not-allowed bg-sunken text-ink-placeholder'
             : 'bg-card text-ink shadow-card active:scale-95'
