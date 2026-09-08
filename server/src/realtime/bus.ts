@@ -131,6 +131,9 @@ function notificationCopy(
     }
     case EventType.AppointmentCompleted:
       return { title: '服务已完成', body: `${pet}服务已完成，欢迎评价` };
+    case EventType.AppointmentReopened:
+      // v1.1-b3 B3-1：completed 单打标重开——预约回 in_service，目标步待重拍
+      return { title: '预约已重新开启', body: `${pet}「${step}」被商家打标，服务已重新开启等待重拍` };
     case EventType.AppointmentCancelRequested:
       return { title: '取消申请', body: `客户申请取消${pet}预约，请尽快处理` };
     case EventType.AppointmentCancelled:

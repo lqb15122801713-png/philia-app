@@ -236,6 +236,8 @@ export const services = sqliteTable('services', {
   priceFen: integer('price_fen').notNull(),
   /** 寄养房型（仅 boarding 类使用，如 标准间/豪华间） */
   boardingRoomType: text('boarding_room_type'),
+  /** 寄养房型的房间数（仅 boarding 类使用；NULL 时按默认 1 间计，见 boarding_slots） */
+  roomCount: integer('room_count'),
   /** 是否上架 */
   active: integer('active', { mode: 'boolean' }).notNull().default(true),
   ...auditColumns,
@@ -289,6 +291,16 @@ export const appointments = sqliteTable('appointments', {
   paidFen: integer('paid_fen'),
   /** 备注 */
   note: text('note'),
+  /**
+   * 取消原因（v1.1-b3 B3-3 起落地，B3-5 W-14 客户取消原因复用本列）。
+   * NULL = 未取消或取消时未填写原因。
+   */
+  cancelReason: text('cancel_reason'),
+  /**
+   * 取消来源标记，取值：merchant_reject（B3-3 商家拒单） | customer（客户自助取消，
+   * W-14 起填） | merchant_review（商家批准 ≤4h 取消申请）。NULL = 未取消/历史数据。
+   */
+  cancelSource: text('cancel_source'),
   /** 到店签到时间 */
   checkedInAt: integer('checked_in_at', { mode: 'timestamp' }),
   /** 服务完成时间 */
@@ -318,6 +330,37 @@ export const storeSlots = sqliteTable(
     ...auditColumns,
   },
   (t) => [uniqueIndex('uq_store_slots_store_start').on(t.storeId, t.slotStart)],
+);
+
+/**
+ * 寄养房型晚槽表（v1.1-b3 B3-2 · A-P1-11 红标）：寄养容量按「晚」占用。
+ * 每房型（service_id）× 每住宿晚（night_date，本地日界 'YYYY-MM-DD'，取入住日
+ * 到退房日前一日）一行；booked_count >= capacity 即满房，建单事务内逐晚校验占用，
+ * 取消/拒单逐晚释放（appointment.releaseBoardingSlots）。
+ * 与 store_slots（洗护 30min 时段槽）解耦：寄养不再占用洗护时段槽。
+ * 行按需创建（该晚首单 UPSERT），capacity 快照自 services.room_count（空默认 1 间）。
+ */
+export const boardingSlots = sqliteTable(
+  'boarding_slots',
+  {
+    id: id(),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 房型服务项 ID -> services.id */
+    serviceId: text('service_id')
+      .notNull()
+      .references(() => services.id),
+    /** 住宿晚（本地日界，ISO 日期 'YYYY-MM-DD'） */
+    nightDate: text('night_date').notNull(),
+    /** 该房型房间数（容量快照） */
+    capacity: integer('capacity').notNull(),
+    /** 已预约数 */
+    bookedCount: integer('booked_count').notNull().default(0),
+    ...auditColumns,
+  },
+  (t) => [uniqueIndex('uq_boarding_slots_store_service_night').on(t.storeId, t.serviceId, t.nightDate)],
 );
 
 /** 服务步骤表（洗护六步流程，寄养可复用部分步骤） */

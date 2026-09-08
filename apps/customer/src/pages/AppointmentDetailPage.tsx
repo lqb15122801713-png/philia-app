@@ -5,18 +5,22 @@
  * - 取消规则：>4h confirm 后直接 cancel（outcome=cancelled）；≤4h 提示「需商家审核」，
  *   提交后转 cancel_requested 展示；in_service/in_boarding 禁用自助取消
  *   （「服务中，如需取消请联系门店」+ tel: 联系门店）；
- * - 改期（v1.1-b2 B2-6）：pending/confirmed 且距开始 >4h 的洗护单显示「改期」按钮，
- *   展开复用预约向导的 SlotPicker 选新时段（服务/宠物沿用原单）→ appointment.reschedule
- *   → toast「改期已提交，等待商家重新确认」（状态回退 pending，重新走商家确认流）；
+ * - 改期（v1.1-b2 B2-6 / v1.1-b3 B3-4）：pending/confirmed 且距开始 >4h 的单显示「改期」按钮
+ *   （B3-4 起对寄养开放；寄养以入住日首晚计 4h 阈值）。
+ *   洗护：展开复用预约向导的 SlotPicker 选新时段；寄养：复用 B2-5 两阶段日期组件
+ *   （BoardingDateRangePicker）重选入住/退房（预填当前区间）→ appointment.reschedule
+ *   （寄养必传 scheduledStart+scheduledEnd）→ toast「改期已提交，等待商家重新确认」
+ *   （状态回退 pending，重新走商家确认流）；
  * - completed：评价入口（星级 + 文字 → appointment.review；已评价则展示）；
  * - in_service/in_boarding：显著入口跳 /appointments/:id/live。
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { usePhiliaClient } from '@philia/shared';
+import { EventType, getApiBase, useEventSource, useMe, usePhiliaClient, type EventEnvelope } from '@philia/shared';
 import BookingCode from '@/components/booking/BookingCode';
+import BoardingDateRangePicker, { checkinAt } from '@/components/booking/BoardingDateRangePicker';
 import SlotPicker from '@/components/booking/SlotPicker';
 import { ErrorState } from '@/components/home/common';
 import { friendlyError, useToast } from '@/components/booking/Toast';
@@ -34,6 +38,25 @@ import {
 
 /** 客户免费取消阈值（秒）：开始前 4 小时（与 server CANCEL_FREE_BEFORE_SEC 同步） */
 const CANCEL_FREE_BEFORE_SEC = 4 * 3600;
+
+/** v1.1-b3 B3-5（W-14）：取消原因快捷选项（选填，可再补充自由文本） */
+const CANCEL_REASON_CHIPS = ['行程有变', '时间不合适', '价格因素', '其他'] as const;
+
+const CLIENT_ID_KEY = 'philia.sseClientId';
+
+/** SSE clientId：localStorage 持久化（契约 · push.subscribe 与 /api/events 共用，同 live 页口径） */
+function getClientId(): string {
+  try {
+    let id = window.localStorage.getItem(CLIENT_ID_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      window.localStorage.setItem(CLIENT_ID_KEY, id);
+    }
+    return id;
+  } catch {
+    return crypto.randomUUID();
+  }
+}
 
 /** 门店导航外链（高德 / 腾讯 URI；有坐标用坐标，无坐标按地址关键词） */
 function navLinks(store: { name: string; address: string | null; lat: number | null; lng: number | null }) {
@@ -95,14 +118,20 @@ export default function AppointmentDetailPage() {
   });
 
   const [confirmingCancel, setConfirmingCancel] = useState(false);
+  // B3-5（W-14）：取消原因——chips 单选（选填）+ 自由文本；合成后随 cancel 提交
+  const [cancelChip, setCancelChip] = useState<string | null>(null);
+  const [cancelNote, setCancelNote] = useState('');
   // v1.1-b2 B2-6：改期面板状态 + 新选时段
   const [rescheduling, setRescheduling] = useState(false);
   const [newSlot, setNewSlot] = useState<Date | null>(null);
+  // v1.1-b3 B3-4：寄养改期——重选入住/退房日（打开面板时预填当前区间）
+  const [newCheckin, setNewCheckin] = useState<Date | null>(null);
+  const [newCheckout, setNewCheckout] = useState<Date | null>(null);
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
 
-  // 改期槽位数据源：与预约向导同源（store.getWithServices 带当前 serviceId，
-  // 槽位按该服务时长过滤连续槽），展开改期面板时才拉取
+  // 改期槽位数据源（仅洗护）：与预约向导同源（store.getWithServices 带当前 serviceId，
+  // 槽位按该服务时长过滤连续槽），展开改期面板时才拉取；寄养改期走两阶段日期重选，无需槽位
   const rescheduleSlotsQ = useQuery({
     queryKey: ['store', 'getWithServices', appt?.storeId ?? '', appt?.serviceId ?? '', 'reschedule'],
     queryFn: () =>
@@ -110,7 +139,7 @@ export default function AppointmentDetailPage() {
         storeId: appt!.storeId,
         serviceId: appt!.serviceId,
       }),
-    enabled: rescheduling && !!appt,
+    enabled: rescheduling && !!appt && appt.type === 'grooming',
   });
 
   const invalidate = () => {
@@ -118,10 +147,16 @@ export default function AppointmentDetailPage() {
   };
 
   const cancelM = useMutation({
-    mutationFn: () => trpc.appointment.cancel.mutate({ appointmentId: id }),
+    // B3-5（W-14）：原因合成「chip：自由文本」，均为空则不传（选填）；服务端上限 100 字
+    mutationFn: () => {
+      const reason = [cancelChip, cancelNote.trim()].filter(Boolean).join('：');
+      return trpc.appointment.cancel.mutate({ appointmentId: id, ...(reason ? { reason } : {}) });
+    },
     onSuccess: (r) => {
       invalidate();
       setConfirmingCancel(false);
+      setCancelChip(null);
+      setCancelNote('');
       showToast(
         r.outcome === 'cancelled' ? '预约已取消' : '已提交取消申请，待门店审核',
         'info',
@@ -144,17 +179,101 @@ export default function AppointmentDetailPage() {
     onError: (err) => showToast(friendlyError(err, '评价提交失败')),
   });
 
-  // v1.1-b2 B2-6：客户自助改期（服务端校验：本人 + pending/confirmed + 距原开始 >4h）
+  // v1.1-b2 B2-6 / v1.1-b3 B3-4：客户自助改期（服务端校验：本人 + pending/confirmed +
+  // 距原开始 >4h，寄养以入住日首晚计）。寄养必传 scheduledStart+scheduledEnd
+  // （入住/退房日按门店开店时刻对齐，与寄养向导 checkinAt 同口径）；洗护传 scheduledStart。
   const rescheduleM = useMutation({
-    mutationFn: () =>
-      trpc.appointment.reschedule.mutate({ appointmentId: id, scheduledStart: newSlot! }),
+    mutationFn: () => {
+      if (appt?.type === 'boarding') {
+        if (!d?.store || !newCheckin || !newCheckout) throw new Error('请选择新的入住/退房日期');
+        return trpc.appointment.reschedule.mutate({
+          appointmentId: id,
+          scheduledStart: checkinAt(d.store, newCheckin),
+          scheduledEnd: checkinAt(d.store, newCheckout),
+        });
+      }
+      return trpc.appointment.reschedule.mutate({ appointmentId: id, scheduledStart: newSlot! });
+    },
     onSuccess: () => {
       invalidate();
       setRescheduling(false);
       setNewSlot(null);
+      setNewCheckin(null);
+      setNewCheckout(null);
       showToast('改期已提交，等待商家重新确认', 'info');
     },
     onError: (err) => showToast(friendlyError(err, '改期失败，请稍后再试')),
+  });
+
+  /* ---------------- SSE（v1.1-b3 B3-3）：user 频道收 appointment.rejected → 刷新详情 ---------------- */
+  // 现有订阅模式（同 live 页）：先 push.subscribe 登记，再连 /api/events；
+  // rejected 走 user:{customerId} 频道（基础频道，无需 watch 参数）。
+  const { user } = useMe();
+  const [clientId] = useState(getClientId);
+  const [subscribed, setSubscribed] = useState(false);
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    let timer: number | undefined;
+    const attempt = () => {
+      trpc.push.subscribe
+        .mutate({ clientId, appType: 'customer' })
+        .then(() => {
+          if (!cancelled) setSubscribed(true);
+        })
+        .catch(() => {
+          if (!cancelled) timer = window.setTimeout(attempt, 5000);
+        });
+    };
+    attempt();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [trpc, clientId, user]);
+
+  // 事件去重（重连补发/多端同事件会重复到达）
+  const seenRef = useRef<{ set: Set<string>; queue: string[] }>({ set: new Set(), queue: [] });
+  const markSeen = useCallback((eid: string): boolean => {
+    const s = seenRef.current;
+    if (s.set.has(eid)) return false;
+    s.set.add(eid);
+    s.queue.push(eid);
+    if (s.queue.length > 500) {
+      const oldest = s.queue.shift();
+      if (oldest) s.set.delete(oldest);
+    }
+    return true;
+  }, []);
+
+  const invalidateRef = useRef(invalidate);
+  invalidateRef.current = invalidate;
+  const showToastRef = useRef(showToast);
+  showToastRef.current = showToast;
+
+  const onEvent = useCallback(
+    (envelope: EventEnvelope) => {
+      if (!markSeen(envelope.id)) return;
+      const data = (envelope.data ?? {}) as Record<string, unknown>;
+      // user 频道会混进其他预约的事件，只处理本预约
+      if (typeof data.appointmentId === 'string' && data.appointmentId !== id) return;
+      if (envelope.type === EventType.AppointmentRejected) {
+        invalidateRef.current();
+        showToastRef.current(
+          `商家已婉拒${typeof data.reason === 'string' && data.reason ? `：${data.reason}` : ''}`,
+          'info',
+        );
+      }
+    },
+    [id, markSeen],
+  );
+
+  const sseUrl =
+    subscribed && id ? `${getApiBase()}/api/events?client_id=${encodeURIComponent(clientId)}` : null;
+  useEventSource({
+    url: sseUrl,
+    onEvent,
+    onReconnect: () => invalidateRef.current(), // 断线重连全量对齐
   });
 
   if (detailQ.isPending) {
@@ -190,9 +309,9 @@ export default function AppointmentDetailPage() {
   const cancellable = appt.status === 'pending' || appt.status === 'confirmed';
   const secondsToStart = Math.floor((appt.scheduledStart.getTime() - Date.now()) / 1000);
   const freeCancel = secondsToStart > CANCEL_FREE_BEFORE_SEC;
-  // v1.1-b2 B2-6：自助改期入口——与取消同 >4h 阈值；洗护单复用向导 SlotPicker
-  // （寄养改期涉及退房晚数重选，本批次由商家端代改，客户端入口仅洗护）
-  const reschedulable = cancellable && freeCancel && appt.type === 'grooming';
+  // v1.1-b2 B2-6 / v1.1-b3 B3-4：自助改期入口——与取消同 >4h 阈值（寄养以入住日首晚
+  // 即 scheduledStart 计）；B3-4 起对寄养开放（两阶段日期组件重选入住/退房）
+  const reschedulable = cancellable && freeCancel;
   // stores 表暂无 phone 字段：有则渲染 tel:，无则提示到店/商家端联系
   const storePhone = (d.store as { phone?: string | null } | null)?.phone ?? null;
 
@@ -253,6 +372,13 @@ export default function AppointmentDetailPage() {
       {appt.status === 'cancel_requested' ? (
         <p className="mt-4 rounded-card bg-danger-light px-4 py-3 text-body text-danger-deep">
           取消申请审核中，门店处理后会通知你；审核通过前预约仍然有效。
+        </p>
+      ) : null}
+
+      {/* 商家婉拒（v1.1-b3 B3-3）：已取消 + 来源 merchant_reject 时展示拒单原因 */}
+      {appt.status === 'cancelled' && appt.cancelSource === 'merchant_reject' ? (
+        <p className="mt-4 rounded-card bg-danger-light px-4 py-3 text-body text-danger-deep">
+          商家已婉拒{appt.cancelReason ? `：${appt.cancelReason}` : ''}
         </p>
       ) : null}
 
@@ -438,12 +564,24 @@ export default function AppointmentDetailPage() {
         <section className="mt-4">
           {rescheduling ? (
             <div className="rounded-card bg-card p-4 shadow-card">
-              <p className="text-body font-semibold">选择新时间</p>
+              <p className="text-body font-semibold">
+                {appt.type === 'boarding' ? '重选入住 / 退房日期' : '选择新时间'}
+              </p>
               <p className="mt-1 text-caption text-ink-secondary">
                 {d.service?.name ?? '服务'} · {d.pet?.name ?? '宠物'}（改期后需商家重新确认）
               </p>
               <div className="mt-3">
-                {rescheduleSlotsQ.data?.store ? (
+                {appt.type === 'boarding' ? (
+                  // B3-4：寄养改期复用 B2-5 两阶段日期组件（打开时已预填当前区间），
+                  // 任一新晚满员由服务端 CONFLICT 拦截并原文 toast
+                  <BoardingDateRangePicker
+                    store={d.store ?? null}
+                    checkin={newCheckin}
+                    checkout={newCheckout}
+                    onCheckinChange={setNewCheckin}
+                    onCheckoutChange={setNewCheckout}
+                  />
+                ) : rescheduleSlotsQ.data?.store ? (
                   <SlotPicker
                     store={rescheduleSlotsQ.data.store}
                     slots={rescheduleSlotsQ.data.slots ?? []}
@@ -463,6 +601,8 @@ export default function AppointmentDetailPage() {
                   onClick={() => {
                     setRescheduling(false);
                     setNewSlot(null);
+                    setNewCheckin(null);
+                    setNewCheckout(null);
                   }}
                   className="h-11 flex-1 rounded-full bg-sunken text-body font-medium text-ink"
                 >
@@ -470,7 +610,10 @@ export default function AppointmentDetailPage() {
                 </button>
                 <button
                   type="button"
-                  disabled={!newSlot || rescheduleM.isPending}
+                  disabled={
+                    (appt.type === 'boarding' ? !newCheckin || !newCheckout : !newSlot) ||
+                    rescheduleM.isPending
+                  }
                   onClick={() => rescheduleM.mutate()}
                   className="h-11 flex-1 rounded-full bg-brand-primary text-body font-medium text-white disabled:opacity-60"
                 >
@@ -488,6 +631,34 @@ export default function AppointmentDetailPage() {
                   ? '开始前 4 小时以上可免费取消，槽位将立即释放。'
                   : '提交后预约转为「取消审核中」，门店审核通过才会取消并释放槽位。'}
               </p>
+              {/* B3-5（W-14）：取消原因收集（选填 chips + 自由文本，商家端透出） */}
+              <div className="mt-3">
+                <p className="text-caption text-ink-secondary">取消原因（选填，告诉我们为什么）</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {CANCEL_REASON_CHIPS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setCancelChip((cur) => (cur === c ? null : c))}
+                      className={`h-9 rounded-full px-3.5 text-caption transition ${
+                        cancelChip === c
+                          ? 'bg-brand-primary font-semibold text-white'
+                          : 'bg-sunken text-ink-secondary'
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  value={cancelNote}
+                  onChange={(e) => setCancelNote(e.target.value)}
+                  maxLength={100}
+                  rows={2}
+                  placeholder="补充说明（选填，100 字以内）"
+                  className="mt-2 w-full rounded-input border border-line bg-card px-3.5 py-2.5 text-body placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
+                />
+              </div>
               <div className="mt-3 flex gap-2">
                 <button
                   type="button"
@@ -511,7 +682,26 @@ export default function AppointmentDetailPage() {
               {reschedulable ? (
                 <button
                   type="button"
-                  onClick={() => setRescheduling(true)}
+                  onClick={() => {
+                    // B3-4：寄养改期面板预填当前住宿区间（按本地日界取入住/退房日）
+                    if (appt.type === 'boarding') {
+                      setNewCheckin(
+                        new Date(
+                          appt.scheduledStart.getFullYear(),
+                          appt.scheduledStart.getMonth(),
+                          appt.scheduledStart.getDate(),
+                        ),
+                      );
+                      setNewCheckout(
+                        new Date(
+                          appt.scheduledEnd.getFullYear(),
+                          appt.scheduledEnd.getMonth(),
+                          appt.scheduledEnd.getDate(),
+                        ),
+                      );
+                    }
+                    setRescheduling(true);
+                  }}
                   className="h-11 flex-1 rounded-full bg-brand-primary text-body font-medium text-white shadow-card"
                 >
                   改期

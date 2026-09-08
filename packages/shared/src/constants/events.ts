@@ -17,8 +17,10 @@ export const EventType = {
   StepUpdated:           'step_updated',             // → appointment 频道（照片+状态）
   StepFlagged:           'step_flagged',             // 商家打标重拍 → staff + appointment
   AppointmentCompleted:  'appointment.completed',    // → appointment 频道（三端）
+  AppointmentReopened:   'appointment.reopened',     // completed 打标重开 → appointment + store + user 三频道（v1.1-b3 B3-1）
   AppointmentCancelRequested: 'appointment.cancel_requested', // → store
   AppointmentCancelled:  'appointment.cancelled',    // → 相关方
+  AppointmentRejected:   'appointment.rejected',     // 商家拒单 → user + store 双频道（v1.1-b3 B3-3）
   AppointmentRescheduled:'appointment.rescheduled',  // → 相关方
   AppointmentReviewed:   'appointment.reviewed',     // → store + staff
   AppointmentPaid:       'appointment.paid',         // → store（到店付收款登记）

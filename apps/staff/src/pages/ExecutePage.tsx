@@ -251,6 +251,11 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
           showToast('该预约已取消')
           window.setTimeout(() => navigate('/today'), 1200)
           break
+        case EventType.AppointmentReopened:
+          // v1.1-b3 B3-1：商家对已完成单打标 → 预约打回 in_service，重进执行流
+          invalidateAll()
+          showToast('预约已被商家重新开启，请按打标步骤重拍')
+          break
         case EventType.AppointmentCompleted:
           invalidateAll()
           break

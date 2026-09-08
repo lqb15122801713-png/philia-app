@@ -23,9 +23,10 @@
  *   （stay 未退房 && in_boarding && scheduledEnd < now；v1 无任务发该事件，本地计算为主）。
  * - boarding.completed（商家端退房）→ 全量失效 + 完成态。
  *
- * 退房：开发方案 §6.2 中 boarding.checkout 权限为 staff/merchant 双权限，
- * 但员工端页面树（§2.3）没有退房入口——按页面树执行：员工端不提供退房按钮，
- * 仅显示「退房请到商家端操作」引导（P4 商家端实现退房结算）。
+ * 退房（v1.1-b3 B3-5 A-P2-14）：boarding.checkout 基类由 publicProcedure 修正为
+ * staffProcedure（仅员工可退房，商家/客户在中间件层即被拒）；员工端相应补上
+ * 退房入口——stay 已登记且未完成时显示「办理退房」按钮（二次确认内联展开），
+ * 成功后预约转 completed；商家端收款仍走财务页 markPaid。
  */
 
 import {
@@ -280,6 +281,18 @@ export default function BoardingCheckinPage() {
     onError: (err) => showToast(err instanceof Error ? err.message : '提交失败，请稍后再试'),
   });
 
+  // B3-5（A-P2-14）：退房核销入口（checkout 已修正为 staffProcedure，员工办理）
+  const [confirmingCheckout, setConfirmingCheckout] = useState(false);
+  const checkoutMutation = useMutation({
+    mutationFn: () => trpc.boarding.checkout.mutate({ appointmentId: aid! }),
+    onSuccess: (r) => {
+      setConfirmingCheckout(false);
+      showToast(r.alreadyCompleted ? '本单此前已完成退房' : '退房完成，本单转入「已完成」');
+      alignAll();
+    },
+    onError: (err) => showToast(err instanceof Error ? err.message : '退房失败，请稍后再试'),
+  });
+
   /* ---------------- 派生态 ---------------- */
 
   // 超期：在住未退房 && in_boarding && 预约结束时间已过（与 stayBoard 判定一致）
@@ -485,13 +498,43 @@ export default function BoardingCheckinPage() {
           </>
         ) : null}
 
-        {/* 退房引导：§6.2 checkout 权限 staff/merchant，但员工端页面树无退房入口，
-            按页面树执行——员工端不提供退房按钮（P4 商家端退房结算） */}
-        {!completed && stay !== null ? (
-          <p className="flex items-center gap-2 rounded-card bg-sunken px-4 py-3 text-body text-ink-secondary">
-            <DoorOpen className="h-5 w-5 shrink-0" strokeWidth={1.5} />
-            退房请到商家端操作
-          </p>
+        {/* 退房（B3-5 A-P2-14）：checkout 已修正为员工权限，员工端补退房入口；
+            stay 已登记且未完成的在住单显示「办理退房」（内联二次确认，操作幂等） */}
+        {!completed && stay !== null && appt.status === 'in_boarding' ? (
+          confirmingCheckout ? (
+            <div className="rounded-card bg-card p-4 shadow-card">
+              <p className="text-body-lg font-semibold text-ink">确认办理退房？</p>
+              <p className="mt-1 text-body text-ink-secondary">
+                退房后预约转入「已完成」；到店付订单请提醒商家在财务页确认收款。
+              </p>
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmingCheckout(false)}
+                  className="h-14 flex-1 rounded-full bg-sunken text-body-lg font-medium text-ink active:scale-[0.98]"
+                >
+                  再想想
+                </button>
+                <button
+                  type="button"
+                  disabled={checkoutMutation.isPending}
+                  onClick={() => checkoutMutation.mutate()}
+                  className="h-14 flex-1 rounded-full bg-brand-primary text-body-lg font-semibold text-white transition active:scale-[0.98] disabled:opacity-60"
+                >
+                  {checkoutMutation.isPending ? '办理中…' : '确认退房'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setConfirmingCheckout(true)}
+              className="flex h-14 w-full items-center justify-center gap-2 rounded-full bg-card text-body-lg font-semibold text-brand-primary shadow-card transition active:scale-[0.98]"
+            >
+              <DoorOpen className="h-5 w-5" strokeWidth={1.5} />
+              办理退房
+            </button>
+          )
         ) : null}
       </div>
 

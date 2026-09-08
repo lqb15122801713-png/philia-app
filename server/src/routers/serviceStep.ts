@@ -518,8 +518,17 @@ export const serviceStepRouter = router({
    * 前置条件二选一：
    *  (a) 目标步为当前 active 步 → 仅置 flagged=1（不动照片）；
    *  (b) 目标步为 step_order 最大的 done 步且其后全部 locked（即当前无 active 步）
-   *      → 事务内 done→active + flagged=1 + 该步未失效照片批量 invalidated_at=now；
+   *      → 事务内 done→active + flagged=1 + 该步未失效照片批量 invalidated_at=now。
    * 其他情况一律拒绝。规则 1 不变量事务内校验。事件 step_flagged → staff + appointment 双频道。
+   *
+   * v1.1-b3 B3-1（A-P0-9 结构性）：completed 预约放行打标，走 (b) 路径成功时
+   * **同一事务**内：预约 completed→in_service + 清 completed_at + 目标步 reactivate，
+   * 并写 outbox 事件 appointment.reopened（appointment:{aid} + store:{storeId} +
+   * user:{customerId} 三频道，payload 含 appointmentId/stepKey/by）——批次 1 的
+   * completed 拒绝守卫由本事务路径取代（重开后员工可 confirmStep 再次完成，
+   * completed_at 重写、completed 事件再发一次，死局消除）。
+   * 其余状态维持拒绝：cancelled 显式 BAD_REQUEST；pending/confirmed 尚未核销
+   * 初始化六步流，loadStep 以 NOT_FOUND 拒绝（既有行为不变）。
    */
   flagForRedo: merchantProcedure
     .input(
@@ -531,15 +540,7 @@ export const serviceStepRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const appt = await assertAppointmentAccess(ctx, input.appointmentId); // merchant 本店
-      // v1.1 A-P0-9 死局止血：completed/cancelled 预约禁止打标重拍——
-      // completed 单打标会把 done 步拉回 active，但 confirmStep 要求预约 in_service，
-      // 重新 confirm 必被拒，形成不可逆死局；cancelled 单打标无业务意义。
-      if (appt.status === 'completed') {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: '预约已完成，不可打标重拍；如需处理请联系门店线下协商',
-        });
-      }
+      // cancelled 单打标无业务意义（completed 已于 v1.1-b3 B3-1 改为事务内重开，见上）
       if (appt.status === 'cancelled') {
         throw new TRPCError({ code: 'BAD_REQUEST', message: '预约已取消，不可打标重拍' });
       }
@@ -547,7 +548,7 @@ export const serviceStepRouter = router({
       const petName = await petNameOf(ctx.db, appt.petId);
       const now = new Date();
 
-      const { outboxIds, reactivated, invalidatedCount } = await ctx.db.transaction(
+      const { outboxIds, reactivated, invalidatedCount, reopened } = await ctx.db.transaction(
         async (tx) => {
           // 规则 1 不变量预检：存在多个 active 步直接回滚
           const actives = await assertActiveInvariant(tx, input.appointmentId, false);
@@ -560,6 +561,7 @@ export const serviceStepRouter = router({
 
           let didReactivate = false;
           let invalidated = 0;
+          let didReopen = false; // B3-1：completed 预约同事务重开标记
 
           if (target.status === 'active') {
             // 路径 (a)：目标步为当前 active 步 → 仅置 flagged=1（重新打标/催拍，不动照片）
@@ -600,6 +602,20 @@ export const serviceStepRouter = router({
               .returning({ id: schema.stepPhotos.id });
             invalidated = voided.length;
             didReactivate = true;
+            // B3-1（A-P0-9 结构性）：completed 预约同事务重开——打回 in_service + 清 completed_at。
+            // 事务内复查状态（防 confirmStep 并发末步完成后的过期读），非 completed 不触发。
+            const apptRow = await tx
+              .select({ status: schema.appointments.status })
+              .from(schema.appointments)
+              .where(eq(schema.appointments.id, appt.id))
+              .get();
+            if (apptRow?.status === 'completed') {
+              await tx
+                .update(schema.appointments)
+                .set({ status: 'in_service', completedAt: null, updatedAt: now })
+                .where(eq(schema.appointments.id, appt.id));
+              didReopen = true;
+            }
             // 规则 1 不变量复检：回退后必须恰好 1 个 active 步（即目标步）
             const after = await assertActiveInvariant(tx, input.appointmentId, true);
             if (after[0]!.id !== target.id) {
@@ -629,12 +645,31 @@ export const serviceStepRouter = router({
           if (appt.staffId) {
             ids.push(await emitEvent(txBus(tx), `staff:${appt.staffId}`, EventType.StepFlagged, data));
           }
-          return { outboxIds: ids, reactivated: didReactivate, invalidatedCount: invalidated };
+          // B3-1：completed 重开 → appointment.reopened 三频道（appointment + store + user）
+          if (didReopen) {
+            const reopenData = {
+              appointmentId: appt.id,
+              petName,
+              stepKey: input.stepKey,
+              by: ctx.user.id,
+            };
+            ids.push(
+              await emitEvent(txBus(tx), `appointment:${appt.id}`, EventType.AppointmentReopened, reopenData),
+              await emitEvent(txBus(tx), `store:${appt.storeId}`, EventType.AppointmentReopened, reopenData),
+              await emitEvent(txBus(tx), `user:${appt.customerId}`, EventType.AppointmentReopened, reopenData),
+            );
+          }
+          return {
+            outboxIds: ids,
+            reactivated: didReactivate,
+            invalidatedCount: invalidated,
+            reopened: didReopen,
+          };
         },
       );
 
       for (const id of outboxIds) broadcastNow(id);
-      return { stepKey: input.stepKey, flagged: true as const, reactivated, invalidatedCount };
+      return { stepKey: input.stepKey, flagged: true as const, reactivated, invalidatedCount, reopened };
     }),
 
   /**

@@ -3,12 +3,11 @@
  *
  * - 全字段：客户 / 宠物（品种/体重/疫苗/性格标签）/ 服务 / 时间 / 金额 / 收款方式 /
  *   备注 / 核销时间 / 人工码 / 支付状态。
- *   客户昵称：现有 merchant 可读接口（appointment.get / listForStore）均未返回 customer
- *   昵称（仅 boarding.stayBoard 对 in_boarding 单返回 customer），故非寄养在住单显示
- *   「客户 {id后4位}」兜底——已在汇报中标注，建议后续 appointment.get 补 customer 字段。
+ *   客户标识（v1.1-b3 B3-5 W-4）：appointment.get 响应补 customer{ nickname, phoneTail }，
+ *   展示「昵称（空则「客户」）· 尾号 XXXX」；listForStore 同口径（仅本店订单出参）。
  * - 操作区按状态出按钮：
  *   pending → 确认预约 / 拒绝（说明见下）；confirmed → 指派员工 / 改期；
- *   cancel_requested → 批准取消 / 拒绝取消（二次确认）。
+ *   cancel_requested → 批准取消 / 拒绝取消（二次确认），透出客户取消原因（B3-5 W-14）。
  *   「拒绝」(pending)：服务端当前无商家直接拒绝入口（reviewCancel 仅受理
  *   cancel_requested），实现为说明弹层（请客户自助取消或电话协商）+ 复制预约编号，
  *   不 ship 必然失败的调用；建议主代理评估放宽 reviewCancel 或新增 merchant cancel。
@@ -23,6 +22,8 @@ import { CalendarClock, Check, ChevronLeft, ClipboardCopy, Info, MonitorPlay, Us
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
+  cancelSourceLabel,
+  customerLabel,
   fenToYuan,
   fmtDate,
   fmtDateTime,
@@ -73,21 +74,12 @@ export default function AppointmentDetailPage() {
     [staffQuery.data, appt?.staffId],
   );
 
-  // 寄养在住单：stayBoard 带 customer 昵称/电话（merchant 唯一可读客户信息的入口）
-  const stayBoardQuery = useQuery({
-    queryKey: ['boarding', 'stayBoard'],
-    queryFn: () => trpc.boarding.stayBoard.query(),
-    enabled: !!appt && appt.type === 'boarding' && appt.status === 'in_boarding',
-  });
-  const boardEntry = useMemo(
-    () => stayBoardQuery.data?.board.find((b) => b.appointment.id === aid) ?? null,
-    [stayBoardQuery.data, aid],
+  // B3-5（W-4）：客户标识改由 appointment.get 的 customer{nickname, phoneTail} 供给
+  // （不再借道 boarding.stayBoard——它只对 in_boarding 单返回 customer）
+  const customerDisplay = customerLabel(
+    detailQuery.data?.customer?.nickname,
+    detailQuery.data?.customer?.phoneTail,
   );
-  const customerDisplay = boardEntry?.customer.nickname?.trim()
-    ? boardEntry.customer.nickname
-    : appt
-      ? `客户 ${appt.customerId.slice(-4)}`
-      : '—';
 
   /* ---------------- 操作 ---------------- */
 
@@ -204,6 +196,13 @@ export default function AppointmentDetailPage() {
             ) : null}
           </Field>
           {appt.note ? <Field label="备注">{appt.note}</Field> : null}
+          {/* B3-5（W-14）：已取消单透出取消来源与原因 */}
+          {appt.status === 'cancelled' && (appt.cancelReason || appt.cancelSource) ? (
+            <Field label="取消信息">
+              {cancelSourceLabel(appt.cancelSource)}
+              {appt.cancelReason ? `：${appt.cancelReason}` : ''}
+            </Field>
+          ) : null}
           <Field label="核销时间">
             {appt.checkedInAt ? (
               <span className="font-number">{fmtDateTime(appt.checkedInAt)}</span>
@@ -347,6 +346,12 @@ export default function AppointmentDetailPage() {
           <p className="mb-2 text-caption text-ink-secondary">
             客户已申请取消该预约（开始前 4 小时内），请审核：
           </p>
+          {/* B3-5（W-14）：透出客户取消原因，辅助审核决策 */}
+          {appt.cancelReason ? (
+            <p className="mb-2 rounded-card bg-danger-light px-3 py-2 text-body text-danger-deep">
+              客户取消原因：{appt.cancelReason}
+            </p>
+          ) : null}
           <div className="flex gap-3">
             <button
               type="button"

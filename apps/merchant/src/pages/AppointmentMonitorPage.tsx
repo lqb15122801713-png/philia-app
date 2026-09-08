@@ -99,6 +99,11 @@ export default function AppointmentMonitorPage() {
           showToast('服务已完成', 'success');
           alignAll();
           break;
+        case EventType.AppointmentReopened:
+          // v1.1-b3 B3-1：completed 单打标重开 → 预约回 in_service，全量对齐
+          showToast('该预约已重新开启（打回服务中），等待员工重拍', 'alert');
+          alignAll();
+          break;
         case EventType.BoardingDailyUpdate: {
           const logDate = typeof data.logDate === 'string' ? data.logDate : '';
           showToast(`${logDate ? `${logDate} ` : ''}寄养打卡已更新`, 'alert');
@@ -133,14 +138,20 @@ export default function AppointmentMonitorPage() {
     onSuccess: (r, vars) => {
       const label = getStepDef(vars.stepKey)?.name ?? vars.stepKey;
       showToast(
-        r.reactivated
-          ? `已打标「${label}」：步骤已回退为进行中，旧照片作废，等待员工重拍`
-          : `已打标「${label}」，等待员工重拍`,
+        r.reopened
+          ? `已打标「${label}」：预约已重新开启（打回服务中），等待员工重拍`
+          : r.reactivated
+            ? `已打标「${label}」：步骤已回退为进行中，旧照片作废，等待员工重拍`
+            : `已打标「${label}」，等待员工重拍`,
         'success',
       );
       setFlagTarget(null);
       setFlagReason('');
       void queryClient.invalidateQueries({ queryKey: ['serviceStep', 'list', aid] });
+      // v1.1-b3 B3-1：completed→in_service 重开，头部状态徽标需同步对齐
+      if (r.reopened) {
+        void queryClient.invalidateQueries({ queryKey: ['appointment', 'get', aid] });
+      }
     },
     onError: (err) =>
       showToast(err instanceof Error ? err.message : '打标失败，请稍后再试', 'error'),
@@ -272,9 +283,11 @@ export default function AppointmentMonitorPage() {
         open={flagTarget !== null}
         title={`打标重拍「${flagTarget ? (getStepDef(flagTarget.stepKey)?.name ?? flagTarget.stepKey) : ''}」？`}
         body={
-          flagTarget?.status === 'done'
-            ? '该步骤将回退为「进行中」，已有照片全部作废，员工需重新拍摄上传。'
-            : '该步骤当前进行中，打标后员工会收到重拍提醒。'
+          appt.status === 'completed'
+            ? '该预约已完成：打标将重新开启本预约（打回「服务中」），该步骤回退为「进行中」，员工重拍后需重新确认完成。'
+            : flagTarget?.status === 'done'
+              ? '该步骤将回退为「进行中」，已有照片全部作废，员工需重新拍摄上传。'
+              : '该步骤当前进行中，打标后员工会收到重拍提醒。'
         }
         confirmText="确认打标"
         danger
