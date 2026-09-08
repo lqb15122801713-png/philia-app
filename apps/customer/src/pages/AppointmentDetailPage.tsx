@@ -85,7 +85,7 @@ function StarRating({ value, onChange }: { value: number; onChange?: (v: number)
           aria-label={`${n} 星`}
           className={onChange ? 'transition active:scale-90' : 'cursor-default'}
         >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill={n <= value ? '#D98E5F' : 'none'} stroke={n <= value ? '#D98E5F' : '#DDD0C6'} strokeWidth="1.5" strokeLinejoin="round">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill={n <= value ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" className={n <= value ? 'text-brand-primary' : 'text-line-strong'}>
             <path d="M12 2.5 15 9l7 .8-5.2 4.7 1.5 6.9L12 17.7 5.7 21.4l1.5-6.9L2 9.8 9 9z" />
           </svg>
         </button>
@@ -332,7 +332,7 @@ export default function AppointmentDetailPage() {
           aria-label="返回"
           className="flex h-9 w-9 items-center justify-center rounded-full bg-card shadow-card active:scale-92"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A7A6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ink-secondary" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m15 18-6-6 6-6" />
           </svg>
         </button>
@@ -344,16 +344,16 @@ export default function AppointmentDetailPage() {
       {serving ? (
         <Link
           to={`/appointments/${id}/live`}
-          className="mt-4 flex items-center justify-between rounded-card bg-philia-gradient p-4 text-white shadow-philia"
+          className="mt-4 flex items-center justify-between rounded-card bg-philia-gradient p-4 text-ink shadow-philia"
         >
           <span>
             <span className="flex items-center gap-2 text-title">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/25 animate-halo">●</span>
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-card/25 animate-halo">●</span>
               {appt.type === 'boarding' ? '寄养进行中' : '服务进行中'}
             </span>
-            <span className="mt-0.5 block text-caption text-white/85">点击查看实时进度与照片</span>
+            <span className="mt-0.5 block text-caption text-ink/85">点击查看实时进度与照片</span>
           </span>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m9 18 6-6-6-6" />
           </svg>
         </Link>
@@ -491,7 +491,7 @@ export default function AppointmentDetailPage() {
                             className={`absolute left-1 top-1 rounded-tag px-1.5 py-0.5 text-caption ${
                               p.tag === 'before'
                                 ? 'bg-brand-secondary-light text-ink'
-                                : 'bg-brand-primary text-white'
+                                : 'bg-brand-primary text-ink'
                             }`}
                           >
                             {p.tag === 'before' ? '服务前' : '服务后'}
@@ -516,7 +516,7 @@ export default function AppointmentDetailPage() {
               `${appt.type === 'boarding' ? '/booking/boarding' : '/booking/grooming'}?serviceId=${encodeURIComponent(appt.serviceId)}&storeId=${encodeURIComponent(appt.storeId)}&petId=${encodeURIComponent(appt.petId)}`,
             )
           }
-          className="mt-4 h-12 w-full rounded-full bg-brand-primary text-body font-semibold text-white shadow-card transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="mt-4 h-12 w-full rounded-full bg-brand-primary text-body font-semibold text-ink shadow-card transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           再次预约
         </button>
@@ -615,7 +615,7 @@ export default function AppointmentDetailPage() {
                     rescheduleM.isPending
                   }
                   onClick={() => rescheduleM.mutate()}
-                  className="h-11 flex-1 rounded-full bg-brand-primary text-body font-medium text-white disabled:opacity-60"
+                  className="h-11 flex-1 rounded-full bg-brand-primary text-body font-medium text-ink disabled:opacity-60"
                 >
                   {rescheduleM.isPending ? '提交中…' : '确认改期'}
                 </button>
@@ -642,7 +642,7 @@ export default function AppointmentDetailPage() {
                       onClick={() => setCancelChip((cur) => (cur === c ? null : c))}
                       className={`h-9 rounded-full px-3.5 text-caption transition ${
                         cancelChip === c
-                          ? 'bg-brand-primary font-semibold text-white'
+                          ? 'bg-brand-primary font-semibold text-ink'
                           : 'bg-sunken text-ink-secondary'
                       }`}
                     >
@@ -702,7 +702,7 @@ export default function AppointmentDetailPage() {
                     }
                     setRescheduling(true);
                   }}
-                  className="h-11 flex-1 rounded-full bg-brand-primary text-body font-medium text-white shadow-card"
+                  className="h-11 flex-1 rounded-full bg-brand-primary text-body font-medium text-ink shadow-card"
                 >
                   改期
                 </button>
@@ -762,7 +762,7 @@ export default function AppointmentDetailPage() {
                 type="button"
                 disabled={reviewM.isPending}
                 onClick={() => reviewM.mutate()}
-                className="mt-2 h-11 w-full rounded-full bg-brand-primary text-body font-semibold text-white shadow-card disabled:opacity-60"
+                className="mt-2 h-11 w-full rounded-full bg-brand-primary text-body font-semibold text-ink shadow-card disabled:opacity-60"
               >
                 {reviewM.isPending ? '提交中…' : '提交评价'}
               </button>

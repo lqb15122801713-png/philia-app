@@ -45,7 +45,7 @@ function AppointmentCard({ item }: { item: AppointmentListItem }) {
     >
       {/* 服务中呼吸光环角标 */}
       {serving ? (
-        <span className="absolute -right-1.5 -top-1.5 flex items-center gap-1 rounded-full bg-brand-primary px-2.5 py-1 text-caption font-medium text-white animate-halo">
+        <span className="absolute -right-1.5 -top-1.5 flex items-center gap-1 rounded-full bg-brand-primary px-2.5 py-1 text-caption font-medium text-ink animate-halo">
           ● 进行中
         </span>
       ) : null}
@@ -104,7 +104,7 @@ export default function AppointmentsPage() {
           <p className="mt-1 text-body text-ink-secondary">给毛孩子安排一次舒服的洗护吧</p>
           <Link
             to="/booking"
-            className="mt-6 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-white shadow-card transition-transform duration-120 ease-philia-spring active:scale-92"
+            className="mt-6 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink shadow-card transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             立即预约
           </Link>
@@ -122,7 +122,7 @@ export default function AppointmentsPage() {
                   onClick={() => setTab(t.key)}
                   className={`shrink-0 rounded-full px-4 py-2 text-body transition ${
                     tab === t.key
-                      ? 'bg-brand-primary font-semibold text-white'
+                      ? 'bg-brand-primary font-semibold text-ink'
                       : 'bg-card text-ink-secondary shadow-card'
                   }`}
                 >
