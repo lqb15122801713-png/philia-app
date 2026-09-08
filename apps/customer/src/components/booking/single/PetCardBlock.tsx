@@ -57,7 +57,7 @@ export default function PetCardBlock({
         <button
           type="button"
           onClick={() => navigate('/philia/pets')}
-          className="mt-4 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-semibold text-white transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="mt-4 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           先建立宠物档案
         </button>

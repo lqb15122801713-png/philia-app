@@ -19,7 +19,7 @@ export default function BottomSheet({
 }) {
   return (
     <div
-      className="fixed inset-0 z-modal flex items-end justify-center bg-[rgba(61,50,41,0.4)]"
+      className="fixed inset-0 z-modal flex items-end justify-center bg-ink/40"
       onClick={onClose}
       role="dialog"
       aria-label={title}
@@ -37,7 +37,7 @@ export default function BottomSheet({
             aria-label="关闭"
             className="flex h-9 w-9 items-center justify-center rounded-full bg-sunken"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8A7A6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ink-secondary" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 6 6 18M6 6l12 12" />
             </svg>
           </button>

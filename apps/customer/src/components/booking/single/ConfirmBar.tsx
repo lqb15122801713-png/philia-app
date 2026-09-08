@@ -44,7 +44,7 @@ export default function ConfirmBar({
           data-testid="gs-confirm"
           data-state={submitting ? 'submitting' : missingLabel !== null ? 'disabled' : 'ready'}
           className={`pointer-events-auto h-12 w-full rounded-full text-body font-semibold shadow-philia transition-transform duration-120 ease-philia-spring ${
-            ready ? 'bg-philia-gradient text-white active:scale-92' : 'cursor-not-allowed bg-line text-ink-placeholder'
+            ready ? 'bg-philia-gradient text-ink active:scale-92' : 'cursor-not-allowed bg-line text-ink-placeholder'
           }`}
         >
           {label}
