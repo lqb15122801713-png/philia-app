@@ -1,4 +1,8 @@
 /**
+ * 【批次 4 起为旧版向导】B4-2 后默认路由 /booking/boarding 已切换为单屏页
+ * （BoardingSinglePage）；本文件整体保留于隐藏路由 /booking/boarding/wizard
+ * 作回滚保障，验收通过后下批次再删。以下历史注释保留原样。
+ *
  * 寄养预约（T2.2 · 4 屏）：
  *   屏1 选入住/退房日期（今日起 14 天；退房 > 入住；门店休息日禁选）
  *   屏2 选房型（boarding 服务项卡，含 boarding_room_type；顶部可切换门店，联动刷新）

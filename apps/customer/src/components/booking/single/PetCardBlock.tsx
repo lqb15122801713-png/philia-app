@@ -1,9 +1,11 @@
 /**
- * B4-1 单屏 · 宠物卡区块：
+ * B4-1 单屏 · 宠物卡区块（B4-2 寄养单屏复用）：
  * - 已选：头像 + 「名字·品种」+ 上次洗护行 + 体重行，点按弹底部半屏宠物列表（不跳页）；
  * - 未选（多宠不替选）：占位卡「请选择宠物」；
  * - 无宠物：「先建档」岔路卡（保留旧向导现状逻辑：可「随便看看」仅浏览，
  *   确认按钮会因缺宠物置灰——双保险）。
+ * - 寄养用法：传 requireVaccineUntil=退房日，底部半屏选宠列表启用疫苗硬校验
+ *   （不满足的宠物渲染红色阻断卡，PetPicker 现状能力，仅透传）。
  */
 
 import { useState } from 'react';
@@ -20,6 +22,8 @@ export default function PetCardBlock({
   onSelect,
   lastGroomingLabel,
   loading,
+  requireVaccineUntil,
+  pickerHint,
 }: {
   pets: PetItem[];
   selectedId: string | null;
@@ -27,6 +31,10 @@ export default function PetCardBlock({
   /** 选中宠物的上次洗护摘要（如「上次洗护 8.23 · 基础洗护」），无则隐藏该行 */
   lastGroomingLabel?: string | null;
   loading?: boolean;
+  /** B4-2 寄养：底部半屏选宠列表启用疫苗硬校验（须覆盖至退房日），不满足的宠物渲染红色阻断卡 */
+  requireVaccineUntil?: Date | null;
+  /** 未选占位卡副文案（默认「点按选择要洗护的毛孩子」，寄养传「寄养」版） */
+  pickerHint?: string;
 }) {
   const navigate = useNavigate();
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -105,7 +113,7 @@ export default function PetCardBlock({
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-sunken text-[22px]">🐾</span>
             <span className="flex-1">
               <span className="block text-body font-semibold text-ink-secondary">请选择宠物</span>
-              <span className="mt-0.5 block text-caption text-ink-placeholder">点按选择要洗护的毛孩子</span>
+              <span className="mt-0.5 block text-caption text-ink-placeholder">{pickerHint ?? '点按选择要洗护的毛孩子'}</span>
             </span>
             <span className="text-caption text-brand-primary">选择 ▸</span>
           </>
@@ -121,6 +129,7 @@ export default function PetCardBlock({
               onSelect(id);
               setSheetOpen(false);
             }}
+            requireVaccineUntil={requireVaccineUntil}
           />
         </BottomSheet>
       ) : null}

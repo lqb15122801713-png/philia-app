@@ -8,6 +8,7 @@ import BookingBoardingPage from './pages/BookingBoardingPage'
 import BookingGroomingPage from './pages/BookingGroomingPage'
 import BookingPage from './pages/BookingPage'
 import BookingSuccessPage from './pages/BookingSuccessPage'
+import BoardingSinglePage from './pages/BoardingSinglePage'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
 import DevLoginPage from './pages/DevLoginPage'
@@ -42,7 +43,9 @@ function ProtectedRoutes() {
       {/* B4-1：默认路由换新单屏；旧 4 屏向导保留隐藏路由 /wizard（回滚保障，下批次再删） */}
       <Route path="/booking/grooming" element={<GroomingSinglePage />} />
       <Route path="/booking/grooming/wizard" element={<BookingGroomingPage />} />
-      <Route path="/booking/boarding" element={<BookingBoardingPage />} />
+      {/* B4-2：寄养同上——默认路由换单屏，旧向导保留隐藏路由 /booking/boarding/wizard */}
+      <Route path="/booking/boarding" element={<BoardingSinglePage />} />
+      <Route path="/booking/boarding/wizard" element={<BookingBoardingPage />} />
       <Route path="/booking/success" element={<BookingSuccessPage />} />
       <Route path="/appointments" element={<AppointmentsPage />} />
       <Route path="/appointments/:id" element={<AppointmentDetailPage />} />
