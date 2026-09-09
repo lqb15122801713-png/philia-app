@@ -99,7 +99,7 @@ export default function BookingCode({
 
   return (
     <div className="flex flex-col items-center">
-      <div className="rounded-card bg-white p-3 shadow-card">
+      <div className="rounded-card bg-card p-3 shadow-card">
         {qrUrl ? (
           <img src={qrUrl} width={size} height={size} alt="预约二维码" className="block" />
         ) : (

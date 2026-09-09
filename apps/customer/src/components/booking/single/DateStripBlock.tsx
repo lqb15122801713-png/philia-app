@@ -55,12 +55,12 @@ export default function DateStripBlock({
               data-active={active ? 'true' : 'false'}
               data-greyed={greyed ? 'true' : 'false'}
               className={`flex w-16 shrink-0 flex-col items-center rounded-card px-2 py-2.5 transition active:scale-95 ${
-                active ? 'bg-brand-primary text-white shadow-card' : greyed ? 'bg-sunken text-ink-placeholder' : 'bg-card text-ink shadow-card'
+                active ? 'bg-brand-primary text-ink shadow-card' : greyed ? 'bg-sunken text-ink-placeholder' : 'bg-card text-ink shadow-card'
               }`}
             >
-              <span className={`text-caption ${active ? 'text-white/90' : ''}`}>{dayLabel(d.date)}</span>
+              <span className={`text-caption ${active ? 'text-ink/90' : ''}`}>{dayLabel(d.date)}</span>
               <span className="mt-0.5 font-number text-body font-semibold">{d.date.getDate()}</span>
-              <span className={`mt-0.5 h-4 text-[10px] leading-4 ${active ? 'text-white/80' : 'text-ink-placeholder'}`}>
+              <span className={`mt-0.5 h-4 text-[10px] leading-4 ${active ? 'text-ink/80' : 'text-ink-placeholder'}`}>
                 {d.closed ? '休息' : !d.hasAvailable ? '约满' : ''}
               </span>
             </button>
@@ -115,7 +115,7 @@ export default function DateStripBlock({
                         data-in-window={inWindow ? 'true' : 'false'}
                         className={`flex h-9 items-center justify-center rounded-full font-number text-body transition ${
                           active
-                            ? 'bg-brand-primary font-semibold text-white'
+                            ? 'bg-brand-primary font-semibold text-ink'
                             : !inWindow
                               ? 'cursor-not-allowed text-ink-placeholder/50'
                               : greyed

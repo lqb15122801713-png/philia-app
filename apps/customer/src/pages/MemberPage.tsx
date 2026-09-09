@@ -54,7 +54,7 @@ function RealStatsCard() {
   const totalFen = completed.reduce((sum, a) => sum + a.priceFen, 0)
 
   return (
-    <div className="rounded-card bg-philia-gradient p-5 text-white shadow-philia">
+    <div className="rounded-card bg-philia-gradient p-5 text-ink shadow-philia">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-caption opacity-90">PHILIA MEMBER</p>
@@ -68,13 +68,13 @@ function RealStatsCard() {
         <img src="/brand/logo-512.png" alt="" className="h-12 w-12 rounded-card opacity-95" />
       </div>
       <div className="mt-5 grid grid-cols-2 gap-3">
-        <div className="rounded-input bg-white/20 px-3 py-2.5">
+        <div className="rounded-input bg-card/20 px-3 py-2.5">
           <p className="text-caption opacity-90">累计完成服务</p>
           <p className="mt-0.5 font-number text-price" style={tabularNums}>
             {completedCount} <span className="text-caption">次</span>
           </p>
         </div>
-        <div className="rounded-input bg-white/20 px-3 py-2.5">
+        <div className="rounded-input bg-card/20 px-3 py-2.5">
           <p className="text-caption opacity-90">累计消费</p>
           <p className="mt-0.5 font-number text-price" style={tabularNums}>
             ¥{formatFen(totalFen)}

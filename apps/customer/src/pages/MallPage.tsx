@@ -147,7 +147,7 @@ function MallInner() {
             onClick={() => setCategory(c)}
             className={`shrink-0 rounded-full px-4 py-2 text-body transition ${
               category === c
-                ? 'bg-brand-primary font-semibold text-white'
+                ? 'bg-brand-primary font-semibold text-ink'
                 : 'bg-card text-ink-secondary shadow-card'
             }`}
           >
@@ -175,7 +175,7 @@ function MallInner() {
           <button
             type="button"
             onClick={() => void productsQ.refetch()}
-            className="mt-4 rounded-full bg-brand-primary px-6 py-2.5 text-body text-white transition-transform duration-120 ease-philia-spring active:scale-92"
+            className="mt-4 rounded-full bg-brand-primary px-6 py-2.5 text-body text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             重新加载
           </button>
@@ -192,7 +192,7 @@ function MallInner() {
             <button
               type="button"
               onClick={() => setSearchText('')}
-              className="mt-5 rounded-full bg-brand-primary px-6 py-2.5 text-body text-white transition-transform duration-120 ease-philia-spring active:scale-92"
+              className="mt-5 rounded-full bg-brand-primary px-6 py-2.5 text-body text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
             >
               清空搜索
             </button>

@@ -16,9 +16,9 @@ export default function StepIndicator({ steps, current }: { steps: string[]; cur
               <span
                 className={`flex h-6 w-6 items-center justify-center rounded-full text-caption ${
                   done
-                    ? 'bg-brand-primary text-white'
+                    ? 'bg-brand-primary text-ink'
                     : active
-                      ? 'bg-brand-primary text-white'
+                      ? 'bg-brand-primary text-ink'
                       : 'border-[1.5px] border-line-strong text-ink-placeholder'
                 }`}
               >

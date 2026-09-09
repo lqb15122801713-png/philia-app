@@ -95,7 +95,7 @@ function DetailInner() {
         </p>
         <Link
           to="/mall"
-          className="mt-6 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-white transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="mt-6 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           返回商城
         </Link>
@@ -221,7 +221,7 @@ function DetailInner() {
             type="button"
             disabled={soldOut}
             onClick={handleBuyNow}
-            className="h-11 flex-1 rounded-full bg-philia-gradient text-body font-medium text-white shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
+            className="h-11 flex-1 rounded-full bg-philia-gradient text-body font-medium text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
           >
             {soldOut ? '已售罄' : '立即购买'}
           </button>

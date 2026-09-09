@@ -73,7 +73,7 @@ export default function TimeGridBlock({
                   data-available={ok ? 'true' : 'false'}
                   className={`rounded-input py-2.5 text-center font-number text-body transition ${
                     active
-                      ? 'bg-brand-primary font-semibold text-white shadow-card'
+                      ? 'bg-brand-primary font-semibold text-ink shadow-card'
                       : ok
                         ? 'bg-card text-ink shadow-card active:scale-95'
                         : 'cursor-not-allowed bg-sunken text-ink-placeholder line-through'

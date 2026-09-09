@@ -136,7 +136,7 @@ function PetsSection() {
           action={
             <Link
               to="/philia/pets"
-              className="mt-2 rounded-full bg-brand-primary px-5 py-2 text-body text-white"
+              className="mt-2 rounded-full bg-brand-primary px-5 py-2 text-body text-ink"
             >
               建立宠物档案
             </Link>
@@ -264,7 +264,7 @@ function LogoutConfirmDialog({
 }) {
   return (
     <div
-      className="fixed inset-0 z-modal flex items-center justify-center bg-[rgba(61,50,41,0.4)] px-8"
+      className="fixed inset-0 z-modal flex items-center justify-center bg-ink/40 px-8"
       onClick={onCancel}
       role="dialog"
       aria-label="退出登录确认"

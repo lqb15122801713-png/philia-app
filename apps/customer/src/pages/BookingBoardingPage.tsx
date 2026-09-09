@@ -168,7 +168,7 @@ export default function BookingBoardingPage() {
           aria-label="返回"
           className="flex h-9 w-9 items-center justify-center rounded-full bg-card shadow-card active:scale-92"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8A7A6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ink-secondary" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m15 18-6-6 6-6" />
           </svg>
         </button>
@@ -210,7 +210,7 @@ export default function BookingBoardingPage() {
               <button
                 type="button"
                 onClick={() => navigate('/philia/pets')}
-                className="mt-4 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-semibold text-white transition-transform duration-120 ease-philia-spring active:scale-92"
+                className="mt-4 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
               >
                 先建立宠物档案
               </button>
@@ -253,7 +253,7 @@ export default function BookingBoardingPage() {
                 onClick={() => pickStore(s.id)}
                 className={`shrink-0 rounded-full px-4 py-2 text-body transition ${
                   s.id === effStoreId
-                    ? 'bg-brand-primary font-semibold text-white'
+                    ? 'bg-brand-primary font-semibold text-ink'
                     : 'bg-card text-ink shadow-card'
                 }`}
               >
@@ -414,7 +414,7 @@ export default function BookingBoardingPage() {
             type="button"
             disabled={!canNext}
             onClick={() => setStep(step + 1)}
-            className="h-12 w-full rounded-full bg-brand-primary text-body font-semibold text-white shadow-card transition-transform duration-120 ease-philia-spring active:scale-92 disabled:bg-line disabled:text-ink-placeholder"
+            className="h-12 w-full rounded-full bg-brand-primary text-body font-semibold text-ink shadow-card transition-transform duration-120 ease-philia-spring active:scale-92 disabled:bg-line disabled:text-ink-placeholder"
           >
             下一步
           </button>
@@ -423,7 +423,7 @@ export default function BookingBoardingPage() {
             type="button"
             disabled={createM.isPending}
             onClick={() => createM.mutate()}
-            className="h-12 w-full rounded-full bg-philia-gradient text-body font-semibold text-white shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+            className="h-12 w-full rounded-full bg-philia-gradient text-body font-semibold text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
           >
             {createM.isPending ? '提交中…' : '确认预约'}
           </button>

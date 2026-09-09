@@ -39,7 +39,7 @@ export default function PetPicker({
         <p className="mt-1 text-caption text-ink-secondary">先为毛孩子建一份档案，再来预约吧</p>
         <Link
           to="/philia/pets"
-          className="mt-4 inline-flex h-11 items-center rounded-full bg-brand-primary px-6 text-body font-medium text-white shadow-card transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="mt-4 inline-flex h-11 items-center rounded-full bg-brand-primary px-6 text-body font-medium text-ink shadow-card transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           去建宠物档案
         </Link>
@@ -124,7 +124,7 @@ export default function PetPicker({
               }`}
             >
               {active ? (
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ink" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 6 9 17l-5-5" />
                 </svg>
               ) : null}

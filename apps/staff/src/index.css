@@ -2,66 +2,135 @@
 @tailwind components;
 @tailwind utilities;
 
+/* -------------------------------------------------------------------------- */
+/* 品牌字体自托管（批次 5 · v1.1 冻结）：Poppins（拉丁正文）/ Montserrat（拉丁标题·数字） */
+/* / Noto Sans SC（中文）。woff2 放 public/fonts/，禁外链 CDN；font-display: swap。    */
+/* 红线：中文禁斜体；中文不落拉丁展示字体（拉丁字体只列 latin 子集，中文自然落 Noto）。   */
+/* 注：woff2 二进制不入本 PR（MCP 通道 utf8 编码会损坏二进制），由老板 web 上传         */
+/* （沿用 PR #15 流程）；文件未上传前 @font-face 静默 404，自动回退系统栈，无闪断。     */
+/* -------------------------------------------------------------------------- */
+
+/* Poppins 400/600（latin 子集） */
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/poppins-latin-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/poppins-latin-600.woff2') format('woff2');
+}
+
+/* Montserrat 400/600/700（latin 子集） */
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/montserrat-latin-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/montserrat-latin-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/montserrat-latin-700.woff2') format('woff2');
+}
+
+/* Noto Sans SC 400/700（chinese-simplified 子集） */
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/noto-sans-sc-chinese-simplified-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Noto Sans SC';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/noto-sans-sc-chinese-simplified-700.woff2') format('woff2');
+}
+
 @layer base {
+  /* shadcn light 变量 · 对齐冻结表 4.1（docs/BRAND-TOKENS-v1.1.md §三） */
   :root {
-    --background: 33 53% 96%; /* 品牌画布 #FBF7F2 */
-    --foreground: 27 20% 20%; /* 品牌正文 #3D3229 */
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --background: 44 51% 93%; /* 米白 canvas #F6F1E3 */
+    --foreground: 28 23% 24%; /* 深棕墨 ink #4A3B2E */
+    --card: 0 0% 100%; /* card 维持纯白 */
+    --card-foreground: 28 23% 24%; /* foreground 系对齐深棕墨 */
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
+    --popover-foreground: 28 23% 24%;
+    --primary: 44 98% 59%; /* 柠檬黄 #FDC830 */
+    --primary-foreground: 28 23% 24%; /* on-primary 深棕墨（对比度 6.89:1） */
+    --secondary: 162 44% 88%; /* 薄荷绿洗底 #D3EEE6 */
+    --secondary-foreground: 28 23% 24%;
+    --muted: 46 55% 90%;
+    --muted-foreground: 28 13% 47%; /* ink-secondary #8A796B 同族 */
+    --accent: 162 44% 88%;
+    --accent-foreground: 28 23% 24%;
+    --destructive: 4 74% 49%; /* 功能红 #D92D20 */
+    --destructive-foreground: 0 0% 100%; /* danger/白字 4.83:1 */
+    --border: 26 29% 89%;
+    --input: 26 29% 89%;
+    --ring: 28 23% 24%; /* 深棕墨焦点环 */
     --radius: 0.625rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* sidebar-* 同祖推导：background←card 纯白；foreground/primary/accent/border/ring
+       分别对齐同名主变量 */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 28 23% 24%;
+    --sidebar-primary: 44 98% 59%;
+    --sidebar-primary-foreground: 28 23% 24%;
+    --sidebar-accent: 162 44% 88%;
+    --sidebar-accent-foreground: 28 23% 24%;
+    --sidebar-border: 26 29% 89%;
+    --sidebar-ring: 28 23% 24%;
   }
 
+  /* shadcn dark 变量 · 全量替换为冻结表 4.2 dark 子表（确认书第 3 条：本批次开启） */
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: 28 25% 12%; /* dark canvas #261E17 */
+    --foreground: 44 51% 93%; /* 米白反相 #F6F1E3 */
+    --card: 30 23% 17%; /* #352B21 */
+    --card-foreground: 44 51% 93%;
+    --popover: 30 23% 17%;
+    --popover-foreground: 44 51% 93%;
+    --primary: 44 98% 59%; /* 柠檬黄原值（dark 对比度 10.53:1） */
+    --primary-foreground: 28 23% 24%; /* on-primary 深棕墨 */
+    --secondary: 162 44% 88%;
+    --secondary-foreground: 28 23% 24%;
+    --muted: 30 22% 9%;
+    --muted-foreground: 28 12% 68%;
+    --accent: 162 44% 88%;
+    --accent-foreground: 28 23% 24%;
+    --destructive: 4 74% 57%; /* dark danger #E34A3F（+8 提亮） */
+    --destructive-foreground: 0 0% 100%;
+    --border: 27 20% 26%;
+    --input: 27 20% 26%;
+    --ring: 44 98% 59%;
+    /* sidebar-* 同祖推导：background←card；foreground/primary/accent/border/ring
+       分别对齐同名主变量 */
+    --sidebar-background: 30 23% 17%;
+    --sidebar-foreground: 44 51% 93%;
+    --sidebar-primary: 44 98% 59%;
+    --sidebar-primary-foreground: 28 23% 24%;
+    --sidebar-accent: 162 44% 88%;
+    --sidebar-accent-foreground: 28 23% 24%;
+    --sidebar-border: 27 20% 26%;
+    --sidebar-ring: 44 98% 59%;
   }
 }
 
@@ -70,13 +139,11 @@
     @apply border-border;
   }
   body {
-    /* 品牌画布米白暖底 #FBF7F2 + 暖深棕正文 #3D3229（token: bg.canvas / text.primary） */
-    @apply bg-canvas text-ink;
-    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC",
-      "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC",
-      "Source Han Sans SC", "Segoe UI", Roboto, sans-serif;
+    /* 品牌画布米白 #F6F1E3 + 深棕墨正文 #4A3B2E（token: bg.canvas / text.primary） */
+    @apply bg-canvas text-ink font-sans;
   }
 }
+
 @layer utilities {
   /* 横滑 chips 隐藏滚动条（历史页状态筛选等） */
   .no-scrollbar {

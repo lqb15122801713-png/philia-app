@@ -162,7 +162,7 @@ export default function TabBar() {
       {/* 长按弹层：一键预约最近一次服务 */}
       {sheetOpen ? (
         <div
-          className="fixed inset-0 z-modal flex items-end justify-center bg-[rgba(61,50,41,0.4)]"
+          className="fixed inset-0 z-modal flex items-end justify-center bg-ink/40"
           onClick={() => setSheetOpen(false)}
           role="dialog"
           aria-label="快捷预约"
@@ -191,7 +191,7 @@ export default function TabBar() {
                 <button
                   type="button"
                   onClick={rebook}
-                  className="mt-4 w-full rounded-full bg-philia-gradient py-3 text-body font-semibold text-white shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92"
+                  className="mt-4 w-full rounded-full bg-philia-gradient py-3 text-body font-semibold text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92"
                 >
                   再次预约同款服务
                 </button>
@@ -207,7 +207,7 @@ export default function TabBar() {
                     setSheetOpen(false)
                     navigate('/booking')
                   }}
-                  className="mt-4 w-full rounded-full bg-philia-gradient py-3 text-body font-semibold text-white shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92"
+                  className="mt-4 w-full rounded-full bg-philia-gradient py-3 text-body font-semibold text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92"
                 >
                   去预约
                 </button>

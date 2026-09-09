@@ -46,7 +46,7 @@ export default function StaffPicker({
               onClick={() => onSelect(s.id)}
               className={cardCls(selectedId === s.id)}
             >
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-primary text-body font-semibold text-white">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-primary text-body font-semibold text-ink">
                 {s.name.slice(0, 1)}
               </span>
               <span className="text-body font-medium">{s.name}</span>

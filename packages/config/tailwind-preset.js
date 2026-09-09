@@ -1,5 +1,5 @@
 /**
- * 菲丽亚宠物 Philia · Tailwind preset
+ * 菲丽亚宠物 Philia · Tailwind preset（批次 5 · B 阶段品牌换色 v1.1 冻结版）
  *
  * 各端 app 的 tailwind.config 引用方式：
  *   module.exports = {
@@ -8,10 +8,11 @@
  *   }
  *
  * 与 packages/shared/src/tokens.ts 同名同值；改值两处同步。
+ * 冻结凭据：docs/BRAND-TOKENS-v1.1.md（B5-0 冻结确认书 2026-09-08 老板拍板）。
  * 本 preset 不含 content / 插件，仅注入品牌 theme。
  *
  * 常用类速查：
- *   背景      bg-canvas / bg-card / bg-sunken
+ *   背景      bg-canvas / bg-card / bg-sunken / bg-oak / bg-oak-light
  *   品牌色    bg-brand-primary / bg-brand-primary-hover / bg-brand-primary-pressed / bg-brand-primary-light
  *             bg-brand-secondary / bg-brand-secondary-light / bg-brand-secondary-deep
  *   文字      text-ink / text-ink-secondary / text-ink-placeholder
@@ -32,39 +33,43 @@ module.exports = {
       colors: {
         brand: {
           primary: {
-            DEFAULT: '#D98E5F', // 暖杏橘（锁定）
-            hover: '#D37D46',
-            pressed: '#C7692F',
-            light: '#F5E9E1',
+            DEFAULT: '#FDC830', // 柠檬黄（VI 主色，锁定）
+            hover: '#FDC012', // 明度 −6
+            pressed: '#E8AD02', // 明度 −13
+            light: '#FCF3D9', // 同 H、S−12、L=92
           },
           secondary: {
-            DEFAULT: '#F2C9A4', // 奶杏（锁定）
-            light: '#F5E1CE',
-            deep: '#EEB47F',
+            DEFAULT: '#7FD8BE', // 薄荷绿（VI 辅色，锁定；不参与功能反馈）
+            light: '#D3EEE6', // 同 H、S−9、L=88
+            deep: '#5ED1AF', // 同 H、S+2、L−8
           },
         },
-        canvas: '#FBF7F2', // 米白暖底（锁定）
+        canvas: '#F6F1E3', // 米白（VI 底色，锁定）
         card: '#FFFFFF',
-        sunken: '#F8F0E6',
+        sunken: '#F3ECD6',
+        oak: {
+          DEFAULT: '#D4B896', // 浅木（VI 空间色：寄养/房间场景辅助底、暖色区块）
+          light: '#F1EBE5', // 浅木洗色（同 H、S−12、L=92）
+        },
         ink: {
-          DEFAULT: '#3D3229', // 暖深棕正文（锁定）
-          secondary: '#8A7A6B', // （锁定）
+          DEFAULT: '#4A3B2E', // 深棕墨（VI 文字色，锁定；兼 on-primary 主按钮前景）
+          secondary: '#8A796B', // hue→27.9°，S/L 同档
           placeholder: '#BDB2A8',
         },
         line: {
-          DEFAULT: '#EBE3DB',
-          strong: '#DDD0C6',
-          divider: '#F0EBE5',
+          DEFAULT: '#EBE2DB',
+          strong: '#DDD1C6',
+          divider: '#F0EAE5',
         },
         success: {
-          DEFAULT: '#7FA87C', // 苔绿（锁定）
+          DEFAULT: '#7FA87C', // 苔绿（功能色原值保留，确认书第 1 条）
           light: '#E8EFE8',
           deep: '#649160',
         },
         danger: {
-          DEFAULT: '#C96F5E', // 陶红（锁定）
-          light: '#F3E4E1',
-          deep: '#B7503D',
+          DEFAULT: '#D92D20', // 标准功能红（确认书第 2 条，token 独立一行）
+          light: '#F8DFDD',
+          deep: '#AC2419',
         },
       },
 
@@ -80,7 +85,7 @@ module.exports = {
       boxShadow: {
         card: '0 2px 10px rgba(61, 50, 41, 0.05)',
         elevated: '0 8px 24px rgba(61, 50, 41, 0.08)',
-        philia: '0 6px 16px rgba(214, 138, 90, 0.35)', // （锁定）
+        philia: '0 6px 16px rgba(253, 200, 48, 0.35)', // 柠檬黄光晕（随主色，锁定）
       },
 
       fontSize: {
@@ -92,8 +97,11 @@ module.exports = {
         price: ['20px', { lineHeight: '28px', fontWeight: '600' }],
       },
 
+      // 字体自托管 woff2（禁外链 CDN）；中文不落拉丁展示字体，中文禁斜体
       fontFamily: {
         sans: [
+          'Poppins',
+          'Noto Sans SC',
           '-apple-system',
           'BlinkMacSystemFont',
           'PingFang SC',
@@ -104,20 +112,22 @@ module.exports = {
           'Arial',
           'sans-serif',
         ],
-        // 数字与价格：配合 font-variant-numeric: tabular-nums 使用
-        number: ['Helvetica Neue', 'Helvetica', 'Arial', 'PingFang SC', 'Microsoft YaHei', 'sans-serif'],
+        // 拉丁标题：Montserrat SemiBold；中文永远落 Noto Sans SC Bold
+        display: ['Montserrat', 'Noto Sans SC', '-apple-system', 'BlinkMacSystemFont', 'PingFang SC', 'Microsoft YaHei', 'sans-serif'],
+        // 数字与价格：Montserrat → Noto Sans SC，配合 font-variant-numeric: tabular-nums 使用
+        number: ['Montserrat', 'Noto Sans SC', 'Helvetica Neue', 'Helvetica', 'Arial', 'PingFang SC', 'Microsoft YaHei', 'sans-serif'],
       },
 
       backgroundImage: {
-        'philia-gradient': 'linear-gradient(135deg, #D98E5F 0%, #F2C9A4 100%)', // （锁定）
-        'philia-gradient-hover': 'linear-gradient(135deg, #D37D46 0%, #EEB47F 100%)',
+        'philia-gradient': 'linear-gradient(135deg, #FDC830 0%, #7FD8BE 100%)', // 135° 柠檬黄→薄荷绿（锁定）
+        'philia-gradient-hover': 'linear-gradient(135deg, #FDC012 0%, #5ED1AF 100%)',
       },
 
       keyframes: {
-        // philia 按钮 / StepTimeline active 节点的呼吸光环（1.8s）
+        // philia 按钮 / StepTimeline active 节点的呼吸光环（1.8s，随主色）
         halo: {
-          '0%': { boxShadow: '0 0 0 0 rgba(217, 142, 95, 0.45)' },
-          '100%': { boxShadow: '0 0 0 14px rgba(217, 142, 95, 0)' },
+          '0%': { boxShadow: '0 0 0 0 rgba(253, 200, 48, 0.45)' },
+          '100%': { boxShadow: '0 0 0 14px rgba(253, 200, 48, 0)' },
         },
       },
       animation: {

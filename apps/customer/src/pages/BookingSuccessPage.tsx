@@ -86,7 +86,7 @@ export default function BookingSuccessPage() {
     <div className="px-4 py-6">
       <div className="flex flex-col items-center pt-2">
         <span className="flex h-14 w-14 items-center justify-center rounded-full bg-success-light">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#649160" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-success-deep" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 6 9 17l-5-5" />
           </svg>
         </span>
@@ -151,7 +151,7 @@ export default function BookingSuccessPage() {
           disabled={!d}
           className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-card text-body font-semibold text-ink shadow-card transition active:scale-[0.99] disabled:opacity-50"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D98E5F" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-brand-primary" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="4" width="18" height="18" rx="2" />
             <path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4" />
           </svg>
@@ -159,7 +159,7 @@ export default function BookingSuccessPage() {
         </button>
         <Link
           to="/appointments"
-          className="flex h-12 w-full items-center justify-center rounded-full bg-philia-gradient text-body font-semibold text-white shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="flex h-12 w-full items-center justify-center rounded-full bg-philia-gradient text-body font-semibold text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           查看我的预约
         </Link>

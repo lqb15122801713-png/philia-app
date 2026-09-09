@@ -91,13 +91,13 @@ export default function DevLoginPage() {
     <div className="px-4 pb-10">
       <header className="pt-8">
         <h1 className="text-title-lg">开发登录</h1>
-        <p className="mt-1 inline-block rounded-full bg-[#F5E9E1] px-3 py-1 text-caption text-[#C7692F]">
+        <p className="mt-1 inline-block rounded-full bg-brand-primary-light px-3 py-1 text-caption text-brand-primary-pressed">
           仅开发环境 · 生产环境请移除
         </p>
       </header>
 
       {user ? (
-        <div className="mt-4 rounded-card bg-white p-4 shadow-card">
+        <div className="mt-4 rounded-card bg-card p-4 shadow-card">
           <p className="text-body">
             当前已登录：<span className="font-semibold">{user.nickname ?? user.id}</span>
           </p>
@@ -129,7 +129,7 @@ export default function DevLoginPage() {
                   type="button"
                   disabled={pendingId !== null}
                   onClick={() => void doLogin(u.id)}
-                  className="flex w-full items-center justify-between rounded-card bg-white px-4 py-3 text-left shadow-card transition active:scale-[0.99] disabled:opacity-60"
+                  className="flex w-full items-center justify-between rounded-card bg-card px-4 py-3 text-left shadow-card transition active:scale-[0.99] disabled:opacity-60"
                 >
                   <span>
                     <span className="block text-body font-semibold">{u.nickname}</span>
@@ -161,12 +161,12 @@ export default function DevLoginPage() {
             value={manualId}
             onChange={(e) => setManualId(e.target.value)}
             placeholder="users.id（ULID）"
-            className="bg-white"
+            className="bg-card"
           />
           <Button
             disabled={pendingId !== null || manualId.trim().length === 0}
             onClick={() => void doLogin(manualId.trim())}
-            className="bg-[#D98E5F] text-white hover:bg-[#D37D46]"
+            className="bg-brand-primary text-ink hover:bg-brand-primary-hover"
           >
             登录
           </Button>

@@ -198,7 +198,7 @@ export default function BoardingRangeSheet({
                       data-phase={phase}
                       className={`mx-auto flex h-9 w-9 items-center justify-center rounded-full text-body transition ${
                         endpoint
-                          ? 'bg-brand-primary font-semibold text-white'
+                          ? 'bg-brand-primary font-semibold text-ink'
                           : dis
                             ? 'cursor-not-allowed text-ink-placeholder opacity-40'
                             : `text-ink active:scale-95 ${isToday ? 'font-semibold text-brand-primary' : ''}`

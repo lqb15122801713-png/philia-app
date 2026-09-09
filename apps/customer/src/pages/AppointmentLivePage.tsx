@@ -508,7 +508,7 @@ export default function AppointmentLivePage() {
           </p>
           <Link
             to="/appointments"
-            className="mt-5 inline-flex h-11 items-center rounded-full bg-brand-primary px-6 text-body font-semibold text-white"
+            className="mt-5 inline-flex h-11 items-center rounded-full bg-brand-primary px-6 text-body font-semibold text-ink"
           >
             回到我的预约
           </Link>
@@ -561,7 +561,7 @@ export default function AppointmentLivePage() {
           {!cancelRequested ? (
             <Link
               to={`/appointments/${appt.id}`}
-              className="mt-5 inline-flex h-11 items-center gap-1.5 rounded-full bg-brand-primary px-6 text-body font-semibold text-white"
+              className="mt-5 inline-flex h-11 items-center gap-1.5 rounded-full bg-brand-primary px-6 text-body font-semibold text-ink"
             >
               <QrCode className="h-5 w-5" strokeWidth={1.5} />
               出示预约码
@@ -584,7 +584,7 @@ export default function AppointmentLivePage() {
           <p className="mt-2 text-body text-ink-secondary">这次没能相见，期待下次再约。</p>
           <Link
             to="/booking"
-            className="mt-5 inline-flex h-11 items-center rounded-full bg-brand-primary px-6 text-body font-semibold text-white"
+            className="mt-5 inline-flex h-11 items-center rounded-full bg-brand-primary px-6 text-body font-semibold text-ink"
           >
             重新预约
           </Link>
