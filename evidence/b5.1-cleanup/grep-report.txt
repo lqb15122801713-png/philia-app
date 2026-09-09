@@ -1,0 +1,32 @@
+# 批次 5.1 grep 验收报告
+# 执行时间: 2026-09-09 18:19:00  分支: feat/b5.1-cleanup  HEAD: c65e1a6
+
+## 任务 A 验收：apps/ 全域（含 dist）旧色值 + 珊瑚粉
+$ grep -rn -E "#D98E5F|#C7692F|#F2C9A4|#FBF7F2|#DDD0C6|#EBE3DB|#FFAAA5" apps/ | wc -l
+0
+
+## 任务 A 补充：apps/ 源码域（排除 dist/node_modules）
+$ grep -rn -E "同上" apps/ --exclude-dir=dist --exclude-dir=node_modules | wc -l
+0
+
+## 任务 B 验收：30 个 SVG 旧色值
+$ grep -rE "#F5E9E1|#D98E5F|#B87448|#FBEBD3|#C98A3D|#A66F2A|#6FA08F|#54826F|#3D3229|#8A7A6B" apps/*/public/products/ | wc -l
+0
+
+## 任务 B 验收：30 个 SVG 新色板命中数（与脚本推导一致）
+#FCF3D9: 9
+#FDC830: 63
+#E8AD02: 9
+#F1EBE5: 9
+#D4B896: 45
+#8A796B: 39
+#E8EFE8: 6
+#7FA87C: 42
+#649160: 6
+#D3EEE6: 6
+#7FD8BE: 48
+#5ED1AF: 6
+#4A3B2E: 30
+
+## SVG 文件数
+30

@@ -1,0 +1,16 @@
+# 批次 5.1 截图说明（light + dark 各一套）
+
+拍摄环境：Edge headless CDP（--use-fake-device-for-media-stream 假摄像头），390×844 mobile 视口；
+dark 通过 `document.documentElement.classList.add('dark')` 切换（三端 tailwind `darkMode: ["class"]`，
+index.css `.dark` 变量块）。驱动脚本：driver-shots.mjs（本目录，临时脚本不入库）。
+
+| 文件 | 内容 | 验证点 |
+|---|---|---|
+| staff-scan-light.png | staff 扫码核销模态 · 扫码态（light） | 四角扫描框描边 = 柠檬黄 #FDC830（任务 A1）；假摄像头绿色测试图为采集源，非 UI |
+| staff-scan-dark.png | 同上 · dark | 模态为黑底取景，dark 下描边同 #FDC830 |
+| staff-manual-light.png | staff 扫码模态 · 手动输入态（light） | 提交按钮 bg #FDC830 + 文字深棕墨 #4A3B2E（未输入码为 disabled 40% 透明，任务 A2）；focus 描边 #FDC830 |
+| staff-manual-dark.png | 同上 · dark | 同上 |
+| merchant-finance-empty-light.png | merchant 财务页空态（light，月视图翻至 2024-09 无记录周期） | 空态插画光晕渐变 #FDC830→#7FD8BE、爪印深棕墨 #4A3B2E、收据线 #DDD1C6、明细线 #EBE2DB（任务 A3） |
+| merchant-finance-empty-dark.png | 同上 · dark | dark 卡片 #352B21 下插画同版式 |
+| customer-mall-light.png | 客户端商城商品网格（light） | 新占位图：主粮柠檬黄系 #FCF3D9/#FDC830、零食浅木系 #F1EBE5/#D4B896（任务 B） |
+| customer-mall-dark.png | 同上 · dark | 占位图为静态 SVG（light 色板，产品裁定），卡片容器走 dark 变量 |
