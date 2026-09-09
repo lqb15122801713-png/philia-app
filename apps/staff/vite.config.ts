@@ -17,8 +17,8 @@ export default defineConfig({
         name: '菲丽亚员工端',
         short_name: '菲丽亚员工',
         description: '菲丽亚宠物服务平台 · 员工端（服务执行）',
-        theme_color: '#FBF7F2',
-        background_color: '#FBF7F2',
+        theme_color: '#F6F1E3',
+        background_color: '#F6F1E3',
         display: 'standalone',
         start_url: './',
         icons: [

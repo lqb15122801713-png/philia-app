@@ -17,8 +17,8 @@ export default defineConfig({
         name: '菲丽亚商家端',
         short_name: '菲丽亚商家',
         description: '菲丽亚宠物服务平台 · 商家端（门店管理）',
-        theme_color: '#FBF7F2',
-        background_color: '#FBF7F2',
+        theme_color: '#F6F1E3',
+        background_color: '#F6F1E3',
         display: 'standalone',
         start_url: './',
         icons: [
