@@ -1,0 +1,4 @@
+app-1  | [entrypoint] 启动 philia-server（PORT=7200 SERVE_STATIC=1）…
+app-1  | [deploy] NODE_ENV=staging（内测口径）：关键配置均已显式注入 ✓
+app-1  | [philia-server] 已启动: http://localhost:7200 （tRPC: /trpc/*, SSE: /api/events）
+app-1  | [philia-server] PUBLIC_BASE_URL: http://120.53.102.45:7200
