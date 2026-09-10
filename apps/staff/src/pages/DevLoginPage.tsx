@@ -7,7 +7,9 @@
  * - 种子用户列表：启动时 fetch GET /api/auth/dev-seed-users 动态渲染（v1.1-b1，
  *   不再硬编码 ULID——重跑 db:seed 后 ID 变化也能直接登录）；仅列员工角色；
  *   fetch 失败/为空 → 错误提示 + 手动输入兜底。
- * - 点击调 devLogin(baseUrl, userId) → 失效全部查询缓存 → 跳回 from 或 /today。
+ * - 内测口令门（批次 6 任务 B2）：服务端设置 BETA_GATE_CODE 后，dev-seed-users
+ *   无口令返回 401 → 页面显示口令输入框；登录请求 body 携带 code。
+ * - 点击调 devLogin(baseUrl, userId, code?) → 失效全部查询缓存 → 跳回 from 或 /today。
  */
 
 import { devLogin, getApiBase, logout, useMe, usePhiliaClient } from '@philia/shared'
@@ -43,34 +45,66 @@ export default function DevLoginPage() {
   /* ---- v1.1-b1：动态拉取种子用户（仅员工角色） ---- */
   const [seeds, setSeeds] = useState<SeedUser[] | null>(null)
   const [seedsError, setSeedsError] = useState<string | null>(null)
-  useEffect(() => {
-    let cancelled = false
-    fetch(`${getApiBase()}/api/auth/dev-seed-users`)
-      .then((r) => {
+  /* ---- 批次 6 任务 B2：内测口令门（服务端 BETA_GATE_CODE 设置后须带口令） ---- */
+  const [gateRequired, setGateRequired] = useState(false)
+  const [gateCode, setGateCode] = useState('')
+  const [gateError, setGateError] = useState<string | null>(null)
+
+  const loadSeeds = (code?: string) => {
+    const qs = code ? `?code=${encodeURIComponent(code)}` : ''
+    fetch(`${getApiBase()}/api/auth/dev-seed-users${qs}`)
+      .then(async (r) => {
+        if (r.status === 401) {
+          // 服务端要求内测口令 → 显示口令输入框
+          setGateRequired(true)
+          setGateError(null)
+          return null
+        }
+        if (r.status === 403) {
+          setGateRequired(true)
+          setGateError('内测口令错误，请重新输入')
+          return null
+        }
         if (!r.ok) throw new Error(`HTTP ${r.status}`)
-        return r.json() as Promise<{ users?: SeedUser[] }>
+        return (await r.json()) as { users?: SeedUser[] }
       })
       .then((d) => {
-        if (!cancelled) setSeeds(d.users ?? [])
+        if (d) {
+          setSeeds(d.users ?? [])
+          setSeedsError(null)
+          setGateError(null)
+        }
       })
       .catch((e) => {
-        if (!cancelled) setSeedsError(e instanceof Error ? e.message : '拉取失败')
+        setSeedsError(e instanceof Error ? e.message : '拉取失败')
       })
-    return () => {
-      cancelled = true
-    }
+  }
+
+  useEffect(() => {
+    loadSeeds()
+    // 仅首挂载拉一次；口令提交由 submitGate 显式触发
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const submitGate = () => {
+    const code = gateCode.trim()
+    if (!code) return
+    loadSeeds(code)
+  }
   const staffSeeds = (seeds ?? []).filter((u) => u.roles.includes('staff'))
 
   const doLogin = async (userId: string) => {
     setPendingId(userId)
     setError(null)
     try {
-      await devLogin(getApiBase(), userId)
+      await devLogin(getApiBase(), userId, gateCode.trim() || undefined)
       await queryClient.invalidateQueries()
       navigate(from && from !== '/dev-login' ? from : '/today', { replace: true })
     } catch (err) {
-      setError(err instanceof Error ? err.message : '登录失败')
+      const msg = err instanceof Error ? err.message : '登录失败'
+      // 口令缺失/错误 → 强制显示口令输入框
+      if (msg.includes('口令')) setGateRequired(true)
+      setError(msg)
     } finally {
       setPendingId(null)
     }
@@ -115,7 +149,34 @@ export default function DevLoginPage() {
 
       <section className="mt-6">
         <h2 className="text-title">选择员工账号登录</h2>
-        {seeds === null && seedsError === null ? (
+        {gateRequired && seeds === null ? (
+          <div className="mt-3 rounded-card bg-card p-4 shadow-card">
+            <p className="text-body-lg font-semibold">内测环境需要口令</p>
+            <p className="mt-1 text-caption text-ink-secondary">
+              请输入内测口令后加载可登录账号；无口令或口令错误将无法登录。
+            </p>
+            <div className="mt-2 flex gap-2">
+              <Input
+                type="password"
+                value={gateCode}
+                onChange={(e) => setGateCode(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') submitGate()
+                }}
+                placeholder="内测口令"
+                className="h-14 bg-card text-body-lg"
+              />
+              <Button
+                disabled={gateCode.trim().length === 0}
+                onClick={submitGate}
+                className="h-14 bg-brand-primary text-body-lg text-ink hover:bg-brand-primary-hover"
+              >
+                确认
+              </Button>
+            </div>
+            {gateError ? <p className="mt-2 text-caption text-danger-deep">{gateError}</p> : null}
+          </div>
+        ) : seeds === null && seedsError === null ? (
           <ul className="mt-3 space-y-2">
             {[1, 2, 3].map((i) => (
               <li key={i} className="h-14 animate-pulse rounded-card bg-sunken" />
@@ -166,7 +227,7 @@ export default function DevLoginPage() {
           <Button
             disabled={pendingId !== null || manualId.trim().length === 0}
             onClick={() => void doLogin(manualId.trim())}
-            className="h-14 bg-brand-primary text-body-lg text-white hover:bg-brand-primary-hover"
+            className="h-14 bg-brand-primary text-body-lg text-ink hover:bg-brand-primary-hover"
           >
             登录
           </Button>

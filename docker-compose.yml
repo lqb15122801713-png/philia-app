@@ -1,0 +1,53 @@
+# ============================================================================
+# Philia 单实例编排（批次 6 任务 A · 拍板 1：VPS 单实例，libsql 嵌入式不迁移）
+#
+# 两条命令拉起（详见 docs/DEPLOY.md）：
+#   docker compose up -d --build     # 内测主流程（http://<IP>:7200 或本地 hosts 三子域）
+#   docker compose --profile https up -d --build   # 带 Caddy 自动 HTTPS（需三域名）
+#
+# 骨架：单服务 app（server 7200 + Host 头分发托管三端静态产物）
+#   + libsql 数据文件挂 volume（数据不随容器丢）+ 可选 https profile（Caddy）。
+# ============================================================================
+
+services:
+  app:
+    build: .
+    # 环境变量全部走 .env（env_file）；此处仅声明容器内固定骨架值
+    env_file: .env
+    environment:
+      PORT: "7200"
+      SERVE_STATIC: "1"
+      STATIC_ROOT: /app/apps
+      PHILIA_DB_URL: file:/app/data/philia.db
+    ports:
+      - "7200:7200"
+    volumes:
+      - philia-data:/app/data                 # libsql 库文件（philia.db）持久化
+      - philia-uploads:/app/server/uploads    # 上传图片持久化
+    restart: unless-stopped
+
+  # 可选 profile：Caddy 反代 + 自动 HTTPS（三子域名走环境变量，Host 头天然透传，
+  # 与方案一 Host 分发零适配成本）。用法：docker compose --profile https up -d
+  caddy:
+    image: caddy:2-alpine
+    profiles: ["https"]
+    depends_on:
+      - app
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?err APP_DOMAIN 未设置（客户端域名，如 app.example.com）}
+      M_DOMAIN: ${M_DOMAIN:?err M_DOMAIN 未设置（商家端域名，如 m.example.com）}
+      S_DOMAIN: ${S_DOMAIN:?err S_DOMAIN 未设置（员工端域名，如 s.example.com）}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data        # 证书持久化
+      - caddy-config:/config
+    restart: unless-stopped
+
+volumes:
+  philia-data:
+  philia-uploads:
+  caddy-data:
+  caddy-config:

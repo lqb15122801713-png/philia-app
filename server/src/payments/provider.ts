@@ -69,6 +69,8 @@ export function getPaymentProvider(): ResolvedPaymentProvider {
  * 启动校验（集成时在服务入口调用一次；冒烟/测试可直接调用验证语义）：
  * - PAYMENT_PROVIDER 非法取值 → 抛错；
  * - 生产环境（NODE_ENV=production）仍为 mock → 抛错（禁止 mock 上生产，§4.7）；
+ * - 内测环境（NODE_ENV=staging）使用 mock → 合法放行（批次 6 产品侧裁定书 #1 ②：
+ *   内测走 MockPayProvider 不接真钱；production + mock 红线一行不动）；
  * - provider=wechat 时 WECHAT_MCHID / WECHAT_APPID / WECHAT_KEY / WECHAT_SERIAL
  *   任一缺失 → WechatPayProvider 构造函数抛错（列出缺失项）。
  * 任何失败都以明确 Error 暴露，绝不静默降级。
@@ -76,6 +78,8 @@ export function getPaymentProvider(): ResolvedPaymentProvider {
 export function assertPaymentConfig(): void {
   const name = paymentProviderName(); // 非法取值直接抛
   if (name === 'mock') {
+    // 批次 6 裁定书 #1 ②：staging（VPS 内测）放行 MockPayProvider；
+    // production + mock 维持 §4.7 红线，启动报错（下行逻辑一字不动）
     if (process.env.NODE_ENV === 'production') {
       throw new Error(
         '[payments] 生产构建检测到 PAYMENT_PROVIDER=mock：mock 仅用于开发/演示，' +
