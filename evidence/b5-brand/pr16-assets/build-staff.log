@@ -1,0 +1,38 @@
+
+> @philia/staff@0.0.0 build
+> tsc -b && vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+
+/fonts/poppins-latin-400.woff2 referenced in /fonts/poppins-latin-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/fonts/poppins-latin-600.woff2 referenced in /fonts/poppins-latin-600.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/fonts/montserrat-latin-400.woff2 referenced in /fonts/montserrat-latin-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/fonts/montserrat-latin-600.woff2 referenced in /fonts/montserrat-latin-600.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/fonts/montserrat-latin-700.woff2 referenced in /fonts/montserrat-latin-700.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/fonts/noto-sans-sc-chinese-simplified-400.woff2 referenced in /fonts/noto-sans-sc-chinese-simplified-400.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+
+/fonts/noto-sans-sc-chinese-simplified-700.woff2 referenced in /fonts/noto-sans-sc-chinese-simplified-700.woff2 didn't resolve at build time, it will remain unchanged to be resolved at runtime
+✓ 2152 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                          0.14 kB
+dist/manifest.webmanifest                   0.40 kB
+dist/index.html                             0.74 kB │ gzip:   0.43 kB
+dist/assets/philia-tab-icon-wiOD1Y2x.png   10.07 kB
+dist/assets/index-CvyGuop3.css             92.19 kB │ gzip:  15.48 kB
+dist/assets/QrScanner-wht1qW92.js         141.36 kB │ gzip:  51.26 kB
+dist/assets/index-DSmOxJg4.js             464.49 kB │ gzip: 138.00 kB
+✓ built in 10.45s
+
+PWA v1.3.0
+mode      generateSW
+precache  8 entries (682.53 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js
