@@ -170,7 +170,7 @@ export default function DevLoginPage() {
               <Button
                 disabled={gateCode.trim().length === 0}
                 onClick={submitGate}
-                className="h-12 bg-brand-primary text-body text-white hover:bg-brand-primary-hover"
+                className="h-12 bg-brand-primary text-body text-ink hover:bg-brand-primary-hover"
               >
                 确认
               </Button>
@@ -228,7 +228,7 @@ export default function DevLoginPage() {
           <Button
             disabled={pendingId !== null || manualId.trim().length === 0}
             onClick={() => void doLogin(manualId.trim())}
-            className="h-12 bg-brand-primary text-body text-white hover:bg-brand-primary-hover"
+            className="h-12 bg-brand-primary text-body text-ink hover:bg-brand-primary-hover"
           >
             登录
           </Button>
