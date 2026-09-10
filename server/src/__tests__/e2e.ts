@@ -502,16 +502,17 @@ async function main(): Promise<void> {
     ['appointment.created', 1],
     ['appointment.confirmed', 1],
     ['appointment.assigned', 2], // staff + customer 双频道
-    ['appointment.checkedin', 1],
+    // B2-8：checkedin / completed 为 appointment + store 双频道各 1 条（本断言 P1 时代后未同步，见批次 7.1 前置项复核）
+    ['appointment.checkedin', 2],
     ['step_updated', 6],
-    ['appointment.completed', 1],
+    ['appointment.completed', 2],
     ['appointment.paid', 1],
     ['appointment.reviewed', 2], // store + staff 双频道
   ];
   const outboxOk = outboxExpect.every(([t, n]) => (byType.get(t) ?? []).length === n);
   check(
-    `event_outbox 事件齐全（共 ${outboxRows.length} 条 / 期望 15 条）`,
-    outboxOk && outboxRows.length === 15,
+    `event_outbox 事件齐全（共 ${outboxRows.length} 条 / 期望 17 条）`,
+    outboxOk && outboxRows.length === 17,
     Object.fromEntries([...byType].map(([k, v]) => [k, v.length])),
   );
   const assignedChannels = (byType.get('appointment.assigned') ?? []).sort();

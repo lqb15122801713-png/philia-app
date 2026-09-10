@@ -8,6 +8,7 @@
     "packages/*"
   ],
   "scripts": {
+    "postinstall": "node scripts/postinstall.mjs",
     "dev:customer": "npm run dev -w @philia/customer",
     "dev:merchant": "npm run dev -w @philia/merchant",
     "dev:staff": "npm run dev -w @philia/staff",
