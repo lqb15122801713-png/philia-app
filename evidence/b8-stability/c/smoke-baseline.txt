@@ -1,0 +1,46 @@
+✅ [customer] /dev-login —— 200 + 非空白 + 锚点/守卫命中
+✅ [customer] /home —— 200 + 非空白 + 锚点/守卫命中
+✅ [customer] /mall —— 200 + 非空白 + 锚点/守卫命中
+❌ [customer] /mall/cart —— #root 空白；锚点未命中（期望任一：购物车）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7100/mall/assets/index-CYF8SCvC.js) 等 2 条
+❌ [customer] /mall/checkout —— #root 空白；锚点未命中（期望任一：确认订单/没有待结算）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7100/mall/assets/index-CYF8SCvC.js) 等 2 条
+❌ [customer] /mall/orders —— #root 空白；锚点未命中（期望任一：订单）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7100/mall/assets/index-CYF8SCvC.js) 等 2 条
+❌ [customer] /mall/orders/ —— #root 空白；锚点未命中（期望任一：订单）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7100/mall/orders/assets/index-CYF8SCvC.js) 等 2 条
+✅ [customer] /booking —— 200 + 非空白 + 锚点/守卫命中
+❌ [customer] /booking/grooming —— #root 空白；锚点未命中（期望任一：预约洗护）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7100/booking/assets/index-CYF8SCvC.js) 等 2 条
+❌ [customer] /booking/grooming/ —— #root 空白；锚点未命中（期望任一：预约洗护）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7100/booking/grooming/assets/index-CYF8SCvC.js) 等 2 条
+✅ [customer] /appointments —— 200 + 非空白 + 锚点/守卫命中
+❌ [customer] /appointments/01M256D240E19GWNG2QMFV3Q8V —— #root 空白；锚点未命中（期望任一：预约/核销，或守卫跳 /dev-login）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7100/appointments/assets/index-CYF8SCvC.js) 等 2 条
+❌ [customer] /philia/pets —— #root 空白；锚点未命中（期望任一：宠物）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7100/philia/assets/index-CYF8SCvC.js) 等 2 条
+❌ [customer] /philia/moments —— #root 空白；锚点未命中（期望任一：动态/瞬间/广场）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7100/philia/assets/index-CYF8SCvC.js) 等 2 条
+✅ [merchant] /dev-login —— 200 + 非空白 + 锚点/守卫命中
+✅ [merchant] /dashboard —— 200 + 非空白 + 锚点/守卫命中
+✅ [merchant] /monitor —— 200 + 非空白 + 锚点/守卫命中（B2 修复路由）
+❌ [merchant] /monitor/ —— #root 空白；锚点未命中（期望任一：服务监视）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7101/monitor/assets/index-CYIn9r1n.js) 等 2 条
+❌ [merchant] /monitor/01M256D240E19GWNG2QMFV3Q8V —— #root 空白；锚点未命中（期望任一：监视/预约，或守卫跳 /dev-login）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7101/monitor/assets/index-CYIn9r1n.js) 等 2 条
+✅ [merchant] /live —— 200 + 非空白 + 锚点/守卫命中（B2 重定向）
+✅ [merchant] /appointments —— 200 + 非空白 + 锚点/守卫命中（A3 白屏群）
+❌ [merchant] /appointments/01M256D240E19GWNG2QMFV3Q8V/monitor —— #root 空白；锚点未命中（期望任一：监视/预约，或守卫跳 /dev-login）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7101/appointments/01M256D240E19GWNG2QMFV3Q8V/assets/index-CYIn9r1n.js) 等 2 条
+✅ [staff] /dev-login —— 200 + 非空白 + 锚点/守卫命中
+✅ [staff] /today —— 200 + 非空白 + 锚点/守卫命中
+❌ [staff] /execute/01M256D240E19GWNG2QMFV3Q8V —— #root 空白；锚点未命中（期望任一：第/步/核销，或守卫跳 /dev-login）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7102/execute/assets/index-BIE2h7gN.js) 等 2 条
+❌ [staff] /execute/01M256D240E19GWNG2QMFV3Q8V/ —— #root 空白；锚点未命中（期望任一：第/步/核销，或守卫跳 /dev-login）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7102/execute/01M256D240E19GWNG2QMFV3Q8V/assets/index-BIE2h7gN.js) 等 2 条
+✅ [staff] /history —— 200 + 非空白 + 锚点/守卫命中
+✅ [staff] /me —— 200 + 非空白 + 锚点/守卫命中
+
+===== 路由冒烟汇总：14/28 通过 =====
+  ❌ [customer] /mall/cart —— #root 空白；锚点未命中（期望任一：购物车）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7100/mall/assets/index-CYF8SCvC.js) 等 2 条
+  ❌ [customer] /mall/checkout —— #root 空白；锚点未命中（期望任一：确认订单/没有待结算）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7100/mall/assets/index-CYF8SCvC.js) 等 2 条
+  ❌ [customer] /mall/orders —— #root 空白；锚点未命中（期望任一：订单）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7100/mall/assets/index-CYF8SCvC.js) 等 2 条
+  ❌ [customer] /mall/orders/ —— #root 空白；锚点未命中（期望任一：订单）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7100/mall/orders/assets/index-CYF8SCvC.js) 等 2 条
+  ❌ [customer] /booking/grooming —— #root 空白；锚点未命中（期望任一：预约洗护）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7100/booking/assets/index-CYF8SCvC.js) 等 2 条
+  ❌ [customer] /booking/grooming/ —— #root 空白；锚点未命中（期望任一：预约洗护）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7100/booking/grooming/assets/index-CYF8SCvC.js) 等 2 条
+  ❌ [customer] /appointments/01M256D240E19GWNG2QMFV3Q8V —— #root 空白；锚点未命中（期望任一：预约/核销，或守卫跳 /dev-login）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7100/appointments/assets/index-CYF8SCvC.js) 等 2 条
+  ❌ [customer] /philia/pets —— #root 空白；锚点未命中（期望任一：宠物）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7100/philia/assets/index-CYF8SCvC.js) 等 2 条
+  ❌ [customer] /philia/moments —— #root 空白；锚点未命中（期望任一：动态/瞬间/广场）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7100/philia/assets/index-CYF8SCvC.js) 等 2 条
+  ❌ [merchant] /monitor/ —— #root 空白；锚点未命中（期望任一：服务监视）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7101/monitor/assets/index-CYIn9r1n.js) 等 2 条
+  ❌ [merchant] /monitor/01M256D240E19GWNG2QMFV3Q8V —— #root 空白；锚点未命中（期望任一：监视/预约，或守卫跳 /dev-login）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7101/monitor/assets/index-CYIn9r1n.js) 等 2 条
+  ❌ [merchant] /appointments/01M256D240E19GWNG2QMFV3Q8V/monitor —— #root 空白；锚点未命中（期望任一：监视/预约，或守卫跳 /dev-login）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7101/appointments/01M256D240E19GWNG2QMFV3Q8V/assets/index-CYIn9r1n.js) 等 2 条
+  ❌ [staff] /execute/01M256D240E19GWNG2QMFV3Q8V —— #root 空白；锚点未命中（期望任一：第/步/核销，或守卫跳 /dev-login）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7102/execute/assets/index-BIE2h7gN.js) 等 2 条
+  ❌ [staff] /execute/01M256D240E19GWNG2QMFV3Q8V/ —— #root 空白；锚点未命中（期望任一：第/步/核销，或守卫跳 /dev-login）；console 红线：[log] Failed to load resource: the server responded with a status of 404 (Not Found) (http://localhost:7102/execute/01M256D240E19GWNG2QMFV3Q8V/assets/index-BIE2h7gN.js) 等 2 条
+结果 JSON：D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\evidence\b8-stability\c\smoke-baseline.json
+smoke-routes-exit-code: 1

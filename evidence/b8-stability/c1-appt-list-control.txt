@@ -1,0 +1,10 @@
+# 路由复现 c1-appt-list-control
+url: http://localhost:7100/appointments
+final href: http://localhost:7100/appointments
+耗时: 4556ms
+#root innerHTML length: 15522
+body.innerText 前300字: "我的预约\n待确认8\n已确认\n服务中2\n已完成1\n已取消\n\n标准间寄养（犬）\n\n待确认\n\n菲丽亚宠物·示例店 · 旺财\n\n9月17日 周四 → 9月18日 周五\n\n¥199\n\n标准间寄养（犬）\n\n待确认\n\n菲丽亚宠物·示例店 · 旺财\n\n9月15日 周二 → 9月16日 周三\n\n¥199\n\n标准间寄养（犬）\n\n待确认\n\n菲丽亚宠物·示例店 · 旺财\n\n9月15日 周二 → 9月16日 周三\n\n¥199\n\n标准间寄养（犬）\n\n待确认\n\n菲丽亚宠物·示例店 · 旺财\n\n9月12日 周六 → 9月14日 周一\n\n¥398\n\n标准间寄养（犬）\n\n待确认\n\n菲丽亚宠物·示例店 · 旺财\n\n9月9日 周三 "
+
+## window.__errs (0)
+
+## CDP console/exception/network (0)

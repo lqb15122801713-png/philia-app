@@ -1,0 +1,6 @@
+# nav-a1-detail-inapp
+start: http://localhost:7100/appointments
+step: {"clicked":"/appointments/01M20FDY59VECCMZEH27ZJVAYR"}
+final href: http://localhost:7100/appointments/01M20FDY59VECCMZEH27ZJVAYR
+rootLen: 20430
+text: "预约详情\n待确认\n到店核销码\n\n到店出示此码 · 每 5 分钟自动刷新防截图\n\nCR35SF\n\n扫不上就报这个码（人工核销）\n\n预约信息\n类型\n寄养\n服务\n标准间寄养（犬）\n房型\n标准间\n宠物\n旺财\n时间\n9月17日 周四 → 9月18日 周五\n金额\n¥199\n收款方式\n到店付\n预约编号\n01M20"

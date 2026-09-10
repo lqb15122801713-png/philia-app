@@ -1,0 +1,10 @@
+import { createClient } from '@libsql/client';
+import { fileURLToPath } from 'node:url';
+const dbFile = fileURLToPath(new URL('../data/philia.db', import.meta.url));
+const client = createClient({ url: `file:${dbFile.replaceAll('\\', '/')}` });
+const appts = await client.execute('SELECT id, status, scheduled_start, code, customer_id, pet_id FROM appointments ORDER BY created_at DESC LIMIT 5');
+console.log('appointments:', JSON.stringify(appts.rows, null, 1));
+const orders = await client.execute('SELECT id, order_no, total_fen, status, customer_id FROM orders ORDER BY created_at DESC LIMIT 5');
+console.log('orders:', JSON.stringify(orders.rows, null, 1));
+const pets = await client.execute('SELECT * FROM pets LIMIT 3');
+console.log('pets:', JSON.stringify(pets.rows, null, 1));

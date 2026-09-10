@@ -1,0 +1,3 @@
+# x-philia-member
+url: http://localhost:7100/philia/member
+rootLen: 0

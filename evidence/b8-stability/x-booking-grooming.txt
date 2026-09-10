@@ -1,0 +1,3 @@
+# x-booking-grooming
+url: http://localhost:7100/booking/grooming
+rootLen: 0

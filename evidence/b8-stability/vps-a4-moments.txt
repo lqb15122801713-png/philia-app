@@ -1,0 +1,17 @@
+# 路由复现 vps-a4-moments
+url: http://app.localhost:7200/philia/moments
+final href: http://app.localhost:7200/philia/moments
+
+#root innerHTML length: 0
+body.innerText 前200字: ""
+
+## window.__errs (1)
+-- [0] onerror: Uncaught SyntaxError: Unexpected token '<'
+SyntaxError: Unexpected token '<'
+
+## CDP console/exception/network (5)
+[net.MIME-ODD 200 text/html] http://app.localhost:7200/philia/assets/index-BXkHFDj0.css
+[net.MIME-ODD 200 text/html] http://app.localhost:7200/philia/assets/index-tnp8dJmB.js
+[log.error] (javascript) Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec. http://app.localhost:7200/philia/assets/index-tnp8dJmB.js
+[EXCEPTION] SyntaxError: Unexpected token '<'
+[log.error] (other) Manifest: Line: 1, column: 1, Syntax error. http://app.localhost:7200/philia/manifest.webmanifest

@@ -1,0 +1,3 @@
+# x-mall-checkout
+url: http://localhost:7100/mall/checkout
+rootLen: 0

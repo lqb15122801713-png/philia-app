@@ -1,0 +1,10 @@
+# 路由复现 a3-merchant-appointments
+url: http://localhost:7101/appointments
+final href: http://localhost:7101/appointments
+耗时: 4548ms
+#root innerHTML length: 11007
+body.innerText 前300字: "预约管理\n列表\n日历\n全部\n待确认\n已确认\n服务中\n寄养中\n取消申请\n已完成\n已取消\n今天\n明天\n本周\n自定义\n全部\n\n该条件下暂无预约\n\n可调整状态或日期范围\n\n选择左侧一条预约查看摘要\n\n手机端点行直接进入详情页\n\n仪表盘\n8\n预约\n管理\n财务"
+
+## window.__errs (0)
+
+## CDP console/exception/network (0)

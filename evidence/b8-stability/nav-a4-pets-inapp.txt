@@ -1,0 +1,6 @@
+# nav-a4-pets-inapp
+start: http://localhost:7100/philia
+step: {"clicked":"/philia/pets"}
+final href: http://localhost:7100/philia/pets
+rootLen: 16470
+text: "宠物档案\n\n旺财\n\n狗狗 · 金毛寻回犬\n\n2021年3月15日\n28.5 kg\n已绝育\n疫苗有效至 2027-03-01\n亲人\n好动\n\n咪咪\n\n猫咪 · 英国短毛猫\n\n2022年7月1日\n4.2 kg\n疫苗有效至 2026-12-01\n胆小\n安静\n新增宠物\n首页\n商城\n预约\n我的"

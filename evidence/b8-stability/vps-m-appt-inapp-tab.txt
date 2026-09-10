@@ -1,0 +1,12 @@
+# 路由复现 vps-m-appt-inapp-tab
+url: http://m.localhost:7200/dashboard
+final href: http://m.localhost:7200/dev-login
+click: {"clicked":null,"links":[]}
+#root innerHTML length: 3605
+body.innerText 前200字: "商家端 · 开发登录\n\n仅开发环境 · 生产环境请移除\n\n选择商家账号登录\n菲丽亚店主\n店主 · merchant_owner\n登录 →\n手动输入 userId\n\n重跑 server 的 db:seed 后用户 ID 会变化，可在 server 库中查 users 表后粘贴到这里。\n\n登录\n\n提示：dev-login 仅允许种子用户（kimi_id 以 seed_ 前缀），会话 cookie 有效"
+
+## window.__errs (0)
+
+## CDP console/exception/network (2)
+[net.401] http://localhost:7200/trpc/auth.me?batch=1&input=%7B%220%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D
+[log.error] (network) Failed to load resource: the server responded with a status of 401 (Unauthorized) http://localhost:7200/trpc/auth.me?batch=1&input=%7B%220%22%3A%7B%22json%22%3Anull%2C%22meta%22%3A%7B%22values%22%3A%5B%22undefined%22%5D%2C%22v%22%3A1%7D%7D%7D

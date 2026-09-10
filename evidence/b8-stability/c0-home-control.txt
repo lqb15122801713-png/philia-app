@@ -1,0 +1,10 @@
+# 路由复现 c0-home-control
+url: http://localhost:7100/home
+final href: http://localhost:7100/home
+耗时: 4575ms
+#root innerHTML length: 22991
+body.innerText 前300字: "菲丽亚宠物\n\nPhilia · 用心呵护每一只毛孩子\n\n洗护预约\n寄养服务\n宠物商城\n附近好店\n\n授权定位后可按距离排序并显示距离\n\n菲丽亚宠物·示例店\n杭州市西湖区文三路 100 号\n\n距上次洗护已 22 天\n\n旺财该洗澡啦\n\n▸ 一键预约\n推荐服务\n\n基础洗护（小型犬）\n\n约 60 分钟\n\n¥88\n\n基础洗护（中型犬）\n\n约 90 分钟\n\n¥128\n\n猫咪精致洗护\n\n约 90 分钟\n\n¥168\n\n造型修剪\n\n约 120 分钟\n\n¥198\n\n深层清洁 SPA\n\n约 120 分钟\n\n¥258\n\n快速洗+吹干\n\n约 45 分钟\n\n¥68\n\n标准间寄养（犬）\n\n标准间 · 按天计\n\n¥199\n\n首"
+
+## window.__errs (0)
+
+## CDP console/exception/network (0)

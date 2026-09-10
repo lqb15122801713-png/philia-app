@@ -1,0 +1,3 @@
+# x-mall-product
+url: http://localhost:7100/mall/product/01M20EDD8GG8B9DM30FRF0A7T8
+rootLen: 0

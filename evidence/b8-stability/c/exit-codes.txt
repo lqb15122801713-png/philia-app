@@ -1,0 +1,17 @@
+# 批次 8 收口退出码（2026-09-11 00:35 CST）
+
+## 三端生产构建（npm.cmd run build:{customer,merchant,staff}，于批次内统一重跑）
+build-customer: 0
+build-merchant: 0
+build-staff: 0
+（日志：build-customer.log / build-merchant.log / build-staff.log）
+
+## 服务端 typecheck（server：tsc --noEmit）
+server-typecheck: 0
+
+## 服务端 e2e（server：npm run test:e2e）
+server-e2e(CST 本机时区): 0 —— 全链路验收全部通过 ✅（e2e-final.log）
+server-e2e(TZ=UTC 仿真 VPS 容器): 0 —— 全链路验收全部通过 ✅（e2e-utc.log）
+
+## smoke-routes 基线（base './' 未修前）
+smoke-routes: 1（14/28 绿；红项全部为嵌套路由，属任务 A 待修的 base 问题，详见 smoke-baseline.txt）

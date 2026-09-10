@@ -1,0 +1,17 @@
+# 路由复现 vps-m-appt-trailslash
+url: http://m.localhost:7200/appointments/
+final href: http://m.localhost:7200/appointments/
+
+#root innerHTML length: 0
+body.innerText 前200字: ""
+
+## window.__errs (1)
+-- [0] onerror: Uncaught SyntaxError: Unexpected token '<'
+SyntaxError: Unexpected token '<'
+
+## CDP console/exception/network (5)
+[net.MIME-ODD 200 text/html] http://m.localhost:7200/appointments/assets/index-CxQbDJSu.css
+[net.MIME-ODD 200 text/html] http://m.localhost:7200/appointments/assets/index-zGCSFLkn.js
+[log.error] (javascript) Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html". Strict MIME type checking is enforced for module scripts per HTML spec. http://m.localhost:7200/appointments/assets/index-zGCSFLkn.js
+[EXCEPTION] SyntaxError: Unexpected token '<'
+[log.error] (other) Manifest: Line: 1, column: 1, Syntax error. http://m.localhost:7200/appointments/manifest.webmanifest

@@ -1,0 +1,10 @@
+# 路由复现 c2-philia-control
+url: http://localhost:7100/philia
+final href: http://localhost:7100/philia
+耗时: 4557ms
+#root innerHTML length: 15041
+body.innerText 前300字: "晚安，示例客户\n\n欢迎来到 Philia 品牌空间 · 今天也要好好爱 TA\n\n旺财\n\n狗狗 · 金毛寻回犬\n\n咪咪\n\n猫咪 · 英国短毛猫\n\n宠物档案\nTA 的小档案\n会员卡\n专属身份\n服务相册\n变美记录\n菲丽亚日记\n\n日记还没有篇章\n\n完成第一次洗护后，这里会留下 TA 的变美瞬间\n\n养宠小贴士\n\n定期驱虫\n\n体外驱虫建议每月一次，体内驱虫每三个月一次，守护毛孩子健康。\n\n养宠小贴士\n\n梳毛的好处\n\n每天梳毛 5 分钟，减少浮毛打结，还能增进和毛孩子的感情。\n\n养宠小贴士\n\n疫苗提醒\n\n疫苗有效期临近时记得及时续种，寄养前需提供有效疫苗证明。\n\n首页\n商城\n预约\n我的"
+
+## window.__errs (0)
+
+## CDP console/exception/network (0)

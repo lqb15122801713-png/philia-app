@@ -1,0 +1,10 @@
+# 路由复现 m0-dashboard-control
+url: http://localhost:7101/dashboard
+final href: http://localhost:7101/dashboard
+耗时: 4565ms
+#root innerHTML length: 20150
+body.innerText 前300字: "9月10日 周四\n\n菲丽亚宠物·示例店\n实时已连接\n\n今日预约\n\n0\n\n服务中\n\n2\n\n洗护/寄养在店服务\n\n今日营业额（元）\n\n¥0.00\n\n按今日收款登记合计\n\n待办合计\n\n8\n\n待办\n8\n待确认\n新预约等待门店确认\n8\n去处理 →\n待派单\n已确认但尚未指派员工\n0\n去处理 →\n取消审核\n客户申请取消，待审批\n0\n去处理 →\n待收款\n服务已完成，未登记收款\n0\n去处理 →\n异常 · 超期寄养\n超过预计退房时间仍在店\n0\n去处理 →\n今日时间轴\n共 0 单\n\n今日暂无预约\n\n新预约到达时会实时出现在这里\n\n邀请员工\n生成邀请码，员工扫码加入\n门店设置\n营业时间 / 门店信息\n仪表盘\n8\n预约"
+
+## window.__errs (0)
+
+## CDP console/exception/network (0)

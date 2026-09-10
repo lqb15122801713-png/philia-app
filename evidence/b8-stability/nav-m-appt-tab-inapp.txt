@@ -1,0 +1,6 @@
+# nav-m-appt-tab-inapp
+start: http://localhost:7101/dashboard
+step: {"clicked":"/appointments"}
+final href: http://localhost:7101/appointments
+rootLen: 11007
+text: "预约管理\n列表\n日历\n全部\n待确认\n已确认\n服务中\n寄养中\n取消申请\n已完成\n已取消\n今天\n明天\n本周\n自定义\n全部\n\n该条件下暂无预约\n\n可调整状态或日期范围\n\n仪表盘\n8\n预约\n管理\n财务"

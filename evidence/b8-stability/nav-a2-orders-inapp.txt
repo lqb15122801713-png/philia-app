@@ -1,0 +1,6 @@
+# nav-a2-orders-inapp
+start: http://localhost:7100/me
+step: {"clicked":"/mall/orders"}
+final href: http://localhost:7100/mall/orders
+rootLen: 11444
+text: "商品订单\n待支付1\n待发货\n待收货\n已完成\n售后\n\n菲丽亚宠物·示例店\n\n待支付\n\nMO-B8-0001 · 2026-09-10 22:34\n\n全价成犬粮 2kg\n\n¥129 × 1\n\n¥129\n\n共 1 件，合计\n¥129\n取消订单\n继续支付\n首页\n商城\n预约\n我的"
