@@ -95,8 +95,10 @@ export type OrderAddress = {
 /** 用户表（对接 Kimi 账号体系） */
 export const users = sqliteTable('users', {
   id: id(),
-  /** Kimi 账号 ID（全局唯一） */
+  /** Kimi 账号 ID（全局唯一；kimi_id 不删，批次 7.1 微信用户以 wxmini: 前缀占位） */
   kimiId: text('kimi_id').notNull().unique(),
+  /** 微信小程序 openid（批次 7.1 新增，全局唯一；非微信渠道用户为 NULL） */
+  wxOpenid: text('wx_openid').unique(),
   /** 昵称 */
   nickname: text('nickname'),
   /** 头像 URL */

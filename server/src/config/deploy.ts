@@ -25,12 +25,37 @@ export const DEV_ORIGINS = [
   'http://localhost:7100',
   'http://localhost:7101',
   'http://localhost:7102',
+  // 批次 7.1：customer-mini H5 预览端口（Taro devServer / 静态预览），仅开发期缺省白名单
+  'http://localhost:7103',
   'http://127.0.0.1:7100',
   'http://127.0.0.1:7101',
   'http://127.0.0.1:7102',
+  'http://127.0.0.1:7103',
 ];
 
 const isProduction = () => process.env.NODE_ENV === 'production';
+
+/** 微信小程序 AppID（批次 7.1 任务 B；未设置返回 null，staging/dev 可空走 mock） */
+export function getWechatMiniAppId(): string | null {
+  const raw = process.env.WECHAT_MINI_APPID;
+  return raw && raw.trim() ? raw.trim() : null;
+}
+
+/** 微信小程序 AppSecret（同上） */
+export function getWechatMiniSecret(): string | null {
+  const raw = process.env.WECHAT_MINI_SECRET;
+  return raw && raw.trim() ? raw.trim() : null;
+}
+
+/**
+ * 微信小程序登录 mock 旁路（批次 7.1 任务 B）：设置后 POST /api/auth/wechat-mini
+ * 跳过 code2session 直接以该 openid 查/建用户（无真实 AppID 也能跑通链路）。
+ * ⚠️ production 下该变量存在即拒绝启动（见 assertDeployConfig）。
+ */
+export function getWechatMiniMockOpenid(): string | null {
+  const raw = process.env.WECHAT_MINI_MOCK_OPENID;
+  return raw && raw.trim() ? raw.trim() : null;
+}
 
 /** 解析 CORS_ORIGINS：逗号分隔、去空白、去空项；未设置返回 null */
 function parseCorsOrigins(): string[] | null {
@@ -102,6 +127,22 @@ export function assertDeployConfig(): void {
       '  - BETA_GATE_CODE（未设置）：内测口令门（批次 6 拍板 2）——dev-login / dev-seed-users 凭口令放行；生产不得留无门槛后门',
     );
   }
+  // 批次 7.1 任务 B：微信小程序登录生产闸门——mock 旁路变量存在即拒启动；AppID/Secret 必配
+  if (getWechatMiniMockOpenid()) {
+    problems.push(
+      '  - WECHAT_MINI_MOCK_OPENID（已设置）：微信登录 mock 旁路仅供开发/内测，production 下该变量存在即拒绝启动——请移除该变量并配置真实 WECHAT_MINI_APPID/SECRET',
+    );
+  }
+  if (!getWechatMiniAppId()) {
+    problems.push(
+      '  - WECHAT_MINI_APPID（未设置）：微信小程序 AppID，POST /api/auth/wechat-mini 走 code2session 必需',
+    );
+  }
+  if (!getWechatMiniSecret()) {
+    problems.push(
+      '  - WECHAT_MINI_SECRET（未设置）：微信小程序 AppSecret，POST /api/auth/wechat-mini 走 code2session 必需',
+    );
+  }
   if (problems.length === 0) return;
   throw new Error(
     `[deploy] 生产环境（NODE_ENV=production）检测到 ${problems.length} 项部署配置缺失/非法，拒绝启动：\n` +
@@ -135,6 +176,12 @@ export function warnStagingConfig(): void {
   if (!parseCorsOrigins()) problems.push('  - CORS_ORIGINS（未设置，正沿用三端 dev 端口缺省白名单）');
   if (!getPublicBaseUrl()) problems.push('  - PUBLIC_BASE_URL（未设置）');
   if (!getBetaGateCode()) problems.push('  - BETA_GATE_CODE（未设置，dev-login 无口令门——内测机等同后门）');
+  // 批次 7.1：staging 可空走 mock，但 mock 旁路激活状态必须显式可见
+  if (getWechatMiniMockOpenid()) {
+    problems.push('  - WECHAT_MINI_MOCK_OPENID（已设置，wechat-mini 登录正走 mock 旁路——拿到真实 AppID/Secret 后应移除）');
+  } else if (!getWechatMiniAppId() || !getWechatMiniSecret()) {
+    problems.push('  - WECHAT_MINI_APPID/SECRET（未设置且未开 mock 旁路，wechat-mini 登录将 503）');
+  }
   if (problems.length === 0) {
     console.log('[deploy] NODE_ENV=staging（内测口径）：关键配置均已显式注入 ✓');
     return;

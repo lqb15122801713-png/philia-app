@@ -25,6 +25,7 @@ import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { client, db } from './db';
 import { authHttpRoutes } from './auth/devLogin';
+import { wechatMiniAuthRoutes } from './auth/wechatMini';
 import { sessionMiddleware, type AuthVariables } from './auth/middleware';
 import { eventsRoute } from './routes/events';
 import { imagesRoute } from './routes/images';
@@ -64,6 +65,7 @@ export function createApp(): Hono<{ Variables: AppVariables }> {
 
   // 4) Hono 原生路由
   app.route('/', authHttpRoutes); // POST /api/auth/dev-login、/api/auth/logout
+  app.route('/', wechatMiniAuthRoutes); // POST /api/auth/wechat-mini（批次 7.1 微信小程序登录）
   app.route('/api/events', eventsRoute); // GET /api/events（SSE）
   app.route('/', uploadRoute); // POST /api/upload
   app.route('/', imagesRoute); // GET /api/img/*

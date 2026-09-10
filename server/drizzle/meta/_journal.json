@@ -36,6 +36,13 @@
       "when": 1788786347657,
       "tag": "0004_dark_mandarin",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1789037222075,
+      "tag": "0005_chunky_swordsman",
+      "breakpoints": true
     }
   ]
 }
