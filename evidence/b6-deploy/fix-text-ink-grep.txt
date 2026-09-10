@@ -1,0 +1,22 @@
+# fix-text-ink-grep · 返工令-批次6-PR18 证据
+# 范围：三端 DevLoginPage.tsx 全域 grep bg-brand-primary（含 -light 变体，逐一列出类名）
+# 基线：feat/b6-deploy @ 9d9a2c7（text-ink 修正后）
+
+== apps/customer/src/pages/DevLoginPage.tsx
+  128:        <p className="mt-1 inline-block rounded-full bg-brand-primary-light px-3 py-1 text-caption text-brand-primary-pressed">
+  172:                className="bg-brand-primary text-ink hover:bg-brand-primary-hover"
+  230:            className="bg-brand-primary text-ink hover:bg-brand-primary-hover"
+  text-white on brand 残留: 0 处
+
+== apps/merchant/src/pages/DevLoginPage.tsx
+  129:        <p className="mt-1 inline-block rounded-full bg-brand-primary-light px-3 py-1 text-caption text-brand-primary-pressed">
+  173:                className="h-12 bg-brand-primary text-body text-ink hover:bg-brand-primary-hover"
+  231:            className="h-12 bg-brand-primary text-body text-ink hover:bg-brand-primary-hover"
+  text-white on brand 残留: 0 处
+
+== apps/staff/src/pages/DevLoginPage.tsx
+  128:        <p className="mt-1 inline-block rounded-full bg-brand-primary-light px-3 py-1 text-caption text-brand-primary-pressed">
+  172:                className="h-14 bg-brand-primary text-body-lg text-ink hover:bg-brand-primary-hover"
+  230:            className="h-14 bg-brand-primary text-body-lg text-ink hover:bg-brand-primary-hover"
+  text-white on brand 残留: 0 处
+
