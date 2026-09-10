@@ -11,7 +11,12 @@
 
 services:
   app:
-    build: .
+    build:
+      context: .
+      args:
+        # VITE_API_BASE 构建期变量（b6.1 D3）：从 .env 读入传给 fe-builder ARG，
+        # 改它必须重新 build（docker compose up -d --build）
+        - VITE_API_BASE=${VITE_API_BASE:-}
     # 环境变量全部走 .env（env_file）；此处仅声明容器内固定骨架值
     env_file: .env
     environment:

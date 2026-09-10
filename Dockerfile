@@ -22,15 +22,23 @@
 FROM node:20-bookworm-slim AS fe-builder
 WORKDIR /app
 # 先拷 package 清单层（最大化 Docker layer 缓存：源码变动不打破依赖层）
+# workspaces = apps/* + packages/*（packages 仅 shared 与 config 两名成员，
+# 清单缺一不可，否则 npm ci 工作区链接失败——b6.1 D2 实证 @philia/config 漏拷报错）
 COPY package.json package-lock.json ./
 COPY apps/customer/package.json apps/customer/
 COPY apps/merchant/package.json apps/merchant/
 COPY apps/staff/package.json apps/staff/
 COPY packages/shared/package.json packages/shared/
+COPY packages/config/package.json packages/config/
 RUN npm ci
 # server 依赖仅用于三端 tsc 的类型解析（type-only 相对路径引用，构建期擦除）
 COPY server/package.json server/package-lock.json ./server/
 RUN npm --prefix server ci
+# VITE_API_BASE 构建期注入（b6.1 D3）：getApiBase() 读 import.meta.env.VITE_API_BASE，
+# vite build 时静态替换——根 build 脚本一次构建三端，一处 ARG 三端同吃；
+# 值经 compose build.args 从 .env 读入，改它必须 rebuild（镜像层不含运行时覆盖通道）
+ARG VITE_API_BASE=""
+ENV VITE_API_BASE=$VITE_API_BASE
 # 再拷源码并构建三端（vite build 输出 apps/*/dist）
 COPY packages ./packages
 COPY apps ./apps
