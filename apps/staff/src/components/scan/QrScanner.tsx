@@ -35,7 +35,7 @@ interface BarcodeDetectorCtor {
 }
 
 const JSQR_INTERVAL_MS = 200; // 5fps ≥ 4fps 要求
-const BRAND = '#D98E5F';
+const BRAND = '#FDC830';
 
 type CamStatus = 'starting' | 'scanning' | 'processing' | 'error';
 
@@ -257,7 +257,7 @@ export default function QrScanner({ open, onClose, onCheckedIn }: QrScannerProps
                 <button
                   type="button"
                   onClick={() => void startRef.current?.()}
-                  className="flex h-14 min-h-[56px] w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-[#D98E5F] text-base font-medium text-white active:bg-[#C7692F]"
+                  className="flex h-14 min-h-[56px] w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-[#FDC830] text-base font-medium text-[#4A3B2E] active:bg-[#E8AD02]"
                 >
                   <SwitchCamera className="h-5 w-5" />
                   重试摄像头

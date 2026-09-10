@@ -10,12 +10,12 @@ export default function EmptyState({ hint }: { hint?: string }) {
         {/* 暖色光晕底（品牌渐变仅用于空态插画） */}
         <circle cx="60" cy="60" r="48" fill="url(#philiaEmptyGrad)" opacity="0.35" />
         {/* 收据 */}
-        <rect x="36" y="30" width="48" height="60" rx="6" fill="#FFFFFF" stroke="#DDD0C6" strokeWidth="1.5" />
-        <path d="M36 84l6 5 6-5 6 5 6-5 6 5 6-5 6 5" stroke="#DDD0C6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        <line x1="46" y1="44" x2="74" y2="44" stroke="#EBE3DB" strokeWidth="1.5" strokeLinecap="round" />
-        <line x1="46" y1="54" x2="66" y2="54" stroke="#EBE3DB" strokeWidth="1.5" strokeLinecap="round" />
+        <rect x="36" y="30" width="48" height="60" rx="6" fill="#FFFFFF" stroke="#DDD1C6" strokeWidth="1.5" />
+        <path d="M36 84l6 5 6-5 6 5 6-5 6 5 6-5 6 5" stroke="#DDD1C6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="46" y1="44" x2="74" y2="44" stroke="#EBE2DB" strokeWidth="1.5" strokeLinecap="round" />
+        <line x1="46" y1="54" x2="66" y2="54" stroke="#EBE2DB" strokeWidth="1.5" strokeLinecap="round" />
         {/* 爪印 */}
-        <g stroke="#D98E5F" strokeWidth="1.5" strokeLinecap="round">
+        <g stroke="#4A3B2E" strokeWidth="1.5" strokeLinecap="round">
           <circle cx="54" cy="68" r="2.4" fill="none" />
           <circle cx="66" cy="68" r="2.4" fill="none" />
           <circle cx="48" cy="74" r="2.4" fill="none" />
@@ -24,8 +24,8 @@ export default function EmptyState({ hint }: { hint?: string }) {
         </g>
         <defs>
           <linearGradient id="philiaEmptyGrad" x1="12" y1="12" x2="108" y2="108" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#D98E5F" />
-            <stop offset="1" stopColor="#F2C9A4" />
+            <stop stopColor="#FDC830" />
+            <stop offset="1" stopColor="#7FD8BE" />
           </linearGradient>
         </defs>
       </svg>
