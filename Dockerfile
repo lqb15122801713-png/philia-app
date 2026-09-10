@@ -22,11 +22,14 @@
 FROM node:20-bookworm-slim AS fe-builder
 WORKDIR /app
 # 先拷 package 清单层（最大化 Docker layer 缓存：源码变动不打破依赖层）
+# workspaces = apps/* + packages/*（packages 仅 shared 与 config 两名成员，
+# 清单缺一不可，否则 npm ci 工作区链接失败——b6.1 D2 实证 @philia/config 漏拷报错）
 COPY package.json package-lock.json ./
 COPY apps/customer/package.json apps/customer/
 COPY apps/merchant/package.json apps/merchant/
 COPY apps/staff/package.json apps/staff/
 COPY packages/shared/package.json packages/shared/
+COPY packages/config/package.json packages/config/
 RUN npm ci
 # server 依赖仅用于三端 tsc 的类型解析（type-only 相对路径引用，构建期擦除）
 COPY server/package.json server/package-lock.json ./server/
