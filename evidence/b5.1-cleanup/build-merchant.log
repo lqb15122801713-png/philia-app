@@ -1,0 +1,31 @@
+# vite build 日志 · feat/b5.1-cleanup HEAD=c65e1a6（批次 5.1 返工补传）
+# 命令: cd apps/merchant && npm run build  · 时间: 2026-09-10T14:40:12+08:00
+
+> @philia/merchant@0.0.0 build
+> tsc -b && vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 1865 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                          0.14 kB
+dist/manifest.webmanifest                   0.40 kB
+dist/index.html                             0.76 kB │ gzip:   0.44 kB
+dist/assets/philia-tab-icon-wiOD1Y2x.png   10.07 kB
+dist/assets/index-CxQbDJSu.css             95.24 kB │ gzip:  15.88 kB
+dist/assets/index-BMfPIgY6.js             561.23 kB │ gzip: 155.86 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 2.28s
+
+PWA v1.3.0
+mode      generateSW
+precache  7 entries (641.95 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js
+exit=0 :: apps/merchant

@@ -1,0 +1,27 @@
+# vite build 日志 · feat/b5.1-cleanup HEAD=c65e1a6（批次 5.1 返工补传）
+# 命令: cd apps/staff && npm run build  · 时间: 2026-09-10T14:40:20+08:00
+
+> @philia/staff@0.0.0 build
+> tsc -b && vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 2152 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                          0.14 kB
+dist/manifest.webmanifest                   0.40 kB
+dist/index.html                             0.76 kB │ gzip:   0.43 kB
+dist/assets/philia-tab-icon-wiOD1Y2x.png   10.07 kB
+dist/assets/index-CjoMsvWA.css             92.29 kB │ gzip:  15.47 kB
+dist/assets/QrScanner-GfsSH_Qg.js         141.46 kB │ gzip:  51.27 kB
+dist/assets/index-CT78Ruih.js             466.02 kB │ gzip: 138.06 kB
+✓ built in 2.52s
+
+PWA v1.3.0
+mode      generateSW
+precache  8 entries (684.24 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js
+exit=0 :: apps/staff
