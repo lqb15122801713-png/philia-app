@@ -2,8 +2,9 @@
  * Hono 服务入口（CONTRACTS.md · T1.6 名下文件）
  *
  * 组装顺序：
- *   1. CORS（hono/cors）：开发期允许三端 dev 端口（7100/7101/7102，含 localhost
- *      与 127.0.0.1 两种宿主写法）携带凭证跨域；
+ *   1. CORS（hono/cors）：白名单走 env CORS_ORIGINS（逗号分隔）；开发期缺省允许
+ *      三端 dev 端口（7100/7101/7102，含 localhost 与 127.0.0.1 两种宿主写法），
+ *      生产必须显式配置（见 config/deploy.ts getCorsOrigins/assertDeployConfig）；
  *   2. 全局 sessionMiddleware（T1.2）：解析 philia_session cookie → c.var.sessionUser；
  *   3. GET /api/health：{ ok: true, ts }；
  *   4. Hono 原生路由：/api/auth/*（dev-login/logout）、/api/events（SSE）、
@@ -31,31 +32,22 @@ import { payCallbackRoute } from './routes/payCallback';
 import { uploadRoute } from './routes/upload';
 import { assertPaymentConfig } from './payments/provider';
 import { assertSecretsConfigured } from './config/secrets';
+import { assertDeployConfig, getCorsOrigins, getPublicBaseUrl } from './config/deploy';
 import { startOutboxSweeper } from './realtime/outboxSweeper';
 import { expirePendingOrders } from './routers/mall';
 import { appRouter } from './routers';
 import type { Context as TrpcContext } from './trpc';
-
-/** 开发期三端 dev 端口（客户/商家/员工），允许携带会话 cookie 跨域 */
-const DEV_ORIGINS = [
-  'http://localhost:7100',
-  'http://localhost:7101',
-  'http://localhost:7102',
-  'http://127.0.0.1:7100',
-  'http://127.0.0.1:7101',
-  'http://127.0.0.1:7102',
-];
 
 export type AppVariables = AuthVariables;
 
 export function createApp(): Hono<{ Variables: AppVariables }> {
   const app = new Hono<{ Variables: AppVariables }>();
 
-  // 1) CORS：开发端口白名单 + 凭证（生产部署时应以环境变量收敛域名）
+  // 1) CORS：env CORS_ORIGINS 白名单 + 凭证；开发期缺省三端 dev 端口，生产必须显式配置
   app.use(
     '*',
     cors({
-      origin: DEV_ORIGINS,
+      origin: getCorsOrigins(),
       credentials: true,
       allowHeaders: ['Content-Type', 'Last-Event-ID'],
       allowMethods: ['GET', 'POST', 'OPTIONS'],
@@ -109,6 +101,9 @@ if (isMain) {
   // 生产密钥闸门（v1.1 P0-1）：三处 HMAC 密钥缺省/仍为 dev 值即拒绝启动，
   // 先于支付校验执行，保证密钥缺失首先暴露
   assertSecretsConfigured();
+  // 部署配置闸门（批次 6 任务 B）：生产缺 CORS_ORIGINS / PUBLIC_BASE_URL /
+  // BETA_GATE_CODE 任一项即拒绝启动，一次性列出全部缺失项
+  assertDeployConfig();
   // 支付配置启动校验：生产环境 mock / wechat 缺配置直接报错，不静默降级（§4.7）
   assertPaymentConfig();
   const port = Number(process.env.PORT ?? 7200);
@@ -123,7 +118,9 @@ if (isMain) {
   orderExpiryTimer.unref?.();
 
   const server: ServerType = serve({ fetch: app.fetch, port }, (info) => {
+    const publicBase = getPublicBaseUrl();
     console.log(`[philia-server] 已启动: http://localhost:${info.port} （tRPC: /trpc/*, SSE: /api/events）`);
+    if (publicBase) console.log(`[philia-server] PUBLIC_BASE_URL: ${publicBase}`);
   });
 
   let shuttingDown = false;

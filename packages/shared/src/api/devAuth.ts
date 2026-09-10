@@ -18,13 +18,17 @@ async function errorMessage(res: Response, fallback: string): Promise<string> {
   return `${fallback}（HTTP ${res.status}）`;
 }
 
-/** 开发登录：POST /api/auth/dev-login { userId }（仅种子用户可用） */
-export async function devLogin(baseUrl: string, userId: string): Promise<void> {
+/**
+ * 开发登录：POST /api/auth/dev-login { userId, code? }（仅种子用户可用）
+ * 内测口令门（批次 6 任务 B2）：服务端 BETA_GATE_CODE 设置后须带 code，
+ * 缺失/错误分别 401/403（message 已汉化，页面直接展示）。
+ */
+export async function devLogin(baseUrl: string, userId: string, code?: string): Promise<void> {
   const res = await fetch(`${baseUrl}/api/auth/dev-login`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId }),
+    body: JSON.stringify(code ? { userId, code } : { userId }),
   });
   if (!res.ok) {
     throw new Error(await errorMessage(res, '登录失败'));
