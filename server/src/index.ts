@@ -30,9 +30,10 @@ import { eventsRoute } from './routes/events';
 import { imagesRoute } from './routes/images';
 import { payCallbackRoute } from './routes/payCallback';
 import { uploadRoute } from './routes/upload';
+import { serveStatic } from './static/spa';
 import { assertPaymentConfig } from './payments/provider';
 import { assertSecretsConfigured } from './config/secrets';
-import { assertDeployConfig, getCorsOrigins, getPublicBaseUrl } from './config/deploy';
+import { assertDeployConfig, getCorsOrigins, getPublicBaseUrl, warnStagingConfig } from './config/deploy';
 import { startOutboxSweeper } from './realtime/outboxSweeper';
 import { expirePendingOrders } from './routers/mall';
 import { appRouter } from './routers';
@@ -80,6 +81,11 @@ export function createApp(): Hono<{ Variables: AppVariables }> {
     }),
   );
 
+  // 6) 三端静态托管（批次 6 任务 A · 方案一 Host 头分发）：SERVE_STATIC 开启时
+  //    按 Host 子域分发 customer/merchant/staff 的 dist（含 SPA fallback）；
+  //    装配在最后兜底，/api、/trpc 永不被接管；未开启时零行为变化
+  app.use('*', serveStatic());
+
   return app;
 }
 
@@ -104,6 +110,9 @@ if (isMain) {
   // 部署配置闸门（批次 6 任务 B）：生产缺 CORS_ORIGINS / PUBLIC_BASE_URL /
   // BETA_GATE_CODE 任一项即拒绝启动，一次性列出全部缺失项
   assertDeployConfig();
+  // staging 内测缺配提醒（裁定书 #1 ②）：staging 合法但闸门不触发，
+  // 未显式注入的关键变量逐项 console.warn（不阻断）
+  warnStagingConfig();
   // 支付配置启动校验：生产环境 mock / wechat 缺配置直接报错，不静默降级（§4.7）
   assertPaymentConfig();
   const port = Number(process.env.PORT ?? 7200);
