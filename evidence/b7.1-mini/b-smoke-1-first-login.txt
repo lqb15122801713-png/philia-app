@@ -1,0 +1,11 @@
+HTTP/1.1 200 OK
+access-control-allow-credentials: true
+content-type: application/json
+vary: Origin
+set-cookie: philia_session=eyJ1aWQiOiIwMU0yNUYwRlo2RU5WREY1VDVRUjNZUjk0WSIsImtpbWlJZCI6Ind4bWluaTpvTW9ja0I3MVRlc3RPcGVuaWQwMDEiLCJpYXQiOjE3ODkwMzczOTUsImV4cCI6MTc4OTY0MjE5NX0.XYDkJs84pn0TCgkQf16Xa9V-xwC0oyFrPa4BV-x98sI; Max-Age=604800; Path=/; HttpOnly; SameSite=Lax
+content-length: 116
+Date: Thu, 10 Sep 2026 10:49:55 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+{"ok":true,"created":true,"user":{"id":"01M25F0FZ6ENVDF5T5QR3YR94Y","nickname":"微信用户","roles":["customer"]}}

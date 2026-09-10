@@ -1,0 +1,402 @@
+
+> @philia/customer-mini@0.0.0 build:weapp
+> taro build --type weapp
+
+👽 Taro v4.2.1
+
+Tips:
+1. 建议开启持久化缓存功能，能有效提升二次编译速度，详情请参考: https://docs.taro.zone/docs/config-detail#cache。
+
+
+提示  appid     touristappid
+生成  工具配置  D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\apps\customer-mini\dist\weapp/project.config.json
+启动  开发者工具-项目目录  D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\apps\customer-mini\dist\weapp
+i Weapp-tailwindcss 使用 Tailwind CSS (v3.4.19)
+√ 当前使用 Tailwind CSS 版本为: 3.4.19
+
+● Webpack █████████████████████████  (0%)  
+ 
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (10%) 0/18 entries 18/18 dependen
+cies 0/18 modules 1 active 
+ babel-loader › src\app.config.ts
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (13%) 1/18 entries 18/18 dependen
+cies 1/18 modules 17 active 
+ ...l-loader › node_modules\@tarojs\webpack5-runner\dist\template\custom-wrapp
+er.js
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (30%) 8/18 entries 38/103 depende
+ncies 8/29 modules 20 active 
+ babel-loader › node_modules\@tarojs\plugin-framework-react\dist\runtime.js
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (34%) 8/18 entries 80/150 depende
+ncies 9/38 modules 29 active 
+ babel-loader › node_modules\@tarojs\react\dist\react.esm.js
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (34%) 8/18 entries 115/161 depend
+encies 9/47 modules 30 active 
+ ...a-app\apps\customer-mini\node_modules\@babel\runtime\helpers\esm\regenerat
+or.js
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (34%) 8/18 entries 164/172 depend
+encies 10/84 modules 39 active 
+ css-loader › postcss-loader › src\app.css
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (34%) 8/18 entries 315/370 depend
+encies 18/95 modules 68 active 
+ babel-loader › node_modules\@tarojs\shared\dist\index.js
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (34%) 8/18 entries 419/437 depend
+encies 32/127 modules 91 active 
+ ...er › node_modules\@nutui\nutui-react-taro\dist\es\packages\nutui.react.bui
+ld.js
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (34%) 8/18 entries 483/484 depend
+encies 61/147 modules 86 active 
+ ...2-22-13-267fc560\philia-app\apps\customer-mini\node_modules\tslib\tslib.es
+6.mjs
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (34%) 8/18 entries 510/618 depend
+encies 106/150 modules 41 active 
+ ...app\apps\customer-mini\node_modules\@babel\runtime\helpers\esm\superPropBa
+se.js
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (40%) 10/18 entries 616/707 depen
+dencies 123/254 modules 113 active 
+ ...l-loader › node_modules\@nutui\nutui-react-taro\dist\es\packages\price\ind
+ex.js
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (40%) 10/18 entries 714/900 depen
+dencies 123/346 modules 202 active 
+ ...er › node_modules\@nutui\nutui-react-taro\dist\es\packages\skeleton\skelet
+on.js
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (40%) 10/18 entries 1600/1619 dep
+endencies 125/453 modules 201 active 
+ ...l-loader › node_modules\@nutui\nutui-react-taro\dist\es\packages\toast\toa
+st.js
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (40%) 10/18 entries 2311/2359 dep
+endencies 162/727 modules 262 active 
+ ...ia-app\apps\customer-mini\node_modules\@swc\helpers\esm\_object_spread_pro
+ps.js
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (40%) 10/18 entries 2395/2449 dep
+endencies 244/730 modules 278 active 
+ ...› node_modules\@nutui\nutui-react-taro\dist\es\types\spec\shortpassword\ta
+ro.js
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (40%) 10/18 entries 2449/2650 dep
+endencies 379/751 modules 240 active 
+ ... › node_modules\@nutui\nutui-react-taro\dist\es\types\spec\imagepreview\ta
+ro.js
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (40%) 10/18 entries 2650/2653 dep
+endencies 463/952 modules 256 active 
+ ...der › node_modules\@nutui\nutui-react-taro\dist\es\types\spec\actionsheet\
+h5.js
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (49%) 13/18 entries 3005/3019 dep
+endencies 558/965 modules 258 active 
+ babel-loader › node_modules\@nutui\icons-react-taro\dist\es\icons\EyeF.js
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (49%) 13/18 entries 3461/3474 dep
+endencies 558/965 modules 349 active 
+ babel-loader › node_modules\@nutui\icons-react-taro\dist\es\icons\Search.js
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (49%) 13/18 entries 3711/3712 dep
+endencies 866/970 modules 103 active 
+ node_modules\dom-helpers\esm\removeClass.js
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ building (49%) 13/18 entries 3720/3720 dep
+endencies 885/975 modules 89 active 
+ node_modules\css-loader\dist\runtime\noSourceMaps.js
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ sealing (70%)  
+ plugins
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ sealing (88%)  
+ runtime requirements
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ sealing (92%) asset processing 
+ CssMinimizerPlugin
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ sealing (92%) asset processing 
+ weapp-tailwindcss-webpack-plugin
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+● Webpack █████████████████████████ sealing (92%) asset processing 
+ RealContentHashPlugin
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[1A[2K[G
+√ Webpack
+  Compiled successfully in 5.24s
+
+编译  发现入口  src/app.ts
+编译  发现页面  src/pages/home/index.tsx
+编译  发现页面  src/pages/booking/index.tsx
+编译  发现页面  src/pages/mall/index.tsx
+编译  发现页面  src/pages/me/index.tsx
+编译  发现页面  src/pages/login/index.tsx
+编译  发现页面  src/pages/store/index.tsx
+编译  发现页面  src/pages/product/index.tsx
+ℹ Stats: 
+
+assets by path [1m[32mpages/[39m[22m 21.5 KiB 21 assets
+assets by path [1m[32m*.js[39m[22m 258 KiB
+  asset [1m[32mtaro.js[39m[22m 130 KiB [1m[32m[emitted][39m[22m [1m[32m[minimized][39m[22m (name: taro) (id hint: taro)
+  + 5 assets
+assets by path [1m[32m*.wxss[39m[22m 8.39 KiB
+  asset [1m[32mapp-origin.wxss[39m[22m 5.08 KiB [1m[32m[emitted][39m[22m [1m[32m[minimized][39m[22m
+  asset [1m[32mcommon.wxss[39m[22m 3.26 KiB [1m[32m[emitted][39m[22m [1m[32m[minimized][39m[22m (name: common) (id hint: common)
+  asset [1m[32mapp.wxss[39m[22m 52 bytes [1m[32m[emitted][39m[22m [1m[32m[minimized][39m[22m (name: app)
+assets by path [1m[32m*.wxml[39m[22m 56.8 KiB
+  asset [1m[32mbase.wxml[39m[22m 56.7 KiB [1m[32m[emitted][39m[22m
+  asset [1m[32mcomp.wxml[39m[22m 140 bytes [1m[32m[emitted][39m[22m
+assets by path [1m[32m*.json[39m[22m 736 bytes
+  asset [1m[32mapp.json[39m[22m 650 bytes [1m[32m[emitted][39m[22m
+  asset [1m[32mcomp.json[39m[22m 86 bytes [1m[32m[emitted][39m[22m
+asset [1m[32mutils.wxs[39m[22m 997 bytes [1m[32m[emitted][39m[22m
+webpack 5.91.0 compiled [1m[32msuccessfully[39m[22m in 5270 ms

@@ -1,0 +1,10 @@
+# 批次 7.1 全绿回归退出码汇总（2026-09-10 19:11:26，分支 feat/b7.1-mini@1fe39c5）
+server typecheck (tsc --noEmit): exit=0
+server appointment.smoke: exit=0
+server test:e2e: exit=0
+三端根 build (customer/merchant/staff): exit=0
+customer-mini build:weapp: exit=0
+customer-mini build:h5: exit=0
+--- 摘要 ---
+e2e ✓ 计数: 40
+全链路验收全部通过 ✅

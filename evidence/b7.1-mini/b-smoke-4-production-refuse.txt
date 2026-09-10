@@ -1,0 +1,13 @@
+=== [4/4] production + WECHAT_MINI_MOCK_OPENID → 拒启动 ===
+D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\config\deploy.ts:147
+  throw new Error(
+        ^
+
+Error: [deploy] 生产环境（NODE_ENV=production）检测到 1 项部署配置缺失/非法，拒绝启动：
+  - WECHAT_MINI_MOCK_OPENID（已设置）：微信登录 mock 旁路仅供开发/内测，production 下该变量存在即拒绝启动——请移除该变量并配置真实 WECHAT_MINI_APPID/SECRET
+请通过环境变量显式注入上述配置后重启（清单与注释见仓库 .env.example）。
+    at assertDeployConfig (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\config\deploy.ts:147:9)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:114:3)
+
+Node.js v24.15.0
+exit=1

@@ -1,0 +1,43 @@
+# weapp 构建产物目录结构（诚实缺口替代物：本机无微信开发者工具，无法导入截图）
+# 构建：taro build --type weapp exit=0（日志 c-build-weapp-final.log / a-build-weapp.log）
+./app-origin.wxss
+./app.js
+./app.js.LICENSE.txt
+./app.json
+./app.wxss
+./base.wxml
+./common.js
+./common.wxss
+./comp.js
+./comp.json
+./comp.wxml
+./pages/booking/index.js
+./pages/booking/index.json
+./pages/booking/index.wxml
+./pages/home/index.js
+./pages/home/index.json
+./pages/home/index.wxml
+./pages/login/index.js
+./pages/login/index.json
+./pages/login/index.wxml
+./pages/mall/index.js
+./pages/mall/index.json
+./pages/mall/index.wxml
+./pages/me/index.js
+./pages/me/index.json
+./pages/me/index.wxml
+./pages/product/index.js
+./pages/product/index.json
+./pages/product/index.wxml
+./pages/store/index.js
+./pages/store/index.json
+./pages/store/index.wxml
+./project.config.json
+./runtime.js
+./taro.js
+./utils.wxs
+./vendors.js
+./vendors.js.LICENSE.txt
+
+# app.json:
+{"pages":["pages/home/index","pages/booking/index","pages/mall/index","pages/me/index","pages/login/index","pages/store/index","pages/product/index"],"window":{"backgroundTextStyle":"light","navigationBarBackgroundColor":"#F6F1E3","navigationBarTitleText":"菲丽亚宠物 Philia","navigationBarTextStyle":"black","backgroundColor":"#F6F1E3"},"tabBar":{"color":"#8A796B","selectedColor":"#E8AD02","backgroundColor":"#FFFFFF","borderStyle":"white","list":[{"pagePath":"pages/home/index","text":"首页"},{"pagePath":"pages/booking/index","text":"预约"},{"pagePath":"pages/mall/index","text":"商城"},{"pagePath":"pages/me/index","text":"我的"}]}}
