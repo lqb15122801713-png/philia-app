@@ -1,0 +1,72 @@
+# .env.example 每行 ↔ 代码读取位置对照（生成时间 Thu Sep 10 15:38:33     2026）
+
+## NODE_ENV
+server/src/config/deploy.ts:33:const isProduction = () => process.env.NODE_ENV === 'production';
+server/src/config/secrets.ts:58:  if (process.env.NODE_ENV !== 'production') return;
+server/src/payments/provider.ts:79:    if (process.env.NODE_ENV === 'production') {
+
+## PORT
+server/src/index.ts:109:  const port = Number(process.env.PORT ?? 7200);
+
+## PHILIA_DB_URL
+server/src/db/index.ts:25:const url = process.env.PHILIA_DB_URL ?? toFileUrl(defaultDbFile);
+
+## SESSION_SECRET
+server/src/auth/session.ts:25:  return process.env.SESSION_SECRET ?? DEV_SECRET;
+
+## BOOKING_CODE_SECRET
+server/src/routers/appointment.ts:87:const BOOKING_CODE_SECRET = process.env.BOOKING_CODE_SECRET ?? 'philia-dev-booking-code-secret';
+
+## IMG_SECRET
+server/src/storage/sign.ts:13:const IMG_SECRET = process.env.IMG_SECRET ?? 'philia-dev-img-secret-do-not-use-in-prod';
+
+## CORS_ORIGINS
+server/src/config/deploy.ts:37:  const raw = process.env.CORS_ORIGINS;
+
+## PUBLIC_BASE_URL
+server/src/config/deploy.ts:67:  const raw = process.env.PUBLIC_BASE_URL;
+
+## BETA_GATE_CODE
+server/src/config/deploy.ts:73:  const raw = process.env.BETA_GATE_CODE;
+
+## PAYMENT_PROVIDER
+server/src/payments/provider.ts:47:  const raw = (process.env.PAYMENT_PROVIDER ?? 'mock').trim().toLowerCase();
+
+## MOCK_PAY_SECRET
+server/src/payments/mockPay.ts:23:const MOCK_PAY_SECRET = process.env.MOCK_PAY_SECRET ?? 'philia-dev-mock-pay-secret';
+
+## WECHAT_MCHID
+server/src/payments/wechatPay.ts:63:      mchid: process.env.WECHAT_MCHID!.trim(),
+
+## WECHAT_APPID
+server/src/payments/wechatPay.ts:64:      appid: process.env.WECHAT_APPID!.trim(),
+
+## WECHAT_KEY
+server/src/payments/wechatPay.ts:65:      key: process.env.WECHAT_KEY!.trim(),
+
+## WECHAT_SERIAL
+server/src/payments/wechatPay.ts:66:      serial: process.env.WECHAT_SERIAL!.trim(),
+
+## VITE_API_BASE
+packages/shared/src/api/client.ts:8: * - getApiBase()：读 import.meta.env.VITE_API_BASE，缺省 http://localhost:7200。
+packages/shared/src/api/client.ts:42:/** API base：env VITE_API_BASE（import.meta.env 读取），缺省 http://localhost:7200 */
+packages/shared/src/api/client.ts:46:  const fromEnv = env?.VITE_API_BASE;
+apps/customer/src/vite-env.d.ts:5:  readonly VITE_API_BASE?: string
+
+## 反向核对：代码读取但 .env.example 未覆盖的变量
+（无输出 = 全覆盖）
+
+## 批次 6 任务 A 增量（Thu Sep 10 16:18:19     2026）
+## SERVE_STATIC
+server/src/static/spa.ts:82:  const v = (process.env.SERVE_STATIC ?? '').trim().toLowerCase();
+
+## STATIC_ROOT
+server/src/static/spa.ts:88:  const fromEnv = process.env.STATIC_ROOT?.trim();
+
+## APP_DOMAIN / M_DOMAIN / S_DOMAIN（server 运行时不读，compose/Caddy 消费）
+docker-compose.yml:37:      APP_DOMAIN: ${APP_DOMAIN:?err APP_DOMAIN 未设置（客户端域名，如 app.example.com）}
+docker-compose.yml:38:      M_DOMAIN: ${M_DOMAIN:?err M_DOMAIN 未设置（商家端域名，如 m.example.com）}
+docker-compose.yml:39:      S_DOMAIN: ${S_DOMAIN:?err S_DOMAIN 未设置（员工端域名，如 s.example.com）}
+caddy/Caddyfile:6:{$APP_DOMAIN} {
+caddy/Caddyfile:10:{$M_DOMAIN} {
+caddy/Caddyfile:14:{$S_DOMAIN} {

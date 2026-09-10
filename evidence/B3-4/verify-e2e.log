@@ -1,0 +1,14 @@
+PASS  寄养单详情页出现「改期」按钮
+saved fix-detail-reschedule-btn.png
+PASS  改期面板：入住日收起为摘要 chip（两阶段组件，预填当前区间）  — {"hasChip":true,"hasCheckoutGrid":true,"nightsText":"共 2 晚"}
+PASS  改期面板：显示退房日期网格
+PASS  改期面板：预填当前区间并即时显示「共 N 晚」  — 共 2 晚
+saved fix-reschedule-panel.png
+PASS  重选退房 9月26日 后即时显示「共 3 晚」  — 3
+saved fix-reschedule-repicked.png
+PASS  toast「改期已提交，等待商家重新确认」（沿用洗护口径）
+PASS  详情页状态胶囊回「待确认」（status 回退 pending）
+saved fix-reschedule-toast.png
+PASS  我的预约列表：改期后单回「待确认」Tab/列表且服务项可见
+saved fix-list-pending.png
+PASS ALL

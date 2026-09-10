@@ -1,0 +1,14 @@
+### 段④：NODE_ENV=production 且未设置 BETA_GATE_CODE → 启动即报错（secrets/CORS/PUBLIC_BASE_URL 均已注入，仅缺口令）
+$ NODE_ENV=production SESSION_SECRET=prod-s BOOKING_CODE_SECRET=prod-b IMG_SECRET=prod-i CORS_ORIGINS=https://philia.example.com PUBLIC_BASE_URL=https://philia.example.com tsx src/index.ts
+D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\config\deploy.ts:106
+  throw new Error(
+        ^
+
+Error: [deploy] 生产环境（NODE_ENV=production）检测到 1 项部署配置缺失/非法，拒绝启动：
+  - BETA_GATE_CODE（未设置）：内测口令门（批次 6 拍板 2）——dev-login / dev-seed-users 凭口令放行；生产不得留无门槛后门
+请通过环境变量显式注入上述配置后重启（清单与注释见仓库 .env.example）。
+    at assertDeployConfig (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\config\deploy.ts:106:9)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:106:3)
+
+Node.js v24.15.0
+exit=1

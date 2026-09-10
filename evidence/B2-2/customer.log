@@ -1,0 +1,16 @@
+
+> @philia/customer@0.0.0 dev
+> vite --port 7100
+
+
+  VITE v7.3.6  ready in 248 ms
+
+  ➜  Local:   http://localhost:7100/
+  ➜  Network: http://192.168.18.84:7100/
+npm error Lifecycle script `dev` failed with error:
+npm error code 1
+npm error path D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\apps\customer
+npm error workspace @philia/customer@0.0.0
+npm error location D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\apps\customer
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c vite --port 7100

@@ -1,0 +1,97 @@
+# 静态托管 Host 头分发运行时实证（SERVE_STATIC=1，本机 tsx 直跑，无需 Docker）
+
+## GET /  Host: app.beta.local
+HTTP/1.1 200 OK
+cache-control: no-cache
+content-length: 749
+content-type: text/html; charset=utf-8
+  首行: <!doctype html><html lang="zh-CN">  <head>    <meta charset="UTF-8" />    <meta name="viewport" content="width=d
+  title: <title>菲丽亚宠物</title>
+
+## GET /  Host: m.beta.local
+HTTP/1.1 200 OK
+cache-control: no-cache
+content-length: 755
+content-type: text/html; charset=utf-8
+  首行: <!doctype html><html lang="zh-CN">  <head>    <meta charset="UTF-8" />    <meta name="viewport" content="width=d
+  title: <title>菲丽亚商家端</title>
+
+## GET /  Host: s.beta.local
+HTTP/1.1 200 OK
+cache-control: no-cache
+content-length: 755
+content-type: text/html; charset=utf-8
+  首行: <!doctype html><html lang="zh-CN">  <head>    <meta charset="UTF-8" />    <meta name="viewport" content="width=d
+  title: <title>菲丽亚员工端</title>
+
+## GET /  Host: beta.local
+HTTP/1.1 200 OK
+cache-control: no-cache
+content-length: 749
+content-type: text/html; charset=utf-8
+  首行: <!doctype html><html lang="zh-CN">  <head>    <meta charset="UTF-8" />    <meta name="viewport" content="width=d
+  title: <title>菲丽亚宠物</title>
+
+## GET /  Host: 127.0.0.1
+HTTP/1.1 200 OK
+cache-control: no-cache
+content-length: 749
+content-type: text/html; charset=utf-8
+  首行: <!doctype html><html lang="zh-CN">  <head>    <meta charset="UTF-8" />    <meta name="viewport" content="width=d
+  title: <title>菲丽亚宠物</title>
+
+## SPA fallback：GET /appointments  Host: m.beta.local（应返回 merchant index.html）
+HTTP/1.1 200 OK
+cache-control: no-cache
+content-type: text/html; charset=utf-8
+  title: <title>菲丽亚商家端</title>
+
+## API 不被接管：GET /api/health
+HTTP/1.1 200 OK
+content-type: application/json
+{"ok":true,"ts":1789027701589}
+
+## tRPC 不被接管：GET /trpc/store.listNearby（无参 400/401 均可，证明走到 tRPC 而非静态）
+HTTP 401 ct=application/json
+[{"error":{"json":{"message":"未登录或会话已过期","code":-32001,"data":{"code":"UNAUTHORIZED","httpStatus":401,"stack":"TRPCError: 未登录或会话已过期\n    at <anonymous> (D:\\KimiDat
+
+## PWA 文件：GET /manifest.webmanifest 与 /sw.js 与 /icons/icon-192.png  Host: s.beta.local
+HTTP/1.1 200 OK
+cache-control: no-cache
+content-type: application/manifest+json; charset=utf-8
+HTTP/1.1 200 OK
+cache-control: no-cache
+content-type: text/javascript; charset=utf-8
+HTTP/1.1 200 OK
+cache-control: public, max-age=86400
+content-type: image/png
+
+## 指纹资源长缓存：GET /assets/<首个js>  Host: app.beta.local
+ls: cannot access '../apps/customer/dist/assets': No such file or directory
+HTTP/1.1 200 OK
+cache-control: no-cache
+content-type: text/html; charset=utf-8
+
+## 路径穿越防护：GET /../server/src/index.ts（encode）
+HTTP 200 ct=text/html; charset=utf-8
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+  
+
+## 指纹资源长缓存（补测）：GET /assets/<js>  Host: app.beta.local
+  asset=index-tnp8dJmB.js
+HTTP/1.1 200 OK
+cache-control: public, max-age=31536000, immutable
+content-type: text/javascript; charset=utf-8
+
+## HEAD 请求：HEAD /  Host: m.beta.local
+HTTP/1.1 200 OK
+cache-control: no-cache
+content-length: 755
+content-type: text/html; charset=utf-8
+
+## 对照：SERVE_STATIC 未设置（dev 默认）——GET / 应为 404（行为不变）
+GET / (Host: app.beta.local) no SERVE_STATIC -> HTTP 404
+GET /api/health -> HTTP 200

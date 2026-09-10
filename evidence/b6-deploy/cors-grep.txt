@@ -1,0 +1,35 @@
+# CORS 硬编码残留 grep（批次 6 任务 B 验收口径）
+$ grep -rn "7100|7101|7102" 仓库（排除 node_modules/dist/.git）
+./apps/customer/scripts/me-page-e2e.mjs:4: * 前置：server dev 已监听 7200、customer dev 已监听 7100（脚本只做可达性检查，不自起服务）。
+./apps/customer/scripts/me-page-e2e.mjs:31:const APP_PORT = 7100;
+./apps/customer/scripts/me-page-e2e.mjs:95:    throw new Error('customer 7100 不可达，请先 cd apps/customer && npm run dev -- --port 7100');
+./apps/customer/vite.config.ts:33:    port: 7100,
+./apps/merchant/vite.config.ts:33:    port: 7101,
+./apps/staff/vite.config.ts:33:    port: 7102,
+./docs/ACCEPTANCE.md:133:| ENV-1 | 环境（非产品 bug） | 本轮开始前 7200/7100 被历史会话残留进程占用（pid 28584/6196），曾致 C5 误连旧实例报 dev-login 403。已 taskkill 清理；`acceptance-c5.mts` 已加端口前置检查防再踩 | — | 已处理 |
+./docs/ACCEPTANCE.md:134:| ENV-2 | 环境（非产品 bug） | 报告完成时 7101/7102/7200/9223 仍有监听（pid 4816/24596/31624/10024，三端 dev server + 调试 Chrome 的完整开发套件）。**已逐一核实非本轮验收所起**（本轮每次运行后均验证端口已释放；9223 Chrome 未使用本脚本 profile 目录），应为共享工作区并行任务的开发环境，按约定不动他人进程 | — | 保留，不动 |
+./packages/shared/src/api/client.ts:57:        // 会话为 httpOnly cookie，跨域（7100 → 7200）必须携带凭证
+./packages/shared/src/api/hooks.ts:144:      // 会话 cookie 跨域携带（7100 → 7200）
+./plan.md:13:| 预览 | website_version_manager 版本卡 | Kimi Work 本地预览卡（dev server，customer 端口 7100） | 平台能力差异 |
+./plan.md:14:| 端口约定 | — | customer=7100 / merchant=7101 / staff=7102 | 客户端预览规则 |
+./plan.md:68:- [x] T2.4 集成验证：`tsc -b && vite build` 全绿（修 1 个未使用常量）；运行时联调：server(7200)+customer(7100) 真实环境，scripts/demo-live.ts 造"服务进行到第 4 步"演示单（真实下单→确认→派单→核销→3 步拍照上传），CDP 登录态截图 8 页（home/philia/pets/booking×2/appointments/detail/live）全部渲染正确、真实数据可见、philia 光环生效
+./README.md:10:│   ├── customer/     # 客户端 PWA（宠物主人），dev 端口 7100
+./README.md:11:│   ├── merchant/     # 商家端 PWA（门店管理，平板横屏优先），dev 端口 7101
+./README.md:12:│   └── staff/        # 员工端 PWA（服务执行，手机竖屏单手优先），dev 端口 7102
+./README.md:29:npm run dev:customer        # 客户端  http://localhost:7100
+./README.md:30:npm run dev:merchant        # 商家端  http://localhost:7101
+./README.md:31:npm run dev:staff           # 员工端  http://localhost:7102
+./scripts/smoke-deploy.mjs:15: *                     http://localhost:7100 / 7101 / 7102）
+./server/README.md:88:允许三端 dev 端口 `7100/7101/7102`（localhost 与 127.0.0.1 两种宿主）携带凭证
+./server/src/config/deploy.ts:8: *                    （DEV_ORIGINS，7100/7101/7102，含 localhost 与 127.0.0.1）；
+./server/src/config/deploy.ts:25:  'http://localhost:7100',
+./server/src/config/deploy.ts:26:  'http://localhost:7101',
+./server/src/config/deploy.ts:27:  'http://localhost:7102',
+./server/src/config/deploy.ts:28:  'http://127.0.0.1:7100',
+./server/src/config/deploy.ts:29:  'http://127.0.0.1:7101',
+./server/src/config/deploy.ts:30:  'http://127.0.0.1:7102',
+./server/src/index.ts:6: *      三端 dev 端口（7100/7101/7102，含 localhost 与 127.0.0.1 两种宿主写法），
+./shots/probe.mjs:3:const URL_TO_TEST = process.argv[2] || 'http://localhost:7100/philia';
+
+# 结论：server/src 中 7100-7102 仅存在于 config/deploy.ts 的 DEV_ORIGINS 开发期缺省值
+# （任务书允许：NODE_ENV≠production 时的 dev 默认）；其余为 vite config 端口、注释与历史文档，无 CORS 硬编码残留

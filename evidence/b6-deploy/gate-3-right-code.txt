@@ -1,0 +1,12 @@
+### 段③：BETA_GATE_CODE=beta-gate-7f3k9 → 对口令 200
+$ curl -s -w "\nHTTP %{http_code}\n" "http://localhost:7200/api/auth/dev-seed-users?code=beta-gate-7f3k9"
+{"users":[{"id":"01M20EDD8CMJCG42PBGX9MY5NB","nickname":"菲丽亚店主","roles":["merchant_owner"]},{"id":"01M20EDD8DCX0M28PR83D6XMPC","nickname":"小美","roles":["staff"]},{"id":"01M20EDD8D6X6KPFP2ZBS837EW","nickname":"阿强","roles":["staff"]},{"id":"01M20EDD8D3KQ5GMBK2SK3KRD2","nickname":"丽丽","roles":["staff"]},{"id":"01M20EDD8DKJ5DR9FZY7A01Y04","nickname":"示例客户","roles":["customer"]}]}
+HTTP 200
+
+$ curl -s -c cookies.txt -w "\nHTTP %{http_code}\n" -X POST -H 'Content-Type: application/json' -d '{"userId":"01M20EDD8DKJ5DR9FZY7A01Y04","code":"beta-gate-7f3k9"}' http://localhost:7200/api/auth/dev-login
+{"ok":true,"user":{"id":"01M20EDD8DKJ5DR9FZY7A01Y04","nickname":"示例客户","roles":["customer"]}}
+HTTP 200
+
+# 登录态生效验证：GET /trpc/auth.me 带 cookie
+[{"result":{"data":{"json":{"user":{"id":"01M20EDD8DKJ5DR9FZY7A01Y04","kimiId":"seed_kimi_customer","nickname":"示例客户","avatarUrl":null,"phone":"13800000000","createdAt":"2026-09-08T12:03:18.000Z","updatedAt":"2026-09-08T12:03:18.000Z"},"roles":["customer"],"staff":null,"store":null},"meta":{"values":{"user.createdAt":["Date"],"user.updatedAt":["Date"]},"v":1}}}}]
+HTTP 200

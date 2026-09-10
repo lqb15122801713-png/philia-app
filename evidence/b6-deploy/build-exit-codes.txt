@@ -1,0 +1,13 @@
+# 构建/校验退出码汇总（Thu Sep 10 15:46:47     2026）
+server typecheck (tsc --noEmit): exit=0
+server appointment.smoke (tsx src/routers/__tests__/appointment.smoke.ts): exit=0（全部冒烟验证通过 ✅）
+customer build (tsc -b && vite build): exit=0
+merchant build: exit=0
+staff build: exit=0
+
+# 任务 A 增量（静态托管 + staging 改动后复跑）
+server typecheck: exit=0
+appointment.smoke: exit=0（全部冒烟验证通过 ✅）
+三端 build（根 npm run build：customer+merchant+staff）: exit=0
+smoke-deploy 回归（SERVE_STATIC=1）: exit=0（20/20 ✅）
+staging 启动实证: exit=0（告警不阻断，health 200）

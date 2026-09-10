@@ -1,0 +1,25 @@
+$ PUBLIC_BASE_URL=http://localhost:7200 BETA_GATE_CODE=beta-gate-7f3k9 CUSTOMER_URL=http://localhost:7100 MERCHANT_URL=http://localhost:7101 STAFF_URL=http://localhost:7102 node scripts/smoke-deploy.mjs
+✅ GET /api/health —— {"ok":true,"ts":1789026177992}
+✅ 三端首页可达：customer http://localhost:7100 —— status=200 ct=text/html
+✅ 三端首页可达：merchant http://localhost:7101 —— status=200 ct=text/html
+✅ 三端首页可达：staff http://localhost:7102 —— status=200 ct=text/html
+✅ 口令门：dev-seed-users 无码 → 401 BETA_GATE_REQUIRED —— status=401 error=BETA_GATE_REQUIRED
+✅ 口令门：dev-seed-users 错码 → 403 BETA_GATE_INVALID —— status=403 error=BETA_GATE_INVALID
+✅ 口令门：dev-seed-users 对口令 → 200 —— status=200 users=5
+✅ 口令门：dev-login 错码 → 403（先于用户校验被拒） —— status=403
+✅ dev-seed-users 动态取数（带口令） —— users=5
+✅ 种子角色齐全（customer / merchant_owner / staff） —— customer=示例客户 merchant=菲丽亚店主 staff=小美
+✅ dev-login（示例客户 / customer） —— status=200
+✅ dev-login（菲丽亚店主 / merchant） —— status=200
+✅ dev-login（小美 / staff） —— status=200
+✅ trpc pet.list（种子客户有宠物） —— pets=2 第一只=旺财
+✅ trpc store.listNearby（种子门店） —— stores=1 第一家=菲丽亚宠物·示例店
+✅ trpc store.getWithServices（洗护服务项） —— 服务=基础洗护（小型犬） 价格=8800分
+✅ 演示单下单 trpc appointment.create —— id=01M254A5YEHJX4H0D9CPWWYZTT scheduledStart=2026/9/11 10:00:00
+✅ 商家确认 trpc appointment.confirm（pending → confirmed） —— status=confirmed
+✅ 客户取码 trpc appointment.getCode —— code=3P7C3J
+✅ 员工核销 trpc appointment.checkin（confirmed → in_service） —— status=in_service checkedInAt=2026-09-10T07:42:59.000Z 认领员工=01M20EDD8FXKD9XGDXDGT5KKYW
+
+目标：http://localhost:7200（口令门已启用）
+全部通过 🎉
+exit=0

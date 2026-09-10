@@ -1,0 +1,16 @@
+# staging 口径实证（裁定书 #1 ②）：NODE_ENV=staging + mock 合法启动；未注入项告警不阻断
+$ NODE_ENV=staging tsx src/index.ts（不注入任何密钥/口令）
+--- 启动日志 ---
+[deploy] NODE_ENV=staging（内测口径）检测到 7 项配置未显式注入（不阻断启动，但内测机强烈建议补齐）：
+  - SESSION_SECRET（未设置，正沿用源码 dev 缺省密钥）
+  - BOOKING_CODE_SECRET（未设置，正沿用源码 dev 缺省密钥）
+  - IMG_SECRET（未设置，正沿用源码 dev 缺省密钥）
+  - MOCK_PAY_SECRET（未设置，正沿用源码 dev 缺省密钥）
+  - CORS_ORIGINS（未设置，正沿用三端 dev 端口缺省白名单）
+  - PUBLIC_BASE_URL（未设置）
+  - BETA_GATE_CODE（未设置，dev-login 无口令门——内测机等同后门）
+[deploy] 按 .env.example 逐项注入后重启即可消除本提醒。
+[philia-server] 已启动: http://localhost:7200 （tRPC: /trpc/*, SSE: /api/events）
+--- 运行验证 ---
+{"ok":true,"ts":1789028282361}
+GET /api/health -> HTTP 200

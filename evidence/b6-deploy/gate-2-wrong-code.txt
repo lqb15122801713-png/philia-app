@@ -1,0 +1,16 @@
+### 段②：BETA_GATE_CODE=beta-gate-7f3k9（进程环境注入）→ 无码 401 / 错码 403
+$ curl -s -w "\nHTTP %{http_code}\n" http://localhost:7200/api/auth/dev-seed-users   （无码）
+{"ok":false,"error":"BETA_GATE_REQUIRED","message":"内测环境：请携带内测口令（code）"}
+HTTP 401
+
+$ curl -s -w "\nHTTP %{http_code}\n" "http://localhost:7200/api/auth/dev-seed-users?code=wrong-code"   （错码）
+{"ok":false,"error":"BETA_GATE_INVALID","message":"内测口令错误"}
+HTTP 403
+
+$ curl -s -w "\nHTTP %{http_code}\n" -X POST -H 'Content-Type: application/json' -d '{"userId":"01M20EDD8DKJ5DR9FZY7A01Y04"}' http://localhost:7200/api/auth/dev-login   （无码）
+{"ok":false,"error":"BETA_GATE_REQUIRED","message":"内测环境：请携带内测口令（code）"}
+HTTP 401
+
+$ curl -s -w "\nHTTP %{http_code}\n" -X POST -H 'Content-Type: application/json' -d '{"userId":"01M20EDD8DKJ5DR9FZY7A01Y04","code":"wrong-code"}' http://localhost:7200/api/auth/dev-login   （错码）
+{"ok":false,"error":"BETA_GATE_INVALID","message":"内测口令错误"}
+HTTP 403

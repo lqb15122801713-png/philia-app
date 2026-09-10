@@ -1,0 +1,383 @@
+
+> @philia/server@0.1.0 dev
+> tsx watch src/index.ts
+
+[philia-server] 已启动: http://localhost:7200 （tRPC: /trpc/*, SSE: /api/events）
+12:46:53 [tsx] change in ./src\routers\serviceStep.ts Rerunning...
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::7200
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at serve (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/@hono/node-server/dist/index.mjs:1305:9)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:125:30)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2044:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 7200
+}
+
+Node.js v24.15.0
+12:47:09 [tsx] change in ./src\routers\appointment.ts Rerunning...
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::7200
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at serve (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/@hono/node-server/dist/index.mjs:1305:9)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:125:30)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2044:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 7200
+}
+
+Node.js v24.15.0
+12:48:21 [tsx] change in ./src\routers\appointment.ts Rerunning...
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::7200
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at serve (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/@hono/node-server/dist/index.mjs:1305:9)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:125:30)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2044:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 7200
+}
+
+Node.js v24.15.0
+13:07:56 [tsx] change in ./src\routers\appointment.ts Rerunning...
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::7200
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at serve (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/@hono/node-server/dist/index.mjs:1305:9)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:125:30)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2044:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 7200
+}
+
+Node.js v24.15.0
+13:08:51 [tsx] change in ./src\routers\appointment.ts Rerunning...
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::7200
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at serve (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/@hono/node-server/dist/index.mjs:1305:9)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:125:30)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2044:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 7200
+}
+
+Node.js v24.15.0
+13:09:30 [tsx] change in ./src\routers\appointment.ts Rerunning...
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::7200
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at serve (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/@hono/node-server/dist/index.mjs:1305:9)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:125:30)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2044:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 7200
+}
+
+Node.js v24.15.0
+13:41:57 [tsx] change in ./src\db\schema.ts Rerunning...
+[philia-server] 已启动: http://localhost:7200 （tRPC: /trpc/*, SSE: /api/events）
+13:44:48 [tsx] change in ./src\routers\appointment.ts Restarting...
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::7200
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at serve (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/@hono/node-server/dist/index.mjs:1305:9)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:125:30)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2044:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 7200
+}
+
+Node.js v24.15.0
+13:45:46 [tsx] change in ./src\routers\appointment.ts Rerunning...
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::7200
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at serve (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/@hono/node-server/dist/index.mjs:1305:9)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:125:30)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2044:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 7200
+}
+
+Node.js v24.15.0
+13:46:07 [tsx] change in ./src\routers\appointment.ts Rerunning...
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::7200
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at serve (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/@hono/node-server/dist/index.mjs:1305:9)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:125:30)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2044:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 7200
+}
+
+Node.js v24.15.0
+13:46:18 [tsx] change in ./src\routers\appointment.ts Rerunning...
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::7200
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at serve (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/@hono/node-server/dist/index.mjs:1305:9)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:125:30)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2044:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 7200
+}
+
+Node.js v24.15.0
+13:46:55 [tsx] change in ./src\routers\appointment.ts Rerunning...
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::7200
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at serve (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/@hono/node-server/dist/index.mjs:1305:9)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:125:30)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2044:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 7200
+}
+
+Node.js v24.15.0
+13:47:17 [tsx] change in ./src\routers\appointment.ts Rerunning...
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::7200
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at serve (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/@hono/node-server/dist/index.mjs:1305:9)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:125:30)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2044:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 7200
+}
+
+Node.js v24.15.0
+13:47:32 [tsx] change in ./src\routers\appointment.ts Rerunning...
+[philia-server] 已启动: http://localhost:7200 （tRPC: /trpc/*, SSE: /api/events）
+13:48:36 [tsx] change in ./src\routers\index.ts Restarting...
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::7200
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at serve (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/@hono/node-server/dist/index.mjs:1305:9)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:125:30)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2044:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 7200
+}
+
+Node.js v24.15.0
+13:49:03 [tsx] change in ./src\routers\index.ts Rerunning...
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::7200
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at serve (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/@hono/node-server/dist/index.mjs:1305:9)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:125:30)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2044:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 7200
+}
+
+Node.js v24.15.0
+14:42:19 [tsx] change in ./src\routers\appointment.ts Rerunning...
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::7200
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at serve (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/@hono/node-server/dist/index.mjs:1305:9)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:125:30)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2044:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 7200
+}
+
+Node.js v24.15.0
+14:42:38 [tsx] change in ./src\routers\serviceStep.ts Rerunning...
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::7200
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at serve (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/@hono/node-server/dist/index.mjs:1305:9)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:125:30)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2044:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 7200
+}
+
+Node.js v24.15.0
+14:42:56 [tsx] change in ./src\realtime\events.ts Rerunning...
+node:events:487
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: listen EADDRINUSE: address already in use :::7200
+    at Server.setupListenHandle [as _listen2] (node:net:2008:16)
+    at listenInCluster (node:net:2065:12)
+    at Server.listen (node:net:2170:7)
+    at serve (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/@hono/node-server/dist/index.mjs:1305:9)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:125:30)
+Emitted 'error' event on Server instance at:
+    at emitErrorNT (node:net:2044:8)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -4091,
+  syscall: 'listen',
+  address: '::',
+  port: 7200
+}
+
+Node.js v24.15.0

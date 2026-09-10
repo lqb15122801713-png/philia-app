@@ -1,0 +1,13 @@
+### 附：已知冲突实证 —— NODE_ENV=production 全部配置含 BETA_GATE_CODE 注入、PAYMENT_PROVIDER 缺省 mock
+→ §4.7 assertPaymentConfig 拒绝启动（与批次 6 拍板 3「内测走 MockPay」冲突，待产品侧裁定）
+$ NODE_ENV=production SESSION_SECRET=prod-s BOOKING_CODE_SECRET=prod-b IMG_SECRET=prod-i CORS_ORIGINS=https://philia.example.com PUBLIC_BASE_URL=https://philia.example.com BETA_GATE_CODE=beta-gate-7f3k9 tsx src/index.ts
+D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\payments\provider.ts:80
+      throw new Error(
+            ^
+
+Error: [payments] 生产构建检测到 PAYMENT_PROVIDER=mock：mock 仅用于开发/演示，禁止上生产（静默降级即资损风险）。请配置 PAYMENT_PROVIDER=wechat 及完整 WECHAT_* 环境变量。
+    at assertPaymentConfig (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\payments\provider.ts:80:13)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\index.ts:108:3)
+
+Node.js v24.15.0
+exit=1
