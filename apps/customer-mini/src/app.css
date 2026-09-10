@@ -2,7 +2,20 @@
  * 全局样式：Tailwind 指令由 weapp-tailwindcss 在 weapp/h5 双端产物中改写。
  * VI token 类（bg-canvas / text-ink / bg-brand-primary 等）来自
  * packages/config/tailwind-preset.js（色值零改动）。
+ * NutUI 主题变量按 VI v1.1 token 覆写（品牌主色/按压/浅底/前景），不引入组件库默认色。
  */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+page,
+:root {
+  --nutui-color-primary: #FDC830;
+  --nutui-color-primary-pressed: #E8AD02;
+  --nutui-color-primary-light: #FCF3D9;
+  --nutui-color-primary-light-pressed: #FCF3D9;
+  --nutui-color-primary-stop-1: #FDC830;
+  --nutui-color-primary-stop-2: #FDC012;
+  --nutui-color-primary-text: #4A3B2E;
+}
+

@@ -12,6 +12,7 @@ export default {
     'pages/booking/index',
     'pages/mall/index',
     'pages/me/index',
+    'pages/login/index',
   ],
   window: {
     backgroundTextStyle: 'light',

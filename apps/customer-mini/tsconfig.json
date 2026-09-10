@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2019",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "strict": true,
     "noImplicitAny": false,
@@ -12,10 +12,10 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      // AppRouter infer 帮助器：type-only 指到 server 依赖（不新增 npm 依赖，见 src/lib/trpc.ts）
+      "@trpc/server": ["../../server/node_modules/@trpc/server"]
     },
-    "lib": ["ES2020", "DOM"],
-    "types": ["@tarojs/taro"]
+    "lib": ["ES2021", "DOM"]
   },
   "include": ["./src", "./types"],
   "exclude": ["node_modules", "dist"]
