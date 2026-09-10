@@ -13,6 +13,8 @@ export default {
     'pages/mall/index',
     'pages/me/index',
     'pages/login/index',
+    'pages/store/index',
+    'pages/product/index',
   ],
   window: {
     backgroundTextStyle: 'light',

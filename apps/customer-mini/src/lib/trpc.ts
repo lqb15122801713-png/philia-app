@@ -72,7 +72,7 @@ export async function trpcQuery<R extends keyof Outputs & string, P extends keyo
   proc: P,
   input?: Inputs[R][P],
 ): Promise<Outputs[R][P]> {
-  const payload = { '0': { json: input ?? null } };
+  const payload = input === undefined ? { '0': {} } : { '0': { json: input } };
   const url = `${API_BASE}/trpc/${router}.${proc}?batch=1&input=${encodeURIComponent(JSON.stringify(payload))}`;
   const data = await apiFetch<BatchItem<Outputs[R][P]>[]>({ url });
   return unwrap(data, `${router}.${proc}`);
