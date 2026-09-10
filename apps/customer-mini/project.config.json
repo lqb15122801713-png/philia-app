@@ -1,0 +1,16 @@
+{
+  "miniprogramRoot": "dist/weapp/",
+  "projectname": "philia-customer-mini",
+  "description": "Philia 客户端小程序（批次 7.1 · Taro 双产物）",
+  "appid": "touristappid",
+  "compileType": "miniprogram",
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "ignoreUploadUnusedFiles": true
+  },
+  "libVersion": "latest"
+}

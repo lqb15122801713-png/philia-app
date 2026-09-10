@@ -1,0 +1,8 @@
+/**
+ * 全局样式：Tailwind 指令由 weapp-tailwindcss 在 weapp/h5 双端产物中改写。
+ * VI token 类（bg-canvas / text-ink / bg-brand-primary 等）来自
+ * packages/config/tailwind-preset.js（色值零改动）。
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
