@@ -1,0 +1,341 @@
+# 任务 A4 同步核查：全新 clone → npm ci → 三端 build → server typecheck
+# clone 来源：本仓库 fix/b6.1-deploy @ 7aa1c5b4027b4e93cd526218b1edf43ffd97d411
+# 时间：Thu Sep 10 21:02:04     2026
+
+## 1) 根 npm ci
+
+added 688 packages in 17s
+npm ci exit=0
+## 2) 三端 npm run build（根脚本一次构建 customer+merchant+staff）
+
+> philia@0.0.0 build
+> npm run build -w @philia/customer && npm run build -w @philia/merchant && npm run build -w @philia/staff
+
+
+> @philia/customer@0.0.0 build
+> tsc -b && vite build
+
+src/components/booking/StaffPicker.tsx(54,40): error TS7006: Parameter 'k' implicitly has an 'any' type.
+src/components/home/RecommendedServices.tsx(38,24): error TS7006: Parameter 'svc' implicitly has an 'any' type.
+src/pages/AppointmentDetailPage.tsx(321,73): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/AppointmentDetailPage.tsx(322,46): error TS7006: Parameter 'n' implicitly has an 'any' type.
+src/pages/AppointmentDetailPage.tsx(322,49): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/AppointmentDetailPage.tsx(468,30): error TS7006: Parameter 'step' implicitly has an 'any' type.
+src/pages/AppointmentDetailPage.tsx(478,39): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/pages/AppointmentDetailPage.tsx(478,42): error TS7006: Parameter 'i' implicitly has an 'any' type.
+src/pages/AppointmentLivePage.tsx(454,43): error TS7006: Parameter 'l' implicitly has an 'any' type.
+src/pages/BoardingSinglePage.tsx(77,52): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/BoardingSinglePage.tsx(80,42): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/BoardingSinglePage.tsx(118,44): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/BoardingSinglePage.tsx(138,45): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/pages/BoardingSinglePage.tsx(148,45): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/BoardingSinglePage.tsx(156,40): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/pages/BookingBoardingPage.tsx(56,44): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/BookingBoardingPage.tsx(64,52): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/BookingBoardingPage.tsx(67,42): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/BookingBoardingPage.tsx(89,45): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/pages/BookingBoardingPage.tsx(96,69): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/BookingBoardingPage.tsx(113,63): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/pages/BookingBoardingPage.tsx(123,45): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/BookingBoardingPage.tsx(249,48): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/BookingBoardingPage.tsx(285,37): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/BookingGroomingPage.tsx(95,47): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/pages/BookingGroomingPage.tsx(105,63): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/pages/BookingGroomingPage.tsx(111,52): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/BookingGroomingPage.tsx(114,42): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/BookingGroomingPage.tsx(118,69): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/BookingGroomingPage.tsx(122,69): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/BookingGroomingPage.tsx(123,46): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/BookingGroomingPage.tsx(251,38): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/BookingGroomingPage.tsx(281,47): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/GroomingSinglePage.tsx(84,47): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/pages/GroomingSinglePage.tsx(112,52): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/GroomingSinglePage.tsx(148,69): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/GroomingSinglePage.tsx(202,42): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/GroomingSinglePage.tsx(203,46): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/MallPage.tsx(89,32): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/MemberPage.tsx(139,32): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/MemberPage.tsx(139,35): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/pages/MemberPage.tsx(149,24): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/pages/MePage.tsx(158,20): error TS7006: Parameter 'pet' implicitly has an 'any' type.
+src/pages/MomentsPage.tsx(167,34): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/MomentsPage.tsx(169,42): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/pages/PetsPage.tsx(523,31): error TS7006: Parameter 'pet' implicitly has an 'any' type.
+src/pages/PetsPage.tsx(550,20): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ dog: string; cat: string; other: string; }'.
+src/pages/PetsPage.tsx(574,47): error TS7006: Parameter 'tag' implicitly has an 'any' type.
+src/pages/PhiliaPage.tsx(104,20): error TS7006: Parameter 'pet' implicitly has an 'any' type.
+src/pages/PhiliaPage.tsx(127,22): error TS7006: Parameter 'pet' implicitly has an 'any' type.
+src/pages/PhiliaPage.tsx(127,27): error TS7006: Parameter 'i' implicitly has an 'any' type.
+src/pages/PhiliaPage.tsx(153,34): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/PhiliaPage.tsx(155,42): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/pages/ProductDetailPage.tsx(44,50): error TS7006: Parameter 'u' implicitly has an 'any' type.
+src/pages/ProductDetailPage.tsx(121,55): error TS7006: Parameter 'u' implicitly has an 'any' type.
+src/pages/ProductDetailPage.tsx(121,58): error TS7006: Parameter 'i' implicitly has an 'any' type.
+src/pages/ProductDetailPage.tsx(139,26): error TS7006: Parameter '_' implicitly has an 'any' type.
+src/pages/ProductDetailPage.tsx(139,29): error TS7006: Parameter 'i' implicitly has an 'any' type.
+../../server/src/db/index.ts(15,30): error TS2307: Cannot find module '@libsql/client' or its corresponding type declarations.
+../../server/src/db/index.ts(16,25): error TS2307: Cannot find module 'drizzle-orm/libsql' or its corresponding type declarations.
+../../server/src/db/schema.ts(21,21): error TS2307: Cannot find module 'drizzle-orm' or its corresponding type declarations.
+../../server/src/db/schema.ts(29,8): error TS2307: Cannot find module 'drizzle-orm/sqlite-core' or its corresponding type declarations.
+../../server/src/db/schema.ts(30,40): error TS2307: Cannot find module 'ulid' or its corresponding type declarations.
+../../server/src/db/schema.ts(122,4): error TS7006: Parameter 't' implicitly has an 'any' type.
+../../server/src/db/schema.ts(332,4): error TS7006: Parameter 't' implicitly has an 'any' type.
+../../server/src/db/schema.ts(363,4): error TS7006: Parameter 't' implicitly has an 'any' type.
+../../server/src/db/schema.ts(391,4): error TS7006: Parameter 't' implicitly has an 'any' type.
+../../server/src/db/schema.ts(420,4): error TS7006: Parameter 't' implicitly has an 'any' type.
+../../server/src/db/schema.ts(467,4): error TS7006: Parameter 't' implicitly has an 'any' type.
+../../server/src/db/schema.ts(497,4): error TS7006: Parameter 't' implicitly has an 'any' type.
+../../server/src/db/schema.ts(515,4): error TS7006: Parameter 't' implicitly has an 'any' type.
+../../server/src/db/schema.ts(603,4): error TS7006: Parameter 't' implicitly has an 'any' type.
+../../server/src/db/schema.ts(648,4): error TS7006: Parameter 't' implicitly has an 'any' type.
+../../server/src/payments/mockPay.ts(16,22): error TS2307: Cannot find module 'ulid' or its corresponding type declarations.
+../../server/src/realtime/bus.ts(19,34): error TS2307: Cannot find module 'drizzle-orm' or its corresponding type declarations.
+../../server/src/realtime/bus.ts(70,55): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(43,75): error TS2307: Cannot find module 'drizzle-orm' or its corresponding type declarations.
+../../server/src/routers/appointment.ts(480,21): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(616,59): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(707,22): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(824,55): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(830,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(868,55): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(883,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(942,55): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(948,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(993,57): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1006,20): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1021,55): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1032,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1057,55): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1068,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1155,55): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1210,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1319,54): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1332,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1357,20): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1407,55): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1413,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1441,55): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1447,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1488,10): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1523,34): error TS7006: Parameter 's' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1551,27): error TS7006: Parameter 's' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1555,49): error TS7006: Parameter 'p' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1590,8): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/appointment.ts(1632,10): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/auth.ts(13,25): error TS2307: Cannot find module 'drizzle-orm' or its corresponding type declarations.
+../../server/src/routers/auth.ts(26,14): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/auth.ts(37,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/auth.ts(47,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/auth.ts(69,16): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/auth.ts(88,16): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/auth.ts(94,56): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/auth.ts(101,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/auth.ts(154,16): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/auth.ts(159,53): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/boarding.ts(23,36): error TS2307: Cannot find module 'drizzle-orm' or its corresponding type declarations.
+../../server/src/routers/boarding.ts(66,12): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/boarding.ts(94,12): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/boarding.ts(124,16): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/boarding.ts(171,16): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/boarding.ts(186,66): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/boarding.ts(197,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/boarding.ts(261,16): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/boarding.ts(279,86): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/boarding.ts(334,23): error TS7006: Parameter 'row' implicitly has an 'any' type.
+../../server/src/routers/boarding.ts(342,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/boarding.ts(368,16): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/boarding.ts(384,16): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/boarding.ts(414,16): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/mall.ts(22,65): error TS2307: Cannot find module 'drizzle-orm' or its corresponding type declarations.
+../../server/src/routers/mall.ts(138,47): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/mall.ts(163,16): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/mall.ts(296,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/mall.ts(310,16): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/mall.ts(411,59): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/mall.ts(466,22): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/mall.ts(576,55): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/mall.ts(582,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/mall.ts(608,55): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/mall.ts(614,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/pass.ts(17,40): error TS2307: Cannot find module 'drizzle-orm' or its corresponding type declarations.
+../../server/src/routers/pass.ts(42,24): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/pass.ts(57,22): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/pass.ts(79,47): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/pass.ts(79,81): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/pass.ts(85,17): error TS7006: Parameter 'a' implicitly has an 'any' type.
+../../server/src/routers/pass.ts(85,20): error TS7006: Parameter 'b' implicitly has an 'any' type.
+../../server/src/routers/pass.ts(127,40): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/pass.ts(145,20): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/pass.ts(152,20): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/pass.ts(182,24): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/pet.ts(12,25): error TS2307: Cannot find module 'drizzle-orm' or its corresponding type declarations.
+../../server/src/routers/pet.ts(55,16): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/pet.ts(91,16): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/pet.ts(113,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/pet.ts(130,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/push.ts(14,52): error TS2307: Cannot find module 'drizzle-orm' or its corresponding type declarations.
+../../server/src/routers/push.ts(106,27): error TS7006: Parameter 'n' implicitly has an 'any' type.
+../../server/src/routers/serviceStep.ts(23,47): error TS2307: Cannot find module 'drizzle-orm' or its corresponding type declarations.
+../../server/src/routers/serviceStep.ts(112,12): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/serviceStep.ts(204,34): error TS7006: Parameter 's' implicitly has an 'any' type.
+../../server/src/routers/serviceStep.ts(225,25): error TS7006: Parameter 's' implicitly has an 'any' type.
+../../server/src/routers/serviceStep.ts(273,46): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/serviceStep.ts(404,41): error TS7006: Parameter 'p' implicitly has an 'any' type.
+../../server/src/routers/serviceStep.ts(405,40): error TS7006: Parameter 'p' implicitly has an 'any' type.
+../../server/src/routers/serviceStep.ts(423,39): error TS7006: Parameter 'p' implicitly has an 'any' type.
+../../server/src/routers/serviceStep.ts(425,57): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/serviceStep.ts(552,16): error TS7006: Parameter 'tx' implicitly has an 'any' type.
+../../server/src/routers/serviceStep.ts(560,38): error TS7006: Parameter 's' implicitly has an 'any' type.
+../../server/src/routers/serviceStep.ts(574,45): error TS7006: Parameter 's' implicitly has an 'any' type.
+../../server/src/routers/serviceStep.ts(577,24): error TS7006: Parameter 's' implicitly has an 'any' type.
+../../server/src/routers/serviceStep.ts(578,23): error TS7006: Parameter 's' implicitly has an 'any' type.
+../../server/src/routers/serviceStep.ts(691,35): error TS7006: Parameter 's' implicitly has an 'any' type.
+../../server/src/routers/serviceStep.ts(694,34): error TS7006: Parameter 's' implicitly has an 'any' type.
+../../server/src/routers/store.ts(29,61): error TS2307: Cannot find module 'drizzle-orm' or its corresponding type declarations.
+../../server/src/routers/store.ts(123,22): error TS7006: Parameter 'a' implicitly has an 'any' type.
+../../server/src/routers/store.ts(123,25): error TS7006: Parameter 'b' implicitly has an 'any' type.
+../../server/src/routers/store.ts(143,16): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/store.ts(157,36): error TS7006: Parameter 's' implicitly has an 'any' type.
+../../server/src/routers/store.ts(185,49): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/store.ts(200,21): error TS2339: Property 'bookedCount' does not exist on type '{}'.
+../../server/src/routers/store.ts(200,39): error TS2339: Property 'capacity' does not exist on type '{}'.
+../../server/src/routers/store.ts(245,16): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/store.ts(276,39): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/store.ts(279,41): error TS7006: Parameter 's' implicitly has an 'any' type.
+../../server/src/routers/store.ts(287,32): error TS2339: Property 'capacity' does not exist on type '{}'.
+../../server/src/routers/store.ts(287,47): error TS2339: Property 'bookedCount' does not exist on type '{}'.
+../../server/src/routers/store.ts(336,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/store.ts(397,29): error TS7006: Parameter 'row' implicitly has an 'any' type.
+../../server/src/routers/store.ts(436,16): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/store.ts(455,18): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/store.ts(489,16): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/store.ts(519,16): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/store.ts(649,52): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/routers/store.ts(688,53): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+../../server/src/routers/store.ts(688,58): error TS7006: Parameter 'r' implicitly has an 'any' type.
+../../server/src/trpc.ts(18,20): error TS2307: Cannot find module 'drizzle-orm' or its corresponding type declarations.
+../../server/src/trpc.ts(117,12): error TS7006: Parameter 'r' implicitly has an 'any' type.
+npm error Lifecycle script `build` failed with error:
+npm error code 2
+npm error path D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\tmp-b61-clone\apps\customer
+npm error workspace @philia/customer@0.0.0
+npm error location D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\tmp-b61-clone\apps\customer
+npm error command failed
+npm error command C:\Windows\system32\cmd.exe /d /s /c tsc -b && vite build
+三端 build exit=2
+
+## 2a) 首次 build exit=2 诊断：TS7006 implicit any ×N（customer）
+    原因：全新 clone 未装 server 依赖，tsc 无法解析 server/src 类型引用 → AppRouter=any
+    处置（与 Dockerfile fe-builder 同序）：npm --prefix server ci 后重建
+
+## 2b) npm --prefix server ci
+npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+
+added 110 packages in 3s
+server ci exit=0
+## 3) 重建三端
+
+> philia@0.0.0 build
+> npm run build -w @philia/customer && npm run build -w @philia/merchant && npm run build -w @philia/staff
+
+
+> @philia/customer@0.0.0 build
+> tsc -b && vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+node_modules/zod/v4/core/regexes.js (70:0): A comment
+
+"/** Anchors a pattern source. The interpolation lives here rather than at the call site because
+ * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it
+ * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */"
+
+in "node_modules/zod/v4/core/regexes.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+node_modules/zod/v4/core/util.js (330:0): A comment
+
+"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle."
+
+in "node_modules/zod/v4/core/util.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+✓ 2320 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                          0.14 kB
+dist/manifest.webmanifest                   0.38 kB
+dist/index.html                             0.75 kB │ gzip:   0.44 kB
+dist/assets/philia-tab-icon-wiOD1Y2x.png   10.07 kB
+dist/assets/index-BXkHFDj0.css             95.36 kB │ gzip:  15.77 kB
+dist/assets/index-tnp8dJmB.js             733.52 kB │ gzip: 205.73 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 13.92s
+
+PWA v1.3.0
+mode      generateSW
+precache  7 entries (810.32 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js
+
+> @philia/merchant@0.0.0 build
+> tsc -b && vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 1865 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                          0.14 kB
+dist/manifest.webmanifest                   0.40 kB
+dist/index.html                             0.76 kB │ gzip:   0.44 kB
+dist/assets/philia-tab-icon-wiOD1Y2x.png   10.07 kB
+dist/assets/index-CxQbDJSu.css             95.24 kB │ gzip:  15.88 kB
+dist/assets/index-zGCSFLkn.js             562.75 kB │ gzip: 156.24 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 2.38s
+
+PWA v1.3.0
+mode      generateSW
+precache  7 entries (643.44 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js
+
+> @philia/staff@0.0.0 build
+> tsc -b && vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 2152 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                          0.14 kB
+dist/manifest.webmanifest                   0.40 kB
+dist/index.html                             0.76 kB │ gzip:   0.43 kB
+dist/assets/philia-tab-icon-wiOD1Y2x.png   10.07 kB
+dist/assets/index-CjoMsvWA.css             92.29 kB │ gzip:  15.47 kB
+dist/assets/QrScanner-Dek8weCv.js         141.46 kB │ gzip:  51.27 kB
+dist/assets/index-iNd5Ogp8.js             467.58 kB │ gzip: 138.44 kB
+✓ built in 2.54s
+
+PWA v1.3.0
+mode      generateSW
+precache  8 entries (685.77 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js
+三端 build exit=0
+## 4) server typecheck
+
+> @philia/server@0.1.0 typecheck
+> tsc --noEmit
+
+server typecheck exit=0

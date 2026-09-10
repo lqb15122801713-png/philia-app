@@ -1,0 +1,6 @@
+# lock 入仓自证（git hash-object 对比，Thu Sep 10 21:06:38     2026）
+commit: 7aa1c5b4027b4e93cd526218b1edf43ffd97d411
+本地文件 hash-object: 9e7fd727c3fc7e2e8616342e0a8cd95421ed2b81
+入仓 blob sha:        9e7fd727c3fc7e2e8616342e0a8cd95421ed2b81
+结论：逐字节一致 ✓
+lock 概况：lockfileVersion 3 / 694 packages / workspaces apps/*+packages/*

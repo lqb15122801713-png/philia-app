@@ -82,3 +82,29 @@
 3. tsx 直跑冷启动略慢于编译产物（秒级），1C2G 可接受；
 4. 静态评审不能替代实机构建：base 镜像拉取、npm ci 网络、entrypoint sh 权限
    （已 `chmod +x`）等待 VPS 首验实证。
+
+============================================================
+# b6.1 更新（Thu Sep 10 21:05:41     2026）：D1/D2/D3 修复后逐行核对引用文件存在性
+分支 fix/b6.1-deploy @ 9b0e5ca
+
+OK   package.json（已入库）
+OK   package-lock.json（已入库）
+OK   apps/customer/package.json（已入库）
+OK   apps/merchant/package.json（已入库）
+OK   apps/staff/package.json（已入库）
+OK   packages/shared/package.json（已入库）
+OK   packages/config/package.json（已入库）
+OK   server/package.json（已入库）
+OK   server/package-lock.json（已入库）
+OK   server/tsconfig.json（已入库）
+OK   docker/entrypoint.sh（已入库）
+OK   caddy/Caddyfile（已入库）
+OK   docker-compose.yml（已入库）
+OK   packages/（目录在场）
+OK   apps/（目录在场）
+OK   server/src/（目录在场）
+OK   server/drizzle/（目录在场）
+
+# .dockerignore 排除项不破坏 COPY 引用：docker/ 未排除（entrypoint.sh 可达）；
+# **/dist 排除无碍（dist 镜像内构建）；server/data、server/uploads 排除无碍（volume）
+# 结论：Dockerfile 全部 COPY 引用文件已入库在场，zip 部署自洽

@@ -32,3 +32,11 @@
 - `smoke-deploy-static-on.txt` — 静态托管装配后 smoke 全链路回归：20/20 ✅ exit=0
 - `dockerfile-static-review.md` — Dockerfile/compose/Caddyfile/entrypoint 逐行静态评审
   （基础镜像 / 构建阶段 / 端口 / volume / health / 迁移幂等 / 瘦身 / 已识别风险）
+
+## 批次 6.1 补修（fix/b6.1-deploy）追加
+- `b61-lock-selfproof.txt` — 根 package-lock.json 入仓自证（hash-object = blob sha，逐字节一致）
+- `b61-fresh-clone-build.log` — 同步核查：全新 clone → npm ci → server ci → 三端 build + typecheck 全绿
+  （含 2a 段诊断：未装 server 依赖时 tsc 类型解析失败 TS7006，与 Dockerfile 步骤顺序同因同解）
+- `dockerfile-static-review.md` 末尾 b6.1 更新段 — Dockerfile 全部 COPY 引用文件存在性逐行核对（全 OK）
+- `vps-first-run/first-run-notes.md` — VPS 首验档案：D1/D2/D3 现场、老板临时补丁思路、解堵后实证
+- `vps-first-run/deploy.log.placeholder.md` — 首验运行日志待产品侧移交，到位后原样替换 deploy.log
