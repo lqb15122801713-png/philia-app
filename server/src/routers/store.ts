@@ -586,17 +586,20 @@ export const storeRouter = router({
           ),
         );
 
-      /** 本地日期键 YYYY-MM-DD（服务端时区，与前端周期切换同为本地口径） */
+      /** 日期键 YYYY-MM-DD（B8 裁定②：门店规范时区 +8 展示口径——仅按日分组展示，
+       *  不改 paidAt 存储与区间过滤；复用 appointment.ts storeWallclock/storeDayStartMs） */
       const dayKey = (d: Date): string => {
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${d.getFullYear()}-${m}-${day}`;
+        const w = storeWallclock(d);
+        const m = String(w.m).padStart(2, '0');
+        const day = String(w.day).padStart(2, '0');
+        return `${w.y}-${m}-${day}`;
       };
 
-      // 按日序列：先把 [from, to) 每一天铺 0，再累加，保证序列连续无洞
+      // 按日序列：先把 [from, to) 每一天铺 0，再累加，保证序列连续无洞（日界同 +8 口径）
       const byDayMap = new Map<string, { date: string; serviceFen: number; shopFen: number }>();
-      for (const d = new Date(from.getFullYear(), from.getMonth(), from.getDate()); d < to; d.setDate(d.getDate() + 1)) {
-        const key = dayKey(d);
+      const fromWc = storeWallclock(from);
+      for (let ms = storeDayStartMs(fromWc.y, fromWc.m, fromWc.day); ms < to.getTime(); ms += 24 * 3600 * 1000) {
+        const key = dayKey(new Date(ms));
         byDayMap.set(key, { date: key, serviceFen: 0, shopFen: 0 });
       }
 

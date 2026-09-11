@@ -27,6 +27,7 @@ import { customerProcedure, merchantProcedure, publicProcedure, router } from '.
 import { broadcastNow, emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
 import { getPaymentProvider } from '../payments/provider';
+import { storeWallclock } from './appointment';
 
 /* ------------------------------------------------------------------ */
 /* 常量与工具                                                            */
@@ -88,11 +89,13 @@ function forbidden(message: string): never {
   throw new TRPCError({ code: 'FORBIDDEN', message });
 }
 
-/** 人类可读订单号：P + yyMMdd + 6 位去混淆随机段（≤20 字符，全局唯一靠 UNIQUE 索引 + 重试） */
+/** 人类可读订单号：P + yyMMdd + 6 位去混淆随机段（≤20 字符，全局唯一靠 UNIQUE 索引 + 重试）。
+ *  B8 裁定②：日期段按门店规范时区（+8）展示口径——仅订单号可读性，不涉及存储/状态机 */
 function genOrderNo(now: Date): string {
-  const yy = String(now.getFullYear()).slice(-2);
-  const mm = String(now.getMonth() + 1).padStart(2, '0');
-  const dd = String(now.getDate()).padStart(2, '0');
+  const w = storeWallclock(now);
+  const yy = String(w.y).slice(-2);
+  const mm = String(w.m).padStart(2, '0');
+  const dd = String(w.day).padStart(2, '0');
   let rand = '';
   for (let i = 0; i < 6; i++) rand += ORDER_NO_ALPHABET[randomInt(ORDER_NO_ALPHABET.length)];
   return `P${yy}${mm}${dd}${rand}`;
