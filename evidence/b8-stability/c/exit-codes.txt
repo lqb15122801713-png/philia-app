@@ -1,17 +1,17 @@
-# 批次 8 收口退出码（2026-09-11 00:35 CST）
+# 批次 8 收口退出码（2026-09-11 01:1x CST，裁定书①②施工后更新）
 
-## 三端生产构建（npm.cmd run build:{customer,merchant,staff}，于批次内统一重跑）
-build-customer: 0
-build-merchant: 0
-build-staff: 0
-（日志：build-customer.log / build-merchant.log / build-staff.log）
+## 三端生产构建（base 改 '/' 后重跑）
+build-customer: 0（build-customer-postfix.log）
+build-merchant: 0（build-merchant-postfix.log）
+build-staff: 0（build-staff-postfix.log）
 
-## 服务端 typecheck（server：tsc --noEmit）
+## 服务端 typecheck（server：tsc --noEmit，裁定②改动后）
 server-typecheck: 0
 
-## 服务端 e2e（server：npm run test:e2e）
-server-e2e(CST 本机时区): 0 —— 全链路验收全部通过 ✅（e2e-final.log）
-server-e2e(TZ=UTC 仿真 VPS 容器): 0 —— 全链路验收全部通过 ✅（e2e-utc.log）
+## 服务端 e2e（server：npm run test:e2e，裁定②改动后复跑）
+server-e2e(CST 本机时区): 0 —— 全链路验收全部通过 ✅（e2e-postfix-cst.log）
+server-e2e(TZ=UTC 仿真 VPS 容器): 0 —— 全链路验收全部通过 ✅（e2e-postfix-utc.log）
 
-## smoke-routes 基线（base './' 未修前）
-smoke-routes: 1（14/28 绿；红项全部为嵌套路由，属任务 A 待修的 base 问题，详见 smoke-baseline.txt）
+## smoke-routes（生产构建路由级渲染冒烟，scripts/smoke-routes.mjs）
+- base 修复前基线：exit 1，14/28 绿（红项全部嵌套路由，smoke-baseline.txt）
+- base 修复后复跑：exit 0，28/28 全绿 ×2 连跑（smoke-postfix.txt/json，含尾斜杠变体）
