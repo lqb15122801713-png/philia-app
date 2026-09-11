@@ -1,0 +1,49 @@
+# fix-b8-text-ink-grep · 返工令-批次8-PR21 证据（全仓口径核对）
+# 基线：fix/b8-stability @ 4cafd90
+# 口径：三端 apps/ 全域 grep (bg-brand-primary|bg-philia-gradient) 与 text-white 同行共现（brand-primary-light 浅底变体不计）
+# bg-gradient-to-* 为图片遮罩工具类（非品牌色面），不计入
+
+## 本批新增代码：违规 0 处（MonitorHubPage 已修正为 text-ink）
+
+## 全仓既有代码残留（非本批引入，逐文件列出，未随本返工修——超出授权范围，已上报待裁定）
+  apps/customer/src/components/mall/CartLink.tsx:36:          className={`absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-primary px-1 font-number text-[11px] font-semibold text-white transition-transform duration-300 ease-philia-spring ${
+  apps/customer/src/components/mall/CashierModal.tsx:129:                className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-philia-gradient text-body font-medium text-white shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
+  apps/merchant/src/components/appointments/AppointmentRow.tsx:105:            className="flex h-9 items-center gap-1 rounded-full bg-brand-primary px-3 text-caption font-semibold text-white transition-colors hover:bg-brand-primary-hover disabled:opacity-50"
+  apps/merchant/src/components/appointments/AssignStaffSheet.tsx:223:        className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-brand-primary px-3 text-caption font-semibold text-white transition-colors hover:bg-brand-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
+  apps/merchant/src/components/appointments/DetailSummary.tsx:88:            className="flex h-11 items-center justify-center gap-1.5 rounded-full bg-brand-primary text-body font-semibold text-white transition-colors hover:bg-brand-primary-hover disabled:opacity-50"
+  apps/merchant/src/components/appointments/RescheduleSheet.tsx:143:                        ? 'bg-brand-primary font-semibold text-white'
+  apps/merchant/src/components/appointments/RescheduleSheet.tsx:161:            className="mt-4 h-11 w-full rounded-full bg-brand-primary text-body font-semibold text-white transition-colors hover:bg-brand-primary-hover disabled:opacity-40"
+  apps/merchant/src/components/dashboard/TodayTimeline.tsx:17:  in_service: { label: '服务中', cls: 'bg-brand-primary text-white' },
+  apps/merchant/src/components/dashboard/TodayTimeline.tsx:18:  in_boarding: { label: '寄养中', cls: 'bg-brand-primary text-white' },
+  apps/merchant/src/components/finance/PendingPayments.tsx:98:                className="h-10 shrink-0 rounded-full bg-brand-primary px-4 text-body font-semibold text-white transition active:scale-95 disabled:opacity-50"
+  apps/merchant/src/components/mall-admin/ProductEditorDialog.tsx:207:                  <span className="absolute left-0 top-0 flex items-center gap-0.5 rounded-br-tag bg-brand-primary px-1 py-0.5 text-[10px] text-white">
+  apps/merchant/src/components/mall-admin/ui.tsx:26:  primary: 'bg-brand-primary text-white hover:bg-brand-primary-hover active:bg-brand-primary-pressed',
+  apps/merchant/src/components/RequireMerchant.tsx:52:          className="mt-6 h-12 min-w-[200px] rounded-full bg-brand-primary px-8 text-body font-semibold text-white transition active:scale-92 duration-120"
+  apps/merchant/src/components/staff-admin/ServiceEditorDialog.tsx:136:                    ? 'bg-brand-primary text-white'
+  apps/merchant/src/components/staff-admin/ui.tsx:27:  primary: 'bg-brand-primary text-white hover:bg-brand-primary-hover active:bg-brand-primary-pressed',
+  apps/merchant/src/pages/AppointmentDetailPage.tsx:292:            className="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-brand-primary text-body font-semibold text-white transition-colors hover:bg-brand-primary-hover disabled:opacity-50"
+  apps/merchant/src/pages/AppointmentDetailPage.tsx:313:              className="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-brand-primary text-body font-semibold text-white transition-colors hover:bg-brand-primary-hover"
+  apps/merchant/src/pages/AppointmentDetailPage.tsx:445:          className="mt-4 flex h-11 w-full items-center justify-center gap-1.5 rounded-full bg-brand-primary text-body font-semibold text-white transition-colors hover:bg-brand-primary-hover"
+  apps/merchant/src/pages/FinancePage.tsx:146:            className="mt-4 h-11 min-w-[160px] rounded-full bg-brand-primary px-8 text-body font-semibold text-white active:scale-[0.98]"
+  apps/merchant/src/pages/OrdersPage.tsx:116:                isActive ? 'bg-brand-primary text-white' : 'bg-card text-ink-secondary shadow-card hover:text-ink'
+  apps/merchant/src/pages/ProductsPage.tsx:128:                  ? 'bg-brand-primary text-white'
+  apps/staff/src/components/boarding/CheckinForm.tsx:221:          className="h-staff-btn w-full rounded-full bg-brand-primary text-body-lg font-semibold text-white shadow-philia transition active:scale-95 disabled:opacity-50"
+  apps/staff/src/components/boarding/DailyLogForm.tsx:307:        className="mt-5 h-staff-btn w-full rounded-full bg-brand-primary text-body-lg font-semibold text-white shadow-philia transition active:scale-95 disabled:opacity-50"
+  apps/staff/src/components/execute/BeforeAfterSlots.tsx:53:              tag === 'before' ? 'bg-brand-secondary-light text-ink' : 'bg-brand-primary text-white'
+  apps/staff/src/components/execute/GuidePage.tsx:24:          className="mt-8 h-14 w-full max-w-xs rounded-full bg-brand-primary text-body-lg font-semibold text-white shadow-card active:scale-92 duration-120"
+  apps/staff/src/components/execute/StepScreen.tsx:185:              : 'bg-brand-primary text-white shadow-elevated'
+  apps/staff/src/components/RequireStaff.tsx:48:          className="mt-6 h-14 min-w-[200px] rounded-full bg-brand-primary px-8 text-body-lg font-semibold text-white transition active:scale-92 duration-120"
+  apps/staff/src/components/today/StatusCapsule.tsx:15:  in_service: { label: '服务中', cls: 'bg-brand-primary text-white' },
+  apps/staff/src/components/today/StatusCapsule.tsx:16:  in_boarding: { label: '寄养中', cls: 'bg-brand-primary text-white' },
+  apps/staff/src/components/today/TodayTaskCard.tsx:77:            className="mt-3 h-14 w-full rounded-full bg-brand-primary text-body-lg font-semibold text-white transition active:scale-[0.98]"
+  apps/staff/src/components/today/TodayTaskCard.tsx:87:            className="mt-3 h-14 w-full rounded-full bg-brand-primary text-body-lg font-semibold text-white transition active:scale-[0.98]"
+  apps/staff/src/pages/BoardingCheckinPage.tsx:371:            className="mt-4 flex h-staff-btn items-center justify-center rounded-full bg-brand-primary text-body-lg font-semibold text-white"
+  apps/staff/src/pages/BoardingCheckinPage.tsx:522:                  className="h-14 flex-1 rounded-full bg-brand-primary text-body-lg font-semibold text-white transition active:scale-[0.98] disabled:opacity-60"
+  apps/staff/src/pages/ExecutePage.tsx:679:        className="mt-2 h-14 min-w-[200px] rounded-full bg-philia-gradient text-body-lg font-semibold text-white shadow-philia active:scale-[0.98]"
+  apps/staff/src/pages/HistoryPage.tsx:131:                ? 'bg-brand-primary font-semibold text-white'
+  apps/staff/src/pages/HistoryPage.tsx:155:            className="mt-4 h-14 min-w-[160px] rounded-full bg-brand-primary px-8 text-body-lg font-semibold text-white active:scale-[0.98]"
+  apps/staff/src/pages/TodayPage.tsx:196:        className="mt-4 flex h-16 w-full items-center justify-center gap-2 rounded-full bg-philia-gradient text-body-lg font-semibold text-white shadow-philia transition active:scale-[0.98]"
+  apps/staff/src/pages/TodayPage.tsx:241:              className="mt-4 h-14 min-w-[160px] rounded-full bg-brand-primary px-8 text-body-lg font-semibold text-white active:scale-[0.98]"
+  apps/staff/src/pages/TodayPage.tsx:290:            className="mt-4 h-14 min-w-[160px] rounded-full bg-brand-primary px-8 text-body-lg font-semibold text-white active:scale-[0.98]"
+
+残留文件数: 29
