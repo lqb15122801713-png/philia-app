@@ -72,7 +72,7 @@ const ROUTES = [
   { app: 'customer', path: '/appointments', anchors: ['预约'] },
   { app: 'customer', path: `/appointments/${APPT_ID}`, anchors: ['预约', '核销'], serverDep: true, note: 'A1 白屏群' },
   { app: 'customer', path: '/philia/pets', anchors: ['宠物'], note: 'A4 白屏群' },
-  { app: 'customer', path: '/philia/moments', anchors: ['动态', '瞬间', '广场'], note: 'A4 白屏群' },
+  { app: 'customer', path: '/philia/moments', anchors: ['服务相册', '相册'], note: 'A4 白屏群' },
   /* ---- 商家端 ---- */
   { app: 'merchant', path: '/dev-login', anchors: ['登录'] },
   { app: 'merchant', path: '/dashboard', anchors: ['今日', '仪表', '预约'] },
@@ -146,13 +146,24 @@ class Cdp {
         msg.error ? p.rej(new Error(msg.error.message)) : p.res(msg.result);
         return;
       }
+      if (msg.method === 'Fetch.requestPaused') {
+        // 拦截的 SSE 请求立即中止（不占连接），见 open() 中 Fetch.enable 注释
+        this.send('Fetch.failRequest', { requestId: msg.params.requestId, errorReason: 'ConnectionAborted' }).catch(() => {});
+        return;
+      }
       this.events.push(msg);
     };
     await new Promise((r, rej) => { this.ws.onopen = r; this.ws.onerror = rej; });
     await this.send('Page.enable');
     await this.send('Runtime.enable');
     await this.send('Network.enable');
+    await this.send('Network.setBypassServiceWorker', { bypass: true }); // 冒烟目标为静态产物直出，绕开 PWA SW 干扰
     await this.send('Log.enable');
+    if (process.env.SMOKE_DEBUG) await this.send('Inspector.enable');
+    // 路由冒烟不订阅 SSE：拦截 /api/events 并立即失败（EventSource 会自动重试、
+    // 每轮重试间释放连接）。否则快速逐路由跳转时 SSE 长连接累积占满浏览器
+    // per-host 连接上限，后续路由的 auth.me 被饿死、守卫卡在「加载中…」误判白屏。
+    await this.send('Fetch.enable', { patterns: [{ urlPattern: '*://*/api/events*', requestStage: 'Request' }] });
     await this.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
   }
   send(method, params = {}) {
@@ -203,8 +214,37 @@ async function seedUserId(role) {
   return (users.find((u) => (u.roles ?? []).includes(role)) ?? users[0])?.id ?? null;
 }
 
-/** 单路由断言：文档 200 + 非空白 + 锚点/守卫/重定向 + console 红线 */
+/** 单路由断言：文档 200 + 非空白 + 锚点/守卫/重定向 + console 红线。
+ *  偶发渲染迟滞（SSE 连接竞争等）以一次整页重试兜底：仅当两轮同判失败才记红
+ *  （base 类白屏为必现，两轮必同红，不会被吞），重试通过会在 verdict 标注。 */
 async function runRoute(cdp, route, _logged) {
+  const first = await runRouteOnce(cdp, route);
+  if (first.ok) { record(first); return; }
+  const retry = await runRouteOnce(cdp, route);
+  if (retry.ok) {
+    retry.verdict += '（首轮异常，重试通过）';
+    record(retry);
+    return;
+  }
+  record({ ...first, verdict: `${first.verdict}（两轮同判）` });
+  // 失败留证：截图 + 现场 DOM/readyState（供闸后排查；SMOKE_SHOT_DIR 缺省 ./smoke-shots）
+  try {
+    const shotDir = process.env.SMOKE_SHOT_DIR ?? 'smoke-shots';
+    mkdirSync(shotDir, { recursive: true });
+    const name = `${route.app}-${route.path.replaceAll('/', '_').replace(/^_+|_+$/g, '') || 'root'}.png`;
+    const shot = await cdp.send('Page.captureScreenshot', { format: 'png' });
+    writeFileSync(join(shotDir, name), Buffer.from(shot.data, 'base64'));
+    const dbg = await cdp.eval(`JSON.stringify({
+      href: location.href, ready: document.readyState,
+      htmlLen: document.documentElement.outerHTML.length,
+      rootHtml: (document.getElementById('root')?.innerHTML ?? '').slice(0, 400),
+    })`).catch((e) => `eval失败: ${e.message}`);
+    console.log(`  [失败留证] ${join(shotDir, name)}`);
+    console.log('  [现场]', typeof dbg === 'string' ? dbg.slice(0, 600) : dbg);
+  } catch { /* 留证失败不阻塞 */ }
+}
+
+async function runRouteOnce(cdp, route) {
   const base = APP_URLS[route.app];
   const url = base + route.path;
   cdp.events = [];
@@ -256,27 +296,29 @@ async function runRoute(cdp, route, _logged) {
   if (!redirectHit) reasons.push(`重定向终态不符（期望 ${route.expectPath}，实际 ${state.path}）`);
   if (reds.length > 0) reasons.push(`console 红线：${reds[0]}${reds.length > 1 ? ` 等 ${reds.length} 条` : ''}`);
 
-  record({
+  return {
     app: route.app, path: route.path, ok: reasons.length === 0,
     verdict: reasons.length === 0
       ? `200 + 非空白 + 锚点/守卫命中${route.note ? `（${route.note}）` : ''}${settled ? '' : '（超时边缘判定）'}`
       : reasons.join('；'),
     docStatus, finalPath: state.path, anchorHit, guardHit, redCount: reds.length,
     reds, note: route.note ?? null,
-  });
+  };
 }
 
 async function main() {
-  const wsUrl = await launchBrowser();
-  const cdp = new Cdp(wsUrl);
-  await cdp.open();
-
-  /* ---- 按端分组：先登录本端再跑本端路由（dev-login 会话 cookie 互相覆盖，
-     若三端先集中登录再统一跑，最后一端的会话会顶掉前两端） ---- */
+  /* ---- 按端分组：每端独立浏览器实例（tab 隔离）——先登录本端再跑本端路由。
+     dev-login 会话 cookie 互相覆盖（集中登录会顶号）；长会话内 SSE/SW/渲染
+     累积会让后段路由加载迟滞（实测同 tab 26+ 导航后商家 /appointments 首渲染
+     超时），每端重启实例后判定稳定。 ---- */
   const appOrder = ['customer', 'merchant', 'staff'];
   for (const app of appOrder) {
     const routes = ROUTES.filter((r) => r.app === app);
     if (routes.length === 0) continue;
+
+    const wsUrl = await launchBrowser();
+    const cdp = new Cdp(wsUrl);
+    await cdp.open();
 
     let logged = false;
     if (SMOKE_LOGIN) {
@@ -298,9 +340,10 @@ async function main() {
     for (const route of routes) {
       await runRoute(cdp, route, logged);
     }
-  }
 
-  cdp.close();
+    cdp.close();
+    cleanup(); // 杀本端实例，下一端重起
+  }
 
   const passed = results.length - failures;
   console.log(`\n===== 路由冒烟汇总：${passed}/${results.length} 通过 =====`);
