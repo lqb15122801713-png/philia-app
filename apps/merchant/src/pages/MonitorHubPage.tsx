@@ -69,7 +69,7 @@ export default function MonitorHubPage() {
               void inServiceQ.refetch();
               void inBoardingQ.refetch();
             }}
-            className="mt-4 h-11 min-w-[140px] rounded-full bg-brand-primary px-6 text-body font-semibold text-white active:scale-[0.98]"
+            className="mt-4 h-11 min-w-[140px] rounded-full bg-brand-primary px-6 text-body font-semibold text-ink active:scale-[0.98]"
           >
             重新加载
           </button>
