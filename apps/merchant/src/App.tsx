@@ -8,7 +8,7 @@
  *   DashboardPage 与 TabBar 红点经 context 订阅，不重复建连。
  */
 
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useParams } from 'react-router-dom'
 import { Toaster } from '@/components/ui/sonner'
 import RequireMerchant from './components/RequireMerchant'
 import TabBar from './components/TabBar'
@@ -20,6 +20,7 @@ import BoardingPage from './pages/BoardingPage'
 import DashboardPage from './pages/DashboardPage'
 import DevLoginPage from './pages/DevLoginPage'
 import FinancePage from './pages/FinancePage'
+import MonitorHubPage from './pages/MonitorHubPage'
 import OrdersPage from './pages/OrdersPage'
 import PassPage from './pages/PassPage'
 import ProductsPage from './pages/ProductsPage'
@@ -27,6 +28,12 @@ import SettingsPage from './pages/SettingsPage'
 import StaffPage from './pages/StaffPage'
 
 // 受商家身份保护的主内容路由（P0 路由表原样保留，路径不许改）
+/** B8-B2：/live/:id → /monitor/:id 重定向（保留参数） */
+function MonitorLiveRedirect() {
+  const { id } = useParams<{ id: string }>()
+  return <Navigate to={id ? `/monitor/${id}` : '/monitor'} replace />
+}
+
 function ProtectedRoutes() {
   return (
     <Routes>
@@ -35,6 +42,13 @@ function ProtectedRoutes() {
       <Route path="/appointments" element={<AppointmentsPage />} />
       <Route path="/appointments/:id" element={<AppointmentDetailPage />} />
       <Route path="/appointments/:id/monitor" element={<AppointmentMonitorPage />} />
+      {/* B8-B2：监视页独立路由补建（P4 既有实现接通，不重设计）。
+          /monitor 目录页（复用 AppointmentRow + listForStore），/monitor/:id 同监视页别名；
+          /live、/live/:id 重定向到 /monitor 系。此前两者命中兜底 path="*" 被弹回 /dashboard */}
+      <Route path="/monitor" element={<MonitorHubPage />} />
+      <Route path="/monitor/:id" element={<AppointmentMonitorPage />} />
+      <Route path="/live" element={<Navigate to="/monitor" replace />} />
+      <Route path="/live/:id" element={<MonitorLiveRedirect />} />
       <Route path="/boarding" element={<BoardingPage />} />
       <Route path="/passes" element={<PassPage />} />
       <Route path="/staff" element={<StaffPage />} />

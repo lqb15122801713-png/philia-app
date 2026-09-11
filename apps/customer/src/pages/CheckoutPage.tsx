@@ -171,7 +171,10 @@ function CheckoutInner() {
   }
 
   /* ---------------- 无商品来源 ---------------- */
-  if (lines.length === 0) {
+  // B8-B3：收银台打开期间不清空态分支——购物车结算成功时 onSuccess 已 clearChecked
+  // （lines 随之变空），若此处不看 cashierOrder，页面会切到空态分支、CashierModal
+  // 随表单分支一起卸载，用户看到「提交后零反馈原地变空态」（走查红标）。
+  if (lines.length === 0 && !cashierOrder) {
     return (
       <div className="flex flex-col items-center px-4 py-16">
         <img src="/brand/empty-appointments-800.png" alt="没有待结算商品" className="w-48 max-w-full rounded-card" />

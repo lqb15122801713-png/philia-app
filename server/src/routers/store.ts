@@ -30,7 +30,7 @@ import { and, desc, eq, gt, gte, inArray, isNull, lt } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import { merchantProcedure, publicProcedure, router, type Context } from '../trpc';
-import { boardingNightDates, BOOKING_LEAD_BUFFER_MS, DEFAULT_BOARDING_ROOM_COUNT, DEFAULT_SLOT_CAPACITY } from './appointment';
+import { boardingNightDates, BOOKING_LEAD_BUFFER_MS, DEFAULT_BOARDING_ROOM_COUNT, DEFAULT_SLOT_CAPACITY, storeDayStartMs, storeWallclock } from './appointment';
 
 /** 时间槽粒度：30min（与 seed 的 store_slots 生成粒度一致） */
 const SLOT_MS = 30 * 60 * 1000;
@@ -168,17 +168,20 @@ export const storeRouter = router({
        * （无行 = 尚未被订，按默认容量视为可约，与 appointment.create 的 UPSERT 同口径）；
        * 统一剔除「当前时间 +1h 缓冲」内的时段（与 assertBookableTime 同一条线，
        * 前后端同拦），满槽剔除。休息日（openHours 为 null）整天不产生槽位。
+       * B8-B4：栅格墙钟改用门店规范时区（storeWallclock/storeDayStartMs，固定 +8）——
+       * 原服务器本地时区在 UTC 宿主（VPS 容器）下栅格偏移 8h，与客户端栅格错位。
        */
-      const day0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const gridEnd = new Date(day0.getTime() + 7 * 24 * 3600 * 1000);
+      const nowWc = storeWallclock(now);
+      const day0ms = storeDayStartMs(nowWc.y, nowWc.m, nowWc.day);
+      const gridEnd = day0ms + 7 * 24 * 3600 * 1000;
       const existingRows = await ctx.db
         .select()
         .from(schema.storeSlots)
         .where(
           and(
             eq(schema.storeSlots.storeId, store.id),
-            gte(schema.storeSlots.slotStart, day0),
-            lt(schema.storeSlots.slotStart, gridEnd),
+            gte(schema.storeSlots.slotStart, new Date(day0ms)),
+            lt(schema.storeSlots.slotStart, new Date(gridEnd)),
           ),
         )
         .orderBy(schema.storeSlots.slotStart);
@@ -187,13 +190,14 @@ export const storeRouter = router({
       const earliest = now.getTime() + BOOKING_LEAD_BUFFER_MS;
       const openSlots: (typeof schema.storeSlots.$inferSelect)[] = [];
       for (let i = 0; i < 7; i++) {
-        const date = new Date(day0.getTime() + i * 24 * 3600 * 1000);
-        const hours = store.openHours?.[DAY_KEYS[date.getDay()]!];
+        const dateMs = day0ms + i * 24 * 3600 * 1000;
+        const dow = storeWallclock(new Date(dateMs)).dow;
+        const hours = store.openHours?.[DAY_KEYS[dow]!];
         if (!hours) continue;
         const [oh = 0, om = 0] = hours.open.split(':').map(Number);
         const [ch = 0, cm = 0] = hours.close.split(':').map(Number);
         for (let min = oh * 60 + om; min < ch * 60 + cm; min += 30) {
-          const t = new Date(date.getTime() + min * 60_000);
+          const t = new Date(dateMs + min * 60_000);
           if (t.getTime() < earliest) continue; // +1h 缓冲内（含已过期）时段不可约
           const row = byStart.get(t.getTime());
           if (row) {
@@ -582,17 +586,20 @@ export const storeRouter = router({
           ),
         );
 
-      /** 本地日期键 YYYY-MM-DD（服务端时区，与前端周期切换同为本地口径） */
+      /** 日期键 YYYY-MM-DD（B8 裁定②：门店规范时区 +8 展示口径——仅按日分组展示，
+       *  不改 paidAt 存储与区间过滤；复用 appointment.ts storeWallclock/storeDayStartMs） */
       const dayKey = (d: Date): string => {
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${d.getFullYear()}-${m}-${day}`;
+        const w = storeWallclock(d);
+        const m = String(w.m).padStart(2, '0');
+        const day = String(w.day).padStart(2, '0');
+        return `${w.y}-${m}-${day}`;
       };
 
-      // 按日序列：先把 [from, to) 每一天铺 0，再累加，保证序列连续无洞
+      // 按日序列：先把 [from, to) 每一天铺 0，再累加，保证序列连续无洞（日界同 +8 口径）
       const byDayMap = new Map<string, { date: string; serviceFen: number; shopFen: number }>();
-      for (const d = new Date(from.getFullYear(), from.getMonth(), from.getDate()); d < to; d.setDate(d.getDate() + 1)) {
-        const key = dayKey(d);
+      const fromWc = storeWallclock(from);
+      for (let ms = storeDayStartMs(fromWc.y, fromWc.m, fromWc.day); ms < to.getTime(); ms += 24 * 3600 * 1000) {
+        const key = dayKey(new Date(ms));
         byDayMap.set(key, { date: key, serviceFen: 0, shopFen: 0 });
       }
 

@@ -82,8 +82,11 @@ export function useCheckin(): {
           appointmentId: res.appointment.id,
           nextRoute: res.nextRoute,
         };
-        // 全量失效刷新（今日任务 / 执行页 / 寄养页等）
-        await queryClient.invalidateQueries();
+        // 全量失效刷新（今日任务 / 执行页 / 寄养页等）。
+        // B8-B1：不 await——失效刷新后台进行，核销反馈（toast/跳转）只门控在 checkin
+        // 事务本身。此前 await 会使反馈额外等待全部活跃查询 refetch 完成，弱网或单查询
+        // 挂起时按钮停在「核销中…」无任何结果反馈（走查「零反馈」根因之一）。
+        void queryClient.invalidateQueries();
         return result;
       } catch (err) {
         throw new CheckinError(toUserMessage(err, input));

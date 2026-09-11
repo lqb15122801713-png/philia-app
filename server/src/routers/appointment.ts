@@ -133,7 +133,33 @@ type BoardingStayRow = typeof schema.boardingStays.$inferSelect;
 
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 const pad2 = (n: number) => String(n).padStart(2, '0');
-const hhmm = (d: Date) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+
+/* ------------------------------------------------------------------ */
+/* 门店规范时区（B8-B4）：openHours / 员工排班 / 寄养晚界的墙钟统一按      */
+/* Asia/Shanghai（固定 +8，中国无夏令时）。此前一律用「服务器本地时区」    */
+/* 解释墙钟：VPS 容器为 UTC 时槽位栅格整体偏移 8h，客户端（手机 CST）     */
+/* 本地栅格与服务端可约集错位——上午/下午大面积灰死、点击无响应，仅错位   */
+/* 后碰巧对齐的 17:00-19:30 可点（走查「预约时段首次点击无响应需点两次」  */
+/* 根因；走查单落在 18:00 正因此）。改为固定 +8 后与客户端栅格同帧；      */
+/* +1h 缓冲 / 容量 / 时长连续 / 幂等 等槽位规则不变（仅矫正墙钟参照系）。 */
+const STORE_TZ_OFFSET_MS = 8 * 60 * 60 * 1000;
+
+/** instant → 门店规范时区（+8）墙钟部件（位移后用 UTC getter 读取） */
+export function storeWallclock(d: Date): { y: number; m: number; day: number; dow: number; minutes: number } {
+  const s = new Date(d.getTime() + STORE_TZ_OFFSET_MS);
+  return {
+    y: s.getUTCFullYear(),
+    m: s.getUTCMonth() + 1,
+    day: s.getUTCDate(),
+    dow: s.getUTCDay(),
+    minutes: s.getUTCHours() * 60 + s.getUTCMinutes(),
+  };
+}
+
+/** 门店规范时区某日 00:00 的 epoch（槽位栅格合成基准） */
+export function storeDayStartMs(y: number, m1: number, day: number): number {
+  return Date.UTC(y, m1 - 1, day) - STORE_TZ_OFFSET_MS;
+}
 
 // 注意：必须用 function 声明（而非箭头函数常量），TS 才会把「返回 never 的调用」
 // 当作控制流终止点，从而在 if (!x) badRequest(...) 之后正确收窄 x 为非空。
@@ -294,11 +320,15 @@ async function releaseSlot(tx: DbHandle, storeId: string, slotStart: Date): Prom
  */
 export function boardingNightDates(start: Date, end: Date): string[] {
   const dates: string[] = [];
-  const cur = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-  const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-  while (cur.getTime() < endDay.getTime()) {
-    dates.push(`${cur.getFullYear()}-${pad2(cur.getMonth() + 1)}-${pad2(cur.getDate())}`);
-    cur.setDate(cur.getDate() + 1);
+  // B8-B4：晚界按门店规范时区（+8）取日（原服务器本地日，UTC 宿主下晚界错位一天）
+  const s = storeWallclock(start);
+  const e = storeWallclock(end);
+  let curMs = storeDayStartMs(s.y, s.m, s.day);
+  const endMs = storeDayStartMs(e.y, e.m, e.day);
+  while (curMs < endMs) {
+    const w = storeWallclock(new Date(curMs));
+    dates.push(`${w.y}-${pad2(w.m)}-${pad2(w.day)}`);
+    curMs += 24 * 3600 * 1000;
   }
   return dates;
 }
@@ -442,10 +472,11 @@ function assertBookableTime(
   if (start.getSeconds() !== 0 || start.getMilliseconds() !== 0 || start.getMinutes() % 30 !== 0) {
     badRequest('预约开始时间须按 30 分钟粒度对齐（如 10:00 / 10:30）');
   }
-  const day = DAY_KEYS[start.getDay()]!;
+  const startWc = storeWallclock(start); // B8-B4：营业时间判定按门店规范时区
+  const day = DAY_KEYS[startWc.dow]!;
   const hours = store.openHours?.[day];
   if (!hours) badRequest('门店当日休息，不可预约');
-  const startMin = start.getHours() * 60 + start.getMinutes();
+  const startMin = startWc.minutes;
   const [oh = 0, om = 0] = hours.open.split(':').map(Number);
   const [ch = 0, cm = 0] = hours.close.split(':').map(Number);
   const openMin = oh * 60 + om;
@@ -473,10 +504,12 @@ function assertBookableTime(
 
 /** 排班校验：预约开始时间须落在员工当日排班区间内 */
 function assertWithinSchedule(staffRow: StaffRow, start: Date): void {
-  const day = DAY_KEYS[start.getDay()]!;
+  // B8-B4：排班墙钟同属门店规范时区（UTC 宿主下本地时区会错判时段）
+  const wc = storeWallclock(start);
+  const day = DAY_KEYS[wc.dow]!;
   const ranges = staffRow.schedule?.[day];
   if (!ranges || ranges.length === 0) badRequest('该员工在预约当日无排班');
-  const t = hhmm(start);
+  const t = `${pad2(Math.floor(wc.minutes / 60))}:${pad2(wc.minutes % 60)}`;
   if (!ranges.some((r) => r.start <= t && t < r.end)) {
     badRequest('预约时间不在该员工排班时段内');
   }

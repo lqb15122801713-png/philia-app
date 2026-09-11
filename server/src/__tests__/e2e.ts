@@ -294,9 +294,12 @@ async function main(): Promise<void> {
     { cookie: customerCookie, input: { storeId: store.id, serviceId: service.id } },
   );
   // 选 10:00-16:00 之间的槽：任意星期都落在种子排班（工作日 09-18 / 周末 10-19）与营业时间内
+  // B8-B4：时段墙钟按门店规范时区（固定 +8，与服务端 storeWallclock 同帧）读取，
+  // 否则 UTC 宿主下会错选到门店晚间槽、排班校验正确拒绝
   const slot = cat2.slots.find((s) => {
-    const h = s.slotStart.getHours();
-    return h >= 10 && h <= 16 && s.slotStart.getMinutes() === 0;
+    const shifted = new Date(s.slotStart.getTime() + 8 * 3600 * 1000);
+    const h = shifted.getUTCHours();
+    return h >= 10 && h <= 16 && shifted.getUTCMinutes() === 0;
   });
   check('getWithServices 返回可约槽位（10:00-16:00 整点）', !!slot, cat2.slots.length);
   if (!slot) throw new Error('无可约槽位');
