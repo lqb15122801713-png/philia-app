@@ -40,6 +40,7 @@ import {
   EventType,
   getApiBase,
   getStepDef,
+  safeUuid,
   useEventSource,
   useMe,
   usePhiliaClient,
@@ -63,17 +64,19 @@ export type EntryReason =
 
 const CLIENT_ID_KEY = 'philia.sseClientId';
 
-/** SSE clientId：与直播页同一 localStorage 键（契约 · push.subscribe 与 /api/events 共用） */
+/** SSE clientId：与直播页同一 localStorage 键（契约 · push.subscribe 与 /api/events 共用）。
+ * b9.1：一律走 safeUuid()——crypto.randomUUID 仅安全上下文存在，普通 HTTP 内测
+ * 环境下 try/catch 两路同崩（VPS 实战捕获）；任何路径不得二次抛出。 */
 function getClientId(): string {
   try {
     let id = window.localStorage.getItem(CLIENT_ID_KEY);
     if (!id) {
-      id = crypto.randomUUID();
+      id = safeUuid();
       window.localStorage.setItem(CLIENT_ID_KEY, id);
     }
     return id;
   } catch {
-    return crypto.randomUUID();
+    return safeUuid();
   }
 }
 

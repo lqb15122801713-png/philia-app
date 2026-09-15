@@ -158,3 +158,15 @@
 
 - **D3（原 ❌）已修复**：`emitBoardingOverdue` 寄养超期每日幂等发射器落地（outboxSweeper 同进程，启动即查 + 30min 轮查，按预约×自然日幂等，写入 outbox 并即时广播 + 商家站内通知）。冒烟 7 断言全过（首扫发射/同日幂等跳过/次日再发）。修复后 D 组 5/5 ✅，**总通过率 34/35（仅余 C1/C3 自动化注入测试与 E4/E5 真机走查类 ⚠️ 项）**。
 - T6.2 打磨同步完成：种子商品占位图、三端三态补齐、favicon、历史 chips 横滑等（详见 plan.md P6）。
+
+---
+
+## 附记（2026-09-15 · 固定闸门条款新增，批次 9a.1 授权）
+
+> 背景：批次 8/9a 验收跑的是 npm 构建与 vite preview 冒烟，未做 docker build 实证，
+> 致 postinstall 分层顺序缺陷（b9.1 任务 A）漏网至 VPS 才暴露（环境差漏网同族案例）。
+
+- **固定闸门条款**：凡 diff 含 `Dockerfile` / `docker/entrypoint.sh` / `docker-compose*.yml`
+  的批次，验收必须附**真实 docker build 成功实证**（构建日志关键行 + exit 0）；
+  施工环境无 Docker 时，以「Dockerfile 逐行静态核对 + 引用文件存在性核对」为过程证据，
+  并须在当批明确登记由 VPS 首验补档 docker build 实证，缺档不予收口。
