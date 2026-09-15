@@ -1,0 +1,89 @@
+
+[1] locked 步 addPhotos/confirmStep → FORBIDDEN；跨店/客户归属 → FORBIDDEN
+  ✓ locked 步（precheck）addPhotos：FORBIDDEN
+  ✓ locked 步（precheck）confirmStep：FORBIDDEN
+  ✓ 客户身份 addPhotos（staffProcedure 拦截）：FORBIDDEN
+  ✓ 跨店 staff addPhotos（归属校验）：FORBIDDEN
+  ✓ 跨店 merchant flagForRedo（归属校验）：FORBIDDEN
+  ✓ 他人预约 customer list（归属校验）：FORBIDDEN
+  ✓ [1] 后：active 步数 ≤1（规则 1 不变量）
+
+[2] 张数不足 confirm → 拒（提示还差 N 张）；超 max addPhotos → 拒
+  ✓ step1 无照片 confirmStep：BAD_REQUEST 且提示含「还差 1 张」
+  ✓ step1 一次传 4 张（max=3）addPhotos：BAD_REQUEST 且提示含「上限 3 张」
+
+[3] step1 传 1 张 → confirm → step1 done、step2 active；step_updated 载荷校验
+  ✓ step1 addPhotos 登记 1 张
+  ✓ addPhotos 补写 started_at（staff 未开始时）
+  ✓ confirmStep 返回 nextStepKey=precheck、未完结预约
+  ✓ step1 done（done_at 写入、flagged=0）
+  ✓ step2 locked→active（started_at 写入）
+  ✓ step_updated 落 outbox：频道 appointment:{aid} 且载荷含 photos 与 nextStepKey
+  ✓ [3] 后：active 步数 ≤1（规则 1 不变量）
+
+[4] flagForRedo：locked 步拒 / 非最新 done 拒 / (b) 回退+作废旧照 / (a) 仅打标
+  ✓ step2 完成、step3 active
+  ✓ step2 confirm 后：active 步数 ≤1（规则 1 不变量）
+  ✓ step2 旧照片 2 张（待作废对象）
+  ✓ 对 locked 步（detail）打标：FORBIDDEN
+  ✓ step3 仍 active 时对 step2 打标：FORBIDDEN
+  ✓ (b) 路径返回 reactivated=true、作废 2 张旧照片
+  ✓ step2 done→active、flagged=1、done_at 清空
+  ✓ 旧照片全部 invalidated_at=now（保留可查）
+  ✓ 回退后恰好 1 个 active 步且为 step2（规则 1）
+  ✓ step_flagged 落 outbox ×2（appointment + staff 双频道）且载荷含 stepKey/flagged
+  ✓ 回退后 confirmStep step2（仅统计新照片）：BAD_REQUEST 且提示含「还差 2 张」
+  ✓ 重拍后 step2 重新 done、flagged 清 0
+  ✓ list 只返回 2 张新照片（旧照不计入）
+  ✓ step3 重新 active
+  ✓ step2 重拍 confirm 后：active 步数 ≤1（规则 1 不变量）
+  ✓ (a) 路径返回 reactivated=false、作废 0 张
+  ✓ (a) 路径：step3 仍 active、flagged=1、3 张照片未失效
+  ✓ step3 confirm 后 done 且 flagged 清 0
+  ✓ step3 已 done 时对 step2 打标：FORBIDDEN
+  ✓ step3 confirm 后：active 步数 ≤1（规则 1 不变量）
+
+[5] before_after 步：normal 标签拒 / 只传 before 拒 / before+after 各 1 过
+  ✓ step4 done、step5 active
+  ✓ before_after 步传 normal 标签：BAD_REQUEST 且提示含「before / after」
+  ✓ 只传 1 张 before 时 confirm：BAD_REQUEST 且提示含「before / after 各至少 1 张」
+  ✓ before+after 各 1 → confirm 通过、step6 active
+  ✓ step5 confirm 后：active 步数 ≤1（规则 1 不变量）
+
+[6] step6 confirm：预约 completed + completed_at + appointment.completed 事件
+  ✓ progressSummary（step6 前）：currentStepKey=confirm、doneCount=5、total=6、status=in_service
+  ✓ confirm 步传照片（max=0）：BAD_REQUEST
+  ✓ list 返回 6 步且未失效照片数正确 [1,2,3,2,2,0]
+  ✓ list 每步照片按 taken_at 升序（非递减）
+  ✓ step6 confirm 返回 appointmentCompleted=true、nextStepKey=null
+  ✓ 预约 in_service→completed 且 completed_at 写入（规则 4 三合一）
+  ✓ step6 done
+  ✓ appointment.completed 事件落 outbox（频道 appointment:{aid}）
+  ✓ step6 的 step_updated 载荷 nextStepKey=null、photos 为空数组
+  ✓ 全程完成后：active 步数 ≤1（规则 1 不变量）
+  ✓ progressSummary（完成态）：currentStepKey=null、doneCount=6、status=completed
+  ✓ 完成后再 confirmStep（done 步）：FORBIDDEN
+
+[7] B3-1：completed 打标 → in_service + reopened 三频道事件 + 二次完成全链路
+  ✓ cancelled 单打标：BAD_REQUEST 且提示含「已取消」
+  ✓ pending 单打标（六步流未初始化）：NOT_FOUND
+  ✓ cancelled 单打标被拒后状态仍 cancelled（无写库副作用）
+  ✓ completed 打标返回 reopened=true、reactivated=true、作废 0 张（confirm 步无照片）
+  ✓ 重开后预约 completed→in_service 且 completed_at 清空
+  ✓ 末步 done→active、flagged=1、done_at 清空
+  ✓ 重开后恰好 1 个 active 步（=confirm，规则 1 不变量）
+  ✓ appointment.reopened 落 outbox ×3（appointment + store + user 三频道）且载荷齐全
+  ✓ 重开后 confirmStep(confirm) 再次返回 appointmentCompleted=true
+  ✓ 二次完成：预约回 completed 且 completed_at 重写（不早于首次）
+  ✓ appointment.completed 事件再发一次（appointment 频道 ×2、store 频道 ×2，口径与现有一致）
+  ✓ 二次完成后 progressSummary 回到完成态（doneCount=6、status=completed）
+[smoke] 临时目录清理失败（不影响验证结果）: C:\Users\lqb15\AppData\Local\Temp\philia-servicestep-smoke-Xfu9xw Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-servicestep-smoke-Xfu9xw '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-servicestep-smoke-Xfu9xw'
+    at rmSync (node:fs:1222:18)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\routers\__tests__\serviceStep.smoke.ts:748:5) {
+  errno: 1,
+  code: 'EPERM',
+  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-servicestep-smoke-Xfu9xw',
+  syscall: 'rm'
+}
+
+全部冒烟验证通过 ✅

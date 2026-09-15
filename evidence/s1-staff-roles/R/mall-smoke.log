@@ -1,0 +1,93 @@
+
+[1] 商品目录：过滤/搜索/分页/上下架 + 商家编辑归属
+  ✓ keyword 搜索命中 pd-a
+  ✓ category 过滤命中 pd-b
+  ✓ 仅上架可见（pd-off 不出现，共 3 件）
+  ✓ 分页：pageSize=2 → 2+1，total=3
+  ✓ storeId 过滤仅他店商品
+  ✓ getProduct 详情（含门店名）
+  ✓ 下架商品 getProduct → NOT_FOUND
+  ✓ upsertProduct 新增（本店 storeId）
+  ✓ upsertProduct 编辑/下架/库存编辑
+  ✓ 越店编辑商品 → FORBIDDEN
+
+[2] createOrder：合并行/扣库存/服务端金额/快照/事件
+  ✓ 下单成功：pending + 订单号 P+日期+随机（人类可读）
+  ✓ total_fen 服务端口径（3×10000=30000，不信任前端金额）
+  ✓ items 快照合并（qty=3）且含 name/priceFen/image
+  ✓ 地址快照（receiver/phone/detail）
+  ✓ pd-a 库存 5 → 2 正确扣减
+  ✓ order.created 事件落 store:s-1
+  ✓ 含下架商品下单 → BAD_REQUEST
+  ✓ 超库存下单（pd-a 剩 2 买 3）→ CONFLICT 库存不足
+  ✓ 跨店商品一单 → BAD_REQUEST
+  ✓ 校验失败后 pd-a 库存未被误扣（仍 2）
+
+[3] 防超卖：库存 1 件，两人并发 createOrder → 仅一单成功
+  ✓ 恰好一单成功、一单 CONFLICT「库存不足」（不超卖）
+  ✓ pd-b 库存扣到 0（不为负）
+
+[4] createPayment → 篡改签名/金额不符被拒 → mock-callback → paid + 流水 + 事件
+  ✓ 他人订单 createPayment → FORBIDDEN
+  ✓ 越权 mock-callback（他人订单）→ 403
+  ✓ 未登录 mock-callback → 401
+  ✓ createPayment（mock）：mock_ 支付单号 + payParams 标记
+[pay] ALERT 回调验签失败 provider=mock: Error: mock 回调验签失败（签名不符）
+    at MockPayProvider.verifyCallback (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\payments\mockPay.ts:65:13)
+    at processPayCallback (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\routes\payCallback.ts:74:31)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\routes\payCallback.ts:197:28)
+    at async dispatch (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/hono/dist/compose.js:22:17)
+    at async <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\routers\__tests__\mall.smoke.ts:119:5)
+    at async dispatch (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/hono/dist/compose.js:22:17)
+    at async file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/hono/dist/hono-base.js:307:25
+    at async <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\routers\__tests__\mall.smoke.ts:297:21)
+  ✓ 篡改签名回调被拒（400 INVALID_SIGNATURE）
+  ✓ 拒签后订单仍 pending 且无流水
+[pay] ALERT 回调金额不符：order=01M2JNWPV80Q64NCSPNYZ5AGSE 应付=30000fen 实报=999fen paymentId=mock_01M2JNWPVX6VX977M5KEFM2WYN
+  ✓ 金额不符回调被拒（400 AMOUNT_MISMATCH）
+  ✓ 拒额后订单仍 pending 且无流水
+  ✓ mock-callback 成功（code=SUCCESS）
+  ✓ 订单 pending → paid
+  ✓ payments 流水 1 条（mock/30000/paid/paymentId 对齐/含回调原文）
+  ✓ order.paid 事件落 user:u-c1
+  ✓ u-c1 收到 order.paid 站内通知（支付成功文案）
+
+[5] 幂等：回调重复投递 → 成功且无重复流水/事件
+  ✓ 演示端点重复投递 → 200 且 idempotent=true
+  ✓ 原始回调端点重复投递 → 200 且 idempotent=true
+  ✓ 无重复流水（仍 1 条）
+  ✓ 无重复 order.paid 事件（仍 1 条）
+  ✓ 已支付订单 createPayment → BAD_REQUEST
+
+[6] shipOrder → receiveOrder 状态机与事件
+  ✓ 越店发货（u-m2 发 s-1 订单）→ FORBIDDEN
+  ✓ pending 订单不可发货（orderB 未支付）→ BAD_REQUEST
+  ✓ 发货成功：shipped + tracking_no
+  ✓ order.shipped 事件落 user:u-c1
+  ✓ 重复发货 → BAD_REQUEST
+  ✓ 他人收货 → FORBIDDEN
+  ✓ 确认收货：shipped → received
+  ✓ order.received 事件落 store:s-1
+  ✓ 重复收货 → BAD_REQUEST
+
+[7] listMyOrders 分组 / listStoreOrders 队列
+  ✓ listMyOrders：六态分组齐全，received 含 order1（带门店名）
+  ✓ 未抢到库存者无 pd-b 订单（groups 全空）
+  ✓ 队列夹具：c2 下单并 mock 支付成功
+  ✓ listStoreOrders：paid/shipped/refunding 三队列；新支付单在 paid 队列（待发货，含客户昵称）
+  ✓ 越店商家看不到他店队列（m2 的 s-2 队列为空）
+
+[8] assertPaymentConfig：生产禁 mock / wechat 缺配置报错（不静默降级）
+  ✓ 生产构建 + PAYMENT_PROVIDER=mock → 启动报错
+  ✓ PAYMENT_PROVIDER=wechat 缺 WECHAT_* → 启动报错（列出缺失项）
+  ✓ 开发态 mock 配置 → 校验通过
+[smoke] 临时目录清理失败（不影响验证结果，系统临时目录会自行回收）: C:\Users\lqb15\AppData\Local\Temp\philia-mall-smoke-jnyS5N Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-mall-smoke-jnyS5N '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-mall-smoke-jnyS5N'
+    at rmSync (node:fs:1222:18)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\routers\__tests__\mall.smoke.ts:453:5) {
+  errno: 1,
+  code: 'EPERM',
+  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-mall-smoke-jnyS5N',
+  syscall: 'rm'
+}
+
+全部冒烟验证通过 ✅

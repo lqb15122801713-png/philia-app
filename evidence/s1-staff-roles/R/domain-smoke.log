@@ -1,0 +1,7 @@
+✅ 1. pet upsert/list/get：归属校验正确（他人 FORBIDDEN；关联预约 staff 可读；zod 拦截非法物种）
+✅ 2. store listNearby 仅 active + geo 粗排；getWithServices 合成栅格（W-2 +1h 缓冲/无行默认可约）、满槽剔除、按 duration 过滤连续占用
+✅ 3. upsertService 越店写 FORBIDDEN 且未生效；本店新增（含寄养房型）正常
+✅ 4. inviteStaff 24h 码 + 同名复用不建行；staffList 绩效聚合正确；setSchedule 越店 FORBIDDEN
+✅ 5. boarding：checkinStay 幂等 / dailyLog UPSERT+事件 / checkout 幂等+completed / stayBoard 超期标记正确
+
+[domain.smoke] 全部 5 项通过 🎉
