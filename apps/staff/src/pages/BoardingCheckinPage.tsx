@@ -32,6 +32,7 @@
 import {
   EventType,
   getApiBase,
+  safeUuid,
   useEventSource,
   useMe,
   usePhiliaClient,
@@ -67,12 +68,12 @@ function getClientId(): string {
   try {
     let id = window.localStorage.getItem(CLIENT_ID_KEY);
     if (!id) {
-      id = crypto.randomUUID();
+      id = safeUuid();
       window.localStorage.setItem(CLIENT_ID_KEY, id);
     }
     return id;
   } catch {
-    return crypto.randomUUID();
+    return safeUuid();
   }
 }
 
@@ -83,7 +84,7 @@ function stayToInitial(stay: BoardingStayRow): CheckinFormInitial {
     weightText: stay.checkinWeightKg != null ? stay.checkinWeightKg.toFixed(1) : '',
     belongings: (stay.belongings ?? []).map(
       (b: BelongingItem): BelongingDraft => ({
-        key: crypto.randomUUID(),
+        key: safeUuid(),
         name: b.name,
         photoUrl: b.photoUrl,
       }),

@@ -13,7 +13,7 @@
  * 订单事件走 user:{uid} 频道，登录即订阅，无需 watch 参数。
  */
 
-import { getApiBase, useMe, usePhiliaClient } from '@philia/shared';
+import { getApiBase, safeUuid, useMe, usePhiliaClient } from '@philia/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const CLIENT_ID_KEY = 'philia.sseClientId';
@@ -25,12 +25,12 @@ function getClientId(): string {
   try {
     let id = window.localStorage.getItem(CLIENT_ID_KEY);
     if (!id) {
-      id = crypto.randomUUID();
+      id = safeUuid();
       window.localStorage.setItem(CLIENT_ID_KEY, id);
     }
     return id;
   } catch {
-    return crypto.randomUUID();
+    return safeUuid();
   }
 }
 

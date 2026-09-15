@@ -27,6 +27,7 @@ import {
   SERVICE_STEPS,
   getApiBase,
   getStepDef,
+  safeUuid,
   uploadImage,
   useEventSource,
   useMe,
@@ -59,12 +60,12 @@ function getClientId(): string {
   try {
     let id = window.localStorage.getItem(CLIENT_ID_KEY)
     if (!id) {
-      id = crypto.randomUUID()
+      id = safeUuid()
       window.localStorage.setItem(CLIENT_ID_KEY, id)
     }
     return id
   } catch {
-    return crypto.randomUUID()
+    return safeUuid()
   }
 }
 
