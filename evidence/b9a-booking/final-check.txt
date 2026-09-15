@@ -1,0 +1,7 @@
+# 批次 9a 验收总闸门 · 全新 clone 终验（主 agent 终验非自报）
+# clone: feat/b9a-booking @ 98a27a8（--depth 1）
+npm.cmd ci: exit 0（688 packages）
+npm.cmd --prefix server ci: exit 0（110 packages）
+npm.cmd run build（三端）: exit 0
+server typecheck: exit 0
+server test:e2e: exit 0（全绿，无失败项）
