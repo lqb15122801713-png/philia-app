@@ -1,0 +1,20 @@
+# 批次 9a.2 清扫后 crypto.randomUUID 残留自查
+# 时间: 2026-09-15 16:58:16  分支: fix/b9.2-safeuuid  基线: main@86928363  commit: 14c0a6b
+
+## 命令 1（任务书逐字口径，全新 clone 语义 = git 跟踪文件全集）：git grep -n "crypto.randomUUID" -- apps/ packages/
+apps/customer/src/components/home/HomeBookingPanel.tsx:68: * b9.1：一律走 safeUuid()——crypto.randomUUID 仅安全上下文存在，普通 HTTP 内测
+packages/shared/src/index.ts:22:// 安全 UUID（b9.1：crypto.randomUUID 仅安全上下文存在，HTTP 内测环境模板兜底）
+packages/shared/src/lib/safeUuid.ts:4: * 背景：crypto.randomUUID() 仅在安全上下文（HTTPS 或 localhost）存在；
+packages/shared/src/lib/safeUuid.ts:9: * safeUuid()：优先 crypto.randomUUID()，不存在则 Math.random 版 v4 模板兜底，
+packages/shared/src/lib/safeUuid.ts:23:/** 取 UUID v4：安全上下文走 crypto.randomUUID()，否则模板兜底；永不抛出 */
+exit=0
+
+## 命令 2（工作区实测，排除 gitignore 产物 node_modules/dist/dev-dist）：grep -rn --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=dev-dist "crypto.randomUUID" apps/ packages/
+apps/customer/src/components/home/HomeBookingPanel.tsx:68: * b9.1：一律走 safeUuid()——crypto.randomUUID 仅安全上下文存在，普通 HTTP 内测
+packages/shared/src/index.ts:22:// 安全 UUID（b9.1：crypto.randomUUID 仅安全上下文存在，HTTP 内测环境模板兜底）
+packages/shared/src/lib/safeUuid.ts:4: * 背景：crypto.randomUUID() 仅在安全上下文（HTTPS 或 localhost）存在；
+packages/shared/src/lib/safeUuid.ts:9: * safeUuid()：优先 crypto.randomUUID()，不存在则 Math.random 版 v4 模板兜底，
+packages/shared/src/lib/safeUuid.ts:23:/** 取 UUID v4：安全上下文走 crypto.randomUUID()，否则模板兜底；永不抛出 */
+exit=0
+
+## 结论：safeUuid.ts 实现内部 3 处注释命中（任务书豁免）；index.ts:22 与 HomeBookingPanel.tsx:68 为 9a.1 已并文件的注释命中（圈外，改则违反「diff 仅限 13 文件」）；代码调用点零残留 ✅

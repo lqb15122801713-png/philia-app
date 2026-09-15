@@ -1,0 +1,9 @@
+# 批次 9a.2 退出码记录  2026-09-15 16:45:40  分支 fix/b9.2-safeuuid  基线 main@86928363
+
+build:customer   exit=0  (tsc -b && vite build)
+build:merchant   exit=0  (tsc -b && vite build)
+build:staff      exit=0  (tsc -b && vite build)
+server typecheck exit=0  (tsc --noEmit)
+server test:e2e  exit=0  (全链路验收全部通过 ✅；尾部 EPERM 为 Windows 临时库清理滞后警告，测试判绿且种子库原样)
+offline-queue.smoke.mjs exit=0  (22 通过 / 0 失败，genId 改 safeUuid 后回归)
+smoke-routes     exit=0  (30/30 通过，详见 b92-smoke-routes.txt/json)
