@@ -35,6 +35,12 @@ export const SKILL_LABEL: Record<string, string> = {
   boarding: '寄养',
 };
 
+/** 员工岗位角色 key → 中文（批次 S1：frontdesk=前台 / groomer=美容师） */
+export const STAFF_ROLE_LABEL: Record<string, string> = {
+  frontdesk: '前台',
+  groomer: '美容师',
+};
+
 /** 时段（HH:MM） */
 export interface TimeRange {
   start: string;
@@ -53,6 +59,8 @@ export interface StaffRow {
   storeId: string;
   userId: string;
   name: string;
+  /** 岗位角色（批次 S1）：frontdesk | groomer */
+  role: string;
   skills: string[] | null;
   schedule: StaffScheduleLike | null;
   status: string; // active | suspended

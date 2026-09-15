@@ -625,6 +625,100 @@ async function main(): Promise<void> {
     anon && { status: anon.httpStatus, code: anon.code },
   );
 
+  /* ---------- 12b. 批次 S1（任务 D）：store.updateStaff 权限收口 + 角色/状态联动 ---------- */
+  // 第二商家夹具（他店 owner）：直插 users/user_roles/stores
+  const [owner2] = await db
+    .insert(schema.users)
+    .values({ kimiId: 'seed_e2e_owner2', nickname: 'e2e 他店店主', phone: '13900000999' })
+    .returning();
+  await db.insert(schema.userRoles).values({ userId: owner2.id, role: 'merchant_owner' });
+  await db.insert(schema.stores).values({ ownerId: owner2.id, name: 'e2e 他店', status: 'active' });
+  const owner2Cookie = await devLogin(owner2.id);
+
+  const staffRowsNow = await trpcQuery<{ staff: Array<{ id: string; name: string; role: string; status: string }> }>(
+    'store.staffList',
+    { cookie: ownerCookie },
+  );
+  const aqiang = staffRowsNow.staff.find((s) => s.name === '阿强');
+  check('store.staffList 行带 role/status 字段（阿强=groomer/active）',
+    !!aqiang && aqiang.role === 'groomer' && aqiang.status === 'active', aqiang);
+  if (!aqiang) throw new Error('阿强缺失');
+
+  const crossStore = await trpcMutate('store.updateStaff', {
+    cookie: owner2Cookie,
+    input: { staffId: aqiang.id, role: 'frontdesk' },
+  }).then(
+    () => null,
+    (e) => e as TrpcHttpError,
+  );
+  check(
+    '批次 S1：越店 updateStaff（他店 owner 改本店员工）→ 403 FORBIDDEN',
+    crossStore instanceof TrpcHttpError && crossStore.httpStatus === 403 && crossStore.code === 'FORBIDDEN',
+    crossStore && { status: crossStore.httpStatus, code: crossStore.code },
+  );
+
+  const nonMerchant = await trpcMutate('store.updateStaff', {
+    cookie: customerCookie,
+    input: { staffId: aqiang.id, role: 'frontdesk' },
+  }).then(
+    () => null,
+    (e) => e as TrpcHttpError,
+  );
+  check(
+    '批次 S1：非商家（customer）updateStaff → 403 FORBIDDEN',
+    nonMerchant instanceof TrpcHttpError && nonMerchant.httpStatus === 403 && nonMerchant.code === 'FORBIDDEN',
+    nonMerchant && { status: nonMerchant.httpStatus, code: nonMerchant.code },
+  );
+
+  const emptyInput = await trpcMutate('store.updateStaff', {
+    cookie: ownerCookie,
+    input: { staffId: aqiang.id },
+  }).then(
+    () => null,
+    (e) => e as TrpcHttpError,
+  );
+  check(
+    '批次 S1：role/status 均缺省 → 400 BAD_REQUEST（至少传一项）',
+    emptyInput instanceof TrpcHttpError && emptyInput.httpStatus === 400 && emptyInput.code === 'BAD_REQUEST',
+    emptyInput && { status: emptyInput.httpStatus, code: emptyInput.code },
+  );
+
+  // 正向：改角色 → staffList 反映 → 员工端 auth.me 下次拉取生效（联动）
+  const toFrontdesk = await trpcMutate<{ staff: { role: string; status: string } }>('store.updateStaff', {
+    cookie: ownerCookie,
+    input: { staffId: aqiang.id, role: 'frontdesk' },
+  });
+  check('批次 S1：本店 owner 改阿强 role→frontdesk 成功', toFrontdesk.staff.role === 'frontdesk', toFrontdesk.staff);
+  const groomerMe = await trpcQuery<{ staff: { role: string; status: string } | null }>('auth.me', {
+    cookie: groomerCookie,
+  });
+  check(
+    '批次 S1：员工端下次拉取（auth.me）即见新角色 frontdesk（联动生效）',
+    groomerMe.staff?.role === 'frontdesk',
+    groomerMe.staff,
+  );
+
+  // 改回 groomer 并停用 → staffList 反映（留 groomer 身份供后续断言一致性）
+  const backToGroomer = await trpcMutate<{ staff: { role: string; status: string } }>('store.updateStaff', {
+    cookie: ownerCookie,
+    input: { staffId: aqiang.id, role: 'groomer', status: 'suspended' },
+  });
+  check(
+    '批次 S1：改回 groomer + 停用（role/status 同传）成功',
+    backToGroomer.staff.role === 'groomer' && backToGroomer.staff.status === 'suspended',
+    backToGroomer.staff,
+  );
+  const listAfter = await trpcQuery<{ staff: Array<{ id: string; name: string; role: string; status: string }> }>(
+    'store.staffList',
+    { cookie: ownerCookie },
+  );
+  const aqiangAfter = listAfter.staff.find((s) => s.id === aqiang.id);
+  check(
+    '批次 S1：staffList 刷新一致（阿强=groomer/suspended）',
+    aqiangAfter?.role === 'groomer' && aqiangAfter?.status === 'suspended',
+    aqiangAfter,
+  );
+
   /* ---------- 13. 客户端错误上报（批次 9a 任务 E · POST /api/client-error） ---------- */
   const postClientError = (body: unknown, ip: string, raw = false) =>
     fetch(`${BASE}/api/client-error`, {

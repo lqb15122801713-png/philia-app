@@ -19,6 +19,9 @@
  * - store.setSchedule：merchant 本店。写 staff.schedule 周模板 JSON。
  * - store.setStaffStatus（v1.1 P1-2 追加）：merchant 本店。停职/恢复员工
  *   （staff.status=active|suspended），停职由 staffProcedure 每请求校验即时生效。
+ * - store.updateStaff（批次 S1 任务 D）：merchant 本店。更新员工岗位角色 role
+ *   （frontdesk|groomer）与在职状态 status（active|suspended），二者至少传一；
+ *   技能标签 skills 本批不可改（留 S4）；越店写 FORBIDDEN。
  * - store.financeStats（T4.4 · MERCHANT-CONTRACTS）：merchant 本店。入参 {from,to}；
  *   区间服务收入（appointments paid_fen 按 paid_at 合计）/ 商城收入（v1 恒 0，P5 接
  *   orders）/ 按日分组序列 / 收款方式拆分 / 员工维度（完成单数·服务金额·平均评分·
@@ -570,6 +573,48 @@ export const storeRouter = router({
       const [updated] = await ctx.db
         .update(schema.staff)
         .set({ status: input.status, updatedAt: new Date() })
+        .where(eq(schema.staff.id, staffRow.id))
+        .returning();
+      return { staff: updated };
+    }),
+
+  /**
+   * 更新员工岗位角色与在职状态（merchant 本店 · 批次 S1 任务 D）。
+   * 入参 {staffId, role?, status?}：仅 role（frontdesk|groomer）与 status（active|suspended）
+   * 可改，二者至少传一；技能标签 skills 本批不可改（留 S4 派单批）；越店写 FORBIDDEN。
+   * 生效口径：核销角色判定（assertFrontdeskStaff）与 staffProcedure 在职校验均每请求查库，
+   * 员工端 auth.me 下次拉取即见新角色——无需等会话过期。
+   */
+  updateStaff: merchantProcedure
+    .input(
+      z.object({
+        staffId: z.string().min(1),
+        role: z.enum(['frontdesk', 'groomer']).optional(),
+        status: z.enum(['active', 'suspended']).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (input.role === undefined && input.status === undefined) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'role 与 status 至少传一项' });
+      }
+      const staffRow = await ctx.db
+        .select()
+        .from(schema.staff)
+        .where(eq(schema.staff.id, input.staffId))
+        .limit(1)
+        .then((r) => r[0]);
+      if (!staffRow) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: '员工不存在' });
+      }
+      assertOwnStore(ctx, staffRow.storeId); // 越店写 FORBIDDEN
+
+      const [updated] = await ctx.db
+        .update(schema.staff)
+        .set({
+          ...(input.role !== undefined ? { role: input.role } : {}),
+          ...(input.status !== undefined ? { status: input.status } : {}),
+          updatedAt: new Date(),
+        })
         .where(eq(schema.staff.id, staffRow.id))
         .returning();
       return { staff: updated };
