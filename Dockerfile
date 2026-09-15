@@ -30,6 +30,9 @@ COPY apps/merchant/package.json apps/merchant/
 COPY apps/staff/package.json apps/staff/
 COPY packages/shared/package.json packages/shared/
 COPY packages/config/package.json packages/config/
+# postinstall 钩子脚本必须在首个 npm ci 前在场（b9.1：批次 7.1 引入的
+# scripts/postinstall.mjs 防御分支——server/package.json 不在场→打印跳过→exit 0）
+COPY scripts ./scripts
 RUN npm ci
 # server 依赖仅用于三端 tsc 的类型解析（type-only 相对路径引用，构建期擦除）
 COPY server/package.json server/package-lock.json ./server/
