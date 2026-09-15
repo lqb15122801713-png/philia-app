@@ -133,11 +133,12 @@ export default function FrontdeskDesk() {
         </Link>
       </header>
 
-      {/* 顶部常驻「扫码核销」大按钮（≥64px 品牌渐变，拇指热区；品牌面上文字用 on-primary 深棕墨，DESIGN.md §2.1） */}
+      {/* 顶部常驻「扫码核销」大按钮（≥64px 纯色品牌底，拇指热区；S1-R2：规格 v3 §6 禁渐变底，
+          bg-philia-gradient → bg-brand-primary；文字 on-primary 深棕墨，DESIGN.md §2.1） */}
       <button
         type="button"
         onClick={() => setScanOpen(true)}
-        className="mt-4 flex h-16 w-full items-center justify-center gap-2 rounded-full bg-philia-gradient text-body-lg font-semibold text-ink shadow-philia transition active:scale-[0.98]"
+        className="mt-4 flex h-16 w-full items-center justify-center gap-2 rounded-full bg-brand-primary text-body-lg font-semibold text-ink shadow-philia transition active:scale-[0.98]"
       >
         <ScanLine className="h-6 w-6" strokeWidth={1.5} />
         扫码核销
