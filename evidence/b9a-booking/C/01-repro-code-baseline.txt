@@ -1,0 +1,38 @@
+== baseline b4597e1 ==
+
+-- appointment.ts create: end 取 durationMin（629-631 行）--
+      const end =
+        input.scheduledEnd ??
+        // 仅 grooming 可缺省（按服务时长）；boarding 上面已强制 scheduledEnd 必填
+        new Date(start.getTime() + (service.durationMin ?? 60) * 60_000);
+      assertBookableTime(store, input.type, start, end);
+
+-- appointment.ts create: grooming 仅占 start 单槽（696-722 行结构摘要）--
+              const slot = await tx
+                .select()
+                .from(schema.storeSlots)
+                .where(
+                  and(
+
+-- store.ts getWithServices: slotsNeeded 取 svc.durationMin（154-162 行）--
+      // 服务时长 → 需要的连续 30min 槽数（boarding 无时长按 1 槽起约）
+      let slotsNeeded = 1;
+      if (input.serviceId) {
+        const svc = services.find((s) => s.id === input.serviceId);
+        if (!svc) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: '服务项不存在或已下架' });
+        }
+        slotsNeeded = svc.durationMin ? Math.max(1, Math.ceil(svc.durationMin / 30)) : 1;
+      }
+
+-- GroomingSinglePage 确认条 durationMin=service.durationMin（344 行）--
+      <ConfirmBar
+        priceFen={service?.priceFen ?? null}
+        durationMin={service?.durationMin ?? null}
+        missingLabel={missingLabel}
+
+-- HomeBookingPanel 一键面板 durationMin=service.durationMin（339 行）--
+        serviceName={derived.service.name}
+        priceFen={derived.service.priceFen}
+        durationMin={derived.service.durationMin}
+        petId={derived.pet.id}

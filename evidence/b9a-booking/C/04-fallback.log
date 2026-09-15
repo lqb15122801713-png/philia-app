@@ -1,0 +1,9 @@
+[临时宠物] pet_c_fallback_mu25x5mu（species=dog, breed=NULL, weight_kg=NULL）
+[回退] serviceDurations: {"durationMin":120,"slotsNeeded":4,"source":"default","fallbackReason":"缺体重，无法推导体型档"}
+  ✓ 1. 缺品种/体重 → source=default 且回退 durationMin=120 / 4 槽（附回退原因）
+  ✓ 2. 回退路径建单成功（不阻断下单），时长 = 服务默认 120min（实际 120min）
+  ✓ 3. 回退单占用槽数 = 4（与 default slotsNeeded 一致）
+  ✓ 4. 收尾：回退单已取消（槽位对称释放）
+  ✓ 5. 验收单与临时宠物已删除
+
+回退路径实证全部通过 ✅

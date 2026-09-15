@@ -1,0 +1,26 @@
+[数据] store=01M20EDD8FQ5K9X22WACHWSXN4 service=造型修剪(01M20EDD8GR5DG51YRM02XCFWC) 旺财=01M20EDD8GXKWWCB3BGNA8V87Z 咪咪=01M20EDD8GSCCB0TSEG8DMRMS1
+  ✓ 页面内 dev-login 种子客户
+  ✓ 单屏(旺财) 时段栅格就绪
+  ✓ 单屏(旺财) 确认条进入 ready
+  [单屏·旺财] 确认条文案：确认预约 · ¥198 · 约 240 分钟
+  ✓ 单屏(旺财) 确认条含「约 240 分钟」（引擎联动）
+  [单屏·旺财] 服务 chip 文案：造型修剪约 240 分钟 · ¥198
+  ✓ 单屏(旺财) 服务 chip 含「约 240 分钟」
+  saved D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/evidence/b9a-booking/C/06-single-wangcai.png
+  ✓ 单屏(咪咪) 时段栅格就绪
+  ✓ 单屏(咪咪) 确认条进入 ready
+  [单屏·咪咪] 确认条文案：确认预约 · ¥198 · 约 120 分钟
+  ✓ 单屏(咪咪) 确认条含「约 120 分钟」（引擎联动）
+  [单屏·咪咪] 服务 chip 文案：造型修剪约 120 分钟 · ¥198
+  ✓ 单屏(咪咪) 服务 chip 含「约 120 分钟」
+  saved D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/evidence/b9a-booking/C/06-single-mimi.png
+  ✓ 一键面板(旺财) rebook 态渲染
+  [一键·旺财] 服务行：造型修剪约 240 分钟 ｜ 时间行：今天 14:30最早可约
+  ✓ 一键面板(旺财) 服务行含「约 240 分钟」（引擎联动）
+  saved D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/evidence/b9a-booking/C/06-home-rebook-wangcai.png
+  ✓ 一键面板(咪咪) rebook 态渲染
+  [一键·咪咪] 服务行：造型修剪约 120 分钟 ｜ 时间行：今天 14:30最早可约
+  ✓ 一键面板(咪咪) 服务行含「约 120 分钟」（引擎联动）
+  saved D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/evidence/b9a-booking/C/06-home-rebook-mimi.png
+
+联动截图断言全部通过 ✅

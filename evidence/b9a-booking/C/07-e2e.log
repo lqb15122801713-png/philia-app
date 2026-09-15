@@ -1,0 +1,59 @@
+
+> @philia/server@0.1.0 test:e2e
+> tsx src/__tests__/e2e.ts
+
+[e2e] 临时库迁移 + 种子…
+  ✓ 临时库迁移 + 种子完成
+  ✓ 种子用户齐全（customer/owner/staff1）
+  ✓ server 启动且 GET /api/health 返回 {ok:true, ts}
+  ✓ 三角色 dev-login 均签发会话 cookie
+  ✓ auth.me（商家）角色与门店绑定正确
+  ✓ push.subscribe 登记成功（create 前完成）
+  ✓ pet.list 返回客户宠物
+  ✓ store.listNearby 返回种子门店
+  ✓ getWithServices 返回 grooming 服务项
+  ✓ getWithServices 返回可约槽位（10:00-16:00 整点）
+  ✓ appointment.create 成功（pending）
+  ✓ GET /api/events 建立 SSE（200 + text/event-stream）
+  ✓ store.staffList 找到可承接员工
+  ✓ appointment.confirm → confirmed
+  ✓ appointment.assign 派单成功
+  ✓ appointment.getCode 返回二维码原文与人工码
+  ✓ appointment.checkin（二维码原文）→ in_service + 六步初始化
+  ✓ serviceStep.addPhotos(disinfection ×1)
+  ✓ serviceStep.confirmStep(disinfection)
+  ✓ serviceStep.addPhotos(precheck ×2)
+  ✓ serviceStep.confirmStep(precheck)
+  ✓ serviceStep.addPhotos(grooming ×3)
+  ✓ serviceStep.confirmStep(grooming)
+  ✓ serviceStep.addPhotos(detail ×2)
+  ✓ serviceStep.confirmStep(detail)
+  ✓ serviceStep.addPhotos(before_after ×2)
+  ✓ serviceStep.confirmStep(before_after)
+  ✓ serviceStep.confirmStep(confirm)
+  ✓ GET /api/img/* 签名 URL 可访问（200 image/jpeg）
+  ✓ 预约已 completed（含 completed_at）
+  ✓ appointment.markPaid 收款登记
+  ✓ appointment.review 评价成功
+  [SSE] 实际收到事件序列: ["appointment.confirmed","appointment.assigned","appointment.checkedin","step_updated","step_updated","step_updated","step_updated","step_updated","step_updated","appointment.completed"]
+  [SSE] 期望事件序列:     ["appointment.confirmed","appointment.assigned","appointment.checkedin","step_updated","step_updated","step_updated","step_updated","step_updated","step_updated","appointment.completed"]
+  ✓ SSE 流依次收到 confirmed/assigned/checkedin/step_updated×6/completed（按 id 去重）
+  ✓ step_updated 载荷均指向本预约
+  ✓ event_outbox 事件齐全（共 17 条 / 期望 17 条）
+  ✓ assigned 双频道（staff + user）
+  ✓ 客户调 merchantProcedure（store.upsertService）→ 403 FORBIDDEN
+  ✓ 未登录调 appointment.create → 401 UNAUTHORIZED
+  ✓ 验收结束：7200 端口无残留监听
+[e2e] 临时库目录清理失败（Windows libsql 句柄滞后，可手工删）: C:\Users\lqb15\AppData\Local\Temp\philia-e2e-Ka8xdO Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-Ka8xdO '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-Ka8xdO'
+    at rmSync (node:fs:1222:18)
+    at cleanup (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\__tests__\e2e.ts:588:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\__tests__\e2e.ts:624:3) {
+  errno: 1,
+  code: 'EPERM',
+  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-e2e-Ka8xdO',
+  syscall: 'rm'
+}
+  ✓ 种子库 data/philia.db 原样（size/mtime 未变）
+
+全链路验收全部通过 ✅

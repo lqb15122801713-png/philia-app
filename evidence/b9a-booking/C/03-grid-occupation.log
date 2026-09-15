@@ -1,0 +1,26 @@
+[服务] 造型修剪（durationMin=120，美容类）
+[A] 旺财 serviceDurations: {"durationMin":240,"slotsNeeded":8,"source":"engine","rawMin":225,"detail":{"species":"dog","kind":"groom","sizeTier":"large","coat":"long","baseMin":90,"sizeCoef":2,"coatCoef":1.25}}
+[A] 咪咪 serviceDurations: {"durationMin":120,"slotsNeeded":4,"source":"engine","rawMin":120,"detail":{"species":"cat","kind":"groom","sizeTier":"small","coat":"short","baseMin":120,"sizeCoef":1,"coatCoef":1}}
+  ✓ A1. 旺财引擎时长 240min/8 槽（raw 225）
+  ✓ A2. 咪咪引擎时长 120min/4 槽（raw 120）
+  ✓ A3. 不传 petId → serviceDurations 为 null（行为不变）
+[A] 逐日最晚可约开始时刻（+8 墙钟）：
+    2026-09-15  旺财=16:00  咪咪=18:00
+    2026-09-16  旺财=16:00  咪咪=18:00
+    2026-09-17  旺财=16:00  咪咪=18:00
+    2026-09-18  旺财=16:00  咪咪=18:00
+    2026-09-19  旺财=16:00  咪咪=18:00
+    2026-09-20  旺财=16:00  咪咪=18:00
+    2026-09-21  旺财=16:00  咪咪=18:00
+  ✓ A4. 可约槽差异：打烊前最晚可约开始时刻 旺财(8 连续槽) 早于 咪咪(4 连续槽)
+[B] 旺财建单开始 2026-09-16T05:00:00.000Z（+8 13:00）；咪咪建单开始 2026-09-17T01:00:00.000Z（+8 09:00）
+  ✓ B1. 旺财建单 scheduledEnd-scheduledStart = 240min（引擎输出，覆盖服务默认 120min）
+  ✓ B2. 咪咪建单 scheduledEnd-scheduledStart = 120min（引擎输出）
+[B] 旺财覆盖区间 store_slots：13:00=1 13:30=1 14:00=1 14:30=1 15:00=1 15:30=1 16:00=1 16:30=1
+[B] 咪咪覆盖区间 store_slots：09:00=1 09:30=1 10:00=1 10:30=1
+  ✓ B3. 旺财建单 → 连续 8 个 30min 槽全部有占用
+  ✓ B4. 咪咪建单 → 连续 4 个 30min 槽全部有占用
+  ✓ B5. 旺财单取消后 8 槽对称释放（各 -1）
+  ✓ B6. 咪咪单取消后 4 槽对称释放（各 -1）
+
+栅格占用实证全部通过 ✅

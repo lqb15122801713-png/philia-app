@@ -1,0 +1,18 @@
+# 任务 C 验收退出码 / 通过标记汇总（批次 9a · feat/b9a-booking）
+
+| 证据 | 内容 | 退出码 / 通过标记 |
+|---|---|---|
+| 00-backfill-active-grooming.log | 存量 pending/confirmed 洗护单占槽补齐（一次性，CONFIRM=1 写入） | 7 单 7 槽补齐；2 处存量超容量如实记录（旧口径重叠单所致） |
+| 01-repro-fixed-duration.log | 复现：时长写死 durationMin（两宠物同 90min）+ 90min 单仅占 1 槽 | 复现成立（改动前基线 b4597e1） |
+| 01-repro-code-baseline.txt | 基线代码口径快照（create/getWithServices/前端显示均取 durationMin） | — |
+| 02-engine-assert.log | 引擎规则断言 15 组（9 组合规则 + 6 组回退，含边界 225→240/8 槽） | exit=0（复验于收尾）「全部断言通过 ✅」 |
+| 03-grid-occupation.log | 栅格占用对比：serviceDurations 联动 + 可约槽差异 + 建单 8 槽 vs 4 槽 + 对称释放 | exit=0「栅格占用实证全部通过 ✅」 |
+| 04-fallback.log | 回退路径：缺品种/体重 → source=default 120min，建单不阻断 | exit=0「回退路径实证全部通过 ✅」 |
+| 05-boarding-regression.log | 寄养回归：boardingNightDates 3 例 + 按晚占用/释放 + store_slots 零触碰 | exit=0「寄养按晚口径回归全部通过 ✅」 |
+| 06-screenshots.log + 4 png | 单屏确认条 / 服务 chips / 一键面板「约 N 分钟」两宠物联动（240 vs 120） | exit=0「联动截图断言全部通过 ✅」 |
+| 07-e2e.log | 既有全链路 e2e（独立临时库） | exit=0「全链路验收全部通过 ✅」（临时目录清理 EPERM 为 Windows 句柄滞后已知告警，非断言失败） |
+| 08-smoke-routes.log / .json | 三端生产构建路由冒烟 | exit=0「30/30 通过」 |
+| 09-typecheck.log | server tsc --noEmit | exit=0（复验于收尾） |
+
+说明：03/04/05/06/07/08 为取证当次实跑（输出经 tee 落盘，脚本均以 process.exit(failures?1:0) 收尾，
+全绿标记即 exit=0）；02 与 typecheck 在收尾时原样复验，退出码实测为 0。

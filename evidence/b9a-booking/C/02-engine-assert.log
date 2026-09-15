@@ -1,0 +1,32 @@
+[犬·洗澡] 小型短毛（柯基 8kg）: {"durationMin":60,"slotsNeeded":2,"source":"engine","rawMin":60,"detail":{"species":"dog","kind":"bath","sizeTier":"small","coat":"short","baseMin":60,"sizeCoef":1,"coatCoef":1}}
+  ✓ 1. 小型短毛犬洗澡 = 60×1.0×1.0 = 60min / 2 槽
+[犬·洗澡] 中型短毛（柴犬 12kg）: {"durationMin":90,"slotsNeeded":3,"source":"engine","rawMin":90,"detail":{"species":"dog","kind":"bath","sizeTier":"medium","coat":"short","baseMin":60,"sizeCoef":1.5,"coatCoef":1}}
+  ✓ 2. 中型短毛犬洗澡 = 60×1.5×1.0 = 90min / 3 槽
+[犬·洗澡] 大型长毛（金毛 28.5kg）: {"durationMin":150,"slotsNeeded":5,"source":"engine","rawMin":150,"detail":{"species":"dog","kind":"bath","sizeTier":"large","coat":"long","baseMin":60,"sizeCoef":2,"coatCoef":1.25}}
+  ✓ 3. 大型长毛犬洗澡 = 60×2.0×1.25 = 150min / 5 槽
+[犬·美容] 小型长毛（泰迪 6kg）: {"durationMin":120,"slotsNeeded":4,"source":"engine","rawMin":112.5,"detail":{"species":"dog","kind":"groom","sizeTier":"small","coat":"long","baseMin":90,"sizeCoef":1,"coatCoef":1.25}}
+  ✓ 4. 小型长毛犬美容 = 90×1.0×1.25 = 112.5 → 取整 120min / 4 槽
+[犬·美容] 中型长毛（边牧 20kg）: {"durationMin":180,"slotsNeeded":6,"source":"engine","rawMin":168.75,"detail":{"species":"dog","kind":"groom","sizeTier":"medium","coat":"long","baseMin":90,"sizeCoef":1.5,"coatCoef":1.25}}
+  ✓ 5. 中型长毛犬美容 = 90×1.5×1.25 = 168.75 → 取整 180min / 6 槽
+[犬·美容] 大型长毛（阿拉斯加 35kg）: {"durationMin":240,"slotsNeeded":8,"source":"engine","rawMin":225,"detail":{"species":"dog","kind":"groom","sizeTier":"large","coat":"long","baseMin":90,"sizeCoef":2,"coatCoef":1.25}}
+  ✓ 6. ★边界：大型长毛犬美容 = 90×2.0×1.25 = 225min → 向上取整 240min / 8 个 30min 槽位块
+[猫·洗澡] 小型短毛（英短 4.2kg）: {"durationMin":90,"slotsNeeded":3,"source":"engine","rawMin":90,"detail":{"species":"cat","kind":"bath","sizeTier":"small","coat":"short","baseMin":90,"sizeCoef":1,"coatCoef":1}}
+  ✓ 7. 小型短毛猫洗澡 = 90×1.0×1.0 = 90min / 3 槽
+[猫·美容] 中型长毛（布偶 6kg）: {"durationMin":240,"slotsNeeded":8,"source":"engine","rawMin":225,"detail":{"species":"cat","kind":"groom","sizeTier":"medium","coat":"long","baseMin":120,"sizeCoef":1.5,"coatCoef":1.25}}
+  ✓ 8. 中型长毛猫美容 = 120×1.5×1.25 = 225 → 取整 240min / 8 槽
+[猫·美容] 大型长毛（缅因 11kg）: {"durationMin":300,"slotsNeeded":10,"source":"engine","rawMin":300,"detail":{"species":"cat","kind":"groom","sizeTier":"large","coat":"long","baseMin":120,"sizeCoef":2,"coatCoef":1.25}}
+  ✓ 9. 大型长毛猫美容 = 120×2.0×1.25 = 300min / 10 槽
+[回退] 缺品种: {"durationMin":60,"slotsNeeded":2,"source":"default","fallbackReason":"缺品种，无法推导毛长档"}
+  ✓ 10. 缺品种 → 回退 durationMin=60 / 2 槽
+[回退] 缺体重: {"durationMin":60,"slotsNeeded":2,"source":"default","fallbackReason":"缺体重，无法推导体型档"}
+  ✓ 11. 缺体重 → 回退 durationMin=60
+[回退] 物种非犬猫: {"durationMin":60,"slotsNeeded":2,"source":"default","fallbackReason":"物种非犬猫（other）"}
+  ✓ 12. 物种非犬猫 → 回退默认
+[回退] 服务名未命中关键词: {"durationMin":45,"slotsNeeded":2,"source":"default","fallbackReason":"服务名未命中洗澡/美容关键词"}
+  ✓ 13. 服务名未命中洗澡/美容关键词 → 回退 durationMin=45 / 2 槽（45 向上取整占 2 槽）
+[回退] 无宠物档案: {"durationMin":60,"slotsNeeded":2,"source":"default","fallbackReason":"无宠物档案"}
+  ✓ 14. 无宠物档案 → 回退默认
+[回退] 寄养: {"durationMin":null,"slotsNeeded":null,"source":"default","fallbackReason":"寄养按晚计费，时长引擎不介入"}
+  ✓ 15. 寄养 → 引擎不介入（durationMin=null，按晚计费口径不动）
+
+全部断言通过 ✅（15 组：9 组合规则 + 6 组回退）
