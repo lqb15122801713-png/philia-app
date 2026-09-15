@@ -19,6 +19,8 @@ export * from './constants/events';
 export * from './api/client';
 export * from './api/upload';
 export * from './api/devAuth';
+// 安全 UUID（b9.1：crypto.randomUUID 仅安全上下文存在，HTTP 内测环境模板兜底）
+export { safeUuid } from './lib/safeUuid';
 // hooks 显式导出：EventEnvelope 以契约形（data: any）覆盖 constants/events 的同名导出
 export { useMe, useEventSource, SSE_BACKOFF_DELAYS, backoffDelay } from './api/hooks';
 export type { EventEnvelope } from './api/hooks';

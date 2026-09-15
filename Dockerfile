@@ -77,5 +77,5 @@ RUN chmod +x ./entrypoint.sh && mkdir -p /app/data /app/server/uploads
 EXPOSE 7200
 # 健康检查对接既有 GET /api/health（不新增端点，与任务 B/C 契约一致）
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD node -e "fetch(`http://localhost:${process.env.PORT||7200}/api/health`).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+  CMD node -e "fetch('http://localhost:'+(process.env.PORT||7200)+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 ENTRYPOINT ["/app/entrypoint.sh"]
