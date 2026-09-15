@@ -71,6 +71,7 @@ export default function TimeGridBlock({
                   onClick={() => onSelect(t)}
                   data-testid={`gs-slot-${fmtHM(t)}`}
                   data-available={ok ? 'true' : 'false'}
+                  data-slot-start={t.getTime()}
                   className={`rounded-card border py-2.5 text-center font-number text-body transition ${
                     active
                       ? 'border-[1.5px] border-ink font-semibold text-ink'
