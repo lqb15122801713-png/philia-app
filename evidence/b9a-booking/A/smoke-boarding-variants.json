@@ -1,0 +1,17 @@
+{
+  "at": "2026-09-15T02:33:26.683Z",
+  "results": [
+    {
+      "app": "customer",
+      "path": "/booking/boarding",
+      "ok": true,
+      "verdict": "200 + 非空白 + 锚点命中"
+    },
+    {
+      "app": "customer",
+      "path": "/booking/boarding/",
+      "ok": true,
+      "verdict": "200 + 非空白 + 锚点命中（尾斜杠变体）"
+    }
+  ]
+}

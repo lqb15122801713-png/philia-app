@@ -1,0 +1,4 @@
+customer build (tsc -b && vite build): exit 0（含 Flat 副本的最终构建）
+merchant build: exit 0
+staff build: exit 0
+server typecheck (tsc --noEmit): exit 0

@@ -1,0 +1,17 @@
+== git grep -ri "FFAAA5" -- apps/ ==
+exit=1 (1=0命中)
+
+== 本批 diff 新增 text-white 行 ==
+warning: in the working copy of 'apps/customer/src/components/booking/single/BoardingDatesBlock.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/customer/src/components/booking/single/ExtrasBlock.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/customer/src/components/booking/single/NoteFoldBlock.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/customer/src/components/booking/single/RoomTypeBlock.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/customer/src/components/booking/single/ServiceChipsBlock.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'apps/customer/src/components/booking/single/StoreLineBlock.tsx', LF will be replaced by CRLF the next time Git touches it
+exit=1 (1=0命中)
+
+== 单屏族 accent/阴影残留（bg-brand-primary 应仅 2 处 CTA） ==
+apps/customer/src/components/booking/single/BoardingConfirmBar.tsx:70:            ready ? 'bg-brand-primary text-ink active:scale-92' : 'cursor-not-allowed bg-line text-ink-placeholder shadow-none'
+apps/customer/src/components/booking/single/BottomSheet.tsx:3: * 遮罩 + 底部圆角 sheet，点遮罩或「关闭」收起（v4.1：圆角收敛 18px、阴影降到极浅 shadow-card，
+apps/customer/src/components/booking/single/BottomSheet.tsx:29:        className="max-h-[70vh] w-full max-w-lg overflow-y-auto rounded-t-[18px] bg-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-card"
+apps/customer/src/components/booking/single/ConfirmBar.tsx:47:            ready ? 'bg-brand-primary text-ink active:scale-92' : 'cursor-not-allowed bg-line text-ink-placeholder shadow-none'
