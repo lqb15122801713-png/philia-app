@@ -11,10 +11,11 @@
  *   1. POST /api/auth/dev-login 三角色各登一次（客户 / 商家 owner / 员工），拿 cookie
  *   2. 客户：store.listNearby → store.getWithServices（服务 + 可约槽位）→ appointment.create
  *      （create 前已完成 push.subscribe；create 后立刻以 watch=<aid> 建立 SSE 流后台读）
- *   3. 商家：appointment.confirm → appointment.assign（派给种子员工）
+ *   3. 商家：appointment.confirm → appointment.assign（派给 groomer 阿强）
  *   4. 客户：appointment.getCode → 员工（groomer）核销被拒（批次 S1 双角色断言）
- *      → 员工（frontdesk）：appointment.checkin（二维码原文）
- *   5. 员工：POST /api/upload（jimp 现造 JPEG）→ serviceStep.addPhotos 登记
+ *      → 员工（frontdesk）：appointment.checkin（二维码原文；S1-R1 断言①原指派保留）
+ *      → 未指派单前台核销（S1-R1 断言② staff_id 仍 NULL + 无 assigned 事件）
+ *   5. 美容师（阿强，被指派人）：POST /api/upload（jimp 现造 JPEG）→ serviceStep.addPhotos 登记
  *      → 逐步 confirmStep 走完六步（张数按 min：1/2/3/2/2/0，before_after 需 before+after 各 1）
  *   6. 校验预约 completed；商家 markPaid；客户 review
  *   7. SSE 断言：客户流依次收到 appointment.confirmed / assigned / checkedin /
@@ -337,14 +338,14 @@ async function main(): Promise<void> {
   startSseReader(sseRes, frames);
   await sleep(300); // 等连接注册进 Hub
 
-  /* ---------- 6. 商家：确认 → 派单 ---------- */
-  const staffList = await trpcQuery<{ staff: Array<{ id: string; name: string; skills: string[] | null }> }>(
+  /* ---------- 6. 商家：确认 → 派单（S1-R1：派给 groomer 阿强，验证前台核销豁免归属+不认领） ---------- */
+  const staffList = await trpcQuery<{ staff: Array<{ id: string; name: string; role: string; skills: string[] | null }> }>(
     'store.staffList',
     { cookie: ownerCookie },
   );
-  const staffRow = staffList.staff.find((s) => s.skills?.some((k) => ['wash', 'groom'].includes(k)));
-  check('store.staffList 找到可承接员工', !!staffRow, staffList.staff.map((s) => s.name));
-  if (!staffRow) throw new Error('无员工');
+  const staffRow = staffList.staff.find((s) => s.name === '阿强' && s.role === 'groomer');
+  check('store.staffList 找到承接美容师（阿强=groomer）', !!staffRow, staffList.staff.map((s) => s.name));
+  if (!staffRow) throw new Error('无美容师');
 
   const confirmed = await trpcMutate<{ status: string }>('appointment.confirm', {
     cookie: ownerCookie,
@@ -356,7 +357,7 @@ async function main(): Promise<void> {
     cookie: ownerCookie,
     input: { appointmentId: aid, staffId: staffRow.id },
   });
-  check('appointment.assign 派单成功', assigned.staffId === staffRow.id, assigned);
+  check('appointment.assign 派单成功（指派阿强）', assigned.staffId === staffRow.id, assigned);
 
   /* ---------- 7. 客户出码 → 员工扫码核销 ---------- */
   const codeRes = await trpcQuery<{ raw: string; code: string }>('appointment.getCode', {
@@ -426,12 +427,13 @@ async function main(): Promise<void> {
     frontdeskStay && { status: frontdeskStay.httpStatus, code: frontdeskStay.code, message: frontdeskStay.message },
   );
 
-  /* ---------- 7b. 前台扫码核销（全链路） ---------- */
+  /* ---------- 7b. 前台扫码核销（全链路）+ S1-R1 断言①：豁免归属、原指派保留 ---------- */
   const checkin = await trpcMutate<{
-    appointment: { status: string };
+    appointment: { status: string; staffId: string | null };
     steps: Array<{ stepKey: string; status: string }>;
     nextRoute: string;
     idempotent: boolean;
+    claimed: boolean;
   }>('appointment.checkin', { cookie: staffCookie, input: { qr: codeRes.raw } });
   check(
     'appointment.checkin（frontdesk 二维码原文）→ in_service + 六步初始化',
@@ -439,8 +441,13 @@ async function main(): Promise<void> {
       checkin.steps[0]!.status === 'active' && checkin.steps.slice(1).every((s) => s.status === 'locked'),
     checkin,
   );
+  check(
+    'S1-R1 断言①：已指派给阿强的单被小美（frontdesk）核销成功 → staff_id 仍为阿强（原指派保留，claimed=false）',
+    checkin.appointment.staffId === staffRow.id && checkin.claimed === false,
+    { staffId: checkin.appointment.staffId, expect: staffRow.id, claimed: checkin.claimed },
+  );
 
-  /* ---------- 8. 员工：上传 → 登记照片 → 逐步确认 ---------- */
+  /* ---------- 8. 美容师（阿强，被指派人）：上传 → 登记照片 → 逐步确认 ---------- */
   const { Jimp } = await import('jimp');
   async function uploadOne(stepKey: string): Promise<{ url: string; thumbUrl: string }> {
     const img = new Jimp({ width: 320, height: 240, color: 0x66aaffff });
@@ -450,7 +457,7 @@ async function main(): Promise<void> {
     fd.append('relDir', `appointment/${aid}/${stepKey}`);
     const res = await fetch(`${BASE}/api/upload`, {
       method: 'POST',
-      headers: { cookie: staffCookie },
+      headers: { cookie: groomerCookie },
       body: fd,
     });
     const body = (await res.json()) as { url?: string; thumbUrl?: string; message?: string };
@@ -473,7 +480,7 @@ async function main(): Promise<void> {
       const up = await uploadOne(plan.key);
       if (!firstUploadUrl) firstUploadUrl = up.url;
       const added = await trpcMutate<{ added: number; totalValid: number }>('serviceStep.addPhotos', {
-        cookie: staffCookie,
+        cookie: groomerCookie,
         input: {
           appointmentId: aid,
           stepKey: plan.key,
@@ -488,7 +495,7 @@ async function main(): Promise<void> {
     }
     const done = await trpcMutate<{ nextStepKey: string | null; appointmentCompleted: boolean }>(
       'serviceStep.confirmStep',
-      { cookie: staffCookie, input: { appointmentId: aid, stepKey: plan.key } },
+      { cookie: groomerCookie, input: { appointmentId: aid, stepKey: plan.key } },
     );
     check(
       `serviceStep.confirmStep(${plan.key})`,
@@ -497,7 +504,7 @@ async function main(): Promise<void> {
     );
   }
 
-  // 顺带验证签名图片可访问（imagesRoute 全链路）
+  // 顺带验证签名图片可访问（imagesRoute 全链路；阿强上传，前台小美读取验证跨角色签名访问）
   const imgRes = await fetch(`${BASE}${firstUploadUrl}`, { headers: { cookie: staffCookie } });
   check('GET /api/img/* 签名 URL 可访问（200 image/jpeg）',
     imgRes.status === 200 && (imgRes.headers.get('content-type') ?? '').includes('image/jpeg'),
@@ -531,6 +538,57 @@ async function main(): Promise<void> {
     10_000,
   );
   sseController.abort();
+
+  /* ---------- 10b. S1-R1 断言②：未指派单前台核销 → staff_id 仍 NULL + 无 assigned 事件 ----------
+   * 置于 SSE abort 之后：第二单（aid2）与主单同客户，其 confirmed/checkedin 会经
+   * user 频道进入 SSE 帧，若放在第 10 节前会污染序列断言（首轮实测多拉一条 confirmed）。 */
+  const slot2 = cat2.slots.find((s) => {
+    if (s.slotStart.getTime() === slot.slotStart.getTime()) return false;
+    const shifted = new Date(s.slotStart.getTime() + 8 * 3600 * 1000);
+    const h = shifted.getUTCHours();
+    return h >= 10 && h <= 16 && shifted.getUTCMinutes() === 0;
+  });
+  check('找到第二个可约槽（未指派单用）', !!slot2);
+  if (!slot2) throw new Error('无第二槽位');
+  const appt2 = await trpcMutate<{ id: string; status: string; code: string }>('appointment.create', {
+    cookie: customerCookie,
+    input: {
+      storeId: store.id,
+      petId,
+      serviceId: service.id,
+      type: 'grooming',
+      scheduledStart: slot2.slotStart,
+      paymentMode: 'pay_at_store',
+      note: 'e2e S1-R1 未指派核销单',
+    },
+  });
+  const aid2 = appt2.id;
+  await trpcMutate('appointment.confirm', { cookie: ownerCookie, input: { appointmentId: aid2 } });
+  const codeRes2 = await trpcQuery<{ raw: string; code: string }>('appointment.getCode', {
+    cookie: customerCookie,
+    input: { appointmentId: aid2 },
+  });
+  const assignedBefore = (await db.select().from(schema.eventOutbox)).filter(
+    (r) => r.eventType === 'appointment.assigned' && (r.payload as Record<string, unknown>)?.appointmentId === aid2,
+  ).length;
+  const checkin2 = await trpcMutate<{
+    appointment: { status: string; staffId: string | null };
+    idempotent: boolean;
+    claimed: boolean;
+  }>('appointment.checkin', { cookie: staffCookie, input: { code: codeRes2.code } });
+  const assignedAfter = (await db.select().from(schema.eventOutbox)).filter(
+    (r) => r.eventType === 'appointment.assigned' && (r.payload as Record<string, unknown>)?.appointmentId === aid2,
+  ).length;
+  check(
+    'S1-R1 断言②：未指派单前台核销成功 → staff_id 仍为 NULL（不认领，claimed=false）',
+    checkin2.appointment.status === 'in_service' && checkin2.appointment.staffId === null && checkin2.claimed === false,
+    { staffId: checkin2.appointment.staffId, claimed: checkin2.claimed },
+  );
+  check(
+    'S1-R1 断言②：未指派单核销后 outbox 无新增 appointment.assigned 事件',
+    assignedBefore === 0 && assignedAfter === 0,
+    { assignedBefore, assignedAfter },
+  );
   const deduped = [...new Map(frames.filter((f) => f.id).map((f) => [f.id, f])).values()];
   const typeSeq = deduped.map((f) => f.event);
   const expectedSeq = [
