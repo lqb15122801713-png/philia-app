@@ -160,6 +160,11 @@ export const staff = sqliteTable('staff', {
     .references(() => users.id),
   /** 员工姓名 */
   name: text('name').notNull(),
+  /**
+   * 岗位角色（批次 S1）：frontdesk=前台（扫码核销/接待） | groomer=美容师（服务执行）。
+   * NOT NULL 默认 'groomer'——存量员工=执行者，迁移零破坏。
+   */
+  role: text('role').notNull().default('groomer'),
   /** 技能标签 JSON，如 ["wash","groom","boarding"] */
   skills: text('skills', { mode: 'json' }).$type<string[]>(),
   /** 排班 JSON，结构见 StaffSchedule */
@@ -180,6 +185,11 @@ export const staffInvites = sqliteTable('staff_invites', {
   code: text('code').notNull().unique(),
   /** 预填员工姓名 */
   staffName: text('staff_name'),
+  /**
+   * 预置岗位角色（批次 S1）：frontdesk | groomer，缺省 groomer；
+   * auth.bindStaff 兑现邀请码时写入 staff.role。
+   */
+  role: text('role').notNull().default('groomer'),
   /** 过期时间 */
   expiresAt: integer('expires_at', { mode: 'timestamp' }),
   /** 使用时间（NULL = 未使用） */

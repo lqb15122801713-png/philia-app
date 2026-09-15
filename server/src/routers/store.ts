@@ -14,7 +14,8 @@
  * - store.staffList：merchant 本店。员工 + 技能 + 排班 + 绩效（完成单数/好评率，
  *   从 appointments 聚合）。
  * - store.inviteStaff：merchant 本店。生成 8 位去混淆字符邀请码落 staff_invites，
- *   expires_at=+24h，明文仅此一次返回；同店同 staff_name 有未使用未过期码则复用。
+ *   expires_at=+24h，明文仅此一次返回；同店同 staff_name 同角色有未使用未过期码则复用。
+ *   批次 S1：可指定预置角色 role（frontdesk|groomer，缺省 groomer），bindStaff 兑现时写入 staff.role。
  * - store.setSchedule：merchant 本店。写 staff.schedule 周模板 JSON。
  * - store.setStaffStatus（v1.1 P1-2 追加）：merchant 本店。停职/恢复员工
  *   （staff.status=active|suspended），停职由 staffProcedure 每请求校验即时生效。
@@ -450,12 +451,19 @@ export const storeRouter = router({
    * 明文码仅此一次返回（响应里带提示）；同店同 staff_name 存在未使用未过期码则复用，不重复建行。
    */
   inviteStaff: merchantProcedure
-    .input(z.object({ staffName: z.string().trim().min(1, '员工姓名不能为空').max(32) }))
+    .input(
+      z.object({
+        staffName: z.string().trim().min(1, '员工姓名不能为空').max(32),
+        /** 批次 S1：邀请时预置岗位角色（frontdesk=前台 / groomer=美容师），缺省 groomer */
+        role: z.enum(['frontdesk', 'groomer']).optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const storeId = ctx.user.storeId!;
       const now = new Date();
+      const role = input.role ?? 'groomer';
 
-      // 复用：同店同名、未使用、未过期
+      // 复用：同店同名同角色、未使用、未过期（角色不同则另发新码，保证预置角色生效）
       const existing = await ctx.db
         .select()
         .from(schema.staffInvites)
@@ -463,6 +471,7 @@ export const storeRouter = router({
           and(
             eq(schema.staffInvites.storeId, storeId),
             eq(schema.staffInvites.staffName, input.staffName),
+            eq(schema.staffInvites.role, role),
             isNull(schema.staffInvites.usedAt),
             gt(schema.staffInvites.expiresAt, now),
           ),
@@ -495,6 +504,7 @@ export const storeRouter = router({
             storeId,
             code,
             staffName: input.staffName,
+            role,
             expiresAt: new Date(now.getTime() + INVITE_TTL_MS),
             createdBy: ctx.user.id,
           })
