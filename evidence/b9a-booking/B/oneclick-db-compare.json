@@ -1,0 +1,33 @@
+{
+  "storeId": {
+    "panel": "01M20EDD8FQ5K9X22WACHWSXN4",
+    "single": "01M20EDD8FQ5K9X22WACHWSXN4",
+    "equal": true
+  },
+  "serviceId": {
+    "panel": "01M20EDD8GHGYFMHF2ZKE4T9D1",
+    "single": "01M20EDD8GHGYFMHF2ZKE4T9D1",
+    "equal": true
+  },
+  "petId": {
+    "panel": "01M20EDD8GXKWWCB3BGNA8V87Z",
+    "single": "01M20EDD8GXKWWCB3BGNA8V87Z",
+    "equal": true
+  },
+  "scheduledStart": {
+    "panel": "2026-09-15T05:00:00.000Z",
+    "single": "2026-09-15T05:00:00.000Z",
+    "equal": true
+  },
+  "paymentMode": {
+    "panel": "pay_at_store",
+    "single": "pay_at_store",
+    "equal": true
+  },
+  "priceFen": {
+    "panel": 8800,
+    "single": 8800,
+    "equal": true
+  },
+  "__allEqual": true
+}

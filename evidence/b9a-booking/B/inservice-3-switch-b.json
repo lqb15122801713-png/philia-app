@@ -1,0 +1,12 @@
+{
+  "sseDriven": true,
+  "inserviceShown": true,
+  "stepName": "消毒工具确认",
+  "panelText": "旺财 · 服务进行中\n\n消毒工具确认\n\n第 1 步 / 共 6 步\n\n查看实时直播 ›",
+  "liveHref": "/appointments/01B8TESTCHECKIN000000000001/live",
+  "stepOrder": "1",
+  "doneCount": "0",
+  "photoCount": 0,
+  "rebookShown": false,
+  "entryShown": false
+}

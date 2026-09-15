@@ -1,0 +1,21 @@
+{
+  "env": "server-cst",
+  "browserTz": "Asia/Shanghai",
+  "serverTz": "Asia/Shanghai",
+  "trpcBaseline": {
+    "count": 138,
+    "firstEpoch": 1789450200000
+  },
+  "panel": {
+    "epoch": 1789450200000,
+    "text": "今天 13:30最早可约"
+  },
+  "grid": {
+    "epoch": 1789450200000,
+    "testid": "gs-slot-13:30",
+    "cellText": "13:30"
+  },
+  "panelIso": "2026-09-15T05:30:00.000Z",
+  "gridIso": "2026-09-15T05:30:00.000Z",
+  "equal": true
+}

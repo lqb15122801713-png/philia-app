@@ -1,0 +1,6 @@
+{
+  "entryShown": false,
+  "rebookShown": true,
+  "reminderShown": false,
+  "reminderText": null
+}

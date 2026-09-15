@@ -1,0 +1,16 @@
+{
+  "note": "信息项（非闸门）：浏览器 TZ=UTC。面板用服务端槽 epoch（TZ 无关）；单屏栅格 buildWeekGrid 按浏览器本地日界+营业时间生成候选格，与 +8 服务端槽 epoch 不对齐属既有行为（B4 单屏逻辑，本批不动）。",
+  "browserTz": "UTC",
+  "serverTz": "UTC",
+  "panel": {
+    "rebookShown": true,
+    "epoch": 1789450200000,
+    "text": "今天 05:30最早可约",
+    "entryShown": false
+  },
+  "grid": {
+    "firstAvailableEpoch": 1789462800000,
+    "availableCount": 5
+  },
+  "panelIso": "2026-09-15T05:30:00.000Z"
+}

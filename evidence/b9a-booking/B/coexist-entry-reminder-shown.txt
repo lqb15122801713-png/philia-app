@@ -1,0 +1,6 @@
+{
+  "entryShown": true,
+  "rebookShown": false,
+  "reminderShown": true,
+  "reminderText": "距上次洗护已 20 天\n\n旺财该洗澡啦\n\n▸ 一键预约"
+}

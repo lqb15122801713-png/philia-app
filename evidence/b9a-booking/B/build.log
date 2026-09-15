@@ -1,0 +1,96 @@
+
+> philia@0.0.0 build
+> npm run build -w @philia/customer && npm run build -w @philia/merchant && npm run build -w @philia/staff
+
+
+> @philia/customer@0.0.0 build
+> tsc -b && vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+node_modules/zod/v4/core/regexes.js (70:0): A comment
+
+"/** Anchors a pattern source. The interpolation lives here rather than at the call site because
+ * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it
+ * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */"
+
+in "node_modules/zod/v4/core/regexes.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+node_modules/zod/v4/core/util.js (330:0): A comment
+
+"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle."
+
+in "node_modules/zod/v4/core/util.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+✓ 2325 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                          0.13 kB
+dist/manifest.webmanifest                   0.38 kB
+dist/index.html                             0.75 kB │ gzip:   0.44 kB
+dist/assets/philia-tab-icon-wiOD1Y2x.png   10.07 kB
+dist/assets/index-BKYZwbq-.css             95.66 kB │ gzip:  15.85 kB
+dist/assets/index-DHIb0Wxq.js             753.69 kB │ gzip: 209.85 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 3.21s
+
+PWA v1.3.0
+mode      generateSW
+precache  7 entries (830.30 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js
+
+> @philia/merchant@0.0.0 build
+> tsc -b && vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 1866 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                          0.13 kB
+dist/manifest.webmanifest                   0.40 kB
+dist/index.html                             0.75 kB │ gzip:   0.44 kB
+dist/assets/philia-tab-icon-wiOD1Y2x.png   10.07 kB
+dist/assets/index-BAKQ9-jC.css             95.29 kB │ gzip:  15.89 kB
+dist/assets/index-BMXPjd6u.js             566.18 kB │ gzip: 156.89 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 2.31s
+
+PWA v1.3.0
+mode      generateSW
+precache  7 entries (646.83 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js
+
+> @philia/staff@0.0.0 build
+> tsc -b && vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 2152 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                          0.13 kB
+dist/manifest.webmanifest                   0.40 kB
+dist/index.html                             0.75 kB │ gzip:   0.44 kB
+dist/assets/philia-tab-icon-wiOD1Y2x.png   10.07 kB
+dist/assets/index-DsRll4A-.css             92.28 kB │ gzip:  15.47 kB
+dist/assets/QrScanner-ZF6rr9rC.js         141.46 kB │ gzip:  51.27 kB
+dist/assets/index-B8Bkoloo.js             467.44 kB │ gzip: 138.37 kB
+✓ built in 2.47s
+
+PWA v1.3.0
+mode      generateSW
+precache  8 entries (685.61 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js
