@@ -55,11 +55,14 @@ export default function GroomingSinglePage() {
   const effStoreId = storeId;
 
   const servicesQ = useQuery({
-    queryKey: ['store', 'getWithServices', effStoreId, serviceId],
+    // B9a 任务 C：petId 入参驱动时长引擎（serviceDurations + 时长连续过滤按引擎时长）；
+    // 换宠物即换时长口径，queryKey 带 petId 触发重取
+    queryKey: ['store', 'getWithServices', effStoreId, serviceId, petId],
     queryFn: () =>
       trpc.store.getWithServices.query({
         storeId: effStoreId!,
         serviceId: serviceId ?? undefined,
+        petId: petId ?? undefined,
       }),
     enabled: effStoreId !== null,
   });
@@ -201,6 +204,17 @@ export default function GroomingSinglePage() {
   /* ---- 提交（现有 appointment.create，入参不动） ---- */
   const service = groomingServices.find((s) => s.id === serviceId) ?? null;
   const staffName = staffQ.data?.staff.find((s) => s.id === staffId)?.name ?? null;
+  // B9a 任务 C：确认条/服务 chips 的「约 N 分钟」按时长引擎联动（serviceDurations），
+  // 引擎未输出（未选宠物/查询中）回退服务默认 durationMin
+  const serviceDurations = servicesQ.data?.serviceDurations ?? null;
+  const durationById = useMemo(
+    () =>
+      serviceDurations
+        ? Object.fromEntries(Object.entries(serviceDurations).map(([id, d]) => [id, d.durationMin]))
+        : null,
+    [serviceDurations],
+  );
+  const engineDurationMin = serviceId ? (durationById?.[serviceId] ?? null) : null;
 
   const createM = useMutation({
     mutationFn: () => {
@@ -243,7 +257,9 @@ export default function GroomingSinglePage() {
             ? '请选择时间'
             : null;
 
-  /* ---- 渲染：单屏区块化（区块顺序即设计方案第二节） ---- */
+  /* ---- 渲染：单屏区块化（v4.1：留白 + hairline 分节，时段栅格紧贴日期横条） ---- */
+  // 节间 hairline：既有 token 深棕墨 4A3B2E 的 9% 透明度用法（设计规格 v3 §1）
+  const SECTION = 'mt-6 border-t border-[rgba(74,59,46,.09)] pt-5';
   return (
     <div className="px-4 pb-36 pt-6" data-testid="grooming-single">
       {toastEl}
@@ -253,7 +269,7 @@ export default function GroomingSinglePage() {
           type="button"
           onClick={() => navigate(-1)}
           aria-label="返回"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-card shadow-card active:scale-92"
+          className="flex h-9 w-9 items-center justify-center rounded-full active:scale-92"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ink-secondary" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m15 18-6-6 6-6" />
@@ -262,19 +278,22 @@ export default function GroomingSinglePage() {
         <h1 className="text-title-lg">预约洗护</h1>
       </header>
 
-      {/* 宠物卡 */}
+      {/* 宠物卡（B9a 任务 C：换宠物 → 时长引擎口径变化，已选时段清空重选） */}
       <section className="mt-4">
         <PetCardBlock
           pets={petsQ.data ?? []}
           selectedId={petId}
-          onSelect={setPetId}
+          onSelect={(id) => {
+            if (id !== petId) setSlot(null);
+            setPetId(id);
+          }}
           lastGroomingLabel={lastGroomingLabel}
           loading={petsQ.isPending}
         />
       </section>
 
       {/* 服务 chips */}
-      <section className="mt-5">
+      <section className={SECTION}>
         <h2 className="text-title">选择服务</h2>
         <div className="mt-2">
           <ServiceChipsBlock
@@ -282,12 +301,13 @@ export default function GroomingSinglePage() {
             selectedId={serviceId}
             onSelect={pickService}
             loading={servicesQ.isPending}
+            durationById={durationById}
           />
         </div>
       </section>
 
       {/* 门店单行 */}
-      <section className="mt-5">
+      <section className={SECTION}>
         <h2 className="text-title">门店</h2>
         <div className="mt-2">
           <StoreLineBlock
@@ -300,18 +320,13 @@ export default function GroomingSinglePage() {
         </div>
       </section>
 
-      {/* 日期横条 + 整月日历二级 */}
-      <section className="mt-5">
+      {/* 日期横条 + 时段栅格（v4.1：栅格上移紧贴日期区，同一节内） */}
+      <section className={SECTION}>
         <h2 className="text-title">选择日期</h2>
         <div className="mt-2">
           <DateStripBlock days={days} selectedDay={day} onPickDay={pickDay} />
         </div>
-      </section>
-
-      {/* 时段栅格（上午/下午/晚上分组） */}
-      <section className="mt-5">
-        <h2 className="text-title">可选时段</h2>
-        <div className="mt-2">
+        <div className="mt-4">
           <TimeGridBlock
             day={selectedDayGrid}
             slots={slots}
@@ -323,7 +338,7 @@ export default function GroomingSinglePage() {
       </section>
 
       {/* 折叠区：收款方式 + 备注 + 指定洗护师 */}
-      <section className="mt-5">
+      <section className={SECTION}>
         <ExtrasBlock
           paymentMode={paymentMode}
           onPaymentModeChange={(m) => {
@@ -341,10 +356,11 @@ export default function GroomingSinglePage() {
         />
       </section>
 
-      {/* 吸底确认条（fixed 于 TabBar 上方） */}
+      {/* 吸底确认条（fixed 于 TabBar 上方；B9a 任务 C：约 N 分钟 = 时长引擎输出，
+          引擎未输出时回退服务默认 durationMin） */}
       <ConfirmBar
         priceFen={service?.priceFen ?? null}
-        durationMin={service?.durationMin ?? null}
+        durationMin={engineDurationMin ?? service?.durationMin ?? null}
         missingLabel={missingLabel}
         submitting={createM.isPending}
         onConfirm={() => createM.mutate()}

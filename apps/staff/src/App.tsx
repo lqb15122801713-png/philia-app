@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { PageErrorBoundary } from '@philia/shared'
 import { Toaster } from '@/components/ui/sonner'
 import RequireStaff from './components/RequireStaff'
 import TabBar from './components/TabBar'
@@ -38,7 +39,10 @@ export default function App() {
             path="/*"
             element={
               <RequireStaff>
-                <ProtectedRoutes />
+                {/* 批次 9a 任务 E：页级错误边界（执行/核销链路 /execute/:id 崩一屏不塌全端，TabBar 存活） */}
+                <PageErrorBoundary app="staff">
+                  <ProtectedRoutes />
+                </PageErrorBoundary>
               </RequireStaff>
             }
           />

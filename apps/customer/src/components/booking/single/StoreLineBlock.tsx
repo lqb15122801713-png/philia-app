@@ -37,7 +37,7 @@ export default function StoreLineBlock({
         type="button"
         onClick={() => setSheetOpen(true)}
         data-testid="gs-store-line"
-        className="flex w-full items-center justify-between rounded-card bg-card px-4 py-3 text-left shadow-card transition active:scale-[0.99]"
+        className="flex w-full items-center justify-between py-2 text-left transition active:scale-[0.99]"
       >
         <span className="min-w-0 flex-1">
           <span className="block truncate text-body font-semibold">{name ?? '请选择门店'}</span>
@@ -45,7 +45,7 @@ export default function StoreLineBlock({
             <span className="mt-0.5 block truncate text-caption text-ink-secondary">{current.address}</span>
           ) : null}
         </span>
-        <span className="ml-3 shrink-0 text-caption font-medium text-brand-primary">更换 ▸</span>
+        <span className="ml-3 shrink-0 text-caption font-medium text-ink">更换 ▸</span>
       </button>
 
       {sheetOpen ? (
@@ -62,13 +62,13 @@ export default function StoreLineBlock({
                     setSheetOpen(false);
                   }}
                   data-testid={`gs-store-option-${s.id}`}
-                  className={`w-full rounded-card bg-card p-4 text-left shadow-card transition active:scale-[0.99] ${
-                    active ? 'ring-2 ring-brand-primary' : ''
+                  className={`w-full rounded-card border p-4 text-left transition active:scale-[0.99] ${
+                    active ? 'border-[1.5px] border-ink' : 'border-line'
                   }`}
                 >
                   <span className="flex items-center justify-between">
                     <span className="text-body font-semibold">{s.name}</span>
-                    {active ? <span className="text-caption text-brand-primary">当前选择</span> : null}
+                    {active ? <span className="text-caption font-medium text-ink">当前选择</span> : null}
                   </span>
                   {s.address ? (
                     <span className="mt-0.5 block text-caption text-ink-secondary">{s.address}</span>

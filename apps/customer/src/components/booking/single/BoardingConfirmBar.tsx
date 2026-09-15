@@ -66,8 +66,8 @@ export default function BoardingConfirmBar({
           data-testid="bs-confirm"
           data-state={submitting ? 'submitting' : ready ? 'ready' : 'disabled'}
           data-block-reason={vaccineBlock ? 'vaccine' : missingLabel !== null ? 'missing' : ''}
-          className={`pointer-events-auto h-12 w-full rounded-full text-body font-semibold shadow-philia transition-transform duration-120 ease-philia-spring ${
-            ready ? 'bg-philia-gradient text-ink active:scale-92' : 'cursor-not-allowed bg-line text-ink-placeholder'
+          className={`pointer-events-auto h-12 w-full rounded-card text-body font-semibold shadow-philia transition-transform duration-120 ease-philia-spring ${
+            ready ? 'bg-brand-primary text-ink active:scale-92' : 'cursor-not-allowed bg-line text-ink-placeholder shadow-none'
           }`}
         >
           {label}

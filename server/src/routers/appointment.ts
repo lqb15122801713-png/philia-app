@@ -35,6 +35,12 @@
  *   appointment_steps（step1 disinfection=active，2-6=locked，required_photos
  *   快照 min 值 1/2/3/2/2/0）；boarding → in_boarding + 建 boarding_stays
  *   （room_no 可空待登记，不初始化六步）。
+ * - B9a 任务 C（时长引擎）：grooming 时长由「猫犬/体型/毛长」引擎驱动
+ *   （config/durationEngine，规则表占位待老板供给）——create/reschedule 的
+ *   scheduledEnd 一律以引擎输出为准（客户端传入值对 grooming 不生效）；
+ *   占槽/释放按引擎输出时长覆盖的连续 30min 槽逐槽进行（占 release 对称幂等）；
+ *   取不到宠物物种/体重/品种字段时回退服务默认 durationMin，不阻断下单。
+ *   boarding 不涉引擎：按晚计费/占晚、boardingNightDates 口径不动。
  * - 事件（契约 2）：业务写库与 emitEvent 同事务，事务提交后 broadcastNow。
  */
 
@@ -43,6 +49,11 @@ import { TRPCError } from '@trpc/server';
 import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, ne, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
+import {
+  DURATION_SLOT_MIN,
+  resolveServiceDuration,
+  type ServiceDuration,
+} from '../config/durationEngine';
 import {
   assertAppointmentAccess,
   customerProcedure,
@@ -310,6 +321,43 @@ async function releaseSlot(tx: DbHandle, storeId: string, slotStart: Date): Prom
   }
 }
 
+/**
+ * B9a 任务 C：洗护占容量——从预约开始时刻起，按【时长引擎输出时长】覆盖的连续
+ * 30min 槽逐个 UPSERT（每槽校验 booked_count < capacity 后 +1；任一槽满员抛
+ * CONFLICT，事务整体回滚，不产生部分占用）。
+ * 与 getWithServices「时长覆盖的连续 30min 槽全部有余量」栅格过滤同口径
+ * （此前仅占开始时刻 1 槽，与栅格过滤口径不对称——90min 单物理占 3 槽但只记 1 槽）。
+ */
+async function occupyGroomingSlots(
+  tx: DbHandle,
+  args: { storeId: string; start: Date; slots: number },
+): Promise<void> {
+  for (let i = 0; i < args.slots; i++) {
+    const t = new Date(args.start.getTime() + i * DURATION_SLOT_MIN * 60_000);
+    const slot = await tx
+      .select()
+      .from(schema.storeSlots)
+      .where(and(eq(schema.storeSlots.storeId, args.storeId), eq(schema.storeSlots.slotStart, t)))
+      .get();
+    if (slot) {
+      if (slot.bookedCount >= slot.capacity) {
+        throw new TRPCError({ code: 'CONFLICT', message: '该时段已约满，请换个时间' });
+      }
+      await tx
+        .update(schema.storeSlots)
+        .set({ bookedCount: slot.bookedCount + 1, updatedAt: new Date() })
+        .where(eq(schema.storeSlots.id, slot.id));
+    } else {
+      await tx.insert(schema.storeSlots).values({
+        storeId: args.storeId,
+        slotStart: t,
+        capacity: DEFAULT_SLOT_CAPACITY,
+        bookedCount: 1,
+      });
+    }
+  }
+}
+
 /* ---- B3-2（A-P1-11 红标）：寄养容量按「晚」占用（房型 × 本地日界） ---- */
 
 /**
@@ -409,7 +457,7 @@ async function releaseBoardingSlots(
   }
 }
 
-/** 取消/改期释放槽位统一入口：grooming 释放 30min 时段槽；boarding 释放住宿区间全部晚（B3-2） */
+/** 取消/改期释放槽位统一入口：grooming 释放时长覆盖的连续 30min 槽；boarding 释放住宿区间全部晚（B3-2） */
 async function releaseAppointmentSlots(tx: DbHandle, appt: AppointmentRow): Promise<void> {
   if (appt.type === 'boarding') {
     await releaseBoardingSlots(tx, {
@@ -419,7 +467,21 @@ async function releaseAppointmentSlots(tx: DbHandle, appt: AppointmentRow): Prom
       end: appt.scheduledEnd,
     });
   } else {
-    await releaseSlot(tx, appt.storeId, appt.scheduledStart);
+    // B9a 任务 C：与 occupyGroomingSlots 对称——释放 [scheduledStart, scheduledEnd)
+    // 覆盖的全部连续 30min 槽（幂等：槽行不存在或已为 0 不动）
+    const count = Math.max(
+      1,
+      Math.ceil(
+        (appt.scheduledEnd.getTime() - appt.scheduledStart.getTime()) / (DURATION_SLOT_MIN * 60_000),
+      ),
+    );
+    for (let i = 0; i < count; i++) {
+      await releaseSlot(
+        tx,
+        appt.storeId,
+        new Date(appt.scheduledStart.getTime() + i * DURATION_SLOT_MIN * 60_000),
+      );
+    }
   }
 }
 
@@ -562,9 +624,9 @@ export const appointmentRouter = router({
   /**
    * 1. create（customer）：宠物归属 / 服务项有效且 type 一致 / 门店营业时间内 /
    * payment_mode 快照；事务内占槽（防超卖）+ 建 pending 预约（生成 6 位人工核销码）
-   * + emitEvent(store, appointment.created)。占槽按 type 分路：grooming UPSERT
-   * store_slots（30min 时段槽）；boarding（B3-2）逐晚 UPSERT boarding_slots
-   * （房型×晚），任一晚满员 CONFLICT 整体回滚。
+   * + emitEvent(store, appointment.created)。占槽按 type 分路：grooming 按 B9a 任务 C
+   * 时长引擎输出 UPSERT 连续 store_slots（30min 时段槽）；boarding（B3-2）逐晚 UPSERT
+   * boarding_slots（房型×晚），任一晚满员 CONFLICT 整体回滚。
    * paymentMode=pass_deduct（B2-7）：同事务内先校验本人名下该店次卡
    * （active + remain_times>0 + 未过期，否则 BAD_REQUEST「暂无可用次卡」）并
    * remain_times-1、写 -1 扣次流水——扣次先于占槽，占槽 CONFLICT/建单失败时
@@ -625,10 +687,17 @@ export const appointmentRouter = router({
       ) {
         badRequest('寄养必须选择退房日期且晚于入住日期');
       }
+      // B9a 任务 C（时长引擎）：grooming 的 scheduledEnd 一律以时长引擎输出为准——
+      // 引擎从 petId 查宠物档案的物种/体型/毛长推导（取不到字段时回退服务默认
+      // durationMin，不阻断下单）；客户端传入的 scheduledEnd 对 grooming 不再生效
+      // （此前口径 input.scheduledEnd ?? start+durationMin，现引擎覆盖）。boarding
+      // 不受影响：仍上面强制必传 scheduledEnd，按晚计费/占晚口径不动。
+      const groomingDuration: ServiceDuration | null =
+        input.type === 'grooming' ? resolveServiceDuration(service, pet) : null;
       const end =
-        input.scheduledEnd ??
-        // 仅 grooming 可缺省（按服务时长）；boarding 上面已强制 scheduledEnd 必填
-        new Date(start.getTime() + (service.durationMin ?? 60) * 60_000);
+        input.type === 'boarding'
+          ? input.scheduledEnd! // boarding 上面已强制非空且晚于开始
+          : new Date(start.getTime() + (groomingDuration?.durationMin ?? 60) * 60_000);
       assertBookableTime(store, input.type, start, end);
 
       // v1.1 A-P0-10：寄养金额 = 单晚价 × 晚数（晚数 = ceil((end−start)/24h)，快照入 price_fen）；
@@ -693,32 +762,13 @@ export const appointmentRouter = router({
                 end,
               });
             } else {
-              const slot = await tx
-                .select()
-                .from(schema.storeSlots)
-                .where(
-                  and(
-                    eq(schema.storeSlots.storeId, input.storeId),
-                    eq(schema.storeSlots.slotStart, start),
-                  ),
-                )
-                .get();
-              if (slot) {
-                if (slot.bookedCount >= slot.capacity) {
-                  throw new TRPCError({ code: 'CONFLICT', message: '该时段已约满，请换个时间' });
-                }
-                await tx
-                  .update(schema.storeSlots)
-                  .set({ bookedCount: slot.bookedCount + 1, updatedAt: new Date() })
-                  .where(eq(schema.storeSlots.id, slot.id));
-              } else {
-                await tx.insert(schema.storeSlots).values({
-                  storeId: input.storeId,
-                  slotStart: start,
-                  capacity: DEFAULT_SLOT_CAPACITY,
-                  bookedCount: 1,
-                });
-              }
+              // B9a 任务 C：洗护按时长引擎输出占用连续 30min 槽（occupyGroomingSlots，
+              // 任一槽满员 CONFLICT 整体回滚；与 getWithServices 栅格连续过滤同口径）
+              await occupyGroomingSlots(txDb(tx), {
+                storeId: input.storeId,
+                start,
+                slots: groomingDuration?.slotsNeeded ?? 1,
+              });
             }
             const appt = await tx
               .insert(schema.appointments)
@@ -1172,15 +1222,27 @@ export const appointmentRouter = router({
       const start = input.scheduledStart;
       // B3-4（寄养改期）：boarding 必传 scheduledEnd（重选退房日）且须晚于入住时间——
       // 缺省 24h 会把多晚单静默压成 1 晚而金额快照不变（晚数/金额错位，见 B3-4 复现记录）；
-      // grooming 的 scheduledEnd 可缺省，按服务时长补齐（与 create 同口径）
+      // B9a 任务 C：grooming 改期的 scheduledEnd 与 create 同口径——一律以时长引擎输出
+      // 为准（宠物档案随单走），客户端传入的 grooming scheduledEnd 不再生效
       if (
         appt.type === 'boarding' &&
         (!input.scheduledEnd || input.scheduledEnd.getTime() <= start.getTime())
       ) {
         badRequest('寄养改期必须选择新的退房日期且晚于入住日期');
       }
+      const pet =
+        appt.type === 'grooming'
+          ? await ctx.db.select().from(schema.pets).where(eq(schema.pets.id, appt.petId)).get()
+          : null;
+      const groomingDuration: ServiceDuration | null =
+        appt.type === 'grooming'
+          ? // 服务行缺失（防御）时以空名占位 → 引擎回退默认 60min
+            resolveServiceDuration(service ?? { type: 'grooming', name: '', durationMin: null }, pet)
+          : null;
       const end =
-        input.scheduledEnd ?? new Date(start.getTime() + (service?.durationMin ?? 60) * 60_000);
+        appt.type === 'boarding'
+          ? input.scheduledEnd! // boarding 上面已强制非空且晚于开始
+          : new Date(start.getTime() + (groomingDuration?.durationMin ?? 60) * 60_000);
       assertBookableTime(store, appt.type as 'grooming' | 'boarding', start, end);
 
       const petName = await petNameOf(ctx.db, appt.petId);
@@ -1199,29 +1261,12 @@ export const appointmentRouter = router({
             end,
           });
         } else {
-          const slot = await tx
-            .select()
-            .from(schema.storeSlots)
-            .where(
-              and(eq(schema.storeSlots.storeId, appt.storeId), eq(schema.storeSlots.slotStart, start)),
-            )
-            .get();
-          if (slot) {
-            if (slot.bookedCount >= slot.capacity) {
-              throw new TRPCError({ code: 'CONFLICT', message: '该时段已约满，请换个时间' });
-            }
-            await tx
-              .update(schema.storeSlots)
-              .set({ bookedCount: slot.bookedCount + 1, updatedAt: new Date() })
-              .where(eq(schema.storeSlots.id, slot.id));
-          } else {
-            await tx.insert(schema.storeSlots).values({
-              storeId: appt.storeId,
-              slotStart: start,
-              capacity: DEFAULT_SLOT_CAPACITY,
-              bookedCount: 1,
-            });
-          }
+          // B9a 任务 C：洗护改期新槽按引擎时长占用连续 30min 槽（与 create 同函数同口径）
+          await occupyGroomingSlots(txDb(tx), {
+            storeId: appt.storeId,
+            start,
+            slots: groomingDuration?.slotsNeeded ?? 1,
+          });
         }
         // B2-6：客户改期同事务内 status 回退 pending + staffId 置空（重新走商家确认流）；
         // 商家改期保持状态与指派不变。新槽满槽抛 CONFLICT 时此处一并回滚。

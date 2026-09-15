@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { PageErrorBoundary } from '@philia/shared'
 import RequireAuth from './components/RequireAuth'
 import TabBar from './components/TabBar'
 import AppointmentDetailPage from './pages/AppointmentDetailPage'
@@ -73,7 +74,10 @@ export default function App() {
             path="/*"
             element={
               <RequireAuth>
-                <ProtectedRoutes />
+                {/* 批次 9a 任务 E：页级错误边界（按路由 key 重置，崩一屏不塌全端，TabBar 存活） */}
+                <PageErrorBoundary app="customer">
+                  <ProtectedRoutes />
+                </PageErrorBoundary>
               </RequireAuth>
             }
           />

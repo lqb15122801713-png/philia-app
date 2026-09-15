@@ -27,6 +27,7 @@ import { client, db } from './db';
 import { authHttpRoutes } from './auth/devLogin';
 import { wechatMiniAuthRoutes } from './auth/wechatMini';
 import { sessionMiddleware, type AuthVariables } from './auth/middleware';
+import { clientErrorRoute } from './routes/clientError';
 import { eventsRoute } from './routes/events';
 import { imagesRoute } from './routes/images';
 import { payCallbackRoute } from './routes/payCallback';
@@ -70,6 +71,7 @@ export function createApp(): Hono<{ Variables: AppVariables }> {
   app.route('/', uploadRoute); // POST /api/upload
   app.route('/', imagesRoute); // GET /api/img/*
   app.route('/', payCallbackRoute); // POST /api/pay/callback、/api/pay/mock-callback（mock 模式）
+  app.route('/', clientErrorRoute); // POST /api/client-error（批次 9a 任务 E：三端 ErrorBoundary 错误摘要上报，落 JSONL 日志+限流）
 
   // 5) tRPC：context 取会话中间件注入的 sessionUser
   app.use(

@@ -33,14 +33,14 @@ export default function TimeGridBlock({
   if (!day) return null;
   if (day.closed) {
     return (
-      <p className="rounded-card bg-sunken px-4 py-6 text-center text-caption text-ink-secondary" data-testid="gs-time-closed">
+      <p className="py-6 text-center text-caption text-ink-secondary" data-testid="gs-time-closed">
         门店当日休息，换个日期看看
       </p>
     );
   }
   if (day.grid.length === 0) {
     return (
-      <p className="rounded-card bg-sunken px-4 py-6 text-center text-caption text-ink-secondary" data-testid="gs-time-passed">
+      <p className="py-6 text-center text-caption text-ink-secondary" data-testid="gs-time-passed">
         今日营业时段已过，看看明天吧
       </p>
     );
@@ -71,12 +71,13 @@ export default function TimeGridBlock({
                   onClick={() => onSelect(t)}
                   data-testid={`gs-slot-${fmtHM(t)}`}
                   data-available={ok ? 'true' : 'false'}
-                  className={`rounded-input py-2.5 text-center font-number text-body transition ${
+                  data-slot-start={t.getTime()}
+                  className={`rounded-card border py-2.5 text-center font-number text-body transition ${
                     active
-                      ? 'bg-brand-primary font-semibold text-ink shadow-card'
+                      ? 'border-[1.5px] border-ink font-semibold text-ink'
                       : ok
-                        ? 'bg-card text-ink shadow-card active:scale-95'
-                        : 'cursor-not-allowed bg-sunken text-ink-placeholder line-through'
+                        ? 'border-line text-ink active:scale-95'
+                        : 'cursor-not-allowed border-transparent text-ink-placeholder line-through'
                   }`}
                 >
                   {fmtHM(t)}

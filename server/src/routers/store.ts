@@ -7,7 +7,9 @@
  * - store.getWithServices：public。门店详情 + active 服务项 + 可约时间槽（今天起 7 天
  *   按营业时间合成 30min 栅格，合并 store_slots 既有行的占用/容量；统一剔除
  *   「当前时间 +1h 缓冲」内时段与满槽——B3-5 W-2，与 assertBookableTime 同口径；
- *   传 serviceId 则按服务时长过滤——需 duration 覆盖的连续 30min 槽位全部有余量才算可约）。
+ *   传 serviceId 则按服务时长过滤——需 duration 覆盖的连续 30min 槽位全部有余量才算可约；
+ *   B9a 任务 C：可选 petId——逐服务输出时长引擎结果 serviceDurations 并以引擎时长
+ *   做连续性过滤，不传 petId 行为不变）。
  * - store.upsertService：merchant 本店。新增/编辑服务项（含寄养房型）；越店写 FORBIDDEN。
  * - store.staffList：merchant 本店。员工 + 技能 + 排班 + 绩效（完成单数/好评率，
  *   从 appointments 聚合）。
@@ -30,6 +32,7 @@ import { and, desc, eq, gt, gte, inArray, isNull, lt } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import { merchantProcedure, publicProcedure, router, type Context } from '../trpc';
+import { resolveServiceDuration, type ServiceDuration } from '../config/durationEngine';
 import { boardingNightDates, BOOKING_LEAD_BUFFER_MS, DEFAULT_BOARDING_ROOM_COUNT, DEFAULT_SLOT_CAPACITY, storeDayStartMs, storeWallclock } from './appointment';
 
 /** 时间槽粒度：30min（与 seed 的 store_slots 生成粒度一致） */
@@ -132,6 +135,13 @@ export const storeRouter = router({
         storeId: z.string().min(1),
         /** 可选：按服务时长过滤可约槽（需连续槽位均有剩余容量） */
         serviceId: z.string().min(1).optional(),
+        /**
+         * 可选（B9a 任务 C）：宠物 ID——传入时按该宠物档案经时长引擎计算各服务
+         * 时长（响应扩展 serviceDurations；可约槽「时长连续」过滤的 slotsNeeded
+         * 随之改用引擎输出）。不传时行为与之前完全一致（按 services.duration_min）。
+         * 本接口为公开只读：仅回传时长数值（分钟），不回传宠物档案任何字段。
+         */
+        petId: z.string().min(1).optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -151,14 +161,35 @@ export const storeRouter = router({
         .where(and(eq(schema.services.storeId, store.id), eq(schema.services.active, true)))
         .orderBy(schema.services.createdAt);
 
-      // 服务时长 → 需要的连续 30min 槽数（boarding 无时长按 1 槽起约）
+      // B9a 任务 C：petId 传入时取宠物档案（物种/体重/品种）供时长引擎推导；
+      // 查不到按「无档案」回退默认时长（不阻断查询）
+      const pet = input.petId
+        ? ((await ctx.db
+            .select({
+              species: schema.pets.species,
+              breed: schema.pets.breed,
+              weightKg: schema.pets.weightKg,
+            })
+            .from(schema.pets)
+            .where(eq(schema.pets.id, input.petId))
+            .get()) ?? null)
+        : null;
+      /** 逐服务引擎时长（仅 petId 传入时输出；boarding 项 durationMin 恒 null） */
+      const serviceDurations: Record<string, ServiceDuration> | null = input.petId
+        ? Object.fromEntries(services.map((s) => [s.id, resolveServiceDuration(s, pet)]))
+        : null;
+
+      // 服务时长 → 需要的连续 30min 槽数（boarding 无时长按 1 槽起约；
+      // B9a 任务 C：petId 传入时改用引擎输出时长，引擎回退时与服务默认 durationMin 同值）
       let slotsNeeded = 1;
       if (input.serviceId) {
         const svc = services.find((s) => s.id === input.serviceId);
         if (!svc) {
           throw new TRPCError({ code: 'NOT_FOUND', message: '服务项不存在或已下架' });
         }
-        slotsNeeded = svc.durationMin ? Math.max(1, Math.ceil(svc.durationMin / 30)) : 1;
+        slotsNeeded =
+          serviceDurations?.[svc.id]?.slotsNeeded ??
+          (svc.durationMin ? Math.max(1, Math.ceil(svc.durationMin / 30)) : 1);
       }
 
       const now = new Date();
@@ -227,7 +258,7 @@ export const storeRouter = router({
         return true;
       });
 
-      return { store, services, slots: available };
+      return { store, services, slots: available, serviceDurations };
     }),
 
   /**

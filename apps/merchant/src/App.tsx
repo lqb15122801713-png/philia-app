@@ -9,6 +9,7 @@
  */
 
 import { Navigate, Route, Routes, useParams } from 'react-router-dom'
+import { PageErrorBoundary } from '@philia/shared'
 import { Toaster } from '@/components/ui/sonner'
 import RequireMerchant from './components/RequireMerchant'
 import TabBar from './components/TabBar'
@@ -74,7 +75,10 @@ export default function App() {
               <MerchantEventsProvider>
                 {/* 平板横屏优先：内容区放宽到 max-w-5xl，手机自然单列降级 */}
                 <main className="mx-auto w-full max-w-5xl pb-24">
-                  <ProtectedRoutes />
+                  {/* 批次 9a 任务 E：页级错误边界（派单链路 /appointments 等崩一屏不塌全端，TabBar/SSE 存活） */}
+                  <PageErrorBoundary app="merchant">
+                    <ProtectedRoutes />
+                  </PageErrorBoundary>
                 </main>
                 <TabBar />
               </MerchantEventsProvider>

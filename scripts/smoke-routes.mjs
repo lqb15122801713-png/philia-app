@@ -60,6 +60,7 @@ const APPT_ID = process.env.SMOKE_APPT_ID ?? '01M256D240E19GWNG2QMFV3Q8V';
 const ROUTES = [
   /* ---- 客户端 ---- */
   { app: 'customer', path: '/dev-login', anchors: ['登录'] },
+  { app: 'customer', path: '/', anchors: ['菲丽亚', '预约', '商城'], expectPath: '/home', note: 'B9a 根路径重定向' },
   { app: 'customer', path: '/home', anchors: ['菲丽亚', '预约', '商城'] },
   { app: 'customer', path: '/mall', anchors: ['商城', '商品'] },
   { app: 'customer', path: '/mall/cart', anchors: ['购物车'] },
@@ -69,6 +70,7 @@ const ROUTES = [
   { app: 'customer', path: '/booking', anchors: ['预约服务', '预约'] },
   { app: 'customer', path: '/booking/grooming', anchors: ['预约洗护'], note: 'B4 修复路由' },
   { app: 'customer', path: '/booking/grooming/', anchors: ['预约洗护'], note: '尾斜杠变体' },
+  { app: 'customer', path: '/booking/success', anchors: ['预约', '缺少预约参数'], note: 'B9a 任务B 一键再约落点' },
   { app: 'customer', path: '/appointments', anchors: ['预约'] },
   { app: 'customer', path: `/appointments/${APPT_ID}`, anchors: ['预约', '核销'], serverDep: true, note: 'A1 白屏群' },
   { app: 'customer', path: '/philia/pets', anchors: ['宠物'], note: 'A4 白屏群' },
