@@ -11,9 +11,11 @@
  *   1. POST /api/auth/dev-login 三角色各登一次（客户 / 商家 owner / 员工），拿 cookie
  *   2. 客户：store.listNearby → store.getWithServices（服务 + 可约槽位）→ appointment.create
  *      （create 前已完成 push.subscribe；create 后立刻以 watch=<aid> 建立 SSE 流后台读）
- *   3. 商家：appointment.confirm → appointment.assign（派给种子员工）
- *   4. 客户：appointment.getCode → 员工：appointment.checkin（二维码原文）
- *   5. 员工：POST /api/upload（jimp 现造 JPEG）→ serviceStep.addPhotos 登记
+ *   3. 商家：appointment.confirm → appointment.assign（派给 groomer 阿强）
+ *   4. 客户：appointment.getCode → 员工（groomer）核销被拒（批次 S1 双角色断言）
+ *      → 员工（frontdesk）：appointment.checkin（二维码原文；S1-R1 断言①原指派保留）
+ *      → 未指派单前台核销（S1-R1 断言② staff_id 仍 NULL + 无 assigned 事件）
+ *   5. 美容师（阿强，被指派人）：POST /api/upload（jimp 现造 JPEG）→ serviceStep.addPhotos 登记
  *      → 逐步 confirmStep 走完六步（张数按 min：1/2/3/2/2/0，before_after 需 before+after 各 1）
  *   6. 校验预约 completed；商家 markPaid；客户 review
  *   7. SSE 断言：客户流依次收到 appointment.confirmed / assigned / checkedin /
@@ -212,9 +214,10 @@ async function main(): Promise<void> {
   const byKimi = (kimiId: string) => seedUsers.find((u) => u.kimiId === kimiId);
   const customerUser = byKimi('seed_kimi_customer');
   const ownerUser = byKimi('seed_kimi_owner');
-  const staffUser = byKimi('seed_kimi_staff1');
-  check('种子用户齐全（customer/owner/staff1）', !!(customerUser && ownerUser && staffUser));
-  if (!customerUser || !ownerUser || !staffUser) throw new Error('种子用户缺失');
+  const staffUser = byKimi('seed_kimi_staff1'); // 小美：批次 S1 起为 frontdesk（核销执行人）
+  const groomerUser = byKimi('seed_kimi_staff2'); // 阿强：groomer（核销应被拒）
+  check('种子用户齐全（customer/owner/staff1/staff2）', !!(customerUser && ownerUser && staffUser && groomerUser));
+  if (!customerUser || !ownerUser || !staffUser || !groomerUser) throw new Error('种子用户缺失');
 
   /* ---------- 1. 启动 server 子进程（7200） ---------- */
   server = spawn(process.execPath, [TSX_CLI, 'src/index.ts'], {
@@ -250,7 +253,8 @@ async function main(): Promise<void> {
   const customerCookie = await devLogin(customerUser!.id);
   const ownerCookie = await devLogin(ownerUser!.id);
   const staffCookie = await devLogin(staffUser!.id);
-  check('三角色 dev-login 均签发会话 cookie', !!(customerCookie && ownerCookie && staffCookie));
+  const groomerCookie = await devLogin(groomerUser!.id);
+  check('三角色 dev-login 均签发会话 cookie', !!(customerCookie && ownerCookie && staffCookie && groomerCookie));
 
   const me = await trpcQuery<{ roles: string[]; store: { id: string } | null }>('auth.me', {
     cookie: ownerCookie,
@@ -334,14 +338,14 @@ async function main(): Promise<void> {
   startSseReader(sseRes, frames);
   await sleep(300); // 等连接注册进 Hub
 
-  /* ---------- 6. 商家：确认 → 派单 ---------- */
-  const staffList = await trpcQuery<{ staff: Array<{ id: string; name: string; skills: string[] | null }> }>(
+  /* ---------- 6. 商家：确认 → 派单（S1-R1：派给 groomer 阿强，验证前台核销豁免归属+不认领） ---------- */
+  const staffList = await trpcQuery<{ staff: Array<{ id: string; name: string; role: string; skills: string[] | null }> }>(
     'store.staffList',
     { cookie: ownerCookie },
   );
-  const staffRow = staffList.staff.find((s) => s.skills?.some((k) => ['wash', 'groom'].includes(k)));
-  check('store.staffList 找到可承接员工', !!staffRow, staffList.staff.map((s) => s.name));
-  if (!staffRow) throw new Error('无员工');
+  const staffRow = staffList.staff.find((s) => s.name === '阿强' && s.role === 'groomer');
+  check('store.staffList 找到承接美容师（阿强=groomer）', !!staffRow, staffList.staff.map((s) => s.name));
+  if (!staffRow) throw new Error('无美容师');
 
   const confirmed = await trpcMutate<{ status: string }>('appointment.confirm', {
     cookie: ownerCookie,
@@ -353,7 +357,7 @@ async function main(): Promise<void> {
     cookie: ownerCookie,
     input: { appointmentId: aid, staffId: staffRow.id },
   });
-  check('appointment.assign 派单成功', assigned.staffId === staffRow.id, assigned);
+  check('appointment.assign 派单成功（指派阿强）', assigned.staffId === staffRow.id, assigned);
 
   /* ---------- 7. 客户出码 → 员工扫码核销 ---------- */
   const codeRes = await trpcQuery<{ raw: string; code: string }>('appointment.getCode', {
@@ -362,20 +366,88 @@ async function main(): Promise<void> {
   });
   check('appointment.getCode 返回二维码原文与人工码', !!codeRes.raw && /^\{.*\}$/.test(codeRes.raw), codeRes.code);
 
+  /* ---------- 7a. 批次 S1（任务 B）双角色权限断言：groomer 核销被拒 ---------- */
+  const groomerQr = await trpcMutate('appointment.checkin', {
+    cookie: groomerCookie,
+    input: { qr: codeRes.raw },
+  }).then(
+    () => null,
+    (e) => e as TrpcHttpError,
+  );
+  check(
+    '批次 S1：groomer 扫码核销 → 403 FORBIDDEN「核销需前台账号操作」',
+    groomerQr instanceof TrpcHttpError &&
+      groomerQr.httpStatus === 403 &&
+      groomerQr.code === 'FORBIDDEN' &&
+      groomerQr.message.includes('核销需前台账号操作'),
+    groomerQr && { status: groomerQr.httpStatus, code: groomerQr.code, message: groomerQr.message },
+  );
+  const groomerCode = await trpcMutate('appointment.checkin', {
+    cookie: groomerCookie,
+    input: { code: codeRes.code },
+  }).then(
+    () => null,
+    (e) => e as TrpcHttpError,
+  );
+  check(
+    '批次 S1：groomer 人工码核销 → 403 FORBIDDEN「核销需前台账号操作」',
+    groomerCode instanceof TrpcHttpError &&
+      groomerCode.httpStatus === 403 &&
+      groomerCode.code === 'FORBIDDEN' &&
+      groomerCode.message.includes('核销需前台账号操作'),
+    groomerCode && { status: groomerCode.httpStatus, code: groomerCode.code, message: groomerCode.message },
+  );
+  // boarding.checkinStay 同口径：groomer → FORBIDDEN（角色判定先于预约查询， dummy id 也被拒）
+  const groomerStay = await trpcMutate('boarding.checkinStay', {
+    cookie: groomerCookie,
+    input: { appointmentId: 'appt-not-exist', checkinWeightKg: 4.2, belongings: [] },
+  }).then(
+    () => null,
+    (e) => e as TrpcHttpError,
+  );
+  check(
+    '批次 S1：groomer 入住登记（checkinStay）→ 403 FORBIDDEN「核销需前台账号操作」',
+    groomerStay instanceof TrpcHttpError &&
+      groomerStay.httpStatus === 403 &&
+      groomerStay.code === 'FORBIDDEN' &&
+      groomerStay.message.includes('核销需前台账号操作'),
+    groomerStay && { status: groomerStay.httpStatus, code: groomerStay.code, message: groomerStay.message },
+  );
+  // 前台过角色校验：同一 dummy id 不再吃 FORBIDDEN（落后续预约查询报错）
+  const frontdeskStay = await trpcMutate('boarding.checkinStay', {
+    cookie: staffCookie,
+    input: { appointmentId: 'appt-not-exist', checkinWeightKg: 4.2, belongings: [] },
+  }).then(
+    () => null,
+    (e) => e as TrpcHttpError,
+  );
+  check(
+    '批次 S1：frontdesk 入住登记越过角色校验（dummy id 报非 FORBIDDEN 业务错）',
+    frontdeskStay instanceof TrpcHttpError && frontdeskStay.code !== 'FORBIDDEN',
+    frontdeskStay && { status: frontdeskStay.httpStatus, code: frontdeskStay.code, message: frontdeskStay.message },
+  );
+
+  /* ---------- 7b. 前台扫码核销（全链路）+ S1-R1 断言①：豁免归属、原指派保留 ---------- */
   const checkin = await trpcMutate<{
-    appointment: { status: string };
+    appointment: { status: string; staffId: string | null };
     steps: Array<{ stepKey: string; status: string }>;
     nextRoute: string;
     idempotent: boolean;
+    claimed: boolean;
   }>('appointment.checkin', { cookie: staffCookie, input: { qr: codeRes.raw } });
   check(
-    'appointment.checkin（二维码原文）→ in_service + 六步初始化',
+    'appointment.checkin（frontdesk 二维码原文）→ in_service + 六步初始化',
     checkin.appointment.status === 'in_service' && checkin.steps.length === 6 &&
       checkin.steps[0]!.status === 'active' && checkin.steps.slice(1).every((s) => s.status === 'locked'),
     checkin,
   );
+  check(
+    'S1-R1 断言①：已指派给阿强的单被小美（frontdesk）核销成功 → staff_id 仍为阿强（原指派保留，claimed=false）',
+    checkin.appointment.staffId === staffRow.id && checkin.claimed === false,
+    { staffId: checkin.appointment.staffId, expect: staffRow.id, claimed: checkin.claimed },
+  );
 
-  /* ---------- 8. 员工：上传 → 登记照片 → 逐步确认 ---------- */
+  /* ---------- 8. 美容师（阿强，被指派人）：上传 → 登记照片 → 逐步确认 ---------- */
   const { Jimp } = await import('jimp');
   async function uploadOne(stepKey: string): Promise<{ url: string; thumbUrl: string }> {
     const img = new Jimp({ width: 320, height: 240, color: 0x66aaffff });
@@ -385,7 +457,7 @@ async function main(): Promise<void> {
     fd.append('relDir', `appointment/${aid}/${stepKey}`);
     const res = await fetch(`${BASE}/api/upload`, {
       method: 'POST',
-      headers: { cookie: staffCookie },
+      headers: { cookie: groomerCookie },
       body: fd,
     });
     const body = (await res.json()) as { url?: string; thumbUrl?: string; message?: string };
@@ -408,7 +480,7 @@ async function main(): Promise<void> {
       const up = await uploadOne(plan.key);
       if (!firstUploadUrl) firstUploadUrl = up.url;
       const added = await trpcMutate<{ added: number; totalValid: number }>('serviceStep.addPhotos', {
-        cookie: staffCookie,
+        cookie: groomerCookie,
         input: {
           appointmentId: aid,
           stepKey: plan.key,
@@ -423,7 +495,7 @@ async function main(): Promise<void> {
     }
     const done = await trpcMutate<{ nextStepKey: string | null; appointmentCompleted: boolean }>(
       'serviceStep.confirmStep',
-      { cookie: staffCookie, input: { appointmentId: aid, stepKey: plan.key } },
+      { cookie: groomerCookie, input: { appointmentId: aid, stepKey: plan.key } },
     );
     check(
       `serviceStep.confirmStep(${plan.key})`,
@@ -432,7 +504,7 @@ async function main(): Promise<void> {
     );
   }
 
-  // 顺带验证签名图片可访问（imagesRoute 全链路）
+  // 顺带验证签名图片可访问（imagesRoute 全链路；阿强上传，前台小美读取验证跨角色签名访问）
   const imgRes = await fetch(`${BASE}${firstUploadUrl}`, { headers: { cookie: staffCookie } });
   check('GET /api/img/* 签名 URL 可访问（200 image/jpeg）',
     imgRes.status === 200 && (imgRes.headers.get('content-type') ?? '').includes('image/jpeg'),
@@ -466,6 +538,57 @@ async function main(): Promise<void> {
     10_000,
   );
   sseController.abort();
+
+  /* ---------- 10b. S1-R1 断言②：未指派单前台核销 → staff_id 仍 NULL + 无 assigned 事件 ----------
+   * 置于 SSE abort 之后：第二单（aid2）与主单同客户，其 confirmed/checkedin 会经
+   * user 频道进入 SSE 帧，若放在第 10 节前会污染序列断言（首轮实测多拉一条 confirmed）。 */
+  const slot2 = cat2.slots.find((s) => {
+    if (s.slotStart.getTime() === slot.slotStart.getTime()) return false;
+    const shifted = new Date(s.slotStart.getTime() + 8 * 3600 * 1000);
+    const h = shifted.getUTCHours();
+    return h >= 10 && h <= 16 && shifted.getUTCMinutes() === 0;
+  });
+  check('找到第二个可约槽（未指派单用）', !!slot2);
+  if (!slot2) throw new Error('无第二槽位');
+  const appt2 = await trpcMutate<{ id: string; status: string; code: string }>('appointment.create', {
+    cookie: customerCookie,
+    input: {
+      storeId: store.id,
+      petId,
+      serviceId: service.id,
+      type: 'grooming',
+      scheduledStart: slot2.slotStart,
+      paymentMode: 'pay_at_store',
+      note: 'e2e S1-R1 未指派核销单',
+    },
+  });
+  const aid2 = appt2.id;
+  await trpcMutate('appointment.confirm', { cookie: ownerCookie, input: { appointmentId: aid2 } });
+  const codeRes2 = await trpcQuery<{ raw: string; code: string }>('appointment.getCode', {
+    cookie: customerCookie,
+    input: { appointmentId: aid2 },
+  });
+  const assignedBefore = (await db.select().from(schema.eventOutbox)).filter(
+    (r) => r.eventType === 'appointment.assigned' && (r.payload as Record<string, unknown>)?.appointmentId === aid2,
+  ).length;
+  const checkin2 = await trpcMutate<{
+    appointment: { status: string; staffId: string | null };
+    idempotent: boolean;
+    claimed: boolean;
+  }>('appointment.checkin', { cookie: staffCookie, input: { code: codeRes2.code } });
+  const assignedAfter = (await db.select().from(schema.eventOutbox)).filter(
+    (r) => r.eventType === 'appointment.assigned' && (r.payload as Record<string, unknown>)?.appointmentId === aid2,
+  ).length;
+  check(
+    'S1-R1 断言②：未指派单前台核销成功 → staff_id 仍为 NULL（不认领，claimed=false）',
+    checkin2.appointment.status === 'in_service' && checkin2.appointment.staffId === null && checkin2.claimed === false,
+    { staffId: checkin2.appointment.staffId, claimed: checkin2.claimed },
+  );
+  check(
+    'S1-R1 断言②：未指派单核销后 outbox 无新增 appointment.assigned 事件',
+    assignedBefore === 0 && assignedAfter === 0,
+    { assignedBefore, assignedAfter },
+  );
   const deduped = [...new Map(frames.filter((f) => f.id).map((f) => [f.id, f])).values()];
   const typeSeq = deduped.map((f) => f.event);
   const expectedSeq = [
@@ -558,6 +681,100 @@ async function main(): Promise<void> {
     '未登录调 appointment.create → 401 UNAUTHORIZED',
     anon instanceof TrpcHttpError && anon.httpStatus === 401 && anon.code === 'UNAUTHORIZED',
     anon && { status: anon.httpStatus, code: anon.code },
+  );
+
+  /* ---------- 12b. 批次 S1（任务 D）：store.updateStaff 权限收口 + 角色/状态联动 ---------- */
+  // 第二商家夹具（他店 owner）：直插 users/user_roles/stores
+  const [owner2] = await db
+    .insert(schema.users)
+    .values({ kimiId: 'seed_e2e_owner2', nickname: 'e2e 他店店主', phone: '13900000999' })
+    .returning();
+  await db.insert(schema.userRoles).values({ userId: owner2.id, role: 'merchant_owner' });
+  await db.insert(schema.stores).values({ ownerId: owner2.id, name: 'e2e 他店', status: 'active' });
+  const owner2Cookie = await devLogin(owner2.id);
+
+  const staffRowsNow = await trpcQuery<{ staff: Array<{ id: string; name: string; role: string; status: string }> }>(
+    'store.staffList',
+    { cookie: ownerCookie },
+  );
+  const aqiang = staffRowsNow.staff.find((s) => s.name === '阿强');
+  check('store.staffList 行带 role/status 字段（阿强=groomer/active）',
+    !!aqiang && aqiang.role === 'groomer' && aqiang.status === 'active', aqiang);
+  if (!aqiang) throw new Error('阿强缺失');
+
+  const crossStore = await trpcMutate('store.updateStaff', {
+    cookie: owner2Cookie,
+    input: { staffId: aqiang.id, role: 'frontdesk' },
+  }).then(
+    () => null,
+    (e) => e as TrpcHttpError,
+  );
+  check(
+    '批次 S1：越店 updateStaff（他店 owner 改本店员工）→ 403 FORBIDDEN',
+    crossStore instanceof TrpcHttpError && crossStore.httpStatus === 403 && crossStore.code === 'FORBIDDEN',
+    crossStore && { status: crossStore.httpStatus, code: crossStore.code },
+  );
+
+  const nonMerchant = await trpcMutate('store.updateStaff', {
+    cookie: customerCookie,
+    input: { staffId: aqiang.id, role: 'frontdesk' },
+  }).then(
+    () => null,
+    (e) => e as TrpcHttpError,
+  );
+  check(
+    '批次 S1：非商家（customer）updateStaff → 403 FORBIDDEN',
+    nonMerchant instanceof TrpcHttpError && nonMerchant.httpStatus === 403 && nonMerchant.code === 'FORBIDDEN',
+    nonMerchant && { status: nonMerchant.httpStatus, code: nonMerchant.code },
+  );
+
+  const emptyInput = await trpcMutate('store.updateStaff', {
+    cookie: ownerCookie,
+    input: { staffId: aqiang.id },
+  }).then(
+    () => null,
+    (e) => e as TrpcHttpError,
+  );
+  check(
+    '批次 S1：role/status 均缺省 → 400 BAD_REQUEST（至少传一项）',
+    emptyInput instanceof TrpcHttpError && emptyInput.httpStatus === 400 && emptyInput.code === 'BAD_REQUEST',
+    emptyInput && { status: emptyInput.httpStatus, code: emptyInput.code },
+  );
+
+  // 正向：改角色 → staffList 反映 → 员工端 auth.me 下次拉取生效（联动）
+  const toFrontdesk = await trpcMutate<{ staff: { role: string; status: string } }>('store.updateStaff', {
+    cookie: ownerCookie,
+    input: { staffId: aqiang.id, role: 'frontdesk' },
+  });
+  check('批次 S1：本店 owner 改阿强 role→frontdesk 成功', toFrontdesk.staff.role === 'frontdesk', toFrontdesk.staff);
+  const groomerMe = await trpcQuery<{ staff: { role: string; status: string } | null }>('auth.me', {
+    cookie: groomerCookie,
+  });
+  check(
+    '批次 S1：员工端下次拉取（auth.me）即见新角色 frontdesk（联动生效）',
+    groomerMe.staff?.role === 'frontdesk',
+    groomerMe.staff,
+  );
+
+  // 改回 groomer 并停用 → staffList 反映（留 groomer 身份供后续断言一致性）
+  const backToGroomer = await trpcMutate<{ staff: { role: string; status: string } }>('store.updateStaff', {
+    cookie: ownerCookie,
+    input: { staffId: aqiang.id, role: 'groomer', status: 'suspended' },
+  });
+  check(
+    '批次 S1：改回 groomer + 停用（role/status 同传）成功',
+    backToGroomer.staff.role === 'groomer' && backToGroomer.staff.status === 'suspended',
+    backToGroomer.staff,
+  );
+  const listAfter = await trpcQuery<{ staff: Array<{ id: string; name: string; role: string; status: string }> }>(
+    'store.staffList',
+    { cookie: ownerCookie },
+  );
+  const aqiangAfter = listAfter.staff.find((s) => s.id === aqiang.id);
+  check(
+    '批次 S1：staffList 刷新一致（阿强=groomer/suspended）',
+    aqiangAfter?.role === 'groomer' && aqiangAfter?.status === 'suspended',
+    aqiangAfter,
   );
 
   /* ---------- 13. 客户端错误上报（批次 9a 任务 E · POST /api/client-error） ---------- */

@@ -26,6 +26,7 @@ import { schema } from '../db';
 import { emitEvent, broadcastNow, type Db as BusDb } from '../realtime/bus';
 import { EventType } from '../realtime/events';
 import {
+  assertFrontdeskStaff,
   customerProcedure,
   merchantProcedure,
   router,
@@ -53,10 +54,13 @@ const mealItem = z.object({
 /**
  * 取寄养预约并校验「本店」归属（staff：本店且未指派/指派给本人；merchant：本店）。
  * 预约不存在 NOT_FOUND；非寄养类 / 越店 / 越权抛相应错误。
+ * S1-R1：opts.staffStorewide=true 时 staff 放宽为「本店任意员工」（仅 checkinStay
+ * 在 assertFrontdeskStaff 之后使用——前台到店登记豁免归属；其余过程不传，口径不变）。
  */
 async function getBoardingAppointment(
   ctx: Context & { user: NonNullable<Context['user']> },
   appointmentId: string,
+  opts?: { staffStorewide?: boolean },
 ): Promise<AppointmentRow> {
   const appt = await ctx.db
     .select()
@@ -74,7 +78,7 @@ async function getBoardingAppointment(
   const staffOk =
     !!user.staffId &&
     user.storeId === appt.storeId &&
-    (appt.staffId === null || appt.staffId === user.staffId);
+    (opts?.staffStorewide === true || appt.staffId === null || appt.staffId === user.staffId);
   const merchantOk =
     (user.roles.includes('merchant_owner') || user.roles.includes('merchant_manager')) &&
     user.storeId === appt.storeId;
@@ -96,7 +100,7 @@ async function petNameOf(ctx: Context, petId: string): Promise<string | undefine
 }
 
 export const boardingRouter = router({
-  /** 入住登记（staff 本店；幂等：已登记则更新） */
+  /** 入住登记（staff 本店；幂等：已登记则更新；批次 S1 收口前台 + R1 到店登记口径：豁免归属） */
   checkinStay: staffProcedure
     .input(
       z.object({
@@ -107,7 +111,10 @@ export const boardingRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const appt = await getBoardingAppointment(ctx, input.appointmentId);
+      // 批次 S1 任务 B：与 appointment.checkin 同口径——仅前台可入住登记
+      await assertFrontdeskStaff(ctx);
+      // S1-R1：前台=到店登记，豁免归属（本店任意寄养单，不论指派给谁；同店校验保留）
+      const appt = await getBoardingAppointment(ctx, input.appointmentId, { staffStorewide: true });
       if (appt.status !== 'in_boarding') {
         throw new TRPCError({
           code: 'BAD_REQUEST',

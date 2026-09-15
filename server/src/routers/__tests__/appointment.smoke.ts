@@ -9,7 +9,8 @@
  * 覆盖：
  * 1. create 占槽成功；同槽 capacity 打满后第二单 CONFLICT（不超卖）；归属/type/营业时间/过去时间校验
  * 2. getCode 签名验证通过；篡改 aid/exp 被拒；tw-1 窗口接受、tw-2 拒绝；过期 exp 拒绝
- * 3. checkin 全流程：未指派 B 核销成功并自动认领；已指派 A 的单被 B 核销拒绝；非同店拒绝；
+ * 3. checkin 全流程：S1-R1 到店登记口径——未指派 B（frontdesk）核销成功不认领（staff_id 留 NULL）；
+ *    已指派 A 的单被 B 核销成功且原指派保留（豁免归属）；非同店拒绝；groomer 拒绝；
  *    重复扫码幂等返回；连续失败 5 次后第 6 次 TOO_MANY_REQUESTS
  * 4. grooming checkin 后六步初始化（step1 active、2-6 locked、required_photos 1/2/3/2/2/0）；
  *    boarding checkin 建 boarding_stays 且无 steps
@@ -144,10 +145,11 @@ try {
     { id: 's-2', ownerId: 'u-m', name: '冒烟二号店', openHours: OPEN_ALL, status: 'active' },
   ]);
   await db.insert(schema.staff).values([
-    { id: 'st-a', storeId: 's-1', userId: 'u-a', name: '员工A', skills: ['wash', 'groom'], schedule: SCHED_FULL, status: 'active' },
-    { id: 'st-b', storeId: 's-1', userId: 'u-b', name: '员工B', skills: ['wash', 'boarding'], schedule: SCHED_FULL, status: 'active' },
-    { id: 'st-c', storeId: 's-2', userId: 'u-c', name: '他店员工', skills: ['wash', 'groom', 'boarding'], schedule: SCHED_FULL, status: 'active' },
-    { id: 'st-d', storeId: 's-1', userId: 'u-d', name: '员工D', skills: ['boarding'], schedule: {}, status: 'active' }, // 无排班
+    // 批次 S1：核销收口前台——执行核销的 A/B/C 夹具为 frontdesk；D 为 groomer（角色拒绝断言用）
+    { id: 'st-a', storeId: 's-1', userId: 'u-a', name: '员工A', role: 'frontdesk', skills: ['wash', 'groom'], schedule: SCHED_FULL, status: 'active' },
+    { id: 'st-b', storeId: 's-1', userId: 'u-b', name: '员工B', role: 'frontdesk', skills: ['wash', 'boarding'], schedule: SCHED_FULL, status: 'active' },
+    { id: 'st-c', storeId: 's-2', userId: 'u-c', name: '他店员工', role: 'frontdesk', skills: ['wash', 'groom', 'boarding'], schedule: SCHED_FULL, status: 'active' },
+    { id: 'st-d', storeId: 's-1', userId: 'u-d', name: '员工D', role: 'groomer', skills: ['boarding'], schedule: {}, status: 'active' }, // 无排班
   ]);
   await db.insert(schema.pets).values([
     { id: 'p-1', ownerId: 'u-c1', name: '豆豆', species: 'dog' },
@@ -408,29 +410,29 @@ try {
   );
 
   /* ==================== 3. checkin 全流程 ==================== */
-  console.log('\n[3] checkin：认领 / 归属 / 幂等 / 防爆破限流');
-  // 3.1 未指派单：员工 B 扫二维码核销成功并自动认领
+  console.log('\n[3] checkin：到店登记（S1-R1 豁免归属/不认领）/ 幂等 / 防爆破限流');
+  // 3.1 未指派单：员工 B（frontdesk）扫二维码核销成功；S1-R1：不认领（staff_id 仍 NULL）
   const ck1 = await bStaff.checkin({ qr: codeRes.raw });
   check(
-    '未指派单：B 扫码核销成功 → in_service 且自动认领（staff_id=st-b）',
+    'S1-R1：未指派单 B 扫码核销成功 → in_service 且不认领（staff_id 仍 NULL，claimed=false）',
     ck1.appointment.status === 'in_service' &&
-      ck1.appointment.staffId === 'st-b' &&
-      ck1.claimed === true &&
+      ck1.appointment.staffId === null &&
+      ck1.claimed === false &&
       ck1.idempotent === false,
     ck1.appointment,
   );
   check('grooming 核销 → nextRoute=/execute/:id', ck1.nextRoute === `/execute/${appt1.id}`);
   check(
-    '认领补发 appointment.assigned → staff + user 频道',
-    (await countOutbox('staff:st-b', 'appointment.assigned')) === 1 &&
-      (await countOutbox('user:u-c1', 'appointment.assigned')) === 1,
+    'S1-R1：未指派核销不补发 appointment.assigned（staff/user 频道均 0 条）',
+    (await countOutbox('staff:st-b', 'appointment.assigned')) === 0 &&
+      (await countOutbox('user:u-c1', 'appointment.assigned')) === 0,
   );
   check(
     'appointment.checkedin → appointment 频道',
     (await countOutbox(`appointment:${appt1.id}`, 'appointment.checkedin')) === 1,
   );
 
-  // 3.2 已指派 A 的单被 B 核销 → 拒绝
+  // 3.2 已指派 A 的单被 B（frontdesk）核销 → S1-R1：豁免归属核销成功，原指派保留
   const appt2 = await c1.create({
     storeId: 's-1',
     petId: 'p-1',
@@ -441,14 +443,25 @@ try {
   });
   await m1.confirm({ appointmentId: appt2.id });
   await m1.assign({ appointmentId: appt2.id, staffId: 'st-a' });
+  const ck2 = await bStaff.checkin({ code: appt2.code });
   check(
-    '已指派 A 的单被 B 核销 → FORBIDDEN',
-    await rejects(bStaff.checkin({ code: appt2.code }), 'FORBIDDEN', /指派/),
+    'S1-R1：已指派 A 的单被 B 核销成功 → in_service 且 staff_id 仍为 st-a（原指派保留）',
+    ck2.appointment.status === 'in_service' &&
+      ck2.appointment.staffId === 'st-a' &&
+      ck2.claimed === false,
+    ck2.appointment,
   );
-  // 3.3 非同店员工核销 → 拒绝
+  // 3.3 非同店员工核销 → 拒绝（同店校验保留）
   check(
     '非同店员工核销 → FORBIDDEN',
     await rejects(cStaff.checkin({ code: appt2.code }), 'FORBIDDEN', /本店/),
+  );
+  // 3.3b 批次 S1（任务 B）：美容师（groomer）核销 → FORBIDDEN「核销需前台账号操作」
+  // （角色判定先于归属/幂等/限流，且不计入防爆破失败次数）
+  const dStaff = appointmentRouter.createCaller(ctxStaff('u-d', 'st-d', 's-1'));
+  check(
+    '批次 S1：groomer 核销 → FORBIDDEN「核销需前台账号操作」',
+    await rejects(dStaff.checkin({ code: appt2.code }), 'FORBIDDEN', /核销需前台账号操作/),
   );
   // 3.4 重复扫码 → 幂等返回当前进度，不产生重复记录/事件
   const totalBeforeIdem = await totalOutbox();
@@ -581,10 +594,10 @@ try {
   await m1.confirm({ appointmentId: appt3.id });
   const ck3 = await aStaff.checkin({ code: appt3.code });
   check(
-    'boarding 人工码核销 → in_boarding + 认领 + nextRoute=/boarding/:id/checkin',
+    'boarding 人工码核销 → in_boarding + 不认领（staff_id 仍 NULL）+ nextRoute=/boarding/:id/checkin',
     ck3.appointment.status === 'in_boarding' &&
-      ck3.appointment.staffId === 'st-a' &&
-      ck3.claimed === true &&
+      ck3.appointment.staffId === null &&
+      ck3.claimed === false &&
       ck3.nextRoute === `/boarding/${appt3.id}/checkin`,
     ck3.appointment,
   );
@@ -1475,14 +1488,15 @@ try {
       (await countOutbox('store:s-1', 'appointment.rejected')) === 3,
   );
   check(
-    'appointment.assigned 计数正确（st-a：派单 appt2 + 认领 appt3；st-b：认领 appt1 + 派单 appt4 + 派单 b41（B3-4）；user:u-c1 共 5 条）',
-    (await countOutbox('staff:st-a', 'appointment.assigned')) === 2 &&
-      (await countOutbox('staff:st-b', 'appointment.assigned')) === 3 &&
-      (await countOutbox('user:u-c1', 'appointment.assigned')) === 5,
+    'appointment.assigned 计数正确（S1-R1 核销不认领后：st-a 仅派单 appt2=1；st-b 派单 appt4+b41=2；user:u-c1 派单三条=3）',
+    (await countOutbox('staff:st-a', 'appointment.assigned')) === 1 &&
+      (await countOutbox('staff:st-b', 'appointment.assigned')) === 2 &&
+      (await countOutbox('user:u-c1', 'appointment.assigned')) === 3,
   );
   check(
-    'appointment.checkedin 仅 2 条（appt1/appt3 各 1，幂等重扫无新增）',
+    'appointment.checkedin 共 3 条（appt1/appt2/appt3 各 1，幂等重扫无新增）',
     (await countOutbox(`appointment:${appt1.id}`, 'appointment.checkedin')) === 1 &&
+      (await countOutbox(`appointment:${appt2.id}`, 'appointment.checkedin')) === 1 &&
       (await countOutbox(`appointment:${appt3.id}`, 'appointment.checkedin')) === 1,
   );
   check(

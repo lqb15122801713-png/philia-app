@@ -27,10 +27,12 @@
  * - 预约码（§3.3）：二维码 payload { v:2, aid, tw, exp, sig }，
  *   sig = HMAC_SHA256(`${aid}|${tw}|${exp}`, BOOKING_CODE_SECRET)；tw 为 5min 滚动
  *   时间窗编号，验签接受当前窗口与上一窗口；exp = scheduled_start + 4h（覆盖迟到）。
- * - 核销（§3.3）：状态 confirmed + 门店归属 + 核销归属（已指派仅本人；未指派同事务
- *   认领写入 staff_id 并补发 appointment.assigned）+ 幂等（checked_in_at 已存在直接
+ * - 核销（§3.3）：状态 confirmed + 门店归属 + 幂等（checked_in_at 已存在直接
  *   返回当前进度）+ 防爆破限流（每员工每分钟失败 ≤5 次，超限锁 10 分钟；内存 Map
  *   单实例实现——多实例部署时需替换为 Redis 等共享存储，P1 单实例边界见下）。
+ *   批次 S1（任务 B + R1 返工）：仅 role=frontdesk 可核销；前台核销=到店登记——
+ *   归属校验豁免（本店任意到店单，不论指派给谁）、不改写 staff_id、不补发
+ *   appointment.assigned（认领规则自 S1-R1 起废止，归属由派单/S4 决定）。
  * - type 分支（§3.1 序 5）：grooming → in_service + 事务内初始化 6 条
  *   appointment_steps（step1 disinfection=active，2-6=locked，required_photos
  *   快照 min 值 1/2/3/2/2/0）；boarding → in_boarding + 建 boarding_stays
@@ -56,6 +58,7 @@ import {
 } from '../config/durationEngine';
 import {
   assertAppointmentAccess,
+  assertFrontdeskStaff,
   customerProcedure,
   merchantProcedure,
   publicProcedure,
@@ -1325,8 +1328,9 @@ export const appointmentRouter = router({
 
   /**
    * 9. checkin（staff）★ 扫码 / 人工码核销：
-   * 限流 → 验签（滚动时间窗 HMAC）→ 状态 confirmed → 门店归属 → 核销归属
-   * （已指派仅本人；未指派事务内认领并补发 assigned）→ 幂等 → type 分支事务。
+   * 前台角色（批次 S1：仅 role=frontdesk，先于限流与凭据校验，角色拒绝不计失败次数）
+   * → 限流 → 验签（滚动时间窗 HMAC）→ 状态 confirmed → 门店归属 → 幂等 → type 分支事务。
+   * S1-R1：核销=到店登记——归属校验豁免（本店任意单）、不改写 staff_id、不补发 assigned。
    */
   checkin: staffProcedure
     .input(
@@ -1338,6 +1342,8 @@ export const appointmentRouter = router({
     .mutation(async ({ ctx, input }) => {
       const staffId = ctx.user.staffId!;
       const staffStoreId = ctx.user.storeId!;
+      // 批次 S1 任务 B：核销权限收口——仅前台可核销（groomer → FORBIDDEN 原文案）
+      await assertFrontdeskStaff(ctx);
       // 防爆破限流：锁定中直接 429（不再校验凭据，不给爆破者任何区分信号）
       assertCheckinNotLocked(staffId);
       /** 核销失败统一入口：计一次失败（达限即锁 10 分钟）后抛出（function 声明以便 TS 收窄） */
@@ -1373,11 +1379,8 @@ export const appointmentRouter = router({
         if (!appt) fail('NOT_FOUND', '核销码不存在或已失效');
       }
 
-      /* ---- 2. 门店归属 / 核销归属 ---- */
+      /* ---- 2. 门店归属（S1-R1：核销=到店登记，归属校验豁免——前台可核销本店任意到店单） ---- */
       if (appt.storeId !== staffStoreId) fail('FORBIDDEN', '非本店预约，无权核销');
-      if (appt.staffId !== null && appt.staffId !== staffId) {
-        fail('FORBIDDEN', '该预约已指派给其他员工，仅被指派人可核销');
-      }
 
       /* ---- 3. 幂等：已核销 → 直接返回当前进度，不产生重复记录/事件（防重放，§3.3） ---- */
       if (appt.checkedInAt) {
@@ -1395,14 +1398,14 @@ export const appointmentRouter = router({
       const petName = await petNameOf(ctx.db, appt.petId);
       const outboxIds: string[] = [];
       const result = await ctx.db.transaction(async (tx) => {
-        const willClaim = appt.staffId === null;
         const nextStatus = appt.type === 'grooming' ? 'in_service' : 'in_boarding';
+        // S1-R1：前台核销=到店登记，不改写 staff_id——已指派保留原指派，未指派保持 NULL，
+        // 归属由商家派单 / S4 决定；不再补发 appointment.assigned。
         const row = await tx
           .update(schema.appointments)
           .set({
             status: nextStatus,
             checkedInAt: now,
-            staffId: willClaim ? staffId : appt.staffId, // 未指派 → 核销即认领
             updatedAt: now,
           })
           .where(eq(schema.appointments.id, appt.id))
@@ -1435,12 +1438,6 @@ export const appointmentRouter = router({
             .then((r) => r[0]!);
         }
 
-        if (willClaim) {
-          // 认领补推 appointment.assigned（员工端 + 客户端，§3.3 核销归属规则）
-          const payload = { appointmentId: appt.id, staffId, staffName: ctx.user.nickname, petName, by: 'checkin_claim' };
-          outboxIds.push(await emitEvent(txDb(tx), `staff:${staffId}`, EventType.AppointmentAssigned, payload));
-          outboxIds.push(await emitEvent(txDb(tx), `user:${appt.customerId}`, EventType.AppointmentAssigned, payload));
-        }
         // B2-8（A-P1-12）：checkedin 增发 store:{storeId} 频道，payload 与 appointment 频道一致，
         // 商家不逐个打开详情页（watch appointment 频道）也能感知到店签到。
         const checkedInPayload = {
@@ -1455,7 +1452,8 @@ export const appointmentRouter = router({
         outboxIds.push(
           await emitEvent(txDb(tx), `store:${appt.storeId}`, EventType.AppointmentCheckedIn, checkedInPayload),
         );
-        return { appointment: row, steps, boardingStay, claimed: willClaim };
+        // S1-R1：claimed 恒 false（核销不认领；字段保留仅为响应形状兼容）
+        return { appointment: row, steps, boardingStay, claimed: false };
       });
       outboxIds.forEach(broadcastNow);
       clearCheckinFailures(staffId);
@@ -1675,9 +1673,9 @@ export const appointmentRouter = router({
 
   /**
    * 14. listForStaff（staff）：员工端历史页数据源（T3.1 追加，唯一一处服务端小改授权）。
-   * 范围 = 本店且（指派给本人 或 本人执行过）的预约：指派（assign）与核销认领
-   * （checkin 未指派单事务内写 staff_id）都会落 staff_id，故两种情形统一收敛为
-   * staff_id = 本人；按 scheduled_start 倒序，联 pet/service/store 名称直显。
+   * 范围 = 本店且（指派给本人 或 本人执行过）的预约：指派（assign）落 staff_id
+   * （S1-R1 起核销不再认领/不改写 staff_id，历史「核销认领」单保留原值不影响本查询）；
+   * 按 scheduled_start 倒序，联 pet/service/store 名称直显。
    * 入参 from/to 过滤 scheduledStart 闭区间，status 精确过滤。
    */
   listForStaff: staffProcedure

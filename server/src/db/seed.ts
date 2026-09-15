@@ -7,7 +7,7 @@
  * 种子内容：
  * - 1 门店（菲丽亚宠物·示例店，open_hours 全周 09:00-20:00）
  * - 1 店主用户（merchant_owner）+ 3 员工用户（staff 角色 + staff 记录，技能覆盖
- *   wash/groom/boarding）+ 1 客户用户（customer）
+ *   wash/groom/boarding；批次 S1 岗位角色：小美=frontdesk，阿强/丽丽=groomer）+ 1 客户用户（customer）
  * - 2 宠物（1 狗 1 猫，含疫苗有效期）
  * - 10 服务项（grooming 6 + boarding 4，boarding 含房型）
  * - 10 商品（分类覆盖 主粮/零食/玩具/清洁，images 用 /products/*.svg 占位图（scripts/gen-product-placeholders.mjs 生成））
@@ -128,7 +128,7 @@ async function main() {
       })
       .returning();
 
-    /* ---- 员工（技能覆盖 wash/groom/boarding） ---- */
+    /* ---- 员工（批次 S1 双角色：小美=前台 frontdesk；阿强/丽丽=美容师 groomer） ---- */
     const staffRows = await tx
       .insert(schema.staff)
       .values([
@@ -136,6 +136,7 @@ async function main() {
           storeId: store.id,
           userId: staffUser1.id,
           name: '小美',
+          role: 'frontdesk',
           skills: ['wash', 'groom'],
           schedule: STAFF_SCHEDULE,
           status: 'active',
@@ -144,6 +145,7 @@ async function main() {
           storeId: store.id,
           userId: staffUser2.id,
           name: '阿强',
+          role: 'groomer',
           skills: ['wash', 'boarding'],
           schedule: STAFF_SCHEDULE,
           status: 'active',
@@ -152,6 +154,7 @@ async function main() {
           storeId: store.id,
           userId: staffUser3.id,
           name: '丽丽',
+          role: 'groomer',
           skills: ['groom', 'boarding'],
           schedule: STAFF_SCHEDULE,
           status: 'active',
