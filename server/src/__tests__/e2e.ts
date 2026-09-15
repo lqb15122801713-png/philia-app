@@ -23,7 +23,7 @@
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -40,6 +40,7 @@ const UPLOAD_APPT_ROOT = join(SERVER_ROOT, 'uploads', 'appointment');
 
 const tmpDir = mkdtempSync(join(tmpdir(), 'philia-e2e-'));
 const DB_URL = `file:${join(tmpDir, 'e2e.db').replaceAll('\\', '/')}`;
+const CLIENT_ERROR_LOG = join(tmpDir, 'client-error.log');
 const PORT = 7200;
 const BASE = `http://127.0.0.1:${PORT}`;
 
@@ -218,7 +219,7 @@ async function main(): Promise<void> {
   /* ---------- 1. 启动 server 子进程（7200） ---------- */
   server = spawn(process.execPath, [TSX_CLI, 'src/index.ts'], {
     cwd: SERVER_ROOT,
-    env: { ...process.env, PHILIA_DB_URL: DB_URL, PORT: String(PORT) },
+    env: { ...process.env, PHILIA_DB_URL: DB_URL, PHILIA_CLIENT_ERROR_LOG: CLIENT_ERROR_LOG, PORT: String(PORT) },
   });
   server.stdout?.on('data', (d) => (serverLog += d));
   server.stderr?.on('data', (d) => (serverLog += d));
@@ -557,6 +558,60 @@ async function main(): Promise<void> {
     '未登录调 appointment.create → 401 UNAUTHORIZED',
     anon instanceof TrpcHttpError && anon.httpStatus === 401 && anon.code === 'UNAUTHORIZED',
     anon && { status: anon.httpStatus, code: anon.code },
+  );
+
+  /* ---------- 13. 客户端错误上报（批次 9a 任务 E · POST /api/client-error） ---------- */
+  const postClientError = (body: unknown, ip: string, raw = false) =>
+    fetch(`${BASE}/api/client-error`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-forwarded-for': ip },
+      body: raw ? String(body) : JSON.stringify(body),
+    });
+  const validReport = {
+    app: 'customer',
+    route: '/appointments?crash=1',
+    message: 'B9A-E e2e 注入错误',
+    stackFirstFrame: 'AppointmentsPage (http://localhost:7100/src/pages/AppointmentsPage.tsx:98:11)',
+    componentStackFirstFrame: 'AppointmentsPage',
+    time: new Date().toISOString(),
+    ua: 'philia-e2e/1.0',
+  };
+  const ceOk = await postClientError(validReport, '10.9.0.1');
+  const ceOkBody = (await ceOk.json()) as { ok?: boolean };
+  check('client-error 合法上报 → 200 {ok:true}（免登录）', ceOk.status === 200 && ceOkBody.ok === true, ceOk.status);
+
+  const ceBadApp = await postClientError({ ...validReport, app: 'hacker' }, '10.9.0.2');
+  check('client-error 非法 app → 400', ceBadApp.status === 400, ceBadApp.status);
+  const ceMissing = await postClientError({ app: 'staff' }, '10.9.0.3');
+  check('client-error 缺 route/message → 400', ceMissing.status === 400, ceMissing.status);
+  const ceNotJson = await postClientError('not-json{{{', '10.9.0.4', true);
+  check('client-error 非 JSON body → 400', ceNotJson.status === 400, ceNotJson.status);
+
+  // 限流：同一 IP 固定窗口 20 次/分，第 21 次起 429
+  let first429 = -1;
+  for (let i = 1; i <= 24; i++) {
+    const r = await postClientError(validReport, '10.9.9.9');
+    if (r.status === 429) { first429 = i; break; }
+  }
+  check('client-error 限流：同 IP 第 21 次起 → 429', first429 > 0 && first429 <= 22, first429);
+
+  const ceLogRaw = existsSync(CLIENT_ERROR_LOG) ? readFileSync(CLIENT_ERROR_LOG, 'utf8') : '';
+  const ceLines = ceLogRaw.trim().split('\n').filter(Boolean).map((l) => JSON.parse(l) as Record<string, unknown>);
+  check(
+    'client-error JSONL 落盘：合法条目在日志（app/route/message/UA/首帧齐全）',
+    ceLines.some(
+      (l) =>
+        l.app === 'customer' &&
+        l.route === '/appointments?crash=1' &&
+        l.message === 'B9A-E e2e 注入错误' &&
+        typeof l.componentStackFirstFrame === 'string' &&
+        l.ua === 'philia-e2e/1.0',
+    ),
+    ceLines.slice(0, 2),
+  );
+  check(
+    'client-error 落盘：非法 app 条目不入日志',
+    !ceLines.some((l) => l.app === 'hacker'),
   );
 
   client.close();

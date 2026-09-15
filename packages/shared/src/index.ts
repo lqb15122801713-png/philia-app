@@ -32,3 +32,11 @@ export type { StepTimelineStep, StepTimelineProps } from './components/StepTimel
 
 export { default as PhotoWall } from './components/PhotoWall';
 export type { PhotoWallPhoto, PhotoWallProps } from './components/PhotoWall';
+
+export { default as ErrorBoundary, PageErrorBoundary } from './components/ErrorBoundary';
+export type {
+  ClientErrorReport,
+  ErrorBoundaryProps,
+  PhiliaAppKind,
+} from './components/ErrorBoundary';
+export { buildClientErrorReport, reportClientError } from './components/ErrorBoundary';
