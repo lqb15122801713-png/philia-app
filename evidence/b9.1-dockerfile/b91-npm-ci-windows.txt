@@ -1,0 +1,14 @@
+# Windows 侧干净副本 npm ci 不回归验证（归位后根 lock）
+# 时间 Tue Sep 15 15:14:41     2026；副本 = 工作树 tar 拷贝（无 node_modules/.git/dist）
+
+> philia@0.0.0 postinstall
+> node scripts/postinstall.mjs
+
+npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+
+added 110 packages in 3s
+
+added 688 packages in 20s
+根 npm ci exit=0

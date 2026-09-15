@@ -1,0 +1,39 @@
+# crypto.randomUUID 裸调用自查（任务 D 第 3 条，Tue Sep 15 15:18:26     2026）
+$ grep -rn "crypto.randomUUID" apps/ packages/（.ts/.tsx，排除注释）
+
+## 修复后 HomeBookingPanel（圈定文件）
+43:  safeUuid,
+68: * b9.1：一律走 safeUuid()——crypto.randomUUID 仅安全上下文存在，普通 HTTP 内测
+74:      id = safeUuid();
+79:    return safeUuid();
+
+## safeUuid 实现内部（豁免）
+4: * 背景：crypto.randomUUID() 仅在安全上下文（HTTPS 或 localhost）存在；
+9: * safeUuid()：优先 crypto.randomUUID()，不存在则 Math.random 版 v4 模板兜底，
+23:/** 取 UUID v4：安全上下文走 crypto.randomUUID()，否则模板兜底；永不抛出 */
+26:    return globalThis.crypto?.randomUUID?.() ?? uuidV4Fallback();
+
+## 其余裸调用残留（纪律圈定两文件外，未动——上报产品侧另批清扫）
+apps/customer/src/components/mall/useOrderEvents.ts:28:      id = crypto.randomUUID();
+apps/customer/src/components/mall/useOrderEvents.ts:33:    return crypto.randomUUID();
+apps/customer/src/pages/AppointmentDetailPage.tsx:52:      id = crypto.randomUUID();
+apps/customer/src/pages/AppointmentDetailPage.tsx:57:    return crypto.randomUUID();
+apps/customer/src/pages/AppointmentLivePage.tsx:8: * - SSE：先 push.subscribe 登记（clientId 持久化于 localStorage，crypto.randomUUID()），
+apps/customer/src/pages/AppointmentLivePage.tsx:56:      id = crypto.randomUUID()
+apps/customer/src/pages/AppointmentLivePage.tsx:62:    return crypto.randomUUID()
+apps/merchant/src/components/appointments/useMerchantEvents.ts:19:      id = crypto.randomUUID();
+apps/merchant/src/components/appointments/useMerchantEvents.ts:24:    return crypto.randomUUID();
+apps/merchant/src/components/dashboard/MerchantEventsProvider.tsx:39:      id = crypto.randomUUID()
+apps/merchant/src/components/finance/useMerchantEvents.ts:28:      id = crypto.randomUUID();
+apps/merchant/src/components/staff-admin/useMerchantEvents.ts:25:      id = crypto.randomUUID();
+apps/staff/src/components/boarding/CheckinForm.tsx:57:const newRow = (): BelongingDraft => ({ key: crypto.randomUUID(), name: '' });
+apps/staff/src/components/boarding/DailyLogForm.tsx:60:const newMeal = (): MealDraft => ({ key: crypto.randomUUID(), time: nowHHmm(), food: '', finished: false });
+apps/staff/src/components/boarding/DailyLogForm.tsx:85:        key: crypto.randomUUID(),
+apps/staff/src/components/today/useStaffEvents.ts:22:      id = crypto.randomUUID();
+apps/staff/src/lib/offlineQueue.ts:147:    return crypto.randomUUID()
+apps/staff/src/pages/BoardingCheckinPage.tsx:70:      id = crypto.randomUUID();
+apps/staff/src/pages/BoardingCheckinPage.tsx:75:    return crypto.randomUUID();
+apps/staff/src/pages/BoardingCheckinPage.tsx:86:        key: crypto.randomUUID(),
+apps/staff/src/pages/ExecutePage.tsx:62:      id = crypto.randomUUID()
+apps/staff/src/pages/ExecutePage.tsx:67:    return crypto.randomUUID()
+packages/shared/src/index.ts:22:// 安全 UUID（b9.1：crypto.randomUUID 仅安全上下文存在，HTTP 内测环境模板兜底）

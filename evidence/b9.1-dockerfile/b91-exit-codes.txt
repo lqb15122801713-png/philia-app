@@ -1,0 +1,12 @@
+# 批次 9a.1 退出码汇总（Tue Sep 15 15:20:20     2026）
+三端 build exit=0
+server typecheck exit=0
+server e2e exit=0
+smoke-routes exit=0
+
+# 任务 D 实证结论（Tue Sep 15 15:31:32     2026）
+非安全上下文前提坐实：http://192.168.18.84:7200 下 isSecureContext=false、
+crypto.randomUUID=undefined（与 VPS 老板实机同型环境，server 静态托管同源部署形态）
+结果：dev-login 200 → /home 完整渲染（无 ErrorBoundary、无异常、无 console 错误）、
+philia.sseClientId 落库为 v4 UUID（safeUuid 模板兜底路径，第三组首字符 '4' 实证）→ PASS
+实证文件：b91-insecure-context-proof.txt / b91-insecure-home.png / 驱动 b91-insecure-context-proof.mjs

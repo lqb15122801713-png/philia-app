@@ -1,0 +1,124 @@
+# package-lock.json 归位扫描：缺口 52 条
+  缺 node_modules/fsevents（fsevents@~2.3.2，引自 node_modules/chokidar）
+  缺 node_modules/@napi-rs/lzma-linux-x64-gnu（@napi-rs/lzma-linux-x64-gnu@1.5.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-android-arm-eabi（@rollup/rollup-android-arm-eabi@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-android-arm64（@rollup/rollup-android-arm64@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-darwin-arm64（@rollup/rollup-darwin-arm64@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-darwin-x64（@rollup/rollup-darwin-x64@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-freebsd-arm64（@rollup/rollup-freebsd-arm64@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-freebsd-x64（@rollup/rollup-freebsd-x64@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-linux-arm-gnueabihf（@rollup/rollup-linux-arm-gnueabihf@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-linux-arm-musleabihf（@rollup/rollup-linux-arm-musleabihf@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-linux-arm64-gnu（@rollup/rollup-linux-arm64-gnu@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-linux-arm64-musl（@rollup/rollup-linux-arm64-musl@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-linux-loong64-gnu（@rollup/rollup-linux-loong64-gnu@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-linux-loong64-musl（@rollup/rollup-linux-loong64-musl@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-linux-ppc64-gnu（@rollup/rollup-linux-ppc64-gnu@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-linux-ppc64-musl（@rollup/rollup-linux-ppc64-musl@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-linux-riscv64-gnu（@rollup/rollup-linux-riscv64-gnu@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-linux-riscv64-musl（@rollup/rollup-linux-riscv64-musl@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-linux-s390x-gnu（@rollup/rollup-linux-s390x-gnu@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-linux-x64-gnu（@rollup/rollup-linux-x64-gnu@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-linux-x64-musl（@rollup/rollup-linux-x64-musl@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-openbsd-x64（@rollup/rollup-openbsd-x64@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-openharmony-arm64（@rollup/rollup-openharmony-arm64@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-win32-arm64-msvc（@rollup/rollup-win32-arm64-msvc@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/@rollup/rollup-win32-ia32-msvc（@rollup/rollup-win32-ia32-msvc@4.63.1，引自 node_modules/rollup）
+  缺 node_modules/fsevents（fsevents@~2.3.2，引自 node_modules/rollup）
+  缺 node_modules/fsevents（fsevents@~2.3.3，引自 node_modules/vite）
+  缺 node_modules/vite/node_modules/@esbuild/aix-ppc64（@esbuild/aix-ppc64@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/android-arm（@esbuild/android-arm@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/android-arm64（@esbuild/android-arm64@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/android-x64（@esbuild/android-x64@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/darwin-arm64（@esbuild/darwin-arm64@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/darwin-x64（@esbuild/darwin-x64@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/freebsd-arm64（@esbuild/freebsd-arm64@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/freebsd-x64（@esbuild/freebsd-x64@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/linux-arm（@esbuild/linux-arm@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/linux-arm64（@esbuild/linux-arm64@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/linux-ia32（@esbuild/linux-ia32@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/linux-loong64（@esbuild/linux-loong64@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/linux-mips64el（@esbuild/linux-mips64el@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/linux-ppc64（@esbuild/linux-ppc64@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/linux-riscv64（@esbuild/linux-riscv64@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/linux-s390x（@esbuild/linux-s390x@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/linux-x64（@esbuild/linux-x64@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/netbsd-arm64（@esbuild/netbsd-arm64@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/netbsd-x64（@esbuild/netbsd-x64@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/openbsd-arm64（@esbuild/openbsd-arm64@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/openbsd-x64（@esbuild/openbsd-x64@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/openharmony-arm64（@esbuild/openharmony-arm64@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/sunos-x64（@esbuild/sunos-x64@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/win32-arm64（@esbuild/win32-arm64@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+  缺 node_modules/vite/node_modules/@esbuild/win32-ia32（@esbuild/win32-ia32@0.28.2，引自 node_modules/vite/node_modules/esbuild）
+
+# diff 摘要（自证：只增不改不删）
+  新增条目 50；删除 0；既有条目内容变更 0
+
+# linux-x64 条目 integrity 对照（registry packument dist.integrity 复取逐值比对）
+  ✓ node_modules/@napi-rs/lzma-linux-x64-gnu@1.5.1
+      lock=sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ==
+      reg =sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ==
+  ✓ node_modules/@rollup/rollup-linux-x64-gnu@4.63.1
+      lock=sha512-gfI5T24WLLuFfSKw7Go/zDXjAAV0fny0swTaDv+WjK7vqcw4cRhFfdsyKL1n+ukI+ooBxn3bVQnyrn06WpI50w==
+      reg =sha512-gfI5T24WLLuFfSKw7Go/zDXjAAV0fny0swTaDv+WjK7vqcw4cRhFfdsyKL1n+ukI+ooBxn3bVQnyrn06WpI50w==
+  ✓ node_modules/@rollup/rollup-linux-x64-musl@4.63.1
+      lock=sha512-4h6XqthmB4Hspji84wvgk+ElodTsGj+dbZqHJHHtKxj4mYq0ANSEEPX9ys3moJueqsRjwpaJYH7874Itwnj2ow==
+      reg =sha512-4h6XqthmB4Hspji84wvgk+ElodTsGj+dbZqHJHHtKxj4mYq0ANSEEPX9ys3moJueqsRjwpaJYH7874Itwnj2ow==
+  ✓ node_modules/vite/node_modules/@esbuild/linux-x64@0.28.2
+      lock=sha512-4xTZr1FUmSoQW4XIWmit3tzQrUTZM+N3P0XV8xROKYF50XfI7xeO90+1bZvNwxIufQ9hDQVRJH5YhgPVF8A/HQ==
+      reg =sha512-4xTZr1FUmSoQW4XIWmit3tzQrUTZM+N3P0XV8xROKYF50XfI7xeO90+1bZvNwxIufQ9hDQVRJH5YhgPVF8A/HQ==
+
+# 完成：新增 52 条平台 optional 条目，已写回 package-lock.json（原件备份 .b9.1.bak）
+  + node_modules/@napi-rs/lzma-linux-x64-gnu@1.5.1
+  + node_modules/fsevents@2.3.3
+  + node_modules/@rollup/rollup-freebsd-arm64@4.63.1
+  + node_modules/@rollup/rollup-darwin-x64@4.63.1
+  + node_modules/@rollup/rollup-darwin-arm64@4.63.1
+  + node_modules/@rollup/rollup-android-arm-eabi@4.63.1
+  + node_modules/@rollup/rollup-freebsd-x64@4.63.1
+  + node_modules/@rollup/rollup-android-arm64@4.63.1
+  + node_modules/@rollup/rollup-linux-loong64-musl@4.63.1
+  + node_modules/@rollup/rollup-linux-loong64-gnu@4.63.1
+  + node_modules/@rollup/rollup-linux-ppc64-gnu@4.63.1
+  + node_modules/@rollup/rollup-linux-ppc64-musl@4.63.1
+  + node_modules/@rollup/rollup-linux-arm64-gnu@4.63.1
+  + node_modules/@rollup/rollup-linux-arm64-musl@4.63.1
+  + node_modules/@rollup/rollup-linux-arm-gnueabihf@4.63.1
+  + node_modules/@rollup/rollup-linux-arm-musleabihf@4.63.1
+  + node_modules/@rollup/rollup-openbsd-x64@4.63.1
+  + node_modules/@rollup/rollup-openharmony-arm64@4.63.1
+  + node_modules/@rollup/rollup-linux-s390x-gnu@4.63.1
+  + node_modules/@rollup/rollup-linux-x64-gnu@4.63.1
+  + node_modules/@rollup/rollup-linux-riscv64-musl@4.63.1
+  + node_modules/@rollup/rollup-linux-riscv64-gnu@4.63.1
+  + node_modules/@rollup/rollup-linux-x64-musl@4.63.1
+  + node_modules/@rollup/rollup-win32-arm64-msvc@4.63.1
+  + node_modules/fsevents@2.3.3
+  + node_modules/fsevents@2.3.3
+  + node_modules/vite/node_modules/@esbuild/android-arm@0.28.2
+  + node_modules/vite/node_modules/@esbuild/aix-ppc64@0.28.2
+  + node_modules/vite/node_modules/@esbuild/darwin-arm64@0.28.2
+  + node_modules/vite/node_modules/@esbuild/android-arm64@0.28.2
+  + node_modules/vite/node_modules/@esbuild/android-x64@0.28.2
+  + node_modules/@rollup/rollup-win32-ia32-msvc@4.63.1
+  + node_modules/vite/node_modules/@esbuild/freebsd-x64@0.28.2
+  + node_modules/vite/node_modules/@esbuild/linux-ia32@0.28.2
+  + node_modules/vite/node_modules/@esbuild/linux-arm@0.28.2
+  + node_modules/vite/node_modules/@esbuild/linux-arm64@0.28.2
+  + node_modules/vite/node_modules/@esbuild/darwin-x64@0.28.2
+  + node_modules/vite/node_modules/@esbuild/linux-loong64@0.28.2
+  + node_modules/vite/node_modules/@esbuild/freebsd-arm64@0.28.2
+  + node_modules/vite/node_modules/@esbuild/linux-mips64el@0.28.2
+  + node_modules/vite/node_modules/@esbuild/openbsd-arm64@0.28.2
+  + node_modules/vite/node_modules/@esbuild/linux-s390x@0.28.2
+  + node_modules/vite/node_modules/@esbuild/netbsd-arm64@0.28.2
+  + node_modules/vite/node_modules/@esbuild/netbsd-x64@0.28.2
+  + node_modules/vite/node_modules/@esbuild/linux-x64@0.28.2
+  + node_modules/vite/node_modules/@esbuild/linux-ppc64@0.28.2
+  + node_modules/vite/node_modules/@esbuild/linux-riscv64@0.28.2
+  + node_modules/vite/node_modules/@esbuild/openbsd-x64@0.28.2
+  + node_modules/vite/node_modules/@esbuild/openharmony-arm64@0.28.2
+  + node_modules/vite/node_modules/@esbuild/win32-arm64@0.28.2
+  + node_modules/vite/node_modules/@esbuild/win32-ia32@0.28.2
+  + node_modules/vite/node_modules/@esbuild/sunos-x64@0.28.2

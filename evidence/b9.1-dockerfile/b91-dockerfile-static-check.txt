@@ -1,0 +1,37 @@
+# Dockerfile 逐行静态核对（批次 9a.1，Tue Sep 15 15:30:42     2026）
+分支 fix/b9.1-dockerfile @ 0e1185e；本机无 Docker/WSL → 静态核对 + 老板 VPS docker build 实证收口
+
+## 本批两行改动定位
+35:COPY scripts ./scripts
+79:HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+80:  CMD node -e "fetch('http://localhost:'+(process.env.PORT||7200)+'/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+
+## 引用文件存在性（git ls-files 核对）
+OK   package.json
+OK   package-lock.json
+OK   scripts/postinstall.mjs
+OK   scripts/smoke-deploy.mjs
+OK   scripts/smoke-routes.mjs
+OK   scripts/gen-product-placeholders.mjs
+OK   apps/customer/package.json
+OK   apps/merchant/package.json
+OK   apps/staff/package.json
+OK   packages/shared/package.json
+OK   packages/config/package.json
+OK   server/package.json
+OK   server/package-lock.json
+OK   server/tsconfig.json
+OK   docker/entrypoint.sh
+OK   packages/
+OK   apps/
+OK   server/src/
+OK   server/drizzle/
+OK   scripts/
+
+## 关键行核对
+- COPY scripts ./scripts 位于 fe-builder 首个 RUN npm ci 之前 ✓（postinstall 防御分支生效：server/package.json 不在场→打印跳过→exit 0）
+- HEALTHCHECK 无反引号，单引号拼接 URL ✓（sh -c 下不再触发命令替换）
+- 除上述两行（A 行+C 行）外与 main@1ee8448 一致：
++# postinstall 钩子脚本必须在首个 npm ci 前在场（b9.1：批次 7.1 引入的
++# scripts/postinstall.mjs 防御分支——server/package.json 不在场→打印跳过→exit 0）
++COPY scripts ./scripts
