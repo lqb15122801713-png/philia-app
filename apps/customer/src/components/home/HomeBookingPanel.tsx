@@ -140,15 +140,24 @@ export default function HomeBookingPanel({
     [storeQ.isSuccess, groomingServices, memory],
   );
 
-  // 第二段：时长连续过滤槽（与单屏同一入参同一 queryKey）
+  // 宠物预解析（B9a 任务 C：时长引擎以 petId 推导服务时长；提前解析供第二段查询入参，
+  // 与单屏 resolvePetId 同一函数同一口径）
+  const resolvedPetId = useMemo(
+    () => (petsQ.isSuccess ? resolvePetId(null, petsQ.data ?? [], memory) : null),
+    [petsQ.isSuccess, petsQ.data, memory],
+  );
+
+  // 第二段：时长连续过滤槽（与单屏同一入参同一 queryKey；B9a 任务 C：带 petId
+  // 走时长引擎——serviceDurations 联动「约 N 分钟」，可约槽按引擎时长过滤）
   const slotsQ = useQuery({
-    queryKey: ['store', 'getWithServices', memoryStoreId, resolvedServiceId],
+    queryKey: ['store', 'getWithServices', memoryStoreId, resolvedServiceId, resolvedPetId],
     queryFn: () =>
       trpc.store.getWithServices.query({
         storeId: memoryStoreId!,
         serviceId: resolvedServiceId ?? undefined,
+        petId: resolvedPetId ?? undefined,
       }),
-    enabled: !!user && memoryStoreId !== null && resolvedServiceId !== null,
+    enabled: !!user && memoryStoreId !== null && resolvedServiceId !== null && petsQ.isSuccess,
   });
 
   // 本人该店次卡（paymentMode 默认口径与单屏一致：有可用次卡 → pass_deduct）
@@ -246,7 +255,6 @@ export default function HomeBookingPanel({
     if (!resolvedServiceId) return { mode: 'entry', reason: 'no-service' };
     if (slotsQ.isPending) return { mode: 'loading' };
     const pets = petsQ.data ?? [];
-    const resolvedPetId = resolvePetId(null, pets, memory);
     if (!resolvedPetId) return { mode: 'entry', reason: 'pet-undecided' };
     const slots = slotsQ.data?.slots ?? [];
     const earliest = slots.reduce<Date | null>(
@@ -254,13 +262,15 @@ export default function HomeBookingPanel({
       null,
     );
     if (!earliest) return { mode: 'entry', reason: 'no-slot' };
-    const service = groomingServices.find((s) => s.id === resolvedServiceId) ?? null;
+    const serviceRow = groomingServices.find((s) => s.id === resolvedServiceId) ?? null;
     const pet = pets.find((p) => p.id === resolvedPetId) ?? null;
-    if (!service || !pet) return { mode: 'entry', reason: 'store-unavailable' };
+    if (!serviceRow || !pet) return { mode: 'entry', reason: 'store-unavailable' };
+    // B9a 任务 C：「约 N 分钟」以时长引擎输出为准（serviceDurations），未输出回退默认
+    const engineDurationMin = slotsQ.data?.serviceDurations?.[serviceRow.id]?.durationMin ?? null;
     return {
       mode: 'rebook',
       earliest,
-      service,
+      service: { ...serviceRow, durationMin: engineDurationMin ?? serviceRow.durationMin },
       pet,
       storeName: storeQ.data?.store.name ?? '',
       paymentMode: usablePass ? 'pass_deduct' : 'pay_at_store',
@@ -280,6 +290,7 @@ export default function HomeBookingPanel({
     petsQ.data,
     passQ.isPending,
     resolvedServiceId,
+    resolvedPetId,
     groomingServices,
     memory,
     usablePass,

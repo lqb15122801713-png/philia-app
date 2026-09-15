@@ -55,11 +55,14 @@ export default function GroomingSinglePage() {
   const effStoreId = storeId;
 
   const servicesQ = useQuery({
-    queryKey: ['store', 'getWithServices', effStoreId, serviceId],
+    // B9a 任务 C：petId 入参驱动时长引擎（serviceDurations + 时长连续过滤按引擎时长）；
+    // 换宠物即换时长口径，queryKey 带 petId 触发重取
+    queryKey: ['store', 'getWithServices', effStoreId, serviceId, petId],
     queryFn: () =>
       trpc.store.getWithServices.query({
         storeId: effStoreId!,
         serviceId: serviceId ?? undefined,
+        petId: petId ?? undefined,
       }),
     enabled: effStoreId !== null,
   });
@@ -201,6 +204,17 @@ export default function GroomingSinglePage() {
   /* ---- 提交（现有 appointment.create，入参不动） ---- */
   const service = groomingServices.find((s) => s.id === serviceId) ?? null;
   const staffName = staffQ.data?.staff.find((s) => s.id === staffId)?.name ?? null;
+  // B9a 任务 C：确认条/服务 chips 的「约 N 分钟」按时长引擎联动（serviceDurations），
+  // 引擎未输出（未选宠物/查询中）回退服务默认 durationMin
+  const serviceDurations = servicesQ.data?.serviceDurations ?? null;
+  const durationById = useMemo(
+    () =>
+      serviceDurations
+        ? Object.fromEntries(Object.entries(serviceDurations).map(([id, d]) => [id, d.durationMin]))
+        : null,
+    [serviceDurations],
+  );
+  const engineDurationMin = serviceId ? (durationById?.[serviceId] ?? null) : null;
 
   const createM = useMutation({
     mutationFn: () => {
@@ -264,12 +278,15 @@ export default function GroomingSinglePage() {
         <h1 className="text-title-lg">预约洗护</h1>
       </header>
 
-      {/* 宠物卡 */}
+      {/* 宠物卡（B9a 任务 C：换宠物 → 时长引擎口径变化，已选时段清空重选） */}
       <section className="mt-4">
         <PetCardBlock
           pets={petsQ.data ?? []}
           selectedId={petId}
-          onSelect={setPetId}
+          onSelect={(id) => {
+            if (id !== petId) setSlot(null);
+            setPetId(id);
+          }}
           lastGroomingLabel={lastGroomingLabel}
           loading={petsQ.isPending}
         />
@@ -284,6 +301,7 @@ export default function GroomingSinglePage() {
             selectedId={serviceId}
             onSelect={pickService}
             loading={servicesQ.isPending}
+            durationById={durationById}
           />
         </div>
       </section>
@@ -338,10 +356,11 @@ export default function GroomingSinglePage() {
         />
       </section>
 
-      {/* 吸底确认条（fixed 于 TabBar 上方） */}
+      {/* 吸底确认条（fixed 于 TabBar 上方；B9a 任务 C：约 N 分钟 = 时长引擎输出，
+          引擎未输出时回退服务默认 durationMin） */}
       <ConfirmBar
         priceFen={service?.priceFen ?? null}
-        durationMin={service?.durationMin ?? null}
+        durationMin={engineDurationMin ?? service?.durationMin ?? null}
         missingLabel={missingLabel}
         submitting={createM.isPending}
         onConfirm={() => createM.mutate()}

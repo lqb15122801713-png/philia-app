@@ -15,11 +15,14 @@ export default function ServiceChipsBlock({
   selectedId,
   onSelect,
   loading,
+  durationById,
 }: {
   services: ServiceItem[];
   selectedId: string | null;
   onSelect: (id: string) => void;
   loading?: boolean;
+  /** B9a 任务 C：时长引擎逐服务输出（分钟，null=寄养无时长）；缺省回退服务默认 durationMin */
+  durationById?: Record<string, number | null> | null;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -65,7 +68,7 @@ export default function ServiceChipsBlock({
             >
               <span className="block text-body font-semibold">{s.name}</span>
               <span className="mt-0.5 block text-caption text-ink-secondary">
-                约 {s.durationMin ?? 60} 分钟 · <span className="font-number font-semibold text-ink">{fenToYuan(s.priceFen)}</span>
+                约 {durationById?.[s.id] ?? s.durationMin ?? 60} 分钟 · <span className="font-number font-semibold text-ink">{fenToYuan(s.priceFen)}</span>
               </span>
             </button>
           );
