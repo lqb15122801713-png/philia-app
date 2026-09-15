@@ -12,7 +12,7 @@
  * T4.1 后续可在 providers 全局挂载，页面级用法不受影响。
  */
 
-import { getApiBase, useEventSource, useMe, usePhiliaClient, type EventEnvelope } from '@philia/shared';
+import { getApiBase, safeUuid, useEventSource, useMe, usePhiliaClient, type EventEnvelope } from '@philia/shared';
 import { useEffect, useState } from 'react';
 
 const CLIENT_ID_KEY = 'philia.sseClientId';
@@ -22,7 +22,7 @@ function getClientId(): string {
   try {
     let id = window.localStorage.getItem(CLIENT_ID_KEY);
     if (!id) {
-      id = crypto.randomUUID();
+      id = safeUuid();
       window.localStorage.setItem(CLIENT_ID_KEY, id);
     }
     return id;

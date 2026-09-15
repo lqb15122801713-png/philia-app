@@ -5,7 +5,7 @@
  * - 首屏：appointment.get（归属/状态/宠物/门店/服务）→ 按 type+status 分支：
  *   grooming（in_service/completed）→ serviceStep.list 六步+未失效照片；
  *   boarding（in_boarding/completed）→ boarding.myStay 住宿单+每日打卡。
- * - SSE：先 push.subscribe 登记（clientId 持久化于 localStorage，crypto.randomUUID()），
+ * - SSE：先 push.subscribe 登记（clientId 持久化于 localStorage，safeUuid()），
  *   再连 GET /api/events?client_id=…&watch=aid（useEventSource）。
  *   step_updated → 对应步照片乐观 append（按 url 去重）+ invalidate；
  *   appointment.completed → 完成态 + 庆祝微动效；boarding.daily_update →
@@ -20,6 +20,7 @@
 import {
   EventType,
   getApiBase,
+  safeUuid,
   StepTimeline,
   useEventSource,
   useMe,
@@ -53,13 +54,13 @@ function getClientId(): string {
   try {
     let id = window.localStorage.getItem(CLIENT_ID_KEY)
     if (!id) {
-      id = crypto.randomUUID()
+      id = safeUuid()
       window.localStorage.setItem(CLIENT_ID_KEY, id)
     }
     return id
   } catch {
     // localStorage 不可用（隐私模式等）：退化为页面级随机 id，SSE 仍可用
-    return crypto.randomUUID()
+    return safeUuid()
   }
 }
 

@@ -9,7 +9,7 @@
  * - onReconnect 由页面做全量对齐（断线期间可能漏变更）。
  */
 
-import { getApiBase, useEventSource, useMe, usePhiliaClient, type EventEnvelope } from '@philia/shared';
+import { getApiBase, safeUuid, useEventSource, useMe, usePhiliaClient, type EventEnvelope } from '@philia/shared';
 import { useEffect, useState } from 'react';
 
 const CLIENT_ID_KEY = 'philia.sseClientId';
@@ -19,7 +19,7 @@ function getClientId(): string {
   try {
     let id = window.localStorage.getItem(CLIENT_ID_KEY);
     if (!id) {
-      id = crypto.randomUUID();
+      id = safeUuid();
       window.localStorage.setItem(CLIENT_ID_KEY, id);
     }
     return id;

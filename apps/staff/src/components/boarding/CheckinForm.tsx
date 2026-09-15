@@ -8,7 +8,7 @@
  * - 提交由页面层 mutation 完成；编辑模式带「取消」返回信息卡
  */
 
-import { getApiBase, uploadImage } from '@philia/shared';
+import { getApiBase, safeUuid, uploadImage } from '@philia/shared';
 import { Camera, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useRef, useState, type ChangeEvent } from 'react';
 
@@ -54,7 +54,7 @@ function sanitizeWeight(v: string): string {
   return `${int}.${dec.slice(0, 1)}`;
 }
 
-const newRow = (): BelongingDraft => ({ key: crypto.randomUUID(), name: '' });
+const newRow = (): BelongingDraft => ({ key: safeUuid(), name: '' });
 
 export default function CheckinForm({
   appointmentId,

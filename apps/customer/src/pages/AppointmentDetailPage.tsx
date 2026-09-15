@@ -18,7 +18,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { EventType, getApiBase, useEventSource, useMe, usePhiliaClient, type EventEnvelope } from '@philia/shared';
+import { EventType, getApiBase, safeUuid, useEventSource, useMe, usePhiliaClient, type EventEnvelope } from '@philia/shared';
 import BookingCode from '@/components/booking/BookingCode';
 import BoardingDateRangePicker, { checkinAt } from '@/components/booking/BoardingDateRangePicker';
 import SlotPicker from '@/components/booking/SlotPicker';
@@ -49,12 +49,12 @@ function getClientId(): string {
   try {
     let id = window.localStorage.getItem(CLIENT_ID_KEY);
     if (!id) {
-      id = crypto.randomUUID();
+      id = safeUuid();
       window.localStorage.setItem(CLIENT_ID_KEY, id);
     }
     return id;
   } catch {
-    return crypto.randomUUID();
+    return safeUuid();
   }
 }
 

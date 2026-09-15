@@ -10,7 +10,7 @@
  *   避免后台轮询重取后覆盖员工正在编辑的内容。
  */
 
-import { getApiBase, uploadImage } from '@philia/shared';
+import { getApiBase, safeUuid, uploadImage } from '@philia/shared';
 import { Camera, Info, Loader2, Minus, Plus, Trash2, X } from 'lucide-react';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import type { BoardingLogRow, MealItem } from './types';
@@ -57,7 +57,7 @@ const nowHHmm = () => {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 };
 
-const newMeal = (): MealDraft => ({ key: crypto.randomUUID(), time: nowHHmm(), food: '', finished: false });
+const newMeal = (): MealDraft => ({ key: safeUuid(), time: nowHHmm(), food: '', finished: false });
 
 export default function DailyLogForm({
   appointmentId,
@@ -82,7 +82,7 @@ export default function DailyLogForm({
     prefilledIdRef.current = todayLog.id;
     setMeals(
       (todayLog.meals ?? []).map((m) => ({
-        key: crypto.randomUUID(),
+        key: safeUuid(),
         time: m.time || nowHHmm(),
         food: m.food ?? '',
         amount: m.amount,

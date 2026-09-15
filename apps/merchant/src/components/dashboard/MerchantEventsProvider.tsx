@@ -13,6 +13,7 @@
 
 import {
   getApiBase,
+  safeUuid,
   useEventSource,
   useMe,
   usePhiliaClient,
@@ -36,7 +37,7 @@ function getClientId(): string {
   try {
     let id = window.localStorage.getItem(CLIENT_ID_KEY)
     if (!id) {
-      id = crypto.randomUUID()
+      id = safeUuid()
       window.localStorage.setItem(CLIENT_ID_KEY, id)
     }
     return id

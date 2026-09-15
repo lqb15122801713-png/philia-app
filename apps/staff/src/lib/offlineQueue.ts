@@ -27,6 +27,8 @@
  * 唯一会"丢"的情形是服务端永久拒绝——此时服务端已有等效数据或状态机已推进，本地副本无登记意义。
  */
 
+import { safeUuid } from '@philia/shared/lib/safeUuid.ts'
+
 /* ------------------------------------------------------------------ */
 /* 契约类型（逐字）                                                      */
 /* ------------------------------------------------------------------ */
@@ -144,7 +146,7 @@ async function idbDelete(id: string): Promise<void> {
 
 function genId(): string {
   try {
-    return crypto.randomUUID()
+    return safeUuid()
   } catch {
     return `q_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`
   }
