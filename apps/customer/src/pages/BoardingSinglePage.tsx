@@ -210,7 +210,9 @@ export default function BoardingSinglePage() {
                 ? '请选择门店'
                 : null;
 
-  /* ---- 渲染：单屏区块化（区块顺序即设计方案第三节） ---- */
+  /* ---- 渲染：单屏区块化（v4.1：留白 + hairline 分节） ---- */
+  // 节间 hairline：既有 token 深棕墨 4A3B2E 的 9% 透明度用法（设计规格 v3 §1）
+  const SECTION = 'mt-6 border-t border-[rgba(74,59,46,.09)] pt-5';
   return (
     <div className="px-4 pb-36 pt-6" data-testid="boarding-single">
       {toastEl}
@@ -220,7 +222,7 @@ export default function BoardingSinglePage() {
           type="button"
           onClick={() => navigate(-1)}
           aria-label="返回"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-card shadow-card active:scale-92"
+          className="flex h-9 w-9 items-center justify-center rounded-full active:scale-92"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ink-secondary" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m15 18-6-6 6-6" />
@@ -242,7 +244,7 @@ export default function BoardingSinglePage() {
       </section>
 
       {/* 入住/退房日期（底部月历 range picker） */}
-      <section className="mt-5">
+      <section className={SECTION}>
         <h2 className="text-title">入住 / 退房日期</h2>
         <div className="mt-2">
           <BoardingDatesBlock
@@ -256,7 +258,7 @@ export default function BoardingSinglePage() {
       </section>
 
       {/* 房型区（单房型只读信息卡 / 多房型选择器，数据驱动） */}
-      <section className="mt-5">
+      <section className={SECTION}>
         <h2 className="text-title">寄养房型</h2>
         <div className="mt-2">
           <RoomTypeBlock
@@ -273,7 +275,7 @@ export default function BoardingSinglePage() {
       </section>
 
       {/* 门店单行 */}
-      <section className="mt-5">
+      <section className={SECTION}>
         <h2 className="text-title">门店</h2>
         <div className="mt-2">
           <StoreLineBlock
@@ -287,7 +289,7 @@ export default function BoardingSinglePage() {
       </section>
 
       {/* 折叠区：备注（寄养固定到店付，无收款选择器） */}
-      <section className="mt-5">
+      <section className={SECTION}>
         <NoteFoldBlock note={note} onNoteChange={setNote} />
       </section>
 

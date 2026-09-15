@@ -17,7 +17,7 @@ export default function NoteFoldBlock({
   const summary = note.trim() ? note.trim().slice(0, 12) + (note.trim().length > 12 ? '…' : '') : '添加备注';
 
   return (
-    <div className="rounded-card bg-card px-4 shadow-card" data-testid="bs-extras">
+    <div data-testid="bs-extras">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -37,7 +37,7 @@ export default function NoteFoldBlock({
           rows={3}
           placeholder="饮食习惯、每日喂药、性格注意事项…"
           data-testid="bs-note-input"
-          className="mb-3 w-full rounded-input border border-line bg-canvas px-3.5 py-3 text-body placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
+          className="mb-3 w-full rounded-[14px] border border-line bg-canvas px-3.5 py-3 text-body placeholder:text-ink-placeholder focus:border-ink focus:outline-none"
         />
       ) : null}
     </div>

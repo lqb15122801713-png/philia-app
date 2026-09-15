@@ -1,7 +1,7 @@
 /**
  * B4-1 单屏通用底部半屏弹层（换店 / 换宠物共用）：
- * 遮罩 + 底部圆角 sheet，点遮罩或「关闭」收起；样式沿用 TabBar 长按弹层同款
- * （z-modal / rounded-t-sheet / shadow-elevated），不新增 token。
+ * 遮罩 + 底部圆角 sheet，点遮罩或「关闭」收起（v4.1：圆角收敛 18px、阴影降到极浅 shadow-card，
+ * 不新增 token）。
  */
 
 import type { ReactNode } from 'react';
@@ -26,7 +26,7 @@ export default function BottomSheet({
       data-testid={testId}
     >
       <div
-        className="max-h-[70vh] w-full max-w-lg overflow-y-auto rounded-t-sheet bg-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-elevated"
+        className="max-h-[70vh] w-full max-w-lg overflow-y-auto rounded-t-[18px] bg-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-card"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">

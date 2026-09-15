@@ -10,7 +10,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PetPicker from '../PetPicker';
+import PetPickerFlat from './PetPickerFlat';
 import BottomSheet from './BottomSheet';
 import type { PetItem } from '../types';
 
@@ -44,11 +44,11 @@ export default function PetCardBlock({
     return <div className="h-20 animate-pulse rounded-card bg-sunken" data-testid="gs-pet-loading" />;
   }
 
-  /* 无宠物 → 先建档岔路卡（保留现状逻辑） */
+  /* 无宠物 → 先建档岔路卡（保留现状逻辑；v4.1：去卡片化，CTA 退让为细线+深棕墨文字） */
   if (pets.length === 0 && !forkDismissed) {
     return (
       <div
-        className="flex flex-col items-center rounded-card bg-card px-4 py-6 text-center shadow-card"
+        className="flex flex-col items-center py-4 text-center"
         data-testid="gs-no-pet-fork"
       >
         <img src="/brand/empty-appointments-800.png" alt="还没有宠物档案" className="w-40 max-w-full rounded-card" />
@@ -57,7 +57,7 @@ export default function PetCardBlock({
         <button
           type="button"
           onClick={() => navigate('/philia/pets')}
-          className="mt-4 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="mt-4 flex h-11 items-center rounded-card border-[1.5px] border-ink px-8 text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           先建立宠物档案
         </button>
@@ -80,8 +80,8 @@ export default function PetCardBlock({
         type="button"
         onClick={() => setSheetOpen(true)}
         data-testid="gs-pet-card"
-        className={`flex w-full items-center gap-3 rounded-card bg-card p-4 text-left shadow-card transition active:scale-[0.99] ${
-          pet ? '' : 'border border-dashed border-line-strong'
+        className={`flex w-full items-center gap-3 py-2 text-left transition active:scale-[0.99] ${
+          pet ? '' : 'rounded-card border border-dashed border-line-strong px-4 py-3'
         }`}
       >
         {pet ? (
@@ -89,7 +89,7 @@ export default function PetCardBlock({
             {pet.avatarUrl ? (
               <img src={pet.avatarUrl} alt={pet.name} className="h-12 w-12 rounded-full object-cover" />
             ) : (
-              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-secondary-light text-[22px]">
+              <span className="flex h-12 w-12 items-center justify-center text-[28px]">
                 {pet.species === 'cat' ? '🐱' : '🐶'}
               </span>
             )}
@@ -106,23 +106,23 @@ export default function PetCardBlock({
                   [pet.weightKg ? `${pet.weightKg}kg` : null, pet.breed ?? null].filter(Boolean).join(' · ')}
               </span>
             </span>
-            <span className="text-caption text-brand-primary">更换 ▸</span>
+            <span className="text-caption font-medium text-ink">更换 ▸</span>
           </>
         ) : (
           <>
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-sunken text-[22px]">🐾</span>
+            <span className="flex h-12 w-12 items-center justify-center text-[28px]">🐾</span>
             <span className="flex-1">
               <span className="block text-body font-semibold text-ink-secondary">请选择宠物</span>
               <span className="mt-0.5 block text-caption text-ink-placeholder">{pickerHint ?? '点按选择要洗护的毛孩子'}</span>
             </span>
-            <span className="text-caption text-brand-primary">选择 ▸</span>
+            <span className="text-caption font-medium text-ink">选择 ▸</span>
           </>
         )}
       </button>
 
       {sheetOpen ? (
         <BottomSheet title="选择宠物" onClose={() => setSheetOpen(false)} testId="gs-pet-sheet">
-          <PetPicker
+          <PetPickerFlat
             pets={pets}
             selectedId={selectedId}
             onSelect={(id) => {

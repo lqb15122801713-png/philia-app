@@ -36,7 +36,7 @@ export default function RoomTypeBlock({
     return (
       <div className="rounded-card bg-sunken px-4 py-8 text-center" data-testid="bs-room-error">
         <p className="text-caption text-ink-secondary">房型加载失败，请检查网络</p>
-        <button type="button" onClick={onRetry} className="mt-2 text-caption font-semibold text-brand-primary">
+        <button type="button" onClick={onRetry} className="mt-2 text-caption font-semibold text-ink">
           重新加载
         </button>
       </div>
@@ -65,7 +65,7 @@ export default function RoomTypeBlock({
     const s = services[0]!;
     return (
       <div
-        className="flex w-full items-center justify-between rounded-card bg-card p-4 shadow-card"
+        className="flex w-full items-center justify-between rounded-card border border-line p-4"
         data-testid="bs-room-readonly"
         data-service-id={s.id}
       >
@@ -75,7 +75,7 @@ export default function RoomTypeBlock({
           {remainLine(s.id)}
         </span>
         <span className="text-right">
-          <span className="block font-number text-price text-brand-primary">{fenToYuan(s.priceFen)}</span>
+          <span className="block font-number text-price text-ink">{fenToYuan(s.priceFen)}</span>
           <span className="text-caption text-ink-placeholder">/ 晚</span>
         </span>
       </div>
@@ -94,7 +94,7 @@ export default function RoomTypeBlock({
             onClick={() => onSelect(s.id)}
             data-testid={`bs-room-option-${s.id}`}
             data-active={active ? 'true' : 'false'}
-            className={`flex w-full items-center justify-between rounded-card bg-card p-4 text-left shadow-card transition active:scale-[0.99] ${active ? 'ring-2 ring-brand-primary' : ''}`}
+            className={`flex w-full items-center justify-between rounded-card border p-4 text-left transition active:scale-[0.99] ${active ? 'border-[1.5px] border-ink' : 'border-line'}`}
           >
             <span>
               <span className="block text-body font-semibold">{s.boardingRoomType ?? s.name}</span>
@@ -102,7 +102,7 @@ export default function RoomTypeBlock({
               {remainLine(s.id)}
             </span>
             <span className="text-right">
-              <span className="block font-number text-price text-brand-primary">{fenToYuan(s.priceFen)}</span>
+              <span className="block font-number text-price text-ink">{fenToYuan(s.priceFen)}</span>
               <span className="text-caption text-ink-placeholder">/ 晚</span>
             </span>
           </button>

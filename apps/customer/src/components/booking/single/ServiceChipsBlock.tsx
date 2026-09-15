@@ -59,13 +59,13 @@ export default function ServiceChipsBlock({
               onClick={() => onSelect(s.id)}
               data-testid={`gs-service-chip-${s.id}`}
               data-active={active ? 'true' : 'false'}
-              className={`rounded-card px-3.5 py-2.5 text-left transition active:scale-95 ${
-                active ? 'bg-brand-primary-light shadow-card ring-2 ring-brand-primary' : 'bg-card shadow-card'
+              className={`rounded-card border px-3.5 py-2.5 text-left transition active:scale-95 ${
+                active ? 'border-[1.5px] border-ink' : 'border-line'
               }`}
             >
               <span className="block text-body font-semibold">{s.name}</span>
               <span className="mt-0.5 block text-caption text-ink-secondary">
-                约 {s.durationMin ?? 60} 分钟 · <span className="font-number text-brand-primary">{fenToYuan(s.priceFen)}</span>
+                约 {s.durationMin ?? 60} 分钟 · <span className="font-number font-semibold text-ink">{fenToYuan(s.priceFen)}</span>
               </span>
             </button>
           );
@@ -76,7 +76,7 @@ export default function ServiceChipsBlock({
           type="button"
           onClick={() => setExpanded((v) => !v)}
           data-testid="gs-service-more"
-          className="mt-2 text-caption font-medium text-brand-primary"
+          className="mt-2 text-caption font-medium text-ink"
         >
           {expanded ? '收起服务 ▾' : `更多服务 ▸（共 ${services.length} 项）`}
         </button>

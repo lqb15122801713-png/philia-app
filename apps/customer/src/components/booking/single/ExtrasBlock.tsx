@@ -7,7 +7,7 @@
  */
 
 import { useState } from 'react';
-import StaffPicker from '../StaffPicker';
+import StaffPickerFlat from './StaffPickerFlat';
 import { PAYMENT_MODE_META } from '../format';
 import type { StaffPublic } from '../types';
 
@@ -80,7 +80,7 @@ export default function ExtrasBlock({
       : PAYMENT_MODE_META[paymentMode].label;
 
   return (
-    <div className="rounded-card bg-card px-4 shadow-card" data-testid="gs-extras">
+    <div data-testid="gs-extras">
       {/* 收款方式（单行选择器） */}
       <ChevronRow
         label="收款"
@@ -111,8 +111,8 @@ export default function ExtrasBlock({
                 onClick={() => onPaymentModeChange(m)}
                 data-testid={`gs-payment-${m}`}
                 data-disabled={passDisabled ? 'true' : 'false'}
-                className={`flex w-full items-center justify-between rounded-card bg-canvas p-3 text-left transition active:scale-[0.99] ${
-                  active ? 'ring-2 ring-brand-primary' : ''
+                className={`flex w-full items-center justify-between rounded-card border p-3 text-left transition active:scale-[0.99] ${
+                  active ? 'border-[1.5px] border-ink' : 'border-line'
                 } ${passDisabled ? 'cursor-not-allowed opacity-50' : ''}`}
               >
                 <span>
@@ -121,7 +121,7 @@ export default function ExtrasBlock({
                 </span>
                 <span
                   className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
-                    active ? 'bg-brand-primary' : 'border-[1.5px] border-line-strong'
+                    active ? 'bg-ink' : 'border-[1.5px] border-line-strong'
                   }`}
                 >
                   {active ? (
@@ -136,7 +136,7 @@ export default function ExtrasBlock({
         </div>
       ) : null}
 
-      <div className="border-t border-line-divider" />
+      <div className="border-t border-[rgba(74,59,46,.09)]" />
 
       {/* 添加备注（默认收起） */}
       <ChevronRow
@@ -154,11 +154,11 @@ export default function ExtrasBlock({
           rows={3}
           placeholder="毛孩子的注意事项，如怕水、需剃脚底毛…"
           data-testid="gs-note-input"
-          className="mb-3 w-full rounded-input border border-line bg-canvas px-3.5 py-3 text-body placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
+          className="mb-3 w-full rounded-[14px] border border-line bg-canvas px-3.5 py-3 text-body placeholder:text-ink-placeholder focus:border-ink focus:outline-none"
         />
       ) : null}
 
-      <div className="border-t border-line-divider" />
+      <div className="border-t border-[rgba(74,59,46,.09)]" />
 
       {/* 指定洗护师（默认收起，默认随缘） */}
       <ChevronRow
@@ -170,7 +170,7 @@ export default function ExtrasBlock({
       />
       {staffOpen ? (
         <div className="pb-3" data-testid="gs-staff-picker">
-          <StaffPicker staff={staff} selectedId={staffId} onSelect={onStaffChange} loading={staffLoading} />
+          <StaffPickerFlat staff={staff} selectedId={staffId} onSelect={onStaffChange} loading={staffLoading} />
           <p className="mt-1 text-caption text-ink-placeholder">指定洗护师会写在预约备注里传达给门店</p>
         </div>
       ) : null}

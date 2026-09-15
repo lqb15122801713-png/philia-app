@@ -125,8 +125,8 @@ export default function BoardingRangeSheet({
       onClick={() => setPhase(p)}
       data-testid={`bs-phase-${p}`}
       data-active={phase === p ? 'true' : 'false'}
-      className={`flex-1 rounded-input px-3 py-2 text-left transition ${
-        phase === p ? 'bg-brand-primary-light ring-1 ring-brand-primary' : 'bg-canvas'
+      className={`flex-1 rounded-card border px-3 py-2 text-left transition ${
+        phase === p ? 'border-[1.5px] border-ink' : 'border-line'
       }`}
     >
       <span className="block text-caption text-ink-secondary">{label}</span>
@@ -173,7 +173,7 @@ export default function BoardingRangeSheet({
                 const endpoint = isEndpoint(d);
                 const between = inRange(d);
                 const isToday = d.getTime() === today.getTime();
-                // 区间连色：端点格半侧补底 + 圆角收边，中间格整格浅色
+                // 区间连色（v4.1：中性洗色 + 端点细线圈）：端点格半侧补底 + 圆角收边，中间格整格浅色
                 const cinT = cIn?.getTime() ?? null;
                 const coutT = cOut?.getTime() ?? null;
                 const t = d.getTime();
@@ -181,11 +181,11 @@ export default function BoardingRangeSheet({
                   cinT === null || coutT === null
                     ? ''
                     : endpoint && t === cinT
-                      ? 'rounded-l-full bg-brand-primary-light'
+                      ? 'rounded-l-full bg-sunken'
                       : endpoint && t === coutT
-                        ? 'rounded-r-full bg-brand-primary-light'
+                        ? 'rounded-r-full bg-sunken'
                         : between
-                          ? 'bg-brand-primary-light'
+                          ? 'bg-sunken'
                           : '';
                 return (
                   <div key={d.getTime()} className={wrapCls}>
@@ -198,10 +198,10 @@ export default function BoardingRangeSheet({
                       data-phase={phase}
                       className={`mx-auto flex h-9 w-9 items-center justify-center rounded-full text-body transition ${
                         endpoint
-                          ? 'bg-brand-primary font-semibold text-ink'
+                          ? 'border-[1.5px] border-ink font-semibold text-ink'
                           : dis
                             ? 'cursor-not-allowed text-ink-placeholder opacity-40'
-                            : `text-ink active:scale-95 ${isToday ? 'font-semibold text-brand-primary' : ''}`
+                            : `text-ink active:scale-95 ${isToday ? 'font-semibold underline underline-offset-4' : ''}`
                       }`}
                     >
                       {i + 1}

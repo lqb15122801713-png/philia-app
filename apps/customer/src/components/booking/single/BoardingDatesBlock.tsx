@@ -26,7 +26,7 @@ export default function BoardingDatesBlock({
       type="button"
       onClick={() => onOpen(phase)}
       data-testid={testId}
-      className="flex-1 rounded-card bg-card px-4 py-3 text-left shadow-card transition active:scale-[0.99]"
+      className="flex-1 rounded-card border border-line px-4 py-3 text-left transition active:scale-[0.99]"
     >
       <span className="block text-caption text-ink-secondary">{label}</span>
       {value ? (
@@ -48,7 +48,7 @@ export default function BoardingDatesBlock({
       </div>
       {checkin && checkout ? (
         <p className="mt-2 text-body" data-testid="bs-nights-line">
-          共 <span className="font-number font-semibold text-brand-primary">{nights}</span> 晚
+          共 <span className="font-number font-semibold text-ink">{nights}</span> 晚
           {perNightFen !== null ? (
             <span className="text-ink-secondary"> · 单晚 <span className="font-number">{fenToYuan(perNightFen)}</span></span>
           ) : null}

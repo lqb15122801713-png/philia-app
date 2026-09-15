@@ -41,7 +41,7 @@ export default function DateStripBlock({
 
   return (
     <div data-testid="gs-date-strip">
-      {/* 7 天横条 */}
+      {/* 7 天横条（v4.1：去色块，选中=深棕墨加粗 + 细线指示） */}
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
         {days.map((d) => {
           const active = selectedDay !== null && isSameDay(d.date, selectedDay);
@@ -54,15 +54,16 @@ export default function DateStripBlock({
               data-testid={`gs-day-${d.date.getFullYear()}-${d.date.getMonth() + 1}-${d.date.getDate()}`}
               data-active={active ? 'true' : 'false'}
               data-greyed={greyed ? 'true' : 'false'}
-              className={`flex w-16 shrink-0 flex-col items-center rounded-card px-2 py-2.5 transition active:scale-95 ${
-                active ? 'bg-brand-primary text-ink shadow-card' : greyed ? 'bg-sunken text-ink-placeholder' : 'bg-card text-ink shadow-card'
+              className={`relative flex w-16 shrink-0 flex-col items-center px-2 pb-2.5 pt-1 transition active:scale-95 ${
+                greyed ? 'text-ink-placeholder' : 'text-ink'
               }`}
             >
-              <span className={`text-caption ${active ? 'text-ink/90' : ''}`}>{dayLabel(d.date)}</span>
-              <span className="mt-0.5 font-number text-body font-semibold">{d.date.getDate()}</span>
-              <span className={`mt-0.5 h-4 text-[10px] leading-4 ${active ? 'text-ink/80' : 'text-ink-placeholder'}`}>
+              <span className="text-caption">{dayLabel(d.date)}</span>
+              <span className={`mt-0.5 font-number text-body ${active ? 'font-bold' : 'font-semibold'}`}>{d.date.getDate()}</span>
+              <span className="mt-0.5 h-4 text-[10px] leading-4 text-ink-placeholder">
                 {d.closed ? '休息' : !d.hasAvailable ? '约满' : ''}
               </span>
+              {active ? <span className="absolute bottom-0 h-[2px] w-7 rounded-full bg-ink" /> : null}
             </button>
           );
         })}
@@ -73,7 +74,7 @@ export default function DateStripBlock({
         type="button"
         onClick={() => setCalOpen((v) => !v)}
         data-testid="gs-calendar-toggle"
-        className="mt-2 text-caption font-medium text-brand-primary"
+        className="mt-2 text-caption font-medium text-ink"
       >
         {calOpen ? '收起日历 ▾' : '展开整月日历 ▸'}
       </button>
@@ -89,7 +90,7 @@ export default function DateStripBlock({
               ...Array.from({ length: daysInMonth }, (_, i) => new Date(y, m, i + 1)),
             ];
             return (
-              <div key={`${y}-${m}`} className="rounded-card bg-card p-3 shadow-card">
+              <div key={`${y}-${m}`} className="rounded-card border border-[rgba(74,59,46,.09)] p-3">
                 <p className="text-center text-body font-semibold">
                   {y} 年 {m + 1} 月
                 </p>
@@ -115,7 +116,7 @@ export default function DateStripBlock({
                         data-in-window={inWindow ? 'true' : 'false'}
                         className={`flex h-9 items-center justify-center rounded-full font-number text-body transition ${
                           active
-                            ? 'bg-brand-primary font-semibold text-ink'
+                            ? 'border-[1.5px] border-ink font-semibold text-ink'
                             : !inWindow
                               ? 'cursor-not-allowed text-ink-placeholder/50'
                               : greyed
