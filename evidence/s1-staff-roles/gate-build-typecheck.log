@@ -1,0 +1,8 @@
+== server typecheck ==
+TYPECHECK_EXIT=0
+== build customer ==
+CUSTOMER_EXIT=0
+== build merchant ==
+MERCHANT_EXIT=0
+== build staff ==
+STAFF_EXIT=0

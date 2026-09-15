@@ -1,0 +1,13 @@
+
+> @philia/server@0.1.0 db:migrate
+> tsx src/db/migrate.ts
+
+[migrate] 迁移目录: D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\drizzle
+[migrate] 迁移完成，已应用 7 条迁移：
+  - hash=7014c5ccfe81…  applied_at=2026-09-04T15:18:00.969Z
+  - hash=0122c83421e6…  applied_at=2026-09-05T08:33:07.454Z
+  - hash=c9bf0424a486…  applied_at=2026-09-07T05:42:13.796Z
+  - hash=dc82ac221be3…  applied_at=2026-09-07T12:12:51.482Z
+  - hash=e28f77bb21fe…  applied_at=2026-09-07T13:05:47.657Z
+  - hash=b57a51cb7201…  applied_at=2026-09-10T10:47:02.075Z
+  - hash=d8108bd71355…  applied_at=2026-09-15T09:26:26.154Z

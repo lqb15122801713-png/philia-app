@@ -1,0 +1,6 @@
+[legacy] 迁移到 0005：已应用 6 条（期望 6）
+[legacy] 已按 0005 schema 插入存量员工行（无 role 列）
+[0006 应用后] 存量员工行： {"id":"st_legacy","name":"旧员工","role":"groomer","status":"active"}
+[重跑] 迁移记录 7 条（期望 7，不重复应用）；role 仍为 groomer
+[warn] 临时目录清理失败（Windows libsql 句柄滞后，可手工删）: C:\Users\lqb15\AppData\Local\Temp\philia-s1-legacy-27700
+存量零破坏 + 幂等实证完成 ✅

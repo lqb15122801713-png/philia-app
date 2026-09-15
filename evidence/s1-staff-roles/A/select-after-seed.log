@@ -1,0 +1,6 @@
+[staff 表]
+  小美  role=frontdesk  status=active
+  阿强  role=groomer  status=active
+  丽丽  role=groomer  status=active
+[staff_invites 表] 共 0 行
+[staff 列] id:TEXT NOTNULL dflt=null | store_id:TEXT NOTNULL dflt=null | user_id:TEXT NOTNULL dflt=null | name:TEXT NOTNULL dflt=null | skills:TEXT dflt=null | schedule:TEXT dflt=null | status:TEXT NOTNULL dflt='active' | created_at:INTEGER NOTNULL dflt=unixepoch() | updated_at:INTEGER NOTNULL dflt=unixepoch() | role:TEXT NOTNULL dflt='groomer'
