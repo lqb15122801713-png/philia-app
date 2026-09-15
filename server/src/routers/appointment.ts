@@ -56,6 +56,7 @@ import {
 } from '../config/durationEngine';
 import {
   assertAppointmentAccess,
+  assertFrontdeskStaff,
   customerProcedure,
   merchantProcedure,
   publicProcedure,
@@ -1325,7 +1326,8 @@ export const appointmentRouter = router({
 
   /**
    * 9. checkin（staff）★ 扫码 / 人工码核销：
-   * 限流 → 验签（滚动时间窗 HMAC）→ 状态 confirmed → 门店归属 → 核销归属
+   * 前台角色（批次 S1：仅 role=frontdesk，先于限流与凭据校验，角色拒绝不计失败次数）
+   * → 限流 → 验签（滚动时间窗 HMAC）→ 状态 confirmed → 门店归属 → 核销归属
    * （已指派仅本人；未指派事务内认领并补发 assigned）→ 幂等 → type 分支事务。
    */
   checkin: staffProcedure
@@ -1338,6 +1340,8 @@ export const appointmentRouter = router({
     .mutation(async ({ ctx, input }) => {
       const staffId = ctx.user.staffId!;
       const staffStoreId = ctx.user.storeId!;
+      // 批次 S1 任务 B：核销权限收口——仅前台可核销（groomer → FORBIDDEN 原文案）
+      await assertFrontdeskStaff(ctx);
       // 防爆破限流：锁定中直接 429（不再校验凭据，不给爆破者任何区分信号）
       assertCheckinNotLocked(staffId);
       /** 核销失败统一入口：计一次失败（达限即锁 10 分钟）后抛出（function 声明以便 TS 收窄） */

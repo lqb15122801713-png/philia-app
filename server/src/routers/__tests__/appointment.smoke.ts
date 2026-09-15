@@ -144,10 +144,11 @@ try {
     { id: 's-2', ownerId: 'u-m', name: '冒烟二号店', openHours: OPEN_ALL, status: 'active' },
   ]);
   await db.insert(schema.staff).values([
-    { id: 'st-a', storeId: 's-1', userId: 'u-a', name: '员工A', skills: ['wash', 'groom'], schedule: SCHED_FULL, status: 'active' },
-    { id: 'st-b', storeId: 's-1', userId: 'u-b', name: '员工B', skills: ['wash', 'boarding'], schedule: SCHED_FULL, status: 'active' },
-    { id: 'st-c', storeId: 's-2', userId: 'u-c', name: '他店员工', skills: ['wash', 'groom', 'boarding'], schedule: SCHED_FULL, status: 'active' },
-    { id: 'st-d', storeId: 's-1', userId: 'u-d', name: '员工D', skills: ['boarding'], schedule: {}, status: 'active' }, // 无排班
+    // 批次 S1：核销收口前台——执行核销的 A/B/C 夹具为 frontdesk；D 为 groomer（角色拒绝断言用）
+    { id: 'st-a', storeId: 's-1', userId: 'u-a', name: '员工A', role: 'frontdesk', skills: ['wash', 'groom'], schedule: SCHED_FULL, status: 'active' },
+    { id: 'st-b', storeId: 's-1', userId: 'u-b', name: '员工B', role: 'frontdesk', skills: ['wash', 'boarding'], schedule: SCHED_FULL, status: 'active' },
+    { id: 'st-c', storeId: 's-2', userId: 'u-c', name: '他店员工', role: 'frontdesk', skills: ['wash', 'groom', 'boarding'], schedule: SCHED_FULL, status: 'active' },
+    { id: 'st-d', storeId: 's-1', userId: 'u-d', name: '员工D', role: 'groomer', skills: ['boarding'], schedule: {}, status: 'active' }, // 无排班
   ]);
   await db.insert(schema.pets).values([
     { id: 'p-1', ownerId: 'u-c1', name: '豆豆', species: 'dog' },
@@ -449,6 +450,13 @@ try {
   check(
     '非同店员工核销 → FORBIDDEN',
     await rejects(cStaff.checkin({ code: appt2.code }), 'FORBIDDEN', /本店/),
+  );
+  // 3.3b 批次 S1（任务 B）：美容师（groomer）核销 → FORBIDDEN「核销需前台账号操作」
+  // （角色判定先于归属/幂等/限流，且不计入防爆破失败次数）
+  const dStaff = appointmentRouter.createCaller(ctxStaff('u-d', 'st-d', 's-1'));
+  check(
+    '批次 S1：groomer 核销 → FORBIDDEN「核销需前台账号操作」',
+    await rejects(dStaff.checkin({ code: appt2.code }), 'FORBIDDEN', /核销需前台账号操作/),
   );
   // 3.4 重复扫码 → 幂等返回当前进度，不产生重复记录/事件
   const totalBeforeIdem = await totalOutbox();

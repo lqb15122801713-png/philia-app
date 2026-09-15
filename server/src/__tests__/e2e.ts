@@ -12,7 +12,8 @@
  *   2. 客户：store.listNearby → store.getWithServices（服务 + 可约槽位）→ appointment.create
  *      （create 前已完成 push.subscribe；create 后立刻以 watch=<aid> 建立 SSE 流后台读）
  *   3. 商家：appointment.confirm → appointment.assign（派给种子员工）
- *   4. 客户：appointment.getCode → 员工：appointment.checkin（二维码原文）
+ *   4. 客户：appointment.getCode → 员工（groomer）核销被拒（批次 S1 双角色断言）
+ *      → 员工（frontdesk）：appointment.checkin（二维码原文）
  *   5. 员工：POST /api/upload（jimp 现造 JPEG）→ serviceStep.addPhotos 登记
  *      → 逐步 confirmStep 走完六步（张数按 min：1/2/3/2/2/0，before_after 需 before+after 各 1）
  *   6. 校验预约 completed；商家 markPaid；客户 review
@@ -212,9 +213,10 @@ async function main(): Promise<void> {
   const byKimi = (kimiId: string) => seedUsers.find((u) => u.kimiId === kimiId);
   const customerUser = byKimi('seed_kimi_customer');
   const ownerUser = byKimi('seed_kimi_owner');
-  const staffUser = byKimi('seed_kimi_staff1');
-  check('种子用户齐全（customer/owner/staff1）', !!(customerUser && ownerUser && staffUser));
-  if (!customerUser || !ownerUser || !staffUser) throw new Error('种子用户缺失');
+  const staffUser = byKimi('seed_kimi_staff1'); // 小美：批次 S1 起为 frontdesk（核销执行人）
+  const groomerUser = byKimi('seed_kimi_staff2'); // 阿强：groomer（核销应被拒）
+  check('种子用户齐全（customer/owner/staff1/staff2）', !!(customerUser && ownerUser && staffUser && groomerUser));
+  if (!customerUser || !ownerUser || !staffUser || !groomerUser) throw new Error('种子用户缺失');
 
   /* ---------- 1. 启动 server 子进程（7200） ---------- */
   server = spawn(process.execPath, [TSX_CLI, 'src/index.ts'], {
@@ -250,7 +252,8 @@ async function main(): Promise<void> {
   const customerCookie = await devLogin(customerUser!.id);
   const ownerCookie = await devLogin(ownerUser!.id);
   const staffCookie = await devLogin(staffUser!.id);
-  check('三角色 dev-login 均签发会话 cookie', !!(customerCookie && ownerCookie && staffCookie));
+  const groomerCookie = await devLogin(groomerUser!.id);
+  check('三角色 dev-login 均签发会话 cookie', !!(customerCookie && ownerCookie && staffCookie && groomerCookie));
 
   const me = await trpcQuery<{ roles: string[]; store: { id: string } | null }>('auth.me', {
     cookie: ownerCookie,
@@ -362,6 +365,68 @@ async function main(): Promise<void> {
   });
   check('appointment.getCode 返回二维码原文与人工码', !!codeRes.raw && /^\{.*\}$/.test(codeRes.raw), codeRes.code);
 
+  /* ---------- 7a. 批次 S1（任务 B）双角色权限断言：groomer 核销被拒 ---------- */
+  const groomerQr = await trpcMutate('appointment.checkin', {
+    cookie: groomerCookie,
+    input: { qr: codeRes.raw },
+  }).then(
+    () => null,
+    (e) => e as TrpcHttpError,
+  );
+  check(
+    '批次 S1：groomer 扫码核销 → 403 FORBIDDEN「核销需前台账号操作」',
+    groomerQr instanceof TrpcHttpError &&
+      groomerQr.httpStatus === 403 &&
+      groomerQr.code === 'FORBIDDEN' &&
+      groomerQr.message.includes('核销需前台账号操作'),
+    groomerQr && { status: groomerQr.httpStatus, code: groomerQr.code, message: groomerQr.message },
+  );
+  const groomerCode = await trpcMutate('appointment.checkin', {
+    cookie: groomerCookie,
+    input: { code: codeRes.code },
+  }).then(
+    () => null,
+    (e) => e as TrpcHttpError,
+  );
+  check(
+    '批次 S1：groomer 人工码核销 → 403 FORBIDDEN「核销需前台账号操作」',
+    groomerCode instanceof TrpcHttpError &&
+      groomerCode.httpStatus === 403 &&
+      groomerCode.code === 'FORBIDDEN' &&
+      groomerCode.message.includes('核销需前台账号操作'),
+    groomerCode && { status: groomerCode.httpStatus, code: groomerCode.code, message: groomerCode.message },
+  );
+  // boarding.checkinStay 同口径：groomer → FORBIDDEN（角色判定先于预约查询， dummy id 也被拒）
+  const groomerStay = await trpcMutate('boarding.checkinStay', {
+    cookie: groomerCookie,
+    input: { appointmentId: 'appt-not-exist', checkinWeightKg: 4.2, belongings: [] },
+  }).then(
+    () => null,
+    (e) => e as TrpcHttpError,
+  );
+  check(
+    '批次 S1：groomer 入住登记（checkinStay）→ 403 FORBIDDEN「核销需前台账号操作」',
+    groomerStay instanceof TrpcHttpError &&
+      groomerStay.httpStatus === 403 &&
+      groomerStay.code === 'FORBIDDEN' &&
+      groomerStay.message.includes('核销需前台账号操作'),
+    groomerStay && { status: groomerStay.httpStatus, code: groomerStay.code, message: groomerStay.message },
+  );
+  // 前台过角色校验：同一 dummy id 不再吃 FORBIDDEN（落后续预约查询报错）
+  const frontdeskStay = await trpcMutate('boarding.checkinStay', {
+    cookie: staffCookie,
+    input: { appointmentId: 'appt-not-exist', checkinWeightKg: 4.2, belongings: [] },
+  }).then(
+    () => null,
+    (e) => e as TrpcHttpError,
+  );
+  check(
+    '批次 S1：frontdesk 入住登记越过角色校验（dummy id 报非 FORBIDDEN 业务错）',
+    frontdeskStay instanceof TrpcHttpError && frontdeskStay.code !== 'FORBIDDEN',
+    frontdeskStay && { status: frontdeskStay.httpStatus, code: frontdeskStay.code, message: frontdeskStay.message },
+  );
+
+  /* ---------- 7b. 前台扫码核销（全链路） ---------- */
   const checkin = await trpcMutate<{
     appointment: { status: string };
     steps: Array<{ stepKey: string; status: string }>;
@@ -369,7 +434,7 @@ async function main(): Promise<void> {
     idempotent: boolean;
   }>('appointment.checkin', { cookie: staffCookie, input: { qr: codeRes.raw } });
   check(
-    'appointment.checkin（二维码原文）→ in_service + 六步初始化',
+    'appointment.checkin（frontdesk 二维码原文）→ in_service + 六步初始化',
     checkin.appointment.status === 'in_service' && checkin.steps.length === 6 &&
       checkin.steps[0]!.status === 'active' && checkin.steps.slice(1).every((s) => s.status === 'locked'),
     checkin,

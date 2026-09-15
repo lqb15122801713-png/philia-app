@@ -96,6 +96,27 @@ export const merchantProcedure = publicProcedure.use(({ ctx, next }) => {
   return next();
 });
 
+/**
+ * 批次 S1（任务 B）核销权限收口：仅前台（staff.role='frontdesk'）可核销。
+ * 每请求直查 staff 行（与 staffProcedure 在职校验同模式），角色改动即时生效；
+ * groomer / 无 staff 记录 → FORBIDDEN 原文案「核销需前台账号操作」。
+ * 用于 appointment.checkin / boarding.checkinStay，须在限流/凭据校验之前调用
+ * （角色拒绝不计入防爆破失败次数）。
+ */
+export async function assertFrontdeskStaff(ctx: Context): Promise<void> {
+  const staffId = ctx.user?.staffId;
+  const row = staffId
+    ? await ctx.db
+        .select({ role: schema.staff.role })
+        .from(schema.staff)
+        .where(eq(schema.staff.id, staffId))
+        .get()
+    : undefined;
+  if (row?.role !== 'frontdesk') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: '核销需前台账号操作' });
+  }
+}
+
 export type AppointmentRow = typeof schema.appointments.$inferSelect;
 
 /**

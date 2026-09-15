@@ -26,6 +26,7 @@ import { schema } from '../db';
 import { emitEvent, broadcastNow, type Db as BusDb } from '../realtime/bus';
 import { EventType } from '../realtime/events';
 import {
+  assertFrontdeskStaff,
   customerProcedure,
   merchantProcedure,
   router,
@@ -96,7 +97,7 @@ async function petNameOf(ctx: Context, petId: string): Promise<string | undefine
 }
 
 export const boardingRouter = router({
-  /** 入住登记（staff 本店；幂等：已登记则更新） */
+  /** 入住登记（staff 本店；幂等：已登记则更新；批次 S1 同口径收口：仅前台可操作） */
   checkinStay: staffProcedure
     .input(
       z.object({
@@ -107,6 +108,8 @@ export const boardingRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // 批次 S1 任务 B：与 appointment.checkin 同口径——仅前台可入住登记
+      await assertFrontdeskStaff(ctx);
       const appt = await getBoardingAppointment(ctx, input.appointmentId);
       if (appt.status !== 'in_boarding') {
         throw new TRPCError({
