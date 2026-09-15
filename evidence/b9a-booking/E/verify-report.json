@@ -1,0 +1,83 @@
+{
+  "customer": {
+    "login": {
+      "status": 200,
+      "user": "01M20EDD8DKJ5DR9FZY7A01Y04",
+      "roles": [
+        "customer"
+      ]
+    },
+    "state": {
+      "path": "/appointments?crash=1",
+      "rootLen": 7891,
+      "bodyText": "页面出了点小状况\n\n这次错误已经自动记录，我们会尽快排查。\n\nB9A-E 注入测试错误：渲染崩溃取证（customer /appointments）\n\nat AppointmentsPage (http://localhost:7100/src/pages/AppointmentsPage.tsx:95:11)\n\n重试\n回首页\n首页\n商城\n预约\n我的"
+    },
+    "retry": {
+      "retry": true,
+      "afterRetry": {
+        "path": "/appointments",
+        "rootLen": 20605,
+        "bodyText": "我的预约\n待确认13\n已确认1\n服务中\n已完成4\n已取消5\n\n标准间寄养（犬）\n\n待确认\n\n菲丽亚宠物·示例店 · 旺财\n\n9月17日 周四 → 9月18日 周五\n\n¥199\n\n基础洗护（小型犬）\n\n待确认\n\n菲丽亚宠物·示例店 · 旺财\n\n9月15日 周二 13:30\n\n¥88\n\n基础洗护（小型犬）\n\n待确认\n\n菲丽亚宠物·示例店 · 旺财\n\n9月15日 周二 13:00\n\n¥88\n\n基础洗护（"
+      },
+      "homeBtn": "clicked",
+      "afterHome": {
+        "path": "/home"
+      },
+      "expectHome": "/home"
+    }
+  },
+  "merchant": {
+    "login": {
+      "status": 200,
+      "user": "01M20EDD8CMJCG42PBGX9MY5NB",
+      "roles": [
+        "merchant_owner"
+      ]
+    },
+    "state": {
+      "path": "/appointments?crash=1",
+      "rootLen": 6740,
+      "bodyText": "页面出了点小状况\n\n这次错误已经自动记录，我们会尽快排查。\n\nB9A-E 注入测试错误：渲染崩溃取证（merchant /appointments 派单链路）\n\nat AppointmentsPage (http://localhost:7101/src/pages/AppointmentsPage.tsx:48:11)\n\n重试\n回首页\n仪表盘\n17\n预约\n1\n管理\n财务"
+    },
+    "retry": {
+      "retry": true,
+      "afterRetry": {
+        "path": "/appointments",
+        "rootLen": 35560,
+        "bodyText": "预约管理\n列表\n日历\n全部\n待确认\n已确认\n服务中\n寄养中\n取消申请\n已完成\n已取消\n今天\n明天\n本周\n自定义\n全部\n\n09:00\n\n9月15日\n\n旺财·标准间寄养（犬）\n\n示例客户 · 尾号 0000|寄养|未指派\n\n待确认\n¥199.00\n确认\n婉拒\n\n09:00\n\n9月15日\n\n旺财·标准间寄养（犬）\n\n示例客户 · 尾号 0000|寄养|未指派\n\n待确认\n¥199.00\n确认\n婉拒\n\n12"
+      },
+      "homeBtn": "clicked",
+      "afterHome": {
+        "path": "/dashboard"
+      },
+      "expectHome": "/dashboard"
+    }
+  },
+  "staff": {
+    "login": {
+      "status": 200,
+      "user": "01M20EDD8DCX0M28PR83D6XMPC",
+      "roles": [
+        "staff"
+      ]
+    },
+    "state": {
+      "path": "/execute/b9a-e-fake-appt?crash=1",
+      "rootLen": 4360,
+      "bodyText": "页面出了点小状况\n\n这次错误已经自动记录，我们会尽快排查。\n\nB9A-E 注入测试错误：渲染崩溃取证（staff /execute/:id 执行核销链路）\n\nat ExecutePageCore (http://localhost:7102/src/pages/ExecutePage.tsx:53:28)\n\n重试\n回首页\n今日\n执行\n记录"
+    },
+    "retry": {
+      "retry": true,
+      "afterRetry": {
+        "path": "/execute/b9a-e-fake-appt",
+        "rootLen": 3689,
+        "bodyText": "预约不存在\n可能已被取消或删除\n返回今日任务\n今日\n执行\n记录"
+      },
+      "homeBtn": "clicked",
+      "afterHome": {
+        "path": "/today"
+      },
+      "expectHome": "/today"
+    }
+  }
+}

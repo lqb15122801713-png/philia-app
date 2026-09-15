@@ -1,0 +1,44 @@
+{
+  "customer": {
+    "login": {
+      "status": 200,
+      "user": "01M20EDD8DKJ5DR9FZY7A01Y04",
+      "roles": [
+        "customer"
+      ]
+    },
+    "state": {
+      "path": "/appointments?crash=1",
+      "rootLen": 0,
+      "bodyText": ""
+    }
+  },
+  "merchant": {
+    "login": {
+      "status": 200,
+      "user": "01M20EDD8CMJCG42PBGX9MY5NB",
+      "roles": [
+        "merchant_owner"
+      ]
+    },
+    "state": {
+      "path": "/appointments?crash=1",
+      "rootLen": 0,
+      "bodyText": ""
+    }
+  },
+  "staff": {
+    "login": {
+      "status": 200,
+      "user": "01M20EDD8DCX0M28PR83D6XMPC",
+      "roles": [
+        "staff"
+      ]
+    },
+    "state": {
+      "path": "/execute/b9a-e-fake-appt?crash=1",
+      "rootLen": 0,
+      "bodyText": ""
+    }
+  }
+}
