@@ -1,0 +1,13 @@
+=== 仿真1：全新 DB（首装口径，PHILIA_DB_URL 指向不存在文件） ===
+  - hash=dc82ac221be3…  applied_at=2026-09-07T12:12:51.482Z
+  - hash=e28f77bb21fe…  applied_at=2026-09-07T13:05:47.657Z
+  - hash=61fd44979ca3…  applied_at=2026-09-10T10:47:02.075Z
+  - hash=d8108bd71355…  applied_at=2026-09-15T09:26:26.154Z
+exit=0
+
+=== 仿真2：同库再跑（0 pending 幂等秒过） ===
+  - hash=dc82ac221be3…  applied_at=2026-09-07T12:12:51.482Z
+  - hash=e28f77bb21fe…  applied_at=2026-09-07T13:05:47.657Z
+  - hash=61fd44979ca3…  applied_at=2026-09-10T10:47:02.075Z
+  - hash=d8108bd71355…  applied_at=2026-09-15T09:26:26.154Z
+exit=0
