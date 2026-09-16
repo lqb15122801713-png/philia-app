@@ -1,9 +1,10 @@
 #!/bin/sh
 # ============================================================================
-# Philia 容器入口（批次 6 任务 A）
-# 1) 数据库初始化：PHILIA_DB_URL（file: 前缀）指向的 DB 文件缺失时执行
-#    db:migrate —— drizzle 迁移记录 __drizzle_migrations 日志表，天然幂等，
-#    重复执行不会重复应用（升级带新迁移时按 docs/DEPLOY.md 手动 exec migrate）；
+# Philia 容器入口（批次 6 任务 A；批次 S1.1 迁移口径修正）
+# 1) 数据库迁移：**无论 DB 文件是否存在，启动一律先执行** db:migrate——
+#    drizzle 迁移记录 __drizzle_migrations 日志表，天然幂等（已应用零副作用，
+#    0 pending 秒过）；首装与存量升级同口径，杜绝「含迁移批次在存量库上不迁移
+#    即上线」（批次 S1 VPS 实录缺陷）。set -e 保证迁移失败 fail-fast 不起服务；
 # 2) exec tsx 起 server（exec 替换进程，SIGTERM 直达 index.ts 优雅退出处理器）。
 # ============================================================================
 set -e
@@ -15,10 +16,8 @@ DB_PATH="${DB_URL#file:}"
 mkdir -p "$(dirname "$DB_PATH")" /app/server/uploads
 
 cd /app/server
-if [ ! -f "$DB_PATH" ]; then
-  echo "[entrypoint] 数据库文件 $DB_PATH 不存在，执行首次迁移（drizzle journal 幂等）…"
-  ./node_modules/.bin/tsx src/db/migrate.ts
-fi
+echo "[entrypoint] 执行数据库迁移（首装/存量升级同口径，drizzle journal 幂等）…"
+./node_modules/.bin/tsx src/db/migrate.ts
 
-echo "[entrypoint] 启动 philia-server（PORT=${PORT:-7200} SERVE_STATIC=${SERVE_STATIC:-1}）…"
+echo "[entrypoint] 迁移检查完成，启动 philia-server（PORT=${PORT:-7200} SERVE_STATIC=${SERVE_STATIC:-1}）…"
 exec ./node_modules/.bin/tsx src/index.ts
