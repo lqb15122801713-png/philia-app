@@ -1,0 +1,9 @@
+{
+  "banner": false,
+  "reminder": false,
+  "nearbyText": false,
+  "recommendText": false,
+  "capsuleEntries": 0,
+  "oldTabBar": false,
+  "promoText": false
+}

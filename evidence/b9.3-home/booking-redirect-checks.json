@@ -1,0 +1,47 @@
+[
+  {
+    "name": "/booking 直达洗护单屏",
+    "ok": true,
+    "detail": "path=/booking/grooming"
+  },
+  {
+    "name": "hub 不可达（无「预约服务/选择服务类型」残留）",
+    "ok": true,
+    "detail": "hub 文案 0 命中"
+  },
+  {
+    "name": "/booking?type=boarding 直达寄养单屏",
+    "ok": true,
+    "detail": "path=/booking/boarding"
+  },
+  {
+    "name": "洗护单屏顶部「寄养 ›」存在",
+    "ok": true,
+    "detail": "testid=true"
+  },
+  {
+    "name": "「寄养 ›」点击落点 /booking/boarding",
+    "ok": true,
+    "detail": "path=/booking/boarding"
+  },
+  {
+    "name": "寄养单屏顶部「洗护 ›」存在",
+    "ok": true,
+    "detail": "testid=true"
+  },
+  {
+    "name": "「洗护 ›」点击落点 /booking/grooming",
+    "ok": true,
+    "detail": "path=/booking/grooming"
+  },
+  {
+    "name": "首页服务行「寄养服务 ›」存在",
+    "ok": true,
+    "detail": "testid=true"
+  },
+  {
+    "name": "首页「寄养服务 ›」落点 /booking/boarding",
+    "ok": true,
+    "detail": "path=/booking/boarding"
+  }
+]

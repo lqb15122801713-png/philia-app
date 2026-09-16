@@ -1,0 +1,8 @@
+build-customer=0
+build-merchant=0
+build-staff=0
+server-typecheck=0
+smoke-routes=0
+server-e2e=0
+taskB-routes=0
+three-states=0

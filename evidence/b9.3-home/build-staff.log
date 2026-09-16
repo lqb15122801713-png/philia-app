@@ -1,0 +1,28 @@
+
+> philia@0.0.0 build:staff
+> npm run build -w @philia/staff
+
+
+> @philia/staff@0.0.0 build
+> tsc -b && vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 2156 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                          0.13 kB
+dist/manifest.webmanifest                   0.40 kB
+dist/index.html                             0.75 kB │ gzip:   0.44 kB
+dist/assets/philia-tab-icon-wiOD1Y2x.png   10.07 kB
+dist/assets/index-CKEqTtwd.css             92.73 kB │ gzip:  15.53 kB
+dist/assets/QrScanner-CkyEvK75.js         141.46 kB │ gzip:  51.27 kB
+dist/assets/index-ADJbmgyc.js             480.89 kB │ gzip: 140.66 kB
+✓ built in 2.90s
+
+PWA v1.3.0
+mode      generateSW
+precache  8 entries (699.18 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js
