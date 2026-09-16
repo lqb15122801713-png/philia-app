@@ -9,9 +9,9 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Coins, Crown, Sparkles, Ticket, Wallet } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Coins, Crown, Sparkles, Ticket, Wallet } from 'lucide-react'
 import { usePhiliaClient } from '@philia/shared'
+import PageHeader from '@/components/PageHeader'
 import { ErrorState, LoadingBlock, formatFen, tabularNums } from '../components/home/common'
 
 const DAY_MS = 86_400_000
@@ -175,16 +175,8 @@ function PassCard() {
 export default function MemberPage() {
   return (
     <div className="px-4 pb-6">
-      <header className="flex items-center gap-2 pt-6">
-        <Link
-          to="/philia"
-          aria-label="返回"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-card shadow-card"
-        >
-          <ArrowLeft className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
-        </Link>
-        <h1 className="text-title-lg">会员卡</h1>
-      </header>
+      {/* U1-A：统一返回条（←圆钮+标题），固定返回 philia 页 */}
+      <PageHeader title="会员卡" to="/philia" className="pt-6" />
 
       <div className="mt-4 flex flex-col gap-3">
         <RealStatsCard />

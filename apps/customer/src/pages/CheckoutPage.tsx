@@ -15,10 +15,11 @@
 
 import { usePhiliaClient } from '@philia/shared';
 import { useMutation } from '@tanstack/react-query';
-import { BadgeCheck, ChevronLeft, MapPin } from 'lucide-react';
+import { BadgeCheck, MapPin } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import CashierModal, { type CashierOrder } from '../components/mall/CashierModal';
+import PageHeader from '../components/PageHeader';
 import { CartProvider, useCart, type AddInput } from '../components/mall/cartStore';
 import { fenToYuan } from '../components/mall/format';
 import { friendlyError, useMallToast } from '../components/mall/MallToast';
@@ -202,17 +203,8 @@ function CheckoutInner() {
   return (
     <div className="px-4 pb-32 pt-6">
       {toastEl}
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          aria-label="返回"
-          onClick={() => navigate(-1)}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-card shadow-card transition-transform duration-120 ease-philia-spring active:scale-92"
-        >
-          <ChevronLeft className="h-5 w-5 text-ink" strokeWidth={1.5} />
-        </button>
-        <h1 className="text-title-lg">确认订单</h1>
-      </div>
+      {/* U1-A：统一返回条（←圆钮+标题） */}
+      <PageHeader title="确认订单" />
 
       {/* 收货地址 */}
       <section className="mt-4 rounded-card bg-card p-4 shadow-card">

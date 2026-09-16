@@ -19,6 +19,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
 import { friendlyError, useToast } from '@/components/booking/Toast';
+import PageHeader from '@/components/PageHeader';
 import PetCardBlock from '@/components/booking/single/PetCardBlock';
 import ServiceChipsBlock from '@/components/booking/single/ServiceChipsBlock';
 import StoreLineBlock from '@/components/booking/single/StoreLineBlock';
@@ -264,27 +265,15 @@ export default function GroomingSinglePage() {
     <div className="px-4 pb-36 pt-6" data-testid="grooming-single">
       {toastEl}
 
-      <header className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          aria-label="返回"
-          className="flex h-9 w-9 items-center justify-center rounded-full active:scale-92"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ink-secondary" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m15 18-6-6 6-6" />
-          </svg>
-        </button>
-        <h1 className="text-title-lg">预约洗护</h1>
-        {/* B9.3 任务 B：hub 退役后寄养入口安置——顶部栏右侧安静文字链 */}
-        <Link
-          to="/booking/boarding"
-          data-testid="grooming-to-boarding"
-          className="ml-auto text-caption text-ink"
-        >
-          寄养 ›
-        </Link>
-      </header>
+      {/* U1-A：统一返回条（←圆钮+标题）；B9.3 任务 B：hub 退役后寄养入口安置——右侧安静文字链 */}
+      <PageHeader
+        title="预约洗护"
+        right={
+          <Link to="/booking/boarding" data-testid="grooming-to-boarding" className="text-caption text-ink">
+            寄养 ›
+          </Link>
+        }
+      />
 
       {/* 宠物卡（B9a 任务 C：换宠物 → 时长引擎口径变化，已选时段清空重选） */}
       <section className="mt-4">

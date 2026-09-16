@@ -9,6 +9,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
+import PageHeader from '@/components/PageHeader';
 import {
   APPT_STATUS_META,
   APPT_TYPE_LABEL,
@@ -88,7 +89,8 @@ export default function AppointmentsPage() {
 
   return (
     <div className="px-4 py-6">
-      <h1 className="text-title-lg">我的预约</h1>
+      {/* U1-A：详情级页面不渲染 dock，统一返回条（←圆钮+标题） */}
+      <PageHeader title="我的预约" />
 
       {listQ.isPending ? (
         <div className="mt-5 space-y-2">

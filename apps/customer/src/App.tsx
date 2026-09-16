@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes, useLocation, useSearchParams } from 'react-router-dom'
 import { PageErrorBoundary } from '@philia/shared'
 import RequireAuth from './components/RequireAuth'
-import TabBar from './components/TabBar'
+import AppDock from './components/AppDock'
 import AppointmentDetailPage from './pages/AppointmentDetailPage'
 import AppointmentLivePage from './pages/AppointmentLivePage'
 import AppointmentsPage from './pages/AppointmentsPage'
@@ -70,24 +70,27 @@ function ProtectedRoutes() {
 export default function App() {
   const { pathname } = useLocation()
   const isDevLogin = pathname === '/dev-login'
-  // B4-R1：洗护/寄养单屏为沉浸式下单流，隐藏底部 TabBar（凸起中按钮会遮挡吸底确认条）；
-  // 旧向导 /wizard、成功页 /booking/success 及其余页面维持现状不变。
-  const isBookingSingle = pathname === '/booking/grooming' || pathname === '/booking/boarding'
-  // B9.3 任务 A：首页渲染专属减法 dock（HomeDock，见 components/home/HomeDock），
-  // 全局 ConvexTabBar 在首页让位（其余页面保留现状，全局替换下批统一）。
-  const isHome = pathname === '/home' || pathname === '/'
+  // U1-A：全局 dock 统一为 <AppDock>，仅主级页面渲染（首页/商城/我的/philia）；
+  // 预约单屏等详情级页面一律不渲染 dock，走统一返回条（components/PageHeader）。
+  // 旧 ConvexTabBar（五栏凸起）与 9a.3 HomeDock（首页三栏 pill）已退役删除。
+  const isMainPath =
+    pathname === '/' ||
+    pathname === '/home' ||
+    pathname === '/mall' ||
+    pathname === '/me' ||
+    pathname === '/philia'
 
   return (
     <div className="min-h-screen bg-canvas text-ink">
       <main className="mx-auto max-w-lg pb-24">
         <Routes>
-          {/* 开发登录页：守卫之外，且不显示 TabBar（T2.0 新增路由，已向主代理汇报） */}
+          {/* 开发登录页：守卫之外，且不显示 dock（T2.0 新增路由，已向主代理汇报） */}
           <Route path="/dev-login" element={<DevLoginPage />} />
           <Route
             path="/*"
             element={
               <RequireAuth>
-                {/* 批次 9a 任务 E：页级错误边界（按路由 key 重置，崩一屏不塌全端，TabBar 存活） */}
+                {/* 批次 9a 任务 E：页级错误边界（按路由 key 重置，崩一屏不塌全端，dock 存活） */}
                 <PageErrorBoundary app="customer">
                   <ProtectedRoutes />
                 </PageErrorBoundary>
@@ -96,7 +99,7 @@ export default function App() {
           />
         </Routes>
       </main>
-      {!isDevLogin && !isBookingSingle && !isHome && <TabBar />}
+      {!isDevLogin && isMainPath && <AppDock />}
     </div>
   )
 }

@@ -2,7 +2,7 @@
   "name": "@philia/shared",
   "private": true,
   "version": "0.0.0",
-  "description": "三端共享：设计 tokens、共享组件（ConvexTabBar/StepTimeline/PhotoWall）、六步服务流程常量",
+  "description": "三端共享：设计 tokens、共享组件（StepTimeline/PhotoWall）、六步服务流程常量",
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",

@@ -264,7 +264,7 @@ export default function PhiliaPage() {
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
-      className="fixed inset-0 z-overlay overflow-y-auto bg-canvas"
+      className="fixed inset-0 z-sticky overflow-y-auto bg-canvas"
       style={{
         transform: `translateY(${translateY})`,
         transition: withTransition ? 'transform 300ms cubic-bezier(0.33, 1, 0.68, 1)' : 'none',
@@ -272,7 +272,7 @@ export default function PhiliaPage() {
       role="dialog"
       aria-label="Philia 品牌空间"
     >
-      <div className="mx-auto min-h-full max-w-lg px-4 pb-10">
+      <div className="mx-auto min-h-full max-w-lg px-4 pb-28">
         {/* 顶部：问候语 + 关闭按钮 */}
         <header className="flex items-start justify-between pt-8">
           <div>

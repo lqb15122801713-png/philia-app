@@ -275,7 +275,7 @@ export const zIndex = {
   base: 0,
   /** 吸顶区块（列表吸顶分类条）。 */
   sticky: 10,
-  /** 底部 TabBar（含 ConvexTabBar 凸起按钮）。 */
+  /** 底部 dock（U1-A 起为客户端 AppDock 悬浮 pill）。 */
   tabBar: 50,
   /** 遮罩层。 */
   overlay: 100,

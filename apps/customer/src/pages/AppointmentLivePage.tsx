@@ -31,7 +31,7 @@ import {
 } from '@philia/shared'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { CalendarClock, ChevronLeft, CircleX, QrCode } from 'lucide-react'
+import { CalendarClock, CircleX, QrCode } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import BoardingLive, { type BoardingLogItem, type BoardingStayInfo } from '../components/live/BoardingLive'
@@ -39,6 +39,7 @@ import CelebrationOverlay from '../components/live/CelebrationOverlay'
 import ConnectionBar from '../components/live/ConnectionBar'
 import ContactStore from '../components/live/ContactStore'
 import LiveHeader from '../components/live/LiveHeader'
+import { BackButton } from '../components/PageHeader'
 import LiveToast from '../components/live/LiveToast'
 import PhotoViewer from '../components/live/PhotoViewer'
 import ReviewPanel from '../components/live/ReviewPanel'
@@ -474,14 +475,9 @@ export default function AppointmentLivePage() {
 
   /* ---------------- 渲染分支 ---------------- */
 
+  // U1-A：统一返回圆钮（←圆钮）；标题语境由 LiveHeader（宠物+服务名胶囊）承担
   const backLink = (
-    <Link
-      to={aid ? `/appointments/${aid}` : '/appointments'}
-      className="mb-3 inline-flex items-center gap-0.5 text-caption text-ink-secondary"
-    >
-      <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
-      预约详情
-    </Link>
+    <BackButton to={aid ? `/appointments/${aid}` : '/appointments'} className="mb-3" ariaLabel="返回预约详情" />
   )
 
   // 加载中

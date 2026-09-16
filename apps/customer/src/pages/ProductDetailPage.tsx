@@ -10,10 +10,11 @@
 
 import { usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, Minus, Plus, Store } from 'lucide-react';
+import { Minus, Plus, Store } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import CartLink from '../components/mall/CartLink';
+import { BackButton } from '../components/PageHeader';
 import { CartProvider, MAX_QTY, useCart, type AddInput } from '../components/mall/cartStore';
 import ConfirmSheet from '../components/mall/ConfirmSheet';
 import { fenToYuan } from '../components/mall/format';
@@ -124,15 +125,8 @@ function DetailInner() {
             </div>
           ))}
         </div>
-        {/* 返回按钮 */}
-        <button
-          type="button"
-          aria-label="返回"
-          onClick={() => navigate(-1)}
-          className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-card/90 shadow-card transition-transform duration-120 ease-philia-spring active:scale-92"
-        >
-          <ChevronLeft className="h-5 w-5 text-ink" strokeWidth={1.5} />
-        </button>
+        {/* 返回按钮（U1-A：统一圆钮，主图通栏场景保持浮动形态） */}
+        <BackButton className="absolute left-4 top-4 h-10 w-10 bg-card/90" />
         {/* 圆点指示 */}
         {images.length > 1 ? (
           <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">

@@ -14,10 +14,11 @@
 
 import { usePhiliaClient } from '@philia/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { BadgeCheck, ChevronLeft, Package, Truck } from 'lucide-react';
+import { BadgeCheck, Package, Truck } from 'lucide-react';
 import { useCallback, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import CashierModal, { type CashierOrder } from '../components/mall/CashierModal';
+import PageHeader from '../components/PageHeader';
 import ConfirmSheet from '../components/mall/ConfirmSheet';
 import { fenToYuan, fmtOrderTime } from '../components/mall/format';
 import { friendlyError, useMallToast } from '../components/mall/MallToast';
@@ -189,7 +190,6 @@ function OrderCard({
 export default function MallOrdersPage() {
   const { trpc } = usePhiliaClient();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const { toastEl, showToast } = useMallToast();
 
   const [tab, setTab] = useState<(typeof TABS)[number]['key']>('pending');
@@ -256,17 +256,8 @@ export default function MallOrdersPage() {
   return (
     <div className="px-4 py-6">
       {toastEl}
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          aria-label="返回"
-          onClick={() => navigate(-1)}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-card shadow-card transition-transform duration-120 ease-philia-spring active:scale-92"
-        >
-          <ChevronLeft className="h-5 w-5 text-ink" strokeWidth={1.5} />
-        </button>
-        <h1 className="text-title-lg">商品订单</h1>
-      </div>
+      {/* U1-A：统一返回条（←圆钮+标题） */}
+      <PageHeader title="商品订单" />
 
       {ordersQ.isPending ? (
         <div className="mt-5 space-y-2.5">

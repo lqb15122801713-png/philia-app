@@ -17,9 +17,9 @@
  *    hairline 分隔，无图标无卡片。落点：前三行进 /booking/grooming（接送/造型无独立
  *    流程，与洗护同链路；造型带 ?tab=style 直达口径，PR 报告说明）、寄养进
  *    /booking/boarding、商城进 /mall；
- * 5. 底部减法 dock：首页专属 HomeDock（悬浮白 pill 圆角 24，三项等宽 首页 / philia
- *    44px 柠檬黄平圆深棕墨 paw 不凸起 / 我的；active ink 600 其余 muted）——仅首页
- *    渲染，其余页面保留既有 ConvexTabBar（全局替换下批统一，PR 报告说明）；
+ * 5. 底部 dock：U1-A 起统一为全局 AppDock（悬浮白 pill 全圆档细线 ring，五项槽位
+ *    首页 / 预约 / philia 60px 柠檬黄平圆 paw / 商城 / 我的；active 文字 600 深棕墨
+ *    + 24px 线图标墨色）——App.tsx 主级路径统一渲染，首页专属 HomeDock 退役；
  * 6. 下掉清单（本批逐一移除）：banner-home 大图、三入口胶囊卡、附近好店区、推荐服务
  *    横滑卡阵、GroomingReminder 复购提醒卡、促销位（本无所增）；
  * 7. 数据三态：主区面板自带 loading 骨架（版式随新规）；问候副句数据未就绪/失败时
@@ -31,7 +31,6 @@ import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useMe, usePhiliaClient } from '@philia/shared'
 import HomeBookingPanel from '../components/home/HomeBookingPanel'
-import HomeDock from '../components/home/HomeDock'
 import type { AppointmentListItem } from '@/components/booking/types'
 
 /** 时段问候语（本地时区） */
@@ -154,8 +153,8 @@ export default function HomePage() {
         ))}
       </section>
 
-      {/* 5. 底部减法 dock（仅首页渲染；其余页面保留既有 TabBar） */}
-      <HomeDock />
+      {/* 5. 底部 dock：U1-A 起统一为全局 AppDock（App.tsx 主级路径渲染），
+          首页专属 HomeDock 已随旧 ConvexTabBar 一并退役 */}
     </div>
   )
 }

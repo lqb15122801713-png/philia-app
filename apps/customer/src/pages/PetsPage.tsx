@@ -9,11 +9,11 @@
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Cake, PawPrint, Pencil, Plus, Scale, Syringe, X } from 'lucide-react'
+import { Cake, PawPrint, Pencil, Plus, Scale, Syringe, X } from 'lucide-react'
 import { useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { z } from 'zod'
 import { getApiBase, uploadImage, usePhiliaClient } from '@philia/shared'
+import PageHeader from '@/components/PageHeader'
 import {
   EmptyState,
   ErrorState,
@@ -488,16 +488,8 @@ export default function PetsPage() {
 
   return (
     <div className="px-4 pb-6">
-      <header className="flex items-center gap-2 pt-6">
-        <Link
-          to="/philia"
-          aria-label="返回"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-card shadow-card"
-        >
-          <ArrowLeft className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
-        </Link>
-        <h1 className="text-title-lg">宠物档案</h1>
-      </header>
+      {/* U1-A：统一返回条（←圆钮+标题），固定返回 philia 页 */}
+      <PageHeader title="宠物档案" to="/philia" className="pt-6" />
 
       <div className="mt-4 flex flex-col gap-3">
         {petsQuery.isPending ? <LoadingBlock lines={3} /> : null}
