@@ -1,7 +1,8 @@
 /**
  * 仪表盘待办区（T4.1 · 红点聚合）
  *
- * 五行：待确认（pending）/ 待派单（confirmed 无员工）/ 取消审核（cancel_requested）/
+ * 五行：已启用自动接单（原待确认 pending——S4 免确认后仅计历史/改期回退单）/
+ * 待派单（S4 自动派单后恒 0，仅 grooming 口径）/ 取消审核（cancel_requested）/
  * 待收款（completed 未 paid）/ 异常（超期寄养）。
  * 每行 = 图标 + 文案 + 数量红点 + 「去处理」，整行可点跳转对应页；
  * 数量为 0 时灰显 0、不出红点（行保留，信息密度优先且位置稳定）。
@@ -33,8 +34,10 @@ export default function TodoSection({ stats }: { stats: DashboardStats | undefin
     {
       key: 'pending',
       icon: ClipboardCheck,
-      label: '待确认',
-      desc: '新预约等待门店确认',
+      // 批次 S4（任务 D）：免商家确认——「待确认」区改标注「已启用自动接单」，
+      // 不再作为待办驱动；count 仅计历史 pending 单与客户改期回退单（保留入口可处理）
+      label: '已启用自动接单',
+      desc: '新预约自动确认，无需手动接单；历史待确认单仍会在此计数',
       count: stats?.todo.pending ?? 0,
       to: '/appointments?status=pending&from=todo',
     },
@@ -42,7 +45,8 @@ export default function TodoSection({ stats }: { stats: DashboardStats | undefin
       key: 'unassigned',
       icon: UserRoundPlus,
       label: '待派单',
-      desc: '已确认但尚未指派员工',
+      // S4：grooming 下单即自动派单，本数恒 0（仅 groomer 口径，寄养按晚占房无需派单）
+      desc: '洗护单已自动派单；仅未指派的洗护单在此计数',
       count: stats?.todo.unassigned ?? 0,
       to: '/appointments?status=confirmed&from=todo',
     },

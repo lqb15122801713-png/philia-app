@@ -7,6 +7,7 @@
 
 import { Check, X } from 'lucide-react';
 import {
+  assignSourceLabel,
   cancelSourceLabel,
   customerLabel,
   fenToYuan,
@@ -73,6 +74,12 @@ export function AppointmentRow({
           {item.type === 'boarding' ? '寄养' : '洗护'}
           <span className="mx-1 text-line-strong">|</span>
           {item.staffName ? `员工 ${item.staffName}` : '未指派'}
+          {/* 批次 S4（任务 D）：派单来源标记「自动派单 / 商家改派」 */}
+          {assignSourceLabel(item.assignSource) ? (
+            <span className="ml-1 rounded-tag bg-brand-secondary-light px-1.5 py-0.5 text-ink-secondary">
+              {assignSourceLabel(item.assignSource)}
+            </span>
+          ) : null}
         </p>
         {/* B3-5（W-14）：已取消/取消审核行透出客户取消原因 */}
         {(item.status === 'cancelled' || item.status === 'cancel_requested') && item.cancelReason ? (

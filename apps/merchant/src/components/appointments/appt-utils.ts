@@ -100,6 +100,14 @@ export const CANCEL_SOURCE_LABEL: Record<string, string> = {
 export const cancelSourceLabel = (s: string | null): string =>
   (s && CANCEL_SOURCE_LABEL[s]) || '取消';
 
+/** 批次 S4（任务 D）：派单来源标记 → 中文（auto=自动派单 / merchant=商家改派；null 不显示） */
+export const ASSIGN_SOURCE_LABEL: Record<string, string> = {
+  auto: '自动派单',
+  merchant: '商家改派',
+};
+export const assignSourceLabel = (s: string | null | undefined): string | null =>
+  (s && ASSIGN_SOURCE_LABEL[s]) || null;
+
 /* ------------------------------------------------------------------ */
 /* 技能匹配（与服务端 TYPE_ACCEPT_SKILLS 同口径）                        */
 /* ------------------------------------------------------------------ */

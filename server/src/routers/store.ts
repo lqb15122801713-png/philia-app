@@ -857,6 +857,9 @@ export const storeRouter = router({
    *   批次 S4（任务 A · 免商家确认）：create 落库直接 confirmed，新单的「待确认」数恒 0；
    *   todo.pending 仅计历史 pending 单与客户改期回退 pending 单（不迁移，保留计数与入口），
    *   商家端「待确认」区随任务 D 改标注「已启用自动接单」（不再作待办驱动）。
+   *   批次 S4（任务 C/D）：todo.unassigned 口径收窄为 grooming——自动派单后 grooming
+   *   单恒有 staff_id（天然恒 0）；boarding 按晚占房无需美容师、不参与派单待办
+   *   （商家仍可经 assign 主动指派，但不作待办驱动）。
    * - 异常：超期寄养数（status=in_boarding 且 scheduled_end 已过，应退未退）。
    * 实现：本店预约一次取出在应用层聚合（与 staffList 同模式，v1 数据量级无压力）。
    */
@@ -873,6 +876,7 @@ export const storeRouter = router({
         .select({
           status: schema.appointments.status,
           staffId: schema.appointments.staffId,
+          type: schema.appointments.type,
           scheduledStart: schema.appointments.scheduledStart,
           scheduledEnd: schema.appointments.scheduledEnd,
           paidAt: schema.appointments.paidAt,
@@ -899,7 +903,8 @@ export const storeRouter = router({
           todayRevenueFen += r.paidFen ?? 0;
         }
         if (s === 'pending') todo.pending += 1;
-        else if (s === 'confirmed' && r.staffId === null) todo.unassigned += 1;
+        // S4：待派单仅计 grooming（自动派单后恒 0）；boarding 按晚占房无需美容师，不作待办
+        else if (s === 'confirmed' && r.staffId === null && r.type === 'grooming') todo.unassigned += 1;
         else if (s === 'cancel_requested') todo.cancelRequested += 1;
         else if (s === 'completed' && r.paidAt === null) todo.unpaid += 1;
         if (s === 'in_boarding' && r.scheduledEnd < now) overdueBoardingCount += 1;

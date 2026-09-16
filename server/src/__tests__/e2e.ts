@@ -297,7 +297,10 @@ async function main(): Promise<void> {
 
   const cat2 = await trpcQuery<{ slots: Array<{ slotStart: Date; bookedCount: number; capacity: number }> }>(
     'store.getWithServices',
-    { cookie: customerCookie, input: { storeId: store.id, serviceId: service.id } },
+    // S4：传 petId——栅格可约判定与 create 同按 9a 引擎时长口径（引擎时长更长时
+    // 整段区间须落在 groomer 排班内，否则该槽本就不可约，避免选到「服务默认时长
+    // 可约但引擎时长超排班」的伪可约槽）
+    { cookie: customerCookie, input: { storeId: store.id, serviceId: service.id, petId } },
   );
   // 选 10:00-16:00 之间的槽：任意星期都落在种子排班（工作日 09-18 / 周末 10-19）与营业时间内
   // B8-B4：时段墙钟按门店规范时区（固定 +8，与服务端 storeWallclock 同帧）读取，
@@ -380,12 +383,16 @@ async function main(): Promise<void> {
     { s1: confirmed.status, s2: confirmed2.status },
   );
 
-  // S4（任务 D）：商家保留改派——assign 改派丽丽（不回归）
-  const assigned = await trpcMutate<{ status: string; staffId: string | null }>('appointment.assign', {
+  // S4（任务 D）：商家保留改派——assign 改派丽丽（不回归），来源标记覆盖为 merchant
+  const assigned = await trpcMutate<{ status: string; staffId: string | null; assignSource: string | null }>('appointment.assign', {
     cookie: ownerCookie,
     input: { appointmentId: aid, staffId: staffRow2.id },
   });
-  check('appointment.assign 改派成功（阿强 → 丽丽）', assigned.staffId === staffRow2.id, assigned);
+  check(
+    'appointment.assign 改派成功（阿强 → 丽丽），assignSource 覆盖为 merchant',
+    assigned.staffId === staffRow2.id && assigned.assignSource === 'merchant',
+    { staffId: assigned.staffId, assignSource: assigned.assignSource },
+  );
   const liliCookie = await devLogin(byKimi('seed_kimi_staff3')!.id); // 丽丽：改派后的被指派人
 
   /* ---------- 7. 客户出码 → 员工扫码核销 ---------- */

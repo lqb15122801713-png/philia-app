@@ -1268,8 +1268,11 @@ export const appointmentRouter = router({
     }),
 
   /**
-   * 6. assign（merchant 本店）：派单。校验员工属本店、在职、技能匹配服务 type、
+   * 6. assign（merchant 本店）：派单/改派。校验员工属本店、在职、技能匹配服务 type、
    * 排班覆盖预约时间、同 staff 同 scheduled_start 无 confirmed/in_service 冲突单。
+   * 批次 S4（任务 D）：商家保留改派不回归——覆盖写 assignSource='merchant'（列表/详情
+   * 来源标记「商家改派」），assigned 事件 payload.by='merchant'（与下单自动派单的
+   * by='auto' 共同构成轨迹，不做独立审计表）。
    */
   assign: merchantProcedure
     .input(z.object({ appointmentId: z.string().min(1), staffId: z.string().min(1) }))
@@ -1313,13 +1316,15 @@ export const appointmentRouter = router({
       const petName = await petNameOf(ctx.db, appt.petId);
       const outboxIds: string[] = [];
       const updated = await ctx.db.transaction(async (tx) => {
+        // 批次 S4（任务 D）：商家改派保留——assign 覆盖来源标记为 merchant
+        //（assigned 事件 payload.by 与 assignSource 共同构成轨迹，不做独立审计表）
         const row = await tx
           .update(schema.appointments)
-          .set({ staffId: staffRow.id, updatedAt: new Date() })
+          .set({ staffId: staffRow.id, assignSource: 'merchant', updatedAt: new Date() })
           .where(eq(schema.appointments.id, appt.id))
           .returning()
           .then((r) => r[0]!);
-        const payload = { appointmentId: appt.id, staffId: staffRow.id, staffName: staffRow.name, petName };
+        const payload = { appointmentId: appt.id, staffId: staffRow.id, staffName: staffRow.name, petName, by: 'merchant' as const };
         // → 员工端 + 客户端
         outboxIds.push(await emitEvent(txDb(tx), `staff:${staffRow.id}`, EventType.AppointmentAssigned, payload));
         outboxIds.push(await emitEvent(txDb(tx), `user:${appt.customerId}`, EventType.AppointmentAssigned, payload));

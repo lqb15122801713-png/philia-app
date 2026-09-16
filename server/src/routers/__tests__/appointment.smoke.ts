@@ -729,7 +729,11 @@ try {
     await rejects(m1.assign({ appointmentId: appt4.id, staffId: 'st-c' }), 'BAD_REQUEST'),
   );
   const asg4 = await m1.assign({ appointmentId: appt4.id, staffId: 'st-b' });
-  check('assign 成功（B 持 wash 技能、同时段无冲突）', asg4.staffId === 'st-b');
+  check(
+    'assign 成功（B 持 wash 技能、同时段无冲突；S4 任务 D：来源标记覆盖为 merchant）',
+    asg4.staffId === 'st-b' && asg4.assignSource === 'merchant',
+    { staffId: asg4.staffId, assignSource: asg4.assignSource },
+  );
   // assign：无排班
   // B3-2：boarding 按晚占用后，appt5 须避开 appt3 已占晚（sv-b1 默认容量 1），
   // 取 D+3 15:00 → D+4 15:00（晚 D+3 空闲）
