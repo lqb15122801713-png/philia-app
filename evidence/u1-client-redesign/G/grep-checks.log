@@ -1,0 +1,9 @@
+## U1-G 改动
+ M apps/customer/src/pages/MallOrdersPage.tsx
+ M apps/customer/src/pages/MallPage.tsx
+ M apps/customer/src/pages/ProductDetailPage.tsx
+## #FFAAA5
+exit=123
+## 新增 text-white
+0
+## 新增渐变

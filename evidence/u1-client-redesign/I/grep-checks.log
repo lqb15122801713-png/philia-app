@@ -1,0 +1,13 @@
+## U1-I 改动
+ M apps/customer/src/components/home/common.tsx
+ M apps/customer/src/pages/AppointmentsPage.tsx
+ M apps/customer/src/pages/CartPage.tsx
+ M apps/customer/src/pages/DevLoginPage.tsx
+ M apps/customer/src/pages/MallOrdersPage.tsx
+ M apps/customer/src/pages/MallPage.tsx
+ M apps/customer/src/pages/PetsPage.tsx
+## #FFAAA5
+exit=123
+## 新增 text-white
+0
+## 新增渐变

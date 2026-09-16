@@ -1,0 +1,67 @@
+{
+  "results": [
+    {
+      "name": "dev-login 种子客户",
+      "ok": true
+    },
+    {
+      "name": "我的：用户条 + 纸面细线会员卡（GUARDIAN CARD·三真数→/me/card）",
+      "ok": true
+    },
+    {
+      "name": "我的：入口列表全真实跳转（会员卡→/me/card）",
+      "ok": true
+    },
+    {
+      "name": "我的：假按钮不存在（意见反馈/关于菲丽亚）+ 已省行隐去 + 守护值不出现",
+      "ok": true
+    },
+    {
+      "name": "我的：主级页 dock 在且「我的」active",
+      "ok": true
+    },
+    {
+      "name": "/me/card：三档卡面展示（占位文案细则以门店公布为准）",
+      "ok": true
+    },
+    {
+      "name": "/me/card：真实次卡余额区（不编造守护值流水/折扣数字）",
+      "ok": true
+    },
+    {
+      "name": "/me/card：详情级无 dock + 返回圆钮",
+      "ok": true
+    },
+    {
+      "name": "点验：两页无死链",
+      "ok": true
+    }
+  ],
+  "m1": {
+    "userCard": true,
+    "guardian": "/me/card",
+    "guardianText": "GUARDIAN CARD›2 天陪伴天数1 次服务次数¥88累计消费",
+    "entries": [
+      "/appointments",
+      "/mall/orders",
+      "/me/card",
+      "/philia/pets",
+      "/philia/moments"
+    ],
+    "fakeRows": [],
+    "savedRow": false,
+    "shouhu": false,
+    "logout": true,
+    "dock": true,
+    "dockActiveMe": true
+  },
+  "c1": {
+    "tiers": 3,
+    "tiersText": "GUARDIAN CARD星芽会员折扣细则以门店公布为准首档 · 细则以门店公布为准GUARDIAN CARD进阶档折扣细则以门店公布为准名称与细则以门店公布为准GUARDIAN CARD高阶档折扣细则以门店公布为准名称与细则以门店公布为准",
+    "balance": true,
+    "total": "0 次",
+    "hasZhekouNumber": false,
+    "dock": false,
+    "backBtn": true
+  }
+}

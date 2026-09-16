@@ -1,0 +1,9 @@
+## U1-H 改动
+ M apps/customer/src/App.tsx
+ M apps/customer/src/pages/MePage.tsx
+ M scripts/smoke-routes.mjs
+?? apps/customer/src/pages/MemberCardPage.tsx
+## #FFAAA5
+exit=123
+## 新增 text-white
+0

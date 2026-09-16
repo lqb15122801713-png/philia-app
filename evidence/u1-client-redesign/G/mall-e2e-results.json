@@ -1,0 +1,89 @@
+{
+  "results": [
+    {
+      "name": "dev-login 种子客户",
+      "ok": true
+    },
+    {
+      "name": "列表：分类 chips（6 类）+ 双列大卡带快加购钮",
+      "ok": true
+    },
+    {
+      "name": "链路：快加购真实入车（cartStore/localStorage）",
+      "ok": true
+    },
+    {
+      "name": "PDP：会员价提示行（诚实静态文案）",
+      "ok": true
+    },
+    {
+      "name": "PDP：双钮吸底（加购/立即买真链路，立即买=柠檬黄实底）",
+      "ok": true
+    },
+    {
+      "name": "PDP：详情级无 dock",
+      "ok": true
+    },
+    {
+      "name": "链路：立即购买 → 结算页",
+      "ok": true
+    },
+    {
+      "name": "链路：收货地址填写（表单真实校验）",
+      "ok": true
+    },
+    {
+      "name": "链路：提交订单可点",
+      "ok": true
+    },
+    {
+      "name": "链路：mock 收银台「模拟支付成功」（mock 支付不动）",
+      "ok": true
+    },
+    {
+      "name": "订单：tabs 五档",
+      "ok": true
+    },
+    {
+      "name": "订单：待发货卡（刚支付真实订单）",
+      "ok": true
+    },
+    {
+      "name": "订单：详情级无 dock + 返回圆钮",
+      "ok": true
+    },
+    {
+      "name": "链路：再来一单（无 received 种子单，标注跳过）",
+      "ok": true
+    },
+    {
+      "name": "点验：订单页无死链",
+      "ok": true
+    }
+  ],
+  "l1": {
+    "cats": 6,
+    "cards": 10,
+    "firstCard": "mall-quickadd-01M2J6BT1T5E8QVTM4EH6N547A",
+    "dock": true
+  },
+  "p1": {
+    "note": "会员价细则即将公布",
+    "addBtn": "加入购物车",
+    "buyBtn": "立即购买",
+    "buyBg": "rgb(253, 200, 48)",
+    "dock": false
+  },
+  "o1": {
+    "tabs": [
+      "待支付",
+      "待发货",
+      "待收货",
+      "已完成",
+      "售后"
+    ],
+    "hasPayBtn": false,
+    "dock": false,
+    "backBtn": true
+  }
+}

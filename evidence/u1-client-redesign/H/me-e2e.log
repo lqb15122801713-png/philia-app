@@ -1,0 +1,11 @@
+PASS  dev-login 种子客户
+PASS  我的：用户条 + 纸面细线会员卡（GUARDIAN CARD·三真数→/me/card）  — GUARDIAN CARD›2 天陪伴天数1 次服务次数¥88累计消费
+PASS  我的：入口列表全真实跳转（会员卡→/me/card）  — /appointments,/mall/orders,/me/card,/philia/pets,/philia/moments
+PASS  我的：假按钮不存在（意见反馈/关于菲丽亚）+ 已省行隐去 + 守护值不出现
+PASS  我的：主级页 dock 在且「我的」active
+PASS  /me/card：三档卡面展示（占位文案细则以门店公布为准）  — tiers=3
+PASS  /me/card：真实次卡余额区（不编造守护值流水/折扣数字）  — total=0 次
+PASS  /me/card：详情级无 dock + 返回圆钮
+PASS  点验：两页无死链
+
+== 汇总：9/9 PASS ==

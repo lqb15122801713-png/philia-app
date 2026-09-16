@@ -1,0 +1,12 @@
+PASS  登录页：细线圆爪印 + 衬线宣言 + 柠檬细线
+PASS  登录页：种子列表逻辑保留（真实渲染）  — seeds=5
+PASS  dev-login 种子客户
+PASS  档案：头图圆形双细线环（pet.list 真实数据）  — rings=4
+PASS  档案：疫苗徽标真实驱动（薄荷 #D3EEE6 正常 或 柠檬浅底到期）  — 疫苗有效至 2027-03-01 rgb(211, 238, 230)
+PASS  档案：洗护史时间线存在（真实完成单）  — history=1
+PASS  档案：同款再约=真实预填链（storeId/serviceId/petId 三参齐）  — /booking/grooming?storeId=01M2J6BT1RYQVA1WWRZ737J0D8&serviceId=01M2J6BT1SXCB4CE7SWEEWCCVN&petId=01M2J6BT1SPP0PJQ4QJWM5FVYT
+PASS  档案：详情级无 dock + 返回圆钮
+PASS  空态：购物车空态走统一组件（插画+一句话+一行动）  — 去逛逛
+PASS  点验：无死链
+
+== 汇总：10/10 PASS ==
