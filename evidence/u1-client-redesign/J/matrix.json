@@ -1,0 +1,427 @@
+{
+  "results": [
+    {
+      "name": "dev-login 种子客户",
+      "ok": true
+    },
+    {
+      "name": "/home：dock=有 / 破版=否 / 渐变=0 / 彩色emoji=0",
+      "ok": true
+    },
+    {
+      "name": "/mall：dock=有 / 破版=否 / 渐变=0 / 彩色emoji=0",
+      "ok": true
+    },
+    {
+      "name": "/philia：dock=有 / 破版=否 / 渐变=0 / 彩色emoji=0",
+      "ok": true
+    },
+    {
+      "name": "/me：dock=有 / 破版=否 / 渐变=0 / 彩色emoji=0",
+      "ok": true
+    },
+    {
+      "name": "/booking/grooming：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0",
+      "ok": true
+    },
+    {
+      "name": "/booking/grooming：详情级返回条统一",
+      "ok": true
+    },
+    {
+      "name": "/booking/boarding：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0",
+      "ok": true
+    },
+    {
+      "name": "/booking/boarding：详情级返回条统一",
+      "ok": true
+    },
+    {
+      "name": "/mall/product/01M2J6BT1T5E8QVTM4EH6N547A：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0",
+      "ok": true
+    },
+    {
+      "name": "/mall/product/01M2J6BT1T5E8QVTM4EH6N547A：详情级返回条统一",
+      "ok": true
+    },
+    {
+      "name": "/mall/cart：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0",
+      "ok": true
+    },
+    {
+      "name": "/mall/cart：详情级返回条统一",
+      "ok": true
+    },
+    {
+      "name": "/mall/checkout：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0",
+      "ok": true
+    },
+    {
+      "name": "/mall/checkout：详情级返回条统一",
+      "ok": true
+    },
+    {
+      "name": "/mall/orders：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0",
+      "ok": true
+    },
+    {
+      "name": "/mall/orders：详情级返回条统一",
+      "ok": true
+    },
+    {
+      "name": "/appointments：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0",
+      "ok": true
+    },
+    {
+      "name": "/appointments：详情级返回条统一",
+      "ok": true
+    },
+    {
+      "name": "/appointments/01M256D240E19GWNG2QMFV3Q8V：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0",
+      "ok": true
+    },
+    {
+      "name": "/appointments/01M256D240E19GWNG2QMFV3Q8V：详情级返回条统一",
+      "ok": true
+    },
+    {
+      "name": "/appointments/01M256D240E19GWNG2QMFV3Q8V/live：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0",
+      "ok": true
+    },
+    {
+      "name": "/appointments/01M256D240E19GWNG2QMFV3Q8V/live：详情级返回条统一",
+      "ok": true
+    },
+    {
+      "name": "/philia/pets：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0",
+      "ok": true
+    },
+    {
+      "name": "/philia/pets：详情级返回条统一",
+      "ok": true
+    },
+    {
+      "name": "/philia/member：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0",
+      "ok": true
+    },
+    {
+      "name": "/philia/member：详情级返回条统一",
+      "ok": true
+    },
+    {
+      "name": "/philia/moments：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0",
+      "ok": true
+    },
+    {
+      "name": "/philia/moments：详情级返回条统一",
+      "ok": true
+    },
+    {
+      "name": "/me/card：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0",
+      "ok": true
+    },
+    {
+      "name": "/me/card：详情级返回条统一",
+      "ok": true
+    },
+    {
+      "name": "/booking/success：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0",
+      "ok": true
+    },
+    {
+      "name": "/booking/success：详情级返回条统一",
+      "ok": true
+    },
+    {
+      "name": "/dev-login：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0",
+      "ok": true
+    },
+    {
+      "name": "/dev-login：详情级返回条统一",
+      "ok": true
+    },
+    {
+      "name": "accent 纪律：无屏柠檬黄元素超 3 处（主行动+状态位观察阈）",
+      "ok": true
+    },
+    {
+      "name": "console 运行期零异常",
+      "ok": true
+    }
+  ],
+  "matrix": [
+    {
+      "path": "/home",
+      "expectDock": true,
+      "dock": true,
+      "backBtn": false,
+      "lemonCount": 0,
+      "lemonLabels": [],
+      "gradients": 0,
+      "gradientSample": [],
+      "emoji": false,
+      "rootText": 187,
+      "secure": true
+    },
+    {
+      "path": "/mall",
+      "expectDock": true,
+      "dock": true,
+      "backBtn": false,
+      "lemonCount": 1,
+      "lemonLabels": [
+        "全部"
+      ],
+      "gradients": 0,
+      "gradientSample": [],
+      "emoji": false,
+      "rootText": 318,
+      "secure": true
+    },
+    {
+      "path": "/philia",
+      "expectDock": true,
+      "dock": true,
+      "backBtn": false,
+      "lemonCount": 2,
+      "lemonLabels": [
+        "",
+        "服务后"
+      ],
+      "gradients": 0,
+      "gradientSample": [],
+      "emoji": false,
+      "rootText": 298,
+      "secure": true
+    },
+    {
+      "path": "/me",
+      "expectDock": true,
+      "dock": true,
+      "backBtn": false,
+      "lemonCount": 0,
+      "lemonLabels": [],
+      "gradients": 0,
+      "gradientSample": [],
+      "emoji": false,
+      "rootText": 129,
+      "secure": true
+    },
+    {
+      "path": "/booking/grooming",
+      "expectDock": false,
+      "dock": false,
+      "backBtn": true,
+      "lemonCount": 0,
+      "lemonLabels": [],
+      "gradients": 0,
+      "gradientSample": [],
+      "emoji": false,
+      "rootText": 607,
+      "secure": true
+    },
+    {
+      "path": "/booking/boarding",
+      "expectDock": false,
+      "dock": false,
+      "backBtn": true,
+      "lemonCount": 0,
+      "lemonLabels": [],
+      "gradients": 0,
+      "gradientSample": [],
+      "emoji": false,
+      "rootText": 180,
+      "secure": true
+    },
+    {
+      "path": "/mall/product/01M2J6BT1T5E8QVTM4EH6N547A",
+      "expectDock": false,
+      "dock": false,
+      "backBtn": true,
+      "lemonCount": 1,
+      "lemonLabels": [
+        "立即购买"
+      ],
+      "gradients": 0,
+      "gradientSample": [],
+      "emoji": false,
+      "rootText": 86,
+      "secure": true
+    },
+    {
+      "path": "/mall/cart",
+      "expectDock": false,
+      "dock": false,
+      "backBtn": true,
+      "lemonCount": 1,
+      "lemonLabels": [
+        "去逛逛"
+      ],
+      "gradients": 0,
+      "gradientSample": [],
+      "emoji": false,
+      "rootText": 33,
+      "secure": true
+    },
+    {
+      "path": "/mall/checkout",
+      "expectDock": false,
+      "dock": false,
+      "backBtn": true,
+      "lemonCount": 1,
+      "lemonLabels": [
+        "去逛逛"
+      ],
+      "gradients": 0,
+      "gradientSample": [],
+      "emoji": false,
+      "rootText": 43,
+      "secure": true
+    },
+    {
+      "path": "/mall/orders",
+      "expectDock": false,
+      "dock": false,
+      "backBtn": true,
+      "lemonCount": 1,
+      "lemonLabels": [
+        "待支付"
+      ],
+      "gradients": 0,
+      "gradientSample": [],
+      "emoji": false,
+      "rootText": 34,
+      "secure": true
+    },
+    {
+      "path": "/appointments",
+      "expectDock": false,
+      "dock": false,
+      "backBtn": true,
+      "lemonCount": 1,
+      "lemonLabels": [
+        "已确认1"
+      ],
+      "gradients": 0,
+      "gradientSample": [],
+      "emoji": false,
+      "rootText": 79,
+      "secure": true
+    },
+    {
+      "path": "/appointments/01M256D240E19GWNG2QMFV3Q8V",
+      "expectDock": false,
+      "dock": false,
+      "backBtn": true,
+      "lemonCount": 3,
+      "lemonLabels": [
+        "服务后",
+        "再次预约",
+        "提交评价"
+      ],
+      "gradients": 0,
+      "gradientSample": [],
+      "emoji": false,
+      "rootText": 309,
+      "secure": true
+    },
+    {
+      "path": "/appointments/01M256D240E19GWNG2QMFV3Q8V/live",
+      "expectDock": false,
+      "dock": false,
+      "backBtn": true,
+      "lemonCount": 2,
+      "lemonLabels": [
+        "服务后",
+        "提交评价"
+      ],
+      "gradients": 0,
+      "gradientSample": [],
+      "emoji": false,
+      "rootText": 165,
+      "secure": true
+    },
+    {
+      "path": "/philia/pets",
+      "expectDock": false,
+      "dock": false,
+      "backBtn": true,
+      "lemonCount": 0,
+      "lemonLabels": [],
+      "gradients": 0,
+      "gradientSample": [],
+      "emoji": false,
+      "rootText": 157,
+      "secure": true
+    },
+    {
+      "path": "/philia/member",
+      "expectDock": false,
+      "dock": false,
+      "backBtn": true,
+      "lemonCount": 0,
+      "lemonLabels": [],
+      "gradients": 0,
+      "gradientSample": [],
+      "emoji": false,
+      "rootText": 271,
+      "secure": true
+    },
+    {
+      "path": "/philia/moments",
+      "expectDock": false,
+      "dock": false,
+      "backBtn": true,
+      "lemonCount": 0,
+      "lemonLabels": [],
+      "gradients": 0,
+      "gradientSample": [],
+      "emoji": false,
+      "rootText": 42,
+      "secure": true
+    },
+    {
+      "path": "/me/card",
+      "expectDock": false,
+      "dock": false,
+      "backBtn": true,
+      "lemonCount": 0,
+      "lemonLabels": [],
+      "gradients": 0,
+      "gradientSample": [],
+      "emoji": false,
+      "rootText": 217,
+      "secure": true
+    },
+    {
+      "path": "/booking/success",
+      "expectDock": false,
+      "dock": false,
+      "backBtn": false,
+      "lemonCount": 0,
+      "lemonLabels": [],
+      "gradients": 0,
+      "gradientSample": [],
+      "emoji": false,
+      "rootText": 14,
+      "secure": true
+    },
+    {
+      "path": "/dev-login",
+      "expectDock": false,
+      "dock": false,
+      "backBtn": false,
+      "lemonCount": 2,
+      "lemonLabels": [
+        "",
+        "登录"
+      ],
+      "gradients": 0,
+      "gradientSample": [],
+      "emoji": false,
+      "rootText": 273,
+      "secure": true
+    }
+  ],
+  "consoleErrors": []
+}

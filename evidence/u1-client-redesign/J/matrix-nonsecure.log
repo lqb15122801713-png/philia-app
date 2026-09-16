@@ -1,0 +1,59 @@
+PASS  dev-login 种子客户
+PASS  非安全上下文：isSecureContext=false（纯 IP HTTP）  — isSecureContext=false randomUUID=false
+PASS  /home：dock=有 / 破版=否 / 渐变=0 / 彩色emoji=0  — dock=true lemon=0 grad=0 emoji=false
+PASS  /home：非安全上下文渲染不崩
+PASS  /mall：dock=有 / 破版=否 / 渐变=0 / 彩色emoji=0  — dock=true lemon=1 grad=0 emoji=false
+PASS  /mall：非安全上下文渲染不崩
+PASS  /philia：dock=有 / 破版=否 / 渐变=0 / 彩色emoji=0  — dock=true lemon=2 grad=0 emoji=false
+PASS  /philia：非安全上下文渲染不崩
+PASS  /me：dock=有 / 破版=否 / 渐变=0 / 彩色emoji=0  — dock=true lemon=0 grad=0 emoji=false
+PASS  /me：非安全上下文渲染不崩
+PASS  /booking/grooming：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0  — dock=false lemon=0 grad=0 emoji=false
+PASS  /booking/grooming：详情级返回条统一  — backBtn=true
+PASS  /booking/grooming：非安全上下文渲染不崩
+PASS  /booking/boarding：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0  — dock=false lemon=0 grad=0 emoji=false
+PASS  /booking/boarding：详情级返回条统一  — backBtn=true
+PASS  /booking/boarding：非安全上下文渲染不崩
+PASS  /mall/product/01M2J6BT1T5E8QVTM4EH6N547A：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0  — dock=false lemon=1 grad=0 emoji=false
+PASS  /mall/product/01M2J6BT1T5E8QVTM4EH6N547A：详情级返回条统一  — backBtn=true
+PASS  /mall/product/01M2J6BT1T5E8QVTM4EH6N547A：非安全上下文渲染不崩
+PASS  /mall/cart：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0  — dock=false lemon=1 grad=0 emoji=false
+PASS  /mall/cart：详情级返回条统一  — backBtn=true
+PASS  /mall/cart：非安全上下文渲染不崩
+PASS  /mall/checkout：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0  — dock=false lemon=1 grad=0 emoji=false
+PASS  /mall/checkout：详情级返回条统一  — backBtn=true
+PASS  /mall/checkout：非安全上下文渲染不崩
+PASS  /mall/orders：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0  — dock=false lemon=1 grad=0 emoji=false
+PASS  /mall/orders：详情级返回条统一  — backBtn=true
+PASS  /mall/orders：非安全上下文渲染不崩
+PASS  /appointments：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0  — dock=false lemon=1 grad=0 emoji=false
+PASS  /appointments：详情级返回条统一  — backBtn=true
+PASS  /appointments：非安全上下文渲染不崩
+PASS  /appointments/01M256D240E19GWNG2QMFV3Q8V：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0  — dock=false lemon=3 grad=0 emoji=false
+PASS  /appointments/01M256D240E19GWNG2QMFV3Q8V：详情级返回条统一  — backBtn=true
+PASS  /appointments/01M256D240E19GWNG2QMFV3Q8V：非安全上下文渲染不崩
+PASS  /appointments/01M256D240E19GWNG2QMFV3Q8V/live：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0  — dock=false lemon=2 grad=0 emoji=false
+PASS  /appointments/01M256D240E19GWNG2QMFV3Q8V/live：详情级返回条统一  — backBtn=true
+PASS  /appointments/01M256D240E19GWNG2QMFV3Q8V/live：非安全上下文渲染不崩
+PASS  /philia/pets：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0  — dock=false lemon=0 grad=0 emoji=false
+PASS  /philia/pets：详情级返回条统一  — backBtn=true
+PASS  /philia/pets：非安全上下文渲染不崩
+PASS  /philia/member：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0  — dock=false lemon=0 grad=0 emoji=false
+PASS  /philia/member：详情级返回条统一  — backBtn=true
+PASS  /philia/member：非安全上下文渲染不崩
+PASS  /philia/moments：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0  — dock=false lemon=0 grad=0 emoji=false
+PASS  /philia/moments：详情级返回条统一  — backBtn=true
+PASS  /philia/moments：非安全上下文渲染不崩
+PASS  /me/card：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0  — dock=false lemon=0 grad=0 emoji=false
+PASS  /me/card：详情级返回条统一  — backBtn=true
+PASS  /me/card：非安全上下文渲染不崩
+PASS  /booking/success：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0  — dock=false lemon=0 grad=0 emoji=false
+PASS  /booking/success：详情级返回条统一  — backBtn=false
+PASS  /booking/success：非安全上下文渲染不崩
+PASS  /dev-login：dock=无 / 破版=否 / 渐变=0 / 彩色emoji=0  — dock=false lemon=2 grad=0 emoji=false
+PASS  /dev-login：详情级返回条统一  — backBtn=false
+PASS  /dev-login：非安全上下文渲染不崩
+PASS  accent 纪律：无屏柠檬黄元素超 3 处（主行动+状态位观察阈）  — 全屏 ≤3
+PASS  console 运行期零异常
+
+== 汇总：57/57 PASS ==

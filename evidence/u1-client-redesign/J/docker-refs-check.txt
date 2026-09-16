@@ -1,0 +1,12 @@
+OK  package.json
+OK  package-lock.json
+OK  apps/customer/package.json
+OK  apps/merchant/package.json
+OK  apps/staff/package.json
+OK  packages/shared/package.json
+OK  packages/config/package.json
+OK  scripts/postinstall.mjs
+OK  server/package.json
+OK  server/package-lock.json
+OK  server/drizzle
+OK  docker/entrypoint.sh

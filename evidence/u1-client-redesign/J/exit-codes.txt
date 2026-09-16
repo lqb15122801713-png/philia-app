@@ -1,0 +1,34 @@
+# U1 批次 · 全绿退出码汇总（U1-J 收口 · 2026-09-17）
+
+## 总闸门（J 批现场，最新代码 = 全部 U1 提交 + J-fix）
+
+| 项 | 命令 | 退出码 |
+|---|---|---|
+| customer build | npm run build --workspace=@philia/customer | 0（build-customer.log；tsc -b + vite build） |
+| merchant build | npm run build --workspace=@philia/merchant | 0（build-merchant.log；merchant 零改动，复跑实证） |
+| staff build | npm run build --workspace=@philia/staff | 0（build-staff.log；staff 零改动，复跑实证） |
+| server typecheck | npm --prefix server run typecheck（tsc --noEmit） | 0（typecheck-server.log；server 零改动） |
+| smoke-routes | node scripts/smoke-routes.mjs（生产构建 preview 三端） | 0（smoke-routes.log：31/31 通过，含 U1-H 新增 /me/card 锚点） |
+| 一致性矩阵 e2e | matrix-e2e.mjs（19 屏） | 0（37/37 PASS） |
+| 非安全上下文 e2e | NONSECURE=1 matrix-e2e.mjs（LAN IP 19 屏） | 0（57/57 PASS，isSecureContext=false） |
+| J-fix build | npm run build --workspace=@philia/customer | 0（build-jfix.log） |
+| LAN 口径 build | VITE_API_BASE=http://192.168.18.84:7200 npm run build | 0（build-lan.log；非安全实证专用，事后已重建默认） |
+
+## 分任务 e2e（各批目录内 *.log）
+
+| 任务 | 结果 |
+|---|---|
+| U1-A dock-e2e | 45/45 exit=0 |
+| U1-C home-e2e（常态/服务中/断接口） | 17/17 + 8/8 + 8/8 exit=0 |
+| U1-D booking-e2e（含下单全链路） | 20/20 exit=0 |
+| U1-E live-e2e（三态+SSE 推进+全完成） | 8/8 + 3/3 exit=0 |
+| U1-F philia-e2e | 10/10 exit=0 |
+| U1-G mall-e2e（商城真链路） | 15/15 exit=0 |
+| U1-H me-e2e | 9/9 exit=0 |
+| U1-I pets-login-e2e | 10/10 exit=0 |
+| smoke-routes（C/F/I/J 批各跑一次） | 30/30、30/30、31/31、31/31 均 exit=0 |
+
+## 附记：部署文件 diff 核对
+
+git diff --name-only 30d2f06..HEAD | grep -iE "dockerfile|entrypoint|compose" → 无命中（exit=1）；
+package-lock.json（根）全批零改动（git status 逐批核对）；docker build 缺口见 docker-review.md。

@@ -1,0 +1,8 @@
+== customer build ==
+customer_build_exit=0
+== merchant build ==
+merchant_build_exit=0
+== staff build ==
+staff_build_exit=0
+== server typecheck ==
+server_typecheck_exit=0
