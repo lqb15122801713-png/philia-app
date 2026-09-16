@@ -44,7 +44,7 @@ export default function InServicePanel({
   return (
     <section
       data-testid="home-inservice-panel"
-      className="rounded-card bg-card p-4 shadow-card"
+      className="u1-card p-4"
       aria-label="服务进行中"
     >
       <div className="flex items-start justify-between gap-3">
@@ -79,9 +79,9 @@ export default function InServicePanel({
         ) : null}
       </div>
 
-      {/* 细线进度条（已完成步数 / 共 6 步） */}
+      {/* 2px 细线进度条（已完成步数 / 共 6 步，柠檬段）；U1-C 换肤：h-1(4px) → h-0.5(2px) */}
       <div
-        className="mt-3 h-1 w-full overflow-hidden rounded-full bg-sunken"
+        className="mt-3 h-0.5 w-full overflow-hidden rounded-full bg-sunken"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={totalSteps}
@@ -102,7 +102,7 @@ export default function InServicePanel({
           data-testid="home-inservice-live"
           className="text-caption font-medium text-brand-primary"
         >
-          查看实时直播 ›
+          查看全程 ›
         </Link>
       </div>
     </section>
