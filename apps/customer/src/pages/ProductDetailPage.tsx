@@ -159,10 +159,15 @@ function DetailInner() {
           <Store className="h-3.5 w-3.5" strokeWidth={1.5} />
           {storeName} · 门店同价 · 正品保障
         </p>
+        {/* U1-G 会员价行（诚实处理）：当前无折扣引擎——不显会员价数字，
+            以静态提示行说明（二选一取「提示行」，PR 注明；细则上线后替换为真实会员价） */}
+        <p data-testid="pdp-member-price-note" className="mt-1.5 text-caption-xs text-ink-placeholder">
+          会员价细则即将公布
+        </p>
 
         {/* 数量 */}
         {!soldOut ? (
-          <div className="mt-4 flex items-center justify-between rounded-card bg-card p-3.5 shadow-card">
+          <div className="u1-card mt-4 flex items-center justify-between p-3.5">
             <span className="text-body text-ink-secondary">购买数量</span>
             <div className="flex items-center gap-3">
               <button
@@ -190,7 +195,7 @@ function DetailInner() {
 
         {/* 详情描述 */}
         {product.description ? (
-          <div className="mt-3 rounded-card bg-card p-4 shadow-card">
+          <div className="u1-card mt-3 p-4">
             <p className="text-title">商品详情</p>
             <p className="mt-2 whitespace-pre-line text-body leading-relaxed text-ink-secondary">
               {product.description}
@@ -199,15 +204,17 @@ function DetailInner() {
         ) : null}
       </div>
 
-      {/* 底部固定栏（TabBar 之上） */}
-      <div className="fixed inset-x-0 bottom-14 z-sticky border-t border-line-divider bg-card">
+      {/* 底部固定栏（U1-A 起 PDP 为详情级无 dock，落底 safe-area；
+          U1-G 双钮：加购=细线钮 / 立即买=柠檬黄实底深棕墨字，去渐变） */}
+      <div className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-sticky border-t border-[rgba(74,59,46,.09)] bg-card">
         <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
           <CartLink className="shadow-none" />
           <button
             type="button"
             disabled={soldOut}
             onClick={handleAddCart}
-            className="h-11 flex-1 rounded-full bg-brand-secondary text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
+            data-testid="pdp-add-cart"
+            className="h-11 flex-1 rounded-full bg-card text-body font-medium text-ink ring-1 ring-line-ring transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
           >
             加入购物车
           </button>
@@ -215,7 +222,8 @@ function DetailInner() {
             type="button"
             disabled={soldOut}
             onClick={handleBuyNow}
-            className="h-11 flex-1 rounded-full bg-philia-gradient text-body font-medium text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
+            data-testid="pdp-buy-now"
+            className="h-11 flex-1 rounded-full bg-brand-primary text-body font-semibold text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
           >
             {soldOut ? '已售罄' : '立即购买'}
           </button>
