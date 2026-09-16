@@ -20,6 +20,7 @@ import { useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import CashierModal, { type CashierOrder } from '../components/mall/CashierModal';
 import PageHeader from '../components/PageHeader';
+import { EmptyState } from '../components/home/common';
 import { CartProvider, useCart, type AddInput } from '../components/mall/cartStore';
 import { fenToYuan } from '../components/mall/format';
 import { friendlyError, useMallToast } from '../components/mall/MallToast';
@@ -176,24 +177,31 @@ function CheckoutInner() {
   // （lines 随之变空），若此处不看 cashierOrder，页面会切到空态分支、CashierModal
   // 随表单分支一起卸载，用户看到「提交后零反馈原地变空态」（走查红标）。
   if (lines.length === 0 && !cashierOrder) {
+    /* U1-J 一致性修正：空态分支补统一返回条 + 统一空态组件 */
     return (
-      <div className="flex flex-col items-center px-4 py-16">
-        <img src="/brand/empty-appointments-800.png" alt="没有待结算商品" className="w-48 max-w-full rounded-card" />
-        <p className="mt-4 text-title">没有待结算的商品</p>
-        <p className="mt-1 text-body text-ink-secondary">去商城挑点好物，或回购物车勾选商品</p>
-        <div className="mt-6 flex gap-3">
-          <Link
-            to="/mall"
-            className="flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
-          >
-            去逛逛
-          </Link>
-          <Link
-            to="/mall/cart"
-            className="flex h-11 items-center rounded-full bg-sunken px-8 text-body text-ink-secondary transition-transform duration-120 ease-philia-spring active:scale-92"
-          >
-            回购物车
-          </Link>
+      <div className="px-4 pb-10 pt-6">
+        <PageHeader title="确认订单" />
+        <div className="mt-6">
+          <EmptyState
+            title="没有待结算的商品"
+            desc="去商城挑点好物，或回购物车勾选商品"
+            action={
+              <div className="mt-4 flex gap-3">
+                <Link
+                  to="/mall"
+                  className="flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                >
+                  去逛逛
+                </Link>
+                <Link
+                  to="/mall/cart"
+                  className="flex h-11 items-center rounded-full bg-card px-8 text-body font-medium text-ink ring-1 ring-line-ring transition-transform duration-120 ease-philia-spring active:scale-92"
+                >
+                  回购物车
+                </Link>
+              </div>
+            }
+          />
         </div>
       </div>
     );

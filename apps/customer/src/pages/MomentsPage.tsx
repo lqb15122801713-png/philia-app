@@ -104,7 +104,7 @@ function AlbumCard({ album }: { album: Album }) {
           className="aspect-[4/3] w-full object-cover"
           loading="lazy"
         />
-        <span className="absolute inset-x-0 bottom-0 flex items-end justify-between bg-gradient-to-t from-ink/65 to-transparent p-3 text-left">
+        <span className="absolute inset-x-0 bottom-0 flex items-end justify-between bg-ink/55 p-3 text-left">
           <span>
             <span className="block text-body font-semibold text-white">
               {album.petName ?? '毛孩子'} · {album.serviceName ?? '洗护服务'}

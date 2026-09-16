@@ -61,7 +61,8 @@ function ProductCard({
           <p className="mt-1 truncate text-caption-xs text-ink-secondary">{storeName}</p>
         </div>
       </Link>
-      {/* 快加购：真链路（addItem → 角标/购物车；跨店由页面 ConfirmSheet 处理） */}
+      {/* 快加购：真链路（addItem → 角标/购物车；跨店由页面 ConfirmSheet 处理）。
+          U1-J 一致性修正：柠檬黄每屏一处主行动（分类 chip），加购钮改细线钮 */}
       {item.stock > 0 ? (
         <button
           type="button"
@@ -71,7 +72,7 @@ function ProductCard({
             e.preventDefault();
             onQuickAdd(item);
           }}
-          className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-brand-primary text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-card text-ink ring-1 ring-line-ring transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           <Plus className="h-5 w-5" strokeWidth={1.5} />
         </button>
