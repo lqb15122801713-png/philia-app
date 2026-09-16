@@ -1,0 +1,12 @@
+✓ A-1a grooming create 落库即 confirmed（不再经 pending） 
+✓ A-1b boarding create 落库即 confirmed（寄养同口径自动确认） 
+✓ A-2 grooming create 事务内发 appointment.confirmed（user+store 双频道） 
+✓ A-2b confirmed payload.by=auto（自动确认标识） 
+✓ A-2c 既有 appointment.created（store 频道）保留 
+✓ A-3a confirm 幂等：confirmed 单连调两次均返回 confirmed 
+✓ A-3b confirm 幂等零副作用：无新增 outbox 事件、updatedAt 不被改写 
+✓ A-4 历史 pending 单 confirm → confirmed + confirmed 事件（不迁移、旧链路不断裂） 
+✓ A-5 dashboardStats：新单待确认恒 0 口径——todo.pending 仅计历史 pending（=1，即上面直插的历史单） 
+[A-5] todo = {"pending":1,"unassigned":3,"cancelRequested":0,"unpaid":0,"total":4} byStatus = {"pending":0,"confirmed":0,"in_service":0,"in_boarding":0,"completed":0,"cancel_requested":0,"cancelled":0}
+
+任务 A 证据全部通过 ✅

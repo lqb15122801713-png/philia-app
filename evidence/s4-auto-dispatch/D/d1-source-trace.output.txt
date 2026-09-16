@@ -1,0 +1,7 @@
+✓ D-1a 下单自动派单：assignSource=auto（staff_id=st-g1） 
+✓ D-1b 商家 assign 改派不回归：改派 st-g2 成功，assignSource 覆盖为 merchant 
+✓ D-2 assigned 事件轨迹：下单 by=auto（staff+user）→ 改派 by=merchant（staff+user），无审计表 
+✓ D-3 listForStore 行带 assignSource=merchant（商家端列表/详情来源标记直显） 
+✓ D-4 dashboardStats：待确认仅计历史 pending（=1）；待派单 grooming 口径恒 0（boarding 未指派不计） 
+
+任务 D（服务端口径）证据全部通过 ✅

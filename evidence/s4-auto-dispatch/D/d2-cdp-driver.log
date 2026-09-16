@@ -1,0 +1,9 @@
+种子用户：customer=01M2J6BT1PTF5TVG46ZFH20XBY owner=01M2J6BT1PRZVM4EM0QSZJWESF
+A1 自动派单：id=01M2MAK9SATFH32P4WS654W7D6 status=confirmed staffId=01M2J6BT1S1DAKVJT6Y0WG9J77 assignSource=auto
+A2 自动派单：id=01M2MAK9SR0M88JADF2K9FTEJV status=confirmed staffId=01M2J6BT1SMHNK06N4C00B8V4N assignSource=auto
+A2 商家改派 → 阿强：staffId=01M2J6BT1S1DAKVJT6Y0WG9J77 assignSource=merchant
+页面内商家登录：true
+saved D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\evidence\s4-auto-dispatch\D\d2-dashboard-auto-accept.png
+saved D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\evidence\s4-auto-dispatch\D\d2-list-source-tags.png
+saved D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\evidence\s4-auto-dispatch\D\d2-detail-merchant-reassign.png
+CDP 截图完成

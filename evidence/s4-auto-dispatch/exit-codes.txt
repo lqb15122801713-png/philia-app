@@ -1,0 +1,633 @@
+== server typecheck ==
+
+> @philia/server@0.1.0 typecheck
+> tsc --noEmit
+
+server typecheck EXIT=0
+== build:customer ==
+
+> philia@0.0.0 build:customer
+> npm run build -w @philia/customer
+
+
+> @philia/customer@0.0.0 build
+> tsc -b && vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+node_modules/zod/v4/core/regexes.js (70:0): A comment
+
+"/** Anchors a pattern source. The interpolation lives here rather than at the call site because
+ * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it
+ * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */"
+
+in "node_modules/zod/v4/core/regexes.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+node_modules/zod/v4/core/util.js (330:0): A comment
+
+"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle."
+
+in "node_modules/zod/v4/core/util.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+✓ 2323 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                          0.13 kB
+dist/manifest.webmanifest                   0.38 kB
+dist/index.html                             0.75 kB │ gzip:   0.44 kB
+dist/assets/philia-tab-icon-wiOD1Y2x.png   10.07 kB
+dist/assets/index-COLK0JXA.css             96.37 kB │ gzip:  15.97 kB
+dist/assets/index-Bfft4Sgs.js             751.81 kB │ gzip: 209.71 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 4.21s
+
+PWA v1.3.0
+mode      generateSW
+precache  7 entries (829.16 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js
+build:customer EXIT=0
+== build:merchant ==
+
+> philia@0.0.0 build:merchant
+> npm run build -w @philia/merchant
+
+
+> @philia/merchant@0.0.0 build
+> tsc -b && vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 1869 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                          0.13 kB
+dist/manifest.webmanifest                   0.40 kB
+dist/index.html                             0.75 kB │ gzip:   0.44 kB
+dist/assets/philia-tab-icon-wiOD1Y2x.png   10.07 kB
+dist/assets/index-Bi6JJisl.css             95.33 kB │ gzip:  15.90 kB
+dist/assets/index-jBDDK6W9.js             575.75 kB │ gzip: 159.31 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 2.67s
+
+PWA v1.3.0
+mode      generateSW
+precache  7 entries (656.22 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js
+build:merchant EXIT=0
+== build:staff ==
+
+> philia@0.0.0 build:staff
+> npm run build -w @philia/staff
+
+
+> @philia/staff@0.0.0 build
+> tsc -b && vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 2156 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                          0.13 kB
+dist/manifest.webmanifest                   0.40 kB
+dist/index.html                             0.75 kB │ gzip:   0.44 kB
+dist/assets/philia-tab-icon-wiOD1Y2x.png   10.07 kB
+dist/assets/index-CKEqTtwd.css             92.73 kB │ gzip:  15.53 kB
+dist/assets/QrScanner-CkyEvK75.js         141.46 kB │ gzip:  51.27 kB
+dist/assets/index-ADJbmgyc.js             480.89 kB │ gzip: 140.66 kB
+✓ built in 3.06s
+
+PWA v1.3.0
+mode      generateSW
+precache  8 entries (699.18 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js
+build:staff EXIT=0
+== smoke: appointment ==
+
+[1] create：占槽 / 防超卖 / 各类校验
+  ✓ create 成功：批次 S4 落库即 confirmed + 6 位去混淆人工码 + payment_mode 快照 + 价格快照
+  ✓ S4：appointment.confirmed 随 create 落 user+store 双频道
+  ✓ 事务占槽：booked_count 0→1
+  ✓ S4：未指定 staffId → 自动派单唯一空闲 groomer（staff_id=st-e，assignSource=auto）
+  ✓ appointment.created → store 频道落 outbox
+  ✓ S4：自动派单 assigned 事件（staff+user 双频道，payload.by=auto）
+  ✓ S4：唯一 groomer（st-e）同时段已占 → 第二单 CONFLICT「该时段已约满」（B/C 同根双保险，不超卖）
+  ✓ 宠物非本人 → FORBIDDEN
+  ✓ type 与服务项不一致 → BAD_REQUEST
+  ✓ pass_deduct 无可用次卡 → BAD_REQUEST「暂无可用次卡」
+  ✓ 非营业时间（23:00）→ BAD_REQUEST
+  ✓ 过去时间 → BAD_REQUEST
+
+[2] getCode 签名与 verifyCode 窗口/过期规则
+  ✓ S4：confirm 幂等——confirmed 单连调两次均成功（状态不变）
+  ✓ S4：confirm 幂等零副作用（无新增 outbox 事件）
+  ✓ appointment.confirmed → user 频道（仍 1 条：create 所发，confirm 幂等不增发）
+  ✓ S4 兼容：历史 pending 单 confirm → confirmed + confirmed 事件（user 频道累计 2 条）
+  ✓ payload 结构 {v:2, aid, tw, exp, sig} 正确
+  ✓ exp = scheduled_start + 4h
+  ✓ verifyCode：原样 payload 验签通过
+  ✓ verifyCode：篡改 aid → 拒绝
+  ✓ verifyCode：篡改 exp → 拒绝
+  ✓ verifyCode：tw-1 上一窗口接受
+  ✓ verifyCode：tw-2 窗口拒绝
+  ✓ verifyCode：过期 exp 拒绝（即便签名自洽）
+
+[3] checkin：到店登记（S1-R1 豁免归属/不认领）/ 幂等 / 防爆破限流
+  ✓ S1-R1：自动派单单（st-e）被 B 扫码核销 → in_service 且原指派保留（staff_id 仍 st-e，claimed=false）
+  ✓ grooming 核销 → nextRoute=/execute/:id
+  ✓ S1-R1 断言②：未指派单 B 核销成功 → staff_id 仍 NULL（不认领，claimed=false）
+  ✓ S1-R1 断言②：未指派核销不补发 appointment.assigned（该单 assigned 事件前后均 0 条）
+  ✓ appointment.checkedin → appointment 频道
+  ✓ S1-R1：已指派 A 的单被 B 核销成功 → in_service 且 staff_id 仍为 st-a（原指派保留）
+  ✓ 非同店员工核销 → FORBIDDEN
+  ✓ 批次 S1：groomer 核销 → FORBIDDEN「核销需前台账号操作」
+  ✓ 重复扫码幂等：返回当前进度（in_service + 6 步）
+  ✓ 幂等不产生新事件 / 新记录
+  ✓ 连续 5 次核销失败均按 NOT_FOUND 正常报错
+  ✓ 第 6 次（即便持有效码）→ TOO_MANY_REQUESTS（锁 10 分钟）
+
+[4] type 分支：grooming 六步初始化 / boarding 住宿单
+  ✓ grooming 核销后初始化 6 条 appointment_steps
+  ✓ step1 disinfection=active，step2-6=locked
+  ✓ required_photos 快照 1/2/3/2/2/0 且 step_order=1..6
+  ✓ boarding create：type/end/payment_mode 快照正确
+  ✓ boarding + pass_deduct → BAD_REQUEST「寄养订单暂不支持次卡支付」
+  ✓ 寄养拒绝后 remainTimes 不变（仍 5）
+  ✓ 寄养拒绝后无新增 pass_deduct_log 行
+  ✓ grooming + pass_deduct 建单仍成功（200；S4 落库即 confirmed）
+  ✓ pass_deduct 建单同事务扣次（remain 5→4）
+  ✓ 扣次流水 delta=-1 挂在该单上
+  ✓ B3-2：boarding 不再占用洗护 30min 时段槽（T3 无 store_slots 行）
+  ✓ B3-2：boarding create 按晚占用（入住日晚 1 行；room_count 空 → 默认容量 1，booked=1）
+  ✓ boarding 人工码核销 → in_boarding + 不认领（staff_id 仍 NULL）+ nextRoute=/boarding/:id/checkin
+  ✓ boarding_stays 已建（room_no 空，待入住登记）
+  ✓ boarding 不初始化六步
+  ✓ appointment.checkedin → appointment 频道（boarding）
+
+[5] assign 技能·排班·冲突 / cancel 4h 两分支 / markPaid 幂等 / review
+  ✓ assign 技能不匹配（grooming 单派给仅 boarding 技能的 D）→ BAD_REQUEST
+  ✓ assign 时间冲突（A 同时段已有 confirmed 单）→ CONFLICT
+  ✓ assign 非同店员工 → BAD_REQUEST
+  ✓ assign 成功（B 持 wash 技能、同时段无冲突；S4 任务 D：来源标记覆盖为 merchant）
+  ✓ assign 无排班（D 的 schedule 为空）→ BAD_REQUEST
+  ✓ >4h 取消 → cancelled
+  ✓ B3-2：寄养取消后各晚释放（晚 D+3 booked_count 1→0）
+  ✓ appointment.cancelled → store 频道
+  ✓ pass_deduct 建单扣次（remain 4→3）
+  ✓ pass_deduct 单 >4h 取消 → cancelled
+  ✓ 取消同事务回补（remain 3→4）
+  ✓ 该单流水两条：-1 扣次 + +1 回补
+  ✓ ≤4h 取消 → cancel_requested
+  ✓ appointment.cancel_requested → store 频道
+  ✓ reviewCancel 批准 → cancelled
+  ✓ 批准事件 appointment.cancelled → user 频道
+  ✓ reviewCancel 拒绝 → 回 confirmed
+  ✓ 拒绝事件 appointment.confirmed → user 频道（累计 9 条：create 自动确认×7 + 历史 pending confirm×1 + 拒绝×1）
+  ✓ 服务中锁定：in_service 取消 → BAD_REQUEST
+  ✓ 未 completed 不可收款 → BAD_REQUEST
+  ✓ markPaid 写 paid_at / paid_fen（缺省=订单金额）
+  ✓ markPaid 幂等：已 paid 返回现状（不改写 paid_fen/paid_at）
+  ✓ appointment.paid → store 频道（仅 1 次）
+  ✓ review 落库 rating/review
+  ✓ appointment.reviewed → store + staff 频道
+  ✓ 非本人评价 → FORBIDDEN
+  ✓ 重复评价 → BAD_REQUEST
+  ✓ 未 completed 评价 → BAD_REQUEST
+
+[5c] B3-2：寄养逐晚占用 / 满晚 CONFLICT 整体回滚 / 取消全晚释放 / 多间容量
+  ✓ 两晚寄养建单成功（priceFen = 单晚价 × 2 晚）
+  ✓ 逐晚占用：晚 D+5 / D+6 各 1 行（booked=1，capacity=1）
+  ✓ 任一晚满员 → 第二单 CONFLICT「已订满」
+  ✓ 回滚实证：失败单不产生部分占用（各晚快照与建单前逐行一致，晚 D+7 无槽位行）
+  ✓ 回滚实证：失败单不产生预约记录（u-c2 名下仍 0 单）
+  ✓ room_count=2 房型：同晚两单均成功（capacity=2，booked=2）
+  ✓ 同晚第三单 CONFLICT 且 booked_count 不超限（仍 2）
+  ✓ 寄养 >4h 取消 → cancelled
+  ✓ 取消释放全部晚（晚 D+5 / D+6 booked_count 1→0）
+  ✓ 寄养 0 晚（住退同一日）→ BAD_REQUEST「退房日期且晚于入住日期」
+
+[5d] B3-3：reject 状态门禁 / 槽位释放 / 次卡回补幂等 / 双频道事件 / 入参与归属校验
+  ✓ confirmed 单拒单 → BAD_REQUEST「仅待确认（pending）可婉拒」
+  ✓ in_service 单拒单 → BAD_REQUEST
+  ✓ 非 pending 拒单零副作用：appt7 仍 confirmed、cancelReason/cancelSource 与尝试前一致、无新增 outbox
+  ✓ reason 为空 → BAD_REQUEST（zod 必填）
+  ✓ reason 超 100 字 → BAD_REQUEST
+  ✓ 客户角色调 reject → FORBIDDEN（merchantProcedure）
+  ✓ 非本店商家调 reject → FORBIDDEN
+  ✓ 拒单前置：洗护时段槽已占（booked_count=1）
+  ✓ 拒单 → cancelled + cancelReason/cancelSource=merchant_reject 落库
+  ✓ 拒单同事务释放洗护时段槽（booked_count 1→0）
+  ✓ appointment.rejected → user + store 双频道各 1 条，payload 含 reason
+  ✓ rejected payload 含 appointmentId/petName/reason
+  ✓ 寄养拒单前置：晚 D+8 / D+9 各占 1
+  ✓ 寄养拒单 → cancelled（来源 merchant_reject）
+  ✓ 寄养拒单同事务全晚释放（晚 D+8 / D+9 booked_count 1→0）
+  ✓ pass_deduct 建单扣次（remain 4→3）
+  ✓ 门禁3：拒单同事务回补次卡（remain 3→4）
+  ✓ 门禁3：该单流水两条（-1 扣次 + +1 拒单回补）
+  ✓ 幂等：已取消单再拒 → BAD_REQUEST（仅待确认可婉拒）
+  ✓ 幂等：重复拒单不重复回补（remain 仍 4，+1 流水仍 1 条）
+
+[5e] B3-4：寄养改期——必传 scheduledEnd / 全晚释放+逐晚占用 / 回退 pending / 双频道事件 / 满晚回滚 / 边界
+  ✓ B3-4：寄养改期缺 scheduledEnd → BAD_REQUEST「退房日期」
+  ✓ B3-4：寄养改期 scheduledEnd 不晚于入住日 → BAD_REQUEST「退房日期」
+  ✓ B3-4：寄养改期 → status 回退 pending + staffId 置空 + 新区间落库
+  ✓ B3-4：旧晚 D+11/D+12 全部释放（booked 1→0），新晚 D+13/D+14 逐晚占用（0→1）
+  ✓ B3-4：rescheduled 双频道（appointment:{aid} + store:s-1，by=customer，payload 含新区间）
+  ✓ B3-4：rescheduled payload 含 appointmentId/scheduledStart/scheduledEnd/by=customer
+  ✓ B3-4：寄养改期不触碰卡表（该单 pass_deduct_log 0 条）
+  ✓ B3-4：满员晚前置——b42 已占满 D+16/D+17（capacity=1，booked=1；S4 落库即 confirmed）
+  ✓ B3-4：新区间含满员晚 → CONFLICT「已订满」
+  ✓ B3-4 回滚实证：预约行逐项一致（pending/staffId=null/区间 D+13→D+15 不变）
+  ✓ B3-4 回滚实证：各晚快照与改期前逐行一致（旧晚未释放、满员晚未超占）
+  ✓ B3-4：距入住日首晚不足 4 小时 → BAD_REQUEST「不足 4 小时」
+  ✓ B3-4：in_boarding 进行中改期 → BAD_REQUEST「不可改期」
+  ✓ B3-4 回归：洗护改期 → pending + 新时段落库（end 按服务时长补齐）
+  ✓ B3-4 回归：洗护旧时段槽释放（1→0）+ 新时段槽占用（0→1）
+
+[5f] B3-5：W-2 +1h 缓冲前后端同拦 / W-14 取消原因落库（含 ≤4h 审核链）
+  ✓ W-2：当前时间 +1h 内的时段 → BAD_REQUEST「1 小时」（过期/临近同拦）
+  ✓ W-2：48h 内总能找到 ≥now+1h 且在营业时间的对齐时段
+  ✓ W-2：≥now+1h 时段建单成功（命中今天晚些时候 2026/9/16 14:30:00；S4 落库即 confirmed）
+  ✓ W-14：>4h 直消带原因 → cancelled + cancelReason/cancelSource=customer 落库
+  ✓ W-14：原因选填（不传 → cancelReason=null、cancelSource=customer）
+  ✓ W-14：≤4h 取消申请带原因 → cancel_requested + 原因落库
+  ✓ W-14：商家批准取消后保留客户原因/来源（cancelled + customer，审核动作由事件 by 承载）
+  ✓ W-14：reason 超 100 字 → BAD_REQUEST
+
+[6] listMine 分组 / get 归属 / listForStore 过滤 / listTodayForStaff
+  ✓ listMine：in_service 含 appt1
+  ✓ listMine：in_boarding 含 appt3
+  ✓ listMine：cancelled 含 appt5/appt6，completed 含 appt2，confirmed 含 appt7
+  ✓ listMine：带关联名称（petName/serviceName/storeName）
+  ✓ get：本人可查（含六步进度）
+  ✓ get：他人客户 → FORBIDDEN
+  ✓ get：被指员工可查
+  ✓ get：本店未指派员工查已指派单 → FORBIDDEN
+  ✓ get：本店商家可查
+  ✓ get：不存在 → NOT_FOUND
+  ✓ listForStore：日期范围过滤（明天 ≥5 单全部在范围内）
+  ✓ W-4：listForStore 行带 customerName/customerPhoneTail（昵称「客户一号」+ 尾号 1111）
+  ✓ W-4：appointment.get 带 customer{nickname, phoneTail}
+  ✓ listForStore：状态过滤（含 confirmed 的 appt7，不含 in_service 的 appt1）
+  ✓ listTodayForStaff：本人单按 scheduled_start 升序 + 含未指派待承接单
+  ✓ listTodayForStaff：已取消单不进时间轴
+  ✓ listTodayForStaff：他人（B）只见未指派单，不见 A 的单
+
+[7] 事件总账（event_outbox 按频道+类型核对）
+  ✓ appointment.created → store 频道共 19 条（原 7 次成功 create + B3-2 三节 b31 与 sv-b2 两单 + B3-3 拒单三单 + B3-4 改期三节 b41/b42/g41 + B3-5 5f 三单 w2Appt/w14a/w14b；CONFLICT/拒绝单不产生事件）
+  ✓ appointment.rejected → 双频道各 3 条（B3-3：洗护/寄养/次卡三单）
+  ✓ appointment.assigned 计数正确（S4：st-e 自动派单×11（u-c1 全部 grooming 建单）；st-a 改派 appt2=1；st-b 派单 appt4+b41=2；user:u-c1 = 11 自动 + 3 商家 = 14）
+  ✓ appointment.checkedin 共 3 条（appt1/appt2/appt3 各 1，幂等重扫无新增）
+  ✓ appointment.cancel_requested → store 频道共 3 条（appt6/appt7 + B3-5 W-14 的 w14c）
+
+[8] S4 任务 C：自动派单（负荷/并列）/ 客户指定 / 校验 / 并发
+  ✓ S4：负荷最轻派单——同日 4 单交替 sg-a/sg-b/sg-a/sg-b（0/0 并列→先入职 sg-a；随后负荷均衡）
+  ✓ S4：自动派单写 assignSource=auto + assigned 事件双频道（staff+user，payload.by=auto）
+  ✓ S4：assigned payload 含 staffId/staffName/by=auto
+  ✓ S4：指定 sg-b（此时段有空）→ 成功写入 staff_id
+  ✓ S4：指定无空（sg-a 15:00 已占）→ CONFLICT「该美容师此时段已约满，请换时间或换美容师」
+  ✓ S4：未指定且无可空 → CONFLICT「该时段已约满，请换个时间」
+  ✓ S4：派单失败整体回滚——占槽不产生部分占用（15:00 booked_count 仍 2，失败单无预约记录）
+  ✓ S4：指定他店员工（st-c 属 s-2）→ BAD_REQUEST
+  ✓ S4：指定前台（sf-3 非 groomer）→ BAD_REQUEST
+  ✓ S4：指定停职 groomer（sg-s）→ BAD_REQUEST
+  ✓ S4：boarding 传 staffId → BAD_REQUEST（寄养按晚占房无需美容师）
+  ✓ S4：并发双击不产生双占——恰 1 单成功 1 单 CONFLICT，sg-b 同时段仅 1 单、占槽仅 1
+[smoke] 临时目录清理失败（不影响验证结果，系统临时目录会自行回收）: C:\Users\lqb15\AppData\Local\Temp\philia-appt-smoke-7CE0wV Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-appt-smoke-7CE0wV '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-appt-smoke-7CE0wV'
+    at rmSync (node:fs:1222:18)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\routers\__tests__\appointment.smoke.ts:1805:5) {
+  errno: 1,
+  code: 'EPERM',
+  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-appt-smoke-7CE0wV',
+  syscall: 'rm'
+}
+
+全部冒烟验证通过 ✅
+smoke: appointment EXIT=0
+== smoke: domain ==
+✅ 1. pet upsert/list/get：归属校验正确（他人 FORBIDDEN；关联预约 staff 可读；zod 拦截非法物种）
+✅ 2. store listNearby 仅 active + geo 粗排；getWithServices 合成栅格（W-2 +1h 缓冲）+ S4 可用性引擎（groomer 空闲判定/动态容量/store_slots 降级/时长连续）
+✅ 3. upsertService 越店写 FORBIDDEN 且未生效；本店新增（含寄养房型）正常
+✅ 4. inviteStaff 24h 码 + 同名复用不建行；staffList 绩效聚合正确；setSchedule 越店 FORBIDDEN
+✅ 5. boarding：checkinStay 幂等 / dailyLog UPSERT+事件 / checkout 幂等+completed / stayBoard 超期标记正确
+
+[domain.smoke] 全部 5 项通过 🎉
+smoke: domain EXIT=0
+== smoke: serviceStep ==
+
+[1] locked 步 addPhotos/confirmStep → FORBIDDEN；跨店/客户归属 → FORBIDDEN
+  ✓ locked 步（precheck）addPhotos：FORBIDDEN
+  ✓ locked 步（precheck）confirmStep：FORBIDDEN
+  ✓ 客户身份 addPhotos（staffProcedure 拦截）：FORBIDDEN
+  ✓ 跨店 staff addPhotos（归属校验）：FORBIDDEN
+  ✓ 跨店 merchant flagForRedo（归属校验）：FORBIDDEN
+  ✓ 他人预约 customer list（归属校验）：FORBIDDEN
+  ✓ [1] 后：active 步数 ≤1（规则 1 不变量）
+
+[2] 张数不足 confirm → 拒（提示还差 N 张）；超 max addPhotos → 拒
+  ✓ step1 无照片 confirmStep：BAD_REQUEST 且提示含「还差 1 张」
+  ✓ step1 一次传 4 张（max=3）addPhotos：BAD_REQUEST 且提示含「上限 3 张」
+
+[3] step1 传 1 张 → confirm → step1 done、step2 active；step_updated 载荷校验
+  ✓ step1 addPhotos 登记 1 张
+  ✓ addPhotos 补写 started_at（staff 未开始时）
+  ✓ confirmStep 返回 nextStepKey=precheck、未完结预约
+  ✓ step1 done（done_at 写入、flagged=0）
+  ✓ step2 locked→active（started_at 写入）
+  ✓ step_updated 落 outbox：频道 appointment:{aid} 且载荷含 photos 与 nextStepKey
+  ✓ [3] 后：active 步数 ≤1（规则 1 不变量）
+
+[4] flagForRedo：locked 步拒 / 非最新 done 拒 / (b) 回退+作废旧照 / (a) 仅打标
+  ✓ step2 完成、step3 active
+  ✓ step2 confirm 后：active 步数 ≤1（规则 1 不变量）
+  ✓ step2 旧照片 2 张（待作废对象）
+  ✓ 对 locked 步（detail）打标：FORBIDDEN
+  ✓ step3 仍 active 时对 step2 打标：FORBIDDEN
+  ✓ (b) 路径返回 reactivated=true、作废 2 张旧照片
+  ✓ step2 done→active、flagged=1、done_at 清空
+  ✓ 旧照片全部 invalidated_at=now（保留可查）
+  ✓ 回退后恰好 1 个 active 步且为 step2（规则 1）
+  ✓ step_flagged 落 outbox ×2（appointment + staff 双频道）且载荷含 stepKey/flagged
+  ✓ 回退后 confirmStep step2（仅统计新照片）：BAD_REQUEST 且提示含「还差 2 张」
+  ✓ 重拍后 step2 重新 done、flagged 清 0
+  ✓ list 只返回 2 张新照片（旧照不计入）
+  ✓ step3 重新 active
+  ✓ step2 重拍 confirm 后：active 步数 ≤1（规则 1 不变量）
+  ✓ (a) 路径返回 reactivated=false、作废 0 张
+  ✓ (a) 路径：step3 仍 active、flagged=1、3 张照片未失效
+  ✓ step3 confirm 后 done 且 flagged 清 0
+  ✓ step3 已 done 时对 step2 打标：FORBIDDEN
+  ✓ step3 confirm 后：active 步数 ≤1（规则 1 不变量）
+
+[5] before_after 步：normal 标签拒 / 只传 before 拒 / before+after 各 1 过
+  ✓ step4 done、step5 active
+  ✓ before_after 步传 normal 标签：BAD_REQUEST 且提示含「before / after」
+  ✓ 只传 1 张 before 时 confirm：BAD_REQUEST 且提示含「before / after 各至少 1 张」
+  ✓ before+after 各 1 → confirm 通过、step6 active
+  ✓ step5 confirm 后：active 步数 ≤1（规则 1 不变量）
+
+[6] step6 confirm：预约 completed + completed_at + appointment.completed 事件
+  ✓ progressSummary（step6 前）：currentStepKey=confirm、doneCount=5、total=6、status=in_service
+  ✓ confirm 步传照片（max=0）：BAD_REQUEST
+  ✓ list 返回 6 步且未失效照片数正确 [1,2,3,2,2,0]
+  ✓ list 每步照片按 taken_at 升序（非递减）
+  ✓ step6 confirm 返回 appointmentCompleted=true、nextStepKey=null
+  ✓ 预约 in_service→completed 且 completed_at 写入（规则 4 三合一）
+  ✓ step6 done
+  ✓ appointment.completed 事件落 outbox（频道 appointment:{aid}）
+  ✓ step6 的 step_updated 载荷 nextStepKey=null、photos 为空数组
+  ✓ 全程完成后：active 步数 ≤1（规则 1 不变量）
+  ✓ progressSummary（完成态）：currentStepKey=null、doneCount=6、status=completed
+  ✓ 完成后再 confirmStep（done 步）：FORBIDDEN
+
+[7] B3-1：completed 打标 → in_service + reopened 三频道事件 + 二次完成全链路
+  ✓ cancelled 单打标：BAD_REQUEST 且提示含「已取消」
+  ✓ pending 单打标（六步流未初始化）：NOT_FOUND
+  ✓ cancelled 单打标被拒后状态仍 cancelled（无写库副作用）
+  ✓ completed 打标返回 reopened=true、reactivated=true、作废 0 张（confirm 步无照片）
+  ✓ 重开后预约 completed→in_service 且 completed_at 清空
+  ✓ 末步 done→active、flagged=1、done_at 清空
+  ✓ 重开后恰好 1 个 active 步（=confirm，规则 1 不变量）
+  ✓ appointment.reopened 落 outbox ×3（appointment + store + user 三频道）且载荷齐全
+  ✓ 重开后 confirmStep(confirm) 再次返回 appointmentCompleted=true
+  ✓ 二次完成：预约回 completed 且 completed_at 重写（不早于首次）
+  ✓ appointment.completed 事件再发一次（appointment 频道 ×2、store 频道 ×2，口径与现有一致）
+  ✓ 二次完成后 progressSummary 回到完成态（doneCount=6、status=completed）
+[smoke] 临时目录清理失败（不影响验证结果）: C:\Users\lqb15\AppData\Local\Temp\philia-servicestep-smoke-EVLZLg Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-servicestep-smoke-EVLZLg '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-servicestep-smoke-EVLZLg'
+    at rmSync (node:fs:1222:18)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\routers\__tests__\serviceStep.smoke.ts:748:5) {
+  errno: 1,
+  code: 'EPERM',
+  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-servicestep-smoke-EVLZLg',
+  syscall: 'rm'
+}
+
+全部冒烟验证通过 ✅
+smoke: serviceStep EXIT=0
+== smoke: mall ==
+
+[1] 商品目录：过滤/搜索/分页/上下架 + 商家编辑归属
+  ✓ keyword 搜索命中 pd-a
+  ✓ category 过滤命中 pd-b
+  ✓ 仅上架可见（pd-off 不出现，共 3 件）
+  ✓ 分页：pageSize=2 → 2+1，total=3
+  ✓ storeId 过滤仅他店商品
+  ✓ getProduct 详情（含门店名）
+  ✓ 下架商品 getProduct → NOT_FOUND
+  ✓ upsertProduct 新增（本店 storeId）
+  ✓ upsertProduct 编辑/下架/库存编辑
+  ✓ 越店编辑商品 → FORBIDDEN
+
+[2] createOrder：合并行/扣库存/服务端金额/快照/事件
+  ✓ 下单成功：pending + 订单号 P+日期+随机（人类可读）
+  ✓ total_fen 服务端口径（3×10000=30000，不信任前端金额）
+  ✓ items 快照合并（qty=3）且含 name/priceFen/image
+  ✓ 地址快照（receiver/phone/detail）
+  ✓ pd-a 库存 5 → 2 正确扣减
+  ✓ order.created 事件落 store:s-1
+  ✓ 含下架商品下单 → BAD_REQUEST
+  ✓ 超库存下单（pd-a 剩 2 买 3）→ CONFLICT 库存不足
+  ✓ 跨店商品一单 → BAD_REQUEST
+  ✓ 校验失败后 pd-a 库存未被误扣（仍 2）
+
+[3] 防超卖：库存 1 件，两人并发 createOrder → 仅一单成功
+  ✓ 恰好一单成功、一单 CONFLICT「库存不足」（不超卖）
+  ✓ pd-b 库存扣到 0（不为负）
+
+[4] createPayment → 篡改签名/金额不符被拒 → mock-callback → paid + 流水 + 事件
+  ✓ 他人订单 createPayment → FORBIDDEN
+  ✓ 越权 mock-callback（他人订单）→ 403
+  ✓ 未登录 mock-callback → 401
+  ✓ createPayment（mock）：mock_ 支付单号 + payParams 标记
+[pay] ALERT 回调验签失败 provider=mock: Error: mock 回调验签失败（签名不符）
+    at MockPayProvider.verifyCallback (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\payments\mockPay.ts:65:13)
+    at processPayCallback (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\routes\payCallback.ts:74:31)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\routes\payCallback.ts:197:28)
+    at async dispatch (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/hono/dist/compose.js:22:17)
+    at async <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\routers\__tests__\mall.smoke.ts:119:5)
+    at async dispatch (file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/hono/dist/compose.js:22:17)
+    at async file:///D:/KimiData/kimi/tasks/2026-09-07/02-22-13-267fc560/philia-app/server/node_modules/hono/dist/hono-base.js:307:25
+    at async <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\routers\__tests__\mall.smoke.ts:297:21)
+  ✓ 篡改签名回调被拒（400 INVALID_SIGNATURE）
+  ✓ 拒签后订单仍 pending 且无流水
+[pay] ALERT 回调金额不符：order=01M2MAXGK8ZTHHHYM5SKF608Y0 应付=30000fen 实报=999fen paymentId=mock_01M2MAXGM4DMNY6SD5VJAE1X1S
+  ✓ 金额不符回调被拒（400 AMOUNT_MISMATCH）
+  ✓ 拒额后订单仍 pending 且无流水
+  ✓ mock-callback 成功（code=SUCCESS）
+  ✓ 订单 pending → paid
+  ✓ payments 流水 1 条（mock/30000/paid/paymentId 对齐/含回调原文）
+  ✓ order.paid 事件落 user:u-c1
+  ✓ u-c1 收到 order.paid 站内通知（支付成功文案）
+
+[5] 幂等：回调重复投递 → 成功且无重复流水/事件
+  ✓ 演示端点重复投递 → 200 且 idempotent=true
+  ✓ 原始回调端点重复投递 → 200 且 idempotent=true
+  ✓ 无重复流水（仍 1 条）
+  ✓ 无重复 order.paid 事件（仍 1 条）
+  ✓ 已支付订单 createPayment → BAD_REQUEST
+
+[6] shipOrder → receiveOrder 状态机与事件
+  ✓ 越店发货（u-m2 发 s-1 订单）→ FORBIDDEN
+  ✓ pending 订单不可发货（orderB 未支付）→ BAD_REQUEST
+  ✓ 发货成功：shipped + tracking_no
+  ✓ order.shipped 事件落 user:u-c1
+  ✓ 重复发货 → BAD_REQUEST
+  ✓ 他人收货 → FORBIDDEN
+  ✓ 确认收货：shipped → received
+  ✓ order.received 事件落 store:s-1
+  ✓ 重复收货 → BAD_REQUEST
+
+[7] listMyOrders 分组 / listStoreOrders 队列
+  ✓ listMyOrders：六态分组齐全，received 含 order1（带门店名）
+  ✓ 未抢到库存者无 pd-b 订单（groups 全空）
+  ✓ 队列夹具：c2 下单并 mock 支付成功
+  ✓ listStoreOrders：paid/shipped/refunding 三队列；新支付单在 paid 队列（待发货，含客户昵称）
+  ✓ 越店商家看不到他店队列（m2 的 s-2 队列为空）
+
+[8] assertPaymentConfig：生产禁 mock / wechat 缺配置报错（不静默降级）
+  ✓ 生产构建 + PAYMENT_PROVIDER=mock → 启动报错
+  ✓ PAYMENT_PROVIDER=wechat 缺 WECHAT_* → 启动报错（列出缺失项）
+  ✓ 开发态 mock 配置 → 校验通过
+[smoke] 临时目录清理失败（不影响验证结果，系统临时目录会自行回收）: C:\Users\lqb15\AppData\Local\Temp\philia-mall-smoke-Bp74iC Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-mall-smoke-Bp74iC '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-mall-smoke-Bp74iC'
+    at rmSync (node:fs:1222:18)
+    at <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\routers\__tests__\mall.smoke.ts:453:5) {
+  errno: 1,
+  code: 'EPERM',
+  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-mall-smoke-Bp74iC',
+  syscall: 'rm'
+}
+
+全部冒烟验证通过 ✅
+smoke: mall EXIT=0
+== e2e ==
+[e2e] 临时库迁移 + 种子…
+  ✓ 临时库迁移 + 种子完成
+  ✓ 种子用户齐全（customer/owner/staff1/staff2）
+  ✓ server 启动且 GET /api/health 返回 {ok:true, ts}
+  ✓ 三角色 dev-login 均签发会话 cookie
+  ✓ auth.me（商家）角色与门店绑定正确
+  ✓ push.subscribe 登记成功（create 前完成）
+  ✓ pet.list 返回客户宠物
+  ✓ store.listNearby 返回种子门店
+  ✓ getWithServices 返回 grooming 服务项
+  ✓ getWithServices 返回可约槽位（10:00-16:00 整点）
+  ✓ appointment.create 成功（S4：落库即 confirmed）
+  ✓ GET /api/events 建立 SSE（200 + text/event-stream）
+  ✓ store.staffList 找到承接美容师（阿强/丽丽=groomer）
+  ✓ S4：create 自动派单（staff_id=阿强，assignSource=auto）
+  ✓ appointment.confirm 幂等：confirmed 单连调两次均成功且 updatedAt 不变（零副作用）
+  ✓ appointment.assign 改派成功（阿强 → 丽丽），assignSource 覆盖为 merchant
+  ✓ appointment.getCode 返回二维码原文与人工码
+  ✓ 批次 S1：groomer 扫码核销 → 403 FORBIDDEN「核销需前台账号操作」
+  ✓ 批次 S1：groomer 人工码核销 → 403 FORBIDDEN「核销需前台账号操作」
+  ✓ 批次 S1：groomer 入住登记（checkinStay）→ 403 FORBIDDEN「核销需前台账号操作」
+  ✓ 批次 S1：frontdesk 入住登记越过角色校验（dummy id 报非 FORBIDDEN 业务错）
+  ✓ appointment.checkin（frontdesk 二维码原文）→ in_service + 六步初始化
+  ✓ S1-R1 断言①：已改派给丽丽的单被小美（frontdesk）核销成功 → staff_id 仍为丽丽（原指派保留，claimed=false）
+  ✓ serviceStep.addPhotos(disinfection ×1)
+  ✓ serviceStep.confirmStep(disinfection)
+  ✓ serviceStep.addPhotos(precheck ×2)
+  ✓ serviceStep.confirmStep(precheck)
+  ✓ serviceStep.addPhotos(grooming ×3)
+  ✓ serviceStep.confirmStep(grooming)
+  ✓ serviceStep.addPhotos(detail ×2)
+  ✓ serviceStep.confirmStep(detail)
+  ✓ serviceStep.addPhotos(before_after ×2)
+  ✓ serviceStep.confirmStep(before_after)
+  ✓ serviceStep.confirmStep(confirm)
+  ✓ GET /api/img/* 签名 URL 可访问（200 image/jpeg）
+  ✓ 预约已 completed（含 completed_at）
+  ✓ appointment.markPaid 收款登记
+  ✓ appointment.review 评价成功
+  ✓ 找到第二个可约槽（未指派单用）
+  ✓ S1-R1 断言②：未指派单前台核销成功 → staff_id 仍为 NULL（不认领，claimed=false）
+  ✓ S1-R1 断言②：未指派单核销后 outbox 无新增 appointment.assigned 事件（核销前后计数一致）
+  [SSE] 实际收到事件序列: ["appointment.confirmed","appointment.assigned","appointment.assigned","appointment.checkedin","step_updated","step_updated","step_updated","step_updated","step_updated","step_updated","appointment.completed"]
+  [SSE] 期望事件序列:     ["appointment.confirmed","appointment.assigned","appointment.assigned","appointment.checkedin","step_updated","step_updated","step_updated","step_updated","step_updated","step_updated","appointment.completed"]
+  ✓ SSE 流依次收到 confirmed/assigned/checkedin/step_updated×6/completed（按 id 去重）
+  ✓ step_updated 载荷均指向本预约
+  ✓ event_outbox 事件齐全（共 20 条 / 期望 20 条）
+  ✓ assigned 双频道（staff + user）
+  ✓ 客户调 merchantProcedure（store.upsertService）→ 403 FORBIDDEN
+  ✓ 未登录调 appointment.create → 401 UNAUTHORIZED
+  ✓ store.staffList 行带 role/status 字段（阿强=groomer/active）
+  ✓ 批次 S1：越店 updateStaff（他店 owner 改本店员工）→ 403 FORBIDDEN
+  ✓ 批次 S1：非商家（customer）updateStaff → 403 FORBIDDEN
+  ✓ 批次 S1：role/status 均缺省 → 400 BAD_REQUEST（至少传一项）
+  ✓ 批次 S1：本店 owner 改阿强 role→frontdesk 成功
+  ✓ 批次 S1：员工端下次拉取（auth.me）即见新角色 frontdesk（联动生效）
+  ✓ 批次 S1：改回 groomer + 停用（role/status 同传）成功
+  ✓ 批次 S1：staffList 刷新一致（阿强=groomer/suspended）
+  ✓ client-error 合法上报 → 200 {ok:true}（免登录）
+  ✓ client-error 非法 app → 400
+  ✓ client-error 缺 route/message → 400
+  ✓ client-error 非 JSON body → 400
+  ✓ client-error 限流：同 IP 第 21 次起 → 429
+  ✓ client-error JSONL 落盘：合法条目在日志（app/route/message/UA/首帧齐全）
+  ✓ client-error 落盘：非法 app 条目不入日志
+  ✓ 验收结束：7200 端口无残留监听
+[e2e] 临时库目录清理失败（Windows libsql 句柄滞后，可手工删）: C:\Users\lqb15\AppData\Local\Temp\philia-e2e-UPgg93 Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-UPgg93 '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-UPgg93'
+    at rmSync (node:fs:1222:18)
+    at cleanup (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\__tests__\e2e.ts:906:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async <anonymous> (D:\KimiData\kimi\tasks\2026-09-07\02-22-13-267fc560\philia-app\server\src\__tests__\e2e.ts:942:3) {
+  errno: 1,
+  code: 'EPERM',
+  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-e2e-UPgg93',
+  syscall: 'rm'
+}
+  ✓ 种子库 data/philia.db 原样（size/mtime 未变）
+
+全链路验收全部通过 ✅
+e2e EXIT=0
+== smoke-routes ==
+✅ [customer] /dev-login —— 200 + 非空白 + 锚点/守卫命中
+✅ [customer] / —— 200 + 非空白 + 锚点/守卫命中（B9a 根路径重定向 + B9.3 新首页锚点）
+✅ [customer] /home —— 200 + 非空白 + 锚点/守卫命中（B9.3 首页完整改版）
+✅ [customer] /mall —— 200 + 非空白 + 锚点/守卫命中
+✅ [customer] /mall/cart —— 200 + 非空白 + 锚点/守卫命中
+✅ [customer] /mall/checkout —— 200 + 非空白 + 锚点/守卫命中（B3 修复路由）
+✅ [customer] /mall/orders —— 200 + 非空白 + 锚点/守卫命中（A2 白屏群）
+✅ [customer] /mall/orders/ —— 200 + 非空白 + 锚点/守卫命中（尾斜杠变体）
+✅ [customer] /booking —— 200 + 非空白 + 锚点/守卫命中（B9.3 中间层 hub 退役直达单屏）
+✅ [customer] /booking/grooming —— 200 + 非空白 + 锚点/守卫命中（B4 修复路由）
+✅ [customer] /booking/grooming/ —— 200 + 非空白 + 锚点/守卫命中（尾斜杠变体）
+✅ [customer] /booking/success —— 200 + 非空白 + 锚点/守卫命中（B9a 任务B 一键再约落点）
+✅ [customer] /appointments —— 200 + 非空白 + 锚点/守卫命中
+✅ [customer] /appointments/01M256D240E19GWNG2QMFV3Q8V —— 200 + 非空白 + 锚点/守卫命中（A1 白屏群）
+✅ [customer] /philia/pets —— 200 + 非空白 + 锚点/守卫命中（A4 白屏群）
+✅ [customer] /philia/moments —— 200 + 非空白 + 锚点/守卫命中（A4 白屏群）
+✅ [merchant] /dev-login —— 200 + 非空白 + 锚点/守卫命中
+✅ [merchant] /dashboard —— 200 + 非空白 + 锚点/守卫命中
+✅ [merchant] /monitor —— 200 + 非空白 + 锚点/守卫命中（B2 修复路由）
+✅ [merchant] /monitor/ —— 200 + 非空白 + 锚点/守卫命中（尾斜杠变体）
+✅ [merchant] /monitor/01M256D240E19GWNG2QMFV3Q8V —— 200 + 非空白 + 锚点/守卫命中（B2 别名深链）
+✅ [merchant] /live —— 200 + 非空白 + 锚点/守卫命中（B2 重定向）
+✅ [merchant] /appointments —— 200 + 非空白 + 锚点/守卫命中（A3 白屏群）
+✅ [merchant] /appointments/01M256D240E19GWNG2QMFV3Q8V/monitor —— 200 + 非空白 + 锚点/守卫命中（P4 原深链）
+✅ [staff] /dev-login —— 200 + 非空白 + 锚点/守卫命中
+✅ [staff] /today —— 200 + 非空白 + 锚点/守卫命中
+✅ [staff] /execute/01M256D240E19GWNG2QMFV3Q8V —— 200 + 非空白 + 锚点/守卫命中（B1 修复路由）
+✅ [staff] /execute/01M256D240E19GWNG2QMFV3Q8V/ —— 200 + 非空白 + 锚点/守卫命中（尾斜杠变体）
+✅ [staff] /history —— 200 + 非空白 + 锚点/守卫命中
+✅ [staff] /me —— 200 + 非空白 + 锚点/守卫命中
+
+===== 路由冒烟汇总：30/30 通过 =====
+smoke-routes EXIT=0
+
+== 珊瑚粉自查（c255e7c..HEAD diff 新增行） ==
+珊瑚粉色值命中: 0
+新增 text-white 命中: 0

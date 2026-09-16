@@ -1,0 +1,11 @@
+✓ C-1a 未指定 → 自动派单先入职者（staff_id=st-g1，assignSource=auto） 
+✓ C-1b assigned 事件双频道（staff:st-g1 + user:u-c，payload.by=auto） 
+✓ C-2 负荷最轻（st-g1 当日已有 1 在单）→ 派 st-g2 
+✓ C-2b 负荷再并列（1/1）→ 先入职 st-g1 
+✓ C-3a 指定 st-g2（10:00 有空）→ 成功写入 
+✓ C-3b 指定 st-g1（10:00 已占）→ CONFLICT「该美容师此时段已约满，请换时间或换美容师」 
+✓ C-4a 未指定且无可空（st-g1/st-g2 10:00 均占）→ CONFLICT「该时段已约满，请换个时间」 
+✓ C-4b 派单与占槽同一事务：失败整体回滚（booked_count 2→仍 2，无部分占用） 
+✓ C-5 并发双击：恰 1 成功 1 CONFLICT；st-g2 同时段仅 1 单、占槽仅 1（不产生双占） 
+
+任务 C 证据全部通过 ✅

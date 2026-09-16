@@ -1,0 +1,11 @@
+✓ R-1 寄养 create 落库即 confirmed（自动确认同口径） 
+✓ R-2 按晚占用口径不动：晚 D+5/D+6/D+7 各 1 行（入住日到退房日前一日），priceFen=单晚价×3 
+✓ R-5a 寄养不自动派单（staff_id=NULL） 
+✓ R-5b 寄养无 assigned 事件（按晚占房无需美容师） 
+✓ R-5c 寄养不占洗护 30min 时段槽（store_slots 零行） 
+✓ R-3a 任一晚满员（D+6/D+7 已占）→ CONFLICT「已订满」 
+✓ R-3b 整体回滚：各晚快照逐项一致（无部分占用），客户二零预约记录 
+✓ R-4 >4h 取消 → cancelled + 全部晚释放（booked_count 归零，行保留） 
+✓ R-6 疫苗阻断链路本批零改动（客户端 PetPicker/BoardingConfirmBar 未动，见 d4-vaccine-diff.txt） 
+
+寄养回归证据全部通过 ✅

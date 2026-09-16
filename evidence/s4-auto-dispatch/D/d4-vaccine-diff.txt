@@ -1,0 +1,17 @@
+# 疫苗阻断回归佐证（批次 S4 全 diff 范围）
+## 基线 main@c255e7c → HEAD 的客户端寄养疫苗链路文件 diff（应为空）
+（以上无输出 = 疫苗阻断链路零改动）
+
+## 本批客户端改动全量（仅两处，均非疫苗链路）
+apps/customer/src/pages/AppointmentsPage.tsx
+apps/customer/src/pages/BookingSuccessPage.tsx
+
+## 疫苗阻断代码仍在位（PetPicker 行号实证）
+4: * - 疫苗硬校验模式（寄养，requireVaccineUntil=退房日）：vaccine_valid_until 为空或
+20:  requireVaccineUntil,
+27:  requireVaccineUntil?: Date | null;
+50:  const vaccineOk = (p: PetItem): boolean => {
+51:    if (!requireVaccineUntil) return true;
+54:    return toISODate(isoToDate(p.vaccineValidUntil)) >= toISODate(requireVaccineUntil);
+60:        const ok = vaccineOk(p);
+64:          // 疫苗阻断卡（红色）：不可选 + 补录引导
