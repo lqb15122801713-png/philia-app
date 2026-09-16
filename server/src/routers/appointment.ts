@@ -53,7 +53,7 @@
 
 import { createHmac, randomInt, timingSafeEqual } from 'node:crypto';
 import { TRPCError } from '@trpc/server';
-import { and, asc, desc, eq, gte, inArray, isNull, lt, lte, ne, or } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, lte, ne, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import {
@@ -584,6 +584,103 @@ function assertWithinSchedule(staffRow: StaffRow, start: Date): void {
     badRequest('预约时间不在该员工排班时段内');
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* 批次 S4（任务 B/C）：groomer 空闲判定——可用性引擎（getWithServices      */
+/* 栅格）与自动派单（create 事务内）同根同源，查询时计算，不做缓存表。       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 排班覆盖判定（S4 任务 B）：目标区间 [startMs, endMs) 覆盖的每个 30min tick 的
+ * 墙钟（门店规范时区）均落在当日某段排班 [start, end) 内；同日多段排班按并集计。
+ */
+export function scheduleCoversInterval(
+  schedule: schema.StaffSchedule | null,
+  startMs: number,
+  endMs: number,
+): boolean {
+  for (let t = startMs; t < endMs; t += DURATION_SLOT_MIN * 60_000) {
+    const wc = storeWallclock(new Date(t));
+    const ranges = schedule?.[DAY_KEYS[wc.dow]!];
+    if (!ranges || ranges.length === 0) return false;
+    const tt = `${pad2(Math.floor(wc.minutes / 60))}:${pad2(wc.minutes % 60)}`;
+    if (!ranges.some((r) => r.start <= tt && tt < r.end)) return false;
+  }
+  return true;
+}
+
+/** 窗口内 groomer 占用快照（空闲判定的输入） */
+export interface GroomerOccupancy {
+  /** 本店全部 role='groomer' + status='active' 员工（含排班） */
+  groomers: StaffRow[];
+  /** 窗口内与本店 groomer 相关的非 cancelled 预约区间（占用=冲突） */
+  appts: Array<{ staffId: string | null; scheduledStart: Date; scheduledEnd: Date }>;
+}
+
+/**
+ * 取窗口 [windowStartMs, windowEndMs) 内的 groomer 占用快照：
+ * 非 cancelled 预约（含 confirmed/in_service/in_boarding/cancel_requested/completed 等
+ * 一切未取消态——取消申请尚未释放槽位，与 releaseAppointmentSlots 口径一致）且
+ * 时间区间与窗口重叠（apptStart < windowEnd && apptEnd > windowStart）即计入。
+ */
+export async function loadGroomerOccupancy(
+  d: DbHandle,
+  storeId: string,
+  windowStartMs: number,
+  windowEndMs: number,
+): Promise<GroomerOccupancy> {
+  const groomers = await d
+    .select()
+    .from(schema.staff)
+    .where(
+      and(
+        eq(schema.staff.storeId, storeId),
+        eq(schema.staff.role, 'groomer'),
+        eq(schema.staff.status, 'active'),
+      ),
+    )
+    .orderBy(asc(schema.staff.createdAt));
+  if (groomers.length === 0) return { groomers: [], appts: [] };
+  const appts = await d
+    .select({
+      staffId: schema.appointments.staffId,
+      scheduledStart: schema.appointments.scheduledStart,
+      scheduledEnd: schema.appointments.scheduledEnd,
+    })
+    .from(schema.appointments)
+    .where(
+      and(
+        eq(schema.appointments.storeId, storeId),
+        inArray(
+          schema.appointments.staffId,
+          groomers.map((g) => g.id),
+        ),
+        ne(schema.appointments.status, 'cancelled'),
+        lt(schema.appointments.scheduledStart, new Date(windowEndMs)),
+        gt(schema.appointments.scheduledEnd, new Date(windowStartMs)),
+      ),
+    );
+  return { groomers, appts };
+}
+
+/**
+ * 目标区间 [startMs, endMs) 的空闲 groomer（纯函数，与 loadGroomerOccupancy 配套）：
+ * 空闲 = 排班覆盖目标区间（scheduleCoversInterval）+ 无冲突预约
+ * （其任一预约区间与目标区间重叠即冲突，含 9a 引擎时长占用的连续区间）。
+ */
+export function freeGroomersInInterval(
+  occ: GroomerOccupancy,
+  startMs: number,
+  endMs: number,
+): StaffRow[] {
+  const busy = new Set(
+    occ.appts
+      .filter((a) => a.scheduledStart.getTime() < endMs && a.scheduledEnd.getTime() > startMs)
+      .map((a) => a.staffId),
+  );
+  return occ.groomers.filter((g) => !busy.has(g.id) && scheduleCoversInterval(g.schedule, startMs, endMs));
+}
+
 
 /** 核销后的当前进度（幂等重扫与正常核销返回同构数据） */
 async function progressOf(

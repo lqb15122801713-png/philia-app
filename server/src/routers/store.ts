@@ -5,11 +5,14 @@
  *   粗排（v1 不做球面距离，城区尺度误差可接受），无坐标门店排最后；无则按创建序。
  *   仅 status=active，取前 20。
  * - store.getWithServices：public。门店详情 + active 服务项 + 可约时间槽（今天起 7 天
- *   按营业时间合成 30min 栅格，合并 store_slots 既有行的占用/容量；统一剔除
- *   「当前时间 +1h 缓冲」内时段与满槽——B3-5 W-2，与 assertBookableTime 同口径；
- *   传 serviceId 则按服务时长过滤——需 duration 覆盖的连续 30min 槽位全部有余量才算可约；
- *   B9a 任务 C：可选 petId——逐服务输出时长引擎结果 serviceDurations 并以引擎时长
- *   做连续性过滤，不传 petId 行为不变）。
+ *   按营业时间合成 30min 栅格；统一剔除「当前时间 +1h 缓冲」内时段——B3-5 W-2，
+ *   与 assertBookableTime 同口径；传 serviceId 则按服务时长过滤——需 duration 覆盖的
+ *   连续区间全程可约；B9a 任务 C：可选 petId——逐服务输出时长引擎结果
+ *   serviceDurations 并以引擎时长做连续性过滤，不传 petId 行为不变）。
+ *   批次 S4（任务 B · 可用性引擎）：可约判定改为「目标服务区间有 ≥1 名 groomer
+ *   空闲」（role=groomer + active + 排班覆盖 + 无冲突预约），时段容量=空闲 groomer
+ *   数（动态，查询时计算）；store_slots 降级为占用记录，不再参与可约判定；
+ *   寄养 boarding_slots 按晚口径不动。
  * - store.upsertService：merchant 本店。新增/编辑服务项（含寄养房型）；越店写 FORBIDDEN。
  * - store.staffList：merchant 本店。员工 + 技能 + 排班 + 绩效（完成单数/好评率，
  *   从 appointments 聚合）。
@@ -37,7 +40,7 @@ import { z } from 'zod';
 import { schema } from '../db';
 import { merchantProcedure, publicProcedure, router, type Context } from '../trpc';
 import { resolveServiceDuration, type ServiceDuration } from '../config/durationEngine';
-import { boardingNightDates, BOOKING_LEAD_BUFFER_MS, DEFAULT_BOARDING_ROOM_COUNT, DEFAULT_SLOT_CAPACITY, storeDayStartMs, storeWallclock } from './appointment';
+import { boardingNightDates, BOOKING_LEAD_BUFFER_MS, DEFAULT_BOARDING_ROOM_COUNT, freeGroomersInInterval, loadGroomerOccupancy, storeDayStartMs, storeWallclock } from './appointment';
 
 /** 时间槽粒度：30min（与 seed 的 store_slots 生成粒度一致） */
 const SLOT_MS = 30 * 60 * 1000;
@@ -199,28 +202,24 @@ export const storeRouter = router({
       const now = new Date();
       /**
        * B3-5（W-2 今天可约口径统一）：可约槽不再依赖 store_slots 预建行——
-       * 按门店营业时间合成「今天起 7 天」30min 栅格，合并既有槽位行取占用/容量
-       * （无行 = 尚未被订，按默认容量视为可约，与 appointment.create 的 UPSERT 同口径）；
-       * 统一剔除「当前时间 +1h 缓冲」内的时段（与 assertBookableTime 同一条线，
-       * 前后端同拦），满槽剔除。休息日（openHours 为 null）整天不产生槽位。
-       * B8-B4：栅格墙钟改用门店规范时区（storeWallclock/storeDayStartMs，固定 +8）——
-       * 原服务器本地时区在 UTC 宿主（VPS 容器）下栅格偏移 8h，与客户端栅格错位。
+       * 按门店营业时间合成「今天起 7 天」30min 栅格；统一剔除「当前时间 +1h 缓冲」
+       * 内的时段（与 assertBookableTime 同一条线，前后端同拦）。休息日不产生槽位。
+       * B8-B4：栅格墙钟改用门店规范时区（storeWallclock/storeDayStartMs，固定 +8）。
+       * 批次 S4（任务 B · 可用性引擎）：可约判定从 store_slots 固定容量改为
+       * 「该 30min 槽（按时长连续口径的服务区间）有 ≥1 名 groomer 空闲」——
+       * 空闲 = role=groomer + status=active + 排班覆盖整个服务区间 + 无冲突预约
+       * （非 cancelled 预约区间与目标区间重叠即冲突，含 9a 引擎时长连续占用）；
+       * 时段容量 = 空闲 groomer 数（动态，随派单/改期/取消实时变化，查询时计算）；
+       * 容量耗尽（0 名空闲）= 不显示为可约（日期层「约满」标签沿用）。
+       * store_slots（booked_count/capacity 固定值）自此降级为占用记录——
+       * create/cancel/reschedule 继续维护供报表与防回归，不再参与可约判定。
+       * 寄养 boarding_slots 按晚容量口径不动（boardingAvailability）。
        */
       const nowWc = storeWallclock(now);
       const day0ms = storeDayStartMs(nowWc.y, nowWc.m, nowWc.day);
       const gridEnd = day0ms + 7 * 24 * 3600 * 1000;
-      const existingRows = await ctx.db
-        .select()
-        .from(schema.storeSlots)
-        .where(
-          and(
-            eq(schema.storeSlots.storeId, store.id),
-            gte(schema.storeSlots.slotStart, new Date(day0ms)),
-            lt(schema.storeSlots.slotStart, new Date(gridEnd)),
-          ),
-        )
-        .orderBy(schema.storeSlots.slotStart);
-      const byStart = new Map(existingRows.map((r) => [r.slotStart.getTime(), r]));
+      // S4：一次性取 7 天窗口的 groomer 占用快照，逐槽内存计算空闲数（不做缓存表）
+      const occupancy = await loadGroomerOccupancy(ctx.db, store.id, day0ms, gridEnd);
 
       const earliest = now.getTime() + BOOKING_LEAD_BUFFER_MS;
       const openSlots: (typeof schema.storeSlots.$inferSelect)[] = [];
@@ -231,38 +230,31 @@ export const storeRouter = router({
         if (!hours) continue;
         const [oh = 0, om = 0] = hours.open.split(':').map(Number);
         const [ch = 0, cm = 0] = hours.close.split(':').map(Number);
-        for (let min = oh * 60 + om; min < ch * 60 + cm; min += 30) {
+        for (let min = oh * 60 + om; min + slotsNeeded * 30 <= ch * 60 + cm; min += 30) {
           const t = new Date(dateMs + min * 60_000);
           if (t.getTime() < earliest) continue; // +1h 缓冲内（含已过期）时段不可约
-          const row = byStart.get(t.getTime());
-          if (row) {
-            if (row.bookedCount < row.capacity) openSlots.push(row);
-          } else {
-            // 无槽位行 = 空场：按默认容量合成可约槽（id 以 virtual: 前缀标识非持久行）
-            openSlots.push({
-              id: `virtual:${store.id}:${t.getTime()}`,
-              storeId: store.id,
-              slotStart: t,
-              capacity: DEFAULT_SLOT_CAPACITY,
-              bookedCount: 0,
-              createdAt: now,
-              updatedAt: now,
-            });
-          }
+          // S4 任务 B：目标区间 = 自该槽起 slotsNeeded 个连续 30min（9a 时长连续口径），
+          // 全程有 ≥1 名 groomer 空闲才可约；容量 = 空闲 groomer 数（动态）
+          const freeCount = freeGroomersInInterval(
+            occupancy,
+            t.getTime(),
+            t.getTime() + slotsNeeded * SLOT_MS,
+          ).length;
+          if (freeCount < 1) continue; // 容量耗尽 = 不显示为可约
+          // 槽位行为合成行（id 以 virtual: 前缀标识非持久行；capacity=动态空闲 groomer 数）
+          openSlots.push({
+            id: `virtual:${store.id}:${t.getTime()}`,
+            storeId: store.id,
+            slotStart: t,
+            capacity: freeCount,
+            bookedCount: 0,
+            createdAt: now,
+            updatedAt: now,
+          });
         }
       }
 
-      // duration 过滤：从候选起始槽起，后续 slotsNeeded-1 个连续槽（步长 30min）也须有余量
-      const openSet = new Map(openSlots.map((s) => [s.slotStart.getTime(), s]));
-      const available = openSlots.filter((s) => {
-        const t0 = s.slotStart.getTime();
-        for (let i = 1; i < slotsNeeded; i++) {
-          if (!openSet.has(t0 + i * SLOT_MS)) return false;
-        }
-        return true;
-      });
-
-      return { store, services, slots: available, serviceDurations };
+      return { store, services, slots: openSlots, serviceDurations };
     }),
 
   /**
