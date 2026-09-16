@@ -44,12 +44,12 @@ export default function BoardingConfirmBar({
       className="pointer-events-none fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-sticky"
       data-testid="bs-confirm-bar"
     >
-      <div className="mx-auto max-w-lg bg-gradient-to-t from-canvas via-canvas to-transparent px-4 pb-3 pt-6">
+      <div className="mx-auto max-w-lg border-t border-[rgba(74,59,46,.09)] bg-canvas px-4 pb-3 pt-3">
         {vaccineBlock ? (
           <Link
             to="/philia/pets"
             data-testid="bs-vaccine-bar"
-            className="pointer-events-auto mb-2 flex items-center justify-between rounded-card bg-danger-light px-4 py-2.5 text-body text-danger-deep"
+            className="pointer-events-auto mb-2 flex items-center justify-between rounded-control bg-danger-light px-4 py-2.5 text-body text-danger-deep"
           >
             <span>
               {vaccineBlock.until
@@ -66,12 +66,16 @@ export default function BoardingConfirmBar({
           data-testid="bs-confirm"
           data-state={submitting ? 'submitting' : ready ? 'ready' : 'disabled'}
           data-block-reason={vaccineBlock ? 'vaccine' : missingLabel !== null ? 'missing' : ''}
-          className={`pointer-events-auto h-12 w-full rounded-card text-body font-semibold shadow-philia transition-transform duration-120 ease-philia-spring ${
+          className={`pointer-events-auto h-12 w-full rounded-control text-body font-semibold shadow-philia transition-transform duration-120 ease-philia-spring ${
             ready ? 'bg-brand-primary text-ink active:scale-92' : 'cursor-not-allowed bg-line text-ink-placeholder shadow-none'
           }`}
         >
           {label}
         </button>
+        {/* U1-D 安心行：真实功能点（寄养每日照看日志 + 照片记录，BoardingLive 现成链路） */}
+        <p data-testid="bs-confirm-assurance" className="mt-2 text-center text-caption-xs text-ink-secondary">
+          每日照看日志 · 照片记录
+        </p>
       </div>
     </div>
   );

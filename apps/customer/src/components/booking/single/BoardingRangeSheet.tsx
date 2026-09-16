@@ -125,7 +125,7 @@ export default function BoardingRangeSheet({
       onClick={() => setPhase(p)}
       data-testid={`bs-phase-${p}`}
       data-active={phase === p ? 'true' : 'false'}
-      className={`flex-1 rounded-card border px-3 py-2 text-left transition ${
+      className={`flex-1 rounded-control border px-3 py-2 text-left transition ${
         phase === p ? 'border-[1.5px] border-ink' : 'border-line'
       }`}
     >

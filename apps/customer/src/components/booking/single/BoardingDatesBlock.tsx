@@ -26,7 +26,7 @@ export default function BoardingDatesBlock({
       type="button"
       onClick={() => onOpen(phase)}
       data-testid={testId}
-      className="flex-1 rounded-card border border-line px-4 py-3 text-left transition active:scale-[0.99]"
+      className="flex-1 rounded-control border border-line px-4 py-3 text-left transition active:scale-[0.99]"
     >
       <span className="block text-caption text-ink-secondary">{label}</span>
       {value ? (

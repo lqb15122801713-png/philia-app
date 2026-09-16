@@ -10,6 +10,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { PawPrint } from 'lucide-react';
 import PetPickerFlat from './PetPickerFlat';
 import BottomSheet from './BottomSheet';
 import type { PetItem } from '../types';
@@ -89,8 +90,9 @@ export default function PetCardBlock({
             {pet.avatarUrl ? (
               <img src={pet.avatarUrl} alt={pet.name} className="h-12 w-12 rounded-full object-cover" />
             ) : (
-              <span className="flex h-12 w-12 items-center justify-center text-[28px]">
-                {pet.species === 'cat' ? '🐱' : '🐶'}
+              /* U1-D：彩色 emoji 改 VI 线图标（全域禁彩色图标） */
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-sunken" aria-hidden="true">
+                <PawPrint className="h-6 w-6 text-ink" strokeWidth={1.5} />
               </span>
             )}
             <span className="flex-1">
@@ -110,7 +112,9 @@ export default function PetCardBlock({
           </>
         ) : (
           <>
-            <span className="flex h-12 w-12 items-center justify-center text-[28px]">🐾</span>
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-sunken" aria-hidden="true">
+              <PawPrint className="h-6 w-6 text-ink-secondary" strokeWidth={1.5} />
+            </span>
             <span className="flex-1">
               <span className="block text-body font-semibold text-ink-secondary">请选择宠物</span>
               <span className="mt-0.5 block text-caption text-ink-placeholder">{pickerHint ?? '点按选择要洗护的毛孩子'}</span>

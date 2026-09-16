@@ -2,13 +2,28 @@
  * B4-1 单屏 · 服务 chips 区块：
  * 横排 chips，默认选中=上次/推荐（由页面预填）；超过 4 个时显示前 4 个 +
  * 「更多服务 ▸」渐进披露（展开为 wrap 全量，可再收起）。chip 含名称/时长/价格。
+ *
+ * U1-D 换肤（v9.1）：chips 之上加「服务二选一照片大卡」——洗澡 / 造型美容两档
+ * （grooming 目录真实分组：服务名含「造型」为美容档，其余为洗澡档；某档目录为空
+ * 则该卡不渲染，不造假入口）。点大卡=选中该档首个服务（复用 onSelect 真实选择逻辑，
+ * 零新交互）；选中态=深棕墨 1.5px 细线圈（与 chips 选中态同语言）。
+ * 照片资产取舍：产品侧 photos/ 照片包未入库——以 VI 线图标（lucide 墨色）+ 文字版
+ * 大卡占位，结构留 img 插槽（见 CatCard 内注释），资产到位后替换。
+ * chips 圆角换 U1-B 控件档 rounded-control(14)，逻辑零改动。
  */
 
 import { useState } from 'react';
+import { Bath, Scissors } from 'lucide-react';
 import type { ServiceItem } from '../types';
 import { fenToYuan } from '../format';
 
 const COLLAPSED_COUNT = 4;
+
+/** 档定义：洗澡（非造型）/ 造型美容（名含「造型」） */
+const CATEGORIES = [
+  { key: 'wash', name: '洗澡', icon: Bath, testId: 'gs-cat-wash', match: (s: ServiceItem) => !s.name.includes('造型') },
+  { key: 'style', name: '造型美容', icon: Scissors, testId: 'gs-cat-style', match: (s: ServiceItem) => s.name.includes('造型') },
+] as const;
 
 export default function ServiceChipsBlock({
   services,
@@ -30,7 +45,7 @@ export default function ServiceChipsBlock({
     return (
       <div className="flex gap-2" data-testid="gs-service-loading">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-14 w-28 animate-pulse rounded-card bg-sunken" />
+          <div key={i} className="h-14 w-28 animate-pulse rounded-control bg-sunken" />
         ))}
       </div>
     );
@@ -39,7 +54,7 @@ export default function ServiceChipsBlock({
   if (services.length === 0) {
     return (
       <p
-        className="rounded-card bg-sunken px-4 py-6 text-center text-caption text-ink-secondary"
+        className="rounded-control bg-sunken px-4 py-6 text-center text-caption text-ink-secondary"
         data-testid="gs-service-empty"
       >
         该门店暂无可约洗护服务，换家门店看看
@@ -47,11 +62,48 @@ export default function ServiceChipsBlock({
     );
   }
 
+  // 二选一照片大卡：按档聚合真实目录（档内服务数 + 最低价）
+  const catCards = CATEGORIES.map((c) => {
+    const items = services.filter(c.match);
+    return { ...c, items };
+  }).filter((c) => c.items.length > 0);
+
   const overflow = services.length > COLLAPSED_COUNT && !expanded;
   const visible = overflow ? services.slice(0, COLLAPSED_COUNT) : services;
 
   return (
     <div data-testid="gs-service-chips">
+      {/* U1-D：服务二选一照片大卡（洗澡/造型美容两档；空档不渲染） */}
+      {catCards.length > 0 ? (
+        <div className="mb-3 grid grid-cols-2 gap-3">
+          {catCards.map((c) => {
+            const active = c.items.some((s) => s.id === selectedId);
+            const Icon = c.icon;
+            return (
+              <button
+                key={c.key}
+                type="button"
+                onClick={() => onSelect(c.items[0]!.id)}
+                data-testid={c.testId}
+                data-active={active ? 'true' : 'false'}
+                className={`u1-ring flex flex-col items-start gap-2 rounded-panel bg-card p-3.5 text-left transition-transform duration-120 ease-philia-spring active:scale-[0.98] ${
+                  active ? 'ring-2 ring-ink' : ''
+                }`}
+              >
+                {/* 照片插槽：产品侧 photos/ 照片包入库后以 <img> 替换此图标位（容器尺寸不变） */}
+                <span className="flex h-14 w-full items-center justify-center rounded-control bg-sunken" aria-hidden="true">
+                  <Icon className="h-7 w-7 text-ink" strokeWidth={1.5} />
+                </span>
+                <span className="text-body-sm font-semibold leading-5">{c.name}</span>
+                <span className="u1-num text-caption-xs leading-4 text-ink-secondary">
+                  {c.items.length} 项可选 · {fenToYuan(Math.min(...c.items.map((s) => s.priceFen)))} 起
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap gap-2">
         {visible.map((s) => {
           const active = s.id === selectedId;
@@ -62,11 +114,11 @@ export default function ServiceChipsBlock({
               onClick={() => onSelect(s.id)}
               data-testid={`gs-service-chip-${s.id}`}
               data-active={active ? 'true' : 'false'}
-              className={`rounded-card border px-3.5 py-2.5 text-left transition active:scale-95 ${
+              className={`rounded-control border px-3.5 py-2.5 text-left transition active:scale-95 ${
                 active ? 'border-[1.5px] border-ink' : 'border-line'
               }`}
             >
-              <span className="block text-body font-semibold">{s.name}</span>
+              <span className="block text-body-sm font-semibold">{s.name}</span>
               <span className="mt-0.5 block text-caption text-ink-secondary">
                 约 {durationById?.[s.id] ?? s.durationMin ?? 60} 分钟 · <span className="font-number font-semibold text-ink">{fenToYuan(s.priceFen)}</span>
               </span>
