@@ -4,17 +4,28 @@
  * - 进入转场：translateY(100%) → 0，300ms ease-out（rAF 触发 transition，锁定值）；
  * - 关闭：右上角 × 或顶部下滑手势（拖拽 >120px 关闭，否则回弹）；
  * - 顶部问候语：按时段（早安/午安/晚安）+ 昵称（useMe）；
- * - 当前宠物大头像横滑切换（pet.list；无宠物显示引导建档案卡）；
- * - 中部三胶囊卡：宠物档案 / 会员卡 / 服务相册 → 三个子路由；
+ * - 中部三胶囊卡：宠物档案 / 会员卡 / 服务相册 → 三个子路由（真实链路保留）；
  * - 底部「菲丽亚日记」：已完成服务的前后对比照回顾卡（不足 3 条用养宠小贴士静态卡补齐）。
+ *
+ * U1-F 本期上（v9.1，任务书逐项口径）：
+ * 1. 形象位：宠物照片圆形「双细线环」（外环 + 内环 1px 暖墨细线，深度策略去 shadow-elevated）；
+ * 2. 真实三数：陪伴天数（auth.me user.createdAt 距今，MemberPage 同口径）· 服务次数
+ *    （listMine completed 数）；守护值无真实来源（schema 无积分表，U1-C 已上报）——
+ *    按任务书口径两项显示，不出守护值；
+ * 3. 一键预约卡：接现成一键再约链路——内嵌 HomeBookingPanel（9a 双态面板逻辑原样，
+ *    rebook/entry/in-service 全真，零新逻辑）；
+ * 4. 成长护照预告行：置灰「9c 解锁」（静态预告行，非按钮不挂链，不造假互动）；
+ * 5. 守护市集入口行：无市集路由（App.tsx 路由表无）——该行隐藏（任务书口径）；
+ * 禁做假互动：喂食/玩耍/打扮/拍照四钮不做；「定制我的崽」入口隐藏（AI 生成接口待拍板）。
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { Camera, ChevronRight, IdCard, PawPrint, Plus, X } from 'lucide-react'
+import { BookOpen, Camera, ChevronRight, IdCard, PawPrint, Plus, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { PhotoWall, useMe, usePhiliaClient } from '@philia/shared'
 import type { PhotoWallPhoto } from '@philia/shared'
+import HomeBookingPanel from '../components/home/HomeBookingPanel'
 import {
   EmptyState,
   ErrorState,
@@ -103,17 +114,20 @@ function PetAvatarRail() {
       >
         {pets.map((pet) => (
           <div key={pet.id} className="flex w-full shrink-0 snap-center flex-col items-center py-1">
-            {pet.avatarUrl ? (
-              <img
-                src={pet.avatarUrl}
-                alt={pet.name}
-                className="h-36 w-36 rounded-full border-4 border-card object-cover shadow-elevated"
-              />
-            ) : (
-              <span className="flex h-36 w-36 items-center justify-center rounded-full border-4 border-card bg-brand-secondary-light shadow-elevated">
-                <PawPrint className="h-14 w-14 text-brand-primary" strokeWidth={1.5} />
-              </span>
-            )}
+            {/* U1-F 形象位：圆形双细线环（外环 p-2 + 内环，1px 暖墨细线；去 shadow-elevated） */}
+            <span className="rounded-full p-2 ring-1 ring-line-ring">
+              {pet.avatarUrl ? (
+                <img
+                  src={pet.avatarUrl}
+                  alt={pet.name}
+                  className="h-36 w-36 rounded-full object-cover ring-1 ring-line-ring"
+                />
+              ) : (
+                <span className="flex h-36 w-36 items-center justify-center rounded-full bg-brand-secondary-light ring-1 ring-line-ring">
+                  <PawPrint className="h-14 w-14 text-brand-primary" strokeWidth={1.5} />
+                </span>
+              )}
+            </span>
             <p className="mt-3 text-title">{pet.name}</p>
             <p className="mt-0.5 text-caption text-ink-secondary">
               {SPECIES_LABEL[pet.species] ?? '小可爱'}
@@ -219,6 +233,52 @@ const CAPSULES = [
   { to: '/philia/moments', label: '服务相册', desc: '变美记录', icon: Camera },
 ]
 
+const DAY_MS = 86_400_000
+
+/** U1-F 真实三数（守护值无真实来源→两项显示）：陪伴天数（user.createdAt 距今）· 服务次数
+ *  （listMine completed 数）。queryKey 与首页/会员页同源缓存共享；查询失败整行隐去。 */
+function TriStats() {
+  const { trpc } = usePhiliaClient()
+  const { user } = useMe()
+  const meRawQ = useQuery({
+    queryKey: ['auth', 'me', 'raw'],
+    queryFn: () => trpc.auth.me.query(),
+    enabled: !!user,
+    staleTime: 60_000,
+  })
+  const mineQ = useQuery({
+    queryKey: ['appointment', 'listMine'],
+    queryFn: () => trpc.appointment.listMine.query(),
+    enabled: !!user,
+    staleTime: 60_000,
+  })
+  if (meRawQ.isError || mineQ.isError) return null
+  const createdAt = meRawQ.data?.user?.createdAt
+  const joinDays = createdAt
+    ? Math.max(1, Math.floor((Date.now() - new Date(createdAt).getTime()) / DAY_MS) + 1)
+    : null
+  const completedCount = mineQ.data?.groups.completed.length ?? null
+  const items = [
+    { label: '陪伴天数', value: joinDays !== null ? `${joinDays} 天` : null },
+    { label: '服务次数', value: completedCount !== null && completedCount > 0 ? `${completedCount} 次` : null },
+  ].filter((i) => i.value !== null)
+  if (items.length === 0) return null
+  return (
+    <section
+      data-testid="philia-tri-stats"
+      aria-label="陪伴数据"
+      className="mt-5 grid grid-cols-2 gap-2 border-y border-[rgba(74,59,46,.09)] py-3"
+    >
+      {items.map((i) => (
+        <p key={i.label} className="text-center">
+          <span className="u1-num block text-body font-semibold leading-6">{i.value}</span>
+          <span className="block text-caption-xs leading-4 text-ink-secondary">{i.label}</span>
+        </p>
+      ))}
+    </section>
+  )
+}
+
 export default function PhiliaPage() {
   const navigate = useNavigate()
   const { user } = useMe()
@@ -293,12 +353,20 @@ export default function PhiliaPage() {
           </button>
         </header>
 
-        {/* 当前宠物大头像横滑 */}
+        {/* 当前宠物大头像横滑（U1-F 形象位：圆形双细线环） */}
         <div className="mt-6">
           <PetAvatarRail />
         </div>
 
-        {/* 三胶囊卡 */}
+        {/* U1-F 真实三数：陪伴天数 · 服务次数（守护值无真实来源不出；失败隐去） */}
+        <TriStats />
+
+        {/* U1-F 一键预约卡：内嵌现成一键再约链路（9a HomeBookingPanel 逻辑原样） */}
+        <div className="mt-5" data-testid="philia-booking-card">
+          <HomeBookingPanel />
+        </div>
+
+        {/* 三胶囊卡（真实链路保留） */}
         <div className="mt-6 grid grid-cols-3 gap-3">
           {CAPSULES.map(({ to, label, desc, icon: Icon }) => (
             <Link
@@ -311,6 +379,17 @@ export default function PhiliaPage() {
               <span className="text-caption text-ink-placeholder">{desc}</span>
             </Link>
           ))}
+        </div>
+
+        {/* U1-F 成长护照预告行：置灰「9c 解锁」（静态预告，非按钮不挂链）；守护市集行无路由隐藏 */}
+        <div
+          data-testid="philia-passport-teaser"
+          aria-disabled="true"
+          className="mt-6 flex items-center gap-3 border-t border-[rgba(74,59,46,.09)] pt-4 opacity-60"
+        >
+          <BookOpen className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} aria-hidden="true" />
+          <span className="flex-1 text-body-sm text-ink-secondary">成长护照</span>
+          <span className="rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">9c 解锁</span>
         </div>
 
         {/* 菲丽亚日记 */}
