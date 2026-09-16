@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation, useSearchParams } from 'react-router-dom'
 import { PageErrorBoundary } from '@philia/shared'
 import RequireAuth from './components/RequireAuth'
 import TabBar from './components/TabBar'
@@ -7,7 +7,6 @@ import AppointmentLivePage from './pages/AppointmentLivePage'
 import AppointmentsPage from './pages/AppointmentsPage'
 import BookingBoardingPage from './pages/BookingBoardingPage'
 import BookingGroomingPage from './pages/BookingGroomingPage'
-import BookingPage from './pages/BookingPage'
 import BookingSuccessPage from './pages/BookingSuccessPage'
 import BoardingSinglePage from './pages/BoardingSinglePage'
 import CartPage from './pages/CartPage'
@@ -23,6 +22,16 @@ import MomentsPage from './pages/MomentsPage'
 import PetsPage from './pages/PetsPage'
 import PhiliaPage from './pages/PhiliaPage'
 import ProductDetailPage from './pages/ProductDetailPage'
+
+// B9.3 任务 B：/booking 中间层（类型选择 hub）退役——直接重定向单屏；
+// 兼容旧深链 ?type=boarding → 寄养单屏，?storeId= 透传（首页门店卡深链口径保留）。
+function BookingRedirect() {
+  const [searchParams] = useSearchParams()
+  const base = searchParams.get('type') === 'boarding' ? '/booking/boarding' : '/booking/grooming'
+  const storeId = searchParams.get('storeId')
+  const query = storeId ? `?storeId=${encodeURIComponent(storeId)}` : ''
+  return <Navigate to={`${base}${query}`} replace />
+}
 
 // 受登录保护的主内容路由（P0 路由表原样保留）
 function ProtectedRoutes() {
@@ -40,7 +49,8 @@ function ProtectedRoutes() {
       <Route path="/philia/pets" element={<PetsPage />} />
       <Route path="/philia/member" element={<MemberPage />} />
       <Route path="/philia/moments" element={<MomentsPage />} />
-      <Route path="/booking" element={<BookingPage />} />
+      {/* B9.3 任务 B：hub 退役，/booking 直达洗护单屏（?type=boarding 兼容深链寄养） */}
+      <Route path="/booking" element={<BookingRedirect />} />
       {/* B4-1：默认路由换新单屏；旧 4 屏向导保留隐藏路由 /wizard（回滚保障，下批次再删） */}
       <Route path="/booking/grooming" element={<GroomingSinglePage />} />
       <Route path="/booking/grooming/wizard" element={<BookingGroomingPage />} />

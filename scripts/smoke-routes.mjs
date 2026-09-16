@@ -60,14 +60,14 @@ const APPT_ID = process.env.SMOKE_APPT_ID ?? '01M256D240E19GWNG2QMFV3Q8V';
 const ROUTES = [
   /* ---- 客户端 ---- */
   { app: 'customer', path: '/dev-login', anchors: ['登录'] },
-  { app: 'customer', path: '/', anchors: ['菲丽亚', '预约', '商城'], expectPath: '/home', note: 'B9a 根路径重定向' },
-  { app: 'customer', path: '/home', anchors: ['菲丽亚', '预约', '商城'] },
+  { app: 'customer', path: '/', anchors: ['守护每一次洗护', '到店洗护'], expectPath: '/home', note: 'B9a 根路径重定向 + B9.3 新首页锚点' },
+  { app: 'customer', path: '/home', anchors: ['守护每一次洗护', '到店洗护'], note: 'B9.3 首页完整改版' },
   { app: 'customer', path: '/mall', anchors: ['商城', '商品'] },
   { app: 'customer', path: '/mall/cart', anchors: ['购物车'] },
   { app: 'customer', path: '/mall/checkout', anchors: ['确认订单', '没有待结算'], note: 'B3 修复路由' },
   { app: 'customer', path: '/mall/orders', anchors: ['订单'], note: 'A2 白屏群' },
   { app: 'customer', path: '/mall/orders/', anchors: ['订单'], note: '尾斜杠变体' },
-  { app: 'customer', path: '/booking', anchors: ['预约服务', '预约'] },
+  { app: 'customer', path: '/booking', anchors: ['预约洗护'], expectPath: '/booking/grooming', note: 'B9.3 中间层 hub 退役直达单屏' },
   { app: 'customer', path: '/booking/grooming', anchors: ['预约洗护'], note: 'B4 修复路由' },
   { app: 'customer', path: '/booking/grooming/', anchors: ['预约洗护'], note: '尾斜杠变体' },
   { app: 'customer', path: '/booking/success', anchors: ['预约', '缺少预约参数'], note: 'B9a 任务B 一键再约落点' },

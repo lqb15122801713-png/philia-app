@@ -21,7 +21,7 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
 import { checkinAt } from '@/components/booking/BoardingDateRangePicker';
 import { friendlyError, useToast } from '@/components/booking/Toast';
@@ -229,6 +229,14 @@ export default function BoardingSinglePage() {
           </svg>
         </button>
         <h1 className="text-title-lg">预约寄养</h1>
+        {/* B9.3 任务 B：与洗护单屏对称的回链 */}
+        <Link
+          to="/booking/grooming"
+          data-testid="boarding-to-grooming"
+          className="ml-auto text-caption text-ink"
+        >
+          洗护 ›
+        </Link>
       </header>
 
       {/* 宠物卡（选宠半屏带疫苗硬校验） */}
