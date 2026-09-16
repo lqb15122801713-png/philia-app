@@ -1,0 +1,33 @@
+✅ [customer] /dev-login —— 200 + 非空白 + 锚点/守卫命中
+✅ [customer] / —— 200 + 非空白 + 锚点/守卫命中（B9a 根路径重定向 + B9.3 新首页锚点）
+✅ [customer] /home —— 200 + 非空白 + 锚点/守卫命中（B9.3 首页完整改版）
+✅ [customer] /mall —— 200 + 非空白 + 锚点/守卫命中
+✅ [customer] /mall/cart —— 200 + 非空白 + 锚点/守卫命中
+✅ [customer] /mall/checkout —— 200 + 非空白 + 锚点/守卫命中（B3 修复路由）
+✅ [customer] /mall/orders —— 200 + 非空白 + 锚点/守卫命中（A2 白屏群）
+✅ [customer] /mall/orders/ —— 200 + 非空白 + 锚点/守卫命中（尾斜杠变体）
+✅ [customer] /booking —— 200 + 非空白 + 锚点/守卫命中（B9.3 中间层 hub 退役直达单屏）
+✅ [customer] /booking/grooming —— 200 + 非空白 + 锚点/守卫命中（B4 修复路由）
+✅ [customer] /booking/grooming/ —— 200 + 非空白 + 锚点/守卫命中（尾斜杠变体）
+✅ [customer] /booking/success —— 200 + 非空白 + 锚点/守卫命中（B9a 任务B 一键再约落点）
+✅ [customer] /appointments —— 200 + 非空白 + 锚点/守卫命中
+✅ [customer] /appointments/01M256D240E19GWNG2QMFV3Q8V —— 200 + 非空白 + 锚点/守卫命中（A1 白屏群）
+✅ [customer] /philia/pets —— 200 + 非空白 + 锚点/守卫命中（A4 白屏群）
+✅ [customer] /philia/moments —— 200 + 非空白 + 锚点/守卫命中（A4 白屏群）
+✅ [merchant] /dev-login —— 200 + 非空白 + 锚点/守卫命中
+✅ [merchant] /dashboard —— 200 + 非空白 + 锚点/守卫命中
+✅ [merchant] /monitor —— 200 + 非空白 + 锚点/守卫命中（B2 修复路由）
+✅ [merchant] /monitor/ —— 200 + 非空白 + 锚点/守卫命中（尾斜杠变体）
+✅ [merchant] /monitor/01M256D240E19GWNG2QMFV3Q8V —— 200 + 非空白 + 锚点/守卫命中（B2 别名深链）
+✅ [merchant] /live —— 200 + 非空白 + 锚点/守卫命中（B2 重定向）
+✅ [merchant] /appointments —— 200 + 非空白 + 锚点/守卫命中（A3 白屏群）
+✅ [merchant] /appointments/01M256D240E19GWNG2QMFV3Q8V/monitor —— 200 + 非空白 + 锚点/守卫命中（P4 原深链）
+✅ [staff] /dev-login —— 200 + 非空白 + 锚点/守卫命中
+✅ [staff] /today —— 200 + 非空白 + 锚点/守卫命中
+✅ [staff] /execute/01M256D240E19GWNG2QMFV3Q8V —— 200 + 非空白 + 锚点/守卫命中（B1 修复路由）
+✅ [staff] /execute/01M256D240E19GWNG2QMFV3Q8V/ —— 200 + 非空白 + 锚点/守卫命中（尾斜杠变体）
+✅ [staff] /history —— 200 + 非空白 + 锚点/守卫命中
+✅ [staff] /me —— 200 + 非空白 + 锚点/守卫命中
+
+===== 路由冒烟汇总：30/30 通过 =====
+结果 JSON：../evidence/u1-client-redesign/F/smoke-results.json

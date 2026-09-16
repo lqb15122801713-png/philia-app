@@ -1,0 +1,63 @@
+{
+  "results": [
+    {
+      "name": "dev-login 种子客户",
+      "ok": true
+    },
+    {
+      "name": "形象位：宠物照片圆形双细线环（pet.list 真实数据）",
+      "ok": true
+    },
+    {
+      "name": "真实三数：陪伴天数/服务次数两项（守护值不出）",
+      "ok": true
+    },
+    {
+      "name": "一键预约卡：现成真链路（rebook 或降级入口卡）",
+      "ok": true
+    },
+    {
+      "name": "成长护照预告行：置灰静态行（9c 解锁，非互动）",
+      "ok": true
+    },
+    {
+      "name": "守护市集入口行：不存在",
+      "ok": true
+    },
+    {
+      "name": "禁做假互动：无四钮/定制我的崽",
+      "ok": true
+    },
+    {
+      "name": "真实链路保留：三胶囊卡 + 菲丽亚日记 + 关闭钮",
+      "ok": true
+    },
+    {
+      "name": "dock：主级页 AppDock 在且 philia 中央钮 active",
+      "ok": true
+    },
+    {
+      "name": "按钮点验：无死链（# / javascript: / 空 href）",
+      "ok": true
+    }
+  ],
+  "state": {
+    "heroRing": 2,
+    "petName": "旺财",
+    "statsText": "2 天陪伴天数1 次服务次数",
+    "statsHasShouhu": false,
+    "bookingRebook": false,
+    "bookingEntry": "/booking/grooming",
+    "bookingCta": null,
+    "teaserText": "成长护照9c 解锁",
+    "teaserInteractive": false,
+    "market": false,
+    "fakeActions": [],
+    "capsules": 3,
+    "diary": true,
+    "closeBtn": true,
+    "dock": true,
+    "dockActive": true,
+    "deadLinks": 0
+  }
+}

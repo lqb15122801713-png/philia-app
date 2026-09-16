@@ -1,0 +1,10 @@
+PASS  三态：六步 stepper 渲染  — [["disinfection","done"],["precheck","done"],["grooming","active"],["detail","locked"],["before_after","locked"],["confirm","locked"]]
+PASS  三态：done=薄荷圆 #7FD8BE + 深棕墨✓  — rgb(127, 216, 190) / check=rgb(74, 59, 46)
+PASS  三态：active=柠檬圆 #FDC830 + 「进行中」小签（深棕墨字）  — rgb(253, 200, 48) / tag=进行中
+PASS  三态：locked=墨灰未到（detail/before_after/confirm）
+PASS  三态：步骤挂过程照（既有 PhotoWall 链路）  — photos=10
+PASS  三态：详情级无 dock
+PASS  推进：staff confirmStep 第 3 步 HTTP 200（真实事件链）  — HTTP 200 [{"result":{"data":{"json":{"stepKey":"grooming","status":"done","nextStepKey":"detail","appointmentCompleted":false}}}}
+PASS  SSE：页面不刷新，第 3 步 done（薄荷）+ 第 4 步 active（柠檬）  — ["done","active"]
+
+== 汇总：8/8 PASS ==

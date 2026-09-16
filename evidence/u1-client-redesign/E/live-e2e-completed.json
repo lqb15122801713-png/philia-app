@@ -1,0 +1,67 @@
+{
+  "results": [
+    {
+      "name": "全完成：六步全 done 薄荷圆（#7FD8BE）",
+      "ok": true
+    },
+    {
+      "name": "全完成：✓ 为深棕墨（品牌面文字一律深棕墨）",
+      "ok": true
+    },
+    {
+      "name": "全完成：前后对比区保留（服务前/服务后）",
+      "ok": true
+    }
+  ],
+  "state": {
+    "steps": [
+      {
+        "key": "disinfection",
+        "status": "done",
+        "bg": "rgb(127, 216, 190)",
+        "tag": null,
+        "name": ""
+      },
+      {
+        "key": "precheck",
+        "status": "done",
+        "bg": "rgb(127, 216, 190)",
+        "tag": null,
+        "name": ""
+      },
+      {
+        "key": "grooming",
+        "status": "done",
+        "bg": "rgb(127, 216, 190)",
+        "tag": null,
+        "name": ""
+      },
+      {
+        "key": "detail",
+        "status": "done",
+        "bg": "rgb(127, 216, 190)",
+        "tag": null,
+        "name": ""
+      },
+      {
+        "key": "before_after",
+        "status": "done",
+        "bg": "rgb(127, 216, 190)",
+        "tag": null,
+        "name": ""
+      },
+      {
+        "key": "confirm",
+        "status": "done",
+        "bg": "rgb(127, 216, 190)",
+        "tag": null,
+        "name": ""
+      }
+    ],
+    "checkColor": "rgb(74, 59, 46)",
+    "photos": 10,
+    "beforeAfter": true,
+    "rootText": 165,
+    "dock": false
+  }
+}

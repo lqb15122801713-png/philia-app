@@ -1,0 +1,128 @@
+{
+  "results": [
+    {
+      "name": "dev-login 种子客户",
+      "ok": true
+    },
+    {
+      "name": "洗护：宠物卡/门店行/时段栅格六段锚点",
+      "ok": true
+    },
+    {
+      "name": "洗护：服务二选一照片大卡（洗澡/造型美容真实聚合）",
+      "ok": true
+    },
+    {
+      "name": "洗护：服务 chips 保留（精确选择逻辑不动）",
+      "ok": true
+    },
+    {
+      "name": "洗护：美容师横卡置顶「随缘派单」默认卡",
+      "ok": true
+    },
+    {
+      "name": "洗护：员工卡真实数据（≥1 名）",
+      "ok": true
+    },
+    {
+      "name": "洗护：日期余量透出（余 N）与约满透出",
+      "ok": true
+    },
+    {
+      "name": "洗护：吸底安心行真实功能点文案",
+      "ok": true
+    },
+    {
+      "name": "洗护：详情级无 dock + 返回圆钮",
+      "ok": true
+    },
+    {
+      "name": "链路：底部半屏选宠（真实数据）",
+      "ok": true
+    },
+    {
+      "name": "链路：洗澡大卡点选=选中档内首个服务（真实选择）",
+      "ok": true
+    },
+    {
+      "name": "链路：时段可选并透出时间摘要行",
+      "ok": true
+    },
+    {
+      "name": "链路：吸底条可点态「确认预约 · ¥X · 约 N 分钟」",
+      "ok": true
+    },
+    {
+      "name": "链路：确认后落 /booking/success 成功页",
+      "ok": true
+    },
+    {
+      "name": "链路：成功页真实内容（预约成功 + 核销码区）",
+      "ok": true
+    },
+    {
+      "name": "寄养：宠物卡/门店行/房型区锚点",
+      "ok": true
+    },
+    {
+      "name": "寄养：吸底安心行真实功能点文案",
+      "ok": true
+    },
+    {
+      "name": "寄养：详情级无 dock + 返回圆钮",
+      "ok": true
+    },
+    {
+      "name": "点验：grooming 无死链（# / javascript: / 空 href）",
+      "ok": true
+    },
+    {
+      "name": "点验：boarding 无死链（# / javascript: / 空 href）",
+      "ok": true
+    }
+  ],
+  "grooming": {
+    "g1": {
+      "petCard": true,
+      "catWash": "洗澡5 项可选 · ¥68 起",
+      "catStyle": "造型美容1 项可选 · ¥198 起",
+      "chips": 4,
+      "storeLine": true,
+      "groomerRail": true,
+      "groomerAny": "随缘派单门店安排",
+      "groomerCount": 4,
+      "dateStrip": true,
+      "remainDays": [
+        "明天17余17",
+        "9月18日周五18余17",
+        "9月19日周六19余17",
+        "9月20日周日20余17",
+        "9月21日周一21余17",
+        "9月22日周二22余17"
+      ],
+      "fullDays": [
+        "今天16约满"
+      ],
+      "timeGrid": true,
+      "confirmBar": true,
+      "assurance": "全程可见 · 照片记录",
+      "dock": false,
+      "backBtn": true
+    },
+    "g2": {
+      "summary": "已选时间明天 10:00约 150 分钟",
+      "confirm": "确认预约 · ¥88 · 约 150 分钟",
+      "state": "ready"
+    }
+  },
+  "boarding": {
+    "petCard": true,
+    "room": true,
+    "roomText": "标准间标准间寄养（犬）今晚剩余 2 间¥199/ 晚",
+    "storeLine": true,
+    "assurance": "每日照看日志 · 照片记录",
+    "confirm": "请选择入住日期",
+    "dock": false,
+    "backBtn": true
+  }
+}

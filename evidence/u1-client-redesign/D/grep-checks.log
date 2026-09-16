@@ -1,0 +1,22 @@
+## U1-D 改动文件
+ M apps/customer/src/components/booking/single/BoardingConfirmBar.tsx
+ M apps/customer/src/components/booking/single/BoardingDatesBlock.tsx
+ M apps/customer/src/components/booking/single/BoardingRangeSheet.tsx
+ M apps/customer/src/components/booking/single/ConfirmBar.tsx
+ M apps/customer/src/components/booking/single/DateStripBlock.tsx
+ M apps/customer/src/components/booking/single/ExtrasBlock.tsx
+ M apps/customer/src/components/booking/single/NoteFoldBlock.tsx
+ M apps/customer/src/components/booking/single/PetCardBlock.tsx
+ M apps/customer/src/components/booking/single/PetPickerFlat.tsx
+ M apps/customer/src/components/booking/single/RoomTypeBlock.tsx
+ M apps/customer/src/components/booking/single/ServiceChipsBlock.tsx
+ M apps/customer/src/components/booking/single/StaffPickerFlat.tsx
+ M apps/customer/src/pages/GroomingSinglePage.tsx
+
+## #FFAAA5（改动文件）
+exit=123
+## 新增 text-white（+行计数）
+0
+## 新增渐变（+行）
+## 残留 emoji（改动文件）
+apps/customer/src/components/booking/single/StaffPickerFlat.tsx:7: * U1-D 换肤（v9.1 美容师横卡）：置顶「随缘派单」默认卡（paw VI 线图标，替换 🐾

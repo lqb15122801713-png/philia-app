@@ -1,0 +1,12 @@
+PASS  dev-login 种子客户
+PASS  形象位：宠物照片圆形双细线环（pet.list 真实数据）  — 旺财
+PASS  真实三数：陪伴天数/服务次数两项（守护值不出）  — 2 天陪伴天数1 次服务次数
+PASS  一键预约卡：现成真链路（rebook 或降级入口卡）  — entry→/booking/grooming
+PASS  成长护照预告行：置灰静态行（9c 解锁，非互动）  — 成长护照9c 解锁
+PASS  守护市集入口行：不存在
+PASS  禁做假互动：无四钮/定制我的崽
+PASS  真实链路保留：三胶囊卡 + 菲丽亚日记 + 关闭钮
+PASS  dock：主级页 AppDock 在且 philia 中央钮 active
+PASS  按钮点验：无死链（# / javascript: / 空 href）
+
+== 汇总：10/10 PASS ==

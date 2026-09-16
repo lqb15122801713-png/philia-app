@@ -1,0 +1,138 @@
+{
+  "results": [
+    {
+      "name": "三态：六步 stepper 渲染",
+      "ok": true
+    },
+    {
+      "name": "三态：done=薄荷圆 #7FD8BE + 深棕墨✓",
+      "ok": true
+    },
+    {
+      "name": "三态：active=柠檬圆 #FDC830 + 「进行中」小签（深棕墨字）",
+      "ok": true
+    },
+    {
+      "name": "三态：locked=墨灰未到（detail/before_after/confirm）",
+      "ok": true
+    },
+    {
+      "name": "三态：步骤挂过程照（既有 PhotoWall 链路）",
+      "ok": true
+    },
+    {
+      "name": "三态：详情级无 dock",
+      "ok": true
+    },
+    {
+      "name": "推进：staff confirmStep 第 3 步 HTTP 200（真实事件链）",
+      "ok": true
+    },
+    {
+      "name": "SSE：页面不刷新，第 3 步 done（薄荷）+ 第 4 步 active（柠檬）",
+      "ok": true
+    }
+  ],
+  "before": {
+    "steps": [
+      {
+        "key": "disinfection",
+        "status": "done",
+        "bg": "rgb(127, 216, 190)",
+        "tag": null,
+        "name": ""
+      },
+      {
+        "key": "precheck",
+        "status": "done",
+        "bg": "rgb(127, 216, 190)",
+        "tag": null,
+        "name": ""
+      },
+      {
+        "key": "grooming",
+        "status": "active",
+        "bg": "rgb(253, 200, 48)",
+        "tag": "进行中",
+        "name": ""
+      },
+      {
+        "key": "detail",
+        "status": "locked",
+        "bg": "rgb(255, 255, 255)",
+        "tag": null,
+        "name": ""
+      },
+      {
+        "key": "before_after",
+        "status": "locked",
+        "bg": "rgb(255, 255, 255)",
+        "tag": null,
+        "name": ""
+      },
+      {
+        "key": "confirm",
+        "status": "locked",
+        "bg": "rgb(255, 255, 255)",
+        "tag": null,
+        "name": ""
+      }
+    ],
+    "checkColor": "rgb(74, 59, 46)",
+    "photos": 10,
+    "beforeAfter": true,
+    "rootText": 124,
+    "dock": false
+  },
+  "after": {
+    "steps": [
+      {
+        "key": "disinfection",
+        "status": "done",
+        "bg": "rgb(127, 216, 190)",
+        "tag": null,
+        "name": ""
+      },
+      {
+        "key": "precheck",
+        "status": "done",
+        "bg": "rgb(127, 216, 190)",
+        "tag": null,
+        "name": ""
+      },
+      {
+        "key": "grooming",
+        "status": "done",
+        "bg": "rgb(127, 216, 190)",
+        "tag": null,
+        "name": ""
+      },
+      {
+        "key": "detail",
+        "status": "active",
+        "bg": "rgb(253, 200, 48)",
+        "tag": "进行中",
+        "name": ""
+      },
+      {
+        "key": "before_after",
+        "status": "locked",
+        "bg": "rgb(255, 255, 255)",
+        "tag": null,
+        "name": ""
+      },
+      {
+        "key": "confirm",
+        "status": "locked",
+        "bg": "rgb(255, 255, 255)",
+        "tag": null,
+        "name": ""
+      }
+    ],
+    "checkColor": "rgb(74, 59, 46)",
+    "photos": 10,
+    "beforeAfter": true,
+    "rootText": 123,
+    "dock": false
+  }
+}

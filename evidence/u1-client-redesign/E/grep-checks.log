@@ -1,0 +1,8 @@
+## U1-E 改动
+ M apps/customer/src/pages/AppointmentLivePage.tsx
+?? apps/customer/src/components/live/LiveStepper.tsx
+## #FFAAA5
+exit=123
+## 新增 text-white
+0
+## 新增渐变/halo
