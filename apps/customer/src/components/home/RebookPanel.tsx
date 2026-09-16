@@ -14,9 +14,10 @@
  * 幂等：提交中禁用 CTA + submittingRef 同步锁（同一事件循环内的双击也被吞），
  * 快速重试不产生重复单。服务端 create 现状无幂等键（本批不动服务端，已如实上报）。
  *
- * 视觉（设计语言规格 v3 减法）：去卡片化 hairline 分隔、阴影近零（仅 CTA 允许
- * shadow-philia 浮起）、无彩色图标底块、圆角 rounded-card(16∈14~18)、全屏唯一
- * accent 色块 = CTA（柠檬黄底 + 深棕墨字，on-primary 深棕墨，不用反白字）。
+ * 视觉（设计语言规格 v3 减法）：去卡片化 hairline 分隔、无彩色图标底块、圆角
+ * rounded-card(16∈14~18)、全屏唯一 accent 色块 = CTA（柠檬黄底 + 深棕墨字，
+ * on-primary 深棕墨，不用反白字；CTA 保留 shadow-philia 浮起）。B9.3：面板本体
+ * 按试样带一层软阴影（shadow-card，「全屏唯一白面板 + 一层软阴影」），去描边。
  */
 
 import { useMutation } from '@tanstack/react-query';
@@ -103,7 +104,7 @@ export default function RebookPanel({
   return (
     <section
       data-testid="home-rebook-panel"
-      className="rounded-card border border-[rgba(74,59,46,.09)] bg-card p-4"
+      className="rounded-card bg-card p-4 shadow-card"
       aria-label="一键再约"
     >
       {toastEl}

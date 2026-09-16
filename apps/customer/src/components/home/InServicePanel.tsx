@@ -8,8 +8,9 @@
  * 数据与实时：步骤/照片来自 serviceStep.list（queryKey ['serviceStep','list',aid]，
  * 与直播页同源）；SSE 事件到达由 HomeBookingPanel 统一 invalidate 该 query（见容器头注）。
  *
- * 视觉同 v3 减法：hairline 分隔、阴影近零、缩略图 rounded-tag(8)、无 accent 色块
+ * 视觉同 v3 减法：hairline 分隔、缩略图 rounded-tag(8)、无 accent 色块
  * （直播入口为文字链接；全屏唯一 accent 留给常态面板 CTA / 本面板无 CTA）。
+ * B9.3：面板本体按试样带一层软阴影（shadow-card），去描边。
  */
 
 import { Link } from 'react-router-dom';
@@ -43,7 +44,7 @@ export default function InServicePanel({
   return (
     <section
       data-testid="home-inservice-panel"
-      className="rounded-card border border-[rgba(74,59,46,.09)] bg-card p-4"
+      className="rounded-card bg-card p-4 shadow-card"
       aria-label="服务进行中"
     >
       <div className="flex items-start justify-between gap-3">

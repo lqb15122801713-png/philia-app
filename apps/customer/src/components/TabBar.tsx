@@ -19,10 +19,11 @@ import { ConvexTabBar, useMe, usePhiliaClient } from '@philia/shared'
 import type { ConvexTabBarItem } from '@philia/shared'
 
 // 客户端五栏凸起 TabBar：左 2 + philia 凸起按钮 + 右 2（规格见 docs/DESIGN.md §6.1）
+// B9.3 任务 B：预约落点即洗护单屏（/booking 中间层 hub 已退役重定向）
 const items: ConvexTabBarItem[] = [
   { key: 'home', label: '首页', icon: Home, path: '/home' },
   { key: 'mall', label: '商城', icon: Store, path: '/mall' },
-  { key: 'booking', label: '预约', icon: Calendar, path: '/booking' },
+  { key: 'booking', label: '预约', icon: Calendar, path: '/booking/grooming' },
   { key: 'me', label: '我的', icon: User, path: '/me' },
 ]
 
@@ -205,7 +206,7 @@ export default function TabBar() {
                   type="button"
                   onClick={() => {
                     setSheetOpen(false)
-                    navigate('/booking')
+                    navigate('/booking/grooming')
                   }}
                   className="mt-4 w-full rounded-full bg-philia-gradient py-3 text-body font-semibold text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92"
                 >

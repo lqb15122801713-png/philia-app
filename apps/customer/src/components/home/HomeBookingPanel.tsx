@@ -28,9 +28,8 @@
  * → invalidate ['serviceStep','list',aid] + ['appointment']（listMine 随之重取，
  * 完成/重开后面板自动在双态间切换）。clientId 与直播页同一 localStorage 键。
  *
- * GroomingReminder 共存：rebook 态一键路径已覆盖提醒卡同款动作（同源三元组预填），
- * in-service 态避免与进行中服务竞争主区焦点——两种态下提醒卡隐藏（HomePage 按
- * onModeChange 上报的 mode 控制）；降级入口卡态正常展示（条件卡先例保留）。
+ * GroomingReminder 共存（历史）：B9a 曾按 onModeChange 上报的 mode 控制提醒卡显隐；
+ * B9.3 首页完整改版已下掉 GroomingReminder（下掉清单），onModeChange 暂保留不再被消费。
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -313,7 +312,7 @@ export default function HomeBookingPanel({
       <div
         data-testid="home-booking-loading"
         aria-label="加载中"
-        className="animate-pulse rounded-card border border-[rgba(74,59,46,.09)] bg-card p-4"
+        className="animate-pulse rounded-card bg-card p-4 shadow-card"
       >
         <div className="h-5 w-24 rounded-tag bg-sunken" />
         <div className="mt-3 space-y-2.5">
@@ -366,7 +365,7 @@ export default function HomeBookingPanel({
       to="/booking/grooming"
       data-testid="home-booking-entry"
       data-reason={reason ?? 'no-memory'}
-      className="flex items-center gap-3 rounded-card border border-[rgba(74,59,46,.09)] bg-card p-4 transition-transform duration-120 ease-philia-spring active:scale-[0.97]"
+      className="flex items-center gap-3 rounded-card bg-card p-4 shadow-card transition-transform duration-120 ease-philia-spring active:scale-[0.97]"
     >
       <svg
         width="22"

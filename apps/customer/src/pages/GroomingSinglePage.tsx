@@ -16,7 +16,7 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
 import { friendlyError, useToast } from '@/components/booking/Toast';
 import PetCardBlock from '@/components/booking/single/PetCardBlock';
@@ -276,6 +276,14 @@ export default function GroomingSinglePage() {
           </svg>
         </button>
         <h1 className="text-title-lg">预约洗护</h1>
+        {/* B9.3 任务 B：hub 退役后寄养入口安置——顶部栏右侧安静文字链 */}
+        <Link
+          to="/booking/boarding"
+          data-testid="grooming-to-boarding"
+          className="ml-auto text-caption text-ink"
+        >
+          寄养 ›
+        </Link>
       </header>
 
       {/* 宠物卡（B9a 任务 C：换宠物 → 时长引擎口径变化，已选时段清空重选） */}
