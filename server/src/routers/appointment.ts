@@ -145,6 +145,29 @@ export const DEFAULT_BOARDING_ROOM_COUNT = 1;
 type DbHandle = Parameters<typeof emitEvent>[0];
 const txDb = (tx: unknown): DbHandle => tx as DbHandle;
 
+/* ------------------------------------------------------------------ */
+/* 预约建单写路径应用层串行化（进程内 async mutex · 单实例边界）             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 批次 S4（任务 C）：appointment.create 写事务串行锁，口径同 mall.withOrderWriteLock。
+ * @libsql/client 单连接上两个并发 db.transaction 会交错执行——败者 SQLITE_BUSY 且
+ * 连接可能进入中毒态；串行进入后，后到的 create 读到的是前一事务已提交的占用，
+ * 由 groomer 空闲闸给出干净的 CONFLICT（并发双击不产生双占，败者按原文案报错）。
+ * 边界：单实例内存实现；多实例部署需替换为共享锁（同 mall 注释口径）。
+ */
+let appointmentCreateQueue: Promise<unknown> = Promise.resolve();
+
+/** 串行执行 fn（前序失败不阻塞后续队列） */
+export function withAppointmentCreateLock<T>(fn: () => Promise<T>): Promise<T> {
+  const run = appointmentCreateQueue.then(fn);
+  appointmentCreateQueue = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  return run;
+}
+
 type StoreRow = typeof schema.stores.$inferSelect;
 type StaffRow = typeof schema.staff.$inferSelect;
 type StepRow = typeof schema.appointmentSteps.$inferSelect;
@@ -331,10 +354,12 @@ async function releaseSlot(tx: DbHandle, storeId: string, slotStart: Date): Prom
 
 /**
  * B9a 任务 C：洗护占容量——从预约开始时刻起，按【时长引擎输出时长】覆盖的连续
- * 30min 槽逐个 UPSERT（每槽校验 booked_count < capacity 后 +1；任一槽满员抛
- * CONFLICT，事务整体回滚，不产生部分占用）。
- * 与 getWithServices「时长覆盖的连续 30min 槽全部有余量」栅格过滤同口径
- * （此前仅占开始时刻 1 槽，与栅格过滤口径不对称——90min 单物理占 3 槽但只记 1 槽）。
+ * 30min 槽逐个 UPSERT（booked_count +1）。
+ * 批次 S4（任务 B/C）：store_slots 降级为占用记录——不再以 booked_count < capacity
+ * 作防超卖闸门（固定 capacity 与动态人力脱节，继续拦截会破坏「能约=能约上」）；
+ * 可约/冲突判定统一由 groomer 空闲引擎承担（getWithServices 栅格 + create 事务内
+ * 自动派单选员同根同源，派单与占槽同一事务，冲突整体回滚）。booked_count 继续
+ * 维护供报表与防回归比对，允许超过历史固定 capacity（仅作占用计数）。
  */
 async function occupyGroomingSlots(
   tx: DbHandle,
@@ -348,9 +373,7 @@ async function occupyGroomingSlots(
       .where(and(eq(schema.storeSlots.storeId, args.storeId), eq(schema.storeSlots.slotStart, t)))
       .get();
     if (slot) {
-      if (slot.bookedCount >= slot.capacity) {
-        throw new TRPCError({ code: 'CONFLICT', message: '该时段已约满，请换个时间' });
-      }
+      // S4：占用记录口径——不再校验 capacity 闸，只累加占用计数
       await tx
         .update(schema.storeSlots)
         .set({ bookedCount: slot.bookedCount + 1, updatedAt: new Date() })
@@ -681,6 +704,60 @@ export function freeGroomersInInterval(
   return occ.groomers.filter((g) => !busy.has(g.id) && scheduleCoversInterval(g.schedule, startMs, endMs));
 }
 
+/**
+ * 批次 S4（任务 C）：自动派单选员——从空闲 groomer 中选负荷最轻者：
+ * 负荷 = 预约当日（scheduledStart 所在门店规范时区自然日）已完成 + 在单数，
+ * 在单 = confirmed / in_service / in_boarding / cancel_requested（未取消且未完成，
+ * 取消申请尚未释放人力），已完成 = completed；并列按 staff.createdAt 先入职
+ * （loadGroomerOccupancy 按 createdAt 升序返回，取首个最小值即天然满足）。
+ */
+export async function pickLightestGroomer(
+  d: DbHandle,
+  storeId: string,
+  free: StaffRow[],
+  scheduledStartMs: number,
+): Promise<StaffRow | null> {
+  if (free.length === 0) return null;
+  const wc = storeWallclock(new Date(scheduledStartMs));
+  const dayStart = storeDayStartMs(wc.y, wc.m, wc.day);
+  const dayEnd = dayStart + 24 * 3600 * 1000;
+  const rows = await d
+    .select({ staffId: schema.appointments.staffId })
+    .from(schema.appointments)
+    .where(
+      and(
+        eq(schema.appointments.storeId, storeId),
+        inArray(
+          schema.appointments.staffId,
+          free.map((g) => g.id),
+        ),
+        gte(schema.appointments.scheduledStart, new Date(dayStart)),
+        lt(schema.appointments.scheduledStart, new Date(dayEnd)),
+        inArray(schema.appointments.status, [
+          'confirmed',
+          'in_service',
+          'in_boarding',
+          'cancel_requested',
+          'completed',
+        ]),
+      ),
+    );
+  const load = new Map<string, number>();
+  for (const r of rows) {
+    if (r.staffId) load.set(r.staffId, (load.get(r.staffId) ?? 0) + 1);
+  }
+  let best: StaffRow | null = null;
+  let bestLoad = Number.POSITIVE_INFINITY;
+  for (const g of free) {
+    const l = load.get(g.id) ?? 0;
+    if (l < bestLoad) {
+      best = g;
+      bestLoad = l;
+    }
+  }
+  return best;
+}
+
 
 /** 核销后的当前进度（幂等重扫与正常核销返回同构数据） */
 async function progressOf(
@@ -735,6 +812,14 @@ export const appointmentRouter = router({
    * 批次 S4（任务 A · 免商家确认）：落库状态直接 confirmed（不再经 pending 待商家确认），
    * 同事务增发 appointment.confirmed（user:{customerId} + store:{storeId} 双频道，
    * payload.by='auto' 标识自动确认）；历史 pending 单不迁移，confirm 幂等兼容。
+   * 批次 S4（任务 C · 自动派单与客户指定）：入参新增可选 staffId（仅 grooming；
+   * 不传 = 自动派单）。未指定 → 事务内指派「预约当日已完成+在单数最少」的空闲
+   * groomer（并列按 createdAt 先入职；无可空 → CONFLICT「该时段已约满，请换个时间」，
+   * 与任务 B 可用性引擎同根双保险）；指定 → 校验同店 + role=groomer + active +
+   * 当时有空（无空 → CONFLICT「该美容师此时段已约满，请换时间或换美容师」）。
+   * 派单写 staff_id + assignSource='auto' + emit assigned（staff+user 双频道，
+   * by='auto'）；派单与占槽同一事务（占槽写先持锁串行化并发，选员失败整体回滚）。
+   * boarding 按晚占房无需美容师：不自动派单、传 staffId 直接 BAD_REQUEST。
    * paymentMode=pass_deduct（B2-7）：同事务内先校验本人名下该店次卡
    * （active + remain_times>0 + 未过期，否则 BAD_REQUEST「暂无可用次卡」）并
    * remain_times-1、写 -1 扣次流水——扣次先于占槽，占槽 CONFLICT/建单失败时
@@ -753,9 +838,20 @@ export const appointmentRouter = router({
         scheduledEnd: z.date().optional(),
         paymentMode: z.enum(['pay_at_store', 'pass_deduct']),
         note: z.string().max(500).optional(),
+        /**
+         * 批次 S4（任务 C）：可选指定美容师（staff.id；向后兼容——不传 = 自动派单）。
+         * 仅 grooming 生效：指定则校验同店 + role=groomer + active + 当时有空
+         * （无空 → CONFLICT「该美容师此时段已约满，请换时间或换美容师」）；
+         * 不传则事务内自动指派负荷最轻的空闲 groomer（无可空 → CONFLICT
+         * 「该时段已约满，请换个时间」）。boarding 按晚占房无需美容师，传了直接拒绝。
+         */
+        staffId: z.string().min(1).optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) =>
+      // S4（任务 C）：建单写路径应用层串行化——并发双击/并发建单排队进入，
+      // 后到者以前一事务已提交占用为准，CONFLICT 干净返回，不产生双占
+      withAppointmentCreateLock(async () => {
       /* ---- 校验 1：宠物归属本人 ---- */
       const pet = await ctx.db
         .select()
@@ -807,6 +903,11 @@ export const appointmentRouter = router({
           ? input.scheduledEnd! // boarding 上面已强制非空且晚于开始
           : new Date(start.getTime() + (groomingDuration?.durationMin ?? 60) * 60_000);
       assertBookableTime(store, input.type, start, end);
+
+      // 批次 S4（任务 C）：boarding 按晚占房无需美容师——staffId 仅 grooming 可用
+      if (input.type === 'boarding' && input.staffId) {
+        badRequest('寄养由门店统一安排，无需指定美容师');
+      }
 
       // v1.1 A-P0-10：寄养金额 = 单晚价 × 晚数（晚数 = ceil((end−start)/24h)，快照入 price_fen）；
       // grooming 保持单次服务价不变
@@ -870,13 +971,51 @@ export const appointmentRouter = router({
                 end,
               });
             } else {
-              // B9a 任务 C：洗护按时长引擎输出占用连续 30min 槽（occupyGroomingSlots，
-              // 任一槽满员 CONFLICT 整体回滚；与 getWithServices 栅格连续过滤同口径）
+              // B9a 任务 C：洗护按时长引擎输出占用连续 30min 槽（occupyGroomingSlots；
+              // S4 起降级为占用记录，不再作 capacity 闸——与 getWithServices 栅格同根）
               await occupyGroomingSlots(txDb(tx), {
                 storeId: input.storeId,
                 start,
                 slots: groomingDuration?.slotsNeeded ?? 1,
               });
+            }
+            /* ---- 批次 S4（任务 C）：自动派单 / 客户指定（仅 grooming；与占槽同一事务） ----
+             * 选员在占槽写之后：SQLite 单写者下事务已持写锁，并发 create 在此串行，
+             * 后进入者读到的是前一事务已提交的占用——冲突判定可靠，不产生双占；
+             * 选员失败（无可空 / 指定无空）抛 CONFLICT，占槽与扣次同事务整体回滚。 */
+            let assignedStaff: StaffRow | null = null;
+            if (input.type === 'grooming') {
+              const occ = await loadGroomerOccupancy(txDb(tx), input.storeId, start.getTime(), end.getTime());
+              if (input.staffId) {
+                const staffRow = await tx
+                  .select()
+                  .from(schema.staff)
+                  .where(eq(schema.staff.id, input.staffId))
+                  .get();
+                if (!staffRow || staffRow.storeId !== input.storeId) {
+                  badRequest('员工不存在或不属于本店');
+                }
+                if (staffRow.role !== 'groomer') badRequest('仅可指定美容师（groomer）接单');
+                if (staffRow.status !== 'active') badRequest('该美容师已停职，不可指定');
+                const freeNow = freeGroomersInInterval(occ, start.getTime(), end.getTime());
+                if (!freeNow.some((g) => g.id === staffRow.id)) {
+                  throw new TRPCError({
+                    code: 'CONFLICT',
+                    message: '该美容师此时段已约满，请换时间或换美容师',
+                  });
+                }
+                assignedStaff = staffRow;
+              } else {
+                assignedStaff = await pickLightestGroomer(
+                  txDb(tx),
+                  input.storeId,
+                  freeGroomersInInterval(occ, start.getTime(), end.getTime()),
+                  start.getTime(),
+                );
+                if (!assignedStaff) {
+                  throw new TRPCError({ code: 'CONFLICT', message: '该时段已约满，请换个时间' });
+                }
+              }
             }
             const appt = await tx
               .insert(schema.appointments)
@@ -886,6 +1025,10 @@ export const appointmentRouter = router({
                 storeId: input.storeId,
                 petId: input.petId,
                 serviceId: input.serviceId,
+                // S4（任务 C）：grooming 下单即指派（自动派单 / 客户指定同写 staff_id +
+                // assignSource='auto'；boarding 不指派留 NULL，商家可后续 assign 改派）
+                staffId: assignedStaff?.id ?? null,
+                assignSource: assignedStaff ? 'auto' : null,
                 type: input.type,
                 scheduledStart: start,
                 scheduledEnd: end,
@@ -923,6 +1066,24 @@ export const appointmentRouter = router({
             outboxIds.push(
               await emitEvent(txDb(tx), `store:${input.storeId}`, EventType.AppointmentConfirmed, confirmedPayload),
             );
+            // 批次 S4（任务 C）：下单即指派 → appointment.assigned（staff+user 双频道，
+            // payload.by='auto'；与商家 assign 改派的 by='merchant' 共同构成轨迹，不做审计表；
+            // 事件序按生命周期 created → confirmed → assigned 落库）
+            if (assignedStaff) {
+              const assignedPayload = {
+                appointmentId: appt.id,
+                staffId: assignedStaff.id,
+                staffName: assignedStaff.name,
+                petName: pet.name,
+                by: 'auto' as const,
+              };
+              outboxIds.push(
+                await emitEvent(txDb(tx), `staff:${assignedStaff.id}`, EventType.AppointmentAssigned, assignedPayload),
+              );
+              outboxIds.push(
+                await emitEvent(txDb(tx), `user:${ctx.user.id}`, EventType.AppointmentAssigned, assignedPayload),
+              );
+            }
             return appt;
           });
           outboxIds.forEach(broadcastNow);
@@ -937,7 +1098,8 @@ export const appointmentRouter = router({
         }
       }
       throw lastErr;
-    }),
+      }),
+    ),
 
   /** 2. listMine（customer）：我的预约按状态分组 */
   listMine: customerProcedure.query(async ({ ctx }) => {

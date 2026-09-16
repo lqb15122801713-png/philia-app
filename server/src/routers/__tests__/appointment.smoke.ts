@@ -42,6 +42,11 @@
  *    （夹具经 flipToPending 模拟历史/改期回退 pending 单）
  * 6. listMine 分组 / get 归属 / listForStore 过滤 / listTodayForStaff 今日时间轴
  * 7. 事件总账：每个关键动作后 event_outbox 有对应事件且 channel 正确
+ * 8. 批次 S4（任务 C · 独立门店 s-3 双 groomer）：自动派单负荷最轻（预约当日已完成+
+ *    在单数最少）+ 并列先入职（交替序列 a/b/a/b）；assignSource=auto + assigned 双频道
+ *    payload.by=auto；客户指定——有空成功、无空 CONFLICT 原文案、他店/非 groomer/停职
+ *    BAD_REQUEST、boarding 指定拒绝；无可空 CONFLICT 原文案 + 占槽整体回滚；
+ *    并发双击恰 1 成功 1 CONFLICT 不产生双占
  */
 
 import { mkdtempSync, rmSync } from 'node:fs';
@@ -96,7 +101,7 @@ const isoDay = (d: Date): string =>
 try {
   const { migrate } = await import('drizzle-orm/libsql/migrator');
   const { db, schema, client } = await import('../../db');
-  const { and, asc, eq } = await import('drizzle-orm');
+  const { and, asc, eq, ne } = await import('drizzle-orm');
   type Context = import('../../trpc').Context;
   const { appointmentRouter, verifyCode, signCode, resetCheckinRateLimitForTest } = await import(
     '../appointment'
@@ -116,6 +121,7 @@ try {
     { id: 'u-b', kimiId: 'k-b', nickname: '员工B' },
     { id: 'u-c', kimiId: 'k-c', nickname: '他店员工' },
     { id: 'u-d', kimiId: 'k-d', nickname: '员工D' },
+    { id: 'u-e', kimiId: 'k-e', nickname: '员工E' },
   ]);
   await db.insert(schema.userRoles).values([
     { userId: 'u-c1', role: 'customer' },
@@ -125,6 +131,7 @@ try {
     { userId: 'u-b', role: 'staff' },
     { userId: 'u-c', role: 'staff' },
     { userId: 'u-d', role: 'staff' },
+    { userId: 'u-e', role: 'staff' },
   ]);
   const OPEN_ALL = {
     mon: { open: '09:00', close: '20:00' },
@@ -154,6 +161,9 @@ try {
     { id: 'st-b', storeId: 's-1', userId: 'u-b', name: '员工B', role: 'frontdesk', skills: ['wash', 'boarding'], schedule: SCHED_FULL, status: 'active' },
     { id: 'st-c', storeId: 's-2', userId: 'u-c', name: '他店员工', role: 'frontdesk', skills: ['wash', 'groom', 'boarding'], schedule: SCHED_FULL, status: 'active' },
     { id: 'st-d', storeId: 's-1', userId: 'u-d', name: '员工D', role: 'groomer', skills: ['boarding'], schedule: {}, status: 'active' }, // 无排班
+    // 批次 S4（任务 C）：s-1 唯一可派 groomer（全覆盖排班）——既有 grooming 建单自动派单落 st-e；
+    // 负荷/并列/指定/并发等专项断言见末节 [8]（独立门店 s-3 双 groomer 夹具，不扰动本店事件总账）
+    { id: 'st-e', storeId: 's-1', userId: 'u-e', name: '员工E', role: 'groomer', skills: ['wash', 'groom'], schedule: SCHED_FULL, status: 'active' },
   ]);
   await db.insert(schema.pets).values([
     { id: 'p-1', ownerId: 'u-c1', name: '豆豆', species: 'dog' },
@@ -284,12 +294,23 @@ try {
     .where(and(eq(schema.storeSlots.storeId, 's-1'), eq(schema.storeSlots.slotStart, T1)))
     .get();
   check('事务占槽：booked_count 0→1', slotT1?.bookedCount === 1, slotT1);
+  // S4（任务 C）：s-1 唯一可派 groomer 为 st-e——appt1 自动派单落 st-e（assignSource=auto）
+  check(
+    'S4：未指定 staffId → 自动派单唯一空闲 groomer（staff_id=st-e，assignSource=auto）',
+    appt1.staffId === 'st-e' && appt1.assignSource === 'auto',
+    { staffId: appt1.staffId, assignSource: appt1.assignSource },
+  );
   check(
     'appointment.created → store 频道落 outbox',
     (await countOutbox('store:s-1', 'appointment.created')) === 1,
   );
   check(
-    '同槽 capacity=1 打满 → 第二单 CONFLICT（不超卖）',
+    'S4：自动派单 assigned 事件（staff+user 双频道，payload.by=auto）',
+    (await countOutbox('staff:st-e', 'appointment.assigned')) === 1 &&
+      (await countOutbox('user:u-c1', 'appointment.assigned')) === 1,
+  );
+  check(
+    'S4：唯一 groomer（st-e）同时段已占 → 第二单 CONFLICT「该时段已约满」（B/C 同根双保险，不超卖）',
     await rejects(
       c2.create({
         storeId: 's-1',
@@ -300,6 +321,7 @@ try {
         paymentMode: 'pay_at_store',
       }),
       'CONFLICT',
+      /该时段已约满，请换个时间/,
     ),
   );
   check(
@@ -455,21 +477,42 @@ try {
 
   /* ==================== 3. checkin 全流程 ==================== */
   console.log('\n[3] checkin：到店登记（S1-R1 豁免归属/不认领）/ 幂等 / 防爆破限流');
-  // 3.1 未指派单：员工 B（frontdesk）扫二维码核销成功；S1-R1：不认领（staff_id 仍 NULL）
+  // 3.1 appt1（S4 已自动派单 st-e）：员工 B（frontdesk）扫二维码核销成功；
+  // S1-R1 豁免归属：原指派保留（staff_id 仍 st-e，不认领）
   const ck1 = await bStaff.checkin({ qr: codeRes.raw });
   check(
-    'S1-R1：未指派单 B 扫码核销成功 → in_service 且不认领（staff_id 仍 NULL，claimed=false）',
+    'S1-R1：自动派单单（st-e）被 B 扫码核销 → in_service 且原指派保留（staff_id 仍 st-e，claimed=false）',
     ck1.appointment.status === 'in_service' &&
-      ck1.appointment.staffId === null &&
+      ck1.appointment.staffId === 'st-e' &&
       ck1.claimed === false &&
       ck1.idempotent === false,
     ck1.appointment,
   );
   check('grooming 核销 → nextRoute=/execute/:id', ck1.nextRoute === `/execute/${appt1.id}`);
+  // S1-R1 断言②：真正的未指派单（直插 staffId=null）核销仍不认领、不补发 assigned
+  const unassignedAppt = await insertDirectAppt({
+    code: 'SMKUU2', // 人工码字符集（去混淆）：不含 0/1
+    status: 'confirmed',
+    start: at(20, 10),
+  });
+  const codeUnassigned = await c1.getCode({ appointmentId: unassignedAppt.id });
+  const assignedOfUnassigned = async () =>
+    (await db.select().from(schema.eventOutbox)).filter(
+      (r) =>
+        r.eventType === 'appointment.assigned' &&
+        (r.payload as Record<string, unknown>)?.appointmentId === unassignedAppt.id,
+    ).length;
+  const assignedBeforeCk = await assignedOfUnassigned();
+  const ckU = await bStaff.checkin({ code: codeUnassigned.code });
   check(
-    'S1-R1：未指派核销不补发 appointment.assigned（staff/user 频道均 0 条）',
-    (await countOutbox('staff:st-b', 'appointment.assigned')) === 0 &&
-      (await countOutbox('user:u-c1', 'appointment.assigned')) === 0,
+    'S1-R1 断言②：未指派单 B 核销成功 → staff_id 仍 NULL（不认领，claimed=false）',
+    ckU.appointment.status === 'in_service' && ckU.appointment.staffId === null && ckU.claimed === false,
+    ckU.appointment,
+  );
+  check(
+    'S1-R1 断言②：未指派核销不补发 appointment.assigned（该单 assigned 事件前后均 0 条）',
+    assignedBeforeCk === 0 && (await assignedOfUnassigned()) === 0,
+    { assignedBeforeCk, after: await assignedOfUnassigned() },
   );
   check(
     'appointment.checkedin → appointment 频道',
@@ -477,6 +520,7 @@ try {
   );
 
   // 3.2 已指派 A 的单被 B（frontdesk）核销 → S1-R1：豁免归属核销成功，原指派保留
+  // （S4：appt2 下单自动派单 st-e，商家 assign 改派 st-a——改派不回归，见末节 [8] 与批次 D）
   const appt2 = await c1.create({
     storeId: 's-1',
     petId: 'p-1',
@@ -485,8 +529,8 @@ try {
     scheduledStart: T2,
     paymentMode: 'pay_at_store',
   });
-  await m1.confirm({ appointmentId: appt2.id });
-  await m1.assign({ appointmentId: appt2.id, staffId: 'st-a' });
+  await m1.confirm({ appointmentId: appt2.id }); // S4：幂等（create 已 confirmed）
+  await m1.assign({ appointmentId: appt2.id, staffId: 'st-a' }); // 商家改派 st-a
   const ck2 = await bStaff.checkin({ code: appt2.code });
   check(
     'S1-R1：已指派 A 的单被 B 核销成功 → in_service 且 staff_id 仍为 st-a（原指派保留）',
@@ -1535,10 +1579,11 @@ try {
       (await countOutbox('store:s-1', 'appointment.rejected')) === 3,
   );
   check(
-    'appointment.assigned 计数正确（S1-R1 核销不认领后：st-a 仅派单 appt2=1；st-b 派单 appt4+b41=2；user:u-c1 派单三条=3）',
-    (await countOutbox('staff:st-a', 'appointment.assigned')) === 1 &&
+    'appointment.assigned 计数正确（S4：st-e 自动派单×11（u-c1 全部 grooming 建单）；st-a 改派 appt2=1；st-b 派单 appt4+b41=2；user:u-c1 = 11 自动 + 3 商家 = 14）',
+    (await countOutbox('staff:st-e', 'appointment.assigned')) === 11 &&
+      (await countOutbox('staff:st-a', 'appointment.assigned')) === 1 &&
       (await countOutbox('staff:st-b', 'appointment.assigned')) === 2 &&
-      (await countOutbox('user:u-c1', 'appointment.assigned')) === 3,
+      (await countOutbox('user:u-c1', 'appointment.assigned')) === 14,
   );
   check(
     'appointment.checkedin 共 3 条（appt1/appt2/appt3 各 1，幂等重扫无新增）',
@@ -1549,6 +1594,199 @@ try {
   check(
     'appointment.cancel_requested → store 频道共 3 条（appt6/appt7 + B3-5 W-14 的 w14c）',
     (await countOutbox('store:s-1', 'appointment.cancel_requested')) === 3,
+  );
+
+  /* ==================== 8. 批次 S4（任务 C）：自动派单与客户指定 ====================
+   * 独立门店 s-3（双 groomer，不扰动 s-1 事件总账）：
+   * 负荷最轻 / 并列先入职 / 指定成功与无空 / 校验错误 / 无可空 CONFLICT / 并发双击无双占 */
+  console.log('\n[8] S4 任务 C：自动派单（负荷/并列）/ 客户指定 / 校验 / 并发');
+  await db.insert(schema.users).values([
+    { id: 'u-g1', kimiId: 'k-g1', nickname: '美容师甲' },
+    { id: 'u-g2', kimiId: 'k-g2', nickname: '美容师乙' },
+    { id: 'u-f3', kimiId: 'k-f3', nickname: '前台三' },
+    { id: 'u-gs', kimiId: 'k-gs', nickname: '停职美容师' },
+  ]);
+  await db.insert(schema.userRoles).values([
+    { userId: 'u-g1', role: 'staff' },
+    { userId: 'u-g2', role: 'staff' },
+    { userId: 'u-f3', role: 'staff' },
+    { userId: 'u-gs', role: 'staff' },
+  ]);
+  await db.insert(schema.stores).values([
+    { id: 's-3', ownerId: 'u-m', name: '冒烟三号店', openHours: OPEN_ALL, status: 'active' },
+  ]);
+  await db.insert(schema.staff).values([
+    // sg-a 先入职（createdAt 先，并列时应优先）
+    { id: 'sg-a', storeId: 's-3', userId: 'u-g1', name: '美容师甲', role: 'groomer', skills: ['wash'], schedule: SCHED_FULL, status: 'active' },
+    { id: 'sg-b', storeId: 's-3', userId: 'u-g2', name: '美容师乙', role: 'groomer', skills: ['wash'], schedule: SCHED_FULL, status: 'active' },
+    { id: 'sf-3', storeId: 's-3', userId: 'u-f3', name: '前台三', role: 'frontdesk', skills: ['wash'], schedule: SCHED_FULL, status: 'active' },
+    { id: 'sg-s', storeId: 's-3', userId: 'u-gs', name: '停职美容师', role: 'groomer', skills: ['wash'], schedule: SCHED_FULL, status: 'suspended' },
+  ]);
+  await db.insert(schema.services).values([
+    { id: 'svg-3', storeId: 's-3', type: 'grooming', name: 'S4 洗护', durationMin: 60, priceFen: 8800 },
+    { id: 'svb-3', storeId: 's-3', type: 'boarding', name: 'S4 寄养', boardingRoomType: '标准间', priceFen: 19900 },
+  ]);
+  const s3Create = (scheduledStart: Date, staffId?: string, scheduledEnd?: Date) =>
+    c1.create({
+      storeId: 's-3',
+      petId: 'p-1',
+      serviceId: 'svg-3',
+      type: 'grooming',
+      scheduledStart,
+      ...(scheduledEnd ? { scheduledEnd } : {}),
+      paymentMode: 'pay_at_store',
+      ...(staffId ? { staffId } : {}),
+    });
+
+  // ① 负荷最轻 + 并列先入职：同日连续 4 单 → sg-a / sg-b / sg-a / sg-b 交替
+  const d1 = await s3Create(at(2, 15));
+  const d2 = await s3Create(at(2, 16));
+  const d3 = await s3Create(at(2, 17));
+  const d4 = await s3Create(at(2, 18));
+  check(
+    'S4：负荷最轻派单——同日 4 单交替 sg-a/sg-b/sg-a/sg-b（0/0 并列→先入职 sg-a；随后负荷均衡）',
+    d1.staffId === 'sg-a' && d2.staffId === 'sg-b' && d3.staffId === 'sg-a' && d4.staffId === 'sg-b',
+    [d1.staffId, d2.staffId, d3.staffId, d4.staffId],
+  );
+  check(
+    'S4：自动派单写 assignSource=auto + assigned 事件双频道（staff+user，payload.by=auto）',
+    d1.assignSource === 'auto' &&
+      (await countOutbox('staff:sg-a', 'appointment.assigned')) === 2 &&
+      (await countOutbox('staff:sg-b', 'appointment.assigned')) === 2,
+    d1.assignSource,
+  );
+  const d1Evt = (await db.select().from(schema.eventOutbox)).find(
+    (r) =>
+      r.eventType === 'appointment.assigned' &&
+      (r.payload as Record<string, unknown>)?.appointmentId === d1.id,
+  );
+  check(
+    'S4：assigned payload 含 staffId/staffName/by=auto',
+    d1Evt?.payload?.staffId === 'sg-a' && d1Evt?.payload?.staffName === '美容师甲' && d1Evt?.payload?.by === 'auto',
+    d1Evt?.payload,
+  );
+
+  // ② 客户指定：有空 → 成功写入；无空 → CONFLICT 原文案
+  const d5 = await s3Create(at(2, 15), 'sg-b');
+  check('S4：指定 sg-b（此时段有空）→ 成功写入 staff_id', d5.staffId === 'sg-b', d5.staffId);
+  const slot15Before = await db
+    .select()
+    .from(schema.storeSlots)
+    .where(and(eq(schema.storeSlots.storeId, 's-3'), eq(schema.storeSlots.slotStart, at(2, 15))))
+    .get();
+  check(
+    'S4：指定无空（sg-a 15:00 已占）→ CONFLICT「该美容师此时段已约满，请换时间或换美容师」',
+    await rejects(s3Create(at(2, 15), 'sg-a'), 'CONFLICT', /^该美容师此时段已约满，请换时间或换美容师$/),
+  );
+
+  // ③ 无可空 groomer → CONFLICT 原文案（sg-a/sg-b 15:00 均已占；整体回滚不占槽）
+  check(
+    'S4：未指定且无可空 → CONFLICT「该时段已约满，请换个时间」',
+    await rejects(s3Create(at(2, 15)), 'CONFLICT', /^该时段已约满，请换个时间$/),
+  );
+  const slot15After = await db
+    .select()
+    .from(schema.storeSlots)
+    .where(and(eq(schema.storeSlots.storeId, 's-3'), eq(schema.storeSlots.slotStart, at(2, 15))))
+    .get();
+  check(
+    'S4：派单失败整体回滚——占槽不产生部分占用（15:00 booked_count 仍 2，失败单无预约记录）',
+    slot15Before?.bookedCount === 2 && slot15After?.bookedCount === 2,
+    { before: slot15Before?.bookedCount, after: slot15After?.bookedCount },
+  );
+
+  // ④ 指定校验：他店 / 非 groomer / 停职 / boarding 指定
+  check(
+    'S4：指定他店员工（st-c 属 s-2）→ BAD_REQUEST',
+    await rejects(s3Create(at(3, 10), 'st-c'), 'BAD_REQUEST', /本店/),
+  );
+  check(
+    'S4：指定前台（sf-3 非 groomer）→ BAD_REQUEST',
+    await rejects(s3Create(at(3, 10), 'sf-3'), 'BAD_REQUEST', /美容师/),
+  );
+  check(
+    'S4：指定停职 groomer（sg-s）→ BAD_REQUEST',
+    await rejects(s3Create(at(3, 10), 'sg-s'), 'BAD_REQUEST', /停职/),
+  );
+  check(
+    'S4：boarding 传 staffId → BAD_REQUEST（寄养按晚占房无需美容师）',
+    await rejects(
+      c1.create({
+        storeId: 's-3',
+        petId: 'p-1',
+        serviceId: 'svb-3',
+        type: 'boarding',
+        scheduledStart: at(5, 10),
+        scheduledEnd: at(6, 10),
+        paymentMode: 'pay_at_store',
+        staffId: 'sg-a',
+      }),
+      'BAD_REQUEST',
+      /寄养/,
+    ),
+  );
+
+  // ⑤ 并发双击不产生双占：D+3 10:00 仅 sg-b 可空（sg-a 直插冲突单占住），
+  //    双客户并发 create → 恰 1 成功 1 CONFLICT，sg-b 该时段仅 1 单、占槽仅 +1
+  await db.insert(schema.appointments).values({
+    code: 'SMKS4W',
+    customerId: 'u-c1',
+    storeId: 's-3',
+    staffId: 'sg-a',
+    petId: 'p-1',
+    serviceId: 'svg-3',
+    type: 'grooming',
+    scheduledStart: at(3, 10),
+    scheduledEnd: at(3, 11),
+    status: 'confirmed',
+    priceFen: 8800,
+    paymentMode: 'pay_at_store',
+  });
+  const [r1, r2] = await Promise.allSettled([
+    s3Create(at(3, 10)),
+    c2.create({
+      storeId: 's-3',
+      petId: 'p-2',
+      serviceId: 'svg-3',
+      type: 'grooming',
+      scheduledStart: at(3, 10),
+      paymentMode: 'pay_at_store',
+    }),
+  ]);
+  const won = [r1, r2].filter((r) => r.status === 'fulfilled').length;
+  const conflicted = [r1, r2].filter(
+    (r) => r.status === 'rejected' && (r.reason as { code?: string })?.code === 'CONFLICT',
+  ).length;
+  if (conflicted !== 1) {
+    console.log(
+      '  [debug] 并发双击拒绝原因：',
+      [r1, r2].map((r) =>
+        r.status === 'rejected'
+          ? { code: (r.reason as { code?: string })?.code, message: String((r.reason as Error)?.message).slice(0, 200) }
+          : 'fulfilled',
+      ),
+    );
+  }
+  const sgBAtW = await db
+    .select()
+    .from(schema.appointments)
+    .where(
+      and(
+        eq(schema.appointments.storeId, 's-3'),
+        eq(schema.appointments.staffId, 'sg-b'),
+        eq(schema.appointments.scheduledStart, at(3, 10)),
+        ne(schema.appointments.status, 'cancelled'),
+      ),
+    );
+  const slotW = await db
+    .select()
+    .from(schema.storeSlots)
+    .where(and(eq(schema.storeSlots.storeId, 's-3'), eq(schema.storeSlots.slotStart, at(3, 10))))
+    .get();
+  check(
+    'S4：并发双击不产生双占——恰 1 单成功 1 单 CONFLICT，sg-b 同时段仅 1 单、占槽仅 1',
+    won === 1 && conflicted === 1 && sgBAtW.length === 1 && slotW?.bookedCount === 1,
+    { won, conflicted, sgBAtW: sgBAtW.length, booked: slotW?.bookedCount },
   );
 
   await sleep(150); // 让 fire-and-forget 的 broadcastNow 读完落库行，避免关闭后噪音

@@ -12,15 +12,15 @@
  *   2. 客户：store.listNearby → store.getWithServices（服务 + 可约槽位）→ appointment.create
  *      （create 前已完成 push.subscribe；create 后立刻以 watch=<aid> 建立 SSE 流后台读）
  *   3. 商家：appointment.confirm（批次 S4：create 已落 confirmed，confirm 幂等成功零副作用）
- *      → appointment.assign（派给 groomer 阿强）
- *   4. 客户：appointment.getCode → 员工（groomer）核销被拒（批次 S1 双角色断言）
- *      → 员工（frontdesk）：appointment.checkin（二维码原文；S1-R1 断言①原指派保留）
+ *      → S4 任务 C：create 自动派单（负荷并列→先入职阿强）→ 商家 assign 改派丽丽（不回归）
+ *   4. 客户：appointment.getCode → 员工（groomer 阿强）核销被拒（批次 S1 双角色断言）
+ *      → 员工（frontdesk）：appointment.checkin（二维码原文；S1-R1 断言①原指派丽丽保留）
  *      → 未指派单前台核销（S1-R1 断言② staff_id 仍 NULL + 无 assigned 事件）
- *   5. 美容师（阿强，被指派人）：POST /api/upload（jimp 现造 JPEG）→ serviceStep.addPhotos 登记
+ *   5. 美容师（丽丽，改派后的被指派人）：POST /api/upload（jimp 现造 JPEG）→ serviceStep.addPhotos 登记
  *      → 逐步 confirmStep 走完六步（张数按 min：1/2/3/2/2/0，before_after 需 before+after 各 1）
  *   6. 校验预约 completed；商家 markPaid；客户 review
- *   7. SSE 断言：客户流依次收到 appointment.confirmed / assigned / checkedin /
- *      step_updated×6 / completed（允许心跳注释帧，按 id 去重）；event_outbox 事件齐全
+ *   7. SSE 断言：客户流依次收到 appointment.confirmed / assigned（自动派单）/ assigned（改派）/
+ *      checkedin / step_updated×6 / completed（允许心跳注释帧，按 id 去重）；event_outbox 事件齐全
  *   8. 权限负例：客户 cookie 调 store.upsertService（merchantProcedure）→ 403；
  *      未登录调 appointment.create → 401
  */
@@ -310,7 +310,7 @@ async function main(): Promise<void> {
   check('getWithServices 返回可约槽位（10:00-16:00 整点）', !!slot, cat2.slots.length);
   if (!slot) throw new Error('无可约槽位');
 
-  const appt = await trpcMutate<{ id: string; status: string; code: string }>('appointment.create', {
+  const appt = await trpcMutate<{ id: string; status: string; code: string; staffId: string | null; assignSource: string | null }>('appointment.create', {
     cookie: customerCookie,
     input: {
       storeId: store.id,
@@ -342,14 +342,25 @@ async function main(): Promise<void> {
   startSseReader(sseRes, frames);
   await sleep(300); // 等连接注册进 Hub
 
-  /* ---------- 6. 商家：确认（S4 幂等）→ 派单（S1-R1：派给 groomer 阿强，验证前台核销豁免归属+不认领） ---------- */
+  /* ---------- 6. 商家：确认（S4 幂等）→ 派单 ----------
+   * S4（任务 C）：create 已自动派单（负荷 0/0 并列 → 先入职的阿强，assignSource=auto）；
+   * 商家 assign 改派丽丽（改派不回归）——后续步骤由被指派人丽丽执行，
+   * 验证前台（小美）核销豁免归属 + 原指派（丽丽）保留（S1-R1 断言①） */
   const staffList = await trpcQuery<{ staff: Array<{ id: string; name: string; role: string; skills: string[] | null }> }>(
     'store.staffList',
     { cookie: ownerCookie },
   );
   const staffRow = staffList.staff.find((s) => s.name === '阿强' && s.role === 'groomer');
-  check('store.staffList 找到承接美容师（阿强=groomer）', !!staffRow, staffList.staff.map((s) => s.name));
-  if (!staffRow) throw new Error('无美容师');
+  const staffRow2 = staffList.staff.find((s) => s.name === '丽丽' && s.role === 'groomer');
+  check('store.staffList 找到承接美容师（阿强/丽丽=groomer）', !!staffRow && !!staffRow2, staffList.staff.map((s) => s.name));
+  if (!staffRow || !staffRow2) throw new Error('无美容师');
+
+  // S4（任务 C）：未指定 staffId → 自动派单负荷最轻（0/0 并列按 createdAt 先入职 → 阿强）
+  check(
+    'S4：create 自动派单（staff_id=阿强，assignSource=auto）',
+    appt.staffId === staffRow.id && appt.assignSource === 'auto',
+    { staffId: appt.staffId, expect: staffRow.id },
+  );
 
   // 批次 S4（任务 A）：create 已落 confirmed——confirm 对该单 = 幂等成功（零副作用），
   // 连调两次均返回 confirmed 且不重复发事件（防旧链路重复调用断裂）
@@ -369,11 +380,13 @@ async function main(): Promise<void> {
     { s1: confirmed.status, s2: confirmed2.status },
   );
 
+  // S4（任务 D）：商家保留改派——assign 改派丽丽（不回归）
   const assigned = await trpcMutate<{ status: string; staffId: string | null }>('appointment.assign', {
     cookie: ownerCookie,
-    input: { appointmentId: aid, staffId: staffRow.id },
+    input: { appointmentId: aid, staffId: staffRow2.id },
   });
-  check('appointment.assign 派单成功（指派阿强）', assigned.staffId === staffRow.id, assigned);
+  check('appointment.assign 改派成功（阿强 → 丽丽）', assigned.staffId === staffRow2.id, assigned);
+  const liliCookie = await devLogin(byKimi('seed_kimi_staff3')!.id); // 丽丽：改派后的被指派人
 
   /* ---------- 7. 客户出码 → 员工扫码核销 ---------- */
   const codeRes = await trpcQuery<{ raw: string; code: string }>('appointment.getCode', {
@@ -458,12 +471,12 @@ async function main(): Promise<void> {
     checkin,
   );
   check(
-    'S1-R1 断言①：已指派给阿强的单被小美（frontdesk）核销成功 → staff_id 仍为阿强（原指派保留，claimed=false）',
-    checkin.appointment.staffId === staffRow.id && checkin.claimed === false,
-    { staffId: checkin.appointment.staffId, expect: staffRow.id, claimed: checkin.claimed },
+    'S1-R1 断言①：已改派给丽丽的单被小美（frontdesk）核销成功 → staff_id 仍为丽丽（原指派保留，claimed=false）',
+    checkin.appointment.staffId === staffRow2.id && checkin.claimed === false,
+    { staffId: checkin.appointment.staffId, expect: staffRow2.id, claimed: checkin.claimed },
   );
 
-  /* ---------- 8. 美容师（阿强，被指派人）：上传 → 登记照片 → 逐步确认 ---------- */
+  /* ---------- 8. 美容师（丽丽，改派后的被指派人）：上传 → 登记照片 → 逐步确认 ---------- */
   const { Jimp } = await import('jimp');
   async function uploadOne(stepKey: string): Promise<{ url: string; thumbUrl: string }> {
     const img = new Jimp({ width: 320, height: 240, color: 0x66aaffff });
@@ -473,7 +486,7 @@ async function main(): Promise<void> {
     fd.append('relDir', `appointment/${aid}/${stepKey}`);
     const res = await fetch(`${BASE}/api/upload`, {
       method: 'POST',
-      headers: { cookie: groomerCookie },
+      headers: { cookie: liliCookie }, // S4：改派后由丽丽执行
       body: fd,
     });
     const body = (await res.json()) as { url?: string; thumbUrl?: string; message?: string };
@@ -496,7 +509,7 @@ async function main(): Promise<void> {
       const up = await uploadOne(plan.key);
       if (!firstUploadUrl) firstUploadUrl = up.url;
       const added = await trpcMutate<{ added: number; totalValid: number }>('serviceStep.addPhotos', {
-        cookie: groomerCookie,
+        cookie: liliCookie, // S4：改派后由丽丽执行
         input: {
           appointmentId: aid,
           stepKey: plan.key,
@@ -511,7 +524,7 @@ async function main(): Promise<void> {
     }
     const done = await trpcMutate<{ nextStepKey: string | null; appointmentCompleted: boolean }>(
       'serviceStep.confirmStep',
-      { cookie: groomerCookie, input: { appointmentId: aid, stepKey: plan.key } },
+      { cookie: liliCookie, input: { appointmentId: aid, stepKey: plan.key } }, // S4：改派后由丽丽执行
     );
     check(
       `serviceStep.confirmStep(${plan.key})`,
@@ -580,6 +593,12 @@ async function main(): Promise<void> {
   });
   const aid2 = appt2.id;
   await trpcMutate('appointment.confirm', { cookie: ownerCookie, input: { appointmentId: aid2 } });
+  // S4（任务 C）：aid2 下单已被自动派单——断言②需要「真未指派单」，此处直清 staff_id/
+  // assign_source 模拟（其自动派单 assigned 事件已发，下方按「核销不新增」口径断言）
+  await db
+    .update(schema.appointments)
+    .set({ staffId: null, assignSource: null, updatedAt: new Date() })
+    .where(eq(schema.appointments.id, aid2));
   const codeRes2 = await trpcQuery<{ raw: string; code: string }>('appointment.getCode', {
     cookie: customerCookie,
     input: { appointmentId: aid2 },
@@ -601,14 +620,16 @@ async function main(): Promise<void> {
     { staffId: checkin2.appointment.staffId, claimed: checkin2.claimed },
   );
   check(
-    'S1-R1 断言②：未指派单核销后 outbox 无新增 appointment.assigned 事件',
-    assignedBefore === 0 && assignedAfter === 0,
+    'S1-R1 断言②：未指派单核销后 outbox 无新增 appointment.assigned 事件（核销前后计数一致）',
+    assignedAfter === assignedBefore,
     { assignedBefore, assignedAfter },
   );
   const deduped = [...new Map(frames.filter((f) => f.id).map((f) => [f.id, f])).values()];
   const typeSeq = deduped.map((f) => f.event);
   const expectedSeq = [
     'appointment.confirmed',
+    // S4：create 自动派单（阿强）+ 商家改派（丽丽）各一条 assigned
+    'appointment.assigned',
     'appointment.assigned',
     'appointment.checkedin',
     ...Array(6).fill('step_updated'),
@@ -645,7 +666,8 @@ async function main(): Promise<void> {
     ['appointment.created', 1],
     // S4（任务 A）：confirmed 随 create 发 user+store 双频道；商家 confirm 幂等不再增发
     ['appointment.confirmed', 2],
-    ['appointment.assigned', 2], // staff + customer 双频道
+    // S4（任务 C/D）：create 自动派单（staff+user）+ 商家改派（staff+user）各 2 条
+    ['appointment.assigned', 4],
     // B2-8：checkedin / completed 为 appointment + store 双频道各 1 条（本断言 P1 时代后未同步，见批次 7.1 前置项复核）
     ['appointment.checkedin', 2],
     ['step_updated', 6],
@@ -655,8 +677,8 @@ async function main(): Promise<void> {
   ];
   const outboxOk = outboxExpect.every(([t, n]) => (byType.get(t) ?? []).length === n);
   check(
-    `event_outbox 事件齐全（共 ${outboxRows.length} 条 / 期望 18 条）`,
-    outboxOk && outboxRows.length === 18,
+    `event_outbox 事件齐全（共 ${outboxRows.length} 条 / 期望 20 条）`,
+    outboxOk && outboxRows.length === 20,
     Object.fromEntries([...byType].map(([k, v]) => [k, v.length])),
   );
   const assignedChannels = (byType.get('appointment.assigned') ?? []).sort();
