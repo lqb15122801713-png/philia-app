@@ -5,6 +5,11 @@
  *   create → confirm → assign → checkin（二维码 / 6 位人工码）→ 六步流 / 寄养（T1.3b/c）
  *   → completed → markPaid（到店付收款登记）/ review（评价）
  *   取消：开始前 >4h 直接取消并回减槽位；≤4h 转 cancel_requested 由商家 reviewCancel 审批。
+ *   批次 S4（任务 A · 免商家确认）：create 落库直接 confirmed（grooming/boarding 同口径，
+ *   既有校验全保留：宠物归属/服务有效/营业时间/+1h 缓冲/次卡扣次/占槽事务）；
+ *   pending 仅兼容历史单与客户改期回退单（不迁移不改写）；confirm 保留且幂等
+ *   （对 confirmed 单 = 幂等成功，零副作用）；create 事务内增发 appointment.confirmed
+ *   （user+store 双频道，by='auto'）。reject 仍仅 pending 可拒（历史/改期回退单）。
  *   改期（reschedule）：商家（本店）改期保持状态/指派；客户（本人，v1.1-b2 B2-6）仅 >4h 可自助改，
  *   与取消同阈值，事务内回退 pending + 清空 staffId + 旧槽释放/新槽校验；
  *   B3-4 起对 boarding 开放（scheduledEnd 必传，逐晚释放/占用走 B3-2 函数，不退次不动卡表）。
@@ -626,10 +631,13 @@ type ListItem = AppointmentRow & {
 export const appointmentRouter = router({
   /**
    * 1. create（customer）：宠物归属 / 服务项有效且 type 一致 / 门店营业时间内 /
-   * payment_mode 快照；事务内占槽（防超卖）+ 建 pending 预约（生成 6 位人工核销码）
+   * payment_mode 快照；事务内占槽（防超卖）+ 建预约（生成 6 位人工核销码）
    * + emitEvent(store, appointment.created)。占槽按 type 分路：grooming 按 B9a 任务 C
    * 时长引擎输出 UPSERT 连续 store_slots（30min 时段槽）；boarding（B3-2）逐晚 UPSERT
    * boarding_slots（房型×晚），任一晚满员 CONFLICT 整体回滚。
+   * 批次 S4（任务 A · 免商家确认）：落库状态直接 confirmed（不再经 pending 待商家确认），
+   * 同事务增发 appointment.confirmed（user:{customerId} + store:{storeId} 双频道，
+   * payload.by='auto' 标识自动确认）；历史 pending 单不迁移，confirm 幂等兼容。
    * paymentMode=pass_deduct（B2-7）：同事务内先校验本人名下该店次卡
    * （active + remain_times>0 + 未过期，否则 BAD_REQUEST「暂无可用次卡」）并
    * remain_times-1、写 -1 扣次流水——扣次先于占槽，占槽 CONFLICT/建单失败时
@@ -717,7 +725,7 @@ export const appointmentRouter = router({
       for (let attempt = 0; attempt < MAX_CODE_RETRIES; attempt++) {
         const code = genManualCode();
         try {
-          let outboxId = '';
+          const outboxIds: string[] = [];
           const created = await ctx.db.transaction(async (tx) => {
             // B2-7 资损红标：次卡扣次——先校验并扣减（同一事务），后续占槽/建单
             // 任一步失败（如该时段已约满 CONFLICT）整体回滚，remain_times 随之还原。
@@ -784,7 +792,9 @@ export const appointmentRouter = router({
                 type: input.type,
                 scheduledStart: start,
                 scheduledEnd: end,
-                status: 'pending',
+                // 批次 S4（任务 A）：免商家确认——落库直接 confirmed（grooming/boarding 同口径）；
+                // pending 仅保留给历史单与客户改期回退单（不迁移）
+                status: 'confirmed',
                 priceFen, // 金额快照（A-P0-10：寄养=单晚价×晚数，grooming=单次价）
                 paymentMode: input.paymentMode, // 收款方式快照（§3.1 结算规则）
                 note: input.note ?? null,
@@ -799,15 +809,26 @@ export const appointmentRouter = router({
                 delta: -1,
               });
             }
-            outboxId = await emitEvent(txDb(tx), `store:${input.storeId}`, EventType.AppointmentCreated, {
-              appointmentId: appt.id,
-              storeId: input.storeId,
-              petName: pet.name,
-              serviceName: service.name,
-            });
+            outboxIds.push(
+              await emitEvent(txDb(tx), `store:${input.storeId}`, EventType.AppointmentCreated, {
+                appointmentId: appt.id,
+                storeId: input.storeId,
+                petName: pet.name,
+                serviceName: service.name,
+              }),
+            );
+            // 批次 S4（任务 A）：免确认——create 同事务发 appointment.confirmed 双频道
+            //（user=客户端状态刷新 / store=商家端列表刷新；payload.by='auto' 标识自动确认）
+            const confirmedPayload = { appointmentId: appt.id, petName: pet.name, by: 'auto' as const };
+            outboxIds.push(
+              await emitEvent(txDb(tx), `user:${ctx.user.id}`, EventType.AppointmentConfirmed, confirmedPayload),
+            );
+            outboxIds.push(
+              await emitEvent(txDb(tx), `store:${input.storeId}`, EventType.AppointmentConfirmed, confirmedPayload),
+            );
             return appt;
           });
-          broadcastNow(outboxId);
+          outboxIds.forEach(broadcastNow);
           return created;
         } catch (err) {
           // 6 位人工码撞唯一索引：换码重试整个事务；其他错误直接抛出
@@ -898,12 +919,19 @@ export const appointmentRouter = router({
       return { payload, raw: JSON.stringify(payload), code: appt.code };
     }),
 
-  /** 5. confirm（merchant 本店）：pending → confirmed */
+  /**
+   * 5. confirm（merchant 本店）：pending → confirmed。
+   * 批次 S4（任务 A）：create 已直接落 confirmed，本接口主要为历史 pending 单 /
+   * 客户改期回退 pending 单保留；对 confirmed 单调用 = 幂等成功（直接返回现状，
+   * 零写库、零事件——防旧链路/旧测试重复调用断裂）。
+   */
   confirm: merchantProcedure
     .input(z.object({ appointmentId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       const appt = await getAppointmentOrThrow(ctx.db, input.appointmentId);
       if (appt.storeId !== ctx.user.storeId) forbidden('非本店预约，无权操作');
+      // S4 幂等：已 confirmed → 直接返回现状（不重写 updated_at、不重复发 confirmed 事件）
+      if (appt.status === 'confirmed') return appt;
       if (appt.status !== 'pending') badRequest(`当前状态（${appt.status}）不可确认，仅 pending 可确认`);
       const petName = await petNameOf(ctx.db, appt.petId);
       let outboxId = '';

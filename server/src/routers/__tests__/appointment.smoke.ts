@@ -36,6 +36,10 @@
  *    原因选填（缺省 null）、超 100 字 BAD_REQUEST，reviewCancel 批准保留客户原因；
  *    W-4 客户标识——listForStore 行带 customerName/customerPhoneTail、
  *    appointment.get 带 customer{nickname, phoneTail}
+ * 5g. 批次 S4（任务 A）：create 落库即 confirmed（grooming/boarding 同口径）+ confirmed
+ *    事件随 create 发 user+store 双频道；confirm 幂等（confirmed 单连调成功零副作用，
+ *    历史 pending 单仍可 confirm → confirmed + 事件）；reject 仍仅 pending 可拒
+ *    （夹具经 flipToPending 模拟历史/改期回退 pending 单）
  * 6. listMine 分组 / get 归属 / listForStore 过滤 / listTodayForStaff 今日时间轴
  * 7. 事件总账：每个关键动作后 event_outbox 有对应事件且 channel 正确
  */
@@ -238,6 +242,17 @@ try {
       .returning()
       .then((r) => r[0]!);
 
+  /**
+   * 批次 S4 适配：create 落库即 confirmed，而 reject 仍仅 pending 可拒。
+   * 拒单链路（B3-3）服务的对象变为「历史 pending 单 / 客户改期回退 pending 单」，
+   * 故拒单夹具在 create（占槽/扣次/事件真实发生）后直改回 pending 模拟该两类单。
+   */
+  const flipToPending = async (appointmentId: string) =>
+    db
+      .update(schema.appointments)
+      .set({ status: 'pending', updatedAt: new Date() })
+      .where(eq(schema.appointments.id, appointmentId));
+
   /* ==================== 1. create 占槽与防超卖 ==================== */
   console.log('\n[1] create：占槽 / 防超卖 / 各类校验');
   const appt1 = await c1.create({
@@ -250,12 +265,18 @@ try {
     note: '冒烟单1',
   });
   check(
-    'create 成功：pending + 6 位去混淆人工码 + payment_mode 快照 + 价格快照',
-    appt1.status === 'pending' &&
+    'create 成功：批次 S4 落库即 confirmed + 6 位去混淆人工码 + payment_mode 快照 + 价格快照',
+    appt1.status === 'confirmed' &&
       /^[2-9A-HJKMNP-Z]{6}$/.test(appt1.code) &&
       appt1.paymentMode === 'pay_at_store' &&
       appt1.priceFen === 8800,
     appt1,
+  );
+  // S4（任务 A）：confirmed 事件随 create 即发（user+store 双频道，by='auto'）
+  check(
+    'S4：appointment.confirmed 随 create 落 user+store 双频道',
+    (await countOutbox('user:u-c1', 'appointment.confirmed')) === 1 &&
+      (await countOutbox('store:s-1', 'appointment.confirmed')) === 1,
   );
   const slotT1 = await db
     .select()
@@ -357,11 +378,34 @@ try {
 
   /* ==================== 2. getCode / verifyCode ==================== */
   console.log('\n[2] getCode 签名与 verifyCode 窗口/过期规则');
+  // S4（任务 A）：appt1 create 时已落 confirmed——confirm 幂等成功且零副作用（无新事件、updatedAt 不变）
+  const outboxBeforeConfirm = await totalOutbox();
   const conf1 = await m1.confirm({ appointmentId: appt1.id });
-  check('confirm：pending → confirmed', conf1.status === 'confirmed');
+  const conf1b = await m1.confirm({ appointmentId: appt1.id });
   check(
-    'appointment.confirmed → user 频道',
+    'S4：confirm 幂等——confirmed 单连调两次均成功（状态不变）',
+    conf1.status === 'confirmed' && conf1b.status === 'confirmed',
+  );
+  check(
+    'S4：confirm 幂等零副作用（无新增 outbox 事件）',
+    (await totalOutbox()) === outboxBeforeConfirm,
+  );
+  check(
+    'appointment.confirmed → user 频道（仍 1 条：create 所发，confirm 幂等不增发）',
     (await countOutbox('user:u-c1', 'appointment.confirmed')) === 1,
+  );
+  // S4 兼容：历史 pending 单仍可 confirm → confirmed 且发事件（防旧链路断裂）
+  const legacyPending = await insertDirectAppt({
+    code: 'SMKL01',
+    status: 'pending',
+    start: at(30, 10),
+  });
+  const confLegacy = await m1.confirm({ appointmentId: legacyPending.id });
+  check(
+    'S4 兼容：历史 pending 单 confirm → confirmed + confirmed 事件（user 频道累计 2 条）',
+    confLegacy.status === 'confirmed' &&
+      (await countOutbox('user:u-c1', 'appointment.confirmed')) === 2,
+    confLegacy.status,
   );
 
   const codeRes = await c1.getCode({ appointmentId: appt1.id });
@@ -559,8 +603,8 @@ try {
     paymentMode: 'pass_deduct',
   });
   check(
-    'grooming + pass_deduct 建单仍成功（200）',
-    apptPass.status === 'pending' && apptPass.paymentMode === 'pass_deduct',
+    'grooming + pass_deduct 建单仍成功（200；S4 落库即 confirmed）',
+    apptPass.status === 'confirmed' && apptPass.paymentMode === 'pass_deduct',
   );
   check('pass_deduct 建单同事务扣次（remain 5→4）', (await remainOf()) === 4, await remainOf());
   const apptPassLogs = await db
@@ -740,8 +784,8 @@ try {
   const rc7 = await m1.reviewCancel({ appointmentId: appt7.id, approve: false });
   check('reviewCancel 拒绝 → 回 confirmed', rc7.appointment.status === 'confirmed');
   check(
-    '拒绝事件 appointment.confirmed → user 频道（累计 4 条：confirm×3 + 拒绝×1）',
-    (await countOutbox('user:u-c1', 'appointment.confirmed')) === 4,
+    '拒绝事件 appointment.confirmed → user 频道（累计 9 条：create 自动确认×7 + 历史 pending confirm×1 + 拒绝×1）',
+    (await countOutbox('user:u-c1', 'appointment.confirmed')) === 9,
   );
   check(
     '服务中锁定：in_service 取消 → BAD_REQUEST',
@@ -986,6 +1030,7 @@ try {
     scheduledStart: at(2, 10),
     paymentMode: 'pay_at_store',
   });
+  await flipToPending(apptR1.id); // S4：create 即 confirmed，改回 pending 模拟改期回退单（reject 仅 pending 可拒）
   const slotR1Before = await db
     .select()
     .from(schema.storeSlots)
@@ -1034,6 +1079,7 @@ try {
     scheduledEnd: at(10, 10),
     paymentMode: 'pay_at_store',
   });
+  await flipToPending(apptR2.id); // S4：create 即 confirmed，改回 pending 模拟历史/改期回退单
   const r2NightsBefore = await nightRows('sv-b1');
   check(
     '寄养拒单前置：晚 D+8 / D+9 各占 1',
@@ -1063,6 +1109,7 @@ try {
     scheduledStart: at(2, 15),
     paymentMode: 'pass_deduct',
   });
+  await flipToPending(apptR3.id); // S4：create 即 confirmed，改回 pending 模拟历史/改期回退单（扣次流水已真实发生）
   check('pass_deduct 建单扣次（remain 4→3）', (await remainOf()) === 3, await remainOf());
   await m1.reject({ appointmentId: apptR3.id, reason: '门店临时休业' });
   check('门禁3：拒单同事务回补次卡（remain 3→4）', (await remainOf()) === 4, await remainOf());
@@ -1174,8 +1221,8 @@ try {
   const b41RowBefore = await db.select().from(schema.appointments).where(eq(schema.appointments.id, b41.id)).get();
   const nightsBeforeConflict = await nightRows('sv-b1');
   check(
-    'B3-4：满员晚前置——b42 已占满 D+16/D+17（capacity=1，booked=1）',
-    b42.status === 'pending' &&
+    'B3-4：满员晚前置——b42 已占满 D+16/D+17（capacity=1，booked=1；S4 落库即 confirmed）',
+    b42.status === 'confirmed' &&
       [isoDay(at(16, 10)), isoDay(at(17, 10))].every((d) =>
         nightsBeforeConflict.some((r) => r.nightDate === d && r.bookedCount === 1 && r.capacity === 1),
       ),
@@ -1328,8 +1375,8 @@ try {
   check(
     `W-2：≥now+1h 时段建单成功（命中${
       laterSlot && laterSlot.getDate() === new Date().getDate() ? '今天晚些时候' : '下一营业日'
-    } ${laterSlot?.toLocaleString('zh-CN', { hour12: false }) ?? '-'}）`,
-    !!w2Appt && w2Appt.status === 'pending',
+    } ${laterSlot?.toLocaleString('zh-CN', { hour12: false }) ?? '-'}；S4 落库即 confirmed）`,
+    !!w2Appt && w2Appt.status === 'confirmed',
   );
 
   // W-14：>4h 直消带原因 → cancelled + cancelReason + cancelSource='customer'

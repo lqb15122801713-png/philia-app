@@ -71,7 +71,9 @@ function AppointmentCard({ item }: { item: AppointmentListItem }) {
 
 export default function AppointmentsPage() {
   const { trpc } = usePhiliaClient();
-  const [tab, setTab] = useState(TABS[0]!.key);
+  // 批次 S4：免确认后新单落库即 confirmed，默认 Tab 由「待确认」改「已确认」
+  //（待确认 Tab 保留：历史 pending 单与客户改期回退单仍在此分组）
+  const [tab, setTab] = useState('confirmed');
 
   const listQ = useQuery({
     queryKey: ['appointment', 'listMine'],

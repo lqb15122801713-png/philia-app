@@ -11,7 +11,8 @@
  *   1. POST /api/auth/dev-login 三角色各登一次（客户 / 商家 owner / 员工），拿 cookie
  *   2. 客户：store.listNearby → store.getWithServices（服务 + 可约槽位）→ appointment.create
  *      （create 前已完成 push.subscribe；create 后立刻以 watch=<aid> 建立 SSE 流后台读）
- *   3. 商家：appointment.confirm → appointment.assign（派给 groomer 阿强）
+ *   3. 商家：appointment.confirm（批次 S4：create 已落 confirmed，confirm 幂等成功零副作用）
+ *      → appointment.assign（派给 groomer 阿强）
  *   4. 客户：appointment.getCode → 员工（groomer）核销被拒（批次 S1 双角色断言）
  *      → 员工（frontdesk）：appointment.checkin（二维码原文；S1-R1 断言①原指派保留）
  *      → 未指派单前台核销（S1-R1 断言② staff_id 仍 NULL + 无 assigned 事件）
@@ -321,13 +322,16 @@ async function main(): Promise<void> {
       note: 'e2e 验收单',
     },
   });
-  check('appointment.create 成功（pending）', appt.status === 'pending' && !!appt.id, appt);
+  // 批次 S4（任务 A）：免商家确认——create 落库即 confirmed（原断言 pending 已退役）
+  check('appointment.create 成功（S4：落库即 confirmed）', appt.status === 'confirmed' && !!appt.id, appt);
   const aid = appt.id;
   createdAid = aid;
 
-  /* ---------- 5. 建立客户 SSE 流（watch=aid，后台读） ---------- */
+  /* ---------- 5. 建立客户 SSE 流（watch=aid，后台读） ----------
+   * S4 适配：confirmed 事件随 create 即发（早于 SSE 建连），以 last_event_id=0
+   * 触发服务端 replayMissed 补发，事件序列断言口径不变 */
   const sseController = new AbortController();
-  const sseRes = await fetch(`${BASE}/api/events?client_id=${CLIENT_ID}&watch=${aid}`, {
+  const sseRes = await fetch(`${BASE}/api/events?client_id=${CLIENT_ID}&watch=${aid}&last_event_id=0`, {
     headers: { cookie: customerCookie },
     signal: sseController.signal,
   });
@@ -338,7 +342,7 @@ async function main(): Promise<void> {
   startSseReader(sseRes, frames);
   await sleep(300); // 等连接注册进 Hub
 
-  /* ---------- 6. 商家：确认 → 派单（S1-R1：派给 groomer 阿强，验证前台核销豁免归属+不认领） ---------- */
+  /* ---------- 6. 商家：确认（S4 幂等）→ 派单（S1-R1：派给 groomer 阿强，验证前台核销豁免归属+不认领） ---------- */
   const staffList = await trpcQuery<{ staff: Array<{ id: string; name: string; role: string; skills: string[] | null }> }>(
     'store.staffList',
     { cookie: ownerCookie },
@@ -347,11 +351,23 @@ async function main(): Promise<void> {
   check('store.staffList 找到承接美容师（阿强=groomer）', !!staffRow, staffList.staff.map((s) => s.name));
   if (!staffRow) throw new Error('无美容师');
 
-  const confirmed = await trpcMutate<{ status: string }>('appointment.confirm', {
+  // 批次 S4（任务 A）：create 已落 confirmed——confirm 对该单 = 幂等成功（零副作用），
+  // 连调两次均返回 confirmed 且不重复发事件（防旧链路重复调用断裂）
+  const confirmed = await trpcMutate<{ status: string; updatedAt: Date }>('appointment.confirm', {
     cookie: ownerCookie,
     input: { appointmentId: aid },
   });
-  check('appointment.confirm → confirmed', confirmed.status === 'confirmed', confirmed);
+  const confirmed2 = await trpcMutate<{ status: string; updatedAt: Date }>('appointment.confirm', {
+    cookie: ownerCookie,
+    input: { appointmentId: aid },
+  });
+  check(
+    'appointment.confirm 幂等：confirmed 单连调两次均成功且 updatedAt 不变（零副作用）',
+    confirmed.status === 'confirmed' &&
+      confirmed2.status === 'confirmed' &&
+      new Date(confirmed.updatedAt).getTime() === new Date(confirmed2.updatedAt).getTime(),
+    { s1: confirmed.status, s2: confirmed2.status },
+  );
 
   const assigned = await trpcMutate<{ status: string; staffId: string | null }>('appointment.assign', {
     cookie: ownerCookie,
@@ -627,7 +643,8 @@ async function main(): Promise<void> {
   }
   const outboxExpect: Array<[string, number]> = [
     ['appointment.created', 1],
-    ['appointment.confirmed', 1],
+    // S4（任务 A）：confirmed 随 create 发 user+store 双频道；商家 confirm 幂等不再增发
+    ['appointment.confirmed', 2],
     ['appointment.assigned', 2], // staff + customer 双频道
     // B2-8：checkedin / completed 为 appointment + store 双频道各 1 条（本断言 P1 时代后未同步，见批次 7.1 前置项复核）
     ['appointment.checkedin', 2],
@@ -638,8 +655,8 @@ async function main(): Promise<void> {
   ];
   const outboxOk = outboxExpect.every(([t, n]) => (byType.get(t) ?? []).length === n);
   check(
-    `event_outbox 事件齐全（共 ${outboxRows.length} 条 / 期望 17 条）`,
-    outboxOk && outboxRows.length === 17,
+    `event_outbox 事件齐全（共 ${outboxRows.length} 条 / 期望 18 条）`,
+    outboxOk && outboxRows.length === 18,
     Object.fromEntries([...byType].map(([k, v]) => [k, v.length])),
   );
   const assignedChannels = (byType.get('appointment.assigned') ?? []).sort();
