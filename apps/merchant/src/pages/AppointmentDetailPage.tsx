@@ -22,6 +22,7 @@ import { CalendarClock, Check, ChevronLeft, ClipboardCopy, Info, MonitorPlay, Us
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
+  assignSourceLabel,
   cancelSourceLabel,
   customerLabel,
   fenToYuan,
@@ -182,7 +183,15 @@ export default function AppointmentDetailPage() {
             </span>
           </Field>
           <Field label="客户">{customerDisplay}</Field>
-          <Field label="员工">{staffName ?? (appt.staffId ? '（已指派）' : '未指派')}</Field>
+          <Field label="员工">
+            {staffName ?? (appt.staffId ? '（已指派）' : '未指派')}
+            {/* 批次 S4（任务 D）：派单来源标记「自动派单 / 商家改派」 */}
+            {assignSourceLabel(appt.assignSource) ? (
+              <span className="ml-2 rounded-tag bg-brand-secondary-light px-1.5 py-0.5 text-caption text-ink-secondary">
+                {assignSourceLabel(appt.assignSource)}
+              </span>
+            ) : null}
+          </Field>
           <Field label="收款方式">
             {paymentModeLabel(appt.paymentMode)}
             {appt.paidAt ? (

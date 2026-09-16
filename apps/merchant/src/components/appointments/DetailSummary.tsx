@@ -7,6 +7,7 @@
 import { Check, ChevronRight, MonitorPlay } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
+  assignSourceLabel,
   cancelSourceLabel,
   customerLabel,
   fenToYuan,
@@ -66,7 +67,15 @@ export function DetailSummary({
         <Field label="服务" value={`${item.serviceName ?? '—'}（${item.type === 'boarding' ? '寄养' : '洗护'}）`} />
         {/* B3-5 W-4：客户 = 昵称（空则「客户」）+ 手机号后 4 位 */}
         <Field label="客户" value={customerLabel(item.customerName, item.customerPhoneTail)} />
-        <Field label="员工" value={item.staffName ?? '未指派'} />
+        {/* 批次 S4（任务 D）：员工随派单来源标记「自动派单 / 商家改派」 */}
+        <Field
+          label="员工"
+          value={`${item.staffName ?? '未指派'}${
+            item.staffName && assignSourceLabel(item.assignSource)
+              ? `（${assignSourceLabel(item.assignSource)}）`
+              : ''
+          }`}
+        />
         <Field label="收款方式" value={paymentModeLabel(item.paymentMode)} />
         {item.note ? <Field label="备注" value={item.note} /> : null}
         {/* B3-5（W-14）：已取消/取消审核透出取消来源与原因 */}

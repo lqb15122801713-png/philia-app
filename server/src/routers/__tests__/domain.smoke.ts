@@ -6,8 +6,10 @@
  * 覆盖：
  * 1. pet upsert/list/get 归属校验（他人宠物 FORBIDDEN；有关联预约的 staff 可读）
  * 2. store listNearby 只回 active 门店；getWithServices 可约槽 = 营业时间合成栅格
- *    （B3-5 W-2：今天起 7 天，无预建行按默认容量视为可约）合并既有占用行——
- *    满槽不出现、≥当前时间 +1h 缓冲、按服务 duration 过滤连续占用
+ *    （B3-5 W-2：今天起 7 天、≥当前时间 +1h 缓冲）；批次 S4（任务 B）可用性引擎——
+ *    可约 = 目标区间有 ≥1 名 groomer 空闲（排班覆盖 + active + 无冲突预约），
+ *    时段容量 = 空闲 groomer 数（动态）；store_slots 降级为占用记录不参与判定；
+ *    按服务 duration 过滤连续区间（与 9a 引擎时长口径一致）
  * 3. upsertService 越店写 → FORBIDDEN
  * 4. inviteStaff 生成 24h 码；同人复用不重复建行；staffList 聚合返回
  * 5. boarding：in_boarding 夹具 → checkinStay（幂等更新）→ dailyLog 同日两次为 UPSERT
@@ -185,9 +187,26 @@ async function main() {
   created.staffIds.push(staffRow.id);
 
   // 批次 S1：groomer 夹具（checkinStay 角色拒绝断言用）
+  // 批次 S4（任务 B）：可用性引擎按「groomer 空闲」判定可约——夹具 groomer 须带全周排班
+  const GROOMER_FULL_SCHEDULE = {
+    mon: [{ start: '00:00', end: '23:59' }],
+    tue: [{ start: '00:00', end: '23:59' }],
+    wed: [{ start: '00:00', end: '23:59' }],
+    thu: [{ start: '00:00', end: '23:59' }],
+    fri: [{ start: '00:00', end: '23:59' }],
+    sat: [{ start: '00:00', end: '23:59' }],
+    sun: [{ start: '00:00', end: '23:59' }],
+  };
   const [staffGroomerRow] = await db
     .insert(schema.staff)
-    .values({ storeId: storeA.id, userId: staffGroomerUser, name: '烟雾美容师', role: 'groomer', skills: ['boarding'] })
+    .values({
+      storeId: storeA.id,
+      userId: staffGroomerUser,
+      name: '烟雾美容师',
+      role: 'groomer',
+      skills: ['boarding'],
+      schedule: GROOMER_FULL_SCHEDULE,
+    })
     .returning();
   created.staffIds.push(staffGroomerRow.id);
 
@@ -271,30 +290,38 @@ async function main() {
   assert.equal(nearbyGeo.stores[0]!.id, storeB.id, 'geo 粗排最近的门店 B 应排第一');
   assert.ok(!nearbyGeo.stores.some((s) => s.id === storeClosed.id));
 
-  // 时间槽：明天 10:00 起 5 个连续槽，11:00 满槽
+  // 批次 S4（任务 B）：可约判定 = 「目标区间有 ≥1 名 groomer 空闲」，store_slots 降级为
+  // 占用记录不再参与判定。夹具随之改为：groomer 在明天 11:00-11:30 有一条 confirmed
+  // 冲突单（→ 11:00 槽不可约；60min 时长连续口径下 10:30 起始亦被剔除）；
+  // 另插一条明天 14:00 的「满槽」store_slots 行（capacity=1 booked=1）——
+  // 降级后该槽照常可约，作为「不再以 store_slots 判定」的实证。
   const base = new Date();
   base.setDate(base.getDate() + 1);
   base.setHours(10, 0, 0, 0);
-  const slotAt = (i: number, booked: number) => ({
+  await makeAppointment({
+    customerId: customerA,
     storeId: storeA.id,
-    slotStart: new Date(base.getTime() + i * 30 * 60e3),
-    capacity: 2,
-    bookedCount: booked,
+    staffId: staffGroomerRow.id,
+    petId: up1.pet.id,
+    serviceId: svcGroom.id,
+    type: 'grooming',
+    status: 'confirmed',
+    scheduledStart: new Date(base.getTime() + 2 * 30 * 60e3), // 明天 11:00
+    scheduledEnd: new Date(base.getTime() + 3 * 30 * 60e3), // 明天 11:30
   });
-  await db.insert(schema.storeSlots).values([
-    slotAt(0, 0), // 10:00 可约
-    slotAt(1, 0), // 10:30 可约
-    slotAt(2, 2), // 11:00 满
-    slotAt(3, 0), // 11:30 可约
-    slotAt(4, 0), // 12:00 可约
-  ]);
+  await db.insert(schema.storeSlots).values({
+    storeId: storeA.id,
+    slotStart: new Date(base.getTime() + 8 * 30 * 60e3), // 明天 14:00
+    capacity: 1,
+    bookedCount: 1, // 满槽（降级为占用记录后不再影响可约判定）
+  });
 
   const gws = await storeAnon.getWithServices({ storeId: storeA.id });
   assert.equal(gws.store.id, storeA.id);
   assert.ok(gws.services.some((s) => s.id === svcGroom.id), '应返回 active 服务项');
   const slotStarts = gws.slots.map((s) => s.slotStart.getTime());
-  // B3-5（W-2 统一口径）：可约槽 =「今天起 7 天 × 营业时间」合成栅格合并既有占用行——
-  // 不再只回传预建行；全部 ≥ 当前时间 +1h 缓冲、按升序、满槽剔除
+  // B3-5（W-2 统一口径）+ S4（任务 B）：可约槽 =「今天起 7 天 × 营业时间」合成栅格，
+  // 逐槽判定 groomer 空闲（排班覆盖 + 无冲突预约）；全部 ≥ 当前时间 +1h 缓冲、按升序
   assert.ok(slotStarts.length > 4, '合成栅格应覆盖 7 天营业时段（远多于 4 个预建行）');
   assert.ok(
     slotStarts.every((t) => t >= Date.now() + 60 * 60e3 - 5000),
@@ -304,30 +331,42 @@ async function main() {
     slotStarts.every((t, i) => i === 0 || t > slotStarts[i - 1]!),
     '可约槽按 slotStart 升序',
   );
-  assert.ok(!slotStarts.includes(base.getTime() + 2 * 30 * 60e3), '满槽（明天 11:00）不应出现');
+  assert.ok(
+    !slotStarts.includes(base.getTime() + 2 * 30 * 60e3),
+    'S4：groomer 冲突时段（明天 11:00）容量耗尽不显示为可约',
+  );
   for (const i of [0, 1, 3, 4]) {
     assert.ok(
       slotStarts.includes(base.getTime() + i * 30 * 60e3),
-      `明天 10:00+${i * 30}min 有余量槽应出现`,
+      `明天 10:00+${i * 30}min groomer 空闲应可约`,
     );
   }
-  // 合成栅格：无 store_slots 预建行的营业时段按默认容量视为可约（如明天 09:00）
+  // 合成栅格：无冲突的营业时段均可约（如明天 09:00，排班覆盖 + 无冲突单）
   const tomorrow0900 = new Date(base);
   tomorrow0900.setHours(9, 0, 0, 0);
   assert.ok(
     slotStarts.includes(tomorrow0900.getTime()),
-    'W-2：无预建行时段（明天 09:00）合成可约槽（与 create UPSERT 同口径）',
+    'W-2：无预建行时段（明天 09:00）合成可约槽（与 create 同口径）',
   );
+  // S4：store_slots 降级实证——明天 14:00 槽位行已「满」（booked=capacity=1）但仍可约，
+  // 且动态容量 = 空闲 groomer 数（本夹具 1 名 groomer → capacity=1）
+  const slot1400 = gws.slots.find((s) => s.slotStart.getTime() === base.getTime() + 8 * 30 * 60e3);
+  assert.ok(slot1400, 'S4：store_slots 满槽行不再剔除可约槽（明天 14:00 照常可约）');
+  assert.equal(slot1400!.capacity, 1, 'S4：时段容量 = 空闲 groomer 数（动态）');
 
-  // 按服务 duration=60min 过滤：需要 2 个连续有余量槽 → 10:30 起始因 11:00 满槽被剔除，
-  // 10:00 / 11:30 起始仍可约（11:30 起覆盖 11:30/12:00 两槽）
+  // 按服务 duration=60min 过滤：目标区间 2 个连续 30min 全程须 groomer 空闲 →
+  // 10:30 起始（10:30-11:30）与 groomer 冲突单（11:00-11:30）重叠被剔除；
+  // 10:00（10:00-11:00）/ 11:30（11:30-12:30）起始终点相接不算重叠，仍可约
   const gws60 = await storeAnon.getWithServices({ storeId: storeA.id, serviceId: svcGroom.id });
   const starts60 = gws60.slots.map((s) => s.slotStart.getTime());
   assert.ok(starts60.includes(base.getTime()), '60min：10:00 起始可约');
   assert.ok(starts60.includes(base.getTime() + 3 * 30 * 60e3), '60min：11:30 起始可约');
-  assert.ok(!starts60.includes(base.getTime() + 1 * 30 * 60e3), '60min：10:30 起始因 11:00 满槽被剔除');
-  assert.ok(!starts60.includes(base.getTime() + 2 * 30 * 60e3), '60min：11:00 满槽不出现');
-  console.log('✅ 2. store listNearby 仅 active + geo 粗排；getWithServices 合成栅格（W-2 +1h 缓冲/无行默认可约）、满槽剔除、按 duration 过滤连续占用');
+  assert.ok(
+    !starts60.includes(base.getTime() + 1 * 30 * 60e3),
+    'S4：60min 10:30 起始因区间覆盖 groomer 冲突（11:00-11:30）被剔除',
+  );
+  assert.ok(!starts60.includes(base.getTime() + 2 * 30 * 60e3), '60min：11:00 冲突时段不出现');
+  console.log('✅ 2. store listNearby 仅 active + geo 粗排；getWithServices 合成栅格（W-2 +1h 缓冲）+ S4 可用性引擎（groomer 空闲判定/动态容量/store_slots 降级/时长连续）');
 
   /* ===== 3. upsertService 越店写 → FORBIDDEN ===== */
   const svcB = (

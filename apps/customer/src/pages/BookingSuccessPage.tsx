@@ -91,7 +91,8 @@ export default function BookingSuccessPage() {
           </svg>
         </span>
         <h1 className="mt-3 text-title-lg">预约成功</h1>
-        <p className="mt-1 text-body text-ink-secondary">门店确认后会通知你，请留意预约状态</p>
+        {/* 批次 S4：免商家确认——create 落库即 confirmed */}
+        <p className="mt-1 text-body text-ink-secondary">已自动确认，请按时到店并出示预约码</p>
       </div>
 
       {/* 预约摘要 */}

@@ -274,6 +274,12 @@ export const appointments = sqliteTable('appointments', {
     .references(() => stores.id),
   /** 指派员工 ID -> staff.id（可空，到店后分配） */
   staffId: text('staff_id').references(() => staff.id),
+  /**
+   * 派单来源标记（批次 S4 任务 C/D）：auto=下单时自动派单（含客户指定 staffId 的
+   * 下单即指派） | merchant=商家 assign 改派（改派后覆盖为 merchant，assigned 事件
+   * payload.by 即轨迹，不做独立审计表）。NULL = 未派单或 S4 前的历史单。
+   */
+  assignSource: text('assign_source'),
   /** 宠物 ID -> pets.id */
   petId: text('pet_id')
     .notNull()
