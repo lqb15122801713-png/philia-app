@@ -1,0 +1,47 @@
+PASS  dev-login 种子客户  — HTTP 200
+PASS  取真实商品 id（PDP 路由）  — id=01M2J6BT1T5E8QVTM4EH6N547A
+PASS  01-home 主级页 dock 存在且可见
+PASS  01-home 五槽位顺序 首页/预约/philia/商城/我的  — app-dock-home,app-dock-booking,app-dock-philia,app-dock-mall,app-dock-me
+PASS  01-home 中央钮 60px 柠檬黄  — {"w":60,"h":60} rgb(253, 200, 48)
+PASS  01-home 路由感知 active=home  — app-dock-home
+PASS  02-philia 主级页 dock 存在且可见
+PASS  02-philia 五槽位顺序 首页/预约/philia/商城/我的  — app-dock-home,app-dock-booking,app-dock-philia,app-dock-mall,app-dock-me
+PASS  02-philia 中央钮 60px 柠檬黄  — {"w":60,"h":60} rgb(253, 200, 48)
+PASS  02-philia 路由感知 active=philia  — app-dock-philia
+PASS  03-mall 主级页 dock 存在且可见
+PASS  03-mall 五槽位顺序 首页/预约/philia/商城/我的  — app-dock-home,app-dock-booking,app-dock-philia,app-dock-mall,app-dock-me
+PASS  03-mall 中央钮 60px 柠檬黄  — {"w":60,"h":60} rgb(253, 200, 48)
+PASS  03-mall 路由感知 active=mall  — app-dock-mall
+PASS  04-me 主级页 dock 存在且可见
+PASS  04-me 五槽位顺序 首页/预约/philia/商城/我的  — app-dock-home,app-dock-booking,app-dock-philia,app-dock-mall,app-dock-me
+PASS  04-me 中央钮 60px 柠檬黄  — {"w":60,"h":60} rgb(253, 200, 48)
+PASS  04-me 路由感知 active=me  — app-dock-me
+PASS  05-booking-grooming 详情级无 dock
+PASS  05-booking-grooming 返回圆钮存在
+PASS  06-booking-boarding 详情级无 dock
+PASS  06-booking-boarding 返回圆钮存在
+PASS  07-appointments 详情级无 dock
+PASS  07-appointments 返回圆钮存在
+PASS  08-appointment-detail 详情级无 dock
+PASS  08-appointment-detail 返回圆钮存在
+PASS  09-appointment-live 详情级无 dock
+PASS  09-appointment-live 返回圆钮存在
+PASS  10-mall-orders 详情级无 dock
+PASS  10-mall-orders 返回圆钮存在
+PASS  11-mall-cart 详情级无 dock
+PASS  11-mall-cart 返回圆钮存在
+PASS  12-philia-pets 详情级无 dock
+PASS  12-philia-pets 返回圆钮存在
+PASS  13-philia-member 详情级无 dock
+PASS  13-philia-member 返回圆钮存在
+PASS  14-philia-moments 详情级无 dock
+PASS  14-philia-moments 返回圆钮存在
+PASS  15-booking-success 详情级无 dock（流程终点免返回条）
+PASS  16-product-detail 详情级无 dock
+PASS  16-product-detail 返回圆钮存在
+PASS  17-wizard-regression 详情级无 dock
+PASS  17-wizard-regression 返回圆钮存在
+PASS  长按 500ms 弹快捷弹层  — app-dock-sheet-member,app-dock-sheet-rebook
+PASS  弹层含会员码/一键预约  — app-dock-sheet-member,app-dock-sheet-rebook
+
+== 汇总：45/45 PASS ==

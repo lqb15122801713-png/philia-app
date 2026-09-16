@@ -1,0 +1,45 @@
+## 改动域文件清单
+apps/customer/src/index.css
+packages/config/tailwind-preset.js
+packages/shared/src/tokens.ts
+
+## grep #FFAAA5（改动域）
+packages/shared/src/tokens.ts:12: * 深棕墨 #4A3B2E（文字）/ 米白 #F6F1E3（底色）。珊瑚粉 #FFAAA5 已删，全域 0 命中。
+hits=0
+
+## grep text-white（改动域）
+hits=123
+
+## 越档圆角抽查（改动域：22px/18px/24px/10px 等非四档值）
+packages/config/tailwind-preset.js:93:        card: '0 2px 10px rgba(61, 50, 41, 0.05)',
+packages/config/tailwind-preset.js:94:        elevated: '0 8px 24px rgba(61, 50, 41, 0.08)',
+packages/config/tailwind-preset.js:102:        title: ['17px', { lineHeight: '24px', fontWeight: '600' }],
+packages/config/tailwind-preset.js:103:        body: ['15px', { lineHeight: '22px' }],
+packages/config/tailwind-preset.js:104:        'body-lg': ['16px', { lineHeight: '24px' }], // 员工端 ≥16px
+packages/shared/src/tokens.ts:200:  card: '0 2px 10px rgba(61, 50, 41, 0.05)',
+packages/shared/src/tokens.ts:202:  elevated: '0 8px 24px rgba(61, 50, 41, 0.08)',
+packages/shared/src/tokens.ts:249:  title: { size: '17px', lineHeight: '24px', weight: 600 },
+packages/shared/src/tokens.ts:251:  body: { size: '15px', lineHeight: '22px', weight: 400 },
+packages/shared/src/tokens.ts:255:  bodyLg: { size: '16px', lineHeight: '24px', weight: 400 },
+hits=0
+
+## 新增 token 值抽查
+85:        // 既有档保留供旧件，全圆档沿用 full；新件一律走 panel/control/chip/full
+86:        panel: '20px', // 卡（大卡/面板）
+87:        control: '14px', // 控件（按钮/输入/chips 容器）
+88:        chip: '6px', // 小签（角标/小标签）
+97:        hairline: '0 1px 2px rgba(61, 50, 41, 0.04)',
+109:        'caption-xs': ['11px', { lineHeight: '15px' }],
+110:        'body-sm': ['14px', { lineHeight: '20px' }],
+111:        detail: ['28px', { lineHeight: '36px', fontWeight: '600' }],
+112:        'detail-lg': ['32px', { lineHeight: '40px', fontWeight: '600' }],
+136:        'serif-cn': ['Noto Serif SC', 'Songti SC', 'serif'],
+      2 '11px'
+      4 '14px'
+      2 '15px'
+      4 '20px'
+      2 '28px'
+      2 '32px'
+      2 '36px'
+      2 '40px'
+      2 '6px'

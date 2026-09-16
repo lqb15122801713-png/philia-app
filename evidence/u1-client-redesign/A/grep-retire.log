@@ -1,0 +1,15 @@
+## U1-A 退役删除 grep 残留（代码域：apps/packages/server/scripts，排除 node_modules 与历史 docs）
+
+### ConvexTabBar|HomeDock|components/TabBar（.ts/.tsx/.js/.mjs/.json）
+apps/customer/src/App.tsx:75:  // 旧 ConvexTabBar（五栏凸起）与 9a.3 HomeDock（首页三栏 pill）已退役删除。
+apps/customer/src/components/AppDock.tsx:9: *   （ConvexTabBar 接线）长按交互：500ms 触发、10px 移动取消、长按后吞掉 click；
+apps/customer/src/pages/HomePage.tsx:22: *    + 24px 线图标墨色）——App.tsx 主级路径统一渲染，首页专属 HomeDock 退役；
+apps/customer/src/pages/HomePage.tsx:157:          首页专属 HomeDock 已随旧 ConvexTabBar 一并退役 */}
+apps/merchant/src/App.tsx:15:import TabBar from './components/TabBar'
+apps/staff/src/App.tsx:5:import TabBar from './components/TabBar'
+packages/shared/src/index.ts:29:// U1-A：ConvexTabBar（五栏凸起 dock）已随客户端全局 dock 统一退役删除，
+
+命中行均为「退役说明注释」，可执行引用=0
+
+### philia-tab-icon（专属图标资产已随删）
+exit=1（1=零命中）
