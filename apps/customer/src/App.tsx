@@ -17,6 +17,7 @@ import HomePage from './pages/HomePage'
 import MallOrdersPage from './pages/MallOrdersPage'
 import MallPage from './pages/MallPage'
 import MePage from './pages/MePage'
+import MemberCardPage from './pages/MemberCardPage'
 import MemberPage from './pages/MemberPage'
 import MomentsPage from './pages/MomentsPage'
 import PetsPage from './pages/PetsPage'
@@ -62,6 +63,8 @@ function ProtectedRoutes() {
       <Route path="/appointments/:id" element={<AppointmentDetailPage />} />
       <Route path="/appointments/:id/live" element={<AppointmentLivePage />} />
       <Route path="/me" element={<MePage />} />
+      {/* U1-H：会员卡页新路由（信息展示 v0；详情级——无 dock，统一返回条） */}
+      <Route path="/me/card" element={<MemberCardPage />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )

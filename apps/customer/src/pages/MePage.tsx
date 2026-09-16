@@ -19,9 +19,7 @@ import {
   CalendarCheck,
   ChevronRight,
   Crown,
-  Info,
   LogOut,
-  MessageSquare,
   Package,
   PawPrint,
   Plus,
@@ -29,8 +27,8 @@ import {
 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { getApiBase, logout, usePhiliaClient } from '@philia/shared'
-import { EmptyState, ErrorState, LoadingBlock, tabularNums } from '../components/home/common'
+import { getApiBase, logout, useMe, usePhiliaClient } from '@philia/shared'
+import { EmptyState, ErrorState, LoadingBlock } from '../components/home/common'
 
 const DAY_MS = 86_400_000
 
@@ -84,7 +82,7 @@ function UserCard() {
     : null
 
   return (
-    <div data-testid="me-user-card" className="flex items-center gap-4 rounded-card bg-card p-4 shadow-card">
+    <div data-testid="me-user-card" className="u1-card flex items-center gap-4 p-4">
       {user.avatarUrl ? (
         <img
           src={user.avatarUrl}
@@ -99,12 +97,85 @@ function UserCard() {
       <div className="min-w-0 flex-1">
         <p data-testid="me-nickname" className="truncate text-title">{nickname}</p>
         {joinDays !== null ? (
-          <p className="mt-1 font-number text-caption text-ink-secondary" style={tabularNums}>
+          <p className="u1-num mt-1 text-caption text-ink-secondary">
             加入菲丽亚第 {joinDays} 天
           </p>
         ) : null}
       </div>
     </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* 1.5 U1-H 纸面细线会员卡（GUARDIAN CARD · 三真数；档名/守护值无真实来源——
+ *     同 U1-C/F 口径不出现；已省行无折扣引擎算不出 → 整行隐去）            */
+/* ------------------------------------------------------------------ */
+
+function GuardianCard() {
+  const { trpc } = usePhiliaClient()
+  const { user } = useMe()
+  const meRawQ = useQuery({
+    queryKey: ['auth', 'me', 'raw'],
+    queryFn: () => trpc.auth.me.query(),
+    enabled: !!user,
+    staleTime: 60_000,
+  })
+  const mineQ = useQuery({
+    queryKey: ['appointment', 'listMine'],
+    queryFn: () => trpc.appointment.listMine.query(),
+    enabled: !!user,
+    staleTime: 60_000,
+  })
+
+  if (meRawQ.isPending || mineQ.isPending) return <LoadingBlock lines={2} />
+  if (meRawQ.isError || mineQ.isError) {
+    return (
+      <ErrorState
+        message="会员卡加载失败"
+        onRetry={() => {
+          void meRawQ.refetch()
+          void mineQ.refetch()
+        }}
+      />
+    )
+  }
+
+  const createdAt = meRawQ.data.user.createdAt
+  const joinDays = createdAt
+    ? Math.max(1, Math.floor((Date.now() - new Date(createdAt).getTime()) / DAY_MS) + 1)
+    : null
+  const completed = mineQ.data.groups.completed
+  const totalFen = completed.reduce((s, a) => s + a.priceFen, 0)
+
+  const stats = [
+    { label: '陪伴天数', value: joinDays !== null ? `${joinDays} 天` : null },
+    { label: '服务次数', value: completed.length > 0 ? `${completed.length} 次` : null },
+    { label: '累计消费', value: totalFen > 0 ? `¥${(totalFen / 100).toFixed(totalFen % 100 === 0 ? 0 : 2)}` : null },
+  ].filter((s) => s.value !== null)
+
+  return (
+    <Link
+      to="/me/card"
+      data-testid="me-guardian-card"
+      className="u1-card block p-4 transition-transform duration-120 ease-philia-spring active:scale-[0.99]"
+    >
+      <div className="flex items-baseline justify-between">
+        <p className="text-caption-xs tracking-[0.22em] text-ink-secondary">GUARDIAN CARD</p>
+        <span className="text-caption-xs text-ink-secondary" aria-hidden="true">›</span>
+      </div>
+      {stats.length > 0 ? (
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {stats.map((s) => (
+            <p key={s.label} className="text-center">
+              <span className="u1-num block text-body-sm font-semibold leading-5">{s.value}</span>
+              <span className="block text-caption-xs leading-4 text-ink-secondary">{s.label}</span>
+            </p>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-2 text-caption text-ink-secondary">会员细则以门店公布为准</p>
+      )}
+    </Link>
   )
 }
 
@@ -147,7 +218,7 @@ function PetsSection() {
   }
 
   return (
-    <section data-testid="me-pets" className="rounded-card bg-card p-4 shadow-card">
+    <section data-testid="me-pets" className="u1-card p-4">
       <div className="mb-3 flex items-baseline justify-between">
         <h2 className="text-title">我的宠物</h2>
         <Link to="/philia/pets" className="text-caption text-ink-secondary">
@@ -194,7 +265,8 @@ function PetsSection() {
 const ENTRIES: Array<{ to: string; label: string; icon: typeof Crown }> = [
   { to: '/appointments', label: '我的预约', icon: CalendarCheck },
   { to: '/mall/orders', label: '我的订单', icon: Package },
-  { to: '/philia/member', label: '会员卡', icon: Crown },
+  // U1-H：会员卡入口指向新路由 /me/card（信息展示 v0）
+  { to: '/me/card', label: '会员卡', icon: Crown },
   { to: '/philia/pets', label: '宠物档案', icon: PawPrint },
   { to: '/philia/moments', label: '宠友圈', icon: Users },
 ]
@@ -204,7 +276,7 @@ function EntryList() {
     <nav
       data-testid="me-entries"
       aria-label="功能入口"
-      className="divide-y divide-line-divider rounded-card bg-card shadow-card"
+      className="u1-card divide-y divide-line-divider"
     >
       {ENTRIES.map(({ to, label, icon: Icon }) => (
         <Link key={to} to={to} className="flex items-center gap-3 px-4 py-3.5">
@@ -219,32 +291,23 @@ function EntryList() {
 
 /* ------------------------------------------------------------------ */
 /* 4. 设置区（含退出登录确认弹窗）                                        */
+/*    U1-H：意见反馈/关于菲丽亚为 toast「即将上线」假按钮——按老板铁则          */
+/*    「每个按钮要么通真实链路、要么不存在」整行移除，不留花架子。              */
 /* ------------------------------------------------------------------ */
 
 function SettingsCard({
-  onComingSoon,
   onRequestLogout,
 }: {
-  onComingSoon: () => void
   onRequestLogout: () => void
 }) {
-  const rowCls = 'flex w-full items-center gap-3 px-4 py-3.5 text-left'
   return (
-    <div
-      data-testid="me-settings"
-      className="divide-y divide-line-divider rounded-card bg-card shadow-card"
-    >
-      <button type="button" onClick={onComingSoon} className={rowCls}>
-        <MessageSquare className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
-        <span className="flex-1 text-body">意见反馈</span>
-        <ChevronRight className="h-4 w-4 text-ink-placeholder" strokeWidth={1.5} />
-      </button>
-      <button type="button" onClick={onComingSoon} className={rowCls}>
-        <Info className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
-        <span className="flex-1 text-body">关于菲丽亚</span>
-        <ChevronRight className="h-4 w-4 text-ink-placeholder" strokeWidth={1.5} />
-      </button>
-      <button type="button" onClick={onRequestLogout} className={rowCls} data-testid="me-logout-btn">
+    <div data-testid="me-settings" className="u1-card">
+      <button
+        type="button"
+        onClick={onRequestLogout}
+        className="flex w-full items-center gap-3 px-4 py-3.5 text-left"
+        data-testid="me-logout-btn"
+      >
         <LogOut className="h-5 w-5 text-danger-deep" strokeWidth={1.5} />
         <span className="flex-1 text-body text-danger-deep">退出登录</span>
       </button>
@@ -331,12 +394,11 @@ export default function MePage() {
 
       <div className="mt-4 flex flex-col gap-3">
         <UserCard />
+        {/* U1-H：纸面细线会员卡（GUARDIAN CARD·三真数 → /me/card）；已省行隐去（无折扣引擎） */}
+        <GuardianCard />
         <PetsSection />
         <EntryList />
-        <SettingsCard
-          onComingSoon={() => showToast('即将上线，敬请期待')}
-          onRequestLogout={() => setConfirmOpen(true)}
-        />
+        <SettingsCard onRequestLogout={() => setConfirmOpen(true)} />
       </div>
 
       {confirmOpen ? (
