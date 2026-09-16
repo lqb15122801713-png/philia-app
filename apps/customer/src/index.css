@@ -65,6 +65,23 @@
   src: url('/fonts/noto-sans-sc-chinese-simplified-700.woff2') format('woff2');
 }
 
+/* U1-B（v9.1）：Noto Serif SC 中文展示位衬线。woff2 由产品侧随后入库（同 PR #15 流程）；
+   文件未入库前 @font-face 静默 404，自动回退 "Songti SC", serif（font-serif-cn 链），无闪断不报错。 */
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/noto-serif-sc-chinese-simplified-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/noto-serif-sc-chinese-simplified-700.woff2') format('woff2');
+}
+
 @layer base {
   /* shadcn light 变量 · 对齐冻结表 4.1（docs/BRAND-TOKENS-v1.1.md §三） */
   :root {
@@ -141,5 +158,37 @@
   body {
     /* 品牌画布米白 #F6F1E3 + 深棕墨正文 #4A3B2E（token: bg.canvas / text.primary） */
     @apply bg-canvas text-ink font-sans;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* U1-B 设计基件（v9.1）：四档圆角 / 细线 ring / 近零影 / 衬线展示位 / 数字等宽。      */
+/* token 来源：@philia/config/tailwind-preset（panel 20 / control 14 / chip 6 /     */
+/* full；line.ring rgba(74,59,46,.09)；shadow-hairline）。新件一律走基件，旧件分批迁移。 */
+/* -------------------------------------------------------------------------- */
+@layer components {
+  /* 深度策略组合：1px 暖墨细线 ring + 近零软影（替代旧 shadow-card/elevated 层级） */
+  .u1-ring {
+    @apply shadow-hairline ring-1 ring-line-ring;
+  }
+  /* 卡：白底 + 20px 圆角 + 细线 ring + 近零影 */
+  .u1-card {
+    @apply u1-ring rounded-panel bg-card;
+  }
+  /* 控件：14px 圆角（按钮/输入/chips 容器，配合 bg/border 使用） */
+  .u1-control {
+    @apply rounded-control;
+  }
+  /* 小签：6px 圆角（角标/小标签） */
+  .u1-chip {
+    @apply rounded-chip;
+  }
+  /* 数字与价格：Montserrat 字族 + tabular-nums 等宽（金额/时间/编号一律使用） */
+  .u1-num {
+    @apply font-number tabular-nums;
+  }
+  /* 中文展示位衬线：Noto Serif SC → Songti SC → serif（缺失静默回退） */
+  .u1-serif {
+    @apply font-serif-cn;
   }
 }

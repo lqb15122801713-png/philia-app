@@ -73,6 +73,8 @@ export const colors = {
     strong: '#DDD1C6',
     /** 更浅的分隔线（列表项 hairline，hue→27.9°）。 */
     divider: '#F0EAE5',
+    /** U1-B 新增（v9.1 深度策略）：1px 暖墨细线 ring，替代投影做层级。 */
+    ring: 'rgba(74, 59, 46, .09)',
   },
   /** 苔绿 · 成功 / 完成态。功能色原值保留（确认书第 1 条），不占品牌位。 */
   success: {
@@ -179,6 +181,14 @@ export const radius = {
   sheet: '20px',
   /** 按钮全圆角胶囊 / 圆形按钮。锁定值。 */
   full: '9999px',
+  /* U1-B 新增（v9.1 圆角四档：卡 20 / 控件 14 / 小签 6 / 全圆）；
+     既有档保留供旧件，全圆档沿用 full；新件一律走 panel/control/chip/full */
+  /** 卡（大卡/面板）。 */
+  panel: '20px',
+  /** 控件（按钮/输入/chips 容器）。 */
+  control: '14px',
+  /** 小签（角标/小标签）。 */
+  chip: '6px',
 } as const;
 
 /* ------------------------------------------------------------------------ */
@@ -195,6 +205,8 @@ export const shadows = {
   /** 呼吸光环关键帧起止（配合 motion.halo，1.8s 循环；随主色）。锁定值。 */
   haloFrom: '0 0 0 0 rgba(253, 200, 48, 0.45)',
   haloTo: '0 0 0 14px rgba(253, 200, 48, 0)',
+  /** U1-B 新增（v9.1 深度策略）：近零软影，与 border.ring 细线 ring 配套使用。 */
+  hairline: '0 1px 2px rgba(61, 50, 41, 0.04)',
 } as const;
 
 /* ------------------------------------------------------------------------ */
@@ -217,6 +229,11 @@ export const fontFamily = {
    * 搭配 numericStyle（tabular-nums）获得等宽感，金额、时间、编号一律使用。
    */
   number: 'Montserrat, "Noto Sans SC", "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif',
+  /**
+   * U1-B 新增（v9.1）：中文展示位衬线链。woff2 产品侧随后入库，
+   * 未入库时静默回退 Songti SC / 系统 serif，不报错；只用于中文展示位，不承载正文。
+   */
+  serifCn: '"Noto Serif SC", "Songti SC", serif',
 } as const;
 
 /** 数字等宽感样式：价格 / 倒计时 / 编号元素必须带上。 */
@@ -238,6 +255,16 @@ export const fontSize = {
   bodyLg: { size: '16px', lineHeight: '24px', weight: 400 },
   /** 价格大字：配合 fontFamily.number + numericStyle。 */
   price: { size: '20px', lineHeight: '28px', weight: 600 },
+  /* U1-B 新增（v9.1 字阶 11/12/14/17/20，详情页可 28/32）；
+     12/17/20 已由 caption/title/titleLg 覆盖，此处补 11/14/28/32 四档 */
+  /** 极小辅助字（dock 标签/角标）。 */
+  captionXs: { size: '11px', lineHeight: '15px', weight: 400 },
+  /** v9.1 正文档（15 既有档保留供旧件）。 */
+  bodySm: { size: '14px', lineHeight: '20px', weight: 400 },
+  /** 详情页大字一档。 */
+  detail: { size: '28px', lineHeight: '36px', weight: 600 },
+  /** 详情页大字二档。 */
+  detailLg: { size: '32px', lineHeight: '40px', weight: 600 },
 } as const;
 
 /* ------------------------------------------------------------------------ */
@@ -333,6 +360,12 @@ export const cssVars = {
   '--radius-full': radius.full,
   '--shadow-card': shadows.card,
   '--shadow-philia': shadows.philia,
+  /* U1-B 新增（v9.1 四档圆角 / 细线 ring / 近零影） */
+  '--radius-panel': radius.panel,
+  '--radius-control': radius.control,
+  '--radius-chip': radius.chip,
+  '--border-ring': colors.border.ring,
+  '--shadow-hairline': shadows.hairline,
 } as const;
 
 /** 聚合导出，便于 `import { tokens } from '@philia/shared/tokens'`。 */
