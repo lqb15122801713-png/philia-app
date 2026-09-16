@@ -17,6 +17,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import CartLink from '../components/mall/CartLink';
 import ConfirmSheet from '../components/mall/ConfirmSheet';
+import { EmptyState } from '../components/home/common';
 import { useMallToast } from '../components/mall/MallToast';
 import { CartProvider, useCart, type AddInput } from '../components/mall/cartStore';
 import { fenToYuan } from '../components/mall/format';
@@ -229,22 +230,23 @@ function MallInner() {
           </button>
         </div>
       ) : items.length === 0 ? (
-        /* 空态：品牌插画 */
-        <div className="mt-8 flex flex-col items-center rounded-card bg-card px-4 py-10 shadow-card">
-          <img src="/brand/empty-appointments-800.png" alt="暂无商品" className="w-48 max-w-full rounded-card" />
-          <p className="mt-4 text-title">没有找到相关商品</p>
-          <p className="mt-1 text-body text-ink-secondary">
-            {keyword ? `换个关键词试试，或看看其他分类` : '这个分类暂时没有商品，看看别的吧'}
-          </p>
-          {keyword ? (
-            <button
-              type="button"
-              onClick={() => setSearchText('')}
-              className="mt-5 rounded-full bg-brand-primary px-6 py-2.5 text-body text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
-            >
-              清空搜索
-            </button>
-          ) : null}
+        /* 空态：U1-I 全域统一组件（philia 插画 + 一句话 + 一行动） */
+        <div className="mt-8">
+          <EmptyState
+            title="没有找到相关商品"
+            desc={keyword ? '换个关键词试试，或看看其他分类' : '这个分类暂时没有商品，看看别的吧'}
+            action={
+              keyword ? (
+                <button
+                  type="button"
+                  onClick={() => setSearchText('')}
+                  className="mt-3 rounded-full bg-brand-primary px-6 py-2.5 text-body text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                >
+                  清空搜索
+                </button>
+              ) : undefined
+            }
+          />
         </div>
       ) : (
         <>

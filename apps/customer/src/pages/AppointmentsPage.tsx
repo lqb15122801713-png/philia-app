@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
 import PageHeader from '@/components/PageHeader';
+import { EmptyState } from '@/components/home/common';
 import {
   APPT_STATUS_META,
   APPT_TYPE_LABEL,
@@ -101,17 +102,20 @@ export default function AppointmentsPage() {
       ) : listQ.isError ? (
         <p className="mt-10 text-center text-body text-ink-secondary">加载失败，请下拉重试</p>
       ) : totalCount === 0 ? (
-        /* 全局空状态（品牌插画） */
-        <div className="mt-10 flex flex-col items-center">
-          <img src="./brand/empty-appointments-800.png" alt="暂无预约" className="w-56 max-w-full rounded-card" />
-          <p className="mt-4 text-title">还没有预约</p>
-          <p className="mt-1 text-body text-ink-secondary">给毛孩子安排一次舒服的洗护吧</p>
-          <Link
-            to="/booking"
-            className="mt-6 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink shadow-card transition-transform duration-120 ease-philia-spring active:scale-92"
-          >
-            立即预约
-          </Link>
+        /* U1-I：全域统一空态组件 */
+        <div className="mt-10">
+          <EmptyState
+            title="还没有预约"
+            desc="给毛孩子安排一次舒服的洗护吧"
+            action={
+              <Link
+                to="/booking"
+                className="mt-4 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+              >
+                立即预约
+              </Link>
+            }
+          />
         </div>
       ) : (
         <>

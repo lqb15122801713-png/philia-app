@@ -10,6 +10,7 @@
 import { Check, Minus, Plus, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CartProvider, MAX_QTY, useCart, type CartItem } from '../components/mall/cartStore';
+import { EmptyState } from '../components/home/common';
 import { fenToYuan } from '../components/mall/format';
 import { useMallToast } from '../components/mall/MallToast';
 import PageHeader from '../components/PageHeader';
@@ -119,16 +120,20 @@ function CartInner() {
       />
 
       {cart.items.length === 0 ? (
-        <div className="mt-8 flex flex-col items-center rounded-card bg-card px-4 py-10 shadow-card">
-          <img src="/brand/empty-appointments-800.png" alt="购物车为空" className="w-48 max-w-full rounded-card" />
-          <p className="mt-4 text-title">购物车还是空的</p>
-          <p className="mt-1 text-body text-ink-secondary">给毛孩子挑点好吃的、好玩的吧</p>
-          <Link
-            to="/mall"
-            className="mt-6 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
-          >
-            去逛逛
-          </Link>
+        <div className="mt-8">
+          {/* U1-I：全域统一空态组件 */}
+          <EmptyState
+            title="购物车还是空的"
+            desc="给毛孩子挑点好吃的、好玩的吧"
+            action={
+              <Link
+                to="/mall"
+                className="mt-4 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+              >
+                去逛逛
+              </Link>
+            }
+          />
         </div>
       ) : (
         <>

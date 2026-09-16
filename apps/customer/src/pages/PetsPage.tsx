@@ -11,8 +11,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Cake, PawPrint, Pencil, Plus, Scale, Syringe, X } from 'lucide-react'
 import { useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { z } from 'zod'
-import { getApiBase, uploadImage, usePhiliaClient } from '@philia/shared'
+import { getApiBase, uploadImage, useMe, usePhiliaClient } from '@philia/shared'
 import PageHeader from '@/components/PageHeader'
 import {
   EmptyState,
@@ -91,7 +92,7 @@ const SPECIES_OPTIONS: Array<{ value: FormState['species']; label: string }> = [
 function VaccineBadge({ until }: { until: string | null }) {
   if (!until) {
     return (
-      <span className="rounded-tag bg-sunken px-2 py-1 text-caption text-ink-placeholder">
+      <span className="rounded-chip bg-sunken px-2 py-1 text-caption-xs text-ink-placeholder">
         未登记疫苗
       </span>
     )
@@ -99,20 +100,22 @@ function VaccineBadge({ until }: { until: string | null }) {
   const days = daysUntil(until)
   if (days < 0) {
     return (
-      <span className="rounded-tag bg-danger-light px-2 py-1 text-caption text-danger-deep">
+      <span className="rounded-chip bg-danger-light px-2 py-1 text-caption-xs text-danger-deep">
         疫苗已过期 · 寄养前需补种
       </span>
     )
   }
   if (days < 30) {
+    /* U1-I：柠檬=到期提醒（v9.1 色票；真实 vaccineValidUntil 驱动） */
     return (
-      <span className="rounded-tag bg-brand-secondary-light px-2 py-1 text-caption text-brand-primary-pressed">
+      <span className="rounded-chip bg-brand-primary-light px-2 py-1 text-caption-xs text-ink">
         疫苗 {days} 天后到期 · 寄养需有效期内
       </span>
     )
   }
+  /* U1-I：薄荷=正常（安心状态位） */
   return (
-    <span className="rounded-tag bg-success-light px-2 py-1 text-caption text-success-deep">
+    <span className="rounded-chip bg-brand-secondary-light px-2 py-1 text-caption-xs text-ink">
       疫苗有效至 {until}
     </span>
   )
@@ -458,6 +461,52 @@ function CustomTagInput({ onAdd, disabled }: { onAdd: (tag: string) => void; dis
 }
 
 /* ------------------------------------------------------------------ */
+/* U1-I 洗护史时间线（真实完成单；同款再约=现成预填链路 URL 参数直达单屏）      */
+/* ------------------------------------------------------------------ */
+
+function PetGroomingHistory({ petId }: { petId: string }) {
+  const { trpc } = usePhiliaClient()
+  const { user } = useMe()
+  const mineQ = useQuery({
+    queryKey: ['appointment', 'listMine'],
+    queryFn: () => trpc.appointment.listMine.query(),
+    enabled: !!user,
+    staleTime: 60_000,
+  })
+
+  const rows = (mineQ.data?.groups.completed ?? [])
+    .filter((a) => a.type === 'grooming' && a.petId === petId)
+    .slice(0, 3)
+  if (rows.length === 0) return null
+
+  return (
+    <div className="mt-3 border-t border-[rgba(74,59,46,.09)] pt-2.5" data-testid={`pet-history-${petId}`}>
+      <p className="text-caption-xs text-ink-placeholder">洗护史</p>
+      <ul className="mt-1.5 flex flex-col gap-1.5">
+        {rows.map((a) => {
+          const d = new Date(a.completedAt ?? a.scheduledStart)
+          return (
+            <li key={a.id} className="flex items-center justify-between gap-2 text-caption">
+              <span className="u1-num shrink-0 text-ink-secondary">
+                {d.getMonth() + 1}.{d.getDate()}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-ink">{a.serviceName ?? '洗护'}</span>
+              <Link
+                to={`/booking/grooming?storeId=${encodeURIComponent(a.storeId)}&serviceId=${encodeURIComponent(a.serviceId)}&petId=${encodeURIComponent(petId)}`}
+                data-testid={`pet-rebook-${a.id}`}
+                className="shrink-0 text-caption-xs font-medium text-ink underline-offset-2 hover:underline"
+              >
+                同款再约 ›
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
 /* 页面                                                                 */
 /* ------------------------------------------------------------------ */
 
@@ -513,19 +562,22 @@ export default function PetsPage() {
         ) : null}
 
         {petsQuery.data?.map((pet) => (
-          <article key={pet.id} className="rounded-card bg-card p-4 shadow-card">
+          <article key={pet.id} className="u1-card p-4">
             <div className="flex items-start gap-3">
-              {pet.avatarUrl ? (
-                <img
-                  src={pet.avatarUrl}
-                  alt={pet.name}
-                  className="h-14 w-14 shrink-0 rounded-full object-cover"
-                />
-              ) : (
-                <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand-secondary-light">
-                  <PawPrint className="h-6 w-6 text-brand-primary" strokeWidth={1.5} />
-                </span>
-              )}
+              {/* U1-I 头图：圆形双细线环（同 philia 页形象位口径） */}
+              <span className="shrink-0 rounded-full p-1 ring-1 ring-line-ring">
+                {pet.avatarUrl ? (
+                  <img
+                    src={pet.avatarUrl}
+                    alt={pet.name}
+                    className="h-14 w-14 rounded-full object-cover ring-1 ring-line-ring"
+                  />
+                ) : (
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-secondary-light ring-1 ring-line-ring">
+                    <PawPrint className="h-6 w-6 text-brand-primary" strokeWidth={1.5} />
+                  </span>
+                )}
+              </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
                   <p className="truncate text-body font-semibold">{pet.name}</p>
@@ -542,24 +594,27 @@ export default function PetsPage() {
                   {{ dog: '狗狗', cat: '猫咪', other: '其他' }[pet.species] ?? '其他'}
                   {pet.breed ? ` · ${pet.breed}` : ''}
                 </p>
-                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-caption text-ink-secondary">
-                  {pet.birthday ? (
-                    <span className="flex items-center gap-1">
-                      <Cake className="h-3.5 w-3.5" strokeWidth={1.5} />
-                      {formatDateCn(`${pet.birthday}T00:00:00`)}
-                    </span>
-                  ) : null}
-                  {pet.weightKg !== null ? (
-                    <span className="flex items-center gap-1">
-                      <Scale className="h-3.5 w-3.5" strokeWidth={1.5} />
-                      {pet.weightKg} kg
-                    </span>
-                  ) : null}
-                  {pet.neutered ? <span>已绝育</span> : null}
-                </div>
-                <div className="mt-2 flex items-center gap-1.5">
-                  <Syringe className="h-3.5 w-3.5 text-ink-placeholder" strokeWidth={1.5} />
-                  <VaccineBadge until={pet.vaccineValidUntil} />
+                {/* U1-I 指标格：疫苗（薄荷正常/柠檬到期，真实 vaccineValidUntil）/ 生日 / 体重 */}
+                <div className="mt-2.5 grid grid-cols-1 gap-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <Syringe className="h-3.5 w-3.5 text-ink-placeholder" strokeWidth={1.5} />
+                    <VaccineBadge until={pet.vaccineValidUntil} />
+                  </div>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-caption text-ink-secondary">
+                    {pet.birthday ? (
+                      <span className="flex items-center gap-1">
+                        <Cake className="h-3.5 w-3.5" strokeWidth={1.5} />
+                        {formatDateCn(`${pet.birthday}T00:00:00`)}
+                      </span>
+                    ) : null}
+                    {pet.weightKg !== null ? (
+                      <span className="flex items-center gap-1">
+                        <Scale className="h-3.5 w-3.5" strokeWidth={1.5} />
+                        {pet.weightKg} kg
+                      </span>
+                    ) : null}
+                    {pet.neutered ? <span>已绝育</span> : null}
+                  </div>
                 </div>
                 {pet.temperamentTags && pet.temperamentTags.length > 0 ? (
                   <div className="mt-2 flex flex-wrap gap-1.5">
@@ -573,6 +628,8 @@ export default function PetsPage() {
                     ))}
                   </div>
                 ) : null}
+                {/* U1-I 洗护史时间线：真实完成单 + 同款再约（现成预填链路） */}
+                <PetGroomingHistory petId={pet.id} />
               </div>
             </div>
           </article>

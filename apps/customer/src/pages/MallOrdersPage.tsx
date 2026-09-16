@@ -20,6 +20,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import CashierModal, { type CashierOrder } from '../components/mall/CashierModal';
 import PageHeader from '../components/PageHeader';
 import ConfirmSheet from '../components/mall/ConfirmSheet';
+import { EmptyState } from '../components/home/common';
 import { CartProvider, MAX_QTY, useCart } from '../components/mall/cartStore';
 import { fenToYuan, fmtOrderTime } from '../components/mall/format';
 import { friendlyError, useMallToast } from '../components/mall/MallToast';
@@ -322,17 +323,20 @@ function MallOrdersInner() {
           </button>
         </div>
       ) : totalCount === 0 ? (
-        /* 全局空态：品牌插画 */
-        <div className="mt-8 flex flex-col items-center rounded-card bg-card px-4 py-10 shadow-card">
-          <img src="/brand/empty-appointments-800.png" alt="暂无订单" className="w-48 max-w-full rounded-card" />
-          <p className="mt-4 text-title">还没有商品订单</p>
-          <p className="mt-1 text-body text-ink-secondary">去商城给毛孩子挑点好物吧</p>
-          <Link
-            to="/mall"
-            className="mt-6 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
-          >
-            去逛逛
-          </Link>
+        /* U1-I：全域统一空态组件 */
+        <div className="mt-8">
+          <EmptyState
+            title="还没有商品订单"
+            desc="去商城给毛孩子挑点好物吧"
+            action={
+              <Link
+                to="/mall"
+                className="mt-4 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+              >
+                去逛逛
+              </Link>
+            }
+          />
         </div>
       ) : (
         <>
