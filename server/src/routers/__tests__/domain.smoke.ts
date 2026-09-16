@@ -145,6 +145,7 @@ async function main() {
   const merchant1 = await makeUser('烟雾商家1', ['merchant_owner']);
   const merchant2 = await makeUser('烟雾商家2', ['merchant_owner']);
   const staffUser = await makeUser('烟雾员工', ['staff']);
+  const staffGroomerUser = await makeUser('烟雾美容师', ['staff']);
 
   const [storeA] = await db
     .insert(schema.stores)
@@ -178,9 +179,17 @@ async function main() {
 
   const [staffRow] = await db
     .insert(schema.staff)
-    .values({ storeId: storeA.id, userId: staffUser, name: '烟雾员工', skills: ['boarding'] })
+    // 批次 S1：boarding.checkinStay 收口前台——夹具员工须为 frontdesk
+    .values({ storeId: storeA.id, userId: staffUser, name: '烟雾员工', role: 'frontdesk', skills: ['boarding'] })
     .returning();
   created.staffIds.push(staffRow.id);
+
+  // 批次 S1：groomer 夹具（checkinStay 角色拒绝断言用）
+  const [staffGroomerRow] = await db
+    .insert(schema.staff)
+    .values({ storeId: storeA.id, userId: staffGroomerUser, name: '烟雾美容师', role: 'groomer', skills: ['boarding'] })
+    .returning();
+  created.staffIds.push(staffGroomerRow.id);
 
   const ctxA = ctxOf({ id: customerA, nickname: '烟雾客户A', roles: ['customer'] });
   const ctxB = ctxOf({ id: customerB, nickname: '烟雾客户B', roles: ['customer'] });
@@ -196,6 +205,10 @@ async function main() {
   const storeM2 = storeRouter.createCaller(ctxM2);
   const boardingStaff = boardingRouter.createCaller(ctxStaff);
   const boardingM1 = boardingRouter.createCaller(ctxM1);
+  // 批次 S1：groomer caller（checkinStay 应被角色收口拒绝）
+  const boardingGroomer = boardingRouter.createCaller(
+    ctxOf({ id: staffGroomerUser, nickname: '烟雾美容师', roles: ['staff'], staffId: staffGroomerRow.id, storeId: storeA.id }),
+  );
 
   /* ===== 1. pet upsert/list/get 归属校验 ===== */
   const up1 = await petA.upsert({
@@ -405,6 +418,14 @@ async function main() {
   created.outboxChannels.push(`user:${customerB}`, `store:${storeA.id}`, `appointment:${apptBoard1}`);
 
   // checkinStay：入住登记 + 幂等更新
+  // 批次 S1（任务 B）：groomer 入住登记 → FORBIDDEN「核销需前台账号操作」（与 checkin 同口径）
+  await assert.rejects(
+    boardingGroomer.checkinStay({ appointmentId: apptBoard1, checkinWeightKg: 4.4, belongings: [] }),
+    (e: unknown) =>
+      (e as { code?: string; message?: string })?.code === 'FORBIDDEN' &&
+      /核销需前台账号操作/.test((e as { message?: string })?.message ?? ''),
+    'groomer checkinStay 应被前台角色收口拒绝',
+  );
   const ci1 = await boardingStaff.checkinStay({
     appointmentId: apptBoard1,
     checkinWeightKg: 4.4,

@@ -31,6 +31,8 @@ export interface SessionUser {
   staffId?: string;
   /** staff 所属门店 / merchant 管理门店 */
   storeId?: string;
+  /** 批次 S1：staff 岗位角色（frontdesk=前台 / groomer=美容师），来自 auth.me 的 staff.role；非 staff 无此字段 */
+  staffRole?: 'frontdesk' | 'groomer';
 }
 
 /** createPhiliaClient 返回体（契约签名） */

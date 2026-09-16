@@ -112,6 +112,7 @@ export const authRouter = router({
             storeId: invite.storeId,
             userId,
             name: invite.staffName ?? ctx.user.nickname ?? '员工',
+            role: invite.role, // 批次 S1：兑现邀请预置角色（staff_invites.role 缺省 groomer）
             status: 'active',
           })
           .returning();
