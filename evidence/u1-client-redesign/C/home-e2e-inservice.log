@@ -1,0 +1,10 @@
+PASS  dev-login 种子客户  — HTTP 200
+PASS  服务中：图注标题=洗护进行中 · 第 N 步  — 洗护进行中 · 第 3 步
+PASS  服务中：在店细线卡渲染（步骤名真实）  — 洗澡美容
+PASS  服务中：2px 细进度线（柠檬段）+ done/步序实证  — {"order":"3","done":"2","height":"2px"}
+PASS  服务中：查看全程 › 真实链路进 live  — /appointments/01M256D240E19GWNG2QMFV3Q8V/live
+PASS  服务中：主入口大卡仍在（在店卡先、大卡后）
+PASS  服务中：一键再约面板让位
+PASS  服务中：下掉项仍为 0
+
+== 服务中态汇总：8/8 PASS ==

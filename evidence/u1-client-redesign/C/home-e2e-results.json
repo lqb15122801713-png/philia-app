@@ -1,0 +1,201 @@
+{
+  "results": [
+    {
+      "name": "dev-login 种子客户",
+      "ok": true
+    },
+    {
+      "name": "常态：banner + wordmark + 会员码浮层",
+      "ok": true
+    },
+    {
+      "name": "常态：banner 图（复用库内资产，失败则静默回退）",
+      "ok": true
+    },
+    {
+      "name": "常态：图注标题=守护每一次洗护",
+      "ok": true
+    },
+    {
+      "name": "常态：会员信息行真实（含昵称）",
+      "ok": true
+    },
+    {
+      "name": "常态：主入口大卡三入口真实链路",
+      "ok": true
+    },
+    {
+      "name": "常态：三入口各带「时长·价格起」小字（造型无目录可隐）",
+      "ok": true
+    },
+    {
+      "name": "常态：次级行 商城/会员卡真实跳转",
+      "ok": true
+    },
+    {
+      "name": "常态：守护市集入口不存在（无路由隐藏）",
+      "ok": true
+    },
+    {
+      "name": "常态：会员提醒条=真实次卡文案或整条隐去",
+      "ok": true
+    },
+    {
+      "name": "常态：守护值细线行真实聚合或隐去（无演示数字）",
+      "ok": true
+    },
+    {
+      "name": "常态：毛孩子行渲染（pet.list 真实数据）",
+      "ok": true
+    },
+    {
+      "name": "常态：主区面板常态形态（一键再约或降级入口卡）",
+      "ok": true
+    },
+    {
+      "name": "常态：服务中卡不出现",
+      "ok": true
+    },
+    {
+      "name": "下掉：无问候语/旧服务文字行/胶囊卡阵/轮播点",
+      "ok": true
+    },
+    {
+      "name": "常态：AppDock 渲染",
+      "ok": true
+    },
+    {
+      "name": "按钮点验：全部链接有真实目标（无 # / javascript: / 空 href）",
+      "ok": true
+    }
+  ],
+  "buttonAudit": [
+    {
+      "kind": "link",
+      "label": "会员码",
+      "target": "/philia/member"
+    },
+    {
+      "kind": "link",
+      "label": "洗护约 45 分钟起 · ¥68 起",
+      "target": "/booking/grooming"
+    },
+    {
+      "kind": "link",
+      "label": "造型美容约 120 分钟起 · ¥198 起",
+      "target": "/booking/grooming?tab=style"
+    },
+    {
+      "kind": "link",
+      "label": "寄养¥199 起/晚",
+      "target": "/booking/boarding"
+    },
+    {
+      "kind": "link",
+      "label": "商城›",
+      "target": "/mall"
+    },
+    {
+      "kind": "link",
+      "label": "会员卡›",
+      "target": "/philia/member"
+    },
+    {
+      "kind": "link",
+      "label": "预约洗护选择门店、服务和时间›",
+      "target": "/booking/grooming"
+    },
+    {
+      "kind": "link",
+      "label": "管理 ›",
+      "target": "/philia/pets"
+    },
+    {
+      "kind": "link",
+      "label": "旺财",
+      "target": "/philia/pets"
+    },
+    {
+      "kind": "link",
+      "label": "咪咪",
+      "target": "/philia/pets"
+    },
+    {
+      "kind": "link",
+      "label": "添加",
+      "target": "/philia/pets"
+    },
+    {
+      "kind": "button",
+      "label": "app-dock-home",
+      "target": "(handler)"
+    },
+    {
+      "kind": "button",
+      "label": "app-dock-booking",
+      "target": "(handler)"
+    },
+    {
+      "kind": "button",
+      "label": "app-dock-philia",
+      "target": "(handler)"
+    },
+    {
+      "kind": "button",
+      "label": "app-dock-mall",
+      "target": "(handler)"
+    },
+    {
+      "kind": "button",
+      "label": "app-dock-me",
+      "target": "(handler)"
+    }
+  ],
+  "normal": {
+    "banner": true,
+    "bannerImg": true,
+    "topbar": true,
+    "memberCode": "/philia/member",
+    "bannerTitle": "守护每一次洗护",
+    "bannerSub": "示例客户 · 加入菲丽亚第 2 天",
+    "entryCard": true,
+    "entries": [
+      {
+        "t": "home-entry-grooming",
+        "href": "/booking/grooming",
+        "note": "洗护约 45 分钟起 · ¥68 起"
+      },
+      {
+        "t": "home-entry-style",
+        "href": "/booking/grooming?tab=style",
+        "note": "造型美容约 120 分钟起 · ¥198 起"
+      },
+      {
+        "t": "home-entry-boarding",
+        "href": "/booking/boarding",
+        "note": "寄养¥199 起/晚"
+      }
+    ],
+    "subMall": "/mall",
+    "subMember": "/philia/member",
+    "subMarket": false,
+    "memberStrip": null,
+    "statsRow": "2 天陪伴天数1 次服务次数¥88累计消费",
+    "petsRow": true,
+    "petItems": 2,
+    "petsAdd": "/philia/pets",
+    "rebook": false,
+    "entryFallback": "/booking/grooming",
+    "inservice": false,
+    "inserviceStep": null,
+    "progress": null,
+    "inserviceLive": null,
+    "inservicePhotos": 0,
+    "greeting": false,
+    "services": false,
+    "serviceRows": 0,
+    "carouselDots": 0,
+    "dock": true,
+    "rootText": 187
+  }
+}

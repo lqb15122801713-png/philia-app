@@ -1,0 +1,18 @@
+## U1-C 改动域自查
+ M apps/customer/src/components/home/InServicePanel.tsx
+ M apps/customer/src/pages/HomePage.tsx
+?? shots/me-page-logout.png
+?? shots/me-page.png
+
+## 改动文件
+apps/customer/src/components/home/InServicePanel.tsx
+apps/customer/src/pages/HomePage.tsx
+
+## 珊瑚粉 #FFAAA5（改动文件）
+exit=123（1=零命中）
+
+## 新增 text-white（diff + 行）
+0
+
+## 渐变/text-shadow 自查（+行）
+text-shadow:0_1px_8px_rgba(246,241,227,.9)]

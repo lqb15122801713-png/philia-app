@@ -1,0 +1,19 @@
+PASS  dev-login 种子客户  — HTTP 200
+PASS  常态：banner + wordmark + 会员码浮层
+PASS  常态：banner 图（复用库内资产，失败则静默回退）
+PASS  常态：图注标题=守护每一次洗护  — 守护每一次洗护
+PASS  常态：会员信息行真实（含昵称）  — 示例客户 · 加入菲丽亚第 2 天
+PASS  常态：主入口大卡三入口真实链路  — home-entry-grooming→/booking/grooming home-entry-style→/booking/grooming?tab=style home-entry-boarding→/booking/boarding
+PASS  常态：三入口各带「时长·价格起」小字（造型无目录可隐）  — 洗护约 45 分钟起 · ¥68 起 | 造型美容约 120 分钟起 · ¥198 起 | 寄养¥199 起/晚
+PASS  常态：次级行 商城/会员卡真实跳转
+PASS  常态：守护市集入口不存在（无路由隐藏）
+PASS  常态：会员提醒条=真实次卡文案或整条隐去  — （无可用次卡，已隐去）
+PASS  常态：守护值细线行真实聚合或隐去（无演示数字）  — 2 天陪伴天数1 次服务次数¥88累计消费
+PASS  常态：毛孩子行渲染（pet.list 真实数据）  — items=2
+PASS  常态：主区面板常态形态（一键再约或降级入口卡）  — entry→/booking/grooming
+PASS  常态：服务中卡不出现
+PASS  下掉：无问候语/旧服务文字行/胶囊卡阵/轮播点
+PASS  常态：AppDock 渲染
+PASS  按钮点验：全部链接有真实目标（无 # / javascript: / 空 href）  — 共 16 个可点元素全为真实链路
+
+== 常态汇总：17/17 PASS ==

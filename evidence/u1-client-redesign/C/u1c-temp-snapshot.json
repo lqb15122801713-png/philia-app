@@ -1,0 +1,111 @@
+{
+  "appt": [
+    {
+      "id": "01M256D240E19GWNG2QMFV3Q8V",
+      "code": "SMK6P8",
+      "customerId": "01M2J6BT1PTF5TVG46ZFH20XBY",
+      "storeId": "01M2J6BT1RYQVA1WWRZ737J0D8",
+      "staffId": "01M2J6BT1S3ZVPEH0KKTP4XHM1",
+      "assignSource": null,
+      "petId": "01M2J6BT1SPP0PJQ4QJWM5FVYT",
+      "serviceId": "01M2J6BT1SXCB4CE7SWEEWCCVN",
+      "type": "grooming",
+      "scheduledStart": "2026-09-15T09:31:29.000Z",
+      "scheduledEnd": "2026-09-15T10:31:29.000Z",
+      "status": "completed",
+      "priceFen": 8800,
+      "paymentMode": "pay_at_store",
+      "paidAt": null,
+      "paidFen": null,
+      "note": null,
+      "cancelReason": null,
+      "cancelSource": null,
+      "checkedInAt": "2026-09-15T10:01:29.000Z",
+      "completedAt": "2026-09-16T03:14:41.000Z",
+      "rating": null,
+      "review": null,
+      "createdAt": "2026-09-15T10:01:29.000Z",
+      "updatedAt": "2026-09-16T03:14:41.000Z"
+    }
+  ],
+  "steps": [
+    {
+      "id": "stpsmk1FV3Q8V",
+      "appointmentId": "01M256D240E19GWNG2QMFV3Q8V",
+      "stepKey": "disinfection",
+      "stepOrder": 1,
+      "status": "done",
+      "requiredPhotos": 1,
+      "flagged": false,
+      "startedAt": "2026-09-15T10:01:29.000Z",
+      "doneAt": "2026-09-16T03:14:38.000Z",
+      "createdAt": "2026-09-15T10:01:29.000Z",
+      "updatedAt": "2026-09-16T03:14:38.000Z"
+    },
+    {
+      "id": "stpsmk2FV3Q8V",
+      "appointmentId": "01M256D240E19GWNG2QMFV3Q8V",
+      "stepKey": "precheck",
+      "stepOrder": 2,
+      "status": "done",
+      "requiredPhotos": 2,
+      "flagged": false,
+      "startedAt": "2026-09-16T03:14:38.000Z",
+      "doneAt": "2026-09-16T03:14:39.000Z",
+      "createdAt": "2026-09-15T10:01:29.000Z",
+      "updatedAt": "2026-09-16T03:14:39.000Z"
+    },
+    {
+      "id": "stpsmk3FV3Q8V",
+      "appointmentId": "01M256D240E19GWNG2QMFV3Q8V",
+      "stepKey": "grooming",
+      "stepOrder": 3,
+      "status": "done",
+      "requiredPhotos": 3,
+      "flagged": false,
+      "startedAt": "2026-09-16T03:14:39.000Z",
+      "doneAt": "2026-09-16T03:14:40.000Z",
+      "createdAt": "2026-09-15T10:01:29.000Z",
+      "updatedAt": "2026-09-16T03:14:40.000Z"
+    },
+    {
+      "id": "stpsmk4FV3Q8V",
+      "appointmentId": "01M256D240E19GWNG2QMFV3Q8V",
+      "stepKey": "detail",
+      "stepOrder": 4,
+      "status": "done",
+      "requiredPhotos": 2,
+      "flagged": false,
+      "startedAt": "2026-09-16T03:14:40.000Z",
+      "doneAt": "2026-09-16T03:14:40.000Z",
+      "createdAt": "2026-09-15T10:01:29.000Z",
+      "updatedAt": "2026-09-16T03:14:40.000Z"
+    },
+    {
+      "id": "stpsmk5FV3Q8V",
+      "appointmentId": "01M256D240E19GWNG2QMFV3Q8V",
+      "stepKey": "before_after",
+      "stepOrder": 5,
+      "status": "done",
+      "requiredPhotos": 2,
+      "flagged": false,
+      "startedAt": "2026-09-16T03:14:40.000Z",
+      "doneAt": "2026-09-16T03:14:41.000Z",
+      "createdAt": "2026-09-15T10:01:29.000Z",
+      "updatedAt": "2026-09-16T03:14:41.000Z"
+    },
+    {
+      "id": "stpsmk6FV3Q8V",
+      "appointmentId": "01M256D240E19GWNG2QMFV3Q8V",
+      "stepKey": "confirm",
+      "stepOrder": 6,
+      "status": "done",
+      "requiredPhotos": 0,
+      "flagged": false,
+      "startedAt": "2026-09-16T03:14:41.000Z",
+      "doneAt": "2026-09-16T03:14:41.000Z",
+      "createdAt": "2026-09-15T10:01:29.000Z",
+      "updatedAt": "2026-09-16T03:14:41.000Z"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "results": [
+    {
+      "name": "dev-login 种子客户",
+      "ok": true
+    },
+    {
+      "name": "断接口：未跳守卫，首页渲染不白屏",
+      "ok": true
+    },
+    {
+      "name": "断接口：banner + 图注标题在",
+      "ok": true
+    },
+    {
+      "name": "断接口：主入口大卡与导航保留（真实链路不消失）",
+      "ok": true
+    },
+    {
+      "name": "断接口：服务目录失败 → 价格小字隐去（不编造）",
+      "ok": true
+    },
+    {
+      "name": "断接口：毛孩子行真实错误空态（可重试）",
+      "ok": true
+    },
+    {
+      "name": "断接口：会员提醒条随 pass.mine 失败隐去",
+      "ok": true
+    },
+    {
+      "name": "断接口：dock 存活",
+      "ok": true
+    }
+  ],
+  "state": {
+    "banner": true,
+    "bannerTitle": "守护每一次洗护",
+    "entryCard": true,
+    "entryGrooming": "/booking/grooming",
+    "groomingNoteHasPrice": false,
+    "petsError": true,
+    "memberStrip": false,
+    "statsRow": false,
+    "dock": true,
+    "rootText": 104,
+    "url": "/home"
+  }
+}
