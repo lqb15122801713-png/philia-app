@@ -63,6 +63,9 @@ export default function App() {
   // B4-R1：洗护/寄养单屏为沉浸式下单流，隐藏底部 TabBar（凸起中按钮会遮挡吸底确认条）；
   // 旧向导 /wizard、成功页 /booking/success 及其余页面维持现状不变。
   const isBookingSingle = pathname === '/booking/grooming' || pathname === '/booking/boarding'
+  // B9.3 任务 A：首页渲染专属减法 dock（HomeDock，见 components/home/HomeDock），
+  // 全局 ConvexTabBar 在首页让位（其余页面保留现状，全局替换下批统一）。
+  const isHome = pathname === '/home' || pathname === '/'
 
   return (
     <div className="min-h-screen bg-canvas text-ink">
@@ -83,7 +86,7 @@ export default function App() {
           />
         </Routes>
       </main>
-      {!isDevLogin && !isBookingSingle && <TabBar />}
+      {!isDevLogin && !isBookingSingle && !isHome && <TabBar />}
     </div>
   )
 }
