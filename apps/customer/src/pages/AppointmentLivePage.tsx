@@ -21,14 +21,13 @@ import {
   EventType,
   getApiBase,
   safeUuid,
-  StepTimeline,
   useEventSource,
   useMe,
   usePhiliaClient,
   type EventEnvelope,
   type PhotoWallPhoto,
-  type StepTimelineStep,
 } from '@philia/shared'
+import LiveStepper, { type LiveStepperStep } from '../components/live/LiveStepper'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { CalendarClock, CircleX, QrCode } from 'lucide-react'
@@ -65,7 +64,7 @@ function getClientId(): string {
   }
 }
 
-/** active 步操作说明（StepTimeline description 槽位） */
+/** active 步操作说明（LiveStepper description 槽位） */
 const ACTIVE_HINT: Record<string, string> = {
   disinfection: '工具消毒确认中，安心第一步',
   precheck: '正在做预检，确认皮肤与毛发状态',
@@ -412,7 +411,7 @@ export default function AppointmentLivePage() {
 
   /* ---------------- 派生展示数据 ---------------- */
 
-  const timelineSteps: StepTimelineStep[] = useMemo(
+  const timelineSteps: LiveStepperStep[] = useMemo(
     () =>
       (steps ?? []).map((s) => ({
         stepKey: s.stepKey,
@@ -619,12 +618,13 @@ export default function AppointmentLivePage() {
             onPhotoClick={(photos, index) => setViewer({ photos, index })}
           />
         ) : stepsQuery.isPending ? (
-          <div className="rounded-card bg-card p-6 text-center shadow-card">
+          <div className="u1-card p-6 text-center">
             <p className="text-caption text-ink-secondary">正在接入服务进度…</p>
           </div>
         ) : (
-          <div className="rounded-card bg-card p-4 shadow-card">
-            <StepTimeline steps={timelineSteps} onPhotoClick={openStepPhotos} />
+          /* U1-E：stepper 容器换 U1-B 细线卡（ring + 近零影），去旧 shadow-card */
+          <div className="u1-card p-4">
+            <LiveStepper steps={timelineSteps} onPhotoClick={openStepPhotos} />
           </div>
         )}
       </div>
