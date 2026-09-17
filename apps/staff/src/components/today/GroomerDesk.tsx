@@ -1,11 +1,13 @@
 /**
- * 美容师任务台（批次 S1 · 任务 C）—— 原 TodayPage 全部内容，唯二减法：
- * 1. 移除顶部「扫码核销」大按钮与 QrScanner（核销已收口前台，groomer 台不再出现核销入口）；
- * 2. 空态文案不再引导扫码（见 EmptyToday）。
+ * 美容师任务台 · /today（批次 U2 任务 B · 时间轴台 B′ groomer 态）
  *
- * 保留：今日任务时间轴（appointment.listTodayForStaff）/ 未来 7 天前瞻（listForStaff）/
- * SSE（useStaffEvents：assigned/rescheduled/cancelled → invalidate + toast；
- * step_flagged → toast「商家要求重拍」；断线重连全量对齐；60s 轮询兜底）。
+ * 规格书 §2 逐段：顶栏（日期 20/700 + 门店·周几·排班段 11/400 + 头像薄荷环进 /me）/
+ * 周横条 6 日 chip（仅当前周不可翻页）/ 全天行（寄养打卡卡列，无寄养整行不渲染）/
+ * 日轴（09:00–打烊 · 小时行高 52px · 当前时间墨线 · 三态单块 · 服务中就地展开服务卡）/
+ * 底部安静统计行（无按钮）。
+ * 数据：listTodayForStaff（现成）+ auth.me 原始响应（门店 openHours/排班，现成）+
+ * boarding 今日 dailyLog 存在性前端聚合（规格书 §2 注，零新接口）；空档=前端按轴块推算纯展示。
+ * SSE：useStaffEvents（assigned/rescheduled/cancelled/step_flagged → invalidate+toast）+ 60s 轮询兜底。
  */
 
 import {
@@ -15,49 +17,24 @@ import {
   type EventEnvelope,
 } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
-import { UserRound } from 'lucide-react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { MoonStar, PawPrint } from 'lucide-react';
+import { useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import EmptyToday from '@/components/today/EmptyToday';
 import Toast, { useToast } from '@/components/today/Toast';
-import TodayTaskCard from '@/components/today/TodayTaskCard';
-import StatusCapsule from '@/components/today/StatusCapsule';
 import { useStaffEvents } from '@/components/today/useStaffEvents';
-import { hhmm, mmdd, todayLabel, weekdayLabel, type HistoryItem } from '@/components/today/utils';
+import AllDayRow from '@/components/today/deck/AllDayRow';
+import DayAxis from '@/components/today/deck/DayAxis';
+import WeekStrip from '@/components/today/deck/WeekStrip';
+import { firstGap, minutesOf, todayAxisRange, fmtMin } from '@/components/today/deck/deckUtils';
+import { dayKeyOf, todayLabel } from '@/components/today/utils';
 
 const TODAY_QUERY_KEY = ['appointment', 'listTodayForStaff'] as const;
-/** B3-5（W-16）：未来 7 天视图查询键 */
-const WEEK_QUERY_KEY = ['appointment', 'listForStaff', 'upcoming7'] as const;
-
-/** 本地日界 00:00 */
-const dayStartOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-
-/** B3-5（W-16）：未来 7 天分组的只读卡片（无核销/执行按钮） */
-function UpcomingCard({ item }: { item: HistoryItem }) {
-  return (
-    <li className="rounded-card bg-card p-4 shadow-card">
-      <div className="flex items-start justify-between gap-2">
-        <p className="font-number text-body-lg tabular-nums">{hhmm(item.scheduledStart)}</p>
-        <StatusCapsule status={item.status} />
-      </div>
-      <p className="mt-1 text-body-lg font-semibold">
-        {item.petName ?? '宠物'}
-        <span className="font-normal text-ink-secondary"> · {item.serviceName ?? '服务'}</span>
-      </p>
-      {item.note ? (
-        <p className="mt-1 rounded-tag bg-sunken px-2 py-1 text-body text-ink-secondary">
-          客户备注：{item.note}
-        </p>
-      ) : null}
-    </li>
-  );
-}
+const ME_RAW_KEY = ['auth', 'me', 'raw', 'staff-deck'] as const;
 
 export default function GroomerDesk() {
   const { trpc, queryClient } = usePhiliaClient();
   const [toast, showToast] = useToast();
-  // B3-5（W-16）：今日 / 未来 7 天 视图切换
-  const [view, setView] = useState<'today' | 'week'>('today');
+  const now = new Date();
 
   const todayQuery = useQuery({
     queryKey: TODAY_QUERY_KEY,
@@ -65,42 +42,15 @@ export default function GroomerDesk() {
     refetchInterval: 60_000, // 弱网 / SSE 断线兜底轮询
   });
 
-  // B3-5（W-16）：未来 7 天 = 明天 00:00 起 7 天（今天已由今日时间轴覆盖）；
-  // 复用 listForStaff（本店已派本人单），只读展示
-  const weekRange = useMemo(() => {
-    const from = new Date(dayStartOf(new Date()).getTime() + 24 * 3600 * 1000);
-    const to = new Date(dayStartOf(new Date()).getTime() + 8 * 24 * 3600 * 1000 - 1);
-    return { from, to };
-  }, []);
-  const weekQuery = useQuery({
-    queryKey: [...WEEK_QUERY_KEY, weekRange.from.getTime()],
-    queryFn: () =>
-      trpc.appointment.listForStaff.query({ from: weekRange.from, to: weekRange.to }),
-    enabled: view === 'week',
-    refetchInterval: 60_000,
+  // auth.me 原始响应：门店名/openHours（打烊）+ 本人排班段（MePage 同口径）
+  const meRawQ = useQuery({
+    queryKey: ME_RAW_KEY,
+    queryFn: () => trpc.auth.me.query(),
+    staleTime: 300_000,
   });
-  /** 按日分组（组间日期升序、组内按 scheduledStart 升序；已取消不进前瞻列表） */
-  const weekGroups = useMemo(() => {
-    const rows = (weekQuery.data ?? []).filter((r) => r.status !== 'cancelled');
-    const map = new Map<string, HistoryItem[]>();
-    for (const r of rows) {
-      const key = `${r.scheduledStart.getFullYear()}-${r.scheduledStart.getMonth()}-${r.scheduledStart.getDate()}`;
-      const arr = map.get(key);
-      if (arr) arr.push(r);
-      else map.set(key, [r]);
-    }
-    return [...map.values()]
-      .map((items) => ({
-        date: items[0]!.scheduledStart,
-        items: [...items].sort((a, b) => a.scheduledStart.getTime() - b.scheduledStart.getTime()),
-      }))
-      .sort((a, b) => a.date.getTime() - b.date.getTime());
-  }, [weekQuery.data]);
 
   const invalidateToday = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: TODAY_QUERY_KEY });
-    // W-16：派单/改期/取消事件同样影响未来 7 天视图
-    void queryClient.invalidateQueries({ queryKey: WEEK_QUERY_KEY });
   }, [queryClient]);
 
   // 事件去重：envelope.id Set（FIFO 500；续传补发/多端同事件会重复到达）
@@ -152,129 +102,109 @@ export default function GroomerDesk() {
 
   useStaffEvents({ onEvent, onReconnect: invalidateToday });
 
-  const items = todayQuery.data ?? [];
+  const items = useMemo(() => todayQuery.data ?? [], [todayQuery.data]);
+  const boardingItems = useMemo(() => items.filter((i) => i.type === 'boarding'), [items]);
+  const axisItems = useMemo(() => items.filter((i) => i.type === 'grooming'), [items]);
+
+  const store = meRawQ.data?.store ?? null;
+  const staff = meRawQ.data?.staff ?? null;
+  const axis = todayAxisRange(store?.openHours as Record<string, { open: string; close: string } | null> | null, now);
+  const scheduleToday = (staff?.schedule as Record<string, Array<{ start: string; end: string }> | null> | null)?.[dayKeyOf(now)];
+  const scheduleText = scheduleToday?.length ? scheduleToday.map((s) => `${s.start}–${s.end}`).join(' / ') : null;
+
+  const stats = useMemo(() => {
+    const done = axisItems.filter((i) => i.status === 'completed').length;
+    const gap = firstGap(
+      axisItems.map((i) => ({ startMin: minutesOf(i.scheduledStart), endMin: minutesOf(i.scheduledEnd) })),
+      minutesOf(now),
+      axis.endMin,
+    );
+    return { total: axisItems.length, done, gap };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [axisItems, axis.endMin]);
 
   return (
     <div className="px-4 pb-6">
-      <header className="flex items-start justify-between pt-6">
+      {/* 1. 顶栏：日期 + 门店·周几·排班段 + 头像薄荷环进 /me */}
+      <header className="flex items-start justify-between pt-3">
         <div>
-          <h1 className="text-title-lg">今日任务</h1>
-          <p className="mt-1 text-body text-ink-secondary">
-            {todayLabel(new Date())} · 美容师 · 共 {items.length} 单
+          <h1 className="text-title-lg font-bold">今天 · {todayLabel(now).split(' ')[0]}</h1>
+          <p className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+            {store?.name ?? '门店'} · {todayLabel(now).split(' ')[1]}
+            {scheduleText ? ` · 你的排班 ${scheduleText}` : ''}
           </p>
         </div>
-        {/* /me 入口（员工端 TabBar 按方案为 3 栏，我的页从这里进） */}
         <Link
           to="/me"
           aria-label="我的"
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-card text-ink-secondary shadow-card active:scale-95"
+          data-testid="deck-avatar"
+          className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FFFDF6,0_0_0_3.5px_#7FD8BE] transition-transform duration-120 ease-philia-spring active:scale-92"
         >
-          <UserRound className="h-5 w-5" strokeWidth={1.5} />
+          {meRawQ.data?.user?.avatarUrl ? (
+            <img src={meRawQ.data.user.avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
+          ) : (
+            <PawPrint className="h-4 w-4 text-ink" strokeWidth={1.6} />
+          )}
         </Link>
       </header>
 
-      {/* B3-5（W-16）：今日 / 未来 7 天 视图切换（员工排班前瞻，只读） */}
-      <div className="mt-4 flex rounded-full bg-sunken p-1" role="tablist" aria-label="任务视图">
-        {(
-          [
-            { key: 'today', label: '今日' },
-            { key: 'week', label: '未来 7 天' },
-          ] as const
-        ).map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            role="tab"
-            aria-selected={view === t.key}
-            onClick={() => setView(t.key)}
-            className={`h-11 flex-1 rounded-full text-body-lg transition active:scale-[0.98] ${
-              view === t.key ? 'bg-card font-semibold text-brand-primary shadow-card' : 'text-ink-secondary'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      {/* 2. 周横条（仅当前周，不可翻页） */}
+      <WeekStrip today={now} />
 
-      {view === 'week' ? (
-        weekQuery.isPending ? (
-          <div className="mt-6 space-y-3" aria-label="加载中">
-            {[0, 1].map((i) => (
-              <div key={i} className="animate-pulse rounded-card bg-card p-4 shadow-card">
-                <div className="h-5 w-24 rounded-tag bg-sunken" />
-                <div className="mt-2 h-5 w-44 rounded-tag bg-sunken" />
-              </div>
+      {todayQuery.isPending ? (
+        // 加载 >300ms 骨架（禁转圈；骨架形状=内容轮廓）
+        <div className="mt-3 animate-pulse" aria-label="加载中">
+          <div className="h-[52px] rounded-control bg-card u1-ring" />
+          <div className="mt-3 space-y-0">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="h-[52px] border-t border-[rgba(74,59,46,.06)]" />
             ))}
           </div>
-        ) : weekQuery.isError ? (
-          <div className="mt-6 rounded-card bg-card p-6 text-center shadow-card">
-            <p className="text-body-lg text-ink-secondary">未来 7 天安排加载失败，请检查网络后重试</p>
-            <button
-              type="button"
-              onClick={() => void weekQuery.refetch()}
-              className="mt-4 h-14 min-w-[160px] rounded-full bg-brand-primary px-8 text-body-lg font-semibold text-ink active:scale-[0.98]"
-            >
-              重新加载
-            </button>
-          </div>
-        ) : weekGroups.length === 0 ? (
-          <div className="mt-6 rounded-card bg-card px-6 py-10 text-center shadow-card">
-            <span aria-hidden className="text-4xl">
-              🗓️
-            </span>
-            <p className="mt-3 text-body-lg text-ink-secondary">未来 7 天暂无派单</p>
-          </div>
-        ) : (
-          <div className="mt-6 space-y-5">
-            {weekGroups.map((g) => (
-              <section key={g.date.getTime()}>
-                <h2 className="text-body-lg font-semibold text-ink">
-                  {mmdd(g.date)} {weekdayLabel(g.date)}
-                  <span className="ml-2 text-caption font-normal text-ink-secondary">
-                    共 {g.items.length} 单
-                  </span>
-                </h2>
-                <ul className="mt-2 space-y-3">
-                  {g.items.map((item) => (
-                    <UpcomingCard key={item.id} item={item} />
-                  ))}
-                </ul>
-              </section>
-            ))}
-          </div>
-        )
-      ) : todayQuery.isPending ? (
-        // 加载态：骨架卡
-        <div className="mt-6 space-y-3" aria-label="加载中">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="animate-pulse rounded-card bg-card p-4 shadow-card">
-              <div className="h-6 w-20 rounded-tag bg-sunken" />
-              <div className="mt-2 h-5 w-40 rounded-tag bg-sunken" />
-              <div className="mt-3 h-14 w-full rounded-full bg-sunken" />
-            </div>
-          ))}
         </div>
       ) : todayQuery.isError ? (
-        // 失败态：重试
-        <div className="mt-6 rounded-card bg-card p-6 text-center shadow-card">
-          <p className="text-body-lg text-ink-secondary">今日任务加载失败，请检查网络后重试</p>
+        // 错误态：一句话 + 重试真链路
+        <div className="u1-card mt-3 p-6 text-center">
+          <p className="text-body-sm text-ink-secondary">今日任务加载失败，请检查网络后重试</p>
           <button
             type="button"
             onClick={() => void todayQuery.refetch()}
-            className="mt-4 h-14 min-w-[160px] rounded-full bg-brand-primary px-8 text-body-lg font-semibold text-ink active:scale-[0.98]"
+            className="mt-4 h-12 min-w-[160px] rounded-control bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             重新加载
           </button>
         </div>
-      ) : items.length === 0 ? (
-        <EmptyToday />
       ) : (
-        // 今日任务时间轴（服务端已按 scheduledStart 升序）
-        <ol className="relative mt-6 space-y-3 before:absolute before:bottom-4 before:left-[7px] before:top-4 before:w-0.5 before:bg-line-divider">
-          {items.map((item) => (
-            <TodayTaskCard key={item.id} item={item} />
-          ))}
-        </ol>
+        <>
+          {/* 3. 全天行：寄养打卡卡列（无寄养单整行不渲染） */}
+          <AllDayRow items={boardingItems} today={now} />
+
+          {/* 4. 日轴 */}
+          {axisItems.length === 0 ? (
+            // 空态（规格书原文文案；emoji 禁令 → lucide 墨色线图标）
+            <div className="flex flex-col items-center px-6 py-14 text-center" data-testid="deck-empty">
+              <span className="flex h-20 w-20 items-center justify-center rounded-full bg-sunken" aria-hidden>
+                <MoonStar className="h-9 w-9 text-ink" strokeWidth={1.5} />
+              </span>
+              <p className="mt-4 text-body-sm text-ink-secondary">
+                今天没有派给你的单——休息，或去前台看看有没有要帮忙的
+              </p>
+            </div>
+          ) : (
+            <DayAxis items={axisItems} startMin={axis.startMin} endMin={axis.endMin} now={now} />
+          )}
+
+          {/* 5. 底部安静统计行（无按钮——主行动已归服务卡） */}
+          {axisItems.length > 0 ? (
+            <p className="mb-4 mt-3 text-center text-caption-xs text-[rgba(74,59,46,.62)]" data-testid="deck-stats">
+              今天 <b className="u1-num text-ink">{stats.total}</b> 单 · 已完成 <b className="u1-num text-ink">{stats.done}</b>
+              {stats.gap ? (
+                <>
+                  {' '}· 当前空档 {fmtMin(stats.gap.from)}–{fmtMin(stats.gap.to)}
+                </>
+              ) : null}
+            </p>
+          ) : null}
+        </>
       )}
 
       <Toast message={toast} />
