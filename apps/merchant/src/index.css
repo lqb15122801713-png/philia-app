@@ -65,6 +65,23 @@
   src: url('/fonts/noto-sans-sc-chinese-simplified-700.woff2') format('woff2');
 }
 
+
+/* U3（动效纲领 + v9.1）：Noto Serif SC 中文展示位衬线（font-serif-cn 链） */
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/noto-serif-sc-chinese-simplified-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/noto-serif-sc-chinese-simplified-700.woff2') format('woff2');
+}
+
 @layer base {
   /* shadcn light 变量 · 对齐冻结表 4.1（docs/BRAND-TOKENS-v1.1.md §三） */
   :root {
@@ -142,4 +159,14 @@
     /* 品牌画布米白 #F6F1E3 + 深棕墨正文 #4A3B2E（token: bg.canvas / text.primary） */
     @apply bg-canvas text-ink font-sans;
   }
+}
+
+/* U3 批次：v9.1 组件类（与客户端 U1-B / 员工端 U2 同语言，同名同值） */
+@layer components {
+  .u1-ring { @apply shadow-hairline ring-1 ring-line-ring; }
+  .u1-card { @apply u1-ring rounded-panel bg-card; }
+  .u1-control { @apply rounded-control; }
+  .u1-chip { @apply rounded-chip; }
+  .u1-num { @apply font-number tabular-nums; }
+  .u1-serif { @apply font-serif-cn; }
 }
