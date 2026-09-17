@@ -1,34 +1,46 @@
 /**
- * 今日时间轴简表（T4.1）：appointment.listForStore 今日区间
+ * 今日预约表（U3 §2 左栏 · 母本 .panel + .tbl）：appointment.listForStore 今日区间
  *
- * 每行 = 时间 / 宠物 / 服务 / 员工 / 状态胶囊，点行进预约详情；
- * 已取消行灰显；空数据态明确展示「今日暂无预约」。
- * 商家端动效纪律：仅 hover/状态过渡，不用呼吸光环（设计手册 §7）。
+ * 列 = 时间（u1-num Montserrat 加粗）/ 宠物·服务（副行：客户昵称 · 到店付/次卡抵扣）/
+ * 员工（副行：派单来源小签，assignSourceLabel 口径 auto=自动派单 / merchant=商家改派）/
+ * 状态胶囊（u3-st：live=服务中·寄养中、wait=待到店·待确认、done=已完成·已取消、amber=取消申请）；
+ * 行点击进入 /appointments/:id；已取消行灰显；
+ * 空态 = 规格书原文「今天还没有预约——把预约页分享给老客，或等自动接单」；
+ * 加载中骨架行（禁转圈）。
  */
 
-import { PawPrint } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { assignSourceLabel, paymentModeLabel } from '@/components/appointments/appt-utils'
 import { hhmm, type TodayApptItem } from './utils'
 
-/** 状态胶囊（商家端版：无脉冲光环，颜色语义与员工端一致） */
+/** 状态 → 胶囊（u3-st 变体；confirmed 按母本口径写作「待到店」） */
 const CAPSULE: Record<string, { label: string; cls: string }> = {
-  pending: { label: '待确认', cls: 'bg-sunken text-ink-secondary' },
-  confirmed: { label: '已确认', cls: 'bg-brand-primary-light text-brand-primary-pressed' },
-  in_service: { label: '服务中', cls: 'bg-brand-primary text-white' },
-  in_boarding: { label: '寄养中', cls: 'bg-brand-primary text-white' },
-  completed: { label: '已完成', cls: 'bg-success-light text-success-deep' },
-  cancel_requested: { label: '取消审核', cls: 'bg-danger-light text-danger-deep' },
-  cancelled: { label: '已取消', cls: 'bg-sunken text-ink-placeholder' },
+  pending: { label: '待确认', cls: 'u3-st wait' },
+  confirmed: { label: '待到店', cls: 'u3-st wait' },
+  in_service: { label: '服务中', cls: 'u3-st live' },
+  in_boarding: { label: '寄养中', cls: 'u3-st live' },
+  completed: { label: '已完成', cls: 'u3-st done' },
+  cancel_requested: { label: '取消申请', cls: 'u3-st amber' },
+  cancelled: { label: '已取消', cls: 'u3-st done' },
 }
 
-function StatusCapsule({ status }: { status: string }) {
-  const c = CAPSULE[status] ?? { label: status, cls: 'bg-sunken text-ink-secondary' }
+function RowSkeleton() {
   return (
-    <span
-      className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-caption font-medium ${c.cls}`}
-    >
-      {c.label}
-    </span>
+    <tr className="animate-pulse">
+      <td>
+        <div className="h-3 w-9 rounded-md bg-[rgba(74,59,46,.08)]" />
+      </td>
+      <td>
+        <div className="h-3 w-32 rounded-md bg-[rgba(74,59,46,.08)]" />
+        <div className="mt-1.5 h-2.5 w-24 rounded-md bg-[rgba(74,59,46,.06)]" />
+      </td>
+      <td>
+        <div className="h-3 w-14 rounded-md bg-[rgba(74,59,46,.08)]" />
+      </td>
+      <td>
+        <div className="h-4 w-12 rounded-md bg-[rgba(74,59,46,.08)]" />
+      </td>
+    </tr>
   )
 }
 
@@ -42,60 +54,68 @@ export default function TodayTimeline({
   const navigate = useNavigate()
 
   return (
-    <section className="rounded-card bg-card shadow-card">
-      <header className="flex items-center justify-between px-4 pt-4">
-        <h2 className="text-title">今日时间轴</h2>
-        <span className="font-number text-caption text-ink-secondary tabular-nums">
-          共 {items.length} 单
-        </span>
-      </header>
+    <section className="u3-panel">
+      <div className="u3-panel-head">
+        <h3>今日预约</h3>
+        <span className="aside">按时间 · {items.length} 单</span>
+      </div>
 
       {loading ? (
-        <p className="px-4 py-8 text-center text-body text-ink-secondary">加载中…</p>
+        <table className="u3-tbl">
+          <tbody>
+            {[0, 1, 2, 3].map((i) => (
+              <RowSkeleton key={i} />
+            ))}
+          </tbody>
+        </table>
       ) : items.length === 0 ? (
-        <div className="px-4 py-10 text-center">
-          <p className="text-body text-ink-secondary">今日暂无预约</p>
-          <p className="mt-1 text-caption text-ink-placeholder">新预约到达时会实时出现在这里</p>
-        </div>
+        <p className="px-[17px] pb-7 pt-3 text-center text-[12px] leading-6 text-[rgba(74,59,46,.62)]">
+          今天还没有预约——把预约页分享给老客，或等自动接单
+        </p>
       ) : (
-        <ul className="mt-2 divide-y divide-line-divider pb-2">
-          {items.map((item) => {
-            const cancelled = item.status === 'cancelled'
-            return (
-              <li key={item.id}>
-                <button
-                  type="button"
+        <table className="u3-tbl">
+          <thead>
+            <tr>
+              <th>时间</th>
+              <th>宠物 / 服务</th>
+              <th>员工</th>
+              <th>状态</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => {
+              const cancelled = item.status === 'cancelled'
+              const capsule = CAPSULE[item.status] ?? { label: item.status, cls: 'u3-st wait' }
+              const payText = item.paymentMode ? paymentModeLabel(item.paymentMode) : null
+              const srcText = assignSourceLabel(item.assignSource)
+              return (
+                <tr
+                  key={item.id}
+                  className={`rowlink ${cancelled ? 'opacity-50' : ''}`}
                   onClick={() => navigate(`/appointments/${item.id}`)}
-                  className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-sunken/60 ${
-                    cancelled ? 'opacity-60' : ''
-                  }`}
                 >
-                  <span className="w-12 shrink-0 font-number text-body font-semibold tabular-nums">
-                    {hhmm(item.scheduledStart)}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-1.5 text-body font-medium">
-                      <PawPrint className="h-4 w-4 shrink-0 text-brand-primary" strokeWidth={1.5} />
-                      <span className="truncate">{item.petName ?? '宠物'}</span>
-                      <span className="truncate font-normal text-ink-secondary">
-                        · {item.serviceName ?? '服务'}
-                      </span>
-                    </span>
-                    <span className="mt-0.5 block text-caption text-ink-secondary">
-                      {item.staffName ? (
-                        <>员工：{item.staffName}</>
-                      ) : (
-                        <span className="text-danger-deep">未指派员工</span>
-                      )}
-                      {item.type === 'boarding' ? ' · 寄养' : ''}
-                    </span>
-                  </span>
-                  <StatusCapsule status={item.status} />
-                </button>
-              </li>
-            )
-          })}
-        </ul>
+                  <td className="u1-num font-bold">{hhmm(item.scheduledStart)}</td>
+                  <td>
+                    {item.petName ?? '宠物'} · {item.serviceName ?? '服务'}
+                    <div className="mt-0.5 text-[11px] text-[rgba(74,59,46,.42)]">
+                      {item.customerName ?? '客户'}
+                      {payText ? ` · ${payText}` : ''}
+                    </div>
+                  </td>
+                  <td>
+                    {item.staffName ?? '未指派'}
+                    {srcText ? (
+                      <div className="mt-0.5 text-[11px] text-[rgba(74,59,46,.42)]">{srcText}</div>
+                    ) : null}
+                  </td>
+                  <td>
+                    <span className={capsule.cls}>{capsule.label}</span>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
       )}
     </section>
   )

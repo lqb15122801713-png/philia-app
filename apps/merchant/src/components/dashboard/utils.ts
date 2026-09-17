@@ -15,6 +15,8 @@ export type TodayApptItem = RouterOutputs['appointment']['listForStore'][number]
 /** React Query 键（TabBar 红点与 DashboardPage 共用，invalidate 互通） */
 export const STATS_QUERY_KEY = ['store', 'dashboardStats'] as const
 export const TODAY_QUERY_KEY = ['appointment', 'listForStore', 'today'] as const
+/** 在店寄养（listForStore status=in_boarding 无日期档，房型分组用；U3 总览新增） */
+export const IN_BOARDING_QUERY_KEY = ['appointment', 'listForStore', 'in-boarding'] as const
 
 /** 待办合计（四项待办 + 异常超期寄养；TabBar 红点与「待办合计」卡同口径） */
 export const todoGrandTotal = (s: DashboardStats): number => s.todo.total + s.overdueBoardingCount
@@ -39,3 +41,26 @@ export function todayRange(): { from: Date; to: Date } {
 
 /** 分 → 元字符串（两位小数，配合 font-number + tabular-nums 纵向对齐） */
 export const fenToYuan = (fen: number): string => (fen / 100).toFixed(2)
+
+/* ------------------------------------------------------------------ */
+/* U3 总览新增（§2 母本副行 / 统计卡大字）                                */
+/* ------------------------------------------------------------------ */
+
+/** auth.me 门店行的 openHours 类型（{ mon: {open,close} | null, ... }，null=当日休息） */
+type MeOpenHours = NonNullable<RouterOutputs['auth']['me']['store']>['openHours']
+
+const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const
+
+/** 头部副行日期：YYYY年M月d日 周X */
+export const fullDateLabel = (d: Date): string =>
+  `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${WEEK_LABELS[d.getDay()]}`
+
+/** 当日营业时段：openHours 有当天档 → 营业中 HH:MM–HH:MM；缺档 / null → 今日店休 */
+export const openHoursLabel = (openHours: MeOpenHours | null | undefined, d: Date): string => {
+  const today = openHours?.[DAY_KEYS[d.getDay()]]
+  return today ? `营业中 ${today.open}–${today.close}` : '今日店休'
+}
+
+/** 分 → 元（千分位、至多两位小数；统计卡 26px Montserrat 大字用，如 2,368） */
+export const fenToYuanGrouped = (fen: number): string =>
+  (fen / 100).toLocaleString('en-US', { maximumFractionDigits: 2 })
