@@ -1,6 +1,8 @@
 /**
- * 二次确认弹层（T4.2）：关键操作（批准/拒绝取消、打标重拍等）防误触。
- * children 可放附加内容（如打标原因输入框）。
+ * 二次确认弹层（T4.2；U3 任务 E 视觉同批）：关键操作（批准/拒绝取消、打标重拍、
+ * 收款登记等）防误触。children 可放附加内容（如打标原因输入框）。
+ * API 与 T4.2 一致（监控页打标同用）；按钮换 U3 件：取消=纸面细线、确认=柠檬墨字、
+ * danger=功能红 #D92D20 + 纸面字（u3-st.red 同款配对，功能色不占品牌位）。
  */
 
 import { Modal } from './Modal';
@@ -31,14 +33,16 @@ export function ConfirmDialog({
 }) {
   return (
     <Modal open={open} title={title} onClose={onCancel} widthClass="sm:max-w-md">
-      {body ? <p className="text-body text-ink-secondary">{body}</p> : null}
+      {body ? (
+        <p className="text-[12px] leading-relaxed text-[rgba(74,59,46,.62)]">{body}</p>
+      ) : null}
       {children}
-      <div className="mt-5 flex gap-3">
+      <div className="mt-5 flex gap-2.5">
         <button
           type="button"
           onClick={onCancel}
           disabled={loading}
-          className="h-11 flex-1 rounded-full border border-line text-body text-ink-secondary transition-colors hover:bg-sunken disabled:opacity-50"
+          className="u1-ring h-11 flex-1 rounded-control bg-card text-[13px] font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
         >
           {cancelText}
         </button>
@@ -46,8 +50,8 @@ export function ConfirmDialog({
           type="button"
           onClick={onConfirm}
           disabled={loading}
-          className={`h-11 flex-1 rounded-full text-body font-semibold text-white transition-colors disabled:opacity-50 ${
-            danger ? 'bg-danger hover:opacity-90' : 'bg-brand-primary hover:bg-brand-primary-hover'
+          className={`h-11 flex-1 rounded-control text-[13px] font-bold transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50 ${
+            danger ? 'bg-[#D92D20] text-[#FFFDF6]' : 'bg-brand-primary text-ink'
           }`}
         >
           {loading ? '处理中…' : confirmText}
