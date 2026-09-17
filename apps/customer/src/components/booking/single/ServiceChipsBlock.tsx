@@ -19,11 +19,25 @@ import { fenToYuan } from '../format';
 
 const COLLAPSED_COUNT = 4;
 
-/** 档定义：洗澡（非造型）/ 造型美容（名含「造型」） */
+/** 档定义：洗澡（非造型）/ 造型美容（名含「造型」）；photo=VI 插画图标（已入库） */
 const CATEGORIES = [
-  { key: 'wash', name: '洗澡', icon: Bath, testId: 'gs-cat-wash', match: (s: ServiceItem) => !s.name.includes('造型') },
-  { key: 'style', name: '造型美容', icon: Scissors, testId: 'gs-cat-style', match: (s: ServiceItem) => s.name.includes('造型') },
+  { key: 'wash', name: '洗澡', icon: Bath, photo: '/photos/icons/ic-bath.png', testId: 'gs-cat-wash', match: (s: ServiceItem) => !s.name.includes('造型') },
+  { key: 'style', name: '造型美容', icon: Scissors, photo: '/photos/icons/ic-groom.png', testId: 'gs-cat-style', match: (s: ServiceItem) => s.name.includes('造型') },
 ] as const;
+
+/** 大卡照片插槽：VI 插画 <img> 直出，onError 回退 lucide 线图标（资产缺失不破版） */
+function CatPhoto({ photo, icon: Icon }: { photo: string; icon: typeof Bath }) {
+  const [imgOk, setImgOk] = useState(true);
+  return (
+    <span className="flex h-14 w-full items-center justify-center rounded-control bg-sunken" aria-hidden="true">
+      {imgOk ? (
+        <img src={photo} alt="" className="h-12 w-12 object-contain" onError={() => setImgOk(false)} />
+      ) : (
+        <Icon className="h-7 w-7 text-ink" strokeWidth={1.5} />
+      )}
+    </span>
+  );
+}
 
 export default function ServiceChipsBlock({
   services,
@@ -78,7 +92,6 @@ export default function ServiceChipsBlock({
         <div className="mb-3 grid grid-cols-2 gap-3">
           {catCards.map((c) => {
             const active = c.items.some((s) => s.id === selectedId);
-            const Icon = c.icon;
             return (
               <button
                 key={c.key}
@@ -90,10 +103,8 @@ export default function ServiceChipsBlock({
                   active ? 'ring-2 ring-ink' : ''
                 }`}
               >
-                {/* 照片插槽：产品侧 photos/ 照片包入库后以 <img> 替换此图标位（容器尺寸不变） */}
-                <span className="flex h-14 w-full items-center justify-center rounded-control bg-sunken" aria-hidden="true">
-                  <Icon className="h-7 w-7 text-ink" strokeWidth={1.5} />
-                </span>
+                {/* 照片插槽：VI 插画图标（U1.1 启用），onError 回退 lucide（容器尺寸不变） */}
+                <CatPhoto photo={c.photo} icon={c.icon} />
                 <span className="text-body-sm font-semibold leading-5">{c.name}</span>
                 <span className="u1-num text-caption-xs leading-4 text-ink-secondary">
                   {c.items.length} 项可选 · {fenToYuan(Math.min(...c.items.map((s) => s.priceFen)))} 起

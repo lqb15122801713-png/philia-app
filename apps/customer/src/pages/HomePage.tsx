@@ -64,12 +64,17 @@ interface ServiceRow {
   priceFen: number
 }
 
-/** 入口图标插槽：产品侧 photos/icons/ 四张透明底 PNG 未入库——lucide 线图标占位；
- *  资产到位后以 <img src> 替换 Icon 即可（容器尺寸不变）。 */
-function EntryIcon({ icon: Icon, label }: { icon: typeof Bath; label: string }) {
+/** 入口图标插槽：VI 插画图标已入库（photos/icons/，批次 U1 资产）——<img> 直出；
+ *  onError 回退原 lucide 线图标（资产缺失不破版，与 banner 同口径）；容器尺寸不变。 */
+function EntryIcon({ icon: Icon, label, src }: { icon: typeof Bath; label: string; src: string }) {
+  const [imgOk, setImgOk] = useState(true)
   return (
     <span className="flex h-12 w-12 items-center justify-center rounded-full bg-sunken" aria-hidden="true">
-      <Icon className="h-6 w-6 text-ink" strokeWidth={1.5} aria-label={label} />
+      {imgOk ? (
+        <img src={src} alt="" className="h-8 w-8 object-contain" onError={() => setImgOk(false)} />
+      ) : (
+        <Icon className="h-6 w-6 text-ink" strokeWidth={1.5} aria-label={label} />
+      )}
     </span>
   )
 }
@@ -171,17 +176,17 @@ export default function HomePage() {
       {/* 横排三入口：洗护 / 造型美容 / 寄养 */}
       <div className="grid grid-cols-3 gap-2">
         {[
-          { to: '/booking/grooming', testid: 'home-entry-grooming', icon: Bath, name: '洗护', note: washNote },
-          { to: '/booking/grooming?tab=style', testid: 'home-entry-style', icon: Scissors, name: '造型美容', note: styleNote },
-          { to: '/booking/boarding', testid: 'home-entry-boarding', icon: BedDouble, name: '寄养', note: boardingNote },
-        ].map(({ to, testid, icon, name, note }) => (
+          { to: '/booking/grooming', testid: 'home-entry-grooming', icon: Bath, iconSrc: '/photos/icons/ic-bath.png', name: '洗护', note: washNote },
+          { to: '/booking/grooming?tab=style', testid: 'home-entry-style', icon: Scissors, iconSrc: '/photos/icons/ic-groom.png', name: '造型美容', note: styleNote },
+          { to: '/booking/boarding', testid: 'home-entry-boarding', icon: BedDouble, iconSrc: '/photos/icons/ic-board.png', name: '寄养', note: boardingNote },
+        ].map(({ to, testid, icon, iconSrc, name, note }) => (
           <Link
             key={testid}
             to={to}
             data-testid={testid}
             className="flex flex-col items-center gap-1.5 py-1 transition-transform duration-120 ease-philia-spring active:scale-92"
           >
-            <EntryIcon icon={icon} label={name} />
+            <EntryIcon icon={icon} label={name} src={iconSrc} />
             <span className="text-body-sm font-semibold leading-5">{name}</span>
             {note ? (
               <span className="u1-num text-center text-caption-xs leading-4 text-ink-secondary">{note}</span>
