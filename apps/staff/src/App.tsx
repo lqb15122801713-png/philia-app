@@ -1,8 +1,8 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
-import { PageErrorBoundary } from '@philia/shared'
+import { PageErrorBoundary, useMe } from '@philia/shared'
 import { Toaster } from '@/components/ui/sonner'
 import RequireStaff from './components/RequireStaff'
-import TabBar from './components/TabBar'
+import StaffDock, { type StaffDockActive } from './components/StaffDock'
 import BoardingCheckinPage from './pages/BoardingCheckinPage'
 import DevLoginPage from './pages/DevLoginPage'
 import ExecutePage from './pages/ExecutePage'
@@ -25,21 +25,26 @@ function ProtectedRoutes() {
   )
 }
 
+// U2 任务 A：dock 仅主级三屏（任务台/历史/我的）；详情级（执行/打卡）走 PageHeader 返回条
+const DOCK_TABS: Record<string, StaffDockActive> = { '/today': 'today', '/history': 'history', '/me': 'me' }
+
 export default function App() {
   const { pathname } = useLocation()
   const isDevLogin = pathname === '/dev-login'
+  const dockActive = DOCK_TABS[pathname]
+  const { user } = useMe()
 
   return (
     <div className="min-h-screen bg-canvas text-ink">
-      <main className="mx-auto max-w-lg pb-24">
+      <main className={`mx-auto max-w-lg ${dockActive ? 'pb-[94px]' : ''}`}>
         <Routes>
-          {/* 开发登录页：守卫之外，且不显示 TabBar（T3.1 新增路由，契约允许） */}
+          {/* 开发登录页：守卫之外，且不显示 Dock（T3.1 新增路由，契约允许） */}
           <Route path="/dev-login" element={<DevLoginPage />} />
           <Route
             path="/*"
             element={
               <RequireStaff>
-                {/* 批次 9a 任务 E：页级错误边界（执行/核销链路 /execute/:id 崩一屏不塌全端，TabBar 存活） */}
+                {/* 批次 9a 任务 E：页级错误边界（执行/核销链路 /execute/:id 崩一屏不塌全端，Dock 存活） */}
                 <PageErrorBoundary app="staff">
                   <ProtectedRoutes />
                 </PageErrorBoundary>
@@ -48,7 +53,9 @@ export default function App() {
           />
         </Routes>
       </main>
-      {!isDevLogin && <TabBar />}
+      {!isDevLogin && dockActive && user?.staffId ? (
+        <StaffDock active={dockActive} role={user.staffRole === 'frontdesk' ? 'frontdesk' : 'groomer'} />
+      ) : null}
       <Toaster position="top-center" richColors />
     </div>
   )
