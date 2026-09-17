@@ -218,7 +218,7 @@ export default function CheckinForm({
           type="button"
           onClick={submit}
           disabled={submitting || anyUploading}
-          className="h-staff-btn w-full rounded-full bg-brand-primary text-body-lg font-semibold text-white shadow-philia transition active:scale-95 disabled:opacity-50"
+          className="h-12 w-full rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
         >
           {submitting ? '提交中…' : initial ? '保存登记信息' : '完成入住登记'}
         </button>

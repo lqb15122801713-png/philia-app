@@ -43,13 +43,13 @@ export default function PhotoViewer({ state, onClose, onIndexChange }: PhotoView
       onClick={onClose}
     >
       <div className="flex items-center justify-between p-3">
-        <span className="font-number text-body text-white/90">
+        <span className="font-number text-body text-[#F6F1E3]/90">
           {index + 1} / {photos.length}
         </span>
         <button
           type="button"
           onClick={onClose}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-[rgba(246,241,227,.12)] text-[#F6F1E3]"
           aria-label="关闭"
         >
           <X className="h-6 w-6" strokeWidth={1.5} />
@@ -74,7 +74,7 @@ export default function PhotoViewer({ state, onClose, onIndexChange }: PhotoView
               e.stopPropagation();
               onIndexChange(index - 1);
             }}
-            className="absolute left-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white disabled:opacity-30"
+            className="absolute left-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-[rgba(246,241,227,.12)] text-[#F6F1E3] disabled:opacity-30"
             aria-label="上一张"
           >
             <ChevronLeft className="h-7 w-7" strokeWidth={1.5} />
@@ -86,7 +86,7 @@ export default function PhotoViewer({ state, onClose, onIndexChange }: PhotoView
               e.stopPropagation();
               onIndexChange(index + 1);
             }}
-            className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white disabled:opacity-30"
+            className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-[rgba(246,241,227,.12)] text-[#F6F1E3] disabled:opacity-30"
             aria-label="下一张"
           >
             <ChevronRight className="h-7 w-7" strokeWidth={1.5} />

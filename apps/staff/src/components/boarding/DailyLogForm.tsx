@@ -1,31 +1,21 @@
 /**
- * 今日打卡卡（boarding.dailyLog · UPSERT by (stay_id, log_date)）
+ * U2 任务 E · 今日打卡表单卡（boarding.dailyLog · UPSERT by (stay_id, log_date) 幂等）
  *
- * - 喂食记录：可添加多顿（时间 + 食物 + 「已吃完」开关），≤12 顿
- * - 遛弯次数：步进器（0–99）
- * - 状态备注：≤300 字（服务端上限 500，UI 按任务规格收紧到 300）
- * - 状态照片：≤6 张，三列九宫格，uploadImage → boarding/<aid>/daily/<date>
- * - UPSERT 语义：当日已有打卡时顶部明示「今日已打卡，再次提交将更新」，
- *   按钮文案变为「更新今日打卡」；预填仅在 todayLog.id 变化时发生，
- *   避免后台轮询重取后覆盖员工正在编辑的内容。
+ * 规格书 §5 + 试样 .bd-form：标题「今日打卡 · M月d日」+ 副行「提交后实时推送给家长
+ * （照片+文字）」；喂食 segment（未喂/1/2/3 餐，墨底选中）；遛狗 − N ＋ stepper
+ * （副行「次 · 每次约 15 分钟」）；今日照片 ≥1 张（缩略 64×48 + ＋拍照虚线槽）；
+ * 备注选填多行（提示家长可见）；吸底柠檬主钮「提交今日打卡」（副行「同日重复提交=
+ * 更新当日记录（幂等）」；已打卡则主钮文案「更新今日打卡」）。
+ *
+ * 数据口径注记：server mealItem.food 必填（min 1）——segment 餐次映射为
+ * N × { time: 提交时刻, food: '正餐' }（餐次计数语义，食物明细 v1 不采，规格书同）；
+ * 预填仅在 todayLog.id 变化时发生（轮询重取不打断编辑，沿用旧口径）。
  */
 
-import { getApiBase, safeUuid, uploadImage } from '@philia/shared';
-import { Camera, Info, Loader2, Minus, Plus, Trash2, X } from 'lucide-react';
+import { getApiBase, uploadImage } from '@philia/shared';
+import { Camera, Minus, Plus, X } from 'lucide-react';
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import type { BoardingLogRow, MealItem } from './types';
-
-interface MealDraft {
-  key: string;
-  time: string;
-  food: string;
-  amount?: string;
-  finished: boolean;
-}
-
-interface PhotoDraft {
-  url: string;
-}
 
 export interface DailyLogSubmit {
   stayId: string;
@@ -39,25 +29,21 @@ export interface DailyLogSubmit {
 export interface DailyLogFormProps {
   appointmentId: string;
   stayId: string;
-  /** 今日 ISO 日期 'YYYY-MM-DD' */
   today: string;
-  /** 今日已有打卡（UPSERT 预填 + 提示）；undefined 表示今日未打卡 */
   todayLog: BoardingLogRow | undefined;
   submitting: boolean;
   onSubmit(input: DailyLogSubmit): void;
   onError(message: string): void;
 }
 
-const NOTE_MAX = 300;
 const PHOTO_MAX = 6;
-const MEAL_MAX = 12;
+/** 喂食 segment 档：0=未喂 / 1–3 餐（试样四档） */
+const MEAL_SEGS = ['未喂', '1 餐', '2 餐', '3 餐'] as const;
 
 const nowHHmm = () => {
   const d = new Date();
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 };
-
-const newMeal = (): MealDraft => ({ key: safeUuid(), time: nowHHmm(), food: '', finished: false });
 
 export default function DailyLogForm({
   appointmentId,
@@ -68,33 +54,23 @@ export default function DailyLogForm({
   onSubmit,
   onError,
 }: DailyLogFormProps) {
-  const [meals, setMeals] = useState<MealDraft[]>([]);
+  const [mealCount, setMealCount] = useState(0);
   const [walks, setWalks] = useState(0);
   const [note, setNote] = useState('');
-  const [photos, setPhotos] = useState<PhotoDraft[]>([]);
+  const [photos, setPhotos] = useState<string[]>([]);
   const [uploadingCount, setUploadingCount] = useState(0);
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  // 预填只在「今日打卡记录 id 变化」时发生一次：60s 慢轮询/失效重取会产生新对象，
-  // 但 id 不变，不会打断员工正在进行的编辑
+  // 预填只在「今日打卡记录 id 变化」时发生一次
   const prefilledIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (!todayLog || prefilledIdRef.current === todayLog.id) return;
     prefilledIdRef.current = todayLog.id;
-    setMeals(
-      (todayLog.meals ?? []).map((m) => ({
-        key: safeUuid(),
-        time: m.time || nowHHmm(),
-        food: m.food ?? '',
-        amount: m.amount,
-        finished: m.finished ?? false,
-      })),
-    );
+    setMealCount(Math.min(3, todayLog.meals?.length ?? 0));
     setWalks(todayLog.walks ?? 0);
     setNote(todayLog.note ?? '');
-    setPhotos((todayLog.photos ?? []).slice(0, PHOTO_MAX).map((url) => ({ url })));
+    setPhotos((todayLog.photos ?? []).slice(0, PHOTO_MAX));
   }, [todayLog]);
-
-  const fileRef = useRef<HTMLInputElement>(null);
 
   const onFiles = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
@@ -102,25 +78,21 @@ export default function DailyLogForm({
     if (files.length === 0) return;
     const room = PHOTO_MAX - photos.length;
     if (room <= 0) {
-      onError(`状态照片最多 ${PHOTO_MAX} 张`);
+      onError(`今日照片最多 ${PHOTO_MAX} 张`);
       return;
     }
     for (const file of files.slice(0, room)) {
       setUploadingCount((c) => c + 1);
       try {
         const { url } = await uploadImage(getApiBase(), file, `boarding/${appointmentId}/daily/${today}`);
-        setPhotos((ps) => (ps.length < PHOTO_MAX ? [...ps, { url }] : ps));
+        setPhotos((ps) => (ps.length < PHOTO_MAX ? [...ps, url] : ps));
       } catch (err) {
         onError(err instanceof Error ? err.message : '照片上传失败，请重试');
       } finally {
         setUploadingCount((c) => c - 1);
       }
     }
-    if (files.length > room) onError(`状态照片最多 ${PHOTO_MAX} 张，超出的已忽略`);
-  };
-
-  const patchMeal = (key: string, patch: Partial<MealDraft>) => {
-    setMeals((ms) => ms.map((m) => (m.key === key ? { ...m, ...patch } : m)));
+    if (files.length > room) onError(`今日照片最多 ${PHOTO_MAX} 张，超出的已忽略`);
   };
 
   const anyUploading = uploadingCount > 0;
@@ -130,194 +102,147 @@ export default function DailyLogForm({
       onError('照片上传中，请稍候再提交');
       return;
     }
-    const badIdx = meals.findIndex((m) => !m.food.trim());
-    if (badIdx !== -1) {
-      onError(`请填写第 ${badIdx + 1} 餐的食物，或删除该餐`);
+    if (photos.length < 1) {
+      onError('今日照片至少 1 张——家长等着看 TA 呢');
       return;
     }
+    const meals: MealItem[] = Array.from({ length: mealCount }, () => ({
+      time: nowHHmm(),
+      food: '正餐',
+    }));
     onSubmit({
       stayId,
       logDate: today,
-      meals: meals.map((m) => ({
-        time: (m.time || nowHHmm()).slice(0, 32),
-        food: m.food.trim().slice(0, 64),
-        ...(m.amount ? { amount: m.amount } : {}),
-        finished: m.finished,
-      })),
+      meals,
       walks,
-      note: note.trim() ? note.trim() : undefined,
-      photos: photos.length > 0 ? photos.map((p) => p.url) : undefined,
+      note: note.trim() ? note.trim().slice(0, 500) : undefined,
+      photos,
     });
   };
 
   return (
-    <section className="rounded-card bg-card p-4 shadow-card">
-      <div className="flex items-center justify-between">
-        <h2 className="text-title">今日打卡</h2>
-        <span className="font-number text-caption text-ink-secondary">{today}</span>
-      </div>
+    <>
+      <section className="u1-card mx-4 mt-3.5 p-4" data-testid="daily-log-form">
+        <h2 className="text-body-sm font-extrabold">今日打卡 · {Number(today.slice(5, 7))}月{Number(today.slice(8, 10))}日</h2>
+        <p className="mb-3.5 mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">提交后实时推送给家长（照片+文字）</p>
 
-      {/* UPSERT 明示 */}
-      {todayLog ? (
-        <p className="mt-2 flex items-center gap-1.5 rounded-tag bg-brand-secondary-light px-3 py-2 text-body text-ink">
-          <Info className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-          今日已打卡，再次提交将更新
-        </p>
-      ) : null}
-
-      {/* 喂食记录 */}
-      <div className="mt-4">
-        <span className="text-body-lg font-medium text-ink">喂食记录</span>
-        <ul className="mt-1.5 space-y-2">
-          {meals.map((meal) => (
-            <li key={meal.key} className="flex items-center gap-2">
-              <input
-                type="time"
-                value={meal.time}
-                onChange={(e) => patchMeal(meal.key, { time: e.target.value })}
-                className="h-staff-btn w-24 shrink-0 rounded-input border border-line bg-canvas px-2 font-number text-body-lg text-ink focus:border-brand-primary focus:outline-none"
-                aria-label="用餐时间"
-              />
-              <input
-                type="text"
-                value={meal.food}
-                onChange={(e) => patchMeal(meal.key, { food: e.target.value.slice(0, 64) })}
-                placeholder="食物，如：自带粮"
-                className="h-staff-btn min-w-0 flex-1 rounded-input border border-line bg-canvas px-3 text-body-lg text-ink placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
-              />
+        {/* 喂食 segment（墨底选中） */}
+        <div className="mb-3.5">
+          <p className="mb-2 text-caption-xs font-bold">
+            喂食 <small className="font-medium text-[rgba(74,59,46,.42)]">· 实际餐次</small>
+          </p>
+          <div className="flex gap-2" role="group" aria-label="喂食餐次">
+            {MEAL_SEGS.map((label, i) => (
               <button
+                key={label}
                 type="button"
-                onClick={() => patchMeal(meal.key, { finished: !meal.finished })}
-                className={`h-12 shrink-0 rounded-full px-3 text-body ${
-                  meal.finished ? 'bg-success-light text-success-deep' : 'bg-sunken text-ink-secondary'
+                aria-pressed={mealCount === i}
+                onClick={() => setMealCount(i)}
+                className={`flex-1 rounded-[10px] py-2.5 text-caption font-semibold transition-transform duration-120 ease-philia-spring active:scale-92 ${
+                  mealCount === i ? 'bg-ink text-[#F6F1E3]' : 'u1-ring bg-canvas text-[rgba(74,59,46,.62)]'
                 }`}
-                aria-pressed={meal.finished}
               >
-                {meal.finished ? '已吃完' : '未吃完'}
+                {label}
               </button>
-              <button
-                type="button"
-                onClick={() => setMeals((ms) => ms.filter((m) => m.key !== meal.key))}
-                className="flex h-12 w-12 shrink-0 items-center justify-center text-danger-deep"
-                aria-label="删除该餐"
-              >
-                <Trash2 className="h-5 w-5" strokeWidth={1.5} />
-              </button>
-            </li>
-          ))}
-        </ul>
-        {meals.length < MEAL_MAX ? (
-          <button
-            type="button"
-            onClick={() => setMeals((ms) => [...ms, newMeal()])}
-            className="mt-2 flex h-12 items-center gap-1.5 rounded-full bg-brand-primary-light px-4 text-body-lg text-brand-primary"
-          >
-            <Plus className="h-5 w-5" strokeWidth={1.5} />
-            添加一餐
-          </button>
-        ) : null}
-      </div>
-
-      {/* 遛弯步进器 */}
-      <div className="mt-4 flex items-center justify-between">
-        <span className="text-body-lg font-medium text-ink">遛弯次数</span>
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setWalks((w) => Math.max(0, w - 1))}
-            disabled={walks <= 0}
-            className="flex h-staff-btn w-14 items-center justify-center rounded-full bg-sunken text-ink disabled:opacity-40"
-            aria-label="减少一次"
-          >
-            <Minus className="h-6 w-6" strokeWidth={1.5} />
-          </button>
-          <span className="w-10 text-center font-number text-title-lg">{walks}</span>
-          <button
-            type="button"
-            onClick={() => setWalks((w) => Math.min(99, w + 1))}
-            disabled={walks >= 99}
-            className="flex h-staff-btn w-14 items-center justify-center rounded-full bg-brand-primary-light text-brand-primary disabled:opacity-40"
-            aria-label="增加一次"
-          >
-            <Plus className="h-6 w-6" strokeWidth={1.5} />
-          </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      {/* 状态备注 */}
-      <label className="mt-4 block">
-        <span className="flex items-baseline justify-between text-body-lg font-medium text-ink">
-          状态备注
-          <span className="font-number text-caption text-ink-placeholder">
-            {note.length}/{NOTE_MAX}
-          </span>
-        </span>
-        <textarea
-          value={note}
-          onChange={(e) => setNote(e.target.value.slice(0, NOTE_MAX))}
-          rows={3}
-          placeholder="精神、食欲、排便等情况（可空）"
-          className="mt-1.5 w-full rounded-input border border-line bg-canvas px-3 py-2.5 text-body-lg text-ink placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
-        />
-      </label>
-
-      {/* 状态照片（≤6，九宫格） */}
-      <div className="mt-4">
-        <span className="text-body-lg font-medium text-ink">状态照片（≤{PHOTO_MAX} 张）</span>
-        <div className="mt-1.5 grid grid-cols-3 gap-1">
-          {photos.map((p, i) => (
-            <div key={p.url} className="relative aspect-square overflow-hidden rounded-tag bg-sunken">
-              <img src={p.url} alt={`状态照片 ${i + 1}`} className="h-full w-full object-cover" />
-              <button
-                type="button"
-                onClick={() => setPhotos((ps) => ps.filter((x) => x.url !== p.url))}
-                className="absolute right-1 top-1 flex h-10 w-10 items-center justify-center rounded-full bg-[rgba(61,50,41,0.55)] text-white"
-                aria-label={`删除照片 ${i + 1}`}
-              >
-                <X className="h-4 w-4" strokeWidth={2} />
-              </button>
-            </div>
-          ))}
-          {Array.from({ length: uploadingCount }).map((_, i) => (
-            <div
-              key={`uploading-${i}`}
-              className="flex aspect-square items-center justify-center rounded-tag bg-sunken"
-            >
-              <Loader2 className="h-6 w-6 animate-spin text-ink-secondary" strokeWidth={1.5} />
-            </div>
-          ))}
-          {photos.length + uploadingCount < PHOTO_MAX ? (
+        {/* 遛狗 stepper */}
+        <div className="mb-3.5">
+          <p className="mb-2 text-caption-xs font-bold">
+            遛狗 <small className="font-medium text-[rgba(74,59,46,.42)]">· 实际次数</small>
+          </p>
+          <div className="flex items-center gap-3.5">
             <button
               type="button"
-              onClick={() => fileRef.current?.click()}
-              className="flex aspect-square flex-col items-center justify-center gap-1 rounded-tag border border-dashed border-line-strong text-ink-secondary"
+              onClick={() => setWalks((w) => Math.max(0, w - 1))}
+              disabled={walks <= 0}
+              aria-label="减少一次"
+              className="u1-ring flex h-10 w-10 items-center justify-center rounded-full bg-canvas text-body-lg text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
             >
-              <Camera className="h-6 w-6" strokeWidth={1.5} />
-              <span className="text-caption">拍照</span>
+              <Minus className="h-4 w-4" strokeWidth={1.8} />
             </button>
-          ) : null}
+            <span className="u1-num min-w-7 text-center text-title-lg font-extrabold">{walks}</span>
+            <button
+              type="button"
+              onClick={() => setWalks((w) => Math.min(99, w + 1))}
+              disabled={walks >= 99}
+              aria-label="增加一次"
+              className="u1-ring flex h-10 w-10 items-center justify-center rounded-full bg-canvas text-body-lg text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
+            >
+              <Plus className="h-4 w-4" strokeWidth={1.8} />
+            </button>
+            <span className="text-caption-xs text-[rgba(74,59,46,.42)]">次 · 每次约 15 分钟</span>
+          </div>
         </div>
+
+        {/* 今日照片（≥1 张） */}
+        <div className="mb-3.5">
+          <p className="mb-2 text-caption-xs font-bold">
+            今日照片 <small className="font-medium text-[rgba(74,59,46,.42)]">· 至少 1 张</small>
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {photos.map((url, i) => (
+              <span key={url} className="relative inline-block h-12 w-16">
+                <img src={url} alt={`今日照片 ${i + 1}`} className="h-12 w-16 rounded-tag object-cover" loading="lazy" />
+                <button
+                  type="button"
+                  aria-label={`删除照片 ${i + 1}`}
+                  onClick={() => setPhotos((ps) => ps.filter((x) => x !== url))}
+                  className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[11px] text-[#F6F1E3] transition-transform duration-120 ease-philia-spring active:scale-92"
+                >
+                  <X className="h-3 w-3" strokeWidth={2.5} />
+                </button>
+              </span>
+            ))}
+            {photos.length + uploadingCount < PHOTO_MAX ? (
+              <button
+                type="button"
+                data-testid="daily-add-photo"
+                onClick={() => fileRef.current?.click()}
+                className="flex h-12 w-16 flex-col items-center justify-center rounded-tag bg-card text-[11px] leading-tight text-[rgba(74,59,46,.42)] [border:1px_dashed_rgba(74,59,46,.25)] transition-transform duration-120 ease-philia-spring active:scale-92"
+              >
+                <b className="text-body font-normal">＋</b>
+                拍照
+              </button>
+            ) : null}
+            {Array.from({ length: uploadingCount }).map((_, i) => (
+              <span key={`up-${i}`} className="h-12 w-16 animate-pulse rounded-tag bg-sunken" aria-label="上传中" />
+            ))}
+          </div>
+        </div>
+
+        {/* 备注（选填，家长可见） */}
+        <div>
+          <p className="mb-2 text-caption-xs font-bold">
+            备注 <small className="font-medium text-[rgba(74,59,46,.42)]">· 选填，家长可见</small>
+          </p>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value.slice(0, 500))}
+            placeholder="今天胃口很好，中午在院子里跑了二十分钟…"
+            className="h-16 w-full resize-none rounded-input bg-canvas px-3.5 py-3 text-caption text-ink shadow-[inset_0_0_0_1px_rgba(74,59,46,.09)] placeholder:text-[rgba(74,59,46,.42)] focus:outline-none focus:shadow-[inset_0_0_0_1px_rgba(74,59,46,.25)]"
+          />
+        </div>
+
+        <input ref={fileRef} type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={onFiles} />
+      </section>
+
+      {/* 吸底柠檬主钮（幂等副行常驻） */}
+      <div className="sticky bottom-0 mt-3 bg-card px-4 pb-[calc(14px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-1px_0_rgba(74,59,46,.06)]">
+        <button
+          type="button"
+          data-testid="daily-submit"
+          onClick={submit}
+          disabled={submitting || anyUploading}
+          className="flex w-full items-center justify-center gap-2 rounded-control bg-brand-primary py-3.5 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-60"
+        >
+          <Camera className="h-4 w-4" strokeWidth={1.8} />
+          {submitting ? '提交中…' : todayLog ? '更新今日打卡' : '提交今日打卡'}
+        </button>
+        <p className="mt-1.5 text-center text-caption-xs text-[rgba(74,59,46,.42)]">同日重复提交=更新当日记录（幂等）</p>
       </div>
-
-      {/* 提交 */}
-      <button
-        type="button"
-        onClick={submit}
-        disabled={submitting || anyUploading}
-        className="mt-5 h-staff-btn w-full rounded-full bg-brand-primary text-body-lg font-semibold text-white shadow-philia transition active:scale-95 disabled:opacity-50"
-      >
-        {submitting ? '提交中…' : todayLog ? '更新今日打卡' : '提交今日打卡'}
-      </button>
-
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        multiple
-        className="hidden"
-        onChange={onFiles}
-      />
-    </section>
+    </>
   );
 }

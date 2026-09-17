@@ -65,6 +65,23 @@
   src: url('/fonts/noto-sans-sc-chinese-simplified-700.woff2') format('woff2');
 }
 
+/* U2（动效纲领 + v9.1）：Noto Serif SC 中文展示位衬线（font-serif-cn 链）。
+   woff2 与客户端同源同文件（批次 U1 已入库资产），只用于登录宣言等中文展示位。 */
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/noto-serif-sc-chinese-simplified-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/noto-serif-sc-chinese-simplified-700.woff2') format('woff2');
+}
+
 @layer base {
   /* shadcn light 变量 · 对齐冻结表 4.1（docs/BRAND-TOKENS-v1.1.md §三） */
   :root {
@@ -152,5 +169,33 @@
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/* U2 批次：v9.1 组件类（与客户端 U1-B 同语言，同名同值） */
+@layer components {
+  /* 深度策略组合：1px 暖墨细线 ring + 近零软影 */
+  .u1-ring {
+    @apply shadow-hairline ring-1 ring-line-ring;
+  }
+  /* 卡：白底 + 20px 圆角 + 细线 ring + 近零影 */
+  .u1-card {
+    @apply u1-ring rounded-panel bg-card;
+  }
+  /* 控件：14px 圆角（按钮/输入/chips 容器） */
+  .u1-control {
+    @apply rounded-control;
+  }
+  /* 小签：6px 圆角（角标/小标签） */
+  .u1-chip {
+    @apply rounded-chip;
+  }
+  /* 数字与价格：Montserrat 字族 + tabular-nums 等宽 */
+  .u1-num {
+    @apply font-number tabular-nums;
+  }
+  /* 中文展示位衬线：Noto Serif SC → Songti SC → serif（缺失静默回退） */
+  .u1-serif {
+    @apply font-serif-cn;
   }
 }

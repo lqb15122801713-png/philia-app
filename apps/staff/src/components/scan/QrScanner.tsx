@@ -218,12 +218,12 @@ export default function QrScanner({ open, onClose, onCheckedIn }: QrScannerProps
     <div className="fixed inset-0 z-[100] flex flex-col bg-black" role="dialog" aria-modal="true" aria-label="扫码核销">
       {/* 顶栏 */}
       <div className="flex items-center justify-between px-4 pt-[max(env(safe-area-inset-top),12px)]">
-        <span className="text-base font-medium text-white">扫码核销</span>
+        <span className="text-base font-medium text-[#F6F1E3]">扫码核销</span>
         <button
           type="button"
           onClick={handleClose}
           aria-label="关闭"
-          className="flex h-11 w-11 items-center justify-center rounded-full text-white/80 active:bg-white/10"
+          className="flex h-11 w-11 items-center justify-center rounded-full text-[#F6F1E3]/80 active:bg-[#F6F1E3]/10"
         >
           <X className="h-6 w-6" />
         </button>
@@ -239,7 +239,7 @@ export default function QrScanner({ open, onClose, onCheckedIn }: QrScannerProps
               setStatus('starting');
               void startRef.current?.();
             }}
-            className="mx-6 flex h-14 min-h-[56px] items-center justify-center gap-2 rounded-xl border border-white/30 text-base text-white active:bg-white/10"
+            className="mx-6 flex h-14 min-h-[56px] items-center justify-center gap-2 rounded-xl border border-[#F6F1E3]/30 text-base text-[#F6F1E3] active:bg-[#F6F1E3]/10"
           >
             <SwitchCamera className="h-5 w-5" />
             返回扫码
@@ -253,7 +253,7 @@ export default function QrScanner({ open, onClose, onCheckedIn }: QrScannerProps
 
             {status === 'error' ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 px-8 text-center">
-                <p className="text-base leading-relaxed text-white/90">{errorMsg}</p>
+                <p className="text-base leading-relaxed text-[#F6F1E3]/90">{errorMsg}</p>
                 <button
                   type="button"
                   onClick={() => void startRef.current?.()}
@@ -262,7 +262,7 @@ export default function QrScanner({ open, onClose, onCheckedIn }: QrScannerProps
                   <SwitchCamera className="h-5 w-5" />
                   重试摄像头
                 </button>
-                <p className="text-sm text-white/60">摄像头不可用？点底部「手动输入核销码」报 6 位码照样核销。</p>
+                <p className="text-sm text-[#F6F1E3]/60">摄像头不可用？点底部「手动输入核销码」报 6 位码照样核销。</p>
               </div>
             ) : (
               <>
@@ -275,7 +275,7 @@ export default function QrScanner({ open, onClose, onCheckedIn }: QrScannerProps
                     <span className="absolute bottom-0 right-0 h-8 w-8 rounded-br-lg border-b-4 border-r-4" style={{ borderColor: BRAND }} />
                   </div>
                 </div>
-                <p className="absolute inset-x-0 bottom-16 text-center text-base text-white/90">
+                <p className="absolute inset-x-0 bottom-16 text-center text-base text-[#F6F1E3]/90">
                   {status === 'processing' ? '核销中…' : '对准客户预约码'}
                 </p>
               </>
@@ -290,7 +290,7 @@ export default function QrScanner({ open, onClose, onCheckedIn }: QrScannerProps
                 stopStream();
                 setMode('manual');
               }}
-              className="flex h-14 min-h-[56px] w-full items-center justify-center gap-2 rounded-xl border border-white/30 text-base text-white active:bg-white/10"
+              className="flex h-14 min-h-[56px] w-full items-center justify-center gap-2 rounded-xl border border-[#F6F1E3]/30 text-base text-[#F6F1E3] active:bg-[#F6F1E3]/10"
             >
               <Keyboard className="h-5 w-5" />
               手动输入核销码

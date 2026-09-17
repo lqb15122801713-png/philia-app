@@ -1,177 +1,145 @@
 /**
- * 历史记录页（契约 docs/STAFF-CONTRACTS.md · T3.1）—— 路由 /history
+ * 历史 /history（批次 U2 任务 F · 试样 .hi-* 重做）
  *
- * 数据源：appointment.listForStaff（T3.1 服务端追加，staffProcedure）——
- * 本店且指派给本人/本人执行过的预约，按 scheduledStart 倒序。
- * 默认本月（from=当月 1 日 00:00），可切状态过滤。
- * 头部统计：本月完成单数 + 平均评分；提成字段服务端暂无，按契约做占位说明。
- * 卡片：时间 / 宠物 / 服务 / 状态 / 评分（无评分显示「待评价」）。
+ * 规格书 §6：标题「历史」（20/700）+ 右摘要（近 30 天·N 单）→ 按月分组行
+ * （12/700 墨 40% 宽距）→ 单条卡：日/周（Montserrat）+ 宠物·服务 +
+ * 时间·时长·状态（取消单带来源小签）+ 右好评 ★N.N + 金额 Montserrat（取消=—）。
+ * 数据：listForStaff 近 30 天（现成）+ appointment.rating（行内现成字段）。
+ * 明确不做：筛选/搜索（v1 量小）、导出、绩效图、提成。
  */
 
 import { usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
-import StatusCapsule from '@/components/today/StatusCapsule';
-import { Stars } from '@/components/today/TodayTaskCard';
-import { fenToYuan, hhmm, mmdd, monthStart, type HistoryItem } from '@/components/today/utils';
+import { ClipboardList } from 'lucide-react';
+import { useMemo } from 'react';
+import { fenToYuan, hhmm, type HistoryItem } from '@/components/today/utils';
 
-type StatusFilter = 'all' | 'completed' | 'in_service' | 'in_boarding' | 'cancelled';
+const STATUS_TEXT: Record<string, string> = {
+  completed: '已完成',
+  cancelled: '已取消',
+  in_service: '服务中',
+  in_boarding: '寄养中',
+  confirmed: '待到店',
+  pending: '待确认',
+  cancel_requested: '取消审核中',
+};
 
-const STATUS_FILTERS: Array<{ value: StatusFilter; label: string }> = [
-  { value: 'all', label: '全部' },
-  { value: 'completed', label: '已完成' },
-  { value: 'in_service', label: '服务中' },
-  { value: 'in_boarding', label: '寄养中' },
-  { value: 'cancelled', label: '已取消' },
-];
+/** 取消来源小签（schema cancelSource） */
+const CANCEL_SOURCE: Record<string, string> = {
+  customer: '客户取消',
+  merchant: '商家取消',
+};
 
-function HistoryCard({ item }: { item: HistoryItem }) {
-  const isDone = item.status === 'completed' || item.status === 'cancelled';
+const WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'] as const;
+
+function HistoryRow({ item }: { item: HistoryItem }) {
+  const cancelled = item.status === 'cancelled';
+  const durationMin = Math.max(0, Math.round((item.scheduledEnd.getTime() - item.scheduledStart.getTime()) / 60_000));
   return (
-    <li className={`rounded-card bg-card p-4 shadow-card ${isDone ? 'opacity-80' : ''}`}>
-      <div className="flex items-start justify-between gap-2">
-        <p className="font-number text-body-lg tabular-nums">
-          {mmdd(item.scheduledStart)} {hhmm(item.scheduledStart)}
-        </p>
-        <StatusCapsule status={item.status} />
+    <li className="u1-card mb-2.5 flex items-center gap-3.5 px-4 py-3.5" data-testid={`history-${item.id}`}>
+      <div className="w-[52px] shrink-0 text-center">
+        <div className="u1-num text-body font-bold">{item.scheduledStart.getDate()}</div>
+        <div className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.42)]">{WEEK[item.scheduledStart.getDay()]}</div>
       </div>
-      <p className="mt-1 text-body-lg font-semibold">
-        {item.petName ?? '宠物'}
-        <span className="font-normal text-ink-secondary"> · {item.serviceName ?? '服务'}</span>
-      </p>
-      <div className="mt-2 flex items-center justify-between border-t border-line-divider pt-2">
-        {item.status === 'completed' ? (
-          <Stars rating={item.rating} />
-        ) : (
-          <span className="text-body text-ink-placeholder">
-            {item.type === 'boarding' ? '寄养单' : '洗护单'}
-          </span>
-        )}
-        <span className="font-number text-body text-ink-secondary tabular-nums">
-          {fenToYuan(item.priceFen)}
-        </span>
-      </div>
-      {item.review ? (
-        <p className="mt-2 rounded-tag bg-sunken px-2 py-1 text-body text-ink-secondary">
-          客户评价:{item.review}
+      <div className="min-w-0 flex-1">
+        <p className="text-body-sm font-bold">
+          {item.petName ?? '宠物'} · {item.serviceName ?? '服务'}
         </p>
+        <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+          {hhmm(item.scheduledStart)} · {item.type === 'boarding' ? `${Math.max(1, Math.round(durationMin / 1440))} 晚` : `${durationMin} 分钟`} · {STATUS_TEXT[item.status] ?? item.status}
+          {cancelled && item.cancelSource && CANCEL_SOURCE[item.cancelSource] ? (
+            <span className="ml-1 text-[rgba(74,59,46,.42)]">{CANCEL_SOURCE[item.cancelSource]}</span>
+          ) : null}
+        </p>
+      </div>
+      {!cancelled && item.rating !== null ? (
+        <span className="shrink-0 text-caption-xs text-[rgba(74,59,46,.62)]">★ {item.rating.toFixed(1)}</span>
       ) : null}
+      <span className={`u1-num shrink-0 text-body-sm font-bold ${cancelled ? 'text-[rgba(74,59,46,.42)]' : 'text-ink'}`}>
+        {cancelled ? '—' : fenToYuan(item.priceFen)}
+      </span>
     </li>
   );
 }
 
 export default function HistoryPage() {
   const { trpc } = usePhiliaClient();
-  const [status, setStatus] = useState<StatusFilter>('all');
-  const from = useMemo(monthStart, []);
+  // 近 30 天（规格书 §6 口径）
+  const from = useMemo(() => new Date(Date.now() - 30 * 86_400_000), []);
 
-  // 列表（按状态过滤）
   const listQuery = useQuery({
-    queryKey: ['appointment', 'listForStaff', { from: from.getTime(), status }],
-    queryFn: () =>
-      trpc.appointment.listForStaff.query({
-        from,
-        ...(status === 'all' ? {} : { status }),
-      }),
-  });
-
-  // 头部统计（恒为「全部状态」口径，不随筛选变化）
-  const statsQuery = useQuery({
-    queryKey: ['appointment', 'listForStaff', { from: from.getTime(), status: 'all' }],
+    queryKey: ['appointment', 'listForStaff', { from: from.getTime() }],
     queryFn: () => trpc.appointment.listForStaff.query({ from }),
+    refetchInterval: 60_000,
   });
 
-  const items = listQuery.data ?? [];
-  const stats = useMemo(() => {
-    const all = statsQuery.data ?? [];
-    const done = all.filter((a) => a.status === 'completed');
-    const rated = done.filter((a) => a.rating !== null);
-    const avg =
-      rated.length > 0
-        ? rated.reduce((sum, a) => sum + (a.rating ?? 0), 0) / rated.length
-        : null;
-    return { doneCount: done.length, avgRating: avg };
-  }, [statsQuery.data]);
+  const items = useMemo(() => listQuery.data ?? [], [listQuery.data]);
+
+  /** 按月分组（组间按 scheduledStart 倒序保持） */
+  const groups = useMemo(() => {
+    const map = new Map<string, HistoryItem[]>();
+    for (const it of items) {
+      const key = `${it.scheduledStart.getFullYear()}-${it.scheduledStart.getMonth()}`;
+      const arr = map.get(key);
+      if (arr) arr.push(it);
+      else map.set(key, [it]);
+    }
+    return [...map.entries()].map(([key, rows]) => ({ key, label: `${rows[0]!.scheduledStart.getMonth() + 1} 月`, rows }));
+  }, [items]);
 
   return (
     <div className="px-4 pb-6">
-      <header className="pt-6">
-        <h1 className="text-title-lg">历史记录</h1>
-        <p className="mt-1 text-body text-ink-secondary">
-          {from.getMonth() + 1} 月起 · 我承接的服务单
-        </p>
+      <header className="flex h-12 items-center" data-testid="history-header">
+        <h1 className="text-title-lg font-bold">历史</h1>
+        <span className="ml-auto text-caption-xs text-[rgba(74,59,46,.42)]">
+          近 30 天 · <b className="u1-num">{items.length}</b> 单
+        </span>
       </header>
 
-      {/* 统计头部（提成字段服务端暂无 → 占位，契约口径） */}
-      <section className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-card bg-card p-4 shadow-card">
-          <p className="font-number text-price tabular-nums">{stats.doneCount}</p>
-          <p className="mt-1 text-caption text-ink-secondary">本月完成单数</p>
-        </div>
-        <div className="rounded-card bg-card p-4 shadow-card">
-          <p className="font-number text-price tabular-nums">
-            {stats.avgRating !== null ? stats.avgRating.toFixed(1) : '—'}
-          </p>
-          <p className="mt-1 text-caption text-ink-secondary">本月平均评分</p>
-        </div>
-      </section>
-      <p className="mt-2 text-caption text-ink-placeholder">
-        提成明细以门店结算为准（提成统计功能建设中）
-      </p>
-
-      {/* 状态筛选（可横滑：全宽出血 + 隐藏滚动条，末枚 chip 不被页边裁切） */}
-      <div className="-mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar">
-        {STATUS_FILTERS.map((f) => (
-          <button
-            key={f.value}
-            type="button"
-            onClick={() => setStatus(f.value)}
-            className={`h-11 shrink-0 rounded-full px-4 text-body transition active:scale-92 duration-120 ${
-              status === f.value
-                ? 'bg-brand-primary font-semibold text-white'
-                : 'bg-card text-ink-secondary shadow-card'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
       {listQuery.isPending ? (
-        <div className="mt-4 space-y-3" aria-label="加载中">
+        <div className="mt-2 space-y-2.5" aria-label="加载中">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="animate-pulse rounded-card bg-card p-4 shadow-card">
-              <div className="h-5 w-28 rounded-tag bg-sunken" />
-              <div className="mt-2 h-5 w-44 rounded-tag bg-sunken" />
+            <div key={i} className="u1-card flex items-center gap-3.5 px-4 py-3.5">
+              <div className="h-8 w-[52px] animate-pulse rounded-tag bg-sunken" />
+              <div className="flex-1">
+                <div className="h-5 w-32 animate-pulse rounded-tag bg-sunken" />
+                <div className="mt-1.5 h-4 w-44 animate-pulse rounded-tag bg-sunken" />
+              </div>
             </div>
           ))}
         </div>
       ) : listQuery.isError ? (
-        <div className="mt-4 rounded-card bg-card p-6 text-center shadow-card">
-          <p className="text-body-lg text-ink-secondary">历史记录加载失败，请检查网络后重试</p>
+        <div className="u1-card mt-2 p-6 text-center">
+          <p className="text-body-sm text-ink-secondary">历史记录加载失败，请检查网络后重试</p>
           <button
             type="button"
             onClick={() => void listQuery.refetch()}
-            className="mt-4 h-14 min-w-[160px] rounded-full bg-brand-primary px-8 text-body-lg font-semibold text-white active:scale-[0.98]"
+            className="mt-4 h-12 min-w-[160px] rounded-control bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             重新加载
           </button>
         </div>
       ) : items.length === 0 ? (
-        <div className="mt-4 rounded-card bg-card px-6 py-10 text-center shadow-card">
-          <span aria-hidden className="text-4xl">
-            📋
+        // 空态（规格书原文）
+        <div className="flex flex-col items-center px-6 py-14 text-center" data-testid="history-empty">
+          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-sunken" aria-hidden>
+            <ClipboardList className="h-9 w-9 text-ink" strokeWidth={1.5} />
           </span>
-          <p className="mt-3 text-body-lg text-ink-secondary">
-            {status === 'all' ? '本月还没有承接的服务单' : '该状态下暂无记录'}
-          </p>
+          <p className="mt-4 text-body-sm text-ink-secondary">还没有历史单——第一单完成后会出现在这里</p>
         </div>
       ) : (
-        <ul className="mt-4 space-y-3">
-          {items.map((item) => (
-            <HistoryCard key={item.id} item={item} />
-          ))}
-        </ul>
+        groups.map((g) => (
+          <section key={g.key}>
+            <h2 className="px-0 pb-1.5 pt-4 text-caption font-extrabold tracking-[.08em] text-[rgba(74,59,46,.42)]">
+              {g.label}
+            </h2>
+            <ul>
+              {g.rows.map((item) => (
+                <HistoryRow key={item.id} item={item} />
+              ))}
+            </ul>
+          </section>
+        ))
       )}
     </div>
   );

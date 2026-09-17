@@ -23,7 +23,7 @@ export default function CelebrationOverlay({ petName, onDone }: { petName?: stri
         className="flex h-28 w-28 items-center justify-center rounded-full bg-success shadow-elevated"
         style={{ animation: 'celebrate-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both' }}
       >
-        <Check className="h-14 w-14 text-white" strokeWidth={2.5} />
+        <Check className="h-14 w-14 text-[#F6F1E3]" strokeWidth={2.5} />
       </div>
       <div className="mt-8 text-title-lg text-ink">服务完成</div>
       <div className="mt-2 text-body-lg text-ink-secondary">
