@@ -1,0 +1,4 @@
+event: appointment.assigned
+data: {"id":"01M2QN3G1GC7ZA7275TN3TFD77","type":"appointment.assigned","channel":"staff:01M2Q4VVJWFWC25F299QFFC9DK","data":{"appointmentId":"01M2Q9J37GEQBYMNDVA4A05S4Y","staffId":"01M2Q4VVJWFWC25F299QFFC9DK","staffName":"小美","petName":"旺财","by":"merchant"},"ts":1789647765000}
+id: 01M2QN3G1GC7ZA7275TN3TFD77
+
