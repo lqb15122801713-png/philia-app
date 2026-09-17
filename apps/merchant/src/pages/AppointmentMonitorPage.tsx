@@ -1,26 +1,39 @@
 /**
- * 服务过程监视 /appointments/:id/monitor（T4.2 · 开发方案 §2.2）
+ * 单约监控 /monitor/:id（= /appointments/:id/monitor 别名同组件）
+ * （U3 任务 N · 规格书 §13 · 母本 754-814 行）
  *
- * - 只读展示 + 操作叠加：MonitorTimeline（共享 StepTimeline 视觉规范）+ 照片墙
- *   （before_after 复用共享 PhotoWall，其余步骤照片 hover 显示拍摄时间）。
- * - 实时：serviceStep.list 首屏 + SSE（watch=aid，store 频道兜底）；
- *   step_updated / step_flagged → invalidate；appointment.completed → 全量对齐 + toast；
- *   boarding.daily_update → toast + 打卡流累积；onReconnect 全量对齐（断线漏帧补偿）。
- * - 打标重拍：active 步 / 最新 done 步（其后未开始）节点可打标 → 确认弹层（可填原因）
- *   → flagForRedo → toast；其余步按钮禁用（悬停提示规则）；打标后该步显示
- *   「已打标，等待重拍」。
- * - 寄养单：BoardingMonitorPanel（stayBoard 同款信息：入住 + 每日打卡只读流）。
+ * 结构：MainScaffold（title `{宠物} · {服务} · 实时监控`；sub `{员工} · HH:MM–HH:MM
+ * · SSE 实时同步`；actions=实时签 u3-st live「● 实时连接中」/断线换 wait「重连中…」）
+ * → 两栏（1.6fr:1fr gap 14）：
+ * - 左：过程照片墙（128×96 最新在前，点击放大=PhotoViewer 现成）+ 家长端视角说明卡
+ *   （文案冻结原文，B3-1 在案）；
+ * - 右：六步进度卡（MonitorTimeline=u3-stepv 本地档 + 时间戳 + 张数）+ 快捷操作
+ *   （QuietButton「打标重拍」→ 现有 flagForRedo 弹层链路（可填原因）保留；
+ *   QuietButton「联系员工」→ 就地展开员工信息小卡：姓名/角色/今日排班段，
+ *   staffList 真值，staff 表无电话字段不编造）。
+ * - 寄养单：BoardingMonitorPanel 现有（视觉已对齐 u3 工艺）。
+ *
+ * SSE：watch=aid 订阅 step_updated/step_flagged/reopened/completed/boarding.daily_update
+ * （appointments/useMerchantEvents.ts 局部 hook 逻辑保留——appointment 频道只能靠
+ * watch 挂入，全局 store 连接收不到，故本页保留局部连接）；onReconnect 全量对齐。
  */
 
-import { EventType, getStepDef, usePhiliaClient, type EventEnvelope, type ServiceStepKey } from '@philia/shared';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { CalendarClock, ChevronLeft, CircleX } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
 import {
-  fmtDateTime,
-  statusBadge,
-  statusLabel,
+  EventType,
+  getStepDef,
+  usePhiliaClient,
+  type EventEnvelope,
+  type ServiceStepKey,
+} from '@philia/shared';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useCallback, useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { toast } from 'sonner';
+import MainScaffold, { QuietButton } from '../components/MainScaffold';
+import {
+  dayKeyOf,
+  fmtTime,
+  type StaffListItem,
   type StepListItem,
 } from '../components/appointments/appt-utils';
 import {
@@ -28,10 +41,50 @@ import {
   type LiveLogItem,
 } from '../components/appointments/BoardingMonitorPanel';
 import { ConfirmDialog } from '../components/appointments/ConfirmDialog';
-import { MonitorTimeline } from '../components/appointments/MonitorTimeline';
+import { MonitorTimeline, pickFlaggableStep } from '../components/appointments/MonitorTimeline';
 import { PhotoViewer, type ViewPhoto } from '../components/appointments/PhotoViewer';
-import { showToast, ToastHost } from '../components/appointments/Toast';
 import { useMerchantEvents } from '../components/appointments/useMerchantEvents';
+
+/** 员工角色 → 中文（staff.role 枚举：frontdesk=前台 / groomer=美容师，批次 S1） */
+const ROLE_LABEL: Record<string, string> = { frontdesk: '前台', groomer: '美容师' };
+const roleLabel = (role: string): string => ROLE_LABEL[role] ?? role;
+
+/** 今日排班段：schedule[今日] →「HH:MM–HH:MM」多段「 · 」相连；无排班 →「今日未排班」 */
+function todayScheduleLabel(staff: StaffListItem | null): string {
+  const ranges = staff?.schedule?.[dayKeyOf(new Date())] ?? [];
+  if (!ranges || ranges.length === 0) return '今日未排班';
+  return ranges.map((r) => `${r.start}–${r.end}`).join(' · ');
+}
+
+/** 墙照片：全步聚合，最新在前（takenAt 降序，空时间排末） */
+function wallPhotosOf(steps: StepListItem[]): ViewPhoto[] {
+  return steps
+    .flatMap((s) => s.photos)
+    .sort((a, b) => (b.takenAt?.getTime() ?? 0) - (a.takenAt?.getTime() ?? 0))
+    .map((p) => ({
+      id: p.id,
+      url: p.url,
+      thumbUrl: p.thumbUrl ?? undefined,
+      takenAt: p.takenAt,
+      tag: p.tag,
+    }));
+}
+
+/** 家长端视角说明卡（文案冻结原文） */
+function ParentViewNote() {
+  return (
+    <>
+      <div className="u3-panel-head border-t border-[rgba(74,59,46,.06)]">
+        <h3>家长端视角</h3>
+        <span className="aside">与客户端「服务中全程页」同源</span>
+      </div>
+      <p className="px-[17px] pb-4 text-caption leading-[1.7] text-[rgba(74,59,46,.62)]">
+        家长看到的内容与这屏一致（六步进度+过程照）。照片一经上传即双频道推送，不可删除，仅可被商家「打标重拍」作废旧照（B3-1
+        在案）。
+      </p>
+    </>
+  );
+}
 
 export default function AppointmentMonitorPage() {
   const { id: aid } = useParams<{ id: string }>();
@@ -69,6 +122,17 @@ export default function AppointmentMonitorPage() {
     [boardQuery.data, aid],
   );
 
+  // 员工小卡 + 副行员工名：store.staffList 真值（姓名/角色/排班；无电话字段）
+  const staffQuery = useQuery({
+    queryKey: ['store', 'staffList'],
+    queryFn: () => trpc.store.staffList.query(),
+    enabled: !!appt,
+  });
+  const staff = useMemo(
+    () => staffQuery.data?.staff.find((s) => s.id === appt?.staffId) ?? null,
+    [staffQuery.data, appt?.staffId],
+  );
+
   /* ---------------- 全量对齐 / SSE ---------------- */
 
   const alignAll = useCallback(() => {
@@ -80,6 +144,7 @@ export default function AppointmentMonitorPage() {
 
   const [liveLogs, setLiveLogs] = useState<LiveLogItem[]>([]);
   const [viewer, setViewer] = useState<{ photos: ViewPhoto[]; index: number } | null>(null);
+  const [staffOpen, setStaffOpen] = useState(false);
 
   const onEvent = useCallback(
     (envelope: EventEnvelope) => {
@@ -96,17 +161,17 @@ export default function AppointmentMonitorPage() {
           void queryClient.invalidateQueries({ queryKey: ['serviceStep', 'list', aid] });
           break;
         case EventType.AppointmentCompleted:
-          showToast('服务已完成', 'success');
+          toast.success('服务已完成');
           alignAll();
           break;
         case EventType.AppointmentReopened:
           // v1.1-b3 B3-1：completed 单打标重开 → 预约回 in_service，全量对齐
-          showToast('该预约已重新开启（打回服务中），等待员工重拍', 'alert');
+          toast.warning('该预约已重新开启（打回服务中），等待员工重拍');
           alignAll();
           break;
         case EventType.BoardingDailyUpdate: {
           const logDate = typeof data.logDate === 'string' ? data.logDate : '';
-          showToast(`${logDate ? `${logDate} ` : ''}寄养打卡已更新`, 'alert');
+          toast(`${logDate ? `${logDate} ` : ''}寄养打卡已更新`);
           setLiveLogs((prev) =>
             [{ logDate: logDate || '今日', ts: envelope.ts }, ...prev].slice(0, 20),
           );
@@ -125,117 +190,54 @@ export default function AppointmentMonitorPage() {
     [aid, alignAll, queryClient],
   );
 
-  useMerchantEvents({ watch: aid ?? null, onEvent, onReconnect: alignAll });
+  const { connected } = useMerchantEvents({ watch: aid ?? null, onEvent, onReconnect: alignAll });
 
-  /* ---------------- 打标重拍 ---------------- */
+  /* ---------------- 打标重拍（现有 flagForRedo 弹层链路保留） ---------------- */
 
-  const [flagTarget, setFlagTarget] = useState<StepListItem | null>(null);
+  const [flagOpen, setFlagOpen] = useState(false);
   const [flagReason, setFlagReason] = useState('');
+  const flagTarget = useMemo(() => pickFlaggableStep(steps), [steps]);
 
   const flagMut = useMutation({
     mutationFn: (input: { stepKey: ServiceStepKey; reason?: string }) =>
       trpc.serviceStep.flagForRedo.mutate({ appointmentId: aid!, ...input }),
     onSuccess: (r, vars) => {
       const label = getStepDef(vars.stepKey)?.name ?? vars.stepKey;
-      showToast(
+      toast.success(
         r.reopened
           ? `已打标「${label}」：预约已重新开启（打回服务中），等待员工重拍`
           : r.reactivated
             ? `已打标「${label}」：步骤已回退为进行中，旧照片作废，等待员工重拍`
             : `已打标「${label}」，等待员工重拍`,
-        'success',
       );
-      setFlagTarget(null);
+      setFlagOpen(false);
       setFlagReason('');
       void queryClient.invalidateQueries({ queryKey: ['serviceStep', 'list', aid] });
-      // v1.1-b3 B3-1：completed→in_service 重开，头部状态徽标需同步对齐
+      // v1.1-b3 B3-1：completed→in_service 重开，头部状态需同步对齐
       if (r.reopened) {
         void queryClient.invalidateQueries({ queryKey: ['appointment', 'get', aid] });
       }
     },
-    onError: (err) =>
-      showToast(err instanceof Error ? err.message : '打标失败，请稍后再试', 'error'),
+    onError: (err) => toast.error(err instanceof Error ? err.message : '打标失败，请稍后再试'),
   });
 
-  /* ---------------- 渲染分支 ---------------- */
+  /* ---------------- 渲染 ---------------- */
 
-  const backLink = (
-    <Link
-      to={aid ? `/appointments/${aid}` : '/appointments'}
-      className="inline-flex items-center gap-0.5 text-caption text-ink-secondary"
-    >
-      <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
-      预约详情
-    </Link>
+  const title = `${pet?.name ?? '宠物'} · ${service?.name ?? (isBoarding ? '寄养服务' : '洗护服务')} · 实时监控`;
+  const sub = appt
+    ? `${staff?.name ?? (appt.staffId ? '员工' : '待指派')} · ${fmtTime(appt.scheduledStart)}–${fmtTime(appt.scheduledEnd)} · SSE 实时同步`
+    : 'SSE 实时同步';
+  const liveBadge = (
+    <span className={connected ? 'u3-st live' : 'u3-st wait'} data-testid="monitor-live-badge">
+      {connected ? '● 实时连接中' : '重连中…'}
+    </span>
   );
 
-  if (detailQuery.isPending) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-caption text-ink-secondary">加载中…</p>
-      </div>
-    );
-  }
-
-  if (detailQuery.isError || !appt) {
-    return (
-      <div className="mx-auto max-w-3xl px-4 py-6">
-        {backLink}
-        <div className="mt-4 flex flex-col items-center rounded-card bg-card px-6 py-12 text-center shadow-card">
-          <CircleX className="h-10 w-10 text-ink-placeholder" strokeWidth={1.5} />
-          <p className="mt-3 text-title">打不开这个监视页</p>
-          <p className="mt-2 text-body text-ink-secondary">
-            {detailQuery.error instanceof Error ? detailQuery.error.message : '预约不存在或无权限'}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const header = (
-    <div className="mt-2 flex items-center justify-between">
-      <div>
-        <h1 className="text-title-lg">
-          {pet?.name ?? '宠物'} · {service?.name ?? (isBoarding ? '寄养服务' : '洗护服务')}
-        </h1>
-        <p className="mt-0.5 font-number text-caption text-ink-secondary">
-          预约时间 {fmtDateTime(appt.scheduledStart)}
-        </p>
-      </div>
-      <span className={`rounded-tag px-1.5 py-0.5 text-caption ${statusBadge(appt.status)}`}>
-        {statusLabel(appt.status)}
-      </span>
-    </div>
-  );
-
-  // 尚未开始 / 已取消
-  if (!inLiveFlow) {
-    const cancelled = appt.status === 'cancelled';
-    return (
-      <div className="mx-auto max-w-3xl px-4 py-4">
-        <ToastHost />
-        {backLink}
-        {header}
-        <div className="mt-3 flex flex-col items-center rounded-card bg-card px-6 py-10 text-center shadow-card">
-          {cancelled ? (
-            <CircleX className="h-10 w-10 text-ink-placeholder" strokeWidth={1.5} />
-          ) : (
-            <CalendarClock className="h-10 w-10 text-brand-primary" strokeWidth={1.5} />
-          )}
-          <p className="mt-3 text-title">{cancelled ? '预约已取消' : '服务尚未开始'}</p>
-          <p className="mt-2 text-body text-ink-secondary">
-            {cancelled
-              ? '该预约已取消，无服务过程可监视。'
-              : '客户到店核销后，这里会实时展示服务进度与照片。'}
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const wallPhotos = useMemo(() => wallPhotosOf(steps), [steps]);
+  const doneCount = steps.filter((s) => s.status === 'done').length;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-4">
-      <ToastHost />
+    <MainScaffold title={title} sub={sub} actions={liveBadge} testid="appointment-monitor-page">
       {viewer ? (
         <PhotoViewer
           photos={viewer.photos}
@@ -245,45 +247,189 @@ export default function AppointmentMonitorPage() {
         />
       ) : null}
 
-      {backLink}
-      {header}
+      {detailQuery.isPending ? (
+        /* 加载骨架（禁转圈） */
+        <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.6fr_1fr]" aria-label="加载中">
+          <div className="u3-panel p-[14px_17px]">
+            <div className="h-3.5 w-28 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
+            <div className="mt-3 flex flex-wrap gap-2">
+              {[0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-24 w-32 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]"
+                />
+              ))}
+            </div>
+          </div>
+          <div className="u3-panel p-[14px_17px]">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="mt-2.5 h-3.5 w-40 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
+            ))}
+          </div>
+        </div>
+      ) : detailQuery.isError || !appt ? (
+        <div className="u3-panel px-[17px] py-14 text-center">
+          <div className="text-body-sm font-semibold text-[rgba(74,59,46,.62)]">
+            打不开这个监视页
+          </div>
+          <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+            {detailQuery.error instanceof Error ? detailQuery.error.message : '预约不存在或无权限'}
+          </div>
+        </div>
+      ) : !inLiveFlow ? (
+        /* 尚未开始 / 已取消 */
+        <div className="u3-panel px-[17px] py-14 text-center">
+          <div className="text-body-sm font-semibold text-[rgba(74,59,46,.62)]">
+            {appt.status === 'cancelled' ? '预约已取消' : '服务尚未开始'}
+          </div>
+          <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+            {appt.status === 'cancelled'
+              ? '该预约已取消，无服务过程可监视。'
+              : '客户到店核销后，这里会实时展示服务进度与照片。'}
+          </div>
+        </div>
+      ) : isBoarding ? (
+        <BoardingMonitorPanel
+          boardingStay={detailQuery.data?.boardingStay ?? null}
+          boardEntry={boardEntry}
+          liveLogs={liveLogs}
+        />
+      ) : (
+        <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.6fr_1fr]">
+          {/* 左：过程照片墙 + 家长端视角 */}
+          <div className="u3-panel">
+            <div className="u3-panel-head">
+              <h3>过程照片墙</h3>
+              <span className="aside">最新在前 · 点击放大</span>
+            </div>
+            {stepsQuery.isPending ? (
+              <div className="flex flex-wrap gap-2 px-[17px] pb-4">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="h-24 w-32 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]"
+                  />
+                ))}
+              </div>
+            ) : steps.length === 0 ? (
+              <p className="px-[17px] pb-4 text-caption text-[rgba(74,59,46,.62)]">
+                六步流尚未初始化（等待员工核销）。
+              </p>
+            ) : wallPhotos.length === 0 ? (
+              <p className="px-[17px] pb-4 text-caption text-[rgba(74,59,46,.62)]">
+                员工上传过程照后会实时出现在这里。
+              </p>
+            ) : (
+              <div className="flex flex-wrap gap-2 px-[17px] pb-4 pt-1">
+                {wallPhotos.map((p, i) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setViewer({ photos: wallPhotos, index: i })}
+                    className="block h-24 w-32 overflow-hidden rounded-chip bg-[#F6F1E3] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+                    aria-label={`照片 ${i + 1}`}
+                  >
+                    <img
+                      src={p.thumbUrl ?? p.url}
+                      alt={p.tag ?? `照片 ${i + 1}`}
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+            <ParentViewNote />
+          </div>
 
-      <div className="mt-3">
-        {isBoarding ? (
-          <BoardingMonitorPanel
-            boardingStay={detailQuery.data?.boardingStay ?? null}
-            boardEntry={boardEntry}
-            liveLogs={liveLogs}
-          />
-        ) : stepsQuery.isPending ? (
-          <div className="rounded-card bg-card p-6 text-center shadow-card">
-            <p className="text-caption text-ink-secondary">正在接入服务进度…</p>
-          </div>
-        ) : steps.length === 0 ? (
-          <div className="rounded-card bg-card p-6 text-center shadow-card">
-            <p className="text-body text-ink-secondary">六步流尚未初始化（等待员工核销）。</p>
-          </div>
-        ) : (
-          <div className="rounded-card bg-card p-4 shadow-card">
-            <MonitorTimeline
-              steps={steps}
-              flaggingKey={flagMut.isPending ? (flagMut.variables?.stepKey ?? null) : null}
-              onFlag={(s) => {
-                setFlagReason('');
-                setFlagTarget(s);
-              }}
-              onPhotoClick={(photos, index) => setViewer({ photos, index })}
-            />
-          </div>
-        )}
-      </div>
+          {/* 右：六步进度 + 快捷操作 */}
+          <div className="u3-panel self-start">
+            <div className="u3-panel-head">
+              <h3>六步进度</h3>
+              <span className="aside font-number tabular-nums">
+                {doneCount}/{steps.length || 6}
+              </span>
+            </div>
+            {stepsQuery.isPending ? (
+              <div className="px-[17px] pb-4">
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <div
+                    key={i}
+                    className="mt-2.5 h-3.5 w-40 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]"
+                  />
+                ))}
+              </div>
+            ) : steps.length === 0 ? (
+              <p className="px-[17px] pb-4 text-caption text-[rgba(74,59,46,.62)]">
+                六步流尚未初始化（等待员工核销）。
+              </p>
+            ) : (
+              <MonitorTimeline steps={steps} />
+            )}
 
-      {/* 打标重拍确认弹层 */}
+            <div className="u3-panel-head border-t border-[rgba(74,59,46,.06)]">
+              <h3>快捷操作</h3>
+            </div>
+            <div className="flex gap-2.5 px-[17px] pb-4">
+              <div className="flex-1 [&>button]:w-full">
+                <QuietButton
+                  testid="monitor-flag-entry"
+                  disabled={!flagTarget || flagMut.isPending}
+                  onClick={() => {
+                    setFlagReason('');
+                    setFlagOpen(true);
+                  }}
+                >
+                  {flagMut.isPending ? '打标中…' : '打标重拍'}
+                </QuietButton>
+              </div>
+              <div className="flex-1 [&>button]:w-full">
+                <QuietButton testid="monitor-staff-entry" onClick={() => setStaffOpen((v) => !v)}>
+                  联系员工
+                </QuietButton>
+              </div>
+            </div>
+
+            {/* 联系员工：就地展开员工信息小卡（staffList 真值，无电话字段不编造） */}
+            {staffOpen ? (
+              <div className="mx-[17px] mb-4 rounded-[14px] bg-[#F6F1E3] px-3.5 py-2.5">
+                {staff ? (
+                  <>
+                    <div className="flex items-center justify-between py-1">
+                      <span className="text-caption-xs text-[rgba(74,59,46,.42)]">姓名</span>
+                      <span className="text-caption font-semibold">{staff.name}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-1">
+                      <span className="text-caption-xs text-[rgba(74,59,46,.42)]">角色</span>
+                      <span className="text-caption font-semibold">{roleLabel(staff.role)}</span>
+                    </div>
+                    <div className="flex items-center justify-between py-1">
+                      <span className="text-caption-xs text-[rgba(74,59,46,.42)]">今日排班</span>
+                      <span className="font-number text-caption font-semibold tabular-nums">
+                        {todayScheduleLabel(staff)}
+                      </span>
+                    </div>
+                    <p className="pt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]">
+                      店内对讲或到工位找TA；联系方式请走门店内部渠道。
+                    </p>
+                  </>
+                ) : (
+                  <p className="py-1.5 text-caption text-[rgba(74,59,46,.62)]">
+                    该单尚未指派员工，可在预约详情页改派。
+                  </p>
+                )}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      )}
+
+      {/* 打标重拍确认弹层（现有链路：填原因 → flagForRedo） */}
       <ConfirmDialog
-        open={flagTarget !== null}
+        open={flagOpen && flagTarget !== null}
         title={`打标重拍「${flagTarget ? (getStepDef(flagTarget.stepKey)?.name ?? flagTarget.stepKey) : ''}」？`}
         body={
-          appt.status === 'completed'
+          appt?.status === 'completed'
             ? '该预约已完成：打标将重新开启本预约（打回「服务中」），该步骤回退为「进行中」，员工重拍后需重新确认完成。'
             : flagTarget?.status === 'done'
               ? '该步骤将回退为「进行中」，已有照片全部作废，员工需重新拍摄上传。'
@@ -300,7 +446,7 @@ export default function AppointmentMonitorPage() {
             ...(reason ? { reason } : {}),
           });
         }}
-        onCancel={() => setFlagTarget(null)}
+        onCancel={() => setFlagOpen(false)}
       >
         <textarea
           value={flagReason}
@@ -308,9 +454,9 @@ export default function AppointmentMonitorPage() {
           maxLength={200}
           rows={2}
           placeholder="重拍原因（可选，200 字内），会随通知发给员工"
-          className="mt-3 w-full rounded-input border border-line bg-sunken px-3 py-2 text-body text-ink placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
+          className="mt-3 w-full rounded-control border border-line bg-sunken px-3 py-2 text-body text-ink placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
         />
       </ConfirmDialog>
-    </div>
+    </MainScaffold>
   );
 }
