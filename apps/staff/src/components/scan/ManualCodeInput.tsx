@@ -41,7 +41,7 @@ export default function ManualCodeInput({ onCheckedIn }: ManualCodeInputProps) {
 
   return (
     <div className="flex w-full flex-col gap-4 px-6 pb-6">
-      <label htmlFor="manual-code" className="text-base text-white/80">
+      <label htmlFor="manual-code" className="text-base text-[#F6F1E3]/80">
         输入 6 位人工核销码
       </label>
       <input
@@ -63,9 +63,9 @@ export default function ManualCodeInput({ onCheckedIn }: ManualCodeInputProps) {
         maxLength={6}
         placeholder="例如 3K7M9P"
         aria-label="人工核销码"
-        className="h-14 w-full rounded-xl border border-white/30 bg-white/10 text-center font-mono text-2xl font-semibold tracking-[0.5em] text-white placeholder:text-white/30 focus:border-[#FDC830] focus:outline-none"
+        className="h-14 w-full rounded-xl border border-[#F6F1E3]/30 bg-[#F6F1E3]/10 text-center font-mono text-2xl font-semibold tracking-[0.5em] text-[#F6F1E3] placeholder:text-[#F6F1E3]/30 focus:border-[#FDC830] focus:outline-none"
       />
-      <p className="text-sm text-white/60">
+      <p className="text-sm text-[#F6F1E3]/60">
         核销码为 6 位字母数字，不含易混淆的 0/O、1/I/L；可在预约详情页查看，或按手机号核对。
       </p>
       <button

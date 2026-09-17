@@ -88,7 +88,7 @@ const ROUTES = [
   { app: 'merchant', path: `/appointments/${APPT_ID}/monitor`, anchors: ['监视', '预约'], serverDep: true, note: 'P4 原深链' },
   /* ---- 员工端 ---- */
   { app: 'staff', path: '/dev-login', anchors: ['登录'] },
-  { app: 'staff', path: '/today', anchors: ['今日任务'] },
+  { app: 'staff', path: '/today', anchors: ['今天 ·', '任务台', '核销台'], note: 'U2 时间轴台 B′：顶栏「今天 · M月d日」+ dock 首栏（groomer=任务台/frontdesk=核销台）' },
   { app: 'staff', path: `/execute/${APPT_ID}`, anchors: ['第', '步', '核销'], serverDep: true, note: 'B1 修复路由' },
   { app: 'staff', path: `/execute/${APPT_ID}/`, anchors: ['第', '步', '核销'], serverDep: true, note: '尾斜杠变体' },
   { app: 'staff', path: '/history', anchors: ['记录', '历史'] },
