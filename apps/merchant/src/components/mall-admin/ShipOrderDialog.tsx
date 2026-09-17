@@ -3,10 +3,13 @@
  *
  * 输入物流单号（必填）→ mall.shipOrder（服务端校验本店 + 仅 paid 可发货）
  * → toast + invalidate 订单队列；错误原文 toast。
+ *
+ * U3：表单重置由父组件 key 重挂载承担（OrdersPage 以 order.id 作 key，
+ * 每次打开即全新实例），不再用 effect 同步 setState（react-hooks 闸）。
  */
 
 import { usePhiliaClient } from '@philia/shared'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { errMsg, STORE_ORDERS_KEY, type StoreOrder } from './format'
 import { Btn, Field, inputCls, Modal } from './ui'
@@ -24,14 +27,6 @@ export default function ShipOrderDialog({
   const { trpc, queryClient } = usePhiliaClient()
   const [trackingNo, setTrackingNo] = useState('')
   const [pending, setPending] = useState(false)
-
-  // 每次打开重置
-  useEffect(() => {
-    if (open) {
-      setTrackingNo('')
-      setPending(false)
-    }
-  }, [open])
 
   const submit = async () => {
     if (!order) return

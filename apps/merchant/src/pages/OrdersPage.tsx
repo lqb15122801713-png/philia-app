@@ -1,43 +1,72 @@
 /**
- * 商城订单页（T5.2 · coder-mall-merchant）—— 路由 /orders
+ * 商城订单页（/orders · U3 任务 H · 规格书 §7）
  *
- * - 队列 Tab：待发货（paid，红点计数）/ 已发货（shipped）/ 售后（refunding）；
- *   数据 mall.listStoreOrders（60s 轮询兜底 + SSE 联动 invalidate，
- *   查询键与 TabBar 红点共用 STORE_ORDERS_KEY，invalidate 互通）。
- * - 待发货卡片「发货」→ ShipOrderDialog（物流单号必填）→ shipOrder → toast + invalidate。
+ * 结构：MainScaffold（副行=三队列真值计数；动作区=SearchInput 前端过滤，
+ * 无接口增发）→ u3-chipf 队列 chips → u3-panel + u3-tbl 订单表（行末
+ * 「发货 ›」主行动 → ShipOrderDialog → mall.shipOrder 现成链路）。
+ *
+ * 取舍（试样四档 → 接口三队列，文件头备查）：试样 chips 含「已完成」，
+ * 但 mall.listStoreOrders 仅返回 {paid, shipped, refunding} 三队列，没有
+ * 已完成队列接口（零新接口红线）——「已完成」chip 不渲染，不造归档假数据。
+ * 售后退款队列只读展示：退款操作=冻结项不做（行末无动作）。
+ * 搜索=纯前端按 orderNo / customerNickname 过滤当前队列。
+ *
+ * 数据与 SSE 口径不变（T5.2 原样保留）：
+ * - STORE_ORDERS_KEY 与 TabBar 红点共用查询键，invalidate 互通；60s 轮询兜底；
  * - SSE（MerchantEventsProvider 单连接 → store:{storeId} 频道）：
- *   order.created → toast「新订单：{orderNo}」+ invalidate（待发货红点联动）；
- *   order.received → toast「客户已确认收货」+ invalidate（订单移出已发货队列）。
- *   注：order.paid 事件服务端仅投递 customer 频道（payCallback.ts），商家端收不到，
- *   支付到「待发货」出现的最坏延迟 = 60s 轮询兜底（见汇报遗留问题）。
+ *   order.created → toast「新订单：{orderNo}」+ invalidate；
+ *   order.received → toast「客户已确认收货」+ invalidate。
+ *   注：order.paid 事件服务端仅投递 customer 频道（payCallback.ts），商家端
+ *   收不到，支付到「待发货」出现的最坏延迟 = 60s 轮询兜底。
  */
 
 import { EventType, usePhiliaClient } from '@philia/shared'
 import { useQuery } from '@tanstack/react-query'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import MainScaffold, { QuietButton, SearchInput } from '@/components/MainScaffold'
 import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider'
-import OrderCard from '@/components/mall-admin/OrderCard'
+import OrderRow from '@/components/mall-admin/OrderCard'
 import ShipOrderDialog from '@/components/mall-admin/ShipOrderDialog'
 import { errMsg, STORE_ORDERS_KEY, type StoreOrder } from '@/components/mall-admin/format'
-import { Empty, Loading } from '@/components/mall-admin/ui'
 
 type QueueKey = 'paid' | 'shipped' | 'refunding'
 
-const TABS: Array<{ key: QueueKey; label: string; empty: string; hint: string }> = [
-  { key: 'paid', label: '待发货', empty: '没有待发货订单', hint: '客户支付成功的订单会出现在这里' },
-  { key: 'shipped', label: '已发货', empty: '没有已发货订单', hint: '发货后可在这里查看物流单号' },
-  { key: 'refunding', label: '售后', empty: '没有售后订单', hint: '客户发起退款的订单会出现在这里' },
+const TABS: Array<{ key: QueueKey; label: string; empty: string }> = [
+  { key: 'paid', label: '待发货', empty: '没有待发货订单' },
+  { key: 'shipped', label: '已发货', empty: '没有已发货订单' },
+  { key: 'refunding', label: '售后·退款', empty: '没有售后订单' },
 ]
 
 /** 轮询兜底间隔（SSE 在线时也保留：order.paid 不到商家频道，见头注） */
 const POLL_MS = 60_000
+
+/** 订单表骨架（禁转圈：opacity 脉冲骨架条） */
+function TableSkeleton() {
+  return (
+    <div>
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-6 border-t border-[rgba(74,59,46,.06)] px-[17px] py-3.5"
+        >
+          <div className="h-3.5 w-32 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
+          <div className="h-3.5 w-20 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
+          <div className="h-3.5 w-28 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
+          <div className="h-3.5 w-14 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
+          <div className="ml-auto h-3.5 w-16 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
+        </div>
+      ))}
+    </div>
+  )
+}
 
 export default function OrdersPage() {
   const { trpc, queryClient } = usePhiliaClient()
   const events = useMerchantEvents()
 
   const [tab, setTab] = useState<QueueKey>('paid')
+  const [keyword, setKeyword] = useState('')
   const [shipTarget, setShipTarget] = useState<StoreOrder | null>(null)
 
   const ordersQuery = useQuery({
@@ -51,7 +80,7 @@ export default function OrdersPage() {
     [queryClient],
   )
 
-  // SSE：新订单 toast + 红点联动；确认收货后移出已发货队列
+  // SSE：新订单 toast + 队列联动；确认收货后移出已发货队列
   useEffect(
     () =>
       events.onEvent((envelope) => {
@@ -83,74 +112,114 @@ export default function OrdersPage() {
   useEffect(() => events.onReconnect(() => void invalidate()), [events, invalidate])
 
   const groups = ordersQuery.data?.groups
-  const paidCount = groups?.paid.length ?? 0
-  const active = TABS.find((t) => t.key === tab)!
-  const list = groups?.[tab] ?? []
+  const countOf = (key: QueueKey) => groups?.[key].length ?? 0
+  const allEmpty =
+    !!groups && groups.paid.length === 0 && groups.shipped.length === 0 && groups.refunding.length === 0
+
+  // 搜索=纯前端过滤当前队列（单号 / 客户昵称，无接口增发）
+  const filtered = useMemo(() => {
+    const list = groups?.[tab] ?? []
+    const kw = keyword.trim().toLowerCase()
+    if (!kw) return list
+    return list.filter(
+      (o) =>
+        o.orderNo.toLowerCase().includes(kw) ||
+        (o.customerNickname ?? '').toLowerCase().includes(kw),
+    )
+  }, [groups, tab, keyword])
+
+  const searching = keyword.trim().length > 0
+  const emptyText = searching
+    ? '没有找到匹配的订单'
+    : allEmpty
+      ? '还没有订单'
+      : (TABS.find((t) => t.key === tab)?.empty ?? '还没有订单')
 
   return (
-    <div className="px-4 pb-6 lg:px-8">
-      <header className="flex items-end justify-between pt-6">
-        <div>
-          <h1 className="text-title-lg">商城订单</h1>
-          <p className="mt-0.5 text-caption text-ink-secondary">待发货 / 已发货 / 售后队列</p>
-        </div>
-        <span className="flex items-center gap-1.5 text-caption text-ink-secondary">
-          <span
-            className={`h-2 w-2 rounded-full ${events.connected ? 'bg-success' : 'bg-line-strong'}`}
-          />
-          {events.connected ? '实时已连接' : '实时连接中…'}
-        </span>
-      </header>
-
-      {/* 队列 Tab */}
-      <div className="mt-4 flex gap-1.5">
+    <MainScaffold
+      title="商城订单"
+      sub={`待发货 ${countOf('paid')} · 已发货 ${countOf('shipped')} · 售后 ${countOf('refunding')}`}
+      actions={
+        <SearchInput
+          placeholder="搜索单号 / 客户…"
+          value={keyword}
+          onChange={setKeyword}
+          testid="orders-search"
+        />
+      }
+      testid="orders-page"
+    >
+      {/* 队列 chips（当前=墨底；接口仅三队列，「已完成」chip 不渲染——见文件头取舍） */}
+      <div className="mb-3.5 flex flex-wrap gap-2">
         {TABS.map((t) => {
-          const count = groups?.[t.key].length ?? 0
-          const isActive = tab === t.key
+          const count = countOf(t.key)
           return (
             <button
               key={t.key}
               type="button"
+              className={`u3-chipf ${tab === t.key ? 'on' : ''}`}
               onClick={() => setTab(t.key)}
-              className={`relative flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-caption transition-colors duration-150 ${
-                isActive ? 'bg-brand-primary text-white' : 'bg-card text-ink-secondary shadow-card hover:text-ink'
-              }`}
+              data-testid={`orders-tab-${t.key}`}
             >
               {t.label}
-              {t.key === 'paid' && paidCount > 0 ? (
-                <span
-                  className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 font-number text-[10px] font-semibold leading-none tabular-nums ${
-                    isActive ? 'bg-white text-brand-primary-pressed' : 'bg-danger text-white'
-                  }`}
-                >
-                  {paidCount > 99 ? '99+' : paidCount}
-                </span>
-              ) : count > 0 ? (
-                <span className={isActive ? 'text-white/80' : 'text-ink-placeholder'}>{count}</span>
-              ) : null}
+              {count > 0 ? ` ${count}` : ''}
             </button>
           )
         })}
       </div>
 
-      {/* 队列内容 */}
-      <div className="mt-3">
+      {/* 订单表 */}
+      <div className="u3-panel">
         {ordersQuery.isPending ? (
-          <Loading />
+          <TableSkeleton />
         ) : ordersQuery.isError ? (
-          <Empty title="加载失败" hint={errMsg(ordersQuery.error)} />
-        ) : list.length === 0 ? (
-          <Empty title={active.empty} hint={active.hint} />
+          <div className="px-[17px] py-10 text-center">
+            <div className="text-caption text-[rgba(74,59,46,.62)]">
+              订单加载失败：{errMsg(ordersQuery.error)}
+            </div>
+            <div className="mt-3 flex justify-center">
+              <QuietButton onClick={() => void ordersQuery.refetch()}>重试</QuietButton>
+            </div>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="px-[17px] py-14 text-center">
+            <div className="text-body-sm font-semibold text-[rgba(74,59,46,.62)]">{emptyText}</div>
+          </div>
         ) : (
-          <div className="grid gap-3 lg:grid-cols-2">
-            {list.map((o) => (
-              <OrderCard key={o.id} order={o} onShip={tab === 'paid' ? setShipTarget : undefined} />
-            ))}
+          <div className="overflow-x-auto">
+            <table className="u3-tbl min-w-[820px]">
+              <thead>
+                <tr>
+                  <th>单号</th>
+                  <th>客户</th>
+                  <th>商品</th>
+                  <th>金额</th>
+                  <th>支付</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((o) => (
+                  <OrderRow
+                    key={o.id}
+                    order={o}
+                    onShip={tab === 'paid' ? setShipTarget : undefined}
+                  />
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
 
-      <ShipOrderDialog open={shipTarget !== null} order={shipTarget} onClose={() => setShipTarget(null)} />
-    </div>
+      {/* key=order.id：每次打开重挂载，表单态天然重置（配合 ShipOrderDialog 头注） */}
+      <ShipOrderDialog
+        key={shipTarget?.id ?? 'closed'}
+        open={shipTarget !== null}
+        order={shipTarget}
+        onClose={() => setShipTarget(null)}
+      />
+    </MainScaffold>
   )
 }
