@@ -1,0 +1,3 @@
+ .../booking/single/ServiceChipsBlock.tsx           | 27 +++++++++++++++-------
+ apps/customer/src/pages/HomePage.tsx               | 23 ++++++++++--------
+ 2 files changed, 33 insertions(+), 17 deletions(-)
