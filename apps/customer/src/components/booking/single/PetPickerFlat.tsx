@@ -8,6 +8,7 @@
  */
 
 import { Link } from 'react-router-dom';
+import { PawPrint } from 'lucide-react';
 import type { PetItem } from '../types';
 import { isoToDate, toISODate } from '../format';
 
@@ -34,7 +35,7 @@ export default function PetPickerFlat({
   if (pets.length === 0) {
     return (
       <div className="py-4 text-center">
-        <p className="text-[28px]">🐶</p>
+        <PawPrint className="mx-auto h-8 w-8 text-ink-secondary" strokeWidth={1.5} aria-hidden="true" />
         <p className="mt-1 text-title">还没有宠物档案</p>
         <p className="mt-1 text-caption text-ink-secondary">先为毛孩子建一份档案，再来预约吧</p>
         <Link
@@ -103,8 +104,9 @@ export default function PetPickerFlat({
             {p.avatarUrl ? (
               <img src={p.avatarUrl} alt={p.name} className="h-11 w-11 rounded-full object-cover" />
             ) : (
-              <span className="flex h-11 w-11 items-center justify-center text-[24px]">
-                {p.species === 'cat' ? '🐱' : '🐶'}
+              /* U1-D：彩色 emoji 改 VI 线图标（全域禁彩色图标） */
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-sunken" aria-hidden="true">
+                <PawPrint className="h-5 w-5 text-ink" strokeWidth={1.5} />
               </span>
             )}
             <span className="flex-1">

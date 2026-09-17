@@ -1,15 +1,14 @@
 /**
- * B4-1 单屏 · 折叠区区块（收款方式 + 添加备注 + 指定洗护师，默认收起）：
+ * B4-1 单屏 · 折叠区区块（收款方式 + 添加备注，默认收起）：
  * - 收款：单行选择器「收款：到店付 ▾ / 次卡扣次 · 余 N 次 ▾」，点开两行单选；
  *   有可用次卡默认次卡（页面预填），无卡置灰提示沿用 B2-7 文案；
  * - 添加备注 ▸：展开 textarea（主流程零打字，默认收起）；
- * - 指定洗护师 ▸：展开横滑员工卡，默认「随缘」，仍以备注前缀传达（服务端不加字段）。
+ * - U1-D：指定洗护师迁出折叠区，由 GroomingSinglePage 独立「洗护师」横卡区渲染
+ *   （v9.1 美容师横卡：置顶「随缘派单」默认卡 + 横滑员工卡），本组件不再含 staff。
  */
 
 import { useState } from 'react';
-import StaffPickerFlat from './StaffPickerFlat';
 import { PAYMENT_MODE_META } from '../format';
-import type { StaffPublic } from '../types';
 
 type PaymentMode = 'pay_at_store' | 'pass_deduct';
 
@@ -52,10 +51,6 @@ export default function ExtrasBlock({
   passLoading,
   note,
   onNoteChange,
-  staff,
-  staffId,
-  onStaffChange,
-  staffLoading,
 }: {
   paymentMode: PaymentMode;
   onPaymentModeChange: (m: PaymentMode) => void;
@@ -63,17 +58,10 @@ export default function ExtrasBlock({
   passLoading: boolean;
   note: string;
   onNoteChange: (v: string) => void;
-  staff: StaffPublic[];
-  /** null = 随缘 */
-  staffId: string | null;
-  onStaffChange: (id: string | null) => void;
-  staffLoading: boolean;
 }) {
   const [payOpen, setPayOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
-  const [staffOpen, setStaffOpen] = useState(false);
 
-  const staffName = staff.find((s) => s.id === staffId)?.name ?? null;
   const paySummary =
     paymentMode === 'pass_deduct' && usablePass
       ? `次卡扣次 · 余 ${usablePass.remainTimes} 次`
@@ -111,7 +99,7 @@ export default function ExtrasBlock({
                 onClick={() => onPaymentModeChange(m)}
                 data-testid={`gs-payment-${m}`}
                 data-disabled={passDisabled ? 'true' : 'false'}
-                className={`flex w-full items-center justify-between rounded-card border p-3 text-left transition active:scale-[0.99] ${
+                className={`flex w-full items-center justify-between rounded-control border p-3 text-left transition active:scale-[0.99] ${
                   active ? 'border-[1.5px] border-ink' : 'border-line'
                 } ${passDisabled ? 'cursor-not-allowed opacity-50' : ''}`}
               >
@@ -154,25 +142,8 @@ export default function ExtrasBlock({
           rows={3}
           placeholder="毛孩子的注意事项，如怕水、需剃脚底毛…"
           data-testid="gs-note-input"
-          className="mb-3 w-full rounded-[14px] border border-line bg-canvas px-3.5 py-3 text-body placeholder:text-ink-placeholder focus:border-ink focus:outline-none"
+          className="mb-3 w-full rounded-control border border-line bg-canvas px-3.5 py-3 text-body placeholder:text-ink-placeholder focus:border-ink focus:outline-none"
         />
-      ) : null}
-
-      <div className="border-t border-[rgba(74,59,46,.09)]" />
-
-      {/* 指定洗护师（默认收起，默认随缘） */}
-      <ChevronRow
-        label="指定洗护师"
-        summary={staffName ?? '随缘'}
-        open={staffOpen}
-        onToggle={() => setStaffOpen((v) => !v)}
-        testId="gs-staff-toggle"
-      />
-      {staffOpen ? (
-        <div className="pb-3" data-testid="gs-staff-picker">
-          <StaffPickerFlat staff={staff} selectedId={staffId} onSelect={onStaffChange} loading={staffLoading} />
-          <p className="mt-1 text-caption text-ink-placeholder">指定洗护师会写在预约备注里传达给门店</p>
-        </div>
       ) : null}
     </div>
   );

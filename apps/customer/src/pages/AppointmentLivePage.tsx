@@ -21,17 +21,16 @@ import {
   EventType,
   getApiBase,
   safeUuid,
-  StepTimeline,
   useEventSource,
   useMe,
   usePhiliaClient,
   type EventEnvelope,
   type PhotoWallPhoto,
-  type StepTimelineStep,
 } from '@philia/shared'
+import LiveStepper, { type LiveStepperStep } from '../components/live/LiveStepper'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { CalendarClock, ChevronLeft, CircleX, QrCode } from 'lucide-react'
+import { CalendarClock, CircleX, QrCode } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import BoardingLive, { type BoardingLogItem, type BoardingStayInfo } from '../components/live/BoardingLive'
@@ -39,6 +38,7 @@ import CelebrationOverlay from '../components/live/CelebrationOverlay'
 import ConnectionBar from '../components/live/ConnectionBar'
 import ContactStore from '../components/live/ContactStore'
 import LiveHeader from '../components/live/LiveHeader'
+import { BackButton } from '../components/PageHeader'
 import LiveToast from '../components/live/LiveToast'
 import PhotoViewer from '../components/live/PhotoViewer'
 import ReviewPanel from '../components/live/ReviewPanel'
@@ -64,7 +64,7 @@ function getClientId(): string {
   }
 }
 
-/** active 步操作说明（StepTimeline description 槽位） */
+/** active 步操作说明（LiveStepper description 槽位） */
 const ACTIVE_HINT: Record<string, string> = {
   disinfection: '工具消毒确认中，安心第一步',
   precheck: '正在做预检，确认皮肤与毛发状态',
@@ -411,7 +411,7 @@ export default function AppointmentLivePage() {
 
   /* ---------------- 派生展示数据 ---------------- */
 
-  const timelineSteps: StepTimelineStep[] = useMemo(
+  const timelineSteps: LiveStepperStep[] = useMemo(
     () =>
       (steps ?? []).map((s) => ({
         stepKey: s.stepKey,
@@ -474,14 +474,9 @@ export default function AppointmentLivePage() {
 
   /* ---------------- 渲染分支 ---------------- */
 
+  // U1-A：统一返回圆钮（←圆钮）；标题语境由 LiveHeader（宠物+服务名胶囊）承担
   const backLink = (
-    <Link
-      to={aid ? `/appointments/${aid}` : '/appointments'}
-      className="mb-3 inline-flex items-center gap-0.5 text-caption text-ink-secondary"
-    >
-      <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
-      预约详情
-    </Link>
+    <BackButton to={aid ? `/appointments/${aid}` : '/appointments'} className="mb-3" ariaLabel="返回预约详情" />
   )
 
   // 加载中
@@ -623,12 +618,13 @@ export default function AppointmentLivePage() {
             onPhotoClick={(photos, index) => setViewer({ photos, index })}
           />
         ) : stepsQuery.isPending ? (
-          <div className="rounded-card bg-card p-6 text-center shadow-card">
+          <div className="u1-card p-6 text-center">
             <p className="text-caption text-ink-secondary">正在接入服务进度…</p>
           </div>
         ) : (
-          <div className="rounded-card bg-card p-4 shadow-card">
-            <StepTimeline steps={timelineSteps} onPhotoClick={openStepPhotos} />
+          /* U1-E：stepper 容器换 U1-B 细线卡（ring + 近零影），去旧 shadow-card */
+          <div className="u1-card p-4">
+            <LiveStepper steps={timelineSteps} onPhotoClick={openStepPhotos} />
           </div>
         )}
       </div>

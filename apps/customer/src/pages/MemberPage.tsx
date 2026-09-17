@@ -9,9 +9,9 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Coins, Crown, Sparkles, Ticket, Wallet } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Coins, Crown, Sparkles, Ticket, Wallet } from 'lucide-react'
 import { usePhiliaClient } from '@philia/shared'
+import PageHeader from '@/components/PageHeader'
 import { ErrorState, LoadingBlock, formatFen, tabularNums } from '../components/home/common'
 
 const DAY_MS = 86_400_000
@@ -54,13 +54,14 @@ function RealStatsCard() {
   const totalFen = completed.reduce((sum, a) => sum + a.priceFen, 0)
 
   return (
-    <div className="rounded-card bg-philia-gradient p-5 text-ink shadow-philia">
+    /* U1-J 一致性修正：禁渐变装饰——渐变卡改 U1-B 纸面细线卡（与 /me/card 同语言） */
+    <div className="u1-card p-5 text-ink">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-caption opacity-90">PHILIA MEMBER</p>
+          <p className="text-caption text-ink-secondary">PHILIA MEMBER</p>
           <p className="mt-1 text-title-lg">{nickname}</p>
           {joinDays !== null ? (
-            <p className="mt-1 font-number text-caption opacity-90" style={tabularNums}>
+            <p className="u1-num mt-1 text-caption text-ink-secondary">
               加入菲丽亚第 {joinDays} 天
             </p>
           ) : null}
@@ -68,15 +69,15 @@ function RealStatsCard() {
         <img src="/brand/logo-512.png" alt="" className="h-12 w-12 rounded-card opacity-95" />
       </div>
       <div className="mt-5 grid grid-cols-2 gap-3">
-        <div className="rounded-input bg-card/20 px-3 py-2.5">
-          <p className="text-caption opacity-90">累计完成服务</p>
-          <p className="mt-0.5 font-number text-price" style={tabularNums}>
+        <div className="rounded-control bg-sunken px-3 py-2.5">
+          <p className="text-caption text-ink-secondary">累计完成服务</p>
+          <p className="u1-num mt-0.5 text-price">
             {completedCount} <span className="text-caption">次</span>
           </p>
         </div>
-        <div className="rounded-input bg-card/20 px-3 py-2.5">
-          <p className="text-caption opacity-90">累计消费</p>
-          <p className="mt-0.5 font-number text-price" style={tabularNums}>
+        <div className="rounded-control bg-sunken px-3 py-2.5">
+          <p className="text-caption text-ink-secondary">累计消费</p>
+          <p className="u1-num mt-0.5 text-price">
             ¥{formatFen(totalFen)}
           </p>
         </div>
@@ -175,16 +176,8 @@ function PassCard() {
 export default function MemberPage() {
   return (
     <div className="px-4 pb-6">
-      <header className="flex items-center gap-2 pt-6">
-        <Link
-          to="/philia"
-          aria-label="返回"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-card shadow-card"
-        >
-          <ArrowLeft className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
-        </Link>
-        <h1 className="text-title-lg">会员卡</h1>
-      </header>
+      {/* U1-A：统一返回条（←圆钮+标题），固定返回 philia 页 */}
+      <PageHeader title="会员卡" to="/philia" className="pt-6" />
 
       <div className="mt-4 flex flex-col gap-3">
         <RealStatsCard />

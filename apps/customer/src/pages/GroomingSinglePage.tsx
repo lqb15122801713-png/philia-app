@@ -19,6 +19,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
 import { friendlyError, useToast } from '@/components/booking/Toast';
+import PageHeader from '@/components/PageHeader';
 import PetCardBlock from '@/components/booking/single/PetCardBlock';
 import ServiceChipsBlock from '@/components/booking/single/ServiceChipsBlock';
 import StoreLineBlock from '@/components/booking/single/StoreLineBlock';
@@ -26,7 +27,9 @@ import DateStripBlock from '@/components/booking/single/DateStripBlock';
 import TimeGridBlock from '@/components/booking/single/TimeGridBlock';
 import ExtrasBlock from '@/components/booking/single/ExtrasBlock';
 import ConfirmBar from '@/components/booking/single/ConfirmBar';
+import StaffPickerFlat from '@/components/booking/single/StaffPickerFlat';
 import { buildWeekGrid, isSameDay } from '@/components/booking/single/slotGrid';
+import { dayLabel, fmtHM } from '@/components/booking/format';
 import { readLastBooking, resolvePetId, resolveServiceId, resolveStoreId, writeLastBooking } from '@/lib/bookingPrefill';
 
 export default function GroomingSinglePage() {
@@ -163,6 +166,17 @@ export default function GroomingSinglePage() {
 
   const selectedDayGrid = day ? (days.find((d) => isSameDay(d.date, day)) ?? null) : null;
 
+  // U1-D：日期余量透出——逐日可约槽计数（slots 为服务端过滤后可约集，key=yyyy-m-d）
+  const remainByDay = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const s of slots) {
+      const t = s.slotStart;
+      const key = `${t.getFullYear()}-${t.getMonth() + 1}-${t.getDate()}`;
+      map.set(key, (map.get(key) ?? 0) + 1);
+    }
+    return map;
+  }, [slots]);
+
   /* ---- 联动：换门店清服务/员工/时间；换服务/换日清时间 ---- */
   const pickStore = (id: string) => {
     if (id === effStoreId) return;
@@ -264,27 +278,15 @@ export default function GroomingSinglePage() {
     <div className="px-4 pb-36 pt-6" data-testid="grooming-single">
       {toastEl}
 
-      <header className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          aria-label="返回"
-          className="flex h-9 w-9 items-center justify-center rounded-full active:scale-92"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ink-secondary" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m15 18-6-6 6-6" />
-          </svg>
-        </button>
-        <h1 className="text-title-lg">预约洗护</h1>
-        {/* B9.3 任务 B：hub 退役后寄养入口安置——顶部栏右侧安静文字链 */}
-        <Link
-          to="/booking/boarding"
-          data-testid="grooming-to-boarding"
-          className="ml-auto text-caption text-ink"
-        >
-          寄养 ›
-        </Link>
-      </header>
+      {/* U1-A：统一返回条（←圆钮+标题）；B9.3 任务 B：hub 退役后寄养入口安置——右侧安静文字链 */}
+      <PageHeader
+        title="预约洗护"
+        right={
+          <Link to="/booking/boarding" data-testid="grooming-to-boarding" className="text-caption text-ink">
+            寄养 ›
+          </Link>
+        }
+      />
 
       {/* 宠物卡（B9a 任务 C：换宠物 → 时长引擎口径变化，已选时段清空重选） */}
       <section className="mt-4">
@@ -328,11 +330,26 @@ export default function GroomingSinglePage() {
         </div>
       </section>
 
+      {/* U1-D：洗护师横卡（v9.1 美容师横卡——置顶「随缘派单」默认卡 + 横滑员工卡；
+          由 ExtrasBlock 折叠区迁出为独立节，选择逻辑/备注前缀传达口径不变） */}
+      <section className={SECTION}>
+        <h2 className="text-title">洗护师</h2>
+        <div className="mt-2">
+          <StaffPickerFlat
+            staff={staffQ.data?.staff ?? []}
+            selectedId={staffId}
+            onSelect={setStaffId}
+            loading={staffQ.isPending}
+          />
+          <p className="mt-1 text-caption-xs text-ink-placeholder">指定洗护师会写在预约备注里传达给门店</p>
+        </div>
+      </section>
+
       {/* 日期横条 + 时段栅格（v4.1：栅格上移紧贴日期区，同一节内） */}
       <section className={SECTION}>
         <h2 className="text-title">选择日期</h2>
         <div className="mt-2">
-          <DateStripBlock days={days} selectedDay={day} onPickDay={pickDay} />
+          <DateStripBlock days={days} selectedDay={day} onPickDay={pickDay} remainByDay={remainByDay} />
         </div>
         <div className="mt-4">
           <TimeGridBlock
@@ -343,9 +360,24 @@ export default function GroomingSinglePage() {
             loading={servicesQ.isPending || servicesQ.isFetching}
           />
         </div>
+        {/* U1-D：时间摘要行（选中时段后透出，真实数据；未选不渲染） */}
+        {slot ? (
+          <p
+            data-testid="gs-slot-summary"
+            className="u1-ring mt-4 flex items-center justify-between rounded-control bg-card px-3.5 py-2.5 text-body-sm"
+          >
+            <span className="text-ink-secondary">已选时间</span>
+            <span className="u1-num font-semibold">
+              {dayLabel(slot)} {fmtHM(slot)}
+              <span className="ml-1.5 text-caption-xs font-normal text-ink-secondary">
+                约 {engineDurationMin ?? service?.durationMin ?? 60} 分钟
+              </span>
+            </span>
+          </p>
+        ) : null}
       </section>
 
-      {/* 折叠区：收款方式 + 备注 + 指定洗护师 */}
+      {/* 折叠区：收款方式 + 备注（U1-D：洗护师迁出为独立横卡区） */}
       <section className={SECTION}>
         <ExtrasBlock
           paymentMode={paymentMode}
@@ -357,10 +389,6 @@ export default function GroomingSinglePage() {
           passLoading={passQ.isPending}
           note={note}
           onNoteChange={setNote}
-          staff={staffQ.data?.staff ?? []}
-          staffId={staffId}
-          onStaffChange={setStaffId}
-          staffLoading={staffQ.isPending}
         />
       </section>
 

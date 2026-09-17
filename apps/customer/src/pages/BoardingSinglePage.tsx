@@ -25,6 +25,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
 import { checkinAt } from '@/components/booking/BoardingDateRangePicker';
 import { friendlyError, useToast } from '@/components/booking/Toast';
+import PageHeader from '@/components/PageHeader';
 import { isoToDate, nightsBetween, toISODate } from '@/components/booking/format';
 import PetCardBlock from '@/components/booking/single/PetCardBlock';
 import BoardingDatesBlock from '@/components/booking/single/BoardingDatesBlock';
@@ -217,27 +218,15 @@ export default function BoardingSinglePage() {
     <div className="px-4 pb-36 pt-6" data-testid="boarding-single">
       {toastEl}
 
-      <header className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          aria-label="返回"
-          className="flex h-9 w-9 items-center justify-center rounded-full active:scale-92"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ink-secondary" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m15 18-6-6 6-6" />
-          </svg>
-        </button>
-        <h1 className="text-title-lg">预约寄养</h1>
-        {/* B9.3 任务 B：与洗护单屏对称的回链 */}
-        <Link
-          to="/booking/grooming"
-          data-testid="boarding-to-grooming"
-          className="ml-auto text-caption text-ink"
-        >
-          洗护 ›
-        </Link>
-      </header>
+      {/* U1-A：统一返回条（←圆钮+标题）；B9.3 任务 B：与洗护单屏对称的回链 */}
+      <PageHeader
+        title="预约寄养"
+        right={
+          <Link to="/booking/grooming" data-testid="boarding-to-grooming" className="text-caption text-ink">
+            洗护 ›
+          </Link>
+        }
+      />
 
       {/* 宠物卡（选宠半屏带疫苗硬校验） */}
       <section className="mt-4">

@@ -13,6 +13,7 @@
  */
 
 import { devLogin, getApiBase, logout, useMe, usePhiliaClient } from '@philia/shared'
+import { PawPrint } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -123,8 +124,14 @@ export default function DevLoginPage() {
 
   return (
     <div className="px-4 pb-10">
-      <header className="pt-8">
-        <h1 className="text-title-lg">开发登录</h1>
+      {/* U1-I 登录页换肤：细线圆爪印 + 衬线宣言 + 柠檬细线（仅视觉，逻辑不动） */}
+      <header className="flex flex-col items-center pt-12 text-center">
+        <span className="flex h-16 w-16 items-center justify-center rounded-full ring-1 ring-line-ring" aria-hidden="true">
+          <PawPrint className="h-7 w-7 text-ink" strokeWidth={1.5} />
+        </span>
+        <p className="u1-serif mt-4 text-title-lg leading-7">守护每一次洗护</p>
+        <span className="mt-3 h-0.5 w-10 rounded-full bg-brand-primary" aria-hidden="true" />
+        <h1 className="mt-4 text-title">开发登录</h1>
         <p className="mt-1 inline-block rounded-full bg-brand-primary-light px-3 py-1 text-caption text-brand-primary-pressed">
           仅开发环境 · 生产环境请移除
         </p>

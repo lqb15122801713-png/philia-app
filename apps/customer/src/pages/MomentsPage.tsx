@@ -9,10 +9,11 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Check, ChevronDown, Share2, X } from 'lucide-react'
+import { Check, ChevronDown, Share2, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PhotoWall, usePhiliaClient } from '@philia/shared'
+import PageHeader from '@/components/PageHeader'
 import type { PhotoWallPhoto } from '@philia/shared'
 import { EmptyState, ErrorState, LoadingBlock, formatDateCn } from '../components/home/common'
 
@@ -103,7 +104,7 @@ function AlbumCard({ album }: { album: Album }) {
           className="aspect-[4/3] w-full object-cover"
           loading="lazy"
         />
-        <span className="absolute inset-x-0 bottom-0 flex items-end justify-between bg-gradient-to-t from-ink/65 to-transparent p-3 text-left">
+        <span className="absolute inset-x-0 bottom-0 flex items-end justify-between bg-ink/55 p-3 text-left">
           <span>
             <span className="block text-body font-semibold text-white">
               {album.petName ?? '毛孩子'} · {album.serviceName ?? '洗护服务'}
@@ -191,16 +192,8 @@ export default function MomentsPage() {
 
   return (
     <div className="px-4 pb-6">
-      <header className="flex items-center gap-2 pt-6">
-        <Link
-          to="/philia"
-          aria-label="返回"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-card shadow-card"
-        >
-          <ArrowLeft className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
-        </Link>
-        <h1 className="text-title-lg">服务相册</h1>
-      </header>
+      {/* U1-A：统一返回条（←圆钮+标题），固定返回 philia 页 */}
+      <PageHeader title="服务相册" to="/philia" className="pt-6" />
 
       <div className="mt-4 flex flex-col gap-4">
         {albumsQuery.isPending ? <LoadingBlock lines={3} /> : null}

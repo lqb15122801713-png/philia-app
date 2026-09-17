@@ -26,9 +26,8 @@ export { useMe, useEventSource, SSE_BACKOFF_DELAYS, backoffDelay } from './api/h
 export type { EventEnvelope } from './api/hooks';
 
 // 共享组件
-export { default as ConvexTabBar } from './components/ConvexTabBar';
-export type { ConvexTabBarItem, ConvexTabBarProps } from './components/ConvexTabBar';
-
+// U1-A：ConvexTabBar（五栏凸起 dock）已随客户端全局 dock 统一退役删除，
+// 客户端改用 apps/customer/src/components/AppDock。
 export { default as StepTimeline } from './components/StepTimeline';
 export type { StepTimelineStep, StepTimelineProps } from './components/StepTimeline';
 

@@ -30,11 +30,11 @@ export default function RoomTypeBlock({
   onRetry: () => void;
 }) {
   if (loading) {
-    return <div className="h-20 animate-pulse rounded-card bg-sunken" data-testid="bs-room-loading" />;
+    return <div className="h-20 animate-pulse rounded-control bg-sunken" data-testid="bs-room-loading" />;
   }
   if (error) {
     return (
-      <div className="rounded-card bg-sunken px-4 py-8 text-center" data-testid="bs-room-error">
+      <div className="rounded-control bg-sunken px-4 py-8 text-center" data-testid="bs-room-error">
         <p className="text-caption text-ink-secondary">房型加载失败，请检查网络</p>
         <button type="button" onClick={onRetry} className="mt-2 text-caption font-semibold text-ink">
           重新加载
@@ -44,7 +44,7 @@ export default function RoomTypeBlock({
   }
   if (services.length === 0) {
     return (
-      <p className="rounded-card bg-sunken px-4 py-8 text-center text-caption text-ink-secondary" data-testid="bs-room-empty">
+      <p className="rounded-control bg-sunken px-4 py-8 text-center text-caption text-ink-secondary" data-testid="bs-room-empty">
         该门店暂无寄养房型，换一家看看
       </p>
     );
@@ -65,7 +65,7 @@ export default function RoomTypeBlock({
     const s = services[0]!;
     return (
       <div
-        className="flex w-full items-center justify-between rounded-card border border-line p-4"
+        className="flex w-full items-center justify-between rounded-control border border-line p-4"
         data-testid="bs-room-readonly"
         data-service-id={s.id}
       >
@@ -94,7 +94,7 @@ export default function RoomTypeBlock({
             onClick={() => onSelect(s.id)}
             data-testid={`bs-room-option-${s.id}`}
             data-active={active ? 'true' : 'false'}
-            className={`flex w-full items-center justify-between rounded-card border p-4 text-left transition active:scale-[0.99] ${active ? 'border-[1.5px] border-ink' : 'border-line'}`}
+            className={`flex w-full items-center justify-between rounded-control border p-4 text-left transition active:scale-[0.99] ${active ? 'border-[1.5px] border-ink' : 'border-line'}`}
           >
             <span>
               <span className="block text-body font-semibold">{s.boardingRoomType ?? s.name}</span>

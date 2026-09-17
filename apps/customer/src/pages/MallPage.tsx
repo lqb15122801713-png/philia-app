@@ -12,11 +12,14 @@
 
 import { usePhiliaClient } from '@philia/shared';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { Search, X } from 'lucide-react';
+import { Plus, Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import CartLink from '../components/mall/CartLink';
-import { CartProvider } from '../components/mall/cartStore';
+import ConfirmSheet from '../components/mall/ConfirmSheet';
+import { EmptyState } from '../components/home/common';
+import { useMallToast } from '../components/mall/MallToast';
+import { CartProvider, useCart, type AddInput } from '../components/mall/cartStore';
 import { fenToYuan } from '../components/mall/format';
 import ProductImage from '../components/mall/ProductImage';
 
@@ -32,32 +35,77 @@ type ProductItem = {
   images: string[] | null;
 };
 
-function ProductCard({ item, storeName }: { item: ProductItem; storeName: string }) {
+function ProductCard({
+  item,
+  storeName,
+  onQuickAdd,
+}: {
+  item: ProductItem;
+  storeName: string;
+  /** U1-G 快加购（真加购链路 cartStore.addItem；售罄不渲染） */
+  onQuickAdd: (item: ProductItem) => void;
+}) {
   return (
-    <Link
-      to={`/mall/product/${item.id}`}
-      className="block overflow-hidden rounded-card bg-card shadow-card transition active:scale-[0.99]"
-    >
-      <ProductImage src={item.images?.[0]} alt={item.name} className="aspect-square w-full" />
-      <div className="p-3">
-        <p className="line-clamp-2 min-h-11 text-body">{item.name}</p>
-        <div className="mt-1.5 flex items-baseline justify-between gap-2">
-          <p className="font-number text-title text-brand-primary">{fenToYuan(item.priceFen)}</p>
-          {item.stock <= 0 ? (
-            <span className="rounded-full bg-sunken px-2 py-0.5 text-caption text-ink-placeholder">已售罄</span>
-          ) : null}
+    /* U1-G 换肤：双列大卡=U1-B 细线卡（rounded-panel 20 + ring + 近零影，去 shadow-card） */
+    <div className="u1-card relative overflow-hidden">
+      <Link to={`/mall/product/${item.id}`} className="block transition active:scale-[0.99]">
+        <ProductImage src={item.images?.[0]} alt={item.name} className="aspect-square w-full" />
+        <div className="p-3">
+          <p className="line-clamp-2 min-h-11 text-body-sm">{item.name}</p>
+          <div className="mt-1.5 flex items-baseline justify-between gap-2">
+            <p className="u1-num text-title text-brand-primary">{fenToYuan(item.priceFen)}</p>
+            {item.stock <= 0 ? (
+              <span className="rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">已售罄</span>
+            ) : null}
+          </div>
+          <p className="mt-1 truncate text-caption-xs text-ink-secondary">{storeName}</p>
         </div>
-        <p className="mt-1 truncate text-caption text-ink-secondary">{storeName}</p>
-      </div>
-    </Link>
+      </Link>
+      {/* 快加购：真链路（addItem → 角标/购物车；跨店由页面 ConfirmSheet 处理）。
+          U1-J 一致性修正：柠檬黄每屏一处主行动（分类 chip），加购钮改细线钮 */}
+      {item.stock > 0 ? (
+        <button
+          type="button"
+          aria-label={`快速加入购物车：${item.name}`}
+          data-testid={`mall-quickadd-${item.id}`}
+          onClick={(e) => {
+            e.preventDefault();
+            onQuickAdd(item);
+          }}
+          className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-card text-ink ring-1 ring-line-ring transition-transform duration-120 ease-philia-spring active:scale-92"
+        >
+          <Plus className="h-5 w-5" strokeWidth={1.5} />
+        </button>
+      ) : null}
+    </div>
   );
 }
 
 function MallInner() {
   const { trpc } = usePhiliaClient();
+  const cart = useCart();
+  const { toastEl, showToast } = useMallToast();
   const [category, setCategory] = useState<(typeof CATEGORIES)[number]>('全部');
   const [searchText, setSearchText] = useState('');
   const [keyword, setKeyword] = useState('');
+  /** U1-G 快加购跨店冲突待确认（与 PDP 同链路） */
+  const [pendingAdd, setPendingAdd] = useState<AddInput | null>(null);
+
+  // U1-G 快加购（真链路）：成功 → toast；跨店 → ConfirmSheet 确认后 replaceWith
+  const quickAdd = (item: ProductItem) => {
+    const input: AddInput = {
+      productId: item.id,
+      storeId: item.storeId,
+      storeName: storeNameOf(item.storeId),
+      name: item.name,
+      priceFen: item.priceFen,
+      image: item.images?.[0] ?? null,
+      stock: item.stock,
+    };
+    const result = cart.addItem(input);
+    if (result === 'conflict') setPendingAdd(input);
+    else showToast('已加入购物车', 'info');
+  };
 
   // 搜索防抖：350ms
   useEffect(() => {
@@ -111,14 +159,15 @@ function MallInner() {
 
   return (
     <div className="px-4 py-6">
+      {toastEl}
       {/* 标题 + 购物车入口 */}
       <div className="flex items-center justify-between">
         <h1 className="text-title-lg">商城</h1>
         <CartLink />
       </div>
 
-      {/* 搜索框 */}
-      <div className="mt-4 flex h-11 items-center gap-2 rounded-input bg-card px-3.5 shadow-card">
+      {/* 搜索框（U1-G：细线 ring 控件档，去 shadow-card） */}
+      <div className="u1-ring mt-4 flex h-11 items-center gap-2 rounded-control bg-card px-3.5">
         <Search className="h-[18px] w-[18px] shrink-0 text-ink-placeholder" strokeWidth={1.5} />
         <input
           value={searchText}
@@ -138,17 +187,18 @@ function MallInner() {
         ) : null}
       </div>
 
-      {/* 分类 chips */}
+      {/* 分类 chips（选中=柠檬黄主行动位；未选中=细线 ring 去阴影） */}
       <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
         {CATEGORIES.map((c) => (
           <button
             key={c}
             type="button"
             onClick={() => setCategory(c)}
-            className={`shrink-0 rounded-full px-4 py-2 text-body transition ${
+            data-testid={`mall-cat-${c}`}
+            className={`shrink-0 rounded-full px-4 py-2 text-body-sm transition ${
               category === c
                 ? 'bg-brand-primary font-semibold text-ink'
-                : 'bg-card text-ink-secondary shadow-card'
+                : 'bg-card text-ink-secondary ring-1 ring-line-ring'
             }`}
           >
             {c}
@@ -181,28 +231,29 @@ function MallInner() {
           </button>
         </div>
       ) : items.length === 0 ? (
-        /* 空态：品牌插画 */
-        <div className="mt-8 flex flex-col items-center rounded-card bg-card px-4 py-10 shadow-card">
-          <img src="/brand/empty-appointments-800.png" alt="暂无商品" className="w-48 max-w-full rounded-card" />
-          <p className="mt-4 text-title">没有找到相关商品</p>
-          <p className="mt-1 text-body text-ink-secondary">
-            {keyword ? `换个关键词试试，或看看其他分类` : '这个分类暂时没有商品，看看别的吧'}
-          </p>
-          {keyword ? (
-            <button
-              type="button"
-              onClick={() => setSearchText('')}
-              className="mt-5 rounded-full bg-brand-primary px-6 py-2.5 text-body text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
-            >
-              清空搜索
-            </button>
-          ) : null}
+        /* 空态：U1-I 全域统一组件（philia 插画 + 一句话 + 一行动） */
+        <div className="mt-8">
+          <EmptyState
+            title="没有找到相关商品"
+            desc={keyword ? '换个关键词试试，或看看其他分类' : '这个分类暂时没有商品，看看别的吧'}
+            action={
+              keyword ? (
+                <button
+                  type="button"
+                  onClick={() => setSearchText('')}
+                  className="mt-3 rounded-full bg-brand-primary px-6 py-2.5 text-body text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                >
+                  清空搜索
+                </button>
+              ) : undefined
+            }
+          />
         </div>
       ) : (
         <>
           <div className="mt-4 grid grid-cols-2 gap-3">
             {items.map((it) => (
-              <ProductCard key={it.id} item={it} storeName={storeNameOf(it.storeId)} />
+              <ProductCard key={it.id} item={it} storeName={storeNameOf(it.storeId)} onQuickAdd={quickAdd} />
             ))}
           </div>
           {/* 上拉加载哨兵与状态行 */}
@@ -214,6 +265,22 @@ function MallInner() {
                 ? '上拉加载更多'
                 : `共 ${total} 件商品 · 到底啦`}
           </p>
+
+          {/* U1-G 快加购跨店确认（与 PDP 同链路） */}
+          <ConfirmSheet
+            open={!!pendingAdd}
+            title="购物车仅限同一门店商品"
+            desc={`购物车内已有「${cart.items[0]?.storeName ?? '其他门店'}」的商品，加入本商品将清空原购物车。`}
+            confirmText="清空并加入"
+            onCancel={() => setPendingAdd(null)}
+            onConfirm={() => {
+              if (pendingAdd) {
+                cart.replaceWith(pendingAdd);
+                showToast('已清空原购物车并加入本商品', 'info');
+              }
+              setPendingAdd(null);
+            }}
+          />
         </>
       )}
     </div>

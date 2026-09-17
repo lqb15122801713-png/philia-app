@@ -60,6 +60,8 @@ module.exports = {
           DEFAULT: '#EBE2DB',
           strong: '#DDD1C6',
           divider: '#F0EAE5',
+          // U1-B 新增（v9.1 深度策略）：1px 暖墨细线 ring，替代投影做层级
+          ring: 'rgba(74, 59, 46, .09)',
         },
         success: {
           DEFAULT: '#7FA87C', // 苔绿（功能色原值保留，确认书第 1 条）
@@ -79,6 +81,11 @@ module.exports = {
         card: '16px', // 卡片（锁定）
         sheet: '20px',
         full: '9999px', // 胶囊按钮（锁定）
+        // U1-B 新增（v9.1 圆角四档：卡 20 / 控件 14 / 小签 6 / 全圆）；
+        // 既有档保留供旧件，全圆档沿用 full；新件一律走 panel/control/chip/full
+        panel: '20px', // 卡（大卡/面板）
+        control: '14px', // 控件（按钮/输入/chips 容器）
+        chip: '6px', // 小签（角标/小标签）
       },
 
       // 一律暖色投影，禁止中性灰
@@ -86,6 +93,8 @@ module.exports = {
         card: '0 2px 10px rgba(61, 50, 41, 0.05)',
         elevated: '0 8px 24px rgba(61, 50, 41, 0.08)',
         philia: '0 6px 16px rgba(253, 200, 48, 0.35)', // 柠檬黄光晕（随主色，锁定）
+        // U1-B 新增（v9.1 深度策略）：近零软影，与 line.ring 细线 ring 配套使用
+        hairline: '0 1px 2px rgba(61, 50, 41, 0.04)',
       },
 
       fontSize: {
@@ -95,6 +104,12 @@ module.exports = {
         'body-lg': ['16px', { lineHeight: '24px' }], // 员工端 ≥16px
         caption: ['12px', { lineHeight: '16px' }],
         price: ['20px', { lineHeight: '28px', fontWeight: '600' }],
+        // U1-B 新增（v9.1 字阶 11/12/14/17/20，详情页可 28/32）；
+        // 12/17/20 已由 caption/title/title-lg 覆盖，此处补 11/14/28/32 四档
+        'caption-xs': ['11px', { lineHeight: '15px' }],
+        'body-sm': ['14px', { lineHeight: '20px' }],
+        detail: ['28px', { lineHeight: '36px', fontWeight: '600' }],
+        'detail-lg': ['32px', { lineHeight: '40px', fontWeight: '600' }],
       },
 
       // 字体自托管 woff2（禁外链 CDN）；中文不落拉丁展示字体，中文禁斜体
@@ -116,6 +131,9 @@ module.exports = {
         display: ['Montserrat', 'Noto Sans SC', '-apple-system', 'BlinkMacSystemFont', 'PingFang SC', 'Microsoft YaHei', 'sans-serif'],
         // 数字与价格：Montserrat → Noto Sans SC，配合 font-variant-numeric: tabular-nums 使用
         number: ['Montserrat', 'Noto Sans SC', 'Helvetica Neue', 'Helvetica', 'Arial', 'PingFang SC', 'Microsoft YaHei', 'sans-serif'],
+        // U1-B 新增（v9.1）：中文展示位衬线链；woff2 产品侧随后入库，
+        // 未入库时静默回退 Songti SC/serif，不报错
+        'serif-cn': ['Noto Serif SC', 'Songti SC', 'serif'],
       },
 
       backgroundImage: {

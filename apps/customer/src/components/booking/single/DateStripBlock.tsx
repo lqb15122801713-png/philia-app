@@ -17,11 +17,14 @@ export default function DateStripBlock({
   days,
   selectedDay,
   onPickDay,
+  remainByDay,
 }: {
   days: DayGrid[];
   /** 当前选中日（当日 00:00），null = 未选 */
   selectedDay: Date | null;
   onPickDay: (d: Date) => void;
+  /** U1-D 余量透出：逐日可约槽数（key=yyyy-m-d）；缺省/约满/休息不显示余量 */
+  remainByDay?: Map<string, number>;
 }) {
   const [calOpen, setCalOpen] = useState(false);
 
@@ -60,8 +63,11 @@ export default function DateStripBlock({
             >
               <span className="text-caption">{dayLabel(d.date)}</span>
               <span className={`mt-0.5 font-number text-body ${active ? 'font-bold' : 'font-semibold'}`}>{d.date.getDate()}</span>
-              <span className="mt-0.5 h-4 text-[10px] leading-4 text-ink-placeholder">
-                {d.closed ? '休息' : !d.hasAvailable ? '约满' : ''}
+              <span className={`mt-0.5 h-4 text-[10px] leading-4 ${greyed ? 'text-ink-placeholder' : 'text-ink-secondary'}`}>
+                {d.closed ? '休息' : !d.hasAvailable ? '约满' : (() => {
+                  const remain = remainByDay?.get(`${d.date.getFullYear()}-${d.date.getMonth() + 1}-${d.date.getDate()}`);
+                  return remain ? `余 ${remain}` : '';
+                })()}
               </span>
               {active ? <span className="absolute bottom-0 h-[2px] w-7 rounded-full bg-ink" /> : null}
             </button>

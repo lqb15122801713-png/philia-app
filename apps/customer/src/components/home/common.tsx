@@ -70,7 +70,8 @@ export function ErrorState({ message, onRetry }: { message?: string; onRetry?: (
   )
 }
 
-/** 空态：品牌插画 + 文案 + 可选动作 */
+/** 空态（U1-I 全域统一组件）：philia 插画 + 一句话（标题+说明）+ 一行动（可选）。
+ *  形态=U1-B 细线卡（ring + 近零影）；各页空态一律走本组件，不再手写内联空态。 */
 export function EmptyState({
   title,
   desc,
@@ -83,8 +84,8 @@ export function EmptyState({
   image?: string
 }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-card bg-card px-4 py-8 text-center shadow-card">
-      <img src={image} alt="" className="h-28 w-28 rounded-card object-cover" />
+    <div className="u1-card flex flex-col items-center gap-2 px-4 py-8 text-center">
+      <img src={image} alt="" className="h-28 w-28 rounded-control object-cover" />
       <p className="text-body font-semibold">{title}</p>
       {desc ? <p className="text-caption text-ink-secondary">{desc}</p> : null}
       {action}

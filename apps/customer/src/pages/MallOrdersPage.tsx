@@ -14,11 +14,14 @@
 
 import { usePhiliaClient } from '@philia/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { BadgeCheck, ChevronLeft, Package, Truck } from 'lucide-react';
+import { BadgeCheck, Package, Truck } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import CashierModal, { type CashierOrder } from '../components/mall/CashierModal';
+import PageHeader from '../components/PageHeader';
 import ConfirmSheet from '../components/mall/ConfirmSheet';
+import { EmptyState } from '../components/home/common';
+import { CartProvider, MAX_QTY, useCart } from '../components/mall/cartStore';
 import { fenToYuan, fmtOrderTime } from '../components/mall/format';
 import { friendlyError, useMallToast } from '../components/mall/MallToast';
 import ProductImage from '../components/mall/ProductImage';
@@ -45,6 +48,8 @@ interface OrderRow {
   createdAt: Date | string;
   updatedAt: Date | string;
   storeName: string | null;
+  /** 服务端 listMyOrders 经 orders 全列透传（r.order spread），U1-G 再来一单取店用 */
+  storeId: string;
 }
 
 type OrderGroups = Record<string, OrderRow[]>;
@@ -75,19 +80,23 @@ function OrderCard({
   onContinuePay,
   onReceive,
   onCancel,
+  onReorder,
   receiving,
 }: {
   order: OrderRow;
   onContinuePay: (o: OrderRow) => void;
   onReceive: (o: OrderRow) => void;
   onCancel: (o: OrderRow) => void;
+  /** U1-G 再来一单（received 态真链路：重建购物车 → /mall/cart） */
+  onReorder: (o: OrderRow) => void;
   receiving: boolean;
 }) {
   const meta = STATUS_META[order.status] ?? { label: order.status, pill: 'bg-sunken text-ink-secondary' };
   const qty = order.items.reduce((n, it) => n + it.quantity, 0);
 
   return (
-    <div className="rounded-card bg-card p-4 shadow-card">
+    /* U1-G 换肤：订单卡=U1-B 细线卡（ring + 近零影，去 shadow-card） */
+    <div className="u1-card p-4">
       {/* 头部：门店 + 状态 */}
       <div className="flex items-center justify-between">
         <p className="flex items-center gap-1.5 text-body font-semibold">
@@ -162,9 +171,9 @@ function OrderCard({
           <button
             type="button"
             onClick={() => onContinuePay(order)}
-            className="h-9 rounded-full bg-philia-gradient px-6 text-body font-medium text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92"
+            className="h-9 rounded-full bg-brand-primary px-6 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
           >
-            继续支付
+            去支付
           </button>
         </div>
       ) : null}
@@ -180,16 +189,30 @@ function OrderCard({
           </button>
         </div>
       ) : null}
+      {/* U1-G 已完成态：再来一单（真链路）；「查看全程」无物流全程接口——不渲染该钮（铁则） */}
+      {order.status === 'received' ? (
+        <div className="mt-3 flex justify-end">
+          <button
+            type="button"
+            onClick={() => onReorder(order)}
+            data-testid={`order-reorder-${order.id}`}
+            className="h-9 rounded-full bg-card px-6 text-body font-medium text-ink ring-1 ring-line-ring transition-transform duration-120 ease-philia-spring active:scale-92"
+          >
+            再来一单
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
 
 /* ---------------- 页面 ---------------- */
 
-export default function MallOrdersPage() {
+function MallOrdersInner() {
   const { trpc } = usePhiliaClient();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const cart = useCart();
   const { toastEl, showToast } = useMallToast();
 
   const [tab, setTab] = useState<(typeof TABS)[number]['key']>('pending');
@@ -206,6 +229,29 @@ export default function MallOrdersPage() {
   const invalidateOrders = useCallback(
     () => void queryClient.invalidateQueries({ queryKey: ['mall', 'listMyOrders'] }),
     [queryClient],
+  );
+
+  /* ---- U1-G 再来一单（真链路）：清空购物车 → 按订单明细重建 → /mall/cart 结算。
+     订单单店（createOrder 服务端约束），逐项 addItem 不会触发跨店冲突。 */
+  const onReorder = useCallback(
+    (order: OrderRow) => {
+      cart.clearAll();
+      for (const it of order.items) {
+        cart.addItem({
+          productId: it.product_id,
+          storeId: order.storeId,
+          storeName: order.storeName ?? '菲丽亚门店',
+          name: it.name,
+          priceFen: it.price_fen,
+          image: it.image ?? null,
+          stock: MAX_QTY, // 库存快照以结算时服务端重算为准（与 PDP 同口径）
+          qty: it.quantity,
+        });
+      }
+      showToast('已按原单加入购物车', 'info');
+      navigate('/mall/cart');
+    },
+    [cart, navigate, showToast],
   );
 
   /* ---- SSE：order.paid / order.shipped → toast + invalidate ---- */
@@ -256,17 +302,8 @@ export default function MallOrdersPage() {
   return (
     <div className="px-4 py-6">
       {toastEl}
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          aria-label="返回"
-          onClick={() => navigate(-1)}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-card shadow-card transition-transform duration-120 ease-philia-spring active:scale-92"
-        >
-          <ChevronLeft className="h-5 w-5 text-ink" strokeWidth={1.5} />
-        </button>
-        <h1 className="text-title-lg">商品订单</h1>
-      </div>
+      {/* U1-A：统一返回条（←圆钮+标题） */}
+      <PageHeader title="商品订单" />
 
       {ordersQ.isPending ? (
         <div className="mt-5 space-y-2.5">
@@ -286,17 +323,20 @@ export default function MallOrdersPage() {
           </button>
         </div>
       ) : totalCount === 0 ? (
-        /* 全局空态：品牌插画 */
-        <div className="mt-8 flex flex-col items-center rounded-card bg-card px-4 py-10 shadow-card">
-          <img src="/brand/empty-appointments-800.png" alt="暂无订单" className="w-48 max-w-full rounded-card" />
-          <p className="mt-4 text-title">还没有商品订单</p>
-          <p className="mt-1 text-body text-ink-secondary">去商城给毛孩子挑点好物吧</p>
-          <Link
-            to="/mall"
-            className="mt-6 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
-          >
-            去逛逛
-          </Link>
+        /* U1-I：全域统一空态组件 */
+        <div className="mt-8">
+          <EmptyState
+            title="还没有商品订单"
+            desc="去商城给毛孩子挑点好物吧"
+            action={
+              <Link
+                to="/mall"
+                className="mt-4 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+              >
+                去逛逛
+              </Link>
+            }
+          />
         </div>
       ) : (
         <>
@@ -338,6 +378,7 @@ export default function MallOrdersPage() {
                   }
                   onReceive={(order) => setReceiveTarget(order)}
                   onCancel={(order) => setCancelTarget(order)}
+                  onReorder={onReorder}
                 />
               ))
             )}
@@ -384,5 +425,13 @@ export default function MallOrdersPage() {
         }}
       />
     </div>
+  );
+}
+
+export default function MallOrdersPage() {
+  return (
+    <CartProvider>
+      <MallOrdersInner />
+    </CartProvider>
   );
 }

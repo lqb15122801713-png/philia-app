@@ -20,6 +20,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { EventType, getApiBase, safeUuid, useEventSource, useMe, usePhiliaClient, type EventEnvelope } from '@philia/shared';
 import BookingCode from '@/components/booking/BookingCode';
+import PageHeader from '@/components/PageHeader';
 import BoardingDateRangePicker, { checkinAt } from '@/components/booking/BoardingDateRangePicker';
 import SlotPicker from '@/components/booking/SlotPicker';
 import { ErrorState } from '@/components/home/common';
@@ -325,20 +326,11 @@ export default function AppointmentDetailPage() {
     <div className="px-4 py-6">
       {toastEl}
 
-      <header className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          aria-label="返回"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-card shadow-card active:scale-92"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ink-secondary" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m15 18-6-6 6-6" />
-          </svg>
-        </button>
-        <h1 className="text-title-lg">预约详情</h1>
-        <span className={`ml-auto rounded-full px-2.5 py-1 text-caption ${status.pill}`}>{status.label}</span>
-      </header>
+      {/* U1-A：统一返回条（←圆钮+标题），右侧保留状态 pill */}
+      <PageHeader
+        title="预约详情"
+        right={<span className={`rounded-full px-2.5 py-1 text-caption ${status.pill}`}>{status.label}</span>}
+      />
 
       {/* 服务中：显著 live 入口 */}
       {serving ? (
