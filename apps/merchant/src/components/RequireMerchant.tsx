@@ -49,7 +49,7 @@ export default function RequireMerchant({ children }: { children: ReactNode }) {
         <button
           type="button"
           onClick={() => navigate('/dev-login', { replace: true })}
-          className="mt-6 h-12 min-w-[200px] rounded-full bg-brand-primary px-8 text-body font-semibold text-white transition active:scale-92 duration-120"
+          className="mt-6 h-12 min-w-[200px] rounded-full bg-brand-primary px-8 text-body font-semibold text-ink transition active:scale-92 duration-120"
         >
           去切换账号
         </button>

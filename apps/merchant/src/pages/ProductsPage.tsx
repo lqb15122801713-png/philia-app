@@ -1,56 +1,57 @@
 /**
- * 商品管理页（T5.2 · coder-mall-merchant）—— 路由 /products
+ * 商品 /products（U3 批次 · 任务 I · 规格书 §8 · 母本试样 519-556 行 + .prod CSS 124-132 行）
  *
  * - 数据：mall.listProductsForStore（merchantProcedure，本店全部商品含下架；
- *   分类筛选 + 关键词搜索在服务端过滤，搜索 300ms 防抖）。
- * - 表格：主图缩略 / 名称 / 分类 / 价格（元，tabular-nums）/ 库存（<10 红色）/
- *   状态开关（上下架即时切换，optimistic + 失败回滚）/ 编辑。
- * - 新增 / 编辑：ProductEditorDialog（多图上传 products/<storeId>，元→分转换）。
+ *   分类筛选 + 关键词搜索在服务端过滤，搜索 300ms 防抖沿用）。
+ * - 结构：MainScaffold（title 商品 / sub 在售·已下架·低库存真值 / 搜索 + 柠檬钮新增）
+ *   → u3-chipf 分类 chips（当前墨底）→ 4 列商品卡（纸面 ring 20 圆角 overflow hidden）。
+ * - 卡片：4:3 图（images[0]，无图=浅木色块 #D4B896）+ 名 + 价 Montserrat tabular（¥/件）
+ *   + 库存 + 状态（在售 live / 低库存 amber（库存<5） / 已下架 done 半透明）。点击卡→编辑弹层。
+ * - 上下架：不新造开关——ProductEditorDialog 内「上架销售」Switch 走 upsertProduct
+ *   真实链路（失败原文 toast + invalidate 回拉），越店写 FORBIDDEN 由服务端强制。
  */
 
 import { usePhiliaClient } from '@philia/shared'
-import { useQuery, type QueryKey } from '@tanstack/react-query'
-import { PackageOpen, Plus, Search } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { PackageOpen } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
+import MainScaffold, { LemonButton, QuietButton, SearchInput } from '@/components/MainScaffold'
 import ProductEditorDialog from '@/components/mall-admin/ProductEditorDialog'
 import {
   errMsg,
   fenToYuan,
-  LOW_STOCK_THRESHOLD,
   PRODUCT_CATEGORIES,
   PRODUCTS_KEY,
   type StoreProduct,
 } from '@/components/mall-admin/format'
-import { Badge, Btn, Empty, inputCls, Loading, numStyle, Switch } from '@/components/mall-admin/ui'
-import type { inferRouterOutputs } from '@trpc/server'
-import type { AppRouter } from '@philia/shared'
 
-type ProductsResult = inferRouterOutputs<AppRouter>['mall']['listProductsForStore']
+/** U3 低库存口径（规格书 §8 真值）：库存 < 5 */
+const LOW_STOCK = 5
+
+/** 卡片状态胶囊：已下架 done / 低库存 amber / 在售 live */
+function prodStatus(p: StoreProduct): { cls: string; label: string } {
+  if (p.status !== 'on') return { cls: 'u3-st done', label: '已下架' }
+  if (p.stock < LOW_STOCK) return { cls: 'u3-st amber', label: '低库存' }
+  return { cls: 'u3-st live', label: '在售' }
+}
 
 export default function ProductsPage() {
-  const { trpc, queryClient } = usePhiliaClient()
+  const { trpc } = usePhiliaClient()
 
   const [category, setCategory] = useState('')
   const [kw, setKw] = useState('')
   const [keyword, setKeyword] = useState('')
   const [editorOpen, setEditorOpen] = useState(false)
   const [editing, setEditing] = useState<StoreProduct | null>(null)
-  const [togglingId, setTogglingId] = useState<string | null>(null)
 
-  // 搜索 300ms 防抖
+  // 搜索 300ms 防抖（沿用现有口径）
   useEffect(() => {
     const t = window.setTimeout(() => setKeyword(kw.trim()), 300)
     return () => window.clearTimeout(t)
   }, [kw])
 
-  const queryKey = useMemo<QueryKey>(
-    () => [...PRODUCTS_KEY, { category: category || undefined, keyword: keyword || undefined }],
-    [category, keyword],
-  )
-
   const listQuery = useQuery({
-    queryKey,
+    queryKey: [...PRODUCTS_KEY, { category: category || undefined, keyword: keyword || undefined }],
     queryFn: () =>
       trpc.mall.listProductsForStore.query({
         category: category || undefined,
@@ -60,206 +61,134 @@ export default function ProductsPage() {
       }),
   })
 
+  // 副行计数真值：不带筛选的全量查询（同接口同缓存前缀，不新增接口）
+  const statsQuery = useQuery({
+    queryKey: [...PRODUCTS_KEY, 'u3-stats'],
+    queryFn: () => trpc.mall.listProductsForStore.query({ page: 1, pageSize: 100 }),
+  })
+
   const items = listQuery.data?.items ?? []
 
-  /** 上下架：optimistic 改写缓存 → 提交 → 失败回滚 + 原文 toast */
-  const toggleStatus = async (p: StoreProduct) => {
-    const nextStatus = (p.status === 'on' ? 'off' : 'on') as 'on' | 'off'
-    const snapshots = queryClient.getQueriesData<ProductsResult>({ queryKey: PRODUCTS_KEY })
-    queryClient.setQueriesData<ProductsResult>({ queryKey: PRODUCTS_KEY }, (old) =>
-      old
-        ? { ...old, items: old.items.map((it) => (it.id === p.id ? { ...it, status: nextStatus } : it)) }
-        : old,
-    )
-    setTogglingId(p.id)
-    try {
-      await trpc.mall.upsertProduct.mutate({
-        productId: p.id,
-        category: p.category,
-        name: p.name,
-        description: p.description ?? undefined,
-        images: p.images ?? [],
-        priceFen: p.priceFen,
-        stock: p.stock,
-        status: nextStatus,
-      })
-      toast.success(nextStatus === 'on' ? `「${p.name}」已上架` : `「${p.name}」已下架`)
-    } catch (e) {
-      // 回滚到操作前快照
-      for (const [key, data] of snapshots) queryClient.setQueryData(key, data)
-      toast.error(errMsg(e))
-    } finally {
-      setTogglingId(null)
-      void queryClient.invalidateQueries({ queryKey: PRODUCTS_KEY })
-    }
+  const sub = useMemo(() => {
+    const all = statsQuery.data?.items
+    if (!all) return '门店商品库存、价格与上下架'
+    const on = all.filter((p) => p.status === 'on').length
+    const off = all.length - on
+    const low = all.filter((p) => p.status === 'on' && p.stock < LOW_STOCK).length
+    return `在售 ${on} · 已下架 ${off} · 低库存 ${low}`
+  }, [statsQuery.data])
+
+  const openEditor = (p: StoreProduct | null) => {
+    setEditing(p)
+    setEditorOpen(true)
   }
 
   return (
-    <div className="px-4 pb-6 lg:px-8">
-      <header className="flex items-end justify-between pt-6">
-        <div>
-          <h1 className="text-title-lg">商品管理</h1>
-          <p className="mt-0.5 text-caption text-ink-secondary">
-            {listQuery.data ? `共 ${listQuery.data.total} 件商品（含下架）` : '门店商品库存、价格与上下架'}
-          </p>
-        </div>
-        <Btn
-          variant="primary"
-          onClick={() => {
-            setEditing(null)
-            setEditorOpen(true)
-          }}
-        >
-          <Plus size={16} strokeWidth={2} />
-          新增商品
-        </Btn>
-      </header>
+    <MainScaffold
+      testid="products-page"
+      title="商品"
+      sub={sub}
+      actions={
+        <>
+          <SearchInput placeholder="搜索商品…" value={kw} onChange={setKw} testid="products-search" />
+          <LemonButton testid="products-create" onClick={() => openEditor(null)}>
+            ＋ 新增商品
+          </LemonButton>
+        </>
+      }
+    >
+      {/* 分类 chips（当前墨底；映射服务端 category 查询参数） */}
+      <div className="mb-[14px] flex flex-wrap gap-2">
+        {['', ...PRODUCT_CATEGORIES].map((c) => (
+          <button
+            key={c || 'all'}
+            type="button"
+            data-testid={`products-chip-${c || 'all'}`}
+            onClick={() => setCategory(c)}
+            className={`u3-chipf ${category === c ? 'on' : ''}`}
+          >
+            {c || '全部'}
+          </button>
+        ))}
+      </div>
 
-      {/* 筛选行：分类 + 搜索 */}
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <div className="flex flex-wrap gap-1.5">
-          {['', ...PRODUCT_CATEGORIES].map((c) => (
-            <button
-              key={c || 'all'}
-              type="button"
-              onClick={() => setCategory(c)}
-              className={`rounded-full px-3 py-1.5 text-caption transition-colors duration-150 ${
-                category === c
-                  ? 'bg-brand-primary text-white'
-                  : 'bg-card text-ink-secondary shadow-card hover:text-ink'
-              }`}
+      {listQuery.isPending ? (
+        /* 骨架（禁转圈）：纸面卡轮廓 pulse */
+        <div className="grid grid-cols-2 gap-[14px] lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div
+              key={i}
+              className="overflow-hidden rounded-[20px] bg-[#FFFDF6] shadow-[0_0_0_1px_rgba(74,59,46,.09)]"
             >
-              {c || '全部'}
-            </button>
+              <div className="aspect-[4/3] w-full animate-pulse bg-[rgba(74,59,46,.06)]" />
+              <div className="space-y-2 px-[13px] py-[11px]">
+                <div className="h-3 w-3/4 animate-pulse rounded-[6px] bg-[rgba(74,59,46,.06)]" />
+                <div className="h-3.5 w-1/3 animate-pulse rounded-[6px] bg-[rgba(74,59,46,.06)]" />
+              </div>
+            </div>
           ))}
         </div>
-        <div className="relative ml-auto w-full sm:w-64">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-placeholder" />
-          <input
-            className={`${inputCls} pl-8`}
-            placeholder="搜索商品名 / 描述"
-            value={kw}
-            maxLength={64}
-            onChange={(e) => setKw(e.target.value)}
-          />
+      ) : listQuery.isError ? (
+        <div className="u3-panel px-[17px] py-10 text-center">
+          <p className="text-sm font-bold text-ink">加载失败</p>
+          <p className="mt-1 text-xs text-[rgba(74,59,46,.62)]">{errMsg(listQuery.error)}</p>
         </div>
-      </div>
+      ) : items.length === 0 ? (
+        <div className="u3-panel flex flex-col items-center px-[17px] py-14">
+          <PackageOpen size={34} strokeWidth={1.2} className="text-[rgba(74,59,46,.42)]" />
+          <p className="mt-3 text-sm font-bold text-ink">货架空空，去上架第一件商品</p>
+          <div className="mt-4">
+            <QuietButton testid="products-empty-create" onClick={() => openEditor(null)}>
+              ＋ 新增商品
+            </QuietButton>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-[14px] lg:grid-cols-3 xl:grid-cols-4">
+          {items.map((p) => {
+            const cover = p.images?.[0]
+            const st = prodStatus(p)
+            const off = p.status !== 'on'
+            return (
+              <button
+                key={p.id}
+                type="button"
+                data-testid={`product-card-${p.id}`}
+                onClick={() => openEditor(p)}
+                className={`overflow-hidden rounded-[20px] bg-[#FFFDF6] text-left shadow-[0_0_0_1px_rgba(74,59,46,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] ${
+                  off ? 'opacity-60' : ''
+                }`}
+              >
+                {cover ? (
+                  <img src={cover} alt={p.name} className="aspect-[4/3] w-full object-cover" />
+                ) : (
+                  <div className="aspect-[4/3] w-full bg-[#D4B896]" />
+                )}
+                <div className="px-[13px] py-[11px]">
+                  <div className="truncate text-xs font-bold text-ink">{p.name}</div>
+                  <div className="mt-[5px] font-number text-sm font-extrabold tabular-nums text-ink">
+                    ¥{fenToYuan(p.priceFen)}
+                    <small className="ml-1 text-[11px] font-medium text-[rgba(74,59,46,.42)]">/ 件</small>
+                  </div>
+                  <div className="mt-[3px] flex items-center gap-1.5 text-[11px] text-[rgba(74,59,46,.62)]">
+                    <span className="font-number tabular-nums">库存 {p.stock}</span>
+                    <span aria-hidden>·</span>
+                    <span className={st.cls}>{st.label}</span>
+                  </div>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      )}
 
-      {/* 商品表格 */}
-      <div className="mt-3 overflow-hidden rounded-card bg-card shadow-card">
-        {listQuery.isPending ? (
-          <Loading />
-        ) : listQuery.isError ? (
-          <Empty title="加载失败" hint={errMsg(listQuery.error)} />
-        ) : items.length === 0 ? (
-          <div className="flex flex-col items-center py-14 text-ink-placeholder">
-            <PackageOpen size={36} strokeWidth={1.2} />
-            <p className="mt-2 text-body">暂无商品</p>
-            <p className="mt-1 text-caption">点击右上角「新增商品」上架第一件商品</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] border-collapse text-left">
-              <thead>
-                <tr className="border-b border-line-divider text-caption text-ink-secondary">
-                  <th className="px-4 py-2.5 font-medium">商品</th>
-                  <th className="px-3 py-2.5 font-medium">分类</th>
-                  <th className="px-3 py-2.5 font-medium">价格</th>
-                  <th className="px-3 py-2.5 font-medium">库存</th>
-                  <th className="px-3 py-2.5 font-medium">状态</th>
-                  <th className="px-4 py-2.5 text-right font-medium">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((p) => {
-                  const cover = p.images?.[0]
-                  const low = p.stock < LOW_STOCK_THRESHOLD
-                  const on = p.status === 'on'
-                  return (
-                    <tr
-                      key={p.id}
-                      className="border-b border-line-divider text-[13px] last:border-b-0 hover:bg-canvas/60"
-                    >
-                      <td className="px-4 py-2.5">
-                        <div className="flex items-center gap-2.5">
-                          {cover ? (
-                            <img
-                              src={cover}
-                              alt={p.name}
-                              className="h-11 w-11 shrink-0 rounded-tag border border-line object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-tag bg-sunken text-ink-placeholder">
-                              <PackageOpen size={18} strokeWidth={1.5} />
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <div className="truncate font-medium text-ink">{p.name}</div>
-                            {p.description ? (
-                              <div className="mt-0.5 max-w-56 truncate text-caption text-ink-placeholder">
-                                {p.description}
-                              </div>
-                            ) : null}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <Badge tone={p.category === '其他' ? 'muted' : 'brand'}>{p.category}</Badge>
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <span className="font-number font-semibold text-ink" style={numStyle}>
-                          ¥{fenToYuan(p.priceFen)}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <span
-                          className={`font-number font-semibold ${low ? 'text-danger-deep' : 'text-ink'}`}
-                          style={numStyle}
-                        >
-                          {p.stock}
-                        </span>
-                        {low ? <span className="ml-1 text-caption text-danger-deep">低库存</span> : null}
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <div className="flex items-center gap-1.5">
-                          <Switch
-                            checked={on}
-                            disabled={togglingId === p.id}
-                            onChange={() => void toggleStatus(p)}
-                            label={on ? '下架' : '上架'}
-                          />
-                          <span className={`text-caption ${on ? 'text-success-deep' : 'text-ink-placeholder'}`}>
-                            {on ? '在售' : '下架'}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-2.5 text-right">
-                        <Btn
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setEditing(p)
-                            setEditorOpen(true)
-                          }}
-                        >
-                          编辑
-                        </Btn>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
       {listQuery.data && listQuery.data.total > listQuery.data.items.length ? (
-        <p className="mt-2 text-caption text-ink-placeholder">
+        <p className="mt-2 text-[11px] text-[rgba(74,59,46,.42)]">
           结果较多，当前显示前 {listQuery.data.items.length} 条，请用分类 / 搜索缩小范围
         </p>
       ) : null}
 
       <ProductEditorDialog open={editorOpen} product={editing} onClose={() => setEditorOpen(false)} />
-    </div>
+    </MainScaffold>
   )
 }

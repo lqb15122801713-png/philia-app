@@ -1,130 +1,115 @@
 /**
- * 仪表盘待办区（T4.1 · 红点聚合）
+ * 待办队列（U3 §2 右栏 · 母本 .todo-row 四行）：
+ * 取消申请待审（红点）/ 待收款（柠檬点）/ 超期寄养（红点）/ 历史待确认（薄荷点）。
  *
- * 五行：已启用自动接单（原待确认 pending——S4 免确认后仅计历史/改期回退单）/
- * 待派单（S4 自动派单后恒 0，仅 grooming 口径）/ 取消审核（cancel_requested）/
- * 待收款（completed 未 paid）/ 异常（超期寄养）。
- * 每行 = 图标 + 文案 + 数量红点 + 「去处理」，整行可点跳转对应页；
- * 数量为 0 时灰显 0、不出红点（行保留，信息密度优先且位置稳定）。
+ * - 计数 = dashboardStats.todo.cancelRequested / todo.unpaid / overdueBoardingCount /
+ *   todo.pending（批次 S4：新单免确认，pending 仅计历史单与改期回退单）；
+ * - 行点击进入对应筛选态：预约页 ?status= 深链 + from=todo 放开日期档（v1.1-b2 B2-1），
+ *   待收款 → /finance#pending-payments 锚点，超期寄养 → /boarding；
+ * - 小字给一条真实样例：取消/待收款取今日 listForStore 首条命中单，超期寄养取在店
+ *   in_boarding 首条应退未退单；今日无样例时回退事由说明；
+ * - 数量为 0 行保留（信息密度与位置稳定），计数 Montserrat tabular 由 u3-todo .n 承担。
  */
 
-import {
-  CalendarClock,
-  CircleAlert,
-  ClipboardCheck,
-  TriangleAlert,
-  UserRoundPlus,
-} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { todoGrandTotal, type DashboardStats } from './utils'
+import { fenToYuanGrouped, hhmm, type DashboardStats, type TodayApptItem } from './utils'
 
-interface TodoRow {
+const DOT_RED = '#D92D20'
+const DOT_LEMON = '#FDC830'
+const DOT_MINT = '#7FD8BE'
+
+interface TodoRowSpec {
   key: string
-  icon: typeof CalendarClock
+  dot: string
   label: string
-  desc: string
+  hint: string
   count: number
   to: string
 }
 
-export default function TodoSection({ stats }: { stats: DashboardStats | undefined }) {
-  const navigate = useNavigate()
+/** 超期样例小字：应退未退 N 天（不足一天算「今日到期未退」） */
+function overdueHint(item: TodayApptItem, nowTs: number): string {
+  const days = Math.floor((nowTs - item.scheduledEnd.getTime()) / 86_400_000)
+  const overdueText = days >= 1 ? `应退未退 ${days} 天` : '今日到期未退'
+  return `${item.petName ?? '宠物'} · ${item.serviceName ?? '寄养'} · ${overdueText}`
+}
 
-  const rows: TodoRow[] = [
-    {
-      key: 'pending',
-      icon: ClipboardCheck,
-      // 批次 S4（任务 D）：免商家确认——「待确认」区改标注「已启用自动接单」，
-      // 不再作为待办驱动；count 仅计历史 pending 单与客户改期回退单（保留入口可处理）
-      label: '已启用自动接单',
-      desc: '新预约自动确认，无需手动接单；历史待确认单仍会在此计数',
-      count: stats?.todo.pending ?? 0,
-      to: '/appointments?status=pending&from=todo',
-    },
-    {
-      key: 'unassigned',
-      icon: UserRoundPlus,
-      label: '待派单',
-      // S4：grooming 下单即自动派单，本数恒 0（仅 groomer 口径，寄养按晚占房无需派单）
-      desc: '洗护单已自动派单；仅未指派的洗护单在此计数',
-      count: stats?.todo.unassigned ?? 0,
-      to: '/appointments?status=confirmed&from=todo',
-    },
+export default function TodoSection({
+  stats,
+  todayItems,
+  boardingItems,
+  now,
+}: {
+  stats: DashboardStats | undefined
+  todayItems: TodayApptItem[] | undefined
+  boardingItems: TodayApptItem[] | undefined
+  /** 页面层传入的当前时间（react-hooks/purity：组件内不调 Date.now） */
+  now: Date
+}) {
+  const navigate = useNavigate()
+  const nowTs = now.getTime()
+
+  const cancelSample = todayItems?.find((i) => i.status === 'cancel_requested')
+  const unpaidSample = todayItems?.find((i) => i.status === 'completed' && i.paidAt == null)
+  const overdueSample = boardingItems?.find((i) => i.scheduledEnd.getTime() < nowTs)
+
+  const rows: TodoRowSpec[] = [
     {
       key: 'cancelRequested',
-      icon: CircleAlert,
-      label: '取消审核',
-      desc: '客户申请取消，待审批',
+      dot: DOT_RED,
+      label: '取消申请待审',
+      hint: cancelSample
+        ? `${cancelSample.petName ?? '宠物'} · ${hhmm(cancelSample.scheduledStart)} ${cancelSample.serviceName ?? ''}`
+        : '客户申请取消，待审批',
       count: stats?.todo.cancelRequested ?? 0,
       to: '/appointments?status=cancel_requested&from=todo',
     },
     {
       key: 'unpaid',
-      icon: CalendarClock,
+      dot: DOT_LEMON,
       label: '待收款',
-      desc: '服务已完成，未登记收款',
+      hint: unpaidSample
+        ? `${unpaidSample.petName ?? '宠物'} ${unpaidSample.serviceName ?? ''} ¥${fenToYuanGrouped(unpaidSample.priceFen)}`
+        : '服务已完成，未登记收款',
       count: stats?.todo.unpaid ?? 0,
-      // v1.1-b1：跳财务页待收款锚点（原 /appointments?status=completed 页无收款按钮）
       to: '/finance#pending-payments',
     },
     {
       key: 'overdue',
-      icon: TriangleAlert,
-      label: '异常 · 超期寄养',
-      desc: '超过预计退房时间仍在店',
+      dot: DOT_RED,
+      label: '超期寄养',
+      hint: overdueSample ? overdueHint(overdueSample, nowTs) : '超过预计退房时间仍在店',
       count: stats?.overdueBoardingCount ?? 0,
       to: '/boarding',
     },
+    {
+      key: 'pending',
+      dot: DOT_MINT,
+      label: '历史待确认',
+      hint: '自动接单已启用 · 仅旧单与改期回退单在此',
+      count: stats?.todo.pending ?? 0,
+      to: '/appointments?status=pending&from=todo',
+    },
   ]
 
-  const total = stats ? todoGrandTotal(stats) : 0
-
   return (
-    <section className="rounded-card bg-card shadow-card">
-      <header className="flex items-center justify-between px-4 pt-4">
-        <h2 className="text-title">待办</h2>
-        {total > 0 ? (
-          <span className="rounded-full bg-danger px-2.5 py-0.5 font-number text-caption font-semibold text-white tabular-nums">
-            {total > 99 ? '99+' : total}
-          </span>
-        ) : (
-          <span className="text-caption text-ink-placeholder">全部处理完</span>
-        )}
-      </header>
-      <ul className="mt-2 divide-y divide-line-divider pb-2">
-        {rows.map(({ key, icon: Icon, label, desc, count, to }) => (
-          <li key={key}>
-            <button
-              type="button"
-              onClick={() => navigate(to)}
-              className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-sunken/60"
-            >
-              <Icon
-                className={`h-5 w-5 shrink-0 ${count > 0 ? 'text-brand-primary' : 'text-ink-placeholder'}`}
-                strokeWidth={1.5}
-              />
-              <span className="min-w-0 flex-1">
-                <span className="block text-body font-medium">{label}</span>
-                <span className="block text-caption text-ink-secondary">{desc}</span>
-              </span>
-              {count > 0 ? (
-                <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-danger px-1.5 font-number text-caption font-semibold text-white tabular-nums">
-                  {count > 99 ? '99+' : count}
-                </span>
-              ) : (
-                <span className="shrink-0 font-number text-body text-ink-placeholder tabular-nums">0</span>
-              )}
-              <span
-                className={`shrink-0 text-caption ${
-                  count > 0 ? 'font-medium text-brand-primary' : 'text-ink-placeholder'
-                }`}
-              >
-                去处理 →
-              </span>
-            </button>
-          </li>
+    <section className="u3-panel">
+      <div className="u3-panel-head">
+        <h3>待办</h3>
+        <span className="aside">{rows.length} 项</span>
+      </div>
+      <div>
+        {rows.map((r) => (
+          <button key={r.key} type="button" className="u3-todo" onClick={() => navigate(r.to)}>
+            <i className="dot" style={{ background: r.dot }} />
+            <span className="tx">
+              {r.label}
+              <small>{r.hint}</small>
+            </span>
+            <span className="n">{r.count}</span>
+          </button>
         ))}
-      </ul>
+      </div>
     </section>
   )
 }

@@ -10,8 +10,8 @@ import { usePhiliaClient } from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { UserCheck } from 'lucide-react';
 import { useMemo } from 'react';
+import { toast } from 'sonner';
 import { Modal } from './Modal';
-import { showToast } from './Toast';
 import {
   dayKeyOf,
   dayStart,
@@ -71,13 +71,13 @@ export function AssignStaffSheet({
       trpc.appointment.assign.mutate(input),
     onSuccess: (_r, vars) => {
       const name = staffQuery.data?.staff.find((s) => s.id === vars.staffId)?.name;
-      showToast(`已指派${name ? ` ${name}` : ''}`, 'success');
+      toast.success(`已指派${name ? ` ${name}` : ''}`);
       void queryClient.invalidateQueries({ queryKey: ['appointment'] });
       onAssigned();
       onClose();
     },
     // 冲突 / 排班 / 技能不匹配：服务端错误原文 toast
-    onError: (err) => showToast(err instanceof Error ? err.message : '指派失败，请稍后再试', 'error'),
+    onError: (err) => toast.error(err instanceof Error ? err.message : '指派失败，请稍后再试'),
   });
 
   const rows = useMemo(() => {
@@ -220,7 +220,7 @@ function StaffRow({
         type="button"
         disabled={!row.assignable || pending}
         onClick={onAssign}
-        className="flex h-9 shrink-0 items-center gap-1 rounded-full bg-brand-primary px-3 text-caption font-semibold text-white transition-colors hover:bg-brand-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex h-9 shrink-0 items-center gap-1 rounded-control bg-brand-primary px-3 text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
       >
         <UserCheck className="h-4 w-4" strokeWidth={1.5} />
         指派

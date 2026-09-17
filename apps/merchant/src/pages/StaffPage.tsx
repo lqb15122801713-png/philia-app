@@ -1,56 +1,123 @@
 /**
- * 员工管理（/staff · T4.3 · coder-staff-admin）
+ * 员工 /staff（U3 批次 · 任务 K · 规格书 §10 · 母本试样 608-657 行 / .staff-card CSS 133-140）
  *
  * 数据源：store.staffList（员工 + 岗位角色 + 技能 + 排班 + 绩效聚合：完成单数/好评率/平均分）。
- * 操作：
- * - 「邀请员工」→ InviteStaffDialog → store.inviteStaff（明文邀请码一次展示 + 复制）。
- * - 「编辑」→ EditStaffDialog → store.updateStaff（批次 S1：角色 frontdesk/groomer 下拉
- *   + 在职状态切换，保存 toast + invalidate；技能标签仍只读，留 S4）。
- * - 「排班」→ ScheduleEditorDialog → store.setSchedule（周模板，每天休息/至多 4 时段）。
+ * 布局：MainScaffold（title 员工 / sub 在职·角色计数·S4 派单口径 / 柠檬钮「＋ 邀请员工」）
+ * → u3-panel 行式员工卡（staff-card 工艺：42 圆头像占位 + 名 + 角色签（美容师=薄荷 /
+ * 前台=浅木，u3-chip 圆角 6）+ 绩效行 + 右侧排班摘要（周模板压缩「一至五 09:00–18:00」+休日）
+ * + 在班态（今日排班覆盖当前时刻→今日在班）+「编辑 ›」）。
  *
- * 布局（契约）：平板 lg+ 信息密度优先用表格；手机降级为紧凑卡片列表。
+ * 真链路（全部保留）：
+ * - 邀请：InviteStaffDialog → store.inviteStaff（24h 明文码一次展示 + 复制）；
+ * - 「编辑 ›」→ EditStaffDialog → store.updateStaff（角色 + 在职状态）；
+ * - 排班摘要块（可点）→ ScheduleEditorDialog → store.setSchedule（周模板）；
+ * - 停职行 55% 透明 +「启用 ›」→ store.updateStaff status=active（部分更新，role 不动）。
+ *
+ * 口径备注：stats.completedCount 为全部已完成预约聚合（接口无「本月」维度），
+ * 故绩效行写「完成 N 单」不挂「本月」字样，避免口径虚标。
  */
 
 import { usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
-import { CalendarClock, UserPen, UserPlus } from 'lucide-react';
+import { UserRound } from 'lucide-react';
 import { useState } from 'react';
+import MainScaffold, { LemonButton, QuietButton } from '../components/MainScaffold';
 import EditStaffDialog from '../components/staff-admin/EditStaffDialog';
 import InviteStaffDialog from '../components/staff-admin/InviteStaffDialog';
 import ScheduleEditorDialog from '../components/staff-admin/ScheduleEditorDialog';
-import { fmtAvg, fmtRate, scheduleSummary } from '../components/staff-admin/format';
-import { SKILL_LABEL, STAFF_ROLE_LABEL, type StaffRow } from '../components/staff-admin/types';
-import { Badge, Btn, Chip, Empty, Loading, ToasterMount } from '../components/staff-admin/ui';
+import { errMsg } from '../components/staff-admin/format';
+import { toast, ToasterMount } from '../components/staff-admin/ui';
+import {
+  DAY_KEYS,
+  DAY_SHORT,
+  STAFF_ROLE_LABEL,
+  type DayKey,
+  type StaffRow,
+  type StaffScheduleLike,
+} from '../components/staff-admin/types';
 
-function SkillChips({ skills }: { skills: string[] | null }) {
-  if (!skills || skills.length === 0) {
-    return <span className="text-caption text-ink-placeholder">未设置</span>;
+/* ------------------------------------------------------------------ */
+/* 文案/压缩助手                                                        */
+/* ------------------------------------------------------------------ */
+
+/** 连续工作日压缩：run ≥3 →「一至五」；短 run/单日 →「六/日」斜杠连（试样口径） */
+function compressDays(days: DayKey[]): string {
+  const runs: DayKey[][] = [];
+  for (const d of days) {
+    const last = runs[runs.length - 1];
+    if (last && DAY_KEYS.indexOf(d) === DAY_KEYS.indexOf(last[last.length - 1]) + 1) {
+      last.push(d);
+    } else {
+      runs.push([d]);
+    }
   }
+  return runs
+    .map((r) =>
+      r.length >= 3
+        ? `${DAY_SHORT[r[0]]}至${DAY_SHORT[r[r.length - 1]]}`
+        : r.map((k) => DAY_SHORT[k]).join('/'),
+    )
+    .join('/');
+}
+
+/** 周模板压缩摘要：同时段的工作日合并；休日缀后（「一至五 09:00–18:00 · 休 六/日」） */
+function weekSummary(schedule: StaffScheduleLike | null | undefined): string {
+  if (!schedule) return '未排班';
+  const working = DAY_KEYS.filter((k) => (schedule[k]?.length ?? 0) > 0);
+  if (working.length === 0) return '未排班';
+  const sigOf = (k: DayKey) => schedule[k]!.map((r) => `${r.start}–${r.end}`).join('/');
+  const groups = new Map<string, DayKey[]>();
+  for (const k of working) {
+    const sig = sigOf(k);
+    groups.set(sig, [...(groups.get(sig) ?? []), k]);
+  }
+  const parts = [...groups.entries()].map(([time, days]) => `${compressDays(days)} ${time}`);
+  const rest = DAY_KEYS.filter((k) => !working.includes(k));
+  if (rest.length > 0) parts.push(`休 ${compressDays(rest)}`);
+  return parts.join(' · ');
+}
+
+/** 在班态：今日排班覆盖当前时刻 → 今日在班；有班未覆盖 → 今日班次；无班 → 今日休息 */
+function todayStatus(schedule: StaffScheduleLike | null | undefined): { label: string; onDuty: boolean } {
+  const now = new Date();
+  const key = DAY_KEYS[(now.getDay() + 6) % 7];
+  const ranges = schedule?.[key] ?? null;
+  if (!ranges || ranges.length === 0) return { label: '今日休息', onDuty: false };
+  const toMin = (t: string) => {
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+  };
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  if (ranges.some((r) => toMin(r.start) <= nowMin && nowMin < toMin(r.end))) {
+    return { label: '今日在班', onDuty: true };
+  }
+  return { label: `今日班次 ${ranges.map((r) => `${r.start}–${r.end}`).join('/')}`, onDuty: false };
+}
+
+/** 入职年月：YYYY-MM（Montserrat tabular） */
+function joinMonth(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+/* ------------------------------------------------------------------ */
+/* 角色签（美容师=薄荷 #7FD8BE / 前台=浅木 #D4B896 · 圆角 6 · 墨色字）     */
+/* ------------------------------------------------------------------ */
+
+function RoleChip({ role }: { role: string }) {
+  const bg = role === 'frontdesk' ? '#D4B896' : '#7FD8BE';
   return (
-    <span className="flex flex-wrap gap-1">
-      {skills.map((s) => (
-        <Chip key={s}>{SKILL_LABEL[s] ?? s}</Chip>
-      ))}
+    <span
+      className="rounded-chip px-[7px] py-[2px] text-caption-xs font-bold text-ink"
+      style={{ background: bg }}
+    >
+      {STAFF_ROLE_LABEL[role] ?? role}
     </span>
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  return status === 'active' ? (
-    <Badge tone="success">在职</Badge>
-  ) : (
-    <Badge tone="muted">已停用</Badge>
-  );
-}
-
-/** 岗位角色徽章（批次 S1：frontdesk=前台 / groomer=美容师） */
-function RoleBadge({ role }: { role: string }) {
-  return role === 'frontdesk' ? (
-    <Badge tone="brand">{STAFF_ROLE_LABEL[role]}</Badge>
-  ) : (
-    <Badge tone="muted">{STAFF_ROLE_LABEL[role] ?? role}</Badge>
-  );
-}
+/* ------------------------------------------------------------------ */
+/* 页面                                                                */
+/* ------------------------------------------------------------------ */
 
 export default function StaffPage() {
   const { trpc, queryClient } = usePhiliaClient();
@@ -61,133 +128,147 @@ export default function StaffPage() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [scheduleFor, setScheduleFor] = useState<StaffRow | null>(null);
   const [editFor, setEditFor] = useState<StaffRow | null>(null);
+  /** 正在启用中的停职行（行级 loading，防重复点击） */
+  const [enablingId, setEnablingId] = useState<string | null>(null);
 
   const staff = (staffQuery.data?.staff ?? []) as StaffRow[];
   const invalidateStaff = () => void queryClient.invalidateQueries({ queryKey: ['store', 'staffList'] });
 
+  const active = staff.filter((s) => s.status === 'active');
+  const groomerCount = active.filter((s) => s.role === 'groomer').length;
+  const frontdeskCount = active.filter((s) => s.role === 'frontdesk').length;
+
+  const enableStaff = async (s: StaffRow) => {
+    setEnablingId(s.id);
+    try {
+      await trpc.store.updateStaff.mutate({ staffId: s.id, status: 'active' });
+      toast(`已启用：${s.name} 恢复在职`);
+      invalidateStaff();
+    } catch (e) {
+      toast(errMsg(e), 'error');
+    } finally {
+      setEnablingId(null);
+    }
+  };
+
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6">
+    <MainScaffold
+      title="员工"
+      sub={`在职 ${active.length} · 美容师 ${groomerCount} · 前台 ${frontdeskCount} · 自动派单按排班+负荷（S4）`}
+      actions={<LemonButton onClick={() => setInviteOpen(true)}>＋ 邀请员工</LemonButton>}
+      testid="staff-page"
+    >
       <ToasterMount />
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-title-lg font-semibold text-ink">员工管理</h1>
-          <p className="mt-0.5 text-caption text-ink-secondary">
-            共 {staff.length} 人 · 绩效取本店全部已完成预约聚合
-          </p>
+
+      <div className="u3-panel">
+        <div className="u3-panel-head">
+          <h3>在职员工</h3>
+          <span className="aside">排班=自动派单与可约判定之源</span>
         </div>
-        <Btn variant="primary" onClick={() => setInviteOpen(true)}>
-          <UserPlus size={16} strokeWidth={1.5} />
-          邀请员工
-        </Btn>
-      </div>
 
-      {staffQuery.isPending ? (
-        <Loading />
-      ) : staffQuery.isError ? (
-        <Empty title="员工列表加载失败" hint="请检查网络后下拉刷新或重新进入" />
-      ) : staff.length === 0 ? (
-        <Empty title="还没有员工" hint="点右上角「邀请员工」生成邀请码，员工在员工端输入邀请码即可入职" />
-      ) : (
-        <>
-          {/* 平板/桌面：表格（信息密度优先；辅助档 13px 用 text-caption） */}
-          <div className="hidden overflow-hidden rounded-card bg-card shadow-card lg:block">
-            <table className="w-full text-left text-body">
-              <thead>
-                <tr className="border-b border-line-divider text-caption text-ink-secondary">
-                  <th className="px-4 py-3 font-medium">花名</th>
-                  <th className="px-4 py-3 font-medium">角色</th>
-                  <th className="px-4 py-3 font-medium">技能标签</th>
-                  <th className="px-4 py-3 font-medium">排班</th>
-                  <th className="px-4 py-3 font-medium">完成单数</th>
-                  <th className="px-4 py-3 font-medium">好评率</th>
-                  <th className="px-4 py-3 font-medium">平均分</th>
-                  <th className="px-4 py-3 font-medium">状态</th>
-                  <th className="px-4 py-3 font-medium">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {staff.map((s) => (
-                  <tr key={s.id} className="border-b border-line-divider last:border-0 hover:bg-canvas">
-                    <td className="px-4 py-3 font-medium text-ink">{s.name}</td>
-                    <td className="px-4 py-3">
-                      <RoleBadge role={s.role} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <SkillChips skills={s.skills} />
-                    </td>
-                    <td className="px-4 py-3 text-ink-secondary">{scheduleSummary(s.schedule)}</td>
-                    <td className="px-4 py-3 text-ink" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                      {s.stats.completedCount}
-                    </td>
-                    <td className="px-4 py-3 text-ink" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                      {fmtRate(s.stats.goodRate)}
-                    </td>
-                    <td className="px-4 py-3 text-ink" style={{ fontVariantNumeric: 'tabular-nums' }}>
-                      {fmtAvg(s.stats.avgRating)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={s.status} />
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-1">
-                        <Btn variant="subtle" size="sm" onClick={() => setEditFor(s)}>
-                          <UserPen size={14} strokeWidth={1.5} />
-                          编辑
-                        </Btn>
-                        <Btn variant="subtle" size="sm" onClick={() => setScheduleFor(s)}>
-                          <CalendarClock size={14} strokeWidth={1.5} />
-                          排班
-                        </Btn>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* 手机：紧凑卡片列表 */}
-          <div className="space-y-3 lg:hidden">
-            {staff.map((s) => (
-              <div key={s.id} className="rounded-card bg-card p-4 shadow-card">
-                <div className="flex items-center justify-between">
-                  <span className="text-title font-semibold text-ink">{s.name}</span>
-                  <span className="flex items-center gap-1.5">
-                    <RoleBadge role={s.role} />
-                    <StatusBadge status={s.status} />
-                  </span>
+        {staffQuery.isPending ? (
+          // 骨架（禁转圈）：三条脉冲行
+          <div aria-label="加载中">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="flex animate-pulse items-center gap-[13px] border-t border-[rgba(74,59,46,.06)] px-[17px] py-3"
+              >
+                <div className="h-[42px] w-[42px] rounded-full bg-[rgba(74,59,46,.08)]" />
+                <div className="flex-1">
+                  <div className="h-3.5 w-28 rounded-chip bg-[rgba(74,59,46,.08)]" />
+                  <div className="mt-2 h-3 w-44 rounded-chip bg-[rgba(74,59,46,.06)]" />
                 </div>
-                <div className="mt-2">
-                  <SkillChips skills={s.skills} />
-                </div>
-                <div className="mt-2 text-caption text-ink-secondary">排班：{scheduleSummary(s.schedule)}</div>
-                <div
-                  className="mt-2 flex gap-4 text-caption text-ink-secondary"
-                  style={{ fontVariantNumeric: 'tabular-nums' }}
-                >
-                  <span>完成 {s.stats.completedCount} 单</span>
-                  <span>好评率 {fmtRate(s.stats.goodRate)}</span>
-                  <span>平均 {fmtAvg(s.stats.avgRating)}</span>
-                </div>
-                <div className="mt-3 flex gap-1">
-                  <Btn variant="ghost" size="sm" onClick={() => setEditFor(s)}>
-                    <UserPen size={14} strokeWidth={1.5} />
-                    编辑
-                  </Btn>
-                  <Btn variant="ghost" size="sm" onClick={() => setScheduleFor(s)}>
-                    <CalendarClock size={14} strokeWidth={1.5} />
-                    编辑排班
-                  </Btn>
-                </div>
+                <div className="h-3 w-32 rounded-chip bg-[rgba(74,59,46,.06)]" />
               </div>
             ))}
           </div>
+        ) : staffQuery.isError ? (
+          <div className="border-t border-[rgba(74,59,46,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(74,59,46,.62)]">员工列表加载失败，请检查网络后重试</p>
+            <div className="mt-4">
+              <QuietButton onClick={() => void staffQuery.refetch()}>重新加载</QuietButton>
+            </div>
+          </div>
+        ) : staff.length === 0 ? (
+          <div className="border-t border-[rgba(74,59,46,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(74,59,46,.62)]">还没有员工</p>
+            <div className="mt-4">
+              <LemonButton onClick={() => setInviteOpen(true)}>去邀请第一位员工</LemonButton>
+            </div>
+          </div>
+        ) : (
+          staff.map((s) => {
+            const suspended = s.status !== 'active';
+            const duty = todayStatus(s.schedule);
+            return (
+              <div
+                key={s.id}
+                className="flex items-center gap-[13px] border-t border-[rgba(74,59,46,.06)] px-[17px] py-3 text-caption"
+                style={suspended ? { opacity: 0.55 } : undefined}
+              >
+                {/* 头像 42 圆（staff 表无 avatarUrl 字段 → 恒 sunken 占位） */}
+                <span className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-full bg-[rgba(74,59,46,.12)]">
+                  <UserRound size={20} strokeWidth={1.6} className="text-[rgba(74,59,46,.42)]" />
+                </span>
 
-          <p className="mt-3 text-caption text-ink-placeholder">
-            角色与在职状态可从「编辑」入口修改（保存即时生效）；技能标签暂为只读（S4 派单批开放）；排班可直接编辑。
-          </p>
-        </>
-      )}
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-body-sm font-extrabold text-ink">{s.name}</span>
+                    <RoleChip role={s.role} />
+                  </div>
+                  <div className="mt-[2px] text-caption-xs text-[rgba(74,59,46,.62)]">
+                    {suspended ? (
+                      <>
+                        入职 <span className="u1-num">{joinMonth(s.createdAt)}</span> · 停职中不可派单/核销
+                      </>
+                    ) : (
+                      <>
+                        入职 <span className="u1-num">{joinMonth(s.createdAt)}</span> · 完成{' '}
+                        <span className="u1-num">{s.stats.completedCount}</span> 单 · 好评{' '}
+                        <span className="u1-num">
+                          {s.stats.goodRate !== null ? `${Math.round(s.stats.goodRate * 100)}%` : '—'}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* 右侧排班摘要（点击 → 排班编辑器，setSchedule 真链路） */}
+                <button
+                  type="button"
+                  onClick={() => setScheduleFor(s)}
+                  className="ml-auto shrink-0 rounded-chip px-2 py-1 text-right transition-colors duration-150 hover:bg-[rgba(74,59,46,.04)]"
+                  aria-label={`编辑${s.name}的排班`}
+                >
+                  <div className="text-caption-xs text-[rgba(74,59,46,.62)]">排班 {weekSummary(s.schedule)}</div>
+                  <div
+                    className={`mt-[2px] text-caption-xs ${
+                      suspended
+                        ? 'text-[rgba(74,59,46,.42)]'
+                        : duty.onDuty
+                          ? 'font-semibold text-ink'
+                          : 'text-[rgba(74,59,46,.42)]'
+                    }`}
+                  >
+                    {suspended ? '已停职' : duty.label}
+                  </div>
+                </button>
+
+                <span className="ml-3.5 shrink-0">
+                  {suspended ? (
+                    <QuietButton disabled={enablingId === s.id} onClick={() => void enableStaff(s)}>
+                      {enablingId === s.id ? '启用中…' : '启用 ›'}
+                    </QuietButton>
+                  ) : (
+                    <QuietButton onClick={() => setEditFor(s)}>编辑 ›</QuietButton>
+                  )}
+                </span>
+              </div>
+            );
+          })
+        )}
+      </div>
 
       <InviteStaffDialog open={inviteOpen} onClose={() => setInviteOpen(false)} />
       <EditStaffDialog
@@ -202,6 +283,6 @@ export default function StaffPage() {
         onClose={() => setScheduleFor(null)}
         onSaved={invalidateStaff}
       />
-    </div>
+    </MainScaffold>
   );
 }

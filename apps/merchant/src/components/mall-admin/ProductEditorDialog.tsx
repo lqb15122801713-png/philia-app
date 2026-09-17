@@ -204,7 +204,7 @@ export default function ProductEditorDialog({ open, product, onClose }: ProductE
               <div key={url} className="group relative aspect-square overflow-hidden rounded-tag border border-line">
                 <img src={url} alt={`商品图 ${idx + 1}`} className="h-full w-full object-cover" />
                 {idx === 0 ? (
-                  <span className="absolute left-0 top-0 flex items-center gap-0.5 rounded-br-tag bg-brand-primary px-1 py-0.5 text-[10px] text-white">
+                  <span className="absolute left-0 top-0 flex items-center gap-0.5 rounded-br-tag bg-brand-primary px-1 py-0.5 text-[10px] text-ink">
                     <Star size={10} strokeWidth={2} />
                     主图
                   </span>

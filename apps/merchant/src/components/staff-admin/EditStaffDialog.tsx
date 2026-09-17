@@ -88,7 +88,7 @@ export default function EditStaffDialog({
           <select
             value={role}
             onChange={(e) => setRole(e.target.value === 'frontdesk' ? 'frontdesk' : 'groomer')}
-            className="w-full rounded-input border border-line bg-card px-3 py-2 text-body text-ink focus:border-brand-primary focus:outline-none"
+            className="w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(74,59,46,.25)]"
             aria-label="岗位角色"
           >
             {ROLE_OPTIONS.map((o) => (
@@ -99,7 +99,7 @@ export default function EditStaffDialog({
           </select>
         </Field>
 
-        <div className="flex items-center justify-between rounded-input border border-line px-3 py-2.5">
+        <div className="flex items-center justify-between rounded-control bg-card px-3 py-2.5 shadow-hairline ring-1 ring-line-ring">
           <div>
             <div className="text-body text-ink">在职状态</div>
             <div className="mt-0.5 text-caption text-ink-placeholder">
@@ -110,7 +110,7 @@ export default function EditStaffDialog({
         </div>
 
         <p className="text-caption text-ink-placeholder">
-          技能标签暂为只读（S4 派单批开放编辑）；排班请从列表「排班」入口编辑。
+          技能标签暂为只读（S4 派单批开放编辑）；排班请点员工行右侧的排班摘要编辑。
         </p>
 
         {error ? <p className="text-body text-danger-deep">{error}</p> : null}

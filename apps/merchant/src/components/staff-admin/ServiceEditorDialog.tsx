@@ -133,8 +133,8 @@ export default function ServiceEditorDialog({
                 onClick={() => setType(v)}
                 className={`rounded-full px-4 py-1.5 text-body transition-colors ${
                   type === v
-                    ? 'bg-brand-primary text-white'
-                    : 'border border-line-strong bg-card text-ink-secondary hover:bg-sunken'
+                    ? 'bg-brand-primary font-semibold text-ink'
+                    : 'bg-card text-ink-secondary shadow-hairline ring-1 ring-line-ring hover:bg-canvas'
                 }`}
               >
                 {label}

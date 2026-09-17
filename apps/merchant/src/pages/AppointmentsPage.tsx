@@ -1,53 +1,82 @@
 /**
- * 预约管理 /appointments（T4.2 · 开发方案 §2.2）
+ * U3 任务 D · 预约列表 /appointments（规格书 §3 · 母本 246–290 行，整页重写）
  *
- * - 视图切换：列表视图（默认）/ 日历视图（月历，日格预约数+状态点，今天高亮，
- *   点日格 → 切列表视图并按当日过滤）。
- * - 筛选：状态 chips（全部/待确认/已确认/服务中/寄养中/取消申请/已完成/已取消）
- *   + 日期范围（今天/明天/本周/自定义起止/全部）。
- * - 深链：?status= 初始化状态档（v1.1-b1）；?from=todo 或 ?date=all 时日期档
- *   初始化「全部」（v1.1-b2 B2-1，待办「去处理」不再被默认「今天」过滤吞单）。
- *   无参数入口（TabBar 等）日期档仍默认「今天」。
- * - 列表行紧凑（时间/宠物/服务/客户/员工/状态/金额）；待确认行品牌色高亮边框
- *   + 行内「确认」一键 confirm（≤30 秒操作路径关键）。
- * - 横屏双栏（lg+）：左列表右选中详情摘要；手机点行进详情页。
- * - SSE（store 频道）：appointment.created / cancel_requested → invalidate + 红点 toast；
- *   其他预约状态事件 → invalidate；断线重连 onReconnect 全量对齐。
+ * - MainScaffold：title「预约」+ sub「M月d日 · 共 N 单 · 自动接单已启用」；
+ *   actions = SearchInput「搜索宠物 / 客户 / 单号…」（纯前端按 petName/customerName/code
+ *   过滤当前列表，零新接口）+ LemonButton「＋ 新增预约」（商家端无新建表单 → toast
+ *   引导：客户端预约 / 前台手动核销登记）。
+ * - 筛选 chips（u3-chipf，当前墨底）：今天 N / 待到店 N / 服务中 N / 已完成 N /
+ *   取消申请 N / 寄养 N / 日期 ›。计数真值 = 今日 listForStore 全量在前端按口径聚合
+ *   （待到店 = confirmed+pending 且未核销、服务中 = in_service、已完成 = completed、
+ *   取消申请 = cancel_requested、寄养 = type boarding）。状态档点击 = 前端过滤
+ *   （查询参数不变）；「日期 ›」就地展开原生 input[type=date]，选日才改 from/to
+ *   （当日 0 点区间）。选中非今天时「今天」chip 不再 on。
+ * - 表（u3-panel + u3-tbl）：时间(Montserrat)｜宠物+客户(昵称·尾号)｜服务｜员工+来源
+ *   小签｜金额(tabular)｜状态胶囊(u3-st)｜›；tr.rowlink 点击进 /appointments/:id。
+ *   列表纯读——S4 起确认/婉拒链路在详情页，行内按钮与 month 日历查询随批删除
+ *   （CalendarView 已 git rm，日历视图=明确不做）。空态=「这一天没有预约」。
+ * - 深链：?status=cancel_requested|pending|… 初始化状态档（总览待办行会跳）；
+ *   ?from=todo 兼容 = 不锁当天（from/to 省略查全量），防待办「去处理」被「今天」吞单。
+ * - SSE（store 频道）：appointment.created / cancel_requested → 红点 toast + invalidate；
+ *   其余预约状态事件静默 invalidate；断线重连 onReconnect 全量对齐。
+ * - 计数跨日真值：主列表已是今日时直接复用；选了其他日期（或 from=todo 全量档）时
+ *   补一档同接口的今日查询（enabled 条件触发），chips 计数恒为今日口径。
  */
 
 import { EventType, usePhiliaClient, type EventEnvelope } from '@philia/shared';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { CalendarDays, List } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import MainScaffold, { LemonButton, QuietButton, SearchInput } from '../components/MainScaffold';
 import { AppointmentRow } from '../components/appointments/AppointmentRow';
-import { buildDayStats, CalendarView } from '../components/appointments/CalendarView';
-import { DetailSummary } from '../components/appointments/DetailSummary';
-import { Modal } from '../components/appointments/Modal';
-import { StatusChips, type StatusFilter } from '../components/appointments/StatusChips';
+import {
+  StatusChips,
+  type CategoryKey,
+  type ChipCounts,
+} from '../components/appointments/StatusChips';
 import { showToast, ToastHost } from '../components/appointments/Toast';
 import { useMerchantEvents } from '../components/appointments/useMerchantEvents';
 import {
   addDays,
+  fmtDate,
   localDayKey,
-  RANGE_LABEL,
-  rangeToDates,
-  STATUS_ORDER,
-  type ApptStatus,
-  type RangeKey,
+  type ListForStoreItem,
 } from '../components/appointments/appt-utils';
 
-const RANGE_KEYS: RangeKey[] = ['today', 'tomorrow', 'week', 'custom', 'all'];
+/* ------------------------------------------------------------------ */
+/* 状态档口径（规格书 §3；appt-utils.ts 只读不改，故聚合逻辑就地）          */
+/* ------------------------------------------------------------------ */
 
-/** v1.1-b1：?status= 深链初始化（仪表盘待办「去处理」）；非法值忽略回全部 */
-function initStatus(raw: string | null): StatusFilter {
-  if (raw === 'all') return 'all';
-  return (STATUS_ORDER as string[]).includes(raw ?? '') ? (raw as StatusFilter) : 'all';
-}
+const CATEGORY_MATCH: Record<CategoryKey, (i: ListForStoreItem) => boolean> = {
+  /** 待到店 = confirmed + pending 且未核销 */
+  arriving: (i) => (i.status === 'confirmed' || i.status === 'pending') && !i.checkedInAt,
+  /** 服务中 = in_service */
+  serving: (i) => i.status === 'in_service',
+  /** 已完成 = completed */
+  done: (i) => i.status === 'completed',
+  /** 取消申请 = cancel_requested */
+  cancel: (i) => i.status === 'cancel_requested',
+  /** 寄养 = type boarding */
+  boarding: (i) => i.type === 'boarding',
+};
 
-/** v1.1-b2 B2-1：?from=todo / ?date=all 深链 → 日期档置「全部」；其余入口维持默认「今天」 */
-function initRange(p: URLSearchParams): RangeKey {
-  return p.get('from') === 'todo' || p.get('date') === 'all' ? 'all' : 'today';
+/** ?status= 深链 → 状态档（总览待办行：cancel_requested / pending；非法值忽略） */
+function initCategory(raw: string | null): CategoryKey | null {
+  switch (raw) {
+    case 'pending':
+    case 'confirmed':
+      return 'arriving';
+    case 'in_service':
+      return 'serving';
+    case 'completed':
+      return 'done';
+    case 'cancel_requested':
+      return 'cancel';
+    case 'in_boarding':
+      return 'boarding';
+    default:
+      return null;
+  }
 }
 
 /** 需要列表静默 invalidate 的预约状态事件（store 频道可达） */
@@ -63,128 +92,95 @@ const QUIET_INVALIDATE = new Set<string>([
   EventType.AppointmentReviewed,
 ]);
 
-const todayStr = () => localDayKey(new Date());
+/** 当日 0 点区间（服务端 from=gte / to=lte，to 取次日 -1ms） */
+const dayRange = (dayKey: string): { from: Date; to: Date } => {
+  const from = new Date(`${dayKey}T00:00:00`);
+  return { from, to: new Date(addDays(from, 1).getTime() - 1) };
+};
 
 export default function AppointmentsPage() {
   const { trpc, queryClient } = usePhiliaClient();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const [view, setView] = useState<'list' | 'calendar'>('list');
-  const [status, setStatus] = useState<StatusFilter>(() => initStatus(searchParams.get('status')));
-  const [rangeKey, setRangeKey] = useState<RangeKey>(() => initRange(searchParams));
-  const [customFrom, setCustomFrom] = useState(todayStr);
-  const [customTo, setCustomTo] = useState(todayStr);
-  const [month, setMonth] = useState(() => new Date());
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const todayKey = localDayKey(new Date());
 
-  /* ---------------- 列表查询 ---------------- */
-
-  /** 'all' 档不传 from/to（服务端默认按 scheduledStart 升序），其余档走 rangeToDates */
-  const range = useMemo(
-    () => (rangeKey === 'all' ? null : rangeToDates(rangeKey, customFrom, customTo)),
-    [rangeKey, customFrom, customTo],
+  /** 日期档：yyyy-MM-dd 本地键；null = 全部（?from=todo 兼容档，不锁当天防吞单） */
+  const [day, setDay] = useState<string | null>(() =>
+    searchParams.get('from') === 'todo' ? null : todayKey,
   );
+  const [category, setCategory] = useState<CategoryKey | null>(() =>
+    initCategory(searchParams.get('status')),
+  );
+  const [search, setSearch] = useState('');
+
+  const isToday = day === todayKey;
+
+  /* ---------------- 列表查询（当日区间 / from=todo 全量） ---------------- */
 
   const listQuery = useQuery({
     queryKey: [
       'appointment',
       'listForStore',
-      range
-        ? { from: range.from.toISOString(), to: range.to.toISOString(), status }
-        : { all: true, status },
+      day === null
+        ? { all: true }
+        : { from: dayRange(day).from.toISOString(), to: dayRange(day).to.toISOString() },
     ],
     queryFn: () =>
-      trpc.appointment.listForStore.query({
-        ...(range ? { from: range.from, to: range.to } : {}),
-        ...(status === 'all' ? {} : { status: status as ApptStatus }),
-      }),
-    enabled: view === 'list',
+      day === null
+        ? trpc.appointment.listForStore.query({})
+        : trpc.appointment.listForStore.query(dayRange(day)),
   });
 
-  /* ---------------- 日历查询（整月 + 前后溢出格） ---------------- */
-
-  const monthRange = useMemo(() => {
-    const first = new Date(month.getFullYear(), month.getMonth(), 1);
-    const from = addDays(first, -((first.getDay() + 6) % 7));
-    const to = new Date(addDays(from, 42).getTime() - 1);
-    return { from, to };
-  }, [month]);
-
-  const calQuery = useQuery({
-    queryKey: [
-      'appointment',
-      'listForStore',
-      'calendar',
-      { from: monthRange.from.toISOString(), status },
-    ],
-    queryFn: () =>
-      trpc.appointment.listForStore.query({
-        from: monthRange.from,
-        to: monthRange.to,
-        ...(status === 'all' ? {} : { status: status as ApptStatus }),
-      }),
-    enabled: view === 'calendar',
+  /**
+   * chips 计数真值 = 今日 listForStore 全量。主列表已是今日时复用；选了其他日期
+   * （或全量档）时补一档同接口今日查询（enabled 条件触发，零新接口）。
+   */
+  const todayQuery = useQuery({
+    queryKey: ['appointment', 'listForStore', { day: todayKey }],
+    queryFn: () => trpc.appointment.listForStore.query(dayRange(todayKey)),
+    enabled: !isToday,
   });
 
-  const dayStats = useMemo(() => buildDayStats(calQuery.data ?? []), [calQuery.data]);
+  const items = useMemo(() => listQuery.data ?? [], [listQuery.data]);
+  const todayItems = isToday ? items : (todayQuery.data ?? []);
 
-  /* ---------------- 行内一键确认（≤30 秒操作路径） ---------------- */
+  const counts: ChipCounts = useMemo(
+    () => ({
+      today: todayItems.length,
+      arriving: todayItems.filter(CATEGORY_MATCH.arriving).length,
+      serving: todayItems.filter(CATEGORY_MATCH.serving).length,
+      done: todayItems.filter(CATEGORY_MATCH.done).length,
+      cancel: todayItems.filter(CATEGORY_MATCH.cancel).length,
+      boarding: todayItems.filter(CATEGORY_MATCH.boarding).length,
+    }),
+    [todayItems],
+  );
+
+  /* ---------------- 前端过滤：状态档 + 搜索（petName/customerName/code） ---------------- */
+
+  const q = search.trim().toLowerCase();
+  const visible = useMemo(
+    () =>
+      items
+        .filter((i) => (category ? CATEGORY_MATCH[category](i) : true))
+        .filter(
+          (i) =>
+            q.length === 0 ||
+            [i.petName, i.customerName, i.code].some(
+              (s) => typeof s === 'string' && s.toLowerCase().includes(q),
+            ),
+        ),
+    [items, category, q],
+  );
+
+  /* ---------------- SSE：store 频道 ---------------- */
 
   const invalidateLists = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ['appointment', 'listForStore'] });
     // 仪表盘待办聚合同步刷新（T4.1 的 dashboardStats；未挂载时无副作用）
     void queryClient.invalidateQueries({ queryKey: ['store', 'dashboardStats'] });
   }, [queryClient]);
-
-  const [confirmingId, setConfirmingId] = useState<string | null>(null);
-  const confirmMut = useMutation({
-    mutationFn: (appointmentId: string) => trpc.appointment.confirm.mutate({ appointmentId }),
-    onMutate: (appointmentId) => setConfirmingId(appointmentId),
-    onSettled: () => setConfirmingId(null),
-    onSuccess: () => {
-      showToast('已确认预约', 'success');
-      invalidateLists();
-    },
-    onError: (err) =>
-      showToast(err instanceof Error ? err.message : '确认失败，请稍后再试', 'error'),
-  });
-
-  /* ---------------- 婉拒（v1.1-b3 B3-3）：弹层填原因 → appointment.reject ---------------- */
-
-  const [rejectTarget, setRejectTarget] = useState<string | null>(null);
-  const [rejectReason, setRejectReason] = useState('');
-  const rejectMut = useMutation({
-    mutationFn: (args: { appointmentId: string; reason: string }) =>
-      trpc.appointment.reject.mutate(args),
-    onSuccess: () => {
-      showToast('已婉拒该预约，客户将收到通知', 'success');
-      setRejectTarget(null);
-      setRejectReason('');
-      invalidateLists();
-    },
-    onError: (err) =>
-      showToast(err instanceof Error ? err.message : '婉拒失败，请稍后再试', 'error'),
-  });
-  const openReject = (id: string) => {
-    setRejectTarget(id);
-    setRejectReason('');
-  };
-  const trimmedReason = rejectReason.trim();
-  const submitReject = () => {
-    if (!rejectTarget) return;
-    if (trimmedReason.length === 0) {
-      showToast('请填写婉拒原因', 'error');
-      return;
-    }
-    if (trimmedReason.length > 100) {
-      showToast('婉拒原因不能超过 100 字', 'error');
-      return;
-    }
-    rejectMut.mutate({ appointmentId: rejectTarget, reason: trimmedReason });
-  };
-
-  /* ---------------- SSE：store 频道 ---------------- */
 
   const onEvent = useCallback(
     (envelope: EventEnvelope) => {
@@ -218,201 +214,123 @@ export default function AppointmentsPage() {
 
   /* ---------------- 交互 ---------------- */
 
-  const isLg = () => window.matchMedia('(min-width: 1024px)').matches;
+  const sub = `${
+    day === null ? '全部日期' : fmtDate(new Date(`${day}T00:00:00`))
+  } · 共 ${items.length} 单 · 自动接单已启用`;
 
-  const openItem = (id: string) => {
-    if (isLg()) setSelectedId(id);
-    else navigate(`/appointments/${id}`);
-  };
-
-  /** 日历点日 → 切列表视图 + 自定义范围=当日 */
-  const pickDay = (d: Date) => {
-    const key = localDayKey(d);
-    setCustomFrom(key);
-    setCustomTo(key);
-    setRangeKey('custom');
-    setView('list');
-  };
-
-  const items = listQuery.data ?? [];
-  const selected = items.find((i) => i.id === selectedId) ?? null;
+  const openNewAppointmentHint = () =>
+    showToast('新客户预约请引导至客户端预约页；到店客可由前台手动核销登记', 'info');
 
   /* ---------------- 渲染 ---------------- */
 
+  const tableHead = (
+    <thead>
+      <tr>
+        <th>时间</th>
+        <th>宠物 / 客户</th>
+        <th>服务</th>
+        <th>员工</th>
+        <th>金额</th>
+        <th>状态</th>
+        <th aria-label="详情" />
+      </tr>
+    </thead>
+  );
+
   return (
-    <div className="px-4 py-4 lg:px-6">
+    <MainScaffold
+      title="预约"
+      sub={sub}
+      testid="appointments-page"
+      actions={
+        <>
+          <SearchInput
+            placeholder="搜索宠物 / 客户 / 单号…"
+            value={search}
+            onChange={setSearch}
+            testid="appointments-search"
+          />
+          <LemonButton testid="appointment-create" onClick={openNewAppointmentHint}>
+            ＋ 新增预约
+          </LemonButton>
+        </>
+      }
+    >
       <ToastHost />
 
-      {/* 页头：标题 + 视图切换 */}
-      <div className="mb-3 flex items-center justify-between">
-        <h1 className="text-title-lg">预约管理</h1>
-        <div className="flex rounded-full bg-sunken p-0.5" role="tablist" aria-label="视图切换">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={view === 'list'}
-            onClick={() => setView('list')}
-            className={`flex h-8 items-center gap-1 rounded-full px-3 text-caption transition-colors ${
-              view === 'list' ? 'bg-card font-semibold text-ink shadow-card' : 'text-ink-secondary'
-            }`}
-          >
-            <List className="h-4 w-4" strokeWidth={1.5} />
-            列表
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={view === 'calendar'}
-            onClick={() => setView('calendar')}
-            className={`flex h-8 items-center gap-1 rounded-full px-3 text-caption transition-colors ${
-              view === 'calendar' ? 'bg-card font-semibold text-ink shadow-card' : 'text-ink-secondary'
-            }`}
-          >
-            <CalendarDays className="h-4 w-4" strokeWidth={1.5} />
-            日历
-          </button>
-        </div>
-      </div>
-
-      {/* 筛选：状态 chips + 日期范围 */}
-      <StatusChips value={status} onChange={setStatus} />
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        {RANGE_KEYS.map((k) => (
-          <button
-            key={k}
-            type="button"
-            onClick={() => setRangeKey(k)}
-            className={`h-8 rounded-full px-3 text-caption transition-colors ${
-              rangeKey === k
-                ? 'bg-brand-primary-light font-semibold text-brand-primary'
-                : 'bg-card text-ink-secondary shadow-card hover:bg-sunken'
-            }`}
-          >
-            {RANGE_LABEL[k]}
-          </button>
-        ))}
-        {rangeKey === 'custom' ? (
-          <span className="flex items-center gap-1 text-caption text-ink-secondary">
-            <input
-              type="date"
-              value={customFrom}
-              max={customTo}
-              onChange={(e) => setCustomFrom(e.target.value)}
-              className="h-8 rounded-input border border-line bg-card px-2 font-number text-caption text-ink"
-              aria-label="开始日期"
-            />
-            至
-            <input
-              type="date"
-              value={customTo}
-              min={customFrom}
-              onChange={(e) => setCustomTo(e.target.value)}
-              className="h-8 rounded-input border border-line bg-card px-2 font-number text-caption text-ink"
-              aria-label="结束日期"
-            />
-          </span>
-        ) : null}
-      </div>
-
-      {/* 主体 */}
-      {view === 'calendar' ? (
-        <div className="mt-3">
-          {calQuery.isPending ? (
-            <p className="py-16 text-center text-caption text-ink-secondary">加载中…</p>
-          ) : (
-            <CalendarView
-              month={month}
-              stats={dayStats}
-              onMonthChange={setMonth}
-              onPickDay={pickDay}
-            />
-          )}
-        </div>
-      ) : (
-        <div className="mt-3 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-4">
-          {/* 左：列表 */}
-          <div className="flex flex-col gap-2">
-            {listQuery.isPending ? (
-              <p className="py-16 text-center text-caption text-ink-secondary">加载中…</p>
-            ) : listQuery.isError ? (
-              <p className="py-16 text-center text-caption text-danger-deep">
-                {listQuery.error instanceof Error ? listQuery.error.message : '加载失败'}
-              </p>
-            ) : items.length === 0 ? (
-              <div className="rounded-card bg-card py-16 text-center shadow-card">
-                <p className="text-body text-ink-placeholder">该条件下暂无预约</p>
-                <p className="mt-1 text-caption text-ink-placeholder">可调整状态或日期范围</p>
-              </div>
-            ) : (
-              items.map((item) => (
-                <AppointmentRow
-                  key={item.id}
-                  item={item}
-                  selected={item.id === selectedId}
-                  confirming={confirmingId === item.id}
-                  onOpen={() => openItem(item.id)}
-                  onConfirm={(id) => confirmMut.mutate(id)}
-                  onReject={openReject}
-                />
-              ))
-            )}
-          </div>
-
-          {/* 右（lg+）：选中详情摘要 */}
-          <aside className="sticky top-4 hidden lg:block">
-            <DetailSummary
-              item={selected}
-              confirming={confirmingId === selected?.id}
-              onConfirm={(id) => confirmMut.mutate(id)}
-            />
-          </aside>
-        </div>
-      )}
-
-      {/* 婉拒弹层（v1.1-b3 B3-3）：必填原因 1~100 字，提交后客户详情页可见 */}
-      <Modal
-        open={rejectTarget !== null}
-        title="婉拒该预约？"
-        onClose={() => {
-          if (!rejectMut.isPending) setRejectTarget(null);
+      <StatusChips
+        counts={counts}
+        isToday={isToday}
+        category={category}
+        pickedDate={day ?? todayKey}
+        onToday={() => {
+          setDay(todayKey);
+          setCategory(null);
         }}
-        widthClass="sm:max-w-sm"
-      >
-        <p className="text-caption text-ink-secondary">
-          婉拒后预约将取消并释放槽位，客户会看到此处填写的原因。
-        </p>
-        <textarea
-          value={rejectReason}
-          onChange={(e) => setRejectReason(e.target.value)}
-          maxLength={100}
-          rows={3}
-          autoFocus
-          placeholder="请填写婉拒原因（必填，100 字以内），如：该时段已约满"
-          className="mt-3 w-full rounded-input border border-line bg-card px-3.5 py-3 text-body placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
-          aria-label="婉拒原因"
-        />
-        <p className="mt-1 text-right font-number text-caption text-ink-placeholder">
-          {trimmedReason.length}/100
-        </p>
-        <div className="mt-2 flex gap-2">
-          <button
-            type="button"
-            disabled={rejectMut.isPending}
-            onClick={() => setRejectTarget(null)}
-            className="h-11 flex-1 rounded-full bg-sunken text-body font-medium text-ink"
-          >
-            再想想
-          </button>
-          <button
-            type="button"
-            disabled={rejectMut.isPending || trimmedReason.length === 0}
-            onClick={submitReject}
-            className="h-11 flex-1 rounded-full bg-danger text-body font-medium text-white disabled:opacity-60"
-          >
-            {rejectMut.isPending ? '提交中…' : '确认婉拒'}
-          </button>
-        </div>
-      </Modal>
-    </div>
+        onCategory={(c) => setCategory((cur) => (cur === c ? null : c))}
+        onPickDate={(d) => setDay(d)}
+      />
+
+      <div className="mt-3.5">
+        {listQuery.isPending ? (
+          /* 加载：骨架行（禁转圈） */
+          <div className="u3-panel" aria-busy="true" aria-label="加载中">
+            <table className="u3-tbl">
+              {tableHead}
+              <tbody>
+                {[0, 1, 2, 3, 4].map((r) => (
+                  <tr key={r}>
+                    {[38, 120, 72, 88, 52, 76, 12].map((w, c) => (
+                      <td key={c}>
+                        <div
+                          className="h-3 animate-pulse rounded-[6px] bg-[rgba(74,59,46,.08)]"
+                          style={{ width: w }}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : listQuery.isError ? (
+          /* 错误：文案 + 重试 */
+          <div className="u3-panel px-[17px] py-16 text-center">
+            <p className="text-[12px] text-danger-deep">
+              {listQuery.error instanceof Error ? listQuery.error.message : '加载失败，请稍后再试'}
+            </p>
+            <div className="mt-4 flex justify-center">
+              <QuietButton testid="appointments-retry" onClick={() => void listQuery.refetch()}>
+                重试
+              </QuietButton>
+            </div>
+          </div>
+        ) : (
+          /* 数据 / 空态 */
+          <div className="u3-panel">
+            <table className="u3-tbl">
+              {tableHead}
+              <tbody>
+                {visible.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-16 text-center text-[rgba(74,59,46,.42)]">
+                      这一天没有预约
+                    </td>
+                  </tr>
+                ) : (
+                  visible.map((item) => (
+                    <AppointmentRow
+                      key={item.id}
+                      item={item}
+                      onOpen={() => navigate(`/appointments/${item.id}`)}
+                    />
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </MainScaffold>
   );
 }

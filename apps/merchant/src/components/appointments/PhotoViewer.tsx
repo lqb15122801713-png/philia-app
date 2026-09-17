@@ -1,6 +1,7 @@
 /**
  * 全屏照片查看器（T4.2 监视页）：90% 暖深棕底（保持色温，DESIGN §6.3），
  * 显示拍摄时间 + 序号，左右切换，点遮罩/关闭按钮退出。
+ * U3：底上文字/控件由 text-white 系换为纸面米 #FFFDF6 系（禁令：无 text-white）。
  */
 
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
@@ -39,14 +40,14 @@ export function PhotoViewer({
       aria-label="查看照片"
     >
       {/* 顶栏 */}
-      <div className="flex items-center justify-between px-4 py-3 text-white">
+      <div className="flex items-center justify-between px-4 py-3 text-[#FFFDF6]">
         <span className="font-number text-caption">
           {index + 1} / {photos.length}
         </span>
         <button
           type="button"
           onClick={onClose}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-[rgba(255,253,246,.12)]"
           aria-label="关闭"
         >
           <X className="h-5 w-5" strokeWidth={1.5} />
@@ -68,7 +69,7 @@ export function PhotoViewer({
             <button
               type="button"
               onClick={prev}
-              className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white"
+              className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[rgba(255,253,246,.12)] text-[#FFFDF6]"
               aria-label="上一张"
             >
               <ChevronLeft className="h-5 w-5" strokeWidth={1.5} />
@@ -76,7 +77,7 @@ export function PhotoViewer({
             <button
               type="button"
               onClick={next}
-              className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white"
+              className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-[rgba(255,253,246,.12)] text-[#FFFDF6]"
               aria-label="下一张"
             >
               <ChevronRight className="h-5 w-5" strokeWidth={1.5} />
@@ -87,7 +88,7 @@ export function PhotoViewer({
 
       {/* 底部：拍摄时间 */}
       <div className="px-4 pb-6 pt-2 text-center">
-        <p className="text-caption text-white/80">
+        <p className="text-caption text-[rgba(255,253,246,.78)]">
           {photo.takenAt ? `${fmtDateTime(photo.takenAt)} 拍摄` : '拍摄时间未知'}
           {photo.tag ? ` · ${photo.tag}` : ''}
         </p>
