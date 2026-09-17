@@ -1,132 +1,106 @@
 /**
- * 预约列表行（T4.2）：紧凑单行卡片 —— 时间 / 宠物 / 服务 / 客户 / 员工 / 状态 / 金额。
- * 待确认行整行品牌色高亮边框 + 行内「确认」快捷按钮（≤30 秒操作路径关键：
- * SSE 红点 toast → 点行内确认 → 完成，无需进详情页）；
- * v1.1-b3 B3-3：待确认行追加「婉拒」次按钮（弹层填原因 → appointment.reject）。
+ * 预约列表行（U3 任务 D · 规格书 §3 · 母本 279–284 行）：u3-tbl 的 tr.rowlink ——
+ * 时间（Montserrat 数字字族）｜宠物+客户（副行 昵称·尾号）｜服务｜员工+来源小签
+ * （assignSourceLabel 口径 appt-utils.ts）｜金额（priceFen→¥，tabular）｜状态胶囊｜›。
+ *
+ * S4 起列表纯读：行内确认/婉拒已迁入详情页。selected/confirming/onConfirm/onReject
+ * 仅以 @deprecated 保留在签名里，供 MonitorHubPage（非本批授权文件）编译兼容，
+ * 渲染一律忽略；点行进 /appointments/:id。
  */
 
-import { Check, X } from 'lucide-react';
 import {
   assignSourceLabel,
-  cancelSourceLabel,
   customerLabel,
-  fenToYuan,
-  fmtDate,
   fmtTime,
-  statusBadge,
-  statusLabel,
   type ListForStoreItem,
 } from './appt-utils';
 
+/** 状态胶囊口径（规格书 §3）：cls = u3-st 修饰类（live/wait/done/amber） */
+function statusCapsule(item: ListForStoreItem): { cls: 'live' | 'wait' | 'done' | 'amber'; text: string } {
+  switch (item.status) {
+    case 'pending':
+      return { cls: 'wait', text: '待确认' };
+    case 'confirmed':
+      return { cls: 'wait', text: '待到店' };
+    case 'in_service':
+      return { cls: 'live', text: '服务中' };
+    case 'in_boarding':
+      return { cls: 'live', text: '寄养中' };
+    case 'completed':
+      // 未收款附「· 待收款」
+      return { cls: 'done', text: item.paidAt ? '已完成' : '已完成 · 待收款' };
+    case 'cancel_requested':
+      return { cls: 'amber', text: '取消申请待审' };
+    default:
+      return { cls: 'done', text: '已取消' };
+  }
+}
+
+/** 金额分 → ¥元：整数去小数（母本 ¥128 口径），非整数保留两位；数字字族由 u1-num 保证 */
+const fmtPrice = (fen: number): string => {
+  const yuan = fen / 100;
+  return Number.isInteger(yuan) ? `¥${yuan}` : `¥${yuan.toFixed(2)}`;
+};
+
 export function AppointmentRow({
   item,
-  selected = false,
-  confirming = false,
   onOpen,
-  onConfirm,
-  onReject,
 }: {
   item: ListForStoreItem;
-  selected?: boolean;
-  confirming?: boolean;
   onOpen: () => void;
-  onConfirm: (id: string) => void;
-  onReject: (id: string) => void;
+  /** @deprecated S4 起列表纯读；仅为 MonitorHubPage 编译兼容保留，渲染忽略 */
+  selected?: boolean;
+  /** @deprecated 同上 */
+  confirming?: boolean;
+  /** @deprecated 同上 */
+  onConfirm?: (id: string) => void;
+  /** @deprecated 同上 */
+  onReject?: (id: string) => void;
 }) {
-  const pending = item.status === 'pending';
-  const start = item.scheduledStart;
+  const cap = statusCapsule(item);
+  const srcLabel = assignSourceLabel(item.assignSource);
 
   return (
-    <div
+    <tr
+      className="rowlink"
       onClick={onOpen}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onOpen();
-        }
-      }}
-      role="button"
       tabIndex={0}
-      className={`flex w-full cursor-pointer items-center gap-3 rounded-card border bg-card px-3 py-2.5 text-left transition-colors hover:bg-sunken ${
-        pending
-          ? 'border-brand-primary bg-brand-primary-light/40'
-          : selected
-            ? 'border-brand-primary'
-            : 'border-line'
-      }`}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') onOpen();
+      }}
     >
-      {/* 时间列（数字字族纵向对齐） */}
-      <div className="w-14 shrink-0">
-        <p className="font-number text-body font-semibold text-ink">{fmtTime(start)}</p>
-        <p className="font-number text-caption text-ink-secondary">{fmtDate(start)}</p>
-      </div>
+      {/* 时间（Montserrat tabular） */}
+      <td className="u1-num font-bold">{fmtTime(item.scheduledStart)}</td>
 
-      {/* 主信息：宠物+服务 / 客户+员工（B3-5 W-4：客户=昵称+手机尾号） */}
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-body font-semibold text-ink">
-          {item.petName ?? '宠物'}
-          <span className="mx-1 font-normal text-ink-placeholder">·</span>
-          <span className="font-normal">{item.serviceName ?? '服务'}</span>
-        </p>
-        <p className="mt-0.5 truncate text-caption text-ink-secondary">
+      {/* 宠物 + 客户（副行：昵称 · 尾号，customerPhoneTail 现成字段） */}
+      <td>
+        <span className="font-semibold">{item.petName ?? '宠物'}</span>
+        <span className="mt-0.5 block text-[11px] text-[rgba(74,59,46,.42)]">
           {customerLabel(item.customerName, item.customerPhoneTail)}
-          <span className="mx-1 text-line-strong">|</span>
-          {item.type === 'boarding' ? '寄养' : '洗护'}
-          <span className="mx-1 text-line-strong">|</span>
-          {item.staffName ? `员工 ${item.staffName}` : '未指派'}
-          {/* 批次 S4（任务 D）：派单来源标记「自动派单 / 商家改派」 */}
-          {assignSourceLabel(item.assignSource) ? (
-            <span className="ml-1 rounded-tag bg-brand-secondary-light px-1.5 py-0.5 text-ink-secondary">
-              {assignSourceLabel(item.assignSource)}
-            </span>
-          ) : null}
-        </p>
-        {/* B3-5（W-14）：已取消/取消审核行透出客户取消原因 */}
-        {(item.status === 'cancelled' || item.status === 'cancel_requested') && item.cancelReason ? (
-          <p className="mt-0.5 truncate text-caption text-ink-placeholder">
-            {cancelSourceLabel(item.cancelSource)}：{item.cancelReason}
-          </p>
+        </span>
+      </td>
+
+      {/* 服务 */}
+      <td>{item.serviceName ?? '服务'}</td>
+
+      {/* 员工 + 来源小签（自动派单 / 商家改派；null 不显示） */}
+      <td>
+        {item.staffName ?? '未指派'}
+        {srcLabel ? (
+          <span className="ml-1 text-[11px] text-[rgba(74,59,46,.42)]">{srcLabel}</span>
         ) : null}
-      </div>
+      </td>
 
-      {/* 状态 + 金额 */}
-      <div className="flex shrink-0 flex-col items-end gap-1">
-        <span className={`rounded-tag px-1.5 py-0.5 text-caption ${statusBadge(item.status)}`}>
-          {statusLabel(item.status)}
-        </span>
-        <span className="font-number text-body font-semibold text-ink">
-          {fenToYuan(item.priceFen)}
-        </span>
-      </div>
+      {/* 金额（Montserrat tabular） */}
+      <td className="u1-num font-semibold">{fmtPrice(item.priceFen)}</td>
 
-      {/* 待确认：行内一键确认（≤30 秒操作路径）+ 婉拒次按钮（B3-3，弹层填原因） */}
-      {pending ? (
-        <div className="flex shrink-0 flex-col items-end gap-1.5">
-          <button
-            type="button"
-            disabled={confirming}
-            onClick={(e) => {
-              e.stopPropagation();
-              onConfirm(item.id);
-            }}
-            className="flex h-9 items-center gap-1 rounded-full bg-brand-primary px-3 text-caption font-semibold text-white transition-colors hover:bg-brand-primary-hover disabled:opacity-50"
-          >
-            <Check className="h-4 w-4" strokeWidth={1.5} />
-            {confirming ? '确认中…' : '确认'}
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onReject(item.id);
-            }}
-            className="flex h-8 items-center gap-1 rounded-full border border-line bg-card px-3 text-caption text-ink-secondary transition-colors hover:bg-sunken"
-          >
-            <X className="h-3.5 w-3.5" strokeWidth={1.5} />
-            婉拒
-          </button>
-        </div>
-      ) : null}
-    </div>
+      {/* 状态胶囊 */}
+      <td>
+        <span className={`u3-st ${cap.cls}`}>{cap.text}</span>
+      </td>
+
+      {/* › */}
+      <td className="text-[rgba(74,59,46,.42)]">›</td>
+    </tr>
   );
 }
