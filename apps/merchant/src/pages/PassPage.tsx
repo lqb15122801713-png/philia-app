@@ -8,7 +8,7 @@
  * - pass.listLogs：扣次（-1）/ 回补（+1）/ 充次（+N）流水，倒序，上限 100。
  *
  * 结构：MainScaffold（title 会员 · 次卡 / sub 含冻结决策 15 原文 / 柠檬钮「＋ 售卡」）
- * → 两栏（1.6fr:1fr）：左=在效次卡表（u3-panel + u3-tbl，按剩余次数排序），
+ * → 两栏（试样 .two-col 1.7fr:1fr）：左=在效次卡表（u3-panel + u3-tbl，按剩余次数排序），
  * 右=扣次流水（u3-todo 工艺：−1 薄荷点 / 正数木点 #D4B896）。
  *
  * 操作（真实链路保留）：
@@ -198,7 +198,7 @@ function LogsModal({ pass, onClose }: { pass: PassRow | null; onClose: () => voi
                   {fmtDateTime(l.createdAt)}
                 </span>
               </div>
-              <span className="font-number text-caption font-extrabold tabular-nums text-ink">
+              <span className="font-number text-caption font-bold tabular-nums text-ink">
                 {l.delta > 0 ? `+${l.delta}` : l.delta}
               </span>
             </div>
@@ -246,7 +246,7 @@ export default function PassPage() {
       }
     >
       <ToasterMount />
-      <div className="grid grid-cols-1 gap-[14px] xl:grid-cols-[1.6fr_1fr]">
+      <div className="grid grid-cols-1 gap-[14px] xl:grid-cols-[1.7fr_1fr]">
         {/* 左：在效次卡表 */}
         <div className="u3-panel">
           <div className="u3-panel-head">
@@ -297,7 +297,7 @@ export default function PassPage() {
                         <span className="ml-1 font-number tabular-nums">共 {p.totalTimes} 次</span>
                       </td>
                       <td>
-                        <span className="font-number text-sm font-extrabold tabular-nums text-ink">
+                        <span className="font-number text-sm font-bold tabular-nums text-ink">
                           {p.remainTimes}
                         </span>
                         <span className="ml-0.5 text-[11px] text-[rgba(74,59,46,.42)]">次</span>

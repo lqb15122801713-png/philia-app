@@ -39,8 +39,8 @@ export function monthStart(): Date {
   return d;
 }
 
-/** 分 → ¥ 元（两位小数，数字字族配合 tabular-nums） */
-export const fenToYuan = (fen: number): string => `¥${(fen / 100).toFixed(2)}`;
+/** 分 → ¥ 元（整数元不带 .00 尾零，试样 ¥88 口径；非整数保留两位，数字字族配合 tabular-nums） */
+export const fenToYuan = (fen: number): string => `¥${(fen / 100).toFixed(2).replace(/\.00$/, '')}`;
 
 /** 排班周模板有序键（周一在前）与中文标签 */
 export const SCHEDULE_DAYS: Array<{ key: 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'; label: string }> = [

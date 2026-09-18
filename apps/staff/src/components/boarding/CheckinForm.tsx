@@ -127,25 +127,25 @@ export default function CheckinForm({
   };
 
   return (
-    <section className="rounded-card bg-card p-4 shadow-card">
+    <section className="u1-card p-4">
       <h2 className="text-title">入住登记</h2>
-      <p className="mt-1 text-body text-ink-secondary">称重、分房、登记随身物品，完成后开始每日打卡。</p>
+      <p className="mt-1 text-body-sm text-ink-secondary">称重、分房、登记随身物品，完成后开始每日打卡。</p>
 
       {/* 房间/笼位号 */}
       <label className="mt-4 block">
-        <span className="text-body-lg font-medium text-ink">房间 / 笼位号</span>
+        <span className="text-body-sm font-semibold text-ink">房间 / 笼位号</span>
         <input
           type="text"
           value={roomNo}
           onChange={(e) => setRoomNo(e.target.value.slice(0, 32))}
           placeholder="如：A-03（可稍后由商家分配）"
-          className="mt-1.5 h-staff-btn w-full rounded-input border border-line bg-canvas px-3 text-body-lg text-ink placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
+          className="mt-1.5 h-staff-btn w-full rounded-control border border-line bg-canvas px-3 text-body-sm text-ink placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
         />
       </label>
 
       {/* 入住称重 */}
       <label className="mt-4 block">
-        <span className="text-body-lg font-medium text-ink">
+        <span className="text-body-sm font-semibold text-ink">
           入住称重 <span className="text-danger-deep">*</span>
         </span>
         <div className="mt-1.5 flex items-center gap-2">
@@ -155,15 +155,15 @@ export default function CheckinForm({
             value={weightText}
             onChange={(e) => setWeightText(sanitizeWeight(e.target.value))}
             placeholder="0.0"
-            className="h-staff-btn w-32 rounded-input border border-line bg-canvas px-3 font-number text-body-lg text-ink placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
+            className="h-staff-btn w-32 rounded-control border border-line bg-canvas px-3 font-number text-body-sm text-ink placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
           />
-          <span className="text-body-lg text-ink-secondary">kg（一位小数）</span>
+          <span className="text-body-sm text-ink-secondary">kg（一位小数）</span>
         </div>
       </label>
 
       {/* 随身物品动态行 */}
       <div className="mt-4">
-        <span className="text-body-lg font-medium text-ink">随身物品（可空）</span>
+        <span className="text-body-sm font-semibold text-ink">随身物品（可空）</span>
         <ul className="mt-1.5 space-y-2">
           {rows.map((row) => (
             <li key={row.key} className="flex items-center gap-2">
@@ -172,13 +172,13 @@ export default function CheckinForm({
                 value={row.name}
                 onChange={(e) => patchRow(row.key, { name: e.target.value.slice(0, 64) })}
                 placeholder="物品名称，如：食盆 / 玩具"
-                className="h-staff-btn min-w-0 flex-1 rounded-input border border-line bg-canvas px-3 text-body-lg text-ink placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
+                className="h-staff-btn min-w-0 flex-1 rounded-control border border-line bg-canvas px-3 text-body-sm text-ink placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
               />
               <button
                 type="button"
                 onClick={() => pickPhoto(row.key)}
                 disabled={row.uploading}
-                className="relative flex h-staff-btn w-14 shrink-0 items-center justify-center overflow-hidden rounded-input border border-line bg-sunken text-ink-secondary"
+                className="relative flex h-staff-btn w-14 shrink-0 items-center justify-center overflow-hidden rounded-control border border-line bg-sunken text-ink-secondary transition-transform duration-120 ease-philia-spring active:scale-92"
                 aria-label={row.photoUrl ? '重拍物品照片' : '拍物品照片'}
               >
                 {row.uploading ? (
@@ -192,7 +192,7 @@ export default function CheckinForm({
               <button
                 type="button"
                 onClick={() => setRows((rs) => rs.filter((r) => r.key !== row.key))}
-                className="flex h-staff-btn w-12 shrink-0 items-center justify-center rounded-input text-danger-deep"
+                className="flex h-staff-btn w-12 shrink-0 items-center justify-center rounded-control text-danger-deep transition-transform duration-120 ease-philia-spring active:scale-92"
                 aria-label="删除该行"
               >
                 <Trash2 className="h-5 w-5" strokeWidth={1.5} />
@@ -204,7 +204,7 @@ export default function CheckinForm({
           <button
             type="button"
             onClick={() => setRows((rs) => [...rs, newRow()])}
-            className="mt-2 flex h-12 items-center gap-1.5 rounded-full bg-brand-primary-light px-4 text-body-lg text-brand-primary"
+            className="mt-2 flex h-12 items-center gap-1.5 rounded-full bg-brand-primary-light px-4 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
             <Plus className="h-5 w-5" strokeWidth={1.5} />
             添加物品
@@ -227,7 +227,7 @@ export default function CheckinForm({
             type="button"
             onClick={onCancel}
             disabled={submitting}
-            className="h-staff-btn w-full rounded-full bg-sunken text-body-lg text-ink"
+            className="h-staff-btn w-full rounded-full bg-sunken text-body-sm text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
             取消
           </button>

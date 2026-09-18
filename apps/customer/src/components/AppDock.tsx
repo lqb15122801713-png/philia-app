@@ -20,8 +20,9 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useMe, usePhiliaClient } from '@philia/shared'
 
-/** 深棕墨 paw 剪影（token text.primary #4A3B2E，currentColor 继承） */
-function PawMark({ className = '' }: { className?: string }) {
+/** 深棕墨 paw 剪影（token text.primary #4A3B2E，currentColor 继承）
+ *  U4-D3：导出复用——全域空态组件（home/common EmptyState）同用此 VI 爪印。 */
+export function PawMark({ className = '' }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
       {/* 四趾 */}

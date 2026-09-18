@@ -15,6 +15,16 @@
  *   主查询同时挂 30s refetchInterval）；visibilitychange 回前台全量对齐一次。
  * - 异常态：非本人/不存在 → 友好错误页；pending/confirmed → 预约码引导；
  *   cancel_requested/cancelled → 取消提示。
+ *
+ * U4-D2（试样 05 逐格收口）：
+ * - 返回条补题「洗护全程/寄养全程」（PageHeader 全域统一返回条，U1-A 形态）；
+ * - 摘要卡（LiveHeader）：柠檬细环头像 +「{宠物} · {服务}」+ 美容师行
+ *   「{员工}服务中 · 预计 HH:MM 完成」（员工名=store.listStaffPublic 按 staffId
+ *   解析，U4-B 同口径现成接口零新增；ETA=scheduledEnd 真字段；缺真值段隐去）+
+ *   SSE 真值签（connected → 薄荷点「实时同步」/ 灰点「重连中」，禁常亮）；
+ * - stepper 去卡壳直上画布（试样 .steps 无卡），工艺取齐见 LiveStepper 头注；
+ * - 「联系门店」条：stores 无 phone 字段 → 不渲染（U1 疑点口径，ContactStore
+ *   防御保持，schema 补字段后自动生效）。
  */
 
 import {
@@ -38,7 +48,7 @@ import CelebrationOverlay from '../components/live/CelebrationOverlay'
 import ConnectionBar from '../components/live/ConnectionBar'
 import ContactStore from '../components/live/ContactStore'
 import LiveHeader from '../components/live/LiveHeader'
-import { BackButton } from '../components/PageHeader'
+import PageHeader, { BackButton } from '../components/PageHeader'
 import LiveToast from '../components/live/LiveToast'
 import PhotoViewer from '../components/live/PhotoViewer'
 import ReviewPanel from '../components/live/ReviewPanel'
@@ -219,6 +229,19 @@ export default function AppointmentLivePage() {
     enabled: !!aid && sseDown && inLiveFlow && appt?.status !== 'completed',
     refetchInterval: 30_000,
   })
+
+  // U4-D2 美容师行：指派员工名=store.listStaffPublic 现成接口按 staffId 解析
+  // （U4-B 同口径，零新接口）；未指派/查询失败 → staffName=null，摘要卡该段隐去不造假
+  const staffQ = useQuery({
+    queryKey: ['store', 'listStaffPublic', appt?.storeId],
+    queryFn: () => trpc.store.listStaffPublic.query({ storeId: appt!.storeId }),
+    enabled: !!user && !!appt?.storeId,
+    staleTime: 300_000,
+  })
+  const staffName = useMemo(() => {
+    if (!appt?.staffId) return null
+    return staffQ.data?.staff.find((s) => s.id === appt.staffId)?.name ?? null
+  }, [appt, staffQ.data])
 
   /* ---------------- 全量对齐 ---------------- */
 
@@ -411,25 +434,17 @@ export default function AppointmentLivePage() {
 
   /* ---------------- 派生展示数据 ---------------- */
 
+  // U4-D2：时间戳口径按试样——done 步出完成时刻；active 步 meta=「进行中 · 说明」
+  // （不再出「HH:MM 开始」，试样进行中步无时间戳）
   const timelineSteps: LiveStepperStep[] = useMemo(
     () =>
       (steps ?? []).map((s) => ({
         stepKey: s.stepKey,
         status: s.status,
-        time:
-          s.status === 'done' && s.doneAt
-            ? fmtTime(s.doneAt)
-            : s.status === 'active' && s.startedAt
-              ? `${fmtTime(s.startedAt)} 开始`
-              : undefined,
+        time: s.status === 'done' && s.doneAt ? fmtTime(s.doneAt) : undefined,
         description: s.status === 'active' ? ACTIVE_HINT[s.stepKey] : undefined,
         photos: toWallPhotos(s),
       })),
-    [steps],
-  )
-
-  const activeStepOrder = useMemo(
-    () => (steps ?? []).find((s) => s.status === 'active')?.stepOrder ?? null,
     [steps],
   )
 
@@ -514,24 +529,37 @@ export default function AppointmentLivePage() {
   }
 
   const completed = appt.status === 'completed'
-  const capsule = completed
-    ? '已完成'
-    : appt.status === 'in_service'
-      ? activeStepOrder
-        ? `服务中 · 第 ${activeStepOrder} 步`
-        : '服务中'
-      : appt.status === 'in_boarding'
-        ? `寄养中 · 第 ${boardingDayCount} 天`
-        : ''
+
+  // U4-D2 摘要卡美容师行：「{员工}服务中 · 预计 HH:MM 完成」（缺真值段隐去）；
+  // 寄养态=「寄养中 · 第 N 天」（scheduledEnd 为离店日，不出 ETA 免歧义）
+  const headerMeta = (() => {
+    if (appt.status === 'in_service') {
+      const parts: string[] = []
+      if (staffName) parts.push(`${staffName}服务中`)
+      if (appt.scheduledEnd) parts.push(`预计 ${fmtTime(appt.scheduledEnd)} 完成`)
+      return parts.length > 0 ? parts.join(' · ') : null
+    }
+    if (appt.status === 'in_boarding') return `寄养中 · 第 ${boardingDayCount} 天`
+    return null
+  })()
 
   const header = (
     <LiveHeader
       petName={pet?.name ?? '宝贝'}
       petAvatarUrl={pet?.avatarUrl}
       serviceName={service?.name ?? (isBoarding ? '寄养服务' : '洗护服务')}
-      storeName={store?.name ?? ''}
-      capsule={capsule}
-      capsuleTone={completed ? 'done' : 'active'}
+      meta={headerMeta}
+      state={completed ? 'done' : inLiveFlow ? 'live' : 'plain'}
+      sseConnected={connected}
+    />
+  )
+
+  // U4-D2：统一返回条补题（试样 05 nav：←圆钮 +「洗护全程」）
+  const nav = (
+    <PageHeader
+      title={isBoarding ? '寄养全程' : '洗护全程'}
+      to={aid ? `/appointments/${aid}` : '/appointments'}
+      className="mb-3"
     />
   )
 
@@ -540,7 +568,7 @@ export default function AppointmentLivePage() {
     const cancelRequested = appt.status === 'cancel_requested'
     return (
       <div className="px-4 pb-10 pt-4">
-        {backLink}
+        {nav}
         {header}
         <div className="mt-3 flex flex-col items-center rounded-card bg-card px-6 py-10 text-center shadow-card">
           {cancelRequested ? (
@@ -572,7 +600,7 @@ export default function AppointmentLivePage() {
   if (appt.status === 'cancelled') {
     return (
       <div className="px-4 pb-10 pt-4">
-        {backLink}
+        {nav}
         {header}
         <div className="mt-3 flex flex-col items-center rounded-card bg-card px-6 py-10 text-center shadow-card">
           <CircleX className="h-10 w-10 text-ink-placeholder" strokeWidth={1.5} />
@@ -607,10 +635,10 @@ export default function AppointmentLivePage() {
         />
       ) : null}
 
-      {backLink}
+      {nav}
       {header}
 
-      <div className="mt-3">
+      <div className="mt-3.5">
         {isBoarding ? (
           <BoardingLive
             stay={stayInfo}
@@ -622,10 +650,8 @@ export default function AppointmentLivePage() {
             <p className="text-caption text-ink-secondary">正在接入服务进度…</p>
           </div>
         ) : (
-          /* U1-E：stepper 容器换 U1-B 细线卡（ring + 近零影），去旧 shadow-card */
-          <div className="u1-card p-4">
-            <LiveStepper steps={timelineSteps} onPhotoClick={openStepPhotos} />
-          </div>
+          /* U4-D2：stepper 去卡壳直上画布（试样 05 .steps 无卡），工艺取齐见 LiveStepper 头注 */
+          <LiveStepper steps={timelineSteps} onPhotoClick={openStepPhotos} />
         )}
       </div>
 

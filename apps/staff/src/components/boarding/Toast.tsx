@@ -6,7 +6,7 @@ export default function Toast({ message }: { message: string | null }) {
   if (!message) return null;
   return (
     <div className="pointer-events-none fixed left-1/2 top-3 z-toast w-full max-w-lg -translate-x-1/2 px-4">
-      <p className="rounded-full bg-ink px-4 py-2.5 text-center text-body text-[#F6F1E3] shadow-elevated">
+      <p className="rounded-full bg-ink px-4 py-2.5 text-center text-body-sm text-[#F6F1E3] shadow-elevated">
         {message}
       </p>
     </div>

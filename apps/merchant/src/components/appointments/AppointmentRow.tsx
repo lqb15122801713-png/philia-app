@@ -14,16 +14,24 @@ import {
   fmtTime,
   type ListForStoreItem,
 } from './appt-utils';
+import type { StepProgress } from './useStepProgress';
 
-/** 状态胶囊口径（规格书 §3）：cls = u3-st 修饰类（live/wait/done/amber） */
-function statusCapsule(item: ListForStoreItem): { cls: 'live' | 'wait' | 'done' | 'amber'; text: string } {
+/** 状态胶囊口径（规格书 §3）：cls = u3-st 修饰类（live/wait/done/amber）；
+    服务中携带六步进度「服务中 N/6」（试样 §3 口径；进度未回=裸「服务中」不伪造） */
+function statusCapsule(
+  item: ListForStoreItem,
+  progress?: StepProgress | null,
+): { cls: 'live' | 'wait' | 'done' | 'amber'; text: string } {
   switch (item.status) {
     case 'pending':
       return { cls: 'wait', text: '待确认' };
     case 'confirmed':
       return { cls: 'wait', text: '待到店' };
     case 'in_service':
-      return { cls: 'live', text: '服务中' };
+      return {
+        cls: 'live',
+        text: progress ? `服务中 ${progress.done}/${progress.total}` : '服务中',
+      };
     case 'in_boarding':
       return { cls: 'live', text: '寄养中' };
     case 'completed':
@@ -45,9 +53,12 @@ const fmtPrice = (fen: number): string => {
 export function AppointmentRow({
   item,
   onOpen,
+  progress,
 }: {
   item: ListForStoreItem;
   onOpen: () => void;
+  /** 服务中行的六步进度（试样「服务中 N/6」）；未回/非服务中传空 */
+  progress?: StepProgress | null;
   /** @deprecated S4 起列表纯读；仅为 MonitorHubPage 编译兼容保留，渲染忽略 */
   selected?: boolean;
   /** @deprecated 同上 */
@@ -57,7 +68,7 @@ export function AppointmentRow({
   /** @deprecated 同上 */
   onReject?: (id: string) => void;
 }) {
-  const cap = statusCapsule(item);
+  const cap = statusCapsule(item, progress);
   const srcLabel = assignSourceLabel(item.assignSource);
 
   return (

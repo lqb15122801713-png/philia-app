@@ -218,7 +218,7 @@ export default function BoardingPage() {
       }
       testid="boarding-page"
     >
-      {/* 房型卡行（.room 同工艺：纸面+ring+圆角 20，占用 Montserrat 22） */}
+      {/* 房型卡行（.room 同工艺：纸面+ring+圆角 20，占用 Montserrat 20【试样所印 22 越字阶闸门，U4 映射】） */}
       {roomsLoading ? (
         <div className="mb-[18px] grid grid-cols-2 gap-3.5 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -235,7 +235,7 @@ export default function BoardingPage() {
               <div className="text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">
                 {r.name} · {fmtNightPrice(r.priceFen)}/晚
               </div>
-              <div className="mt-1.5 font-number text-[22px] font-extrabold leading-7 tabular-nums">
+              <div className="mt-1.5 font-number text-title-lg font-bold leading-7 tabular-nums">
                 {r.stays.length}
                 <small className="text-caption font-semibold text-[rgba(74,59,46,.42)]">
                   /{r.roomCount} 间
@@ -287,7 +287,7 @@ export default function BoardingPage() {
               </div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="u3-noscrollx overflow-x-auto">
               <table className="u3-tbl min-w-[720px]">
                 <thead>
                   <tr>

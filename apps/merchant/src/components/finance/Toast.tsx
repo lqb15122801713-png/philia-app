@@ -14,7 +14,7 @@ export function useToast(): [string | null, (msg: string) => void] {
   const showToast = useCallback((msg: string) => {
     setToast(msg);
     window.clearTimeout(timerRef.current);
-    timerRef.current = window.setTimeout(() => setToast(null), 3200);
+    timerRef.current = window.setTimeout(() => setToast(null), 2500);
   }, []);
 
   useEffect(() => () => window.clearTimeout(timerRef.current), []);

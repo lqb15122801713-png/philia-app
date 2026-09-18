@@ -14,7 +14,7 @@ export function useToast(): [string | null, (msg: string) => void] {
   const showToast = useCallback((msg: string) => {
     setToast(msg);
     window.clearTimeout(timerRef.current);
-    timerRef.current = window.setTimeout(() => setToast(null), 3200);
+    timerRef.current = window.setTimeout(() => setToast(null), 2500); // 动效纲领 §四.1：toast 2.5s 自消
   }, []);
 
   useEffect(() => () => window.clearTimeout(timerRef.current), []);
@@ -26,7 +26,7 @@ export default function Toast({ message }: { message: string | null }) {
   if (!message) return null;
   return (
     <div className="pointer-events-none fixed inset-x-0 top-4 z-toast flex justify-center px-4">
-      <p className="max-w-full rounded-full bg-ink px-4 py-2 text-body text-card shadow-elevated">
+      <p className="max-w-full rounded-full bg-ink px-4 py-2 text-body-sm text-card shadow-elevated">
         {message}
       </p>
     </div>

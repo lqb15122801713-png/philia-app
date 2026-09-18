@@ -31,8 +31,10 @@ export const LOW_STOCK_THRESHOLD = 10
 /** 商品图上限（v1 管理端口径；服务端 upsertProduct 允许最多 9 张） */
 export const MAX_PRODUCT_IMAGES = 5
 
-/** 分 → 元字符串（两位小数，配合 font-number + tabular-nums 纵向对齐） */
-export const fenToYuan = (fen: number): string => (fen / 100).toFixed(2)
+/** 分 → 元字符串（U4 任务 F：试样整数元口径——整数去 .00，带零头才两位小数；
+    等宽数字由调用方加 tabular-nums / font-number） */
+export const fenToYuan = (fen: number): string =>
+  fen % 100 === 0 ? String(fen / 100) : (fen / 100).toFixed(2)
 
 /** 分 → ¥元 */
 export const fmtMoney = (fen: number | null | undefined): string =>

@@ -43,7 +43,7 @@ export default function PhotoViewer({ state, onClose, onIndexChange }: PhotoView
       onClick={onClose}
     >
       <div className="flex items-center justify-between p-3">
-        <span className="font-number text-body text-[#F6F1E3]/90">
+        <span className="font-number text-body-sm text-[#F6F1E3]/90">
           {index + 1} / {photos.length}
         </span>
         <button
@@ -60,7 +60,7 @@ export default function PhotoViewer({ state, onClose, onIndexChange }: PhotoView
         <img
           src={current.url}
           alt={current.tag ?? `照片 ${index + 1}`}
-          className="max-h-full max-w-full rounded-tag object-contain"
+          className="max-h-full max-w-full rounded-chip object-contain"
           onClick={(e) => e.stopPropagation()}
         />
       </div>

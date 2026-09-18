@@ -85,7 +85,7 @@ export default function TodoSection({
     {
       key: 'pending',
       dot: DOT_MINT,
-      label: '历史待确认',
+      label: '历史待确认单',
       hint: '自动接单已启用 · 仅旧单与改期回退单在此',
       count: stats?.todo.pending ?? 0,
       to: '/appointments?status=pending&from=todo',

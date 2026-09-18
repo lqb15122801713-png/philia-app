@@ -24,6 +24,7 @@ import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider
 import StatCards from '@/components/dashboard/StatCards'
 import TodayTimeline from '@/components/dashboard/TodayTimeline'
 import TodoSection from '@/components/dashboard/TodoSection'
+import { useStepProgress } from '@/components/appointments/useStepProgress'
 import {
   IN_BOARDING_QUERY_KEY,
   STATS_QUERY_KEY,
@@ -116,6 +117,9 @@ export default function DashboardPage() {
     void boardingQuery.refetch()
   }
 
+  /* 今日表服务中行六步进度（胶囊「服务中 N/6」，试样 §2；现成接口共享缓存） */
+  const stepProgress = useStepProgress(todayQuery.data ?? [])
+
   return (
     <MainScaffold
       title="经营总览"
@@ -161,7 +165,7 @@ export default function DashboardPage() {
 
       {/* 两栏：左今日预约表（1.7fr）右待办队列（1fr），gap 14 */}
       <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.7fr_1fr]">
-        <TodayTimeline items={todayQuery.data ?? []} loading={todayQuery.isPending} />
+        <TodayTimeline items={todayQuery.data ?? []} loading={todayQuery.isPending} stepProgress={stepProgress} />
         <TodoSection
           stats={statsQuery.data}
           todayItems={todayQuery.data}

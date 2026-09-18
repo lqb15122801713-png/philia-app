@@ -42,7 +42,7 @@ export default function ServiceCard({ item }: { item: TodayItem }) {
         <p className="text-caption font-bold">
           {item.petName ?? '宠物'} · {item.serviceName ?? '服务'}
         </p>
-        <span className="flex items-center gap-1.5 rounded-chip bg-card px-2 py-0.5 text-caption-xs font-extrabold">
+        <span className="flex items-center gap-1.5 rounded-chip bg-card px-2 py-0.5 text-caption-xs font-bold">
           <i className="h-1.5 w-1.5 rounded-full bg-ink" aria-hidden />
           服务中
         </span>
@@ -51,13 +51,13 @@ export default function ServiceCard({ item }: { item: TodayItem }) {
         {fmtMin(minutesOf(item.scheduledStart))}–{fmtMin(minutesOf(item.scheduledEnd))} · 约 {durationMin} 分钟 ·{' '}
         {item.checkedInAt ? '到店已核销' : '待核销'}
       </p>
-      {/* 六步进度段：薄荷 done / 柠檬 now / 墨灰未到 */}
-      <div className="flex gap-1.5 pb-0.5 pt-2" aria-hidden>
+      {/* 六步进度段（试样 .a-prog：gap 5 / 高 4 / 薄荷 done / 柠檬 now / 墨 6% 未到） */}
+      <div className="flex gap-[5px] pb-0.5 pt-2" aria-hidden>
         {steps.map((s) => (
           <i
             key={s.id}
             className={`h-1 flex-1 rounded-full ${
-              s.status === 'done' ? 'bg-brand-secondary-deep' : s.status === 'active' ? 'bg-brand-primary' : 'bg-[rgba(74,59,46,.18)]'
+              s.status === 'done' ? 'bg-brand-secondary' : s.status === 'active' ? 'bg-brand-primary' : 'bg-[rgba(74,59,46,.06)]'
             }`}
           />
         ))}

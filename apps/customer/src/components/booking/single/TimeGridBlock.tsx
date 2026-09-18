@@ -3,6 +3,9 @@
  * 选中日的 30min 栅格按 上午/下午/晚上 分组展示；可约槽高亮可选，
  * 满槽/已过/「当前+1h 缓冲」内一律灰显禁用（批次 3 统一口径：可约集由
  * getWithServices 服务端过滤供给，集合外全部禁用，前后端同拦）。
+ *
+ * U4-D1 三态工艺（任务书 D-补1）：可约=白底+细线；选中=柠檬底（与日期条同口径）；
+ * 禁用=墨 25% 字+细线 ring（bg 不落死灰，禁用态可辨）；圆角控件档 14，数字 u1-num。
  */
 
 import type { SlotItem } from '../types';
@@ -72,12 +75,12 @@ export default function TimeGridBlock({
                   data-testid={`gs-slot-${fmtHM(t)}`}
                   data-available={ok ? 'true' : 'false'}
                   data-slot-start={t.getTime()}
-                  className={`rounded-card border py-2.5 text-center font-number text-body transition ${
+                  className={`rounded-control border py-2.5 text-center u1-num text-body-sm transition ${
                     active
-                      ? 'border-[1.5px] border-ink font-semibold text-ink'
+                      ? 'border-transparent bg-brand-primary font-semibold text-ink'
                       : ok
-                        ? 'border-line text-ink active:scale-95'
-                        : 'cursor-not-allowed border-transparent text-ink-placeholder line-through'
+                        ? 'border-line bg-card text-ink active:scale-95'
+                        : 'cursor-not-allowed border-line-ring text-ink/25'
                   }`}
                 >
                   {fmtHM(t)}
@@ -87,7 +90,7 @@ export default function TimeGridBlock({
           </div>
         </div>
       ))}
-      <p className="text-caption text-ink-placeholder">灰色为已约满或 1 小时内的临近时段</p>
+      <p className="text-caption text-ink-placeholder">浅色为已约满或 1 小时内的临近时段</p>
     </div>
   );
 }

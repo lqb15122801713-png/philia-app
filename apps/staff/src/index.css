@@ -162,13 +162,27 @@
 }
 
 @layer utilities {
-  /* 横滑 chips 隐藏滚动条（历史页状态筛选等） */
+  /* 横滑 chips 隐藏滚动条（历史页状态筛选等；E-补1 口径：scrollbar-width:none + webkit 伪类双写） */
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
   .no-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+}
+
+@layer base {
+  /* 动效纲领 §四.7 可访问性红线：prefers-reduced-motion 全域降级为静态 */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 

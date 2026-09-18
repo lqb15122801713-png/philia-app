@@ -200,11 +200,18 @@ if (sessions.customer && sessions.merchant && sessions.staff) {
   const service = detail?.services?.find((s) => s.type === 'grooming');
   check('trpc store.getWithServices（洗护服务项）', !!service?.id, `服务=${service?.name} 价格=${service?.priceFen}分`);
 
-  // 4.2 下单：明天 10:00（本地时区，营业时间 09:00-20:00 内）起，满槽 CONFLICT 则 +30min 重试
+  // 4.2 下单：门店规范时区（Asia/Shanghai，固定 +8，与 server B8-B4 口径一致）取
+  // 「明天 10:00」起，满槽 CONFLICT 则 +30min 重试。
+  // U4-G 修复：此前用容器本地时区 setHours(10)——VPS 容器为 UTC 时演示单落在
+  // 门店墙钟 18:00，撞打烊校验（营业时间判定按门店规范时区）。改为位移法：
+  // 先把瞬时移到 +8 墙钟取「明天」，再按 UTC 合成 10:00 并位移回真实 epoch。
   if (pet && store && service) {
-    const start = new Date();
-    start.setDate(start.getDate() + 1);
-    start.setHours(10, 0, 0, 0);
+    const STORE_TZ_OFFSET_MS = 8 * 60 * 60 * 1000;
+    const storeNow = new Date(Date.now() + STORE_TZ_OFFSET_MS);
+    const start = new Date(
+      Date.UTC(storeNow.getUTCFullYear(), storeNow.getUTCMonth(), storeNow.getUTCDate() + 1, 10, 0, 0, 0) -
+        STORE_TZ_OFFSET_MS,
+    );
     let lastErr = null;
     for (let i = 0; i < 16 && !appointmentId; i++) {
       const scheduledStart = new Date(start.getTime() + i * 30 * 60_000);

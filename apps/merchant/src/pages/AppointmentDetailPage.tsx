@@ -23,7 +23,7 @@
 
 import { EventType, usePhiliaClient, type EventEnvelope } from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { CalendarX, Check, CircleX, RefreshCw } from 'lucide-react';
+import { CalendarX, CircleX, RefreshCw } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -37,7 +37,8 @@ import {
   fmtDateTime,
   fmtTime,
   paymentModeLabel,
-  statusLabel,
+  stepDisplayName,
+  STEP_ROWS,
   type AppointmentGetResult,
   type StepListItem,
 } from '../components/appointments/appt-utils';
@@ -51,33 +52,14 @@ import { useMerchantEvents } from '../components/appointments/useMerchantEvents'
 /** SSE 断线时的兜底轮询间隔（与总览页同值） */
 const POLL_FALLBACK_MS = 30_000;
 
-/** 六步展示名（任务书冻结口径；key 顺序即流程顺序，不可乱序渲染） */
-const STEP_ROWS = [
-  { key: 'disinfection', name: '消毒' },
-  { key: 'precheck', name: '预检' },
-  { key: 'grooming', name: '洗护' },
-  { key: 'detail', name: '精修' },
-  { key: 'before_after', name: '前后对比照' },
-  { key: 'confirm', name: '完成确认' },
-] as const;
-const stepName = (key: string): string =>
-  STEP_ROWS.find((s) => s.key === key)?.name ?? key;
+/** 六步展示名（任务书冻结口径；统一表已迁 appt-utils（STEP_ROWS/stepDisplayName），
+    单约监控页与 Hub 动态行同表渲染——规格书 §13「同 §4 stepper」） */
+const stepName = stepDisplayName;
 
 /** 照片标签 → 中文（PhotoViewer 底部透出） */
 const PHOTO_TAG_LABEL: Record<string, string> = { before: '服务前', after: '服务后' };
 
 const SPECIES_LABEL: Record<string, string> = { dog: '狗狗', cat: '猫咪', other: '其他' };
-
-/** 状态 → u3-st 五态（red 留给异常，本页无对应场景） */
-const STATUS_ST: Record<string, string> = {
-  pending: 'wait',
-  confirmed: 'wait',
-  in_service: 'live',
-  in_boarding: 'live',
-  cancel_requested: 'amber',
-  completed: 'done',
-  cancelled: 'done',
-};
 
 type ApptRow = AppointmentGetResult['appointment'];
 type StayRow = AppointmentGetResult['boardingStay'];
@@ -283,7 +265,7 @@ export default function AppointmentDetailPage() {
           ) : (
             <CircleX className="h-9 w-9 text-[rgba(74,59,46,.35)]" strokeWidth={1.5} />
           )}
-          <p className="mt-3 text-[14px] font-extrabold">
+          <p className="mt-3 text-[14px] font-bold">
             {notFound ? '找不到这个预约' : '打不开这个预约'}
           </p>
           <p className="mt-1 text-[12px] text-[rgba(74,59,46,.62)]">
@@ -426,9 +408,6 @@ export default function AppointmentDetailPage() {
       sub={
         <span>
           单号 <span className="u1-num">{appt.code}</span> · {timeLabel} · {durLabel}
-          <span className={`u3-st ml-2 ${STATUS_ST[appt.status] ?? 'wait'}`}>
-            {statusLabel(appt.status)}
-          </span>
         </span>
       }
       actions={actions}
@@ -473,11 +452,8 @@ export default function AppointmentDetailPage() {
                       key={def.key}
                       className={`row ${st === 'done' ? 'done' : st === 'active' ? 'now' : ''}`}
                     >
-                      <i className="dt flex items-center justify-center">
-                        {st === 'done' ? (
-                          <Check className="h-3 w-3 text-[#4A3B2E]" strokeWidth={3} />
-                        ) : null}
-                      </i>
+                      {/* 试样同值锁定：done=纯薄荷圆点（无内嵌图标）/ now=柠檬 / 未到=描边 */}
+                      <i className="dt flex items-center justify-center" />
                       <div className="tx">
                         <b>{def.name}</b>
                         <small>{small}</small>
@@ -583,7 +559,7 @@ export default function AppointmentDetailPage() {
                 {pet?.vaccineValidUntil ? (
                   <span className={vaccineExpired ? 'text-[#D92D20]' : undefined}>
                     有效期至 {pet.vaccineValidUntil}
-                    {vaccineExpired ? '（已过期）' : ''}
+                    {vaccineExpired ? '（已过期）' : ' ✓'}
                   </span>
                 ) : (
                   '未记录'
@@ -618,20 +594,20 @@ export default function AppointmentDetailPage() {
               </div>
               <div className="cell">
                 <div className="cap">收款方式</div>
-                <div className="mt-1 text-[13px] font-bold">
+                <div className="mt-1 text-body-sm font-bold">
                   {paymentModeLabel(appt.paymentMode)}
                 </div>
               </div>
               <div className="cell">
                 <div className="cap">会员折扣</div>
-                <div className="mt-1 text-[13px] font-bold">
+                <div className="mt-1 text-body-sm font-bold">
                   {appt.paymentMode === 'pass_deduct' ? '次卡扣次' : '无'}
                 </div>
               </div>
               <div className="cell">
                 <div className="cap">状态</div>
                 <div
-                  className={`mt-1 text-[13px] font-bold ${payable ? 'text-[#D92D20]' : ''}`}
+                  className={`mt-1 text-body-sm font-bold ${payable ? 'text-[#D92D20]' : ''}`}
                 >
                   {appt.paidAt ? '已收' : appt.status === 'completed' ? '待收款' : '未收'}
                 </div>
@@ -695,7 +671,7 @@ export default function AppointmentDetailPage() {
             type="button"
             disabled={reviewCancelMut.isPending}
             onClick={() => reviewCancelMut.mutate(false)}
-            className="u1-ring h-11 flex-1 rounded-control bg-card text-[13px] font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+            className="u1-ring h-11 flex-1 rounded-control bg-card text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
           >
             拒绝取消
           </button>
@@ -704,7 +680,7 @@ export default function AppointmentDetailPage() {
             disabled={reviewCancelMut.isPending}
             onClick={() => reviewCancelMut.mutate(true)}
             data-testid="detail-approve-cancel"
-            className="h-11 flex-1 rounded-control bg-[#D92D20] text-[13px] font-bold text-[#FFFDF6] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+            className="h-11 flex-1 rounded-control bg-[#D92D20] text-body-sm font-bold text-[#FFFDF6] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
           >
             {reviewCancelMut.isPending ? '处理中…' : '批准取消'}
           </button>

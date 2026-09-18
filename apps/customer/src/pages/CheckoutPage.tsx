@@ -184,20 +184,20 @@ function CheckoutInner() {
         <div className="mt-6">
           <EmptyState
             title="没有待结算的商品"
-            desc="去商城挑点好物，或回购物车勾选商品"
+            desc="去商城挑点好物，或回购物袋勾选商品"
             action={
-              <div className="mt-4 flex gap-3">
+              <div className="flex gap-3">
                 <Link
                   to="/mall"
-                  className="flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                  className="inline-flex items-center rounded-control bg-brand-primary px-[30px] py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
                 >
                   去逛逛
                 </Link>
                 <Link
                   to="/mall/cart"
-                  className="flex h-11 items-center rounded-full bg-card px-8 text-body font-medium text-ink ring-1 ring-line-ring transition-transform duration-120 ease-philia-spring active:scale-92"
+                  className="inline-flex items-center rounded-control bg-card px-[30px] py-[13px] text-body-sm font-semibold text-ink ring-1 ring-line-ring transition-transform duration-120 ease-philia-spring active:scale-92"
                 >
-                  回购物车
+                  回购物袋
                 </Link>
               </div>
             }
@@ -292,7 +292,7 @@ function CheckoutInner() {
             type="button"
             disabled={createOrderM.isPending}
             onClick={handleSubmit}
-            className="h-11 rounded-full bg-philia-gradient px-8 text-body font-medium text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
+            className="h-11 rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
           >
             {createOrderM.isPending ? '提交中…' : '提交订单'}
           </button>

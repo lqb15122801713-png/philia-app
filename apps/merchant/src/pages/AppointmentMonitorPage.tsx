@@ -20,7 +20,6 @@
 
 import {
   EventType,
-  getStepDef,
   usePhiliaClient,
   type EventEnvelope,
   type ServiceStepKey,
@@ -33,6 +32,7 @@ import MainScaffold, { QuietButton } from '../components/MainScaffold';
 import {
   dayKeyOf,
   fmtTime,
+  stepDisplayName,
   type StaffListItem,
   type StepListItem,
 } from '../components/appointments/appt-utils';
@@ -202,7 +202,7 @@ export default function AppointmentMonitorPage() {
     mutationFn: (input: { stepKey: ServiceStepKey; reason?: string }) =>
       trpc.serviceStep.flagForRedo.mutate({ appointmentId: aid!, ...input }),
     onSuccess: (r, vars) => {
-      const label = getStepDef(vars.stepKey)?.name ?? vars.stepKey;
+      const label = stepDisplayName(vars.stepKey);
       toast.success(
         r.reopened
           ? `已打标「${label}」：预约已重新开启（打回服务中），等待员工重拍`
@@ -297,7 +297,7 @@ export default function AppointmentMonitorPage() {
       ) : (
         <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.6fr_1fr]">
           {/* 左：过程照片墙 + 家长端视角 */}
-          <div className="u3-panel">
+          <div className="u3-panel" data-testid="monitor-wall">
             <div className="u3-panel-head">
               <h3>过程照片墙</h3>
               <span className="aside">最新在前 · 点击放大</span>
@@ -427,7 +427,7 @@ export default function AppointmentMonitorPage() {
       {/* 打标重拍确认弹层（现有链路：填原因 → flagForRedo） */}
       <ConfirmDialog
         open={flagOpen && flagTarget !== null}
-        title={`打标重拍「${flagTarget ? (getStepDef(flagTarget.stepKey)?.name ?? flagTarget.stepKey) : ''}」？`}
+        title={`打标重拍「${flagTarget ? (stepDisplayName(flagTarget.stepKey)) : ''}」？`}
         body={
           appt?.status === 'completed'
             ? '该预约已完成：打标将重新开启本预约（打回「服务中」），该步骤回退为「进行中」，员工重拍后需重新确认完成。'

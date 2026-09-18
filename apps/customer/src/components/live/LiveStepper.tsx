@@ -1,19 +1,23 @@
 /**
- * LiveStepper · 客户端服务全程页六步 stepper（批次 U1 任务 E · v9.1 换肤）。
+ * LiveStepper · 客户端服务全程页六步 stepper（批次 U1 任务 E；U4-D2 试样 05 逐格收口）。
  *
- * 结构与数据口径 1:1 沿用共享 StepTimeline（packages/shared/StepTimeline.tsx，
- * 商家端 MonitorTimeline 以其视觉规范为准——共享件本批不动，故客户端落本地副本）：
- * 左轨 24px 节点圆 + 连接线（done 段实线、未到达段虚线），内容区标题/时间戳/
- * active 操作说明/节点下挂 PhotoWall（共享件只读复用，前后对比照区随之保留）。
- *
- * v9.1 三态色票（任务书：薄荷✓完成 / 柠檬进行中 / 墨灰未到；品牌面文字一律深棕墨）：
- * - done   ：24px 薄荷绿圆（brand.secondary）+ 深棕墨 ✓；连接线薄荷实线；
- * - active ：24px 柠檬黄圆 + 深棕墨芯点；标题深棕墨 600 +「进行中」小签
- *            （柠檬浅底 + 深棕墨字，不写反白）；深度策略去呼吸光环（halo 为投影动画）；
- * - locked ：墨灰描边圆 + 小锁（ink-placeholder），标题占位灰，连接线虚线。
+ * 步骤名以 server getStepDef 真实定义为准（试样步骤名为设计文案，不改数据）。
+ * U4-D2 试样取齐（.steps/.step CSS 逐格）：
+ * - 节点圆 24px：done=薄荷底墨 ✓；active=柠檬底 + 步序数字（u1-num 11/700）+
+ *   静态柠檬环影（试样 box-shadow 0 0 0 5px rgba(253,200,48,.25)；U1-E 去除的是
+ *   呼吸光环动画，本环为试样静态工艺，恢复并登记 diff-client）；locked=纸面
+ *   细线环 + 灰数字（去锁图标，试样未到步显步序）；
+ * - 连接线统一 2px 暖墨细线（试样 ink-06 → 令牌 line-ring rgba(74,59,46,.09)），
+ *   不再按 done 段薄荷实线/未到段虚线分色；
+ * - 步骤名 14px（done/active 600、locked 灰 500），meta 行 11px 置于题下
+ *   （试样 .st2 结构：done=完成时刻 u1-num；active=「进行中 · 说明」；
+ *   locked 无说明——server stepDef 无描述字段，不照抄试样设计文案）；
+ * - 过程照横排 64×44（试样 CSS 尺寸；圆角 8 越四档 → 取 chip 6）+ inset 1px
+ *   描边 rgba(0,0,0,.08)；before_after 步仍走共享 PhotoWall 前后并排（哇塞时刻
+ *   既有特性保留）。
  */
 
-import { Check, Lock } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { PhotoWall, getStepDef } from '@philia/shared'
 import type { PhotoWallPhoto, ServiceStepStatus } from '@philia/shared'
 
@@ -21,7 +25,9 @@ import type { PhotoWallPhoto, ServiceStepStatus } from '@philia/shared'
 export interface LiveStepperStep {
   stepKey: string
   status: ServiceStepStatus
+  /** done 步完成时刻（HH:MM） */
   time?: string
+  /** active 步操作说明 */
   description?: string
   photos?: PhotoWallPhoto[]
 }
@@ -32,8 +38,8 @@ export interface LiveStepperProps {
   resolveName?: (stepKey: string) => string
 }
 
-/** 24px 节点圆：薄荷✓完成 / 柠檬进行中 / 墨灰未到。 */
-function StepNode({ status }: { status: ServiceStepStatus }) {
+/** 24px 节点圆：薄荷✓完成 / 柠檬步序数字进行中（静态柠檬环影）/ 纸面细线环灰数字未到。 */
+function StepNode({ status, order }: { status: ServiceStepStatus; order: number }) {
   if (status === 'done') {
     return (
       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-secondary">
@@ -43,76 +49,94 @@ function StepNode({ status }: { status: ServiceStepStatus }) {
   }
   if (status === 'active') {
     return (
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-primary">
-        <span className="h-2 w-2 rounded-full bg-ink" />
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-primary shadow-[0_0_0_5px_rgba(253,200,48,.25)]">
+        <span className="u1-num text-caption-xs font-bold leading-none text-ink">{order}</span>
       </span>
     )
   }
   return (
-    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-[1.5px] border-line-strong bg-card">
-      <Lock className="h-3 w-3 text-ink-placeholder" strokeWidth={1.5} />
+    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-card ring-1 ring-line-ring">
+      <span className="u1-num text-caption-xs font-bold leading-none text-ink-placeholder">{order}</span>
     </span>
   )
 }
 
 export default function LiveStepper({ steps, onPhotoClick, resolveName }: LiveStepperProps) {
   return (
-    <ol className="flex flex-col" data-testid="live-stepper">
+    <ol className="flex flex-col pt-1.5" data-testid="live-stepper">
       {steps.map((step, index) => {
         const isLast = index === steps.length - 1
-        const lineDone = step.status === 'done'
         const name = resolveName?.(step.stepKey) ?? getStepDef(step.stepKey)?.name ?? step.stepKey
+        // meta 行（试样 .st2）：done=完成时刻；active=进行中 · 说明；locked 无
+        const meta =
+          step.status === 'done' && step.time
+            ? step.time
+            : step.status === 'active'
+              ? `进行中${step.description ? ` · ${step.description}` : ''}`
+              : null
 
         return (
-          <li key={step.stepKey} className="relative flex gap-3" data-step-key={step.stepKey} data-step-status={step.status}>
-            {/* 左轨：节点圆 + 连接线，轴线左偏 24px */}
+          <li
+            key={step.stepKey}
+            className="relative flex gap-[13px]"
+            data-step-key={step.stepKey}
+            data-step-status={step.status}
+          >
+            {/* 左轨：节点圆 + 连接线（统一 2px 暖墨细线） */}
             <div className="flex w-6 flex-col items-center">
-              <StepNode status={step.status} />
-              {!isLast ? (
-                lineDone ? (
-                  <span className="min-h-4 w-0.5 flex-1 bg-brand-secondary" />
-                ) : (
-                  <span className="min-h-4 w-0 flex-1 border-l-2 border-dashed border-line-strong" />
-                )
-              ) : null}
+              <StepNode status={step.status} order={index + 1} />
+              {!isLast ? <span className="min-h-4 w-0.5 flex-1 bg-line-ring" /> : null}
             </div>
 
             {/* 内容区 */}
-            <div className={`flex-1 ${isLast ? '' : 'pb-6'}`}>
-              <div className="flex h-6 items-center gap-2">
+            <div className={`flex-1 ${isLast ? '' : 'pb-5'}`}>
+              <div className="flex h-6 items-center">
                 <span
                   className={
-                    step.status === 'active'
-                      ? 'text-body font-semibold text-ink'
-                      : step.status === 'done'
-                        ? 'text-body text-ink'
-                        : 'text-body text-ink-placeholder'
+                    step.status === 'locked'
+                      ? 'text-body-sm font-medium text-ink-placeholder'
+                      : 'text-body-sm font-semibold text-ink'
                   }
                 >
                   {name}
                 </span>
-                {step.status === 'active' ? (
-                  <span className="rounded-chip bg-brand-primary-light px-1.5 py-0.5 text-caption-xs text-ink">
-                    进行中
-                  </span>
-                ) : null}
-                {step.time ? (
-                  <span className="u1-num ml-auto text-caption text-ink-secondary">{step.time}</span>
-                ) : null}
               </div>
 
-              {step.description ? (
-                <p className="mt-1 text-body-sm text-ink-secondary">{step.description}</p>
+              {meta ? (
+                <p className="mt-0.5 text-caption-xs text-ink-secondary">
+                  {step.status === 'done' ? <span className="u1-num">{meta}</span> : meta}
+                </p>
               ) : null}
 
               {step.photos && step.photos.length > 0 ? (
-                <div className="mt-2">
-                  <PhotoWall
-                    photos={step.photos}
-                    stepKey={step.stepKey}
-                    onPhotoClick={(photo, i) => onPhotoClick?.(photo, i, step.stepKey)}
-                  />
-                </div>
+                step.stepKey === 'before_after' ? (
+                  <div className="mt-2">
+                    <PhotoWall
+                      photos={step.photos}
+                      stepKey={step.stepKey}
+                      onPhotoClick={(photo, i) => onPhotoClick?.(photo, i, step.stepKey)}
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-2 flex gap-1.5">
+                    {step.photos.map((p, i) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => onPhotoClick?.(p, i, step.stepKey)}
+                        className="block h-11 w-16 shrink-0 overflow-hidden rounded-chip bg-sunken shadow-[inset_0_0_0_1px_rgba(0,0,0,.08)]"
+                        aria-label={p.tag ?? `照片 ${i + 1}`}
+                      >
+                        <img
+                          src={p.thumbUrl ?? p.url}
+                          alt=""
+                          loading="lazy"
+                          className="h-full w-full object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )
               ) : null}
             </div>
           </li>

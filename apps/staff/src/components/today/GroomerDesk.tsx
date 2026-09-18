@@ -17,7 +17,7 @@ import {
   type EventEnvelope,
 } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
-import { MoonStar, PawPrint } from 'lucide-react';
+import { MoonStar } from 'lucide-react';
 import { useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Toast, { useToast } from '@/components/today/Toast';
@@ -124,8 +124,8 @@ export default function GroomerDesk() {
   }, [axisItems, axis.endMin]);
 
   return (
-    <div className="px-4 pb-6">
-      {/* 1. 顶栏：日期 + 门店·周几·排班段 + 头像薄荷环进 /me */}
+    <div className="px-[22px] pb-6">
+      {/* 1. 顶栏：日期 + 门店·周几·排班段 + 头像薄荷环进 /me（试样 30px 环=2px 纸缝+3px 薄荷） */}
       <header className="flex items-start justify-between pt-3">
         <div>
           <h1 className="text-title-lg font-bold">今天 · {todayLabel(now).split(' ')[0]}</h1>
@@ -138,12 +138,17 @@ export default function GroomerDesk() {
           to="/me"
           aria-label="我的"
           data-testid="deck-avatar"
-          className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FFFDF6,0_0_0_3.5px_#7FD8BE] transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FFFDF6,0_0_0_3px_#7FD8BE] transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           {meRawQ.data?.user?.avatarUrl ? (
             <img src={meRawQ.data.user.avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
           ) : (
-            <PawPrint className="h-4 w-4 text-ink" strokeWidth={1.6} />
+            /* E-补1 空数据态字圈工艺：浅木底 + 衬线首字（客户端 D-补3 同口径），不用 PawPrint 占位 */
+            <span className="flex h-full w-full items-center justify-center rounded-full bg-oak-light" aria-hidden>
+              <span className="u1-serif text-caption-xs font-semibold text-ink">
+                {(staff?.name ?? meRawQ.data?.user?.nickname ?? '员').slice(0, 1)}
+              </span>
+            </span>
           )}
         </Link>
       </header>

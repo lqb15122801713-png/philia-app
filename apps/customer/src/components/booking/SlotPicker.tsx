@@ -81,7 +81,7 @@ export default function SlotPicker({
   return (
     <div>
       {/* 日分组条 */}
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {days.map((d, i) => {
           const hasAny = d.grid.some((t) => availableSet.has(t.getTime()));
           return (

@@ -102,25 +102,23 @@ export default function AppointmentsPage() {
       ) : listQ.isError ? (
         <p className="mt-10 text-center text-body text-ink-secondary">加载失败，请下拉重试</p>
       ) : totalCount === 0 ? (
-        /* U1-I：全域统一空态组件 */
-        <div className="mt-10">
-          <EmptyState
-            title="还没有预约"
-            desc="给毛孩子安排一次舒服的洗护吧"
-            action={
-              <Link
-                to="/booking"
-                className="mt-4 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
-              >
-                立即预约
-              </Link>
-            }
-          />
-        </div>
+        /* U1-I：全域统一空态组件（U4-D3 试样 12 工艺；行动钮统一柠檬控件档） */
+        <EmptyState
+          title="还没有预约"
+          desc="给毛孩子安排一次舒服的洗护吧"
+          action={
+            <Link
+              to="/booking"
+              className="inline-flex items-center rounded-control bg-brand-primary px-[30px] py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+            >
+              立即预约
+            </Link>
+          }
+        />
       ) : (
         <>
-          {/* 状态分组 Tab */}
-          <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+          {/* 状态分组 Tab（D-补2：横滑条隐藏） */}
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {TABS.map((t) => {
               const n = countOf(t);
               return (

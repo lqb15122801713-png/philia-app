@@ -17,6 +17,17 @@
  * 4. 成长护照预告行：置灰「9c 解锁」（静态预告行，非按钮不挂链，不造假互动）；
  * 5. 守护市集入口行：无市集路由（App.tsx 路由表无）——该行隐藏（任务书口径）；
  * 禁做假互动：喂食/玩耍/打扮/拍照四钮不做；「定制我的崽」入口隐藏（AI 生成接口待拍板）。
+ *
+ * U4-D2（试样 06 逐格收口）：
+ * - 成长三格补齐真实可聚合第三项「累计消费」（listMine completed priceFen 合计
+ *   fenToYuan，HomePage stats 行同口径）；守护值位不造假维持不出（裁定 #23 豁免）；
+ *   大数字 u1-num 20/700（试样 800 字重 → 自托管 Montserrat 仅至 700）；grid-cols-3；
+ * - 三胶囊卡阵退役 → 试样 q-row 细线列表行工艺（U4-A 首页次级行同工艺：oak-light
+ *   圆角 14 图标芯片 + 名 14/600 + 述 11 + ›），成长护照预告行并入同组；
+ * - 形象位宠物名换 u1-serif 衬线展示位（试样 .q-name）；日记卡圆角 16 越四档
+ *   → panel 20 + 细线 ring；text-body(15) 越字阶处取 14；
+ * - 维持不动（登记）：顶部问候语+关闭钮（试样为 serif wordmark+守护值，守护值无真值）；
+ *   LV/进度条/喂食玩耍打扮拍照四钮无真实字段/接口（U1-F 禁做假互动在案）。
  */
 
 import { useQuery } from '@tanstack/react-query'
@@ -26,12 +37,15 @@ import { Link, useNavigate } from 'react-router-dom'
 import { PhotoWall, useMe, usePhiliaClient } from '@philia/shared'
 import type { PhotoWallPhoto } from '@philia/shared'
 import HomeBookingPanel from '../components/home/HomeBookingPanel'
+import { fenToYuan } from '@/components/booking/format'
 import {
   EmptyState,
   ErrorState,
   LoadingBlock,
   formatDateCn,
 } from '../components/home/common'
+
+const HAIRLINE = 'border-t border-[rgba(74,59,46,.09)]'
 
 /** 按时段的问候语 */
 function greeting(): string {
@@ -81,13 +95,13 @@ function PetAvatarRail() {
     return (
       <Link
         to="/philia/pets"
-        className="flex items-center gap-4 rounded-card bg-card p-4 shadow-card transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+        className="u1-card flex items-center gap-4 p-4 transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
       >
         <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-primary-light">
           <Plus className="h-7 w-7 text-brand-primary" strokeWidth={1.5} />
         </span>
         <span className="flex-1">
-          <span className="block text-body font-semibold">建立第一份宠物档案</span>
+          <span className="block text-body-sm font-semibold">建立第一份宠物档案</span>
           <span className="mt-0.5 block text-caption text-ink-secondary">
             记录 TA 的品种、生日与疫苗，开启菲丽亚之旅
           </span>
@@ -109,8 +123,7 @@ function PetAvatarRail() {
       <div
         ref={railRef}
         onScroll={onScroll}
-        className="-mx-4 flex snap-x snap-mandatory overflow-x-auto px-4"
-        style={{ scrollbarWidth: 'none' }}
+        className="-mx-4 flex snap-x snap-mandatory overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {pets.map((pet) => (
           <div key={pet.id} className="flex w-full shrink-0 snap-center flex-col items-center py-1">
@@ -123,13 +136,15 @@ function PetAvatarRail() {
                   className="h-36 w-36 rounded-full object-cover ring-1 ring-line-ring"
                 />
               ) : (
-                <span className="flex h-36 w-36 items-center justify-center rounded-full bg-brand-secondary-light ring-1 ring-line-ring">
-                  <PawPrint className="h-14 w-14 text-brand-primary" strokeWidth={1.5} />
+                /* D-补3 字圈工艺：浅木底 + 衬线首字（D1 洗护师字圈同口径），不再用 PawPrint 图标占位 */
+                <span className="flex h-36 w-36 items-center justify-center rounded-full bg-oak-light ring-1 ring-line-ring">
+                  <span className="u1-serif text-detail-lg font-semibold text-ink">{pet.name.slice(0, 1)}</span>
                 </span>
               )}
             </span>
-            <p className="mt-3 text-title">{pet.name}</p>
-            <p className="mt-0.5 text-caption text-ink-secondary">
+            {/* U4-D2：宠物名衬线展示位（试样 .q-name）；物种·品种行取 11（试样 10px 越阶） */}
+            <p className="u1-serif mt-3 text-title">{pet.name}</p>
+            <p className="mt-0.5 text-caption-xs text-ink-secondary">
               {SPECIES_LABEL[pet.species] ?? '小可爱'}
               {pet.breed ? ` · ${pet.breed}` : ''}
             </p>
@@ -202,7 +217,7 @@ function DiaryFeed() {
         />
       ) : (
         entries.map((e) => (
-          <article key={e.appointmentId} className="rounded-card bg-card p-3 shadow-card">
+          <article key={e.appointmentId} className="u1-card p-3">
             <PhotoWall photos={[e.before, e.after]} stepKey="before_after" />
             <p className="mt-2 text-caption text-ink-secondary">
               {e.doneAt ? formatDateCn(e.doneAt) : ''}
@@ -216,9 +231,9 @@ function DiaryFeed() {
       {Array.from({ length: tipsNeeded }).map((_, i) => {
         const tip = CARE_TIPS[i % CARE_TIPS.length]!
         return (
-          <article key={`tip-${i}`} className="rounded-card bg-brand-primary-light p-4">
+          <article key={`tip-${i}`} className="rounded-panel bg-brand-primary-light p-4">
             <p className="text-caption text-brand-primary-pressed">养宠小贴士</p>
-            <p className="mt-1 text-body font-semibold">{tip.title}</p>
+            <p className="mt-1 text-body-sm font-semibold">{tip.title}</p>
             <p className="mt-1 text-caption text-ink-secondary">{tip.desc}</p>
           </article>
         )
@@ -235,8 +250,11 @@ const CAPSULES = [
 
 const DAY_MS = 86_400_000
 
-/** U1-F 真实三数（守护值无真实来源→两项显示）：陪伴天数（user.createdAt 距今）· 服务次数
- *  （listMine completed 数）。queryKey 与首页/会员页同源缓存共享；查询失败整行隐去。 */
+/** U4-D2 成长三格（规格书 §4：Montserrat 大数字；守护值无真实来源不出，裁定 #23 豁免）：
+ *  陪伴天数（user.createdAt 距今）· 服务次数（listMine completed 数）· 累计消费
+ *  （completed priceFen 合计 fenToYuan）——HomePage stats 行同口径；
+ *  queryKey 与首页/会员页同源缓存共享；查询失败整行隐去。
+ *  大数字 20/700（试样 800 字重 → 自托管 Montserrat 仅至 700，登记）。 */
 function TriStats() {
   const { trpc } = usePhiliaClient()
   const { user } = useMe()
@@ -257,22 +275,24 @@ function TriStats() {
   const joinDays = createdAt
     ? Math.max(1, Math.floor((Date.now() - new Date(createdAt).getTime()) / DAY_MS) + 1)
     : null
-  const completedCount = mineQ.data?.groups.completed.length ?? null
+  const completedList = mineQ.data?.groups.completed ?? []
+  const totalFen = completedList.reduce((s, a) => s + a.priceFen, 0)
   const items = [
     { label: '陪伴天数', value: joinDays !== null ? `${joinDays} 天` : null },
-    { label: '服务次数', value: completedCount !== null && completedCount > 0 ? `${completedCount} 次` : null },
+    { label: '服务次数', value: completedList.length > 0 ? `${completedList.length} 次` : null },
+    { label: '累计消费', value: completedList.length > 0 ? fenToYuan(totalFen) : null },
   ].filter((i) => i.value !== null)
   if (items.length === 0) return null
   return (
     <section
       data-testid="philia-tri-stats"
       aria-label="陪伴数据"
-      className="mt-5 grid grid-cols-2 gap-2 border-y border-[rgba(74,59,46,.09)] py-3"
+      className="mt-5 grid grid-cols-3 gap-2 border-y border-[rgba(74,59,46,.09)] py-3"
     >
       {items.map((i) => (
         <p key={i.label} className="text-center">
-          <span className="u1-num block text-body font-semibold leading-6">{i.value}</span>
-          <span className="block text-caption-xs leading-4 text-ink-secondary">{i.label}</span>
+          <span className="u1-num block text-title-lg font-bold leading-7">{i.value}</span>
+          <span className="mt-0.5 block text-caption-xs leading-4 text-ink-secondary">{i.label}</span>
         </p>
       ))}
     </section>
@@ -347,7 +367,7 @@ export default function PhiliaPage() {
             type="button"
             onClick={close}
             aria-label="关闭"
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-card shadow-card transition-transform duration-120 ease-philia-spring active:scale-92"
+            className="u1-ring flex h-11 w-11 items-center justify-center rounded-full bg-card transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             <X className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
           </button>
@@ -366,30 +386,51 @@ export default function PhiliaPage() {
           <HomeBookingPanel />
         </div>
 
-        {/* 三胶囊卡（真实链路保留） */}
-        <div className="mt-6 grid grid-cols-3 gap-3">
-          {CAPSULES.map(({ to, label, desc, icon: Icon }) => (
+        {/* U4-D2：三胶囊卡阵 → 试样 q-row 细线列表行工艺（U4-A 首页次级行同工艺：
+            oak-light 圆角 14 图标芯片 + 名 14/600 + 述 11 + › 墨 30%）；真实链路保留。
+            成长护照预告行并入同组（置灰静态「9c 解锁」，非按钮不挂链）；
+            守护市集行无路由隐藏（任务书口径）。 */}
+        <div className="mt-6">
+          {CAPSULES.map(({ to, label, desc, icon: Icon }, i) => (
             <Link
               key={to}
               to={to}
-              className="flex flex-col items-center gap-1.5 rounded-full bg-card px-2 py-4 shadow-card transition-transform duration-120 ease-philia-spring active:scale-92"
+              className={`flex items-center gap-3 py-4 transition-transform duration-120 ease-philia-spring active:scale-[0.98] ${i > 0 ? HAIRLINE : ''}`}
             >
-              <Icon className="h-6 w-6 text-brand-primary" strokeWidth={1.5} />
-              <span className="text-body font-semibold">{label}</span>
-              <span className="text-caption text-ink-placeholder">{desc}</span>
+              <span
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-oak-light"
+                aria-hidden="true"
+              >
+                <Icon className="h-5 w-5 text-ink/60" strokeWidth={1.5} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-body-sm font-semibold leading-5">{label}</span>
+                <span className="mt-0.5 block text-caption-xs text-ink-secondary">{desc}</span>
+              </span>
+              <span className="shrink-0 text-ink/30" aria-hidden="true">
+                ›
+              </span>
             </Link>
           ))}
-        </div>
-
-        {/* U1-F 成长护照预告行：置灰「9c 解锁」（静态预告，非按钮不挂链）；守护市集行无路由隐藏 */}
-        <div
-          data-testid="philia-passport-teaser"
-          aria-disabled="true"
-          className="mt-6 flex items-center gap-3 border-t border-[rgba(74,59,46,.09)] pt-4 opacity-60"
-        >
-          <BookOpen className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} aria-hidden="true" />
-          <span className="flex-1 text-body-sm text-ink-secondary">成长护照</span>
-          <span className="rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">9c 解锁</span>
+          <div
+            data-testid="philia-passport-teaser"
+            aria-disabled="true"
+            className={`flex items-center gap-3 py-4 opacity-60 ${HAIRLINE}`}
+          >
+            <span
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-oak-light"
+              aria-hidden="true"
+            >
+              <BookOpen className="h-5 w-5 text-ink/60" strokeWidth={1.5} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-body-sm font-semibold leading-5">成长护照</span>
+              <span className="mt-0.5 block text-caption-xs text-ink-secondary">护照盖章预告</span>
+            </span>
+            <span className="shrink-0 rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">
+              9c 解锁
+            </span>
+          </div>
         </div>
 
         {/* 菲丽亚日记 */}

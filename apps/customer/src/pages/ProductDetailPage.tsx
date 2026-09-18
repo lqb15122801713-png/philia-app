@@ -13,7 +13,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Minus, Plus, Store } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import CartLink from '../components/mall/CartLink';
 import { BackButton } from '../components/PageHeader';
 import { CartProvider, MAX_QTY, useCart, type AddInput } from '../components/mall/cartStore';
 import ConfirmSheet from '../components/mall/ConfirmSheet';
@@ -80,8 +79,8 @@ function DetailInner() {
   /* ---------------- 异常态 ---------------- */
   if (productQ.isPending) {
     return (
-      <div className="px-4 py-6">
-        <div className="aspect-square animate-pulse rounded-card bg-sunken" />
+      <div className="px-[22px] py-6">
+        <div className="h-[300px] animate-pulse rounded-panel bg-sunken" />
         <div className="mt-4 h-5 w-2/3 animate-pulse rounded-tag bg-sunken" />
         <div className="mt-2 h-5 w-1/3 animate-pulse rounded-tag bg-sunken" />
       </div>
@@ -89,14 +88,14 @@ function DetailInner() {
   }
   if (productQ.isError || !product) {
     return (
-      <div className="flex flex-col items-center px-4 py-16">
-        <img src="/brand/empty-appointments-800.png" alt="商品不存在" className="w-48 max-w-full rounded-card" />
+      <div className="flex flex-col items-center px-[22px] py-16">
+        <img src="/brand/empty-appointments-800.png" alt="商品不存在" className="w-48 max-w-full rounded-panel" />
         <p className="mt-4 text-title">
           {productQ.isError ? friendlyError(productQ.error, '商品不存在或已下架') : '商品不存在或已下架'}
         </p>
         <Link
           to="/mall"
-          className="mt-6 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="mt-6 flex items-center rounded-control bg-brand-primary px-[30px] py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           返回商城
         </Link>
@@ -108,7 +107,7 @@ function DetailInner() {
     <div className="pb-32">
       {toastEl}
 
-      {/* 大图轮 */}
+      {/* 大图轮（U4-D3 对齐试样 .pdp-hero：高 300px 通栏，可横滑多图） */}
       <div className="relative">
         <div
           ref={trackRef}
@@ -121,12 +120,12 @@ function DetailInner() {
         >
           {(images.length > 0 ? images : [null]).map((u, i) => (
             <div key={i} className="w-full shrink-0 snap-center">
-              <ProductImage src={u} alt={`${product.name} 图 ${i + 1}`} className="aspect-square w-full" />
+              <ProductImage src={u} alt={`${product.name} 图 ${i + 1}`} className="h-[300px] w-full" />
             </div>
           ))}
         </div>
-        {/* 返回按钮（U1-A：统一圆钮，主图通栏场景保持浮动形态） */}
-        <BackButton className="absolute left-4 top-4 h-10 w-10 bg-card/90" />
+        {/* 返回按钮（U1-A：统一圆钮 36px，主图通栏场景保持浮动形态；试样 .nav .back） */}
+        <BackButton className="absolute left-4 top-4" />
         {/* 圆点指示 */}
         {images.length > 1 ? (
           <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
@@ -142,62 +141,40 @@ function DetailInner() {
         ) : null}
       </div>
 
-      {/* 信息区 */}
-      <div className="px-4 pt-4">
-        <div className="flex items-start justify-between gap-3">
-          <p className="font-number text-price text-brand-primary">{fenToYuan(product.priceFen)}</p>
+      {/* 信息区（试样 .pdp-body：米白面 -22px 叠上主图，顶圆角取四档 panel 20） */}
+      <div className="relative -mt-[22px] rounded-t-panel bg-canvas px-[22px] pt-5">
+        <h1 className="text-title font-bold">{product.name}</h1>
+        {/* 价格行（试样 .pdp-price：大价 24px 越字阶闸门→取 20 text-price，墨色非柠檬字） */}
+        <div className="mt-2.5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <p className="u1-num text-price font-bold text-ink">{fenToYuan(product.priceFen)}</p>
+            {/* U1-G 会员价（诚实处理，U4-D3 登记）：无折扣引擎/会员价字段——不显示价格数字；
+                试样薄荷小签位以诚实提示填充（细则上线后替换为真实会员价） */}
+            <span
+              data-testid="pdp-member-price-note"
+              className="rounded-chip bg-brand-secondary/35 px-[7px] py-0.5 text-caption-xs font-semibold text-ink"
+            >
+              会员价细则即将公布
+            </span>
+          </div>
           {soldOut ? (
-            <span className="rounded-full bg-sunken px-2.5 py-1 text-caption text-ink-placeholder">已售罄</span>
+            <span className="rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">已售罄</span>
           ) : stock < 10 ? (
-            <span className="rounded-full bg-danger-light px-2.5 py-1 font-number text-caption text-danger-deep">
+            <span className="rounded-chip bg-danger-light px-2 py-0.5 font-number text-caption-xs text-danger-deep">
               仅剩 {stock} 件
             </span>
           ) : null}
         </div>
-        <h1 className="mt-2 text-title-lg">{product.name}</h1>
-        <p className="mt-1.5 flex items-center gap-1 text-caption text-ink-secondary">
+        <p className="mt-2.5 flex items-center gap-1 text-caption text-ink-secondary">
           <Store className="h-3.5 w-3.5" strokeWidth={1.5} />
           {storeName} · 门店同价 · 正品保障
         </p>
-        {/* U1-G 会员价行（诚实处理）：当前无折扣引擎——不显会员价数字，
-            以静态提示行说明（二选一取「提示行」，PR 注明；细则上线后替换为真实会员价） */}
-        <p data-testid="pdp-member-price-note" className="mt-1.5 text-caption-xs text-ink-placeholder">
-          会员价细则即将公布
-        </p>
 
-        {/* 数量 */}
-        {!soldOut ? (
-          <div className="u1-card mt-4 flex items-center justify-between p-3.5">
-            <span className="text-body text-ink-secondary">购买数量</span>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                aria-label="减少数量"
-                disabled={qty <= 1}
-                onClick={() => setQty((q) => Math.max(1, q - 1))}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-sunken text-ink transition disabled:opacity-40"
-              >
-                <Minus className="h-4 w-4" strokeWidth={1.5} />
-              </button>
-              <span className="w-8 text-center font-number text-body">{qty}</span>
-              <button
-                type="button"
-                aria-label="增加数量"
-                disabled={qty >= Math.min(stock, MAX_QTY)}
-                onClick={() => setQty((q) => Math.min(Math.min(stock, MAX_QTY), q + 1))}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-sunken text-ink transition disabled:opacity-40"
-              >
-                <Plus className="h-4 w-4" strokeWidth={1.5} />
-              </button>
-            </div>
-          </div>
-        ) : null}
-
-        {/* 详情描述 */}
+        {/* 详情描述（真实字段；试样规格表/评价区无真实字段来源，不出——U4-D3 登记） */}
         {product.description ? (
-          <div className="u1-card mt-3 p-4">
-            <p className="text-title">商品详情</p>
-            <p className="mt-2 whitespace-pre-line text-body leading-relaxed text-ink-secondary">
+          <div className="u1-card mt-4 p-4">
+            <p className="text-body-sm font-semibold">商品详情</p>
+            <p className="mt-2 whitespace-pre-line text-body-sm leading-relaxed text-ink-secondary">
               {product.description}
             </p>
           </div>
@@ -205,27 +182,55 @@ function DetailInner() {
       </div>
 
       {/* 底部固定栏（U1-A 起 PDP 为详情级无 dock，落底 safe-area；
-          U1-G 双钮：加购=细线钮 / 立即买=柠檬黄实底深棕墨字，去渐变） */}
+          U4-D3 对齐试样 .pdp-bar：左=数量步进 pill（bg ink-06 全圆）+
+          「加入购物袋」墨底米白字 +「立即购买 · ¥X」柠檬底墨字，控件档圆角 14；
+          试样底栏无购物袋入口——移除（购物袋经商城页头 pill 可达，登记）） */}
       <div className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-sticky border-t border-[rgba(74,59,46,.09)] bg-card">
-        <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
-          <CartLink className="shadow-none" />
+        <div className="mx-auto flex max-w-lg items-center gap-2.5 px-4 pb-4 pt-3">
+          {!soldOut ? (
+            <div className="flex shrink-0 items-center gap-0.5 rounded-full bg-sunken p-[3px]">
+              <button
+                type="button"
+                aria-label="减少数量"
+                disabled={qty <= 1}
+                onClick={() => setQty((q) => Math.max(1, q - 1))}
+                className="flex h-[30px] w-[30px] items-center justify-center rounded-full text-ink transition disabled:opacity-40"
+              >
+                <Minus className="h-4 w-4" strokeWidth={2} />
+              </button>
+              <span className="u1-num min-w-5 text-center text-body-sm font-bold">{qty}</span>
+              <button
+                type="button"
+                aria-label="增加数量"
+                disabled={qty >= Math.min(stock, MAX_QTY)}
+                onClick={() => setQty((q) => Math.min(Math.min(stock, MAX_QTY), q + 1))}
+                className="flex h-[30px] w-[30px] items-center justify-center rounded-full text-ink transition disabled:opacity-40"
+              >
+                <Plus className="h-4 w-4" strokeWidth={2} />
+              </button>
+            </div>
+          ) : null}
           <button
             type="button"
             disabled={soldOut}
             onClick={handleAddCart}
             data-testid="pdp-add-cart"
-            className="h-11 flex-1 rounded-full bg-card text-body font-medium text-ink ring-1 ring-line-ring transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
+            className="flex-1 rounded-control bg-ink py-[13px] text-body-sm font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
           >
-            加入购物车
+            加入购物袋
           </button>
           <button
             type="button"
             disabled={soldOut}
             onClick={handleBuyNow}
             data-testid="pdp-buy-now"
-            className="h-11 flex-1 rounded-full bg-brand-primary text-body font-semibold text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
+            className="flex-1 rounded-control bg-brand-primary py-[13px] text-body-sm font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
           >
-            {soldOut ? '已售罄' : '立即购买'}
+            {soldOut ? '已售罄' : (
+              <>
+                立即购买 · <span className="u1-num">{fenToYuan(product.priceFen * qty)}</span>
+              </>
+            )}
           </button>
         </div>
       </div>

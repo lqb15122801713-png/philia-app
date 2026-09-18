@@ -1,33 +1,46 @@
 /**
  * B9a 任务 B · 首页主区服务中面板（有进行中洗护预约时替换常态一键再约面板）。
  *
- * 内容（任务书口径）：当前步骤名 + 第 N 步/共 6 步 + 细线进度条 +
- * 最新员工照片缩略（复用 serviceStep.list 的未失效照片 + thumbUrl 缩略，不新增接口）
- * +「查看实时直播 ›」（进 /appointments/:id/live 直播页）。
+ * U4-B 密度补齐（批次 U4 任务书，对照试样 03 屏 .instore2 逐格）：
+ * 1. r1 标题行：「{宠物} · 洗护中」（衬线展示位）+ SSE 真值状态点——
+ *    connected 绿点「实时同步」/ 断线灰点「重连中」（useEventSource connected
+ *    真值上行，不许常亮造假）；
+ * 2. 进度条：2px 暖墨轨道 + 柠檬实底填充至「第 N/6 步」（active 步序优先，
+ *    无 active 回退已完成步数；线上空白细线不可读已修）；
+ * 3. r2 信息行：第 N / 6 步 · 步骤名 · 员工名（store.listStaffPublic 现成接口
+ *    解析 staffId，零新接口）· 预计 HH:MM 完成（scheduledEnd 真字段）——
+ *    任一段无真值即整段隐去，不造假；
+ * 4. r3 过程照片缩略列：最近 3 张（56×42 圆角 6，U4 任务书口径；试样 46×32
+ *    以任务书为准），无照片不渲染缩略列；「查看全程 ›」跳现行直播路由
+ *    /appointments/:id/live（任务书所写 /booking/journey 非现行路由，按
+ *    「现行路由口径不变」维持）。
  *
  * 数据与实时：步骤/照片来自 serviceStep.list（queryKey ['serviceStep','list',aid]，
- * 与直播页同源）；SSE 事件到达由 HomeBookingPanel 统一 invalidate 该 query（见容器头注）。
- *
- * 视觉同 v3 减法：hairline 分隔、缩略图 rounded-tag(8)、无 accent 色块
- * （直播入口为文字链接；全屏唯一 accent 留给常态面板 CTA / 本面板无 CTA）。
- * B9.3：面板本体按试样带一层软阴影（shadow-card），去描边。
+ * 与直播页同源）；SSE 事件到达由 HomeBookingPanel 统一 invalidate 该 query。
  */
 
 import { Link } from 'react-router-dom';
+import { fmtHM } from '@/components/booking/format';
 
 export interface InServicePanelProps {
   appointmentId: string;
   petName: string;
-  /** 当前步骤展示名（如「洗澡美容」；步骤数据未就绪为 null） */
+  /** 当前步骤展示名（如「深层清洁」；步骤数据未就绪为 null） */
   stepName: string | null;
   /** 当前 active 步序（1-6；未就绪为 null） */
   stepOrder: number | null;
   /** 总步数（六步流恒 6） */
   totalSteps: number;
-  /** 已完成步数（进度条口径：done/totalSteps） */
+  /** 已完成步数（无 active 步时的进度条回退口径） */
   doneCount: number;
   /** 最新员工照片缩略（takenAt 新→旧，最多 3 张） */
   photos: { id: string; thumbUrl: string }[];
+  /** SSE 连接真值（绿点「实时同步」/ 灰点「重连中」） */
+  sseConnected: boolean;
+  /** 指派员工名（listStaffPublic 解析；未指派/未解析为 null → 段隐去） */
+  staffName: string | null;
+  /** 预计完成时刻（appointments.scheduledEnd 真字段；null → 段隐去） */
+  etaEnd: Date | null;
 }
 
 export default function InServicePanel({
@@ -38,8 +51,13 @@ export default function InServicePanel({
   totalSteps,
   doneCount,
   photos,
+  sseConnected,
+  staffName,
+  etaEnd,
 }: InServicePanelProps) {
-  const pct = Math.round((doneCount / totalSteps) * 100);
+  // 进度：可视「第 N/6 步」——active 步序优先，无 active（待开工/已完结间隙）回退已完成数
+  const progressStep = stepOrder ?? doneCount;
+  const pct = Math.round((progressStep / totalSteps) * 100);
 
   return (
     <section
@@ -47,45 +65,31 @@ export default function InServicePanel({
       className="u1-card p-4"
       aria-label="服务进行中"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-caption text-ink-secondary">{petName} · 服务进行中</p>
-          <h2 className="mt-0.5 text-title" data-testid="home-inservice-step">
-            {stepName ?? '服务准备中'}
-          </h2>
-          <p className="mt-0.5 text-caption text-ink-secondary font-number">
-            {stepOrder !== null ? `第 ${stepOrder} 步 / 共 ${totalSteps} 步` : `共 ${totalSteps} 步`}
-          </p>
-        </div>
-
-        {/* 最新员工照片缩略（最多 3 张，新→旧；点击进直播页看原图） */}
-        {photos.length > 0 ? (
-          <Link
-            to={`/appointments/${appointmentId}/live`}
-            className="flex shrink-0 gap-1.5"
-            data-testid="home-inservice-photos"
-            aria-label="查看最新服务照片"
-          >
-            {photos.map((p) => (
-              <img
-                key={p.id}
-                src={p.thumbUrl}
-                alt="服务照片"
-                loading="lazy"
-                className="h-12 w-12 rounded-tag bg-sunken object-cover"
-              />
-            ))}
-          </Link>
-        ) : null}
+      {/* r1：标题 + SSE 真值状态点 */}
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="u1-serif text-title" data-testid="home-inservice-step">
+          {petName} · 洗护中
+        </h2>
+        <span
+          data-testid="home-inservice-sync"
+          data-connected={sseConnected}
+          className="flex shrink-0 items-center gap-[5px] text-caption-xs leading-4 text-ink-secondary"
+        >
+          <i
+            className={`h-1.5 w-1.5 rounded-full ${sseConnected ? 'bg-brand-secondary' : 'bg-ink/30'}`}
+            aria-hidden="true"
+          />
+          {sseConnected ? '实时同步' : '重连中'}
+        </span>
       </div>
 
-      {/* 2px 细线进度条（已完成步数 / 共 6 步，柠檬段）；U1-C 换肤：h-1(4px) → h-0.5(2px) */}
+      {/* 进度条：2px 暖墨轨道 + 柠檬实底填充第 N/6 步（role=progressbar 保留） */}
       <div
-        className="mt-3 h-0.5 w-full overflow-hidden rounded-full bg-sunken"
+        className="mb-[9px] mt-3 h-0.5 w-full overflow-hidden rounded-full bg-line-ring"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={totalSteps}
-        aria-valuenow={doneCount}
+        aria-valuenow={progressStep}
         data-testid="home-inservice-progress"
         data-step-order={stepOrder ?? ''}
         data-done-count={doneCount}
@@ -96,11 +100,48 @@ export default function InServicePanel({
         />
       </div>
 
-      <div className="mt-3 flex justify-end border-t border-[rgba(74,59,46,.09)] pt-3">
+      {/* r2：第 N / 6 步 · 步骤名 · 员工 · 预计完成（缺真值的段整段隐去） */}
+      <p className="text-caption-xs leading-4 text-ink-secondary">
+        {stepOrder !== null ? (
+          <>
+            第{' '}
+            <b className="u1-num font-semibold text-ink">
+              {stepOrder} / {totalSteps}
+            </b>{' '}
+            步
+          </>
+        ) : (
+          <>共 {totalSteps} 步 · 等待开工</>
+        )}
+        {stepName ? ` · ${stepName}` : ''}
+        {staffName ? ` · ${staffName}` : ''}
+        {etaEnd ? (
+          <>
+            {' '}
+            · 预计 <b className="u1-num font-semibold text-ink">{fmtHM(new Date(etaEnd))}</b> 完成
+          </>
+        ) : null}
+      </p>
+
+      {/* r3：过程照片缩略列（56×42 圆角 6，最多 3 张新→旧；无照片不渲染缩略列）
+          + 查看全程 ›（现行直播路由不变） */}
+      <div className="mt-[11px] flex items-center gap-1.5">
+        {photos.length > 0
+          ? photos.map((p) => (
+              <img
+                key={p.id}
+                src={p.thumbUrl}
+                alt="服务照片"
+                loading="lazy"
+                data-testid="home-inservice-photos"
+                className="h-[42px] w-14 rounded-chip bg-sunken object-cover"
+              />
+            ))
+          : null}
         <Link
           to={`/appointments/${appointmentId}/live`}
           data-testid="home-inservice-live"
-          className="text-caption font-medium text-brand-primary"
+          className="ml-auto shrink-0 text-caption-xs font-bold leading-4 text-ink"
         >
           查看全程 ›
         </Link>

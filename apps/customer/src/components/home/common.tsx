@@ -9,6 +9,7 @@
 
 import { AlertCircle, RefreshCw } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { PawMark } from '../AppDock'
 
 /** 区块外壳：标题 + 可选右侧动作 + 内容 */
 export function SectionShell({
@@ -70,25 +71,28 @@ export function ErrorState({ message, onRetry }: { message?: string; onRetry?: (
   )
 }
 
-/** 空态（U1-I 全域统一组件）：philia 插画 + 一句话（标题+说明）+ 一行动（可选）。
- *  形态=U1-B 细线卡（ring + 近零影）；各页空态一律走本组件，不再手写内联空态。 */
+/** 空态（U1-I 全域统一组件；U4-D3 对齐试样 12 屏工艺）：philia 精灵插画位
+ *  =浅木圆（VI 空间色 oak #D4B896）+ 爪印（AppDock PawMark 同源，墨 55%），
+ *  一句话（标题 17/600 + 说明 12 双行）+ 一个行动钮（调用方传入，建议柠檬主钮
+ *  rounded-control px-[30px] py-[13px] text-body-sm font-semibold）。
+ *  直上画布不套卡（试样 .empty-wrap）；各页空态一律走本组件，不再手写内联空态。 */
 export function EmptyState({
   title,
   desc,
   action,
-  image = '/brand/empty-appointments-800.png',
 }: {
   title: string
-  desc?: string
+  desc?: ReactNode
   action?: ReactNode
-  image?: string
 }) {
   return (
-    <div className="u1-card flex flex-col items-center gap-2 px-4 py-8 text-center">
-      <img src={image} alt="" className="h-28 w-28 rounded-control object-cover" />
-      <p className="text-body font-semibold">{title}</p>
-      {desc ? <p className="text-caption text-ink-secondary">{desc}</p> : null}
-      {action}
+    <div className="flex flex-col items-center px-10 py-12 text-center">
+      <span className="flex h-[110px] w-[110px] items-center justify-center rounded-full bg-oak">
+        <PawMark className="h-[50px] w-[50px] text-ink opacity-55" />
+      </span>
+      <p className="mt-5 text-title">{title}</p>
+      {desc ? <p className="mt-2 text-caption leading-[1.6] text-ink-secondary">{desc}</p> : null}
+      {action ? <div className="mt-5">{action}</div> : null}
     </div>
   )
 }

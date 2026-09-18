@@ -15,7 +15,7 @@
  */
 
 import { getStepDef } from '@philia/shared';
-import { fmtTime } from './appt-utils';
+import { fmtTime, stepDisplayName } from './appt-utils';
 import type { StepListItem } from './appt-utils';
 
 /** 规则 5 镜像：选出当前唯一可打标重拍的步骤；无可打标步返回 null */
@@ -31,7 +31,8 @@ export function pickFlaggableStep(steps: StepListItem[]): StepListItem | null {
   return restLocked ? latestDone : null;
 }
 
-/** 行副行文案（时间戳 + 张数 + 状态提示） */
+/** 行副行文案（时间戳 + 张数 + 状态提示；试样口径：张数分母=应传 minPhotos，
+    active 步补「· N 分钟前更新」（取该步最新照片 takenAt 真值，无照片不缀）） */
 function subLine(step: StepListItem): string {
   const photoCount = step.photos.length;
   if (step.status === 'done') {
@@ -39,10 +40,22 @@ function subLine(step: StepListItem): string {
     return `${time}${photoCount} 张`;
   }
   if (step.status === 'active') {
-    const max = getStepDef(step.stepKey)?.maxPhotos;
-    return max && max > 0 ? `进行中 · ${photoCount}/${max} 张` : '进行中';
+    const min = getStepDef(step.stepKey)?.minPhotos;
+    const base = min && min > 0 ? `进行中 · ${photoCount}/${min} 张` : '进行中';
+    const lastPhotoAt = photoCount > 0 ? step.photos[photoCount - 1]!.takenAt : null;
+    return lastPhotoAt ? `${base} · ${relMinuteLabel(lastPhotoAt)}更新` : base;
   }
   return step.stepKey === 'confirm' ? '未到 · 完成后家长收到通知' : '未到';
+}
+
+/** 相对时长（试样「2 分钟前」口径）：<60min=N 分钟前；<24h=N 小时前；否则 M/D */
+function relMinuteLabel(d: Date): string {
+  const diffMin = Math.max(0, Math.floor((Date.now() - d.getTime()) / 60_000));
+  if (diffMin < 1) return '刚刚';
+  if (diffMin < 60) return `${diffMin} 分钟前`;
+  const h = Math.floor(diffMin / 60);
+  if (h < 24) return `${h} 小时前`;
+  return `${d.getMonth() + 1}/${d.getDate()} `;
 }
 
 export function MonitorTimeline({ steps }: { steps: StepListItem[] }) {
@@ -50,7 +63,7 @@ export function MonitorTimeline({ steps }: { steps: StepListItem[] }) {
     <div className="u3-stepv px-[17px] pb-[14px] pt-1">
       {steps.map((step) => {
         const rowCls = step.status === 'done' ? 'done' : step.status === 'active' ? 'now' : '';
-        const name = getStepDef(step.stepKey)?.name ?? step.stepKey;
+        const name = stepDisplayName(step.stepKey); // §13 同 §4 stepper 冻结口径
         return (
           <div key={step.id} className={`row ${rowCls}`}>
             <i className="dt" />

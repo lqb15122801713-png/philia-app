@@ -204,7 +204,7 @@ export default function ProductEditorDialog({ open, product, onClose }: ProductE
               <div key={url} className="group relative aspect-square overflow-hidden rounded-tag border border-line">
                 <img src={url} alt={`商品图 ${idx + 1}`} className="h-full w-full object-cover" />
                 {idx === 0 ? (
-                  <span className="absolute left-0 top-0 flex items-center gap-0.5 rounded-br-tag bg-brand-primary px-1 py-0.5 text-[10px] text-ink">
+                  <span className="absolute left-0 top-0 flex items-center gap-0.5 rounded-br-tag bg-brand-primary px-1 py-0.5 text-caption-xs text-ink">
                     <Star size={10} strokeWidth={2} />
                     主图
                   </span>
@@ -214,7 +214,7 @@ export default function ProductEditorDialog({ open, product, onClose }: ProductE
                     <button
                       type="button"
                       onClick={() => setCover(idx)}
-                      className="rounded-full bg-card px-1.5 py-0.5 text-[10px] text-ink"
+                      className="rounded-full bg-card px-1.5 py-0.5 text-caption-xs text-ink"
                     >
                       设为封面
                     </button>
@@ -238,7 +238,7 @@ export default function ProductEditorDialog({ open, product, onClose }: ProductE
                 className="flex aspect-square flex-col items-center justify-center gap-1 rounded-tag border border-dashed border-line-strong text-ink-secondary transition-colors hover:border-brand-primary hover:text-brand-primary disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <ImagePlus size={18} strokeWidth={1.5} />
-                <span className="text-[10px]">上传</span>
+                <span className="text-caption-xs">上传</span>
               </button>
             ) : null}
             {Array.from({ length: uploading }).map((_, i) => (

@@ -60,10 +60,10 @@ const APPT_ID = process.env.SMOKE_APPT_ID ?? '01M256D240E19GWNG2QMFV3Q8V';
 const ROUTES = [
   /* ---- 客户端 ---- */
   { app: 'customer', path: '/dev-login', anchors: ['登录'] },
-  { app: 'customer', path: '/', anchors: ['守护每一次洗护', '到店洗护'], expectPath: '/home', note: 'B9a 根路径重定向 + B9.3 新首页锚点' },
-  { app: 'customer', path: '/home', anchors: ['守护每一次洗护', '到店洗护'], note: 'B9.3 首页完整改版' },
+  { app: 'customer', path: '/', anchors: ['守护每一次洗护', '到店洗护', '洗护进行中'], expectPath: '/home', note: 'B9a 根路径重定向 + B9.3 新首页锚点；U4：首页双态——服务中态图注为「洗护进行中」' },
+  { app: 'customer', path: '/home', anchors: ['守护每一次洗护', '到店洗护', '洗护进行中'], note: 'B9.3 首页完整改版；U4：双态锚点（常态/服务中）' },
   { app: 'customer', path: '/mall', anchors: ['商城', '商品'] },
-  { app: 'customer', path: '/mall/cart', anchors: ['购物车'] },
+  { app: 'customer', path: '/mall/cart', anchors: ['购物袋', '购物车'], note: 'U4-D3：购物袋口径（试样同词）' },
   { app: 'customer', path: '/mall/checkout', anchors: ['确认订单', '没有待结算'], note: 'B3 修复路由' },
   { app: 'customer', path: '/mall/orders', anchors: ['订单'], note: 'A2 白屏群' },
   { app: 'customer', path: '/mall/orders/', anchors: ['订单'], note: '尾斜杠变体' },
@@ -91,8 +91,8 @@ const ROUTES = [
   /* ---- 员工端 ---- */
   { app: 'staff', path: '/dev-login', anchors: ['登录'] },
   { app: 'staff', path: '/today', anchors: ['今天 ·', '任务台', '核销台'], note: 'U2 时间轴台 B′：顶栏「今天 · M月d日」+ dock 首栏（groomer=任务台/frontdesk=核销台）' },
-  { app: 'staff', path: `/execute/${APPT_ID}`, anchors: ['第', '步', '核销'], serverDep: true, note: 'B1 修复路由' },
-  { app: 'staff', path: `/execute/${APPT_ID}/`, anchors: ['第', '步', '核销'], serverDep: true, note: '尾斜杠变体' },
+  { app: 'staff', path: `/execute/${APPT_ID}`, anchors: ['第', '步', '核销', '无法执行该预约'], serverDep: true, note: 'B1 修复路由；U4：smoke 以首个 staff 种子（前台）登录，进他人 groomer 单命中设计内守卫态「无法执行该预约」' },
+  { app: 'staff', path: `/execute/${APPT_ID}/`, anchors: ['第', '步', '核销', '无法执行该预约'], serverDep: true, note: '尾斜杠变体（同上守卫态口径）' },
   { app: 'staff', path: '/history', anchors: ['记录', '历史'] },
   { app: 'staff', path: '/me', anchors: ['我的', '员工'] },
 ];

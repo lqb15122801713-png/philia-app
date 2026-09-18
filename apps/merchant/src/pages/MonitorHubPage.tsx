@@ -3,8 +3,8 @@
  *
  * 结构：MainScaffold（title「在店监控」+ sub 真值计数 + actions 两枚 u3-chipf
  * 过滤服务中/寄养）→ 三列 mon-card 卡墙（纸面 ring 20 圆角 overflow hidden）：
- * - 照片头 16:10（该单最新过程照 thumbUrl；无照片=浅木色块 #D4B896）+ 纸面 badge
- *   （「服务中 · 实时」/「寄养 · 房型名」）；
+ * - 照片头 120px 定高（试样 .mon-card .ph 落值；该单最新过程照 thumbUrl，无照片=浅木
+ *   色块 #D4B896）+ badge（洗护=纸面+薄荷点「服务中 · 实时」/寄养=墨底米白字「寄养 · 房型名」）；
  * - 洗护卡：名+服务 + 6 段步进条（薄荷 done/柠檬 now/墨灰未到）+ 员工·最新动态行；
  * - 寄养卡：第 N 晚（日界差+1）· 今日打卡态（lastLogDate===今天→已打卡 ✓）
  *   · 退房日；超期红字「超期」+「应退未退 N 天」。
@@ -25,7 +25,7 @@
  * 监控页不手动刷新也能翻步；其余事件仍由 SSE 即时驱动。
  */
 
-import { EventType, getStepDef, usePhiliaClient } from '@philia/shared';
+import { EventType, usePhiliaClient } from '@philia/shared';
 import { useQueries, useQuery, type QueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -36,6 +36,7 @@ import {
   type ListForStoreItem,
   type StayBoardEntry,
   type StepListItem,
+  stepDisplayName,
 } from '../components/appointments/appt-utils';
 import {
   useMerchantEvents,
@@ -74,7 +75,7 @@ function activityLine(staffName: string | null | undefined, steps: StepListItem[
   const who = staffName ?? '待指派';
   if (!steps || steps.length === 0) return `${who} · 等待开工`;
   const active = steps.find((s) => s.status === 'active');
-  if (active) return `${who} · ${getStepDef(active.stepKey)?.name ?? active.stepKey}中`;
+  if (active) return `${who} · ${stepDisplayName(active.stepKey)}中`; // 冻结步名（§13 同 §4）
   const dones = steps.filter((s) => s.status === 'done' && s.doneAt);
   const last = dones[dones.length - 1];
   if (last?.doneAt) return `${who} · 最近完成 ${fmtTime(last.doneAt)}`;
@@ -85,25 +86,33 @@ function activityLine(staffName: string | null | undefined, steps: StepListItem[
 const cardCls =
   'block w-full overflow-hidden rounded-panel bg-[#FFFDF6] text-left shadow-[0_0_0_1px_rgba(74,59,46,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]';
 
-/** 照片头 16:10 + 纸面 badge pill */
+/** 照片头 + badge pill（试样 .mon-card：头高 120px 固定【规格书 §5「16:10」为裁切意图，
+    试样落 120px 定值——从试样，1920 大屏亦紧凑】；洗护 badge=纸面+薄荷点，
+    寄养 badge=墨底米白字无点【试样 inline 锁定，墨轨同族浅色字，仅此两式】） */
 function CardPhotoHead({
   thumbUrl,
   badge,
-  dotCls,
+  tone,
 }: {
   thumbUrl: string | null;
   badge: string;
-  dotCls: string;
+  tone: 'service' | 'boarding';
 }) {
   return (
     <div
-      className="relative aspect-[16/10] w-full bg-[#D4B896] bg-cover [background-position:center_60%]"
+      className="relative h-[120px] w-full bg-[#D4B896] bg-cover [background-position:center_60%]"
       style={thumbUrl ? { backgroundImage: `url(${thumbUrl})` } : undefined}
     >
-      <span className="absolute left-2.5 top-2.5 flex items-center gap-[5px] rounded-full bg-[#FFFDF6] px-2.5 py-1 text-caption-xs font-extrabold">
-        <i className={`h-1.5 w-1.5 rounded-full ${dotCls}`} />
-        {badge}
-      </span>
+      {tone === 'service' ? (
+        <span className="absolute left-2.5 top-2.5 flex items-center gap-[5px] rounded-full bg-[#FFFDF6] px-2.5 py-1 text-caption-xs font-bold">
+          <i className="h-1.5 w-1.5 rounded-full bg-[#7FD8BE]" />
+          {badge}
+        </span>
+      ) : (
+        <span className="absolute left-2.5 top-2.5 flex items-center rounded-full bg-[#4A3B2E] px-2.5 py-1 text-caption-xs font-bold text-[#F6F1E3]">
+          {badge}
+        </span>
+      )}
     </div>
   );
 }
@@ -126,11 +135,11 @@ function StepBars({ steps }: { steps: StepListItem[] | undefined }) {
   );
 }
 
-/** 卡片骨架（禁转圈：opacity 脉冲） */
+/** 卡片骨架（禁转圈：opacity 脉冲；轮廓与成片同构——120px 照片头 + 文本条 + 6 段条） */
 function CardSkeleton() {
   return (
     <div className="overflow-hidden rounded-panel bg-[#FFFDF6] shadow-[0_0_0_1px_rgba(74,59,46,.09)]">
-      <div className="aspect-[16/10] w-full animate-pulse bg-[rgba(74,59,46,.06)]" />
+      <div className="h-[120px] w-full animate-pulse bg-[rgba(74,59,46,.06)]" />
       <div className="p-[12px_14px]">
         <div className="h-3.5 w-32 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
         <div className="mt-2 h-3 w-44 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
@@ -327,14 +336,14 @@ export default function MonitorHubPage() {
                 <CardPhotoHead
                   thumbUrl={photo?.thumbUrl ?? photo?.url ?? null}
                   badge="服务中 · 实时"
-                  dotCls="bg-[#7FD8BE]"
+                  tone="service"
                 />
                 <div className="p-[12px_14px]">
-                  <div className="flex items-baseline justify-between text-body-sm font-extrabold">
+                  <div className="flex items-baseline justify-between text-body-sm font-bold">
                     <span>
                       {it.petName} · {it.serviceName}
                     </span>
-                    <span className="font-number text-caption font-extrabold tabular-nums">
+                    <span className="font-number text-body-sm font-bold tabular-nums">
                       {doneCount}/{steps?.length ?? 6}
                     </span>
                   </div>
@@ -367,17 +376,17 @@ export default function MonitorHubPage() {
                   <CardPhotoHead
                     thumbUrl={null}
                     badge={`寄养 · ${meta?.serviceName ?? '寄养'}`}
-                    dotCls="bg-[#D4B896]"
+                    tone="boarding"
                   />
                   <div className="p-[12px_14px]">
-                    <div className="flex items-baseline justify-between text-body-sm font-extrabold">
+                    <div className="flex items-baseline justify-between text-body-sm font-bold">
                       <span>{entry.pet.name}</span>
                       {entry.overdue ? (
-                        <span className="font-number text-caption font-extrabold tabular-nums text-[#D92D20]">
+                        <span className="font-number text-body-sm font-bold tabular-nums text-[#D92D20]">
                           超期
                         </span>
                       ) : (
-                        <span className="font-number text-caption font-extrabold tabular-nums">
+                        <span className="font-number text-body-sm font-bold tabular-nums">
                           D{n}
                         </span>
                       )}

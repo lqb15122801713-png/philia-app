@@ -218,6 +218,13 @@ export default function GroomingSinglePage() {
   /* ---- 提交（现有 appointment.create，入参不动） ---- */
   const service = groomingServices.find((s) => s.id === serviceId) ?? null;
   const staffName = staffQ.data?.staff.find((s) => s.id === staffId)?.name ?? null;
+  const petName = petsQ.data?.find((p) => p.id === petId)?.name ?? null;
+  // U4-D1：随缘派单卡「最早可约 HH:MM」真值——可约槽集合（服务端过滤后）的最早时刻
+  const earliestSlotLabel = useMemo(() => {
+    if (slots.length === 0) return null;
+    const t = Math.min(...slots.map((s) => s.slotStart.getTime()));
+    return fmtHM(new Date(t));
+  }, [slots]);
   // B9a 任务 C：确认条/服务 chips 的「约 N 分钟」按时长引擎联动（serviceDurations），
   // 引擎未输出（未选宠物/查询中）回退服务默认 durationMin
   const serviceDurations = servicesQ.data?.serviceDurations ?? null;
@@ -340,6 +347,7 @@ export default function GroomingSinglePage() {
             selectedId={staffId}
             onSelect={setStaffId}
             loading={staffQ.isPending}
+            earliestLabel={earliestSlotLabel}
           />
           <p className="mt-1 text-caption-xs text-ink-placeholder">指定洗护师会写在预约备注里传达给门店</p>
         </div>
@@ -400,6 +408,11 @@ export default function GroomingSinglePage() {
         missingLabel={missingLabel}
         submitting={createM.isPending}
         onConfirm={() => createM.mutate()}
+        petName={petName}
+        serviceName={service?.name ?? null}
+        staffName={staffName}
+        slot={slot}
+        paymentMode={paymentMode}
       />
     </div>
   );

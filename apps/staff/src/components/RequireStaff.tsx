@@ -10,6 +10,7 @@
  */
 
 import { useMe } from '@philia/shared'
+import { PawPrint } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 
@@ -21,7 +22,7 @@ export default function RequireStaff({ children }: { children: ReactNode }) {
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-body-lg text-ink-secondary">加载中…</p>
+        <p className="text-body-sm text-ink-secondary">加载中…</p>
       </div>
     )
   }
@@ -33,11 +34,11 @@ export default function RequireStaff({ children }: { children: ReactNode }) {
   if (!user.roles.includes('staff')) {
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
-        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-primary-light text-3xl">
-          🐾
+        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-sunken">
+          <PawPrint className="h-7 w-7 text-ink" strokeWidth={1.5} />
         </span>
         <h1 className="mt-4 text-title-lg">需要员工账号</h1>
-        <p className="mt-2 text-body-lg text-ink-secondary">
+        <p className="mt-2 text-body-sm text-ink-secondary">
           当前账号「{user.nickname ?? user.id}」不是员工身份。
           <br />
           员工端仅供门店洗护师 / 美容师使用，请改用员工账号登录。
@@ -45,7 +46,7 @@ export default function RequireStaff({ children }: { children: ReactNode }) {
         <button
           type="button"
           onClick={() => navigate('/dev-login', { replace: true })}
-          className="mt-6 h-14 min-w-[200px] rounded-full bg-brand-primary px-8 text-body-lg font-semibold text-[#F6F1E3] transition active:scale-92 duration-120"
+          className="mt-6 h-14 min-w-[200px] rounded-full bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           去切换账号
         </button>

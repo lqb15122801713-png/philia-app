@@ -278,7 +278,7 @@ export function RescheduleSheet({
               type="button"
               disabled={!checkin || !checkout || rescheduleMut.isPending}
               onClick={submitBoarding}
-              className="mt-4 h-11 w-full rounded-control bg-brand-primary text-[13px] font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-40"
+              className="mt-4 h-11 w-full rounded-control bg-brand-primary text-body-sm font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-40"
             >
               {rescheduleMut.isPending
                 ? '提交中…'
@@ -298,7 +298,7 @@ export function RescheduleSheet({
       ) : (
         <>
           {/* 日期选择（U3 chips：当前=墨底反白） */}
-          <div className="flex gap-2 overflow-x-auto pb-2" role="tablist" aria-label="选择日期">
+          <div className="u3-noscrollx flex gap-2 overflow-x-auto pb-2" role="tablist" aria-label="选择日期">
             {days.map((d) => {
               const active = activeDay?.key === d.key;
               return (
@@ -347,7 +347,7 @@ export function RescheduleSheet({
               if (!target || !slot) return;
               rescheduleMut.mutate({ appointmentId: target.id, scheduledStart: slot.slotStart });
             }}
-            className="mt-4 h-11 w-full rounded-control bg-brand-primary text-[13px] font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-40"
+            className="mt-4 h-11 w-full rounded-control bg-brand-primary text-body-sm font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-40"
           >
             {rescheduleMut.isPending
               ? '提交中…'

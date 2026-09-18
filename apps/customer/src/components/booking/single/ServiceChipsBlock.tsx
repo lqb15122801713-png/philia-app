@@ -6,10 +6,13 @@
  * U1-D 换肤（v9.1）：chips 之上加「服务二选一照片大卡」——洗澡 / 造型美容两档
  * （grooming 目录真实分组：服务名含「造型」为美容档，其余为洗澡档；某档目录为空
  * 则该卡不渲染，不造假入口）。点大卡=选中该档首个服务（复用 onSelect 真实选择逻辑，
- * 零新交互）；选中态=深棕墨 1.5px 细线圈（与 chips 选中态同语言）。
- * 照片资产取舍：产品侧 photos/ 照片包未入库——以 VI 线图标（lucide 墨色）+ 文字版
+ * 零新交互）。
+ * U4-D1 逐格对照试样：大卡选中态=深棕墨 2px 描边+右上角柠檬圆勾（试样 .svc-card.sel/
+ * .sc-check 工艺）；服务项 chips 选中态=柠檬底（与 U4 日期条选中同口径，治「全是线条」），
+ * 未选中=细线 ring 白底。
+ * 照片资产取舍：services 表无照片字段（schema 实证）——以 VI 线图标（lucide 墨色）+ 文字版
  * 大卡占位，结构留 img 插槽（见 CatCard 内注释），资产到位后替换。
- * chips 圆角换 U1-B 控件档 rounded-control(14)，逻辑零改动。
+ * chips 圆角走 U1-B 控件档 rounded-control(14)，逻辑零改动。
  */
 
 import { useState } from 'react';
@@ -99,10 +102,21 @@ export default function ServiceChipsBlock({
                 onClick={() => onSelect(c.items[0]!.id)}
                 data-testid={c.testId}
                 data-active={active ? 'true' : 'false'}
-                className={`u1-ring flex flex-col items-start gap-2 rounded-panel bg-card p-3.5 text-left transition-transform duration-120 ease-philia-spring active:scale-[0.98] ${
+                className={`u1-ring relative flex flex-col items-start gap-2 rounded-panel bg-card p-3.5 text-left transition-transform duration-120 ease-philia-spring active:scale-[0.98] ${
                   active ? 'ring-2 ring-ink' : ''
                 }`}
               >
+                {/* U4-D1：选中柠檬圆勾（试样 .sc-check：22px 柠檬圆底 + 墨色勾，右上角） */}
+                {active ? (
+                  <span
+                    className="absolute right-2.5 top-2.5 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-brand-primary"
+                    aria-hidden="true"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#4A3B2E" strokeWidth="2.2" strokeLinecap="round">
+                      <path d="M2 6.5 4.8 9 10 3.5" />
+                    </svg>
+                  </span>
+                ) : null}
                 {/* 照片插槽：VI 插画图标（U1.1 启用），onError 回退 lucide（容器尺寸不变） */}
                 <CatPhoto photo={c.photo} icon={c.icon} />
                 <span className="text-body-sm font-semibold leading-5">{c.name}</span>
@@ -126,11 +140,11 @@ export default function ServiceChipsBlock({
               data-testid={`gs-service-chip-${s.id}`}
               data-active={active ? 'true' : 'false'}
               className={`rounded-control border px-3.5 py-2.5 text-left transition active:scale-95 ${
-                active ? 'border-[1.5px] border-ink' : 'border-line'
+                active ? 'border-transparent bg-brand-primary' : 'border-line bg-card'
               }`}
             >
               <span className="block text-body-sm font-semibold">{s.name}</span>
-              <span className="mt-0.5 block text-caption text-ink-secondary">
+              <span className={`mt-0.5 block text-caption ${active ? 'text-ink/70' : 'text-ink-secondary'}`}>
                 约 {durationById?.[s.id] ?? s.durationMin ?? 60} 分钟 · <span className="font-number font-semibold text-ink">{fenToYuan(s.priceFen)}</span>
               </span>
             </button>

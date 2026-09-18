@@ -2,8 +2,9 @@
  * MePage · /me 「我的」页（T2.1）
  *
  * 五区块（自上而下）：
- * 1. 用户信息卡：auth.me 原始响应（queryKey ['auth','me','raw']，与 MemberPage 同模式）
- *    —— 头像 user.avatarUrl（无则 PawPrint 占位）+ 昵称（空显示「铲屎官」）+ 加入天数；
+ * 1. 用户信息条：auth.me 原始响应（queryKey ['auth','me','raw']，与 MemberPage 同模式）
+ *    —— 头像 user.avatarUrl（无则字圈工艺：浅木底+衬线首字，D-补3）+ 昵称（空显示「铲屎官」）
+ *    + 手机号脱敏（users.phone 真实字段）· 加入天数；
  * 2. 我的宠物横滑卡片区：pet.list → 圆形头像 + 名字，末尾固定「添加」虚线圆按钮
  *    → /philia/pets；空态引导卡「建立宠物档案」→ /philia/pets；
  * 3. 功能入口列表：我的预约 /appointments、我的订单 /mall/orders、会员卡 /philia/member、
@@ -15,16 +16,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
-import {
-  CalendarCheck,
-  ChevronRight,
-  Crown,
-  LogOut,
-  Package,
-  PawPrint,
-  Plus,
-  Users,
-} from 'lucide-react'
+import { LogOut, Plus } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getApiBase, logout, useMe, usePhiliaClient } from '@philia/shared'
@@ -48,7 +40,7 @@ function useMeToast(durationMs = 3200) {
     <div
       key={msg.id}
       role="alert"
-      className="fixed left-1/2 top-5 z-toast max-w-[86vw] -translate-x-1/2 rounded-full bg-success-light px-4 py-2.5 text-body text-success-deep shadow-elevated"
+      className="fixed left-1/2 top-5 z-toast max-w-[86vw] -translate-x-1/2 rounded-full bg-success-light px-4 py-2.5 text-body-sm text-success-deep shadow-elevated"
     >
       {msg.text}
     </div>
@@ -80,27 +72,36 @@ function UserCard() {
   const joinDays = createdAt
     ? Math.max(1, Math.floor((Date.now() - new Date(createdAt).getTime()) / DAY_MS) + 1)
     : null
+  /* U4-D3：手机号=auth.me 真实字段（users.phone），脱敏展示 138****8888 口径；无号段隐去 */
+  const phone = user.phone
+  const phoneMasked = phone && phone.length >= 7 ? `${phone.slice(0, 3)}****${phone.slice(-4)}` : null
 
+  /* U4-D3 对齐试样 10 .me-user：直上画布不套卡；头像 54 全圆+细线 ring；
+     无头像=字圈工艺（D-补3：浅木底+衬线首字，D1 洗护师字圈同口径） */
   return (
-    <div data-testid="me-user-card" className="u1-card flex items-center gap-4 p-4">
+    <div data-testid="me-user-card" className="flex items-center gap-3.5 pt-3.5">
       {user.avatarUrl ? (
         <img
           src={user.avatarUrl}
           alt={nickname}
-          className="h-16 w-16 shrink-0 rounded-full object-cover"
+          className="h-[54px] w-[54px] shrink-0 rounded-full object-cover ring-1 ring-line-ring"
         />
       ) : (
-        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-secondary-light">
-          <PawPrint className="h-7 w-7 text-brand-primary" strokeWidth={1.5} />
+        <span className="flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-full bg-oak-light ring-1 ring-line-ring">
+          <span className="u1-serif text-title-lg font-semibold text-ink">{nickname.slice(0, 1)}</span>
         </span>
       )}
       <div className="min-w-0 flex-1">
-        <p data-testid="me-nickname" className="truncate text-title">{nickname}</p>
-        {joinDays !== null ? (
-          <p className="u1-num mt-1 text-caption text-ink-secondary">
-            加入菲丽亚第 {joinDays} 天
-          </p>
-        ) : null}
+        <p data-testid="me-nickname" className="u1-serif truncate text-title">{nickname}</p>
+        <p className="mt-[3px] text-caption-xs text-ink-secondary">
+          {phoneMasked ? <span className="u1-num">{phoneMasked}</span> : null}
+          {phoneMasked && joinDays !== null ? ' · ' : ''}
+          {joinDays !== null ? (
+            <>
+              加入 <span className="u1-num">{joinDays}</span> 天
+            </>
+          ) : null}
+        </p>
       </div>
     </div>
   )
@@ -148,29 +149,33 @@ function GuardianCard() {
   const totalFen = completed.reduce((s, a) => s + a.priceFen, 0)
 
   const stats = [
-    { label: '陪伴天数', value: joinDays !== null ? `${joinDays} 天` : null },
-    { label: '服务次数', value: completed.length > 0 ? `${completed.length} 次` : null },
+    { label: '陪伴天数', value: joinDays !== null ? `${joinDays}` : null },
+    { label: '服务次数', value: completed.length > 0 ? `${completed.length}` : null },
     { label: '累计消费', value: totalFen > 0 ? `¥${(totalFen / 100).toFixed(totalFen % 100 === 0 ? 0 : 2)}` : null },
   ].filter((s) => s.value !== null)
 
+  /* U4-D3 对齐试样 10 .gcardQ 素卡工艺：纸面细线卡（深棕墨大卡已退役）；
+     档名/守护值/折扣副题无真实字段不出（裁定 #23 口径维持）；
+     三真数=左对齐 Montserrat 17/700（试样 800 字重→自托管仅 400/600/700，取 700 登记），
+     小标签 11px；右下「会员码 ›」=真路由 /me/card 入口 */
   return (
     <Link
       to="/me/card"
       data-testid="me-guardian-card"
-      className="u1-card block p-4 transition-transform duration-120 ease-philia-spring active:scale-[0.99]"
+      className="u1-card block px-5 py-[18px] transition-transform duration-120 ease-philia-spring active:scale-[0.99]"
     >
-      <div className="flex items-baseline justify-between">
-        <p className="text-caption-xs tracking-[0.22em] text-ink-secondary">GUARDIAN CARD</p>
-        <span className="text-caption-xs text-ink-secondary" aria-hidden="true">›</span>
-      </div>
+      <p className="text-caption-xs font-semibold tracking-[0.22em] text-ink-placeholder">GUARDIAN CARD</p>
       {stats.length > 0 ? (
-        <div className="mt-3 grid grid-cols-3 gap-2">
+        <div className="mt-3.5 flex gap-[30px] border-t border-[rgba(74,59,46,.06)] pt-[13px]">
           {stats.map((s) => (
-            <p key={s.label} className="text-center">
-              <span className="u1-num block text-body-sm font-semibold leading-5">{s.value}</span>
-              <span className="block text-caption-xs leading-4 text-ink-secondary">{s.label}</span>
+            <p key={s.label}>
+              <span className="u1-num block text-title font-bold leading-6">{s.value}</span>
+              <span className="mt-[3px] block text-caption-xs leading-4 text-ink-placeholder">{s.label}</span>
             </p>
           ))}
+          <span className="ml-auto self-end text-caption-xs text-ink-placeholder" aria-hidden="true">
+            会员码 ›
+          </span>
         </div>
       ) : (
         <p className="mt-2 text-caption text-ink-secondary">会员细则以门店公布为准</p>
@@ -207,7 +212,7 @@ function PetsSection() {
           action={
             <Link
               to="/philia/pets"
-              className="mt-2 rounded-full bg-brand-primary px-5 py-2 text-body text-ink"
+              className="inline-flex items-center rounded-control bg-brand-primary px-[30px] py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
             >
               建立宠物档案
             </Link>
@@ -225,7 +230,7 @@ function PetsSection() {
           管理
         </Link>
       </div>
-      <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1">
+      <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {pets.map((pet) => (
           <div key={pet.id} className="flex w-16 shrink-0 flex-col items-center gap-1.5">
             {pet.avatarUrl ? (
@@ -235,8 +240,9 @@ function PetsSection() {
                 className="h-16 w-16 rounded-full object-cover"
               />
             ) : (
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-secondary-light">
-                <PawPrint className="h-6 w-6 text-brand-primary" strokeWidth={1.5} />
+              /* D-补3 字圈工艺：浅木底 + 衬线首字（D1 洗护师字圈同口径），不再用 PawPrint 图标占位 */
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-oak-light ring-1 ring-line-ring">
+                <span className="u1-serif text-title-lg font-semibold text-ink">{pet.name.slice(0, 1)}</span>
               </span>
             )}
             <p className="w-full truncate text-center text-caption">{pet.name}</p>
@@ -260,15 +266,19 @@ function PetsSection() {
 
 /* ------------------------------------------------------------------ */
 /* 3. 功能入口列表                                                       */
+/*    U4-D3 对齐试样 10 .svc-list：细线列表行直上画布（去卡壳去图标），      */
+/*    行名衬线 14/600（试样 serif 14.5→字阶 14），右位 › 墨 placeholder；  */
+/*    行距 padding 16px 0 + hairline 分隔（试样 ink-06）。                 */
+/*    入口仅保留真实路由：试样「优惠券/联系客服」无字段无路由不出（登记）。   */
 /* ------------------------------------------------------------------ */
 
-const ENTRIES: Array<{ to: string; label: string; icon: typeof Crown }> = [
-  { to: '/appointments', label: '我的预约', icon: CalendarCheck },
-  { to: '/mall/orders', label: '我的订单', icon: Package },
+const ENTRIES: Array<{ to: string; label: string }> = [
+  { to: '/appointments', label: '我的预约' },
+  { to: '/mall/orders', label: '商城订单' },
   // U1-H：会员卡入口指向新路由 /me/card（信息展示 v0）
-  { to: '/me/card', label: '会员卡', icon: Crown },
-  { to: '/philia/pets', label: '宠物档案', icon: PawPrint },
-  { to: '/philia/moments', label: '宠友圈', icon: Users },
+  { to: '/me/card', label: '会员卡' },
+  { to: '/philia/pets', label: '我的宠物' },
+  { to: '/philia/moments', label: '宠友圈' },
 ]
 
 function EntryList() {
@@ -276,13 +286,12 @@ function EntryList() {
     <nav
       data-testid="me-entries"
       aria-label="功能入口"
-      className="u1-card divide-y divide-line-divider"
+      className="divide-y divide-[rgba(74,59,46,.06)] border-b border-[rgba(74,59,46,.06)]"
     >
-      {ENTRIES.map(({ to, label, icon: Icon }) => (
-        <Link key={to} to={to} className="flex items-center gap-3 px-4 py-3.5">
-          <Icon className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
-          <span className="flex-1 text-body">{label}</span>
-          <ChevronRight className="h-4 w-4 text-ink-placeholder" strokeWidth={1.5} />
+      {ENTRIES.map(({ to, label }) => (
+        <Link key={to} to={to} className="flex items-center py-4">
+          <span className="u1-serif flex-1 text-body-sm font-semibold">{label}</span>
+          <span className="text-caption-xs text-ink-placeholder" aria-hidden="true">›</span>
         </Link>
       ))}
     </nav>
@@ -309,7 +318,7 @@ function SettingsCard({
         data-testid="me-logout-btn"
       >
         <LogOut className="h-5 w-5 text-danger-deep" strokeWidth={1.5} />
-        <span className="flex-1 text-body text-danger-deep">退出登录</span>
+        <span className="flex-1 text-body-sm text-danger-deep">退出登录</span>
       </button>
     </div>
   )
@@ -333,17 +342,17 @@ function LogoutConfirmDialog({
       aria-label="退出登录确认"
     >
       <div
-        className="w-full max-w-sm rounded-card bg-card p-5 shadow-elevated"
+        className="w-full max-w-sm rounded-panel bg-card p-5 shadow-elevated"
         onClick={(e) => e.stopPropagation()}
       >
         <p className="text-title">退出登录？</p>
-        <p className="mt-2 text-body text-ink-secondary">退出后需要重新登录才能继续使用菲丽亚。</p>
+        <p className="mt-2 text-body-sm text-ink-secondary">退出后需要重新登录才能继续使用菲丽亚。</p>
         <div className="mt-5 flex gap-3">
           <button
             type="button"
             onClick={onCancel}
             disabled={pending}
-            className="flex-1 rounded-full border border-line py-2.5 text-body text-ink-secondary"
+            className="flex-1 rounded-full border border-line py-2.5 text-body-sm text-ink-secondary"
           >
             取消
           </button>
@@ -352,7 +361,7 @@ function LogoutConfirmDialog({
             onClick={onConfirm}
             disabled={pending}
             data-testid="me-logout-confirm"
-            className="flex-1 rounded-full bg-danger py-2.5 text-body text-white transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
+            className="flex-1 rounded-full bg-danger py-2.5 text-body-sm text-destructive-foreground transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
           >
             {pending ? '正在退出…' : '退出登录'}
           </button>
@@ -387,12 +396,14 @@ export default function MePage() {
   }
 
   return (
-    <div className="px-4 pb-6">
-      <header className="pt-6">
-        <h1 className="text-title-lg">我的</h1>
+    /* U4-D3：页边距 22px；题「我的」=衬线 17/600 宽距（试样 10 wordmark serif .14em）。
+       试样右上「设置」无真实路由/功能——不出（登记）。 */
+    <div className="px-[22px] pb-6">
+      <header className="pt-3">
+        <h1 className="u1-serif text-title tracking-[0.14em]">我的</h1>
       </header>
 
-      <div className="mt-4 flex flex-col gap-3">
+      <div className="flex flex-col gap-3">
         <UserCard />
         {/* U1-H：纸面细线会员卡（GUARDIAN CARD·三真数 → /me/card）；已省行隐去（无折扣引擎） */}
         <GuardianCard />

@@ -5,8 +5,10 @@
  *   分类筛选 + 关键词搜索在服务端过滤，搜索 300ms 防抖沿用）。
  * - 结构：MainScaffold（title 商品 / sub 在售·已下架·低库存真值 / 搜索 + 柠檬钮新增）
  *   → u3-chipf 分类 chips（当前墨底）→ 4 列商品卡（纸面 ring 20 圆角 overflow hidden）。
- * - 卡片：4:3 图（images[0]，无图=浅木色块 #D4B896）+ 名 + 价 Montserrat tabular（¥/件）
- *   + 库存 + 状态（在售 live / 低库存 amber（库存<5） / 已下架 done 半透明）。点击卡→编辑弹层。
+ * - 卡片：图区 110px 定高（试样 .prod .ph 落值；规格书 §8「4:3 图」为裁切意图，
+ *   试样为落地数值——从试样，货架密度优先；images[0]，无图=浅木色块 #D4B896）+ 名 +
+ *   价 Montserrat tabular（¥/件）+ 库存 + 状态（在售 live / 低库存 amber（库存<5） /
+ *   已下架 done 半透明）。点击卡→编辑弹层。
  * - 上下架：不新造开关——ProductEditorDialog 内「上架销售」Switch 走 upsertProduct
  *   真实链路（失败原文 toast + invalidate 回拉），越店写 FORBIDDEN 由服务端强制。
  */
@@ -120,7 +122,7 @@ export default function ProductsPage() {
               key={i}
               className="overflow-hidden rounded-[20px] bg-[#FFFDF6] shadow-[0_0_0_1px_rgba(74,59,46,.09)]"
             >
-              <div className="aspect-[4/3] w-full animate-pulse bg-[rgba(74,59,46,.06)]" />
+              <div className="h-[110px] w-full animate-pulse bg-[rgba(74,59,46,.06)]" />
               <div className="space-y-2 px-[13px] py-[11px]">
                 <div className="h-3 w-3/4 animate-pulse rounded-[6px] bg-[rgba(74,59,46,.06)]" />
                 <div className="h-3.5 w-1/3 animate-pulse rounded-[6px] bg-[rgba(74,59,46,.06)]" />
@@ -160,13 +162,13 @@ export default function ProductsPage() {
                 }`}
               >
                 {cover ? (
-                  <img src={cover} alt={p.name} className="aspect-[4/3] w-full object-cover" />
+                  <img src={cover} alt={p.name} className="h-[110px] w-full object-cover" />
                 ) : (
-                  <div className="aspect-[4/3] w-full bg-[#D4B896]" />
+                  <div className="h-[110px] w-full bg-[#D4B896]" />
                 )}
                 <div className="px-[13px] py-[11px]">
                   <div className="truncate text-xs font-bold text-ink">{p.name}</div>
-                  <div className="mt-[5px] font-number text-sm font-extrabold tabular-nums text-ink">
+                  <div className="mt-[5px] font-number text-sm font-bold tabular-nums text-ink">
                     ¥{fenToYuan(p.priceFen)}
                     <small className="ml-1 text-[11px] font-medium text-[rgba(74,59,46,.42)]">/ 件</small>
                   </div>

@@ -119,8 +119,8 @@ export default function DevLoginPage() {
 
   return (
     <div className="pb-10">
-      {/* 1. 主视觉卡（340 高；既有品牌资产 /brand/banner-home-1200.png） */}
-      <div className="u1-card mx-4 mt-2.5 flex h-[340px] items-center justify-center overflow-hidden">
+      {/* 1. 主视觉卡（340 高；既有品牌资产 /brand/banner-home-1200.png；试样 .lg-hero margin 10px 22px 0） */}
+      <div className="u1-card mx-[22px] mt-2.5 flex h-[340px] items-center justify-center overflow-hidden">
         <img
           src="/brand/banner-home-1200.png"
           alt="菲丽亚宠物门店"
@@ -129,12 +129,14 @@ export default function DevLoginPage() {
         />
       </div>
 
-      {/* 2. wordmark + 衬线宣言 + 门店行 */}
-      <div className="px-8 pt-6 text-center">
-        <p className="font-display text-body-sm font-extrabold tracking-[.3em] text-[rgba(74,59,46,.42)]">
+      {/* 2. wordmark + 衬线宣言 + 门店行（试样 .lg-brand padding 26px 30px 0；
+             宣言试样 22px 越字阶闸门 → 取 20/700 u1-serif（客户端 D2-1 同口径映射）；
+             Montserrat 自托管上限 700，wordmark 800→700） */}
+      <div className="px-[30px] pt-[26px] text-center">
+        <p className="font-display text-body-sm font-bold tracking-[.3em] text-[rgba(74,59,46,.42)]">
           PHILIA · 员工端
         </p>
-        <h1 className="u1-serif mt-3 text-[22px] font-bold leading-9">
+        <h1 className="u1-serif mt-3 text-title-lg font-bold leading-[1.5]">
           照顾好每一个
           <br />
           被托付的小生命
@@ -144,8 +146,8 @@ export default function DevLoginPage() {
         </p>
       </div>
 
-      {/* 3. 柠檬主钮 + 次级口令（真实落点：账号选择区 / 口令门） */}
-      <div className="flex flex-col gap-2.5 px-8 pt-5">
+      {/* 3. 柠檬主钮 + 次级口令（真实落点：账号选择区 / 口令门）；试样 .lg-act padding 22px 30px 0 */}
+      <div className="flex flex-col gap-2.5 px-[30px] pt-[22px]">
         <button
           type="button"
           data-testid="login-primary"
@@ -164,8 +166,8 @@ export default function DevLoginPage() {
         </button>
       </div>
 
-      {/* 4. 角色签（仅展示——角色由商家端员工管理分配，不可自选） */}
-      <div className="mt-4 flex justify-center gap-2">
+      {/* 4. 角色签（仅展示——角色由商家端员工管理分配，不可自选）；试样 .lg-role margin-top 18px */}
+      <div className="mt-[18px] flex justify-center gap-2">
         <span className="u1-ring rounded-full bg-card px-3 py-1.5 text-caption-xs font-semibold text-[rgba(74,59,46,.62)]">前台 frontdesk</span>
         <span className="u1-ring rounded-full bg-card px-3 py-1.5 text-caption-xs font-semibold text-[rgba(74,59,46,.62)]">美容师 groomer</span>
       </div>
