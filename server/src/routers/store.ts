@@ -777,6 +777,10 @@ export const storeRouter = router({
        * - 已收：settled 单的「自有口径」（服务/商品行，预约行金额由预约翻转口径
        *   认领，禁止双头记账）按支付段 createdAt 逐段认领，落 [from,to) 区间与
        *   byDay 日格；服务/商品按「优惠先抵服务、收款先认服务」拆分。
+       *   fix（M1 UI 集成）：已收=现金类（cash/wechat/alipay）实收，次卡扣次等值
+       *   不进 serviceFen/shopFen（防 paidFen=payableFen 口径下双计），passFen
+       *   单列（cashierPassFen / cashierLedger.passFen）供对账，对齐 U3「次卡扣次
+       *   非现金」口径。
        * - shopFen 自本批起接实口径（收银商品行已收；商城 orders 仍无 paid_at 口径）。
        * - M1-补1：「记账 credit」已删——收银单无待收态，待收口径回归预约域
        *   （pendingPayment* 仅 completed 未 paid 预约，cashierPending 并入逻辑删除）。
@@ -793,7 +797,10 @@ export const storeRouter = router({
         itemCount: number;
         methods: string[];
         payableFen: number;
+        /** 已收（现金类实收 cash/wechat/alipay，不含次卡扣次等值——fix 双计修订） */
         receivedFen: number;
+        /** 次卡扣次等值（非现金，单列供对账，对齐 U3「次卡扣次非现金」口径） */
+        passFen: number;
         source: 'cashier';
       }> = [];
       for (const cf of cashierFin) {
@@ -822,7 +829,9 @@ export const storeRouter = router({
             itemCount: cf.itemCount,
             methods: cf.methods,
             payableFen: cf.bill.payableFen,
-            receivedFen: cf.bill.paidFen + cf.passFen,
+            // fix（M1 UI 集成）：已收=现金类实收（不含次卡等值），passFen 单列
+            receivedFen: cf.cashLikeFen,
+            passFen: cf.passFen,
             source: 'cashier',
           });
         }
@@ -845,7 +854,7 @@ export const storeRouter = router({
           pendingPaymentCount: pendingRows.length,
           /** 批次 M1：区间内收银台已结账单单数 */
           cashierPaidCount: cashierLedger.length,
-          /** 批次 M1：区间内收银次卡扣次认领额（非现金，含于 serviceFen，供对账溯源） */
+          /** 批次 M1：区间内收银次卡扣次认领额（非现金，fix 后不计入 serviceFen/已收，单列供对账溯源） */
           cashierPassFen,
         },
         /** 按日分组序列（[from,to) 每日一格，无收款日为 0；shopFen 自 M1 接收银实口径） */

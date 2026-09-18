@@ -368,6 +368,27 @@ function passUsable(p: PassRow): boolean {
   );
 }
 
+/**
+ * 会员归属解析（fix：收银单买家名缺失；散客混单口径在案）：
+ * - 显式传 customerId 字符串 → 该会员；
+ * - 显式传 null → **确认散客，不回填**（前端显式选择散客的语义保持不变）；
+ * - 字段缺省（undefined = 未选会员）→ 单含预约行时回填首行预约的客户
+ *   （「待收款拉入 → 结账」链路天然带会员归属，避免流水买家名丢失；
+ *   一单多预约行取首行，它们必然同客户——pendingAppointments 按单拉入）；
+ * - settle 对既有单（取单/再挂轨迹）缺省时先沿用单上已有 customerId。
+ */
+function resolveBillCustomerId(
+  inputCustomerId: string | null | undefined,
+  resolved: ResolvedItem[],
+  existingCustomerId?: string | null,
+): string | null {
+  if (typeof inputCustomerId === 'string') return inputCustomerId;
+  if (inputCustomerId === null) return null; // 显式散客
+  if (existingCustomerId) return existingCustomerId;
+  const apptLine = resolved.find((r) => r.kind === 'appointment' && r.appointment);
+  return apptLine?.appointment?.customerId ?? null;
+}
+
 /* ------------------------------------------------------------------ */
 /* 快照组装（路由返回统一形状）                                              */
 /* ------------------------------------------------------------------ */
@@ -425,12 +446,18 @@ async function billSnapshot(d: DbHandle, bill: BillRow) {
  *   入账记录（at=段时间）。M1-补1 起 settled 即全额已收（无 credit 段），
  *   ownReceived 恒 = ownPayable；历史 credit 段（M1-补1 前的本地验证数据）
  *   跳过不认领，仅作留痕。
+ * - 钱口径（fix：receivedFen 重复计次卡段修订）：「已收」= 现金类
+ *   （cash/wechat/alipay）实收，**不含次卡扣次等值**——pass 段的认领额
+ *   不进 recognized 的 serviceFen/shopFen（避免 settled 单 paidFen=payableFen
+ *   口径下与 passFen 双计），只在 recognized.passFen 单列（对齐 U3 财务
+ *   「次卡扣次非现金」口径，供对账溯源）；pass 段仍照常推进服务/商品归属
+ *   簿记（svcCovered），保证后续现金类段不被重复归到服务桶。
  */
 export interface CashierRecognizedEntry {
   at: Date;
   serviceFen: number;
   shopFen: number;
-  /** 其中次卡扣次部分（非现金；财务「次卡扣次不计入营业额」口径的溯源依据） */
+  /** 次卡扣次等值（非现金，单列对账；不进 serviceFen/shopFen/todayRevenueFen） */
   passFen: number;
 }
 
@@ -442,8 +469,10 @@ export interface CashierBillFinanceView {
   summary: string;
   /** 支付方式去重列表（流水表「支付方式签」，四分列 cash|wechat|alipay|pass） */
   methods: string[];
-  /** 次卡扣次合计（分，method='pass' 段） */
+  /** 次卡扣次合计（分，method='pass' 段；非现金，单列供对账） */
   passFen: number;
+  /** 现金类实收（分）= Σ cash/wechat/alipay 段（「已收」口径，不含次卡等值） */
+  cashLikeFen: number;
   ownPayableFen: number;
   ownReceivedFen: number;
   recognized: CashierRecognizedEntry[];
@@ -508,10 +537,10 @@ export async function loadCashierFinance(
     let covered = 0;
     let svcCovered = 0;
     let passFen = 0;
+    let cashLikeFen = 0;
     const methods: string[] = [];
     for (const p of billPayments) {
       if (!methods.includes(p.method)) methods.push(p.method);
-      if (p.method === 'pass') passFen += p.amountFen;
       // M1-补1 前本地验证数据的历史 credit 段：跳过不认领，仅留痕（credit 已废）
       if (p.method === 'credit') continue;
       const ownPart = Math.min(p.amountFen, ownPayableFen - covered);
@@ -519,12 +548,20 @@ export async function loadCashierFinance(
       const svcPart = Math.min(ownPart, serviceNet - svcCovered);
       svcCovered += svcPart;
       covered += ownPart;
-      recognized.push({
-        at: p.createdAt,
-        serviceFen: svcPart,
-        shopFen: ownPart - svcPart,
-        passFen: p.method === 'pass' ? ownPart : 0,
-      });
+      if (p.method === 'pass') {
+        // 次卡扣次等值：非现金，单列 passFen 供对账，不进 serviceFen/shopFen
+        // （fix：settled 单 paidFen=payableFen 口径下防双计）
+        passFen += ownPart;
+        recognized.push({ at: p.createdAt, serviceFen: 0, shopFen: 0, passFen: ownPart });
+      } else {
+        cashLikeFen += p.amountFen;
+        recognized.push({
+          at: p.createdAt,
+          serviceFen: svcPart,
+          shopFen: ownPart - svcPart,
+          passFen: 0,
+        });
+      }
     }
     const names = billItems.map((it) => it.nameSnapshot);
     const summary =
@@ -536,6 +573,7 @@ export async function loadCashierFinance(
       summary,
       methods,
       passFen,
+      cashLikeFen,
       ownPayableFen,
       ownReceivedFen: covered,
       recognized,
@@ -608,6 +646,7 @@ export const cashierRouter = router({
       .select({
         id: schema.appointments.id,
         code: schema.appointments.code,
+        customerId: schema.appointments.customerId, // fix：收银台拉入后买家回填/会员条联动用
         priceFen: schema.appointments.priceFen,
         scheduledStart: schema.appointments.scheduledStart,
         completedAt: schema.appointments.completedAt,
@@ -649,10 +688,6 @@ export const cashierRouter = router({
           const now = new Date();
           const resolved = await resolveItems(txDb(tx), storeId, input.items);
           const amounts = computeAmounts(resolved, input.discountType, input.discountValue);
-          const customerId = input.customerId ?? null;
-          if (resolved.some((r) => r.paidByPass) && !customerId) {
-            badRequest('散客单不能使用次卡扣次，请先检索会员');
-          }
 
           let bill: BillRow;
           if (input.billNo) {
@@ -666,6 +701,11 @@ export const cashierRouter = router({
             if (existing.createdBy !== ctx.user.id) forbidden('仅可更新本人开出的挂单');
             if (existing.status !== 'open' && existing.status !== 'held') {
               badRequest(`当前状态（${existing.status}）不可挂单`);
+            }
+            // 会员归属：缺省沿用单上已有值，含预约行可回填（见 resolveBillCustomerId 注释）
+            const customerId = resolveBillCustomerId(input.customerId, resolved, existing.customerId);
+            if (resolved.some((r) => r.paidByPass) && !customerId) {
+              badRequest('散客单不能使用次卡扣次，请先检索会员');
             }
             // 同号更新：行项整组替换（快照语义），金额/会员/备注刷新；
             // operator_id 同步为当前操作人（M1-补1 审计链，by=who）
@@ -690,6 +730,11 @@ export const cashierRouter = router({
               .then((r) => r[0]!);
           } else {
             const billNo = await genBillNo(txDb(tx), storeId, now);
+            // 会员归属：缺省且含预约行 → 回填首行预约客户（显式 null=确认散客不回填）
+            const customerId = resolveBillCustomerId(input.customerId, resolved);
+            if (resolved.some((r) => r.paidByPass) && !customerId) {
+              badRequest('散客单不能使用次卡扣次，请先检索会员');
+            }
             bill = await tx
               .insert(schema.cashierBills)
               .values({
@@ -813,7 +858,9 @@ export const cashierRouter = router({
           /* ---- 行解析 / 金额重算 / 支付校验 ---- */
           const resolved = await resolveItems(txDb(tx), storeId, input.items);
           const amounts = computeAmounts(resolved, input.discountType, input.discountValue);
-          const customerId = input.customerId ?? existing?.customerId ?? null;
+          // 会员归属：缺省沿用单上已有值 / 含预约行回填首行预约客户（显式 null=确认散客，
+          // 见 resolveBillCustomerId 注释——「待收款拉入→结账」链路流水买家名不再丢失）
+          const customerId = resolveBillCustomerId(input.customerId, resolved, existing?.customerId);
           const passLines = resolved.filter((r) => r.paidByPass);
           if (passLines.length > 0 && !customerId) {
             badRequest('散客单不能使用次卡扣次，请先检索会员');
