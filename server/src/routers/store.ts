@@ -771,14 +771,15 @@ export const storeRouter = router({
         .orderBy(desc(schema.appointments.completedAt))
         .limit(100);
 
-      const pendingPaymentFenAppt = pendingRows.reduce((sum, r) => sum + r.priceFen, 0);
+      const pendingPaymentFen = pendingRows.reduce((sum, r) => sum + r.priceFen, 0);
 
       /* ---- 批次 M1：收银台并入（口径见 cashier.ts loadCashierFinance 头注） ----
        * - 已收：settled 单的「自有口径」（服务/商品行，预约行金额由预约翻转口径
        *   认领，禁止双头记账）按支付段 createdAt 逐段认领，落 [from,to) 区间与
        *   byDay 日格；服务/商品按「优惠先抵服务、收款先认服务」拆分。
-       * - 待收：记账单 ownPending = ownPayable − ownReceived（时点待办，与区间无关）。
        * - shopFen 自本批起接实口径（收银商品行已收；商城 orders 仍无 paid_at 口径）。
+       * - M1-补1：「记账 credit」已删——收银单无待收态，待收口径回归预约域
+       *   （pendingPayment* 仅 completed 未 paid 预约，cashierPending 并入逻辑删除）。
        */
       const cashierFin = await loadCashierFinance(ctx.db, storeId);
       let cashierServiceFen = 0;
@@ -793,19 +794,8 @@ export const storeRouter = router({
         methods: string[];
         payableFen: number;
         receivedFen: number;
-        pendingFen: number;
         source: 'cashier';
       }> = [];
-      const cashierPending: Array<{
-        billNo: string;
-        settledAt: Date | null;
-        buyer: string;
-        summary: string;
-        payableFen: number;
-        pendingFen: number;
-        source: 'cashier';
-      }> = [];
-      let cashierPendingFen = 0;
       for (const cf of cashierFin) {
         for (const r of cf.recognized) {
           if (r.at.getTime() >= from.getTime() && r.at.getTime() < to.getTime()) {
@@ -833,19 +823,6 @@ export const storeRouter = router({
             methods: cf.methods,
             payableFen: cf.bill.payableFen,
             receivedFen: cf.bill.paidFen + cf.passFen,
-            pendingFen: cf.ownPendingFen,
-            source: 'cashier',
-          });
-        }
-        if (cf.ownPendingFen > 0) {
-          cashierPendingFen += cf.ownPendingFen;
-          cashierPending.push({
-            billNo: cf.bill.billNo,
-            settledAt: cf.bill.settledAt,
-            buyer: cf.buyerName,
-            summary: cf.summary,
-            payableFen: cf.bill.payableFen,
-            pendingFen: cf.ownPendingFen,
             source: 'cashier',
           });
         }
@@ -855,8 +832,6 @@ export const storeRouter = router({
       // 已收口径同步：服务收入 += 收银服务行实收；商城收入接收银商品行实收（不再恒 0）
       const serviceTotalFenMerged = serviceTotalFen + cashierServiceFen;
       const shopTotalFen = cashierShopFen;
-      // 待收口径同步：预约待收 + 收银记账待收
-      const pendingPaymentFen = pendingPaymentFenAppt + cashierPendingFen;
 
       return {
         range: { from, to },
@@ -867,7 +842,7 @@ export const storeRouter = router({
           /** 完成单数：区间内完成并收款单数（预约口径，收银单数见 cashierPaidCount） */
           paidCount: paidRows.length,
           pendingPaymentFen,
-          pendingPaymentCount: pendingRows.length + cashierPending.length,
+          pendingPaymentCount: pendingRows.length,
           /** 批次 M1：区间内收银台已结账单单数 */
           cashierPaidCount: cashierLedger.length,
           /** 批次 M1：区间内收银次卡扣次认领额（非现金，含于 serviceFen，供对账溯源） */
@@ -883,8 +858,6 @@ export const storeRouter = router({
         pendingPayments: pendingRows,
         /** 批次 M1：收银台流水（区间内 settled 单，来源签 'cashier'，按结账时间倒序） */
         cashierLedger,
-        /** 批次 M1：收银台记账待收明细（时点待办，与区间无关） */
-        cashierPending,
       };
     }),
 
@@ -1003,9 +976,10 @@ export const storeRouter = router({
 
       const todayCount = DASHBOARD_STATUSES.reduce((n, s) => n + byStatus[s], 0);
       /* ---- 批次 M1：收银台并入（口径见 cashier.ts loadCashierFinance 头注） ----
-       * - 今日营业额 += 收银已结单按支付段 createdAt 落在统计日的自有口径认领额
-       *   （服务/商品行；预约行金额已由上面 paidAt 口径认领，不重复计）；
-       * - 待办.待收款 += 收银记账待收单数（ownPending>0，闭环任务书 §1.5.1）。
+       * 今日营业额 += 收银已结单按支付段 createdAt 落在统计日的自有口径认领额
+       * （服务/商品行；预约行金额已由上面 paidAt 口径认领，不重复计）。
+       * M1-补1：「记账 credit」已删——收银单无待收态，todo.unpaid 回归纯预约口径
+       * （原收银待收单计数并入逻辑删除）。
        */
       const cashierFin = await loadCashierFinance(ctx.db, storeId);
       for (const cf of cashierFin) {
@@ -1014,7 +988,6 @@ export const storeRouter = router({
             todayRevenueFen += r.serviceFen + r.shopFen;
           }
         }
-        if (cf.ownPendingFen > 0) todo.unpaid += 1;
       }
       return {
         /** 统计日 0 点（本地时区） */

@@ -169,8 +169,6 @@ function notificationCopy(
       return { title: '收银台结账', body: `单 ${data.billNo ?? ''} 已结账` };
     case EventType.CashierBillVoided:
       return { title: '收银台撤单', body: `单 ${data.billNo ?? ''} 已撤单` };
-    case EventType.CashierBillCollected:
-      return { title: '收银台收款', body: `记账单 ${data.billNo ?? ''} 已结清` };
     default:
       return { title: '消息提醒', body: '您有一条新消息' };
   }

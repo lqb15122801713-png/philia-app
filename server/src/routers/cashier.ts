@@ -14,11 +14,18 @@
  *   序号 = 该店当日已开单数 + 1，事务内在串行锁下分配（收银写路径应用层
  *   串行锁 withCashierWriteLock，口径同 mall.withOrderWriteLock——@libsql/client
  *   单连接并发事务会交错中毒，串行后事务即行锁）。bill_no 同时是 settle /
- *   collect / void 的幂等键（裁定③）。
+ *   void 的幂等键（裁定③）。
  * - 金额口径（分）：金额一律服务端按快照重算（同 mall §4.7 不信前端金额）。
  *   有效价 = adjustedPriceFen ?? unitPriceFen；subtotal = Σ有效价×qty；
  *   应收 payable = subtotal − 单级优惠 discount；单级优惠只允许覆盖
  *   服务/商品行（预约行金额不参与优惠，保证预约财务口径可逐行对账）。
+ * - 支付方式四分列（M1-补1 修订 1）：cash | wechat | alipay | pass
+ *   （「扫码」拆微信/支付宝，账目四分列入流水，M2 日结批次直接取数）；
+ *   「记账 credit」已删除（挂账缓做，运营口径在案）——Σ支付=应收才放行，
+ *   settled 即全额已收（paid_fen = payable_fen），收银单无待收态；
+ *   预留 stored_value 位但禁用（存量储值支付=老板裁定①已生效，功能列 M2，
+ *   zod 不收）。连带删除：collect 端点 / cashier.billCollected 事件（无
+ *   触发点，删干净）。
  * - 改价/折扣闸门（裁定① + 任务书 §1.7）：行改价（adjustedPriceFen）或
  *   单级优惠（discountType≠none）仅 merchant_owner——hold/settle 路由内
  *   assertMerchantOwner 硬校验（merchantOwnerProcedure 不能复用于整路由，
@@ -34,14 +41,12 @@
  *   记账——收银流水不再重复认领预约行金额，见 loadCashierFinance 头注）
  *   → 落/更新单 settled + 写 cashier_payments → emitEvent(cashier.billSettled)
  *   同事务，提交后 broadcastNow。
- * - 幂等：settle/collect 以 bill_no 为幂等键——同 bill_no 重复 settle 直接
+ * - 审计链（M1-补1 修订 2）：operator_id 必填——创建/挂单/结账时 =
+ *   当时操作人 ctx.user.id（v1 与 created_by 同源，M2 班次启用后分叉）；
+ *   shift_id 预留恒 NULL。
+ * - 幂等：settle 以 bill_no 为幂等键——同 bill_no 重复 settle 直接
  *   返回已 settled 单快照（idempotent=true），不重复扣次/扣库存/翻预约/写
- *   支付段；collect 在已结清单上同样幂等返回。voidBill 对 voided 单幂等返回。
- * - 记账（credit 段）：单照 settled，paid_fen 不增（paid_fen 口径=现金+扫码
- *   实收；pass 段金额经 cashier_payments 溯源），差额=待收，进财务待收口径
- *   （store.financeStats.pendingPayment* 与 dashboardStats.todo.unpaid，
- *   闭环任务书 §1.5.1）；collect 收款须等额结清（Σ=待收余额），结清后发
- *   cashier.billCollected。
+ *   支付段。voidBill 对 voided 单幂等返回。
  * - 事件（契约 2）：全部走 store:{storeId} 频道（商家端 MerchantEventsProvider
  *   已订阅，零新 SSE 基建）；业务写库与 emitEvent 同事务，提交后 broadcastNow。
  * - 边界（任务书 §6）：v1 单收银台假设——无挂单超时清理、无多端开单冲突
@@ -73,7 +78,13 @@ type BillStatus = (typeof BILL_STATUSES)[number];
 
 /** 行类型 / 支付方式 / 优惠类型枚举 */
 const ITEM_KINDS = ['service', 'product', 'appointment'] as const;
-const PAYMENT_METHODS = ['cash', 'qr', 'pass', 'credit'] as const;
+/**
+ * 支付方式四分列（M1-补1 修订 1）：cash 现金 | wechat 微信 | alipay 支付宝 |
+ * pass 次卡扣次。「记账 credit」已删除（挂账缓做，运营口径在案）。
+ * 预留 stored_value（存量储值支付）位但禁用——老板裁定①已生效、功能列 M2，
+ * zod 此处不收，传了直接 400。
+ */
+const PAYMENT_METHODS = ['cash', 'wechat', 'alipay', 'pass'] as const;
 
 /** 单号格式：HD-{YYYYMMDD}-{当日 3 位序号} */
 const BILL_NO_RE = /^HD-\d{8}-\d{3}$/;
@@ -178,7 +189,7 @@ const cartSnapshotSchema = z.object({
   note: z.string().max(500).optional(),
 });
 
-/** 支付段入参（settle：四法可组合；collect：仅现金/扫码，见 collect 注释） */
+/** 支付段入参（settle：四分列可组合；stored_value 预留位禁用——zod 不收） */
 const paymentSegmentSchema = z.object({
   method: z.enum(PAYMENT_METHODS),
   amountFen: z.number().int().min(1, '支付金额须 ≥1 分').max(100_000_000),
@@ -405,16 +416,16 @@ async function billSnapshot(d: DbHandle, bill: BillRow) {
  * 收银单财务切片（禁止双头记账的核心约定）：
  * - 预约行金额（effAppt = Σ 预约行有效价）**不进**收银财务并入——该部分随
  *   预约翻转（appointments.paidAt/paidFen）由既有预约口径认领（任务书 §1.5.2
- *   「预约财务口径只此一翻」）；settled 即翻转，无论记账段是否覆盖。
+ *   「预约财务口径只此一翻」）。
  * - 收银自有口径 ownPayable = payable − effAppt（单级优惠只覆盖服务/商品行，
  *   settle 已强制 discount ≤ 非预约行合计，故 ownPayable = 服务/商品净额，
  *   恒 ≥0）。服务/商品拆分：优惠先抵服务行——serviceNet = max(0, effService −
  *   discount)（封顶 ownPayable），productNet = ownPayable − serviceNet。
  * - 收款确认按 payment 段逐段认领（现金口径，与预约 paidAt 口径同基）：
- *   非 credit 段按 createdAt 顺序先抵服务净额再抵商品净额；每段产生一条
- *   recognized 入账记录（at=段时间），collect 补记的段自然落在收款当日。
- * - ownReceived = 已认领合计（≤ ownPayable）；ownPending = ownPayable −
- *   ownReceived = 记账待收（进财务待收款待办的口径）。
+ *   各段按 createdAt 顺序先抵服务净额再抵商品净额；每段产生一条 recognized
+ *   入账记录（at=段时间）。M1-补1 起 settled 即全额已收（无 credit 段），
+ *   ownReceived 恒 = ownPayable；历史 credit 段（M1-补1 前的本地验证数据）
+ *   跳过不认领，仅作留痕。
  */
 export interface CashierRecognizedEntry {
   at: Date;
@@ -430,13 +441,12 @@ export interface CashierBillFinanceView {
   itemCount: number;
   /** 行摘要（流水表「内容摘要」列）：前 2 行名 + 等 N 项 */
   summary: string;
-  /** 支付方式去重列表（流水表「支付方式签」） */
+  /** 支付方式去重列表（流水表「支付方式签」，四分列 cash|wechat|alipay|pass） */
   methods: string[];
   /** 次卡扣次合计（分，method='pass' 段） */
   passFen: number;
   ownPayableFen: number;
   ownReceivedFen: number;
-  ownPendingFen: number;
   recognized: CashierRecognizedEntry[];
 }
 
@@ -503,7 +513,8 @@ export async function loadCashierFinance(
     for (const p of billPayments) {
       if (!methods.includes(p.method)) methods.push(p.method);
       if (p.method === 'pass') passFen += p.amountFen;
-      if (p.method === 'credit') continue; // 记账段=赊账登记，不认领实收
+      // M1-补1 前本地验证数据的历史 credit 段：跳过不认领，仅留痕（credit 已废）
+      if (p.method === 'credit') continue;
       const ownPart = Math.min(p.amountFen, ownPayableFen - covered);
       if (ownPart <= 0) continue;
       const svcPart = Math.min(ownPart, serviceNet - svcCovered);
@@ -528,7 +539,6 @@ export async function loadCashierFinance(
       passFen,
       ownPayableFen,
       ownReceivedFen: covered,
-      ownPendingFen: ownPayableFen - covered,
       recognized,
     };
   });
@@ -658,7 +668,8 @@ export const cashierRouter = router({
             if (existing.status !== 'open' && existing.status !== 'held') {
               badRequest(`当前状态（${existing.status}）不可挂单`);
             }
-            // 同号更新：行项整组替换（快照语义），金额/会员/备注刷新
+            // 同号更新：行项整组替换（快照语义），金额/会员/备注刷新；
+            // operator_id 同步为当前操作人（M1-补1 审计链，by=who）
             await tx
               .delete(schema.cashierBillItems)
               .where(eq(schema.cashierBillItems.billId, existing.id));
@@ -672,6 +683,7 @@ export const cashierRouter = router({
                 note: input.note ?? null,
                 status: 'held',
                 heldAt: now,
+                operatorId: ctx.user.id,
                 updatedAt: now,
               })
               .where(eq(schema.cashierBills.id, existing.id))
@@ -691,6 +703,8 @@ export const cashierRouter = router({
                 ...amounts,
                 note: input.note ?? null,
                 createdBy: ctx.user.id,
+                // M1-补1：operator_id 与 created_by 同源起步（M2 班次启用后分叉）
+                operatorId: ctx.user.id,
                 heldAt: now,
               })
               .returning()
@@ -762,8 +776,10 @@ export const cashierRouter = router({
    * FORBIDDEN 如实；流水 appointment_id=NULL、note 带 bill_no；后续步骤
    * 失败整体回滚）→ 商品行库存 MAX(0,stock-qty)（扣前不足 → stockShort=true
    * 留痕不阻塞）→ 预约行翻转（markPaid 同内核：paidAt/paidFen=行有效价 +
-   * appointment.paid 事件）→ 落/更新单 settled → 写 cashier_payments
-   * （credit 段不计 paid_fen）→ emit cashier.billSettled 同事务。
+   * appointment.paid 事件）→ 落/更新单 settled → 写 cashier_payments →
+   * emit cashier.billSettled 同事务。
+   * M1-补1：支付方式四分列（cash|wechat|alipay|pass），credit 已删——
+   * settled 即全额已收（paid_fen=payable_fen），收银单无待收态。
    * 改价/折扣触发 owner 闸门（manager 提交 FORBIDDEN 如实）。
    */
   settle: merchantProcedure
@@ -810,8 +826,6 @@ export const cashierRouter = router({
             );
           }
           const passSegs = input.payments.filter((p) => p.method === 'pass');
-          const creditSegs = input.payments.filter((p) => p.method === 'credit');
-          if (creditSegs.length > 1) badRequest('记账段至多一段');
           if (passSegs.length > 1) badRequest('次卡扣次段至多一段（客户×门店唯一卡）');
           const passAmount = passLines.reduce((s, r) => s + effPrice(r) * r.qty, 0);
           if (passLines.length > 0) {
@@ -928,9 +942,10 @@ export const cashierRouter = router({
             note: input.note ?? null,
             status: 'settled' as const,
             settledAt: now,
-            paidFen: input.payments
-              .filter((p) => p.method === 'cash' || p.method === 'qr')
-              .reduce((s, p) => s + p.amountFen, 0),
+            // M1-补1：Σ支付=应收才放行（上面已校验），settled 即全额已收
+            paidFen: amounts.payableFen,
+            // M1-补1 审计链：operator_id = 结账操作人（与 created_by 同源起步）
+            operatorId: ctx.user.id,
           };
           if (existing) {
             await tx
@@ -982,7 +997,6 @@ export const cashierRouter = router({
               billNo: bill.billNo,
               payableFen: bill.payableFen,
               paidFen: bill.paidFen,
-              creditFen: creditSegs.reduce((s, p) => s + p.amountFen, 0),
               passFen: passSegs.reduce((s, p) => s + p.amountFen, 0),
               itemCount: resolved.length,
               hasStockShort: [...stockShortByRef.values()].some(Boolean),
@@ -997,86 +1011,13 @@ export const cashierRouter = router({
     }),
 
   /**
-   * 6. collect（merchant 本店）：记账待收单收款（流水屏「收款 ›」）。
-   * 仅 settled 且未结清（paid+pass < payable）的单；收款方式仅现金/扫码
-   * （次卡抵账留扩展点），Σ 须等于待收余额（等额结清，前端按余额预填）。
-   * 补写 payments、paid_fen 累加到达应收 → emit cashier.billCollected。
-   * 幂等：已结清单重复 collect → 返回现状（idempotent=true），不重复补写。
-   */
-  collect: merchantProcedure
-    .input(
-      z.object({
-        billNo: z.string().regex(BILL_NO_RE),
-        payments: z
-          .array(
-            paymentSegmentSchema.extend({
-              method: z.enum(['cash', 'qr']),
-            }),
-          )
-          .min(1),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const storeId = ctx.user.storeId!;
-      return withCashierWriteLock(async () => {
-        let outboxId = '';
-        const result = await ctx.db.transaction(async (tx) => {
-          const bill = await tx
-            .select()
-            .from(schema.cashierBills)
-            .where(eq(schema.cashierBills.billNo, input.billNo))
-            .get();
-          if (!bill) throw new TRPCError({ code: 'NOT_FOUND', message: '单据不存在' });
-          if (bill.storeId !== storeId) forbidden('非本店单据，无权操作');
-          if (bill.status !== 'settled') badRequest(`当前状态（${bill.status}）不可收款，仅已结账单可收款`);
-          const passRow = await tx
-            .select({ n: sql<number>`coalesce(sum(${schema.cashierPayments.amountFen}), 0)` })
-            .from(schema.cashierPayments)
-            .where(
-              and(
-                eq(schema.cashierPayments.billId, bill.id),
-                eq(schema.cashierPayments.method, 'pass'),
-              ),
-            )
-            .get();
-          const received = bill.paidFen + Number(passRow?.n ?? 0);
-          const remaining = bill.payableFen - received;
-          if (remaining <= 0) return { bill, idempotent: true as const }; // 幂等：已结清
-          const sum = input.payments.reduce((s, p) => s + p.amountFen, 0);
-          if (sum !== remaining) {
-            badRequest(
-              `收款合计须等于待收余额（${(remaining / 100).toFixed(2)} 元）`,
-            );
-          }
-          const now = new Date();
-          await tx.insert(schema.cashierPayments).values(
-            input.payments.map((p) => ({ billId: bill.id, method: p.method, amountFen: p.amountFen })),
-          );
-          const updated = await tx
-            .update(schema.cashierBills)
-            .set({ paidFen: bill.paidFen + sum, updatedAt: now })
-            .where(eq(schema.cashierBills.id, bill.id))
-            .returning()
-            .then((r) => r[0]!);
-          outboxId = await emitEvent(txDb(tx), `store:${storeId}`, EventType.CashierBillCollected, {
-            billId: updated.id,
-            billNo: updated.billNo,
-            paidFen: updated.paidFen,
-            collectedFen: sum,
-          });
-          return { bill: updated, idempotent: false as const };
-        });
-        const snapshot = await billSnapshot(ctx.db, result.bill);
-        if (outboxId) broadcastNow(outboxId);
-        return { ...snapshot, idempotent: result.idempotent };
-      });
-    }),
-
-  /**
-   * 7. voidBill（merchant_owner 硬闸门，裁定①：撤单仅店主）：open/held →
+   * 6. voidBill（merchant_owner 硬闸门，裁定①：撤单仅店主）：open/held →
    * voided 留痕（voidReason 选填），禁止物理删除；**settled 单明确报错不可撤**
    * （裁定③：回补属退款专项，本批冻结——不存在撤单回补路径）；voided 重复
    * 撤 = 幂等返回。emit cashier.billVoided。
+   *
+   * （M1-补1：原 collect 端点随「记账 credit」删除而废——收银单无待收态，
+   * 死接口不留；「待收」回归预约域口径。）
    */
   voidBill: merchantOwnerProcedure
     .input(
@@ -1135,8 +1076,9 @@ export const cashierRouter = router({
    * 8. listBills（merchant 本店）：流水屏数据源。倒序（创建时间），上限 100；
    * 过滤：status（open|held|settled|voided）/ range（today|d7|d30，today 按
    * 门店规范时区当日）/ buyer（会员昵称或手机号模糊；特殊值「散客」匹配
-   * 无会员单）。行含 buyerName / itemCount / summary / passFen / methods，
-   * 前端据此渲染「已收 / 待收（payable > paid+pass）/ 已撤单」状态签。
+   * 无会员单）。行含 buyerName / itemCount / summary / passFen / methods。
+   * M1-补1：收银单无待收态（credit 已删）——流水状态签只剩
+   * 「已收薄荷 / 已撤单灰」（「待收」是预约域口径，不属于收银流水）。
    */
   listBills: merchantProcedure
     .input(
@@ -1222,9 +1164,6 @@ export const cashierRouter = router({
               : `${names.slice(0, 2).join('、')} 等 ${names.length} 项`,
           passFen,
           methods,
-          /** 待收标记（流水屏状态签）：已结账且 实收+次卡 < 应收 */
-          pendingCollection:
-            bill.status === 'settled' && bill.paidFen + passFen < bill.payableFen,
         };
       });
     }),

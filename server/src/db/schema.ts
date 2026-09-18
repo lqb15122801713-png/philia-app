@@ -642,9 +642,11 @@ export const payments = sqliteTable(
  *   （裁定③：撤单回补属退款专项，本批冻结）。
  * - 金额口径（分）：subtotal_fen = Σ行有效价×qty（有效价 = adjusted ?? unit）；
  *   discount_fen = 单级优惠额；payable_fen = subtotal − discount；
- *   paid_fen = 现金+扫码累计（收银台口径「实收现金类」；次卡扣次/记账不计入，
- *   次卡段经 cashier_payments method='pass' 溯源）。
- * - customer_id NULL = 散客；created_by = 开单人（商家用户）。
+ *   paid_fen = 实收（M1-补1 起 settled 即全额已收，恒 = payable_fen；
+ *   「记账 credit」已删除，收银单无待收态）。
+ * - customer_id NULL = 散客；created_by = 开单人（商家用户）；
+ *   operator_id = 操作员（M1-补1，v1 与 created_by 同源，M2 班次启用后分叉）；
+ *   shift_id = 班次预留（M2，本批恒 NULL）。
  */
 export const cashierBills = sqliteTable(
   'cashier_bills',
@@ -670,7 +672,10 @@ export const cashierBills = sqliteTable(
     discountFen: integer('discount_fen').notNull().default(0),
     /** 应收（分）= subtotal − discount */
     payableFen: integer('payable_fen').notNull().default(0),
-    /** 实收现金类（分）：现金+扫码累计（次卡扣次/记账不计；collect 累加） */
+    /**
+     * 实收（分）：M1-补1 起 settled 即全额已收（无记账态），恒 = payable_fen；
+     * 列保留骨架不动（收银单待收态随 credit 删除而废——「待收」是预约域口径）。
+     */
     paidFen: integer('paid_fen').notNull().default(0),
     /** 备注 */
     note: text('note'),
@@ -678,13 +683,30 @@ export const cashierBills = sqliteTable(
     createdBy: text('created_by')
       .notNull()
       .references(() => users.id),
+    /**
+     * 操作员（用户 ULID，必填）——by=who 审计链（M1-补1 修订 2，对齐裁定②）。
+     * v1 与 created_by 同源（创建/挂单/结账时 = 当时操作人 ctx.user.id）；
+     * M2 班次启用后与 created_by 分叉（created_by=开单人不变，operator_id=当班操作员）。
+     */
+    operatorId: text('operator_id')
+      .notNull()
+      .references(() => users.id),
+    /**
+     * 班次 ID（可空，M1-补1 修订 2 预留）——M2 日结/班次批次启用，
+     * 本批恒 NULL，应用层不写。
+     */
+    shiftId: text('shift_id'),
     /** 最近挂单时间（NULL = 从未挂单） */
     heldAt: integer('held_at', { mode: 'timestamp' }),
     /** 结账时间（NULL = 未结账） */
     settledAt: integer('settled_at', { mode: 'timestamp' }),
     /** 撤单时间（NULL = 未撤单） */
     voidedAt: integer('voided_at', { mode: 'timestamp' }),
-    /** 撤单原因（选填；留痕不删除） */
+    /**
+     * 撤单原因（选填；留痕不删除）
+     * 年费分摊预留说明（M1-补1 修订 2）：会员年费分摊本批无售卖场景，
+     * 不加列——会员前置批落地裁定④时再增分摊快照列。
+     */
     voidReason: text('void_reason'),
     ...auditColumns,
   },
@@ -736,10 +758,14 @@ export const cashierBillItems = sqliteTable(
 
 /**
  * 收银支付段表（登记型：只登记支付方式与金额，无任何真实扣款/网关）。
- * 一单可多段组合（如 现金 50 + 扫码 68）；method='credit' 段 = 记账（赊账），
- * 不计入 bills.paid_fen，单照 settled、差额进财务待收；method='pass' 段 =
- * 次卡扣次，须带 pass_id，扣次流水见 pass_deduct_log（appointment_id=NULL，
- * note 带 bill_no）。collect（待收收款）补写现金类段并累加 paid_fen。
+ * 一单可多段组合（如 现金 50 + 微信 68）。
+ * 方式枚举（M1-补1 修订 1 四分列）：cash | wechat | alipay | pass
+ * （「扫码」拆微信/支付宝，账目四分列入流水，M2 日结批次直接取数）；
+ * 「记账 credit」已删除（挂账缓做，运营口径在案）——settled 即全额已收，
+ * 收银单无待收态；预留 stored_value 位但禁用（存量储值支付=老板裁定①
+ * 已生效，功能列 M2，zod 层不收）。
+ * method='pass' 段须带 pass_id，扣次流水见 pass_deduct_log
+ * （appointment_id=NULL，note 带 bill_no）。
  */
 export const cashierPayments = sqliteTable(
   'cashier_payments',
