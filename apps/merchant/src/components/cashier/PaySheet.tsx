@@ -83,8 +83,9 @@ export default function PaySheet({
     setWasOpen(open)
     if (open) {
       setSelected(['cash'])
-      setInputs({ cash: String(amounts.dueFen / 100), wechat: '', alipay: '' })
-      setCashReceived(String(amounts.dueFen / 100))
+      const s = String(amounts.dueFen / 100)
+      setInputs({ cash: s, wechat: '', alipay: '' })
+      setCashReceived(s)
     }
   }
 
@@ -127,17 +128,18 @@ export default function PaySheet({
     setInputs(rebalance(next, cleared, dueFen))
   }
 
-  /* 次卡开合 / 应收变化时按当前选中重排末位金额 */
+  /* 次卡开合：应收变化只能在面板打开期由本动作触发（遮罩下车不可改），
+     故事件内就地重排末位金额——不做 render 期追随（同轮双 setInputs 会旧闭包覆盖） */
   const passOn = passCoveredFen > 0
-  const [lastDue, setLastDue] = useState(dueFen)
-  if (open && dueFen !== lastDue) {
-    setLastDue(dueFen)
-    setInputs(rebalance(selected, inputs, dueFen))
-  }
-
   const togglePass = () => {
     if (passBlockReason !== null) return
-    onTogglePassAll(!passOn)
+    const next = !passOn
+    const groomEff = lines
+      .filter((l) => l.kind === 'service' && l.serviceType === 'grooming')
+      .reduce((s, l) => s + (l.adjustedPriceFen ?? l.unitPriceFen) * l.qty, 0)
+    const nextDue = next ? dueFen + passCoveredFen - groomEff : dueFen + passCoveredFen
+    setInputs(rebalance(selected, inputs, Math.max(0, nextDue)))
+    onTogglePassAll(next)
   }
 
   /* ---- 校验：Σ现金类 = 展示应收；现金实收 ≥ 现金承担 ---- */

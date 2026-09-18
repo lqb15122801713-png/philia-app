@@ -70,9 +70,10 @@ function passStatus(p: PassRow): { cls: string; label: string } {
   return { cls: 'u3-st live', label: '在效' };
 }
 
-/** 流水事由（B3-3 口径：+1 含取消回补与商家拒单自动回补，流水字段不区分来源，并列标注） */
+/** 流水事由（B3-3 口径：+1 含取消回补与商家拒单自动回补，流水字段不区分来源，并列标注；
+ *  批次 M1：收银台扣次 appointment_id=NULL（裁定③）→ 标「收银台扣次」，与预约扣次区分） */
 function logReason(l: LogRow): string {
-  if (l.delta === -1) return '预约扣次 1 次';
+  if (l.delta === -1) return l.appointmentId ? '预约扣次 1 次' : '收银台扣次 1 次';
   if (l.delta === 1) return '取消/拒单回补 1 次';
   return `商家充次 ${l.delta} 次`;
 }

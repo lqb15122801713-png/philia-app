@@ -78,7 +78,7 @@ export default function MemberSearch({
           data-testid="cashier-member-search-btn"
           disabled={phone.trim().length < 3 || searching}
           onClick={() => void doSearch()}
-          className="inline-flex items-center gap-1.5 rounded-full bg-[#FFFDF6] px-4 py-2.5 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(74,59,46,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+          className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#FFFDF6] px-4 py-2.5 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(74,59,46,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
         >
           <Search size={15} strokeWidth={1.8} aria-hidden />
           {searching ? '检索中…' : '检索'}
