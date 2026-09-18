@@ -24,6 +24,9 @@ import { client, db, schema } from './index';
 /* ---------------- 清空（子表 -> 父表） ---------------- */
 
 const CLEAR_ORDER = [
+  schema.cashierPayments, // M1 收银台（FK → cashier_bills/member_pass），须先于父表清空
+  schema.cashierBillItems,
+  schema.cashierBills,
   schema.stepPhotos,
   schema.appointmentSteps,
   schema.boardingDailyLogs,
@@ -243,6 +246,9 @@ async function main() {
     ['boarding_daily_logs', 'boarding_daily_logs'],
     ['products', 'products'],
     ['orders', 'orders'],
+    ['cashier_bills', 'cashier_bills'],
+    ['cashier_bill_items', 'cashier_bill_items'],
+    ['cashier_payments', 'cashier_payments'],
     ['push_subscriptions', 'push_subscriptions'],
     ['event_outbox', 'event_outbox'],
     ['notifications', 'notifications'],

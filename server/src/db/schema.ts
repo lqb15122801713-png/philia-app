@@ -524,10 +524,15 @@ export const passDeductLogs = sqliteTable(
     passId: text('pass_id')
       .notNull()
       .references(() => memberPasses.id),
-    /** 关联预约单 ID -> appointments.id（NULL = 商家充次等无单操作） */
+    /** 关联预约单 ID -> appointments.id（NULL = 商家充次 / 收银台结账扣次等无单操作） */
     appointmentId: text('appointment_id').references(() => appointments.id),
     /** 次数变动：-1 扣次 / +1 取消回补 / +N 商家充次 */
     delta: integer('delta').notNull(),
+    /**
+     * 备注（批次 M1 追加，可空）：收银台结账扣次写「收银台结账 {bill_no}」，
+     * 收银台扣次流水 appointment_id 恒 NULL，靠本列回溯来源单（裁定③）。
+     */
+    note: text('note'),
     ...auditColumns,
   },
   (t) => [
@@ -619,6 +624,140 @@ export const payments = sqliteTable(
     ...auditColumns,
   },
   (t) => [index('ix_payments_order_id').on(t.orderId)],
+);
+
+/* ------------------------------------------------------------------ */
+/* 5.4b 收银台（批次 M1 · 登记型收银，决策 #27：不碰真实支付）               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 收银单表（批次 M1）。
+ *
+ * - 单号 bill_no：HD-{YYYYMMDD}-{当日 3 位序号}，日期按门店规范时区（+8，
+ *   appointment.ts storeWallclock 位移法）取「当日」，序号=该店当日已开单数+1，
+ *   全局唯一靠 UNIQUE 索引 + 事务内序号分配（收银写路径应用层串行锁，
+ *   口径同 mall.withOrderWriteLock）。bill_no 同时是结账/收款/撤单的幂等键。
+ * - 状态机：open（开单中）→ held（挂单）→ open（取单）→ settled（已结账）；
+ *   open/held → voided（撤单留痕，禁止物理删除）；settled 终态不可撤
+ *   （裁定③：撤单回补属退款专项，本批冻结）。
+ * - 金额口径（分）：subtotal_fen = Σ行有效价×qty（有效价 = adjusted ?? unit）；
+ *   discount_fen = 单级优惠额；payable_fen = subtotal − discount；
+ *   paid_fen = 现金+扫码累计（收银台口径「实收现金类」；次卡扣次/记账不计入，
+ *   次卡段经 cashier_payments method='pass' 溯源）。
+ * - customer_id NULL = 散客；created_by = 开单人（商家用户）。
+ */
+export const cashierBills = sqliteTable(
+  'cashier_bills',
+  {
+    id: id(),
+    /** 挂单/收银单号（全局唯一，幂等键）：HD-{YYYYMMDD}-{当日 3 位序号} */
+    billNo: text('bill_no').notNull().unique(),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 状态，取值：open | held | settled | voided */
+    status: text('status').notNull().default('open'),
+    /** 会员用户 ID -> users.id（NULL = 散客） */
+    customerId: text('customer_id').references(() => users.id),
+    /** 单级优惠类型，取值：none | percent（折扣%） | amount（立减分） */
+    discountType: text('discount_type').notNull().default('none'),
+    /** 优惠值：percent 时为 1-100（如 90 = 九折）；amount 时为立减金额（分） */
+    discountValue: integer('discount_value').notNull().default(0),
+    /** 合计（分）：Σ行有效价×qty（服务端按快照重算，不信前端金额） */
+    subtotalFen: integer('subtotal_fen').notNull().default(0),
+    /** 单级优惠额（分） */
+    discountFen: integer('discount_fen').notNull().default(0),
+    /** 应收（分）= subtotal − discount */
+    payableFen: integer('payable_fen').notNull().default(0),
+    /** 实收现金类（分）：现金+扫码累计（次卡扣次/记账不计；collect 累加） */
+    paidFen: integer('paid_fen').notNull().default(0),
+    /** 备注 */
+    note: text('note'),
+    /** 开单人（商家用户 ID -> users.id） */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    /** 最近挂单时间（NULL = 从未挂单） */
+    heldAt: integer('held_at', { mode: 'timestamp' }),
+    /** 结账时间（NULL = 未结账） */
+    settledAt: integer('settled_at', { mode: 'timestamp' }),
+    /** 撤单时间（NULL = 未撤单） */
+    voidedAt: integer('voided_at', { mode: 'timestamp' }),
+    /** 撤单原因（选填；留痕不删除） */
+    voidReason: text('void_reason'),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_cashier_bills_store_status').on(t.storeId, t.status),
+    index('ix_cashier_bills_store_created').on(t.storeId, t.createdAt),
+  ],
+);
+
+/**
+ * 收银单行表：服务行 / 商品行 / 预约行三类，快照留名留价（引用不复制语义
+ * 仅指预约财务口径回写，行本身仍快照，防止后续改价/下架影响历史单）。
+ * - 有效价 = adjusted_price_fen ?? unit_price_fen（改价留痕，仅店主可改，闸门在路由层）。
+ * - paid_by_pass=true 的服务行：结账时走次卡扣次（1 行 = 扣 1 次），
+ *   金额经 method='pass' 支付段覆盖。
+ * - stock_short=true：结账时库存不足的留痕（任务书口径「不足不阻塞但须明示」，
+ *   库存按 MAX(0, stock-qty) 扣减）。
+ */
+export const cashierBillItems = sqliteTable(
+  'cashier_bill_items',
+  {
+    id: id(),
+    /** 收银单 ID -> cashier_bills.id */
+    billId: text('bill_id')
+      .notNull()
+      .references(() => cashierBills.id),
+    /** 行类型，取值：service | product | appointment */
+    kind: text('kind').notNull(),
+    /** 引用 ID：services.id / products.id / appointments.id（按 kind 解释） */
+    refId: text('ref_id').notNull(),
+    /** 名称快照 */
+    nameSnapshot: text('name_snapshot').notNull(),
+    /** 规格快照（如「90 分钟」/ 宠物名·预约时间 / 商品单位），可空 */
+    specSnapshot: text('spec_snapshot'),
+    /** 数量（服务/预约行恒 1，仅商品行 >1；应用层约束） */
+    qty: integer('qty').notNull().default(1),
+    /** 单价快照（分） */
+    unitPriceFen: integer('unit_price_fen').notNull(),
+    /** 改价后单价（分，可空；NULL = 未改价；改价/折扣仅 merchant_owner） */
+    adjustedPriceFen: integer('adjusted_price_fen'),
+    /** 是否次卡扣次行（仅 grooming 服务行允许） */
+    paidByPass: integer('paid_by_pass', { mode: 'boolean' }).notNull().default(false),
+    /** 结账时库存不足留痕（不足不阻塞、库存兜底扣到 0） */
+    stockShort: integer('stock_short', { mode: 'boolean' }).notNull().default(false),
+    ...auditColumns,
+  },
+  (t) => [index('ix_cashier_bill_items_bill').on(t.billId)],
+);
+
+/**
+ * 收银支付段表（登记型：只登记支付方式与金额，无任何真实扣款/网关）。
+ * 一单可多段组合（如 现金 50 + 扫码 68）；method='credit' 段 = 记账（赊账），
+ * 不计入 bills.paid_fen，单照 settled、差额进财务待收；method='pass' 段 =
+ * 次卡扣次，须带 pass_id，扣次流水见 pass_deduct_log（appointment_id=NULL，
+ * note 带 bill_no）。collect（待收收款）补写现金类段并累加 paid_fen。
+ */
+export const cashierPayments = sqliteTable(
+  'cashier_payments',
+  {
+    id: id(),
+    /** 收银单 ID -> cashier_bills.id */
+    billId: text('bill_id')
+      .notNull()
+      .references(() => cashierBills.id),
+    /** 支付方式，取值：cash | qr | pass | credit */
+    method: text('method').notNull(),
+    /** 金额（分）；pass 段金额 = 本单扣次行有效价合计（记账口径用，非现金） */
+    amountFen: integer('amount_fen').notNull(),
+    /** 次卡 ID -> member_pass.id（method='pass' 必填，其余 NULL） */
+    passId: text('pass_id').references(() => memberPasses.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_cashier_payments_bill').on(t.billId)],
 );
 
 /* ------------------------------------------------------------------ */

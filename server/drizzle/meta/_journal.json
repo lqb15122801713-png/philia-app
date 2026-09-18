@@ -57,6 +57,13 @@
       "when": 1789533378626,
       "tag": "0007_fluffy_bucky",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1789738576072,
+      "tag": "0008_fresh_lord_hawal",
+      "breakpoints": true
     }
   ]
 }
