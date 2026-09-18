@@ -106,16 +106,17 @@ function AlbumCard({ album }: { album: Album }) {
         />
         <span className="absolute inset-x-0 bottom-0 flex items-end justify-between bg-ink/55 p-3 text-left">
           <span>
-            <span className="block text-body font-semibold text-white">
+            {/* U4-D3 禁令清净：纯白字类 → text-canvas（VI 米白，墨上反白同观感） */}
+            <span className="block text-body font-semibold text-canvas">
               {album.petName ?? '毛孩子'} · {album.serviceName ?? '洗护服务'}
             </span>
-            <span className="mt-0.5 block text-caption text-white/85">
+            <span className="mt-0.5 block text-caption text-canvas/85">
               {album.doneAt ? formatDateCn(album.doneAt) : ''}
               {album.storeName ? ` · ${album.storeName}` : ''}
             </span>
           </span>
           <ChevronDown
-            className={`h-5 w-5 shrink-0 text-white transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+            className={`h-5 w-5 shrink-0 text-canvas transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
             strokeWidth={1.5}
           />
         </span>
@@ -207,7 +208,7 @@ export default function MomentsPage() {
             action={
               <Link
                 to="/booking/grooming"
-                className="mt-2 rounded-full bg-brand-primary px-5 py-2 text-body text-ink"
+                className="inline-flex items-center rounded-control bg-brand-primary px-[30px] py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
               >
                 去预约洗护
               </Link>

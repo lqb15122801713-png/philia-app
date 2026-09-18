@@ -1,9 +1,11 @@
 /**
- * 购物车入口（T5.3）：右上购物车图标 + 角标数量。
- * 角标动画：检测到数量增加时做一次克制的缩放弹跳（200ms philia-spring，对齐设计手册徽章弹出）。
+ * 购物袋入口（T5.3；U4-D3 对齐试样 07 屏 .pill-code 工艺）：
+ * 页头右侧细线 pill——袋图标 +「购物袋 · N」（N>0 时带出件数，u1-num 等宽）。
+ * 试样：1px 细线 ring + 全圆 + 11px/600 墨 60%；角标弹跳保留（数量增加时 200ms
+ * 克制缩放，对齐设计手册徽章弹出）。
  */
 
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingBag } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from './cartStore';
@@ -27,17 +29,18 @@ export default function CartLink({ className = '' }: { className?: string }) {
   return (
     <Link
       to="/mall/cart"
-      aria-label={`购物车，共 ${count} 件商品`}
-      className={`relative flex h-11 w-11 items-center justify-center rounded-full bg-card shadow-card transition-transform duration-120 ease-philia-spring active:scale-92 ${className}`}
+      aria-label={`购物袋，共 ${count} 件商品`}
+      className={`flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 text-caption-xs font-semibold text-ink-secondary ring-1 ring-line-ring transition-transform duration-120 ease-philia-spring active:scale-92 ${className}`}
     >
-      <ShoppingCart className="h-5 w-5 text-ink" strokeWidth={1.5} />
+      <ShoppingBag className="h-3 w-3" strokeWidth={1.8} />
+      购物袋
       {count > 0 ? (
         <span
-          className={`absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-primary px-1 font-number text-[11px] font-semibold text-white transition-transform duration-300 ease-philia-spring ${
+          className={`u1-num text-ink transition-transform duration-300 ease-philia-spring ${
             bump ? 'scale-125' : 'scale-100'
           }`}
         >
-          {count > 99 ? '99+' : count}
+          · {count > 99 ? '99+' : count}
         </span>
       ) : null}
     </Link>

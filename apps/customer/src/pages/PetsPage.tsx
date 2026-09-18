@@ -9,7 +9,7 @@
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Cake, PawPrint, Pencil, Plus, Scale, Syringe, X } from 'lucide-react'
+import { Cake, PawPrint, Plus, Scale, Syringe, X } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { z } from 'zod'
@@ -211,12 +211,12 @@ function PetForm({
   }
 
   const inputCls =
-    'w-full rounded-input border border-line bg-card px-3 py-2.5 text-body outline-none transition-colors focus:border-brand-primary'
+    'w-full rounded-control border border-line bg-card px-3 py-2.5 text-body-sm outline-none transition-colors focus:border-brand-primary'
   const labelCls = 'mb-1 block text-caption text-ink-secondary'
   const errCls = 'mt-1 text-caption text-danger-deep'
 
   return (
-    <div className="rounded-card bg-card p-4 shadow-card">
+    <div className="u1-card p-4">
       <p className="text-title">{editingId ? '编辑档案' : '新增宠物'}</p>
 
       {/* 头像 */}
@@ -273,7 +273,7 @@ function PetForm({
               key={opt.value}
               type="button"
               onClick={() => set('species', opt.value)}
-              className={`flex-1 rounded-full border px-3 py-2 text-body transition-colors ${
+              className={`flex-1 rounded-full border px-3 py-2 text-body-sm transition-colors ${
                 form.species === opt.value
                   ? 'border-brand-primary bg-brand-primary-light text-brand-primary-pressed'
                   : 'border-line bg-card text-ink-secondary'
@@ -340,7 +340,7 @@ function PetForm({
       </div>
 
       {/* 绝育 */}
-      <label className="mt-4 flex items-center gap-2 text-body">
+      <label className="mt-4 flex items-center gap-2 text-body-sm">
         <input
           type="checkbox"
           checked={form.neutered}
@@ -407,7 +407,7 @@ function PetForm({
         <button
           type="button"
           onClick={onCancel}
-          className="flex-1 rounded-full border border-line py-2.5 text-body text-ink-secondary"
+          className="flex-1 rounded-full border border-line py-2.5 text-body-sm text-ink-secondary"
         >
           取消
         </button>
@@ -415,7 +415,7 @@ function PetForm({
           type="button"
           disabled={saveMutation.isPending}
           onClick={onSubmit}
-          className="flex-1 rounded-full bg-brand-primary py-2.5 text-body text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
+          className="flex-1 rounded-full bg-brand-primary py-2.5 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
         >
           {saveMutation.isPending ? '保存中…' : '保存档案'}
         </button>
@@ -474,27 +474,34 @@ function PetGroomingHistory({ petId }: { petId: string }) {
     staleTime: 60_000,
   })
 
-  const rows = (mineQ.data?.groups.completed ?? [])
-    .filter((a) => a.type === 'grooming' && a.petId === petId)
-    .slice(0, 3)
+  const rowsAll = (mineQ.data?.groups.completed ?? []).filter(
+    (a) => a.type === 'grooming' && a.petId === petId,
+  )
+  const rows = rowsAll.slice(0, 3)
   if (rows.length === 0) return null
 
+  /* U4-D3 对齐试样 11 洗护史：区头=题 14/600 + 右「共 N 次」（真值=该宠已完成洗护单数）；
+     行=日期 u1-num + 项目 + 「同款再约 ›」11/700（试样 .tl .re）；
+     试样缩略图位无真实照片字段来源（listMine 不透出过程照）——不出，登记 */
   return (
     <div className="mt-3 border-t border-[rgba(74,59,46,.09)] pt-2.5" data-testid={`pet-history-${petId}`}>
-      <p className="text-caption-xs text-ink-placeholder">洗护史</p>
+      <div className="flex items-baseline justify-between">
+        <p className="text-body-sm font-semibold">洗护史</p>
+        <p className="u1-num text-caption-xs text-ink-placeholder">共 {rowsAll.length} 次</p>
+      </div>
       <ul className="mt-1.5 flex flex-col gap-1.5">
         {rows.map((a) => {
           const d = new Date(a.completedAt ?? a.scheduledStart)
           return (
             <li key={a.id} className="flex items-center justify-between gap-2 text-caption">
-              <span className="u1-num shrink-0 text-ink-secondary">
+              <span className="u1-num shrink-0 text-ink-placeholder">
                 {d.getMonth() + 1}.{d.getDate()}
               </span>
               <span className="min-w-0 flex-1 truncate text-ink">{a.serviceName ?? '洗护'}</span>
               <Link
                 to={`/booking/grooming?storeId=${encodeURIComponent(a.storeId)}&serviceId=${encodeURIComponent(a.serviceId)}&petId=${encodeURIComponent(petId)}`}
                 data-testid={`pet-rebook-${a.id}`}
-                className="shrink-0 text-caption-xs font-medium text-ink underline-offset-2 hover:underline"
+                className="shrink-0 text-caption-xs font-bold text-ink underline-offset-2 hover:underline"
               >
                 同款再约 ›
               </Link>
@@ -536,9 +543,11 @@ export default function PetsPage() {
     })
 
   return (
-    <div className="px-4 pb-6">
+    /* U4-D3：页边距 22px。结构说明（登记）：试样 11=单宠详情页（/pets/:id 大头照+指标格），
+       实现=多宠列表页（/philia/pets）——信息架构维持现行不重构，逐格对齐卡工艺 */
+    <div className="px-[22px] pb-6">
       {/* U1-A：统一返回条（←圆钮+标题），固定返回 philia 页 */}
-      <PageHeader title="宠物档案" to="/philia" className="pt-6" />
+      <PageHeader title="宠物档案" to="/philia" className="pt-4" />
 
       <div className="mt-4 flex flex-col gap-3">
         {petsQuery.isPending ? <LoadingBlock lines={3} /> : null}
@@ -553,7 +562,7 @@ export default function PetsPage() {
               <button
                 type="button"
                 onClick={openCreate}
-                className="mt-2 rounded-full bg-brand-primary px-5 py-2 text-body text-ink"
+                className="rounded-control bg-brand-primary px-[30px] py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
               >
                 建立档案
               </button>
@@ -564,7 +573,8 @@ export default function PetsPage() {
         {petsQuery.data?.map((pet) => (
           <article key={pet.id} className="u1-card p-4">
             <div className="flex items-start gap-3">
-              {/* U1-I 头图：圆形双细线环（同 philia 页形象位口径） */}
+              {/* U1-I 头图：圆形双细线环（同 philia 页形象位口径）；
+                  D-补3：无头像=字圈工艺（浅木底+衬线首字），不再用 PawPrint 图标占位 */}
               <span className="shrink-0 rounded-full p-1 ring-1 ring-line-ring">
                 {pet.avatarUrl ? (
                   <img
@@ -573,21 +583,22 @@ export default function PetsPage() {
                     className="h-14 w-14 rounded-full object-cover ring-1 ring-line-ring"
                   />
                 ) : (
-                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-secondary-light ring-1 ring-line-ring">
-                    <PawPrint className="h-6 w-6 text-brand-primary" strokeWidth={1.5} />
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-oak-light ring-1 ring-line-ring">
+                    <span className="u1-serif text-title-lg font-semibold text-ink">{pet.name.slice(0, 1)}</span>
                   </span>
                 )}
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-body font-semibold">{pet.name}</p>
+                  <p className="truncate text-title">{pet.name}</p>
+                  {/* U4-D3：试样 11「编辑 ›」安静文字链（11px 墨 60%），铅笔圆钮退役 */}
                   <button
                     type="button"
                     onClick={() => openEdit(pet)}
                     aria-label={`编辑 ${pet.name}`}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sunken"
+                    className="shrink-0 text-caption-xs text-ink-secondary"
                   >
-                    <Pencil className="h-4 w-4 text-ink-secondary" strokeWidth={1.5} />
+                    编辑 ›
                   </button>
                 </div>
                 <p className="mt-0.5 text-caption text-ink-secondary">
@@ -604,13 +615,13 @@ export default function PetsPage() {
                     {pet.birthday ? (
                       <span className="flex items-center gap-1">
                         <Cake className="h-3.5 w-3.5" strokeWidth={1.5} />
-                        {formatDateCn(`${pet.birthday}T00:00:00`)}
+                        <span className="u1-num">{formatDateCn(`${pet.birthday}T00:00:00`)}</span>
                       </span>
                     ) : null}
                     {pet.weightKg !== null ? (
                       <span className="flex items-center gap-1">
                         <Scale className="h-3.5 w-3.5" strokeWidth={1.5} />
-                        {pet.weightKg} kg
+                        <span className="u1-num">{pet.weightKg} kg</span>
                       </span>
                     ) : null}
                     {pet.neutered ? <span>已绝育</span> : null}
@@ -646,7 +657,7 @@ export default function PetsPage() {
           <button
             type="button"
             onClick={openCreate}
-            className="flex items-center justify-center gap-1.5 rounded-card border border-dashed border-line-strong bg-card py-3.5 text-body text-ink-secondary transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            className="flex items-center justify-center gap-1.5 rounded-panel border border-dashed border-line-strong bg-card py-3.5 text-body-sm text-ink-secondary transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
             <Plus className="h-4 w-4" strokeWidth={1.5} />
             新增宠物

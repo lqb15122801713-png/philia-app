@@ -44,11 +44,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Bath, BedDouble, Gift, PawPrint, Plus, Scissors } from 'lucide-react'
-import { useMe, usePhiliaClient } from '@philia/shared'
+import { Bath, BedDouble, CreditCard, Gift, Plus, Scissors, ShoppingBag } from 'lucide-react'
+import { useMe, usePhiliaClient, getStepDef } from '@philia/shared'
 import HomeBookingPanel from '../components/home/HomeBookingPanel'
 import { ErrorState } from '../components/home/common'
-import { fenToYuan } from '@/components/booking/format'
+import { fenToYuan, fmtHM } from '@/components/booking/format'
 import type { AppointmentListItem } from '@/components/booking/types'
 import { readLastBooking } from '@/lib/bookingPrefill'
 
@@ -135,6 +135,17 @@ export default function HomePage() {
   })
   const activeStep = (stepsQ.data ?? []).find((s) => s.status === 'active') ?? null
 
+  // U4-C 图注副行（服务中态）：旺财 · 第 N 步 · 步骤名 · 预计 HH:MM（scheduledEnd 真字段）
+  const bannerServiceSub = useMemo(() => {
+    if (!inServiceAppt) return null
+    const parts: string[] = [inServiceAppt.petName ?? '爱宠']
+    if (activeStep?.stepOrder) parts.push(`第 ${activeStep.stepOrder} 步`)
+    const nm = activeStep ? (getStepDef(activeStep.stepKey)?.name ?? null) : null
+    if (nm) parts.push(nm)
+    if (inServiceAppt.scheduledEnd) parts.push(`预计 ${fmtHM(new Date(inServiceAppt.scheduledEnd))}`)
+    return parts.join(' · ')
+  }, [inServiceAppt, activeStep])
+
   // 首店解析：B4-3 记忆门店优先，否则 listNearby 首店（仅取服务目录做三入口小字）
   const memoryStoreId = useMemo(() => readLastBooking()?.storeId ?? null, [])
   const nearbyQ = useQuery({
@@ -195,24 +206,34 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* 细线隔出次级行：商城 / 会员卡（守护市集无路由、联系门店无 phone——不渲染） */}
-      <div className={`mt-3 grid grid-cols-2 gap-2 pt-1 ${HAIRLINE}`}>
-        <Link
-          to="/mall"
-          data-testid="home-sub-mall"
-          className="flex items-center justify-between py-2.5 text-body-sm text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
-        >
-          商城
-          <span className="text-ink-secondary" aria-hidden="true">›</span>
-        </Link>
-        <Link
-          to="/philia/member"
-          data-testid="home-sub-member"
-          className="flex items-center justify-between py-2.5 text-body-sm text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
-        >
-          会员卡
-          <span className="text-ink-secondary" aria-hidden="true">›</span>
-        </Link>
+      {/* U4-A 重做：次级入口=两条整宽列表行（细线分隔）——40px 圆角 14 浅木底
+          图标芯片（lucide 线图标墨 60%）+ 名称 14/600 墨 + › 墨 30%；
+          按下 scale 0.98 / 120ms / ease-philia-spring。
+          守护市集无路由、联系门店无 phone——不渲染，不造假。
+          跳转口径（U4 任务书）：商城→/mall、会员卡→/me/card。 */}
+      <div className={`mt-3 pt-1 ${HAIRLINE}`}>
+        {[
+          { to: '/mall', testid: 'home-sub-mall', icon: ShoppingBag, name: '商城' },
+          { to: '/me/card', testid: 'home-sub-member', icon: CreditCard, name: '会员卡' },
+        ].map(({ to, testid, icon: RowIcon, name }, i) => (
+          <Link
+            key={testid}
+            to={to}
+            data-testid={testid}
+            className={`flex items-center gap-3 py-2.5 text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] ${i > 0 ? HAIRLINE : ''}`}
+          >
+            <span
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-oak-light"
+              aria-hidden="true"
+            >
+              <RowIcon className="h-5 w-5 text-ink/60" strokeWidth={1.5} />
+            </span>
+            <span className="min-w-0 flex-1 text-body-sm font-semibold leading-5">{name}</span>
+            <span className="shrink-0 text-ink/30" aria-hidden="true">
+              ›
+            </span>
+          </Link>
+        ))}
       </div>
     </section>
   )
@@ -227,34 +248,33 @@ export default function HomePage() {
             alt="菲丽亚宠物门店"
             data-testid="home-banner-img"
             onError={() => setBannerImgOk(false)}
-            className="h-44 w-full object-cover"
+            className="h-[238px] w-full object-cover object-[center_70%]"
           />
         ) : (
-          <div className="h-44 w-full bg-oak-light" aria-hidden="true" />
+          <div className="h-[238px] w-full bg-oak-light" aria-hidden="true" />
         )}
-        <header data-testid="home-topbar" className="absolute inset-x-0 top-0 flex items-start justify-between px-4 pt-6">
-          <p className="font-display text-[22px] font-semibold italic leading-7 text-ink">
-            philia
+        <header data-testid="home-topbar" className="absolute inset-x-0 top-0 flex items-start justify-between px-[22px] pt-[46px]">
+          <p className="font-display text-[19px] font-extrabold uppercase leading-7 tracking-[.06em] text-[#FFFDF6] [text-shadow:0_1px_8px_rgba(46,38,32,.35)]">
+            PHILIA
           </p>
           <Link
             to="/philia/member"
             data-testid="home-member-code"
-            className="mt-1 rounded-full border border-[rgba(74,59,46,.3)] bg-card/80 px-3.5 py-1.5 text-caption-xs leading-4 text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+            className="rounded-full border border-[rgba(255,253,246,.7)] px-3 py-[5px] text-caption-xs leading-4 text-[#FFFDF6] transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             会员码
           </Link>
         </header>
-        {/* 图注标题（衬线展示位）+ 会员信息行（真实数据；服务中态标题变第 N 步）。
-            pb-10：为后随卡片 26px 上探预留，图注行不被压盖 */}
-        <div className="px-4 pb-10 pt-3">
-          <h1 data-testid="home-banner-title" className="u1-serif text-title-lg leading-7">
-            {inServiceAppt
-              ? `洗护进行中${activeStep?.stepOrder ? ` · 第 ${activeStep.stepOrder} 步` : ''}`
-              : '守护每一次洗护'}
+        {/* 图注标题（衬线展示位，叠于图上左下——U4-C 恢复试样 .h-cap 展示位；bottom 38
+            避开后随卡片 26px 上探区） */}
+        <div className="absolute inset-x-[22px] bottom-[38px]">
+          <h1 data-testid="home-banner-title" className="u1-serif text-title-lg leading-7 text-[#FFFDF6] [text-shadow:0_1px_10px_rgba(46,38,32,.45)]">
+            {inServiceAppt ? '洗护进行中' : '守护每一次洗护'}
           </h1>
-          <p data-testid="home-banner-sub" className="mt-0.5 text-caption-xs leading-4 text-ink-secondary">
-            {user?.nickname ?? '宠友'}
-            {joinDays !== null ? ` · 加入菲丽亚第 ${joinDays} 天` : ''}
+          <p data-testid="home-banner-sub" className="mt-[5px] text-caption-xs leading-4 tracking-[.06em] text-[#FFFDF6]/90">
+            {inServiceAppt
+              ? (bannerServiceSub ?? '')
+              : `${user?.nickname ?? '宠友'}${joinDays !== null ? ` · 加入菲丽亚第 ${joinDays} 天` : ''}`}
           </p>
         </div>
       </section>
@@ -362,8 +382,9 @@ export default function HomePage() {
                     className="h-14 w-14 rounded-full bg-sunken object-cover"
                   />
                 ) : (
-                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-sunken" aria-hidden="true">
-                    <PawPrint className="h-6 w-6 text-ink-secondary" strokeWidth={1.5} />
+                  /* D-补3 字圈工艺：浅木底 + 衬线首字（D1 洗护师字圈同口径），不再用 PawPrint 图标占位 */
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-oak-light ring-1 ring-line-ring" aria-hidden="true">
+                    <span className="u1-serif text-title font-semibold text-ink">{(pet.name ?? '毛孩子').slice(0, 1)}</span>
                   </span>
                 )}
                 <span className="w-full truncate text-center text-caption-xs leading-4">{pet.name ?? '毛孩子'}</span>

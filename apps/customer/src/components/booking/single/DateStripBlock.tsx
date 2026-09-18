@@ -8,10 +8,19 @@
  */
 
 import { useMemo, useState } from 'react';
-import { dayLabel } from '../format';
+import { weekCN } from '../format';
 import { isSameDay, type DayGrid } from './slotGrid';
 
 const WEEK_HEADER = ['日', '一', '二', '三', '四', '五', '六'] as const;
+
+/** U4-D1：横条 chip 短标签（试样 .d-w 口径：今天/明天/周x——56 宽 chip 内单行不折行） */
+const stripLabel = (d: Date) => {
+  const now = new Date();
+  if (isSameDay(d, now)) return '今天';
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  if (isSameDay(d, tomorrow)) return '明天';
+  return weekCN(d);
+};
 
 export default function DateStripBlock({
   days,
@@ -44,8 +53,9 @@ export default function DateStripBlock({
 
   return (
     <div data-testid="gs-date-strip">
-      {/* 7 天横条（v4.1：去色块，选中=深棕墨加粗 + 细线指示） */}
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+      {/* 7 天横条（U4-D1 试样 .date 工艺：56 宽 chip 白底细线 ring；选中=柠檬底——
+          任务书 D-补1 口径，覆盖试样墨底；约满/休息=43% 透明度，约满附红字） */}
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {days.map((d) => {
           const active = selectedDay !== null && isSameDay(d.date, selectedDay);
           const greyed = d.closed || !d.hasAvailable;
@@ -57,19 +67,26 @@ export default function DateStripBlock({
               data-testid={`gs-day-${d.date.getFullYear()}-${d.date.getMonth() + 1}-${d.date.getDate()}`}
               data-active={active ? 'true' : 'false'}
               data-greyed={greyed ? 'true' : 'false'}
-              className={`relative flex w-16 shrink-0 flex-col items-center px-2 pb-2.5 pt-1 transition active:scale-95 ${
-                greyed ? 'text-ink-placeholder' : 'text-ink'
-              }`}
+              className={`flex w-14 shrink-0 flex-col items-center rounded-control px-1 pb-2 pt-2.5 transition active:scale-95 ${
+                active ? 'bg-brand-primary' : 'u1-ring bg-card'
+              } ${greyed && !active ? 'opacity-[.43]' : ''}`}
             >
-              <span className="text-caption">{dayLabel(d.date)}</span>
-              <span className={`mt-0.5 font-number text-body ${active ? 'font-bold' : 'font-semibold'}`}>{d.date.getDate()}</span>
-              <span className={`mt-0.5 h-4 text-[10px] leading-4 ${greyed ? 'text-ink-placeholder' : 'text-ink-secondary'}`}>
+              <span className={`text-caption-xs ${active ? 'text-ink/60' : 'text-ink-secondary'}`}>{stripLabel(d.date)}</span>
+              <span className="u1-num mt-0.5 text-title">{d.date.getDate()}</span>
+              <span
+                className={`u1-num mt-0.5 h-4 text-caption-xs leading-4 ${
+                  active
+                    ? 'text-ink/70'
+                    : !d.closed && !d.hasAvailable
+                      ? 'text-danger'
+                      : 'text-ink-secondary'
+                }`}
+              >
                 {d.closed ? '休息' : !d.hasAvailable ? '约满' : (() => {
                   const remain = remainByDay?.get(`${d.date.getFullYear()}-${d.date.getMonth() + 1}-${d.date.getDate()}`);
                   return remain ? `余 ${remain}` : '';
                 })()}
               </span>
-              {active ? <span className="absolute bottom-0 h-[2px] w-7 rounded-full bg-ink" /> : null}
             </button>
           );
         })}
@@ -97,7 +114,7 @@ export default function DateStripBlock({
             ];
             return (
               <div key={`${y}-${m}`} className="rounded-card border border-[rgba(74,59,46,.09)] p-3">
-                <p className="text-center text-body font-semibold">
+                <p className="text-center text-body-sm font-semibold">
                   {y} 年 {m + 1} 月
                 </p>
                 <div className="mt-2 grid grid-cols-7 gap-1 text-center text-caption text-ink-placeholder">
@@ -120,7 +137,7 @@ export default function DateStripBlock({
                         onClick={() => onPickDay(d)}
                         data-testid={`gs-cal-${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`}
                         data-in-window={inWindow ? 'true' : 'false'}
-                        className={`flex h-9 items-center justify-center rounded-full font-number text-body transition ${
+                        className={`flex h-9 items-center justify-center rounded-full font-number text-body-sm transition ${
                           active
                             ? 'border-[1.5px] border-ink font-semibold text-ink'
                             : !inWindow

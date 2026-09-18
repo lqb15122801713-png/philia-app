@@ -4,9 +4,15 @@
  * appointment.create 无 staffId 入参，所选员工以备注前缀传达门店）。
  * 共享件 StaffPicker 被旧 4 屏向导 /wizard 共用，不动。
  *
- * U1-D 换肤（v9.1 美容师横卡）：置顶「随缘派单」默认卡（paw VI 线图标，替换 🐾
- * 彩色 emoji——全域禁彩色图标）+ 横滑员工卡；卡片=U1-B 细线 ring 控件档
- * （rounded-control 14 + ring-1 ring-line-ring），选中态=深棕墨 1.5px 细线圈（同语言）。
+ * U4-D1 逐格对照试样（.staff/.st-photo 工艺）：
+ * - 卡：118px 宽横滑卡（试样 .staff），rounded-control 14 + 细线 ring；
+ *   选中卡=深棕墨 2px 描边（试样 .staff.sel）。
+ * - 头像圈 58px 圆（试样 .st-photo）：listStaffPublic 不透出头像字段（staff 表无
+ *   avatar，实证 schema/listStaffPublic 仅 id/name/skills）——无照片=浅木底
+ *   （bg-oak-light）+衬线首字（u1-serif）字圈，选中态柠檬边（任务书 D-补1 口径）。
+ * - 置顶「随缘派单」默认卡：木纹底（bg-oak）爪印 VI 线图标 +「最早可约 HH:MM」
+ *   真值（页面由可约槽集合算出，无可约槽回退「门店安排」，不造假）。
+ * - 横滑条滚动条隐藏（D-补2 口径：scrollbar-width:none + ::-webkit-scrollbar 隐藏）。
  */
 
 import { PawPrint } from 'lucide-react';
@@ -18,20 +24,26 @@ export default function StaffPickerFlat({
   selectedId,
   onSelect,
   loading,
+  earliestLabel,
 }: {
   staff: StaffPublic[];
   /** null = 随缘派单 */
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   loading?: boolean;
+  /** 随缘卡「最早可约 HH:MM」真值（可约槽集合最早时刻）；null = 暂无可约槽，回退「门店安排」 */
+  earliestLabel?: string | null;
 }) {
   const cardCls = (active: boolean) =>
-    `flex w-24 shrink-0 flex-col items-center gap-1 rounded-control px-2 py-3 text-center ring-1 transition active:scale-95 ${
+    `flex w-[118px] shrink-0 flex-col items-center gap-1 rounded-control px-3 py-3.5 text-center ring-1 transition active:scale-95 ${
       active ? 'ring-2 ring-ink' : 'ring-line-ring'
     }`;
 
   return (
-    <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1" data-testid="gs-groomer-rail">
+    <div
+      className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      data-testid="gs-groomer-rail"
+    >
       {/* 置顶默认卡：随缘派单（不指定，门店按 S4 可用性引擎自动派单） */}
       <button
         type="button"
@@ -39,16 +51,23 @@ export default function StaffPickerFlat({
         data-testid="gs-groomer-any"
         className={cardCls(selectedId === null)}
       >
-        <span className="flex h-11 w-11 items-center justify-center" aria-hidden="true">
+        <span
+          className={`flex h-[58px] w-[58px] items-center justify-center rounded-full bg-oak ${
+            selectedId === null ? 'ring-2 ring-brand-primary' : ''
+          }`}
+          aria-hidden="true"
+        >
           <PawPrint className="h-6 w-6 text-ink" strokeWidth={1.5} />
         </span>
-        <span className="text-body-sm font-semibold">随缘派单</span>
-        <span className="text-caption-xs text-ink-secondary">门店安排</span>
+        <span className="mt-1 text-body-sm font-semibold">随缘派单</span>
+        <span className="u1-num text-caption-xs text-ink-secondary">
+          {earliestLabel ? `最早可约 ${earliestLabel}` : '门店安排'}
+        </span>
       </button>
 
       {loading
         ? [1, 2].map((i) => (
-            <div key={i} className="h-[104px] w-24 shrink-0 animate-pulse rounded-control bg-sunken" />
+            <div key={i} className="h-[132px] w-[118px] shrink-0 animate-pulse rounded-control bg-sunken" />
           ))
         : staff.map((s) => (
             <button
@@ -58,10 +77,16 @@ export default function StaffPickerFlat({
               data-testid={`gs-groomer-${s.id}`}
               className={cardCls(selectedId === s.id)}
             >
-              <span className="flex h-11 w-11 items-center justify-center rounded-full ring-1 ring-line-ring text-body font-semibold text-ink">
+              {/* 字圈：无真实头像字段——浅木底 + 衬线首字；选中柠檬边（任务书 D-补1） */}
+              <span
+                className={`flex h-[58px] w-[58px] items-center justify-center rounded-full bg-oak-light u1-serif text-title-lg font-semibold text-ink ${
+                  selectedId === s.id ? 'ring-2 ring-brand-primary' : ''
+                }`}
+                aria-hidden="true"
+              >
                 {s.name.slice(0, 1)}
               </span>
-              <span className="text-body-sm font-semibold">{s.name}</span>
+              <span className="mt-1 text-body-sm font-semibold">{s.name}</span>
               <span className="text-caption-xs text-ink-secondary">
                 {(s.skills ?? []).map((k) => SKILL_LABEL[k] ?? k).join('·') || '店员'}
               </span>

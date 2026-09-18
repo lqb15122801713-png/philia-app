@@ -177,6 +177,19 @@ export default function HomeBookingPanel({
     enabled: !!user && inServiceAppt !== null,
   });
 
+  // U4-B：指派员工名解析——store.listStaffPublic 现成接口（零新接口），
+  // 仅服务中态启用；未指派/查询失败 → staffName=null，在店卡该段隐去不造假
+  const staffQ = useQuery({
+    queryKey: ['store', 'listStaffPublic', inServiceAppt?.storeId],
+    queryFn: () => trpc.store.listStaffPublic.query({ storeId: inServiceAppt!.storeId }),
+    enabled: !!user && inServiceAppt !== null,
+    staleTime: 300_000,
+  });
+  const inServiceStaffName = useMemo(() => {
+    if (!inServiceAppt?.staffId) return null;
+    return staffQ.data?.staff.find((s) => s.id === inServiceAppt.staffId)?.name ?? null;
+  }, [inServiceAppt, staffQ.data]);
+
   /* ---- SSE：服务中态事件到达 invalidate 对应 query（先 subscribe 再连 /api/events） ---- */
   const [clientId] = useState(getClientId);
   const [subscribed, setSubscribed] = useState(false);
@@ -214,7 +227,7 @@ export default function HomeBookingPanel({
   const alignRef = useRef(alignInService);
   alignRef.current = alignInService;
 
-  useEventSource({
+  const { connected: sseConnected } = useEventSource({
     url: sseUrl,
     onEvent: (envelope: EventEnvelope) => {
       switch (envelope.type) {
@@ -337,6 +350,9 @@ export default function HomeBookingPanel({
         totalSteps={6}
         doneCount={steps.filter((s) => s.status === 'done').length}
         photos={latestPhotos(steps, 3)}
+        sseConnected={sseConnected}
+        staffName={inServiceStaffName}
+        etaEnd={inServiceAppt.scheduledEnd ?? null}
       />
     );
   }

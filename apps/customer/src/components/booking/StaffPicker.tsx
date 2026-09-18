@@ -25,7 +25,7 @@ export default function StaffPicker({
     }`;
 
   return (
-    <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1">
+    <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {/* 随缘：不指定 */}
       <button type="button" onClick={() => onSelect(null)} className={cardCls(selectedId === null)}>
         <span className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-secondary-light text-[20px]">

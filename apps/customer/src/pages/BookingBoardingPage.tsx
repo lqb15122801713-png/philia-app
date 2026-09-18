@@ -245,7 +245,7 @@ export default function BookingBoardingPage() {
       {step === 2 ? (
         <section className="mt-4">
           <h2 className="text-title">寄养门店</h2>
-          <div className="-mx-4 mt-2 flex gap-2 overflow-x-auto px-4 pb-1">
+          <div className="-mx-4 mt-2 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {(nearbyQ.data?.stores ?? []).map((s) => (
               <button
                 key={s.id}
@@ -423,7 +423,7 @@ export default function BookingBoardingPage() {
             type="button"
             disabled={createM.isPending}
             onClick={() => createM.mutate()}
-            className="h-12 w-full rounded-full bg-philia-gradient text-body font-semibold text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+            className="h-12 w-full rounded-full bg-brand-primary text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
           >
             {createM.isPending ? '提交中…' : '确认预约'}
           </button>
