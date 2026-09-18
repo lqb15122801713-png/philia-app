@@ -16,6 +16,7 @@ import { router } from '../trpc';
 import { appointmentRouter } from './appointment';
 import { authRouter } from './auth';
 import { boardingRouter } from './boarding';
+import { cashierRouter } from './cashier';
 import { mallRouter } from './mall';
 import { passRouter } from './pass';
 import { petRouter } from './pet';
@@ -33,6 +34,7 @@ export const appRouter = router({
   push: pushRouter,
   mall: mallRouter, // P5 T5.1 商城（coder-mall-server 追加）
   pass: passRouter, // v1.1-b2 B2-7 次卡（充次/扣次/回补闭环）
+  cashier: cashierRouter, // 批次 M1 商家端收银台（登记型收银，决策 #27）
 });
 
 /** 前端 tRPC client 的类型锚点（仅类型导出，无运行时开销） */
