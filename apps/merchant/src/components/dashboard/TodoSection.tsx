@@ -72,7 +72,9 @@ export default function TodoSection({
         ? `${unpaidSample.petName ?? '宠物'} ${unpaidSample.serviceName ?? ''} ¥${fenToYuanGrouped(unpaidSample.priceFen)}`
         : '服务已完成，未登记收款',
       count: stats?.todo.unpaid ?? 0,
-      to: '/finance#pending-payments',
+      // 批次 M1 联动（任务书 §1.5.1）：待收款 → 收银台并自动拉入该预约；
+      // 无样例时落收银台主屏（原 /finance#pending-payments 落点退役为收银链路）
+      to: unpaidSample ? `/cashier?pull=${unpaidSample.id}` : '/cashier',
     },
     {
       key: 'overdue',

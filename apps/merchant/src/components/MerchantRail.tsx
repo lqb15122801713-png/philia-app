@@ -12,6 +12,7 @@ import { NavLink } from 'react-router-dom';
 import {
   CalendarDays,
   BedDouble,
+  Calculator,
   House,
   MonitorDot,
   Package,
@@ -37,6 +38,8 @@ const GROUPS: Array<{ label: string | null; items: Array<{ to: string; label: st
   {
     label: '商城',
     items: [
+      // 批次 M1：收银台=商城组首位（任务书 §1.7，lucide Calculator）
+      { to: '/cashier', label: '收银台', icon: Calculator, testid: 'rail-cashier' },
       { to: '/orders', label: '订单', icon: ShoppingBag, testid: 'rail-orders' },
       { to: '/products', label: '商品', icon: Package, testid: 'rail-products' },
     ],
@@ -65,15 +68,19 @@ export default function MerchantRail() {
   return (
     <nav
       data-testid="merchant-rail"
-      className="flex h-full w-[190px] shrink-0 flex-col bg-ink px-3 py-[18px] text-[rgba(246,241,227,.72)]"
+      className="flex h-full w-[56px] shrink-0 flex-col bg-ink px-1.5 py-[18px] text-[rgba(246,241,227,.72)] xl:w-[190px] xl:px-3"
     >
-      <div className="px-2.5 pb-4 pt-1.5 font-display text-title font-bold tracking-[.05em] text-[#F6F1E3]">
+      {/* M1 收银台 390 降级配套：xl 以下图标轨（字标/组标/底卡收起，导航可达性保留），xl 起完整 190px */}
+      <div className="hidden px-2.5 pb-4 pt-1.5 font-display text-title font-bold tracking-[.05em] text-[#F6F1E3] xl:block">
         PHILIA
+      </div>
+      <div className="pb-3 pt-1.5 text-center font-display text-title font-bold text-brand-primary xl:hidden" aria-hidden>
+        P
       </div>
       {GROUPS.map((g) => (
         <div key={g.label ?? 'top'}>
           {g.label ? (
-            <div className="px-2.5 pb-1.5 pt-3.5 text-caption-xs tracking-[.14em] text-[rgba(246,241,227,.35)]">
+            <div className="hidden px-2.5 pb-1.5 pt-3.5 text-caption-xs tracking-[.14em] text-[rgba(246,241,227,.35)] xl:block">
               {g.label}
             </div>
           ) : null}
@@ -82,20 +89,21 @@ export default function MerchantRail() {
               key={to}
               to={to}
               data-testid={testid}
+              title={label}
               className={({ isActive }) =>
-                `mb-0.5 flex items-center gap-2.5 rounded-chip px-2.5 py-[9px] text-caption font-medium transition-transform duration-120 ease-philia-spring active:scale-92 ${
+                `mb-0.5 flex items-center justify-center gap-2.5 rounded-chip px-0 py-[9px] text-caption font-medium transition-transform duration-120 ease-philia-spring active:scale-92 xl:justify-start xl:px-2.5 ${
                   isActive ? 'bg-[rgba(253,200,48,.14)] font-semibold text-brand-primary' : ''
                 }`
               }
             >
               <Icon className="h-[19px] w-[19px]" strokeWidth={1.6} aria-hidden />
-              {label}
+              <span className="hidden xl:inline">{label}</span>
             </NavLink>
           ))}
         </div>
       ))}
       {/* 底部：门店/店主卡（真值） */}
-      <div className="mt-auto px-2.5 py-2.5 text-caption-xs leading-relaxed text-[rgba(246,241,227,.4)]" data-testid="rail-foot">
+      <div className="mt-auto hidden px-2.5 py-2.5 text-caption-xs leading-relaxed text-[rgba(246,241,227,.4)] xl:block" data-testid="rail-foot">
         {storeName}
         <br />
         店主 · {ownerName}

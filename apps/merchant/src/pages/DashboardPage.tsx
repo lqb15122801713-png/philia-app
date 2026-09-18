@@ -98,6 +98,11 @@ export default function DashboardPage() {
           case EventType.AppointmentPaid:
           case EventType.BoardingOverdue:
           case EventType.BoardingCompleted:
+          // 批次 M1：收银台事件 → 总览联动（结账翻预约待收 −1 / todayRevenueFen 含收银；
+          // 挂单/撤单影响收银台自身口径，统一全量对齐）
+          case EventType.CashierBillHeld:
+          case EventType.CashierBillSettled:
+          case EventType.CashierBillVoided:
             invalidateAll()
             break
           default:

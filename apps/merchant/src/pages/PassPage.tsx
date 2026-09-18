@@ -19,9 +19,10 @@
  * 禁编造年费档位/价格；储值不做。次卡无卡种字段——卡种列仅展示 member_pass 行真值（累计充次）。
  */
 
-import { usePhiliaClient } from '@philia/shared';
+import { EventType, usePhiliaClient } from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useMerchantEvents } from '../components/dashboard/MerchantEventsProvider';
 import MainScaffold, { LemonButton } from '../components/MainScaffold';
 import { errMsg, fmtDateTime } from '../components/staff-admin/format';
 import { Btn, Field, inputCls, Modal, numStyle, toast, ToasterMount } from '../components/staff-admin/ui';
@@ -210,7 +211,8 @@ function LogsModal({ pass, onClose }: { pass: PassRow | null; onClose: () => voi
 }
 
 export default function PassPage() {
-  const { trpc } = usePhiliaClient();
+  const { trpc, queryClient } = usePhiliaClient();
+  const events = useMerchantEvents();
   const passesQ = useQuery({
     queryKey: ['pass', 'listForStore'],
     queryFn: () => trpc.pass.listForStore.query(),
@@ -219,6 +221,20 @@ export default function PassPage() {
     queryKey: ['pass', 'listLogs', 'store'],
     queryFn: () => trpc.pass.listLogs.query({}),
   });
+
+  // 批次 M1（任务书 §1.5.3）：收银台结账含次卡扣次 → 次卡余额/扣次流水即时刷新；
+  // 断线重连全量对齐（MerchantEventsProvider 全域单连接，零新建连）
+  const invalidatePass = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ['pass'] });
+  }, [queryClient]);
+  useEffect(
+    () =>
+      events.onEvent((envelope) => {
+        if (envelope.type === EventType.CashierBillSettled) invalidatePass();
+      }),
+    [events, invalidatePass],
+  );
+  useEffect(() => events.onReconnect(invalidatePass), [events, invalidatePass]);
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [presetUserId, setPresetUserId] = useState<string | null>(null);
   const [logsFor, setLogsFor] = useState<PassRow | null>(null);

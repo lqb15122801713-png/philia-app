@@ -74,7 +74,6 @@ import { storeDayStartMs, storeWallclock } from './appointment';
 
 /** 收银单状态取值（schema text 列的应用层枚举，五态冻结） */
 const BILL_STATUSES = ['open', 'held', 'settled', 'voided'] as const;
-type BillStatus = (typeof BILL_STATUSES)[number];
 
 /** 行类型 / 支付方式 / 优惠类型枚举 */
 const ITEM_KINDS = ['service', 'product', 'appointment'] as const;
