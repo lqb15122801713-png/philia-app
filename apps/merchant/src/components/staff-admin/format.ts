@@ -9,10 +9,11 @@ import { DAY_KEYS, DAY_SHORT, type DayKey, type StaffScheduleLike } from './type
 
 const WEEK_CN = ['日', '一', '二', '三', '四', '五', '六'];
 
-/** 金额：分 → ¥元（两位小数，等宽数字由调用方加 tabular-nums） */
+/** 金额：分 → ¥元（U4 任务 F：试样整数元口径——整数去 .00，带零头才两位小数；
+    等宽数字由调用方加 tabular-nums） */
 export function fmtMoney(fen: number | null | undefined): string {
   if (fen === null || fen === undefined) return '—';
-  return `¥${(fen / 100).toFixed(2)}`;
+  return fen % 100 === 0 ? `¥${fen / 100}` : `¥${(fen / 100).toFixed(2)}`;
 }
 
 function pad2(n: number): string {

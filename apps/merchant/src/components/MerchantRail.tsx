@@ -67,7 +67,7 @@ export default function MerchantRail() {
       data-testid="merchant-rail"
       className="flex h-full w-[190px] shrink-0 flex-col bg-ink px-3 py-[18px] text-[rgba(246,241,227,.72)]"
     >
-      <div className="px-2.5 pb-4 pt-1.5 font-display text-body-lg font-extrabold tracking-[.05em] text-[#F6F1E3]">
+      <div className="px-2.5 pb-4 pt-1.5 font-display text-title font-bold tracking-[.05em] text-[#F6F1E3]">
         PHILIA
       </div>
       {GROUPS.map((g) => (

@@ -11,9 +11,11 @@
 
 import { useNavigate } from 'react-router-dom'
 import { assignSourceLabel, paymentModeLabel } from '@/components/appointments/appt-utils'
+import type { StepProgress } from '@/components/appointments/useStepProgress'
 import { hhmm, type TodayApptItem } from './utils'
 
-/** 状态 → 胶囊（u3-st 变体；confirmed 按母本口径写作「待到店」） */
+/** 状态 → 胶囊（u3-st 变体；confirmed 按母本口径写作「待到店」；
+    服务中携带六步进度「服务中 N/6」（试样 §2 口径）；已完成未收款缀「· 待收款」（试样 §2） */
 const CAPSULE: Record<string, { label: string; cls: string }> = {
   pending: { label: '待确认', cls: 'u3-st wait' },
   confirmed: { label: '待到店', cls: 'u3-st wait' },
@@ -47,9 +49,12 @@ function RowSkeleton() {
 export default function TodayTimeline({
   items,
   loading,
+  stepProgress,
 }: {
   items: TodayApptItem[]
   loading: boolean
+  /** 服务中行六步进度（appointmentId → done/total），页面层 useStepProgress 提供 */
+  stepProgress?: Map<string, StepProgress>
 }) {
   const navigate = useNavigate()
 
@@ -86,6 +91,13 @@ export default function TodayTimeline({
             {items.map((item) => {
               const cancelled = item.status === 'cancelled'
               const capsule = CAPSULE[item.status] ?? { label: item.status, cls: 'u3-st wait' }
+              const prog = stepProgress?.get(item.id)
+              const capsuleLabel =
+                item.status === 'in_service' && prog
+                  ? `服务中 ${prog.done}/${prog.total}`
+                  : item.status === 'completed' && item.paidAt == null
+                    ? '已完成 · 待收款'
+                    : capsule.label
               const payText = item.paymentMode ? paymentModeLabel(item.paymentMode) : null
               const srcText = assignSourceLabel(item.assignSource)
               return (
@@ -109,7 +121,7 @@ export default function TodayTimeline({
                     ) : null}
                   </td>
                   <td>
-                    <span className={capsule.cls}>{capsule.label}</span>
+                    <span className={capsule.cls}>{capsuleLabel}</span>
                   </td>
                 </tr>
               )

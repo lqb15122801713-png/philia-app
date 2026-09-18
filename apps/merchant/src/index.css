@@ -176,7 +176,7 @@
   /* 面板（表格/分组容器） */
   .u3-panel { background:#FFFDF6; border-radius:20px; box-shadow:0 0 0 1px rgba(74,59,46,.09), 0 1px 2px rgba(61,50,41,.04); overflow:hidden; }
   .u3-panel-head { display:flex; align-items:baseline; justify-content:space-between; padding:14px 17px 10px; }
-  .u3-panel-head h3 { font-size:14px; font-weight:800; }
+  .u3-panel-head h3 { font-size:14px; font-weight:700; }
   .u3-panel-head .aside { font-size:11px; color:rgba(74,59,46,.42); }
   /* 表格（后台密度：行高 40~44） */
   .u3-tbl { width:100%; border-collapse:collapse; font-size:12px; }
@@ -199,7 +199,7 @@
   /* 数据卡（总览/财务） */
   .u3-stat { background:#FFFDF6; border-radius:20px; box-shadow:0 0 0 1px rgba(74,59,46,.09); padding:15px 17px; }
   .u3-stat .cap { font-size:11px; color:rgba(74,59,46,.42); font-weight:600; }
-  .u3-stat .v { font-family:Montserrat,"Noto Sans SC",sans-serif; font-variant-numeric:tabular-nums; font-size:26px; font-weight:800; margin-top:6px; }
+  .u3-stat .v { font-family:Montserrat,"Noto Sans SC",sans-serif; font-variant-numeric:tabular-nums; font-size:26px; font-weight:700; margin-top:6px; }
   .u3-stat .d { font-size:11px; color:rgba(74,59,46,.62); margin-top:4px; }
   .u3-stat .d b { color:#4A3B2E; }
   /* 待办行（色点+事由+数量） */
@@ -208,12 +208,12 @@
   .u3-todo .dot { width:8px; height:8px; border-radius:50%; flex:none; }
   .u3-todo .tx { flex:1; line-height:1.5; }
   .u3-todo .tx small { display:block; font-size:11px; color:rgba(74,59,46,.42); }
-  .u3-todo .n { font-family:Montserrat,sans-serif; font-variant-numeric:tabular-nums; font-weight:800; font-size:14px; }
+  .u3-todo .n { font-family:Montserrat,sans-serif; font-variant-numeric:tabular-nums; font-weight:700; font-size:14px; }
   /* kv 小格（金额卡） */
   .u3-kv { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:4px 17px 16px; }
-  .u3-kv .cell { background:#F6F1E3; border-radius:12px; padding:11px 13px; }
+  .u3-kv .cell { background:#F6F1E3; border-radius:14px; padding:11px 13px; }
   .u3-kv .cap { font-size:11px; color:rgba(74,59,46,.42); font-weight:600; }
-  .u3-kv .v { font-family:Montserrat,sans-serif; font-variant-numeric:tabular-nums; font-size:16px; font-weight:800; margin-top:4px; }
+  .u3-kv .v { font-family:Montserrat,sans-serif; font-variant-numeric:tabular-nums; font-size:17px; font-weight:700; margin-top:4px; }
   /* 字段行（详情信息卡） */
   .u3-field { display:flex; padding:9px 0; border-top:1px solid rgba(74,59,46,.06); font-size:12px; }
   .u3-field:first-child { border-top:none; }
@@ -229,4 +229,22 @@
   .u3-stepv .tx { flex:1; font-size:12px; }
   .u3-stepv .tx b { font-size:12px; }
   .u3-stepv .tx small { display:block; font-size:11px; color:rgba(74,59,46,.42); margin-top:2px; }
+}
+
+/* U4 F-补1：表格/chips 横滑容器滚动条隐藏（桌面浏览器同样干净） */
+.u3-noscrollx { scrollbar-width: none; -ms-overflow-style: none; }
+.u3-noscrollx::-webkit-scrollbar { display: none; }
+
+/* 动效纲领 §四.7 可访问性红线：prefers-reduced-motion 全域降级为静态（员工端 E-43 同构） */
+@layer base {
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }

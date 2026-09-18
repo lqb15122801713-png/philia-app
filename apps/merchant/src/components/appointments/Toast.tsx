@@ -38,7 +38,7 @@ export function ToastHost() {
       setItems((prev) => [...prev.slice(-3), m]);
       window.setTimeout(() => {
         setItems((prev) => prev.filter((x) => x.id !== m.id));
-      }, 3600);
+      }, 2500);
     };
     listeners.add(l);
     return () => {

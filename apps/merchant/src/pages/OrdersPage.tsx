@@ -186,7 +186,7 @@ export default function OrdersPage() {
             <div className="text-body-sm font-semibold text-[rgba(74,59,46,.62)]">{emptyText}</div>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="u3-noscrollx overflow-x-auto">
             <table className="u3-tbl min-w-[820px]">
               <thead>
                 <tr>

@@ -39,9 +39,12 @@ export function chipRange(mode: ChipMode, now: Date): { from: Date; to: Date } {
   return { from, to: new Date(from.getFullYear(), from.getMonth() + 1, 1) };
 }
 
-/** 分 → 元字符串（千分位 + 2 位小数），对账友好 */
+/** 分 → 元字符串（千分位保留；U4 任务 F：试样整数元口径——整数去 .00，带零头才两位小数） */
 export function formatYuan(fen: number): string {
-  return (fen / 100).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (fen / 100).toLocaleString('zh-CN', {
+    minimumFractionDigits: fen % 100 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
 }
 
 /** HH:mm */

@@ -42,7 +42,7 @@ export function ConfirmDialog({
           type="button"
           onClick={onCancel}
           disabled={loading}
-          className="u1-ring h-11 flex-1 rounded-control bg-card text-[13px] font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+          className="u1-ring h-11 flex-1 rounded-control bg-card text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
         >
           {cancelText}
         </button>
@@ -50,7 +50,7 @@ export function ConfirmDialog({
           type="button"
           onClick={onConfirm}
           disabled={loading}
-          className={`h-11 flex-1 rounded-control text-[13px] font-bold transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50 ${
+          className={`h-11 flex-1 rounded-control text-body-sm font-bold transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50 ${
             danger ? 'bg-[#D92D20] text-[#FFFDF6]' : 'bg-brand-primary text-ink'
           }`}
         >

@@ -36,6 +36,7 @@ import {
 } from '../components/appointments/StatusChips';
 import { showToast, ToastHost } from '../components/appointments/Toast';
 import { useMerchantEvents } from '../components/appointments/useMerchantEvents';
+import { useStepProgress } from '../components/appointments/useStepProgress';
 import {
   addDays,
   fmtDate,
@@ -173,6 +174,9 @@ export default function AppointmentsPage() {
         ),
     [items, category, q],
   );
+
+  /* 服务中行六步进度（胶囊「服务中 N/6」；现成接口一单一查，跨页共享缓存） */
+  const stepProgress = useStepProgress(visible);
 
   /* ---------------- SSE：store 频道 ---------------- */
 
@@ -322,6 +326,7 @@ export default function AppointmentsPage() {
                     <AppointmentRow
                       key={item.id}
                       item={item}
+                      progress={stepProgress.get(item.id) ?? null}
                       onOpen={() => navigate(`/appointments/${item.id}`)}
                     />
                   ))

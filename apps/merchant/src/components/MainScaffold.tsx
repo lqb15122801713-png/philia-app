@@ -1,8 +1,8 @@
 /**
  * U3 任务 A · MainScaffold 主区骨架（规格书 §0）
  *
- * 顶行（标题 19/800 + 副行 11/400 + 右动作区：搜索=纸面细线 14 圆角、
- * 主行动=柠檬钮——每屏至多一个柠檬钮）+ 内容区。
+ * 顶行（标题 20/700（试样所印 19/800 越字阶闸门+超自托管字重上限，U4 映射）+
+ * 副行 11/400 + 右动作区：搜索=纸面细线 14 圆角、主行动=柠檬钮——每屏至多一个柠檬钮）+ 内容区。
  * 桌面档：主区内边距 22~26（任务书冻结），圆角 20/14/6，深度=ring+近零影。
  */
 
@@ -96,7 +96,7 @@ export default function MainScaffold({
     <div className="px-[26px] pb-8 pt-[22px]" data-testid={testid}>
       <div className="mb-[18px] flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-[19px] font-extrabold leading-7">{title}</h1>
+          <h1 className="text-title-lg font-bold leading-7">{title}</h1>
           {sub ? <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">{sub}</div> : null}
         </div>
         {actions ? <div className="flex shrink-0 items-center gap-2.5">{actions}</div> : null}

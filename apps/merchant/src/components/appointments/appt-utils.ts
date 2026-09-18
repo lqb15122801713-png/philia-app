@@ -109,6 +109,25 @@ export const assignSourceLabel = (s: string | null | undefined): string | null =
   (s && ASSIGN_SOURCE_LABEL[s]) || null;
 
 /* ------------------------------------------------------------------ */
+/* 六步展示名（U3 任务书冻结口径；key 顺序即流程顺序，不可乱序渲染）        */
+/* 注：共享包 steps.ts 另有一套运营向全称（消毒工具确认/洗澡美容/细节对比照…）， */
+/* 商家端规格书 §13 明确「同 §4 stepper」——详情页/单约监控/Hub 动态行统一用本表 */
+/* ------------------------------------------------------------------ */
+
+export const STEP_ROWS = [
+  { key: 'disinfection', name: '消毒' },
+  { key: 'precheck', name: '预检' },
+  { key: 'grooming', name: '洗护' },
+  { key: 'detail', name: '精修' },
+  { key: 'before_after', name: '前后对比照' },
+  { key: 'confirm', name: '完成确认' },
+] as const;
+
+/** stepKey → 展示名（冻结口径；未知 key 原样返回） */
+export const stepDisplayName = (key: string): string =>
+  STEP_ROWS.find((s) => s.key === key)?.name ?? key;
+
+/* ------------------------------------------------------------------ */
 /* 技能匹配（与服务端 TYPE_ACCEPT_SKILLS 同口径）                        */
 /* ------------------------------------------------------------------ */
 
@@ -150,8 +169,10 @@ export const fmtDateWeek = (d: Date): string => `${fmtDate(d)} 周${WEEK_CHARS[d
 /** M月D日 HH:mm */
 export const fmtDateTime = (d: Date): string => `${fmtDate(d)} ${fmtTime(d)}`;
 
-/** 金额分 → ¥元（数字字族由外层 font-number 保证） */
-export const fenToYuan = (fen: number): string => `¥${(fen / 100).toFixed(2)}`;
+/** 金额分 → ¥元（数字字族由外层 font-number 保证）；
+    U4 任务 F：试样整数元口径（¥128），整数去 .00，带零头才给两位小数（员工端 E-37 同口径） */
+export const fenToYuan = (fen: number): string =>
+  fen % 100 === 0 ? `¥${fen / 100}` : `¥${(fen / 100).toFixed(2)}`;
 
 /** 收款方式快照 → 中文 */
 export const paymentModeLabel = (mode: string | null): string =>

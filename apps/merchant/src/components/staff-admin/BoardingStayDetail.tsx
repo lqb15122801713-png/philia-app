@@ -45,7 +45,7 @@ export default function BoardingStayDetail({
         <PetAvatar url={pet.avatarUrl} name={pet.name} size={48} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="truncate text-body-sm font-extrabold text-ink">{pet.name}</span>
+            <span className="truncate text-body-sm font-bold text-ink">{pet.name}</span>
             {row.overdue ? (
               <span className="u3-st red">应退未退</span>
             ) : (
@@ -123,7 +123,7 @@ export default function BoardingStayDetail({
           <span className="text-caption-xs text-[rgba(74,59,46,.62)]">
             应收金额 · {PAYMENT_MODE_LABEL[appointment.paymentMode ?? ''] ?? '未记录'}
           </span>
-          <span className="font-number text-title font-extrabold tabular-nums text-ink" style={numStyle}>
+          <span className="font-number text-title font-bold tabular-nums text-ink" style={numStyle}>
             {fmtMoney(appointment.priceFen)}
           </span>
         </div>

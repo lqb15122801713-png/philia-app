@@ -222,7 +222,7 @@ export function ToasterMount() {
   useEffect(() => {
     const listener = (t: ToastItem) => {
       setItems((xs) => [...xs, t]);
-      window.setTimeout(() => setItems((xs) => xs.filter((i) => i.id !== t.id)), 3600);
+      window.setTimeout(() => setItems((xs) => xs.filter((i) => i.id !== t.id)), 2500);
     };
     toastListeners.add(listener);
     return () => {

@@ -132,13 +132,14 @@ function SetRow({
   );
 }
 
-/** 可展开行：右侧「编辑 ›」点击后在行下展开编辑区 */
+/** 可展开行：右侧动作签（试样 .set-row .vl 口径：编辑 › / 管理 ›）点击后在行下展开编辑区 */
 function ExpandRow({
   title,
   hint,
   value,
   open,
   onToggle,
+  actionLabel = '编辑 ›',
   children,
 }: {
   title: string;
@@ -146,6 +147,8 @@ function ExpandRow({
   value?: string;
   open: boolean;
   onToggle: () => void;
+  /** 收起前动作签（试样：服务项行=「管理 ›」，其余=「编辑 ›」） */
+  actionLabel?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -162,7 +165,7 @@ function ExpandRow({
         </div>
         <span className="shrink-0 text-caption font-bold text-[rgba(74,59,46,.62)]">
           {value ? <span className="u1-num mr-1.5">{value}</span> : null}
-          {open ? '收起 ›' : '编辑 ›'}
+          {open ? '收起 ›' : actionLabel}
         </span>
       </button>
       {open ? <div className="px-[17px] pb-4 pt-1">{children}</div> : null}
@@ -501,6 +504,7 @@ export default function SettingsPage() {
               hint="洗护/造型美容/寄养房型（时长引擎之母）"
               open={openRow === 'services'}
               onToggle={() => toggleRow('services')}
+              actionLabel="管理 ›"
             >
               {servicesQuery.isPending ? (
                 <div className="space-y-2" aria-label="加载中">

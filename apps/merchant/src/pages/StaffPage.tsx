@@ -19,7 +19,6 @@
 
 import { usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
-import { UserRound } from 'lucide-react';
 import { useState } from 'react';
 import MainScaffold, { LemonButton, QuietButton } from '../components/MainScaffold';
 import EditStaffDialog from '../components/staff-admin/EditStaffDialog';
@@ -207,14 +206,12 @@ export default function StaffPage() {
                 className="flex items-center gap-[13px] border-t border-[rgba(74,59,46,.06)] px-[17px] py-3 text-caption"
                 style={suspended ? { opacity: 0.55 } : undefined}
               >
-                {/* 头像 42 圆（staff 表无 avatarUrl 字段 → 恒 sunken 占位） */}
-                <span className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-full bg-[rgba(74,59,46,.12)]">
-                  <UserRound size={20} strokeWidth={1.6} className="text-[rgba(74,59,46,.42)]" />
-                </span>
+                {/* 头像 42 圆（staff 表无 avatarUrl 字段 → 试样占位口径：纯墨 12% 圆，不堆图标） */}
+                <span className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-full bg-[rgba(74,59,46,.12)]" />
 
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-body-sm font-extrabold text-ink">{s.name}</span>
+                    <span className="text-body-sm font-bold text-ink">{s.name}</span>
                     <RoleChip role={s.role} />
                   </div>
                   <div className="mt-[2px] text-caption-xs text-[rgba(74,59,46,.62)]">
@@ -255,13 +252,25 @@ export default function StaffPage() {
                   </div>
                 </button>
 
+                {/* 行动作=纯文字 12/700 墨字（试样「编辑 ›」11.5/700 映射入闸门；按下 120ms） */}
                 <span className="ml-3.5 shrink-0">
                   {suspended ? (
-                    <QuietButton disabled={enablingId === s.id} onClick={() => void enableStaff(s)}>
+                    <button
+                      type="button"
+                      disabled={enablingId === s.id}
+                      onClick={() => void enableStaff(s)}
+                      className="text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+                    >
                       {enablingId === s.id ? '启用中…' : '启用 ›'}
-                    </QuietButton>
+                    </button>
                   ) : (
-                    <QuietButton onClick={() => setEditFor(s)}>编辑 ›</QuietButton>
+                    <button
+                      type="button"
+                      onClick={() => setEditFor(s)}
+                      className="text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                    >
+                      编辑 ›
+                    </button>
                   )}
                 </span>
               </div>

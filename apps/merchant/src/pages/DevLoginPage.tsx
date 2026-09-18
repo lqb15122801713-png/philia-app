@@ -151,8 +151,11 @@ export default function DevLoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-canvas px-4 py-10">
       <div className="w-full max-w-[400px]">
         {/* 400px 登录卡（试样 .login-card：#FFFDF6 / rounded-20 / 1px ring / 34·32 内边距） */}
-        <div className="rounded-[20px] bg-[#FFFDF6] px-8 pb-8 pt-[34px] text-center shadow-[0_0_0_1px_rgba(74,59,46,0.09)]">
-          <p className="font-display text-[14px] font-extrabold tracking-[.3em] text-[rgba(74,59,46,0.42)]">
+        <div
+          data-testid="login-gate"
+          className="rounded-[20px] bg-[#FFFDF6] px-8 pb-8 pt-[34px] text-center shadow-[0_0_0_1px_rgba(74,59,46,0.09)]"
+        >
+          <p className="font-display text-[14px] font-bold tracking-[.3em] text-[rgba(74,59,46,0.42)]">
             PHILIA · 商家端
           </p>
           <h1 className="u1-serif mt-3.5 text-[20px] font-bold leading-[34px]">
@@ -262,7 +265,7 @@ export default function DevLoginPage() {
                     if (e.key === 'Enter') submitGate()
                   }}
                   placeholder="内测口令"
-                  className="h-[46px] rounded-[14px] border-0 bg-[#F6F1E3] px-4 text-[13px] shadow-[inset_0_0_0_1px_rgba(74,59,46,0.09)] focus-visible:ring-1 focus-visible:ring-[rgba(74,59,46,0.3)] focus-visible:ring-offset-0"
+                  className="h-[46px] rounded-[14px] border-0 bg-[#F6F1E3] px-4 text-body-sm shadow-[inset_0_0_0_1px_rgba(74,59,46,0.09)] focus-visible:ring-1 focus-visible:ring-[rgba(74,59,46,0.3)] focus-visible:ring-offset-0"
                 />
                 {gateError ? (
                   <p className="mt-1.5 text-[11px] text-danger-deep">{gateError}</p>
@@ -282,7 +285,8 @@ export default function DevLoginPage() {
             </div>
           )}
 
-          <p className="mt-3.5 text-[10px] leading-relaxed text-[rgba(74,59,46,0.42)]">
+          {/* 协议小字（试样所印 10px 越字阶闸门 → 11，员工端 E-19 同口径映射） */}
+          <p className="mt-3.5 text-caption-xs leading-relaxed text-[rgba(74,59,46,0.42)]">
             登录即同意《商家内测协议》· 遇到问题联系 philia 小助手
           </p>
         </div>
