@@ -33,6 +33,11 @@ export const EventType = {
   OrderPaid:             'order.paid',               // → customer + store（T5.4 同步服务端 events.ts）
   OrderShipped:          'order.shipped',            // → customer
   OrderReceived:         'order.received',           // → store
+  // 收银台（批次 M1 · 登记型收银；统一走 store 频道，与 server 端 realtime/events.ts 同步）
+  CashierBillHeld:       'cashier.billHeld',         // 挂单 → store
+  CashierBillSettled:    'cashier.billSettled',      // 结账 → store
+  CashierBillVoided:     'cashier.billVoided',       // 撤单 → store
+  CashierBillCollected:  'cashier.billCollected',    // 记账待收单收款结清 → store
 } as const;
 
 export type EventTypeValue = (typeof EventType)[keyof typeof EventType];

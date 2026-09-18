@@ -162,6 +162,15 @@ function notificationCopy(
       return data.by === 'system_timeout'
         ? { title: '订单已关闭', body: '一笔待支付订单超时未支付，已自动取消并回补库存' }
         : { title: '订单已取消', body: '客户取消了待支付订单，库存已回补' };
+    // 批次 M1 收银台（登记型收银，store 频道）
+    case EventType.CashierBillHeld:
+      return { title: '收银台挂单', body: `单 ${data.billNo ?? ''} 已挂单` };
+    case EventType.CashierBillSettled:
+      return { title: '收银台结账', body: `单 ${data.billNo ?? ''} 已结账` };
+    case EventType.CashierBillVoided:
+      return { title: '收银台撤单', body: `单 ${data.billNo ?? ''} 已撤单` };
+    case EventType.CashierBillCollected:
+      return { title: '收银台收款', body: `记账单 ${data.billNo ?? ''} 已结清` };
     default:
       return { title: '消息提醒', body: '您有一条新消息' };
   }

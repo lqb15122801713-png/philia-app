@@ -97,6 +97,29 @@ export const merchantProcedure = publicProcedure.use(({ ctx, next }) => {
 });
 
 /**
+ * 店主：publicProcedure + roles 含 merchant_owner + storeId 存在（批次 M1 追加）。
+ * 产品裁定①：merchant_admin=merchant_owner、merchant_staff=merchant_manager，
+ * 收银台撤单/改价仅 owner——本过程是服务端硬闸门（前端置灰只是体验层）。
+ * 路由内局部场景（如同一 settle 仅在含改价/折扣时要求 owner）用 assertMerchantOwner。
+ */
+export const merchantOwnerProcedure = publicProcedure.use(({ ctx, next }) => {
+  if (!ctx.user.roles.includes('merchant_owner') || !ctx.user.storeId) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: '需要店主身份（merchant_owner）且已绑定门店',
+    });
+  }
+  return next();
+});
+
+/** 路由内店主硬校验（批次 M1 收银台改价/折扣闸门）：非 merchant_owner 抛 FORBIDDEN */
+export function assertMerchantOwner(ctx: Context): void {
+  if (!ctx.user?.roles.includes('merchant_owner')) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: '改价/折扣仅店主（merchant_owner）可操作' });
+  }
+}
+
+/**
  * 批次 S1（任务 B）核销权限收口：仅前台（staff.role='frontdesk'）可核销。
  * 每请求直查 staff 行（与 staffProcedure 在职校验同模式），角色改动即时生效；
  * groomer / 无 staff 记录 → FORBIDDEN 原文案「核销需前台账号操作」。
