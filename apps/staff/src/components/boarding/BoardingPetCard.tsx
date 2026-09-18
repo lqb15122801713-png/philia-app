@@ -25,7 +25,7 @@ export default function BoardingPetCard({
   overdue: boolean;
 }) {
   return (
-    <section className="u1-card mx-4 mt-1.5 overflow-hidden" data-testid="boarding-pet-card">
+    <section className="u1-card mx-[22px] mt-1.5 overflow-hidden" data-testid="boarding-pet-card">
       <div className="relative aspect-[16/10] bg-sunken">
         {pet?.avatarUrl ? (
           <img src={pet.avatarUrl} alt={pet.name ?? '宠物'} className="h-full w-full object-cover" />
@@ -40,7 +40,7 @@ export default function BoardingPetCard({
       </div>
       <div className="flex items-center gap-3 px-4 py-3.5">
         <div className="min-w-0 flex-1">
-          <p className="text-body-lg font-extrabold">{pet?.name ?? '宠物'}</p>
+          <p className="text-body-lg font-bold">{pet?.name ?? '宠物'}</p>
           <p className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">
             {[pet?.breed, pet?.weightKg ? `${pet.weightKg}kg` : null].filter(Boolean).join(' · ') || '档案未完善'}
             {scheduledStart && scheduledEnd ? ` · ${fmtDay(scheduledStart)} 入住 → ${fmtDay(scheduledEnd)} 退房` : ''}

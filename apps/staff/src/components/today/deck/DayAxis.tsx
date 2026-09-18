@@ -78,11 +78,11 @@ export default function DayAxis({
 
   return (
     <div className="relative mt-3" data-testid="day-axis" style={{ paddingLeft: 46 }}>
-      {/* 当前时间墨线+圆点 */}
+      {/* 当前时间墨线+圆点（试样 .b-now：left 38 / right 22 / 高 2px 墨 + 8px 圆点） */}
       {showNow ? (
         <div
           aria-hidden
-          className="absolute left-[38px] right-0 z-[2] h-0.5 bg-ink"
+          className="absolute left-[38px] right-[22px] z-[2] h-0.5 bg-ink"
           style={{ top: ((nowMin - startMin) / 60) * AXIS_HOUR_PX }}
         >
           <i className="absolute -left-1 -top-[3px] h-2 w-2 rounded-full bg-ink" />
@@ -115,7 +115,9 @@ export default function DayAxis({
               key={item.id}
               data-axis-block
               data-testid={`axis-block-${item.id}`}
-              className={`absolute overflow-hidden rounded-xl px-3 py-2 ${
+              className={`absolute overflow-hidden rounded-xl ${
+                expanded ? 'px-[13px] py-[11px]' : 'px-3 py-2' /* 试样 .b-ev.svc padding 11px 13px 13px */
+              } ${
                 live
                   ? 'z-[3] bg-brand-secondary shadow-[0_0_0_1px_rgba(74,59,46,.14)]'
                   : 'u1-ring bg-card'

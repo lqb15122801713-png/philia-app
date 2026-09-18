@@ -38,7 +38,7 @@ function HistoryRow({ item }: { item: HistoryItem }) {
   return (
     <li className="u1-card mb-2.5 flex items-center gap-3.5 px-4 py-3.5" data-testid={`history-${item.id}`}>
       <div className="w-[52px] shrink-0 text-center">
-        <div className="u1-num text-body font-bold">{item.scheduledStart.getDate()}</div>
+        <div className="u1-num text-title font-bold">{item.scheduledStart.getDate()}</div>
         <div className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.42)]">{WEEK[item.scheduledStart.getDay()]}</div>
       </div>
       <div className="min-w-0 flex-1">
@@ -88,7 +88,7 @@ export default function HistoryPage() {
   }, [items]);
 
   return (
-    <div className="px-4 pb-6">
+    <div className="px-[22px] pb-6">
       <header className="flex h-12 items-center" data-testid="history-header">
         <h1 className="text-title-lg font-bold">历史</h1>
         <span className="ml-auto text-caption-xs text-[rgba(74,59,46,.42)]">
@@ -100,10 +100,10 @@ export default function HistoryPage() {
         <div className="mt-2 space-y-2.5" aria-label="加载中">
           {[0, 1, 2].map((i) => (
             <div key={i} className="u1-card flex items-center gap-3.5 px-4 py-3.5">
-              <div className="h-8 w-[52px] animate-pulse rounded-tag bg-sunken" />
+              <div className="h-8 w-[52px] animate-pulse rounded-chip bg-sunken" />
               <div className="flex-1">
-                <div className="h-5 w-32 animate-pulse rounded-tag bg-sunken" />
-                <div className="mt-1.5 h-4 w-44 animate-pulse rounded-tag bg-sunken" />
+                <div className="h-5 w-32 animate-pulse rounded-chip bg-sunken" />
+                <div className="mt-1.5 h-4 w-44 animate-pulse rounded-chip bg-sunken" />
               </div>
             </div>
           ))}
@@ -130,7 +130,7 @@ export default function HistoryPage() {
       ) : (
         groups.map((g) => (
           <section key={g.key}>
-            <h2 className="px-0 pb-1.5 pt-4 text-caption font-extrabold tracking-[.08em] text-[rgba(74,59,46,.42)]">
+            <h2 className="px-0 pb-1.5 pt-4 text-caption font-bold tracking-[.08em] text-[rgba(74,59,46,.42)]">
               {g.label}
             </h2>
             <ul>

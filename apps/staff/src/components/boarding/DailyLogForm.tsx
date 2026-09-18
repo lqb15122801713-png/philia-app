@@ -122,8 +122,8 @@ export default function DailyLogForm({
 
   return (
     <>
-      <section className="u1-card mx-4 mt-3.5 p-4" data-testid="daily-log-form">
-        <h2 className="text-body-sm font-extrabold">今日打卡 · {Number(today.slice(5, 7))}月{Number(today.slice(8, 10))}日</h2>
+      <section className="u1-card mx-[22px] mt-3.5 p-4" data-testid="daily-log-form">
+        <h2 className="text-body-sm font-bold">今日打卡 · {Number(today.slice(5, 7))}月{Number(today.slice(8, 10))}日</h2>
         <p className="mb-3.5 mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">提交后实时推送给家长（照片+文字）</p>
 
         {/* 喂食 segment（墨底选中） */}
@@ -138,7 +138,7 @@ export default function DailyLogForm({
                 type="button"
                 aria-pressed={mealCount === i}
                 onClick={() => setMealCount(i)}
-                className={`flex-1 rounded-[10px] py-2.5 text-caption font-semibold transition-transform duration-120 ease-philia-spring active:scale-92 ${
+                className={`flex-1 rounded-control py-2.5 text-caption font-semibold transition-transform duration-120 ease-philia-spring active:scale-92 ${
                   mealCount === i ? 'bg-ink text-[#F6F1E3]' : 'u1-ring bg-canvas text-[rgba(74,59,46,.62)]'
                 }`}
               >
@@ -159,17 +159,17 @@ export default function DailyLogForm({
               onClick={() => setWalks((w) => Math.max(0, w - 1))}
               disabled={walks <= 0}
               aria-label="减少一次"
-              className="u1-ring flex h-10 w-10 items-center justify-center rounded-full bg-canvas text-body-lg text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
+              className="u1-ring flex h-10 w-10 items-center justify-center rounded-full bg-canvas text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
             >
               <Minus className="h-4 w-4" strokeWidth={1.8} />
             </button>
-            <span className="u1-num min-w-7 text-center text-title-lg font-extrabold">{walks}</span>
+            <span className="u1-num min-w-7 text-center text-title-lg font-bold">{walks}</span>
             <button
               type="button"
               onClick={() => setWalks((w) => Math.min(99, w + 1))}
               disabled={walks >= 99}
               aria-label="增加一次"
-              className="u1-ring flex h-10 w-10 items-center justify-center rounded-full bg-canvas text-body-lg text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
+              className="u1-ring flex h-10 w-10 items-center justify-center rounded-full bg-canvas text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
             >
               <Plus className="h-4 w-4" strokeWidth={1.8} />
             </button>
@@ -185,7 +185,7 @@ export default function DailyLogForm({
           <div className="flex flex-wrap gap-1.5">
             {photos.map((url, i) => (
               <span key={url} className="relative inline-block h-12 w-16">
-                <img src={url} alt={`今日照片 ${i + 1}`} className="h-12 w-16 rounded-tag object-cover" loading="lazy" />
+                <img src={url} alt={`今日照片 ${i + 1}`} className="h-12 w-16 rounded-chip object-cover" loading="lazy" />
                 <button
                   type="button"
                   aria-label={`删除照片 ${i + 1}`}
@@ -201,14 +201,14 @@ export default function DailyLogForm({
                 type="button"
                 data-testid="daily-add-photo"
                 onClick={() => fileRef.current?.click()}
-                className="flex h-12 w-16 flex-col items-center justify-center rounded-tag bg-card text-[11px] leading-tight text-[rgba(74,59,46,.42)] [border:1px_dashed_rgba(74,59,46,.25)] transition-transform duration-120 ease-philia-spring active:scale-92"
+                className="flex h-12 w-16 flex-col items-center justify-center rounded-chip bg-card text-caption-xs leading-tight text-[rgba(74,59,46,.42)] [border:1px_dashed_rgba(74,59,46,.25)] transition-transform duration-120 ease-philia-spring active:scale-92"
               >
-                <b className="text-body font-normal">＋</b>
+                <b className="text-title font-normal leading-none">＋</b>
                 拍照
               </button>
             ) : null}
             {Array.from({ length: uploadingCount }).map((_, i) => (
-              <span key={`up-${i}`} className="h-12 w-16 animate-pulse rounded-tag bg-sunken" aria-label="上传中" />
+              <span key={`up-${i}`} className="h-12 w-16 animate-pulse rounded-chip bg-sunken" aria-label="上传中" />
             ))}
           </div>
         </div>
@@ -222,15 +222,15 @@ export default function DailyLogForm({
             value={note}
             onChange={(e) => setNote(e.target.value.slice(0, 500))}
             placeholder="今天胃口很好，中午在院子里跑了二十分钟…"
-            className="h-16 w-full resize-none rounded-input bg-canvas px-3.5 py-3 text-caption text-ink shadow-[inset_0_0_0_1px_rgba(74,59,46,.09)] placeholder:text-[rgba(74,59,46,.42)] focus:outline-none focus:shadow-[inset_0_0_0_1px_rgba(74,59,46,.25)]"
+            className="h-16 w-full resize-none rounded-control bg-canvas px-3.5 py-3 text-caption text-ink shadow-[inset_0_0_0_1px_rgba(74,59,46,.09)] placeholder:text-[rgba(74,59,46,.42)] focus:outline-none focus:shadow-[inset_0_0_0_1px_rgba(74,59,46,.25)]"
           />
         </div>
 
         <input ref={fileRef} type="file" accept="image/*" capture="environment" multiple className="hidden" onChange={onFiles} />
       </section>
 
-      {/* 吸底柠檬主钮（幂等副行常驻） */}
-      <div className="sticky bottom-0 mt-3 bg-card px-4 pb-[calc(14px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-1px_0_rgba(74,59,46,.06)]">
+      {/* 吸底柠檬主钮（幂等副行常驻；试样底栏 padding 12px 22px 14px） */}
+      <div className="sticky bottom-0 mt-3 bg-card px-[22px] pb-[calc(14px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-1px_0_rgba(74,59,46,.06)]">
         <button
           type="button"
           data-testid="daily-submit"

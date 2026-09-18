@@ -26,10 +26,10 @@ export default function CelebrationOverlay({ petName, onDone }: { petName?: stri
         <Check className="h-14 w-14 text-[#F6F1E3]" strokeWidth={2.5} />
       </div>
       <div className="mt-8 text-title-lg text-ink">服务完成</div>
-      <div className="mt-2 text-body-lg text-ink-secondary">
+      <div className="mt-2 text-body-sm text-ink-secondary">
         {petName ? `${petName} 的服务照片与记录已同步给家长和商家` : '服务照片与记录已同步'}
       </div>
-      <div className="mt-10 text-body text-ink-placeholder">即将返回今日任务…</div>
+      <div className="mt-10 text-caption text-ink-placeholder">即将返回今日任务…</div>
     </div>
   )
 }

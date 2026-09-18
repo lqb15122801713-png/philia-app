@@ -22,7 +22,7 @@ import {
   type EventEnvelope,
 } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
-import { BedDouble, CalendarClock, PawPrint, ScanLine } from 'lucide-react';
+import { BedDouble, CalendarClock, ScanLine } from 'lucide-react';
 import { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Toast, { useToast } from '@/components/today/Toast';
@@ -140,8 +140,10 @@ export default function FrontdeskDesk() {
   }, [axisItems]);
 
   return (
-    <div className="px-4 pb-6">
-      {/* 顶栏（同骨架：日期 + 门店·周几·排班段 + 头像薄荷环进 /me） */}
+    <div className="px-[22px] pb-6">
+      {/* 顶栏（同骨架：日期 + 门店·周几·排班段 + 头像薄荷环进 /me）
+          口径注记：试样 frontdesk 副行「全店 N 单 · N 美容师在班」无员工可读数据源
+          （全店单=U2-1 疑点 / 在班数 staffList=merchantProcedure U2-2 在案），不造假，保持排班段 */}
       <header className="flex items-start justify-between pt-3">
         <div>
           <h1 className="text-title-lg font-bold">今天 · {todayLabel(now).split(' ')[0]}</h1>
@@ -154,23 +156,28 @@ export default function FrontdeskDesk() {
           to="/me"
           aria-label="我的"
           data-testid="deck-avatar"
-          className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FFFDF6,0_0_0_3.5px_#7FD8BE] transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FFFDF6,0_0_0_3px_#7FD8BE] transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           {meRawQ.data?.user?.avatarUrl ? (
             <img src={meRawQ.data.user.avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
           ) : (
-            <PawPrint className="h-4 w-4 text-ink" strokeWidth={1.6} />
+            /* E-补1 空数据态字圈工艺：浅木底 + 衬线首字（客户端 D-补3 同口径） */
+            <span className="flex h-full w-full items-center justify-center rounded-full bg-oak-light" aria-hidden>
+              <span className="u1-serif text-caption-xs font-semibold text-ink">
+                {(staff?.name ?? meRawQ.data?.user?.nickname ?? '员').slice(0, 1)}
+              </span>
+            </span>
           )}
         </Link>
       </header>
 
-      {/* 1. 柠檬大钮「扫码核销 · 到店登记」（15/700 高 50）+ 手动核销码小字 */}
+      {/* 1. 柠檬大钮「扫码核销 · 到店登记」（高 50；试样 15px 越字阶闸门 → 14/700）+ 手动核销码小字 */}
       <div className="mt-3.5">
         <button
           type="button"
           data-testid="frontdesk-scan"
           onClick={() => setScanOpen(true)}
-          className="flex h-[50px] w-full items-center justify-center gap-2 rounded-control bg-brand-primary text-[15px] font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+          className="flex h-[50px] w-full items-center justify-center gap-2 rounded-control bg-brand-primary text-body-sm font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
         >
           <ScanLine className="h-5 w-5" strokeWidth={1.8} />
           扫码核销 · 到店登记

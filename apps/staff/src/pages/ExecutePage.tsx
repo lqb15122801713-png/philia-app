@@ -84,7 +84,7 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
   const showToast = useCallback((msg: string) => {
     setToast(msg)
     window.clearTimeout(toastTimerRef.current)
-    toastTimerRef.current = window.setTimeout(() => setToast(null), 3200)
+    toastTimerRef.current = window.setTimeout(() => setToast(null), 2500) // 动效纲领 §四.1：toast 2.5s 自消
   }, [])
 
   /* ---------------- 数据 ---------------- */
@@ -359,16 +359,16 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
   if (!appt || !steps) {
     // 加载 >300ms 骨架（禁转圈，动效纲领 §四.2）
     return (
-      <div className="px-4 pt-3">
+      <div className="px-[22px] pt-3">
         <div className="flex items-center gap-2.5">
           <span className="h-9 w-9 animate-pulse rounded-full bg-sunken" />
-          <span className="h-6 w-24 animate-pulse rounded-tag bg-sunken" />
+          <span className="h-6 w-24 animate-pulse rounded-chip bg-sunken" />
         </div>
         <div className="u1-card mt-2 flex items-center gap-3 p-4">
           <span className="h-[52px] w-[52px] animate-pulse rounded-full bg-sunken" />
           <div className="flex-1">
-            <div className="h-5 w-28 animate-pulse rounded-tag bg-sunken" />
-            <div className="mt-2 h-4 w-44 animate-pulse rounded-tag bg-sunken" />
+            <div className="h-5 w-28 animate-pulse rounded-chip bg-sunken" />
+            <div className="mt-2 h-4 w-44 animate-pulse rounded-chip bg-sunken" />
           </div>
         </div>
         <div className="mt-4 space-y-4">
@@ -376,8 +376,8 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
             <div key={i} className="flex gap-3">
               <span className="h-7 w-7 animate-pulse rounded-full bg-sunken" />
               <div className="flex-1">
-                <div className="h-5 w-24 animate-pulse rounded-tag bg-sunken" />
-                <div className="mt-2 h-4 w-36 animate-pulse rounded-tag bg-sunken" />
+                <div className="h-5 w-24 animate-pulse rounded-chip bg-sunken" />
+                <div className="mt-2 h-4 w-36 animate-pulse rounded-chip bg-sunken" />
               </div>
             </div>
           ))}
@@ -521,36 +521,41 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
     confirmMutation.mutate(activeRow.def.stepKey)
   }
 
-  const petMeta = pet && (pet.breed || pet.weightKg) ? [pet.breed, pet.weightKg ? `${pet.weightKg}kg` : null].filter(Boolean).join(' · ') : null
+  // 规格书 §4 摘要卡 meta=服务·时间·员工（员工=当前登录本人；非本人单已被守卫拦到引导页）
+  const staffName = user?.nickname ?? null
 
   return (
     <div className="flex min-h-[100dvh] flex-col bg-canvas">
       <PageHeader title="服务执行" aside={`${pet?.name ?? '宠物'} · ${service?.name ?? '服务'}`} backTo="/today" />
 
-      {/* 摘要卡：头像柠檬环 + 服务中薄荷签 + 服务·时间·员工 + 右 N/6 */}
-      <section className="u1-card mx-4 mt-1.5 flex items-center gap-3.5 p-3.5" data-testid="execute-summary">
+      {/* 摘要卡（试样 .ex-sum margin 6px 22px 0 / padding 14px 16px）：
+          头像柠檬环（无头像=E-补1 字圈：浅木底+衬线首字，柠檬环保留）+ 服务中薄荷签 +
+          服务·时间·员工 + 右 N/6 Montserrat */}
+      <section className="u1-card mx-[22px] mt-1.5 flex items-center gap-3.5 p-3.5" data-testid="execute-summary">
         <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FFFDF6,0_0_0_3.5px_#FDC830]">
           {pet?.avatarUrl ? (
             <img src={pet.avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
           ) : (
-            <PawPrint className="h-6 w-6 text-ink" strokeWidth={1.6} />
+            <span className="flex h-full w-full items-center justify-center rounded-full bg-oak-light" aria-hidden>
+              <span className="u1-serif text-title font-semibold text-ink">{(pet?.name ?? '宠').slice(0, 1)}</span>
+            </span>
           )}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="flex items-center gap-2 text-body font-extrabold">
+          <p className="flex items-center gap-2 text-body-lg font-bold">
             {pet?.name ?? '宠物'}
             <span className="rounded-chip bg-brand-secondary px-1.5 py-px text-caption-xs font-bold text-ink">服务中</span>
           </p>
           <p className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">
             {service?.name ?? '服务'} · {fmtHM(appointment.scheduledStart)}–{fmtHM(appointment.scheduledEnd)}
-            {petMeta ? ` · ${petMeta}` : ''}
+            {staffName ? ` · ${staffName}` : ''}
           </p>
           {pendingAllCount > 0 ? (
             <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">{pendingAllCount} 张照片上传中…</p>
           ) : null}
         </div>
         <div className="shrink-0 text-center">
-          <p className="u1-num text-title font-extrabold">
+          <p className="u1-num text-title font-bold">
             {activeRow?.def.stepOrder ?? 6}
             <span className="text-caption-xs text-[rgba(74,59,46,.42)]">/6</span>
           </p>
@@ -575,9 +580,9 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
         />
       </div>
 
-      {/* 吸底柠檬主钮（文案随态） */}
+      {/* 吸底柠檬主钮（文案随态；试样底栏 padding 12px 22px 14px + 顶部 hairline） */}
       {activeRow ? (
-        <div className="sticky bottom-0 bg-card px-4 pb-[calc(14px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-1px_0_rgba(74,59,46,.06)]">
+        <div className="sticky bottom-0 bg-card px-[22px] pb-[calc(14px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-1px_0_rgba(74,59,46,.06)]">
           <button
             type="button"
             data-testid="execute-primary"
@@ -614,7 +619,7 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
                 type="button"
                 disabled={deletePhotoMutation.isPending}
                 onClick={() => deletePhotoMutation.mutate(deleteTarget)}
-                className="h-11 flex-1 rounded-control bg-danger text-body-sm font-semibold text-[#F6F1E3] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
+                className="h-11 flex-1 rounded-control bg-danger text-body-sm font-semibold text-destructive-foreground transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
               >
                 {deletePhotoMutation.isPending ? '删除中…' : '确认删除'}
               </button>

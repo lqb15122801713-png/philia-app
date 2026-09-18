@@ -26,7 +26,6 @@ import {
   ChevronRight,
   CircleHelp,
   LogOut,
-  PawPrint,
   Settings,
   Star,
 } from 'lucide-react';
@@ -103,7 +102,6 @@ export default function MePage() {
     queryFn: () => trpc.auth.me.query(),
   });
   const staff = meQuery.data?.staff ?? null;
-  const store = meQuery.data?.store ?? null;
 
   // 本月我的单（绩效聚合真值来源）
   const monthFrom = useMemo(() => {
@@ -176,28 +174,33 @@ export default function MePage() {
   };
 
   return (
-    <div className="px-4 pb-6">
-      {/* 用户卡：头像薄荷环 + 角色薄荷签 + 入职年月 + 在班态 */}
+    <div className="px-[22px] pb-6">
+      {/* 用户卡（试样 .me-user margin 10px 22px 0）：头像薄荷环 + 角色薄荷签 + 入职年月 + 在班态；
+          无头像=E-补1 字圈工艺（浅木底+衬线首字，客户端 D-补3 同口径） */}
       <section className="u1-card mt-2.5 flex items-center gap-3.5 p-4" data-testid="me-user-card">
         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FFFDF6,0_0_0_3.5px_#7FD8BE]">
           {user && 'avatarUrl' in user && (user as { avatarUrl?: string }).avatarUrl ? (
             <img src={(user as { avatarUrl?: string }).avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
           ) : (
-            <PawPrint className="h-6 w-6 text-ink" strokeWidth={1.6} />
+            <span className="flex h-full w-full items-center justify-center rounded-full bg-oak-light" aria-hidden>
+              <span className="u1-serif text-title-lg font-semibold text-ink">
+                {(staff?.name ?? user?.nickname ?? '员').slice(0, 1)}
+              </span>
+            </span>
           )}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-title font-extrabold">{staff?.name ?? user?.nickname ?? '员工'}</p>
+          <p className="text-title font-bold">{staff?.name ?? user?.nickname ?? '员工'}</p>
           <p className="mt-1 flex flex-wrap items-center gap-1.5 text-caption-xs text-[rgba(74,59,46,.62)]">
             <b className="rounded-chip bg-brand-secondary px-1.5 py-0.5 font-bold text-ink">{roleLabel}</b>
             {joinText ? <span>· {joinText}</span> : null}
             <span>· {onDuty ? '在班' : '今日休息'}</span>
           </p>
-          {store ? <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.42)]">{store.name}</p> : null}
         </div>
       </section>
 
-      {/* 三格数字（Montserrat 22，三连圆角 20） */}
+      {/* 三格数字（试样 .me-nums：Montserrat 22/800 越字阶闸门 → 20/700（客户端 D2-12 同口径映射，
+          自托管 Montserrat 上限 700）；三连圆角 panel 20；无绩效数据=「—」不落死灰） */}
       <section className="mt-3.5 grid grid-cols-3" data-testid="me-stats">
         {[
           { v: monthQuery.isPending ? '…' : String(perf.doneCount), c: '本月完成单' },
@@ -208,7 +211,7 @@ export default function MePage() {
             key={cell.c}
             className={`u1-ring bg-card px-2 py-3.5 text-center ${i === 0 ? 'rounded-l-panel' : ''} ${i === 2 ? 'rounded-r-panel' : ''}`}
           >
-            <div className="u1-num text-[22px] font-extrabold leading-7">{cell.v}</div>
+            <div className="u1-num text-title-lg font-bold leading-7">{cell.v}</div>
             <div className="mt-1 text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">{cell.c}</div>
           </div>
         ))}

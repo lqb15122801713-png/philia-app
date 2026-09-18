@@ -30,16 +30,16 @@ export default function StayInfoCard({ stay, onEdit, onPhotoClick }: StayInfoCar
   }));
 
   return (
-    <section className="rounded-card bg-card p-4 shadow-card">
+    <section className="u1-card p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-title">入住信息</h2>
         <span className="flex items-center gap-2">
-          <span className="rounded-tag bg-success-light px-2 py-1 text-caption text-success-deep">已入住</span>
+          <span className="rounded-chip bg-success-light px-2 py-1 text-caption text-success-deep">已入住</span>
           {onEdit ? (
             <button
               type="button"
               onClick={onEdit}
-              className="flex h-12 items-center gap-1 rounded-full bg-sunken px-3 text-body text-ink"
+              className="flex h-12 items-center gap-1 rounded-full bg-sunken px-3 text-body-sm text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
             >
               <Pencil className="h-4 w-4" strokeWidth={1.5} />
               修改
@@ -49,14 +49,14 @@ export default function StayInfoCard({ stay, onEdit, onPhotoClick }: StayInfoCar
       </div>
 
       <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
-        <p className="flex items-center gap-1.5 text-body-lg text-ink">
+        <p className="flex items-center gap-1.5 text-body-sm text-ink">
           <BedDouble className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
           房间 <span className="font-semibold">{stay.roomNo ?? '待分配'}</span>
         </p>
         {stay.checkinWeightKg != null ? (
-          <p className="flex items-center gap-1.5 text-body-lg text-ink">
+          <p className="flex items-center gap-1.5 text-body-sm text-ink">
             <Scale className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
-            入住称重 <span className="font-number font-semibold">{stay.checkinWeightKg.toFixed(1)} kg</span>
+            入住称重 <span className="u1-num font-semibold">{stay.checkinWeightKg.toFixed(1)} kg</span>
           </p>
         ) : null}
       </div>
@@ -64,7 +64,7 @@ export default function StayInfoCard({ stay, onEdit, onPhotoClick }: StayInfoCar
       <div className="mt-3">
         <p className="text-caption text-ink-secondary">随身物品</p>
         {belongings.length === 0 ? (
-          <p className="mt-1 text-body text-ink-secondary">无登记物品</p>
+          <p className="mt-1 text-body-sm text-ink-secondary">无登记物品</p>
         ) : (
           <ul className="mt-1.5 flex flex-wrap gap-1.5">
             {belongings.map((b, i) => {
@@ -77,10 +77,10 @@ export default function StayInfoCard({ stay, onEdit, onPhotoClick }: StayInfoCar
                     onClick={() => {
                       if (wallIdx !== -1) onPhotoClick?.(wallPhotos, wallIdx);
                     }}
-                    className="flex h-11 items-center gap-1.5 rounded-tag bg-sunken px-2.5 text-body text-ink disabled:cursor-default"
+                    className="flex h-11 items-center gap-1.5 rounded-chip bg-sunken px-2.5 text-body-sm text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:cursor-default disabled:opacity-100"
                   >
                     {b.photoUrl ? (
-                      <img src={b.photoUrl} alt={b.name} className="h-8 w-8 rounded-tag object-cover" />
+                      <img src={b.photoUrl} alt={b.name} className="h-8 w-8 rounded-chip object-cover" />
                     ) : null}
                     {b.name}
                   </button>

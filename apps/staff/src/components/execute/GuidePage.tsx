@@ -16,7 +16,7 @@ export default function GuidePage({ icon: Icon, title, description, actionText, 
         <Icon className="h-9 w-9 text-ink-secondary" strokeWidth={1.5} />
       </div>
       <div className="mt-6 text-title-lg text-ink">{title}</div>
-      {description && <div className="mt-2 text-body-lg text-ink-secondary">{description}</div>}
+      {description && <div className="mt-2 text-body-sm text-ink-secondary">{description}</div>}
       {actionText && onAction && (
         <button
           type="button"

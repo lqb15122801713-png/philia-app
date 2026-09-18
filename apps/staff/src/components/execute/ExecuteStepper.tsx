@@ -41,7 +41,7 @@ export interface ExecuteStepRow {
 
 const fmtHM = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 
-/** 缩略图 64×48（点击看大图；active 步服务端照片右上 × 可删） */
+/** 缩略图 64×48（点击看大图；active 步服务端照片右上 × 可删；圆角试样 8 越四档→chip 6，客户端 D2-9 同口径） */
 function Thumb({
   photo,
   onTap,
@@ -56,7 +56,7 @@ function Thumb({
       <button
         type="button"
         onClick={() => onTap(photo.url)}
-        className="block h-12 w-16 overflow-hidden rounded-tag bg-sunken transition-transform duration-120 ease-philia-spring active:scale-92"
+        className="block h-12 w-16 overflow-hidden rounded-chip bg-sunken transition-transform duration-120 ease-philia-spring active:scale-92"
         aria-label="查看大图"
       >
         <img src={photo.url} alt={photo.tagLabel ?? '过程照'} loading="lazy" className={`h-full w-full object-cover ${photo.uploading ? 'animate-pulse opacity-80' : ''}`} />
@@ -85,7 +85,7 @@ function Thumb({
   );
 }
 
-/** 「＋拍照/相册」虚线槽（64×48） */
+/** 「＋拍照/相册」虚线槽（64×48；规格书 §4 虚线槽——单层 dashed 边，不再叠 ring 双边） */
 function AddSlot({ onFiles, disabled }: { onFiles: (files: FileList) => void; disabled?: boolean }) {
   const inputRef = useRef<HTMLInputElement>(null);
   return (
@@ -95,9 +95,9 @@ function AddSlot({ onFiles, disabled }: { onFiles: (files: FileList) => void; di
         disabled={disabled}
         onClick={() => inputRef.current?.click()}
         data-testid="step-add-photo"
-        className="flex h-12 w-16 shrink-0 flex-col items-center justify-center rounded-tag bg-card text-[11px] leading-tight text-[rgba(74,59,46,.42)] shadow-[0_0_0_1px_rgba(74,59,46,.12)] [border:1px_dashed_rgba(74,59,46,.25)] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+        className="flex h-12 w-16 shrink-0 flex-col items-center justify-center rounded-chip bg-card text-caption-xs leading-tight text-[rgba(74,59,46,.42)] [border:1px_dashed_rgba(74,59,46,.25)] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
       >
-        <b className="text-body font-normal">＋</b>
+        <b className="text-title font-normal leading-none">＋</b>
         拍照/相册
       </button>
       <input
@@ -140,7 +140,7 @@ function DualSlot({
           type="button"
           data-testid={testid}
           onClick={() => onTap(slot.url)}
-          className="relative block h-16 w-full overflow-hidden rounded-tag bg-sunken transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="relative block h-16 w-full overflow-hidden rounded-chip bg-sunken transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           <img src={slot.url} alt={label} className={`h-full w-full object-cover ${slot.uploading ? 'animate-pulse opacity-80' : ''}`} />
           <span className="absolute left-1 top-1 rounded-chip bg-[rgba(74,59,46,.72)] px-1.5 py-px text-[11px] text-[#F6F1E3]">{label}</span>
@@ -154,7 +154,7 @@ function DualSlot({
           data-testid={testid}
           disabled={readOnly}
           onClick={() => inputRef.current?.click()}
-          className="flex h-16 w-full items-center justify-center rounded-tag bg-card text-caption-xs text-[rgba(74,59,46,.42)] [border:1px_dashed_rgba(74,59,46,.25)] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+          className="flex h-16 w-full items-center justify-center rounded-chip bg-card text-caption-xs text-[rgba(74,59,46,.42)] [border:1px_dashed_rgba(74,59,46,.25)] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
         >
           {label} 待拍
         </button>
@@ -188,7 +188,7 @@ export default function ExecuteStepper({
   onPhotoTap: (url: string) => void;
 }) {
   return (
-    <ol className="flex flex-col px-4 pb-5 pt-4" data-testid="execute-stepper">
+    <ol className="flex flex-col px-[22px] pb-5 pt-4" data-testid="execute-stepper">
       {rows.map((row, idx) => {
         const { def, status, flagged } = row;
         const name = STEP_NAME[def.stepKey] ?? def.name;
@@ -281,9 +281,22 @@ export default function ExecuteStepper({
               ) : null}
 
               {status === 'locked' ? (
-                <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">
-                  {isConfirm ? '确认后预约完成 · 家长收到通知' : isBA ? '服务前、服务后各拍 1 张' : '完成上一步后解锁'}
-                </p>
+                <>
+                  <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+                    {isConfirm ? '确认后预约完成 · 家长收到通知' : isBA ? '服务前、服务后各拍 1 张' : '完成上一步后解锁'}
+                  </p>
+                  {/* 试样构图：locked 前后对比步也画出双槽（随父级 45% 透明；纯展示不挂交互） */}
+                  {isBA ? (
+                    <div className="mt-2 flex gap-1.5" aria-hidden>
+                      <span className="flex h-16 flex-1 items-center justify-center rounded-chip bg-card text-caption-xs text-[rgba(74,59,46,.42)] [border:1px_dashed_rgba(74,59,46,.25)]">
+                        before 待拍
+                      </span>
+                      <span className="flex h-16 flex-1 items-center justify-center rounded-chip bg-card text-caption-xs text-[rgba(74,59,46,.42)] [border:1px_dashed_rgba(74,59,46,.25)]">
+                        after 待拍
+                      </span>
+                    </div>
+                  ) : null}
+                </>
               ) : null}
             </div>
           </li>

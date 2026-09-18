@@ -22,8 +22,8 @@ const dayStartOf = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDat
 export default function DailyLogList({ logs, today, stayStart, onPhotoClick }: DailyLogListProps) {
   const desc = [...logs].reverse();
   return (
-    <div className="mx-4 mb-5 mt-3.5" data-testid="daily-log-list">
-      <h2 className="mb-2.5 text-body-sm font-extrabold">历史打卡</h2>
+    <div className="mx-[22px] mb-5 mt-3.5" data-testid="daily-log-list">
+      <h2 className="mb-2.5 text-body-sm font-bold">历史打卡</h2>
       {desc.length === 0 ? (
         <p className="u1-card px-4 py-5 text-center text-caption text-ink-secondary">
           今天还没打卡——喂了饭、遛了弯，拍张照再提交
@@ -38,7 +38,7 @@ export default function DailyLogList({ logs, today, stayStart, onPhotoClick }: D
           return (
             <div key={log.id} className="u1-card mb-2.5 flex items-center gap-3 px-3.5 py-3" data-testid={`log-${log.logDate}`}>
               <div className="w-11 shrink-0 text-center">
-                <div className="u1-num text-body-lg font-extrabold">{Number(log.logDate.slice(8, 10))}</div>
+                <div className="u1-num text-body-lg font-bold">{Number(log.logDate.slice(8, 10))}</div>
                 <div className="text-caption-xs text-[rgba(74,59,46,.42)]">周{WEEK[d.getDay()]}</div>
               </div>
               <div className="min-w-0 flex-1 text-caption-xs leading-relaxed text-[rgba(74,59,46,.62)]">
