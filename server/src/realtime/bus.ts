@@ -31,8 +31,8 @@ export type Db = typeof db;
 /**
  * 频道 → 接收用户 ID 数组（去重）：
  * - user:{uid}        → 本人
- * - store:{storeId}   → 该店 merchant_owner / merchant_manager 全部 userId
- *                       （店主 stores.owner_id + 该店员工中具有商家角色的用户）
+ * - store:{storeId}   → 该店 merchant_owner / merchant_manager / merchant_clerk 全部 userId
+ *                       （店主 stores.owner_id + 该店员工中具有商家角色的用户；clerk=M1-补2 R2）
  * - staff:{staffId}   → 该员工的 userId
  * - appointment:{aid} → customer_id + 门店商家 + 被指 staff 的 userId
  */
@@ -55,7 +55,7 @@ export async function resolveChannelTargets(d: Db, channel: string): Promise<str
         .from(schema.stores)
         .where(eq(schema.stores.id, key))
         .get();
-      // 该店员工中角色为 merchant_owner / merchant_manager 的用户
+      // 该店员工中具有商家角色（owner/manager/clerk，M1-补2 R2 增 clerk）的用户
       const managers = await d
         .select({ userId: schema.staff.userId })
         .from(schema.staff)
@@ -63,7 +63,7 @@ export async function resolveChannelTargets(d: Db, channel: string): Promise<str
           schema.userRoles,
           and(
             eq(schema.userRoles.userId, schema.staff.userId),
-            inArray(schema.userRoles.role, ['merchant_owner', 'merchant_manager']),
+            inArray(schema.userRoles.role, ['merchant_owner', 'merchant_manager', 'merchant_clerk']),
           ),
         )
         .where(eq(schema.staff.storeId, key));

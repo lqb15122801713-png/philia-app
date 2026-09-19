@@ -117,7 +117,7 @@ export const userRoles = sqliteTable(
     userId: text('user_id')
       .notNull()
       .references(() => users.id),
-    /** 角色，取值：customer | merchant_owner | merchant_manager | staff */
+    /** 角色，取值：customer | merchant_owner | merchant_manager | merchant_clerk（M1-补2 R2 新增） | staff */
     role: text('role').notNull(),
     ...auditColumns,
   },

@@ -3,8 +3,10 @@
  *
  * 导出（契约固定签名，其他子代理按此引用）：
  * - SessionUser / Context / Db 类型
- * - router / publicProcedure / customerProcedure / staffProcedure / merchantProcedure
- * - assertAppointmentAccess(ctx, appointmentId)
+ * - router / publicProcedure / customerProcedure / staffProcedure
+ * - merchantProcedure（owner|manager|clerk）/ merchantManagerProcedure（owner|manager，
+ *   M1-补2 R2 新增）/ merchantOwnerProcedure（owner）
+ * - assertMerchantOwner / assertMerchantManager（M1-补2 R2 新增）/ assertAppointmentAccess
  *
  * 约定：
  * - transformer 用 superjson（Date 等类型端到端保鲜）。
@@ -24,7 +26,8 @@ export type Db = typeof db;
 export interface SessionUser {
   id: string;
   nickname: string | null;
-  roles: Array<'customer' | 'merchant_owner' | 'merchant_manager' | 'staff'>;
+  /** M1-补2 R2：新增 merchant_clerk（店员，收银执行层）——商家端三级账号：owner/manager/clerk */
+  roles: Array<'customer' | 'merchant_owner' | 'merchant_manager' | 'merchant_clerk' | 'staff'>;
   staffId?: string; // 若为 staff，其 staff 记录 id
   storeId?: string; // staff 所属门店 / merchant 管理门店
 }
@@ -83,24 +86,52 @@ export const staffProcedure = publicProcedure.use(async ({ ctx, next }) => {
   return next();
 });
 
-/** 商家：publicProcedure + roles 含 merchant_owner|merchant_manager + storeId 存在 */
+/**
+ * 商家三级（M1-补2 R2 · 补丁①/矩阵会签稿冻结表）：
+ * - merchantProcedure        = owner | manager | clerk（收银执行层：开单/挂单/取单/结账/撤未支付单）
+ * - merchantManagerProcedure = owner | manager（审批/管理层：改价·折扣/财务流水/看板/日结闸门预留）
+ * - merchantOwnerProcedure   = owner（反结账/导出/CSV 储值导入闸门预留）
+ * 归属校验全部在服务端 procedure 内强制，前端置灰只是体验层（双闸口径）。
+ */
+
+/** 商家（收银执行层）：publicProcedure + roles 含 owner|manager|clerk + storeId 存在 */
 export const merchantProcedure = publicProcedure.use(({ ctx, next }) => {
   const isMerchant =
-    ctx.user.roles.includes('merchant_owner') || ctx.user.roles.includes('merchant_manager');
+    ctx.user.roles.includes('merchant_owner') ||
+    ctx.user.roles.includes('merchant_manager') ||
+    ctx.user.roles.includes('merchant_clerk');
   if (!isMerchant || !ctx.user.storeId) {
     throw new TRPCError({
       code: 'FORBIDDEN',
-      message: '需要商家身份（merchant_owner / merchant_manager）且已绑定门店',
+      message: '需要商家身份（merchant_owner / merchant_manager / merchant_clerk）且已绑定门店',
     });
   }
   return next();
 });
 
 /**
- * 店主：publicProcedure + roles 含 merchant_owner + storeId 存在（批次 M1 追加）。
- * 产品裁定①：merchant_admin=merchant_owner、merchant_staff=merchant_manager，
- * 收银台撤单/改价仅 owner——本过程是服务端硬闸门（前端置灰只是体验层）。
- * 路由内局部场景（如同一 settle 仅在含改价/折扣时要求 owner）用 assertMerchantOwner。
+ * 商家管理层（M1-补2 R2 新增）：publicProcedure + roles 含 owner|manager + storeId 存在。
+ * 用途（矩阵会签稿）：退款/改价/免单（ cashier 路由内 assertMerchantManager 同档）、
+ * 财务流水查看（financeStats）、看板（dashboardStats）——店员不看营业额（总规则②）；
+ * 日结/交接班确认端点（S1b 批次落端点）的预留闸门函数即本过程。
+ */
+export const merchantManagerProcedure = publicProcedure.use(({ ctx, next }) => {
+  const isManager =
+    ctx.user.roles.includes('merchant_owner') || ctx.user.roles.includes('merchant_manager');
+  if (!isManager || !ctx.user.storeId) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: '需要店主或店长身份（merchant_owner / merchant_manager）且已绑定门店',
+    });
+  }
+  return next();
+});
+
+/**
+ * 店主：publicProcedure + roles 含 merchant_owner + storeId 存在。
+ * M1-补2 闸门冻结表（补丁①+矩阵会签稿）：反结账（收银台已支付单冲正/日结拆封箱）、
+ * 数据导出、储值台账 CSV 导入 仅店主——上述端点（S1b/R5b 批次落）一律走本过程。
+ * 路由内局部店主硬校验用 assertMerchantOwner。
  */
 export const merchantOwnerProcedure = publicProcedure.use(({ ctx, next }) => {
   if (!ctx.user.roles.includes('merchant_owner') || !ctx.user.storeId) {
@@ -112,10 +143,26 @@ export const merchantOwnerProcedure = publicProcedure.use(({ ctx, next }) => {
   return next();
 });
 
-/** 路由内店主硬校验（批次 M1 收银台改价/折扣闸门）：非 merchant_owner 抛 FORBIDDEN */
+/**
+ * 路由内店主硬校验：非 merchant_owner 抛 FORBIDDEN。
+ * M1-补2 后用途：仅店主档动作（反结账原因校验、CSV 导入、导出等）路由内复核。
+ */
 export function assertMerchantOwner(ctx: Context): void {
   if (!ctx.user?.roles.includes('merchant_owner')) {
-    throw new TRPCError({ code: 'FORBIDDEN', message: '改价/折扣仅店主（merchant_owner）可操作' });
+    throw new TRPCError({ code: 'FORBIDDEN', message: '该操作仅店主（merchant_owner）可操作' });
+  }
+}
+
+/**
+ * 路由内店主/店长硬校验（M1-补2 R2 · 补丁①+矩阵会签稿）：非 owner|manager 抛 FORBIDDEN。
+ * 用途：收银台改价/折扣闸门（M1 的 owner-only 放宽一档至 manager，留痕含操作人不变）、
+ * 退款/免单闸门骨架同档（功能本体后续批次，本批先落闸门口径）。
+ */
+export function assertMerchantManager(ctx: Context): void {
+  const ok =
+    ctx.user?.roles.includes('merchant_owner') || ctx.user?.roles.includes('merchant_manager');
+  if (!ok) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: '改价/折扣/退款仅店主或店长（owner / manager）可操作' });
   }
 }
 
