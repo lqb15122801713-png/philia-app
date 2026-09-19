@@ -886,6 +886,81 @@ async function computeShiftTender(
   };
 }
 
+/**
+ * 日结预览/冻结同源聚合（M1-补2 条件② 全日口径裁定）：
+ * - 总额=computeDayTender（全日、跨班次，与 todayTenderStats 同函数同值——
+ *   预览=冻结同源，UI 只展示）；
+ * - shiftBreakdown=当日班次逐班拆分（computeShiftTender，展示用；跨日仍开班的
+ *   班次并入；无班次归属的存量单/预约直收不在拆分内，以全日总额为准）；
+ * - existingFrozenCloseId：该自然日（bizDate）已有 frozen 日结单则带出
+ *   （一日一结守卫的数据源）。
+ */
+export interface DayClosePreviewData {
+  stats: DayTenderStats;
+  bizDate: string;
+  shiftBreakdown: Array<{
+    shiftId: string;
+    openedAt: Date;
+    closedAt: Date | null;
+    status: string;
+    cashFen: number;
+    wechatFen: number;
+    alipayFen: number;
+    passFen: number;
+    storedValueFen: number;
+    receivedTotalFen: number;
+    cashierPaidCount: number;
+  }>;
+  existingFrozenCloseId: string | null;
+}
+
+async function computeDayClosePreview(
+  d: DbHandle,
+  storeId: string,
+  dayStart: Date,
+): Promise<DayClosePreviewData> {
+  const stats = await computeDayTender(d, storeId, dayStart);
+  const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000);
+  const w = storeWallclock(dayStart);
+  const bizDate = `${w.y}-${pad2(w.m)}-${pad2(w.day)}`;
+  const dayShifts = await d
+    .select()
+    .from(schema.shifts)
+    .where(
+      and(
+        eq(schema.shifts.storeId, storeId),
+        lt(schema.shifts.openedAt, dayEnd),
+        // 当日内开班，或仍在开班的跨日班次（其当日收银单挂该班）
+        or(gte(schema.shifts.openedAt, dayStart), eq(schema.shifts.status, 'open')),
+      ),
+    )
+    .orderBy(schema.shifts.openedAt);
+  const shiftBreakdown: DayClosePreviewData['shiftBreakdown'] = [];
+  for (const s of dayShifts) {
+    const t = await computeShiftTender(d, storeId, s.id);
+    shiftBreakdown.push({
+      shiftId: s.id,
+      openedAt: s.openedAt,
+      closedAt: s.closedAt,
+      status: s.status,
+      ...t,
+    });
+  }
+  const frozen = await d
+    .select({ id: schema.dayCloses.id })
+    .from(schema.dayCloses)
+    .where(
+      and(
+        eq(schema.dayCloses.storeId, storeId),
+        eq(schema.dayCloses.bizDate, bizDate),
+        eq(schema.dayCloses.kind, 'close'),
+        eq(schema.dayCloses.status, 'frozen'),
+      ),
+    )
+    .get();
+  return { stats, bizDate, shiftBreakdown, existingFrozenCloseId: frozen?.id ?? null };
+}
+
 /* ------------------------------------------------------------------ */
 /* router                                                               */
 /* ------------------------------------------------------------------ */
@@ -1783,18 +1858,38 @@ export const cashierRouter = router({
   }),
 
   /**
-   * 7e. dayClose（owner|manager · 修订单 R3）：日结=生成日结单并冻结当班账目。
-   * - 账面现金=当班现金支付段 Σ（computeShiftTender，与 todayTenderStats 同一
-   *   「已收=现金类」定义的班次切片）；实点现金手输；差异=实点−账面（红字数据源）；
-   *   微信/支付宝/次卡等值/储值分列 + 笔数快照随单冻结。
-   * - 缺省对当前 open 班次日结并闭班；指定 shiftId 用于「反结账拆箱后同班次重结」
-   *   （原单 reversed 后才放行，同班次已有 frozen 日结单 → CONFLICT）。
+   * 7e0. dayClosePreview（owner|manager · M1-补2 条件②）：日结预览=冻结同源同值
+   * （同一 computeDayClosePreview → computeDayTender 全日口径），UI 只展示不自算；
+   * 附班次拆分展示与「本日是否已有冻结单」标记。
+   */
+  dayClosePreview: merchantManagerProcedure
+    .input(z.object({ date: z.date().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      const w = storeWallclock(input?.date ?? new Date());
+      const dayStart = new Date(storeDayStartMs(w.y, w.m, w.day));
+      return computeDayClosePreview(ctx.db, ctx.user.storeId!, dayStart);
+    }),
+
+  /**
+   * 7e. dayClose（owner|manager · 修订单 R3 + M1-补2 条件② 全日口径裁定）：
+   * 日结=生成日结单并冻结**自然日全部支付段（跨班次）**。
+   * - 账面现金=当日现金支付段 Σ（computeDayTender 全日，与 todayTenderStats/
+   *   收银台头部/财务页头部同一聚合出口——预览与冻结同源同值，错账红线修复：
+   *   原当班口径 computeShiftTender 冻结与全日预览劈叉已废）；
+   *   实点现金手输；差异=实点−账面（红字数据源）；微信/支付宝/次卡等值/储值
+   *   分列 + 笔数快照随单冻结；班次拆分明细存 snapshot_json.shiftBreakdown
+   *   （展示用拆分，冻结数字以全日为准）。
+   * - 一日一结：同一自然日（bizDate，+8）已有 frozen 日结单 → CONFLICT；
+   *   反结账拆箱（原单 reversed）后同日可重新日结。
+   * - shiftId 入参仅作兼容追溯记录（旧端拆箱重结传入）；记录列缺省=当前 open 班
+   *   → 当日最近班 → 懒建即闭。日结即闭当前 open 班（交接班闭班不冻结，
+   *   维持当班小结口径不变）。
    * emit cashier.dayClosed。
    */
   dayClose: merchantManagerProcedure
     .input(
       z.object({
-        /** 缺省=当前 open 班次；指定=拆箱后同班次重新日结 */
+        /** 兼容旧端（拆箱重结传入原班次）：仅作追溯记录，冻结口径=全日 */
         shiftId: z.string().min(1).optional(),
         /** 实点现金（分，手输） */
         actualCashFen: z.number().int().min(0).max(100_000_000),
@@ -1807,82 +1902,104 @@ export const cashierRouter = router({
         const outboxIds: string[] = [];
         const close = await ctx.db.transaction(async (tx) => {
           const now = new Date();
-          let shift: ShiftRow | undefined;
+          const w = storeWallclock(now);
+          const dayStart = new Date(storeDayStartMs(w.y, w.m, w.day));
+          const preview = await computeDayClosePreview(txDb(tx), storeId, dayStart);
+          // 一日一结（条件②）：同自然日已有冻结单 → CONFLICT（拆箱后 reversed 才放行）
+          if (preview.existingFrozenCloseId) {
+            throw new TRPCError({
+              code: 'CONFLICT',
+              message: '该自然日已有冻结的日结单（一日一结）；如需重新日结，请先由店主反结账拆箱',
+            });
+          }
+          /* ---- 追溯用班次记录列（冻结口径与班次无关） ---- */
+          let recordShift: ShiftRow | undefined;
           if (input.shiftId) {
-            shift = await tx
+            recordShift = await tx
               .select()
               .from(schema.shifts)
               .where(eq(schema.shifts.id, input.shiftId))
               .get();
-            if (!shift || shift.storeId !== storeId) {
+            if (!recordShift || recordShift.storeId !== storeId) {
               throw new TRPCError({ code: 'NOT_FOUND', message: '班次不存在' });
             }
-          } else {
-            shift = await tx
+          }
+          if (!recordShift) {
+            recordShift = await tx
               .select()
               .from(schema.shifts)
               .where(and(eq(schema.shifts.storeId, storeId), eq(schema.shifts.status, 'open')))
               .orderBy(desc(schema.shifts.openedAt))
               .limit(1)
               .then((r) => r[0]);
-            if (!shift) badRequest('当前无开班班次，无可日结的当班账目');
           }
-          const existing = await tx
-            .select()
-            .from(schema.dayCloses)
-            .where(
-              and(
-                eq(schema.dayCloses.shiftId, shift.id),
-                eq(schema.dayCloses.kind, 'close'),
-                eq(schema.dayCloses.status, 'frozen'),
-              ),
-            )
-            .get();
-          if (existing) {
-            throw new TRPCError({
-              code: 'CONFLICT',
-              message: '该班次已有冻结的日结单；如需重新日结，请先由店主反结账拆箱',
-            });
+          if (!recordShift) {
+            recordShift = await tx
+              .select()
+              .from(schema.shifts)
+              .where(eq(schema.shifts.storeId, storeId))
+              .orderBy(desc(schema.shifts.openedAt))
+              .limit(1)
+              .then((r) => r[0]);
           }
-          const tender = await computeShiftTender(txDb(tx), storeId, shift.id);
-          const w = storeWallclock(now);
-          const bizDate = `${w.y}-${pad2(w.m)}-${pad2(w.day)}`;
-          const diffFen = input.actualCashFen - tender.cashFen;
+          if (!recordShift) {
+            // 全日无任何班次（零收银日）：懒建即闭，保证 shift_id 追溯列非空
+            const { shift, openedOutboxId } = await ensureOpenShift(txDb(tx), storeId, ctx.user.id, now);
+            if (openedOutboxId) outboxIds.push(openedOutboxId);
+            recordShift = shift;
+          }
+          const tender = preview.stats;
+          const diffFen = input.actualCashFen - tender.tender.cashFen;
           const row = await tx
             .insert(schema.dayCloses)
             .values({
               storeId,
-              shiftId: shift.id,
+              shiftId: recordShift.id,
               kind: 'close',
-              bizDate,
-              bookCashFen: tender.cashFen,
+              bizDate: preview.bizDate,
+              bookCashFen: tender.tender.cashFen,
               actualCashFen: input.actualCashFen,
               diffFen,
-              wechatFen: tender.wechatFen,
-              alipayFen: tender.alipayFen,
-              passFen: tender.passFen,
-              storedValueFen: tender.storedValueFen,
-              cashierPaidCount: tender.cashierPaidCount,
-              // 班次账=收银域支付段口径（computeShiftTender 注释），笔数同理
-              paidCount: tender.cashierPaidCount,
+              wechatFen: tender.tender.wechatFen,
+              alipayFen: tender.tender.alipayFen,
+              passFen: tender.tender.passFen,
+              storedValueFen: tender.tender.storedValueFen,
+              cashierPaidCount: tender.counts.cashierPaidCount,
+              paidCount: tender.counts.paidCount,
               reason: input.note ?? null,
+              // 条件②：全日口径标记 + 班次拆分展示明细（拆分不求和勾稽——无班次
+              // 归属的存量单/预约直收以全日总额为准）
+              snapshotJson: JSON.stringify({
+                scope: 'full-day',
+                note: '冻结=全日口径（computeDayTender 同源）；shiftBreakdown 为班次拆分展示',
+                shiftBreakdown: preview.shiftBreakdown,
+                legacyPayAtStoreFen: tender.legacyPayAtStoreFen,
+              }),
               status: 'frozen',
               createdBy: ctx.user.id,
             })
             .returning()
             .then((r) => r[0]!);
-          // 日结即闭班（当班账目冻结）；拆箱重结场景班次可能已 closed，不重复写
-          if (shift.status === 'open') {
+          // 日结即闭当前 open 班（当班冻结废止后，闭班=交接班语义维持不冻结）
+          const openShift = await tx
+            .select()
+            .from(schema.shifts)
+            .where(and(eq(schema.shifts.storeId, storeId), eq(schema.shifts.status, 'open')))
+            .orderBy(desc(schema.shifts.openedAt))
+            .limit(1)
+            .then((r) => r[0]);
+          if (openShift) {
             await tx
               .update(schema.shifts)
               .set({ status: 'closed', closedAt: now, closedBy: ctx.user.id, updatedAt: now })
-              .where(eq(schema.shifts.id, shift.id));
+              .where(eq(schema.shifts.id, openShift.id));
           }
           outboxIds.push(
             await emitEvent(txDb(tx), `store:${storeId}`, EventType.CashierDayClosed, {
               closeId: row.id,
-              shiftId: shift.id,
-              bizDate,
+              shiftId: recordShift.id,
+              bizDate: row.bizDate,
+              scope: 'full-day', // 条件②：全日口径标记
               bookCashFen: row.bookCashFen,
               actualCashFen: row.actualCashFen,
               diffFen: row.diffFen,
@@ -1918,8 +2035,8 @@ export const cashierRouter = router({
    * 7g. reverseDayClose（仅店主 · 裁定④+补丁①3a：日结反结账=拆箱）：
    * 强制原因；原日结单永存不涂改（仅置 status='reversed' 与 reversed_at/reversed_by/
    * reversal_id 链接元数据）；冲正关联单独立行（ref_close_id 指原单，snapshot_json
-   * 存前后值，含操作人/时间/原因）；之后可对同班次重新日结（dayClose 的 frozen
-   * 守卫放行）。emit cashier.dayCloseReversed。幂等：已 reversed 返回现状。
+   * 存前后值——M1-补2 条件②起为全日口径快照，含操作人/时间/原因）；之后可对**同日**
+   * 重新日结（一日一结的 frozen 守卫放行）。emit cashier.dayCloseReversed。幂等：已 reversed 返回现状。
    */
   reverseDayClose: merchantOwnerProcedure
     .input(

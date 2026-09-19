@@ -5,12 +5,13 @@
  * - 当前班次卡：cashier.currentShift（骨架无金额，clerk 可调——本页 clerk 无入口，
  *   路由层引导）；「交接班」=closeShift（owner|manager，闭班不冻结账目，下一笔
  *   收银写懒建新班）；
- * - 日结表单：账面现金预览=store.todayTenderStats 同源（R1 出口，今日现金支付段 Σ；
- *   冻结值以当班口径为准——server computeShiftTender，单班场景两者一致）vs
- *   实点现金手输，差异=实点−账面（非零红字）；微信/支付宝/次卡等值/储值分列
- *   （参考列：次卡/储值不计入已收——裁定①）；提交=cashier.dayClose 冻结；
- * - 拆箱重结：reversed 日结单的班次可「重新日结」（dayClose 指定 shiftId，
- *   服务端 frozen 守卫放行）；
+ * - 日结表单：账面现金预览=store.todayTenderStats 同源（R1 出口，今日现金支付段 Σ，
+ *   全日口径）vs 实点现金手输，差异=实点−账面（非零红字）；微信/支付宝/次卡等值/储值
+ *   分列（参考列：次卡/储值不计入已收——裁定①）；提交=cashier.dayClose 冻结——
+ *   **M1-补2 条件②：冻结=全日口径（server computeDayTender，与预览同源同值，
+ *   一日一结）**，班次拆分展示保留（server snapshot.shiftBreakdown / 列表班次列）；
+ * - 拆箱重结：reversed 日结单同日可「重新日结」（dayClose 兼容 shiftId 入参作追溯，
+ *   服务端按 bizDate frozen 守卫放行）；
  * - 日结单列表=listDayCloses（close/reversal 双向可查：reversal 行关联原单，
  *   原单 reversed 挂 reversalId）；详情=字段行 + 冲正前后值快照 + 调整记录；
  * - 反结账（拆箱）=reverseDayClose（仅 owner · 强制原因弹层）；
@@ -112,19 +113,18 @@ export function DayCloseForm({
   const book = tender?.tender.cashFen ?? null
   const actualFen = yuanToFen(actualInput)
   const diff = book !== null && actualFen !== null ? actualFen - book : null
-  const canSubmit =
-    !submitting && actualFen !== null && (shift != null || overrideShiftId !== null)
+  const canSubmit = !submitting && actualFen !== null // 条件②：全日口径，不依赖当班
 
   return (
     <div className="u3-panel" data-testid="dayclose-form">
       <div className="u3-panel-head">
-        <h3>{overrideShiftId ? '重新日结（拆箱后同班次）' : '日结（冻结当班账目）'}</h3>
-        <span className="aside">账面=同源今日现金支付段 Σ · 冻结以当班口径为准</span>
+        <h3>{overrideShiftId ? '重新日结（拆箱后同日）' : '日结（冻结全日账目）'}</h3>
+        <span className="aside">账面=server 全日同源预览 · 冻结与预览同值 · 一日一结</span>
       </div>
       <div className="px-[17px] pb-4">
         {overrideShiftId ? (
           <p className="mb-2.5 flex items-center gap-2 rounded-[10px] bg-[#F1E8D4] px-3 py-2 text-caption-xs text-[rgba(74,59,46,.62)]">
-            对拆箱班次 <b className="font-number tabular-nums">{overrideShiftId.slice(-6)}</b> 重新日结
+            拆箱后重新日结（全日口径；追溯班次 <b className="font-number tabular-nums">{overrideShiftId.slice(-6)}</b>）
             <button type="button" className="ml-auto font-semibold text-ink" onClick={onCancelOverride}>
               取消
             </button>
@@ -196,11 +196,11 @@ export function DayCloseForm({
           className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-[14px] bg-brand-primary py-3 text-body-sm font-bold text-ink shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         >
           <BookCheck size={15} strokeWidth={2} aria-hidden />
-          {submitting ? '冻结中…' : overrideShiftId ? '重新日结并冻结' : '日结并冻结当班账目'}
+          {submitting ? '冻结中…' : overrideShiftId ? '重新日结并冻结' : '日结并冻结全日账目'}
         </button>
         {shift == null && overrideShiftId === null ? (
           <p className="mt-1.5 text-center text-caption-xs text-[rgba(74,59,46,.42)]">
-            当前无开班班次，无可日结的当班账目
+            全日口径：当前无开班班次也可日结（账面按当日全部支付段计）
           </p>
         ) : null}
       </div>
@@ -322,7 +322,7 @@ export function DayCloseList({
                           <button
                             type="button"
                             data-testid={`dayclose-reclose-${r.id}`}
-                            title="对该班次重新日结"
+                            title="拆箱后同日重新日结（全日口径）"
                             onClick={() => onReclose(r)}
                             className="inline-flex items-center gap-1 text-caption-xs font-bold text-ink transition-transform duration-120 active:scale-[0.92]"
                           >
@@ -545,7 +545,7 @@ export function CloseReasonDialog({
       />
       <p className="mt-1.5 text-caption-xs leading-relaxed text-[rgba(74,59,46,.42)]">
         {isReverse
-          ? '拆箱将生成冲正关联单（含前后值快照/操作人/时间/原因），原日结单永存不涂改（置「已冲正」）；之后可对同班次重新日结。'
+          ? '拆箱将生成冲正关联单（含前后值快照/操作人/时间/原因），原日结单永存不涂改（置「已冲正」）；之后可对同日重新日结（全日口径）。'
           : '备注追加进调整记录留痕，原冻结数字不涂改。'}
       </p>
       {!valid ? (

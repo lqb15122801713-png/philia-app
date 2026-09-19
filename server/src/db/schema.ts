@@ -836,15 +836,18 @@ export const shifts = sqliteTable(
 );
 
 /**
- * 日结单表（M1-补2 R3 · 裁定④ + 补丁①3a）：
- * - 生成即冻结当班账目（status='frozen'）：账面现金（当班现金支付段 Σ，与
- *   todayTenderStats 同源的班次口径 computeShiftTender）vs 实点现金（手输），
- *   差异=实点−账面；微信/支付宝/次卡等值/储值分列 + 笔数快照。
+ * 日结单表（M1-补2 R3 · 裁定④ + 补丁①3a + 条件②全日口径）：
+ * - 生成即冻结**自然日全部支付段（跨班次，computeDayTender 同源）**
+ *   （status='frozen'）：账面现金（当日现金支付段 Σ）vs 实点现金（手输），
+ *   差异=实点−账面；微信/支付宝/次卡等值/储值分列 + 笔数快照；班次拆分
+ *   明细存 snapshot_json.shiftBreakdown（展示用）；一日一结（bizDate 唯一冻结）。
+ * - shift_id 列=日结发起时当班（追溯记录，口径与冻结无关）；班次账拆分见
+ *   snapshot；交接班闭班（shifts.status）不冻结账目。
  * - 原日结单永存不涂改：反结账（拆箱）不删不改原单数字，仅置 status='reversed'
  *   + reversed_at/reversed_by/reversal_id 链接元数据；冲正关联单为独立行
  *   （kind='reversal'，ref_close_id 指原单，snapshot_json 存前后值，强制原因）。
  * - 差错走调整备注（adjustments_json 追加只增不改，留痕含操作人）；重新日结=
- *   原单 reversed 后对同班次再 dayClose。
+ *   原单 reversed 后对同日再 dayClose。
  */
 export const dayCloses = sqliteTable(
   'day_closes',
