@@ -1,0 +1,60 @@
+[provision] state → D:\KimiData\kimi\Workspaces\Philia\u4-pipeline\m1-contract-check.state.json
+{
+  "provisionedAt": "2026-09-19T07:07:16.104Z",
+  "customerId": "01M2W7V87MWRD1KGT06JXCCVH2",
+  "customerNickname": "验收客户0707161X531K",
+  "customerPhone": "13701637045",
+  "apptId": "01M2W7V87V6WVMEGXC8FZJTAR7",
+  "appt2Id": "01M2W7V87Z5BMAS458SJ2W2Q4T",
+  "note": "每次运行新建客户+预约；不重置存量数据"
+}
+  ✔ server 健康检查
+[login] owner/manager/clerk(seed_clerk) 三号已登
+  ✔ R2：clerk auth.me 角色含 merchant_clerk 且绑定门店（staff 行口径） —— ["merchant_clerk"]
+  ✔ R2：clerk 可调 merchantProcedure 端点（pendingAppointments 200，storeId 已绑） —— http=200
+
+—— R1 基线（聚合出口 todayTenderStats）——
+  ✔ R1：出口结构齐备（tender 五分列+回馈金列位+合计+笔数） —— {"received":930200,"counts":{"cashierPaidCount":142,"appointmentPaidCount":0,"paidCount":142}}
+  ✔ R1：基线不变量 receivedTotal = cash+wechat+alipay（分列可加总）
+
+—— R1：voided 零聚合（回归保护，修订单 R1④）——
+  ✔ R2：clerk 撤未支付单（held→voided）200（补丁①三级全开） —— HD-20260919-212
+  ✔ R2 留痕：撤单后 operatorId=clerk（operator_id=当时操作人） —— operatorId=01M2VYN9NPJX4S665BECMRJV4M
+  ✔ R1：撤单单据零聚合（已收/笔数与基线持平） —— received 930200 → 930200
+
+—— R2：clerk 收银全链路（组合支付 + 次卡扣次）——
+  ✔ R2：clerk 组合支付结账 200，operatorId=clerk —— HD-20260919-213
+  ✔ R2：clerk 次卡扣次结账 200 —— HD-20260919-214
+
+—— R2：manager 放宽档位（改价/折扣 owner|manager）——
+  ✔ R2：manager 改价 settle 200（M1 owner-only 放宽一档，补丁①）
+  ✔ R2：manager 折扣 hold 200 —— payable=6120
+  ✔ R2：manager 撤未支付单 200（三级全开）
+
+—— R2：clerk 越权双闸（服务端 403）——
+  ✔ R2：clerk 改价 settle 403（FORBIDDEN 如实） —— 改价/折扣/退款仅店主或店长（owner / manager）可操作
+  ✔ R2：clerk 折扣 hold 403 —— 改价/折扣/退款仅店主或店长（owner / manager）可操作
+  ✔ R2：clerk financeStats 403（财务流水·查看 ❌，矩阵）
+  ✔ R2：clerk dashboardStats 403（看板 ❌，总规则②店员不看营业额）
+  ✔ R2：clerk todayTenderStats 200 但 restricted 遮罩（金额/笔数全 null） —— {"restricted":true,"date":"2026-09-18T16:00:00.000Z","tender":null,"receivedTotalFen":null,"referenceTotalFen":null,"legacyPayAtStoreFen":null,"counts":null}
+
+—— R1：聚合出口分列与合计（差值断言）——
+  ✔ R1：Δcash=11000（X6000+manager改价5000） —— Δ=11000
+  ✔ R1：Δwechat=4700（X 单） —— Δ=4700
+  ✔ R1：Δalipay=6800（W 单） —— Δ=6800
+  ✔ R1：Δpass=19800（Y 单次卡等值，参考列单列） —— Δ=19800
+  ✔ R1：Δ已收=22500=Δ现金类和（pass 永不计入，裁定①） —— Δ=22500
+  ✔ R1：Δ收银单数=4（X/Y/W/manager改价；撤单 Z 不计） —— Δ=4
+  ✔ R1：Δ合并流水笔数=4（counts.paidCount，无预约域直收） —— Δ=4
+  ✔ R1：结账后不变量 receivedTotal = cash+wechat+alipay
+
+—— R1：三处同数同源（同一聚合出口）——
+  ✔ R1：dashboardStats.todayTender ≡ 出口（经营总览同源） —— dash=952700 outlet=952700
+  ✔ R1：financeStats.todayTender ≡ 出口（财务页头部同源） —— fin=952700
+  ✔ R1：manager 出口与 owner 同数（本店同聚合，可分角色渲染但同值）
+
+—— R2：留痕审计链（eventOutbox by=操作人，直查库）——
+  ✔ R2 留痕：cashier.billSettled 事件 by=clerk（总规则①） —— "01M2VYN9NPJX4S665BECMRJV4M"
+  ✔ R2 留痕：cashier.billVoided 事件 by=clerk + 原因留痕 —— {"billId":"01M2W7V89K31RPRCKWSWQFQBTQ","billNo":"HD-20260919-212","reason":"R2 店员撤单实证","fromStatus":"held","by":"01M2VYN9NPJX4S665BECMRJV4M"}
+
+========== 结果：31 过 / 0 挂 ==========

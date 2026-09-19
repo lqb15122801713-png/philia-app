@@ -1,0 +1,15 @@
+## diff 范围（基线 origin/main=9b89ca4f）
+     22 apps/merchant
+      2 packages/shared
+      1 scripts/smoke-deploy.mjs
+      1 scripts/smoke-routes.mjs
+      3 server/drizzle
+     10 server/src
+
+## 越界（应只有 merchant/server/shared/scripts）
+0
+
+## 禁令（diff + 行）：珊瑚粉/text-white/渐变
+0
+0
+0
