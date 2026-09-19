@@ -26,11 +26,13 @@
  *   预留 stored_value 位但禁用（存量储值支付=老板裁定①已生效，功能列 M2，
  *   zod 不收）。连带删除：collect 端点 / cashier.billCollected 事件（无
  *   触发点，删干净）。
- * - 改价/折扣闸门（裁定① + 任务书 §1.7）：行改价（adjustedPriceFen）或
- *   单级优惠（discountType≠none）仅 merchant_owner——hold/settle 路由内
- *   assertMerchantOwner 硬校验（merchantOwnerProcedure 不能复用于整路由，
- *   因开单/挂单/结账本体对 manager 开放）；voidBill 整端点走
- *   merchantOwnerProcedure。manager 越权一律 FORBIDDEN 如实文案。
+ * - 改价/折扣闸门（M1-补2 R2 · 补丁①+矩阵会签稿）：行改价（adjustedPriceFen）或
+ *   单级优惠（discountType≠none）仅 owner|manager——hold/settle 路由内
+ *   assertMerchantManager 硬校验（M1 原 owner-only，补丁①放宽一档至 manager；
+ *   merchantManagerProcedure 不能复用于整路由，因开单/挂单/结账本体对 clerk 开放）。
+ *   voidBill 整端点走 merchantProcedure（补丁①作废 M1 的 owner-only：撤单三级全开，
+ *   边界仍锁「仅未支付单」——settled 单 CONFLICT 不变，已支付单走反结账，S1b 另批）。
+ *   clerk 越权一律 FORBIDDEN 如实文案。
  * - 结账事务（settle）同构 appointment.create / mall.createOrder 模式：
  *   串行锁 + 单事务内 校验 Σ支付=应收 → 次卡扣次（pass 段=扣次，先于后续
  *   写库，失败整体回滚；余额不足 FORBIDDEN 如实；扣次流水 appointment_id=NULL、
@@ -59,8 +61,7 @@ import { and, desc, eq, gte, inArray, isNull, like, lt, or, sql } from 'drizzle-
 import { z } from 'zod';
 import { schema } from '../db';
 import {
-  assertMerchantOwner,
-  merchantOwnerProcedure,
+  assertMerchantManager,
   merchantProcedure,
   router,
 } from '../trpc';
@@ -350,13 +351,17 @@ function computeAmounts(
   return { subtotalFen, discountFen, payableFen: subtotalFen - discountFen };
 }
 
-/** 改价/折扣 owner 闸门（裁定①）：行改价或单级优惠非 none 时硬校验 merchant_owner */
-function assertPriceEditAllowed(ctx: Parameters<typeof assertMerchantOwner>[0], input: {
+/**
+ * 改价/折扣闸门（M1-补2 R2 · 补丁①+矩阵会签稿）：行改价或单级优惠非 none 时
+ * 硬校验 owner|manager（M1 原 owner-only 放宽一档至 manager；clerk 越权 FORBIDDEN 如实）。
+ * 留痕不变：operator_id = 操作人，事件带 by。
+ */
+function assertPriceEditAllowed(ctx: Parameters<typeof assertMerchantManager>[0], input: {
   items: Array<{ adjustedPriceFen?: number | null }>;
   discountType: string;
 }): void {
   const hasAdjusted = input.items.some((it) => it.adjustedPriceFen != null);
-  if (hasAdjusted || input.discountType !== 'none') assertMerchantOwner(ctx);
+  if (hasAdjusted || input.discountType !== 'none') assertMerchantManager(ctx);
 }
 
 /** 次卡当前可用（口径同 pass.ts passUsable）：active + 有余量 + 未过期 */
@@ -582,6 +587,171 @@ export async function loadCashierFinance(
 }
 
 /* ------------------------------------------------------------------ */
+/* R1 统一聚合出口（M1-补2 · 账目口径统一 · 裁定①，决策 #33 回馈金列位预留）   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 单日「已收」聚合（三处同数同源的唯一出口：经营总览 dashboardStats /
+ * 收银台头部 / 财务页头部 一律经 store.todayTenderStats 或内嵌 todayTender 块取数，
+ * 禁止各页自算）：
+ * - 「已收」唯一定义 = Σ 支付段现金类（cash+wechat+alipay，按支付段 createdAt 落日，
+ *   与 financeStats 认领口径同帧）；**次卡扣次 pass、储值消费 stored_value 永不计入**，
+ *   作参考列单列（裁定①）；**回馈金 rebateFen 列位预留**（决策 #33：三本账物理分离，
+ *   会员批启用，本批恒 0 不实现——避免届时聚合返工）。
+ * - 收银单支付段携全单金额（含预约行），按 method 分列最准；经收银台翻转的预约
+ *   金额已在段内，预约域不再重复认领（禁止双头记账，同 loadCashierFinance 头注）。
+ * - 未经收银台的预约到店付直收（appointment.markPaid，无支付段）：pay_at_store/NULL
+ *   按历史缺省口径并入 cash 列（与 financeStats paymentSplit.payAtStore 同桶），
+ *   金额另列 legacyPayAtStoreFen 供对账；pass_deduct 进 passFen 参考列（不计已收）。
+ * - 笔数 = 合并流水行数（收银 settled 单数 + 未经收银台的预约收款笔数），消除
+ *   「头部取预约域笔数、列表是合并视图」的 264 错数矛盾（修订单 R1③）。
+ * - voided 单零聚合：支付段仅在 settle 事务写入，撤单（open/held→voided）本无
+ *   支付段；且段查询强制 bill.status='settled'——双保险（修订单 R1④ 回归保护）。
+ */
+export interface DayTenderStats {
+  /** 统计日 0 点（门店规范时区 +8，与 bill_no/财务 byDay 日界同帧） */
+  date: Date;
+  tender: {
+    cashFen: number;
+    wechatFen: number;
+    alipayFen: number;
+    /** 次卡扣次等值（参考列，永不计入已收）：收银 pass 段 + 预约域 pass_deduct 直收 */
+    passFen: number;
+    /** 储值消费（参考列，永不计入已收）：stored_value 段现禁用恒 0，R5 启用后接管 */
+    storedValueFen: number;
+    /** 回馈金列位预留（决策 #33：回馈金/储值/XP 三本账物理分离、永不计营业额；会员批实现） */
+    rebateFen: number;
+  };
+  /** 已收合计（分）= cashFen + wechatFen + alipayFen（分列可加总核对） */
+  receivedTotalFen: number;
+  /** 参考列合计（分）= passFen + storedValueFen（+ rebateFen，恒 0）；不进已收 */
+  referenceTotalFen: number;
+  /** 其中未经收银台的预约到店付直收额（已并入 cash 列；单列供对账溯源） */
+  legacyPayAtStoreFen: number;
+  counts: {
+    /** 当日 settled 收银单数（按 settledAt） */
+    cashierPaidCount: number;
+    /** 当日未经收银台的预约收款笔数（按 paidAt；经收银台翻转的预约已含在单内不重复计） */
+    appointmentPaidCount: number;
+    /** 合并流水行数 = cashierPaidCount + appointmentPaidCount（财务页笔数口径） */
+    paidCount: number;
+  };
+}
+
+export async function computeDayTender(
+  d: DbHandle,
+  storeId: string,
+  dayStart: Date,
+): Promise<DayTenderStats> {
+  const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000);
+
+  /* ---- 收银支付段分列（仅 settled 单；voided 双保险排除；credit 历史段跳过不认领） ---- */
+  const segments = await d
+    .select({ method: schema.cashierPayments.method, amountFen: schema.cashierPayments.amountFen })
+    .from(schema.cashierPayments)
+    .innerJoin(schema.cashierBills, eq(schema.cashierBills.id, schema.cashierPayments.billId))
+    .where(
+      and(
+        eq(schema.cashierBills.storeId, storeId),
+        eq(schema.cashierBills.status, 'settled'),
+        gte(schema.cashierPayments.createdAt, dayStart),
+        lt(schema.cashierPayments.createdAt, dayEnd),
+      ),
+    );
+  let cashFen = 0;
+  let wechatFen = 0;
+  let alipayFen = 0;
+  let passFen = 0;
+  let storedValueFen = 0;
+  for (const s of segments) {
+    if (s.method === 'cash') cashFen += s.amountFen;
+    else if (s.method === 'wechat') wechatFen += s.amountFen;
+    else if (s.method === 'alipay') alipayFen += s.amountFen;
+    else if (s.method === 'pass') passFen += s.amountFen;
+    else if (s.method === 'stored_value') storedValueFen += s.amountFen;
+    // 'credit'（M1-补1 前历史脏数据）：跳过不认领，仅留痕（同 loadCashierFinance 口径）
+  }
+
+  /* ---- 预约域：经收银台翻转的预约（金额已在支付段内）剔除后，直收部分入列 ---- */
+  const cashierApptRows = await d
+    .select({ refId: schema.cashierBillItems.refId })
+    .from(schema.cashierBillItems)
+    .innerJoin(schema.cashierBills, eq(schema.cashierBills.id, schema.cashierBillItems.billId))
+    .where(
+      and(
+        eq(schema.cashierBills.storeId, storeId),
+        eq(schema.cashierBillItems.kind, 'appointment'),
+      ),
+    );
+  const viaCashier = new Set(cashierApptRows.map((r) => r.refId));
+
+  const apptPaids = await d
+    .select({
+      id: schema.appointments.id,
+      paidFen: schema.appointments.paidFen,
+      priceFen: schema.appointments.priceFen,
+      paymentMode: schema.appointments.paymentMode,
+    })
+    .from(schema.appointments)
+    .where(
+      and(
+        eq(schema.appointments.storeId, storeId),
+        gte(schema.appointments.paidAt, dayStart),
+        lt(schema.appointments.paidAt, dayEnd),
+      ),
+    );
+  let legacyPayAtStoreFen = 0;
+  let appointmentPaidCount = 0;
+  for (const a of apptPaids) {
+    if (viaCashier.has(a.id)) continue; // 经收银台翻转：金额已在支付段按 method 分列
+    const fen = a.paidFen ?? a.priceFen;
+    appointmentPaidCount += 1;
+    if (a.paymentMode === 'pass_deduct') {
+      passFen += fen; // 次卡扣次等值：参考列，不计已收（裁定①）
+    } else {
+      // markPaid 直收无支付段：按到店付历史缺省口径并入现金列，另列对账
+      cashFen += fen;
+      legacyPayAtStoreFen += fen;
+    }
+  }
+
+  /* ---- 笔数：合并流水行数（收银 settled 单 + 预约域直收笔数） ---- */
+  const billCountRow = await d
+    .select({ n: sql<number>`count(*)` })
+    .from(schema.cashierBills)
+    .where(
+      and(
+        eq(schema.cashierBills.storeId, storeId),
+        eq(schema.cashierBills.status, 'settled'),
+        gte(schema.cashierBills.settledAt, dayStart),
+        lt(schema.cashierBills.settledAt, dayEnd),
+      ),
+    )
+    .get();
+  const cashierPaidCount = Number(billCountRow?.n ?? 0);
+
+  return {
+    date: dayStart,
+    tender: {
+      cashFen,
+      wechatFen,
+      alipayFen,
+      passFen,
+      storedValueFen,
+      rebateFen: 0, // 决策 #33 列位预留，会员批实现
+    },
+    receivedTotalFen: cashFen + wechatFen + alipayFen,
+    referenceTotalFen: passFen + storedValueFen,
+    legacyPayAtStoreFen,
+    counts: {
+      cashierPaidCount,
+      appointmentPaidCount,
+      paidCount: cashierPaidCount + appointmentPaidCount,
+    },
+  };
+}
+
+/* ------------------------------------------------------------------ */
 /* router                                                               */
 /* ------------------------------------------------------------------ */
 
@@ -773,6 +943,7 @@ export const cashierRouter = router({
             billNo: bill.billNo,
             payableFen: bill.payableFen,
             itemCount: resolved.length,
+            by: ctx.user.id, // M1-补2 R2 总规则①：留痕含操作人
           });
           return bill;
         });
@@ -973,6 +1144,7 @@ export const cashierRouter = router({
                 petName: it.appointmentPetName,
                 paidFen,
                 by: 'cashier',
+                operatorId: ctx.user.id, // M1-补2 R2：by=来源签保留，操作人另列（审计链）
                 billNo,
               }),
             );
@@ -1046,6 +1218,7 @@ export const cashierRouter = router({
               passFen: passSegs.reduce((s, p) => s + p.amountFen, 0),
               itemCount: resolved.length,
               hasStockShort: [...stockShortByRef.values()].some(Boolean),
+              by: ctx.user.id, // M1-补2 R2 总规则①：留痕含操作人
             }),
           );
           return { bill, idempotent: false as const };
@@ -1057,15 +1230,16 @@ export const cashierRouter = router({
     }),
 
   /**
-   * 6. voidBill（merchant_owner 硬闸门，裁定①：撤单仅店主）：open/held →
-   * voided 留痕（voidReason 选填），禁止物理删除；**settled 单明确报错不可撤**
-   * （裁定③：回补属退款专项，本批冻结——不存在撤单回补路径）；voided 重复
-   * 撤 = 幂等返回。emit cashier.billVoided。
+   * 6. voidBill（M1-补2 R2：merchantProcedure，撤单三级全开——补丁①作废 M1 的
+   * owner-only；owner/manager/clerk 均可撤，矩阵边界不变「仅未支付单」）：open/held →
+   * voided 留痕（voidReason 选填 + 事件带 by=操作人，审计链总规则①），禁止物理删除；
+   * **settled 单明确报错不可撤**（裁定③：回补属退款专项冻结；已支付单冲正=反结账，
+   * 仅店主，S1b 批次交付）；voided 重复撤 = 幂等返回。emit cashier.billVoided。
    *
    * （M1-补1：原 collect 端点随「记账 credit」删除而废——收银单无待收态，
    * 死接口不留；「待收」回归预约域口径。）
    */
-  voidBill: merchantOwnerProcedure
+  voidBill: merchantProcedure
     .input(
       z.object({
         billNo: z.string().regex(BILL_NO_RE),
@@ -1099,6 +1273,8 @@ export const cashierRouter = router({
               status: 'voided',
               voidedAt: now,
               voidReason: input.reason ?? null,
+              // M1-补2 R2 审计链：operator_id = 撤单操作人（三级全开后谁是经手人必须可追溯）
+              operatorId: ctx.user.id,
               updatedAt: now,
             })
             .where(eq(schema.cashierBills.id, bill.id))
@@ -1109,6 +1285,7 @@ export const cashierRouter = router({
             billNo: updated.billNo,
             reason: input.reason ?? null,
             fromStatus: bill.status,
+            by: ctx.user.id, // M1-补2 R2 总规则①：动钱/改数动作留痕含操作人
           });
           return { bill: updated, idempotent: false as const };
         });
