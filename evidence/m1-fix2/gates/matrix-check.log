@@ -1,0 +1,107 @@
+[fixture] 客户 13506691691 + 预约 8 条（pending×3/confirmed×1/cancel_requested×2/completed×2）
+
+===== 权限矩阵实证（条件①） =====
+| 端点 | 级 | 期望 O/M/C | owner | manager | clerk | 结果 |
+ ✔ cashier.searchMember [A] 期望 200/200/200 实际 OK/OK/OK
+ ✔ cashier.pendingAppointments [A] 期望 200/200/200 实际 OK/OK/OK
+ ✔ cashier.hold [A] 期望 200/200/200 实际 OK/OK/OK
+ ✔ cashier.resume [A] 期望 200/200/200 实际 OK/OK/OK
+ ✔ cashier.settle [A] 期望 200/200/200 实际 OK/OK/OK
+ ✔ cashier.voidBill(未支付) [A] 期望 200/200/200 实际 OK/OK/OK
+ ✔ cashier.listBills [A] 期望 200/200/200 实际 OK/OK/OK
+ ✔ cashier.getBill [A] 期望 200/200/200 实际 OK/OK/OK
+ ✔ cashier.currentShift [A] 期望 200/200/200 实际 OK/OK/OK
+ ✔ store.todayTenderStats [A] 期望 200/200/200 实际 OK/OK/OK
+ ✔ store.todayTenderStats clerk 遮罩（restricted=true，金额 null）
+ ✔ cashier.settle+改价 [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ cashier.dayClosePreview [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ cashier.listDayCloses [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ cashier.closeShift [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ cashier.dayClose [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ cashier.reverseDayClose(仅owner) [A] 期望 200/403/403 实际 OK/FORBIDDEN/FORBIDDEN
+ ✔ cashier.adjustDayClose [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ cashier.exportDayCloseCsv(仅owner) [A] 期望 200/403/403 实际 OK/FORBIDDEN/FORBIDDEN
+ ✔ cashier.reverseBill(仅owner) [A] 期望 200/403/403 实际 OK/FORBIDDEN/FORBIDDEN
+ ✔ store.financeStats [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ store.dashboardStats [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ storedValue.previewImport(仅owner) [A] 期望 200/403/403 实际 OK/FORBIDDEN/FORBIDDEN
+ ✔ storedValue.executeImport(仅owner) [A] 期望 200/403/403 实际 OK/FORBIDDEN/FORBIDDEN
+ ✔ storedValue.listImportBatches(仅owner) [A] 期望 200/403/403 实际 OK/FORBIDDEN/FORBIDDEN
+ ✔ storedValue.clearImportBatch(仅owner) [A] 期望 200/403/403 实际 OK/FORBIDDEN/FORBIDDEN
+ ✔ appointment.listForStore(监控Hub) [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ appointment.confirm [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ appointment.reject [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ appointment.assign [B] 期望 NF/NF/403 实际 OK/OK/FORBIDDEN
+ ✔ appointment.reviewCancel(取消审批) [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ appointment.markPaid(收款=收银面) [A] 期望 200/200/200 实际 OK/OK/OK
+ ✔ boarding.stayBoard(监控) [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ serviceStep.flagForRedo [B] 期望 NF/NF/403 实际 NOT_FOUND/NOT_FOUND/FORBIDDEN
+ ✔ pass.listForStore [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ pass.listCustomers [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ pass.listLogs [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ pass.topUp(充次) [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ mall.listProductsForStore(收银只读) [A] 期望 200/200/200 实际 OK/OK/OK
+ ✔ mall.upsertProduct(定价仅owner) [A] 期望 200/403/403 实际 OK/FORBIDDEN/FORBIDDEN
+ ✔ mall.listStoreOrders [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ mall.shipOrder [B] 期望 NF/NF/403 实际 BAD_REQUEST/BAD_REQUEST/FORBIDDEN
+ ✔ store.upsertService(定价仅owner) [A] 期望 200/403/403 实际 OK/FORBIDDEN/FORBIDDEN
+ ✔ store.update(系统设置仅owner·红线回归) [A] 期望 200/403/403 实际 OK/FORBIDDEN/FORBIDDEN
+ ✔ 红线复核：store.update 越权写未生效（店名未被改）
+ ✔ store.staffList [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ store.setSchedule(排班manager本店) [A] 期望 200/200/403 实际 OK/OK/FORBIDDEN
+ ✔ store.inviteStaff(账号创建仅owner) [A] 期望 200/403/403 实际 OK/FORBIDDEN/FORBIDDEN
+ ✔ store.setStaffStatus(停用仅owner) [A] 期望 200/403/403 实际 OK/FORBIDDEN/FORBIDDEN
+ ✔ store.updateStaff(角色/状态仅owner) [A] 期望 200/403/403 实际 OK/FORBIDDEN/FORBIDDEN
+
+===== 矩阵表格 =====
+| 端点 | 级 | 期望 O/M/C | owner | manager | clerk | 结果 |
+|---|---|---|---|---|---|---|
+| cashier.pendingAppointments | A | 200/200/200 | ✓OK | ✓OK | ✓OK | PASS |
+| cashier.hold | A | 200/200/200 | ✓OK | ✓OK | ✓OK | PASS |
+| cashier.resume | A | 200/200/200 | ✓OK | ✓OK | ✓OK | PASS |
+| cashier.settle | A | 200/200/200 | ✓OK | ✓OK | ✓OK | PASS |
+| cashier.voidBill(未支付) | A | 200/200/200 | ✓OK | ✓OK | ✓OK | PASS |
+| cashier.listBills | A | 200/200/200 | ✓OK | ✓OK | ✓OK | PASS |
+| cashier.getBill | A | 200/200/200 | ✓OK | ✓OK | ✓OK | PASS |
+| cashier.currentShift | A | 200/200/200 | ✓OK | ✓OK | ✓OK | PASS |
+| store.todayTenderStats | A | 200/200/200 | ✓OK | ✓OK | ✓OK | PASS |
+| cashier.settle+改价 | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| cashier.dayClosePreview | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| cashier.listDayCloses | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| cashier.closeShift | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| cashier.dayClose | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| cashier.reverseDayClose(仅owner) | A | 200/403/403 | ✓OK | ✓FORBIDDEN | ✓FORBIDDEN | PASS |
+| cashier.adjustDayClose | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| cashier.exportDayCloseCsv(仅owner) | A | 200/403/403 | ✓OK | ✓FORBIDDEN | ✓FORBIDDEN | PASS |
+| cashier.reverseBill(仅owner) | A | 200/403/403 | ✓OK | ✓FORBIDDEN | ✓FORBIDDEN | PASS |
+| store.financeStats | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| store.dashboardStats | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| storedValue.previewImport(仅owner) | A | 200/403/403 | ✓OK | ✓FORBIDDEN | ✓FORBIDDEN | PASS |
+| storedValue.executeImport(仅owner) | A | 200/403/403 | ✓OK | ✓FORBIDDEN | ✓FORBIDDEN | PASS |
+| storedValue.listImportBatches(仅owner) | A | 200/403/403 | ✓OK | ✓FORBIDDEN | ✓FORBIDDEN | PASS |
+| storedValue.clearImportBatch(仅owner) | A | 200/403/403 | ✓OK | ✓FORBIDDEN | ✓FORBIDDEN | PASS |
+| appointment.listForStore(监控Hub) | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| appointment.confirm | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| appointment.reject | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| appointment.assign | B | NF/NF/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| appointment.reviewCancel(取消审批) | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| appointment.markPaid(收款=收银面) | A | 200/200/200 | ✓OK | ✓OK | ✓OK | PASS |
+| boarding.stayBoard(监控) | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| serviceStep.flagForRedo | B | NF/NF/403 | ✓NOT_FOUND | ✓NOT_FOUND | ✓FORBIDDEN | PASS |
+| pass.listForStore | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| pass.listCustomers | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| pass.listLogs | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| pass.topUp(充次) | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| mall.listProductsForStore(收银只读) | A | 200/200/200 | ✓OK | ✓OK | ✓OK | PASS |
+| mall.upsertProduct(定价仅owner) | A | 200/403/403 | ✓OK | ✓FORBIDDEN | ✓FORBIDDEN | PASS |
+| mall.listStoreOrders | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| mall.shipOrder | B | NF/NF/403 | ✓BAD_REQUEST | ✓BAD_REQUEST | ✓FORBIDDEN | PASS |
+| store.upsertService(定价仅owner) | A | 200/403/403 | ✓OK | ✓FORBIDDEN | ✓FORBIDDEN | PASS |
+| store.update(系统设置仅owner·红线回归) | A | 200/403/403 | ✓OK | ✓FORBIDDEN | ✓FORBIDDEN | PASS |
+| store.staffList | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| store.setSchedule(排班manager本店) | A | 200/200/403 | ✓OK | ✓OK | ✓FORBIDDEN | PASS |
+| store.inviteStaff(账号创建仅owner) | A | 200/403/403 | ✓OK | ✓FORBIDDEN | ✓FORBIDDEN | PASS |
+| store.setStaffStatus(停用仅owner) | A | 200/403/403 | ✓OK | ✓FORBIDDEN | ✓FORBIDDEN | PASS |
+| store.updateStaff(角色/状态仅owner) | A | 200/403/403 | ✓OK | ✓FORBIDDEN | ✓FORBIDDEN | PASS |
+
+========== 结果：50 过 / 0 挂 ==========

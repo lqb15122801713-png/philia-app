@@ -13,10 +13,25 @@
 | server typecheck exit 0 | ✅ | gates/server-typecheck.log |
 | smoke-routes | ✅ **36/36**（新增 /cashier/close 锚点） | gates/smoke-routes.log/.json |
 | smoke-deploy | ✅ 全绿（新增修复包 15 用例：同源三处同数/clerk 遮罩+403 矩阵/日结/反结账/储值导入 preview 校验位；演示单按天顺延防满槽加固） | gates/smoke-deploy.log |
-| 契约实证 | ✅ m1fix2-check **31/0**（R1 聚合+R2 三级）+ m1fix2b-check **55/0**（R3/R5/R5b/反结账）+ m1-contract-check **67/0**（M1 回归） | gates/*.log |
+| 契约实证 | ✅ m1fix2-check **31/0**（R1 聚合+R2 三级）+ m1fix2b-check **59/0**（R3/R5/R5b/反结账+全日口径两班场景）+ m1-contract-check **67/0**（M1 回归）+ matrix-check **50/0**（端点级权限矩阵） | gates/*.log |
 | 禁令 grep（diff + 行） | ✅ 珊瑚粉=0 / text-white=0 / 渐变=0；零新依赖 | gates/grep-gate.log |
 | diff 范围 | ✅ apps/merchant 22 + server 13 + packages/shared 2 + scripts 2；apps/customer、apps/staff 零改动 | PR diff |
 | 日志入卷 | ✅ 全部 `git add -f`（.gitignore 第 25 行教训已纠） | 本目录 |
+
+## 复核退回补改（2026-09-19 七步复核裁定，同分支补改已收口）
+
+### 补改① 权限继承面收紧（越权红线：clerk 实测 store.update 200 改名成功）
+
+- **裁定**：clerk 全收 + manager 同步按矩阵收紧——矩阵「仅老板」行（系统设置/口令、商品与服务定价、员工账号创建/停用等）clerk 与 manager 一律 403；clerk 仅保留收银执行面；manager 保留收银+改价免单+日结+财务流水查看。
+- **落点**：server 37 个 merchant 端点逐端点过闸（三级放行 12 端点 / owner|manager 23 端点 / 仅 owner 12 端点——含 store.update 红线修复，clerk/manager 均 FORBIDDEN 且店名未被改动实证）。
+- **端点级 403/放行矩阵实证**：`gates/matrix-check.log`（**50/0**，三角色×37 端点逐格真实调用，含 Markdown 矩阵表；B 级深状态端点按闸门码口径注明）。
+- 卷宗注：首交疑点 Y1 的继承面（clerk 经 merchantProcedure 理论可调）本补改已按裁定收紧闭环。
+
+### 补改② 日结冻结口径改全日（错账红线：当班 ¥129 与全日预览 ¥498 劈叉）
+
+- **裁定**：日结=全日口径——冻结自然日全部支付段（跨班次），班次明细拆分展示，预览与冻结同源同值；交接班（闭班）维持当班小结不冻结；冲正关联同步全日口径。
+- **落点**：dayClose 冻结值改用 computeDayTender（全日，与 todayTenderStats 同函数）；新增 `cashier.dayClosePreview`（owner|manager，预览=冻结同函数同值+班次拆分 shiftBreakdown+已冻结探测）；一日一结 CONFLICT；拆箱后同日可重结；UI 预览接 server 同源值（删「以当班口径为准」标注）。
+- **两班场景实证**（gates/m1fix2b-check.log R3 全日段）：班 A clerk 结 ¥68 → 交接班闭班 → 班 B clerk 结 ¥68 → **冻结账面=预览=全日出口值（两班 13600 分含其中），manager 实点 +100 → diff=+100 红字**；同日再结 CONFLICT；owner 拆箱 → 同日重结 diff=0。实拍：shots/70（全日口径日结页）。
 
 ## R1~R6 落点对照
 

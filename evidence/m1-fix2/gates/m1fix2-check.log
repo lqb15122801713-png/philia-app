@@ -1,11 +1,11 @@
 [provision] state → D:\KimiData\kimi\Workspaces\Philia\u4-pipeline\m1-contract-check.state.json
 {
-  "provisionedAt": "2026-09-19T07:07:16.104Z",
-  "customerId": "01M2W7V87MWRD1KGT06JXCCVH2",
-  "customerNickname": "验收客户0707161X531K",
-  "customerPhone": "13701637045",
-  "apptId": "01M2W7V87V6WVMEGXC8FZJTAR7",
-  "appt2Id": "01M2W7V87Z5BMAS458SJ2W2Q4T",
+  "provisionedAt": "2026-09-19T08:31:32.267Z",
+  "customerId": "01M2WCNHWXT4CKXSKHSFHN9C3A",
+  "customerNickname": "验收客户083132AP7HGD",
+  "customerPhone": "13706693185",
+  "apptId": "01M2WCNHX4EGNG8VWT6G4EHX7E",
+  "appt2Id": "01M2WCNHX7CXJY2GD06EVZY6FH",
   "note": "每次运行新建客户+预约；不重置存量数据"
 }
   ✔ server 健康检查
@@ -14,17 +14,17 @@
   ✔ R2：clerk 可调 merchantProcedure 端点（pendingAppointments 200，storeId 已绑） —— http=200
 
 —— R1 基线（聚合出口 todayTenderStats）——
-  ✔ R1：出口结构齐备（tender 五分列+回馈金列位+合计+笔数） —— {"received":930200,"counts":{"cashierPaidCount":142,"appointmentPaidCount":0,"paidCount":142}}
+  ✔ R1：出口结构齐备（tender 五分列+回馈金列位+合计+笔数） —— {"received":1355600,"counts":{"cashierPaidCount":196,"appointmentPaidCount":12,"paidCount":208}}
   ✔ R1：基线不变量 receivedTotal = cash+wechat+alipay（分列可加总）
 
 —— R1：voided 零聚合（回归保护，修订单 R1④）——
-  ✔ R2：clerk 撤未支付单（held→voided）200（补丁①三级全开） —— HD-20260919-212
+  ✔ R2：clerk 撤未支付单（held→voided）200（补丁①三级全开） —— HD-20260919-323
   ✔ R2 留痕：撤单后 operatorId=clerk（operator_id=当时操作人） —— operatorId=01M2VYN9NPJX4S665BECMRJV4M
-  ✔ R1：撤单单据零聚合（已收/笔数与基线持平） —— received 930200 → 930200
+  ✔ R1：撤单单据零聚合（已收/笔数与基线持平） —— received 1355600 → 1355600
 
 —— R2：clerk 收银全链路（组合支付 + 次卡扣次）——
-  ✔ R2：clerk 组合支付结账 200，operatorId=clerk —— HD-20260919-213
-  ✔ R2：clerk 次卡扣次结账 200 —— HD-20260919-214
+  ✔ R2：clerk 组合支付结账 200，operatorId=clerk —— HD-20260919-324
+  ✔ R2：clerk 次卡扣次结账 200 —— HD-20260919-325
 
 —— R2：manager 放宽档位（改价/折扣 owner|manager）——
   ✔ R2：manager 改价 settle 200（M1 owner-only 放宽一档，补丁①）
@@ -49,12 +49,12 @@
   ✔ R1：结账后不变量 receivedTotal = cash+wechat+alipay
 
 —— R1：三处同数同源（同一聚合出口）——
-  ✔ R1：dashboardStats.todayTender ≡ 出口（经营总览同源） —— dash=952700 outlet=952700
-  ✔ R1：financeStats.todayTender ≡ 出口（财务页头部同源） —— fin=952700
+  ✔ R1：dashboardStats.todayTender ≡ 出口（经营总览同源） —— dash=1378100 outlet=1378100
+  ✔ R1：financeStats.todayTender ≡ 出口（财务页头部同源） —— fin=1378100
   ✔ R1：manager 出口与 owner 同数（本店同聚合，可分角色渲染但同值）
 
 —— R2：留痕审计链（eventOutbox by=操作人，直查库）——
   ✔ R2 留痕：cashier.billSettled 事件 by=clerk（总规则①） —— "01M2VYN9NPJX4S665BECMRJV4M"
-  ✔ R2 留痕：cashier.billVoided 事件 by=clerk + 原因留痕 —— {"billId":"01M2W7V89K31RPRCKWSWQFQBTQ","billNo":"HD-20260919-212","reason":"R2 店员撤单实证","fromStatus":"held","by":"01M2VYN9NPJX4S665BECMRJV4M"}
+  ✔ R2 留痕：cashier.billVoided 事件 by=clerk + 原因留痕 —— {"billId":"01M2WCNHYNGJ6CWG6RQ4GZS4P2","billNo":"HD-20260919-323","reason":"R2 店员撤单实证","fromStatus":"held","by":"01M2VYN9NPJX4S665BECMRJV4M"}
 
 ========== 结果：31 过 / 0 挂 ==========

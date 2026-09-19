@@ -1,12 +1,12 @@
-✅ GET /api/health —— {"ok":true,"ts":1789800926186}
+✅ GET /api/health —— {"ok":true,"ts":1789806856042}
 ✅ 三端首页可达：customer http://localhost:7200 —— status=200 ct=text/html; charset=utf-8
 ✅ 三端首页可达：merchant http://localhost:7200 —— status=200 ct=text/html; charset=utf-8
 ✅ 三端首页可达：staff http://localhost:7200 —— status=200 ct=text/html; charset=utf-8
 ✅ 口令门：dev-seed-users 无码 → 401 BETA_GATE_REQUIRED —— status=401 error=BETA_GATE_REQUIRED
 ✅ 口令门：dev-seed-users 错码 → 403 BETA_GATE_INVALID —— status=403 error=BETA_GATE_INVALID
-✅ 口令门：dev-seed-users 对口令 → 200 —— status=200 users=14
+✅ 口令门：dev-seed-users 对口令 → 200 —— status=200 users=47
 ✅ 口令门：dev-login 错码 → 403（先于用户校验被拒） —— status=403
-✅ dev-seed-users 动态取数（带口令） —— users=14
+✅ dev-seed-users 动态取数（带口令） —— users=47
 ✅ 种子角色齐全（customer / merchant_owner / staff） —— customer=示例客户 merchant=菲丽亚店主 staff=小美
 ✅ dev-login（示例客户 / customer） —— status=200
 ✅ dev-login（菲丽亚店主 / merchant） —— status=200
@@ -14,38 +14,38 @@
 ✅ trpc pet.list（种子客户有宠物） —— pets=2 第一只=旺财
 ✅ trpc store.listNearby（种子门店） —— stores=1 第一家=菲丽亚宠物·示例店
 ✅ trpc store.getWithServices（洗护服务项） —— 服务=基础洗护（小型犬） 价格=8800分
-✅ 演示单下单 trpc appointment.create —— id=01M2W75K2AX5N52D7FETJZ6ST7 scheduledStart=2026/9/21 10:00:00
+✅ 演示单下单 trpc appointment.create —— id=01M2WCTHZDQP2C7WJGVHBA9H6M scheduledStart=2026/9/21 10:00:00
 ✅ 商家确认 trpc appointment.confirm（pending → confirmed） —— status=confirmed
-✅ 客户取码 trpc appointment.getCode —— code=R5EAJK
-✅ 员工核销 trpc appointment.checkin（confirmed → in_service） —— status=in_service checkedInAt=2026-09-19T06:55:26.000Z 认领员工=01M2SVYE6HZC0TAFMKKGD2S25Y
-✅ 收银台 trpc cashier.pendingAppointments 可查 —— 待收款=6
-✅ 收银台 会员检索命中（种子客户） —— found=true 次卡余=1
+✅ 客户取码 trpc appointment.getCode —— code=ZFHW58
+✅ 员工核销 trpc appointment.checkin（confirmed → in_service） —— status=in_service checkedInAt=2026-09-19T08:34:16.000Z 认领员工=01M2SVYE6H5JWDP5KM4GR1BF3X
+✅ 收银台 trpc cashier.pendingAppointments 可查 —— 待收款=28
+✅ 收银台 会员检索命中（种子客户） —— found=true 次卡余=2
 ✅ 收银台 会员检索未命中（安静 found:false） —— found=false
 ✅ 收银台前置 pass.topUp 充次 1 —— times=1
-✅ 收银台 挂单 cashier.hold（HD 单号） —— billNo=HD-20260919-121 应收=21700分
+✅ 收银台 挂单 cashier.hold（HD 单号） —— billNo=HD-20260919-349 应收=21700分
 ✅ 收银台 取单 cashier.resume（held→open） —— status=open 行数=2
 ✅ 收银台 结账 cashier.settle（现金） —— status=settled 已收=21700分
 ✅ 收银台 结账幂等（同 bill_no 重放 idempotent） —— idempotent=true
-✅ 收银台 库存扣减（settled −1，幂等重放不再扣） —— stock 39→38（重放后仍 38）
+✅ 收银台 库存扣减（settled −1，幂等重放不再扣） —— stock 38→37（重放后仍 37）
 ✅ 收银台 流水可查 cashier.listBills（今日含本单） —— rows=100
 ✅ 收银台 流水详情 getBill（现金 1 段） —— 支付段=1
-✅ 收银台 次卡扣次结账（pass 段=扣次行有效价） —— billNo=HD-20260919-122 应收=8800分
-✅ 收银台 扣次联动（次卡余额 −1） —— remain 2→1
+✅ 收银台 次卡扣次结账（pass 段=扣次行有效价） —— billNo=HD-20260919-350 应收=8800分
+✅ 收银台 扣次联动（次卡余额 −1） —— remain 3→2
 ✅ 收银台 撤单留痕 cashier.voidBill（voided 留痕不删除） —— status=voided reason=smoke 撤单验证
-✅ 收银台 财务流水接数（financeStats.cashierLedger 含本批单） —— cashierLedger=85 行
+✅ 收银台 财务流水接数（financeStats.cashierLedger 含本批单） —— cashierLedger=215 行
 ✅ dev-login（演示店员 / clerk） —— status=200
-✅ 收银修复包 todayTenderStats（已收=现金+微信+支付宝可加总） —— 已收=600700分 分列=430100/87800/82800 参考列 pass=244200 sv=11200
-✅ 收银修复包 三处同源同数（总览/收银台头部/财务头部） —— 三处=600700/600700/600700分
+✅ 收银修复包 todayTenderStats（已收=现金+微信+支付宝可加总） —— 已收=1476400分 分列=1010400/242000/224000 参考列 pass=572000 sv=18400
+✅ 收银修复包 三处同源同数（总览/收银台头部/财务头部） —— 三处=1476400/1476400/1476400分
 ✅ clerk 营业额遮罩（restricted=true 且金额 null） —— restricted=true
-✅ clerk 开单 cashier.hold 放行 —— billNo=HD-20260919-124
+✅ clerk 开单 cashier.hold 放行 —— billNo=HD-20260919-352
 ✅ clerk 改价 403（服务端硬闸门）
 ✅ clerk financeStats 403
 ✅ clerk 撤单（未支付单，补丁①放宽）放行
 ✅ clerk 日结 403（无交接班/日结权）
-✅ 日结 当前班次可查（懒建开班） —— shift=01M2W735J6BBKG9EXH1F4FN7GT
-✅ 日结 cashier.dayClose 冻结当班（当日已结则幂等通过） —— diff=408400分
-✅ 日结单留痕可查（listDayCloses） —— rows=6
-✅ 反结账单 cashier.reverseBill（owner，强制原因+关联原单） —— 原单=HD-20260919-122 冲正=HD-20260919-125
+✅ 日结 当前班次可查（懒建开班） —— shift=01M2WCNJDHV47PECEEDR7D3VJY
+✅ 日结 cashier.dayClose 冻结当班（当日已结则幂等通过） —— trpc cashier.dayClose 失败：该自然日已有冻结的日结单（一日一结）；如需重新日结，请先由店主反结账拆
+✅ 日结单留痕可查（listDayCloses） —— rows=47
+✅ 反结账单 cashier.reverseBill（owner，强制原因+关联原单） —— 原单=HD-20260919-350 冲正=HD-20260919-353
 ✅ manager 反结账 403（仅店主）
 ✅ 储值导入 preview（零写入+校验位：2 行/本金 ¥150） —— sourceStats={"totalRows":2,"personsWithBalance":2,"principalTotalFen":15000,"bonusTotalFen":0,"bonusAllZero":true,"uniquePhones":2,"storeDist":{"贝肯山店":1
 ✅ clerk 储值导入 403（仅老板）

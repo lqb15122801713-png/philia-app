@@ -1,62 +1,66 @@
 [provision] state → D:\KimiData\kimi\Workspaces\Philia\u4-pipeline\m1-contract-check.state.json
 {
-  "provisionedAt": "2026-09-19T07:07:16.433Z",
-  "customerId": "01M2W7V8J1VRF02K7AMQ4PAP8K",
-  "customerNickname": "验收客户070716S722R3",
-  "customerPhone": "13701636868",
-  "apptId": "01M2W7V8J8EZ6Y3R3GZ9W34AX4",
-  "appt2Id": "01M2W7V8JBF8WJ32KKS8J3720W",
+  "provisionedAt": "2026-09-19T08:31:32.594Z",
+  "customerId": "01M2WCNJ72413WSNFJG6RM8QD6",
+  "customerNickname": "验收客户083132QKH7CP",
+  "customerPhone": "13706692928",
+  "apptId": "01M2WCNJ79CJ2VAQ13FARN3Q61",
+  "appt2Id": "01M2WCNJ7CAZB6K7ENBBN083ZG",
   "note": "每次运行新建客户+预约；不重置存量数据"
 }
   ✔ server 健康检查
 
-—— R3：班次懒建与挂班 ——
-  ✔ R3：收银单创建时点挂当班 shift_id（非 NULL） —— shiftId=01M2W7TZCHVSGZ359HHQH5YQB9
+—— R3：班次懒建与挂班（两班实证清场）——
+  ✔ R3：收银单创建时点挂当班 shift_id（非 NULL） —— shiftId=01M2WCNJ9J2XDKDBARNQY71R3T
   ✔ R3：currentShift 即该班（懒建开班）
   ✔ R3：clerk 交接班确认 403（补丁①② clerk 无入口）
-  ✔ R3：manager 交接班确认闭班 200
-  ✔ R3：闭班后下一笔收银懒建下一班（shiftId 切换） —— 01M2W7TZCHVSGZ359HHQH5YQB9 → 01M2W7V8N18HYX7JV6NPMH3YNE
+  ✔ R3：manager 交接班确认闭班 200（交接班=当班小结不冻结）
+  ✔ R3：闭班后下一笔收银懒建下一班（shiftId 切换） —— 01M2WCNJ9J2XDKDBARNQY71R3T → 01M2WCNJA93XTSFJYF3QXFTHQH
 
-—— R3：日结（账面 vs 实点差异 / 分列 / 冻结）——
+—— R3：日结（条件②全日口径 · 两班实证 · 预览=冻结同源）——
+  ✔ R3 条件②：预览=全日出口同源同值（dayClosePreview.stats ≡ todayTenderStats） —— preview=956800 outlet=956800
+  ✔ R3 条件②：班次拆分展示——本批两班各 ¥68（6800） —— {"shift1":6800,"shift2":6800}
+  ✔ R3：clerk 日结预览 403（无入口）
   ✔ R3：clerk 日结 403（无入口）
-  ✔ R3：日结单账面=当班现金段 Σ（6800）、实点 6900、差异=+100 —— {"book":6800,"actual":6900,"diff":100}
-  ✔ R3：日结分列快照齐备（微信0/支付宝0/次卡0/储值0/笔数=1）
-  ✔ R3：生成即冻结（status=frozen）且闭班
+  ✔ R3 条件②：冻结账面=全日口径=预览同值（两班合计 13600 含其中）、实点+100、差异=+100 —— {"book":956800,"preview":956800,"twoShift":13600}
+  ✔ R3 条件②：冻结快照 scope=full-day + 班次拆分明细随单冻结
+  ✔ R3 条件②：分列与笔数快照=全日出口同值
+  ✔ R3：生成即冻结（status=frozen）且闭当前班
   ✔ R3：日结后当班已闭（currentShift=null）
-  ✔ R3：同班次重复日结被拒 CONFLICT（已有冻结单） —— 该班次已有冻结的日结单；如需重新日结，请先由店主反结账拆箱
+  ✔ R3 条件②：同日再日结 CONFLICT（一日一结） —— 该自然日已有冻结的日结单（一日一结）；如需重新日结，请先由店主反结账拆箱
 
-—— R3：日结反结账（拆箱，仅店主）+ 重新日结 ——
+—— R3：日结反结账（拆箱，仅店主）+ 同日重新日结 ——
   ✔ R3：manager 日结反结账 403（仅店主）
   ✔ R3：反结账强制填原因（空原因 400）
   ✔ R3：原日结单永存不涂改（status→reversed + 链接元数据，数字不动）
-  ✔ R3：冲正关联单（kind=reversal，refCloseId→原单，前后值快照+原因+操作人）
+  ✔ R3：冲正关联单（kind=reversal，refCloseId→原单，前后值快照=全日口径+原因+操作人）
   ✔ R3：listDayCloses 双向可查（原单 reversalId ↔ 冲正单 refCloseId）
   ✔ R3：重复反结账幂等（idempotent=true）
   ✔ R3：调整备注只增不改（留痕含操作人）
-  ✔ R3：拆箱后可同班次重新日结（diff=0）
+  ✔ R3 条件②：拆箱后同日重新日结成功（diff=0；shiftId 入参仅追溯兼容）
 
 —— R3：日结 CSV 导出（仅店主）——
   ✔ R3：clerk/manager 导出 403（补丁①导出仅老板）
-  ✔ R3：owner 导出 200（CSV 含表头与账面 68.00） —— day-close-2026-09-19-DNQHD7.csv
+  ✔ R3：owner 导出 200（CSV 含表头与全日账面值） —— day-close-2026-09-19-X3ZDY5.csv
 
 —— R3b：收银台反结账单（已支付单冲正，仅店主）——
   ✔ R3b：混合单结账成功（pass19800+cash12600）
   ✔ R3b 前置：库存已扣（-2）、预约已翻转、次卡已扣（1→0）
   ✔ R3b：manager/clerk 反结账 403（仅店主）
   ✔ R3b：强制填原因（空原因 400）
-  ✔ R3b：原单永存（status 仍 settled）+ 被冲正链接（reversedAt/reversedBy/reversalBillNo） —— reversal=HD-20260919-221
+  ✔ R3b：原单永存（status 仍 settled）+ 被冲正链接（reversedAt/reversedBy/reversalBillNo） —— reversal=HD-20260919-332
   ✔ R3b：冲正单独立行（status=reversal、金额镜像 -32400、reversalOfBillNo 指原单）
   ✔ R3b：库存自动回补（+2 回到原值） —— 68 → 70
   ✔ R3b：预约回补（paidAt 清零 → 回到待收款清单）
   ✔ R3b：次卡回补（remain 0→1 + 流水「反结账回补」delta=+1）
-  ✔ R3b：冲正不计当日已收（Δcash=-12600、Δpass=-19800、Δ笔数=-1） —— received 978900 → 966300
+  ✔ R3b：冲正不计当日已收（Δcash=-12600、Δpass=-19800、Δ笔数=-1） —— received 1404300 → 1391700
   ✔ R3b：重复反结账幂等（idempotent=true）
   ✔ R3b：冲正单不可撤（reversal 态 BAD_REQUEST）
 
 —— R5b：CSV 导入两阶段（演示台账）——
   ✔ R5b：clerk 导入 preview 403（仅店主）
   ✔ R5b：preview 零写入对账报告（ok=2/fail=2：门店未映射+手机号非法） —— {"门店未映射（「未映射店」无 mapping 入参）":1,"手机号缺失或非法（手机号为主键）":1}
-  ✔ R5b：execute 落批次（ok=2/fail=2 留痕） —— 01M2W7V8RKP2VFN0Y48GFJ0H7A
+  ✔ R5b：execute 落批次（ok=2/fail=2 留痕） —— 01M2WCNJFA5H3ER2MVGKMS8CKM
   ✔ R5：searchMember 可见储值余额（本金 10000 + 赠送 0） —— 10000
 
 —— R5：储值结账（足/不足/混搭/留痕/不计已收）——
@@ -84,4 +88,4 @@
 —— R5：无充值入口回归保护 ——
   ✔ R5：storedValue 路由无充值端点（topUp 不存在）
 
-========== 结果：55 过 / 0 挂 ==========
+========== 结果：59 过 / 0 挂 ==========

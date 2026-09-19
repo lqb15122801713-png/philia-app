@@ -1,35 +1,35 @@
 [provision] state → D:\KimiData\kimi\Workspaces\Philia\u4-pipeline\m1-contract-check.state.json
 {
-  "provisionedAt": "2026-09-19T07:07:16.836Z",
-  "customerId": "01M2W7V8YPYV4CYQYHG905AEJC",
-  "customerNickname": "验收客户070716MP0XGN",
-  "customerPhone": "13701637174",
-  "apptId": "01M2W7V8YXATV8HWD8FZCNNF85",
-  "appt2Id": "01M2W7V8Z0S8PJ255GHXQG331R",
+  "provisionedAt": "2026-09-19T08:31:33.052Z",
+  "customerId": "01M2WCNJNEEA0DJ7QM9RQZT4B7",
+  "customerNickname": "验收客户083133PGPK1H",
+  "customerPhone": "13706693137",
+  "apptId": "01M2WCNJNPW5C9A8E1E8T9BEET",
+  "appt2Id": "01M2WCNJNSX8XNXZ8JFGJRGJ75",
   "note": "每次运行新建客户+预约；不重置存量数据"
 }
-[state] provisionedAt=2026-09-19T07:07:16.836Z customer=验收客户070716MP0XGN/13701637174
-[state] appt1=01M2W7V8YXATV8HWD8FZCNNF85 appt2=01M2W7V8Z0S8PJ255GHXQG331R
+[state] provisionedAt=2026-09-19T08:31:33.052Z customer=验收客户083133PGPK1H/13706693137
+[state] appt1=01M2WCNJNPW5C9A8E1E8T9BEET appt2=01M2WCNJNSX8XNXZ8JFGJRGJ75
   ✔ server 健康检查
   ✔ dev-seed-users 含 owner/seed_manager/本批验收客户
 
 —— 会员检索 / 待收款预约 ——
   ✔ searchMember 未命中安静 found:false
   ✔ pass.topUp 充次 2 次（全新客户，余额恒 2） —— 2
-  ✔ searchMember 命中：昵称/脱敏手机/次卡余额/在店预约数 —— {"found":true,"id":"01M2W7V8YPYV4CYQYHG905AEJC","nickname":"验收客户070716MP0XGN","phoneMasked":"137****7174","passRemainTimes":2,"storedValueBalanceFen":0,"storedValuePrincipalFen":0,"storedValueBonusFen":0,"appointmentCount":0}
-  ✔ pendingAppointments 含本批待收款预约（completed && paidAt IS NULL 口径） —— {"id":"01M2W7V8YXATV8HWD8FZCNNF85","code":"CK2TED","customerId":"01M2W7V8YPYV4CYQYHG905AEJC","priceFen":8800,"scheduledStart":"2026-09-19T05:07:16.000Z","completedAt":"2026-09-19T06:07:16.000Z","petName":"旺财","serviceName":"基础洗护（小型犬）","customerName":"验收客户070716MP0XGN"}
+  ✔ searchMember 命中：昵称/脱敏手机/次卡余额/在店预约数 —— {"found":true,"id":"01M2WCNJNEEA0DJ7QM9RQZT4B7","nickname":"验收客户083133PGPK1H","phoneMasked":"137****3137","passRemainTimes":2,"storedValueBalanceFen":0,"storedValuePrincipalFen":0,"storedValueBonusFen":0,"appointmentCount":0}
+  ✔ pendingAppointments 含本批待收款预约（completed && paidAt IS NULL 口径） —— {"id":"01M2WCNJNPW5C9A8E1E8T9BEET","code":"CK48KN","customerId":"01M2WCNJNEEA0DJ7QM9RQZT4B7","priceFen":8800,"scheduledStart":"2026-09-19T06:31:33.000Z","completedAt":"2026-09-19T07:31:33.000Z","petName":"旺财","serviceName":"基础洗护（小型犬）","customerName":"验收客户083133PGPK1H"}
   ✔ fix2：pendingAppointments 增返 customerId（买家回填数据源）
-  [基线] serviceFen=773300 shopFen=200600 pass=437800 pending=193600/22 unpaid=22
+  [基线] serviceFen=1183100 shopFen=216200 pass=534600 pending=264000/30 unpaid=30
 
 —— 挂单/取单 ——
-  ✔ hold 新单 → held + 单号 HD-YYYYMMDD-NNN 格式 —— HD-20260919-225 payable=20600（16800+1900×2=20600）
+  ✔ hold 新单 → held + 单号 HD-YYYYMMDD-NNN 格式 —— HD-20260919-336 payable=20600（16800+1900×2=20600）
   ✔ hold 金额服务端重算 payable=20600
-  ✔ operatorId=操作人（owner）；M1-补2 R3：shiftId 挂当班（懒建开班，非 NULL） —— shiftId=01M2W7V8Q08C20AC5YTXTX6DWS
+  ✔ operatorId=操作人（owner）；M1-补2 R3：shiftId 挂当班（懒建开班，非 NULL） —— shiftId=01M2WCNJDHV47PECEEDR7D3VJY
   ✔ resume → open + 整单快照（2 行）
   ✔ 再挂同号更新（行项替换为 1 行、金额 16800、heldAt 刷新）
 
 —— 结账（现金+微信组合，四分列）+ 库存联动 + stockShort 留痕 ——
-  ✔ settle A 成功（现金6000+微信5800=应收11800） —— HD-20260919-226 paidFen=11800
+  ✔ settle A 成功（现金6000+微信5800=应收11800） —— HD-20260919-337 paidFen=11800
   ✔ M1-补1：settled 即全额已收 paidFen=payableFen=11800
   ✔ M1-补1：settle 写 operatorId=owner
   ✔ 支付明细四分列入账（cash+wechat 两段）
@@ -45,32 +45,32 @@
   ✔ 幂等：无新增扣次流水（A 单无次卡段）
 
 —— 次卡扣次联动（裁定③：扣次发生在结账提交时）——
-  ✔ settle B 次卡扣次成功（pass 段 19800，M1-补1 口径 paidFen=payableFen） —— HD-20260919-228
-  ✔ fix1：纯 pass 单不胀 totals（serviceFen/totalFen 与结账前持平） —— serviceFen 788900 → 788900
-  ✔ fix1：cashierPassFen 单列对账 +19800（非现金，不进已收） —— cashierPassFen=457600
+  ✔ settle B 次卡扣次成功（pass 段 19800，M1-补1 口径 paidFen=payableFen） —— HD-20260919-339
+  ✔ fix1：纯 pass 单不胀 totals（serviceFen/totalFen 与结账前持平） —— serviceFen 1198700 → 1198700
+  ✔ fix1：cashierPassFen 单列对账 +19800（非现金，不进已收） —— cashierPassFen=554400
   ✔ 扣次联动：remain_times 2→1（结账提交时扣）
-  ✔ 扣次流水 appointment_id=NULL 且 note 带 bill_no —— "收银台结账 HD-20260919-228"
+  ✔ 扣次流水 appointment_id=NULL 且 note 带 bill_no —— "收银台结账 HD-20260919-339"
   ✔ 幂等：B 重复 settle → idempotent:true 且不重复扣次（remain 仍 1、流水仍 1 条）
   ✔ 第 2 次扣次成功（remain 1→0）
   ✔ 次卡余额不足 → FORBIDDEN 如实文案 —— 次卡余额不足：剩余 0 次，本单需扣 1 次
   ✔ 散客单次卡扣次被拒（BAD_REQUEST）
 
 —— 预约行联动（markPaid 内核翻转，禁止双头记账）——
-  ✔ settle C 预约行结账成功 —— HD-20260919-230
-  ✔ fix2：未选会员（customerId 缺省）+ 预约行 → 回填 bill.customerId=预约客户 —— customerId=01M2W7V8YPYV4CYQYHG905AEJC
-  ✔ 预约口径翻转：本批新单 paidAt NULL→有值、paidFen=8800（联动 §1.5.2） —— paidAt null → "2026-09-19T07:07:17.000Z"
+  ✔ settle C 预约行结账成功 —— HD-20260919-341
+  ✔ fix2：未选会员（customerId 缺省）+ 预约行 → 回填 bill.customerId=预约客户 —— customerId=01M2WCNJNEEA0DJ7QM9RQZT4B7
+  ✔ 预约口径翻转：本批新单 paidAt NULL→有值、paidFen=8800（联动 §1.5.2） —— paidAt null → "2026-09-19T08:31:33.000Z"
   ✔ 待收款清单 −1（该预约消失）
   ✔ 幂等：C 重复 settle → idempotent:true（不再翻转预约/不写支付段）
-  ✔ fix2：显式 null=确认散客，含预约行也不回填（customerId 保持 null） —— billNo=HD-20260919-231
+  ✔ fix2：显式 null=确认散客，含预约行也不回填（customerId 保持 null） —— billNo=HD-20260919-342
 
 —— M1-补1：无记账态 + fix1 现金口径（全部差值断言）——
-  ✔ settle D：settled 且 paidFen=payableFen=2900（无记账态） —— HD-20260919-232
+  ✔ settle D：settled 且 paidFen=payableFen=2900（无记账态） —— HD-20260919-343
   ✔ fix1 差值对账：ΔserviceFen=33200（A8800+支付宝6800+预约C8800+预约E8800，pass 不进） —— Δ=33200
   ✔ fix1 差值对账：ΔshopFen=5900（逗猫棒3000+猫条2900） —— Δ=5900
   ✔ fix1 差值对账：ΔcashierPassFen=28600（B19800+B3 8800，单列非现金） —— Δ=28600
   ✔ 待收口径回归预约域：ΔpendingPaymentFen=-17600（本批两条预约被收银翻转）、Δcount=-2 —— Δ=-17600/-2
   ✔ M1-补1：financeStats 不再有 cashierPending 字段（并入逻辑删除）
-  ✔ M1-补1：dashboardStats.todo.unpaid 差值=-2（收银不贡献待收，预约翻转 −2） —— 22 → 20
+  ✔ M1-补1：dashboardStats.todo.unpaid 差值=-2（收银不贡献待收，预约翻转 −2） —— 30 → 28
   ✔ 财务并入：cashierLedger 来源签 cashier 且 D 单 receivedFen=2900
   ✔ fix1：纯 pass 单流水 receivedFen=0、passFen=19800 单列（不双计） —— {"receivedFen":0,"passFen":19800}
 
@@ -81,7 +81,7 @@
   ✔ listBills 过滤 status=settled + range=today（本批 settled=7：A/支付宝/B/B3/C/E/D） —— ours settled=7
   ✔ M1-补1：流水行无 pendingCollection 字段（收银单无待收态）
   ✔ listBills buyer=散客 仅无会员单
-  ✔ listBills buyer 模糊搜会员名（本批昵称唯一 → 恰为 B/B3/C 三单） —— hit=HD-20260919-230,HD-20260919-229,HD-20260919-228
+  ✔ listBills buyer 模糊搜会员名（本批昵称唯一 → 恰为 B/B3/C 三单） —— hit=HD-20260919-341,HD-20260919-340,HD-20260919-339
   ✔ getBill 详情：行项+支付明细+开单人名+轨迹字段 —— creator=菲丽亚店主
 
 —— 撤单（owner）——
@@ -92,7 +92,7 @@
 —— manager 权限实证（M1-补2 R2 补丁①：撤单三级全开；改价/折扣 owner|manager）——
   ✔ manager 开单结账可用（merchantProcedure 默认放开）
   ✔ M1-补1 审计链：createdBy=owner / operatorId=manager 分叉实证 —— createdBy=01M2SVYE6F7ASSG3B2CP3V7PPJ operatorId=01M2TCPFPK4H07D69WEC9R1WY9
-  ✔ M1-补2：manager 撤未支付单放行 200（撤单三级全开，原 FORBIDDEN 期望作废） —— HD-20260919-234
+  ✔ M1-补2：manager 撤未支付单放行 200（撤单三级全开，原 FORBIDDEN 期望作废） —— HD-20260919-345
   ✔ M1-补2：manager 带改价 settle 放行 200（改价放宽至 owner|manager，原 FORBIDDEN 期望作废）
   ✔ M1-补2：manager 带折扣 hold 放行 200（应收 6800×90%=6120，原 FORBIDDEN 期望作废）
   ✔ owner 改价+立减可用：应收 5000-500=4500 留痕 adjustedPriceFen
