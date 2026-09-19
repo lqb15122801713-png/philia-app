@@ -1,0 +1,38 @@
+✅ GET /api/health —— {"ok":true,"ts":1789747994450}
+✅ 三端首页可达：customer http://localhost:7200 —— status=200 ct=text/html; charset=utf-8
+✅ 三端首页可达：merchant http://localhost:7200 —— status=200 ct=text/html; charset=utf-8
+✅ 三端首页可达：staff http://localhost:7200 —— status=200 ct=text/html; charset=utf-8
+✅ 口令门：dev-seed-users 无码 → 401 BETA_GATE_REQUIRED —— status=401 error=BETA_GATE_REQUIRED
+✅ 口令门：dev-seed-users 错码 → 403 BETA_GATE_INVALID —— status=403 error=BETA_GATE_INVALID
+✅ 口令门：dev-seed-users 对口令 → 200 —— status=200 users=6
+✅ 口令门：dev-login 错码 → 403（先于用户校验被拒） —— status=403
+✅ dev-seed-users 动态取数（带口令） —— users=6
+✅ 种子角色齐全（customer / merchant_owner / staff） —— customer=示例客户 merchant=菲丽亚店主 staff=小美
+✅ dev-login（示例客户 / customer） —— status=200
+✅ dev-login（菲丽亚店主 / merchant） —— status=200
+✅ dev-login（小美 / staff） —— status=200
+✅ trpc pet.list（种子客户有宠物） —— pets=2 第一只=旺财
+✅ trpc store.listNearby（种子门店） —— stores=1 第一家=菲丽亚宠物·示例店
+✅ trpc store.getWithServices（洗护服务项） —— 服务=基础洗护（小型犬） 价格=8800分
+✅ 演示单下单 trpc appointment.create —— id=01M2TMP7XXG626DBCEQ7HTC9E4 scheduledStart=2026/9/20 15:00:00
+✅ 商家确认 trpc appointment.confirm（pending → confirmed） —— status=confirmed
+✅ 客户取码 trpc appointment.getCode —— code=7PNEQ6
+✅ 员工核销 trpc appointment.checkin（confirmed → in_service） —— status=in_service checkedInAt=2026-09-18T16:13:14.000Z 认领员工=01M2SVYE6H5JWDP5KM4GR1BF3X
+✅ 收银台 trpc cashier.pendingAppointments 可查 —— 待收款=0
+✅ 收银台 会员检索命中（种子客户） —— found=true 次卡余=1
+✅ 收银台 会员检索未命中（安静 found:false） —— found=false
+✅ 收银台前置 pass.topUp 充次 1 —— times=1
+✅ 收银台 挂单 cashier.hold（HD 单号） —— billNo=HD-20260919-013 应收=21700分
+✅ 收银台 取单 cashier.resume（held→open） —— status=open 行数=2
+✅ 收银台 结账 cashier.settle（现金） —— status=settled 已收=21700分
+✅ 收银台 结账幂等（同 bill_no 重放 idempotent） —— idempotent=true
+✅ 收银台 库存扣减（settled −1，幂等重放不再扣） —— stock 42→41（重放后仍 41）
+✅ 收银台 流水可查 cashier.listBills（今日含本单） —— rows=13
+✅ 收银台 流水详情 getBill（现金 1 段） —— 支付段=1
+✅ 收银台 次卡扣次结账（pass 段=扣次行有效价） —— billNo=HD-20260919-014 应收=8800分
+✅ 收银台 扣次联动（次卡余额 −1） —— remain 2→1
+✅ 收银台 撤单留痕 cashier.voidBill（voided 留痕不删除） —— status=voided reason=smoke 撤单验证
+✅ 收银台 财务流水接数（financeStats.cashierLedger 含本批单） —— cashierLedger=11 行
+
+目标：http://localhost:7200（口令门已启用）
+全部通过 🎉

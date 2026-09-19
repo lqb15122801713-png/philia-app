@@ -1,0 +1,14 @@
+## M1 diff 范围（基线 514a94a=U4 终态）
+     16 apps/merchant
+      1 packages/shared
+      1 scripts/smoke-deploy.mjs
+      1 scripts/smoke-routes.mjs
+      5 server/drizzle
+      9 server/src
+
+## 珊瑚粉 #FFAAA5（diff + 行）
+0
+## text-white（diff + 行）
+0
+## 渐变（diff + 行）
+0
