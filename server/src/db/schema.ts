@@ -658,7 +658,7 @@ export const cashierBills = sqliteTable(
     storeId: text('store_id')
       .notNull()
       .references(() => stores.id),
-    /** 状态，取值：open | held | settled | voided */
+    /** 状态，取值：open | held | settled | voided | reversal（M1-补2 R3b：冲正单，金额镜像独立态） */
     status: text('status').notNull().default('open'),
     /** 会员用户 ID -> users.id（NULL = 散客） */
     customerId: text('customer_id').references(() => users.id),
@@ -692,8 +692,8 @@ export const cashierBills = sqliteTable(
       .notNull()
       .references(() => users.id),
     /**
-     * 班次 ID（可空，M1-补1 修订 2 预留）——M2 日结/班次批次启用，
-     * 本批恒 NULL，应用层不写。
+     * 班次 ID（可空）——M1-补2 R3 正式启用：hold/settle 创建时点挂当班 shift_id
+     * （无开班时懒建开班，见 cashier.ts ensureOpenShift）；存量单恒 NULL（迁移零破坏）。
      */
     shiftId: text('shift_id'),
     /** 最近挂单时间（NULL = 从未挂单） */
@@ -708,6 +708,19 @@ export const cashierBills = sqliteTable(
      * 不加列——会员前置批落地裁定④时再增分摊快照列。
      */
     voidReason: text('void_reason'),
+    /* ---- M1-补2 R3b 收银台反结账（已支付单冲正，仅店主；补丁①3b） ----
+     * 原 settled 单永存不涂改：以下三列是「被冲正」链接元数据（非账目数字涂改）；
+     * 冲正单为独立行（status='reversal'，金额镜像负值，reversal_of_bill_no 指原单）。
+     * 收入聚合口径：被冲正原单（reversed_at 非空）与冲正单一律排除（computeDayTender /
+     * loadCashierFinance 双落点）。 */
+    /** 被冲正时间（NULL = 未被冲正） */
+    reversedAt: integer('reversed_at', { mode: 'timestamp' }),
+    /** 冲正操作人（仅店主，闸门在路由层） */
+    reversedBy: text('reversed_by').references(() => users.id),
+    /** 冲正单单号（原单 → 冲正单链接；NULL = 未被冲正） */
+    reversalBillNo: text('reversal_bill_no'),
+    /** 冲正单 → 原单号链接（仅 status='reversal' 行有值） */
+    reversalOfBillNo: text('reversal_of_bill_no'),
     ...auditColumns,
   },
   (t) => [
@@ -759,13 +772,14 @@ export const cashierBillItems = sqliteTable(
 /**
  * 收银支付段表（登记型：只登记支付方式与金额，无任何真实扣款/网关）。
  * 一单可多段组合（如 现金 50 + 微信 68）。
- * 方式枚举（M1-补1 修订 1 四分列）：cash | wechat | alipay | pass
- * （「扫码」拆微信/支付宝，账目四分列入流水，M2 日结批次直接取数）；
- * 「记账 credit」已删除（挂账缓做，运营口径在案）——settled 即全额已收，
- * 收银单无待收态；预留 stored_value 位但禁用（存量储值支付=老板裁定①
- * 已生效，功能列 M2，zod 层不收）。
+ * 方式枚举（M1-补2 R5 五分列）：cash | wechat | alipay | pass | stored_value
+ * （「扫码」拆微信/支付宝；stored_value=存量储值消费，M1-补2 正式启用——
+ * 仅消费、全域无充值入口（新售冻结不变）；「记账 credit」已删除）。
+ * 已收口径（裁定①）：已收=Σ现金类（cash/wechat/alipay）；pass 次卡等值与
+ * stored_value 储值消费永不计入，作参考列单列（computeDayTender 出口）。
  * method='pass' 段须带 pass_id，扣次流水见 pass_deduct_log
- * （appointment_id=NULL，note 带 bill_no）。
+ * （appointment_id=NULL，note 带 bill_no）；method='stored_value' 段扣减流水见
+ * stored_value_logs（含前后余额+单号+操作人）。
  */
 export const cashierPayments = sqliteTable(
   'cashier_payments',
@@ -784,6 +798,220 @@ export const cashierPayments = sqliteTable(
     ...auditColumns,
   },
   (t) => [index('ix_cashier_payments_bill').on(t.billId)],
+);
+
+/* ------------------------------------------------------------------ */
+/* 5.4c 班次 / 日结 / 储值（批次 M1-补2：R3 交接班·日结·反结账 + R5/R5b 储值） */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 班次表（M1-补2 R3 · 启用 0009 预留的 cashier_bills.shift_id）：
+ * 开店/交接班生成班次；收银单在创建时点（hold/settle）挂当班 shift_id。
+ * 无开班时口径=懒建开班（ensureOpenShift：首笔收银写操作人记 openedBy，
+ * 交接班「确认」是 owner/manager 的 closeShift；clerk 无任何交接班入口）。
+ */
+export const shifts = sqliteTable(
+  'shifts',
+  {
+    id: id(),
+    /** 所属门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 开班人（懒建时=首笔收银写操作人） */
+    openedBy: text('opened_by')
+      .notNull()
+      .references(() => users.id),
+    /** 开班时间 */
+    openedAt: integer('opened_at', { mode: 'timestamp' }).notNull(),
+    /** 闭班时间（NULL = 当班进行中） */
+    closedAt: integer('closed_at', { mode: 'timestamp' }),
+    /** 闭班确认人（owner|manager；clerk 无入口） */
+    closedBy: text('closed_by').references(() => users.id),
+    /** 状态，取值：open | closed */
+    status: text('status').notNull().default('open'),
+    ...auditColumns,
+  },
+  (t) => [index('ix_shifts_store_status').on(t.storeId, t.status)],
+);
+
+/**
+ * 日结单表（M1-补2 R3 · 裁定④ + 补丁①3a）：
+ * - 生成即冻结当班账目（status='frozen'）：账面现金（当班现金支付段 Σ，与
+ *   todayTenderStats 同源的班次口径 computeShiftTender）vs 实点现金（手输），
+ *   差异=实点−账面；微信/支付宝/次卡等值/储值分列 + 笔数快照。
+ * - 原日结单永存不涂改：反结账（拆箱）不删不改原单数字，仅置 status='reversed'
+ *   + reversed_at/reversed_by/reversal_id 链接元数据；冲正关联单为独立行
+ *   （kind='reversal'，ref_close_id 指原单，snapshot_json 存前后值，强制原因）。
+ * - 差错走调整备注（adjustments_json 追加只增不改，留痕含操作人）；重新日结=
+ *   原单 reversed 后对同班次再 dayClose。
+ */
+export const dayCloses = sqliteTable(
+  'day_closes',
+  {
+    id: id(),
+    /** 所属门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 冻结的班次 ID -> shifts.id */
+    shiftId: text('shift_id')
+      .notNull()
+      .references(() => shifts.id),
+    /** 行类型：close=日结单 | reversal=冲正关联单 */
+    kind: text('kind').notNull().default('close'),
+    /** 冲正关联单 → 原日结单 ID（仅 kind='reversal' 有值） */
+    refCloseId: text('ref_close_id'),
+    /** 营业日（YYYY-MM-DD，门店规范时区 +8） */
+    bizDate: text('biz_date').notNull(),
+    /** 账面现金（分）：当班现金支付段 Σ */
+    bookCashFen: integer('book_cash_fen').notNull().default(0),
+    /** 实点现金（分，手输；reversal 行镜像原单值） */
+    actualCashFen: integer('actual_cash_fen'),
+    /** 差异（分）= 实点 − 账面（红字标出的数据源；reversal 行镜像原单值） */
+    diffFen: integer('diff_fen'),
+    /** 分列快照：微信 / 支付宝 / 次卡等值（参考列） / 储值消费（参考列） */
+    wechatFen: integer('wechat_fen').notNull().default(0),
+    alipayFen: integer('alipay_fen').notNull().default(0),
+    passFen: integer('pass_fen').notNull().default(0),
+    storedValueFen: integer('stored_value_fen').notNull().default(0),
+    /** 笔数快照：收银单数 / 合并流水笔数 */
+    cashierPaidCount: integer('cashier_paid_count').notNull().default(0),
+    paidCount: integer('paid_count').notNull().default(0),
+    /** 反结账强制原因（kind='reversal' 必填；close 行可空备注） */
+    reason: text('reason'),
+    /** 前后值快照 JSON（reversal 行：{before: 原单冻结数字, note}；双向可查） */
+    snapshotJson: text('snapshot_json'),
+    /** 调整备注 JSON 数组（次日调整单留痕：[{at, by, note}]，只增不改） */
+    adjustmentsJson: text('adjustments_json'),
+    /** 状态：frozen=冻结生效 | reversed=已被冲正（仅 close 行会翻转） */
+    status: text('status').notNull().default('frozen'),
+    /** 被冲正时间 / 操作人 / 冲正关联单 ID（close 行链接元数据） */
+    reversedAt: integer('reversed_at', { mode: 'timestamp' }),
+    reversedBy: text('reversed_by').references(() => users.id),
+    reversalId: text('reversal_id'),
+    /** 创建人（日结=确认人 owner|manager；冲正=店主） */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_day_closes_store').on(t.storeId, t.status),
+    index('ix_day_closes_shift').on(t.shiftId),
+  ],
+);
+
+/**
+ * 会员储值账户表（M1-补2 R5 · 裁定①③）：userId×storeId 唯一。
+ * 台账两列分列：principal=本金、bonus=赠送；余额=本金+赠送。
+ * 扣减顺序：先本金后赠送（台账赠送列全零，v1 简化口径，注释在案）。
+ * 全域无充值入口（新售冻结不变）；账户仅由 R5b CSV 导入批次建立。
+ */
+export const storedValueAccounts = sqliteTable(
+  'stored_value_accounts',
+  {
+    id: id(),
+    /** 会员用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 归属门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 储值本金余额（分） */
+    principalFen: integer('principal_fen').notNull().default(0),
+    /** 储值赠送余额（分） */
+    bonusFen: integer('bonus_fen').notNull().default(0),
+    ...auditColumns,
+  },
+  (t) => [uniqueIndex('uq_sv_account_user_store').on(t.userId, t.storeId)],
+);
+
+/**
+ * 储值流水表（只增不改审计账）：结账扣减（billNo 带单号，delta 负）/
+ * 反结账回补（delta 正）/ R5b 导入入账（importBatchId 带批次号）。
+ * 前后余额=本金+赠送合计口径；分列 delta 供批次清除重算。
+ */
+export const storedValueLogs = sqliteTable(
+  'stored_value_logs',
+  {
+    id: id(),
+    /** 账户 ID -> stored_value_accounts.id */
+    accountId: text('account_id')
+      .notNull()
+      .references(() => storedValueAccounts.id),
+    /** 会员用户 ID（冗余列，按人查账免 join） */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 门店 ID */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 本金变动（分，带符号） */
+    deltaPrincipalFen: integer('delta_principal_fen').notNull().default(0),
+    /** 赠送变动（分，带符号） */
+    deltaBonusFen: integer('delta_bonus_fen').notNull().default(0),
+    /** 总变动（分，带符号）= deltaPrincipal + deltaBonus */
+    deltaFen: integer('delta_fen').notNull(),
+    /** 变动前后余额（分，本金+赠送合计） */
+    balanceBeforeFen: integer('balance_before_fen').notNull(),
+    balanceAfterFen: integer('balance_after_fen').notNull(),
+    /** 关联收银单号（消费/回补；导入入账为 NULL） */
+    billNo: text('bill_no'),
+    /** 操作人（结账/回补=当班操作员；导入=owner） */
+    operatorId: text('operator_id')
+      .notNull()
+      .references(() => users.id),
+    /** 导入批次号（R5b；消费/回补为 NULL） */
+    importBatchId: text('import_batch_id'),
+    /** 备注 */
+    note: text('note'),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_sv_logs_account').on(t.accountId),
+    index('ix_sv_logs_batch').on(t.importBatchId),
+    index('ix_sv_logs_bill').on(t.billNo),
+  ],
+);
+
+/**
+ * 储值台账 CSV 导入批次表（M1-补2 R5b · 裁定③：只交付不执行，启用等老板令）。
+ * 全量留痕：成功/失败行数报告（report_json）+ 源文件校验位（本金合计/人数）。
+ * 批次可标记清除（试导回滚）：status executed→cleared + clearedAt/clearedBy；
+ * 已产生消费（批次账户存在带 bill_no 的流水）的批次拒绝清除。
+ */
+export const storedValueImportBatches = sqliteTable(
+  'stored_value_import_batches',
+  {
+    id: id(),
+    /** 执行人（仅 owner，闸门在路由层） */
+    operatorId: text('operator_id')
+      .notNull()
+      .references(() => users.id),
+    /** 源文件名（留痕） */
+    filename: text('filename'),
+    /** 门店映射快照（台账店名 → storeId） */
+    mappingJson: text('mapping_json'),
+    /** 数据行数 / 成功行数 / 失败行数 */
+    totalRows: integer('total_rows').notNull().default(0),
+    okRows: integer('ok_rows').notNull().default(0),
+    failRows: integer('fail_rows').notNull().default(0),
+    /** 源文件校验位：本金>0 人数 / 本金合计（分） */
+    memberCount: integer('member_count').notNull().default(0),
+    principalTotalFen: integer('principal_total_fen').notNull().default(0),
+    /** 状态：executed | cleared（标记清除） */
+    status: text('status').notNull().default('executed'),
+    clearedAt: integer('cleared_at', { mode: 'timestamp' }),
+    clearedBy: text('cleared_by').references(() => users.id),
+    /** 对账报告 JSON（preview 同构：校验位 + 失败原因分布 + 门店分布 + 次卡夹带计数） */
+    reportJson: text('report_json'),
+    ...auditColumns,
+  },
+  (t) => [index('ix_sv_batches_status').on(t.status)],
 );
 
 /* ------------------------------------------------------------------ */
