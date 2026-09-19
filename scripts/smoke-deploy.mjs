@@ -207,47 +207,53 @@ if (sessions.customer && sessions.merchant && sessions.staff) {
   // U4-G 修复：此前用容器本地时区 setHours(10)——VPS 容器为 UTC 时演示单落在
   // 门店墙钟 18:00，撞打烊校验（营业时间判定按门店规范时区）。改为位移法：
   // 先把瞬时移到 +8 墙钟取「明天」，再按 UTC 合成 10:00 并位移回真实 epoch。
+  // M1-补2 加固：高频复跑把明天时段占满时，按天顺延（门店时区，最多 7 天，
+  // 与可约窗口同口径）——「重复跑自动顺延不失败」口径落实。
   if (pet && store && service) {
     const STORE_TZ_OFFSET_MS = 8 * 60 * 60 * 1000;
     const storeNow = new Date(Date.now() + STORE_TZ_OFFSET_MS);
-    const start = new Date(
-      Date.UTC(storeNow.getUTCFullYear(), storeNow.getUTCMonth(), storeNow.getUTCDate() + 1, 10, 0, 0, 0) -
-        STORE_TZ_OFFSET_MS,
-    );
+    const dayStartAt = (offsetDays) =>
+      new Date(
+        Date.UTC(storeNow.getUTCFullYear(), storeNow.getUTCMonth(), storeNow.getUTCDate() + offsetDays, 10, 0, 0, 0) -
+          STORE_TZ_OFFSET_MS,
+      );
     let lastErr = null;
-    for (let i = 0; i < 16 && !appointmentId; i++) {
-      const scheduledStart = new Date(start.getTime() + i * 30 * 60_000);
-      try {
-        const created = await trpcMutate(
-          sessions.customer,
-          'appointment.create',
-          {
-            storeId: store.id,
-            petId: pet.id,
-            serviceId: service.id,
-            type: 'grooming',
-            scheduledStart: scheduledStart.toISOString(),
-            paymentMode: 'pay_at_store',
-            note: 'smoke-deploy 演示单（可安全取消）',
-          },
-          { scheduledStart: ['Date'] },
-        );
-        appointmentId = created?.id ?? created?.appointment?.id ?? null;
-        check(
-          '演示单下单 trpc appointment.create',
-          !!appointmentId,
-          `id=${appointmentId} scheduledStart=${scheduledStart.toLocaleString()}`,
-        );
-      } catch (err) {
-        lastErr = err;
-        if (!String(err?.message).includes('CONFLICT') && !String(err?.message).includes('约满')) {
-          check('演示单下单 trpc appointment.create', false, String(err?.message ?? err));
-          break;
+    outer: for (let dayOffset = 1; dayOffset <= 7 && !appointmentId; dayOffset++) {
+      const start = dayStartAt(dayOffset);
+      for (let i = 0; i < 16 && !appointmentId; i++) {
+        const scheduledStart = new Date(start.getTime() + i * 30 * 60_000);
+        try {
+          const created = await trpcMutate(
+            sessions.customer,
+            'appointment.create',
+            {
+              storeId: store.id,
+              petId: pet.id,
+              serviceId: service.id,
+              type: 'grooming',
+              scheduledStart: scheduledStart.toISOString(),
+              paymentMode: 'pay_at_store',
+              note: 'smoke-deploy 演示单（可安全取消）',
+            },
+            { scheduledStart: ['Date'] },
+          );
+          appointmentId = created?.id ?? created?.appointment?.id ?? null;
+          check(
+            '演示单下单 trpc appointment.create',
+            !!appointmentId,
+            `id=${appointmentId} scheduledStart=${scheduledStart.toLocaleString()}`,
+          );
+        } catch (err) {
+          lastErr = err;
+          if (!String(err?.message).includes('CONFLICT') && !String(err?.message).includes('约满')) {
+            check('演示单下单 trpc appointment.create', false, String(err?.message ?? err));
+            break outer;
+          }
         }
       }
     }
     if (!appointmentId && lastErr) {
-      check('演示单下单 trpc appointment.create', false, `16 个时段均不可约：${lastErr?.message}`);
+      check('演示单下单 trpc appointment.create', false, `7 天时段均不可约：${lastErr?.message}`);
     }
   }
 
@@ -462,6 +468,125 @@ if (sessions.merchant && seedCustomer && sessions.customer) {
     cashierRows.some?.((r) => r.billNo === billNo1) ?? false,
     `cashierLedger=${cashierRows.length} 行`,
   );
+}
+
+/* ------------------------------------------------------------------ */
+/* 6. M1-补2 收银修复包：同源聚合 / 三级闸门 / 日结 / 反结账 / 储值导入   */
+/* ------------------------------------------------------------------ */
+
+if (sessions.merchant) {
+  // 6.0 clerk 会话与服务项重取（种子动态取数，禁硬编码 ULID）
+  const clerkUser = seeds?.find((u) => u.roles.includes('merchant_clerk'));
+  let clerkCookie = null;
+  if (clerkUser) {
+    const r = await devLogin(clerkUser.id, GATE ?? undefined);
+    clerkCookie = r.cookie;
+    check(`dev-login（${clerkUser.nickname} / clerk）`, r.status === 200 && r.cookie.includes('philia_session='), `status=${r.status}`);
+  } else {
+    check('种子含 merchant_clerk（seed_clerk）', false, '未找到 clerk 种子');
+  }
+  const nearby6 = await trpcQuery(sessions.customer, 'store.listNearby', { lat: 30.2741, lng: 120.1551 });
+  const store6 = nearby6?.stores?.[0];
+  const detail6 = store6 ? await trpcQuery(sessions.customer, 'store.getWithServices', { storeId: store6.id }) : null;
+  const service6 = detail6?.services?.find((s) => s.type === 'grooming') ?? null;
+
+  // 6.1 同源聚合出口：字段齐全 + 已收=现金类和可加总
+  const tender = await trpcQuery(sessions.merchant, 'store.todayTenderStats', {});
+  const t = tender?.tender ?? {};
+  const sumOk = (t.cashFen ?? 0) + (t.wechatFen ?? 0) + (t.alipayFen ?? 0) === tender?.receivedTotalFen;
+  check('收银修复包 todayTenderStats（已收=现金+微信+支付宝可加总）', !!tender && sumOk && typeof t.passFen === 'number' && typeof t.storedValueFen === 'number',
+    `已收=${tender?.receivedTotalFen}分 分列=${t.cashFen}/${t.wechatFen}/${t.alipayFen} 参考列 pass=${t.passFen} sv=${t.storedValueFen}`);
+
+  // 6.2 三处同源：todayTenderStats / dashboardStats.todayTender / financeStats.todayTender 同数
+  const STORE_TZ_MS2 = 8 * 60 * 60 * 1000;
+  const nowWc2 = new Date(Date.now() + STORE_TZ_MS2);
+  const d0 = new Date(Date.UTC(nowWc2.getUTCFullYear(), nowWc2.getUTCMonth(), nowWc2.getUTCDate(), 0, 0, 0, 0) - STORE_TZ_MS2);
+  const d1 = new Date(d0.getTime() + 24 * 60 * 60 * 1000);
+  const dash = await trpcQuery(sessions.merchant, 'store.dashboardStats', {});
+  const fin2 = await trpcQuery(sessions.merchant, 'store.financeStats', { from: d0.toISOString(), to: d1.toISOString() }, { from: ['Date'], to: ['Date'] });
+  const v1 = tender?.receivedTotalFen, v2 = dash?.todayTender?.receivedTotalFen, v3 = fin2?.todayTender?.receivedTotalFen;
+  check('收银修复包 三处同源同数（总览/收银台头部/财务头部）', v1 !== undefined && v1 === v2 && v2 === v3, `三处=${v1}/${v2}/${v3}分`);
+
+  // 6.3 clerk 闸门：开单 200 / 改价 403 / 财务聚合 403 / 营业额遮罩 / 撤单未支付放行 / 日结 403
+  if (clerkCookie) {
+    const clerkTender = await trpcQuery(clerkCookie, 'store.todayTenderStats', {});
+    check('clerk 营业额遮罩（restricted=true 且金额 null）', clerkTender?.restricted === true && (clerkTender?.tender?.cashFen ?? null) === null, `restricted=${clerkTender?.restricted}`);
+    let clerkBillNo = null;
+    if (service6) {
+      const clerkHold = await trpcMutate(clerkCookie, 'cashier.hold', {
+        items: [{ kind: 'service', refId: service6.id, qty: 1 }],
+        discountType: 'none', discountValue: 0, note: 'smoke clerk 开单验证',
+      }).then((r) => ({ ok: true, bill: r?.bill ?? r })).catch((e) => ({ ok: false, err: String(e?.message ?? e) }));
+      clerkBillNo = clerkHold.bill?.billNo ?? null;
+      check('clerk 开单 cashier.hold 放行', clerkHold.ok === true, clerkHold.ok ? `billNo=${clerkBillNo}` : clerkHold.err);
+    }
+    if (service6) {
+      const clerkPriced = await trpcMutate(clerkCookie, 'cashier.hold', {
+        items: [{ kind: 'service', refId: service6.id, qty: 1, adjustedPriceFen: 100 }],
+        discountType: 'none', discountValue: 0, note: 'smoke clerk 改价验证（应被拒）',
+      }).then(() => false).catch((e) => /店主|FORBIDDEN|改价/.test(String(e?.message ?? e)));
+      check('clerk 改价 403（服务端硬闸门）', clerkPriced === true, '');
+    }
+    const clerkFin = await trpcQuery(clerkCookie, 'store.financeStats', { from: d0.toISOString(), to: d1.toISOString() }, { from: ['Date'], to: ['Date'] }).then(() => false).catch(() => true);
+    check('clerk financeStats 403', clerkFin === true, '');
+    if (clerkBillNo) {
+      const clerkVoid = await trpcMutate(clerkCookie, 'cashier.voidBill', { billNo: clerkBillNo, reason: 'smoke clerk 撤单验证' }).then((r) => ((r?.bill ?? r)?.status === 'voided')).catch(() => false);
+      check('clerk 撤单（未支付单，补丁①放宽）放行', clerkVoid === true, '');
+    }
+    const clerkClose = await trpcMutate(clerkCookie, 'cashier.dayClose', { actualCashFen: 0 }).then(() => false).catch(() => true);
+    check('clerk 日结 403（无交接班/日结权）', clerkClose === true, '');
+  }
+
+  // 6.4 日结全流程（owner）：当前班次 → 日结冻结 → 列表可查（重复跑：已冻结视为幂等通过）
+  const shift = await trpcQuery(sessions.merchant, 'cashier.currentShift', {});
+  check('日结 当前班次可查（懒建开班）', !!(shift?.shift?.id ?? shift?.id), `shift=${shift?.shift?.id ?? shift?.id ?? 'none'}`);
+  const tenderNow = await trpcQuery(sessions.merchant, 'store.todayTenderStats', {});
+  const bookCash = tenderNow?.tender?.cashFen ?? 0;
+  const closeRes = await trpcMutate(sessions.merchant, 'cashier.dayClose', { actualCashFen: bookCash, note: 'smoke 日结验证' })
+    .then((r) => ({ ok: true, close: r?.close ?? r }))
+    .catch((e) => ({ ok: false, err: String(e?.message ?? e) }));
+  const closeOk = closeRes.ok || /已冻结|已日结|CONFLICT|已存在|已结/.test(closeRes.err ?? '');
+  check('日结 cashier.dayClose 冻结当班（当日已结则幂等通过）', closeOk, closeRes.ok ? `diff=${closeRes.close?.diffFen ?? 0}分` : (closeRes.err ?? '').slice(0, 60));
+  const closes = await trpcQuery(sessions.merchant, 'cashier.listDayCloses', {});
+  const closeRows = closes?.closes ?? closes ?? [];
+  check('日结单留痕可查（listDayCloses）', (closeRows.some?.((c) => c.status === 'frozen' || c.kind === 'close') ?? false), `rows=${closeRows.length}`);
+
+  // 6.5 反结账单（owner）：挑一张今日未冲正 settled 单冲正 → 冲正单生成 + 原单链接；manager 403
+  const ledgerNow = await trpcQuery(sessions.merchant, 'cashier.listBills', { range: 'today' });
+  const settledRow = (ledgerNow?.bills ?? ledgerNow ?? []).find?.((b) => b.status === 'settled' && !(b.reversedAt ?? b.reversed_at));
+  if (settledRow) {
+    const rev = await trpcMutate(sessions.merchant, 'cashier.reverseBill', { billNo: settledRow.billNo, reason: 'smoke 反结账验证' }).catch((e) => ({ err: String(e?.message ?? e) }));
+    const revBill = rev?.reversalBill ?? rev?.reversal ?? null;
+    check('反结账单 cashier.reverseBill（owner，强制原因+关联原单）', !rev?.err && (!!revBill || rev?.ok === true || !!(rev?.bill ?? null)), `原单=${settledRow.billNo} 冲正=${revBill?.billNo ?? rev?.reversalBillNo ?? '见日志'}`);
+    const mgrUser = seeds?.find((u) => u.roles.includes('merchant_manager'));
+    if (mgrUser) {
+      const mgrLogin = await devLogin(mgrUser.id, GATE ?? undefined);
+      const mgrDeny = await trpcMutate(mgrLogin.cookie, 'cashier.reverseBill', { billNo: settledRow.billNo, reason: 'x' }).then(() => false).catch(() => true);
+      check('manager 反结账 403（仅店主）', mgrDeny === true, '');
+    }
+  } else {
+    check('反结账单（今日有 settled 单可冲）', false, '今日无 settled 单');
+  }
+
+  // 6.6 储值导入接口：preview 零写入对账（演示台账内嵌 2 行；execute 不在 smoke 层执行——只交付不执行口径）
+  const demoCsv = [
+    '门店,会员编号,会员姓名,手机号码,会员卡名称,储值本金余额(¥),储值赠送金额(¥),次卡名称,次卡剩余次数,累计消费金额(¥),累计消费次数,会员加入时间,上次消费时间',
+    '贝肯山店,9001,演示甲,13800000000,银卡,100.00,0,,0,0,0,2026-09-01,2026-09-01',
+    '生活馆店,9002,演示乙,13911112222,银卡,50.00,0,,0,0,0,2026-09-01,2026-09-01',
+  ].join('\n');
+  const preview = await trpcMutate(sessions.merchant, 'storedValue.previewImport', {
+    csvText: demoCsv, filename: 'smoke-demo.csv',
+    mapping: { 贝肯山店: store6?.id, 生活馆店: store6?.id, 生态城店: store6?.id },
+  }).catch((e) => ({ err: String(e?.message ?? e) }));
+  const src = preview?.sourceStats ?? preview?.report?.sourceStats ?? preview ?? {};
+  const srcStr = JSON.stringify(src);
+  check('储值导入 preview（零写入+校验位：2 行/本金 ¥150）',
+    !preview?.err && /15000/.test(srcStr) && /("totalRows":2|"rows":2)/.test(srcStr),
+    `sourceStats=${srcStr.slice(0, 140)}`);
+  if (clerkCookie) {
+    const clerkImport = await trpcMutate(clerkCookie, 'storedValue.previewImport', { csvText: demoCsv, mapping: {} }).then(() => false).catch(() => true);
+    check('clerk 储值导入 403（仅老板）', clerkImport === true, '');
+  }
 }
 
 console.log(`\n目标：${BASE}${GATE ? '（口令门已启用）' : '（口令门未设置，开发期开放口径）'}`);
