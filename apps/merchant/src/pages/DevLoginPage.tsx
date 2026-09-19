@@ -107,7 +107,8 @@ export default function DevLoginPage() {
     try {
       await devLogin(getApiBase(), userId, gateCode.trim() || undefined)
       await queryClient.invalidateQueries()
-      navigate(from && from !== '/dev-login' && from !== '/login' ? from : '/dashboard', {
+      // M1-补2 G：缺省落地改走 / 由 RoleLanding 按角色分流（clerk → /cashier）
+      navigate(from && from !== '/dev-login' && from !== '/login' ? from : '/', {
         replace: true,
       })
     } catch (err) {

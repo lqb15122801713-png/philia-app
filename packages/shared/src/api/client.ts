@@ -26,7 +26,7 @@ export type { AppRouter };
 export interface SessionUser {
   id: string;
   nickname: string | null;
-  roles: Array<'customer' | 'merchant_owner' | 'merchant_manager' | 'staff'>;
+  roles: Array<'customer' | 'merchant_owner' | 'merchant_manager' | 'merchant_clerk' | 'staff'>;
   /** 若为 staff，其 staff 记录 id */
   staffId?: string;
   /** staff 所属门店 / merchant 管理门店 */

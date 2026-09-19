@@ -28,7 +28,7 @@ import { EventType } from '../realtime/events';
 import {
   assertFrontdeskStaff,
   customerProcedure,
-  merchantProcedure,
+  merchantManagerProcedure,
   router,
   staffProcedure,
   type AppointmentRow,
@@ -308,7 +308,7 @@ export const boardingRouter = router({
     }),
 
   /** 在店宠物看板（merchant 本店）：含最近一次打卡日期与超期标记 */
-  stayBoard: merchantProcedure.query(async ({ ctx }) => {
+  stayBoard: merchantManagerProcedure.query(async ({ ctx }) => { // M1-补2 条件①：在店寄养监控 clerk 403（矩阵「监控 Hub」行）
     const storeId = ctx.user.storeId!;
     const rows = await ctx.db
       .select({

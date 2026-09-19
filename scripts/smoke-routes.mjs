@@ -87,6 +87,7 @@ const ROUTES = [
   { app: 'merchant', path: '/pass', anchors: ['次卡'], serverDep: true, note: 'U3 规范名（/passes 重定向兼容）' },
   { app: 'merchant', path: '/cashier', anchors: ['收银台'], serverDep: true, note: 'M1 新屏：收银台主屏' },
   { app: 'merchant', path: '/cashier/records', anchors: ['流水', '收银'], serverDep: true, note: 'M1 新屏：收银流水' },
+  { app: 'merchant', path: '/cashier/close', anchors: ['日结', '交接班', '店长'], serverDep: true, note: 'M1-补2 新屏：日结/交接班（clerk 引导页口径）' },
   { app: 'merchant', path: '/live', anchors: ['在店监控'], expectPath: '/monitor', note: 'B2 重定向；U3 锚点' },
   { app: 'merchant', path: '/appointments', anchors: ['预约'], note: 'A3 白屏群' },
   { app: 'merchant', path: `/appointments/${APPT_ID}/monitor`, anchors: ['实时监控', '预约'], serverDep: true, note: 'P4 原深链；U3 锚点' },

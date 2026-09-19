@@ -71,6 +71,13 @@
       "when": 1789740648344,
       "tag": "0009_acoustic_revanche",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1789793363220,
+      "tag": "0010_fantastic_randall",
+      "breakpoints": true
     }
   ]
 }

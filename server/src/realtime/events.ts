@@ -36,6 +36,12 @@ export const EventType = {
   CashierBillHeld:       'cashier.billHeld',         // 挂单 → store
   CashierBillSettled:    'cashier.billSettled',      // 结账 → store
   CashierBillVoided:     'cashier.billVoided',       // 撤单 → store
+  // 批次 M1-补2：R3 交接班/日结 + 反结账双件（与 packages/shared constants/events.ts 同步）
+  CashierShiftOpened:    'cashier.shiftOpened',      // 开班（含懒建） → store
+  CashierShiftClosed:    'cashier.shiftClosed',      // 交接班确认闭班 → store
+  CashierDayClosed:      'cashier.dayClosed',        // 日结冻结当班账目 → store
+  CashierDayCloseReversed: 'cashier.dayCloseReversed', // 日结反结账（拆箱，仅店主） → store
+  CashierBillReversed:   'cashier.billReversed',     // 收银台反结账单（已支付单冲正，仅店主） → store
 } as const;
 
 export type EventTypeValue = (typeof EventType)[keyof typeof EventType];

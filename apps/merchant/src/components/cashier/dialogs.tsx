@@ -108,12 +108,13 @@ const modeTabCls = (on: boolean) =>
 
 export function PriceDialog({
   line,
-  isOwner,
+  canEdit,
   onApply,
   onClose,
 }: {
   line: CartLine | null
-  isOwner: boolean
+  /** M1-补2 R2：改价闸门 owner|manager（server assertPriceEditAllowed 同档硬校验） */
+  canEdit: boolean
   /** adjusted=null 表示恢复原价 */
   onApply: (refId: string, adjustedPriceFen: number | null) => void
   onClose: () => void
@@ -152,7 +153,7 @@ export function PriceDialog({
           {line.adjustedPriceFen != null ? (
             <SheetBtn
               data-testid="cashier-price-reset"
-              disabled={!isOwner}
+              disabled={!canEdit}
               onClick={() => {
                 onApply(line.refId, null)
                 onClose()
@@ -165,7 +166,7 @@ export function PriceDialog({
           <SheetBtn
             variant="primary"
             data-testid="cashier-price-confirm"
-            disabled={!isOwner || !valid}
+            disabled={!canEdit || !valid}
             onClick={() => {
               if (nextFen === null) return
               onApply(line.refId, nextFen)
@@ -200,7 +201,7 @@ export function PriceDialog({
             inputMode="decimal"
             placeholder={`新价（元），如 ${(unit / 100).toString()}`}
             value={priceInput}
-            disabled={!isOwner}
+            disabled={!canEdit}
             onChange={(e) => setPriceInput(e.target.value)}
           />
         ) : (
@@ -210,7 +211,7 @@ export function PriceDialog({
             inputMode="numeric"
             placeholder="折扣 %（90 = 九折）"
             value={percentInput}
-            disabled={!isOwner}
+            disabled={!canEdit}
             onChange={(e) => setPercentInput(e.target.value)}
           />
         )}
@@ -223,9 +224,9 @@ export function PriceDialog({
         </p>
       </div>
 
-      {!isOwner ? (
+      {!canEdit ? (
         <p className="mt-2 text-caption-xs font-semibold text-[rgba(74,59,46,.42)]" data-testid="cashier-price-owner-hint">
-          仅店主可改价
+          仅店主/店长可改价
         </p>
       ) : null}
     </CashierModal>
@@ -241,7 +242,7 @@ export function DiscountDialog({
   discountType,
   discountValue,
   nonApptSubtotalFen,
-  isOwner,
+  canEdit,
   onApply,
   onClose,
 }: {
@@ -250,7 +251,8 @@ export function DiscountDialog({
   discountValue: number
   /** 非预约行合计（优惠上限；预约行金额不参与优惠，服务端同口径拒绝超限） */
   nonApptSubtotalFen: number
-  isOwner: boolean
+  /** M1-补2 R2：整单优惠闸门 owner|manager（server 同档硬校验） */
+  canEdit: boolean
   onApply: (type: DiscountType, value: number) => void
   onClose: () => void
 }) {
@@ -286,7 +288,7 @@ export function DiscountDialog({
           {discountType !== 'none' ? (
             <SheetBtn
               data-testid="cashier-discount-clear"
-              disabled={!isOwner}
+              disabled={!canEdit}
               onClick={() => {
                 onApply('none', 0)
                 onClose()
@@ -299,7 +301,7 @@ export function DiscountDialog({
           <SheetBtn
             variant="primary"
             data-testid="cashier-discount-confirm"
-            disabled={!isOwner || !valid}
+            disabled={!canEdit || !valid}
             onClick={() => {
               if (discountFen === null) return
               onApply(mode, mode === 'percent' ? pct : (amtFen ?? 0))
@@ -327,7 +329,7 @@ export function DiscountDialog({
             inputMode="numeric"
             placeholder="折扣 %（90 = 九折）"
             value={pctInput}
-            disabled={!isOwner}
+            disabled={!canEdit}
             onChange={(e) => setPctInput(e.target.value)}
           />
         ) : (
@@ -337,7 +339,7 @@ export function DiscountDialog({
             inputMode="decimal"
             placeholder="立减金额（元）"
             value={amtInput}
-            disabled={!isOwner}
+            disabled={!canEdit}
             onChange={(e) => setAmtInput(e.target.value)}
           />
         )}
@@ -351,8 +353,8 @@ export function DiscountDialog({
                 : '单位元，最多两位小数'}
         </p>
       </div>
-      {!isOwner ? (
-        <p className="mt-2 text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">仅店主可整单优惠</p>
+      {!canEdit ? (
+        <p className="mt-2 text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">仅店主/店长可整单优惠</p>
       ) : null}
     </CashierModal>
   )
@@ -364,14 +366,13 @@ export function DiscountDialog({
 
 export function VoidDialog({
   bill,
-  isOwner,
   pending,
   onConfirm,
   onClose,
 }: {
-  /** 目标单（open/held；settled 不可撤——入口不渲染，这里仅防御） */
+  /** 目标单（open/held；settled 不可撤——入口不渲染，这里仅防御）
+      M1-补2 补丁①1：撤单三级全开（owner|manager|clerk），边界仍锁「仅未支付单」 */
   bill: { billNo: string; buyerName?: string; payableFen?: number; status?: string } | null
-  isOwner: boolean
   pending: boolean
   onConfirm: (reason: string | undefined) => void
   onClose: () => void
@@ -399,7 +400,7 @@ export function VoidDialog({
           <SheetBtn
             variant="danger-outline"
             data-testid="cashier-void-confirm"
-            disabled={!isOwner || pending || settled}
+            disabled={pending || settled}
             onClick={() => onConfirm(reason.trim() || undefined)}
           >
             {pending ? '撤单中…' : '确认撤单'}
@@ -428,18 +429,129 @@ export function VoidDialog({
         onChange={(e) => setReason(e.target.value)}
       />
       <p className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]">
-        撤单后单据留痕为「已撤单」，不会物理删除
+        撤单后单据留痕为「已撤单」，不会物理删除；仅未支付单可撤（已结账请店主用反结账）
       </p>
-      {!isOwner ? (
-        <p className="mt-2 text-caption-xs font-semibold text-[rgba(74,59,46,.42)]" data-testid="cashier-void-owner-hint">
-          仅店主可撤单
-        </p>
-      ) : null}
       {settled ? (
         <p className="mt-2 text-caption-xs font-semibold text-danger-deep">
           已结账单不可撤单（退款专项冻结中）
         </p>
       ) : null}
+    </CashierModal>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* M1-补2 D：反结账单弹层（已支付单冲正 · 仅店主 · 强制原因）                */
+/* ------------------------------------------------------------------ */
+
+export function ReverseDialog({
+  bill,
+  pending,
+  onConfirm,
+  onClose,
+}: {
+  /** 目标单（settled 且未被冲正；入口由调用方按角色/状态把控） */
+  bill: { billNo: string; buyerName?: string; payableFen?: number } | null
+  pending: boolean
+  onConfirm: (reason: string) => void
+  onClose: () => void
+}) {
+  const [reason, setReason] = useState('')
+  const [lastNo, setLastNo] = useState<string | null>(null)
+  if (bill && bill.billNo !== lastNo) {
+    setLastNo(bill.billNo)
+    setReason('')
+  }
+  if (!bill && lastNo !== null) setLastNo(null)
+
+  if (!bill) return null
+  const valid = reason.trim().length > 0
+
+  return (
+    <CashierModal
+      open={bill !== null}
+      onClose={onClose}
+      title="反结账（已支付单冲正）"
+      testid="cashier-reverse-dialog"
+      footer={
+        <>
+          <SheetBtn onClick={onClose}>取消</SheetBtn>
+          <SheetBtn
+            variant="danger-outline"
+            data-testid="cashier-reverse-confirm"
+            disabled={!valid || pending}
+            onClick={() => onConfirm(reason.trim())}
+          >
+            {pending ? '冲正中…' : '确认冲正'}
+          </SheetBtn>
+        </>
+      }
+    >
+      <div className="rounded-[14px] bg-[#F6F1E3] px-3.5 py-3">
+        <div className="font-number text-caption font-semibold tabular-nums" data-testid="cashier-reverse-billno">
+          {bill.billNo}
+        </div>
+        <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">
+          {bill.buyerName ?? '—'}
+          {bill.payableFen != null ? (
+            <>
+              {' · '}
+              <span className="font-number tabular-nums">¥{fenToYuan(bill.payableFen)}</span>
+            </>
+          ) : null}
+        </div>
+      </div>
+      <textarea
+        className="mt-3 min-h-[76px] w-full resize-none rounded-[14px] bg-[#FFFDF6] px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(74,59,46,.12)] placeholder:text-[rgba(74,59,46,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(74,59,46,.3)]"
+        data-testid="cashier-reverse-reason"
+        placeholder="冲正原因（必填，留痕）"
+        maxLength={200}
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+      />
+      <p className="mt-1.5 text-caption-xs leading-relaxed text-[rgba(74,59,46,.42)]">
+        冲正将自动生成关联冲正单（金额镜像负值，不计当日已收）：库存回补、预约回到待收款、
+        次卡/储值按原路回补；原单永存不涂改，仅挂「已冲正」灰签（双向可查）。
+      </p>
+      {!valid ? (
+        <p className="mt-2 text-caption-xs font-semibold text-danger-deep">反结账必须填写原因</p>
+      ) : null}
+    </CashierModal>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* M1-补2 补丁②：退款明文拦截（防假退款 · 纯前端零接口零写入）               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 「退款」唯一形态：owner/manager 点退款只许出本明文提示——退款功能随专项批开通，
+ * 如需冲正请店主使用反结账。**禁止调任何接口**（零副作用零写入）；clerk 无该入口
+ * （入口在调用方按角色渲染）。不许白屏/死按钮。
+ */
+export function RefundBlockDialog({
+  billNo,
+  onClose,
+}: {
+  /** 关联单号（仅展示，无任何接口动作） */
+  billNo: string | null
+  onClose: () => void
+}) {
+  return (
+    <CashierModal
+      open={billNo !== null}
+      onClose={onClose}
+      title="退款"
+      testid="cashier-refund-block"
+      footer={<SheetBtn variant="primary" data-testid="cashier-refund-block-ok" onClick={onClose}>知道了</SheetBtn>}
+    >
+      <p className="py-2 text-body-sm leading-relaxed text-ink">
+        退款功能随专项批开通，本批未开放。
+      </p>
+      <p className="text-caption leading-relaxed text-[rgba(74,59,46,.62)]">
+        如需冲正已收款单{billNo ? `（${billNo}）` : ''}，请店主使用「反结账」：
+        强制原因留痕，库存/次卡/储值/预约自动回补，冲正单不计当日已收。
+      </p>
     </CashierModal>
   )
 }

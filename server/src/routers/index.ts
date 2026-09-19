@@ -23,6 +23,7 @@ import { petRouter } from './pet';
 import { pushRouter } from './push';
 import { serviceStepRouter } from './serviceStep';
 import { storeRouter } from './store';
+import { storedValueRouter } from './storedValue';
 
 export const appRouter = router({
   auth: authRouter,
@@ -35,6 +36,7 @@ export const appRouter = router({
   mall: mallRouter, // P5 T5.1 商城（coder-mall-server 追加）
   pass: passRouter, // v1.1-b2 B2-7 次卡（充次/扣次/回补闭环）
   cashier: cashierRouter, // 批次 M1 商家端收银台（登记型收银，决策 #27）
+  storedValue: storedValueRouter, // M1-补2 R5b 存量储值台账 CSV 导入（仅店主，只交付不执行）
 });
 
 /** 前端 tRPC client 的类型锚点（仅类型导出，无运行时开销） */

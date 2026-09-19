@@ -59,7 +59,7 @@ export default function CartPanel({
   discountValue,
   billNo,
   creatorLabel,
-  isOwner,
+  canEditPrice,
   holding,
   onQty,
   onRemove,
@@ -81,7 +81,8 @@ export default function CartPanel({
   discountValue: number
   billNo: string | null
   creatorLabel: string
-  isOwner: boolean
+  /** M1-补2 R2：改价/整单优惠闸门放宽至 owner|manager（server assertPriceEditAllowed 同档） */
+  canEditPrice: boolean
   holding: boolean
   onQty: (refId: string, d: 1 | -1) => void
   onRemove: (refId: string) => void
@@ -146,16 +147,16 @@ export default function CartPanel({
                   {l.kind === 'product' ? (
                     <QtyStepper qty={l.qty} testid={`cashier-qty-${l.refId}`} onDelta={(d) => onQty(l.refId, d)} />
                   ) : null}
-                  {/* 点行价 = 改价弹层入口（manager 置灰） */}
+                  {/* 点行价 = 改价弹层入口（M1-补2：owner|manager 可用，clerk 置灰） */}
                   <button
                     type="button"
                     data-testid={`cashier-price-${l.refId}`}
-                    disabled={!isOwner}
-                    title={isOwner ? '点按改价 / 折扣' : '仅店主可改价'}
+                    disabled={!canEditPrice}
+                    title={canEditPrice ? '点按改价 / 折扣' : '仅店主/店长可改价'}
                     onClick={() => onOpenPrice(l)}
                     className={`w-[56px] text-right font-number text-caption font-semibold tabular-nums ${
                       l.paidByPass ? 'text-[rgba(74,59,46,.3)] line-through' : 'text-ink'
-                    } ${isOwner ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                    } ${canEditPrice ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                   >
                     ¥{fenToYuan(lineTotal(l))}
                     {l.adjustedPriceFen != null ? (
@@ -210,8 +211,8 @@ export default function CartPanel({
           <button
             type="button"
             data-testid="cashier-discount-btn"
-            disabled={!isOwner}
-            title={isOwner ? '整单折扣或立减' : '仅店主可整单优惠'}
+            disabled={!canEditPrice}
+            title={canEditPrice ? '整单折扣或立减' : '仅店主/店长可整单优惠'}
             onClick={onOpenDiscount}
             className="inline-flex items-center gap-1 rounded-full bg-[#FFFDF6] px-3 py-1.5 text-caption-xs font-semibold text-ink shadow-[0_0_0_1px_rgba(74,59,46,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -225,7 +226,7 @@ export default function CartPanel({
               <button
                 type="button"
                 aria-label="清除整单优惠"
-                disabled={!isOwner}
+                disabled={!canEditPrice}
                 onClick={onClearDiscount}
                 className="text-[rgba(74,59,46,.3)] hover:text-[rgba(74,59,46,.6)] disabled:opacity-40"
               >
@@ -238,9 +239,9 @@ export default function CartPanel({
           ) : null}
         </div>
       ) : null}
-      {!isOwner ? (
+      {!canEditPrice ? (
         <p className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]" data-testid="cashier-owner-hint">
-          改价 / 整单优惠仅店主可操作
+          改价 / 整单优惠仅店主/店长可操作
         </p>
       ) : null}
 

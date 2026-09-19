@@ -34,7 +34,6 @@ import {
   formatDateTime,
   formatTime,
   formatYuan,
-  startOfDay,
   type ChipMode,
 } from '@/components/finance/utils';
 
@@ -48,6 +47,14 @@ const CAP_RECEIVED: Record<ChipMode, string> = {
   month: '本月已收',
 };
 const PAYMENT_MODE_LABEL: Record<string, string> = { pay_at_store: '到店付', pass_deduct: '次卡扣次' };
+/** M1-补2 R5/R6-1：收银流水方式五分列标签（组合支付全显；储值单列不计已收） */
+const CASHIER_METHOD_LABEL: Record<string, string> = {
+  cash: '现金',
+  wechat: '微信',
+  alipay: '支付宝',
+  pass: '次卡扣次',
+  stored_value: '储值',
+};
 
 /** 流水行（已收 + 待收 + 收银台并入合并视图）；sortKey 已收=paidAt/settledAt，待收=completedAt??scheduledStart */
 interface LedgerRow {
@@ -126,6 +133,11 @@ export default function FinancePage() {
           showToast('收银台有一笔收款到账');
           invalidateFinance();
           break;
+        // M1-补2 D：反结账冲正影响已收口径（原单不再计入；冲正单不计）→ 全量对齐
+        case EventType.CashierBillReversed:
+          showToast('收银台有一笔反结账冲正');
+          invalidateFinance();
+          break;
         case EventType.AppointmentCompleted:
         case EventType.AppointmentReviewed:
         case EventType.AppointmentCancelled:
@@ -183,7 +195,7 @@ export default function FinancePage() {
         item: c.summary,
         customer: c.buyer,
         modeLabel:
-          c.methods.map((m) => ({ cash: '现金', wechat: '微信', alipay: '支付宝', pass: '次卡扣次' })[m] ?? m).join('、') ||
+          c.methods.map((m) => CASHIER_METHOD_LABEL[m] ?? m).join('、') ||
           '—',
         fen: c.payableFen,
         source: 'cashier',
@@ -192,17 +204,28 @@ export default function FinancePage() {
     return [...paid, ...pending, ...cashier].sort((a, b) => b.sortKey - a.sortKey);
   }, [ledgerQuery.data, data]);
 
-  /** 卡 1 副行：洗护/寄养笔数（已收明细按预约类型聚合） */
-  const kindCount = useMemo(() => {
-    let grooming = 0;
-    let boarding = 0;
-    for (const r of ledgerQuery.data ?? []) {
-      if (r.paidAt === null) continue;
-      if (r.type === 'boarding') boarding += 1;
-      else grooming += 1;
+  /**
+   * 卡 1（M1-补2 R1③ 同源改造，消除「洗护 0 笔」矛盾）：
+   * - 今日档：金额=todayTender.receivedTotalFen（统一聚合出口，与收银台头部/总览同值）；
+   *   副行笔数=todayTender.counts 合并流水行数（收银 settled 单 + 预约域收款笔数）；
+   * - 7 天/本月档：金额=totals.totalFen（服务+商品，与下方合并流水列表同帧）；
+   *   副行笔数=收银单数（cashierPaidCount）+预约收款笔数（totals.paidCount）。
+   * 旧副行「洗护 N 笔 · 寄养 N 笔」（预约域口径，与合并流水列表矛盾）随本改造删除。
+   */
+  const receivedCard = useMemo(() => {
+    if (!data) return null;
+    if (mode === 'day') {
+      const t = data.todayTender;
+      return {
+        fen: t.receivedTotalFen,
+        caption: `共 ${t.counts.paidCount} 笔（收银 ${t.counts.cashierPaidCount} 单 · 预约收款 ${t.counts.appointmentPaidCount} 笔）`,
+      };
     }
-    return { grooming, boarding };
-  }, [ledgerQuery.data]);
+    return {
+      fen: data.totals.totalFen,
+      caption: `收银 ${data.totals.cashierPaidCount} 单 · 预约收款 ${data.totals.paidCount} 笔`,
+    };
+  }, [data, mode]);
 
   /** 卡 3：区间内次卡扣次次数 */
   const deductCount = useMemo(
@@ -213,14 +236,9 @@ export default function FinancePage() {
     [logsQuery.data, from, to],
   );
 
-  /** 顶行「今日已收」：恒为今日口径，不随期间档漂移（byDay 序列含今日格） */
-  const todayReceivedFen = useMemo(() => {
-    if (!data) return null;
-    if (mode === 'day') return data.totals.serviceFen;
-    const t = startOfDay(new Date());
-    const key = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
-    return data.byDay.find((c) => c.date === key)?.serviceFen ?? 0;
-  }, [data, mode]);
+  /** 顶行「今日已收」（M1-补2 R1）：恒为今日同源口径（todayTender.receivedTotalFen），
+      不随期间档漂移；与收银台头部/经营总览三处同数。 */
+  const todayReceivedFen = data ? data.todayTender.receivedTotalFen : null;
 
   /* ---------------- 待收行「收款 ›」（markPaid 真链路，原 PendingPayments 并入） ---------------- */
   const [settlingId, setSettlingId] = useState<string | null>(null);
@@ -315,10 +333,11 @@ export default function FinancePage() {
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
             <div className="u3-stat">
               <div className="cap">{CAP_RECEIVED[mode]}</div>
-              <div className="v">¥{formatYuan(data.totals.serviceFen)}</div>
-              <div className="d">
-                洗护 <b className="u1-num">{kindCount.grooming}</b> 笔 · 寄养{' '}
-                <b className="u1-num">{kindCount.boarding}</b> 笔
+              <div className="v" data-testid="finance-received-card">
+                ¥{receivedCard ? formatYuan(receivedCard.fen) : '…'}
+              </div>
+              <div className="d" data-testid="finance-received-count">
+                {receivedCard?.caption ?? ''}
               </div>
             </div>
             <div className="u3-stat">

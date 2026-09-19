@@ -29,7 +29,8 @@ import * as hub from '../realtime/hub';
 export interface SessionUserLike {
   id: string;
   nickname: string | null;
-  roles: Array<'customer' | 'merchant_owner' | 'merchant_manager' | 'staff'>;
+  /** M1-补2 R2：merchant_clerk 店员同为商家角色（收银台 SSE 联动需 store 频道） */
+  roles: Array<'customer' | 'merchant_owner' | 'merchant_manager' | 'merchant_clerk' | 'staff'>;
   staffId?: string;
   storeId?: string;
 }
@@ -45,7 +46,9 @@ export function channelsForUser(user: SessionUserLike): string[] {
   const channels = [`user:${user.id}`];
   if (user.staffId) channels.push(`staff:${user.staffId}`);
   const isMerchant =
-    user.roles.includes('merchant_owner') || user.roles.includes('merchant_manager');
+    user.roles.includes('merchant_owner') ||
+    user.roles.includes('merchant_manager') ||
+    user.roles.includes('merchant_clerk'); // M1-补2 R2：店员订阅本店频道（挂单/结账联动）
   if (isMerchant && user.storeId) channels.push(`store:${user.storeId}`);
   return channels;
 }
@@ -68,7 +71,9 @@ export async function validateWatch(
   if (!appt) return false;
   if (appt.customerId === user.id) return true;
   const isMerchant =
-    user.roles.includes('merchant_owner') || user.roles.includes('merchant_manager');
+    user.roles.includes('merchant_owner') ||
+    user.roles.includes('merchant_manager') ||
+    user.roles.includes('merchant_clerk'); // M1-补2 R2
   if (isMerchant && user.storeId && appt.storeId === user.storeId) return true;
   if (
     user.staffId &&

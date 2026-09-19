@@ -38,10 +38,10 @@ import { TRPCError } from '@trpc/server';
 import { and, desc, eq, gt, gte, inArray, isNull, lt } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
-import { merchantProcedure, publicProcedure, router, type Context } from '../trpc';
+import { merchantManagerProcedure, merchantOwnerProcedure, merchantProcedure, publicProcedure, router, type Context } from '../trpc';
 import { resolveServiceDuration, type ServiceDuration } from '../config/durationEngine';
 import { boardingNightDates, BOOKING_LEAD_BUFFER_MS, DEFAULT_BOARDING_ROOM_COUNT, freeGroomersInInterval, loadGroomerOccupancy, storeDayStartMs, storeWallclock } from './appointment';
-import { loadCashierFinance } from './cashier';
+import { computeDayTender, loadCashierFinance, type DayTenderStats } from './cashier';
 
 /** 时间槽粒度：30min（与 seed 的 store_slots 生成粒度一致） */
 const SLOT_MS = 30 * 60 * 1000;
@@ -77,6 +77,21 @@ function assertOwnStore(ctx: Context & { user: NonNullable<Context['user']> }, s
   if (ctx.user.storeId !== storeId) {
     throw new TRPCError({ code: 'FORBIDDEN', message: '只能操作本店资源' });
   }
+}
+
+/** 当日 0 点（门店规范时区 +8，与 computeDayTender / bill_no / 财务 byDay 日界同帧） */
+function storeTodayStart(now: Date): Date {
+  const w = storeWallclock(now);
+  return new Date(storeDayStartMs(w.y, w.m, w.day));
+}
+
+/**
+ * 营业额可见性（M1-补2 · 矩阵会签稿总规则②「店员不看营业额」）：
+ * owner|manager 可见；仅 clerk 角色的账号在聚合出口被遮罩（分角色渲染的服务端硬闸，
+ * 前端隐藏只是体验层）。
+ */
+function canSeeTurnover(ctx: Context & { user: NonNullable<Context['user']> }): boolean {
+  return ctx.user.roles.includes('merchant_owner') || ctx.user.roles.includes('merchant_manager');
 }
 
 const timeStr = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, '时间格式须为 HH:MM');
@@ -339,8 +354,8 @@ export const storeRouter = router({
       return { staff: staffRows };
     }),
 
-  /** 新增/编辑服务项或寄养房型（merchant 本店） */
-  upsertService: merchantProcedure
+  /** 新增/编辑服务项或寄养房型（仅店主 · M1-补2 条件①：商品与服务定价管理仅老板，矩阵） */
+  upsertService: merchantOwnerProcedure
     .input(
       z.object({
         id: z.string().min(1).optional(),
@@ -385,8 +400,8 @@ export const storeRouter = router({
       return { service: created, created: true as const };
     }),
 
-  /** 员工列表 + 技能/排班 + 绩效占位（完成单数/好评率，从 appointments 聚合） */
-  staffList: merchantProcedure.query(async ({ ctx }) => {
+  /** 员工列表 + 技能/排班 + 绩效占位（owner|manager · M1-补2 条件①：员工花名册 clerk 403） */
+  staffList: merchantManagerProcedure.query(async ({ ctx }) => {
     const storeId = ctx.user.storeId!;
     const staffRows = await ctx.db
       .select()
@@ -446,7 +461,7 @@ export const storeRouter = router({
    * 生成员工邀请码（merchant 本店）：8 位去混淆字符，24h 有效、单次使用。
    * 明文码仅此一次返回（响应里带提示）；同店同 staff_name 存在未使用未过期码则复用，不重复建行。
    */
-  inviteStaff: merchantProcedure
+  inviteStaff: merchantOwnerProcedure // M1-补2 条件①：员工账号创建仅老板（矩阵）
     .input(
       z.object({
         staffName: z.string().trim().min(1, '员工姓名不能为空').max(32),
@@ -518,8 +533,8 @@ export const storeRouter = router({
       };
     }),
 
-  /** 写员工周排班模板（merchant 本店） */
-  setSchedule: merchantProcedure
+  /** 写员工周排班模板（owner|manager 本店 · M1-补2 条件①：排班维护 manager 本店，clerk 403） */
+  setSchedule: merchantManagerProcedure
     .input(z.object({ staffId: z.string().min(1), schedule: scheduleInput }))
     .mutation(async ({ ctx, input }) => {
       const staffRow = await ctx.db
@@ -549,7 +564,7 @@ export const storeRouter = router({
    * updated_at 显式写。停职即时生效——staffProcedure 每请求校验在职状态，
    * 同会话下一请求即 403。现状没有任何停职入口，本接口是让「停职」可发生的最小接口。
    */
-  setStaffStatus: merchantProcedure
+  setStaffStatus: merchantOwnerProcedure // M1-补2 条件①：员工账号停用仅老板（矩阵）
     .input(z.object({ staffId: z.string().min(1), status: z.enum(['active', 'suspended']) }))
     .mutation(async ({ ctx, input }) => {
       const staffRow = await ctx.db
@@ -578,7 +593,7 @@ export const storeRouter = router({
    * 生效口径：核销角色判定（assertFrontdeskStaff）与 staffProcedure 在职校验均每请求查库，
    * 员工端 auth.me 下次拉取即见新角色——无需等会话过期。
    */
-  updateStaff: merchantProcedure
+  updateStaff: merchantOwnerProcedure // M1-补2 条件①：岗位角色/在职状态=账号管理，仅老板（矩阵）
     .input(
       z.object({
         staffId: z.string().min(1),
@@ -615,6 +630,9 @@ export const storeRouter = router({
 
   /**
    * 财务报表统计（merchant 本店 · T4.4）。
+   * M1-补2 R2：闸门升档 merchantManagerProcedure（owner|manager；矩阵会签稿
+   * 「财务流水·查看」店员 ❌，总规则②店员不看营业额）；M1-补2 R1：响应增
+   * todayTender 块（今日已收统一聚合出口，与收银台头部/经营总览同源同值）。
    *
    * 口径（前端汇总卡/趋势图/员工表共用同一口径，保证对账一致）：
    * - 收入按「收款时间 paid_at」归属区间 [from, to)；金额取 paid_fen（markPaid 必写，
@@ -627,7 +645,7 @@ export const storeRouter = router({
    * - 商城收入 v1 恒 0（商城属 P5，orders 尚无 paid_at 口径），结构预留 shopFen。
    * - 待收款：时点待办（completed 且未 paid），与区间无关，全量返回（上限 100 条）。
    */
-  financeStats: merchantProcedure
+  financeStats: merchantManagerProcedure
     .input(
       z.object({
         from: z.date(),
@@ -644,6 +662,11 @@ export const storeRouter = router({
       if (to.getTime() - from.getTime() > MAX_RANGE_MS) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: '统计区间最长 400 天' });
       }
+
+      /* M1-补2 R1：财务页头部「今日已收」统一出口（与收银台头部/经营总览同源，
+       * 同函数 computeDayTender 同字段 todayTender；UI 阶段改接，禁止页面自算）。
+       * 店员不可达本端点（merchantManagerProcedure，矩阵：财务流水·查看 clerk ❌）。 */
+      const todayTender: DayTenderStats = await computeDayTender(ctx.db, storeId, storeTodayStart(new Date()));
 
       // 同一份数据：区间内已收款预约（服务收入/按日序列/员工维度/收款方式四者共同来源）
       const paidRows = await ctx.db
@@ -844,6 +867,8 @@ export const storeRouter = router({
 
       return {
         range: { from, to },
+        /** M1-补2 R1：今日已收统一聚合（同 store.todayTenderStats 出口同函数同字段） */
+        todayTender,
         totals: {
           serviceFen: serviceTotalFenMerged,
           shopFen: shopTotalFen,
@@ -875,7 +900,7 @@ export const storeRouter = router({
    * 入参 {name?, address?, lat?, lng?, openHours?}，仅写本店（ctx.user.storeId）字段；
    * 未提供的字段不动；updated_at 显式写（SQLite 无 ON UPDATE）。
    */
-  update: merchantProcedure
+  update: merchantOwnerProcedure // M1-补2 条件①：系统设置/门店信息仅老板（矩阵；实测 clerk 越权改名红线修复）
     .input(
       z.object({
         name: z.string().trim().min(1, '门店名称不能为空').max(64).optional(),
@@ -936,7 +961,7 @@ export const storeRouter = router({
    * - 异常：超期寄养数（status=in_boarding 且 scheduled_end 已过，应退未退）。
    * 实现：本店预约一次取出在应用层聚合（与 staffList 同模式，v1 数据量级无压力）。
    */
-  dashboardStats: merchantProcedure
+  dashboardStats: merchantManagerProcedure
     .input(z.object({ date: z.date().optional() }).optional())
     .query(async ({ ctx, input }) => {
       const storeId = ctx.user.storeId!;
@@ -944,6 +969,19 @@ export const storeRouter = router({
       const dayStart = new Date(input?.date ?? now);
       dayStart.setHours(0, 0, 0, 0);
       const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000);
+
+      /* M1-补2 R2：闸门升档 merchantManagerProcedure（矩阵「三店六项日报/看板」店员 ❌）。
+       * M1-补2 R1：todayTender = 今日已收统一聚合出口（与收银台头部/财务页头部同源，
+       * 同一 computeDayTender 函数；UI 阶段改接后 todayRevenueFen 由本块替代）。
+       * 注意：todayRevenueFen 为旧口径字段（含预约域 pass_deduct 已收款等值），
+       * 保持语义不变供存量消费；裁定①「已收=现金类」新口径以 todayTender 为准。
+       * 日界：本端点统计日沿用本地 0 点（历史口径不动），todayTender 用门店规范
+       * 时区 +8 日界（与 bill_no/财务 byDay 同帧；本机 +8 二者同刻）。 */
+      const todayTender: DayTenderStats = await computeDayTender(
+        ctx.db,
+        storeId,
+        storeTodayStart(input?.date ?? now),
+      );
 
       const rows = await ctx.db
         .select({
@@ -1001,6 +1039,8 @@ export const storeRouter = router({
       return {
         /** 统计日 0 点（本地时区） */
         date: dayStart,
+        /** M1-补2 R1：今日已收统一聚合（同 store.todayTenderStats 出口同函数同字段） */
+        todayTender,
         /** 今日预约总数（全部状态合计） */
         todayCount,
         /** 今日预约分状态计数 */
@@ -1017,5 +1057,48 @@ export const storeRouter = router({
         /** 异常：超期寄养数（应退未退） */
         overdueBoardingCount,
       };
+    }),
+
+  /**
+   * 今日已收·统一聚合出口（M1-补2 R1 · 裁定① · 决策 #33）。
+   *
+   * 三处同数同源的唯一取数口：经营总览（dashboardStats.todayTender）、收银台头部、
+   * 财务页头部（financeStats.todayTender）——同一 computeDayTender 函数，禁止各页自算；
+   * 收银台头部 UI 阶段自前端自算（listBills 聚合混入次卡等值，§0 取证 610 错数根因）
+   * 改接本端点。
+   *
+   * 口径（字段语义见 cashier.ts DayTenderStats 头注）：
+   * - 已收 = Σ 支付段现金类（cash/wechat/alipay 三分列，receivedTotalFen 可加总核对）；
+   *   次卡扣次 passFen / 储值 storedValueFen 参考列单列、永不计入；
+   *   rebateFen 回馈金列位预留（决策 #33，恒 0 不实现）；
+   * - 笔数 = 合并流水行数（收银 settled 单 + 未经收银台的预约收款）；
+   * - voided 单零聚合（回归保护）。
+   *
+   * 闸门：merchantProcedure（收银员工作面需要调用以渲染头部），但矩阵总规则②
+   * 「店员不看营业额」服务端硬遮罩——仅 clerk 角色账号返回 restricted:true 且
+   * 金额/笔数全 null（前端据此渲染「—」，分角色渲染的 server 侧对应）。
+   */
+  todayTenderStats: merchantProcedure
+    .input(z.object({ date: z.date().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
+      const stats = await computeDayTender(
+        ctx.db,
+        storeId,
+        storeTodayStart(input?.date ?? new Date()),
+      );
+      if (!canSeeTurnover(ctx)) {
+        return {
+          /** 店员遮罩签（前端渲染「—」；金额/笔数一律 null，不下发） */
+          restricted: true as const,
+          date: stats.date,
+          tender: null,
+          receivedTotalFen: null,
+          referenceTotalFen: null,
+          legacyPayAtStoreFen: null,
+          counts: null,
+        };
+      }
+      return { restricted: false as const, ...stats };
     }),
 });

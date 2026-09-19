@@ -27,7 +27,7 @@ import { broadcastNow, emitEvent, type Db as BusDb } from '../realtime/bus';
 import { EventType } from '../realtime/events';
 import {
   assertAppointmentAccess,
-  merchantProcedure,
+  merchantManagerProcedure,
   publicProcedure,
   router,
   staffProcedure,
@@ -530,7 +530,7 @@ export const serviceStepRouter = router({
    * 其余状态维持拒绝：cancelled 显式 BAD_REQUEST；pending/confirmed 尚未核销
    * 初始化六步流，loadStep 以 NOT_FOUND 拒绝（既有行为不变）。
    */
-  flagForRedo: merchantProcedure
+  flagForRedo: merchantManagerProcedure // M1-补2 条件①：打标重拍=质检管理 owner|manager，clerk 403
     .input(
       z.object({
         appointmentId: z.string().min(1),

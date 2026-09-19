@@ -10,6 +10,7 @@
 
 import { NavLink } from 'react-router-dom';
 import {
+  BookCheck,
   CalendarDays,
   BedDouble,
   Calculator,
@@ -24,39 +25,60 @@ import {
 } from 'lucide-react';
 import { usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
+import { roleLabelCn, useMerchantRole, type MerchantRole } from '@/lib/roles';
 
-const GROUPS: Array<{ label: string | null; items: Array<{ to: string; label: string; icon: typeof House; testid: string }> }> = [
-  { label: null, items: [{ to: '/dashboard', label: '总览', icon: House, testid: 'rail-dashboard' }] },
-  {
-    label: '履约',
-    items: [
-      { to: '/appointments', label: '预约', icon: CalendarDays, testid: 'rail-appointments' },
-      { to: '/boarding', label: '寄养', icon: BedDouble, testid: 'rail-boarding' },
-      { to: '/monitor', label: '监控', icon: MonitorDot, testid: 'rail-monitor' },
-    ],
-  },
-  {
-    label: '商城',
-    items: [
-      // 批次 M1：收银台=商城组首位（任务书 §1.7，lucide Calculator）
-      { to: '/cashier', label: '收银台', icon: Calculator, testid: 'rail-cashier' },
-      { to: '/orders', label: '订单', icon: ShoppingBag, testid: 'rail-orders' },
-      { to: '/products', label: '商品', icon: Package, testid: 'rail-products' },
-    ],
-  },
-  {
-    label: '门店',
-    items: [
-      { to: '/pass', label: '会员·次卡', icon: CreditCard, testid: 'rail-pass' },
-      { to: '/staff', label: '员工', icon: Users, testid: 'rail-staff' },
-      { to: '/finance', label: '财务', icon: ReceiptText, testid: 'rail-finance' },
-      { to: '/settings', label: '设置', icon: Settings, testid: 'rail-settings' },
-    ],
-  },
-];
+type RailItem = { to: string; label: string; icon: typeof House; testid: string };
+
+/**
+ * M1-补2 G：墨轨按角色分流（矩阵总规则② 店员不见流水与看板）：
+ * - clerk：仅「收银台」工作面入口（单组单项，组标收起）；
+ * - owner/manager：现状四组不动，「商城」组收银台下方插「日结」（R3 交接班/日结页）。
+ */
+function groupsFor(role: MerchantRole): Array<{ label: string | null; items: RailItem[] }> {
+  if (role.isClerk) {
+    return [
+      {
+        label: null,
+        items: [{ to: '/cashier', label: '收银台', icon: Calculator, testid: 'rail-cashier' }],
+      },
+    ];
+  }
+  return [
+    { label: null, items: [{ to: '/dashboard', label: '总览', icon: House, testid: 'rail-dashboard' }] },
+    {
+      label: '履约',
+      items: [
+        { to: '/appointments', label: '预约', icon: CalendarDays, testid: 'rail-appointments' },
+        { to: '/boarding', label: '寄养', icon: BedDouble, testid: 'rail-boarding' },
+        { to: '/monitor', label: '监控', icon: MonitorDot, testid: 'rail-monitor' },
+      ],
+    },
+    {
+      label: '商城',
+      items: [
+        // 批次 M1：收银台=商城组首位（任务书 §1.7，lucide Calculator）
+        { to: '/cashier', label: '收银台', icon: Calculator, testid: 'rail-cashier' },
+        // M1-补2 C：日结/交接班页（owner|manager 可见；clerk 无入口）
+        { to: '/cashier/close', label: '日结', icon: BookCheck, testid: 'rail-cashier-close' },
+        { to: '/orders', label: '订单', icon: ShoppingBag, testid: 'rail-orders' },
+        { to: '/products', label: '商品', icon: Package, testid: 'rail-products' },
+      ],
+    },
+    {
+      label: '门店',
+      items: [
+        { to: '/pass', label: '会员·次卡', icon: CreditCard, testid: 'rail-pass' },
+        { to: '/staff', label: '员工', icon: Users, testid: 'rail-staff' },
+        { to: '/finance', label: '财务', icon: ReceiptText, testid: 'rail-finance' },
+        { to: '/settings', label: '设置', icon: Settings, testid: 'rail-settings' },
+      ],
+    },
+  ];
+}
 
 export default function MerchantRail() {
   const { trpc } = usePhiliaClient();
+  const role = useMerchantRole();
   const meQ = useQuery({
     queryKey: ['auth', 'me', 'rail'],
     queryFn: () => trpc.auth.me.query(),
@@ -64,6 +86,8 @@ export default function MerchantRail() {
   });
   const storeName = meQ.data?.store?.name ?? '门店';
   const ownerName = meQ.data?.user?.nickname ?? '店主';
+  const roleLabel = roleLabelCn(meQ.data?.roles);
+  const groups = groupsFor(role);
 
   return (
     <nav
@@ -77,7 +101,7 @@ export default function MerchantRail() {
       <div className="pb-3 pt-1.5 text-center font-display text-title font-bold text-brand-primary xl:hidden" aria-hidden>
         P
       </div>
-      {GROUPS.map((g) => (
+      {groups.map((g) => (
         <div key={g.label ?? 'top'}>
           {g.label ? (
             <div className="hidden px-2.5 pb-1.5 pt-3.5 text-caption-xs tracking-[.14em] text-[rgba(246,241,227,.35)] xl:block">
@@ -102,11 +126,11 @@ export default function MerchantRail() {
           ))}
         </div>
       ))}
-      {/* 底部：门店/店主卡（真值） */}
+      {/* 底部：门店/账号卡（真值；M1-补2 G：三级账号角色签） */}
       <div className="mt-auto hidden px-2.5 py-2.5 text-caption-xs leading-relaxed text-[rgba(246,241,227,.4)] xl:block" data-testid="rail-foot">
         {storeName}
         <br />
-        店主 · {ownerName}
+        {roleLabel} · {ownerName}
       </div>
     </nav>
   );
