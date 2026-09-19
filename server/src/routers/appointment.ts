@@ -65,6 +65,7 @@ import {
   assertAppointmentAccess,
   assertFrontdeskStaff,
   customerProcedure,
+  merchantManagerProcedure,
   merchantProcedure,
   publicProcedure,
   router,
@@ -1184,7 +1185,7 @@ export const appointmentRouter = router({
    * 客户改期回退 pending 单保留；对 confirmed 单调用 = 幂等成功（直接返回现状，
    * 零写库、零事件——防旧链路/旧测试重复调用断裂）。
    */
-  confirm: merchantProcedure
+  confirm: merchantManagerProcedure // M1-补2 条件①：接单确认属调度管理，clerk 403（矩阵）
     .input(z.object({ appointmentId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       const appt = await getAppointmentOrThrow(ctx.db, input.appointmentId);
@@ -1221,7 +1222,7 @@ export const appointmentRouter = router({
    * 事件 appointment.rejected 双频道：user:{customerId}（客户端详情页文案）+
    * store:{storeId}（商家端列表刷新），payload 含 reason。
    */
-  reject: merchantProcedure
+  reject: merchantManagerProcedure // M1-补2 条件①：拒单属调度管理，clerk 403（矩阵）
     .input(
       z.object({
         appointmentId: z.string().min(1),
@@ -1274,7 +1275,7 @@ export const appointmentRouter = router({
    * 来源标记「商家改派」），assigned 事件 payload.by='merchant'（与下单自动派单的
    * by='auto' 共同构成轨迹，不做独立审计表）。
    */
-  assign: merchantProcedure
+  assign: merchantManagerProcedure // M1-补2 条件①：派单属调度管理（排班/派单 manager 本店），clerk 403
     .input(z.object({ appointmentId: z.string().min(1), staffId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       const appt = await getAppointmentOrThrow(ctx.db, input.appointmentId);
@@ -1424,7 +1425,7 @@ export const appointmentRouter = router({
    * 拒绝 → 回 confirmed + 事件（沿用 appointment.confirmed 语义「预约维持有效」，
    * payload.cancelRejected=true 供端上区分话术）。
    */
-  reviewCancel: merchantProcedure
+  reviewCancel: merchantManagerProcedure // M1-补2 条件①：取消申请审批 owner|manager（矩阵）
     .input(z.object({ appointmentId: z.string().min(1), approve: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
       const appt = await getAppointmentOrThrow(ctx.db, input.appointmentId);
@@ -1756,7 +1757,7 @@ export const appointmentRouter = router({
    * 10. markPaid（merchant 本店）：到店付收款登记。服务已完成（completed）且未 paid
    * → 写 paid_at / paid_fen + 事件；已 paid 直接返回现状（幂等）。
    */
-  markPaid: merchantProcedure
+  markPaid: merchantProcedure // 收款登记=收银执行面（矩阵：收款三级全开），维持三级放行
     .input(
       z.object({
         appointmentId: z.string().min(1),
@@ -1828,7 +1829,7 @@ export const appointmentRouter = router({
   /** 12. listForStore（merchant 本店）：按日期范围 / 状态过滤（日历 / 列表视图数据源）。
    *  B3-5 W-4：联 users 补 customerName（昵称）/customerPhoneTail（手机号后 4 位）——
    *  查询条件恒含 storeId=当前商家门店，客户标识只随本店订单出参，手机号仅回尾号。 */
-  listForStore: merchantProcedure
+  listForStore: merchantManagerProcedure // M1-补2 条件①：在途单监控数据端点 clerk 403（矩阵「监控 Hub」行）
     .input(
       z
         .object({

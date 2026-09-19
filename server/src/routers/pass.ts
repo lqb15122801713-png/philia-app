@@ -17,7 +17,7 @@ import { TRPCError } from '@trpc/server';
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
-import { customerProcedure, merchantProcedure, router } from '../trpc';
+import { customerProcedure, merchantManagerProcedure, router } from '../trpc';
 
 type PassRow = typeof schema.memberPasses.$inferSelect;
 
@@ -43,7 +43,7 @@ export const passRouter = router({
     }),
 
   /** listForStore（merchant 本店）：本店次卡列表 + 持卡人昵称/手机号 */
-  listForStore: merchantProcedure.query(async ({ ctx }) => {
+  listForStore: merchantManagerProcedure.query(async ({ ctx }) => { // M1-补2 条件①：次卡台账 clerk 不可翻（矩阵 ⚠️ 仅收银识别可见余额）
     const rows = await ctx.db
       .select({
         pass: schema.memberPasses,
@@ -66,7 +66,7 @@ export const passRouter = router({
    * listCustomers（merchant 本店）：可充次客户下拉清单。
    * 口径 = 本店有预约单的用户 ∪ 已持本店次卡的用户（与 topUp 归属校验同口径）。
    */
-  listCustomers: merchantProcedure.query(async ({ ctx }) => {
+  listCustomers: merchantManagerProcedure.query(async ({ ctx }) => { // M1-补2 条件①：会员名册翻查 clerk 403
     const storeId = ctx.user.storeId!;
     const apptRows = await ctx.db
       .select({ userId: schema.appointments.customerId })
@@ -91,7 +91,7 @@ export const passRouter = router({
    * 事务内整体提交：建/改卡与流水同生共死。归属红线：目标用户须为本店客户
    * （本店有预约或已持本店卡），否则 FORBIDDEN。
    */
-  topUp: merchantProcedure
+  topUp: merchantManagerProcedure // M1-补2 条件①：充次=售卖性质，clerk 403（矩阵；owner|manager 保留）
     .input(
       z.object({
         userId: z.string().min(1),
@@ -161,7 +161,7 @@ export const passRouter = router({
     }),
 
   /** listLogs（merchant 本店）：次卡流水（可指定某张卡），倒序，上限 100 条 */
-  listLogs: merchantProcedure
+  listLogs: merchantManagerProcedure // M1-补2 条件①：扣次流水翻查 clerk 403
     .input(z.object({ passId: z.string().min(1).optional() }).optional())
     .query(async ({ ctx, input }) => {
       const conds = [eq(schema.memberPasses.storeId, ctx.user.storeId!)]; // 本店口径，防越店泄漏

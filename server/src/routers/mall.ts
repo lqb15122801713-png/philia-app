@@ -23,7 +23,7 @@ import { and, desc, eq, gte, like, lt, or, sql, type SQL } from 'drizzle-orm';
 import { randomInt } from 'node:crypto';
 import { z } from 'zod';
 import { db, schema } from '../db';
-import { customerProcedure, merchantProcedure, publicProcedure, router } from '../trpc';
+import { customerProcedure, merchantManagerProcedure, merchantOwnerProcedure, merchantProcedure, publicProcedure, router } from '../trpc';
 import { broadcastNow, emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
 import { getPaymentProvider } from '../payments/provider';
@@ -267,7 +267,7 @@ export const mallRouter = router({
    * 3. upsertProduct（merchant 本店）：新增/编辑/上下架/库存编辑一体。
    * 带 productId → 更新（强制本店归属，否则 FORBIDDEN）；不带 → 本店新增。
    */
-  upsertProduct: merchantProcedure
+  upsertProduct: merchantOwnerProcedure // M1-补2 条件①：商品定价管理仅老板（矩阵）
     .input(
       z.object({
         productId: z.string().min(1).optional(),
@@ -561,7 +561,7 @@ export const mallRouter = router({
    * 7. shipOrder（merchant 本店）：paid → shipped + 填物流单号；
    * emitEvent(user:{customerId}, order.shipped)。
    */
-  shipOrder: merchantProcedure
+  shipOrder: merchantManagerProcedure // M1-补2 条件①：订单履约管理 owner|manager，clerk 403
     .input(
       z.object({
         orderId: z.string().min(1),
@@ -629,7 +629,7 @@ export const mallRouter = router({
    * 9. listStoreOrders（merchant 本店）：待办队列——待发货 paid / 已发货 shipped /
    * 售后 refunding 三组（附客户昵称，按创建时间倒序）。
    */
-  listStoreOrders: merchantProcedure.query(async ({ ctx }) => {
+  listStoreOrders: merchantManagerProcedure.query(async ({ ctx }) => { // M1-补2 条件①：商城订单流水 clerk 403
     const rows = await ctx.db
       .select({ order: schema.orders, customerNickname: schema.users.nickname })
       .from(schema.orders)

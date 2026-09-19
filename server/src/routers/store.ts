@@ -38,7 +38,7 @@ import { TRPCError } from '@trpc/server';
 import { and, desc, eq, gt, gte, inArray, isNull, lt } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
-import { merchantManagerProcedure, merchantProcedure, publicProcedure, router, type Context } from '../trpc';
+import { merchantManagerProcedure, merchantOwnerProcedure, merchantProcedure, publicProcedure, router, type Context } from '../trpc';
 import { resolveServiceDuration, type ServiceDuration } from '../config/durationEngine';
 import { boardingNightDates, BOOKING_LEAD_BUFFER_MS, DEFAULT_BOARDING_ROOM_COUNT, freeGroomersInInterval, loadGroomerOccupancy, storeDayStartMs, storeWallclock } from './appointment';
 import { computeDayTender, loadCashierFinance, type DayTenderStats } from './cashier';
@@ -354,8 +354,8 @@ export const storeRouter = router({
       return { staff: staffRows };
     }),
 
-  /** 新增/编辑服务项或寄养房型（merchant 本店） */
-  upsertService: merchantProcedure
+  /** 新增/编辑服务项或寄养房型（仅店主 · M1-补2 条件①：商品与服务定价管理仅老板，矩阵） */
+  upsertService: merchantOwnerProcedure
     .input(
       z.object({
         id: z.string().min(1).optional(),
@@ -400,8 +400,8 @@ export const storeRouter = router({
       return { service: created, created: true as const };
     }),
 
-  /** 员工列表 + 技能/排班 + 绩效占位（完成单数/好评率，从 appointments 聚合） */
-  staffList: merchantProcedure.query(async ({ ctx }) => {
+  /** 员工列表 + 技能/排班 + 绩效占位（owner|manager · M1-补2 条件①：员工花名册 clerk 403） */
+  staffList: merchantManagerProcedure.query(async ({ ctx }) => {
     const storeId = ctx.user.storeId!;
     const staffRows = await ctx.db
       .select()
@@ -461,7 +461,7 @@ export const storeRouter = router({
    * 生成员工邀请码（merchant 本店）：8 位去混淆字符，24h 有效、单次使用。
    * 明文码仅此一次返回（响应里带提示）；同店同 staff_name 存在未使用未过期码则复用，不重复建行。
    */
-  inviteStaff: merchantProcedure
+  inviteStaff: merchantOwnerProcedure // M1-补2 条件①：员工账号创建仅老板（矩阵）
     .input(
       z.object({
         staffName: z.string().trim().min(1, '员工姓名不能为空').max(32),
@@ -533,8 +533,8 @@ export const storeRouter = router({
       };
     }),
 
-  /** 写员工周排班模板（merchant 本店） */
-  setSchedule: merchantProcedure
+  /** 写员工周排班模板（owner|manager 本店 · M1-补2 条件①：排班维护 manager 本店，clerk 403） */
+  setSchedule: merchantManagerProcedure
     .input(z.object({ staffId: z.string().min(1), schedule: scheduleInput }))
     .mutation(async ({ ctx, input }) => {
       const staffRow = await ctx.db
@@ -564,7 +564,7 @@ export const storeRouter = router({
    * updated_at 显式写。停职即时生效——staffProcedure 每请求校验在职状态，
    * 同会话下一请求即 403。现状没有任何停职入口，本接口是让「停职」可发生的最小接口。
    */
-  setStaffStatus: merchantProcedure
+  setStaffStatus: merchantOwnerProcedure // M1-补2 条件①：员工账号停用仅老板（矩阵）
     .input(z.object({ staffId: z.string().min(1), status: z.enum(['active', 'suspended']) }))
     .mutation(async ({ ctx, input }) => {
       const staffRow = await ctx.db
@@ -593,7 +593,7 @@ export const storeRouter = router({
    * 生效口径：核销角色判定（assertFrontdeskStaff）与 staffProcedure 在职校验均每请求查库，
    * 员工端 auth.me 下次拉取即见新角色——无需等会话过期。
    */
-  updateStaff: merchantProcedure
+  updateStaff: merchantOwnerProcedure // M1-补2 条件①：岗位角色/在职状态=账号管理，仅老板（矩阵）
     .input(
       z.object({
         staffId: z.string().min(1),
@@ -900,7 +900,7 @@ export const storeRouter = router({
    * 入参 {name?, address?, lat?, lng?, openHours?}，仅写本店（ctx.user.storeId）字段；
    * 未提供的字段不动；updated_at 显式写（SQLite 无 ON UPDATE）。
    */
-  update: merchantProcedure
+  update: merchantOwnerProcedure // M1-补2 条件①：系统设置/门店信息仅老板（矩阵；实测 clerk 越权改名红线修复）
     .input(
       z.object({
         name: z.string().trim().min(1, '门店名称不能为空').max(64).optional(),
