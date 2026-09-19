@@ -50,22 +50,23 @@ function PanelError({ onRetry, testid }: { onRetry: () => void; testid: string }
 export default function HoldPanel({
   held,
   todayBills,
+  hideToday = false,
   loading,
   error,
   onRetry,
   freshHeldNo,
-  isOwner,
   onResume,
   onVoid,
 }: {
   held: BillListRow[] | undefined
   todayBills: BillListRow[] | undefined
+  /** M1-补2 G：clerk 隐藏今日流水整块（矩阵总规则② 店员不见流水） */
+  hideToday?: boolean
   loading: boolean
   error: boolean
   onRetry: () => void
   /** 刚挂出的单号（柠檬点标记） */
   freshHeldNo: string | null
-  isOwner: boolean
   onResume: (bill: BillListRow) => void
   onVoid: (bill: BillListRow) => void
 }) {
@@ -122,18 +123,17 @@ export default function HoldPanel({
                     ¥{fenToYuan(b.payableFen)}
                   </span>
                 </div>
-                {/* ⋯ 撤单入口（owner-only） */}
+                {/* ⋯ 撤单入口（M1-补2 补丁①1：三级全开，边界=仅未支付单；本面板恒 held） */}
                 <button
                   type="button"
                   aria-label={`撤单 ${b.billNo}`}
                   data-testid={`cashier-void-${b.billNo}`}
-                  disabled={!isOwner}
-                  title={isOwner ? '撤单（留痕）' : '仅店主可撤单'}
+                  title="撤单（留痕）"
                   onClick={(e) => {
                     e.stopPropagation()
                     onVoid(b)
                   }}
-                  className="absolute bottom-2 right-2 rounded-full p-1 text-[rgba(74,59,46,.3)] transition-colors hover:bg-[rgba(74,59,46,.05)] hover:text-[rgba(74,59,46,.6)] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="absolute bottom-2 right-2 rounded-full p-1 text-[rgba(74,59,46,.3)] transition-colors hover:bg-[rgba(74,59,46,.05)] hover:text-[rgba(74,59,46,.6)]"
                 >
                   <MoreHorizontal size={15} strokeWidth={1.8} aria-hidden />
                 </button>
@@ -141,10 +141,11 @@ export default function HoldPanel({
             ))}
           </div>
         )}
-        <p className="mt-2 text-caption-xs text-[rgba(74,59,46,.42)]">点卡取单续结 · ⋯ 撤单（店主）</p>
+        <p className="mt-2 text-caption-xs text-[rgba(74,59,46,.42)]">点卡取单续结 · ⋯ 撤单（留痕）</p>
       </section>
 
-      {/* ---- 今日流水（最近 5 条） ---- */}
+      {/* ---- 今日流水（最近 5 条；clerk 隐藏整块——矩阵总规则②） ---- */}
+      {hideToday ? null : (
       <section
         className="rounded-[20px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(74,59,46,.09)]"
         data-testid="cashier-today-flow"
@@ -165,12 +166,21 @@ export default function HoldPanel({
           <div>
             {recent.map((b) => {
               const voided = b.status === 'voided'
+              const reversed = b.reversedAt != null // M1-补2 D：被冲正原单灰签
               const chip =
                 b.status === 'settled'
-                  ? { cls: 'bg-[#7FD8BE] text-[#1E4D3D]', label: PAY_METHOD_LABEL[b.methods[0] ?? ''] ?? '已收' }
-                  : b.status === 'voided'
-                    ? { cls: 'bg-[rgba(74,59,46,.08)] text-[rgba(74,59,46,.42)]', label: '撤' }
-                    : { cls: 'bg-[#F1E8D4] text-[rgba(74,59,46,.62)]', label: BILL_STATUS_CHIP[b.status]?.label ?? b.status }
+                  ? reversed
+                    ? { cls: 'u3-st done', label: '已冲正' }
+                    : {
+                        cls: 'bg-[#7FD8BE] text-[#1E4D3D]',
+                        // R6-1：组合支付方式签全显（现金+微信），不再只显首方式
+                        label: b.methods.length > 0 ? b.methods.map((m) => PAY_METHOD_LABEL[m] ?? m).join('+') : '已收',
+                      }
+                  : b.status === 'reversal'
+                    ? { cls: 'u3-st done', label: '冲正' }
+                    : voided
+                      ? { cls: 'bg-[rgba(74,59,46,.08)] text-[rgba(74,59,46,.42)]', label: '撤' }
+                      : { cls: 'bg-[#F1E8D4] text-[rgba(74,59,46,.62)]', label: BILL_STATUS_CHIP[b.status]?.label ?? b.status }
               return (
                 <div
                   key={b.id}
@@ -192,6 +202,7 @@ export default function HoldPanel({
           </div>
         )}
       </section>
+      )}
     </>
   )
 }

@@ -4,12 +4,16 @@
  * - 视觉全部走 index.css 注入的 u3-stat（.cap/.v/.d），26px Montserrat tabular 大字由类承担；
  * - 今日预约副行 = byStatus 今日分状态聚合：服务中=in_service+in_boarding、
  *   待到店=confirmed+pending、已完成=completed；
- * - 今日营业额：v=todayRevenueFen（paid_at 今日口径）；副行 已收=今日单中已登记收款笔数
- *   （listForStore 今日聚合），待收=todo.unpaid（全量 completed 未收款口径）；
+ * - 今日营业额（M1-补2 R1 同源改造）：v=todayTender.receivedTotalFen（统一聚合出口，
+ *   已收=现金类三分列；次卡/储值参考列不进合计）；副行 已收=todayTender.counts.paidCount
+ *   （合并流水行数=收银 settled 单+预约域收款笔数），待收=todo.unpaid（全量 completed
+ *   未收款口径）。todayRevenueFen 旧字段退役（预约 paidAt 口径+收银认领混入，
+ *   与本卡不再同源——server 保留字段仅存量兼容，本页不再消费）；
  * - 在店寄养：listForStore(status=in_boarding) 按 serviceName（寄养服务名即房型）前端聚合，
  *   零新接口（stayBoard 行不含 serviceName，故取 listForStore）；
  * - 接单模式：批次 S4 起自动接单常驻，静态卡 + 薄荷 pill（u3 未注入 pill 类，tailwind 同值实现）；
  * - 加载中骨架块（animate-pulse，禁转圈），查询失败显示 —（错误卡由页面层给出）。
+ * - 本页 owner|manager 可见（dashboardStats 服务端闸门；clerk 路由层引导页）。
  */
 
 import type { ReactNode } from 'react'
@@ -36,12 +40,12 @@ function StatSkeleton() {
 
 export default function StatCards({
   stats,
-  todayItems,
   boardingItems,
   loading,
 }: {
   stats: DashboardStats | undefined
-  todayItems: TodayApptItem[] | undefined
+  /** M1-补2 R1：已收笔数改走 todayTender.counts.paidCount，本参数退役（保留签名不动页面装配） */
+  todayItems?: TodayApptItem[]
   boardingItems: TodayApptItem[] | undefined
   loading: boolean
 }) {
@@ -59,9 +63,6 @@ export default function StatCards({
   const waiting = (stats?.byStatus.confirmed ?? 0) + (stats?.byStatus.pending ?? 0)
   const done = stats?.byStatus.completed ?? 0
 
-  const paidCount = todayItems?.filter((i) => i.paidAt != null).length ?? 0
-  const unpaidCount = stats?.todo.unpaid ?? 0
-
   const boardingCount = boardingItems?.length ?? 0
   const roomGroups = new Map<string, number>()
   for (const b of boardingItems ?? []) {
@@ -70,6 +71,10 @@ export default function StatCards({
   }
   const roomText =
     [...roomGroups.entries()].map(([name, n]) => `${name} ${n}`).join(' · ') || '当前无在店寄养'
+
+  /* M1-补2 R1：今日营业额卡改接同源内嵌块 todayTender（与收银台头部/财务页头部同值） */
+  const tender = stats?.todayTender
+  const tenderPaidCount = tender?.counts.paidCount ?? 0
 
   return (
     <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
@@ -81,9 +86,12 @@ export default function StatCards({
       </StatShell>
 
       <StatShell cap="今日营业额">
-        <div className="v">{stats ? `¥${fenToYuanGrouped(stats.todayRevenueFen)}` : '—'}</div>
+        {/* M1-补2 R1：todayRevenueFen 退役 → todayTender.receivedTotalFen（同源出口） */}
+        <div className="v" data-testid="dashboard-today-revenue">
+          {tender ? `¥${fenToYuanGrouped(tender.receivedTotalFen)}` : '—'}
+        </div>
         <div className="d">
-          已收 <b>{paidCount}</b> 笔 · 待收 <b>{unpaidCount}</b> 笔
+          已收 <b>{tenderPaidCount}</b> 笔 · 待收 <b>{stats?.todo.unpaid ?? 0}</b> 笔
         </div>
       </StatShell>
 

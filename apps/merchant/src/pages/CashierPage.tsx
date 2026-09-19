@@ -22,7 +22,7 @@
  * （幂等：已在车内不重复加；已收款/不存在安静 toast）。
  */
 
-import { EventType, useMe, usePhiliaClient } from '@philia/shared'
+import { EventType, usePhiliaClient } from '@philia/shared'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { TRPCClientError } from '@trpc/client'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -32,16 +32,28 @@ import CartPanel from '@/components/cashier/CartPanel'
 import { DiscountDialog, PriceDialog, VoidDialog } from '@/components/cashier/dialogs'
 import HoldPanel from '@/components/cashier/HoldPanel'
 import MemberSearch from '@/components/cashier/MemberSearch'
+import OfflineBar from '@/components/cashier/OfflineBar'
+import {
+  enqueueOffline,
+  flushOfflineQueue,
+  isNetworkError,
+  loadOfflineQueue,
+  OFFLINE_QUEUE_EVENT,
+  offlineQueueSize,
+} from '@/components/cashier/offlineQueue'
 import PaySheet from '@/components/cashier/PaySheet'
 import PickPanel from '@/components/cashier/PickPanel'
 import {
   BILLS_TODAY_KEY,
   CASHIER_ROOT_KEY,
   computeCart,
+  CURRENT_SHIFT_KEY,
+  DAY_CLOSES_KEY,
   discountOverLimit,
   fenToYuan,
   HELD_BILLS_KEY,
   PENDING_APPTS_KEY,
+  TODAY_TENDER_KEY,
   toCartSnapshot,
   type BillListRow,
   type CartLine,
@@ -52,8 +64,9 @@ import {
   type StoreService,
 } from '@/components/cashier/model'
 import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider'
-import { fullDateLabel, STATS_QUERY_KEY } from '@/components/dashboard/utils'
+import { fullDateLabel, fenToYuanGrouped, STATS_QUERY_KEY } from '@/components/dashboard/utils'
 import { errMsg, fmtDateTime, PRODUCTS_KEY, type StoreProduct } from '@/components/mall-admin/format'
+import { useMerchantRole } from '@/lib/roles'
 
 type PickTab = 'service' | 'product' | 'pending'
 type MobileTab = 'pick' | 'cart' | 'queue'
@@ -63,9 +76,8 @@ const FINANCE_ROOT = ['store', 'financeStats'] as const
 export default function CashierPage() {
   const { trpc, queryClient } = usePhiliaClient()
   const events = useMerchantEvents()
-  const { user } = useMe()
-  const isOwner = user?.roles.includes('merchant_owner') ?? false
-  const storeId = user?.storeId
+  const role = useMerchantRole()
+  const storeId = role.storeId
   const now = useMemo(() => new Date(), [])
 
   /* ---------------- 查询 ---------------- */
@@ -87,9 +99,20 @@ export default function CashierPage() {
     queryKey: HELD_BILLS_KEY,
     queryFn: () => trpc.cashier.listBills.query({ status: 'held' }),
   })
+  // M1-补2 G：矩阵总规则② 店员不见流水——clerk 不拉今日流水（右栏同隐）
   const todayQ = useQuery({
     queryKey: BILLS_TODAY_KEY,
     queryFn: () => trpc.cashier.listBills.query({ range: 'today' }),
+    enabled: role.canSeeTurnover,
+  })
+  /**
+   * M1-补2 R1：头部「今日已收」改接统一聚合出口 store.todayTenderStats
+   * （删掉前端 listBills 自算——§0 取证 610 错数根因：paid_fen 求和混入次卡等值）。
+   * clerk：服务端硬遮罩 restricted=true（金额/笔数全 null）→ 隐藏整个金额块。
+   */
+  const tenderQ = useQuery({
+    queryKey: TODAY_TENDER_KEY,
+    queryFn: () => trpc.store.todayTenderStats.query(),
   })
   /** 会员次卡真值（与 PassPage 同接口同缓存；扣次闸门 + 取单会员回填共用） */
   const passesQ = useQuery({
@@ -227,6 +250,10 @@ export default function CashierPage() {
     void queryClient.invalidateQueries({ queryKey: CASHIER_ROOT_KEY })
     void queryClient.invalidateQueries({ queryKey: STATS_QUERY_KEY })
     void queryClient.invalidateQueries({ queryKey: FINANCE_ROOT })
+    // M1-补2 R1：同源聚合出口随收银事件一并失效（三处同数）
+    void queryClient.invalidateQueries({ queryKey: TODAY_TENDER_KEY })
+    void queryClient.invalidateQueries({ queryKey: CURRENT_SHIFT_KEY })
+    void queryClient.invalidateQueries({ queryKey: DAY_CLOSES_KEY })
     void queryClient.invalidateQueries({ queryKey: ['appointment', 'listForStore'] })
     void queryClient.invalidateQueries({ queryKey: ['pass'] })
     void queryClient.invalidateQueries({ queryKey: PRODUCTS_KEY })
@@ -236,6 +263,27 @@ export default function CashierPage() {
     mutationFn: () => trpc.cashier.hold.mutate(toCartSnapshot(lines, member, discountType, discountValue, billNo ?? undefined)),
     onSuccess: (r) => {
       setFreshHeldNo(r.bill.billNo)
+      /**
+       * R6-2 挂单即时刷新修法（根因见卷宗：invalidate 前缀失效经微任务调度 +
+       * SSE 帧经 outbox→broadcast 一跳，双链路都有可见空窗）——onSuccess 就地
+       * 用返回快照乐观插入挂单队列缓存（立即出卡），invalidate 兜底对齐真值，
+       * SSE billHeld 事件为双保险。
+       */
+      const optimistic: BillListRow = {
+        ...r.bill,
+        buyerName: r.buyerName,
+        itemCount: r.items.length,
+        summary:
+          r.items.length <= 2
+            ? r.items.map((i) => i.nameSnapshot).join('、')
+            : `${r.items.slice(0, 2).map((i) => i.nameSnapshot).join('、')} 等 ${r.items.length} 项`,
+        passFen: 0,
+        methods: [],
+      }
+      queryClient.setQueryData<BillListRow[]>(HELD_BILLS_KEY, (old) => {
+        const rest = (old ?? []).filter((b) => b.billNo !== r.bill.billNo)
+        return [optimistic, ...rest]
+      })
       toast.success(`已挂单 ${r.bill.billNo}`)
       clearCart()
       invalidateCashier()
@@ -268,6 +316,9 @@ export default function CashierPage() {
           nickname: r.buyerName === '散客' ? null : r.buyerName,
           phoneMasked: r.customerPhoneMasked,
           passRemainTimes: p?.remainTimes ?? 0,
+          // 取单快照不含储值域（model.ts CashierMember 注释）：恒 0 → 储值胶囊不出现，
+          // 要用储值支付请移除会员重新检索（余额实时口径）
+          storedValueBalanceFen: 0,
           appointmentCount: 0,
         })
       } else {
@@ -294,6 +345,53 @@ export default function CashierPage() {
 
   const [payOpen, setPayOpen] = useState(false)
   const [settledInfo, setSettledInfo] = useState<{ billNo: string; paidFen: number } | null>(null)
+
+  /* ---------------- R4 离线暂存 / 补传（断网不静默） ---------------- */
+  const [online, setOnline] = useState(() => navigator.onLine)
+  const [queueTick, setQueueTick] = useState(0) // 队列变更信号（自派发事件驱动重渲染）
+  const [flushing, setFlushing] = useState(false)
+  const flushingRef = useRef(false)
+  useEffect(() => {
+    const onUp = () => setOnline(true)
+    const onDown = () => setOnline(false)
+    const onQueue = () => setQueueTick((t) => t + 1)
+    window.addEventListener('online', onUp)
+    window.addEventListener('offline', onDown)
+    window.addEventListener(OFFLINE_QUEUE_EVENT, onQueue)
+    return () => {
+      window.removeEventListener('online', onUp)
+      window.removeEventListener('offline', onDown)
+      window.removeEventListener(OFFLINE_QUEUE_EVENT, onQueue)
+    }
+  }, [])
+  /** 双信号离线态：浏览器离线 或 SSE 断开（任务书 R4①） */
+  const isOffline = !online || !events.connected
+  const pendingOffline = useMemo(() => {
+    void queueTick
+    return loadOfflineQueue()
+  }, [queueTick])
+  const failedOffline = pendingOffline.filter((e) => e.lastError).length
+
+  /** 离线暂存当前购物车（含已 hold 的 bill_no——补传幂等键） */
+  const stageOffline = useCallback(
+    (payments: SettleInput['payments']) => {
+      const okFlag = enqueueOffline({
+        billNo,
+        snapshot: toCartSnapshot(lines, member, discountType, discountValue),
+        payments,
+      })
+      if (okFlag) {
+        setPayOpen(false)
+        setSettledInfo(null)
+        clearCart()
+        toast('已暂存，待补传 —— 恢复网络后自动补传', { icon: '📥' })
+      } else {
+        toast.error('暂存队列已满（50 单），请恢复网络后再结账')
+      }
+    },
+    [billNo, lines, member, discountType, discountValue, clearCart],
+  )
+
   const settleM = useMutation({
     mutationFn: (payments: SettleInput['payments']) =>
       trpc.cashier.settle.mutate({
@@ -306,10 +404,52 @@ export default function CashierPage() {
       invalidateCashier()
     },
     onError: (e) => {
+      // R4②：结账遇网络层断线 → 转本地暂存（明示「已暂存，待补传」，禁止只转「结账中…」）
+      if (isNetworkError(e)) {
+        stageOffline(settleM.variables as SettleInput['payments'])
+        return
+      }
       if (e instanceof TRPCClientError) toast.error(e.message)
       else toast.error('结账失败，请重试')
     },
   })
+
+  /** PaySheet 确认入口：离线直接暂存（不调接口），在线走 settle（网络错误兜底同暂存） */
+  const requestSettle = useCallback(
+    (payments: SettleInput['payments']) => {
+      if (isOffline) {
+        stageOffline(payments)
+        return
+      }
+      settleM.mutate(payments)
+    },
+    // settleM 引用随渲染刷新即可（mutate 幂等安全）
+    [isOffline, stageOffline, settleM],
+  )
+
+  /* 恢复自动补传（R4③）：回在线且队列非空 → 逐单串行补传，结果明示；
+     网络层失败（恢复初期连接未就绪）5s 后自动重试一轮（queueTick 自增重触发） */
+  useEffect(() => {
+    if (isOffline || flushingRef.current || offlineQueueSize() === 0) return
+    flushingRef.current = true
+    setFlushing(true)
+    void flushOfflineQueue(trpc)
+      .then(({ ok, failed, networkDown }) => {
+        if (ok > 0) toast.success(`补传成功 ${ok} 单`)
+        if (failed.length > 0) {
+          toast.error(`补传失败 ${failed.length} 单：${failed[0]!.reason}（已保留暂存，可再次触发或找店长）`)
+        }
+        // 恢复初期连接未就绪（网络层中断）：5s 后自动重试一轮
+        if (networkDown) {
+          window.setTimeout(() => setQueueTick((t) => t + 1), 5000)
+        }
+        invalidateCashier()
+      })
+      .finally(() => {
+        flushingRef.current = false
+        setFlushing(false)
+      })
+  }, [isOffline, queueTick, trpc, invalidateCashier])
 
   const [voidTarget, setVoidTarget] = useState<{
     billNo: string
@@ -335,6 +475,12 @@ export default function CashierPage() {
           case EventType.CashierBillHeld:
           case EventType.CashierBillSettled:
           case EventType.CashierBillVoided:
+          // M1-补2：反结账/班次/日结事件同链路（同源出口/挂单/流水/日结页全量对齐）
+          case EventType.CashierBillReversed:
+          case EventType.CashierShiftOpened:
+          case EventType.CashierShiftClosed:
+          case EventType.CashierDayClosed:
+          case EventType.CashierDayCloseReversed:
             invalidateCashier()
             break
           case EventType.AppointmentCompleted:
@@ -356,10 +502,11 @@ export default function CashierPage() {
   const [priceLine, setPriceLine] = useState<CartLine | null>(null)
   const [discountOpen, setDiscountOpen] = useState(false)
 
-  /* ---------------- 副行真值：今日已收（settled Σ应收）· 挂单 N ---------------- */
-  const todayReceivedFen = (todayQ.data ?? [])
-    .filter((b) => b.status === 'settled')
-    .reduce((s, b) => s + b.payableFen, 0)
+  /* ---------------- 副行真值：今日已收（R1 同源出口）· 挂单 N ----------------
+   * M1-补2 R1：删除前端 listBills 自算（§0 取证 610 错数根因——paid_fen 求和
+   * 混入次卡等值）；改接 store.todayTenderStats 统一聚合出口。
+   * clerk（restricted=true 服务端硬遮罩）隐藏整个金额块（矩阵总规则②）。 */
+  const tender = tenderQ.data && !tenderQ.data.restricted ? tenderQ.data : null
   const heldCount = heldQ.data?.length ?? 0
 
   const pickError =
@@ -394,11 +541,42 @@ export default function CashierPage() {
       <header className="mb-4">
         <h1 className="text-title-lg font-bold leading-7">收银台</h1>
         <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">
-          {fullDateLabel(now)} · 今日已收{' '}
-          <b className="font-number tabular-nums text-ink">¥{fenToYuan(todayReceivedFen)}</b> · 挂单{' '}
+          {fullDateLabel(now)}
+          {/* M1-补2 R1：今日已收=统一聚合出口（同源三处同数）；clerk 隐藏整个金额块 */}
+          {tender ? (
+            <>
+              {' · 今日已收 '}
+              <b className="font-number tabular-nums text-ink" data-testid="cashier-today-received">
+                ¥{fenToYuanGrouped(tender.receivedTotalFen ?? 0)}
+              </b>
+            </>
+          ) : null}
+          {' · 挂单 '}
           <b className="font-number tabular-nums text-ink">{heldCount}</b>
         </div>
+        {/* 分列小字：现金类三分列（计入已收）+ 参考列（次卡/储值，永不计入——裁定①） */}
+        {tender?.tender ? (
+          <div className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.42)]" data-testid="cashier-today-tender-split">
+            现金 <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(tender.tender.cashFen)}</b>
+            {' · 微信 '}
+            <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(tender.tender.wechatFen)}</b>
+            {' · 支付宝 '}
+            <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(tender.tender.alipayFen)}</b>
+            <span className="mx-1.5 text-[rgba(74,59,46,.2)]">｜</span>
+            参考（不计入已收）：次卡 <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(tender.tender.passFen)}</b>
+            {' · 储值 '}
+            <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(tender.tender.storedValueFen)}</b>
+          </div>
+        ) : null}
       </header>
+
+      {/* R4 离线状态条（双信号常显 + 本地暂存单数） */}
+      <OfflineBar
+        offline={isOffline}
+        pendingCount={pendingOffline.length}
+        failedCount={failedOffline}
+        flushing={flushing}
+      />
 
       {/* 390 降级：单栏 tab（零件原样重排，lg 起三栏） */}
       <div className="mb-3 flex gap-1.5 lg:hidden" role="tablist">
@@ -467,8 +645,8 @@ export default function CashierPage() {
               discountType={discountType}
               discountValue={discountValue}
               billNo={billNo}
-              creatorLabel={billNo ? creatorLabel || '—' : (user?.nickname ?? '—')}
-              isOwner={isOwner}
+              creatorLabel={billNo ? creatorLabel || '—' : (role.nickname ?? '—')}
+              canEditPrice={role.canManage}
               holding={holdM.isPending}
               onQty={(refId, d) =>
                 setLines((prev) =>
@@ -501,19 +679,19 @@ export default function CashierPage() {
           </div>
         </section>
 
-        {/* 右栏：挂单队列 + 今日流水（260px） */}
+        {/* 右栏：挂单队列 + 今日流水（260px；M1-补2 G：clerk 隐藏今日流水——矩阵总规则②） */}
         <section className={`flex-col gap-3 ${mobileTab === 'queue' ? 'flex' : 'hidden'} lg:flex`}>
           <HoldPanel
             held={heldQ.data}
             todayBills={todayQ.data}
-            loading={heldQ.isPending || todayQ.isPending}
-            error={heldQ.isError || todayQ.isError}
+            hideToday={!role.canSeeTurnover}
+            loading={heldQ.isPending || (role.canSeeTurnover && todayQ.isPending)}
+            error={heldQ.isError || (role.canSeeTurnover && todayQ.isError)}
             onRetry={() => {
               void heldQ.refetch()
-              void todayQ.refetch()
+              if (role.canSeeTurnover) void todayQ.refetch()
             }}
             freshHeldNo={freshHeldNo}
-            isOwner={isOwner}
             onResume={onResume}
             onVoid={(b) =>
               setVoidTarget({ billNo: b.billNo, buyerName: b.buyerName, payableFen: b.payableFen, status: b.status })
@@ -522,10 +700,10 @@ export default function CashierPage() {
         </section>
       </div>
 
-      {/* 弹层组 */}
+      {/* 弹层组（M1-补2：改价/整单优惠 owner|manager；撤单三级全开——补丁①1 仅限未支付单） */}
       <PriceDialog
         line={priceLine}
-        isOwner={isOwner}
+        canEdit={role.canManage}
         onApply={(refId, adjusted) =>
           setLines((prev) => prev.map((l) => (l.refId === refId ? { ...l, adjustedPriceFen: adjusted } : l)))
         }
@@ -536,7 +714,7 @@ export default function CashierPage() {
         discountType={discountType}
         discountValue={discountValue}
         nonApptSubtotalFen={amounts.nonApptSubtotalFen}
-        isOwner={isOwner}
+        canEdit={role.canManage}
         onApply={(t, v) => {
           setDiscountType(t)
           setDiscountValue(v)
@@ -545,7 +723,6 @@ export default function CashierPage() {
       />
       <VoidDialog
         bill={voidTarget}
-        isOwner={isOwner}
         pending={voidM.isPending}
         onConfirm={(reason) => {
           if (!voidTarget) return
@@ -556,7 +733,8 @@ export default function CashierPage() {
         onClose={() => setVoidTarget(null)}
       />
 
-      {/* 屏二：支付面板（主屏内展开层，不跳路由；390 全屏） */}
+      {/* 屏二：支付面板（主屏内展开层，不跳路由；390 全屏）
+          R4：离线时确认=本地暂存（requestSettle 内判定），面板文案同步 */}
       <PaySheet
         open={payOpen}
         billNo={billNo}
@@ -564,6 +742,7 @@ export default function CashierPage() {
         lines={lines}
         member={member}
         pass={memberPass}
+        offline={isOffline}
         settling={settleM.isPending}
         settledInfo={settledInfo}
         onTogglePassAll={(on) =>
@@ -573,7 +752,7 @@ export default function CashierPage() {
             ),
           )
         }
-        onConfirm={(payments) => settleM.mutate(payments)}
+        onConfirm={requestSettle}
         onClose={() => {
           setPayOpen(false)
           setSettledInfo(null)

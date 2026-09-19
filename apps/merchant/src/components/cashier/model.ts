@@ -51,6 +51,36 @@ export const BILL_DETAIL_KEY = 'getBill' as const
 export const RECORDS_KEY = ['cashier', 'listBills', 'records'] as const
 
 /* ------------------------------------------------------------------ */
+/* M1-补2 R1：今日已收统一聚合出口（store.todayTenderStats）                */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 三处同数同源唯一取数口（收银台头部直连；总览/财务走各自 stats 内嵌
+ * todayTender 块——同一 computeDayTender 函数同字段，禁止页面自算）。
+ * clerk 调用返回 restricted=true 且金额/笔数全 null（服务端硬遮罩，
+ * 矩阵总规则②）——前端据此隐藏整个金额块。
+ */
+export const TODAY_TENDER_KEY = ['store', 'todayTenderStats'] as const
+export type TodayTenderStats = RouterOutputs['store']['todayTenderStats']
+
+/* ------------------------------------------------------------------ */
+/* M1-补2 C：日结/交接班 + R5b 储值台账导入                                */
+/* ------------------------------------------------------------------ */
+
+/** cashier.currentShift 返回的班次骨架（无金额，clerk 可调） */
+export type ShiftInfo = NonNullable<RouterOutputs['cashier']['currentShift']['shift']>
+/** cashier.listDayCloses 行（日结单/冲正关联单同构，含 createdByName） */
+export type DayCloseRow = RouterOutputs['cashier']['listDayCloses'][number]
+/** storedValue.listImportBatches 行（report=对账报告 JSON 已解析） */
+export type ImportBatchRow = RouterOutputs['storedValue']['listImportBatches'][number]
+/** R5b 对账报告（preview/execute 同构） */
+export type ImportReport = NonNullable<ImportBatchRow['report']>
+
+export const CURRENT_SHIFT_KEY = ['cashier', 'currentShift'] as const
+export const DAY_CLOSES_KEY = ['cashier', 'listDayCloses'] as const
+export const IMPORT_BATCHES_KEY = ['storedValue', 'listImportBatches'] as const
+
+/* ------------------------------------------------------------------ */
 /* 会员 / 购物车行                                                      */
 /* ------------------------------------------------------------------ */
 
@@ -61,6 +91,12 @@ export interface CashierMember {
   phoneMasked: string | null
   /** 本店可用次卡剩余次数（检索真值 / 取单后经 pass.listForStore 回填） */
   passRemainTimes: number
+  /**
+   * M1-补2 R5：储值余额（分，本金+赠送；searchMember 真值）。
+   * 取单还原的会员条无余额快照（快照不含储值域）——恒 0，储值胶囊不出现；
+   * 要用储值支付请移除会员后重新检索（余额实时口径）。
+   */
+  storedValueBalanceFen: number
   /** 在店预约数（confirmed/in_service/in_boarding） */
   appointmentCount: number
 }
@@ -165,20 +201,25 @@ export function toCartSnapshot(
 }
 
 /**
- * 组装结账支付段：现金/微信/支付宝三段按选中输入 + 次卡段自动派生
- * （金额 = Σ扣次行有效价，服务端口径「次卡支付段金额须等于扣次行有效价合计」）。
- * 返回 null = 校验未过（Σ现金类 ≠ 展示应收）。
+ * 组装结账支付段：现金/微信/支付宝按选中输入 + 次卡段自动派生 + 储值段手输
+ * （次卡金额 = Σ扣次行有效价，服务端口径「次卡支付段金额须等于扣次行有效价合计」；
+ *   储值段 = 存量储值消费，M1-补2 R5 启用，须绑会员，余额服务端事务内核验）。
+ * 返回 null = 校验未过（Σ现金类 + 储值 ≠ 展示应收）。
  */
 export function finalizePayments(
   amounts: CartAmounts,
-  moneySegs: Array<{ method: Exclude<PayMethod, 'pass'>; amountFen: number }>,
+  moneySegs: Array<{ method: Exclude<PayMethod, 'pass' | 'stored_value'>; amountFen: number }>,
+  storedValueFen = 0,
 ): SettleInput['payments'] | null {
-  const sum = moneySegs.reduce((s, p) => s + p.amountFen, 0)
+  const sum = moneySegs.reduce((s, p) => s + p.amountFen, 0) + storedValueFen
   if (sum !== amounts.dueFen) return null
   const payments: SettleInput['payments'] = moneySegs.map((p) => ({
     method: p.method,
     amountFen: p.amountFen,
   }))
+  if (storedValueFen > 0) {
+    payments.push({ method: 'stored_value', amountFen: storedValueFen })
+  }
   if (amounts.passCoveredFen > 0) {
     payments.push({ method: 'pass', amountFen: amounts.passCoveredFen })
   }
@@ -189,20 +230,23 @@ export function finalizePayments(
 /* 展示标签 / 图标                                                      */
 /* ------------------------------------------------------------------ */
 
-/** 支付方式四分列标签（M1-补1：cash|wechat|alipay|pass；stored_value 预留位不出现） */
+/** 支付方式五分列标签（M1-补2 R5：cash|wechat|alipay|pass|stored_value；credit 已废不出现） */
 export const PAY_METHOD_LABEL: Record<string, string> = {
   cash: '现金',
   wechat: '微信',
   alipay: '支付宝',
   pass: '次卡扣次',
+  stored_value: '储值',
 }
 
-/** 流水状态签：已收薄荷 / 已撤单灰 / 挂单·开单中浅木（收银单无待收——修订单口径） */
+/** 流水状态签：已收薄荷 / 已撤单灰 / 挂单·开单中浅木（收银单无待收——修订单口径）；
+    M1-补2 D：reversal=冲正单（永驻流水，不计已收）；settled 被冲正由调用方叠加「已冲正」灰签 */
 export const BILL_STATUS_CHIP: Record<string, { cls: string; label: string }> = {
   settled: { cls: 'u3-st live', label: '已收' },
   voided: { cls: 'u3-st done', label: '已撤单' },
   held: { cls: 'u3-st wait', label: '挂单' },
   open: { cls: 'u3-st wait', label: '开单中' },
+  reversal: { cls: 'u3-st done', label: '冲正单' },
 }
 
 /** 服务/行图标映射（试样口径：洗护 shower-head / 造型 scissors / 寄养 bed-double / 商品 package） */

@@ -33,7 +33,9 @@ export default function RequireMerchant({ children }: { children: ReactNode }) {
   }
 
   const isMerchant =
-    user.roles.includes('merchant_owner') || user.roles.includes('merchant_manager')
+    user.roles.includes('merchant_owner') ||
+    user.roles.includes('merchant_manager') ||
+    user.roles.includes('merchant_clerk')
 
   if (!isMerchant) {
     return (
@@ -46,7 +48,7 @@ export default function RequireMerchant({ children }: { children: ReactNode }) {
         <p className="mt-2 text-body-sm text-ink-secondary">
           当前账号「{user.nickname ?? user.id}」不是商家身份。
           <br />
-          商家端仅供门店店主 / 店长使用，请改用商家账号登录。
+          商家端仅供门店店主 / 店长 / 店员使用，请改用商家账号登录。
         </p>
         <button
           type="button"

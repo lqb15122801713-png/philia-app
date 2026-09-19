@@ -42,6 +42,8 @@ export default function MemberSearch({
           nickname: r.nickname,
           phoneMasked: r.phoneMasked,
           passRemainTimes: r.passRemainTimes,
+          // M1-补2 R5：储值余额真值（本金+赠送；收银识别可见余额，矩阵⑥）
+          storedValueBalanceFen: r.storedValueBalanceFen,
           appointmentCount: r.appointmentCount,
         })
       } else {
@@ -100,6 +102,15 @@ export default function MemberSearch({
               {member.passRemainTimes > 0 ? (
                 <span className="ml-1.5 inline-flex items-center rounded-full bg-[#7FD8BE] px-2.5 py-[3px] text-caption-xs text-[#1E4D3D]">
                   次卡 · 余 {member.passRemainTimes} 次
+                </span>
+              ) : null}
+              {/* M1-补2 R5：储值余额签（柠檬底；>0 才出。收银识别可见余额——矩阵⑥） */}
+              {member.storedValueBalanceFen > 0 ? (
+                <span
+                  className="ml-1.5 inline-flex items-center rounded-full bg-brand-primary px-2.5 py-[3px] font-number tabular-nums text-caption-xs text-ink"
+                  data-testid="cashier-member-sv"
+                >
+                  储值 · 余 ¥{(member.storedValueBalanceFen / 100).toFixed(2)}
                 </span>
               ) : null}
             </div>

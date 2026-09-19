@@ -1,14 +1,19 @@
 /**
  * 屏二 · 支付面板（批次 M1 · 主屏内右下展开层，不跳路由；390 全屏化）
  *
- * - 应收 Montserrat 32 墨大数字 + 副行（含次卡扣次 N 项 −¥X 已抵）；
- * - P5 支付胶囊四分列：现金 / 微信 / 支付宝 / 次卡扣次——未选白底 ring、
- *   选中柠檬底墨字、禁用灰 + 原因行紧跟；次卡胶囊带余额小字（余 N 次），
- *   余额不足禁用 + 原因；stored_value 预留位不出现（M1-补1）；
- * - 选中胶囊展开金额输入（可组合支付）；现金带「实收」自动算找零
- *   （Montserrat 20）；Σ支付 = 应收 才放行「确认结账」柠檬钮，否则置灰；
+ * - 应收 Montserrat 32 墨大数字 + 副行（含次卡扣次 N 项 −¥X 已抵 / 储值 −¥X）；
+ * - 支付胶囊五分列（M1-补2 R5）：现金 / 微信 / 支付宝 / 次卡扣次 / 储值——
+ *   未选白底 ring、选中柠檬底墨字、禁用灰 + 原因行紧跟；
+ *   储值胶囊仅「会员有储值余额」时出现（余额小字；不足禁用+原因行；可混搭——
+ *   储值金额手输，现金类自动承担剩余）；**全域无充值入口（新售冻结回归保护）**；
  * - 次卡胶囊 = 行级扣次的整单开关：点选=全部洗护服务行标记扣次（金额自动
  *   派生 = Σ扣次行有效价，不可手填——服务端同口径强校验）；再点=取消；
+ * - 选中胶囊展开金额输入（可组合支付）；现金带「实收」自动算找零
+ *   （Montserrat 20）；Σ现金类 + 储值 = 展示应收 才放行「确认结账」柠檬钮；
+ * - 副行口径（裁定①）：已收=现金类（现金/微信/支付宝）；次卡扣次/储值消费
+ *   单列「不计入已收」；
+ * - R4 断网不静默：离线态确认钮=「暂存，待补传」（本地暂存，恢复自动补传），
+ *   面板顶部出离线提示行；
  * - 结账成功 = 薄荷对勾 +「已收款 ¥X」+ 3s 自动回主屏空购物车（不跳页）；
  * - 常客纯服务 ≤3 步（修订单③）：拉入 → 结账 → 确认，本面板内无任何
  *   中间页/额外确认弹层。
@@ -16,7 +21,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Check, CheckCircle2 } from 'lucide-react'
+import { Check, CheckCircle2, WifiOff } from 'lucide-react'
 import { fenToYuan, yuanToFen } from '@/components/mall-admin/format'
 import {
   finalizePayments,
@@ -54,6 +59,7 @@ export default function PaySheet({
   lines,
   member,
   pass,
+  offline = false,
   settling,
   settledInfo,
   onTogglePassAll,
@@ -67,6 +73,8 @@ export default function PaySheet({
   member: CashierMember | null
   /** 会员本店次卡行（null = 无卡；undefined = 加载中） */
   pass: PassListRow | null | undefined
+  /** R4：离线态（确认=本地暂存待补传） */
+  offline?: boolean
   settling: boolean
   /** 结账成功快照（非空即成功态，3s 自动关） */
   settledInfo: { billNo: string; paidFen: number } | null
@@ -74,23 +82,30 @@ export default function PaySheet({
   onConfirm: (payments: SettleInput['payments']) => void
   onClose: () => void
 }) {
-  /* ---- 现金类胶囊选中与金额输入（打开时重置） ---- */
+  /* ---- 现金类胶囊选中与金额输入 + 储值段（打开时重置） ---- */
   const [selected, setSelected] = useState<MoneyMethod[]>([])
   const [inputs, setInputs] = useState<Record<MoneyMethod, string>>({ cash: '', wechat: '', alipay: '' })
   const [cashReceived, setCashReceived] = useState('')
+  const [svOn, setSvOn] = useState(false)
+  const [svInput, setSvInput] = useState('')
   const [wasOpen, setWasOpen] = useState(false)
+
+  const svBalance = member?.storedValueBalanceFen ?? 0
+  const passCoveredFen = amounts.passCoveredFen
+  const dueFen = amounts.dueFen
+
   if (open !== wasOpen) {
     setWasOpen(open)
     if (open) {
       setSelected(['cash'])
-      const s = String(amounts.dueFen / 100)
+      const s = String(dueFen / 100)
       setInputs({ cash: s, wechat: '', alipay: '' })
       setCashReceived(s)
+      setSvOn(false)
+      setSvInput('')
     }
   }
 
-  const passCoveredFen = amounts.passCoveredFen
-  const dueFen = amounts.dueFen
   const groomCount = lines.filter((l) => l.kind === 'service' && l.serviceType === 'grooming').length
   const passUsable =
     pass != null && pass.status === 'active' && pass.remainTimes > 0 &&
@@ -107,14 +122,28 @@ export default function PaySheet({
     return null
   }, [member, pass, passUsable, groomCount, passCoveredFen])
 
-  /** 金额再平衡：末位选中胶囊兜底差额（Σ = 应收 的默认填法） */
-  const rebalance = (next: MoneyMethod[], base: Record<MoneyMethod, string>, due: number) => {
+  /* ---- 储值段（R5）：金额手输，≤ min(余额, 应收)；现金类承担剩余 ---- */
+  const svFen = svOn ? yuanToFen(svInput) : null
+  const svApplied = svOn ? (svFen ?? 0) : 0
+  const svOver = svOn && (svFen === null || svFen < 1 || svFen > Math.min(svBalance, dueFen))
+  /** 储值开启后现金类须承担的剩余额 */
+  const moneyNeedFen = Math.max(0, dueFen - svApplied)
+
+  /** 储值胶囊不可用原因（null = 可用；仅在有余额时出现，故仅负担保口径） */
+  const svBlockReason = useMemo((): string | null => {
+    if (!member || svBalance <= 0) return null // 不出现（无原因行）
+    if (dueFen <= 0) return '应收已为 0（次卡已全额抵扣）——无需储值段'
+    return null
+  }, [member, svBalance, dueFen])
+
+  /** 金额再平衡：末位选中现金胶囊兜底差额（Σ现金类 = moneyNeed 的默认填法） */
+  const rebalance = (next: MoneyMethod[], base: Record<MoneyMethod, string>, needFen: number) => {
     const out = { ...base }
     const others = next.slice(0, -1)
     const othersSum = others.reduce((s, m) => s + (yuanToFen(out[m]) ?? 0), 0)
     const last = next[next.length - 1]
     if (last) {
-      const remain = due - othersSum
+      const remain = needFen - othersSum
       out[last] = remain > 0 ? String(remain / 100) : ''
       if (last === 'cash') setCashReceived(out[last])
     }
@@ -125,7 +154,23 @@ export default function PaySheet({
     const next = selected.includes(m) ? selected.filter((x) => x !== m) : [...selected, m]
     const cleared = { ...inputs, [m]: '' }
     setSelected(next)
-    setInputs(rebalance(next, cleared, dueFen))
+    setInputs(rebalance(next, cleared, moneyNeedFen))
+  }
+
+  const toggleSv = () => {
+    if (svBlockReason !== null) return
+    const next = !svOn
+    setSvOn(next)
+    // 开启：默认全额 min(余额, 应收)，现金类自动退到剩余；关闭：现金类回补全额
+    const nextSv = next ? Math.min(svBalance, dueFen) : 0
+    setSvInput(next ? String(nextSv / 100) : '')
+    setInputs(rebalance(selected, inputs, dueFen - nextSv))
+  }
+
+  const onSvAmount = (v: string) => {
+    setSvInput(v)
+    const fen = yuanToFen(v)
+    if (fen !== null) setInputs(rebalance(selected, inputs, dueFen - fen))
   }
 
   /* 次卡开合：应收变化只能在面板打开期由本动作触发（遮罩下车不可改），
@@ -138,21 +183,31 @@ export default function PaySheet({
       .filter((l) => l.kind === 'service' && l.serviceType === 'grooming')
       .reduce((s, l) => s + (l.adjustedPriceFen ?? l.unitPriceFen) * l.qty, 0)
     const nextDue = next ? dueFen + passCoveredFen - groomEff : dueFen + passCoveredFen
-    setInputs(rebalance(selected, inputs, Math.max(0, nextDue)))
+    // 次卡开合改变应收：储值段封顶追随（已开则收回到新应收内），现金类再平衡
+    const nextSv = svOn ? Math.min(svBalance, Math.max(0, nextDue)) : 0
+    if (svOn) setSvInput(String(nextSv / 100))
+    setInputs(rebalance(selected, inputs, Math.max(0, nextDue - nextSv)))
     onTogglePassAll(next)
   }
 
-  /* ---- 校验：Σ现金类 = 展示应收；现金实收 ≥ 现金承担 ---- */
+  /* ---- 校验：Σ现金类 = 应收 − 储值；储值 ≤ min(余额,应收)；现金实收 ≥ 现金承担 ---- */
   const segs = selected
     .map((m) => ({ method: m, amountFen: yuanToFen(inputs[m]) }))
     .filter((s): s is { method: MoneyMethod; amountFen: number } => s.amountFen !== null && s.amountFen >= 1)
+  /** 选中但输入非法（非空却解析不出）→ 拦截 */
+  const invalidInput = selected.some((m) => inputs[m].trim() !== '' && yuanToFen(inputs[m]) === null)
   const sumMoney = segs.reduce((s, p) => s + p.amountFen, 0)
   const cashApplied = yuanToFen(inputs.cash) ?? 0
   const cashReceivedFen = yuanToFen(cashReceived)
-  const cashShort = selected.includes('cash') && (cashReceivedFen === null || cashReceivedFen < cashApplied)
-  const zeroDuePassOnly = dueFen === 0 && passCoveredFen > 0 && selected.length === 0
-  const moneyBalanced = sumMoney === dueFen && segs.length === selected.length
-  const canConfirm = !settling && !cashShort && (moneyBalanced || zeroDuePassOnly) && (dueFen > 0 || passCoveredFen > 0)
+  const cashShort = selected.includes('cash') && cashApplied > 0 && (cashReceivedFen === null || cashReceivedFen < cashApplied)
+  const zeroDuePassOnly = dueFen === 0 && passCoveredFen > 0 // 全额次卡
+  const moneyBalanced = sumMoney === moneyNeedFen && !invalidInput && !svOver
+  const canConfirm =
+    !settling &&
+    !cashShort &&
+    (moneyBalanced || zeroDuePassOnly) &&
+    (dueFen > 0 || passCoveredFen > 0) &&
+    (!svOn || (svFen !== null && svFen >= 1 && !svOver))
 
   /* ---- 成功态 3s 自动回主屏 ---- */
   useEffect(() => {
@@ -164,7 +219,7 @@ export default function PaySheet({
   if (!open) return null
 
   const submit = () => {
-    const payments = finalizePayments(amounts, zeroDuePassOnly ? [] : segs)
+    const payments = finalizePayments(amounts, zeroDuePassOnly ? [] : segs, svApplied)
     if (!payments) return
     onConfirm(payments)
   }
@@ -198,6 +253,16 @@ export default function PaySheet({
           </div>
         ) : (
           <>
+            {/* R4：离线提示行（确认=暂存待补传，非「结账中…」空转） */}
+            {offline ? (
+              <div
+                className="mb-3 flex items-center gap-1.5 rounded-[10px] bg-[#FDC830] px-3 py-2 text-caption-xs font-semibold text-[#4A3B2E]"
+                data-testid="cashier-pay-offline"
+              >
+                <WifiOff size={13} strokeWidth={2} aria-hidden />
+                离线中 —— 确认后本地暂存，恢复网络自动补传
+              </div>
+            ) : null}
             <div className="mb-1.5 flex items-center justify-between">
               <b className="text-body-sm">结账</b>
               <span className="text-caption-xs text-[rgba(74,59,46,.42)]">
@@ -214,8 +279,8 @@ export default function PaySheet({
                 : ''}
             </div>
 
-            {/* P5 支付胶囊四分列 */}
-            <div className="grid grid-cols-4 gap-2">
+            {/* 支付胶囊五分列（储值仅会员有余额时出现） */}
+            <div className={`grid gap-2 ${member && svBalance > 0 ? 'grid-cols-5' : 'grid-cols-4'}`}>
               {MONEY_METHODS.map((m) => (
                 <button
                   key={m.key}
@@ -254,15 +319,39 @@ export default function PaySheet({
                       : '会员可用'}
                 </small>
               </button>
+              {/* R5 储值胶囊：会员有储值余额时出现；不足/超应收由输入行校验拦截（余额小字随行） */}
+              {member && svBalance > 0 ? (
+                <button
+                  type="button"
+                  data-testid="cashier-pay-m-sv"
+                  disabled={svBlockReason !== null}
+                  onClick={toggleSv}
+                  className={capsuleCls(svOn ? 'on' : svBlockReason ? 'disabled' : 'off')}
+                >
+                  储值
+                  <small
+                    className={`mt-0.5 block font-number tabular-nums text-caption-xs font-normal ${
+                      svOn ? 'text-[rgba(74,59,46,.55)]' : 'text-[rgba(74,59,46,.42)]'
+                    }`}
+                  >
+                    余 ¥{fenToYuan(svBalance)}
+                  </small>
+                </button>
+              ) : null}
             </div>
             {passBlockReason ? (
               <p className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]" data-testid="cashier-pass-block">
                 {passBlockReason}
               </p>
             ) : null}
+            {svBlockReason ? (
+              <p className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]" data-testid="cashier-sv-block">
+                {svBlockReason}
+              </p>
+            ) : null}
 
-            {/* 选中胶囊金额输入（组合支付） */}
-            {selected.length > 0 ? (
+            {/* 选中胶囊金额输入（组合支付：现金类 + 储值段） */}
+            {selected.length > 0 || svOn ? (
               <div className="mt-3.5 rounded-[14px] bg-[#F6F1E3] px-3.5 py-3" data-testid="cashier-pay-detail">
                 {selected.map((m) => {
                   const label = MONEY_METHODS.find((x) => x.key === m)!.label
@@ -280,11 +369,34 @@ export default function PaySheet({
                     </div>
                   )
                 })}
-                {selected.includes('cash') ? (
+                {svOn ? (
+                  <div className="flex items-center justify-between py-1 text-caption">
+                    <span>
+                      储值支付
+                      <small className="ml-1 font-number tabular-nums text-caption-xs text-[rgba(74,59,46,.42)]">
+                        余 ¥{fenToYuan(svBalance)}
+                      </small>
+                    </span>
+                    <input
+                      className={payInputCls}
+                      data-testid="cashier-pay-amt-sv"
+                      inputMode="decimal"
+                      placeholder="0"
+                      value={svInput}
+                      onChange={(e) => onSvAmount(e.target.value)}
+                    />
+                  </div>
+                ) : null}
+                {svOn && svOver ? (
+                  <p className="py-1 text-caption-xs font-semibold text-danger-deep" data-testid="cashier-sv-over">
+                    储值金额须 ≤ min(余额 ¥{fenToYuan(svBalance)}, 应收 ¥{fenToYuan(dueFen)})，可混搭现金/扫码补足
+                  </p>
+                ) : null}
+                {selected.includes('cash') && cashApplied > 0 ? (
                   <div className="flex items-center justify-between py-1 text-caption">
                     <span className="text-[rgba(74,59,46,.42)]">
                       实收 ¥{cashReceivedFen !== null ? fenToYuan(cashReceivedFen) : '…'} − 应收 ¥
-                      {fenToYuan(Math.min(cashApplied, dueFen))}
+                      {fenToYuan(Math.min(cashApplied, moneyNeedFen))}
                     </span>
                     {cashShort ? (
                       <span className="font-number text-caption font-bold tabular-nums text-danger-deep">实收不足</span>
@@ -297,7 +409,7 @@ export default function PaySheet({
                     )}
                   </div>
                 ) : null}
-                {selected.includes('cash') ? (
+                {selected.includes('cash') && cashApplied > 0 ? (
                   <div className="flex items-center justify-between py-1 text-caption">
                     <span className="text-[rgba(74,59,46,.42)]">现金实收</span>
                     <input
@@ -314,15 +426,19 @@ export default function PaySheet({
                   可组合支付：Σ支付 = 应收 才放行确认
                   {!moneyBalanced && !zeroDuePassOnly ? (
                     <span className="ml-1 text-danger-deep">
-                      （当前差 ¥{fenToYuan(Math.abs(dueFen - sumMoney))}
-                      {sumMoney > dueFen ? ' 超出' : ' 不足'}）
+                      （当前差 ¥{fenToYuan(Math.abs(moneyNeedFen - sumMoney))}
+                      {sumMoney > moneyNeedFen ? ' 超出' : ' 不足'}）
                     </span>
                   ) : null}
+                </div>
+                {/* 副行口径（裁定①）：已收=现金类；次卡/储值单列不计入已收 */}
+                <div className="border-t border-dashed border-[rgba(74,59,46,.12)] py-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+                  已收口径=现金/微信/支付宝；次卡扣次 / 储值消费单列，不计入今日已收
                 </div>
               </div>
             ) : passCoveredFen > 0 ? (
               <div className="mt-3.5 rounded-[14px] bg-[#F6F1E3] px-3.5 py-3 text-caption-xs text-[rgba(74,59,46,.62)]">
-                全额次卡扣次——无需现金/扫码段
+                全额次卡扣次——无需现金/扫码段（次卡单列，不计入已收）
               </div>
             ) : null}
 
@@ -342,8 +458,17 @@ export default function PaySheet({
                 onClick={submit}
                 className="inline-flex items-center justify-center gap-1.5 rounded-[14px] bg-brand-primary py-3 text-body-sm font-bold text-ink shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <Check size={15} strokeWidth={2} aria-hidden />
-                {settling ? '结账中…' : '确认结账'}
+                {offline ? (
+                  <>
+                    <WifiOff size={15} strokeWidth={2} aria-hidden />
+                    暂存，待补传
+                  </>
+                ) : (
+                  <>
+                    <Check size={15} strokeWidth={2} aria-hidden />
+                    {settling ? '结账中…' : '确认结账'}
+                  </>
+                )}
               </button>
             </div>
           </>

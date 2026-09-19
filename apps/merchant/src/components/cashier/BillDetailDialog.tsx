@@ -3,8 +3,13 @@
  *
  * - u3-field 工艺字段行：状态/买家/开单人/优惠/备注/创建/挂单/结账/撤单轨迹；
  * - 完整行项（名+规格+数量+有效价；扣次薄荷签 / 改价划线留痕 / 库存不足红签）；
- * - 支付明细（方式四分列标签 + 金额 + 时间）；
- * - open/held 单给撤单入口（P8 弹层在父层）；settled 单无撤单入口（退款专项冻结）。
+ * - 支付明细（方式五分列标签 + 金额 + 时间；次卡/储值单列不计已收口径小字）；
+ * - M1-补2 D（反结账双件之一 · 收银台反结账单）：
+ *   - open/held 单：撤单入口（补丁①1 三级全开，边界=仅未支付单）；
+ *   - settled 未被冲正：owner 见「反结账」钮（强制原因弹层在父层）；
+ *     owner|manager 见「退款」钮 → 明文拦截弹层（补丁② 纯前端零接口零写入）；
+ *   - settled 已冲正（reversedAt）：灰签「已冲正」+ 冲正单号（双向可查）；
+ *   - reversal 冲正单：签 + 关联原单号 + 「不计入已收」口径行；永驻流水无动作。
  */
 
 import { usePhiliaClient } from '@philia/shared'
@@ -21,13 +26,23 @@ import {
 export default function BillDetailDialog({
   billNo,
   isOwner,
+  canManage,
   onVoid,
+  onReverse,
+  onRefund,
   onClose,
 }: {
   billNo: string | null
+  /** 仅店主：反结账入口（收银台已支付单冲正） */
   isOwner: boolean
-  /** 打开 P8 撤单弹层（父层持有 VoidDialog） */
+  /** owner|manager：退款明文拦截入口可见（补丁②；clerk 无该入口） */
+  canManage: boolean
+  /** 打开撤单弹层（父层持有 VoidDialog） */
   onVoid: (bill: { billNo: string; buyerName: string; payableFen: number; status: string }) => void
+  /** 打开反结账原因弹层（父层持有 ReverseDialog） */
+  onReverse: (bill: { billNo: string; buyerName: string; payableFen: number }) => void
+  /** 打开退款明文拦截弹层（父层持有 RefundBlockDialog；纯前端，零接口） */
+  onRefund: (billNo: string) => void
   onClose: () => void
 }) {
   const { trpc } = usePhiliaClient()
@@ -39,8 +54,18 @@ export default function BillDetailDialog({
 
   const d = detailQ.data
   const bill = d?.bill
-  const st = bill ? (BILL_STATUS_CHIP[bill.status] ?? { cls: 'u3-st wait', label: bill.status }) : null
+  const isReversal = bill?.status === 'reversal'
+  const reversed = bill?.reversedAt != null
+  const st = bill
+    ? reversed && bill.status === 'settled'
+      ? { cls: 'u3-st done', label: '已冲正' }
+      : (BILL_STATUS_CHIP[bill.status] ?? { cls: 'u3-st wait', label: bill.status })
+    : null
   const voidable = bill != null && (bill.status === 'open' || bill.status === 'held')
+  /** 反结账入口：settled 且未被冲正 + 仅店主（矩阵；manager/clerk 无入口） */
+  const reversible = bill != null && bill.status === 'settled' && !reversed && isOwner
+  /** 退款入口：settled 单 + owner|manager 可见（点击只出明文拦截，零接口——补丁②） */
+  const refundVisible = bill != null && bill.status === 'settled' && !reversed && canManage
 
   return (
     <CashierModal
@@ -55,8 +80,7 @@ export default function BillDetailDialog({
               <SheetBtn
                 variant="danger-outline"
                 data-testid="cashier-detail-void"
-                disabled={!isOwner}
-                title={isOwner ? '撤单（留痕）' : '仅店主可撤单'}
+                title="撤单（留痕，仅未支付单）"
                 onClick={() =>
                   onVoid({
                     billNo: bill!.billNo,
@@ -68,10 +92,28 @@ export default function BillDetailDialog({
               >
                 撤单
               </SheetBtn>
-              {!isOwner ? (
-                <span className="text-caption-xs text-[rgba(74,59,46,.42)]">仅店主可撤单</span>
-              ) : null}
             </span>
+          ) : null}
+          {reversible ? (
+            <SheetBtn
+              variant="danger-outline"
+              data-testid="cashier-detail-reverse"
+              title="反结账（仅店主 · 强制原因留痕 · 生成冲正单）"
+              onClick={() =>
+                onReverse({ billNo: bill!.billNo, buyerName: d!.buyerName, payableFen: bill!.payableFen })
+              }
+            >
+              反结账
+            </SheetBtn>
+          ) : null}
+          {refundVisible ? (
+            <SheetBtn
+              data-testid="cashier-detail-refund"
+              title="退款功能随专项批开通（点击查看说明）"
+              onClick={() => onRefund(bill!.billNo)}
+            >
+              退款
+            </SheetBtn>
           ) : null}
           <SheetBtn onClick={onClose}>关闭</SheetBtn>
         </>
@@ -87,6 +129,22 @@ export default function BillDetailDialog({
         <p className="py-6 text-center text-caption text-[rgba(74,59,46,.62)]">单据加载失败</p>
       ) : (
         <div>
+          {/* 冲正/被冲正横幅（双向可查 + 不计已收口径） */}
+          {isReversal ? (
+            <div className="mb-3 rounded-[10px] bg-[#F1E8D4] px-3 py-2 text-caption-xs text-[rgba(74,59,46,.62)]" data-testid="cashier-detail-reversal-banner">
+              本单为冲正单 · 关联原单{' '}
+              <b className="font-number tabular-nums text-ink">{bill.reversalOfBillNo ?? '—'}</b>
+              {' · 金额镜像负值，不计入已收'}
+            </div>
+          ) : null}
+          {reversed ? (
+            <div className="mb-3 rounded-[10px] bg-[rgba(74,59,46,.06)] px-3 py-2 text-caption-xs text-[rgba(74,59,46,.62)]" data-testid="cashier-detail-reversed-banner">
+              本单已被反结账冲正 · 冲正单{' '}
+              <b className="font-number tabular-nums text-ink">{bill.reversalBillNo ?? '—'}</b>
+              {' · 不再计入已收（原单永存不涂改）'}
+            </div>
+          ) : null}
+
           {/* 行项 */}
           <div className="rounded-[14px] bg-[#F6F1E3] px-3.5 py-2">
             {d.items.map((it) => {
@@ -130,7 +188,7 @@ export default function BillDetailDialog({
               <span>合计</span>
               <b className="font-number font-semibold tabular-nums text-ink">¥{fenToYuan(bill.subtotalFen)}</b>
             </div>
-            {bill.discountFen > 0 ? (
+            {bill.discountFen !== 0 ? (
               <div className="flex justify-between py-1 text-caption text-[rgba(74,59,46,.62)]">
                 <span>
                   整单优惠（{bill.discountType === 'percent' ? `${bill.discountValue / 10} 折` : '立减'}）
@@ -144,13 +202,18 @@ export default function BillDetailDialog({
             </div>
           </div>
 
-          {/* 支付明细 */}
+          {/* 支付明细（R6-1 五分列全显；次卡/储值单列不计已收） */}
           {d.payments.length > 0 ? (
             <div className="mt-3">
               <div className="mb-1 text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">支付明细</div>
               {d.payments.map((p) => (
                 <div key={p.id} className="flex items-center justify-between py-1 text-caption">
-                  <span>{PAY_METHOD_LABEL[p.method] ?? p.method}</span>
+                  <span>
+                    {PAY_METHOD_LABEL[p.method] ?? p.method}
+                    {p.method === 'pass' || p.method === 'stored_value' ? (
+                      <small className="ml-1 text-caption-xs text-[rgba(74,59,46,.42)]">（不计入已收）</small>
+                    ) : null}
+                  </span>
                   <span className="text-[rgba(74,59,46,.42)]">
                     {fmtDateTime(p.createdAt)}
                     <b className="ml-2 font-number font-semibold tabular-nums text-ink">
