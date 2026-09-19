@@ -19,9 +19,10 @@
  * 禁编造年费档位/价格；储值不做。次卡无卡种字段——卡种列仅展示 member_pass 行真值（累计充次）。
  */
 
-import { usePhiliaClient } from '@philia/shared';
+import { EventType, usePhiliaClient } from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useMerchantEvents } from '../components/dashboard/MerchantEventsProvider';
 import MainScaffold, { LemonButton } from '../components/MainScaffold';
 import { errMsg, fmtDateTime } from '../components/staff-admin/format';
 import { Btn, Field, inputCls, Modal, numStyle, toast, ToasterMount } from '../components/staff-admin/ui';
@@ -69,9 +70,10 @@ function passStatus(p: PassRow): { cls: string; label: string } {
   return { cls: 'u3-st live', label: '在效' };
 }
 
-/** 流水事由（B3-3 口径：+1 含取消回补与商家拒单自动回补，流水字段不区分来源，并列标注） */
+/** 流水事由（B3-3 口径：+1 含取消回补与商家拒单自动回补，流水字段不区分来源，并列标注；
+ *  批次 M1：收银台扣次 appointment_id=NULL（裁定③）→ 标「收银台扣次」，与预约扣次区分） */
 function logReason(l: LogRow): string {
-  if (l.delta === -1) return '预约扣次 1 次';
+  if (l.delta === -1) return l.appointmentId ? '预约扣次 1 次' : '收银台扣次 1 次';
   if (l.delta === 1) return '取消/拒单回补 1 次';
   return `商家充次 ${l.delta} 次`;
 }
@@ -210,7 +212,8 @@ function LogsModal({ pass, onClose }: { pass: PassRow | null; onClose: () => voi
 }
 
 export default function PassPage() {
-  const { trpc } = usePhiliaClient();
+  const { trpc, queryClient } = usePhiliaClient();
+  const events = useMerchantEvents();
   const passesQ = useQuery({
     queryKey: ['pass', 'listForStore'],
     queryFn: () => trpc.pass.listForStore.query(),
@@ -219,6 +222,20 @@ export default function PassPage() {
     queryKey: ['pass', 'listLogs', 'store'],
     queryFn: () => trpc.pass.listLogs.query({}),
   });
+
+  // 批次 M1（任务书 §1.5.3）：收银台结账含次卡扣次 → 次卡余额/扣次流水即时刷新；
+  // 断线重连全量对齐（MerchantEventsProvider 全域单连接，零新建连）
+  const invalidatePass = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ['pass'] });
+  }, [queryClient]);
+  useEffect(
+    () =>
+      events.onEvent((envelope) => {
+        if (envelope.type === EventType.CashierBillSettled) invalidatePass();
+      }),
+    [events, invalidatePass],
+  );
+  useEffect(() => events.onReconnect(invalidatePass), [events, invalidatePass]);
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [presetUserId, setPresetUserId] = useState<string | null>(null);
   const [logsFor, setLogsFor] = useState<PassRow | null>(null);

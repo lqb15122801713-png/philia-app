@@ -49,7 +49,7 @@ const CAP_RECEIVED: Record<ChipMode, string> = {
 };
 const PAYMENT_MODE_LABEL: Record<string, string> = { pay_at_store: '到店付', pass_deduct: '次卡扣次' };
 
-/** 流水行（已收 + 待收合并视图）；sortKey 已收=paidAt，待收=completedAt??scheduledStart */
+/** 流水行（已收 + 待收 + 收银台并入合并视图）；sortKey 已收=paidAt/settledAt，待收=completedAt??scheduledStart */
 interface LedgerRow {
   id: string;
   pending: boolean;
@@ -59,6 +59,8 @@ interface LedgerRow {
   customer: string;
   modeLabel: string;
   fen: number;
+  /** 批次 M1：来源签（'cashier'=收银台 settled 单；预约行不标） */
+  source?: 'cashier';
 }
 
 export default function FinancePage() {
@@ -118,6 +120,12 @@ export default function FinancePage() {
           showToast('有一笔收款到账');
           invalidateFinance();
           break;
+        // 批次 M1：收银台结账 → 财务三卡/流水并入刷新（billHeld/Voided 不触及
+        // 财务口径——open/held 不进 financeStats，settled 不可撤，故不订阅）
+        case EventType.CashierBillSettled:
+          showToast('收银台有一笔收款到账');
+          invalidateFinance();
+          break;
         case EventType.AppointmentCompleted:
         case EventType.AppointmentReviewed:
         case EventType.AppointmentCancelled:
@@ -163,7 +171,25 @@ export default function FinancePage() {
         fen: p.priceFen,
       }),
     );
-    return [...paid, ...pending].sort((a, b) => b.sortKey - a.sortKey);
+    // 批次 M1（任务书 §1.5.5，零结构改动）：收银台 settled 单并入流水表，来源签「收银台」。
+    // 金额取 payableFen（应收=实收，M1-补1 起 settled 即全额已收）；预约行金额不进
+    // cashierLedger（随预约翻转口径认领，禁止双头记账——server loadCashierFinance 头注）。
+    const cashier = (data?.cashierLedger ?? []).map(
+      (c): LedgerRow => ({
+        id: c.billNo,
+        pending: false,
+        sortKey: c.time?.getTime() ?? 0,
+        time: c.time,
+        item: c.summary,
+        customer: c.buyer,
+        modeLabel:
+          c.methods.map((m) => ({ cash: '现金', wechat: '微信', alipay: '支付宝', pass: '次卡扣次' })[m] ?? m).join('、') ||
+          '—',
+        fen: c.payableFen,
+        source: 'cashier',
+      }),
+    );
+    return [...paid, ...pending, ...cashier].sort((a, b) => b.sortKey - a.sortKey);
   }, [ledgerQuery.data, data]);
 
   /** 卡 1 副行：洗护/寄养笔数（已收明细按预约类型聚合） */
@@ -338,7 +364,13 @@ export default function FinancePage() {
                       <td className="u1-num font-bold">
                         {r.time ? (mode === 'day' ? formatTime(r.time) : formatDateTime(r.time)) : '—'}
                       </td>
-                      <td className="font-semibold">{r.item}</td>
+                      <td className="font-semibold">
+                        {/* 批次 M1：来源签「收银台」（最小渲染分支，其余结构不动） */}
+                        {r.source === 'cashier' ? (
+                          <span className="u3-st wait mr-1.5">收银台</span>
+                        ) : null}
+                        {r.item}
+                      </td>
                       <td>{r.customer}</td>
                       <td className="text-[rgba(74,59,46,.62)]">{r.modeLabel}</td>
                       <td className="u1-num">¥{formatYuan(r.fen)}</td>

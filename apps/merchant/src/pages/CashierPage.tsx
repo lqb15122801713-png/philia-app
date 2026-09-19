@@ -1,0 +1,584 @@
+/**
+ * 收银台主屏 /cashier（批次 M1 · 屏一三栏工作台 + 屏二支付面板展开层）
+ *
+ * 布局（试样拼装规则）：1440 三栏 = 开单区 1fr / 购物车 380px / 挂单队列 260px，
+ * 间距 16，栏=纸卡 ring 20 圆角，页边距 16；390 降级 = 单栏 tab（开单/购物车/
+ * 挂单流水），零件原样重排（lg: 前缀拼装，零件不变——修订单④）。
+ *
+ * 数据：
+ * - 服务目录 store.getWithServices（active 服务）；商品 mall.listProductsForStore
+ *   （仅列在架 status='on'）；待收款 cashier.pendingAppointments；
+ *   挂单/今日流水 cashier.listBills（held / today）；
+ * - 金额前端预览镜像服务端口径（components/cashier/model.ts computeCart），
+ *   提交以服务端重算为准；
+ * - SSE（MerchantEventsProvider 全域单连接）：cashier.billHeld/billSettled/
+ *   billVoided + appointment.completed/paid → invalidate cashier 相关查询 +
+ *   store.dashboardStats/financeStats/pass/products 键；onReconnect 全量对齐。
+ *
+ * 权限：merchantProcedure 级页面（owner+manager 同进）；撤单/改价/整单优惠
+ * owner-only——manager 置灰 + 原因行（服务端硬闸门兜底 FORBIDDEN 如实）。
+ *
+ * 联动（任务书 §1.5.1）：?pull=<apptId> 启动参数自动把该预约拉入购物车
+ * （幂等：已在车内不重复加；已收款/不存在安静 toast）。
+ */
+
+import { EventType, useMe, usePhiliaClient } from '@philia/shared'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { TRPCClientError } from '@trpc/client'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { toast } from 'sonner'
+import CartPanel from '@/components/cashier/CartPanel'
+import { DiscountDialog, PriceDialog, VoidDialog } from '@/components/cashier/dialogs'
+import HoldPanel from '@/components/cashier/HoldPanel'
+import MemberSearch from '@/components/cashier/MemberSearch'
+import PaySheet from '@/components/cashier/PaySheet'
+import PickPanel from '@/components/cashier/PickPanel'
+import {
+  BILLS_TODAY_KEY,
+  CASHIER_ROOT_KEY,
+  computeCart,
+  discountOverLimit,
+  fenToYuan,
+  HELD_BILLS_KEY,
+  PENDING_APPTS_KEY,
+  toCartSnapshot,
+  type BillListRow,
+  type CartLine,
+  type CashierMember,
+  type DiscountType,
+  type PendingAppt,
+  type SettleInput,
+  type StoreService,
+} from '@/components/cashier/model'
+import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider'
+import { fullDateLabel, STATS_QUERY_KEY } from '@/components/dashboard/utils'
+import { errMsg, fmtDateTime, PRODUCTS_KEY, type StoreProduct } from '@/components/mall-admin/format'
+
+type PickTab = 'service' | 'product' | 'pending'
+type MobileTab = 'pick' | 'cart' | 'queue'
+
+const FINANCE_ROOT = ['store', 'financeStats'] as const
+
+export default function CashierPage() {
+  const { trpc, queryClient } = usePhiliaClient()
+  const events = useMerchantEvents()
+  const { user } = useMe()
+  const isOwner = user?.roles.includes('merchant_owner') ?? false
+  const storeId = user?.storeId
+  const now = useMemo(() => new Date(), [])
+
+  /* ---------------- 查询 ---------------- */
+  const servicesQ = useQuery({
+    queryKey: ['store', 'getWithServices', storeId],
+    queryFn: () => trpc.store.getWithServices.query({ storeId: storeId! }),
+    enabled: !!storeId,
+    staleTime: 300_000,
+  })
+  const productsQ = useQuery({
+    queryKey: [...PRODUCTS_KEY, 'cashier-on'],
+    queryFn: () => trpc.mall.listProductsForStore.query({ page: 1, pageSize: 100 }),
+  })
+  const pendingQ = useQuery({
+    queryKey: PENDING_APPTS_KEY,
+    queryFn: () => trpc.cashier.pendingAppointments.query(),
+  })
+  const heldQ = useQuery({
+    queryKey: HELD_BILLS_KEY,
+    queryFn: () => trpc.cashier.listBills.query({ status: 'held' }),
+  })
+  const todayQ = useQuery({
+    queryKey: BILLS_TODAY_KEY,
+    queryFn: () => trpc.cashier.listBills.query({ range: 'today' }),
+  })
+  /** 会员次卡真值（与 PassPage 同接口同缓存；扣次闸门 + 取单会员回填共用） */
+  const passesQ = useQuery({
+    queryKey: ['pass', 'listForStore'],
+    queryFn: () => trpc.pass.listForStore.query(),
+  })
+
+  const services = servicesQ.data?.services
+  const products = useMemo(
+    () => (productsQ.data?.items ?? []).filter((p) => p.status === 'on'),
+    [productsQ.data],
+  )
+
+  /* ---------------- 购物车状态 ---------------- */
+  const [lines, setLines] = useState<CartLine[]>([])
+  const [member, setMember] = useState<CashierMember | null>(null)
+  const [discountType, setDiscountType] = useState<DiscountType>('none')
+  const [discountValue, setDiscountValue] = useState(0)
+  /** 取单回来的单号（再挂=同号更新轨迹；结账幂等键） */
+  const [billNo, setBillNo] = useState<string | null>(null)
+  const [creatorLabel, setCreatorLabel] = useState('')
+  const [freshHeldNo, setFreshHeldNo] = useState<string | null>(null)
+  const [pickTab, setPickTab] = useState<PickTab>('service')
+  const [mobileTab, setMobileTab] = useState<MobileTab>('pick')
+
+  const amounts = computeCart(lines, discountType, discountValue)
+
+  const memberPass = member
+    ? passesQ.data
+      ? (passesQ.data.find((p) => p.userId === member.id) ?? null)
+      : undefined
+    : null
+  const passRemain = memberPass
+    ? memberPass.remainTimes
+    : (member?.passRemainTimes ?? 0)
+  const canUsePass =
+    member != null &&
+    passRemain > 0 &&
+    (memberPass == null ||
+      (memberPass.status === 'active' &&
+        (memberPass.expiresAt === null || memberPass.expiresAt.getTime() > Date.now())))
+
+  const clearCart = useCallback(() => {
+    setLines([])
+    setMember(null)
+    setDiscountType('none')
+    setDiscountValue(0)
+    setBillNo(null)
+    setCreatorLabel('')
+  }, [])
+
+  /* ---------------- 开单动作 ---------------- */
+  const addLine = (line: CartLine) => {
+    setLines((prev) => {
+      const hit = prev.find((l) => l.refId === line.refId)
+      if (hit) {
+        // 商品行重复点 = 数量 +1；服务/预约行恒 1 不重复入
+        if (line.kind !== 'product') return prev
+        return prev.map((l) =>
+          l.refId === line.refId ? { ...l, qty: Math.min(99, l.qty + 1) } : l,
+        )
+      }
+      return [...prev, line]
+    })
+  }
+
+  const onAddService = (s: StoreService) =>
+    addLine({
+      kind: 'service',
+      refId: s.id,
+      name: s.name,
+      spec: s.durationMin ? `约 ${s.durationMin} 分钟` : null,
+      qty: 1,
+      unitPriceFen: s.priceFen,
+      adjustedPriceFen: null,
+      paidByPass: false,
+      serviceType: s.type,
+    })
+
+  const onAddProduct = (p: StoreProduct) =>
+    addLine({
+      kind: 'product',
+      refId: p.id,
+      name: p.name,
+      spec: `${p.category} · 库存 ${p.stock}`,
+      qty: 1,
+      unitPriceFen: p.priceFen,
+      adjustedPriceFen: null,
+      paidByPass: false,
+      stock: p.stock,
+    })
+
+  const pullAppt = useCallback(
+    (a: PendingAppt) => {
+      setLines((prev) => {
+        if (prev.some((l) => l.refId === a.id)) return prev // 幂等：不重复拉入
+        return [
+          ...prev,
+          {
+            kind: 'appointment',
+            refId: a.id,
+            name: `${a.petName} · ${a.serviceName}`,
+            spec: `预约到店付 · ${a.completedAt ? fmtDateTime(a.completedAt) : '—'}`,
+            qty: 1,
+            unitPriceFen: a.priceFen,
+            adjustedPriceFen: null,
+            paidByPass: false,
+          },
+        ]
+      })
+      setMobileTab((t) => (t === 'pick' ? 'cart' : t)) // 390：拉入直达购物车（3 步链路）
+    },
+    [],
+  )
+
+  /* ?pull=<apptId> 联动：总览待收款 → 自动拉入购物车 */
+  const [searchParams, setSearchParams] = useSearchParams()
+  const pullId = searchParams.get('pull')
+  const pullHandledRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!pullId || pullHandledRef.current === pullId || !pendingQ.data) return
+    pullHandledRef.current = pullId
+    const appt = pendingQ.data.find((a) => a.id === pullId)
+    if (appt) {
+      pullAppt(appt)
+      toast(`已拉入待收款预约：${appt.petName} · ${appt.serviceName}`)
+    } else {
+      toast('该预约已收款或不存在', { icon: 'ℹ️' })
+    }
+    setSearchParams({}, { replace: true })
+  }, [pullId, pendingQ.data, pullAppt, setSearchParams])
+
+  /* ---------------- 挂单 / 取单 / 结账 / 撤单 ---------------- */
+  const invalidateCashier = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: CASHIER_ROOT_KEY })
+    void queryClient.invalidateQueries({ queryKey: STATS_QUERY_KEY })
+    void queryClient.invalidateQueries({ queryKey: FINANCE_ROOT })
+    void queryClient.invalidateQueries({ queryKey: ['appointment', 'listForStore'] })
+    void queryClient.invalidateQueries({ queryKey: ['pass'] })
+    void queryClient.invalidateQueries({ queryKey: PRODUCTS_KEY })
+  }, [queryClient])
+
+  const holdM = useMutation({
+    mutationFn: () => trpc.cashier.hold.mutate(toCartSnapshot(lines, member, discountType, discountValue, billNo ?? undefined)),
+    onSuccess: (r) => {
+      setFreshHeldNo(r.bill.billNo)
+      toast.success(`已挂单 ${r.bill.billNo}`)
+      clearCart()
+      invalidateCashier()
+    },
+    onError: (e) => toast.error(errMsg(e)),
+  })
+
+  const resumeM = useMutation({
+    mutationFn: (no: string) => trpc.cashier.resume.mutate({ billNo: no }),
+    onSuccess: (r) => {
+      const svcTypeById = new Map((services ?? []).map((s) => [s.id, s.type] as const))
+      setLines(
+        r.items.map((it) => ({
+          kind: it.kind as CartLine['kind'],
+          refId: it.refId,
+          name: it.nameSnapshot,
+          spec: it.specSnapshot,
+          qty: it.qty,
+          unitPriceFen: it.unitPriceFen,
+          adjustedPriceFen: it.adjustedPriceFen,
+          paidByPass: it.paidByPass,
+          serviceType: it.kind === 'service' ? svcTypeById.get(it.refId) : undefined,
+          stock: null,
+        })),
+      )
+      if (r.bill.customerId) {
+        const p = passesQ.data?.find((x) => x.userId === r.bill.customerId)
+        setMember({
+          id: r.bill.customerId,
+          nickname: r.buyerName === '散客' ? null : r.buyerName,
+          phoneMasked: r.customerPhoneMasked,
+          passRemainTimes: p?.remainTimes ?? 0,
+          appointmentCount: 0,
+        })
+      } else {
+        setMember(null)
+      }
+      setDiscountType((r.bill.discountType as DiscountType) ?? 'none')
+      setDiscountValue(r.bill.discountValue)
+      setBillNo(r.bill.billNo)
+      setCreatorLabel(r.createdByName ?? '—')
+      setMobileTab('cart')
+      toast(`已取单 ${r.bill.billNo}`)
+      invalidateCashier()
+    },
+    onError: (e) => toast.error(errMsg(e)),
+  })
+
+  const onResume = (b: BillListRow) => {
+    if (lines.length > 0 && billNo !== b.billNo) {
+      toast('请先结账或挂单当前单，再取其他挂单', { icon: 'ℹ️' })
+      return
+    }
+    resumeM.mutate(b.billNo)
+  }
+
+  const [payOpen, setPayOpen] = useState(false)
+  const [settledInfo, setSettledInfo] = useState<{ billNo: string; paidFen: number } | null>(null)
+  const settleM = useMutation({
+    mutationFn: (payments: SettleInput['payments']) =>
+      trpc.cashier.settle.mutate({
+        ...toCartSnapshot(lines, member, discountType, discountValue, billNo ?? undefined),
+        payments,
+      }),
+    onSuccess: (r) => {
+      setSettledInfo({ billNo: r.bill.billNo, paidFen: r.bill.paidFen })
+      clearCart()
+      invalidateCashier()
+    },
+    onError: (e) => {
+      if (e instanceof TRPCClientError) toast.error(e.message)
+      else toast.error('结账失败，请重试')
+    },
+  })
+
+  const [voidTarget, setVoidTarget] = useState<{
+    billNo: string
+    buyerName?: string
+    payableFen?: number
+    status?: string
+  } | null>(null)
+  const voidM = useMutation({
+    mutationFn: (input: { billNo: string; reason?: string }) => trpc.cashier.voidBill.mutate(input),
+    onSuccess: (r) => {
+      toast.success(`已撤单 ${r.bill.billNo}（留痕可查）`)
+      setVoidTarget(null)
+      invalidateCashier()
+    },
+    onError: (e) => toast.error(errMsg(e)),
+  })
+
+  /* ---------------- SSE（全域单连接；对齐 DashboardPage invalidate 模式） ---------------- */
+  useEffect(
+    () =>
+      events.onEvent((envelope) => {
+        switch (envelope.type) {
+          case EventType.CashierBillHeld:
+          case EventType.CashierBillSettled:
+          case EventType.CashierBillVoided:
+            invalidateCashier()
+            break
+          case EventType.AppointmentCompleted:
+          case EventType.AppointmentPaid:
+          case EventType.AppointmentCancelled:
+            // 待收款 tab 数据源联动（完成进 / 收款·取消出）
+            void queryClient.invalidateQueries({ queryKey: PENDING_APPTS_KEY })
+            void queryClient.invalidateQueries({ queryKey: STATS_QUERY_KEY })
+            break
+          default:
+            break
+        }
+      }),
+    [events, invalidateCashier, queryClient],
+  )
+  useEffect(() => events.onReconnect(invalidateCashier), [events, invalidateCashier])
+
+  /* ---------------- 弹层状态 ---------------- */
+  const [priceLine, setPriceLine] = useState<CartLine | null>(null)
+  const [discountOpen, setDiscountOpen] = useState(false)
+
+  /* ---------------- 副行真值：今日已收（settled Σ应收）· 挂单 N ---------------- */
+  const todayReceivedFen = (todayQ.data ?? [])
+    .filter((b) => b.status === 'settled')
+    .reduce((s, b) => s + b.payableFen, 0)
+  const heldCount = heldQ.data?.length ?? 0
+
+  const pickError =
+    pickTab === 'service'
+      ? servicesQ.isError
+        ? errMsg(servicesQ.error)
+        : null
+      : pickTab === 'product'
+        ? productsQ.isError
+          ? errMsg(productsQ.error)
+          : null
+        : pendingQ.isError
+          ? errMsg(pendingQ.error)
+          : null
+  const pickLoading =
+    pickTab === 'service' ? servicesQ.isPending : pickTab === 'product' ? productsQ.isPending : pendingQ.isPending
+  const pickRetry = () => {
+    if (pickTab === 'service') void servicesQ.refetch()
+    else if (pickTab === 'product') void productsQ.refetch()
+    else void pendingQ.refetch()
+  }
+
+  const mobileTabs: Array<{ key: MobileTab; label: string; n?: number }> = [
+    { key: 'pick', label: '开单' },
+    { key: 'cart', label: '购物车', n: lines.length },
+    { key: 'queue', label: '挂单流水', n: heldCount },
+  ]
+
+  return (
+    <div className="px-4 pb-6 pt-[22px]" data-testid="cashier-page">
+      {/* 标题行（页边距 16，对齐试样拼装规则） */}
+      <header className="mb-4">
+        <h1 className="text-title-lg font-bold leading-7">收银台</h1>
+        <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+          {fullDateLabel(now)} · 今日已收{' '}
+          <b className="font-number tabular-nums text-ink">¥{fenToYuan(todayReceivedFen)}</b> · 挂单{' '}
+          <b className="font-number tabular-nums text-ink">{heldCount}</b>
+        </div>
+      </header>
+
+      {/* 390 降级：单栏 tab（零件原样重排，lg 起三栏） */}
+      <div className="mb-3 flex gap-1.5 lg:hidden" role="tablist">
+        {mobileTabs.map((t) => (
+          <button
+            key={t.key}
+            type="button"
+            role="tab"
+            aria-selected={mobileTab === t.key}
+            data-testid={`cashier-mtab-${t.key}`}
+            onClick={() => setMobileTab(t.key)}
+            className={`rounded-full px-3.5 py-[7px] text-caption ${
+              mobileTab === t.key ? 'bg-[#4A3B2E] font-semibold text-[#F6F1E3]' : 'text-[rgba(74,59,46,.6)]'
+            }`}
+          >
+            {t.label}
+            {t.n ? <span className="ml-1 font-number text-caption-xs tabular-nums opacity-70">{t.n}</span> : null}
+          </button>
+        ))}
+      </div>
+
+      <div className="lg:grid lg:grid-cols-[1fr_380px_260px] lg:items-start lg:gap-4">
+        {/* 左栏：开单区（P1 会员检索 + tabs/P2 选品） */}
+        <section className={`flex-col gap-3 ${mobileTab === 'pick' ? 'flex' : 'hidden'} lg:flex`}>
+          <div className="rounded-[20px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(74,59,46,.09)]">
+            <MemberSearch
+              member={member}
+              onSelect={(m) => {
+                setMember(m)
+                // 换绑会员时清掉扣次标记（次卡跟人走）
+                setLines((prev) => prev.map((l) => (l.paidByPass ? { ...l, paidByPass: false } : l)))
+              }}
+              onRemove={() => {
+                setMember(null)
+                setLines((prev) => prev.map((l) => (l.paidByPass ? { ...l, paidByPass: false } : l)))
+              }}
+            />
+          </div>
+          <div className="rounded-[20px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(74,59,46,.09)]">
+            <PickPanel
+              tab={pickTab}
+              onTab={setPickTab}
+              services={services}
+              products={products}
+              pending={pendingQ.data}
+              loading={pickLoading}
+              error={pickError}
+              onRetry={pickRetry}
+              pulledIds={new Set(lines.filter((l) => l.kind === 'appointment').map((l) => l.refId))}
+              onAddService={onAddService}
+              onAddProduct={onAddProduct}
+              onPullAppt={pullAppt}
+            />
+          </div>
+        </section>
+
+        {/* 中栏：购物车（380px） */}
+        <section className={`${mobileTab === 'cart' ? 'block' : 'hidden'} lg:block`}>
+          <div className="flex min-h-[320px] flex-col rounded-[20px] bg-[#FFFDF6] p-4 shadow-[0_0_0_1px_rgba(74,59,46,.09)] lg:h-full">
+            <CartPanel
+              lines={lines}
+              memberBound={member !== null}
+              canUsePass={canUsePass}
+              passRemainTimes={passRemain}
+              amounts={amounts}
+              discountType={discountType}
+              discountValue={discountValue}
+              billNo={billNo}
+              creatorLabel={billNo ? creatorLabel || '—' : (user?.nickname ?? '—')}
+              isOwner={isOwner}
+              holding={holdM.isPending}
+              onQty={(refId, d) =>
+                setLines((prev) =>
+                  prev.map((l) =>
+                    l.refId === refId ? { ...l, qty: Math.min(99, Math.max(1, l.qty + d)) } : l,
+                  ),
+                )
+              }
+              onRemove={(refId) => setLines((prev) => prev.filter((l) => l.refId !== refId))}
+              onOpenPrice={setPriceLine}
+              onOpenDiscount={() => setDiscountOpen(true)}
+              onClearDiscount={() => {
+                setDiscountType('none')
+                setDiscountValue(0)
+              }}
+              onTogglePassLine={(refId) =>
+                setLines((prev) =>
+                  prev.map((l) => (l.refId === refId ? { ...l, paidByPass: !l.paidByPass } : l)),
+                )
+              }
+              onHold={() => holdM.mutate()}
+              onCheckout={() => {
+                if (discountOverLimit(amounts)) {
+                  toast.error('整单优惠超过服务/商品行合计，请调整后再结账')
+                  return
+                }
+                setPayOpen(true)
+              }}
+            />
+          </div>
+        </section>
+
+        {/* 右栏：挂单队列 + 今日流水（260px） */}
+        <section className={`flex-col gap-3 ${mobileTab === 'queue' ? 'flex' : 'hidden'} lg:flex`}>
+          <HoldPanel
+            held={heldQ.data}
+            todayBills={todayQ.data}
+            loading={heldQ.isPending || todayQ.isPending}
+            error={heldQ.isError || todayQ.isError}
+            onRetry={() => {
+              void heldQ.refetch()
+              void todayQ.refetch()
+            }}
+            freshHeldNo={freshHeldNo}
+            isOwner={isOwner}
+            onResume={onResume}
+            onVoid={(b) =>
+              setVoidTarget({ billNo: b.billNo, buyerName: b.buyerName, payableFen: b.payableFen, status: b.status })
+            }
+          />
+        </section>
+      </div>
+
+      {/* 弹层组 */}
+      <PriceDialog
+        line={priceLine}
+        isOwner={isOwner}
+        onApply={(refId, adjusted) =>
+          setLines((prev) => prev.map((l) => (l.refId === refId ? { ...l, adjustedPriceFen: adjusted } : l)))
+        }
+        onClose={() => setPriceLine(null)}
+      />
+      <DiscountDialog
+        open={discountOpen}
+        discountType={discountType}
+        discountValue={discountValue}
+        nonApptSubtotalFen={amounts.nonApptSubtotalFen}
+        isOwner={isOwner}
+        onApply={(t, v) => {
+          setDiscountType(t)
+          setDiscountValue(v)
+        }}
+        onClose={() => setDiscountOpen(false)}
+      />
+      <VoidDialog
+        bill={voidTarget}
+        isOwner={isOwner}
+        pending={voidM.isPending}
+        onConfirm={(reason) => {
+          if (!voidTarget) return
+          voidM.mutate({ billNo: voidTarget.billNo, reason })
+          // 撤的是当前取回的单 → 同步清车
+          if (billNo && voidTarget.billNo === billNo) clearCart()
+        }}
+        onClose={() => setVoidTarget(null)}
+      />
+
+      {/* 屏二：支付面板（主屏内展开层，不跳路由；390 全屏） */}
+      <PaySheet
+        open={payOpen}
+        billNo={billNo}
+        amounts={amounts}
+        lines={lines}
+        member={member}
+        pass={memberPass}
+        settling={settleM.isPending}
+        settledInfo={settledInfo}
+        onTogglePassAll={(on) =>
+          setLines((prev) =>
+            prev.map((l) =>
+              l.kind === 'service' && l.serviceType === 'grooming' ? { ...l, paidByPass: on } : l,
+            ),
+          )
+        }
+        onConfirm={(payments) => settleM.mutate(payments)}
+        onClose={() => {
+          setPayOpen(false)
+          setSettledInfo(null)
+        }}
+      />
+    </div>
+  )
+}

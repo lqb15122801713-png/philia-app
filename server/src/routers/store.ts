@@ -41,6 +41,7 @@ import { schema } from '../db';
 import { merchantProcedure, publicProcedure, router, type Context } from '../trpc';
 import { resolveServiceDuration, type ServiceDuration } from '../config/durationEngine';
 import { boardingNightDates, BOOKING_LEAD_BUFFER_MS, DEFAULT_BOARDING_ROOM_COUNT, freeGroomersInInterval, loadGroomerOccupancy, storeDayStartMs, storeWallclock } from './appointment';
+import { loadCashierFinance } from './cashier';
 
 /** 时间槽粒度：30min（与 seed 的 store_slots 生成粒度一致） */
 const SLOT_MS = 30 * 60 * 1000;
@@ -772,28 +773,100 @@ export const storeRouter = router({
 
       const pendingPaymentFen = pendingRows.reduce((sum, r) => sum + r.priceFen, 0);
 
-      // 商城收入：v1 恒 0（P5 商城落地后接 orders 实口径，结构已预留）
-      const shopTotalFen = 0;
+      /* ---- 批次 M1：收银台并入（口径见 cashier.ts loadCashierFinance 头注） ----
+       * - 已收：settled 单的「自有口径」（服务/商品行，预约行金额由预约翻转口径
+       *   认领，禁止双头记账）按支付段 createdAt 逐段认领，落 [from,to) 区间与
+       *   byDay 日格；服务/商品按「优惠先抵服务、收款先认服务」拆分。
+       *   fix（M1 UI 集成）：已收=现金类（cash/wechat/alipay）实收，次卡扣次等值
+       *   不进 serviceFen/shopFen（防 paidFen=payableFen 口径下双计），passFen
+       *   单列（cashierPassFen / cashierLedger.passFen）供对账，对齐 U3「次卡扣次
+       *   非现金」口径。
+       * - shopFen 自本批起接实口径（收银商品行已收；商城 orders 仍无 paid_at 口径）。
+       * - M1-补1：「记账 credit」已删——收银单无待收态，待收口径回归预约域
+       *   （pendingPayment* 仅 completed 未 paid 预约，cashierPending 并入逻辑删除）。
+       */
+      const cashierFin = await loadCashierFinance(ctx.db, storeId);
+      let cashierServiceFen = 0;
+      let cashierShopFen = 0;
+      let cashierPassFen = 0; // 区间内收银次卡扣次认领额（非现金，不计入已收营业额）
+      const cashierLedger: Array<{
+        billNo: string;
+        time: Date | null;
+        buyer: string;
+        summary: string;
+        itemCount: number;
+        methods: string[];
+        payableFen: number;
+        /** 已收（现金类实收 cash/wechat/alipay，不含次卡扣次等值——fix 双计修订） */
+        receivedFen: number;
+        /** 次卡扣次等值（非现金，单列供对账，对齐 U3「次卡扣次非现金」口径） */
+        passFen: number;
+        source: 'cashier';
+      }> = [];
+      for (const cf of cashierFin) {
+        for (const r of cf.recognized) {
+          if (r.at.getTime() >= from.getTime() && r.at.getTime() < to.getTime()) {
+            cashierServiceFen += r.serviceFen;
+            cashierShopFen += r.shopFen;
+            cashierPassFen += r.passFen;
+            const cell = byDayMap.get(dayKey(r.at));
+            if (cell) {
+              cell.serviceFen += r.serviceFen;
+              cell.shopFen += r.shopFen;
+            }
+          }
+        }
+        if (
+          cf.bill.settledAt &&
+          cf.bill.settledAt.getTime() >= from.getTime() &&
+          cf.bill.settledAt.getTime() < to.getTime()
+        ) {
+          cashierLedger.push({
+            billNo: cf.bill.billNo,
+            time: cf.bill.settledAt,
+            buyer: cf.buyerName,
+            summary: cf.summary,
+            itemCount: cf.itemCount,
+            methods: cf.methods,
+            payableFen: cf.bill.payableFen,
+            // fix（M1 UI 集成）：已收=现金类实收（不含次卡等值），passFen 单列
+            receivedFen: cf.cashLikeFen,
+            passFen: cf.passFen,
+            source: 'cashier',
+          });
+        }
+      }
+      cashierLedger.sort((a, b) => (b.time?.getTime() ?? 0) - (a.time?.getTime() ?? 0));
+
+      // 已收口径同步：服务收入 += 收银服务行实收；商城收入接收银商品行实收（不再恒 0）
+      const serviceTotalFenMerged = serviceTotalFen + cashierServiceFen;
+      const shopTotalFen = cashierShopFen;
 
       return {
         range: { from, to },
         totals: {
-          serviceFen: serviceTotalFen,
+          serviceFen: serviceTotalFenMerged,
           shopFen: shopTotalFen,
-          totalFen: serviceTotalFen + shopTotalFen,
-          /** 完成单数：区间内完成并收款单数（与收入同源） */
+          totalFen: serviceTotalFenMerged + shopTotalFen,
+          /** 完成单数：区间内完成并收款单数（预约口径，收银单数见 cashierPaidCount） */
           paidCount: paidRows.length,
           pendingPaymentFen,
           pendingPaymentCount: pendingRows.length,
+          /** 批次 M1：区间内收银台已结账单单数 */
+          cashierPaidCount: cashierLedger.length,
+          /** 批次 M1：区间内收银次卡扣次认领额（非现金，fix 后不计入 serviceFen/已收，单列供对账溯源） */
+          cashierPassFen,
         },
-        /** 按日分组序列（[from,to) 每日一格，无收款日为 0；shopFen v1 恒 0） */
+        /** 按日分组序列（[from,to) 每日一格，无收款日为 0；shopFen 自 M1 接收银实口径） */
         byDay: [...byDayMap.values()],
-        /** 收款方式拆分（两桶互斥穷尽，合计 = 服务收入） */
+        /** 收款方式拆分（预约口径两桶互斥穷尽；收银台并入见 cashierLedger/cashierPassFen） */
         paymentSplit: { payAtStore, passDeduct },
-        /** 员工维度（同一行集聚合；serviceFen 之和 = 区间服务收入） */
+        /** 员工维度（同一行集聚合；serviceFen 之和 = 区间预约服务收入） */
         byStaff,
         /** 待收款明细（completed 未 paid，按完成时间倒序，上限 100 条） */
         pendingPayments: pendingRows,
+        /** 批次 M1：收银台流水（区间内 settled 单，来源签 'cashier'，按结账时间倒序） */
+        cashierLedger,
       };
     }),
 
@@ -911,6 +984,20 @@ export const storeRouter = router({
       }
 
       const todayCount = DASHBOARD_STATUSES.reduce((n, s) => n + byStatus[s], 0);
+      /* ---- 批次 M1：收银台并入（口径见 cashier.ts loadCashierFinance 头注） ----
+       * 今日营业额 += 收银已结单按支付段 createdAt 落在统计日的自有口径认领额
+       * （服务/商品行；预约行金额已由上面 paidAt 口径认领，不重复计）。
+       * M1-补1：「记账 credit」已删——收银单无待收态，todo.unpaid 回归纯预约口径
+       * （原收银待收单计数并入逻辑删除）。
+       */
+      const cashierFin = await loadCashierFinance(ctx.db, storeId);
+      for (const cf of cashierFin) {
+        for (const r of cf.recognized) {
+          if (r.at >= dayStart && r.at < dayEnd) {
+            todayRevenueFen += r.serviceFen + r.shopFen;
+          }
+        }
+      }
       return {
         /** 统计日 0 点（本地时区） */
         date: dayStart,

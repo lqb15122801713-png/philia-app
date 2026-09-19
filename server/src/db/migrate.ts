@@ -16,7 +16,19 @@ const migrationsFolder = fileURLToPath(new URL('../../drizzle', import.meta.url)
 
 console.log(`[migrate] 迁移目录: ${migrationsFolder}`);
 
-await migrate(db, { migrationsFolder });
+/**
+ * SQLite 迁移标准前置（12-step 口径）：迁移期间关闭外键约束。
+ * drizzle libsql migrator 把语句包在事务批内执行，PRAGMA foreign_keys 在事务内
+ * 无效，必须在进入迁移前在连接级关闭（M1-补1：cashier_bills 增 operator_id
+ * NOT NULL+REFERENCES 列需 DEFAULT 回填窗，FK 开启时 SQLite 拒绝该 ALTER）。
+ * 迁移结束后恢复开启。
+ */
+await client.execute('PRAGMA foreign_keys = OFF');
+try {
+  await migrate(db, { migrationsFolder });
+} finally {
+  await client.execute('PRAGMA foreign_keys = ON');
+}
 
 // drizzle 的迁移记录表：__drizzle_migrations(hash, created_at)
 // 注：该表主键为 SERIAL PRIMARY KEY（非 INTEGER PRIMARY KEY），SQLite 下 id 恒为

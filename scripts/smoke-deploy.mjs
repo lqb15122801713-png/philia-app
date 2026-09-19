@@ -50,8 +50,10 @@ function unwrap(arr, name) {
   return first?.result?.data?.json;
 }
 
-async function trpcQuery(cookie, path, input) {
-  const payload = encodeURIComponent(JSON.stringify({ '0': { json: input ?? null } }));
+async function trpcQuery(cookie, path, input, metaValues) {
+  const frame = { json: input ?? null };
+  if (metaValues) frame.meta = { values: metaValues };
+  const payload = encodeURIComponent(JSON.stringify({ '0': frame }));
   const res = await fetch(`${BASE}/trpc/${path}?batch=1&input=${payload}`, {
     headers: cookie ? { Cookie: cookie } : {},
   });
@@ -287,6 +289,179 @@ if (sessions.customer && sessions.merchant && sessions.staff) {
       }
     }
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. 收银台全链路（批次 M1）：开单→挂单→取单→结账→流水可查→次卡扣次联动   */
+/*    （+撤单留痕/幂等重放/库存扣减/财务接数断言；全部真实落库）          */
+/* ------------------------------------------------------------------ */
+
+if (sessions.merchant && seedCustomer && sessions.customer) {
+  // 5.0 服务项重取（第 4 节块级作用域不外泄）：首店首个 grooming 服务
+  const nearby5 = await trpcQuery(sessions.customer, 'store.listNearby', { lat: 30.2741, lng: 120.1551 });
+  const store5 = nearby5?.stores?.[0];
+  const detail5 = store5 ? await trpcQuery(sessions.customer, 'store.getWithServices', { storeId: store5.id }) : null;
+  const service = detail5?.services?.find((s) => s.type === 'grooming') ?? null;
+
+  // 5.1 待收款预约可查（收银台「待收款」tab 数据源）
+  const pending = await trpcQuery(sessions.merchant, 'cashier.pendingAppointments');
+  check('收银台 trpc cashier.pendingAppointments 可查', Array.isArray(pending), `待收款=${pending?.length ?? 'ERR'}`);
+
+  // 5.2 会员检索：命中（种子客户固定手机号，server/src/db/seed.ts 同口径）+ 未命中安静
+  const hit = await trpcQuery(sessions.merchant, 'cashier.searchMember', { phone: '13800000000' });
+  check('收银台 会员检索命中（种子客户）', hit?.found === true && !!hit?.id, `found=${hit?.found} 次卡余=${hit?.passRemainTimes}`);
+  const miss = await trpcQuery(sessions.merchant, 'cashier.searchMember', { phone: '19900000000' });
+  check('收银台 会员检索未命中（安静 found:false）', miss?.found === false, `found=${miss?.found}`);
+
+  // 5.3 扣次联动前置：给种子客户充 1 次（pass.topUp 真链路；重复跑次数累积不失败）
+  const topped = await trpcMutate(sessions.merchant, 'pass.topUp', { userId: seedCustomer.id, times: 1 });
+  check('收银台前置 pass.topUp 充次 1', !!topped, 'times=1');
+
+  // 5.4 开单+挂单：服务行（演示单同服务）+ 商品行（首个在架商品）
+  const prodList = await trpcQuery(sessions.merchant, 'mall.listProductsForStore', { page: 1, pageSize: 100 });
+  const product = (prodList?.items ?? []).find((p) => p.status === 'on');
+  let billNo1 = null;
+  let payable1 = 0;
+  let stockBefore = null;
+  if (product?.id && service?.id) {
+    stockBefore = product.stock;
+    const cart1 = {
+      items: [
+        { kind: 'service', refId: service.id, qty: 1 },
+        { kind: 'product', refId: product.id, qty: 1 },
+      ],
+      discountType: 'none',
+      discountValue: 0,
+      note: 'smoke-deploy 收银演示单',
+    };
+    const held = await trpcMutate(sessions.merchant, 'cashier.hold', cart1);
+    billNo1 = held?.bill?.billNo ?? held?.billNo ?? null;
+    payable1 = held?.bill?.payableFen ?? 0;
+    check(
+      '收银台 挂单 cashier.hold（HD 单号）',
+      /^HD-\d{8}-\d{3}$/.test(billNo1 ?? '') && (held?.bill?.status ?? held?.status) === 'held',
+      `billNo=${billNo1} 应收=${payable1}分`,
+  );
+
+    // 5.5 取单：held → open 整单恢复
+    if (billNo1) {
+      const resumed = await trpcMutate(sessions.merchant, 'cashier.resume', { billNo: billNo1 });
+      const rBill = resumed?.bill ?? resumed;
+      const rItems = resumed?.items ?? rBill?.items ?? [];
+      check('收银台 取单 cashier.resume（held→open）', rBill?.status === 'open' && rItems.length === 2, `status=${rBill?.status} 行数=${rItems.length}`);
+
+      // 5.6 结账：现金全额（Σ支付=应收，金额取服务端快照口径）
+      const settled = await trpcMutate(sessions.merchant, 'cashier.settle', {
+        ...cart1,
+        billNo: billNo1,
+        payments: [{ method: 'cash', amountFen: payable1 }],
+      });
+      const sBill = settled?.bill ?? settled;
+      check(
+        '收银台 结账 cashier.settle（现金）',
+        sBill?.status === 'settled' && sBill?.paidFen === sBill?.payableFen,
+        `status=${sBill?.status} 已收=${sBill?.paidFen}分`,
+      );
+
+      // 5.7 幂等重放：同 bill_no 重复 settle → idempotent，不重复扣库存
+      const replay = await trpcMutate(sessions.merchant, 'cashier.settle', {
+        ...cart1,
+        billNo: billNo1,
+        payments: [{ method: 'cash', amountFen: payable1 }],
+      });
+      check('收银台 结账幂等（同 bill_no 重放 idempotent）', replay?.idempotent === true, `idempotent=${replay?.idempotent}`);
+      const prodAfter = (await trpcQuery(sessions.merchant, 'mall.listProductsForStore', { page: 1, pageSize: 100 }))?.items?.find((p) => p.id === product.id);
+      check(
+        '收银台 库存扣减（settled −1，幂等重放不再扣）',
+        prodAfter?.stock === stockBefore - 1,
+        `stock ${stockBefore}→${prodAfter?.stock}（重放后仍 ${prodAfter?.stock}）`,
+      );
+
+      // 5.8 流水可查 + 详情支付明细
+      const ledger = await trpcQuery(sessions.merchant, 'cashier.listBills', { range: 'today' });
+      const row1 = (ledger?.bills ?? ledger ?? []).find?.((b) => b.billNo === billNo1);
+      check('收银台 流水可查 cashier.listBills（今日含本单）', !!row1, `rows=${ledger?.bills?.length ?? ledger?.length}`);
+      const detail1 = await trpcQuery(sessions.merchant, 'cashier.getBill', { billNo: billNo1 });
+      const pays1 = detail1?.payments ?? detail1?.bill?.payments ?? [];
+      check('收银台 流水详情 getBill（现金 1 段）', pays1.length === 1 && pays1[0]?.method === 'cash', `支付段=${pays1.length}`);
+    }
+  } else {
+    check('收银台 挂单前置（在架商品+洗护服务）', false, '无在架商品或服务项');
+  }
+
+  // 5.9 次卡扣次联动：会员单 grooming 服务行扣次 → settle → 次卡 remain −1
+  if (service?.id && hit?.found) {
+    // 扣次前余额重取（5.2 的检索早于 5.3 充次，不能拿旧值当基线）
+    const beforeSettle2 = await trpcQuery(sessions.merchant, 'cashier.searchMember', { phone: '13800000000' });
+    const passBefore = beforeSettle2?.passRemainTimes ?? null;
+    const cart2 = {
+      customerId: seedCustomer.id,
+      items: [{ kind: 'service', refId: service.id, qty: 1, paidByPass: true }],
+      discountType: 'none',
+      discountValue: 0,
+      note: 'smoke-deploy 扣次联动单',
+    };
+    // 先 hold 取服务端重算应收（扣次行有效价=pass 段金额）
+    const held2 = await trpcMutate(sessions.merchant, 'cashier.hold', cart2);
+    const billNo2 = held2?.bill?.billNo ?? null;
+    const payable2 = held2?.bill?.payableFen ?? 0;
+    const settled2 = billNo2
+      ? await trpcMutate(sessions.merchant, 'cashier.settle', {
+          ...cart2,
+          billNo: billNo2,
+          payments: [{ method: 'pass', amountFen: payable2 }],
+        })
+      : null;
+    const sBill2 = settled2?.bill ?? settled2;
+    check('收银台 次卡扣次结账（pass 段=扣次行有效价）', sBill2?.status === 'settled', `billNo=${billNo2} 应收=${payable2}分`);
+    const passes = await trpcQuery(sessions.merchant, 'pass.listForStore');
+    const passRow = (passes?.passes ?? passes ?? []).find?.((p) => p.userId === seedCustomer.id || p.customerId === seedCustomer.id);
+    check(
+      '收银台 扣次联动（次卡余额 −1）',
+      passBefore !== null && (passRow?.remainTimes ?? passRow?.remain_times) === passBefore - 1,
+      `remain ${passBefore}→${passRow?.remainTimes ?? passRow?.remain_times}`,
+    );
+  }
+
+  // 5.10 撤单留痕（不物理删除，流水灰签可见）
+  if (product?.id) {
+    const held3 = await trpcMutate(sessions.merchant, 'cashier.hold', {
+      items: [{ kind: 'product', refId: product.id, qty: 1 }],
+      discountType: 'none',
+      discountValue: 0,
+      note: 'smoke-deploy 撤单验证单',
+    });
+    const billNo3 = held3?.bill?.billNo ?? null;
+    if (billNo3) {
+      const voided = await trpcMutate(sessions.merchant, 'cashier.voidBill', { billNo: billNo3, reason: 'smoke 撤单验证' });
+      const vBill = voided?.bill ?? voided;
+      const ledger2 = await trpcQuery(sessions.merchant, 'cashier.listBills', { range: 'today' });
+      const voidRow = (ledger2?.bills ?? ledger2 ?? []).find?.((b) => b.billNo === billNo3);
+      check(
+        '收银台 撤单留痕 cashier.voidBill（voided 留痕不删除）',
+        vBill?.status === 'voided' && !!vBill?.voidReason && voidRow?.status === 'voided',
+        `status=${vBill?.status} reason=${vBill?.voidReason}`,
+      );
+    }
+  }
+
+  // 5.11 财务接数：financeStats 含 cashierLedger（来源签 cashier）；入参 {from,to} Date（门店时区今日区间）
+  const STORE_TZ_MS = 8 * 60 * 60 * 1000;
+  const nowWc = new Date(Date.now() + STORE_TZ_MS);
+  const dayStart = new Date(Date.UTC(nowWc.getUTCFullYear(), nowWc.getUTCMonth(), nowWc.getUTCDate(), 0, 0, 0, 0) - STORE_TZ_MS);
+  const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+  const fin = await trpcQuery(
+    sessions.merchant,
+    'store.financeStats',
+    { from: dayStart.toISOString(), to: dayEnd.toISOString() },
+    { from: ['Date'], to: ['Date'] },
+  );
+  const cashierRows = fin?.cashierLedger ?? [];
+  check(
+    '收银台 财务流水接数（financeStats.cashierLedger 含本批单）',
+    cashierRows.some?.((r) => r.billNo === billNo1) ?? false,
+    `cashierLedger=${cashierRows.length} 行`,
+  );
 }
 
 console.log(`\n目标：${BASE}${GATE ? '（口令门已启用）' : '（口令门未设置，开发期开放口径）'}`);

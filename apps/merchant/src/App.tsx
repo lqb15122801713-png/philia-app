@@ -18,6 +18,8 @@ import AppointmentDetailPage from './pages/AppointmentDetailPage'
 import AppointmentMonitorPage from './pages/AppointmentMonitorPage'
 import AppointmentsPage from './pages/AppointmentsPage'
 import BoardingPage from './pages/BoardingPage'
+import CashierPage from './pages/CashierPage'
+import CashierRecordsPage from './pages/CashierRecordsPage'
 import DashboardPage from './pages/DashboardPage'
 import DevLoginPage from './pages/DevLoginPage'
 import FinancePage from './pages/FinancePage'
@@ -50,6 +52,9 @@ function ProtectedRoutes() {
       <Route path="/live" element={<Navigate to="/monitor" replace />} />
       <Route path="/live/:id" element={<MonitorLiveRedirect />} />
       <Route path="/boarding" element={<BoardingPage />} />
+      {/* 批次 M1：收银台（主屏三栏 + 流水屏；墨轨「商城」组首位入口） */}
+      <Route path="/cashier" element={<CashierPage />} />
+      <Route path="/cashier/records" element={<CashierRecordsPage />} />
       {/* U3：墨轨规范名 /pass（/passes 保留兼容深链） */}
       <Route path="/pass" element={<PassPage />} />
       <Route path="/passes" element={<Navigate to="/pass" replace />} />

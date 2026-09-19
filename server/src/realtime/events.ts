@@ -31,6 +31,11 @@ export const EventType = {
   OrderShipped:          'order.shipped',            // → customer
   OrderReceived:         'order.received',           // → store
   OrderCancelled:        'order.cancelled',          // → store（待支付取消/超时关单，库存已回补；v1.1 P0-8）
+  // 收银台（批次 M1 · 登记型收银；统一走 store 频道，商家端 MerchantEventsProvider 已订阅）
+  // M1-补1：cashier.billCollected 已随「记账 credit」删除（无触发点，删干净）
+  CashierBillHeld:       'cashier.billHeld',         // 挂单 → store
+  CashierBillSettled:    'cashier.billSettled',      // 结账 → store
+  CashierBillVoided:     'cashier.billVoided',       // 撤单 → store
 } as const;
 
 export type EventTypeValue = (typeof EventType)[keyof typeof EventType];
