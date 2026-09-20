@@ -289,18 +289,37 @@ export default function AppointmentDetailPage() {
   if (detailQ.isError) {
     return (
       <div className="px-4 py-6">
+        {/* W1 退回修：错误态补第四件出口（重试=柠檬主，出口=细线白底次钮回列表） */}
         <ErrorState
           message="预约详情加载失败，请检查网络后重试"
           onRetry={() => void detailQ.refetch()}
+          action={
+            <Link
+              to="/appointments"
+              className="u1-ring flex items-center rounded-full bg-card px-4 py-2 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+            >
+              返回我的预约
+            </Link>
+          }
         />
       </div>
     );
   }
   if (!d || !appt) {
     return (
-      <div className="px-4 py-16 text-center">
-        <p className="text-body text-ink-secondary">预约不存在或无权查看</p>
-        <Link to="/appointments" className="mt-4 inline-block text-brand-primary">返回我的预约</Link>
+      <div className="px-4 py-6">
+        {/* W1 退回修：无效 id 死胡同——规范 E 三件套 + 第四件出口（唯一动作=柠檬主钮回列表） */}
+        <ErrorState
+          message="预约不存在或无权查看"
+          action={
+            <Link
+              to="/appointments"
+              className="flex items-center rounded-full bg-brand-primary px-4 py-2 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+            >
+              返回我的预约
+            </Link>
+          }
+        />
       </div>
     );
   }

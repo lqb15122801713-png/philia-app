@@ -18,6 +18,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
 import PageHeader from '@/components/PageHeader';
 import BookingCode from '@/components/booking/BookingCode';
+import { ErrorState } from '@/components/home/common';
 import { APPT_TYPE_LABEL, fmtDateTime, fmtHM, fmtMD, fmtRange, weekCN } from '@/components/booking/format';
 
 /** 生成 ICS 日历文件内容（本地时间浮点格式，免时区歧义） */
@@ -85,11 +86,21 @@ export default function BookingSuccessPage() {
   if (!aid) {
     return (
       <div className="px-4 py-6">
-        {/* W1-D1：异常分支同样导航闭环（返回键 + 明确出口） */}
+        {/* W1-D1：异常分支同样导航闭环（返回键 + 明确出口）；
+            W1 退回修：链接形出口按钮化（唯一动作=柠檬主钮回列表） */}
         <PageHeader title="预约成功" to="/home" />
-        <div className="py-10 text-center">
-          <p className="text-body text-ink-secondary">缺少预约参数</p>
-          <Link to="/appointments" className="mt-4 inline-block text-brand-primary">查看我的预约</Link>
+        <div className="mt-4">
+          <ErrorState
+            message="缺少预约参数"
+            action={
+              <Link
+                to="/appointments"
+                className="flex items-center rounded-full bg-brand-primary px-4 py-2 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+              >
+                查看我的预约
+              </Link>
+            }
+          />
         </div>
       </div>
     );

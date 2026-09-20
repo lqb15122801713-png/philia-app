@@ -10,7 +10,7 @@ import { useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
 import PageHeader from '@/components/PageHeader';
-import { EmptyState } from '@/components/home/common';
+import { EmptyState, ErrorState } from '@/components/home/common';
 import {
   APPT_STATUS_META,
   APPT_TYPE_LABEL,
@@ -146,7 +146,10 @@ export default function AppointmentsPage() {
           ))}
         </div>
       ) : listQ.isError ? (
-        <p className="mt-10 text-center text-body text-ink-secondary">加载失败，请下拉重试</p>
+        /* W1 退回修：裸错误文本升 ErrorState（重试=柠檬主；页头返回条已是出口件） */
+        <div className="mt-5">
+          <ErrorState message="预约列表加载失败，请检查网络后重试" onRetry={() => void listQ.refetch()} />
+        </div>
       ) : totalCount === 0 ? (
         /* U1-I：全域统一空态组件（U4-D3 试样 12 工艺；行动钮统一柠檬控件档） */
         <EmptyState
