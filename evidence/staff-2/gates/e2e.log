@@ -1,0 +1,173 @@
+
+> @philia/server@0.1.0 test:e2e
+> tsx src/__tests__/e2e.ts
+
+[e2e] 临时库迁移 + 种子…
+  ✓ 临时库迁移 + 种子完成
+  ✓ 种子用户齐全（customer/owner/staff1/staff2）
+  ✓ server 启动且 GET /api/health 返回 {ok:true, ts}
+  ✓ 三角色 dev-login 均签发会话 cookie
+  ✓ auth.me（商家）角色与门店绑定正确
+  ✓ push.subscribe 登记成功（create 前完成）
+  ✓ pet.list 返回客户宠物
+  ✓ store.listNearby 返回种子门店
+  ✓ getWithServices 返回 grooming 服务项
+  ✓ getWithServices 返回可约槽位（10:00-16:00 整点）
+  ✓ appointment.create 成功（S4：落库即 confirmed）
+  ✓ GET /api/events 建立 SSE（200 + text/event-stream）
+  ✓ store.staffList 找到承接美容师（阿强/丽丽=groomer）
+  ✓ S4：create 自动派单（staff_id=阿强，assignSource=auto）
+  ✓ appointment.confirm 幂等：confirmed 单连调两次均成功且 updatedAt 不变（零副作用）
+  ✓ appointment.assign 改派成功（阿强 → 丽丽），assignSource 覆盖为 merchant
+  ✓ appointment.getCode 返回二维码原文与人工码
+  ✓ 批次 S1：groomer 扫码核销 → 403 FORBIDDEN「核销需前台账号操作」
+  ✓ 批次 S1：groomer 人工码核销 → 403 FORBIDDEN「核销需前台账号操作」
+  ✓ 批次 S1：groomer 入住登记（checkinStay）→ 403 FORBIDDEN「核销需前台账号操作」
+  ✓ 批次 S1：frontdesk 入住登记越过角色校验（dummy id 报非 FORBIDDEN 业务错）
+  ✓ appointment.checkin（frontdesk 二维码原文）→ in_service + 六步初始化
+  ✓ S1-R1 断言①：已改派给丽丽的单被小美（frontdesk）核销成功 → staff_id 仍为丽丽（原指派保留，claimed=false）
+  ✓ serviceStep.addPhotos(disinfection ×1)
+  ✓ serviceStep.confirmStep(disinfection)
+  ✓ serviceStep.addPhotos(precheck ×2)
+  ✓ serviceStep.confirmStep(precheck)
+  ✓ serviceStep.addPhotos(grooming ×3)
+  ✓ serviceStep.confirmStep(grooming)
+  ✓ serviceStep.addPhotos(detail ×2)
+  ✓ serviceStep.confirmStep(detail)
+  ✓ serviceStep.addPhotos(before_after ×2)
+  ✓ serviceStep.confirmStep(before_after)
+  ✓ serviceStep.confirmStep(confirm)
+  ✓ GET /api/img/* 签名 URL 可访问（200 image/jpeg）
+  ✓ 预约已 completed（含 completed_at）
+  ✓ appointment.markPaid 收款登记
+  ✓ appointment.review 评价成功
+  ✓ 找到第二个可约槽（未指派单用）
+  ✓ S1-R1 断言②：未指派单前台核销成功 → staff_id 仍为 NULL（不认领，claimed=false）
+  ✓ S1-R1 断言②：未指派单核销后 outbox 无新增 appointment.assigned 事件（核销前后计数一致）
+  [SSE] 实际收到事件序列: ["appointment.confirmed","appointment.assigned","appointment.assigned","appointment.checkedin","step_updated","step_updated","step_updated","step_updated","step_updated","step_updated","appointment.completed"]
+  [SSE] 期望事件序列:     ["appointment.confirmed","appointment.assigned","appointment.assigned","appointment.checkedin","step_updated","step_updated","step_updated","step_updated","step_updated","step_updated","appointment.completed"]
+  ✓ SSE 流依次收到 confirmed/assigned/checkedin/step_updated×6/completed（按 id 去重）
+  ✓ step_updated 载荷均指向本预约
+  ✓ event_outbox 事件齐全（共 21 条 / 期望 21 条）
+  ✓ assigned 双频道（staff + user）
+  ✓ 客户调 merchantProcedure（store.upsertService）→ 403 FORBIDDEN
+  ✓ 未登录调 appointment.create → 401 UNAUTHORIZED
+  ✓ store.staffList 行带 role/status 字段（阿强=groomer/active）
+  ✓ 批次 S1：越店 updateStaff（他店 owner 改本店员工）→ 403 FORBIDDEN
+  ✓ 批次 S1：非商家（customer）updateStaff → 403 FORBIDDEN
+  ✓ 批次 S1：role/status 均缺省 → 400 BAD_REQUEST（至少传一项）
+  ✓ 批次 S1：本店 owner 改阿强 role→frontdesk 成功
+  ✓ 批次 S1：员工端下次拉取（auth.me）即见新角色 frontdesk（联动生效）
+  ✓ 批次 S1：改回 groomer + 停用（role/status 同传）成功
+  ✓ 批次 S1：staffList 刷新一致（阿强=groomer/suspended）
+  ✓ client-error 合法上报 → 200 {ok:true}（免登录）
+  ✓ client-error 非法 app → 400
+  ✓ client-error 缺 route/message → 400
+  ✓ client-error 非 JSON body → 400
+  ✓ client-error 限流：同 IP 第 21 次起 → 429
+  ✓ client-error JSONL 落盘：合法条目在日志（app/route/message/UA/首帧齐全）
+  ✓ client-error 落盘：非法 app 条目不入日志
+  ✓ staff-2 前置：阿强复职（role 留 groomer / status active）
+  ✓ staff-2 前置：clerk/manager/附加员工夹具就绪（dev-login 均签发）
+
+[staff-2] 15. R7 考勤：打卡两击 / 围栏拦截
+  ✓ R7① 上班打卡成功（围栏内 distanceM=0）
+  ✓ R7① 上班重复打卡幂等（返回同一条记录，不重复落行）
+  ✓ R7① 下班打卡 + 重打幂等
+  ✓ R7① 当日 attendance_records 恰 2 行（in+out，两击封顶）
+  ✓ R7② 围栏外打卡 → 400 BAD_REQUEST「不在门店范围，无法打卡」
+  ✓ R7② 围栏外拦截零写入（阿强当日 0 行，不写异常记录）
+
+[staff-2] 16. R7 补卡双流
+  ✓ R7③ 补卡申请建档（pending，限当月日期）
+  ✓ R7③ 店长审批通过（approved + 回链 record_id）
+  ✓ R7③ 补卡通过落 makeup=1 记录（status=normal，补卡视同正常）
+  ✓ R7③ 员工端 myApprovals 可见审批结果（approved）
+  ✓ R7④ 补卡限当月（上月日期 → BAD_REQUEST「补卡限当月」）
+  ✓ R7⑤ 当月第 4 次补卡 → BAD_REQUEST（每人 ≤3 次/月）
+
+[staff-2] 17. R8 盘点状态机（confirm 前零库存写入 / 驳回重盘）
+  ✓ R8① 周盘建单（draft + 全量账面快照行）
+  ✓ R8① 员工端待办可见盘点单（行项齐全）
+  ✓ R8② 实盘录入 → counted；confirm 前零库存写入（products.stock 不变）
+  ✓ R8③ 店长确认才入账（posted，diffs=1）
+  ✓ R8③ 入账落流水 sourceType=count（盘亏 delta=-3，before/after 正确）+ products.stock 更新
+  ✓ R8④ 驳回 → rejected（退回重盘，note 回显）
+  ✓ R8④ 退回单重录 → counted → 确认 posted；无差异零流水
+
+[staff-2] 18. R9-C 接待人域（核销改挂 / 默认开单人 / 无接待人硬排除 / 两池分列）
+  ✓ staff-2 前置：第三/第四可约槽（接待人域用单）
+  ✓ R9-C① 核销改挂接待人（响应透出 receptionistId=小美）
+  ✓ R9-C① reception_logs 挂预约留痕前后值（NULL → 小美，操作人=小美）
+  ✓ staff-2 前置：appt4 指派阿强（扣减闸门基数来源单）
+  ✓ R9-C② 三单结账 settled（接待人域夹具）
+  ✓ R9-C② 账单接待人默认=开单人（billC → owner）
+  ✓ R9-C② 含预约行账单接待人=预约接待人（billA → 小美，核销改挂落点）
+  ✓ R9-C③ 构造 billB 无接待人单（receptionist_id=NULL）
+  ✓ R9-C③ 前台绩效池仅计本人接待归属（=billA 门市价，billB 无接待人硬排除）
+  ✓ R9-C④ storePools 同源双计两池分列（美容师绩效池/前台绩效池两行不合并）
+  ✓ R9-C④ 池基数正确（groomer=两预约行操作归属 / frontdesk=改挂单+散客服务单接待归属）
+  ✓ R9-C⑤ 无接待人洗美营收硬排除透出（unattributedFen=billB）
+
+[staff-2] 19. R9 绩效扣减：50% 上限 FORBIDDEN
+  ✓ R9⑥ 季度评级录入（阿强 当季 A 档，系数 1.0）
+  ✓ R9⑦ 提成 mySummary 仅本人（阿强 200，staffId=本人）
+  ✓ R9⑦ 阿强美容师绩效池基数>0（预约行操作归属=settled 账单口径）且 A 档系数 1.0
+  ✓ R9⑧ 扣减超当月绩效 50% → 403 FORBIDDEN「已达当月扣减上限」
+  ✓ R9⑧ 限额内扣减成功（monthUsed/monthCap 透出，cap 与口径一致）
+  ✓ R9⑧ 扣减列示于 mySummary.deductions（含原因/录单人）
+  ✓ R9⑧ 扣减只扣绩效不扣提成（commissionTotalFen 不变）
+
+[staff-2] 20. 仅本人：越权传参 4xx / myEvents 仅本人 / storePools 403
+  ✓ R9⑨ mySummary 越权传 staffId → 4xx（strict BAD_REQUEST）
+  ✓ R10⑩ 主单好评已落 reviews 行（rating=5 非匿名，R10 最小评价域）
+  ✓ R10⑪ myEvents 仅本人（丽丽流内含本人 +6 好评事件）
+  ✓ R10⑪ myEvents 仅本人（阿强流内无丽丽事件，无入参可越权）
+  ✓ R9⑩ storePools 仅店主（staff → 403 FORBIDDEN）
+  ✓ R9⑩ storePools 仅店主（clerk → 403 FORBIDDEN，附证）
+
+[staff-2] 21. R10 评价：差评扣分 + 匿名 + 店长频道提示 + 幂等
+  ✓ R10⑫ aid2 六步推进（disinfection）
+  ✓ R10⑫ aid2 六步推进（precheck）
+  ✓ R10⑫ aid2 六步推进（grooming）
+  ✓ R10⑫ aid2 六步推进（detail）
+  ✓ R10⑫ aid2 六步推进（before_after）
+  ✓ R10⑫ aid2 六步推进（confirm）
+  ✓ R10⑬ 差评提交成功（rating=2 anonymous=true，≤30s 链路内完成）
+  ✓ R10⑬ reviews 行落库（anonymous=1，归属阿强）
+  ✓ R10⑬ 差评 XP −8（扣分不扣款，penalty 不占日上限）
+  ✓ R10⑬ 差评提示 review.flagged 到达 store 频道（店长视图数据源，event_outbox 实证）
+  ✓ R10⑬ 员工端 myReviews 仅本人且匿名标记透出（阿强见 aid2 差评 anonymous=1）
+  ✓ R10⑬ myReviews 仅本人（丽丽不见阿强差评，见本人 aid 好评）
+  ✓ R10⑭ 5 星好评 +6（主单 aid，匿名同权口径的对照组）
+  ✓ R10⑮ 一单一评（重复评价幂等拒绝 BAD_REQUEST「该预约已评价」×2）
+
+[staff-2] 22. R10 学习通道：日上限填满后考试 XP 仍计分
+  ✓ R10⑯ 补位 ×4 填满日上限（+15×4=60，均未丢弃）
+  ✓ R10⑯ 第 5 次补位超限丢弃留痕（dropped=1 / awarded=0，不报错）
+  ✓ R10⑯ 今日进度封顶明示（earned=60 cap=60）
+  ✓ R10⑰ 考试 XP 不受日上限（P0 +30 learning 通道照常计入）
+  ✓ R10⑰ 考试计入累计但不占日额（totalXp=900+60+30=990，today 仍 60/60）
+  ✓ R10⑰ 同级当月重复考试 → BAD_REQUEST（每级每月限 1 次）
+
+[staff-2] 23. R9-F 配置端口：版本化留痕 / 新参只管新单 / clerk+manager 403 / 未知键 / 拉新置灰
+  ✓ R9-F① 配置读取（当前 version=1，xp_daily_cap=60 生效中）
+  ✓ R9-F② owner 保存即生效（version=2）
+  ✓ R9-F② 版本留痕（每 key 前后值 + 变更人）
+  ✓ R9-F② 旧行失效新行生效（v1 active=0 / v2 active=1 cap=50）
+  ✓ R9-F③ 新参只管新单：cap=50 后第 4 次补位丢弃（today 45/50）
+  ✓ R9-F③ 新事件按新规则版本落库（dropped 行 rule_version=2）
+  ✓ R9-F③ 旧事件保持 rule_version=1 且仍计入（新参不回溯：totalXp 仍 990）
+  ✓ R9-F④ 配置端口 clerk 403（list/save/versions 全拒，仅 owner）
+  ✓ R9-F④ 配置端口 manager 403（list/save/versions 全拒，仅 owner）
+  ✓ R9-F⑤ 未知规则键 → 400 BAD_REQUEST「未知规则键」（配置页只改既有参数）
+  ✓ R10⑱ 拉新置灰拒写（rulesView 标注 disabled +「随会员游戏化批开通」；xp 路由无 referral 写入口，awardXp 对 referral 源码级硬拒）
+
+[staff-2] 24. R10 榜单查询层裁剪（前三+自己+前一名）
+  ✓ R10⑲ 榜尾视角 ≤5 行（前三+自己+前一名）
+  ✓ R10⑲ 榜尾视角含自己与前一名（丽丽 rank5），第 4 名（阿强）不可达
+  ✓ R10⑲ 前排视角仅前三（丽丽/阿强/附加丙均不出参，全榜永不外泄）
+  ✓ 验收结束：7200 端口无残留监听
+  ✓ 种子库 data/philia.db 原样（size/mtime 未变）
+
+全链路验收全部通过 ✅
