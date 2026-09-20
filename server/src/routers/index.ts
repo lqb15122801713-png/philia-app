@@ -14,9 +14,13 @@
 
 import { router } from '../trpc';
 import { appointmentRouter } from './appointment';
+import { attendanceRouter } from './attendance';
 import { authRouter } from './auth';
 import { boardingRouter } from './boarding';
 import { cashierRouter } from './cashier';
+import { commissionRouter } from './commission';
+import { configRulesRouter } from './configRules';
+import { inventoryRouter } from './inventory';
 import { mallRouter } from './mall';
 import { passRouter } from './pass';
 import { petRouter } from './pet';
@@ -24,6 +28,7 @@ import { pushRouter } from './push';
 import { serviceStepRouter } from './serviceStep';
 import { storeRouter } from './store';
 import { storedValueRouter } from './storedValue';
+import { xpRouter } from './xp';
 
 export const appRouter = router({
   auth: authRouter,
@@ -37,6 +42,11 @@ export const appRouter = router({
   pass: passRouter, // v1.1-b2 B2-7 次卡（充次/扣次/回补闭环）
   cashier: cashierRouter, // 批次 M1 商家端收银台（登记型收银，决策 #27）
   storedValue: storedValueRouter, // M1-补2 R5b 存量储值台账 CSV 导入（仅店主，只交付不执行）
+  attendance: attendanceRouter, // 批次 员工端2.0 R7 打卡考勤（含补卡双流）
+  inventory: inventoryRouter, // 批次 员工端2.0 R8 库存流水+盘点
+  commission: commissionRouter, // 批次 员工端2.0 R9 提成/绩效（仅本人硬过滤）
+  xp: xpRouter, // 批次 员工端2.0 R10 XP/榜单/评价查询
+  config: configRulesRouter, // 批次 员工端2.0 R9-F 规则配置管理端口（仅 owner）
 });
 
 /** 前端 tRPC client 的类型锚点（仅类型导出，无运行时开销） */
