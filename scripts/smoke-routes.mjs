@@ -53,6 +53,8 @@ const BROWSER = EDGE_CANDIDATES.find((p) => existsSync(p));
 
 /** 走查在卷测试数据（本地 DB 种子一致；缺失时 serverDep 口径仍可达守卫） */
 const APPT_ID = process.env.SMOKE_APPT_ID ?? '01M256D240E19GWNG2QMFV3Q8V';
+/** 无效 id（批次 staff-2：/inventory/:id 异常态——空态页仍渲染「盘点执行」标题+返回出口） */
+const INVALID_ID = process.env.SMOKE_INVALID_ID ?? '01000000000000000000000000';
 
 /**
  * 路由清单：app / 路径 / 锚点（任一命中）/ serverDep（守卫口径兜底）/ expectPath（重定向终态）
@@ -90,6 +92,7 @@ const ROUTES = [
   { app: 'merchant', path: '/cashier', anchors: ['收银台'], serverDep: true, note: 'M1 新屏：收银台主屏' },
   { app: 'merchant', path: '/cashier/records', anchors: ['流水', '收银'], serverDep: true, note: 'M1 新屏：收银流水' },
   { app: 'merchant', path: '/cashier/close', anchors: ['日结', '交接班', '店长'], serverDep: true, note: 'M1-补2 新屏：日结/交接班（clerk 引导页口径）' },
+  { app: 'merchant', path: '/settings/rules', anchors: ['规则配置'], serverDep: true, note: '批次 staff-2 R9-F：owner 登录渲染「规则配置管理」；manager 页内引导卡标题同含锚点，clerk 由 ClerkRouteGuard 拦截' },
   { app: 'merchant', path: '/live', anchors: ['在店监控'], expectPath: '/monitor', note: 'B2 重定向；U3 锚点' },
   { app: 'merchant', path: '/appointments', anchors: ['预约'], note: 'A3 白屏群' },
   { app: 'merchant', path: `/appointments/${APPT_ID}/monitor`, anchors: ['实时监控', '预约'], serverDep: true, note: 'P4 原深链；U3 锚点' },
@@ -101,6 +104,14 @@ const ROUTES = [
   { app: 'staff', path: `/boarding/${process.env.SMOKE_STAY_ID ?? APPT_ID}/checkin`, anchors: ['无法查看该寄养单', '返回任务台', '寄养打卡', '打卡'], serverDep: true, note: 'W1：checkin 异常态弱出口已按钮化' },
   { app: 'staff', path: '/history', anchors: ['记录', '历史'] },
   { app: 'staff', path: '/me', anchors: ['我的', '员工'] },
+  /* 批次 staff-2（R7~R10）：/me 列表进入的子页，锚点均命中 PageHeader 静态标题，数据异常态不悬空 */
+  { app: 'staff', path: '/attendance', anchors: ['打卡', '补卡'], note: '批次 staff-2 R7' },
+  { app: 'staff', path: '/inventory', anchors: ['盘点', '安心包'], note: '批次 staff-2 R8' },
+  { app: 'staff', path: `/inventory/${INVALID_ID}`, anchors: ['盘点'], serverDep: true, note: '批次 staff-2 R8：无效 id 空态页仍渲染「盘点执行」标题+返回出口' },
+  { app: 'staff', path: '/pay', anchors: ['提成', '绩效'], note: '批次 staff-2 R9' },
+  { app: 'staff', path: '/xp', anchors: ['经验', '段位'], note: '批次 staff-2 R10' },
+  { app: 'staff', path: '/reviews', anchors: ['评价'], note: '批次 staff-2 R10' },
+  { app: 'staff', path: '/manager', anchors: ['店长视图'], note: '批次 staff-2：smoke 以首个 staff 种子（非店长）登录渲染引导卡；锚点命中 PageHeader 标题与引导卡 h1' },
 ];
 
 const APP_URLS = { customer: CUSTOMER_URL, merchant: MERCHANT_URL, staff: STAFF_URL };
