@@ -171,6 +171,16 @@ export const staff = sqliteTable('staff', {
   schedule: text('schedule', { mode: 'json' }).$type<StaffSchedule>(),
   /** 在职状态，取值：active | suspended */
   status: text('status').notNull().default('active'),
+  /**
+   * 提成/绩效档位（批次 staff-2 R9 附带列）：美容师 G0..G4 | 前台/店长 P0..P4。
+   * NULL = 未评级；计提/绩效判定只读本列，比例系数落 commission_rules 配置表。
+   */
+  grade: text('grade'),
+  /**
+   * 试用期标记（批次 staff-2 R9 · 0012）：试用期前台提成 ×50%
+   * （commission_probation_multiplier）；试用期不设绩效与全勤。
+   */
+  probation: integer('probation', { mode: 'boolean' }).notNull().default(false),
   ...auditColumns,
 });
 
@@ -327,6 +337,12 @@ export const appointments = sqliteTable('appointments', {
   rating: integer('rating'),
   /** 评价内容 */
   review: text('review'),
+  /**
+   * 接待人（批次 staff-2 R9-C · 0012，可空 -> users.id）：预约单到店核销时可改挂
+   * 实际接待人的落点；收银开单时若含预约行，账单 receptionist_id 优先取本列
+   * （无则=开单人）。NULL = 未指定。变更留痕见 reception_logs（挂 appointment_id）。
+   */
+  receptionistId: text('receptionist_id').references(() => users.id),
   ...auditColumns,
 });
 
@@ -566,6 +582,18 @@ export const products = sqliteTable('products', {
   stock: integer('stock').notNull().default(0),
   /** 上架状态，取值：on | off */
   status: text('status').notNull().default('on'),
+  /**
+   * 效期截止时间（批次 staff-2 R8 附带列）：安心包（category='care_package'）
+   * 效期 ≤30 天预警查询用；NULL = 无有效期概念。
+   */
+  expiresAt: integer('expires_at', { mode: 'timestamp' }),
+  /**
+   * 是否消毒耗材（批次 staff-2 R8 附带列，0/1 默认 0）：洗护消毒步完成时，
+   * 本店 is_disinfection_supply=1 商品各扣 1 并落流水（source_type='disinfection'）。
+   */
+  isDisinfectionSupply: integer('is_disinfection_supply', { mode: 'boolean' })
+    .notNull()
+    .default(false),
   ...auditColumns,
 });
 
@@ -691,6 +719,13 @@ export const cashierBills = sqliteTable(
     operatorId: text('operator_id')
       .notNull()
       .references(() => users.id),
+    /**
+     * 接待人（批次 staff-2 R9-C，可空 -> users.id）：前台绩效归属字段。
+     * 默认=开单人（迁移回填 receptionist_id = operator_id）；预约单到店核销时
+     * 可改挂实际接待人，变更写 reception_logs（前后值留痕）；无接待人（IS NULL）
+     * 的洗美单在前台绩效聚合中硬排除（宁可漏计，不许乱挂）。
+     */
+    receptionistId: text('receptionist_id').references(() => users.id),
     /**
      * 班次 ID（可空）——M1-补2 R3 正式启用：hold/settle 创建时点挂当班 shift_id
      * （无开班时懒建开班，见 cashier.ts ensureOpenShift）；存量单恒 NULL（迁移零破坏）。
@@ -1081,3 +1116,612 @@ export const notifications = sqliteTable('notifications', {
   readAt: integer('read_at', { mode: 'timestamp' }),
   ...auditColumns,
 });
+
+/* ------------------------------------------------------------------ */
+/* 5.6 员工端 2.0（批次 staff-2 · R7~R10；字段级规格见 docs/staff2/R7-R10-DESIGN.md §一） */
+/* 口径：数值一律落配置表（commission_rules / xp_rules），代码只读表、不落常量。      */
+/* ------------------------------------------------------------------ */
+
+/** 规则配置值载体：比例 bp / 定额分 / 拆分 / 门槛全在此，结构按 rule_key 约定，应用层 zod 校验 */
+export type RuleConfigValue = Record<string, unknown>;
+
+/** 提成/绩效快照分列载荷（美容师绩效池/前台绩效池两行不合并等，结构按 kind 约定） */
+export type CommissionSnapshotPayload = Record<string, unknown>;
+
+/** 规则配置变更留痕：每 key 前后值数组 */
+export type RuleConfigChanges = Array<{ rule_key: string; before: unknown; after: unknown }>;
+
+/* ---- R7 考勤 ---- */
+
+/**
+ * 考勤打卡记录表（R7）：缺卡不落行（无行即缺卡）。
+ * - 打卡时按 staff.schedule 周模板比对班次（容差 10min）→ status late/early；
+ * - 围栏=门店经纬度 300m，围栏外 server 拒写（不写异常行）；
+ * - 防代打：同 device_id 同日不同 user_id 打卡账号数 >2 → 该批记录 flagged=1（只标记不阻断）；
+ * - 补卡审批通过 → 插入 makeup=1 行（status='normal'）并回链审批单。
+ */
+export const attendanceRecords = sqliteTable(
+  'attendance_records',
+  {
+    id: id(),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 员工 ID -> staff.id */
+    staffId: text('staff_id')
+      .notNull()
+      .references(() => staff.id),
+    /** 打卡用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 打卡日期（本地日界，ISO 'YYYY-MM-DD'） */
+    date: text('date').notNull(),
+    /** 打卡类型，取值：in（上班） | out（下班） */
+    kind: text('kind').notNull(),
+    /** 打卡时间（Unix 秒） */
+    ts: integer('ts', { mode: 'timestamp' }).notNull(),
+    /** 打卡纬度 / 经度（围栏采样） */
+    lat: real('lat').notNull(),
+    lng: real('lng').notNull(),
+    /** 距门店围栏圆心距离（米） */
+    distanceM: integer('distance_m').notNull(),
+    /** 状态，取值：normal | late（迟到） | early（早退） */
+    status: text('status').notNull().default('normal'),
+    /** 补卡标记（0/1）：补卡审批通过插入的行 =1 */
+    makeup: integer('makeup', { mode: 'boolean' }).notNull().default(false),
+    /** 打卡设备标识（防代打判定维度） */
+    deviceId: text('device_id').notNull(),
+    /** 防代打标记（0/1，只标记不阻断） */
+    flagged: integer('flagged', { mode: 'boolean' }).notNull().default(false),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_attendance_records_store_date').on(t.storeId, t.date),
+    index('ix_attendance_records_staff_date').on(t.staffId, t.date),
+    index('ix_attendance_records_device_date').on(t.deviceId, t.date),
+  ],
+);
+
+/**
+ * 考勤审批表（R7，异常申诉 + 补卡双流）：
+ * - 异常申诉（type='exception'）挂原卡 record_id；补卡（type='makeup'）填 date+kind+requested_ts；
+ * - 补卡限当月 + 每人 ≤3 次/月（常量 MAKEUP_MONTHLY_LIMIT=3，任务书称可配置，本批代码常量+报备）；
+ * - 审批通过 → 插入 makeup=1 的 attendance_records 行（status='normal'）并回链。
+ */
+export const attendanceApprovals = sqliteTable(
+  'attendance_approvals',
+  {
+    id: id(),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 员工 ID -> staff.id */
+    staffId: text('staff_id')
+      .notNull()
+      .references(() => staff.id),
+    /** 申请人用户 ID -> users.id */
+    applicantUserId: text('applicant_user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 审批类型，取值：exception（异常申诉） | makeup（补卡） */
+    type: text('type').notNull(),
+    /** 原打卡记录 ID -> attendance_records.id（异常申诉挂原卡；补卡为 NULL） */
+    recordId: text('record_id').references(() => attendanceRecords.id),
+    /** 目标日期（ISO 'YYYY-MM-DD'） */
+    date: text('date').notNull(),
+    /** 补卡申请目标，取值：in | out（exception 申诉时填原卡 kind） */
+    kind: text('kind').notNull(),
+    /** 补卡填的实际上下班时间（exception 申诉为 NULL） */
+    requestedTs: integer('requested_ts', { mode: 'timestamp' }),
+    /** 申请原因（必填） */
+    reason: text('reason').notNull(),
+    /** 状态，取值：pending | approved | rejected */
+    status: text('status').notNull().default('pending'),
+    /** 审批人用户 ID -> users.id（NULL = 待审批） */
+    reviewerId: text('reviewer_id').references(() => users.id),
+    /** 审批时间（NULL = 待审批） */
+    reviewedAt: integer('reviewed_at', { mode: 'timestamp' }),
+    /** 审批备注 */
+    reviewNote: text('review_note'),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_attendance_approvals_store_status').on(t.storeId, t.status),
+    index('ix_attendance_approvals_staff_date').on(t.staffId, t.date),
+  ],
+);
+
+/* ---- R8 库存流水 / 盘点 ---- */
+
+/**
+ * 库存流水表（R8 地基，只增不改审计账）：收银扣减（cashier）/ 反结账回补（reversal）/
+ * 盘点入账（count）/ 消毒耗材扣减（disinfection）/ 手工调整（manual）。
+ * 收银扣减与反结账回补既有逻辑不动，增流水写入（事务内）；before/after 落前后值。
+ */
+export const stockMovements = sqliteTable(
+  'stock_movements',
+  {
+    id: id(),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 商品 ID -> products.id */
+    productId: text('product_id')
+      .notNull()
+      .references(() => products.id),
+    /** 来源类型，取值：cashier | reversal | count | disinfection | manual */
+    sourceType: text('source_type').notNull(),
+    /** 来源单号（收银单号 / 盘点单 id / 预约步骤 id 等；manual 可为空） */
+    sourceId: text('source_id'),
+    /** 库存变动（带符号，正增负减） */
+    delta: integer('delta').notNull(),
+    /** 变动前 / 后库存 */
+    beforeStock: integer('before_stock').notNull(),
+    afterStock: integer('after_stock').notNull(),
+    /** 操作人用户 ID -> users.id */
+    operatorId: text('operator_id')
+      .notNull()
+      .references(() => users.id),
+    /** 备注 */
+    note: text('note'),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_stock_movements_product').on(t.productId),
+    index('ix_stock_movements_store_created').on(t.storeId, t.createdAt),
+    index('ix_stock_movements_source').on(t.sourceType, t.sourceId),
+  ],
+);
+
+/**
+ * 盘点单表（R8）：日盘（单价≥100 元商品，products.price_fen≥10000 过滤）/
+ * 周盘（全量）/ 盲盘。确认（店长/老板）事务内按差异生成 stock_movements
+ * （source_type='count'，来源=盘点单 id）+ 更新 products.stock + status→posted；
+ * 驳回→rejected（退回重盘=可重新 counted）；confirm 前零库存写入。
+ */
+export const inventoryCounts = sqliteTable(
+  'inventory_counts',
+  {
+    id: id(),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 盘点类型，取值：daily | weekly | blind */
+    type: text('type').notNull(),
+    /** 状态，取值：draft | counted | confirmed | posted | rejected */
+    status: text('status').notNull().default('draft'),
+    /** 建单人用户 ID -> users.id */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    /** 确认人用户 ID -> users.id（NULL = 未确认） */
+    confirmedBy: text('confirmed_by').references(() => users.id),
+    /** 确认时间（NULL = 未确认） */
+    confirmedAt: integer('confirmed_at', { mode: 'timestamp' }),
+    /** 入账时间（NULL = 未入账） */
+    postedAt: integer('posted_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [index('ix_inventory_counts_store_status').on(t.storeId, t.status)],
+);
+
+/** 盘点单行表（R8）：建单时账面快照 system_stock + 实盘 actual_stock（NULL = 未盘） */
+export const inventoryCountItems = sqliteTable(
+  'inventory_count_items',
+  {
+    id: id(),
+    /** 盘点单 ID -> inventory_counts.id */
+    countId: text('count_id')
+      .notNull()
+      .references(() => inventoryCounts.id),
+    /** 商品 ID -> products.id */
+    productId: text('product_id')
+      .notNull()
+      .references(() => products.id),
+    /** 建单时账面库存快照 */
+    systemStock: integer('system_stock').notNull(),
+    /** 实盘库存（NULL = 未录入） */
+    actualStock: integer('actual_stock'),
+    ...auditColumns,
+  },
+  (t) => [index('ix_inventory_count_items_count').on(t.countId)],
+);
+
+/* ---- R9 提成 / 绩效 ---- */
+
+/**
+ * 提成规则配置表（R9 · 改数不改码）：V1.3 全表种子 version=1（含售卡定额
+ * 5/10/20 元、活体 5%-10% 备用、P4 预留行 active=0、绩效 SABCD 系数、
+ * 绩效基数 5%、扣减上限 50%、结算日 15、快照日 1）。
+ * 计提=只读计算：按 effective_from 取规则版本算；老板端配置页保存=version+1
+ * 新行 active=1（见 rule_config_versions），新规只约束生效后的单不回溯。
+ */
+export const commissionRules = sqliteTable(
+  'commission_rules',
+  {
+    id: id(),
+    /** 规则版本（初始全表种子 =1） */
+    version: integer('version').notNull(),
+    /** 规则键（如 commission_grooming_rate / perf_coeff_s） */
+    ruleKey: text('rule_key').notNull(),
+    /** 规则中文名（配置页展示） */
+    label: text('label').notNull(),
+    /** 规则值 JSON（比例 bp / 定额分 / 拆分 / 门槛），结构见 RuleConfigValue */
+    valueJson: text('value_json', { mode: 'json' }).$type<RuleConfigValue>().notNull(),
+    /** 生效时间（按此取规则版本；新规只管生效后的单） */
+    effectiveFrom: integer('effective_from', { mode: 'timestamp' }).notNull(),
+    /** 是否生效（0/1；预留/作废行 =0） */
+    active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    /** 创建/变更人用户 ID -> users.id */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_commission_rules_key_active').on(t.ruleKey, t.active)],
+);
+
+/**
+ * 提成/绩效月度快照表（R9）：每月 1 日 02:00 快照（server 定时器幂等）；
+ * 季度绩效同 15 日口径快照。已快照月份读快照，差额进当月「调整项」，不动历史。
+ * payload_json 分列池：美容师绩效池/前台绩效池两行不合并（同源双计为设计）。
+ */
+export const commissionSnapshots = sqliteTable(
+  'commission_snapshots',
+  {
+    id: id(),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 员工 ID -> staff.id */
+    staffId: text('staff_id')
+      .notNull()
+      .references(() => staff.id),
+    /** 账期：'YYYY-MM'（月度提成）或 'YYYY-Qn'（季度绩效） */
+    period: text('period').notNull(),
+    /** 快照类型，取值：commission | performance */
+    kind: text('kind').notNull(),
+    /** 分列池载荷 JSON（美容师绩效池/前台绩效池两行不合并） */
+    payloadJson: text('payload_json', { mode: 'json' })
+      .$type<CommissionSnapshotPayload>()
+      .notNull(),
+    /** 快照总额（分） */
+    totalFen: integer('total_fen').notNull(),
+    /** 计提所用规则版本（commission_rules.version） */
+    ruleVersion: integer('rule_version').notNull(),
+    ...auditColumns,
+  },
+  (t) => [
+    uniqueIndex('uq_commission_snapshots_staff_period_kind').on(t.staffId, t.period, t.kind),
+    index('ix_commission_snapshots_store_period').on(t.storeId, t.period),
+  ],
+);
+
+/**
+ * 绩效扣减记录表（R9）：只扣绩效不扣提成；插入闸门=当月累计 ≤ 当月绩效 50%
+ * （cap 值落 commission_rules rule_key=perf_deduction_cap_bp），超限 server 拒绝
+ * 「已达当月扣减上限」。
+ */
+export const deductionRecords = sqliteTable(
+  'deduction_records',
+  {
+    id: id(),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 员工 ID -> staff.id */
+    staffId: text('staff_id')
+      .notNull()
+      .references(() => staff.id),
+    /** 归属月份（'YYYY-MM'） */
+    month: text('month').notNull(),
+    /** 扣减金额（分） */
+    amountFen: integer('amount_fen').notNull(),
+    /** 扣减原因（必填） */
+    reason: text('reason').notNull(),
+    /** 录单人用户 ID -> users.id（店长或老板） */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_deduction_records_staff_month').on(t.staffId, t.month),
+    index('ix_deduction_records_store_month').on(t.storeId, t.month),
+  ],
+);
+
+/* ---- R9-B 绩效档位 ---- */
+
+/**
+ * 绩效档位表（R9-B）：季度考核 SABCD 五档（老板或授权店长打分）。
+ * 系数 1.2/1.0/0.8/0.5/0 落 commission_rules（rule_key=perf_coeff_*）。
+ */
+export const performanceGrades = sqliteTable(
+  'performance_grades',
+  {
+    id: id(),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 员工 ID -> staff.id */
+    staffId: text('staff_id')
+      .notNull()
+      .references(() => staff.id),
+    /** 季度（'YYYY-Qn'） */
+    quarter: text('quarter').notNull(),
+    /** 档位，取值：S | A | B | C | D */
+    grade: text('grade').notNull(),
+    /** 打分人用户 ID -> users.id（老板或授权店长） */
+    graderId: text('grader_id')
+      .notNull()
+      .references(() => users.id),
+    /** 备注 */
+    note: text('note'),
+    ...auditColumns,
+  },
+  (t) => [
+    uniqueIndex('uq_performance_grades_staff_quarter').on(t.staffId, t.quarter),
+    index('ix_performance_grades_store_quarter').on(t.storeId, t.quarter),
+  ],
+);
+
+/* ---- R9-C 接待人域 ---- */
+
+/**
+ * 接待人变更留痕表（R9-C）：核销改挂实际接待人 / 事后纠偏时写入（前后值）。
+ * 接待人本体=cashier_bills.receptionist_id（默认=开单人，迁移回填=operator_id）；
+ * 预约侧落点=appointments.receptionist_id（0012 新增）。
+ * 0012 起：bill_id 改可空 + 新增 appointment_id——留痕可挂预约（核销改挂时账单
+ * 可能尚未开出）或账单（事后纠偏），两者至少其一非空（应用层约束）。
+ */
+export const receptionLogs = sqliteTable(
+  'reception_logs',
+  {
+    id: id(),
+    /** 收银单 ID -> cashier_bills.id（0012 起可空：核销改挂时账单未开则挂 appointment_id） */
+    billId: text('bill_id').references(() => cashierBills.id),
+    /** 预约单 ID -> appointments.id（0012 新增，可空：预约侧核销改挂留痕落点） */
+    appointmentId: text('appointment_id').references(() => appointments.id),
+    /** 变更前接待人 -> users.id（NULL = 原无接待人） */
+    oldReceptionistId: text('old_receptionist_id').references(() => users.id),
+    /** 变更后接待人 -> users.id */
+    newReceptionistId: text('new_receptionist_id')
+      .notNull()
+      .references(() => users.id),
+    /** 变更操作人 -> users.id */
+    changedBy: text('changed_by')
+      .notNull()
+      .references(() => users.id),
+    /** 备注 */
+    note: text('note'),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_reception_logs_bill').on(t.billId),
+    index('ix_reception_logs_appointment').on(t.appointmentId),
+  ],
+);
+
+/**
+ * 产能红线批准留痕表（R9 · 0012 新增）：美容师日超 8 只超出部分按 1.5 倍计提
+ * 须店长批准——批准落本表（unique(staff_id, date)，重复批准幂等 upsert）；
+ * 无批准行的超出部分按 1 倍计提并在提成明细标 pendingApproval（待批准）。
+ */
+export const overworkApprovals = sqliteTable(
+  'overwork_approvals',
+  {
+    id: id(),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 员工 ID -> staff.id */
+    staffId: text('staff_id')
+      .notNull()
+      .references(() => staff.id),
+    /** 批准日期（'YYYY-MM-DD'，产能红线按日判定） */
+    date: text('date').notNull(),
+    /** 批准人用户 ID -> users.id（店长或老板） */
+    approvedBy: text('approved_by')
+      .notNull()
+      .references(() => users.id),
+    /** 备注 */
+    note: text('note'),
+    ...auditColumns,
+  },
+  (t) => [
+    uniqueIndex('uq_overwork_approvals_staff_date').on(t.staffId, t.date),
+    index('ix_overwork_approvals_store_date').on(t.storeId, t.date),
+  ],
+);
+
+/* ---- R10 XP ---- */
+
+/**
+ * XP 事件表（R10，只增不改）：六来源 attendance/service/review/exam/cover/penalty
+ * （referral 拉新置灰——server 拒写+明示「随会员游戏化批开通」，防假功能第三态禁止）。
+ * - 日上限 60 仅 channel='daily'；学习通道（exam）单列不占；超限写入 dropped=1 留痕不计分；
+ * - 防刷：同客户对员工当日好评只计 1 次（查 reviews）；考试每级每月 1 次（查 source=exam source_id）。
+ */
+export const xpEvents = sqliteTable(
+  'xp_events',
+  {
+    id: id(),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 员工 ID -> staff.id */
+    staffId: text('staff_id')
+      .notNull()
+      .references(() => staff.id),
+    /** 员工用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 来源，取值：attendance | service | review | exam | referral | cover | penalty */
+    source: text('source').notNull(),
+    /** 来源单据 ID（打卡记录/预约单/评价/考试级别等） */
+    sourceId: text('source_id').notNull(),
+    /** 分值（正负；差评扣分 −8 扣分不扣款） */
+    points: integer('points').notNull(),
+    /** 通道，取值：daily（占日上限） | learning（学习通道单列不占） */
+    channel: text('channel').notNull(),
+    /** 计分所用规则版本（xp_rules.version） */
+    ruleVersion: integer('rule_version').notNull(),
+    /** 日上限超限丢弃留痕（0/1；dropped=1 不计分） */
+    dropped: integer('dropped', { mode: 'boolean' }).notNull().default(false),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_xp_events_staff_created').on(t.staffId, t.createdAt),
+    index('ix_xp_events_store_created').on(t.storeId, t.createdAt),
+    index('ix_xp_events_source').on(t.source, t.sourceId),
+  ],
+);
+
+/**
+ * XP 月度结算表（R10）：每月 1 日结算——上月 XP 增量 ≥ 保级线保级，
+ * 不足降一级（不降多级），累计 XP 不清零。段位门槛/保级线落 xp_rules。
+ */
+export const xpLevels = sqliteTable(
+  'xp_levels',
+  {
+    id: id(),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 员工 ID -> staff.id */
+    staffId: text('staff_id')
+      .notNull()
+      .references(() => staff.id),
+    /** 结算月份（'YYYY-MM'） */
+    month: text('month').notNull(),
+    /** 月初累计 XP */
+    startXp: integer('start_xp').notNull(),
+    /** 当月 XP 增量 */
+    gainedXp: integer('gained_xp').notNull(),
+    /** 月末累计 XP */
+    endXp: integer('end_xp').notNull(),
+    /** 结算前段位序号（0=嫩芽 1=熟手 2=能手 3=掌柜 4=导师） */
+    levelBefore: integer('level_before').notNull(),
+    /** 结算后段位序号（同上） */
+    levelAfter: integer('level_after').notNull(),
+    /** 是否保级（0/1；不足保级线降一级） */
+    retained: integer('retained', { mode: 'boolean' }).notNull(),
+    ...auditColumns,
+  },
+  (t) => [
+    uniqueIndex('uq_xp_levels_staff_month').on(t.staffId, t.month),
+    index('ix_xp_levels_store_month').on(t.storeId, t.month),
+  ],
+);
+
+/**
+ * XP 规则配置表（R10 · 结构同 commission_rules）：种子=附件一冻结版 V1.0
+ * （六来源分值 5/2/6/3/30/50/80/15/−8、日上限 60、段位门槛 0/300/900/2000/4000、
+ * 保级线 150/300/500/700、考试月限 1、好评日限 1、拉新置灰 active=0）。
+ */
+export const xpRules = sqliteTable(
+  'xp_rules',
+  {
+    id: id(),
+    /** 规则版本（初始种子 =1） */
+    version: integer('version').notNull(),
+    /** 规则键（如 xp_attendance_daily / xp_level_threshold_1） */
+    ruleKey: text('rule_key').notNull(),
+    /** 规则中文名（配置页展示） */
+    label: text('label').notNull(),
+    /** 规则值 JSON（分值/上限/门槛/保级线），结构见 RuleConfigValue */
+    valueJson: text('value_json', { mode: 'json' }).$type<RuleConfigValue>().notNull(),
+    /** 生效时间 */
+    effectiveFrom: integer('effective_from', { mode: 'timestamp' }).notNull(),
+    /** 是否生效（0/1；置灰来源 =0） */
+    active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    /** 创建/变更人用户 ID -> users.id */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_xp_rules_key_active').on(t.ruleKey, t.active)],
+);
+
+/* ---- R10 最小评价域 ---- */
+
+/**
+ * 评价表（R10 最小评价域）：既有 appointment.review mutation 扩展写入（幂等不变），
+ * 触发 XP（5 星+6 / 4 星+3 / ≤2 星 −8 扣分不扣款）+ ≤2 星 emit 店长频道差评提示事件。
+ * 一句话评价 ≤140 字（应用层约束）；匿名评价同权计分。
+ */
+export const reviews = sqliteTable(
+  'reviews',
+  {
+    id: id(),
+    /** 预约单 ID -> appointments.id（一单一评，唯一） */
+    appointmentId: text('appointment_id')
+      .notNull()
+      .references(() => appointments.id),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 评价客户用户 ID -> users.id */
+    customerId: text('customer_id')
+      .notNull()
+      .references(() => users.id),
+    /** 操作美容师 ID -> staff.id */
+    staffId: text('staff_id')
+      .notNull()
+      .references(() => staff.id),
+    /** 评分（1-5） */
+    rating: integer('rating').notNull(),
+    /** 评价内容（可空，≤140 字一句话） */
+    text: text('text'),
+    /** 是否匿名（0/1，匿名同权计分） */
+    anonymous: integer('anonymous', { mode: 'boolean' }).notNull().default(false),
+    ...auditColumns,
+  },
+  (t) => [
+    uniqueIndex('uq_reviews_appointment').on(t.appointmentId),
+    index('ix_reviews_staff_created').on(t.staffId, t.createdAt),
+    index('ix_reviews_store_created').on(t.storeId, t.createdAt),
+    index('ix_reviews_customer_staff_created').on(t.customerId, t.staffId, t.createdAt),
+  ],
+);
+
+/* ---- R9-F 规则配置版本 ---- */
+
+/**
+ * 规则配置版本表（R9-F 配置端口留痕）：老板端配置页保存=事务——旧 active 行失效
+ * → 新行 active=1 version+1 effective_from=now + 本表一行（每 key 前后值数组）。
+ * 仅 merchantOwnerProcedure；新规只管生效后的单，不回溯历史月份。
+ */
+export const ruleConfigVersions = sqliteTable(
+  'rule_config_versions',
+  {
+    id: id(),
+    /** 配置域，取值：commission | xp */
+    domain: text('domain').notNull(),
+    /** 保存后的新版本号 */
+    version: integer('version').notNull(),
+    /** 变更人用户 ID -> users.id（仅老板） */
+    changedBy: text('changed_by')
+      .notNull()
+      .references(() => users.id),
+    /** 变更明细 JSON（每 key 前后值数组），结构见 RuleConfigChanges */
+    changesJson: text('changes_json', { mode: 'json' }).$type<RuleConfigChanges>().notNull(),
+    ...auditColumns,
+  },
+  (t) => [index('ix_rule_config_versions_domain').on(t.domain, t.version)],
+);
