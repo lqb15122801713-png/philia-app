@@ -42,6 +42,15 @@ export const EventType = {
   CashierDayClosed:      'cashier.dayClosed',        // 日结冻结当班账目 → store
   CashierDayCloseReversed: 'cashier.dayCloseReversed', // 日结反结账（拆箱，仅店主） → store
   CashierBillReversed:   'cashier.billReversed',     // 收银台反结账单（已支付单冲正，仅店主） → store
+  // 批次 员工端2.0（R7~R10；与 packages/shared constants/events.ts 同步）
+  AttendanceMarked:      'attendance.marked',        // 打卡落痕 → staff + store
+  AttendanceApprovalResolved: 'attendance.approvalResolved', // 异常/补卡审批结果 → staff
+  AttendanceMonthExported: 'attendance.monthExported', // 考勤月表导出审计（仅老板） → store
+  StockCountConfirmed:   'stock.countConfirmed',     // 盘点店长确认入账 → store
+  ReviewSubmitted:       'review.submitted',         // 评价落库 → staff
+  ReviewFlagged:         'review.flagged',           // ≤2 星差评提示 → store（店长视图）
+  XpAwarded:             'xp.awarded',               // XP 事件（含 dropped 标记） → staff
+  ConfigVersionSaved:    'config.versionSaved',      // 规则配置版本保存 → store
 } as const;
 
 export type EventTypeValue = (typeof EventType)[keyof typeof EventType];
