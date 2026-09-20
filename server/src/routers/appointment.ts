@@ -74,6 +74,7 @@ import {
 } from '../trpc';
 import { broadcastNow, emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
+import { awardXp, loadXpRules } from '../services/xpAward';
 import { StepLabel, type StepKey } from './serviceStep';
 
 /* ------------------------------------------------------------------ */
@@ -145,6 +146,10 @@ export const DEFAULT_BOARDING_ROOM_COUNT = 1;
 /** emitEvent 首参类型（全局 db；事务 handle 运行时接口一致，类型上做显式断言） */
 type DbHandle = Parameters<typeof emitEvent>[0];
 const txDb = (tx: unknown): DbHandle => tx as DbHandle;
+
+/** 规则值取数（xp_rules.value_json 为自由 JSON；缺行时回退附件一冻结值，与 xpAward.num 同口径） */
+const numOr = (v: unknown, fallback: number): number =>
+  typeof v === 'number' && Number.isFinite(v) ? v : fallback;
 
 /* ------------------------------------------------------------------ */
 /* 预约建单写路径应用层串行化（进程内 async mutex · 单实例边界）             */
@@ -1628,8 +1633,9 @@ export const appointmentRouter = router({
   checkin: staffProcedure
     .input(
       z.union([
-        z.object({ qr: z.string().min(1) }), // 二维码原文 JSON
-        z.object({ code: z.string().regex(MANUAL_CODE_RE, '人工核销码格式不正确') }), // 6 位人工码
+        // staff-2 R9-C：可选 receptionistId=核销改挂实际接待人（默认带出当前值是 UI 的事）
+        z.object({ qr: z.string().min(1), receptionistId: z.string().min(1).optional() }), // 二维码原文 JSON
+        z.object({ code: z.string().regex(MANUAL_CODE_RE, '人工核销码格式不正确'), receptionistId: z.string().min(1).optional() }), // 6 位人工码
       ]),
     )
     .mutation(async ({ ctx, input }) => {
@@ -1679,7 +1685,8 @@ export const appointmentRouter = router({
       if (appt.checkedInAt) {
         clearCheckinFailures(staffId);
         const { steps, boardingStay } = await progressOf(ctx.db, appt);
-        return { appointment: appt, steps, boardingStay, nextRoute: nextRouteOf(appt), claimed: false, idempotent: true };
+        // R9-C：响应透出当前接待人（默认带出当前值供 UI 回填；已核销不再改挂，纠偏走 commission.reassignReception）
+        return { appointment: appt, steps, boardingStay, nextRoute: nextRouteOf(appt), claimed: false, idempotent: true, receptionistId: appt.receptionistId ?? null };
       }
 
       /* ---- 4. 状态校验 ---- */
@@ -1689,6 +1696,21 @@ export const appointmentRouter = router({
 
       /* ---- 5. type 分支事务（grooming 六步初始化 / boarding 住宿单） ---- */
       const petName = await petNameOf(ctx.db, appt.petId);
+      /* R9-C 核销改挂接待人：传入且与当前值不同 → 校验新接待人为本店员工（先于事务拒绝） */
+      const newReceptionistId =
+        input.receptionistId && input.receptionistId !== appt.receptionistId
+          ? input.receptionistId
+          : null;
+      if (newReceptionistId) {
+        const recStaff = await ctx.db
+          .select({ id: schema.staff.id })
+          .from(schema.staff)
+          .where(and(eq(schema.staff.userId, newReceptionistId), eq(schema.staff.storeId, staffStoreId)))
+          .get();
+        if (!recStaff) {
+          fail('BAD_REQUEST', '接待人须为本店员工');
+        }
+      }
       const outboxIds: string[] = [];
       const result = await ctx.db.transaction(async (tx) => {
         const nextStatus = appt.type === 'grooming' ? 'in_service' : 'in_boarding';
@@ -1700,10 +1722,49 @@ export const appointmentRouter = router({
             status: nextStatus,
             checkedInAt: now,
             updatedAt: now,
+            // R9-C：核销改挂接待人落点（null=不改挂，保留原值）
+            ...(newReceptionistId ? { receptionistId: newReceptionistId } : {}),
           })
           .where(eq(schema.appointments.id, appt.id))
           .returning()
           .then((r) => r[0]!);
+
+        /* R9-C 改挂留痕：reception_logs 挂 appointment_id（前后值）；
+           该预约若已有结算账单（经 cashier_bill_items 预约行反查），同步更新账单接待人并挂 bill_id */
+        if (newReceptionistId) {
+          const linkedItems = await tx
+            .select({ billId: schema.cashierBillItems.billId })
+            .from(schema.cashierBillItems)
+            .where(
+              and(
+                eq(schema.cashierBillItems.kind, 'appointment'),
+                eq(schema.cashierBillItems.refId, appt.id),
+              ),
+            );
+          let linkedBillId: string | null = null;
+          if (linkedItems.length > 0) {
+            const linkedBill = await tx
+              .select()
+              .from(schema.cashierBills)
+              .where(eq(schema.cashierBills.id, linkedItems[0]!.billId))
+              .get();
+            if (linkedBill) {
+              linkedBillId = linkedBill.id;
+              await tx
+                .update(schema.cashierBills)
+                .set({ receptionistId: newReceptionistId, updatedAt: now })
+                .where(eq(schema.cashierBills.id, linkedBill.id));
+            }
+          }
+          await tx.insert(schema.receptionLogs).values({
+            appointmentId: appt.id,
+            billId: linkedBillId,
+            oldReceptionistId: appt.receptionistId ?? null,
+            newReceptionistId,
+            changedBy: ctx.user.id,
+            note: '核销改挂接待人',
+          });
+        }
 
         let steps: StepRow[] = [];
         let boardingStay: BoardingStayRow | null = null;
@@ -1750,7 +1811,8 @@ export const appointmentRouter = router({
       });
       outboxIds.forEach(broadcastNow);
       clearCheckinFailures(staffId);
-      return { ...result, nextRoute: nextRouteOf(result.appointment), idempotent: false };
+      // R9-C：响应透出当前接待人（改挂后为新人，未改挂为原值，供 UI 默认带出）
+      return { ...result, nextRoute: nextRouteOf(result.appointment), idempotent: false, receptionistId: result.appointment.receptionistId ?? null };
     }),
 
   /**
@@ -1792,13 +1854,25 @@ export const appointmentRouter = router({
       return { appointment: updated, idempotent: false };
     }),
 
-  /** 11. review（customer 本人）：completed 后写 rating(1-5)/review；事件发 store + staff */
+  /**
+   * 11. review（customer 本人）：completed 后写 rating(1-5)/review；事件发 store + staff。
+   * R10 最小评价域扩展（任务书 §五.6 + 附件一 §一；既有行为与幂等不变）：
+   * - 输入增 anonymous（默认 false）；review 文本收紧为 ≤140 字（星级必填+一句话选填）；
+   * - 同事务增写 reviews 行（appointmentId 唯一，一单一评）；
+   * - XP：5 星 +6 / 4 星 +3（xp_review_5_star / xp_review_4_star）发给被评员工；
+   *   ≤2 星 −8（xp_penalty_low_star，扣分不扣款）并 emit store 频道 review.flagged
+   *   （差评提示店长视图）；日上限丢弃/同客户当日去重 skipped 均不阻断评价落库；
+   * - 始终 emit staff 频道 review.submitted（有指派员工时）。
+   * 边界：预约未指派员工（寄养单/历史单）时 reviews.staff_id 无从归属——保留既有
+   * appointments.rating/review 写入与事件，跳过 reviews 行与 XP（差评提示仍发店长频道）。
+   */
   review: customerProcedure
     .input(
       z.object({
         appointmentId: z.string().min(1),
         rating: z.number().int().min(1).max(5),
-        review: z.string().max(1000).optional(),
+        review: z.string().max(140, '评价最多 140 字（一句话）').optional(),
+        anonymous: z.boolean().optional().default(false),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -1819,6 +1893,78 @@ export const appointmentRouter = router({
         outboxIds.push(await emitEvent(txDb(tx), `store:${appt.storeId}`, EventType.AppointmentReviewed, payload));
         if (appt.staffId) {
           outboxIds.push(await emitEvent(txDb(tx), `staff:${appt.staffId}`, EventType.AppointmentReviewed, payload));
+        }
+
+        /* ---- R10：最小评价域 + XP（同事务） ---- */
+        let reviewId: string | null = null;
+        if (appt.staffId) {
+          const staffRow = await tx
+            .select({ userId: schema.staff.userId })
+            .from(schema.staff)
+            .where(eq(schema.staff.id, appt.staffId))
+            .get();
+          if (staffRow) {
+            // reviews 行（uq_reviews_appointment 兜底一单一评；并发双击撞唯一索引整体回滚）
+            const inserted = await tx
+              .insert(schema.reviews)
+              .values({
+                appointmentId: appt.id,
+                storeId: appt.storeId,
+                customerId: ctx.user.id,
+                staffId: appt.staffId,
+                rating: input.rating,
+                text: input.review ?? null,
+                anonymous: input.anonymous,
+              })
+              .returning({ id: schema.reviews.id });
+            reviewId = inserted[0]?.id ?? null;
+
+            // XP：分值随星级取 xp_rules（配置表唯一事实源）；3 星不计分。
+            // awardXp 内部处理日上限（dropped=1 留痕）与同客户当日去重（skipped）——均不抛错。
+            if (reviewId) {
+              const ruleKey =
+                input.rating === 5
+                  ? 'xp_review_5_star'
+                  : input.rating === 4
+                    ? 'xp_review_4_star'
+                    : input.rating <= 2
+                      ? 'xp_penalty_low_star'
+                      : null;
+              if (ruleKey) {
+                const rules = await loadXpRules(txDb(tx));
+                const points = numOr(rules.byKey.get(ruleKey)?.points, input.rating <= 2 ? -8 : 0);
+                await awardXp(txDb(tx), {
+                  storeId: appt.storeId,
+                  staffId: appt.staffId,
+                  userId: staffRow.userId,
+                  source: input.rating <= 2 ? 'penalty' : 'review',
+                  sourceId: reviewId,
+                  points,
+                  customerId: ctx.user.id, // 防刷：同客户对员工当日好评只计 1 次（查 reviews）
+                });
+              }
+            }
+
+            // 始终发 staff 频道 review.submitted（员工端本人评价列表实时刷新）
+            outboxIds.push(
+              await emitEvent(txDb(tx), `staff:${appt.staffId}`, EventType.ReviewSubmitted, {
+                appointmentId: appt.id,
+                reviewId,
+                rating: input.rating,
+                anonymous: input.anonymous,
+              }),
+            );
+          }
+        }
+        // ≤2 星差评提示 → store 频道（店长视图；未指派员工时 staffId 为 null 仍提示）
+        if (input.rating <= 2) {
+          outboxIds.push(
+            await emitEvent(txDb(tx), `store:${appt.storeId}`, EventType.ReviewFlagged, {
+              appointmentId: appt.id,
+              staffId: appt.staffId,
+              rating: input.rating,
+            }),
+          );
         }
         return row;
       });
