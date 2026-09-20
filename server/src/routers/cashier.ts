@@ -396,6 +396,16 @@ function resolveBillCustomerId(
   return apptLine?.appointment?.customerId ?? null;
 }
 
+/**
+ * staff-2 R9-C 接待人归属（默认=开单人，预约核销改挂优先）：
+ * 单含预约行时 receptionist_id 取该预约的 receptionist_id（核销改挂落点，0012 新增列）；
+ * 无预约行或预约未指定 → 开单人（operator 同源起步，同 resolveBillCustomerId 首行口径）。
+ */
+function resolveReceptionistId(operatorUserId: string, resolved: ResolvedItem[]): string {
+  const apptLine = resolved.find((r) => r.kind === 'appointment' && r.appointment);
+  return apptLine?.appointment?.receptionistId ?? operatorUserId;
+}
+
 /* ------------------------------------------------------------------ */
 /* 快照组装（路由返回统一形状）                                              */
 /* ------------------------------------------------------------------ */
@@ -1150,6 +1160,8 @@ export const cashierRouter = router({
                 createdBy: ctx.user.id,
                 // M1-补1：operator_id 与 created_by 同源起步（M2 班次启用后分叉）
                 operatorId: ctx.user.id,
+                // staff-2 R9-C: 接待人默认=开单人；含预约行时优先取预约 receptionist_id（核销改挂落点）
+                receptionistId: resolveReceptionistId(ctx.user.id, resolved),
                 shiftId: shift.id,
                 heldAt: now,
               })
@@ -1408,6 +1420,20 @@ export const cashierRouter = router({
               .update(schema.products)
               .set({ stock: sql`MAX(0, ${schema.products.stock} - ${it.qty})`, updatedAt: now })
               .where(eq(schema.products.id, it.refId));
+            // staff-2 R8: 库存流水——按条件更新真实前后值落行（兜底扣到 0 时 afterStock=0、
+            // delta=实际扣减量；stockShort 行为不变，同事务）
+            const beforeStock = fresh?.stock ?? 0;
+            const afterStock = Math.max(0, beforeStock - it.qty);
+            await tx.insert(schema.stockMovements).values({
+              storeId,
+              productId: it.refId,
+              sourceType: 'cashier',
+              sourceId: billNo,
+              delta: afterStock - beforeStock,
+              beforeStock,
+              afterStock,
+              operatorId: ctx.user.id,
+            });
           }
 
           /* ---- 预约行翻转（markPaid 事务内核：completed 且未 paid →
@@ -1477,6 +1503,8 @@ export const cashierRouter = router({
                 storeId,
                 ...billFields,
                 createdBy: ctx.user.id,
+                // staff-2 R9-C: 接待人默认=开单人；含预约行时优先取预约 receptionist_id（核销改挂落点）
+                receptionistId: resolveReceptionistId(ctx.user.id, resolved),
                 shiftId: shift.id, // M1-补2 R3：挂当班
               })
               .returning()
@@ -1655,13 +1683,23 @@ export const cashierRouter = router({
 
           /* ---- 库存回补（商品行 stock += qty） ---- */
           const restocked: Array<{ productId: string; qty: number }> = [];
+          // staff-2 R8: 回补前后值暂存，冲正单号分配后统一落流水（见冲正单段落之后）
+          const restockMoves: Array<{ productId: string; qty: number; beforeStock: number }> = [];
           for (const it of items) {
             if (it.kind !== 'product') continue;
+            // staff-2 R8: 事务内重读库存取真实前值（串行锁下即最新）
+            const fresh = await tx
+              .select({ stock: schema.products.stock })
+              .from(schema.products)
+              .where(eq(schema.products.id, it.refId))
+              .get();
+            const beforeStock = fresh?.stock ?? 0;
             await tx
               .update(schema.products)
               .set({ stock: sql`${schema.products.stock} + ${it.qty}`, updatedAt: now })
               .where(eq(schema.products.id, it.refId));
             restocked.push({ productId: it.refId, qty: it.qty });
+            restockMoves.push({ productId: it.refId, qty: it.qty, beforeStock });
           }
 
           /* ---- 预约回补（翻转回退：paidAt/paidFen 清零 → 回到待收款口径） ---- */
@@ -1768,10 +1806,29 @@ export const cashierRouter = router({
               reversalOfBillNo: bill.billNo,
               createdBy: ctx.user.id,
               operatorId: ctx.user.id,
+              // staff-2 R9-C: 冲正单接待人镜像原单（金额镜像负值随原接待人对冲，不改挂到冲正操作人）
+              receptionistId: bill.receptionistId ?? null,
               shiftId: shift.id,
             })
             .returning()
             .then((r) => r[0]!);
+
+          // staff-2 R8: 反结账回补流水（sourceId=冲正单号，delta=+qty，前后值留痕）
+          if (restockMoves.length > 0) {
+            await tx.insert(schema.stockMovements).values(
+              restockMoves.map((m) => ({
+                storeId,
+                productId: m.productId,
+                sourceType: 'reversal',
+                sourceId: reversalBillNo,
+                delta: m.qty,
+                beforeStock: m.beforeStock,
+                afterStock: m.beforeStock + m.qty,
+                operatorId: ctx.user.id,
+                note: `反结账回补 ${bill.billNo}`,
+              })),
+            );
+          }
 
           /* ---- 原单标记被冲正（永存不涂改，仅链接元数据） ---- */
           const updated = await tx
