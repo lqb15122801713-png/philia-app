@@ -73,7 +73,7 @@ export function ErrorState({
         <button
           type="button"
           onClick={onRetry}
-          className="flex items-center gap-1.5 rounded-full bg-brand-primary px-4 py-2 text-caption text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="flex min-h-[44px] items-center gap-1.5 rounded-full bg-brand-primary px-5 py-2 text-caption text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           <RefreshCw className="h-3.5 w-3.5" strokeWidth={1.5} />
           重新加载

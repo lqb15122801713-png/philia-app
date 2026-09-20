@@ -296,7 +296,7 @@ export default function AppointmentDetailPage() {
           action={
             <Link
               to="/appointments"
-              className="u1-ring flex items-center rounded-full bg-card px-4 py-2 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+              className="u1-ring flex min-h-[44px] items-center rounded-full bg-card px-5 py-2 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
             >
               返回我的预约
             </Link>
@@ -314,7 +314,7 @@ export default function AppointmentDetailPage() {
           action={
             <Link
               to="/appointments"
-              className="flex items-center rounded-full bg-brand-primary px-4 py-2 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+              className="flex min-h-[44px] items-center rounded-full bg-brand-primary px-5 py-2 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
             >
               返回我的预约
             </Link>
