@@ -335,9 +335,10 @@ export default function BoardingCheckinPage() {
           <p className="mt-1 text-caption text-ink-secondary">
             {detailQuery.error instanceof Error ? detailQuery.error.message : '预约不存在或无权查看'}
           </p>
+          {/* W1-D2 弱出口按钮化：异常页无返回条，唯一主出口=柠檬主钮（导航闭环规范②） */}
           <Link
             to="/today"
-            className="mt-4 flex h-12 items-center justify-center rounded-control bg-sunken text-body-sm text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            className="mt-4 flex h-12 items-center justify-center rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
             返回任务台
           </Link>
@@ -351,9 +352,10 @@ export default function BoardingCheckinPage() {
       <div className="px-[22px] py-6">
         <section className="u1-card p-4">
           <p className="text-body-sm text-ink">该预约不是寄养单</p>
+          {/* W1-D2 弱出口按钮化：同上，唯一主出口=柠檬主钮 */}
           <Link
             to="/today"
-            className="mt-4 flex h-12 items-center justify-center rounded-control bg-sunken text-body-sm text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            className="mt-4 flex h-12 items-center justify-center rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
             返回任务台
           </Link>
@@ -407,9 +409,10 @@ export default function BoardingCheckinPage() {
             {appt.status === 'cancelled' ? '该预约已取消' : '该预约正在取消审核中'}
           </p>
           <p className="mt-1 text-caption text-ink-secondary">如有疑问请到商家端查看处理。</p>
+          {/* W1-D2 弱出口按钮化：本分支已有返回条，出口=细线白底次钮 */}
           <Link
             to="/today"
-            className="mt-4 flex h-12 items-center justify-center rounded-control bg-sunken text-body-sm text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            className="u1-ring mt-4 flex h-12 items-center justify-center rounded-control bg-card text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
             返回任务台
           </Link>

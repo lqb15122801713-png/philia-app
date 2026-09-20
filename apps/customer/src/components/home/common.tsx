@@ -49,8 +49,20 @@ export function LoadingBlock({ lines = 3, className = '' }: { lines?: number; cl
   )
 }
 
-/** 错误态：陶红提示 + 重试按钮 */
-export function ErrorState({ message, onRetry }: { message?: string; onRetry?: () => void }) {
+/** 错误态：陶红提示 + 重试按钮 + 可选导航出口件
+ *  W1 退回修（规范 E 第四件「能回哪去」）：action=出口按钮（调用方按页型给真实落点
+ *  ——回列表/回首页；重试已是柠檬主钮时出口走细线白底次钮，无重试时出口可为柠檬主钮）。
+ *  三件套（图标/文案/重试）原貌不动，action 追加在最下。 */
+export function ErrorState({
+  message,
+  onRetry,
+  action,
+}: {
+  message?: string
+  onRetry?: () => void
+  /** W1：导航出口件（规范 E 第四件） */
+  action?: ReactNode
+}) {
   return (
     <div className="flex flex-col items-center gap-3 rounded-card bg-card px-4 py-8 text-center shadow-card">
       <span className="flex h-10 w-10 items-center justify-center rounded-full bg-danger-light">
@@ -61,12 +73,13 @@ export function ErrorState({ message, onRetry }: { message?: string; onRetry?: (
         <button
           type="button"
           onClick={onRetry}
-          className="flex items-center gap-1.5 rounded-full bg-brand-primary px-4 py-2 text-caption text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="flex min-h-[44px] items-center gap-1.5 rounded-full bg-brand-primary px-5 py-2 text-caption text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           <RefreshCw className="h-3.5 w-3.5" strokeWidth={1.5} />
           重新加载
         </button>
       ) : null}
+      {action}
     </div>
   )
 }

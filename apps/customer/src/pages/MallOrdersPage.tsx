@@ -15,8 +15,8 @@
 import { usePhiliaClient } from '@philia/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BadgeCheck, Package, Truck } from 'lucide-react';
-import { useCallback, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import CashierModal, { type CashierOrder } from '../components/mall/CashierModal';
 import PageHeader from '../components/PageHeader';
 import ConfirmSheet from '../components/mall/ConfirmSheet';
@@ -65,6 +65,10 @@ const TABS = [
   { key: 'received', label: '已完成', statuses: ['received'] },
   { key: 'aftersale', label: '售后', statuses: ['cancelled', 'refunding'] },
 ] as const;
+
+const TAB_KEYS = new Set<string>(TABS.map((t) => t.key));
+/** W1 R-Nav-2：滚动位置会话级记忆 key（sessionStorage，会话结束自清） */
+const SCROLL_KEY = 'w1.scroll.mall-orders';
 
 /* U4-D3 状态胶囊对齐试样 .opill：小签档 6 圆角 + 11px/600；
    待支付=柠檬底（试样 opill.pay）、进行中（待发货/待收货）=薄荷洗（opill.doing）、
@@ -223,7 +227,14 @@ function MallOrdersInner() {
   const cart = useCart();
   const { toastEl, showToast } = useMallToast();
 
-  const [tab, setTab] = useState<(typeof TABS)[number]['key']>('all');
+  /* W1 R-Nav-2 返回保状态（淘宝订单列表同规范）：
+     - 筛选 tab 入 URL（?tab=，replace 写入不污染历史栈——后退不会逐 tab 回放）；
+     - 滚动位置会话级记忆（sessionStorage + rAF 节流），数据就绪后恢复一次；
+     从购物车/结算等子页返回后 tab 与滚动位置一并保住；与浏览器/系统后退手势不冲突。 */
+  const [searchParams, setSearchParams] = useSearchParams();
+  const rawTab = searchParams.get('tab') ?? 'all';
+  const tab = (TAB_KEYS.has(rawTab) ? rawTab : 'all') as (typeof TABS)[number]['key'];
+  const setTab = (key: (typeof TABS)[number]['key']) => setSearchParams({ tab: key }, { replace: true });
   const [payOrder, setPayOrder] = useState<CashierOrder | null>(null);
   const [receiveTarget, setReceiveTarget] = useState<OrderRow | null>(null);
   const [cancelTarget, setCancelTarget] = useState<OrderRow | null>(null);
@@ -232,6 +243,40 @@ function MallOrdersInner() {
     queryKey: ['mall', 'listMyOrders'],
     queryFn: () => trpc.mall.listMyOrders.query(),
   });
+
+  // 滚动位置：持续记忆（rAF 节流）
+  useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        try {
+          window.sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
+        } catch {
+          /* 隐私模式忽略 */
+        }
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
+
+  // 数据就绪后恢复一次滚动位置
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (restoredRef.current || ordersQ.isPending || ordersQ.isError) return;
+    restoredRef.current = true;
+    let y = 0;
+    try {
+      y = Number(window.sessionStorage.getItem(SCROLL_KEY) ?? 0) || 0;
+    } catch {
+      /* 隐私模式忽略 */
+    }
+    if (y > 0) window.scrollTo(0, y);
+  }, [ordersQ.isPending, ordersQ.isError]);
   const groups = (ordersQ.data?.groups ?? {}) as unknown as OrderGroups;
 
   const invalidateOrders = useCallback(

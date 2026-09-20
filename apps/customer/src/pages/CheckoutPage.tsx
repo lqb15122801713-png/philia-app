@@ -141,31 +141,62 @@ function CheckoutInner() {
   };
 
   /* ---------------- 支付成功页 ---------------- */
+  /* W1-D1 同构（补丁③规格）：单据摘要卡（订单号/实付/收货信息）+ 双出口
+     （查看订单=柠檬主 / 返回首页=细线白底次）+ PageHeader 返回键（固定落点 /home，
+     交易成功页不回已消耗的结算表单；直访兜底同 W1-D3）。 */
   if (paidOrder) {
     return (
-      <div className="flex flex-col items-center px-4 py-16">
+      <div className="px-4 py-6">
         {toastEl}
-        <span className="flex h-20 w-20 items-center justify-center rounded-full bg-success-light">
-          <BadgeCheck className="h-10 w-10 text-success-deep" strokeWidth={1.5} />
-        </span>
-        <p className="mt-5 text-title-lg">支付成功</p>
-        <p className="mt-2 text-body text-ink-secondary">
-          订单号 <span className="font-number text-ink">{paidOrder.orderNo}</span>
-        </p>
-        <p className="mt-1 font-number text-body text-ink-secondary">{fenToYuan(paidOrder.totalFen)}</p>
-        <p className="mt-3 text-caption text-ink-placeholder">门店会尽快为你发货，进度可在订单列表查看</p>
-        <div className="mt-8 flex gap-3">
+        <PageHeader title="支付成功" to="/home" />
+        <div className="flex flex-col items-center pt-2">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-success-light">
+            <BadgeCheck className="h-7 w-7 text-success-deep" strokeWidth={1.5} />
+          </span>
+          <p className="mt-3 text-title-lg">支付成功</p>
+          <p className="mt-1 text-body text-ink-secondary">门店会尽快为你发货，进度可在订单列表查看</p>
+        </div>
+
+        {/* 单据摘要卡（订单号 / 实付金额 / 收货信息快照） */}
+        <section className="mt-5 rounded-card bg-card p-4 shadow-card">
+          <dl className="space-y-1.5 text-body">
+            <div className="flex justify-between">
+              <dt className="text-ink-secondary">订单号</dt>
+              <dd className="font-number font-medium">{paidOrder.orderNo}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-ink-secondary">实付金额</dt>
+              <dd className="font-number font-semibold text-brand-primary">{fenToYuan(paidOrder.totalFen)}</dd>
+            </div>
+            <div className="flex justify-between gap-4">
+              <dt className="shrink-0 text-ink-secondary">收货信息</dt>
+              <dd className="text-right">
+                {form.name} <span className="font-number">{form.phone}</span>
+                <span className="mt-0.5 block text-caption text-ink-secondary">{form.detail}</span>
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+        {/* 双出口：主=查看订单（柠檬唯一主动作）；次=返回首页（细线白底） */}
+        <div className="mt-5 space-y-2.5">
           <Link
             to="/mall/orders"
-            className="flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+            className="flex h-12 w-full items-center justify-center rounded-full bg-brand-primary text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             查看订单
           </Link>
           <Link
-            to="/mall"
-            className="flex h-11 items-center rounded-full bg-sunken px-8 text-body text-ink-secondary transition-transform duration-120 ease-philia-spring active:scale-92"
+            to="/home"
+            className="u1-ring flex h-12 w-full items-center justify-center rounded-full bg-card text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
           >
-            返回商城
+            返回首页
+          </Link>
+          <Link
+            to="/mall"
+            className="flex w-full items-center justify-center py-2 text-caption font-medium text-ink-secondary underline-offset-2 hover:underline"
+          >
+            再逛逛商城 ›
           </Link>
         </div>
       </div>

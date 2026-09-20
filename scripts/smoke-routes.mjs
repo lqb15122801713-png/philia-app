@@ -68,6 +68,8 @@ const ROUTES = [
   { app: 'customer', path: '/mall/orders', anchors: ['订单'], note: 'A2 白屏群' },
   { app: 'customer', path: '/mall/orders/', anchors: ['订单'], note: '尾斜杠变体' },
   { app: 'customer', path: '/booking', anchors: ['预约洗护'], expectPath: '/booking/grooming', note: 'B9.3 中间层 hub 退役直达单屏' },
+  { app: 'customer', path: `/booking/success?aid=${APPT_ID}`, anchors: ['返回首页', '查看我的预约', '缺少预约参数'], serverDep: true, note: 'W1-D1：交易成功页双出口+返回键闭环' },
+  { app: 'customer', path: `/booking/success/?aid=${APPT_ID}`, anchors: ['返回首页', '查看我的预约', '缺少预约参数'], serverDep: true, note: '尾斜杠变体' },
   { app: 'customer', path: '/booking/grooming', anchors: ['预约洗护'], note: 'B4 修复路由' },
   { app: 'customer', path: '/booking/grooming/', anchors: ['预约洗护'], note: '尾斜杠变体' },
   { app: 'customer', path: '/booking/success', anchors: ['预约', '缺少预约参数'], note: 'B9a 任务B 一键再约落点' },
@@ -96,6 +98,7 @@ const ROUTES = [
   { app: 'staff', path: '/today', anchors: ['今天 ·', '任务台', '核销台'], note: 'U2 时间轴台 B′：顶栏「今天 · M月d日」+ dock 首栏（groomer=任务台/frontdesk=核销台）' },
   { app: 'staff', path: `/execute/${APPT_ID}`, anchors: ['第', '步', '核销', '无法执行该预约'], serverDep: true, note: 'B1 修复路由；U4：smoke 以首个 staff 种子（前台）登录，进他人 groomer 单命中设计内守卫态「无法执行该预约」' },
   { app: 'staff', path: `/execute/${APPT_ID}/`, anchors: ['第', '步', '核销', '无法执行该预约'], serverDep: true, note: '尾斜杠变体（同上守卫态口径）' },
+  { app: 'staff', path: `/boarding/${process.env.SMOKE_STAY_ID ?? APPT_ID}/checkin`, anchors: ['无法查看该寄养单', '返回任务台', '寄养打卡', '打卡'], serverDep: true, note: 'W1：checkin 异常态弱出口已按钮化' },
   { app: 'staff', path: '/history', anchors: ['记录', '历史'] },
   { app: 'staff', path: '/me', anchors: ['我的', '员工'] },
 ];

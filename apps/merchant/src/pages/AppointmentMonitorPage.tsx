@@ -26,9 +26,9 @@ import {
 } from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import MainScaffold, { QuietButton } from '../components/MainScaffold';
+import MainScaffold, { LemonButton, QuietButton } from '../components/MainScaffold';
 import {
   dayKeyOf,
   fmtTime,
@@ -89,6 +89,7 @@ function ParentViewNote() {
 export default function AppointmentMonitorPage() {
   const { id: aid } = useParams<{ id: string }>();
   const { trpc, queryClient } = usePhiliaClient();
+  const navigate = useNavigate();
 
   /* ---------------- 查询 ---------------- */
 
@@ -274,6 +275,17 @@ export default function AppointmentMonitorPage() {
           </div>
           <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">
             {detailQuery.error instanceof Error ? detailQuery.error.message : '预约不存在或无权限'}
+          </div>
+          {/* W1 退回修：异常分支补第四件出口（柠檬主钮回预约管理，同详情页口径） */}
+          <div className="mt-4 flex items-center justify-center gap-2.5">
+            <LemonButton testid="monitor-back" onClick={() => navigate('/appointments')}>
+              返回预约管理
+            </LemonButton>
+            {detailQuery.isError ? (
+              <QuietButton testid="monitor-retry" onClick={() => void detailQuery.refetch()}>
+                重新加载
+              </QuietButton>
+            ) : null}
           </div>
         </div>
       ) : !inLiveFlow ? (

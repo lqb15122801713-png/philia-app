@@ -6,11 +6,11 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
 import PageHeader from '@/components/PageHeader';
-import { EmptyState } from '@/components/home/common';
+import { EmptyState, ErrorState } from '@/components/home/common';
 import {
   APPT_STATUS_META,
   APPT_TYPE_LABEL,
@@ -36,6 +36,10 @@ const TABS: TabDef[] = [
 ];
 
 const SERVING = new Set(['in_service', 'in_boarding']);
+
+const TAB_KEYS = new Set(TABS.map((t) => t.key));
+/** W1 R-Nav-2：滚动位置会话级记忆 key（sessionStorage，会话结束自清） */
+const SCROLL_KEY = 'w1.scroll.appointments';
 
 function AppointmentCard({ item }: { item: AppointmentListItem }) {
   const meta = APPT_STATUS_META[item.status] ?? { label: item.status, pill: 'bg-sunken text-ink-secondary' };
@@ -75,12 +79,54 @@ export default function AppointmentsPage() {
   const { trpc } = usePhiliaClient();
   // 批次 S4：免确认后新单落库即 confirmed，默认 Tab 由「待确认」改「已确认」
   //（待确认 Tab 保留：历史 pending 单与客户改期回退单仍在此分组）
-  const [tab, setTab] = useState('confirmed');
+  /* W1 R-Nav-2 返回保状态（淘宝订单列表同规范）：
+     - 筛选 tab 入 URL（?tab=，replace 写入不污染历史栈——后退不会逐 tab 回放）；
+     - 滚动位置会话级记忆（sessionStorage + rAF 节流），数据就绪后恢复一次；
+     详情页返回列表后 tab 与滚动位置一并保住；与浏览器/系统后退手势不冲突
+     （只读 URL/会话存储，不拦截 popstate）。 */
+  const [searchParams, setSearchParams] = useSearchParams();
+  const rawTab = searchParams.get('tab') ?? 'confirmed';
+  const tab = TAB_KEYS.has(rawTab) ? rawTab : 'confirmed';
+  const setTab = (key: string) => setSearchParams({ tab: key }, { replace: true });
 
   const listQ = useQuery({
     queryKey: ['appointment', 'listMine'],
     queryFn: () => trpc.appointment.listMine.query(),
   });
+
+  // 滚动位置：持续记忆（rAF 节流）
+  useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        try {
+          window.sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
+        } catch {
+          /* 隐私模式忽略 */
+        }
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
+
+  // 数据就绪后恢复一次滚动位置（列表有内容才恢复，避免空页乱跳）
+  const restoredRef = useRef(false);
+  useEffect(() => {
+    if (restoredRef.current || listQ.isPending || listQ.isError) return;
+    restoredRef.current = true;
+    let y = 0;
+    try {
+      y = Number(window.sessionStorage.getItem(SCROLL_KEY) ?? 0) || 0;
+    } catch {
+      /* 隐私模式忽略 */
+    }
+    if (y > 0) window.scrollTo(0, y);
+  }, [listQ.isPending, listQ.isError]);
   const groups: AppointmentGroups | undefined = listQ.data?.groups;
 
   const active = TABS.find((t) => t.key === tab)!;
@@ -100,7 +146,10 @@ export default function AppointmentsPage() {
           ))}
         </div>
       ) : listQ.isError ? (
-        <p className="mt-10 text-center text-body text-ink-secondary">加载失败，请下拉重试</p>
+        /* W1 退回修：裸错误文本升 ErrorState（重试=柠檬主；页头返回条已是出口件） */
+        <div className="mt-5">
+          <ErrorState message="预约列表加载失败，请检查网络后重试" onRetry={() => void listQ.refetch()} />
+        </div>
       ) : totalCount === 0 ? (
         /* U1-I：全域统一空态组件（U4-D3 试样 12 工艺；行动钮统一柠檬控件档） */
         <EmptyState

@@ -267,13 +267,14 @@ function PetForm({
       </div>
       <div className="mt-4">
         <span className={labelCls}>物种 *</span>
+        {/* W1-D2 触控量化：整钮可点 + 目标高 ≥44px，相邻间距 8px（gap-2） */}
         <div className="flex gap-2">
           {SPECIES_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               type="button"
               onClick={() => set('species', opt.value)}
-              className={`flex-1 rounded-full border px-3 py-2 text-body-sm transition-colors ${
+              className={`min-h-[44px] flex-1 rounded-full border px-3 py-2 text-body-sm transition-colors ${
                 form.species === opt.value
                   ? 'border-brand-primary bg-brand-primary-light text-brand-primary-pressed'
                   : 'border-line bg-card text-ink-secondary'
@@ -339,8 +340,8 @@ function PetForm({
         </div>
       </div>
 
-      {/* 绝育 */}
-      <label className="mt-4 flex items-center gap-2 text-body-sm">
+      {/* 绝育（W1-D2：整行 label 可点 + 行高 ≥44px） */}
+      <label className="mt-4 flex min-h-[44px] items-center gap-2 text-body-sm">
         <input
           type="checkbox"
           checked={form.neutered}

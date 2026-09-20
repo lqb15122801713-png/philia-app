@@ -31,6 +31,14 @@ npm run dev:merchant        # 商家端  http://localhost:7101
 npm run dev:staff           # 员工端  http://localhost:7102
 ```
 
+## 验收固定清单（每批七步复核必查）
+
+1. 三端 build exit 0 + server typecheck exit 0；
+2. smoke-routes 全绿（`node scripts/smoke-routes.mjs`）；
+3. smoke-deploy 全绿（`node scripts/smoke-deploy.mjs`）；
+4. 禁令 grep=0（珊瑚粉 #FFAAA5 / text-white / 渐变，diff + 行口径）；
+5. **导航闭环**（批次 W1 起制度化）：每页有出口、无死胡同、交易成功页双出口、选择器整行可点——常备 harness：`node scripts/check-nav-closure.mjs`（51 路由体检）+ `node scripts/e2e-nav-check.mjs`（真机实证）。
+
 ## 构建
 
 ```bash

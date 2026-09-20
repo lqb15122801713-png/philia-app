@@ -16,7 +16,8 @@ import { useMallToast } from '../components/mall/MallToast';
 import PageHeader from '../components/PageHeader';
 import ProductImage from '../components/mall/ProductImage';
 
-/** 圆形勾选钮：品牌色实心圆 + 深棕墨 ✓（v1.1 冻结 on-primary 语义） */
+/** 圆形勾选钮：品牌色实心圆 + 深棕墨 ✓（v1.1 冻结 on-primary 语义）
+ *  W1-D2 触控量化：视觉圆点 24px 不变，命中区扩至 44×44px（负边距补偿布局零视觉变化） */
 function CheckDot({ checked, onToggle, label }: { checked: boolean; onToggle: () => void; label: string }) {
   return (
     <button
@@ -25,11 +26,15 @@ function CheckDot({ checked, onToggle, label }: { checked: boolean; onToggle: ()
       aria-checked={checked}
       aria-label={label}
       onClick={onToggle}
-      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition ${
-        checked ? 'bg-brand-primary' : 'border-[1.5px] border-line-strong bg-card'
-      }`}
+      className="-m-2.5 flex h-11 w-11 shrink-0 items-center justify-center"
     >
-      {checked ? <Check className="h-3.5 w-3.5 text-ink" strokeWidth={2.5} /> : null}
+      <span
+        className={`flex h-6 w-6 items-center justify-center rounded-full transition ${
+          checked ? 'bg-brand-primary' : 'border-[1.5px] border-line-strong bg-card'
+        }`}
+      >
+        {checked ? <Check className="h-3.5 w-3.5 text-ink" strokeWidth={2.5} /> : null}
+      </span>
     </button>
   );
 }
