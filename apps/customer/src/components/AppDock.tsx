@@ -7,6 +7,7 @@
  * - 中央钮：60px 柠檬黄平圆 + 深棕墨 paw；点击=philia 页；
  *   长按 500ms=快捷弹层（会员码 / 一键预约 / 联系门店）——迁移旧 TabBar
  *   （ConvexTabBar 接线）长按交互：500ms 触发、10px 移动取消、长按后吞掉 click；
+ *   W1 R-Nav-3：中位补「philia」文字标签（底栏五槽全件带文字，字号字重同槽对齐）；
  * - 路由感知 active：文字 600 深棕墨 + 24px 线图标墨色；未选中 ink-secondary；
  * - 详情级页面不渲染本组件（App.tsx 按路径白名单渲染）。
  *
@@ -208,8 +209,10 @@ export default function AppDock() {
             ))}
 
             {/* philia 中央钮：60px 柠檬黄平圆 + 深棕墨 paw（不凸起无投影）；
-                点击=philia 页，长按=快捷弹层 */}
-            <span className="flex items-center justify-center">
+                点击=philia 页，长按=快捷弹层。
+                W1 R-Nav-3：中位补文字标签（与其他槽位同字号字重口径，
+                active=600 深棕墨 / 未选中 ink-secondary）——底栏图标全部带文字 */}
+            <span className="flex flex-col items-center justify-center gap-0.5 py-1.5">
               <button
                 type="button"
                 onClick={onPhiliaClick}
@@ -225,6 +228,13 @@ export default function AppDock() {
               >
                 <PawMark className="h-7 w-7" />
               </button>
+              <span
+                className={`text-caption-xs leading-none ${
+                  philiaActive ? 'font-semibold text-ink' : 'text-ink-secondary'
+                }`}
+              >
+                philia
+              </span>
             </span>
 
             {RIGHT_TABS.map((tab) => (

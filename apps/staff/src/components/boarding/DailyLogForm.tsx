@@ -138,7 +138,8 @@ export default function DailyLogForm({
                 type="button"
                 aria-pressed={mealCount === i}
                 onClick={() => setMealCount(i)}
-                className={`flex-1 rounded-control py-2.5 text-caption font-semibold transition-transform duration-120 ease-philia-spring active:scale-92 ${
+                /* W1-D2 触控量化：segment 整钮可点 + 目标高 ≥44px，相邻间距 8px（gap-2） */
+                className={`min-h-[44px] flex-1 rounded-control py-2.5 text-caption font-semibold transition-transform duration-120 ease-philia-spring active:scale-92 ${
                   mealCount === i ? 'bg-ink text-[#F6F1E3]' : 'u1-ring bg-canvas text-[rgba(74,59,46,.62)]'
                 }`}
               >

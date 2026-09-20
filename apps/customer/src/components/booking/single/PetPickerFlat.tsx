@@ -5,6 +5,9 @@
  * 无彩色图标底块（emoji 直接呈现）、选中态=深棕墨细线圈（不铺色块）、
  * 圆角收敛 14~18px。共享件 PetPicker 被旧 4 屏向导 /wizard 共用，不动。
  * 疫苗阻断为状态必需，保留 danger 状态色；「去补录」退让为细线按钮（避免新增 text-white）。
+ *
+ * W1-D2 触控量化复核：整行 <button> 可点（含圆圈与文字区）、行高 p-4 实测 ≥44px、
+ * 相邻行距 space-y-2=8px——满足补丁③4（HIG 44pt / WCAG 24px 取严）。
  */
 
 import { Link } from 'react-router-dom';
@@ -97,7 +100,8 @@ export default function PetPickerFlat({
             key={p.id}
             type="button"
             onClick={() => onSelect(p.id)}
-            className={`flex w-full items-center gap-3 rounded-card border p-4 text-left transition active:scale-[0.99] ${
+            /* W1-D2：整行可点（含圆圈与文字区），行高 ≥44px，相邻间距 8px（space-y-2） */
+            className={`flex min-h-[44px] w-full items-center gap-3 rounded-card border p-4 text-left transition active:scale-[0.99] ${
               active ? 'border-[1.5px] border-ink' : 'border-line'
             }`}
           >
