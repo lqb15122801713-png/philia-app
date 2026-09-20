@@ -25,9 +25,15 @@ import {
   ChevronDown,
   ChevronRight,
   CircleHelp,
+  ClipboardCheck,
+  Fingerprint,
   LogOut,
+  MessagesSquare,
   Settings,
+  ShieldCheck,
   Star,
+  Trophy,
+  Wallet,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -254,6 +260,18 @@ export default function MePage() {
           to="/today"
           testid="me-boarding"
         />
+      </section>
+
+      {/* 列表组 1.5：员工端 2.0（R7~R10）——打卡/盘点/薪资/XP/评价；店长视图仅店长与老板可见 */}
+      <section className="u1-card mt-3.5 divide-y divide-[rgba(74,59,46,.06)]" data-testid="me-list-staff2">
+        <ListRow icon={Fingerprint} label="打卡考勤" sub="上班/下班打卡 · 补卡申请" to="/attendance" testid="me-attendance" />
+        <ListRow icon={ClipboardCheck} label="盘点任务" sub="日盘/周盘执行 · 安心包效期" to="/inventory" testid="me-inventory" />
+        <ListRow icon={Wallet} label="薪资提成" sub="本月提成逐单明细 · 绩效 · 扣减" to="/pay" testid="me-pay" />
+        <ListRow icon={Trophy} label="XP 成长" sub="段位 · 本店榜 · 规则一句话" to="/xp" testid="me-xp" />
+        <ListRow icon={MessagesSquare} label="我的评价" sub="本人收到的客户评价" to="/reviews" testid="me-reviews-list" />
+        {(user?.roles ?? []).some((r) => r === 'merchant_manager' || r === 'merchant_owner') ? (
+          <ListRow icon={ShieldCheck} label="店长视图" sub="审批 · 日结确认 · 差评提示" to="/manager" testid="me-manager" />
+        ) : null}
       </section>
 
       {/* 列表组 2 */}
