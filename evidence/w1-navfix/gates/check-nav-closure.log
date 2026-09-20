@@ -12,11 +12,13 @@
 ✅ [customer] /booking/success?aid=01M2SW1M3YQ9AT8SH6T05Z69M3 —— OK back=true dock=false 出口钮=true
 ✅ [customer] /appointments —— OK back=true dock=false 出口钮=false
 ✅ [customer] /appointments/01M2SW1M3YQ9AT8SH6T05Z69M3 —— OK back=true dock=false 出口钮=false
+✅ [customer] /appointments/01000000000000000000000000 —— OK（无效 id 异常态须出口（W1 补改）） back=false dock=false 出口钮=true
 ✅ [customer] /appointments/01M2SW1M3YQ9AT8SH6T05Z69M3/live —— OK back=true dock=false 出口钮=false
 ✅ [customer] /mall/orders —— OK back=true dock=false 出口钮=false
 ✅ [customer] /mall/cart —— OK back=true dock=false 出口钮=true
 ✅ [customer] /mall/checkout —— OK back=true dock=false 出口钮=true
 ✅ [customer] /mall/product/01M2S57Y960FYBQ4H8SQGP2396 —— OK（商品 id 缺失时守卫口径） back=false dock=false 出口钮=true
+✅ [customer] /mall/product/01000000000000000000000000 —— OK（无效 id 异常态须出口（W1 补改）） back=false dock=false 出口钮=true
 ✅ [customer] /me/card —— OK back=true dock=false 出口钮=false
 ✅ [customer] /philia/member —— OK back=true dock=false 出口钮=false
 ✅ [customer] /philia/moments —— OK back=true dock=false 出口钮=false
@@ -27,8 +29,10 @@
 ✅ [merchant] /dashboard —— OK back=false dock=true 出口钮=false
 ✅ [merchant] /appointments —— OK back=false dock=true 出口钮=false
 ✅ [merchant] /appointments/01M2SW1M3YQ9AT8SH6T05Z69M3 —— OK back=false dock=true 出口钮=false
+✅ [merchant] /appointments/01000000000000000000000000 —— OK（无效 id 异常态须出口（W1 补改）） back=false dock=true 出口钮=false
 ✅ [merchant] /monitor —— OK back=false dock=true 出口钮=false
 ✅ [merchant] /monitor/01M2SW1M3YQ9AT8SH6T05Z69M3 —— OK back=false dock=true 出口钮=false
+✅ [merchant] /monitor/01000000000000000000000000 —— OK（无效 id 异常态须出口（W1 补改）） back=false dock=true 出口钮=false
 ✅ [merchant] /boarding —— OK back=false dock=true 出口钮=false
 ✅ [merchant] /orders —— OK back=false dock=true 出口钮=false
 ✅ [merchant] /products —— OK back=false dock=true 出口钮=false
@@ -54,4 +58,4 @@
 ➖ [staff] /dev-login —— 豁免 门禁页
 ✅ [staff] / —— OK（重定向→/today） back=false dock=true 出口钮=false
 
-===== 体检汇总：51 路由 · 死胡同 0 · 弱 0 · 豁免 6 =====
+===== 体检汇总：55 路由 · 死胡同 0 · 弱 0 · 豁免 6 =====

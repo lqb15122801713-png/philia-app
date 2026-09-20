@@ -26,18 +26,18 @@ computing gzip size...
 dist/registerSW.js                0.13 kB
 dist/manifest.webmanifest         0.38 kB
 dist/index.html                   0.75 kB │ gzip:   0.44 kB
-dist/assets/index-DIaT19Qg.css  102.68 kB │ gzip:  16.99 kB
-dist/assets/index-CscFtKFv.js   781.34 kB │ gzip: 217.48 kB
+dist/assets/index-4c8nBNVH.css  102.65 kB │ gzip:  16.98 kB
+dist/assets/index-BiEZqoM4.js   781.95 kB │ gzip: 217.55 kB
 
 (!) Some chunks are larger than 500 kB after minification. Consider:
 - Using dynamic import() to code-split the application
 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-✓ built in 3.15s
+✓ built in 3.45s
 
 PWA v1.3.0
 mode      generateSW
-precache  7 entries (864.16 KiB)
+precache  7 entries (864.72 KiB)
 files generated
   dist/sw.js
   dist/workbox-9c191d2f.js
@@ -54,17 +54,17 @@ dist/registerSW.js                0.13 kB
 dist/manifest.webmanifest         0.40 kB
 dist/index.html                   0.75 kB │ gzip:   0.44 kB
 dist/assets/index-D9HknDW5.css  111.69 kB │ gzip:  18.57 kB
-dist/assets/index-y-fqEcxo.js   721.08 kB │ gzip: 193.39 kB
+dist/assets/index-DW4bk9Be.js   721.55 kB │ gzip: 193.43 kB
 
 (!) Some chunks are larger than 500 kB after minification. Consider:
 - Using dynamic import() to code-split the application
 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-✓ built in 2.71s
+✓ built in 3.02s
 
 PWA v1.3.0
 mode      generateSW
-precache  7 entries (814.12 KiB)
+precache  7 entries (814.57 KiB)
 files generated
   dist/sw.js
   dist/workbox-9c191d2f.js
@@ -83,7 +83,7 @@ dist/index.html                      0.75 kB │ gzip:   0.43 kB
 dist/assets/index-CzTCj6fN.css      98.35 kB │ gzip:  16.35 kB
 dist/assets/QrScanner-BLiv11Pr.js  141.53 kB │ gzip:  51.27 kB
 dist/assets/index-CoxekXwr.js      482.17 kB │ gzip: 142.14 kB
-✓ built in 2.50s
+✓ built in 2.98s
 
 PWA v1.3.0
 mode      generateSW

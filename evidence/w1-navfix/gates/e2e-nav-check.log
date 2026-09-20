@@ -1,4 +1,4 @@
-✅ 真实造单（成功页数据源） —— aid=01M2YNBC1BD1XRKRG7W0SP1V02
+✅ 真实造单（成功页数据源） —— aid=01M2YTD0T37HMQWX132HN8QP0J
 ✅ 浏览器 dev-login —— status=200
 ✅ 成功页可达（?aid= 真实单据）
 ✅ 成功页返回键存在
@@ -8,7 +8,11 @@
 ✅ 成功页一击回首页（落 /home） —— path=/home
 ✅ 选宠物弹层打开
 ✅ 选宠物弹层点整行可选中（文字区命中） —— pet=旺财狗狗 ·
-✅ R-Nav-2 返回列表保筛选 tab —— tab=已完成7 返回后=/appointments?tab=history
+✅ R-Nav-2 前置：listMine 取到非默认 tab 单据（运行时数据闭环） —— status=completed aid=01M2TMG75TSVN9CEKQ4F65E8HG
+✅ R-Nav-2 前置：切到「已完成」tab
+✅ R-Nav-2 前置：目标单据在列表可取（取不到=显式失败）
+✅ R-Nav-2 前置：已进入目标单据详情（进详情成功才断言） —— path=/appointments/01M2TMG75TSVN9CEKQ4F65E8HG
+✅ R-Nav-2 返回列表保筛选 tab —— tab=已完成 返回后=/appointments?tab=history
 ✅ R-Nav-3 底栏中位爪印带文字标签 —— label=philia
 
 e2e-nav-check 全绿 🎉

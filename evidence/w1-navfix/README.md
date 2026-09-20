@@ -10,14 +10,39 @@
 
 | 闸门 | 结果 | 证据 |
 |---|---|---|
-| 三端 build exit 0 | ✅ | gates/build-all.log |
+| 三端 build exit 0 | ✅（Y1 裁定：只许根目录 `npm run build` 单命令，本批照此执行） | gates/build-all.log |
 | server typecheck exit 0 | ✅ | gates/server-typecheck.log |
 | smoke-routes | ✅ **39/39**（36→39：/booking/success 双出口锚点 ×2 + staff checkin 弱出口按钮化锚点） | gates/smoke-routes.log/.json |
 | smoke-deploy | ✅ 全绿（含新增「商品单冲正库存 +1」用例：settle −N → reverseBill +N，stock 35→36 实证） | gates/smoke-deploy.log |
-| e2e-nav-check（新增常备） | ✅ 全绿 12 项：真实造单→成功页返回键/双出口/核销码区/改期快捷入口/一击回首页（落 /home）；选宠物弹层点文字区选中收层；R-Nav-2 tab 保持（?tab=history）；底栏中位文字标签 | gates/e2e-nav-check.log |
-| check-nav-closure（常备入仓） | ✅ **51 路由：死胡同 0 · 弱 0 · 豁免 6**（门禁页） | gates/check-nav-closure.log |
+| e2e-nav-check（新增常备） | ✅ 全绿 16 项：真实造单→成功页返回键/双出口/核销码区/改期快捷入口/一击回首页（落 /home）；选宠物弹层点文字区选中收层；R-Nav-2 数据闭环（listMine 自取单据/进详情成功才断言/tab=已完成 → 返回后 ?tab=history）；底栏中位文字标签 | gates/e2e-nav-check.log |
+| check-nav-closure（常备入仓） | ✅ **55 路由：死胡同 0 · 弱 0 · 豁免 6**（门禁页；含 4 行无效 id 异常态断言） | gates/check-nav-closure.log |
 | 禁令 grep（diff + 行） | ✅ 珊瑚粉=0 / text-white=0 / 渐变=0；零新依赖 | gates/grep-gate.log |
-| diff 范围 | ✅ apps/customer 9 + apps/staff 2 + scripts 4 + README 1 | PR diff |
+| diff 范围 | ✅ apps/customer 13 + apps/staff 2 + apps/merchant 1 + scripts 4 + README 1 | PR diff |
+
+## 复核退回补改（2026-09-20 七步复核裁定，同分支补改收口）
+
+### 补改一 子页异常态死胡同（实证：/appointments/<无效id> 四要素全无）
+
+- **ErrorState 增第四件「能回哪去」**：`components/home/common.tsx` 的 ErrorState 增 `action` 出口件槽位（重试/出口钮均 ≥44px 量化护栏）；`AppointmentDetailPage` 两个异常分支接入（重新加载柠檬 + 「返回我的预约」细线 44px）；空态链接形出口按钮化（BookingSuccessPage 缺参分支文字链 → ErrorState+柠檬出口；AppointmentsPage 裸错误文本 → ErrorState；merchant `AppointmentMonitorPage` 异常分支补 LemonButton 出口）。
+- **全三端子页同型排查**（出口落点表在卷）：customer /appointments/:id（isError 与 !d 双分支）、/appointments/:id/live、/mall/product/:id、列表五页；staff /execute/:id 五态 GuidePage、/boarding/:id/checkin 三处守卫（W1 已修口径）；merchant /monitor/:id（本次补）+ 其余页常驻 rail。
+- **体检表增「无效 id 异常态」断言行**（51→55）：customer /appointments/<无效id>、/mall/product/<无效id>；merchant /appointments/<无效id>、/monitor/<无效id>——全部 OK（出口钮/常驻 rail 实证）。
+- 实拍：shots/08（/appointments 无效 id 出口件）/09（pdp 无效 id）/10（staff execute 守卫回归）/11（merchant monitor 无效 id）。
+
+### 补改二 e2e R-Nav-2 假阴性
+
+- **数据闭环**：放弃「赌存量 tab 有行」——改为 listMine 运行时自取单据（completed→in_service→cancelled→pending 优先级），tab 由状态反推（已完成/服务中/已取消/待确认）；
+- **进详情成功才断言**：三段前置（tab 切换成功/行可取/详情 path 命中）逐段 check，任一失败即显式 fail；
+- **取不到行显式失败**（不再静默跳过）。
+- 过程校准三处（脚本级，非产品缺陷）：tab 钮计数无空格（「已完成7」前缀匹配）；默认 tab=已确认故自造 confirmed 单不覆盖非默认场景（改 listMine 自取）；preview 构建只许 localhost base（Y1 单命令口径，beta.local 烘焙版不再用于本地验收）。
+
+### P3 顺手两件
+
+- **BackButton 三态语义注释**（PageHeader.tsx）：①idx>0+to=固定目标 ②idx>0 无 to=navigate(-1) ③idx===0=兜底 to ?? '/home'；边界=只兜 SPA 无栈场景不拦系统手势。
+- **harness 跨环境**：两件头注写全环境假设（Node≥22 或 20/21 `--experimental-websocket`；CHROME_PATH 优先+Windows/Linux 候选自动探测；无口令假设=被检服务未设 BETA_GATE_CODE；Y1 构建只许根 npm run build）。
+
+### Y1 裁成立（施工令附件裁定）
+
+今后三端构建只许根目录 `npm run build`（单命令三端全量，杜绝链式命令环境变量只对首端生效的陷阱）——本批及后续验收照此执行，本卷宗闸门日志即此口径产出。
 
 ## 缺陷修复落点（任务书 §一/§二 + 补丁③）
 
