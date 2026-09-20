@@ -21,6 +21,8 @@
  *  4. 演示单链路：dev-seed-users 动态取数（带口令）→ 客户下单 appointment.create
  *     → 商家确认 appointment.confirm → 客户取码 appointment.getCode
  *     → 员工核销 appointment.checkin（人工 6 位码）
+ *  5. 收银台全链路 + 冲正回补；5.13（staff-2 R8）库存流水三类来源验证：
+ *     cashier（结账扣减）/ reversal（冲正回补）/ count（现造盘点单确认入账），前后值正确
  */
 
 const BASE = (process.env.PUBLIC_BASE_URL ?? 'http://localhost:7200').replace(/\/$/, '');
@@ -480,6 +482,68 @@ if (sessions.merchant && seedCustomer && sessions.customer) {
       !rev?.err && afterRev === beforeRev + 1,
       `stock ${beforeRev}→${afterRev}（期望 +1）${rev?.err ? ` err=${rev.err.slice(0, 60)}` : ''}`,
     );
+  }
+
+  // 5.13 staff-2 R8：库存流水三类来源写入验证（cashier / reversal / count，前后值正确）——
+  // cashier 行来自 5.6 结账扣减（sourceId=billNo1），reversal 行来自 5.12 冲正回补；
+  // count 行由本节现造盘点单（owner 建单 → staff 录入盘亏 → owner 确认入账）产出。
+  // 幂等口径：全部按「本单 sourceId / 相对前后值」断言，重复跑数据累积不失败。
+  if (sessions.staff) {
+    // cashier 来源：5.6 结账商品行扣减（delta=-1，before→after 连续）
+    const movC = await trpcQuery(sessions.merchant, 'inventory.listMovements', { sourceType: 'cashier', limit: 100 })
+      .catch((e) => ({ err: String(e?.message ?? e) }));
+    const cashRow = Array.isArray(movC) ? movC.find((m) => m.sourceId === billNo1 && m.productId === product?.id) : null;
+    check(
+      '库存流水 cashier 来源（5.6 结账扣减落账，delta=-1 前后值连续）',
+      !movC?.err && !!cashRow && cashRow.delta === -1 && cashRow.afterStock === cashRow.beforeStock - 1,
+      cashRow ? `before=${cashRow.beforeStock} after=${cashRow.afterStock}` : `err=${movC?.err ?? '未找到本单流水'}`,
+    );
+
+    // reversal 来源：5.12 冲正回补（delta=+1；note 带原单号）
+    const movR = await trpcQuery(sessions.merchant, 'inventory.listMovements', { sourceType: 'reversal', limit: 100 })
+      .catch((e) => ({ err: String(e?.message ?? e) }));
+    const revRow = Array.isArray(movR)
+      ? movR.find((m) => m.productId === product?.id && String(m.note ?? '').includes(billNo1 ?? '')) ?? movR.find((m) => m.productId === product?.id && m.delta > 0)
+      : null;
+    check(
+      '库存流水 reversal 来源（5.12 冲正回补落账，delta=+1 前后值连续）',
+      !movR?.err && !!revRow && revRow.delta === 1 && revRow.afterStock === revRow.beforeStock + 1,
+      revRow ? `before=${revRow.beforeStock} after=${revRow.afterStock}` : `err=${movR?.err ?? '未找到冲正流水（5.12 未执行则不达）'}`,
+    );
+
+    // count 来源：现造盘点单（weekly 全量）→ 员工录入（首个商品盘亏 2）→ owner 确认入账
+    const count0 = await trpcMutate(sessions.merchant, 'inventory.assignCount', { type: 'weekly' })
+      .catch((e) => ({ err: String(e?.message ?? e) }));
+    const countId = count0?.id ?? null;
+    check('库存流水 count 前置：盘点建单（weekly draft）', !count0?.err && !!countId && count0?.status === 'draft', `countId=${countId} items=${count0?.itemCount}${count0?.err ? ` err=${count0.err.slice(0, 60)}` : ''}`);
+    if (countId) {
+      const tasks = await trpcQuery(sessions.staff, 'inventory.myCountTasks').catch((e) => ({ err: String(e?.message ?? e) }));
+      const task = Array.isArray(tasks) ? tasks.find((t) => t.id === countId) : null;
+      const items = task?.items ?? [];
+      const target = items.find((it) => (it.systemStock ?? 0) >= 2) ?? items[0];
+      check('库存流水 count 前置：员工待办可见盘点行项', !!task && items.length > 0, `items=${items.length}${tasks?.err ? ` err=${tasks.err.slice(0, 60)}` : ''}`);
+      if (task && target) {
+        const rec = await trpcMutate(sessions.staff, 'inventory.recordItems', {
+          countId,
+          items: items.map((it) => ({ itemId: it.id, actualStock: it.id === target.id ? Math.max(0, it.systemStock - 2) : it.systemStock })),
+        }).catch((e) => ({ err: String(e?.message ?? e) }));
+        check('库存流水 count 前置：实盘录入 → counted', !rec?.err && rec?.status === 'counted', `status=${rec?.status}${rec?.err ? ` err=${rec.err.slice(0, 60)}` : ''}`);
+        const conf = await trpcMutate(sessions.merchant, 'inventory.confirmCount', { countId })
+          .catch((e) => ({ err: String(e?.message ?? e) }));
+        const confCount = conf?.count ?? conf;
+        check('库存流水 count 前置：店长确认入账（posted，diffs≥1）', !conf?.err && confCount?.status === 'posted' && (conf?.diffs ?? 0) >= 1, `status=${confCount?.status} diffs=${conf?.diffs}${conf?.err ? ` err=${conf.err.slice(0, 60)}` : ''}`);
+        const movCnt = await trpcQuery(sessions.merchant, 'inventory.listMovements', { sourceType: 'count', limit: 100 })
+          .catch((e) => ({ err: String(e?.message ?? e) }));
+        const cntRow = Array.isArray(movCnt) ? movCnt.find((m) => m.sourceId === countId && m.productId === target.productId) : null;
+        check(
+          '库存流水 count 来源（盘点入账落账，delta=-2 前后值=快照/实盘）',
+          !movCnt?.err && !!cntRow && cntRow.delta === -2 && cntRow.beforeStock === target.systemStock && cntRow.afterStock === Math.max(0, target.systemStock - 2),
+          cntRow ? `before=${cntRow.beforeStock} after=${cntRow.afterStock}` : `err=${movCnt?.err ?? '未找到盘点流水'}`,
+        );
+      }
+    }
+  } else {
+    check('库存流水三类来源验证（staff 会话缺失，跳过 count 链路）', false, 'sessions.staff 不可用');
   }
 }
 
