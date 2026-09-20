@@ -28,12 +28,12 @@
 - **体检表增「无效 id 异常态」断言行**（51→55）：customer /appointments/<无效id>、/mall/product/<无效id>；merchant /appointments/<无效id>、/monitor/<无效id>——全部 OK（出口钮/常驻 rail 实证）。
 - 实拍：shots/08（/appointments 无效 id 出口件）/09（pdp 无效 id）/10（staff execute 守卫回归）/11（merchant monitor 无效 id）。
 
-### 补改二 e2e R-Nav-2 假阴性
+### 补改二 e2e R-Nav-2 假阴性（二轮回：R-W1-B 自闭环口径收口）
 
-- **数据闭环**：放弃「赌存量 tab 有行」——改为 listMine 运行时自取单据（completed→in_service→cancelled→pending 优先级），tab 由状态反推（已完成/服务中/已取消/待确认）；
-- **进详情成功才断言**：三段前置（tab 切换成功/行可取/详情 path 命中）逐段 check，任一失败即显式 fail；
-- **取不到行显式失败**（不再静默跳过）。
-- 过程校准三处（脚本级，非产品缺陷）：tab 钮计数无空格（「已完成7」前缀匹配）；默认 tab=已确认故自造 confirmed 单不覆盖非默认场景（改 listMine 自取）；preview 构建只许 localhost base（Y1 单命令口径，beta.local 烘焙版不再用于本地验收）。
+- **复验退回（R-W1-B）**：初版「listMine 运行时自取单据」在全新种子库必空（种子只清不造，干净库仅 confirmed×1）——用例未自闭环。
+- **终版（冻结验收口径）**：e2e 自造单据走完整状态闭环——造单（明天 10:00，距开始 >4h）→ **客户真实取消**（W-14 `appointment.cancel` 端点，>4h 直消，取消原因留痕）→「已取消」tab 取到该单 → 进详情 → 返回断言 `?tab=cancelled` 保持。
+- **通过标准实证**：全新种子库（db:seed 重置后）e2e 全绿 16/16（gates/e2e-nav-check.log 末轮输出）；前置三段（tab 切换/行可取/详情 path 命中）任一失败即显式 fail，取不到行显式失败，无假阴性空间。
+- 过程校准三处（脚本级，非产品缺陷）：tab 钮计数无空格（「已完成7」前缀匹配）；默认 tab=已确认故自造 confirmed 单不覆盖非默认场景；preview 构建只许 localhost base（Y1 单命令口径，beta.local 烘焙版不再用于本地验收）。
 
 ### P3 顺手两件
 
