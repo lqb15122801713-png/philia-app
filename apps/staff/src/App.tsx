@@ -8,6 +8,13 @@ import DevLoginPage from './pages/DevLoginPage'
 import ExecutePage from './pages/ExecutePage'
 import HistoryPage from './pages/HistoryPage'
 import MePage from './pages/MePage'
+import AttendancePage from './pages/staff2/AttendancePage'
+import InventoryCountPage from './pages/staff2/InventoryCountPage'
+import InventoryPage from './pages/staff2/InventoryPage'
+import ManagerPage from './pages/staff2/ManagerPage'
+import MyReviewsPage from './pages/staff2/MyReviewsPage'
+import PayPage from './pages/staff2/PayPage'
+import XpPage from './pages/staff2/XpPage'
 import TodayPage from './pages/TodayPage'
 
 // 受员工身份保护的主内容路由（P0 路由表原样保留，路径不许改）
@@ -20,6 +27,14 @@ function ProtectedRoutes() {
       <Route path="/boarding/:id/checkin" element={<BoardingCheckinPage />} />
       <Route path="/history" element={<HistoryPage />} />
       <Route path="/me" element={<MePage />} />
+      {/* 批次 员工端2.0（R7~R10）：子页统一 PageHeader 返回条（W1 导航闭环） */}
+      <Route path="/attendance" element={<AttendancePage />} />
+      <Route path="/inventory" element={<InventoryPage />} />
+      <Route path="/inventory/:id" element={<InventoryCountPage />} />
+      <Route path="/pay" element={<PayPage />} />
+      <Route path="/xp" element={<XpPage />} />
+      <Route path="/reviews" element={<MyReviewsPage />} />
+      <Route path="/manager" element={<ManagerPage />} />
       <Route path="*" element={<Navigate to="/today" replace />} />
     </Routes>
   )

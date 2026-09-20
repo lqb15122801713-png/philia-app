@@ -130,6 +130,8 @@ export default function AppointmentDetailPage() {
   const [newCheckout, setNewCheckout] = useState<Date | null>(null);
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
+  // R10 最小评价域：匿名可选（默认关，同权计分）；一句话选填 ≤140 字
+  const [reviewAnonymous, setReviewAnonymous] = useState(false);
 
   // 改期槽位数据源（仅洗护）：与预约向导同源（store.getWithServices 带当前 serviceId，
   // 槽位按该服务时长过滤连续槽），展开改期面板时才拉取；寄养改期走两阶段日期重选，无需槽位
@@ -172,6 +174,7 @@ export default function AppointmentDetailPage() {
         appointmentId: id,
         rating,
         ...(reviewText.trim() ? { review: reviewText.trim() } : {}),
+        anonymous: reviewAnonymous,
       }),
     onSuccess: () => {
       invalidate();
@@ -764,11 +767,32 @@ export default function AppointmentDetailPage() {
               <textarea
                 value={reviewText}
                 onChange={(e) => setReviewText(e.target.value)}
-                maxLength={1000}
+                maxLength={140}
                 rows={3}
                 placeholder="这次服务怎么样？说说毛孩子的体验…"
                 className="mt-3 w-full rounded-input border border-line bg-card px-3.5 py-3 text-body placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
               />
+              <p className="mt-1 text-right text-caption text-ink-placeholder">
+                一句话选填 · {reviewText.length}/140
+              </p>
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-body text-ink">匿名评价</p>
+                  <p className="mt-0.5 text-caption text-ink-secondary">匿名评价同权计分</p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={reviewAnonymous}
+                  aria-label="匿名评价"
+                  onClick={() => setReviewAnonymous((v) => !v)}
+                  className={`relative h-6 w-11 shrink-0 rounded-full transition ${reviewAnonymous ? 'bg-brand-primary' : 'bg-line'}`}
+                >
+                  <span
+                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-card shadow-card transition-all ${reviewAnonymous ? 'left-[22px]' : 'left-0.5'}`}
+                  />
+                </button>
+              </div>
               <button
                 type="button"
                 disabled={reviewM.isPending}
