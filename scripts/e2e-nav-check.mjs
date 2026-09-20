@@ -14,6 +14,12 @@
  *
  * 环境变量：CUSTOMER_URL（默认 http://localhost:7100）、API_BASE（默认 http://localhost:7200）、
  *   CDP_PORT（默认 9225）。
+ * 环境假设（P3 跨环境条款）：
+ *   - Node ≥22（全局 WebSocket 稳定）；Node 20/21 须加 flag：
+ *       node --experimental-websocket scripts/e2e-nav-check.mjs
+ *   - 浏览器：CHROME_PATH 显式指定优先，其次 Windows/Linux 候选自动探测；
+ *   - 口令假设：dev-seed-users / dev-login 不带 code——被检服务须未设 BETA_GATE_CODE（无门态）；
+ *   - 构建口径（Y1 裁定）：三端构建只许根目录 `npm run build`。
  * 退出码：0 全绿；1 存在失败；2 环境不可用。
  */
 
@@ -27,11 +33,16 @@ const API_BASE = (process.env.API_BASE ?? 'http://localhost:7200').replace(/\/$/
 const CDP_PORT = Number(process.env.CDP_PORT ?? 9225);
 
 const BROWSER = [
+  process.env.CHROME_PATH, // 跨环境显式指定（P3）
   'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
   'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
   'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
   'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-].find((p) => existsSync(p));
+  '/usr/bin/google-chrome',
+  '/usr/bin/chromium',
+  '/usr/bin/chromium-browser',
+  '/usr/bin/microsoft-edge',
+].filter(Boolean).find((p) => existsSync(p));
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let failures = 0;
@@ -242,24 +253,55 @@ async function main() {
   })()`);
   check('选宠物弹层点整行可选中（文字区命中）', picked.ok === true && petSelected === true, `pet=${picked.name ?? '?'}`);
 
-  /* ---- 3. R-Nav-2 返回保状态（tab 保持） ---- */
-  await cdp.send('Page.navigate', { url: `${CUSTOMER_URL}/appointments` });
-  await cdp.waitFor(`(document.body?.innerText ?? '').includes('预约')`);
-  await sleep(1200);
-  // 切到非默认 tab（找「历史/已完成」类 tab 钮）
-  const tabPicked = await cdp.eval(`(() => {
-    const tab = [...document.querySelectorAll('button, a')].find((el) => /历史|已完成|全部/.test((el.textContent || '').trim()) && (el.textContent || '').trim().length <= 4);
-    if (tab) { tab.click(); return (tab.textContent || '').trim(); } return null;
-  })()`);
-  await sleep(1000);
-  const tabUrl = await cdp.eval('location.search');
-  // 进首个详情再返回
-  await cdp.eval(`(() => { const row = document.querySelector('a[href*="/appointments/"]'); if (row) { row.click(); return true; } return false; })()`);
-  await sleep(1800);
-  await cdp.eval(`(() => { const b = document.querySelector('button[aria-label*="返回"], a[aria-label*="返回"]'); if (b) { b.click(); return true; } history.back(); return true; })()`);
-  await sleep(1500);
-  const backUrl = await cdp.eval('location.pathname + location.search');
-  check('R-Nav-2 返回列表保筛选 tab', tabPicked !== null && backUrl.includes('tab='), `tab=${tabPicked} 返回后=${backUrl}`);
+  /* ---- 3. R-Nav-2 返回保状态（数据闭环：listMine 运行时自取自证，非默认 tab 有行才断言） ---- */
+  // tab 体系（AppointmentsPage TABS 常量）：已确认(默认)/待确认/服务中/已完成/已取消
+  const TAB_BY_STATUS = { completed: '已完成', in_service: '服务中', in_boarding: '服务中', cancelled: '已取消', pending: '待确认' };
+  const mine = await trpcQuery(cookie, 'appointment.listMine');
+  const groups = mine?.groups ?? {};
+  let navTarget = null;
+  for (const statuses of [['completed'], ['in_service', 'in_boarding'], ['cancelled'], ['pending']]) {
+    for (const s of statuses) {
+      const rows = groups[s] ?? [];
+      if (rows.length > 0) { navTarget = { aid: rows[0].id, label: TAB_BY_STATUS[s], status: s }; break; }
+    }
+    if (navTarget) break;
+  }
+  check('R-Nav-2 前置：listMine 取到非默认 tab 单据（运行时数据闭环）', navTarget !== null, navTarget ? `status=${navTarget.status} aid=${navTarget.aid}` : '全部为空');
+  if (navTarget) {
+    await cdp.send('Page.navigate', { url: `${CUSTOMER_URL}/appointments` });
+    await cdp.waitFor(`(document.body?.innerText ?? '').includes('预约')`);
+    await sleep(1200);
+    // 切到该非默认 tab（label 前缀匹配——钮上计数无空格，如「已完成7」）
+    const tabClicked = await cdp.eval(`(() => {
+      const tab = [...document.querySelectorAll('button, a')].find((el) => (el.textContent || '').trim().startsWith(${JSON.stringify(navTarget.label)}));
+      if (!tab) return false;
+      tab.click();
+      return true;
+    })()`);
+    check(`R-Nav-2 前置：切到「${navTarget.label}」tab`, tabClicked === true, '');
+    await sleep(1200);
+    const rowHit = await cdp.eval(`(() => {
+      const row = document.querySelector('a[href*="/appointments/${navTarget.aid}"]');
+      if (!row) return false;
+      row.click();
+      return true;
+    })()`);
+    check('R-Nav-2 前置：目标单据在列表可取（取不到=显式失败）', rowHit === true, '');
+    await sleep(1800);
+    const detailPath = await cdp.eval('location.pathname');
+    const detailOk = rowHit === true && detailPath.includes(`/appointments/${navTarget.aid}`);
+    check('R-Nav-2 前置：已进入目标单据详情（进详情成功才断言）', detailOk === true, `path=${detailPath}`);
+    if (detailOk) {
+      await cdp.eval(`(() => { const b = document.querySelector('button[aria-label*="返回"], a[aria-label*="返回"]'); if (b) { b.click(); return true; } history.back(); return true; })()`);
+      await sleep(1500);
+      const backUrl = await cdp.eval('location.pathname + location.search');
+      check('R-Nav-2 返回列表保筛选 tab', backUrl.includes('tab='), `tab=${navTarget.label} 返回后=${backUrl}`);
+    } else {
+      check('R-Nav-2 返回列表保筛选 tab', false, '未进详情，显式失败');
+    }
+  } else {
+    check('R-Nav-2 返回列表保筛选 tab', false, '无可用非默认 tab 数据，显式失败');
+  }
 
   /* ---- 4. R-Nav-3 底栏中位文字标签（底栏只在主 tab 页渲染，先回 /home） ---- */
   await cdp.send('Page.navigate', { url: `${CUSTOMER_URL}/home` });

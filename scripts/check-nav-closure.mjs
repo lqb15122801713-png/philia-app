@@ -13,6 +13,15 @@
  * 判定（§六）：四者全无=死胡同（阻断，exit 1）；仅有链接形出口=弱（整改项，不阻断）；
  *   门禁/登录页豁免；新增路由须在 PR 中申报并补入本表。
  *
+ * 环境假设（P3 跨环境条款）：
+ *   - Node ≥22（全局 WebSocket 稳定）；Node 20/21 须加 flag 运行：
+ *       node --experimental-websocket scripts/check-nav-closure.mjs
+ *   - 浏览器自动探测：CHROME_PATH 显式指定优先，其次 Windows Edge/Chrome 候选，
+ *     再 Linux 候选（/usr/bin/google-chrome、chromium、chromium-browser、microsoft-edge）；
+ *   - 口令假设：dev-seed-users / dev-login 不带 code——被检服务须未设 BETA_GATE_CODE
+ *     （无门态；设门环境请先以无门实例跑本表）。
+ *   - 构建口径（Y1 裁定）：三端构建只许根目录 `npm run build`（一条命令三端全量）。
+ *
  * 环境变量：CUSTOMER_URL / MERCHANT_URL / STAFF_URL（默认 vite preview 7100/7101/7102）、
  *   API_BASE（默认 http://localhost:7200）、CDP_PORT（默认 9224，避免与 smoke-routes 撞车）、
  *   NAV_JSON（设置时把 51 行结果写 JSON 到该路径）。
@@ -35,14 +44,20 @@ const NAV_JSON = process.env.NAV_JSON ?? null;
 const APPT_ID = process.env.NAV_APPT_ID ?? '01M2SW1M3YQ9AT8SH6T05Z69M3';
 const STAY_ID = process.env.NAV_STAY_ID ?? '01000000000000000000000000';
 const PRODUCT_ID = process.env.NAV_PRODUCT_ID ?? '01M2S57Y960FYBQ4H8SQGP2396';
+const INVALID_ID = '01000000000000000000000000'; // 无效 id 异常态断言（W1 补改：子页错误态须出口）
 const TIMEOUT = 9000;
 
 const BROWSER = [
+  process.env.CHROME_PATH, // 跨环境显式指定（P3）
   'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
   'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
   'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
   'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-].find((p) => existsSync(p));
+  '/usr/bin/google-chrome',
+  '/usr/bin/chromium',
+  '/usr/bin/chromium-browser',
+  '/usr/bin/microsoft-edge',
+].filter(Boolean).find((p) => existsSync(p));
 
 /** 51 路由体检表（任务书 W1 §五巡检地图；expect: tab=主tab页 / sub=子页 / success=交易成功页 / gate=门禁豁免） */
 const ROUTES = [
@@ -59,11 +74,13 @@ const ROUTES = [
   { app: 'customer', path: `/booking/success?aid=${APPT_ID}`, expect: 'success' },
   { app: 'customer', path: '/appointments', expect: 'sub' },
   { app: 'customer', path: `/appointments/${APPT_ID}`, expect: 'sub' },
+  { app: 'customer', path: `/appointments/${INVALID_ID}`, expect: 'sub', note: '无效 id 异常态须出口（W1 补改）' },
   { app: 'customer', path: `/appointments/${APPT_ID}/live`, expect: 'sub' },
   { app: 'customer', path: '/mall/orders', expect: 'sub' },
   { app: 'customer', path: '/mall/cart', expect: 'sub' },
   { app: 'customer', path: '/mall/checkout', expect: 'sub' },
   { app: 'customer', path: `/mall/product/${PRODUCT_ID}`, expect: 'sub', note: '商品 id 缺失时守卫口径' },
+  { app: 'customer', path: `/mall/product/${INVALID_ID}`, expect: 'sub', note: '无效 id 异常态须出口（W1 补改）' },
   { app: 'customer', path: '/me/card', expect: 'sub' },
   { app: 'customer', path: '/philia/member', expect: 'sub' },
   { app: 'customer', path: '/philia/moments', expect: 'sub' },
@@ -74,8 +91,10 @@ const ROUTES = [
   { app: 'merchant', path: '/dashboard', expect: 'tab' },
   { app: 'merchant', path: '/appointments', expect: 'sub' },
   { app: 'merchant', path: `/appointments/${APPT_ID}`, expect: 'sub' },
+  { app: 'merchant', path: `/appointments/${INVALID_ID}`, expect: 'sub', note: '无效 id 异常态须出口（W1 补改）' },
   { app: 'merchant', path: '/monitor', expect: 'sub' },
   { app: 'merchant', path: `/monitor/${APPT_ID}`, expect: 'sub' },
+  { app: 'merchant', path: `/monitor/${INVALID_ID}`, expect: 'sub', note: '无效 id 异常态须出口（W1 补改）' },
   { app: 'merchant', path: '/boarding', expect: 'sub' },
   { app: 'merchant', path: '/orders', expect: 'sub' },
   { app: 'merchant', path: '/products', expect: 'sub' },

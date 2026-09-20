@@ -32,8 +32,13 @@ export function BackButton({
   className?: string
 }) {
   const navigate = useNavigate()
+  // W1-D3 / P3 语义注释：返回键三态语义契约——
+  //   ① idx>0 且传 to     ：SPA 栈内有历史，但本页声明了固定目标 → navigate(to)
+  //      （如交易成功页：不回已消耗的下单页）；
+  //   ② idx>0 未传 to     ：常规详情页 → navigate(-1)（10 处在用页既有行为，零回归）；
+  //   ③ idx===0（直访/刷新到栈底）：栈内无上一页 → 兜底 navigate(to ?? '/home')。
+  // 边界：只兜 SPA 内无栈场景；不拦截/不改变浏览器与系统后退手势的路径。
   const onBack = () => {
-    // W1-D3：react-router 在 history.state 写入 idx——idx>0 说明 SPA 栈内有上一页
     const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0
     if (idx > 0) {
       if (to) navigate(to)
