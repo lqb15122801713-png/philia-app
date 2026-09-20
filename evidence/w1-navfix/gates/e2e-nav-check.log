@@ -1,0 +1,14 @@
+✅ 真实造单（成功页数据源） —— aid=01M2YNBC1BD1XRKRG7W0SP1V02
+✅ 浏览器 dev-login —— status=200
+✅ 成功页可达（?aid= 真实单据）
+✅ 成功页返回键存在
+✅ 成功页双出口（查看我的预约 / 返回首页）
+✅ 成功页核销码区（工作文档）
+✅ 成功页改期快捷入口
+✅ 成功页一击回首页（落 /home） —— path=/home
+✅ 选宠物弹层打开
+✅ 选宠物弹层点整行可选中（文字区命中） —— pet=旺财狗狗 ·
+✅ R-Nav-2 返回列表保筛选 tab —— tab=已完成7 返回后=/appointments?tab=history
+✅ R-Nav-3 底栏中位爪印带文字标签 —— label=philia
+
+e2e-nav-check 全绿 🎉
