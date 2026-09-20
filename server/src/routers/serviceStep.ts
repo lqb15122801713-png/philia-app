@@ -20,7 +20,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { and, asc, eq, inArray, isNull } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema, type db } from '../db';
 import { broadcastNow, emitEvent, type Db as BusDb } from '../realtime/bus';
@@ -437,6 +437,39 @@ export const serviceStepRouter = router({
           .update(schema.appointmentSteps)
           .set({ status: 'done', doneAt: now, flagged: false, updatedAt: now })
           .where(eq(schema.appointmentSteps.id, step.id));
+
+        // staff-2 R8: 消毒步完成 → 本店 is_disinfection_supply=1 商品各扣 1（MAX 兜底 0，
+        // 不足不阻塞）并逐品落流水（source_type='disinfection'，source_id=appointment_steps.id）；
+        // 无标记商品时 no-op。同事务，失败整体回滚。
+        if (input.stepKey === 'disinfection') {
+          const supplies = await tx
+            .select({ id: schema.products.id, stock: schema.products.stock })
+            .from(schema.products)
+            .where(
+              and(
+                eq(schema.products.storeId, appt.storeId),
+                eq(schema.products.isDisinfectionSupply, true),
+              ),
+            );
+          for (const p of supplies) {
+            const beforeStock = p.stock;
+            const afterStock = Math.max(0, beforeStock - 1);
+            await tx
+              .update(schema.products)
+              .set({ stock: sql`MAX(0, ${schema.products.stock} - 1)`, updatedAt: now })
+              .where(eq(schema.products.id, p.id));
+            await tx.insert(schema.stockMovements).values({
+              storeId: appt.storeId,
+              productId: p.id,
+              sourceType: 'disinfection',
+              sourceId: step.id,
+              delta: afterStock - beforeStock,
+              beforeStock,
+              afterStock,
+              operatorId: ctx.user.id,
+            });
+          }
+        }
 
         let isFinalStep = false;
         if (!nextDef) {
