@@ -468,6 +468,19 @@ if (sessions.merchant && seedCustomer && sessions.customer) {
     cashierRows.some?.((r) => r.billNo === billNo1) ?? false,
     `cashierLedger=${cashierRows.length} 行`,
   );
+
+  // 5.12 商品单冲正库存回补（运营签收台账① · W1 顺手）：settle 商品 ×N → stock −N →
+  // owner 反结账冲正 → stock 回补 +N（库存自动回补口径实证）
+  if (product?.id && billNo1) {
+    const beforeRev = (await trpcQuery(sessions.merchant, 'mall.listProductsForStore', { page: 1, pageSize: 100 }))?.items?.find((p) => p.id === product.id)?.stock;
+    const rev = await trpcMutate(sessions.merchant, 'cashier.reverseBill', { billNo: billNo1, reason: 'smoke 冲正回补验证' }).catch((e) => ({ err: String(e?.message ?? e) }));
+    const afterRev = (await trpcQuery(sessions.merchant, 'mall.listProductsForStore', { page: 1, pageSize: 100 }))?.items?.find((p) => p.id === product.id)?.stock;
+    check(
+      '收银台 冲正库存回补（reverseBill 后 stock +1）',
+      !rev?.err && afterRev === beforeRev + 1,
+      `stock ${beforeRev}→${afterRev}（期望 +1）${rev?.err ? ` err=${rev.err.slice(0, 60)}` : ''}`,
+    );
+  }
 }
 
 /* ------------------------------------------------------------------ */
