@@ -1,4 +1,4 @@
-✅ GET /api/health —— {"ok":true,"ts":1789917267936}
+✅ GET /api/health —— {"ok":true,"ts":1789963172563}
 ✅ 三端首页可达：customer http://localhost:7100 —— status=200 ct=text/html
 ✅ 三端首页可达：merchant http://localhost:7101 —— status=200 ct=text/html
 ✅ 三端首页可达：staff http://localhost:7102 —— status=200 ct=text/html
@@ -11,46 +11,46 @@
 ✅ trpc pet.list（种子客户有宠物） —— pets=2 第一只=旺财
 ✅ trpc store.listNearby（种子门店） —— stores=1 第一家=菲丽亚宠物·示例店
 ✅ trpc store.getWithServices（洗护服务项） —— 服务=基础洗护（小型犬） 价格=8800分
-✅ 演示单下单 trpc appointment.create —— id=01M2ZP4202HM0T9VAXD2977R50 scheduledStart=2026/9/21 10:00:00
+✅ 演示单下单 trpc appointment.create —— id=01M311WYRXMW7AJJFX3CBQBHGT scheduledStart=2026/9/22 10:00:00
 ✅ 商家确认 trpc appointment.confirm（pending → confirmed） —— status=confirmed
-✅ 客户取码 trpc appointment.getCode —— code=JREPDM
-✅ 员工核销 trpc appointment.checkin（confirmed → in_service） —— status=in_service checkedInAt=2026-09-20T15:14:27.000Z 认领员工=01M2ZNYJPN6QNQH9D3Y2QS1GES
+✅ 客户取码 trpc appointment.getCode —— code=ZVCW64
+✅ 员工核销 trpc appointment.checkin（confirmed → in_service） —— status=in_service checkedInAt=2026-09-21T03:59:32.000Z 认领员工=01M2ZNYJPN6QNQH9D3Y2QS1GES
 ✅ 收银台 trpc cashier.pendingAppointments 可查 —— 待收款=0
-✅ 收银台 会员检索命中（种子客户） —— found=true 次卡余=0
+✅ 收银台 会员检索命中（种子客户） —— found=true 次卡余=1
 ✅ 收银台 会员检索未命中（安静 found:false） —— found=false
 ✅ 收银台前置 pass.topUp 充次 1 —— times=1
-✅ 收银台 挂单 cashier.hold（HD 单号） —— billNo=HD-20260920-001 应收=21700分
+✅ 收银台 挂单 cashier.hold（HD 单号） —— billNo=HD-20260921-001 应收=21700分
 ✅ 收银台 取单 cashier.resume（held→open） —— status=open 行数=2
 ✅ 收银台 结账 cashier.settle（现金） —— status=settled 已收=21700分
 ✅ 收银台 结账幂等（同 bill_no 重放 idempotent） —— idempotent=true
-✅ 收银台 库存扣减（settled −1，幂等重放不再扣） —— stock 50→49（重放后仍 49）
+✅ 收银台 库存扣减（settled −1，幂等重放不再扣） —— stock 48→47（重放后仍 47）
 ✅ 收银台 流水可查 cashier.listBills（今日含本单） —— rows=1
 ✅ 收银台 流水详情 getBill（现金 1 段） —— 支付段=1
-✅ 收银台 次卡扣次结账（pass 段=扣次行有效价） —— billNo=HD-20260920-002 应收=8800分
-✅ 收银台 扣次联动（次卡余额 −1） —— remain 1→0
+✅ 收银台 次卡扣次结账（pass 段=扣次行有效价） —— billNo=HD-20260921-002 应收=8800分
+✅ 收银台 扣次联动（次卡余额 −1） —— remain 2→1
 ✅ 收银台 撤单留痕 cashier.voidBill（voided 留痕不删除） —— status=voided reason=smoke 撤单验证
 ✅ 收银台 财务流水接数（financeStats.cashierLedger 含本批单） —— cashierLedger=2 行
-✅ 收银台 冲正库存回补（reverseBill 后 stock +1） —— stock 49→50（期望 +1）
-✅ 库存流水 cashier 来源（5.6 结账扣减落账，delta=-1 前后值连续） —— before=50 after=49
-✅ 库存流水 reversal 来源（5.12 冲正回补落账，delta=+1 前后值连续） —— before=49 after=50
-✅ 库存流水 count 前置：盘点建单（weekly draft） —— countId=01M2ZP4251WETMASHG7M7VE4CP items=13
+✅ 收银台 冲正库存回补（reverseBill 后 stock +1） —— stock 47→48（期望 +1）
+✅ 库存流水 cashier 来源（5.6 结账扣减落账，delta=-1 前后值连续） —— before=48 after=47
+✅ 库存流水 reversal 来源（5.12 冲正回补落账，delta=+1 前后值连续） —— before=47 after=48
+✅ 库存流水 count 前置：盘点建单（weekly draft） —— countId=01M311WYXTPY9EAX8PYW9H8Y9A items=13
 ✅ 库存流水 count 前置：员工待办可见盘点行项 —— items=13
 ✅ 库存流水 count 前置：实盘录入 → counted —— status=counted
 ✅ 库存流水 count 前置：店长确认入账（posted，diffs≥1） —— status=posted diffs=1
-✅ 库存流水 count 来源（盘点入账落账，delta=-2 前后值=快照/实盘） —— before=50 after=48
+✅ 库存流水 count 来源（盘点入账落账，delta=-2 前后值=快照/实盘） —— before=48 after=46
 ✅ dev-login（小周 / clerk） —— status=200
 ✅ 收银修复包 todayTenderStats（已收=现金+微信+支付宝可加总） —— 已收=0分 分列=0/0/0 参考列 pass=8800 sv=0
 ✅ 收银修复包 三处同源同数（总览/收银台头部/财务头部） —— 三处=0/0/0分
 ✅ clerk 营业额遮罩（restricted=true 且金额 null） —— restricted=true
-✅ clerk 开单 cashier.hold 放行 —— billNo=HD-20260920-005
+✅ clerk 开单 cashier.hold 放行 —— billNo=HD-20260921-005
 ✅ clerk 改价 403（服务端硬闸门）
 ✅ clerk financeStats 403
 ✅ clerk 撤单（未支付单，补丁①放宽）放行
 ✅ clerk 日结 403（无交接班/日结权）
-✅ 日结 当前班次可查（懒建开班） —— shift=01M2ZP421TYCSXF6SAYTM2GEMJ
+✅ 日结 当前班次可查（懒建开班） —— shift=01M2ZP427QBYBP28Z0HJY72SAM
 ✅ 日结 cashier.dayClose 冻结当班（当日已结则幂等通过） —— diff=0分
-✅ 日结单留痕可查（listDayCloses） —— rows=1
-✅ 反结账单 cashier.reverseBill（owner，强制原因+关联原单） —— 原单=HD-20260920-002 冲正=HD-20260920-006
+✅ 日结单留痕可查（listDayCloses） —— rows=2
+✅ 反结账单 cashier.reverseBill（owner，强制原因+关联原单） —— 原单=HD-20260921-002 冲正=HD-20260921-006
 ✅ 储值导入 preview（零写入+校验位：2 行/本金 ¥150） —— sourceStats={"totalRows":2,"personsWithBalance":2,"principalTotalFen":15000,"bonusTotalFen":0,"bonusAllZero":true,"uniquePhones":2,"storeDist":{"贝肯山店":1
 ✅ clerk 储值导入 403（仅老板）
 

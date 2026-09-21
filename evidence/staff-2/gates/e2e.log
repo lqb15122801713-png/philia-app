@@ -163,11 +163,34 @@
   ✓ R9-F⑤ 未知规则键 → 400 BAD_REQUEST「未知规则键」（配置页只改既有参数）
   ✓ R10⑱ 拉新置灰拒写（rulesView 标注 disabled +「随会员游戏化批开通」；xp 路由无 referral 写入口，awardXp 对 referral 源码级硬拒）
 
-[staff-2] 24. R10 榜单查询层裁剪（前三+自己+前一名）
+[staff-2] 24. R9 提成回溯（Bug②）：旧单旧率/新单新率 + G0 仅洗护计 5%（裁定③）
+  ✓ R9回溯① 前置：商品率 5%→6% 保存即生效（commission version=2）
+  ✓ R9回溯① 商品改率前单仍按旧率 5%（rateBp=500，金额=门市实收×5% 逐行精确）
+  ✓ R9回溯① 商品改率后单按新率 6%（rateBp=600，金额=×6% 逐行精确）
+  ✓ R9回溯② 前置：服务率 20%→25% 保存即生效（version=3）
+  ✓ R9回溯② 前置：appt5 结账 settled
+  ✓ R9回溯② 服务改率前单仍按旧率 20%（appt4/billB，rateBp=2000 金额精确）
+  ✓ R9回溯② 服务改率后单按新率 25%（appt5，rateBp=2500 金额精确）
+  ✓ R9回溯③ 前置：perf_base_rate 5%→10% 保存即生效（version=4）
+  ✓ R9回溯③ 绩效 perf_base_rate 改值不回溯（旧单仍 5%，appt6 按 10% 逐行精确累加）
+  ✓ G0③ 洗护单计 5%（命中 洗/浴 不命中造型类；金额=10000×5%=500）
+  ✓ G0③ 造型单不计提成（serviceLines 无 apptS 行，commissionTotalFen=500 仅洗护行）
+
+[staff-2] 25. R10 榜单查询层裁剪（前三+自己+前一名）
   ✓ R10⑲ 榜尾视角 ≤5 行（前三+自己+前一名）
   ✓ R10⑲ 榜尾视角含自己与前一名（丽丽 rank5），第 4 名（阿强）不可达
   ✓ R10⑲ 前排视角仅前三（丽丽/阿强/附加丙均不出参，全榜永不外泄）
   ✓ 验收结束：7200 端口无残留监听
+[e2e] 临时库目录清理失败（Windows libsql 句柄滞后，可手工删）: C:\Users\lqb15\AppData\Local\Temp\philia-e2e-EOa0wj Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-EOa0wj '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-EOa0wj'
+    at rmSync (node:fs:1222:18)
+    at cleanup (D:\KimiData\kimi\Workspaces\Philia\repo\server\src\__tests__\e2e.ts:1694:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async <anonymous> (D:\KimiData\kimi\Workspaces\Philia\repo\server\src\__tests__\e2e.ts:1732:3) {
+  errno: 1,
+  code: 'EPERM',
+  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-e2e-EOa0wj',
+  syscall: 'rm'
+}
   ✓ 种子库 data/philia.db 原样（size/mtime 未变）
 
 全链路验收全部通过 ✅
