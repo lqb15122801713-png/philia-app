@@ -4,9 +4,14 @@
  * 冻结口径：
  * - 仅 owner：墨轨入口已按 isOwner 收起；本页再自装页内闸门（非 owner → 明确引导页，
  *   非 403 白屏）；server 端 merchantOwnerProcedure 为硬闸门（clerk/manager 403 实证）；
- * - 提成+XP 全参数可视化：双域页签（提成与绩效 / XP 成长），config.list({domain}) 拉全量规则行；
+ * - 提成+XP+时长 全参数可视化：三域页签（提成与绩效 / XP 成长 / 时长系数），config.list({domain}) 拉全量规则行；
  * - 数值一律读写配置表（不落代码常量）：比例/系数/倍率 bp ↔ 展示 %/系数/倍率，
  *   定额 fen ↔ 元，拆分 bp ↔ %，分值/上限/门槛/保级线/日/时 直读直写；
+ * - 时长域（补充令①，与提成/XP 同构接入同一 list/save/versions 管道）：嵌套对象按
+ *   二级 key 渲染（物种×种类分钟 / 体重分档 kg）、coef 对象按倍率直读（引擎占位值
+ *   照转，存原始倍率非 bp）、keywords 数组 ↔ 逗号分隔文本（保存切回 string[]，去空白项）；
+ * - 枚举字段（补充令①：G0 scope「老板端口可调」）→ 分段二选一（bath=仅洗护 / all=全部
+ *   洗美服务，缺省 bath），纳入脏跟踪与重确认前后值摘要，深合并随 valueJson 提交；
  * - 置灰行（作废/备用/预留/随会员游戏化批开通）只读展示 + 状态 chip，不可编辑；
  * - 脏跟踪：仅提交有变化的 key；保存 = 危险操作 D 套（变更摘要明示 + 键入「确认保存」二次确认）
  *   → config.save；保存即生效，toast 明示 + 列表/留痕双失效刷新；
@@ -33,23 +38,31 @@ type RuleRow = ListOut['rules'][number];
 type VersionsOut = Awaited<ReturnType<Trpc['config']['versions']['query']>>;
 type VersionRow = VersionsOut['versions'][number];
 
-type RulesDomain = 'commission' | 'xp';
+type RulesDomain = 'commission' | 'xp' | 'duration';
 
 const DOMAIN_TABS: Array<{ key: RulesDomain; label: string }> = [
   { key: 'commission', label: '提成与绩效' },
   { key: 'xp', label: 'XP 成长' },
+  { key: 'duration', label: '时长系数' },
 ];
 
 const DOMAIN_TITLE: Record<RulesDomain, string> = {
   commission: '提成与绩效规则',
   xp: 'XP 成长规则',
+  duration: '时长系数规则',
+};
+
+/** 域页签分区顶部小字（duration 补充令①：占位待供给口径明示） */
+const DOMAIN_NOTICE: Partial<Record<RulesDomain, string>> = {
+  duration:
+    '占位待供给——当前为引擎占位值照转，老板完整供给表到后在此直接改值，保存即生效、不回溯既有单据。',
 };
 
 /* ------------------------------------------------------------------ */
 /* 数值换算族（bp=万分比 / fen=分 / 直读直写）——展示层换算，落库值不变      */
 /* ------------------------------------------------------------------ */
 
-type NumConv = 'percent' | 'coeff' | 'multiplier' | 'yuan' | 'plain';
+type NumConv = 'percent' | 'coeff' | 'multiplier' | 'yuan' | 'plain' | 'decimal' | 'ratio';
 
 interface FieldMeta {
   label: string;
@@ -78,29 +91,89 @@ const FIELD_META: Record<string, FieldMeta> = {
 const MAP_LABEL: Record<string, string> = {
   fixed_fen_by_plan: '售卡定额',
   split_bp: '拆分比例',
+  duration_size_coef: '体型系数',
+  duration_coat_coef: '毛长系数',
 };
 
 const MAP_CONV: Record<string, NumConv> = {
   fixed_fen_by_plan: 'yuan',
   split_bp: 'percent',
+  /* 时长域 coef 对象：引擎占位值照转，存原始倍率（1.5 即 1.5，非 bp） */
+  duration_size_coef: 'ratio',
+  duration_coat_coef: 'ratio',
 };
 
 const MAP_UNIT: Record<string, string> = {
   fixed_fen_by_plan: '元/单',
   split_bp: '%',
+  duration_size_coef: '倍',
+  duration_coat_coef: '倍',
 };
 
-/** 师徒拆分成员中文签（其余 key 原样展示） */
-const SPLIT_MEMBER_LABEL: Record<string, string> = {
+/** 嵌套对象（二级数值）组名 / 展示族 / 单位（时长域；未知嵌套键 fallback=decimal 保精度） */
+const NESTED_LABEL: Record<string, string> = {
+  duration_base_min: '基础时长',
+  duration_size_tier_weight_kg: '体型体重分档',
+};
+
+const NESTED_CONV: Record<string, NumConv> = {
+  duration_base_min: 'plain',
+  duration_size_tier_weight_kg: 'decimal',
+};
+
+const NESTED_UNIT: Record<string, string> = {
+  duration_base_min: '分钟',
+  duration_size_tier_weight_kg: 'kg',
+};
+
+/** 关键词词表组名（时长域；值=string[] 或 对象值=string[]） */
+const KW_LABEL: Record<string, string> = {
+  duration_long_coat_breeds: '长毛品种关键词',
+  duration_service_kind_keywords: '服务种类关键词',
+};
+
+/** map/嵌套/词表 二级 key 中文签（其余 key 原样展示） */
+const SUB_LABEL: Record<string, string> = {
   apprentice: '徒弟',
   mentor: '师傅',
+  dog: '犬',
+  cat: '猫',
+  bath: '洗护',
+  groom: '美容',
+  small: '小型',
+  medium: '中型',
+  large: '大型',
+  short: '短毛',
+  long: '长毛',
+  smallMax: '小体重上限',
+  mediumMax: '中体重上限',
+  keywords: '词表',
 };
 
 const TEXT_FIELD_LABEL: Record<string, string> = {
   name: '名称',
   level: '段位',
   same_as: '口径引用',
+  scope: '适用范围',
 };
+
+/** 枚举字段选项表（补充令①：G0 scope「老板端口可调」——分段二选一，不落自由文本） */
+const ENUM_OPTIONS: Record<string, Array<{ value: string; label: string }>> = {
+  scope: [
+    { value: 'bath', label: '仅洗护（不含造型）' },
+    { value: 'all', label: '全部洗美服务' },
+  ],
+};
+
+/** 枚举字段缺省值（valueJson 未带该字段时的原值口径） */
+const ENUM_DEFAULT: Record<string, string> = {
+  scope: 'bath',
+};
+
+/** 枚举值 → 中文签（前后值摘要/留痕用；未知值原样返回） */
+function enumValueLabel(key: string, v: string): string {
+  return ENUM_OPTIONS[key]?.find((o) => o.value === v)?.label ?? v;
+}
 
 /** 置灰行状态 chip（V1.3 种子口径；fallback=已停用） */
 const INACTIVE_STATUS: Record<string, string> = {
@@ -122,7 +195,7 @@ function trimNum(n: number): string {
   return String(Number(n.toFixed(4)));
 }
 
-/** 库内值 → 输入框展示串（2000bp→'20'；12000bp→'1.2'；500fen→'5'） */
+/** 库内值 → 输入框展示串（2000bp→'20'；12000bp→'1.2'；500fen→'5'；原始倍率 1.5→'1.5'） */
 function toDisplay(conv: NumConv, internal: number): string {
   switch (conv) {
     case 'percent':
@@ -134,10 +207,13 @@ function toDisplay(conv: NumConv, internal: number): string {
       return trimNum(internal / 100);
     case 'plain':
       return String(internal);
+    case 'decimal':
+    case 'ratio':
+      return trimNum(internal);
   }
 }
 
-/** 输入串 → 库内值（非法输入返回 null；整数族四舍五入到整数） */
+/** 输入串 → 库内值（非法输入返回 null；plain 取整 / decimal 两位小数 / ratio 原始倍率四位小数） */
 function fromDisplay(conv: NumConv, text: string): number | null {
   const t = text.trim();
   if (t === '') return null;
@@ -152,10 +228,14 @@ function fromDisplay(conv: NumConv, text: string): number | null {
       return Math.round(v * 10000);
     case 'plain':
       return Math.round(v);
+    case 'decimal':
+      return Math.round(v * 100) / 100;
+    case 'ratio':
+      return Math.round(v * 10000) / 10000;
   }
 }
 
-/** 库内值 → 人类可读（2000→'20%'；15000→'1.5 倍'；500→'5 元'） */
+/** 库内值 → 人类可读（2000→'20%'；15000→'1.5 倍'；500→'5 元'；原始倍率 1.5→'1.5 倍'） */
 function fmtInternal(conv: NumConv, internal: number): string {
   switch (conv) {
     case 'percent':
@@ -164,37 +244,58 @@ function fmtInternal(conv: NumConv, internal: number): string {
       return trimNum(internal / 10000);
     case 'multiplier':
       return `${trimNum(internal / 10000)} 倍`;
+    case 'ratio':
+      return `${trimNum(internal)} 倍`;
     case 'yuan':
       return internal % 100 === 0 ? `${internal / 100} 元` : `${(internal / 100).toFixed(2)} 元`;
     case 'plain':
-      return String(internal);
+    case 'decimal':
+      return trimNum(internal);
   }
 }
 
-function mapMemberLabel(mapKey: string, subKey: string): string {
-  if (mapKey === 'split_bp') return SPLIT_MEMBER_LABEL[subKey] ?? subKey;
-  return subKey;
+function mapMemberLabel(_mapKey: string, subKey: string): string {
+  return SUB_LABEL[subKey] ?? subKey;
+}
+
+/** map 族换算选择（fixed/split/coef 显式映射；其余 *_coef → 原始倍率 ratio；兜底 plain） */
+function mapConvForKey(key: string): NumConv {
+  return MAP_CONV[key] ?? (key.endsWith('_coef') ? 'ratio' : 'plain');
 }
 
 function fieldLabel(k: string): string {
-  return FIELD_META[k]?.label ?? MAP_LABEL[k] ?? TEXT_FIELD_LABEL[k] ?? k;
+  return FIELD_META[k]?.label ?? MAP_LABEL[k] ?? NESTED_LABEL[k] ?? KW_LABEL[k] ?? TEXT_FIELD_LABEL[k] ?? k;
 }
 
-/** 单字段值格式化（留痕 diff 用） */
+/** 单字段值格式化（留痕 diff / 置灰摘要用；兼容嵌套对象与词表数组） */
 function fmtScalar(key: string, v: unknown): string {
   if (v === null || v === undefined) return '—';
   if (typeof v === 'number') {
     const meta = FIELD_META[key];
     return meta ? fmtInternal(meta.conv, v) : trimNum(v);
   }
-  if (typeof v === 'string') return v;
-  if (v && typeof v === 'object' && !Array.isArray(v)) {
-    const conv = MAP_CONV[key] ?? 'plain';
+  if (typeof v === 'string') return ENUM_OPTIONS[key] ? enumValueLabel(key, v) : v;
+  if (Array.isArray(v)) {
+    return v.length > 0 ? v.map((x) => String(x)).join('、') : '（空）';
+  }
+  if (v && typeof v === 'object') {
+    const conv = mapConvForKey(key);
+    const nestedConv = NESTED_CONV[key] ?? 'decimal';
     const entries = Object.entries(v as Record<string, unknown>);
     if (entries.length === 0) return '—';
     return entries
-      .map(([mk, mv]) => `${mapMemberLabel(key, mk)} ${typeof mv === 'number' ? fmtInternal(conv, mv) : String(mv)}`)
-      .join('、');
+      .map(([mk, mv]) => {
+        if (typeof mv === 'number') return `${mapMemberLabel(key, mk)} ${fmtInternal(conv, mv)}`;
+        if (Array.isArray(mv)) return `${mapMemberLabel(key, mk)}：${mv.map((x) => String(x)).join('、')}`;
+        if (mv && typeof mv === 'object') {
+          const inner = Object.entries(mv as Record<string, unknown>)
+            .map(([sk, sv]) => `${mapMemberLabel(key, sk)} ${typeof sv === 'number' ? fmtInternal(nestedConv, sv) : String(sv)}`)
+            .join('、');
+          return `${mapMemberLabel(key, mk)}：${inner}`;
+        }
+        return `${mapMemberLabel(key, mk)} ${String(mv)}`;
+      })
+      .join('；');
   }
   return '—';
 }
@@ -247,7 +348,52 @@ interface TextEditor {
   original: string;
 }
 
-type Editor = NumEditor | MapEditor | TextEditor;
+/** 枚举字段编辑器（如 scope：bath/all 分段二选一；选项见 ENUM_OPTIONS，不落自由文本） */
+interface EnumEditor {
+  kind: 'enum';
+  path: string;
+  key: string;
+  label: string;
+  original: string;
+  options: Array<{ value: string; label: string }>;
+}
+
+interface NestedEntry {
+  parent: string;
+  sub: string;
+  /** 二级中文签（如 犬·洗护 / 犬·小体重上限） */
+  label: string;
+  path: string;
+  original: number;
+}
+
+/** 嵌套对象编辑器（值为对象、内层全数字：物种×种类分钟 / 体重分档 kg） */
+interface NestedEditor {
+  kind: 'nested';
+  key: string;
+  nestedLabel: string;
+  conv: NumConv;
+  unitHint: string;
+  entries: NestedEntry[];
+}
+
+interface KeywordsEntry {
+  /** null = 值本身即 string[]（非对象包裹） */
+  sub: string | null;
+  subLabel: string;
+  path: string;
+  original: string[];
+}
+
+/** 词表编辑器（string[] / 对象值为 string[] ↔ 逗号分隔文本框，保存切回数组） */
+interface KeywordsEditor {
+  kind: 'keywords';
+  key: string;
+  kwLabel: string;
+  entries: KeywordsEntry[];
+}
+
+type Editor = NumEditor | MapEditor | TextEditor | NestedEditor | KeywordsEditor | EnumEditor;
 
 interface RuleModel {
   editors: Editor[];
@@ -259,24 +405,85 @@ function buildModel(value: Record<string, unknown>): RuleModel {
   const editors: Editor[] = [];
   const notes: string[] = [];
   for (const [k, v] of Object.entries(value)) {
-    if (k === 'fixed_fen_by_plan' || k === 'split_bp') {
-      if (v && typeof v === 'object' && !Array.isArray(v)) {
-        const entries: MapEntry[] = [];
-        for (const [mk, mv] of Object.entries(v as Record<string, unknown>)) {
-          if (typeof mv === 'number' && Number.isFinite(mv)) {
-            entries.push({ sub: mk, subLabel: mapMemberLabel(k, mk), path: `${k}::${mk}`, original: mv });
+    /* 值本身即词表（string[]）→ 逗号分隔文本框 */
+    if (Array.isArray(v)) {
+      if (v.length > 0 && v.every((x) => typeof x === 'string')) {
+        editors.push({
+          kind: 'keywords',
+          key: k,
+          kwLabel: KW_LABEL[k] ?? k,
+          entries: [{ sub: null, subLabel: KW_LABEL[k] ?? k, path: k, original: [...(v as string[])] }],
+        });
+      }
+      continue;
+    }
+    if (v && typeof v === 'object') {
+      const objEntries = Object.entries(v as Record<string, unknown>);
+      /* 一级 map（值全为数字：fixed_fen_by_plan / split_bp / *_coef 倍率对象） */
+      if (objEntries.length > 0 && objEntries.every(([, mv]) => typeof mv === 'number' && Number.isFinite(mv))) {
+        const entries: MapEntry[] = objEntries.map(([mk, mv]) => ({
+          sub: mk,
+          subLabel: mapMemberLabel(k, mk),
+          path: `${k}::${mk}`,
+          original: mv as number,
+        }));
+        editors.push({
+          kind: 'map',
+          key: k,
+          mapLabel: MAP_LABEL[k] ?? k,
+          conv: mapConvForKey(k),
+          unitHint: MAP_UNIT[k] ?? '',
+          entries,
+        });
+        continue;
+      }
+      /* 二级嵌套（值为对象且内层全数字：物种×种类分钟 / 体重分档 kg）→ 按二级 key 渲染 */
+      if (
+        objEntries.length > 0 &&
+        objEntries.every(
+          ([, mv]) =>
+            mv !== null &&
+            typeof mv === 'object' &&
+            !Array.isArray(mv) &&
+            Object.keys(mv as Record<string, unknown>).length > 0 &&
+            Object.values(mv as Record<string, unknown>).every((x) => typeof x === 'number' && Number.isFinite(x)),
+        )
+      ) {
+        const entries: NestedEntry[] = [];
+        for (const [pk, pv] of objEntries) {
+          for (const [sk, sv] of Object.entries(pv as Record<string, unknown>)) {
+            entries.push({
+              parent: pk,
+              sub: sk,
+              label: `${mapMemberLabel(k, pk)}·${mapMemberLabel(k, sk)}`,
+              path: `${k}::${pk}::${sk}`,
+              original: sv as number,
+            });
           }
         }
-        if (entries.length > 0) {
-          editors.push({
-            kind: 'map',
-            key: k,
-            mapLabel: MAP_LABEL[k] ?? k,
-            conv: MAP_CONV[k] ?? 'plain',
-            unitHint: MAP_UNIT[k] ?? '',
-            entries,
-          });
-        }
+        editors.push({
+          kind: 'nested',
+          key: k,
+          nestedLabel: NESTED_LABEL[k] ?? k,
+          conv: NESTED_CONV[k] ?? 'decimal',
+          unitHint: NESTED_UNIT[k] ?? '',
+          entries,
+        });
+        continue;
+      }
+      /* 词表 map（值全为 string[]：keywords / 服务种类词表）→ 每组一个逗号分隔文本框 */
+      if (
+        objEntries.length > 0 &&
+        objEntries.every(([, mv]) => Array.isArray(mv) && (mv as unknown[]).every((x) => typeof x === 'string'))
+      ) {
+        const entries: KeywordsEntry[] = objEntries.map(([mk, mv]) => ({
+          sub: mk,
+          subLabel: mapMemberLabel(k, mk),
+          path: `${k}::${mk}`,
+          original: [...(mv as string[])],
+        }));
+        editors.push({ kind: 'keywords', key: k, kwLabel: KW_LABEL[k] ?? k, entries });
+        continue;
       }
       continue;
     }
@@ -293,13 +500,35 @@ function buildModel(value: Record<string, unknown>): RuleModel {
       continue;
     }
     if (typeof v === 'string') {
-      if (k === 'name') {
+      if (ENUM_OPTIONS[k]) {
+        editors.push({
+          kind: 'enum',
+          path: k,
+          key: k,
+          label: TEXT_FIELD_LABEL[k] ?? k,
+          original: v,
+          options: ENUM_OPTIONS[k]!,
+        });
+      } else if (k === 'name') {
         editors.push({ kind: 'text', path: k, key: k, label: TEXT_FIELD_LABEL.name!, original: v });
       } else if (k === 'same_as') {
         notes.push(`口径引用：${v}（同前台规则，无数值参数）`);
       } else {
         notes.push(`${k}：${v}`);
       }
+    }
+  }
+  /* 枚举字段缺省补齐（valueJson 未带该键时按缺省值渲染选择器，如 scope 缺省 bath） */
+  for (const [k, def] of Object.entries(ENUM_DEFAULT)) {
+    if (!(k in value) && ENUM_OPTIONS[k]) {
+      editors.push({
+        kind: 'enum',
+        path: k,
+        key: k,
+        label: TEXT_FIELD_LABEL[k] ?? k,
+        original: def,
+        options: ENUM_OPTIONS[k]!,
+      });
     }
   }
   return { editors, notes };
@@ -314,7 +543,9 @@ function initDrafts(rules: RuleRow[]): Record<string, Record<string, string>> {
     const d: Record<string, string> = {};
     for (const ed of model.editors) {
       if (ed.kind === 'num') d[ed.path] = toDisplay(ed.meta.conv, ed.original);
-      else if (ed.kind === 'map') for (const e of ed.entries) d[e.path] = toDisplay(ed.conv, e.original);
+      else if (ed.kind === 'map' || ed.kind === 'nested')
+        for (const e of ed.entries) d[e.path] = toDisplay(ed.conv, e.original);
+      else if (ed.kind === 'keywords') for (const e of ed.entries) d[e.path] = e.original.join('，');
       else d[ed.path] = ed.original;
     }
     out[r.ruleKey] = d;
@@ -344,6 +575,14 @@ interface PendingResult {
   /** ruleKey → fieldPath → 错误文案（有任一错误则禁止进入重确认） */
   errors: Record<string, Record<string, string>>;
   errorCount: number;
+}
+
+/** 逗号/顿号/分号/换行分隔 → string[]（去首尾空白与空项，保序不去重） */
+function parseKeywords(text: string): string[] {
+  return text
+    .split(/[,，、;；\n]/)
+    .map((s) => s.trim())
+    .filter((s) => s !== '');
 }
 
 function computePending(activeRules: RuleRow[], drafts: Record<string, Record<string, string>>): PendingResult {
@@ -377,6 +616,19 @@ function computePending(activeRules: RuleRow[], drafts: Record<string, Record<st
         continue;
       }
 
+      if (ed.kind === 'enum') {
+        const cur = (draft[ed.path] ?? '').trim() || ed.original;
+        if (cur !== ed.original) {
+          fields.push({
+            label: ed.label,
+            beforeText: enumValueLabel(ed.key, ed.original),
+            afterText: enumValueLabel(ed.key, cur),
+          });
+          after[ed.key] = cur;
+        }
+        continue;
+      }
+
       if (ed.kind === 'num') {
         const parsed = fromDisplay(ed.meta.conv, draft[ed.path] ?? '');
         if (parsed === null) {
@@ -402,7 +654,63 @@ function computePending(activeRules: RuleRow[], drafts: Record<string, Record<st
         continue;
       }
 
-      // map 族（fixed_fen_by_plan / split_bp）
+      if (ed.kind === 'nested') {
+        const origNested = (r.valueJson[ed.key] ?? {}) as Record<string, unknown>;
+        const newNested: Record<string, Record<string, number>> = {};
+        for (const [pk, pv] of Object.entries(origNested)) {
+          newNested[pk] = { ...(pv as Record<string, number>) };
+        }
+        const unit = ed.unitHint ? ` ${ed.unitHint}` : '';
+        let nestedChanged = false;
+        for (const e of ed.entries) {
+          const parsed = fromDisplay(ed.conv, draft[e.path] ?? '');
+          if (parsed === null) {
+            putErr(rk, e.path, '请输入有效数字');
+            continue;
+          }
+          if (parsed < 0) {
+            putErr(rk, e.path, '不允许为负');
+            continue;
+          }
+          if (parsed !== e.original) {
+            nestedChanged = true;
+            fields.push({
+              label: `${ed.nestedLabel}·${e.label}`,
+              beforeText: `${fmtInternal(ed.conv, e.original)}${unit}`,
+              afterText: `${fmtInternal(ed.conv, parsed)}${unit}`,
+            });
+            (newNested[e.parent] ??= {})[e.sub] = parsed;
+          }
+        }
+        if (nestedChanged) after[ed.key] = newNested;
+        continue;
+      }
+
+      if (ed.kind === 'keywords') {
+        const origVal = r.valueJson[ed.key];
+        const origObj =
+          origVal && typeof origVal === 'object' && !Array.isArray(origVal)
+            ? (origVal as Record<string, unknown>)
+            : null;
+        const newObj: Record<string, string[]> = origObj ? { ...(origObj as Record<string, string[]>) } : {};
+        let kwChanged = false;
+        for (const e of ed.entries) {
+          const arr = parseKeywords(draft[e.path] ?? '');
+          if (JSON.stringify(arr) === JSON.stringify(e.original)) continue;
+          kwChanged = true;
+          fields.push({
+            label: e.sub === null ? ed.kwLabel : `${ed.kwLabel}·${e.subLabel}`,
+            beforeText: e.original.length > 0 ? e.original.join('、') : '（空）',
+            afterText: arr.length > 0 ? arr.join('、') : '（空）',
+          });
+          if (e.sub === null) after[ed.key] = arr;
+          else newObj[e.sub] = arr;
+        }
+        if (kwChanged && origObj) after[ed.key] = newObj;
+        continue;
+      }
+
+      // map 族（一级数值 map：fixed_fen_by_plan / split_bp / *_coef）
       const origMap = (r.valueJson[ed.key] ?? {}) as Record<string, unknown>;
       const newMap: Record<string, number> = { ...(origMap as Record<string, number>) };
       let sum = 0;
@@ -443,27 +751,66 @@ function computePending(activeRules: RuleRow[], drafts: Record<string, Record<st
   return { pending, errors, errorCount };
 }
 
-/** 留痕 diff：before/after valueJson → 逐字段「label：旧 → 新」 */
+/** 留痕 diff：before/after valueJson → 逐字段「label：旧 → 新」（兼容嵌套对象与词表数组） */
 function diffEntries(before: unknown, after: unknown): string[] {
   const b = before && typeof before === 'object' && !Array.isArray(before) ? (before as Record<string, unknown>) : {};
   const a = after && typeof after === 'object' && !Array.isArray(after) ? (after as Record<string, unknown>) : {};
   const keys = new Set([...Object.keys(b), ...Object.keys(a)]);
   const lines: string[] = [];
+  const isNumMap = (v: unknown): v is Record<string, number> =>
+    v !== null &&
+    typeof v === 'object' &&
+    !Array.isArray(v) &&
+    Object.keys(v).length > 0 &&
+    Object.values(v).every((x) => typeof x === 'number');
+  const isNestedNum = (v: unknown): v is Record<string, Record<string, number>> =>
+    v !== null && typeof v === 'object' && !Array.isArray(v) && Object.values(v).every((x) => isNumMap(x));
+  const isKwMap = (v: unknown): v is Record<string, string[]> =>
+    v !== null &&
+    typeof v === 'object' &&
+    !Array.isArray(v) &&
+    Object.values(v).every((x) => Array.isArray(x) && x.every((s) => typeof s === 'string'));
+  const arrText = (v: unknown): string =>
+    Array.isArray(v) && v.length > 0 ? v.map((x) => String(x)).join('、') : '（空）';
+
   for (const k of keys) {
     const bv = b[k];
     const av = a[k];
     if (JSON.stringify(bv) === JSON.stringify(av)) continue;
-    if ((k === 'fixed_fen_by_plan' || k === 'split_bp') && bv && av && typeof bv === 'object' && typeof av === 'object') {
-      const conv = MAP_CONV[k] ?? 'plain';
-      const subs = new Set([...Object.keys(bv), ...Object.keys(av as object)]);
-      for (const mk of subs) {
-        const sb = (bv as Record<string, unknown>)[mk];
-        const sa = (av as Record<string, unknown>)[mk];
+    if (isNumMap(bv) && isNumMap(av)) {
+      const conv = mapConvForKey(k);
+      for (const mk of new Set([...Object.keys(bv), ...Object.keys(av)])) {
+        const sb = bv[mk];
+        const sa = av[mk];
         if (JSON.stringify(sb) === JSON.stringify(sa)) continue;
         const sbText = typeof sb === 'number' ? fmtInternal(conv, sb) : '—';
         const saText = typeof sa === 'number' ? fmtInternal(conv, sa) : '—';
         lines.push(`${mapMemberLabel(k, mk)}：${sbText} → ${saText}`);
       }
+    } else if (isNestedNum(bv) && isNestedNum(av)) {
+      const conv = NESTED_CONV[k] ?? 'decimal';
+      const unit = NESTED_UNIT[k] ? ` ${NESTED_UNIT[k]}` : '';
+      for (const pk of new Set([...Object.keys(bv), ...Object.keys(av)])) {
+        const pb = bv[pk] ?? {};
+        const pa = av[pk] ?? {};
+        for (const sk of new Set([...Object.keys(pb), ...Object.keys(pa)])) {
+          const sb = pb[sk];
+          const sa = pa[sk];
+          if (JSON.stringify(sb) === JSON.stringify(sa)) continue;
+          const sbText = typeof sb === 'number' ? `${fmtInternal(conv, sb)}${unit}` : '—';
+          const saText = typeof sa === 'number' ? `${fmtInternal(conv, sa)}${unit}` : '—';
+          lines.push(`${mapMemberLabel(k, pk)}·${mapMemberLabel(k, sk)}：${sbText} → ${saText}`);
+        }
+      }
+    } else if (isKwMap(bv) && isKwMap(av)) {
+      for (const mk of new Set([...Object.keys(bv), ...Object.keys(av)])) {
+        const sb = bv[mk];
+        const sa = av[mk];
+        if (JSON.stringify(sb) === JSON.stringify(sa)) continue;
+        lines.push(`${mapMemberLabel(k, mk)}：${arrText(sb)} → ${arrText(sa)}`);
+      }
+    } else if (Array.isArray(bv) || Array.isArray(av)) {
+      lines.push(`${fieldLabel(k)}：${arrText(bv)} → ${arrText(av)}`);
     } else {
       lines.push(`${fieldLabel(k)}：${fmtScalar(k, bv)} → ${fmtScalar(k, av)}`);
     }
@@ -635,6 +982,16 @@ function DomainPanel({ domain }: { domain: RulesDomain }) {
 
   return (
     <>
+      {/* 域分区顶部小字（duration：占位待供给口径明示） */}
+      {DOMAIN_NOTICE[domain] ? (
+        <p
+          className="mb-3.5 rounded-input bg-brand-primary-light px-3 py-2 text-caption text-ink"
+          data-testid={`rules-notice-${domain}`}
+        >
+          {DOMAIN_NOTICE[domain]}
+        </p>
+      ) : null}
+
       {/* 规则面板 */}
       <div className="u3-panel" data-testid={`rules-panel-${domain}`}>
         <div className="u3-panel-head">
@@ -706,6 +1063,84 @@ function DomainPanel({ domain }: { domain: RulesDomain }) {
                         </div>
                       );
                     }
+                    if (ed.kind === 'nested') {
+                      return (
+                        <div key={ed.key} className="min-w-0">
+                          <div className="mb-1 flex items-baseline gap-2">
+                            <span className="text-caption-xs font-semibold text-[rgba(74,59,46,.62)]">
+                              {ed.nestedLabel}
+                            </span>
+                            {ed.unitHint ? (
+                              <span className="text-caption-xs text-[rgba(74,59,46,.42)]">单位：{ed.unitHint}</span>
+                            ) : null}
+                          </div>
+                          <div className="flex flex-wrap items-start gap-3">
+                            {ed.entries.map((e) => (
+                              <NumInput
+                                key={e.path}
+                                label={e.label}
+                                suffix={ed.unitHint}
+                                text={drafts[r.ruleKey]?.[e.path] ?? ''}
+                                error={rowErrors[e.path]}
+                                onChange={(v) => setDraft(r.ruleKey, e.path, v)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+                    if (ed.kind === 'keywords') {
+                      return (
+                        <div key={ed.key} className="min-w-0 flex-1 basis-full">
+                          <div className="mb-1 text-caption-xs font-semibold text-[rgba(74,59,46,.62)]">
+                            {ed.kwLabel}
+                          </div>
+                          <div className="space-y-2">
+                            {ed.entries.map((e) => (
+                              <label key={e.path} className="block">
+                                <span className="mb-1 block text-caption-xs text-[rgba(74,59,46,.62)]">
+                                  {e.subLabel}
+                                  <span className="ml-1 text-[rgba(74,59,46,.42)]">逗号分隔，可留空</span>
+                                </span>
+                                <input
+                                  className="w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(74,59,46,.25)]"
+                                  value={drafts[r.ruleKey]?.[e.path] ?? ''}
+                                  placeholder="如：洗，浴，SPA"
+                                  onChange={(ev) => setDraft(r.ruleKey, e.path, ev.target.value)}
+                                />
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+                    if (ed.kind === 'enum') {
+                      const cur = drafts[r.ruleKey]?.[ed.path] ?? ed.original;
+                      return (
+                        <div key={ed.key} className="min-w-0">
+                          <div className="mb-1 text-caption-xs text-[rgba(74,59,46,.62)]">{ed.label}</div>
+                          <div className="flex gap-1.5" role="radiogroup" aria-label={ed.label}>
+                            {ed.options.map((o) => (
+                              <button
+                                key={o.value}
+                                type="button"
+                                role="radio"
+                                aria-checked={cur === o.value}
+                                data-testid={`rules-enum-${r.ruleKey}-${o.value}`}
+                                onClick={() => setDraft(r.ruleKey, ed.path, o.value)}
+                                className={`rounded-full px-3.5 py-[7px] text-caption transition-colors ${
+                                  cur === o.value
+                                    ? 'bg-[#4A3B2E] font-semibold text-[#F6F1E3]'
+                                    : 'u1-ring bg-card text-[rgba(74,59,46,.6)]'
+                                }`}
+                              >
+                                {o.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
                     return (
                       <label key={ed.path} className="block">
                         <span className="mb-1 block text-caption-xs text-[rgba(74,59,46,.62)]">{ed.label}</span>
@@ -717,7 +1152,7 @@ function DomainPanel({ domain }: { domain: RulesDomain }) {
                           }`}
                           maxLength={20}
                           value={drafts[r.ruleKey]?.[ed.path] ?? ''}
-                          onChange={(e) => setDraft(r.ruleKey, ed.path, e.target.value)}
+                          onChange={(e) => setDraft(r.ruleKey, e.path, e.target.value)}
                         />
                         {rowErrors[ed.path] ? (
                           <span className="mt-1 block text-caption-xs text-danger-deep">{rowErrors[ed.path]}</span>
