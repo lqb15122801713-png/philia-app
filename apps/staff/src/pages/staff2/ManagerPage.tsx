@@ -13,18 +13,22 @@
  *    → appointment.reviewCancel（商家端同 mutation，批准/驳回）；
  * 3. 日结确认（手机通道）：cashier.dayClosePreview（预览=冻结同源同值，UI 只展示不自算）
  *    → cashier.dayClose({actualCashFen})（一日一结 CONFLICT 由 server 硬拒，原文透出）；
- * 4. 盘点：inventory.assignCount（日盘≥100元 / 周盘全量 / 盲盘）→ counted 队列
+ * 4. 退款（批次 R12 真功能，替换原补丁②拦截卡——任务书兑现承诺）：refund.pendingActual
+ *    （executed 超 24h 未登记实退 → 黄色提醒待办）+ refund.list 本店退款单最近 20 条
+ *    （类型中文/金额红字/状态签/发起与审批人）；实退登记=refund.settleActual（备注留空
+ *    按「实退完成」登记，server 口径备注必填）。驳回权仅店主——店长视图不渲染驳回钮；
+ *    draft（超阈值/涉储值申请）对店长只读提示须店主审批；发起入口在商家端收银台，本页不渲染；
+ * 5. 盘点：inventory.assignCount（日盘≥100元 / 周盘全量 / 盲盘）→ counted 队列
  *    inventory.confirmCount（差异红绿字）/ inventory.rejectCount（备注必填）
  *    → 最近已入账 inventory.listCounts({status:'posted'})；
- * 5. 差评提示：xp.storeFlaggedReviews（≤2 星，提示 only，不建工单处理流）；
- * 6. 库存流水：inventory.listMovements({limit:20})（只读，来源中文标签 + 前后值）；
- * 7. 退款审批：补丁②明文拦截卡「退款功能随专项批开通」——零写入零接口，不放任何按钮。
+ * 6. 差评提示：xp.storeFlaggedReviews（≤2 星，提示 only，不建工单处理流）；
+ * 7. 库存流水：inventory.listMovements({limit:20})（只读，来源中文标签 + 前后值）。
  */
 
 import { useMe, usePhiliaClient } from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { TRPCClientError } from '@trpc/client';
-import { Lock, ShieldCheck } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/PageHeader';
@@ -44,6 +48,7 @@ const SOURCE_TYPE_LABEL: Record<string, string> = {
   count: '盘点',
   disinfection: '消毒耗材',
   manual: '人工调整',
+  refund: '退款回补', // R12
 };
 
 /** 服务端错误原文透出（tRPC v11：err.message 即服务端 message） */
@@ -431,7 +436,158 @@ function DayCloseSection({ showToast }: { showToast: (m: string) => void }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* 4. 盘点（assignCount / counted 队列 confirm+reject / 最近已入账）        */
+/* 4. 退款（批次 R12 真功能：pendingActual 实退待办 + list 本店退款单 + settleActual 登记） */
+/* ------------------------------------------------------------------ */
+
+const REFUND_TYPE_LABEL: Record<string, string> = {
+  full: '全额退',
+  partial_items: '按行退',
+  partial_amount: '按金额退',
+  boarding_nights: '寄养剩余晚',
+  pass_cancel: '次卡退卡',
+};
+const REFUND_STATUS_LABEL: Record<string, string> = {
+  draft: 'draft',
+  executed: '已执行',
+  settled: '已实退',
+  rejected: '已驳回',
+};
+
+function RefundSection({ showToast }: { showToast: (m: string) => void }) {
+  const { trpc, queryClient } = usePhiliaClient();
+  const pendingQ = useQuery({
+    queryKey: ['refund', 'pendingActual'],
+    queryFn: () => trpc.refund.pendingActual.query(),
+  });
+  const listQ = useQuery({
+    queryKey: ['refund', 'list'],
+    queryFn: () => trpc.refund.list.query(),
+  });
+  const settleM = useMutation({
+    mutationFn: (v: { refundId: string; note: string }) => trpc.refund.settleActual.mutate(v),
+    onSuccess: (r) => {
+      showToast(r.idempotent ? '该单此前已登记实退' : `实退已登记（${r.refund.refundNo}）`);
+      void queryClient.invalidateQueries({ queryKey: ['refund'] });
+    },
+    onError: (e) => showToast(errMsg(e)),
+  });
+
+  /** 实退登记：备注可填（留空按「实退完成」登记——server settleActual 口径备注必填） */
+  const settle = (refundId: string) => {
+    const note = window.prompt('实退登记备注（可填，留空按「实退完成」登记）');
+    if (note === null) return;
+    settleM.mutate({ refundId, note: note.trim() || '实退完成' });
+  };
+
+  const pending = pendingQ.data ?? [];
+  const rows = (listQ.data ?? []).slice(0, 20);
+  const busy = settleM.isPending;
+  const nowMs = Date.now();
+
+  return (
+    <Section
+      title="退款"
+      aside={pending.length ? `${pending.length} 单实退待办` : undefined}
+      testid="manager-refund"
+    >
+      {/* 实退待办：executed 超 24h 未登记（黄色提醒列表） */}
+      <QueryState pending={pendingQ.isPending} error={pendingQ.error} empty={false} emptyText="" />
+      {pending.length > 0 ? (
+        <div className="rounded-control bg-brand-primary-light p-3">
+          <p className="text-caption-xs font-bold text-ink">实退待办（执行超 24 小时未登记）</p>
+          <ul className="mt-1.5 divide-y divide-[rgba(74,59,46,.08)]">
+            {pending.map((r) => {
+              const overdueH = Math.max(1, Math.floor((nowMs - r.createdAt.getTime()) / 3_600_000));
+              return (
+                <li key={r.id} className="py-2.5" data-testid={`manager-refund-pending-${r.id}`}>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Chip tone="warn">超 24h</Chip>
+                    <span className="u1-num text-body-sm font-bold text-ink">{r.refundNo}</span>
+                    <span className="text-caption-xs text-[rgba(74,59,46,.62)]">原单 {r.billNo}</span>
+                  </div>
+                  <p className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">
+                    金额 <span className="u1-num font-bold text-danger">−{yuan(r.amountFen)}</span> · 执行{' '}
+                    <span className="u1-num">{`${mmdd(r.createdAt)} ${hhmm(r.createdAt)}`}</span> · 已超时{' '}
+                    <span className="u1-num font-bold text-danger">{overdueH} 小时</span>
+                  </p>
+                  <button
+                    type="button"
+                    className={`${BTN_PRIMARY} mt-2`}
+                    disabled={busy}
+                    onClick={() => settle(r.id)}
+                    data-testid={`manager-refund-settle-${r.id}`}
+                  >
+                    实退完成
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ) : null}
+
+      {/* 本店退款单（最近 20 条）：店长可办 executed 实退登记；draft 只读提示须店主（驳回权仅店主，不渲染驳回钮） */}
+      <p className={`text-caption-xs font-bold text-[rgba(74,59,46,.42)] ${pending.length > 0 ? 'mt-3' : ''}`}>
+        本店退款单（最近 20 条）· 发起入口在商家端收银台
+      </p>
+      <QueryState pending={listQ.isPending} error={listQ.error} empty={rows.length === 0} emptyText="暂无退款单" />
+      {rows.length > 0 ? (
+        <ul className="divide-y divide-[rgba(74,59,46,.06)]">
+          {rows.map((r) => (
+            <li key={r.id} className="py-2.5" data-testid={`manager-refund-row-${r.id}`}>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <Chip>{REFUND_TYPE_LABEL[r.type] ?? r.type}</Chip>
+                <span className="u1-num text-body-sm font-bold text-ink">{r.refundNo}</span>
+                <span className="text-caption-xs text-[rgba(74,59,46,.62)]">原单 {r.billNo}</span>
+                <span className="ml-auto">
+                  <Chip
+                    tone={
+                      r.status === 'settled' ? 'ok' : r.status === 'rejected' ? 'danger' : r.status === 'draft' ? 'warn' : 'plain'
+                    }
+                  >
+                    {REFUND_STATUS_LABEL[r.status] ?? r.status}
+                  </Chip>
+                </span>
+              </div>
+              <p className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">
+                金额 <span className="u1-num font-bold text-danger">−{yuan(r.amountFen)}</span> · 退款日{' '}
+                <span className="u1-num">{r.bizDate}</span>
+                {r.settledAt ? (
+                  <>
+                    {' '}
+                    · 实退 <span className="u1-num">{`${mmdd(r.settledAt)} ${hhmm(r.settledAt)}`}</span>
+                  </>
+                ) : null}
+              </p>
+              <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+                原因：{r.reason} · 发起 {r.operatorName ?? '—'} · 审批 {r.approverName ?? '—'}
+              </p>
+              {r.status === 'draft' ? (
+                <p className="mt-1 text-caption-xs font-bold text-[rgba(74,59,46,.62)]">
+                  超阈值/涉储值申请须店主审批（驳回权仅店主）
+                </p>
+              ) : null}
+              {r.status === 'executed' ? (
+                <button
+                  type="button"
+                  className={`${BTN_PRIMARY} mt-2`}
+                  disabled={busy}
+                  onClick={() => settle(r.id)}
+                  data-testid={`manager-refund-settle-${r.id}`}
+                >
+                  实退完成
+                </button>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </Section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. 盘点（assignCount / counted 队列 confirm+reject / 最近已入账）        */
 /* ------------------------------------------------------------------ */
 
 function InventorySection({ showToast }: { showToast: (m: string) => void }) {
@@ -591,7 +747,7 @@ function InventorySection({ showToast }: { showToast: (m: string) => void }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* 5. 差评提示（storeFlaggedReviews · 提示 only 不建工单）                  */
+/* 6. 差评提示（storeFlaggedReviews · 提示 only 不建工单）                  */
 /* ------------------------------------------------------------------ */
 
 function ReviewsSection() {
@@ -629,7 +785,7 @@ function ReviewsSection() {
 }
 
 /* ------------------------------------------------------------------ */
-/* 6. 库存流水（listMovements 最新 20 · 只读）                              */
+/* 7. 库存流水（listMovements 最新 20 · 只读）                              */
 /* ------------------------------------------------------------------ */
 
 function MovementsSection({ operatorNameOf }: { operatorNameOf: (userId: string) => string }) {
@@ -736,19 +892,10 @@ function ManagerBody({
       <AttendanceSection showToast={showToast} staffNameOf={staffNameOf} />
       <CancelSection showToast={showToast} />
       <DayCloseSection showToast={showToast} />
+      <RefundSection showToast={showToast} />
       <InventorySection showToast={showToast} />
       <ReviewsSection />
       <MovementsSection operatorNameOf={operatorNameOf} />
-
-      {/* 7. 退款审批（补丁②明文拦截：零写入零接口，不放任何按钮/表单） */}
-      <section className="u1-card mt-3.5 p-4 opacity-60" data-testid="manager-refund">
-        <div className="flex items-center gap-2">
-          <Lock className="h-4 w-4 text-[rgba(74,59,46,.62)]" strokeWidth={1.8} aria-hidden />
-          <h2 className="text-title font-bold text-[rgba(74,59,46,.62)]">退款审批</h2>
-          <Chip>未开通</Chip>
-        </div>
-        <p className="mt-2 text-body-sm text-[rgba(74,59,46,.62)]">退款功能随专项批开通</p>
-      </section>
     </div>
   );
 }
