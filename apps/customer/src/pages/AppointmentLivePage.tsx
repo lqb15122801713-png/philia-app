@@ -404,7 +404,7 @@ export default function AppointmentLivePage() {
   /* ---------------- 评价 / 分享 ---------------- */
 
   const reviewMutation = useMutation({
-    mutationFn: (input: { rating: number; review?: string }) =>
+    mutationFn: (input: { rating: number; review?: string; anonymous?: boolean }) =>
       trpc.appointment.review.mutate({ appointmentId: aid!, ...input }),
     onSuccess: () => {
       showToast('感谢评价，已转告门店与洗护师')
@@ -663,8 +663,8 @@ export default function AppointmentLivePage() {
             existingRating={appt.rating}
             existingReview={appt.review}
             submitting={reviewMutation.isPending}
-            onSubmit={(rating, text) =>
-              reviewMutation.mutate({ rating, review: text.length > 0 ? text : undefined })
+            onSubmit={(rating, text, anonymous) =>
+              reviewMutation.mutate({ rating, review: text.length > 0 ? text : undefined, anonymous })
             }
             onShare={() => void share()}
           />

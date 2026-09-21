@@ -12,7 +12,7 @@ export interface ReviewPanelProps {
   existingRating: number | null
   existingReview?: string | null
   submitting: boolean
-  onSubmit: (rating: number, text: string) => void
+  onSubmit: (rating: number, text: string, anonymous: boolean) => void
   onShare: () => void
 }
 
@@ -64,6 +64,8 @@ export default function ReviewPanel({
 }: ReviewPanelProps) {
   const [rating, setRating] = useState(0)
   const [text, setText] = useState('')
+  // R10 最小评价域：匿名可选（默认关，同权计分）；一句话选填 ≤140 字
+  const [anonymous, setAnonymous] = useState(false)
 
   return (
     <section className="rounded-card bg-card p-4 shadow-card">
@@ -88,14 +90,35 @@ export default function ReviewPanel({
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={3}
-            maxLength={1000}
+            maxLength={140}
             placeholder="说说这次服务的感受…（可选）"
             className="mt-2 w-full resize-none rounded-input border border-line bg-sunken px-3 py-2 text-body text-ink placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
           />
+          <p className="mt-1 text-right text-caption text-ink-placeholder">
+            一句话选填 · {text.length}/140
+          </p>
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-body text-ink">匿名评价</p>
+              <p className="mt-0.5 text-caption text-ink-secondary">匿名评价同权计分</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={anonymous}
+              aria-label="匿名评价"
+              onClick={() => setAnonymous((v) => !v)}
+              className={`relative h-6 w-11 shrink-0 rounded-full transition ${anonymous ? 'bg-brand-primary' : 'bg-line'}`}
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-card shadow-card transition-all ${anonymous ? 'left-[22px]' : 'left-0.5'}`}
+              />
+            </button>
+          </div>
           <button
             type="button"
             disabled={rating === 0 || submitting}
-            onClick={() => onSubmit(rating, text.trim())}
+            onClick={() => onSubmit(rating, text.trim(), anonymous)}
             className="mt-3 h-11 w-full rounded-full bg-brand-primary text-body font-semibold text-ink transition hover:bg-brand-primary-hover active:bg-brand-primary-pressed disabled:opacity-50"
           >
             {submitting ? '提交中…' : '提交评价'}

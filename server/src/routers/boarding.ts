@@ -25,6 +25,7 @@ import { z } from 'zod';
 import { schema } from '../db';
 import { emitEvent, broadcastNow, type Db as BusDb } from '../realtime/bus';
 import { EventType } from '../realtime/events';
+import { awardXp, loadXpRules } from '../services/xpAward';
 import {
   assertFrontdeskStaff,
   customerProcedure,
@@ -34,6 +35,10 @@ import {
   type AppointmentRow,
   type Context,
 } from '../trpc';
+
+/** 规则值取数（xp_rules.value_json 为自由 JSON；缺行时回退附件一冻结值，与 xpAward.num 同口径） */
+const numOr = (v: unknown, fallback: number): number =>
+  typeof v === 'number' && Number.isFinite(v) ? v : fallback;
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式须为 YYYY-MM-DD');
 
@@ -255,6 +260,8 @@ export const boardingRouter = router({
    * FORBIDDEN/UNAUTHORIZED；getBoardingAppointment 的本店/指派手工守卫保留兜底
    * （其 merchant 分支自此不可达，仅作防御性保留）。商家端不再提供退房按钮，
    * 收款仍走 appointment.markPaid（completed 后商家在财务页确认）。
+   * R10：同事事务增——寄养服务 XP（+2/晚 × 晚数，发给退房核销员工，xp_service_boarding_night）
+   * + 客户评价引导通知（type='review.prompt'，link=/appointments/{id}，完成推送入口）。
    */
   checkout: staffProcedure
     .input(z.object({ appointmentId: z.string().min(1) }))
@@ -300,6 +307,44 @@ export const boardingRouter = router({
           EventType.BoardingCompleted,
           { appointmentId: appt.id, stayId: stay.id, petName },
         );
+
+        /* ---- R10：寄养服务 XP（附件一 §一 +2/晚，发给退房核销员工） ----
+         * 晚数口径对齐 priceFen 快照：ceil((退房−入住)/24h)（appointment.create 同式）；
+         * 逐晚拆行无额外语义，一次性按 晚数×每晚分 发放，source_id 记 boarding:{stayId}。
+         * 幂等：in_boarding→completed 状态机单次可达（寄养单打标重开不可达——无六步流），
+         * 同事务回滚即不重发。 */
+        const checkoutStaff = await tx
+          .select({ userId: schema.staff.userId })
+          .from(schema.staff)
+          .where(eq(schema.staff.id, ctx.user.staffId!))
+          .get();
+        if (checkoutStaff) {
+          const nights = Math.max(
+            1,
+            Math.ceil((appt.scheduledEnd.getTime() - appt.scheduledStart.getTime()) / (24 * 3600 * 1000)),
+          );
+          const rules = await loadXpRules(tx as unknown as BusDb);
+          const perNight = numOr(rules.byKey.get('xp_service_boarding_night')?.points, 2);
+          await awardXp(tx as unknown as BusDb, {
+            storeId: appt.storeId,
+            staffId: ctx.user.staffId!,
+            userId: checkoutStaff.userId,
+            source: 'service',
+            sourceId: `boarding:${stay.id}`,
+            points: nights * perNight,
+          });
+        }
+
+        /* ---- R10：完成推送入口（任务书 §五.6）——一单一行评价引导通知，跳预约详情评价区。
+         * 洗护单的同款通知由 index.ts 完成副作用补偿任务幂等补写（完成点 serviceStep.ts
+         * 属其他工作线文件，本批不交叉改文件）；两路同键（type+link）去重。 */
+        await tx.insert(schema.notifications).values({
+          userId: appt.customerId,
+          type: 'review.prompt',
+          title: '服务已完成，欢迎评价',
+          body: `${petName ? `${petName}的` : ''}寄养已完成，欢迎评价（星级必填，一句话即可）`,
+          link: `/appointments/${appt.id}`,
+        });
         return { updatedStay, updatedAppt, outboxId };
       });
 

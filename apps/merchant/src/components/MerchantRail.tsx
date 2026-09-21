@@ -20,6 +20,7 @@ import {
   ReceiptText,
   Settings,
   ShoppingBag,
+  SlidersHorizontal,
   CreditCard,
   Users,
 } from 'lucide-react';
@@ -71,6 +72,10 @@ function groupsFor(role: MerchantRole): Array<{ label: string | null; items: Rai
         { to: '/staff', label: '员工', icon: Users, testid: 'rail-staff' },
         { to: '/finance', label: '财务', icon: ReceiptText, testid: 'rail-finance' },
         { to: '/settings', label: '设置', icon: Settings, testid: 'rail-settings' },
+        // 批次 员工端2.0 R9-F：规则配置管理端口（仅 owner 可见入口；server 端 merchantOwnerProcedure 硬闸门）
+        ...(role.isOwner
+          ? [{ to: '/settings/rules', label: '规则配置', icon: SlidersHorizontal, testid: 'rail-rules-config' }]
+          : []),
       ],
     },
   ];

@@ -31,6 +31,7 @@ import OrdersPage from './pages/OrdersPage'
 import PassPage from './pages/PassPage'
 import ProductsPage from './pages/ProductsPage'
 import SettingsPage from './pages/SettingsPage'
+import RulesConfigPage from './pages/RulesConfigPage'
 import StaffPage from './pages/StaffPage'
 
 // 受商家身份保护的主内容路由（P0 路由表原样保留；U3 追加 /login 与 /pass 规范名）
@@ -89,6 +90,8 @@ function ProtectedRoutes() {
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/finance" element={<FinancePage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        {/* 批次 员工端2.0 R9-F：规则配置管理端口（owner-only；clerk 由 ClerkRouteGuard 拦，manager 页内引导页，server 硬 403） */}
+        <Route path="/settings/rules" element={<RulesConfigPage />} />
         <Route path="*" element={<RoleLanding />} />
       </Routes>
     </ClerkRouteGuard>

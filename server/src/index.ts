@@ -23,7 +23,8 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { client, db } from './db';
+import { client, db, schema } from './db';
+import { and, eq, gte } from 'drizzle-orm';
 import { authHttpRoutes } from './auth/devLogin';
 import { wechatMiniAuthRoutes } from './auth/wechatMini';
 import { sessionMiddleware, type AuthVariables } from './auth/middleware';
@@ -38,6 +39,8 @@ import { assertSecretsConfigured } from './config/secrets';
 import { assertDeployConfig, getCorsOrigins, getPublicBaseUrl, warnStagingConfig } from './config/deploy';
 import { startOutboxSweeper } from './realtime/outboxSweeper';
 import { expirePendingOrders } from './routers/mall';
+import { awardXp, settleXpMonth } from './services/xpAward';
+import { snapshotStoreMonth } from './routers/commission';
 import { appRouter } from './routers';
 import type { Context as TrpcContext } from './trpc';
 
@@ -94,6 +97,135 @@ export function createApp(): Hono<{ Variables: AppVariables }> {
 }
 
 /* ------------------------------------------------------------------ */
+/* R10 XP 定时任务（批次 员工端2.0；crash-safe：逐店/逐单 try/catch，幂等重入）   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * R10 月度保级结算（任务书 §五.1/附件一 §四）：每月 1 日对每店结算上月。
+ * 幂等：xp_levels unique(staff_id, month) + onConflictDoNothing——30min 滴答内重复触发、
+ * 与 xp.monthlySettleNow 手动补跑互撞均零副作用。
+ */
+async function runXpMonthlySettle(): Promise<void> {
+  const now = new Date();
+  if (now.getDate() !== 1) return; // 仅每月 1 日生效
+  const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const month = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`;
+  const storeRows = await db.select({ id: schema.stores.id }).from(schema.stores);
+  for (const s of storeRows) {
+    try {
+      const written = await settleXpMonth(db, s.id, month);
+      if (written > 0) console.log(`[xp] 月度保级结算 store=${s.id} month=${month} 写入 ${written} 行`);
+    } catch (err) {
+      console.error(`[xp] 月度保级结算失败 store=${s.id} month=${month}:`, err);
+    }
+  }
+}
+
+/** 完成副作用补偿的回看窗口：只覆盖宕机/重启空窗，不做历史回填（避免给旧单补发 XP/骚扰通知） */
+const XP_COMPLETION_LOOKBACK_MS = 2 * 24 * 3600 * 1000;
+
+/**
+ * R9 提成月度快照（任务书 §四.D：每月 1 日 02:00）：每月 1 日 02:00 起对每店快照上月
+ * （上月为季度末月时同写该季度 kind='performance' 绩效快照）。
+ * 幂等：commission_snapshots unique(staff_id,period,kind) + onConflictDoNothing——
+ * 30min 滴答内重复触发、与 commission.snapshotMonth 手动补跑互撞均零副作用，不动历史快照。
+ */
+async function runCommissionSnapshot(): Promise<void> {
+  const now = new Date();
+  if (now.getDate() !== 1 || now.getHours() < 2) return; // 仅每月 1 日 02:00 后生效
+  const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const month = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`;
+  const storeRows = await db.select({ id: schema.stores.id }).from(schema.stores);
+  for (const s of storeRows) {
+    try {
+      const r = await snapshotStoreMonth(db, s.id, month);
+      if (r.commission + r.performance > 0) {
+        console.log(`[commission] 月度快照 store=${s.id} month=${month} 提成 ${r.commission} 行 / 绩效 ${r.performance} 行`);
+      }
+    } catch (err) {
+      console.error(`[commission] 月度快照失败 store=${s.id} month=${month}:`, err);
+    }
+  }
+}
+
+/**
+ * R10 洗护完成副作用补偿（60s 滴答，幂等）：
+ * 洗护单完成点（六步 confirm → appointment.completed 事件）位于 serviceStep.ts——
+ * 该文件属其他工作线同期在改（R8 消毒扣库存钩子亦在 confirmStep），本批不交叉改文件
+ * （报备在案），故洗护完成 XP（xp_service_order +2/单）与客户评价引导通知
+ * （review.prompt → /appointments/{id}，任务书 §五.6 完成推送入口）由本任务按存在性
+ * 检查补写：
+ * - 服务 XP：completed 洗护单（有指派员工）且 xp_events 无 (source='service', source_id=单号) → 补发；
+ * - 评价引导：completed 单且 notifications 无 (customer, 'review.prompt', 同 link) → 补写
+ *   （寄养单在 boarding.checkout 事务内已写，同键去重自然跳过）。
+ * 边界：XP 按补发当日计日上限（非完成当日）；若后续完成钩子移入完成事务，
+ * 存在性检查使本任务自然空转，无需拆线。
+ */
+async function runXpCompletionSweep(): Promise<void> {
+  const since = new Date(Date.now() - XP_COMPLETION_LOOKBACK_MS);
+  const doneRows = await db
+    .select({
+      id: schema.appointments.id,
+      type: schema.appointments.type,
+      storeId: schema.appointments.storeId,
+      staffId: schema.appointments.staffId,
+      customerId: schema.appointments.customerId,
+    })
+    .from(schema.appointments)
+    .where(and(eq(schema.appointments.status, 'completed'), gte(schema.appointments.completedAt, since)));
+  for (const appt of doneRows) {
+    try {
+      // 评价引导通知（洗护+寄养同口径，一单一行）
+      const link = `/appointments/${appt.id}`;
+      const prompt = await db
+        .select({ id: schema.notifications.id })
+        .from(schema.notifications)
+        .where(
+          and(
+            eq(schema.notifications.userId, appt.customerId),
+            eq(schema.notifications.type, 'review.prompt'),
+            eq(schema.notifications.link, link),
+          ),
+        )
+        .get();
+      if (!prompt) {
+        await db.insert(schema.notifications).values({
+          userId: appt.customerId,
+          type: 'review.prompt',
+          title: '服务已完成，欢迎评价',
+          body: '服务已完成，欢迎评价（星级必填，一句话即可）',
+          link,
+        });
+      }
+      // 洗护服务 XP（寄养按晚在 boarding.checkout 事务内发放，此处跳过）
+      if (appt.type !== 'grooming' || !appt.staffId) continue;
+      const awarded = await db
+        .select({ id: schema.xpEvents.id })
+        .from(schema.xpEvents)
+        .where(and(eq(schema.xpEvents.source, 'service'), eq(schema.xpEvents.sourceId, appt.id)))
+        .get();
+      if (awarded) continue;
+      const staffRow = await db
+        .select({ id: schema.staff.id, userId: schema.staff.userId })
+        .from(schema.staff)
+        .where(eq(schema.staff.id, appt.staffId))
+        .get();
+      if (!staffRow) continue;
+      await awardXp(db, {
+        storeId: appt.storeId,
+        staffId: staffRow.id,
+        userId: staffRow.userId,
+        source: 'service',
+        sourceId: appt.id,
+      });
+      console.log(`[xp] 洗护完成 XP 补发 appointment=${appt.id} staff=${staffRow.id}`);
+    } catch (err) {
+      console.error(`[xp] 完成副作用补偿失败 appointment=${appt.id}:`, err);
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* 直接执行时启动监听                                                      */
 /* ------------------------------------------------------------------ */
 
@@ -130,6 +262,27 @@ if (isMain) {
   }, 60_000);
   orderExpiryTimer.unref?.();
 
+  // R10 XP 月度保级结算：启动即试一次，之后每 30min 滴答（仅每月 1 日生效，幂等）
+  runXpMonthlySettle().catch((err) => console.error('[xp] 月度保级结算扫描失败:', err));
+  const xpSettleTimer = setInterval(() => {
+    runXpMonthlySettle().catch((err) => console.error('[xp] 月度保级结算扫描失败:', err));
+  }, 30 * 60_000);
+  xpSettleTimer.unref?.();
+
+  // R10 洗护完成副作用补偿：启动即扫一次，之后每 60s 幂等补写（见 runXpCompletionSweep 注释）
+  runXpCompletionSweep().catch((err) => console.error('[xp] 完成副作用补偿扫描失败:', err));
+  const xpCompletionTimer = setInterval(() => {
+    runXpCompletionSweep().catch((err) => console.error('[xp] 完成副作用补偿扫描失败:', err));
+  }, 60_000);
+  xpCompletionTimer.unref?.();
+
+  // R9 提成月度快照：启动即试一次，之后每 30min 滴答（仅每月 1 日 02:00 后生效，幂等）
+  runCommissionSnapshot().catch((err) => console.error('[commission] 月度快照扫描失败:', err));
+  const commissionSnapshotTimer = setInterval(() => {
+    runCommissionSnapshot().catch((err) => console.error('[commission] 月度快照扫描失败:', err));
+  }, 30 * 60_000);
+  commissionSnapshotTimer.unref?.();
+
   const server: ServerType = serve({ fetch: app.fetch, port }, (info) => {
     const publicBase = getPublicBaseUrl();
     console.log(`[philia-server] 已启动: http://localhost:${info.port} （tRPC: /trpc/*, SSE: /api/events）`);
@@ -143,6 +296,9 @@ if (isMain) {
     console.log(`[philia-server] 收到 ${signal}，正在优雅退出…`);
     sweeper.stop();
     clearInterval(orderExpiryTimer);
+    clearInterval(xpSettleTimer);
+    clearInterval(xpCompletionTimer);
+    clearInterval(commissionSnapshotTimer);
     server.close(() => {
       client.close();
       console.log('[philia-server] 已退出');

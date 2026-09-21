@@ -39,7 +39,7 @@ import { and, desc, eq, gt, gte, inArray, isNull, lt } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import { merchantManagerProcedure, merchantOwnerProcedure, merchantProcedure, publicProcedure, router, type Context } from '../trpc';
-import { resolveServiceDuration, type ServiceDuration } from '../config/durationEngine';
+import { loadDurationRules, resolveServiceDuration, type ServiceDuration } from '../config/durationEngine';
 import { boardingNightDates, BOOKING_LEAD_BUFFER_MS, DEFAULT_BOARDING_ROOM_COUNT, freeGroomersInInterval, loadGroomerOccupancy, storeDayStartMs, storeWallclock } from './appointment';
 import { computeDayTender, loadCashierFinance, type DayTenderStats } from './cashier';
 
@@ -198,8 +198,9 @@ export const storeRouter = router({
             .get()) ?? null)
         : null;
       /** 逐服务引擎时长（仅 petId 传入时输出；boarding 项 durationMin 恒 null） */
+      const durationRules = input.petId ? await loadDurationRules(ctx.db) : null; // 补充令①：规则取数改读 duration_rules 配置表
       const serviceDurations: Record<string, ServiceDuration> | null = input.petId
-        ? Object.fromEntries(services.map((s) => [s.id, resolveServiceDuration(s, pet)]))
+        ? Object.fromEntries(services.map((s) => [s.id, resolveServiceDuration(s, pet, durationRules)]))
         : null;
 
       // 服务时长 → 需要的连续 30min 槽数（boarding 无时长按 1 槽起约；
