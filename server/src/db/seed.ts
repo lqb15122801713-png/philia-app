@@ -28,6 +28,10 @@ import { client, db, schema } from './index';
 /* ---------------- 清空（子表 -> 父表） ---------------- */
 
 const CLEAR_ORDER = [
+  /* ---- R12 退款专项新表：子表先父表，先于 cashier 域与 users 清空 ---- */
+  schema.refundBillItems, // FK → refund_bills/cashier_bill_items/cashier_payments
+  schema.refundBills, // FK → stores/cashier_bills/users
+  schema.refundRules, // FK → users
   /* ---- staff-2（R7~R10）新表：全部子表须先于各自父表清空 ---- */
   schema.overworkApprovals, // FK → stores/staff/users（0012 产能红线批准留痕）
   schema.receptionLogs, // FK → cashier_bills/appointments/users（0012 起 bill_id 可空+appointment_id）
@@ -346,6 +350,23 @@ async function main() {
       durationSeed('duration_service_kind_keywords', '服务种类关键词（服务名命中即归类，bath 先于 groom 判定；时长引擎与 G0 洗护判别共用·决策 #40）（占位待供给）', { bath: ['洗', '浴', 'SPA', 'spa', '清洁', '吹干'], groom: ['美容', '造型', '修剪', '修毛', '剪'] }),
     ]);
 
+    /* ---- R12 退款专项：退款规则配置种子（冻结版 V1.0 §九，version=1） ----
+     * 阈值按「原单累计退款额」校验（V1：已退累计+本次申请>阈值即须店主，堵拆分绕过）；
+     * 配置端口第四域 domain='refund'，保存即生效+版本化留痕。
+     */
+    const refundSeed = (ruleKey: string, label: string, valueJson: schema.RuleConfigValue) => ({
+      version: 1,
+      ruleKey,
+      label,
+      valueJson,
+      effectiveFrom: RULES_EFFECTIVE_FROM,
+      active: true,
+      createdBy: owner.id,
+    });
+    await tx.insert(schema.refundRules).values([
+      refundSeed('refund_threshold_fen', '退款店长阈值：原单累计退款额超过此额须店主（默认 ¥500，R12 冻结版 V1.0 §九待老板终拍口径）', { threshold_fen: 50000 }),
+    ]);
+
     /* ---- staff-2 R10：XP 规则配置种子（附件一冻结版 V1.0 全表照转，version=1） ----
      * 分值单位 XP 点；段位门槛/保级线为累计/月增量 XP；拉新 referral 置灰（active=false，
      * 随会员游戏化批 G3 链路开通，server 拒写该来源）。
@@ -432,6 +453,10 @@ async function main() {
     ['xp_rules', 'xp_rules'],
     ['reviews', 'reviews'],
     ['rule_config_versions', 'rule_config_versions'],
+    /* R12 退款专项新表 */
+    ['refund_bills', 'refund_bills'],
+    ['refund_bill_items', 'refund_bill_items'],
+    ['refund_rules', 'refund_rules'],
   ];
 
   console.log('[seed] 完成，各表行数：');
