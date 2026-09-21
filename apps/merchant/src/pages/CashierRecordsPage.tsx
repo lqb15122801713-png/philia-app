@@ -1,20 +1,24 @@
 /**
- * 收银流水 /cashier/records（批次 M1 · 屏三；M1-补2 D/R6 改造）
+ * 收银流水 /cashier/records（批次 M1 · 屏三；M1-补2 D/R6 改造；R12 退款专项 Phase 3）
  *
  * - 全宽表 u3-tbl：单号 Montserrat | 时间 | 买家（会员名/散客）| 内容摘要 |
  *   金额右对齐 | 支付方式签（R6-1 五分列全显，组合支付「现金+微信」）|
- *   状态签（已收薄荷 / 已撤单灰 / 挂单·开单中浅木 / 冲正单灰 / 已冲正灰）| 详情 ›；
+ *   状态签（已收薄荷 / 已撤单灰 / 挂单·开单中浅木 / 冲正单灰 / 已冲正灰 + R12 退款灰签）| 详情 ›；
  * - 顶部 chips：全部/已收/已撤单 + 今日/近7天/近30天 + 买家搜索框（300ms 防抖，
  *   走 listBills buyer 参数——服务端模糊昵称/手机号，「散客」匹配无会员单）；
  * - M1-补2 D（反结账双件之一）：
  *   - settled 且未被冲正的行，owner 行末见「反结账」钮（manager/clerk 无入口）→
  *     强制原因弹层（关联原单号自动带出）；成功后原单灰签「已冲正」+ 冲正单
  *     （status=reversal，金额镜像负值）入流水、不计已收提示 + toast 真实口径；
- *   - 详情内 owner|manager 见「退款」入口（置反结账旁）→ 明文拦截弹层
- *     「退款功能随专项批开通」（补丁② 纯前端零接口零写入）；clerk 无该入口；
  *   - open/held 详情内撤单入口三级全开（补丁①1，边界=仅未支付单）；
- * - SSE：cashier.billHeld/billSettled/billVoided/billReversed → invalidate 流水 +
- *   重连全量对齐；
+ * - R12 退款专项（补丁② 拦截文案替换为真功能，任务书兑现承诺）：
+ *   - 详情内 owner|manager 见「退款」入口（BillDetailDialog 落点）→ RefundDialog
+ *     真链路（选类型→原因必填→六联动预览→重确认 D 套→refund.execute）；
+ *     已冲正/已撤/已全额退款单不渲染按钮（V5 终态禁退 UI 层）；clerk 不渲染；
+ *   - 已退款单：行内灰签+「退款 ¥X」红字标签+关联退款单号（refund.list 按 billId
+ *     归并）；详情横幅点开退款单号见 refund_bills 详情（RefundDetailDialog，双向可查）；
+ * - SSE：cashier.billHeld/billSettled/billVoided/billReversed + refund.executed/
+ *   settled/rejected → invalidate 流水+退款键；重连全量对齐；
  * - 390 降级：表格横滑（u3-noscrollx + min-w）；三态齐全（骨架/错误重试/空态）。
  * - 路由层：clerk 直达本页由 App.tsx ClerkRouteGuard 给引导页（矩阵总规则②）。
  */
@@ -24,7 +28,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import BillDetailDialog from '@/components/cashier/BillDetailDialog'
-import { RefundBlockDialog, ReverseDialog, VoidDialog } from '@/components/cashier/dialogs'
+import { ReverseDialog, VoidDialog } from '@/components/cashier/dialogs'
 import {
   BILL_STATUS_CHIP,
   CASHIER_ROOT_KEY,
@@ -34,6 +38,14 @@ import {
   TODAY_TENDER_KEY,
   type BillListRow,
 } from '@/components/cashier/model'
+import {
+  REFUND_LIST_KEY,
+  REFUND_ROOT_KEY,
+  sumPostedRefunds,
+  type RefundListRow,
+} from '@/components/cashier/refund'
+import RefundDetailDialog from '@/components/cashier/RefundDetailDialog'
+import RefundDialog from '@/components/cashier/RefundDialog'
 import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider'
 import { STATS_QUERY_KEY } from '@/components/dashboard/utils'
 import MainScaffold, { QuietButton, SearchInput } from '@/components/MainScaffold'
@@ -81,15 +93,32 @@ export default function CashierRecordsPage() {
       }),
   })
 
+  // R12：退款单按原单归并（行内「退款 ¥X」红字标签+详情横幅数据源；
+  // refund.list 为 merchantManagerProcedure——clerk 已被路由层拦截，这里再守一道）
+  const refundsQ = useQuery({
+    queryKey: [...REFUND_LIST_KEY, 'records-merge'],
+    queryFn: () => trpc.refund.list.query(),
+    enabled: role.canManage,
+  })
+  /** billId → 已落账退款聚合（executed|settled；pass_cancel 锚点单不占原单口径） */
+  const refundByBillId = useMemo(() => {
+    const m = new Map<string, { totalFen: number; rows: RefundListRow[] }>()
+    for (const b of listQ.data ?? []) {
+      m.set(b.id, sumPostedRefunds(refundsQ.data, b.id))
+    }
+    return m
+  }, [listQ.data, refundsQ.data])
+
   const invalidate = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: CASHIER_ROOT_KEY })
-    // M1-补2 R1：冲正影响已收口径，同源出口一并失效
+    // M1-补2 R1：冲正影响已收口径，同源出口一并失效；R12：退款影响退款单列/净额口径
     void queryClient.invalidateQueries({ queryKey: TODAY_TENDER_KEY })
     void queryClient.invalidateQueries({ queryKey: STATS_QUERY_KEY })
     void queryClient.invalidateQueries({ queryKey: ['store', 'financeStats'] })
+    void queryClient.invalidateQueries({ queryKey: REFUND_ROOT_KEY })
   }, [queryClient])
 
-  // SSE：收银事件 → 流水刷新；断线重连全量对齐
+  // SSE：收银事件 + R12 退款事件 → 流水刷新；断线重连全量对齐
   useEffect(
     () =>
       events.onEvent((envelope) => {
@@ -98,6 +127,9 @@ export default function CashierRecordsPage() {
           case EventType.CashierBillSettled:
           case EventType.CashierBillVoided:
           case EventType.CashierBillReversed:
+          case EventType.RefundExecuted:
+          case EventType.RefundSettled:
+          case EventType.RefundRejected:
             invalidate()
             break
           default:
@@ -120,7 +152,8 @@ export default function CashierRecordsPage() {
     buyerName?: string
     payableFen?: number
   } | null>(null)
-  const [refundBlockNo, setRefundBlockNo] = useState<string | null>(null)
+  const [refundTarget, setRefundTarget] = useState<string | null>(null)
+  const [refundDetailRow, setRefundDetailRow] = useState<RefundListRow | null>(null)
 
   const voidM = useMutation({
     mutationFn: (input: { billNo: string; reason?: string }) => trpc.cashier.voidBill.mutate(input),
@@ -246,6 +279,15 @@ export default function CashierRecordsPage() {
                             冲正 {b.reversalOfBillNo}
                           </span>
                         ) : null}
+                        {/* R12：已退款单「退款 ¥X」红字标签+关联退款单号（双向可查） */}
+                        {b.refundStatus && refundByBillId.get(b.id) ? (
+                          <span className="block text-caption-xs font-bold text-danger-deep">
+                            退款 ¥{fenToYuan(refundByBillId.get(b.id)!.totalFen)}
+                            {b.refundBillNo ? (
+                              <span className="ml-1 font-normal text-[rgba(74,59,46,.42)]">{b.refundBillNo}</span>
+                            ) : null}
+                          </span>
+                        ) : null}
                       </td>
                       <td className="u1-num">{range === 'today' ? formatTime(b.createdAt) : formatDateTime(b.createdAt)}</td>
                       <td>{b.buyerName}</td>
@@ -261,6 +303,12 @@ export default function CashierRecordsPage() {
                       </td>
                       <td>
                         <span className={st.cls}>{st.label}</span>
+                        {/* R12：退款灰签（已退款/部分退款；红字金额在单号列） */}
+                        {b.refundStatus === 'refunded' ? (
+                          <span className="u3-st done ml-1">已退款</span>
+                        ) : b.refundStatus === 'partial' ? (
+                          <span className="u3-st wait ml-1">部分退款</span>
+                        ) : null}
                       </td>
                       <td>
                         <span className="inline-flex items-center gap-2.5">
@@ -294,12 +342,18 @@ export default function CashierRecordsPage() {
         billNo={detailNo}
         isOwner={role.isOwner}
         canManage={role.canManage}
+        refundRows={
+          detailNo
+            ? (refundByBillId.get(rows.find((r) => r.billNo === detailNo)?.id ?? '')?.rows ?? [])
+            : []
+        }
         onVoid={(b) => setVoidTarget(b)}
         onReverse={(b) => {
           setDetailNo(null)
           setReverseTarget(b)
         }}
-        onRefund={(no) => setRefundBlockNo(no)}
+        onRefund={(no) => setRefundTarget(no)}
+        onShowRefund={(row) => setRefundDetailRow(row)}
         onClose={() => setDetailNo(null)}
       />
       <VoidDialog
@@ -320,8 +374,15 @@ export default function CashierRecordsPage() {
         }}
         onClose={() => setReverseTarget(null)}
       />
-      {/* 补丁②：退款明文拦截（纯前端提示，零接口调用零写入） */}
-      <RefundBlockDialog billNo={refundBlockNo} onClose={() => setRefundBlockNo(null)} />
+      {/* R12：真退款弹层（六联动预览 + 重确认 D 套；替换补丁② 拦截文案） */}
+      <RefundDialog
+        billNo={refundTarget}
+        isOwner={role.isOwner}
+        onClose={() => setRefundTarget(null)}
+        onExecuted={invalidate}
+      />
+      {/* R12：退款单详情（双向可查，点开 refundBillNo 见 refund_bills） */}
+      <RefundDetailDialog row={refundDetailRow} onClose={() => setRefundDetailRow(null)} />
     </MainScaffold>
   )
 }
