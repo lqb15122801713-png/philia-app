@@ -17,8 +17,11 @@
  * PendingPayments 一并退役出页面（git rm，待收款「确认收款」并入流水表）。
  *
  * SSE（store 频道）：appointment.paid → toast + invalidate；completed/reviewed/
- * cancelled → invalidate；断线重连全量对齐；60s 轮询兜底（沿用 T4.4 接线）。
+ * cancelled → invalidate；refund.executed/settled/rejected → 退款汇总行联动刷新；
+ * 断线重连全量对齐；60s 轮询兜底（沿用 T4.4 接线）。
  * v1.1-b1：/finance#pending-payments 深链 → 滚动到流水表（待收行所在面板）。
+ * R12：三卡下加一行「今日退款汇总」（refund.dayStats · 当日净额=已收−退款，
+ * 最小侵入不自建大块）。
  */
 
 import { EventType, usePhiliaClient, type EventEnvelope } from '@philia/shared';
@@ -27,6 +30,7 @@ import { TRPCClientError } from '@trpc/client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import MainScaffold, { QuietButton } from '@/components/MainScaffold';
+import { REFUND_DAY_STATS_KEY, storeTodayStr } from '@/components/cashier/refund';
 import Toast, { useToast } from '@/components/finance/Toast';
 import { useMerchantEvents } from '@/components/finance/useMerchantEvents';
 import {
@@ -99,10 +103,18 @@ export default function FinancePage() {
     refetchInterval: 60_000,
   });
 
+  // R12：当日退款汇总（refund.dayStats · 当日净额=已收−退款；最小侵入一行，不自建大块）
+  const refundDayQ = useQuery({
+    queryKey: [...REFUND_DAY_STATS_KEY, storeTodayStr()],
+    queryFn: () => trpc.refund.dayStats.query({ date: storeTodayStr() }),
+    refetchInterval: 60_000,
+  });
+
   const invalidateFinance = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: FINANCE_QUERY_ROOT });
     void queryClient.invalidateQueries({ queryKey: ['appointment', 'listForStore'] });
     void queryClient.invalidateQueries({ queryKey: ['pass', 'listLogs'] });
+    void queryClient.invalidateQueries({ queryKey: REFUND_DAY_STATS_KEY });
   }, [queryClient]);
 
   // 事件去重（续传补发 / 多端同事件会重复到达）
@@ -136,6 +148,15 @@ export default function FinancePage() {
         // M1-补2 D：反结账冲正影响已收口径（原单不再计入；冲正单不计）→ 全量对齐
         case EventType.CashierBillReversed:
           showToast('收银台有一笔反结账冲正');
+          invalidateFinance();
+          break;
+        // R12：退款落账/实退 → 当日净额=已收−退款口径联动（退款单列刷新）
+        case EventType.RefundExecuted:
+          showToast('有一笔退款落账（退款单列）');
+          invalidateFinance();
+          break;
+        case EventType.RefundSettled:
+        case EventType.RefundRejected:
           invalidateFinance();
           break;
         case EventType.AppointmentCompleted:
@@ -353,6 +374,39 @@ export default function FinancePage() {
               </div>
             </div>
           </div>
+
+          {/* R12：当日退款汇总一行（同口径退款列：当日净额=已收−退款；最小侵入不自建大块）。
+              退款笔数/金额=refund.dayStats（biz_date=执行日，executed|settled 口径）；
+              已收=todayTender.receivedTotalFen（R1 同源出口），前端做差。 */}
+          {refundDayQ.data ? (
+            <div
+              className="u3-panel mt-3.5 flex flex-wrap items-center gap-x-3 gap-y-1 px-[17px] py-3 text-caption"
+              data-testid="finance-refund-strip"
+            >
+              <span className="font-semibold">今日退款</span>
+              <span className="u1-num">
+                {refundDayQ.data.count} 笔 ·{' '}
+                <b className={refundDayQ.data.totalFen > 0 ? 'text-danger-deep' : ''}>
+                  {refundDayQ.data.totalFen > 0 ? `−¥${formatYuan(refundDayQ.data.totalFen)}` : '¥0'}
+                </b>
+              </span>
+              <span className="text-[rgba(74,59,46,.42)]">｜</span>
+              <span className="text-[rgba(74,59,46,.62)]">
+                当日净额=已收−退款：
+                <b className="u1-num text-ink">
+                  ¥{todayReceivedFen !== null ? formatYuan(todayReceivedFen) : '…'} − ¥
+                  {formatYuan(refundDayQ.data.totalFen)} = ¥
+                  {todayReceivedFen !== null
+                    ? formatYuan(Math.max(0, todayReceivedFen - refundDayQ.data.totalFen))
+                    : '…'}
+                </b>
+              </span>
+              <span className="text-caption-xs text-[rgba(74,59,46,.42)]">
+                （现金段净额=现金已收−现金退款，现金退款 ¥{formatYuan(refundDayQ.data.segments.cashFen)} 详见日结页；
+                跨日退款计入发生日，历史封箱不回填）
+              </span>
+            </div>
+          ) : null}
 
           {/* 收款流水（已收 + 待收合并，按时间倒序） */}
           <div id="pending-payments" className="u3-panel mt-3.5 scroll-mt-4">
