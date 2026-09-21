@@ -22,7 +22,9 @@
  *     → 商家确认 appointment.confirm → 客户取码 appointment.getCode
  *     → 员工核销 appointment.checkin（人工 6 位码）
  *  5. 收银台全链路 + 冲正回补；5.13（staff-2 R8）库存流水三类来源验证：
- *     cashier（结账扣减）/ reversal（冲正回补）/ count（现造盘点单确认入账），前后值正确
+ *     cashier（结账扣减）/ reversal（冲正回补）/ count（现造盘点单确认入账），前后值正确；
+ *     5.14（R12）退款冒烟：现金单全额退六联动 / 储值组合单 6:4 分摊回补前后值 /
+ *     商品 refund 流水 / 寄养剩余晚部分退
  */
 
 const BASE = (process.env.PUBLIC_BASE_URL ?? 'http://localhost:7200').replace(/\/$/, '');
@@ -544,6 +546,147 @@ if (sessions.merchant && seedCustomer && sessions.customer) {
     }
   } else {
     check('库存流水三类来源验证（staff 会话缺失，跳过 count 链路）', false, 'sessions.staff 不可用');
+  }
+
+  // 5.14 R12 退款专项冒烟（任务书 §七闸门：现金单全额退 / 储值单余额回补 / 商品单 refund 流水 / 寄养剩余晚部分退）
+  // 幂等口径：全部按本单号 / 相对前后值断言，重复跑数据累积不失败。
+  {
+    // (a) 现金单全额退（服务+商品）→ 六联动：refund_status 回指 + rebate 列位 + 商品 refund 流水前后值 + 库存回补
+    if (service?.id && product?.id) {
+      const itemsR1 = [{ kind: 'service', refId: service.id, qty: 1 }, { kind: 'product', refId: product.id, qty: 1 }];
+      const stockR1Before = (await trpcQuery(sessions.merchant, 'mall.listProductsForStore', { page: 1, pageSize: 100 }))?.items?.find((p) => p.id === product.id)?.stock;
+      const heldR1 = await trpcMutate(sessions.merchant, 'cashier.hold', {
+        items: itemsR1, discountType: 'none', discountValue: 0, note: 'smoke R12 现金全额退单',
+      }).catch((e) => ({ err: String(e?.message ?? e) }));
+      const r1No = heldR1?.bill?.billNo ?? null;
+      const r1Payable = heldR1?.bill?.payableFen ?? 0;
+      if (r1No) {
+        await trpcMutate(sessions.merchant, 'cashier.settle', {
+          items: itemsR1, billNo: r1No, discountType: 'none', discountValue: 0, note: 'smoke R12 现金全额退单',
+          payments: [{ method: 'cash', amountFen: r1Payable }],
+        }).catch(() => null);
+        const rf1 = await trpcMutate(sessions.merchant, 'refund.execute', { billNo: r1No, type: 'full', reason: 'smoke R12 现金单全额退' })
+          .catch((e) => ({ err: String(e?.message ?? e) }));
+        const rf1Row = rf1?.refund ?? null;
+        const linkage1 = rf1Row?.linkageJson ?? {};
+        check('R12 现金单全额退 executed（金额=原单已收）',
+          !rf1?.err && rf1Row?.status === 'executed' && rf1Row?.amountFen === r1Payable,
+          rf1?.err ?? `refundNo=${rf1Row?.refundNo} 金额=${rf1Row?.amountFen}`);
+        check('R12 六联动快照含 rebateClawbackFen=0 列位（回馈金 R11 冻结回归）',
+          !rf1?.err && 'rebateClawbackFen' in linkage1 && linkage1.rebateClawbackFen === 0,
+          `keys=${Object.keys(linkage1).length}`);
+        const billR1After = await trpcQuery(sessions.merchant, 'cashier.getBill', { billNo: r1No }).catch(() => null);
+        const billR1Obj = billR1After?.bill ?? billR1After ?? {};
+        check('R12 原单挂 refund_status=refunded + refund_bill_no 双向回指（已收 paidFen 不涂改）',
+          billR1Obj?.refundStatus === 'refunded' && billR1Obj?.refundBillNo === rf1Row?.refundNo && billR1Obj?.paidFen === r1Payable,
+          `refundStatus=${billR1Obj?.refundStatus} refundBillNo=${billR1Obj?.refundBillNo}`);
+        const movR1 = await trpcQuery(sessions.merchant, 'inventory.listMovements', { sourceType: 'refund', limit: 100 })
+          .catch((e) => ({ err: String(e?.message ?? e) }));
+        const mvRow1 = Array.isArray(movR1) ? movR1.find((m) => m.sourceId === rf1Row?.refundNo && m.productId === product.id) : null;
+        const stockR1After = (await trpcQuery(sessions.merchant, 'mall.listProductsForStore', { page: 1, pageSize: 100 }))?.items?.find((p) => p.id === product.id)?.stock;
+        check('R12 商品 refund 流水前后值（delta=+1 连续）+ 库存回补到位',
+          !movR1?.err && !!mvRow1 && mvRow1.delta === 1 && mvRow1.afterStock === mvRow1.beforeStock + 1 && stockR1After === stockR1Before,
+          mvRow1 ? `流水 ${mvRow1.beforeStock}→${mvRow1.afterStock}，stock ${stockR1Before}→${stockR1After}` : `err=${movR1?.err ?? '未找到退款流水'}`);
+      } else {
+        check('R12 现金单全额退（挂单前置失败）', false, heldR1?.err ?? 'no billNo');
+      }
+    }
+
+    // (b) 储值段单退（余额回补前后值）：CSV 导入建账 ¥100 → 现金 6/储值 4 组合单 → 按金额退 50% → 6:4 分摊回补。
+    // 偏差说明：§6.6 对导入只 preview 不执行；本节为退款链路必须真实建户——executeImport 即生产建账
+    // 通道（仅店主），重复跑余额累加 ¥100/次，断言全为相对前后值，幂等安全。
+    const svCsv = [
+      '门店,会员编号,会员姓名,手机号码,会员卡名称,储值本金余额(¥),储值赠送金额(¥),次卡名称,次卡剩余次数,累计消费金额(¥),累计消费次数,会员加入时间,上次消费时间',
+      '贝肯山店,9001,演示甲,13800000000,银卡,100.00,0,,0,0,0,2026-09-01,2026-09-01',
+    ].join('\n');
+    const imp = await trpcMutate(sessions.merchant, 'storedValue.executeImport', { csvText: svCsv, filename: 'smoke-r12-sv.csv', mapping: { 贝肯山店: store5?.id } })
+      .catch((e) => ({ err: String(e?.message ?? e) }));
+    check('R12 前置：储值账户建账（executeImport 1 行 ¥100，仅店主生产通道）', !imp?.err && imp?.okRows === 1, imp?.err ?? `okRows=${imp?.okRows}`);
+    if (!imp?.err && service?.id) {
+      const balBefore = (await trpcQuery(sessions.merchant, 'cashier.searchMember', { phone: '13800000000' }))?.storedValueBalanceFen ?? null;
+      const heldR2 = await trpcMutate(sessions.merchant, 'cashier.hold', {
+        customerId: seedCustomer.id, items: [{ kind: 'service', refId: service.id, qty: 1 }],
+        discountType: 'none', discountValue: 0, note: 'smoke R12 储值组合单',
+      }).catch((e) => ({ err: String(e?.message ?? e) }));
+      const r2No = heldR2?.bill?.billNo ?? null;
+      const r2Payable = heldR2?.bill?.payableFen ?? 0;
+      const cashPart = Math.round(r2Payable * 0.6);
+      const svPart = r2Payable - cashPart;
+      if (r2No && balBefore !== null && balBefore >= svPart) {
+        await trpcMutate(sessions.merchant, 'cashier.settle', {
+          customerId: seedCustomer.id, items: [{ kind: 'service', refId: service.id, qty: 1 }],
+          billNo: r2No, discountType: 'none', discountValue: 0, note: 'smoke R12 储值组合单',
+          payments: [{ method: 'cash', amountFen: cashPart }, { method: 'stored_value', amountFen: svPart }],
+        }).catch(() => null);
+        const balAfterSettle = (await trpcQuery(sessions.merchant, 'cashier.searchMember', { phone: '13800000000' }))?.storedValueBalanceFen;
+        check('R12 储值段结账扣减（余额 −40% 段，前后值连续）', balAfterSettle === balBefore - svPart, `balance ${balBefore}→${balAfterSettle}`);
+        const rfAmt = Math.floor(r2Payable / 2);
+        const expSv = Math.floor((rfAmt * svPart) / r2Payable);
+        const expCash = rfAmt - expSv; // 余数落最大段（cash>sv）
+        const rf2 = await trpcMutate(sessions.merchant, 'refund.execute', { billNo: r2No, type: 'partial_amount', amountFen: rfAmt, reason: 'smoke R12 储值组合单退 50%' })
+          .catch((e) => ({ err: String(e?.message ?? e) }));
+        const segs2 = rf2?.plan?.segments ?? [];
+        const cashSeg2 = segs2.find((s) => s.method === 'cash');
+        const svSeg2 = segs2.find((s) => s.method === 'stored_value');
+        const balAfterRefund = (await trpcQuery(sessions.merchant, 'cashier.searchMember', { phone: '13800000000' }))?.storedValueBalanceFen;
+        check('R12 组合支付 6:4 分摊回补（按段占比精确到分）+ 储值余额回补前后值留痕',
+          !rf2?.err && cashSeg2?.amountFen === expCash && svSeg2?.amountFen === expSv && svSeg2?.channel === 'stored_value_restore' &&
+            balAfterRefund === balAfterSettle + expSv,
+          rf2?.err ?? `segs=${segs2.map((s) => `${s.method}:${s.amountFen}`).join('/')} balance=${balAfterSettle}→${balAfterRefund}`);
+      } else {
+        check('R12 储值组合单（前置失败：余额不足或挂单失败）', false, `balBefore=${balBefore} svPart=${svPart} r2No=${r2No}`);
+      }
+    }
+
+    // (c) 寄养剩余晚部分退：boarding 预约（明天入住 3 晚）→ 前台核销（in_boarding）→ 退房（completed）
+    //     → 收银结账 → 退 2 晚。注：演示单明天入住→已发生 0 晚；「已发生晚一分不退」由 e2e §32（昨日入住夹具）实证。
+    const boardingSvc5 = detail5?.services?.find((s) => s.type === 'boarding');
+    const petsR = await trpcQuery(sessions.customer, 'pet.list').catch(() => null);
+    const petR = petsR?.[0];
+    if (boardingSvc5?.id && petR?.id && store5?.id && sessions.staff) {
+      const STORE_TZ3 = 8 * 60 * 60 * 1000;
+      const nowW3 = new Date(Date.now() + STORE_TZ3);
+      const bStart = new Date(Date.UTC(nowW3.getUTCFullYear(), nowW3.getUTCMonth(), nowW3.getUTCDate() + 1, 15, 0, 0, 0) - STORE_TZ3);
+      const bEnd = new Date(bStart.getTime() + 3 * 86400000);
+      const bAppt = await trpcMutate(sessions.customer, 'appointment.create', {
+        storeId: store5.id, petId: petR.id, serviceId: boardingSvc5.id, type: 'boarding',
+        scheduledStart: bStart.toISOString(), scheduledEnd: bEnd.toISOString(),
+        paymentMode: 'pay_at_store', note: 'smoke R12 寄养 3 晚单',
+      }, { scheduledStart: ['Date'], scheduledEnd: ['Date'] }).catch((e) => ({ err: String(e?.message ?? e) }));
+      const bAid = bAppt?.id ?? null;
+      check('R12 寄养预约创建（明天入住共 3 晚）', !bAppt?.err && !!bAid, bAppt?.err ?? `id=${bAid}`);
+      if (bAid) {
+        const bCode = await trpcQuery(sessions.customer, 'appointment.getCode', { appointmentId: bAid }).catch(() => null);
+        const bCheckin = bCode?.code
+          ? await trpcMutate(sessions.staff, 'appointment.checkin', { code: bCode.code }).catch((e) => ({ err: String(e?.message ?? e) }))
+          : { err: '取码失败' };
+        const bOut = await trpcMutate(sessions.staff, 'boarding.checkout', { appointmentId: bAid }).catch((e) => ({ err: String(e?.message ?? e) }));
+        check('R12 寄养核销 + 退房（in_boarding → completed）', !bCheckin?.err && !bOut?.err, bCheckin?.err ?? bOut?.err ?? 'ok');
+        const heldB = await trpcMutate(sessions.merchant, 'cashier.hold', {
+          items: [{ kind: 'appointment', refId: bAid, qty: 1 }], discountType: 'none', discountValue: 0, note: 'smoke R12 寄养结账',
+        }).catch((e) => ({ err: String(e?.message ?? e) }));
+        const bNo = heldB?.bill?.billNo ?? null;
+        const bPayable = heldB?.bill?.payableFen ?? 0;
+        if (bNo) {
+          await trpcMutate(sessions.merchant, 'cashier.settle', {
+            items: [{ kind: 'appointment', refId: bAid, qty: 1 }], billNo: bNo, discountType: 'none', discountValue: 0,
+            note: 'smoke R12 寄养结账', payments: [{ method: 'cash', amountFen: bPayable }],
+          }).catch(() => null);
+          const rfB = await trpcMutate(sessions.merchant, 'refund.execute', { billNo: bNo, type: 'boarding_nights', nights: 2, reason: 'smoke R12 寄养退剩余 2 晚' })
+            .catch((e) => ({ err: String(e?.message ?? e) }));
+          const expB = Math.floor(bPayable / 3) * 2;
+          const bd = rfB?.plan?.boarding ?? null;
+          check('R12 寄养剩余晚部分退（退 2/3 晚，金额=floor(总价÷3)×2；分段明细透出总晚/退晚/晚单价）',
+            !rfB?.err && rfB?.refund?.status === 'executed' && rfB?.refund?.amountFen === expB &&
+              bd?.totalNights === 3 && bd?.nights === 2 && bd?.remainingNights === 3,
+            rfB?.err ?? `amount=${rfB?.refund?.amountFen} 期望=${expB} boarding=${JSON.stringify(bd)}`);
+        } else {
+          check('R12 寄养结账（挂单前置失败）', false, heldB?.err ?? 'no billNo');
+        }
+      }
+    } else {
+      check('R12 寄养剩余晚部分退（前置缺失，显式跳过）', false, `boardingSvc=${boardingSvc5?.id ?? 'none'} pet=${petR?.id ?? 'none'} staff=${!!sessions.staff}`);
+    }
   }
 }
 
