@@ -44,7 +44,9 @@
  *      未知键 BAD_REQUEST / 拉新置灰拒写
  *   24. R9 提成回溯（七步复核 Bug②）：商品/服务率改值前后单各按当时率逐行精确 /
  *      perf_base_rate 不回溯；G0 学徒仅洗护计 5%、造型单不计（裁定③）
- *   25. R10 榜尾不可达：榜尾视角≤5 行且第 4 名不可达；前排视角仅前三
+ *   25. 补充令①（决策 #39/#40）：owner 改体型系数→新预约引擎新值/旧单 scheduledEnd 不变/
+ *      config.versions 留痕前后值；G0 scope=bath 造型不计提→scope=all 计提 5% 双向
+ *   26. R10 榜尾不可达：榜尾视角≤5 行且第 4 名不可达；前排视角仅前三
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -1649,8 +1651,89 @@ async function main(): Promise<void> {
     !sumG0.payload.serviceLines.some((l) => l.refId === apptS.id) && sumG0.payload.commissionTotalFen === 500,
     { total: sumG0.payload.commissionTotalFen, lines: sumG0.payload.serviceLines.map((l) => `${l.name}:${l.amountFen}`) });
 
-  /* ---------- 25. R10 榜尾不可达（清单⑥） ---------- */
-  console.log('\n[staff-2] 25. R10 榜单查询层裁剪（前三+自己+前一名）');
+  /* ---------- 25. 补充令①：时长系数配置化（决策 #39/#40）+ G0 scope（决策 #40） ---------- */
+  console.log('\n[staff-2] 25. 时长规则配置端口（改系数→新预约新值/旧单不变/留痕）+ G0 scope bath→all 双向');
+  // ① owner 改体型系数 medium 1.5→2.0：中型犬（15kg 柯基短毛）新预约时长 90→120min；
+  //    改前已建预约 scheduledEnd 原值不变（新值只管新单）；config.versions 留痕前后值
+  const midDog = (await db.insert(schema.pets).values({
+    ownerId: customerUser!.id, name: 'e2e 中型犬', species: 'dog', breed: '柯基', weightKg: 15,
+  }).returning())[0]!;
+  const slotD1 = slotPool[2];
+  // D2 与 D1 间隔 ≥4h：D1 引擎时长 90min 占连续槽 + S4 可用性引擎按 groomer 空闲判定，
+  // 相邻槽会因区间重叠/无空闲美容师 409（本轮实测），故取 ≥4h 后的槽位
+  const slotD2 = slotD1 ? slotPool.find((s) => s.slotStart.getTime() >= slotD1.slotStart.getTime() + 4 * 3600 * 1000) : undefined;
+  check('时长前置：D1/D2 可约槽（duration 用单，间隔≥4h 防区间重叠）', !!slotD1 && !!slotD2, slotPool.length);
+  if (!slotD1 || !slotD2) throw new Error('可约槽不足（duration 段）');
+  const apptD1 = await trpcMutate<{ id: string; scheduledStart: Date; scheduledEnd: Date }>('appointment.create', {
+    cookie: customerCookie,
+    input: { storeId: store.id, petId: midDog.id, serviceId: service.id, type: 'grooming', scheduledStart: slotD1.slotStart, paymentMode: 'pay_at_store', note: 'e2e 时长 apptD1（改系数前）' },
+  });
+  const d1Min = (apptD1.scheduledEnd.getTime() - apptD1.scheduledStart.getTime()) / 60000;
+  // 引擎口径：bath 基础 60 × medium 1.5 × short 1.0 = 90min（30min 栅格已整除）
+  check('时长① 改系数前：中型犬洗护新预约 scheduledEnd=引擎 90min（60×1.5×1.0）', d1Min === 90, { d1Min });
+  const saveSizeCoef = await trpcMutate<{ version: number; keys: string[] }>('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'duration', changes: [{ ruleKey: 'duration_size_coef', valueJson: { small: 1.0, medium: 2.0, large: 2.0 } }] },
+  });
+  check('时长① owner 改体型系数 medium 1.5→2.0（duration domain version=2）',
+    saveSizeCoef.version === 2 && saveSizeCoef.keys.includes('duration_size_coef'), saveSizeCoef);
+  const apptD2 = await trpcMutate<{ id: string; scheduledStart: Date; scheduledEnd: Date }>('appointment.create', {
+    cookie: customerCookie,
+    input: { storeId: store.id, petId: midDog.id, serviceId: service.id, type: 'grooming', scheduledStart: slotD2.slotStart, paymentMode: 'pay_at_store', note: 'e2e 时长 apptD2（改系数后）' },
+  });
+  const d2Min = (apptD2.scheduledEnd.getTime() - apptD2.scheduledStart.getTime()) / 60000;
+  check('时长① 改系数后：同宠物同服务新预约 scheduledEnd=新系数 120min（60×2.0×1.0）', d2Min === 120, { d2Min });
+  const d1Row = await db.select().from(schema.appointments).where(eq(schema.appointments.id, apptD1.id)).get();
+  check('时长① 改前已建预约 scheduledEnd 原值不变（不回溯：库内仍 90min）',
+    !!d1Row && (d1Row.scheduledEnd.getTime() - d1Row.scheduledStart.getTime()) / 60000 === 90,
+    d1Row && (d1Row.scheduledEnd.getTime() - d1Row.scheduledStart.getTime()) / 60000);
+  const durVers = await trpcQuery<{ versions: Array<{ version: number; changedBy: string; changesJson: Array<{ rule_key: string; before: unknown; after: unknown }> }> }>(
+    'config.versions',
+    { cookie: ownerCookie, input: { domain: 'duration' } },
+  );
+  const dv2 = durVers.versions.find((v) => v.version === 2)?.changesJson.find((c) => c.rule_key === 'duration_size_coef');
+  check('时长① config.versions 留痕前后值（medium 1.5→2.0，变更人=owner）',
+    !!dv2 && (dv2.before as Record<string, unknown>)?.medium === 1.5 && (dv2.after as Record<string, unknown>)?.medium === 2.0 &&
+      durVers.versions.find((v) => v.version === 2)?.changedBy === ownerUser!.id,
+    dv2);
+
+  // ② G0 scope（决策 #40）：阿强 grade 直改 G0（夹具）→ scope=bath 默认造型单不计提；
+  //    owner 改 scope=all 后新造型单计提 5%（双向断言；秒界 sleep 防同秒 tie）
+  await db.update(schema.staff).set({ grade: 'G0', updatedAt: new Date() }).where(eq(schema.staff.id, aqiang.id));
+  const apptS2 = (await db.insert(schema.appointments).values({
+    code: 'E2EGS2', customerId: customerUser!.id, storeId, petId, serviceId: styleSvc.id,
+    type: 'grooming', scheduledStart: new Date(), scheduledEnd: new Date(),
+    status: 'completed', priceFen: 10000, completedAt: new Date(), staffId: aqiang.id,
+  }).returning())[0]!;
+  await settleBill([{ kind: 'appointment', refId: apptS2.id }], 'e2e G0-scope billS2（造型·scope=bath）');
+  const sumAqG0a = await trpcQuery<CommSummaryT>('commission.mySummary', { cookie: groomerCookie, input: {} });
+  check('G0scope② scope=bath（默认）：G0 造型单不计提（serviceLines 无 apptS2 行）',
+    !sumAqG0a.payload.serviceLines.some((l) => l.refId === apptS2.id),
+    sumAqG0a.payload.serviceLines.map((l) => `${l.name}:${l.rateBp}`));
+  await sleep(1100); // 跨秒界：billS2 结账严格早于 scope 改版
+  const saveG0Scope = await trpcMutate<{ version: number }>('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'commission', changes: [{ ruleKey: 'commission_grooming_assistant_g0_rate', valueJson: { rate_bp: 500, scope: 'all' } }] },
+  });
+  check('G0scope② owner 改 scope=all（commission version=5）', saveG0Scope.version === 5, saveG0Scope);
+  await sleep(1100); // 跨秒界：billS3 结账严格晚于改版
+  const apptS3 = (await db.insert(schema.appointments).values({
+    code: 'E2EGS3', customerId: customerUser!.id, storeId, petId, serviceId: styleSvc.id,
+    type: 'grooming', scheduledStart: new Date(), scheduledEnd: new Date(),
+    status: 'completed', priceFen: 10000, completedAt: new Date(), staffId: aqiang.id,
+  }).returning())[0]!;
+  await settleBill([{ kind: 'appointment', refId: apptS3.id }], 'e2e G0-scope billS3（造型·scope=all）');
+  const sumAqG0b = await trpcQuery<CommSummaryT>('commission.mySummary', { cookie: groomerCookie, input: {} });
+  const lineS3 = sumAqG0b.payload.serviceLines.find((l) => l.refId === apptS3.id);
+  check('G0scope② scope=all：新造型单计提 5%（rateBp=500，金额=10000×5%=500 精确）',
+    lineS3?.rateBp === 500 && lineS3.amountFen === 500, lineS3);
+  check('G0scope② scope=all 不回溯：scope=bath 期造型单（apptS2）仍不计提',
+    !sumAqG0b.payload.serviceLines.some((l) => l.refId === apptS2.id), apptS2.id);
+  // 夹具还原：阿强 grade 回 G1（防干扰后续段）
+  await db.update(schema.staff).set({ grade: 'G1', updatedAt: new Date() }).where(eq(schema.staff.id, aqiang.id));
+
+  /* ---------- 26. R10 榜尾不可达（清单⑥） ---------- */
+  console.log('\n[staff-2] 26. R10 榜单查询层裁剪（前三+自己+前一名）');
   interface LbRow { staffId: string; rank: number; isSelf: boolean; totalXp: number }
   const lbTail = await trpcQuery<{ rows: LbRow[] }>('xp.leaderboard', { cookie: extra3Cookie });
   check('R10⑲ 榜尾视角 ≤5 行（前三+自己+前一名）', lbTail.rows.length > 0 && lbTail.rows.length <= 5, lbTail.rows.length);
