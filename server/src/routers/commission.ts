@@ -19,10 +19,12 @@
  * - 售卡定额规则已落库但源单不存在（R11 会员前置批）：cardLines 恒空 + cardNote 明示，不悬空。
  *
  * 报备偏差（schema 实证适配，PR 中显式列）：
- * 1. 洗护/造型判别（七步复核裁定③，V1.3 原文「仅洗护不含造型」）：services 表无类目列
- *    （仅 type=grooming|boarding 大类）→ G0 学徒 5% 用名称关键词判别（isWashService：
- *    命中 洗/浴 且不命中 造型/修剪/剪毛/美容），集中一处导出，时长供给表批次落地正式
- *    类目列后换装正式判别；
+ * 1. 洗护/造型判别（裁定③ + 决策 #40）：services 表无类目列（仅 type=grooming|boarding
+ *    大类）→ G0 学徒 5% 用名称关键词判别（isWashService：命中 bath 词表且不命中 groom
+ *    词表），关键词读 duration_rules 的 duration_service_kind_keywords 当前生效行——
+ *    与时长引擎共用一张表一处维护；commission_grooming_assistant_g0_rate.valueJson.scope
+ *    控制口径（'bath' 默认仅洗护 / 'all' 全部 grooming，老板端口可调；缺省='bath' 向后
+ *    兼容无 scope 行）；时长供给表批次落地正式类目列后换装正式判别；
  * 2. 计提时点=结账时（备案知悉，行为不动）：服务单任务书口径=服务完成即计提，但提成
  *    源单=收银账单（门市价快照/冲正排除均在账单域），月份归属与规则版本统一按账单
  *    settled_at——完成与结算跨月的微差在案；
@@ -232,22 +234,25 @@ export async function resolveRulesAt(
 }
 
 /* ------------------------------------------------------------------ */
-/* G0 学徒洗护判别（裁定③ · V1.3 原文：仅洗护不含造型）                     */
+/* G0 学徒洗护判别（裁定③/决策 #40：仅洗护不含造型；关键词读 duration_rules） */
 /* ------------------------------------------------------------------ */
 
-/** 造型类否定关键词（命中即非洗护） */
-const STYLE_RE = /(造型|修剪|剪毛|美容)/;
-/** 洗护类肯定关键词（洗/洗护/浴） */
-const WASH_RE = /(洗|浴)/;
-
 /**
- * G0 学徒 5% 洗护单判别（关键词口径，七步复核裁定③）：
- * 服务名命中 洗/洗护/浴 且不命中 造型/修剪/剪毛/美容 → 洗护单（计 5%）；否则不计。
- * services 表无 洗护/造型 类目列（仅 type=grooming|boarding 大类），故用名称启发式——
+ * G0 学徒 5% 洗护单判别（决策 #40：与时长引擎共用 duration_service_kind_keywords
+ * 一张关键词表，一处维护；不再硬编码关键词）：
+ * 服务名命中 bath 词表（洗/浴/SPA/清洁/吹干…）且不命中 groom 词表（美容/造型/修剪/修毛/剪…）
+ * → 洗护单（计 5%）；否则不计。
+ * 注意与引擎 classifyServiceKind 的「bath 先命中优先」语义刻意不同：G0 是排除式
+ * （双语义命中=groom 优先排除，宁漏计不多计），注释写死防误统一。
  * 时长供给表批次落地正式类目列后换装正式判别（仅此一处集中判别，换装零扩散）。
  */
-export function isWashService(serviceName: string): boolean {
-  return WASH_RE.test(serviceName) && !STYLE_RE.test(serviceName);
+export function isWashService(
+  serviceName: string,
+  keywords: Record<'bath' | 'groom', string[]>,
+): boolean {
+  const name = serviceName.toLowerCase();
+  const hit = (kws: string[]) => kws.some((kw) => name.includes(kw.toLowerCase()));
+  return hit(keywords.bath) && !hit(keywords.groom);
 }
 
 /* ------------------------------------------------------------------ */
@@ -442,6 +447,19 @@ export async function computeMonth(
   const serviceLines: CommissionLine[] = [];
   const lineTs = new Map<string, Date>(); // itemId → 源单时间（产能加计逐行时序解析用）
   const isGroomer = staffRow.role === 'groomer' || (staffRow.grade ?? '').startsWith('G');
+  /* G0 判别关键词（决策 #40：读 duration_service_kind_keywords 当前生效行，与时长引擎共用一表） */
+  const kwRow = isGroomer && staffRow.grade === 'G0'
+    ? await d
+        .select({ valueJson: schema.durationRules.valueJson })
+        .from(schema.durationRules)
+        .where(and(eq(schema.durationRules.ruleKey, 'duration_service_kind_keywords'), eq(schema.durationRules.active, true)))
+        .get()
+    : undefined;
+  const kwVal = kwRow?.valueJson as Record<string, unknown> | undefined;
+  const serviceKindKeywords: Record<'bath' | 'groom', string[]> | null =
+    Array.isArray(kwVal?.bath) && Array.isArray(kwVal?.groom)
+      ? { bath: kwVal.bath as string[], groom: kwVal.groom as string[] }
+      : null; // 缺行/非法 → scope=bath 时 G0 不计（宁漏计口径，注释在案）
   if (isGroomer) {
     for (const it of monthData.items) {
       if (it.kind !== 'appointment') continue;
@@ -449,8 +467,15 @@ export async function computeMonth(
       if (!appt || appt.type !== 'grooming' || appt.staffId !== staffRow.id) continue;
       const bill = billById.get(it.billId)!;
       const ts = bill.settledAt ?? bill.createdAt;
-      // 裁定③：G0 学徒 5% 仅洗护不含造型——名称关键词判别（isWashService，正式类目列随时长供给表批次落地后换装）
-      if (staffRow.grade === 'G0' && !isWashService(it.nameSnapshot)) continue;
+      // 裁定③/决策 #40：G0 学徒 5% scope 判定——scope 缺省='bath'（向后兼容既有库无 scope 行）：
+      // bath=仅洗护单（isWashService 读共享关键词表）；all=全部 grooming 单（老板端口可调）
+      if (staffRow.grade === 'G0') {
+        const g0Rule = ruleAt('commission_grooming_assistant_g0_rate', ts);
+        const scope = typeof g0Rule?.scope === 'string' ? g0Rule.scope : 'bath';
+        if (scope !== 'all' && (!serviceKindKeywords || !isWashService(it.nameSnapshot, serviceKindKeywords))) {
+          continue;
+        }
+      }
       const key = staffRow.grade === 'G0' ? 'commission_grooming_assistant_g0_rate' : 'commission_grooming_rate';
       const rateBp = num(ruleAt(key, ts)?.rate_bp, 0);
       const baseFen = it.unitPriceFen; // 门市价快照（券单/会员差额门店担，同按门市价）
