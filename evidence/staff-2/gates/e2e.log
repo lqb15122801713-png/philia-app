@@ -176,19 +176,31 @@
   ✓ G0③ 洗护单计 5%（命中 洗/浴 不命中造型类；金额=10000×5%=500）
   ✓ G0③ 造型单不计提成（serviceLines 无 apptS 行，commissionTotalFen=500 仅洗护行）
 
-[staff-2] 25. R10 榜单查询层裁剪（前三+自己+前一名）
+[staff-2] 25. 时长规则配置端口（改系数→新预约新值/旧单不变/留痕）+ G0 scope bath→all 双向
+  ✓ 时长前置：D1/D2 可约槽（duration 用单，间隔≥4h 防区间重叠）
+  ✓ 时长① 改系数前：中型犬洗护新预约 scheduledEnd=引擎 90min（60×1.5×1.0）
+  ✓ 时长① owner 改体型系数 medium 1.5→2.0（duration domain version=2）
+  ✓ 时长① 改系数后：同宠物同服务新预约 scheduledEnd=新系数 120min（60×2.0×1.0）
+  ✓ 时长① 改前已建预约 scheduledEnd 原值不变（不回溯：库内仍 90min）
+  ✓ 时长① config.versions 留痕前后值（medium 1.5→2.0，变更人=owner）
+  ✓ G0scope② scope=bath（默认）：G0 造型单不计提（serviceLines 无 apptS2 行）
+  ✓ G0scope② owner 改 scope=all（commission version=5）
+  ✓ G0scope② scope=all：新造型单计提 5%（rateBp=500，金额=10000×5%=500 精确）
+  ✓ G0scope② scope=all 不回溯：scope=bath 期造型单（apptS2）仍不计提
+
+[staff-2] 26. R10 榜单查询层裁剪（前三+自己+前一名）
   ✓ R10⑲ 榜尾视角 ≤5 行（前三+自己+前一名）
   ✓ R10⑲ 榜尾视角含自己与前一名（丽丽 rank5），第 4 名（阿强）不可达
   ✓ R10⑲ 前排视角仅前三（丽丽/阿强/附加丙均不出参，全榜永不外泄）
   ✓ 验收结束：7200 端口无残留监听
-[e2e] 临时库目录清理失败（Windows libsql 句柄滞后，可手工删）: C:\Users\lqb15\AppData\Local\Temp\philia-e2e-EOa0wj Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-EOa0wj '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-EOa0wj'
+[e2e] 临时库目录清理失败（Windows libsql 句柄滞后，可手工删）: C:\Users\lqb15\AppData\Local\Temp\philia-e2e-NHvnAu Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-NHvnAu '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-NHvnAu'
     at rmSync (node:fs:1222:18)
-    at cleanup (D:\KimiData\kimi\Workspaces\Philia\repo\server\src\__tests__\e2e.ts:1694:5)
+    at cleanup (D:\KimiData\kimi\Workspaces\Philia\repo\server\src\__tests__\e2e.ts:1777:5)
     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-    at async <anonymous> (D:\KimiData\kimi\Workspaces\Philia\repo\server\src\__tests__\e2e.ts:1732:3) {
+    at async <anonymous> (D:\KimiData\kimi\Workspaces\Philia\repo\server\src\__tests__\e2e.ts:1815:3) {
   errno: 1,
   code: 'EPERM',
-  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-e2e-EOa0wj',
+  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-e2e-NHvnAu',
   syscall: 'rm'
 }
   ✓ 种子库 data/philia.db 原样（size/mtime 未变）
