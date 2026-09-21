@@ -1367,6 +1367,39 @@ export const commissionRules = sqliteTable(
 );
 
 /**
+ * 时长规则配置表（补充令① · 时长系数表配置化，决策 #39/#40；结构逐列同 commission_rules）：
+ * durationEngine 全部系数（物种×服务种类基础时长、体型系数、毛长系数、体重分档阈值、
+ * 长毛品种关键词、服务种类关键词）落本表，引擎/提成（G0 洗护判别共用服务种类关键词表）
+ * 只读表，改数不改码；初始 version=1 种子=原引擎占位常量照转（label 注「占位待供给」）。
+ * 保存即生效、版本化留痕（rule_config_versions domain='duration'）；新值只管修改后新
+ * 产生的预约/时长计算，不回溯既有单据。
+ */
+export const durationRules = sqliteTable(
+  'duration_rules',
+  {
+    id: id(),
+    /** 规则版本（初始全表种子 =1） */
+    version: integer('version').notNull(),
+    /** 规则键（如 duration_base_min / duration_size_coef / duration_service_kind_keywords） */
+    ruleKey: text('rule_key').notNull(),
+    /** 规则中文名（配置页展示；占位期注明「占位待供给」） */
+    label: text('label').notNull(),
+    /** 规则值 JSON（分钟/系数/阈值/关键词表），结构见 RuleConfigValue */
+    valueJson: text('value_json', { mode: 'json' }).$type<RuleConfigValue>().notNull(),
+    /** 生效时间（按此取规则版本；新规只管生效后的单） */
+    effectiveFrom: integer('effective_from', { mode: 'timestamp' }).notNull(),
+    /** 是否生效（0/1） */
+    active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    /** 创建/变更人用户 ID -> users.id */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_duration_rules_key_active').on(t.ruleKey, t.active)],
+);
+
+/**
  * 提成/绩效月度快照表（R9）：每月 1 日 02:00 快照（server 定时器幂等）；
  * 季度绩效同 15 日口径快照。已快照月份读快照，差额进当月「调整项」，不动历史。
  * payload_json 分列池：美容师绩效池/前台绩效池两行不合并（同源双计为设计）。

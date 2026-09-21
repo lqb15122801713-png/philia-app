@@ -43,6 +43,7 @@ const CLEAR_ORDER = [
   schema.xpLevels, // FK → stores/staff
   schema.reviews, // FK → appointments/stores/users/staff
   schema.commissionRules, // FK → users
+  schema.durationRules, // FK → users（补充令① 时长系数配置表）
   schema.xpRules, // FK → users
   schema.ruleConfigVersions, // FK → users
   /* ---- 既有表（原顺序不动） ---- */
@@ -298,7 +299,7 @@ async function main() {
     await tx.insert(schema.commissionRules).values([
       /* —— 提成规则总表（V1.3 §一 全行）—— */
       commissionSeed('commission_grooming_rate', '美容师洗美服务提成（G1-G4）：当单门市价 20%（会员折扣差额门店承担；券核销单同按门市价；门店统一促销特价单按实收）', { rate_bp: 2000 }),
-      commissionSeed('commission_grooming_assistant_g0_rate', '美容师学徒洗护助理提成（G0）：当单门市价 5%，仅洗护单、不含造型', { rate_bp: 500 }),
+      commissionSeed('commission_grooming_assistant_g0_rate', '美容师学徒洗护助理提成（G0）：当单门市价 5%；scope=bath 仅洗护单不含造型（默认，洗护判别读 duration_service_kind_keywords 关键词表）/ scope=all 全部 grooming 单（老板端口可调）', { rate_bp: 500, scope: 'bath' }),
       commissionSeed('commission_mentor_split', '师徒带教组合单拆分：按徒弟当单门市价，徒弟计件 80%、师傅加计 20%', { split_bp: { apprentice: 8000, mentor: 2000 } }),
       commissionSeed('commission_overwork_multiplier', '美容师产能红线加计：日超 8 只须店长批准，超出部分按 1.5 倍计', { threshold_per_day: 8, multiplier_bp: 15000 }),
       commissionSeed('commission_g4_store_rate', '美容师 G4 全店管理提成：本店月度洗美营收（门市价）0.5%，对全店技术质量负责', { rate_bp: 50 }),
@@ -321,6 +322,28 @@ async function main() {
       commissionSeed('perf_deduction_cap_bp', '绩效扣减当月累计上限：≤当月绩效 50%（只扣绩效不扣提成，超限拒写）', { cap_bp: 5000 }),
       commissionSeed('settlement_day', '结算日：次月 15 日随工资发放', { day: 15 }),
       commissionSeed('snapshot_day', '月度快照：每月 1 日 02:00（季度绩效同 15 日口径快照）', { day: 1, hour: 2 }),
+    ]);
+
+    /* ---- 补充令①：时长规则配置种子（决策 #39/#40，version=1） ----
+     * 初始值=原 durationEngine.ts 占位常量（第 35-72 行）照转，label 注「占位待供给」；
+     * 引擎/G0 洗护判别（决策 #40 共用 duration_service_kind_keywords）只读表，改数不改码。
+     */
+    const durationSeed = (ruleKey: string, label: string, valueJson: schema.RuleConfigValue) => ({
+      version: 1,
+      ruleKey,
+      label,
+      valueJson,
+      effectiveFrom: RULES_EFFECTIVE_FROM,
+      active: true,
+      createdBy: owner.id,
+    });
+    await tx.insert(schema.durationRules).values([
+      durationSeed('duration_base_min', '基础时长（分钟）：物种×服务种类（占位待供给）', { dog: { bath: 60, groom: 90 }, cat: { bath: 90, groom: 120 } }),
+      durationSeed('duration_size_coef', '体型系数：小/中/大型（占位待供给）', { small: 1.0, medium: 1.5, large: 2.0 }),
+      durationSeed('duration_coat_coef', '毛长系数：短毛/长毛（占位待供给）', { short: 1.0, long: 1.25 }),
+      durationSeed('duration_size_tier_weight_kg', '体型分档体重阈值（kg）：weight<smallMax→小，smallMax≤weight≤mediumMax→中，>mediumMax→大（占位待供给）', { dog: { smallMax: 10, mediumMax: 25 }, cat: { smallMax: 5, mediumMax: 10 } }),
+      durationSeed('duration_long_coat_breeds', '长毛品种关键词（pets.breed 子串命中即长毛，未命中短毛）（占位待供给）', { keywords: ['金毛', '萨摩', '阿拉斯加', '哈士奇', '二哈', '边牧', '边境牧羊', '苏牧', '苏格兰牧羊', '古牧', '古代牧羊', '松狮', '博美', '比熊', '泰迪', '贵宾', '雪纳瑞', '喜乐蒂', '藏獒', '布偶', '波斯', '缅因', '挪威森林', '西森', '金吉拉', '英长', '英国长毛', '长毛'] }),
+      durationSeed('duration_service_kind_keywords', '服务种类关键词（服务名命中即归类，bath 先于 groom 判定；时长引擎与 G0 洗护判别共用·决策 #40）（占位待供给）', { bath: ['洗', '浴', 'SPA', 'spa', '清洁', '吹干'], groom: ['美容', '造型', '修剪', '修毛', '剪'] }),
     ]);
 
     /* ---- staff-2 R10：XP 规则配置种子（附件一冻结版 V1.0 全表照转，version=1） ----
@@ -398,6 +421,7 @@ async function main() {
     ['inventory_counts', 'inventory_counts'],
     ['inventory_count_items', 'inventory_count_items'],
     ['commission_rules', 'commission_rules'],
+    ['duration_rules', 'duration_rules'],
     ['commission_snapshots', 'commission_snapshots'],
     ['deduction_records', 'deduction_records'],
     ['performance_grades', 'performance_grades'],
