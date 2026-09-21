@@ -24,14 +24,16 @@ type DbHandle = Parameters<typeof emitEvent>[0];
 const txDb = (tx: unknown): DbHandle => tx as DbHandle;
 
 /* ------------------------------------------------------------------ */
-/* 域 → 表映射（commission_rules / xp_rules 结构相同，xp_rules 注释即「结构同 commission_rules」） */
+/* 域 → 表映射（commission_rules / xp_rules / duration_rules 结构相同，      */
+/* 后两者注释即「结构同 commission_rules」）                                 */
 /* ------------------------------------------------------------------ */
 
-const domainSchema = z.enum(['commission', 'xp']);
+const domainSchema = z.enum(['commission', 'xp', 'duration']);
 
 const RULES_TABLE = {
   commission: schema.commissionRules,
   xp: schema.xpRules,
+  duration: schema.durationRules, // 补充令①：时长系数表配置化（决策 #39/#40），同型天然兼容
 } as const;
 
 /* ------------------------------------------------------------------ */
@@ -85,12 +87,20 @@ const NUMBER_MAP_KEYS = new Set(['fixed_fen_by_plan', 'split_bp']);
 /** 字符串字段（段位名 / 同口径引用） */
 const STRING_KEYS = new Set(['name', 'same_as']);
 
+/** 字符串数组字段（补充令① 时长域关键词表：keywords 词表 / bath、groom 服务种类词表，须 string[]） */
+const STRING_ARRAY_KEYS = new Set(['keywords', 'bath', 'groom']);
+
+/** 嵌套数值映射字段（补充令① 时长域：species → 内层映射，内层数值须非负有限数字） */
+const NESTED_NUMBER_MAP_KEYS = new Set(['dog', 'cat']);
+
 /**
  * 校验单条规则值（宽松按 key 族）：
  * - 已知数值字段必须是有限数字（NaN/Infinity/字符串一律拒）；
  * - 比例/上限/门槛/分值等非负（points 仅 xp_penalty_low_star 允许为负）；
  * - fixed_fen_by_plan / split_bp 必须是对象且每个值都是非负有限数字；
- * - name / same_as 必须是字符串。
+ * - name / same_as 必须是字符串；
+ * - keywords / bath / groom 必须是字符串数组（时长域关键词表，决策 #40 共用）；
+ * - dog / cat 嵌套映射的内层数值必须非负有限数字（时长域物种分块）。
  * 未知字段宽松放行（结构按 key 约定演进），但不存在的 rule_key 在调用前已被拒。
  */
 function validateValueJson(ruleKey: string, value: Record<string, unknown>): void {
@@ -125,6 +135,19 @@ function validateValueJson(ruleKey: string, value: Record<string, unknown>): voi
     } else if (STRING_KEYS.has(k)) {
       if (typeof v !== 'string') {
         bad(`字段 ${k} 必须是字符串`);
+      }
+    } else if (STRING_ARRAY_KEYS.has(k)) {
+      if (!Array.isArray(v) || !v.every((x) => typeof x === 'string' && x.length > 0)) {
+        bad(`字段 ${k} 必须是非空字符串数组`);
+      }
+    } else if (NESTED_NUMBER_MAP_KEYS.has(k)) {
+      if (typeof v !== 'object' || v === null || Array.isArray(v)) {
+        bad(`字段 ${k} 必须是对象（嵌套映射，内层值为非负数字）`);
+      }
+      for (const [mk, mv] of Object.entries(v as Record<string, unknown>)) {
+        if (typeof mv !== 'number' || !Number.isFinite(mv) || mv < 0) {
+          bad(`字段 ${k}.${mk} 必须是非负有限数字`);
+        }
       }
     }
   }

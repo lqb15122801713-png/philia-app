@@ -93,3 +93,13 @@ smoke-deploy 增：库存流水三类来源（cashier/reversal/count 或 disinfe
 2. 安心包回收登记不存在：本批只做效期预警只读（任务书 R8④ 本批口径）。
 3. 补卡月限次数：代码常量 3（注释标可配置），配置端口 V1.3 范围=提成+XP 不含考勤参数。
 4. 次卡售卡/寄养提成：默认不计（任务书§九写死）。
+
+---
+
+# 补充令①（2026-09-21 · 决策 #39/#40）：时长系数表配置化
+
+- duration_rules 配置表（0013）：六块系数照引擎常量照转（基础时长/体型/毛长/体重分档/长毛品种词表/服务种类词表），label 带"占位待供给"；引擎逻辑不动只改取数来源（loadDurationRules active=1 装配，缺行回退服务默认 durationMin，参数零代码常量）。
+- 配置端口第三页签"时长系数"（同构 list/save/versions；嵌套/倍率/词表渲染族+占位告示条）；新值只管新预约（scheduledEnd 创建时落库不回溯）。
+- G0 挂钩（决策 #40）：isWashService 改读 duration_service_kind_keywords（提成与时长共表一处维护）；commission_grooming_assistant_g0_rate valueJson {rate_bp, scope}，scope 默认 bath=仅洗护，老板端口枚举可调（bath/all），缺省向后兼容。
+- 边界：三端时长口径对齐不做（归价目表批次）。
+- 闸门：e2e §25（改体型系数→新预约按新值/旧单不变/留痕前后值；G0 scope=bath 造型不计→scope=all 计提双向）全绿；既有时长 smoke 不破（domain.smoke 清场补 xp_events 既有 bug 修复在案）。
