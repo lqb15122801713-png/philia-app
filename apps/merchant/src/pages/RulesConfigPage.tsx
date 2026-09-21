@@ -1152,7 +1152,7 @@ function DomainPanel({ domain }: { domain: RulesDomain }) {
                           }`}
                           maxLength={20}
                           value={drafts[r.ruleKey]?.[ed.path] ?? ''}
-                          onChange={(e) => setDraft(r.ruleKey, e.path, e.target.value)}
+                          onChange={(e) => setDraft(r.ruleKey, ed.path, e.target.value)}
                         />
                         {rowErrors[ed.path] ? (
                           <span className="mt-1 block text-caption-xs text-danger-deep">{rowErrors[ed.path]}</span>
