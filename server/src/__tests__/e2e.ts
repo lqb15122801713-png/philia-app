@@ -42,7 +42,9 @@
  *   22. R10 考试 XP 不受日上限：日上限填满后 recordExamPass 仍计分；同级当月重复拒
  *   23. R9-F 配置端口：owner 改参版本化留痕 / 新参只管新单 / clerk+manager 403 /
  *      未知键 BAD_REQUEST / 拉新置灰拒写
- *   24. R10 榜尾不可达：榜尾视角≤5 行且第 4 名不可达；前排视角仅前三
+ *   24. R9 提成回溯（七步复核 Bug②）：商品/服务率改值前后单各按当时率逐行精确 /
+ *      perf_base_rate 不回溯；G0 学徒仅洗护计 5%、造型单不计（裁定③）
+ *   25. R10 榜尾不可达：榜尾视角≤5 行且第 4 名不可达；前排视角仅前三
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -1531,8 +1533,124 @@ async function main(): Promise<void> {
   check('R10⑱ 拉新置灰拒写（rulesView 标注 disabled +「随会员游戏化批开通」；xp 路由无 referral 写入口，awardXp 对 referral 源码级硬拒）',
     referralSrc?.disabled === true && referralSrc.disabledNote === '随会员游戏化批开通', referralSrc);
 
-  /* ---------- 24. R10 榜尾不可达（清单⑥） ---------- */
-  console.log('\n[staff-2] 24. R10 榜单查询层裁剪（前三+自己+前一名）');
+  /* ---------- 24. R9 提成规则回溯（七步复核 Bug②）+ G0 洗护判别（裁定③） ----------
+   * 回溯写死：改率前已结账单按旧率、改率后新单按新率（源单 settled_at × effective_from 时序解析）。
+   * 夹具顺序：商品单 P1 → 商品率 5%→6% → 商品单 P2；服务率 20%→25% → appt5；
+   * perf_base_rate 5%→10% → appt6；G0 学徒洗护/造型对照。 */
+  console.log('\n[staff-2] 24. R9 提成回溯（Bug②）：旧单旧率/新单新率 + G0 仅洗护计 5%（裁定③）');
+  interface CommLineT { billId: string; itemId: string; refId: string; name: string; baseFen: number; rateBp: number; amountFen: number }
+  interface CommSummaryT {
+    payload: {
+      staffId: string;
+      commissionTotalFen: number;
+      serviceLines: CommLineT[];
+      productLines: CommLineT[];
+      performance: { grade: string; coeffBp: number | null; payableFen: number; groomerPool: PerfPoolT; frontdeskPool: PerfPoolT };
+    };
+  }
+
+  // ① 商品率 5%→6%：billP1（改率前）/ billP2（改率后），归属=小美（商品提成按开单人 operator 归属，夹具置 operator=小美）
+  // （时间列精度=秒：改率/结账之间 sleep 1.1s 跨秒界，同秒边界取旧版的保守口径见 commission.ts resolveFromHistory 注释）
+  const prod = (await db.select().from(schema.products).where(and(eq(schema.products.storeId, storeId), eq(schema.products.status, 'on')))).find((p) => p.stock > 0);
+  if (!prod) throw new Error('无在售商品夹具');
+  const prodPrice = prod.priceFen;
+  const billP1 = await settleBill([{ kind: 'product', refId: prod.id }], 'e2e 回溯 billP1（商品·改率前）');
+  await db.update(schema.cashierBills).set({ operatorId: staffUser!.id, updatedAt: new Date() }).where(eq(schema.cashierBills.id, billP1.billId));
+  await sleep(1100); // 跨秒界：billP1 settled_at 严格早于改率 effective_from
+  const saveProdRate = await trpcMutate<{ version: number; keys: string[] }>('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'commission', changes: [{ ruleKey: 'commission_product_rate', valueJson: { rate_bp: 600 } }] },
+  });
+  check('R9回溯① 前置：商品率 5%→6% 保存即生效（commission version=2）', saveProdRate.version === 2, saveProdRate);
+  await sleep(1100); // 跨秒界：billP2 settled_at 严格晚于改率
+  const billP2 = await settleBill([{ kind: 'product', refId: prod.id }], 'e2e 回溯 billP2（商品·改率后）');
+  await db.update(schema.cashierBills).set({ operatorId: staffUser!.id, updatedAt: new Date() }).where(eq(schema.cashierBills.id, billP2.billId));
+  const sumXm = await trpcQuery<CommSummaryT>('commission.mySummary', { cookie: staffCookie, input: {} });
+  const lineP1 = sumXm.payload.productLines.find((l) => l.billId === billP1.billId);
+  const lineP2 = sumXm.payload.productLines.find((l) => l.billId === billP2.billId);
+  check('R9回溯① 商品改率前单仍按旧率 5%（rateBp=500，金额=门市实收×5% 逐行精确）',
+    lineP1?.rateBp === 500 && lineP1.amountFen === Math.round((prodPrice * 500) / 10000),
+    { lineP1, prodPrice });
+  check('R9回溯① 商品改率后单按新率 6%（rateBp=600，金额=×6% 逐行精确）',
+    lineP2?.rateBp === 600 && lineP2.amountFen === Math.round((prodPrice * 600) / 10000),
+    { lineP2, prodPrice });
+
+  // ② 服务率 20%→25%：appt4（阿强，§18 billB 已结账=旧单）/ appt5（改率后新单）
+  const saveGroomRate = await trpcMutate<{ version: number }>('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'commission', changes: [{ ruleKey: 'commission_grooming_rate', valueJson: { rate_bp: 2500 } }] },
+  });
+  check('R9回溯② 前置：服务率 20%→25% 保存即生效（version=3）', saveGroomRate.version === 3, saveGroomRate);
+  await sleep(1100); // 跨秒界：appt5 结账严格晚于改率
+  const appt5 = (await db.insert(schema.appointments).values({
+    code: 'E2EAQ5', customerId: customerUser!.id, storeId, petId, serviceId: service.id,
+    type: 'grooming', scheduledStart: new Date(), scheduledEnd: new Date(),
+    status: 'completed', priceFen: 12345, completedAt: new Date(), staffId: aqiang.id,
+  }).returning())[0]!;
+  const billE = await settleBill([{ kind: 'appointment', refId: appt5.id }], 'e2e 回溯 billE（appt5 服务·改率后）');
+  check('R9回溯② 前置：appt5 结账 settled', billE.status === 'settled', billE);
+  const sumAq3 = await trpcQuery<CommSummaryT>('commission.mySummary', { cookie: groomerCookie, input: {} });
+  const lineSvcOld = sumAq3.payload.serviceLines.find((l) => l.refId === appt4.id);
+  const lineSvcNew = sumAq3.payload.serviceLines.find((l) => l.refId === appt5.id);
+  check('R9回溯② 服务改率前单仍按旧率 20%（appt4/billB，rateBp=2000 金额精确）',
+    lineSvcOld?.rateBp === 2000 && lineSvcOld.amountFen === Math.round((priceB * 2000) / 10000),
+    { lineSvcOld, priceB });
+  check('R9回溯② 服务改率后单按新率 25%（appt5，rateBp=2500 金额精确）',
+    lineSvcNew?.rateBp === 2500 && lineSvcNew.amountFen === Math.round((12345 * 2500) / 10000),
+    { lineSvcNew });
+
+  // ③ perf_base_rate 5%→10%：既有全部旧单保持 5%，appt6（改率后）按 10% 逐行累加
+  const poolBefore = sumAq3.payload.performance.groomerPool.amountFen; // 旧单已按 5% 逐行结算
+  await sleep(1100); // 跨秒界：appt5 结账严格早于 perf 改率
+  const savePerfRate = await trpcMutate<{ version: number }>('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'commission', changes: [{ ruleKey: 'perf_base_rate', valueJson: { rate_bp: 1000 } }] },
+  });
+  check('R9回溯③ 前置：perf_base_rate 5%→10% 保存即生效（version=4）', savePerfRate.version === 4, savePerfRate);
+  await sleep(1100); // 跨秒界：appt6 结账严格晚于改率
+  const appt6 = (await db.insert(schema.appointments).values({
+    code: 'E2EAQ6', customerId: customerUser!.id, storeId, petId, serviceId: service.id,
+    type: 'grooming', scheduledStart: new Date(), scheduledEnd: new Date(),
+    status: 'completed', priceFen: 8000, completedAt: new Date(), staffId: aqiang.id,
+  }).returning())[0]!;
+  await settleBill([{ kind: 'appointment', refId: appt6.id }], 'e2e 回溯 billF（appt6 绩效·改率后）');
+  const sumAq4 = await trpcQuery<CommSummaryT>('commission.mySummary', { cookie: groomerCookie, input: {} });
+  check('R9回溯③ 绩效 perf_base_rate 改值不回溯（旧单仍 5%，appt6 按 10% 逐行精确累加）',
+    sumAq4.payload.performance.groomerPool.amountFen === poolBefore + Math.round((8000 * 1000) / 10000),
+    { before: poolBefore, after: sumAq4.payload.performance.groomerPool.amountFen, delta: Math.round((8000 * 1000) / 10000) });
+
+  // ④ G0 学徒（裁定③）：洗护单计 5%、造型单不计（isWashService 关键词判别）
+  const g0User = (await db.insert(schema.users).values({ kimiId: 'seed_e2e_g0', nickname: 'e2e 学徒小G', phone: '13900001021' }).returning())[0]!;
+  await db.insert(schema.userRoles).values({ userId: g0User.id, role: 'staff' });
+  const g0Staff = (await db.insert(schema.staff).values({ storeId, userId: g0User.id, name: '学徒小G', role: 'groomer', grade: 'G0', status: 'active' }).returning())[0]!;
+  const [washSvc, styleSvc] = (await db.insert(schema.services).values([
+    { storeId, type: 'grooming', name: '深层洗护浴', durationMin: 60, priceFen: 10000, active: true },
+    { storeId, type: 'grooming', name: '泰迪造型修剪', durationMin: 90, priceFen: 10000, active: true },
+  ]).returning()) as [typeof schema.services.$inferSelect, typeof schema.services.$inferSelect];
+  const apptW = (await db.insert(schema.appointments).values({
+    code: 'E2EG0W', customerId: customerUser!.id, storeId, petId, serviceId: washSvc.id,
+    type: 'grooming', scheduledStart: new Date(), scheduledEnd: new Date(),
+    status: 'completed', priceFen: 10000, completedAt: new Date(), staffId: g0Staff.id,
+  }).returning())[0]!;
+  const apptS = (await db.insert(schema.appointments).values({
+    code: 'E2EG0S', customerId: customerUser!.id, storeId, petId, serviceId: styleSvc.id,
+    type: 'grooming', scheduledStart: new Date(), scheduledEnd: new Date(),
+    status: 'completed', priceFen: 10000, completedAt: new Date(), staffId: g0Staff.id,
+  }).returning())[0]!;
+  await settleBill([{ kind: 'appointment', refId: apptW.id }], 'e2e G0 billW（洗护单）');
+  await settleBill([{ kind: 'appointment', refId: apptS.id }], 'e2e G0 billS（造型单）');
+  const g0Cookie = await devLogin(g0User.id);
+  const sumG0 = await trpcQuery<CommSummaryT>('commission.mySummary', { cookie: g0Cookie, input: {} });
+  check('G0③ 洗护单计 5%（命中 洗/浴 不命中造型类；金额=10000×5%=500）',
+    sumG0.payload.serviceLines.length === 1 && sumG0.payload.serviceLines[0]!.refId === apptW.id &&
+      sumG0.payload.serviceLines[0]!.rateBp === 500 && sumG0.payload.serviceLines[0]!.amountFen === 500,
+    sumG0.payload.serviceLines);
+  check('G0③ 造型单不计提成（serviceLines 无 apptS 行，commissionTotalFen=500 仅洗护行）',
+    !sumG0.payload.serviceLines.some((l) => l.refId === apptS.id) && sumG0.payload.commissionTotalFen === 500,
+    { total: sumG0.payload.commissionTotalFen, lines: sumG0.payload.serviceLines.map((l) => `${l.name}:${l.amountFen}`) });
+
+  /* ---------- 25. R10 榜尾不可达（清单⑥） ---------- */
+  console.log('\n[staff-2] 25. R10 榜单查询层裁剪（前三+自己+前一名）');
   interface LbRow { staffId: string; rank: number; isSelf: boolean; totalXp: number }
   const lbTail = await trpcQuery<{ rows: LbRow[] }>('xp.leaderboard', { cookie: extra3Cookie });
   check('R10⑲ 榜尾视角 ≤5 行（前三+自己+前一名）', lbTail.rows.length > 0 && lbTail.rows.length <= 5, lbTail.rows.length);

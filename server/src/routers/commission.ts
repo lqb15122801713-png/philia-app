@@ -19,21 +19,28 @@
  * - 售卡定额规则已落库但源单不存在（R11 会员前置批）：cardLines 恒空 + cardNote 明示，不悬空。
  *
  * 报备偏差（schema 实证适配，PR 中显式列）：
- * 1. 洗护/造型判别：services 表只有 type（grooming|boarding）大类，无 洗护/造型 类目列——
- *    G0 学徒 5% 无法只限洗护单，本批对 G0 全部洗美（grooming）服务行统一按 G0 助理率计提
- *    （报备在案；后续若服务表增类目列，规则口径自动收窄，代码无需改）；
- * 2. 计提时点：服务单任务书口径=服务完成即计提，但提成源单=收银账单（门市价快照/冲正排除
- *    均在账单域），本批月份归属与规则版本统一按账单 settled_at（支付成功时点）——
- *    完成与结算跨月时的差额随次月账单自然落入次月（与「冲减进当月调整项」同精神）；
- * 3. kind='service' 的散客服务行无预约链，无法归属操作美容师——不计入任何个人服务提成
- *    （但计入全店洗美营收基数，G4/P3/绩效池口径一致）；个人服务提成仅以
- *    kind='appointment' 行 + appointments.staff_id（操作美容师既有口径）归属；
+ * 1. 洗护/造型判别（七步复核裁定③，V1.3 原文「仅洗护不含造型」）：services 表无类目列
+ *    （仅 type=grooming|boarding 大类）→ G0 学徒 5% 用名称关键词判别（isWashService：
+ *    命中 洗/浴 且不命中 造型/修剪/剪毛/美容），集中一处导出，时长供给表批次落地正式
+ *    类目列后换装正式判别；
+ * 2. 计提时点=结账时（备案知悉，行为不动）：服务单任务书口径=服务完成即计提，但提成
+ *    源单=收银账单（门市价快照/冲正排除均在账单域），月份归属与规则版本统一按账单
+ *    settled_at——完成与结算跨月的微差在案；
+ * 3. 散客服务单不计个人提成（备案知悉，合「宁漏计」）：kind='service' 行无预约链、无
+ *    归属链，不计入任何个人服务提成（但计入全店洗美营收基数，G4/P3/绩效池口径一致）；
+ *    个人服务提成仅以 kind='appointment' 行 + appointments.staff_id 归属；
  * 4. 绩效月度估计（扣减 50% 闸门分母）=（当季池基数×5%×系数）/3，季度未评级时系数按 1.0
  *    计（报备口径：宁可放行可解释的上限，不用 0 锁死扣减录入）；
  * 5. 试用期（staff.probation=1）：前台商品/售卡类提成 ×50%（commission_probation_multiplier）；
  *    试用期不设绩效——performance.applicable=false，应付绩效按 0 透出（基数仍列出供核对）；
  * 6. P3 全店提成基数=全店洗美服务营收（门市价，同 G4 口径；商品/年费不进，寄养不计——
  *    任务书 §九 寄养默认不计提成）。
+ *
+ * 回溯写死（七步复核 Bug② 修复）：computeMonth 全部金钱行（服务率/商品率/产能阈值倍率/
+ * G4/P3 率/perf_base_rate/SABCD 系数档/试用期倍率）逐源单按 settled_at 时序解析
+ * （resolveFromHistory：effective_from<=ts 最新行，失效历史行参与，无命中取最早行兜底）；
+ * 仅两处例外取当前生效值并注释写死——扣减 50% cap（扣减是当下动作）与口径小字/policyNote
+ * （那是「现在口径」不是历史账单）。快照逻辑不变：每月 1 日 02:00 冻结，已快照月份不动。
  */
 
 import { TRPCError } from '@trpc/server';
@@ -132,11 +139,15 @@ export async function loadCommissionRules(d: DbHandle, atTs?: Date): Promise<Com
   return { version, byKey };
 }
 
-/** 逐源单时间戳取规则（effective_from 口径）：加载全表一次，返回取值函数（无 N+1） */
-async function ruleAtFn(d: DbHandle): Promise<{
-  at: (key: string, ts: Date) => Record<string, unknown> | undefined;
-  currentVersion: number;
-}> {
+/** 规则时序行（effective_from 升序） */
+interface RuleHistoryRow {
+  effMs: number;
+  value: Record<string, unknown>;
+}
+type RuleHistory = Map<string, RuleHistoryRow[]>;
+
+/** 全表规则时序一次加载（computeMonth 逐行解析用，单查询无 N+1） */
+async function loadRuleHistory(d: DbHandle): Promise<{ history: RuleHistory; currentVersion: number }> {
   const rows = await d
     .select({
       ruleKey: schema.commissionRules.ruleKey,
@@ -145,7 +156,7 @@ async function ruleAtFn(d: DbHandle): Promise<{
       effectiveFrom: schema.commissionRules.effectiveFrom,
     })
     .from(schema.commissionRules);
-  const history = new Map<string, Array<{ effMs: number; value: Record<string, unknown> }>>();
+  const history: RuleHistory = new Map();
   let currentVersion = 0;
   for (const r of rows) {
     let arr = history.get(r.ruleKey);
@@ -157,18 +168,86 @@ async function ruleAtFn(d: DbHandle): Promise<{
     if (r.version > currentVersion) currentVersion = r.version;
   }
   for (const arr of history.values()) arr.sort((a, b) => a.effMs - b.effMs);
-  const at = (key: string, ts: Date): Record<string, unknown> | undefined => {
-    const arr = history.get(key);
-    if (!arr) return undefined;
-    const ms = ts.getTime();
-    let hit: Record<string, unknown> | undefined;
-    for (const row of arr) {
-      if (row.effMs > ms) break;
-      hit = row.value;
+  return { history, currentVersion };
+}
+
+/**
+ * 时序解析（纯函数）：取 effective_from <= ts 的最新一行（active 与 inactive 历史行
+ * 都参与——config.save 保留失效行 effective_from，新规只管生效后的单不回溯）；
+ * 无命中（源单早于该 key 首行生效时间）→ 取该 key 最早一行兜底（种子行即初始口径）。
+ * 同秒边界（时间列精度=秒的固有歧义）：源单 ts 与某次改版 effective_from 同秒时
+ * 取改前旧版——宁旧勿新，与「不回溯、防工资越看越瘦」同向（e2e 同秒连击实证）：
+ * 实现=严格取 effMs < ts 的最后一行；同秒首行之前无更早行时取 effMs <= ts 的最早一行。
+ */
+function resolveFromHistory(history: RuleHistory, key: string, ts: Date): Record<string, unknown> | undefined {
+  const arr = history.get(key);
+  if (!arr || arr.length === 0) return undefined;
+  const ms = ts.getTime();
+  let hit: RuleHistoryRow | undefined;
+  for (const row of arr) {
+    if (row.effMs >= ms) break; // 严格小于：同秒改版不算「生效后」
+    hit = row;
+  }
+  if (!hit) hit = arr.find((r) => r.effMs <= ms) ?? arr[0]!;
+  return hit.value;
+}
+
+/**
+ * 规则时序解析器（DB 版，给定 key 集合单查询解析）：各取 effective_from <= ts 的最新一行；
+ * 无则取该 key 最早一行兜底。语义与 resolveFromHistory 完全一致。
+ * （computeMonth 走 loadRuleHistory+resolveFromHistory 预加载路径避免逐行查询；
+ * 本函数供需要"任意 ts 任意 keys"的调用方/测试直用。）
+ */
+export async function resolveRulesAt(
+  d: DbHandle,
+  keys: string[],
+  ts: Date,
+): Promise<Map<string, Record<string, unknown>>> {
+  const rows = keys.length
+    ? await d
+        .select({
+          ruleKey: schema.commissionRules.ruleKey,
+          valueJson: schema.commissionRules.valueJson,
+          effectiveFrom: schema.commissionRules.effectiveFrom,
+        })
+        .from(schema.commissionRules)
+        .where(inArray(schema.commissionRules.ruleKey, keys))
+    : [];
+  const history: RuleHistory = new Map();
+  for (const r of rows) {
+    let arr = history.get(r.ruleKey);
+    if (!arr) {
+      arr = [];
+      history.set(r.ruleKey, arr);
     }
-    return hit;
-  };
-  return { at, currentVersion };
+    arr.push({ effMs: r.effectiveFrom.getTime(), value: (r.valueJson ?? {}) as Record<string, unknown> });
+  }
+  for (const arr of history.values()) arr.sort((a, b) => a.effMs - b.effMs);
+  const out = new Map<string, Record<string, unknown>>();
+  for (const key of keys) {
+    const v = resolveFromHistory(history, key, ts);
+    if (v) out.set(key, v);
+  }
+  return out;
+}
+
+/* ------------------------------------------------------------------ */
+/* G0 学徒洗护判别（裁定③ · V1.3 原文：仅洗护不含造型）                     */
+/* ------------------------------------------------------------------ */
+
+/** 造型类否定关键词（命中即非洗护） */
+const STYLE_RE = /(造型|修剪|剪毛|美容)/;
+/** 洗护类肯定关键词（洗/洗护/浴） */
+const WASH_RE = /(洗|浴)/;
+
+/**
+ * G0 学徒 5% 洗护单判别（关键词口径，七步复核裁定③）：
+ * 服务名命中 洗/洗护/浴 且不命中 造型/修剪/剪毛/美容 → 洗护单（计 5%）；否则不计。
+ * services 表无 洗护/造型 类目列（仅 type=grooming|boarding 大类），故用名称启发式——
+ * 时长供给表批次落地正式类目列后换装正式判别（仅此一处集中判别，换装零扩散）。
+ */
+export function isWashService(serviceName: string): boolean {
+  return WASH_RE.test(serviceName) && !STYLE_RE.test(serviceName);
 }
 
 /* ------------------------------------------------------------------ */
@@ -324,8 +403,11 @@ function isGroomingItem(
 }
 
 /**
- * 计算某员工某月提成+绩效结构化载荷（live 口径：源单实时计算，
- * 逐行规则版本按账单 settled_at 取 effective_from 生效行）。
+ * 计算某员工某月提成+绩效结构化载荷（live 口径：源单实时计算）。
+ * 回溯写死（V1.3「新规只管生效后的单」，七步复核 Bug② 修复）：
+ * 全部金钱行（服务/商品/产能加计/G4/P3/绩效池/系数档/试用期倍率）逐源单按其
+ * 账单 settled_at 走 resolveFromHistory 时序解析（effective_from<=ts 最新行，
+ * 失效历史行参与，无命中取最早行兜底）——改率前的旧单永按旧率，改率后的新单按新率。
  */
 export async function computeMonth(
   d: DbHandle,
@@ -336,7 +418,8 @@ export async function computeMonth(
   const { start, end } = monthRange(month);
   const quarter = quarterOfMonth(month);
   const qRange = quarterRange(quarter);
-  const { at: ruleAt, currentVersion } = await ruleAtFn(d);
+  const { history: ruleHistory, currentVersion } = await loadRuleHistory(d);
+  const ruleAt = (key: string, ts: Date) => resolveFromHistory(ruleHistory, key, ts);
 
   /* ---- 当月账单域（提成） ---- */
   const monthData = await loadSettledBills(d, storeId, start, end);
@@ -355,8 +438,9 @@ export async function computeMonth(
     );
   const approvedDates = new Set(approvals.map((a) => a.date));
 
-  /* ---- 服务提成（groomer）：仅 kind='appointment' 行可归属操作美容师（报备偏差 3） ---- */
+  /* ---- 服务提成（groomer）：仅 kind='appointment' 行可归属操作美容师（备案③散客单不计） ---- */
   const serviceLines: CommissionLine[] = [];
+  const lineTs = new Map<string, Date>(); // itemId → 源单时间（产能加计逐行时序解析用）
   const isGroomer = staffRow.role === 'groomer' || (staffRow.grade ?? '').startsWith('G');
   if (isGroomer) {
     for (const it of monthData.items) {
@@ -365,10 +449,12 @@ export async function computeMonth(
       if (!appt || appt.type !== 'grooming' || appt.staffId !== staffRow.id) continue;
       const bill = billById.get(it.billId)!;
       const ts = bill.settledAt ?? bill.createdAt;
-      // 报备偏差 1：无 洗护/造型 类目列，G0 对全部洗美行按助理率计提
+      // 裁定③：G0 学徒 5% 仅洗护不含造型——名称关键词判别（isWashService，正式类目列随时长供给表批次落地后换装）
+      if (staffRow.grade === 'G0' && !isWashService(it.nameSnapshot)) continue;
       const key = staffRow.grade === 'G0' ? 'commission_grooming_assistant_g0_rate' : 'commission_grooming_rate';
       const rateBp = num(ruleAt(key, ts)?.rate_bp, 0);
       const baseFen = it.unitPriceFen; // 门市价快照（券单/会员差额门店担，同按门市价）
+      lineTs.set(it.id, ts);
       serviceLines.push({
         billId: bill.id,
         billNo: bill.billNo,
@@ -385,9 +471,8 @@ export async function computeMonth(
       });
     }
 
-    /* 产能红线加计：按日分组，count>threshold 的超出行 ×1.5（须店长批准；未批准 1 倍+待批准） */
-    const ow = (ts: Date) =>
-      ruleAt('commission_overwork_multiplier', ts) ?? {};
+    /* 产能红线加计：按日分组，序号>threshold 的行为超出行 ×1.5（须店长批准；未批准 1 倍+待批准）。
+       阈值/倍率逐行按该行源单 settled_at 时序解析（回溯口径同提成率）。 */
     const byDay = new Map<string, CommissionLine[]>();
     for (const l of serviceLines) {
       const arr = byDay.get(l.date) ?? [];
@@ -395,42 +480,51 @@ export async function computeMonth(
       byDay.set(l.date, arr);
     }
     for (const [date, lines] of byDay) {
-      // 阈值/倍率按当日规则版本（取该日 23:59 生效行）
-      const dayEnd = new Date(`${date}T23:59:59`);
-      const cfg = ow(dayEnd);
-      const threshold = num(cfg.threshold_per_day, 8);
-      const multiplierBp = num(cfg.multiplier_bp, 15000);
-      if (lines.length <= threshold) continue;
       const approved = approvedDates.has(date);
-      for (const l of lines.slice(threshold)) {
+      lines.forEach((l, idx) => {
+        const ts = lineTs.get(l.itemId) ?? new Date(`${date}T23:59:59`);
+        const cfg = ruleAt('commission_overwork_multiplier', ts) ?? {};
+        const threshold = num(cfg.threshold_per_day, 8);
+        if (idx < threshold) return; // 阈值内行正常计提
         if (approved) {
+          const multiplierBp = num(cfg.multiplier_bp, 15000);
           l.multiplierBp = multiplierBp;
           l.amountFen = Math.round((l.baseFen * l.rateBp * multiplierBp) / 10000 / 10000);
           l.overwork = true;
         } else {
           l.pendingApproval = true; // 未批准按 1 倍计提，页面据此明示「待店长批准」
         }
-      }
+      });
     }
   }
 
-  /* ---- 全店洗美营收（门市价，G4/P3 共用基数） ---- */
+  /* ---- 全店洗美营收（门市价，G4/P3 共用基数；金额逐行时序解析） ---- */
   let storeGroomingRevenueFen = 0;
+  let g4AmountFen = 0;
+  let p3AmountFen = 0;
+  const wantG4 = staffRow.grade === 'G4';
+  const wantP3 = staffRow.grade === 'P3';
   for (const it of monthData.items) {
     if (!isGroomingItem(it, monthData.appts, monthData.services)) continue;
-    storeGroomingRevenueFen += it.unitPriceFen * it.qty;
+    const fen = it.unitPriceFen * it.qty;
+    storeGroomingRevenueFen += fen;
+    if (wantG4 || wantP3) {
+      const bill = billById.get(it.billId)!;
+      const ts = bill.settledAt ?? bill.createdAt;
+      if (wantG4) g4AmountFen += Math.round((fen * num(ruleAt('commission_g4_store_rate', ts)?.rate_bp, 0)) / 10000);
+      if (wantP3) p3AmountFen += Math.round((fen * num(ruleAt('commission_p3_store_rate', ts)?.rate_bp, 0)) / 10000);
+    }
   }
 
   const storeLines: StoreLine[] = [];
-  if (staffRow.grade === 'G4') {
-    const ts = end; // 全店口径按账期末规则版本
-    const rateBp = num(ruleAt('commission_g4_store_rate', ts)?.rate_bp, 0);
+  if (wantG4) {
+    // rateBp 展示口径=当期末生效版本；amountFen 已按逐源单时序解析（回溯不回改）
     storeLines.push({
       kind: 'g4_store',
       label: 'G4 全店管理提成（本店月度洗美营收·门市价）',
       baseFen: storeGroomingRevenueFen,
-      rateBp,
-      amountFen: Math.round((storeGroomingRevenueFen * rateBp) / 10000),
+      rateBp: num(ruleAt('commission_g4_store_rate', end)?.rate_bp, 0),
+      amountFen: g4AmountFen,
     });
   }
 
@@ -466,37 +560,19 @@ export async function computeMonth(
     }
   }
 
-  /* ---- P3 全店提成（全店洗美服务营收 ×1%，报备偏差 6） ---- */
-  if (staffRow.grade === 'P3') {
-    const rateBp = num(ruleAt('commission_p3_store_rate', end)?.rate_bp, 0);
+  /* ---- P3 全店提成（全店洗美服务营收 ×1%，金额逐行时序解析，报备偏差 6） ---- */
+  if (wantP3) {
     storeLines.push({
       kind: 'p3_store',
       label: 'P3 全店提成（全店洗美服务营收·门市价）',
       baseFen: storeGroomingRevenueFen,
-      rateBp,
-      amountFen: Math.round((storeGroomingRevenueFen * rateBp) / 10000),
+      rateBp: num(ruleAt('commission_p3_store_rate', end)?.rate_bp, 0), // 展示口径=当期末生效
+      amountFen: p3AmountFen,
     });
   }
 
-  /* ---- 绩效（季度，Philia 口径 ×5% × SABCD 系数；同源双计两池分列） ---- */
-  const qData = await loadSettledBills(d, storeId, qRange.start, qRange.end);
-  const perfRateBp = num(ruleAt('perf_base_rate', qRange.end)?.rate_bp, 500);
-  let groomerBaseFen = 0;
-  let frontdeskBaseFen = 0;
-  const qBillById = new Map(qData.bills.map((b) => [b.id, b]));
-  for (const it of qData.items) {
-    if (!isGroomingItem(it, qData.appts, qData.services)) continue;
-    const fen = it.unitPriceFen * it.qty; // 绩效基数=门市价（与提成同口径）
-    const bill = qBillById.get(it.billId)!;
-    // 美容师池：本人操作（appointment 行 staff_id；散客 service 行无操作人归属不计个人池）
-    if (it.kind === 'appointment' && qData.appts.get(it.refId)?.staffId === staffRow.id) {
-      groomerBaseFen += fen;
-    }
-    // 前台池：本人接待归属（receptionist_id=本人 userId；IS NULL 的账单等值匹配天然硬排除）
-    if (bill.receptionistId === staffRow.userId) {
-      frontdeskBaseFen += fen;
-    }
-  }
+  /* ---- 绩效（季度，Philia 口径 ×5% × SABCD 系数；同源双计两池分列；
+         perf_base_rate 与系数档均逐源单按 settled_at 时序解析——改率/改档不回溯旧单） ---- */
   const gradeRow = await d
     .select()
     .from(schema.performanceGrades)
@@ -507,24 +583,54 @@ export async function computeMonth(
       ),
     )
     .get();
-  const coeffBp = gradeRow
-    ? num(ruleAt(`perf_coeff_${gradeRow.grade.toLowerCase()}`, qRange.end)?.coeff_bp, 0)
-    : null;
+  const coeffKey = gradeRow ? `perf_coeff_${gradeRow.grade.toLowerCase()}` : null;
+  const qData = await loadSettledBills(d, storeId, qRange.start, qRange.end);
+  let groomerBaseFen = 0;
+  let groomerAmountFen = 0; // Σ 逐行 round(门市价×当时 perf 率)
+  let groomerPayableFen = 0; // Σ 逐行 round(行池额×当时系数)
+  let frontdeskBaseFen = 0;
+  let frontdeskAmountFen = 0;
+  let frontdeskPayableFen = 0;
+  const qBillById = new Map(qData.bills.map((b) => [b.id, b]));
+  for (const it of qData.items) {
+    if (!isGroomingItem(it, qData.appts, qData.services)) continue;
+    const fen = it.unitPriceFen * it.qty; // 绩效基数=门市价（与提成同口径）
+    const bill = qBillById.get(it.billId)!;
+    const ts = bill.settledAt ?? bill.createdAt;
+    const rowPerfBp = num(ruleAt('perf_base_rate', ts)?.rate_bp, 500);
+    const rowAmount = Math.round((fen * rowPerfBp) / 10000);
+    const rowCoeffBp = coeffKey ? num(ruleAt(coeffKey, ts)?.coeff_bp, 0) : null;
+    const rowPayable = rowCoeffBp !== null ? Math.round((rowAmount * rowCoeffBp) / 10000) : 0;
+    // 美容师池：本人操作（appointment 行 staff_id；散客 service 行无操作人归属不计个人池）
+    if (it.kind === 'appointment' && qData.appts.get(it.refId)?.staffId === staffRow.id) {
+      groomerBaseFen += fen;
+      groomerAmountFen += rowAmount;
+      groomerPayableFen += rowPayable;
+    }
+    // 前台池：本人接待归属（receptionist_id=本人 userId；IS NULL 的账单等值匹配天然硬排除）
+    if (bill.receptionistId === staffRow.userId) {
+      frontdeskBaseFen += fen;
+      frontdeskAmountFen += rowAmount;
+      frontdeskPayableFen += rowPayable;
+    }
+  }
+  // 展示口径（rateBp/coeffBp）=当期末生效版本；金额列已逐行时序解析
+  const perfRateBp = num(ruleAt('perf_base_rate', qRange.end)?.rate_bp, 500);
+  const coeffBp = coeffKey ? num(ruleAt(coeffKey, qRange.end)?.coeff_bp, 0) : null;
   const groomerPool: PerfPool = {
     baseFen: groomerBaseFen,
     rateBp: perfRateBp,
-    amountFen: Math.round((groomerBaseFen * perfRateBp) / 10000),
+    amountFen: groomerAmountFen,
   };
   const frontdeskPool: PerfPool = {
     baseFen: frontdeskBaseFen,
     rateBp: perfRateBp,
-    amountFen: Math.round((frontdeskBaseFen * perfRateBp) / 10000),
+    amountFen: frontdeskAmountFen,
   };
   // 适用池：按岗位取主池（groomer=操作池，frontdesk/P 档=接待池）；两池仍分列透出
-  const primaryPool = isGroomer ? groomerPool : frontdeskPool;
   const applicable = !staffRow.probation; // 试用期不设绩效与全勤（报备偏差 5）
   const payableFen =
-    applicable && coeffBp !== null ? Math.round((primaryPool.amountFen * coeffBp) / 10000) : 0;
+    applicable && gradeRow ? (isGroomer ? groomerPayableFen : frontdeskPayableFen) : 0;
   const performance: PerformanceBlock = {
     quarter,
     applicable,
@@ -768,20 +874,32 @@ export const commissionRouter = router({
       const storeId = input.storeId ?? ctx.user.storeId!;
       const qRange = quarterRange(input.quarter);
       const data = await loadSettledBills(ctx.db, storeId, qRange.start, qRange.end);
-      const rules = await loadCommissionRules(ctx.db, qRange.end);
-      const perfRateBp = num(rules.byKey.get('perf_base_rate')?.rate_bp, 500);
+      // 展示率=当期末生效；金额逐源单时序解析（与 computeMonth 同口径，改率不回溯旧单）
+      const { history: poolRuleHistory } = await loadRuleHistory(ctx.db);
+      const perfRateBp = num(resolveFromHistory(poolRuleHistory, 'perf_base_rate', qRange.end)?.rate_bp, 500);
 
       let groomerBaseFen = 0; // 全店美容师操作洗美营收（门市价）
+      let groomerAmountFen = 0;
       let frontdeskBaseFen = 0; // 全店前台接待归属洗美营收（门市价；receptionist_id IS NULL 硬排除）
+      let frontdeskAmountFen = 0;
       let unattributedFen = 0; // 无接待人洗美营收（明示漏计量，不乱挂）
       const billById = new Map(data.bills.map((b) => [b.id, b]));
       for (const it of data.items) {
         if (!isGroomingItem(it, data.appts, data.services)) continue;
         const fen = it.unitPriceFen * it.qty;
-        if (it.kind === 'appointment' && data.appts.get(it.refId)?.staffId) groomerBaseFen += fen;
         const bill = billById.get(it.billId)!;
-        if (bill.receptionistId) frontdeskBaseFen += fen;
-        else unattributedFen += fen;
+        const ts = bill.settledAt ?? bill.createdAt;
+        const rowAmount = Math.round(
+          (fen * num(resolveFromHistory(poolRuleHistory, 'perf_base_rate', ts)?.rate_bp, 500)) / 10000,
+        );
+        if (it.kind === 'appointment' && data.appts.get(it.refId)?.staffId) {
+          groomerBaseFen += fen;
+          groomerAmountFen += rowAmount;
+        }
+        if (bill.receptionistId) {
+          frontdeskBaseFen += fen;
+          frontdeskAmountFen += rowAmount;
+        } else unattributedFen += fen;
       }
       return {
         storeId,
@@ -792,14 +910,14 @@ export const commissionRouter = router({
             label: '美容师绩效池（当季操作洗美营收·门市价 ×5%）',
             baseFen: groomerBaseFen,
             rateBp: perfRateBp,
-            amountFen: Math.round((groomerBaseFen * perfRateBp) / 10000),
+            amountFen: groomerAmountFen,
           },
           {
             pool: 'frontdesk',
             label: '前台绩效池（当季接待归属洗美营收·门市价 ×5%）',
             baseFen: frontdeskBaseFen,
             rateBp: perfRateBp,
-            amountFen: Math.round((frontdeskBaseFen * perfRateBp) / 10000),
+            amountFen: frontdeskAmountFen,
           },
         ],
         unattributedFen, // 无接待人硬排除量（宁漏计不乱挂，透出供核对）
@@ -832,6 +950,8 @@ export const commissionRouter = router({
       // 季度未评级 → 系数按 1.0 计（报备口径：不用 0 锁死扣减录入，上限可解释）
       const coeffBp = perf.coeffBp ?? 10000;
       const monthlyPerfEstimateFen = Math.round((poolAmountFen * coeffBp) / 10000 / 3);
+      // cap 取当前生效值：扣减是当下动作（不是历史源单重算），不走回溯语义——
+      // 与提成/绩效逐行时序解析的口径刻意不同，注释写死防误改
       const rules = await loadCommissionRules(ctx.db);
       const capBp = num(rules.byKey.get('perf_deduction_cap_bp')?.cap_bp, 5000);
       const capFen = Math.floor((monthlyPerfEstimateFen * capBp) / 10000);
