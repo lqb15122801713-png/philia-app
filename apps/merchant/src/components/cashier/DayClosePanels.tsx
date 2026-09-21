@@ -26,6 +26,7 @@ import {
   type ShiftInfo,
   type TodayTenderStats,
 } from './model'
+import type { RefundDayStats } from './refund'
 import { fenToYuan, yuanToFen, fmtDateTime } from '@/components/mall-admin/format'
 import { CashierModal, SheetBtn } from './dialogs'
 
@@ -203,6 +204,94 @@ export function DayCloseForm({
             全日口径：当前无开班班次也可日结（账面按当日全部支付段计）
           </p>
         ) : null}
+      </div>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* R12 当日退款单列（refund.dayStats · V2 现金段净额 / V7 发生日口径）         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 日结页「退款单列」面板（R12 冻结版 §五）：
+ * - 当日退款笔数+金额（refund.dayStats，biz_date=执行日聚合，executed|settled 口径）；
+ * - 支付段退款分列（现金/微信/支付宝/次卡/储值）；
+ * - 现金段净额=现金已收−现金退款（V2 口径：现金已收由 cashier 既有统计
+ *   todayTenderStats.tender.cashFen 出，退款段由 dayStats.segments.cashFen 出，
+ *   前端做差——server 不改既有日结函数，只出退款侧分列）；
+ * - 历史日结封箱不回填（V7）：本面板只出当日，历史日结单只读不补列。
+ */
+export function RefundDayPanel({
+  stats,
+  loading,
+  cashReceivedFen,
+}: {
+  stats: RefundDayStats | undefined
+  loading: boolean
+  /** 现金已收（分，todayTenderStats.tender.cashFen；null=未加载） */
+  cashReceivedFen: number | null
+}) {
+  const cashNet =
+    stats && cashReceivedFen !== null ? cashReceivedFen - stats.segments.cashFen : null
+  return (
+    <div className="u3-panel" data-testid="refund-day-panel">
+      <div className="u3-panel-head">
+        <h3>当日退款（退款单列）</h3>
+        <span className="aside">当日净额=已收−退款 · 历史日结封箱不回填（只读）</span>
+      </div>
+      <div className="px-[17px] pb-4">
+        {loading ? (
+          <div className="space-y-2">
+            {[0, 1].map((i) => (
+              <div key={i} className="h-8 animate-pulse rounded-[6px] bg-[rgba(74,59,46,.06)]" />
+            ))}
+          </div>
+        ) : !stats ? (
+          <p className="py-2 text-caption text-[rgba(74,59,46,.62)]">退款统计暂不可用</p>
+        ) : (
+          <>
+            <div className="u3-kv !px-0">
+              <div className="cell">
+                <div className="cap">退款笔数</div>
+                <div className="v u1-num" data-testid="refund-day-count">
+                  {stats.count}
+                </div>
+              </div>
+              <div className="cell">
+                <div className="cap">退款金额（单列）</div>
+                <div
+                  className={`v font-number tabular-nums ${stats.totalFen > 0 ? 'text-danger-deep' : ''}`}
+                  data-testid="refund-day-total"
+                >
+                  {stats.totalFen > 0 ? `−¥${fenToYuan(stats.totalFen)}` : '¥0'}
+                </div>
+              </div>
+              <div className="cell">
+                <div className="cap">现金段净额（现金已收−现金退款）</div>
+                <div className="v font-number tabular-nums" data-testid="refund-day-cash-net">
+                  {cashNet !== null ? `¥${fenToYuan(cashNet)}` : '…'}
+                </div>
+              </div>
+            </div>
+            {/* 支付段退款分列（V2 同法分列；次卡/储值回补不计现金口径） */}
+            <p className="mt-2 text-caption-xs leading-relaxed text-[rgba(74,59,46,.42)]" data-testid="refund-day-split">
+              退款分列：现金{' '}
+              <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(stats.segments.cashFen)}</b>
+              {' · 微信 '}
+              <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(stats.segments.wechatFen)}</b>
+              {' · 支付宝 '}
+              <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(stats.segments.alipayFen)}</b>
+              {' ｜ 非现金回补：次卡次数折抵 '}
+              <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(stats.segments.passFen)}</b>
+              {' · 储值余额回补 '}
+              <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(stats.segments.storedValueFen)}</b>
+            </p>
+            <p className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]">
+              跨日退款计入退款发生日日结（V7）；已封箱历史日结单不回填，只读留痕。
+            </p>
+          </>
+        )}
       </div>
     </div>
   )
