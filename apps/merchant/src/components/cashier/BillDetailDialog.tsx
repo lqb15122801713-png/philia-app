@@ -7,7 +7,10 @@
  * - M1-补2 D（反结账双件之一 · 收银台反结账单）：
  *   - open/held 单：撤单入口（补丁①1 三级全开，边界=仅未支付单）；
  *   - settled 未被冲正：owner 见「反结账」钮（强制原因弹层在父层）；
- *     owner|manager 见「退款」钮 → 明文拦截弹层（补丁② 纯前端零接口零写入）；
+ *   - R12：settled 未冲正未撤且 refundStatus!=='refunded' + owner|manager 见「退款」钮 →
+ *     真退款弹层（RefundDialog 六联动预览+重确认 D 套，在父层）；已全额退款单不渲染（V5 终态禁退 UI 层）；
+ *   - 退款标记：refundStatus 单显灰签+「退款 ¥X」红字标签+关联退款单号（双向可查，
+ *     点开见 refund_bills 详情——RefundDetailDialog 在父层）；
  *   - settled 已冲正（reversedAt）：灰签「已冲正」+ 冲正单号（双向可查）；
  *   - reversal 冲正单：签 + 关联原单号 + 「不计入已收」口径行；永驻流水无动作。
  */
@@ -22,27 +25,34 @@ import {
   BILL_DETAIL_KEY,
   PAY_METHOD_LABEL,
 } from './model'
+import { sumPostedRefunds, type RefundListRow } from './refund'
 
 export default function BillDetailDialog({
   billNo,
   isOwner,
   canManage,
+  refundRows,
   onVoid,
   onReverse,
   onRefund,
+  onShowRefund,
   onClose,
 }: {
   billNo: string | null
   /** 仅店主：反结账入口（收银台已支付单冲正） */
   isOwner: boolean
-  /** owner|manager：退款明文拦截入口可见（补丁②；clerk 无该入口） */
+  /** owner|manager：退款入口可见（R12 真退款；clerk 无该入口） */
   canManage: boolean
+  /** R12：本单的已落账退款行（refund.list 按 billId 归并，父层传入；空窗期为空数组） */
+  refundRows: RefundListRow[]
   /** 打开撤单弹层（父层持有 VoidDialog） */
   onVoid: (bill: { billNo: string; buyerName: string; payableFen: number; status: string }) => void
   /** 打开反结账原因弹层（父层持有 ReverseDialog） */
   onReverse: (bill: { billNo: string; buyerName: string; payableFen: number }) => void
-  /** 打开退款明文拦截弹层（父层持有 RefundBlockDialog；纯前端，零接口） */
+  /** 打开退款弹层（父层持有 RefundDialog；R12 真链路六联动） */
   onRefund: (billNo: string) => void
+  /** 点开退款单号看 refund_bills 详情（父层持有 RefundDetailDialog） */
+  onShowRefund: (row: RefundListRow) => void
   onClose: () => void
 }) {
   const { trpc } = usePhiliaClient()
@@ -64,8 +74,12 @@ export default function BillDetailDialog({
   const voidable = bill != null && (bill.status === 'open' || bill.status === 'held')
   /** 反结账入口：settled 且未被冲正 + 仅店主（矩阵；manager/clerk 无入口） */
   const reversible = bill != null && bill.status === 'settled' && !reversed && isOwner
-  /** 退款入口：settled 单 + owner|manager 可见（点击只出明文拦截，零接口——补丁②） */
-  const refundVisible = bill != null && bill.status === 'settled' && !reversed && canManage
+  /** R12 退款入口：settled 且未冲正未撤 + refundStatus!=='refunded'（V5 终态禁退 UI 层）+
+      owner|manager（clerk 不渲染）；阈值/涉储值由 server preview/execute 明文闸 */
+  const refundVisible =
+    bill != null && bill.status === 'settled' && !reversed && bill.refundStatus !== 'refunded' && canManage
+  /** 已落账退款聚合（展示侧；金额真值以 refund_bills 为准） */
+  const posted = bill ? sumPostedRefunds(refundRows, bill.id) : { totalFen: 0, rows: [] }
 
   return (
     <CashierModal
@@ -109,7 +123,7 @@ export default function BillDetailDialog({
           {refundVisible ? (
             <SheetBtn
               data-testid="cashier-detail-refund"
-              title="退款功能随专项批开通（点击查看说明）"
+              title="退款（R12：选类型→原因必填→六联动预览→重确认）"
               onClick={() => onRefund(bill!.billNo)}
             >
               退款
@@ -142,6 +156,39 @@ export default function BillDetailDialog({
               本单已被反结账冲正 · 冲正单{' '}
               <b className="font-number tabular-nums text-ink">{bill.reversalBillNo ?? '—'}</b>
               {' · 不再计入已收（原单永存不涂改）'}
+            </div>
+          ) : null}
+
+          {/* R12 退款横幅：灰签+「退款 ¥X」红字标签+关联退款单号（双向可查，点开见 refund_bills 详情） */}
+          {bill.refundStatus ? (
+            <div className="mb-3 rounded-[10px] bg-[rgba(74,59,46,.06)] px-3 py-2 text-caption-xs" data-testid="cashier-detail-refund-banner">
+              <span className="u3-st done">{bill.refundStatus === 'refunded' ? '已退款' : '部分退款'}</span>
+              {posted.rows.length > 0 ? (
+                <>
+                  <b className="ml-2 font-number tabular-nums text-danger-deep">
+                    退款 ¥{fenToYuan(posted.totalFen)}
+                  </b>
+                  <span className="ml-2 inline-flex flex-wrap items-center gap-1.5 align-middle">
+                    {posted.rows.map((r) => (
+                      <button
+                        key={r.id}
+                        type="button"
+                        data-testid={`cashier-detail-refund-link-${r.refundNo}`}
+                        title="查看退款单详情（refund_bills）"
+                        onClick={() => onShowRefund(r)}
+                        className="inline-flex min-h-[28px] items-center rounded-full bg-[#FFFDF6] px-2.5 font-number font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(74,59,46,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.95]"
+                      >
+                        {r.refundNo}
+                      </button>
+                    ))}
+                  </span>
+                </>
+              ) : (
+                <span className="ml-2 text-[rgba(74,59,46,.62)]">
+                  退款单 <b className="font-number tabular-nums text-ink">{bill.refundBillNo ?? '—'}</b>
+                  （详情见「退款」列表页）
+                </span>
+              )}
             </div>
           ) : null}
 
