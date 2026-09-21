@@ -22,7 +22,7 @@
  */
 
 import assert from 'node:assert/strict';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, or } from 'drizzle-orm';
 import { ulid } from 'ulid';
 import { client, db, schema } from '../../db';
 import type { Context, SessionUser } from '../../trpc';
@@ -64,6 +64,16 @@ async function runCleanup() {
   }
   if (created.petIds.length) {
     await db.delete(schema.pets).where(inArray(schema.pets.id, created.petIds));
+  }
+  // staff-2 R10：boarding.checkout 寄养按晚 XP 落 xp_events（FK → staff/users），清场须先清
+  // （补充令① 修复：既有清场漏清本表 → 删 staff/users 时 FK 787 崩溃、残留夹具污染后续 run）
+  if (created.staffIds.length || created.userIds.length) {
+    await db.delete(schema.xpEvents).where(
+      or(
+        created.staffIds.length ? inArray(schema.xpEvents.staffId, created.staffIds) : undefined,
+        created.userIds.length ? inArray(schema.xpEvents.userId, created.userIds) : undefined,
+      ),
+    );
   }
   if (created.staffIds.length) {
     await db.delete(schema.staff).where(inArray(schema.staff.id, created.staffIds));
