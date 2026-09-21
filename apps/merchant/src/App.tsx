@@ -23,6 +23,7 @@ import BoardingPage from './pages/BoardingPage'
 import CashierClosePage from './pages/CashierClosePage'
 import CashierPage from './pages/CashierPage'
 import CashierRecordsPage from './pages/CashierRecordsPage'
+import CashierRefundsPage from './pages/CashierRefundsPage'
 import DashboardPage from './pages/DashboardPage'
 import DevLoginPage from './pages/DevLoginPage'
 import FinancePage from './pages/FinancePage'
@@ -82,6 +83,8 @@ function ProtectedRoutes() {
         <Route path="/cashier" element={<CashierPage />} />
         <Route path="/cashier/records" element={<CashierRecordsPage />} />
         <Route path="/cashier/close" element={<CashierClosePage />} />
+        {/* 批次 R12 退款专项：退款单列表页（owner|manager；clerk 由 ClerkRouteGuard 拦 + 页内 canManage 闸门） */}
+        <Route path="/cashier/refunds" element={<CashierRefundsPage />} />
         {/* U3：墨轨规范名 /pass（/passes 保留兼容深链） */}
         <Route path="/pass" element={<PassPage />} />
         <Route path="/passes" element={<Navigate to="/pass" replace />} />

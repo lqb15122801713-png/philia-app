@@ -135,7 +135,7 @@ export default function MerchantRail() {
         </div>
       ))}
       {/* 底部：门店/账号卡（真值；M1-补2 G：三级账号角色签） */}
-      <div className="mt-auto hidden px-2.5 py-2.5 text-caption-xs leading-relaxed text-[rgba(74,59,46,.4)] xl:block" data-testid="rail-foot">
+      <div className="mt-auto hidden px-2.5 py-2.5 text-caption-xs leading-relaxed text-[rgba(246,241,227,.4)] xl:block" data-testid="rail-foot">
         {storeName}
         <br />
         {roleLabel} · {ownerName}
