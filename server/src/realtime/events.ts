@@ -51,6 +51,11 @@ export const EventType = {
   ReviewFlagged:         'review.flagged',           // ≤2 星差评提示 → store（店长视图）
   XpAwarded:             'xp.awarded',               // XP 事件（含 dropped 标记） → staff
   ConfigVersionSaved:    'config.versionSaved',      // 规则配置版本保存 → store
+  // 批次 R12 退款专项（双端同步）
+  RefundExecuted:        'refund.executed',         // 退款确认六联动落账 → store
+  RefundSettled:         'refund.settled',          // 实退完成登记 → store
+  RefundRejected:        'refund.rejected',         // 退款申请驳回（仅店主） → store
+  RefundMonthExported:   'refund.monthExported',    // 退款月表导出审计（仅老板） → store
 } as const;
 
 export type EventTypeValue = (typeof EventType)[keyof typeof EventType];

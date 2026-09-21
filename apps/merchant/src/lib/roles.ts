@@ -73,6 +73,9 @@ export function clerkGuideText(pathname: string): { title: string; hint: string 
   if (pathname.startsWith('/cashier/records')) {
     return { title: '收银流水由店长或店主查看', hint: '店员不看流水与营业额（门店规矩）；挂单/结账在收银台主屏完成。' }
   }
+  if (pathname.startsWith('/cashier/refunds')) {
+    return { title: '退款单由店长或店主处理', hint: '退款发起与实退登记属管理层动作（矩阵 V1.2）；店员账号的工作面是收银台。' }
+  }
   if (pathname.startsWith('/dashboard')) {
     return { title: '经营总览由店长或店主查看', hint: '店员不看营业额与看板（门店规矩）；开单收银请用收银台。' }
   }
