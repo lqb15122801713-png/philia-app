@@ -58,6 +58,7 @@ import { z } from 'zod';
 import { schema } from '../db';
 import {
   DURATION_SLOT_MIN,
+  loadDurationRules,
   resolveServiceDuration,
   type ServiceDuration,
 } from '../config/durationEngine';
@@ -903,7 +904,10 @@ export const appointmentRouter = router({
       // （此前口径 input.scheduledEnd ?? start+durationMin，现引擎覆盖）。boarding
       // 不受影响：仍上面强制必传 scheduledEnd，按晚计费/占晚口径不动。
       const groomingDuration: ServiceDuration | null =
-        input.type === 'grooming' ? resolveServiceDuration(service, pet) : null;
+        input.type === 'grooming'
+          ? // 补充令①：规则取数改读 duration_rules 配置表（保存即生效，新值只管新单）
+            resolveServiceDuration(service, pet, await loadDurationRules(ctx.db))
+          : null;
       const end =
         input.type === 'boarding'
           ? input.scheduledEnd! // boarding 上面已强制非空且晚于开始
@@ -1538,7 +1542,8 @@ export const appointmentRouter = router({
       const groomingDuration: ServiceDuration | null =
         appt.type === 'grooming'
           ? // 服务行缺失（防御）时以空名占位 → 引擎回退默认 60min
-            resolveServiceDuration(service ?? { type: 'grooming', name: '', durationMin: null }, pet)
+            // 补充令①：规则取数改读 duration_rules 配置表（保存即生效，新值只管新改期单）
+            resolveServiceDuration(service ?? { type: 'grooming', name: '', durationMin: null }, pet, await loadDurationRules(ctx.db))
           : null;
       const end =
         appt.type === 'boarding'
