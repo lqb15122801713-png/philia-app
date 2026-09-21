@@ -28,12 +28,13 @@ const txDb = (tx: unknown): DbHandle => tx as DbHandle;
 /* 后两者注释即「结构同 commission_rules」）                                 */
 /* ------------------------------------------------------------------ */
 
-const domainSchema = z.enum(['commission', 'xp', 'duration']);
+const domainSchema = z.enum(['commission', 'xp', 'duration', 'refund']);
 
 const RULES_TABLE = {
   commission: schema.commissionRules,
   xp: schema.xpRules,
   duration: schema.durationRules, // 补充令①：时长系数表配置化（决策 #39/#40），同型天然兼容
+  refund: schema.refundRules, // R12 退款专项：退款阈值等（冻结版 V1.0 §九），同型天然兼容
 } as const;
 
 /* ------------------------------------------------------------------ */
@@ -56,11 +57,12 @@ const NUMERIC_KEYS = new Set([
   'rate_bp_min',
   'rate_bp_max',
   'threshold_per_day',
+  'threshold_fen', // R12 退款店长阈值（分）
   'hour',
   'level',
 ]);
 
-/** 语义非负的数值字段（比例/系数/倍率/上限/门槛/保级线/日/次数不允许为负） */
+/** 语义非负的数值字段（比例/系数/倍率/上限/门槛/保级线/日/次数/退款阈值不允许为负） */
 const NON_NEGATIVE_KEYS = new Set([
   'cap',
   'limit',
@@ -74,6 +76,7 @@ const NON_NEGATIVE_KEYS = new Set([
   'rate_bp_min',
   'rate_bp_max',
   'threshold_per_day',
+  'threshold_fen', // R12 退款店长阈值（分）
   'hour',
   'level',
 ]);

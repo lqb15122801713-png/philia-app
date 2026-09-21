@@ -11,7 +11,10 @@
  *   listDayCloses（日结单+冲正关联单双向可查）；
  * - 动作：closeShift（交接班）/ dayClose（冻结）/ reverseDayClose（拆箱 · owner）/
  *   adjustDayClose（备注）/ exportDayCloseCsv（Blob 下载 · owner）；
- * - SSE：cashier.shift 系 / dayClose 系 / billSettled / billReversed → 全量对齐；
+ * - R12：当日退款单列面板（RefundDayPanel · refund.dayStats）——笔数+金额+
+ *   支付段退款分列+现金段净额（V2：现金已收−现金退款，前端做差；历史封箱不回填只读）；
+ * - SSE：cashier.shift 系 / dayClose 系 / billSettled / billReversed /
+ *   refund.executed / refund.settled / refund.rejected → 全量对齐；
  * - R5b：页面底部 owner-only 储值台账导入卡（ImportLedgerPanel，只交付不执行，
  *   演示台账试导可标记清除）。
  */
@@ -32,9 +35,11 @@ import {
   DayCloseDetailDialog,
   DayCloseForm,
   DayCloseList,
+  RefundDayPanel,
   ShiftCard,
 } from '@/components/cashier/DayClosePanels'
 import ImportLedgerPanel from '@/components/cashier/ImportLedgerPanel'
+import { REFUND_DAY_STATS_KEY, storeTodayStr } from '@/components/cashier/refund'
 import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider'
 import { STATS_QUERY_KEY } from '@/components/dashboard/utils'
 import MainScaffold from '@/components/MainScaffold'
@@ -61,6 +66,11 @@ export default function CashierClosePage() {
     queryKey: DAY_CLOSES_KEY,
     queryFn: () => trpc.cashier.listDayCloses.query({ limit: 50 }),
   })
+  // R12：当日退款单列（refund.dayStats，biz_date=执行日口径；只出退款侧分列，不改既有日结函数）
+  const refundDayQ = useQuery({
+    queryKey: [...REFUND_DAY_STATS_KEY, storeTodayStr()],
+    queryFn: () => trpc.refund.dayStats.query({ date: storeTodayStr() }),
+  })
 
   const invalidateAll = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: CURRENT_SHIFT_KEY })
@@ -68,9 +78,10 @@ export default function CashierClosePage() {
     void queryClient.invalidateQueries({ queryKey: TODAY_TENDER_KEY })
     void queryClient.invalidateQueries({ queryKey: STATS_QUERY_KEY })
     void queryClient.invalidateQueries({ queryKey: FINANCE_ROOT })
+    void queryClient.invalidateQueries({ queryKey: REFUND_DAY_STATS_KEY })
   }, [queryClient])
 
-  // SSE：班次/日结/收银事件 → 全量对齐；重连兜底
+  // SSE：班次/日结/收银/R12 退款事件 → 全量对齐；重连兜底
   useEffect(
     () =>
       events.onEvent((envelope) => {
@@ -81,6 +92,9 @@ export default function CashierClosePage() {
           case EventType.CashierDayCloseReversed:
           case EventType.CashierBillSettled:
           case EventType.CashierBillReversed:
+          case EventType.RefundExecuted:
+          case EventType.RefundSettled:
+          case EventType.RefundRejected:
             invalidateAll()
             break
           default:
@@ -206,6 +220,14 @@ export default function CashierClosePage() {
           submitting={dayCloseM.isPending}
           onSubmit={(actualCashFen, note) => dayCloseM.mutate({ actualCashFen, note })}
           onCancelOverride={() => setOverrideShiftId(null)}
+        />
+
+        {/* R12：当日退款单列 + 现金段净额（V2：现金已收−现金退款，前端做差；
+            历史日结封箱不回填只读） */}
+        <RefundDayPanel
+          stats={refundDayQ.data}
+          loading={refundDayQ.isPending}
+          cashReceivedFen={tender?.tender.cashFen ?? null}
         />
 
         {/* 日结单列表（双向可查） */}
