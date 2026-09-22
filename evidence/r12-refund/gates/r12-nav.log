@@ -1,0 +1,71 @@
+导航闭环体检（W1 §六 harness）：64 路由 · 四要素检测
+[customer] dev-login ✓
+✅ [customer] /home —— OK back=false dock=true 出口钮=false
+✅ [customer] /mall —— OK back=false dock=true 出口钮=false
+✅ [customer] /me —— OK back=false dock=true 出口钮=false
+✅ [customer] /philia —— OK back=false dock=true 出口钮=false
+✅ [customer] /booking —— OK back=true dock=false 出口钮=false
+✅ [customer] /booking/grooming —— OK back=true dock=false 出口钮=false
+✅ [customer] /booking/grooming/wizard —— OK back=true dock=false 出口钮=false
+✅ [customer] /booking/boarding —— OK back=true dock=false 出口钮=false
+✅ [customer] /booking/boarding/wizard —— OK back=true dock=false 出口钮=false
+✅ [customer] /booking/success?aid=01M32M351TZNF9W2YQ0DDBGY4K —— OK back=true dock=false 出口钮=true
+✅ [customer] /appointments —— OK back=true dock=false 出口钮=false
+✅ [customer] /appointments/01M32M351TZNF9W2YQ0DDBGY4K —— OK back=true dock=false 出口钮=false
+✅ [customer] /appointments/01000000000000000000000000 —— OK（无效 id 异常态须出口（W1 补改）） back=false dock=false 出口钮=true
+✅ [customer] /appointments/01M32M351TZNF9W2YQ0DDBGY4K/live —— OK back=true dock=false 出口钮=false
+✅ [customer] /mall/orders —— OK back=true dock=false 出口钮=true
+✅ [customer] /mall/cart —— OK back=true dock=false 出口钮=true
+✅ [customer] /mall/checkout —— OK back=true dock=false 出口钮=true
+✅ [customer] /mall/product/01M2S57Y960FYBQ4H8SQGP2396 —— OK（商品 id 缺失时守卫口径） back=false dock=false 出口钮=true
+✅ [customer] /mall/product/01000000000000000000000000 —— OK（无效 id 异常态须出口（W1 补改）） back=false dock=false 出口钮=true
+✅ [customer] /me/card —— OK back=true dock=false 出口钮=false
+✅ [customer] /philia/member —— OK back=true dock=false 出口钮=false
+✅ [customer] /philia/moments —— OK back=true dock=false 出口钮=false
+✅ [customer] /philia/pets —— OK back=true dock=false 出口钮=false
+➖ [customer] /dev-login —— 豁免 门禁页
+➖ [customer] /login —— 豁免（门禁别名） 门禁页
+[merchant] dev-login ✓
+✅ [merchant] /dashboard —— OK back=false dock=true 出口钮=false
+✅ [merchant] /appointments —— OK back=false dock=true 出口钮=false
+✅ [merchant] /appointments/01M32M351TZNF9W2YQ0DDBGY4K —— OK back=false dock=true 出口钮=false
+✅ [merchant] /appointments/01000000000000000000000000 —— OK（无效 id 异常态须出口（W1 补改）） back=false dock=true 出口钮=false
+✅ [merchant] /monitor —— OK back=false dock=true 出口钮=false
+✅ [merchant] /monitor/01M32M351TZNF9W2YQ0DDBGY4K —— OK back=false dock=true 出口钮=false
+✅ [merchant] /monitor/01000000000000000000000000 —— OK（无效 id 异常态须出口（W1 补改）） back=false dock=true 出口钮=false
+✅ [merchant] /boarding —— OK back=false dock=true 出口钮=false
+✅ [merchant] /orders —— OK back=false dock=true 出口钮=false
+✅ [merchant] /products —— OK back=false dock=true 出口钮=false
+✅ [merchant] /pass —— OK back=false dock=true 出口钮=false
+✅ [merchant] /staff —— OK back=false dock=true 出口钮=false
+✅ [merchant] /finance —— OK back=false dock=true 出口钮=false
+✅ [merchant] /settings —— OK back=false dock=true 出口钮=false
+✅ [merchant] /settings/rules —— OK（批次 staff-2 R9-F：owner 专属（clerk 守卫引导页 / manager 页内引导卡，rail 布局内）） back=false dock=true 出口钮=false
+✅ [merchant] /cashier —— OK back=false dock=true 出口钮=false
+✅ [merchant] /cashier/records —— OK back=false dock=true 出口钮=false
+✅ [merchant] /cashier/close —— OK back=false dock=true 出口钮=false
+✅ [merchant] /cashier/refunds —— OK（批次 R12 退款单列表（墨轨常驻；clerk 引导页）） back=false dock=true 出口钮=false
+➖ [merchant] /dev-login —— 豁免 门禁页
+➖ [merchant] /login —— 豁免 门禁页
+✅ [merchant] /passes —— OK（重定向兼容） back=false dock=true 出口钮=false
+✅ [merchant] /live —— OK（重定向→/monitor） back=false dock=true 出口钮=false
+✅ [merchant] / —— OK（重定向→/dashboard） back=false dock=true 出口钮=false
+➖ [merchant] /dev-login —— 豁免 门禁页
+[staff] dev-login ✓
+✅ [staff] /today —— OK back=false dock=true 出口钮=false
+✅ [staff] /history —— OK back=false dock=true 出口钮=false
+✅ [staff] /me —— OK back=false dock=true 出口钮=false
+✅ [staff] /execute/01M32M351TZNF9W2YQ0DDBGY4K —— OK（异常态守卫页亦须出口） back=true dock=false 出口钮=false
+✅ [staff] /boarding/01000000000000000000000000/checkin —— OK（异常态守卫页（W1 弱出口已按钮化）） back=false dock=false 出口钮=true
+➖ [staff] /dev-login —— 豁免 门禁页
+✅ [staff] / —— OK（重定向→/today） back=false dock=true 出口钮=false
+✅ [staff] /attendance —— OK（批次 staff-2 R7~R10） back=true dock=false 出口钮=false
+✅ [staff] /inventory —— OK（批次 staff-2 R7~R10） back=true dock=false 出口钮=false
+✅ [staff] /inventory/01000000000000000000000000 —— OK（无效 id 异常态须出口（批次 staff-2 R7~R10；无种子盘点单 id，INVALID 行即可）） back=true dock=false 出口钮=true
+✅ [staff] /pay —— OK（批次 staff-2 R7~R10） back=true dock=false 出口钮=false
+✅ [staff] /xp —— OK（批次 staff-2 R7~R10） back=true dock=false 出口钮=false
+✅ [staff] /reviews —— OK（批次 staff-2 R7~R10） back=true dock=false 出口钮=false
+✅ [staff] /manager —— OK（批次 staff-2 R7~R10；非店长登录渲染引导卡（「返回我的」按钮出口）） back=true dock=false 出口钮=true
+
+===== 体检汇总：64 路由 · 死胡同 0 · 弱 0 · 豁免 6 =====
+结果 JSON：C:/Users/lqb15/AppData/Local/Temp/r12-nav.json

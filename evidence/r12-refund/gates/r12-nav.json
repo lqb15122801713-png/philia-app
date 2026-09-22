@@ -1,0 +1,474 @@
+{
+  "at": "2026-09-21T18:39:09.161Z",
+  "results": [
+    {
+      "app": "customer",
+      "path": "/home",
+      "expect": "tab",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "customer",
+      "path": "/mall",
+      "expect": "tab",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "customer",
+      "path": "/me",
+      "expect": "tab",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "customer",
+      "path": "/philia",
+      "expect": "tab",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "customer",
+      "path": "/booking",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=false"
+    },
+    {
+      "app": "customer",
+      "path": "/booking/grooming",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=false"
+    },
+    {
+      "app": "customer",
+      "path": "/booking/grooming/wizard",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=false"
+    },
+    {
+      "app": "customer",
+      "path": "/booking/boarding",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=false"
+    },
+    {
+      "app": "customer",
+      "path": "/booking/boarding/wizard",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=false"
+    },
+    {
+      "app": "customer",
+      "path": "/booking/success?aid=01M32M351TZNF9W2YQ0DDBGY4K",
+      "expect": "success",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=true"
+    },
+    {
+      "app": "customer",
+      "path": "/appointments",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=false"
+    },
+    {
+      "app": "customer",
+      "path": "/appointments/01M32M351TZNF9W2YQ0DDBGY4K",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=false"
+    },
+    {
+      "app": "customer",
+      "path": "/appointments/01000000000000000000000000",
+      "expect": "sub",
+      "note": "无效 id 异常态须出口（W1 补改）",
+      "verdict": "OK",
+      "detail": "back=false dock=false 出口钮=true"
+    },
+    {
+      "app": "customer",
+      "path": "/appointments/01M32M351TZNF9W2YQ0DDBGY4K/live",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=false"
+    },
+    {
+      "app": "customer",
+      "path": "/mall/orders",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=true"
+    },
+    {
+      "app": "customer",
+      "path": "/mall/cart",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=true"
+    },
+    {
+      "app": "customer",
+      "path": "/mall/checkout",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=true"
+    },
+    {
+      "app": "customer",
+      "path": "/mall/product/01M2S57Y960FYBQ4H8SQGP2396",
+      "expect": "sub",
+      "note": "商品 id 缺失时守卫口径",
+      "verdict": "OK",
+      "detail": "back=false dock=false 出口钮=true"
+    },
+    {
+      "app": "customer",
+      "path": "/mall/product/01000000000000000000000000",
+      "expect": "sub",
+      "note": "无效 id 异常态须出口（W1 补改）",
+      "verdict": "OK",
+      "detail": "back=false dock=false 出口钮=true"
+    },
+    {
+      "app": "customer",
+      "path": "/me/card",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=false"
+    },
+    {
+      "app": "customer",
+      "path": "/philia/member",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=false"
+    },
+    {
+      "app": "customer",
+      "path": "/philia/moments",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=false"
+    },
+    {
+      "app": "customer",
+      "path": "/philia/pets",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=false"
+    },
+    {
+      "app": "customer",
+      "path": "/dev-login",
+      "expect": "gate",
+      "verdict": "豁免",
+      "detail": "门禁页"
+    },
+    {
+      "app": "customer",
+      "path": "/login",
+      "expect": "gate",
+      "note": "门禁别名",
+      "verdict": "豁免",
+      "detail": "门禁页"
+    },
+    {
+      "app": "merchant",
+      "path": "/dashboard",
+      "expect": "tab",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/appointments",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/appointments/01M32M351TZNF9W2YQ0DDBGY4K",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/appointments/01000000000000000000000000",
+      "expect": "sub",
+      "note": "无效 id 异常态须出口（W1 补改）",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/monitor",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/monitor/01M32M351TZNF9W2YQ0DDBGY4K",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/monitor/01000000000000000000000000",
+      "expect": "sub",
+      "note": "无效 id 异常态须出口（W1 补改）",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/boarding",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/orders",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/products",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/pass",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/staff",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/finance",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/settings",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/settings/rules",
+      "expect": "sub",
+      "note": "批次 staff-2 R9-F：owner 专属（clerk 守卫引导页 / manager 页内引导卡，rail 布局内）",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/cashier",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/cashier/records",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/cashier/close",
+      "expect": "sub",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/cashier/refunds",
+      "expect": "sub",
+      "note": "批次 R12 退款单列表（墨轨常驻；clerk 引导页）",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/dev-login",
+      "expect": "gate",
+      "verdict": "豁免",
+      "detail": "门禁页"
+    },
+    {
+      "app": "merchant",
+      "path": "/login",
+      "expect": "gate",
+      "verdict": "豁免",
+      "detail": "门禁页"
+    },
+    {
+      "app": "merchant",
+      "path": "/passes",
+      "expect": "sub",
+      "note": "重定向兼容",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/live",
+      "expect": "sub",
+      "note": "重定向→/monitor",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/",
+      "expect": "sub",
+      "note": "重定向→/dashboard",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "merchant",
+      "path": "/dev-login",
+      "expect": "gate",
+      "verdict": "豁免",
+      "detail": "门禁页"
+    },
+    {
+      "app": "staff",
+      "path": "/today",
+      "expect": "tab",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "staff",
+      "path": "/history",
+      "expect": "tab",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "staff",
+      "path": "/me",
+      "expect": "tab",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "staff",
+      "path": "/execute/01M32M351TZNF9W2YQ0DDBGY4K",
+      "expect": "sub",
+      "note": "异常态守卫页亦须出口",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=false"
+    },
+    {
+      "app": "staff",
+      "path": "/boarding/01000000000000000000000000/checkin",
+      "expect": "sub",
+      "note": "异常态守卫页（W1 弱出口已按钮化）",
+      "verdict": "OK",
+      "detail": "back=false dock=false 出口钮=true"
+    },
+    {
+      "app": "staff",
+      "path": "/dev-login",
+      "expect": "gate",
+      "verdict": "豁免",
+      "detail": "门禁页"
+    },
+    {
+      "app": "staff",
+      "path": "/",
+      "expect": "sub",
+      "note": "重定向→/today",
+      "verdict": "OK",
+      "detail": "back=false dock=true 出口钮=false"
+    },
+    {
+      "app": "staff",
+      "path": "/attendance",
+      "expect": "sub",
+      "note": "批次 staff-2 R7~R10",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=false"
+    },
+    {
+      "app": "staff",
+      "path": "/inventory",
+      "expect": "sub",
+      "note": "批次 staff-2 R7~R10",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=false"
+    },
+    {
+      "app": "staff",
+      "path": "/inventory/01000000000000000000000000",
+      "expect": "sub",
+      "note": "无效 id 异常态须出口（批次 staff-2 R7~R10；无种子盘点单 id，INVALID 行即可）",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=true"
+    },
+    {
+      "app": "staff",
+      "path": "/pay",
+      "expect": "sub",
+      "note": "批次 staff-2 R7~R10",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=false"
+    },
+    {
+      "app": "staff",
+      "path": "/xp",
+      "expect": "sub",
+      "note": "批次 staff-2 R7~R10",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=false"
+    },
+    {
+      "app": "staff",
+      "path": "/reviews",
+      "expect": "sub",
+      "note": "批次 staff-2 R7~R10",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=false"
+    },
+    {
+      "app": "staff",
+      "path": "/manager",
+      "expect": "sub",
+      "note": "批次 staff-2 R7~R10；非店长登录渲染引导卡（「返回我的」按钮出口）",
+      "verdict": "OK",
+      "detail": "back=true dock=false 出口钮=true"
+    }
+  ]
+}
