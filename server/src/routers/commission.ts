@@ -37,6 +37,12 @@
  *    试用期不设绩效——performance.applicable=false，应付绩效按 0 透出（基数仍列出供核对）；
  * 6. P3 全店提成基数=全店洗美服务营收（门市价，同 G4 口径；商品/年费不进，寄养不计——
  *    任务书 §九 寄养默认不计提成）。
+ * 7. R12 V6 退款提成冲减（读侧）：源单行有 refund_bill_items（kind='item'）→ 行退款额/
+ *    行有效价=退款比例，该行提成×(1−比例) 精确到分（行内 refundRatioBp/refundClawbackFen/
+ *    refunded 快照列）；全额退=该行提成全额冲减归零；跨月=退款发生月 biz_date 落在本月、
+ *    源单属更早月份且源月已快照 → 不动快照、差额进本月 adjustments 调整项行（mySummary
+ *    提成区随行透出）；源月未快照由源月 live 重算自然冲减（防双计）。G4/P3 店级行与绩效
+ *    池基数不做冲减（V6 冻结口径只写「该行提成」）。
  *
  * 回溯写死（七步复核 Bug② 修复）：computeMonth 全部金钱行（服务率/商品率/产能阈值倍率/
  * G4/P3 率/perf_base_rate/SABCD 系数档/试用期倍率）逐源单按 settled_at 时序解析
@@ -272,10 +278,18 @@ interface CommissionLine {
   rateBp: number;
   /** 产能加计倍率 bp（默认 10000=1 倍） */
   multiplierBp: number;
+  /** 提成净额（分）：R12 V6 起=毛提成−退款冲减（行退款额/行金额=退款比例，精确到分） */
   amountFen: number;
   /** 产能红线超出部分：已批准 1.5 倍（overwork=true）；未批准 1 倍计提+待批准标记 */
   overwork: boolean;
   pendingApproval: boolean;
+  /* ---- R12 V6 退款提成冲减（读侧快照列） ---- */
+  /** 退款比例 bp（行退款额÷行有效价×10000；无退款=0） */
+  refundRatioBp: number;
+  /** 冲减额（分）= round(毛提成 × 退款比例) */
+  refundClawbackFen: number;
+  /** 全额退标记：该行提成全额冲减、行归零 */
+  refunded: boolean;
 }
 
 interface StoreLine {
@@ -323,7 +337,22 @@ export interface CommissionMonthPayload {
   cardLines: never[];
   cardNote: string;
   storeLines: StoreLine[];
+  /** 提成合计（分）= 行净额合计 + 店级行 − 跨月调整项合计（R12 V6 冲减口径） */
   commissionTotalFen: number;
+  /**
+   * 跨月冲减「调整项」（R12 V6 · V1.3 口径）：退款发生月在本月、源单属更早月份且
+   * 源月已快照 → 不动快照，差额进本月调整项行；源月未快照 → 由源月 live 重算自然
+   * 冲减，不进调整项（防双计，注释写死）。clawbackFen 正值列示（展示=负数行）。
+   */
+  adjustments: Array<{
+    refundNo: string;
+    billNo: string;
+    itemId: string;
+    name: string;
+    clawbackFen: number;
+  }>;
+  /** 调整项冲减合计（分，≥0；commissionTotalFen 已减除） */
+  adjustmentsTotalFen: number;
   performance: PerformanceBlock;
   deductions: Array<{
     id: string;
@@ -493,6 +522,9 @@ export async function computeMonth(
         amountFen: Math.round((baseFen * rateBp) / 10000),
         overwork: false,
         pendingApproval: false,
+        refundRatioBp: 0, // R12 V6：退款冲减在总额聚合前统一按行结算（见下方 V6 段）
+        refundClawbackFen: 0,
+        refunded: false,
       });
     }
 
@@ -580,6 +612,9 @@ export async function computeMonth(
           amountFen: Math.round((baseFen * rateBp * probMultBp) / 10000 / 10000),
           overwork: false,
           pendingApproval: false,
+          refundRatioBp: 0,
+          refundClawbackFen: 0,
+          refunded: false,
         });
       }
     }
@@ -685,10 +720,161 @@ export async function computeMonth(
     )
     .orderBy(desc(schema.deductionRecords.createdAt));
 
+  /* ---- R12 V6 退款提成冲减（读侧，只读计算；接回溯修复后的逐行解析口径） ----
+   * 行内冲减：源单（本月账单域）有 refund_bill_items（kind='item'，含全额退的逐行、
+   * 按行退的指定行、按金额退的 apportioned 分摊行）→ 行退款额/行有效价=退款比例，
+   * 该行提成×(1−比例)（精确到分）；全额退=该行提成全额冲减（行归零并标注 refunded）。
+   * 跨月调整项：退款发生月在本月（refund_bills.biz_date）、源单属更早月份且源月
+   * 已快照 → 不动快照，差额进本月「调整项」行；源月未快照 → 由源月 live 重算自然
+   * 冲减，不进调整项（防双计，口径写死）。
+   * 边界写死：G4/P3 店级行与绩效池基数不做退款冲减（V6 冻结口径只写「该行提成」，
+   * 店级/绩效口径如需联动随 V1.3 后续修订）；寄养/次卡退卡无 item 明细行天然不进。 */
+  const monthItemById = new Map(monthData.items.map((it) => [it.id, it]));
+  const refundFenByItem = new Map<string, number>();
+  const monthBillIds = monthData.bills.map((b) => b.id);
+  if (monthBillIds.length > 0) {
+    const refundItemRows = await d
+      .select({
+        billItemId: schema.refundBillItems.billItemId,
+        amountFen: schema.refundBillItems.amountFen,
+      })
+      .from(schema.refundBillItems)
+      .innerJoin(schema.refundBills, eq(schema.refundBills.id, schema.refundBillItems.refundId))
+      .where(
+        and(
+          inArray(schema.refundBills.billId, monthBillIds),
+          inArray(schema.refundBills.status, ['executed', 'settled']),
+          eq(schema.refundBillItems.kind, 'item'),
+        ),
+      );
+    for (const r of refundItemRows) {
+      if (!r.billItemId) continue;
+      refundFenByItem.set(r.billItemId, (refundFenByItem.get(r.billItemId) ?? 0) + r.amountFen);
+    }
+  }
+  const applyRefundClawback = (lines: CommissionLine[]) => {
+    for (const l of lines) {
+      const refundedFen = refundFenByItem.get(l.itemId) ?? 0;
+      if (refundedFen <= 0) continue;
+      const src = monthItemById.get(l.itemId);
+      const lineEffFen = src ? effPrice(src) * src.qty : 0;
+      if (lineEffFen <= 0) continue;
+      const ratio = Math.min(1, refundedFen / lineEffFen);
+      const clawbackFen = Math.round(l.amountFen * ratio); // 行提成×退款比例，精确到分
+      l.refundRatioBp = Math.round(ratio * 10000);
+      l.refundClawbackFen = clawbackFen;
+      l.refunded = ratio >= 1; // 全额退=该行提成全额冲减（行归零并标注 refunded）
+      l.amountFen -= clawbackFen;
+    }
+  };
+  applyRefundClawback(serviceLines);
+  applyRefundClawback(productLines);
+
+  /* 跨月「调整项」：逐退款单重算归属本人的源行毛提成×退款比例（1×基线——产能加计的
+     跨月差额不追，简单正确口径写死；规则版本仍按源单 settled_at 时序解析，回溯口径保持） */
+  const adjustments: CommissionMonthPayload['adjustments'] = [];
+  const monthRefunds = await d
+    .select()
+    .from(schema.refundBills)
+    .where(
+      and(
+        eq(schema.refundBills.storeId, storeId),
+        gte(schema.refundBills.bizDate, localDateStr(start)),
+        lt(schema.refundBills.bizDate, localDateStr(end)),
+        inArray(schema.refundBills.status, ['executed', 'settled']),
+      ),
+    );
+  for (const rf of monthRefunds) {
+    const srcBill = await d
+      .select()
+      .from(schema.cashierBills)
+      .where(eq(schema.cashierBills.id, rf.billId))
+      .get();
+    if (!srcBill) continue;
+    const srcTs = srcBill.settledAt ?? srcBill.createdAt;
+    const srcMonth = localDateStr(srcTs).slice(0, 7);
+    if (srcMonth >= month) continue; // 同月：行内冲减已覆盖，不进调整项
+    const snap = await d
+      .select({ id: schema.commissionSnapshots.id })
+      .from(schema.commissionSnapshots)
+      .where(
+        and(
+          eq(schema.commissionSnapshots.staffId, staffRow.id),
+          eq(schema.commissionSnapshots.period, srcMonth),
+          eq(schema.commissionSnapshots.kind, 'commission'),
+        ),
+      )
+      .get();
+    if (!snap) continue; // 源月未快照：源月 live 重算自然冲减（防双计，口径写死）
+    const rfItems = await d
+      .select()
+      .from(schema.refundBillItems)
+      .where(and(eq(schema.refundBillItems.refundId, rf.id), eq(schema.refundBillItems.kind, 'item')));
+    if (rfItems.length === 0) continue;
+    const srcItems = await d
+      .select()
+      .from(schema.cashierBillItems)
+      .where(
+        inArray(
+          schema.cashierBillItems.id,
+          rfItems.map((r) => r.billItemId).filter((x): x is string => !!x),
+        ),
+      );
+    const srcApptIds = [...new Set(srcItems.filter((i) => i.kind === 'appointment').map((i) => i.refId))];
+    const srcAppts = srcApptIds.length
+      ? await d
+          .select({ id: schema.appointments.id, staffId: schema.appointments.staffId, type: schema.appointments.type })
+          .from(schema.appointments)
+          .where(inArray(schema.appointments.id, srcApptIds))
+      : [];
+    const srcApptById = new Map(srcAppts.map((a) => [a.id, a]));
+    for (const rfIt of rfItems) {
+      const src = srcItems.find((i) => i.id === rfIt.billItemId);
+      if (!src) continue;
+      const lineEffFen = effPrice(src) * src.qty;
+      if (lineEffFen <= 0) continue;
+      const ratio = Math.min(1, rfIt.amountFen / lineEffFen);
+      let grossFen = 0;
+      if (src.kind === 'appointment' && isGroomer) {
+        const appt = srcApptById.get(src.refId);
+        if (!appt || appt.type !== 'grooming' || appt.staffId !== staffRow.id) continue;
+        if (staffRow.grade === 'G0') {
+          const g0Rule = ruleAt('commission_grooming_assistant_g0_rate', srcTs);
+          const scope = typeof g0Rule?.scope === 'string' ? g0Rule.scope : 'bath';
+          if (scope !== 'all' && (!serviceKindKeywords || !isWashService(src.nameSnapshot, serviceKindKeywords))) {
+            continue;
+          }
+        }
+        const key = staffRow.grade === 'G0' ? 'commission_grooming_assistant_g0_rate' : 'commission_grooming_rate';
+        grossFen = Math.round((src.unitPriceFen * num(ruleAt(key, srcTs)?.rate_bp, 0)) / 10000);
+      } else if (src.kind === 'product' && frontdeskLike) {
+        if (srcBill.operatorId !== staffRow.userId) continue;
+        const rateBp = num(ruleAt('commission_product_rate', srcTs)?.rate_bp, 0);
+        const probMultBp = staffRow.probation
+          ? num(ruleAt('commission_probation_multiplier', srcTs)?.multiplier_bp, 5000)
+          : 10000;
+        grossFen = Math.round((lineEffFen * rateBp * probMultBp) / 10000 / 10000);
+      } else {
+        continue; // 非本人归属行（散客 service 行/他人行）不进本人调整项
+      }
+      const clawbackFen = Math.round(grossFen * ratio);
+      if (clawbackFen <= 0) continue;
+      adjustments.push({
+        refundNo: rf.refundNo,
+        billNo: srcBill.billNo,
+        itemId: src.id,
+        name: src.nameSnapshot,
+        clawbackFen,
+      });
+    }
+  }
+  const adjustmentsTotalFen = adjustments.reduce((s, a) => s + a.clawbackFen, 0);
+
   const commissionTotalFen =
     serviceLines.reduce((s, l) => s + l.amountFen, 0) +
     productLines.reduce((s, l) => s + l.amountFen, 0) +
-    storeLines.reduce((s, l) => s + l.amountFen, 0);
+    storeLines.reduce((s, l) => s + l.amountFen, 0) -
+    adjustmentsTotalFen;
 
   return {
     staffId: staffRow.id,
@@ -703,6 +889,8 @@ export async function computeMonth(
     cardNote: '随会员前置批开通',
     storeLines,
     commissionTotalFen,
+    adjustments,
+    adjustmentsTotalFen,
     performance,
     deductions,
     ruleVersion: currentVersion,
