@@ -756,6 +756,14 @@ export const cashierBills = sqliteTable(
     reversalBillNo: text('reversal_bill_no'),
     /** 冲正单 → 原单号链接（仅 status='reversal' 行有值） */
     reversalOfBillNo: text('reversal_of_bill_no'),
+    /* ---- R12 退款专项（退款 ≠ 反结账；原单永存不涂改，仅挂退款关联标记，内容一字不改） ---- */
+    /**
+     * 退款状态（批次 R12，可空）：NULL=未退款 | 'partial' 部分退款 | 'refunded' 已退款。
+     * 原单仅挂本标记，金额/行项一字不改；退款明细见 refund_bills.bill_id 索引双向可查。
+     */
+    refundStatus: text('refund_status'),
+    /** 最近一笔退款单号（RB-yyyymmdd-NNN，可空；与 refund_bills.bill_id 构成双向可查） */
+    refundBillNo: text('refund_bill_no'),
     ...auditColumns,
   },
   (t) => [
@@ -1744,7 +1752,7 @@ export const ruleConfigVersions = sqliteTable(
   'rule_config_versions',
   {
     id: id(),
-    /** 配置域，取值：commission | xp */
+    /** 配置域，取值：commission | xp | duration（补充令①） | refund（R12） */
     domain: text('domain').notNull(),
     /** 保存后的新版本号 */
     version: integer('version').notNull(),
@@ -1757,4 +1765,127 @@ export const ruleConfigVersions = sqliteTable(
     ...auditColumns,
   },
   (t) => [index('ix_rule_config_versions_domain').on(t.domain, t.version)],
+);
+
+/* ------------------------------------------------------------------ */
+/* 5.4d 退款（批次 R12 退款专项 · 冻结版 V1.0，老板会签 CJ-0921-23）        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 退款单头表（R12 §一）。纲：退款 ≠ 反结账——反结账既有逻辑一行不动（错单纠正，
+ * 不计当日已收）；退款=经营行为计退款单列，原单已收不涂改，当日净额=已收−退款。
+ * - 原单永存不涂改：cashier_bills 仅挂 refund_status/refund_bill_no 标记，内容一字不改；
+ * - biz_date=执行日（V7 跨日口径：计入发生日日结，不回填已封箱历史日结）；
+ * - linkage_json=六联动快照（含 rebate_clawback_fen 列位默认 0——回馈金未上线 R11，
+ *   冻结规则+R11 回归；快照另含支付段回补/库存回补/储值次卡回补/提成冲减明细）；
+ * - 状态机：draft→executed（账已联动，不可撤销）→settled（实退完成）；rejected=驳回留痕。
+ */
+export const refundBills = sqliteTable(
+  'refund_bills',
+  {
+    id: id(),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 退款单号（全局唯一，幂等键）：RB-yyyymmdd-NNN（日序，同既有单号发生器口径） */
+    refundNo: text('refund_no').notNull(),
+    /** 执行日（YYYY-MM-DD；V7：跨日退款计入发生日日结，不回填封箱历史） */
+    bizDate: text('biz_date').notNull(),
+    /** 原收银单 ID -> cashier_bills.id（原单永存不涂改，仅挂标记） */
+    billId: text('bill_id')
+      .notNull()
+      .references(() => cashierBills.id),
+    /** 退款类型，取值：full 全额 | partial_items 按行 | partial_amount 按金额 | boarding_nights 寄养剩余晚 | pass_cancel 次卡退卡 */
+    type: text('type').notNull(),
+    /** 本次退款总额（分） */
+    amountFen: integer('amount_fen').notNull(),
+    /** 退款原因（必填，红线 3） */
+    reason: text('reason').notNull(),
+    /** 状态，取值：draft | executed | settled | rejected（executed 后不可撤销，纠错=再开正单） */
+    status: text('status').notNull().default('draft'),
+    /**
+     * 六联动快照 JSON（执行时落；含 rebate_clawback_fen 列位默认 0——回馈金未上线 R11
+     * 冻结列位，R11 生效按冻结规则回归）。NULL = draft 未执行。
+     */
+    linkageJson: text('linkage_json', { mode: 'json' }).$type<RuleConfigValue>(),
+    /** 实退方式（可空）：offline_original 内测期线下原路 | to_stored_value 退储值账户（次卡退卡二选一必选） */
+    refundMethod: text('refund_method'),
+    /** 实退完成时间（NULL = 未登记实退；超 24h 未登记进店长待办提醒） */
+    settledAt: integer('settled_at', { mode: 'timestamp' }),
+    /** 实退备注 */
+    settleNote: text('settle_note'),
+    /** 发起/执行人用户 ID -> users.id */
+    operatorId: text('operator_id')
+      .notNull()
+      .references(() => users.id),
+    /** 审批人用户 ID -> users.id（超阈值/涉储值=店主批；店长自批单发起即执行 approver=本人；NULL=draft 未批） */
+    approverId: text('approver_id').references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [
+    uniqueIndex('uq_refund_bills_refund_no').on(t.refundNo),
+    index('ix_refund_bills_store_bizdate').on(t.storeId, t.bizDate),
+    index('ix_refund_bills_bill').on(t.billId),
+    index('ix_refund_bills_status').on(t.status),
+  ],
+);
+
+/**
+ * 退款明细表（R12 §一）：按行/按段退明细——行退挂 bill_item_id，支付段回补挂
+ * payment_id，寄养剩余晚/次卡退卡折算挂 detail_json（分摊占比/晚数等），回补额精确到分。
+ */
+export const refundBillItems = sqliteTable(
+  'refund_bill_items',
+  {
+    id: id(),
+    /** 退款单 ID -> refund_bills.id */
+    refundId: text('refund_id')
+      .notNull()
+      .references(() => refundBills.id),
+    /** 原单行 ID -> cashier_bill_items.id（按行退的行；按金额/寄养晚退可空） */
+    billItemId: text('bill_item_id').references(() => cashierBillItems.id),
+    /** 支付段 ID -> cashier_payments.id（支付段回补行；非段回补可空） */
+    paymentId: text('payment_id').references(() => cashierPayments.id),
+    /** 明细类型，取值：item 按行 | segment 支付段 | night 寄养剩余晚 | pass 次卡退卡 */
+    kind: text('kind').notNull(),
+    /** 数量（按行退商品行 qty；其余可空） */
+    qty: integer('qty'),
+    /** 该行/段回补额（分，精确到分） */
+    amountFen: integer('amount_fen').notNull(),
+    /** 明细 JSON（分摊占比/晚数/折算口径等，可空） */
+    detailJson: text('detail_json', { mode: 'json' }).$type<RuleConfigValue>(),
+    ...auditColumns,
+  },
+  (t) => [index('ix_refund_bill_items_refund').on(t.refundId)],
+);
+
+/**
+ * 退款规则配置表（R12 §一，同构 commission_rules）：种子 version=1 一行
+ * refund_threshold_fen（店长累计阈值，按原单累计校验·V1，默认 ¥500=50000 分，
+ * 冻结版 §九待老板终拍口径）。配置端口第四域 domain='refund'，保存即生效+版本化留痕。
+ */
+export const refundRules = sqliteTable(
+  'refund_rules',
+  {
+    id: id(),
+    /** 规则版本（初始种子 =1） */
+    version: integer('version').notNull(),
+    /** 规则键（如 refund_threshold_fen） */
+    ruleKey: text('rule_key').notNull(),
+    /** 规则中文名（配置页展示） */
+    label: text('label').notNull(),
+    /** 规则值 JSON（阈值分等），结构见 RuleConfigValue */
+    valueJson: text('value_json', { mode: 'json' }).$type<RuleConfigValue>().notNull(),
+    /** 生效时间（按此取规则版本；新规只管生效后的单） */
+    effectiveFrom: integer('effective_from', { mode: 'timestamp' }).notNull(),
+    /** 是否生效（0/1） */
+    active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    /** 创建/变更人用户 ID -> users.id */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_refund_rules_key_active').on(t.ruleKey, t.active)],
 );
