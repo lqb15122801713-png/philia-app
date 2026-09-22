@@ -1,0 +1,281 @@
+
+> @philia/server@0.1.0 test:e2e
+> tsx src/__tests__/e2e.ts
+
+[e2e] 临时库迁移 + 种子…
+  ✓ 临时库迁移 + 种子完成
+  ✓ 种子用户齐全（customer/owner/staff1/staff2）
+  ✓ server 启动且 GET /api/health 返回 {ok:true, ts}
+  ✓ 三角色 dev-login 均签发会话 cookie
+  ✓ auth.me（商家）角色与门店绑定正确
+  ✓ push.subscribe 登记成功（create 前完成）
+  ✓ pet.list 返回客户宠物
+  ✓ store.listNearby 返回种子门店
+  ✓ getWithServices 返回 grooming 服务项
+  ✓ getWithServices 返回可约槽位（10:00-16:00 整点）
+  ✓ appointment.create 成功（S4：落库即 confirmed）
+  ✓ GET /api/events 建立 SSE（200 + text/event-stream）
+  ✓ store.staffList 找到承接美容师（阿强/丽丽=groomer）
+  ✓ S4：create 自动派单（staff_id=阿强，assignSource=auto）
+  ✓ appointment.confirm 幂等：confirmed 单连调两次均成功且 updatedAt 不变（零副作用）
+  ✓ appointment.assign 改派成功（阿强 → 丽丽），assignSource 覆盖为 merchant
+  ✓ appointment.getCode 返回二维码原文与人工码
+  ✓ 批次 S1：groomer 扫码核销 → 403 FORBIDDEN「核销需前台账号操作」
+  ✓ 批次 S1：groomer 人工码核销 → 403 FORBIDDEN「核销需前台账号操作」
+  ✓ 批次 S1：groomer 入住登记（checkinStay）→ 403 FORBIDDEN「核销需前台账号操作」
+  ✓ 批次 S1：frontdesk 入住登记越过角色校验（dummy id 报非 FORBIDDEN 业务错）
+  ✓ appointment.checkin（frontdesk 二维码原文）→ in_service + 六步初始化
+  ✓ S1-R1 断言①：已改派给丽丽的单被小美（frontdesk）核销成功 → staff_id 仍为丽丽（原指派保留，claimed=false）
+  ✓ serviceStep.addPhotos(disinfection ×1)
+  ✓ serviceStep.confirmStep(disinfection)
+  ✓ serviceStep.addPhotos(precheck ×2)
+  ✓ serviceStep.confirmStep(precheck)
+  ✓ serviceStep.addPhotos(grooming ×3)
+  ✓ serviceStep.confirmStep(grooming)
+  ✓ serviceStep.addPhotos(detail ×2)
+  ✓ serviceStep.confirmStep(detail)
+  ✓ serviceStep.addPhotos(before_after ×2)
+  ✓ serviceStep.confirmStep(before_after)
+  ✓ serviceStep.confirmStep(confirm)
+  ✓ GET /api/img/* 签名 URL 可访问（200 image/jpeg）
+  ✓ 预约已 completed（含 completed_at）
+  ✓ appointment.markPaid 收款登记
+  ✓ appointment.review 评价成功
+  ✓ 找到第二个可约槽（未指派单用）
+  ✓ S1-R1 断言②：未指派单前台核销成功 → staff_id 仍为 NULL（不认领，claimed=false）
+  ✓ S1-R1 断言②：未指派单核销后 outbox 无新增 appointment.assigned 事件（核销前后计数一致）
+  [SSE] 实际收到事件序列: ["appointment.confirmed","appointment.assigned","appointment.assigned","appointment.checkedin","step_updated","step_updated","step_updated","step_updated","step_updated","step_updated","appointment.completed"]
+  [SSE] 期望事件序列:     ["appointment.confirmed","appointment.assigned","appointment.assigned","appointment.checkedin","step_updated","step_updated","step_updated","step_updated","step_updated","step_updated","appointment.completed"]
+  ✓ SSE 流依次收到 confirmed/assigned/checkedin/step_updated×6/completed（按 id 去重）
+  ✓ step_updated 载荷均指向本预约
+  ✓ event_outbox 事件齐全（共 21 条 / 期望 21 条）
+  ✓ assigned 双频道（staff + user）
+  ✓ 客户调 merchantProcedure（store.upsertService）→ 403 FORBIDDEN
+  ✓ 未登录调 appointment.create → 401 UNAUTHORIZED
+  ✓ store.staffList 行带 role/status 字段（阿强=groomer/active）
+  ✓ 批次 S1：越店 updateStaff（他店 owner 改本店员工）→ 403 FORBIDDEN
+  ✓ 批次 S1：非商家（customer）updateStaff → 403 FORBIDDEN
+  ✓ 批次 S1：role/status 均缺省 → 400 BAD_REQUEST（至少传一项）
+  ✓ 批次 S1：本店 owner 改阿强 role→frontdesk 成功
+  ✓ 批次 S1：员工端下次拉取（auth.me）即见新角色 frontdesk（联动生效）
+  ✓ 批次 S1：改回 groomer + 停用（role/status 同传）成功
+  ✓ 批次 S1：staffList 刷新一致（阿强=groomer/suspended）
+  ✓ client-error 合法上报 → 200 {ok:true}（免登录）
+  ✓ client-error 非法 app → 400
+  ✓ client-error 缺 route/message → 400
+  ✓ client-error 非 JSON body → 400
+  ✓ client-error 限流：同 IP 第 21 次起 → 429
+  ✓ client-error JSONL 落盘：合法条目在日志（app/route/message/UA/首帧齐全）
+  ✓ client-error 落盘：非法 app 条目不入日志
+  ✓ staff-2 前置：阿强复职（role 留 groomer / status active）
+  ✓ staff-2 前置：clerk/manager/附加员工夹具就绪（dev-login 均签发）
+
+[staff-2] 15. R7 考勤：打卡两击 / 围栏拦截
+  ✓ R7① 上班打卡成功（围栏内 distanceM=0）
+  ✓ R7① 上班重复打卡幂等（返回同一条记录，不重复落行）
+  ✓ R7① 下班打卡 + 重打幂等
+  ✓ R7① 当日 attendance_records 恰 2 行（in+out，两击封顶）
+  ✓ R7② 围栏外打卡 → 400 BAD_REQUEST「不在门店范围，无法打卡」
+  ✓ R7② 围栏外拦截零写入（阿强当日 0 行，不写异常记录）
+
+[staff-2] 16. R7 补卡双流
+  ✓ R7③ 补卡申请建档（pending，限当月日期）
+  ✓ R7③ 店长审批通过（approved + 回链 record_id）
+  ✓ R7③ 补卡通过落 makeup=1 记录（status=normal，补卡视同正常）
+  ✓ R7③ 员工端 myApprovals 可见审批结果（approved）
+  ✓ R7④ 补卡限当月（上月日期 → BAD_REQUEST「补卡限当月」）
+  ✓ R7⑤ 当月第 4 次补卡 → BAD_REQUEST（每人 ≤3 次/月）
+
+[staff-2] 17. R8 盘点状态机（confirm 前零库存写入 / 驳回重盘）
+  ✓ R8① 周盘建单（draft + 全量账面快照行）
+  ✓ R8① 员工端待办可见盘点单（行项齐全）
+  ✓ R8② 实盘录入 → counted；confirm 前零库存写入（products.stock 不变）
+  ✓ R8③ 店长确认才入账（posted，diffs=1）
+  ✓ R8③ 入账落流水 sourceType=count（盘亏 delta=-3，before/after 正确）+ products.stock 更新
+  ✓ R8④ 驳回 → rejected（退回重盘，note 回显）
+  ✓ R8④ 退回单重录 → counted → 确认 posted；无差异零流水
+
+[staff-2] 18. R9-C 接待人域（核销改挂 / 默认开单人 / 无接待人硬排除 / 两池分列）
+  ✓ staff-2 前置：第三/第四可约槽（接待人域用单）
+  ✓ R9-C① 核销改挂接待人（响应透出 receptionistId=小美）
+  ✓ R9-C① reception_logs 挂预约留痕前后值（NULL → 小美，操作人=小美）
+  ✓ staff-2 前置：appt4 指派阿强（扣减闸门基数来源单）
+  ✓ R9-C② 三单结账 settled（接待人域夹具）
+  ✓ R9-C② 账单接待人默认=开单人（billC → owner）
+  ✓ R9-C② 含预约行账单接待人=预约接待人（billA → 小美，核销改挂落点）
+  ✓ R9-C③ 构造 billB 无接待人单（receptionist_id=NULL）
+  ✓ R9-C③ 前台绩效池仅计本人接待归属（=billA 门市价，billB 无接待人硬排除）
+  ✓ R9-C④ storePools 同源双计两池分列（美容师绩效池/前台绩效池两行不合并）
+  ✓ R9-C④ 池基数正确（groomer=两预约行操作归属 / frontdesk=改挂单+散客服务单接待归属）
+  ✓ R9-C⑤ 无接待人洗美营收硬排除透出（unattributedFen=billB）
+
+[staff-2] 19. R9 绩效扣减：50% 上限 FORBIDDEN
+  ✓ R9⑥ 季度评级录入（阿强 当季 A 档，系数 1.0）
+  ✓ R9⑦ 提成 mySummary 仅本人（阿强 200，staffId=本人）
+  ✓ R9⑦ 阿强美容师绩效池基数>0（预约行操作归属=settled 账单口径）且 A 档系数 1.0
+  ✓ R9⑧ 扣减超当月绩效 50% → 403 FORBIDDEN「已达当月扣减上限」
+  ✓ R9⑧ 限额内扣减成功（monthUsed/monthCap 透出，cap 与口径一致）
+  ✓ R9⑧ 扣减列示于 mySummary.deductions（含原因/录单人）
+  ✓ R9⑧ 扣减只扣绩效不扣提成（commissionTotalFen 不变）
+
+[staff-2] 20. 仅本人：越权传参 4xx / myEvents 仅本人 / storePools 403
+  ✓ R9⑨ mySummary 越权传 staffId → 4xx（strict BAD_REQUEST）
+  ✓ R10⑩ 主单好评已落 reviews 行（rating=5 非匿名，R10 最小评价域）
+  ✓ R10⑪ myEvents 仅本人（丽丽流内含本人 +6 好评事件）
+  ✓ R10⑪ myEvents 仅本人（阿强流内无丽丽事件，无入参可越权）
+  ✓ R9⑩ storePools 仅店主（staff → 403 FORBIDDEN）
+  ✓ R9⑩ storePools 仅店主（clerk → 403 FORBIDDEN，附证）
+
+[staff-2] 21. R10 评价：差评扣分 + 匿名 + 店长频道提示 + 幂等
+  ✓ R10⑫ aid2 六步推进（disinfection）
+  ✓ R10⑫ aid2 六步推进（precheck）
+  ✓ R10⑫ aid2 六步推进（grooming）
+  ✓ R10⑫ aid2 六步推进（detail）
+  ✓ R10⑫ aid2 六步推进（before_after）
+  ✓ R10⑫ aid2 六步推进（confirm）
+  ✓ R10⑬ 差评提交成功（rating=2 anonymous=true，≤30s 链路内完成）
+  ✓ R10⑬ reviews 行落库（anonymous=1，归属阿强）
+  ✓ R10⑬ 差评 XP −8（扣分不扣款，penalty 不占日上限）
+  ✓ R10⑬ 差评提示 review.flagged 到达 store 频道（店长视图数据源，event_outbox 实证）
+  ✓ R10⑬ 员工端 myReviews 仅本人且匿名标记透出（阿强见 aid2 差评 anonymous=1）
+  ✓ R10⑬ myReviews 仅本人（丽丽不见阿强差评，见本人 aid 好评）
+  ✓ R10⑭ 5 星好评 +6（主单 aid，匿名同权口径的对照组）
+  ✓ R10⑮ 一单一评（重复评价幂等拒绝 BAD_REQUEST「该预约已评价」×2）
+
+[staff-2] 22. R10 学习通道：日上限填满后考试 XP 仍计分
+  ✓ R10⑯ 补位 ×4 填满日上限（+15×4=60，均未丢弃）
+  ✓ R10⑯ 第 5 次补位超限丢弃留痕（dropped=1 / awarded=0，不报错）
+  ✓ R10⑯ 今日进度封顶明示（earned=60 cap=60）
+  ✓ R10⑰ 考试 XP 不受日上限（P0 +30 learning 通道照常计入）
+  ✓ R10⑰ 考试计入累计但不占日额（totalXp=900+60+30=990，today 仍 60/60）
+  ✓ R10⑰ 同级当月重复考试 → BAD_REQUEST（每级每月限 1 次）
+
+[staff-2] 23. R9-F 配置端口：版本化留痕 / 新参只管新单 / clerk+manager 403 / 未知键 / 拉新置灰
+  ✓ R9-F① 配置读取（当前 version=1，xp_daily_cap=60 生效中）
+  ✓ R9-F② owner 保存即生效（version=2）
+  ✓ R9-F② 版本留痕（每 key 前后值 + 变更人）
+  ✓ R9-F② 旧行失效新行生效（v1 active=0 / v2 active=1 cap=50）
+  ✓ R9-F③ 新参只管新单：cap=50 后第 4 次补位丢弃（today 45/50）
+  ✓ R9-F③ 新事件按新规则版本落库（dropped 行 rule_version=2）
+  ✓ R9-F③ 旧事件保持 rule_version=1 且仍计入（新参不回溯：totalXp 仍 990）
+  ✓ R9-F④ 配置端口 clerk 403（list/save/versions 全拒，仅 owner）
+  ✓ R9-F④ 配置端口 manager 403（list/save/versions 全拒，仅 owner）
+  ✓ R9-F⑤ 未知规则键 → 400 BAD_REQUEST「未知规则键」（配置页只改既有参数）
+  ✓ R10⑱ 拉新置灰拒写（rulesView 标注 disabled +「随会员游戏化批开通」；xp 路由无 referral 写入口，awardXp 对 referral 源码级硬拒）
+
+[staff-2] 24. R9 提成回溯（Bug②）：旧单旧率/新单新率 + G0 仅洗护计 5%（裁定③）
+  ✓ R9回溯① 前置：商品率 5%→6% 保存即生效（commission version=2）
+  ✓ R9回溯① 商品改率前单仍按旧率 5%（rateBp=500，金额=门市实收×5% 逐行精确）
+  ✓ R9回溯① 商品改率后单按新率 6%（rateBp=600，金额=×6% 逐行精确）
+  ✓ R9回溯② 前置：服务率 20%→25% 保存即生效（version=3）
+  ✓ R9回溯② 前置：appt5 结账 settled
+  ✓ R9回溯② 服务改率前单仍按旧率 20%（appt4/billB，rateBp=2000 金额精确）
+  ✓ R9回溯② 服务改率后单按新率 25%（appt5，rateBp=2500 金额精确）
+  ✓ R9回溯③ 前置：perf_base_rate 5%→10% 保存即生效（version=4）
+  ✓ R9回溯③ 绩效 perf_base_rate 改值不回溯（旧单仍 5%，appt6 按 10% 逐行精确累加）
+  ✓ G0③ 洗护单计 5%（命中 洗/浴 不命中造型类；金额=10000×5%=500）
+  ✓ G0③ 造型单不计提成（serviceLines 无 apptS 行，commissionTotalFen=500 仅洗护行）
+
+[staff-2] 25. 时长规则配置端口（改系数→新预约新值/旧单不变/留痕）+ G0 scope bath→all 双向
+  ✓ 时长前置：D1/D2 可约槽（duration 用单，间隔≥4h 防区间重叠）
+  ✓ 时长① 改系数前：中型犬洗护新预约 scheduledEnd=引擎 90min（60×1.5×1.0）
+  ✓ 时长① owner 改体型系数 medium 1.5→2.0（duration domain version=2）
+  ✓ 时长① 改系数后：同宠物同服务新预约 scheduledEnd=新系数 120min（60×2.0×1.0）
+  ✓ 时长① 改前已建预约 scheduledEnd 原值不变（不回溯：库内仍 90min）
+  ✓ 时长① config.versions 留痕前后值（medium 1.5→2.0，变更人=owner）
+  ✓ G0scope② scope=bath（默认）：G0 造型单不计提（serviceLines 无 apptS2 行）
+  ✓ G0scope② owner 改 scope=all（commission version=5）
+  ✓ G0scope② scope=all：新造型单计提 5%（rateBp=500，金额=10000×5%=500 精确）
+  ✓ G0scope② scope=all 不回溯：scope=bath 期造型单（apptS2）仍不计提
+
+[staff-2] 26. R10 榜单查询层裁剪（前三+自己+前一名）
+  ✓ R10⑲ 榜尾视角 ≤5 行（前三+自己+前一名）
+  ✓ R10⑲ 榜尾视角含自己与前一名（丽丽 rank5），第 4 名（阿强）不可达
+  ✓ R10⑲ 前排视角仅前三（丽丽/阿强/附加丙均不出参，全榜永不外泄）
+
+[R12] 27. 权限闸：店员 clerk 403（清单①）
+  ✓ R12① 店员 clerk 退款无入口（preview / execute / list 全 403 FORBIDDEN）
+
+[R12] 28. 店长≤阈值全额退：六联动 + rebate 列位（清单②+⑭）
+  ✓ R12② 店长≤阈值发起即执行（executed + 自批 approver=本人 + 幂等标记 false）
+  ✓ R12② 全额退金额=可退余额全退（=原单已收）
+  ✓ R12⑭ 六联动快照含回馈金扣回列位（rebateClawbackFen 键存在且=0，R11 冻结回归）
+  ✓ R12② 快照六联动列位齐全（segments 支付段回补 / stockRestock 库存回补 / 提成冲减预估 / 阈值口径）
+  ✓ R12② 原单挂 refund_status=refunded + refund_bill_no 双向回指（已收 paidFen 一字未改）
+  ✓ R12② 库存回补：stock_movements 来源 refund 前后值真实（delta=+1）+ products.stock 回补
+  ✓ R12② RefundExecuted 事件到店频道（店长视图/财务联动，event_outbox 实证）
+  ✓ R12② 预约行清零口径不适用对照：服务行非预约行，无 appointmentReverts（本单纯服务+商品）
+
+[R12] 29. V1 拆分累计阈值（清单③）
+  ✓ R12③ 前置：大单 64500 分 settled（店长阈值 50000 分）
+  ✓ R12③ 店长第一笔 30000 成（原单累计 30000 ≤ 50000）
+  ✓ R12③ 第二笔累计 60000>50000 → FORBIDDEN「该单累计退款已达店长上限，须店主」（V1 按原单累计校验堵拆分绕过）
+  ✓ R12③ 店主执行成功（累计 60000/64500，可退余额余 4500）
+
+[R12] 30. V2 日结退款单列 + 现金段净额（清单④）
+  ✓ R12④ dayStats 当日退款单列（总额 +4400；现金段退款 +2500 / 微信段 +1900，按段占比分摊精确到分）
+  ✓ R12④ 已收不涂改 + 当日净额=已收−退款算术成立（净额恰 −4400；现金段净额=现金已收−现金退款恰 −2500）
+
+[R12] 31. V3 6:4 分摊回补 + 涉储值拦截（清单⑤+⑪）
+  ✓ R12⑤ 前置：储值段结账扣减（余额 100000 → 96480，先本金后赠送）
+  ✓ R12⑪ 涉储值单店长明文拦截（FORBIDDEN「储值退款须店主」，运营加固不设阈值）
+  ✓ R12⑤ 组合支付 6:4 分摊回补精确到分（cash 2640 线下原路待登记 / 储值 1760 余额回补）
+  ✓ R12⑤ 储值余额回补前后值留痕（96480 → 98240；stored_value_logs 正向行 note 关联退款单号）
+
+[R12] 32. V4 寄养剩余晚退（清单⑥）
+  ✓ R12⑥ 已发生晚一分不退（退 3 晚 > 剩余 2 晚 → BAD_REQUEST「剩余可退晚数不足」明文）
+  ✓ R12⑥ 寄养退剩余 2 晚：金额=剩余晚×晚单价（floor(59700÷3)×2=39800）
+  ✓ R12⑥ 分段明细透出（总 3 晚 / 已住 1 晚不退 / 退 2 晚（qty 列）/ 晚单价 19900）
+  ✓ R12⑥ 按支付段占比回补（全现金单 → cash 段 39800 线下原路）
+  ✓ R12⑥ 只退钱不动预约单（status/paidAt 原样；退住核销由寄养域既有流程承担）
+
+[R12] 33. V5 终态禁退（清单⑦）
+  ✓ R12⑦ 已冲正单无退款入口（reverseBill 后 execute → BAD_REQUEST「原单已冲正/已撤，不可退款」）
+  ✓ R12⑦ 已撤单无退款入口（voided → 同明文拒）
+
+[R12] 34. V6 提成冲减（清单⑧）
+  ✓ R12⑧ 部分退 50% → 该行提成减半精确到分（毛 2500 → 净 1250，refundRatioBp=5000，refunded=false）
+  ✓ R12⑧ 退完全额 → 该行提成归零 + refunded 标记（冲减合计 2500=毛提成全额）
+  ✓ R12⑧ 前置：上月快照落库（阿强毛提成=20000×20%=4000 冻结于快照）
+  ✓ R12⑧ 跨月退款差额进当月「调整项」（mySummary.adjustments 透出 refundNo + 冲减 2000=4000×50%）
+  ✓ R12⑧ 调整项从当月提成总额减除（commissionTotalFen 恰 −2000）
+  ✓ R12⑧ 已快照月份不动（snapshot totalFen/payload 前后一致）
+
+[R12] 35. V7 跨日退款（清单⑨）
+  ✓ R12⑨ 跨日退款入发生日（refund_bills.biz_date=今日，不回填昨日）
+  ✓ R12⑨ dayStats 今日含该退款（+1000）、昨日不含（昨日 count/total 原样）
+  ✓ R12⑨ 昨日已封箱日结行不变（bookCash/status/frozen 原样，封箱历史不涂改）
+
+[R12] 36. V8 次卡退卡（清单⑩+⑪ 附证）
+  ✓ R12⑩ 前置：次卡建卡（total=12 remain=12）
+  ✓ R12⑩ 前置：扣次 6 次（remain 12→6；付费先消耗 → 剩付费 4 + 赠 2）
+  ✓ R12⑪ 次卡退卡涉储值 → 店长 FORBIDDEN「储值退款须店主」（type=pass_cancel 天然涉储值）
+  ✓ R12⑩ 折算=剩余付费 4 次 ×（实付 10000 ÷ 付费 10 次）=4000（赠次不计价）
+  ✓ R12⑩ 快照明示：剩余付费 4 / 赠次 2 随退作废不计价（giftVoided=2）
+  ✓ R12⑩ 退卡后卡作废留痕（status=disabled + remain=0 + 负向流水 note 含「赠次作废 2」）
+  ✓ R12⑩ 锚点单不挂退款标记（anchor_only：原单 refund_status 仍 NULL）
+  ✓ R12⑩ 重复退卡幂等拒（卡已作废 → BAD_REQUEST「不可重复退卡」）
+
+[R12] 37. 部分退款余额内可再退（清单⑫）
+  ✓ R12⑫ 余额内可再退（30%→2640 成，再 20%→1760 成；累计 4400 ≤ 8800）
+  ✓ R12⑫ 累计超可退余额硬拒（4400+4401 > 8800 → BAD_REQUEST「超过原单可退余额」）
+
+[R12] 38. 实退待办（清单⑬）
+  ✓ R12⑬ 实退待办：executed 超 24h 未登记 → pendingActual 含（店长本店可办）
+  ✓ R12⑬ 实退登记 → settled（+RefundSettled 事件到店频道）
+  ✓ R12⑬ 重复登记幂等（idempotent=true，事件不重复增发）
+  ✓ R12⑬ 实退登记后待办消失（pendingActual 不再含该单）
+  ✓ 验收结束：7200 端口无残留监听
+[e2e] 临时库目录清理失败（Windows libsql 句柄滞后，可手工删）: C:\Users\lqb15\AppData\Local\Temp\philia-e2e-wEciiy Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-wEciiy '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-wEciiy'
+    at rmSync (node:fs:1222:18)
+    at cleanup (D:\KimiData\kimi\Workspaces\Philia\repo\server\src\__tests__\e2e.ts:2223:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async <anonymous> (D:\KimiData\kimi\Workspaces\Philia\repo\server\src\__tests__\e2e.ts:2261:3) {
+  errno: 1,
+  code: 'EPERM',
+  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-e2e-wEciiy',
+  syscall: 'rm'
+}
+  ✓ 种子库 data/philia.db 原样（size/mtime 未变）
+
+全链路验收全部通过 ✅

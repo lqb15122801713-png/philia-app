@@ -1,0 +1,68 @@
+✅ GET /api/health —— {"ok":true,"ts":1790016015416}
+✅ 三端首页可达：customer http://localhost:7100 —— status=200 ct=text/html
+✅ 三端首页可达：merchant http://localhost:7101 —— status=200 ct=text/html
+✅ 三端首页可达：staff http://localhost:7102 —— status=200 ct=text/html
+✅ 口令门未设置（开发期开放）：dev-seed-users 无码 → 200 —— status=200 users=6
+✅ dev-seed-users 动态取数（带口令） —— users=6
+✅ 种子角色齐全（customer / merchant_owner / staff） —— customer=示例客户 merchant=菲丽亚店主 staff=小美
+✅ dev-login（示例客户 / customer） —— status=200
+✅ dev-login（菲丽亚店主 / merchant） —— status=200
+✅ dev-login（小美 / staff） —— status=200
+✅ trpc pet.list（种子客户有宠物） —— pets=2 第一只=旺财
+✅ trpc store.listNearby（种子门店） —— stores=1 第一家=菲丽亚宠物·示例店
+✅ trpc store.getWithServices（洗护服务项） —— 服务=基础洗护（小型犬） 价格=8800分
+✅ 演示单下单 trpc appointment.create —— id=01M32M9K3HT23JGBTR06Z6CX4F scheduledStart=2026/9/23 10:00:00
+✅ 商家确认 trpc appointment.confirm（pending → confirmed） —— status=confirmed
+✅ 客户取码 trpc appointment.getCode —— code=E8GCW9
+✅ 员工核销 trpc appointment.checkin（confirmed → in_service） —— status=in_service checkedInAt=2026-09-21T18:40:15.000Z 认领员工=01M32M34CYV9V6XA25CTDWY44D
+✅ 收银台 trpc cashier.pendingAppointments 可查 —— 待收款=1
+✅ 收银台 会员检索命中（种子客户） —— found=true 次卡余=0
+✅ 收银台 会员检索未命中（安静 found:false） —— found=false
+✅ 收银台前置 pass.topUp 充次 1 —— times=1
+✅ 收银台 挂单 cashier.hold（HD 单号） —— billNo=HD-20260922-010 应收=21700分
+✅ 收银台 取单 cashier.resume（held→open） —— status=open 行数=2
+✅ 收银台 结账 cashier.settle（现金） —— status=settled 已收=21700分
+✅ 收银台 结账幂等（同 bill_no 重放 idempotent） —— idempotent=true
+✅ 收银台 库存扣减（settled −1，幂等重放不再扣） —— stock 48→47（重放后仍 47）
+✅ 收银台 流水可查 cashier.listBills（今日含本单） —— rows=10
+✅ 收银台 流水详情 getBill（现金 1 段） —— 支付段=1
+✅ 收银台 次卡扣次结账（pass 段=扣次行有效价） —— billNo=HD-20260922-011 应收=8800分
+✅ 收银台 扣次联动（次卡余额 −1） —— remain 1→0
+✅ 收银台 撤单留痕 cashier.voidBill（voided 留痕不删除） —— status=voided reason=smoke 撤单验证
+✅ 收银台 财务流水接数（financeStats.cashierLedger 含本批单） —— cashierLedger=5 行
+✅ 收银台 冲正库存回补（reverseBill 后 stock +1） —— stock 47→48（期望 +1）
+✅ 库存流水 cashier 来源（5.6 结账扣减落账，delta=-1 前后值连续） —— before=48 after=47
+✅ 库存流水 reversal 来源（5.12 冲正回补落账，delta=+1 前后值连续） —— before=47 after=48
+✅ 库存流水 count 前置：盘点建单（weekly draft） —— countId=01M32M9K9KEKWN1HBPBM7PP8T3 items=13
+✅ 库存流水 count 前置：员工待办可见盘点行项 —— items=13
+✅ 库存流水 count 前置：实盘录入 → counted —— status=counted
+✅ 库存流水 count 前置：店长确认入账（posted，diffs≥1） —— status=posted diffs=1
+✅ 库存流水 count 来源（盘点入账落账，delta=-2 前后值=快照/实盘） —— before=48 after=46
+✅ R12 现金单全额退 executed（金额=原单已收） —— refundNo=RB-20260922-004 金额=21700
+✅ R12 六联动快照含 rebateClawbackFen=0 列位（回馈金 R11 冻结回归） —— keys=24
+✅ R12 原单挂 refund_status=refunded + refund_bill_no 双向回指（已收 paidFen 不涂改） —— refundStatus=refunded refundBillNo=RB-20260922-004
+✅ R12 商品 refund 流水前后值（delta=+1 连续）+ 库存回补到位 —— 流水 45→46，stock 46→46
+✅ R12 前置：储值账户建账（executeImport 1 行 ¥100，仅店主生产通道） —— okRows=1
+✅ R12 储值段结账扣减（余额 −40% 段，前后值连续） —— balance 18240→14720
+✅ R12 组合支付 6:4 分摊回补（按段占比精确到分）+ 储值余额回补前后值留痕 —— segs=cash:2640/stored_value:1760 balance=14720→16480
+✅ R12 寄养预约创建（明天入住共 3 晚） —— id=01M32M9KDKZJ8ZN3187V8XH3K6
+✅ R12 寄养核销 + 退房（in_boarding → completed） —— ok
+✅ R12 寄养剩余晚部分退（退 2/3 晚，金额=floor(总价÷3)×2；分段明细透出总晚/退晚/晚单价） —— amount=39800 期望=39800 boarding={"appointmentId":"01M32M9KDKZJ8ZN3187V8XH3K6","billItemId":"01M32M9KF5KAFGGV7CK8T3XY7H","totalNights":3,"occurredNights":0,"remainingNights":3,"nights":2,"perNightFen":19900}
+✅ dev-login（小周 / clerk） —— status=200
+✅ 收银修复包 todayTenderStats（已收=现金+微信+支付宝可加总） —— 已收=113660分 分列=113660/0/0 参考列 pass=17600 sv=7040
+✅ 收银修复包 三处同源同数（总览/收银台头部/财务头部） —— 三处=113660/113660/113660分
+✅ clerk 营业额遮罩（restricted=true 且金额 null） —— restricted=true
+✅ clerk 开单 cashier.hold 放行 —— billNo=HD-20260922-017
+✅ clerk 改价 403（服务端硬闸门）
+✅ clerk financeStats 403
+✅ clerk 撤单（未支付单，补丁①放宽）放行
+✅ clerk 日结 403（无交接班/日结权）
+✅ 日结 当前班次可查（懒建开班） —— shift=01M32M7WN8E6V63C009P52PP74
+✅ 日结 cashier.dayClose 冻结当班（当日已结则幂等通过） —— trpc cashier.dayClose 失败：该自然日已有冻结的日结单（一日一结）；如需重新日结，请先由店主反结账拆
+✅ 日结单留痕可查（listDayCloses） —— rows=1
+✅ 反结账单 cashier.reverseBill（owner，强制原因+关联原单） —— 原单=HD-20260922-016 冲正=HD-20260922-018
+✅ 储值导入 preview（零写入+校验位：2 行/本金 ¥150） —— sourceStats={"totalRows":2,"personsWithBalance":2,"principalTotalFen":15000,"bonusTotalFen":0,"bonusAllZero":true,"uniquePhones":2,"storeDist":{"贝肯山店":1
+✅ clerk 储值导入 403（仅老板）
+
+目标：http://localhost:7200（口令门未设置，开发期开放口径）
+全部通过 🎉
