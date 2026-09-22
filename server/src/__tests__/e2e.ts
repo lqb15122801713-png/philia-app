@@ -47,6 +47,24 @@
  *   25. 补充令①（决策 #39/#40）：owner 改体型系数→新预约引擎新值/旧单 scheduledEnd 不变/
  *      config.versions 留痕前后值；G0 scope=bath 造型不计提→scope=all 计提 5% 双向
  *   26. R10 榜尾不可达：榜尾视角≤5 行且第 4 名不可达；前排视角仅前三
+ *
+ * 批次 R12（退款专项）段（任务书冻结版 V1.0 §七全清单 / docs/r12/R12-DESIGN.md §六）：
+ *   27. 店员 clerk 403（preview/execute/list）
+ *   28. 店长≤阈值现金单全额退六联动 + 快照 rebate 列位（清单②+⑭）
+ *   29. V1 拆分两笔累计超阈值顶到店主（店长 30000 成 → 再 30000 FORBIDDEN → 店主成）
+ *   30. V2 日结现金段净额（现金+微信组合单部分退：dayStats 退款单列 delta + 已收不涂改 + 净额算术）
+ *   31. V3 组合支付 6:4 分摊回补（现金 60%/储值 40% 按金额退，储值余额前后值留痕）
+ *      + 涉储值单店长明文拦截（清单⑤+⑪）
+ *   32. V4 寄养提前接回退剩余晚（剩余 2 晚×晚单价；已发生晚不退明文；分段明细透出；不动预约单）
+ *   33. V5 已冲正/已撤单无退款入口（明文拒 ×2）
+ *   34. V6 部分退提成按比例冲减精确到分（50%→1250）+ 退完归零 refunded +
+ *      跨月退款进当月 adjustments（不动已快照月份）
+ *   35. V7 跨日退款入发生日（biz_date=今日；昨日封箱日结行不变；dayStats 今含昨不含）
+ *   36. V8 次卡赠次不计价（付费 10 赠 2 剩付费 4 → 折算 4×(实付÷10)；赠次 2 作废；
+ *      卡作废留痕；重复退卡拒）+ 次卡退卡店长拦截（涉储值）
+ *   37. 部分退款余额内可再退（30% 成 → 20% 成 → 累计超可退余额拒）
+ *   38. 实退待办（executed 超 24h → pendingActual 含；settleActual → settled+RefundSettled；
+ *      重复登记幂等；待办消失）
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -912,8 +930,11 @@ async function main(): Promise<void> {
   /* ---------- 14. 前置夹具 ----------
    * - 12b 收尾将阿强置 groomer/suspended；本批验收需其在岗（staffProcedure 每请求在职校验）→ 复职；
    * - 围栏圆心显式置位（种子本带坐标，按任务书 §二.2 口径显式落定保证判定确定）；
-   * - clerk/manager 越权负例账号（仅 users+user_roles，无 staff 行——merchantOwnerProcedure
-   *   角色闸先于归属，FORBIDDEN 同口径；不污染本店 staff 域）；
+   * - clerk 越权负例账号（仅 users+user_roles，无 staff 行——merchantOwnerProcedure
+   *   角色闸先于归属，FORBIDDEN 同口径）；
+   * - manager（店长）挂 staff 行绑定本店（merchantManagerProcedure 需 storeId——
+   *   中间件对非 owner 商家角色只从 staff 行取门店归属；R12 店长退款链路实证用，
+   *   配置端口 owner-only 403 断言不受影响）；
    * - 附加员工×3（榜尾不可达夹具：本店 6 名员工，榜尾视角验证第 4 名不出参）；
    * - 榜单 XP 基底直插 xp_events（channel='learning' 不占日上限，不干扰第 22 节日上限断言）；
    *   分值拉开 ≥90 间距，吸收运行期噪声（好评 +6 / 差评 −8 / 完成补偿 +2 / 考勤 ±5）。 */
@@ -960,16 +981,19 @@ async function main(): Promise<void> {
   const extraStaffRows = await db
     .insert(schema.staff)
     .values([
+      { storeId, userId: managerFix.id, name: 'e2e 店长', role: 'frontdesk', grade: 'P3', status: 'active' }, // R12：店长退款链路需 storeId（staff 行绑定）
       { storeId, userId: extraU1.id, name: '附加甲', role: 'groomer', status: 'active' },
       { storeId, userId: extraU2.id, name: '附加乙', role: 'groomer', status: 'active' },
       { storeId, userId: extraU3.id, name: '附加丙', role: 'groomer', status: 'active' },
     ])
     .returning();
-  const [extraS1, extraS2, extraS3] = extraStaffRows as [
+  const [managerStaff, extraS1, extraS2, extraS3] = extraStaffRows as [
+    (typeof extraStaffRows)[number],
     (typeof extraStaffRows)[number],
     (typeof extraStaffRows)[number],
     (typeof extraStaffRows)[number],
   ];
+  void managerStaff;
   const clerkCookie = await devLogin(clerkFix.id);
   const managerCookie = await devLogin(managerFix.id);
   const extra2Cookie = await devLogin(extraU2.id);
@@ -1747,6 +1771,428 @@ async function main(): Promise<void> {
     lbTop.rows.length === 3 &&
       !lbTop.rows.some((r) => r.staffId === staffRow2.id || r.staffId === aqiang.id || r.staffId === extraS3.id),
     lbTop.rows.map((r) => `${r.rank}:${r.staffId.slice(0, 6)}`));
+
+  /* ==================================================================
+   * 批次 R12（退款专项）验收段 —— 任务书冻结版 V1.0 §七全清单逐条实证
+   * 纲：退款 ≠ 反结账；原单已收不涂改；当日净额=已收−退款；六联动同事务。
+   * ================================================================== */
+
+  /* ---- 共用工具：+8 门店规范日界（refund.biz_date / dayStats 与 server storeWallclock 同帧） ---- */
+  const storeDayStr = (d: Date) => new Date(d.getTime() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+  const storeToday = storeDayStr(new Date());
+  const storeYesterday = storeDayStr(new Date(Date.now() - 24 * 3600 * 1000));
+
+  interface R12CartItem { kind: 'service' | 'product' | 'appointment'; refId: string; qty?: number; paidByPass?: boolean }
+  /** R12 收银夹具：hold 取服务端重算应收 → settle 按支付段组合结账（缺省全额现金；开单人=owner） */
+  const settleBill2 = async (
+    items: R12CartItem[],
+    opts: { customerId?: string; payments?: (payableFen: number) => Array<{ method: string; amountFen: number }>; note: string },
+  ): Promise<{ billId: string; billNo: string; payableFen: number }> => {
+    const held = await trpcMutate<{ bill: { id: string; billNo: string; payableFen: number } }>('cashier.hold', {
+      cookie: ownerCookie,
+      input: { customerId: opts.customerId ?? null, items, discountType: 'none', discountValue: 0, note: opts.note },
+    });
+    const settled = await trpcMutate<{ bill: { id: string; status: string } }>('cashier.settle', {
+      cookie: ownerCookie,
+      input: {
+        customerId: opts.customerId ?? null,
+        items,
+        billNo: held.bill.billNo,
+        discountType: 'none',
+        discountValue: 0,
+        note: opts.note,
+        payments: opts.payments ? opts.payments(held.bill.payableFen) : [{ method: 'cash', amountFen: held.bill.payableFen }],
+      },
+    });
+    if (settled.bill.status !== 'settled') throw new Error(`R12 夹具结账失败：${opts.note}`);
+    return { billId: held.bill.id, billNo: held.bill.billNo, payableFen: held.bill.payableFen };
+  };
+
+  interface RefundExecRes {
+    refund: {
+      id: string; refundNo: string; status: string; amountFen: number; bizDate: string; type: string;
+      operatorId: string; approverId: string | null; linkageJson: Record<string, unknown> | null;
+    };
+    plan: {
+      refundFen: number;
+      segments: Array<{ paymentId: string; method: string; amountFen: number; ratioBp: number; channel: string }>;
+      boarding: { totalNights: number; occurredNights: number; remainingNights: number; nights: number; perNightFen: number } | null;
+      passCancel: Record<string, unknown> | null;
+    } | null;
+    idempotent: boolean;
+  }
+  const execRefund = (cookie: string, input: Record<string, unknown>) =>
+    trpcMutate<RefundExecRes>('refund.execute', { cookie, input });
+  interface RefundDayStats {
+    date: string; count: number; totalFen: number;
+    segments: { cashFen: number; wechatFen: number; alipayFen: number; passFen: number; storedValueFen: number };
+  }
+  const dayStats = (date: string) => trpcQuery<RefundDayStats>('refund.dayStats', { cookie: ownerCookie, input: { date } });
+  /** store 频道事件计数（event_outbox 实证，SSE 数据源同表） */
+  const storeEventsOf = async (eventType: string, match: (payload: Record<string, unknown>) => boolean) =>
+    (await db.select().from(schema.eventOutbox)).filter(
+      (r) => r.eventType === eventType && r.channel === `store:${storeId}` && match((r.payload ?? {}) as Record<string, unknown>),
+    );
+
+  /* ---------- 27. 清单①：店员 clerk 无退款入口（server 403 明文） ---------- */
+  console.log('\n[R12] 27. 权限闸：店员 clerk 403（清单①）');
+  const clerkPrev = await asErr(trpcMutate('refund.preview', { cookie: clerkCookie, input: { billNo: billC.billNo, type: 'full' } }));
+  const clerkExec = await asErr(execRefund(clerkCookie, { billNo: billC.billNo, type: 'full', reason: 'clerk 越权验证' }));
+  const clerkList = await asErr(trpcQuery('refund.list', { cookie: clerkCookie }));
+  check('R12① 店员 clerk 退款无入口（preview / execute / list 全 403 FORBIDDEN）',
+    [clerkPrev, clerkExec, clerkList].every((r) => r instanceof TrpcHttpError && r.httpStatus === 403 && r.code === 'FORBIDDEN'),
+    [clerkPrev, clerkExec, clerkList].map((r) => r && `${r.httpStatus}:${r.code}`));
+
+  /* ---------- 28. 清单②+⑭：店长 ≤ 阈值现金单全额退，六联动同事务 ---------- */
+  console.log('\n[R12] 28. 店长≤阈值全额退：六联动 + rebate 列位（清单②+⑭）');
+  const prod28 = (await db.select().from(schema.products).where(eq(schema.products.id, prod.id)).get())!;
+  const mgrBill = await settleBill2(
+    [{ kind: 'service', refId: service.id }, { kind: 'product', refId: prod.id }],
+    { note: 'e2e R12 店长全额退单' },
+  ); // 8800 + 商品价 ≤ 50000 阈值
+  const stockAtSettle28 = prod28.stock - 1; // 结账已扣 1
+  const fullRefund = await execRefund(managerCookie, { billNo: mgrBill.billNo, type: 'full', reason: '店长全额退（≤阈值六联动）' });
+  check('R12② 店长≤阈值发起即执行（executed + 自批 approver=本人 + 幂等标记 false）',
+    fullRefund.refund.status === 'executed' && fullRefund.idempotent === false &&
+      fullRefund.refund.operatorId === managerFix.id && fullRefund.refund.approverId === managerFix.id,
+    { status: fullRefund.refund.status, amount: fullRefund.refund.amountFen });
+  check('R12② 全额退金额=可退余额全退（=原单已收）', fullRefund.refund.amountFen === mgrBill.payableFen, { refund: fullRefund.refund.amountFen, payable: mgrBill.payableFen });
+  const linkage28 = fullRefund.refund.linkageJson ?? {};
+  check('R12⑭ 六联动快照含回馈金扣回列位（rebateClawbackFen 键存在且=0，R11 冻结回归）',
+    'rebateClawbackFen' in linkage28 && linkage28.rebateClawbackFen === 0, Object.keys(linkage28));
+  check('R12② 快照六联动列位齐全（segments 支付段回补 / stockRestock 库存回补 / 提成冲减预估 / 阈值口径）',
+    Array.isArray(linkage28.segments) && Array.isArray(linkage28.stockRestock) &&
+      typeof linkage28.estimatedCommissionClawbackFen === 'number' && linkage28.thresholdFen === 50000,
+    { keys: Object.keys(linkage28).length, threshold: linkage28.thresholdFen });
+  const mgrBillRow = await db.select().from(schema.cashierBills).where(eq(schema.cashierBills.id, mgrBill.billId)).get();
+  check('R12② 原单挂 refund_status=refunded + refund_bill_no 双向回指（已收 paidFen 一字未改）',
+    mgrBillRow?.refundStatus === 'refunded' && mgrBillRow.refundBillNo === fullRefund.refund.refundNo &&
+      mgrBillRow.paidFen === mgrBill.payableFen,
+    { refundStatus: mgrBillRow?.refundStatus, refundBillNo: mgrBillRow?.refundBillNo, paidFen: mgrBillRow?.paidFen });
+  const stockAfterRefund28 = (await db.select().from(schema.products).where(eq(schema.products.id, prod.id)).get())!.stock;
+  const refundMoves28 = await db.select().from(schema.stockMovements)
+    .where(and(eq(schema.stockMovements.sourceType, 'refund'), eq(schema.stockMovements.sourceId, fullRefund.refund.refundNo)));
+  check('R12② 库存回补：stock_movements 来源 refund 前后值真实（delta=+1）+ products.stock 回补',
+    refundMoves28.length === 1 && refundMoves28[0]!.delta === 1 &&
+      refundMoves28[0]!.beforeStock === stockAtSettle28 && refundMoves28[0]!.afterStock === stockAtSettle28 + 1 &&
+      stockAfterRefund28 === stockAtSettle28 + 1,
+    { moves: refundMoves28.length, stockAfterRefund28 });
+  check('R12② RefundExecuted 事件到店频道（店长视图/财务联动，event_outbox 实证）',
+    (await storeEventsOf('refund.executed', (p) => p.refundNo === fullRefund.refund.refundNo)).length === 1,
+    fullRefund.refund.refundNo);
+  check('R12② 预约行清零口径不适用对照：服务行非预约行，无 appointmentReverts（本单纯服务+商品）',
+    Array.isArray((linkage28.appointmentReverts as unknown[]) ?? []) && (linkage28.appointmentReverts as unknown[]).length === 0,
+    linkage28.appointmentReverts);
+
+  /* ---------- 29. 清单③（V1）：拆分两笔累计超阈值顶到店主 ---------- */
+  console.log('\n[R12] 29. V1 拆分累计阈值（清单③）');
+  const staple = (await db.select().from(schema.products).where(and(eq(schema.products.storeId, storeId), eq(schema.products.name, '全价成犬粮 2kg'))).get())!;
+  const bigBill = await settleBill2([{ kind: 'product', refId: staple.id, qty: 5 }], { note: 'e2e R12 V1 拆分阈值单' }); // 12900×5=64500
+  check('R12③ 前置：大单 64500 分 settled（店长阈值 50000 分）', bigBill.payableFen === 64500, bigBill);
+  const split1 = await execRefund(managerCookie, { billNo: bigBill.billNo, type: 'partial_amount', amountFen: 30000, reason: 'V1 拆分第一笔' });
+  check('R12③ 店长第一笔 30000 成（原单累计 30000 ≤ 50000）',
+    split1.refund.status === 'executed' && split1.refund.amountFen === 30000, split1.refund.amountFen);
+  const split2 = await asErr(execRefund(managerCookie, { billNo: bigBill.billNo, type: 'partial_amount', amountFen: 30000, reason: 'V1 拆分第二笔' }));
+  check('R12③ 第二笔累计 60000>50000 → FORBIDDEN「该单累计退款已达店长上限，须店主」（V1 按原单累计校验堵拆分绕过）',
+    split2 instanceof TrpcHttpError && split2.httpStatus === 403 && split2.code === 'FORBIDDEN' && split2.message.includes('累计退款已达店长上限'),
+    split2 && { status: split2.httpStatus, message: split2.message });
+  const split2Owner = await execRefund(ownerCookie, { billNo: bigBill.billNo, type: 'partial_amount', amountFen: 30000, reason: 'V1 拆分第二笔（店主执行）' });
+  check('R12③ 店主执行成功（累计 60000/64500，可退余额余 4500）',
+    split2Owner.refund.status === 'executed' && split2Owner.refund.amountFen === 30000, split2Owner.refund.amountFen);
+
+  /* ---------- 30. 清单④（V2）：日结现金段净额 ---------- */
+  console.log('\n[R12] 30. V2 日结退款单列 + 现金段净额（清单④）');
+  const comboBill = await settleBill2([{ kind: 'service', refId: service.id }], {
+    payments: (p) => [{ method: 'cash', amountFen: 5000 }, { method: 'wechat', amountFen: p - 5000 }],
+    note: 'e2e R12 V2 现金微信组合单',
+  }); // 8800 = cash 5000 + wechat 3800
+  interface TenderRes { receivedTotalFen: number; tender: { cashFen: number } }
+  const v2StatsBefore = await dayStats(storeToday);
+  const tenderBefore = await trpcQuery<TenderRes>('store.todayTenderStats', { cookie: ownerCookie });
+  const v2Refund = await execRefund(managerCookie, { billNo: comboBill.billNo, type: 'partial_amount', amountFen: 4400, reason: 'V2 组合单部分退' });
+  const v2StatsAfter = await dayStats(storeToday);
+  const tenderAfter = await trpcQuery<TenderRes>('store.todayTenderStats', { cookie: ownerCookie });
+  check('R12④ dayStats 当日退款单列（总额 +4400；现金段退款 +2500 / 微信段 +1900，按段占比分摊精确到分）',
+    v2Refund.refund.bizDate === storeToday &&
+      v2StatsAfter.totalFen - v2StatsBefore.totalFen === 4400 &&
+      v2StatsAfter.segments.cashFen - v2StatsBefore.segments.cashFen === 2500 &&
+      v2StatsAfter.segments.wechatFen - v2StatsBefore.segments.wechatFen === 1900,
+    { dTotal: v2StatsAfter.totalFen - v2StatsBefore.totalFen, dCash: v2StatsAfter.segments.cashFen - v2StatsBefore.segments.cashFen, dWechat: v2StatsAfter.segments.wechatFen - v2StatsBefore.segments.wechatFen });
+  check('R12④ 已收不涂改 + 当日净额=已收−退款算术成立（净额恰 −4400；现金段净额=现金已收−现金退款恰 −2500）',
+    tenderAfter.receivedTotalFen === tenderBefore.receivedTotalFen &&
+      (tenderAfter.receivedTotalFen - v2StatsAfter.totalFen) - (tenderBefore.receivedTotalFen - v2StatsBefore.totalFen) === -4400 &&
+      (tenderAfter.tender.cashFen - v2StatsAfter.segments.cashFen) - (tenderBefore.tender.cashFen - v2StatsBefore.segments.cashFen) === -2500,
+    { receivedBefore: tenderBefore.receivedTotalFen, receivedAfter: tenderAfter.receivedTotalFen });
+
+  /* ---------- 31. 清单⑤+⑪（V3）：组合支付 6:4 分摊回补 + 涉储值店长拦截 ---------- */
+  console.log('\n[R12] 31. V3 6:4 分摊回补 + 涉储值拦截（清单⑤+⑪）');
+  const svAcc = (await db.insert(schema.storedValueAccounts)
+    .values({ userId: customerUser!.id, storeId, principalFen: 100000, bonusFen: 0 })
+    .returning())[0]!; // 储值账户夹具直插（生产仅 R5b CSV 导入建户；e2e 不走路径外入口）
+  const svBill = await settleBill2([{ kind: 'service', refId: service.id }], {
+    customerId: customerUser!.id,
+    payments: (p) => [{ method: 'cash', amountFen: Math.round(p * 0.6) }, { method: 'stored_value', amountFen: p - Math.round(p * 0.6) }],
+    note: 'e2e R12 V3 现金6储值4组合单',
+  }); // 8800 = cash 5280 + 储值 3520
+  const accAfterSettle = await db.select().from(schema.storedValueAccounts).where(eq(schema.storedValueAccounts.id, svAcc.id)).get();
+  check('R12⑤ 前置：储值段结账扣减（余额 100000 → 96480，先本金后赠送）',
+    !!accAfterSettle && accAfterSettle.principalFen + accAfterSettle.bonusFen === 96480,
+    accAfterSettle && accAfterSettle.principalFen + accAfterSettle.bonusFen);
+  const mgrSv = await asErr(execRefund(managerCookie, { billNo: svBill.billNo, type: 'partial_amount', amountFen: 4400, reason: '店长涉储值验证' }));
+  check('R12⑪ 涉储值单店长明文拦截（FORBIDDEN「储值退款须店主」，运营加固不设阈值）',
+    mgrSv instanceof TrpcHttpError && mgrSv.httpStatus === 403 && mgrSv.code === 'FORBIDDEN' && mgrSv.message.includes('储值退款须店主'),
+    mgrSv && { status: mgrSv.httpStatus, message: mgrSv.message });
+  const svRefund = await execRefund(ownerCookie, { billNo: svBill.billNo, type: 'partial_amount', amountFen: 4400, reason: 'V3 按金额退 50%（6:4 分摊回补）' });
+  const segs31 = svRefund.plan?.segments ?? [];
+  const cashSeg31 = segs31.find((s) => s.method === 'cash');
+  const svSeg31 = segs31.find((s) => s.method === 'stored_value');
+  check('R12⑤ 组合支付 6:4 分摊回补精确到分（cash 2640 线下原路待登记 / 储值 1760 余额回补）',
+    cashSeg31?.amountFen === 2640 && cashSeg31.channel === 'offline_pending' &&
+      svSeg31?.amountFen === 1760 && svSeg31.channel === 'stored_value_restore' &&
+      svRefund.refund.amountFen === 4400,
+    segs31.map((s) => `${s.method}:${s.amountFen}`));
+  const accAfterRefund = await db.select().from(schema.storedValueAccounts).where(eq(schema.storedValueAccounts.id, svAcc.id)).get();
+  const svLogs31 = await db.select().from(schema.storedValueLogs).where(eq(schema.storedValueLogs.billNo, svBill.billNo));
+  const restoreLog31 = svLogs31.find((l) => l.deltaFen > 0);
+  check('R12⑤ 储值余额回补前后值留痕（96480 → 98240；stored_value_logs 正向行 note 关联退款单号）',
+    !!accAfterRefund && accAfterRefund.principalFen + accAfterRefund.bonusFen === 98240 &&
+      restoreLog31?.balanceBeforeFen === 96480 && restoreLog31.balanceAfterFen === 98240 &&
+      (restoreLog31.note ?? '').includes(svRefund.refund.refundNo),
+    { balance: accAfterRefund && accAfterRefund.principalFen + accAfterRefund.bonusFen, restoreLog: restoreLog31 && { before: restoreLog31.balanceBeforeFen, after: restoreLog31.balanceAfterFen, note: restoreLog31.note } });
+
+  /* ---------- 32. 清单⑥（V4）：寄养提前接回退剩余晚 ---------- */
+  console.log('\n[R12] 32. V4 寄养剩余晚退（清单⑥）');
+  const boardingSvc = (await db.select().from(schema.services).where(and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'boarding'))).get())!;
+  const bStart = new Date(`${storeYesterday}T15:00:00+08:00`); // 昨日入住（+8 日界）→ 已发生 1 晚
+  const boardingAppt = (await db.insert(schema.appointments).values({
+    code: 'E2EBD1', customerId: customerUser!.id, storeId, petId, serviceId: boardingSvc.id,
+    type: 'boarding', scheduledStart: bStart, scheduledEnd: new Date(bStart.getTime() + 3 * 86400_000),
+    status: 'completed', priceFen: 59700, completedAt: new Date(), note: 'e2e R12 寄养 3 晚单（夹具直插）',
+  }).returning())[0]!;
+  const bBill = await settleBill2([{ kind: 'appointment', refId: boardingAppt.id }], { note: 'e2e R12 寄养结账' }); // 19900×3=59700 全现金
+  const tooMany = await asErr(execRefund(ownerCookie, { billNo: bBill.billNo, type: 'boarding_nights', nights: 3, reason: '超剩余晚数验证' }));
+  check('R12⑥ 已发生晚一分不退（退 3 晚 > 剩余 2 晚 → BAD_REQUEST「剩余可退晚数不足」明文）',
+    tooMany instanceof TrpcHttpError && tooMany.code === 'BAD_REQUEST' && tooMany.message.includes('剩余可退晚数不足'),
+    tooMany && { code: tooMany.code, message: tooMany.message });
+  const bRefund = await execRefund(ownerCookie, { billNo: bBill.billNo, type: 'boarding_nights', nights: 2, reason: '提前接回退剩余 2 晚' });
+  check('R12⑥ 寄养退剩余 2 晚：金额=剩余晚×晚单价（floor(59700÷3)×2=39800）', bRefund.refund.amountFen === 39800, bRefund.refund.amountFen);
+  const nightRow = (await db.select().from(schema.refundBillItems)
+    .where(and(eq(schema.refundBillItems.refundId, bRefund.refund.id), eq(schema.refundBillItems.kind, 'night'))))[0];
+  const nightDetail = (nightRow?.detailJson ?? {}) as Record<string, unknown>;
+  check('R12⑥ 分段明细透出（总 3 晚 / 已住 1 晚不退 / 退 2 晚（qty 列）/ 晚单价 19900）',
+    nightRow?.qty === 2 && nightRow.amountFen === 39800 &&
+      nightDetail.totalNights === 3 && nightDetail.occurredNights === 1 && nightDetail.perNightFen === 19900,
+    nightDetail);
+  check('R12⑥ 按支付段占比回补（全现金单 → cash 段 39800 线下原路）',
+    bRefund.plan?.segments.find((s) => s.method === 'cash')?.amountFen === 39800, bRefund.plan?.segments);
+  const bApptAfter = await db.select().from(schema.appointments).where(eq(schema.appointments.id, boardingAppt.id)).get();
+  check('R12⑥ 只退钱不动预约单（status/paidAt 原样；退住核销由寄养域既有流程承担）',
+    bApptAfter?.status === 'completed' && bApptAfter.paidAt !== null, { status: bApptAfter?.status, paidAt: bApptAfter?.paidAt });
+
+  /* ---------- 33. 清单⑦（V5）：已冲正/已撤单无退款入口 ---------- */
+  console.log('\n[R12] 33. V5 终态禁退（清单⑦）');
+  const rvBill = await settleBill2([{ kind: 'product', refId: prod.id }], { note: 'e2e R12 V5 冲正单' });
+  await trpcMutate('cashier.reverseBill', { cookie: ownerCookie, input: { billNo: rvBill.billNo, reason: 'R12 冲正禁退验证' } });
+  const rvRow = await db.select().from(schema.cashierBills).where(eq(schema.cashierBills.id, rvBill.billId)).get();
+  const rvRefund = await asErr(execRefund(ownerCookie, { billNo: rvBill.billNo, type: 'full', reason: '冲正单退款验证' }));
+  const vdHeld = await trpcMutate<{ bill: { billNo: string } }>('cashier.hold', {
+    cookie: ownerCookie,
+    input: { items: [{ kind: 'product', refId: prod.id }], discountType: 'none', discountValue: 0, note: 'e2e R12 V5 撤单' },
+  });
+  await trpcMutate('cashier.voidBill', { cookie: ownerCookie, input: { billNo: vdHeld.bill.billNo, reason: 'R12 撤单禁退验证' } });
+  const vdRefund = await asErr(execRefund(ownerCookie, { billNo: vdHeld.bill.billNo, type: 'full', reason: '撤单退款验证' }));
+  check('R12⑦ 已冲正单无退款入口（reverseBill 后 execute → BAD_REQUEST「原单已冲正/已撤，不可退款」）',
+    !!(rvRow?.reversedAt) && rvRefund instanceof TrpcHttpError && rvRefund.code === 'BAD_REQUEST' && rvRefund.message.includes('已冲正/已撤'),
+    rvRefund && { code: rvRefund.code, message: rvRefund.message });
+  check('R12⑦ 已撤单无退款入口（voided → 同明文拒）',
+    vdRefund instanceof TrpcHttpError && vdRefund.code === 'BAD_REQUEST' && vdRefund.message.includes('已冲正/已撤'),
+    vdRefund && { code: vdRefund.code, message: vdRefund.message });
+
+  /* ---------- 34. 清单⑧（V6）：部分退提成按比例冲减 + 跨月调整项 ---------- */
+  console.log('\n[R12] 34. V6 提成冲减（清单⑧）');
+  interface R12CommLine { billId: string; itemId: string; refId: string; name: string; amountFen: number; refundRatioBp: number; refundClawbackFen: number; refunded: boolean }
+  interface R12SummaryT {
+    payload: {
+      commissionTotalFen: number;
+      serviceLines: R12CommLine[];
+      adjustments: Array<{ refundNo: string; billNo: string; itemId: string; name: string; clawbackFen: number }>;
+      adjustmentsTotalFen: number;
+    };
+  }
+  // ① 同月行内冲减：阿强洗护单 10000（现行率 25% → 毛提成 2500）
+  const apptV6 = (await db.insert(schema.appointments).values({
+    code: 'E2EV6A', customerId: customerUser!.id, storeId, petId, serviceId: service.id,
+    type: 'grooming', scheduledStart: new Date(), scheduledEnd: new Date(),
+    status: 'completed', priceFen: 10000, completedAt: new Date(), staffId: aqiang.id, note: 'e2e R12 V6 同月单',
+  }).returning())[0]!;
+  const billV6 = await settleBill2([{ kind: 'appointment', refId: apptV6.id }], { note: 'e2e R12 V6 同月冲减单' });
+  await execRefund(ownerCookie, { billNo: billV6.billNo, type: 'partial_amount', amountFen: 5000, reason: 'V6 部分退 50%' });
+  const sumV6a = await trpcQuery<R12SummaryT>('commission.mySummary', { cookie: groomerCookie, input: {} });
+  const lineV6a = sumV6a.payload.serviceLines.find((l) => l.billId === billV6.billId);
+  check('R12⑧ 部分退 50% → 该行提成减半精确到分（毛 2500 → 净 1250，refundRatioBp=5000，refunded=false）',
+    lineV6a?.amountFen === 1250 && lineV6a.refundClawbackFen === 1250 && lineV6a.refundRatioBp === 5000 && lineV6a.refunded === false,
+    lineV6a);
+  await execRefund(ownerCookie, { billNo: billV6.billNo, type: 'partial_amount', amountFen: 5000, reason: 'V6 退剩余 50%' });
+  const sumV6b = await trpcQuery<R12SummaryT>('commission.mySummary', { cookie: groomerCookie, input: {} });
+  const lineV6b = sumV6b.payload.serviceLines.find((l) => l.billId === billV6.billId);
+  check('R12⑧ 退完全额 → 该行提成归零 + refunded 标记（冲减合计 2500=毛提成全额）',
+    lineV6b?.amountFen === 0 && lineV6b.refunded === true && lineV6b.refundClawbackFen === 2500, lineV6b);
+
+  // ② 跨月调整项：源单回填上月 + 上月快照 → 今日退款差额进当月「调整项」，不动快照。
+  //    历史规则行回填：种子 effective_from=2026-09-20，早于该日的源单需 v0 历史行兜底取率
+  //    （active=false 不污染当前生效集；ruleAtFn 按全表 effective_from 时序解析，口径同 §24）。
+  await db.insert(schema.commissionRules).values({
+    version: 0, ruleKey: 'commission_grooming_rate', label: 'e2e 历史规则回填（V6 跨月夹具）',
+    valueJson: { rate_bp: 2000 }, effectiveFrom: new Date('2020-01-01T00:00:00+08:00'), active: false, createdBy: ownerUser!.id,
+  });
+  const backTs = new Date(`${prevMonthStr}-15T12:00:00`); // 服务器本地时区口径（commission 月界同帧）
+  const apptV6X = (await db.insert(schema.appointments).values({
+    code: 'E2EV6X', customerId: customerUser!.id, storeId, petId, serviceId: service.id,
+    type: 'grooming', scheduledStart: backTs, scheduledEnd: backTs,
+    status: 'completed', priceFen: 20000, completedAt: backTs, staffId: aqiang.id, note: 'e2e R12 V6 跨月源单',
+  }).returning())[0]!;
+  const billV6X = await settleBill2([{ kind: 'appointment', refId: apptV6X.id }], { note: 'e2e R12 V6 跨月源单结账' });
+  // 结账时点回填上月（计提月份+规则时序同按 settled_at）。
+  // 注意：createdAt 一律不回填——cashier.genBillNo 按 createdAt 计当日单数分配单号，
+  // 回填会减少当日计数导致后续单号复用撞 UNIQUE（本轮实测 HD-…-021 撞号 500）。
+  await db.update(schema.cashierBills).set({ settledAt: backTs, updatedAt: new Date() })
+    .where(eq(schema.cashierBills.id, billV6X.billId));
+  const snapRes = await trpcMutate<{ commission: number; performance: number }>('commission.snapshotMonth', {
+    cookie: ownerCookie, input: { month: prevMonthStr },
+  });
+  const snapBefore = await db.select().from(schema.commissionSnapshots)
+    .where(and(eq(schema.commissionSnapshots.staffId, aqiang.id), eq(schema.commissionSnapshots.period, prevMonthStr), eq(schema.commissionSnapshots.kind, 'commission')))
+    .get();
+  check('R12⑧ 前置：上月快照落库（阿强毛提成=20000×20%=4000 冻结于快照）',
+    snapRes.commission > 0 && snapBefore?.totalFen === 4000, { snap: snapRes, totalFen: snapBefore?.totalFen });
+  const totalBeforeAdj = sumV6b.payload.commissionTotalFen;
+  const v6x = await execRefund(ownerCookie, { billNo: billV6X.billNo, type: 'partial_amount', amountFen: 10000, reason: 'V6 跨月退 50%' });
+  const sumV6c = await trpcQuery<R12SummaryT>('commission.mySummary', { cookie: groomerCookie, input: {} });
+  const adj = sumV6c.payload.adjustments.find((a) => a.refundNo === v6x.refund.refundNo);
+  check('R12⑧ 跨月退款差额进当月「调整项」（mySummary.adjustments 透出 refundNo + 冲减 2000=4000×50%）',
+    adj?.clawbackFen === 2000 && adj.billNo === billV6X.billNo && sumV6c.payload.adjustmentsTotalFen === 2000, adj);
+  check('R12⑧ 调整项从当月提成总额减除（commissionTotalFen 恰 −2000）',
+    sumV6c.payload.commissionTotalFen === totalBeforeAdj - 2000,
+    { before: totalBeforeAdj, after: sumV6c.payload.commissionTotalFen });
+  const snapAfter = await db.select().from(schema.commissionSnapshots)
+    .where(and(eq(schema.commissionSnapshots.staffId, aqiang.id), eq(schema.commissionSnapshots.period, prevMonthStr), eq(schema.commissionSnapshots.kind, 'commission')))
+    .get();
+  check('R12⑧ 已快照月份不动（snapshot totalFen/payload 前后一致）',
+    !!snapBefore && !!snapAfter && snapAfter.totalFen === snapBefore.totalFen &&
+      JSON.stringify(snapAfter.payloadJson) === JSON.stringify(snapBefore.payloadJson),
+    { before: snapBefore?.totalFen, after: snapAfter?.totalFen });
+
+  /* ---------- 35. 清单⑨（V7）：跨日退款入发生日日结，不回填封箱历史 ---------- */
+  console.log('\n[R12] 35. V7 跨日退款（清单⑨）');
+  const yBill = await settleBill2([{ kind: 'product', refId: prod.id }], { note: 'e2e R12 V7 昨日单' });
+  const yTs = new Date(`${storeYesterday}T12:00:00+08:00`);
+  await db.update(schema.cashierBills).set({ settledAt: yTs, updatedAt: new Date() })
+    .where(eq(schema.cashierBills.id, yBill.billId)); // 仅回填 settledAt（createdAt 回填会撞 genBillNo 当日序号，见 §34 注释）
+  const shiftRow = await db.select().from(schema.shifts).where(eq(schema.shifts.storeId, storeId)).get();
+  const yClose = (await db.insert(schema.dayCloses).values({
+    storeId, shiftId: shiftRow!.id, kind: 'close', bizDate: storeYesterday,
+    bookCashFen: yBill.payableFen, actualCashFen: yBill.payableFen, diffFen: 0,
+    cashierPaidCount: 1, paidCount: 1, status: 'frozen', createdBy: ownerUser!.id,
+  }).returning())[0]!; // 昨日已日结封箱夹具（冻结态）
+  const yStatsBefore = await dayStats(storeYesterday);
+  const tStatsBefore = await dayStats(storeToday);
+  const yRefund = await execRefund(ownerCookie, { billNo: yBill.billNo, type: 'partial_amount', amountFen: 1000, reason: 'V7 跨日退款' });
+  check('R12⑨ 跨日退款入发生日（refund_bills.biz_date=今日，不回填昨日）', yRefund.refund.bizDate === storeToday, { bizDate: yRefund.refund.bizDate, storeToday });
+  const yStatsAfter = await dayStats(storeYesterday);
+  const tStatsAfter = await dayStats(storeToday);
+  check('R12⑨ dayStats 今日含该退款（+1000）、昨日不含（昨日 count/total 原样）',
+    tStatsAfter.totalFen - tStatsBefore.totalFen === 1000 &&
+      yStatsAfter.totalFen === yStatsBefore.totalFen && yStatsAfter.count === yStatsBefore.count,
+    { todayDelta: tStatsAfter.totalFen - tStatsBefore.totalFen, yesterday: [yStatsBefore.totalFen, yStatsAfter.totalFen] });
+  const yCloseAfter = await db.select().from(schema.dayCloses).where(eq(schema.dayCloses.id, yClose.id)).get();
+  check('R12⑨ 昨日已封箱日结行不变（bookCash/status/frozen 原样，封箱历史不涂改）',
+    yCloseAfter?.bookCashFen === yClose.bookCashFen && yCloseAfter.status === 'frozen' && !yCloseAfter.reversedAt,
+    { before: yClose.bookCashFen, after: yCloseAfter?.bookCashFen, status: yCloseAfter?.status });
+
+  /* ---------- 36. 清单⑩（V8）：次卡赠次不计价 + 涉储值退卡店长拦截 ---------- */
+  console.log('\n[R12] 36. V8 次卡退卡（清单⑩+⑪ 附证）');
+  await trpcMutate('pass.topUp', { cookie: ownerCookie, input: { userId: customerUser!.id, times: 12 } }); // 付费 10 + 赠 2 口径由店主录入留痕（无金额台账，报备偏差 1）
+  const passRow0 = await db.select().from(schema.memberPasses).where(and(eq(schema.memberPasses.userId, customerUser!.id), eq(schema.memberPasses.storeId, storeId))).get();
+  check('R12⑩ 前置：次卡建卡（total=12 remain=12）', passRow0?.totalTimes === 12 && passRow0.remainTimes === 12, passRow0 && { total: passRow0.totalTimes, remain: passRow0.remainTimes });
+  const passBill = await settleBill2(
+    Array.from({ length: 6 }, () => ({ kind: 'service' as const, refId: service.id, paidByPass: true })),
+    { customerId: customerUser!.id, payments: (p) => [{ method: 'pass', amountFen: p }], note: 'e2e R12 V8 扣次 6 行单' },
+  );
+  void passBill;
+  const passRow1 = await db.select().from(schema.memberPasses).where(and(eq(schema.memberPasses.userId, customerUser!.id), eq(schema.memberPasses.storeId, storeId))).get();
+  check('R12⑩ 前置：扣次 6 次（remain 12→6；付费先消耗 → 剩付费 4 + 赠 2）', passRow1?.remainTimes === 6, passRow1?.remainTimes);
+  // 锚点单：该客户在本店的任一 settled 单（anchor_only：金额与其无关、不挂标记）
+  const anchorBill = (await db.select().from(schema.cashierBills)
+    .where(and(eq(schema.cashierBills.customerId, customerUser!.id), eq(schema.cashierBills.status, 'settled'))).get())!;
+  const mgrCancel = await asErr(execRefund(managerCookie, {
+    billNo: anchorBill.billNo, type: 'pass_cancel', passId: passRow1!.id,
+    passPaidFen: 10000, passPaidTimes: 10, passGiftTimes: 2, reason: '店长退卡验证', refundMethod: 'offline_original',
+  }));
+  check('R12⑪ 次卡退卡涉储值 → 店长 FORBIDDEN「储值退款须店主」（type=pass_cancel 天然涉储值）',
+    mgrCancel instanceof TrpcHttpError && mgrCancel.httpStatus === 403 && mgrCancel.code === 'FORBIDDEN' && mgrCancel.message.includes('储值退款须店主'),
+    mgrCancel && { status: mgrCancel.httpStatus, message: mgrCancel.message });
+  const cancel = await execRefund(ownerCookie, {
+    billNo: anchorBill.billNo, type: 'pass_cancel', passId: passRow1!.id,
+    passPaidFen: 10000, passPaidTimes: 10, passGiftTimes: 2, reason: '次卡退卡（剩付费 4 次）', refundMethod: 'offline_original',
+  });
+  check('R12⑩ 折算=剩余付费 4 次 ×（实付 10000 ÷ 付费 10 次）=4000（赠次不计价）',
+    cancel.refund.status === 'executed' && cancel.refund.amountFen === 4000, cancel.refund.amountFen);
+  const pc36 = (cancel.refund.linkageJson?.passCancel ?? {}) as Record<string, unknown>;
+  check('R12⑩ 快照明示：剩余付费 4 / 赠次 2 随退作废不计价（giftVoided=2）',
+    pc36.remainingPaidTimes === 4 && pc36.giftVoided === 2 && pc36.giftTimes === 2 && pc36.remainTimesBefore === 6, pc36);
+  const passRow2 = await db.select().from(schema.memberPasses).where(eq(schema.memberPasses.id, passRow1!.id)).get();
+  const passLogs = await db.select().from(schema.passDeductLogs).where(eq(schema.passDeductLogs.passId, passRow1!.id));
+  check('R12⑩ 退卡后卡作废留痕（status=disabled + remain=0 + 负向流水 note 含「赠次作废 2」）',
+    passRow2?.status === 'disabled' && passRow2.remainTimes === 0 &&
+      passLogs.some((l) => l.delta === -6 && (l.note ?? '').includes('赠次作废 2')),
+    { status: passRow2?.status, remain: passRow2?.remainTimes, logs: passLogs.map((l) => `${l.delta}:${l.note}`) });
+  check('R12⑩ 锚点单不挂退款标记（anchor_only：原单 refund_status 仍 NULL）',
+    (await db.select().from(schema.cashierBills).where(eq(schema.cashierBills.id, anchorBill.id)).get())?.refundStatus === null,
+    anchorBill.billNo);
+  const cancelAgain = await asErr(execRefund(ownerCookie, {
+    billNo: anchorBill.billNo, type: 'pass_cancel', passId: passRow1!.id,
+    passPaidFen: 10000, passPaidTimes: 10, passGiftTimes: 2, reason: '重复退卡验证', refundMethod: 'offline_original',
+  }));
+  check('R12⑩ 重复退卡幂等拒（卡已作废 → BAD_REQUEST「不可重复退卡」）',
+    cancelAgain instanceof TrpcHttpError && cancelAgain.code === 'BAD_REQUEST' && cancelAgain.message.includes('不可重复退卡'),
+    cancelAgain && { code: cancelAgain.code, message: cancelAgain.message });
+
+  /* ---------- 37. 清单⑫：部分退款余额内可再退 ---------- */
+  console.log('\n[R12] 37. 部分退款余额内可再退（清单⑫）');
+  const reBill = await settleBill2([{ kind: 'service', refId: service.id }], { note: 'e2e R12 余额再退单' }); // 8800 现金
+  const re1 = await execRefund(managerCookie, { billNo: reBill.billNo, type: 'partial_amount', amountFen: 2640, reason: '先退 30%' });
+  const re2 = await execRefund(managerCookie, { billNo: reBill.billNo, type: 'partial_amount', amountFen: 1760, reason: '再退 20%' });
+  check('R12⑫ 余额内可再退（30%→2640 成，再 20%→1760 成；累计 4400 ≤ 8800）',
+    re1.refund.status === 'executed' && re2.refund.status === 'executed' && re2.refund.amountFen === 1760,
+    [re1.refund.amountFen, re2.refund.amountFen]);
+  const re3 = await asErr(execRefund(managerCookie, { billNo: reBill.billNo, type: 'partial_amount', amountFen: 4401, reason: '超可退余额验证' }));
+  check('R12⑫ 累计超可退余额硬拒（4400+4401 > 8800 → BAD_REQUEST「超过原单可退余额」）',
+    re3 instanceof TrpcHttpError && re3.code === 'BAD_REQUEST' && re3.message.includes('可退余额'),
+    re3 && { code: re3.code, message: re3.message });
+
+  /* ---------- 38. 清单⑬：实退待办 + settleActual 幂等 ---------- */
+  console.log('\n[R12] 38. 实退待办（清单⑬）');
+  // §37 第一笔退款（executed 未登记）回填 createdAt 至 25h 前 → 进店长待办
+  await db.update(schema.refundBills).set({ createdAt: new Date(Date.now() - 25 * 3600 * 1000) }).where(eq(schema.refundBills.id, re1.refund.id));
+  const todoBefore = await trpcQuery<Array<{ id: string; refundNo: string }>>('refund.pendingActual', { cookie: managerCookie });
+  check('R12⑬ 实退待办：executed 超 24h 未登记 → pendingActual 含（店长本店可办）',
+    todoBefore.some((r) => r.id === re1.refund.id), todoBefore.map((r) => r.refundNo));
+  const settle1 = await trpcMutate<{ refund: { status: string }; idempotent: boolean }>('refund.settleActual', {
+    cookie: managerCookie, input: { refundId: re1.refund.id, note: '线下原路已退（现金 2640）' },
+  });
+  check('R12⑬ 实退登记 → settled（+RefundSettled 事件到店频道）',
+    settle1.refund.status === 'settled' && settle1.idempotent === false &&
+      (await storeEventsOf('refund.settled', (p) => p.refundNo === re1.refund.refundNo)).length === 1,
+    settle1.refund.status);
+  const settle2 = await trpcMutate<{ refund: { status: string }; idempotent: boolean }>('refund.settleActual', {
+    cookie: managerCookie, input: { refundId: re1.refund.id, note: '重复登记验证' },
+  });
+  check('R12⑬ 重复登记幂等（idempotent=true，事件不重复增发）',
+    settle2.idempotent === true && settle2.refund.status === 'settled' &&
+      (await storeEventsOf('refund.settled', (p) => p.refundNo === re1.refund.refundNo)).length === 1,
+    settle2.idempotent);
+  const todoAfter = await trpcQuery<Array<{ id: string }>>('refund.pendingActual', { cookie: managerCookie });
+  check('R12⑬ 实退登记后待办消失（pendingActual 不再含该单）', !todoAfter.some((r) => r.id === re1.refund.id), todoAfter.length);
 
   client.close();
 }

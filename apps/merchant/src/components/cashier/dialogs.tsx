@@ -8,7 +8,10 @@
  *   discountType/discountValue；优惠 ≤ 非预约行合计（服务端口径，输入期拦截）；
  * - VoidDialog（P8 撤单弹层）：原因 textarea（选填）+ [取消] 白底 +
  *   [确认撤单] 红描边功能胶囊；owner-only（manager 确认钮置灰 + 原因行）；
- *   settled 单不进本弹层（退款专项冻结，入口不渲染）。
+ *   settled 单不进本弹层（R12 退款专项已落地，settled 走退款真链路）。
+ *
+ * R12：补丁② RefundBlockDialog「退款功能随专项批开通」拦截弹层已随真退款
+ * （RefundDialog 六联动真链路）退役删除——任务书兑现承诺：替换站岗拦截文案。
  */
 
 import { useEffect, useState, type ReactNode } from 'react'
@@ -519,40 +522,3 @@ export function ReverseDialog({
     </CashierModal>
   )
 }
-
-/* ------------------------------------------------------------------ */
-/* M1-补2 补丁②：退款明文拦截（防假退款 · 纯前端零接口零写入）               */
-/* ------------------------------------------------------------------ */
-
-/**
- * 「退款」唯一形态：owner/manager 点退款只许出本明文提示——退款功能随专项批开通，
- * 如需冲正请店主使用反结账。**禁止调任何接口**（零副作用零写入）；clerk 无该入口
- * （入口在调用方按角色渲染）。不许白屏/死按钮。
- */
-export function RefundBlockDialog({
-  billNo,
-  onClose,
-}: {
-  /** 关联单号（仅展示，无任何接口动作） */
-  billNo: string | null
-  onClose: () => void
-}) {
-  return (
-    <CashierModal
-      open={billNo !== null}
-      onClose={onClose}
-      title="退款"
-      testid="cashier-refund-block"
-      footer={<SheetBtn variant="primary" data-testid="cashier-refund-block-ok" onClick={onClose}>知道了</SheetBtn>}
-    >
-      <p className="py-2 text-body-sm leading-relaxed text-ink">
-        退款功能随专项批开通，本批未开放。
-      </p>
-      <p className="text-caption leading-relaxed text-[rgba(74,59,46,.62)]">
-        如需冲正已收款单{billNo ? `（${billNo}）` : ''}，请店主使用「反结账」：
-        强制原因留痕，库存/次卡/储值/预约自动回补，冲正单不计当日已收。
-      </p>
-    </CashierModal>
-  )
-}
-

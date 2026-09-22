@@ -38,7 +38,7 @@ import {
 /* ------------------------------------------------------------------ */
 
 /** 流水来源枚举（schema text 列的应用层约束，见 stock_movements 头注） */
-const SOURCE_TYPES = ['cashier', 'reversal', 'count', 'disinfection', 'manual'] as const;
+const SOURCE_TYPES = ['cashier', 'reversal', 'count', 'disinfection', 'manual', 'refund'] as const; // R12：退款回补来源（stock_movements source='refund'）
 
 /** 盘点类型 / 状态枚举（schema text 列的应用层约束） */
 const COUNT_TYPES = ['daily', 'weekly', 'blind'] as const;

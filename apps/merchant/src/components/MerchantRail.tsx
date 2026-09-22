@@ -2,8 +2,8 @@
  * U3 任务 A · MerchantRail 墨轨（商家端全域唯一导航，冻结决策 #21 案 A）
  *
  * 规格书 §0：宽 190px 深棕墨底（#4A3B2E，与客户端 GUARDIAN 墨卡同族）；
- * wordmark + 4 组 10 项直达（总览｜履约[预约/寄养/监控]｜商城[订单/商品]｜
- * 门店[会员·次卡/员工/财务/设置]）+ 底部门店/店主卡（auth.me 真值）。
+ * wordmark + 4 组直达（总览｜履约[预约/寄养/监控]｜商城[收银台/日结/退款/
+ * 订单/商品]｜门店[会员·次卡/员工/财务/设置]）+ 底部门店/店主卡（auth.me 真值）。
  * 当前项=柠檬 14% 底+柠檬字；分组小标题 11px 宽距 35% 透明。
  * 无 TabBar（冻结）、无二级菜单、不折叠。按下 scale 0.92 + 120ms（动效纲领）。
  */
@@ -18,6 +18,7 @@ import {
   MonitorDot,
   Package,
   ReceiptText,
+  RotateCcw,
   Settings,
   ShoppingBag,
   SlidersHorizontal,
@@ -61,6 +62,8 @@ function groupsFor(role: MerchantRole): Array<{ label: string | null; items: Rai
         { to: '/cashier', label: '收银台', icon: Calculator, testid: 'rail-cashier' },
         // M1-补2 C：日结/交接班页（owner|manager 可见；clerk 无入口）
         { to: '/cashier/close', label: '日结', icon: BookCheck, testid: 'rail-cashier-close' },
+        // 批次 R12 退款专项：退款单列表页（owner|manager 可见；clerk 无入口）
+        { to: '/cashier/refunds', label: '退款', icon: RotateCcw, testid: 'rail-refunds' },
         { to: '/orders', label: '订单', icon: ShoppingBag, testid: 'rail-orders' },
         { to: '/products', label: '商品', icon: Package, testid: 'rail-products' },
       ],

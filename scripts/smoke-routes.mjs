@@ -92,6 +92,7 @@ const ROUTES = [
   { app: 'merchant', path: '/cashier', anchors: ['收银台'], serverDep: true, note: 'M1 新屏：收银台主屏' },
   { app: 'merchant', path: '/cashier/records', anchors: ['流水', '收银'], serverDep: true, note: 'M1 新屏：收银流水' },
   { app: 'merchant', path: '/cashier/close', anchors: ['日结', '交接班', '店长'], serverDep: true, note: 'M1-补2 新屏：日结/交接班（clerk 引导页口径）' },
+  { app: 'merchant', path: '/cashier/refunds', anchors: ['退款'], serverDep: true, note: '批次 R12' },
   { app: 'merchant', path: '/settings/rules', anchors: ['规则配置'], serverDep: true, note: '批次 staff-2 R9-F：owner 登录渲染「规则配置管理」；manager 页内引导卡标题同含锚点，clerk 由 ClerkRouteGuard 拦截' },
   { app: 'merchant', path: '/live', anchors: ['在店监控'], expectPath: '/monitor', note: 'B2 重定向；U3 锚点' },
   { app: 'merchant', path: '/appointments', anchors: ['预约'], note: 'A3 白屏群' },
