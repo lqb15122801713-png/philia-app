@@ -1,0 +1,9 @@
+=== typecheck ===
+> @philia/server@0.1.0 typecheck
+> tsc --noEmit
+
+exit=0
+
+=== 迁移幂等：全新库两遍 ===
+[migrate] 迁移完成，已应用 16 条迁移：
+[migrate] 迁移完成，已应用 16 条迁移：

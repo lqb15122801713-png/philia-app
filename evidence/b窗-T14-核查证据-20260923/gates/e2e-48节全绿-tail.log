@@ -1,0 +1,61 @@
+  ✓ R11a⑨ 11 只超封顶 → BAD_REQUEST「多宠封顶 10 只」
+
+[R11a] 41. 会员服务折扣（清单⑦）
+  ✓ R11a⑦ 萤火服务单自动 88 折（adjusted=8800×0.88=7744 精确到分，应收=7744）
+  ✓ R11a⑦ 门市价划线对照（unit_price_fen=8800 门市价原值不动）
+  ✓ R11a⑦ 对照：微光（10000bp）无折扣=门市价 8800（adjusted 留空）
+
+[R11a] 42. grant 无月上限 + 三本账（清单③+①）
+  ✓ R11a③ 无月上限：同月两笔 grant 累计 258+258=516 全挂期次（无 cap 截断），未到账口径 balance=0
+  ✓ R11a③ grant 行挂期次且余额不动（before=after=0，统一次月到账）
+  ✓ R11a① 端点扫描：全路由无回馈金/储值/XP 互转通道（无 convert/transfer/exchange/互转 过程名）
+  ✓ R11a① 余额变动只走自家流水表（grant×2 后：储值账仍 98240 未动 / 客户 XP 账零事件）
+
+[R11a] 43. settleMonthly 次月到账（回归）
+  ✓ R11a回归 settleMonthly 未到期空转（not-due 零写入）
+  ✓ R11a回归 期次结算入账（批次单 grantedCount=2/grantedFen=516；余额 0→516 前后值留痕）
+  ✓ R11a回归 批次单幂等（period unique：重入 already-settled，全表仍 1 行）
+
+[R11a] 44. rebate 抵扣段（清单② + 不计已收回归）
+  ✓ R11a② 服务行单 + rebate 段 → 403 FORBIDDEN「回馈金仅可抵商品」（红线 2 硬校验）
+  ✓ R11a② 商品行单 + rebate 段成（余额 516→216 前后值留痕，1:1 扣已到账）
+  ✓ R11a回归 rebate 段不计已收（已收仅 +现金段 12600；rebateFen 参考列 +300）
+
+[R11a] 45. 退货扣回接 R12（清单⑥）
+  ✓ R11a⑥ 部分退 50% → rebateClawbackFen 实算=已发 258×(6450÷12900)=129（linkage 填实值，冻结接口激活）
+  ✓ R11a⑥ clawback 流水前后值（216→129 扣后余额 87；source_id=退款单号，note 关联原单号）
+  ✓ R11a⑥ 余额不足扣 0 不负账（应扣 129 > 余额 87 → 实扣 87，差额 42 记 rebateClawbackMissedFen 未扣回）
+
+[R11a] 46. 到期冻结 / 续费解冻（清单④）
+  ✓ R11a④ 到期过日 → 读路径懒冻结（membership frozen + 回馈金账户 frozen + freeze 留痕行）
+  ✓ R11a④ 冻结期抵扣不可用（FORBIDDEN「回馈金账户冻结中」，余额在不可用）
+  ✓ R11a④ 冻结期服务折扣同步失效（门市价 8800 不打折）
+  ✓ R11a④ 续费解冻：active + expires 自今日顺延 365 天 + 回馈金账户恢复 active
+
+[R11a] 47. plans 权益表述 + 立省钩子 + 年费分摊双口径（清单⑫+回归）
+  ✓ R11a⑫ 权益表述：plans 透出含「安心包全员免费」（微光档权益行）
+  ✓ R11a⑫ 无「非会员 ¥15」残留（全档权益文案 grep 级实证）
+  ✓ R11a⑫ 四档价格明面（0 / 19900 / 29900 / 59900 升序）
+  ✓ R11a回归 savingsPreview 立省钩子数值（服务 8800×12% + 商品 12900×2% = 1056+258=1314）
+  ✓ R11a回归 年费分摊双口径并列（收现 cashFen=156700 / 分摊确认 amortizedFen=11400 精确到分）
+
+[R11a] 48. 退会（清单⑤+⑪，R11a 段收尾动作）
+  ✓ R11a⑪ 退会折算=剩余整月 7×月均价（19900×7/12=11608 分精确到分）
+  ✓ R11a⑤ 退会清零（余额 0 + clear 留痕行前后值 + memberships cancelled）
+  ✓ R11a⑤ 客户频道通知（membership.cancelled → user 频道，payload 含折算额与「按原路退回」文案）
+  ✓ R11a⑤ 退会后会员页回非会员引导态（membership=null + guide 透出）
+  ✓ R11a⑤ 回馈金流水前后值链完整（grant/deduct/clawback/freeze/clear 全周期）
+  ✓ 验收结束：7200 端口无残留监听
+[e2e] 临时库目录清理失败（Windows libsql 句柄滞后，可手工删）: C:\Users\lqb15\AppData\Local\Temp\philia-e2e-p4MLtR Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-p4MLtR '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-p4MLtR'
+    at rmSync (node:fs:1282:18)
+    at cleanup (E:\KIMI code\philia-app\server\src\__tests__\e2e.ts:2534:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async <anonymous> (E:\KIMI code\philia-app\server\src\__tests__\e2e.ts:2572:3) {
+  errno: 1,
+  code: 'EPERM',
+  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-e2e-p4MLtR',
+  syscall: 'rm'
+}
+
+全链路验收全部通过 ✅
+E2E_EXIT=0

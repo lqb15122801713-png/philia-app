@@ -1,0 +1,21 @@
+computing gzip size...
+dist/registerSW.js                   0.13 kB
+dist/manifest.webmanifest            0.40 kB
+dist/index.html                      0.75 kB │ gzip:   0.43 kB
+dist/assets/index-B02uxnCx.css      99.69 kB │ gzip:  16.57 kB
+dist/assets/QrScanner-BPZG7nKu.js  141.53 kB │ gzip:  51.27 kB
+dist/assets/index-nl46Srfq.js      593.48 kB │ gzip: 164.62 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 3.01s
+
+PWA v1.3.0
+mode      generateSW
+precache  8 entries (816.00 KiB)
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js
+BUILD_EXIT=0
