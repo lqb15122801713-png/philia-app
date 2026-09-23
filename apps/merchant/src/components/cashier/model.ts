@@ -201,17 +201,21 @@ export function toCartSnapshot(
 }
 
 /**
- * 组装结账支付段：现金/微信/支付宝按选中输入 + 次卡段自动派生 + 储值段手输
+ * 组装结账支付段：现金/微信/支付宝按选中输入 + 次卡段自动派生 + 储值段手输 +
+ * 回馈金段手输（R11a 第六段）：
  * （次卡金额 = Σ扣次行有效价，服务端口径「次卡支付段金额须等于扣次行有效价合计」；
- *   储值段 = 存量储值消费，M1-补2 R5 启用，须绑会员，余额服务端事务内核验）。
- * 返回 null = 校验未过（Σ现金类 + 储值 ≠ 展示应收）。
+ *   储值段 = 存量储值消费，M1-补2 R5 启用，须绑会员，余额服务端事务内核验；
+ *   回馈金段 = 已到账余额抵扣，仅商品行可用——红线 2，server settle 硬校验兜底，
+ *   余额不足 deductRebate FORBIDDEN 原文透出；不计已收，computeDayTender rebateFen 单列）。
+ * 返回 null = 校验未过（Σ现金类 + 储值 + 回馈金 ≠ 展示应收）。
  */
 export function finalizePayments(
   amounts: CartAmounts,
-  moneySegs: Array<{ method: Exclude<PayMethod, 'pass' | 'stored_value'>; amountFen: number }>,
+  moneySegs: Array<{ method: Exclude<PayMethod, 'pass' | 'stored_value' | 'rebate'>; amountFen: number }>,
   storedValueFen = 0,
+  rebateFen = 0,
 ): SettleInput['payments'] | null {
-  const sum = moneySegs.reduce((s, p) => s + p.amountFen, 0) + storedValueFen
+  const sum = moneySegs.reduce((s, p) => s + p.amountFen, 0) + storedValueFen + rebateFen
   if (sum !== amounts.dueFen) return null
   const payments: SettleInput['payments'] = moneySegs.map((p) => ({
     method: p.method,
@@ -220,23 +224,63 @@ export function finalizePayments(
   if (storedValueFen > 0) {
     payments.push({ method: 'stored_value', amountFen: storedValueFen })
   }
+  if (rebateFen > 0) {
+    payments.push({ method: 'rebate', amountFen: rebateFen })
+  }
   if (amounts.passCoveredFen > 0) {
     payments.push({ method: 'pass', amountFen: amounts.passCoveredFen })
   }
   return payments
 }
 
+/**
+ * R11a：会员服务折扣镜像（展示口径）——server cashier.ts applyMemberServiceDiscount
+ * 同公式 round(unit×bp/10000)、同「人工改价行不覆盖」、同作用域（service/appointment 行，
+ * 商品全员同价）。**提交快照保持 adjustedPriceFen=null**（server 结账实算且避免撞
+ * 改价闸门 assertPriceEditAllowed——adjusted≠null 须 owner|manager，clerk 会 403）。
+ * bp=null 或 ≥10000（微光无折扣，红线 7）→ 门市价口径原样。
+ */
+export function computeCartMember(
+  lines: CartLine[],
+  discountType: DiscountType,
+  discountValue: number,
+  svcDiscountBp: number | null,
+): CartAmounts {
+  if (svcDiscountBp === null || svcDiscountBp >= 10000) {
+    return computeCart(lines, discountType, discountValue)
+  }
+  const discounted = lines.map((l) =>
+    (l.kind === 'service' || l.kind === 'appointment') && l.adjustedPriceFen == null
+      ? { ...l, adjustedPriceFen: Math.round((l.unitPriceFen * svcDiscountBp) / 10000) }
+      : l,
+  )
+  return computeCart(discounted, discountType, discountValue)
+}
+
+/** 商品行有效价合计（分）——回馈金抵扣段上限（server：rebate 段 ≤ 当单商品行合计，红线 2） */
+export const productTotalFen = (lines: CartLine[]): number =>
+  lines.filter((l) => l.kind === 'product').reduce((s, l) => s + lineTotal(l), 0)
+
+/** 行会员折后合计（展示用；非服务/预约行或人工改价行返回 null=不走会员折扣） */
+export function memberDiscountLineTotal(l: CartLine, bp: number | null): number | null {
+  if (bp === null || bp >= 10000) return null
+  if (l.kind !== 'service' && l.kind !== 'appointment') return null
+  if (l.adjustedPriceFen != null) return null // 人工改价优先（server 同口径）
+  return Math.round((l.unitPriceFen * bp) / 10000) * l.qty
+}
+
 /* ------------------------------------------------------------------ */
 /* 展示标签 / 图标                                                      */
 /* ------------------------------------------------------------------ */
 
-/** 支付方式五分列标签（M1-补2 R5：cash|wechat|alipay|pass|stored_value；credit 已废不出现） */
+/** 支付方式六分列标签（M1-补2 R5 + R11a：cash|wechat|alipay|pass|stored_value|rebate；credit 已废不出现） */
 export const PAY_METHOD_LABEL: Record<string, string> = {
   cash: '现金',
   wechat: '微信',
   alipay: '支付宝',
   pass: '次卡扣次',
   stored_value: '储值',
+  rebate: '回馈金',
 }
 
 /** 流水状态签：已收薄荷 / 已撤单灰 / 挂单·开单中浅木（收银单无待收——修订单口径）；

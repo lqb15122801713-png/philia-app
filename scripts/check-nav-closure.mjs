@@ -3,7 +3,7 @@
  * 导航闭环体检（批次 W1 · 常备验收工具）：node scripts/check-nav-closure.mjs
  *
  * 来源：任务书 W1 §二冻结规则（每页①底栏常显 或 ②返回键+明确主出口；交易成功页双出口）
- *      + §五巡检地图（51 路由；后续批次申报补入，现 64 路由）+ §六 Harness 规格（四要素检测/死胡同判定）。
+ *      + §五巡检地图（51 路由；后续批次申报补入，现 66 路由）+ §六 Harness 规格（四要素检测/死胡同判定）。
  *
  * 检测要素（页内真实渲染断言）：
  *   - back   返回键（页首左上 aria-label 含「返回」的可点区）
@@ -24,7 +24,7 @@
  *
  * 环境变量：CUSTOMER_URL / MERCHANT_URL / STAFF_URL（默认 vite preview 7100/7101/7102）、
  *   API_BASE（默认 http://localhost:7200）、CDP_PORT（默认 9224，避免与 smoke-routes 撞车）、
- *   NAV_JSON（设置时把 64 行结果写 JSON 到该路径）。
+ *   NAV_JSON（设置时把 66 行结果写 JSON 到该路径）。
  * 退出码：0=无死胡同；1=存在死胡同；2=环境不可用。
  */
 
@@ -59,9 +59,9 @@ const BROWSER = [
   '/usr/bin/microsoft-edge',
 ].filter(Boolean).find((p) => existsSync(p));
 
-/** 64 路由体检表（任务书 W1 §五巡检地图 51 路由 + 后续批次申报补入；expect: tab=主tab页 / sub=子页 / success=交易成功页 / gate=门禁豁免） */
+/** 66 路由体检表（任务书 W1 §五巡检地图 51 路由 + 后续批次申报补入；expect: tab=主tab页 / sub=子页 / success=交易成功页 / gate=门禁豁免） */
 const ROUTES = [
-  /* 客户端 25 */
+  /* 客户端 27 */
   { app: 'customer', path: '/home', expect: 'tab' },
   { app: 'customer', path: '/mall', expect: 'tab' },
   { app: 'customer', path: '/me', expect: 'tab' },
@@ -87,6 +87,8 @@ const ROUTES = [
   { app: 'customer', path: '/philia/pets', expect: 'sub' },
   { app: 'customer', path: '/dev-login', expect: 'gate' },
   { app: 'customer', path: '/login', expect: 'gate', note: '门禁别名' },
+  { app: 'customer', path: '/member', expect: 'sub', note: '批次 R11a' },
+  { app: 'customer', path: '/member/open', expect: 'sub', note: '批次 R11a' },
   /* 商家端 25 */
   { app: 'merchant', path: '/dashboard', expect: 'tab' },
   { app: 'merchant', path: '/appointments', expect: 'sub' },
@@ -245,7 +247,7 @@ async function checkRoute(cdp, route) {
 }
 
 async function main() {
-  console.log('导航闭环体检（W1 §六 harness）：64 路由 · 四要素检测');
+  console.log('导航闭环体检（W1 §六 harness）：66 路由 · 四要素检测');
   const results = [];
   for (const app of ['customer', 'merchant', 'staff']) {
     const routes = ROUTES.filter((r) => r.app === app);

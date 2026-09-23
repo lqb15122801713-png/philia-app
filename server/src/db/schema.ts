@@ -1889,3 +1889,168 @@ export const refundRules = sqliteTable(
   },
   (t) => [index('ix_refund_rules_key_active').on(t.ruleKey, t.active)],
 );
+
+/* ------------------------------------------------------------------ */
+/* 5.7 会员（批次 R11a 会员前置批·骨架批 · 冻结版 V1.0，CJ-0922-12/-13）     */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 会员档位配置表（R11a §一，同构 commission_rules，配置端口第四+域 domain='member_plans'）：
+ * 种子 version=1——四档（微光 free / 萤火 199·2%·88折 / 烛光 299·5%·85折 / 暖阳 599·10%·8折，
+ * 多宠全档统一：含 3 只、第 4 只起 +¥59/年/只、10 只封顶）+ 回馈金次月 5 日到账 /
+ * 回馈金有效期 365 天 / 会员有效期 365 天。保存即生效+版本化留痕，新值只管新单不回溯。
+ */
+export const memberPlans = sqliteTable(
+  'member_plans',
+  {
+    id: id(),
+    /** 规则版本（初始种子 =1） */
+    version: integer('version').notNull(),
+    /** 规则键（plan_weiguang/plan_yinghuo/plan_zhuguang/plan_nuanyang/rebate_settlement_day/rebate_validity_days/membership_validity_days） */
+    ruleKey: text('rule_key').notNull(),
+    /** 规则中文名（配置页展示） */
+    label: text('label').notNull(),
+    /** 规则值 JSON（档位价格/回馈 bp/折扣 bp/多宠参数/天数），结构见 RuleConfigValue */
+    valueJson: text('value_json', { mode: 'json' }).$type<RuleConfigValue>().notNull(),
+    /** 生效时间（按此取规则版本；新规只管生效后的单） */
+    effectiveFrom: integer('effective_from', { mode: 'timestamp' }).notNull(),
+    /** 是否生效（0/1） */
+    active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    /** 创建/变更人用户 ID -> users.id */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_member_plans_key_active').on(t.ruleKey, t.active)],
+);
+
+/**
+ * 会员实例表（R11a §一）：一行=一个用户的一张有效年卡。
+ * - 微光自助开档 sold_store_id=NULL（或注册店）；付费三档售卡单 sold_store=bill.store_id
+ *   （决策 #41 双归属：售卡店=sold_store，消费店=cashier_bills.store_id，注释写死口径）；
+ * - expires_at=开通日+membership_validity_days（默认 365 天），开通时算定不重算；
+ * - 到期冻结 status='frozen'（回馈金余额在不可用）/续费解冻/退会 cancelled+清零留痕
+ *   （cancelled_at/cancel_reason/refund_fen=剩余整月×月均价折算，精确到分）。
+ */
+export const memberships = sqliteTable(
+  'memberships',
+  {
+    id: id(),
+    /** 会员用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 档位键（plan_weiguang/plan_yinghuo/plan_zhuguang/plan_nuanyang -> member_plans.rule_key） */
+    planKey: text('plan_key').notNull(),
+    /** 办卡门店 ID -> stores.id（微光自助开档=NULL 或注册店；付费档=售卡单消费店） */
+    soldStoreId: text('sold_store_id').references(() => stores.id),
+    /** 开通时间 */
+    startedAt: integer('started_at', { mode: 'timestamp' }).notNull(),
+    /** 到期时间（=开通日+365 天，开通时算定不重算） */
+    expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+    /** 状态，取值：active | frozen（到期冻结） | cancelled（退会） */
+    status: text('status').notNull().default('active'),
+    /** 名下宠物数（多宠附加费口径：含 3 只，第 4 只起 +¥59/年/只，10 只封顶） */
+    petCount: integer('pet_count').notNull().default(0),
+    /** 实付（分，多宠附加费含） */
+    paidFen: integer('paid_fen').notNull().default(0),
+    /** 退会时间（NULL=未退会） */
+    cancelledAt: integer('cancelled_at', { mode: 'timestamp' }),
+    /** 退会原因 */
+    cancelReason: text('cancel_reason'),
+    /** 退会折算退款额（分；剩余整月×月均价，CJ-0922-13 口径） */
+    refundFen: integer('refund_fen'),
+    ...auditColumns,
+  },
+  (t) => [index('ix_memberships_user_status').on(t.userId, t.status)],
+);
+
+/**
+ * 回馈金余额表（R11a §一）：余额只反映已到账（grant 统一次月 5 日到账，见 rebate_settlements）；
+ * 三本账物理分离，永不计营业额（与储值/XP 同红线）。
+ */
+export const rebateAccounts = sqliteTable(
+  'rebate_accounts',
+  {
+    id: id(),
+    /** 会员用户 ID -> users.id（一人一本） */
+    userId: text('user_id')
+      .notNull()
+      .unique()
+      .references(() => users.id),
+    /** 可用余额（分；仅已到账期次合计） */
+    balanceFen: integer('balance_fen').notNull().default(0),
+    /** 状态，取值：active | frozen（会员到期冻结，余额在不可用） */
+    status: text('status').notNull().default('active'),
+    ...auditColumns,
+  },
+);
+
+/**
+ * 回馈金流水表（R11a §一，五类）：grant 发放（挂期次，次月到账）/ deduct 抵扣（仅商品行，
+ * 1:1 扣已到账余额）/ clawback 扣回（R12 退款联动，余额不足扣 0 不负账，差额记未扣回）/
+ * freeze 冻结 / clear 清零（退会）。前后余额+来源单号全留痕。
+ */
+export const rebateLogs = sqliteTable(
+  'rebate_logs',
+  {
+    id: id(),
+    /** 会员用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 回馈金账户 ID -> rebate_accounts.id */
+    accountId: text('account_id')
+      .notNull()
+      .references(() => rebateAccounts.id),
+    /** 流水类型，取值：grant 发放 | deduct 抵扣 | clawback 扣回 | freeze 冻结 | clear 清零 */
+    type: text('type').notNull(),
+    /** 变动额（分，正负） */
+    deltaFen: integer('delta_fen').notNull(),
+    /** 变动前余额（分；grant 未到账期余额不动，before=after） */
+    beforeFen: integer('before_fen').notNull(),
+    /** 变动后余额（分） */
+    afterFen: integer('after_fen').notNull(),
+    /** 来源单号（订单/账单/退款单/期次批次） */
+    sourceId: text('source_id').notNull(),
+    /** 期次（'YYYY-MM'，grant 挂期次统一次月到账；其余可空） */
+    period: text('period'),
+    /** 结算批次 ID -> rebate_settlements.id（grant 入账批次回链；未结算可空） */
+    settlementId: text('settlement_id').references(() => rebateSettlements.id),
+    /** 备注 */
+    note: text('note'),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_rebate_logs_user_created').on(t.userId, t.createdAt),
+    index('ix_rebate_logs_period').on(t.period),
+  ],
+);
+
+/**
+ * 回馈金月度结算批次表（R11a §一）：每月 5 日（rebate_settlement_day 可调，故障顺延≤3 天
+ * 页面明示）把上一期次 grant 行汇总入账——一批次一行，余额入账前后值落在 rebate_logs。
+ */
+export const rebateSettlements = sqliteTable(
+  'rebate_settlements',
+  {
+    id: id(),
+    /** 结算期次（'YYYY-MM'，唯一——一期一批，幂等） */
+    period: text('period').notNull(),
+    /** 本批入账笔数（grant 行数） */
+    grantedCount: integer('granted_count').notNull(),
+    /** 本批入账总额（分） */
+    grantedFen: integer('granted_fen').notNull(),
+    /** 计划结算日（该月几号，快照 rebate_settlement_day 当时值） */
+    scheduledDay: integer('scheduled_day').notNull(),
+    /** 实际执行时间（故障顺延留痕） */
+    executedAt: integer('executed_at', { mode: 'timestamp' }),
+    /** 状态，取值：done（一期完成恒 done；批次行存在即已执行） */
+    status: text('status').notNull().default('done'),
+    /** 备注 */
+    note: text('note'),
+    ...auditColumns,
+  },
+  (t) => [uniqueIndex('uq_rebate_settlements_period').on(t.period)],
+);

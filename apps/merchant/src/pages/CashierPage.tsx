@@ -20,6 +20,18 @@
  *
  * 联动（任务书 §1.5.1）：?pull=<apptId> 启动参数自动把该预约拉入购物车
  * （幂等：已在车内不重复加；已收款/不存在安静 toast）。
+ *
+ * R11a 会员四件（Phase 3A）：
+ * - 售卡/续费：会员区常驻入口 + MembershipPanel（四档对照卡/多宠附加费预览/
+ *   到店付三段/新客手机号建档旁路；frozen/临期默认续费模式；续费金额 server 实算
+ *   经空段探测取得——读路径缺口报备）；成交回写会话缓存（档位签/宠物数/有效期）；
+ * - 服务折扣：已知档位（本端成交缓存）→ 服务/预约行折后价+门市价划线+档位签，
+ *   金额镜像 computeCartMember（同 server 公式）；提交快照 adjustedPriceFen=null
+ *   不撞改价闸门，结账由 server applyMemberServiceDiscount 实算；
+ * - 回馈金抵扣段：PaySheet 第六段胶囊（仅会员出现；无商品行置灰「回馈金仅可抵
+ *   商品」；≤min(商品行合计,应收) 前置拦截，余额不足 server 原文拒；不计已收）；
+ * - 立省钩子（APP-47）：非会员当单 savingsPreview 实时算「开通萤火立省 ¥X」，
+ *   一屏一次，关闭后本单不再弹（localStorage 行签名）。
  */
 
 import { EventType, usePhiliaClient } from '@philia/shared'
@@ -32,6 +44,16 @@ import CartPanel from '@/components/cashier/CartPanel'
 import { DiscountDialog, PriceDialog, VoidDialog } from '@/components/cashier/dialogs'
 import HoldPanel from '@/components/cashier/HoldPanel'
 import MemberSearch from '@/components/cashier/MemberSearch'
+import MembershipPanel from '@/components/cashier/MembershipPanel'
+import {
+  dismissSavings,
+  isRenewDue,
+  loadSavingsDismissed,
+  MEMBER_PLANS_KEY,
+  MEMBER_SAVINGS_KEY,
+  planShortLabel,
+  type MembershipRow,
+} from '@/components/cashier/membership'
 import OfflineBar from '@/components/cashier/OfflineBar'
 import {
   enqueueOffline,
@@ -46,12 +68,13 @@ import PickPanel from '@/components/cashier/PickPanel'
 import {
   BILLS_TODAY_KEY,
   CASHIER_ROOT_KEY,
-  computeCart,
+  computeCartMember,
   CURRENT_SHIFT_KEY,
   DAY_CLOSES_KEY,
   discountOverLimit,
   fenToYuan,
   HELD_BILLS_KEY,
+  lineTotal,
   PENDING_APPTS_KEY,
   TODAY_TENDER_KEY,
   toCartSnapshot,
@@ -119,12 +142,21 @@ export default function CashierPage() {
     queryKey: ['pass', 'listForStore'],
     queryFn: () => trpc.pass.listForStore.query(),
   })
+  /** R11a：会员四档目录（public 透出；售卡面板/折扣镜像/档位签共用） */
+  const plansQ = useQuery({
+    queryKey: MEMBER_PLANS_KEY,
+    queryFn: () => trpc.membership.plans.query(),
+    staleTime: 300_000,
+  })
 
   const services = servicesQ.data?.services
   const products = useMemo(
     () => (productsQ.data?.items ?? []).filter((p) => p.status === 'on'),
     [productsQ.data],
   )
+
+  /* ---------------- R11a 会员状态会话缓存（售卡/续费成交回写真值；无 server 读路径报备） ---------------- */
+  const [memberStatusMap, setMemberStatusMap] = useState<Record<string, MembershipRow>>({})
 
   /* ---------------- 购物车状态 ---------------- */
   const [lines, setLines] = useState<CartLine[]>([])
@@ -138,7 +170,20 @@ export default function CashierPage() {
   const [pickTab, setPickTab] = useState<PickTab>('service')
   const [mobileTab, setMobileTab] = useState<MobileTab>('pick')
 
-  const amounts = computeCart(lines, discountType, discountValue)
+  /**
+   * R11a：会员服务折扣镜像（展示口径）——当前绑定会员的档位 bp（会话缓存 → plans 目录）。
+   * 提交快照保持 adjustedPriceFen=null（避免撞改价闸门，server 结账实算同公式）；
+   * 缓存未知档位时 memberDiscountUnknown 提示，金额以 server 成交为准（读路径缺口报备）。
+   */
+  const cachedMembership = member ? (memberStatusMap[member.id] ?? null) : null
+  const svcDiscountBp = useMemo(() => {
+    if (!cachedMembership || cachedMembership.status !== 'active') return null
+    const plan = plansQ.data?.plans.find((p) => p.planKey === cachedMembership.planKey)
+    if (!plan || plan.serviceDiscountBp >= 10000) return null // 微光无折扣（红线 7）
+    return plan.serviceDiscountBp
+  }, [cachedMembership, plansQ.data])
+
+  const amounts = computeCartMember(lines, discountType, discountValue, svcDiscountBp)
 
   const memberPass = member
     ? passesQ.data
@@ -345,6 +390,55 @@ export default function CashierPage() {
 
   const [payOpen, setPayOpen] = useState(false)
   const [settledInfo, setSettledInfo] = useState<{ billNo: string; paidFen: number } | null>(null)
+
+  /* ---------------- R11a：售卡/续费面板 + 立省钩子 ---------------- */
+  const [sellOpen, setSellOpen] = useState(false)
+  const [sellPrefill, setSellPrefill] = useState<{ phone?: string; planKey?: string | null; mode?: 'sell' | 'renew' }>({})
+  const openSell = useCallback(
+    (opts?: { phone?: string; planKey?: string; mode?: 'sell' | 'renew' }) => {
+      const cached = member ? (memberStatusMap[member.id] ?? null) : null
+      setSellPrefill({
+        phone: opts?.phone,
+        planKey: opts?.planKey ?? null,
+        // 会员已识别且 frozen/临期（≤30 天）→ 默认续费模式（任务书 §四.5）
+        mode: opts?.mode ?? (cached && isRenewDue(cached) ? 'renew' : 'sell'),
+      })
+      setSellOpen(true)
+    },
+    [member, memberStatusMap],
+  )
+  /** 售卡/续费成交回写：会员状态会话缓存 + 流水/已收/财务失效（成交单=settled 入流水） */
+  const onMembershipSold = useCallback(
+    (m: MembershipRow) => {
+      setMemberStatusMap((prev) => ({ ...prev, [m.userId]: m }))
+      invalidateCashier()
+      if (!member || member.id !== m.userId) {
+        toast(`已开通「${planShortLabel(m.planKey)}」——检索手机号绑定会员后，本单享服务折扣与回馈金`, { icon: '💳' })
+      }
+    },
+    [invalidateCashier, member],
+  )
+
+  /* 立省钩子（APP-47）：非会员当单实时算「开通萤火立省 ¥X」，一屏一次；
+     关闭标记按行签名存 localStorage（本单不再弹） */
+  const savingsSig = useMemo(
+    () => lines.map((l) => `${l.refId}:${l.qty}:${lineTotal(l)}`).join('|'),
+    [lines],
+  )
+  const [savingsDismissed, setSavingsDismissed] = useState<string[]>(() => loadSavingsDismissed())
+  const savingsQ = useQuery({
+    queryKey: [...MEMBER_SAVINGS_KEY, savingsSig],
+    queryFn: () =>
+      trpc.membership.savingsPreview.query({
+        lines: lines.map((l) => ({ kind: l.kind, amountFen: lineTotal(l) })),
+      }),
+    enabled: member === null && lines.length > 0 && !savingsDismissed.includes(savingsSig),
+  })
+  const savings =
+    member === null && lines.length > 0 && savingsQ.data && savingsQ.data.fen > 0 ? savingsQ.data : null
+  const onDismissSavings = useCallback(() => {
+    setSavingsDismissed(dismissSavings(savingsSig))
+  }, [savingsSig])
 
   /* ---------------- R4 离线暂存 / 补传（断网不静默） ---------------- */
   const [online, setOnline] = useState(() => navigator.onLine)
@@ -604,6 +698,8 @@ export default function CashierPage() {
           <div className="rounded-[20px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(74,59,46,.09)]">
             <MemberSearch
               member={member}
+              membership={cachedMembership}
+              svcDiscountBp={svcDiscountBp}
               onSelect={(m) => {
                 setMember(m)
                 // 换绑会员时清掉扣次标记（次卡跟人走）
@@ -613,6 +709,7 @@ export default function CashierPage() {
                 setMember(null)
                 setLines((prev) => prev.map((l) => (l.paidByPass ? { ...l, paidByPass: false } : l)))
               }}
+              onOpenSell={openSell}
             />
           </div>
           <div className="rounded-[20px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(74,59,46,.09)]">
@@ -648,6 +745,13 @@ export default function CashierPage() {
               creatorLabel={billNo ? creatorLabel || '—' : (role.nickname ?? '—')}
               canEditPrice={role.canManage}
               holding={holdM.isPending}
+              svcDiscount={
+                svcDiscountBp !== null && cachedMembership
+                  ? { bp: svcDiscountBp, planLabel: planShortLabel(cachedMembership.planKey) }
+                  : null
+              }
+              memberDiscountUnknown={member !== null && cachedMembership === null}
+              savings={savings}
               onQty={(refId, d) =>
                 setLines((prev) =>
                   prev.map((l) =>
@@ -675,6 +779,8 @@ export default function CashierPage() {
                 }
                 setPayOpen(true)
               }}
+              onOpenSell={() => openSell({ planKey: 'plan_yinghuo' })}
+              onDismissSavings={onDismissSavings}
             />
           </div>
         </section>
@@ -731,6 +837,21 @@ export default function CashierPage() {
           if (billNo && voidTarget.billNo === billNo) clearCart()
         }}
         onClose={() => setVoidTarget(null)}
+      />
+
+      {/* R11a：售卡/续费面板（会员区/立省钩子入口；clerk 可售卡收款——三级权限不动） */}
+      <MembershipPanel
+        open={sellOpen}
+        member={member}
+        membership={cachedMembership}
+        prefillPhone={sellPrefill.phone}
+        preselectPlanKey={sellPrefill.planKey}
+        defaultMode={sellPrefill.mode}
+        onSold={onMembershipSold}
+        onClose={() => {
+          setSellOpen(false)
+          setSellPrefill({})
+        }}
       />
 
       {/* 屏二：支付面板（主屏内展开层，不跳路由；390 全屏）

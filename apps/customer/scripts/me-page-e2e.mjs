@@ -180,8 +180,9 @@ async function main() {
 
   /* ---------- 断言 2：五个功能入口 href（对照 App.tsx 路由表） ---------- */
   const entryHrefs = await evalJs(`Array.from(document.querySelectorAll('[data-testid="me-entries"] a')).map(a => a.getAttribute('href'))`);
-  const expected = ['/appointments', '/mall/orders', '/philia/member', '/philia/pets', '/philia/moments'];
-  assert('功能入口共 5 项', entryHrefs.length === 5, JSON.stringify(entryHrefs));
+  // R11a 同步：会员入口已改指 /member（旧 /philia/member 退役重定向）；入口现为 6 项（U1-H /me/card 会员卡 + R11a /member 会员中心）
+  const expected = ['/appointments', '/mall/orders', '/member', '/me/card', '/philia/pets', '/philia/moments'];
+  assert('功能入口共 6 项', entryHrefs.length === 6, JSON.stringify(entryHrefs));
   for (const href of expected) {
     assert(`入口存在：${href}`, entryHrefs.includes(href));
   }

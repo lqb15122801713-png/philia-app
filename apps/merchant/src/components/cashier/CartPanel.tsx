@@ -15,15 +15,17 @@
  * - 吸底双钮 [挂单] 白底墨边 + [结账] 柠檬（grid 1 : 1.4）。
  */
 
-import { Check, Minus, Pause, Percent, Plus, X } from 'lucide-react'
+import { Check, Minus, Pause, Percent, Plus, Sparkles, X } from 'lucide-react'
 import {
   fenToYuan,
   lineIcon,
   lineTotal,
+  memberDiscountLineTotal,
   type CartAmounts,
   type CartLine,
   type DiscountType,
 } from './model'
+import { serviceDiscountLabel } from './membership'
 
 function QtyStepper({
   qty,
@@ -61,6 +63,9 @@ export default function CartPanel({
   creatorLabel,
   canEditPrice,
   holding,
+  svcDiscount,
+  memberDiscountUnknown,
+  savings,
   onQty,
   onRemove,
   onOpenPrice,
@@ -69,6 +74,8 @@ export default function CartPanel({
   onTogglePassLine,
   onHold,
   onCheckout,
+  onOpenSell,
+  onDismissSavings,
 }: {
   lines: CartLine[]
   /** 整单已绑会员（散客 false → 不出现扣次钮） */
@@ -84,6 +91,12 @@ export default function CartPanel({
   /** M1-补2 R2：改价/整单优惠闸门放宽至 owner|manager（server assertPriceEditAllowed 同档） */
   canEditPrice: boolean
   holding: boolean
+  /** R11a：会员服务折扣镜像（已知档位：bp + 档位短名；null=无折扣或微光） */
+  svcDiscount: { bp: number; planLabel: string } | null
+  /** R11a：会员已绑但档位未在本端读出（读路径缺口——折扣由 server 结账实算，折后价以成交为准） */
+  memberDiscountUnknown: boolean
+  /** R11a 立省钩子（非会员当单 savingsPreview 实时算；null=不展示） */
+  savings: { fen: number; text: string } | null
   onQty: (refId: string, d: 1 | -1) => void
   onRemove: (refId: string) => void
   onOpenPrice: (line: CartLine) => void
@@ -92,10 +105,23 @@ export default function CartPanel({
   onTogglePassLine: (refId: string) => void
   onHold: () => void
   onCheckout: () => void
+  /** 立省钩子「开通萤火」快捷入口（售卡面板萤火档预选） */
+  onOpenSell: () => void
+  /** 立省钩子关闭（本单不再弹——localStorage 行签名标记） */
+  onDismissSavings: () => void
 }) {
   const empty = lines.length === 0
   const markedPassCount = lines.filter((l) => l.paidByPass).length
   const adjustedCount = lines.filter((l) => l.adjustedPriceFen != null).length
+  /** R11a：会员折扣合计（展示预估口径，服务/预约行未人工改价的部分） */
+  const memberDiscFen =
+    svcDiscount === null
+      ? 0
+      : lines.reduce((s, l) => {
+          const disc = memberDiscountLineTotal(l, svcDiscount.bp)
+          return disc === null ? s : s + (lineTotal(l) - disc)
+        }, 0)
+  const svcDiscLabel = svcDiscount ? serviceDiscountLabel(svcDiscount.bp) : null
 
   return (
     <div className="flex flex-1 flex-col" data-testid="cashier-cart">
@@ -121,6 +147,8 @@ export default function CartPanel({
             const passToggleable =
               groomLine && memberBound && canUsePass && (l.paidByPass || passRemainTimes > markedPassCount)
             const stockShort = l.kind === 'product' && l.stock != null && l.qty > l.stock
+            // R11a：会员折扣镜像行（人工改价行不走折扣——server 同口径；展示=折后价+门市价划线）
+            const mDisc = svcDiscount ? memberDiscountLineTotal(l, svcDiscount.bp) : null
             return (
               <div
                 key={l.refId}
@@ -137,6 +165,15 @@ export default function CartPanel({
                       {l.paidByPass ? (
                         <span className="ml-1.5 inline-flex items-center rounded-full bg-[#7FD8BE] px-2 py-[2px] text-caption-xs leading-none text-[#1E4D3D]">
                           扣次
+                        </span>
+                      ) : null}
+                      {/* R11a：档位签（会员折扣行；88/85/8 折） */}
+                      {mDisc !== null && svcDiscount ? (
+                        <span
+                          className="ml-1.5 inline-flex items-center rounded-full bg-brand-primary px-2 py-[2px] text-caption-xs leading-none text-ink"
+                          data-testid={`cashier-member-disc-${l.refId}`}
+                        >
+                          {svcDiscount.planLabel} · {svcDiscLabel}
                         </span>
                       ) : null}
                     </div>
@@ -158,10 +195,18 @@ export default function CartPanel({
                       l.paidByPass ? 'text-[rgba(74,59,46,.3)] line-through' : 'text-ink'
                     } ${canEditPrice ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                   >
-                    ¥{fenToYuan(lineTotal(l))}
+                    ¥{fenToYuan(mDisc ?? lineTotal(l))}
                     {l.adjustedPriceFen != null ? (
                       <span className="block text-caption-xs font-normal text-[rgba(74,59,46,.3)] line-through">
                         ¥{fenToYuan(l.unitPriceFen * l.qty)}
+                      </span>
+                    ) : mDisc !== null ? (
+                      /* R11a：门市价划线对照（服务允许划线价——红线 6 商品全员同价不划线） */
+                      <span
+                        className="block text-caption-xs font-normal text-[rgba(74,59,46,.3)] line-through"
+                        data-testid={`cashier-member-strike-${l.refId}`}
+                      >
+                        门市 ¥{fenToYuan(lineTotal(l))}
                       </span>
                     ) : null}
                   </button>
@@ -245,12 +290,55 @@ export default function CartPanel({
         </p>
       ) : null}
 
+      {/* R11a 立省钩子（APP-47）：非会员当单「开通萤火立省 ¥X」一屏一次不打扰；
+          关闭后本单不再弹（localStorage 行签名标记） */}
+      {savings && !empty ? (
+        <div
+          className="mt-2 flex items-center gap-2 rounded-[14px] bg-brand-primary-light px-3 py-2.5"
+          data-testid="cashier-savings-hook"
+        >
+          <Sparkles size={14} strokeWidth={1.8} className="shrink-0 text-ink" aria-hidden />
+          <span className="min-w-0 flex-1 text-caption-xs font-semibold text-ink">{savings.text}</span>
+          <button
+            type="button"
+            data-testid="cashier-savings-open"
+            onClick={onOpenSell}
+            className="inline-flex min-h-[44px] shrink-0 items-center rounded-full bg-brand-primary px-3 py-1.5 text-caption-xs font-bold text-ink shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+          >
+            开通萤火 ›
+          </button>
+          <button
+            type="button"
+            aria-label="关闭本单立省提示"
+            data-testid="cashier-savings-dismiss"
+            onClick={onDismissSavings}
+            className="shrink-0 p-1.5 text-[rgba(74,59,46,.42)] transition-colors hover:text-[rgba(74,59,46,.7)]"
+          >
+            <X size={13} strokeWidth={1.8} aria-hidden />
+          </button>
+        </div>
+      ) : null}
+
       {/* P6 金额面板（吸底） */}
       <div className="mt-auto pt-2.5">
         <div className="flex justify-between py-1 text-caption text-[rgba(74,59,46,.6)]">
           <span>合计（{lines.length} 项）</span>
           <b className="font-number font-semibold tabular-nums text-ink">¥{fenToYuan(amounts.subtotalFen)}</b>
         </div>
+        {/* R11a：会员折扣行（服务/预约行按档折扣预估；商品全员同价不打折——红线 6/7） */}
+        {svcDiscount && memberDiscFen > 0 ? (
+          <div className="flex justify-between py-1 text-caption text-[rgba(74,59,46,.6)]" data-testid="cashier-member-discount-row">
+            <span>
+              会员折扣（{svcDiscount.planLabel} · {svcDiscLabel}）
+            </span>
+            <b className="font-number font-semibold tabular-nums text-ink">−¥{fenToYuan(memberDiscFen)}</b>
+          </div>
+        ) : null}
+        {memberDiscountUnknown ? (
+          <p className="py-1 text-caption-xs text-[rgba(74,59,46,.42)]" data-testid="cashier-member-discount-unknown">
+            会员折扣由服务端结账时按档自动计算，折后价以成交为准（内测期档位读路径缺口）
+          </p>
+        ) : null}
         {amounts.passCoveredFen > 0 ? (
           <div className="flex justify-between py-1 text-caption text-[rgba(74,59,46,.6)]">
             <span>次卡抵扣（{markedPassCount} 行）</span>
