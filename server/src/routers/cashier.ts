@@ -69,6 +69,13 @@ import {
 import { broadcastNow, emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
 import { storeDayStartMs, storeWallclock } from './appointment';
+// R11a 会员前置批：回馈金账本内核（抵扣/计提）+ 会员档位服务折扣读侧
+import {
+  deductRebate,
+  grantOnProductSettled,
+  memberPlanFor,
+  planNum as memberPlanNum,
+} from '../services/rebate';
 
 /* ------------------------------------------------------------------ */
 /* 常量与类型                                                            */
@@ -85,8 +92,12 @@ const ITEM_KINDS = ['service', 'product', 'appointment'] as const;
  * stored_value 本批正式启用（裁定①③：仅存量消费，余额不足可混搭，储值消费不计入
  * 已收、参考列单列）；**全域无充值/新售入口**（新售冻结不变，回归保护——本文件
  * 不出现任何储值充值端点，账户余额仅经 R5b CSV 导入批次建立）。
+ * R11a 增第六段 rebate 回馈金抵扣（批次 R11a · 决策 #33+红线 2）：仅商品行可用
+ * （服务/寄养行 server 硬校验 FORBIDDEN「回馈金仅可抵商品」），余额不足可混搭，
+ * 不计已收（参考列同储值口径，computeDayTender rebateFen 单列），扣减留痕见
+ * rebate_logs（前后余额+单号，services/rebate.ts deductRebate）。
  */
-const PAYMENT_METHODS = ['cash', 'wechat', 'alipay', 'pass', 'stored_value'] as const;
+const PAYMENT_METHODS = ['cash', 'wechat', 'alipay', 'pass', 'stored_value', 'rebate'] as const;
 
 /** 单号格式：HD-{YYYYMMDD}-{当日 3 位序号} */
 const BILL_NO_RE = /^HD-\d{8}-\d{3}$/;
@@ -142,8 +153,9 @@ export function withCashierWriteLock<T>(fn: () => Promise<T>): Promise<T> {
 /**
  * 事务内调用（串行锁保护下无并发撞号； UNIQUE 索引兜底）。
  * 当日窗口 = 门店规范时区（+8）当日 [00:00, 次日 00:00)，与财务 byDay 日界同帧。
+ * R11a：导出供 membership.sell/renew 售卡/续费单用（同一单号序列）。
  */
-async function genBillNo(d: DbHandle, storeId: string, now: Date): Promise<string> {
+export async function genBillNo(d: DbHandle, storeId: string, now: Date): Promise<string> {
   const w = storeWallclock(now);
   const dayStart = new Date(storeDayStartMs(w.y, w.m, w.day));
   const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000);
@@ -191,7 +203,8 @@ const cartSnapshotSchema = z.object({
   note: z.string().max(500).optional(),
 });
 
-/** 支付段入参（settle：五分列可组合；stored_value=存量储值消费，M1-补2 R5 启用，须绑会员） */
+/** 支付段入参（settle：五分列+回馈金段可组合；stored_value=存量储值消费（M1-补2 R5）与
+ *  rebate=回馈金抵扣（R11a，仅商品行可用——红线 2，硬校验在 settle）均须绑会员） */
 const paymentSegmentSchema = z.object({
   method: z.enum(PAYMENT_METHODS),
   amountFen: z.number().int().min(1, '支付金额须 ≥1 分').max(100_000_000),
@@ -354,16 +367,52 @@ function computeAmounts(
 }
 
 /**
- * 改价/折扣闸门（M1-补2 R2 · 补丁①+矩阵会签稿）：行改价或单级优惠非 none 时
- * 硬校验 owner|manager（M1 原 owner-only 放宽一档至 manager；clerk 越权 FORBIDDEN 如实）。
- * 留痕不变：operator_id = 操作人，事件带 by。
+ * 改价/折扣闸门（M1-补2 R2 · 补丁①+矩阵会签稿；R11a 补丁②修订）：行改价或单级优惠
+ * 非 none 时硬校验 owner|manager（M1 原 owner-only 放宽一档至 manager；clerk 越权
+ * FORBIDDEN 如实）。留痕不变：operator_id = 操作人，事件带 by。
+ *
+ * R11a 补丁②（收银台 UI 复核真缺口）：**系统折扣 ≠ 人工改价**——会员服务折扣由
+ * applyMemberServiceDiscount 落 adjusted=round(门市价×service_discount_bp/10000)，
+ * 挂单/取单回显后随购物车快照回传；若一刀切视为人工改价，clerk 会员折扣单结账被
+ * 闸门误拦（传 adjusted=null 又与前端应收口径打架）。最小可靠判据：
+ * 账单带会员（customerId 已按 resolveBillCustomerId 口径解析）+ 该行为服务/预约行 +
+ * input.adjustedPriceFen 精确等于 round(该行门市价×当前会员档 bp/10000)
+ * → 视为系统折扣回显，不触发闸门；不等值/散客单/商品行一律按人工改价走原闸。
+ * （判据局限写死：人工改价恰好等于公式值时无法区分，按系统折扣放行——可接受，
+ *  改价留痕仍落 adjustedPriceFen 行快照。）
  */
-function assertPriceEditAllowed(ctx: Parameters<typeof assertMerchantManager>[0], input: {
-  items: Array<{ adjustedPriceFen?: number | null }>;
-  discountType: string;
-}): void {
+async function assertPriceEditAllowed(
+  ctx: Parameters<typeof assertMerchantManager>[0],
+  d: DbHandle,
+  input: {
+    items: Array<{ adjustedPriceFen?: number | null }>;
+    discountType: string;
+  },
+  resolved: ResolvedItem[],
+  customerId: string | null,
+): Promise<void> {
   const hasAdjusted = input.items.some((it) => it.adjustedPriceFen != null);
-  if (hasAdjusted || input.discountType !== 'none') assertMerchantManager(ctx);
+  if (!hasAdjusted && input.discountType === 'none') return; // 快路径：无改价无优惠
+  /* 当前识别会员档折扣 bp（无会员/微光=10000，公式恒等于门市价故天然不匹配改价） */
+  let memberBp = 10000;
+  if (customerId) {
+    const mp = await memberPlanFor(d, customerId);
+    if (mp) memberBp = memberPlanNum(mp.plan, 'service_discount_bp', 10000);
+  }
+  const hasManualAdjust = input.items.some((it, i) => {
+    if (it.adjustedPriceFen == null) return false;
+    const r = resolved[i]; // resolveItems 按 input 顺序逐行解析，下标一一对应
+    if (
+      memberBp < 10000 &&
+      r &&
+      (r.kind === 'service' || r.kind === 'appointment') &&
+      it.adjustedPriceFen === Math.round((r.unitPriceFen * memberBp) / 10000)
+    ) {
+      return false; // R11a 补丁②：系统折扣回显，非人工改价
+    }
+    return true;
+  });
+  if (hasManualAdjust || input.discountType !== 'none') assertMerchantManager(ctx);
 }
 
 /** 次卡当前可用（口径同 pass.ts passUsable）：active + 有余量 + 未过期 */
@@ -404,6 +453,30 @@ function resolveBillCustomerId(
 function resolveReceptionistId(operatorUserId: string, resolved: ResolvedItem[]): string {
   const apptLine = resolved.find((r) => r.kind === 'appointment' && r.appointment);
   return apptLine?.appointment?.receptionistId ?? operatorUserId;
+}
+
+/**
+ * R11a 会员服务折扣（任务书 §四.3 · 红线 6 全员同价：商品无会员价，折扣仅限服务）：
+ * 识别会员（active 付费档）后服务/预约行自动按档折扣——adjusted=门市价×
+ * service_discount_bp/10000 精确到分（unit_price_fen 不动=门市价划线对照）；
+ * 行已被人工改价（adjustedPriceFen 非空，owner|manager 闸门动作）时不覆盖；
+ * 未识别/散客/微光（bp=10000）=门市价原价。hold/settle 在 computeAmounts 前调用。
+ */
+async function applyMemberServiceDiscount(
+  d: DbHandle,
+  customerId: string | null,
+  resolved: ResolvedItem[],
+): Promise<void> {
+  if (!customerId) return;
+  const mp = await memberPlanFor(d, customerId);
+  if (!mp) return;
+  const bp = memberPlanNum(mp.plan, 'service_discount_bp', 10000);
+  if (bp >= 10000) return; // 微光无折扣（红线 7）
+  for (const it of resolved) {
+    if (it.kind !== 'service' && it.kind !== 'appointment') continue; // 商品行全员同价，不打折
+    if (it.adjustedPriceFen != null) continue; // 人工改价优先（改价留痕语义不覆盖）
+    it.adjustedPriceFen = Math.round((it.unitPriceFen * bp) / 10000);
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -478,6 +551,8 @@ export interface CashierRecognizedEntry {
   passFen: number;
   /** 储值消费额（M1-补2 R5；非现金，单列对账，永不计入已收——裁定①同次卡口径） */
   storedValueFen: number;
+  /** 回馈金抵扣额（R11a；非现金，单列对账，永不计入已收——三本账物理分离，同储值口径） */
+  rebateFen: number;
 }
 
 export interface CashierBillFinanceView {
@@ -492,6 +567,8 @@ export interface CashierBillFinanceView {
   passFen: number;
   /** 储值消费合计（分，method='stored_value' 段；非现金，单列供对账） */
   storedValueFen: number;
+  /** 回馈金抵扣合计（分，method='rebate' 段；R11a，非现金，单列供对账，永不计入已收） */
+  rebateFen: number;
   /** 现金类实收（分）= Σ cash/wechat/alipay 段（「已收」口径，不含次卡等值与储值消费） */
   cashLikeFen: number;
   ownPayableFen: number;
@@ -567,6 +644,7 @@ export async function loadCashierFinance(
     let svcCovered = 0;
     let passFen = 0;
     let storedValueFen = 0;
+    let rebateFen = 0; // R11a：回馈金抵扣段（非现金单列，同储值口径）
     let cashLikeFen = 0;
     const methods: string[] = [];
     for (const p of billPayments) {
@@ -582,12 +660,17 @@ export async function loadCashierFinance(
         // 次卡扣次等值：非现金，单列 passFen 供对账，不进 serviceFen/shopFen
         // （fix：settled 单 paidFen=payableFen 口径下防双计）
         passFen += ownPart;
-        recognized.push({ at: p.createdAt, serviceFen: 0, shopFen: 0, passFen: ownPart, storedValueFen: 0 });
+        recognized.push({ at: p.createdAt, serviceFen: 0, shopFen: 0, passFen: ownPart, storedValueFen: 0, rebateFen: 0 });
       } else if (p.method === 'stored_value') {
         // M1-补2 R5：储值消费非现金（裁定①同次卡口径），单列 storedValueFen 供对账；
         // 仍推进服务/商品归属簿记，保证后续现金类段不被重复归桶
         storedValueFen += ownPart;
-        recognized.push({ at: p.createdAt, serviceFen: 0, shopFen: 0, passFen: 0, storedValueFen: ownPart });
+        recognized.push({ at: p.createdAt, serviceFen: 0, shopFen: 0, passFen: 0, storedValueFen: ownPart, rebateFen: 0 });
+      } else if (p.method === 'rebate') {
+        // R11a：回馈金抵扣非现金（三本账物理分离，红线 1），单列 rebateFen 供对账；
+        // 仍推进服务/商品归属簿记（rebate 段仅覆盖商品行——settle 硬校验）
+        rebateFen += ownPart;
+        recognized.push({ at: p.createdAt, serviceFen: 0, shopFen: 0, passFen: 0, storedValueFen: 0, rebateFen: ownPart });
       } else {
         cashLikeFen += p.amountFen;
         recognized.push({
@@ -596,6 +679,7 @@ export async function loadCashierFinance(
           shopFen: ownPart - svcPart,
           passFen: 0,
           storedValueFen: 0,
+          rebateFen: 0,
         });
       }
     }
@@ -610,6 +694,7 @@ export async function loadCashierFinance(
       methods,
       passFen,
       storedValueFen,
+      rebateFen,
       cashLikeFen,
       ownPayableFen,
       ownReceivedFen: covered,
@@ -651,12 +736,12 @@ export interface DayTenderStats {
     passFen: number;
     /** 储值消费（参考列，永不计入已收）：stored_value 段现禁用恒 0，R5 启用后接管 */
     storedValueFen: number;
-    /** 回馈金列位预留（决策 #33：回馈金/储值/XP 三本账物理分离、永不计营业额；会员批实现） */
+    /** 回馈金抵扣段（参考列，永不计入已收——三本账物理分离）：R11a 起实额接管（原列位预留恒 0） */
     rebateFen: number;
   };
   /** 已收合计（分）= cashFen + wechatFen + alipayFen（分列可加总核对） */
   receivedTotalFen: number;
-  /** 参考列合计（分）= passFen + storedValueFen（+ rebateFen，恒 0）；不进已收 */
+  /** 参考列合计（分）= passFen + storedValueFen + rebateFen（R11a 回馈金抵扣段并入）；不进已收 */
   referenceTotalFen: number;
   /** 其中未经收银台的预约到店付直收额（已并入 cash 列；单列供对账溯源） */
   legacyPayAtStoreFen: number;
@@ -698,12 +783,14 @@ export async function computeDayTender(
   let alipayFen = 0;
   let passFen = 0;
   let storedValueFen = 0;
+  let rebateFen = 0; // R11a：回馈金抵扣段（参考列，永不计入已收——三本账物理分离）
   for (const s of segments) {
     if (s.method === 'cash') cashFen += s.amountFen;
     else if (s.method === 'wechat') wechatFen += s.amountFen;
     else if (s.method === 'alipay') alipayFen += s.amountFen;
     else if (s.method === 'pass') passFen += s.amountFen;
     else if (s.method === 'stored_value') storedValueFen += s.amountFen;
+    else if (s.method === 'rebate') rebateFen += s.amountFen; // R11a（同储值口径，读侧排除已收）
     // 'credit'（M1-补1 前历史脏数据）：跳过不认领，仅留痕（同 loadCashierFinance 口径）
   }
 
@@ -774,10 +861,10 @@ export async function computeDayTender(
       alipayFen,
       passFen,
       storedValueFen,
-      rebateFen: 0, // 决策 #33 列位预留，会员批实现
+      rebateFen, // R11a：回馈金抵扣段实额接管列位（原预留恒 0）
     },
     receivedTotalFen: cashFen + wechatFen + alipayFen,
-    referenceTotalFen: passFen + storedValueFen,
+    referenceTotalFen: passFen + storedValueFen + rebateFen,
     legacyPayAtStoreFen,
     counts: {
       cashierPaidCount,
@@ -799,8 +886,9 @@ type DayCloseRow = typeof schema.dayCloses.$inferSelect;
  * 并 emit cashier.shiftOpened（同事务，由调用方 broadcast）。
  * 仅在收银写事务（hold/settle/reverseBill 创建单据时点）调用——读路径不建班，
  * clerk 无任何交接班端点入口（补丁①②），懒建保证 clerk 收银单也能挂当班 shift_id。
+ * R11a：导出供 membership.sell/renew 售卡/续费单挂当班（日结口径一致）。
  */
-async function ensureOpenShift(
+export async function ensureOpenShift(
   d: DbHandle,
   storeId: string,
   operatorId: string,
@@ -844,6 +932,7 @@ async function computeShiftTender(
   alipayFen: number;
   passFen: number;
   storedValueFen: number;
+  rebateFen: number; // R11a：回馈金抵扣段（参考列，同储值口径不进已收）
   receivedTotalFen: number;
   cashierPaidCount: number;
 }> {
@@ -864,12 +953,14 @@ async function computeShiftTender(
   let alipayFen = 0;
   let passFen = 0;
   let storedValueFen = 0;
+  let rebateFen = 0; // R11a：回馈金抵扣段（参考列，永不计入已收）
   for (const s of segments) {
     if (s.method === 'cash') cashFen += s.amountFen;
     else if (s.method === 'wechat') wechatFen += s.amountFen;
     else if (s.method === 'alipay') alipayFen += s.amountFen;
     else if (s.method === 'pass') passFen += s.amountFen;
     else if (s.method === 'stored_value') storedValueFen += s.amountFen;
+    else if (s.method === 'rebate') rebateFen += s.amountFen; // R11a
     // credit 历史段跳过不认领（同 computeDayTender 口径）
   }
   const countRow = await d
@@ -891,6 +982,7 @@ async function computeShiftTender(
     alipayFen,
     passFen,
     storedValueFen,
+    rebateFen,
     receivedTotalFen: cashFen + wechatFen + alipayFen,
     cashierPaidCount,
   };
@@ -918,6 +1010,7 @@ export interface DayClosePreviewData {
     alipayFen: number;
     passFen: number;
     storedValueFen: number;
+    rebateFen: number; // R11a：回馈金抵扣段参考列（同储值口径不进已收）
     receivedTotalFen: number;
     cashierPaidCount: number;
   }>;
@@ -1089,17 +1182,16 @@ export const cashierRouter = router({
     .input(cartSnapshotSchema)
     .mutation(async ({ ctx, input }) => {
       const storeId = ctx.user.storeId!;
-      assertPriceEditAllowed(ctx, input);
       return withCashierWriteLock(async () => {
         const outboxIds: string[] = [];
         const result = await ctx.db.transaction(async (tx) => {
           const now = new Date();
           const resolved = await resolveItems(txDb(tx), storeId, input.items);
-          const amounts = computeAmounts(resolved, input.discountType, input.discountValue);
 
-          let bill: BillRow;
+          /* ---- R11a：会员归属先于金额计算（服务折扣判定用）——带 billNo 时先取既有单校验 ---- */
+          let existing: BillRow | undefined;
           if (input.billNo) {
-            const existing = await tx
+            existing = await tx
               .select()
               .from(schema.cashierBills)
               .where(eq(schema.cashierBills.billNo, input.billNo))
@@ -1110,11 +1202,20 @@ export const cashierRouter = router({
             if (existing.status !== 'open' && existing.status !== 'held') {
               badRequest(`当前状态（${existing.status}）不可挂单`);
             }
-            // 会员归属：缺省沿用单上已有值，含预约行可回填（见 resolveBillCustomerId 注释）
-            const customerId = resolveBillCustomerId(input.customerId, resolved, existing.customerId);
-            if (resolved.some((r) => r.paidByPass) && !customerId) {
-              badRequest('散客单不能使用次卡扣次，请先检索会员');
-            }
+          }
+          // 会员归属：缺省沿用单上已有值，含预约行可回填（见 resolveBillCustomerId 注释）
+          const customerId = resolveBillCustomerId(input.customerId, resolved, existing?.customerId);
+          if (resolved.some((r) => r.paidByPass) && !customerId) {
+            badRequest('散客单不能使用次卡扣次，请先检索会员');
+          }
+          /* R11a 补丁②：改价闸门移到归属解析后（事务内、任何写入前）——系统折扣回显不拦 clerk */
+          await assertPriceEditAllowed(ctx, txDb(tx), input, resolved, customerId);
+          // R11a：会员服务/预约行按档折扣（adjusted=门市价×bp，unit 不动划线对照；人工改价不覆盖）
+          await applyMemberServiceDiscount(txDb(tx), customerId, resolved);
+          const amounts = computeAmounts(resolved, input.discountType, input.discountValue);
+
+          let bill: BillRow;
+          if (existing) {
             // 同号更新：行项整组替换（快照语义），金额/会员/备注刷新；
             // operator_id 同步为当前操作人（M1-补1 审计链，by=who）
             await tx
@@ -1138,11 +1239,6 @@ export const cashierRouter = router({
               .then((r) => r[0]!);
           } else {
             const billNo = await genBillNo(txDb(tx), storeId, now);
-            // 会员归属：缺省且含预约行 → 回填首行预约客户（显式 null=确认散客不回填）
-            const customerId = resolveBillCustomerId(input.customerId, resolved);
-            if (resolved.some((r) => r.paidByPass) && !customerId) {
-              badRequest('散客单不能使用次卡扣次，请先检索会员');
-            }
             // M1-补2 R3：创建时点挂当班 shift_id（无开班懒建；同号更新不改班次归属）
             const { shift, openedOutboxId } = await ensureOpenShift(txDb(tx), storeId, ctx.user.id, now);
             if (openedOutboxId) outboxIds.push(openedOutboxId);
@@ -1246,7 +1342,6 @@ export const cashierRouter = router({
     .input(cartSnapshotSchema.extend({ payments: z.array(paymentSegmentSchema).min(1) }))
     .mutation(async ({ ctx, input }) => {
       const storeId = ctx.user.storeId!;
-      assertPriceEditAllowed(ctx, input);
       return withCashierWriteLock(async () => {
         const outboxIds: string[] = [];
         const result = await ctx.db.transaction(async (tx) => {
@@ -1271,12 +1366,18 @@ export const cashierRouter = router({
           /* ---- 单号前置落定（幂等键 + 扣次流水 note 必须带真实 bill_no，裁定③） ---- */
           const billNo = input.billNo ?? (await genBillNo(txDb(tx), storeId, now));
 
-          /* ---- 行解析 / 金额重算 / 支付校验 ---- */
+          /* ---- 行解析 / 会员归属 / 会员服务折扣（R11a） / 金额重算 / 支付校验 ---- */
           const resolved = await resolveItems(txDb(tx), storeId, input.items);
-          const amounts = computeAmounts(resolved, input.discountType, input.discountValue);
           // 会员归属：缺省沿用单上已有值 / 含预约行回填首行预约客户（显式 null=确认散客，
           // 见 resolveBillCustomerId 注释——「待收款拉入→结账」链路流水买家名不再丢失）
+          // R11a：归属先于金额计算——服务折扣与 rebate 段校验均以 customerId 为前提
           const customerId = resolveBillCustomerId(input.customerId, resolved, existing?.customerId);
+          /* R11a 补丁②：改价闸门移到归属解析后（幂等快路径之后、任何写入前）——
+             系统折扣回显不拦 clerk；不等值改价/单级优惠仍拦（assertMerchantManager 原闸） */
+          await assertPriceEditAllowed(ctx, txDb(tx), input, resolved, customerId);
+          // R11a：会员服务/预约行按档折扣（adjusted=门市价×bp，unit 不动划线对照；人工改价不覆盖）
+          await applyMemberServiceDiscount(txDb(tx), customerId, resolved);
+          const amounts = computeAmounts(resolved, input.discountType, input.discountValue);
           const passLines = resolved.filter((r) => r.paidByPass);
           if (passLines.length > 0 && !customerId) {
             badRequest('散客单不能使用次卡扣次，请先检索会员');
@@ -1303,6 +1404,22 @@ export const cashierRouter = router({
           if (svSegs.length > 1) badRequest('储值支付段至多一段');
           if (svSegs.length === 1 && !customerId) {
             badRequest('散客单不能使用储值支付，请先检索会员');
+          }
+          // R11a：回馈金段校验（红线 2 server 硬校验——仅商品行可用，服务/寄养行禁用；
+          // 至多一段；须绑会员——散客无回馈金账户；余额扣减前校验见 deductRebate）
+          const rebateSegs = input.payments.filter((p) => p.method === 'rebate');
+          if (rebateSegs.length > 1) badRequest('回馈金支付段至多一段');
+          if (rebateSegs.length === 1 && !customerId) {
+            badRequest('散客单不能使用回馈金支付，请先检索会员');
+          }
+          const rebateSegAmount = rebateSegs[0]?.amountFen ?? 0;
+          if (rebateSegAmount > 0) {
+            const effProductFen = resolved
+              .filter((r) => r.kind === 'product')
+              .reduce((s, r) => s + effPrice(r) * r.qty, 0);
+            if (rebateSegAmount > effProductFen) {
+              forbidden('回馈金仅可抵商品（服务/寄养行禁用回馈金支付段）');
+            }
           }
 
           /* ---- 次卡扣次（先于后续写库；失败整体回滚） ---- */
@@ -1402,6 +1519,19 @@ export const cashierRouter = router({
               note: `收银台结账 ${billNo}`,
             });
             svAccountDeducted = { accountId: acc.id, before, after: before - svAmount };
+          }
+
+          /* ---- R11a 回馈金扣减（红线 2/三本账物理分离；失败整体回滚） ----
+           * 仅已到账余额 1:1 扣（rebate_accounts.balance_fen，grant 统一次月到账不在其内）；
+           * 前后余额+单号留痕（rebate_logs type='deduct'）；余额不足 deductRebate 兜底
+           * FORBIDDEN 如实；不计已收（computeDayTender rebateFen 参考列单列，同储值口径）。 */
+          let rebateDeducted: { beforeFen: number; afterFen: number } | null = null;
+          if (rebateSegs.length === 1) {
+            rebateDeducted = await deductRebate(txDb(tx), {
+              userId: customerId!,
+              billNo,
+              amountFen: rebateSegAmount,
+            });
           }
 
           /* ---- 商品行库存扣减（不足不阻塞，stockShort 留痕） ---- */
@@ -1532,6 +1662,33 @@ export const cashierRouter = router({
               passId: p.method === 'pass' ? (passRow?.id ?? null) : null,
             })),
           );
+
+          /* ---- R11a 商品行回馈金计提（结账成交时点，同事务；决策 #33 无月上限） ----
+           * 基数=商品实收−rebate 抵扣段（用回馈金付的部分不再返）；商品实收口径同
+           * loadCashierFinance：优惠先抵服务行，productNet=ownPayable−serviceNet。
+           * 仅 active 付费档返（微光/散客/到期冻结=0 不写行）；grant 挂期次余额不动，
+           * 统一次月到账（settleMonthly 入账）。 */
+          let rebateGrantedFen = 0;
+          if (customerId) {
+            const effServiceFen = resolved
+              .filter((r) => r.kind === 'service')
+              .reduce((s, r) => s + effPrice(r) * r.qty, 0);
+            const effApptFen = resolved
+              .filter((r) => r.kind === 'appointment')
+              .reduce((s, r) => s + effPrice(r) * r.qty, 0);
+            const ownPayableFen = Math.max(0, amounts.payableFen - effApptFen);
+            const serviceNetFen = Math.min(ownPayableFen, Math.max(0, effServiceFen - amounts.discountFen));
+            const productRealFen = ownPayableFen - serviceNetFen;
+            const grantBaseFen = Math.max(0, productRealFen - rebateSegAmount);
+            const g = await grantOnProductSettled(txDb(tx), {
+              userId: customerId,
+              billNo,
+              productFen: grantBaseFen,
+              storeId,
+            });
+            rebateGrantedFen = g.grantedFen;
+          }
+
           outboxIds.push(
             await emitEvent(txDb(tx), `store:${storeId}`, EventType.CashierBillSettled, {
               billId: bill.id,
@@ -1541,6 +1698,9 @@ export const cashierRouter = router({
               passFen: passSegs.reduce((s, p) => s + p.amountFen, 0),
               storedValueFen: svSegs.reduce((s, p) => s + p.amountFen, 0), // M1-补2 R5
               storedValueBalanceAfterFen: svAccountDeducted?.after ?? null, // 扣减后余额留痕
+              rebateFen: rebateSegAmount, // R11a：回馈金抵扣段（参考列，不计已收）
+              rebateBalanceAfterFen: rebateDeducted?.afterFen ?? null, // 抵扣后余额留痕
+              rebateGrantedFen, // R11a：本单商品行计提回馈金（次月到账，不进可用余额）
               itemCount: resolved.length,
               hasStockShort: [...stockShortByRef.values()].some(Boolean),
               by: ctx.user.id, // M1-补2 R2 总规则①：留痕含操作人

@@ -20,7 +20,11 @@
  *      paid_at/paid_fen 清零回待收款；已核销/已服务→execute 直接拒
  *      「已服务预约禁止退款，请转店主特批」（本批不建特批流，明文引导）；
  *   ⑤ 财务口径：refund.dayStats 读侧按 biz_date 聚合退款单列+支付段分列（V2/V7）；
- *   ⑥ 回馈金扣回列位 rebate_clawback_fen=0 落快照（接口冻结，R11 回归）。
+ *   ⑥ 回馈金扣回（R11a 激活冻结接口，接口形状不变）：退款涉及商品行时实算——
+ *      扣回额=该单已发回馈金×(本次退款商品金额÷该单商品总额) 精确到分，1:1 扣
+ *      rebate_accounts 已到账余额（余额不足扣 0 不负账，差额记快照"未扣回"
+ *      rebateClawbackMissedFen），rebate_logs type='clawback' 负向行（前后余额+
+ *      source_id=refund_no+note 关联原单号）；linkage_json.rebateClawbackFen 填实算值。
  *
  * 权限闸（矩阵 V1.2 修订页写死）：
  * - 店员：无入口——本路由写端点全部 merchantManagerProcedure 起，clerk 天然 403；
@@ -53,11 +57,18 @@
  * 5. 退款单查询/日结统计端点按矩阵 V1.2 收至 merchantManagerProcedure（店员 403）——
  *    任务书§四「退款单查询 店员❌」；merchantProcedure 会放行 clerk，与矩阵冲突，从严。
  * 6. 导出留痕事件：EventType 常量表（realtime/events.ts）不在本批文件清单，
- *    审计事件用字面量 EventType.RefundMonthExported（payload {by, month, rows}），
+ *    审计事件用字面量 'refund.monthExported'（payload {by, month, rows}），
  *    与 attendance.ts 报备偏差 4 同型；常量双端同步由后续批补齐。
  * 7. 寄养剩余晚（boarding_nights）只退钱不动预约单（提前接回的退住/核销由寄养域
  *    既有流程承担）；已发生晚一分不退：occurred=入住日~执行日（门店规范时区 +8 日界），
  *    晚单价=floor(原单寄养行有效价÷总晚)，残余分归已发生晚（注释写死）。
+ * 8. 回馈金扣回（R11a 激活）：「已发回馈金」=grant 行 Σdelta（含未到账期次——grant
+ *    落 logs 即视为已发，到账是结算口径）；扣减对象=rebate_accounts 已到账余额（次月
+ *    5 日前 grant 未入余额，可能出现"已发有余额不足"→未扣回差额记 missedFen，不追债
+ *    不惊扰客户，任务书§三原口径）；累计封顶=已发−本单已扣回（clawback 行按
+ *    source_id∈本单既往退款单号聚合），防部分退多次重复扣超；clawback 留痕行恒写
+ *    （扣 0 也落 0 行，扣回动作本身的审计账）。会员年费退会折算走 membership.cancel
+ *    域（剩余整月×月均价），不经本路由商品行扣回。
  */
 
 import { TRPCError } from '@trpc/server';
@@ -315,8 +326,30 @@ interface RefundPlan {
   passTimesRestore: number;
   /** 提成冲减预估（分；实际以提成读侧 computeMonth V6 为准） */
   estimatedCommissionClawbackFen: number;
-  /** 回馈金扣回列位（冻结恒 0，R11 回归） */
-  rebateClawbackFen: 0;
+  /**
+   * 回馈金扣回（R11a 激活 R12 冻结接口，接口形状不变）：仅当退款涉及商品行
+   * （全额/按行/按金额含商品分摊行）时实算——扣回额=该单已发回馈金（rebate_logs
+   * type='grant' source_id=原单单号 Σdelta）×（本次退款商品金额÷该单商品总额），
+   * 精确到分；累计封顶=已发−本单已扣回（防部分退多次重复扣超）。1:1 扣减
+   * rebate_accounts 已到账余额；余额不足扣 0 不负账，差额记 missedFen（快照"未扣回"）。
+   * 无 grant 行/无商品退款/散客单 → null（快照落 0）。
+   */
+  rebate: {
+    userId: string;
+    accountId: string | null;
+    /** 该单已发回馈金合计（分，grant Σ） */
+    grantedFen: number;
+    /** 该单商品总额（分，有效价口径） */
+    productTotalFen: number;
+    /** 本次退款商品金额（分，含按金额退分摊到商品行的部分） */
+    refundProductFen: number;
+    /** 应扣回（分，累计封顶后） */
+    clawbackFen: number;
+    /** 账户当前可用余额（分；preview 透出 / execute 实扣基数，同事务同值） */
+    balanceFen: number;
+    /** 余额不足扣 0 不负账的未扣回差额（分） */
+    missedFen: number;
+  } | null;
   /** pass_cancel 锚点单标记：true=金额与锚点单无关、原单不挂标记 */
   anchorOnly: boolean;
   thresholdFen: number;
@@ -661,6 +694,56 @@ async function computePlan(
     }
   }
 
+  /* ---- 回馈金扣回（R11a 激活冻结接口；preview 与 execute 同实算同透出） ----
+   * 扣回额=该单已发回馈金×(本次退款商品金额÷该单商品总额)；累计封顶=已发−本单已扣回；
+   * 1:1 扣已到账余额（余额不足扣 0 不负账，差额 missedFen 记快照"未扣回"）。 */
+  let rebate: RefundPlan['rebate'] = null;
+  const productTotalFen = items
+    .filter((it) => it.kind === 'product')
+    .reduce((s, it) => s + effPriceOf(it) * it.qty, 0);
+  const refundProductFen = itemRows
+    .filter((r) => r.kind === 'product')
+    .reduce((s, r) => s + r.amountFen, 0);
+  if (refundProductFen > 0 && productTotalFen > 0 && bill.customerId && !anchorOnly) {
+    const grants = await d
+      .select({ deltaFen: schema.rebateLogs.deltaFen, accountId: schema.rebateLogs.accountId })
+      .from(schema.rebateLogs)
+      .where(and(eq(schema.rebateLogs.type, 'grant'), eq(schema.rebateLogs.sourceId, bill.billNo)));
+    const grantedFen = grants.reduce((s, g) => s + Math.max(0, g.deltaFen), 0);
+    if (grantedFen > 0) {
+      // 本单已扣回（既往退款单的 clawback 行，source_id=退款单号）先行减除
+      const postedNos = postedRefunds.map((r) => r.refundNo);
+      const clawedRows = postedNos.length
+        ? await d
+            .select({ deltaFen: schema.rebateLogs.deltaFen })
+            .from(schema.rebateLogs)
+            .where(and(eq(schema.rebateLogs.type, 'clawback'), inArray(schema.rebateLogs.sourceId, postedNos)))
+        : [];
+      const alreadyClawedFen = clawedRows.reduce((s, r) => s + Math.max(0, -r.deltaFen), 0);
+      const remainingFen = Math.max(0, grantedFen - alreadyClawedFen);
+      const clawbackFen = Math.min(Math.round((grantedFen * refundProductFen) / productTotalFen), remainingFen);
+      if (clawbackFen > 0) {
+        const account = await d
+          .select()
+          .from(schema.rebateAccounts)
+          .where(eq(schema.rebateAccounts.userId, bill.customerId))
+          .get();
+        const balanceFen = account?.balanceFen ?? 0;
+        const deductedFen = Math.min(balanceFen, clawbackFen);
+        rebate = {
+          userId: bill.customerId,
+          accountId: account?.id ?? grants[0]?.accountId ?? null,
+          grantedFen,
+          productTotalFen,
+          refundProductFen,
+          clawbackFen,
+          balanceFen,
+          missedFen: clawbackFen - deductedFen,
+        };
+      }
+    }
+  }
+
   /* ---- 权限闸（V1 累计校验 + 运营加固涉储值；preview 与 execute 同口径） ---- */
   const thresholdFen = await loadRefundThresholdFen(d);
   if (!callerIsOwner) {
@@ -689,7 +772,7 @@ async function computePlan(
     storedValueRestoreFen,
     passTimesRestore,
     estimatedCommissionClawbackFen,
-    rebateClawbackFen: 0, // 第六联动列位冻结：回馈金未上线 R11，冻结规则+R11 回归
+    rebate,
     anchorOnly,
     thresholdFen,
   };
@@ -714,8 +797,18 @@ function planView(plan: RefundPlan) {
     passTimesRestore: plan.passTimesRestore,
     estimatedCommissionClawbackFen: plan.estimatedCommissionClawbackFen,
     commissionNote: '提成冲减为预估，实际以提成读侧 computeMonth（R9 只读计算）为准',
-    rebateClawbackFen: 0,
-    rebateNote: '回馈金扣回（随 R11 会员批生效）',
+    rebateClawbackFen: plan.rebate?.clawbackFen ?? 0,
+    /** 未扣回差额（余额不足扣 0 不负账口径；R11a 激活键位） */
+    rebateClawbackMissedFen: plan.rebate?.missedFen ?? 0,
+    rebateDetail: plan.rebate
+      ? {
+          grantedFen: plan.rebate.grantedFen,
+          productTotalFen: plan.rebate.productTotalFen,
+          refundProductFen: plan.rebate.refundProductFen,
+          balanceFen: plan.rebate.balanceFen,
+        }
+      : null,
+    rebateNote: '回馈金扣回（R11a 已启用）：扣回=该单已发回馈金×(本次退款商品金额÷该单商品总额)，1:1 扣已到账余额；余额不足扣 0 不负账，差额记未扣回',
     thresholdFen: plan.thresholdFen,
   };
 }
@@ -1010,6 +1103,35 @@ export const refundRouter = router({
               .update(schema.appointments)
               .set({ paidAt: null, paidFen: null, updatedAt: now })
               .where(eq(schema.appointments.id, r.appointmentId));
+          }
+
+          /* ---- ⑥ 回馈金扣回（R11a 激活冻结接口）：1:1 扣已到账余额 + clawback 行留痕 ---- */
+          if (plan.rebate && plan.rebate.clawbackFen > 0 && plan.rebate.accountId) {
+            const rbAcc = await d
+              .select()
+              .from(schema.rebateAccounts)
+              .where(eq(schema.rebateAccounts.id, plan.rebate.accountId))
+              .get();
+            const beforeBal = rbAcc?.balanceFen ?? 0;
+            const deductFen = Math.min(beforeBal, plan.rebate.clawbackFen); // 余额不足扣 0 不负账
+            if (rbAcc && deductFen > 0) {
+              await d
+                .update(schema.rebateAccounts)
+                .set({ balanceFen: beforeBal - deductFen, updatedAt: now })
+                .where(eq(schema.rebateAccounts.id, rbAcc.id));
+            }
+            // 留痕恒写（余额 0 扣不动也落 0 行：扣回动作本身的审计账；未扣回差额快照已记）
+            const missedFen = plan.rebate.clawbackFen - deductFen;
+            await d.insert(schema.rebateLogs).values({
+              userId: plan.rebate.userId,
+              accountId: plan.rebate.accountId,
+              type: 'clawback',
+              deltaFen: -deductFen,
+              beforeFen: beforeBal,
+              afterFen: beforeBal - deductFen,
+              sourceId: refundNo, // 来源=退款单号（冻结接口口径）
+              note: `退款扣回 ${plan.bill.billNo}${missedFen > 0 ? `（余额不足，未扣回 ${missedFen} 分）` : ''}`,
+            });
           }
 
           /* ---- ⑧ 次卡退卡（V8）：折算额按 refundMethod 落地 + 卡作废留痕 ---- */

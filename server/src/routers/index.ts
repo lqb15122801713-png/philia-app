@@ -22,6 +22,7 @@ import { commissionRouter } from './commission';
 import { configRulesRouter } from './configRules';
 import { inventoryRouter } from './inventory';
 import { mallRouter } from './mall';
+import { membershipRouter } from './membership';
 import { passRouter } from './pass';
 import { petRouter } from './pet';
 import { pushRouter } from './push';
@@ -49,6 +50,7 @@ export const appRouter = router({
   xp: xpRouter, // 批次 员工端2.0 R10 XP/榜单/评价查询
   config: configRulesRouter, // 批次 员工端2.0 R9-F 规则配置管理端口（仅 owner）
   refund: refundRouter, // 批次 R12 退款专项（六联动内核：退款单/支付段/库存/储值次卡/财务口径/回馈金列位）
+  membership: membershipRouter, // 批次 R11a 会员前置批（档位透出/微光开档/售卡/续费/退会/立省钩子/年费分摊双口径）
 });
 
 /** 前端 tRPC client 的类型锚点（仅类型导出，无运行时开销） */

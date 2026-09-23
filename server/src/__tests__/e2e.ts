@@ -65,6 +65,20 @@
  *   37. 部分退款余额内可再退（30% 成 → 20% 成 → 累计超可退余额拒）
  *   38. 实退待办（executed 超 24h → pendingActual 含；settleActual → settled+RefundSettled；
  *      重复登记幂等；待办消失）
+ *
+ * 批次 R11a（会员前置批·骨架批）段（28 号施工令全清单 + 回归）：
+ *   39. 售卡三档到店付 + 售卡提成定额（萤火 500/烛光 1000/微光 0）+ 双归属两字段 + 微光开档幂等
+ *   40. 多宠第 4 只+59（4 只 25800 / 10 只 61200 / 11 只拒）
+ *   41. 服务 88 折自动（adjusted=unit×0.88，unit 门市价划线不动）+ 微光无折扣对照
+ *   42. grant 无月上限（同月多笔累计无 cap）+ 三本账无互转（端点扫描+储值/XP 零交叉）
+ *   43. settleMonthly 次月到账批次单幂等（服务级直调：not-due / settled / already-settled）
+ *   44. 抵扣段仅商品（服务行 rebate 段 403 / 商品行成）+ rebate 段不计已收
+ *   45. 退货扣回接 R12（rebateClawbackFen 实算 + clawback 前后值 + 余额不足扣 0 记未扣回）
+ *   46. 到期冻结（懒冻结+抵扣冻结拒+折扣失效）→ 续费解冻顺延 365 天
+ *   47. plans 权益表述（安心包全员免费、无「非会员 ¥15」残留）+ savingsPreview 数值 +
+ *      amortizationStats 双口径（cashFen 156700 / amortizedFen 11400）
+ *   48. 退会清零 + 折算（剩余整月 7×19900/12=11608 精确到分）+ 客户频道通知 +
+ *      回馈金流水前后值链完整
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -2172,27 +2186,324 @@ async function main(): Promise<void> {
 
   /* ---------- 38. 清单⑬：实退待办 + settleActual 幂等 ---------- */
   console.log('\n[R12] 38. 实退待办（清单⑬）');
-  // §37 第一笔退款（executed 未登记）回填 createdAt 至 25h 前 → 进店长待办
-  await db.update(schema.refundBills).set({ createdAt: new Date(Date.now() - 25 * 3600 * 1000) }).where(eq(schema.refundBills.id, re1.refund.id));
+  // 造「executed 超 24h 未登记」夹具：直插 25h 前的 executed 退款行（挂 §37 reBill）。
+  // 不回填真实退款单 createdAt——genRefundNo 按 createdAt 计当日序号，回填减计数会让后续
+  // 退款单号复用撞 UNIQUE（本轮实测 RB-…-013 撞号 500；与 §34 收银 genBillNo 教训同型）。
+  const agedRefund = (await db.insert(schema.refundBills).values({
+    storeId, refundNo: 'RB-19990101-001', bizDate: storeYesterday, billId: reBill.billId,
+    type: 'partial_amount', amountFen: 2640, reason: 'e2e 实退待办夹具（回填 25h 前）',
+    status: 'executed', operatorId: ownerUser!.id, approverId: ownerUser!.id,
+    createdAt: new Date(Date.now() - 25 * 3600 * 1000),
+  }).returning())[0]!;
   const todoBefore = await trpcQuery<Array<{ id: string; refundNo: string }>>('refund.pendingActual', { cookie: managerCookie });
   check('R12⑬ 实退待办：executed 超 24h 未登记 → pendingActual 含（店长本店可办）',
-    todoBefore.some((r) => r.id === re1.refund.id), todoBefore.map((r) => r.refundNo));
+    todoBefore.some((r) => r.id === agedRefund.id), todoBefore.map((r) => r.refundNo));
   const settle1 = await trpcMutate<{ refund: { status: string }; idempotent: boolean }>('refund.settleActual', {
-    cookie: managerCookie, input: { refundId: re1.refund.id, note: '线下原路已退（现金 2640）' },
+    cookie: managerCookie, input: { refundId: agedRefund.id, note: '线下原路已退（现金 2640）' },
   });
   check('R12⑬ 实退登记 → settled（+RefundSettled 事件到店频道）',
     settle1.refund.status === 'settled' && settle1.idempotent === false &&
-      (await storeEventsOf('refund.settled', (p) => p.refundNo === re1.refund.refundNo)).length === 1,
+      (await storeEventsOf('refund.settled', (p) => p.refundNo === agedRefund.refundNo)).length === 1,
     settle1.refund.status);
   const settle2 = await trpcMutate<{ refund: { status: string }; idempotent: boolean }>('refund.settleActual', {
-    cookie: managerCookie, input: { refundId: re1.refund.id, note: '重复登记验证' },
+    cookie: managerCookie, input: { refundId: agedRefund.id, note: '重复登记验证' },
   });
   check('R12⑬ 重复登记幂等（idempotent=true，事件不重复增发）',
     settle2.idempotent === true && settle2.refund.status === 'settled' &&
-      (await storeEventsOf('refund.settled', (p) => p.refundNo === re1.refund.refundNo)).length === 1,
+      (await storeEventsOf('refund.settled', (p) => p.refundNo === agedRefund.refundNo)).length === 1,
     settle2.idempotent);
   const todoAfter = await trpcQuery<Array<{ id: string }>>('refund.pendingActual', { cookie: managerCookie });
-  check('R12⑬ 实退登记后待办消失（pendingActual 不再含该单）', !todoAfter.some((r) => r.id === re1.refund.id), todoAfter.length);
+  check('R12⑬ 实退登记后待办消失（pendingActual 不再含该单）', !todoAfter.some((r) => r.id === agedRefund.id), todoAfter.length);
+
+  /* ==================================================================
+   * 批次 R11a（会员前置批·骨架批）验收段 —— 28 号施工令全清单 + 回归
+   * 主线夹具：示例客户（萤火会员）；manager（店长，staff 绑定）售卡/续费/退会。
+   * ================================================================== */
+  console.log('\n[R11a] 39. 售卡三档 + 售卡提成定额 + 双归属 + 微光开档幂等');
+  interface MembershipRowT {
+    id: string; userId: string; planKey: string; soldStoreId: string | null;
+    status: string; petCount: number; paidFen: number; expiresAt: Date; refundFen: number | null;
+  }
+  interface SellRes { billNo: string; billId: string; amountFen: number; membership: MembershipRowT }
+  const sellPlan = (cookie: string, input: Record<string, unknown>) =>
+    trpcMutate<SellRes>('membership.sell', { cookie, input });
+
+  // ① 萤火售卖到店付（manager 开单）：成交即开通 + sold_store=办卡店（双归属）
+  const sellYinghuo = await sellPlan(managerCookie, {
+    userId: customerUser!.id, planKey: 'plan_yinghuo', petCount: 0,
+    paySegments: [{ method: 'cash', amountFen: 19900 }],
+  });
+  check('R11a⑧ 萤火售卖到店付（现金段 19900，成交即开通 active）',
+    sellYinghuo.amountFen === 19900 && sellYinghuo.membership.status === 'active' &&
+      sellYinghuo.membership.planKey === 'plan_yinghuo' && sellYinghuo.membership.paidFen === 19900,
+    { amount: sellYinghuo.amountFen, status: sellYinghuo.membership.status });
+  const yinghuoExpiresDays = (sellYinghuo.membership.expiresAt.getTime() - Date.now()) / 86400_000;
+  check('R11a⑧ 有效期=开通+365 天（读表 membership_validity_days）', yinghuoExpiresDays > 364 && yinghuoExpiresDays < 366, yinghuoExpiresDays);
+  const sellBillRow = await db.select().from(schema.cashierBills).where(eq(schema.cashierBills.id, sellYinghuo.billId)).get();
+  check('R11a⑩ 双归属两字段：memberships.sold_store_id=办卡店 且 售卡单 cashier_bills.store_id=消费店（同店场景两值同帧）',
+    sellYinghuo.membership.soldStoreId === storeId && sellBillRow?.storeId === storeId &&
+      sellYinghuo.membership.soldStoreId === sellBillRow?.storeId,
+    { soldStore: sellYinghuo.membership.soldStoreId, billStore: sellBillRow?.storeId });
+  const sellBillItem = await db.select().from(schema.cashierBillItems).where(eq(schema.cashierBillItems.billId, sellYinghuo.billId)).get();
+  check('R11a⑩ 售卡单落 kind=membership 行（refId=plan_key，提成读侧数据源）',
+    sellBillItem?.kind === 'membership' && sellBillItem.refId === 'plan_yinghuo', sellBillItem && { kind: sellBillItem.kind, refId: sellBillItem.refId });
+
+  // ② 烛光/微光售卡（微光 0 元单直接成交，paySegments 空）
+  const sellZhuguang = await sellPlan(managerCookie, { phone: '13811110001', planKey: 'plan_zhuguang', petCount: 0, paySegments: [{ method: 'wechat', amountFen: 29900 }] });
+  const sellWeiguang = await sellPlan(managerCookie, { phone: '13811110002', planKey: 'plan_weiguang', petCount: 0, paySegments: [] });
+  check('R11a⑧ 烛光 29900（微信段）+ 微光 0 元单直接成交（无支付段）',
+    sellZhuguang.amountFen === 29900 && sellWeiguang.amountFen === 0 && sellWeiguang.membership.status === 'active',
+    { zg: sellZhuguang.amountFen, wg: sellWeiguang.amountFen });
+
+  // ③ 售卡提成定额（commission.cardLines 接通）：归属=开单人 manager
+  interface CardLineT { billId: string; plan: string; amountFen: number }
+  const mgrSummary1 = await trpcQuery<{ payload: { cardLines: CardLineT[] } }>('commission.mySummary', { cookie: managerCookie, input: {} });
+  const cardAmts = mgrSummary1.payload.cardLines.map((l) => `${l.plan}:${l.amountFen}`).sort();
+  check('R11a⑧ 售卡提成定额：萤火 500（5 元）/ 烛光 1000（10 元）/ 微光 0 三档入 cardLines（暖阳 2000 同映射表抽单免验）',
+    mgrSummary1.payload.cardLines.length === 3 &&
+      cardAmts.includes('plan_yinghuo:500') && cardAmts.includes('plan_zhuguang:1000') && cardAmts.includes('plan_weiguang:0'),
+    cardAmts);
+
+  // ④ 微光开档幂等（回归）：新客 openFree 两次，第二次 idempotent=true 零副作用
+  const freeUser = (await db.insert(schema.users).values({ kimiId: 'seed_e2e_free1', nickname: 'e2e 微光客', phone: '13811110009' }).returning())[0]!;
+  await db.insert(schema.userRoles).values({ userId: freeUser.id, role: 'customer' });
+  const freeCookie = await devLogin(freeUser.id);
+  const of1 = await trpcMutate<{ membership: MembershipRowT; idempotent: boolean }>('membership.openFree', { cookie: freeCookie });
+  const of2 = await trpcMutate<{ membership: MembershipRowT; idempotent: boolean }>('membership.openFree', { cookie: freeCookie });
+  check('R11a回归 微光一键开档幂等（首次开档 → 第二次 idempotent=true 同档不重建）',
+    of1.idempotent === false && of1.membership.planKey === 'plan_weiguang' && of1.membership.paidFen === 0 &&
+      of2.idempotent === true && of2.membership.id === of1.membership.id,
+    { first: of1.idempotent, second: of2.idempotent });
+
+  /* ---------- 40. 清单⑨：多宠第 4 只 +59，10 只封顶 ---------- */
+  console.log('\n[R11a] 40. 多宠附加费（清单⑨）');
+  const sell4Pets = await sellPlan(managerCookie, { phone: '13811110003', planKey: 'plan_yinghuo', petCount: 4, paySegments: [{ method: 'cash', amountFen: 25800 }] });
+  check('R11a⑨ 萤火 4 只 = 19900+5900=25800（第 4 只起 +¥59/年/只）',
+    sell4Pets.amountFen === 25800 && sell4Pets.membership.petCount === 4, sell4Pets.amountFen);
+  const sell10Pets = await sellPlan(managerCookie, { phone: '13811110004', planKey: 'plan_yinghuo', petCount: 10, paySegments: [{ method: 'cash', amountFen: 61200 }] });
+  check('R11a⑨ 10 只封顶内放行（19900+7×5900=61200）', sell10Pets.amountFen === 61200, sell10Pets.amountFen);
+  const sell11Pets = await asErr(sellPlan(managerCookie, { phone: '13811110005', planKey: 'plan_yinghuo', petCount: 11, paySegments: [{ method: 'cash', amountFen: 67100 }] }));
+  check('R11a⑨ 11 只超封顶 → BAD_REQUEST「多宠封顶 10 只」',
+    sell11Pets instanceof TrpcHttpError && sell11Pets.code === 'BAD_REQUEST' && sell11Pets.message.includes('多宠封顶'),
+    sell11Pets && { code: sell11Pets.code, message: sell11Pets.message });
+
+  /* ---------- 41. 清单⑦：服务 88 折自动 + 门市价划线 ---------- */
+  console.log('\n[R11a] 41. 会员服务折扣（清单⑦）');
+  const svcBillMember = await settleBill2([{ kind: 'service', refId: service.id }], { customerId: customerUser!.id, note: 'e2e R11a 萤火服务单' });
+  const svcItemMember = await db.select().from(schema.cashierBillItems).where(eq(schema.cashierBillItems.billId, svcBillMember.billId)).get();
+  check('R11a⑦ 萤火服务单自动 88 折（adjusted=8800×0.88=7744 精确到分，应收=7744）',
+    svcItemMember?.adjustedPriceFen === 7744 && svcBillMember.payableFen === 7744,
+    { adjusted: svcItemMember?.adjustedPriceFen, payable: svcBillMember.payableFen });
+  check('R11a⑦ 门市价划线对照（unit_price_fen=8800 门市价原值不动）', svcItemMember?.unitPriceFen === 8800, svcItemMember?.unitPriceFen);
+  const wgUserId = sellWeiguang.membership.userId;
+  const svcBillWeiguang = await settleBill2([{ kind: 'service', refId: service.id }], { customerId: wgUserId, note: 'e2e R11a 微光服务单' });
+  const svcItemWeiguang = await db.select().from(schema.cashierBillItems).where(eq(schema.cashierBillItems.billId, svcBillWeiguang.billId)).get();
+  check('R11a⑦ 对照：微光（10000bp）无折扣=门市价 8800（adjusted 留空）',
+    svcItemWeiguang?.adjustedPriceFen === null && svcBillWeiguang.payableFen === 8800, svcItemWeiguang?.adjustedPriceFen);
+
+  /* ---------- 42. 清单③+①：回馈金 grant 无月上限 + 三本账无互转 ---------- */
+  console.log('\n[R11a] 42. grant 无月上限 + 三本账（清单③+①）');
+  // 同月两笔商品单（萤火 2%）：12900×2% = 258/笔
+  const gBill1 = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: customerUser!.id, note: 'e2e R11a grant 商品单 1' });
+  const gBill2 = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: customerUser!.id, note: 'e2e R11a grant 商品单 2' });
+  const myAfterGrants = await trpcQuery<{ rebate: { balanceFen: number; pendingFen: number; status: string } | null }>('membership.my', { cookie: customerCookie });
+  check('R11a③ 无月上限：同月两笔 grant 累计 258+258=516 全挂期次（无 cap 截断），未到账口径 balance=0',
+    myAfterGrants.rebate?.pendingFen === 516 && myAfterGrants.rebate.balanceFen === 0,
+    myAfterGrants.rebate);
+  const grantLogs = await db.select().from(schema.rebateLogs)
+    .where(and(eq(schema.rebateLogs.userId, customerUser!.id), eq(schema.rebateLogs.type, 'grant')));
+  check('R11a③ grant 行挂期次且余额不动（before=after=0，统一次月到账）',
+    grantLogs.length === 2 && grantLogs.every((l) => l.deltaFen === 258 && l.beforeFen === l.afterFen && !!l.period),
+    grantLogs.map((l) => ({ delta: l.deltaFen, period: l.period })));
+
+  // 三本账无互转（端点扫描 + 余额变动只走自家流水表）
+  const { appRouter } = await import('../routers');
+  const procNames = Object.keys((appRouter as unknown as { _def: { procedures: Record<string, unknown> } })._def.procedures);
+  check('R11a① 端点扫描：全路由无回馈金/储值/XP 互转通道（无 convert/transfer/exchange/互转 过程名）',
+    !procNames.some((n) => /convert|transfer|exchange|互转/i.test(n)), `procedures=${procNames.length}`);
+  const svAccUntouched = await db.select().from(schema.storedValueAccounts).where(eq(schema.storedValueAccounts.id, svAcc.id)).get();
+  const xpCross = await db.select().from(schema.xpEvents).where(eq(schema.xpEvents.userId, customerUser!.id));
+  check('R11a① 余额变动只走自家流水表（grant×2 后：储值账仍 98240 未动 / 客户 XP 账零事件）',
+    !!svAccUntouched && svAccUntouched.principalFen + svAccUntouched.bonusFen === 98240 && xpCross.length === 0,
+    { sv: svAccUntouched && svAccUntouched.principalFen + svAccUntouched.bonusFen, xpEvents: xpCross.length });
+
+  /* ---------- 43. 回归：settleMonthly 次月到账批次单幂等（服务级直调，harness 共享临时库） ---------- */
+  console.log('\n[R11a] 43. settleMonthly 次月到账（回归）');
+  const { settleMonthly, rebatePeriodOf } = await import('../services/rebate');
+  const periodNow = rebatePeriodOf(new Date()); // 当前期次（上月26~本月25）
+  const [py, pm] = periodNow.split('-').map((s) => parseInt(s, 10));
+  const settleNow = new Date(py, pm, 10); // 期次 P 的次月 10 日（≥结算日 5）——结算对象=P
+  const notDue = await settleMonthly(db, new Date(2030, 0, 2)); // 2 日 < 结算日 5 → 空转
+  check('R11a回归 settleMonthly 未到期空转（not-due 零写入）', notDue.settled === false && notDue.reason === 'not-due', notDue);
+  const rbSettle1 = await settleMonthly(db, settleNow);
+  const accAfterRbSettle = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, customerUser!.id)).get();
+  check('R11a回归 期次结算入账（批次单 grantedCount=2/grantedFen=516；余额 0→516 前后值留痕）',
+    rbSettle1.settled === true && rbSettle1.period === periodNow && rbSettle1.grantedCount === 2 && rbSettle1.grantedFen === 516 &&
+      accAfterRbSettle?.balanceFen === 516,
+    { settled: rbSettle1.settled, period: rbSettle1.period, count: rbSettle1.grantedCount, fen: rbSettle1.grantedFen, balance: accAfterRbSettle?.balanceFen });
+  const rbSettle2 = await settleMonthly(db, settleNow);
+  const batchRows = await db.select().from(schema.rebateSettlements).where(eq(schema.rebateSettlements.period, periodNow));
+  check('R11a回归 批次单幂等（period unique：重入 already-settled，全表仍 1 行）',
+    rbSettle2.settled === false && rbSettle2.reason === 'already-settled' && batchRows.length === 1,
+    { reason: rbSettle2.reason, batches: batchRows.length });
+
+  /* ---------- 44. 清单②：抵扣段仅商品 + 回归：rebate 段不计已收 ---------- */
+  console.log('\n[R11a] 44. rebate 抵扣段（清单② + 不计已收回归）');
+  const svcRebate = await asErr(trpcMutate('cashier.settle', {
+    cookie: ownerCookie,
+    input: {
+      customerId: customerUser!.id, items: [{ kind: 'service', refId: service.id }],
+      discountType: 'none', discountValue: 0, note: 'e2e R11a 服务行 rebate 段验证',
+      payments: [{ method: 'rebate', amountFen: 100 }, { method: 'cash', amountFen: 7644 }],
+    },
+  }));
+  check('R11a② 服务行单 + rebate 段 → 403 FORBIDDEN「回馈金仅可抵商品」（红线 2 硬校验）',
+    svcRebate instanceof TrpcHttpError && svcRebate.httpStatus === 403 && svcRebate.code === 'FORBIDDEN' && svcRebate.message.includes('回馈金仅可抵商品'),
+    svcRebate && { status: svcRebate.httpStatus, message: svcRebate.message });
+  const tender44Before = await trpcQuery<{ receivedTotalFen: number; tender: { rebateFen?: number } }>('store.todayTenderStats', { cookie: ownerCookie });
+  const dBill = await settleBill2([{ kind: 'product', refId: staple.id }], {
+    customerId: customerUser!.id,
+    payments: () => [{ method: 'rebate', amountFen: 300 }, { method: 'cash', amountFen: 12600 }],
+    note: 'e2e R11a 商品行 rebate 抵扣单',
+  }); // 12900 = rebate 300 + cash 12600
+  const accAfterDeduct = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, customerUser!.id)).get();
+  const deductLog = (await db.select().from(schema.rebateLogs)
+    .where(and(eq(schema.rebateLogs.userId, customerUser!.id), eq(schema.rebateLogs.type, 'deduct'))))[0];
+  check('R11a② 商品行单 + rebate 段成（余额 516→216 前后值留痕，1:1 扣已到账）',
+    dBill.payableFen === 12900 && accAfterDeduct?.balanceFen === 216 &&
+      deductLog?.deltaFen === -300 && deductLog.beforeFen === 516 && deductLog.afterFen === 216,
+    { balance: accAfterDeduct?.balanceFen, log: deductLog && { before: deductLog.beforeFen, after: deductLog.afterFen } });
+  const tender44After = await trpcQuery<{ receivedTotalFen: number; tender: { rebateFen?: number } }>('store.todayTenderStats', { cookie: ownerCookie });
+  check('R11a回归 rebate 段不计已收（已收仅 +现金段 12600；rebateFen 参考列 +300）',
+    tender44After.receivedTotalFen - tender44Before.receivedTotalFen === 12600 &&
+      (tender44After.tender.rebateFen ?? 0) - (tender44Before.tender.rebateFen ?? 0) === 300,
+    { dReceived: tender44After.receivedTotalFen - tender44Before.receivedTotalFen, dRebate: (tender44After.tender.rebateFen ?? 0) - (tender44Before.tender.rebateFen ?? 0) });
+
+  /* ---------- 45. 清单⑥：退货扣回接 R12（实算 + 余额不足扣 0 记未扣回） ---------- */
+  console.log('\n[R11a] 45. 退货扣回接 R12（清单⑥）');
+  interface R11aLinkage { rebateClawbackFen?: number; rebateClawbackMissedFen?: number }
+  const cb1 = await trpcMutate<RefundExecRes>('refund.execute', {
+    cookie: ownerCookie,
+    input: { billNo: gBill1.billNo, type: 'partial_amount', amountFen: 6450, reason: 'R11a 退货扣回 50%' },
+  });
+  const cb1Linkage = (cb1.refund.linkageJson ?? {}) as R11aLinkage;
+  const clawLog1 = (await db.select().from(schema.rebateLogs)
+    .where(and(eq(schema.rebateLogs.type, 'clawback'), eq(schema.rebateLogs.sourceId, cb1.refund.refundNo))))[0];
+  check('R11a⑥ 部分退 50% → rebateClawbackFen 实算=已发 258×(6450÷12900)=129（linkage 填实值，冻结接口激活）',
+    cb1Linkage.rebateClawbackFen === 129 && cb1Linkage.rebateClawbackMissedFen === 0, cb1Linkage);
+  check('R11a⑥ clawback 流水前后值（216→129 扣后余额 87；source_id=退款单号，note 关联原单号）',
+    clawLog1?.deltaFen === -129 && clawLog1.beforeFen === 216 && clawLog1.afterFen === 87 &&
+      clawLog1.sourceId === cb1.refund.refundNo && (clawLog1.note ?? '').includes(gBill1.billNo),
+    clawLog1 && { delta: clawLog1.deltaFen, before: clawLog1.beforeFen, after: clawLog1.afterFen, note: clawLog1.note });
+  const cb2 = await trpcMutate<RefundExecRes>('refund.execute', {
+    cookie: ownerCookie,
+    input: { billNo: gBill2.billNo, type: 'partial_amount', amountFen: 6450, reason: 'R11a 退货扣回余额不足' },
+  });
+  const cb2Linkage = (cb2.refund.linkageJson ?? {}) as R11aLinkage;
+  const clawLog2 = (await db.select().from(schema.rebateLogs)
+    .where(and(eq(schema.rebateLogs.type, 'clawback'), eq(schema.rebateLogs.sourceId, cb2.refund.refundNo))))[0];
+  const accAfterClaw2 = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, customerUser!.id)).get();
+  check('R11a⑥ 余额不足扣 0 不负账（应扣 129 > 余额 87 → 实扣 87，差额 42 记 rebateClawbackMissedFen 未扣回）',
+    cb2Linkage.rebateClawbackFen === 129 && cb2Linkage.rebateClawbackMissedFen === 42 &&
+      clawLog2?.beforeFen === 87 && clawLog2.afterFen === 0 && accAfterClaw2?.balanceFen === 0,
+    { linkage: cb2Linkage, balance: accAfterClaw2?.balanceFen });
+
+  /* ---------- 46. 清单④：到期冻结 → 续费解冻顺延 ---------- */
+  console.log('\n[R11a] 46. 到期冻结 / 续费解冻（清单④）');
+  await db.update(schema.memberships).set({ expiresAt: new Date(Date.now() - 86400_000), updatedAt: new Date() })
+    .where(eq(schema.memberships.id, sellYinghuo.membership.id)); // 到期日置昨日
+  const myFrozen = await trpcQuery<{ membership: { status: string } | null; rebate: { status: string } | null }>('membership.my', { cookie: customerCookie });
+  const freezeLog = (await db.select().from(schema.rebateLogs)
+    .where(and(eq(schema.rebateLogs.userId, customerUser!.id), eq(schema.rebateLogs.type, 'freeze'))))[0];
+  check('R11a④ 到期过日 → 读路径懒冻结（membership frozen + 回馈金账户 frozen + freeze 留痕行）',
+    myFrozen.membership?.status === 'frozen' && myFrozen.rebate?.status === 'frozen' && !!freezeLog,
+    { membership: myFrozen.membership?.status, rebate: myFrozen.rebate?.status });
+  const frozenDeduct = await asErr(trpcMutate('cashier.settle', {
+    cookie: ownerCookie,
+    input: {
+      customerId: customerUser!.id, items: [{ kind: 'product', refId: staple.id }],
+      discountType: 'none', discountValue: 0, note: 'e2e R11a 冻结抵扣验证',
+      payments: [{ method: 'rebate', amountFen: 100 }, { method: 'cash', amountFen: 12800 }],
+    },
+  }));
+  check('R11a④ 冻结期抵扣不可用（FORBIDDEN「回馈金账户冻结中」，余额在不可用）',
+    frozenDeduct instanceof TrpcHttpError && frozenDeduct.code === 'FORBIDDEN' && frozenDeduct.message.includes('冻结'),
+    frozenDeduct && { code: frozenDeduct.code, message: frozenDeduct.message });
+  const frozenDiscount = await settleBill2([{ kind: 'service', refId: service.id }], { customerId: customerUser!.id, note: 'e2e R11a 冻结期服务单' });
+  check('R11a④ 冻结期服务折扣同步失效（门市价 8800 不打折）', frozenDiscount.payableFen === 8800, frozenDiscount.payableFen);
+  const renewRes = await trpcMutate<{ membership: MembershipRowT; amountFen: number }>('membership.renew', {
+    cookie: managerCookie,
+    input: { userId: customerUser!.id, paySegments: [{ method: 'cash', amountFen: 19900 }] },
+  });
+  const renewDays = (renewRes.membership.expiresAt.getTime() - Date.now()) / 86400_000;
+  const accAfterRenew = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, customerUser!.id)).get();
+  check('R11a④ 续费解冻：active + expires 自今日顺延 365 天 + 回馈金账户恢复 active',
+    renewRes.membership.status === 'active' && renewDays > 364 && renewDays < 366 && accAfterRenew?.status === 'active',
+    { status: renewRes.membership.status, days: renewDays, acc: accAfterRenew?.status });
+
+  /* ---------- 47. 清单⑫：安心包全员免费（权益表述）+ 回归：savingsPreview / amortizationStats ---------- */
+  console.log('\n[R11a] 47. plans 权益表述 + 立省钩子 + 年费分摊双口径（清单⑫+回归）');
+  const plansRes = await trpcQuery<{ plans: Array<{ planKey: string; label: string; priceFen: number; free: boolean }> }>('membership.plans', { cookie: customerCookie });
+  const plansJson = JSON.stringify(plansRes.plans.map((p) => p.label));
+  check('R11a⑫ 权益表述：plans 透出含「安心包全员免费」（微光档权益行）', plansJson.includes('安心包全员免费'), plansRes.plans.map((p) => p.planKey));
+  check('R11a⑫ 无「非会员 ¥15」残留（全档权益文案 grep 级实证）', !/¥15|15\s*元/.test(plansJson), plansJson.slice(0, 120));
+  check('R11a⑫ 四档价格明面（0 / 19900 / 29900 / 59900 升序）',
+    plansRes.plans.map((p) => p.priceFen).join(',') === '0,19900,29900,59900', plansRes.plans.map((p) => p.priceFen));
+  const savePrev = await trpcQuery<{ fen: number; text: string }>('membership.savingsPreview', {
+    cookie: ownerCookie,
+    input: { lines: [{ kind: 'service', amountFen: 8800 }, { kind: 'product', amountFen: 12900 }] },
+  });
+  check('R11a回归 savingsPreview 立省钩子数值（服务 8800×12% + 商品 12900×2% = 1056+258=1314）',
+    savePrev.fen === 1314 && savePrev.text === '开通萤火立省 ¥13.14', savePrev);
+  const amo = await trpcQuery<{ month: string; cashFen: number; amortizedFen: number }>('membership.amortizationStats', {
+    cookie: ownerCookie, input: { month: currentMonth },
+  });
+  // 售卡实收：萤火 19900 + 烛光 29900 + 微光 0 + 4 宠 25800 + 10 宠 61200 + 续费 19900 = 156700
+  // 分摊确认（退会前 active 快照）：round(19900/12)+round(29900/12)+0+2150+5100 = 1658+2492+0+2150+5100 = 11400
+  check('R11a回归 年费分摊双口径并列（收现 cashFen=156700 / 分摊确认 amortizedFen=11400 精确到分）',
+    amo.cashFen === 156700 && amo.amortizedFen === 11400, amo);
+
+  /* ---------- 48. 清单⑤+⑪：退会清零 + 折算剩余整月×月均价精确到分 ---------- */
+  console.log('\n[R11a] 48. 退会（清单⑤+⑪，R11a 段收尾动作）');
+  // 构造「用 4 个月零几天」：到期日=今日+7 个月+3 天 → 剩余整月=7（到期日「日」>退会日「日」，零头不抹）
+  const exp7 = new Date();
+  exp7.setMonth(exp7.getMonth() + 7);
+  exp7.setDate(exp7.getDate() + 3);
+  await db.update(schema.memberships).set({ expiresAt: exp7, updatedAt: new Date() })
+    .where(eq(schema.memberships.id, sellYinghuo.membership.id));
+  const cancelRes = await trpcMutate<{ membership: MembershipRowT; refundFen: number; clearedRebateFen: number }>('membership.cancel', {
+    cookie: managerCookie,
+    input: { userId: customerUser!.id, reason: '客户申请退会（e2e）' },
+  });
+  // 月均价=19900÷12；剩余整月 7 → round(19900×7/12)=11608 精确到分（¥116.08）
+  check('R11a⑪ 退会折算=剩余整月 7×月均价（19900×7/12=11608 分精确到分）',
+    cancelRes.refundFen === 11608 && cancelRes.membership.refundFen === 11608, { refundFen: cancelRes.refundFen });
+  const accAfterCancel = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, customerUser!.id)).get();
+  const clearLog = (await db.select().from(schema.rebateLogs)
+    .where(and(eq(schema.rebateLogs.userId, customerUser!.id), eq(schema.rebateLogs.type, 'clear'))))[0];
+  check('R11a⑤ 退会清零（余额 0 + clear 留痕行前后值 + memberships cancelled）',
+    accAfterCancel?.balanceFen === 0 && !!clearLog && clearLog.afterFen === 0 && cancelRes.membership.status === 'cancelled',
+    { balance: accAfterCancel?.balanceFen, clearedFen: cancelRes.clearedRebateFen, status: cancelRes.membership.status });
+  const cancelEvents = (await db.select().from(schema.eventOutbox)).filter(
+    (r) => r.eventType === 'membership.cancelled' && r.channel === `user:${customerUser!.id}`,
+  );
+  check('R11a⑤ 客户频道通知（membership.cancelled → user 频道，payload 含折算额与「按原路退回」文案）',
+    cancelEvents.length === 1 && (() => {
+      const p = cancelEvents[0]!.payload as Record<string, unknown>;
+      return p.refundFen === 11608 && typeof p.message === 'string' && (p.message as string).includes('原路退回');
+    })(),
+    cancelEvents.map((r) => r.payload));
+  const myAfterCancel = await trpcQuery<{ membership: unknown; guide: string | null }>('membership.my', { cookie: customerCookie });
+  check('R11a⑤ 退会后会员页回非会员引导态（membership=null + guide 透出）',
+    myAfterCancel.membership === null && typeof myAfterCancel.guide === 'string', myAfterCancel.guide);
+
+  // 收尾一致性：回馈金全生命周期流水前后值链完整（每行 before=上行 after，五类全留痕）
+  const allLogs = (await db.select().from(schema.rebateLogs).where(eq(schema.rebateLogs.userId, customerUser!.id)))
+    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime() || (a.id < b.id ? -1 : 1));
+  const chainOk = allLogs.every((l, i) => i === 0 || l.beforeFen === allLogs[i - 1]!.afterFen);
+  check('R11a⑤ 回馈金流水前后值链完整（grant/deduct/clawback/freeze/clear 全周期）',
+    allLogs.length >= 8 && chainOk && allLogs[allLogs.length - 1]!.afterFen === 0,
+    allLogs.map((l) => `${l.type}:${l.beforeFen}→${l.afterFen}`));
 
   client.close();
 }

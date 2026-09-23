@@ -40,6 +40,7 @@ import { assertDeployConfig, getCorsOrigins, getPublicBaseUrl, warnStagingConfig
 import { startOutboxSweeper } from './realtime/outboxSweeper';
 import { expirePendingOrders } from './routers/mall';
 import { awardXp, settleXpMonth } from './services/xpAward';
+import { settleMonthly as settleRebateMonth } from './services/rebate';
 import { snapshotStoreMonth } from './routers/commission';
 import { appRouter } from './routers';
 import type { Context as TrpcContext } from './trpc';
@@ -145,6 +146,27 @@ async function runCommissionSnapshot(): Promise<void> {
     } catch (err) {
       console.error(`[commission] 月度快照失败 store=${s.id} month=${month}:`, err);
     }
+  }
+}
+
+/**
+ * R11a 回馈金月度结算（任务书 §三 CJ-0922-13「统一次月到账」）：每日滴答检查——
+ * 当日 ≥ 结算日（member_plans.rebate_settlement_day 读表，默认 5 日；故障顺延≤3 天
+ * 页面明示）且上一期次未结算 → settleRebateMonth 入账（Σ 上期 grant 行 →
+ * rebate_settlements 批次单 + 逐用户余额入账）。
+ * 幂等：rebate_settlements.period unique——30min 滴答重入/宕机顺延补跑/e2e 直调
+ * 互撞均零副作用；未到期 not-due 空转。
+ */
+async function runRebateSettle(): Promise<void> {
+  try {
+    const r = await settleRebateMonth(db, new Date());
+    if (r.settled) {
+      console.log(
+        `[rebate] 月度结算 period=${r.period} 入账 ${r.grantedCount} 行 / ${(r.grantedFen / 100).toFixed(2)} 元（批次 ${r.settlementId}）`,
+      );
+    }
+  } catch (err) {
+    console.error('[rebate] 月度结算扫描失败:', err);
   }
 }
 
@@ -283,6 +305,14 @@ if (isMain) {
   }, 30 * 60_000);
   commissionSnapshotTimer.unref?.();
 
+  // R11a 回馈金月度结算：启动即试一次，之后每 30min 滴答（当日≥结算日且本期未结算才执行，
+  // period unique 幂等——未到期/已结算空转，故障顺延补跑零副作用）
+  runRebateSettle().catch((err) => console.error('[rebate] 月度结算扫描失败:', err));
+  const rebateSettleTimer = setInterval(() => {
+    runRebateSettle().catch((err) => console.error('[rebate] 月度结算扫描失败:', err));
+  }, 30 * 60_000);
+  rebateSettleTimer.unref?.();
+
   const server: ServerType = serve({ fetch: app.fetch, port }, (info) => {
     const publicBase = getPublicBaseUrl();
     console.log(`[philia-server] 已启动: http://localhost:${info.port} （tRPC: /trpc/*, SSE: /api/events）`);
@@ -299,6 +329,7 @@ if (isMain) {
     clearInterval(xpSettleTimer);
     clearInterval(xpCompletionTimer);
     clearInterval(commissionSnapshotTimer);
+    clearInterval(rebateSettleTimer);
     server.close(() => {
       client.close();
       console.log('[philia-server] 已退出');

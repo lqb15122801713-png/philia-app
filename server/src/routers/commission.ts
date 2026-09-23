@@ -6,6 +6,13 @@
  * - 提成只读计算（改数只能改规则或源单）：数值全落 commission_rules 配置表，
  *   代码零常量；live 月份按源单时间（账单 settled_at）取 effective_from 生效的规则版本
  *   逐行计提；已快照月份读 commission_snapshots，不动历史快照；
+ * - 售卡定额（R11a 接通）：当月 settled 未冲正账单中 kind='membership' 行按
+ *   commission_card_fixed.fixed_fen_by_plan 定额计提（萤火 500/烛光 1000/暖阳 2000/微光 0，
+ *   规则版本时序口径 resolveFromHistory 保持）；归属=该单 operator 开单人（无岗位闸，
+ *   P3 本人开单同口径）；试用期 ×50%（commission_probation_multiplier，与商品行同口径）；
+ *   cardNote 退役为历史注释（有行时为空串，前端不渲染）；无售卡单时 cardLines 仍为空数组
+ *   （mySummary 返回形状向后兼容）。退会折算走 membership.cancel 域，cardLines 不经 R12
+ *   行冲减（V6 仅服务/商品行，口径写死）。
  * - 仅本人硬过滤：staff 端点 employeeId=ctx.user.staffId，输入 .strict()，
  *   越权传参直接 FORBIDDEN（查不到，非遮蔽）；
  * - 接待人域：账单 receptionist_id 默认=开单人，含预约行时优先取预约 receptionist_id
@@ -15,8 +22,7 @@
  *   payload 中 groomerPool / frontdeskPool 两池分列不合并；
  * - 扣减 50% 硬闸门：当月累计 ≤ 当月绩效估计 50%（扣绩效不扣提成），超限 FORBIDDEN 硬拒；
  * - 产能红线：日超 8 只超出部分按 1.5 倍须店长批准（overwork_approvals 留痕），
- *   未批准按 1 倍计提并标 pendingApproval；
- * - 售卡定额规则已落库但源单不存在（R11 会员前置批）：cardLines 恒空 + cardNote 明示，不悬空。
+ *   未批准按 1 倍计提并标 pendingApproval。
  *
  * 报备偏差（schema 实证适配，PR 中显式列）：
  * 1. 洗护/造型判别（裁定③ + 决策 #40）：services 表无类目列（仅 type=grooming|boarding
@@ -300,6 +306,46 @@ interface StoreLine {
   amountFen: number;
 }
 
+/** 售卡定额行（R11a 接通：kind='membership' 行 × commission_card_fixed.fixed_fen_by_plan） */
+interface CardLine {
+  billId: string;
+  billNo: string;
+  itemId: string;
+  /** 档位键（行 refId=plan_key，如 plan_yinghuo） */
+  plan: string;
+  /** 行快照名（判档兜底依据） */
+  name: string;
+  date: string; // 账单 settled_at 本地日期（计提时点同服务/商品行口径）
+  /** 定额（分；规则时序口径 resolveFromHistory；试用期 ×50% 已乘） */
+  amountFen: number;
+  /** 试用期倍率 bp（非试用期=10000） */
+  multiplierBp: number;
+}
+
+/**
+ * 售卡定额判档映射（R11a）：commission_card_fixed 种子键为档位标签
+ * （萤火199/烛光299/暖阳599/微光免费档）；配置端口若改用 plan_key 作键也兼容——
+ * 依次按 行 refId（plan_key）→ 行快照名 → plan_key→种子标签映射 命中；
+ * 未命中=0（宁漏计不多计，行仍落 cardLines 透出 0 元供核对）。
+ */
+const PLAN_KEY_TO_CARD_LABEL: Record<string, string> = {
+  plan_weiguang: '微光免费档',
+  plan_yinghuo: '萤火199',
+  plan_zhuguang: '烛光299',
+  plan_nuanyang: '暖阳599',
+};
+
+function cardFixedFenOf(fixedMap: unknown, planKey: string, nameSnapshot: string): number {
+  if (!fixedMap || typeof fixedMap !== 'object') return 0;
+  const m = fixedMap as Record<string, unknown>;
+  const direct = num(m[planKey], NaN);
+  if (Number.isFinite(direct)) return direct;
+  const byName = num(m[nameSnapshot], NaN);
+  if (Number.isFinite(byName)) return byName;
+  const label = PLAN_KEY_TO_CARD_LABEL[planKey];
+  return label ? num(m[label], 0) : 0;
+}
+
 interface PerfPool {
   /** 绩效基数（分）：洗美营收·门市价 */
   baseFen: number;
@@ -333,8 +379,9 @@ export interface CommissionMonthPayload {
   probation: boolean;
   serviceLines: CommissionLine[];
   productLines: CommissionLine[];
-  /** 售卡定额：规则已落库、源单随 R11 会员前置批开通——恒空+明示，不悬空 */
-  cardLines: never[];
+  /** 售卡定额行（R11a 已接通；无售卡单时为空数组——mySummary 形状向后兼容） */
+  cardLines: CardLine[];
+  /** 历史注释（cardLines 有行时为空串，前端不渲染；退役口径） */
   cardNote: string;
   storeLines: StoreLine[];
   /** 提成合计（分）= 行净额合计 + 店级行 − 跨月调整项合计（R12 V6 冲减口径） */
@@ -620,6 +667,35 @@ export async function computeMonth(
     }
   }
 
+  /* ---- 售卡定额（R11a 接通，提成规则表 V1.3 已落库）：当月 settled 未冲正账单中
+     kind='membership' 行按 commission_card_fixed.fixed_fen_by_plan 定额计提；
+     归属=该单 operator 开单人（无岗位闸，谁开单谁计提，P3 本人开单同口径）；
+     试用期 ×50%（与商品行同口径）；规则版本按源单 settled_at 时序解析（回溯口径保持）。
+     退会折算走 membership.cancel 域，cardLines 不经 R12 V6 行冲减（口径写死）。 ---- */
+  const cardLines: CardLine[] = [];
+  for (const bill of monthData.bills) {
+    if (bill.operatorId !== staffRow.userId) continue; // 归属=开单人
+    const ts = bill.settledAt ?? bill.createdAt;
+    const fixedMap = ruleAt('commission_card_fixed', ts)?.fixed_fen_by_plan;
+    const probMultBp = staffRow.probation
+      ? num(ruleAt('commission_probation_multiplier', ts)?.multiplier_bp, 5000)
+      : 10000;
+    for (const it of monthData.items) {
+      if (it.billId !== bill.id || it.kind !== 'membership') continue;
+      const fixedFen = cardFixedFenOf(fixedMap, it.refId, it.nameSnapshot);
+      cardLines.push({
+        billId: bill.id,
+        billNo: bill.billNo,
+        itemId: it.id,
+        plan: it.refId,
+        name: it.nameSnapshot,
+        date: localDateStr(ts),
+        amountFen: Math.round((fixedFen * probMultBp) / 10000),
+        multiplierBp: probMultBp,
+      });
+    }
+  }
+
   /* ---- P3 全店提成（全店洗美服务营收 ×1%，金额逐行时序解析，报备偏差 6） ---- */
   if (wantP3) {
     storeLines.push({
@@ -873,6 +949,7 @@ export async function computeMonth(
   const commissionTotalFen =
     serviceLines.reduce((s, l) => s + l.amountFen, 0) +
     productLines.reduce((s, l) => s + l.amountFen, 0) +
+    cardLines.reduce((s, l) => s + l.amountFen, 0) + // R11a：售卡定额计入提成合计
     storeLines.reduce((s, l) => s + l.amountFen, 0) -
     adjustmentsTotalFen;
 
@@ -885,8 +962,8 @@ export async function computeMonth(
     probation: staffRow.probation,
     serviceLines,
     productLines,
-    cardLines: [], // 售卡定额规则已落库、源单随 R11 会员前置批开通（不悬空，不虚构）
-    cardNote: '随会员前置批开通',
+    cardLines, // R11a：售卡定额已接通（无售卡单时为空数组，形状向后兼容）
+    cardNote: cardLines.length > 0 ? '' : '售卡定额已接通（暂无售卡单）', // 退役为历史注释：有行时不渲染
     storeLines,
     commissionTotalFen,
     adjustments,

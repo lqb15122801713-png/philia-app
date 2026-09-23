@@ -12,6 +12,9 @@
  *   照转，存原始倍率非 bp）、keywords 数组 ↔ 逗号分隔文本（保存切回 string[]，去空白项）；
  * - 枚举字段（补充令①：G0 scope「老板端口可调」）→ 分段二选一（bath=仅洗护 / all=全部
  *   洗美服务，缺省 bath），纳入脏跟踪与重确认前后值摘要，深合并随 valueJson 提交；
+ * - 会员档域（R11a Phase 3C，domain='member_plans'，同管道）：年费/多宠加收 fen↔元、
+ *   回馈金比例/服务折扣 bp↔%（折扣加注「88 折=88%」小字）、含宠数/上限/到账日/有效
+ *   天数整数直读、free 布尔结构字段只读注记（档位免费属性不给改）；
  * - 置灰行（作废/备用/预留/随会员游戏化批开通）只读展示 + 状态 chip，不可编辑；
  * - 脏跟踪：仅提交有变化的 key；保存 = 危险操作 D 套（变更摘要明示 + 键入「确认保存」二次确认）
  *   → config.save；保存即生效，toast 明示 + 列表/留痕双失效刷新；
@@ -38,24 +41,28 @@ type RuleRow = ListOut['rules'][number];
 type VersionsOut = Awaited<ReturnType<Trpc['config']['versions']['query']>>;
 type VersionRow = VersionsOut['versions'][number];
 
-type RulesDomain = 'commission' | 'xp' | 'duration';
+type RulesDomain = 'commission' | 'xp' | 'duration' | 'member_plans';
 
 const DOMAIN_TABS: Array<{ key: RulesDomain; label: string }> = [
   { key: 'commission', label: '提成与绩效' },
   { key: 'xp', label: 'XP 成长' },
   { key: 'duration', label: '时长系数' },
+  { key: 'member_plans', label: '会员档' },
 ];
 
 const DOMAIN_TITLE: Record<RulesDomain, string> = {
   commission: '提成与绩效规则',
   xp: 'XP 成长规则',
   duration: '时长系数规则',
+  member_plans: '会员档规则',
 };
 
-/** 域页签分区顶部小字（duration 补充令①：占位待供给口径明示） */
+/** 域页签分区顶部小字（duration 占位待供给 / member_plans R11a 可调口径明示） */
 const DOMAIN_NOTICE: Partial<Record<RulesDomain, string>> = {
   duration:
     '占位待供给——当前为引擎占位值照转，老板完整供给表到后在此直接改值，保存即生效、不回溯既有单据。',
+  member_plans:
+    '档位/价格/回馈金比例/服务折扣/多宠规则老板可调，保存即生效、新规只管新单（不回溯既有会员与单据）。',
 };
 
 /* ------------------------------------------------------------------ */
@@ -68,6 +75,8 @@ interface FieldMeta {
   label: string;
   conv: NumConv;
   suffix?: string;
+  /** 输入框下小字（如折扣换算注记） */
+  hint?: string;
 }
 
 /** 已知数值字段的展示族（与 server configRules.ts 的 NUMERIC_KEYS 口径对齐） */
@@ -86,6 +95,19 @@ const FIELD_META: Record<string, FieldMeta> = {
   day: { label: '日', conv: 'plain' },
   hour: { label: '时（24 小时制）', conv: 'plain' },
   threshold_per_day: { label: '每日门槛', conv: 'plain' },
+  /* R11a 会员档域（member_plans）：价格 fen↔元；回馈/折扣 bp↔%；宠物数/天数直读 */
+  price_fen: { label: '年费', conv: 'yuan', suffix: '元' },
+  rebate_bp: { label: '回馈金比例', conv: 'percent', suffix: '%' },
+  service_discount_bp: {
+    label: '服务折扣',
+    conv: 'percent',
+    suffix: '%',
+    hint: '按百分比填写：88 折 = 88%',
+  },
+  included_pets: { label: '含宠物数', conv: 'plain', suffix: '只' },
+  extra_pet_fen: { label: '超出每只加收', conv: 'yuan', suffix: '元' },
+  max_pets: { label: '多宠上限', conv: 'plain', suffix: '只' },
+  days: { label: '有效天数', conv: 'plain', suffix: '天' },
 };
 
 const MAP_LABEL: Record<string, string> = {
@@ -155,6 +177,7 @@ const TEXT_FIELD_LABEL: Record<string, string> = {
   level: '段位',
   same_as: '口径引用',
   scope: '适用范围',
+  free: '免费属性',
 };
 
 /** 枚举字段选项表（补充令①：G0 scope「老板端口可调」——分段二选一，不落自由文本） */
@@ -499,6 +522,11 @@ function buildModel(value: Record<string, unknown>): RuleModel {
       }
       continue;
     }
+    if (typeof v === 'boolean') {
+      /* 布尔结构字段（如 member_plans free 免费档属性）只读注记，不给改 */
+      notes.push(`${TEXT_FIELD_LABEL[k] ?? k}：${v ? '是' : '否'}（结构属性，不可改）`);
+      continue;
+    }
     if (typeof v === 'string') {
       if (ENUM_OPTIONS[k]) {
         editors.push({
@@ -828,12 +856,14 @@ function NumInput({
   suffix,
   text,
   error,
+  hint,
   onChange,
 }: {
   label: string;
   suffix?: string;
   text: string;
   error?: string;
+  hint?: string;
   onChange: (v: string) => void;
 }) {
   return (
@@ -854,6 +884,9 @@ function NumInput({
         {suffix ? <span className="shrink-0 text-caption-xs text-[rgba(74,59,46,.42)]">{suffix}</span> : null}
       </span>
       {error ? <span className="mt-1 block text-caption-xs text-danger-deep">{error}</span> : null}
+      {!error && hint ? (
+        <span className="mt-1 block text-caption-xs text-[rgba(74,59,46,.42)]">{hint}</span>
+      ) : null}
     </label>
   );
 }
@@ -1028,6 +1061,7 @@ function DomainPanel({ domain }: { domain: RulesDomain }) {
                           key={ed.path}
                           label={ed.meta.label}
                           suffix={ed.meta.suffix}
+                          hint={ed.meta.hint}
                           text={drafts[r.ruleKey]?.[ed.path] ?? ''}
                           error={rowErrors[ed.path]}
                           onChange={(v) => setDraft(r.ruleKey, ed.path, v)}

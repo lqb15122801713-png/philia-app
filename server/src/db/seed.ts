@@ -28,6 +28,12 @@ import { client, db, schema } from './index';
 /* ---------------- 清空（子表 -> 父表） ---------------- */
 
 const CLEAR_ORDER = [
+  /* ---- R11a 会员前置批新表：子表先父表（rebate_logs.settlement_id→rebate_settlements），先于 users/stores 清空 ---- */
+  schema.rebateLogs, // FK → users/rebate_accounts/rebate_settlements
+  schema.rebateAccounts, // FK → users
+  schema.rebateSettlements, // 独立（被 rebate_logs 引用）
+  schema.memberships, // FK → users/stores
+  schema.memberPlans, // FK → users
   /* ---- R12 退款专项新表：子表先父表，先于 cashier 域与 users 清空 ---- */
   schema.refundBillItems, // FK → refund_bills/cashier_bill_items/cashier_payments
   schema.refundBills, // FK → stores/cashier_bills/users
@@ -367,6 +373,32 @@ async function main() {
       refundSeed('refund_threshold_fen', '退款店长阈值：原单累计退款额超过此额须店主（默认 ¥500，R12 冻结版 V1.0 §九待老板终拍口径）', { threshold_fen: 50000 }),
     ]);
 
+    /* ---- R11a 会员前置批：会员档位配置种子（冻结版 V1.0 §二 + CJ-0922-13，version=1） ----
+     * 四档数值照 27 号档照转：微光免费（无回馈金无折扣）/萤火 ¥199·2%·88折/烛光 ¥299·5%·85折/
+     * 暖阳 ¥599·10%·8折；多宠全档统一：含 3 只、第 4 只起 +¥59/年/只、10 只封顶；
+     * 回馈金次月 5 日到账（故障顺延≤3 天页面明示）；回馈金/会员有效期均 365 天。
+     * 配置端口域 domain='member_plans'，保存即生效+版本化留痕，新值只管新单。
+     * 既有种子客户「示例客户」不开会员（留 e2e 自造）。
+     */
+    const planSeed = (ruleKey: string, label: string, valueJson: schema.RuleConfigValue) => ({
+      version: 1,
+      ruleKey,
+      label,
+      valueJson,
+      effectiveFrom: RULES_EFFECTIVE_FROM,
+      active: true,
+      createdBy: owner.id,
+    });
+    await tx.insert(schema.memberPlans).values([
+      planSeed('plan_weiguang', '会员档·微光：免费档（手机号即会员）；无回馈金、无服务折扣；安心包全员免费（钩子仅权益表述，微光不设钩子）', { free: true, price_fen: 0, rebate_bp: 0, service_discount_bp: 10000, included_pets: 3, extra_pet_fen: 5900, max_pets: 10 }),
+      planSeed('plan_yinghuo', '会员档·萤火：¥199/年；商品消费回馈金 2%；服务 88 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 19900, rebate_bp: 200, service_discount_bp: 8800, included_pets: 3, extra_pet_fen: 5900, max_pets: 10 }),
+      planSeed('plan_zhuguang', '会员档·烛光：¥299/年；商品消费回馈金 5%；服务 85 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 29900, rebate_bp: 500, service_discount_bp: 8500, included_pets: 3, extra_pet_fen: 5900, max_pets: 10 }),
+      planSeed('plan_nuanyang', '会员档·暖阳：¥599/年；商品消费回馈金 10%；服务 8 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 59900, rebate_bp: 1000, service_discount_bp: 8000, included_pets: 3, extra_pet_fen: 5900, max_pets: 10 }),
+      planSeed('rebate_settlement_day', '回馈金到账日：次月 5 日统一到账（故障顺延≤3 天，会员页明示口径）', { day: 5 }),
+      planSeed('rebate_validity_days', '回馈金有效期：365 天', { days: 365 }),
+      planSeed('membership_validity_days', '会员有效期：365 天（到期不续费冻结，余额在不可用；续费解冻；退卡清零）', { days: 365 }),
+    ]);
+
     /* ---- staff-2 R10：XP 规则配置种子（附件一冻结版 V1.0 全表照转，version=1） ----
      * 分值单位 XP 点；段位门槛/保级线为累计/月增量 XP；拉新 referral 置灰（active=false，
      * 随会员游戏化批 G3 链路开通，server 拒写该来源）。
@@ -457,6 +489,12 @@ async function main() {
     ['refund_bills', 'refund_bills'],
     ['refund_bill_items', 'refund_bill_items'],
     ['refund_rules', 'refund_rules'],
+    /* R11a 会员前置批新表 */
+    ['member_plans', 'member_plans'],
+    ['memberships', 'memberships'],
+    ['rebate_accounts', 'rebate_accounts'],
+    ['rebate_logs', 'rebate_logs'],
+    ['rebate_settlements', 'rebate_settlements'],
   ];
 
   console.log('[seed] 完成，各表行数：');

@@ -28,13 +28,14 @@ const txDb = (tx: unknown): DbHandle => tx as DbHandle;
 /* 后两者注释即「结构同 commission_rules」）                                 */
 /* ------------------------------------------------------------------ */
 
-const domainSchema = z.enum(['commission', 'xp', 'duration', 'refund']);
+const domainSchema = z.enum(['commission', 'xp', 'duration', 'refund', 'member_plans']);
 
 const RULES_TABLE = {
   commission: schema.commissionRules,
   xp: schema.xpRules,
   duration: schema.durationRules, // 补充令①：时长系数表配置化（决策 #39/#40），同型天然兼容
   refund: schema.refundRules, // R12 退款专项：退款阈值等（冻结版 V1.0 §九），同型天然兼容
+  member_plans: schema.memberPlans, // R11a 会员前置批：四档价格/回馈/折扣/多宠+到账日/有效期，同型天然兼容
 } as const;
 
 /* ------------------------------------------------------------------ */
@@ -58,6 +59,13 @@ const NUMERIC_KEYS = new Set([
   'rate_bp_max',
   'threshold_per_day',
   'threshold_fen', // R12 退款店长阈值（分）
+  'price_fen', // R11a 会员档年费（分）
+  'extra_pet_fen', // R11a 多宠附加费（分/年/只）
+  'rebate_bp', // R11a 回馈金比例（bp）
+  'service_discount_bp', // R11a 服务折扣（bp，10000=无折扣）
+  'included_pets', // R11a 档内含宠物数
+  'max_pets', // R11a 宠物数封顶
+  'days', // R11a 有效期天数
   'hour',
   'level',
 ]);
@@ -77,6 +85,13 @@ const NON_NEGATIVE_KEYS = new Set([
   'rate_bp_max',
   'threshold_per_day',
   'threshold_fen', // R12 退款店长阈值（分）
+  'price_fen', // R11a 会员档年费（分）
+  'extra_pet_fen', // R11a 多宠附加费（分/年/只）
+  'rebate_bp', // R11a 回馈金比例（bp）
+  'service_discount_bp', // R11a 服务折扣（bp，10000=无折扣）
+  'included_pets', // R11a 档内含宠物数
+  'max_pets', // R11a 宠物数封顶
+  'days', // R11a 有效期天数
   'hour',
   'level',
 ]);
@@ -89,6 +104,9 @@ const NUMBER_MAP_KEYS = new Set(['fixed_fen_by_plan', 'split_bp']);
 
 /** 字符串字段（段位名 / 同口径引用） */
 const STRING_KEYS = new Set(['name', 'same_as']);
+
+/** 布尔字段（R11a 会员档：free=免费档标记，仅 true/false 放行） */
+const BOOL_KEYS = new Set(['free']);
 
 /** 字符串数组字段（补充令① 时长域关键词表：keywords 词表 / bath、groom 服务种类词表，须 string[]） */
 const STRING_ARRAY_KEYS = new Set(['keywords', 'bath', 'groom']);
@@ -138,6 +156,10 @@ function validateValueJson(ruleKey: string, value: Record<string, unknown>): voi
     } else if (STRING_KEYS.has(k)) {
       if (typeof v !== 'string') {
         bad(`字段 ${k} 必须是字符串`);
+      }
+    } else if (BOOL_KEYS.has(k)) {
+      if (typeof v !== 'boolean') {
+        bad(`字段 ${k} 必须是布尔值（true/false）`);
       }
     } else if (STRING_ARRAY_KEYS.has(k)) {
       if (!Array.isArray(v) || !v.every((x) => typeof x === 'string' && x.length > 0)) {
