@@ -445,6 +445,8 @@ const REFUND_TYPE_LABEL: Record<string, string> = {
   partial_amount: '按金额退',
   boarding_nights: '寄养剩余晚',
   pass_cancel: '次卡退卡',
+  // R11a：server 新增退会退款类型（会员退会）
+  membership_cancel: '会员退会',
 };
 const REFUND_STATUS_LABEL: Record<string, string> = {
   draft: 'draft',

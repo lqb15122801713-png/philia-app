@@ -274,7 +274,7 @@ export default function AppDock() {
                 data-testid="app-dock-sheet-member"
                 onClick={() => {
                   setSheetOpen(false)
-                  navigate('/philia/member')
+                  navigate('/member')
                 }}
                 className="flex w-full items-center gap-3 py-3.5 text-left transition-transform duration-120 ease-philia-spring active:scale-[0.99]"
               >

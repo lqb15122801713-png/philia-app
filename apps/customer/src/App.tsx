@@ -20,7 +20,6 @@ import MePage from './pages/MePage'
 import MemberCardPage from './pages/MemberCardPage'
 import MemberCenterPage from './pages/MemberCenterPage'
 import MemberOpenPage from './pages/MemberOpenPage'
-import MemberPage from './pages/MemberPage'
 import MomentsPage from './pages/MomentsPage'
 import PetsPage from './pages/PetsPage'
 import PhiliaPage from './pages/PhiliaPage'
@@ -50,7 +49,9 @@ function ProtectedRoutes() {
       <Route path="/mall/orders" element={<MallOrdersPage />} />
       <Route path="/philia" element={<PhiliaPage />} />
       <Route path="/philia/pets" element={<PetsPage />} />
-      <Route path="/philia/member" element={<MemberPage />} />
+      {/* R11a 裁定：旧路由 /philia/member 退役——重定向往 /member 会员中心（路径保留，
+          兼容旧深链与 check-nav-closure 既有申报行） */}
+      <Route path="/philia/member" element={<Navigate to="/member" replace />} />
       <Route path="/philia/moments" element={<MomentsPage />} />
       {/* B9.3 任务 B：hub 退役，/booking 直达洗护单屏（?type=boarding 兼容深链寄养） */}
       <Route path="/booking" element={<BookingRedirect />} />

@@ -1437,6 +1437,7 @@ export const refundRouter = router({
         partial_amount: '部分退款（按金额）',
         boarding_nights: '寄养剩余晚退',
         pass_cancel: '次卡退卡',
+        membership_cancel: '会员退会', // R11a 复核补改①：退会折算落退款单（同通道）
       };
       const STATUS_LABEL: Record<string, string> = {
         draft: '草稿',

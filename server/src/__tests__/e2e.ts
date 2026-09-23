@@ -79,6 +79,15 @@
  *      amortizationStats 双口径（cashFen 156700 / amortizedFen 11400）
  *   48. 退会清零 + 折算（剩余整月 7×19900/12=11608 精确到分）+ 客户频道通知 +
  *      回馈金流水前后值链完整
+ *
+ * 批次 R11a 复核补改段（七步复核打回①/②）：
+ *   49. 打回① 退会挂号退款单：cancel → refund_bills type='membership_cancel' 在库
+ *      （executed/offline_original/bill_id=售卡原单/linkage 快照全字段+rebateClawbackFen=0）
+ *      → refund.list 可见 → createdAt 移位 25h（段尾铁律：移位后不再生成退款单，
+ *      防 genRefundNo 撞号）→ pendingActual 含 → settleActual settled 幂等 → 待办消失；
+ *      打回② 退会后结算日不到账：C 商品单 grant（期次移位至未结算期）→ cancel（作废
+ *      未到账 clear 留痕行「退会作废未到账回馈金 258 分」）→ settleMonthly 合成到点 →
+ *      C 余额不变/grant 未回标/批次单 granted_count 不含退会者，D 对照正常到账
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -100,7 +109,7 @@ const UPLOAD_APPT_ROOT = join(SERVER_ROOT, 'uploads', 'appointment');
 const tmpDir = mkdtempSync(join(tmpdir(), 'philia-e2e-'));
 const DB_URL = `file:${join(tmpDir, 'e2e.db').replaceAll('\\', '/')}`;
 const CLIENT_ERROR_LOG = join(tmpDir, 'client-error.log');
-const PORT = 7200;
+const PORT = Number(process.env.E2E_PORT ?? 7200); // 默认 7200 不变；并行窗占用时可用 E2E_PORT 避让（验收语义不变）
 const BASE = `http://127.0.0.1:${PORT}`;
 
 process.env.PHILIA_DB_URL = DB_URL; // 须先于任何 ../db import 生效
@@ -2505,6 +2514,122 @@ async function main(): Promise<void> {
     allLogs.length >= 8 && chainOk && allLogs[allLogs.length - 1]!.afterFen === 0,
     allLogs.map((l) => `${l.type}:${l.beforeFen}→${l.afterFen}`));
 
+  /* ==================================================================
+   * 批次 R11a 复核补改（七步复核打回①/②）验收段
+   * 打回①：退会折算不悬空——cancel 同事务自动挂 R12 通道退款单
+   *   （refund_bills type='membership_cancel'，executed/offline_original，bill_id=售卡原单）；
+   * 打回②：退会清零含未到账——未结算 grant 写「退会作废未到账回馈金」汇总 clear 行 +
+   *   settleMonthly 跳过 cancelled 用户 grant（双保险，批次单只计实际入账）。
+   * ================================================================== */
+  console.log('\n[R11a-复核] 49. 退会退款单挂号 + 退会后结算日不到账');
+
+  /* ---- 49a. 打回①：退会 → 退款单在库 + refund.list 可见（待办移位在 49c 段尾做） ---- */
+  const sellM1 = await sellPlan(managerCookie, {
+    phone: '13811110006', planKey: 'plan_yinghuo', petCount: 0,
+    paySegments: [{ method: 'cash', amountFen: 19900 }],
+  });
+  interface CancelResV2 {
+    membership: MembershipRowT; refundFen: number; clearedRebateFen: number;
+    refundNo: string; refundId: string; voidedPendingFen: number;
+  }
+  const cancelM1 = await trpcMutate<CancelResV2>('membership.cancel', {
+    cookie: managerCookie,
+    input: { userId: sellM1.membership.userId, reason: '复核补改：退会挂号退款单验证' },
+  });
+  // 萤火新卡（expires=开通+365 天，剩余整月 12）→ 折算=min(19900×12/12, 19900)=19900
+  check('复核① cancel 返回退款单号（refundNo/refundId 透出，折算额=19900）',
+    cancelM1.refundFen === 19900 && !!cancelM1.refundNo && !!cancelM1.refundId, { refundFen: cancelM1.refundFen, refundNo: cancelM1.refundNo });
+  const mRefundRow = await db.select().from(schema.refundBills).where(eq(schema.refundBills.id, cancelM1.refundId)).get();
+  check('复核① refund_bills 行在库（type=membership_cancel / amount=折算额 / status=executed / refund_method=offline_original / bill_id=售卡原单）',
+    mRefundRow?.type === 'membership_cancel' && mRefundRow.amountFen === 19900 &&
+      mRefundRow.status === 'executed' && mRefundRow.refundMethod === 'offline_original' &&
+      mRefundRow.billId === sellM1.billId,
+    mRefundRow && { type: mRefundRow.type, amount: mRefundRow.amountFen, status: mRefundRow.status, method: mRefundRow.refundMethod });
+  const mLinkage = (mRefundRow?.linkageJson ?? {}) as Record<string, unknown>;
+  const mCancelSnap = (mLinkage.membershipCancel ?? {}) as Record<string, unknown>;
+  check('复核① linkage 快照全字段（membershipCancel 含 planKey/paidFen/refundFen/clearedRebateFen/monthsRemaining/voidedPendingFen/期次）+ rebateClawbackFen=0 列位',
+    mCancelSnap.planKey === 'plan_yinghuo' && mCancelSnap.paidFen === 19900 && mCancelSnap.refundFen === 19900 &&
+      mCancelSnap.clearedRebateFen === 0 && mCancelSnap.monthsRemaining === 12 &&
+      mCancelSnap.voidedPendingFen === 0 && Array.isArray(mCancelSnap.voidedPendingPeriods) &&
+      mLinkage.rebateClawbackFen === 0,
+    mCancelSnap);
+  const refundList49 = await trpcQuery<Array<{ id: string; refundNo: string; type: string; amountFen: number }>>('refund.list', { cookie: ownerCookie });
+  check('复核① refund.list 可见该退款单（type=membership_cancel，金额=折算额）',
+    refundList49.some((r) => r.id === cancelM1.refundId && r.refundNo === cancelM1.refundNo && r.type === 'membership_cancel' && r.amountFen === 19900),
+    refundList49.length);
+
+  /* ---- 49b. 打回②：退会后结算日不到账（跳过 cancelled；正常会员对照到账） ----
+   * 期次夹具：§43 已把当前期次 periodNow 结算掉（period unique），故把 C/D 两笔真实商品单
+   * grant 的期次移位到 periodNow+1（未结算新期次），settleMonthly 合成 now 指向其次月 10 日——
+   * 结算对象为 futurePeriod，与 §43 批次和 server 真实定时器（真实上一期次）均不相撞。 */
+  const sellC = await sellPlan(managerCookie, { phone: '13811110007', planKey: 'plan_yinghuo', petCount: 0, paySegments: [{ method: 'cash', amountFen: 19900 }] });
+  const sellD = await sellPlan(managerCookie, { phone: '13811110008', planKey: 'plan_yinghuo', petCount: 0, paySegments: [{ method: 'cash', amountFen: 19900 }] });
+  const gBillC = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: sellC.membership.userId, note: 'e2e 复核② C 商品单（grant 258）' });
+  const gBillD = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: sellD.membership.userId, note: 'e2e 复核② D 商品单（grant 258，对照组）' });
+  const fpDate = new Date(py, pm, 1); // periodNow 的次月（pm 为 1 基月名 → Date 月份索引 pm 即次月）
+  const futurePeriod = `${fpDate.getFullYear()}-${pad2l(fpDate.getMonth() + 1)}`;
+  const settleNow2 = new Date(fpDate.getFullYear(), fpDate.getMonth() + 1, 10); // 期次次月 10 日 ≥ 结算日 5
+  await db.update(schema.rebateLogs).set({ period: futurePeriod, updatedAt: new Date() })
+    .where(and(eq(schema.rebateLogs.type, 'grant'), inArray(schema.rebateLogs.sourceId, [gBillC.billNo, gBillD.billNo]))); // 期次移位到未结算期（夹具）
+  const accC0 = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, sellC.membership.userId)).get();
+  const accD0 = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, sellD.membership.userId)).get();
+
+  const cancelC = await trpcMutate<CancelResV2>('membership.cancel', {
+    cookie: managerCookie,
+    input: { userId: sellC.membership.userId, reason: '复核补改：退会作废未到账验证' },
+  });
+  check('复核② 退会作废未到账合计透出（voidedPendingFen=258=C 的未结算 grant）',
+    cancelC.voidedPendingFen === 258, { voidedPendingFen: cancelC.voidedPendingFen });
+  const voidLog = (await db.select().from(schema.rebateLogs)
+    .where(and(eq(schema.rebateLogs.userId, sellC.membership.userId), eq(schema.rebateLogs.type, 'clear'))))
+    .find((l) => (l.note ?? '').includes('退会作废未到账回馈金'));
+  check('复核② 作废留痕 clear 行在库（note 含「退会作废未到账回馈金 258 分（期次 …）」，delta=0 前后值不动）',
+    !!voidLog && voidLog.deltaFen === 0 && voidLog.beforeFen === voidLog.afterFen &&
+      (voidLog.note ?? '').includes('退会作废未到账回馈金 258 分') && (voidLog.note ?? '').includes(futurePeriod),
+    voidLog && { note: voidLog.note, delta: voidLog.deltaFen });
+
+  const settle49 = await settleMonthly(db, settleNow2);
+  const accC1 = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, sellC.membership.userId)).get();
+  const accD1 = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, sellD.membership.userId)).get();
+  const grantC1 = (await db.select().from(schema.rebateLogs)
+    .where(and(eq(schema.rebateLogs.userId, sellC.membership.userId), eq(schema.rebateLogs.type, 'grant'), eq(schema.rebateLogs.sourceId, gBillC.billNo))))[0];
+  const grantD1 = (await db.select().from(schema.rebateLogs)
+    .where(and(eq(schema.rebateLogs.userId, sellD.membership.userId), eq(schema.rebateLogs.type, 'grant'), eq(schema.rebateLogs.sourceId, gBillD.billNo))))[0];
+  const batch49 = await db.select().from(schema.rebateSettlements).where(eq(schema.rebateSettlements.period, futurePeriod)).get();
+  check('复核② 退会者结算日不到账（C 余额不变 0→0、grant 行未回标 settlement_id、无入账行）',
+    settle49.settled === true && settle49.period === futurePeriod &&
+      accC1?.balanceFen === accC0?.balanceFen && grantC1?.settlementId === null &&
+      !(await db.select().from(schema.rebateLogs)
+        .where(and(eq(schema.rebateLogs.userId, sellC.membership.userId), eq(schema.rebateLogs.settlementId, settle49.settlementId!)))).length,
+    { settled: settle49.settled, cBalance: accC1?.balanceFen, cSettlementId: grantC1?.settlementId });
+  check('复核② 正常会员对照到账（D 余额 0→258 + grant 行回标批次）',
+    accD1?.balanceFen === (accD0?.balanceFen ?? 0) + 258 && grantD1?.settlementId === settle49.settlementId,
+    { dBalance: [accD0?.balanceFen, accD1?.balanceFen], dSettlementId: grantD1?.settlementId });
+  check('复核② 批次单只计实际入账（granted_count=1 不含退会者，note 记跳过 1 行）',
+    batch49?.grantedCount === 1 && batch49.grantedFen === 258 && (batch49.note ?? '').includes('退会用户跳过 1 行'),
+    { count: batch49?.grantedCount, fen: batch49?.grantedFen, note: batch49?.note });
+
+  /* ---- 49c. 打回①收尾：实退待办移位（25h）→ settleActual 幂等 → 待办消失 ----
+   * 段尾铁律（§34/§38 撞号教训）：createdAt 移位之后不得再发生成退款单的动作——
+   * genRefundNo 按 createdAt 计当日序号，移位减计数会致后续 RB 单号撞 UNIQUE。 */
+  await db.update(schema.refundBills).set({ createdAt: new Date(Date.now() - 25 * 3600 * 1000) })
+    .where(eq(schema.refundBills.id, cancelM1.refundId));
+  const todo49Before = await trpcQuery<Array<{ id: string; refundNo: string }>>('refund.pendingActual', { cookie: managerCookie });
+  check('复核① 退会退款单超 24h 未登记 → refund.pendingActual 含该行',
+    todo49Before.some((r) => r.id === cancelM1.refundId), todo49Before.map((r) => r.refundNo));
+  const settle49a = await trpcMutate<{ refund: { status: string }; idempotent: boolean }>('refund.settleActual', {
+    cookie: managerCookie, input: { refundId: cancelM1.refundId, note: '退会折算款已线下退（现金）' },
+  });
+  const settle49b = await trpcMutate<{ refund: { status: string }; idempotent: boolean }>('refund.settleActual', {
+    cookie: managerCookie, input: { refundId: cancelM1.refundId, note: '重复登记验证' },
+  });
+  const todo49After = await trpcQuery<Array<{ id: string }>>('refund.pendingActual', { cookie: managerCookie });
+  check('复核① settleActual 登记 → settled；重复登记幂等；待办消失',
+    settle49a.refund.status === 'settled' && settle49a.idempotent === false &&
+      settle49b.idempotent === true && settle49b.refund.status === 'settled' &&
+      !todo49After.some((r) => r.id === cancelM1.refundId),
+    { a: settle49a.refund.status, bIdem: settle49b.idempotent });
+
   client.close();
 }
 
@@ -2528,7 +2653,7 @@ async function cleanup(): Promise<void> {
       return true;
     }
   }, 10_000);
-  check('验收结束：7200 端口无残留监听', portFree);
+  check(`验收结束：${PORT} 端口无残留监听`, portFree);
 
   try {
     rmSync(tmpDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 300 });

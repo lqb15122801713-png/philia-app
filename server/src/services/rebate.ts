@@ -186,6 +186,45 @@ export async function clearRebateAccount(
   return { clearedFen: acc.balanceFen };
 }
 
+/**
+ * 退会作废未到账回馈金（打回②，membership.cancel 事务内调用）：
+ * rebate_logs 无状态列，未结算 grant（type='grant' AND settlement_id IS NULL）不物理作废，
+ * 落法=加写一条 type='clear' 汇总留痕行（delta=0、before=after=当前余额——pendings
+ * 从未进余额，前后值不动）；期次结算侧由 settleMonthly 跳过 cancelled 用户（双保险）。
+ * 返回作废合计与涉及期次（供 cancel 挂 refund_bills 快照）。
+ */
+export async function voidPendingGrants(
+  d: DbHandle,
+  opts: { userId: string; sourceId: string; now?: Date },
+): Promise<{ voidedFen: number; periods: string[] }> {
+  const now = opts.now ?? new Date();
+  const acc = await ensureRebateAccount(d, opts.userId, now);
+  const pendings = await d
+    .select({ id: schema.rebateLogs.id, deltaFen: schema.rebateLogs.deltaFen, period: schema.rebateLogs.period })
+    .from(schema.rebateLogs)
+    .where(
+      and(
+        eq(schema.rebateLogs.userId, opts.userId),
+        eq(schema.rebateLogs.type, 'grant'),
+        isNull(schema.rebateLogs.settlementId),
+      ),
+    );
+  if (pendings.length === 0) return { voidedFen: 0, periods: [] };
+  const voidedFen = pendings.reduce((s, g) => s + g.deltaFen, 0);
+  const periods = [...new Set(pendings.map((g) => g.period ?? '-'))];
+  await writeLog(d, {
+    userId: opts.userId,
+    accountId: acc.id,
+    type: 'clear',
+    deltaFen: 0,
+    beforeFen: acc.balanceFen,
+    afterFen: acc.balanceFen,
+    sourceId: opts.sourceId,
+    note: `退会作废未到账回馈金 ${voidedFen} 分（期次 ${periods.join('、')}）`,
+  });
+  return { voidedFen, periods };
+}
+
 /* ------------------------------------------------------------------ */
 /* 账户与流水                                                              */
 /* ------------------------------------------------------------------ */
@@ -419,23 +458,45 @@ export async function settleMonthly(d: DbHandle, now: Date): Promise<SettleMonth
         ),
       );
 
+    /* 打回②（七步复核）：退会清零含未到账——memberships 最新行 status='cancelled'
+     * 的用户 grant 跳过入账（其未结算 grant 已由 membership.cancel 事务写
+     * 「退会作废未到账回馈金」汇总 clear 行留痕；批次单 granted_* 只计实际入账）。 */
+    const userIds = [...new Set(grants.map((g) => g.userId))];
+    const skippedUsers = new Set<string>();
+    for (const uid of userIds) {
+      const latest = await t
+        .select({ status: schema.memberships.status })
+        .from(schema.memberships)
+        .where(eq(schema.memberships.userId, uid))
+        .orderBy(desc(schema.memberships.createdAt))
+        .limit(1)
+        .then((r) => r[0]);
+      if (latest?.status === 'cancelled') skippedUsers.add(uid);
+    }
+    const effectiveGrants = grants.filter((g) => !skippedUsers.has(g.userId));
+
     const batch = await t
       .insert(schema.rebateSettlements)
       .values({
         period,
-        grantedCount: grants.length,
-        grantedFen: grants.reduce((s, g) => s + g.deltaFen, 0),
+        grantedCount: effectiveGrants.length,
+        grantedFen: effectiveGrants.reduce((s, g) => s + g.deltaFen, 0),
         scheduledDay,
         executedAt: now,
         status: 'done',
-        note: grants.length === 0 ? '本期无回馈金发放（占位批次，幂等标记）' : null,
+        note:
+          skippedUsers.size > 0
+            ? `退会用户跳过 ${grants.length - effectiveGrants.length} 行未结算 grant（退会清零含未到账，打回②口径）`
+            : effectiveGrants.length === 0
+              ? '本期无回馈金发放（占位批次，幂等标记）'
+              : null,
       })
       .returning()
       .then((r) => r[0]!);
 
     /* 逐用户余额入账（前后值留痕）+ 原 grant 行回标批次 */
     const byUser = new Map<string, { accountId: string; fen: number; ids: string[] }>();
-    for (const g of grants) {
+    for (const g of effectiveGrants) {
       const cell = byUser.get(g.userId) ?? { accountId: g.accountId, fen: 0, ids: [] };
       cell.fen += g.deltaFen;
       cell.ids.push(g.id);
@@ -476,8 +537,8 @@ export async function settleMonthly(d: DbHandle, now: Date): Promise<SettleMonth
       period,
       scheduledDay,
       settlementId: batch.id,
-      grantedCount: grants.length,
-      grantedFen: grants.reduce((s, g) => s + g.deltaFen, 0),
+      grantedCount: effectiveGrants.length,
+      grantedFen: effectiveGrants.reduce((s, g) => s + g.deltaFen, 0),
     };
   });
 }

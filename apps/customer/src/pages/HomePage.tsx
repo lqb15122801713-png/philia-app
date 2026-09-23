@@ -19,11 +19,11 @@
  * 3. 会员提醒条（深棕墨条 + 柠檬礼物圆标）：schema 无守护值/会员档/到期字段
  *    （server/src/db/schema.ts users 表，全库 0 命中），禁编造到期数字与演示数字——
  *    故文案取真实次卡余额（pass.mine）：「次卡共剩 N 次 · 到店出示会员码 ›」，
- *    点击进 /philia/member（/me/card 属 U1-H 后续批，路由暂缺按任务书口径跳既有
- *    会员页）；无可用次卡 → 整条隐去。
+ *    点击进 /member 会员中心（R11a 裁定：旧 /philia/member 退役，重定向往 /member）；
+ *    无可用次卡 → 整条隐去。
  * 4. 守护值细线行：守护值/星芽会员档/已省均无真实来源（无积分表、无折扣引擎），
- *    只渲染可真实聚合三项：陪伴天数（user.createdAt 距今，MemberPage RealStatsCard
- *    同口径）· 服务次数（listMine completed 数）· 累计消费（completed priceFen 合计）；
+ *    只渲染可真实聚合三项：陪伴天数（user.createdAt 距今，原 MemberPage RealStatsCard
+ *    同口径，该页 R11a 已退役）· 服务次数（listMine completed 数）· 累计消费（completed priceFen 合计）；
  *    查询失败或无数据 → 整段隐去，禁写死演示数字。
  * 5. 我的毛孩子圆形头像行：pet.list 真实数据（avatarUrl 或 paw 占位），末位添加钮、
  *    管理入口均真实跳 /philia/pets；空档 → 真实引导行；查询失败 → 错误行可重试。
@@ -102,7 +102,7 @@ export default function HomePage() {
     enabled: !!user,
     staleTime: 60_000,
   })
-  // 会员信息行 / 陪伴天数：auth.me 原始响应（含 createdAt，MemberPage 同 key 同口径）
+  // 会员信息行 / 陪伴天数：auth.me 原始响应（含 createdAt，原 MemberPage 同 key 同口径，该页 R11a 已退役）
   const meRawQ = useQuery({
     queryKey: ['auth', 'me', 'raw'],
     queryFn: () => trpc.auth.me.query(),
@@ -258,7 +258,7 @@ export default function HomePage() {
             PHILIA
           </p>
           <Link
-            to="/philia/member"
+            to="/member"
             data-testid="home-member-code"
             className="rounded-full border border-[rgba(255,253,246,.7)] px-3 py-[5px] text-caption-xs leading-4 text-[#FFFDF6] transition-transform duration-120 ease-philia-spring active:scale-92"
           >
@@ -299,7 +299,7 @@ export default function HomePage() {
       {/* 3. 会员提醒条（深棕墨条 + 柠檬礼物圆标；真实次卡余额，无则整条隐去） */}
       {passRemainTotal > 0 ? (
         <Link
-          to="/philia/member"
+          to="/member"
           data-testid="home-member-strip"
           className="mt-4 flex items-center gap-3 rounded-panel bg-ink px-4 py-3 text-canvas transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
         >

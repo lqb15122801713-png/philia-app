@@ -9,7 +9,7 @@
  *
  * U1-F 本期上（v9.1，任务书逐项口径）：
  * 1. 形象位：宠物照片圆形「双细线环」（外环 + 内环 1px 暖墨细线，深度策略去 shadow-elevated）；
- * 2. 真实三数：陪伴天数（auth.me user.createdAt 距今，MemberPage 同口径）· 服务次数
+ * 2. 真实三数：陪伴天数（auth.me user.createdAt 距今，原 MemberPage 同口径，该页 R11a 已退役）· 服务次数
  *    （listMine completed 数）；守护值无真实来源（schema 无积分表，U1-C 已上报）——
  *    按任务书口径两项显示，不出守护值；
  * 3. 一键预约卡：接现成一键再约链路——内嵌 HomeBookingPanel（9a 双态面板逻辑原样，
@@ -244,7 +244,7 @@ function DiaryFeed() {
 
 const CAPSULES = [
   { to: '/philia/pets', label: '宠物档案', desc: 'TA 的小档案', icon: PawPrint },
-  { to: '/philia/member', label: '会员卡', desc: '专属身份', icon: IdCard },
+  { to: '/member', label: '会员卡', desc: '专属身份', icon: IdCard },
   { to: '/philia/moments', label: '服务相册', desc: '变美记录', icon: Camera },
 ]
 

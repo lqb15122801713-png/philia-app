@@ -40,6 +40,7 @@ import {
   planNum,
   rebatePeriodOf,
   unfreezeRebateAccount,
+  voidPendingGrants,
   type MemberPlanRow,
 } from '../services/rebate';
 import type { DbHandle } from '../services/xpAward';
@@ -51,6 +52,7 @@ import {
   router,
 } from '../trpc';
 import { ensureOpenShift, genBillNo, withCashierWriteLock } from './cashier';
+import { storeDayStartMs, storeWallclock } from './appointment';
 
 /** 事务 handle 类型断言（同 attendance.ts 惯例） */
 const txDb = (tx: unknown): DbHandle => tx as DbHandle;
@@ -59,11 +61,55 @@ function badRequest(message: string): never {
   throw new TRPCError({ code: 'BAD_REQUEST', message });
 }
 
+const pad2 = (n: number) => String(n).padStart(2, '0');
 
+/* ------------------------------------------------------------------ */
+/* 打回①：退会折算自动挂退款单（R12 同通道）工具                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 退款单号日序发生器：RB-{YYYYMMDD}-{当日 3 位序号}。
+ * refund.ts 的 genRefundNo 未导出且本批不动 refund.ts（另一代理钱域文件），
+ * 同模式自写（照 cashier genBillNo / refund genRefundNo 模式：门店规范时区 +8
+ * 当日窗口 count+1；调用方须在收银写串行锁/事务内使用）。
+ */
+async function genRefundNoLocal(d: DbHandle, storeId: string, now: Date): Promise<string> {
+  const w = storeWallclock(now);
+  const dayStart = new Date(storeDayStartMs(w.y, w.m, w.day));
+  const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000);
+  const row = await d
+    .select({ n: sql<number>`count(*)` })
+    .from(schema.refundBills)
+    .where(
+      and(
+        eq(schema.refundBills.storeId, storeId),
+        gte(schema.refundBills.createdAt, dayStart),
+        lt(schema.refundBills.createdAt, dayEnd),
+      ),
+    )
+    .get();
+  const seq = Number(row?.n ?? 0) + 1;
+  return `RB-${w.y}${pad2(w.m)}${pad2(w.day)}-${String(seq).padStart(3, '0')}`;
+}
+
+/** 门店规范时区（+8）YYYY-MM-DD（refund.ts storeLocalDateStr 未导出，同口径自写） */
+function storeLocalDateStrLocal(d: Date): string {
+  const w = storeWallclock(d);
+  return `${w.y}-${pad2(w.m)}-${pad2(w.day)}`;
+}
 /** 'YYYY-MM' → 当月起止（本地时区 Date） */
 function monthWindow(month: string): { start: Date; end: Date } {
   const [y, m] = month.split('-').map((s) => parseInt(s, 10));
   return { start: new Date(y, m - 1, 1), end: new Date(y, m, 1) };
+}
+
+/** 剩余整月数（退会折算口径）：expires_at 往前整月数，已用零头月不计 */
+export function remainingWholeMonths(now: Date, expiresAt: Date): number {
+  let months =
+    (expiresAt.getFullYear() * 12 + expiresAt.getMonth()) -
+    (now.getFullYear() * 12 + now.getMonth());
+  if (expiresAt.getDate() < now.getDate()) months -= 1; // 已用零头月不计
+  return Math.max(0, months);
 }
 
 /**
@@ -75,11 +121,7 @@ function monthWindow(month: string): { start: Date; end: Date } {
  */
 export function cancelRefundFen(paidFen: number, now: Date, expiresAt: Date): number {
   if (paidFen <= 0) return 0;
-  let months =
-    (expiresAt.getFullYear() * 12 + expiresAt.getMonth()) -
-    (now.getFullYear() * 12 + now.getMonth());
-  if (expiresAt.getDate() < now.getDate()) months -= 1; // 已用零头月不计
-  months = Math.max(0, months);
+  const months = remainingWholeMonths(now, expiresAt);
   return Math.min(Math.round((paidFen * months) / 12), paidFen);
 }
 
@@ -506,18 +548,56 @@ export const membershipRouter = router({
    *   落留痕；**内测期线下原路退回**（无线上退款通道，refund_fen 透出待线下退）；
    * - 同事务：回馈金清零（clear 行前后值）+ memberships status='cancelled'+
    *   cancelled_at/reason；到期已 frozen 也可退会（余额一样清零）；
-   * - emitEvent user 频道（客户侧文案口径「退款已安排，按原路退回」）；
-   *   EventType 常量表不在本任务文件范围，事件类型用字面量（同 attendance 报备惯例）。
+   * - 打回②（七步复核）：退会清零含未到账——未结算 grant 先写「退会作废未到账
+   *   回馈金 N 分（期次 X）」汇总 clear 留痕行（before=after，pendings 不进余额
+   *   故前后值不动）；settleMonthly 同步跳过 cancelled 用户 grant（双保险）；
+   * - 打回①（七步复核）：折算不悬空——同事务自动挂退款单（R12 同通道
+   *   refund_bills，type='membership_cancel'[中文签「会员退会」（UI/CSV 映射已落地）]，
+   *   status='executed' 账已联动/refund_method='offline_original' 现金实退待线下），
+   *   bill_id=该会员售卡原单（kind='membership' 最近 settled 未冲正单；查不到→
+   *   拒绝退会并明示「无售卡原单，退会须店主人工办理」）——实退待办
+   *   refund.pendingActual（>24h）自动可见、refund.list 可查、settleActual 通用；
+   * - emitEvent user 频道（客户侧文案口径「退款已安排，按原路退回」）。
    */
   cancel: merchantManagerProcedure
     .input(z.object({ userId: z.string().min(1), reason: z.string().min(1, '退会原因必填').max(200) }))
     .mutation(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
       const result = await ctx.db.transaction(async (tx) => {
         const t = txDb(tx);
         const now = new Date();
         const m = await currentMembership(t, input.userId, now);
         if (!m) badRequest('该客户无有效会员（或已退会）');
+
+        /* ---- 打回①前置：售卡原单挂号（折算不悬空——查不到原单拒绝退会，先于任何写入） ---- */
+        const origItem = await t
+          .select({ billId: schema.cashierBillItems.billId })
+          .from(schema.cashierBillItems)
+          .innerJoin(schema.cashierBills, eq(schema.cashierBills.id, schema.cashierBillItems.billId))
+          .where(
+            and(
+              eq(schema.cashierBillItems.kind, 'membership'),
+              eq(schema.cashierBills.customerId, input.userId),
+              eq(schema.cashierBills.status, 'settled'),
+              isNull(schema.cashierBills.reversedAt), // 被冲正单不算原单
+            ),
+          )
+          .orderBy(desc(schema.cashierBills.settledAt))
+          .limit(1)
+          .then((r) => r[0]);
+        if (!origItem) {
+          badRequest('无售卡原单，退会须店主人工办理（退会折算不悬空挂号）');
+        }
+
         const refundFen = cancelRefundFen(m.paidFen, now, m.expiresAt);
+        const monthsRemaining = remainingWholeMonths(now, m.expiresAt);
+
+        /* ---- 打回②：未结算 grant 作废留痕（汇总 clear 行，前后值不动）→ 余额清零 ---- */
+        const { voidedFen, periods } = await voidPendingGrants(t, {
+          userId: input.userId,
+          sourceId: m.id,
+          now,
+        });
         const { clearedFen } = await clearRebateAccount(t, {
           userId: input.userId,
           sourceId: m.id,
@@ -536,16 +616,64 @@ export const membershipRouter = router({
           .where(eq(schema.memberships.id, m.id))
           .returning()
           .then((r) => r[0]!);
+
+        /* ---- 打回①：退款单落库（R12 同通道；store=执行店，bill=售卡原单店——
+           决策 #41 会员卡三店通用，退会实退由执行店登记待办） ---- */
+        const refundNo = await genRefundNoLocal(t, storeId, now);
+        const refund = await t
+          .insert(schema.refundBills)
+          .values({
+            storeId,
+            refundNo,
+            bizDate: storeLocalDateStrLocal(now), // V7 口径：执行日
+            billId: origItem.billId,
+            type: 'membership_cancel', // 中文签「会员退会」（UI/CSV 映射已落地）
+            amountFen: refundFen,
+            reason: input.reason,
+            status: 'executed', // 账已联动（回馈金清零同事务）；现金实退待线下
+            refundMethod: 'offline_original', // 内测期线下原路退回
+            linkageJson: {
+              membershipCancel: {
+                planKey: m.planKey,
+                paidFen: m.paidFen,
+                refundFen,
+                clearedRebateFen: clearedFen,
+                monthsRemaining,
+                voidedPendingFen: voidedFen, // 打回②：作废未到账合计（期次 periods）
+                voidedPendingPeriods: periods,
+              },
+              rebateClawbackFen: 0, // 退会非商品退款，无扣回（列位口径同 R12）
+              executedAt: now.toISOString(),
+              operatorId: ctx.user.id,
+              approverId: ctx.user.id,
+              refundMethod: 'offline_original',
+              reason: input.reason,
+            },
+            operatorId: ctx.user.id,
+            approverId: ctx.user.id, // 退会审批档=执行人本人（merchantManager 闸门已在路由层）
+          })
+          .returning()
+          .then((r) => r[0]!);
+
         const outboxId = await emitEvent(t, `user:${input.userId}`, EventType.MembershipCancelled, {
           userId: input.userId,
           planKey: m.planKey,
           refundFen,
+          refundNo, // 打回①：退款单号透出（实退待办/查询对齐）
           clearedRebateFen: clearedFen,
           reason: input.reason,
           message: '退款已安排，按原路退回', // 客户侧口径（内测期线下原路退回）
           by: ctx.user.id,
         });
-        return { membership: updated, refundFen, clearedRebateFen: clearedFen, outboxId };
+        return {
+          membership: updated,
+          refundFen,
+          refundNo,
+          refundId: refund.id,
+          clearedRebateFen: clearedFen,
+          voidedPendingFen: voidedFen,
+          outboxId,
+        };
       });
       broadcastNow(result.outboxId);
       const { outboxId: _drop, ...rest } = result;

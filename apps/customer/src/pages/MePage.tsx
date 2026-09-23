@@ -2,7 +2,7 @@
  * MePage · /me 「我的」页（T2.1）
  *
  * 五区块（自上而下）：
- * 1. 用户信息条：auth.me 原始响应（queryKey ['auth','me','raw']，与 MemberPage 同模式）
+ * 1. 用户信息条：auth.me 原始响应（queryKey ['auth','me','raw']，沿用原 MemberPage 模式，该页 R11a 已退役）
  *    —— 头像 user.avatarUrl（无则字圈工艺：浅木底+衬线首字，D-补3）+ 昵称（空显示「铲屎官」）
  *    + 手机号脱敏（users.phone 真实字段）· 加入天数；
  * 2. 我的宠物横滑卡片区：pet.list → 圆形头像 + 名字，末尾固定「添加」虚线圆按钮

@@ -44,13 +44,19 @@ export const REFUND_DAY_STATS_KEY = ['refund', 'dayStats'] as const
 /* 标签 / 状态签                                                        */
 /* ------------------------------------------------------------------ */
 
-/** 退款类型中文签（与 server exportCsv TYPE_LABEL 同口径） */
-export const REFUND_TYPE_LABEL: Record<RefundType, string> = {
+/**
+ * 退款类型中文签（与 server exportCsv TYPE_LABEL 同口径）。
+ * R11a：server 新增退会退款 type='membership_cancel'（会员退会）——server REFUND_TYPES
+ * 尚未落地该枚举（并行批），此处键联合前置兼容：前置加签防列表/详情/CSV 裸码透出，
+ * server 枚举落地后 `| 'membership_cancel'` 自动收敛为冗余项，无需再改。
+ */
+export const REFUND_TYPE_LABEL: Record<RefundType | 'membership_cancel', string> = {
   full: '全额退款',
   partial_items: '部分退款（按行）',
   partial_amount: '部分退款（按金额）',
   boarding_nights: '寄养剩余晚退',
   pass_cancel: '次卡退卡',
+  membership_cancel: '会员退会',
 }
 
 /** 退款单状态签（u3-st 工艺：草稿浅木 / 待实退 amber / 实退完成薄荷 / 已驳回灰） */
