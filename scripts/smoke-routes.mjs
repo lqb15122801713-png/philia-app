@@ -79,10 +79,11 @@ const ROUTES = [
   { app: 'customer', path: `/appointments/${APPT_ID}`, anchors: ['预约', '核销'], serverDep: true, note: 'A1 白屏群' },
   { app: 'customer', path: '/philia/pets', anchors: ['宠物'], note: 'A4 白屏群' },
   { app: 'customer', path: '/philia/moments', anchors: ['服务相册', '相册'], note: 'A4 白屏群' },
-  // U1-H：会员卡页新路由（任务书许可补充锚点行，PR 注明）
-  { app: 'customer', path: '/me/card', anchors: ['GUARDIAN CARD', '会员卡'], serverDep: true, note: 'U1-H 新路由' },
+  // U1-H：会员卡页新路由（任务书许可补充锚点行，PR 注明）；R11b：Q-01 码屏重构，锚点改「会员码」
+  { app: 'customer', path: '/me/card', anchors: ['会员码'], serverDep: true, note: 'U1-H 新路由；R11b Q-01 重构换锚' },
   { app: 'customer', path: '/member', anchors: ['会员'], serverDep: true, note: '批次 R11a' },
   { app: 'customer', path: '/member/open', anchors: ['开通会员'], serverDep: true, note: '批次 R11a' },
+  { app: 'customer', path: '/member/rebate', anchors: ['回馈金'], serverDep: true, note: '批次 R11b 新路由申报（W-01）' },
   /* ---- 商家端 ---- */
   { app: 'merchant', path: '/dev-login', anchors: ['登录'] },
   { app: 'merchant', path: '/dashboard', anchors: ['今日', '仪表', '预约'] },
