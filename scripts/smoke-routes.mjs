@@ -81,6 +81,8 @@ const ROUTES = [
   { app: 'customer', path: '/philia/moments', anchors: ['服务相册', '相册'], note: 'A4 白屏群' },
   // U1-H：会员卡页新路由（任务书许可补充锚点行，PR 注明）
   { app: 'customer', path: '/me/card', anchors: ['GUARDIAN CARD', '会员卡'], serverDep: true, note: 'U1-H 新路由' },
+  { app: 'customer', path: '/member', anchors: ['会员'], serverDep: true, note: '批次 R11a' },
+  { app: 'customer', path: '/member/open', anchors: ['开通会员'], serverDep: true, note: '批次 R11a' },
   /* ---- 商家端 ---- */
   { app: 'merchant', path: '/dev-login', anchors: ['登录'] },
   { app: 'merchant', path: '/dashboard', anchors: ['今日', '仪表', '预约'] },
