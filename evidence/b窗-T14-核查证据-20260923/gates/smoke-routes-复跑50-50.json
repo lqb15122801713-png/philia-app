@@ -176,7 +176,6 @@
       "docStatus": 200,
       "finalPath": "/booking/success",
       "anchorHit": true,
-      "guardHit": false,
       "redCount": 0,
       "reds": [],
       "note": "B9a 任务B 一键再约落点"
@@ -428,7 +427,6 @@
       "docStatus": 200,
       "finalPath": "/monitor",
       "anchorHit": true,
-      "guardHit": false,
       "redCount": 0,
       "reds": [],
       "note": "B2 重定向；U3 锚点"
@@ -626,7 +624,6 @@
       "docStatus": 200,
       "finalPath": "/manager",
       "anchorHit": true,
-      "guardHit": false,
       "redCount": 0,
       "reds": [],
       "note": "批次 staff-2：smoke 以首个 staff 种子（非店长）登录渲染引导卡；锚点命中 PageHeader 标题与引导卡 h1"
