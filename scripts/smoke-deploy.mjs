@@ -24,7 +24,9 @@
  *  5. 收银台全链路 + 冲正回补；5.13（staff-2 R8）库存流水三类来源验证：
  *     cashier（结账扣减）/ reversal（冲正回补）/ count（现造盘点单确认入账），前后值正确；
  *     5.14（R12）退款冒烟：现金单全额退六联动 / 储值组合单 6:4 分摊回补前后值 /
- *     商品 refund 流水 / 寄养剩余晚部分退
+ *     商品 refund 流水 / 寄养剩余晚部分退；
+ *     5.15（R11a）会员冒烟：微光开档 / 萤火售卖到店付（多宠 4 只 25800）/ 回馈金返 2% 挂期次 /
+ *     抵扣段仅商品（服务行 rebate 段 403）/ 日结分摊双口径 amortizationStats
  */
 
 const BASE = (process.env.PUBLIC_BASE_URL ?? 'http://localhost:7200').replace(/\/$/, '');
@@ -686,6 +688,111 @@ if (sessions.merchant && seedCustomer && sessions.customer) {
       }
     } else {
       check('R12 寄养剩余晚部分退（前置缺失，显式跳过）', false, `boardingSvc=${boardingSvc5?.id ?? 'none'} pet=${petR?.id ?? 'none'} staff=${!!sessions.staff}`);
+    }
+  }
+
+  // 5.15 R11a 会员前置批冒烟：微光开档 / 萤火售卖到店付（多宠 4 只 25800）/ 回馈金返 2% 挂期次 /
+  //   抵扣段仅商品（服务行 rebate 段 403 明文）/ 日结分摊双口径（amortizationStats cashFen vs amortizedFen）。
+  // 幂等口径：重复跑「已是会员」按幂等通过；金额断言全为相对值/增量。
+  {
+    // R11a 售卡夹具手机号每次运行唯一（重复跑幂等：会员不可重复售卡，新号=新客）
+    const runTag = String(Date.now() % 10000000).padStart(7, '0'); // 7 位尾号 + 判别位，恰 11 位不截断
+    const wgPhone = `139${runTag}1`;
+    const yhPhone = `139${runTag}2`;
+    // (a) 微光开档：新手机号旁路建档 + 0 元单成交；openFree 幂等（第二次 idempotent=true）
+    const freeSell = await trpcMutate(sessions.merchant, 'membership.sell', {
+      phone: wgPhone, planKey: 'plan_weiguang', petCount: 0, paySegments: [],
+    }).catch((e) => ({ err: String(e?.message ?? e) }));
+    check('R11a 微光开档（新手机号建档 + 0 元单直接成交）',
+      (!freeSell?.err && freeSell?.membership?.planKey === 'plan_weiguang' && freeSell?.amountFen === 0) || /已是会员/.test(freeSell?.err ?? ''),
+      freeSell?.err ?? `membership=${freeSell?.membership?.id} amount=${freeSell?.amountFen}`);
+    const of1 = await trpcMutate(sessions.customer, 'membership.openFree').catch((e) => ({ err: String(e?.message ?? e) }));
+    const of2 = await trpcMutate(sessions.customer, 'membership.openFree').catch((e) => ({ err: String(e?.message ?? e) }));
+    check('R11a openFree 幂等（重复调用 idempotent=true 不重建）',
+      !of1?.err && !of2?.err && of2?.idempotent === true, of1?.err ?? of2?.err ?? `idempotent=${of2?.idempotent}`);
+
+    // (b) 萤火售卖到店付（多宠第 4 只 +¥59：19900+5900=25800 现金段，成交即开通，sold_store=本店）
+    const curMonth = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 7); // 门店规范时区月（与 server monthWindow 同帧）
+    const amoBefore = await trpcQuery(sessions.merchant, 'membership.amortizationStats', { month: curMonth }).catch(() => null);
+    const sellYh = await trpcMutate(sessions.merchant, 'membership.sell', {
+      phone: yhPhone, planKey: 'plan_yinghuo', petCount: 4, paySegments: [{ method: 'cash', amountFen: 25800 }],
+    }).catch((e) => ({ err: String(e?.message ?? e) }));
+    const yhMember = sellYh?.membership ?? null;
+    const sellYhOk = !sellYh?.err && sellYh?.amountFen === 25800;
+    check('R11a 萤火售卖到店付（4 只宠 25800 现金段，成交即开通 active）',
+      sellYhOk && yhMember?.status === 'active' && yhMember?.petCount === 4,
+      sellYh?.err ?? `amount=${sellYh?.amountFen} pets=${yhMember?.petCount} status=${yhMember?.status}`);
+    check('R11a 双归属：memberships.sold_store_id=办卡店（本店）',
+      !sellYhOk || yhMember?.soldStoreId === store5?.id, `soldStore=${yhMember?.soldStoreId}（重复跑已有会员时跳过）`);
+
+    // (c) 回馈金返 2%（萤火会员商品单结账 → grant 挂期次；未到账口径=本期预计 pendingFen 增加）
+    let yhUserId = yhMember?.userId ?? null;
+    if (!yhUserId) {
+      const mHit = await trpcQuery(sessions.merchant, 'cashier.searchMember', { phone: yhPhone }).catch(() => null);
+      yhUserId = mHit?.id ?? null;
+    }
+    if (yhUserId && product?.id) {
+      const fu0 = await trpcQuery(sessions.merchant, 'membership.forUser', { userId: yhUserId }).catch(() => null);
+      const pend0 = fu0?.rebate?.pendingFen ?? 0;
+      const prodPrice = product.priceFen ?? 0;
+      const heldG = await trpcMutate(sessions.merchant, 'cashier.hold', {
+        customerId: yhUserId, items: [{ kind: 'product', refId: product.id, qty: 1 }],
+        discountType: 'none', discountValue: 0, note: 'smoke R11a 回馈金商品单',
+      }).catch((e) => ({ err: String(e?.message ?? e) }));
+      const gNo = heldG?.bill?.billNo ?? null;
+      const gPayable = heldG?.bill?.payableFen ?? 0;
+      if (gNo) {
+        await trpcMutate(sessions.merchant, 'cashier.settle', {
+          customerId: yhUserId, items: [{ kind: 'product', refId: product.id, qty: 1 }],
+          billNo: gNo, discountType: 'none', discountValue: 0, note: 'smoke R11a 回馈金商品单',
+          payments: [{ method: 'cash', amountFen: gPayable }],
+        }).catch(() => null);
+        const fu1 = await trpcQuery(sessions.merchant, 'membership.forUser', { userId: yhUserId }).catch(() => null);
+        const expGrant = Math.round((prodPrice * 200) / 10000); // 萤火 2%
+        check('R11a 回馈金返 2%（商品单 grant 挂期次：本期预计 +2% 精确到分，余额未动=次月到账）',
+          (fu1?.rebate?.pendingFen ?? -1) - pend0 === expGrant && fu1?.rebate?.balanceFen === fu0?.rebate?.balanceFen,
+          `pending ${pend0}→${fu1?.rebate?.pendingFen}（期望 +${expGrant}）`);
+      } else {
+        check('R11a 回馈金返 2%（挂单前置失败）', false, heldG?.err ?? 'no billNo');
+      }
+
+      // (d) 抵扣段仅商品：服务行+rebate 段 → 403 明文；商品行+rebate 段 → 闸门通过（余额足则成，不足则「余额不足」明文——均证明已过仅商品闸）
+      // 会员折扣后应收≠门市价（萤火 88 折 8800→7744）：先 hold 取服务端重算应收再 settle（5.6 同口径），否则先撞合计闸
+      const svcCart = {
+        customerId: yhUserId, items: [{ kind: 'service', refId: service.id, qty: 1 }],
+        discountType: 'none', discountValue: 0, note: 'smoke R11a 服务行 rebate 验证',
+      };
+      const heldSvc = await trpcMutate(sessions.merchant, 'cashier.hold', svcCart).catch(() => null);
+      const svcBillNo = heldSvc?.bill?.billNo ?? null;
+      const svcPayable = heldSvc?.bill?.payableFen ?? 0;
+      const svcRebate = svcBillNo
+        ? await trpcMutate(sessions.merchant, 'cashier.settle', {
+            ...svcCart, billNo: svcBillNo,
+            payments: [{ method: 'rebate', amountFen: 100 }, { method: 'cash', amountFen: svcPayable - 100 }],
+          }).then(() => ({ err: null })).catch((e) => ({ err: String(e?.message ?? e) }))
+        : { err: 'hold 失败（前置）' };
+      check('R11a 抵扣段仅商品（服务行 + rebate 段 → 403「回馈金仅可抵商品」）',
+        /FORBIDDEN/.test(svcRebate?.err ?? '') && /仅可抵商品/.test(svcRebate?.err ?? ''), svcRebate?.err ?? '未被拒（异常）');
+      const prodRebate = await trpcMutate(sessions.merchant, 'cashier.settle', {
+        customerId: yhUserId, items: [{ kind: 'product', refId: product.id, qty: 1 }],
+        discountType: 'none', discountValue: 0, note: 'smoke R11a 商品行 rebate 验证',
+        payments: [{ method: 'rebate', amountFen: 100 }, { method: 'cash', amountFen: prodPrice - 100 }],
+      }).then((r) => ({ err: null, ok: (r?.bill?.status ?? r?.status) === 'settled' })).catch((e) => ({ err: String(e?.message ?? e) }));
+      // 余额未到账（grant 次月才入账）时明文「余额不足」= 已过「仅商品」闸；余额足够则直接成交
+      check('R11a 抵扣段仅商品（商品行 + rebate 段过闸门：成交或余额不足明文，不触「仅可抵商品」）',
+        (prodRebate.ok === true || /余额不足/.test(prodRebate?.err ?? '')) && !/仅可抵商品/.test(prodRebate?.err ?? ''),
+        prodRebate.err ?? `settled=${prodRebate.ok}`);
+
+      // (e) 日结分摊双口径：amortizationStats 当月售卡实收（cashFen）vs 分摊确认（amortizedFen）并列
+      const amoAfter = await trpcQuery(sessions.merchant, 'membership.amortizationStats', { month: curMonth }).catch(() => null);
+      check('R11a 日结分摊双口径并列（cashFen 收现 vs amortizedFen 分摊，两字段同帧透出）',
+        !!amoAfter && typeof amoAfter.cashFen === 'number' && typeof amoAfter.amortizedFen === 'number' &&
+          amoAfter.cashFen >= (amoBefore?.cashFen ?? 0) && amoAfter.amortizedFen >= 0 &&
+          // 本次售卖成功时：收现口径恰 +25800，分摊口径 ≥ round(25800/12)=2150
+          (!sellYhOk || (amoAfter.cashFen - (amoBefore?.cashFen ?? 0) === 25800 && amoAfter.amortizedFen >= 2150)),
+        `cashFen ${amoBefore?.cashFen}→${amoAfter?.cashFen} amortizedFen=${amoAfter?.amortizedFen}`);
+    } else {
+      check('R11a 回馈金/抵扣/分摊链路（前置失败：萤火会员 userId 或商品缺失）', false, `yhUserId=${yhUserId} product=${product?.id}`);
     }
   }
 }
