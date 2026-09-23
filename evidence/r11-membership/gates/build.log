@@ -8,6 +8,11 @@
 
 vite v7.3.6 building client environment for production...
 transforming...
+node_modules/zod/v4/core/util.js (330:0): A comment
+
+"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle."
+
+in "node_modules/zod/v4/core/util.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
 node_modules/zod/v4/core/regexes.js (70:0): A comment
 
 "/** Anchors a pattern source. The interpolation lives here rather than at the call site because
@@ -15,29 +20,24 @@ node_modules/zod/v4/core/regexes.js (70:0): A comment
  * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */"
 
 in "node_modules/zod/v4/core/regexes.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
-node_modules/zod/v4/core/util.js (330:0): A comment
-
-"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle."
-
-in "node_modules/zod/v4/core/util.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
-✓ 2326 modules transformed.
+✓ 2325 modules transformed.
 rendering chunks...
 computing gzip size...
 dist/registerSW.js                0.13 kB
 dist/manifest.webmanifest         0.38 kB
 dist/index.html                   0.75 kB │ gzip:   0.44 kB
-dist/assets/index-9hqCwr7O.css  102.78 kB │ gzip:  17.02 kB
-dist/assets/index--dsHXNEG.js   814.35 kB │ gzip: 224.36 kB
+dist/assets/index-C5ZHOsOF.css  102.75 kB │ gzip:  17.00 kB
+dist/assets/index-ID29TVC-.js   806.02 kB │ gzip: 222.61 kB
 
 (!) Some chunks are larger than 500 kB after minification. Consider:
 - Using dynamic import() to code-split the application
 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-✓ built in 15.13s
+✓ built in 3.30s
 
 PWA v1.3.0
 mode      generateSW
-precache  7 entries (896.49 KiB)
+precache  7 entries (888.33 KiB)
 files generated
   dist/sw.js
   dist/workbox-9c191d2f.js
@@ -54,17 +54,17 @@ dist/registerSW.js                0.13 kB
 dist/manifest.webmanifest         0.40 kB
 dist/index.html                   0.75 kB │ gzip:   0.44 kB
 dist/assets/index-B_X3GanU.css  113.52 kB │ gzip:  18.78 kB
-dist/assets/index-BN6fvirZ.js   847.57 kB │ gzip: 221.65 kB
+dist/assets/index-ehqZM1Vd.js   847.64 kB │ gzip: 221.66 kB
 
 (!) Some chunks are larger than 500 kB after minification. Consider:
 - Using dynamic import() to code-split the application
 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-✓ built in 2.81s
+✓ built in 2.86s
 
 PWA v1.3.0
 mode      generateSW
-precache  7 entries (939.43 KiB)
+precache  7 entries (939.50 KiB)
 files generated
   dist/sw.js
   dist/workbox-9c191d2f.js
@@ -81,18 +81,18 @@ dist/registerSW.js                   0.13 kB
 dist/manifest.webmanifest            0.40 kB
 dist/index.html                      0.75 kB │ gzip:   0.43 kB
 dist/assets/index-B02uxnCx.css      99.69 kB │ gzip:  16.57 kB
-dist/assets/QrScanner-BPZG7nKu.js  141.53 kB │ gzip:  51.27 kB
-dist/assets/index-nl46Srfq.js      593.48 kB │ gzip: 164.62 kB
+dist/assets/QrScanner-zN3ix5DE.js  141.53 kB │ gzip:  51.27 kB
+dist/assets/index-BtsKV3i0.js      593.55 kB │ gzip: 164.64 kB
 
 (!) Some chunks are larger than 500 kB after minification. Consider:
 - Using dynamic import() to code-split the application
 - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
 - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-✓ built in 2.69s
+✓ built in 2.68s
 
 PWA v1.3.0
 mode      generateSW
-precache  8 entries (816.00 KiB)
+precache  8 entries (816.07 KiB)
 files generated
   dist/sw.js
   dist/workbox-9c191d2f.js

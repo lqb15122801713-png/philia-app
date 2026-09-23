@@ -1,5 +1,5 @@
 {
-  "at": "2026-09-22T19:54:05.416Z",
+  "at": "2026-09-23T05:05:19.257Z",
   "results": [
     {
       "app": "customer",
@@ -66,7 +66,7 @@
     },
     {
       "app": "customer",
-      "path": "/booking/success?aid=01M35AP1GEQ0PY9PDYHTAMS3T8",
+      "path": "/booking/success?aid=01M368GGXY9JFJQSNXK4KP5EMN",
       "expect": "success",
       "verdict": "OK",
       "detail": "back=true dock=false 出口钮=true"
@@ -80,7 +80,7 @@
     },
     {
       "app": "customer",
-      "path": "/appointments/01M35AP1GEQ0PY9PDYHTAMS3T8",
+      "path": "/appointments/01M368GGXY9JFJQSNXK4KP5EMN",
       "expect": "sub",
       "verdict": "OK",
       "detail": "back=true dock=false 出口钮=false"
@@ -95,7 +95,7 @@
     },
     {
       "app": "customer",
-      "path": "/appointments/01M35AP1GEQ0PY9PDYHTAMS3T8/live",
+      "path": "/appointments/01M368GGXY9JFJQSNXK4KP5EMN/live",
       "expect": "sub",
       "verdict": "OK",
       "detail": "back=true dock=false 出口钮=false"
@@ -212,7 +212,7 @@
     },
     {
       "app": "merchant",
-      "path": "/appointments/01M35AP1GEQ0PY9PDYHTAMS3T8",
+      "path": "/appointments/01M368GGXY9JFJQSNXK4KP5EMN",
       "expect": "sub",
       "verdict": "OK",
       "detail": "back=false dock=true 出口钮=false"
@@ -234,7 +234,7 @@
     },
     {
       "app": "merchant",
-      "path": "/monitor/01M35AP1GEQ0PY9PDYHTAMS3T8",
+      "path": "/monitor/01M368GGXY9JFJQSNXK4KP5EMN",
       "expect": "sub",
       "verdict": "OK",
       "detail": "back=false dock=true 出口钮=false"
@@ -401,7 +401,7 @@
     },
     {
       "app": "staff",
-      "path": "/execute/01M35AP1GEQ0PY9PDYHTAMS3T8",
+      "path": "/execute/01M368GGXY9JFJQSNXK4KP5EMN",
       "expect": "sub",
       "note": "异常态守卫页亦须出口",
       "verdict": "OK",

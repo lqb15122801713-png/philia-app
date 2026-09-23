@@ -40,3 +40,19 @@
 ## 六、部署提示
 
 含迁移 0015 须先 db:migrate；档位/比例/折扣/多宠/到账日全在配置端口「会员档」页签；回馈金月度结算=server 定时器每月 5 日（端口可调）幂等。
+
+---
+
+# 复核补改①（2026-09-23 · 七步复核退回两条+裁定一条）
+
+## 打回① 退会折算只算不挂号 → 已修
+membership.cancel 同事务自动落 refund_bills（type='membership_cancel'，RB 日序单号，bill_id=售卡原单，status='executed'，refund_method='offline_original'，linkage 快照含 membershipCancel 全字段+rebateClawbackFen:0 列位）——R12 同通道：refund.list 可查/实退待办>24h 可见/settleActual 实退登记通用；无售卡原单拒退会（明文"须店主人工办理"，不悬空）。e2e §49a/c：在库断言+移位 25h 待办可见+登记幂等+待办消失。
+
+## 打回② 退卡清零边界 → 已修（双保险）
+cancel 写作废汇总 clear 行（「退会作废未到账回馈金 N 分（期次 X）」，前后值不动）+settleMonthly 跳过 status='cancelled' 用户 grant（批次单 note 记跳过行数）。e2e §49b：退会者余额不变/grant 不回标/批次单不含退会者/正常会员对照到账。
+
+## 裁定：旧路由 /philia/member 退役 → /member 重定向
+App.tsx 重定向+四处链接改指+MemberPage 旧组件零引用删除+me-page-e2e.mjs 入口清单同步 6 项（顺手修复在案）。签文案裁定统一「会员退会」（UI/CSV/server 注释三处一致）。
+
+## 补改轮闸门复跑（备用端口栈：并行窗占 7200，本批 API=7300/三端=7110-7112，CORS 白名单+构建期 VITE_API_BASE 根进程注入——Y1 环境变量根注入口径）
+build exit 0 / server typecheck exit 0 / smoke-routes 50/50 / check-nav-closure 66 路由 0 死胡同 / smoke-deploy 73 项 / e2e exit 0（§49 含，全量回归）。日志已刷新为本轮。e2e 新增 E2E_PORT 环境变量覆盖（默认 7200 不变，端口空闲闸门不变）。

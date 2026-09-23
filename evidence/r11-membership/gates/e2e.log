@@ -325,15 +325,28 @@
   ✓ R11a⑤ 客户频道通知（membership.cancelled → user 频道，payload 含折算额与「按原路退回」文案）
   ✓ R11a⑤ 退会后会员页回非会员引导态（membership=null + guide 透出）
   ✓ R11a⑤ 回馈金流水前后值链完整（grant/deduct/clawback/freeze/clear 全周期）
-  ✓ 验收结束：7200 端口无残留监听
-[e2e] 临时库目录清理失败（Windows libsql 句柄滞后，可手工删）: C:\Users\lqb15\AppData\Local\Temp\philia-e2e-RMuqlX Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-RMuqlX '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-RMuqlX'
+
+[R11a-复核] 49. 退会退款单挂号 + 退会后结算日不到账
+  ✓ 复核① cancel 返回退款单号（refundNo/refundId 透出，折算额=19900）
+  ✓ 复核① refund_bills 行在库（type=membership_cancel / amount=折算额 / status=executed / refund_method=offline_original / bill_id=售卡原单）
+  ✓ 复核① linkage 快照全字段（membershipCancel 含 planKey/paidFen/refundFen/clearedRebateFen/monthsRemaining/voidedPendingFen/期次）+ rebateClawbackFen=0 列位
+  ✓ 复核① refund.list 可见该退款单（type=membership_cancel，金额=折算额）
+  ✓ 复核② 退会作废未到账合计透出（voidedPendingFen=258=C 的未结算 grant）
+  ✓ 复核② 作废留痕 clear 行在库（note 含「退会作废未到账回馈金 258 分（期次 …）」，delta=0 前后值不动）
+  ✓ 复核② 退会者结算日不到账（C 余额不变 0→0、grant 行未回标 settlement_id、无入账行）
+  ✓ 复核② 正常会员对照到账（D 余额 0→258 + grant 行回标批次）
+  ✓ 复核② 批次单只计实际入账（granted_count=1 不含退会者，note 记跳过 1 行）
+  ✓ 复核① 退会退款单超 24h 未登记 → refund.pendingActual 含该行
+  ✓ 复核① settleActual 登记 → settled；重复登记幂等；待办消失
+  ✓ 验收结束：7300 端口无残留监听
+[e2e] 临时库目录清理失败（Windows libsql 句柄滞后，可手工删）: C:\Users\lqb15\AppData\Local\Temp\philia-e2e-YRP51j Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-YRP51j '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-YRP51j'
     at rmSync (node:fs:1222:18)
-    at cleanup (D:\KimiData\kimi\Workspaces\Philia\repo\server\src\__tests__\e2e.ts:2534:5)
+    at cleanup (D:\KimiData\kimi\Workspaces\Philia\repo\server\src\__tests__\e2e.ts:2659:5)
     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-    at async <anonymous> (D:\KimiData\kimi\Workspaces\Philia\repo\server\src\__tests__\e2e.ts:2572:3) {
+    at async <anonymous> (D:\KimiData\kimi\Workspaces\Philia\repo\server\src\__tests__\e2e.ts:2697:3) {
   errno: 1,
   code: 'EPERM',
-  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-e2e-RMuqlX',
+  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-e2e-YRP51j',
   syscall: 'rm'
 }
   ✓ 种子库 data/philia.db 原样（size/mtime 未变）

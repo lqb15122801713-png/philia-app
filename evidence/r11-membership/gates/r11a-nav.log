@@ -9,11 +9,11 @@
 ✅ [customer] /booking/grooming/wizard —— OK back=true dock=false 出口钮=false
 ✅ [customer] /booking/boarding —— OK back=true dock=false 出口钮=false
 ✅ [customer] /booking/boarding/wizard —— OK back=true dock=false 出口钮=false
-✅ [customer] /booking/success?aid=01M35AP1GEQ0PY9PDYHTAMS3T8 —— OK back=true dock=false 出口钮=true
+✅ [customer] /booking/success?aid=01M368GGXY9JFJQSNXK4KP5EMN —— OK back=true dock=false 出口钮=true
 ✅ [customer] /appointments —— OK back=true dock=false 出口钮=false
-✅ [customer] /appointments/01M35AP1GEQ0PY9PDYHTAMS3T8 —— OK back=true dock=false 出口钮=false
+✅ [customer] /appointments/01M368GGXY9JFJQSNXK4KP5EMN —— OK back=true dock=false 出口钮=false
 ✅ [customer] /appointments/01000000000000000000000000 —— OK（无效 id 异常态须出口（W1 补改）） back=false dock=false 出口钮=true
-✅ [customer] /appointments/01M35AP1GEQ0PY9PDYHTAMS3T8/live —— OK back=true dock=false 出口钮=false
+✅ [customer] /appointments/01M368GGXY9JFJQSNXK4KP5EMN/live —— OK back=true dock=false 出口钮=false
 ✅ [customer] /mall/orders —— OK back=true dock=false 出口钮=true
 ✅ [customer] /mall/cart —— OK back=true dock=false 出口钮=true
 ✅ [customer] /mall/checkout —— OK back=true dock=false 出口钮=true
@@ -30,10 +30,10 @@
 [merchant] dev-login ✓
 ✅ [merchant] /dashboard —— OK back=false dock=true 出口钮=false
 ✅ [merchant] /appointments —— OK back=false dock=true 出口钮=false
-✅ [merchant] /appointments/01M35AP1GEQ0PY9PDYHTAMS3T8 —— OK back=false dock=true 出口钮=false
+✅ [merchant] /appointments/01M368GGXY9JFJQSNXK4KP5EMN —— OK back=false dock=true 出口钮=false
 ✅ [merchant] /appointments/01000000000000000000000000 —— OK（无效 id 异常态须出口（W1 补改）） back=false dock=true 出口钮=false
 ✅ [merchant] /monitor —— OK back=false dock=true 出口钮=false
-✅ [merchant] /monitor/01M35AP1GEQ0PY9PDYHTAMS3T8 —— OK back=false dock=true 出口钮=false
+✅ [merchant] /monitor/01M368GGXY9JFJQSNXK4KP5EMN —— OK back=false dock=true 出口钮=false
 ✅ [merchant] /monitor/01000000000000000000000000 —— OK（无效 id 异常态须出口（W1 补改）） back=false dock=true 出口钮=false
 ✅ [merchant] /boarding —— OK back=false dock=true 出口钮=false
 ✅ [merchant] /orders —— OK back=false dock=true 出口钮=false
@@ -57,7 +57,7 @@
 ✅ [staff] /today —— OK back=false dock=true 出口钮=false
 ✅ [staff] /history —— OK back=false dock=true 出口钮=false
 ✅ [staff] /me —— OK back=false dock=true 出口钮=false
-✅ [staff] /execute/01M35AP1GEQ0PY9PDYHTAMS3T8 —— OK（异常态守卫页亦须出口） back=true dock=false 出口钮=false
+✅ [staff] /execute/01M368GGXY9JFJQSNXK4KP5EMN —— OK（异常态守卫页亦须出口） back=true dock=false 出口钮=false
 ✅ [staff] /boarding/01000000000000000000000000/checkin —— OK（异常态守卫页（W1 弱出口已按钮化）） back=false dock=false 出口钮=true
 ➖ [staff] /dev-login —— 豁免 门禁页
 ✅ [staff] / —— OK（重定向→/today） back=false dock=true 出口钮=false
@@ -70,4 +70,4 @@
 ✅ [staff] /manager —— OK（批次 staff-2 R7~R10；非店长登录渲染引导卡（「返回我的」按钮出口）） back=true dock=false 出口钮=true
 
 ===== 体检汇总：66 路由 · 死胡同 0 · 弱 0 · 豁免 6 =====
-结果 JSON：C:/Users/lqb15/AppData/Local/Temp/r11a-nav.json
+结果 JSON：C:/Users/lqb15/AppData/Local/Temp/r11a-nav2.json

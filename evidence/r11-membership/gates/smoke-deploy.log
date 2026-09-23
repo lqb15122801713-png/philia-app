@@ -1,7 +1,7 @@
-✅ GET /api/health —— {"ok":true,"ts":1790107150552}
-✅ 三端首页可达：customer http://localhost:7100 —— status=200 ct=text/html
-✅ 三端首页可达：merchant http://localhost:7101 —— status=200 ct=text/html
-✅ 三端首页可达：staff http://localhost:7102 —— status=200 ct=text/html
+✅ GET /api/health —— {"ok":true,"ts":1790140164125}
+✅ 三端首页可达：customer http://localhost:7110 —— status=200 ct=text/html
+✅ 三端首页可达：merchant http://localhost:7111 —— status=200 ct=text/html
+✅ 三端首页可达：staff http://localhost:7112 —— status=200 ct=text/html
 ✅ 口令门未设置（开发期开放）：dev-seed-users 无码 → 200 —— status=200 users=6
 ✅ dev-seed-users 动态取数（带口令） —— users=6
 ✅ 种子角色齐全（customer / merchant_owner / staff） —— customer=示例客户 merchant=菲丽亚店主 staff=小美
@@ -11,66 +11,66 @@
 ✅ trpc pet.list（种子客户有宠物） —— pets=2 第一只=旺财
 ✅ trpc store.listNearby（种子门店） —— stores=1 第一家=菲丽亚宠物·示例店
 ✅ trpc store.getWithServices（洗护服务项） —— 服务=基础洗护（小型犬） 价格=8800分
-✅ 演示单下单 trpc appointment.create —— id=01M35B6T7XMDXQQYZ3J95TGX4Q scheduledStart=2026/9/24 10:00:00
+✅ 演示单下单 trpc appointment.create —— id=01M36APA1ZDV83TPVX8QR566EN scheduledStart=2026/9/24 10:00:00
 ✅ 商家确认 trpc appointment.confirm（pending → confirmed） —— status=confirmed
-✅ 客户取码 trpc appointment.getCode —— code=89GKNE
-✅ 员工核销 trpc appointment.checkin（confirmed → in_service） —— status=in_service checkedInAt=2026-09-22T19:59:10.000Z 认领员工=01M35B6H8DASSCCR8E8JPNJDXE
+✅ 客户取码 trpc appointment.getCode —— code=NZWVQ7
+✅ 员工核销 trpc appointment.checkin（confirmed → in_service） —— status=in_service checkedInAt=2026-09-23T05:09:24.000Z 认领员工=01M35B6H8D58FAGD5796P53ESK
 ✅ 收银台 trpc cashier.pendingAppointments 可查 —— 待收款=0
 ✅ 收银台 会员检索命中（种子客户） —— found=true 次卡余=0
 ✅ 收银台 会员检索未命中（安静 found:false） —— found=false
 ✅ 收银台前置 pass.topUp 充次 1 —— times=1
-✅ 收银台 挂单 cashier.hold（HD 单号） —— billNo=HD-20260923-001 应收=21700分
+✅ 收银台 挂单 cashier.hold（HD 单号） —— billNo=HD-20260923-014 应收=21700分
 ✅ 收银台 取单 cashier.resume（held→open） —— status=open 行数=2
 ✅ 收银台 结账 cashier.settle（现金） —— status=settled 已收=21700分
 ✅ 收银台 结账幂等（同 bill_no 重放 idempotent） —— idempotent=true
-✅ 收银台 库存扣减（settled −1，幂等重放不再扣） —— stock 50→49（重放后仍 49）
-✅ 收银台 流水可查 cashier.listBills（今日含本单） —— rows=1
+✅ 收银台 库存扣减（settled −1，幂等重放不再扣） —— stock 48→47（重放后仍 47）
+✅ 收银台 流水可查 cashier.listBills（今日含本单） —— rows=14
 ✅ 收银台 流水详情 getBill（现金 1 段） —— 支付段=1
-✅ 收银台 次卡扣次结账（pass 段=扣次行有效价） —— billNo=HD-20260923-002 应收=8800分
+✅ 收银台 次卡扣次结账（pass 段=扣次行有效价） —— billNo=HD-20260923-015 应收=8800分
 ✅ 收银台 扣次联动（次卡余额 −1） —— remain 1→0
 ✅ 收银台 撤单留痕 cashier.voidBill（voided 留痕不删除） —— status=voided reason=smoke 撤单验证
-✅ 收银台 财务流水接数（financeStats.cashierLedger 含本批单） —— cashierLedger=2 行
-✅ 收银台 冲正库存回补（reverseBill 后 stock +1） —— stock 49→50（期望 +1）
-✅ 库存流水 cashier 来源（5.6 结账扣减落账，delta=-1 前后值连续） —— before=50 after=49
-✅ 库存流水 reversal 来源（5.12 冲正回补落账，delta=+1 前后值连续） —— before=49 after=50
-✅ 库存流水 count 前置：盘点建单（weekly draft） —— countId=01M35B6TD11YF8YJCYS1JJFGD6 items=13
+✅ 收银台 财务流水接数（financeStats.cashierLedger 含本批单） —— cashierLedger=8 行
+✅ 收银台 冲正库存回补（reverseBill 后 stock +1） —— stock 47→48（期望 +1）
+✅ 库存流水 cashier 来源（5.6 结账扣减落账，delta=-1 前后值连续） —— before=48 after=47
+✅ 库存流水 reversal 来源（5.12 冲正回补落账，delta=+1 前后值连续） —— before=47 after=48
+✅ 库存流水 count 前置：盘点建单（weekly draft） —— countId=01M36APA74AY1H76V5KWFTYE5N items=13
 ✅ 库存流水 count 前置：员工待办可见盘点行项 —— items=13
 ✅ 库存流水 count 前置：实盘录入 → counted —— status=counted
 ✅ 库存流水 count 前置：店长确认入账（posted，diffs≥1） —— status=posted diffs=1
-✅ 库存流水 count 来源（盘点入账落账，delta=-2 前后值=快照/实盘） —— before=50 after=48
-✅ R12 现金单全额退 executed（金额=原单已收） —— refundNo=RB-20260923-001 金额=21700
+✅ 库存流水 count 来源（盘点入账落账，delta=-2 前后值=快照/实盘） —— before=48 after=46
+✅ R12 现金单全额退 executed（金额=原单已收） —— refundNo=RB-20260923-004 金额=21700
 ✅ R12 六联动快照含 rebateClawbackFen=0 列位（回馈金 R11 冻结回归） —— keys=26
-✅ R12 原单挂 refund_status=refunded + refund_bill_no 双向回指（已收 paidFen 不涂改） —— refundStatus=refunded refundBillNo=RB-20260923-001
-✅ R12 商品 refund 流水前后值（delta=+1 连续）+ 库存回补到位 —— 流水 47→48，stock 48→48
+✅ R12 原单挂 refund_status=refunded + refund_bill_no 双向回指（已收 paidFen 不涂改） —— refundStatus=refunded refundBillNo=RB-20260923-004
+✅ R12 商品 refund 流水前后值（delta=+1 连续）+ 库存回补到位 —— 流水 45→46，stock 46→46
 ✅ R12 前置：储值账户建账（executeImport 1 行 ¥100，仅店主生产通道） —— okRows=1
-✅ R12 储值段结账扣减（余额 −40% 段，前后值连续） —— balance 10000→6480
-✅ R12 组合支付 6:4 分摊回补（按段占比精确到分）+ 储值余额回补前后值留痕 —— segs=cash:2640/stored_value:1760 balance=6480→8240
-✅ R12 寄养预约创建（明天入住共 3 晚） —— id=01M35B6TGRT3DXCHQ12JVXEDS7
+✅ R12 储值段结账扣减（余额 −40% 段，前后值连续） —— balance 18240→14720
+✅ R12 组合支付 6:4 分摊回补（按段占比精确到分）+ 储值余额回补前后值留痕 —— segs=cash:2640/stored_value:1760 balance=14720→16480
+✅ R12 寄养预约创建（明天入住共 3 晚） —— id=01M36APAAY7EVD7T2XS4552RMV
 ✅ R12 寄养核销 + 退房（in_boarding → completed） —— ok
-✅ R12 寄养剩余晚部分退（退 2/3 晚，金额=floor(总价÷3)×2；分段明细透出总晚/退晚/晚单价） —— amount=39800 期望=39800 boarding={"appointmentId":"01M35B6TGRT3DXCHQ12JVXEDS7","billItemId":"01M35B6TJC81RS8PVPZ1APRFG9","totalNights":3,"occurredNights":0,"remainingNights":3,"nights":2,"perNightFen":19900}
-✅ R11a 微光开档（新手机号建档 + 0 元单直接成交） —— membership=01M35B6TK22EE5VRR8KJJKB2T3 amount=0
+✅ R12 寄养剩余晚部分退（退 2/3 晚，金额=floor(总价÷3)×2；分段明细透出总晚/退晚/晚单价） —— amount=39800 期望=39800 boarding={"appointmentId":"01M36APAAY7EVD7T2XS4552RMV","billItemId":"01M36APACA3CAJYGB2385PKCE7","totalNights":3,"occurredNights":0,"remainingNights":3,"nights":2,"perNightFen":19900}
+✅ R11a 微光开档（新手机号建档 + 0 元单直接成交） —— membership=01M36APAD0GC34209096RPNCH5 amount=0
 ✅ R11a openFree 幂等（重复调用 idempotent=true 不重建） —— idempotent=true
 ✅ R11a 萤火售卖到店付（4 只宠 25800 现金段，成交即开通 active） —— amount=25800 pets=4 status=active
 ✅ R11a 双归属：memberships.sold_store_id=办卡店（本店） —— soldStore=01M35B6H8DTFHDGE3TGCEAPZ81（重复跑已有会员时跳过）
 ✅ R11a 回馈金返 2%（商品单 grant 挂期次：本期预计 +2% 精确到分，余额未动=次月到账） —— pending 0→258（期望 +258）
 ✅ R11a 抵扣段仅商品（服务行 + rebate 段 → 403「回馈金仅可抵商品」） —— trpc cashier.settle 失败：回馈金仅可抵商品（服务/寄养行禁用回馈金支付段）（code=FORBIDDEN）
 ✅ R11a 抵扣段仅商品（商品行 + rebate 段过闸门：成交或余额不足明文，不触「仅可抵商品」） —— trpc cashier.settle 失败：回馈金余额不足：余额 0.00 元，本单需 1.00 元（可混搭现金/微信/支付宝补足）（code=FORBIDDEN）
-✅ R11a 日结分摊双口径并列（cashFen 收现 vs amortizedFen 分摊，两字段同帧透出） —— cashFen 0→25800 amortizedFen=2150
+✅ R11a 日结分摊双口径并列（cashFen 收现 vs amortizedFen 分摊，两字段同帧透出） —— cashFen 25800→51600 amortizedFen=4300
 ✅ dev-login（小周 / clerk） —— status=200
-✅ 收银修复包 todayTenderStats（已收=现金+微信+支付宝可加总） —— 已收=125380分 分列=125380/0/0 参考列 pass=8800 sv=3520
-✅ 收银修复包 三处同源同数（总览/收银台头部/财务头部） —— 三处=125380/125380/125380分
+✅ 收银修复包 todayTenderStats（已收=现金+微信+支付宝可加总） —— 已收=237860分 分列=237860/0/0 参考列 pass=17600 sv=7040
+✅ 收银修复包 三处同源同数（总览/收银台头部/财务头部） —— 三处=237860/237860/237860分
 ✅ clerk 营业额遮罩（restricted=true 且金额 null） —— restricted=true
-✅ clerk 开单 cashier.hold 放行 —— billNo=HD-20260923-012
+✅ clerk 开单 cashier.hold 放行 —— billNo=HD-20260923-025
 ✅ clerk 改价 403（服务端硬闸门）
 ✅ clerk financeStats 403
 ✅ clerk 撤单（未支付单，补丁①放宽）放行
 ✅ clerk 日结 403（无交接班/日结权）
-✅ 日结 当前班次可查（懒建开班） —— shift=01M35B6T9PDYA7M8ZKBYC9J1GD
-✅ 日结 cashier.dayClose 冻结当班（当日已结则幂等通过） —— diff=0分
+✅ 日结 当前班次可查（懒建开班） —— shift=01M35B6TQGMWVWH3D5S1MXGD4M
+✅ 日结 cashier.dayClose 冻结当班（当日已结则幂等通过） —— trpc cashier.dayClose 失败：该自然日已有冻结的日结单（一日一结）；如需重新日结，请先由店主反结账拆
 ✅ 日结单留痕可查（listDayCloses） —— rows=1
-✅ 反结账单 cashier.reverseBill（owner，强制原因+关联原单） —— 原单=HD-20260923-010 冲正=HD-20260923-013
+✅ 反结账单 cashier.reverseBill（owner，强制原因+关联原单） —— 原单=HD-20260923-023 冲正=HD-20260923-026
 ✅ 储值导入 preview（零写入+校验位：2 行/本金 ¥150） —— sourceStats={"totalRows":2,"personsWithBalance":2,"principalTotalFen":15000,"bonusTotalFen":0,"bonusAllZero":true,"uniquePhones":2,"storeDist":{"贝肯山店":1
 ✅ clerk 储值导入 403（仅老板）
 
-目标：http://localhost:7200（口令门未设置，开发期开放口径）
+目标：http://localhost:7300（口令门未设置，开发期开放口径）
 全部通过 🎉
