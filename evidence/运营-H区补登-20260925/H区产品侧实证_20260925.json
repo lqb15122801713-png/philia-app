@@ -1,0 +1,135 @@
+{
+ "meta": {
+  "执行": "运营总监(远程API实证)",
+  "时间": "2026-09-25T12:02:06.109567",
+  "环境": "生产 main@65911fba",
+  "身份": "店主(owner)"
+ },
+ "H1-02_针1_散客回馈金": {
+  "http_error": 400,
+  "body": "[{\"error\":{\"json\":{\"message\":\"支付合计（1.00 元）须等于应收（129.00 元）\",\"code\":-32600,\"data\":{\"code\":\"BAD_REQUEST\",\"httpStatus\":400,\"stack\":\"TRPCError: 支付合计（1.00 元）须等于应收（129.00 元）\\n    at badRequest (/app/server/src/routers/cashier.ts:119:9)\\n    at <anonymous> (/app/server/src/routers/cashier.ts:1387:13)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\\n    at async LibSQLSession.transaction (/app/server/node_modules/src/libsql/session.ts:122:19)\\n    at async <anonymous> (/app/server/src/routers/cashier.ts:1347:24)\",\"path\":\"cashier.settle\"}}}}]"
+ },
+ "H1-02_针2_服务行回馈金": {
+  "http_error": 403,
+  "body": "[{\"error\":{\"json\":{\"message\":\"回馈金仅可抵商品（服务/寄养行禁用回馈金支付段）\",\"code\":-32003,\"data\":{\"code\":\"FORBIDDEN\",\"httpStatus\":403,\"stack\":\"TRPCError: 回馈金仅可抵商品（服务/寄养行禁用回馈金支付段）\\n    at forbidden (/app/server/src/routers/cashier.ts:122:9)\\n    at <anonymous> (/app/server/src/routers/cashier.ts:1421:15)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\\n    at async LibSQLSession.transaction (/app/server/node_modules/src/libsql/session.ts:122:19)\\n    at async <anonymous> (/app/server/src/routers/cashier.ts:1347:24)\",\"path\":\"cashier.settle\"}}}}]"
+ },
+ "H1-02_针3_超额回馈金": {
+  "http_error": 403,
+  "body": "[{\"error\":{\"json\":{\"message\":\"回馈金仅可抵商品（服务/寄养行禁用回馈金支付段）\",\"code\":-32003,\"data\":{\"code\":\"FORBIDDEN\",\"httpStatus\":403,\"stack\":\"TRPCError: 回馈金仅可抵商品（服务/寄养行禁用回馈金支付段）\\n    at forbidden (/app/server/src/routers/cashier.ts:122:9)\\n    at <anonymous> (/app/server/src/routers/cashier.ts:1421:15)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\\n    at async LibSQLSession.transaction (/app/server/node_modules/src/libsql/session.ts:122:19)\\n    at async <anonymous> (/app/server/src/routers/cashier.ts:1347:24)\",\"path\":\"cashier.settle\"}}}}]"
+ },
+ "H3-01_openFree重放": [
+  {
+   "result": {
+    "data": {
+     "json": {
+      "membership": {
+       "id": "01M36DK7A3GVZB3N14W158AHGQ",
+       "userId": "01M25M44KWH9KVM3Q0ACEAHW0Q",
+       "planKey": "plan_weiguang",
+       "soldStoreId": null,
+       "startedAt": "2026-09-23T06:00:08.000Z",
+       "expiresAt": "2027-09-23T06:00:08.000Z",
+       "status": "active",
+       "petCount": 0,
+       "paidFen": 0,
+       "cancelledAt": null,
+       "cancelReason": null,
+       "refundFen": null,
+       "createdAt": "2026-09-23T06:00:08.000Z",
+       "updatedAt": "2026-09-23T06:00:08.000Z"
+      },
+      "idempotent": true
+     },
+     "meta": {
+      "values": {
+       "membership.startedAt": [
+        "Date"
+       ],
+       "membership.expiresAt": [
+        "Date"
+       ],
+       "membership.createdAt": [
+        "Date"
+       ],
+       "membership.updatedAt": [
+        "Date"
+       ]
+      },
+      "v": 1
+     }
+    }
+   }
+  }
+ ],
+ "H3-01_重复售卡": {
+  "http_error": 400,
+  "body": "[{\"error\":{\"json\":{\"message\":\"该客户已是会员（续费请走 membership.renew；退会后可重新购卡）\",\"code\":-32600,\"data\":{\"code\":\"BAD_REQUEST\",\"httpStatus\":400,\"stack\":\"TRPCError: 该客户已是会员（续费请走 membership.renew；退会后可重新购卡）\\n    at badRequest (/app/server/src/routers/membership.ts:61:9)\\n    at <anonymous> (/app/server/src/routers/membership.ts:437:25)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\\n    at async LibSQLSession.transaction (/app/server/node_modules/src/libsql/session.ts:122:19)\\n    at async <anonymous> (/app/server/src/routers/membership.ts:388:24)\",\"path\":\"membership.sell\"}}}}]"
+ },
+ "H1-02_针1b_散客回馈金全额": {
+  "http_error": 400,
+  "body": "[{\"error\":{\"json\":{\"message\":\"散客单不能使用回馈金支付，请先检索会员\",\"code\":-32600,\"data\":{\"code\":\"BAD_REQUEST\",\"httpStatus\":400,\"stack\":\"TRPCError: 散客单不能使用回馈金支付，请先检索会员\\n    at badRequest (/app/server/src/routers/cashier.ts:119:9)\\n    at <anonymous> (/app/server/src/routers/cashier.ts:1413:13)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\\n    at async LibSQLSession.transaction (/app/server/node_modules/src/libsql/session.ts:122:19)\\n    at async <anonymous> (/app/server/src/routers/cashier.ts:1347:24)\",\"path\":\"cashier.settle\"}}}}]"
+ },
+ "H2-02_空数据_my接口": [
+  {
+   "result": {
+    "data": {
+     "json": {
+      "membership": {
+       "id": "01M36DK7A3GVZB3N14W158AHGQ",
+       "userId": "01M25M44KWH9KVM3Q0ACEAHW0Q",
+       "planKey": "plan_weiguang",
+       "soldStoreId": null,
+       "startedAt": "2026-09-23T06:00:08.000Z",
+       "expiresAt": "2027-09-23T06:00:08.000Z",
+       "status": "active",
+       "petCount": 0,
+       "paidFen": 0,
+       "cancelledAt": null,
+       "cancelReason": null,
+       "refundFen": null,
+       "createdAt": "2026-09-23T06:00:08.000Z",
+       "updatedAt": "2026-09-23T06:00:08.000Z"
+      },
+      "plan": {
+       "planKey": "plan_weiguang",
+       "label": "会员档·微光：免费档（手机号即会员）；无回馈金、无服务折扣；安心包全员免费（钩子仅权益表述，微光不设钩子）",
+       "version": 1,
+       "free": true,
+       "priceFen": 0,
+       "rebateBp": 0,
+       "serviceDiscountBp": 10000,
+       "includedPets": 3,
+       "extraPetFen": 5900,
+       "maxPets": 10
+      },
+      "rebate": {
+       "balanceFen": 0,
+       "pendingFen": 0,
+       "status": "active"
+      },
+      "period": "2026-09",
+      "periodLogs": [],
+      "guide": null
+     },
+     "meta": {
+      "values": {
+       "membership.startedAt": [
+        "Date"
+       ],
+       "membership.expiresAt": [
+        "Date"
+       ],
+       "membership.createdAt": [
+        "Date"
+       ],
+       "membership.updatedAt": [
+        "Date"
+       ]
+      },
+      "v": 1
+     }
+    }
+   }
+  }
+ ]
+}
