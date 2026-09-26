@@ -18,6 +18,7 @@
 
 import type { ReactNode } from 'react'
 import { fenToYuanGrouped, type DashboardStats, type TodayApptItem } from './utils'
+import { AmortizationDashNote } from '../member/amortization'
 
 function StatShell({ cap, children }: { cap: string; children: ReactNode }) {
   return (
@@ -93,6 +94,8 @@ export default function StatCards({
         <div className="d">
           已收 <b>{tenderPaidCount}</b> 笔 · 待收 <b>{stats?.todo.unpaid ?? 0}</b> 笔
         </div>
+        {/* QA40-D1（PD-03 件 2）：分摊口径注（参考口径小字，主数口径不变） */}
+        <AmortizationDashNote />
       </StatShell>
 
       <StatShell cap="在店寄养">

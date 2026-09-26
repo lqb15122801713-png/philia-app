@@ -1,8 +1,10 @@
 /**
  * 开发登录（dev-login）—— Kimi 登录是线上平台能力、本地不可用时的适配方案。
  *
- * - `POST /api/auth/dev-login`，body `{ userId }`：仅允许种子用户（kimi_id 以
- *   `seed_` 开头，从 users 表查），通过后签发会话 cookie（httpOnly，7 天）。
+ * - `POST /api/auth/dev-login`：两种入参——`{ userId }` 仅允许种子用户（kimi_id 以
+ *   `seed_` 开头）；`{ phone }`（D-16 自助开户 · CJ-0925-07）口令门内手机号
+ *   登录/注册（存在=登录，不存在=建档 customer）。通过后签发会话 cookie
+ *   （httpOnly，7 天）。
  * - `POST /api/auth/logout`：清除会话 cookie。
  * - `GET /api/auth/dev-seed-users`（v1.1 P1-13）：动态拉取种子用户列表
  *   （登录页免硬编码）；生产环境一律 404。
@@ -33,11 +35,19 @@ import { getBetaGateCode } from '../config/deploy';
 
 export const authHttpRoutes = new Hono<{ Variables: AuthVariables }>();
 
-const devLoginBodySchema = z.object({
-  userId: z.string().min(1),
-  /** 内测口令（BETA_GATE_CODE 设置后必带） */
-  code: z.string().optional(),
-});
+const devLoginBodySchema = z
+  .object({
+    userId: z.string().min(1).optional(),
+    /** 自助开户（D-16 · CJ-0925-07 批准）：口令门内手机号登录/注册——存在=直接登录，
+     * 不存在=建档（kimi_id=phone:<手机号>，customer 角色，照 wechatMini 同构） */
+    phone: z
+      .string()
+      .regex(/^1\d{10}$/, '手机号格式应为 11 位数字')
+      .optional(),
+    /** 内测口令（BETA_GATE_CODE 设置后必带） */
+    code: z.string().optional(),
+  })
+  .refine((v) => !!v.userId || !!v.phone, { message: '请求体需带 userId 或 phone' });
 
 /**
  * 内测口令门校验。返回 null = 放行；否则返回 { status, body }（调用方 c.json 后 return）。
@@ -69,17 +79,55 @@ function betaGateFailure(provided: string | undefined): {
 authHttpRoutes.post('/api/auth/dev-login', async (c) => {
   const body = devLoginBodySchema.safeParse(await c.req.json().catch(() => null));
   if (!body.success) {
-    return c.json({ ok: false, error: 'BAD_REQUEST', message: '请求体需为 JSON：{ userId }' }, 400);
+    return c.json({ ok: false, error: 'BAD_REQUEST', message: '请求体需为 JSON：{ userId } 或 { phone }（手机号 11 位）' }, 400);
   }
 
   // 内测口令门（批次 6 任务 B2）：口令缺失/错误先于任何用户查询被拒
   const gateFail = betaGateFailure(body.data.code);
   if (gateFail) return c.json(gateFail.body, gateFail.status);
 
+  /* D-16 自助开户（CJ-0925-07 批准 · 急修三件 PD-03）：手机号分支——口令门内
+     查 users.phone：存在=直接登录；不存在=建档（kimi_id=phone:<手机号>、
+     nickname=新客<尾4位>、user_roles+customer，照 wechatMini 同构）。安全口径：
+     仍在口令门内（无口令 401/错口令 403 不变），生产 BETA_GATE_CODE 由启动闸门强制。 */
+  const phone = body.data.phone;
+  if (phone) {
+    let user = await db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.phone, phone))
+      .limit(1)
+      .then((r) => r[0]);
+    if (!user) {
+      await db.insert(schema.users).values({
+        kimiId: `phone:${phone}`,
+        phone,
+        nickname: `新客 ${phone.slice(-4)}`,
+      });
+      user = await db
+        .select()
+        .from(schema.users)
+        .where(eq(schema.users.phone, phone))
+        .limit(1)
+        .then((r) => r[0]);
+      if (!user) {
+        return c.json({ ok: false, error: 'INTERNAL', message: '用户创建失败' }, 500);
+      }
+      await db.insert(schema.userRoles).values({ userId: user.id, role: 'customer' });
+    }
+    setCookie(c, SESSION_COOKIE, signSession(createSessionPayload(user)), {
+      httpOnly: true,
+      path: '/',
+      maxAge: SESSION_TTL_SEC, // 7 天
+      sameSite: 'Lax',
+    });
+    return c.json({ ok: true, user: await loadSessionUser(user.id) });
+  }
+
   const user = await db
     .select()
     .from(schema.users)
-    .where(eq(schema.users.id, body.data.userId))
+    .where(eq(schema.users.id, body.data.userId!))
     .limit(1)
     .then((r) => r[0]);
 

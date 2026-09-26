@@ -14,6 +14,9 @@
  *   派生 = Σ扣次行有效价，不可手填——服务端同口径强校验）；再点=取消；
  * - 选中胶囊展开金额输入（可组合支付）；现金带「实收」自动算找零
  *   （Montserrat 20）；Σ现金类 + 储值 = 展示应收 才放行「确认结账」柠檬钮；
+ *   QA40-D13（急修三件 PD-03）：手输任一段即触发再平衡（改动段固定、末位选中段
+ *   兜底差额）+差额提示行实时明示（还差/超出 ¥X）+「应收」标签归一（唯一真值=顶部
+ *   dueFen 大数字，明细行分段额改称「现金承担」）+现金手输同步刷实收；
  * - 副行口径（裁定①）：已收=现金类（现金/微信/支付宝）；次卡扣次/储值消费
  *   单列「不计入已收」；
  * - R4 断网不静默：离线态确认钮=「暂存，待补传」（本地暂存，恢复自动补传），
@@ -186,6 +189,20 @@ export default function PaySheet({
       if (last === 'cash') setCashReceived(out[last])
     }
     return out
+  }
+
+  /* QA40-D13 修法②④：现金类手输 onChange 触发再平衡——改动段固定，其余选中段
+     末位兜底差额（改动段从 others 剔除）；现金段手输同步刷 cashReceived（实收/找零不滞后） */
+  const onMoneyAmount = (m: MoneyMethod, v: string) => {
+    const base = { ...inputs, [m]: v }
+    if (m === 'cash') setCashReceived(v)
+    const editedFen = yuanToFen(v) ?? 0
+    const others = selected.filter((x) => x !== m)
+    if (others.length === 0) {
+      setInputs(base)
+      return
+    }
+    setInputs(rebalance(others, base, moneyNeedFen - editedFen))
   }
 
   const toggleMethod = (m: MoneyMethod) => {
@@ -451,7 +468,7 @@ export default function PaySheet({
                         inputMode="decimal"
                         placeholder="0"
                         value={inputs[m]}
-                        onChange={(e) => setInputs({ ...inputs, [m]: e.target.value })}
+                        onChange={(e) => onMoneyAmount(m, e.target.value)}
                       />
                     </div>
                   )
@@ -511,9 +528,12 @@ export default function PaySheet({
                 ) : null}
                 {selected.includes('cash') && cashApplied > 0 ? (
                   <div className="flex items-center justify-between py-1 text-caption">
+                    {/* QA40-D13 修法①：该位历史上把现金承担额误标「应收」（老板 9-24 亲测
+                        「应收被回写 168→160」即此）——应收唯一真值=顶部大数字 dueFen，
+                        任何位置不许把分段金额叫「应收」 */}
                     <span className="text-[rgba(74,59,46,.42)]">
-                      实收 ¥{cashReceivedFen !== null ? fenToYuan(cashReceivedFen) : '…'} − 应收 ¥
-                      {fenToYuan(Math.min(cashApplied, moneyNeedFen))}
+                      实收 ¥{cashReceivedFen !== null ? fenToYuan(cashReceivedFen) : '…'} − 现金承担 ¥
+                      {fenToYuan(cashApplied)}
                     </span>
                     {cashShort ? (
                       <span className="font-number text-caption font-bold tabular-nums text-danger-deep">实收不足</span>
@@ -539,14 +559,20 @@ export default function PaySheet({
                     />
                   </div>
                 ) : null}
+                {/* QA40-D13 修法③：差额提示行实时明示——Σ≠应收时「还差/超出 ¥X」
+                    单独成行（确认钮锁死原因可见），不再藏在口径小字里 */}
+                {!moneyBalanced && !zeroDuePassOnly ? (
+                  <div
+                    className="mt-1 rounded-[8px] bg-danger-light px-2.5 py-1.5 text-caption-xs font-semibold text-danger-deep"
+                    data-testid="cashier-pay-gap"
+                  >
+                    {sumMoney > moneyNeedFen
+                      ? `超出 ¥${fenToYuan(sumMoney - moneyNeedFen)}——调低任一段金额后才可确认`
+                      : `还差 ¥${fenToYuan(moneyNeedFen - sumMoney)}——补足后才可确认结账`}
+                  </div>
+                ) : null}
                 <div className="py-1 text-caption-xs text-[rgba(74,59,46,.42)]">
                   可组合支付：Σ支付 = 应收 才放行确认
-                  {!moneyBalanced && !zeroDuePassOnly ? (
-                    <span className="ml-1 text-danger-deep">
-                      （当前差 ¥{fenToYuan(Math.abs(moneyNeedFen - sumMoney))}
-                      {sumMoney > moneyNeedFen ? ' 超出' : ' 不足'}）
-                    </span>
-                  ) : null}
                 </div>
                 {/* 副行口径（裁定①+R11a）：已收=现金类；次卡/储值/回馈金单列不计入已收 */}
                 <div className="border-t border-dashed border-[rgba(74,59,46,.12)] py-1 text-caption-xs text-[rgba(74,59,46,.42)]">

@@ -2,7 +2,8 @@
  * 开发登录页（契约 docs/CLIENT-CONTRACTS.md · T2.0）—— 路由 /dev-login
  *
  * ⚠️ 仅开发环境：Kimi 登录是线上平台能力，本地用 dev-login 适配
- * （服务端仅允许种子用户，见 server/src/auth/devLogin.ts）。
+ * （服务端=种子用户 + 口令门内手机号自助开户（D-16 · CJ-0925-07），
+ * 见 server/src/auth/devLogin.ts）。
  *
  * - 种子用户列表：启动时 fetch GET /api/auth/dev-seed-users 动态渲染（v1.1-b1，
  *   不再硬编码 ULID——重跑 db:seed 后 ID 变化也能直接登录）；
@@ -20,7 +21,7 @@
  * 「口令入内测 ›」= 口令门卡显隐开关；口令门卡/种子用户列表真实交互全保留。
  */
 
-import { devLogin, getApiBase, logout, useMe, usePhiliaClient } from '@philia/shared'
+import { devLogin, devLoginByPhone, getApiBase, logout, useMe, usePhiliaClient } from '@philia/shared'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
@@ -50,6 +51,9 @@ export default function DevLoginPage() {
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [manualId, setManualId] = useState('')
   const [error, setError] = useState<string | null>(null)
+  /* D-16 自助开户（CJ-0925-07）：手机号输入卡（口令通过=seeds 拉到后展示） */
+  const [phone, setPhone] = useState('')
+  const [phonePending, setPhonePending] = useState(false)
 
   /* ---- v1.1-b1：动态拉取种子用户（客户端展示全部角色，便于切换身份调试） ---- */
   const [seeds, setSeeds] = useState<SeedUser[] | null>(null)
@@ -88,6 +92,8 @@ export default function DevLoginPage() {
         }
       })
       .catch((e) => {
+        // QA40-D8：网络/连接失败与 401/403 分文案——401/403 已在上方分支走口令门提示，
+        // 到这里的是真网络层失败，不再误导「口令/账号」问题
         setSeedsError(e instanceof Error ? e.message : '拉取失败')
       })
   }
@@ -118,6 +124,25 @@ export default function DevLoginPage() {
       setError(msg)
     } finally {
       setPendingId(null)
+    }
+  }
+
+  /* D-16 自助开户（CJ-0925-07）：口令门内手机号登录/注册——新号自动建档 */
+  const phoneValid = /^1\d{10}$/.test(phone.trim())
+  const doLoginByPhone = async () => {
+    if (!phoneValid || phonePending) return
+    setPhonePending(true)
+    setError(null)
+    try {
+      await devLoginByPhone(getApiBase(), phone.trim(), gateCode.trim() || undefined)
+      await queryClient.invalidateQueries()
+      navigate(from && from !== '/dev-login' ? from : '/home', { replace: true })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '登录失败'
+      if (msg.includes('口令')) setGateRequired(true)
+      setError(msg)
+    } finally {
+      setPhonePending(false)
     }
   }
 
@@ -231,6 +256,37 @@ export default function DevLoginPage() {
           </section>
         ) : null}
 
+        {/* D-16 自助开户：口令通过（seeds 拉到）后出「手机号登录/注册」输入卡 */}
+        {seeds !== null ? (
+          <section className="u1-card mt-4 p-4" aria-label="手机号登录注册" data-testid="phone-login-card">
+            <p className="text-body-sm font-semibold">手机号登录 / 注册</p>
+            <p className="mt-1 text-caption text-ink-secondary">
+              输入手机号即登录；首次使用将自动注册（新客建档）。
+            </p>
+            <div className="mt-2 flex gap-2">
+              <Input
+                inputMode="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void doLoginByPhone()
+                }}
+                placeholder="11 位手机号"
+                className="rounded-control bg-card text-body-sm"
+                data-testid="phone-login-input"
+              />
+              <Button
+                disabled={!phoneValid || phonePending}
+                onClick={() => void doLoginByPhone()}
+                className="rounded-control bg-brand-primary text-ink hover:bg-brand-primary-hover"
+                data-testid="phone-login-submit"
+              >
+                {phonePending ? '登录中…' : '登录'}
+              </Button>
+            </div>
+          </section>
+        ) : null}
+
         <section ref={accountsRef} className="mt-6 scroll-mt-4">
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="text-title">选择种子用户登录</h2>
@@ -268,7 +324,7 @@ export default function DevLoginPage() {
           ) : (
             <p className="mt-3 rounded-panel bg-danger-light px-4 py-3 text-caption text-danger-deep">
               {seedsError
-                ? `种子用户拉取失败（${seedsError}），请确认 server 已启动，或手动输入 userId`
+                ? `种子用户拉取失败（网络连接失败：${seedsError}）——请检查网络或确认 server 已启动；若是口令问题请用上方口令门`
                 : '未拉到种子用户，请重跑 server 的 db:seed，或手动输入 userId'}
             </p>
           )}
@@ -301,7 +357,8 @@ export default function DevLoginPage() {
         ) : null}
 
         <p className="mt-8 text-caption-xs text-ink-placeholder">
-          提示：dev-login 仅允许种子用户（kimi_id 以 seed_ 前缀），会话 cookie 有效期 7 天。
+          提示：种子用户一键登录 + 口令门内手机号自助开户（D-16：新号自动注册 customer）；
+          会话 cookie 有效期 7 天。
         </p>
       </main>
 

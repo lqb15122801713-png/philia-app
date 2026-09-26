@@ -2284,6 +2284,33 @@ async function main(): Promise<void> {
       of2.idempotent === true && of2.membership.id === of1.membership.id,
     { first: of1.idempotent, second: of2.idempotent });
 
+  // ⑤ D-16 自助开户（急修三件 PD-03 件 3）：口令门内手机号分支——新号建档+登录+微光开档链路
+  console.log('\n[急修三件] D-16 自助开户（手机号登录/注册）');
+  const newPhone = '13977776666'; // 避开种子/e2e 既有号段（13800000000/1381111xxxx/1390000xxxx）
+  const devLoginPhone = async (phone: string) => {
+    const res = await fetch(`${BASE}/api/auth/dev-login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ phone }),
+    });
+    const body = (await res.json()) as { ok?: boolean; user?: { id: string; roles?: string[] } };
+    return { res, body, cookie: res.ok ? sessionCookieOf(res) : null };
+  };
+  const reg1 = await devLoginPhone(newPhone);
+  check('D-16 新手机号自助开户：注册即建档（customer 角色）并签发会话',
+    reg1.res.ok && reg1.body.ok === true && !!reg1.body.user?.roles?.includes('customer'), reg1.body);
+  const reg1Of = reg1.cookie
+    ? await trpcMutate<{ membership: MembershipRowT; idempotent: boolean }>('membership.openFree', { cookie: reg1.cookie })
+    : null;
+  check('D-16 注册→登录→微光一键开档链路通（plan_weiguang active）',
+    reg1Of?.membership.planKey === 'plan_weiguang' && reg1Of?.membership.status === 'active', reg1Of);
+  const reg2 = await devLoginPhone(newPhone);
+  check('D-16 同号再登录=同一用户（幂等建档，不重复建行）',
+    reg2.res.ok && reg2.body.user?.id === reg1.body.user?.id, { first: reg1.body.user?.id, second: reg2.body.user?.id });
+  const badPhone = await devLoginPhone('12345');
+  check('D-16 非 11 位手机号 → 400 格式拦截（不建行）',
+    badPhone.res.status === 400, { status: badPhone.res.status });
+
   /* ---------- 40. 清单⑨：多宠第 4 只 +59，10 只封顶 ---------- */
   console.log('\n[R11a] 40. 多宠附加费（清单⑨）');
   const sell4Pets = await sellPlan(managerCookie, { phone: '13811110003', planKey: 'plan_yinghuo', petCount: 4, paySegments: [{ method: 'cash', amountFen: 25800 }] });
