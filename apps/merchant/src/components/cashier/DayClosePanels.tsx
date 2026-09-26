@@ -28,6 +28,7 @@ import {
 } from './model'
 import type { RefundDayStats } from './refund'
 import { fenToYuan, yuanToFen, fmtDateTime } from '@/components/mall-admin/format'
+import { AmortizationDayLine } from '../member/amortization'
 import { CashierModal, SheetBtn } from './dialogs'
 
 /** 日结单金额列 null 防御（schema 可空列；展示口径 null=0） */
@@ -175,6 +176,9 @@ export function DayCloseForm({
           {' · 储值消费 '}
           <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{tender ? fenToYuan(tender.tender.storedValueFen) : '…'}</b>
         </p>
+
+        {/* QA40-D1（PD-03 件 2）：年费分摊双口径参考行——参考口径，不入任何合计 */}
+        <AmortizationDayLine />
 
         <input
           data-testid="dayclose-note"

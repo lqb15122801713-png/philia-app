@@ -1,8 +1,8 @@
 /**
  * 开发登录 / 登出（契约 docs/CLIENT-CONTRACTS.md · T2.0）
  *
- * ⚠️ 仅开发环境使用，生产移除（服务端 dev-login 端点同样仅限种子用户，
- * 见 server/src/auth/devLogin.ts；上线后由 Kimi OAuth 回调替换）。
+ * ⚠️ 仅开发环境使用，生产移除（服务端 dev-login 端点限种子用户 + 口令门内手机号
+ * 自助开户（D-16），见 server/src/auth/devLogin.ts；上线后由 Kimi OAuth 回调替换）。
  *
  * 会话为 httpOnly cookie（philia_session，7 天），请求必须 credentials:'include'。
  */
@@ -29,6 +29,22 @@ export async function devLogin(baseUrl: string, userId: string, code?: string): 
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(code ? { userId, code } : { userId }),
+  });
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, '登录失败'));
+  }
+}
+
+/**
+ * 自助开户（D-16 · CJ-0925-07 · 急修三件 PD-03）：POST { phone, code? }——
+ * 口令门内手机号登录/注册（新号自动建档 customer，server 侧 phone: 前缀 kimi_id）。
+ */
+export async function devLoginByPhone(baseUrl: string, phone: string, code?: string): Promise<void> {
+  const res = await fetch(`${baseUrl}/api/auth/dev-login`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(code ? { phone, code } : { phone }),
   });
   if (!res.ok) {
     throw new Error(await errorMessage(res, '登录失败'));

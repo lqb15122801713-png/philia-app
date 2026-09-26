@@ -717,6 +717,9 @@ export const membershipRouter = router({
    *   单 payable 合计，按 settledAt 落月）；
    * - amortizedFen 分摊口径：当月分摊确认=Σ active 会员 paid_fen÷12 精确到分
    *   （逐会员 round 后求和；内测口径=当前 active 快照，month 参数供对账展示同帧）。
+   *   Y7 本店口径（急修三件 PD-03 件 2，老板已圈）：Σ 按办卡店过滤
+   *   （memberships.sold_store_id=本店）；微光线上开档无办卡店暂不计入任何店
+   *   （待连锁合批裁定口径，注释留痕）。
    */
   amortizationStats: merchantProcedure
     .input(z.object({ month: z.string().regex(MONTH_RE, '月份格式须为 YYYY-MM') }))
@@ -746,7 +749,14 @@ export const membershipRouter = router({
       const activeRows = await ctx.db
         .select({ paidFen: schema.memberships.paidFen })
         .from(schema.memberships)
-        .where(eq(schema.memberships.status, 'active'));
+        .where(
+          and(
+            eq(schema.memberships.status, 'active'),
+            /* Y7 本店口径（PD-03 件 2）：分摊按办卡店归属过滤（sold_store_id=本店）；
+               微光线上开档 sold_store_id=NULL——暂不计入任何店，待连锁合批裁定口径 */
+            eq(schema.memberships.soldStoreId, storeId),
+          ),
+        );
       return {
         month: input.month,
         cashFen: Number(cashRows?.s ?? 0),
