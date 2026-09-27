@@ -7,7 +7,8 @@
  * 权限（矩阵 V1.2 修订页 + server 硬闸门）：
  * - clerk：墨轨无入口 + ClerkRouteGuard 路由引导页 + 本页 canManage 闸门（双保险）；
  * - 店长（本店）：查询 / 实退登记（executed→settled，settleActual+备注）；
- * - 店主：全域 + 驳回 draft（rejectDraft+备注必填，驳回权仅店主）+ 导出 CSV（仅老板留痕）。
+ * - 店主：全域 + 驳回 draft（rejectDraft+备注必填）+ 导出 CSV（仅老板留痕）。
+ * - 店长：本店 + 驳回 draft（矩阵 V1.3 · 修复包 PR-1 驳回权放开）。
  *
  * 结构：
  * - pendingActual 超 24h 待办：顶部黄色提醒条（笔数 + 单号/金额简报）；
@@ -306,12 +307,13 @@ export default function CashierRefundsPage() {
                               实退登记
                             </button>
                           ) : null}
-                          {/* 驳回：draft 行且仅店主（驳回权仅店主；备注必填） */}
-                          {r.status === 'draft' && role.isOwner ? (
+                          {/* 驳回：draft 行（店长本店+店主全域——矩阵 V1.3 驳回权放开店长；
+                              备注必填；OP-01③ 店员无入口） */}
+                          {r.status === 'draft' && role.canManage ? (
                             <button
                               type="button"
                               data-testid={`refunds-reject-${r.refundNo}`}
-                              title="驳回退款申请（仅店主；驳回留痕）"
+                              title="驳回退款申请（店长本店/店主全域；驳回留痕可查）"
                               onClick={() => setRejectTarget(r)}
                               className="text-caption-xs font-bold text-danger transition-transform duration-120 ease-philia-spring active:scale-[0.92]"
                             >
@@ -344,7 +346,7 @@ export default function CashierRefundsPage() {
         }}
         onClose={() => setSettleTarget(null)}
       />
-      {/* 店主驳回弹层（备注必填） */}
+      {/* 驳回弹层（店主/店长本店，备注必填） */}
       <RefundNoteDialog
         row={rejectTarget}
         mode="reject"

@@ -2225,6 +2225,90 @@ async function main(): Promise<void> {
   check('R12⑬ 实退登记后待办消失（pendingActual 不再含该单）', !todoAfter.some((r) => r.id === agedRefund.id), todoAfter.length);
 
   /* ==================================================================
+   * 修复包 PR-1（PD-02/PD-10 · 免签直发）验收段
+   * 件① QA40-D10 账本双倍计数（ledger 每期只计一类行，settleMonthly 后不翻倍）
+   * 件③ H4-01 驳回权放开店长 + 留口开关（超阈值落 draft，默认硬拒）
+   * ================================================================== */
+  console.log('\n[修复包PR-1] D10 账本双倍计数 + 驳回权店长 + 留口开关');
+
+  /* ---- 件③a 留口开关默认硬拒（回归：V1 已实证 split2 403，此处坐实开关缺行/关=同口径） ---- */
+  const bigBill2 = await settleBill2([{ kind: 'product', refId: staple.id, qty: 5 }], { note: 'e2e PR-1 留口开关单' }); // 64500
+  const draftOff = await asErr(execRefund(managerCookie, { billNo: bigBill2.billNo, type: 'partial_amount', amountFen: 60000, reason: 'PR-1 开关默认关验证' }));
+  check('PR-1 留口开关默认关=维持硬拒（超阈值 FORBIDDEN「须店主」）',
+    draftOff instanceof TrpcHttpError && draftOff.code === 'FORBIDDEN' && draftOff.message.includes('须店主'),
+    draftOff && draftOff.message);
+
+  /* ---- 件③b 开开关（owner 端口写 refund_over_threshold_to_draft enabled=true）→ 落 draft ---- */
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'refund', changes: [{ ruleKey: 'refund_over_threshold_to_draft', valueJson: { enabled: true } }] },
+  });
+  const draftOn = await execRefund(managerCookie, { billNo: bigBill2.billNo, type: 'partial_amount', amountFen: 60000, reason: 'PR-1 开关开验证' });
+  check('PR-1 开关 on：超阈值落 draft 申请行（draft:true + status=draft）',
+    (draftOn as { draft?: boolean }).draft === true && draftOn.refund.status === 'draft', draftOn.refund.status);
+  const billAfterDraft = (await db.select().from(schema.cashierBills).where(eq(schema.cashierBills.billNo, bigBill2.billNo)).get())!;
+  check('PR-1 draft 零联动（原单金额/状态不动，钱链路零副作用）',
+    billAfterDraft.status === 'settled' && billAfterDraft.refundStatus === null, { status: billAfterDraft.status, refundStatus: billAfterDraft.refundStatus });
+
+  /* ---- 件③c 驳回权放开店长（H4-01）：店长驳 draft → rejected；店员 403 分口径 ---- */
+  const mgrReject = await trpcMutate<{ refund: { status: string; approverId: string } }>('refund.rejectDraft', {
+    cookie: managerCookie, input: { refundId: draftOn.refund.id, note: '店长驳回（H4-01 验证）' },
+  });
+  check('PR-1 店长驳回本店 draft → rejected（驳回权放开店长落地）', mgrReject.refund.status === 'rejected', mgrReject.refund.status);
+  const clerkReject = await asErr(trpcMutate('refund.rejectDraft', { cookie: clerkCookie, input: { refundId: draftOn.refund.id, note: '店员越权验证' } }));
+  check('PR-1 店员驳回 403 分口径（「请联系店长」，OP-01③）',
+    clerkReject instanceof TrpcHttpError && clerkReject.httpStatus === 403 && clerkReject.message.includes('请联系店长'),
+    clerkReject && clerkReject.message);
+  /* 开关关回（不留副作用给后续段） */
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'refund', changes: [{ ruleKey: 'refund_over_threshold_to_draft', valueJson: { enabled: false } }] },
+  });
+  const draftOffAgain = await asErr(execRefund(managerCookie, { billNo: bigBill2.billNo, type: 'partial_amount', amountFen: 60000, reason: 'PR-1 开关关回验证' }));
+  check('PR-1 开关关回=恢复硬拒（FORBIDDEN）',
+    draftOffAgain instanceof TrpcHttpError && draftOffAgain.code === 'FORBIDDEN', draftOffAgain && draftOffAgain.message);
+
+  /* ---- 件① D10：计提行+入账行不双计（settleMonthly 跑一遍看 yearGrantFen 不翻倍） ----
+   * 口径注：期次防撞——43 段回归要结当前期次（断言 grantedCount=2/grantedFen=516 精确值），
+   * 故本段计提行挂「下一期次」、假时钟 now=下下月 6 日结它（同一生产代码路径：
+   * 计提回标+入账行+period unique 幂等），与 43 段互不占期次。 */
+  const { settleMonthly: settleMonthlyPr1, ensureRebateAccount, rebatePeriodOf: periodOfPr1 } = await import('../services/rebate');
+  const d10User = (await db.insert(schema.users).values({ kimiId: 'seed_e2e_d10', nickname: 'e2e D10 客', phone: '13811110010' }).returning())[0]!;
+  await db.insert(schema.userRoles).values({ userId: d10User.id, role: 'customer' });
+  const d10Cookie = await devLogin(d10User.id);
+  const d10Acc = await ensureRebateAccount(db, d10User.id, new Date());
+  /* 计提行挂「当前期次+2」（当前期次归 43 段、+1 归 49b 复核②段，三方各占其期） */
+  const curP = periodOfPr1(new Date());
+  const [cy, cm] = curP.split('-').map((s) => parseInt(s, 10));
+  const myY = cy + Math.floor((cm + 1) / 12);
+  const myM = ((cm + 1) % 12) + 1;
+  const nextPeriod = `${myY}-${String(myM).padStart(2, '0')}`;
+  const clockY = cy + Math.floor((cm + 2) / 12);
+  const clockM = ((cm + 2) % 12) + 1;
+  const settleClock = new Date(clockY, clockM - 1, 6); // settleMonthly 结「now 的上月」→ 落 nextPeriod（=当前期次+2）
+  await db.insert(schema.rebateLogs).values({
+    userId: d10User.id,
+    accountId: d10Acc.id,
+    type: 'grant',
+    deltaFen: 500,
+    beforeFen: 0,
+    afterFen: 0,
+    sourceId: 'HD-E2E-D10-001',
+    period: nextPeriod,
+    note: 'e2e D10 计提行（下一期次）',
+  });
+  const ledgerBefore = await trpcQuery<{ yearGrantFen: number }>('membership.ledger', { cookie: d10Cookie });
+  const settle1st = await settleMonthlyPr1(db, settleClock);
+  const ledgerAfter = await trpcQuery<{ yearGrantFen: number }>('membership.ledger', { cookie: d10Cookie });
+  const settle2nd = await settleMonthlyPr1(db, settleClock);
+  check('PR-1 D10：月结后 yearGrantFen 不翻倍（500→500，计提行回标+入账行只计一类）',
+    ledgerBefore.yearGrantFen === 500 && ledgerAfter.yearGrantFen === 500,
+    { before: ledgerBefore.yearGrantFen, after: ledgerAfter.yearGrantFen });
+  check('PR-1 D10：settleMonthly 幂等（重复跑 already-settled 不再入账）',
+    settle1st.settled === true && settle2nd.settled === false, { first: settle1st.settled, second: settle2nd });
+
+
+  /* ==================================================================
    * 批次 R11a（会员前置批·骨架批）验收段 —— 28 号施工令全清单 + 回归
    * 主线夹具：示例客户（萤火会员）；manager（店长，staff 绑定）售卡/续费/退会。
    * ================================================================== */
