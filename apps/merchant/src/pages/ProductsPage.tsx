@@ -58,6 +58,8 @@ export default function ProductsPage() {
       trpc.mall.listProductsForStore.query({
         category: category || undefined,
         keyword: keyword || undefined,
+        // QA40-D2：管理端显式含安心包类目（售卖侧默认排除，管理可见性保留）
+        includeCarePackage: true,
         page: 1,
         pageSize: 100,
       }),
@@ -66,7 +68,7 @@ export default function ProductsPage() {
   // 副行计数真值：不带筛选的全量查询（同接口同缓存前缀，不新增接口）
   const statsQuery = useQuery({
     queryKey: [...PRODUCTS_KEY, 'u3-stats'],
-    queryFn: () => trpc.mall.listProductsForStore.query({ page: 1, pageSize: 100 }),
+    queryFn: () => trpc.mall.listProductsForStore.query({ includeCarePackage: true, page: 1, pageSize: 100 }),
   })
 
   const items = listQuery.data?.items ?? []

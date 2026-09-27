@@ -106,7 +106,7 @@ const NUMBER_MAP_KEYS = new Set(['fixed_fen_by_plan', 'split_bp']);
 const STRING_KEYS = new Set(['name', 'same_as']);
 
 /** 布尔字段（R11a 会员档：free=免费档标记，仅 true/false 放行） */
-const BOOL_KEYS = new Set(['free']);
+const BOOL_KEYS = new Set(['free', 'enabled']);
 
 /** 字符串数组字段（补充令① 时长域关键词表：keywords 词表 / bath、groom 服务种类词表，须 string[]） */
 const STRING_ARRAY_KEYS = new Set(['keywords', 'bath', 'groom']);

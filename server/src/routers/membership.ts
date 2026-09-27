@@ -27,7 +27,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import { broadcastNow, emitEvent } from '../realtime/bus';
@@ -311,8 +311,8 @@ export const membershipRouter = router({
    * 溯源联表（38 号档 CJ-0923-16④「要」）：source_id=收银单号（HD- 前缀）时联
    * cashier_bills/cashier_bill_items 取商品快照名+门店名透出；联不到（商城订单/退款单/
    * 结算批次等）title=null，前端降级=类型文案+单号。
-   * yearGrantFen=当年 grant 类流水合计（纯既有数据聚合，无新钱口径——38 号档 §二-②
-   * 三格账聚合「留口」兜底口径下的账本页通行统计）。
+   * yearGrantFen=当年发放合计（每期只计一类行：未结算=计提行／已结算=入账行
+   * source_id=批次 id——QA40-D10 双倍计数修复，PD-02 件 3）。
    * 读路径顺带到期懒冻结（红线 4，同 my）。
    */
   ledger: customerProcedure.query(async ({ ctx }) => {
@@ -366,7 +366,10 @@ export const membershipRouter = router({
       }
     }
 
-    /* 本年累计发放（grant 类合计；冻结/清零等 0 值行不属发放口径） */
+    /* 本年累计发放（QA40-D10 双倍计数修复 · PD-02 件 3 死线 10-05）：
+     * 每期只计一类行——期次未结算=计提行（settlement_id 为空）；期次已结算=
+     * 入账行（source_id=settlement_id=批次 id；计提行月结时已回标批次不再计入）。
+     * 两类交接不重不漏：月结 settleMonthly 跑完后本值不翻倍（e2e 实证在案）。 */
     const yearStart = new Date(now.getFullYear(), 0, 1);
     const yearRows = await ctx.db
       .select({ total: sql<number>`coalesce(sum(${schema.rebateLogs.deltaFen}), 0)` })
@@ -376,6 +379,10 @@ export const membershipRouter = router({
           eq(schema.rebateLogs.userId, ctx.user.id),
           eq(schema.rebateLogs.type, 'grant'),
           gte(schema.rebateLogs.createdAt, yearStart),
+          or(
+            isNull(schema.rebateLogs.settlementId),
+            eq(schema.rebateLogs.sourceId, schema.rebateLogs.settlementId),
+          ),
         ),
       );
 

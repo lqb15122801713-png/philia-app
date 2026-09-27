@@ -371,6 +371,8 @@ async function main() {
     });
     await tx.insert(schema.refundRules).values([
       refundSeed('refund_threshold_fen', '退款店长阈值：原单累计退款额超过此额须店主（默认 ¥500，R12 冻结版 V1.0 §九待老板终拍口径）', { threshold_fen: 50000 }),
+      // 修复包 PR-1（PD-02 件 6 · CJ-0923-20① 留口）：超阈值落 draft 开关，默认关=维持硬拒
+      refundSeed('refund_over_threshold_to_draft', '退款超阈值落 draft 待批（默认关=维持硬拒；开=落申请行，店主重新执行）', { enabled: false }),
     ]);
 
     /* ---- R11a 会员前置批：会员档位配置种子（冻结版 V1.0 §二 + CJ-0922-13，version=1） ----
@@ -397,6 +399,8 @@ async function main() {
       planSeed('rebate_settlement_day', '回馈金到账日：次月 5 日统一到账（故障顺延≤3 天，会员页明示口径）', { day: 5 }),
       planSeed('rebate_validity_days', '回馈金有效期：365 天', { days: 365 }),
       planSeed('membership_validity_days', '会员有效期：365 天（到期不续费冻结，余额在不可用；续费解冻；退卡清零）', { days: 365 }),
+      // 修复包 PR-4 读侧启用（PD-05 件 2 · CJ-0925-10②）：注册默认档端口化，本批先入种子
+      planSeed('default_plan_key', '注册默认会员档（自助开档落档键；端口可改）', { value: 'plan_weiguang' }),
     ]);
 
     /* ---- staff-2 R10：XP 规则配置种子（附件一冻结版 V1.0 全表照转，version=1） ----

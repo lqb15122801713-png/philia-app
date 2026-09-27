@@ -28,11 +28,16 @@
  *
  * 权限闸（矩阵 V1.2 修订页写死）：
  * - 店员：无入口——本路由写端点全部 merchantManagerProcedure 起，clerk 天然 403；
+ *   rejectDraft 例外=publicProcedure+手写分口径闸（OP-01③：店员 403「请联系店长」，店长/店主放行）；
  * - 店长：原单累计退款额+本次 ≤ refund_threshold_fen（refund_rules active 行，
  *   默认 ¥500=50000）且不涉储值 → 发起即执行（自批 approver=本人）；超阈值 FORBIDDEN
  *   「该单累计退款已达店长上限，须店主」（V1 累计校验堵拆分绕过）；涉储值（原单含
  *   stored_value/pass 支付段，或 type='pass_cancel'）→ FORBIDDEN「储值退款须店主」；
- * - 店主：全域；驳回权仅店主（rejectDraft）；导出仅店主留痕（总规则③）。
+ * - 店主：全域；驳回权=店主全域+店长本店（rejectDraft，矩阵 V1.3 · H4-01 修复包放开）；
+ *   店员无入口（403 分口径「请联系店长」，OP-01③）；导出仅店主留痕（总规则③）。
+ * - 超阈值留口开关（CJ-0923-20①）：refund_rules 行 refund_over_threshold_to_draft，
+ *   默认 false=维持硬拒；on=超阈值（非涉储值）落 draft 申请行（零联动纯留痕，
+ *   批准=店主重新执行），种子行随 0016 幂等迁移。
  *
  * 状态机与幂等（§三/红线 8）：draft→executed（账已联动，不可撤销，纠错=再开正单）
  * →settled（实退完成）；rejected=驳回留痕。同原单同参重复提交→返回最新一笔现状
@@ -80,6 +85,7 @@ import { EventType } from '../realtime/events';
 import {
   merchantManagerProcedure,
   merchantOwnerProcedure,
+  publicProcedure,
   router,
 } from '../trpc';
 import { storeDayStartMs, storeWallclock } from './appointment';
@@ -260,6 +266,19 @@ async function loadRefundThresholdFen(d: DbHandle): Promise<number> {
   return num(row?.valueJson?.threshold_fen, 50000);
 }
 
+/** 超阈值留口开关（PD-02 件 6 · CJ-0923-20① 留口）：refund_rules 行
+ * refund_over_threshold_to_draft.enabled——默认 false=维持硬拒（现状不变）；
+ * true=超阈值（不含涉储值）落 draft 申请行（零联动纯留痕，批准=店主重新走 execute）。
+ * 种子行随 0016 幂等迁移（Y6 豁免件）；端口可改（config.save refund 域）。 */
+async function loadOverThresholdToDraft(d: DbHandle): Promise<boolean> {
+  const row = await d
+    .select({ valueJson: schema.refundRules.valueJson })
+    .from(schema.refundRules)
+    .where(and(eq(schema.refundRules.ruleKey, 'refund_over_threshold_to_draft'), eq(schema.refundRules.active, true)))
+    .get();
+  return row?.valueJson?.enabled === true;
+}
+
 /* ------------------------------------------------------------------ */
 /* 六联动计划（preview 干跑 / execute 实跑共用同一计算内核，口径同源）          */
 /* ------------------------------------------------------------------ */
@@ -353,6 +372,8 @@ interface RefundPlan {
   /** pass_cancel 锚点单标记：true=金额与锚点单无关、原单不挂标记 */
   anchorOnly: boolean;
   thresholdFen: number;
+  /** 超阈值留口（PD-02 件 6）：开关 on 且超阈值（非涉储值）→ true=落 draft 申请行 */
+  draftRequired: boolean;
 }
 
 /** 退款输入（preview/execute 共用字段；execute 加 reason 必填 + refundMethod） */
@@ -397,6 +418,9 @@ async function computePlan(
   input: RefundInput,
   callerIsOwner: boolean,
   now: Date,
+  /** 超阈值留口开关（PD-02 件 6）：true=超阈值不落 FORBIDDEN 改挂 draftRequired 标记
+   *（execute 据此落 draft 申请行）；涉储值不受开关影响（不设阈值一律店主）。 */
+  overThresholdToDraft = false,
 ): Promise<RefundPlan> {
   /* ---- 原单与终态闸（V5） ---- */
   const bill = await d
@@ -746,12 +770,15 @@ async function computePlan(
 
   /* ---- 权限闸（V1 累计校验 + 运营加固涉储值；preview 与 execute 同口径） ---- */
   const thresholdFen = await loadRefundThresholdFen(d);
+  let draftRequired = false;
   if (!callerIsOwner) {
     if (hasStoredValueInvolvement(bill, payments, input.type)) {
       forbidden('储值退款须店主');
     }
     if (refundedSoFarFen + refundFen > thresholdFen) {
-      forbidden('该单累计退款已达店长上限，须店主');
+      /* 留口开关（默认硬拒维持现状；on=落 draft 申请行，批准=店主重新执行） */
+      if (overThresholdToDraft) draftRequired = true;
+      else forbidden('该单累计退款已达店长上限，须店主');
     }
   }
 
@@ -775,6 +802,7 @@ async function computePlan(
     rebate,
     anchorOnly,
     thresholdFen,
+    draftRequired,
   };
 }
 
@@ -884,7 +912,9 @@ export const refundRouter = router({
             if (dup) return { refund: dup, plan: null, idempotent: true as const };
           }
 
-          const plan = await computePlan(d, storeId, input, callerIsOwner, now);
+          /* 超阈值留口开关（PD-02 件 6 · CJ-0923-20①）：默认 false=维持硬拒 */
+          const overThresholdToDraft = await loadOverThresholdToDraft(d);
+          const plan = await computePlan(d, storeId, input, callerIsOwner, now, overThresholdToDraft);
 
           /* ---- ① 退款单落库（RB 日序单号；biz_date=执行日 V7；快照含 rebate 列位） ---- */
           const refundNo = await genRefundNo(d, storeId, now);
@@ -897,6 +927,29 @@ export const refundRouter = router({
             refundMethod: input.refundMethod ?? null,
             reason: input.reason,
           };
+
+          /* 留口开关 on 且超阈值 → 落 draft 申请行（零联动纯留痕：不返库存/不动余额/
+             不回补支付段——钱链路一行不动；批准=店主重新走 execute，驳回=rejectDraft） */
+          if (plan.draftRequired) {
+            const draft = await d
+              .insert(schema.refundBills)
+              .values({
+                storeId,
+                refundNo,
+                bizDate,
+                billId: plan.bill.id,
+                type: plan.type,
+                amountFen: plan.refundFen,
+                reason: input.reason,
+                status: 'draft',
+                linkageJson: { ...linkage, draftNote: '超阈值申请（留口开关 on）——批准=店主重新执行，零联动占位' },
+                refundMethod: input.refundMethod ?? null,
+                operatorId: ctx.user.id,
+              })
+              .returning()
+              .then((r) => r[0]!);
+            return { refund: draft, plan: null, idempotent: false as const, draft: true as const };
+          }
           const refund = await d
             .insert(schema.refundBills)
             .values({
@@ -1221,7 +1274,7 @@ export const refundRouter = router({
               by: ctx.user.id,
             }),
           );
-          return { refund, plan, idempotent: false as const };
+          return { refund, plan, idempotent: false as const, draft: false as const };
         });
         outboxIds.forEach(broadcastNow);
         return {
@@ -1229,19 +1282,31 @@ export const refundRouter = router({
           /** 幂等重放不重新干跑计划（原单可能已终态），plan=null 由退款单快照还原 */
           plan: result.plan ? planView(result.plan) : null,
           idempotent: result.idempotent,
+          /** 留口开关（PD-02 件 6）：超阈值落 draft 申请行时=true（零联动） */
+          draft: result.draft ?? false,
         };
       });
     }),
 
   /**
-   * rejectDraft（仅店主——驳回权仅店主，矩阵 V1.2）：draft→rejected 留痕 +
-   * emit RefundRejected。非 draft 单（executed 不可撤销）明文拒。
+   * rejectDraft（店主全域 | 店长本店——驳回权放开店长，矩阵 V1.3 · H4-01/修复包 PR-1）：
+   * draft→rejected 留痕 + emit RefundRejected。非 draft 单（executed 不可撤销）明文拒。
+   * 店员=无入口+403 分口径文案（OP-01③：「请联系店长」）。
    * 备注列复用 settle_note 落「驳回：…」（无专用驳回列，报备）。
    */
-  rejectDraft: merchantOwnerProcedure
+  rejectDraft: publicProcedure
     .input(z.object({ refundId: z.string().min(1), note: z.string().trim().min(1, '驳回须填原因').max(200) }))
     .mutation(async ({ ctx, input }) => {
-      const storeId = ctx.user.storeId!;
+      /* 分口径（OP-01③）：店员→「请联系店长」（含无门店绑定的 clerk）；其他非管理层→通用闸 */
+      const isManagerUp =
+        ctx.user.roles.includes('merchant_owner') || ctx.user.roles.includes('merchant_manager');
+      if (!isManagerUp && ctx.user.roles.includes('merchant_clerk')) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: '退款驳回请联系店长办理（店员无驳回入口）' });
+      }
+      if (!isManagerUp || !ctx.user.storeId) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: '需要店主或店长身份（merchant_owner / merchant_manager）且已绑定门店' });
+      }
+      const storeId = ctx.user.storeId;
       const refund = await ctx.db
         .select()
         .from(schema.refundBills)

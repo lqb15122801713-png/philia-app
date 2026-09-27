@@ -19,7 +19,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, gte, like, lt, or, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, gte, like, lt, ne, or, sql, type SQL } from 'drizzle-orm';
 import { randomInt } from 'node:crypto';
 import { z } from 'zod';
 import { db, schema } from '../db';
@@ -210,6 +210,9 @@ export const mallRouter = router({
   /**
    * 1. listProducts（public）：商品目录。仅上架（status=on）；
    * 支持 storeId / category 过滤、keyword 搜索（name/description 模糊）、分页。
+   * QA40-D2（修复包 PR-1 · CJ-0922-01/13）：安心包类目（care_package）结构性排除——
+   * 安心包=独立库存域不进入售卖区（应急下架是状态位、误上架即复活，须代码层关停）；
+   * 入参 includeCarePackage=true 显式放行（管理端用），缺省排除。
    */
   listProducts: publicProcedure
     .input(
@@ -217,6 +220,8 @@ export const mallRouter = router({
         storeId: z.string().min(1).optional(),
         category: z.string().min(1).max(32).optional(),
         keyword: z.string().min(1).max(64).optional(),
+        /** 安心包类目显式放行（默认排除；QA40-D2 结构性关停） */
+        includeCarePackage: z.boolean().optional(),
         page: z.number().int().min(1).default(1),
         pageSize: z.number().int().min(1).max(50).default(20),
       }),
@@ -225,6 +230,7 @@ export const mallRouter = router({
       const conds: SQL[] = [eq(schema.products.status, 'on')];
       if (input.storeId) conds.push(eq(schema.products.storeId, input.storeId));
       if (input.category) conds.push(eq(schema.products.category, input.category));
+      if (!input.includeCarePackage) conds.push(ne(schema.products.category, 'care_package'));
       if (input.keyword) {
         const kw = `%${input.keyword}%`;
         const fuzzy = or(
@@ -318,12 +324,16 @@ export const mallRouter = router({
    * 与 listProducts（public、仅上架）的区别：本店全部商品含下架（不按 status 过滤），
    * storeId 强制取 ctx.user.storeId（不看入参，天然不越店）；支持 category / keyword 过滤与分页。
    * pageSize 上限放宽到 200（管理端一屏全量编辑场景），返回结构同 listProducts。
+   * QA40-D2：care_package（安心包）类目默认排除（售卖侧结构性关停）——管理端
+   * ProductsPage 传 includeCarePackage=true 显式放行（独立库存域接管前的管理可见性）。
    */
   listProductsForStore: merchantProcedure
     .input(
       z.object({
         category: z.string().min(1).max(32).optional(),
         keyword: z.string().min(1).max(64).optional(),
+        /** 安心包类目显式放行（默认排除=售卖侧结构性关停 QA40-D2；管理端 ProductsPage 传 true） */
+        includeCarePackage: z.boolean().optional(),
         page: z.number().int().min(1).default(1),
         pageSize: z.number().int().min(1).max(200).default(100),
       }),
@@ -331,6 +341,7 @@ export const mallRouter = router({
     .query(async ({ ctx, input }) => {
       const conds: SQL[] = [eq(schema.products.storeId, ctx.user.storeId!)];
       if (input.category) conds.push(eq(schema.products.category, input.category));
+      if (!input.includeCarePackage) conds.push(ne(schema.products.category, 'care_package'));
       if (input.keyword) {
         const kw = `%${input.keyword}%`;
         const fuzzy = or(
