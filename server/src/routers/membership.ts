@@ -6,6 +6,7 @@
  * - plans            四档配置透出（public；客户端开通页/收银台共用，多宠规则与权益表述明面，
  *                    安心包=全员免费表述在权益 label——CJ-0922-13 落槌，非会员 ¥15 作废）
  * - my               本人会员+回馈金账本（customer；非会员 null+引导）
+ * - ledger           W-01 回馈金账本独立页数据源（customer · R11b；全量流水+溯源联表商品名/门店名+本年累计）
  * - openFree         微光一键注册（customer；免费 0 元，手机号即会员=用户本身，幂等）
  * - sell             收银台售卡（merchant；到店付现金/微信/支付宝段，多宠附加费入单）
  * - renew            收银台续费（merchant；解冻 frozen→active+expires 顺延+回馈金解冻）
@@ -26,7 +27,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, gte, isNull, lt, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import { broadcastNow, emitEvent } from '../realtime/bus';
@@ -301,6 +302,105 @@ export const membershipRouter = router({
       period,
       periodLogs,
       guide: null,
+    };
+  }),
+
+  /**
+   * ledger（customer · R11b W-01 回馈金账本独立页数据源）：余额（balanceOf）+ 期次
+   * （rebatePeriodOf）+ 到账日（rebate_settlement_day 读表）+ 全量五类流水（最新 100 条）。
+   * 溯源联表（38 号档 CJ-0923-16④「要」）：source_id=收银单号（HD- 前缀）时联
+   * cashier_bills/cashier_bill_items 取商品快照名+门店名透出；联不到（商城订单/退款单/
+   * 结算批次等）title=null，前端降级=类型文案+单号。
+   * yearGrantFen=当年 grant 类流水合计（纯既有数据聚合，无新钱口径——38 号档 §二-②
+   * 三格账聚合「留口」兜底口径下的账本页通行统计）。
+   * 读路径顺带到期懒冻结（红线 4，同 my）。
+   */
+  ledger: customerProcedure.query(async ({ ctx }) => {
+    const now = new Date();
+    await currentMembership(ctx.db, ctx.user.id, now);
+    const rebate = await balanceOf(ctx.db, ctx.user.id, now);
+    const plans = await loadMemberPlans(ctx.db);
+    const settlementDay = planNum(plans.get('rebate_settlement_day'), 'day', 5);
+    const period = rebatePeriodOf(now);
+
+    const rows = await ctx.db
+      .select()
+      .from(schema.rebateLogs)
+      .where(eq(schema.rebateLogs.userId, ctx.user.id))
+      .orderBy(desc(schema.rebateLogs.createdAt))
+      .limit(100);
+
+    /* 溯源联表：收银单号 → 商品快照名（kind='product' 行）+ 门店名 */
+    const billNos = [...new Set(rows.map((r) => r.sourceId).filter((s) => /^HD-/.test(s)))];
+    const billMap = new Map<string, { storeName: string | null; productNames: string[] }>();
+    if (billNos.length > 0) {
+      const bills = await ctx.db
+        .select({
+          id: schema.cashierBills.id,
+          billNo: schema.cashierBills.billNo,
+          storeName: schema.stores.name,
+        })
+        .from(schema.cashierBills)
+        .leftJoin(schema.stores, eq(schema.stores.id, schema.cashierBills.storeId))
+        .where(inArray(schema.cashierBills.billNo, billNos));
+      const billIdToNo = new Map(bills.map((b) => [b.id, b.billNo]));
+      for (const b of bills) billMap.set(b.billNo, { storeName: b.storeName ?? null, productNames: [] });
+      if (bills.length > 0) {
+        const items = await ctx.db
+          .select({
+            billId: schema.cashierBillItems.billId,
+            name: schema.cashierBillItems.nameSnapshot,
+          })
+          .from(schema.cashierBillItems)
+          .where(
+            and(
+              inArray(schema.cashierBillItems.billId, bills.map((b) => b.id)),
+              eq(schema.cashierBillItems.kind, 'product'),
+            ),
+          );
+        for (const it of items) {
+          const no = billIdToNo.get(it.billId);
+          const slot = no ? billMap.get(no) : undefined;
+          if (slot && !slot.productNames.includes(it.name)) slot.productNames.push(it.name);
+        }
+      }
+    }
+
+    /* 本年累计发放（grant 类合计；冻结/清零等 0 值行不属发放口径） */
+    const yearStart = new Date(now.getFullYear(), 0, 1);
+    const yearRows = await ctx.db
+      .select({ total: sql<number>`coalesce(sum(${schema.rebateLogs.deltaFen}), 0)` })
+      .from(schema.rebateLogs)
+      .where(
+        and(
+          eq(schema.rebateLogs.userId, ctx.user.id),
+          eq(schema.rebateLogs.type, 'grant'),
+          gte(schema.rebateLogs.createdAt, yearStart),
+        ),
+      );
+
+    return {
+      rebate,
+      period,
+      settlementDay,
+      yearGrantFen: yearRows[0]?.total ?? 0,
+      logs: rows.map((r) => {
+        const hit = billMap.get(r.sourceId);
+        return {
+          id: r.id,
+          type: r.type,
+          deltaFen: r.deltaFen,
+          beforeFen: r.beforeFen,
+          afterFen: r.afterFen,
+          sourceId: r.sourceId,
+          period: r.period,
+          settlementId: r.settlementId,
+          note: r.note,
+          createdAt: r.createdAt,
+          title: hit && hit.productNames.length > 0 ? hit.productNames.join('、') : null,
+          storeName: hit?.storeName ?? null,
+        };
+      }),
     };
   }),
 

@@ -1,196 +1,144 @@
 /**
- * MemberCardPage · /me/card 会员卡页（批次 U1 任务 H 信息展示 v0 → R11a 骨架批档位联动）
+ * MemberCardPage · /me/card 会员码屏（Q-01 手持态 · 批次 R11b 视觉批 · 38 号施工令 +
+ * 36 号施工示意图 §四 + 34 号设计规范 v2.0）
  *
- * R11a 档位联动（docs/r11/R11a-DESIGN.md §五「会员码页档位联动」）：
- * 1. 顶部档位签=真实数据（membership.my）：档位名/状态（生效·冻结·退会）/有效期至
- *    + 会员中心入口（/member）；非会员显引导（开通会员 → /member，微光档免费一键开）；
- * 2. 旧三档占位卡面（星芽会员/进阶档/高阶档）退役——R11a 四档（微光/萤火/烛光/暖阳）
- *    已落槌上线，占位档名与真实档位冲突，按本页「禁止虚构」口径换为 membership.plans
- *    实时四档对照（会员态标「当前档」）；
- * 3. 守护值流水维持诚实替代：真实次卡余额（pass.mine 既有接口，按门店列
- *    「剩余 N 次 / 共 M 次」，无次卡显示 0 与说明）。
+ * 本批动作：卡面横卡（92 高 §4.8 码屏规格，档色谱 §1.3，档位联动沿用 R11a 真实数据）+
+ * 页面骨架按图重构。
+ *
+ * ⚠️ 码区=诚实占位（开工回执疑点 1，待裁定）：server 无会员码签发端点（R11a 未落
+ * 「扫会员码」，收银台识别=手机号降级在跑）——按「防假功能/禁止第三态」红线不画假码，
+ * 码区明文提示现状口径（报手机号即享权益）。裁定到后换装真码（接口预留位=本页 qrwrap）。
+ *
+ * 保留件（四铁律③不丢功能入口）：次卡余额（真实 pass.mine）入 m2 卡；
+ * 权益对照不再重复（入口=/member 权益墙+规则明面、/member/open 对比弹层，三处同源）。
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { Ticket } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useMe, usePhiliaClient } from '@philia/shared'
-import PageHeader from '@/components/PageHeader'
-import { ErrorState, LoadingBlock, formatDateCn } from '../components/home/common'
-import { PlanCompareTable, planShortName } from '../components/member/plans'
+import { ErrorState, LoadingBlock } from '../components/home/common'
+import { mc } from '../components/member/copy'
+import { CardFace, PushBar, TipCard, tierClaimOf, type V2Plan } from '../components/member/v2'
 
-const STATUS_META: Record<string, { text: string; cls: string }> = {
-  active: { text: '生效中', cls: 'bg-success-light text-success-deep' },
-  frozen: { text: '已冻结', cls: 'bg-danger-light text-danger-deep' },
-  cancelled: { text: '已退会', cls: 'bg-sunken text-ink-secondary' },
-}
-
-/** R11a 档位签：membership.my 真实档位；非会员显引导 */
-function TierBadge() {
+export default function MemberCardPage() {
   const { trpc } = usePhiliaClient()
   const { user } = useMe()
+  const navigate = useNavigate()
+
   const myQ = useQuery({
     queryKey: ['membership', 'my'],
     queryFn: () => trpc.membership.my.query(),
     enabled: !!user,
   })
-
-  if (myQ.isPending) return <LoadingBlock lines={2} />
-  if (myQ.isError) {
-    return <ErrorState message="会员信息加载失败" onRetry={() => void myQ.refetch()} />
-  }
-
-  const m = myQ.data.membership
-  if (!m) {
-    /* 非会员引导（微光档免费，开通页一键开） */
-    return (
-      <section data-testid="membercard-guide" className="u1-card p-4">
-        <p className="text-caption-xs font-semibold tracking-[0.22em] text-ink-placeholder">
-          PHILIA MEMBERSHIP
-        </p>
-        <p className="mt-2 text-body-sm font-semibold">还不是会员</p>
-        <p className="mt-1 text-caption leading-[1.7] text-ink-secondary">
-          开通会员享商品回馈金与服务折扣；微光档免费，一键开通即会员。
-        </p>
-        <Link
-          to="/member"
-          data-testid="membercard-guide-link"
-          className="mt-3 inline-flex items-center rounded-control bg-brand-primary px-[30px] py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
-        >
-          开通会员 ›
-        </Link>
-      </section>
-    )
-  }
-
-  const meta = STATUS_META[m.status] ?? { text: m.status, cls: 'bg-sunken text-ink-secondary' }
-  const name = myQ.data.plan
-    ? planShortName({ planKey: m.planKey, label: myQ.data.plan.label })
-    : m.planKey
-  return (
-    <section data-testid="membercard-tier" className="u1-card p-4" aria-label="我的会员档位">
-      <div className="flex items-center gap-2">
-        <p className="text-caption-xs font-semibold tracking-[0.22em] text-ink-placeholder">
-          PHILIA MEMBERSHIP
-        </p>
-        <span className={`ml-auto rounded-chip px-2 py-0.5 text-caption-xs ${meta.cls}`}>
-          {meta.text}
-        </span>
-      </div>
-      <div className="mt-2 flex items-baseline justify-between">
-        <h2 className="u1-serif text-title">{name}会员</h2>
-        <span className="u1-num text-caption text-ink-secondary">
-          有效期至 {formatDateCn(m.expiresAt)}
-        </span>
-      </div>
-      <Link to="/member" className="mt-2 block text-right text-caption text-ink-secondary">
-        会员中心 ›
-      </Link>
-    </section>
-  )
-}
-
-/** R11a 真实四档对照（membership.plans 实时读表；会员态标当前档） */
-function RealPlans({ currentPlanKey }: { currentPlanKey: string | null }) {
-  const { trpc } = usePhiliaClient()
   const plansQ = useQuery({
     queryKey: ['membership', 'plans'],
     queryFn: () => trpc.membership.plans.query(),
     staleTime: 60_000,
   })
-
-  if (plansQ.isPending) return <LoadingBlock lines={3} />
-  if (plansQ.isError) {
-    return <ErrorState message="档位信息加载失败" onRetry={() => void plansQ.refetch()} />
-  }
-  return (
-    <section aria-label="权益对照">
-      <h2 className="mb-3 text-title">权益对照</h2>
-      <PlanCompareTable plans={plansQ.data.plans} currentPlanKey={currentPlanKey} />
-    </section>
-  )
-}
-
-/** 真实次卡余额（pass.mine；守护值流水的诚实替代——无流水接口不编造记录） */
-function PassBalance() {
-  const { trpc } = usePhiliaClient()
-  const { user } = useMe()
   const passQ = useQuery({
     queryKey: ['pass', 'mine'],
     queryFn: () => trpc.pass.mine.query(),
     enabled: !!user,
   })
 
-  if (passQ.isPending) return <LoadingBlock lines={2} />
-  if (passQ.isError) {
-    return <ErrorState message="次卡余额加载失败" onRetry={() => void passQ.refetch()} />
-  }
-
+  const m = myQ.data?.membership ?? null
+  const plan = (plansQ.data?.plans as V2Plan[] | undefined)?.find((p) => p.planKey === m?.planKey) ?? null
   const passes = passQ.data ?? []
   const totalRemain = passes.reduce((s, p) => s + p.remainTimes, 0)
 
   return (
-    <section data-testid="member-pass-balance" aria-label="次卡余额" className="u1-card p-4">
-      <div className="flex items-center gap-2">
-        <Ticket className="h-5 w-5 text-ink" strokeWidth={1.5} />
-        <h2 className="text-title">次卡余额</h2>
-        <span className="u1-num ml-auto text-title" data-testid="member-pass-total">
-          {totalRemain} <span className="text-caption font-normal text-ink-secondary">次</span>
-        </span>
-      </div>
-      {passes.length > 0 ? (
-        <ul className="mt-3 divide-y divide-line-divider">
-          {passes.map((p) => (
-            <li key={p.id} className="flex items-center justify-between py-2.5 text-body-sm">
-              <span className="text-ink">{p.storeName ?? '菲丽亚门店'}</span>
-              <span className="u1-num text-ink-secondary">
-                剩余 {p.remainTimes} 次 / 共 {p.totalTimes} 次
-              </span>
-            </li>
-          ))}
-        </ul>
+    <div className="m2" data-testid="member-card-page" style={{ minHeight: '100vh' }}>
+      <PushBar label={mc('q1.pushLabel')} to="/member" />
+
+      {myQ.isPending || plansQ.isPending ? (
+        <div className="m2-pad" style={{ marginTop: 24 }}>
+          <LoadingBlock lines={3} />
+        </div>
+      ) : myQ.isError || plansQ.isError ? (
+        <div className="m2-pad" style={{ marginTop: 24 }}>
+          <ErrorState
+            message={mc('common.memberLoadFail')}
+            onRetry={() => {
+              void myQ.refetch()
+              void plansQ.refetch()
+            }}
+          />
+        </div>
       ) : (
-        <p className="mt-2 text-caption text-ink-secondary">
-          暂无次卡。守护值流水暂无数据接口，本页不展示推测内容。
-        </p>
+        <div className="m2-pad" style={{ marginTop: 14, paddingBottom: 60 }}>
+          {/* 卡面横卡（92 高码屏规格；非会员→微光卡面引导态） */}
+          <CardFace
+            planKey={m?.planKey ?? 'plan_weiguang'}
+            priceText={
+              m
+                ? plan?.free
+                  ? mc('card.freePrice')
+                  : mc('card.priceYear', { price: ((plan?.priceFen ?? 0) / 100).toFixed(0) })
+                : mc('q1.nonMemberPrice')
+            }
+            claimText={m ? tierClaimOf(m.planKey) : mc('q1.nonMemberClaim')}
+            height={92}
+            nameSize={19}
+            testId="membercard-tier"
+          />
+
+          {/* 码区（诚实占位，待疑点 1 裁定；防假功能红线=不画假码） */}
+          <div className="m2-qrwrap" style={{ marginTop: 14 }} data-testid="membercard-qr-pending">
+            <p style={{ fontSize: 12.5, fontWeight: 700 }}>{mc('q1.pendingTitle')}</p>
+            <p className="m2-note" style={{ marginTop: 6 }}>
+              {mc('q1.pendingBody')}
+            </p>
+          </div>
+
+          {/* 非会员引导（微光免费一键开 → /member/open） */}
+          {!m ? (
+            <TipCard>
+              {mc('q1.nonMemberGuide')}
+            </TipCard>
+          ) : null}
+
+          {/* 次卡余额（真实 pass.mine，入口保留件） */}
+          <div className="m2-card" style={{ marginTop: 14, padding: '16px 18px' }} data-testid="member-pass-balance">
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 16, fontWeight: 800 }}>{mc('q1.passTitle')}</span>
+              <span className="m2-mono" style={{ fontSize: 17, fontWeight: 700 }} data-testid="member-pass-total">
+                {totalRemain} <small style={{ fontSize: 10, color: 'var(--v2muted)', fontWeight: 400 }}>{mc('q1.passUnit')}</small>
+              </span>
+            </div>
+            {passQ.isPending ? (
+              <LoadingBlock lines={1} />
+            ) : passes.length > 0 ? (
+              <div style={{ marginTop: 6 }}>
+                {passes.map((p) => (
+                  <div className="m2-rowx" key={p.id}>
+                    <span style={{ fontSize: 12.5, fontWeight: 700 }}>{p.storeName ?? mc('q1.passStoreFallback')}</span>
+                    <span className="m2-mono" style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--v2muted)' }}>
+                      {mc('q1.passRemain', { remain: p.remainTimes, total: p.totalTimes })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="m2-note" style={{ marginTop: 6 }}>
+                {mc('q1.passEmpty')}
+              </p>
+            )}
+          </div>
+
+          {/* 非会员：开通入口 */}
+          {!m ? (
+            <button
+              type="button"
+              className="m2-btn-primary m2-press"
+              style={{ marginTop: 16 }}
+              data-testid="membercard-guide-link"
+              onClick={() => navigate('/member/open')}
+            >
+              {mc('q1.nonMemberCta')}
+            </button>
+          ) : null}
+        </div>
       )}
-    </section>
-  )
-}
-
-export default function MemberCardPage() {
-  const { trpc } = usePhiliaClient()
-  const { user } = useMe()
-  /* 档位签读一次供「当前档」标记复用（与 TierBadge 同 queryKey，命中缓存零额外请求） */
-  const myQ = useQuery({
-    queryKey: ['membership', 'my'],
-    queryFn: () => trpc.membership.my.query(),
-    enabled: !!user,
-  })
-  const currentPlanKey = myQ.data?.membership?.planKey ?? null
-
-  return (
-    <div className="px-4 pb-10 pt-6">
-      <PageHeader title="会员卡" />
-
-      {/* R11a 档位签（真实档位；非会员显引导） */}
-      <div className="mt-4">
-        <TierBadge />
-      </div>
-
-      {/* R11a 真实四档对照（占位三档卡面退役） */}
-      <div className="mt-4">
-        <RealPlans currentPlanKey={currentPlanKey} />
-      </div>
-
-      {/* 守护值流水 → 诚实替代：真实次卡余额 + 说明 */}
-      <div className="mt-4">
-        <PassBalance />
-      </div>
-
-      <p className="mt-4 text-center text-caption-xs text-ink-placeholder">
-        档位与权益细则见会员中心规则明面 · 次卡余额为实时数据
-      </p>
     </div>
   )
 }

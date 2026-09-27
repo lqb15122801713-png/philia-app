@@ -89,6 +89,7 @@ const ROUTES = [
   { app: 'customer', path: '/login', expect: 'gate', note: '门禁别名' },
   { app: 'customer', path: '/member', expect: 'sub', note: '批次 R11a' },
   { app: 'customer', path: '/member/open', expect: 'sub', note: '批次 R11a' },
+  { app: 'customer', path: '/member/rebate', expect: 'sub', note: '批次 R11b 新路由申报（W-01 账本独立页）' },
   /* 商家端 25 */
   { app: 'merchant', path: '/dashboard', expect: 'tab' },
   { app: 'merchant', path: '/appointments', expect: 'sub' },

@@ -82,6 +82,38 @@
   src: url('/fonts/noto-serif-sc-chinese-simplified-700.woff2') format('woff2');
 }
 
+/* R11b（设计规范 v2.0 §2.2 自托管）：serif 宣言/档名 900 档 + JetBrains Mono 等宽轨
+   （400/500/700，latin 子集——mono 轨只承载数字/金额/编号/英文小签）。woff2 已入仓
+   public/fonts/，font-display: swap。 */
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('/fonts/noto-serif-sc-chinese-simplified-900.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin-700.woff2') format('woff2');
+}
+
 @layer base {
   /* shadcn light 变量 · 对齐冻结表 4.1（docs/BRAND-TOKENS-v1.1.md §三） */
   :root {

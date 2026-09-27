@@ -1,0 +1,232 @@
+/* ============================================================================
+   R11b 会员页视觉批 · 会员区四屏 v2.0 构件（定稿挂规版）
+   图纸：docs/ops/36_R11b会员页视觉件施工示意图.md（唯一锚点）
+   规范：docs/ops/design/34_设计规范v2.0/（条款号词典）
+   色纪律 = V3 冻结（CJ-0921-12③④）：深棕主体 / 纸白底 / 淡黄点睛(≤2) / 卡其次阶
+   禁用色红线照 34 号档 §1.5（柠檬黄/暖阳橙/深绿/纯白页面底/纯黑文字，本件 grep=0；
+   白卡色仅作卡片面，页面底=--paper 纸白）。
+   作用域：全部件挂 .m2 作用域，不污染全局 token（全局 token v3 归换皮批）。
+   字体：serif=Noto Serif SC（自托管 §2.2）/ mono=JetBrains Mono（自托管）。
+   ========================================================================== */
+
+.m2 {
+  --paper: #FAF8F2;
+  --v2card: #FFFFFF;
+  --v2ink: #3B2E24;
+  --ink-deep: #2E2318;
+  --gold: #F2DFA6;
+  --gold-deep: #E8CF8C;
+  --khaki: #B9A482;
+  --v2muted: #8A7D6B;
+  --v2line: rgba(59, 46, 36, .14);
+  --v2line-soft: rgba(59, 46, 36, .08);
+  --t3-metal: #D9C08A;
+  --ease: cubic-bezier(.32, .86, .28, 1);
+  --v2serif: 'Noto Serif SC', "Songti SC", "SimSun", serif;
+  --v2mono: 'JetBrains Mono', "SF Mono", monospace;
+
+  min-height: 100%;
+  background: var(--paper);
+  color: var(--v2ink);
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.m2 * , .m2 *::before, .m2 *::after { box-sizing: border-box; }
+
+.m2-mono { font-family: var(--v2mono); }
+.m2-note { font-size: 12px; color: var(--v2muted); line-height: 1.8; }
+.m2-pad { padding: 0 22px; }
+.m2-press { transition: transform .18s var(--ease); }
+.m2-press:active { transform: scale(.97); }
+
+/* ---- 框架件（§4.1） ---------------------------------------------------- */
+
+/* 页头 apphead：serif 27/900 屏题 + mono 10 右下基线注记 */
+.m2-apphead { display: flex; align-items: baseline; justify-content: space-between; padding: 18px 22px 0; }
+.m2-apphead .tt { font-family: var(--v2serif); font-weight: 900; font-size: 27px; letter-spacing: .01em; }
+.m2-apphead .no { font-family: var(--v2mono); font-size: 10px; letter-spacing: .14em; color: var(--v2muted); text-transform: uppercase; }
+
+/* 推送页顶条 pushbar：返回 36 白卡墨描边 + mono 小签 */
+.m2-pushbar { display: flex; align-items: center; gap: 10px; padding: 10px 18px 2px; position: relative; z-index: 10; }
+.m2-pushbar .back {
+  width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--v2line);
+  background: var(--v2card); display: grid; place-items: center; color: var(--v2ink);
+  flex: none; cursor: pointer;
+}
+.m2-pushbar .back svg { width: 17px; height: 17px; stroke-width: 1.8; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+.m2-pushbar .lb { font-family: var(--v2mono); font-size: 10px; letter-spacing: .16em; color: var(--v2muted); text-transform: uppercase; }
+.m2-pushbar .rt { margin-left: auto; font-family: var(--v2mono); font-size: 10px; color: var(--v2muted); }
+
+/* 截面标题 sec-h：h3 16/800 + 右 mono 11 */
+.m2-sec-h { display: flex; align-items: baseline; justify-content: space-between; margin: 26px 0 12px; }
+.m2-sec-h h3 { font-size: 16px; font-weight: 800; letter-spacing: .01em; margin: 0; }
+.m2-sec-h .more { font-family: var(--v2mono); font-size: 11px; color: var(--v2muted); }
+
+/* 主行动钮 btn-primary（深棕主体 §4.1/§3.2） */
+.m2-btn-primary {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  background: var(--ink-deep); color: #F6EFDD; border-radius: 18px;
+  font-size: 16px; font-weight: 700; padding: 16px 22px; border: 0; width: 100%; cursor: pointer;
+}
+.m2-btn-primary .sub { display: block; font-family: var(--v2mono); font-size: 10.5px; font-weight: 400; color: #C9BBA0; }
+.m2-btn-primary:disabled { opacity: .6; }
+
+/* 卡其下划线链 */
+.m2-link {
+  font-size: 12px; color: var(--v2muted); background: none; border: 0; cursor: pointer;
+  border-bottom: 1px solid var(--khaki); padding-bottom: 1px;
+}
+
+/* 提示卡暖底（§1.4）：到期提醒条 */
+.m2-tipcard {
+  border-radius: 16px; background: #FBF5E4; border: 1px solid #E3D2A8;
+  padding: 12px 16px; font-size: 12px; line-height: 1.7; color: var(--v2ink);
+}
+
+/* ---- 卡面 cardface（§4.8/§1.3 四档色谱；槽位虚线框=标注件，施工已移除） -------- */
+.m2-cardface { position: relative; border-radius: 18px; overflow: hidden; color: var(--gold-deep); }
+.m2-cardface .cf-logo { font-family: var(--v2mono); font-size: 10px; letter-spacing: .3em; }
+.m2-cardface .cf-name { font-family: var(--v2serif); font-weight: 900; }
+.m2-cardface .cf-price { font-family: var(--v2mono); font-weight: 700; }
+.m2-cardface .cf-claim { font-size: 11px; opacity: .85; }
+.m2-cardface .cf-no { position: absolute; left: 20px; bottom: 12px; font-family: var(--v2mono); font-size: 9px; letter-spacing: .14em; opacity: .75; }
+/* 状态章（CJ-0923-16⑤：冻结态=卡面保持+右上状态章，蜡封槽位同位复用） */
+.m2-cardface .cf-stamp {
+  position: absolute; top: 14px; right: 16px; padding: 5px 10px; border-radius: 99px;
+  font-family: var(--v2mono); font-size: 9px; letter-spacing: .1em;
+  border: 1px solid rgba(217, 192, 138, .55); color: var(--gold-deep);
+}
+/* 暖阳 · 深棕金 + 淡金双线内框 */
+.m2-cf-t3 { background: linear-gradient(140deg, #433225, #2A1F15); border: 1px solid rgba(217, 192, 138, .4); }
+.m2-cf-t3::before { content: ''; position: absolute; inset: 7px; border: 1px solid rgba(217, 192, 138, .3); border-radius: 12px; pointer-events: none; }
+/* 烛光 · 卡其铜 */
+.m2-cf-t2 { background: linear-gradient(140deg, #B39A6E, #8F7850); color: #FBF3E0; }
+.m2-cf-t2 .cf-stamp { border-color: rgba(251, 243, 224, .55); color: #FBF3E0; }
+/* 萤火 · 淡金 */
+.m2-cf-t1 { background: linear-gradient(140deg, #F6E7BE, #EBD494); color: #5C4A28; }
+.m2-cf-t1 .cf-stamp { border-color: rgba(92, 74, 40, .45); color: #5C4A28; }
+/* 微光 · 纸白墨（白卡+墨描边） */
+.m2-cf-t0 { background: var(--v2card); border: 1px solid var(--v2line); color: var(--v2ink); }
+.m2-cf-t0 .cf-stamp { border-color: rgba(59, 46, 36, .4); color: var(--v2muted); }
+.m2-cf-t0 .cf-no { opacity: 1; color: var(--v2muted); }
+
+/* ---- 三格账 ledger（§4.8） ------------------------------------------------ */
+.m2-ledger {
+  margin-top: 14px; background: var(--v2card); border: 1px solid var(--v2line);
+  border-radius: 20px; display: grid; grid-template-columns: 1fr 1fr 1fr;
+}
+.m2-ledger > div { padding: 15px 8px; text-align: center; }
+.m2-ledger > div + div { border-left: 1px solid var(--v2line-soft); }
+.m2-ledger .v { font-family: var(--v2mono); font-size: 16.5px; font-weight: 700; letter-spacing: -.02em; }
+.m2-ledger .k { font-size: 10px; color: var(--v2muted); margin-top: 5px; }
+
+/* ---- 权益墙 perks（§4.8：4 列网格，章 46 圆 #F4EDDC + 线性 icon 20） ---------- */
+.m2-perks {
+  margin-top: 12px; background: var(--v2card); border: 1px solid var(--v2line);
+  border-radius: 20px; padding: 16px 10px 8px; display: grid;
+  grid-template-columns: repeat(4, 1fr); gap: 6px 4px;
+}
+.m2-perk { text-align: center; padding: 8px 2px 10px; }
+.m2-perk .ic {
+  width: 46px; height: 46px; border-radius: 50%; background: #F4EDDC;
+  border: 1px solid var(--v2line-soft); margin: 0 auto; display: grid;
+  place-items: center; color: var(--v2ink);
+}
+.m2-perk .ic svg { width: 20px; height: 20px; stroke-width: 1.6; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+.m2-perk .t { font-size: 11px; font-weight: 700; margin-top: 7px; }
+.m2-perk .s { font-family: var(--v2mono); font-size: 9px; color: var(--v2muted); margin-top: 2px; }
+
+/* ---- 规则明面 rules（§4.8：虚线边圆角 18 框，红线 5 承载位） ------------------- */
+.m2-rules { margin-top: 12px; border-radius: 18px; border: 1px dashed var(--v2line); padding: 14px 16px; }
+.m2-rules .h { font-size: 12.5px; font-weight: 800; }
+.m2-rules ul { margin-top: 8px; list-style: none; padding: 0; }
+.m2-rules li { font-family: var(--v2mono); font-size: 10px; color: var(--v2muted); line-height: 1.9; }
+
+/* ---- 多宠氛围卡 famcard（§4.8：图 148 + 底部渐变压字；真件=素材通道，本批占位渐变） */
+.m2-famcard { margin-top: 12px; border-radius: 20px; overflow: hidden; position: relative; }
+.m2-famcard .fc-img {
+  width: 100%; height: 148px; display: block; object-fit: cover; object-position: 50% 62%;
+  /* 素材真件未到位前的槽位占位（§1.4 BANNER 占位渐变同族，素色不带图） */
+  background: linear-gradient(165deg, #EFDCAB, #EBD398 52%, #F2E7CB);
+}
+.m2-famcard::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 52%, rgba(42, 31, 21, .55)); }
+.m2-famcard .fc { position: absolute; left: 16px; bottom: 12px; z-index: 2; color: #F6EFDD; font-size: 13px; font-weight: 700; text-shadow: 0 1px 8px rgba(0, 0, 0, .5); }
+
+/* ---- 卡池 deck（§4.8：卡即选择器，横滑 scroll-snap 居中，出血 -22 内补 22） ------ */
+.m2-deck {
+  display: flex; gap: 14px; overflow-x: auto; margin: 14px -22px 0; padding: 4px 22px 12px;
+  scroll-snap-type: x mandatory; scrollbar-width: none;
+}
+.m2-deck::-webkit-scrollbar { display: none; }
+.m2-deck::after { content: ''; flex: none; width: 8px; }
+.m2-deck .m2-cardface { flex: none; width: 320px; height: 204px; scroll-snap-align: center; padding: 18px 20px; }
+.m2-deck .cf-name { font-size: 25px; margin-top: 16px; }
+.m2-deck .cf-price { font-size: 13px; margin-top: 6px; }
+.m2-deck .cf-claim { margin-top: 9px; }
+.m2-cardface.selable { cursor: pointer; transition: transform .26s var(--ease), box-shadow .26s var(--ease); }
+.m2-cardface.sel { box-shadow: 0 0 0 2px var(--gold), 0 18px 40px -14px rgba(46, 35, 24, .5); transform: scale(1.02); }
+
+/* deckdots（点睛位：当前=淡黄长圆 16×5） */
+.m2-deckdots { display: flex; gap: 6px; justify-content: center; margin: 2px 0 4px; }
+.m2-deckdots i { width: 5px; height: 5px; border-radius: 50%; background: var(--khaki); opacity: .4; }
+.m2-deckdots i.on { background: var(--gold); opacity: 1; width: 16px; border-radius: 99px; }
+
+/* ---- 吸底 CTA ctabar（§4.1：页内吸底，底背景渐出，非弹窗） ---------------------- */
+.m2-ctabar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  padding: 14px 18px calc(16px + env(safe-area-inset-bottom));
+  background: linear-gradient(transparent, var(--paper) 40%);
+}
+.m2-ctabar-in { max-width: 480px; margin: 0 auto; }
+
+/* ---- 底部弹层 sheet（§4.5 三件套：抓握手柄+可点遮罩+滚动锁） -------------------- */
+.m2-scrim {
+  position: fixed; inset: 0; z-index: 40; background: rgba(42, 31, 21, .42);
+  opacity: 0; transition: opacity .3s ease;
+}
+.m2-scrim.open { opacity: 1; }
+.m2-sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 41;
+  max-width: 480px; margin: 0 auto; max-height: 82%;
+  background: var(--v2card); border-radius: 26px 26px 0 0;
+  padding: 12px 20px calc(20px + env(safe-area-inset-bottom));
+  transform: translateY(102%); transition: transform .44s var(--ease);
+  overflow-y: auto; box-shadow: 0 -18px 44px -18px rgba(46, 35, 24, .35);
+}
+.m2-sheet.open { transform: translateY(0); }
+.m2-sheet .grab { width: 42px; height: 4px; border-radius: 99px; background: var(--v2line); margin: 0 auto 14px; }
+.m2-sheet .sh-h { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+.m2-sheet .sh-h h4 { font-family: var(--v2serif); font-weight: 900; font-size: 17px; margin: 0; }
+.m2-sheet .sh-h .mono { font-family: var(--v2mono); font-size: 9px; color: var(--v2muted); letter-spacing: .12em; }
+
+/* 弹层四档行（色条 30×22 圆角 5 + 名 + 权益行） */
+.m2-tierrow { display: flex; gap: 12px; align-items: center; padding: 13px 0; border-top: 1px solid var(--v2line-soft); }
+.m2-tierrow:first-of-type { border-top: 0; }
+.m2-tierrow .sw { width: 30px; height: 22px; border-radius: 5px; flex: none; }
+.m2-tierrow .anm { font-size: 13.5px; font-weight: 700; }
+.m2-tierrow .ad { font-size: 11.5px; color: var(--v2muted); margin-top: 2px; line-height: 1.6; }
+
+/* ---- 清单行 rowx（§4.3：行内发丝线，首行无线） -------------------------------- */
+.m2-rowx { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-top: 1px solid var(--v2line-soft); }
+.m2-rowx:first-child { border-top: 0; }
+
+/* ---- 白卡容器 card（§4.3） ------------------------------------------------- */
+.m2-card { background: var(--v2card); border: 1px solid var(--v2line); border-radius: 20px; }
+
+/* ---- 空态 emptyc（§4.11 三句话结构：爪章 54 圆 + serif 21 题 + 12 说明 + 深棕钮） --- */
+.m2-emptyc { text-align: center; padding: 34px 24px 30px; }
+.m2-emptyc .paw {
+  width: 54px; height: 54px; border-radius: 50%; background: #F4EDDC;
+  border: 1px solid var(--v2line-soft); margin: 0 auto; display: grid; place-items: center;
+  color: var(--v2ink);
+}
+.m2-emptyc .paw svg { width: 24px; height: 24px; fill: currentColor; }
+.m2-emptyc .t { font-family: var(--v2serif); font-weight: 900; font-size: 21px; margin-top: 14px; }
+.m2-emptyc .d { font-size: 12px; color: var(--v2muted); line-height: 1.8; margin-top: 6px; }
+.m2-emptyc .m2-btn-primary { max-width: 240px; margin: 16px auto 0; padding: 13px 22px; font-size: 14px; }
+
+/* ---- 会员码屏 qrwrap（§4.8：白卡 24 居中，码白底墨码不染色） ------------------- */
+.m2-qrwrap {
+  background: var(--v2card); border: 1px solid var(--v2line); border-radius: 24px;
+  padding: 26px 22px; text-align: center;
+}

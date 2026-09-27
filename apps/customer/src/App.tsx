@@ -20,6 +20,7 @@ import MePage from './pages/MePage'
 import MemberCardPage from './pages/MemberCardPage'
 import MemberCenterPage from './pages/MemberCenterPage'
 import MemberOpenPage from './pages/MemberOpenPage'
+import MemberRebatePage from './pages/MemberRebatePage'
 import MomentsPage from './pages/MomentsPage'
 import PetsPage from './pages/PetsPage'
 import PhiliaPage from './pages/PhiliaPage'
@@ -72,6 +73,8 @@ function ProtectedRoutes() {
           申报锚点=页面标题「会员中心」「开通会员」） */}
       <Route path="/member" element={<MemberCenterPage />} />
       <Route path="/member/open" element={<MemberOpenPage />} />
+      {/* R11b 视觉批：回馈金账本拆独立推送页（36 号档 §四 W-01；申报锚点=「回馈金」） */}
+      <Route path="/member/rebate" element={<MemberRebatePage />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )
