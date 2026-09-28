@@ -1,7 +1,8 @@
 /**
  * 右栏：挂单队列（P4）+ 今日流水简表（P7）
  *
- * - P4 挂单卡：挂单号 Montserrat 12 + 会员名/散客 · 行数 + 挂出时间 + 金额 +
+ * - P4 挂单卡：挂单号 Montserrat 12 + 会员名/散客 · 行数 + 备注行（有 note 才渲染，
+ *   测试件标注醒目位，PR-3 C2b）+ 挂出时间 + 金额 +
  *   刚挂的右上角柠檬圆点；点卡=取单（resume 恢复整单）；⋯ = 撤单入口
  *   （owner-only，manager 置灰 + title 原因）；空 = 浅木圆牌「无挂单」；
  * - P7 流水行：单号短显 Montserrat + 买家 + 金额右对齐 Montserrat + 状态/方式签
@@ -117,6 +118,12 @@ export default function HoldPanel({
                 <div className="mt-1 text-caption-xs">
                   {b.buyerName} · {b.itemCount} 项
                 </div>
+                {/* PR-3 C2b：备注行（保留标测试件标注「测试件勿动」在队列即醒目，PD-02 反对意见①） */}
+                {b.note ? (
+                  <div className="mt-1 truncate text-caption-xs text-[rgba(74,59,46,.55)]" title={b.note}>
+                    {b.note}
+                  </div>
+                ) : null}
                 <div className="mt-1.5 flex items-center justify-between text-caption-xs text-[rgba(74,59,46,.42)]">
                   <span>{b.heldAt ? `${hhmm(b.heldAt)} 挂出` : '—'}</span>
                   <span className="font-number font-semibold tabular-nums text-ink">
