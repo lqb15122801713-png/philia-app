@@ -41,13 +41,14 @@ type RuleRow = ListOut['rules'][number];
 type VersionsOut = Awaited<ReturnType<Trpc['config']['versions']['query']>>;
 type VersionRow = VersionsOut['versions'][number];
 
-type RulesDomain = 'commission' | 'xp' | 'duration' | 'member_plans';
+type RulesDomain = 'commission' | 'xp' | 'duration' | 'member_plans' | 'refund';
 
 const DOMAIN_TABS: Array<{ key: RulesDomain; label: string }> = [
   { key: 'commission', label: '提成与绩效' },
   { key: 'xp', label: 'XP 成长' },
   { key: 'duration', label: '时长系数' },
   { key: 'member_plans', label: '会员档' },
+  { key: 'refund', label: '退款' },
 ];
 
 const DOMAIN_TITLE: Record<RulesDomain, string> = {
@@ -55,14 +56,17 @@ const DOMAIN_TITLE: Record<RulesDomain, string> = {
   xp: 'XP 成长规则',
   duration: '时长系数规则',
   member_plans: '会员档规则',
+  refund: '退款规则',
 };
 
-/** 域页签分区顶部小字（duration 占位待供给 / member_plans R11a 可调口径明示） */
+/** 域页签分区顶部小字（duration 占位待供给 / member_plans R11a 可调口径明示 / refund PR-4 B1 口径） */
 const DOMAIN_NOTICE: Partial<Record<RulesDomain, string>> = {
   duration:
     '占位待供给——当前为引擎占位值照转，老板完整供给表到后在此直接改值，保存即生效、不回溯既有单据。',
   member_plans:
     '档位/价格/回馈金比例/服务折扣/多宠规则老板可调，保存即生效、新规只管新单（不回溯既有会员与单据）。',
+  refund:
+    '店长可办退款的累计阈值（超过须店主审批）与超阈值留口开关（默认关=维持硬拒）。保存即生效、只管新单不回溯；开关属流程留口，改动前先与产品侧对齐口径。',
 };
 
 /* ------------------------------------------------------------------ */
@@ -108,6 +112,8 @@ const FIELD_META: Record<string, FieldMeta> = {
   extra_pet_fen: { label: '超出每只加收', conv: 'yuan', suffix: '元' },
   max_pets: { label: '多宠上限', conv: 'plain', suffix: '只' },
   days: { label: '有效天数', conv: 'plain', suffix: '天' },
+  /* PR-4 B1 退款域（refund_rules）：阈值 fen↔元 */
+  threshold_fen: { label: '店长退款阈值（原单累计）', conv: 'yuan', suffix: '元' },
 };
 
 const MAP_LABEL: Record<string, string> = {
@@ -193,6 +199,12 @@ const ENUM_DEFAULT: Record<string, string> = {
   scope: 'bath',
 };
 
+/** 枚举字段归属域（PR-4 D5 控件串味修复：枚举选择器只在归属域渲染/补齐——
+ *  修复前 scope 选择器串到 xp/duration/member_plans/refund 全部域的规则行） */
+const ENUM_DOMAIN: Record<string, RulesDomain> = {
+  scope: 'commission',
+};
+
 /** 枚举值 → 中文签（前后值摘要/留痕用；未知值原样返回） */
 function enumValueLabel(key: string, v: string): string {
   return ENUM_OPTIONS[key]?.find((o) => o.value === v)?.label ?? v;
@@ -208,6 +220,15 @@ const INACTIVE_STATUS: Record<string, string> = {
 
 /** 危险操作 D 套：须键入的确认口令 */
 const CONFIRM_PHRASE = '确认保存';
+
+/** 重确认警示文案分域（PR-4 D6 警示文案错域修复：各域只说自己的影响面） */
+const CONFIRM_WARN: Record<RulesDomain, string> = {
+  commission: '影响全员提成与绩效核算',
+  xp: '影响全员 XP 核算',
+  duration: '影响预约引擎时长与可约槽位',
+  member_plans: '影响会员档权益与新售卡结算',
+  refund: '影响退款审批闸门与超阈值口径',
+};
 
 /* ------------------------------------------------------------------ */
 /* 换算与格式化                                                         */
@@ -424,7 +445,7 @@ interface RuleModel {
   notes: string[];
 }
 
-function buildModel(value: Record<string, unknown>): RuleModel {
+function buildModel(value: Record<string, unknown>, domain: RulesDomain): RuleModel {
   const editors: Editor[] = [];
   const notes: string[] = [];
   for (const [k, v] of Object.entries(value)) {
@@ -528,7 +549,7 @@ function buildModel(value: Record<string, unknown>): RuleModel {
       continue;
     }
     if (typeof v === 'string') {
-      if (ENUM_OPTIONS[k]) {
+      if (ENUM_OPTIONS[k] && ENUM_DOMAIN[k] === domain) {
         editors.push({
           kind: 'enum',
           path: k,
@@ -546,9 +567,10 @@ function buildModel(value: Record<string, unknown>): RuleModel {
       }
     }
   }
-  /* 枚举字段缺省补齐（valueJson 未带该键时按缺省值渲染选择器，如 scope 缺省 bath） */
+  /* 枚举字段缺省补齐（valueJson 未带该键时按缺省值渲染选择器，如 scope 缺省 bath）——
+     仅归属域补齐（PR-4 D5：非归属域不渲染不补齐，防串味控件落库） */
   for (const [k, def] of Object.entries(ENUM_DEFAULT)) {
-    if (!(k in value) && ENUM_OPTIONS[k]) {
+    if (!(k in value) && ENUM_OPTIONS[k] && ENUM_DOMAIN[k] === domain) {
       editors.push({
         kind: 'enum',
         path: k,
@@ -563,11 +585,11 @@ function buildModel(value: Record<string, unknown>): RuleModel {
 }
 
 /** 按当前规则行初始化草稿（输入框展示串） */
-function initDrafts(rules: RuleRow[]): Record<string, Record<string, string>> {
+function initDrafts(rules: RuleRow[], domain: RulesDomain): Record<string, Record<string, string>> {
   const out: Record<string, Record<string, string>> = {};
   for (const r of rules) {
     if (!r.active) continue;
-    const model = buildModel(r.valueJson);
+    const model = buildModel(r.valueJson, domain);
     const d: Record<string, string> = {};
     for (const ed of model.editors) {
       if (ed.kind === 'num') d[ed.path] = toDisplay(ed.meta.conv, ed.original);
@@ -613,7 +635,7 @@ function parseKeywords(text: string): string[] {
     .filter((s) => s !== '');
 }
 
-function computePending(activeRules: RuleRow[], drafts: Record<string, Record<string, string>>): PendingResult {
+function computePending(activeRules: RuleRow[], drafts: Record<string, Record<string, string>>, domain: RulesDomain): PendingResult {
   const pending: PendingChange[] = [];
   const errors: Record<string, Record<string, string>> = {};
   let errorCount = 0;
@@ -626,7 +648,7 @@ function computePending(activeRules: RuleRow[], drafts: Record<string, Record<st
   for (const r of activeRules) {
     const rk = r.ruleKey;
     const draft = drafts[rk] ?? {};
-    const model = buildModel(r.valueJson);
+    const model = buildModel(r.valueJson, domain);
     const after: Record<string, unknown> = { ...r.valueJson };
     const fields: PendingField[] = [];
 
@@ -935,18 +957,18 @@ function DomainPanel({ domain }: { domain: RulesDomain }) {
   const [draftsSource, setDraftsSource] = useState<unknown>(null);
   if (rulesQuery.data && rulesQuery.data !== draftsSource) {
     setDraftsSource(rulesQuery.data);
-    setDrafts(initDrafts(rulesQuery.data.rules));
+    setDrafts(initDrafts(rulesQuery.data.rules, domain));
   }
 
   const { pending, errors, errorCount } = useMemo(
-    () => computePending(activeRules, drafts),
-    [activeRules, drafts],
+    () => computePending(activeRules, drafts, domain),
+    [activeRules, drafts, domain],
   );
 
   const setDraft = (ruleKey: string, path: string, text: string) =>
     setDrafts((prev) => ({ ...prev, [ruleKey]: { ...prev[ruleKey], [path]: text } }));
 
-  const resetDrafts = () => setDrafts(initDrafts(activeRules));
+  const resetDrafts = () => setDrafts(initDrafts(activeRules, domain));
 
   /* ---------------- 保存（危险操作 D 套：重确认弹层） ---------------- */
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -1035,7 +1057,7 @@ function DomainPanel({ domain }: { domain: RulesDomain }) {
         </div>
 
         {activeRules.map((r) => {
-          const model = buildModel(r.valueJson);
+          const model = buildModel(r.valueJson, domain);
           const rowErrors = errors[r.ruleKey] ?? {};
           return (
             <div key={r.id} className="border-t border-[rgba(74,59,46,.06)] px-[17px] py-[13px]">
@@ -1360,7 +1382,7 @@ function DomainPanel({ domain }: { domain: RulesDomain }) {
       >
         <div className="space-y-3" data-testid="rules-confirm-modal">
           <p className="rounded-input bg-danger-light px-3 py-2 text-caption text-danger-deep">
-            危险操作：保存后立即生效，影响全员提成与 XP 核算。新规只约束生效后的单，不回溯历史月份与已快照数据。
+            危险操作：保存后立即生效，{CONFIRM_WARN[domain]}。新规只约束生效后的单，不回溯历史月份与已快照数据。
           </p>
           <div className="space-y-2">
             {pending.map((p) => (

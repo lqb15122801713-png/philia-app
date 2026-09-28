@@ -2472,6 +2472,59 @@ async function main(): Promise<void> {
   }
 
   /* ==================================================================
+   * 修复包 PR-4（PD-02 第 4 层 + PD-05 件 1/2 + OP-01②）：
+   * 件 2 注册默认档读 default_plan_key / 件 1 微光永久豁免（免费档永不冻结）/
+   * OP-01② 微光线上开档 sold_store_id=NULL 进全店合计
+   * ================================================================== */
+  console.log('\n[修复包PR-4] PD-05 件 1/2 + OP-01②');
+  {
+    const mkUser = async (kimiId: string, phone: string) => {
+      /* kimiId 须 seed_ 前缀（dev-login 仅允许种子用户，D-16 硬约束） */
+      const u = (await db.insert(schema.users).values({ kimiId: `seed_${kimiId}`, phone, nickname: `e2e PR-4 ${phone.slice(-4)}` }).returning())[0]!;
+      await db.insert(schema.userRoles).values({ userId: u.id, role: 'customer' });
+      return u;
+    };
+    const p4u1 = await mkUser('e2e_pr4_u1', '19900000041');
+    const p4u2 = await mkUser('e2e_pr4_u2', '19900000042');
+
+    /* 件 2：openFree 读 default_plan_key 全局键（改键→新开档走新键→改回还原） */
+    const free0 = await trpcMutate<{ membership: { planKey: string } }>('membership.openFree', { cookie: await devLogin(p4u1.id) });
+    check('PR-4 件 2 openFree 默认档=配置键现值（plan_weiguang，读 default_plan_key 非硬编码）',
+      free0.membership.planKey === 'plan_weiguang', free0.membership.planKey);
+    await trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'member_plans', changes: [{ ruleKey: 'default_plan_key', valueJson: { value: 'plan_yinghuo' } }] },
+    });
+    const free1 = await trpcMutate<{ membership: { planKey: string } }>('membership.openFree', { cookie: await devLogin(p4u2.id) });
+    check('PR-4 件 2 配置键改值即生效（openFree 开 plan_yinghuo 档，端口化落地）',
+      free1.membership.planKey === 'plan_yinghuo', free1.membership.planKey);
+    await trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'member_plans', changes: [{ ruleKey: 'default_plan_key', valueJson: { value: 'plan_weiguang' } }] },
+    });
+
+    /* 件 1：免费档 expires 过日 → 永不冻结（会员 active + 回馈金账户 active；QA40-D11 闭环） */
+    await db.update(schema.memberships)
+      .set({ expiresAt: new Date(Date.now() - 86400_000), updatedAt: new Date() })
+      .where(eq(schema.memberships.userId, p4u1.id));
+    const myP4 = await trpcQuery<{ membership: { status: string; planKey: string } }>('membership.my', { cookie: await devLogin(p4u1.id) });
+    const accP4 = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, p4u1.id)).get();
+    check('PR-4 件 1 微光永久豁免：expires 过日仍 active（会员+回馈金账户双不冻结）',
+      myP4.membership.status === 'active' && myP4.membership.planKey === 'plan_weiguang' && accP4?.status === 'active',
+      { status: myP4.membership.status, acc: accP4?.status });
+
+    /* OP-01②：sold_store_id=NULL 进全店合计（amortizedFen 计入 round(1200÷12)=100） */
+    const amo0 = await trpcQuery<{ amortizedFen: number }>('membership.amortizationStats', { cookie: ownerCookie, input: { month: currentMonth } });
+    await db.update(schema.memberships).set({ paidFen: 1200, updatedAt: new Date() }).where(eq(schema.memberships.userId, p4u2.id));
+    const amo1 = await trpcQuery<{ amortizedFen: number }>('membership.amortizationStats', { cookie: ownerCookie, input: { month: currentMonth } });
+    check('PR-4 OP-01② 微光线上开档 NULL 进全店合计（amortizedFen +100=round(1200÷12)，数值口径统一）',
+      amo1.amortizedFen - amo0.amortizedFen === 100,
+      { before: amo0.amortizedFen, after: amo1.amortizedFen });
+    /* 夹具归零：paidFen 回 0（微光本意），防污染下游 R11a 分摊回归断言期望值 */
+    await db.update(schema.memberships).set({ paidFen: 0, updatedAt: new Date() }).where(eq(schema.memberships.userId, p4u2.id));
+  }
+
+  /* ==================================================================
    * 批次 R11a（会员前置批·骨架批）验收段 —— 28 号施工令全清单 + 回归
    * 主线夹具：示例客户（萤火会员）；manager（店长，staff 绑定）售卡/续费/退会。
    * ================================================================== */

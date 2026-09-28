@@ -162,7 +162,10 @@ function W1Body({
             ¥{yuanOf(data.rebate?.balanceFen ?? 0)}
           </div>
           <div className="m2-note" style={{ marginTop: 4 }}>
-            {frozen ? mc('w1.balanceFrozen') : mc('w1.balanceLabel')} ·{' '}
+            {frozen ? mc('w1.balanceFrozen') : mc('w1.balanceLabel')}
+          </div>
+          {/* PR-4 UX P2-1：周期行独立整行（「·」前强制断行，45 号档修法②——消灭折行孤字） */}
+          <div className="m2-note" style={{ marginTop: 2 }}>
             {mc('w1.periodLine', {
               start: fmtMD(start),
               end: fmtMD(end),

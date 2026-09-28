@@ -103,6 +103,9 @@ export default function MembershipPanel({
   })
   const plans = plansQ.data?.plans ?? []
   const plan: MemberPlan | undefined = plans.find((p) => p.planKey === planKey)
+  /* 有效天数读表（PR-4 D7：消灭「365 天」硬编码——member_plans.membership_validity_days 端口值，
+     未加载时回退 365 与 server planNum 同口径） */
+  const validityDays = plansQ.data?.membershipValidityDays ?? 365
 
   /* ---------------- 售卡金额（镜像 server membershipChargeFen：档价+多宠附加） ---------------- */
   const extraCount = plan ? Math.max(0, petCount - plan.includedPets) : 0
@@ -154,7 +157,7 @@ export default function MembershipPanel({
       }),
     onSuccess: (r) => {
       toast.success(
-        `已开通「${planShortLabel(r.membership.planKey)}」会员 · 售卡单 ${r.billNo}（¥${fenToYuan(r.amountFen)}，有效期 365 天）`,
+        `已开通「${planShortLabel(r.membership.planKey)}」会员 · 售卡单 ${r.billNo}（¥${fenToYuan(r.amountFen)}，有效期 ${validityDays} 天）`,
       )
       invalidateForUser(r.membership.userId)
       onSold(r.membership)
@@ -171,7 +174,7 @@ export default function MembershipPanel({
   const quoteM = useMutation({
     mutationFn: () => trpc.membership.renew.mutate({ userId: member!.id, paySegments: [] }),
     onSuccess: (r) => {
-      toast.success(`已免费续期「${planShortLabel(r.membership.planKey)}」（0 元档，有效期顺延 365 天）`)
+      toast.success(`已免费续期「${planShortLabel(r.membership.planKey)}」（0 元档，有效期顺延 ${validityDays} 天）`)
       invalidateForUser(r.membership.userId)
       onSold(r.membership)
       onClose()
@@ -299,7 +302,7 @@ export default function MembershipPanel({
             {membership ? (
               <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]" data-testid="membership-current">
                 当前档「{planShortLabel(membership.planKey)}」· {MEMBERSHIP_STATUS_LABEL[membership.status] ?? membership.status} · 含宠物{' '}
-                {membership.petCount} 只 · 到期 {membership.expiresAt.getMonth() + 1}月{membership.expiresAt.getDate()}日
+                {membership.petCount} 只 · 到期 {membership.expiresAt.getFullYear()}年{membership.expiresAt.getMonth() + 1}月{membership.expiresAt.getDate()}日
               </div>
             ) : (
               <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">
@@ -434,7 +437,7 @@ export default function MembershipPanel({
           <div className="mt-3 rounded-[14px] bg-[#F6F1E3] px-3.5 py-3 text-caption-xs leading-relaxed text-[rgba(74,59,46,.62)]">
             <p className="flex items-center gap-1.5">
               <RefreshCcw size={13} strokeWidth={1.8} aria-hidden />
-              续费=当前档位顺延 365 天（到期冻结自今日顺延）+ 回馈金解冻；档位不变（变更请退会后重售）。
+              续费=当前档位顺延 {validityDays} 天（到期冻结自今日顺延）+ 回馈金解冻；档位不变（变更请退会后重售）。
             </p>
             <p className="mt-1">
               续费金额=当前档价+既有宠物只数附加费，由 server 实算——先点「计算续费金额」取得应收再收款。
@@ -483,7 +486,7 @@ export default function MembershipPanel({
 
       <p className="mt-3 text-caption-xs leading-relaxed text-[rgba(74,59,46,.42)]">
         <CreditCard size={12} strokeWidth={1.8} className="mr-1 inline" aria-hidden />
-        会员费=权益服务费（年费 ≠ 储值，不计储值账户/不进储值看板）；有效期 365 天自开通日；
+        会员费=权益服务费（年费 ≠ 储值，不计储值账户/不进储值看板）；有效期 {validityDays} 天自开通日；
         到期不自动续费（到期=冻结，续费解冻，退会清零回馈金）。
       </p>
     </CashierModal>

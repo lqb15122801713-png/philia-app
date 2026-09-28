@@ -105,13 +105,15 @@ export default function MemberOpenPage() {
         </div>
       ) : step === 'select' && selected ? (
         <>
-          {/* 已是会员提示条（不挡流程） */}
+          {/* 已是会员提示条（不挡流程；PR-4 PD-05 件 1：免费档不显示有效期） */}
           {alreadyMember && myQ.data?.membership ? (
             <div className="m2-pad" style={{ marginTop: 10 }}>
               <TipCard>
-                {mc('j1.alreadyMember', {
-                  date: new Date(myQ.data.membership.expiresAt).toLocaleDateString('zh-CN'),
-                })}
+                {(myQ.data.plan as V2Plan | null)?.free
+                  ? mc('j1.alreadyMemberFree')
+                  : mc('j1.alreadyMember', {
+                      date: new Date(myQ.data.membership.expiresAt).toLocaleDateString('zh-CN'),
+                    })}
               </TipCard>
             </div>
           ) : null}
@@ -182,23 +184,36 @@ export default function MemberOpenPage() {
           {/* 吸底 CTA（页内形态非弹窗） */}
           <div className="m2-ctabar">
             <div className="m2-ctabar-in">
-              <button
-                type="button"
-                className="m2-btn-primary m2-press"
-                disabled={openFreeM.isPending}
-                data-testid={selected.free ? 'open-free-btn' : 'open-pick-cta'}
-                onClick={() => {
-                  if (selected.free) openFreeM.mutate()
-                  else setStep('guide')
-                }}
-              >
-                <span>
-                  {selected.free
-                    ? mc('j1.ctaOpenFree')
-                    : mc('j1.ctaOpen', { tier: tierNameOf(selected.planKey), daily: dailyOf(selected.priceFen) })}
-                </span>
-                <span className="sub">{mc('j1.ctaSub')}</span>
-              </button>
+              {alreadyMember ? (
+                /* PR-4 UX P2-3：已是会员态 CTA=回会员中心（不再显示「开通 · 每天 ¥x」与提示条打架） */
+                <button
+                  type="button"
+                  className="m2-btn-primary m2-press"
+                  data-testid="open-already-member-cta"
+                  onClick={() => navigate('/member')}
+                >
+                  <span>{mc('j1.ctaAlreadyMember')}</span>
+                  <span className="sub">{mc('j1.ctaSub')}</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="m2-btn-primary m2-press"
+                  disabled={openFreeM.isPending}
+                  data-testid={selected.free ? 'open-free-btn' : 'open-pick-cta'}
+                  onClick={() => {
+                    if (selected.free) openFreeM.mutate()
+                    else setStep('guide')
+                  }}
+                >
+                  <span>
+                    {selected.free
+                      ? mc('j1.ctaOpenFree')
+                      : mc('j1.ctaOpen', { tier: tierNameOf(selected.planKey), daily: dailyOf(selected.priceFen) })}
+                  </span>
+                  <span className="sub">{mc('j1.ctaSub')}</span>
+                </button>
+              )}
             </div>
           </div>
         </>
