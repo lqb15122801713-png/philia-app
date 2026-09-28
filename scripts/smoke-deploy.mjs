@@ -26,7 +26,10 @@
  *     5.14（R12）退款冒烟：现金单全额退六联动 / 储值组合单 6:4 分摊回补前后值 /
  *     商品 refund 流水 / 寄养剩余晚部分退；
  *     5.15（R11a）会员冒烟：微光开档 / 萤火售卖到店付（多宠 4 只 25800）/ 回馈金返 2% 挂期次 /
- *     抵扣段仅商品（服务行 rebate 段 403）/ 日结分摊双口径 amortizationStats
+ *     抵扣段仅商品（服务行 rebate 段 403）/ 日结分摊双口径 amortizationStats；
+ *     7（PR-3 C2）挂单卫生收尾段：日结不含 held 断言 + 本次新增 held 单 voidBill 清零
+ *     （现库 held=保留标测试件 CJ-0926-03 不动）；寄养槽残留已由服务端根治
+ *     （checkout 同事务释放剩余晚，提前接回=房间可再订）。
  */
 
 const BASE = (process.env.PUBLIC_BASE_URL ?? 'http://localhost:7200').replace(/\/$/, '');
@@ -190,6 +193,21 @@ if (seedCustomer && seedMerchant && seedStaff) {
     const r = await devLogin(u.id, GATE ?? undefined);
     sessions[role] = r.cookie;
     check(`dev-login（${u.nickname} / ${role}）`, r.status === 200 && r.cookie.includes('philia_session='), `status=${r.status}`);
+  }
+}
+
+/* PR-3 C2：挂单基线——现库 held 单=保留标测试件不删（CJ-0926-03），尾部收尾段只清
+ * 本次运行新增，基线内的一张不动（含 2 张无备注保留单 HD-20260924-003/004，P-5 已拍）。
+ * 基线读取失败=收尾段整体跳过（null 哨兵）——宁可留残留，不可误撤保留件。 */
+let heldBaseline = null;
+if (sessions.merchant) {
+  const hb = await trpcQuery(sessions.merchant, 'cashier.listBills', { status: 'held' }).catch(() => null);
+  const hbBills = Array.isArray(hb) ? hb : null;
+  if (hbBills) {
+    heldBaseline = new Set(hbBills.map((b) => b.billNo));
+    check('挂单基线读取（现库 held=保留标测试件，收尾段不动）', true, `held=${heldBaseline.size}`);
+  } else {
+    check('挂单基线读取失败——收尾段将整体跳过（防误撤保留件）', false, `resp=${JSON.stringify(hb)?.slice(0, 80)}`);
   }
 }
 
@@ -914,6 +932,52 @@ if (sessions.merchant) {
     const clerkImport = await trpcMutate(clerkCookie, 'storedValue.previewImport', { csvText: demoCsv, mapping: {} }).then(() => false).catch(() => true);
     check('clerk 储值导入 403（仅老板）', clerkImport === true, '');
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* 7. PR-3 C2 收尾段（挂单卫生·防新增残留）：
+ *    7.1 日结/已收合计不含 held 单（QA40-D12 同解防回归断言——held 无支付段天然不进合计）；
+ *    7.2 本次运行新增 held 单逐个 cashier.voidBill（现库保留标测试件 CJ-0926-03 不动），
+ *        并断言「跑后 held 数=跑前」。
+ *    寄养槽残留已由服务端根治（PR-3：boarding.checkout 同事务释放退房日及之后剩余晚，
+ *    提前接回=房间可再订），5.14c 的 3 晚单退房后槽位自动释放，无需 smoke 侧清槽。 */
+if (sessions.merchant && sessions.customer && heldBaseline) {
+  const storeX = (await trpcQuery(sessions.customer, 'store.listNearby', { lat: 30.2741, lng: 120.1551 }).catch(() => null))?.stores?.[0];
+  const detailX = storeX ? await trpcQuery(sessions.customer, 'store.getWithServices', { storeId: storeX.id }).catch(() => null) : null;
+  const svcX = detailX?.services?.find((s) => s.type === 'grooming') ?? null;
+
+  // 7.1 C2c：held 前后 todayTenderStats 逐值相等
+  const tenderX0 = await trpcQuery(sessions.merchant, 'store.todayTenderStats', {}).catch(() => null);
+  const heldX = svcX
+    ? await trpcMutate(sessions.merchant, 'cashier.hold', {
+        customerId: seedCustomer?.id, items: [{ kind: 'service', refId: svcX.id }],
+        discountType: 'none', discountValue: 0, note: 'smoke PR-3 C2c held 不计合计验证',
+      }).catch((e) => ({ err: String(e?.message ?? e) }))
+    : { err: '无洗护服务项（前置）' };
+  const heldXNo = heldX?.bill?.billNo ?? null;
+  const tenderX1 = await trpcQuery(sessions.merchant, 'store.todayTenderStats', {}).catch(() => null);
+  check('PR-3 C2c 日结/已收合计不含 held 单（held 前后 todayTenderStats 逐值相等）',
+    !!heldXNo && tenderX1?.receivedTotalFen === tenderX0?.receivedTotalFen,
+    heldX?.err ?? `received ${tenderX0?.receivedTotalFen}→${tenderX1?.receivedTotalFen}`);
+
+  // 7.2 本次新增 held 单逐个 voidBill（含 7.1 验证单；基线内保留标测试件不动）
+  const heldNowBills = await trpcQuery(sessions.merchant, 'cashier.listBills', { status: 'held' }).catch(() => null);
+  const newHeld = (Array.isArray(heldNowBills) ? heldNowBills : []).filter((b) => !heldBaseline.has(b.billNo));
+  let voidedCount = 0;
+  const voidFailed = [];
+  for (const b of newHeld) {
+    const v = await trpcMutate(sessions.merchant, 'cashier.voidBill', { billNo: b.billNo, reason: 'smoke 收尾清理（PR-3 C2）' }).catch(() => null);
+    if ((v?.bill?.status ?? v?.status) === 'voided') voidedCount++;
+    else voidFailed.push(b.billNo);
+  }
+  check('PR-3 C2 收尾段：本次新增 held 单逐个 voidBill（现库测试件不动）',
+    voidedCount === newHeld.length,
+    `新增=${newHeld.length} 已撤=${voidedCount}${voidFailed.length ? ` 失败=${voidFailed}` : ''}`);
+  const heldAfterBills = await trpcQuery(sessions.merchant, 'cashier.listBills', { status: 'held' }).catch(() => null);
+  const leaked = (Array.isArray(heldAfterBills) ? heldAfterBills : []).filter((b) => !heldBaseline.has(b.billNo));
+  check('PR-3 C2 收尾段：跑后 held 数=跑前（零新增残留）',
+    leaked.length === 0,
+    leaked.length ? `残留=${leaked.map((b) => b.billNo).slice(0, 5)}` : `基线 held=${heldBaseline.size} 原样`);
 }
 
 console.log(`\n目标：${BASE}${GATE ? '（口令门已启用）' : '（口令门未设置，开发期开放口径）'}`);

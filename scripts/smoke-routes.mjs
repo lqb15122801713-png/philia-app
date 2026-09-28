@@ -25,6 +25,13 @@
  * - CDP_PORT        Edge 远程调试端口（默认 9223）
  * - SMOKE_JSON      设置时把结果 JSON 写到该路径
  * - SMOKE_TIMEOUT_MS 每路由等待上限（默认 9000）
+ * - SMOKE_APPT_ID   走查深链用预约 id（默认=规范环境历史演示单 ULID，见下「F1 口径」）
+ * - SMOKE_INVALID_ID 异常态深链用无效 id（默认全 0 ULID）
+ *
+ * F1 口径（修复包 PR-3 C1 · D-2 登记）：默认 SMOKE_APPT_ID 指向规范环境的历史演示单，
+ * 本地种子不造预约——**fresh seed 库上员工端 /execute/:id 两条红（渲染「预约不存在」
+ * 不在锚点内）=环境件非缺陷**；消红二选一：①先跑 smoke-deploy 造单后把其单号传入
+ * SMOKE_APPT_ID；②接受该两条红为已知环境口径。判红先看本段，勿当回归缺陷上报。
  *
  * 退出码：0 全绿；1 存在失败路由；2 环境不可用（Edge/端口）。
  */
@@ -51,7 +58,8 @@ const EDGE_CANDIDATES = [
 ];
 const BROWSER = EDGE_CANDIDATES.find((p) => existsSync(p));
 
-/** 走查在卷测试数据（本地 DB 种子一致；缺失时 serverDep 口径仍可达守卫） */
+/** 走查深链用预约 id（F1 口径见文件头：默认=规范环境历史演示单 ULID，fresh seed 库
+ *  /execute 两红=环境件非缺陷；判红先核此口径，或先跑 smoke-deploy 造单传入真实单号） */
 const APPT_ID = process.env.SMOKE_APPT_ID ?? '01M256D240E19GWNG2QMFV3Q8V';
 /** 无效 id（批次 staff-2：/inventory/:id 异常态——空态页仍渲染「盘点执行」标题+返回出口） */
 const INVALID_ID = process.env.SMOKE_INVALID_ID ?? '01000000000000000000000000';

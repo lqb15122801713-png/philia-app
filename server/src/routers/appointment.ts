@@ -469,12 +469,18 @@ async function occupyBoardingSlots(
  * B3-2：寄养释放——释放住宿区间全部晚的占用（各晚 -1；调用方保证在同一事务内）。
  * 幂等安全（槽位行不存在或已为 0 则不动）。客户 >4h 直消、reviewCancel 批准、
  * B3-3 商家拒单、B3-4 寄养改期统一复用本函数。
+ * PR-3 C2 根治件（PD-02 第 3 层扩一行，产品侧登记）：opts.fromNightDate 传入时
+ * 仅释放 night_date >= 该日的晚——boarding.checkout「提前接回=房间可再订」专用：
+ * 退房日（门店日界）及之后剩余晚释放，已发生晚保持占用；与 R12 剩余晚退款解耦
+ * （退房即释放槽，退款走 R12 不管槽；occurred/remaining 口径与 refund.ts:635-639 同式）。
  */
-async function releaseBoardingSlots(
+export async function releaseBoardingSlots(
   tx: DbHandle,
   args: { storeId: string; serviceId: string; start: Date; end: Date },
+  opts?: { fromNightDate?: string },
 ): Promise<void> {
   for (const night of boardingNightDates(args.start, args.end)) {
+    if (opts?.fromNightDate && night < opts.fromNightDate) continue;
     const row = await tx
       .select()
       .from(schema.boardingSlots)

@@ -2399,6 +2399,79 @@ async function main(): Promise<void> {
   }
 
   /* ==================================================================
+   * 修复包 PR-3（PD-02 第 3 层 + 增补件）：①B checkout 释放剩余晚（C2 根治：提前接回
+   * =房间可再订，与 R12 退款解耦）+ 增补 dailyLog 本店任意店员放行
+   * + C2c 日结合计不含 held 单（QA40-D12 同解防回归）
+   * ================================================================== */
+  console.log('\n[修复包PR-3] C2 根治 + dailyLog 增补 + 日结不含 held');
+  {
+    const p3Svc = (await db.select().from(schema.services).where(and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'boarding'))).get())!;
+    const p3Start = new Date(`${storeDayStr(new Date(Date.now() + 86400_000))}T15:00:00+08:00`);
+    const p3End = new Date(p3Start.getTime() + 3 * 86400_000);
+    const p3Nights = [0, 1, 2].map((i) => storeDayStr(new Date(p3Start.getTime() + i * 86400_000)));
+    const slotOf = async (night: string) =>
+      db.select().from(schema.boardingSlots)
+        .where(and(eq(schema.boardingSlots.storeId, storeId), eq(schema.boardingSlots.serviceId, p3Svc.id), eq(schema.boardingSlots.nightDate, night)))
+        .get();
+
+    /* ① trpc 造单（走 occupy 占槽）→ 核销入住 */
+    const p3Appt = await trpcMutate<{ id: string; status: string }>('appointment.create', {
+      cookie: customerCookie,
+      input: { storeId, petId, serviceId: p3Svc.id, type: 'boarding', scheduledStart: p3Start, scheduledEnd: p3End, paymentMode: 'pay_at_store', note: 'e2e PR-3 寄养 3 晚槽位夹具' },
+    });
+    const p3Before = await Promise.all(p3Nights.map(slotOf));
+    check('PR-3 C2 前置：造单占槽（3 晚 booked≥1）',
+      p3Before.every((r) => (r?.bookedCount ?? 0) >= 1),
+      p3Nights.map((n, i) => `${n}=${p3Before[i]?.bookedCount}`));
+    const p3Code = await trpcQuery<{ code: string }>('appointment.getCode', { cookie: customerCookie, input: { appointmentId: p3Appt.id } });
+    await trpcMutate('appointment.checkin', { cookie: staffCookie, input: { code: p3Code.code } });
+    const p3Stay = (await db.select().from(schema.boardingStays).where(eq(schema.boardingStays.appointmentId, p3Appt.id)).get())!;
+
+    /* ② 增补：dailyLog 本店任意店员放行（丽丽=非负责人非店长；打卡人=操作人留痕） */
+    const p3Log = await trpcMutate<{ log: { staffId: string } }>('boarding.dailyLog', {
+      cookie: liliCookie,
+      input: { stayId: p3Stay.id, logDate: storeToday, walks: 1, note: 'e2e PR-3 增补：非负责人打卡' },
+    });
+    check('PR-3 增补 dailyLog 本店任意店员放行（打卡=班次共享动作，daily_logs.staff_id=操作人留痕）',
+      p3Log.log.staffId === staffRow2.id,
+      { staffId: p3Log.log.staffId, expected: staffRow2.id });
+
+    /* ③ ①B：提前退房（首晚未发生即退）→ 剩余晚槽全释放 → 同区间可再订 */
+    await trpcMutate('boarding.checkout', { cookie: staffCookie, input: { appointmentId: p3Appt.id } });
+    const p3After = await Promise.all(p3Nights.map(slotOf));
+    check('PR-3 C2①B 提前退房→剩余晚槽释放（3 晚 booked 全归零；与 R12 退款解耦）',
+      p3After.every((r) => (r?.bookedCount ?? 9) === 0),
+      p3Nights.map((n, i) => `${n}=${p3After[i]?.bookedCount}`));
+    const p3Rebook = await trpcMutate<{ id: string }>('appointment.create', {
+      cookie: customerCookie,
+      input: { storeId, petId, serviceId: p3Svc.id, type: 'boarding', scheduledStart: p3Start, scheduledEnd: p3End, paymentMode: 'pay_at_store', note: 'e2e PR-3 槽释放后再订验证' },
+    }).then((r) => ({ id: r.id, err: null as string | null }))
+      .catch((e) => ({ id: null as string | null, err: String(e?.message ?? e) }));
+    check('PR-3 C2①B 释放后同区间可再订（无 CONFLICT 已订满）', p3Rebook.err === null, p3Rebook.err ?? p3Rebook.id);
+    if (p3Rebook.id) {
+      const p3Cancel = await trpcMutate<{ outcome: string }>('appointment.cancel', {
+        cookie: customerCookie, input: { appointmentId: p3Rebook.id, reason: 'e2e PR-3 夹具清扫' },
+      });
+      check('PR-3 C2 夹具清扫：再订单 >4h 客户直消（槽全释放，环境零残留）', p3Cancel.outcome === 'cancelled', p3Cancel.outcome);
+    }
+
+    /* ④ C2c：日结合计不含 held 单（held 无支付段天然不进合计——防回归断言+收尾 voidBill） */
+    const tenderC0 = await trpcQuery<{ receivedTotalFen: number }>('store.todayTenderStats', { cookie: ownerCookie });
+    const heldC = await trpcMutate<{ bill: { billNo: string } }>('cashier.hold', {
+      cookie: ownerCookie,
+      input: { items: [{ kind: 'service', refId: service.id }], discountType: 'none', discountValue: 0, note: 'e2e PR-3 C2c held 不计合计验证' },
+    });
+    const tenderC1 = await trpcQuery<{ receivedTotalFen: number }>('store.todayTenderStats', { cookie: ownerCookie });
+    check('PR-3 C2c 日结/已收合计不含 held 单（held 前后 todayTenderStats 逐值相等）',
+      tenderC1.receivedTotalFen === tenderC0.receivedTotalFen,
+      { before: tenderC0.receivedTotalFen, after: tenderC1.receivedTotalFen });
+    const voidC = await trpcMutate<{ bill: { status: string } }>('cashier.voidBill', {
+      cookie: ownerCookie, input: { billNo: heldC.bill.billNo, reason: 'e2e PR-3 C2c 收尾清理' },
+    });
+    check('PR-3 C2c 收尾：held 单 voidBill 撤单（零残留）', voidC.bill.status === 'voided', voidC.bill.status);
+  }
+
+  /* ==================================================================
    * 批次 R11a（会员前置批·骨架批）验收段 —— 28 号施工令全清单 + 回归
    * 主线夹具：示例客户（萤火会员）；manager（店长，staff 绑定）售卡/续费/退会。
    * ================================================================== */

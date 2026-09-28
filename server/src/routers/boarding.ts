@@ -26,6 +26,7 @@ import { schema } from '../db';
 import { emitEvent, broadcastNow, type Db as BusDb } from '../realtime/bus';
 import { EventType } from '../realtime/events';
 import { awardXp, loadXpRules } from '../services/xpAward';
+import { releaseBoardingSlots, storeWallclock } from './appointment';
 import {
   assertFrontdeskStaff,
   customerProcedure,
@@ -206,7 +207,9 @@ export const boardingRouter = router({
       return { stay, created: true as const };
     }),
 
-  /** 每日打卡（staff 本店；UPSERT by (stay_id, log_date)；写完发 boarding.daily_update） */
+  /** 每日打卡（staff 本店任意店员；UPSERT by (stay_id, log_date)；写完发 boarding.daily_update）
+   *  PR-3 增补（产品侧已批，同 checkout 修正口径）：打卡=班次共享动作非责任动作——
+   *  放行=本店任意店员（staffStorewide）；打卡人留痕=daily_logs.staff_id=操作人。 */
   dailyLog: staffProcedure
     .input(
       z.object({
@@ -228,7 +231,7 @@ export const boardingRouter = router({
       if (!stay) {
         throw new TRPCError({ code: 'NOT_FOUND', message: '寄养住宿记录不存在' });
       }
-      const appt = await getBoardingAppointment(ctx, stay.appointmentId);
+      const appt = await getBoardingAppointment(ctx, stay.appointmentId, { staffStorewide: true });
       const petName = await petNameOf(ctx, appt.petId);
 
       const now = new Date();
@@ -309,6 +312,8 @@ export const boardingRouter = router({
    * PR-2 修正版（#33 issuecomment-5864881857 + PD-05 件 3）：放行口径=负责人本人 OR
    * 本店店长/店主 OR 本店任意店员（staffStorewide）——退房=结算动作非责任动作；
    * 责任归属仍记负责人（staff_id 不动，差评 −8 扣负责人），操作人留痕=晚数 XP 发退房操作人。
+   * PR-3 C2 根治：提前接回=房间可再订——同事务释放退房日及之后剩余晚槽位
+   * （历史「checkout 不释放槽=每跑永占」缺口封死；与 R12 剩余晚退款解耦）。
    */
   checkout: staffProcedure
     .input(z.object({ appointmentId: z.string().min(1) }))
@@ -348,6 +353,22 @@ export const boardingRouter = router({
           .set({ status: 'completed', completedAt: now, updatedAt: now })
           .where(eq(schema.appointments.id, appt.id))
           .returning();
+
+        /* PR-3 C2 根治件（PD-02 第 3 层扩一行）：提前接回=房间可再订——同事务释放
+         * 退房日（门店日界）及之后的剩余晚槽位；已发生晚保持占用。与 R12 剩余晚
+         * 退款解耦：退房即释放槽，退款走 R12 不管槽（occurred/remaining 同式口径）。 */
+        const cw = storeWallclock(now);
+        const checkoutDay = `${cw.y}-${String(cw.m).padStart(2, '0')}-${String(cw.day).padStart(2, '0')}`;
+        await releaseBoardingSlots(
+          tx as unknown as BusDb,
+          {
+            storeId: appt.storeId,
+            serviceId: appt.serviceId,
+            start: appt.scheduledStart,
+            end: appt.scheduledEnd,
+          },
+          { fromNightDate: checkoutDay },
+        );
         const outboxId = await emitEvent(
           tx as unknown as BusDb,
           `appointment:${appt.id}`,
