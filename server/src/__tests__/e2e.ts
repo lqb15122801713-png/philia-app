@@ -2357,10 +2357,30 @@ async function main(): Promise<void> {
       check('PR-2 A5② in_boarding 改派（本店仅 1 名寄养技能员工，跳过=通过）', true);
     }
 
-    /* ③ 退房 completed → 客户 2 星差评 → 负责人 −8 落账（CJ-0925-11 封口）
-       （checkout 需负责人本人操作——用负责人员工 cookie） */
-    const leadCookie = await devLogin(leadExpected.userId);
-    await trpcMutate('boarding.checkout', { cookie: leadCookie, input: { appointmentId: a5Appt.id } });
+    /* ③ 退房放行修正版（#33 issuecomment-5864881857 + PD-05 件 3）：退房=结算动作非责任
+       动作——核销人 A → 退房人 B（本店任意店员，非负责人非店长）= 放行；责任归属仍=负责人
+       （差评 −8 扣负责人不变），操作人留痕=寄养晚数 XP 发退房操作人 B。 */
+    const checkoutOp = boardingStaffAll.find((s) => s.id !== leadExpected.id && s.id === staffRow2.id)
+      ?? boardingStaffAll.find((s) => s.id !== leadExpected.id)
+      ?? leadExpected;
+    const opCookie = await devLogin(checkoutOp.userId);
+    const a5Checkout = await trpcMutate<{ appointment: { status: string } }>('boarding.checkout', {
+      cookie: opCookie, input: { appointmentId: a5Appt.id },
+    });
+    check('PR-2 A5③ 退房放行=本店任意店员（核销人 A→退房人 B 放行，PR-2 修正版）',
+      a5Checkout.appointment.status === 'completed' && checkoutOp.id !== leadExpected.id,
+      { status: a5Checkout.appointment.status, operator: checkoutOp.id, lead: leadExpected.id });
+    const a5Stay = (await db.select().from(schema.boardingStays).where(eq(schema.boardingStays.appointmentId, a5Appt.id)).get())!;
+    const a5OpXp = await db.select().from(schema.xpEvents)
+      .where(and(
+        eq(schema.xpEvents.staffId, checkoutOp.id),
+        eq(schema.xpEvents.source, 'service'),
+        eq(schema.xpEvents.sourceId, `boarding:${a5Stay.id}`),
+      ))
+      .get();
+    check('PR-2 A5③ 操作人留痕（寄养晚数 XP 发退房操作人 B，责任归属不动）',
+      a5OpXp !== undefined && a5OpXp.staffId === checkoutOp.id,
+      { staffId: a5OpXp?.staffId, points: a5OpXp?.points });
     await trpcMutate('appointment.review', {
       cookie: customerCookie,
       input: { appointmentId: a5Appt.id, rating: 2, review: 'e2e A5 差评验证', anonymous: false },

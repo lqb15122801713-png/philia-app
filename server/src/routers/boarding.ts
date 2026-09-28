@@ -59,8 +59,11 @@ const mealItem = z.object({
 /**
  * 取寄养预约并校验「本店」归属（staff：本店且未指派/指派给本人；merchant：本店）。
  * 预约不存在 NOT_FOUND；非寄养类 / 越店 / 越权抛相应错误。
- * S1-R1：opts.staffStorewide=true 时 staff 放宽为「本店任意员工」（仅 checkinStay
- * 在 assertFrontdeskStaff 之后使用——前台到店登记豁免归属；其余过程不传，口径不变）。
+ * S1-R1：opts.staffStorewide=true 时 staff 放宽为「本店任意员工」。使用面两处：
+ * ① checkinStay 在 assertFrontdeskStaff 之后（前台到店登记豁免归属）；
+ * ② checkout/stayForStaff（PR-2 修正版，#33 issuecomment-5864881857 + PD-05 件 3：
+ *    退房=结算动作非责任动作，放行=负责人本人 OR 本店店长/店主 OR 本店任意店员；
+ *    责任归属仍记负责人 staff_id，操作人留痕=晚数 XP 发退房操作人）。
  */
 async function getBoardingAppointment(
   ctx: Context & { user: NonNullable<Context['user']> },
@@ -303,11 +306,14 @@ export const boardingRouter = router({
    * 收款仍走 appointment.markPaid（completed 后商家在财务页确认）。
    * R10：同事事务增——寄养服务 XP（+2/晚 × 晚数，发给退房核销员工，xp_service_boarding_night）
    * + 客户评价引导通知（type='review.prompt'，link=/appointments/{id}，完成推送入口）。
+   * PR-2 修正版（#33 issuecomment-5864881857 + PD-05 件 3）：放行口径=负责人本人 OR
+   * 本店店长/店主 OR 本店任意店员（staffStorewide）——退房=结算动作非责任动作；
+   * 责任归属仍记负责人（staff_id 不动，差评 −8 扣负责人），操作人留痕=晚数 XP 发退房操作人。
    */
   checkout: staffProcedure
     .input(z.object({ appointmentId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      const appt = await getBoardingAppointment(ctx, input.appointmentId);
+      const appt = await getBoardingAppointment(ctx, input.appointmentId, { staffStorewide: true });
       const stay = await ctx.db
         .select()
         .from(schema.boardingStays)
@@ -493,11 +499,13 @@ export const boardingRouter = router({
    * 返回 boarding_stays + 该 stay 的 boarding_daily_logs（按 log_date 升序；
    * log_date 为 ISO 文本，字典序即时间序）。
    * 尚未入住登记（stay 未创建）时返回 { stay: null, logs: [] }，不视为错误。
+   * PR-2 修正版（#33 issuecomment-5864881857）：读侧放行=本店任意店员
+   * （staffStorewide）——当班同事互看寄养现状是班次共享动作，非责任动作。
    */
   stayForStaff: staffProcedure
     .input(z.object({ appointmentId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
-      const appt = await getBoardingAppointment(ctx, input.appointmentId);
+      const appt = await getBoardingAppointment(ctx, input.appointmentId, { staffStorewide: true });
 
       const stay = await ctx.db
         .select()
