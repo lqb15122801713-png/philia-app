@@ -341,6 +341,7 @@ function DonePanel({
   validityDays: number
   onBack: () => void
 }) {
+  const navigate = useNavigate()
   return (
     <div className="m2-pad" data-testid="open-done" style={{ marginTop: 14, paddingBottom: 40 }}>
       <div className="m2-card" style={{ padding: '26px 20px', textAlign: 'center' }}>
@@ -360,6 +361,12 @@ function DonePanel({
       <button type="button" data-testid="open-done-back" className="m2-btn-primary m2-press" style={{ marginTop: 16 }} onClick={onBack}>
         {mc('j1.backMember')}
       </button>
+      {/* PR-5 UX P3-2：完成页下半屏配重——宠物档案引导（45 号档改进方向取实现净者） */}
+      <div style={{ textAlign: 'center', marginTop: 14 }}>
+        <button type="button" className="m2-link" data-testid="open-done-goto-pets" onClick={() => navigate('/philia/pets')}>
+          {mc('j1.doneGotoPets')}
+        </button>
+      </div>
     </div>
   )
 }

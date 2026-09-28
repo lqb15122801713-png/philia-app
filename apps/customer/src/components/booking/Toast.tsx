@@ -31,7 +31,7 @@ export function useToast(durationMs = 3200) {
       key={msg.id}
       role="alert"
       className={`fixed left-1/2 top-5 z-toast max-w-[86vw] -translate-x-1/2 rounded-full px-4 py-2.5 text-body shadow-elevated ${
-        msg.kind === 'error' ? 'bg-danger-light text-danger-deep' : 'bg-success-light text-success-deep'
+        msg.kind === 'error' ? 'bg-danger-light text-danger-deep' : 'bg-[#2E2318] text-[#F2DFA6]'
       }`}
     >
       {msg.text}

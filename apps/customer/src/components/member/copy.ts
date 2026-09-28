@@ -27,6 +27,8 @@ export const MEMBER_COPY = {
   'a3.quitLink': '退会说明 ›',
   'a3.renewSheetTitle': '续费 · 到店办理',
   'a3.renewSheetBody': '内测期续费请到店收银台办理（现金/微信/支付宝）。到期不自动续费；续费后有效期顺延 {days} 天，冻结的回馈金同步解冻。',
+  /* PR-5 UX P3-3：纯信息弹层补「知道了」次级钮（定稿同类弹层惯例） */
+  'a3.sheetGotIt': '知道了',
   'a3.quitSheetTitle': '退会说明',
   'a3.quitSheetBody': '退会请联系门店办理。年费按剩余整月 × 月均价折算退回（内测期线下原路退回），回馈金余额清零、档位终止，全程留痕。',
 
@@ -53,6 +55,8 @@ export const MEMBER_COPY = {
   /* PR-4 PD-05 件 1：微光态提示条不显示有效期（永久豁免，无到期语义） */
   'j1.alreadyMemberFree': '你已是会员（免费档永久有效）。升级付费档享回馈金与服务折扣，到店收银台即可办理。',
   'j1.backMember': '回会员中心 ›',
+  /* PR-5 UX P3-2：完成页下半屏配重——宠物档案引导（45 号档改进方向取实现净者） */
+  'j1.doneGotoPets': '看看它的档案 ›',
   'j1.freeOpenedTitle': '微光会员已开通',
   'j1.freeOpenedBody': '免费档即时生效{date}。升级萤火/烛光/暖阳可享商品回馈金与服务折扣，到店收银台即可办理。',
   'j1.storePayTitle': '请到店完成开通',

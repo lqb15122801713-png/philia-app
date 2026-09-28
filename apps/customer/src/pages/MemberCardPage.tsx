@@ -65,7 +65,7 @@ export default function MemberCardPage() {
           />
         </div>
       ) : (
-        <div className="m2-pad" style={{ marginTop: 14, paddingBottom: 60 }}>
+        <div className="m2-pad" style={{ marginTop: 8, paddingBottom: 60 }}>
           {/* 卡面横卡（92 高码屏规格；非会员→微光卡面引导态） */}
           <CardFace
             planKey={m?.planKey ?? 'plan_weiguang'}
@@ -137,6 +137,14 @@ export default function MemberCardPage() {
               {mc('q1.nonMemberCta')}
             </button>
           ) : null}
+
+          {/* PR-5 UX P3-2：mono 注脚配重（下半屏过空——内容组上移+品牌注脚） */}
+          <div
+            className="m2-mono"
+            style={{ marginTop: 26, textAlign: 'center', fontSize: 9, letterSpacing: '.3em', color: 'var(--v2muted)' }}
+          >
+            {mc('card.logo')}
+          </div>
         </div>
       )}
     </div>
