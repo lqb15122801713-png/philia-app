@@ -11,6 +11,7 @@
 import { usePhiliaClient } from '@philia/shared';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Trophy } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import PageHeader from '@/components/PageHeader';
 
 /** XP 来源中文标签（schema xp_events.source） */
@@ -254,6 +255,20 @@ export default function XpPage() {
                       </p>
                       <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.42)]">
                         <span className="u1-num">{fmtTs(ev.createdAt)}</span>
+                        {/* A4 标注粒度：寄养晚数行区分（「完成服务 +6」=寄养 3 晚×2 不再误读） */}
+                        {ev.ruleKey === 'xp_service_boarding_night' && ev.boardingNights !== null ? (
+                          <span className="ml-1.5 rounded-chip bg-sunken px-1 py-0.5">寄养 {ev.boardingNights} 晚</span>
+                        ) : null}
+                        {/* A6 单号链接：来源单可溯（好评/差评/完成服务） */}
+                        {ev.appointmentId ? (
+                          <Link
+                            to={`/execute/${ev.appointmentId}`}
+                            className="u1-num ml-1.5 underline decoration-[rgba(74,59,46,.3)] underline-offset-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            单 …{ev.appointmentId.slice(-6)}
+                          </Link>
+                        ) : null}
                         {ev.dropped ? (
                           <span className="ml-1.5 rounded-chip bg-sunken px-1 py-0.5">超出日上限，未计分</span>
                         ) : null}

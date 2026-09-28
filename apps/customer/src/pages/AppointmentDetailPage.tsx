@@ -21,6 +21,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { EventType, getApiBase, safeUuid, useEventSource, useMe, usePhiliaClient, type EventEnvelope } from '@philia/shared';
 import BookingCode from '@/components/booking/BookingCode';
 import PageHeader from '@/components/PageHeader';
+import ReviewPanel from '@/components/live/ReviewPanel';
 import BoardingDateRangePicker, { checkinAt } from '@/components/booking/BoardingDateRangePicker';
 import SlotPicker from '@/components/booking/SlotPicker';
 import { ErrorState } from '@/components/home/common';
@@ -74,26 +75,7 @@ function navLinks(store: { name: string; address: string | null; lat: number | n
   };
 }
 
-function StarRating({ value, onChange }: { value: number; onChange?: (v: number) => void }) {
-  return (
-    <div className="flex gap-1.5">
-      {[1, 2, 3, 4, 5].map((n) => (
-        <button
-          key={n}
-          type="button"
-          disabled={!onChange}
-          onClick={() => onChange?.(n)}
-          aria-label={`${n} 星`}
-          className={onChange ? 'transition active:scale-90' : 'cursor-default'}
-        >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill={n <= value ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" className={n <= value ? 'text-brand-primary' : 'text-line-strong'}>
-            <path d="M12 2.5 15 9l7 .8-5.2 4.7 1.5 6.9L12 17.7 5.7 21.4l1.5-6.9L2 9.8 9 9z" />
-          </svg>
-        </button>
-      ))}
-    </div>
-  );
-}
+/* 评价星级件=ReviewPanel 内聚（PR-2 A1：本文件私有 StarRating 已随内联表单一并删除） */
 
 export default function AppointmentDetailPage() {
   const { id = '' } = useParams();
@@ -128,10 +110,6 @@ export default function AppointmentDetailPage() {
   // v1.1-b3 B3-4：寄养改期——重选入住/退房日（打开面板时预填当前区间）
   const [newCheckin, setNewCheckin] = useState<Date | null>(null);
   const [newCheckout, setNewCheckout] = useState<Date | null>(null);
-  const [rating, setRating] = useState(5);
-  const [reviewText, setReviewText] = useState('');
-  // R10 最小评价域：匿名可选（默认关，同权计分）；一句话选填 ≤140 字
-  const [reviewAnonymous, setReviewAnonymous] = useState(false);
 
   // 改期槽位数据源（仅洗护）：与预约向导同源（store.getWithServices 带当前 serviceId，
   // 槽位按该服务时长过滤连续槽），展开改期面板时才拉取；寄养改期走两阶段日期重选，无需槽位
@@ -168,20 +146,36 @@ export default function AppointmentDetailPage() {
     onError: (err) => showToast(friendlyError(err, '取消失败，请稍后再试')),
   });
 
+  /* 评价（completed 态）：review 走 ReviewPanel 合规件（PR-2 A1）——评分 state 由组件自持 */
   const reviewM = useMutation({
-    mutationFn: () =>
-      trpc.appointment.review.mutate({
-        appointmentId: id,
-        rating,
-        ...(reviewText.trim() ? { review: reviewText.trim() } : {}),
-        anonymous: reviewAnonymous,
-      }),
+    mutationFn: (input: { rating: number; review?: string; anonymous?: boolean }) =>
+      trpc.appointment.review.mutate({ appointmentId: id, ...input }),
     onSuccess: () => {
       invalidate();
       showToast('感谢评价！', 'info');
     },
     onError: (err) => showToast(friendlyError(err, '评价提交失败')),
   });
+
+  /** 分享到服务相册（同 live 页工艺：Web Share 优先，降级复制链接） */
+  const shareReview = async () => {
+    const url = `${window.location.origin}/appointments/${id}/live`;
+    const text = '宝贝在菲丽亚完成了服务，全程照片可见～';
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ title: '菲丽亚服务相册', text, url });
+      } catch {
+        // 用户取消分享，无需提示
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast('链接已复制，快发给家人朋友吧', 'info');
+    } catch {
+      showToast('复制失败，请手动复制地址栏链接', 'info');
+    }
+  };
 
   // v1.1-b2 B2-6 / v1.1-b3 B3-4：客户自助改期（服务端校验：本人 + pending/confirmed +
   // 距原开始 >4h，寄养以入住日首晚计）。寄养必传 scheduledStart+scheduledEnd
@@ -750,60 +744,20 @@ export default function AppointmentDetailPage() {
         </section>
       ) : null}
 
-      {/* 评价（completed） */}
+      {/* 评价（completed）——修复包 PR-2 A1/A2：删内联表单（默认 5 星/28px 星钮/未选可提交
+          三处踩线），复用 live 页 ReviewPanel 合规件（默认 0 星/44px/未选禁提交） */}
       {appt.status === 'completed' ? (
-        <section className="mt-4 rounded-card bg-card p-4 shadow-card">
-          <h2 className="text-title">服务评价</h2>
-          {appt.rating !== null ? (
-            <div className="mt-2">
-              <StarRating value={appt.rating} />
-              {appt.review ? (
-                <p className="mt-2 rounded-tag bg-sunken px-3 py-2 text-body text-ink">{appt.review}</p>
-              ) : null}
-            </div>
-          ) : (
-            <div className="mt-3">
-              <StarRating value={rating} onChange={setRating} />
-              <textarea
-                value={reviewText}
-                onChange={(e) => setReviewText(e.target.value)}
-                maxLength={140}
-                rows={3}
-                placeholder="这次服务怎么样？说说毛孩子的体验…"
-                className="mt-3 w-full rounded-input border border-line bg-card px-3.5 py-3 text-body placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
-              />
-              <p className="mt-1 text-right text-caption text-ink-placeholder">
-                一句话选填 · {reviewText.length}/140
-              </p>
-              <div className="mt-2 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-body text-ink">匿名评价</p>
-                  <p className="mt-0.5 text-caption text-ink-secondary">匿名评价同权计分</p>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={reviewAnonymous}
-                  aria-label="匿名评价"
-                  onClick={() => setReviewAnonymous((v) => !v)}
-                  className={`relative h-6 w-11 shrink-0 rounded-full transition ${reviewAnonymous ? 'bg-brand-primary' : 'bg-line'}`}
-                >
-                  <span
-                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-card shadow-card transition-all ${reviewAnonymous ? 'left-[22px]' : 'left-0.5'}`}
-                  />
-                </button>
-              </div>
-              <button
-                type="button"
-                disabled={reviewM.isPending}
-                onClick={() => reviewM.mutate()}
-                className="mt-2 h-11 w-full rounded-full bg-brand-primary text-body font-semibold text-ink shadow-card disabled:opacity-60"
-              >
-                {reviewM.isPending ? '提交中…' : '提交评价'}
-              </button>
-            </div>
-          )}
-        </section>
+        <div className="mt-4">
+          <ReviewPanel
+            existingRating={appt.rating}
+            existingReview={appt.review}
+            submitting={reviewM.isPending}
+            onSubmit={(rating, text, anonymous) =>
+              reviewM.mutate({ rating, review: text.length > 0 ? text : undefined, anonymous })
+            }
+            onShare={() => void shareReview()}
+          />
+        </div>
       ) : null}
 
       <p className="mt-6 text-center text-caption text-ink-placeholder">

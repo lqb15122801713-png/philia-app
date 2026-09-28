@@ -30,12 +30,20 @@ export interface CheckinFormSubmit {
   roomNo?: string;
   checkinWeightKg: number;
   belongings: Array<{ name: string; photoUrl?: string }>;
+  /** PR-2 A5：寄养负责人首次指派（仅未指派单；已指派改派走店长） */
+  leadStaffId?: string;
 }
 
 export interface CheckinFormProps {
   appointmentId: string;
   /** 再编辑时传入初值（页面用 key 强制重挂载） */
   initial?: CheckinFormInitial;
+  /** PR-2 A5 寄养负责人选择：assignedId=已指派（锁定+改派引导）；selfId=当前员工（兜底默认） */
+  leadStaff?: {
+    assignedId: string | null;
+    selfId: string | null;
+    options: Array<{ id: string; name: string; skills?: string[] | null }>;
+  };
   submitting: boolean;
   onSubmit(input: CheckinFormSubmit): void;
   /** 编辑模式：取消返回信息卡 */
@@ -59,6 +67,7 @@ const newRow = (): BelongingDraft => ({ key: safeUuid(), name: '' });
 export default function CheckinForm({
   appointmentId,
   initial,
+  leadStaff,
   submitting,
   onSubmit,
   onCancel,
@@ -67,6 +76,13 @@ export default function CheckinForm({
   const [roomNo, setRoomNo] = useState(initial?.roomNo ?? '');
   const [weightText, setWeightText] = useState(initial?.weightText ?? '');
   const [rows, setRows] = useState<BelongingDraft[]>(initial?.belongings ?? []);
+  const [leadStaffId, setLeadStaffId] = useState(
+    // 默认=当班寄养岗（首位 boarding 技能员工），兜底=核销人（PD-05 件 3）
+    leadStaff?.assignedId ??
+      leadStaff?.options.find((o) => (o.skills ?? []).includes('boarding'))?.id ??
+      leadStaff?.selfId ??
+      '',
+  );
 
   // 单个隐藏 file input 复用：activeKeyRef 记录当前为哪一行拍照
   const fileRef = useRef<HTMLInputElement>(null);
@@ -118,11 +134,17 @@ export default function CheckinForm({
       onError('物品照片上传中，请稍候再提交');
       return;
     }
+    if (leadStaff && !leadStaff.assignedId && !leadStaffId) {
+      onError('请选择寄养负责人');
+      return;
+    }
     onSubmit({
       appointmentId,
       roomNo: roomNo.trim() ? roomNo.trim().slice(0, 32) : undefined,
       checkinWeightKg: Math.round(kg * 10) / 10,
       belongings,
+      // 仅未指派单提交首次指派（已指派变更走店长 assign，不随表单提交）
+      ...(leadStaff && !leadStaff.assignedId && leadStaffId ? { leadStaffId } : {}),
     });
   };
 
@@ -160,6 +182,37 @@ export default function CheckinForm({
           <span className="text-body-sm text-ink-secondary">kg（一位小数）</span>
         </div>
       </label>
+
+      {/* 寄养负责人（PR-2 A5：未指派单首次指派；已指派锁定+改派引导店长） */}
+      {leadStaff ? (
+        <label className="mt-4 block">
+          <span className="text-body-sm font-semibold text-ink">
+            寄养负责人 <span className="text-danger-deep">*</span>
+          </span>
+          {leadStaff.assignedId ? (
+            <p className="mt-1.5 rounded-control bg-sunken px-3 py-2.5 text-body-sm text-ink">
+              {leadStaff.options.find((s) => s.id === leadStaff.assignedId)?.name ?? '已指派'}
+              <span className="ml-2 text-caption text-ink-secondary">改派请找店长</span>
+            </p>
+          ) : (
+            <>
+              <select
+                value={leadStaffId}
+                onChange={(e) => setLeadStaffId(e.target.value)}
+                className="mt-1.5 h-staff-btn w-full rounded-control border border-line bg-canvas px-3 text-body-sm text-ink focus:border-brand-primary focus:outline-none"
+                data-testid="boarding-lead-select"
+              >
+                {leadStaff.options.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-caption text-ink-secondary">默认=核销人本人；差评扣分归属该负责人（改派找店长）</p>
+            </>
+          )}
+        </label>
+      ) : null}
 
       {/* 随身物品动态行 */}
       <div className="mt-4">

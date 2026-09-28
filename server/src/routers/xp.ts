@@ -18,7 +18,7 @@
  *   生产路径为 index.ts 每月 1 日定时器，两者同走 settleXpMonth，unique(staff_id,month) 幂等）。
  */
 import { TRPCError } from '@trpc/server';
-import { and, asc, desc, eq, gte, lt, or, sql, type SQLWrapper } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, lt, or, sql, type SQLWrapper } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import {
@@ -218,8 +218,69 @@ export const xpRouter = router({
         .orderBy(desc(schema.xpEvents.createdAt), desc(schema.xpEvents.id))
         .limit(limit);
       const last = rows[rows.length - 1];
+
+      /* A6 好评单号链接（修复包 PR-2 · 24 号档 P2-3）：明细行带单号可溯——
+         review/penalty 行 sourceId=reviewId（联 reviews.appointmentId）；
+         service 行 sourceId=appointmentId 或 boarding:{stayId}（联 boarding_stays）；
+         其余来源（attendance/exam/cover）无单号=null。 */
+      const reviewIds = rows.filter((r) => r.source === 'review' || r.source === 'penalty').map((r) => r.sourceId);
+      const stayIds = rows
+        .filter((r) => r.source === 'service' && r.sourceId.startsWith('boarding:'))
+        .map((r) => r.sourceId.slice('boarding:'.length));
+      const reviewMap = new Map<string, string>();
+      if (reviewIds.length > 0) {
+        const rs = await ctx.db
+          .select({ id: schema.reviews.id, appointmentId: schema.reviews.appointmentId })
+          .from(schema.reviews)
+          .where(inArray(schema.reviews.id, reviewIds));
+        for (const r of rs) reviewMap.set(r.id, r.appointmentId);
+      }
+      const stayMap = new Map<string, string>();
+      if (stayIds.length > 0) {
+        const ss = await ctx.db
+          .select({ id: schema.boardingStays.id, appointmentId: schema.boardingStays.appointmentId })
+          .from(schema.boardingStays)
+          .where(inArray(schema.boardingStays.id, stayIds));
+        for (const s of ss) stayMap.set(s.id, s.appointmentId);
+      }
+      /* A4 XP 标注粒度（修复包 PR-2 · 24 号档 P3）：出参补 ruleKey（区分洗护单/寄养晚），
+         寄养行补晚数（points ÷ 每晚分值，分值读 xp_rules 现值）——「完成服务 +6」
+         不再与「+2/单」误读撞车。 */
+      const boardingRule = await ctx.db
+        .select({ valueJson: schema.xpRules.valueJson })
+        .from(schema.xpRules)
+        .where(and(eq(schema.xpRules.ruleKey, 'xp_service_boarding_night'), eq(schema.xpRules.active, true)))
+        .get();
+      const perNightFen = Number((boardingRule?.valueJson as { points?: number } | undefined)?.points ?? 2) || 2;
+      const items = rows.map((r) => {
+        const isBoarding = r.source === 'service' && r.sourceId.startsWith('boarding:');
+        return {
+          ...r,
+          appointmentId:
+            r.source === 'review' || r.source === 'penalty'
+              ? (reviewMap.get(r.sourceId) ?? null)
+              : r.source === 'service'
+                ? isBoarding
+                  ? (stayMap.get(r.sourceId.slice('boarding:'.length)) ?? null)
+                  : r.sourceId
+                : null,
+          ruleKey:
+            r.source === 'service'
+              ? isBoarding
+                ? 'xp_service_boarding_night'
+                : 'xp_service_order'
+              : r.source === 'review'
+                ? r.points >= 6
+                  ? 'xp_review_5_star'
+                  : 'xp_review_4_star'
+                : r.source === 'penalty'
+                  ? 'xp_penalty_low_star'
+                  : null,
+          boardingNights: isBoarding ? Math.round(r.points / perNightFen) : null,
+        };
+      });
       return {
-        items: rows,
+        items,
         nextCursor: rows.length === limit && last ? { createdAt: last.createdAt, id: last.id } : null,
       };
     }),

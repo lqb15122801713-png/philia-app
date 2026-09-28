@@ -84,9 +84,9 @@ export interface EventEnvelope {
 /** 洗护六步步骤 key → 中文名（通知文案用） */
 export const StepKeyLabel: Record<string, string> = {
   disinfection: '消毒',
-  precheck: '术前检查',
+  precheck: '预检',
   grooming: '洗护',
   detail: '精修',
-  before_after: '前后对比照',
-  confirm: '家长确认',
+  before_after: '交付检查',
+  confirm: '完成确认',
 };

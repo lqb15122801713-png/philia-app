@@ -1195,25 +1195,46 @@ export const appointmentRouter = router({
    * 零写库、零事件——防旧链路/旧测试重复调用断裂）。
    */
   confirm: merchantManagerProcedure // M1-补2 条件①：接单确认属调度管理，clerk 403（矩阵）
-    .input(z.object({ appointmentId: z.string().min(1) }))
+    .input(z.object({ appointmentId: z.string().min(1), staffId: z.string().min(1).optional() }))
     .mutation(async ({ ctx, input }) => {
       const appt = await getAppointmentOrThrow(ctx.db, input.appointmentId);
       if (appt.storeId !== ctx.user.storeId) forbidden('非本店预约，无权操作');
       // S4 幂等：已 confirmed → 直接返回现状（不重写 updated_at、不重复发 confirmed 事件）
       if (appt.status === 'confirmed') return appt;
       if (appt.status !== 'pending') badRequest(`当前状态（${appt.status}）不可确认，仅 pending 可确认`);
+      /* PR-2 A5（PD-05 件 3）：寄养受理=负责人指派——boarding 确认时
+         staffId 传值 ?? 确认人（若确认人为本店员工）落定；两者皆无则留 NULL，
+         由入住核销（checkin）强制落定（客户线上创建无员工上下文，受理硬闸在核销侧）。 */
+      let boardingLeadId: string | null = null;
+      if (appt.type === 'boarding') {
+        boardingLeadId = input.staffId ?? ctx.user.staffId ?? null;
+        if (boardingLeadId) {
+          const leadStaff = await ctx.db
+            .select({ id: schema.staff.id, status: schema.staff.status })
+            .from(schema.staff)
+            .where(and(eq(schema.staff.id, boardingLeadId), eq(schema.staff.storeId, ctx.user.storeId!)))
+            .get();
+          if (!leadStaff) badRequest('寄养负责人须为本店员工');
+          if (leadStaff.status !== 'active') badRequest('寄养负责人已停职，不可指派');
+        }
+      }
       const petName = await petNameOf(ctx.db, appt.petId);
       let outboxId = '';
       const updated = await ctx.db.transaction(async (tx) => {
         const row = await tx
           .update(schema.appointments)
-          .set({ status: 'confirmed', updatedAt: new Date() })
+          .set({
+            status: 'confirmed',
+            updatedAt: new Date(),
+            ...(boardingLeadId ? { staffId: boardingLeadId } : {}),
+          })
           .where(eq(schema.appointments.id, appt.id))
           .returning()
           .then((r) => r[0]!);
         outboxId = await emitEvent(txDb(tx), `user:${appt.customerId}`, EventType.AppointmentConfirmed, {
           appointmentId: appt.id,
           petName,
+          ...(boardingLeadId ? { leadStaffId: boardingLeadId } : {}),
         });
         return row;
       });
@@ -1289,8 +1310,13 @@ export const appointmentRouter = router({
     .mutation(async ({ ctx, input }) => {
       const appt = await getAppointmentOrThrow(ctx.db, input.appointmentId);
       if (appt.storeId !== ctx.user.storeId) forbidden('非本店预约，无权操作');
-      if (appt.status !== 'pending' && appt.status !== 'confirmed') {
-        badRequest(`当前状态（${appt.status}）不可指派，仅 pending/confirmed 可指派`);
+      /* PR-2 A5（PD-05 件 3）：寄养负责人改派——boarding 在住（in_boarding）亦可改派
+         （店长权限+留痕）；其余状态/类型照旧 */
+      const reassignable =
+        appt.status === 'pending' || appt.status === 'confirmed' ||
+        (appt.type === 'boarding' && appt.status === 'in_boarding');
+      if (!reassignable) {
+        badRequest(`当前状态（${appt.status}）不可指派，仅 pending/confirmed 可指派（寄养在住可改派负责人）`);
       }
       const staffRow = await ctx.db
         .select()
@@ -1639,8 +1665,10 @@ export const appointmentRouter = router({
     .input(
       z.union([
         // staff-2 R9-C：可选 receptionistId=核销改挂实际接待人（默认带出当前值是 UI 的事）
-        z.object({ qr: z.string().min(1), receptionistId: z.string().min(1).optional() }), // 二维码原文 JSON
-        z.object({ code: z.string().regex(MANUAL_CODE_RE, '人工核销码格式不正确'), receptionistId: z.string().min(1).optional() }), // 6 位人工码
+        // 修复包 PR-2 A5（PD-05 件 3 · CJ-0925-11）：leadStaffId=寄养负责人指派
+        // （boarding 专用；默认=核销人，可改派）
+        z.object({ qr: z.string().min(1), receptionistId: z.string().min(1).optional(), leadStaffId: z.string().min(1).optional() }), // 二维码原文 JSON
+        z.object({ code: z.string().regex(MANUAL_CODE_RE, '人工核销码格式不正确'), receptionistId: z.string().min(1).optional(), leadStaffId: z.string().min(1).optional() }), // 6 位人工码
       ]),
     )
     .mutation(async ({ ctx, input }) => {
@@ -1716,11 +1744,52 @@ export const appointmentRouter = router({
           fail('BAD_REQUEST', '接待人须为本店员工');
         }
       }
+      /* PR-2 A5（PD-05 件 3 · CJ-0925-11）：寄养单受理（核销入住）必须落定寄养负责人——
+         负责人=leadStaffId 传值 ?? 默认「当班寄养岗」（核销人具 boarding 技能=核销人；
+         否则本店首位 boarding 技能在职员工；兜底=核销人，永不为 NULL）；
+         显式传 leadStaffId=改派前置（校验本店在职）。差评 −8 归属链路（staff_id）接通。 */
+      let boardingLeadId: string | null = null;
+      if (appt.type === 'boarding') {
+        const selfStaff = ctx.user.staffId
+          ? await ctx.db
+              .select({ id: schema.staff.id, skills: schema.staff.skills })
+              .from(schema.staff)
+              .where(eq(schema.staff.id, ctx.user.staffId))
+              .get()
+        : undefined;
+        const selfHasBoarding = (selfStaff?.skills ?? []).includes('boarding');
+        let defaultLeadId: string | null = selfHasBoarding ? ctx.user.staffId! : null;
+        if (!defaultLeadId) {
+          const boardingStaff = await ctx.db
+            .select({ id: schema.staff.id, skills: schema.staff.skills })
+            .from(schema.staff)
+            .where(and(eq(schema.staff.storeId, staffStoreId), eq(schema.staff.status, 'active')))
+            .orderBy(schema.staff.createdAt);
+          defaultLeadId =
+            boardingStaff.find((s) => (s.skills ?? []).includes('boarding'))?.id ??
+            ctx.user.staffId ??
+            null;
+        }
+        boardingLeadId = input.leadStaffId ?? defaultLeadId;
+        if (!boardingLeadId) {
+          fail('BAD_REQUEST', '寄养入住须落定寄养负责人（默认=当班寄养岗，可改派）');
+        } else if (input.leadStaffId) {
+          const leadStaff = await ctx.db
+            .select({ id: schema.staff.id, status: schema.staff.status })
+            .from(schema.staff)
+            .where(and(eq(schema.staff.id, input.leadStaffId), eq(schema.staff.storeId, staffStoreId)))
+            .get();
+          if (!leadStaff) fail('BAD_REQUEST', '寄养负责人须为本店员工');
+          if (leadStaff.status !== 'active') fail('BAD_REQUEST', '寄养负责人已停职，不可指派');
+        }
+      }
       const outboxIds: string[] = [];
       const result = await ctx.db.transaction(async (tx) => {
         const nextStatus = appt.type === 'grooming' ? 'in_service' : 'in_boarding';
         // S1-R1：前台核销=到店登记，不改写 staff_id——已指派保留原指派，未指派保持 NULL，
         // 归属由商家派单 / S4 决定；不再补发 appointment.assigned。
+        // PR-2 A5 例外：boarding=寄养负责人落定（staff_id=负责人，覆盖写；差评 −8 归属
+        // 链路（CJ-0925-11）以 staff_id 为准）。
         const row = await tx
           .update(schema.appointments)
           .set({
@@ -1729,6 +1798,8 @@ export const appointmentRouter = router({
             updatedAt: now,
             // R9-C：核销改挂接待人落点（null=不改挂，保留原值）
             ...(newReceptionistId ? { receptionistId: newReceptionistId } : {}),
+            // PR-2 A5：寄养负责人落定（boarding 限定）
+            ...(boardingLeadId ? { staffId: boardingLeadId } : {}),
           })
           .where(eq(schema.appointments.id, appt.id))
           .returning()
@@ -1811,6 +1882,20 @@ export const appointmentRouter = router({
         outboxIds.push(
           await emitEvent(txDb(tx), `store:${appt.storeId}`, EventType.AppointmentCheckedIn, checkedInPayload),
         );
+        // PR-2 A5：寄养负责人指派留痕（appointment.assigned 双频道，by='checkin'）——
+        // 差评 −8 归属以 staff_id 为准（CJ-0925-11），指派动作全留痕可查询可取证
+        if (boardingLeadId) {
+          const leadUser = await tx
+            .select({ userId: schema.staff.userId })
+            .from(schema.staff)
+            .where(eq(schema.staff.id, boardingLeadId))
+            .get();
+          const assignedPayload = { appointmentId: appt.id, staffId: boardingLeadId, petName, by: 'checkin' as const };
+          if (leadUser) {
+            outboxIds.push(await emitEvent(txDb(tx), `staff:${boardingLeadId}`, EventType.AppointmentAssigned, assignedPayload));
+          }
+          outboxIds.push(await emitEvent(txDb(tx), `user:${appt.customerId}`, EventType.AppointmentAssigned, assignedPayload));
+        }
         // S1-R1：claimed 恒 false（核销不认领；字段保留仅为响应形状兼容）
         return { appointment: row, steps, boardingStay, claimed: false };
       });
