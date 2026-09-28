@@ -59,9 +59,9 @@ export interface StepDef {
 export const STEP_DEFS: ReadonlyArray<StepDef> = [
   { stepKey: 'disinfection', stepOrder: 1, minPhotos: 1, maxPhotos: 3 }, // 消毒工具确认
   { stepKey: 'precheck', stepOrder: 2, minPhotos: 2, maxPhotos: 6 }, // 预检
-  { stepKey: 'grooming', stepOrder: 3, minPhotos: 3, maxPhotos: 9 }, // 洗澡美容
-  { stepKey: 'detail', stepOrder: 4, minPhotos: 2, maxPhotos: 6 }, // 细节对比照
-  { stepKey: 'before_after', stepOrder: 5, minPhotos: 2, maxPhotos: 2 }, // 前后对比照（before/after 各 1）
+  { stepKey: 'grooming', stepOrder: 3, minPhotos: 3, maxPhotos: 9 }, // 洗护
+  { stepKey: 'detail', stepOrder: 4, minPhotos: 2, maxPhotos: 6 }, // 精修
+  { stepKey: 'before_after', stepOrder: 5, minPhotos: 2, maxPhotos: 2 }, // 交付检查（before/after 各 1）
   { stepKey: 'confirm', stepOrder: 6, minPhotos: 0, maxPhotos: 0 }, // 完成确认（无需照片）
 ];
 
@@ -93,7 +93,7 @@ export const StepLabel: Record<StepKey, string> = {
   precheck: '预检',
   grooming: '洗护',
   detail: '精修',
-  before_after: '前后对比照',
+  before_after: '交付检查',
   confirm: '完成确认',
 };
 
@@ -265,7 +265,7 @@ export const serviceStepRouter = router({
       if (input.stepKey === 'before_after' && input.photos.some((p) => p.tag === 'normal')) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: '前后对比照必须为每张照片标记 before / after 标签',
+          message: `「${StepLabel.before_after}」必须为每张照片标记 before / after 标签`,
         });
       }
 
@@ -406,7 +406,7 @@ export const serviceStepRouter = router({
         if (beforeCnt < 1 || afterCnt < 1) {
           throw new TRPCError({
             code: 'BAD_REQUEST',
-            message: `前后对比照需 before / after 各至少 1 张未失效照片（当前 before ${beforeCnt} 张、after ${afterCnt} 张）`,
+            message: `「${StepLabel.before_after}」需 before / after 各至少 1 张未失效照片（当前 before ${beforeCnt} 张、after ${afterCnt} 张）`,
           });
         }
       }

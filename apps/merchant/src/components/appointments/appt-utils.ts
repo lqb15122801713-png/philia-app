@@ -110,7 +110,7 @@ export const assignSourceLabel = (s: string | null | undefined): string | null =
 
 /* ------------------------------------------------------------------ */
 /* 六步展示名（U3 任务书冻结口径；key 顺序即流程顺序，不可乱序渲染）        */
-/* 注：共享包 steps.ts 另有一套运营向全称（消毒工具确认/洗澡美容/细节对比照…）， */
+/* 注：共享包 steps.ts 另有一套全称（消毒工具确认/洗护/精修…，已按冻结表归一）， */
 /* 商家端规格书 §13 明确「同 §4 stepper」——详情页/单约监控/Hub 动态行统一用本表 */
 /* ------------------------------------------------------------------ */
 
@@ -119,7 +119,7 @@ export const STEP_ROWS = [
   { key: 'precheck', name: '预检' },
   { key: 'grooming', name: '洗护' },
   { key: 'detail', name: '精修' },
-  { key: 'before_after', name: '前后对比照' },
+  { key: 'before_after', name: '交付检查' },
   { key: 'confirm', name: '完成确认' },
 ] as const;
 

@@ -113,6 +113,9 @@ export const boardingRouter = router({
         checkinWeightKg: z.number().positive('入住体重须大于 0').max(500),
         belongings: z.array(belongingItem).max(20).default([]),
         roomNo: z.string().trim().max(32).optional(),
+        /** PR-2 A5（PD-05 件 3）：寄养负责人选择——仅未指派（staff_id=NULL，如历史在住单）
+         * 时首次指派有效；已指派的改派走店长（appointment.assign，留痕）。 */
+        leadStaffId: z.string().min(1).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -127,7 +130,45 @@ export const boardingRouter = router({
         });
       }
 
+      /* PR-2 A5：负责人补指派（staff_id=NULL 的历史/旁路在住单） */
+      let leadAssignId: string | null = null;
+      if (appt.staffId === null) {
+        leadAssignId = input.leadStaffId ?? ctx.user.staffId ?? null;
+        if (!leadAssignId) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: '该寄养单未指派负责人——请在选择寄养负责人后登记（默认=核销人，改派找店长）' });
+        }
+        const leadStaff = await ctx.db
+          .select({ id: schema.staff.id, status: schema.staff.status })
+          .from(schema.staff)
+          .where(and(eq(schema.staff.id, leadAssignId), eq(schema.staff.storeId, ctx.user.storeId!)))
+          .get();
+        if (!leadStaff) throw new TRPCError({ code: 'BAD_REQUEST', message: '寄养负责人须为本店员工' });
+        if (leadStaff.status !== 'active') throw new TRPCError({ code: 'BAD_REQUEST', message: '寄养负责人已停职，不可指派' });
+      } else if (input.leadStaffId && input.leadStaffId !== appt.staffId) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: '该单已指派寄养负责人——改派请找店长办理（店长权限+留痕）' });
+      }
+
       const now = new Date();
+      /* PR-2 A5：首次指派落库+留痕（appointment.assigned by='checkinStay'） */
+      if (leadAssignId) {
+        await ctx.db
+          .update(schema.appointments)
+          .set({ staffId: leadAssignId, updatedAt: now })
+          .where(eq(schema.appointments.id, appt.id));
+        const leadUser = await ctx.db
+          .select({ userId: schema.staff.userId })
+          .from(schema.staff)
+          .where(eq(schema.staff.id, leadAssignId))
+          .get();
+        const assignedPayload = { appointmentId: appt.id, staffId: leadAssignId, by: 'checkinStay' as const };
+        const assignedIds: string[] = [];
+        if (leadUser) {
+          assignedIds.push(await emitEvent(ctx.db, `staff:${leadAssignId}`, EventType.AppointmentAssigned, assignedPayload));
+        }
+        assignedIds.push(await emitEvent(ctx.db, `user:${appt.customerId}`, EventType.AppointmentAssigned, assignedPayload));
+        assignedIds.forEach(broadcastNow);
+      }
+
       const existing = await ctx.db
         .select()
         .from(schema.boardingStays)

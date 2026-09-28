@@ -4,7 +4,7 @@
  * 结构（试样 .b-ev.live.svc，整块薄荷底）：标题 +「服务中」签（纸面底）/
  * 时间·时长·已核销行 / 六步进度段（薄荷 done / 柠檬 now / 墨灰未到）/
  * 当前步+已传照行 / 柠檬主钮「继续服务 · 第 N 步{步名}」→ /execute/:id。
- * 数据：serviceStep.list（现成）；步名用服务端 StepLabel 口径（三端一致）。
+ * 数据：serviceStep.list（现成）；步名用冻结表六名（CJ-0919-01，STEP_NAME 常量）。
  */
 
 import { SERVICE_STEPS, usePhiliaClient } from '@philia/shared';
@@ -13,13 +13,13 @@ import { Link } from 'react-router-dom';
 import { fmtMin, minutesOf } from './deckUtils';
 import type { TodayItem } from '../utils';
 
-/** 步名口径=服务端 StepLabel（server/src/routers/serviceStep.ts，三端一致） */
+/** 步名口径=冻结表六名（CJ-0919-01，与 shared SERVICE_STEPS 一致） */
 export const STEP_NAME: Record<string, string> = {
-  disinfection: '消毒',
+  disinfection: '消毒工具确认',
   precheck: '预检',
   grooming: '洗护',
   detail: '精修',
-  before_after: '前后对比照',
+  before_after: '交付检查',
   confirm: '完成确认',
 };
 

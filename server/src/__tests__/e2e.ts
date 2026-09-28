@@ -2309,6 +2309,76 @@ async function main(): Promise<void> {
 
 
   /* ==================================================================
+   * 修复包 PR-2 A5（PD-05 件 3 · CJ-0925-11）：寄养负责人指派 + 差评 −8 扣负责人
+   * ================================================================== */
+  console.log('\n[修复包PR-2] A5 寄养负责人 + 差评 −8');
+  {
+    /* 夹具：寄养单（confirmed 未核销；code 直插绕开扫码环节） */
+    const bSvc = (await db.select().from(schema.services).where(and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'boarding'))).get())!;
+    const a5Start = new Date(`${storeToday}T15:00:00+08:00`);
+    const a5Appt = (await db.insert(schema.appointments).values({
+      code: 'E2EA55', customerId: customerUser!.id, storeId, petId, serviceId: bSvc.id,
+      type: 'boarding', scheduledStart: a5Start, scheduledEnd: new Date(a5Start.getTime() + 2 * 86400_000),
+      status: 'confirmed', priceFen: 39800, note: 'e2e PR-2 A5 寄养 2 晚单（夹具直插）',
+    }).returning())[0]!;
+
+    /* ① 核销入住（默认=当班寄养岗：本店首位 boarding 技能在职员工） */
+    const boardingStaffAll = (await db.select().from(schema.staff)
+      .where(and(eq(schema.staff.storeId, storeId), eq(schema.staff.status, 'active')))
+      .orderBy(schema.staff.createdAt).all());
+    const leadExpected = boardingStaffAll.find((s) => (s.skills ?? []).includes('boarding'))!;
+    const a5Checkin = await trpcMutate<{ appointment: { status: string; staffId: string | null } }>('appointment.checkin', {
+      cookie: staffCookie, input: { code: 'E2EA55' },
+    });
+    const a5ApptAfter = await db.select().from(schema.appointments).where(eq(schema.appointments.id, a5Appt.id)).get();
+    check('PR-2 A5① 寄养核销入住→负责人=当班寄养岗（staff_id 永不为 NULL，PD-05 默认口径）',
+      a5Checkin.appointment.status === 'in_boarding' && a5ApptAfter?.staffId === leadExpected.id,
+      { status: a5Checkin.appointment.status, staffId: a5ApptAfter?.staffId, expected: leadExpected.id });
+    const a5AssignedRows = (await db.select().from(schema.eventOutbox).where(eq(schema.eventOutbox.eventType, 'appointment.assigned')).all())
+      .filter((r) => {
+        const p = r.payload as Record<string, unknown> | null;
+        return p?.appointmentId === a5Appt.id && p?.by === 'checkin';
+      });
+    check('PR-2 A5① 指派留痕（appointment.assigned by=checkin 事件在卷）', a5AssignedRows.length >= 1, a5AssignedRows.length);
+
+    /* ② 改派（in_boarding 可改派，店长权限+留痕）——改派给另一位 boarding 技能员工再改回 */
+    const secondBoarding = boardingStaffAll.find((s) => (s.skills ?? []).includes('boarding') && s.id !== leadExpected.id);
+    if (secondBoarding) {
+      await trpcMutate('appointment.assign', {
+        cookie: managerCookie, input: { appointmentId: a5Appt.id, staffId: secondBoarding.id },
+      });
+      const a5Reassigned = await db.select().from(schema.appointments).where(eq(schema.appointments.id, a5Appt.id)).get();
+      check('PR-2 A5② in_boarding 改派负责人（assign 店长权限，staff_id 变更留痕）',
+        a5Reassigned?.staffId === secondBoarding.id, { staffId: a5Reassigned?.staffId });
+      await trpcMutate('appointment.assign', {
+        cookie: managerCookie, input: { appointmentId: a5Appt.id, staffId: leadExpected.id },
+      });
+    } else {
+      check('PR-2 A5② in_boarding 改派（本店仅 1 名寄养技能员工，跳过=通过）', true);
+    }
+
+    /* ③ 退房 completed → 客户 2 星差评 → 负责人 −8 落账（CJ-0925-11 封口）
+       （checkout 需负责人本人操作——用负责人员工 cookie） */
+    const leadCookie = await devLogin(leadExpected.userId);
+    await trpcMutate('boarding.checkout', { cookie: leadCookie, input: { appointmentId: a5Appt.id } });
+    await trpcMutate('appointment.review', {
+      cookie: customerCookie,
+      input: { appointmentId: a5Appt.id, rating: 2, review: 'e2e A5 差评验证', anonymous: false },
+    });
+    const a5ReviewRow = (await db.select().from(schema.reviews).where(eq(schema.reviews.appointmentId, a5Appt.id)).get())!;
+    const a5Penalty = (await db.select().from(schema.xpEvents)
+      .where(and(
+        eq(schema.xpEvents.staffId, leadExpected.id),
+        eq(schema.xpEvents.source, 'penalty'),
+        eq(schema.xpEvents.sourceId, a5ReviewRow.id),
+      ))
+      .get())!;
+    check('PR-2 A5③ 寄养单差评 2 星 → 负责人 XP −8 落账（xp_penalty_low_star，source=penalty，挂本评价 reviewId）',
+      a5Penalty.points === -8 && a5Penalty.staffId === leadExpected.id,
+      { points: a5Penalty.points, staffId: a5Penalty.staffId, sourceId: a5Penalty.sourceId, reviewId: a5ReviewRow.id });
+  }
+
+  /* ==================================================================
    * 批次 R11a（会员前置批·骨架批）验收段 —— 28 号施工令全清单 + 回归
    * 主线夹具：示例客户（萤火会员）；manager（店长，staff 绑定）售卡/续费/退会。
    * ================================================================== */

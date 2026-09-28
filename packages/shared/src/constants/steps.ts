@@ -36,9 +36,9 @@ export interface ServiceStepDef {
 export const SERVICE_STEPS: readonly ServiceStepDef[] = [
   { stepKey: 'disinfection', stepOrder: 1, name: '消毒工具确认', minPhotos: 1, maxPhotos: 3 },
   { stepKey: 'precheck', stepOrder: 2, name: '预检', minPhotos: 2, maxPhotos: 6 },
-  { stepKey: 'grooming', stepOrder: 3, name: '洗澡美容', minPhotos: 3, maxPhotos: 9 },
-  { stepKey: 'detail', stepOrder: 4, name: '细节对比照', minPhotos: 2, maxPhotos: 6 },
-  { stepKey: 'before_after', stepOrder: 5, name: '前后对比照', minPhotos: 2, maxPhotos: 2 },
+  { stepKey: 'grooming', stepOrder: 3, name: '洗护', minPhotos: 3, maxPhotos: 9 },
+  { stepKey: 'detail', stepOrder: 4, name: '精修', minPhotos: 2, maxPhotos: 6 },
+  { stepKey: 'before_after', stepOrder: 5, name: '交付检查', minPhotos: 2, maxPhotos: 2 },
   { stepKey: 'confirm', stepOrder: 6, name: '完成确认', minPhotos: 0, maxPhotos: 0 },
 ] as const;
 

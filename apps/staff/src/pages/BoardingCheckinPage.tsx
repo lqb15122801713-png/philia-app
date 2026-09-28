@@ -134,6 +134,21 @@ export default function BoardingCheckinPage() {
     enabled: !!aid,
     refetchInterval: sseDown ? 30_000 : false,
   });
+
+  /* PR-2 A5：寄养负责人选择数据源（本店在职员工公开列表） */
+  const apptA5 = detailQuery.data?.appointment;
+  const staffListQ = useQuery({
+    queryKey: ['store', 'listStaffPublic', apptA5?.storeId ?? ''],
+    queryFn: () => trpc.store.listStaffPublic.query({ storeId: apptA5!.storeId }),
+    enabled: !!apptA5?.storeId,
+  });
+  const leadStaffProps = apptA5
+    ? {
+        assignedId: apptA5.staffId ?? null,
+        selfId: user?.staffId ?? null,
+        options: staffListQ.data?.staff ?? [],
+      }
+    : undefined;
   const appt = detailQuery.data?.appointment;
   const pet = detailQuery.data?.pet;
 
@@ -470,6 +485,7 @@ export default function BoardingCheckinPage() {
         <div className="px-[22px]">
           <CheckinForm
             appointmentId={aid!}
+            leadStaff={leadStaffProps}
             submitting={checkinMutation.isPending}
             onSubmit={(input) => checkinMutation.mutate(input)}
             onError={showToast}
@@ -481,6 +497,7 @@ export default function BoardingCheckinPage() {
             key={`edit-${stay.id}`}
             appointmentId={aid!}
             initial={stayToInitial(stay)}
+            leadStaff={leadStaffProps}
             submitting={checkinMutation.isPending}
             onSubmit={(input) => checkinMutation.mutate(input)}
             onCancel={() => setEditingStay(false)}

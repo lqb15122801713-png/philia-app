@@ -23,6 +23,7 @@ import { useMemo, useState } from 'react';
 import PageHeader from '@/components/PageHeader';
 import Toast, { useToast } from '@/components/today/Toast';
 import { dayKeyOf, hhmm, pad2, weekdayLabel } from '@/components/today/utils';
+import { INSECURE_CONTEXT_GEO_MESSAGE, isSecureContextOk } from '@/lib/secureContext';
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 type AttRecord = RouterOutputs['attendance']['myRecords']['records'][number];
@@ -149,6 +150,11 @@ export default function AttendancePage() {
   const punch = (kind: 'in' | 'out') => {
     setGeoError(null);
     setPendingKind(kind);
+    // 非安全源前置分支：HTTP 下 geolocation 调用恒回 PERMISSION_DENIED，真因是环境而非权限
+    if (!isSecureContextOk()) {
+      setGeoError(INSECURE_CONTEXT_GEO_MESSAGE);
+      return;
+    }
     if (!('geolocation' in navigator)) {
       setGeoError('当前设备不支持定位，请更换设备或联系店长');
       return;

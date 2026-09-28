@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { X, SwitchCamera, Keyboard } from 'lucide-react';
 import { useCheckin, type CheckinResult } from './useCheckin';
 import ManualCodeInput from './ManualCodeInput';
+import { INSECURE_CONTEXT_CAMERA_MESSAGE, isSecureContextOk } from '@/lib/secureContext';
 
 export interface QrScannerProps {
   open: boolean;
@@ -96,6 +97,13 @@ export default function QrScanner({ open, onClose, onCheckedIn }: QrScannerProps
     stopStream();
     setErrorMsg('');
     setStatus('starting');
+
+    // 非安全源前置分支：HTTP 下 getUserMedia 恒回 NotAllowedError，真因是环境而非权限
+    if (!isSecureContextOk()) {
+      setStatus('error');
+      setErrorMsg(INSECURE_CONTEXT_CAMERA_MESSAGE);
+      return;
+    }
 
     if (!navigator.mediaDevices?.getUserMedia) {
       setStatus('error');
