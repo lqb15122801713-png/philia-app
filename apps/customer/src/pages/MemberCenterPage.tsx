@@ -97,6 +97,16 @@ export default function MemberCenterPage() {
         <p className="m2-note">
           {mc('a3.renewSheetBody', { days: plansQ.data?.membershipValidityDays ?? 365 })}
         </p>
+        {/* PR-5 UX P3-3：纯信息弹层「知道了」次级钮（定稿同类弹层惯例） */}
+        <button
+          type="button"
+          data-testid="renew-sheet-got-it"
+          className="m2-press"
+          style={{ marginTop: 14, width: '100%', padding: '13px 22px', borderRadius: 18, border: '1px solid var(--v2line)', background: 'var(--v2card)', color: 'var(--v2ink)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}
+          onClick={() => setSheet(null)}
+        >
+          {mc('a3.sheetGotIt')}
+        </button>
       </Sheet>
       <Sheet open={sheet === 'quit'} onClose={() => setSheet(null)} title={mc('a3.quitSheetTitle')}>
         <p className="m2-note">{mc('a3.quitSheetBody')}</p>

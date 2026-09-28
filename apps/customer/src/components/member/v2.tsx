@@ -143,7 +143,7 @@ export function CardFace({
   return (
     <div
       className={`m2-cardface m2-cf-t${t}${selectable ? ' selable' : ''}${selected ? ' sel' : ''}`}
-      style={{ height, padding: padding ?? (height >= 200 ? '20px 22px' : '16px 18px') }}
+      style={{ height, padding: padding ?? (height >= 200 ? '20px 22px' : '10px 16px 14px') }}
       onClick={onClick}
       role={selectable ? 'button' : undefined}
       aria-pressed={selectable ? selected : undefined}
@@ -151,15 +151,20 @@ export function CardFace({
     >
       <div className="cf-logo">{mc('card.logo')}</div>
       {stamp ? <div className="cf-stamp">{stamp}</div> : null}
-      <div className="cf-name" style={{ fontSize: nameSize, marginTop: height >= 200 ? 16 : 10 }}>
+      <div className="cf-name" style={{ fontSize: nameSize, marginTop: height >= 200 ? 16 : 3 }}>
         {tierNameOf(planKey)}会员
       </div>
-      <div className="cf-price" style={{ fontSize: height >= 200 ? 13 : 12, marginTop: 6 }}>
+      {/* PR-5 UX P3-1：92 高码屏横卡行距收紧（价格行不再贴卡面下缘，下内边距=14px） */}
+      <div className="cf-price" style={{ fontSize: height >= 200 ? 13 : 12, marginTop: height >= 200 ? 6 : 2 }}>
         {priceText}
       </div>
-      <div className="cf-claim" style={{ marginTop: 9 }}>
-        {claimText}
-      </div>
+      {/* PR-5 UX P3-1：92 高码屏横卡不渲染 claim（四行必然溢出贴缘——定稿横卡=logo+档名+价，
+         价格行下内边距=14px 达标；claim 在 deck/持有态大卡（≥200）照常） */}
+      {height >= 200 ? (
+        <div className="cf-claim" style={{ marginTop: 9 }}>
+          {claimText}
+        </div>
+      ) : null}
       {noText ? <div className="cf-no">{noText}</div> : null}
     </div>
   )
