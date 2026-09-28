@@ -47,7 +47,11 @@ export const MEMBER_COPY = {
   'j1.ctaOpen': '开通{tier} · 每天 ¥{daily}',
   'j1.ctaOpenFree': '免费注册 · 领个身份',
   'j1.ctaSub': '到期不自动续费 · 随时退卡',
+  /* PR-4 UX P2-3：已是会员态 CTA 不再显示「开通 · 每天 ¥x」（与提示条信息打架），改回会员中心 */
+  'j1.ctaAlreadyMember': '已是会员 · 去会员中心 ›',
   'j1.alreadyMember': '你已是会员（有效期至 {date}）。续费或升级请到店收银台办理。',
+  /* PR-4 PD-05 件 1：微光态提示条不显示有效期（永久豁免，无到期语义） */
+  'j1.alreadyMemberFree': '你已是会员（免费档永久有效）。升级付费档享回馈金与服务折扣，到店收银台即可办理。',
   'j1.backMember': '回会员中心 ›',
   'j1.freeOpenedTitle': '微光会员已开通',
   'j1.freeOpenedBody': '免费档即时生效{date}。升级萤火/烛光/暖阳可享商品回馈金与服务折扣，到店收银台即可办理。',
@@ -64,7 +68,8 @@ export const MEMBER_COPY = {
   'w1.pushLabel': '回馈金 · REBATE LEDGER',
   'w1.ringCenter': '本周期',
   'w1.balanceLabel': '可用余额',
-  'w1.periodLine': '周期 {start} – {end} · {month} 月 {day} 日前到账',
+  /* PR-4 UX P2-1：到账日改紧凑「M.D 前到账」——消灭 mono 溯源行折行孤字（45 号档修法①） */
+  'w1.periodLine': '周期 {start} – {end} · {month}.{day} 前到账',
   'w1.logsTitle': '明细',
   'w1.yearTotal': '本年累计 ¥{amount}',
   'w1.typeGrant': '消费回馈',
@@ -135,6 +140,8 @@ export const MEMBER_COPY = {
   'rules.r1Free': '微光免费档无回馈金 · 付费档 {pcts}% · 仅抵商品',
   'rules.r2': '上月 26 日 – 本月 25 日结算 · 次月 {day} 日前到账（故障顺延 ≤3 天并明示）',
   'rules.r3': '{days} 天有效 · 到期未续冻结 · 续费即解冻 · 退卡清零',
+  /* PR-4 PD-05 件 1：规则明面 r3 微光态换口径——免费档永久普通会员，无到期无冻结 */
+  'rules.r3Free': '免费档永久有效 · 无到期无冻结 · 随时可升级付费档',
   'rules.r4': '回馈金不提现 · 不转让 · 不产息',
   'rules.r5': '用回馈金支付的部分不再返还',
   'rules.r6': '退货按退款比例扣回已返回馈金，余额不足扣至 0 不负账',

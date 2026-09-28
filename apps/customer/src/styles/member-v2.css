@@ -85,7 +85,13 @@
 
 /* ---- 卡面 cardface（§4.8/§1.3 四档色谱；槽位虚线框=标注件，施工已移除） -------- */
 .m2-cardface { position: relative; border-radius: 18px; overflow: hidden; color: var(--gold-deep); }
-.m2-cardface .cf-logo { font-family: var(--v2mono); font-size: 10px; letter-spacing: .3em; }
+.m2-cardface .cf-logo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--v2mono); font-size: 10px; letter-spacing: .3em;
+}
+/* PR-4 UX P2-2（45 号档短期修法）：cf-logo 行两端对齐撑满——蜡封/线稿/NO. 槽移除后
+   右半侧空荡重心左倾，发丝线随行撑满平衡构图；长期=A5 素材通道真件入槽 */
+.m2-cardface .cf-logo::after { content: ''; flex: 1; height: 1px; background: currentColor; opacity: .35; }
 .m2-cardface .cf-name { font-family: var(--v2serif); font-weight: 900; }
 .m2-cardface .cf-price { font-family: var(--v2mono); font-weight: 700; }
 .m2-cardface .cf-claim { font-size: 11px; opacity: .85; }

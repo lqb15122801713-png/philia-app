@@ -185,7 +185,7 @@ export default function MemberSearch({
               {member.phoneMasked ?? '未留手机'}
               {member.appointmentCount > 0 ? ` · 在店预约 ${member.appointmentCount} 单` : ''}
               {effMembership
-                ? ` · 含宠物 ${effMembership.petCount} 只 · 有效期至 ${effMembership.expiresAt.getMonth() + 1}月${effMembership.expiresAt.getDate()}日`
+                ? ` · 含宠物 ${effMembership.petCount} 只 · 有效期至 ${effMembership.expiresAt.getFullYear()}年${effMembership.expiresAt.getMonth() + 1}月${effMembership.expiresAt.getDate()}日`
                 : ''}
             </div>
           </div>

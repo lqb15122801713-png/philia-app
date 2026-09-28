@@ -275,7 +275,8 @@ export function RulesBlock({
       ? mc('rules.r1', { pct: pctOf(plan.rebateBp), tier })
       : mc('rules.r1Free', { pcts: allPcts }),
     mc('rules.r2', { day: settlementDay }),
-    mc('rules.r3', { days: validityDays }),
+    /* PR-4 PD-05 件 1：免费档 r3 换「永久有效」口径（永久豁免，无到期无冻结） */
+    plan?.free ? mc('rules.r3Free') : mc('rules.r3', { days: validityDays }),
     mc('rules.r4'),
     mc('rules.r5'),
     mc('rules.r6'),

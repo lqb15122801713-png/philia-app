@@ -48,6 +48,12 @@ export function planNum(plan: MemberPlanRow | undefined, key: string, fallback: 
   return typeof v === 'number' && Number.isFinite(v) ? v : fallback;
 }
 
+/** member_plans.value_json 字符串字段读取（缺省/非字符串 → fallback；PD-05 件 2：default_plan_key 等全局字符串键） */
+export function planStr(plan: MemberPlanRow | undefined, key: string, fallback: string): string {
+  const v = (plan?.valueJson as Record<string, unknown> | undefined)?.[key];
+  return typeof v === 'string' && v.length > 0 ? v : fallback;
+}
+
 /** 读取当前生效会员档位配置（member_plans active=1 全量；含 plan_* 四档与 rebate_settlement_day 等全局键） */
 export async function loadMemberPlans(d: DbHandle): Promise<Map<string, MemberPlanRow>> {
   const rows = await d.select().from(schema.memberPlans).where(eq(schema.memberPlans.active, true));
@@ -76,6 +82,9 @@ export function rebatePeriodOf(now: Date): string {
  * freeze 留痕行（余额在不可用；无自动续费任何开关——红线 4）。
  * 读路径（my/balanceOf/收银识别）与写路径（grant/deduct）共用本入口，保证
  * 「expire 过日 → frozen+余额不可用」不依赖额外定时器。
+ * PR-4 PD-05 件 1：免费档（注册默认档 default_plan_key 全局键，现值 plan_weiguang）
+ * 永久豁免——免费档无到期语义，永不冻结（expires_at 结构照写、读侧与展示侧忽略）；
+ * QA40-D11 闭环口径=「免费档永久普通会员，无到期无冻结」。
  */
 export async function currentMembership(
   d: DbHandle,
@@ -91,6 +100,10 @@ export async function currentMembership(
     .then((r) => r[0]);
   if (!row) return null;
   if (row.status === 'active' && row.expiresAt.getTime() <= now.getTime()) {
+    /* 免费档豁免（PD-05 件 1）：plan_key=注册默认档键 → 永不冻结 */
+    const plans = await loadMemberPlans(d);
+    const freePlanKey = planStr(plans.get('default_plan_key'), 'value', 'plan_weiguang');
+    if (row.planKey === freePlanKey) return row;
     return freezeMembership(d, { userId, membershipId: row.id, now, note: '会员到期自动冻结（红线 4：到期不自动续费）' });
   }
   return row;

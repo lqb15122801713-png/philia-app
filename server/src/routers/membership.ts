@@ -39,6 +39,7 @@ import {
   ensureRebateAccount,
   loadMemberPlans,
   planNum,
+  planStr,
   rebatePeriodOf,
   unfreezeRebateAccount,
   voidPendingGrants,
@@ -446,11 +447,16 @@ export const membershipRouter = router({
       if (existing) return { membership: existing, idempotent: true as const };
       const plans = await loadMemberPlans(t);
       const days = planNum(plans.get('membership_validity_days'), 'days', 365);
+      /* PR-4 PD-05 件 2：注册默认档端口化——硬编码 plan_weiguang 改读全局键
+       * default_plan_key（0016 种子行已在库；配置端口/API 可改，版本化留痕同族）。
+       * 键值指向不存在的档行时回退 plan_weiguang（防端口误配致开档断链）。 */
+      const configuredDefault = planStr(plans.get('default_plan_key'), 'value', 'plan_weiguang');
+      const defaultPlanKey = plans.has(configuredDefault) ? configuredDefault : 'plan_weiguang';
       const row = await t
         .insert(schema.memberships)
         .values({
           userId: ctx.user.id,
-          planKey: 'plan_weiguang',
+          planKey: defaultPlanKey,
           soldStoreId: null, // 微光自助开档无办卡店（决策 #41 双归属：NULL 或注册店，骨架批=NULL）
           startedAt: now,
           expiresAt: new Date(now.getTime() + days * 24 * 3600 * 1000),
@@ -825,8 +831,10 @@ export const membershipRouter = router({
    * - amortizedFen 分摊口径：当月分摊确认=Σ active 会员 paid_fen÷12 精确到分
    *   （逐会员 round 后求和；内测口径=当前 active 快照，month 参数供对账展示同帧）。
    *   Y7 本店口径（急修三件 PD-03 件 2，老板已圈）：Σ 按办卡店过滤
-   *   （memberships.sold_store_id=本店）；微光线上开档无办卡店暂不计入任何店
-   *   （待连锁合批裁定口径，注释留痕）。
+   *   （memberships.sold_store_id=本店）。
+   *   PR-4 OP-01② 口径收口（意见书 issuecomment-5853808886 §三.3，产品侧已批）：
+   *   微光线上开档 sold_store_id=NULL **进全店合计**（本店合计一并计入）——
+   *   数值零影响（微光 paid_fen=0），口径统一；连锁期归属口径留痕待连锁合批。
    */
   amortizationStats: merchantProcedure
     .input(z.object({ month: z.string().regex(MONTH_RE, '月份格式须为 YYYY-MM') }))
@@ -859,9 +867,9 @@ export const membershipRouter = router({
         .where(
           and(
             eq(schema.memberships.status, 'active'),
-            /* Y7 本店口径（PD-03 件 2）：分摊按办卡店归属过滤（sold_store_id=本店）；
-               微光线上开档 sold_store_id=NULL——暂不计入任何店，待连锁合批裁定口径 */
-            eq(schema.memberships.soldStoreId, storeId),
+            /* Y7 本店口径（PD-03 件 2）+ PR-4 OP-01②：办卡店=本店 ∪ 微光线上开档
+               sold_store_id=NULL 进全店合计（数值零影响，口径统一；连锁期留痕） */
+            or(eq(schema.memberships.soldStoreId, storeId), isNull(schema.memberships.soldStoreId)),
           ),
         );
       return {
