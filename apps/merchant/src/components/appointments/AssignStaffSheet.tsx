@@ -206,11 +206,13 @@ function StaffRow({
         </p>
         <p className="mt-0.5 text-caption text-ink-secondary">
           当日排班：
-          {row.ranges.length > 0
-            ? row.ranges.map((r) => `${r.start}-${r.end}`).join('、')
-            : '休息'}
+          <span className="font-number tabular-nums">
+            {row.ranges.length > 0
+              ? row.ranges.map((r) => `${r.start}-${r.end}`).join('、')
+              : '休息'}
+          </span>
           <span className="mx-1 text-line-strong">|</span>
-          当日 {row.dayOrders} 单
+          当日 <span className="font-number tabular-nums">{row.dayOrders}</span> 单
           {row.conflict ? (
             <span className="ml-1 text-danger-deep">此时段已有服务单</span>
           ) : null}

@@ -205,7 +205,7 @@ export default function CashierRecordsPage() {
             {c.label}
           </button>
         ))}
-        <span className="mx-1 h-4 w-px bg-[rgba(74,59,46,.12)]" aria-hidden />
+        <span className="mx-1 h-4 w-px bg-[rgba(59,46,36,.12)]" aria-hidden />
         {RANGE_CHIPS.map((c) => (
           <button
             key={c.key}
@@ -223,12 +223,12 @@ export default function CashierRecordsPage() {
         {listQ.isPending ? (
           <div className="space-y-2 px-[17px] py-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-9 animate-pulse rounded-[6px] bg-[rgba(74,59,46,.06)]" />
+              <div key={i} className="h-9 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
             ))}
           </div>
         ) : listQ.isError ? (
-          <div className="px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(74,59,46,.62)]">流水加载失败：{errMsg(listQ.error)}</p>
+          <div className="px-[17px] py-10 text-center">
+            <p className="text-body-sm text-[rgba(59,46,36,.62)]">流水加载失败：{errMsg(listQ.error)}</p>
             <div className="mt-4">
               <QuietButton testid="cashier-records-retry" onClick={() => void listQ.refetch()}>
                 重新加载
@@ -236,7 +236,7 @@ export default function CashierRecordsPage() {
             </div>
           </div>
         ) : rows.length === 0 ? (
-          <p className="px-[17px] py-12 text-center text-body-sm text-[rgba(74,59,46,.62)]">
+          <p className="px-[17px] py-10 text-center text-body-sm text-[rgba(59,46,36,.62)]">
             当前筛选无流水——收银台结账后单据会出现在这里
           </p>
         ) : (
@@ -275,27 +275,27 @@ export default function CashierRecordsPage() {
                       <td className="font-number font-semibold tabular-nums">
                         {b.billNo}
                         {isReversal && b.reversalOfBillNo ? (
-                          <span className="block text-caption-xs font-normal text-[rgba(74,59,46,.42)]">
+                          <span className="block text-caption-xs font-normal text-[rgba(59,46,36,.42)]">
                             冲正 {b.reversalOfBillNo}
                           </span>
                         ) : null}
                         {/* R12：已退款单「退款 ¥X」红字标签+关联退款单号（双向可查） */}
                         {b.refundStatus && refundByBillId.get(b.id) ? (
-                          <span className="block text-caption-xs font-bold text-danger-deep">
+                          <span className="block font-number text-caption-xs font-bold tabular-nums text-danger-deep">
                             退款 ¥{fenToYuan(refundByBillId.get(b.id)!.totalFen)}
                             {b.refundBillNo ? (
-                              <span className="ml-1 font-normal text-[rgba(74,59,46,.42)]">{b.refundBillNo}</span>
+                              <span className="ml-1 font-normal text-[rgba(59,46,36,.42)]">{b.refundBillNo}</span>
                             ) : null}
                           </span>
                         ) : null}
                       </td>
                       <td className="u1-num">{range === 'today' ? formatTime(b.createdAt) : formatDateTime(b.createdAt)}</td>
                       <td>{b.buyerName}</td>
-                      <td className="max-w-[220px] truncate text-[rgba(74,59,46,.62)]">{b.summary}</td>
+                      <td className="max-w-[220px] truncate text-[rgba(59,46,36,.62)]">{b.summary}</td>
                       <td className={`u1-num text-right font-bold ${isReversal ? 'text-danger-deep' : ''}`}>
                         {isReversal ? '−' : ''}¥{fenToYuan(Math.abs(b.payableFen))}
                       </td>
-                      <td className="text-[rgba(74,59,46,.62)]">
+                      <td className="text-[rgba(59,46,36,.62)]">
                         {/* R6-1：支付方式标签全显（组合支付「现金+微信」等全部方式） */}
                         {b.methods.length > 0
                           ? b.methods.map((m) => PAY_METHOD_LABEL[m] ?? m).join('、')

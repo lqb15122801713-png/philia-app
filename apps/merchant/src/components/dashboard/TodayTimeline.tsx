@@ -1,7 +1,7 @@
 /**
  * 今日预约表（U3 §2 左栏 · 母本 .panel + .tbl）：appointment.listForStore 今日区间
  *
- * 列 = 时间（u1-num Montserrat 加粗）/ 宠物·服务（副行：客户昵称 · 到店付/次卡抵扣）/
+ * 列 = 时间（u1-num mono 加粗右对齐 · mono 数据位右对齐 tabular 纪律）/ 宠物·服务（副行：客户昵称 · 到店付/次卡抵扣）/
  * 员工（副行：派单来源小签，assignSourceLabel 口径 auto=自动派单 / merchant=商家改派）/
  * 状态胶囊（u3-st：live=服务中·寄养中、wait=待到店·待确认、done=已完成·已取消、amber=取消申请）；
  * 行点击进入 /appointments/:id；已取消行灰显；
@@ -30,17 +30,17 @@ function RowSkeleton() {
   return (
     <tr className="animate-pulse">
       <td>
-        <div className="h-3 w-9 rounded-md bg-[rgba(74,59,46,.08)]" />
+        <div className="h-3 w-9 rounded-md bg-[rgba(59,46,36,.08)]" />
       </td>
       <td>
-        <div className="h-3 w-32 rounded-md bg-[rgba(74,59,46,.08)]" />
-        <div className="mt-1.5 h-2.5 w-24 rounded-md bg-[rgba(74,59,46,.06)]" />
+        <div className="h-3 w-32 rounded-md bg-[rgba(59,46,36,.08)]" />
+        <div className="mt-1.5 h-2.5 w-24 rounded-md bg-[rgba(59,46,36,.06)]" />
       </td>
       <td>
-        <div className="h-3 w-14 rounded-md bg-[rgba(74,59,46,.08)]" />
+        <div className="h-3 w-14 rounded-md bg-[rgba(59,46,36,.08)]" />
       </td>
       <td>
-        <div className="h-4 w-12 rounded-md bg-[rgba(74,59,46,.08)]" />
+        <div className="h-4 w-12 rounded-md bg-[rgba(59,46,36,.08)]" />
       </td>
     </tr>
   )
@@ -62,7 +62,9 @@ export default function TodayTimeline({
     <section className="u3-panel">
       <div className="u3-panel-head">
         <h3>今日预约</h3>
-        <span className="aside">按时间 · {items.length} 单</span>
+        <span className="aside">
+          按时间 · <span className="font-number tabular-nums">{items.length}</span> 单
+        </span>
       </div>
 
       {loading ? (
@@ -74,14 +76,14 @@ export default function TodayTimeline({
           </tbody>
         </table>
       ) : items.length === 0 ? (
-        <p className="px-[17px] pb-7 pt-3 text-center text-[12px] leading-6 text-[rgba(74,59,46,.62)]">
+        <p className="px-[17px] pb-7 pt-3 text-center text-[12px] leading-6 text-[rgba(59,46,36,.62)]">
           今天还没有预约——把预约页分享给老客，或等自动接单
         </p>
       ) : (
         <table className="u3-tbl">
           <thead>
             <tr>
-              <th>时间</th>
+              <th className="!text-right">时间</th>
               <th>宠物 / 服务</th>
               <th>员工</th>
               <th>状态</th>
@@ -93,11 +95,18 @@ export default function TodayTimeline({
               const capsule = CAPSULE[item.status] ?? { label: item.status, cls: 'u3-st wait' }
               const prog = stepProgress?.get(item.id)
               const capsuleLabel =
-                item.status === 'in_service' && prog
-                  ? `服务中 ${prog.done}/${prog.total}`
-                  : item.status === 'completed' && item.paidAt == null
-                    ? '已完成 · 待收款'
-                    : capsule.label
+                item.status === 'in_service' && prog ? (
+                  <>
+                    服务中{' '}
+                    <span className="font-number tabular-nums">
+                      {prog.done}/{prog.total}
+                    </span>
+                  </>
+                ) : item.status === 'completed' && item.paidAt == null ? (
+                  '已完成 · 待收款'
+                ) : (
+                  capsule.label
+                )
               const payText = item.paymentMode ? paymentModeLabel(item.paymentMode) : null
               const srcText = assignSourceLabel(item.assignSource)
               return (
@@ -106,10 +115,10 @@ export default function TodayTimeline({
                   className={`rowlink ${cancelled ? 'opacity-50' : ''}`}
                   onClick={() => navigate(`/appointments/${item.id}`)}
                 >
-                  <td className="u1-num font-bold">{hhmm(item.scheduledStart)}</td>
+                  <td className="u1-num text-right font-bold">{hhmm(item.scheduledStart)}</td>
                   <td>
                     {item.petName ?? '宠物'} · {item.serviceName ?? '服务'}
-                    <div className="mt-0.5 text-[11px] text-[rgba(74,59,46,.42)]">
+                    <div className="mt-0.5 text-[11px] text-[rgba(59,46,36,.42)]">
                       {item.customerName ?? '客户'}
                       {payText ? ` · ${payText}` : ''}
                     </div>
@@ -117,7 +126,7 @@ export default function TodayTimeline({
                   <td>
                     {item.staffName ?? '未指派'}
                     {srcText ? (
-                      <div className="mt-0.5 text-[11px] text-[rgba(74,59,46,.42)]">{srcText}</div>
+                      <div className="mt-0.5 text-[11px] text-[rgba(59,46,36,.42)]">{srcText}</div>
                     ) : null}
                   </td>
                   <td>

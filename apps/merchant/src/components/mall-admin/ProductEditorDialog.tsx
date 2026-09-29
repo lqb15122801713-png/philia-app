@@ -22,7 +22,7 @@ import {
   yuanToFen,
   type StoreProduct,
 } from './format'
-import { Btn, Field, inputCls, Modal, Switch } from './ui'
+import { Btn, Field, inputCls, Modal, numStyle, Switch } from './ui'
 
 export interface ProductEditorProps {
   open: boolean
@@ -170,6 +170,7 @@ export default function ProductEditorDialog({ open, product, onClose }: ProductE
               value={stock}
               inputMode="numeric"
               placeholder="0"
+              style={numStyle}
               onChange={(e) => setStock(e.target.value)}
             />
           </Field>
@@ -181,6 +182,7 @@ export default function ProductEditorDialog({ open, product, onClose }: ProductE
             value={priceYuan}
             inputMode="decimal"
             placeholder="如 39.90"
+            style={numStyle}
             onChange={(e) => setPriceYuan(e.target.value)}
           />
         </Field>

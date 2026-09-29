@@ -11,27 +11,41 @@
  * - 数量为 0 行保留（信息密度与位置稳定），计数 Montserrat tabular 由 u3-todo .n 承担。
  */
 
+import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { fenToYuanGrouped, hhmm, type DashboardStats, type TodayApptItem } from './utils'
 
-const DOT_RED = '#D92D20'
+/* 样例小字里的数据位（时间/金额/天数）：mono 轨 tabular（§八 mono 数据位加重） */
+const HINT_NUM_CLS = 'font-number tabular-nums'
+
+const DOT_RED = '#B4502E' // 警示=赭红（纯红换赭 §1.4）
 const DOT_LEMON = '#F2DFA6' // 淡金点睛（柠檬黄清场，常量名沿用防扩散改）
-const DOT_MINT = '#7FD8BE'
+const DOT_MINT = '#2E2318' // 服务中=livetag 同族深棕（薄荷绿清场）
 
 interface TodoRowSpec {
   key: string
   dot: string
   label: string
-  hint: string
+  hint: ReactNode
   count: number
   to: string
 }
 
 /** 超期样例小字：应退未退 N 天（不足一天算「今日到期未退」） */
-function overdueHint(item: TodayApptItem, nowTs: number): string {
+function overdueHint(item: TodayApptItem, nowTs: number): ReactNode {
   const days = Math.floor((nowTs - item.scheduledEnd.getTime()) / 86_400_000)
-  const overdueText = days >= 1 ? `应退未退 ${days} 天` : '今日到期未退'
-  return `${item.petName ?? '宠物'} · ${item.serviceName ?? '寄养'} · ${overdueText}`
+  return (
+    <>
+      {item.petName ?? '宠物'} · {item.serviceName ?? '寄养'} ·{' '}
+      {days >= 1 ? (
+        <>
+          应退未退 <span className={HINT_NUM_CLS}>{days}</span> 天
+        </>
+      ) : (
+        '今日到期未退'
+      )}
+    </>
+  )
 }
 
 export default function TodoSection({
@@ -58,9 +72,15 @@ export default function TodoSection({
       key: 'cancelRequested',
       dot: DOT_RED,
       label: '取消申请待审',
-      hint: cancelSample
-        ? `${cancelSample.petName ?? '宠物'} · ${hhmm(cancelSample.scheduledStart)} ${cancelSample.serviceName ?? ''}`
-        : '客户申请取消，待审批',
+      hint: cancelSample ? (
+        <>
+          {cancelSample.petName ?? '宠物'} ·{' '}
+          <span className={HINT_NUM_CLS}>{hhmm(cancelSample.scheduledStart)}</span>{' '}
+          {cancelSample.serviceName ?? ''}
+        </>
+      ) : (
+        '客户申请取消，待审批'
+      ),
       count: stats?.todo.cancelRequested ?? 0,
       to: '/appointments?status=cancel_requested&from=todo',
     },
@@ -68,9 +88,14 @@ export default function TodoSection({
       key: 'unpaid',
       dot: DOT_LEMON,
       label: '待收款',
-      hint: unpaidSample
-        ? `${unpaidSample.petName ?? '宠物'} ${unpaidSample.serviceName ?? ''} ¥${fenToYuanGrouped(unpaidSample.priceFen)}`
-        : '服务已完成，未登记收款',
+      hint: unpaidSample ? (
+        <>
+          {unpaidSample.petName ?? '宠物'} {unpaidSample.serviceName ?? ''}{' '}
+          <span className={HINT_NUM_CLS}>¥{fenToYuanGrouped(unpaidSample.priceFen)}</span>
+        </>
+      ) : (
+        '服务已完成，未登记收款'
+      ),
       count: stats?.todo.unpaid ?? 0,
       // 批次 M1 联动（任务书 §1.5.1）：待收款 → 收银台并自动拉入该预约；
       // 无样例时落收银台主屏（原 /finance#pending-payments 落点退役为收银链路）
@@ -98,7 +123,9 @@ export default function TodoSection({
     <section className="u3-panel">
       <div className="u3-panel-head">
         <h3>待办</h3>
-        <span className="aside">{rows.length} 项</span>
+        <span className="aside">
+          <span className={HINT_NUM_CLS}>{rows.length}</span> 项
+        </span>
       </div>
       <div>
         {rows.map((r) => (

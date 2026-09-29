@@ -23,7 +23,7 @@ type BtnSize = 'sm' | 'md'
 const btnBase =
   'inline-flex items-center justify-center gap-1.5 rounded-full font-medium transition-colors duration-150 ease-out disabled:cursor-not-allowed disabled:opacity-50'
 const btnVariant: Record<BtnVariant, string> = {
-  // U3 禁 text-white（仅 red 功能胶囊/墨轨例外）：柠檬底=墨字；danger 底=纸面字
+  // U3 禁 text-white（仅 red 功能胶囊/墨轨例外）：淡黄点睛底=墨字；danger 底=纸面字
   primary: 'bg-brand-primary text-ink hover:bg-brand-primary-hover active:bg-brand-primary-pressed',
   ghost: 'border border-line-strong bg-card text-ink hover:bg-sunken',
   danger: 'bg-danger text-[#FFFDF6] hover:bg-danger-deep',
@@ -169,7 +169,7 @@ export function Modal({
       <div
         role="dialog"
         aria-modal="true"
-        className={`relative flex max-h-[85vh] w-full ${widthClass} flex-col overflow-hidden rounded-card bg-card shadow-elevated`}
+        className={`relative flex max-h-[85vh] w-full ${widthClass} flex-col overflow-hidden rounded-card bg-card shadow-elevated ring-1 ring-line-ring`}
       >
         <div className="flex items-center justify-between border-b border-line-divider px-5 py-4">
           <h3 className="text-title font-semibold text-ink">{title}</h3>

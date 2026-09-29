@@ -37,13 +37,13 @@ function GoodCard({
       type="button"
       data-testid={testid}
       onClick={onClick}
-      className="flex flex-col gap-2 rounded-[14px] bg-[#FFFDF6] p-3.5 text-left shadow-[0_0_0_1px_rgba(74,59,46,.09)] transition-[box-shadow,transform] duration-150 active:shadow-[0_0_0_1.5px_#E8CF8C]"
+      className="flex flex-col gap-2 rounded-[14px] bg-[#FFFDF6] p-3.5 text-left shadow-[0_0_0_1px_rgba(59,46,36,.09)] transition-[box-shadow,transform] duration-150 active:shadow-[0_0_0_1.5px_#E8CF8C]"
     >
-      <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[#F1E8D4] text-[rgba(74,59,46,.6)]">
+      <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[#F1E8D4] text-[rgba(59,46,36,.6)]">
         <Icon size={19} strokeWidth={1.6} aria-hidden />
       </span>
       <span className="text-body-sm font-medium leading-tight">{name}</span>
-      {spec ? <span className="text-caption-xs text-[rgba(74,59,46,.42)]">{spec}</span> : null}
+      {spec ? <span className="text-caption-xs text-[rgba(59,46,36,.42)]">{spec}</span> : null}
       <span className="font-number text-caption font-semibold tabular-nums">¥{fenToYuan(priceFen)}</span>
     </button>
   )
@@ -97,8 +97,8 @@ export default function PickPanel({
             onClick={() => onTab(t.key)}
             className={`rounded-full px-3.5 py-[7px] text-caption transition-colors ${
               tab === t.key
-                ? 'bg-[#4A3B2E] font-semibold text-[#F6F1E3]'
-                : 'text-[rgba(74,59,46,.6)]'
+                ? 'bg-[#3B2E24] font-semibold text-[#FAF8F2]'
+                : 'text-[rgba(59,46,36,.6)]'
             }`}
           >
             {t.label}
@@ -116,29 +116,29 @@ export default function PickPanel({
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="rounded-[14px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(74,59,46,.09)]"
+                className="rounded-[14px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(59,46,36,.09)]"
               >
-                <div className="h-10 w-10 animate-pulse rounded-[10px] bg-[rgba(74,59,46,.06)]" />
-                <div className="mt-2.5 h-3.5 w-3/4 animate-pulse rounded-[6px] bg-[rgba(74,59,46,.06)]" />
-                <div className="mt-2 h-3 w-1/3 animate-pulse rounded-[6px] bg-[rgba(74,59,46,.06)]" />
+                <div className="h-10 w-10 animate-pulse rounded-[10px] bg-[rgba(59,46,36,.06)]" />
+                <div className="mt-2.5 h-3.5 w-3/4 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
+                <div className="mt-2 h-3 w-1/3 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
               </div>
             ))}
           </div>
         ) : error ? (
-          <div className="rounded-[14px] bg-[#FFFDF6] px-4 py-8 text-center shadow-[0_0_0_1px_rgba(74,59,46,.09)]">
-            <p className="text-caption text-[rgba(74,59,46,.62)]">{error}</p>
+          <div className="rounded-[14px] bg-[#FFFDF6] px-4 py-6 text-center shadow-[0_0_0_1px_rgba(59,46,36,.09)]">
+            <p className="text-caption text-[rgba(59,46,36,.62)]">{error}</p>
             <button
               type="button"
               data-testid="cashier-pick-retry"
               onClick={onRetry}
-              className="mt-3 rounded-full bg-[#FFFDF6] px-4 py-2 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(74,59,46,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+              className="mt-3 rounded-full bg-[#FFFDF6] px-4 py-2 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
             >
               重新加载
             </button>
           </div>
         ) : tab === 'service' ? (
           (services ?? []).length === 0 ? (
-            <p className="px-2 py-8 text-center text-caption-xs text-[rgba(74,59,46,.42)]">
+            <p className="px-2 py-6 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
               门店暂无在架服务，请到「设置」维护
             </p>
           ) : (
@@ -158,7 +158,7 @@ export default function PickPanel({
           )
         ) : tab === 'product' ? (
           (products ?? []).length === 0 ? (
-            <p className="px-2 py-8 text-center text-caption-xs text-[rgba(74,59,46,.42)]">
+            <p className="px-2 py-6 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
               暂无在架商品，请到「商品」上架
             </p>
           ) : (
@@ -177,7 +177,7 @@ export default function PickPanel({
             </div>
           )
         ) : (pending ?? []).length === 0 ? (
-          <p className="px-2 py-8 text-center text-caption-xs text-[rgba(74,59,46,.42)]">
+          <p className="px-2 py-6 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
             无待收款预约——服务完成后会出现在这里
           </p>
         ) : (
@@ -189,17 +189,17 @@ export default function PickPanel({
                 <div
                   key={a.id}
                   data-testid={`cashier-pull-${a.id}`}
-                  className="flex items-center gap-2.5 rounded-[14px] bg-[#FFFDF6] px-3.5 py-3 shadow-[0_0_0_1px_rgba(74,59,46,.09)]"
+                  className="flex items-center gap-2.5 rounded-[14px] bg-[#FFFDF6] px-3.5 py-3 shadow-[0_0_0_1px_rgba(59,46,36,.09)]"
                 >
-                  <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-[#F1E8D4] text-caption-xs font-bold shadow-[0_0_0_1px_rgba(74,59,46,.09)]">
+                  <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-[#F1E8D4] text-caption-xs font-bold shadow-[0_0_0_1px_rgba(59,46,36,.09)]">
                     {(a.petName ?? '宠').slice(0, 1)}
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-caption font-semibold">
                       {a.petName} · {a.serviceName}
                     </div>
-                    <div className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.42)]">
-                      预约到店付 · {a.completedAt ? fmtDateTime(a.completedAt) : '—'} · 已完成待收款
+                    <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                      预约到店付 · <span className="font-number tabular-nums">{a.completedAt ? fmtDateTime(a.completedAt) : '—'}</span> · 已完成待收款
                     </div>
                   </div>
                   <span className="mr-1 font-number text-caption font-semibold tabular-nums">

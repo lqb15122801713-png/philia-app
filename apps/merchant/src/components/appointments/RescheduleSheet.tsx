@@ -196,7 +196,7 @@ export function RescheduleSheet({
   return (
     <Modal open={open} title="改期" onClose={close}>
       {target ? (
-        <p className="mb-3 text-caption text-ink-secondary">
+        <p className="mb-3 font-number text-caption tabular-nums text-ink-secondary">
           {isBoarding && target.scheduledEnd
             ? `当前：${fmtDate(target.scheduledStart)} 入住 → ${fmtDate(target.scheduledEnd)} 退房`
             : `当前时间：${fmtDateTime(target.scheduledStart)}`}

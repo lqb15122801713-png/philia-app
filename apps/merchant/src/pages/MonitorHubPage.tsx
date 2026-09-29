@@ -4,8 +4,9 @@
  * 结构：MainScaffold（title「在店监控」+ sub 真值计数 + actions 两枚 u3-chipf
  * 过滤服务中/寄养）→ 三列 mon-card 卡墙（纸面 ring 20 圆角 overflow hidden）：
  * - 照片头 120px 定高（试样 .mon-card .ph 落值；该单最新过程照 thumbUrl，无照片=浅木
- *   色块 #D4B896）+ badge（洗护=纸面+薄荷点「服务中 · 实时」/寄养=墨底米白字「寄养 · 房型名」）；
- * - 洗护卡：名+服务 + 6 段步进条（薄荷 done/柠檬 now/墨灰未到）+ 员工·最新动态行；
+ *   色块 #B9A482）+ badge（洗护=纸面+淡黄点「服务中 · 实时」/寄养=墨底米白字「寄养 · 房型名」）；
+ * - 洗护卡：名+服务 + 6 段步进条（三态同客户端七节点：done 深棕/now 淡黄/future 卡其描边）
+ *   + 员工·最新动态行；
  * - 寄养卡：第 N 晚（日界差+1）· 今日打卡态（lastLogDate===今天→已打卡 ✓）
  *   · 退房日；超期红字「超期」+「应退未退 N 天」。
  * 点击卡 → /monitor/:id（单约监控别名深链，同组件）。
@@ -84,10 +85,10 @@ function activityLine(staffName: string | null | undefined, steps: StepListItem[
 
 /** 卡面公共工艺：纸面 ring 20 圆角 overflow hidden + 按下 120ms scale */
 const cardCls =
-  'block w-full overflow-hidden rounded-panel bg-[#FFFDF6] text-left shadow-[0_0_0_1px_rgba(74,59,46,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]';
+  'block w-full overflow-hidden rounded-panel bg-[#FFFDF6] text-left shadow-[0_0_0_1px_rgba(59,46,36,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]';
 
 /** 照片头 + badge pill（试样 .mon-card：头高 120px 固定【规格书 §5「16:10」为裁切意图，
-    试样落 120px 定值——从试样，1920 大屏亦紧凑】；洗护 badge=纸面+薄荷点，
+    试样落 120px 定值——从试样，1920 大屏亦紧凑】；洗护 badge=纸面+淡黄点，
     寄养 badge=墨底米白字无点【试样 inline 锁定，墨轨同族浅色字，仅此两式】） */
 function CardPhotoHead({
   thumbUrl,
@@ -100,16 +101,16 @@ function CardPhotoHead({
 }) {
   return (
     <div
-      className="relative h-[120px] w-full bg-[#D4B896] bg-cover [background-position:center_60%]"
+      className="relative h-[120px] w-full bg-[#B9A482] bg-cover [background-position:center_60%]"
       style={thumbUrl ? { backgroundImage: `url(${thumbUrl})` } : undefined}
     >
       {tone === 'service' ? (
         <span className="absolute left-2.5 top-2.5 flex items-center gap-[5px] rounded-full bg-[#FFFDF6] px-2.5 py-1 text-caption-xs font-bold">
-          <i className="h-1.5 w-1.5 rounded-full bg-[#7FD8BE]" />
+          <i className="h-1.5 w-1.5 rounded-full bg-[#F2DFA6]" />
           {badge}
         </span>
       ) : (
-        <span className="absolute left-2.5 top-2.5 flex items-center rounded-full bg-[#4A3B2E] px-2.5 py-1 text-caption-xs font-bold text-[#F6F1E3]">
+        <span className="absolute left-2.5 top-2.5 flex items-center rounded-full bg-[#3B2E24] px-2.5 py-1 text-caption-xs font-bold text-[#FAF8F2]">
           {badge}
         </span>
       )}
@@ -117,7 +118,7 @@ function CardPhotoHead({
   );
 }
 
-/** 6 段步进条：薄荷 done / 柠檬 now / 墨灰未到 */
+/** 6 段步进条：三态同客户端七节点（done 深棕 #3B2E24 / now 淡黄 #F2DFA6 / future 卡其描边 #B9A482） */
 function StepBars({ steps }: { steps: StepListItem[] | undefined }) {
   return (
     <div className="mt-2.5 flex gap-1">
@@ -125,10 +126,10 @@ function StepBars({ steps }: { steps: StepListItem[] | undefined }) {
         const st = steps?.[i]?.status;
         const cls =
           st === 'done'
-            ? 'bg-[#7FD8BE]'
+            ? 'bg-[#3B2E24]'
             : st === 'active'
               ? 'bg-[#F2DFA6]'
-              : 'bg-[rgba(74,59,46,.06)]';
+              : 'bg-transparent shadow-[inset_0_0_0_1px_#B9A482]';
         return <i key={i} className={`h-1 flex-1 rounded-full ${cls}`} />;
       })}
     </div>
@@ -138,14 +139,14 @@ function StepBars({ steps }: { steps: StepListItem[] | undefined }) {
 /** 卡片骨架（禁转圈：opacity 脉冲；轮廓与成片同构——120px 照片头 + 文本条 + 6 段条） */
 function CardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-panel bg-[#FFFDF6] shadow-[0_0_0_1px_rgba(74,59,46,.09)]">
-      <div className="h-[120px] w-full animate-pulse bg-[rgba(74,59,46,.06)]" />
+    <div className="overflow-hidden rounded-panel bg-[#FFFDF6] shadow-[0_0_0_1px_rgba(59,46,36,.09)]">
+      <div className="h-[120px] w-full animate-pulse bg-[rgba(59,46,36,.06)]" />
       <div className="p-[12px_14px]">
-        <div className="h-3.5 w-32 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
-        <div className="mt-2 h-3 w-44 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
+        <div className="h-3.5 w-32 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
+        <div className="mt-2 h-3 w-44 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
         <div className="mt-2.5 flex gap-1">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-1 flex-1 animate-pulse rounded-full bg-[rgba(74,59,46,.06)]" />
+            <div key={i} className="h-1 flex-1 animate-pulse rounded-full bg-[rgba(59,46,36,.06)]" />
           ))}
         </div>
       </div>
@@ -296,10 +297,10 @@ export default function MonitorHubPage() {
         </div>
       ) : failed ? (
         <div className="u3-panel px-[17px] py-14 text-center">
-          <div className="text-body-sm font-semibold text-[rgba(74,59,46,.62)]">
+          <div className="text-body-sm font-semibold text-[rgba(59,46,36,.62)]">
             监控列表加载失败
           </div>
-          <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">请检查网络后重试</div>
+          <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">请检查网络后重试</div>
           <div className="mt-4 flex justify-center">
             <QuietButton
               onClick={() => {
@@ -314,7 +315,7 @@ export default function MonitorHubPage() {
         </div>
       ) : totalVisible === 0 ? (
         <div className="u3-panel px-[17px] py-16 text-center">
-          <div className="text-body-sm font-semibold text-[rgba(74,59,46,.62)]">
+          <div className="text-body-sm font-semibold text-[rgba(59,46,36,.62)]">
             现在店里很安静——有单开工时这里会实时动起来
           </div>
         </div>
@@ -347,7 +348,7 @@ export default function MonitorHubPage() {
                       {doneCount}/{steps?.length ?? 6}
                     </span>
                   </div>
-                  <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">
+                  <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
                     {activityLine(it.staffName, steps)}
                   </div>
                   <StepBars steps={steps} />
@@ -382,7 +383,7 @@ export default function MonitorHubPage() {
                     <div className="flex items-baseline justify-between text-body-sm font-bold">
                       <span>{entry.pet.name}</span>
                       {entry.overdue ? (
-                        <span className="font-number text-body-sm font-bold tabular-nums text-[#D92D20]">
+                        <span className="font-number text-body-sm font-bold tabular-nums text-[#B4502E]">
                           超期
                         </span>
                       ) : (
@@ -391,7 +392,7 @@ export default function MonitorHubPage() {
                         </span>
                       )}
                     </div>
-                    <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">
+                    <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
                       {entry.overdue
                         ? `应退未退 ${overdueDays(entry.appointment.scheduledEnd)} 天 · 联系主人或续住`
                         : `第 ${n} 晚 · ${checkedToday ? '今日已打卡 ✓' : '今日未打卡'} · ${fmtCheckout(entry.appointment.scheduledEnd)} 退房`}

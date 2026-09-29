@@ -88,7 +88,7 @@ export default function EditStaffDialog({
           <select
             value={role}
             onChange={(e) => setRole(e.target.value === 'frontdesk' ? 'frontdesk' : 'groomer')}
-            className="w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(74,59,46,.25)]"
+            className="w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
             aria-label="岗位角色"
           >
             {ROLE_OPTIONS.map((o) => (

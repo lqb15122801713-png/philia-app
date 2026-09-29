@@ -37,7 +37,7 @@ function QtyStepper({
   testid?: string
 }) {
   const btn =
-    'flex h-[22px] w-[22px] items-center justify-center rounded-full bg-[#FFFDF6] text-ink shadow-[0_0_0_1px_rgba(74,59,46,.09)] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40'
+    'flex h-[22px] w-[22px] items-center justify-center rounded-full bg-[#FFFDF6] text-ink shadow-[0_0_0_1px_rgba(59,46,36,.09)] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40'
   return (
     <div className="flex items-center gap-2" data-testid={testid}>
       <button type="button" aria-label="减一件" className={btn} disabled={qty <= 1} onClick={() => onDelta(-1)}>
@@ -127,14 +127,20 @@ export default function CartPanel({
     <div className="flex flex-1 flex-col" data-testid="cashier-cart">
       <div className="flex items-baseline justify-between">
         <b className="text-body-sm">当前单</b>
-        <span className="text-caption-xs text-[rgba(74,59,46,.42)]">
-          {billNo ? `${billNo} · ` : ''}开单人：{creatorLabel}
+        <span className="text-caption-xs text-[rgba(59,46,36,.42)]">
+          {billNo ? (
+            <>
+              <span className="font-number tabular-nums">{billNo}</span>
+              {' · '}
+            </>
+          ) : null}
+          开单人：{creatorLabel}
         </span>
       </div>
 
       {empty ? (
         <p
-          className="py-12 text-center text-caption-xs text-[rgba(74,59,46,.42)]"
+          className="py-10 text-center text-caption-xs text-[rgba(59,46,36,.42)]"
           data-testid="cashier-cart-empty"
         >
           点左侧商品或服务开单
@@ -153,17 +159,17 @@ export default function CartPanel({
               <div
                 key={l.refId}
                 data-testid={`cashier-cart-row-${l.refId}`}
-                className="border-b border-dashed border-[rgba(74,59,46,.09)] py-3 last:border-b-0"
+                className="border-b border-dashed border-[rgba(59,46,36,.09)] py-3 last:border-b-0"
               >
                 <div className="flex items-center gap-2.5">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#F1E8D4] text-[rgba(74,59,46,.6)]">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-[#F1E8D4] text-[rgba(59,46,36,.6)]">
                     <Icon size={17} strokeWidth={1.6} aria-hidden />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="text-caption font-medium leading-tight">
                       {l.name}
                       {l.paidByPass ? (
-                        <span className="ml-1.5 inline-flex items-center rounded-full bg-[#7FD8BE] px-2 py-[2px] text-caption-xs leading-none text-[#1E4D3D]">
+                        <span className="ml-1.5 inline-flex items-center rounded-full bg-[#2E2318] px-2 py-[2px] text-caption-xs leading-none text-[#F2DFA6]">
                           扣次
                         </span>
                       ) : null}
@@ -177,7 +183,7 @@ export default function CartPanel({
                         </span>
                       ) : null}
                     </div>
-                    <div className="mt-0.5 truncate text-caption-xs text-[rgba(74,59,46,.42)]">
+                    <div className="mt-0.5 truncate text-caption-xs text-[rgba(59,46,36,.42)]">
                       {l.kind === 'appointment' ? `预约行 · ${l.spec ?? ''}` : (l.spec ?? '')}
                     </div>
                   </div>
@@ -192,18 +198,18 @@ export default function CartPanel({
                     title={canEditPrice ? '点按改价 / 折扣' : '仅店主/店长可改价'}
                     onClick={() => onOpenPrice(l)}
                     className={`w-[56px] text-right font-number text-caption font-semibold tabular-nums ${
-                      l.paidByPass ? 'text-[rgba(74,59,46,.3)] line-through' : 'text-ink'
+                      l.paidByPass ? 'text-[rgba(59,46,36,.3)] line-through' : 'text-ink'
                     } ${canEditPrice ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                   >
                     ¥{fenToYuan(mDisc ?? lineTotal(l))}
                     {l.adjustedPriceFen != null ? (
-                      <span className="block text-caption-xs font-normal text-[rgba(74,59,46,.3)] line-through">
+                      <span className="block text-caption-xs font-normal text-[rgba(59,46,36,.3)] line-through">
                         ¥{fenToYuan(l.unitPriceFen * l.qty)}
                       </span>
                     ) : mDisc !== null ? (
                       /* R11a：门市价划线对照（服务允许划线价——红线 6 商品全员同价不划线） */
                       <span
-                        className="block text-caption-xs font-normal text-[rgba(74,59,46,.3)] line-through"
+                        className="block text-caption-xs font-normal text-[rgba(59,46,36,.3)] line-through"
                         data-testid={`cashier-member-strike-${l.refId}`}
                       >
                         门市 ¥{fenToYuan(lineTotal(l))}
@@ -215,7 +221,7 @@ export default function CartPanel({
                     aria-label="删除该行"
                     data-testid={`cashier-rm-${l.refId}`}
                     onClick={() => onRemove(l.refId)}
-                    className="p-1 text-[rgba(74,59,46,.3)] transition-colors hover:text-[rgba(74,59,46,.6)]"
+                    className="p-1 text-[rgba(59,46,36,.3)] transition-colors hover:text-[rgba(59,46,36,.6)]"
                   >
                     <X size={14} strokeWidth={1.8} aria-hidden />
                   </button>
@@ -230,8 +236,8 @@ export default function CartPanel({
                       onClick={() => onTogglePassLine(l.refId)}
                       className={`rounded-full px-2.5 py-[3px] text-caption-xs font-semibold transition-transform duration-120 ease-philia-spring active:scale-92 disabled:cursor-not-allowed disabled:opacity-40 ${
                         l.paidByPass
-                          ? 'bg-[#7FD8BE] text-[#1E4D3D]'
-                          : 'bg-[#FFFDF6] text-[rgba(74,59,46,.62)] shadow-[0_0_0_1px_rgba(74,59,46,.12)]'
+                          ? 'bg-[#2E2318] text-[#F2DFA6]'
+                          : 'bg-[#FFFDF6] text-[rgba(59,46,36,.62)] shadow-[0_0_0_1px_rgba(59,46,36,.12)]'
                       }`}
                     >
                       {l.paidByPass ? '已扣次 · 点按取消' : '次卡扣次'}
@@ -259,13 +265,13 @@ export default function CartPanel({
             disabled={!canEditPrice}
             title={canEditPrice ? '整单折扣或立减' : '仅店主/店长可整单优惠'}
             onClick={onOpenDiscount}
-            className="inline-flex items-center gap-1 rounded-full bg-[#FFFDF6] px-3 py-1.5 text-caption-xs font-semibold text-ink shadow-[0_0_0_1px_rgba(74,59,46,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-full bg-[#FFFDF6] px-3 py-1.5 text-caption-xs font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Percent size={13} strokeWidth={1.8} aria-hidden />
             整单优惠
           </button>
           {discountType !== 'none' && amounts.discountFen > 0 ? (
-            <span className="inline-flex items-center gap-1 text-caption-xs text-[rgba(74,59,46,.62)]">
+            <span className="inline-flex items-center gap-1 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]">
               {discountType === 'percent' ? `${discountValue / 10} 折` : `立减 ¥${fenToYuan(discountValue)}`}
               {' · '}−¥{fenToYuan(amounts.discountFen)}
               <button
@@ -273,19 +279,19 @@ export default function CartPanel({
                 aria-label="清除整单优惠"
                 disabled={!canEditPrice}
                 onClick={onClearDiscount}
-                className="text-[rgba(74,59,46,.3)] hover:text-[rgba(74,59,46,.6)] disabled:opacity-40"
+                className="text-[rgba(59,46,36,.3)] hover:text-[rgba(59,46,36,.6)] disabled:opacity-40"
               >
                 <X size={12} strokeWidth={2} aria-hidden />
               </button>
             </span>
           ) : null}
           {adjustedCount > 0 ? (
-            <span className="text-caption-xs text-[rgba(74,59,46,.42)]">已改价 {adjustedCount} 行 · 留痕</span>
+            <span className="font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">已改价 {adjustedCount} 行 · 留痕</span>
           ) : null}
         </div>
       ) : null}
       {!canEditPrice ? (
-        <p className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]" data-testid="cashier-owner-hint">
+        <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="cashier-owner-hint">
           改价 / 整单优惠仅店主/店长可操作
         </p>
       ) : null}
@@ -312,7 +318,7 @@ export default function CartPanel({
             aria-label="关闭本单立省提示"
             data-testid="cashier-savings-dismiss"
             onClick={onDismissSavings}
-            className="shrink-0 p-1.5 text-[rgba(74,59,46,.42)] transition-colors hover:text-[rgba(74,59,46,.7)]"
+            className="shrink-0 p-1.5 text-[rgba(59,46,36,.42)] transition-colors hover:text-[rgba(59,46,36,.7)]"
           >
             <X size={13} strokeWidth={1.8} aria-hidden />
           </button>
@@ -321,13 +327,13 @@ export default function CartPanel({
 
       {/* P6 金额面板（吸底） */}
       <div className="mt-auto pt-2.5">
-        <div className="flex justify-between py-1 text-caption text-[rgba(74,59,46,.6)]">
-          <span>合计（{lines.length} 项）</span>
+        <div className="flex justify-between py-1 text-caption text-[rgba(59,46,36,.6)]">
+          <span>合计（<span className="font-number tabular-nums">{lines.length}</span> 项）</span>
           <b className="font-number font-semibold tabular-nums text-ink">¥{fenToYuan(amounts.subtotalFen)}</b>
         </div>
         {/* R11a：会员折扣行（服务/预约行按档折扣预估；商品全员同价不打折——红线 6/7） */}
         {svcDiscount && memberDiscFen > 0 ? (
-          <div className="flex justify-between py-1 text-caption text-[rgba(74,59,46,.6)]" data-testid="cashier-member-discount-row">
+          <div className="flex justify-between py-1 text-caption text-[rgba(59,46,36,.6)]" data-testid="cashier-member-discount-row">
             <span>
               会员折扣（{svcDiscount.planLabel} · {svcDiscLabel}）
             </span>
@@ -335,23 +341,23 @@ export default function CartPanel({
           </div>
         ) : null}
         {memberDiscountUnknown ? (
-          <p className="py-1 text-caption-xs text-[rgba(74,59,46,.42)]" data-testid="cashier-member-discount-unknown">
+          <p className="py-1 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="cashier-member-discount-unknown">
             会员折扣由服务端结账时按档自动计算，折后价以成交为准（内测期档位读路径缺口）
           </p>
         ) : null}
         {amounts.passCoveredFen > 0 ? (
-          <div className="flex justify-between py-1 text-caption text-[rgba(74,59,46,.6)]">
-            <span>次卡抵扣（{markedPassCount} 行）</span>
+          <div className="flex justify-between py-1 text-caption text-[rgba(59,46,36,.6)]">
+            <span>次卡抵扣（<span className="font-number tabular-nums">{markedPassCount}</span> 行）</span>
             <b className="font-number font-semibold tabular-nums text-ink">−¥{fenToYuan(amounts.passCoveredFen)}</b>
           </div>
         ) : null}
-        <div className="flex justify-between py-1 text-caption text-[rgba(74,59,46,.6)]">
+        <div className="flex justify-between py-1 text-caption text-[rgba(59,46,36,.6)]">
           <span>整单优惠</span>
           <b className="font-number font-semibold tabular-nums text-ink">−¥{fenToYuan(amounts.discountFen)}</b>
         </div>
-        <div className="mt-2 flex items-baseline justify-between border-t border-dashed border-[rgba(74,59,46,.09)] pt-2.5">
+        <div className="mt-2 flex items-baseline justify-between border-t border-dashed border-[rgba(59,46,36,.09)] pt-2.5">
           <span className="text-body-sm font-semibold">应收</span>
-          <span className="font-number text-detail font-bold tabular-nums" data-testid="cashier-due">
+          <span className="whitespace-nowrap font-number text-detail font-bold tabular-nums" data-testid="cashier-due">
             ¥{fenToYuan(amounts.dueFen)}
           </span>
         </div>
@@ -361,7 +367,7 @@ export default function CartPanel({
             data-testid="cashier-hold-btn"
             disabled={empty || holding}
             onClick={onHold}
-            className="inline-flex items-center justify-center gap-1.5 rounded-[14px] bg-[#FFFDF6] py-3 text-body-sm font-semibold text-ink shadow-[0_0_0_1px_rgba(74,59,46,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-1.5 rounded-[14px] bg-[#FFFDF6] py-3 text-body-sm font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
           >
             <Pause size={15} strokeWidth={1.8} aria-hidden />
             {holding ? '挂单中…' : '挂单'}

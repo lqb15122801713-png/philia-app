@@ -2,8 +2,8 @@
  * 员工 /staff（U3 批次 · 任务 K · 规格书 §10 · 母本试样 608-657 行 / .staff-card CSS 133-140）
  *
  * 数据源：store.staffList（员工 + 岗位角色 + 技能 + 排班 + 绩效聚合：完成单数/好评率/平均分）。
- * 布局：MainScaffold（title 员工 / sub 在职·角色计数·S4 派单口径 / 柠檬钮「＋ 邀请员工」）
- * → u3-panel 行式员工卡（staff-card 工艺：42 圆头像占位 + 名 + 角色签（美容师=薄荷 /
+ * 布局：MainScaffold（title 员工 / sub 在职·角色计数·S4 派单口径 / 主钮「＋ 邀请员工」）
+ * → u3-panel 行式员工卡（staff-card 工艺：42 圆头像占位 + 名 + 角色签（美容师=livetag 同族 /
  * 前台=浅木，u3-chip 圆角 6）+ 绩效行 + 右侧排班摘要（周模板压缩「一至五 09:00–18:00」+休日）
  * + 在班态（今日排班覆盖当前时刻→今日在班）+「编辑 ›」）。
  *
@@ -99,15 +99,17 @@ function joinMonth(d: Date): string {
 }
 
 /* ------------------------------------------------------------------ */
-/* 角色签（美容师=薄荷 #7FD8BE / 前台=浅木 #D4B896 · 圆角 6 · 墨色字）     */
+/* 角色签（美容师=livetag 同族 #2E2318 底淡金字 / 前台=浅木 #B9A482 底墨字 · 圆角 6） */
 /* ------------------------------------------------------------------ */
 
 function RoleChip({ role }: { role: string }) {
-  const bg = role === 'frontdesk' ? '#D4B896' : '#7FD8BE';
+  const front = role === 'frontdesk';
   return (
     <span
-      className="rounded-chip px-[7px] py-[2px] text-caption-xs font-bold text-ink"
-      style={{ background: bg }}
+      className={`rounded-chip px-[7px] py-[2px] text-caption-xs font-bold ${
+        front ? 'text-ink' : 'text-[#F2DFA6]'
+      }`}
+      style={{ background: front ? '#B9A482' : '#2E2318' }}
     >
       {STAFF_ROLE_LABEL[role] ?? role}
     </span>
@@ -171,27 +173,27 @@ export default function StaffPage() {
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="flex animate-pulse items-center gap-[13px] border-t border-[rgba(74,59,46,.06)] px-[17px] py-3"
+                className="flex animate-pulse items-center gap-[13px] border-t border-[rgba(59,46,36,.06)] px-[17px] py-3"
               >
-                <div className="h-[42px] w-[42px] rounded-full bg-[rgba(74,59,46,.08)]" />
+                <div className="h-[42px] w-[42px] rounded-full bg-[rgba(59,46,36,.08)]" />
                 <div className="flex-1">
-                  <div className="h-3.5 w-28 rounded-chip bg-[rgba(74,59,46,.08)]" />
-                  <div className="mt-2 h-3 w-44 rounded-chip bg-[rgba(74,59,46,.06)]" />
+                  <div className="h-3.5 w-28 rounded-chip bg-[rgba(59,46,36,.08)]" />
+                  <div className="mt-2 h-3 w-44 rounded-chip bg-[rgba(59,46,36,.06)]" />
                 </div>
-                <div className="h-3 w-32 rounded-chip bg-[rgba(74,59,46,.06)]" />
+                <div className="h-3 w-32 rounded-chip bg-[rgba(59,46,36,.06)]" />
               </div>
             ))}
           </div>
         ) : staffQuery.isError ? (
-          <div className="border-t border-[rgba(74,59,46,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(74,59,46,.62)]">员工列表加载失败，请检查网络后重试</p>
+          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(59,46,36,.62)]">员工列表加载失败，请检查网络后重试</p>
             <div className="mt-4">
               <QuietButton onClick={() => void staffQuery.refetch()}>重新加载</QuietButton>
             </div>
           </div>
         ) : staff.length === 0 ? (
-          <div className="border-t border-[rgba(74,59,46,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(74,59,46,.62)]">还没有员工</p>
+          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(59,46,36,.62)]">还没有员工</p>
             <div className="mt-4">
               <LemonButton onClick={() => setInviteOpen(true)}>去邀请第一位员工</LemonButton>
             </div>
@@ -203,18 +205,18 @@ export default function StaffPage() {
             return (
               <div
                 key={s.id}
-                className="flex items-center gap-[13px] border-t border-[rgba(74,59,46,.06)] px-[17px] py-3 text-caption"
+                className="flex items-center gap-[13px] border-t border-[rgba(59,46,36,.06)] px-[17px] py-3 text-caption"
                 style={suspended ? { opacity: 0.55 } : undefined}
               >
                 {/* 头像 42 圆（staff 表无 avatarUrl 字段 → 试样占位口径：纯墨 12% 圆，不堆图标） */}
-                <span className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-full bg-[rgba(74,59,46,.12)]" />
+                <span className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-full bg-[rgba(59,46,36,.12)]" />
 
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-body-sm font-bold text-ink">{s.name}</span>
                     <RoleChip role={s.role} />
                   </div>
-                  <div className="mt-[2px] text-caption-xs text-[rgba(74,59,46,.62)]">
+                  <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.62)]">
                     {suspended ? (
                       <>
                         入职 <span className="u1-num">{joinMonth(s.createdAt)}</span> · 停职中不可派单/核销
@@ -235,17 +237,17 @@ export default function StaffPage() {
                 <button
                   type="button"
                   onClick={() => setScheduleFor(s)}
-                  className="ml-auto shrink-0 rounded-chip px-2 py-1 text-right transition-colors duration-150 hover:bg-[rgba(74,59,46,.04)]"
+                  className="ml-auto shrink-0 rounded-chip px-2 py-1 text-right transition-colors duration-150 hover:bg-[rgba(59,46,36,.04)]"
                   aria-label={`编辑${s.name}的排班`}
                 >
-                  <div className="text-caption-xs text-[rgba(74,59,46,.62)]">排班 {weekSummary(s.schedule)}</div>
+                  <div className="u1-num text-caption-xs text-[rgba(59,46,36,.62)]">排班 {weekSummary(s.schedule)}</div>
                   <div
-                    className={`mt-[2px] text-caption-xs ${
+                    className={`u1-num mt-[2px] text-caption-xs ${
                       suspended
-                        ? 'text-[rgba(74,59,46,.42)]'
+                        ? 'text-[rgba(59,46,36,.42)]'
                         : duty.onDuty
                           ? 'font-semibold text-ink'
-                          : 'text-[rgba(74,59,46,.42)]'
+                          : 'text-[rgba(59,46,36,.42)]'
                     }`}
                   >
                     {suspended ? '已停职' : duty.label}

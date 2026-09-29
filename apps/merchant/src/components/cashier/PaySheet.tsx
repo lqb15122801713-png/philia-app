@@ -56,12 +56,12 @@ const capsuleCls = (state: 'on' | 'off' | 'disabled') =>
     state === 'on'
       ? 'bg-brand-primary text-ink'
       : state === 'off'
-        ? 'bg-[#FFFDF6] text-ink shadow-[0_0_0_1px_rgba(74,59,46,.09)]'
-        : 'cursor-not-allowed bg-[rgba(74,59,46,.05)] text-[rgba(74,59,46,.3)]'
+        ? 'bg-[#FFFDF6] text-ink shadow-[0_0_0_1px_rgba(59,46,36,.09)]'
+        : 'cursor-not-allowed bg-[rgba(59,46,36,.05)] text-[rgba(59,46,36,.3)]'
   }`
 
 const payInputCls =
-  'w-[110px] rounded-[6px] bg-[#FFFDF6] px-2.5 py-[7px] text-right font-number text-caption font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(74,59,46,.09)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(74,59,46,.25)]'
+  'w-[110px] rounded-[6px] bg-[#FFFDF6] px-2.5 py-[7px] text-right font-number text-caption font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(59,46,36,.09)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.25)]'
 
 export default function PaySheet({
   open,
@@ -300,21 +300,21 @@ export default function PaySheet({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-stretch justify-center bg-[rgba(74,59,46,.28)] sm:items-end sm:px-4 sm:pb-6"
+      className="fixed inset-0 z-50 flex items-stretch justify-center bg-[rgba(59,46,36,.28)] sm:items-end sm:px-4 sm:pb-6"
       data-testid="cashier-pay-overlay"
     >
-      <div className="flex w-full flex-col overflow-y-auto bg-[#FFFDF6] p-6 shadow-[0_8px_40px_rgba(74,59,46,.18)] sm:w-[520px] sm:rounded-[20px]">
+      <div className="flex w-full flex-col overflow-y-auto bg-[#FFFDF6] p-6 shadow-[0_8px_40px_rgba(59,46,36,.18)] sm:w-[520px] sm:rounded-[20px]">
         {settledInfo ? (
           /* ---- 成功态：薄荷对勾 + 已收款 + 3s 自动回 ---- */
-          <div className="flex flex-col items-center py-10" data-testid="cashier-pay-success">
-            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#7FD8BE]">
-              <CheckCircle2 size={28} strokeWidth={1.8} className="text-[#1E4D3D]" aria-hidden />
+          <div className="flex flex-col items-center py-8" data-testid="cashier-pay-success">
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#2E2318]">
+              <CheckCircle2 size={28} strokeWidth={1.8} className="text-[#F2DFA6]" aria-hidden />
             </span>
-            <div className="mt-4 font-number text-detail-lg font-bold tabular-nums">
+            <div className="mt-4 whitespace-nowrap font-number text-detail-lg font-bold tabular-nums">
               已收款 ¥{fenToYuan(settledInfo.paidFen)}
             </div>
-            <div className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]">
-              单号 {settledInfo.billNo} · 3 秒后自动返回
+            <div className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+              单号 <span className="font-number tabular-nums">{settledInfo.billNo}</span> · 3 秒后自动返回
             </div>
             <button
               type="button"
@@ -339,14 +339,14 @@ export default function PaySheet({
             ) : null}
             <div className="mb-1.5 flex items-center justify-between">
               <b className="text-body-sm">结账</b>
-              <span className="text-caption-xs text-[rgba(74,59,46,.42)]">
-                单号 {billNo ?? '结账后生成'}
+              <span className="text-caption-xs text-[rgba(59,46,36,.42)]">
+                单号 <span className="font-number tabular-nums">{billNo ?? '结账后生成'}</span>
               </span>
             </div>
-            <div className="py-1.5 text-center font-number text-detail-lg font-bold tabular-nums" data-testid="cashier-pay-due">
+            <div className="whitespace-nowrap py-1.5 text-center font-number text-detail-lg font-bold tabular-nums" data-testid="cashier-pay-due">
               ¥{fenToYuan(dueFen)}
             </div>
-            <div className="mb-3.5 text-center text-caption-xs text-[rgba(74,59,46,.42)]">
+            <div className="mb-3.5 text-center font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
               应收
               {passCoveredFen > 0
                 ? ` · 含次卡扣次 ${lines.filter((l) => l.paidByPass).length} 项（−¥${fenToYuan(passCoveredFen)} 已抵）`
@@ -370,7 +370,7 @@ export default function PaySheet({
                   {m.label}
                   <small
                     className={`mt-0.5 block text-caption-xs font-normal ${
-                      selected.includes(m.key) ? 'text-[rgba(74,59,46,.55)]' : 'text-[rgba(74,59,46,.42)]'
+                      selected.includes(m.key) ? 'text-[rgba(59,46,36,.55)]' : 'text-[rgba(59,46,36,.42)]'
                     }`}
                   >
                     {selected.includes(m.key) ? '已选' : m.hint}
@@ -386,8 +386,8 @@ export default function PaySheet({
               >
                 次卡扣次
                 <small
-                  className={`mt-0.5 block text-caption-xs font-normal ${
-                    passOn ? 'text-[rgba(74,59,46,.55)]' : 'text-[rgba(74,59,46,.42)]'
+                  className={`mt-0.5 block font-number tabular-nums text-caption-xs font-normal ${
+                    passOn ? 'text-[rgba(59,46,36,.55)]' : 'text-[rgba(59,46,36,.42)]'
                   }`}
                 >
                   {passOn
@@ -409,7 +409,7 @@ export default function PaySheet({
                   储值
                   <small
                     className={`mt-0.5 block font-number tabular-nums text-caption-xs font-normal ${
-                      svOn ? 'text-[rgba(74,59,46,.55)]' : 'text-[rgba(74,59,46,.42)]'
+                      svOn ? 'text-[rgba(59,46,36,.55)]' : 'text-[rgba(59,46,36,.42)]'
                     }`}
                   >
                     余 ¥{fenToYuan(svBalance)}
@@ -430,7 +430,7 @@ export default function PaySheet({
                   回馈金
                   <small
                     className={`mt-0.5 block font-number tabular-nums text-caption-xs font-normal ${
-                      rbOn ? 'text-[rgba(74,59,46,.55)]' : 'text-[rgba(74,59,46,.42)]'
+                      rbOn ? 'text-[rgba(59,46,36,.55)]' : 'text-[rgba(59,46,36,.42)]'
                     }`}
                   >
                     {rbOn ? `抵 ¥${fenToYuan(rbApplied)}` : rbBalance !== null ? `余 ¥${fenToYuan(rbBalance)}` : '仅抵商品'}
@@ -439,24 +439,24 @@ export default function PaySheet({
               ) : null}
             </div>
             {passBlockReason ? (
-              <p className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]" data-testid="cashier-pass-block">
+              <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="cashier-pass-block">
                 {passBlockReason}
               </p>
             ) : null}
             {svBlockReason ? (
-              <p className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]" data-testid="cashier-sv-block">
+              <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="cashier-sv-block">
                 {svBlockReason}
               </p>
             ) : null}
             {rbBlockReason ? (
-              <p className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]" data-testid="cashier-rebate-block">
+              <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="cashier-rebate-block">
                 {rbBlockReason}
               </p>
             ) : null}
 
             {/* 选中胶囊金额输入（组合支付：现金类 + 储值段 + 回馈金段） */}
             {selected.length > 0 || svOn || rbOn ? (
-              <div className="mt-3.5 rounded-[14px] bg-[#F6F1E3] px-3.5 py-3" data-testid="cashier-pay-detail">
+              <div className="mt-3.5 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3" data-testid="cashier-pay-detail">
                 {selected.map((m) => {
                   const label = MONEY_METHODS.find((x) => x.key === m)!.label
                   return (
@@ -477,7 +477,7 @@ export default function PaySheet({
                   <div className="flex items-center justify-between py-1 text-caption">
                     <span>
                       储值支付
-                      <small className="ml-1 font-number tabular-nums text-caption-xs text-[rgba(74,59,46,.42)]">
+                      <small className="ml-1 font-number tabular-nums text-caption-xs text-[rgba(59,46,36,.42)]">
                         余 ¥{fenToYuan(svBalance)}
                       </small>
                     </span>
@@ -501,7 +501,7 @@ export default function PaySheet({
                   <div className="flex items-center justify-between py-1 text-caption">
                     <span>
                       回馈金抵扣
-                      <small className="ml-1 font-number tabular-nums text-caption-xs text-[rgba(74,59,46,.42)]">
+                      <small className="ml-1 font-number tabular-nums text-caption-xs text-[rgba(59,46,36,.42)]">
                         {rbBalance !== null ? `余额 ¥${fenToYuan(rbBalance)} · ` : ''}上限 ¥{fenToYuan(rbCap)}
                       </small>
                     </span>
@@ -522,7 +522,7 @@ export default function PaySheet({
                   </p>
                 ) : null}
                 {rbOn ? (
-                  <p className="py-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+                  <p className="py-1 text-caption-xs text-[rgba(59,46,36,.42)]">
                     已到账余额 1:1 抵扣（本期预计在途回馈金次月到账后可用）；用回馈金付的部分不再返
                   </p>
                 ) : null}
@@ -531,7 +531,7 @@ export default function PaySheet({
                     {/* QA40-D13 修法①：该位历史上把现金承担额误标「应收」（老板 9-24 亲测
                         「应收被回写 168→160」即此）——应收唯一真值=顶部大数字 dueFen，
                         任何位置不许把分段金额叫「应收」 */}
-                    <span className="text-[rgba(74,59,46,.42)]">
+                    <span className="font-number tabular-nums text-[rgba(59,46,36,.42)]">
                       实收 ¥{cashReceivedFen !== null ? fenToYuan(cashReceivedFen) : '…'} − 现金承担 ¥
                       {fenToYuan(cashApplied)}
                     </span>
@@ -542,13 +542,13 @@ export default function PaySheet({
                         找零 ¥{fenToYuan(cashReceivedFen - cashApplied)}
                       </span>
                     ) : (
-                      <span className="text-caption-xs text-[rgba(74,59,46,.42)]">无找零</span>
+                      <span className="text-caption-xs text-[rgba(59,46,36,.42)]">无找零</span>
                     )}
                   </div>
                 ) : null}
                 {selected.includes('cash') && cashApplied > 0 ? (
                   <div className="flex items-center justify-between py-1 text-caption">
-                    <span className="text-[rgba(74,59,46,.42)]">现金实收</span>
+                    <span className="text-[rgba(59,46,36,.42)]">现金实收</span>
                     <input
                       className={payInputCls}
                       data-testid="cashier-pay-received"
@@ -571,16 +571,16 @@ export default function PaySheet({
                       : `还差 ¥${fenToYuan(moneyNeedFen - sumMoney)}——补足后才可确认结账`}
                   </div>
                 ) : null}
-                <div className="py-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+                <div className="py-1 text-caption-xs text-[rgba(59,46,36,.42)]">
                   可组合支付：Σ支付 = 应收 才放行确认
                 </div>
                 {/* 副行口径（裁定①+R11a）：已收=现金类；次卡/储值/回馈金单列不计入已收 */}
-                <div className="border-t border-dashed border-[rgba(74,59,46,.12)] py-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+                <div className="border-t border-dashed border-[rgba(59,46,36,.12)] py-1 text-caption-xs text-[rgba(59,46,36,.42)]">
                   已收口径=现金/微信/支付宝；次卡扣次 / 储值消费 / 回馈金抵扣单列，不计入今日已收
                 </div>
               </div>
             ) : passCoveredFen > 0 ? (
-              <div className="mt-3.5 rounded-[14px] bg-[#F6F1E3] px-3.5 py-3 text-caption-xs text-[rgba(74,59,46,.62)]">
+              <div className="mt-3.5 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3 text-caption-xs text-[rgba(59,46,36,.62)]">
                 全额次卡扣次——无需现金/扫码段（次卡单列，不计入已收）
               </div>
             ) : null}
@@ -590,7 +590,7 @@ export default function PaySheet({
                 type="button"
                 data-testid="cashier-pay-back"
                 onClick={onClose}
-                className="rounded-[14px] bg-[#FFFDF6] py-3 text-body-sm font-semibold text-ink shadow-[0_0_0_1px_rgba(74,59,46,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+                className="rounded-[14px] bg-[#FFFDF6] py-3 text-body-sm font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
               >
                 返回改单
               </button>

@@ -26,7 +26,7 @@ function PanelSkeleton({ rows }: { rows: number }) {
   return (
     <div className="flex flex-col gap-2">
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="h-[64px] animate-pulse rounded-[14px] bg-[rgba(74,59,46,.05)]" />
+        <div key={i} className="h-[64px] animate-pulse rounded-[14px] bg-[rgba(59,46,36,.05)]" />
       ))}
     </div>
   )
@@ -35,12 +35,12 @@ function PanelSkeleton({ rows }: { rows: number }) {
 function PanelError({ onRetry, testid }: { onRetry: () => void; testid: string }) {
   return (
     <div className="py-4 text-center">
-      <p className="text-caption-xs text-[rgba(74,59,46,.62)]">加载失败</p>
+      <p className="text-caption-xs text-[rgba(59,46,36,.62)]">加载失败</p>
       <button
         type="button"
         data-testid={testid}
         onClick={onRetry}
-        className="mt-2 rounded-full bg-[#FFFDF6] px-3 py-1.5 text-caption-xs font-semibold text-ink shadow-[0_0_0_1px_rgba(74,59,46,.09)]"
+        className="mt-2 rounded-full bg-[#FFFDF6] px-3 py-1.5 text-caption-xs font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.09)]"
       >
         重新加载
       </button>
@@ -77,12 +77,12 @@ export default function HoldPanel({
     <>
       {/* ---- 挂单队列 ---- */}
       <section
-        className="rounded-[20px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(74,59,46,.09)]"
+        className="rounded-[20px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(59,46,36,.09)]"
         data-testid="cashier-hold-queue"
       >
         <div className="mb-2.5 flex items-center justify-between">
           <b className="text-body-sm">挂单队列</b>
-          <span className="inline-flex items-center rounded-full bg-[#F1E8D4] px-2.5 py-[3px] text-caption-xs text-[rgba(74,59,46,.62)]">
+          <span className="inline-flex items-center rounded-full bg-[#F1E8D4] px-2.5 py-[3px] font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]">
             {held?.length ?? 0} 单
           </span>
         </div>
@@ -92,7 +92,7 @@ export default function HoldPanel({
           <PanelError onRetry={onRetry} testid="cashier-held-retry" />
         ) : (held ?? []).length === 0 ? (
           <div
-            className="rounded-[16px] bg-[#F1E8D4] px-3.5 py-[22px] text-center text-caption-xs text-[rgba(74,59,46,.42)]"
+            className="rounded-[16px] bg-[#F1E8D4] px-3.5 py-[22px] text-center text-caption-xs text-[rgba(59,46,36,.42)]"
             data-testid="cashier-held-empty"
           >
             无挂单
@@ -109,23 +109,23 @@ export default function HoldPanel({
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') onResume(b)
                 }}
-                className="relative cursor-pointer rounded-[16px] bg-[#FFFDF6] px-3.5 py-3 shadow-[0_0_0_1px_rgba(74,59,46,.09)] transition-shadow hover:shadow-[0_0_0_1px_rgba(74,59,46,.18)]"
+                className="relative cursor-pointer rounded-[16px] bg-[#FFFDF6] px-3.5 py-3 shadow-[0_0_0_1px_rgba(59,46,36,.09)] transition-shadow hover:shadow-[0_0_0_1px_rgba(59,46,36,.18)]"
               >
                 {b.billNo === freshHeldNo ? (
                   <span className="absolute right-3 top-2.5 h-[7px] w-[7px] rounded-full bg-brand-primary" />
                 ) : null}
                 <div className="font-number text-caption font-semibold tabular-nums">{b.billNo}</div>
                 <div className="mt-1 text-caption-xs">
-                  {b.buyerName} · {b.itemCount} 项
+                  {b.buyerName} · <span className="font-number tabular-nums">{b.itemCount}</span> 项
                 </div>
                 {/* PR-3 C2b：备注行（保留标测试件标注「测试件勿动」在队列即醒目，PD-02 反对意见①） */}
                 {b.note ? (
-                  <div className="mt-1 truncate text-caption-xs text-[rgba(74,59,46,.55)]" title={b.note}>
+                  <div className="mt-1 truncate text-caption-xs text-[rgba(59,46,36,.55)]" title={b.note}>
                     {b.note}
                   </div>
                 ) : null}
-                <div className="mt-1.5 flex items-center justify-between text-caption-xs text-[rgba(74,59,46,.42)]">
-                  <span>{b.heldAt ? `${hhmm(b.heldAt)} 挂出` : '—'}</span>
+                <div className="mt-1.5 flex items-center justify-between text-caption-xs text-[rgba(59,46,36,.42)]">
+                  <span>{b.heldAt ? <><span className="font-number tabular-nums">{hhmm(b.heldAt)}</span>{' 挂出'}</> : '—'}</span>
                   <span className="font-number font-semibold tabular-nums text-ink">
                     ¥{fenToYuan(b.payableFen)}
                   </span>
@@ -140,7 +140,7 @@ export default function HoldPanel({
                     e.stopPropagation()
                     onVoid(b)
                   }}
-                  className="absolute bottom-2 right-2 rounded-full p-1 text-[rgba(74,59,46,.3)] transition-colors hover:bg-[rgba(74,59,46,.05)] hover:text-[rgba(74,59,46,.6)]"
+                  className="absolute bottom-2 right-2 rounded-full p-1 text-[rgba(59,46,36,.3)] transition-colors hover:bg-[rgba(59,46,36,.05)] hover:text-[rgba(59,46,36,.6)]"
                 >
                   <MoreHorizontal size={15} strokeWidth={1.8} aria-hidden />
                 </button>
@@ -148,18 +148,18 @@ export default function HoldPanel({
             ))}
           </div>
         )}
-        <p className="mt-2 text-caption-xs text-[rgba(74,59,46,.42)]">点卡取单续结 · ⋯ 撤单（留痕）</p>
+        <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]">点卡取单续结 · ⋯ 撤单（留痕）</p>
       </section>
 
       {/* ---- 今日流水（最近 5 条；clerk 隐藏整块——矩阵总规则②） ---- */}
       {hideToday ? null : (
       <section
-        className="rounded-[20px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(74,59,46,.09)]"
+        className="rounded-[20px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(59,46,36,.09)]"
         data-testid="cashier-today-flow"
       >
         <div className="mb-1.5 flex items-center justify-between">
           <b className="text-body-sm">今日流水</b>
-          <Link to="/cashier/records" className="text-caption-xs text-[rgba(74,59,46,.42)] hover:text-ink">
+          <Link to="/cashier/records" className="text-caption-xs text-[rgba(59,46,36,.42)] hover:text-ink">
             全部 ›
           </Link>
         </div>
@@ -168,7 +168,7 @@ export default function HoldPanel({
         ) : error ? (
           <PanelError onRetry={onRetry} testid="cashier-flow-retry" />
         ) : recent.length === 0 ? (
-          <p className="py-4 text-center text-caption-xs text-[rgba(74,59,46,.42)]">今日暂无流水</p>
+          <p className="py-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">今日暂无流水</p>
         ) : (
           <div>
             {recent.map((b) => {
@@ -179,23 +179,23 @@ export default function HoldPanel({
                   ? reversed
                     ? { cls: 'u3-st done', label: '已冲正' }
                     : {
-                        cls: 'bg-[#7FD8BE] text-[#1E4D3D]',
+                        cls: 'bg-[#2E2318] text-[#F2DFA6]',
                         // R6-1：组合支付方式签全显（现金+微信），不再只显首方式
                         label: b.methods.length > 0 ? b.methods.map((m) => PAY_METHOD_LABEL[m] ?? m).join('+') : '已收',
                       }
                   : b.status === 'reversal'
                     ? { cls: 'u3-st done', label: '冲正' }
                     : voided
-                      ? { cls: 'bg-[rgba(74,59,46,.08)] text-[rgba(74,59,46,.42)]', label: '撤' }
-                      : { cls: 'bg-[#F1E8D4] text-[rgba(74,59,46,.62)]', label: BILL_STATUS_CHIP[b.status]?.label ?? b.status }
+                      ? { cls: 'bg-[rgba(59,46,36,.08)] text-[rgba(59,46,36,.42)]', label: '撤' }
+                      : { cls: 'bg-[#F1E8D4] text-[rgba(59,46,36,.62)]', label: BILL_STATUS_CHIP[b.status]?.label ?? b.status }
               return (
                 <div
                   key={b.id}
                   data-testid={`cashier-flow-${b.billNo}`}
-                  className={`flex items-center gap-2 border-b border-dashed border-[rgba(74,59,46,.09)] py-[9px] text-caption-xs last:border-b-0 ${voided ? 'opacity-55' : ''}`}
+                  className={`flex items-center gap-2 border-b border-dashed border-[rgba(59,46,36,.09)] py-[9px] text-caption-xs last:border-b-0 ${voided ? 'opacity-55' : ''}`}
                 >
                   <span className="font-number font-semibold tabular-nums">{shortBillNo(b.billNo)}</span>
-                  <span className="min-w-0 flex-1 truncate text-[rgba(74,59,46,.6)]">
+                  <span className="min-w-0 flex-1 truncate text-[rgba(59,46,36,.6)]">
                     {b.buyerName}
                     {voided ? ' · 已撤单' : ''}
                   </span>

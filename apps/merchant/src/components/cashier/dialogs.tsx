@@ -51,12 +51,12 @@ export function CashierModal({
   if (!open) return null
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-[rgba(74,59,46,.28)]" onClick={onClose} aria-hidden />
+      <div className="absolute inset-0 bg-[rgba(59,46,36,.28)]" onClick={onClose} aria-hidden />
       <div
         role="dialog"
         aria-modal="true"
         data-testid={testid}
-        className="relative flex max-h-[85vh] w-full max-w-[420px] flex-col overflow-hidden rounded-[20px] bg-[#FFFDF6] shadow-[0_8px_40px_rgba(74,59,46,.18)]"
+        className="relative flex max-h-[85vh] w-full max-w-[420px] flex-col overflow-hidden rounded-[20px] bg-[#FFFDF6] shadow-[0_8px_40px_rgba(59,46,36,.18)]"
       >
         <div className="flex items-center justify-between px-5 pb-2 pt-4">
           <h3 className="text-title font-semibold">{title}</h3>
@@ -64,7 +64,7 @@ export function CashierModal({
             type="button"
             onClick={onClose}
             aria-label="关闭"
-            className="rounded-full p-1 text-[rgba(74,59,46,.42)] transition-colors hover:bg-[rgba(74,59,46,.06)]"
+            className="rounded-full p-1 text-[rgba(59,46,36,.42)] transition-colors hover:bg-[rgba(59,46,36,.06)]"
           >
             <X size={18} strokeWidth={1.6} aria-hidden />
           </button>
@@ -86,9 +86,9 @@ export function SheetBtn({
   variant?: 'ghost' | 'primary' | 'danger-outline'
 }) {
   const v = {
-    ghost: 'bg-[#FFFDF6] text-ink shadow-[0_0_0_1px_rgba(74,59,46,.12)]',
+    ghost: 'bg-[#FFFDF6] text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)]',
     primary: 'bg-brand-primary text-ink shadow-hairline font-bold',
-    'danger-outline': 'bg-[#FFFDF6] text-danger shadow-[0_0_0_1px_#D92D20] font-semibold',
+    'danger-outline': 'bg-[#FFFDF6] text-danger shadow-[0_0_0_1px_#B4502E] font-semibold',
   }[variant]
   return (
     <button
@@ -100,10 +100,10 @@ export function SheetBtn({
 }
 
 const sheetInputCls =
-  'w-full rounded-[14px] bg-[#FFFDF6] px-3 py-2 font-number text-body-sm font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(74,59,46,.12)] placeholder:font-sans placeholder:font-normal placeholder:text-[rgba(74,59,46,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(74,59,46,.3)] disabled:opacity-50'
+  'w-full rounded-[14px] bg-[#FFFDF6] px-3 py-2 font-number text-body-sm font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:font-sans placeholder:font-normal placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)] disabled:opacity-50'
 
 const modeTabCls = (on: boolean) =>
-  `rounded-full px-3.5 py-[7px] text-caption ${on ? 'bg-[#4A3B2E] font-semibold text-[#F6F1E3]' : 'text-[rgba(74,59,46,.6)]'}`
+  `rounded-full px-3.5 py-[7px] text-caption ${on ? 'bg-[#3B2E24] font-semibold text-[#FAF8F2]' : 'text-[rgba(59,46,36,.6)]'}`
 
 /* ------------------------------------------------------------------ */
 /* 改价弹层（点行价）                                                    */
@@ -182,9 +182,8 @@ export function PriceDialog({
       }
     >
       <div className="text-body-sm font-semibold">{line.name}</div>
-      <div className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.42)]">
-        原价 <span className="font-number tabular-nums">¥{fenToYuan(unit)}</span>
-        {line.qty > 1 ? ` × ${line.qty}` : ''}
+      <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+        原价 <span className="font-number tabular-nums">¥{fenToYuan(unit)}{line.qty > 1 ? ` × ${line.qty}` : ''}</span>
       </div>
 
       <div className="mt-3 flex gap-1.5">
@@ -218,7 +217,7 @@ export function PriceDialog({
             onChange={(e) => setPercentInput(e.target.value)}
           />
         )}
-        <p className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]">
+        <p className="mt-1.5 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
           {valid && nextFen !== null
             ? `新价 ¥${fenToYuan(nextFen)}（改价留痕，随单可查）`
             : mode === 'price'
@@ -228,7 +227,7 @@ export function PriceDialog({
       </div>
 
       {!canEdit ? (
-        <p className="mt-2 text-caption-xs font-semibold text-[rgba(74,59,46,.42)]" data-testid="cashier-price-owner-hint">
+        <p className="mt-2 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]" data-testid="cashier-price-owner-hint">
           仅店主/店长可改价
         </p>
       ) : null}
@@ -346,7 +345,7 @@ export function DiscountDialog({
             onChange={(e) => setAmtInput(e.target.value)}
           />
         )}
-        <p className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]">
+        <p className="mt-1.5 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
           {overLimit
             ? '优惠不能超过服务/商品行合计（预约行金额不参与优惠）'
             : valid && discountFen !== null && discountFen > 0
@@ -357,7 +356,7 @@ export function DiscountDialog({
         </p>
       </div>
       {!canEdit ? (
-        <p className="mt-2 text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">仅店主/店长可整单优惠</p>
+        <p className="mt-2 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">仅店主/店长可整单优惠</p>
       ) : null}
     </CashierModal>
   )
@@ -411,9 +410,9 @@ export function VoidDialog({
         </>
       }
     >
-      <div className="rounded-[14px] bg-[#F6F1E3] px-3.5 py-3">
+      <div className="rounded-[14px] bg-[#FAF8F2] px-3.5 py-3">
         <div className="font-number text-caption font-semibold tabular-nums">{bill.billNo}</div>
-        <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">
+        <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
           {bill.buyerName ?? '—'}
           {bill.payableFen != null ? (
             <>
@@ -424,14 +423,14 @@ export function VoidDialog({
         </div>
       </div>
       <textarea
-        className="mt-3 min-h-[76px] w-full resize-none rounded-[14px] bg-[#FFFDF6] px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(74,59,46,.12)] placeholder:text-[rgba(74,59,46,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(74,59,46,.3)]"
+        className="mt-3 min-h-[76px] w-full resize-none rounded-[14px] bg-[#FFFDF6] px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
         data-testid="cashier-void-reason"
         placeholder="撤单原因（选填，留痕在流水）"
         maxLength={200}
         value={reason}
         onChange={(e) => setReason(e.target.value)}
       />
-      <p className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]">
+      <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
         撤单后单据留痕为「已撤单」，不会物理删除；仅未支付单可撤（已结账请店主用反结账）
       </p>
       {settled ? (
@@ -490,11 +489,11 @@ export function ReverseDialog({
         </>
       }
     >
-      <div className="rounded-[14px] bg-[#F6F1E3] px-3.5 py-3">
+      <div className="rounded-[14px] bg-[#FAF8F2] px-3.5 py-3">
         <div className="font-number text-caption font-semibold tabular-nums" data-testid="cashier-reverse-billno">
           {bill.billNo}
         </div>
-        <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">
+        <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
           {bill.buyerName ?? '—'}
           {bill.payableFen != null ? (
             <>
@@ -505,14 +504,14 @@ export function ReverseDialog({
         </div>
       </div>
       <textarea
-        className="mt-3 min-h-[76px] w-full resize-none rounded-[14px] bg-[#FFFDF6] px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(74,59,46,.12)] placeholder:text-[rgba(74,59,46,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(74,59,46,.3)]"
+        className="mt-3 min-h-[76px] w-full resize-none rounded-[14px] bg-[#FFFDF6] px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
         data-testid="cashier-reverse-reason"
         placeholder="冲正原因（必填，留痕）"
         maxLength={200}
         value={reason}
         onChange={(e) => setReason(e.target.value)}
       />
-      <p className="mt-1.5 text-caption-xs leading-relaxed text-[rgba(74,59,46,.42)]">
+      <p className="mt-1.5 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
         冲正将自动生成关联冲正单（金额镜像负值，不计当日已收）：库存回补、预约回到待收款、
         次卡/储值按原路回补；原单永存不涂改，仅挂「已冲正」灰签（双向可查）。
       </p>

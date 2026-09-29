@@ -74,11 +74,11 @@ function wallPhotosOf(steps: StepListItem[]): ViewPhoto[] {
 function ParentViewNote() {
   return (
     <>
-      <div className="u3-panel-head border-t border-[rgba(74,59,46,.06)]">
+      <div className="u3-panel-head border-t border-[rgba(59,46,36,.06)]">
         <h3>家长端视角</h3>
         <span className="aside">与客户端「服务中全程页」同源</span>
       </div>
-      <p className="px-[17px] pb-4 text-caption leading-[1.7] text-[rgba(74,59,46,.62)]">
+      <p className="px-[17px] pb-4 text-caption leading-[1.7] text-[rgba(59,46,36,.62)]">
         家长看到的内容与这屏一致（六步进度+过程照）。照片一经上传即双频道推送，不可删除，仅可被商家「打标重拍」作废旧照（B3-1
         在案）。
       </p>
@@ -252,28 +252,28 @@ export default function AppointmentMonitorPage() {
         /* 加载骨架（禁转圈） */
         <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.6fr_1fr]" aria-label="加载中">
           <div className="u3-panel p-[14px_17px]">
-            <div className="h-3.5 w-28 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
+            <div className="h-3.5 w-28 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
             <div className="mt-3 flex flex-wrap gap-2">
               {[0, 1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-24 w-32 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]"
+                  className="h-24 w-32 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]"
                 />
               ))}
             </div>
           </div>
           <div className="u3-panel p-[14px_17px]">
             {[0, 1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="mt-2.5 h-3.5 w-40 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
+              <div key={i} className="mt-2.5 h-3.5 w-40 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
             ))}
           </div>
         </div>
       ) : detailQuery.isError || !appt ? (
         <div className="u3-panel px-[17px] py-14 text-center">
-          <div className="text-body-sm font-semibold text-[rgba(74,59,46,.62)]">
+          <div className="text-body-sm font-semibold text-[rgba(59,46,36,.62)]">
             打不开这个监视页
           </div>
-          <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+          <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
             {detailQuery.error instanceof Error ? detailQuery.error.message : '预约不存在或无权限'}
           </div>
           {/* W1 退回修：异常分支补第四件出口（柠檬主钮回预约管理，同详情页口径） */}
@@ -291,10 +291,10 @@ export default function AppointmentMonitorPage() {
       ) : !inLiveFlow ? (
         /* 尚未开始 / 已取消 */
         <div className="u3-panel px-[17px] py-14 text-center">
-          <div className="text-body-sm font-semibold text-[rgba(74,59,46,.62)]">
+          <div className="text-body-sm font-semibold text-[rgba(59,46,36,.62)]">
             {appt.status === 'cancelled' ? '预约已取消' : '服务尚未开始'}
           </div>
-          <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+          <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
             {appt.status === 'cancelled'
               ? '该预约已取消，无服务过程可监视。'
               : '客户到店核销后，这里会实时展示服务进度与照片。'}
@@ -319,16 +319,16 @@ export default function AppointmentMonitorPage() {
                 {[0, 1, 2].map((i) => (
                   <div
                     key={i}
-                    className="h-24 w-32 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]"
+                    className="h-24 w-32 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]"
                   />
                 ))}
               </div>
             ) : steps.length === 0 ? (
-              <p className="px-[17px] pb-4 text-caption text-[rgba(74,59,46,.62)]">
+              <p className="px-[17px] pb-4 text-caption text-[rgba(59,46,36,.62)]">
                 六步流尚未初始化（等待员工核销）。
               </p>
             ) : wallPhotos.length === 0 ? (
-              <p className="px-[17px] pb-4 text-caption text-[rgba(74,59,46,.62)]">
+              <p className="px-[17px] pb-4 text-caption text-[rgba(59,46,36,.62)]">
                 员工上传过程照后会实时出现在这里。
               </p>
             ) : (
@@ -338,7 +338,7 @@ export default function AppointmentMonitorPage() {
                     key={p.id}
                     type="button"
                     onClick={() => setViewer({ photos: wallPhotos, index: i })}
-                    className="block h-24 w-32 overflow-hidden rounded-chip bg-[#F6F1E3] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+                    className="block h-24 w-32 overflow-hidden rounded-chip bg-[#FAF8F2] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
                     aria-label={`照片 ${i + 1}`}
                   >
                     <img
@@ -367,19 +367,19 @@ export default function AppointmentMonitorPage() {
                 {[0, 1, 2, 3, 4, 5].map((i) => (
                   <div
                     key={i}
-                    className="mt-2.5 h-3.5 w-40 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]"
+                    className="mt-2.5 h-3.5 w-40 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]"
                   />
                 ))}
               </div>
             ) : steps.length === 0 ? (
-              <p className="px-[17px] pb-4 text-caption text-[rgba(74,59,46,.62)]">
+              <p className="px-[17px] pb-4 text-caption text-[rgba(59,46,36,.62)]">
                 六步流尚未初始化（等待员工核销）。
               </p>
             ) : (
               <MonitorTimeline steps={steps} />
             )}
 
-            <div className="u3-panel-head border-t border-[rgba(74,59,46,.06)]">
+            <div className="u3-panel-head border-t border-[rgba(59,46,36,.06)]">
               <h3>快捷操作</h3>
             </div>
             <div className="flex gap-2.5 px-[17px] pb-4">
@@ -404,29 +404,29 @@ export default function AppointmentMonitorPage() {
 
             {/* 联系员工：就地展开员工信息小卡（staffList 真值，无电话字段不编造） */}
             {staffOpen ? (
-              <div className="mx-[17px] mb-4 rounded-[14px] bg-[#F6F1E3] px-3.5 py-2.5">
+              <div className="mx-[17px] mb-4 rounded-[14px] bg-[#FAF8F2] px-3.5 py-2.5">
                 {staff ? (
                   <>
                     <div className="flex items-center justify-between py-1">
-                      <span className="text-caption-xs text-[rgba(74,59,46,.42)]">姓名</span>
+                      <span className="text-caption-xs text-[rgba(59,46,36,.42)]">姓名</span>
                       <span className="text-caption font-semibold">{staff.name}</span>
                     </div>
                     <div className="flex items-center justify-between py-1">
-                      <span className="text-caption-xs text-[rgba(74,59,46,.42)]">角色</span>
+                      <span className="text-caption-xs text-[rgba(59,46,36,.42)]">角色</span>
                       <span className="text-caption font-semibold">{roleLabel(staff.role)}</span>
                     </div>
                     <div className="flex items-center justify-between py-1">
-                      <span className="text-caption-xs text-[rgba(74,59,46,.42)]">今日排班</span>
+                      <span className="text-caption-xs text-[rgba(59,46,36,.42)]">今日排班</span>
                       <span className="font-number text-caption font-semibold tabular-nums">
                         {todayScheduleLabel(staff)}
                       </span>
                     </div>
-                    <p className="pt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]">
+                    <p className="pt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
                       店内对讲或到工位找TA；联系方式请走门店内部渠道。
                     </p>
                   </>
                 ) : (
-                  <p className="py-1.5 text-caption text-[rgba(74,59,46,.62)]">
+                  <p className="py-1.5 text-caption text-[rgba(59,46,36,.62)]">
                     该单尚未指派员工，可在预约详情页改派。
                   </p>
                 )}

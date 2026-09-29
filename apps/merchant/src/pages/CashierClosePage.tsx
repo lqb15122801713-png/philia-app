@@ -256,10 +256,10 @@ export default function CashierClosePage() {
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           data-testid="close-shift-confirm"
         >
-          <div className="absolute inset-0 bg-[rgba(74,59,46,.28)]" onClick={() => setConfirmCloseShift(false)} aria-hidden />
-          <div className="relative w-full max-w-[380px] rounded-[20px] bg-[#FFFDF6] p-5 shadow-[0_8px_40px_rgba(74,59,46,.18)]">
+          <div className="absolute inset-0 bg-[rgba(59,46,36,.28)]" onClick={() => setConfirmCloseShift(false)} aria-hidden />
+          <div className="relative w-full max-w-[380px] rounded-[20px] bg-[#FFFDF6] p-5 shadow-[0_8px_40px_rgba(59,46,36,.18)]">
             <h3 className="text-title font-semibold">交接班确认</h3>
-            <p className="mt-2 text-caption leading-relaxed text-[rgba(74,59,46,.62)]">
+            <p className="mt-2 text-caption leading-relaxed text-[rgba(59,46,36,.62)]">
               交接班=关闭当前班次（不冻结账目）；下一笔收银将自动开新班。
               如需冻结当班账目，请用「日结」。
             </p>
@@ -267,7 +267,7 @@ export default function CashierClosePage() {
               <button
                 type="button"
                 onClick={() => setConfirmCloseShift(false)}
-                className="rounded-full bg-[#FFFDF6] px-4 py-2.5 text-caption text-ink shadow-[0_0_0_1px_rgba(74,59,46,.12)]"
+                className="rounded-full bg-[#FFFDF6] px-4 py-2.5 text-caption text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)]"
               >
                 取消
               </button>

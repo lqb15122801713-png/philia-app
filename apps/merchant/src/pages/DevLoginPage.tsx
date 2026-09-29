@@ -1,7 +1,7 @@
 /**
  * 商家端登录页 /login（路由 /dev-login 同组件）· U3 批次重做（试样屏 1 · 居中 400px 卡）
  *
- * 规格书 §1：米白 #F6F1E3 画布 → 400px 纸面卡（#FFFDF6 / rounded-20 / 1px ring）→
+ * 规格书 §1：米白 #FAF8F2 画布 → 400px 纸面卡（#FFFDF6 / rounded-20 / 1px ring）→
  * wordmark「PHILIA · 商家端」→ 衬线宣言「店里的每一件小事，都值得被认真对待」（font-serif-cn）→
  * 双字段位 + 柠檬主钮「进入门店」+ 协议小字。
  *
@@ -36,7 +36,7 @@ const roleLabel = (roles: string[]) => roles.map((r) => ROLE_LABEL[r] ?? r).join
 
 /* 试样 .fld 字段工艺：米白底 + 内描边 1px ring + 14 圆角 */
 const FLD =
-  'bg-[#F6F1E3] rounded-[14px] shadow-[inset_0_0_0_1px_rgba(74,59,46,0.09)]'
+  'bg-[#FAF8F2] rounded-[14px] shadow-[inset_0_0_0_1px_rgba(59,46,36,0.09)]'
 
 export default function DevLoginPage() {
   const navigate = useNavigate()
@@ -154,9 +154,9 @@ export default function DevLoginPage() {
         {/* 400px 登录卡（试样 .login-card：#FFFDF6 / rounded-20 / 1px ring / 34·32 内边距） */}
         <div
           data-testid="login-gate"
-          className="rounded-[20px] bg-[#FFFDF6] px-8 pb-8 pt-[34px] text-center shadow-[0_0_0_1px_rgba(74,59,46,0.09)]"
+          className="rounded-[20px] bg-[#FFFDF6] px-8 pb-8 pt-[34px] text-center shadow-[0_0_0_1px_rgba(59,46,36,0.09)]"
         >
-          <p className="font-display text-[14px] font-bold tracking-[.3em] text-[rgba(74,59,46,0.42)]">
+          <p className="font-display text-[14px] font-bold tracking-[.3em] text-[rgba(59,46,36,0.42)]">
             PHILIA · 商家端
           </p>
           <h1 className="u1-serif mt-3.5 text-[20px] font-bold leading-[34px]">
@@ -164,7 +164,7 @@ export default function DevLoginPage() {
             <br />
             都值得被认真对待
           </h1>
-          <p className="mt-1.5 text-[12px] text-[rgba(74,59,46,0.62)]">
+          <p className="mt-1.5 text-[12px] text-[rgba(59,46,36,0.62)]">
             菲丽亚宠物 · 门店经营后台（内测）
           </p>
 
@@ -172,12 +172,12 @@ export default function DevLoginPage() {
             /* ---- 已登录态：当前账号 + 进入门店 / 退出登录 ---- */
             <div className="mt-6">
               <div className={`${FLD} flex items-center gap-3 px-4 py-3.5 text-left`}>
-                <Store size={16} strokeWidth={1.8} className="shrink-0 text-[rgba(74,59,46,0.62)]" />
+                <Store size={16} strokeWidth={1.8} className="shrink-0 text-[rgba(59,46,36,0.62)]" />
                 <span className="min-w-0">
                   <span className="block truncate text-[14px] font-semibold">
                     {user.nickname ?? user.id}
                   </span>
-                  <span className="mt-0.5 block truncate text-[11px] text-[rgba(74,59,46,0.42)]">
+                  <span className="mt-0.5 block truncate text-[11px] text-[rgba(59,46,36,0.42)]">
                     {user.roles.join(' / ')}
                   </span>
                 </span>
@@ -193,7 +193,7 @@ export default function DevLoginPage() {
               <button
                 type="button"
                 onClick={doLogout}
-                className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-[14px] bg-[#FFFDF6] py-3 text-[12px] font-semibold text-[rgba(74,59,46,0.62)] shadow-[inset_0_0_0_1px_rgba(74,59,46,0.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+                className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-[14px] bg-[#FFFDF6] py-3 text-[12px] font-semibold text-[rgba(59,46,36,0.62)] shadow-[inset_0_0_0_1px_rgba(59,46,36,0.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
               >
                 <LogOut size={13} strokeWidth={1.8} />
                 退出登录
@@ -204,12 +204,12 @@ export default function DevLoginPage() {
             <div className="mt-6">
               {/* 种子账号列表 = 试样「手机号」字段位（内测登录真链路） */}
               <div ref={accountsRef} className="scroll-mt-6 text-left">
-                <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-[rgba(74,59,46,0.42)]">
+                <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-[rgba(59,46,36,0.42)]">
                   <Store size={12} strokeWidth={1.8} />
                   店主账号
                 </p>
                 {gateRequired && seeds === null ? (
-                  <p className={`${FLD} px-4 py-3.5 text-[12px] text-[rgba(74,59,46,0.42)]`}>
+                  <p className={`${FLD} px-4 py-3.5 text-[12px] text-[rgba(59,46,36,0.42)]`}>
                     内测环境需先在下方输入口令
                   </p>
                 ) : seeds === null && seedsError === null ? (
@@ -232,11 +232,11 @@ export default function DevLoginPage() {
                             <span className="block truncate text-[14px] font-semibold">
                               {u.nickname}
                             </span>
-                            <span className="mt-0.5 block truncate text-[11px] text-[rgba(74,59,46,0.42)]">
+                            <span className="mt-0.5 block truncate text-[11px] text-[rgba(59,46,36,0.42)]">
                               {roleLabel(u.roles)}
                             </span>
                           </span>
-                          <span className="shrink-0 text-[12px] text-[rgba(74,59,46,0.62)]">
+                          <span className="shrink-0 text-[12px] text-[rgba(59,46,36,0.62)]">
                             {pendingId === u.id ? '登录中…' : '登录 ›'}
                           </span>
                         </button>
@@ -254,7 +254,7 @@ export default function DevLoginPage() {
 
               {/* 内测口令字段（批次 6 B2 真实链路；Enter 提交加载账号） */}
               <div className="mt-3 text-left">
-                <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-[rgba(74,59,46,0.42)]">
+                <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold text-[rgba(59,46,36,0.42)]">
                   <KeyRound size={12} strokeWidth={1.8} />
                   内测口令{gateRequired ? '（必填）' : '（如服务端已开启口令门）'}
                 </p>
@@ -266,7 +266,7 @@ export default function DevLoginPage() {
                     if (e.key === 'Enter') submitGate()
                   }}
                   placeholder="内测口令"
-                  className="h-[46px] rounded-[14px] border-0 bg-[#F6F1E3] px-4 text-body-sm shadow-[inset_0_0_0_1px_rgba(74,59,46,0.09)] focus-visible:ring-1 focus-visible:ring-[rgba(74,59,46,0.3)] focus-visible:ring-offset-0"
+                  className="h-[46px] rounded-[14px] border-0 bg-[#FAF8F2] px-4 text-body-sm shadow-[inset_0_0_0_1px_rgba(59,46,36,0.09)] focus-visible:ring-1 focus-visible:ring-[rgba(59,46,36,0.3)] focus-visible:ring-offset-0"
                 />
                 {gateError ? (
                   <p className="mt-1.5 text-[11px] text-danger-deep">{gateError}</p>
@@ -287,7 +287,7 @@ export default function DevLoginPage() {
           )}
 
           {/* 协议小字（试样所印 10px 越字阶闸门 → 11，员工端 E-19 同口径映射） */}
-          <p className="mt-3.5 text-caption-xs leading-relaxed text-[rgba(74,59,46,0.42)]">
+          <p className="mt-3.5 text-caption-xs leading-relaxed text-[rgba(59,46,36,0.42)]">
             登录即同意《商家内测协议》· 遇到问题联系 philia 小助手
           </p>
         </div>
@@ -300,13 +300,13 @@ export default function DevLoginPage() {
                 value={manualId}
                 onChange={(e) => setManualId(e.target.value)}
                 placeholder="手动输入 userId（ULID）兜底"
-                className="h-11 rounded-[14px] border-0 bg-[#FFFDF6] px-4 text-[12px] shadow-[0_0_0_1px_rgba(74,59,46,0.09)] focus-visible:ring-1 focus-visible:ring-[rgba(74,59,46,0.3)] focus-visible:ring-offset-0"
+                className="h-11 rounded-[14px] border-0 bg-[#FFFDF6] px-4 text-[12px] shadow-[0_0_0_1px_rgba(59,46,36,0.09)] focus-visible:ring-1 focus-visible:ring-[rgba(59,46,36,0.3)] focus-visible:ring-offset-0"
               />
               <button
                 type="button"
                 disabled={primaryBusy || manualId.trim().length === 0}
                 onClick={() => void doLogin(manualId.trim())}
-                className="h-11 shrink-0 rounded-[14px] bg-[#FFFDF6] px-4 text-[12px] font-semibold text-ink shadow-[0_0_0_1px_rgba(74,59,46,0.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+                className="h-11 shrink-0 rounded-[14px] bg-[#FFFDF6] px-4 text-[12px] font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,0.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
               >
                 登录
               </button>
@@ -316,7 +316,7 @@ export default function DevLoginPage() {
                 {error}
               </p>
             ) : null}
-            <p className="mt-4 text-center text-[11px] leading-relaxed text-[rgba(74,59,46,0.42)]">
+            <p className="mt-4 text-center text-[11px] leading-relaxed text-[rgba(59,46,36,0.42)]">
               仅开发环境：dev-login 仅允许种子用户（kimi_id 以 seed_ 前缀），会话 cookie 有效期 7 天。
               非商家账号登录后会被引导回本页切换。
             </p>

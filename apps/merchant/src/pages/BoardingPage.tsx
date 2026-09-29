@@ -35,9 +35,11 @@ import BoardingStayDetail from '../components/staff-admin/BoardingStayDetail';
 import { useMerchantEvents } from '../components/staff-admin/useMerchantEvents';
 import type { StayBoardRow } from '../components/staff-admin/types';
 
-/** 单晚价：分 → ¥ 整数优先（¥199），带零头才给两位小数（¥199.50） */
+/** 单晚价：分 → ¥ 整数优先（¥199），带零头才给两位小数（¥199.50）；≥6 位分组（仅展示层） */
 const fmtNightPrice = (fen: number): string =>
-  fen % 100 === 0 ? `¥${fen / 100}` : `¥${(fen / 100).toFixed(2)}`;
+  fen % 100 === 0
+    ? `¥${(fen / 100).toLocaleString('en-US')}`
+    : `¥${(fen / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 /** 今日 YYYY-MM-DD（本地日界，与 lastLogDate 同口径比较） */
 const todayIso = (): string => {
@@ -69,10 +71,10 @@ const stayOverdueDays = (row: StayBoardRow) =>
 /** 房型卡骨架（禁转圈：opacity 脉冲骨架条） */
 function RoomSkeleton() {
   return (
-    <div className="rounded-panel bg-[#FFFDF6] p-[15px_17px] shadow-[0_0_0_1px_rgba(74,59,46,.09)]">
-      <div className="h-3 w-24 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
-      <div className="mt-2.5 h-6 w-16 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
-      <div className="mt-2.5 h-3 w-28 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
+    <div className="rounded-panel bg-[#FFFDF6] p-[15px_17px] shadow-[0_0_0_1px_rgba(59,46,36,.09)]">
+      <div className="h-3 w-24 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
+      <div className="mt-2.5 h-6 w-16 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
+      <div className="mt-2.5 h-3 w-28 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
     </div>
   );
 }
@@ -84,13 +86,13 @@ function TableSkeleton() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-6 border-t border-[rgba(74,59,46,.06)] px-[17px] py-3.5"
+          className="flex items-center gap-6 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3.5"
         >
-          <div className="h-3.5 w-28 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
-          <div className="h-3.5 w-16 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
-          <div className="h-3.5 w-24 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
-          <div className="h-3.5 w-14 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
-          <div className="ml-auto h-3.5 w-20 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
+          <div className="h-3.5 w-28 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
+          <div className="h-3.5 w-16 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
+          <div className="h-3.5 w-24 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
+          <div className="h-3.5 w-14 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
+          <div className="ml-auto h-3.5 w-20 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
         </div>
       ))}
     </div>
@@ -230,18 +232,19 @@ export default function BoardingPage() {
           {rooms.map((r) => (
             <div
               key={r.serviceId}
-              className="rounded-panel bg-[#FFFDF6] p-[15px_17px] shadow-[0_0_0_1px_rgba(74,59,46,.09)]"
+              className="rounded-panel bg-[#FFFDF6] p-[15px_17px] shadow-[0_0_0_1px_rgba(59,46,36,.09)]"
             >
-              <div className="text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">
-                {r.name} · {fmtNightPrice(r.priceFen)}/晚
+              <div className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+                {r.name} ·{' '}
+                <span className="font-number tabular-nums">{fmtNightPrice(r.priceFen)}</span>/晚
               </div>
               <div className="mt-1.5 font-number text-title-lg font-bold leading-7 tabular-nums">
                 {r.stays.length}
-                <small className="text-caption font-semibold text-[rgba(74,59,46,.42)]">
+                <small className="text-caption font-semibold text-[rgba(59,46,36,.42)]">
                   /{r.roomCount} 间
                 </small>
               </div>
-              <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">
+              <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
                 {r.stays.length === 0
                   ? '空 · 可订'
                   : r.stays.map((s, i) => (
@@ -249,9 +252,11 @@ export default function BoardingPage() {
                         {i > 0 ? ' · ' : ''}
                         {s.pet.name}{' '}
                         {s.overdue ? (
-                          <b className="text-danger">超期 {stayOverdueDays(s)} 天</b>
+                          <b className="font-number tabular-nums text-danger">
+                            超期 {stayOverdueDays(s)} 天
+                          </b>
                         ) : (
-                          `D${stayCurrentNight(s)}`
+                          <span className="font-number tabular-nums">D{stayCurrentNight(s)}</span>
                         )}
                       </span>
                     ))}
@@ -272,17 +277,17 @@ export default function BoardingPage() {
             <TableSkeleton />
           ) : boardQuery.isError ? (
             <div className="px-[17px] py-10 text-center">
-              <div className="text-caption text-[rgba(74,59,46,.62)]">寄养看板加载失败</div>
+              <div className="text-caption text-[rgba(59,46,36,.62)]">寄养看板加载失败</div>
               <div className="mt-3 flex justify-center">
                 <QuietButton onClick={() => void boardQuery.refetch()}>重试</QuietButton>
               </div>
             </div>
           ) : sorted.length === 0 ? (
-            <div className="border-t border-[rgba(74,59,46,.06)] px-[17px] py-14 text-center">
-              <div className="text-body-sm font-semibold text-[rgba(74,59,46,.62)]">
+            <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-14 text-center">
+              <div className="text-body-sm font-semibold text-[rgba(59,46,36,.62)]">
                 现在没有寄养的毛孩子
               </div>
-              <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+              <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
                 客户寄养单核销入店后会出现在这里
               </div>
             </div>
@@ -293,8 +298,8 @@ export default function BoardingPage() {
                   <tr>
                     <th>宠物</th>
                     <th>房型</th>
-                    <th>入住 → 退房</th>
-                    <th>进度</th>
+                    <th className="text-right">入住 → 退房</th>
+                    <th className="text-right">进度</th>
                     <th>今日打卡</th>
                     <th>状态</th>
                     <th />
@@ -325,7 +330,7 @@ export default function BoardingPage() {
           {selected ? (
             <BoardingStayDetail row={selected} />
           ) : (
-            <div className="flex h-64 items-center justify-center rounded-panel bg-[#FFFDF6] text-caption text-[rgba(74,59,46,.42)] shadow-[0_0_0_1px_rgba(74,59,46,.09)]">
+            <div className="flex h-64 items-center justify-center rounded-panel bg-[#FFFDF6] text-caption text-[rgba(59,46,36,.42)] shadow-[0_0_0_1px_rgba(59,46,36,.09)]">
               点选左侧在店行查看入住详情
             </div>
           )}

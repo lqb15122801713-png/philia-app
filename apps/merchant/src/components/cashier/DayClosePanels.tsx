@@ -56,18 +56,18 @@ export function ShiftCard({
       </div>
       <div className="flex flex-wrap items-center gap-3 px-[17px] pb-4">
         {shift === undefined ? (
-          <span className="text-caption text-[rgba(74,59,46,.42)]">加载中…</span>
+          <span className="text-caption text-[rgba(59,46,36,.42)]">加载中…</span>
         ) : shift === null ? (
-          <span className="text-caption text-[rgba(74,59,46,.62)]" data-testid="close-shift-none">
+          <span className="text-caption text-[rgba(59,46,36,.62)]" data-testid="close-shift-none">
             当前无开班班次 —— 首笔收银将自动开班（懒建）
           </span>
         ) : (
           <>
             <span className="u3-st live">开班中</span>
-            <span className="text-caption text-[rgba(74,59,46,.62)]">
+            <span className="text-caption text-[rgba(59,46,36,.62)]">
               开班 <b className="font-number tabular-nums text-ink">{fmtDateTime(shift.openedAt)}</b>
             </span>
-            <span className="text-caption-xs text-[rgba(74,59,46,.42)]">
+            <span className="text-caption-xs text-[rgba(59,46,36,.42)]">
               今日收银单数（全日口径）：
               <b className="font-number tabular-nums text-ink">{todayCashierCount ?? '…'}</b>
               {' '}· 冻结口径以日结单为准
@@ -77,7 +77,7 @@ export function ShiftCard({
               data-testid="close-shift-btn"
               disabled={closing}
               onClick={onCloseShift}
-              className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-[#FFFDF6] px-4 py-2 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(74,59,46,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+              className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-[#FFFDF6] px-4 py-2 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
             >
               <LogOut size={13} strokeWidth={1.8} aria-hidden />
               {closing ? '交接中…' : '交接班（闭班）'}
@@ -125,7 +125,7 @@ export function DayCloseForm({
       </div>
       <div className="px-[17px] pb-4">
         {overrideShiftId ? (
-          <p className="mb-2.5 flex items-center gap-2 rounded-[10px] bg-[#F1E8D4] px-3 py-2 text-caption-xs text-[rgba(74,59,46,.62)]">
+          <p className="mb-2.5 flex items-center gap-2 rounded-[10px] bg-[#F1E8D4] px-3 py-2 text-caption-xs text-[rgba(59,46,36,.62)]">
             拆箱后重新日结（全日口径；追溯班次 <b className="font-number tabular-nums">{overrideShiftId.slice(-6)}</b>）
             <button type="button" className="ml-auto font-semibold text-ink" onClick={onCancelOverride}>
               取消
@@ -149,15 +149,15 @@ export function DayCloseForm({
                 placeholder="0.00"
                 value={actualInput}
                 onChange={(e) => setActualInput(e.target.value)}
-                className="w-full rounded-[8px] bg-[#FFFDF6] px-2.5 py-1.5 font-number text-[17px] font-bold tabular-nums text-ink shadow-[0_0_0_1px_rgba(74,59,46,.12)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(74,59,46,.3)]"
+                className="w-full rounded-[8px] bg-[#FFFDF6] px-2.5 py-1.5 font-number text-[17px] font-bold tabular-nums text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
               />
             </div>
           </div>
         </div>
 
         {/* 差异（非零红字） */}
-        <div className="mt-2 flex items-baseline justify-between rounded-[10px] bg-[#F6F1E3] px-3 py-2">
-          <span className="text-caption text-[rgba(74,59,46,.62)]">差异（实点 − 账面）</span>
+        <div className="mt-2 flex items-baseline justify-between rounded-[10px] bg-[#FAF8F2] px-3 py-2">
+          <span className="text-caption text-[rgba(59,46,36,.62)]">差异（实点 − 账面）</span>
           <b
             className={`font-number text-[17px] font-bold tabular-nums ${diff !== null && diff !== 0 ? 'text-danger-deep' : 'text-ink'}`}
             data-testid="dayclose-diff"
@@ -167,14 +167,14 @@ export function DayCloseForm({
         </div>
 
         {/* 微信/支付宝/次卡等值/储值分列（参考列口径小字——裁定①） */}
-        <p className="mt-2 text-caption-xs leading-relaxed text-[rgba(74,59,46,.42)]" data-testid="dayclose-split">
-          微信 <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{tender ? fenToYuan(tender.tender.wechatFen) : '…'}</b>
+        <p className="mt-2 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]" data-testid="dayclose-split">
+          微信 <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{tender ? fenToYuan(tender.tender.wechatFen) : '…'}</b>
           {' · 支付宝 '}
-          <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{tender ? fenToYuan(tender.tender.alipayFen) : '…'}</b>
+          <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{tender ? fenToYuan(tender.tender.alipayFen) : '…'}</b>
           {' ｜ 参考（不计入已收）：次卡等值 '}
-          <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{tender ? fenToYuan(tender.tender.passFen) : '…'}</b>
+          <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{tender ? fenToYuan(tender.tender.passFen) : '…'}</b>
           {' · 储值消费 '}
-          <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{tender ? fenToYuan(tender.tender.storedValueFen) : '…'}</b>
+          <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{tender ? fenToYuan(tender.tender.storedValueFen) : '…'}</b>
         </p>
 
         {/* QA40-D1（PD-03 件 2）：年费分摊双口径参考行——参考口径，不入任何合计 */}
@@ -186,7 +186,7 @@ export function DayCloseForm({
           maxLength={200}
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          className="mt-2.5 w-full rounded-[10px] bg-[#FFFDF6] px-3 py-2 text-caption text-ink shadow-[0_0_0_1px_rgba(74,59,46,.12)] placeholder:text-[rgba(74,59,46,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(74,59,46,.3)]"
+          className="mt-2.5 w-full rounded-[10px] bg-[#FFFDF6] px-3 py-2 text-caption text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
         />
         <button
           type="button"
@@ -204,7 +204,7 @@ export function DayCloseForm({
           {submitting ? '冻结中…' : overrideShiftId ? '重新日结并冻结' : '日结并冻结全日账目'}
         </button>
         {shift == null && overrideShiftId === null ? (
-          <p className="mt-1.5 text-center text-caption-xs text-[rgba(74,59,46,.42)]">
+          <p className="mt-1.5 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
             全日口径：当前无开班班次也可日结（账面按当日全部支付段计）
           </p>
         ) : null}
@@ -248,11 +248,11 @@ export function RefundDayPanel({
         {loading ? (
           <div className="space-y-2">
             {[0, 1].map((i) => (
-              <div key={i} className="h-8 animate-pulse rounded-[6px] bg-[rgba(74,59,46,.06)]" />
+              <div key={i} className="h-8 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
             ))}
           </div>
         ) : !stats ? (
-          <p className="py-2 text-caption text-[rgba(74,59,46,.62)]">退款统计暂不可用</p>
+          <p className="py-2 text-caption text-[rgba(59,46,36,.62)]">退款统计暂不可用</p>
         ) : (
           <>
             <div className="u3-kv !px-0">
@@ -279,19 +279,19 @@ export function RefundDayPanel({
               </div>
             </div>
             {/* 支付段退款分列（V2 同法分列；次卡/储值回补不计现金口径） */}
-            <p className="mt-2 text-caption-xs leading-relaxed text-[rgba(74,59,46,.42)]" data-testid="refund-day-split">
+            <p className="mt-2 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]" data-testid="refund-day-split">
               退款分列：现金{' '}
-              <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(stats.segments.cashFen)}</b>
+              <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(stats.segments.cashFen)}</b>
               {' · 微信 '}
-              <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(stats.segments.wechatFen)}</b>
+              <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(stats.segments.wechatFen)}</b>
               {' · 支付宝 '}
-              <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(stats.segments.alipayFen)}</b>
+              <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(stats.segments.alipayFen)}</b>
               {' ｜ 非现金回补：次卡次数折抵 '}
-              <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(stats.segments.passFen)}</b>
+              <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(stats.segments.passFen)}</b>
               {' · 储值余额回补 '}
-              <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(stats.segments.storedValueFen)}</b>
+              <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(stats.segments.storedValueFen)}</b>
             </p>
-            <p className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]">
+            <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
               跨日退款计入退款发生日日结（V7）；已封箱历史日结单不回填，只读留痕。
             </p>
           </>
@@ -339,11 +339,11 @@ export function DayCloseList({
       {loading ? (
         <div className="space-y-2 px-[17px] pb-4">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-9 animate-pulse rounded-[6px] bg-[rgba(74,59,46,.06)]" />
+            <div key={i} className="h-9 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
           ))}
         </div>
       ) : (rows ?? []).length === 0 ? (
-        <p className="border-t border-[rgba(74,59,46,.06)] px-[17px] py-10 text-center text-body-sm text-[rgba(74,59,46,.62)]">
+        <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-body-sm text-[rgba(59,46,36,.62)]">
           暂无日结单 —— 上方表单完成首次日结
         </p>
       ) : (
@@ -374,7 +374,7 @@ export function DayCloseList({
                     onClick={() => onDetail(r)}
                   >
                     <td className="u1-num font-semibold">{r.bizDate}</td>
-                    <td className="text-[rgba(74,59,46,.62)]">
+                    <td className="text-[rgba(59,46,36,.62)]">
                       {isReversalRow ? (
                         <>
                           冲正单
@@ -407,7 +407,7 @@ export function DayCloseList({
                         <span className="u3-st live">冻结生效</span>
                       )}
                     </td>
-                    <td className="text-[rgba(74,59,46,.62)]">{r.createdByName ?? '—'}</td>
+                    <td className="text-[rgba(59,46,36,.62)]">{r.createdByName ?? '—'}</td>
                     <td onClick={(e) => e.stopPropagation()}>
                       <span className="inline-flex items-center gap-2.5">
                         {/* 拆箱重结：reversed 的原单（close）可对同班次重新日结 */}
@@ -544,8 +544,8 @@ export function DayCloseDetailDialog({
         {/* 冲正前后值快照（裁定④：含操作人/时间/原因/前后值） */}
         {snapshot ? (
           <div className="mt-3">
-            <div className="mb-1 text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">前后值快照</div>
-            <div className="rounded-[10px] bg-[#F6F1E3] px-3 py-2 font-number text-caption-xs tabular-nums text-[rgba(74,59,46,.62)]">
+            <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">前后值快照</div>
+            <div className="rounded-[10px] bg-[#FAF8F2] px-3 py-2 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]">
               <div>冲正前状态：{(snapshot.before?.status as string) ?? '—'} · 账面 ¥{fenToYuan(fz((snapshot.before?.bookCashFen as number | null) ?? null))} · 实点 ¥{fenToYuan(fz((snapshot.before?.actualCashFen as number | null) ?? null))}</div>
               <div className="mt-1">冲正后：{(snapshot.after?.note as string) ?? (snapshot.after?.status as string) ?? '—'}</div>
               <div className="mt-1">操作人 {snapshot.operatorId ?? '—'} · {snapshot.at ? fmtDateTime(new Date(snapshot.at)) : '—'}</div>
@@ -556,9 +556,9 @@ export function DayCloseDetailDialog({
         {/* 调整记录（adjustDayClose 只增不改） */}
         {adjustments.length > 0 ? (
           <div className="mt-3">
-            <div className="mb-1 text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">调整记录（{adjustments.length}）</div>
+            <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">调整记录（{adjustments.length}）</div>
             {adjustments.map((a, i) => (
-              <div key={i} className="rounded-[10px] bg-[#F6F1E3] px-3 py-2 text-caption-xs text-[rgba(74,59,46,.62)] [&+&]:mt-1.5">
+              <div key={i} className="rounded-[10px] bg-[#FAF8F2] px-3 py-2 text-caption-xs text-[rgba(59,46,36,.62)] [&+&]:mt-1.5">
                 <span className="font-number tabular-nums">{fmtDateTime(new Date(a.at))}</span> · {a.note}
               </div>
             ))}
@@ -619,24 +619,24 @@ export function CloseReasonDialog({
         </>
       }
     >
-      <div className="rounded-[14px] bg-[#F6F1E3] px-3.5 py-3">
+      <div className="rounded-[14px] bg-[#FAF8F2] px-3.5 py-3">
         <div className="font-number text-caption font-semibold tabular-nums">
           {target.bizDate} · 班次 {target.shiftId.slice(-6)}
         </div>
-        <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">
+        <div className="mt-1 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]">
           账面 ¥{fenToYuan(fz(target.bookCashFen))} · 实点 ¥{fenToYuan(fz(target.actualCashFen))} · 差异{' '}
           {fz(target.diffFen) === 0 ? '¥0' : `${fz(target.diffFen) > 0 ? '+' : '−'}¥${fenToYuan(Math.abs(fz(target.diffFen)))}`}
         </div>
       </div>
       <textarea
-        className="mt-3 min-h-[76px] w-full resize-none rounded-[14px] bg-[#FFFDF6] px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(74,59,46,.12)] placeholder:text-[rgba(74,59,46,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(74,59,46,.3)]"
+        className="mt-3 min-h-[76px] w-full resize-none rounded-[14px] bg-[#FFFDF6] px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
         data-testid="dayclose-reason-input"
         placeholder={isReverse ? '冲正原因（必填，留痕）' : '调整备注（必填；只增不改，原冻结数字不涂改）'}
         maxLength={200}
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
-      <p className="mt-1.5 text-caption-xs leading-relaxed text-[rgba(74,59,46,.42)]">
+      <p className="mt-1.5 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
         {isReverse
           ? '拆箱将生成冲正关联单（含前后值快照/操作人/时间/原因），原日结单永存不涂改（置「已冲正」）；之后可对同日重新日结（全日口径）。'
           : '备注追加进调整记录留痕，原冻结数字不涂改。'}

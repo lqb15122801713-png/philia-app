@@ -48,13 +48,13 @@ function TableSkeleton() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-6 border-t border-[rgba(74,59,46,.06)] px-[17px] py-3.5"
+          className="flex items-center gap-6 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3.5"
         >
-          <div className="h-3.5 w-32 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
-          <div className="h-3.5 w-20 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
-          <div className="h-3.5 w-28 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
-          <div className="h-3.5 w-14 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
-          <div className="ml-auto h-3.5 w-16 animate-pulse rounded-chip bg-[rgba(74,59,46,.06)]" />
+          <div className="h-3.5 w-32 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
+          <div className="h-3.5 w-20 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
+          <div className="h-3.5 w-28 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
+          <div className="h-3.5 w-14 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
+          <div className="ml-auto h-3.5 w-16 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
         </div>
       ))}
     </div>
@@ -174,7 +174,7 @@ export default function OrdersPage() {
           <TableSkeleton />
         ) : ordersQuery.isError ? (
           <div className="px-[17px] py-10 text-center">
-            <div className="text-caption text-[rgba(74,59,46,.62)]">
+            <div className="text-caption text-[rgba(59,46,36,.62)]">
               订单加载失败：{errMsg(ordersQuery.error)}
             </div>
             <div className="mt-3 flex justify-center">
@@ -183,7 +183,7 @@ export default function OrdersPage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="px-[17px] py-14 text-center">
-            <div className="text-body-sm font-semibold text-[rgba(74,59,46,.62)]">{emptyText}</div>
+            <div className="text-body-sm font-semibold text-[rgba(59,46,36,.62)]">{emptyText}</div>
           </div>
         ) : (
           <div className="u3-noscrollx overflow-x-auto">
@@ -193,7 +193,7 @@ export default function OrdersPage() {
                   <th>单号</th>
                   <th>客户</th>
                   <th>商品</th>
-                  <th>金额</th>
+                  <th className="text-right">金额</th>
                   <th>支付</th>
                   <th>状态</th>
                   <th>操作</th>

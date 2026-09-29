@@ -6,7 +6,7 @@
  *   7 天开关+起止编辑 → store.update openHours）/ 地址与坐标（store.update）/
  *   服务项与时长（时长引擎之母 → upsertService + ServiceEditorDialog）；
  * - 右=经营口径：自动接单（S4 默认开，无开关仅口径展示「已启用」）+
- *   通知偏好三档 sw（薄荷开 / 墨 12% 关 → localStorage philia.merchant.notifyPrefs，
+ *   通知偏好三档 sw（卡其开 / 墨 12% 关 → localStorage philia.merchant.notifyPrefs，
  *   点击即切，仅本机生效，v2 接服务端）。
  *
  * 原四个 Section 的 mutation 全部保留（store.update / store.upsertService），
@@ -122,10 +122,10 @@ function SetRow({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 border-t border-[rgba(74,59,46,.06)] px-[17px] py-[13px] text-caption">
+    <div className="flex items-center gap-3 border-t border-[rgba(59,46,36,.06)] px-[17px] py-[13px] text-caption">
       <div className="min-w-0 flex-1">
         <div className="text-ink">{title}</div>
-        {hint ? <div className="mt-[2px] text-caption-xs text-[rgba(74,59,46,.42)]">{hint}</div> : null}
+        {hint ? <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]">{hint}</div> : null}
       </div>
       {children}
     </div>
@@ -143,7 +143,7 @@ function ExpandRow({
   children,
 }: {
   title: string;
-  hint?: string;
+  hint?: React.ReactNode;
   value?: string;
   open: boolean;
   onToggle: () => void;
@@ -152,18 +152,18 @@ function ExpandRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border-t border-[rgba(74,59,46,.06)]">
+    <div className="border-t border-[rgba(59,46,36,.06)]">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center gap-3 px-[17px] py-[13px] text-left text-caption transition-colors duration-150 hover:bg-[rgba(74,59,46,.03)]"
+        className="flex w-full items-center gap-3 px-[17px] py-[13px] text-left text-caption transition-colors duration-150 hover:bg-[rgba(59,46,36,.03)]"
         aria-expanded={open}
       >
         <div className="min-w-0 flex-1">
           <div className="text-ink">{title}</div>
-          {hint ? <div className="mt-[2px] text-caption-xs text-[rgba(74,59,46,.42)]">{hint}</div> : null}
+          {hint ? <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]">{hint}</div> : null}
         </div>
-        <span className="shrink-0 text-caption font-bold text-[rgba(74,59,46,.62)]">
+        <span className="shrink-0 text-caption font-bold text-[rgba(59,46,36,.62)]">
           {value ? <span className="u1-num mr-1.5">{value}</span> : null}
           {open ? '收起 ›' : actionLabel}
         </span>
@@ -356,11 +356,11 @@ export default function SettingsPage() {
           {[1.7, 1].map((w, i) => (
             <div key={i} className="u3-panel animate-pulse">
               <div className="u3-panel-head">
-                <div className="h-4 w-16 rounded-chip bg-[rgba(74,59,46,.08)]" />
+                <div className="h-4 w-16 rounded-chip bg-[rgba(59,46,36,.08)]" />
               </div>
               {[0, 1, 2, 3].map((r) => (
-                <div key={r} className="border-t border-[rgba(74,59,46,.06)] px-[17px] py-4">
-                  <div className="h-3 rounded-chip bg-[rgba(74,59,46,.06)]" style={{ width: `${52 + w * 10 + r * 8}%` }} />
+                <div key={r} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-4">
+                  <div className="h-3 rounded-chip bg-[rgba(59,46,36,.06)]" style={{ width: `${52 + w * 10 + r * 8}%` }} />
                 </div>
               ))}
             </div>
@@ -403,7 +403,11 @@ export default function SettingsPage() {
             {/* 营业时间（可约栅格之源） */}
             <ExpandRow
               title="营业时间"
-              hint={`可约栅格之源（${hoursSummary(hours)}）`}
+              hint={
+                <>
+                  可约栅格之源（<span className="u1-num">{hoursSummary(hours)}</span>）
+                </>
+              }
               open={openRow === 'hours'}
               onToggle={() => toggleRow('hours')}
             >
@@ -422,20 +426,20 @@ export default function SettingsPage() {
                             type="time"
                             value={d.open}
                             onChange={(e) => setHours((w) => ({ ...w, [k]: { ...d, open: e.target.value } }))}
-                            className="rounded-chip bg-[#FFFDF6] px-2 py-1 text-caption text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(74,59,46,.25)]"
+                            className="rounded-chip bg-[#FFFDF6] px-2 py-1 text-caption text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
                             style={numStyle}
                           />
-                          <span className="text-caption-xs text-[rgba(74,59,46,.42)]">至</span>
+                          <span className="text-caption-xs text-[rgba(59,46,36,.42)]">至</span>
                           <input
                             type="time"
                             value={d.close}
                             onChange={(e) => setHours((w) => ({ ...w, [k]: { ...d, close: e.target.value } }))}
-                            className="rounded-chip bg-[#FFFDF6] px-2 py-1 text-caption text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(74,59,46,.25)]"
+                            className="rounded-chip bg-[#FFFDF6] px-2 py-1 text-caption text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
                             style={numStyle}
                           />
                         </span>
                       ) : (
-                        <span className="text-caption-xs text-[rgba(74,59,46,.42)]">店休</span>
+                        <span className="text-caption-xs text-[rgba(59,46,36,.42)]">店休</span>
                       )}
                       <Switch
                         checked={d.on}
@@ -515,7 +519,7 @@ export default function SettingsPage() {
               ) : (
                 <>
                   {serviceList.length === 0 ? (
-                    <p className="py-4 text-center text-caption-xs text-[rgba(74,59,46,.42)]">
+                    <p className="py-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
                       还没有服务项，点下方「＋ 新增服务」创建洗护或寄养服务
                     </p>
                   ) : (
@@ -523,7 +527,7 @@ export default function SettingsPage() {
                       {serviceList.map((s) => (
                         <div
                           key={s.id}
-                          className="flex items-center gap-3 border-t border-[rgba(74,59,46,.06)] py-2.5 first:border-t-0"
+                          className="flex items-center gap-3 border-t border-[rgba(59,46,36,.06)] py-2.5 first:border-t-0"
                         >
                           <div className="min-w-0 flex-1">
                             <span className="text-caption font-semibold text-ink">
@@ -533,12 +537,12 @@ export default function SettingsPage() {
                               ) : null}
                             </span>
                             <div
-                              className="mt-[2px] text-caption-xs text-[rgba(74,59,46,.42)]"
+                              className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]"
                               style={numStyle}
                             >
                               {s.type === 'boarding' ? '寄养' : '洗护美容'} ·{' '}
                               {s.durationMin != null ? `${s.durationMin} 分钟` : '时长 —'} ·{' '}
-                              <span className="text-[rgba(74,59,46,.62)]">{fmtMoney(s.priceFen)}</span>
+                              <span className="text-[rgba(59,46,36,.62)]">{fmtMoney(s.priceFen)}</span>
                               {s.boardingRoomType ? ` · 房型 ${s.boardingRoomType}` : ''}
                             </div>
                           </div>
@@ -559,7 +563,7 @@ export default function SettingsPage() {
                     </div>
                   )}
                   <div className="mt-3 flex items-center justify-between gap-3">
-                    <p className="text-caption-xs text-[rgba(74,59,46,.42)]">
+                    <p className="text-caption-xs text-[rgba(59,46,36,.42)]">
                       下架项本次会话内仍列出（可重新上架）；刷新后不再显示（「含下架」列表接口 v2 补齐）
                     </p>
                     <QuietButton onClick={() => setEditorFor('new')}>＋ 新增服务</QuietButton>

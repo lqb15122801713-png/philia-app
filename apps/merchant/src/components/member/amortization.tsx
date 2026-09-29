@@ -10,7 +10,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { usePhiliaClient } from '@philia/shared'
-import { fenToYuan } from '../mall-admin/format'
+import { fenToYuanGrouped } from '../mall-admin/format'
 
 export function useAmortizationStats() {
   const { trpc } = usePhiliaClient()
@@ -28,16 +28,16 @@ export function AmortizationDayLine() {
   const q = useAmortizationStats()
   return (
     <p
-      className="mt-1.5 text-caption-xs leading-relaxed text-[rgba(74,59,46,.42)]"
+      className="mt-1.5 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]"
       data-testid="dayclose-amortization"
     >
       其中：会员费分摊确认（本月累计）{' '}
-      <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">
-        ¥{q.data ? fenToYuan(q.data.amortizedFen) : '…'}
+      <b className="whitespace-nowrap font-number tabular-nums text-[rgba(59,46,36,.62)]">
+        ¥{q.data ? fenToYuanGrouped(q.data.amortizedFen) : '…'}
       </b>
       {' · 售卡实收（本月）'}
-      <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">
-        ¥{q.data ? fenToYuan(q.data.cashFen) : '…'}
+      <b className="whitespace-nowrap font-number tabular-nums text-[rgba(59,46,36,.62)]">
+        ¥{q.data ? fenToYuanGrouped(q.data.cashFen) : '…'}
       </b>
       {' —— 参考口径，不计入今日已收'}
     </p>
@@ -49,8 +49,8 @@ export function AmortizationDashNote() {
   const q = useAmortizationStats()
   if (!q.data) return null
   return (
-    <div className="mt-1 text-[11px] leading-snug text-[rgba(74,59,46,.42)]" data-testid="dashboard-amortization-note">
-      含售卡实收 ¥{fenToYuan(q.data.cashFen)} · 分摊确认口径 ¥{fenToYuan(q.data.amortizedFen)}（本月）
+    <div className="mt-1 text-[11px] leading-snug text-[rgba(59,46,36,.42)]" data-testid="dashboard-amortization-note">
+      含售卡实收 <span className="whitespace-nowrap font-number tabular-nums">¥{fenToYuanGrouped(q.data.cashFen)}</span> · 分摊确认口径 <span className="whitespace-nowrap font-number tabular-nums">¥{fenToYuanGrouped(q.data.amortizedFen)}</span>（本月）
     </div>
   )
 }
