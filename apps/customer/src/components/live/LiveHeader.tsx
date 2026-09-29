@@ -1,16 +1,16 @@
 /**
- * live 页摘要卡（开发方案 §8.4；U4-D2 试样 05 逐格收口）。
+ * live 页摘要卡（开发方案 §8.4；换皮批片 2 取齐 S-01 摘要卡）。
  *
- * 试样 .bk-pet 结构：柠檬细环宠物头像（56 全圆 + 2px 纸缝 + 1.5px 柠檬环）
- * +「{宠物} · {服务}」（试样 16/800 → 字阶取 17/700）+ 美容师行 meta
+ * S-01 摘要卡结构：淡黄细环宠物头像（56 全圆 + 2px 纸缝 + 1.5px 淡黄环）
+ * +「{宠物} · {服务}」（17/800）+ 美容师行 meta 落 mono 9.5 muted 溯源轨
  * （「{员工}服务中 · 预计 HH:MM 完成」，页面层组装，缺真值段隐去 → 整行可隐）
  * + 右位状态签：
- * - state=live：SSE connected 真值点签（薄荷点「实时同步」/ 灰点「重连中」，
+ * - state=live：SSE connected 真值点签（淡黄点「实时同步」/ 灰点「重连中」，
  *   禁常亮——InServicePanel U4-B 同口径；仅服务中/寄养中传入，其余态 plain 不出签）；
- * - state=done：苔绿「已完成」chip（真实状态）。
+ * - state=done：深棕墨族「已完成」chip（反馈件色纪律：成功不设绿，45 号档 P1-1②）。
  *
  * 旧状态胶囊（服务中·第 N 步 / 寄养中·第 N 天）退役：步序在 stepper 可视，
- * 寄养天数并入 meta 行；门店名移出摘要卡（试样无此段）。
+ * 寄养天数并入 meta 行；门店名移出摘要卡（定稿无此段）。
  */
 
 export interface LiveHeaderProps {
@@ -42,16 +42,16 @@ export default function LiveHeader({
           className="h-14 w-14 shrink-0 rounded-full bg-sunken object-cover ring-[1.5px] ring-brand-primary ring-offset-2"
         />
       ) : (
-        /* D-补3 字圈工艺：浅木底 + 衬线首字（柠檬细环保留，D2 摘要卡口径） */
+        /* 字圈工艺：浅木底 + 衬线首字（淡黄细环保留，S-01 摘要卡口径） */
         <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-oak-light ring-[1.5px] ring-brand-primary ring-offset-2">
           <span className="u1-serif text-title-lg font-semibold text-ink">{petName.slice(0, 1)}</span>
         </span>
       )}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-title font-bold">
+        <p className="truncate text-title font-extrabold">
           {petName} · {serviceName}
         </p>
-        {meta ? <p className="mt-1 truncate text-caption text-ink-secondary">{meta}</p> : null}
+        {meta ? <p className="mt-1 truncate font-number text-v2-trace text-ink-secondary">{meta}</p> : null}
       </div>
       {state === 'done' ? (
         <span className="shrink-0 rounded-chip bg-success-light px-2 py-0.5 text-caption-xs font-semibold text-success-deep">
@@ -64,7 +64,7 @@ export default function LiveHeader({
           className="flex shrink-0 items-center gap-[5px] text-caption-xs leading-4 text-ink-secondary"
         >
           <i
-            className={`h-1.5 w-1.5 rounded-full ${sseConnected ? 'bg-brand-secondary' : 'bg-ink/30'}`}
+            className={`h-1.5 w-1.5 rounded-full ${sseConnected ? 'bg-brand-primary' : 'bg-ink/30'}`}
             aria-hidden="true"
           />
           {sseConnected ? '实时同步' : '重连中'}

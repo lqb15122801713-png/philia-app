@@ -152,7 +152,7 @@
   /* shadcn dark 变量 · 全量替换为冻结表 4.2 dark 子表（确认书第 3 条：本批次开启） */
   .dark {
     --background: 28 25% 12%; /* dark canvas #261E17 */
-    --foreground: 44 51% 93%; /* 米白反相 #F6F1E3 */
+    --foreground: 44 51% 93%; /* 米白反相 #FAF8F2 */
     --card: 30 23% 17%; /* #352B21 */
     --card-foreground: 44 51% 93%;
     --popover: 30 23% 17%;
@@ -188,7 +188,7 @@
     @apply border-border;
   }
   body {
-    /* 品牌画布米白 #F6F1E3 + 深棕墨正文 #4A3B2E（token: bg.canvas / text.primary） */
+    /* 品牌画布米白 #FAF8F2 + 深棕墨正文 #3B2E24（token: bg.canvas / text.primary） */
     @apply bg-canvas text-ink font-sans;
   }
 }
@@ -196,7 +196,7 @@
 /* -------------------------------------------------------------------------- */
 /* U1-B 设计基件（v9.1）：四档圆角 / 细线 ring / 近零影 / 衬线展示位 / 数字等宽。      */
 /* token 来源：@philia/config/tailwind-preset（panel 20 / control 14 / chip 6 /     */
-/* full；line.ring rgba(74,59,46,.09)；shadow-hairline）。新件一律走基件，旧件分批迁移。 */
+/* full；line.ring rgba(59,46,36,.09)；shadow-hairline）。新件一律走基件，旧件分批迁移。 */
 /* -------------------------------------------------------------------------- */
 @layer components {
   /* 深度策略组合：1px 暖墨细线 ring + 近零软影（替代旧 shadow-card/elevated 层级） */

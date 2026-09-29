@@ -3,7 +3,7 @@
  *
  * 形态锁定：←圆钮（36px 白底 + 细线 ring + 近零影，24px 内 ChevronLeft 线图标墨色）
  * + 标题（text-title-lg）+ 可选右侧 slot（状态 pill / 安静文字链）。
- * 深度策略：u1-ring（1px 暖墨细线 ring rgba(74,59,46,.09) + 近零软影），无旧投影。
+ * 深度策略：u1-ring（1px 暖墨细线 ring rgba(59,46,36,.09) + 近零软影），无旧投影。
  *
  * 用法：
  *   <PageHeader title="预约详情" />                       默认 navigate(-1)

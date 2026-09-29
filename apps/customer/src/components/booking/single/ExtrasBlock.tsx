@@ -113,7 +113,7 @@ export default function ExtrasBlock({
                   }`}
                 >
                   {active ? (
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#F6EFDD" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M20 6 9 17l-5-5" />
                     </svg>
                   ) : null}
@@ -124,7 +124,7 @@ export default function ExtrasBlock({
         </div>
       ) : null}
 
-      <div className="border-t border-[rgba(74,59,46,.09)]" />
+      <div className="border-t border-line-ring" />
 
       {/* 添加备注（默认收起） */}
       <ChevronRow

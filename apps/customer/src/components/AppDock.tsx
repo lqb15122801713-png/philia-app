@@ -1,14 +1,16 @@
 /**
- * AppDock · 客户端全局统一底部 dock（批次 U1 任务 A，v9.1 视觉语言）。
+ * AppDock · 客户端全局统一底部 dock（批次 U1 任务 A；换皮批片 2 落 v2.0 §4.1）。
  *
  * 主级页面（/home /mall /me /philia）唯一 dock，五项槽位顺序锁定：
  *   首页 / 预约 / philia 中央悬浮钮 / 商城 / 我的（序不可错）。
- * - 形态：悬浮白 pill（全圆档）+ 细线 ring + 近零影（深度策略，无凸起无投影）；
- * - 中央钮：60px 柠檬黄平圆 + 深棕墨 paw；点击=philia 页；
- *   长按 500ms=快捷弹层（会员码 / 一键预约 / 联系门店）——迁移旧 TabBar
- *   （ConvexTabBar 接线）长按交互：500ms 触发、10px 移动取消、长按后吞掉 click；
+ * - 形态（v2.0 §4.1 案 A 悬浮胶囊）：高 64 / 左右 16 / 底 14 / 圆角 99；
+ *   深棕 rgba(46,35,24,.94) + blur(18px) saturate(140%)；激活态=淡黄圆底衬深棕
+ *   图标（衬底实心形状，图标不变色）；未激活=深底弱文字 #B9A98F；
+ * - 中央爪钮（客户端私有实心件）：58×58 淡黄圆底凸起 translateY(-16px)
+ *   + 3px 纸白描边 + 深棕墨 paw；点击=philia 页；长按 500ms=快捷弹层
+ *   （会员码 / 一键预约 / 联系门店）——迁移旧 TabBar（ConvexTabBar 接线）
+ *   长按交互：500ms 触发、10px 移动取消、长按后吞掉 click；
  *   W1 R-Nav-3：中位补「philia」文字标签（底栏五槽全件带文字，字号字重同槽对齐）；
- * - 路由感知 active：文字 600 深棕墨 + 24px 线图标墨色；未选中 ink-secondary；
  * - 详情级页面不渲染本组件（App.tsx 按路径白名单渲染）。
  *
  * 服务端缺口（记 PR 描述，不动手）：stores 表暂无 phone 字段，「联系门店」
@@ -21,7 +23,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useMe, usePhiliaClient } from '@philia/shared'
 
-/** 深棕墨 paw 剪影（token text.primary #4A3B2E，currentColor 继承）
+/** 深棕墨 paw 剪影（token text.primary #3B2E24，currentColor 继承）
  *  U4-D3：导出复用——全域空态组件（home/common EmptyState）同用此 VI 爪印。 */
 export function PawMark({ className = '' }: { className?: string }) {
   return (
@@ -97,6 +99,8 @@ const RIGHT_TABS: DockTab[] = [
 function DockTabButton({ tab, active }: { tab: DockTab; active: boolean }) {
   const navigate = useNavigate()
   const Icon = tab.icon
+  /* v2.0 §4.1 dock：激活态=淡黄圆底衬深棕图标（衬底实心形状，图标本身不变色）；
+     未激活=深底弱文字 #B9A98F；文字标签色随深底反白系 */
   return (
     <button
       type="button"
@@ -104,12 +108,18 @@ function DockTabButton({ tab, active }: { tab: DockTab; active: boolean }) {
       aria-label={tab.label}
       aria-current={active ? 'page' : undefined}
       data-testid={`app-dock-${tab.key}`}
-      className={`flex flex-col items-center justify-center gap-0.5 py-1.5 transition-transform duration-120 ease-philia-spring active:scale-92 ${
-        active ? 'font-semibold text-ink' : 'text-ink-secondary'
-      }`}
+      className="flex flex-col items-center justify-center gap-[3px] py-1 transition-transform duration-120 ease-philia-spring active:scale-92"
     >
-      <Icon className="h-6 w-6" strokeWidth={1.5} />
-      <span className="text-caption-xs leading-none">{tab.label}</span>
+      <span
+        className={`flex h-9 w-9 items-center justify-center rounded-full ${
+          active ? 'bg-[#F2DFA6] text-[#3B2E24]' : 'text-[#B9A98F]'
+        }`}
+      >
+        <Icon className="h-[22px] w-[22px]" strokeWidth={1.7} />
+      </span>
+      <span className={`text-caption-xs leading-none ${active ? 'font-semibold text-[#F6EFDD]' : 'text-[#B9A98F]'}`}>
+        {tab.label}
+      </span>
     </button>
   )
 }
@@ -163,6 +173,16 @@ export default function AppDock() {
   }
   useEffect(() => cancelPressTimer, [])
 
+  /* 快捷弹层滚动锁（§4.5 三件套：开时锁底层 body） */
+  useEffect(() => {
+    if (!sheetOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [sheetOpen])
+
   const onPhiliaPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
     cancelPressTimer()
     pressStartRef.current = { x: e.clientX, y: e.clientY }
@@ -201,18 +221,30 @@ export default function AppDock() {
 
   return (
     <>
-      <nav data-testid="app-dock" className="fixed inset-x-0 bottom-4 z-tabbar" aria-label="底部导航">
+      <nav
+        data-testid="app-dock"
+        className="fixed inset-x-0 bottom-[calc(14px+env(safe-area-inset-bottom))] z-tabbar"
+        aria-label="底部导航"
+      >
         <div className="mx-auto max-w-lg px-4">
-          <div className="u1-ring grid grid-cols-5 items-center rounded-full bg-card px-2 py-2">
+          {/* v2.0 §4.1 dock（案 A 悬浮胶囊）：高 64 / 圆角 99 / 深棕 rgba(46,35,24,.94)
+              + blur(18px) saturate(140%) */}
+          <div
+            className="grid h-16 grid-cols-5 items-center rounded-full px-2"
+            style={{
+              background: 'rgba(46,35,24,.94)',
+              backdropFilter: 'blur(18px) saturate(140%)',
+              WebkitBackdropFilter: 'blur(18px) saturate(140%)',
+            }}
+          >
             {LEFT_TABS.map((tab) => (
               <DockTabButton key={tab.key} tab={tab} active={tab.isActive(pathname)} />
             ))}
 
-            {/* philia 中央钮：60px 柠檬黄平圆 + 深棕墨 paw（不凸起无投影）；
-                点击=philia 页，长按=快捷弹层。
-                W1 R-Nav-3：中位补文字标签（与其他槽位同字号字重口径，
-                active=600 深棕墨 / 未选中 ink-secondary）——底栏图标全部带文字 */}
-            <span className="flex flex-col items-center justify-center gap-0.5 py-1.5">
+            {/* philia 中央爪钮（客户端私有）：58×58 淡黄圆底凸起 translateY(-16px)
+                + 3px 纸白描边 + 深棕墨爪；点击=philia 页，长按=快捷弹层。
+                W1 R-Nav-3：中位补文字标签（深底口径） */}
+            <span className="flex flex-col items-center justify-center gap-[3px] py-1">
               <button
                 type="button"
                 onClick={onPhiliaClick}
@@ -224,13 +256,13 @@ export default function AppDock() {
                 aria-label="Philia"
                 aria-current={philiaActive ? 'page' : undefined}
                 data-testid="app-dock-philia"
-                className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-brand-primary text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                className="flex h-[58px] w-[58px] -translate-y-4 items-center justify-center rounded-full bg-[#F2DFA6] text-[#3B2E24] shadow-[0_0_0_3px_#FAF8F2] transition-transform duration-120 ease-philia-spring active:scale-92"
               >
                 <PawMark className="h-7 w-7" />
               </button>
               <span
                 className={`text-caption-xs leading-none ${
-                  philiaActive ? 'font-semibold text-ink' : 'text-ink-secondary'
+                  philiaActive ? 'font-semibold text-[#F6EFDD]' : 'text-[#B9A98F]'
                 }`}
               >
                 philia
@@ -244,7 +276,8 @@ export default function AppDock() {
         </div>
       </nav>
 
-      {/* 长按快捷弹层：会员码 / 一键预约 / 联系门店 */}
+      {/* 长按快捷弹层：会员码 / 一键预约 / 联系门店
+          （§4.5 三件套：抓握手柄 grab 42×4 + 可点遮罩 + 滚动锁；顶角 26） */}
       {sheetOpen ? (
         <div
           className="fixed inset-0 z-modal flex items-end justify-center bg-ink/40"
@@ -253,9 +286,10 @@ export default function AppDock() {
           aria-label="快捷操作"
         >
           <div
-            className="w-full max-w-lg rounded-t-sheet bg-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] ring-1 ring-line-ring"
+            className="w-full max-w-lg rounded-t-[26px] bg-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] ring-1 ring-line-ring"
             onClick={(e) => e.stopPropagation()}
           >
+            <div className="mx-auto mb-3 h-1 w-[42px] rounded-full bg-line" aria-hidden="true" />
             <div className="flex items-center justify-between">
               <p className="text-title">快捷操作</p>
               <button

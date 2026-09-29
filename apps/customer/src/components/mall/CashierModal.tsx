@@ -18,6 +18,11 @@ import { useEffect, useRef, useState } from 'react';
 import { fenToYuan } from './format';
 import { friendlyError } from './MallToast';
 
+/* ------------------------------------------------------------------ */
+/* 换皮批片 2 弹层三件套核查（§4.5）：本层补抓握手柄 grab 42×4 + 滚动锁 + 可点遮罩   */
+/* （点遮罩=放弃支付，与既有「放弃支付」钮同动作，不新增交互步数）；顶角 26。          */
+/* ------------------------------------------------------------------ */
+
 export interface CashierOrder {
   id: string;
   orderNo: string;
@@ -45,6 +50,15 @@ export default function CashierModal({
   const [isMock, setIsMock] = useState(true);
   // StrictMode 双跑防护：createPayment 只发一次
   const preparedRef = useRef(false);
+
+  /* 滚动锁：弹层挂载期间锁底层 body（§4.5 三件套；本组件由调用方条件挂载） */
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
 
   useEffect(() => {
     if (preparedRef.current) return;
@@ -88,8 +102,11 @@ export default function CashierModal({
 
   return (
     <div className="fixed inset-0 z-modal" role="dialog" aria-modal="true" aria-label="收银台">
-      <div className="absolute inset-0 bg-ink/45" />
-      <div className="absolute inset-x-0 bottom-0 mx-auto max-w-lg rounded-t-sheet bg-card px-5 pb-8 pt-6 shadow-elevated">
+      {/* 可点遮罩（§4.5 三件套）：点遮罩=放弃支付，与下方「放弃支付」钮同动作 */}
+      <button type="button" aria-label="放弃支付" className="absolute inset-0 bg-ink/45" onClick={onGiveUp} />
+      <div className="absolute inset-x-0 bottom-0 mx-auto max-w-lg rounded-t-[26px] bg-card px-5 pb-8 pt-3 shadow-elevated">
+        {/* 抓握手柄 grab 42×4（§4.5） */}
+        <div className="mx-auto mb-3 h-1 w-[42px] rounded-full bg-line" aria-hidden="true" />
         {/* 演示模式标识 */}
         <div className="flex justify-center">
           <span className="flex items-center gap-1.5 rounded-full bg-brand-secondary-light px-3 py-1 text-caption text-ink">
@@ -126,7 +143,7 @@ export default function CashierModal({
                 type="button"
                 disabled={phase === 'paying' || !isMock}
                 onClick={() => void handleMockPay()}
-                className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-philia-gradient text-body font-medium text-white shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-philia-gradient text-body font-medium text-[#F6EFDD] shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
               >
                 {phase === 'paying' ? (
                   <>

@@ -19,9 +19,15 @@
  * 禁做假互动：喂食/玩耍/打扮/拍照四钮不做；「定制我的崽」入口隐藏（AI 生成接口待拍板）。
  *
  * U4-D2（试样 06 逐格收口）：
- * - 成长三格补齐真实可聚合第三项「累计消费」（listMine completed priceFen 合计
- *   fenToYuan，HomePage stats 行同口径）；守护值位不造假维持不出（裁定 #23 豁免）；
+ * - 成长三格：陪伴天数（user.createdAt 距今）· 服务次数（listMine completed 数）；
+ *   守护值位不造假维持不出（裁定 #23 豁免）；
  *   大数字 u1-num 20/700（试样 800 字重 → 自托管 Montserrat 仅至 700）；grid-cols-3；
+ * 换皮批片 2（F-01 定稿落地，2026-09-29）：
+ * - 第三格改「照片数」（定稿 F-01=陪伴/服务/照片三数；逐单 serviceStep.list 照片合计，
+ *   复用 listMine 缓存；原「累计消费」格退役——F-01 是纯情感件，不摆钱）；
+ * - 页首加 F-01 情感文案层（mono eyebrow + serif 24/900 宣言，文案入 copy 键）；
+ * - 陪伴段位/徽章区、生日特辑=置灰槽位（PD-15 三规：不上数不上假件+注记
+ *   「即将点亮」+data-testid=slot-badges / slot-birthday）；
  * - 三胶囊卡阵退役 → 试样 q-row 细线列表行工艺（U4-A 首页次级行同工艺：oak-light
  *   圆角 14 图标芯片 + 名 14/600 + 述 11 + ›），成长护照预告行并入同组；
  * - 形象位宠物名换 u1-serif 衬线展示位（试样 .q-name）；日记卡圆角 16 越四档
@@ -37,7 +43,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { PhotoWall, useMe, usePhiliaClient } from '@philia/shared'
 import type { PhotoWallPhoto } from '@philia/shared'
 import HomeBookingPanel from '../components/home/HomeBookingPanel'
-import { fenToYuan } from '@/components/booking/format'
+import { mc } from '../components/member/copy'
 import {
   EmptyState,
   ErrorState,
@@ -45,7 +51,7 @@ import {
   formatDateCn,
 } from '../components/home/common'
 
-const HAIRLINE = 'border-t border-[rgba(74,59,46,.09)]'
+const HAIRLINE = 'border-t border-line-ring'
 
 /** 按时段的问候语 */
 function greeting(): string {
@@ -250,9 +256,10 @@ const CAPSULES = [
 
 const DAY_MS = 86_400_000
 
-/** U4-D2 成长三格（规格书 §4：Montserrat 大数字；守护值无真实来源不出，裁定 #23 豁免）：
- *  陪伴天数（user.createdAt 距今）· 服务次数（listMine completed 数）· 累计消费
- *  （completed priceFen 合计 fenToYuan）——HomePage stats 行同口径；
+/** F-01 落地三数（定稿 F-01：陪伴天数 · 服务次数 · 照片数；片 2 杂项组换皮）：
+ *  陪伴天数（user.createdAt 距今）· 服务次数（listMine completed 数）· 照片数
+ *  （completed 逐单 serviceStep.list 照片数合计，复用已缓存的 listMine，失败项不计入）；
+ *  守护值无真实来源不出（裁定 #23 豁免，守护值已废止不建第四本账）。
  *  queryKey 与首页/会员页同源缓存共享；查询失败整行隐去。
  *  大数字 20/700（试样 800 字重 → 自托管 Montserrat 仅至 700，登记）。 */
 function TriStats() {
@@ -270,24 +277,42 @@ function TriStats() {
     enabled: !!user,
     staleTime: 60_000,
   })
+  /* 照片数：复用 listMine 缓存逐单聚合（内测量级；单预约读取失败不阻断合计） */
+  const photoCountQ = useQuery({
+    queryKey: ['philia', 'photo-count'],
+    queryFn: async (): Promise<number> => {
+      let n = 0
+      for (const appt of mineQ.data?.groups.completed ?? []) {
+        try {
+          const steps = await trpc.serviceStep.list.query({ appointmentId: appt.id })
+          for (const s of steps) n += s.photos.length
+        } catch {
+          // 单个预约步骤读取失败不计入合计
+        }
+      }
+      return n
+    },
+    enabled: !!user && !!mineQ.data,
+    staleTime: 60_000,
+  })
   if (meRawQ.isError || mineQ.isError) return null
   const createdAt = meRawQ.data?.user?.createdAt
   const joinDays = createdAt
     ? Math.max(1, Math.floor((Date.now() - new Date(createdAt).getTime()) / DAY_MS) + 1)
     : null
   const completedList = mineQ.data?.groups.completed ?? []
-  const totalFen = completedList.reduce((s, a) => s + a.priceFen, 0)
+  const photoCount = photoCountQ.data ?? null
   const items = [
-    { label: '陪伴天数', value: joinDays !== null ? `${joinDays} 天` : null },
-    { label: '服务次数', value: completedList.length > 0 ? `${completedList.length} 次` : null },
-    { label: '累计消费', value: completedList.length > 0 ? fenToYuan(totalFen) : null },
+    { label: mc('f1.statDays'), value: joinDays !== null ? `${joinDays} 天` : null },
+    { label: mc('f1.statServices'), value: completedList.length > 0 ? `${completedList.length} 次` : null },
+    { label: mc('f1.statPhotos'), value: photoCount !== null && photoCount > 0 ? `${photoCount} 张` : null },
   ].filter((i) => i.value !== null)
   if (items.length === 0) return null
   return (
     <section
       data-testid="philia-tri-stats"
       aria-label="陪伴数据"
-      className="mt-5 grid grid-cols-3 gap-2 border-y border-[rgba(74,59,46,.09)] py-3"
+      className="mt-5 grid grid-cols-3 gap-2 border-y border-line-ring py-3"
     >
       {items.map((i) => (
         <p key={i.label} className="text-center">
@@ -373,12 +398,23 @@ export default function PhiliaPage() {
           </button>
         </header>
 
+        {/* F-01 情感文案层（定稿 F-01 页首工艺）：mono eyebrow 9.5/.24em +
+            serif 宣言 24/900 lh1.55（片 2 落地；文案入 copy 键） */}
+        <div className="mt-6">
+          <p className="u1-num text-v2-trace uppercase tracking-[.24em] text-ink-secondary">
+            {mc('f1.eyebrow')}
+          </p>
+          <p className="u1-serif mt-2.5 whitespace-pre-line text-[24px] font-black leading-[1.55]">
+            {mc('f1.manifesto')}
+          </p>
+        </div>
+
         {/* 当前宠物大头像横滑（U1-F 形象位：圆形双细线环） */}
         <div className="mt-6">
           <PetAvatarRail />
         </div>
 
-        {/* U1-F 真实三数：陪伴天数 · 服务次数（守护值无真实来源不出；失败隐去） */}
+        {/* F-01 落地三数：陪伴天数 · 服务次数 · 照片数（守护值无真实来源不出；失败隐去） */}
         <TriStats />
 
         {/* U1-F 一键预约卡：内嵌现成一键再约链路（9a HomeBookingPanel 逻辑原样） */}
@@ -432,6 +468,33 @@ export default function PhiliaPage() {
             </span>
           </div>
         </div>
+
+        {/* F-01 槽位（PD-15 V1.1 三规：置灰不上数不上假件 + 注记 + data-testid）：
+            陪伴段位/徽章区无真实数据源（schema 无段位/徽章表）——置灰留口不上假徽章；
+            生日特辑=预留位（定稿 F-01 生日周自动生成功能未开工），同规置灰。 */}
+        <section className="mt-6" data-testid="slot-badges" aria-disabled="true">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-v2-section">{mc('f1.growthTitle')}</h2>
+            <span className="rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">
+              {mc('slot.soon')}
+            </span>
+          </div>
+          <div className="mt-3 rounded-card border border-dashed border-line bg-card px-4 py-8 text-center opacity-60">
+            <p className="text-caption text-ink-secondary">{mc('f1.growthSlotDesc')}</p>
+          </div>
+        </section>
+
+        <section className="mt-3" data-testid="slot-birthday" aria-disabled="true">
+          <div className="rounded-card border border-dashed border-line bg-card p-4 opacity-60">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-body-sm font-semibold">{mc('f1.birthdayTitle')}</p>
+              <span className="shrink-0 rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">
+                {mc('slot.soon')}
+              </span>
+            </div>
+            <p className="mt-1 text-caption text-ink-secondary">{mc('f1.birthdayDesc')}</p>
+          </div>
+        </section>
 
         {/* 菲丽亚日记 */}
         <section className="mt-8">

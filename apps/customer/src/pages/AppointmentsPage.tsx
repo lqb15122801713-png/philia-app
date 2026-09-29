@@ -11,6 +11,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
 import PageHeader from '@/components/PageHeader';
 import { EmptyState, ErrorState } from '@/components/home/common';
+import { mc } from '@/components/member/copy';
 import {
   APPT_STATUS_META,
   APPT_TYPE_LABEL,
@@ -146,19 +147,20 @@ export default function AppointmentsPage() {
           ))}
         </div>
       ) : listQ.isError ? (
-        /* W1 退回修：裸错误文本升 ErrorState（重试=柠檬主；页头返回条已是出口件） */
+        /* W1 退回修：裸错误文本升 ErrorState（重试=点睛主钮；页头返回条已是出口件） */
         <div className="mt-5">
           <ErrorState message="预约列表加载失败，请检查网络后重试" onRetry={() => void listQ.refetch()} />
         </div>
       ) : totalCount === 0 ? (
-        /* U1-I：全域统一空态组件（U4-D3 试样 12 工艺；行动钮统一柠檬控件档） */
+        /* U1-I：全域统一空态组件（E-01 三句话结构；行动钮=深棕墨族 §4.11） */
         <EmptyState
           title="还没有预约"
           desc="给毛孩子安排一次舒服的洗护吧"
           action={
+            /* E 系空态深棕钮（.emptyc .go：深棕墨底 #2E2318 + #F6EFDD，§4.11） */
             <Link
               to="/booking"
-              className="inline-flex items-center rounded-control bg-brand-primary px-[30px] py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+              className="inline-flex items-center rounded-control bg-[#2E2318] px-[22px] py-3 text-[13px] font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92"
             >
               立即预约
             </Link>
@@ -186,6 +188,16 @@ export default function AppointmentsPage() {
                 </button>
               );
             })}
+            {/* O-01 第六槽「退款售后」（定稿 O-01 chips 含退款位；PD-15 三规：置灰
+                不上数 + 注记「即将点亮」+ data-testid；现有五 tab 与过滤逻辑零改动） */}
+            <span
+              data-testid="slot-refund-tab"
+              aria-disabled="true"
+              className="shrink-0 cursor-not-allowed rounded-full bg-card px-4 py-2 text-body text-ink-placeholder opacity-60 shadow-card"
+            >
+              {mc('o1.refundTab')}
+              <span className="ml-1 text-caption-xs">{mc('slot.soon')}</span>
+            </span>
           </div>
 
           {/* 分组卡片 */}

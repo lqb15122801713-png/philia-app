@@ -1,50 +1,24 @@
 /**
- * HomePage · 客户端首页（批次 U1 任务 C · 双态重构 · v9.1 视觉语言）
+ * HomePage · 客户端首页（A-1 常态 / A-2 服务中态 · 换皮批片 2 · 定稿 V2.3 层叠件）
  *
- * 结构六段（任务书 U1-C 逐条落地，试样版本卡 de2b644 文本口径）：
- * 1. 顶图 banner：通栏到状态栏，wordmark + 会员码浮于图上；图注标题（中文展示位
- *    衬线 u1-serif）+ 会员信息行（昵称 · 加入第 N 天，真实 auth.me）。
- *    图源取舍：复用库内既有资产 /brand/banner-home-1200.png（9a.3 下掉但资产在库），
- *    不新推二进制图片；产品侧 banner 资产包入库后替换 src 即可。img 加载失败静默
- *    隐藏留米白底（接口断开/资产缺失不破版）。
- * 2. 主入口大卡：白卡上探压 banner 下缘 26px（-mt-[26px] + u1-card 细线 ring 近零影）。
- *    横排三入口 洗护/造型美容/寄养，各带「时长·价格起」小字——数据=首店服务目录
- *    （store.getWithServices：记忆门店优先，否则 listNearby 首店；时长=服务默认
- *    durationMin 档，与 9a 引擎未输出回退默认同口径；价格=services.priceFen 真实
- *    价目 min；目录查询失败/为空 → 小字隐去，入口导航保留真实链路）。
- *    图标取舍：产品侧 photos/icons/ 四张透明底 PNG 未入库——以 lucide 线图标
- *    （墨色 24px）占位，结构留 img 插槽（见 EntryIcon），资产到位后替换。
- *    卡内细线隔出次级行：商城/会员卡真实跳转；守护市集无路由（任务书「该行隐藏」）、
- *    联系门店无 phone 字段（U1-A 疑点口径）——二者不渲染，不造假按钮。
- * 3. 会员提醒条（深棕墨条 + 柠檬礼物圆标）：schema 无守护值/会员档/到期字段
- *    （server/src/db/schema.ts users 表，全库 0 命中），禁编造到期数字与演示数字——
- *    故文案取真实次卡余额（pass.mine）：「次卡共剩 N 次 · 到店出示会员码 ›」，
- *    点击进 /member 会员中心（R11a 裁定：旧 /philia/member 退役，重定向往 /member）；
- *    无可用次卡 → 整条隐去。
- * 4. 守护值细线行：守护值/星芽会员档/已省均无真实来源（无积分表、无折扣引擎），
- *    只渲染可真实聚合三项：陪伴天数（user.createdAt 距今，原 MemberPage RealStatsCard
- *    同口径，该页 R11a 已退役）· 服务次数（listMine completed 数）· 累计消费（completed priceFen 合计）；
- *    查询失败或无数据 → 整段隐去，禁写死演示数字。
- * 5. 我的毛孩子圆形头像行：pet.list 真实数据（avatarUrl 或 paw 占位），末位添加钮、
- *    管理入口均真实跳 /philia/pets；空档 → 真实引导行；查询失败 → 错误行可重试。
- * 6. 服务中态：存在 in_service 洗护单（listMine）时——图注标题变「洗护进行中 ·
- *    第 N 步」（serviceStep.list active 步，与 HomeBookingPanel 同 queryKey 缓存共享，
- *    零增发）；在店细线卡（InServicePanel 换肤：2px 细进度线柠檬段 + 步骤名 + 过程照
- *    缩略 + 查看全程 ›）置顶于主入口大卡之上。
+ * 层叠秩序（定稿 §4.2 冻结结构）：BANNER 槽 → 身份带压 BANNER 下沿（-98px）→
+ * 浮动大卡压身份带下沿（-16px，上向影不可省）→ 案例流（双列不等高）→ dock。
+ * 服务中态（A-2）：LIVE 卡压 BANNER 下沿，身份带降级为窄行 idline；备台行=消毒备台态。
  *
- * 与批次 9a HomeBookingPanel 的关系（取舍写明）：主入口大卡取代旧主区面板的「入口」
- * 职能；一键再约真实链路必须保留（老板铁则：所有按钮都是真功能）——HomeBookingPanel
- * 逻辑原样不动，常态时其 RebookPanel/降级入口卡置于主入口大卡之下（页面主行动区，
- * 全屏唯一柠檬黄 CTA 保留），服务中态时其 InServicePanel 置于大卡之上（任务书第 6 段）。
+ * 四铁律执行：功能逻辑/数据源零改动（listMine/me/pet.list/pass.mine/serviceStep.list
+ * 全部沿用）；入口不丢——会员码=idband/idlive qr 钮（/me/card）、一键再约=HomeBookingPanel
+ * （RebookPanel 逻辑原样）、商城入口=保留件（见次级行）、我的毛孩子/统计行保留件后置。
  *
- * 下掉清单（任务书，逐一断言）：无问候语（home-greeting）、无旧服务文字行
- * （home-services）、无胶囊卡阵、无 banner 轮播点。
+ * BANNER=槽位（§4.2/§七）：内容=A5 端口平面物料，现态=库内既有照片资产优先、
+ * 加载失败回退占位渐变（§1.4 口径）；不在码上定稿内容。
+ * 案例流=MomentsPage 域真实数据（自己的服务故事，最多 4 卡）；无数据整段隐去
+ * （内容层只做有口不做定稿，不画假案例）。
  */
 
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Bath, BedDouble, CreditCard, Gift, Plus, Scissors, ShoppingBag } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useMe, usePhiliaClient, getStepDef } from '@philia/shared'
 import HomeBookingPanel from '../components/home/HomeBookingPanel'
 import { ErrorState } from '../components/home/common'
@@ -53,9 +27,9 @@ import type { AppointmentListItem } from '@/components/booking/types'
 import { readLastBooking } from '@/lib/bookingPrefill'
 
 const DAY_MS = 86_400_000
-const HAIRLINE = 'border-t border-[rgba(74,59,46,.09)]'
+const HAIRLINE = 'border-t border-[rgba(59,46,36,.09)]'
 
-/** 服务目录行（三入口聚合用到的字段） */
+/** 服务目录行（双入口聚合用到的字段） */
 interface ServiceRow {
   id: string
   type: string
@@ -64,22 +38,7 @@ interface ServiceRow {
   priceFen: number
 }
 
-/** 入口图标插槽：VI 插画图标已入库（photos/icons/，批次 U1 资产）——<img> 直出；
- *  onError 回退原 lucide 线图标（资产缺失不破版，与 banner 同口径）；容器尺寸不变。 */
-function EntryIcon({ icon: Icon, label, src }: { icon: typeof Bath; label: string; src: string }) {
-  const [imgOk, setImgOk] = useState(true)
-  return (
-    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-sunken" aria-hidden="true">
-      {imgOk ? (
-        <img src={src} alt="" className="h-8 w-8 object-contain" onError={() => setImgOk(false)} />
-      ) : (
-        <Icon className="h-6 w-6 text-ink" strokeWidth={1.5} aria-label={label} />
-      )}
-    </span>
-  )
-}
-
-/** 「时长·价格起」小字聚合：分钟/价格取目录最小值；任一项缺失则该项不显示 */
+/** 「时长·价格起」mono 副题聚合：分钟/价格取目录最小值；任一项缺失则该项不显示 */
 function entryNote(services: ServiceRow[], unit: string): string | null {
   if (services.length === 0) return null
   const prices = services.map((s) => s.priceFen)
@@ -88,6 +47,17 @@ function entryNote(services: ServiceRow[], unit: string): string | null {
   if (durations.length > 0) parts.push(`约 ${Math.min(...durations)} 分钟起`)
   parts.push(`${fenToYuan(Math.min(...prices))} 起${unit}`)
   return parts.join(' · ')
+}
+
+/** 回馈金期次窗口（冻结口径：上月 26 日~本月 25 日为一期；到账日=次月 settlementDay） */
+function periodWindow(now: Date) {
+  const y = now.getFullYear()
+  const m = now.getMonth()
+  const inNext = now.getDate() >= 26
+  const start = new Date(y, m - 1, 26)
+  const end = inNext ? new Date(y, m, 25) : new Date(y, m, 25)
+  const arrive = new Date(end.getFullYear(), end.getMonth() + 1, 1)
+  return { start, end, arrive }
 }
 
 export default function HomePage() {
@@ -102,7 +72,6 @@ export default function HomePage() {
     enabled: !!user,
     staleTime: 60_000,
   })
-  // 会员信息行 / 陪伴天数：auth.me 原始响应（含 createdAt，原 MemberPage 同 key 同口径，该页 R11a 已退役）
   const meRawQ = useQuery({
     queryKey: ['auth', 'me', 'raw'],
     queryFn: () => trpc.auth.me.query(),
@@ -114,11 +83,23 @@ export default function HomePage() {
     queryFn: () => trpc.pet.list.query(),
     enabled: !!user,
   })
-  // 次卡余额（会员提醒条真实文案来源；无可用次卡 → 提醒条整条隐去）
   const passQ = useQuery({
     queryKey: ['pass', 'mine'],
     queryFn: () => trpc.pass.mine.query(),
     enabled: !!user,
+  })
+  /* 会员域（身份带档名/回馈金/环行）：membership.my + plans（settlementDay/rebateBp 读表） */
+  const myQ = useQuery({
+    queryKey: ['membership', 'my'],
+    queryFn: () => trpc.membership.my.query(),
+    enabled: !!user,
+    staleTime: 60_000,
+  })
+  const plansQ = useQuery({
+    queryKey: ['membership', 'plans'],
+    queryFn: () => trpc.membership.plans.query(),
+    enabled: !!user,
+    staleTime: 300_000,
   })
 
   // 服务中洗护单（六步流；寄养无六步，不触发服务中态，与 HomeBookingPanel 同口径）
@@ -133,20 +114,16 @@ export default function HomePage() {
     queryFn: () => trpc.serviceStep.list.query({ appointmentId: inServiceAppt!.id }),
     enabled: !!user && inServiceAppt !== null,
   })
-  const activeStep = (stepsQ.data ?? []).find((s) => s.status === 'active') ?? null
+  const steps = stepsQ.data ?? []
+  const activeStep = steps.find((s) => s.status === 'active') ?? null
+  const doneStep1 = steps.find((s) => s.stepOrder === 1 && s.status === 'done') ?? null
+  // LIVE 卡过程照=当前步最近一张照片（无则纯深棕卡，不画假图）
+  const livePhoto = useMemo(() => {
+    const photos = (activeStep?.photos ?? []) as Array<{ url: string }>
+    return photos.length > 0 ? photos[photos.length - 1]!.url : null
+  }, [activeStep])
 
-  // U4-C 图注副行（服务中态）：旺财 · 第 N 步 · 步骤名 · 预计 HH:MM（scheduledEnd 真字段）
-  const bannerServiceSub = useMemo(() => {
-    if (!inServiceAppt) return null
-    const parts: string[] = [inServiceAppt.petName ?? '爱宠']
-    if (activeStep?.stepOrder) parts.push(`第 ${activeStep.stepOrder} 步`)
-    const nm = activeStep ? (getStepDef(activeStep.stepKey)?.name ?? null) : null
-    if (nm) parts.push(nm)
-    if (inServiceAppt.scheduledEnd) parts.push(`预计 ${fmtHM(new Date(inServiceAppt.scheduledEnd))}`)
-    return parts.join(' · ')
-  }, [inServiceAppt, activeStep])
-
-  // 首店解析：B4-3 记忆门店优先，否则 listNearby 首店（仅取服务目录做三入口小字）
+  // 首店解析：B4-3 记忆门店优先，否则 listNearby 首店（仅取服务目录做双入口小字）
   const memoryStoreId = useMemo(() => readLastBooking()?.storeId ?? null, [])
   const nearbyQ = useQuery({
     queryKey: ['store', 'listNearby'],
@@ -162,14 +139,30 @@ export default function HomePage() {
     staleTime: 300_000,
   })
   const services = (storeQ.data?.services ?? []) as ServiceRow[]
-
-  // 三入口小字：洗护=grooming 非造型；造型美容=grooming 名含「造型」（目录无则小字隐去）；
-  // 寄养=boarding（每晚价口径）
-  const washNote = entryNote(services.filter((s) => s.type === 'grooming' && !s.name.includes('造型')), '')
-  const styleNote = entryNote(services.filter((s) => s.type === 'grooming' && s.name.includes('造型')), '')
+  // 洗澡美容=grooming 全族（含造型）；寄养=boarding（每晚价口径）
+  const groomNote = entryNote(services.filter((s) => s.type === 'grooming'), '')
   const boardingNote = entryNote(services.filter((s) => s.type === 'boarding'), '/晚')
 
-  // 会员信息行 + 守护值细线行真实聚合（失败/无数据 → 各段隐去）
+  // 会员信息：档名/回馈金余额/期次环
+  const membership = myQ.data?.membership ?? null
+  const plan = useMemo(() => {
+    const plans = (plansQ.data?.plans ?? []) as Array<{ planKey: string; label: string; free: boolean; rebateBp: number }>
+    return plans.find((p) => p.planKey === membership?.planKey) ?? null
+  }, [plansQ.data, membership])
+  const tierName = plan ? plan.label.replace(/^会员档·/, '').replace(/：.*$/, '') : null
+  const rebateBalance = myQ.data?.rebate?.balanceFen ?? 0
+  const periodLogs = (myQ.data?.periodLogs ?? []) as Array<{ type: string; deltaFen: number }>
+  const grantedThisPeriod = periodLogs.filter((l) => l.type === 'grant').reduce((s, l) => s + l.deltaFen, 0)
+  const settlementDay = plansQ.data?.rebateSettlementDay ?? 5
+  const rebatePct = plan && plan.rebateBp > 0 ? plan.rebateBp / 100 : 0
+  const pw = periodWindow(new Date())
+  const periodPct = Math.min(
+    100,
+    Math.max(0, Math.round(((Date.now() - pw.start.getTime()) / (pw.end.getTime() - pw.start.getTime())) * 100)),
+  )
+  const fmtMD = (d: Date) => `${d.getMonth() + 1}.${d.getDate()}`
+
+  // 陪伴统计（真实聚合三项；失败/无数据 → 各段隐去）
   const joinDays = useMemo(() => {
     const createdAt = meRawQ.data?.user?.createdAt
     if (!createdAt) return null
@@ -178,232 +171,322 @@ export default function HomePage() {
   const completed = mineQ.data?.groups.completed ?? []
   const statsReady = meRawQ.isSuccess && mineQ.isSuccess && (joinDays !== null || completed.length > 0)
 
-  // 会员提醒条：真实次卡余额（pass.mine usable 合计）
+  // 会员提醒条：真实次卡余额（pass.mine usable 合计；无则整条隐去）
   const usablePasses = (passQ.data ?? []).filter((p) => p.usable)
   const passRemainTotal = usablePasses.reduce((s, p) => s + p.remainTimes, 0)
 
-  const entryCard = (
-    <section data-testid="home-entry-card" className="u1-card relative z-10 -mt-[26px] p-4" aria-label="服务入口">
-      {/* 横排三入口：洗护 / 造型美容 / 寄养 */}
-      <div className="grid grid-cols-3 gap-2">
-        {[
-          { to: '/booking/grooming', testid: 'home-entry-grooming', icon: Bath, iconSrc: '/photos/icons/ic-bath.png', name: '洗护', note: washNote },
-          { to: '/booking/grooming?tab=style', testid: 'home-entry-style', icon: Scissors, iconSrc: '/photos/icons/ic-groom.png', name: '造型美容', note: styleNote },
-          { to: '/booking/boarding', testid: 'home-entry-boarding', icon: BedDouble, iconSrc: '/photos/icons/ic-board.png', name: '寄养', note: boardingNote },
-        ].map(({ to, testid, icon, iconSrc, name, note }) => (
-          <Link
-            key={testid}
-            to={to}
-            data-testid={testid}
-            className="flex flex-col items-center gap-1.5 py-1 transition-transform duration-120 ease-philia-spring active:scale-92"
-          >
-            <EntryIcon icon={icon} label={name} src={iconSrc} />
-            <span className="text-body-sm font-semibold leading-5">{name}</span>
-            {note ? (
-              <span className="u1-num text-center text-caption-xs leading-4 text-ink-secondary">{note}</span>
-            ) : null}
-          </Link>
-        ))}
-      </div>
-
-      {/* U4-A 重做：次级入口=两条整宽列表行（细线分隔）——40px 圆角 14 浅木底
-          图标芯片（lucide 线图标墨 60%）+ 名称 14/600 墨 + › 墨 30%；
-          按下 scale 0.98 / 120ms / ease-philia-spring。
-          守护市集无路由、联系门店无 phone——不渲染，不造假。
-          跳转口径（U4 任务书）：商城→/mall、会员卡→/me/card。 */}
-      <div className={`mt-3 pt-1 ${HAIRLINE}`}>
-        {[
-          { to: '/mall', testid: 'home-sub-mall', icon: ShoppingBag, name: '商城' },
-          { to: '/me/card', testid: 'home-sub-member', icon: CreditCard, name: '会员卡' },
-        ].map(({ to, testid, icon: RowIcon, name }, i) => (
-          <Link
-            key={testid}
-            to={to}
-            data-testid={testid}
-            className={`flex items-center gap-3 py-2.5 text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] ${i > 0 ? HAIRLINE : ''}`}
-          >
-            <span
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-oak-light"
-              aria-hidden="true"
-            >
-              <RowIcon className="h-5 w-5 text-ink/60" strokeWidth={1.5} />
-            </span>
-            <span className="min-w-0 flex-1 text-body-sm font-semibold leading-5">{name}</span>
-            <span className="shrink-0 text-ink/30" aria-hidden="true">
-              ›
-            </span>
-          </Link>
-        ))}
-      </div>
-    </section>
-  )
+  // 案例流（「店里今天的故事」）：MomentsPage 域真实数据——最近完成服务的前后对比照 after 封面，最多 4 卡
+  const casesQ = useQuery({
+    queryKey: ['home', 'cases'],
+    queryFn: async () => {
+      const { groups } = await trpc.appointment.listMine.query()
+      const done = groups.completed.slice(0, 8)
+      const cards: Array<{ id: string; petName: string | null; serviceName: string | null; storeName: string | null; url: string; at: Date }> = []
+      for (const appt of done) {
+        try {
+          const stepList = await trpc.serviceStep.list.query({ appointmentId: appt.id })
+          const ba = stepList.find((s) => s.stepKey === 'before_after')
+          const after = ba ? [...ba.photos].reverse().find((p) => p.tag === 'after') : null
+          if (!after) continue
+          cards.push({
+            id: appt.id,
+            petName: appt.petName,
+            serviceName: appt.serviceName,
+            storeName: appt.storeName ?? null,
+            url: after.url,
+            at: appt.completedAt ?? appt.scheduledStart,
+          })
+        } catch {
+          // 单册读取失败不阻断整流
+        }
+      }
+      return cards.slice(0, 4)
+    },
+    enabled: !!user,
+    staleTime: 300_000,
+  })
+  const cases = casesQ.data ?? []
 
   return (
-    <div className="px-4 pb-32">
-      {/* 1. 顶图 banner（通栏到状态栏；wordmark + 会员码浮于图上） */}
-      <section data-testid="home-banner" className="relative -mx-4" aria-label="品牌横幅">
+    <div className="pb-32">
+      {/* 1. BANNER 槽（§4.2：高 190+底垫 96；内容=A5 端口槽位；既有照片资产优先，加载失败回退占位渐变） */}
+      <section className="hv2-banner" data-testid="home-banner" aria-label="品牌横幅">
         {bannerImgOk ? (
           <img
             src="/brand/banner-home-1200.png"
             alt="菲丽亚宠物门店"
             data-testid="home-banner-img"
             onError={() => setBannerImgOk(false)}
-            className="h-[238px] w-full object-cover object-[center_70%]"
+            className="hv2-banner-img"
           />
-        ) : (
-          <div className="h-[238px] w-full bg-oak-light" aria-hidden="true" />
-        )}
-        <header data-testid="home-topbar" className="absolute inset-x-0 top-0 flex items-start justify-between px-[22px] pt-[46px]">
-          <p className="font-display text-[19px] font-extrabold uppercase leading-7 tracking-[.06em] text-[#FFFDF6] [text-shadow:0_1px_8px_rgba(46,38,32,.35)]">
-            PHILIA
-          </p>
+        ) : null}
+        <header className="hv2-banner-top" data-testid="home-topbar">
+          <p className="hv2-wordmark">PHILIA</p>
+        </header>
+        <div className="hv2-banner-space" />
+      </section>
+
+      {inServiceAppt ? (
+        /* ---- A-2 服务中态：LIVE 卡压 BANNER 下沿（仅服务中态出现，CJ-0921-13） ---- */
+        <div className="hv2-livewrap">
+          <Link
+            to={`/appointments/${inServiceAppt.id}/live`}
+            className="hv2-livecard"
+            data-testid="home-live-card"
+          >
+            <div className="top">
+              <span className="hv2-livetag"><i />LIVE · 洗护进行中</span>
+              <span style={{ fontFamily: 'var(--v2mono)', fontSize: 10.5, color: '#C9BBA0' }}>
+                节点 {activeStep?.stepOrder ?? '—'} / {steps.length || 6}
+              </span>
+            </div>
+            <div className="ph">
+              {livePhoto ? (
+                <img src={livePhoto} alt="" />
+              ) : (
+                /* 无过程照时信息不消失（不画假图）：纯文字态呈现 caption 内容 */
+                <div style={{ padding: '14px 12px', fontSize: 12, fontWeight: 600, color: '#F6EFDD' }}>
+                  {inServiceAppt.petName ?? '爱宠'} · {inServiceAppt.serviceName ?? '洗护'} · {activeStep ? (getStepDef(activeStep.stepKey)?.name ?? '') : ''}
+                </div>
+              )}
+              {livePhoto ? (
+                <div className="cap">
+                  {inServiceAppt.petName ?? '爱宠'} · {inServiceAppt.serviceName ?? '洗护'} · {activeStep ? (getStepDef(activeStep.stepKey)?.name ?? '') : ''}
+                </div>
+              ) : null}
+            </div>
+            <div className="bot">
+              <span className="av">{(inServiceAppt.petName ?? '宠').slice(0, 1)}</span>
+              <span>{inServiceAppt.petName ?? '爱宠'}</span>
+              <span className="eta">预计 {fmtHM(new Date(inServiceAppt.scheduledEnd))} 完成</span>
+              <span className="go">查看全程 ›</span>
+            </div>
+          </Link>
+          {/* 备台行：消毒备台态（七节点步 1 完成时刻真实值，无则隐去） */}
+          {doneStep1 ? (
+            <div className="hv2-preprow" style={{ marginTop: 10 }} data-testid="home-preprow">
+              <div>
+                <div className="t">消毒备台 · 一客一消</div>
+                <div className="s">{doneStep1.doneAt ? `${fmtHM(new Date(doneStep1.doneAt))} 已完成` : '已完成'}</div>
+              </div>
+            </div>
+          ) : null}
+          {/* 窄行身份条（服务中态降级件） */}
+          <div className="hv2-idline" style={{ marginTop: 10 }} data-testid="home-idline">
+            <span className="dot" />
+            <b>{tierName ?? '菲丽亚宠友'}</b>
+            <span className="ac">回馈金 {fenToYuan(rebateBalance)}</span>
+            <Link to="/me/card" className="qr" data-testid="home-member-code">会员码 ›</Link>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* 2. 身份带 idband（深棕渐变 135deg；-98px 压 BANNER） */}
+          <div className="hv2-bandwrap">
+            <div className="hv2-idband" data-testid="home-idband">
+              <div className="mini">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 13.5c-2.8 0-5 2-5 4.2 0 1.4 1 2.3 2.4 2.3 1 0 1.7-.5 2.6-.5s1.6.5 2.6.5c1.4 0 2.4-.9 2.4-2.3 0-2.2-2.2-4.2-5-4.2z" /><circle cx="6.5" cy="10" r="1.6" /><circle cx="10" cy="7.5" r="1.7" /><circle cx="14" cy="7.5" r="1.7" /><circle cx="17.5" cy="10" r="1.6" /></svg>
+              </div>
+              <div>
+                <div className="nm">{tierName ?? '菲丽亚宠友'}</div>
+                <div className="ac">{membership ? <>回馈金 <b>{fenToYuan(rebateBalance)}</b></> : '免费领个身份 ›'}</div>
+              </div>
+              <Link
+                to={membership ? '/me/card' : '/member/open'}
+                className="qr"
+                aria-label="会员码"
+                data-testid="home-member-code"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="4" y="4" width="6" height="6" rx="1.2" /><rect x="14" y="4" width="6" height="6" rx="1.2" /><rect x="4" y="14" width="6" height="6" rx="1.2" /><path d="M14 14h2.5v2.5H14zM20 14v6M14 20h6" /></svg>
+              </Link>
+            </div>
+          </div>
+
+          {/* 3. 浮动大卡 megacard（-16px 压身份带下沿；上向影不可省） */}
+          <section className="hv2-megacard" data-testid="home-entry-card" aria-label="服务入口">
+            <div className="hv2-mc-cols">
+              <Link to="/booking/grooming" className="hv2-mc-col" data-testid="home-entry-grooming">
+                <svg viewBox="0 0 24 24"><circle cx="6.5" cy="7" r="2.4" /><circle cx="6.5" cy="17" r="2.4" /><path d="M8.5 8.8L19.5 19M8.5 15.2L19.5 5" /></svg>
+                <div className="t">预约洗澡美容</div>
+                {groomNote ? <div className="s">{groomNote}</div> : null}
+              </Link>
+              <Link to="/booking/boarding" className="hv2-mc-col" data-testid="home-entry-boarding">
+                <svg viewBox="0 0 24 24"><path d="M4 11l8-6 8 6v8a1 1 0 01-1 1h-5v-6h-4v6H5a1 1 0 01-1-1z" /></svg>
+                <div className="t">预约寄养</div>
+                <div className="s">{boardingNote ?? '按晚 · 疫苗核验'}</div>
+              </Link>
+            </div>
+            <div className="hv2-mc-div" />
+            {/* 回馈金结算环行（付费档；免费档/非会员=开通引导行，不画假环） */}
+            {membership && plan && !plan.free ? (
+              <Link to="/member/rebate" className="hv2-mc-row hv2-mc-ring" data-testid="home-rebate-ring">
+                <svg width="68" height="68" viewBox="0 0 76 76" style={{ flex: 'none' }} aria-hidden="true">
+                  <circle cx="38" cy="38" r="30" fill="none" stroke="#EDE4CE" strokeWidth="8" />
+                  <circle cx="38" cy="38" r="30" fill="none" stroke="#F2DFA6" strokeWidth="8" strokeLinecap="round"
+                    strokeDasharray="188.5" strokeDashoffset={188.5 * (1 - periodPct / 100)} transform="rotate(-90 38 38)" />
+                  <text x="38" y="36" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="15" fontWeight="700" fill="#3B2E24">{periodPct}%</text>
+                  <text x="38" y="49" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="7.5" fill="#8A7D6B">本周期</text>
+                </svg>
+                <div>
+                  <div className="big">{fenToYuan(grantedThisPeriod)}</div>
+                  <div className="cap">本期已攒回馈金 · 周期 {fmtMD(pw.start)} – {fmtMD(pw.end)}<br />{pw.arrive.getMonth() + 1} 月 {settlementDay} 日到账</div>
+                  <div className="rule1">买商品的 {rebatePct}%，次月回到这里。</div>
+                </div>
+              </Link>
+            ) : (
+              <Link to={membership ? '/member/rebate' : '/member/open'} className="hv2-mc-row" data-testid="home-rebate-guide" style={{ textDecoration: 'none' }}>
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#3B2E24' }}>
+                    {membership ? '回馈金账本' : '开通会员，买商品返回馈金'}
+                  </div>
+                  <div className="cap" style={{ fontSize: 11, color: '#8A7D6B', marginTop: 3 }}>
+                    {membership ? `余额 ${fenToYuan(rebateBalance)} · 每月 ${settlementDay} 日到账` : `付费档返 ${[2, 5, 10].join('/')}%，次月到账`}
+                  </div>
+                </div>
+                <span style={{ marginLeft: 'auto', color: '#8A7D6B' }} aria-hidden="true">›</span>
+              </Link>
+            )}
+          </section>
+        </>
+      )}
+
+      <div className="px-[22px]">
+        {/* 4. 案例流（「店里今天的故事」=MomentsPage 域真实数据；无数据整段隐去） */}
+        {cases.length > 0 ? (
+          <section data-testid="home-cases" aria-label="店里今天的故事" style={{ marginTop: 26 }}>
+            <div className="flex items-baseline justify-between" style={{ marginBottom: 12 }}>
+              <h3 style={{ fontSize: 16, fontWeight: 800, color: '#3B2E24' }}>店里今天的故事</h3>
+              <Link to="/philia/moments" data-testid="home-cases-more" style={{ fontFamily: 'var(--v2mono)', fontSize: 11, color: '#8A7D6B' }}>
+                每日更新 ›
+              </Link>
+            </div>
+            <div className="hv2-cases">
+              {cases.map((c, i) => (
+                <Link key={c.id} to="/philia/moments" className="hv2-case" data-testid={`home-case-${i}`}>
+                  <img src={c.url} alt="" style={{ height: 132 + ((i * 37) % 65) }} loading="lazy" />
+                  <div className="tt">{c.petName ?? '毛孩子'}的{c.serviceName ?? '洗护'}日记</div>
+                  <div className="src">{c.storeName ?? '门店'} · {c.serviceName ?? '服务'} · {fmtHM(new Date(c.at))}</div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {/* 一键再约 / 降级入口卡（常态主行动区；服务中态已由 LIVE 卡承载） */}
+        {!inServiceAppt ? (
+          <div className="mt-3">
+            <HomeBookingPanel />
+          </div>
+        ) : null}
+
+        {/* 5. 会员提醒条（真实次卡余额，无则整条隐去） */}
+        {passRemainTotal > 0 ? (
           <Link
             to="/member"
-            data-testid="home-member-code"
-            className="rounded-full border border-[rgba(255,253,246,.7)] px-3 py-[5px] text-caption-xs leading-4 text-[#FFFDF6] transition-transform duration-120 ease-philia-spring active:scale-92"
+            data-testid="home-member-strip"
+            className="mt-4 flex items-center gap-3 rounded-panel bg-ink px-4 py-3 text-canvas transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
-            会员码
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-primary" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#3B2E24" strokeWidth="1.5" className="h-4 w-4"><rect x="3" y="8" width="18" height="13" rx="2" /><path d="M12 8v13M3 12h18M8 8c-2-2-1-5 1-5s3 2 3 5M16 8c2-2 1-5-1-5s-3 2-3 5" /></svg>
+            </span>
+            <span className="min-w-0 flex-1 text-body-sm leading-5">
+              次卡共剩 <span className="u1-num font-semibold">{passRemainTotal}</span> 次 · 到店出示会员码
+            </span>
+            <span className="shrink-0 text-canvas/70" aria-hidden="true">›</span>
           </Link>
-        </header>
-        {/* 图注标题（衬线展示位，叠于图上左下——U4-C 恢复试样 .h-cap 展示位；bottom 38
-            避开后随卡片 26px 上探区） */}
-        <div className="absolute inset-x-[22px] bottom-[38px]">
-          <h1 data-testid="home-banner-title" className="u1-serif text-title-lg leading-7 text-[#FFFDF6] [text-shadow:0_1px_10px_rgba(46,38,32,.45)]">
-            {inServiceAppt ? '洗护进行中' : '守护每一次洗护'}
-          </h1>
-          <p data-testid="home-banner-sub" className="mt-[5px] text-caption-xs leading-4 tracking-[.06em] text-[#FFFDF6]/90">
-            {inServiceAppt
-              ? (bannerServiceSub ?? '')
-              : `${user?.nickname ?? '宠友'}${joinDays !== null ? ` · 加入菲丽亚第 ${joinDays} 天` : ''}`}
-          </p>
-        </div>
-      </section>
+        ) : null}
 
-      {/* 6. 服务中态：在店细线卡置顶于大卡之上（HomeBookingPanel 逻辑原样，版式换肤） */}
-      {inServiceAppt ? (
-        <div className="relative z-10 -mt-[26px]">
-          <HomeBookingPanel />
-        </div>
-      ) : null}
-
-      {/* 2. 主入口大卡（常态压 banner 下缘 26px；服务中态跟在店卡之后） */}
-      {inServiceAppt ? <div className="mt-3">{entryCard}</div> : entryCard}
-
-      {/* 一键再约 / 降级入口卡：常态主行动区（9a 双态面板逻辑不动，全屏唯一柠檬黄 CTA） */}
-      {!inServiceAppt ? (
-        <div className="mt-3">
-          <HomeBookingPanel />
-        </div>
-      ) : null}
-
-      {/* 3. 会员提醒条（深棕墨条 + 柠檬礼物圆标；真实次卡余额，无则整条隐去） */}
-      {passRemainTotal > 0 ? (
-        <Link
-          to="/member"
-          data-testid="home-member-strip"
-          className="mt-4 flex items-center gap-3 rounded-panel bg-ink px-4 py-3 text-canvas transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
-        >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-primary" aria-hidden="true">
-            <Gift className="h-4 w-4 text-ink" strokeWidth={1.5} />
-          </span>
-          <span className="min-w-0 flex-1 text-body-sm leading-5">
-            次卡共剩 <span className="u1-num font-semibold">{passRemainTotal}</span> 次 · 到店出示会员码
-          </span>
-          <span className="shrink-0 text-canvas/70" aria-hidden="true">›</span>
-        </Link>
-      ) : null}
-
-      {/* 4. 守护值细线行（真实聚合三项；守护值/档名/已省无真实来源不出现） */}
-      {statsReady ? (
-        <section
-          data-testid="home-stats-row"
-          aria-label="陪伴数据"
-          className={`mt-4 grid grid-cols-3 gap-2 py-3 ${HAIRLINE} border-b border-[rgba(74,59,46,.09)]`}
-        >
-          {[
-            { label: '陪伴天数', value: joinDays !== null ? `${joinDays} 天` : null },
-            { label: '服务次数', value: completed.length > 0 ? `${completed.length} 次` : null },
-            {
-              label: '累计消费',
-              value: completed.length > 0 ? fenToYuan(completed.reduce((s, a) => s + a.priceFen, 0)) : null,
-            },
-          ]
-            .filter((i) => i.value !== null)
-            .map((i) => (
-              <p key={i.label} className="text-center">
-                <span className="u1-num block text-body-sm font-semibold leading-5">{i.value}</span>
-                <span className="block text-caption-xs leading-4 text-ink-secondary">{i.label}</span>
-              </p>
-            ))}
-        </section>
-      ) : null}
-
-      {/* 5. 我的毛孩子圆形头像行（pet.list 真实数据） */}
-      <section data-testid="home-pets-row" className="mt-5" aria-label="我的毛孩子">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-title">我的毛孩子</h2>
-          <Link to="/philia/pets" data-testid="home-pets-manage" className="text-caption-xs text-ink-secondary">
-            管理 ›
-          </Link>
-        </div>
-        {petsQ.isPending ? (
-          <div className="mt-3 flex gap-4">
-            {[1, 2].map((i) => (
-              <span key={i} className="h-14 w-14 animate-pulse rounded-full bg-sunken" />
-            ))}
-          </div>
-        ) : petsQ.isError ? (
-          <div className="mt-3">
-            <ErrorState message="毛孩子加载失败" onRetry={() => void petsQ.refetch()} />
-          </div>
-        ) : (petsQ.data ?? []).length === 0 ? (
-          <Link
-            to="/philia/pets"
-            data-testid="home-pets-empty"
-            className="mt-3 flex items-center justify-between rounded-control bg-sunken px-4 py-3 text-body-sm text-ink-secondary"
+        {/* 6. 守护值细线行（真实聚合三项；守护值/档名/已省无真实来源不出现） */}
+        {statsReady ? (
+          <section
+            data-testid="home-stats-row"
+            aria-label="陪伴数据"
+            className={`mt-4 grid grid-cols-3 gap-2 py-3 ${HAIRLINE} border-b border-[rgba(59,46,36,.09)]`}
           >
-            还没有毛孩子档案，去添加 TA 吧
-            <span aria-hidden="true">›</span>
-          </Link>
-        ) : (
-          <div className="mt-3 flex flex-wrap gap-4">
-            {(petsQ.data ?? []).map((pet) => (
-              <Link
-                key={pet.id}
-                to="/philia/pets"
-                data-testid={`home-pet-${pet.id}`}
-                className="flex w-14 flex-col items-center gap-1 transition-transform duration-120 ease-philia-spring active:scale-92"
-              >
-                {pet.avatarUrl ? (
-                  <img
-                    src={pet.avatarUrl}
-                    alt={pet.name ?? '毛孩子'}
-                    loading="lazy"
-                    className="h-14 w-14 rounded-full bg-sunken object-cover"
-                  />
-                ) : (
-                  /* D-补3 字圈工艺：浅木底 + 衬线首字（D1 洗护师字圈同口径），不再用 PawPrint 图标占位 */
-                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-oak-light ring-1 ring-line-ring" aria-hidden="true">
-                    <span className="u1-serif text-title font-semibold text-ink">{(pet.name ?? '毛孩子').slice(0, 1)}</span>
-                  </span>
-                )}
-                <span className="w-full truncate text-center text-caption-xs leading-4">{pet.name ?? '毛孩子'}</span>
-              </Link>
-            ))}
-            <Link
-              to="/philia/pets"
-              data-testid="home-pets-add"
-              aria-label="添加毛孩子"
-              className="flex w-14 flex-col items-center gap-1 transition-transform duration-120 ease-philia-spring active:scale-92"
-            >
-              <span className="u1-ring flex h-14 w-14 items-center justify-center rounded-full bg-card">
-                <Plus className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
-              </span>
-              <span className="text-caption-xs leading-4 text-ink-secondary">添加</span>
+            {[
+              { label: '陪伴天数', value: joinDays !== null ? `${joinDays} 天` : null },
+              { label: '服务次数', value: completed.length > 0 ? `${completed.length} 次` : null },
+              {
+                label: '累计消费',
+                value: completed.length > 0 ? fenToYuan(completed.reduce((s, a) => s + a.priceFen, 0)) : null,
+              },
+            ]
+              .filter((i) => i.value !== null)
+              .map((i) => (
+                <p key={i.label} className="text-center">
+                  <span className="u1-num block text-body-sm font-semibold leading-5">{i.value}</span>
+                  <span className="block text-caption-xs leading-4 text-ink-secondary">{i.label}</span>
+                </p>
+              ))}
+          </section>
+        ) : null}
+
+        {/* 7. 我的毛孩子圆形头像行（pet.list 真实数据） */}
+        <section data-testid="home-pets-row" className="mt-5" aria-label="我的毛孩子">
+          <div className="flex items-baseline justify-between">
+            <h2 className="text-title">我的毛孩子</h2>
+            <Link to="/philia/pets" data-testid="home-pets-manage" className="text-caption-xs text-ink-secondary">
+              管理 ›
             </Link>
           </div>
-        )}
-      </section>
+          {petsQ.isPending ? (
+            <div className="mt-3 flex gap-4">
+              {[1, 2].map((i) => (
+                <span key={i} className="h-14 w-14 animate-pulse rounded-full bg-sunken" />
+              ))}
+            </div>
+          ) : petsQ.isError ? (
+            <div className="mt-3">
+              <ErrorState message="毛孩子加载失败" onRetry={() => void petsQ.refetch()} />
+            </div>
+          ) : (petsQ.data ?? []).length === 0 ? (
+            <Link
+              to="/philia/pets"
+              data-testid="home-pets-empty"
+              className="mt-3 flex items-center justify-between rounded-control bg-sunken px-4 py-3 text-body-sm text-ink-secondary"
+            >
+              还没有毛孩子档案，去添加 TA 吧
+              <span aria-hidden="true">›</span>
+            </Link>
+          ) : (
+            <div className="mt-3 flex flex-wrap gap-4">
+              {(petsQ.data ?? []).map((pet) => (
+                <Link
+                  key={pet.id}
+                  to="/philia/pets"
+                  data-testid={`home-pet-${pet.id}`}
+                  className="flex w-14 flex-col items-center gap-1 transition-transform duration-120 ease-philia-spring active:scale-92"
+                >
+                  {pet.avatarUrl ? (
+                    <img
+                      src={pet.avatarUrl}
+                      alt={pet.name ?? '毛孩子'}
+                      loading="lazy"
+                      className="h-14 w-14 rounded-full bg-sunken object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-14 w-14 items-center justify-center rounded-full bg-oak-light ring-1 ring-line-ring" aria-hidden="true">
+                      <span className="u1-serif text-title font-semibold text-ink">{(pet.name ?? '毛孩子').slice(0, 1)}</span>
+                    </span>
+                  )}
+                  <span className="w-full truncate text-center text-caption-xs leading-4">{pet.name ?? '毛孩子'}</span>
+                </Link>
+              ))}
+              <Link
+                to="/philia/pets"
+                data-testid="home-pets-add"
+                aria-label="添加毛孩子"
+                className="flex w-14 flex-col items-center gap-1 transition-transform duration-120 ease-philia-spring active:scale-92"
+              >
+                <span className="u1-ring flex h-14 w-14 items-center justify-center rounded-full bg-card">
+                  <Plus className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
+                </span>
+                <span className="text-caption-xs leading-4 text-ink-secondary">添加</span>
+              </Link>
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   )
 }

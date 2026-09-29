@@ -4,12 +4,15 @@
  * 满槽/已过/「当前+1h 缓冲」内一律灰显禁用（批次 3 统一口径：可约集由
  * getWithServices 服务端过滤供给，集合外全部禁用，前后端同拦）。
  *
- * U4-D1 三态工艺（任务书 D-补1）：可约=白底+细线；选中=柠檬底（与日期条同口径）；
- * 禁用=墨 25% 字+细线 ring（bg 不落死灰，禁用态可辨）；圆角控件档 14，数字 u1-num。
+ * 换皮批片 2（定稿 B-01 / §4.4 slots 工艺卡）：3 列 gap 9；片=白卡圆角 14，
+ * mono 13/700 时刻 + 9 状态行；选中=淡黄底 #F2DFA6（本屏点睛位）；禁用=0.4 整片
+ * 半透明（定稿 .slot.dis 口径，覆盖旧「墨 25% 字」）；组头=mono 9 卡其（sh-group gh）。
+ * 状态行口径：可约集内=「可约」，集外=「已满」（含已过/临近缓冲，底部注记保留说明）。
  */
 
 import type { SlotItem } from '../types';
 import { fmtHM } from '../format';
+import { mc } from '@/components/member/copy';
 import { availableSetOf, DAY_PART_LABEL, DAY_PART_ORDER, dayPartOf, type DayGrid, type DayPart } from './slotGrid';
 
 export default function TimeGridBlock({
@@ -61,8 +64,9 @@ export default function TimeGridBlock({
     <div className="space-y-3" data-testid="gs-time-grid">
       {DAY_PART_ORDER.filter((p) => groups.has(p)).map((part) => (
         <div key={part} data-testid={`gs-time-group-${part}`}>
-          <p className="text-caption font-medium text-ink-secondary">{DAY_PART_LABEL[part]}</p>
-          <div className="mt-1.5 grid grid-cols-4 gap-2">
+          {/* 组头 gh：mono 9 卡其（定稿 sh-group 口径） */}
+          <p className="font-number text-[9px] tracking-[.14em] text-brand-secondary">{DAY_PART_LABEL[part]}</p>
+          <div className="mt-2 grid grid-cols-3 gap-[9px]">
             {groups.get(part)!.map((t) => {
               const ok = available.has(t.getTime());
               const active = selected?.getTime() === t.getTime();
@@ -75,15 +79,22 @@ export default function TimeGridBlock({
                   data-testid={`gs-slot-${fmtHM(t)}`}
                   data-available={ok ? 'true' : 'false'}
                   data-slot-start={t.getTime()}
-                  className={`rounded-control border py-2.5 text-center u1-num text-body-sm transition ${
+                  className={`rounded-control border px-1 py-[11px] text-center transition ${
                     active
-                      ? 'border-transparent bg-brand-primary font-semibold text-ink'
+                      ? 'border-transparent bg-brand-primary text-ink'
                       : ok
                         ? 'border-line bg-card text-ink active:scale-95'
-                        : 'cursor-not-allowed border-line-ring text-ink/25'
+                        : 'cursor-not-allowed border-line bg-card opacity-40'
                   }`}
                 >
-                  {fmtHM(t)}
+                  <span className="block font-number text-[13px] font-bold leading-4">{fmtHM(t)}</span>
+                  <span
+                    className={`mt-[3px] block text-[9px] leading-3 ${
+                      active ? 'text-ink' : 'text-ink-secondary'
+                    }`}
+                  >
+                    {ok ? mc('bk.slotOpen') : mc('bk.slotFull')}
+                  </span>
                 </button>
               );
             })}

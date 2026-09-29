@@ -13,10 +13,12 @@
  * - 点击调 devLogin(baseUrl, userId, code?) → 失效全部查询缓存 → 跳回 from 或 /home。
  *
  * U4-D2（试样 01 逐格收口 · 拍板 2 内测口径）：视觉骨架向试样靠拢——
- * 左对齐 hero（54px 细线爪印圆标 + 衬线宣言「守护每一次/被照顾的时刻」
- * 20/700〔试样 30px 越字阶闸门，取字阶内 20；规格书 §10 同口径〕+
- * 「PHILIA · 洗护 / 美容 / 寄养」宽距小字 + 柠檬短分隔线 44×1.5）+
- * 柠檬主钮「手机号一键登录」+「口令入内测 ›」+ 底部协议小字。
+ * 左对齐 hero（54px 细线爪印圆标 + 衬线宣言 +
+ * 「PHILIA · 洗护 / 美容 / 寄养」宽距小字 + 淡黄短分隔线 44×1.5）+
+ * 主钮「手机号一键登录」+「口令入内测 ›」+ 底部协议小字。
+ * 换皮批片 2（L-01 定稿落地，2026-09-29）：宣言升 v2.0 §2.1 宣言档 34/900
+ * + §4.11 淡黄刷底强调；主钮入深棕 btn-primary 纪律（点睛=刷底+分隔线 2 处）；
+ * 微信一键登录=置灰槽位 slot-wechat（WECHAT env 未配，留口在案）。
  * 无真接口不造假：主钮真实落点=锚滚至种子账号区（员工端 U3 同口径），
  * 「口令入内测 ›」= 口令门卡显隐开关；口令门卡/种子用户列表真实交互全保留。
  */
@@ -26,6 +28,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { mc } from '@/components/member/copy'
 
 interface SeedUser {
   id: string
@@ -159,14 +162,14 @@ export default function DevLoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col pb-8">
-      {/* U4-D2 hero：试样 01 左对齐工艺——细线爪印圆标 + 衬线宣言 + 宽距小字 + 柠檬短分隔线 */}
+      {/* U4-D2 hero：试样 01 左对齐工艺——细线爪印圆标 + 衬线宣言 + 宽距小字 + 淡黄短分隔线 */}
       <header className="px-8 pt-14">
         <span
           className="u1-ring flex h-[54px] w-[54px] items-center justify-center rounded-full bg-card"
           aria-hidden="true"
         >
           {/* 实心爪印（VI 同 dock 中央钮，试样 01 同枚 SVG） */}
-          <svg width="26" height="26" viewBox="0 0 32 32" fill="#4A3B2E">
+          <svg width="26" height="26" viewBox="0 0 32 32" fill="#3B2E24">
             <circle cx="10.4" cy="11" r="3.1" />
             <circle cx="21.6" cy="11" r="3.1" />
             <circle cx="6.9" cy="17.2" r="2.7" />
@@ -174,11 +177,20 @@ export default function DevLoginPage() {
             <path d="M16 15.5c-3.9 0-7 2.9-7 6 0 2 1.5 3.4 3.3 3.4 1.3 0 2.4-.7 3.7-.7s2.4.7 3.7.7c1.8 0 3.3-1.4 3.3-3.4 0-3.1-3.1-6-7-6z" />
           </svg>
         </span>
-        {/* 衬线宣言：试样 30px 越字阶闸门 → 取 20/700（规格书 §10 同口径） */}
-        <h1 className="u1-serif mt-[30px] text-title-lg font-bold leading-[1.5] tracking-[.04em]">
-          守护每一次
+        {/* 衬线宣言（v2.0 §2.1 宣言档 34/900 lh1.5 + §4.11 淡黄刷底强调件，
+            登录页专用不泛滥；文案入 copy 键。旧注「试样 30px 越字阶取 20」作废——
+            片 1 字阶梯已落 34px 宣言档，本页即 L-01 唯一用位） */}
+        <h1 className="u1-serif mt-[30px] text-v2-manifesto tracking-[.04em]">
+          {mc('l1.manifestoA')}
           <br />
-          被照顾的时刻
+          {mc('l1.manifestoB')}
+          <em
+            className="not-italic"
+            style={{ background: 'linear-gradient(transparent 62%, #F2DFA6 62%)' }}
+          >
+            {mc('l1.manifestoEm')}
+          </em>
+          {mc('l1.manifestoC')}
         </h1>
         <p className="mt-[14px] text-caption-xs font-medium tracking-[.14em] text-ink-secondary">
           PHILIA · 洗护 / 美容 / 寄养
@@ -186,14 +198,27 @@ export default function DevLoginPage() {
         <span className="mt-[22px] block h-[1.5px] w-11 bg-brand-primary" aria-hidden="true" />
       </header>
 
-      {/* 主行动区：柠檬主钮真实落点=锚滚至种子账号区（拍板 2：无真接口不造假，
-          员工端 U3 同口径）；「口令入内测 ›」= 口令门卡显隐开关（真实交互） */}
+      {/* 主行动区：L-01 微信一键登录=置灰槽位（WECHAT env 未配，留口在案；
+          PD-15 三规：置灰不上假件 + 注记「即将点亮」+ data-testid=slot-wechat）；
+          主钮真实落点=锚滚至种子账号区（拍板 2：无真接口不造假，员工端 U3 同口径）——
+          换皮批片 2 主钮入 v2.0 深棕 btn-primary 纪律（点睛预算：刷底+分隔线=2，主钮不再占淡黄）；
+          「口令入内测 ›」= 口令门卡显隐开关（真实交互） */}
       <div className="mt-9 flex flex-col px-8">
+        <div
+          data-testid="slot-wechat"
+          aria-disabled="true"
+          className="flex w-full items-center justify-between rounded-control border border-dashed border-line bg-card px-5 py-[15px] opacity-60"
+        >
+          <span className="text-body-sm font-semibold text-ink-secondary">{mc('l1.wechatSlot')}</span>
+          <span className="rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">
+            {mc('slot.soon')}
+          </span>
+        </div>
         <button
           type="button"
           data-testid="login-primary"
           onClick={() => accountsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-          className="flex w-full items-center justify-center rounded-control bg-brand-primary py-[15px] text-body-sm font-semibold text-ink shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+          className="mt-3 flex w-full items-center justify-center rounded-control bg-[#2E2318] py-[15px] text-body-sm font-semibold text-[#F6EFDD] shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
         >
           手机号一键登录
         </button>

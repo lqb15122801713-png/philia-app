@@ -1,25 +1,25 @@
 /**
- * LiveStepper · 客户端服务全程页六步 stepper（批次 U1 任务 E；U4-D2 试样 05 逐格收口）。
+ * LiveStepper · 客户端服务全程页六步 stepper（批次 U1 任务 E；换皮批片 2 取齐 S-01）。
  *
- * 步骤名以 server getStepDef 真实定义为准（试样步骤名为设计文案，不改数据）。
- * U4-D2 试样取齐（.steps/.step CSS 逐格）：
- * - 节点圆 24px：done=薄荷底墨 ✓；active=柠檬底 + 步序数字（u1-num 11/700）+
- *   静态柠檬环影（试样 box-shadow 0 0 0 5px rgba(253,200,48,.25)；U1-E 去除的是
- *   呼吸光环动画，本环为试样静态工艺，恢复并登记 diff-client）；locked=纸面
- *   细线环 + 灰数字（去锁图标，试样未到步显步序）；
- * - 连接线统一 2px 暖墨细线（试样 ink-06 → 令牌 line-ring rgba(74,59,46,.09)），
- *   不再按 done 段薄荷实线/未到段虚线分色；
- * - 步骤名 14px（done/active 600、locked 灰 500），meta 行 11px 置于题下
- *   （试样 .st2 结构：done=完成时刻 u1-num；active=「进行中 · 说明」；
- *   locked 无说明——server stepDef 无描述字段，不照抄试样设计文案）；
- * - 过程照横排 64×44（试样 CSS 尺寸；圆角 8 越四档 → 取 chip 6）+ inset 1px
- *   描边 rgba(0,0,0,.08)；before_after 步仍走共享 PhotoWall 前后并排（哇塞时刻
- *   既有特性保留）。
+ * 步骤名以 server getStepDef 真实定义为准（冻结 6+1 步名，不改数据）。
+ * 定稿锚 = screens.html S-01 六步清单 stepx（screens.css 实证值，件级样式落
+ * styles/live-v2.css，lv2-* 类）：
+ * - 步号 22 圆：done=深棕填 #2E2318 米白✓ / now=淡黄填 #F2DFA6 + 4px 淡黄光晕
+ *   （静态工艺，禁呼吸动画）/ future=卡其描边 #B9A482 + 行件 opacity .55；
+ * - 步名 14/800 + 右侧 mono 9 状态（done=完成时刻✓ / now=进行中 / future=未开始，
+ *   文案走 copy 键 live.*）；active 步操作说明落 wnote mono 9 工作注；
+ * - 照片 3 列方格 gap 6 圆角 10；空位虚线框 slotx（仅 now/future 按
+ *   requiredPhotos 补位，done 步不补——定稿 S-01 逐格；requiredPhotos 为
+ *   serviceStep.list 既有字段，仅透传不新取数）；
+ * - 左轨保留既有纵向轨道形态（功能零改动），连接线取齐发丝线 1px --line；
+ *   before_after 步仍走共享 PhotoWall 前后并排（哇塞时刻既有特性保留）。
  */
 
 import { Check } from 'lucide-react'
 import { PhotoWall, getStepDef } from '@philia/shared'
 import type { PhotoWallPhoto, ServiceStepStatus } from '@philia/shared'
+import { mc } from '../member/copy'
+import '../../styles/live-v2.css'
 
 /** 时间轴单步数据（与共享 StepTimelineStep 同构）。 */
 export interface LiveStepperStep {
@@ -30,6 +30,8 @@ export interface LiveStepperStep {
   /** active 步操作说明 */
   description?: string
   photos?: PhotoWallPhoto[]
+  /** 该步规定照片数（serviceStep.list 既有字段；空位虚线框补位依据） */
+  requiredPhotos?: number
 }
 
 export interface LiveStepperProps {
@@ -38,27 +40,16 @@ export interface LiveStepperProps {
   resolveName?: (stepKey: string) => string
 }
 
-/** 24px 节点圆：薄荷✓完成 / 柠檬步序数字进行中（静态柠檬环影）/ 纸面细线环灰数字未到。 */
+/** 22px 步号圆：done 深棕✓ / now 淡黄步序（静态光晕）/ future 卡其描边灰字。 */
 function StepNode({ status, order }: { status: ServiceStepStatus; order: number }) {
   if (status === 'done') {
     return (
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-secondary">
-        <Check className="h-3.5 w-3.5 text-ink" strokeWidth={1.5} />
+      <span className="lv2-stepno done">
+        <Check className="h-3 w-3" strokeWidth={2.2} />
       </span>
     )
   }
-  if (status === 'active') {
-    return (
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-primary shadow-[0_0_0_5px_rgba(253,200,48,.25)]">
-        <span className="u1-num text-caption-xs font-bold leading-none text-ink">{order}</span>
-      </span>
-    )
-  }
-  return (
-    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-card ring-1 ring-line-ring">
-      <span className="u1-num text-caption-xs font-bold leading-none text-ink-placeholder">{order}</span>
-    </span>
-  )
+  return <span className={`lv2-stepno ${status === 'active' ? 'now' : ''}`}>{order}</span>
 }
 
 export default function LiveStepper({ steps, onPhotoClick, resolveName }: LiveStepperProps) {
@@ -67,49 +58,50 @@ export default function LiveStepper({ steps, onPhotoClick, resolveName }: LiveSt
       {steps.map((step, index) => {
         const isLast = index === steps.length - 1
         const name = resolveName?.(step.stepKey) ?? getStepDef(step.stepKey)?.name ?? step.stepKey
-        // meta 行（试样 .st2）：done=完成时刻；active=进行中 · 说明；locked 无
-        const meta =
-          step.status === 'done' && step.time
+        // 右侧 mono 9 状态签（S-01 .stepx .st）：done=完成时刻✓ / now=进行中 / future=未开始
+        const statusText =
+          step.status === 'done'
             ? step.time
-            : step.status === 'active'
-              ? `进行中${step.description ? ` · ${step.description}` : ''}`
+              ? `${step.time} ✓`
               : null
+            : step.status === 'active'
+              ? mc('live.stepActive')
+              : mc('live.stepPending')
+        // 空位虚线框：仅 now/future 补位（done 步空位不画，定稿逐格）；before_after 走对比双图不补位
+        const slotCount =
+          step.status === 'done' || step.stepKey === 'before_after'
+            ? 0
+            : Math.max(0, (step.requiredPhotos ?? 0) - (step.photos?.length ?? 0))
+        const hasGrid = (step.photos?.length ?? 0) > 0 || slotCount > 0
 
         return (
           <li
             key={step.stepKey}
-            className="relative flex gap-[13px]"
+            className={`relative flex gap-[13px] ${step.status === 'locked' ? 'opacity-[.55]' : ''}`}
             data-step-key={step.stepKey}
             data-step-status={step.status}
           >
-            {/* 左轨：节点圆 + 连接线（统一 2px 暖墨细线） */}
-            <div className="flex w-6 flex-col items-center">
+            {/* 左轨：步号圆 + 连接发丝线（1px --line） */}
+            <div className="flex w-[22px] flex-col items-center">
               <StepNode status={step.status} order={index + 1} />
-              {!isLast ? <span className="min-h-4 w-0.5 flex-1 bg-line-ring" /> : null}
+              {!isLast ? <span className="min-h-4 w-px flex-1 bg-line" /> : null}
             </div>
 
             {/* 内容区 */}
-            <div className={`flex-1 ${isLast ? '' : 'pb-5'}`}>
-              <div className="flex h-6 items-center">
-                <span
-                  className={
-                    step.status === 'locked'
-                      ? 'text-body-sm font-medium text-ink-placeholder'
-                      : 'text-body-sm font-semibold text-ink'
-                  }
-                >
-                  {name}
-                </span>
+            <div className={`min-w-0 flex-1 ${isLast ? '' : 'pb-5'}`}>
+              <div className="flex h-[22px] items-center gap-2.5">
+                <span className="lv2-stepname">{name}</span>
+                {statusText ? (
+                  <span className={`lv2-stepst ${step.status === 'active' ? 'now' : ''}`}>{statusText}</span>
+                ) : null}
               </div>
 
-              {meta ? (
-                <p className="mt-0.5 text-caption-xs text-ink-secondary">
-                  {step.status === 'done' ? <span className="u1-num">{meta}</span> : meta}
-                </p>
+              {step.status === 'active' && step.description ? (
+                <p className="lv2-wnote">{step.description}</p>
               ) : null}
 
-              {step.photos && step.photos.length > 0 ? (
-                step.stepKey === 'before_after' ? (
+              {step.stepKey === 'before_after' ? (
+                step.photos && step.photos.length > 0 ? (
                   <div className="mt-2">
                     <PhotoWall
                       photos={step.photos}
@@ -117,26 +109,24 @@ export default function LiveStepper({ steps, onPhotoClick, resolveName }: LiveSt
                       onPhotoClick={(photo, i) => onPhotoClick?.(photo, i, step.stepKey)}
                     />
                   </div>
-                ) : (
-                  <div className="mt-2 flex gap-1.5">
-                    {step.photos.map((p, i) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => onPhotoClick?.(p, i, step.stepKey)}
-                        className="block h-11 w-16 shrink-0 overflow-hidden rounded-chip bg-sunken shadow-[inset_0_0_0_1px_rgba(0,0,0,.08)]"
-                        aria-label={p.tag ?? `照片 ${i + 1}`}
-                      >
-                        <img
-                          src={p.thumbUrl ?? p.url}
-                          alt=""
-                          loading="lazy"
-                          className="h-full w-full object-cover"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                )
+                ) : null
+              ) : hasGrid ? (
+                <div className="lv2-photos">
+                  {(step.photos ?? []).map((p, i) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => onPhotoClick?.(p, i, step.stepKey)}
+                      className="lv2-ph"
+                      aria-label={p.tag ?? `照片 ${i + 1}`}
+                    >
+                      <img src={p.thumbUrl ?? p.url} alt="" loading="lazy" />
+                    </button>
+                  ))}
+                  {Array.from({ length: slotCount }, (_, i) => (
+                    <span key={`slot-${i}`} className="lv2-slotx" aria-hidden="true" />
+                  ))}
+                </div>
               ) : null}
             </div>
           </li>

@@ -34,6 +34,7 @@ import RoomTypeBlock from '@/components/booking/single/RoomTypeBlock';
 import StoreLineBlock from '@/components/booking/single/StoreLineBlock';
 import NoteFoldBlock from '@/components/booking/single/NoteFoldBlock';
 import BoardingConfirmBar, { type VaccineBlock } from '@/components/booking/single/BoardingConfirmBar';
+import { mc } from '@/components/member/copy';
 import { readLastBooking, resolvePetId, resolveServiceId, resolveStoreId, writeLastBooking } from '@/lib/bookingPrefill';
 
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
@@ -212,8 +213,10 @@ export default function BoardingSinglePage() {
                 : null;
 
   /* ---- 渲染：单屏区块化（v4.1：留白 + hairline 分节） ---- */
-  // 节间 hairline：既有 token 深棕墨 4A3B2E 的 9% 透明度用法（设计规格 v3 §1）
-  const SECTION = 'mt-6 border-t border-[rgba(74,59,46,.09)] pt-5';
+  // 节间 hairline：token 深棕墨 #3B2E24 的 9% 透明度（line.ring；换皮批片 2 换代旧暖墨谱系）
+  // 截面题=sec-h 工艺（§4.1：16/800）
+  const SECTION = 'mt-6 border-t border-line-ring pt-5';
+  const SEC_H = 'text-v2-section';
   return (
     <div className="px-4 pb-36 pt-6" data-testid="boarding-single">
       {toastEl}
@@ -238,11 +241,20 @@ export default function BoardingSinglePage() {
           pickerHint="点按选择要寄养的毛孩子"
           loading={petsQ.isPending}
         />
+        {/* PD-15 V1.1 槽位 6：多宠同订置灰槽位（不上数不上假件 + 注记 + data-testid；
+            单宠选择器保留不动，零选择逻辑改动） */}
+        <div
+          data-testid="slot-multi-pet"
+          aria-disabled="true"
+          className="mt-2 flex items-center rounded-control border border-dashed border-line px-4 py-2.5 opacity-50"
+        >
+          <span className="font-number text-v2-trace text-ink-placeholder">{mc('bk.multiPetSlot')}</span>
+        </div>
       </section>
 
       {/* 入住/退房日期（底部月历 range picker） */}
       <section className={SECTION}>
-        <h2 className="text-title">入住 / 退房日期</h2>
+        <h2 className={SEC_H}>入住 / 退房日期</h2>
         <div className="mt-2">
           <BoardingDatesBlock
             checkin={checkin}
@@ -256,7 +268,7 @@ export default function BoardingSinglePage() {
 
       {/* 房型区（单房型只读信息卡 / 多房型选择器，数据驱动） */}
       <section className={SECTION}>
-        <h2 className="text-title">寄养房型</h2>
+        <h2 className={SEC_H}>寄养房型</h2>
         <div className="mt-2">
           <RoomTypeBlock
             services={boardingServices}
@@ -273,7 +285,7 @@ export default function BoardingSinglePage() {
 
       {/* 门店单行 */}
       <section className={SECTION}>
-        <h2 className="text-title">门店</h2>
+        <h2 className={SEC_H}>门店</h2>
         <div className="mt-2">
           <StoreLineBlock
             stores={nearbyQ.data?.stores ?? []}

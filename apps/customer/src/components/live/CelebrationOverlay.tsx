@@ -1,7 +1,9 @@
 /**
  * 服务完成庆祝微动效（开发方案 §8.4 + DESIGN §5「克制」）：
- * appointment.completed 事件到达时弹出一次——苔绿圆内白勾放大回弹一次（600ms
+ * appointment.completed 事件到达时弹出一次——深棕圆内淡金勾放大回弹一次（600ms
  * philia-spring 缓动，动画只跑一次），约 2.6s 后由页面层关闭。
+ * 反馈件色纪律（45 号档 P1-1②）：成功不设绿——深棕墨圆底 + 淡金 #E8CF8C ✓
+ * （--gold-deep，深棕底上的金色谱系值）。
  */
 
 import { Check } from 'lucide-react'
@@ -23,7 +25,7 @@ export default function CelebrationOverlay({
           className="flex h-16 w-16 items-center justify-center rounded-full bg-success"
           style={{ animation: 'live-pop .6s cubic-bezier(0.34,1.56,0.64,1) both' }}
         >
-          <Check className="h-8 w-8 text-white" strokeWidth={2} />
+          <Check className="h-8 w-8 text-brand-primary-hover" strokeWidth={2} />
         </span>
         <p className="mt-4 text-title">服务完成</p>
         <p className="mt-1 text-center text-caption text-ink-secondary">

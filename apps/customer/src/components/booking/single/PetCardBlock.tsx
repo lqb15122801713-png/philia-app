@@ -103,12 +103,14 @@ export default function PetCardBlock({
                   {pet.breed ? ` · ${pet.breed}` : ''}
                 </span>
               </span>
-              <span className="mt-0.5 block text-caption text-ink-secondary">
+              {/* 溯源行 mono（定稿 petcard ps 口径：体重/上次洗护=mono 溯源） */}
+              <span className="mt-0.5 block font-number text-v2-trace text-ink-secondary">
                 {lastGroomingLabel ??
                   [pet.weightKg ? `${pet.weightKg}kg` : null, pet.breed ?? null].filter(Boolean).join(' · ')}
               </span>
             </span>
-            <span className="text-caption font-medium text-ink">更换 ▸</span>
+            {/* tfield 更改链工艺：卡其下划线 */}
+            <span className="border-b border-brand-secondary pb-px text-caption font-medium text-ink">更换 ▸</span>
           </>
         ) : (
           <>
@@ -119,7 +121,7 @@ export default function PetCardBlock({
               <span className="block text-body font-semibold text-ink-secondary">请选择宠物</span>
               <span className="mt-0.5 block text-caption text-ink-placeholder">{pickerHint ?? '点按选择要洗护的毛孩子'}</span>
             </span>
-            <span className="text-caption font-medium text-ink">选择 ▸</span>
+            <span className="border-b border-brand-secondary pb-px text-caption font-medium text-ink">选择 ▸</span>
           </>
         )}
       </button>

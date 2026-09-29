@@ -1,0 +1,54 @@
+/* ============================================================================
+   换皮批片 2 · 服务中+案例流组（服务全程/寄养日报视觉件）
+   定稿锚：docs/ops/design/客户端1.0定稿/screens.html 的 S-01 洗护全程 + H-02 寄养日报，
+   值=screens.css 实证值（.stepx/.slotx/.rowx 逐格）；色=34 号档 v2.0 §一谱系。
+   禁用色红线照 §1.5：柠檬黄/暖阳橙/深绿/纯白页面底/纯黑文字，本件 grep=0。
+   ========================================================================== */
+
+/* v2 字轨变量全局登记：member-v2.css 原定义于 .m2 作用域内，home-v2.css（hv2-*）
+   在作用域外引用 var(--v2mono)/var(--v2serif) 会静默回退继承——此处补 :root 同名
+   同值定义（字体均已自托管，index.css @font-face），不改 .m2 既有行为。 */
+:root {
+  --v2serif: 'Noto Serif SC', "Songti SC", "SimSun", serif;
+  --v2mono: 'JetBrains Mono', "SF Mono", monospace;
+}
+
+/* ---- S-01 六步清单 stepx（screens.css .stepx） ---------------------------- */
+/* 步号 22 圆：future=卡其描边（行件 0.55 由结构层 opacity 承载）；
+   done=深棕填；now=淡黄填 + 4px 淡黄光晕（静态工艺，禁呼吸动画） */
+.lv2-stepno {
+  width: 22px; height: 22px; border-radius: 50%; flex: none;
+  display: grid; place-items: center;
+  font-family: var(--v2mono); font-size: 9px;
+  background: #FFFFFF; border: 1.5px solid #B9A482; color: #8A7D6B;
+}
+.lv2-stepno.done { background: #2E2318; border-color: #2E2318; color: #F6EFDD; }
+.lv2-stepno.now {
+  background: #F2DFA6; border-color: #F2DFA6; color: #2E2318; font-weight: 700;
+  box-shadow: 0 0 0 4px rgba(242, 223, 166, .35);
+}
+.lv2-stepname { font-size: 14px; font-weight: 800; color: #3B2E24; }
+.lv2-stepst { margin-left: auto; flex: none; font-family: var(--v2mono); font-size: 9px; color: #8A7D6B; }
+.lv2-stepst.now { color: #3B2E24; font-weight: 700; }
+/* wnote mono 9 工作注（active 步操作说明落此行） */
+.lv2-wnote { font-family: var(--v2mono); font-size: 9px; color: #8A7D6B; margin-top: 8px; line-height: 1.6; }
+
+/* 照片 3 列方格 gap 6 圆角 10（screens.css .stepx .photos / .pg 同型）；
+   空位虚线框 slotx：仅 now/future 步画位，done 步不补位（定稿 S-01 逐格） */
+.lv2-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+.lv2-ph {
+  display: block; width: 100%; aspect-ratio: 1; padding: 0; border: 0; cursor: pointer;
+  border-radius: 10px; overflow: hidden; background: #F4EDDC;
+}
+.lv2-ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lv2-slotx { aspect-ratio: 1; border: 1px dashed rgba(59, 46, 36, .14); border-radius: 10px; }
+
+/* ---- H-02 照护日志 rowx 行件（screens.css .rowx：发丝线分隔） --------------- */
+/* 题 13/600 + 右 mono 10 muted（时刻/次数落 mono 轨） */
+.lv2-rowx { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-top: 1px solid rgba(59, 46, 36, .08); }
+.lv2-rowx:first-child { border-top: 0; }
+.lv2-rowx .k {
+  font-size: 13px; font-weight: 600; color: #3B2E24;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lv2-rowx .v { margin-left: auto; flex: none; font-family: var(--v2mono); font-size: 10px; color: #8A7D6B; }

@@ -7,7 +7,7 @@
  * W1-D1 死胡同修复（补丁③四件套 + 导航闭环，UI 自装不评审）：
  * ① 单据摘要卡（服务/门店/宠物/时间，复用 appointment.get 现有口径）；
  * ② 核销码区（保留为工作文档形态：确认页是工作文档不是收据）；
- * ③ 双出口：「查看我的预约」（柠檬主钮）+「返回首页」（细线白底次钮）；
+ * ③ 双出口：「查看我的预约」（点睛主钮）+「返回首页」（细线白底次钮）；
  * ④ 改期快捷入口：真实落点=/appointments/:id 详情页改期面板（pending/confirmed
  *    且距开始 >4h 时详情页显示改期，见 AppointmentDetailPage 头注），不造假钮；
  * ⑤ 导航闭环：PageHeader 返回键（to="/home" 固定落点 + W1-D3 直访兜底）——封闭≠困死。
@@ -87,7 +87,7 @@ export default function BookingSuccessPage() {
     return (
       <div className="px-4 py-6">
         {/* W1-D1：异常分支同样导航闭环（返回键 + 明确出口）；
-            W1 退回修：链接形出口按钮化（唯一动作=柠檬主钮回列表） */}
+            W1 退回修：链接形出口按钮化（唯一动作=点睛主钮回列表） */}
         <PageHeader title="预约成功" to="/home" />
         <div className="mt-4">
           <ErrorState
@@ -154,7 +154,7 @@ export default function BookingSuccessPage() {
           <button
             type="button"
             onClick={() => void detailQ.refetch()}
-            className="mt-2 text-caption font-semibold text-brand-primary"
+            className="mt-2 text-caption font-semibold text-ink"
           >
             重新加载
           </button>
@@ -171,7 +171,7 @@ export default function BookingSuccessPage() {
         </div>
       </section>
 
-      {/* W1-D1 ③双出口：主=查看我的预约（柠檬，唯一主动作）；次=返回首页（细线白底）。
+      {/* W1-D1 ③双出口：主=查看我的预约（淡黄点睛，唯一主动作）；次=返回首页（细线白底）。
           ④改期快捷入口：真实落点=/appointments/:id 详情页改期面板（不造假钮） */}
       <div className="mt-5 space-y-2.5">
         <Link

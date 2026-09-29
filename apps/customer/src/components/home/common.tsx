@@ -51,7 +51,7 @@ export function LoadingBlock({ lines = 3, className = '' }: { lines?: number; cl
 
 /** 错误态：陶红提示 + 重试按钮 + 可选导航出口件
  *  W1 退回修（规范 E 第四件「能回哪去」）：action=出口按钮（调用方按页型给真实落点
- *  ——回列表/回首页；重试已是柠檬主钮时出口走细线白底次钮，无重试时出口可为柠檬主钮）。
+ *  ——回列表/回首页；重试已是点睛主钮时出口走细线白底次钮，无重试时出口可为主钮）。
  *  三件套（图标/文案/重试）原貌不动，action 追加在最下。 */
 export function ErrorState({
   message,
@@ -84,28 +84,32 @@ export function ErrorState({
   )
 }
 
-/** 空态（U1-I 全域统一组件；U4-D3 对齐试样 12 屏工艺）：philia 精灵插画位
- *  =浅木圆（VI 空间色 oak #D4B896）+ 爪印（AppDock PawMark 同源，墨 55%），
- *  一句话（标题 17/600 + 说明 12 双行）+ 一个行动钮（调用方传入，建议柠檬主钮
- *  rounded-control px-[30px] py-[13px] text-body-sm font-semibold）。
- *  直上画布不套卡（试样 .empty-wrap）；各页空态一律走本组件，不再手写内联空态。 */
+/** 空态（U1-I 全域统一组件；E-01/02/03 三句话结构铁律 §4.11）：爪章/图标
+ *  54 圆 #F4EDDC（bg-sunken + 更软发丝线边，图标 26 卡其次阶色）+ serif 21/900 题
+ *  （是什么）+ 12 说明（为什么，lh 1.9）+ 深棕钮（去哪，调用方传入，建议深棕墨族
+ *  rounded-control px-[22px] py-[12px] text-[13px] font-bold text-[#F6EFDD]）。
+ *  直上画布不套卡（定稿 .emptyc）；各页空态一律走本组件，不再手写内联空态。
+ *  E-02/E-03 换图标经 icon 传入（默认爪章 PawMark，VI 私有实心件）。 */
 export function EmptyState({
   title,
   desc,
   action,
+  icon,
 }: {
   title: string
   desc?: ReactNode
   action?: ReactNode
+  /** 图标位（默认爪章；E-02 相册 / E-03 购物车等换线性 icon，stroke 1.6） */
+  icon?: ReactNode
 }) {
   return (
-    <div className="flex flex-col items-center px-10 py-12 text-center">
-      <span className="flex h-[110px] w-[110px] items-center justify-center rounded-full bg-oak">
-        <PawMark className="h-[50px] w-[50px] text-ink opacity-55" />
+    <div className="flex flex-col items-center px-[30px] py-[34px] text-center">
+      <span className="flex h-[54px] w-[54px] items-center justify-center rounded-full bg-sunken text-brand-secondary ring-1 ring-line-divider">
+        {icon ?? <PawMark className="h-[26px] w-[26px]" />}
       </span>
-      <p className="mt-5 text-title">{title}</p>
-      {desc ? <p className="mt-2 text-caption leading-[1.6] text-ink-secondary">{desc}</p> : null}
-      {action ? <div className="mt-5">{action}</div> : null}
+      <p className="u1-serif mt-3 text-[21px] font-black leading-[1.5]">{title}</p>
+      {desc ? <p className="mt-2.5 text-caption leading-[1.9] text-ink-secondary">{desc}</p> : null}
+      {action ? <div className="mt-[18px]">{action}</div> : null}
     </div>
   )
 }
