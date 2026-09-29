@@ -99,7 +99,7 @@ export default function RebookPanel({
 
   const adjustTarget = `/booking/grooming?storeId=${encodeURIComponent(storeId)}&serviceId=${encodeURIComponent(serviceId)}&petId=${encodeURIComponent(petId)}`;
   const ROW = 'flex items-baseline justify-between gap-3 py-2';
-  const HAIRLINE = 'border-t border-[rgba(74,59,46,.09)]';
+  const HAIRLINE = 'border-t border-[rgba(59,46,36,.09)]';
 
   return (
     <section

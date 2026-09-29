@@ -5,7 +5,7 @@
  * - 新增/编辑表单：pet.upsert（zod 级校验：重量 >0 ≤500、日期 YYYY-MM-DD 合法、
  *   名字 1-32 字、标签 ≤12 个每个 ≤16 字）；头像 uploadImage 上传，
  *   relDir=pets/<petId>（新建时先建档拿 id 再上传回写）；
- * - 疫苗有效期：临期（<30 天）橙色提醒、过期红色警示（寄养硬校验提示）。
+ * - 疫苗有效期：临期（<30 天）暖底提醒、过期赭红警示（寄养硬校验提示）。
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -15,6 +15,7 @@ import { Link } from 'react-router-dom'
 import { z } from 'zod'
 import { getApiBase, uploadImage, useMe, usePhiliaClient } from '@philia/shared'
 import PageHeader from '@/components/PageHeader'
+import { mc } from '../components/member/copy'
 import {
   EmptyState,
   ErrorState,
@@ -106,14 +107,14 @@ function VaccineBadge({ until }: { until: string | null }) {
     )
   }
   if (days < 30) {
-    /* U1-I：柠檬=到期提醒（v9.1 色票；真实 vaccineValidUntil 驱动） */
+    /* U1-I：到期提醒=提示卡暖底（v2.0 §1.4 暖底辅助件；真实 vaccineValidUntil 驱动） */
     return (
       <span className="rounded-chip bg-brand-primary-light px-2 py-1 text-caption-xs text-ink">
         疫苗 {days} 天后到期 · 寄养需有效期内
       </span>
     )
   }
-  /* U1-I：薄荷=正常（安心状态位） */
+  /* U1-I：正常=卡其族浅底（反馈件不设绿，45 号档 P1-1② 口径） */
   return (
     <span className="rounded-chip bg-brand-secondary-light px-2 py-1 text-caption-xs text-ink">
       疫苗有效至 {until}
@@ -485,7 +486,7 @@ function PetGroomingHistory({ petId }: { petId: string }) {
      行=日期 u1-num + 项目 + 「同款再约 ›」11/700（试样 .tl .re）；
      试样缩略图位无真实照片字段来源（listMine 不透出过程照）——不出，登记 */
   return (
-    <div className="mt-3 border-t border-[rgba(74,59,46,.09)] pt-2.5" data-testid={`pet-history-${petId}`}>
+    <div className="mt-3 border-t border-line-ring pt-2.5" data-testid={`pet-history-${petId}`}>
       <div className="flex items-baseline justify-between">
         <p className="text-body-sm font-semibold">洗护史</p>
         <p className="u1-num text-caption-xs text-ink-placeholder">共 {rowsAll.length} 次</p>
@@ -560,10 +561,11 @@ export default function PetsPage() {
             title="还没有宠物档案"
             desc="建立档案后，预约洗护与寄养更省心"
             action={
+              /* E 系空态深棕钮（.emptyc .go：深棕墨底 #2E2318 + 深底主文字 #F6EFDD，§4.11） */
               <button
                 type="button"
                 onClick={openCreate}
-                className="rounded-control bg-brand-primary px-[30px] py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                className="rounded-control bg-[#2E2318] px-[22px] py-3 text-[13px] font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92"
               >
                 建立档案
               </button>
@@ -572,7 +574,8 @@ export default function PetsPage() {
         ) : null}
 
         {petsQuery.data?.map((pet) => (
-          <article key={pet.id} className="u1-card p-4">
+          /* P-01 petcard：圆角 16 白卡（§3.2 圆角谱系 / §4.10；u1-card 的 20 档不用在此） */
+          <article key={pet.id} className="u1-ring rounded-card bg-card p-4">
             <div className="flex items-start gap-3">
               {/* U1-I 头图：圆形双细线环（同 philia 页形象位口径）；
                   D-补3：无头像=字圈工艺（浅木底+衬线首字），不再用 PawPrint 图标占位 */}
@@ -606,7 +609,7 @@ export default function PetsPage() {
                   {{ dog: '狗狗', cat: '猫咪', other: '其他' }[pet.species] ?? '其他'}
                   {pet.breed ? ` · ${pet.breed}` : ''}
                 </p>
-                {/* U1-I 指标格：疫苗（薄荷正常/柠檬到期，真实 vaccineValidUntil）/ 生日 / 体重 */}
+                {/* U1-I 指标格：疫苗（暖底临期/赭红过期，真实 vaccineValidUntil）/ 生日 / 体重 */}
                 <div className="mt-2.5 grid grid-cols-1 gap-1.5">
                   <div className="flex items-center gap-1.5">
                     <Syringe className="h-3.5 w-3.5 text-ink-placeholder" strokeWidth={1.5} />
@@ -642,6 +645,19 @@ export default function PetsPage() {
                 ) : null}
                 {/* U1-I 洗护史时间线：真实完成单 + 同款再约（现成预填链路） */}
                 <PetGroomingHistory petId={pet.id} />
+                {/* P-01 服务履历「证书 ›」位=置灰槽位（PD-15 三规：不上假件 + 注记
+                    「随体验批开通」+ data-testid；安心证书页随体验批开通后点亮）。
+                    注：多宠时本 testid 逐卡重复，QA 取 .first() */}
+                <div
+                  data-testid="slot-cert"
+                  aria-disabled="true"
+                  className="mt-3 flex items-center justify-between gap-2 border-t border-line-divider pt-2.5 opacity-60"
+                >
+                  <span className="text-caption text-ink-secondary">{mc('p1.certSlotTitle')}</span>
+                  <span className="shrink-0 rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">
+                    {mc('slot.certSoon')}
+                  </span>
+                </div>
               </div>
             </div>
           </article>

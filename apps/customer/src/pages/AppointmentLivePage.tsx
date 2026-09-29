@@ -16,13 +16,14 @@
  * - 异常态：非本人/不存在 → 友好错误页；pending/confirmed → 预约码引导；
  *   cancel_requested/cancelled → 取消提示。
  *
- * U4-D2（试样 05 逐格收口）：
+ * U4-D2（试样 05 逐格收口）+ 换皮批片 2（S-01 洗护全程 / H-02 寄养日报取齐）：
  * - 返回条补题「洗护全程/寄养全程」（PageHeader 全域统一返回条，U1-A 形态）；
- * - 摘要卡（LiveHeader）：柠檬细环头像 +「{宠物} · {服务}」+ 美容师行
+ * - 摘要卡（LiveHeader）：淡黄细环头像 +「{宠物} · {服务}」+ 美容师行
  *   「{员工}服务中 · 预计 HH:MM 完成」（员工名=store.listStaffPublic 按 staffId
  *   解析，U4-B 同口径现成接口零新增；ETA=scheduledEnd 真字段；缺真值段隐去）+
- *   SSE 真值签（connected → 薄荷点「实时同步」/ 灰点「重连中」，禁常亮）；
- * - stepper 去卡壳直上画布（试样 .steps 无卡），工艺取齐见 LiveStepper 头注；
+ *   SSE 真值签（connected → 淡黄点「实时同步」/ 灰点「重连中」，禁常亮）；
+ * - stepper 去卡壳直上画布，六步清单 stepx 工艺（步号 22 圆三态 / 右 mono 9
+ *   状态 / 照片 3 列方格 + 空位虚线框，件级样式落 styles/live-v2.css）；
  * - 「联系门店」条：stores 无 phone 字段 → 不渲染（U1 疑点口径，ContactStore
  *   防御保持，schema 补字段后自动生效）。
  */
@@ -52,6 +53,7 @@ import PageHeader, { BackButton } from '../components/PageHeader'
 import LiveToast from '../components/live/LiveToast'
 import PhotoViewer from '../components/live/PhotoViewer'
 import ReviewPanel from '../components/live/ReviewPanel'
+import '../styles/live-v2.css'
 
 /* ------------------------------------------------------------------ */
 /* 常量与工具                                                            */
@@ -434,8 +436,9 @@ export default function AppointmentLivePage() {
 
   /* ---------------- 派生展示数据 ---------------- */
 
-  // U4-D2：时间戳口径按试样——done 步出完成时刻；active 步 meta=「进行中 · 说明」
-  // （不再出「HH:MM 开始」，试样进行中步无时间戳）
+  // U4-D2：时间戳口径——done 步出完成时刻（右侧 mono 状态签）；active 步
+  // description=操作说明（落 wnote mono 9 工作注，S-01 stepx 逐格）；
+  // requiredPhotos=serviceStep.list 既有字段透传（空位虚线框补位依据，不新取数）
   const timelineSteps: LiveStepperStep[] = useMemo(
     () =>
       (steps ?? []).map((s) => ({
@@ -444,6 +447,7 @@ export default function AppointmentLivePage() {
         time: s.status === 'done' && s.doneAt ? fmtTime(s.doneAt) : undefined,
         description: s.status === 'active' ? ACTIVE_HINT[s.stepKey] : undefined,
         photos: toWallPhotos(s),
+        requiredPhotos: s.requiredPhotos,
       })),
     [steps],
   )
@@ -509,7 +513,7 @@ export default function AppointmentLivePage() {
     return (
       <div className="px-4 pb-10 pt-6">
         {backLink}
-        <div className="flex flex-col items-center rounded-card bg-card px-6 py-12 text-center shadow-card">
+        <div className="u1-card flex flex-col items-center px-6 py-12 text-center">
           <CircleX className="h-10 w-10 text-ink-placeholder" strokeWidth={1.5} />
           <h1 className="mt-3 text-title">打不开这个进度页</h1>
           <p className="mt-2 text-body text-ink-secondary">
@@ -519,7 +523,7 @@ export default function AppointmentLivePage() {
           </p>
           <Link
             to="/appointments"
-            className="mt-5 inline-flex h-11 items-center rounded-full bg-brand-primary px-6 text-body font-semibold text-ink"
+            className="mt-5 inline-flex h-11 items-center rounded-full bg-philia-gradient px-6 text-body font-semibold text-[#F6EFDD] shadow-philia"
           >
             回到我的预约
           </Link>
@@ -570,7 +574,7 @@ export default function AppointmentLivePage() {
       <div className="px-4 pb-10 pt-4">
         {nav}
         {header}
-        <div className="mt-3 flex flex-col items-center rounded-card bg-card px-6 py-10 text-center shadow-card">
+        <div className="u1-card mt-3 flex flex-col items-center px-6 py-10 text-center">
           {cancelRequested ? (
             <CircleX className="h-10 w-10 text-ink-placeholder" strokeWidth={1.5} />
           ) : (
@@ -585,7 +589,7 @@ export default function AppointmentLivePage() {
           {!cancelRequested ? (
             <Link
               to={`/appointments/${appt.id}`}
-              className="mt-5 inline-flex h-11 items-center gap-1.5 rounded-full bg-brand-primary px-6 text-body font-semibold text-ink"
+              className="mt-5 inline-flex h-11 items-center gap-1.5 rounded-full bg-philia-gradient px-6 text-body font-semibold text-[#F6EFDD] shadow-philia"
             >
               <QrCode className="h-5 w-5" strokeWidth={1.5} />
               出示预约码
@@ -602,13 +606,13 @@ export default function AppointmentLivePage() {
       <div className="px-4 pb-10 pt-4">
         {nav}
         {header}
-        <div className="mt-3 flex flex-col items-center rounded-card bg-card px-6 py-10 text-center shadow-card">
+        <div className="u1-card mt-3 flex flex-col items-center px-6 py-10 text-center">
           <CircleX className="h-10 w-10 text-ink-placeholder" strokeWidth={1.5} />
           <h2 className="mt-3 text-title">预约已取消</h2>
           <p className="mt-2 text-body text-ink-secondary">这次没能相见，期待下次再约。</p>
           <Link
             to="/booking"
-            className="mt-5 inline-flex h-11 items-center rounded-full bg-brand-primary px-6 text-body font-semibold text-ink"
+            className="mt-5 inline-flex h-11 items-center rounded-full bg-philia-gradient px-6 text-body font-semibold text-[#F6EFDD] shadow-philia"
           >
             重新预约
           </Link>
@@ -676,12 +680,12 @@ export default function AppointmentLivePage() {
   )
 }
 
-/** 完成时间行（completed 态展示） */
+/** 完成时间行（completed 态展示；时刻落 mono 轨） */
 function completedAtLine(completedAt: Date | null) {
   if (!completedAt) return null
   return (
     <p className="mt-3 text-center text-caption text-ink-secondary">
-      服务已于 {format(completedAt, 'M月d日 HH:mm')} 完成
+      服务已于 <span className="u1-num">{format(completedAt, 'M月d日 HH:mm')}</span> 完成
     </p>
   )
 }

@@ -45,7 +45,7 @@ export default function StoreLineBlock({
             <span className="mt-0.5 block truncate text-caption text-ink-secondary">{current.address}</span>
           ) : null}
         </span>
-        <span className="ml-3 shrink-0 text-caption font-medium text-ink">更换 ▸</span>
+        <span className="ml-3 shrink-0 border-b border-brand-secondary pb-px text-caption font-medium text-ink">更换 ▸</span>
       </button>
 
       {sheetOpen ? (

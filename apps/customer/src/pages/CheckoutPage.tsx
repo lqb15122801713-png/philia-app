@@ -1,5 +1,8 @@
 /**
- * 确认订单 /mall/checkout（T5.3）
+ * 确认订单 /mall/checkout（T5.3；换皮批片 2 落 M-03/§4.7 定稿：表单件 f-field
+ * mono 9.5 签 + 纸白底细线输入框；清单=费用明细 folio 白卡 18（行 12.5 值 mono，
+ * 合计行 14/800 + 值 mono 16 深棕）；吸底 ctabar 渐出底 + 合计 mono 19/700 +
+ * 深棕主钮 16/700 + 回馈金返显 sub（APP-18））
  *
  * 商品来源（二选一）：
  * - 立即购买：location.state.buyNow（详情页带入的单品 AddInput）；
@@ -14,7 +17,7 @@
  */
 
 import { usePhiliaClient } from '@philia/shared';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { BadgeCheck, MapPin } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -25,6 +28,7 @@ import { CartProvider, useCart, type AddInput } from '../components/mall/cartSto
 import { fenToYuan } from '../components/mall/format';
 import { friendlyError, useMallToast } from '../components/mall/MallToast';
 import ProductImage from '../components/mall/ProductImage';
+import { mc } from '../components/member/copy';
 
 const ADDRESS_KEY = 'philia.address';
 const PHONE_RE = /^1[3-9]\d{9}$/;
@@ -95,6 +99,18 @@ function CheckoutInner() {
 
   const totalFen = lines.reduce((sum, l) => sum + l.priceFen * l.qty, 0);
 
+  /* 回馈金返显（CTA sub「本单返 ¥x 回馈金」；口径 APP-18：membership.my 的
+     plan.rebateBp 万分比，返 Fen=round(totalFen*rebateBp/10000)；非会员/免费档=0
+     不渲染假数——MallPage 同款） */
+  const myQ = useQuery({
+    queryKey: ['membership', 'my'],
+    queryFn: () => trpc.membership.my.query(),
+    staleTime: 60_000,
+    retry: false,
+  });
+  const rebateBp = (myQ.data?.plan as { rebateBp?: number } | null | undefined)?.rebateBp ?? 0;
+  const rebateFen = rebateBp > 0 ? Math.round((totalFen * rebateBp) / 10000) : 0;
+
   const [form, setForm] = useState<AddressForm>(loadAddress);
   const [errors, setErrors] = useState<Partial<AddressForm>>({});
   const [cashierOrder, setCashierOrder] = useState<CashierOrder | null>(null);
@@ -142,7 +158,7 @@ function CheckoutInner() {
 
   /* ---------------- 支付成功页 ---------------- */
   /* W1-D1 同构（补丁③规格）：单据摘要卡（订单号/实付/收货信息）+ 双出口
-     （查看订单=柠檬主 / 返回首页=细线白底次）+ PageHeader 返回键（固定落点 /home，
+     （查看订单=深棕主 / 返回首页=细线白底次）+ PageHeader 返回键（固定落点 /home，
      交易成功页不回已消耗的结算表单；直访兜底同 W1-D3）。 */
   if (paidOrder) {
     return (
@@ -157,7 +173,7 @@ function CheckoutInner() {
           <p className="mt-1 text-body text-ink-secondary">门店会尽快为你发货，进度可在订单列表查看</p>
         </div>
 
-        {/* 单据摘要卡（订单号 / 实付金额 / 收货信息快照） */}
+        {/* 单据摘要卡（订单号 / 实付金额 / 收货信息快照）；金额 mono 深棕（成功不设绿不设金） */}
         <section className="mt-5 rounded-card bg-card p-4 shadow-card">
           <dl className="space-y-1.5 text-body">
             <div className="flex justify-between">
@@ -166,7 +182,7 @@ function CheckoutInner() {
             </div>
             <div className="flex justify-between">
               <dt className="text-ink-secondary">实付金额</dt>
-              <dd className="font-number font-semibold text-brand-primary">{fenToYuan(paidOrder.totalFen)}</dd>
+              <dd className="font-number font-semibold text-ink">{fenToYuan(paidOrder.totalFen)}</dd>
             </div>
             <div className="flex justify-between gap-4">
               <dt className="shrink-0 text-ink-secondary">收货信息</dt>
@@ -178,11 +194,11 @@ function CheckoutInner() {
           </dl>
         </section>
 
-        {/* 双出口：主=查看订单（柠檬唯一主动作）；次=返回首页（细线白底） */}
+        {/* 双出口：主=查看订单（深棕唯一主动作）；次=返回首页（细线白底） */}
         <div className="mt-5 space-y-2.5">
           <Link
             to="/mall/orders"
-            className="flex h-12 w-full items-center justify-center rounded-full bg-brand-primary text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+            className="flex h-12 w-full items-center justify-center rounded-full bg-[#2E2318] text-body font-semibold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             查看订单
           </Link>
@@ -245,87 +261,111 @@ function CheckoutInner() {
       {/* U1-A：统一返回条（←圆钮+标题） */}
       <PageHeader title="确认订单" />
 
-      {/* 收货地址 */}
-      <section className="mt-4 rounded-card bg-card p-4 shadow-card">
+      {/* 收货地址（§4.7 f-field 工艺：mono 9.5 签 + 纸白底细线输入框，:focus 深棕边；
+          单地址能力保留，多地址簿无 UI 雏形不画假簿——PD-15 V1.1 槽位 3 不适用） */}
+      <section className="u1-card mt-4 p-4">
         <p className="flex items-center gap-1.5 text-title">
-          <MapPin className="h-4 w-4 text-brand-primary" strokeWidth={1.5} />
+          <MapPin className="h-4 w-4 text-ink" strokeWidth={1.5} />
           收货地址
         </p>
         <div className="mt-3 space-y-3">
           <div>
+            <label className="mb-1 block font-number text-v2-trace text-ink-secondary" htmlFor="ck-name">
+              收货人
+            </label>
             <input
+              id="ck-name"
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               placeholder="收货人姓名"
               maxLength={64}
-              className="h-11 w-full rounded-input bg-sunken px-3.5 text-body outline-none placeholder:text-ink-placeholder focus:ring-1 focus:ring-brand-primary"
+              className="h-11 w-full rounded-input border border-line bg-canvas px-3.5 text-body outline-none transition placeholder:text-ink-placeholder focus:border-ink"
             />
             {errors.name ? <p className="mt-1 text-caption text-danger-deep">{errors.name}</p> : null}
           </div>
           <div>
+            <label className="mb-1 block font-number text-v2-trace text-ink-secondary" htmlFor="ck-phone">
+              手机号
+            </label>
             <input
+              id="ck-phone"
               value={form.phone}
               onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value.replace(/\D/g, '').slice(0, 11) }))}
               placeholder="手机号"
               inputMode="numeric"
               maxLength={11}
-              className="h-11 w-full rounded-input bg-sunken px-3.5 font-number text-body outline-none placeholder:text-ink-placeholder focus:ring-1 focus:ring-brand-primary"
+              className="h-11 w-full rounded-input border border-line bg-canvas px-3.5 font-number text-body outline-none transition placeholder:text-ink-placeholder focus:border-ink"
             />
             {errors.phone ? <p className="mt-1 text-caption text-danger-deep">{errors.phone}</p> : null}
           </div>
           <div>
+            <label className="mb-1 block font-number text-v2-trace text-ink-secondary" htmlFor="ck-detail">
+              详细地址
+            </label>
             <textarea
+              id="ck-detail"
               value={form.detail}
               onChange={(e) => setForm((f) => ({ ...f, detail: e.target.value }))}
-              placeholder="详细地址：小区 / 楼栋 / 门牌号"
+              placeholder="小区 / 楼栋 / 门牌号"
               maxLength={255}
               rows={2}
-              className="w-full resize-none rounded-input bg-sunken px-3.5 py-2.5 text-body outline-none placeholder:text-ink-placeholder focus:ring-1 focus:ring-brand-primary"
+              className="w-full resize-none rounded-input border border-line bg-canvas px-3.5 py-2.5 text-body outline-none transition placeholder:text-ink-placeholder focus:border-ink"
             />
             {errors.detail ? <p className="mt-1 text-caption text-danger-deep">{errors.detail}</p> : null}
           </div>
         </div>
       </section>
 
-      {/* 商品清单 */}
-      <section className="mt-3 rounded-card bg-card p-4 shadow-card">
-        <p className="text-title">商品清单</p>
-        <p className="mt-0.5 text-caption text-ink-secondary">{lines[0]?.storeName} · 门店发货</p>
-        <div className="mt-3 space-y-3">
+      {/* 商品清单（§4.7 folio 费用明细：白卡 18；行 12.5 值 mono；合计行 14/800 + 值 mono 16 深棕） */}
+      <section className="u1-ring mt-3 rounded-[18px] bg-card px-4 py-1.5">
+        <div className="flex items-baseline justify-between py-2.5">
+          <p className="text-title">商品清单</p>
+          <p className="font-number text-v2-trace text-ink-secondary">{lines[0]?.storeName} · 门店发货</p>
+        </div>
+        <div className="divide-y divide-line-divider">
           {lines.map((l) => (
-            <div key={l.productId} className="flex items-center gap-3">
-              <ProductImage src={l.image} alt={l.name} className="h-14 w-14 shrink-0 rounded-tag" />
+            <div key={l.productId} className="flex items-center gap-3 py-2.5">
+              <ProductImage src={l.image} alt={l.name} className="h-14 w-14 shrink-0 rounded-[12px]" />
               <div className="min-w-0 flex-1">
-                <p className="line-clamp-1 text-body">{l.name}</p>
-                <p className="mt-0.5 font-number text-caption text-ink-secondary">
+                <p className="line-clamp-1 text-[12.5px] font-semibold">{l.name}</p>
+                <p className="mt-0.5 font-number text-[12.5px] tabular-nums text-ink-secondary">
                   {fenToYuan(l.priceFen)} × {l.qty}
                 </p>
               </div>
-              <p className="font-number text-body font-semibold">{fenToYuan(l.priceFen * l.qty)}</p>
+              <p className="font-number text-[12.5px] font-bold tabular-nums">{fenToYuan(l.priceFen * l.qty)}</p>
             </div>
           ))}
         </div>
-        <div className="mt-3 flex items-center justify-between border-t border-line-divider pt-3">
-          <span className="text-body text-ink-secondary">合计（{lines.reduce((n, l) => n + l.qty, 0)} 件）</span>
-          <span className="font-number text-price text-brand-primary">{fenToYuan(totalFen)}</span>
+        <div className="flex items-center justify-between border-t border-line-divider py-3">
+          <span className="text-body-sm font-extrabold">合计（{lines.reduce((n, l) => n + l.qty, 0)} 件）</span>
+          <span className="font-number text-body-lg font-bold tabular-nums text-[#2E2318]">{fenToYuan(totalFen)}</span>
         </div>
-        <p className="mt-1 text-right text-caption text-ink-placeholder">金额以提交时门店现价为准</p>
+        <p className="pb-2.5 text-right text-caption text-ink-placeholder">金额以提交时门店现价为准</p>
       </section>
 
-      {/* 底部提交栏（TabBar 之上） */}
-      <div className="fixed inset-x-0 bottom-14 z-sticky border-t border-line-divider bg-card">
-        <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
-          <div className="mr-auto">
-            <p className="text-caption text-ink-secondary">合计</p>
-            <p className="font-number text-title text-brand-primary">{fenToYuan(totalFen)}</p>
+      {/* 吸底提交栏（片 2 M-03 定稿 ctabar：渐出底 + 合计 mono 19/700 + 深棕主钮 16/700；
+          详情级无 dock（App.tsx 白名单），落底 safe-area——修 bottom-14 悬空） */}
+      <div
+        className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-sticky"
+        style={{ background: 'linear-gradient(transparent, #FAF8F2 40%)' }}
+      >
+        <div className="mx-auto max-w-lg px-4 pb-4 pt-3">
+          <div className="mb-2.5 flex items-baseline justify-between">
+            <span className="text-caption-xs text-ink-secondary">合计</span>
+            <span className="u1-num text-[19px] font-bold text-ink">{fenToYuan(totalFen)}</span>
           </div>
           <button
             type="button"
             disabled={createOrderM.isPending}
             onClick={handleSubmit}
-            className="h-11 rounded-full bg-brand-primary px-8 text-body font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
+            className="flex w-full flex-col items-center justify-center rounded-[18px] bg-[#2E2318] py-3 text-body-lg font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
           >
-            {createOrderM.isPending ? '提交中…' : '提交订单'}
+            <span>{createOrderM.isPending ? '提交中…' : '提交订单'}</span>
+            {rebateFen > 0 && !createOrderM.isPending ? (
+              <span className="mt-0.5 font-number text-[10.5px] font-normal text-[#C9BBA0]">
+                {mc('mall.rebateEarnCta', { amt: fenToYuan(rebateFen) })}
+              </span>
+            ) : null}
           </button>
         </div>
       </div>

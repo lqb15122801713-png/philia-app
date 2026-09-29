@@ -1,33 +1,31 @@
 /**
- * MePage · /me 「我的」页（T2.1）
+ * MePage · /me 「我的」页（A-4 定稿山姆骨架 · 换皮批片 2）
  *
- * 五区块（自上而下）：
- * 1. 用户信息条：auth.me 原始响应（queryKey ['auth','me','raw']，沿用原 MemberPage 模式，该页 R11a 已退役）
- *    —— 头像 user.avatarUrl（无则字圈工艺：浅木底+衬线首字，D-补3）+ 昵称（空显示「铲屎官」）
- *    + 手机号脱敏（users.phone 真实字段）· 加入天数；
- * 2. 我的宠物横滑卡片区：pet.list → 圆形头像 + 名字，末尾固定「添加」虚线圆按钮
- *    → /philia/pets；空态引导卡「建立宠物档案」→ /philia/pets；
- * 3. 功能入口列表：我的预约 /appointments、我的订单 /mall/orders、会员中心 /member（R11a）、
- *    会员卡 /me/card、宠物档案 /philia/pets、宠友圈 /philia/moments（路径以 App.tsx 路由表为准）；
- * 4. 设置区：意见反馈 / 关于菲丽亚（toast「即将上线，敬请期待」）+ 退出登录
- *    （确认弹窗 → logout(getApiBase()) → queryClient.clear() → /dev-login）。
+ * 骨架冻结（34 号档 §4.9）：身份大卡置顶（深棕渐变 150deg 圆角 24，min-height 312）
+ * + 订单五格（白卡五列）+ 功能网格一层（4 列×2，禁多层卡片堆叠）。
  *
- * 每区块独立 loading / error / empty 三态；数据只取真实接口，禁止编造字段。
+ * 槽位置灰（PD-15 V1.1 三规：不上数不上假件 + 注记 + data-testid）：
+ * - 今年已省=「——」（省钱口径未冻结前不上数字；口径方案产品侧出）；
+ * - 退款售后（orderrow）/ 服务相册 / 优惠券 / 常用地址 / 小棉花客服（grid8）=置灰槽位；
+ * 落地件：档章/回馈金余额/续费倒计时（membership.my 真值）/会员码 qrrow/订单五态入口/
+ * 宠物档案/寄养预约/设置（退出登录入口保留件）。
+ *
+ * 功能入口保全：商城订单=商城域 /mall/orders 入口在案（M-01）；旧 EntryList 六行
+ * 已由 orderrow+grid8 全量承接（预约/会员中心/会员卡/宠物/相册槽位）。
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { LogOut, Plus } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getApiBase, logout, useMe, usePhiliaClient } from '@philia/shared'
-import { EmptyState, ErrorState, LoadingBlock } from '../components/home/common'
+import { fenToYuan } from '@/components/booking/format'
 
 const DAY_MS = 86_400_000
 
-/* ------------------------------------------------------------------ */
-/* 轻量 toast（本页自带，与商城/预约域同款固定定位胶囊提示）                 */
-/* ------------------------------------------------------------------ */
+/** 槽位置灰注记（PD-15 V1.1 三规②：UX 语感=克制高级，不写「功能缺失」） */
+const SLOT_NOTE = '即将点亮'
 
+/** 轻量 toast（本页自带，退出失败提示用） */
 function useMeToast(durationMs = 3200) {
   const [msg, setMsg] = useState<{ id: number; text: string } | null>(null)
   const showToast = useCallback((text: string) => setMsg({ id: Date.now(), text }), [])
@@ -40,7 +38,7 @@ function useMeToast(durationMs = 3200) {
     <div
       key={msg.id}
       role="alert"
-      className="fixed left-1/2 top-5 z-toast max-w-[86vw] -translate-x-1/2 rounded-full bg-success-light px-4 py-2.5 text-body-sm text-success-deep shadow-elevated"
+      className="fixed left-1/2 top-5 z-toast max-w-[86vw] -translate-x-1/2 rounded-full bg-[#2E2318] px-4 py-2.5 text-body-sm text-[#F2DFA6] shadow-elevated"
     >
       {msg.text}
     </div>
@@ -48,285 +46,8 @@ function useMeToast(durationMs = 3200) {
   return { toastEl, showToast }
 }
 
-/* ------------------------------------------------------------------ */
-/* 1. 用户信息卡                                                         */
-/* ------------------------------------------------------------------ */
-
-function UserCard() {
-  const { trpc } = usePhiliaClient()
-  // auth.me 原始响应（含 user.createdAt / avatarUrl；useMe 映射结构不含，故另起 key 直查）
-  const meQuery = useQuery({
-    queryKey: ['auth', 'me', 'raw'],
-    queryFn: () => trpc.auth.me.query(),
-    staleTime: 60_000,
-  })
-
-  if (meQuery.isPending) return <LoadingBlock lines={2} />
-  if (meQuery.isError) {
-    return <ErrorState message="用户信息加载失败" onRetry={() => void meQuery.refetch()} />
-  }
-
-  const { user } = meQuery.data
-  const nickname = user.nickname ?? '铲屎官'
-  const createdAt = user.createdAt
-  const joinDays = createdAt
-    ? Math.max(1, Math.floor((Date.now() - new Date(createdAt).getTime()) / DAY_MS) + 1)
-    : null
-  /* U4-D3：手机号=auth.me 真实字段（users.phone），脱敏展示 138****8888 口径；无号段隐去 */
-  const phone = user.phone
-  const phoneMasked = phone && phone.length >= 7 ? `${phone.slice(0, 3)}****${phone.slice(-4)}` : null
-
-  /* U4-D3 对齐试样 10 .me-user：直上画布不套卡；头像 54 全圆+细线 ring；
-     无头像=字圈工艺（D-补3：浅木底+衬线首字，D1 洗护师字圈同口径） */
-  return (
-    <div data-testid="me-user-card" className="flex items-center gap-3.5 pt-3.5">
-      {user.avatarUrl ? (
-        <img
-          src={user.avatarUrl}
-          alt={nickname}
-          className="h-[54px] w-[54px] shrink-0 rounded-full object-cover ring-1 ring-line-ring"
-        />
-      ) : (
-        <span className="flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-full bg-oak-light ring-1 ring-line-ring">
-          <span className="u1-serif text-title-lg font-semibold text-ink">{nickname.slice(0, 1)}</span>
-        </span>
-      )}
-      <div className="min-w-0 flex-1">
-        <p data-testid="me-nickname" className="u1-serif truncate text-title">{nickname}</p>
-        <p className="mt-[3px] text-caption-xs text-ink-secondary">
-          {phoneMasked ? <span className="u1-num">{phoneMasked}</span> : null}
-          {phoneMasked && joinDays !== null ? ' · ' : ''}
-          {joinDays !== null ? (
-            <>
-              加入 <span className="u1-num">{joinDays}</span> 天
-            </>
-          ) : null}
-        </p>
-      </div>
-    </div>
-  )
-}
-
-/* ------------------------------------------------------------------ */
-/* 1.5 U1-H 纸面细线会员卡（GUARDIAN CARD · 三真数；档名/守护值无真实来源——
- *     同 U1-C/F 口径不出现；已省行无折扣引擎算不出 → 整行隐去）            */
-/* ------------------------------------------------------------------ */
-
-function GuardianCard() {
-  const { trpc } = usePhiliaClient()
-  const { user } = useMe()
-  const meRawQ = useQuery({
-    queryKey: ['auth', 'me', 'raw'],
-    queryFn: () => trpc.auth.me.query(),
-    enabled: !!user,
-    staleTime: 60_000,
-  })
-  const mineQ = useQuery({
-    queryKey: ['appointment', 'listMine'],
-    queryFn: () => trpc.appointment.listMine.query(),
-    enabled: !!user,
-    staleTime: 60_000,
-  })
-
-  if (meRawQ.isPending || mineQ.isPending) return <LoadingBlock lines={2} />
-  if (meRawQ.isError || mineQ.isError) {
-    return (
-      <ErrorState
-        message="会员卡加载失败"
-        onRetry={() => {
-          void meRawQ.refetch()
-          void mineQ.refetch()
-        }}
-      />
-    )
-  }
-
-  const createdAt = meRawQ.data.user.createdAt
-  const joinDays = createdAt
-    ? Math.max(1, Math.floor((Date.now() - new Date(createdAt).getTime()) / DAY_MS) + 1)
-    : null
-  const completed = mineQ.data.groups.completed
-  const totalFen = completed.reduce((s, a) => s + a.priceFen, 0)
-
-  const stats = [
-    { label: '陪伴天数', value: joinDays !== null ? `${joinDays}` : null },
-    { label: '服务次数', value: completed.length > 0 ? `${completed.length}` : null },
-    { label: '累计消费', value: totalFen > 0 ? `¥${(totalFen / 100).toFixed(totalFen % 100 === 0 ? 0 : 2)}` : null },
-  ].filter((s) => s.value !== null)
-
-  /* U4-D3 对齐试样 10 .gcardQ 素卡工艺：纸面细线卡（深棕墨大卡已退役）；
-     档名/守护值/折扣副题无真实字段不出（裁定 #23 口径维持）；
-     三真数=左对齐 Montserrat 17/700（试样 800 字重→自托管仅 400/600/700，取 700 登记），
-     小标签 11px；右下「会员码 ›」=真路由 /me/card 入口 */
-  return (
-    <Link
-      to="/me/card"
-      data-testid="me-guardian-card"
-      className="u1-card block px-5 py-[18px] transition-transform duration-120 ease-philia-spring active:scale-[0.99]"
-    >
-      <p className="text-caption-xs font-semibold tracking-[0.22em] text-ink-placeholder">GUARDIAN CARD</p>
-      {stats.length > 0 ? (
-        <div className="mt-3.5 flex gap-[30px] border-t border-[rgba(74,59,46,.06)] pt-[13px]">
-          {stats.map((s) => (
-            <p key={s.label}>
-              <span className="u1-num block text-title font-bold leading-6">{s.value}</span>
-              <span className="mt-[3px] block text-caption-xs leading-4 text-ink-placeholder">{s.label}</span>
-            </p>
-          ))}
-          <span className="ml-auto self-end text-caption-xs text-ink-placeholder" aria-hidden="true">
-            会员码 ›
-          </span>
-        </div>
-      ) : (
-        <p className="mt-2 text-caption text-ink-secondary">会员细则以门店公布为准</p>
-      )}
-    </Link>
-  )
-}
-
-/* ------------------------------------------------------------------ */
-/* 2. 我的宠物横滑卡片区                                                  */
-/* ------------------------------------------------------------------ */
-
-function PetsSection() {
-  const { trpc } = usePhiliaClient()
-  const petsQuery = useQuery({
-    queryKey: ['pet', 'list'],
-    queryFn: () => trpc.pet.list.query(),
-  })
-
-  if (petsQuery.isPending) return <LoadingBlock lines={2} />
-  if (petsQuery.isError) {
-    return <ErrorState message="宠物列表加载失败" onRetry={() => void petsQuery.refetch()} />
-  }
-
-  const pets = petsQuery.data
-
-  // 空态：引导建立宠物档案（pets=[] 时渲染此分支）
-  if (pets.length === 0) {
-    return (
-      <div data-testid="me-pets" data-empty="true">
-        <EmptyState
-          title="还没有宠物档案"
-          desc="建立档案后，预约洗护与寄养更省心"
-          action={
-            <Link
-              to="/philia/pets"
-              className="inline-flex items-center rounded-control bg-brand-primary px-[30px] py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
-            >
-              建立宠物档案
-            </Link>
-          }
-        />
-      </div>
-    )
-  }
-
-  return (
-    <section data-testid="me-pets" className="u1-card p-4">
-      <div className="mb-3 flex items-baseline justify-between">
-        <h2 className="text-title">我的宠物</h2>
-        <Link to="/philia/pets" className="text-caption text-ink-secondary">
-          管理
-        </Link>
-      </div>
-      <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {pets.map((pet) => (
-          <div key={pet.id} className="flex w-16 shrink-0 flex-col items-center gap-1.5">
-            {pet.avatarUrl ? (
-              <img
-                src={pet.avatarUrl}
-                alt={pet.name}
-                className="h-16 w-16 rounded-full object-cover"
-              />
-            ) : (
-              /* D-补3 字圈工艺：浅木底 + 衬线首字（D1 洗护师字圈同口径），不再用 PawPrint 图标占位 */
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-oak-light ring-1 ring-line-ring">
-                <span className="u1-serif text-title-lg font-semibold text-ink">{pet.name.slice(0, 1)}</span>
-              </span>
-            )}
-            <p className="w-full truncate text-center text-caption">{pet.name}</p>
-          </div>
-        ))}
-        {/* 末尾固定「添加」虚线圆按钮 */}
-        <Link
-          to="/philia/pets"
-          aria-label="添加宠物"
-          className="flex w-16 shrink-0 flex-col items-center gap-1.5"
-        >
-          <span className="flex h-16 w-16 items-center justify-center rounded-full border border-dashed border-line-strong bg-sunken">
-            <Plus className="h-6 w-6 text-ink-secondary" strokeWidth={1.5} />
-          </span>
-          <span className="text-caption text-ink-secondary">添加</span>
-        </Link>
-      </div>
-    </section>
-  )
-}
-
-/* ------------------------------------------------------------------ */
-/* 3. 功能入口列表                                                       */
-/*    U4-D3 对齐试样 10 .svc-list：细线列表行直上画布（去卡壳去图标），      */
-/*    行名衬线 14/600（试样 serif 14.5→字阶 14），右位 › 墨 placeholder；  */
-/*    行距 padding 16px 0 + hairline 分隔（试样 ink-06）。                 */
-/*    入口仅保留真实路由：试样「优惠券/联系客服」无字段无路由不出（登记）。   */
-/* ------------------------------------------------------------------ */
-
-const ENTRIES: Array<{ to: string; label: string }> = [
-  { to: '/appointments', label: '我的预约' },
-  { to: '/mall/orders', label: '商城订单' },
-  // R11a 骨架批：会员中心入口（/member 新路由，申报锚点=页标题「会员中心」）
-  { to: '/member', label: '会员中心' },
-  // U1-H：会员卡入口指向新路由 /me/card（信息展示 v0）
-  { to: '/me/card', label: '会员卡' },
-  { to: '/philia/pets', label: '我的宠物' },
-  { to: '/philia/moments', label: '宠友圈' },
-]
-
-function EntryList() {
-  return (
-    <nav
-      data-testid="me-entries"
-      aria-label="功能入口"
-      className="divide-y divide-[rgba(74,59,46,.06)] border-b border-[rgba(74,59,46,.06)]"
-    >
-      {ENTRIES.map(({ to, label }) => (
-        <Link key={to} to={to} className="flex items-center py-4">
-          <span className="u1-serif flex-1 text-body-sm font-semibold">{label}</span>
-          <span className="text-caption-xs text-ink-placeholder" aria-hidden="true">›</span>
-        </Link>
-      ))}
-    </nav>
-  )
-}
-
-/* ------------------------------------------------------------------ */
-/* 4. 设置区（含退出登录确认弹窗）                                        */
-/*    U1-H：意见反馈/关于菲丽亚为 toast「即将上线」假按钮——按老板铁则          */
-/*    「每个按钮要么通真实链路、要么不存在」整行移除，不留花架子。              */
-/* ------------------------------------------------------------------ */
-
-function SettingsCard({
-  onRequestLogout,
-}: {
-  onRequestLogout: () => void
-}) {
-  return (
-    <div data-testid="me-settings" className="u1-card">
-      <button
-        type="button"
-        onClick={onRequestLogout}
-        className="flex w-full items-center gap-3 px-4 py-3.5 text-left"
-        data-testid="me-logout-btn"
-      >
-        <LogOut className="h-5 w-5 text-danger-deep" strokeWidth={1.5} />
-        <span className="flex-1 text-body-sm text-danger-deep">退出登录</span>
-      </button>
-    </div>
-  )
-}
-
-/** 退出登录确认弹窗 */
+/** 退出登录确认弹层（功能保留件；片 2 弹层核查：可点遮罩既有，补滚动锁——
+    居中确认件非底部弹层，§4.5 抓握手柄不适用，登记） */
 function LogoutConfirmDialog({
   pending,
   onCancel,
@@ -336,6 +57,15 @@ function LogoutConfirmDialog({
   onCancel: () => void
   onConfirm: () => void
 }) {
+  /* 滚动锁：弹层挂载期间锁底层 body（调用方条件挂载） */
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [])
+
   return (
     <div
       className="fixed inset-0 z-modal flex items-center justify-center bg-ink/40 px-8"
@@ -373,16 +103,61 @@ function LogoutConfirmDialog({
   )
 }
 
-/* ------------------------------------------------------------------ */
-/* 页面                                                                 */
-/* ------------------------------------------------------------------ */
+/* 定稿线图标（§五：24 网格 stroke 1.55 round；同屏同宽） */
+const I = {
+  calendar: <svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M8 3v4M16 3v4M4 10h16" /></svg>,
+  clock: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" /><path d="M12 7v5l3.5 2" /></svg>,
+  star: <svg viewBox="0 0 24 24"><path d="M12 4l2.2 4.6 5 .6-3.7 3.4 1 4.9-4.5-2.5-4.5 2.5 1-4.9L4.8 9.2l5-.6z" /></svg>,
+  refund: <svg viewBox="0 0 24 24"><path d="M4 9V7a2 2 0 012-2h12a2 2 0 012 2v2M4 9h16v8a2 2 0 01-2 2H6a2 2 0 01-2-2zM4 9v8" /></svg>,
+  all: <svg viewBox="0 0 24 24"><path d="M5 6h14M5 12h14M5 18h14" /></svg>,
+  petDoc: <svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="2" /><path d="M9 9h6M9 13h6M9 17h4" /></svg>,
+  album: <svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2" /><circle cx="9" cy="10" r="1.6" /><path d="M4 17l5-4 4 3 3-2 4 3" /></svg>,
+  rebate: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" /><path d="M12 7v5l3.5 2" /></svg>,
+  home: <svg viewBox="0 0 24 24"><path d="M4 11l8-6 8 6v8a1 1 0 01-1 1h-5v-6h-4v6H5a1 1 0 01-1-1z" /></svg>,
+  coupon: <svg viewBox="0 0 24 24"><path d="M5 5h14v6a2 2 0 000 4v4H5v-4a2 2 0 000-4z" /><path d="M12 8v8" strokeDasharray="2.5 2.5" /></svg>,
+  pin: <svg viewBox="0 0 24 24"><path d="M12 21s-7-5.5-7-11a7 7 0 0114 0c0 5.5-7 11-7 11z" /><circle cx="12" cy="10" r="2.4" /></svg>,
+  cotton: <svg viewBox="0 0 24 24"><path d="M5 18a7 7 0 0114 0" /><circle cx="12" cy="7" r="3" /></svg>,
+  gear: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M19 12a7 7 0 01-.2 1.6l2 1.5-2 3.4-2.3-1a7 7 0 01-2.8 1.7L13.4 21h-2.8l-.3-2.5a7 7 0 01-2.8-1.6l-2.3 1-2-3.4 2-1.5A7 7 0 015 12c0-.6.1-1.1.2-1.6l-2-1.5 2-3.4 2.3 1a7 7 0 012.8-1.7L10.6 3h2.8l.3 2.5a7 7 0 012.8 1.6l2.3-1 2 3.4-2 1.5c.1.5.2 1 .2 1.6z" /></svg>,
+}
 
 export default function MePage() {
   const navigate = useNavigate()
-  const { queryClient } = usePhiliaClient()
+  const { trpc, queryClient } = usePhiliaClient()
+  const { user } = useMe()
   const { toastEl, showToast } = useMeToast()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [logoutPending, setLogoutPending] = useState(false)
+
+  const meRawQ = useQuery({
+    queryKey: ['auth', 'me', 'raw'],
+    queryFn: () => trpc.auth.me.query(),
+    enabled: !!user,
+    staleTime: 60_000,
+  })
+  const myQ = useQuery({
+    queryKey: ['membership', 'my'],
+    queryFn: () => trpc.membership.my.query(),
+    enabled: !!user,
+    staleTime: 60_000,
+  })
+  const petsQ = useQuery({
+    queryKey: ['pet', 'list'],
+    queryFn: () => trpc.pet.list.query(),
+    enabled: !!user,
+  })
+
+  const nickname = meRawQ.data?.user?.nickname ?? '铲屎官'
+  const avatarUrl = meRawQ.data?.user?.avatarUrl ?? null
+  const membership = myQ.data?.membership ?? null
+  const plan = myQ.data?.plan ?? null
+  const tierLabel = plan ? plan.label.replace(/^会员档·/, '').replace(/：.*$/, '') : '菲丽亚宠友'
+  const rebateBalance = myQ.data?.rebate?.balanceFen ?? 0
+  /* 续费倒计时（PD-15：落地件=纯展示，membership.expiresAt 真值；非会员不上数） */
+  const renewDaysLeft = membership
+    ? Math.max(0, Math.ceil((new Date(membership.expiresAt).getTime() - Date.now()) / DAY_MS))
+    : null
+  const petCount = (petsQ.data ?? []).length
+  const firstPetName = (petsQ.data ?? [])[0]?.name ?? null
 
   const doLogout = async () => {
     setLogoutPending(true)
@@ -398,20 +173,90 @@ export default function MePage() {
   }
 
   return (
-    /* U4-D3：页边距 22px；题「我的」=衬线 17/600 宽距（试样 10 wordmark serif .14em）。
-       试样右上「设置」无真实路由/功能——不出（登记）。 */
-    <div className="px-[22px] pb-6">
-      <header className="pt-3">
-        <h1 className="u1-serif text-title tracking-[0.14em]">我的</h1>
-      </header>
+    <div className="pb-28">
+      {/* apphead：serif 27/900 大题 + mono 注记（§4.1） */}
+      <div className="m2-apphead">
+        <span className="tt">我的</span>
+        <span className="no">MY PHILIA</span>
+      </div>
 
-      <div className="flex flex-col gap-3">
-        <UserCard />
-        {/* U1-H：纸面细线会员卡（GUARDIAN CARD·三真数 → /me/card）；已省行隐去（无折扣引擎） */}
-        <GuardianCard />
-        <PetsSection />
-        <EntryList />
-        <SettingsCard onRequestLogout={() => setConfirmOpen(true)} />
+      <div className="px-[22px]" style={{ marginTop: 14 }}>
+        {/* 1. 身份大卡 mehero（置顶约 40%；骨架冻结件） */}
+        <section className="me2-hero" data-testid="me-hero" aria-label="会员身份">
+          <div className="r1">
+            {avatarUrl ? (
+              <img className="av" src={avatarUrl} alt={nickname} />
+            ) : (
+              <span className="av" style={{ display: 'grid', placeItems: 'center', background: '#F4EDDC' }} aria-hidden="true">
+                <span style={{ fontFamily: 'var(--v2serif)', fontSize: 20, fontWeight: 900, color: '#3B2E24' }}>
+                  {nickname.slice(0, 1)}
+                </span>
+              </span>
+            )}
+            <div>
+              <div className="nm">{nickname}</div>
+              <span className="tier">{tierLabel}</span>
+            </div>
+            {membership ? (
+              <Link to="/member" className="renew" data-testid="me-renew-link">续费 ›</Link>
+            ) : null}
+          </div>
+          <div className="nums">
+            {/* 今年已省=槽位置灰不上数（PD-15 V1.1 槽位 1：省钱口径未冻结前「——」） */}
+            <div className="dim" data-testid="me-saved-slot">
+              <div className="v">——</div>
+              <div className="k">今年已省 · {SLOT_NOTE}</div>
+            </div>
+            <div data-testid="me-rebate-cell">
+              <div className="v">{fenToYuan(rebateBalance)}</div>
+              <div className="k">回馈金</div>
+            </div>
+            <div data-testid="me-renew-countdown">
+              {renewDaysLeft !== null ? (
+                <>
+                  <div className="v">{renewDaysLeft} <em>天</em></div>
+                  <div className="k">续费倒计时</div>
+                </>
+              ) : (
+                <>
+                  <div className="v">——</div>
+                  <div className="k">开通会员解锁</div>
+                </>
+              )}
+            </div>
+          </div>
+          <Link to={membership ? '/me/card' : '/member/open'} className="me2-qrrow" data-testid="me-qrrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="4" y="4" width="6" height="6" rx="1.2" /><rect x="14" y="4" width="6" height="6" rx="1.2" /><rect x="4" y="14" width="6" height="6" rx="1.2" /><path d="M14 14h2.5v2.5H14zM20 14v6M14 20h6" /></svg>
+            出示会员码
+            <span className="c">到店即扫</span>
+          </Link>
+        </section>
+
+        {/* 2. 订单五格（五态入口；退款售后=槽位置灰 PD-15 V1.1 槽位 10） */}
+        <nav className="me2-orderrow" data-testid="me-orderrow" aria-label="订单五态">
+          <Link to="/appointments?tab=confirmed" className="o">{I.calendar}待到店</Link>
+          <Link to="/appointments?tab=serving" className="o">{I.clock}服务中</Link>
+          <Link to="/appointments?tab=history" className="o">{I.star}待评价</Link>
+          <span className="o slot" data-testid="slot-refund" aria-disabled="true">
+            {I.refund}退款售后
+            <span className="sk">{SLOT_NOTE}</span>
+          </span>
+          <Link to="/appointments?tab=history" className="o">{I.all}全部订单</Link>
+        </nav>
+
+        {/* 3. 功能网格（4 列×2 一层；置灰四件=PD-15 V1.1 槽位 2/3/4/11） */}
+        <nav className="me2-grid8" data-testid="me-grid8" aria-label="功能网格">
+          <Link to="/philia/pets" className="g">{I.petDoc}<div className="t">宠物档案<small>{firstPetName ?? (petCount > 0 ? `${petCount} 只` : '去建档')}</small></div></Link>
+          <span className="g slot" data-testid="slot-gallery" aria-disabled="true">{I.album}<div className="t">服务相册<small>{SLOT_NOTE}</small></div></span>
+          <Link to="/member/rebate" className="g">{I.rebate}<div className="t">回馈金账本<small>{fenToYuan(rebateBalance)}</small></div></Link>
+          <Link to="/booking/boarding" className="g">{I.home}<div className="t">寄养预约<small>按晚</small></div></Link>
+          <span className="g slot" data-testid="slot-coupons" aria-disabled="true">{I.coupon}<div className="t">优惠券<small>{SLOT_NOTE}</small></div></span>
+          <span className="g slot" data-testid="slot-address" aria-disabled="true">{I.pin}<div className="t">常用地址<small>{SLOT_NOTE}</small></div></span>
+          <span className="g slot" data-testid="slot-concierge" aria-disabled="true">{I.cotton}<div className="t">小棉花<small>{SLOT_NOTE}</small></div></span>
+          <button type="button" className="g" data-testid="me-settings" onClick={() => setConfirmOpen(true)}>
+            {I.gear}<div className="t">设置<small>账号 · 退出</small></div>
+          </button>
+        </nav>
       </div>
 
       {confirmOpen ? (

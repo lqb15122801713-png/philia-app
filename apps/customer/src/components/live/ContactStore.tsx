@@ -13,7 +13,7 @@ export default function ContactStore({ phone }: { phone?: string | null }) {
       href={`tel:${phone}`}
       className="flex h-11 w-full items-center justify-center gap-1.5 rounded-full border-[1.5px] border-line-strong bg-card text-body font-semibold text-ink shadow-card transition active:scale-[0.99]"
     >
-      <Phone className="h-5 w-5 text-brand-primary" strokeWidth={1.5} />
+      <Phone className="h-5 w-5 text-ink" strokeWidth={1.5} />
       有问题？联系门店
     </a>
   )

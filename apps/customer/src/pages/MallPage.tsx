@@ -38,31 +38,38 @@ type ProductItem = {
 function ProductCard({
   item,
   onQuickAdd,
+  rebateBp,
 }: {
   item: ProductItem;
   /** U1-G 快加购（真加购链路 cartStore.addItem；售罄不渲染） */
   onQuickAdd: (item: ProductItem) => void;
+  /** 回馈金返显（APP-18：全员同价+按档返；非会员/免费档=0 不渲染假数） */
+  rebateBp: number;
 }) {
+  /* 片 2 M-01 定稿（§4.7）：图 4:3 + 名 12.5/700 两行 + 价 mono 14/700 + 右 mono 8.5
+     「返 ¥x 回馈金」（APP-18 口径）+ qadd 30 圆深棕「＋」（:active scale .9） */
+  const rebateFen = rebateBp > 0 ? Math.round((item.priceFen * rebateBp) / 10000) : 0;
   return (
-    /* U1-G 换肤：双列大卡=U1-B 细线卡（rounded-panel 20 + ring + 近零影，去 shadow-card）
-       U4-D3 对齐试样 07：图 4:3（试样 pr-photo 120px/卡宽 167px）·名 12/600 两行·
-       价 u1-num 14/700 墨色（试样非柠檬字）·右下 26px 柠檬圆底墨「＋」快加购（试样 .pr-add） */
     <div className="u1-card relative overflow-hidden">
       <Link to={`/mall/product/${item.id}`} className="block transition active:scale-[0.99]">
         <ProductImage src={item.images?.[0]} alt={item.name} className="aspect-[4/3] w-full" />
         <div className="px-3 pb-3 pt-2.5">
-          <p className="line-clamp-2 min-h-8 text-caption font-semibold">{item.name}</p>
-          <div className="mt-[7px] flex items-center pr-8">
+          <p className="line-clamp-2 min-h-8 text-[12.5px] font-bold leading-4">{item.name}</p>
+          <div className="mt-[7px] flex items-baseline pr-8">
             <p className="u1-num text-body-sm font-bold text-ink">{fenToYuan(item.priceFen)}</p>
-            {item.stock <= 0 ? (
-              <span className="ml-2 rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">已售罄</span>
+            {rebateFen > 0 ? (
+              <span className="ml-auto font-number text-[8.5px] tabular-nums text-ink-secondary">
+                返 {fenToYuan(rebateFen)} 回馈金
+              </span>
             ) : null}
           </div>
+          {item.stock <= 0 ? (
+            <span className="mt-1 inline-block rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">已售罄</span>
+          ) : null}
         </div>
       </Link>
       {/* 快加购：真链路（addItem → 角标/购物袋；跨店由页面 ConfirmSheet 处理）。
-          U4-D3：对齐试样 .pr-add——26px 柠檬圆底 + 墨「＋」，位于价格行右位（绝对定位保持
-          与 Link 同级，避免交互元素嵌套） */}
+          片 2 M-01：qadd=30px 深棕圆底「＋」（定稿 §4.7，:active scale(.9)） */}
       {item.stock > 0 ? (
         <button
           type="button"
@@ -72,7 +79,7 @@ function ProductCard({
             e.preventDefault();
             onQuickAdd(item);
           }}
-          className="absolute bottom-3 right-3 flex h-[26px] w-[26px] items-center justify-center rounded-full bg-brand-primary text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="absolute bottom-3 right-3 flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#2E2318] text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-90"
         >
           <Plus className="h-4 w-4" strokeWidth={2.2} />
         </button>
@@ -136,6 +143,14 @@ function MallInner() {
   const storeNameOf = (storeId: string) =>
     storesQ.data?.stores.find((s) => s.id === storeId)?.name ?? '菲丽亚门店';
 
+  // 会员档回馈金比例（返显口径 APP-18：按档返；非会员/免费档=0 不渲染假数）
+  const myQ = useQuery({
+    queryKey: ['membership', 'my'],
+    queryFn: () => trpc.membership.my.query(),
+    staleTime: 60_000,
+  });
+  const rebateBp = (myQ.data?.plan as { rebateBp?: number } | null | undefined)?.rebateBp ?? 0;
+
   const items = productsQ.data?.pages.flatMap((p) => p.items) ?? [];
   const total = productsQ.data?.pages[0]?.total ?? 0;
 
@@ -158,12 +173,33 @@ function MallInner() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
-    /* U4-D3：页边距 22px（试样 .topbar/.prod-grid padding 口径） */
-    <div className="px-[22px] pb-6 pt-4">
+    /* 片 2 M-01：apphead（serif 27 大题+mono 注记）+ delbar 槽位置灰（PD-15 V1.1 槽位 13） */
+    <div className="pb-28">
       {toastEl}
-      {/* 标题 + 购物袋入口（试样 07：wordmark 17 + 右上细线 pill「购物袋 · N」） */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-title">商城</h1>
+      <div className="m2-apphead">
+        <span className="tt">商城</span>
+        <span className="no">MALL · 给它买点好的</span>
+      </div>
+
+      {/* 配送条槽位（PD-15 V1.1 槽位 13：配送时效=运营后期端口；置灰不上假时效，留口注记） */}
+      <div className="px-[22px] mt-3">
+        <div
+          className="flex items-center gap-3 rounded-[14px] bg-card px-4 py-3 ring-1 ring-line-ring opacity-60"
+          data-testid="slot-delivery"
+          aria-disabled="true"
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-ink-secondary" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 21s-7-5.5-7-11a7 7 0 0114 0c0 5.5-7 11-7 11z" /><circle cx="12" cy="10" r="2.4" /></svg>
+          <div className="min-w-0 flex-1">
+            <p className="text-caption font-bold text-ink">配送至 · ——</p>
+            <p className="mt-0.5 font-number text-[9.5px] text-ink-placeholder">配送时效 · 即将点亮</p>
+          </div>
+          <span className="text-caption-xs text-ink-placeholder" aria-hidden="true">›</span>
+        </div>
+      </div>
+
+      <div className="px-[22px] pt-1">
+      {/* 购物袋入口（头部右上，试样 07 细线 pill） */}
+      <div className="mt-3 flex items-center justify-end">
         <CartLink />
       </div>
 
@@ -253,7 +289,7 @@ function MallInner() {
         <>
           <div className="mt-4 grid grid-cols-2 gap-3">
             {items.map((it) => (
-              <ProductCard key={it.id} item={it} onQuickAdd={quickAdd} />
+              <ProductCard key={it.id} item={it} onQuickAdd={quickAdd} rebateBp={rebateBp} />
             ))}
           </div>
           {/* 上拉加载哨兵与状态行 */}
@@ -283,6 +319,7 @@ function MallInner() {
           />
         </>
       )}
+      </div>
     </div>
   );
 }

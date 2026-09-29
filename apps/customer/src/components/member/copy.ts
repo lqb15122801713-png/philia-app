@@ -133,10 +133,41 @@ export const MEMBER_COPY = {
   'card.claimZhuguang': '每月一次眼耳甲，不用记',
   'card.claimNuanyang': '含 3 只毛孩子 · 都被叫得出名字',
 
+  /* ---- 商城域（换皮批片 2 商城组新增：M-02/M-03 回馈金返显，口径 APP-18 按档返；
+     数值（金额/到账日）全部经 {amt}/{day} 插值自端口，本表零数值硬编码） ---- */
+  'mall.rebateEarnCard': '购买返 {amt} 回馈金 · 次月 {day} 日到账',
+  'mall.rebateEarnCardNoDay': '购买返 {amt} 回馈金',
+  'mall.rebateEarnCta': '本单返 {amt} 回馈金',
+
   /* ---- 通用 ---- */
   'common.memberLoadFail': '会员信息加载失败',
   'common.plansLoadFail': '档位信息加载失败',
   'common.rebateLoadFail': '回馈金账本加载失败',
+
+  /* ---- 换皮批片 2 · 杂项组新增（2026-09-29，A 窗施工子任务） ----
+     槽位置灰注记（PD-15 V1.1 三规：置灰不上数不上假件 + 注记 + data-testid） */
+  'slot.soon': '即将点亮',
+  'slot.certSoon': '随体验批开通',
+  /* F-01 philia 养成（纯情感件，XP 永不兑钱 APP-51；定稿 screens.html F-01） */
+  'f1.eyebrow': 'PHILIA · 小棉花在替你陪着它',
+  'f1.manifesto': '它不在你身边的时候，\n我们看着它。',
+  'f1.statDays': '陪伴天数',
+  'f1.statServices': '服务次数',
+  'f1.statPhotos': '照片数',
+  'f1.growthTitle': '陪伴段位与徽章',
+  'f1.growthSlotDesc': '陪伴段位（初识 → 家人）与它的徽章墙，随养成体系一同点亮',
+  'f1.birthdayTitle': '生日特辑',
+  'f1.birthdayDesc': '它的生日周，自动为你生成一本年度特辑',
+  /* P-01 宠物档案 · 安心证书槽位 */
+  'p1.certSlotTitle': '安心证书',
+  /* O-01 订单列表 · 退款售后槽位 tab */
+  'o1.refundTab': '退款售后',
+  /* L-01 登录页（宣言三段：淡黄刷底强调件 §4.11） */
+  'l1.manifestoA': '守护每一次',
+  'l1.manifestoB': '被',
+  'l1.manifestoEm': '照顾',
+  'l1.manifestoC': '的时刻。',
+  'l1.wechatSlot': '微信一键登录',
 
   /* ---- 规则明面（红线 5：全量八条，数值读端口） ---- */
   'rules.title': '年费 ≠ 储值 · 到期不自动续费',
@@ -151,6 +182,18 @@ export const MEMBER_COPY = {
   'rules.r6': '退货按退款比例扣回已返回馈金，余额不足扣至 0 不负账',
   'rules.r7': '回馈金 / 储值 / XP 三本账物理分离，均不计营业额',
   'rules.r8': '商品全员同价无会员价；服务折扣仅付费档生效',
+
+  /* ---- 换皮批片 2 · 预约单屏族（B-01/H-01 定稿锚）新增键：时段状态 + 槽位注记 ---- */
+  'bk.slotOpen': '可约',
+  'bk.slotFull': '已满',
+  /* PD-15 V1.1 槽位 6：H-01 多宠同订置灰槽位统一注记 */
+  'bk.multiPetSlot': '多宠同订 · 即将点亮',
+
+  /* ---- 换皮批片 2 · 服务中+案例流组（S-01 定稿锚）新增键：LiveStepper 右侧
+     mono 9 状态签（done=完成时刻✓ / now=进行中 / future=未开始）；live 组无
+     copy 域，就近挂本表，键名 live.* 前缀 ---- */
+  'live.stepActive': '进行中',
+  'live.stepPending': '未开始',
 } as const;
 
 export type MemberCopyKey = keyof typeof MEMBER_COPY;

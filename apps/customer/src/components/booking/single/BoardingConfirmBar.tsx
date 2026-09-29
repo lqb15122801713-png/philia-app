@@ -44,7 +44,7 @@ export default function BoardingConfirmBar({
       className="pointer-events-none fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-sticky"
       data-testid="bs-confirm-bar"
     >
-      <div className="mx-auto max-w-lg border-t border-[rgba(74,59,46,.09)] bg-canvas px-4 pb-3 pt-3">
+      <div className="mx-auto max-w-lg bg-gradient-to-b from-canvas/0 via-canvas to-canvas px-4 pb-3 pt-3">
         {vaccineBlock ? (
           <Link
             to="/philia/pets"
@@ -59,6 +59,7 @@ export default function BoardingConfirmBar({
             <span className="ml-2 shrink-0 font-medium">▸</span>
           </Link>
         ) : null}
+        {/* 主钮（定稿 btn-primary：深棕底 #2E2318 反白，圆角 18；旧柠檬主钮退役） */}
         <button
           type="button"
           disabled={!ready}
@@ -66,8 +67,8 @@ export default function BoardingConfirmBar({
           data-testid="bs-confirm"
           data-state={submitting ? 'submitting' : ready ? 'ready' : 'disabled'}
           data-block-reason={vaccineBlock ? 'vaccine' : missingLabel !== null ? 'missing' : ''}
-          className={`pointer-events-auto h-12 w-full rounded-control text-body font-semibold shadow-philia transition-transform duration-120 ease-philia-spring ${
-            ready ? 'bg-brand-primary text-ink active:scale-92' : 'cursor-not-allowed bg-line text-ink-placeholder shadow-none'
+          className={`pointer-events-auto h-12 w-full rounded-[18px] text-body font-semibold transition-transform duration-120 ease-philia-spring ${
+            ready ? 'bg-[#2E2318] text-[#F6EFDD] shadow-philia active:scale-92' : 'cursor-not-allowed bg-line text-ink-placeholder shadow-none'
           }`}
         >
           {label}

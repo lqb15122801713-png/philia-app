@@ -1,11 +1,15 @@
 /**
- * MomentsPage · /philia/moments 服务相册（T2.1）
+ * MomentsPage · /philia/moments 服务相册（T2.1；换皮批片 2 案例流取齐）
  *
  * - 数据：listMine 取 completed 预约，逐个 serviceStep.list 拿 before_after 步照片；
  *   按时间（completedAt ?? scheduledStart）倒序成册，封面 = after 图；
- * - 内页：before/after 并排（PhotoWall 的 before_after 对比模式）；
+ * - 案例流=首页同款双列不等高网格（hv2-cases/hv2-case 同型同件，
+ *   styles/home-v2.css 既有类）：白卡圆角 16 + 图不定高 + 题 13/600 两行截断
+ *   + mono 9 溯源行（时刻 · 门店）；
+ * - 内页：点封面展开 before/after 并排（PhotoWall 的 before_after 对比模式）；
  * - 分享：Web Share API（navigator.share），不可用则复制链接（clipboard，兜底 execCommand）；
- * - 点击照片进全屏查看器（暖深棕 90% 底，保持色温，DESIGN §6.3）。
+ * - 点击照片进全屏查看器（暖深棕 90% 底，保持色温，DESIGN §6.3）；
+ * - 空态三句话结构保留（是什么/为什么/去哪 + 深棕主钮出口件）。
  */
 
 import { useQuery } from '@tanstack/react-query'
@@ -55,7 +59,7 @@ function PhotoViewer({ photo, onClose }: { photo: PhotoWallPhoto; onClose: () =>
   )
 }
 
-/** 单册相册卡片 */
+/** 单册相册卡（hv2-case 同型同件：图不定高 + 题 13/600 两行截断 + mono 9 溯源行） */
 function AlbumCard({ album }: { album: Album }) {
   const [open, setOpen] = useState(false)
   const [viewing, setViewing] = useState<PhotoWallPhoto | null>(null)
@@ -90,50 +94,48 @@ function AlbumCard({ album }: { album: Album }) {
   }
 
   return (
-    <article className="overflow-hidden rounded-card bg-card shadow-card">
-      {/* 封面 = after 图 */}
+    <article className="hv2-case">
+      {/* 封面 = after 图（不定高，错落节奏）；整面=展开/收起 before/after 内页 */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="relative block w-full"
+        className="relative block w-full text-left"
         aria-expanded={open}
       >
         <img
           src={album.cover.thumbUrl ?? album.cover.url}
           alt={`${album.petName ?? '宠物'}服务后照片`}
-          className="aspect-[4/3] w-full object-cover"
+          className="w-full object-cover"
           loading="lazy"
         />
-        <span className="absolute inset-x-0 bottom-0 flex items-end justify-between bg-ink/55 p-3 text-left">
-          <span>
-            {/* U4-D3 禁令清净：纯白字类 → text-canvas（VI 米白，墨上反白同观感） */}
-            <span className="block text-body font-semibold text-canvas">
-              {album.petName ?? '毛孩子'} · {album.serviceName ?? '洗护服务'}
-            </span>
-            <span className="mt-0.5 block text-caption text-canvas/85">
-              {album.doneAt ? formatDateCn(album.doneAt) : ''}
-              {album.storeName ? ` · ${album.storeName}` : ''}
-            </span>
-          </span>
+        <span className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-card/90">
           <ChevronDown
-            className={`h-5 w-5 shrink-0 text-canvas transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+            className={`h-4 w-4 text-ink transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
             strokeWidth={1.5}
           />
+        </span>
+        <span className="tt">
+          {album.petName ?? '毛孩子'} · {album.serviceName ?? '洗护服务'}
+        </span>
+        <span className="src">
+          {album.doneAt ? formatDateCn(album.doneAt) : ''}
+          {album.storeName ? ` · ${album.storeName}` : ''}
         </span>
       </button>
 
       {/* 内页：before/after 对比 + 分享 */}
       {open ? (
-        <div className="p-3">
+        <div className="px-3 pb-3">
           <PhotoWall
             photos={[album.before, album.after]}
             stepKey="before_after"
             onPhotoClick={(p) => setViewing(p)}
           />
+          {/* 次级钮=白卡墨描边（定稿次级行动惯例） */}
           <button
             type="button"
             onClick={() => void share()}
-            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full bg-brand-primary-light py-2.5 text-body text-brand-primary-pressed transition-transform duration-120 ease-philia-spring active:scale-92"
+            className="mt-3 flex h-10 w-full items-center justify-center gap-1.5 rounded-full border-[1.5px] border-line-strong text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             {copied ? (
               <>
@@ -196,7 +198,7 @@ export default function MomentsPage() {
       {/* U1-A：统一返回条（←圆钮+标题），固定返回 philia 页 */}
       <PageHeader title="服务相册" to="/philia" className="pt-6" />
 
-      <div className="mt-4 flex flex-col gap-4">
+      <div className="mt-4">
         {albumsQuery.isPending ? <LoadingBlock lines={3} /> : null}
         {albumsQuery.isError ? (
           <ErrorState message="相册加载失败" onRetry={() => void albumsQuery.refetch()} />
@@ -208,15 +210,23 @@ export default function MomentsPage() {
             action={
               <Link
                 to="/booking/grooming"
-                className="inline-flex items-center rounded-control bg-brand-primary px-[30px] py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                className="inline-flex items-center rounded-control bg-philia-gradient px-[30px] py-[13px] text-body-sm font-semibold text-[#F6EFDD] shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92"
               >
                 去预约洗护
               </Link>
             }
           />
         ) : null}
-        {albumsQuery.data?.map((album) => <AlbumCard key={album.appointmentId} album={album} />)}
       </div>
+
+      {/* 案例流：双列不等高网格（hv2-cases 同型同件，align-items:start 错落） */}
+      {albumsQuery.data && albumsQuery.data.length > 0 ? (
+        <div className="hv2-cases mt-4">
+          {albumsQuery.data.map((album) => (
+            <AlbumCard key={album.appointmentId} album={album} />
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }

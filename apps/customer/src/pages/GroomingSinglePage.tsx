@@ -279,8 +279,10 @@ export default function GroomingSinglePage() {
             : null;
 
   /* ---- 渲染：单屏区块化（v4.1：留白 + hairline 分节，时段栅格紧贴日期横条） ---- */
-  // 节间 hairline：既有 token 深棕墨 4A3B2E 的 9% 透明度用法（设计规格 v3 §1）
-  const SECTION = 'mt-6 border-t border-[rgba(74,59,46,.09)] pt-5';
+  // 节间 hairline：token 深棕墨 #3B2E24 的 9% 透明度（line.ring；换皮批片 2 换代旧暖墨谱系）
+  // 截面题=sec-h 工艺（§4.1：16/800）
+  const SECTION = 'mt-6 border-t border-line-ring pt-5';
+  const SEC_H = 'text-v2-section';
   return (
     <div className="px-4 pb-36 pt-6" data-testid="grooming-single">
       {toastEl}
@@ -311,7 +313,7 @@ export default function GroomingSinglePage() {
 
       {/* 服务 chips */}
       <section className={SECTION}>
-        <h2 className="text-title">选择服务</h2>
+        <h2 className={SEC_H}>选择服务</h2>
         <div className="mt-2">
           <ServiceChipsBlock
             services={groomingServices}
@@ -325,7 +327,7 @@ export default function GroomingSinglePage() {
 
       {/* 门店单行 */}
       <section className={SECTION}>
-        <h2 className="text-title">门店</h2>
+        <h2 className={SEC_H}>门店</h2>
         <div className="mt-2">
           <StoreLineBlock
             stores={nearbyQ.data?.stores ?? []}
@@ -340,7 +342,7 @@ export default function GroomingSinglePage() {
       {/* U1-D：洗护师横卡（v9.1 美容师横卡——置顶「随缘派单」默认卡 + 横滑员工卡；
           由 ExtrasBlock 折叠区迁出为独立节，选择逻辑/备注前缀传达口径不变） */}
       <section className={SECTION}>
-        <h2 className="text-title">洗护师</h2>
+        <h2 className={SEC_H}>洗护师</h2>
         <div className="mt-2">
           <StaffPickerFlat
             staff={staffQ.data?.staff ?? []}
@@ -355,7 +357,7 @@ export default function GroomingSinglePage() {
 
       {/* 日期横条 + 时段栅格（v4.1：栅格上移紧贴日期区，同一节内） */}
       <section className={SECTION}>
-        <h2 className="text-title">选择日期</h2>
+        <h2 className={SEC_H}>选择日期</h2>
         <div className="mt-2">
           <DateStripBlock days={days} selectedDay={day} onPickDay={pickDay} remainByDay={remainByDay} />
         </div>
@@ -368,20 +370,21 @@ export default function GroomingSinglePage() {
             loading={servicesQ.isPending || servicesQ.isFetching}
           />
         </div>
-        {/* U1-D：时间摘要行（选中时段后透出，真实数据；未选不渲染） */}
+        {/* U1-D：时间摘要行（选中时段后透出，真实数据；未选不渲染）
+            换皮批片 2：tfield 时间卡工艺（§4.4）——白卡 18，主行 14.5/800 + mono 9.5 副行；
+            右「更改 ›」略——时段栅格同屏展开，无可开的弹层，不放假链 */}
         {slot ? (
-          <p
+          <div
             data-testid="gs-slot-summary"
-            className="u1-ring mt-4 flex items-center justify-between rounded-control bg-card px-3.5 py-2.5 text-body-sm"
+            className="mt-4 rounded-[18px] border border-line bg-card px-4 py-3.5"
           >
-            <span className="text-ink-secondary">已选时间</span>
-            <span className="u1-num font-semibold">
-              {dayLabel(slot)} {fmtHM(slot)}
-              <span className="ml-1.5 text-caption-xs font-normal text-ink-secondary">
-                约 {engineDurationMin ?? service?.durationMin ?? 60} 分钟
-              </span>
-            </span>
-          </p>
+            <p className="text-[14.5px] font-extrabold leading-5">
+              已选时间 <span className="u1-num">{dayLabel(slot)} {fmtHM(slot)}</span>
+            </p>
+            <p className="mt-[3px] font-number text-v2-trace text-ink-secondary">
+              约 {engineDurationMin ?? service?.durationMin ?? 60} 分钟
+            </p>
+          </div>
         ) : null}
       </section>
 

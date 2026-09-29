@@ -103,7 +103,7 @@ export function PlanCompareTable({
 }) {
   return (
     <div data-testid="member-plan-compare" className="u1-card overflow-hidden">
-      <ul className="divide-y divide-[rgba(74,59,46,.06)]">
+      <ul className="divide-y divide-[rgba(59,46,36,.06)]">
         {plans.map((p) => (
           <li key={p.planKey} className="px-4 py-3.5" data-plan-key={p.planKey}>
             <div className="flex items-baseline gap-2">
@@ -124,7 +124,7 @@ export function PlanCompareTable({
         ))}
       </ul>
       {/* 安心包=全员免费（CJ-0922-13 落槌：来 Philia 即享，非会员 ¥15 作废） */}
-      <p className="border-t border-[rgba(74,59,46,.06)] px-4 py-3 text-caption text-ink-secondary">
+      <p className="border-t border-[rgba(59,46,36,.06)] px-4 py-3 text-caption text-ink-secondary">
         安心包：全员免费（来店即享，会员与非会员同享）
       </p>
     </div>
@@ -158,7 +158,7 @@ export function RebateRulesList({
     '回馈金不提现、不转让、不产息；会员费为权益服务费，与储值、XP 三本账互不通用。',
   ]
   return (
-    <ul data-testid="member-rebate-rules" className="u1-card divide-y divide-[rgba(74,59,46,.06)] px-4">
+    <ul data-testid="member-rebate-rules" className="u1-card divide-y divide-[rgba(59,46,36,.06)] px-4">
       {rules.map((r) => (
         <li key={r} className="py-3 text-caption leading-[1.7] text-ink-secondary">
           {r}

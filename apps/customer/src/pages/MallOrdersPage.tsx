@@ -77,8 +77,8 @@ const STATUS_META: Record<string, { label: string; pill: string }> = {
   pending: { label: '待支付', pill: 'bg-brand-primary text-ink' },
   paid: { label: '待发货', pill: 'bg-brand-secondary-light text-ink' },
   shipped: { label: '待收货', pill: 'bg-brand-secondary-light text-ink' },
-  received: { label: '已完成', pill: 'bg-[rgba(74,59,46,.06)] text-ink-secondary' },
-  cancelled: { label: '已取消', pill: 'bg-[rgba(74,59,46,.06)] text-ink-placeholder' },
+  received: { label: '已完成', pill: 'bg-[rgba(59,46,36,.06)] text-ink-secondary' },
+  cancelled: { label: '已取消', pill: 'bg-[rgba(59,46,36,.06)] text-ink-placeholder' },
   refunding: { label: '售后中', pill: 'bg-danger-light text-danger-deep' },
 };
 
@@ -171,7 +171,7 @@ function OrderCard({
       {/* 操作区（试样 .o-act：顶部 hairline 分隔 + 右对齐胶囊钮 12px/600；
           pri=柠檬底墨字 / sec=纸面细线 ring） */}
       {order.status === 'pending' ? (
-        <div className="mt-3 flex justify-end gap-2 border-t border-[rgba(74,59,46,.06)] pt-[11px]">
+        <div className="mt-3 flex justify-end gap-2 border-t border-[rgba(59,46,36,.06)] pt-[11px]">
           <button
             type="button"
             onClick={() => onCancel(order)}
@@ -189,7 +189,7 @@ function OrderCard({
         </div>
       ) : null}
       {order.status === 'shipped' ? (
-        <div className="mt-3 flex justify-end border-t border-[rgba(74,59,46,.06)] pt-[11px]">
+        <div className="mt-3 flex justify-end border-t border-[rgba(59,46,36,.06)] pt-[11px]">
           <button
             type="button"
             disabled={receiving}
@@ -203,7 +203,7 @@ function OrderCard({
       {/* U1-G 已完成态：再来一单（真链路）；「查看全程」无物流全程接口——不渲染该钮（铁则）。
           U4-D3：试样已完成卡「再来一单」=柠檬主钮 → 对齐；「申请售后」无售后申请接口——不出 */}
       {order.status === 'received' ? (
-        <div className="mt-3 flex justify-end border-t border-[rgba(74,59,46,.06)] pt-[11px]">
+        <div className="mt-3 flex justify-end border-t border-[rgba(59,46,36,.06)] pt-[11px]">
           <button
             type="button"
             onClick={() => onReorder(order)}
@@ -406,7 +406,7 @@ function MallOrdersInner() {
         <>
           {/* 状态分组签（U4-D3 对齐试样 .tabs：文字签+底部 hairline，
               选中=墨 700+柠檬 2px 下划线；计数为真值保留；横滑条隐藏 D-补2） */}
-          <div className="mt-3 flex gap-[18px] overflow-x-auto border-b border-[rgba(74,59,46,.06)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="mt-3 flex gap-[18px] overflow-x-auto border-b border-[rgba(59,46,36,.06)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {TABS.map((t) => {
               const n = countOf(t);
               return (

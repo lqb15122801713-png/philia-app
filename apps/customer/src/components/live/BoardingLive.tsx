@@ -1,12 +1,17 @@
 /**
- * 寄养变体主视觉（开发方案 §8.4 寄养差异点）：
+ * 寄养变体主视觉（开发方案 §8.4 寄养差异点；换皮批片 2 取齐 H-02 寄养日报）：
  * - 入住信息卡：房间号 / 入住称重 / 随身物品清单；
- * - 每日打卡卡：日期 / 喂食记录 / 遛弯次数 / 备注 / 照片（≤6，九宫格 PhotoWall 复用）。
+ * - 每日打卡卡：日期题 + 喂食/遛弯行件（rowx：题 13/600 + 右 mono 10 时刻，
+ *   发丝线分隔，screens.css 实证值，件级样式落 styles/live-v2.css）+ 备注 + 照片
+ *   （≤6，九宫格 PhotoWall 复用——定稿「照片挂时刻」因 boarding log 照片无时刻
+ *   字段不落位，数据口径不动，已报备）；
+ * - 卡件统一 u1-card（细线 ring + 近零影，v2.0 层级纪律）。
  * 数据源：boarding.myStay（T2.3 新增，customer 本人）。
  */
 
 import { PhotoWall, type PhotoWallPhoto } from '@philia/shared'
-import { BedDouble, Footprints, Scale, UtensilsCrossed } from 'lucide-react'
+import { BedDouble, Scale } from 'lucide-react'
+import '../../styles/live-v2.css'
 
 export interface BoardingStayInfo {
   roomNo: string | null
@@ -43,7 +48,7 @@ function fmtLogDate(iso: string): string {
 function StayCard({ stay }: { stay: BoardingStayInfo | null }) {
   if (!stay) {
     return (
-      <section className="rounded-card bg-card p-4 shadow-card">
+      <section className="u1-card p-4">
         <h2 className="text-title">入住信息</h2>
         <p className="mt-2 text-body text-ink-secondary">
           店员正在办理入住登记，房间与称重信息稍后可见。
@@ -52,7 +57,7 @@ function StayCard({ stay }: { stay: BoardingStayInfo | null }) {
     )
   }
   return (
-    <section className="rounded-card bg-card p-4 shadow-card">
+    <section className="u1-card p-4">
       <h2 className="text-title">入住信息</h2>
       <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
         <p className="flex items-center gap-1.5 text-body text-ink">
@@ -99,35 +104,31 @@ function DailyLogCard({
     url,
   }))
   return (
-    <section className="rounded-card bg-card p-4 shadow-card">
-      <div className="flex items-baseline justify-between">
-        <h3 className="text-title">{fmtLogDate(log.logDate)}</h3>
-        {log.walks > 0 ? (
-          <p className="flex items-center gap-1 text-caption text-ink-secondary">
-            <Footprints className="h-4 w-4" strokeWidth={1.5} />
-            遛弯 <span className="font-number">{log.walks}</span> 次
-          </p>
-        ) : null}
-      </div>
+    <section className="u1-card p-4">
+      <h3 className="text-title">{fmtLogDate(log.logDate)}</h3>
 
-      {log.meals && log.meals.length > 0 ? (
-        <ul className="mt-3 space-y-1.5">
-          {log.meals.map((m, i) => (
-            <li key={i} className="flex items-center gap-2 text-body text-ink">
-              <UtensilsCrossed className="h-4 w-4 shrink-0 text-ink-secondary" strokeWidth={1.5} />
-              <span className="font-number text-ink-secondary">{m.time}</span>
-              <span className="min-w-0 flex-1 truncate">
+      {/* H-02 照护日志行件：喂食/遛弯 rowx（mono 时刻右侧，发丝线分隔） */}
+      {log.meals?.length || log.walks > 0 ? (
+        <div className="mt-1">
+          {(log.meals ?? []).map((m, i) => (
+            <div key={i} className="lv2-rowx">
+              <span className="k">
                 {m.food}
                 {m.amount ? <span className="text-ink-secondary"> · {m.amount}</span> : null}
               </span>
-              {m.finished ? (
-                <span className="shrink-0 rounded-tag bg-success-light px-1.5 py-0.5 text-caption text-success-deep">
-                  已吃完
-                </span>
-              ) : null}
-            </li>
+              <span className="v">
+                {m.time}
+                {m.finished ? ' · 吃完 ✓' : ''}
+              </span>
+            </div>
           ))}
-        </ul>
+          {log.walks > 0 ? (
+            <div className="lv2-rowx">
+              <span className="k">遛弯</span>
+              <span className="v">{log.walks} 次</span>
+            </div>
+          ) : null}
+        </div>
       ) : null}
 
       {log.note ? <p className="mt-3 text-body text-ink-secondary">{log.note}</p> : null}
@@ -149,7 +150,7 @@ export default function BoardingLive({ stay, logs, onPhotoClick }: BoardingLiveP
     <div className="space-y-3">
       <StayCard stay={stay} />
       {logs.length === 0 ? (
-        <section className="rounded-card bg-card p-4 shadow-card">
+        <section className="u1-card p-4">
           <h2 className="text-title">每日打卡</h2>
           <p className="mt-2 text-body text-ink-secondary">
             今天的打卡还没来，店员照顾好后会第一时间上传照片和喂食记录。

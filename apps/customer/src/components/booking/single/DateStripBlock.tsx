@@ -53,8 +53,9 @@ export default function DateStripBlock({
 
   return (
     <div data-testid="gs-date-strip">
-      {/* 7 天横条（U4-D1 试样 .date 工艺：56 宽 chip 白底细线 ring；选中=柠檬底——
-          任务书 D-补1 口径，覆盖试样墨底；约满/休息=43% 透明度，约满附红字） */}
+      {/* 7 天横条（定稿 datechip 56 宽工艺：白卡细线；选中=深棕底 #F6EFDD 字——
+          chips 选中口径（§4.4），旧柠檬底退役（淡黄点睛位让给时段栅格）；
+          约满/休息=0.45 半透明，约满附赭红字） */}
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {days.map((d) => {
           const active = selectedDay !== null && isSameDay(d.date, selectedDay);
@@ -68,15 +69,15 @@ export default function DateStripBlock({
               data-active={active ? 'true' : 'false'}
               data-greyed={greyed ? 'true' : 'false'}
               className={`flex w-14 shrink-0 flex-col items-center rounded-control px-1 pb-2 pt-2.5 transition active:scale-95 ${
-                active ? 'bg-brand-primary' : 'u1-ring bg-card'
-              } ${greyed && !active ? 'opacity-[.43]' : ''}`}
+                active ? 'bg-[#2E2318] text-[#F6EFDD]' : 'u1-ring bg-card'
+              } ${greyed && !active ? 'opacity-[.45]' : ''}`}
             >
-              <span className={`text-caption-xs ${active ? 'text-ink/60' : 'text-ink-secondary'}`}>{stripLabel(d.date)}</span>
+              <span className={`text-v2-trace ${active ? 'text-[#C9BBA0]' : 'text-ink-secondary'}`}>{stripLabel(d.date)}</span>
               <span className="u1-num mt-0.5 text-title">{d.date.getDate()}</span>
               <span
-                className={`u1-num mt-0.5 h-4 text-caption-xs leading-4 ${
+                className={`u1-num mt-0.5 h-4 text-v2-trace leading-4 ${
                   active
-                    ? 'text-ink/70'
+                    ? 'text-[#C9BBA0]'
                     : !d.closed && !d.hasAvailable
                       ? 'text-danger'
                       : 'text-ink-secondary'
@@ -92,12 +93,12 @@ export default function DateStripBlock({
         })}
       </div>
 
-      {/* 二级：整月日历 */}
+      {/* 二级：整月日历（卡其下划线链，tfield 更改链同工艺） */}
       <button
         type="button"
         onClick={() => setCalOpen((v) => !v)}
         data-testid="gs-calendar-toggle"
-        className="mt-2 text-caption font-medium text-ink"
+        className="mt-2 border-b border-brand-secondary pb-px text-caption font-medium text-ink"
       >
         {calOpen ? '收起日历 ▾' : '展开整月日历 ▸'}
       </button>
@@ -113,7 +114,7 @@ export default function DateStripBlock({
               ...Array.from({ length: daysInMonth }, (_, i) => new Date(y, m, i + 1)),
             ];
             return (
-              <div key={`${y}-${m}`} className="rounded-card border border-[rgba(74,59,46,.09)] p-3">
+              <div key={`${y}-${m}`} className="rounded-card border border-line-ring p-3">
                 <p className="text-center text-body-sm font-semibold">
                   {y} 年 {m + 1} 月
                 </p>
