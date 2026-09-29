@@ -49,13 +49,15 @@ function entryNote(services: ServiceRow[], unit: string): string | null {
   return parts.join(' · ')
 }
 
-/** 回馈金期次窗口（冻结口径：上月 26 日~本月 25 日为一期；到账日=次月 settlementDay） */
+/** 回馈金期次窗口（冻结口径：上月 26 日~本月 25 日为一期；到账日=次月 settlementDay）
+ *  片 2 补修（任务卡 9-29 P1）：26~31 日窗口进下一期——start=本月 26/end=次月 25；
+ *  到账月=end 次月（9-29 → 周期 9.26–10.25 · 11 月 settlementDay 日到账）。 */
 function periodWindow(now: Date) {
   const y = now.getFullYear()
   const m = now.getMonth()
   const inNext = now.getDate() >= 26
-  const start = new Date(y, m - 1, 26)
-  const end = inNext ? new Date(y, m, 25) : new Date(y, m, 25)
+  const start = inNext ? new Date(y, m, 26) : new Date(y, m - 1, 26)
+  const end = inNext ? new Date(y, m + 1, 25) : new Date(y, m, 25)
   const arrive = new Date(end.getFullYear(), end.getMonth() + 1, 1)
   return { start, end, arrive }
 }

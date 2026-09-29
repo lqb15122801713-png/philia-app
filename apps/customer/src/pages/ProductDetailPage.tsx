@@ -172,15 +172,8 @@ function DetailInner() {
           <p className="u1-num shrink-0 text-[19px] font-bold text-ink">{fenToYuan(product.priceFen)}</p>
         </div>
         <div className="mt-2 flex items-center gap-2.5">
-          {/* U1-G 会员价槽位（诚实处理，U4-D3 登记）：无折扣引擎/会员价字段——不显示价格数字；
-              片 2 红线 3：槽位置灰注记统一「即将点亮」 */}
-          <span
-            data-testid="pdp-member-price-note"
-            aria-disabled="true"
-            className="rounded-chip bg-brand-secondary/35 px-[7px] py-0.5 text-caption-xs font-semibold text-ink-secondary opacity-60"
-          >
-            会员价 · 即将点亮
-          </span>
+          {/* 「会员价」小签已摘除（任务卡 9-29 附①：全员同价无会员价=冻结红线 rules.r8，
+              错误口径不是未建功能，摘除即净——不留置灰） */}
           {soldOut ? (
             <span className="rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">已售罄</span>
           ) : stock < 10 ? (
