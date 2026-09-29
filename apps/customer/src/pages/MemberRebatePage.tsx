@@ -69,7 +69,7 @@ export default function MemberRebatePage() {
 
   return (
     <div className="m2" data-testid="member-rebate-page" style={{ minHeight: '100vh' }}>
-      <PushBar label={mc('w1.pushLabel')} to="/member" />
+      <PushBar label={mc('w1.pushLabel')} fallback="/member" />
 
       {ledgerQ.isPending || plansQ.isPending ? (
         <div className="m2-pad" style={{ marginTop: 24 }}>

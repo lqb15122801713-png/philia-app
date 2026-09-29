@@ -71,11 +71,23 @@ export function yuanOf(fen: number): string {
 /* ------------------------------------------------------------------ */
 
 /** pushbar（§4.1）：返回 36 白卡墨描边 + mono 小签（aria-label=返回，导航闭环四要素） */
-export function PushBar({ label, to }: { label: string; to: string }) {
+/** 推送页顶条（§4.1）：返回钮 36 圆白卡+墨描边 + mono 小签大写 + 右侧 mono 注记。
+ *  体验急修批：返回=时间序回退 navigate(-1)；直访无栈兜底=fallback 父页（未传=/home）。
+ *  固定 to= 仅交易成功页双出口类明示场景使用 */
+export function PushBar({ label, to, fallback }: { label: string; to?: string; fallback?: string }) {
   const navigate = useNavigate()
+  const onBack = () => {
+    const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0
+    if (idx > 0) {
+      if (to) navigate(to)
+      else navigate(-1)
+    } else {
+      navigate(to ?? fallback ?? '/home')
+    }
+  }
   return (
     <div className="m2-pushbar">
-      <button type="button" className="back m2-press" aria-label="返回" onClick={() => navigate(to)}>
+      <button type="button" className="back m2-press" aria-label="返回" onClick={onBack}>
         <svg viewBox="0 0 24 24">
           <path d="M15 5l-7 7 7 7" />
         </svg>

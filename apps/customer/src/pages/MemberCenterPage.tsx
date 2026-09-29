@@ -59,7 +59,7 @@ export default function MemberCenterPage() {
   return (
     <div className="m2" data-testid="member-center-page" style={{ minHeight: '100vh' }}>
       {/* 导航闭环：详情级页固定回 /me（dock 归换皮批全域件，本批不动） */}
-      <PushBar label={mc('a3.pushLabel')} to="/me" />
+      <PushBar label={mc('a3.pushLabel')} fallback="/me" />
       <AppHead title={mc('a3.headTitle')} no={mc('a3.headNo')} />
 
       {myQ.isPending || plansQ.isPending ? (

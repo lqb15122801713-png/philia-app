@@ -196,7 +196,7 @@ export default function MomentsPage() {
   return (
     <div className="px-4 pb-6">
       {/* U1-A：统一返回条（←圆钮+标题），固定返回 philia 页 */}
-      <PageHeader title="服务相册" to="/philia" className="pt-6" />
+      <PageHeader title="服务相册" fallback="/philia" className="pt-6" />
 
       <div className="mt-4">
         {albumsQuery.isPending ? <LoadingBlock lines={3} /> : null}

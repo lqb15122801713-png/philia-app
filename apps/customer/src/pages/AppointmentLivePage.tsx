@@ -494,8 +494,10 @@ export default function AppointmentLivePage() {
   /* ---------------- 渲染分支 ---------------- */
 
   // U1-A：统一返回圆钮（←圆钮）；标题语境由 LiveHeader（宠物+服务名胶囊）承担
+  /* 体验急修批 A1：返回=时间序回退 navigate(-1)（原固定 Link 压栈致全程↔详情死循环）；
+     直访无栈兜底=预约详情父页 */
   const backLink = (
-    <BackButton to={aid ? `/appointments/${aid}` : '/appointments'} className="mb-3" ariaLabel="返回预约详情" />
+    <BackButton fallback={aid ? `/appointments/${aid}` : '/appointments'} className="mb-3" ariaLabel="返回预约详情" />
   )
 
   // 加载中
@@ -562,7 +564,7 @@ export default function AppointmentLivePage() {
   const nav = (
     <PageHeader
       title={isBoarding ? '寄养全程' : '洗护全程'}
-      to={aid ? `/appointments/${aid}` : '/appointments'}
+      fallback={aid ? `/appointments/${aid}` : '/appointments'}
       className="mb-3"
     />
   )
