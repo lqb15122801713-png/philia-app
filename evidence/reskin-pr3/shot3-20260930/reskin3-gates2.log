@@ -1,0 +1,29 @@
+=== review-e2e ===
+✅ 夹具前置：dev-login 客户+员工
+✅ 夹具前置：门店/寄养服务/宠物 —— store=01M3PT3SN66B767QK5VWC6X1P9 svc=01M3PT3SN864VBEV9R0B15X20K pet=01M3PT3SN7937N7FETYZFQZTN6
+✅ 夹具：寄养预约创建（2 晚） —— id=01M3PZBAZ7C4JKBYH9VP4W5R9H
+✅ 夹具：员工核销（confirmed → in_boarding） —— status=in_boarding
+✅ 夹具：退房 checkout（负责人本人）
+✅ 夹具：退房 completed 且未评价 —— status=completed rating=null
+❌ UI① 评价区渲染（复用 ReviewPanel 合规件） —— {"found":false,"text":"守护每一次\n被照顾的时刻。\n\nPHILIA · 洗护 / 美容 / 寄养\n\n微信一键登录\n即将点亮\n手机号一键登录\n口令入内测 ›\n选择种子用户登录\n仅开发环境 · 生产环境请移除\n\n种子用户拉取失败（网络连接失败：Failed to fetch）—
+❌ UI② 默认 0 星（五钮均未选中，历史默认 5 星已铲除） —— stars=undefined active=undefined
+❌ UI③ 未选星时提交钮 disabled（未选禁提交）
+❌ UI④ 星钮触控面 ≥44px —— undefined×undefined
+TypeError: Cannot read properties of undefined (reading 'active')
+    at main (file:///E:/KIMI%20code/philia-app/apps/customer/scripts/review-e2e.mjs:201:45)
+review exit=1
+=== smoke-routes ===
+⚠️  [customer] dev-login HTTP 0，按未登录口径
+✅ [customer] /dev-login —— 200 + 非空白 + 锚点/守卫命中
+❌ [customer] / —— 锚点未命中（期望任一：守护每一次洗护/到店洗护/洗护进行中）；重定向终态不符（期望 /home，实际 /dev-login）（两轮同判）
+  [失败留证] smoke-shots\customer-root.png
+  [现场] {"href":"http://localhost:7111/dev-login","ready":"complete","htmlLen":165294,"rootHtml":"<div code-path=\"src\\App.tsx:106:5\" class=\"min-h-screen bg-canvas text-ink\"><div code-path=\"src\\pages\\DevLoginPage.tsx:152:5\" class=\"flex min-h-screen items-center justify-center bg-canvas px-4 py-10\"><div code-path=\"src\\pages\\DevLoginPage.tsx:153:7\" class=\"w-full max-w-[400px]\"><div code-path=\"src\\pages\\DevLoginPage.tsx:155:9\" data-testid=\"login-gate\" class=\"rounded-[20px] bg-[#FFFDF6] px-8 pb-8 p"}
+❌ [customer] /home —— 锚点未命中（期望任一：守护每一次洗护/到店洗护/洗护进行中）（两轮同判）
+  [失败留证] smoke-shots\customer-home.png
+  [现场] {"href":"http://localhost:7111/dev-login","ready":"complete","htmlLen":165294,"rootHtml":"<div code-path=\"src\\App.tsx:106:5\" class=\"min-h-screen bg-canvas text-ink\"><div code-path=\"src\\pages\\DevLoginPage.tsx:152:5\" class=\"flex min-h-screen items-center justify-center bg-canvas px-4 py-10\"><div code-path=\"src\\pages\\DevLoginPage.tsx:153:7\" class=\"w-full max-w-[400px]\"><div code-path=\"src\\pages\\DevLoginPage.tsx:155:9\" data-testid=\"login-gate\" class=\"rounded-[20px] bg-[#FFFDF6] px-8 pb-8 p"}
+❌ [customer] /mall —— 锚点未命中（期望任一：商城/商品）（两轮同判）
+  [失败留证] smoke-shots\customer-mall.png
+  [现场] {"href":"http://localhost:7111/dev-login","ready":"complete","htmlLen":165294,"rootHtml":"<div code-path=\"src\\App.tsx:106:5\" class=\"min-h-screen bg-canvas text-ink\"><div code-path=\"src\\pages\\DevLoginPage.tsx:152:5\" class=\"flex min-h-screen items-center justify-center bg-canvas px-4 py-10\"><div code-path=\"src\\pages\\DevLoginPage.tsx:153:7\" class=\"w-full max-w-[400px]\"><div code-path=\"src\\pages\\DevLoginPage.tsx:155:9\" data-testid=\"login-gate\" class=\"rounded-[20px] bg-[#FFFDF6] px-8 pb-8 p"}
+❌ [customer] /mall/cart —— 锚点未命中（期望任一：购物袋/购物车）（两轮同判）
+  [失败留证] smoke-shots\customer-mall_cart.png
+  [现场] {"href":"http://localhost:7111/dev-login","ready":"complete","htmlLen":165294,"rootHtml":"<div code-path=\"src\\App.tsx:106:5\" class=\"min-h-screen bg-canvas text-ink\"><div code-path=\"src\\pages\\DevLoginPage.tsx:152:5\" class=\"flex min-h-screen items-center justify-center bg-canvas px-4 py-10\"><div code-path=\"src\\pages\\DevLoginPage.tsx:153:7\" class=\"w-full max-w-[400px]\"><div code-path=\"src\\pages\\DevLoginPage.tsx:155:9\" data-testid=\"login-gate\" class=\"rounded-[20px] bg-[#FFFDF6] px-8 pb-8 p"}
