@@ -48,7 +48,7 @@ export default function MemberCardPage() {
 
   return (
     <div className="m2" data-testid="member-card-page" style={{ minHeight: '100vh' }}>
-      <PushBar label={mc('q1.pushLabel')} to="/member" />
+      <PushBar label={mc('q1.pushLabel')} fallback="/member" />
 
       {myQ.isPending || plansQ.isPending ? (
         <div className="m2-pad" style={{ marginTop: 24 }}>

@@ -121,6 +121,17 @@ function CartInner() {
   });
   const rebateBp = (myQ.data?.plan as { rebateBp?: number } | null | undefined)?.rebateBp ?? 0;
   const rebateFen = rebateBp > 0 ? Math.round((cart.checkedTotalFen * rebateBp) / 10000) : 0;
+  /* 返显钩子（体验急修批 B）：微光/非会员 CTA sub=规则钩子，点击→/member/open（J-01）；
+     付费档比例读表拼「2/5/10」，缺省不渲染（不上假数） */
+  const hookPctsQ = useQuery({
+    queryKey: ['membership', 'plans'],
+    queryFn: () => trpc.membership.plans.query(),
+    staleTime: 300_000,
+  });
+  const hookPcts = (hookPctsQ.data?.plans ?? [])
+    .filter((p) => p.rebateBp > 0)
+    .map((p) => p.rebateBp / 100)
+    .join('/');
 
   const handleCheckout = () => {
     if (cart.checkedItems.length === 0) {
@@ -215,6 +226,25 @@ function CartInner() {
                 {rebateFen > 0 ? (
                   <span className="mt-0.5 font-number text-[10.5px] font-normal text-[#C9BBA0]">
                     {mc('mall.rebateEarnCta', { amt: fenToYuan(rebateFen) })}
+                  </span>
+                ) : hookPcts ? (
+                  <span
+                    role="link"
+                    tabIndex={0}
+                    data-testid="cart-rebate-hook"
+                    className="mt-0.5 font-number text-[10.5px] font-normal text-[#C9BBA0] underline underline-offset-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/member/open');
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.stopPropagation();
+                        navigate('/member/open');
+                      }
+                    }}
+                  >
+                    {mc('mall.rebateHook', { pcts: hookPcts })}
                   </span>
                 ) : null}
               </button>

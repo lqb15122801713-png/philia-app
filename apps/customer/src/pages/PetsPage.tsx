@@ -549,7 +549,7 @@ export default function PetsPage() {
        实现=多宠列表页（/philia/pets）——信息架构维持现行不重构，逐格对齐卡工艺 */
     <div className="px-[22px] pb-6">
       {/* U1-A：统一返回条（←圆钮+标题），固定返回 philia 页 */}
-      <PageHeader title="宠物档案" to="/philia" className="pt-4" />
+      <PageHeader title="宠物档案" fallback="/philia" className="pt-4" />
 
       <div className="mt-4 flex flex-col gap-3">
         {petsQuery.isPending ? <LoadingBlock lines={3} /> : null}

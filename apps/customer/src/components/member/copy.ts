@@ -136,6 +136,9 @@ export const MEMBER_COPY = {
   /* ---- 商城域（换皮批片 2 商城组新增：M-02/M-03 回馈金返显，口径 APP-18 按档返；
      数值（金额/到账日）全部经 {amt}/{day} 插值自端口，本表零数值硬编码） ---- */
   'mall.rebateEarnCard': '购买返 {amt} 回馈金 · 次月 {day} 日到账',
+  /* 体验急修批 B（任务卡 9-29）：微光/非会员返显钩子（不上假数——rebateBp=0 时替换「返 ¥x」），
+     点击→/member/open（J-01）；pcts=付费档比例读表（member_plans），缺省不渲染 */
+  'mall.rebateHook': '付费档返 {pcts}% · 仅抵商品 ›',
   'mall.rebateEarnCardNoDay': '购买返 {amt} 回馈金',
   'mall.rebateEarnCta': '本单返 {amt} 回馈金',
 

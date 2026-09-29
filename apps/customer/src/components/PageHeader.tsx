@@ -23,11 +23,15 @@ import { useNavigate } from 'react-router-dom'
 
 export function BackButton({
   to,
+  fallback,
   ariaLabel = '返回',
   className = '',
 }: {
-  /** 固定返回目标；缺省 navigate(-1)。同时作为直访兜底落点（未传时兜底 /home） */
+  /** 明示固定目标（仅交易成功页双出口类场景；与浏览器/系统后退手势不冲突） */
   to?: string
+  /** 直访/刷新到栈底（idx===0）时的兜底父页（未传兜底 /home）。体验急修批口径：
+      返回键一律时间序回退 navigate(-1)，固定 to= 只许交易成功页类明示场景 */
+  fallback?: string
   ariaLabel?: string
   className?: string
 }) {
@@ -35,16 +39,15 @@ export function BackButton({
   // W1-D3 / P3 语义注释：返回键三态语义契约——
   //   ① idx>0 且传 to     ：SPA 栈内有历史，但本页声明了固定目标 → navigate(to)
   //      （如交易成功页：不回已消耗的下单页）；
-  //   ② idx>0 未传 to     ：常规详情页 → navigate(-1)（10 处在用页既有行为，零回归）；
-  //   ③ idx===0（直访/刷新到栈底）：栈内无上一页 → 兜底 navigate(to ?? '/home')。
-  // 边界：只兜 SPA 内无栈场景；不拦截/不改变浏览器与系统后退手势的路径。
+  //   ② idx>0 未传 to     ：常规详情页 → navigate(-1)（时间序回退，体验急修批口径）；
+  //   ③ idx===0（直访/刷新到栈底）：栈内无上一页 → 兜底 navigate(to ?? fallback ?? '/home')。
   const onBack = () => {
     const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0
     if (idx > 0) {
       if (to) navigate(to)
       else navigate(-1)
     } else {
-      navigate(to ?? '/home')
+      navigate(to ?? fallback ?? '/home')
     }
   }
   return (
@@ -62,17 +65,20 @@ export function BackButton({
 export default function PageHeader({
   title,
   to,
+  fallback,
   right,
   className = '',
 }: {
   title: ReactNode
   to?: string
+  /** 直访兜底父页（体验急修批：返回=时间序回退，to= 仅交易成功页类明示场景） */
+  fallback?: string
   right?: ReactNode
   className?: string
 }) {
   return (
     <header className={`flex items-center gap-3 ${className}`}>
-      <BackButton to={to} />
+      <BackButton to={to} fallback={fallback} />
       <h1 className="text-title-lg">{title}</h1>
       {right ? <span className="ml-auto flex items-center gap-2">{right}</span> : null}
     </header>

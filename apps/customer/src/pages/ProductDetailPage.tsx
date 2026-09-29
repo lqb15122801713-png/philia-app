@@ -64,6 +64,11 @@ function DetailInner() {
   });
   const rebateBp = (myQ.data?.plan as { rebateBp?: number } | null | undefined)?.rebateBp ?? 0;
   const settleDay = plansQ.data?.rebateSettlementDay;
+  /* 返显钩子（体验急修批 B）：付费档比例读表拼「2/5/10」；缺省=空串不渲染 */
+  const hookPcts = (plansQ.data?.plans ?? [])
+    .filter((p) => p.rebateBp > 0)
+    .map((p) => p.rebateBp / 100)
+    .join('/');
   const rebateFen = product && rebateBp > 0 ? Math.round((product.priceFen * qty * rebateBp) / 10000) : 0;
 
   const buildAddInput = (): AddInput | null =>
@@ -188,7 +193,8 @@ function DetailInner() {
           {storeName} · 门店同价 · 正品保障
         </p>
 
-        {/* 回馈金返显卡（M-02 定稿：白卡 + 淡黄点睛圆点 8 + 12/600；rebateBp=0 不渲染） */}
+        {/* 回馈金返显卡（M-02 定稿：白卡 + 淡黄点睛圆点 8 + 12/600；rebateBp=0 不渲染假数——
+            体验急修批 B：改显示规则钩子，点击→/member/open（J-01）） */}
         {rebateFen > 0 ? (
           <div className="u1-card mt-3 flex items-center gap-2.5 px-3.5 py-3">
             <span className="h-2 w-2 shrink-0 rounded-full bg-brand-primary" aria-hidden="true" />
@@ -198,6 +204,17 @@ function DetailInner() {
                 : mc('mall.rebateEarnCardNoDay', { amt: fenToYuan(rebateFen) })}
             </p>
           </div>
+        ) : hookPcts ? (
+          <Link
+            to="/member/open"
+            data-testid="pdp-rebate-hook"
+            className="u1-card mt-3 flex items-center gap-2.5 px-3.5 py-3 transition-transform duration-120 ease-philia-spring active:scale-[0.99]"
+          >
+            <span className="h-2 w-2 shrink-0 rounded-full bg-brand-primary" aria-hidden="true" />
+            <p className="text-caption font-semibold text-ink-secondary">
+              {mc('mall.rebateHook', { pcts: hookPcts })}
+            </p>
+          </Link>
         ) : null}
 
         {/* 详情描述（真实字段；试样规格表/评价区无真实字段来源，不出——U4-D3 登记；
