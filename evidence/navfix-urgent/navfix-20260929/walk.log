@@ -1,0 +1,36 @@
+svcId= 01M3NAVFIX000000000001
+✅ ①a LIVE 卡在 
+✅ ①b 进全程页 /appointments/01M3NAVFIX000000000000001/live
+shot: chain1-live
+✅ ①c 返回=/home /home
+shot: chain1-back-home
+✅ ①d 再返回≠全程页（死循环归零） /home
+✅ ②a philia 进全程页 /appointments/01M3NAVFIX000000000000001/live
+✅ ②b 返回=/philia /philia
+shot: chain2-back-philia
+✅ ③a 管理入口 
+✅ ③b 进宠物档案 /philia/pets
+shot: chain3-pets
+✅ ③c 返回=/home /home
+shot: chain4-moments
+✅ ④ 改测 /philia→相册→返回=/philia（无照种子） /philia
+✅ ⑤a /me→回馈金账本 /member/rebate
+shot: chain5-rebate
+✅ ⑤b 返回=/me /me
+✅ ⑥a1 会员码入口 
+✅ ⑥a2 进码屏 /me/card
+shot: chain6-card
+✅ ⑥a3 返回=/home /home
+✅ ⑥b1 续费入口 
+✅ ⑥b2 进会员中心 /member
+✅ ⑥b3 返回=/me /me
+shot: direct-live
+❌ 直访① live→兜底=/appointments/:id /appointments/01M3NAVFIX000000000001/live
+shot: direct-live-fallback
+✅ 直访② pets→兜底=/philia /philia
+✅ 返显钩子（微光态=规则钩子不上假数） 付费档返 2/5/10% · 仅抵商品 ›
+shot: hook-weiguang
+✅ 返显钩子点击→/member/open /member/open
+shot: hook-to-j01
+
+21 过 / 1 败
