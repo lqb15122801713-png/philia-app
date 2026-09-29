@@ -1,24 +1,25 @@
 /**
- * 菲丽亚宠物 Philia · 品牌设计 Token（批次 5 · B 阶段品牌换色 v1.1 冻结版）
+ * 菲丽亚宠物 Philia · 品牌设计 Token（换皮批片 1 · v2.0 色纪律落地）
  *
  * 本文件是三端 PWA（客户端 / 商家端 / 员工端）唯一的设计常量来源。
  * Tailwind preset（@philia/config/tailwind-preset）与本文件保持同名同值，
  * 改色先改这里，再同步 preset。
  *
- * 冻结凭据：B5-0 冻结确认书（2026-09-08 老板拍板）；
- * 终值表：docs/BRAND-TOKENS-v1.1.md（唯一改色通道凭据）。
+ * 冻结凭据（换代）：34 号档《设计规范 v2.0》§一 token 全表 + CJ-0928-01（PD-11
+ * 会签）+ PD-13 施工令。B5-0 v1.1 色板（柠檬黄主色时代）已退役——
+ * docs/BRAND-TOKENS-v1.1.md 转历史档案。
  *
- * VI 色板：柠檬黄 #FDC830（主）/ 薄荷绿 #7FD8BE（辅）/ 浅木 #D4B896（空间色）/
- * 深棕墨 #4A3B2E（文字）/ 米白 #F6F1E3（底色）。珊瑚粉 #FFAAA5 已删，全域 0 命中。
+ * VI 色纪律（v2.0 §1.1）：纸白底 #FAF8F2 / 深棕墨 #3B2E24 主体 / 淡黄 #F2DFA6
+ * 点睛（每屏 ≤2 处）/ 卡其 #B9A482 次阶；白卡 #FFFFFF 仅作卡片面（唯一的白）；
+ * 禁用色（柠檬黄/暖阳橙/深绿/纯黑纯白底，值表见 34 号档 §1.5）一律禁入码（grep 级红线）。
  *
- * 推导规则（与冻结表一致）：交互态同 H 同 S，hover 明度 −6、pressed −13
- * （dark 域方向反转：hover +6 / pressed −6）；洗色 light 主色同 H、S−12、L=92，
- * 副色同 H、S−9、L=88，功能色同 H、S−7、L=92；加深 deep 副色同 H、S+2、L−8，
- * 功能色同 H 同 S、L−10；中性族 hue 对齐深棕墨 27.9°。
+ * 反馈件色纪律（45 号档 P1-1 改进方向②，产品侧补钉）：成功/正常不设绿色——
+ * success 族=深棕墨族（✓+墨色呈现）；异常/扣减/红字=暖调赭红 #B4502E（禁纯红）。
  *
  * 中文排版硬性规则：中文禁止使用 font-style: italic（机械伪斜体伤害可读性），
- * 强调请用字重 / 颜色 / 字号 / 字距；中文永远不落拉丁展示字体
- * （Poppins/Montserrat 只承载拉丁，中文落 Noto Sans SC）；字体自托管 woff2，禁外链 CDN。
+ * 强调请用字重 / 颜色 / 字号 / 字距；中文永远不落拉丁展示字体；
+ * 字体自托管 woff2，禁外链 CDN。三轨字阶：屏题=serif（Noto Serif SC）/
+ * 正文=sans（系统栈）/ 数字金额时间=mono（JetBrains Mono）——三轨不串（§二）。
  */
 
 /* ------------------------------------------------------------------------ */
@@ -27,68 +28,66 @@
 
 export const colors = {
   brand: {
-    /** 柠檬黄 · 主品牌色：主按钮、active 态、价格强调。锁定值（VI 主色）。 */
-    primary: '#FDC830',
-    /** 主按钮前景（on-primary）：深棕墨，对比度 6.89:1（WCAG AA 预核过线）。 */
-    onPrimary: '#4A3B2E',
-    /** 主色 hover：同 H 同 S，明度 −6。 */
-    primaryHover: '#FDC012',
-    /** 主色 pressed：同 H 同 S，明度 −13。 */
-    primaryPressed: '#E8AD02',
-    /** 主色浅底：选中态 / 标签底 / 轻强调区块（同 H、S−12、L=92）。 */
-    primaryLight: '#FCF3D9',
-    /** 薄荷绿 · 副品牌色：渐变副色、寄养/余量品牌场景点缀（不参与功能反馈）。锁定值（VI 辅色）。 */
-    secondary: '#7FD8BE',
-    /** 副色浅底（同 H、S−9、L=88）。 */
-    secondaryLight: '#D3EEE6',
-    /** 副色加深：渐变 hover 端点（同 H、S+2、L−8）。 */
-    secondaryDeep: '#5ED1AF',
+    /** 淡黄 · 点睛色：选中态/角标/激活位/进度点（每屏 ≤2 处，铁律）。v2.0 §1.1 --gold。 */
+    primary: '#F2DFA6',
+    /** 点睛位前景（on-gold）：深棕墨（淡黄底上正文对比 ≥4.5:1）。 */
+    onPrimary: '#3B2E24',
+    /** 点睛 hover：深一档淡金（v2.0 §1.1 --gold-deep 同族）。 */
+    primaryHover: '#E8CF8C',
+    /** 点睛 pressed：蜡封淡金（--t3-metal）。 */
+    primaryPressed: '#D9C08A',
+    /** 点睛浅底：提示卡暖底（v2.0 §1.4）。 */
+    primaryLight: '#FBF5E4',
+    /** 卡其 · 次阶：分隔/次要标签（不作大面填充）。v2.0 §1.1 --khaki（薄荷绿已退役）。 */
+    secondary: '#B9A482',
+    /** 次阶浅底：分段开关底（v2.0 §1.4）。 */
+    secondaryLight: '#F1E9D6',
+    /** 次阶加深：卡其铜深端（--t2 同族）。 */
+    secondaryDeep: '#A08B62',
   },
   bg: {
-    /** 米白 · 全局页面背景。锁定值（VI 底色）。 */
-    canvas: '#F6F1E3',
-    /** 卡片 / 浮层底色（保持纯白）。 */
+    /** 纸白 · 全局页面背景（唯一页面底色，不用纯白）。v2.0 §1.1 --paper。 */
+    canvas: '#FAF8F2',
+    /** 白卡面（主卡=白卡+墨描边；只作卡片面，不作页面底）。v2.0 §1.1 --card。 */
     card: '#FFFFFF',
-    /** 下沉区底色：输入区、凹陷分组底（米白同规则 S+3.4、L−3）。 */
-    sunken: '#F3ECD6',
-    /** 浅木 · 空间色：寄养/房间场景辅助底、暖色区块。锁定值（VI 空间色）。 */
-    oak: '#D4B896',
-    /** 浅木洗色（同 H、S−12、L=92）。 */
-    oakLight: '#F1EBE5',
+    /** 下沉区底色：输入区/圆章/头像底（v2.0 §1.4 圆章底）。 */
+    sunken: '#F4EDDC',
+    /** 卡其 · 空间色（次阶辅助底，不大面填充）。 */
+    oak: '#B9A482',
+    /** 卡其洗色（回馈金环轨道同族，§1.4）。 */
+    oakLight: '#EDE4CE',
   },
   text: {
-    /** 深棕墨 · 一切正文与标题。锁定值（VI 文字色）。 */
-    primary: '#4A3B2E',
-    /** 次级文字 / 说明文字（hue→27.9°，S/L 同档）。 */
-    secondary: '#8A796B',
-    /** 占位符 / 禁用文字（暖灰，hue 已对齐深棕墨）。 */
-    placeholder: '#BDB2A8',
+    /** 深棕墨 · 一切正文与标题。v2.0 §1.1 --ink。 */
+    primary: '#3B2E24',
+    /** 次要文字（暖灰同温，正文对比 ≥4.5:1）。v2.0 §1.1 --muted。 */
+    secondary: '#8A7D6B',
+    /** 占位符 / 禁用文字（暖灰，hue 对齐深棕墨）。 */
+    placeholder: '#B9A98F',
     /** 深底上的反白文字。 */
     inverse: '#FFFFFF',
   },
   border: {
-    /** 默认暖色发丝边框（hue→27.9°）。 */
-    default: '#EBE2DB',
-    /** 强描边（hue→27.9°）。 */
-    strong: '#DDD1C6',
-    /** 更浅的分隔线（列表项 hairline，hue→27.9°）。 */
-    divider: '#F0EAE5',
-    /** U1-B 新增（v9.1 深度策略）：1px 暖墨细线 ring，替代投影做层级。 */
-    ring: 'rgba(74, 59, 46, .09)',
+    /** 发丝线（卡边/分隔，半透明染色，禁硬实色线）。v2.0 §1.1 --line。 */
+    default: 'rgba(59,46,36,.14)',
+    /** 强描边（染色加深档）。 */
+    strong: 'rgba(59,46,36,.22)',
+    /** 更软发丝线（行内分隔）。v2.0 §1.1 --line-soft。 */
+    divider: 'rgba(59,46,36,.08)',
+    /** 1px 暖墨细线 ring，替代投影做层级。 */
+    ring: 'rgba(59,46,36,.09)',
   },
-  /** 苔绿 · 成功 / 完成态。功能色原值保留（确认书第 1 条），不占品牌位。 */
+  /** 成功/正常 · 反馈件色纪律：不设绿色——深棕墨族（✓+墨色呈现，45 号档 P1-1②）。 */
   success: {
-    base: '#7FA87C',
-    light: '#E8EFE8',
-    deep: '#649160',
+    base: '#3B2E24',
+    light: '#F1E9D6',
+    deep: '#2E2318',
   },
-  /** 标准功能红 · 危险 / 错误态（确认书第 2 条，token 独立一行）。 */
+  /** 异常/扣减/红字 · 暖调赭红（v2.0 §1.4，禁纯红）。 */
   danger: {
-    base: '#D92D20',
-    /** 同 H、S−7、L=92。 */
-    light: '#F8DFDD',
-    /** 同 H 同 S、L−10。 */
-    deep: '#AC2419',
+    base: '#B4502E',
+    light: '#F6E3DA',
+    deep: '#8F3F22',
   },
 } as const;
 
@@ -98,19 +97,19 @@ export const colors = {
 
 export const darkColors = {
   brand: {
-    /** 品牌色原值保留（深色底上明度自足，对比度 10.53:1）。 */
-    primary: '#FDC830',
-    onPrimary: '#4A3B2E',
-    /** hover 提亮 +6。 */
-    primaryHover: '#FDD04E',
-    /** pressed 压暗 −6。 */
-    primaryPressed: '#FDC012',
-    /** 深底洗色 L=20。 */
-    primaryLight: '#5F4807',
-    secondary: '#7FD8BE',
-    /** 深底 L=24。 */
-    secondaryLight: '#225848',
-    secondaryDeep: '#5ED1AF',
+    /** 淡黄点睛（深底上明度自足）。 */
+    primary: '#F2DFA6',
+    onPrimary: '#3B2E24',
+    /** hover 提亮（淡金）。 */
+    primaryHover: '#F6E7BE',
+    /** pressed 压暗（深一档淡金）。 */
+    primaryPressed: '#E8CF8C',
+    /** 深底洗色。 */
+    primaryLight: '#3A2F1E',
+    secondary: '#B9A482',
+    /** 深底次阶洗色。 */
+    secondaryLight: '#3A3227',
+    secondaryDeep: '#A08B62',
   },
   bg: {
     /** 深棕墨同族压明度 L=12。 */
@@ -119,39 +118,37 @@ export const darkColors = {
     card: '#352B21',
     /** L=9（凹陷更深）。 */
     sunken: '#1C1712',
-    /** 浅木深色化。 */
-    oak: '#6D502C',
+    /** 卡其深色化。 */
+    oak: '#6D5B43',
     oakLight: '#352B21',
   },
   text: {
-    /** 米白反相（dark/canvas 14.53:1）。 */
-    primary: '#F6F1E3',
-    /** L=68。 */
-    secondary: '#B7ADA4',
-    /** L=50。 */
-    placeholder: '#8F7E70',
+    /** 米白反相。 */
+    primary: '#F6EFDD',
+    /** 深底次文字（v2.0 §1.2）。 */
+    secondary: '#C9BBA0',
+    /** 深底弱提示（v2.0 §1.2）。 */
+    placeholder: '#B9A98F',
     /** 亮底上的深字。 */
-    inverse: '#4A3B2E',
+    inverse: '#3B2E24',
   },
   border: {
-    /** L=26。 */
-    default: '#504135',
-    /** L=34。 */
-    strong: '#685545',
-    /** L=21。 */
-    divider: '#40352B',
+    /** 金线族（v2.0 §1.2 深底分隔线）。 */
+    default: 'rgba(217,192,138,.22)',
+    strong: 'rgba(217,192,138,.38)',
+    divider: 'rgba(217,192,138,.14)',
   },
-  /** 功能色 +8 提亮 / 深底 / 浅字。 */
+  /** 成功/正常（深底）：不设绿色——淡金墨族。 */
   success: {
-    base: '#97B895',
-    light: '#2D3A2C',
-    deep: '#C1CEBF',
+    base: '#C9BBA0',
+    light: '#2D2A24',
+    deep: '#F1E9D6',
   },
-  /** 功能色 +8 提亮 / 深底 / 浅字（dark canvas 上 4.15:1，G5 专项核对）。 */
+  /** 赭红（深底提亮）。 */
   danger: {
-    base: '#E34A3F',
-    light: '#551511',
-    deep: '#EEAEAA',
+    base: '#D4744F',
+    light: '#40251B',
+    deep: '#E8A58C',
   },
 } as const;
 
@@ -160,10 +157,11 @@ export const darkColors = {
 /* ------------------------------------------------------------------------ */
 
 export const gradients = {
-  /** philia 主按钮渐变：135° 柠檬黄 → 薄荷绿。锁定值（dark 域同值）。 */
-  philia: 'linear-gradient(135deg, #FDC830 0%, #7FD8BE 100%)',
-  /** philia 渐变 hover：两端点各自派生档。 */
-  philiaHover: 'linear-gradient(135deg, #FDC012 0%, #5ED1AF 100%)',
+  /** philia 主行动渐变：135° 深棕谱系（身份带 §1.2；柠檬黄→薄荷绿渐变已退役，
+   *  渐变按钮=反廉价黑名单件的合规形态=深棕渐变）。 */
+  philia: 'linear-gradient(135deg, #3B2E24 0%, #2E2318 100%)',
+  /** philia 渐变 hover：同谱系微提亮。 */
+  philiaHover: 'linear-gradient(135deg, #46382A 0%, #332A1E 100%)',
 } as const;
 
 /* ------------------------------------------------------------------------ */
@@ -200,12 +198,12 @@ export const shadows = {
   card: '0 2px 10px rgba(61, 50, 41, 0.05)',
   /** 浮起态投影：弹层、hover 浮起卡片。 */
   elevated: '0 8px 24px rgba(61, 50, 41, 0.08)',
-  /** philia 按钮投影：柠檬黄光晕（随主色）。锁定值。 */
-  philia: '0 6px 16px rgba(253, 200, 48, 0.35)',
-  /** 呼吸光环关键帧起止（配合 motion.halo，1.8s 循环；随主色）。锁定值。 */
-  haloFrom: '0 0 0 0 rgba(253, 200, 48, 0.45)',
-  haloTo: '0 0 0 14px rgba(253, 200, 48, 0)',
-  /** U1-B 新增（v9.1 深度策略）：近零软影，与 border.ring 细线 ring 配套使用。 */
+  /** philia 按钮投影：染色阴影（禁纯黑；v2.0 §3.3 小件影族）。 */
+  philia: '0 6px 16px rgba(46, 35, 24, 0.18)',
+  /** 呼吸光环关键帧起止（配合 motion.halo，1.8s 循环；染色深棕）。 */
+  haloFrom: '0 0 0 0 rgba(59, 46, 36, 0.28)',
+  haloTo: '0 0 0 14px rgba(59, 46, 36, 0)',
+  /** 近零软影，与 border.ring 细线 ring 配套使用。 */
   hairline: '0 1px 2px rgba(61, 50, 41, 0.04)',
 } as const;
 
@@ -215,23 +213,22 @@ export const shadows = {
 
 export const fontFamily = {
   /**
-   * 全局字族：Poppins（拉丁正文）→ Noto Sans SC（中文）→ 系统栈兜底。
+   * 无衬线轨（系统栈）：正文、列表、按钮、UI 默认（v2.0 §二——干净执行）。
    * 中文禁斜体：需要强调时用 600 字重 / 品牌色 / 字号对比。
    */
-  sans: 'Poppins, "Noto Sans SC", -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif',
+  sans: '-apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", "Noto Sans SC", "Helvetica Neue", Helvetica, Arial, sans-serif',
   /**
-   * 拉丁展示字体（标题）：Montserrat SemiBold → 中文永远落 Noto Sans SC Bold，
-   * 不允许拉丁展示字体渲染中文标题。
+   * 衬线轨（展示位）：宣言、屏级大题、卡面档名、证书题——编辑感（杂志封面，不是工具）。
+   * 中文永远落 Noto Serif SC / Songti SC，拉丁同轨承载。
    */
-  display: 'Montserrat, "Noto Sans SC", -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif',
+  display: '"Noto Serif SC", "Songti SC", "SimSun", serif',
   /**
-   * 数字与价格字族：Montserrat → Noto Sans SC → 系统栈；
-   * 搭配 numericStyle（tabular-nums）获得等宽感，金额、时间、编号一律使用。
+   * 等宽轨：编号、金额、时间、溯源行、eyebrow 标签、规则明面——档案感。
+   * 搭配 numericStyle（tabular-nums）使用。
    */
-  number: 'Montserrat, "Noto Sans SC", "Helvetica Neue", Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif',
+  number: '"JetBrains Mono", "SF Mono", "Noto Sans SC", monospace',
   /**
-   * U1-B 新增（v9.1）：中文展示位衬线链。woff2 产品侧随后入库，
-   * 未入库时静默回退 Songti SC / 系统 serif，不报错；只用于中文展示位，不承载正文。
+   * 中文展示位衬线链（同 display 轨，历史键名保留）。
    */
   serifCn: '"Noto Serif SC", "Songti SC", serif',
 } as const;
@@ -265,6 +262,27 @@ export const fontSize = {
   detail: { size: '28px', lineHeight: '36px', weight: 600 },
   /** 详情页大字二档。 */
   detailLg: { size: '32px', lineHeight: '40px', weight: 600 },
+  /* ---- v2.0 §2.1 字阶梯（换皮批片 1 落 token；业务组件换引用归片 2-4） ---- */
+  /** 宣言（L-01 登录宣言，serif 900，line-height 1.5）。 */
+  v2Manifesto: { size: '34px', lineHeight: '51px', weight: 900 },
+  /** 屏题（apphead 商城/我的/会员页头，serif 900）。 */
+  v2Screen: { size: '27px', lineHeight: '36px', weight: 900 },
+  /** 卡题（证书题 26/卡面档名 25-26，serif 900）。 */
+  v2CardTitle: { size: '26px', lineHeight: '34px', weight: 900 },
+  /** 题（日报题 22/空态题 21/美容师名 20）。 */
+  v2Topic: { size: '20px', lineHeight: '28px', weight: 800 },
+  /** 大数字（账本余额 24，mono 700，letter-spacing -.02em）。 */
+  v2BigNum: { size: '24px', lineHeight: '32px', weight: 700 },
+  /** 截面题（sec-h 16 sans 800；弹层题 17 serif 900 另列）。 */
+  v2Section: { size: '16px', lineHeight: '22px', weight: 800 },
+  /** 列表题（13-13.5）。 */
+  v2ListTitle: { size: '13.5px', lineHeight: '19px', weight: 700 },
+  /** 小签（权益名 11/更改链 11.5/mono 辅助 10.5）。 */
+  v2Note: { size: '11px', lineHeight: '15px', weight: 400 },
+  /** 溯源行（mono 9-9.5，letter-spacing .02-.2em）。 */
+  v2Trace: { size: '9.5px', lineHeight: '13px', weight: 400 },
+  /** 微印（卡面槽位注 8/环心副签 7.5——最小 7.5 封底，再小禁用）。 */
+  v2Micro: { size: '8px', lineHeight: '11px', weight: 400 },
 } as const;
 
 /* ------------------------------------------------------------------------ */

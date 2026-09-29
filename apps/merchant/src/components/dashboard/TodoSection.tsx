@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom'
 import { fenToYuanGrouped, hhmm, type DashboardStats, type TodayApptItem } from './utils'
 
 const DOT_RED = '#D92D20'
-const DOT_LEMON = '#FDC830'
+const DOT_LEMON = '#F2DFA6' // 淡金点睛（柠檬黄清场，常量名沿用防扩散改）
 const DOT_MINT = '#7FD8BE'
 
 interface TodoRowSpec {

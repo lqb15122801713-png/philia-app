@@ -330,7 +330,7 @@ export default function PaySheet({
             {/* R4：离线提示行（确认=暂存待补传，非「结账中…」空转） */}
             {offline ? (
               <div
-                className="mb-3 flex items-center gap-1.5 rounded-[10px] bg-[#FDC830] px-3 py-2 text-caption-xs font-semibold text-[#4A3B2E]"
+                className="mb-3 flex items-center gap-1.5 rounded-[10px] bg-[#F2DFA6] px-3 py-2 text-caption-xs font-semibold text-[#3B2E24]"
                 data-testid="cashier-pay-offline"
               >
                 <WifiOff size={13} strokeWidth={2} aria-hidden />

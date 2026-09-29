@@ -63,7 +63,7 @@ export default function ManualCodeInput({ onCheckedIn }: ManualCodeInputProps) {
         maxLength={6}
         placeholder="例如 3K7M9P"
         aria-label="人工核销码"
-        className="h-14 w-full rounded-xl border border-[#F6F1E3]/30 bg-[#F6F1E3]/10 text-center font-mono text-2xl font-semibold tracking-[0.5em] text-[#F6F1E3] placeholder:text-[#F6F1E3]/30 focus:border-[#FDC830] focus:outline-none"
+        className="h-14 w-full rounded-xl border border-[#F6F1E3]/30 bg-[#F6F1E3]/10 text-center font-mono text-2xl font-semibold tracking-[0.5em] text-[#F6F1E3] placeholder:text-[#F6F1E3]/30 focus:border-[#F2DFA6] focus:outline-none"
       />
       <p className="text-sm text-[#F6F1E3]/60">
         核销码为 6 位字母数字，不含易混淆的 0/O、1/I/L；可在预约详情页查看，或按手机号核对。
@@ -72,7 +72,7 @@ export default function ManualCodeInput({ onCheckedIn }: ManualCodeInputProps) {
         type="button"
         onClick={() => void submit()}
         disabled={!ready || loading}
-        className="flex h-14 min-h-[56px] w-full items-center justify-center gap-2 rounded-xl bg-[#FDC830] text-base font-medium text-[#4A3B2E] transition-opacity disabled:opacity-40 active:bg-[#E8AD02]"
+        className="flex h-14 min-h-[56px] w-full items-center justify-center gap-2 rounded-xl bg-[#2E2318] text-base font-medium text-[#F6EFDD] transition-opacity disabled:opacity-40 active:bg-[#3B2E24]"
       >
         {loading && <Loader2 className="h-5 w-5 animate-spin" />}
         {loading ? '核销中…' : '确认核销'}

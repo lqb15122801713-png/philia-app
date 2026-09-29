@@ -127,7 +127,7 @@ function StepBars({ steps }: { steps: StepListItem[] | undefined }) {
           st === 'done'
             ? 'bg-[#7FD8BE]'
             : st === 'active'
-              ? 'bg-[#FDC830]'
+              ? 'bg-[#F2DFA6]'
               : 'bg-[rgba(74,59,46,.06)]';
         return <i key={i} className={`h-1 flex-1 rounded-full ${cls}`} />;
       })}

@@ -532,7 +532,7 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
           头像柠檬环（无头像=E-补1 字圈：浅木底+衬线首字，柠檬环保留）+ 服务中薄荷签 +
           服务·时间·员工 + 右 N/6 Montserrat */}
       <section className="u1-card mx-[22px] mt-1.5 flex items-center gap-3.5 p-3.5" data-testid="execute-summary">
-        <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FFFDF6,0_0_0_3.5px_#FDC830]">
+        <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FFFDF6,0_0_0_3.5px_#F2DFA6]">
           {pet?.avatarUrl ? (
             <img src={pet.avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
           ) : (

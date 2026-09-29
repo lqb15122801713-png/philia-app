@@ -1,5 +1,5 @@
 /**
- * 菲丽亚宠物 Philia · Tailwind preset（批次 5 · B 阶段品牌换色 v1.1 冻结版）
+ * 菲丽亚宠物 Philia · Tailwind preset（换皮批片 1 · v2.0 色纪律落地）
  *
  * 各端 app 的 tailwind.config 引用方式：
  *   module.exports = {
@@ -8,20 +8,23 @@
  *   }
  *
  * 与 packages/shared/src/tokens.ts 同名同值；改值两处同步。
- * 冻结凭据：docs/BRAND-TOKENS-v1.1.md（B5-0 冻结确认书 2026-09-08 老板拍板）。
+ * 冻结凭据（换代）：34 号档《设计规范 v2.0》§一 + CJ-0928-01 + PD-13
+ * （B5-0 v1.1 柠檬黄时代已退役，docs/BRAND-TOKENS-v1.1.md 转历史档案）。
  * 本 preset 不含 content / 插件，仅注入品牌 theme。
  *
  * 常用类速查：
  *   背景      bg-canvas / bg-card / bg-sunken / bg-oak / bg-oak-light
- *   品牌色    bg-brand-primary / bg-brand-primary-hover / bg-brand-primary-pressed / bg-brand-primary-light
- *             bg-brand-secondary / bg-brand-secondary-light / bg-brand-secondary-deep
+ *   品牌色    bg-brand-primary（淡黄点睛·每屏≤2）/ bg-brand-primary-hover / bg-brand-primary-pressed / bg-brand-primary-light
+ *             bg-brand-secondary（卡其次阶）/ bg-brand-secondary-light / bg-brand-secondary-deep
  *   文字      text-ink / text-ink-secondary / text-ink-placeholder
  *   边框      border-line / border-line-strong / divide-line-divider
- *   状态      bg-success / bg-success-light / text-success-deep / bg-danger / bg-danger-light / text-danger-deep
+ *   状态      bg-success（深棕墨·不设绿）/ bg-success-light / text-success-deep / bg-danger（赭红）/ bg-danger-light / text-danger-deep
  *   圆角      rounded-card(16) / rounded-input(12) / rounded-tag(8) / rounded-sheet(20) / rounded-full
  *   投影      shadow-card / shadow-elevated / shadow-philia
  *   字号      text-title-lg(20) / text-title(17) / text-body(15) / text-caption(12) / text-body-lg(16) / text-price(20)
- *   渐变      bg-philia-gradient / bg-philia-gradient-hover
+ *             v2 字阶梯（§2.1）：text-v2-manifesto(34) / text-v2-screen(27) / text-v2-card-title(26) / text-v2-topic(20)
+ *             / text-v2-big-num(24) / text-v2-section(16) / text-v2-list-title(13.5) / text-v2-note(11) / text-v2-trace(9.5) / text-v2-micro(8)
+ *   渐变      bg-philia-gradient（深棕谱系）/ bg-philia-gradient-hover
  *   动效      animate-halo（呼吸光环 1.8s）/ scale-92 + duration-120（tab 按下）
  *             duration-300 + ease-philia-out（philial 页转场）
  */
@@ -33,45 +36,45 @@ module.exports = {
       colors: {
         brand: {
           primary: {
-            DEFAULT: '#FDC830', // 柠檬黄（VI 主色，锁定）
-            hover: '#FDC012', // 明度 −6
-            pressed: '#E8AD02', // 明度 −13
-            light: '#FCF3D9', // 同 H、S−12、L=92
+            DEFAULT: '#F2DFA6', // 淡黄点睛（v2.0 §1.1 --gold，每屏 ≤2 处）
+            hover: '#E8CF8C', // 深一档淡金（--gold-deep 同族）
+            pressed: '#D9C08A', // 蜡封淡金（--t3-metal）
+            light: '#FBF5E4', // 提示卡暖底（§1.4）
           },
           secondary: {
-            DEFAULT: '#7FD8BE', // 薄荷绿（VI 辅色，锁定；不参与功能反馈）
-            light: '#D3EEE6', // 同 H、S−9、L=88
-            deep: '#5ED1AF', // 同 H、S+2、L−8
+            DEFAULT: '#B9A482', // 卡其次阶（v2.0 --khaki；薄荷绿已退役）
+            light: '#F1E9D6', // 分段开关底（§1.4）
+            deep: '#A08B62', // 卡其铜深端（--t2 同族）
           },
         },
-        canvas: '#F6F1E3', // 米白（VI 底色，锁定）
-        card: '#FFFFFF',
-        sunken: '#F3ECD6',
+        canvas: '#FAF8F2', // 纸白页面底（v2.0 --paper，唯一页面底色）
+        card: '#FFFFFF', // 白卡面（只作卡片面，不作页面底）
+        sunken: '#F4EDDC', // 下沉区/圆章/头像底（§1.4）
         oak: {
-          DEFAULT: '#D4B896', // 浅木（VI 空间色：寄养/房间场景辅助底、暖色区块）
-          light: '#F1EBE5', // 浅木洗色（同 H、S−12、L=92）
+          DEFAULT: '#B9A482', // 卡其空间色（次阶）
+          light: '#EDE4CE', // 环轨道同族（§1.4）
         },
         ink: {
-          DEFAULT: '#4A3B2E', // 深棕墨（VI 文字色，锁定；兼 on-primary 主按钮前景）
-          secondary: '#8A796B', // hue→27.9°，S/L 同档
-          placeholder: '#BDB2A8',
+          DEFAULT: '#3B2E24', // 深棕墨（v2.0 --ink）
+          secondary: '#8A7D6B', // 暖灰同温（--muted，对比 ≥4.5:1）
+          placeholder: '#B9A98F',
         },
         line: {
-          DEFAULT: '#EBE2DB',
-          strong: '#DDD1C6',
-          divider: '#F0EAE5',
-          // U1-B 新增（v9.1 深度策略）：1px 暖墨细线 ring，替代投影做层级
-          ring: 'rgba(74, 59, 46, .09)',
+          DEFAULT: 'rgba(59,46,36,.14)', // 发丝线（--line）
+          strong: 'rgba(59,46,36,.22)',
+          divider: 'rgba(59,46,36,.08)', // 更软发丝线（--line-soft）
+          // 1px 暖墨细线 ring，替代投影做层级
+          ring: 'rgba(59,46,36,.09)',
         },
         success: {
-          DEFAULT: '#7FA87C', // 苔绿（功能色原值保留，确认书第 1 条）
-          light: '#E8EFE8',
-          deep: '#649160',
+          DEFAULT: '#3B2E24', // 反馈件色纪律：成功不设绿色——深棕墨族（45 号档 P1-1②）
+          light: '#F1E9D6',
+          deep: '#2E2318',
         },
         danger: {
-          DEFAULT: '#D92D20', // 标准功能红（确认书第 2 条，token 独立一行）
-          light: '#F8DFDD',
-          deep: '#AC2419',
+          DEFAULT: '#B4502E', // 暖调赭红（v2.0 §1.4，禁纯红）
+          light: '#F6E3DA',
+          deep: '#8F3F22',
         },
       },
 
@@ -92,8 +95,8 @@ module.exports = {
       boxShadow: {
         card: '0 2px 10px rgba(61, 50, 41, 0.05)',
         elevated: '0 8px 24px rgba(61, 50, 41, 0.08)',
-        philia: '0 6px 16px rgba(253, 200, 48, 0.35)', // 柠檬黄光晕（随主色，锁定）
-        // U1-B 新增（v9.1 深度策略）：近零软影，与 line.ring 细线 ring 配套使用
+        philia: '0 6px 16px rgba(46, 35, 24, 0.18)', // 染色阴影（v2.0 §3.3 小件影族）
+        // 近零软影，与 line.ring 细线 ring 配套使用
         hairline: '0 1px 2px rgba(61, 50, 41, 0.04)',
       },
 
@@ -110,42 +113,51 @@ module.exports = {
         'body-sm': ['14px', { lineHeight: '20px' }],
         detail: ['28px', { lineHeight: '36px', fontWeight: '600' }],
         'detail-lg': ['32px', { lineHeight: '40px', fontWeight: '600' }],
+        // v2.0 §2.1 字阶梯（换皮批片 1 落 token；业务组件换引用归片 2-4）
+        'v2-manifesto': ['34px', { lineHeight: '51px', fontWeight: '900' }],
+        'v2-screen': ['27px', { lineHeight: '36px', fontWeight: '900' }],
+        'v2-card-title': ['26px', { lineHeight: '34px', fontWeight: '900' }],
+        'v2-topic': ['20px', { lineHeight: '28px', fontWeight: '800' }],
+        'v2-big-num': ['24px', { lineHeight: '32px', fontWeight: '700' }],
+        'v2-section': ['16px', { lineHeight: '22px', fontWeight: '800' }],
+        'v2-list-title': ['13.5px', { lineHeight: '19px', fontWeight: '700' }],
+        'v2-note': ['11px', { lineHeight: '15px' }],
+        'v2-trace': ['9.5px', { lineHeight: '13px' }],
+        'v2-micro': ['8px', { lineHeight: '11px' }],
       },
 
-      // 字体自托管 woff2（禁外链 CDN）；中文不落拉丁展示字体，中文禁斜体
+      // 字体自托管 woff2（禁外链 CDN）；三轨不串（v2.0 §二）：屏题=serif / 正文=sans / 数字=mono；中文禁斜体
       fontFamily: {
         sans: [
-          'Poppins',
-          'Noto Sans SC',
           '-apple-system',
           'BlinkMacSystemFont',
           'PingFang SC',
-          'Hiragino Sans GB',
           'Microsoft YaHei',
+          'Hiragino Sans GB',
+          'Noto Sans SC',
           'Helvetica Neue',
           'Helvetica',
           'Arial',
           'sans-serif',
         ],
-        // 拉丁标题：Montserrat SemiBold；中文永远落 Noto Sans SC Bold
-        display: ['Montserrat', 'Noto Sans SC', '-apple-system', 'BlinkMacSystemFont', 'PingFang SC', 'Microsoft YaHei', 'sans-serif'],
-        // 数字与价格：Montserrat → Noto Sans SC，配合 font-variant-numeric: tabular-nums 使用
-        number: ['Montserrat', 'Noto Sans SC', 'Helvetica Neue', 'Helvetica', 'Arial', 'PingFang SC', 'Microsoft YaHei', 'sans-serif'],
-        // U1-B 新增（v9.1）：中文展示位衬线链；woff2 产品侧随后入库，
-        // 未入库时静默回退 Songti SC/serif，不报错
+        // 衬线轨（展示位）：宣言/屏题/卡面档名/证书题——Noto Serif SC 900
+        display: ['Noto Serif SC', 'Songti SC', 'SimSun', 'serif'],
+        // 等宽轨：金额/时间/编号/溯源行——JetBrains Mono + tabular-nums
+        number: ['JetBrains Mono', 'SF Mono', 'Noto Sans SC', 'monospace'],
+        // 中文展示位衬线链（历史键名保留，同 display 轨）
         'serif-cn': ['Noto Serif SC', 'Songti SC', 'serif'],
       },
 
       backgroundImage: {
-        'philia-gradient': 'linear-gradient(135deg, #FDC830 0%, #7FD8BE 100%)', // 135° 柠檬黄→薄荷绿（锁定）
-        'philia-gradient-hover': 'linear-gradient(135deg, #FDC012 0%, #5ED1AF 100%)',
+        'philia-gradient': 'linear-gradient(135deg, #3B2E24 0%, #2E2318 100%)', // 135° 深棕谱系（身份带 §1.2；柠檬黄渐变已退役）
+        'philia-gradient-hover': 'linear-gradient(135deg, #46382A 0%, #332A1E 100%)',
       },
 
       keyframes: {
-        // philia 按钮 / StepTimeline active 节点的呼吸光环（1.8s，随主色）
+        // philia 按钮 / StepTimeline active 节点的呼吸光环（1.8s，染色深棕）
         halo: {
-          '0%': { boxShadow: '0 0 0 0 rgba(253, 200, 48, 0.45)' },
-          '100%': { boxShadow: '0 0 0 14px rgba(253, 200, 48, 0)' },
+          '0%': { boxShadow: '0 0 0 0 rgba(59, 46, 36, 0.28)' },
+          '100%': { boxShadow: '0 0 0 14px rgba(59, 46, 36, 0)' },
         },
       },
       animation: {
