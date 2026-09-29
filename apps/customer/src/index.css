@@ -117,33 +117,33 @@
 @layer base {
   /* shadcn light 变量 · 对齐冻结表 4.1（docs/BRAND-TOKENS-v1.1.md §三） */
   :root {
-    --background: 44 51% 93%; /* 米白 canvas #F6F1E3 */
-    --foreground: 28 23% 24%; /* 深棕墨 ink #4A3B2E */
+    --background: 45 47% 96%; /* 纸白 canvas #FAF8F2（v2.0 --paper） */
+    --foreground: 27 23% 19%; /* 深棕墨 ink #3B2E24（v2.0 --ink） */
     --card: 0 0% 100%; /* card 维持纯白 */
-    --card-foreground: 28 23% 24%; /* foreground 系对齐深棕墨 */
+    --card-foreground: 27 23% 19%;
     --popover: 0 0% 100%;
-    --popover-foreground: 28 23% 24%;
-    --primary: 44 98% 59%; /* 柠檬黄 #FDC830 */
-    --primary-foreground: 28 23% 24%; /* on-primary 深棕墨（对比度 6.89:1） */
-    --secondary: 162 44% 88%; /* 薄荷绿洗底 #D3EEE6 */
-    --secondary-foreground: 28 23% 24%;
+    --popover-foreground: 27 23% 19%;
+    --primary: 42 72% 80%; /* 淡黄点睛 #F2DFA6（v2.0 §1.1 --gold，每屏 ≤2 处） */
+    --primary-foreground: 27 23% 19%; /* on-gold 深棕墨 */
+    --secondary: 41 44% 89%; /* 卡其洗底 #F1E9D6（薄荷绿已退役） */
+    --secondary-foreground: 27 23% 19%;
     --muted: 46 55% 90%;
-    --muted-foreground: 28 13% 47%; /* ink-secondary #8A796B 同族 */
-    --accent: 162 44% 88%;
-    --accent-foreground: 28 23% 24%;
-    --destructive: 4 74% 49%; /* 功能红 #D92D20 */
-    --destructive-foreground: 0 0% 100%; /* danger/白字 4.83:1 */
-    --border: 26 29% 89%;
-    --input: 26 29% 89%;
-    --ring: 28 23% 24%; /* 深棕墨焦点环 */
+    --muted-foreground: 31 12% 48%; /* ink-secondary #8A7D6B（--muted） */
+    --accent: 41 44% 89%;
+    --accent-foreground: 27 23% 19%;
+    --destructive: 16 59% 44%; /* 暖调赭红 #B4502E（v2.0 §1.4，禁纯红） */
+    --destructive-foreground: 40 60% 96%; /* 赭红/暖白字 */
+    --border: 24 9% 84%; /* 发丝线近值（rgba(59,46,36,.14) 纸白上等效） */
+    --input: 24 9% 84%;
+    --ring: 27 23% 19%; /* 深棕墨焦点环 */
     --radius: 0.625rem;
     /* sidebar-* 同祖推导：background←card 纯白；foreground/primary/accent/border/ring
        分别对齐同名主变量 */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 28 23% 24%;
-    --sidebar-primary: 44 98% 59%;
+    --sidebar-primary: 42 72% 80%; /* 淡金点睛（柠檬黄清场） */
     --sidebar-primary-foreground: 28 23% 24%;
-    --sidebar-accent: 162 44% 88%;
+    --sidebar-accent: 34 18% 19%;
     --sidebar-accent-foreground: 28 23% 24%;
     --sidebar-border: 26 29% 89%;
     --sidebar-ring: 28 23% 24%;
@@ -157,29 +157,29 @@
     --card-foreground: 44 51% 93%;
     --popover: 30 23% 17%;
     --popover-foreground: 44 51% 93%;
-    --primary: 44 98% 59%; /* 柠檬黄原值（dark 对比度 10.53:1） */
+    --primary: 42 72% 80%; /* 淡金点睛 #F2DFA6（dark 同值，明度自足） */
     --primary-foreground: 28 23% 24%; /* on-primary 深棕墨 */
-    --secondary: 162 44% 88%;
+    --secondary: 34 18% 19%; /* 深底次阶洗色（薄荷绿退役） */
     --secondary-foreground: 28 23% 24%;
     --muted: 30 22% 9%;
-    --muted-foreground: 28 12% 68%;
-    --accent: 162 44% 88%;
+    --muted-foreground: 33 18% 68%; /* 深底次文字 #C9BBA0 同族 */
+    --accent: 34 18% 19%;
     --accent-foreground: 28 23% 24%;
-    --destructive: 4 74% 57%; /* dark danger #E34A3F（+8 提亮） */
+    --destructive: 15 48% 57%; /* dark 赭红 #D4744F（提亮） */
     --destructive-foreground: 0 0% 100%;
     --border: 27 20% 26%;
     --input: 27 20% 26%;
-    --ring: 44 98% 59%;
+    --ring: 42 72% 80%; /* 淡金焦点环 */
     /* sidebar-* 同祖推导：background←card；foreground/primary/accent/border/ring
        分别对齐同名主变量 */
     --sidebar-background: 30 23% 17%;
     --sidebar-foreground: 44 51% 93%;
-    --sidebar-primary: 44 98% 59%;
+    --sidebar-primary: 42 72% 80%;
     --sidebar-primary-foreground: 28 23% 24%;
-    --sidebar-accent: 162 44% 88%;
+    --sidebar-accent: 34 18% 19%;
     --sidebar-accent-foreground: 28 23% 24%;
     --sidebar-border: 27 20% 26%;
-    --sidebar-ring: 44 98% 59%;
+    --sidebar-ring: 42 72% 80%;
   }
 }
 

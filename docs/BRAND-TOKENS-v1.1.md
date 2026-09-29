@@ -1,5 +1,9 @@
 # PHILIA 品牌 Token 冻结表 v1.1（批次 5 · B5-0 已冻结）
 
+> **🔒 已退役转历史档案（2026-09-29，换皮批片 1）**：v2.0 色纪律落地后，本表不再是改色凭据。
+> 现行唯一真身 = docs/ops/design/34_设计规范v2.0（§一 token 全表）+ CJ-0928-01（PD-11 会签）+ PD-13 施工令。
+> 柠檬黄主色/薄荷绿辅色的柠檬黄时代记录留档备查，禁止再引用施工。
+
 > 本文件 =《PHILIA-VI到App-Token转译方案》v1.1 冻结版 + 完整 token 映射终值表（含 dark 子表）。
 > 效力：批次 5 起**唯一改色通道凭据**。改色只改 `packages/shared/src/tokens.ts` 与
 > `packages/config/tailwind-preset.js`（同名同值双同步），组件禁止硬编码色值。

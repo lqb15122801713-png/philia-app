@@ -30,7 +30,7 @@ export default function OfflineBar({
       role="status"
       className={`mb-3 flex items-center gap-2 rounded-[14px] px-3.5 py-2.5 text-caption font-semibold ${
         offline
-          ? 'bg-[#FDC830] text-[#4A3B2E]'
+          ? 'bg-[#F2DFA6] text-[#3B2E24]'
           : 'bg-[#FFFDF6] text-ink shadow-[0_0_0_1px_rgba(74,59,46,.12)]'
       }`}
     >

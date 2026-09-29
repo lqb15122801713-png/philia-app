@@ -37,7 +37,7 @@ function GoodCard({
       type="button"
       data-testid={testid}
       onClick={onClick}
-      className="flex flex-col gap-2 rounded-[14px] bg-[#FFFDF6] p-3.5 text-left shadow-[0_0_0_1px_rgba(74,59,46,.09)] transition-[box-shadow,transform] duration-150 active:shadow-[0_0_0_1.5px_#FDC830]"
+      className="flex flex-col gap-2 rounded-[14px] bg-[#FFFDF6] p-3.5 text-left shadow-[0_0_0_1px_rgba(74,59,46,.09)] transition-[box-shadow,transform] duration-150 active:shadow-[0_0_0_1.5px_#E8CF8C]"
     >
       <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[#F1E8D4] text-[rgba(74,59,46,.6)]">
         <Icon size={19} strokeWidth={1.6} aria-hidden />
