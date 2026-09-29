@@ -93,7 +93,10 @@ export default function MemberOpenPage() {
   return (
     <div className="m2" data-testid="member-open-page" style={{ minHeight: '100vh' }}>
       {toastEl}
-      <PushBar label={mc('j1.pushLabel')} to="/member" />
+      {/* 急修补一件（任务卡 9-29 P0 弹球陷阱）：PushBar 去写死 /member——非会员按返回
+          →/member→无档分流弹回 /member/open=被关在 J-01。返回=时间序回退（任何来处回得来）；
+          直访兜底=/home（红线：兜底不许 /member，否则再造弹球） */}
+      <PushBar label={mc('j1.pushLabel')} fallback="/home" />
 
       {plansQ.isPending || myQ.isPending ? (
         <div className="m2-pad" style={{ marginTop: 24 }}>
