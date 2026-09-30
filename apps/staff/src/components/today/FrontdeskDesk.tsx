@@ -2,7 +2,7 @@
  * 前台任务台 · /today frontdesk 态（批次 U2 任务 C · 时间轴台 B′ 同骨架变体）
  *
  * 规格书 §3 三差异：
- * 1. 首栏主行动：柠檬大钮「扫码核销 · 到店登记」（15/700 高 50）+ 小字「无摄像头环境
+ * 1. 首栏主行动：淡黄大钮「扫码核销 · 到店登记」（h=56 员工端主钮硬性 · 14/700）+ 小字「无摄像头环境
  *    走手动输入 6 位核销码」→ checkin 链路现成（QrScanner 懒加载 + useCheckin，
  *    核销成功按服务端 nextRoute 跳转）；
  * 2. 全天行=待办列：改期回退待确认（warn 态「去确认 ›」）/ 寄养入住待登记（「入住 ›」
@@ -14,6 +14,9 @@
  * listTodayForStaff（本店今日未取消：本人单+未指派 pending/confirmed）承接——
  * 他人员工已指派单对员工端不可见（待裁定疑点 U2-1 已报产品侧）；
  * 员工名=store.listStaffPublic（公开过程现成）。
+ *
+ * 换皮批片 4（34 号档 §八 效率密度）：页边距 22→16 收紧一档 / serif 只留页题 /
+ * 时刻·单数=mono 轨 tabular-nums / 警示描边=赭红 #B4502E 族（纯红清场）/ 主钮 h≥56。
  */
 
 import {
@@ -140,23 +143,27 @@ export default function FrontdeskDesk() {
   }, [axisItems]);
 
   return (
-    <div className="px-[22px] pb-6">
-      {/* 顶栏（同骨架：日期 + 门店·周几·排班段 + 头像薄荷环进 /me）
+    <div className="px-4 pb-6">
+      {/* 顶栏（同骨架：页题 serif 点缀 + 门店·周几·排班段 + 头像卡其环进 /me）
           口径注记：试样 frontdesk 副行「全店 N 单 · N 美容师在班」无员工可读数据源
           （全店单=U2-1 疑点 / 在班数 staffList=merchantProcedure U2-2 在案），不造假，保持排班段 */}
       <header className="flex items-start justify-between pt-3">
         <div>
-          <h1 className="text-title-lg font-bold">今天 · {todayLabel(now).split(' ')[0]}</h1>
-          <p className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+          <h1 className="u1-serif text-title-lg font-bold">今天 · {todayLabel(now).split(' ')[0]}</h1>
+          <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
             {store?.name ?? '门店'} · {todayLabel(now).split(' ')[1]}
-            {scheduleText ? ` · 你的排班 ${scheduleText}` : ''}
+            {scheduleText ? (
+              <>
+                {' '}· 你的排班 <span className="u1-num">{scheduleText}</span>
+              </>
+            ) : null}
           </p>
         </div>
         <Link
           to="/me"
           aria-label="我的"
           data-testid="deck-avatar"
-          className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FFFDF6,0_0_0_3px_#7FD8BE] transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FAF8F2,0_0_0_3px_#B9A482] transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           {meRawQ.data?.user?.avatarUrl ? (
             <img src={meRawQ.data.user.avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
@@ -171,40 +178,40 @@ export default function FrontdeskDesk() {
         </Link>
       </header>
 
-      {/* 1. 柠檬大钮「扫码核销 · 到店登记」（高 50；试样 15px 越字阶闸门 → 14/700）+ 手动核销码小字 */}
-      <div className="mt-3.5">
+      {/* 1. 淡黄大钮「扫码核销 · 到店登记」（h=56 员工端主钮硬性；14/700）+ 手动核销码小字 */}
+      <div className="mt-3">
         <button
           type="button"
           data-testid="frontdesk-scan"
           onClick={() => setScanOpen(true)}
-          className="flex h-[50px] w-full items-center justify-center gap-2 rounded-control bg-brand-primary text-body-sm font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+          className="flex h-staff-btn w-full items-center justify-center gap-2 rounded-control bg-brand-primary text-body-sm font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
         >
           <ScanLine className="h-5 w-5" strokeWidth={1.8} />
           扫码核销 · 到店登记
         </button>
-        <p className="mt-2 text-center text-caption-xs text-[rgba(74,59,46,.42)]">
+        <p className="mt-2 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
           无摄像头环境走「手动输入 6 位核销码」
         </p>
       </div>
 
       {/* 2. 待办列（无待办整行不渲染） */}
       {hasTodos ? (
-        <div className="mt-3.5 flex items-start gap-2.5" data-testid="frontdesk-todos">
-          <span className="u1-num w-9 shrink-0 pt-2 text-right text-caption-xs text-[rgba(74,59,46,.42)]">待办</span>
+        <div className="mt-3 flex items-start gap-2.5" data-testid="frontdesk-todos">
+          <span className="u1-num w-9 shrink-0 pt-2 text-right text-caption-xs text-[rgba(59,46,36,.42)]">待办</span>
           <div className="min-w-0 flex-1">
             {todos.reschedulePending.length > 0 ? (
               <button
                 type="button"
                 data-testid="todo-reschedule"
                 onClick={() => showToast('改期回退单的确认在商家端审批——已为你标出，请转告店长处理')}
-                className="mb-1.5 flex w-full items-center gap-2.5 rounded-control bg-card px-3 py-2.5 text-left shadow-[0_0_0_1px_rgba(217,45,32,.35)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+                className="mb-1.5 flex w-full items-center gap-2.5 rounded-control bg-card px-3 py-2.5 text-left shadow-[0_0_0_1px_rgba(180,80,46,.4)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
               >
-                <CalendarClock className="h-[17px] w-[17px] shrink-0 text-[rgba(74,59,46,.62)]" strokeWidth={1.6} aria-hidden />
-                <span className="min-w-0 flex-1 text-caption leading-snug text-[rgba(74,59,46,.62)]">
-                  <b className="text-caption font-bold text-ink">改期回退 {todos.reschedulePending.length} 单待确认</b>
+                <CalendarClock className="h-[17px] w-[17px] shrink-0 text-[rgba(59,46,36,.62)]" strokeWidth={1.6} aria-hidden />
+                <span className="min-w-0 flex-1 text-caption leading-snug text-[rgba(59,46,36,.62)]">
+                  <b className="text-caption font-bold text-ink">改期回退 <span className="u1-num">{todos.reschedulePending.length}</span> 单待确认</b>
                   <span className="block text-caption-xs">
                     {todos.reschedulePending[0]!.petName ?? '宠物'} · {todos.reschedulePending[0]!.serviceName ?? '服务'} ·{' '}
-                    {fmtMin(minutesOf(todos.reschedulePending[0]!.scheduledStart))} 到店
+                    <span className="u1-num whitespace-nowrap">{fmtMin(minutesOf(todos.reschedulePending[0]!.scheduledStart))}</span> 到店
                   </span>
                 </span>
                 <span className="shrink-0 text-caption-xs font-bold text-danger">去确认 ›</span>
@@ -216,12 +223,12 @@ export default function FrontdeskDesk() {
                 data-testid="todo-boarding"
                 className="u1-ring mb-1.5 flex items-center gap-2.5 rounded-control bg-card px-3 py-2.5 transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
               >
-                <BedDouble className="h-[17px] w-[17px] shrink-0 text-[rgba(74,59,46,.62)]" strokeWidth={1.6} aria-hidden />
-                <span className="min-w-0 flex-1 text-caption leading-snug text-[rgba(74,59,46,.62)]">
-                  <b className="text-caption font-bold text-ink">寄养入住 {todos.boardingCheckin.length} 只待登记</b>
+                <BedDouble className="h-[17px] w-[17px] shrink-0 text-[rgba(59,46,36,.62)]" strokeWidth={1.6} aria-hidden />
+                <span className="min-w-0 flex-1 text-caption leading-snug text-[rgba(59,46,36,.62)]">
+                  <b className="text-caption font-bold text-ink">寄养入住 <span className="u1-num">{todos.boardingCheckin.length}</span> 只待登记</b>
                   <span className="block text-caption-xs">
                     {todos.boardingCheckin[0]!.petName ?? '宠物'} · {todos.boardingCheckin[0]!.serviceName ?? '寄养'} · 预计{' '}
-                    {fmtMin(minutesOf(todos.boardingCheckin[0]!.scheduledStart))} 到店
+                    <span className="u1-num whitespace-nowrap">{fmtMin(minutesOf(todos.boardingCheckin[0]!.scheduledStart))}</span> 到店
                   </span>
                 </span>
                 <span className="shrink-0 text-caption-xs font-bold text-ink">入住 ›</span>
@@ -236,17 +243,17 @@ export default function FrontdeskDesk() {
           <div className="h-[52px] rounded-control bg-card u1-ring" />
           <div className="mt-3">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="h-[52px] border-t border-[rgba(74,59,46,.06)]" />
+              <div key={i} className="h-[52px] border-t border-[rgba(59,46,36,.06)]" />
             ))}
           </div>
         </div>
       ) : todayQuery.isError ? (
-        <div className="u1-card mt-3 p-6 text-center">
+        <div className="u1-card mt-3 p-4 text-center">
           <p className="text-body-sm text-ink-secondary">今日接待加载失败，请检查网络后重试</p>
           <button
             type="button"
             onClick={() => void todayQuery.refetch()}
-            className="mt-4 h-12 min-w-[160px] rounded-control bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+            className="mt-4 h-staff-btn min-w-[160px] rounded-control bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             重新加载
           </button>
@@ -271,14 +278,18 @@ export default function FrontdeskDesk() {
               now={now}
               titleSuffix={(item) =>
                 item.staffId && staffNameById.get(item.staffId) ? (
-                  <span className="font-normal text-[rgba(74,59,46,.62)]"> · {staffNameById.get(item.staffId)}</span>
+                  <span className="font-normal text-[rgba(59,46,36,.62)]"> · {staffNameById.get(item.staffId)}</span>
                 ) : null
               }
               subtitle={(item) => (
                 <>
-                  {item.checkedInAt
-                    ? `已核销 ${fmtMin(minutesOf(item.checkedInAt))}`
-                    : '待核销'}
+                  {item.checkedInAt ? (
+                    <>
+                      已核销 <span className="u1-num whitespace-nowrap">{fmtMin(minutesOf(item.checkedInAt))}</span>
+                    </>
+                  ) : (
+                    '待核销'
+                  )}
                   {` · ${STATUS_LABEL[item.status] ?? item.status}`}
                   {!item.checkedInAt && item.assignSource === 'merchant' ? ' · 商家改派' : null}
                   {!item.checkedInAt && item.assignSource === 'auto' ? ' · 自动派单' : null}
@@ -289,7 +300,7 @@ export default function FrontdeskDesk() {
 
           {/* 统计行=已核销 N·待到店 N·服务中 N */}
           {axisItems.length > 0 ? (
-            <p className="mb-4 mt-3 text-center text-caption-xs text-[rgba(74,59,46,.62)]" data-testid="deck-stats">
+            <p className="mb-4 mt-3 text-center text-caption-xs text-[rgba(59,46,36,.62)]" data-testid="deck-stats">
               已核销 <b className="u1-num text-ink">{stats.checked}</b> · 待到店 <b className="u1-num text-ink">{stats.waiting}</b> · 服务中{' '}
               <b className="u1-num text-ink">{stats.inService}</b>
             </p>

@@ -1,8 +1,8 @@
 /**
  * 我的 /me（批次 U2 任务 G · 试样 .me-* 重做）
  *
- * 规格书 §7：用户卡（头像薄荷环+角色薄荷签+入职年月+在班态）→ 三格数字
- * （本月完成单/好评率/本月寄养打卡，Montserrat 22，三连圆角 20）→
+ * 规格书 §7：用户卡（头像卡其环+角色卡其签+入职年月+在班态）→ 三格数字
+ * （本月完成单/好评率/本月寄养打卡，mono 20/700，三连圆角 20）→
  * 列表组 1（我的排班=本周段·休日[只读]/我的评价/寄养负责中）→
  * 列表组 2（帮助与规范/设置/退出登录 danger）→ 版本小字。
  *
@@ -35,7 +35,7 @@ import {
   Trophy,
   Wallet,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Toast, { useToast } from '@/components/today/Toast';
 import { dayKeyOf, SCHEDULE_DAYS, type HistoryItem } from '@/components/today/utils';
@@ -55,7 +55,7 @@ function ListRow({
 }: {
   icon: typeof CalendarDays;
   label: string;
-  sub?: string;
+  sub?: ReactNode;
   to?: string;
   onClick?: () => void;
   expanded?: boolean;
@@ -64,16 +64,16 @@ function ListRow({
 }) {
   const inner = (
     <>
-      <Icon className={`h-[22px] w-[22px] shrink-0 ${danger ? 'text-danger' : 'text-[rgba(74,59,46,.62)]'}`} strokeWidth={1.6} aria-hidden />
+      <Icon className={`h-[22px] w-[22px] shrink-0 ${danger ? 'text-danger' : 'text-[rgba(59,46,36,.62)]'}`} strokeWidth={1.6} aria-hidden />
       <span className={`min-w-0 flex-1 text-body-sm ${danger ? 'text-danger' : 'text-ink'}`}>
         {label}
-        {sub ? <small className="mt-0.5 block text-caption-xs text-[rgba(74,59,46,.42)]">{sub}</small> : null}
+        {sub ? <small className="mt-0.5 block text-caption-xs text-[rgba(59,46,36,.42)]">{sub}</small> : null}
       </span>
       {danger ? null : to ? (
-        <ChevronRight className="h-4 w-4 shrink-0 text-[rgba(74,59,46,.42)]" aria-hidden />
+        <ChevronRight className="h-4 w-4 shrink-0 text-[rgba(59,46,36,.42)]" aria-hidden />
       ) : onClick ? (
         <ChevronDown
-          className={`h-4 w-4 shrink-0 text-[rgba(74,59,46,.42)] transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 shrink-0 text-[rgba(59,46,36,.42)] transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
           aria-hidden
         />
       ) : null}
@@ -165,7 +165,7 @@ export default function MePage() {
   const onDuty = todayRanges.length > 0;
   const offDays = SCHEDULE_DAYS.filter((d) => !(schedule?.[d.key]?.length)).map((d) => d.label.replace('周', ''));
   const roleLabel = staff?.role === 'frontdesk' ? '前台 frontdesk' : '美容师 groomer';
-  const joinText = staff?.createdAt ? `入职 ${staff.createdAt.getFullYear()}-${String(staff.createdAt.getMonth() + 1).padStart(2, '0')}` : null;
+  const joinDate = staff?.createdAt ? `${staff.createdAt.getFullYear()}-${String(staff.createdAt.getMonth() + 1).padStart(2, '0')}` : null;
 
   const doLogout = async () => {
     setLoggingOut(true);
@@ -181,10 +181,10 @@ export default function MePage() {
 
   return (
     <div className="px-[22px] pb-6">
-      {/* 用户卡（试样 .me-user margin 10px 22px 0）：头像薄荷环 + 角色薄荷签 + 入职年月 + 在班态；
+      {/* 用户卡（试样 .me-user margin 10px 22px 0）：头像卡其环 + 角色卡其签 + 入职年月 + 在班态；
           无头像=E-补1 字圈工艺（浅木底+衬线首字，客户端 D-补3 同口径） */}
       <section className="u1-card mt-2.5 flex items-center gap-3.5 p-4" data-testid="me-user-card">
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FFFDF6,0_0_0_3.5px_#7FD8BE]">
+        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FFFDF6,0_0_0_3.5px_#B9A482]">
           {user && 'avatarUrl' in user && (user as { avatarUrl?: string }).avatarUrl ? (
             <img src={(user as { avatarUrl?: string }).avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
           ) : (
@@ -197,16 +197,16 @@ export default function MePage() {
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-title font-bold">{staff?.name ?? user?.nickname ?? '员工'}</p>
-          <p className="mt-1 flex flex-wrap items-center gap-1.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+          <p className="mt-1 flex flex-wrap items-center gap-1.5 text-caption-xs text-[rgba(59,46,36,.62)]">
             <b className="rounded-chip bg-brand-secondary px-1.5 py-0.5 font-bold text-ink">{roleLabel}</b>
-            {joinText ? <span>· {joinText}</span> : null}
+            {joinDate ? <span>· 入职 <span className="u1-num">{joinDate}</span></span> : null}
             <span>· {onDuty ? '在班' : '今日休息'}</span>
           </p>
         </div>
       </section>
 
-      {/* 三格数字（试样 .me-nums：Montserrat 22/800 越字阶闸门 → 20/700（客户端 D2-12 同口径映射，
-          自托管 Montserrat 上限 700）；三连圆角 panel 20；无绩效数据=「—」不落死灰） */}
+      {/* 三格数字（试样 .me-nums：22/800 越字阶闸门 → 20/700 u1-num（JetBrains Mono 自托管 700，
+          客户端 D2-12 同口径映射）；三连圆角 panel 20；无绩效数据=「—」不落死灰） */}
       <section className="mt-3.5 grid grid-cols-3" data-testid="me-stats">
         {[
           { v: monthQuery.isPending ? '…' : String(perf.doneCount), c: '本月完成单' },
@@ -218,17 +218,22 @@ export default function MePage() {
             className={`u1-ring bg-card px-2 py-3.5 text-center ${i === 0 ? 'rounded-l-panel' : ''} ${i === 2 ? 'rounded-r-panel' : ''}`}
           >
             <div className="u1-num text-title-lg font-bold leading-7">{cell.v}</div>
-            <div className="mt-1 text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">{cell.c}</div>
+            <div className="mt-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{cell.c}</div>
           </div>
         ))}
       </section>
 
       {/* 列表组 1 */}
-      <section className="u1-card mt-3.5 divide-y divide-[rgba(74,59,46,.06)]" data-testid="me-list-1">
+      <section className="u1-card mt-3.5 divide-y divide-[rgba(59,46,36,.06)]" data-testid="me-list-1">
         <ListRow
           icon={CalendarDays}
           label="我的排班"
-          sub={`本周${(schedule?.[todayKey]?.map((r) => `${r.start}–${r.end}`).join(' / ')) ?? '—'}${offDays.length ? ` · 周${offDays.join('、')}休` : ''}（只读，店长排）`}
+          sub={
+            <>
+              本周<span className="u1-num">{(schedule?.[todayKey]?.map((r) => `${r.start}–${r.end}`).join(' / ')) ?? '—'}</span>
+              {offDays.length ? ` · 周${offDays.join('、')}休` : ''}（只读，店长排）
+            </>
+          }
           testid="me-schedule"
           onClick={() => setExpandKey((k) => (k === 'schedule' ? null : 'schedule'))}
           expanded={expandKey === 'schedule'}
@@ -238,7 +243,7 @@ export default function MePage() {
             {SCHEDULE_DAYS.map(({ key, label }) => {
               const ranges = schedule?.[key] ?? [];
               return (
-                <li key={key} className={`flex items-center justify-between py-1.5 text-caption-xs ${key === todayKey ? 'font-bold text-ink' : 'text-[rgba(74,59,46,.62)]'}`}>
+                <li key={key} className={`flex items-center justify-between py-1.5 text-caption-xs ${key === todayKey ? 'font-bold text-ink' : 'text-[rgba(59,46,36,.62)]'}`}>
                   <span>{label}{key === todayKey ? '（今天）' : ''}</span>
                   <span className="u1-num">{ranges.length ? ranges.map((r) => `${r.start}–${r.end}`).join(' / ') : '休'}</span>
                 </li>
@@ -249,21 +254,30 @@ export default function MePage() {
         <ListRow
           icon={Star}
           label="我的评价"
-          sub={`近 30 天口径看历史页 · 本月已评 ${perf.ratedCount} 条${perf.avg !== null ? ` · 均分 ${perf.avg.toFixed(1)}` : ''}`}
+          sub={
+            <>
+              近 30 天口径看历史页 · 本月已评 <span className="u1-num">{perf.ratedCount}</span> 条
+              {perf.avg !== null ? <> · 均分 <span className="u1-num">{perf.avg.toFixed(1)}</span></> : ''}
+            </>
+          }
           to="/history"
           testid="me-reviews"
         />
         <ListRow
           icon={BedDouble}
           label="寄养负责中"
-          sub={`${perf.boardingInStore} 只在店（任务台全天行打卡）`}
+          sub={
+            <>
+              <span className="u1-num">{perf.boardingInStore}</span> 只在店（任务台全天行打卡）
+            </>
+          }
           to="/today"
           testid="me-boarding"
         />
       </section>
 
       {/* 列表组 1.5：员工端 2.0（R7~R10）——打卡/盘点/薪资/XP/评价；店长视图仅店长与老板可见 */}
-      <section className="u1-card mt-3.5 divide-y divide-[rgba(74,59,46,.06)]" data-testid="me-list-staff2">
+      <section className="u1-card mt-3.5 divide-y divide-[rgba(59,46,36,.06)]" data-testid="me-list-staff2">
         <ListRow icon={Fingerprint} label="打卡考勤" sub="上班/下班打卡 · 补卡申请" to="/attendance" testid="me-attendance" />
         <ListRow icon={ClipboardCheck} label="盘点任务" sub="日盘/周盘执行 · 安心包效期" to="/inventory" testid="me-inventory" />
         <ListRow icon={Wallet} label="薪资提成" sub="本月提成逐单明细 · 绩效 · 扣减" to="/pay" testid="me-pay" />
@@ -275,7 +289,7 @@ export default function MePage() {
       </section>
 
       {/* 列表组 2 */}
-      <section className="u1-card mt-3.5 divide-y divide-[rgba(74,59,46,.06)]" data-testid="me-list-2">
+      <section className="u1-card mt-3.5 divide-y divide-[rgba(59,46,36,.06)]" data-testid="me-list-2">
         <ListRow
           icon={CircleHelp}
           label="帮助与规范"
@@ -285,7 +299,7 @@ export default function MePage() {
           expanded={expandKey === 'help'}
         />
         {expandKey === 'help' ? (
-          <div className="px-4 pb-3 text-caption-xs leading-relaxed text-[rgba(74,59,46,.62)]">
+          <div className="px-4 pb-3 text-caption-xs leading-relaxed text-[rgba(59,46,36,.62)]">
             <p className="font-bold text-ink">六步影像规范</p>
             <p className="mt-1">消毒 1–3 张 · 预检 2–6 张 · 洗护 3–9 张 · 精修 2–6 张 · 前后对比各 1 张；过程照实时同步家长，张数达标才能确认翻步。</p>
             <p className="mt-2 font-bold text-ink">核销流程</p>
@@ -301,7 +315,7 @@ export default function MePage() {
           expanded={expandKey === 'settings'}
         />
         {expandKey === 'settings' ? (
-          <div className="px-4 pb-3 text-caption-xs leading-relaxed text-[rgba(74,59,46,.62)]">
+          <div className="px-4 pb-3 text-caption-xs leading-relaxed text-[rgba(59,46,36,.62)]">
             <p>实时同步：派单/改期/取消即时推送（SSE 长连接，断线自动重连 + 60s 轮询兜底）。</p>
             <p className="mt-1">通知权限：{typeof Notification !== 'undefined' ? (Notification.permission === 'granted' ? '已开启' : Notification.permission === 'denied' ? '已拒绝（浏览器地址栏可改）' : '未开启') : '当前环境不支持'}</p>
           </div>
@@ -315,7 +329,7 @@ export default function MePage() {
         />
       </section>
 
-      <p className="mb-6 mt-4 text-center text-caption-xs text-[rgba(74,59,46,.42)]">Philia 员工端 · 内测 v1.1</p>
+      <p className="mb-6 mt-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">Philia 员工端 · 内测 v1.1</p>
 
       <Toast message={toast} />
     </div>

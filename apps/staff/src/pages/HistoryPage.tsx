@@ -2,8 +2,8 @@
  * 历史 /history（批次 U2 任务 F · 试样 .hi-* 重做）
  *
  * 规格书 §6：标题「历史」（20/700）+ 右摘要（近 30 天·N 单）→ 按月分组行
- * （12/700 墨 40% 宽距）→ 单条卡：日/周（Montserrat）+ 宠物·服务 +
- * 时间·时长·状态（取消单带来源小签）+ 右好评 ★N.N + 金额 Montserrat（取消=—）。
+ * （12/700 墨 40% 宽距）→ 单条卡：日/周（mono）+ 宠物·服务 +
+ * 时间·时长·状态（取消单带来源小签）+ 右好评 ★N.N + 金额 mono（取消=—）。
  * 数据：listForStaff 近 30 天（现成）+ appointment.rating（行内现成字段）。
  * 明确不做：筛选/搜索（v1 量小）、导出、绩效图、提成。
  */
@@ -39,23 +39,23 @@ function HistoryRow({ item }: { item: HistoryItem }) {
     <li className="u1-card mb-2.5 flex items-center gap-3.5 px-4 py-3.5" data-testid={`history-${item.id}`}>
       <div className="w-[52px] shrink-0 text-center">
         <div className="u1-num text-title font-bold">{item.scheduledStart.getDate()}</div>
-        <div className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.42)]">{WEEK[item.scheduledStart.getDay()]}</div>
+        <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">{WEEK[item.scheduledStart.getDay()]}</div>
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-body-sm font-bold">
           {item.petName ?? '宠物'} · {item.serviceName ?? '服务'}
         </p>
-        <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">
-          {hhmm(item.scheduledStart)} · {item.type === 'boarding' ? `${Math.max(1, Math.round(durationMin / 1440))} 晚` : `${durationMin} 分钟`} · {STATUS_TEXT[item.status] ?? item.status}
+        <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+          <span className="u1-num">{hhmm(item.scheduledStart)}</span> · {item.type === 'boarding' ? <><span className="u1-num">{Math.max(1, Math.round(durationMin / 1440))}</span> 晚</> : <><span className="u1-num">{durationMin}</span> 分钟</>} · {STATUS_TEXT[item.status] ?? item.status}
           {cancelled && item.cancelSource && CANCEL_SOURCE[item.cancelSource] ? (
-            <span className="ml-1 text-[rgba(74,59,46,.42)]">{CANCEL_SOURCE[item.cancelSource]}</span>
+            <span className="ml-1 text-[rgba(59,46,36,.42)]">{CANCEL_SOURCE[item.cancelSource]}</span>
           ) : null}
         </p>
       </div>
       {!cancelled && item.rating !== null ? (
-        <span className="shrink-0 text-caption-xs text-[rgba(74,59,46,.62)]">★ {item.rating.toFixed(1)}</span>
+        <span className="u1-num shrink-0 text-caption-xs text-[rgba(59,46,36,.62)]">★ {item.rating.toFixed(1)}</span>
       ) : null}
-      <span className={`u1-num shrink-0 text-body-sm font-bold ${cancelled ? 'text-[rgba(74,59,46,.42)]' : 'text-ink'}`}>
+      <span className={`u1-num shrink-0 text-body-sm font-bold ${cancelled ? 'text-[rgba(59,46,36,.42)]' : 'text-ink'}`}>
         {cancelled ? '—' : fenToYuan(item.priceFen)}
       </span>
     </li>
@@ -90,8 +90,8 @@ export default function HistoryPage() {
   return (
     <div className="px-[22px] pb-6">
       <header className="flex h-12 items-center" data-testid="history-header">
-        <h1 className="text-title-lg font-bold">历史</h1>
-        <span className="ml-auto text-caption-xs text-[rgba(74,59,46,.42)]">
+        <h1 className="u1-serif text-title-lg font-bold">历史</h1>
+        <span className="ml-auto text-caption-xs text-[rgba(59,46,36,.42)]">
           近 30 天 · <b className="u1-num">{items.length}</b> 单
         </span>
       </header>
@@ -109,7 +109,7 @@ export default function HistoryPage() {
           ))}
         </div>
       ) : listQuery.isError ? (
-        <div className="u1-card mt-2 p-6 text-center">
+        <div className="u1-card mt-2 p-4 text-center">
           <p className="text-body-sm text-ink-secondary">历史记录加载失败，请检查网络后重试</p>
           <button
             type="button"
@@ -121,7 +121,7 @@ export default function HistoryPage() {
         </div>
       ) : items.length === 0 ? (
         // 空态（规格书原文）
-        <div className="flex flex-col items-center px-6 py-14 text-center" data-testid="history-empty">
+        <div className="flex flex-col items-center px-6 py-10 text-center" data-testid="history-empty">
           <span className="flex h-20 w-20 items-center justify-center rounded-full bg-sunken" aria-hidden>
             <ClipboardList className="h-9 w-9 text-ink" strokeWidth={1.5} />
           </span>
@@ -130,7 +130,7 @@ export default function HistoryPage() {
       ) : (
         groups.map((g) => (
           <section key={g.key}>
-            <h2 className="px-0 pb-1.5 pt-4 text-caption font-bold tracking-[.08em] text-[rgba(74,59,46,.42)]">
+            <h2 className="px-0 pb-1.5 pt-4 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">
               {g.label}
             </h2>
             <ul>

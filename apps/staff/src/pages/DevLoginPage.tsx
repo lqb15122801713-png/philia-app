@@ -2,9 +2,9 @@
  * 员工端登录页 /dev-login（批次 U2 任务 H · 试样屏 1 换肤）
  *
  * 规格书 §1：主视觉卡（340 高）→ wordmark「PHILIA · 员工端」→ 衬线宣言
- * 「照顾好每一个被托付的小生命」（font-serif-cn）→ 门店行 → 柠檬主钮
+ * 「照顾好每一个被托付的小生命」（font-serif-cn）→ 门店行 → 淡黄主钮
  * 「手机号一键登录」+ 次级「口令入内测」→ 角色签（前台/美容师，仅展示）→ 协议小字。
- * ⚠️ 内测现实：登录链路=dev-login 种子用户（服务端仅允许 seed_ 前缀）——柠檬主钮
+ * ⚠️ 内测现实：登录链路=dev-login 种子用户（服务端仅允许 seed_ 前缀）——淡黄主钮
  * 落到真实账号选择区（手机号登录上线前等价物，不造假）；口令钮展开内测口令门
  * （批次 6 B2 真实链路）。dev-login 种子登录链路不回归。
  */
@@ -130,29 +130,30 @@ export default function DevLoginPage() {
       </div>
 
       {/* 2. wordmark + 衬线宣言 + 门店行（试样 .lg-brand padding 26px 30px 0；
-             宣言试样 22px 越字阶闸门 → 取 20/700 u1-serif（客户端 D2-1 同口径映射）；
-             Montserrat 自托管上限 700，wordmark 800→700） */}
+             换皮批片 4：wordmark=eyebrow 小签转 mono 轨（v2.0 §2.1 eyebrow=等宽+宽距大写），
+             宣言转 v2 屏题档 serif 900（§4.11 宣言题=登录页专用，效率密度下只留这一处）；
+             JetBrains Mono 自托管上限 700，wordmark 800→700） */}
       <div className="px-[30px] pt-[26px] text-center">
-        <p className="font-display text-body-sm font-bold tracking-[.3em] text-[rgba(74,59,46,.42)]">
+        <p className="font-number text-body-sm font-bold tracking-[.3em] text-[rgba(59,46,36,.42)]">
           PHILIA · 员工端
         </p>
-        <h1 className="u1-serif mt-3 text-title-lg font-bold leading-[1.5]">
+        <h1 className="u1-serif mt-3 text-v2-screen">
           照顾好每一个
           <br />
           被托付的小生命
         </h1>
-        <p className="mt-2 text-caption text-[rgba(74,59,46,.62)]">
+        <p className="mt-2 text-caption text-[rgba(59,46,36,.62)]">
           菲丽亚宠物·示例店 · 员工内测通道
         </p>
       </div>
 
-      {/* 3. 柠檬主钮 + 次级口令（真实落点：账号选择区 / 口令门）；试样 .lg-act padding 22px 30px 0 */}
+      {/* 3. 淡黄主钮 + 次级口令（真实落点：账号选择区 / 口令门）；试样 .lg-act padding 22px 30px 0 */}
       <div className="flex flex-col gap-2.5 px-[30px] pt-[22px]">
         <button
           type="button"
           data-testid="login-primary"
           onClick={() => accountsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-          className="flex w-full items-center justify-center rounded-control bg-brand-primary py-3.5 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+          className="flex h-14 min-h-[56px] w-full items-center justify-center rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
         >
           手机号一键登录
         </button>
@@ -160,7 +161,7 @@ export default function DevLoginPage() {
           type="button"
           data-testid="login-gate"
           onClick={() => setGateOpen((v) => !v)}
-          className="u1-ring flex w-full items-center justify-center rounded-control bg-card py-3 text-caption font-semibold text-[rgba(74,59,46,.62)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+          className="u1-ring flex h-11 min-h-[44px] w-full items-center justify-center rounded-control bg-card text-caption font-semibold text-[rgba(59,46,36,.62)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
         >
           口令入内测
         </button>
@@ -168,12 +169,12 @@ export default function DevLoginPage() {
 
       {/* 4. 角色签（仅展示——角色由商家端员工管理分配，不可自选）；试样 .lg-role margin-top 18px */}
       <div className="mt-[18px] flex justify-center gap-2">
-        <span className="u1-ring rounded-full bg-card px-3 py-1.5 text-caption-xs font-semibold text-[rgba(74,59,46,.62)]">前台 frontdesk</span>
-        <span className="u1-ring rounded-full bg-card px-3 py-1.5 text-caption-xs font-semibold text-[rgba(74,59,46,.62)]">美容师 groomer</span>
+        <span className="u1-ring rounded-full bg-card px-3 py-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">前台 frontdesk</span>
+        <span className="u1-ring rounded-full bg-card px-3 py-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">美容师 groomer</span>
       </div>
 
       {/* 5. 协议小字 */}
-      <p className="mt-4 text-center text-caption-xs leading-relaxed text-[rgba(74,59,46,.42)]">
+      <p className="mt-4 text-center text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
         登录即同意《员工内测协议》与《服务影像记录规范》
       </p>
 
@@ -296,7 +297,7 @@ export default function DevLoginPage() {
           <p className="mt-3 rounded-control bg-danger-light px-4 py-3 text-caption text-danger-deep">{error}</p>
         ) : null}
 
-        <p className="mt-5 text-caption-xs leading-relaxed text-[rgba(74,59,46,.42)]">
+        <p className="mt-5 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
           提示：dev-login 仅允许种子用户（kimi_id 以 seed_ 前缀），会话 cookie 有效期 7 天。
           非员工账号登录后会被引导回本页切换。
         </p>

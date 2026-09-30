@@ -70,8 +70,8 @@ const INVALID_ID = process.env.SMOKE_INVALID_ID ?? '01000000000000000000000000';
 const ROUTES = [
   /* ---- 客户端 ---- */
   { app: 'customer', path: '/dev-login', anchors: ['登录'] },
-  { app: 'customer', path: '/', anchors: ['守护每一次洗护', '到店洗护', '洗护进行中'], expectPath: '/home', note: 'B9a 根路径重定向 + B9.3 新首页锚点；U4：首页双态——服务中态图注为「洗护进行中」' },
-  { app: 'customer', path: '/home', anchors: ['守护每一次洗护', '到店洗护', '洗护进行中'], note: 'B9.3 首页完整改版；U4：双态锚点（常态/服务中）' },
+  { app: 'customer', path: '/', anchors: ['预约洗澡美容', '菲丽亚宠友', '洗护进行中'], expectPath: '/home', note: 'F3（片 4）：换皮批片 2 新首页锚点——退役文案「守护每一次洗护」→实证值「预约洗澡美容」（浮动大卡双入口）/「菲丽亚宠友」（身份带非会员态）/服务中态 LIVE 卡「洗护进行中」' },
+  { app: 'customer', path: '/home', anchors: ['预约洗澡美容', '菲丽亚宠友', '洗护进行中'], note: 'F3（片 4）：片 2 新首页实证值（双入口/身份带/LIVE 卡）' },
   { app: 'customer', path: '/mall', anchors: ['商城', '商品'] },
   { app: 'customer', path: '/mall/cart', anchors: ['购物袋', '购物车'], note: 'U4-D3：购物袋口径（试样同词）' },
   { app: 'customer', path: '/mall/checkout', anchors: ['确认订单', '没有待结算'], note: 'B3 修复路由' },

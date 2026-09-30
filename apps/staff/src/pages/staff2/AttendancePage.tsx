@@ -218,19 +218,27 @@ export default function AttendancePage() {
 
   return (
     <div className="pb-6">
-      <PageHeader title="打卡考勤" backTo="/me" aside={`${now.getMonth() + 1}月`} />
+      <PageHeader
+        title="打卡考勤"
+        backTo="/me"
+        aside={
+          <span>
+            <span className="u1-num">{now.getMonth() + 1}</span> 月
+          </span>
+        }
+      />
 
       <div className="px-[22px]">
         {/* 今日班次 + 围栏状态 */}
         <section className="u1-card mt-2.5 p-4" data-testid="att-today">
           <p className="flex items-center gap-1.5 text-body-sm font-bold">
-            <CalendarClock className="h-4 w-4 text-[rgba(74,59,46,.62)]" strokeWidth={1.8} aria-hidden />
+            <CalendarClock className="h-4 w-4 text-[rgba(59,46,36,.62)]" strokeWidth={1.8} aria-hidden />
             今日班次
             <span className="u1-num ml-auto font-bold text-ink">
               {todayShifts.length ? todayShifts.map((s) => `${s.start}–${s.end}`).join(' / ') : '今日无排班'}
             </span>
           </p>
-          <p className="mt-2 flex items-center gap-1.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+          <p className="mt-2 flex items-center gap-1.5 text-caption-xs text-[rgba(59,46,36,.62)]">
             <MapPin className="h-3.5 w-3.5" strokeWidth={1.8} aria-hidden />
             {fenceText} · {store?.name ?? '门店'}
           </p>
@@ -245,7 +253,7 @@ export default function AttendancePage() {
             className={`${punchBtnCls(busy !== null || !!todayIn)} ${todayIn ? '' : 'bg-brand-primary text-ink'}`}
             data-testid="att-punch-in"
           >
-            {busy === 'in' ? '定位打卡中…' : todayIn ? `已打上班卡 ${hhmm(todayIn.ts)}` : '上班打卡'}
+            {busy === 'in' ? '定位打卡中…' : todayIn ? <>已打上班卡 <span className="u1-num">{hhmm(todayIn.ts)}</span></> : '上班打卡'}
           </button>
           <button
             type="button"
@@ -254,7 +262,7 @@ export default function AttendancePage() {
             className={`${punchBtnCls(busy !== null || !!todayOut)} ${todayOut ? '' : 'bg-brand-secondary text-ink'}`}
             data-testid="att-punch-out"
           >
-            {busy === 'out' ? '定位打卡中…' : todayOut ? `已打下班卡 ${hhmm(todayOut.ts)}` : '下班打卡'}
+            {busy === 'out' ? '定位打卡中…' : todayOut ? <>已打下班卡 <span className="u1-num">{hhmm(todayOut.ts)}</span></> : '下班打卡'}
           </button>
           {geoError ? (
             <div className="u1-card p-4 text-center" role="alert">
@@ -272,7 +280,7 @@ export default function AttendancePage() {
 
         {/* 本月记录 */}
         <section className="mt-5" data-testid="att-records">
-          <h2 className="pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(74,59,46,.42)]">本月记录</h2>
+          <h2 className="pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">本月记录</h2>
           {recordsQuery.isPending ? (
             <div className="space-y-2.5" aria-label="加载中">
               {[0, 1, 2].map((i) => (
@@ -280,7 +288,7 @@ export default function AttendancePage() {
               ))}
             </div>
           ) : recordsQuery.isError ? (
-            <div className="u1-card p-6 text-center">
+            <div className="u1-card p-4 text-center">
               <p className="text-body-sm text-ink-secondary">考勤记录加载失败，请检查网络后重试</p>
               <button
                 type="button"
@@ -291,7 +299,7 @@ export default function AttendancePage() {
               </button>
             </div>
           ) : dayRows.length === 0 && missingDays.length === 0 ? (
-            <div className="u1-card p-6 text-center">
+            <div className="u1-card p-4 text-center">
               <p className="text-body-sm text-ink-secondary">本月还没有考勤记录——到店后点上方按钮打卡</p>
             </div>
           ) : (
@@ -308,19 +316,19 @@ export default function AttendancePage() {
                   >
                     <div className="flex items-center gap-2">
                       <span className="u1-num text-body-sm font-bold">{d.date.slice(5)}</span>
-                      <span className="text-caption-xs text-[rgba(74,59,46,.42)]">{weekdayLabel(dateObj)}</span>
+                      <span className="text-caption-xs text-[rgba(59,46,36,.42)]">{weekdayLabel(dateObj)}</span>
                       {flagged ? (
                         <b className="rounded-chip bg-danger-light px-1.5 py-0.5 text-caption-xs font-bold text-danger-deep">
                           标记
                         </b>
                       ) : null}
                       {makeup ? (
-                        <span className="text-caption-xs text-[rgba(74,59,46,.42)]">补卡已通过</span>
+                        <span className="text-caption-xs text-[rgba(59,46,36,.42)]">补卡已通过</span>
                       ) : null}
                     </div>
                     <div className="mt-2 grid grid-cols-2 gap-2">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-caption-xs text-[rgba(74,59,46,.42)]">上班</span>
+                        <span className="text-caption-xs text-[rgba(59,46,36,.42)]">上班</span>
                         {d.in ? (
                           <>
                             <span className="u1-num text-body-sm font-bold">{hhmm(d.in.ts)}</span>
@@ -331,7 +339,7 @@ export default function AttendancePage() {
                         )}
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-caption-xs text-[rgba(74,59,46,.42)]">下班</span>
+                        <span className="text-caption-xs text-[rgba(59,46,36,.42)]">下班</span>
                         {d.out ? (
                           <>
                             <span className="u1-num text-body-sm font-bold">{hhmm(d.out.ts)}</span>
@@ -348,11 +356,11 @@ export default function AttendancePage() {
               {missingDays.map((ds) => (
                 <li key={ds} className="u1-card mb-2.5 flex items-center gap-2 px-4 py-3.5" data-testid={`att-missing-${ds}`}>
                   <span className="u1-num text-body-sm font-bold">{ds.slice(5)}</span>
-                  <span className="text-caption-xs text-[rgba(74,59,46,.42)]">
+                  <span className="text-caption-xs text-[rgba(59,46,36,.42)]">
                     {weekdayLabel(new Date(`${ds}T00:00:00`))}
                   </span>
                   <b className="rounded-chip bg-danger-light px-1.5 py-0.5 text-caption-xs font-bold text-danger-deep">缺卡</b>
-                  <span className="ml-auto text-caption-xs text-[rgba(74,59,46,.42)]">可在下方申请补卡</span>
+                  <span className="ml-auto text-caption-xs text-[rgba(59,46,36,.42)]">可在下方申请补卡</span>
                 </li>
               ))}
             </ul>
@@ -361,11 +369,11 @@ export default function AttendancePage() {
 
         {/* 补卡申请（限当月，每月 ≤3 次） */}
         <section className="mt-5" data-testid="att-makeup">
-          <h2 className="pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(74,59,46,.42)]">
-            补卡申请 · 本月还可补 {makeupLeft} 次（每月限 {MAKEUP_MONTHLY_LIMIT} 次）
+          <h2 className="pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">
+            补卡申请 · 本月还可补 <span className="u1-num">{makeupLeft}</span> 次（每月限 <span className="u1-num">{MAKEUP_MONTHLY_LIMIT}</span> 次）
           </h2>
           <div className="u1-card p-4">
-            <label className="block text-caption-xs font-semibold text-[rgba(74,59,46,.62)]" htmlFor="mk-date">
+            <label className="block text-caption-xs font-semibold text-[rgba(59,46,36,.62)]" htmlFor="mk-date">
               补卡日期（限当月）
             </label>
             <input
@@ -377,7 +385,7 @@ export default function AttendancePage() {
               onChange={(e) => setMkDate(e.target.value)}
               className="u1-ring mt-1.5 h-12 min-h-[44px] w-full rounded-input bg-card px-3 text-body-sm text-ink"
             />
-            <label className="mt-3 block text-caption-xs font-semibold text-[rgba(74,59,46,.62)]" htmlFor="mk-kind">
+            <label className="mt-3 block text-caption-xs font-semibold text-[rgba(59,46,36,.62)]" htmlFor="mk-kind">
               班次
             </label>
             <select
@@ -389,7 +397,7 @@ export default function AttendancePage() {
               <option value="in">上班卡</option>
               <option value="out">下班卡</option>
             </select>
-            <label className="mt-3 block text-caption-xs font-semibold text-[rgba(74,59,46,.62)]" htmlFor="mk-time">
+            <label className="mt-3 block text-caption-xs font-semibold text-[rgba(59,46,36,.62)]" htmlFor="mk-time">
               实际{mkKind === 'in' ? '上班' : '下班'}时间
             </label>
             <input
@@ -399,7 +407,7 @@ export default function AttendancePage() {
               onChange={(e) => setMkTime(e.target.value)}
               className="u1-ring mt-1.5 h-12 min-h-[44px] w-full rounded-input bg-card px-3 text-body-sm text-ink"
             />
-            <label className="mt-3 block text-caption-xs font-semibold text-[rgba(74,59,46,.62)]" htmlFor="mk-reason">
+            <label className="mt-3 block text-caption-xs font-semibold text-[rgba(59,46,36,.62)]" htmlFor="mk-reason">
               补卡原因（必填）
             </label>
             <textarea
@@ -458,13 +466,13 @@ function ApprovalRow({ a }: { a: Approval }) {
           {a.type === 'makeup' ? '补卡' : '异常'}
         </b>
         <span className="u1-num text-body-sm font-bold">{a.date}</span>
-        <span className="text-caption-xs text-[rgba(74,59,46,.62)]">{a.kind === 'in' ? '上班卡' : '下班卡'}</span>
+        <span className="text-caption-xs text-[rgba(59,46,36,.62)]">{a.kind === 'in' ? '上班卡' : '下班卡'}</span>
         {a.type === 'makeup' && a.requestedTs ? (
-          <span className="u1-num text-caption-xs text-[rgba(74,59,46,.62)]">{hhmm(a.requestedTs)}</span>
+          <span className="u1-num text-caption-xs text-[rgba(59,46,36,.62)]">{hhmm(a.requestedTs)}</span>
         ) : null}
         <span className="ml-auto">{statusChip}</span>
       </div>
-      <p className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.62)]">原因：{a.reason}</p>
+      <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.62)]">原因：{a.reason}</p>
       {a.status === 'rejected' && a.reviewNote ? (
         <p className="mt-1 text-caption-xs text-danger-deep">驳回备注：{a.reviewNote}</p>
       ) : null}

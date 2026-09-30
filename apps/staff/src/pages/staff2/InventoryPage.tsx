@@ -67,7 +67,17 @@ export default function InventoryPage() {
 
   return (
     <div className="pb-6">
-      <PageHeader title="盘点任务" backTo="/me" aside={tasks.length ? `${tasks.length} 单待办` : undefined} />
+      <PageHeader
+        title="盘点任务"
+        backTo="/me"
+        aside={
+          tasks.length ? (
+            <span>
+              <span className="u1-num">{tasks.length}</span> 单待办
+            </span>
+          ) : undefined
+        }
+      />
 
       <div className="px-[22px]">
         {/* 待办盘点单 */}
@@ -79,7 +89,7 @@ export default function InventoryPage() {
               ))}
             </div>
           ) : tasksQuery.isError ? (
-            <div className="u1-card p-6 text-center">
+            <div className="u1-card p-4 text-center">
               <p className="text-body-sm text-ink-secondary">盘点任务加载失败，请检查网络后重试</p>
               <button
                 type="button"
@@ -90,7 +100,7 @@ export default function InventoryPage() {
               </button>
             </div>
           ) : tasks.length === 0 ? (
-            <div className="flex flex-col items-center px-6 py-12 text-center" data-testid="inv-tasks-empty">
+            <div className="flex flex-col items-center px-6 py-10 text-center" data-testid="inv-tasks-empty">
               <span className="flex h-20 w-20 items-center justify-center rounded-full bg-sunken" aria-hidden>
                 <ClipboardCheck className="h-9 w-9 text-ink" strokeWidth={1.5} />
               </span>
@@ -111,13 +121,13 @@ export default function InventoryPage() {
                         <TypeChip type={c.type} />
                         <StatusSign status={c.status} />
                       </p>
-                      <p className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+                      <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.62)]">
                         建单 <span className="u1-num">{ymd(c.createdAt)}</span> · 共{' '}
                         <span className="u1-num">{c.items.length}</span> 项
                         {c.status === 'rejected' ? ' · 可重新录入' : ''}
                       </p>
                     </div>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-[rgba(74,59,46,.42)]" aria-hidden />
+                    <ChevronRight className="h-4 w-4 shrink-0 text-[rgba(59,46,36,.42)]" aria-hidden />
                   </button>
                 </li>
               ))}
@@ -127,13 +137,13 @@ export default function InventoryPage() {
 
         {/* 安心包效期（只读 · 处置走回收登记流程） */}
         <section className="mt-5" data-testid="inv-expiry">
-          <h2 className="pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(74,59,46,.42)]">
+          <h2 className="pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">
             安心包效期（30 天内到期）
           </h2>
           {expiryQuery.isPending ? (
             <div className="u1-card h-16 animate-pulse bg-sunken" aria-label="加载中" />
           ) : expiryQuery.isError ? (
-            <div className="u1-card p-6 text-center">
+            <div className="u1-card p-4 text-center">
               <p className="text-body-sm text-ink-secondary">效期信息加载失败，请检查网络后重试</p>
               <button
                 type="button"
@@ -160,7 +170,7 @@ export default function InventoryPage() {
                     <li key={p.id} className="u1-card mb-2.5 flex items-center gap-3 px-4 py-3.5" data-testid={`inv-expiry-${p.id}`}>
                       <div className="min-w-0 flex-1">
                         <p className="text-body-sm font-bold">{p.name}</p>
-                        <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+                        <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
                           效期至 <span className="u1-num">{ymd(p.expiresAt)}</span> · 库存{' '}
                           <span className="u1-num">{p.stock}</span>
                         </p>
@@ -176,7 +186,7 @@ export default function InventoryPage() {
                   );
                 })}
               </ul>
-              <p className="mt-1 px-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+              <p className="mt-1 px-1 text-caption-xs text-[rgba(59,46,36,.42)]">
                 临期/过期安心包请走回收登记流程处置，本页仅作提醒（只读）。
               </p>
             </>

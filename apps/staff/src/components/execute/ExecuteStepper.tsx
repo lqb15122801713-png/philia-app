@@ -1,9 +1,9 @@
 /**
  * U2 任务 D · 竖向六步 stepper（员工端本地副本 ExecuteStepper；共享 StepTimeline 不动）
  *
- * 规格书 §4 + 试样 .ex-steps：
- * - 连接线 2px 墨 6%；完成步=薄荷圆 ✓ + 步名（墨 60%）+ 完成时间·张数 + 64×48 缩略（点击看大图）；
- * - 当前步=柠檬圆序号 + 步名 700 +「已传 X/Y 张·还差 N 张可确认」+ 奶油底操作区
+ * 规格书 §4 + 试样 .ex-steps（§八 效率密度转译：页边距收紧 18，时刻/张数=mono 轨）：
+ * - 连接线 2px 墨 6%；完成步=墨色圆 ✓ + 步名（墨 60%）+ 完成时刻·张数(mono) + 64×48 缩略（点击看大图）；
+ * - 当前步=淡金圆序号 + 步名 700 +「已传 X/Y 张·还差 N 张可确认」(mono) + 奶油底操作区
  *   （已传缩略 +「＋拍照/相册」虚线槽 64×48 + 提示「过程照实时同步给家长」）；
  * - 前后对比步（第 5 步）before/after 双槽并排（各 ≥1 强校验——张数口径由页面按钮链与服务端双重保证）；
  * - 未到步 45% 透明；打标重拍步带红旗签。
@@ -62,12 +62,12 @@ function Thumb({
         <img src={photo.url} alt={photo.tagLabel ?? '过程照'} loading="lazy" className={`h-full w-full object-cover ${photo.uploading ? 'animate-pulse opacity-80' : ''}`} />
       </button>
       {photo.tagLabel ? (
-        <span className="pointer-events-none absolute left-0.5 top-0.5 rounded-chip bg-[rgba(74,59,46,.72)] px-1 py-px text-[11px] text-[#F6F1E3]">
+        <span className="pointer-events-none absolute left-0.5 top-0.5 rounded-chip bg-[rgba(59,46,36,.72)] px-1 py-px text-[11px] text-[#FAF8F2]">
           {photo.tagLabel}
         </span>
       ) : null}
       {photo.uploading ? (
-        <span className="pointer-events-none absolute right-0.5 top-0.5 rounded-chip bg-[rgba(74,59,46,.72)] px-1 py-px text-[11px] text-[#F6F1E3]">
+        <span className="pointer-events-none absolute right-0.5 top-0.5 rounded-chip bg-[rgba(59,46,36,.72)] px-1 py-px text-[11px] text-[#FAF8F2]">
           上传中
         </span>
       ) : null}
@@ -76,7 +76,7 @@ function Thumb({
           type="button"
           aria-label="删除这张照片"
           onClick={() => onDelete(photo.serverId!)}
-          className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[11px] text-[#F6F1E3] transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[11px] text-[#FAF8F2] transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           ×
         </button>
@@ -95,7 +95,7 @@ function AddSlot({ onFiles, disabled }: { onFiles: (files: FileList) => void; di
         disabled={disabled}
         onClick={() => inputRef.current?.click()}
         data-testid="step-add-photo"
-        className="flex h-12 w-16 shrink-0 flex-col items-center justify-center rounded-chip bg-card text-caption-xs leading-tight text-[rgba(74,59,46,.42)] [border:1px_dashed_rgba(74,59,46,.25)] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+        className="flex h-12 w-16 shrink-0 flex-col items-center justify-center rounded-chip bg-card text-caption-xs leading-tight text-[rgba(59,46,36,.42)] [border:1px_dashed_rgba(59,46,36,.25)] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
       >
         <b className="text-title font-normal leading-none">＋</b>
         拍照/相册
@@ -143,9 +143,9 @@ function DualSlot({
           className="relative block h-16 w-full overflow-hidden rounded-chip bg-sunken transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           <img src={slot.url} alt={label} className={`h-full w-full object-cover ${slot.uploading ? 'animate-pulse opacity-80' : ''}`} />
-          <span className="absolute left-1 top-1 rounded-chip bg-[rgba(74,59,46,.72)] px-1.5 py-px text-[11px] text-[#F6F1E3]">{label}</span>
+          <span className="absolute left-1 top-1 rounded-chip bg-[rgba(59,46,36,.72)] px-1.5 py-px text-[11px] text-[#FAF8F2]">{label}</span>
           {slot.uploading ? (
-            <span className="absolute right-1 top-1 rounded-chip bg-[rgba(74,59,46,.72)] px-1.5 py-px text-[11px] text-[#F6F1E3]">上传中</span>
+            <span className="absolute right-1 top-1 rounded-chip bg-[rgba(59,46,36,.72)] px-1.5 py-px text-[11px] text-[#FAF8F2]">上传中</span>
           ) : null}
         </button>
       ) : (
@@ -154,7 +154,7 @@ function DualSlot({
           data-testid={testid}
           disabled={readOnly}
           onClick={() => inputRef.current?.click()}
-          className="flex h-16 w-full items-center justify-center rounded-chip bg-card text-caption-xs text-[rgba(74,59,46,.42)] [border:1px_dashed_rgba(74,59,46,.25)] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+          className="flex h-16 w-full items-center justify-center rounded-chip bg-card text-caption-xs text-[rgba(59,46,36,.42)] [border:1px_dashed_rgba(59,46,36,.25)] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
         >
           {label} 待拍
         </button>
@@ -188,7 +188,7 @@ export default function ExecuteStepper({
   onPhotoTap: (url: string) => void;
 }) {
   return (
-    <ol className="flex flex-col px-[22px] pb-5 pt-4" data-testid="execute-stepper">
+    <ol className="flex flex-col px-[18px] pb-5 pt-4" data-testid="execute-stepper">
       {rows.map((row, idx) => {
         const { def, status, flagged } = row;
         const name = STEP_NAME[def.stepKey] ?? def.name;
@@ -205,25 +205,25 @@ export default function ExecuteStepper({
           >
             {/* 连接线 2px 墨 6% */}
             {idx < rows.length - 1 ? (
-              <i aria-hidden className="absolute bottom-0 left-[13px] top-[30px] w-0.5 bg-[rgba(74,59,46,.06)]" />
+              <i aria-hidden className="absolute bottom-0 left-[13px] top-[30px] w-0.5 bg-[rgba(59,46,36,.06)]" />
             ) : null}
-            {/* 圆点：done=薄荷 ✓ / active=柠檬序号 / locked=纸面 ring 序号 */}
+            {/* 圆点：done=墨色 ✓（不设绿）/ active=淡金序号 / locked=纸面 ring 序号 */}
             <span
               className={`z-[1] flex h-7 w-7 shrink-0 items-center justify-center rounded-full u1-num text-caption font-bold ${
                 status === 'done'
-                  ? 'bg-brand-secondary text-ink'
+                  ? 'bg-ink text-[#FAF8F2]'
                   : status === 'active'
                     ? 'bg-brand-primary text-ink'
-                    : 'u1-ring bg-card text-[rgba(74,59,46,.42)]'
+                    : 'u1-ring bg-card text-[rgba(59,46,36,.42)]'
               }`}
             >
               {status === 'done' ? <Check className="h-4 w-4" strokeWidth={2.5} /> : def.stepOrder}
             </span>
 
             <div className="min-w-0 flex-1">
-              <p className={`flex items-center gap-2 text-body-sm font-bold ${status === 'done' ? 'text-[rgba(74,59,46,.62)]' : 'text-ink'}`}>
+              <p className={`flex items-center gap-2 text-body-sm font-bold ${status === 'done' ? 'text-[rgba(59,46,36,.62)]' : 'text-ink'}`}>
                 {name}
-                <span className="text-caption-xs font-medium text-[rgba(74,59,46,.42)]">{req}</span>
+                <span className="u1-num text-caption-xs font-medium text-[rgba(59,46,36,.42)]">{req}</span>
                 {flagged ? (
                   <span className="flex items-center gap-1 rounded-chip bg-danger-light px-1.5 py-px text-caption-xs font-bold text-danger-deep">
                     <Flag className="h-3 w-3" strokeWidth={2} />
@@ -234,8 +234,19 @@ export default function ExecuteStepper({
 
               {status === 'done' ? (
                 <>
-                  <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">
-                    {row.doneAt ? `${fmtHM(row.doneAt)} 完成 · ` : ''}{row.serverCount > 0 ? `${row.serverCount} 张` : '无需照片'}
+                  <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+                    {row.doneAt ? (
+                      <>
+                        <span className="u1-num whitespace-nowrap">{fmtHM(row.doneAt)}</span> 完成 ·{' '}
+                      </>
+                    ) : null}
+                    {row.serverCount > 0 ? (
+                      <>
+                        <span className="u1-num">{row.serverCount}</span> 张
+                      </>
+                    ) : (
+                      '无需照片'
+                    )}
                   </p>
                   {row.photos.length > 0 ? (
                     <div className="mt-2 flex flex-wrap gap-1.5">
@@ -250,10 +261,17 @@ export default function ExecuteStepper({
               {status === 'active' ? (
                 <>
                   {isConfirm ? (
-                    <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">确认后预约完成 · 家长收到通知</p>
+                    <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">确认后预约完成 · 家长收到通知</p>
                   ) : (
-                    <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">
-                      已传 {row.serverCount}/{def.minPhotos} 张{lack > 0 ? ` · 还差 ${lack} 张可确认` : ' · 可确认'}
+                    <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+                      已传 <span className="u1-num">{row.serverCount}/{def.minPhotos}</span> 张
+                      {lack > 0 ? (
+                        <>
+                          {' '}· 还差 <span className="u1-num">{lack}</span> 张可确认
+                        </>
+                      ) : (
+                        ' · 可确认'
+                      )}
                     </p>
                   )}
                   {/* 奶油底操作区 */}
@@ -274,7 +292,7 @@ export default function ExecuteStepper({
                           ) : null}
                         </div>
                       )}
-                      <p className="mt-2 text-caption-xs text-[rgba(74,59,46,.62)]">过程照实时同步给家长（服务中全程页）</p>
+                      <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.62)]">过程照实时同步给家长（服务中全程页）</p>
                     </div>
                   ) : null}
                 </>
@@ -282,16 +300,24 @@ export default function ExecuteStepper({
 
               {status === 'locked' ? (
                 <>
-                  <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">
-                    {isConfirm ? '确认后预约完成 · 家长收到通知' : isBA ? '服务前、服务后各拍 1 张' : '完成上一步后解锁'}
+                  <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+                    {isConfirm ? (
+                      '确认后预约完成 · 家长收到通知'
+                    ) : isBA ? (
+                      <>
+                        服务前、服务后各拍 <span className="u1-num">1</span> 张
+                      </>
+                    ) : (
+                      '完成上一步后解锁'
+                    )}
                   </p>
                   {/* 试样构图：locked 前后对比步也画出双槽（随父级 45% 透明；纯展示不挂交互） */}
                   {isBA ? (
                     <div className="mt-2 flex gap-1.5" aria-hidden>
-                      <span className="flex h-16 flex-1 items-center justify-center rounded-chip bg-card text-caption-xs text-[rgba(74,59,46,.42)] [border:1px_dashed_rgba(74,59,46,.25)]">
+                      <span className="flex h-16 flex-1 items-center justify-center rounded-chip bg-card text-caption-xs text-[rgba(59,46,36,.42)] [border:1px_dashed_rgba(59,46,36,.25)]">
                         before 待拍
                       </span>
-                      <span className="flex h-16 flex-1 items-center justify-center rounded-chip bg-card text-caption-xs text-[rgba(74,59,46,.42)] [border:1px_dashed_rgba(74,59,46,.25)]">
+                      <span className="flex h-16 flex-1 items-center justify-center rounded-chip bg-card text-caption-xs text-[rgba(59,46,36,.42)] [border:1px_dashed_rgba(59,46,36,.25)]">
                         after 待拍
                       </span>
                     </div>

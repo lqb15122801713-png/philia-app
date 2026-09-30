@@ -2,7 +2,7 @@
  * U2 任务 B · 全天行（groomer 态 = 寄养打卡卡列）
  *
  * 规格书 §2：左「全天」小标，右侧寄养打卡卡列——每只一卡：宠物名 + 房型·第 N 晚 +
- * 今日打卡状态；未完成=红描边卡+红「去打卡 ›」（warn 态），已完成=「查看 ›」。
+ * 今日打卡状态；未完成=赭红描边卡+赭红「去打卡 ›」（warn 态），已完成=墨色「查看 ›」。
  * 数据：listTodayForStaff 的 boarding 单（现成）+ boarding.stayForStaff 今日 dailyLog
  * 存在性（现成，前端聚合，零新接口）。无寄养单整行不渲染。
  */
@@ -34,12 +34,12 @@ function BoardingCard({ item, today }: { item: TodayItem; today: Date }) {
       to={`/boarding/${item.id}/checkin`}
       data-testid={`allday-boarding-${item.id}`}
       className={`mb-1.5 flex items-center gap-2.5 rounded-control bg-card px-3 py-2.5 transition-transform duration-120 ease-philia-spring active:scale-[0.98] ${
-        warn ? 'shadow-[0_0_0_1px_rgba(217,45,32,.35)]' : 'u1-ring'
+        warn ? 'shadow-[0_0_0_1px_rgba(180,80,46,.4)]' : 'u1-ring'
       }`}
     >
-      <BedDouble className="h-[17px] w-[17px] shrink-0 text-[rgba(74,59,46,.62)]" strokeWidth={1.6} aria-hidden />
-      <span className="min-w-0 flex-1 text-caption leading-snug text-[rgba(74,59,46,.62)]">
-        <b className="text-caption font-bold text-ink">{item.petName ?? '宠物'}</b> · {item.serviceName ?? '寄养'}第 {night} 晚
+      <BedDouble className="h-[17px] w-[17px] shrink-0 text-[rgba(59,46,36,.62)]" strokeWidth={1.6} aria-hidden />
+      <span className="min-w-0 flex-1 text-caption leading-snug text-[rgba(59,46,36,.62)]">
+        <b className="text-caption font-bold text-ink">{item.petName ?? '宠物'}</b> · {item.serviceName ?? '寄养'}第 <span className="u1-num">{night}</span> 晚
         <span className="block text-caption-xs">{warn ? '今日喂食/遛狗打卡未完成' : '今日打卡已完成 ✓'}</span>
       </span>
       <span className={`shrink-0 text-caption-xs font-bold ${warn ? 'text-danger' : 'text-ink'}`}>
@@ -53,7 +53,7 @@ export default function AllDayRow({ items, today }: { items: TodayItem[]; today:
   if (items.length === 0) return null;
   return (
     <div className="mt-3 flex items-start gap-2.5" data-testid="allday-row">
-      <span className="u1-num w-9 shrink-0 pt-2 text-right text-caption-xs text-[rgba(74,59,46,.42)]">全天</span>
+      <span className="u1-num w-9 shrink-0 pt-2 text-right text-caption-xs text-[rgba(59,46,36,.42)]">全天</span>
       <div className="min-w-0 flex-1">
         {items.map((item) => (
           <BoardingCard key={item.id} item={item} today={today} />

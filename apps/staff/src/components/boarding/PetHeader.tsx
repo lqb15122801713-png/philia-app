@@ -26,7 +26,7 @@ export interface PetHeaderProps {
 
 type VaccineTone = 'ok' | 'warn' | 'expired' | 'none';
 
-/** 疫苗有效期状态：过期 → 红；≤30 天到期 → 暖杏提醒；其余 → 绿 */
+/** 疫苗有效期状态：过期 → 赭红；≤30 天到期 → 卡其提醒；其余 → 墨色成功族（不设绿） */
 function vaccineState(until?: string | null): { label: string; tone: VaccineTone } {
   if (!until) return { label: '疫苗有效期未登记', tone: 'none' };
   const exp = new Date(`${until}T00:00:00`);
@@ -83,7 +83,7 @@ export default function PetHeader({ pet, note, scheduledStart, scheduledEnd }: P
               </p>
             </div>
             {scheduledStart && scheduledEnd ? (
-              <p className="mt-0.5 font-number text-caption text-ink-secondary">
+              <p className="mt-0.5 u1-num text-caption text-ink-secondary">
                 寄养 {fmtDay(scheduledStart)} → {fmtDay(scheduledEnd)}
               </p>
             ) : null}
