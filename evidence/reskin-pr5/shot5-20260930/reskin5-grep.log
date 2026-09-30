@@ -1,0 +1,18 @@
+=== 片5 禁用色+旧谱系 grep 实证（口径=片1成文：customer-mini 登记豁免） ===
+--- FDC830 (三端 src+packages+scripts) ---
+exit=0
+--- D97B4A (三端 src+packages+scripts) ---
+exit=0
+--- 7FD8BE (三端 src+packages+scripts) ---
+exit=0
+--- 4A3B2E (三端 src+packages+scripts) ---
+exit=0
+--- bg-success (三端 src+packages+scripts) ---
+apps/customer/src/components/booking/format.ts:62:  confirmed: { label: '已确认', pill: 'bg-success-light text-success-deep' },
+apps/customer/src/components/booking/format.ts:65:  completed: { label: '已完成', pill: 'bg-success-light text-success-deep' },
+apps/customer/src/components/live/CelebrationOverlay.tsx:7: * 换皮批片 5：圆勾原子件归并 @philia/shared CelebrationPop（bg-success 残留
+apps/customer/src/components/live/LiveHeader.tsx:57:        <span className="shrink-0 rounded-chip bg-success-light px-2 py-0.5 text-caption-xs font-semibold text-success-deep">
+apps/customer/src/components/member/plans.tsx:113:                <span className="ml-auto rounded-chip bg-success-light px-2 py-0.5 text-caption-xs text-success-deep">
+exit=0
+--- FDC830 全域（含 public/svg） ---
+exit=0
