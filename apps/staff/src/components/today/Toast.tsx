@@ -1,5 +1,5 @@
 /**
- * 轻量 toast（T3.1 · 员工端；样式与客户端 AppointmentLivePage 的 toast 同风格）
+ * 轻量 toast（T3.1 · 员工端；livetag 同族：深棕墨底 + 淡金字，成功/提示不设绿）
  *
  * const [toast, showToast] = useToast()
  * <Toast message={toast} />
@@ -26,7 +26,7 @@ export default function Toast({ message }: { message: string | null }) {
   if (!message) return null;
   return (
     <div className="pointer-events-none fixed inset-x-0 top-4 z-toast flex justify-center px-4">
-      <p className="max-w-full rounded-full bg-ink px-4 py-2 text-body-sm text-card shadow-elevated">
+      <p className="max-w-full rounded-full bg-ink px-4 py-2 text-body-sm text-brand-primary shadow-elevated">
         {message}
       </p>
     </div>

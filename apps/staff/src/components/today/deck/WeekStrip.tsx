@@ -1,8 +1,8 @@
 /**
  * U2 任务 B · 周横条（6 日 chip · 仅当前周不可翻页）
  *
- * 试样口径：本周一~周六 6 枚 chip（周X 小字 11/400 墨 40% + 日号 14/700 Montserrat），
- * 当前日=墨底反白；chip 纸面 + 细线 ring + 圆角 14（控件档）。纯展示，翻页进历史。
+ * 试样口径：本周一~周六 6 枚 chip（周X 小字 11/400 墨 40% + 日号 14/700 mono 轨 tabular-nums），
+ * 当前日=墨底纸白反白；chip 白卡 + 发丝线 ring + 圆角 14（控件档）。纯展示，翻页进历史。
  */
 
 import { useMemo } from 'react';
@@ -29,7 +29,7 @@ export default function WeekStrip({ today }: { today: Date }) {
             isToday ? 'bg-ink text-canvas' : 'u1-ring bg-card'
           }`}
         >
-          <div className={`text-caption-xs ${isToday ? 'text-[rgba(246,241,227,.5)]' : 'text-[rgba(74,59,46,.42)]'}`}>
+          <div className={`text-caption-xs ${isToday ? 'text-[rgba(250,248,242,.5)]' : 'text-[rgba(59,46,36,.42)]'}`}>
             {w}
           </div>
           <div className="u1-num mt-0.5 text-body-sm font-bold">{date.getDate()}</div>

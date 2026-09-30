@@ -20,7 +20,7 @@ export default function TodayPage() {
   // 加载态：骨架（与两台骨架卡同风格，避免分流前闪屏；U4-E 骨架=u1-card+chip 档圆角条）
   if (loading) {
     return (
-      <div className="px-[22px] pb-6">
+      <div className="px-4 pb-6">
         <div className="pt-6">
           <div className="h-8 w-32 animate-pulse rounded-chip bg-sunken" />
           <div className="mt-2 h-5 w-48 animate-pulse rounded-chip bg-sunken" />
@@ -48,7 +48,7 @@ export default function TodayPage() {
         >
           <PawPrint className="h-11 w-11 text-ink" strokeWidth={1.5} />
         </span>
-        <h1 className="mt-5 text-title-lg">还未分配员工角色</h1>
+        <h1 className="u1-serif mt-5 text-title-lg font-bold">还未分配员工角色</h1>
         <p className="mt-2 text-body-sm text-ink-secondary">
           当前账号「{user?.nickname ?? user?.id}」还没有绑定门店员工身份。
           <br />

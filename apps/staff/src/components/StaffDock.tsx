@@ -7,8 +7,9 @@
  * 详情级页面（执行/打卡）不渲染 dock（统一走 PageHeader 返回条）。
  *
  * 工艺：纸面卡底 + 顶部 1px 暖墨 hairline（试样 .sdock）；当前栏墨色 600，
- * 非当前 rgba(74,59,46,.42)；按下 scale 0.92 + duration-120 + ease-philia-spring
+ * 非当前 --muted #8A7D6B；按下 scale 0.92 + duration-120 + ease-philia-spring
  * （动效纲领 §三）；lucide 墨色线图标，禁彩色图标。
+ * 换皮批片 4 复核：平铺条在码照卡（无爪钮凸起——爪印=客户端私有）；旧暖墨谱系色值换代。
  */
 
 import { Link } from 'react-router-dom'
@@ -30,7 +31,7 @@ export default function StaffDock({ active, role }: { active: StaffDockActive; r
   return (
     <nav
       data-testid="staff-dock"
-      className="fixed inset-x-0 bottom-0 z-tabbar bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_0_rgba(74,59,46,.06)]"
+      className="fixed inset-x-0 bottom-0 z-tabbar bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_0_rgba(59,46,36,.06)]"
     >
       <div className="mx-auto grid h-[78px] w-full max-w-lg grid-cols-3 px-2.5 pb-2.5">
         {tabs.map(({ key, to, label, icon: Icon, testid }) => {
@@ -42,7 +43,7 @@ export default function StaffDock({ active, role }: { active: StaffDockActive; r
               data-testid={testid}
               aria-current={on ? 'page' : undefined}
               className={`flex flex-col items-center justify-center gap-1 text-caption-xs transition-transform duration-120 ease-philia-spring active:scale-92 ${
-                on ? 'font-semibold text-ink' : 'font-medium text-[rgba(74,59,46,.42)]'
+                on ? 'font-semibold text-ink' : 'font-medium text-[#8A7D6B]'
               }`}
             >
               <Icon className="h-[22px] w-[22px]" strokeWidth={1.6} aria-hidden />

@@ -150,7 +150,7 @@
   /* shadcn dark 变量 · 全量替换为冻结表 4.2 dark 子表（确认书第 3 条：本批次开启） */
   .dark {
     --background: 28 25% 12%; /* dark canvas #261E17 */
-    --foreground: 44 51% 93%; /* 米白反相 #F6F1E3 */
+    --foreground: 44 51% 93%; /* 米白反相 #FAF8F2 */
     --card: 30 23% 17%; /* #352B21 */
     --card-foreground: 44 51% 93%;
     --popover: 30 23% 17%;
@@ -186,7 +186,7 @@
     @apply border-border;
   }
   body {
-    /* 品牌画布米白 #F6F1E3 + 深棕墨正文 #4A3B2E（token: bg.canvas / text.primary） */
+    /* 品牌画布米白 #FAF8F2 + 深棕墨正文 #3B2E24（token: bg.canvas / text.primary） */
     @apply bg-canvas text-ink font-sans;
   }
 }

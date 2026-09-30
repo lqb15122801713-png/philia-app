@@ -5,7 +5,7 @@
  * 1. 入住登记段：stay 未登记 → CheckinForm（房间/称重/随身物品动态行+拍照）；
  *    登记成功 → StayInfoCard 只读信息卡（可点「修改」回到编辑表单，checkinStay 幂等更新）。
  * 2. 每日打卡段：stay 已登记 → DailyLogForm（喂食 segment/遛狗步进/照片≥1/备注选填，
- *    吸底柠檬主钮）+ DailyLogList 历史倒序行。dailyLog 是 UPSERT by (stay_id, log_date)。
+ *    吸底淡黄主钮）+ DailyLogList 历史倒序行。dailyLog 是 UPSERT by (stay_id, log_date)。
  * U2 版式：PageHeader 返回条（‹ 寄养打卡 + 右「第 N 晚·共 M 晚」）+ BoardingPetCard
  * （16:10 照片头+「在店寄养·房型」签+状态签）。.
  *
@@ -326,7 +326,7 @@ export default function BoardingCheckinPage() {
   if (detailQuery.isPending) {
     // 加载 >300ms 骨架（禁转圈，动效纲领 §四.2）
     return (
-      <div className="px-[22px] pt-3">
+      <div className="px-4 pt-3">
         <div className="flex items-center gap-2.5">
           <span className="h-9 w-9 animate-pulse rounded-full bg-sunken" />
           <span className="h-6 w-24 animate-pulse rounded-chip bg-sunken" />
@@ -344,16 +344,16 @@ export default function BoardingCheckinPage() {
 
   if (detailQuery.isError || !appt) {
     return (
-      <div className="px-[22px] py-6">
+      <div className="px-4 py-6">
         <section className="u1-card p-4">
           <p className="text-body-sm text-ink">无法查看该寄养单</p>
           <p className="mt-1 text-caption text-ink-secondary">
             {detailQuery.error instanceof Error ? detailQuery.error.message : '预约不存在或无权查看'}
           </p>
-          {/* W1-D2 弱出口按钮化：异常页无返回条，唯一主出口=柠檬主钮（导航闭环规范②） */}
+          {/* W1-D2 弱出口按钮化：异常页无返回条，唯一主出口=淡黄主钮（导航闭环规范②） */}
           <Link
             to="/today"
-            className="mt-4 flex h-12 items-center justify-center rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            className="mt-4 flex h-staff-btn items-center justify-center rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
             返回任务台
           </Link>
@@ -364,13 +364,13 @@ export default function BoardingCheckinPage() {
 
   if (!isBoarding) {
     return (
-      <div className="px-[22px] py-6">
+      <div className="px-4 py-6">
         <section className="u1-card p-4">
           <p className="text-body-sm text-ink">该预约不是寄养单</p>
-          {/* W1-D2 弱出口按钮化：同上，唯一主出口=柠檬主钮 */}
+          {/* W1-D2 弱出口按钮化：同上，唯一主出口=淡黄主钮 */}
           <Link
             to="/today"
-            className="mt-4 flex h-12 items-center justify-center rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            className="mt-4 flex h-staff-btn items-center justify-center rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
             返回任务台
           </Link>
@@ -386,15 +386,21 @@ export default function BoardingCheckinPage() {
     Math.max(1, Math.floor((Date.now() - appt.scheduledStart.getTime()) / 86_400_000) + 1),
   );
   const roomLabel = detailQuery.data?.service?.name ?? '寄养';
+  // 晚数=数据位，走 mono 轨 tabular-nums（v2.0 §二 三轨不串）
+  const nightAside = (
+    <>
+      第 <span className="u1-num">{nightNow}</span> 晚 · 共 <span className="u1-num">{nightsTotal}</span> 晚
+    </>
+  );
 
 
   // 尚未核销入店：入住登记前置（checkinStay 服务端也强制 in_boarding）
   if (appt.status === 'pending' || appt.status === 'confirmed') {
     return (
       <div className="pb-6">
-        <PageHeader title="寄养打卡" aside={`第 ${nightNow} 晚 · 共 ${nightsTotal} 晚`} backTo="/today" />
+        <PageHeader title="寄养打卡" aside={nightAside} backTo="/today" />
         <BoardingPetCard pet={pet} roomLabel={roomLabel} scheduledStart={appt.scheduledStart} scheduledEnd={appt.scheduledEnd} overdue={false} />
-        <section className="u1-card mx-[22px] mt-3.5 p-4">
+        <section className="u1-card mx-4 mt-3 p-4">
           <p className="flex items-center gap-2 text-body-sm font-semibold text-ink">
             <QrCode className="h-5 w-5 text-ink" strokeWidth={1.5} />
             客户还未到店核销
@@ -404,7 +410,7 @@ export default function BoardingCheckinPage() {
           </p>
           <Link
             to="/today"
-            className="mt-4 flex h-12 items-center justify-center rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            className="mt-4 flex h-staff-btn items-center justify-center rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
             去任务台核销
           </Link>
@@ -417,9 +423,9 @@ export default function BoardingCheckinPage() {
   if (appt.status === 'cancelled' || appt.status === 'cancel_requested') {
     return (
       <div className="pb-6">
-        <PageHeader title="寄养打卡" aside={`第 ${nightNow} 晚 · 共 ${nightsTotal} 晚`} backTo="/today" />
+        <PageHeader title="寄养打卡" aside={nightAside} backTo="/today" />
         <BoardingPetCard pet={pet} roomLabel={roomLabel} scheduledStart={appt.scheduledStart} scheduledEnd={appt.scheduledEnd} overdue={false} />
-        <section className="u1-card mx-[22px] mt-3.5 p-4">
+        <section className="u1-card mx-4 mt-3 p-4">
           <p className="text-body-sm text-ink">
             {appt.status === 'cancelled' ? '该预约已取消' : '该预约正在取消审核中'}
           </p>
@@ -427,7 +433,7 @@ export default function BoardingCheckinPage() {
           {/* W1-D2 弱出口按钮化：本分支已有返回条，出口=细线白底次钮 */}
           <Link
             to="/today"
-            className="u1-ring mt-4 flex h-12 items-center justify-center rounded-control bg-card text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            className="u1-ring mt-4 flex h-staff-btn items-center justify-center rounded-control bg-card text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
             返回任务台
           </Link>
@@ -441,7 +447,7 @@ export default function BoardingCheckinPage() {
   return (
     <div className="pb-6">
       {/* 返回条（‹ 寄养打卡 + 右「第 N 晚·共 M 晚」） */}
-      <PageHeader title="寄养打卡" aside={`第 ${nightNow} 晚 · 共 ${nightsTotal} 晚`} backTo="/today" />
+      <PageHeader title="寄养打卡" aside={nightAside} backTo="/today" />
 
       {/* 宠物卡（16:10 照片 + 在店寄养·房型签 + 状态签） */}
       <BoardingPetCard
@@ -456,20 +462,20 @@ export default function BoardingCheckinPage() {
       {overdue ? (
         <p
           role="alert"
-          className="mx-[22px] mt-3 flex items-start gap-2 rounded-control border border-danger bg-danger-light px-4 py-3 text-body-sm font-semibold text-danger-deep"
+          className="mx-4 mt-3 flex items-start gap-2 rounded-control border border-danger bg-danger-light px-4 py-3 text-body-sm font-semibold text-danger-deep"
         >
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={1.5} />
           <span>
             已超期，请提醒商家安排退房
             <span className="mt-0.5 block text-caption font-normal">
-              应于 {format(appt.scheduledEnd, 'M月d日 HH:mm')} 退房
+              应于 <span className="u1-num whitespace-nowrap">{format(appt.scheduledEnd, 'M月d日 HH:mm')}</span> 退房
             </span>
           </span>
         </p>
       ) : null}
 
       {completed ? (
-        <p className="mx-[22px] mt-3 flex items-center gap-2 rounded-control bg-success-light px-4 py-3 text-body-sm font-semibold text-success-deep">
+        <p className="mx-4 mt-3 flex items-center gap-2 rounded-control bg-success-light px-4 py-3 text-body-sm font-semibold text-success-deep">
           <CheckCircle2 className="h-5 w-5 shrink-0" strokeWidth={1.5} />
           本单已完成退房结算
         </p>
@@ -477,12 +483,12 @@ export default function BoardingCheckinPage() {
 
       {/* 入住登记段 */}
       {stayQuery.isPending ? (
-        <section className="u1-card mx-[22px] mt-3.5 p-4">
+        <section className="u1-card mx-4 mt-3 p-4">
           <div className="h-5 w-28 animate-pulse rounded-chip bg-sunken" />
           <div className="mt-2 h-4 w-44 animate-pulse rounded-chip bg-sunken" />
         </section>
       ) : stay === null ? (
-        <div className="px-[22px]">
+        <div className="px-4">
           <CheckinForm
             appointmentId={aid!}
             leadStaff={leadStaffProps}
@@ -492,7 +498,7 @@ export default function BoardingCheckinPage() {
           />
         </div>
       ) : editingStay && !completed ? (
-        <div className="px-[22px]">
+        <div className="px-4">
           <CheckinForm
             key={`edit-${stay.id}`}
             appointmentId={aid!}
@@ -505,7 +511,7 @@ export default function BoardingCheckinPage() {
           />
         </div>
       ) : (
-        <div className="px-[22px]">
+        <div className="px-4">
           <StayInfoCard
             stay={stay}
             onEdit={completed ? undefined : () => setEditingStay(true)}
@@ -535,7 +541,7 @@ export default function BoardingCheckinPage() {
       {/* 退房（员工权限，内联二次确认，幂等） */}
       {!completed && stay !== null && appt.status === 'in_boarding' ? (
         confirmingCheckout ? (
-          <div className="u1-card mx-[22px] mt-3 p-4">
+          <div className="u1-card mx-4 mt-3 p-4">
             <p className="text-body-sm font-semibold text-ink">确认办理退房？</p>
             <p className="mt-1 text-caption text-ink-secondary">
               退房后预约转入「已完成」；到店付订单请提醒商家在财务页确认收款。
@@ -544,7 +550,7 @@ export default function BoardingCheckinPage() {
               <button
                 type="button"
                 onClick={() => setConfirmingCheckout(false)}
-                className="h-11 flex-1 rounded-control bg-sunken text-body-sm font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                className="h-staff-btn flex-1 rounded-control bg-sunken text-body-sm font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
               >
                 再想想
               </button>
@@ -552,7 +558,7 @@ export default function BoardingCheckinPage() {
                 type="button"
                 disabled={checkoutMutation.isPending}
                 onClick={() => checkoutMutation.mutate()}
-                className="h-11 flex-1 rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
+                className="h-staff-btn flex-1 rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
               >
                 {checkoutMutation.isPending ? '办理中…' : '确认退房'}
               </button>
@@ -562,7 +568,7 @@ export default function BoardingCheckinPage() {
           <button
             type="button"
             onClick={() => setConfirmingCheckout(true)}
-            className="u1-ring mx-[22px] mt-3 flex h-12 w-[calc(100%-44px)] items-center justify-center gap-2 rounded-control bg-card text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            className="u1-ring mx-4 mt-3 flex h-staff-btn w-[calc(100%-32px)] items-center justify-center gap-2 rounded-control bg-card text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
             <DoorOpen className="h-4 w-4" strokeWidth={1.5} />
             办理退房

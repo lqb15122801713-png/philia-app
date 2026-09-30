@@ -177,7 +177,7 @@ export default function CheckinForm({
             value={weightText}
             onChange={(e) => setWeightText(sanitizeWeight(e.target.value))}
             placeholder="0.0"
-            className="h-staff-btn w-32 rounded-control border border-line bg-canvas px-3 font-number text-body-sm text-ink placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
+            className="h-staff-btn w-32 rounded-control border border-line bg-canvas px-3 u1-num text-body-sm text-ink placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
           />
           <span className="text-body-sm text-ink-secondary">kg（一位小数）</span>
         </div>
@@ -257,7 +257,7 @@ export default function CheckinForm({
           <button
             type="button"
             onClick={() => setRows((rs) => [...rs, newRow()])}
-            className="mt-2 flex h-12 items-center gap-1.5 rounded-full bg-brand-primary-light px-4 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            className="mt-2 flex h-staff-btn items-center gap-1.5 rounded-full bg-brand-primary-light px-4 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
             <Plus className="h-5 w-5" strokeWidth={1.5} />
             添加物品
@@ -271,7 +271,7 @@ export default function CheckinForm({
           type="button"
           onClick={submit}
           disabled={submitting || anyUploading}
-          className="h-12 w-full rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+          className="h-staff-btn w-full rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
         >
           {submitting ? '提交中…' : initial ? '保存登记信息' : '完成入住登记'}
         </button>

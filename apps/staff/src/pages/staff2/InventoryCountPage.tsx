@@ -77,7 +77,13 @@ export default function InventoryCountPage() {
       <PageHeader
         title={count ? `${TYPE_LABEL[count.type] ?? '盘点'}执行` : '盘点执行'}
         backTo="/me"
-        aside={count ? `${items.length} 项` : undefined}
+        aside={
+          count ? (
+            <span>
+              <span className="u1-num">{items.length}</span> 项
+            </span>
+          ) : undefined
+        }
       />
 
       <div className="px-[22px]">
@@ -88,7 +94,7 @@ export default function InventoryCountPage() {
             ))}
           </div>
         ) : tasksQuery.isError ? (
-          <div className="u1-card mt-2.5 p-6 text-center">
+          <div className="u1-card mt-2.5 p-4 text-center">
             <p className="text-body-sm text-ink-secondary">盘点单加载失败，请检查网络后重试</p>
             <button
               type="button"
@@ -99,7 +105,7 @@ export default function InventoryCountPage() {
             </button>
           </div>
         ) : !count ? (
-          <div className="flex flex-col items-center px-6 py-14 text-center" data-testid="inv-count-missing">
+          <div className="flex flex-col items-center px-6 py-10 text-center" data-testid="inv-count-missing">
             <span className="flex h-20 w-20 items-center justify-center rounded-full bg-sunken" aria-hidden>
               <PackageSearch className="h-9 w-9 text-ink" strokeWidth={1.5} />
             </span>
@@ -124,10 +130,10 @@ export default function InventoryCountPage() {
             ) : count.status === 'counted' ? (
               <div className="u1-card mt-2.5 bg-success-light p-4" data-testid="inv-count-counted">
                 <p className="text-body-sm font-bold text-success-deep">已提交，待店长确认后才入账</p>
-                <p className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">确认前库存不变；如被退回会出现在待办里可重盘。</p>
+                <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">确认前库存不变；如被退回会出现在待办里可重盘。</p>
               </div>
             ) : (
-              <p className="mt-2.5 px-1 text-caption-xs text-[rgba(74,59,46,.62)]">
+              <p className="mt-2.5 px-1 text-caption-xs text-[rgba(59,46,36,.62)]">
                 逐项填写实盘数量后提交；提交后待店长确认才入账，确认前库存不变。
                 {isBlind ? '本单为盲盘，不展示账面数。' : ''}
               </p>
@@ -135,7 +141,7 @@ export default function InventoryCountPage() {
 
             {/* 行项 */}
             {items.length === 0 ? (
-              <div className="u1-card mt-3 p-6 text-center">
+              <div className="u1-card mt-3 p-4 text-center">
                 <p className="text-body-sm text-ink-secondary">这张单没有盘点行项，请联系店长确认派单范围</p>
               </div>
             ) : (
@@ -152,12 +158,12 @@ export default function InventoryCountPage() {
                       <div className="flex items-center gap-2">
                         <p className="min-w-0 flex-1 text-body-sm font-bold">{it.productName ?? '商品'}</p>
                         {it.productCategory ? (
-                          <span className="shrink-0 text-caption-xs text-[rgba(74,59,46,.42)]">{it.productCategory}</span>
+                          <span className="shrink-0 text-caption-xs text-[rgba(59,46,36,.42)]">{it.productCategory}</span>
                         ) : null}
                       </div>
                       <div className="mt-2 flex items-center gap-3">
                         {!isBlind ? (
-                          <span className="text-caption-xs text-[rgba(74,59,46,.62)]">
+                          <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
                             账面 <b className="u1-num text-body-sm font-bold text-ink">{it.systemStock}</b>
                           </span>
                         ) : null}
@@ -171,10 +177,10 @@ export default function InventoryCountPage() {
                             aria-label={`${it.productName ?? '商品'}实盘数量`}
                             value={values[it.id] ?? ''}
                             onChange={(e) => setValues((v) => ({ ...v, [it.id]: e.target.value }))}
-                            className="u1-ring ml-auto h-12 min-h-[44px] w-32 rounded-input bg-card px-3 text-right text-body-lg font-bold text-ink placeholder:text-caption-xs placeholder:font-normal placeholder:text-ink-placeholder"
+                            className="u1-num u1-ring ml-auto h-12 min-h-[44px] w-32 rounded-input bg-card px-3 text-right text-body-lg font-bold text-ink placeholder:text-caption-xs placeholder:font-normal placeholder:text-ink-placeholder"
                           />
                         ) : (
-                          <span className="ml-auto text-caption-xs text-[rgba(74,59,46,.62)]">
+                          <span className="ml-auto text-caption-xs text-[rgba(59,46,36,.62)]">
                             实盘 <b className="u1-num text-body-sm font-bold text-ink">{it.actualStock ?? '—'}</b>
                           </span>
                         )}
@@ -183,7 +189,7 @@ export default function InventoryCountPage() {
                       {!isBlind && !editable && diff !== null ? (
                         <p className="mt-1.5 text-caption-xs">
                           {diff === 0 ? (
-                            <span className="text-[rgba(74,59,46,.42)]">账实相符</span>
+                            <span className="text-[rgba(59,46,36,.42)]">账实相符</span>
                           ) : diff < 0 ? (
                             <span className="font-bold text-danger">盘亏 {diff}</span>
                           ) : (
@@ -222,7 +228,7 @@ export default function InventoryCountPage() {
 
             <Link
               to="/inventory"
-              className="mt-3 flex h-12 min-h-[44px] w-full items-center justify-center rounded-control text-body-sm font-semibold text-[rgba(74,59,46,.62)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+              className="mt-3 flex h-12 min-h-[44px] w-full items-center justify-center rounded-control text-body-sm font-semibold text-[rgba(59,46,36,.62)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
             >
               返回盘点任务列表
             </Link>

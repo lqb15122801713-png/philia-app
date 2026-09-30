@@ -1,9 +1,9 @@
 /**
  * 员工端六步执行页（/execute/:appointmentId · U2 任务 D 重做）
  *
- * 规格书 §4：返回条（‹ 服务执行 + 右摘要「宠物·服务」）→ 摘要卡（头像柠檬环 +
- * 服务中薄荷签 + 服务·时间·员工 + 右 N/6 Montserrat）→ 竖向 ExecuteStepper
- * （本地副本，连接线 2px 墨 6%）→ 吸底柠檬主钮文案随态。
+ * 规格书 §4：返回条（‹ 服务执行 + 右摘要「宠物·服务」）→ 摘要卡（头像卡其环 +
+ * 服务中签 + 服务·时刻·员工 + 右 N/6 mono）→ 竖向 ExecuteStepper
+ * （本地副本，连接线 2px 墨 6%）→ 吸底淡金主钮文案随态。
  * 数据：serviceStep.list/addPhotos/confirmStep + POST /api/upload（全现成）；
  * 服务端不变量（至多 1 active）不碰。
  *
@@ -11,7 +11,7 @@
  * SSE watch=aid（step_updated/flagged/reopened/completed/cancelled）、删除照片二次确认、
  * 打标重拍横幅、庆祝页、各异常态引导页。
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { TRPCClientError } from '@trpc/client'
@@ -304,6 +304,15 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
 
   /* ---------------- 删除照片（二次确认 → deletePhoto） ---------------- */
   const [deleteTarget, setDeleteTarget] = useState<{ photoId: string; stepKey: string } | null>(null)
+  /* 弹层三件套之滚动锁：确认层打开期间锁底层 body（§4.5；遮罩可点已在 JSX） */
+  useEffect(() => {
+    if (!deleteTarget) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = prev
+    }
+  }, [deleteTarget])
   const deletePhotoMutation = useMutation({
     mutationFn: (t: { photoId: string; stepKey: string }) =>
       trpc.serviceStep.deletePhoto.mutate({
@@ -359,7 +368,7 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
   if (!appt || !steps) {
     // 加载 >300ms 骨架（禁转圈，动效纲领 §四.2）
     return (
-      <div className="px-[22px] pt-3">
+      <div className="px-[18px] pt-3">
         <div className="flex items-center gap-2.5">
           <span className="h-9 w-9 animate-pulse rounded-full bg-sunken" />
           <span className="h-6 w-24 animate-pulse rounded-chip bg-sunken" />
@@ -480,15 +489,16 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
   const nextDef = activeRow ? SERVICE_STEPS.find((d) => d.stepOrder === activeRow.def.stepOrder + 1) : null
   const nextName = nextDef ? (STEP_NAME[nextDef.stepKey] ?? nextDef.name) : ''
 
-  /* 吸底主钮文案随态（规格书 §4） */
-  let primaryText = ''
-  let primarySub: string | null = null
+  /* 吸底主钮文案随态（规格书 §4）；数字位一律 u1-num（mono 轨，§十.6 三轨不串） */
+  let primaryText: ReactNode = ''
+  let primarySub: ReactNode = null
   let primaryDisabled = false
   if (activeRow) {
     const isBA = activeRow.def.stepKey === 'before_after'
     const isConfirm = activeRow.def.stepKey === 'confirm'
     const lack = Math.max(0, activeRow.def.minPhotos - activeRow.serverCount)
     const baLack = isBA ? (activeRow.beforeCount < 1 ? 1 : 0) + (activeRow.afterCount < 1 ? 1 : 0) : 0
+    const nextOrder = activeRow.def.stepOrder + 1
     if (pendingAllCount > 0) {
       primaryText = '照片上传中…'
       primaryDisabled = true
@@ -498,11 +508,11 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
     } else if (isConfirm) {
       primaryText = '确认完成 · 家长将收到通知'
     } else if (isBA && baLack > 0) {
-      primaryText = '传满 2 张后确认本步'
-      primarySub = `还差 ${baLack} 张 · 确认后进入第 ${activeRow.def.stepOrder + 1} 步${nextName}`
+      primaryText = <>传满 <span className="u1-num">2</span> 张后确认本步</>
+      primarySub = <>还差 <span className="u1-num">{baLack}</span> 张 · 确认后进入第 <span className="u1-num">{nextOrder}</span> 步{nextName}</>
     } else if (lack > 0) {
-      primaryText = `传满 ${activeRow.def.minPhotos} 张后确认本步`
-      primarySub = `还差 ${lack} 张 · 确认后进入第 ${activeRow.def.stepOrder + 1} 步${nextName}`
+      primaryText = <>传满 <span className="u1-num">{activeRow.def.minPhotos}</span> 张后确认本步</>
+      primarySub = <>还差 <span className="u1-num">{lack}</span> 张 · 确认后进入第 <span className="u1-num">{nextOrder}</span> 步{nextName}</>
     } else {
       primaryText = `确认本步，进入${nextName}`
     }
@@ -528,11 +538,11 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
     <div className="flex min-h-[100dvh] flex-col bg-canvas">
       <PageHeader title="服务执行" aside={`${pet?.name ?? '宠物'} · ${service?.name ?? '服务'}`} backTo="/today" />
 
-      {/* 摘要卡（试样 .ex-sum margin 6px 22px 0 / padding 14px 16px）：
-          头像柠檬环（无头像=E-补1 字圈：浅木底+衬线首字，柠檬环保留）+ 服务中薄荷签 +
-          服务·时间·员工 + 右 N/6 Montserrat */}
-      <section className="u1-card mx-[22px] mt-1.5 flex items-center gap-3.5 p-3.5" data-testid="execute-summary">
-        <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FFFDF6,0_0_0_3.5px_#F2DFA6]">
+      {/* 摘要卡（试样 .ex-sum；页边距按 §八 效率密度收紧档 18）：
+          头像卡其环（无头像=E-补1 字圈：浅木底+衬线首字，与 MePage/deck 头像环同族）+ 服务中 livetag 同族签 +
+          服务·时刻(mono)·员工 + 右 N/6 mono；本屏淡黄预算=active 步圆+吸底主钮=2 */}
+      <section className="u1-card mx-[18px] mt-1.5 flex items-center gap-3.5 p-3.5" data-testid="execute-summary">
+        <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FFFDF6,0_0_0_3.5px_#B9A482]">
           {pet?.avatarUrl ? (
             <img src={pet.avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
           ) : (
@@ -544,22 +554,27 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-2 text-body-lg font-bold">
             {pet?.name ?? '宠物'}
-            <span className="rounded-chip bg-brand-secondary px-1.5 py-px text-caption-xs font-bold text-ink">服务中</span>
+            <span className="rounded-chip bg-ink px-1.5 py-px text-caption-xs font-bold text-brand-primary">服务中</span>
           </p>
-          <p className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">
-            {service?.name ?? '服务'} · {fmtHM(appointment.scheduledStart)}–{fmtHM(appointment.scheduledEnd)}
+          <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
+            {service?.name ?? '服务'} ·{' '}
+            <span className="u1-num whitespace-nowrap">
+              {fmtHM(appointment.scheduledStart)}–{fmtHM(appointment.scheduledEnd)}
+            </span>
             {staffName ? ` · ${staffName}` : ''}
           </p>
           {pendingAllCount > 0 ? (
-            <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">{pendingAllCount} 张照片上传中…</p>
+            <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+              <span className="u1-num">{pendingAllCount}</span> 张照片上传中…
+            </p>
           ) : null}
         </div>
         <div className="shrink-0 text-center">
           <p className="u1-num text-title font-bold">
             {activeRow?.def.stepOrder ?? 6}
-            <span className="text-caption-xs text-[rgba(74,59,46,.42)]">/6</span>
+            <span className="text-caption-xs text-[rgba(59,46,36,.42)]">/6</span>
           </p>
-          <p className="text-caption-xs text-[rgba(74,59,46,.42)]">当前步</p>
+          <p className="text-caption-xs text-[rgba(59,46,36,.42)]">当前步</p>
         </div>
       </section>
 
@@ -580,22 +595,22 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
         />
       </div>
 
-      {/* 吸底柠檬主钮（文案随态；试样底栏 padding 12px 22px 14px + 顶部 hairline） */}
+      {/* 吸底淡金主钮（文案随态；主钮 h≥56 员工端硬性要求；顶部 hairline） */}
       {activeRow ? (
-        <div className="sticky bottom-0 bg-card px-[22px] pb-[calc(14px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-1px_0_rgba(74,59,46,.06)]">
+        <div className="sticky bottom-0 bg-card px-[18px] pb-[calc(14px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-1px_0_rgba(59,46,36,.06)]">
           <button
             type="button"
             data-testid="execute-primary"
             disabled={primaryDisabled}
             onClick={onPrimary}
-            className={`flex w-full items-center justify-center rounded-control py-3.5 text-body-sm font-semibold transition-transform duration-120 ease-philia-spring active:scale-[0.98] ${
+            className={`flex h-14 min-h-[56px] w-full items-center justify-center rounded-control text-body-sm font-semibold transition-transform duration-120 ease-philia-spring active:scale-[0.98] ${
               primaryDisabled ? 'bg-sunken text-ink-placeholder' : 'bg-brand-primary text-ink'
             }`}
           >
             {primaryText}
           </button>
           {primarySub ? (
-            <p className="mt-1.5 text-center text-caption-xs text-[rgba(74,59,46,.42)]">{primarySub}</p>
+            <p className="mt-1.5 text-center text-caption-xs text-[rgba(59,46,36,.42)]">{primarySub}</p>
           ) : null}
         </div>
       ) : null}
@@ -603,8 +618,8 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
       {/* 删除照片二次确认弹层（动效纲领 §四.1 危险动作二次确认） */}
       {deleteTarget && (
         <div className="fixed inset-0 z-modal flex items-center justify-center px-8" role="dialog" aria-modal="true" aria-label="删除这张照片？">
-          <button type="button" aria-label="取消" className="absolute inset-0 bg-[rgba(74,59,46,.4)]" onClick={() => setDeleteTarget(null)} />
-          <div className="u1-card relative w-full max-w-xs p-5">
+          <button type="button" aria-label="取消" className="absolute inset-0 bg-[rgba(59,46,36,.4)]" onClick={() => setDeleteTarget(null)} />
+          <div className="u1-card relative w-full max-w-xs p-4">
             <p className="text-title text-ink">删除这张照片？</p>
             <p className="mt-2 text-body-sm text-ink-secondary">删除后不可恢复，如影响步骤照片数下限需补拍。</p>
             <div className="mt-5 flex gap-3">

@@ -7,7 +7,7 @@ import { AlertTriangle } from 'lucide-react'
 export default function FlaggedBanner({ stepNames }: { stepNames: string[] }) {
   if (stepNames.length === 0) return null
   return (
-    <div className="mx-[22px] mt-2 flex items-start gap-2 rounded-control border border-danger bg-danger-light px-4 py-3">
+    <div className="mx-[18px] mt-2 flex items-start gap-2 rounded-control border border-danger bg-danger-light px-4 py-3">
       <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-danger-deep" strokeWidth={1.8} />
       <div className="text-body-sm text-danger-deep">
         <span className="font-semibold">商家要求重拍：{stepNames.join('、')}</span>

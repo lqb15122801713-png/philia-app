@@ -89,7 +89,7 @@ function Chip({ tone = 'plain', children }: { tone?: 'plain' | 'warn' | 'danger'
         ? 'bg-brand-primary-light text-ink'
         : tone === 'ok'
           ? 'bg-success-light text-success-deep'
-          : 'bg-sunken text-[rgba(74,59,46,.62)]';
+          : 'bg-sunken text-[rgba(59,46,36,.62)]';
   return <span className={`inline-flex items-center rounded-chip px-1.5 py-0.5 text-caption-xs font-bold ${cls}`}>{children}</span>;
 }
 
@@ -108,7 +108,7 @@ function Section({
     <section className="u1-card mt-3.5 p-4" data-testid={testid}>
       <div className="flex items-baseline justify-between gap-2">
         <h2 className="text-title font-bold">{title}</h2>
-        {aside ? <div className="text-caption-xs text-[rgba(74,59,46,.42)]">{aside}</div> : null}
+        {aside ? <div className="text-caption-xs text-[rgba(59,46,36,.42)]">{aside}</div> : null}
       </div>
       <div className="mt-3">{children}</div>
     </section>
@@ -116,9 +116,9 @@ function Section({
 }
 
 function QueryState({ pending, error, empty, emptyText }: { pending: boolean; error: unknown; empty: boolean; emptyText: string }) {
-  if (pending) return <p className="py-2 text-caption-xs text-[rgba(74,59,46,.42)]">加载中…</p>;
+  if (pending) return <p className="py-2 text-caption-xs text-[rgba(59,46,36,.42)]">加载中…</p>;
   if (error) return <p className="py-2 text-caption-xs text-danger">{errMsg(error)}</p>;
-  if (empty) return <p className="py-2 text-caption-xs text-[rgba(74,59,46,.42)]">{emptyText}</p>;
+  if (empty) return <p className="py-2 text-caption-xs text-[rgba(59,46,36,.42)]">{emptyText}</p>;
   return null;
 }
 
@@ -133,7 +133,7 @@ function GuideCard() {
       <span className="flex h-16 w-16 items-center justify-center rounded-full bg-oak-light">
         <ShieldCheck className="h-7 w-7 text-ink" strokeWidth={1.6} />
       </span>
-      <h1 className="mt-4 text-title-lg">店长视图仅店长与老板可用</h1>
+      <h1 className="u1-serif mt-4 text-title-lg font-bold">店长视图仅店长与老板可用</h1>
       <p className="mt-2 text-body-sm text-ink-secondary">
         当前账号暂无店长权限。考勤/取消/盘点审批与日结确认请改用商家端，或联系店主开通店长角色。
       </p>
@@ -192,24 +192,29 @@ function AttendanceSection({
   return (
     <Section
       title="考勤审批"
-      aside={approvals.length ? `${approvals.length} 条待审` : undefined}
+      aside={
+        approvals.length ? (
+          <span>
+            <span className="u1-num">{approvals.length}</span> 条待审
+          </span>
+        ) : undefined
+      }
       testid="manager-attendance"
     >
       <QueryState pending={q.isPending} error={q.error} empty={approvals.length === 0 && flagged.length === 0} emptyText="暂无待审批与防代打标记" />
       {approvals.length > 0 ? (
-        <ul className="divide-y divide-[rgba(74,59,46,.06)]">
+        <ul className="divide-y divide-[rgba(59,46,36,.06)]">
           {approvals.map((a) => (
             <li key={a.id} className="py-3" data-testid={`manager-attendance-row-${a.id}`}>
               <div className="flex flex-wrap items-center gap-1.5">
                 <Chip tone={a.type === 'makeup' ? 'warn' : 'danger'}>{a.type === 'makeup' ? '补卡' : '异常'}</Chip>
                 <span className="text-body-sm font-bold text-ink">{staffNameOf(a.staffId)}</span>
-                <span className="text-caption-xs text-[rgba(74,59,46,.62)]">
-                  {a.date} · {KIND_LABEL[a.kind] ?? a.kind}
-                </span>
+                <span className="u1-num text-caption-xs text-[rgba(59,46,36,.62)]">{a.date}</span>
+                <span className="text-caption-xs text-[rgba(59,46,36,.62)]">· {KIND_LABEL[a.kind] ?? a.kind}</span>
               </div>
-              <p className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">{a.reason}</p>
+              <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">{a.reason}</p>
               {a.type === 'makeup' && a.requestedTs ? (
-                <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+                <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
                   申请补卡时间 <span className="u1-num">{hhmm(a.requestedTs)}</span>
                 </p>
               ) : null}
@@ -238,15 +243,15 @@ function AttendanceSection({
         </ul>
       ) : null}
       {flagged.length > 0 ? (
-        <div className={approvals.length > 0 ? 'mt-3 border-t border-[rgba(74,59,46,.06)] pt-3' : ''}>
-          <p className="text-caption-xs font-bold text-[rgba(74,59,46,.42)]">防代打标记（本月 · 只读）</p>
-          <ul className="mt-1 divide-y divide-[rgba(74,59,46,.06)]">
+        <div className={approvals.length > 0 ? 'mt-3 border-t border-[rgba(59,46,36,.06)] pt-3' : ''}>
+          <p className="text-caption-xs font-bold text-[rgba(59,46,36,.42)]">防代打标记（本月 · 只读）</p>
+          <ul className="mt-1 divide-y divide-[rgba(59,46,36,.06)]">
             {flagged.map((r) => (
               <li key={r.id} className="flex flex-wrap items-center gap-1.5 py-2" data-testid={`manager-flagged-row-${r.id}`}>
                 <Chip tone="danger">防代打</Chip>
                 <span className="text-body-sm font-bold text-ink">{staffNameOf(r.staffId)}</span>
-                <span className="text-caption-xs text-[rgba(74,59,46,.62)]">
-                  {r.date} · {KIND_LABEL[r.kind] ?? r.kind} · {RECORD_STATUS_LABEL[r.status] ?? r.status} ·{' '}
+                <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
+                  <span className="u1-num">{r.date}</span> · {KIND_LABEL[r.kind] ?? r.kind} · {RECORD_STATUS_LABEL[r.status] ?? r.status} ·{' '}
                   <span className="u1-num">{hhmm(r.ts)}</span>
                 </span>
               </li>
@@ -281,20 +286,30 @@ function CancelSection({ showToast }: { showToast: (m: string) => void }) {
   const busy = reviewM.isPending;
 
   return (
-    <Section title="取消审批" aside={rows.length ? `${rows.length} 条待审` : undefined} testid="manager-cancel">
+    <Section
+      title="取消审批"
+      aside={
+        rows.length ? (
+          <span>
+            <span className="u1-num">{rows.length}</span> 条待审
+          </span>
+        ) : undefined
+      }
+      testid="manager-cancel"
+    >
       <QueryState pending={q.isPending} error={q.error} empty={rows.length === 0} emptyText="暂无待审核的取消申请" />
       {rows.length > 0 ? (
-        <ul className="divide-y divide-[rgba(74,59,46,.06)]">
+        <ul className="divide-y divide-[rgba(59,46,36,.06)]">
           {rows.map((a) => (
             <li key={a.id} className="py-3" data-testid={`manager-cancel-row-${a.id}`}>
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-body-sm font-bold text-ink">{a.petName ?? '宠物'}</span>
-                <span className="text-caption-xs text-[rgba(74,59,46,.62)]">{a.serviceName ?? ''}</span>
-                <span className="text-caption-xs text-[rgba(74,59,46,.62)]">
+                <span className="text-caption-xs text-[rgba(59,46,36,.62)]">{a.serviceName ?? ''}</span>
+                <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
                   预约 <span className="u1-num">{`${mmdd(a.scheduledStart)} ${hhmm(a.scheduledStart)}`}</span>
                 </span>
               </div>
-              <p className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">
+              <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
                 客户 {a.customerName ?? '—'}
                 {a.customerPhoneTail ? `（尾号 ${a.customerPhoneTail}）` : ''} · 原因：{a.cancelReason ?? '（未填）'}
               </p>
@@ -377,7 +392,7 @@ function DayCloseSection({ showToast }: { showToast: (m: string) => void }) {
             <span className="u1-num text-body-sm font-bold text-ink">{p.bizDate}</span>
             {p.existingFrozenCloseId ? <Chip tone="ok">今日已日结冻结</Chip> : <Chip tone="warn">待日结</Chip>}
           </div>
-          <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-caption-xs text-[rgba(74,59,46,.62)]">
+          <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-caption-xs text-[rgba(59,46,36,.62)]">
             <div className="flex justify-between">
               <dt>已收合计</dt>
               <dd className="u1-num font-bold text-ink">{yuan(p.stats.receivedTotalFen)}</dd>
@@ -400,9 +415,9 @@ function DayCloseSection({ showToast }: { showToast: (m: string) => void }) {
             </div>
           </dl>
           {p.existingFrozenCloseId ? null : (
-            <div className="mt-3 border-t border-[rgba(74,59,46,.06)] pt-3">
-              <label className="block text-caption-xs font-bold text-[rgba(74,59,46,.62)]" htmlFor="manager-dayclose-cash">
-                实点现金（元）· 账面 {yuan(bookCashFen)}
+            <div className="mt-3 border-t border-[rgba(59,46,36,.06)] pt-3">
+              <label className="block text-caption-xs font-bold text-[rgba(59,46,36,.62)]" htmlFor="manager-dayclose-cash">
+                实点现金（元）· 账面 <span className="u1-num">{yuan(bookCashFen)}</span>
               </label>
               <input
                 id="manager-dayclose-cash"
@@ -414,7 +429,7 @@ function DayCloseSection({ showToast }: { showToast: (m: string) => void }) {
                 className="u1-num mt-1 h-11 w-full rounded-input bg-sunken px-3 text-body-sm text-ink outline-none placeholder:text-ink-placeholder"
               />
               {diffFen !== null ? (
-                <p className={`mt-1 text-caption-xs font-bold ${diffFen === 0 ? 'text-[rgba(74,59,46,.62)]' : diffFen < 0 ? 'text-danger' : 'text-success-deep'}`}>
+                <p className={`mt-1 text-caption-xs font-bold ${diffFen === 0 ? 'text-[rgba(59,46,36,.62)]' : diffFen < 0 ? 'text-danger' : 'text-success-deep'}`}>
                   差异 {signedYuan(diffFen)}
                 </p>
               ) : null}
@@ -489,7 +504,13 @@ function RefundSection({ showToast }: { showToast: (m: string) => void }) {
   return (
     <Section
       title="退款"
-      aside={pending.length ? `${pending.length} 单实退待办` : undefined}
+      aside={
+        pending.length ? (
+          <span>
+            <span className="u1-num">{pending.length}</span> 单实退待办
+          </span>
+        ) : undefined
+      }
       testid="manager-refund"
     >
       {/* 实退待办：executed 超 24h 未登记（黄色提醒列表） */}
@@ -497,7 +518,7 @@ function RefundSection({ showToast }: { showToast: (m: string) => void }) {
       {pending.length > 0 ? (
         <div className="rounded-control bg-brand-primary-light p-3">
           <p className="text-caption-xs font-bold text-ink">实退待办（执行超 24 小时未登记）</p>
-          <ul className="mt-1.5 divide-y divide-[rgba(74,59,46,.08)]">
+          <ul className="mt-1.5 divide-y divide-[rgba(59,46,36,.08)]">
             {pending.map((r) => {
               const overdueH = Math.max(1, Math.floor((nowMs - r.createdAt.getTime()) / 3_600_000));
               return (
@@ -505,9 +526,11 @@ function RefundSection({ showToast }: { showToast: (m: string) => void }) {
                   <div className="flex flex-wrap items-center gap-1.5">
                     <Chip tone="warn">超 24h</Chip>
                     <span className="u1-num text-body-sm font-bold text-ink">{r.refundNo}</span>
-                    <span className="text-caption-xs text-[rgba(74,59,46,.62)]">原单 {r.billNo}</span>
+                    <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
+                      原单 <span className="u1-num">{r.billNo}</span>
+                    </span>
                   </div>
-                  <p className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">
+                  <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
                     金额 <span className="u1-num font-bold text-danger">−{yuan(r.amountFen)}</span> · 执行{' '}
                     <span className="u1-num">{`${mmdd(r.createdAt)} ${hhmm(r.createdAt)}`}</span> · 已超时{' '}
                     <span className="u1-num font-bold text-danger">{overdueH} 小时</span>
@@ -529,18 +552,20 @@ function RefundSection({ showToast }: { showToast: (m: string) => void }) {
       ) : null}
 
       {/* 本店退款单（最近 20 条）：店长可办 executed 实退登记；draft 只读提示须店主（驳回权仅店主，不渲染驳回钮） */}
-      <p className={`text-caption-xs font-bold text-[rgba(74,59,46,.42)] ${pending.length > 0 ? 'mt-3' : ''}`}>
+      <p className={`text-caption-xs font-bold text-[rgba(59,46,36,.42)] ${pending.length > 0 ? 'mt-3' : ''}`}>
         本店退款单（最近 20 条）· 发起入口在商家端收银台
       </p>
       <QueryState pending={listQ.isPending} error={listQ.error} empty={rows.length === 0} emptyText="暂无退款单" />
       {rows.length > 0 ? (
-        <ul className="divide-y divide-[rgba(74,59,46,.06)]">
+        <ul className="divide-y divide-[rgba(59,46,36,.06)]">
           {rows.map((r) => (
             <li key={r.id} className="py-2.5" data-testid={`manager-refund-row-${r.id}`}>
               <div className="flex flex-wrap items-center gap-1.5">
                 <Chip>{REFUND_TYPE_LABEL[r.type] ?? r.type}</Chip>
                 <span className="u1-num text-body-sm font-bold text-ink">{r.refundNo}</span>
-                <span className="text-caption-xs text-[rgba(74,59,46,.62)]">原单 {r.billNo}</span>
+                <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
+                  原单 <span className="u1-num">{r.billNo}</span>
+                </span>
                 <span className="ml-auto">
                   <Chip
                     tone={
@@ -551,7 +576,7 @@ function RefundSection({ showToast }: { showToast: (m: string) => void }) {
                   </Chip>
                 </span>
               </div>
-              <p className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">
+              <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
                 金额 <span className="u1-num font-bold text-danger">−{yuan(r.amountFen)}</span> · 退款日{' '}
                 <span className="u1-num">{r.bizDate}</span>
                 {r.settledAt ? (
@@ -561,11 +586,11 @@ function RefundSection({ showToast }: { showToast: (m: string) => void }) {
                   </>
                 ) : null}
               </p>
-              <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+              <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
                 原因：{r.reason} · 发起 {r.operatorName ?? '—'} · 审批 {r.approverName ?? '—'}
               </p>
               {r.status === 'draft' ? (
-                <p className="mt-1 text-caption-xs font-bold text-[rgba(74,59,46,.62)]">
+                <p className="mt-1 text-caption-xs font-bold text-[rgba(59,46,36,.62)]">
                   超阈值/涉储值申请须店主审批（驳回权仅店主）
                 </p>
               ) : null}
@@ -644,7 +669,17 @@ function InventorySection({ showToast }: { showToast: (m: string) => void }) {
   const busy = confirmM.isPending || rejectM.isPending;
 
   return (
-    <Section title="盘点" aside={counted.length ? `${counted.length} 单待确认` : undefined} testid="manager-inventory">
+    <Section
+      title="盘点"
+      aside={
+        counted.length ? (
+          <span>
+            <span className="u1-num">{counted.length}</span> 单待确认
+          </span>
+        ) : undefined
+      }
+      testid="manager-inventory"
+    >
       {/* 派任务 */}
       <div className="grid grid-cols-3 gap-2">
         {(['daily', 'weekly', 'blind'] as const).map((t) => (
@@ -657,7 +692,7 @@ function InventorySection({ showToast }: { showToast: (m: string) => void }) {
             data-testid={`manager-assign-${t}`}
           >
             <span>{COUNT_TYPE_LABEL[t]}</span>
-            <span className="text-caption-xs font-normal text-[rgba(74,59,46,.62)]">
+            <span className="text-caption-xs font-normal text-[rgba(59,46,36,.62)]">
               {t === 'daily' ? '单价≥100元' : t === 'weekly' ? '全量' : '盲盘'}
             </span>
           </button>
@@ -665,10 +700,10 @@ function InventorySection({ showToast }: { showToast: (m: string) => void }) {
       </div>
 
       {/* counted 确认队列 */}
-      <p className="mt-3 text-caption-xs font-bold text-[rgba(74,59,46,.42)]">待确认（店员已录入实盘）</p>
+      <p className="mt-3 text-caption-xs font-bold text-[rgba(59,46,36,.42)]">待确认（店员已录入实盘）</p>
       <QueryState pending={countedQ.isPending} error={countedQ.error} empty={counted.length === 0} emptyText="暂无待确认盘点单" />
       {counted.length > 0 ? (
-        <ul className="divide-y divide-[rgba(74,59,46,.06)]">
+        <ul className="divide-y divide-[rgba(59,46,36,.06)]">
           {counted.map((c) => {
             const diffs = c.items.filter((it) => it.actualStock !== null && it.actualStock !== it.systemStock);
             const unfilled = c.items.filter((it) => it.actualStock === null).length;
@@ -676,12 +711,12 @@ function InventorySection({ showToast }: { showToast: (m: string) => void }) {
               <li key={c.id} className="py-3" data-testid={`manager-count-row-${c.id}`}>
                 <div className="flex flex-wrap items-center gap-1.5">
                   <Chip tone="warn">{COUNT_TYPE_LABEL[c.type] ?? c.type}</Chip>
-                  <span className="text-caption-xs text-[rgba(74,59,46,.62)]">
-                    建单 <span className="u1-num">{`${mmdd(c.createdAt)} ${hhmm(c.createdAt)}`}</span> · 共 {c.items.length} 项 · 差异 {diffs.length} 项
+                  <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
+                    建单 <span className="u1-num">{`${mmdd(c.createdAt)} ${hhmm(c.createdAt)}`}</span> · 共 <span className="u1-num">{c.items.length}</span> 项 · 差异 <span className="u1-num">{diffs.length}</span> 项
                   </span>
                 </div>
                 {unfilled > 0 ? (
-                  <p className="mt-1 text-caption-xs text-danger">有 {unfilled} 项未录入实盘，确认将被 server 拒绝</p>
+                  <p className="mt-1 text-caption-xs text-danger">有 <span className="u1-num">{unfilled}</span> 项未录入实盘，确认将被 server 拒绝</p>
                 ) : null}
                 {diffs.length > 0 ? (
                   <ul className="mt-1.5 space-y-1">
@@ -689,8 +724,8 @@ function InventorySection({ showToast }: { showToast: (m: string) => void }) {
                       const d = it.actualStock! - it.systemStock;
                       return (
                         <li key={it.id} className="flex items-center justify-between text-caption-xs">
-                          <span className="min-w-0 flex-1 truncate text-[rgba(74,59,46,.62)]">{it.productName ?? '（商品已删）'}</span>
-                          <span className="u1-num shrink-0 text-[rgba(74,59,46,.62)]">
+                          <span className="min-w-0 flex-1 truncate text-[rgba(59,46,36,.62)]">{it.productName ?? '（商品已删）'}</span>
+                          <span className="u1-num shrink-0 text-[rgba(59,46,36,.62)]">
                             {it.systemStock} → {it.actualStock}
                           </span>
                           <span className={`u1-num w-10 shrink-0 text-right font-bold ${d < 0 ? 'text-danger' : 'text-success-deep'}`}>
@@ -701,7 +736,7 @@ function InventorySection({ showToast }: { showToast: (m: string) => void }) {
                     })}
                   </ul>
                 ) : (
-                  <p className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">账实一致，无差异</p>
+                  <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">账实一致，无差异</p>
                 )}
                 <div className="mt-2 flex gap-2">
                   <button
@@ -730,15 +765,15 @@ function InventorySection({ showToast }: { showToast: (m: string) => void }) {
       ) : null}
 
       {/* 最近已入账 */}
-      <p className="mt-3 text-caption-xs font-bold text-[rgba(74,59,46,.42)]">最近已入账</p>
+      <p className="mt-3 text-caption-xs font-bold text-[rgba(59,46,36,.42)]">最近已入账</p>
       <QueryState pending={postedQ.isPending} error={postedQ.error} empty={posted.length === 0} emptyText="暂无已入账盘点单" />
       {posted.length > 0 ? (
-        <ul className="divide-y divide-[rgba(74,59,46,.06)]">
+        <ul className="divide-y divide-[rgba(59,46,36,.06)]">
           {posted.map((c) => (
             <li key={c.id} className="flex items-center gap-1.5 py-2" data-testid={`manager-count-posted-${c.id}`}>
               <Chip tone="ok">{COUNT_TYPE_LABEL[c.type] ?? c.type}</Chip>
-              <span className="text-caption-xs text-[rgba(74,59,46,.62)]">
-                入账 <span className="u1-num">{c.postedAt ? `${mmdd(c.postedAt)} ${hhmm(c.postedAt)}` : '—'}</span> · 共 {c.items.length} 项
+              <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
+                入账 <span className="u1-num">{c.postedAt ? `${mmdd(c.postedAt)} ${hhmm(c.postedAt)}` : '—'}</span> · 共 <span className="u1-num">{c.items.length}</span> 项
               </span>
             </li>
           ))}
@@ -764,7 +799,7 @@ function ReviewsSection() {
     <Section title="差评提示" aside="仅提示 · 不构成工单" testid="manager-reviews">
       <QueryState pending={q.isPending} error={q.error} empty={rows.length === 0} emptyText="暂无 ≤2 星差评" />
       {rows.length > 0 ? (
-        <ul className="divide-y divide-[rgba(74,59,46,.06)]">
+        <ul className="divide-y divide-[rgba(59,46,36,.06)]">
           {rows.map((r) => (
             <li key={r.id} className="py-2.5" data-testid={`manager-review-row-${r.id}`}>
               <div className="flex flex-wrap items-center gap-1.5">
@@ -773,11 +808,11 @@ function ReviewsSection() {
                   {'★'.repeat(r.rating)}
                 </span>
                 {r.anonymous ? <Chip>匿名</Chip> : null}
-                <span className="u1-num ml-auto text-caption-xs text-[rgba(74,59,46,.42)]">
+                <span className="u1-num ml-auto text-caption-xs text-[rgba(59,46,36,.42)]">
                   {`${mmdd(r.createdAt)} ${hhmm(r.createdAt)}`}
                 </span>
               </div>
-              <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">{r.text ?? '（未留文字）'}</p>
+              <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">{r.text ?? '（未留文字）'}</p>
             </li>
           ))}
         </ul>
@@ -802,17 +837,17 @@ function MovementsSection({ operatorNameOf }: { operatorNameOf: (userId: string)
     <Section title="库存流水" aside="最新 20 条 · 只读" testid="manager-movements">
       <QueryState pending={q.isPending} error={q.error} empty={rows.length === 0} emptyText="暂无库存流水" />
       {rows.length > 0 ? (
-        <ul className="divide-y divide-[rgba(74,59,46,.06)]">
+        <ul className="divide-y divide-[rgba(59,46,36,.06)]">
           {rows.map((m) => (
             <li key={m.id} className="py-2.5" data-testid={`manager-movement-row-${m.id}`}>
               <div className="flex items-center gap-1.5">
-                <span className="u1-num text-caption-xs text-[rgba(74,59,46,.42)]">{`${mmdd(m.createdAt)} ${hhmm(m.createdAt)}`}</span>
+                <span className="u1-num text-caption-xs text-[rgba(59,46,36,.42)]">{`${mmdd(m.createdAt)} ${hhmm(m.createdAt)}`}</span>
                 <span className="min-w-0 flex-1 truncate text-body-sm font-bold text-ink">{m.productName ?? '（商品已删）'}</span>
                 <span className={`u1-num shrink-0 text-body-sm font-bold ${m.delta < 0 ? 'text-danger' : 'text-success-deep'}`}>
                   {m.delta > 0 ? `+${m.delta}` : `−${Math.abs(m.delta)}`}
                 </span>
               </div>
-              <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+              <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-caption-xs text-[rgba(59,46,36,.62)]">
                 <Chip>{SOURCE_TYPE_LABEL[m.sourceType] ?? m.sourceType}</Chip>
                 <span className="u1-num">
                   {m.beforeStock} → {m.afterStock}
@@ -849,7 +884,7 @@ export default function ManagerPage() {
     <div className="pb-6">
       <PageHeader title="店长视图" backTo="/me" aside={storeName ?? undefined} />
       {loading ? (
-        <p className="px-[22px] text-body-sm text-[rgba(74,59,46,.62)]">加载中…</p>
+        <p className="px-[22px] text-body-sm text-[rgba(59,46,36,.62)]">加载中…</p>
       ) : !isManager ? (
         <GuideCard />
       ) : (

@@ -21,7 +21,7 @@ export default function GuidePage({ icon: Icon, title, description, actionText, 
         <button
           type="button"
           onClick={onAction}
-          className="mt-8 h-12 w-full max-w-xs rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="mt-8 h-14 min-h-[56px] w-full max-w-xs rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           {actionText}
         </button>

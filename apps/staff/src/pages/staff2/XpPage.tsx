@@ -114,12 +114,12 @@ export default function XpPage() {
               <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-sunken" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
                 <div className="h-full rounded-full bg-brand-secondary-deep" style={{ width: `${Math.round(progress * 100)}%` }} />
               </div>
-              <p className="mt-2 text-caption-xs text-[rgba(74,59,46,.62)]">
+              <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.62)]">
                 {s.nextLevel
                   ? <>距 <b>{s.nextLevel.name}</b> 还差 <b className="u1-num">{s.nextLevel.gap}</b> 经验</>
                   : '已达最高段位'}
               </p>
-              <p className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+              <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
                 {s.retention.monthlyXp > 0
                   ? <>保级线：月增量 <span className="u1-num">{s.retention.monthlyXp}</span> · 本月已增 <b className="u1-num text-ink">{s.monthGained}</b></>
                   : '当前段位无保级要求，经验累计不清零'}
@@ -132,8 +132,8 @@ export default function XpPage() {
         <section className="u1-card mt-3.5 flex items-center gap-3.5 px-4 py-3.5" data-testid="xp-today">
           <div className="min-w-0 flex-1">
             <p className="text-body-sm font-bold">今日经验</p>
-            <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.42)]">
-              {full ? '今日经验已满，明日 0 点重置' : `日上限 ${s?.today.cap ?? '…'}，超出部分不计分`}
+            <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+              {full ? '今日经验已满，明日 0 点重置' : <>日上限 <span className="u1-num">{s?.today.cap ?? '…'}</span>，超出部分不计分</>}
             </p>
           </div>
           {full ? (
@@ -156,29 +156,29 @@ export default function XpPage() {
               ))}
             </div>
           ) : boardQuery.isError ? (
-            <p className="py-3 text-caption-xs text-[rgba(74,59,46,.42)]">榜单加载失败，请稍后重试</p>
+            <p className="py-3 text-caption-xs text-[rgba(59,46,36,.42)]">榜单加载失败，请稍后重试</p>
           ) : (
-            <ul className="mt-1 divide-y divide-[rgba(74,59,46,.06)]">
+            <ul className="mt-1 divide-y divide-[rgba(59,46,36,.06)]">
               {boardQuery.data.rows.map((r) => (
                 <li
                   key={r.staffId}
                   className={`-mx-4 flex items-center gap-3 px-4 py-2.5 ${r.isSelf ? 'bg-brand-primary-light' : ''}`}
                   data-testid={r.isSelf ? 'xp-board-self' : undefined}
                 >
-                  <span className="u1-num w-6 shrink-0 text-center text-body-sm font-bold text-[rgba(74,59,46,.62)]">
+                  <span className="u1-num w-6 shrink-0 text-center text-body-sm font-bold text-[rgba(59,46,36,.62)]">
                     {r.rank}
                   </span>
                   <span className="min-w-0 flex-1 truncate text-body-sm font-bold text-ink">
                     {r.name}
-                    {r.isSelf ? <span className="ml-1 text-caption-xs font-normal text-[rgba(74,59,46,.62)]">（我）</span> : null}
-                    <span className="ml-1.5 rounded-chip bg-sunken px-1 py-0.5 text-caption-xs font-normal text-[rgba(74,59,46,.62)]">{r.levelName}</span>
+                    {r.isSelf ? <span className="ml-1 text-caption-xs font-normal text-[rgba(59,46,36,.62)]">（我）</span> : null}
+                    <span className="ml-1.5 rounded-chip bg-sunken px-1 py-0.5 text-caption-xs font-normal text-[rgba(59,46,36,.62)]">{r.levelName}</span>
                   </span>
                   <span className="u1-num shrink-0 text-body-sm font-bold text-ink">{r.totalXp}</span>
                 </li>
               ))}
             </ul>
           )}
-          <p className="pt-1 text-caption-xs text-[rgba(74,59,46,.42)]">榜单只显示前三与你相邻的名次</p>
+          <p className="pt-1 text-caption-xs text-[rgba(59,46,36,.42)]">榜单只显示前三与你相邻的名次</p>
         </section>
 
         {/* 规则一句话 + 六来源分值 */}
@@ -186,11 +186,11 @@ export default function XpPage() {
           {rulesQuery.isPending ? (
             <div className="h-16 animate-pulse rounded-chip bg-sunken" />
           ) : rulesQuery.isError || !rulesQuery.data ? (
-            <p className="py-2 text-caption-xs text-[rgba(74,59,46,.42)]">规则加载失败，请稍后重试</p>
+            <p className="py-2 text-caption-xs text-[rgba(59,46,36,.42)]">规则加载失败，请稍后重试</p>
           ) : (
             <>
               <p className="text-body-sm font-bold leading-relaxed">{rulesQuery.data.oneLiner}</p>
-              <ul className="mt-2 divide-y divide-[rgba(74,59,46,.06)]">
+              <ul className="mt-2 divide-y divide-[rgba(59,46,36,.06)]">
                 {rulesQuery.data.sources.map((src) => {
                   const disabled = 'disabled' in src && src.disabled;
                   return (
@@ -205,7 +205,7 @@ export default function XpPage() {
                           <span className="ml-1.5 rounded-chip bg-brand-secondary-light px-1 py-0.5 text-caption-xs text-ink">学习通道·不占日上限</span>
                         ) : null}
                         {disabled ? (
-                          <span className="ml-1.5 rounded-chip bg-sunken px-1.5 py-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+                          <span className="ml-1.5 rounded-chip bg-sunken px-1.5 py-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
                             {('disabledNote' in src && src.disabledNote) || '暂未开通'}
                           </span>
                         ) : null}
@@ -219,7 +219,7 @@ export default function XpPage() {
                   );
                 })}
               </ul>
-              <p className="pt-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+              <p className="pt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
                 日上限 <span className="u1-num">{rulesQuery.data.dailyCap}</span> · 同客户当日好评只计 <span className="u1-num">{rulesQuery.data.antiFraud.reviewDailyLimitPerCustomer}</span> 次 · 考试每级每月限 <span className="u1-num">{rulesQuery.data.antiFraud.examMonthlyLimit}</span> 次
               </p>
             </>
@@ -236,24 +236,24 @@ export default function XpPage() {
               ))}
             </div>
           ) : eventsQuery.isError ? (
-            <p className="py-3 text-caption-xs text-[rgba(74,59,46,.42)]">经验明细加载失败，请稍后重试</p>
+            <p className="py-3 text-caption-xs text-[rgba(59,46,36,.42)]">经验明细加载失败，请稍后重试</p>
           ) : events.length === 0 ? (
-            <p className="py-3 text-caption-xs text-[rgba(74,59,46,.42)]">
+            <p className="py-3 text-caption-xs text-[rgba(59,46,36,.42)]">
               还没有经验记录——打卡、完成服务、收获好评都会长经验
             </p>
           ) : (
             <>
-              <ul className="divide-y divide-[rgba(74,59,46,.06)]">
+              <ul className="divide-y divide-[rgba(59,46,36,.06)]">
                 {events.map((ev) => (
                   <li key={ev.id} className="flex items-center gap-3 py-2.5">
                     <div className="min-w-0 flex-1">
-                      <p className={`text-body-sm font-bold ${ev.dropped ? 'text-[rgba(74,59,46,.42)] line-through' : 'text-ink'}`}>
+                      <p className={`text-body-sm font-bold ${ev.dropped ? 'text-[rgba(59,46,36,.42)] line-through' : 'text-ink'}`}>
                         {SOURCE_LABEL[ev.source] ?? ev.source}
                         {ev.channel === 'learning' ? (
                           <span className="ml-1.5 rounded-chip bg-brand-secondary-light px-1 py-0.5 text-caption-xs font-normal text-ink">学习</span>
                         ) : null}
                       </p>
-                      <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.42)]">
+                      <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
                         <span className="u1-num">{fmtTs(ev.createdAt)}</span>
                         {/* A4 标注粒度：寄养晚数行区分（「完成服务 +6」=寄养 3 晚×2 不再误读） */}
                         {ev.ruleKey === 'xp_service_boarding_night' && ev.boardingNights !== null ? (
@@ -263,7 +263,7 @@ export default function XpPage() {
                         {ev.appointmentId ? (
                           <Link
                             to={`/execute/${ev.appointmentId}`}
-                            className="u1-num ml-1.5 underline decoration-[rgba(74,59,46,.3)] underline-offset-2"
+                            className="u1-num ml-1.5 underline decoration-[rgba(59,46,36,.3)] underline-offset-2"
                             onClick={(e) => e.stopPropagation()}
                           >
                             单 …{ev.appointmentId.slice(-6)}
@@ -276,7 +276,7 @@ export default function XpPage() {
                     </div>
                     <span
                       className={`u1-num shrink-0 text-body-sm font-bold ${
-                        ev.dropped ? 'text-[rgba(74,59,46,.42)] line-through' : ev.points < 0 ? 'text-danger' : 'text-ink'
+                        ev.dropped ? 'text-[rgba(59,46,36,.42)] line-through' : ev.points < 0 ? 'text-danger' : 'text-ink'
                       }`}
                     >
                       {ev.points > 0 ? `+${ev.points}` : ev.points}
@@ -298,7 +298,7 @@ export default function XpPage() {
           )}
         </section>
 
-        <p className="mb-6 mt-4 flex items-center justify-center gap-1 text-center text-caption-xs text-[rgba(74,59,46,.42)]">
+        <p className="mb-6 mt-4 flex items-center justify-center gap-1 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
           <Trophy className="h-3.5 w-3.5" aria-hidden /> 每月 1 日段位结算 · 经验累计不清零
         </p>
       </div>

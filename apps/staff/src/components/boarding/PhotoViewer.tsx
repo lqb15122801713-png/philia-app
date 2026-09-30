@@ -33,6 +33,15 @@ export default function PhotoViewer({ state, onClose, onIndexChange }: PhotoView
     return () => window.removeEventListener('keydown', onKey);
   }, [index, photos.length, onClose, onIndexChange]);
 
+  // 弹层三件套之滚动锁：查看器在挂期间锁定底层页面滚动
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
   if (!current) return null;
 
   return (
@@ -43,13 +52,13 @@ export default function PhotoViewer({ state, onClose, onIndexChange }: PhotoView
       onClick={onClose}
     >
       <div className="flex items-center justify-between p-3">
-        <span className="font-number text-body-sm text-[#F6F1E3]/90">
+        <span className="u1-num text-body-sm text-[#FAF8F2]/90">
           {index + 1} / {photos.length}
         </span>
         <button
           type="button"
           onClick={onClose}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-[rgba(246,241,227,.12)] text-[#F6F1E3]"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-[rgba(250,248,242,.12)] text-[#FAF8F2]"
           aria-label="关闭"
         >
           <X className="h-6 w-6" strokeWidth={1.5} />
@@ -74,7 +83,7 @@ export default function PhotoViewer({ state, onClose, onIndexChange }: PhotoView
               e.stopPropagation();
               onIndexChange(index - 1);
             }}
-            className="absolute left-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-[rgba(246,241,227,.12)] text-[#F6F1E3] disabled:opacity-30"
+            className="absolute left-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-[rgba(250,248,242,.12)] text-[#FAF8F2] disabled:opacity-30"
             aria-label="上一张"
           >
             <ChevronLeft className="h-7 w-7" strokeWidth={1.5} />
@@ -86,7 +95,7 @@ export default function PhotoViewer({ state, onClose, onIndexChange }: PhotoView
               e.stopPropagation();
               onIndexChange(index + 1);
             }}
-            className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-[rgba(246,241,227,.12)] text-[#F6F1E3] disabled:opacity-30"
+            className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-[rgba(250,248,242,.12)] text-[#FAF8F2] disabled:opacity-30"
             aria-label="下一张"
           >
             <ChevronRight className="h-7 w-7" strokeWidth={1.5} />

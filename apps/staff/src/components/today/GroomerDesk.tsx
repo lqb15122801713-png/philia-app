@@ -1,13 +1,15 @@
 /**
  * 美容师任务台 · /today（批次 U2 任务 B · 时间轴台 B′ groomer 态）
  *
- * 规格书 §2 逐段：顶栏（日期 20/700 + 门店·周几·排班段 11/400 + 头像薄荷环进 /me）/
+ * 规格书 §2 逐段：顶栏（页题 serif 点缀 + 门店·周几·排班段 11/400 + 头像卡其环进 /me）/
  * 周横条 6 日 chip（仅当前周不可翻页）/ 全天行（寄养打卡卡列，无寄养整行不渲染）/
  * 日轴（09:00–打烊 · 小时行高 52px · 当前时间墨线 · 三态单块 · 服务中就地展开服务卡）/
  * 底部安静统计行（无按钮）。
  * 数据：listTodayForStaff（现成）+ auth.me 原始响应（门店 openHours/排班，现成）+
  * boarding 今日 dailyLog 存在性前端聚合（规格书 §2 注，零新接口）；空档=前端按轴块推算纯展示。
  * SSE：useStaffEvents（assigned/rescheduled/cancelled/step_flagged → invalidate+toast）+ 60s 轮询兜底。
+ * 换皮批片 4（34 号档 §八 效率密度）：页边距 22→16 收紧一档 / serif 只留页题 /
+ * 时刻·单数=mono 轨 tabular-nums / 主钮 h≥56（staff-btn 硬性）。
  */
 
 import {
@@ -124,21 +126,25 @@ export default function GroomerDesk() {
   }, [axisItems, axis.endMin]);
 
   return (
-    <div className="px-[22px] pb-6">
-      {/* 1. 顶栏：日期 + 门店·周几·排班段 + 头像薄荷环进 /me（试样 30px 环=2px 纸缝+3px 薄荷） */}
+    <div className="px-4 pb-6">
+      {/* 1. 顶栏：页题 serif 点缀 + 门店·周几·排班段 + 头像卡其环进 /me（30px 环=2px 纸缝+3px 卡其） */}
       <header className="flex items-start justify-between pt-3">
         <div>
-          <h1 className="text-title-lg font-bold">今天 · {todayLabel(now).split(' ')[0]}</h1>
-          <p className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+          <h1 className="u1-serif text-title-lg font-bold">今天 · {todayLabel(now).split(' ')[0]}</h1>
+          <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
             {store?.name ?? '门店'} · {todayLabel(now).split(' ')[1]}
-            {scheduleText ? ` · 你的排班 ${scheduleText}` : ''}
+            {scheduleText ? (
+              <>
+                {' '}· 你的排班 <span className="u1-num">{scheduleText}</span>
+              </>
+            ) : null}
           </p>
         </div>
         <Link
           to="/me"
           aria-label="我的"
           data-testid="deck-avatar"
-          className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FFFDF6,0_0_0_3px_#7FD8BE] transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FAF8F2,0_0_0_3px_#B9A482] transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           {meRawQ.data?.user?.avatarUrl ? (
             <img src={meRawQ.data.user.avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
@@ -162,18 +168,18 @@ export default function GroomerDesk() {
           <div className="h-[52px] rounded-control bg-card u1-ring" />
           <div className="mt-3 space-y-0">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="h-[52px] border-t border-[rgba(74,59,46,.06)]" />
+              <div key={i} className="h-[52px] border-t border-[rgba(59,46,36,.06)]" />
             ))}
           </div>
         </div>
       ) : todayQuery.isError ? (
-        // 错误态：一句话 + 重试真链路
-        <div className="u1-card mt-3 p-6 text-center">
+        // 错误态：一句话 + 重试真链路（卡内边距收紧一档 16；主钮 h≥56 硬性）
+        <div className="u1-card mt-3 p-4 text-center">
           <p className="text-body-sm text-ink-secondary">今日任务加载失败，请检查网络后重试</p>
           <button
             type="button"
             onClick={() => void todayQuery.refetch()}
-            className="mt-4 h-12 min-w-[160px] rounded-control bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+            className="mt-4 h-staff-btn min-w-[160px] rounded-control bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             重新加载
           </button>
@@ -200,11 +206,11 @@ export default function GroomerDesk() {
 
           {/* 5. 底部安静统计行（无按钮——主行动已归服务卡） */}
           {axisItems.length > 0 ? (
-            <p className="mb-4 mt-3 text-center text-caption-xs text-[rgba(74,59,46,.62)]" data-testid="deck-stats">
+            <p className="mb-4 mt-3 text-center text-caption-xs text-[rgba(59,46,36,.62)]" data-testid="deck-stats">
               今天 <b className="u1-num text-ink">{stats.total}</b> 单 · 已完成 <b className="u1-num text-ink">{stats.done}</b>
               {stats.gap ? (
                 <>
-                  {' '}· 当前空档 {fmtMin(stats.gap.from)}–{fmtMin(stats.gap.to)}
+                  {' '}· 当前空档 <span className="u1-num whitespace-nowrap">{fmtMin(stats.gap.from)}–{fmtMin(stats.gap.to)}</span>
                 </>
               ) : null}
             </p>

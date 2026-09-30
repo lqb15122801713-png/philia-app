@@ -37,7 +37,7 @@ export default function RequireStaff({ children }: { children: ReactNode }) {
         <span className="flex h-16 w-16 items-center justify-center rounded-full bg-sunken">
           <PawPrint className="h-7 w-7 text-ink" strokeWidth={1.5} />
         </span>
-        <h1 className="mt-4 text-title-lg">需要员工账号</h1>
+        <h1 className="u1-serif mt-4 text-title-lg font-bold">需要员工账号</h1>
         <p className="mt-2 text-body-sm text-ink-secondary">
           当前账号「{user.nickname ?? user.id}」不是员工身份。
           <br />

@@ -23,7 +23,7 @@ function Stars({ rating }: { rating: number }) {
   return (
     <span className="shrink-0 text-body-sm leading-5" aria-label={`${rating} 星`}>
       {[1, 2, 3, 4, 5].map((i) => (
-        <span key={i} className={i <= rating ? 'text-brand-primary-pressed' : 'text-ink-placeholder'} aria-hidden>
+        <span key={i} className={i <= rating ? 'text-brand-secondary-deep' : 'text-ink-placeholder'} aria-hidden>
           ★
         </span>
       ))}
@@ -73,7 +73,7 @@ export default function MyReviewsPage() {
             ))}
           </div>
         ) : reviewsQuery.isError ? (
-          <div className="u1-card mt-2 p-6 text-center">
+          <div className="u1-card mt-2 p-4 text-center">
             <p className="text-body-sm text-ink-secondary">评价加载失败，请检查网络后重试</p>
             <button
               type="button"
@@ -85,7 +85,7 @@ export default function MyReviewsPage() {
           </div>
         ) : items.length === 0 ? (
           // 空态引导
-          <div className="flex flex-col items-center px-6 py-14 text-center" data-testid="reviews-empty">
+          <div className="flex flex-col items-center px-6 py-10 text-center" data-testid="reviews-empty">
             <span className="flex h-20 w-20 items-center justify-center rounded-full bg-sunken" aria-hidden>
               <MessagesSquare className="h-9 w-9 text-ink" strokeWidth={1.5} />
             </span>
@@ -100,7 +100,7 @@ export default function MyReviewsPage() {
               <span className="u1-num text-detail-lg font-bold leading-9">{avg!.toFixed(1)}</span>
               <div className="min-w-0 flex-1">
                 <Stars rating={Math.round(avg!)} />
-                <p className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+                <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
                   已加载 <span className="u1-num">{items.length}</span> 条评价的平均分
                 </p>
               </div>
@@ -111,11 +111,11 @@ export default function MyReviewsPage() {
                 <li key={r.id} className="u1-card px-4 py-3.5" data-testid={`review-${r.id}`}>
                   <div className="flex items-center gap-3">
                     <Stars rating={r.rating} />
-                    <span className="ml-auto text-caption-xs text-[rgba(74,59,46,.42)]">
+                    <span className="ml-auto text-caption-xs text-[rgba(59,46,36,.42)]">
                       {r.anonymous ? '匿名客户' : '客户'} · <span className="u1-num">{fmtTs(r.createdAt)}</span>
                     </span>
                   </div>
-                  <p className={`mt-2 text-body-sm leading-relaxed ${r.text ? 'text-ink' : 'text-[rgba(74,59,46,.42)]'}`}>
+                  <p className={`mt-2 text-body-sm leading-relaxed ${r.text ? 'text-ink' : 'text-[rgba(59,46,36,.42)]'}`}>
                     {r.text ?? '未留言'}
                   </p>
                 </li>
@@ -135,7 +135,7 @@ export default function MyReviewsPage() {
           </>
         )}
 
-        <p className="mb-6 mt-4 text-center text-caption-xs text-[rgba(74,59,46,.42)]">
+        <p className="mb-6 mt-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
           仅本人可见 · 好评 +XP，≤2 星 −8（扣分不扣款）
         </p>
       </div>

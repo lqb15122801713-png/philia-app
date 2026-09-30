@@ -116,7 +116,7 @@ function LineRow({ line, probation }: { line: CommissionLine; probation: boolean
     <li className="flex items-center gap-3 py-2.5">
       <div className="min-w-0 flex-1">
         <p className="truncate text-body-sm font-bold text-ink">{line.name}</p>
-        <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+        <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
           <span className="u1-num">{line.date.slice(5)}</span> · 单号 <span className="u1-num">{line.billNo}</span>
           {line.pendingApproval ? (
             <span className="ml-1 rounded-chip bg-brand-primary-light px-1 py-0.5 text-ink">超产能·待店长批准</span>
@@ -124,10 +124,10 @@ function LineRow({ line, probation }: { line: CommissionLine; probation: boolean
             <span className="ml-1 rounded-chip bg-brand-secondary-light px-1 py-0.5 text-ink">超产能·1.5 倍已批准</span>
           ) : null}
           {probation && line.multiplierBp !== 10000 ? (
-            <span className="ml-1 rounded-chip bg-sunken px-1 py-0.5 text-[rgba(74,59,46,.62)]">试用期 ×50%</span>
+            <span className="ml-1 rounded-chip bg-sunken px-1 py-0.5 text-[rgba(59,46,36,.62)]">试用期 ×50%</span>
           ) : null}
         </p>
-        <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.42)]">
+        <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
           基数 <span className="u1-num">{fenToYuan(line.baseFen)}</span> × {bpToPct(line.rateBp)}
         </p>
       </div>
@@ -155,16 +155,16 @@ function Section({
     <section className="u1-card mt-3.5 px-4 py-3.5" data-testid={testid}>
       <header className="flex items-baseline">
         <h2 className="text-body-sm font-bold">{title}</h2>
-        <span className="ml-auto text-caption-xs text-[rgba(74,59,46,.42)]">
+        <span className="ml-auto text-caption-xs text-[rgba(59,46,36,.42)]">
           小计 <b className="u1-num text-ink">{fenToYuan(total)}</b>
         </span>
       </header>
       {lines.length === 0 ? (
-        <p className="py-3 text-caption-xs text-[rgba(74,59,46,.42)]">
+        <p className="py-3 text-caption-xs text-[rgba(59,46,36,.42)]">
           {emptyNote ?? '本月暂无此类计提单'}
         </p>
       ) : (
-        <ul className="divide-y divide-[rgba(74,59,46,.06)]">
+        <ul className="divide-y divide-[rgba(59,46,36,.06)]">
           {lines.map((l) => (
             <LineRow key={l.itemId} line={l} probation={probation} />
           ))}
@@ -195,11 +195,11 @@ function SnapshotRow({ period, kind, totalFen }: { period: string; kind: string;
       <div className="min-w-0 flex-1">
         <p className="text-body-sm font-bold text-ink">
           <span className="u1-num">{period}</span>
-          <span className="ml-1.5 text-caption-xs font-normal text-[rgba(74,59,46,.62)]">
+          <span className="ml-1.5 text-caption-xs font-normal text-[rgba(59,46,36,.62)]">
             {kind === 'commission' ? '提成月结' : '绩效季结'}
           </span>
         </p>
-        <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.42)]">
+        <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
           <span className="rounded-chip bg-success-light px-1 py-0.5 text-success-deep">已结算</span>
           {expandable ? '' : ' · 季度绩效快照'}
         </p>
@@ -207,7 +207,7 @@ function SnapshotRow({ period, kind, totalFen }: { period: string; kind: string;
       <span className="u1-num shrink-0 text-body-sm font-bold text-ink">{fenToYuan(totalFen)}</span>
       {expandable ? (
         <ChevronDown
-          className={`h-4 w-4 shrink-0 text-[rgba(74,59,46,.42)] transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 shrink-0 text-[rgba(59,46,36,.42)] transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           aria-hidden
         />
       ) : null}
@@ -230,7 +230,7 @@ function SnapshotRow({ period, kind, totalFen }: { period: string; kind: string;
         <div className="flex items-center gap-3 px-4 py-3.5">{inner}</div>
       )}
       {open && expandable ? (
-        <div className="px-4 pb-3 text-caption-xs text-[rgba(74,59,46,.62)]">
+        <div className="px-4 pb-3 text-caption-xs text-[rgba(59,46,36,.62)]">
           {detailQuery.isPending ? (
             <p>快照明细加载中…</p>
           ) : detailQuery.isError || !detail ? (
@@ -295,7 +295,7 @@ export default function PayPage() {
             ))}
           </div>
         ) : summaryQuery.isError || !data || !payload || !perf || !my ? (
-          <div className="u1-card mt-2 p-6 text-center">
+          <div className="u1-card mt-2 p-4 text-center">
             <p className="text-body-sm text-ink-secondary">薪资提成加载失败，请检查网络后重试</p>
             <button
               type="button"
@@ -309,17 +309,17 @@ export default function PayPage() {
           <>
             {/* 口径小字（server policyNote：计提时点/冲减/次月结算日/每月快照，数值读规则表） */}
             <section className="u1-card mt-2 p-4" data-testid="pay-policy">
-              <p className="text-caption-xs leading-relaxed text-[rgba(74,59,46,.42)]">{data.policyNote}</p>
+              <p className="text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">{data.policyNote}</p>
             </section>
 
             {/* 本月提成合计 */}
             <section className="u1-card mt-3.5 p-4 text-center" data-testid="pay-total">
-              <p className="text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">本月提成合计</p>
+              <p className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">本月提成合计</p>
               <p className="u1-num mt-1 text-detail-lg font-bold text-ink">
                 {fenToYuan(payload.commissionTotalFen)}
               </p>
               {payload.probation ? (
-                <p className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">试用期：商品/售卡类提成 ×50%</p>
+                <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">试用期：商品/售卡类提成 ×50%</p>
               ) : null}
             </section>
 
@@ -350,12 +350,12 @@ export default function PayPage() {
             {payload.storeLines.length > 0 ? (
               <section className="u1-card mt-3.5 px-4 py-3.5" data-testid="pay-store">
                 <h2 className="text-body-sm font-bold">全店提成</h2>
-                <ul className="divide-y divide-[rgba(74,59,46,.06)]">
+                <ul className="divide-y divide-[rgba(59,46,36,.06)]">
                   {payload.storeLines.map((l) => (
                     <li key={l.kind} className="flex items-center gap-3 py-2.5">
                       <div className="min-w-0 flex-1">
                         <p className="text-body-sm font-bold text-ink">{l.label}</p>
-                        <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.42)]">
+                        <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
                           基数 <span className="u1-num">{fenToYuan(l.baseFen)}</span> × {bpToPct(l.rateBp)}
                         </p>
                       </div>
@@ -370,39 +370,39 @@ export default function PayPage() {
             <section className="u1-card mt-3.5 px-4 py-3.5" data-testid="pay-performance">
               <header className="flex items-baseline">
                 <h2 className="text-body-sm font-bold">绩效</h2>
-                <span className="ml-auto text-caption-xs text-[rgba(74,59,46,.42)]">
+                <span className="ml-auto text-caption-xs text-[rgba(59,46,36,.42)]">
                   <span className="u1-num">{perf.quarter}</span> 季度
                 </span>
               </header>
               {!perf.applicable ? (
-                <p className="py-3 text-caption-xs text-[rgba(74,59,46,.42)]">{perf.note ?? '试用期不设绩效与全勤'}</p>
+                <p className="py-3 text-caption-xs text-[rgba(59,46,36,.42)]">{perf.note ?? '试用期不设绩效与全勤'}</p>
               ) : (
                 <>
-                  <p className="mt-2 text-caption-xs text-[rgba(74,59,46,.42)]">{my.label}</p>
+                  <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]">{my.label}</p>
                   <div className="mt-2 grid grid-cols-3 rounded-control bg-sunken px-2 py-3 text-center">
                     <div>
                       <div className="u1-num text-title font-bold leading-6">{fenToYuan(my.pool.baseFen)}</div>
-                      <div className="mt-1 text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">当季基数</div>
+                      <div className="mt-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">当季基数</div>
                     </div>
                     <div>
                       <div className="u1-num text-title font-bold leading-6">{perf.grade}</div>
-                      <div className="mt-1 text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">档位</div>
+                      <div className="mt-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">档位</div>
                     </div>
                     <div>
                       <div className="u1-num text-title font-bold leading-6">
                         {perf.coeffBp === null ? '—' : `×${bpToCoeff(perf.coeffBp)}`}
                       </div>
-                      <div className="mt-1 text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">系数</div>
+                      <div className="mt-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">系数</div>
                     </div>
                   </div>
                   <p className="mt-2.5 flex items-baseline justify-between">
-                    <span className="text-caption-xs text-[rgba(74,59,46,.62)]">
+                    <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
                       预估绩效（基数 × {bpToPct(my.pool.rateBp)} × 系数，季度发放）
                     </span>
                     <span className="u1-num text-body-sm font-bold text-ink">{fenToYuan(perf.payableFen)}</span>
                   </p>
                   {perf.coeffBp === null ? (
-                    <p className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">本季尚未评级，评级后核算应付绩效</p>
+                    <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">本季尚未评级，评级后核算应付绩效</p>
                   ) : null}
                 </>
               )}
@@ -412,14 +412,14 @@ export default function PayPage() {
             <section className="u1-card mt-3.5 px-4 py-3.5" data-testid="pay-deductions">
               <h2 className="text-body-sm font-bold">扣减记录</h2>
               {payload.deductions.length === 0 ? (
-                <p className="py-3 text-caption-xs text-[rgba(74,59,46,.42)]">本月无扣减</p>
+                <p className="py-3 text-caption-xs text-[rgba(59,46,36,.42)]">本月无扣减</p>
               ) : (
-                <ul className="divide-y divide-[rgba(74,59,46,.06)]">
+                <ul className="divide-y divide-[rgba(59,46,36,.06)]">
                   {payload.deductions.map((d) => (
                     <li key={d.id} className="flex items-center gap-3 py-2.5">
                       <div className="min-w-0 flex-1">
                         <p className="text-body-sm font-bold text-ink">{d.reason}</p>
-                        <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.42)]">
+                        <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
                           <span className="u1-num">{fmtTs(d.createdAt)}</span> · 录入人 <span className="u1-num">{d.createdBy.slice(-6)}</span>
                         </p>
                       </div>
@@ -428,29 +428,29 @@ export default function PayPage() {
                   ))}
                 </ul>
               )}
-              <p className="pt-1 text-caption-xs text-[rgba(74,59,46,.42)]">扣减只扣绩效，不扣提成</p>
+              <p className="pt-1 text-caption-xs text-[rgba(59,46,36,.42)]">扣减只扣绩效，不扣提成</p>
             </section>
 
             {/* 历史月份快照（新→旧；提成月结点展开分列明细） */}
-            <section className="u1-card mt-3.5 divide-y divide-[rgba(74,59,46,.06)]" data-testid="pay-history">
+            <section className="u1-card mt-3.5 divide-y divide-[rgba(59,46,36,.06)]" data-testid="pay-history">
               <h2 className="px-4 pt-3.5 text-body-sm font-bold">历史月份</h2>
               {data.snapshots.length === 0 ? (
-                <p className="px-4 py-3 text-caption-xs text-[rgba(74,59,46,.42)]">
+                <p className="px-4 py-3 text-caption-xs text-[rgba(59,46,36,.42)]">
                   暂无历史快照——每月结算后自动生成
                 </p>
               ) : (
-                <ul className="divide-y divide-[rgba(74,59,46,.06)]">
+                <ul className="divide-y divide-[rgba(59,46,36,.06)]">
                   {data.snapshots.map((s) => (
                     <SnapshotRow key={`${s.period}-${s.kind}`} period={s.period} kind={s.kind} totalFen={s.totalFen} />
                   ))}
                 </ul>
               )}
-              <p className="px-4 pb-3.5 pt-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+              <p className="px-4 pb-3.5 pt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
                 已快照月份按冻结口径展示，冲减差额进当月调整项
               </p>
             </section>
 
-            <p className="mb-6 mt-4 flex items-center justify-center gap-1 text-center text-caption-xs text-[rgba(74,59,46,.42)]">
+            <p className="mb-6 mt-4 flex items-center justify-center gap-1 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
               <Wallet className="h-3.5 w-3.5" aria-hidden /> 仅本人可见 · 规则版本 <span className="u1-num">v{data.ruleVersion}</span>
             </p>
           </>

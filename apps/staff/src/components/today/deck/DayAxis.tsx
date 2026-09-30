@@ -2,8 +2,8 @@
  * U2 任务 B/C · 日轴（时间轴台 B′ 核心件，groomer/frontdesk 同骨架）
  *
  * 规格书 §2：09:00–打烊、小时行高 52px、当前时间墨线+圆点；单块三态——
- * 已完成 45% 透明（试样 .45 工艺值）/ 服务中薄荷底（点击就地展开服务卡，点轴外收回）/
- * 待开工带来源签+疫苗安心签；同刻并行块对半分列。
+ * 已完成 45% 透明（试样 .45 工艺值）/ 服务中卡其洗底 #F1E9D6（点击就地展开服务卡，点轴外收回；
+ * 卡其 #B9A482 不作大面填充，v2.0 §1.1）/ 待开工带来源签+疫苗安心签；同刻并行块对半分列。
  * frontdesk 态差异（§3）：块副行=核销状态+员工名（subtitle 覆盖），并行块同分列规则。
  */
 
@@ -92,8 +92,8 @@ export default function DayAxis({
       {/* 小时行 */}
       <div className="relative" style={{ height: axisHeight }}>
         {hours.map((h) => (
-          <div key={h} className="relative border-t border-[rgba(74,59,46,.06)]" style={{ height: AXIS_HOUR_PX }}>
-            <span className="u1-num absolute -left-[44px] -top-[7px] text-caption-xs text-[rgba(74,59,46,.42)]">
+          <div key={h} className="relative border-t border-[rgba(59,46,36,.06)]" style={{ height: AXIS_HOUR_PX }}>
+            <span className="u1-num absolute -left-[44px] -top-[7px] text-caption-xs text-[rgba(59,46,36,.42)]">
               {fmtMin(h)}
             </span>
           </div>
@@ -119,7 +119,7 @@ export default function DayAxis({
                 expanded ? 'px-[13px] py-[11px]' : 'px-3 py-2' /* 试样 .b-ev.svc padding 11px 13px 13px */
               } ${
                 live
-                  ? 'z-[3] bg-brand-secondary shadow-[0_0_0_1px_rgba(74,59,46,.14)]'
+                  ? 'z-[3] bg-brand-secondary-light shadow-[0_0_0_1px_rgba(59,46,36,.14)]'
                   : 'u1-ring bg-card'
               } ${done ? 'opacity-[.45]' : ''} ${live && !expanded ? 'cursor-pointer transition-transform duration-120 ease-philia-spring active:scale-[0.98]' : ''}`}
               style={{
@@ -140,14 +140,18 @@ export default function DayAxis({
                     {item.petName ?? '宠物'} · {item.serviceName ?? '服务'}
                     {titleSuffix?.(item)}
                   </p>
-                  <p className={`mt-0.5 text-caption-xs ${live ? 'text-[rgba(74,59,46,.66)]' : 'text-[rgba(74,59,46,.62)]'}`}>
+                  <p className={`mt-0.5 text-caption-xs ${live ? 'text-[rgba(59,46,36,.66)]' : 'text-[rgba(59,46,36,.62)]'}`}>
                     {subtitle ? (
                       subtitle(item)
                     ) : (
                       <>
-                        {range}
+                        <span className="u1-num whitespace-nowrap">{range}</span>
                         {done ? ' · 已完成' : null}
-                        {live ? ` · 约 ${durationMin} 分钟 · ${item.checkedInAt ? '到店已核销' : '待核销'}` : null}
+                        {live ? (
+                          <>
+                            {' '}· 约 <span className="u1-num">{durationMin}</span> 分钟 · {item.checkedInAt ? '到店已核销' : '待核销'}
+                          </>
+                        ) : null}
                         {!live && !done ? (
                           <>
                             {item.assignSource && SOURCE_LABEL[item.assignSource] ? ` · ${SOURCE_LABEL[item.assignSource]}` : ''}

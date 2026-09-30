@@ -51,7 +51,7 @@ export default function StayInfoCard({ stay, onEdit, onPhotoClick }: StayInfoCar
       <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
         <p className="flex items-center gap-1.5 text-body-sm text-ink">
           <BedDouble className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
-          房间 <span className="font-semibold">{stay.roomNo ?? '待分配'}</span>
+          房间 {stay.roomNo ? <span className="u1-num font-semibold">{stay.roomNo}</span> : <span className="font-semibold">待分配</span>}
         </p>
         {stay.checkinWeightKg != null ? (
           <p className="flex items-center gap-1.5 text-body-sm text-ink">
