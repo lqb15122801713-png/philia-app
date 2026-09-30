@@ -1,0 +1,18 @@
+=== 片4 禁用色+旧谱系 grep 实证（口径=片1成文：apps/customer-mini 小程序端不在片已登记、scripts/gen-product-placeholders.mjs 内容层素材槽位已登记，均豁免） ===
+--- FDC830 ---
+hits_exit=1
+--- D97B4A ---
+hits_exit=1
+--- 7FD8BE ---
+hits_exit=1
+--- 4A3B2E ---
+hits_exit=1
+--- rgba(74,59,46 ---
+hits_exit=1
+--- rgba(127,216,190 ---
+hits_exit=1
+=== 登记豁免项复核（customer-mini 原样保留） ===
+apps/customer-mini/src/app.config.ts:7: *   ink #4A3B2E / ink-secondary #8A796B / card #FFFFFF / brand-primary-pressed #E8AD02
+apps/customer-mini/src/app.css:13:  --nutui-color-primary: #FDC830;
+apps/customer-mini/src/app.css:17:  --nutui-color-primary-stop-1: #FDC830;
+apps/customer-mini/src/app.css:19:  --nutui-color-primary-text: #4A3B2E;
