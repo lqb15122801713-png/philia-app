@@ -24,14 +24,13 @@
  * 最小侵入不自建大块）。
  */
 
-import { EventType, usePhiliaClient, type EventEnvelope } from '@philia/shared';
+import { EventType, Skeleton, usePhiliaClient, useToast, type EventEnvelope } from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { TRPCClientError } from '@trpc/client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import MainScaffold, { QuietButton } from '@/components/MainScaffold';
 import { REFUND_DAY_STATS_KEY, storeTodayStr } from '@/components/cashier/refund';
-import Toast, { useToast } from '@/components/finance/Toast';
 import { useMerchantEvents } from '@/components/finance/useMerchantEvents';
 import {
   chipRange,
@@ -40,15 +39,16 @@ import {
   formatYuan,
   type ChipMode,
 } from '@/components/finance/utils';
+import { fc } from '@/copy/finance';
 
 const FINANCE_QUERY_ROOT = ['store', 'financeStats'] as const;
 
 const MODE_LABEL: Record<ChipMode, string> = { day: '今天', '7d': '近 7 天', month: '本月' };
 /** 数据卡 1 标题随期间档走 */
 const CAP_RECEIVED: Record<ChipMode, string> = {
-  day: '今日已收',
-  '7d': '近 7 天已收',
-  month: '本月已收',
+  day: fc('fin.capReceivedDay'),
+  '7d': fc('fin.capReceived7d'),
+  month: fc('fin.capReceivedMonth'),
 };
 const PAYMENT_MODE_LABEL: Record<string, string> = { pay_at_store: '到店付', pass_deduct: '次卡扣次' };
 /** M1-补2 R5/R6-1：收银流水方式五分列标签（组合支付全显；储值单列不计已收） */
@@ -76,7 +76,7 @@ interface LedgerRow {
 
 export default function FinancePage() {
   const { trpc, queryClient } = usePhiliaClient();
-  const [toast, showToast] = useToast();
+  const { showToast, toastEl } = useToast({ durationMs: 2500 });
   const [mode, setMode] = useState<ChipMode>('day');
   /** 切档即回当前（今天/含今天的近 7 天/本月），不再支持历史翻页 */
   const [anchor, setAnchor] = useState(() => new Date());
@@ -291,14 +291,15 @@ export default function FinancePage() {
     (data?.pendingPayments ?? [])
       .slice(0, 2)
       .map((p) => `${p.petName}·${p.serviceName} ¥${formatYuan(p.priceFen)}`)
-      .join(' · ') || '无待收单';
+      .join(' · ') || fc('fin.pendingEmpty');
 
   return (
     <MainScaffold
-      title="财务"
-      sub={`今日已收 ¥${todayReceivedFen !== null ? formatYuan(todayReceivedFen) : '…'} · 待收 ¥${
-        data ? formatYuan(data.totals.pendingPaymentFen) : '…'
-      } · 口径=收款登记（到店付）`}
+      title={fc('fin.title')}
+      sub={fc('fin.sub', {
+        received: todayReceivedFen !== null ? formatYuan(todayReceivedFen) : '…',
+        pending: data ? formatYuan(data.totals.pendingPaymentFen) : '…',
+      })}
       actions={
         <div className="flex gap-2">
           {(Object.keys(MODE_LABEL) as ChipMode[]).map((m) => (
@@ -319,24 +320,24 @@ export default function FinancePage() {
       testid="finance-page"
     >
       {statsQuery.isPending ? (
-        // 骨架（禁转圈）：3 卡 + 面板
+        // 加载中骨架块（animate-pulse，禁转圈）：3 卡 + 面板 = shared Skeleton 组合
         <div aria-label="加载中">
           <div className="grid grid-cols-3 gap-3.5">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="u3-stat animate-pulse">
-                <div className="h-3 w-16 rounded-chip bg-[rgba(59,46,36,.08)]" />
-                <div className="mt-3 h-7 w-24 rounded-chip bg-[rgba(59,46,36,.08)]" />
-                <div className="mt-2.5 h-3 w-32 rounded-chip bg-[rgba(59,46,36,.06)]" />
+              <div key={i} className="u3-stat">
+                <Skeleton className="h-3 w-16 rounded-chip" />
+                <Skeleton className="mt-3 h-7 w-24 rounded-chip" />
+                <Skeleton className="mt-2.5 h-3 w-32 rounded-chip" />
               </div>
             ))}
           </div>
-          <div className="u3-panel mt-3.5 animate-pulse">
+          <div className="u3-panel mt-3.5">
             <div className="u3-panel-head">
-              <div className="h-4 w-20 rounded-chip bg-[rgba(59,46,36,.08)]" />
+              <Skeleton className="h-4 w-20 rounded-chip" />
             </div>
             {[0, 1, 2, 3].map((i) => (
               <div key={i} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3.5">
-                <div className="h-3 w-full rounded-chip bg-[rgba(59,46,36,.06)]" />
+                <Skeleton className="h-3 w-full rounded-chip" />
               </div>
             ))}
           </div>
@@ -362,15 +363,15 @@ export default function FinancePage() {
               </div>
             </div>
             <div className="u3-stat">
-              <div className="cap">待收款</div>
+              <div className="cap">{fc('fin.capPending')}</div>
               <div className="v">¥{formatYuan(data.totals.pendingPaymentFen)}</div>
               <div className="d u1-num">{pendingBrief}</div>
             </div>
             <div className="u3-stat">
-              <div className="cap">次卡扣次（非现金）</div>
+              <div className="cap">{fc('fin.capDeduct')}</div>
               <div className="v u1-num">{deductCount}</div>
               <div className="d u1-num">
-                {mode === 'day' ? '今日' : '期内'}扣次 <b className="u1-num">{deductCount}</b> 次 · 不计入营业额
+                {mode === 'day' ? '今日' : '期内'}扣次 <b className="u1-num">{deductCount}</b> 次 · {fc('fin.deductNote')}
               </div>
             </div>
           </div>
@@ -383,7 +384,7 @@ export default function FinancePage() {
               className="u3-panel mt-3.5 flex flex-wrap items-center gap-x-3 gap-y-1 px-[17px] py-3 text-caption"
               data-testid="finance-refund-strip"
             >
-              <span className="font-semibold">今日退款</span>
+              <span className="font-semibold">{fc('fin.refundStripTitle')}</span>
               <span className="u1-num">
                 {refundDayQ.data.count} 笔 ·{' '}
                 <b className={refundDayQ.data.totalFen > 0 ? 'text-danger-deep' : ''}>
@@ -392,7 +393,7 @@ export default function FinancePage() {
               </span>
               <span className="text-[rgba(59,46,36,.42)]">｜</span>
               <span className="text-[rgba(59,46,36,.62)]">
-                当日净额=已收−退款：
+                {fc('fin.refundNetLead')}
                 <b className="u1-num text-ink">
                   ¥{todayReceivedFen !== null ? formatYuan(todayReceivedFen) : '…'} − ¥
                   {formatYuan(refundDayQ.data.totalFen)} = ¥
@@ -402,8 +403,7 @@ export default function FinancePage() {
                 </b>
               </span>
               <span className="text-caption-xs text-[rgba(59,46,36,.42)]">
-                （现金段净额=现金已收−现金退款，现金退款 ¥{formatYuan(refundDayQ.data.segments.cashFen)} 详见日结页；
-                跨日退款计入发生日，历史封箱不回填）
+                {fc('fin.refundStripNote', { amt: formatYuan(refundDayQ.data.segments.cashFen) })}
               </span>
             </div>
           ) : null}
@@ -411,12 +411,12 @@ export default function FinancePage() {
           {/* 收款流水（已收 + 待收合并，按时间倒序） */}
           <div id="pending-payments" className="u3-panel mt-3.5 scroll-mt-4">
             <div className="u3-panel-head">
-              <h3>收款流水</h3>
-              <span className="aside">按时间倒序</span>
+              <h3>{fc('fin.ledgerTitle')}</h3>
+              <span className="aside">{fc('fin.ledgerAside')}</span>
             </div>
             {ledgerRows.length === 0 ? (
               <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center text-body-sm text-[rgba(59,46,36,.62)]">
-                {MODE_LABEL[mode]}还没有收款
+                {fc('fin.ledgerEmpty', { period: MODE_LABEL[mode] })}
               </div>
             ) : (
               <table className="u3-tbl">
@@ -478,7 +478,7 @@ export default function FinancePage() {
         </>
       ) : null}
 
-      <Toast message={toast} />
+      {toastEl}
     </MainScaffold>
   );
 }

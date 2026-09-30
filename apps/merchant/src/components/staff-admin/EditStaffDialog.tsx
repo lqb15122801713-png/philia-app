@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react';
 import { errMsg } from './format';
 import { STAFF_ROLE_LABEL, type StaffRow } from './types';
 import { Btn, Field, Modal, Switch, toast } from './ui';
+import { sf } from '../../copy/staff';
 
 const ROLE_OPTIONS = [
   { value: 'frontdesk', label: '前台（扫码核销 / 接待）' },
@@ -84,7 +85,7 @@ export default function EditStaffDialog({
       }
     >
       <div className="space-y-4">
-        <Field label="岗位角色" hint="前台负责扫码核销与接待；美容师负责服务执行（无核销入口）">
+        <Field label="岗位角色" hint={sf('staff.editRoleHint')}>
           <select
             value={role}
             onChange={(e) => setRole(e.target.value === 'frontdesk' ? 'frontdesk' : 'groomer')}
@@ -103,14 +104,14 @@ export default function EditStaffDialog({
           <div>
             <div className="text-body text-ink">在职状态</div>
             <div className="mt-0.5 text-caption text-ink-placeholder">
-              停用后该员工立即无法操作员工端（历史业绩保留）
+              {sf('staff.editSuspendNote')}
             </div>
           </div>
           <Switch checked={active} onChange={setActive} disabled={pending} label="在职状态" />
         </div>
 
         <p className="text-caption text-ink-placeholder">
-          技能标签暂为只读（S4 派单批开放编辑）；排班请点员工行右侧的排班摘要编辑。
+          {sf('staff.editSkillNote')}
         </p>
 
         {error ? <p className="text-body text-danger-deep">{error}</p> : null}

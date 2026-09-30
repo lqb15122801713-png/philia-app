@@ -16,6 +16,7 @@
  */
 
 import { ClipboardList, DoorOpen, Luggage, Scale } from 'lucide-react';
+import { bc } from '../../copy/boarding';
 import { fmtDate, fmtDateTime, fmtIsoDate, fmtMoney } from './format';
 import { PetAvatar } from './BoardingStayCard';
 import { PAYMENT_MODE_LABEL, SPECIES_LABEL, type StayBoardRow } from './types';
@@ -114,8 +115,7 @@ export default function BoardingStayDetail({
         </div>
         <InfoRow label="最近打卡" value={fmtIsoDate(row.lastLogDate)} />
         <p className="mt-1 rounded-control bg-canvas px-3 py-2 text-caption-xs text-[rgba(59,46,36,.42)]">
-          打卡明细（喂食 / 遛弯 / 照片墙）的商家查看接口待服务端补齐（v2）；
-          目前明细可在员工端寄养打卡页查看。
+          {bc('board.stayLogsGap')}
         </p>
 
         {/* 称重记录（入住称重之上无更多历史，保持简洁） */}
@@ -146,8 +146,8 @@ export default function BoardingStayDetail({
           退房结算
         </button>
         <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
-          退房核销由员工在员工端办理（v1.1 起）；员工退房后本单转入「已完成」，
-          {appointment.paymentMode === 'pay_at_store' ? '到店付请到财务页「待收款」确认收款。' : '款项以店内结算为准。'}
+          {bc('board.stayCheckoutLead')}
+          {appointment.paymentMode === 'pay_at_store' ? bc('board.stayCheckoutPayStore') : bc('board.stayCheckoutOther')}
         </p>
       </div>
     </div>

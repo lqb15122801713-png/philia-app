@@ -3,7 +3,7 @@
  *
  * 规格书 §7：用户卡（头像卡其环+角色卡其签+入职年月+在班态）→ 三格数字
  * （本月完成单/好评率/本月寄养打卡，mono 20/700，三连圆角 20）→
- * 列表组 1（我的排班=本周段·休日[只读]/我的评价/寄养负责中）→
+ * 列表组 1（我的排班=本周段·休日[只读]/评价总览[原「我的评价」P2-1 改名]/寄养负责中）→
  * 列表组 2（帮助与规范/设置/退出登录 danger）→ 版本小字。
  *
  * 数据（零新接口，前端聚合）：
@@ -17,7 +17,7 @@
  *   无对应页面，不做假跳转（铁律）；退出登录=真 logout。
  */
 
-import { getApiBase, logout, useMe, usePhiliaClient } from '@philia/shared';
+import { getApiBase, logout, useMe, usePhiliaClient, useToast } from '@philia/shared';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import {
   BedDouble,
@@ -37,8 +37,8 @@ import {
 } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Toast, { useToast } from '@/components/today/Toast';
 import { dayKeyOf, SCHEDULE_DAYS, type HistoryItem } from '@/components/today/utils';
+import { ME_COPY } from '@/copy/me';
 
 type Schedule = Partial<Record<string, Array<{ start: string; end: string }> | null>>;
 
@@ -98,7 +98,7 @@ export default function MePage() {
   const navigate = useNavigate();
   const { trpc, queryClient } = usePhiliaClient();
   const { user } = useMe();
-  const [toast, showToast] = useToast();
+  const { showToast, toastEl } = useToast();
   const [loggingOut, setLoggingOut] = useState(false);
   const [expandKey, setExpandKey] = useState<'schedule' | 'help' | 'settings' | null>(null);
 
@@ -251,13 +251,15 @@ export default function MePage() {
             })}
           </ul>
         ) : null}
+        {/* P2-1 同名歧义消解：本条改题「评价总览」（绩效口径聚合入口，/history）；
+            下组员工端 2.0 的「我的评价」（/reviews 明细列表）保留原题——文案走 copy/me 键 */}
         <ListRow
           icon={Star}
-          label="我的评价"
+          label={ME_COPY['me.reviewSummary']}
           sub={
             <>
-              近 30 天口径看历史页 · 本月已评 <span className="u1-num">{perf.ratedCount}</span> 条
-              {perf.avg !== null ? <> · 均分 <span className="u1-num">{perf.avg.toFixed(1)}</span></> : ''}
+              {ME_COPY['me.reviewSummaryLead']} <span className="u1-num">{perf.ratedCount}</span> {ME_COPY['me.reviewSummaryUnit']}
+              {perf.avg !== null ? <> · {ME_COPY['me.reviewSummaryAvg']} <span className="u1-num">{perf.avg.toFixed(1)}</span></> : ''}
             </>
           }
           to="/history"
@@ -282,7 +284,7 @@ export default function MePage() {
         <ListRow icon={ClipboardCheck} label="盘点任务" sub="日盘/周盘执行 · 安心包效期" to="/inventory" testid="me-inventory" />
         <ListRow icon={Wallet} label="薪资提成" sub="本月提成逐单明细 · 绩效 · 扣减" to="/pay" testid="me-pay" />
         <ListRow icon={Trophy} label="XP 成长" sub="段位 · 本店榜 · 规则一句话" to="/xp" testid="me-xp" />
-        <ListRow icon={MessagesSquare} label="我的评价" sub="本人收到的客户评价" to="/reviews" testid="me-reviews-list" />
+        <ListRow icon={MessagesSquare} label={ME_COPY['me.myReviews']} sub={ME_COPY['me.myReviewsSub']} to="/reviews" testid="me-reviews-list" />
         {(user?.roles ?? []).some((r) => r === 'merchant_manager' || r === 'merchant_owner') ? (
           <ListRow icon={ShieldCheck} label="店长视图" sub="审批 · 日结确认 · 差评提示" to="/manager" testid="me-manager" />
         ) : null}
@@ -300,10 +302,10 @@ export default function MePage() {
         />
         {expandKey === 'help' ? (
           <div className="px-4 pb-3 text-caption-xs leading-relaxed text-[rgba(59,46,36,.62)]">
-            <p className="font-bold text-ink">六步影像规范</p>
-            <p className="mt-1">消毒 1–3 张 · 预检 2–6 张 · 洗护 3–9 张 · 精修 2–6 张 · 前后对比各 1 张；过程照实时同步家长，张数达标才能确认翻步。</p>
-            <p className="mt-2 font-bold text-ink">核销流程</p>
-            <p className="mt-1">客户到店出示预约码 → 前台扫码（无摄像头走手动 6 位码）→ 核销成功自动开单；寄养单核销后办理入住登记。</p>
+            <p className="font-bold text-ink">{ME_COPY['me.help.specTitle']}</p>
+            <p className="mt-1">{ME_COPY['me.help.specBody']}</p>
+            <p className="mt-2 font-bold text-ink">{ME_COPY['me.help.flowTitle']}</p>
+            <p className="mt-1">{ME_COPY['me.help.flowBody']}</p>
           </div>
         ) : null}
         <ListRow
@@ -316,7 +318,7 @@ export default function MePage() {
         />
         {expandKey === 'settings' ? (
           <div className="px-4 pb-3 text-caption-xs leading-relaxed text-[rgba(59,46,36,.62)]">
-            <p>实时同步：派单/改期/取消即时推送（SSE 长连接，断线自动重连 + 60s 轮询兜底）。</p>
+            <p>{ME_COPY['me.settings.sync']}</p>
             <p className="mt-1">通知权限：{typeof Notification !== 'undefined' ? (Notification.permission === 'granted' ? '已开启' : Notification.permission === 'denied' ? '已拒绝（浏览器地址栏可改）' : '未开启') : '当前环境不支持'}</p>
           </div>
         ) : null}
@@ -331,7 +333,7 @@ export default function MePage() {
 
       <p className="mb-6 mt-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">Philia 员工端 · 内测 v1.1</p>
 
-      <Toast message={toast} />
+      {toastEl}
     </div>
   );
 }

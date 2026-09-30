@@ -23,7 +23,7 @@
  *   补一档同接口的今日查询（enabled 条件触发），chips 计数恒为今日口径。
  */
 
-import { EventType, usePhiliaClient, type EventEnvelope } from '@philia/shared';
+import { EventType, Skeleton, usePhiliaClient, type EventEnvelope } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -43,6 +43,7 @@ import {
   localDayKey,
   type ListForStoreItem,
 } from '../components/appointments/appt-utils';
+import { ac } from '../copy/appointments';
 
 /* ------------------------------------------------------------------ */
 /* 状态档口径（规格书 §3；appt-utils.ts 只读不改，故聚合逻辑就地）          */
@@ -218,12 +219,12 @@ export default function AppointmentsPage() {
 
   /* ---------------- 交互 ---------------- */
 
-  const sub = `${
-    day === null ? '全部日期' : fmtDate(new Date(`${day}T00:00:00`))
-  } · 共 ${items.length} 单 · 自动接单已启用`;
+  const sub = ac('appt.listSub', {
+    date: day === null ? ac('appt.listSubAllDates') : fmtDate(new Date(`${day}T00:00:00`)),
+    count: items.length,
+  });
 
-  const openNewAppointmentHint = () =>
-    showToast('新客户预约请引导至客户端预约页；到店客可由前台手动核销登记', 'info');
+  const openNewAppointmentHint = () => showToast(ac('appt.createGuide'), 'info');
 
   /* ---------------- 渲染 ---------------- */
 
@@ -243,7 +244,7 @@ export default function AppointmentsPage() {
 
   return (
     <MainScaffold
-      title="预约"
+      title={ac('appt.listTitle')}
       sub={sub}
       testid="appointments-page"
       actions={
@@ -255,7 +256,7 @@ export default function AppointmentsPage() {
             testid="appointments-search"
           />
           <LemonButton testid="appointment-create" onClick={openNewAppointmentHint}>
-            ＋ 新增预约
+            {ac('appt.createCta')}
           </LemonButton>
         </>
       }
@@ -284,14 +285,13 @@ export default function AppointmentsPage() {
               <tbody>
                 {[0, 1, 2, 3, 4].map((r) => (
                   <tr key={r}>
-                    {[38, 120, 72, 88, 52, 76, 12].map((w, c) => (
-                      <td key={c}>
-                        <div
-                          className="h-3 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.08)]"
-                          style={{ width: w }}
-                        />
-                      </td>
-                    ))}
+                    {['w-[38px]', 'w-[120px]', 'w-[72px]', 'w-[88px]', 'w-[52px]', 'w-[76px]', 'w-[12px]'].map(
+                      (w, c) => (
+                        <td key={c}>
+                          <Skeleton className={`h-3 ${w}`} />
+                        </td>
+                      ),
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -318,7 +318,7 @@ export default function AppointmentsPage() {
                 {visible.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="py-16 text-center text-[rgba(59,46,36,.42)]">
-                      这一天没有预约
+                      {ac('appt.listEmpty')}
                     </td>
                   </tr>
                 ) : (

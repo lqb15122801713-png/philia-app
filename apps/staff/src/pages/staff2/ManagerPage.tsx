@@ -25,15 +25,15 @@
  * 7. 库存流水：inventory.listMovements({limit:20})（只读，来源中文标签 + 前后值）。
  */
 
-import { useMe, usePhiliaClient } from '@philia/shared';
+import { useMe, usePhiliaClient, useToast } from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { TRPCClientError } from '@trpc/client';
 import { ShieldCheck } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/PageHeader';
-import Toast, { useToast } from '@/components/today/Toast';
 import { hhmm, mmdd } from '@/components/today/utils';
+import { MANAGER_COPY } from '@/copy/manager';
 
 /* ------------------------------------------------------------------ */
 /* 文案映射                                                              */
@@ -76,6 +76,11 @@ function parseYuanToFen(text: string): number | null {
 
 const BTN_PRIMARY =
   'inline-flex min-h-[44px] items-center justify-center rounded-full bg-brand-primary px-5 text-body-sm font-semibold text-ink transition duration-120 active:scale-92 disabled:opacity-50';
+/* 换皮批片 5 P3-3（34 号档 §4.11 空态件=深棕钮）：BTN_PRIMARY 兼有主行动场景引用
+   （考勤通过/批准取消/确认日结/实退完成/确认入账），常量整体不动；引导卡出口钮
+   拆独立常量 BTN_GUIDE——深棕墨底淡金字（GuidePage 同族口径） */
+const BTN_GUIDE =
+  'inline-flex min-h-[44px] items-center justify-center rounded-full bg-ink px-5 text-body-sm font-semibold text-brand-primary transition duration-120 active:scale-92 disabled:opacity-50';
 const BTN_DANGER =
   'inline-flex min-h-[44px] items-center justify-center rounded-full bg-danger-light px-5 text-body-sm font-semibold text-danger-deep transition duration-120 active:scale-92 disabled:opacity-50';
 const BTN_PLAIN =
@@ -133,15 +138,15 @@ function GuideCard() {
       <span className="flex h-16 w-16 items-center justify-center rounded-full bg-oak-light">
         <ShieldCheck className="h-7 w-7 text-ink" strokeWidth={1.6} />
       </span>
-      <h1 className="u1-serif mt-4 text-title-lg font-bold">店长视图仅店长与老板可用</h1>
+      <h1 className="u1-serif mt-4 text-title-lg font-bold">{MANAGER_COPY['manager.guide.title']}</h1>
       <p className="mt-2 text-body-sm text-ink-secondary">
-        当前账号暂无店长权限。考勤/取消/盘点审批与日结确认请改用商家端，或联系店主开通店长角色。
+        {MANAGER_COPY['manager.guide.desc']}
       </p>
       <button
         type="button"
         data-testid="manager-guide-back"
         onClick={() => navigate('/me', { replace: true })}
-        className={`${BTN_PRIMARY} mt-6 min-w-[200px]`}
+        className={`${BTN_GUIDE} mt-6 min-w-[200px]`}
       >
         返回我的
       </button>
@@ -201,7 +206,7 @@ function AttendanceSection({
       }
       testid="manager-attendance"
     >
-      <QueryState pending={q.isPending} error={q.error} empty={approvals.length === 0 && flagged.length === 0} emptyText="暂无待审批与防代打标记" />
+      <QueryState pending={q.isPending} error={q.error} empty={approvals.length === 0 && flagged.length === 0} emptyText={MANAGER_COPY['manager.attendance.empty']} />
       {approvals.length > 0 ? (
         <ul className="divide-y divide-[rgba(59,46,36,.06)]">
           {approvals.map((a) => (
@@ -297,7 +302,7 @@ function CancelSection({ showToast }: { showToast: (m: string) => void }) {
       }
       testid="manager-cancel"
     >
-      <QueryState pending={q.isPending} error={q.error} empty={rows.length === 0} emptyText="暂无待审核的取消申请" />
+      <QueryState pending={q.isPending} error={q.error} empty={rows.length === 0} emptyText={MANAGER_COPY['manager.cancel.empty']} />
       {rows.length > 0 ? (
         <ul className="divide-y divide-[rgba(59,46,36,.06)]">
           {rows.map((a) => (
@@ -517,7 +522,7 @@ function RefundSection({ showToast }: { showToast: (m: string) => void }) {
       <QueryState pending={pendingQ.isPending} error={pendingQ.error} empty={false} emptyText="" />
       {pending.length > 0 ? (
         <div className="rounded-control bg-brand-primary-light p-3">
-          <p className="text-caption-xs font-bold text-ink">实退待办（执行超 24 小时未登记）</p>
+          <p className="text-caption-xs font-bold text-ink">{MANAGER_COPY['manager.refund.pendingNote']}</p>
           <ul className="mt-1.5 divide-y divide-[rgba(59,46,36,.08)]">
             {pending.map((r) => {
               const overdueH = Math.max(1, Math.floor((nowMs - r.createdAt.getTime()) / 3_600_000));
@@ -553,9 +558,9 @@ function RefundSection({ showToast }: { showToast: (m: string) => void }) {
 
       {/* 本店退款单（最近 20 条）：店长可办 executed 实退登记；draft 只读提示须店主（驳回权仅店主，不渲染驳回钮） */}
       <p className={`text-caption-xs font-bold text-[rgba(59,46,36,.42)] ${pending.length > 0 ? 'mt-3' : ''}`}>
-        本店退款单（最近 20 条）· 发起入口在商家端收银台
+        {MANAGER_COPY['manager.refund.listNote']}
       </p>
-      <QueryState pending={listQ.isPending} error={listQ.error} empty={rows.length === 0} emptyText="暂无退款单" />
+      <QueryState pending={listQ.isPending} error={listQ.error} empty={rows.length === 0} emptyText={MANAGER_COPY['manager.refund.empty']} />
       {rows.length > 0 ? (
         <ul className="divide-y divide-[rgba(59,46,36,.06)]">
           {rows.map((r) => (
@@ -591,7 +596,7 @@ function RefundSection({ showToast }: { showToast: (m: string) => void }) {
               </p>
               {r.status === 'draft' ? (
                 <p className="mt-1 text-caption-xs font-bold text-[rgba(59,46,36,.62)]">
-                  超阈值/涉储值申请须店主审批（驳回权仅店主）
+                  {MANAGER_COPY['manager.refund.draftNote']}
                 </p>
               ) : null}
               {r.status === 'executed' ? (
@@ -700,8 +705,8 @@ function InventorySection({ showToast }: { showToast: (m: string) => void }) {
       </div>
 
       {/* counted 确认队列 */}
-      <p className="mt-3 text-caption-xs font-bold text-[rgba(59,46,36,.42)]">待确认（店员已录入实盘）</p>
-      <QueryState pending={countedQ.isPending} error={countedQ.error} empty={counted.length === 0} emptyText="暂无待确认盘点单" />
+      <p className="mt-3 text-caption-xs font-bold text-[rgba(59,46,36,.42)]">{MANAGER_COPY['manager.inventory.countedNote']}</p>
+      <QueryState pending={countedQ.isPending} error={countedQ.error} empty={counted.length === 0} emptyText={MANAGER_COPY['manager.inventory.countedEmpty']} />
       {counted.length > 0 ? (
         <ul className="divide-y divide-[rgba(59,46,36,.06)]">
           {counted.map((c) => {
@@ -766,7 +771,7 @@ function InventorySection({ showToast }: { showToast: (m: string) => void }) {
 
       {/* 最近已入账 */}
       <p className="mt-3 text-caption-xs font-bold text-[rgba(59,46,36,.42)]">最近已入账</p>
-      <QueryState pending={postedQ.isPending} error={postedQ.error} empty={posted.length === 0} emptyText="暂无已入账盘点单" />
+      <QueryState pending={postedQ.isPending} error={postedQ.error} empty={posted.length === 0} emptyText={MANAGER_COPY['manager.inventory.postedEmpty']} />
       {posted.length > 0 ? (
         <ul className="divide-y divide-[rgba(59,46,36,.06)]">
           {posted.map((c) => (
@@ -797,7 +802,7 @@ function ReviewsSection() {
 
   return (
     <Section title="差评提示" aside="仅提示 · 不构成工单" testid="manager-reviews">
-      <QueryState pending={q.isPending} error={q.error} empty={rows.length === 0} emptyText="暂无 ≤2 星差评" />
+      <QueryState pending={q.isPending} error={q.error} empty={rows.length === 0} emptyText={MANAGER_COPY['manager.reviews.empty']} />
       {rows.length > 0 ? (
         <ul className="divide-y divide-[rgba(59,46,36,.06)]">
           {rows.map((r) => (
@@ -835,7 +840,7 @@ function MovementsSection({ operatorNameOf }: { operatorNameOf: (userId: string)
 
   return (
     <Section title="库存流水" aside="最新 20 条 · 只读" testid="manager-movements">
-      <QueryState pending={q.isPending} error={q.error} empty={rows.length === 0} emptyText="暂无库存流水" />
+      <QueryState pending={q.isPending} error={q.error} empty={rows.length === 0} emptyText={MANAGER_COPY['manager.movements.empty']} />
       {rows.length > 0 ? (
         <ul className="divide-y divide-[rgba(59,46,36,.06)]">
           {rows.map((m) => (
@@ -869,7 +874,7 @@ function MovementsSection({ operatorNameOf }: { operatorNameOf: (userId: string)
 export default function ManagerPage() {
   const { trpc } = usePhiliaClient();
   const { user, loading } = useMe();
-  const [toast, showToast] = useToast();
+  const { showToast, toastEl } = useToast();
 
   // 店名（header aside；与 MePage 同 queryKey 共享缓存）
   const meQuery = useQuery({
@@ -890,7 +895,7 @@ export default function ManagerPage() {
       ) : (
         <ManagerBody userId={user!.id} userNickname={user!.nickname} showToast={showToast} />
       )}
-      <Toast message={toast} />
+      {toastEl}
     </div>
   );
 }

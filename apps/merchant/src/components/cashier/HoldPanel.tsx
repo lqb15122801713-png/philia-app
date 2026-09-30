@@ -11,7 +11,9 @@
  * - 三态：骨架 / 错误重试 / 空态。
  */
 
+import { Skeleton } from '@philia/shared'
 import { MoreHorizontal } from 'lucide-react'
+import { cc } from '@/copy/cashier'
 import { Link } from 'react-router-dom'
 import {
   BILL_STATUS_CHIP,
@@ -21,16 +23,6 @@ import {
   shortBillNo,
   type BillListRow,
 } from './model'
-
-function PanelSkeleton({ rows }: { rows: number }) {
-  return (
-    <div className="flex flex-col gap-2">
-      {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="h-[64px] animate-pulse rounded-[14px] bg-[rgba(59,46,36,.05)]" />
-      ))}
-    </div>
-  )
-}
 
 function PanelError({ onRetry, testid }: { onRetry: () => void; testid: string }) {
   return (
@@ -87,7 +79,12 @@ export default function HoldPanel({
           </span>
         </div>
         {loading ? (
-          <PanelSkeleton rows={2} />
+          /* 加载中骨架块（animate-pulse，禁转圈）：挂单卡 = shared Skeleton 组合 */
+          <div className="flex flex-col gap-2">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <Skeleton key={i} className="h-[64px] rounded-[14px]" />
+            ))}
+          </div>
         ) : error ? (
           <PanelError onRetry={onRetry} testid="cashier-held-retry" />
         ) : (held ?? []).length === 0 ? (
@@ -95,7 +92,7 @@ export default function HoldPanel({
             className="rounded-[16px] bg-[#F1E8D4] px-3.5 py-[22px] text-center text-caption-xs text-[rgba(59,46,36,.42)]"
             data-testid="cashier-held-empty"
           >
-            无挂单
+            {cc('cashier.holdEmpty')}
           </div>
         ) : (
           <div className="flex flex-col gap-2">
@@ -148,7 +145,7 @@ export default function HoldPanel({
             ))}
           </div>
         )}
-        <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]">点卡取单续结 · ⋯ 撤单（留痕）</p>
+        <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]">{cc('cashier.holdFooter')}</p>
       </section>
 
       {/* ---- 今日流水（最近 5 条；clerk 隐藏整块——矩阵总规则②） ---- */}
@@ -164,11 +161,16 @@ export default function HoldPanel({
           </Link>
         </div>
         {loading ? (
-          <PanelSkeleton rows={3} />
+          /* 加载中骨架块（animate-pulse，禁转圈）：流水行 = shared Skeleton 组合 */
+          <div className="flex flex-col gap-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-[64px] rounded-[14px]" />
+            ))}
+          </div>
         ) : error ? (
           <PanelError onRetry={onRetry} testid="cashier-flow-retry" />
         ) : recent.length === 0 ? (
-          <p className="py-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">今日暂无流水</p>
+          <p className="py-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">{cc('cashier.flowEmpty')}</p>
         ) : (
           <div>
             {recent.map((b) => {

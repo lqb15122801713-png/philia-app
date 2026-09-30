@@ -12,7 +12,7 @@
  *   断线重连后 onSync 全量对齐）。
  */
 
-import { usePhiliaClient } from '@philia/shared';
+import { Skeleton, usePhiliaClient } from '@philia/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BadgeCheck, Package, Truck } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -23,9 +23,10 @@ import ConfirmSheet from '../components/mall/ConfirmSheet';
 import { EmptyState } from '../components/home/common';
 import { CartProvider, MAX_QTY, useCart } from '../components/mall/cartStore';
 import { fenToYuan, fmtOrderTime } from '../components/mall/format';
-import { friendlyError, useMallToast } from '../components/mall/MallToast';
+import { friendlyError, useToast } from '@philia/shared';
 import ProductImage from '../components/mall/ProductImage';
 import { useOrderEvents } from '../components/mall/useOrderEvents';
+import { MALL_COPY, mlc } from '../copy/mall';
 
 /* ---------------- 类型（与 T5.1 listMyOrders 返回对齐） ---------------- */
 
@@ -225,7 +226,7 @@ function MallOrdersInner() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const cart = useCart();
-  const { toastEl, showToast } = useMallToast();
+  const { toastEl, showToast } = useToast({ durationMs: 3200 });
 
   /* W1 R-Nav-2 返回保状态（淘宝订单列表同规范）：
      - 筛选 tab 入 URL（?tab=，replace 写入不污染历史栈——后退不会逐 tab 回放）；
@@ -331,7 +332,7 @@ function MallOrdersInner() {
       showToast('已确认收货，感谢购买', 'info');
       invalidateOrders();
     },
-    onError: (err) => showToast(friendlyError(err, '确认收货失败')),
+    onError: (err) => showToast(friendlyError(err, '确认收货失败', 80), 'error'),
     onSettled: () => setReceiveTarget(null),
   });
 
@@ -342,7 +343,7 @@ function MallOrdersInner() {
       showToast('订单已取消，库存已释放', 'info');
       invalidateOrders();
     },
-    onError: (err) => showToast(friendlyError(err, '取消失败，请稍后再试')),
+    onError: (err) => showToast(friendlyError(err, '取消失败，请稍后再试', 80), 'error'),
     onSettled: () => setCancelTarget(null),
   });
 
@@ -361,43 +362,38 @@ function MallOrdersInner() {
       {toastEl}
       {/* U1-A：统一返回条（←圆钮+标题）；试样 09 顶栏「订单」+dock 为主级形态，
           实现侧 /mall/orders 为商城子页（详情级无 dock，§0.4）——结构差异登记 */}
-      <PageHeader title="商品订单" />
+      <PageHeader title={mlc('mall.ordersTitle')} />
 
       {ordersQ.isPending ? (
         <div className="mt-5 space-y-3.5">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-36 animate-pulse rounded-panel bg-sunken" />
+            <Skeleton key={i} className="h-36 rounded-panel" />
           ))}
         </div>
       ) : ordersQ.isError ? (
         <div className="mt-10 text-center">
-          <p className="text-body-sm text-ink-secondary">订单加载失败，请稍后重试</p>
+          <p className="text-body-sm text-ink-secondary">{mlc('mall.ordersLoadFail')}</p>
           <button
             type="button"
             onClick={() => void ordersQ.refetch()}
-            className="mt-4 rounded-control bg-brand-primary px-[30px] py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+            className="mt-4 rounded-control bg-ink px-[30px] py-[13px] text-body-sm font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             重新加载
           </button>
         </div>
       ) : totalCount === 0 ? (
-        /* U1-I：全域统一空态组件（U4-D3 试样 12 工艺，余白区垂直居中） */
+        /* U1-I：全域统一空态组件（余白区垂直居中）；批片 5 P2：订单系三句话经 MALL_COPY 取值，
+           出口钮=深棕墨底淡字（§4.11 空态件），落点=服务预约入口 /booking */
         <div className="flex min-h-[56vh] flex-col justify-center">
           <EmptyState
-            title="购物袋还空着呢"
-            desc={
-              <>
-                philia 帮你看着货架，
-                <br />
-                门店同款好物都在商城里
-              </>
-            }
+            title={MALL_COPY['mall.orders.emptyTitle']}
+            desc={MALL_COPY['mall.orders.emptyBody']}
             action={
               <Link
-                to="/mall"
-                className="inline-flex items-center rounded-control bg-brand-primary px-[30px] py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                to="/booking"
+                className="inline-flex items-center rounded-control bg-ink px-[30px] py-[13px] text-body-sm font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
               >
-                去逛逛 ›
+                {MALL_COPY['mall.orders.emptyCta']}
               </Link>
             }
           />
@@ -431,7 +427,7 @@ function MallOrdersInner() {
             {items.length === 0 ? (
               /* D-补3：签内空态不坍缩、不裸框——居中一句话 */
               <p className="py-12 text-center text-caption text-ink-placeholder">
-                暂无{active.label}的订单
+                {mlc('mall.ordersTabEmpty', { tab: active.label })}
               </p>
             ) : (
               items.map((o) => (

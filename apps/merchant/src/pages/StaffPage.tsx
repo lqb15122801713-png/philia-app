@@ -17,7 +17,7 @@
  * 故绩效行写「完成 N 单」不挂「本月」字样，避免口径虚标。
  */
 
-import { usePhiliaClient } from '@philia/shared';
+import { Skeleton, usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import MainScaffold, { LemonButton, QuietButton } from '../components/MainScaffold';
@@ -26,6 +26,7 @@ import InviteStaffDialog from '../components/staff-admin/InviteStaffDialog';
 import ScheduleEditorDialog from '../components/staff-admin/ScheduleEditorDialog';
 import { errMsg } from '../components/staff-admin/format';
 import { toast, ToasterMount } from '../components/staff-admin/ui';
+import { sf } from '../copy/staff';
 import {
   DAY_KEYS,
   DAY_SHORT,
@@ -154,9 +155,9 @@ export default function StaffPage() {
 
   return (
     <MainScaffold
-      title="员工"
-      sub={`在职 ${active.length} · 美容师 ${groomerCount} · 前台 ${frontdeskCount} · 自动派单按排班+负荷（S4）`}
-      actions={<LemonButton onClick={() => setInviteOpen(true)}>＋ 邀请员工</LemonButton>}
+      title={sf('staff.title')}
+      sub={sf('staff.sub', { a: active.length, b: groomerCount, c: frontdeskCount })}
+      actions={<LemonButton onClick={() => setInviteOpen(true)}>{sf('staff.inviteCta')}</LemonButton>}
       testid="staff-page"
     >
       <ToasterMount />
@@ -164,23 +165,23 @@ export default function StaffPage() {
       <div className="u3-panel">
         <div className="u3-panel-head">
           <h3>在职员工</h3>
-          <span className="aside">排班=自动派单与可约判定之源</span>
+          <span className="aside">{sf('staff.panelAside')}</span>
         </div>
 
         {staffQuery.isPending ? (
-          // 骨架（禁转圈）：三条脉冲行
+          // 加载中骨架块（animate-pulse，禁转圈）：三条脉冲行 = shared Skeleton 组合
           <div aria-label="加载中">
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="flex animate-pulse items-center gap-[13px] border-t border-[rgba(59,46,36,.06)] px-[17px] py-3"
+                className="flex items-center gap-[13px] border-t border-[rgba(59,46,36,.06)] px-[17px] py-3"
               >
-                <div className="h-[42px] w-[42px] rounded-full bg-[rgba(59,46,36,.08)]" />
+                <Skeleton className="h-[42px] w-[42px] rounded-full" />
                 <div className="flex-1">
-                  <div className="h-3.5 w-28 rounded-chip bg-[rgba(59,46,36,.08)]" />
-                  <div className="mt-2 h-3 w-44 rounded-chip bg-[rgba(59,46,36,.06)]" />
+                  <Skeleton className="h-3.5 w-28 rounded-chip" />
+                  <Skeleton className="mt-2 h-3 w-44 rounded-chip" />
                 </div>
-                <div className="h-3 w-32 rounded-chip bg-[rgba(59,46,36,.06)]" />
+                <Skeleton className="h-3 w-32 rounded-chip" />
               </div>
             ))}
           </div>
@@ -193,9 +194,9 @@ export default function StaffPage() {
           </div>
         ) : staff.length === 0 ? (
           <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">还没有员工</p>
+            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{sf('staff.empty')}</p>
             <div className="mt-4">
-              <LemonButton onClick={() => setInviteOpen(true)}>去邀请第一位员工</LemonButton>
+              <LemonButton onClick={() => setInviteOpen(true)}>{sf('staff.emptyCta')}</LemonButton>
             </div>
           </div>
         ) : (
@@ -219,7 +220,7 @@ export default function StaffPage() {
                   <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.62)]">
                     {suspended ? (
                       <>
-                        入职 <span className="u1-num">{joinMonth(s.createdAt)}</span> · 停职中不可派单/核销
+                        入职 <span className="u1-num">{joinMonth(s.createdAt)}</span> · {sf('staff.suspendedNote')}
                       </>
                     ) : (
                       <>

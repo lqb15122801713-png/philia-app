@@ -81,7 +81,15 @@
   font-display: swap;
   src: url('/fonts/noto-serif-sc-chinese-simplified-700.woff2') format('woff2');
 }
-/* 换皮批片 1 字体备料：serif 900（屏题/卡题主重）+ JetBrains Mono 等宽轨 */
+/* 换皮批片 1 字体备料：serif 900（屏题/卡题主重）+ JetBrains Mono 等宽轨；
+   片 5（R11b F-2 收尾）：600 档补入，900/600=中文按用字子集化（2.1MB→278KB） */
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/noto-serif-sc-chinese-simplified-600.woff2') format('woff2');
+}
 @font-face {
   font-family: 'Noto Serif SC';
   font-style: normal;
@@ -222,8 +230,8 @@
   .u3-st.done { background:transparent; box-shadow:inset 0 0 0 1px rgba(59,46,36,.12); color:rgba(59,46,36,.42); }
   .u3-st.amber { background:#F2DFA6; color:#3B2E24; } /* PR-换皮片1：淡金点睛（柠檬黄清场） */
   .u3-st.red { background:#B4502E; color:#FFFDF6; } /* 警示=赭红（纯红换赭 §1.4） */
-  /* 筛选 chips（当前=墨底反白） */
-  .u3-chipf { font-size:12px; font-weight:600; padding:7px 13px; border-radius:999px; background:#FFFDF6; box-shadow:0 0 0 1px rgba(59,46,36,.09); color:rgba(59,46,36,.62); transition:transform 120ms cubic-bezier(0.34,1.56,0.64,1); }
+  /* 筛选 chips（当前=墨底反白；片 5 归并整改：触控面 ≥44 地板，视觉字号不变） */
+  .u3-chipf { font-size:12px; font-weight:600; padding:10px 16px; min-height:44px; display:inline-flex; align-items:center; border-radius:999px; background:#FFFDF6; box-shadow:0 0 0 1px rgba(59,46,36,.09); color:rgba(59,46,36,.62); transition:transform 120ms cubic-bezier(0.34,1.56,0.64,1); }
   .u3-chipf:active { transform:scale(.92); }
   .u3-chipf.on { background:#3B2E24; color:#FAF8F2; box-shadow:none; }
   /* 数据卡（总览/财务） */

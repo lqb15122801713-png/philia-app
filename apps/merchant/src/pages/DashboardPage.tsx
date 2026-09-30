@@ -25,6 +25,7 @@ import StatCards from '@/components/dashboard/StatCards'
 import TodayTimeline from '@/components/dashboard/TodayTimeline'
 import TodoSection from '@/components/dashboard/TodoSection'
 import { useStepProgress } from '@/components/appointments/useStepProgress'
+import { dc } from '@/copy/dashboard'
 import {
   IN_BOARDING_QUERY_KEY,
   STATS_QUERY_KEY,
@@ -100,6 +101,7 @@ export default function DashboardPage() {
           case EventType.BoardingCompleted:
           // 批次 M1：收银台事件 → 总览联动（结账翻预约待收 −1 / todayRevenueFen 含收银；
           // 挂单/撤单影响收银台自身口径，统一全量对齐）
+          // falls through —— 批次 M1 收银台事件统一全量对齐（故意贯穿，见上方 M1 注释）
           case EventType.CashierBillHeld:
           case EventType.CashierBillSettled:
           case EventType.CashierBillVoided:
@@ -127,7 +129,7 @@ export default function DashboardPage() {
 
   return (
     <MainScaffold
-      title="经营总览"
+      title={dc('dash.title')}
       sub={
         <>
           {fullDateLabel(now)} ·{' '}

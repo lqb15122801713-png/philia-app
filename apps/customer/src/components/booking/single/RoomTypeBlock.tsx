@@ -11,6 +11,8 @@
  */
 
 import { useState } from 'react';
+import { Skeleton } from '@philia/shared';
+import { bkc } from '@/copy/booking';
 import { fenToYuan } from '../format';
 import type { ServiceItem } from '../types';
 
@@ -61,12 +63,16 @@ export default function RoomTypeBlock({
   onRetry: () => void;
 }) {
   if (loading) {
-    return <div className="h-20 animate-pulse rounded-control bg-sunken" data-testid="bs-room-loading" />;
+    return (
+      <div data-testid="bs-room-loading">
+        <Skeleton className="h-20 rounded-control" />
+      </div>
+    );
   }
   if (error) {
     return (
       <div className="rounded-control bg-sunken px-4 py-8 text-center" data-testid="bs-room-error">
-        <p className="text-caption text-ink-secondary">房型加载失败，请检查网络</p>
+        <p className="text-caption text-ink-secondary">{bkc('booking.roomLoadFail')}</p>
         <button type="button" onClick={onRetry} className="mt-2 text-caption font-semibold text-ink">
           重新加载
         </button>
@@ -76,7 +82,7 @@ export default function RoomTypeBlock({
   if (services.length === 0) {
     return (
       <p className="rounded-control bg-sunken px-4 py-8 text-center text-caption text-ink-secondary" data-testid="bs-room-empty">
-        该门店暂无寄养房型，换一家看看
+        {bkc('booking.roomEmpty')}
       </p>
     );
   }

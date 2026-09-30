@@ -9,10 +9,11 @@
  * （批次 6 B2 真实链路）。dev-login 种子登录链路不回归。
  */
 
-import { devLogin, getApiBase, logout, useMe, usePhiliaClient } from '@philia/shared'
+import { devLogin, getApiBase, logout, Skeleton, useMe, usePhiliaClient } from '@philia/shared'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
+import { LOGIN_COPY } from '@/copy/login'
 
 interface SeedUser {
   id: string
@@ -119,7 +120,8 @@ export default function DevLoginPage() {
 
   return (
     <div className="pb-10">
-      {/* 1. 主视觉卡（340 高；既有品牌资产 /brand/banner-home-1200.png；试样 .lg-hero margin 10px 22px 0） */}
+      {/* 1. 主视觉卡（340 高；既有品牌资产 /brand/banner-home-1200.png；试样 .lg-hero margin 10px 22px 0）
+             UX-06 P3-2 素材通道登记：门店晨间实拍替换排期中（拍摄清单在 UX 侧），到位前沿用品牌资产 banner-home-1200.png */}
       <div className="u1-card mx-[22px] mt-2.5 flex h-[340px] items-center justify-center overflow-hidden">
         <img
           src="/brand/banner-home-1200.png"
@@ -135,15 +137,15 @@ export default function DevLoginPage() {
              JetBrains Mono 自托管上限 700，wordmark 800→700） */}
       <div className="px-[30px] pt-[26px] text-center">
         <p className="font-number text-body-sm font-bold tracking-[.3em] text-[rgba(59,46,36,.42)]">
-          PHILIA · 员工端
+          {LOGIN_COPY['login.wordmark']}
         </p>
         <h1 className="u1-serif mt-3 text-v2-screen">
-          照顾好每一个
+          {LOGIN_COPY['login.manifesto.line1']}
           <br />
-          被托付的小生命
+          {LOGIN_COPY['login.manifesto.line2']}
         </h1>
         <p className="mt-2 text-caption text-[rgba(59,46,36,.62)]">
-          菲丽亚宠物·示例店 · 员工内测通道
+          {LOGIN_COPY['login.storeLine']}
         </p>
       </div>
 
@@ -175,7 +177,7 @@ export default function DevLoginPage() {
 
       {/* 5. 协议小字 */}
       <p className="mt-4 text-center text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
-        登录即同意《员工内测协议》与《服务影像记录规范》
+        {LOGIN_COPY['login.agreement']}
       </p>
 
       {/* 已登录态 */}
@@ -207,8 +209,8 @@ export default function DevLoginPage() {
       {/* 口令门（次级钮展开；服务端要求口令时强制显示） */}
       {gateOpen || (gateRequired && seeds === null) ? (
         <div className="u1-card mx-8 mt-4 p-4" data-testid="gate-panel">
-          <p className="text-body-sm font-semibold">内测口令</p>
-          <p className="mt-1 text-caption-xs text-ink-secondary">输入口令后加载可登录账号；无口令或口令错误将无法登录。</p>
+          <p className="text-body-sm font-semibold">{LOGIN_COPY['login.gate.title']}</p>
+          <p className="mt-1 text-caption-xs text-ink-secondary">{LOGIN_COPY['login.gate.hint']}</p>
           <div className="mt-2.5 flex gap-2">
             <Input
               type="password"
@@ -235,15 +237,17 @@ export default function DevLoginPage() {
 
       {/* 账号选择区（内测登录真链路） */}
       <div ref={accountsRef} className="mx-8 mt-5 scroll-mt-4">
-        <h2 className="text-body-sm font-bold">选择员工账号</h2>
+        <h2 className="text-body-sm font-bold">{LOGIN_COPY['login.accounts.title']}</h2>
         {gateRequired && seeds === null ? (
           <p className="mt-2 rounded-control bg-danger-light px-4 py-3 text-caption text-danger-deep">
-            需先输入内测口令
+            {LOGIN_COPY['login.gate.required']}
           </p>
         ) : seeds === null && seedsError === null ? (
           <ul className="mt-2.5 space-y-2">
             {[1, 2].map((i) => (
-              <li key={i} className="h-14 animate-pulse rounded-control bg-sunken" />
+              <li key={i}>
+                <Skeleton className="h-14 !rounded-control" />
+              </li>
             ))}
           </ul>
         ) : staffSeeds.length > 0 ? (
@@ -270,8 +274,8 @@ export default function DevLoginPage() {
         ) : (
           <p className="mt-2.5 rounded-control bg-danger-light px-4 py-3 text-caption-xs text-danger-deep">
             {seedsError
-              ? `种子用户拉取失败（${seedsError}），请确认 server 已启动，或手动输入 userId`
-              : '未拉到员工种子用户，请重跑 server 的 db:seed，或手动输入 userId'}
+              ? LOGIN_COPY['login.seed.loadFailed'].replace('{error}', seedsError)
+              : LOGIN_COPY['login.seed.empty']}
           </p>
         )}
 
@@ -298,8 +302,7 @@ export default function DevLoginPage() {
         ) : null}
 
         <p className="mt-5 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
-          提示：dev-login 仅允许种子用户（kimi_id 以 seed_ 前缀），会话 cookie 有效期 7 天。
-          非员工账号登录后会被引导回本页切换。
+          {LOGIN_COPY['login.seed.tip']}
         </p>
       </div>
     </div>

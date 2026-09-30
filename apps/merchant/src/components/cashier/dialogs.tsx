@@ -18,6 +18,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import { fenToYuan, yuanToFen } from '@/components/mall-admin/format'
+import { cc } from '@/copy/cashier'
 import type { CartLine, DiscountType } from './model'
 
 /* ------------------------------------------------------------------ */
@@ -219,7 +220,7 @@ export function PriceDialog({
         )}
         <p className="mt-1.5 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
           {valid && nextFen !== null
-            ? `新价 ¥${fenToYuan(nextFen)}（改价留痕，随单可查）`
+            ? cc('cashier.priceNewNote', { amt: fenToYuan(nextFen) })
             : mode === 'price'
               ? '输入新单价（元，最多两位小数）'
               : '1-100 的整数，如 90 = 九折'}
@@ -347,7 +348,7 @@ export function DiscountDialog({
         )}
         <p className="mt-1.5 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
           {overLimit
-            ? '优惠不能超过服务/商品行合计（预约行金额不参与优惠）'
+            ? cc('cashier.discountOverNote')
             : valid && discountFen !== null && discountFen > 0
               ? `整单优惠 −¥${fenToYuan(discountFen)}`
               : mode === 'percent'
@@ -431,7 +432,7 @@ export function VoidDialog({
         onChange={(e) => setReason(e.target.value)}
       />
       <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
-        撤单后单据留痕为「已撤单」，不会物理删除；仅未支付单可撤（已结账请店主用反结账）
+        {cc('cashier.voidNote')}
       </p>
       {settled ? (
         <p className="mt-2 text-caption-xs font-semibold text-danger-deep">
@@ -512,8 +513,7 @@ export function ReverseDialog({
         onChange={(e) => setReason(e.target.value)}
       />
       <p className="mt-1.5 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
-        冲正将自动生成关联冲正单（金额镜像负值，不计当日已收）：库存回补、预约回到待收款、
-        次卡/储值按原路回补；原单永存不涂改，仅挂「已冲正」灰签（双向可查）。
+        {cc('cashier.reverseNote')}
       </p>
       {!valid ? (
         <p className="mt-2 text-caption-xs font-semibold text-danger-deep">反结账必须填写原因</p>

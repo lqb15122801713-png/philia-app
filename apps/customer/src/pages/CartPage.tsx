@@ -9,6 +9,7 @@
  * - 去结算 → /mall/checkout（结算页从 localStorage 还原勾选商品，跨页一致）。
  */
 
+import { Fragment } from 'react';
 import { usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Check, Minus, Plus, Trash2 } from 'lucide-react';
@@ -16,7 +17,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { CartProvider, MAX_QTY, useCart, type CartItem } from '../components/mall/cartStore';
 import { EmptyState } from '../components/home/common';
 import { fenToYuan } from '../components/mall/format';
-import { useMallToast } from '../components/mall/MallToast';
+import { mlc } from '../copy/mall';
+import { useToast } from '@philia/shared';
 import PageHeader from '../components/PageHeader';
 import ProductImage from '../components/mall/ProductImage';
 import { mc } from '../components/member/copy';
@@ -108,7 +110,7 @@ function CartInner() {
   const cart = useCart();
   const navigate = useNavigate();
   const { trpc } = usePhiliaClient();
-  const { toastEl, showToast } = useMallToast();
+  const { toastEl, showToast } = useToast({ durationMs: 3200 });
 
   /* 回馈金返显（M-03 定稿 CTA sub「本单返 ¥x 回馈金」；口径 APP-18：
      membership.my 的 plan.rebateBp 万分比，返 Fen=round(勾选合计*rebateBp/10000)；
@@ -135,7 +137,7 @@ function CartInner() {
 
   const handleCheckout = () => {
     if (cart.checkedItems.length === 0) {
-      showToast('请先勾选要结算的商品');
+      showToast('请先勾选要结算的商品', 'error');
       return;
     }
     navigate('/mall/checkout');
@@ -149,7 +151,7 @@ function CartInner() {
       <PageHeader
         title={
           <>
-            购物袋
+            {mlc('mall.cartTitle')}
             {cart.items.length > 0 ? (
               <span className="u1-num ml-1 text-caption font-normal text-ink-secondary">{cart.count} 件</span>
             ) : null}
@@ -161,20 +163,25 @@ function CartInner() {
         /* U1-I：全域统一空态组件；U4-D3 文案对齐试样 12（购物袋空态），余白区垂直居中 */
         <div className="flex min-h-[56vh] flex-col justify-center">
           <EmptyState
-            title="购物袋还空着呢"
+            title={mlc('mall.cartEmptyTitle')}
             desc={
               <>
-                philia 帮你看着货架，
-                <br />
-                门店同款好物都在商城里
+                {mlc('mall.cartEmptyBody')
+                  .split('\n')
+                  .map((line, i, arr) => (
+                    <Fragment key={i}>
+                      {line}
+                      {i < arr.length - 1 ? <br /> : null}
+                    </Fragment>
+                  ))}
               </>
             }
             action={
               <Link
                 to="/mall"
-                className="inline-flex items-center rounded-control bg-brand-primary px-[30px] py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                className="inline-flex items-center rounded-control bg-ink px-[30px] py-[13px] text-body-sm font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
               >
-                去逛逛 ›
+                {mlc('mall.cartEmptyCta')}
               </Link>
             }
           />
@@ -183,7 +190,7 @@ function CartInner() {
         <>
           {/* 单店限制提示 */}
           <p className="mt-3 rounded-control bg-brand-primary-light px-3.5 py-2.5 text-caption text-ink">
-            当前为「{cart.items[0]?.storeName}」的商品 · 一次下单仅支持同一门店
+            {mlc('mall.cartStoreNote', { store: cart.items[0]?.storeName ?? '' })}
           </p>
 
           {/* 行件组（M-03 定稿：单张白卡内发丝线分隔多行） */}
@@ -221,7 +228,7 @@ function CartInner() {
                 className="flex w-full flex-col items-center justify-center rounded-[18px] bg-[#2E2318] py-3 text-body-lg font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
               >
                 <span>
-                  去结算{cart.checkedItems.length > 0 ? `（${cart.checkedItems.reduce((n, it) => n + it.qty, 0)}）` : ''}
+                  {mlc('mall.cartCheckout')}{cart.checkedItems.length > 0 ? `（${cart.checkedItems.reduce((n, it) => n + it.qty, 0)}）` : ''}
                 </span>
                 {rebateFen > 0 ? (
                   <span className="mt-0.5 font-number text-[10.5px] font-normal text-[#C9BBA0]">

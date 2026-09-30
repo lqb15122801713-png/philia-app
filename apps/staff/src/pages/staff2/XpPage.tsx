@@ -8,11 +8,12 @@
  * - xp.myEvents：本人事件流（复合游标翻页），dropped=1 行划线 + 「超出日上限」明示。
  */
 
-import { usePhiliaClient } from '@philia/shared';
+import { ListSkeleton, Skeleton, usePhiliaClient } from '@philia/shared';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import PageHeader from '@/components/PageHeader';
+import { XP_COPY } from '@/copy/xp';
 
 /** XP 来源中文标签（schema xp_events.source） */
 const SOURCE_LABEL: Record<string, string> = {
@@ -83,8 +84,8 @@ export default function XpPage() {
         <section className="u1-card mt-2 p-4" data-testid="xp-level">
           {summaryQuery.isPending ? (
             <div>
-              <div className="h-6 w-24 animate-pulse rounded-chip bg-sunken" />
-              <div className="mt-3 h-3 w-full animate-pulse rounded-full bg-sunken" />
+              <Skeleton className="h-6 w-24 !rounded-chip" />
+              <Skeleton className="mt-3 h-3 w-full !rounded-full" />
             </div>
           ) : summaryQuery.isError || !s ? (
             <div className="text-center">
@@ -116,13 +117,13 @@ export default function XpPage() {
               </div>
               <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.62)]">
                 {s.nextLevel
-                  ? <>距 <b>{s.nextLevel.name}</b> 还差 <b className="u1-num">{s.nextLevel.gap}</b> 经验</>
-                  : '已达最高段位'}
+                  ? <>{XP_COPY['xp.level.gapLead']} <b>{s.nextLevel.name}</b> {XP_COPY['xp.level.gapMid']} <b className="u1-num">{s.nextLevel.gap}</b> {XP_COPY['xp.level.gapTail']}</>
+                  : XP_COPY['xp.level.max']}
               </p>
               <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
                 {s.retention.monthlyXp > 0
-                  ? <>保级线：月增量 <span className="u1-num">{s.retention.monthlyXp}</span> · 本月已增 <b className="u1-num text-ink">{s.monthGained}</b></>
-                  : '当前段位无保级要求，经验累计不清零'}
+                  ? <>{XP_COPY['xp.retention.lead']} <span className="u1-num">{s.retention.monthlyXp}</span> {XP_COPY['xp.retention.mid']} <b className="u1-num text-ink">{s.monthGained}</b></>
+                  : XP_COPY['xp.retention.none']}
               </p>
             </>
           )}
@@ -133,12 +134,12 @@ export default function XpPage() {
           <div className="min-w-0 flex-1">
             <p className="text-body-sm font-bold">今日经验</p>
             <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
-              {full ? '今日经验已满，明日 0 点重置' : <>日上限 <span className="u1-num">{s?.today.cap ?? '…'}</span>，超出部分不计分</>}
+              {full ? XP_COPY['xp.today.fullHint'] : <>{XP_COPY['xp.today.capLead']} <span className="u1-num">{s?.today.cap ?? '…'}</span>{XP_COPY['xp.today.capTail']}</>}
             </p>
           </div>
           {full ? (
             <span className="shrink-0 rounded-chip bg-success-light px-2 py-1 text-caption-xs font-bold text-success-deep">
-              今日经验已满
+              {XP_COPY['xp.today.fullBadge']}
             </span>
           ) : null}
           <span className="u1-num shrink-0 text-title-lg font-bold">
@@ -150,11 +151,7 @@ export default function XpPage() {
         <section className="u1-card mt-3.5 px-4 py-3.5" data-testid="xp-board">
           <h2 className="text-body-sm font-bold">本店榜</h2>
           {boardQuery.isPending ? (
-            <div className="mt-2 space-y-2">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="h-8 animate-pulse rounded-chip bg-sunken" />
-              ))}
-            </div>
+            <ListSkeleton rows={3} className="mt-2" />
           ) : boardQuery.isError ? (
             <p className="py-3 text-caption-xs text-[rgba(59,46,36,.42)]">榜单加载失败，请稍后重试</p>
           ) : (
@@ -178,13 +175,13 @@ export default function XpPage() {
               ))}
             </ul>
           )}
-          <p className="pt-1 text-caption-xs text-[rgba(59,46,36,.42)]">榜单只显示前三与你相邻的名次</p>
+          <p className="pt-1 text-caption-xs text-[rgba(59,46,36,.42)]">{XP_COPY['xp.board.note']}</p>
         </section>
 
         {/* 规则一句话 + 六来源分值 */}
         <section className="u1-card mt-3.5 px-4 py-3.5" data-testid="xp-rules">
           {rulesQuery.isPending ? (
-            <div className="h-16 animate-pulse rounded-chip bg-sunken" />
+            <Skeleton className="h-16 !rounded-chip" />
           ) : rulesQuery.isError || !rulesQuery.data ? (
             <p className="py-2 text-caption-xs text-[rgba(59,46,36,.42)]">规则加载失败，请稍后重试</p>
           ) : (
@@ -230,16 +227,12 @@ export default function XpPage() {
         <section className="u1-card mt-3.5 px-4 py-3.5" data-testid="xp-events">
           <h2 className="text-body-sm font-bold">我的经验明细</h2>
           {eventsQuery.isPending ? (
-            <div className="mt-2 space-y-2">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="h-8 animate-pulse rounded-chip bg-sunken" />
-              ))}
-            </div>
+            <ListSkeleton rows={3} className="mt-2" />
           ) : eventsQuery.isError ? (
             <p className="py-3 text-caption-xs text-[rgba(59,46,36,.42)]">经验明细加载失败，请稍后重试</p>
           ) : events.length === 0 ? (
             <p className="py-3 text-caption-xs text-[rgba(59,46,36,.42)]">
-              还没有经验记录——打卡、完成服务、收获好评都会长经验
+              {XP_COPY['xp.events.empty']}
             </p>
           ) : (
             <>
@@ -299,7 +292,7 @@ export default function XpPage() {
         </section>
 
         <p className="mb-6 mt-4 flex items-center justify-center gap-1 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
-          <Trophy className="h-3.5 w-3.5" aria-hidden /> 每月 1 日段位结算 · 经验累计不清零
+          <Trophy className="h-3.5 w-3.5" aria-hidden /> {XP_COPY['xp.footer']}
         </p>
       </div>
     </div>

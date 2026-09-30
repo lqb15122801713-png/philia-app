@@ -19,12 +19,13 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
-import { useMe, usePhiliaClient, getStepDef } from '@philia/shared'
+import { Skeleton, useMe, usePhiliaClient, getStepDef } from '@philia/shared'
 import HomeBookingPanel from '../components/home/HomeBookingPanel'
 import { ErrorState } from '../components/home/common'
 import { fenToYuan, fmtHM } from '@/components/booking/format'
 import type { AppointmentListItem } from '@/components/booking/types'
 import { readLastBooking } from '@/lib/bookingPrefill'
+import { hc } from '@/copy/home'
 
 const DAY_MS = 86_400_000
 const HAIRLINE = 'border-t border-[rgba(59,46,36,.09)]'
@@ -237,7 +238,7 @@ export default function HomePage() {
             data-testid="home-live-card"
           >
             <div className="top">
-              <span className="hv2-livetag"><i />LIVE · 洗护进行中</span>
+              <span className="hv2-livetag"><i />{hc('home.liveTag')}</span>
               <span style={{ fontFamily: 'var(--v2mono)', fontSize: 10.5, color: '#C9BBA0' }}>
                 节点 {activeStep?.stepOrder ?? '—'} / {steps.length || 6}
               </span>
@@ -260,25 +261,25 @@ export default function HomePage() {
             <div className="bot">
               <span className="av">{(inServiceAppt.petName ?? '宠').slice(0, 1)}</span>
               <span>{inServiceAppt.petName ?? '爱宠'}</span>
-              <span className="eta">预计 {fmtHM(new Date(inServiceAppt.scheduledEnd))} 完成</span>
-              <span className="go">查看全程 ›</span>
+              <span className="eta">{hc('home.liveEta', { time: fmtHM(new Date(inServiceAppt.scheduledEnd)) })}</span>
+              <span className="go">{hc('home.liveViewAll')}</span>
             </div>
           </Link>
           {/* 备台行：消毒备台态（七节点步 1 完成时刻真实值，无则隐去） */}
           {doneStep1 ? (
             <div className="hv2-preprow" style={{ marginTop: 10 }} data-testid="home-preprow">
               <div>
-                <div className="t">消毒备台 · 一客一消</div>
-                <div className="s">{doneStep1.doneAt ? `${fmtHM(new Date(doneStep1.doneAt))} 已完成` : '已完成'}</div>
+                <div className="t">{hc('home.preprowTitle')}</div>
+                <div className="s">{doneStep1.doneAt ? hc('home.preprowDoneAt', { time: fmtHM(new Date(doneStep1.doneAt)) }) : hc('home.preprowDone')}</div>
               </div>
             </div>
           ) : null}
           {/* 窄行身份条（服务中态降级件） */}
           <div className="hv2-idline" style={{ marginTop: 10 }} data-testid="home-idline">
             <span className="dot" />
-            <b>{tierName ?? '菲丽亚宠友'}</b>
-            <span className="ac">回馈金 {fenToYuan(rebateBalance)}</span>
-            <Link to="/me/card" className="qr" data-testid="home-member-code">会员码 ›</Link>
+            <b>{tierName ?? hc('home.idFallback')}</b>
+            <span className="ac">{hc('home.rebateLabel')} {fenToYuan(rebateBalance)}</span>
+            <Link to="/me/card" className="qr" data-testid="home-member-code">{hc('home.memberCode')}</Link>
           </div>
         </div>
       ) : (
@@ -290,8 +291,8 @@ export default function HomePage() {
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 13.5c-2.8 0-5 2-5 4.2 0 1.4 1 2.3 2.4 2.3 1 0 1.7-.5 2.6-.5s1.6.5 2.6.5c1.4 0 2.4-.9 2.4-2.3 0-2.2-2.2-4.2-5-4.2z" /><circle cx="6.5" cy="10" r="1.6" /><circle cx="10" cy="7.5" r="1.7" /><circle cx="14" cy="7.5" r="1.7" /><circle cx="17.5" cy="10" r="1.6" /></svg>
               </div>
               <div>
-                <div className="nm">{tierName ?? '菲丽亚宠友'}</div>
-                <div className="ac">{membership ? <>回馈金 <b>{fenToYuan(rebateBalance)}</b></> : '免费领个身份 ›'}</div>
+                <div className="nm">{tierName ?? hc('home.idFallback')}</div>
+                <div className="ac">{membership ? <>{hc('home.rebateLabel')} <b>{fenToYuan(rebateBalance)}</b></> : hc('home.idJoin')}</div>
               </div>
               <Link
                 to={membership ? '/me/card' : '/member/open'}
@@ -309,13 +310,13 @@ export default function HomePage() {
             <div className="hv2-mc-cols">
               <Link to="/booking/grooming" className="hv2-mc-col" data-testid="home-entry-grooming">
                 <svg viewBox="0 0 24 24"><circle cx="6.5" cy="7" r="2.4" /><circle cx="6.5" cy="17" r="2.4" /><path d="M8.5 8.8L19.5 19M8.5 15.2L19.5 5" /></svg>
-                <div className="t">预约洗澡美容</div>
+                <div className="t">{hc('home.entryGrooming')}</div>
                 {groomNote ? <div className="s">{groomNote}</div> : null}
               </Link>
               <Link to="/booking/boarding" className="hv2-mc-col" data-testid="home-entry-boarding">
                 <svg viewBox="0 0 24 24"><path d="M4 11l8-6 8 6v8a1 1 0 01-1 1h-5v-6h-4v6H5a1 1 0 01-1-1z" /></svg>
-                <div className="t">预约寄养</div>
-                <div className="s">{boardingNote ?? '按晚 · 疫苗核验'}</div>
+                <div className="t">{hc('home.entryBoarding')}</div>
+                <div className="s">{boardingNote ?? hc('home.entryBoardingNote')}</div>
               </Link>
             </div>
             <div className="hv2-mc-div" />
@@ -331,18 +332,18 @@ export default function HomePage() {
                 </svg>
                 <div>
                   <div className="big">{fenToYuan(grantedThisPeriod)}</div>
-                  <div className="cap">本期已攒回馈金 · 周期 {fmtMD(pw.start)} – {fmtMD(pw.end)}<br />{pw.arrive.getMonth() + 1} 月 {settlementDay} 日到账</div>
-                  <div className="rule1">买商品的 {rebatePct}%，次月回到这里。</div>
+                  <div className="cap">{hc('home.ringPeriod', { start: fmtMD(pw.start), end: fmtMD(pw.end) })}<br />{hc('home.ringArrive', { month: pw.arrive.getMonth() + 1, day: settlementDay })}</div>
+                  <div className="rule1">{hc('home.ringRule', { pct: rebatePct })}</div>
                 </div>
               </Link>
             ) : (
               <Link to={membership ? '/member/rebate' : '/member/open'} className="hv2-mc-row" data-testid="home-rebate-guide" style={{ textDecoration: 'none' }}>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: '#3B2E24' }}>
-                    {membership ? '回馈金账本' : '开通会员，买商品返回馈金'}
+                    {membership ? hc('home.rebateLedger') : hc('home.openMemberClaim')}
                   </div>
                   <div className="cap" style={{ fontSize: 11, color: '#8A7D6B', marginTop: 3 }}>
-                    {membership ? `余额 ${fenToYuan(rebateBalance)} · 每月 ${settlementDay} 日到账` : `付费档返 ${[2, 5, 10].join('/')}%，次月到账`}
+                    {membership ? hc('home.rebateBalanceLine', { amt: fenToYuan(rebateBalance), day: settlementDay }) : hc('home.openMemberSub', { pcts: [2, 5, 10].join('/') })}
                   </div>
                 </div>
                 <span style={{ marginLeft: 'auto', color: '#8A7D6B' }} aria-hidden="true">›</span>
@@ -357,16 +358,16 @@ export default function HomePage() {
         {cases.length > 0 ? (
           <section data-testid="home-cases" aria-label="店里今天的故事" style={{ marginTop: 26 }}>
             <div className="flex items-baseline justify-between" style={{ marginBottom: 12 }}>
-              <h3 style={{ fontSize: 16, fontWeight: 800, color: '#3B2E24' }}>店里今天的故事</h3>
+              <h3 style={{ fontSize: 16, fontWeight: 800, color: '#3B2E24' }}>{hc('home.casesTitle')}</h3>
               <Link to="/philia/moments" data-testid="home-cases-more" style={{ fontFamily: 'var(--v2mono)', fontSize: 11, color: '#8A7D6B' }}>
-                每日更新 ›
+                {hc('home.casesMore')}
               </Link>
             </div>
             <div className="hv2-cases">
               {cases.map((c, i) => (
                 <Link key={c.id} to="/philia/moments" className="hv2-case" data-testid={`home-case-${i}`}>
                   <img src={c.url} alt="" style={{ height: 132 + ((i * 37) % 65) }} loading="lazy" />
-                  <div className="tt">{c.petName ?? '毛孩子'}的{c.serviceName ?? '洗护'}日记</div>
+                  <div className="tt">{hc('home.caseTitle', { pet: c.petName ?? '毛孩子', service: c.serviceName ?? '洗护' })}</div>
                   <div className="src">{c.storeName ?? '门店'} · {c.serviceName ?? '服务'} · {fmtHM(new Date(c.at))}</div>
                 </Link>
               ))}
@@ -392,7 +393,7 @@ export default function HomePage() {
               <svg viewBox="0 0 24 24" fill="none" stroke="#3B2E24" strokeWidth="1.5" className="h-4 w-4"><rect x="3" y="8" width="18" height="13" rx="2" /><path d="M12 8v13M3 12h18M8 8c-2-2-1-5 1-5s3 2 3 5M16 8c2-2 1-5-1-5s-3 2-3 5" /></svg>
             </span>
             <span className="min-w-0 flex-1 text-body-sm leading-5">
-              次卡共剩 <span className="u1-num font-semibold">{passRemainTotal}</span> 次 · 到店出示会员码
+              {hc('home.passStripPre')}<span className="u1-num font-semibold">{passRemainTotal}</span>{hc('home.passStripPost')}
             </span>
             <span className="shrink-0 text-canvas/70" aria-hidden="true">›</span>
           </Link>
@@ -406,10 +407,10 @@ export default function HomePage() {
             className={`mt-4 grid grid-cols-3 gap-2 py-3 ${HAIRLINE} border-b border-[rgba(59,46,36,.09)]`}
           >
             {[
-              { label: '陪伴天数', value: joinDays !== null ? `${joinDays} 天` : null },
-              { label: '服务次数', value: completed.length > 0 ? `${completed.length} 次` : null },
+              { label: hc('home.statsDays'), value: joinDays !== null ? `${joinDays} 天` : null },
+              { label: hc('home.statsServices'), value: completed.length > 0 ? `${completed.length} 次` : null },
               {
-                label: '累计消费',
+                label: hc('home.statsSpend'),
                 value: completed.length > 0 ? fenToYuan(completed.reduce((s, a) => s + a.priceFen, 0)) : null,
               },
             ]
@@ -426,7 +427,7 @@ export default function HomePage() {
         {/* 7. 我的毛孩子圆形头像行（pet.list 真实数据） */}
         <section data-testid="home-pets-row" className="mt-5" aria-label="我的毛孩子">
           <div className="flex items-baseline justify-between">
-            <h2 className="text-title">我的毛孩子</h2>
+            <h2 className="text-title">{hc('home.petsTitle')}</h2>
             <Link to="/philia/pets" data-testid="home-pets-manage" className="text-caption-xs text-ink-secondary">
               管理 ›
             </Link>
@@ -434,12 +435,12 @@ export default function HomePage() {
           {petsQ.isPending ? (
             <div className="mt-3 flex gap-4">
               {[1, 2].map((i) => (
-                <span key={i} className="h-14 w-14 animate-pulse rounded-full bg-sunken" />
+                <Skeleton key={i} className="h-14 w-14 rounded-full" />
               ))}
             </div>
           ) : petsQ.isError ? (
             <div className="mt-3">
-              <ErrorState message="毛孩子加载失败" onRetry={() => void petsQ.refetch()} />
+              <ErrorState message={hc('home.petsLoadFail')} onRetry={() => void petsQ.refetch()} />
             </div>
           ) : (petsQ.data ?? []).length === 0 ? (
             <Link
@@ -447,7 +448,7 @@ export default function HomePage() {
               data-testid="home-pets-empty"
               className="mt-3 flex items-center justify-between rounded-control bg-sunken px-4 py-3 text-body-sm text-ink-secondary"
             >
-              还没有毛孩子档案，去添加 TA 吧
+              {hc('home.petsEmpty')}
               <span aria-hidden="true">›</span>
             </Link>
           ) : (

@@ -21,14 +21,15 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { usePhiliaClient } from '@philia/shared';
+import { Skeleton, usePhiliaClient } from '@philia/shared';
 import PetPicker from '@/components/booking/PetPicker';
 import SlotPicker from '@/components/booking/SlotPicker';
 import StaffPicker from '@/components/booking/StaffPicker';
 import StepIndicator from '@/components/booking/StepIndicator';
 import SummaryChips from '@/components/booking/SummaryChips';
-import { friendlyError, useToast } from '@/components/booking/Toast';
+import { friendlyError, useToast } from '@philia/shared';
 import { fenToYuan, fmtDateTime, PAYMENT_MODE_META } from '@/components/booking/format';
+import { bkc } from '@/copy/booking';
 
 const STEPS = ['选服务', '选门店', '选时间', '确认'];
 
@@ -36,7 +37,7 @@ export default function BookingGroomingPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { trpc, queryClient } = usePhiliaClient();
-  const { toastEl, showToast } = useToast();
+  const { toastEl, showToast } = useToast({ durationMs: 3200 });
 
   const [step, setStep] = useState(1);
   const [storeId, setStoreId] = useState<string | null>(searchParams.get('storeId'));
@@ -158,7 +159,7 @@ export default function BookingGroomingPage() {
       navigate(`/booking/success?aid=${encodeURIComponent(appt.id)}`, { replace: true });
     },
     onError: (err) => {
-      showToast(friendlyError(err, '预约失败，请稍后再试'));
+      showToast(friendlyError(err, '预约失败，请稍后再试'), 'error');
       // 满槽/冲突：刷新槽位数据让用户重选
       void servicesQ.refetch();
     },
@@ -193,7 +194,7 @@ export default function BookingGroomingPage() {
             <path d="m15 18-6-6 6-6" />
           </svg>
         </button>
-        <h1 className="text-title-lg">预约洗护</h1>
+        <h1 className="text-title-lg">{bkc('booking.groomingTitle')}</h1>
       </header>
 
       <div className="mt-4">
@@ -222,29 +223,29 @@ export default function BookingGroomingPage() {
           {noPets && !forkDismissed ? (
             <div className="mb-4 flex flex-col items-center rounded-card bg-card px-4 py-6 text-center shadow-card">
               <img src="/brand/empty-appointments-800.png" alt="还没有宠物档案" className="w-40 max-w-full rounded-card" />
-              <p className="mt-3 text-title">还没有宠物档案</p>
-              <p className="mt-1 text-caption text-ink-secondary">预约前需要先为毛孩子建立档案</p>
+              <p className="mt-3 text-title">{bkc('booking.noPetTitle')}</p>
+              <p className="mt-1 text-caption text-ink-secondary">{bkc('booking.noPetBodyWizard')}</p>
               <button
                 type="button"
                 onClick={() => navigate('/philia/pets')}
-                className="mt-4 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                className="mt-4 flex h-11 items-center rounded-full bg-ink px-8 text-body font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
               >
-                先建立宠物档案
+                {bkc('booking.noPetCta')}
               </button>
               <button
                 type="button"
                 onClick={() => setForkDismissed(true)}
                 className="mt-3 text-caption text-ink-secondary underline-offset-2 hover:underline"
               >
-                随便看看
+                {bkc('booking.noPetSkip')}
               </button>
             </div>
           ) : null}
           {servicesQ.isPending ? (
-            <div className="space-y-2">{[1, 2].map((i) => <div key={i} className="h-20 animate-pulse rounded-card bg-sunken" />)}</div>
+            <div className="space-y-2">{[1, 2].map((i) => <Skeleton key={i} className="h-20 rounded-card" />)}</div>
           ) : groomingServices.length === 0 ? (
             <p className="rounded-card bg-sunken px-4 py-8 text-center text-caption text-ink-secondary">
-              该门店暂无可约洗护服务，去下一步换家门店看看
+              {bkc('booking.noGroomingWizard')}
             </p>
           ) : (
             <div className="space-y-2">
@@ -263,7 +264,7 @@ export default function BookingGroomingPage() {
                         约 {s.durationMin ?? 60} 分钟
                       </span>
                     </span>
-                    <span className="font-number text-price text-brand-primary">{fenToYuan(s.priceFen)}</span>
+                    <span className="font-number text-price text-ink">{fenToYuan(s.priceFen)}</span>
                   </button>
                 );
               })}
@@ -276,7 +277,7 @@ export default function BookingGroomingPage() {
       {step === 2 ? (
         <section className="mt-4 space-y-2">
           {nearbyQ.isPending ? (
-            [1, 2].map((i) => <div key={i} className="h-20 animate-pulse rounded-card bg-sunken" />)
+            [1, 2].map((i) => <Skeleton key={i} className="h-20 rounded-card" />)
           ) : (
             (nearbyQ.data?.stores ?? []).map((s) => {
               const active = s.id === effStoreId;
@@ -353,8 +354,8 @@ export default function BookingGroomingPage() {
                   ? passQ.isPending
                     ? '正在查询次卡余额…'
                     : usablePass
-                      ? `剩余 ${usablePass.remainTimes} 次 · 预约确认后扣 1 次`
-                      : '暂无可用次卡'
+                      ? bkc('booking.passHint', { remain: usablePass.remainTimes })
+                      : bkc('booking.passNone')
                   : PAYMENT_MODE_META[m].hint;
               return (
                 <button
@@ -384,7 +385,7 @@ export default function BookingGroomingPage() {
           {service ? (
             <div className="mt-4 flex items-center justify-between rounded-card bg-card px-4 py-3 shadow-card">
               <span className="text-body text-ink-secondary">合计</span>
-              <span className="font-number text-price text-brand-primary">{fenToYuan(service.priceFen)}</span>
+              <span className="font-number text-price text-ink">{fenToYuan(service.priceFen)}</span>
             </div>
           ) : null}
         </section>

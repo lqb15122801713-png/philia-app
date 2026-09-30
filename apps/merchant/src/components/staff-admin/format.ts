@@ -5,16 +5,16 @@
  * - 金额分→元；时间 HH:mm；日期 M月D日 周x；全部中文。
  */
 
+import { fenToYuanGrouped } from '../mall-admin/format';
 import { DAY_KEYS, DAY_SHORT, type DayKey, type StaffScheduleLike } from './types';
 
 const WEEK_CN = ['日', '一', '二', '三', '四', '五', '六'];
 
-/** 金额：分 → ¥元（U4 任务 F：试样整数元口径——整数去 .00，带零头才两位小数；
+/** 金额：分 → ¥元（片 5 归并转发：¥ + fenToYuanGrouped（mall-admin/format 权威实现，
+    千分分组+整数去 .00+带零头两位小数），null → '—'；归并转发，勿再加新实现。
     等宽数字由调用方加 tabular-nums） */
-export function fmtMoney(fen: number | null | undefined): string {
-  if (fen === null || fen === undefined) return '—';
-  return fen % 100 === 0 ? `¥${fen / 100}` : `¥${(fen / 100).toFixed(2)}`;
-}
+export const fmtMoney = (fen: number | null | undefined): string =>
+  fen === null || fen === undefined ? '—' : `¥${fenToYuanGrouped(fen)}`;
 
 function pad2(n: number): string {
   return n < 10 ? `0${n}` : String(n);

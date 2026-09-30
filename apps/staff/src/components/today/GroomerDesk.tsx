@@ -14,28 +14,30 @@
 
 import {
   EventType,
+  Skeleton,
   StepKeyLabel,
   usePhiliaClient,
+  useToast,
   type EventEnvelope,
 } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { MoonStar } from 'lucide-react';
 import { useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import Toast, { useToast } from '@/components/today/Toast';
 import { useStaffEvents } from '@/components/today/useStaffEvents';
 import AllDayRow from '@/components/today/deck/AllDayRow';
 import DayAxis from '@/components/today/deck/DayAxis';
 import WeekStrip from '@/components/today/deck/WeekStrip';
 import { firstGap, minutesOf, todayAxisRange, fmtMin } from '@/components/today/deck/deckUtils';
 import { dayKeyOf, todayLabel } from '@/components/today/utils';
+import { TODAY_COPY } from '@/copy/today';
 
 const TODAY_QUERY_KEY = ['appointment', 'listTodayForStaff'] as const;
 const ME_RAW_KEY = ['auth', 'me', 'raw', 'staff-deck'] as const;
 
 export default function GroomerDesk() {
   const { trpc, queryClient } = usePhiliaClient();
-  const [toast, showToast] = useToast();
+  const { showToast, toastEl } = useToast();
   const now = new Date();
 
   const todayQuery = useQuery({
@@ -163,12 +165,13 @@ export default function GroomerDesk() {
       <WeekStrip today={now} />
 
       {todayQuery.isPending ? (
-        // 加载 >300ms 骨架（禁转圈；骨架形状=内容轮廓）
-        <div className="mt-3 animate-pulse" aria-label="加载中">
-          <div className="h-[52px] rounded-control bg-card u1-ring" />
+        // 加载 >300ms 骨架（禁转圈；骨架形状=内容轮廓；首卡归并 Skeleton 成件，
+        // 时间轴结构行保留 border-t 线档，animate-pulse 逐行自持=原父级脉冲同效）
+        <div className="mt-3" aria-label="加载中">
+          <Skeleton className="h-[52px] !rounded-control" />
           <div className="mt-3 space-y-0">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="h-[52px] border-t border-[rgba(59,46,36,.06)]" />
+              <div key={i} className="h-[52px] animate-pulse border-t border-[rgba(59,46,36,.06)]" />
             ))}
           </div>
         </div>
@@ -197,7 +200,7 @@ export default function GroomerDesk() {
                 <MoonStar className="h-9 w-9 text-ink" strokeWidth={1.5} />
               </span>
               <p className="mt-4 text-body-sm text-ink-secondary">
-                今天没有派给你的单——休息，或去前台看看有没有要帮忙的
+                {TODAY_COPY['today.groomer.empty']}
               </p>
             </div>
           ) : (
@@ -218,7 +221,7 @@ export default function GroomerDesk() {
         </>
       )}
 
-      <Toast message={toast} />
+      {toastEl}
     </div>
   );
 }

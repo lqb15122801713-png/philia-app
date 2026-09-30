@@ -18,7 +18,7 @@
  * - SSE：refund.executed/settled/rejected/monthExported → invalidate 列表+待办。
  */
 
-import { EventType, usePhiliaClient } from '@philia/shared'
+import { EventType, Skeleton, usePhiliaClient } from '@philia/shared'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -37,6 +37,7 @@ import RefundDetailDialog from '@/components/cashier/RefundDetailDialog'
 import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider'
 import MainScaffold, { QuietButton } from '@/components/MainScaffold'
 import RoleGuidePage from '@/components/RoleGuidePage'
+import { cc } from '@/copy/cashier'
 import { fmtDateTime, errMsg, fenToYuan } from '@/components/mall-admin/format'
 import { useMerchantRole } from '@/lib/roles'
 
@@ -161,8 +162,8 @@ export default function CashierRefundsPage() {
     // clerk 直达双保险（路由层 ClerkRouteGuard 已拦截，本闸兜底非 403 白屏）
     return (
       <RoleGuidePage
-        title="退款单由店长或店主处理"
-        hint="退款发起与实退登记属管理层动作；店员账号的工作面是收银台。"
+        title={cc('cashier.refundsGuideTitle')}
+        hint={cc('cashier.refundsGuideHint')}
       />
     )
   }
@@ -173,8 +174,8 @@ export default function CashierRefundsPage() {
   return (
     <MainScaffold
       testid="cashier-refunds-page"
-      title="退款单"
-      sub="退款 ≠ 反结账 · 经营行为计退款单列 · 当日净额=已收−退款 · 原单永存不涂改"
+      title={cc('cashier.refundsTitle')}
+      sub={cc('cashier.refundsSub')}
       actions={
         role.isOwner ? (
           <span className="flex items-center gap-2">
@@ -198,14 +199,14 @@ export default function CashierRefundsPage() {
           className="mb-3.5 rounded-[14px] bg-brand-primary-light px-[17px] py-3 text-caption text-ink"
           data-testid="refunds-pending-bar"
         >
-          <b><span className="font-number tabular-nums">{pendings.length}</span> 笔退款超 24 小时未登记实退</b>
+          <b><span className="font-number tabular-nums">{pendings.length}</span> {cc('cashier.refundsPendingBold')}</b>
           <span className="ml-2 font-number tabular-nums text-[rgba(59,46,36,.62)]">
             {pendings
               .slice(0, 3)
               .map((p) => `${p.refundNo} ¥${fenToYuan(p.amountFen)}`)
               .join(' · ')}
             {pendings.length > 3 ? ` 等 ${pendings.length} 笔` : ''}
-            ——线下原路退回后请点行内「实退登记」
+            {cc('cashier.refundsPendingTail')}
           </span>
         </div>
       ) : null}
@@ -227,9 +228,10 @@ export default function CashierRefundsPage() {
 
       <div className="u3-panel">
         {listQ.isPending ? (
+          /* 加载中骨架块（animate-pulse，禁转圈）：shared Skeleton 组合 */
           <div className="space-y-2 px-[17px] py-4">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-9 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
+              <Skeleton key={i} className="h-9" />
             ))}
           </div>
         ) : listQ.isError ? (
@@ -243,7 +245,7 @@ export default function CashierRefundsPage() {
           </div>
         ) : rows.length === 0 ? (
           <p className="px-[17px] py-10 text-center text-body-sm text-[rgba(59,46,36,.62)]">
-            当前筛选无退款单——收银流水已收单的退款会出现在这里
+            {cc('cashier.refundsEmpty')}
           </p>
         ) : (
           /* 390 降级：横滑容器（u3-noscrollx），表本体保底宽 */
@@ -434,8 +436,8 @@ function RefundNoteDialog({
       />
       <p className="mt-1.5 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
         {isSettle
-          ? '内测期实退=线下原路退回+系统内登记；登记后退款单置「实退完成」，账不再变（executed 不可撤销口径）。'
-          : '驳回仅对草稿（draft）生效；驳回留痕 rejected+原因。已执行单不可撤销，纠错=再开正单。'}
+          ? cc('cashier.refundSettleNote')
+          : cc('cashier.refundRejectNote')}
       </p>
       {!valid ? (
         <p className="mt-2 text-caption-xs font-semibold text-danger-deep">

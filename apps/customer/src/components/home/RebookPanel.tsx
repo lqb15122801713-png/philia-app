@@ -24,7 +24,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
-import { friendlyError, useToast } from '@/components/booking/Toast';
+import { friendlyError, useToast } from '@philia/shared';
 import { dayLabel, fenToYuan, fmtHM } from '@/components/booking/format';
 import { writeLastBooking } from '@/lib/bookingPrefill';
 
@@ -59,7 +59,7 @@ export default function RebookPanel({
 }: RebookPanelProps) {
   const navigate = useNavigate();
   const { trpc, queryClient } = usePhiliaClient();
-  const { toastEl, showToast } = useToast();
+  const { toastEl, showToast } = useToast({ durationMs: 3200 });
   /** 幂等同步锁：disabled 等渲染间隙内的连击也只会放行第一次提交 */
   const submittingRef = useRef(false);
 
@@ -81,7 +81,7 @@ export default function RebookPanel({
       navigate(`/booking/success?aid=${encodeURIComponent(appt.id)}`, { replace: true });
     },
     onError: (err) => {
-      showToast(friendlyError(err, '预约失败，请稍后再试'));
+      showToast(friendlyError(err, '预约失败，请稍后再试'), 'error');
       // 满槽/冲突：刷新槽位数据（最早可约槽随之重算；无可约槽时面板按规则降级）
       void queryClient.invalidateQueries({ queryKey: ['store', 'getWithServices'] });
     },

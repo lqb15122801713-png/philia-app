@@ -5,6 +5,8 @@
  */
 
 import { useState } from 'react';
+import { Skeleton } from '@philia/shared';
+import { bkc } from '@/copy/booking';
 import BottomSheet from './BottomSheet';
 import type { StoreItem } from '../types';
 
@@ -25,7 +27,11 @@ export default function StoreLineBlock({
   const [sheetOpen, setSheetOpen] = useState(false);
 
   if (loading) {
-    return <div className="h-11 animate-pulse rounded-card bg-sunken" data-testid="gs-store-loading" />;
+    return (
+      <div data-testid="gs-store-loading">
+        <Skeleton className="h-11 rounded-card" />
+      </div>
+    );
   }
 
   const current = stores.find((s) => s.id === currentStoreId) ?? null;
@@ -40,7 +46,7 @@ export default function StoreLineBlock({
         className="flex w-full items-center justify-between py-2 text-left transition active:scale-[0.99]"
       >
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-body font-semibold">{name ?? '请选择门店'}</span>
+          <span className="block truncate text-body font-semibold">{name ?? bkc('booking.chooseStore')}</span>
           {current?.address ? (
             <span className="mt-0.5 block truncate text-caption text-ink-secondary">{current.address}</span>
           ) : null}
@@ -49,7 +55,7 @@ export default function StoreLineBlock({
       </button>
 
       {sheetOpen ? (
-        <BottomSheet title="选择门店" onClose={() => setSheetOpen(false)} testId="gs-store-sheet">
+        <BottomSheet title={bkc('booking.chooseStore')} onClose={() => setSheetOpen(false)} testId="gs-store-sheet">
           <div className="space-y-2">
             {stores.map((s) => {
               const active = s.id === currentStoreId;

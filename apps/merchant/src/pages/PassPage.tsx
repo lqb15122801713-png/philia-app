@@ -19,13 +19,14 @@
  * 禁编造年费档位/价格；储值不做。次卡无卡种字段——卡种列仅展示 member_pass 行真值（累计充次）。
  */
 
-import { EventType, usePhiliaClient } from '@philia/shared';
+import { EventType, Skeleton, usePhiliaClient } from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
 import { useMerchantEvents } from '../components/dashboard/MerchantEventsProvider';
 import MainScaffold, { LemonButton } from '../components/MainScaffold';
 import { errMsg, fmtDateTime } from '../components/staff-admin/format';
 import { Btn, Field, inputCls, Modal, numStyle, toast, ToasterMount } from '../components/staff-admin/ui';
+import { pc } from '../copy/pass';
 
 type PassRow = {
   id: string;
@@ -138,7 +139,7 @@ function TopUpDialog({
       }
     >
       <div className="space-y-4">
-        <Field label="客户" hint="仅列出本店客户（有本店预约记录或已持本店次卡）；无卡客户将自动建卡（售卡）">
+        <Field label="客户" hint={pc('pass.topUpCustomerHint')}>
           <select className={inputCls} value={userId} onChange={(e) => setUserId(e.target.value)}>
             <option value="">请选择客户</option>
             {customers.map((c) => (
@@ -148,7 +149,7 @@ function TopUpDialog({
             ))}
           </select>
         </Field>
-        <Field label="次数" hint="1-999；次卡仅适用于洗护服务">
+        <Field label="次数" hint={pc('pass.topUpTimesHint')}>
           <input
             className={inputCls}
             type="number"
@@ -178,7 +179,7 @@ function LogsModal({ pass, onClose }: { pass: PassRow | null; onClose: () => voi
       {logsQ.isPending ? (
         <div className="space-y-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-10 animate-pulse rounded-input bg-canvas" />
+            <Skeleton key={i} className="h-10 rounded-input" />
           ))}
         </div>
       ) : logs.length === 0 ? (
@@ -254,11 +255,11 @@ export default function PassPage() {
   return (
     <MainScaffold
       testid="pass-page"
-      title="会员 · 次卡"
-      sub={`在效次卡 ${activeCount} 张 · 年费会员细则待定（冻结决策 15）`}
+      title={pc('pass.title')}
+      sub={pc('pass.sub', { n: activeCount })}
       actions={
         <LemonButton testid="pass-sell" onClick={() => openTopUp(null)}>
-          ＋ 售卡
+          {pc('pass.sellCta')}
         </LemonButton>
       }
     >
@@ -268,12 +269,12 @@ export default function PassPage() {
         <div className="u3-panel">
           <div className="u3-panel-head">
             <h3>在效次卡</h3>
-            <span className="aside">按剩余次数</span>
+            <span className="aside">{pc('pass.listAside')}</span>
           </div>
           {passesQ.isPending ? (
             <div className="space-y-2 px-[17px] pb-4">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-9 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
+                <Skeleton key={i} className="h-9" />
               ))}
             </div>
           ) : passesQ.isError ? (
@@ -282,7 +283,7 @@ export default function PassPage() {
             </p>
           ) : passes.length === 0 ? (
             <p className="px-[17px] pb-8 pt-3 text-center text-xs text-[rgba(59,46,36,.62)]">
-              还没有客户买次卡——洗护 10 次卡是老客最爱
+              {pc('pass.empty')}
             </p>
           ) : (
             <table className="u3-tbl">
@@ -357,12 +358,12 @@ export default function PassPage() {
         <div className="u3-panel">
           <div className="u3-panel-head">
             <h3>扣次流水</h3>
-            <span className="aside">近 100 条 · 倒序</span>
+            <span className="aside">{pc('pass.logsAside')}</span>
           </div>
           {logsQ.isPending ? (
             <div className="space-y-2 px-[17px] pb-4">
               {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-9 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
+                <Skeleton key={i} className="h-9" />
               ))}
             </div>
           ) : logsQ.isError ? (
@@ -371,7 +372,7 @@ export default function PassPage() {
             </p>
           ) : logs.length === 0 ? (
             <p className="px-[17px] pb-8 pt-3 text-center text-xs text-[rgba(59,46,36,.62)]">
-              暂无扣次流水——预约扣次、取消/拒单回补、售卡充次都会记在这里
+              {pc('pass.logsEmpty')}
             </p>
           ) : (
             <div>

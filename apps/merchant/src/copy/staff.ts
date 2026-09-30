@@ -1,0 +1,34 @@
+/**
+ * 员工域文案键表（copy key 一期硬约定 · 纪律照 apps/customer/src/components/member/copy.ts）
+ *
+ * 覆盖：StaffPage / staff-admin/InviteStaffDialog / EditStaffDialog / ScheduleEditorDialog。
+ * 纪律：经营性文案（屏题副题/空态/邀请与停用操作引导/角色口径明面）一律经本表取值，
+ * 组件内零硬编码；文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名冻结不改。
+ * 数值不进本表：在职计数等到渲染层读列表数据经 {var} 插值。
+ */
+
+export const STAFF_COPY = {
+  'staff.title': '员工',
+  'staff.sub': '在职 {a} · 美容师 {b} · 前台 {c} · 自动派单按排班+负荷（S4）',
+  'staff.inviteCta': '＋ 邀请员工',
+  'staff.panelAside': '排班=自动派单与可约判定之源',
+  'staff.empty': '还没有员工',
+  'staff.emptyCta': '去邀请第一位员工',
+  'staff.suspendedNote': '停职中不可派单/核销',
+  'staff.inviteNameHint': '邀请成功后将以该花名登记员工档案',
+  'staff.inviteGuide': '员工在员工端登录后输入邀请码即可绑定本店。邀请码 24 小时内有效、仅可使用一次。',
+  'staff.inviteCodeOnce': '明文仅此一次展示，关闭本弹层后无法再次查看，请立即复制并转交员工。',
+  'staff.editRoleHint': '前台负责扫码核销与接待；美容师负责服务执行（无核销入口）',
+  'staff.editSuspendNote': '停用后该员工立即无法操作员工端（历史业绩保留）',
+  'staff.editSkillNote': '技能标签暂为只读（S4 派单批开放编辑）；排班请点员工行右侧的排班摘要编辑。',
+  'staff.scheduleNote': '每天最多 {n} 个时段；设为「休息」的当天不排班。',
+} as const;
+
+export type StaffCopyKey = keyof typeof STAFF_COPY;
+
+/** 文案键取值 + 占位插值（{var}）；插值参数全部来自端口/数据，不经本表硬编码 */
+export function sf(key: StaffCopyKey, vars?: Record<string, string | number>): string {
+  const tpl: string = STAFF_COPY[key];
+  if (!vars) return tpl;
+  return tpl.replace(/\{(\w+)\}/g, (_, k: string) => (k in vars ? String(vars[k]) : `{${k}}`));
+}

@@ -43,6 +43,7 @@ import { REFUND_DAY_STATS_KEY, storeTodayStr } from '@/components/cashier/refund
 import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider'
 import { STATS_QUERY_KEY } from '@/components/dashboard/utils'
 import MainScaffold from '@/components/MainScaffold'
+import { cc } from '@/copy/cashier'
 import { errMsg } from '@/components/mall-admin/format'
 import { useMerchantRole } from '@/lib/roles'
 
@@ -200,8 +201,8 @@ export default function CashierClosePage() {
   return (
     <MainScaffold
       testid="cashier-close-page"
-      title="日结 / 交接班"
-      sub="交接班=闭班不冻结 · 日结=冻结当班账目 · 反结账（拆箱）仅店主"
+      title={cc('cashier.closeTitle')}
+      sub={cc('cashier.closeSub')}
     >
       <div className="flex flex-col gap-3.5">
         {/* 当前班次卡 + 交接班 */}
@@ -258,10 +259,9 @@ export default function CashierClosePage() {
         >
           <div className="absolute inset-0 bg-[rgba(59,46,36,.28)]" onClick={() => setConfirmCloseShift(false)} aria-hidden />
           <div className="relative w-full max-w-[380px] rounded-[20px] bg-[#FFFDF6] p-5 shadow-[0_8px_40px_rgba(59,46,36,.18)]">
-            <h3 className="text-title font-semibold">交接班确认</h3>
+            <h3 className="text-title font-semibold">{cc('cashier.closeShiftConfirmTitle')}</h3>
             <p className="mt-2 text-caption leading-relaxed text-[rgba(59,46,36,.62)]">
-              交接班=关闭当前班次（不冻结账目）；下一笔收银将自动开新班。
-              如需冻结当班账目，请用「日结」。
+              {cc('cashier.closeShiftConfirmBody')}
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button

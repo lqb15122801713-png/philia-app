@@ -12,6 +12,7 @@ import { useState } from 'react';
 import { errMsg, fmtDateTime, fmtMoney } from './format';
 import { PAYMENT_MODE_LABEL, type StayBoardRow } from './types';
 import { Btn, Modal, numStyle, toast } from './ui';
+import { bc } from '../../copy/boarding';
 
 export default function CheckoutDialog({
   row,
@@ -86,15 +87,15 @@ export default function CheckoutDialog({
           <p>预计退房：{fmtDateTime(appointment.scheduledEnd)}</p>
         </div>
         {row.overdue ? (
-          <p className="text-caption text-danger-deep">本单已超期，请与客户确认续住或按约结算。</p>
+          <p className="text-caption text-danger-deep">{bc('board.checkoutOverdue')}</p>
         ) : null}
         {payAtStore ? (
           <p className="rounded-input bg-brand-primary-light px-3 py-2 text-caption text-ink">
-            本单为到店付：退房后请在财务页「待收款」确认收款，款项才会计入营业额。
+            {bc('board.checkoutPayNote')}
           </p>
         ) : null}
         <p className="text-caption text-ink-placeholder">
-          确认后预约转为「已完成」，房间立即释放；操作幂等，重复点击不会重复结算。
+          {bc('board.checkoutConfirmNote')}
         </p>
       </div>
     </Modal>

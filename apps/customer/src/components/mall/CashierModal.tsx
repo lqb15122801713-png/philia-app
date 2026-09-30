@@ -16,7 +16,7 @@ import { getApiBase, usePhiliaClient } from '@philia/shared';
 import { BadgeCheck, Loader2, ShieldCheck } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { fenToYuan } from './format';
-import { friendlyError } from './MallToast';
+import { friendlyError } from '@philia/shared';
 
 /* ------------------------------------------------------------------ */
 /* 换皮批片 2 弹层三件套核查（§4.5）：本层补抓握手柄 grab 42×4 + 滚动锁 + 可点遮罩   */
@@ -71,7 +71,7 @@ export default function CashierModal({
         setPhase('ready');
       })
       .catch((err) => {
-        showToast(friendlyError(err, '发起支付失败'));
+        showToast(friendlyError(err, '发起支付失败', 80), 'error');
         setPhase('error');
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -92,10 +92,10 @@ export default function CashierModal({
         onPaid();
         return;
       }
-      showToast(body?.message ?? `支付失败（HTTP ${res.status}）`);
+      showToast(body?.message ?? `支付失败（HTTP ${res.status}）`, 'error');
       setPhase('ready');
     } catch {
-      showToast('网络异常，支付未完成');
+      showToast('网络异常，支付未完成', 'error');
       setPhase('ready');
     }
   };

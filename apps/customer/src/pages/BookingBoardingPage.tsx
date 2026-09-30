@@ -13,13 +13,14 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { usePhiliaClient } from '@philia/shared';
+import { Skeleton, usePhiliaClient } from '@philia/shared';
 import BoardingDateRangePicker, { checkinAt } from '@/components/booking/BoardingDateRangePicker';
 import PetPicker from '@/components/booking/PetPicker';
 import StepIndicator from '@/components/booking/StepIndicator';
 import SummaryChips from '@/components/booking/SummaryChips';
-import { friendlyError, useToast } from '@/components/booking/Toast';
+import { friendlyError, useToast } from '@philia/shared';
 import { fenToYuan, fmtMD, nightsBetween, PAYMENT_MODE_META, toISODate, weekCN } from '@/components/booking/format';
+import { bkc } from '@/copy/booking';
 import type { StoreItem } from '@/components/booking/types';
 
 const STEPS = ['选日期', '选房型', '选宠物', '确认'];
@@ -33,7 +34,7 @@ export default function BookingBoardingPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { trpc, queryClient } = usePhiliaClient();
-  const { toastEl, showToast } = useToast();
+  const { toastEl, showToast } = useToast({ durationMs: 3200 });
 
   const [step, setStep] = useState(1);
   const [storeId, setStoreId] = useState<string | null>(searchParams.get('storeId'));
@@ -148,7 +149,7 @@ export default function BookingBoardingPage() {
       void queryClient.invalidateQueries({ queryKey: ['store', 'boardingAvailability'] });
       navigate(`/booking/success?aid=${encodeURIComponent(appt.id)}`, { replace: true });
     },
-    onError: (err) => showToast(friendlyError(err, '预约失败，请稍后再试')),
+    onError: (err) => showToast(friendlyError(err, '预约失败，请稍后再试'), 'error'),
   });
 
   const nights = checkin && checkout ? nightsBetween(checkin, checkout) : 0;
@@ -172,7 +173,7 @@ export default function BookingBoardingPage() {
             <path d="m15 18-6-6 6-6" />
           </svg>
         </button>
-        <h1 className="text-title-lg">预约寄养</h1>
+        <h1 className="text-title-lg">{bkc('booking.boardingTitle')}</h1>
       </header>
 
       <div className="mt-4">
@@ -205,28 +206,28 @@ export default function BookingBoardingPage() {
           {noPets && !forkDismissed ? (
             <div className="mb-4 flex flex-col items-center rounded-card bg-card px-4 py-6 text-center shadow-card">
               <img src="/brand/empty-appointments-800.png" alt="还没有宠物档案" className="w-40 max-w-full rounded-card" />
-              <p className="mt-3 text-title">还没有宠物档案</p>
-              <p className="mt-1 text-caption text-ink-secondary">预约寄养前需要先为毛孩子建立档案</p>
+              <p className="mt-3 text-title">{bkc('booking.noPetTitle')}</p>
+              <p className="mt-1 text-caption text-ink-secondary">{bkc('booking.noPetBodyBoarding')}</p>
               <button
                 type="button"
                 onClick={() => navigate('/philia/pets')}
-                className="mt-4 flex h-11 items-center rounded-full bg-brand-primary px-8 text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                className="mt-4 flex h-11 items-center rounded-full bg-ink px-8 text-body font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
               >
-                先建立宠物档案
+                {bkc('booking.noPetCta')}
               </button>
               <button
                 type="button"
                 onClick={() => setForkDismissed(true)}
                 className="mt-3 text-caption text-ink-secondary underline-offset-2 hover:underline"
               >
-                随便看看
+                {bkc('booking.noPetSkip')}
               </button>
             </div>
           ) : null}
           {store ? (
             <p className="mb-3 text-caption text-ink-secondary">
-              寄养门店：<span className="font-medium text-ink">{store.name}</span>
-              （可在下一步更换）
+              {bkc('booking.storeLinePre')}<span className="font-medium text-ink">{store.name}</span>
+              {bkc('booking.storeLinePost')}
             </p>
           ) : null}
 
@@ -265,10 +266,10 @@ export default function BookingBoardingPage() {
           <h2 className="mt-5 text-title">选择房型</h2>
           <div className="mt-2 space-y-2">
             {servicesQ.isPending ? (
-              [1, 2].map((i) => <div key={i} className="h-20 animate-pulse rounded-card bg-sunken" />)
+              [1, 2].map((i) => <Skeleton key={i} className="h-20 rounded-card" />)
             ) : servicesQ.isError ? (
               <div className="rounded-card bg-sunken px-4 py-8 text-center">
-                <p className="text-caption text-ink-secondary">房型加载失败，请检查网络</p>
+                <p className="text-caption text-ink-secondary">{bkc('booking.roomLoadFail')}</p>
                 <button
                   type="button"
                   onClick={() => void servicesQ.refetch()}
@@ -279,7 +280,7 @@ export default function BookingBoardingPage() {
               </div>
             ) : boardingServices.length === 0 ? (
               <p className="rounded-card bg-sunken px-4 py-8 text-center text-caption text-ink-secondary">
-                该门店暂无寄养房型，换一家看看
+                {bkc('booking.roomEmpty')}
               </p>
             ) : (
               boardingServices.map((s) => {
@@ -311,7 +312,7 @@ export default function BookingBoardingPage() {
                       ) : null}
                     </span>
                     <span className="text-right">
-                      <span className="block font-number text-price text-brand-primary">
+                      <span className="block font-number text-price text-ink">
                         {fenToYuan(s.priceFen)}
                       </span>
                       <span className="text-caption text-ink-placeholder">/ 晚</span>
@@ -329,7 +330,7 @@ export default function BookingBoardingPage() {
         <section className="mt-4">
           <h2 className="text-title">选择宠物</h2>
           <p className="mt-1 text-caption text-ink-secondary">
-            寄养要求疫苗有效期覆盖至退房日（{checkout ? toISODate(checkout) : '—'}）
+            {bkc('booking.vaccineRule', { date: checkout ? toISODate(checkout) : '—' })}
           </p>
           <div className="mt-2">
             <PetPicker
@@ -399,7 +400,7 @@ export default function BookingBoardingPage() {
                 </span>
               </div>
               <div className="mt-1 flex items-center justify-end">
-                <span className="font-number text-price text-brand-primary">
+                <span className="font-number text-price text-ink">
                   = {fenToYuan(service.priceFen * Math.max(nights, 1))}
                 </span>
               </div>

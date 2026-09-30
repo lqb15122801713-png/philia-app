@@ -24,7 +24,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
 import { checkinAt } from '@/components/booking/BoardingDateRangePicker';
-import { friendlyError, useToast } from '@/components/booking/Toast';
+import { friendlyError, useToast } from '@philia/shared';
 import PageHeader from '@/components/PageHeader';
 import { isoToDate, nightsBetween, toISODate } from '@/components/booking/format';
 import PetCardBlock from '@/components/booking/single/PetCardBlock';
@@ -35,6 +35,7 @@ import StoreLineBlock from '@/components/booking/single/StoreLineBlock';
 import NoteFoldBlock from '@/components/booking/single/NoteFoldBlock';
 import BoardingConfirmBar, { type VaccineBlock } from '@/components/booking/single/BoardingConfirmBar';
 import { mc } from '@/components/member/copy';
+import { bkc } from '@/copy/booking';
 import { readLastBooking, resolvePetId, resolveServiceId, resolveStoreId, writeLastBooking } from '@/lib/bookingPrefill';
 
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
@@ -47,7 +48,7 @@ export default function BoardingSinglePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { trpc, queryClient } = usePhiliaClient();
-  const { toastEl, showToast } = useToast();
+  const { toastEl, showToast } = useToast({ durationMs: 3200 });
 
   /* ---- 选择状态（URL 预填参数初始化，优先级最高） ---- */
   const [storeId, setStoreId] = useState<string | null>(searchParams.get('storeId'));
@@ -189,7 +190,7 @@ export default function BoardingSinglePage() {
     },
     onError: (err) => {
       // 满晚 CONFLICT：toast 原文 + 刷新余量（现状逻辑保留）
-      showToast(friendlyError(err, '预约失败，请稍后再试'));
+      showToast(friendlyError(err, '预约失败，请稍后再试'), 'error');
       void availQ.refetch();
     },
   });
@@ -197,19 +198,19 @@ export default function BoardingSinglePage() {
   /* ---- 确认按钮三态：缺项点名（顺序同屏面区块） ---- */
   const noPets = petsQ.isSuccess && (petsQ.data?.length ?? 0) === 0;
   const missingLabel = noPets
-    ? '请先建立宠物档案'
+    ? bkc('booking.needPet')
     : petId === null
-      ? '请选择宠物'
+      ? bkc('booking.choosePet')
       : checkin === null
-        ? '请选择入住日期'
+        ? bkc('booking.chooseCheckin')
         : checkout === null
-          ? '请选择退房日期'
+          ? bkc('booking.chooseCheckout')
           : servicesQ.isSuccess && boardingServices.length === 0
-            ? '该门店暂无寄养房型'
+            ? bkc('booking.noRoom')
             : serviceId === null
-              ? '请选择房型'
+              ? bkc('booking.chooseRoom')
               : effStoreId === null
-                ? '请选择门店'
+                ? bkc('booking.chooseStore')
                 : null;
 
   /* ---- 渲染：单屏区块化（v4.1：留白 + hairline 分节） ---- */
@@ -223,10 +224,10 @@ export default function BoardingSinglePage() {
 
       {/* U1-A：统一返回条（←圆钮+标题）；B9.3 任务 B：与洗护单屏对称的回链 */}
       <PageHeader
-        title="预约寄养"
+        title={bkc('booking.boardingTitle')}
         right={
           <Link to="/booking/grooming" data-testid="boarding-to-grooming" className="text-caption text-ink">
-            洗护 ›
+            {bkc('booking.toGrooming')}
           </Link>
         }
       />
@@ -238,7 +239,7 @@ export default function BoardingSinglePage() {
           selectedId={petId}
           onSelect={setPetId}
           requireVaccineUntil={checkout}
-          pickerHint="点按选择要寄养的毛孩子"
+          pickerHint={bkc('booking.petPickHintBoarding')}
           loading={petsQ.isPending}
         />
         {/* PD-15 V1.1 槽位 6：多宠同订置灰槽位（不上数不上假件 + 注记 + data-testid；

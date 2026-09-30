@@ -12,12 +12,13 @@
  * 金额：库内 integer 分，显示一律 fenToYuan；比例 bp → %；系数 bp → 倍。
  */
 
-import { usePhiliaClient } from '@philia/shared';
+import { Skeleton, usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronDown, Wallet } from 'lucide-react';
 import { useState } from 'react';
 import PageHeader from '@/components/PageHeader';
 import { fenToYuan } from '@/components/today/utils';
+import { PAY_COPY } from '@/copy/pay';
 
 /* ---------------- 与 server computeMonth 载荷同构的本地类型 ---------------- */
 
@@ -105,8 +106,8 @@ function fmtTs(t: string | Date): string {
 function pickPool(p: MonthPayload): { label: string; pool: PerfPool } {
   const isGroomer = p.role === 'groomer' || (p.grade ?? '').startsWith('G');
   return isGroomer
-    ? { label: '美容师绩效池（本人操作洗美营收·门市价）', pool: p.performance.groomerPool }
-    : { label: '前台绩效池（本人接待归属洗美营收·门市价）', pool: p.performance.frontdeskPool };
+    ? { label: PAY_COPY['pay.pool.groomer'], pool: p.performance.groomerPool }
+    : { label: PAY_COPY['pay.pool.frontdesk'], pool: p.performance.frontdeskPool };
 }
 
 /* ---------------- 提成单列 ---------------- */
@@ -161,7 +162,7 @@ function Section({
       </header>
       {lines.length === 0 ? (
         <p className="py-3 text-caption-xs text-[rgba(59,46,36,.42)]">
-          {emptyNote ?? '本月暂无此类计提单'}
+          {emptyNote ?? PAY_COPY['pay.empty.default']}
         </p>
       ) : (
         <ul className="divide-y divide-[rgba(59,46,36,.06)]">
@@ -289,8 +290,8 @@ export default function PayPage() {
           <div className="mt-2 space-y-2.5" aria-label="加载中">
             {[0, 1, 2].map((i) => (
               <div key={i} className="u1-card p-4">
-                <div className="h-5 w-28 animate-pulse rounded-chip bg-sunken" />
-                <div className="mt-2 h-4 w-44 animate-pulse rounded-chip bg-sunken" />
+                <Skeleton className="h-5 w-28 !rounded-chip" />
+                <Skeleton className="mt-2 h-4 w-44 !rounded-chip" />
               </div>
             ))}
           </div>
@@ -319,7 +320,7 @@ export default function PayPage() {
                 {fenToYuan(payload.commissionTotalFen)}
               </p>
               {payload.probation ? (
-                <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">试用期：商品/售卡类提成 ×50%</p>
+                <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">{PAY_COPY['pay.probation.note']}</p>
               ) : null}
             </section>
 
@@ -327,7 +328,7 @@ export default function PayPage() {
             <Section
               title="服务提成"
               lines={payload.serviceLines}
-              emptyNote="本月暂无服务计提单"
+              emptyNote={PAY_COPY['pay.empty.service']}
               probation={payload.probation}
               testid="pay-service"
             />
@@ -341,7 +342,7 @@ export default function PayPage() {
             <Section
               title="商品提成"
               lines={payload.productLines}
-              emptyNote="本月暂无商品计提单"
+              emptyNote={PAY_COPY['pay.empty.product']}
               probation={payload.probation}
               testid="pay-product"
             />
@@ -397,12 +398,12 @@ export default function PayPage() {
                   </div>
                   <p className="mt-2.5 flex items-baseline justify-between">
                     <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
-                      预估绩效（基数 × {bpToPct(my.pool.rateBp)} × 系数，季度发放）
+                      {PAY_COPY['pay.perf.estimateLead']} {bpToPct(my.pool.rateBp)} {PAY_COPY['pay.perf.estimateTail']}
                     </span>
                     <span className="u1-num text-body-sm font-bold text-ink">{fenToYuan(perf.payableFen)}</span>
                   </p>
                   {perf.coeffBp === null ? (
-                    <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">本季尚未评级，评级后核算应付绩效</p>
+                    <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">{PAY_COPY['pay.perf.noGrade']}</p>
                   ) : null}
                 </>
               )}
@@ -412,7 +413,7 @@ export default function PayPage() {
             <section className="u1-card mt-3.5 px-4 py-3.5" data-testid="pay-deductions">
               <h2 className="text-body-sm font-bold">扣减记录</h2>
               {payload.deductions.length === 0 ? (
-                <p className="py-3 text-caption-xs text-[rgba(59,46,36,.42)]">本月无扣减</p>
+                <p className="py-3 text-caption-xs text-[rgba(59,46,36,.42)]">{PAY_COPY['pay.deductions.empty']}</p>
               ) : (
                 <ul className="divide-y divide-[rgba(59,46,36,.06)]">
                   {payload.deductions.map((d) => (
@@ -428,7 +429,7 @@ export default function PayPage() {
                   ))}
                 </ul>
               )}
-              <p className="pt-1 text-caption-xs text-[rgba(59,46,36,.42)]">扣减只扣绩效，不扣提成</p>
+              <p className="pt-1 text-caption-xs text-[rgba(59,46,36,.42)]">{PAY_COPY['pay.deductions.note']}</p>
             </section>
 
             {/* 历史月份快照（新→旧；提成月结点展开分列明细） */}
@@ -436,7 +437,7 @@ export default function PayPage() {
               <h2 className="px-4 pt-3.5 text-body-sm font-bold">历史月份</h2>
               {data.snapshots.length === 0 ? (
                 <p className="px-4 py-3 text-caption-xs text-[rgba(59,46,36,.42)]">
-                  暂无历史快照——每月结算后自动生成
+                  {PAY_COPY['pay.history.empty']}
                 </p>
               ) : (
                 <ul className="divide-y divide-[rgba(59,46,36,.06)]">
@@ -446,12 +447,12 @@ export default function PayPage() {
                 </ul>
               )}
               <p className="px-4 pb-3.5 pt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
-                已快照月份按冻结口径展示，冲减差额进当月调整项
+                {PAY_COPY['pay.history.note']}
               </p>
             </section>
 
             <p className="mb-6 mt-4 flex items-center justify-center gap-1 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
-              <Wallet className="h-3.5 w-3.5" aria-hidden /> 仅本人可见 · 规则版本 <span className="u1-num">v{data.ruleVersion}</span>
+              <Wallet className="h-3.5 w-3.5" aria-hidden /> {PAY_COPY['pay.footer.lead']} <span className="u1-num">v{data.ruleVersion}</span>
             </p>
           </>
         )}

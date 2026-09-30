@@ -8,11 +8,12 @@
  * 明确不做：筛选/搜索（v1 量小）、导出、绩效图、提成。
  */
 
-import { usePhiliaClient } from '@philia/shared';
+import { Skeleton, usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { ClipboardList } from 'lucide-react';
 import { useMemo } from 'react';
 import { fenToYuan, hhmm, type HistoryItem } from '@/components/today/utils';
+import { HISTORY_COPY } from '@/copy/history';
 
 const STATUS_TEXT: Record<string, string> = {
   completed: '已完成',
@@ -100,10 +101,10 @@ export default function HistoryPage() {
         <div className="mt-2 space-y-2.5" aria-label="加载中">
           {[0, 1, 2].map((i) => (
             <div key={i} className="u1-card flex items-center gap-3.5 px-4 py-3.5">
-              <div className="h-8 w-[52px] animate-pulse rounded-chip bg-sunken" />
+              <Skeleton className="h-8 w-[52px] !rounded-chip" />
               <div className="flex-1">
-                <div className="h-5 w-32 animate-pulse rounded-chip bg-sunken" />
-                <div className="mt-1.5 h-4 w-44 animate-pulse rounded-chip bg-sunken" />
+                <Skeleton className="h-5 w-32 !rounded-chip" />
+                <Skeleton className="mt-1.5 h-4 w-44 !rounded-chip" />
               </div>
             </div>
           ))}
@@ -125,7 +126,7 @@ export default function HistoryPage() {
           <span className="flex h-20 w-20 items-center justify-center rounded-full bg-sunken" aria-hidden>
             <ClipboardList className="h-9 w-9 text-ink" strokeWidth={1.5} />
           </span>
-          <p className="mt-4 text-body-sm text-ink-secondary">还没有历史单——第一单完成后会出现在这里</p>
+          <p className="mt-4 text-body-sm text-ink-secondary">{HISTORY_COPY['history.empty']}</p>
         </div>
       ) : (
         groups.map((g) => (

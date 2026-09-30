@@ -61,6 +61,7 @@ export const openHoursLabel = (openHours: MeOpenHours | null | undefined, d: Dat
   return today ? `营业中 ${today.open}–${today.close}` : '今日店休'
 }
 
-/** 分 → 元（千分位、至多两位小数；统计卡 26px Montserrat 大字用，如 2,368） */
-export const fenToYuanGrouped = (fen: number): string =>
-  (fen / 100).toLocaleString('en-US', { maximumFractionDigits: 2 })
+/** 分 → 元（千分位、至多两位小数；统计卡 26px Montserrat 大字用，如 2,368）。
+    片 5 归并：权威实现迁至 mall-admin/format（zh-CN 口径：千分分组+整数去 .00+
+    带零头两位小数），此处仅 re-export 保持既有导入路径；归并转发，勿再加新实现 */
+export { fenToYuanGrouped } from '../mall-admin/format'

@@ -18,7 +18,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
-import { friendlyError, useToast } from '@/components/booking/Toast';
+import { friendlyError, useToast } from '@philia/shared';
 import PageHeader from '@/components/PageHeader';
 import PetCardBlock from '@/components/booking/single/PetCardBlock';
 import ServiceChipsBlock from '@/components/booking/single/ServiceChipsBlock';
@@ -31,12 +31,13 @@ import StaffPickerFlat from '@/components/booking/single/StaffPickerFlat';
 import { buildWeekGrid, isSameDay } from '@/components/booking/single/slotGrid';
 import { dayLabel, fmtHM } from '@/components/booking/format';
 import { readLastBooking, resolvePetId, resolveServiceId, resolveStoreId, writeLastBooking } from '@/lib/bookingPrefill';
+import { bkc } from '@/copy/booking';
 
 export default function GroomingSinglePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { trpc, queryClient } = usePhiliaClient();
-  const { toastEl, showToast } = useToast();
+  const { toastEl, showToast } = useToast({ durationMs: 3200 });
 
   /* ---- 选择状态（URL 预填参数初始化，优先级最高） ---- */
   const [storeId, setStoreId] = useState<string | null>(searchParams.get('storeId'));
@@ -258,7 +259,7 @@ export default function GroomingSinglePage() {
       navigate(`/booking/success?aid=${encodeURIComponent(appt.id)}`, { replace: true });
     },
     onError: (err) => {
-      showToast(friendlyError(err, '预约失败，请稍后再试'));
+      showToast(friendlyError(err, '预约失败，请稍后再试'), 'error');
       // 满槽/冲突：刷新槽位数据让用户重选（现状逻辑保留）
       void servicesQ.refetch();
     },
@@ -267,15 +268,15 @@ export default function GroomingSinglePage() {
   /* ---- 确认按钮三态：缺项点名（顺序同屏面区块） ---- */
   const noPets = petsQ.isSuccess && (petsQ.data?.length ?? 0) === 0;
   const missingLabel = noPets
-    ? '请先建立宠物档案'
+    ? bkc('booking.needPet')
     : petId === null
-      ? '请选择宠物'
+      ? bkc('booking.choosePet')
       : effStoreId === null
-        ? '请选择门店'
+        ? bkc('booking.chooseStore')
         : serviceId === null
-          ? '请选择服务'
+          ? bkc('booking.chooseService')
           : slot === null
-            ? '请选择时间'
+            ? bkc('booking.chooseTime')
             : null;
 
   /* ---- 渲染：单屏区块化（v4.1：留白 + hairline 分节，时段栅格紧贴日期横条） ---- */
@@ -289,10 +290,10 @@ export default function GroomingSinglePage() {
 
       {/* U1-A：统一返回条（←圆钮+标题）；B9.3 任务 B：hub 退役后寄养入口安置——右侧安静文字链 */}
       <PageHeader
-        title="预约洗护"
+        title={bkc('booking.groomingTitle')}
         right={
           <Link to="/booking/boarding" data-testid="grooming-to-boarding" className="text-caption text-ink">
-            寄养 ›
+            {bkc('booking.toBoarding')}
           </Link>
         }
       />
@@ -351,7 +352,7 @@ export default function GroomingSinglePage() {
             loading={staffQ.isPending}
             earliestLabel={earliestSlotLabel}
           />
-          <p className="mt-1 text-caption-xs text-ink-placeholder">指定洗护师会写在预约备注里传达给门店</p>
+          <p className="mt-1 text-caption-xs text-ink-placeholder">{bkc('booking.staffNote')}</p>
         </div>
       </section>
 

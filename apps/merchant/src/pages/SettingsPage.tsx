@@ -16,7 +16,7 @@
  * 接口——下架项本页在本次会话内以本地 overrides 保持可见（可重新上架），刷新后不再列出。
  */
 
-import { usePhiliaClient } from '@philia/shared';
+import { Skeleton, usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import MainScaffold, { QuietButton } from '../components/MainScaffold';
@@ -31,6 +31,7 @@ import {
   type ServiceRow,
 } from '../components/staff-admin/types';
 import { Empty, Field, inputCls, numStyle, Switch, toast, ToasterMount } from '../components/staff-admin/ui';
+import { st } from '../copy/settings';
 
 /* ------------------------------------------------------------------ */
 /* 营业时间                                                             */
@@ -93,9 +94,9 @@ interface NotifyPrefs {
 }
 /** U3 口径（试样 12 设置）：新预约/取消申请默认开；寄养打卡提醒默认关 */
 const NOTIFY_ITEMS: Array<{ key: keyof NotifyPrefs; label: string; hint: string }> = [
-  { key: 'newAppointment', label: '新预约通知', hint: 'SSE store 频道 · 声音提醒' },
-  { key: 'cancelRequest', label: '取消申请提醒', hint: '≤4h 申请需审批' },
-  { key: 'boardingOverdue', label: '寄养打卡提醒', hint: '每日 16:00 未打卡提醒员工' },
+  { key: 'newAppointment', label: st('set.notifyNewLabel'), hint: st('set.notifyNewHint') },
+  { key: 'cancelRequest', label: st('set.notifyCancelLabel'), hint: st('set.notifyCancelHint') },
+  { key: 'boardingOverdue', label: st('set.notifyBoardingLabel'), hint: st('set.notifyBoardingHint') },
 ];
 
 function loadNotifyPrefs(): NotifyPrefs {
@@ -347,33 +348,36 @@ export default function SettingsPage() {
 
   /* ---------------- 渲染 ---------------- */
   return (
-    <MainScaffold title="设置" sub="门店与经营口径 · 改动即生效（可约/派单联动）" testid="settings-page">
+    <MainScaffold title={st('set.title')} sub={st('set.sub')} testid="settings-page">
       <ToasterMount />
 
       {meQuery.isPending ? (
-        // 骨架（禁转圈）：双栏面板脉冲
+        // 加载中骨架块（animate-pulse，禁转圈）：双栏面板 = shared Skeleton 组合
         <div className="grid items-start gap-3.5 lg:grid-cols-[1.7fr_1fr]" aria-label="加载中">
-          {[1.7, 1].map((w, i) => (
-            <div key={i} className="u3-panel animate-pulse">
+          {([
+            ['w-[69%]', 'w-[77%]', 'w-[85%]', 'w-[93%]'],
+            ['w-[62%]', 'w-[70%]', 'w-[78%]', 'w-[86%]'],
+          ]).map((widths, i) => (
+            <div key={i} className="u3-panel">
               <div className="u3-panel-head">
-                <div className="h-4 w-16 rounded-chip bg-[rgba(59,46,36,.08)]" />
+                <Skeleton className="h-4 w-16 rounded-chip" />
               </div>
-              {[0, 1, 2, 3].map((r) => (
+              {widths.map((w, r) => (
                 <div key={r} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-4">
-                  <div className="h-3 rounded-chip bg-[rgba(59,46,36,.06)]" style={{ width: `${52 + w * 10 + r * 8}%` }} />
+                  <Skeleton className={`h-3 rounded-chip ${w}`} />
                 </div>
               ))}
             </div>
           ))}
         </div>
       ) : !store ? (
-        <Empty title="未找到门店信息" hint="请确认当前账号已完成开店绑定" />
+        <Empty title={st('set.noStoreTitle')} hint={st('set.noStoreHint')} />
       ) : (
         <div className="grid items-start gap-3.5 lg:grid-cols-[1.7fr_1fr]">
           {/* 左栏：门店 */}
           <div className="u3-panel">
             <div className="u3-panel-head">
-              <h3>门店</h3>
+              <h3>{st('set.panelStore')}</h3>
               <span className="aside">名称 / 营业时间 / 地址 / 服务项</span>
             </div>
 
@@ -405,7 +409,7 @@ export default function SettingsPage() {
               title="营业时间"
               hint={
                 <>
-                  可约栅格之源（<span className="u1-num">{hoursSummary(hours)}</span>）
+                  {st('set.hoursHint')}（<span className="u1-num">{hoursSummary(hours)}</span>）
                 </>
               }
               open={openRow === 'hours'}
@@ -460,7 +464,7 @@ export default function SettingsPage() {
             {/* 地址与坐标 */}
             <ExpandRow
               title="地址与坐标"
-              hint="listNearby 距离粗排之用"
+              hint={st('set.addrHint')}
               open={openRow === 'addr'}
               onToggle={() => toggleRow('addr')}
             >
@@ -505,7 +509,7 @@ export default function SettingsPage() {
             {/* 服务项与时长（时长引擎之母） */}
             <ExpandRow
               title="服务项与时长"
-              hint="洗护/造型美容/寄养房型（时长引擎之母）"
+              hint={st('set.servicesHint')}
               open={openRow === 'services'}
               onToggle={() => toggleRow('services')}
               actionLabel="管理 ›"
@@ -513,14 +517,14 @@ export default function SettingsPage() {
               {servicesQuery.isPending ? (
                 <div className="space-y-2" aria-label="加载中">
                   {[0, 1, 2].map((i) => (
-                    <div key={i} className="h-9 animate-pulse rounded-control bg-canvas" />
+                    <Skeleton key={i} className="h-9 rounded-control" />
                   ))}
                 </div>
               ) : (
                 <>
                   {serviceList.length === 0 ? (
                     <p className="py-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
-                      还没有服务项，点下方「＋ 新增服务」创建洗护或寄养服务
+                      {st('set.servicesEmpty')}
                     </p>
                   ) : (
                     <div>
@@ -564,7 +568,7 @@ export default function SettingsPage() {
                   )}
                   <div className="mt-3 flex items-center justify-between gap-3">
                     <p className="text-caption-xs text-[rgba(59,46,36,.42)]">
-                      下架项本次会话内仍列出（可重新上架）；刷新后不再显示（「含下架」列表接口 v2 补齐）
+                      {st('set.servicesOffNote')}
                     </p>
                     <QuietButton onClick={() => setEditorFor('new')}>＋ 新增服务</QuietButton>
                   </div>
@@ -576,10 +580,10 @@ export default function SettingsPage() {
           {/* 右栏：经营口径 */}
           <div className="u3-panel">
             <div className="u3-panel-head">
-              <h3>经营口径</h3>
-              <span className="aside">通知偏好仅本机生效（v2 接服务端）</span>
+              <h3>{st('set.panelRules')}</h3>
+              <span className="aside">{st('set.notifyAside')}</span>
             </div>
-            <SetRow title="自动接单" hint="S4 口径 · 默认开（无开关项，仅口径展示）">
+            <SetRow title="自动接单" hint={st('set.autoAcceptHint')}>
               <span className="shrink-0 text-caption font-bold text-ink">已启用</span>
             </SetRow>
             {NOTIFY_ITEMS.map((item) => (

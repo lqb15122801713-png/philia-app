@@ -9,6 +9,7 @@
 
 import { AlertCircle, RefreshCw } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { ListSkeleton } from '@philia/shared'
 import { PawMark } from '../AppDock'
 
 /** 区块外壳：标题 + 可选右侧动作 + 内容 */
@@ -32,19 +33,11 @@ export function SectionShell({
   )
 }
 
-/** 加载骨架：暖色沉底卡片脉冲 */
+/** 加载骨架：白卡 + ListSkeleton 成件（换皮批片 5 B 块归并，原手写递减宽脉冲行退役） */
 export function LoadingBlock({ lines = 3, className = '' }: { lines?: number; className?: string }) {
   return (
     <div className={`rounded-card bg-card p-4 shadow-card ${className}`} aria-label="加载中">
-      <div className="flex animate-pulse flex-col gap-3">
-        {Array.from({ length: lines }).map((_, i) => (
-          <div
-            key={i}
-            className="h-4 rounded-tag bg-sunken"
-            style={{ width: `${88 - i * 18}%` }}
-          />
-        ))}
-      </div>
+      <ListSkeleton rows={lines} />
     </div>
   )
 }
@@ -86,8 +79,10 @@ export function ErrorState({
 
 /** 空态（U1-I 全域统一组件；E-01/02/03 三句话结构铁律 §4.11）：爪章/图标
  *  54 圆 #F4EDDC（bg-sunken + 更软发丝线边，图标 26 卡其次阶色）+ serif 21/900 题
- *  （是什么）+ 12 说明（为什么，lh 1.9）+ 深棕钮（去哪，调用方传入，建议深棕墨族
- *  rounded-control px-[22px] py-[12px] text-[13px] font-bold text-[#F6EFDD]）。
+ *  （是什么）+ 12 说明（为什么，lh 1.9）+ 深棕钮（去哪，调用方传入，色值走 token：
+ *  rounded-control bg-ink px-[30px] py-[13px] text-body-sm font-semibold text-canvas，
+ *  仓内同型件见 MallPage/MallOrdersPage 空态；批片 5 P2 起空态/异常态出口钮一律
+ *  深棕墨底淡字，不再用 bg-brand-primary 淡金——淡金只留主行动 CTA）。
  *  直上画布不套卡（定稿 .emptyc）；各页空态一律走本组件，不再手写内联空态。
  *  E-02/E-03 换图标经 icon 传入（默认爪章 PawMark，VI 私有实心件）。 */
 export function EmptyState({

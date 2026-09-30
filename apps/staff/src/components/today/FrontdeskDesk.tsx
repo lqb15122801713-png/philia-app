@@ -21,18 +21,20 @@
 
 import {
   EventType,
+  Skeleton,
   usePhiliaClient,
+  useToast,
   type EventEnvelope,
 } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { BedDouble, CalendarClock, ScanLine } from 'lucide-react';
 import { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Toast, { useToast } from '@/components/today/Toast';
 import { useStaffEvents } from '@/components/today/useStaffEvents';
 import DayAxis from '@/components/today/deck/DayAxis';
 import { fmtMin, minutesOf, todayAxisRange } from '@/components/today/deck/deckUtils';
 import { dayKeyOf, todayLabel } from '@/components/today/utils';
+import { TODAY_COPY } from '@/copy/today';
 
 // 契约1：QrScanner（T3.2 components/scan/QrScanner.tsx）懒加载接入（复用不动）
 const QrScanner = lazy(() => import('@/components/scan/QrScanner'));
@@ -53,7 +55,7 @@ const STATUS_LABEL: Record<string, string> = {
 export default function FrontdeskDesk() {
   const navigate = useNavigate();
   const { trpc, queryClient } = usePhiliaClient();
-  const [toast, showToast] = useToast();
+  const { showToast, toastEl } = useToast();
   const [scanOpen, setScanOpen] = useState(false);
   const now = new Date();
 
@@ -190,7 +192,7 @@ export default function FrontdeskDesk() {
           扫码核销 · 到店登记
         </button>
         <p className="mt-2 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
-          无摄像头环境走「手动输入 6 位核销码」
+          {TODAY_COPY['today.frontdesk.scanHint']}
         </p>
       </div>
 
@@ -239,11 +241,11 @@ export default function FrontdeskDesk() {
       ) : null}
 
       {todayQuery.isPending ? (
-        <div className="mt-3 animate-pulse" aria-label="加载中">
-          <div className="h-[52px] rounded-control bg-card u1-ring" />
+        <div className="mt-3" aria-label="加载中">
+          <Skeleton className="h-[52px] !rounded-control" />
           <div className="mt-3">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="h-[52px] border-t border-[rgba(59,46,36,.06)]" />
+              <div key={i} className="h-[52px] animate-pulse border-t border-[rgba(59,46,36,.06)]" />
             ))}
           </div>
         </div>
@@ -267,7 +269,7 @@ export default function FrontdeskDesk() {
                 <ScanLine className="h-9 w-9 text-ink" strokeWidth={1.5} />
               </span>
               <p className="mt-4 text-body-sm text-ink-secondary">
-                今天全店无预约——等自动接单，或把预约页分享给老客
+                {TODAY_COPY['today.frontdesk.empty']}
               </p>
             </div>
           ) : (
@@ -308,7 +310,7 @@ export default function FrontdeskDesk() {
         </>
       )}
 
-      <Toast message={toast} />
+      {toastEl}
 
       <Suspense fallback={null}>
         <QrScanner

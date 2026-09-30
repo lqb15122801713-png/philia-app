@@ -51,7 +51,7 @@ import ContactStore from '../components/live/ContactStore'
 import LiveHeader from '../components/live/LiveHeader'
 import PageHeader, { BackButton } from '../components/PageHeader'
 import LiveToast from '../components/live/LiveToast'
-import PhotoViewer from '../components/live/PhotoViewer'
+import { PhotoViewer } from '@philia/shared'
 import ReviewPanel from '../components/live/ReviewPanel'
 import '../styles/live-v2.css'
 
@@ -638,6 +638,7 @@ export default function AppointmentLivePage() {
           index={viewer.index}
           onClose={() => setViewer(null)}
           onNavigate={(i) => setViewer((v) => (v ? { ...v, index: i } : v))}
+          keyboard={false}
         />
       ) : null}
 

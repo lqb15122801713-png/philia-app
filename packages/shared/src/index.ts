@@ -41,3 +41,27 @@ export type {
   PhiliaAppKind,
 } from './components/ErrorBoundary';
 export { buildClientErrorReport, reportClientError } from './components/ErrorBoundary';
+
+// 换皮批片 5「同型归并」共享件
+export { useToast, friendlyError } from './components/Toast';
+export type {
+  ToastKind,
+  ToastPosition,
+  UseToastOptions,
+  UseToastResult,
+} from './components/Toast';
+
+export { default as PhotoViewer } from './components/PhotoViewer';
+export type { PhotoViewerPhoto, PhotoViewerProps } from './components/PhotoViewer';
+
+export { default as PageHeader, BackButton } from './components/PageHeader';
+export type { PageHeaderProps, BackButtonProps } from './components/PageHeader';
+
+export { default as CelebrationPop } from './components/CelebrationPop';
+export type { CelebrationPopProps } from './components/CelebrationPop';
+
+export { default as StepNode, StepConnector } from './components/StepNode';
+export type { StepNodeProps, StepNodeState, StepConnectorProps } from './components/StepNode';
+
+export { Skeleton, ListSkeleton, BoardSkeleton } from './components/Skeleton';
+export type { SkeletonProps, ListSkeletonProps, BoardSkeletonProps } from './components/Skeleton';

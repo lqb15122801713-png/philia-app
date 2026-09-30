@@ -16,6 +16,7 @@
  */
 
 import { Check, Minus, Pause, Percent, Plus, Sparkles, X } from 'lucide-react'
+import { cc } from '@/copy/cashier'
 import {
   fenToYuan,
   lineIcon,
@@ -143,7 +144,7 @@ export default function CartPanel({
           className="py-10 text-center text-caption-xs text-[rgba(59,46,36,.42)]"
           data-testid="cashier-cart-empty"
         >
-          点左侧商品或服务开单
+          {cc('cashier.cartEmpty')}
         </p>
       ) : (
         <div className="mt-1.5">
@@ -247,7 +248,7 @@ export default function CartPanel({
                 {/* 库存不足警示条（不阻塞，须明示） */}
                 {stockShort ? (
                   <div className="mt-1.5 ml-[46px] rounded-[6px] bg-danger-light px-2 py-1 text-caption-xs font-semibold text-danger-deep">
-                    库存不足：余 {l.stock} 件，结账将按实际库存扣减
+                    {cc('cashier.stockShort', { n: l.stock ?? '' })}
                   </div>
                 ) : null}
               </div>
@@ -311,7 +312,7 @@ export default function CartPanel({
             onClick={onOpenSell}
             className="inline-flex min-h-[44px] shrink-0 items-center rounded-full bg-brand-primary px-3 py-1.5 text-caption-xs font-bold text-ink shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
-            开通萤火 ›
+            {cc('cashier.savingsCta')}
           </button>
           <button
             type="button"
@@ -342,7 +343,7 @@ export default function CartPanel({
         ) : null}
         {memberDiscountUnknown ? (
           <p className="py-1 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="cashier-member-discount-unknown">
-            会员折扣由服务端结账时按档自动计算，折后价以成交为准（内测期档位读路径缺口）
+            {cc('cashier.memberDiscountUnknown')}
           </p>
         ) : null}
         {amounts.passCoveredFen > 0 ? (

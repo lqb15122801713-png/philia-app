@@ -8,10 +8,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { usePhiliaClient } from '@philia/shared';
+import { Skeleton, usePhiliaClient } from '@philia/shared';
 import PageHeader from '@/components/PageHeader';
 import { EmptyState, ErrorState } from '@/components/home/common';
 import { mc } from '@/components/member/copy';
+import { apc } from '@/copy/appointments';
 import {
   APPT_STATUS_META,
   APPT_TYPE_LABEL,
@@ -70,7 +71,7 @@ function AppointmentCard({ item }: { item: AppointmentListItem }) {
             ? fmtRange(item.scheduledStart, item.scheduledEnd)
             : fmtDateTime(item.scheduledStart)}
         </p>
-        <p className="font-number text-body font-semibold text-brand-primary">{fenToYuan(item.priceFen)}</p>
+        <p className="font-number text-body font-semibold text-ink">{fenToYuan(item.priceFen)}</p>
       </div>
     </Link>
   );
@@ -138,31 +139,31 @@ export default function AppointmentsPage() {
   return (
     <div className="px-4 py-6">
       {/* U1-A：详情级页面不渲染 dock，统一返回条（←圆钮+标题） */}
-      <PageHeader title="我的预约" />
+      <PageHeader title={apc('appointments.title')} />
 
       {listQ.isPending ? (
         <div className="mt-5 space-y-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-card bg-sunken" />
+            <Skeleton key={i} className="h-24 rounded-card" />
           ))}
         </div>
       ) : listQ.isError ? (
         /* W1 退回修：裸错误文本升 ErrorState（重试=点睛主钮；页头返回条已是出口件） */
         <div className="mt-5">
-          <ErrorState message="预约列表加载失败，请检查网络后重试" onRetry={() => void listQ.refetch()} />
+          <ErrorState message={apc('appointments.loadFail')} onRetry={() => void listQ.refetch()} />
         </div>
       ) : totalCount === 0 ? (
         /* U1-I：全域统一空态组件（E-01 三句话结构；行动钮=深棕墨族 §4.11） */
         <EmptyState
-          title="还没有预约"
-          desc="给毛孩子安排一次舒服的洗护吧"
+          title={apc('appointments.emptyTitle')}
+          desc={apc('appointments.emptyBody')}
           action={
             /* E 系空态深棕钮（.emptyc .go：深棕墨底 #2E2318 + #F6EFDD，§4.11） */
             <Link
               to="/booking"
               className="inline-flex items-center rounded-control bg-[#2E2318] px-[22px] py-3 text-[13px] font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92"
             >
-              立即预约
+              {apc('appointments.emptyCta')}
             </Link>
           }
         />
@@ -204,7 +205,7 @@ export default function AppointmentsPage() {
           <div className="mt-3 space-y-2.5">
             {items.length === 0 ? (
               <p className="rounded-card bg-sunken px-4 py-10 text-center text-caption text-ink-secondary">
-                暂无{statusLabel(active.statuses[0] ?? '')}的预约
+                {apc('appointments.tabEmpty', { status: statusLabel(active.statuses[0] ?? '') })}
               </p>
             ) : (
               items.map((it) => <AppointmentCard key={it.id} item={it} />)

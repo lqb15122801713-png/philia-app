@@ -43,10 +43,11 @@ export default function RequireStaff({ children }: { children: ReactNode }) {
           <br />
           员工端仅供门店洗护师 / 美容师使用，请改用员工账号登录。
         </p>
+        {/* P3-3：员工身份引导页出口钮同族归色——深棕墨底淡金字（34 号档 §4.11 空态件=深棕钮） */}
         <button
           type="button"
           onClick={() => navigate('/dev-login', { replace: true })}
-          className="mt-6 h-14 min-w-[200px] rounded-full bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="mt-6 h-14 min-w-[200px] rounded-full bg-ink px-8 text-body-sm font-semibold text-brand-primary transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           去切换账号
         </button>

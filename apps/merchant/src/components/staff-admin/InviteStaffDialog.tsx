@@ -13,6 +13,7 @@ import { Copy, Ticket } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { errMsg, fmtDateTime } from './format';
 import { Badge, Btn, Field, inputCls, Modal, numStyle, toast } from './ui';
+import { sf } from '../../copy/staff';
 import type { InviteResult } from './types';
 
 export default function InviteStaffDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -91,7 +92,7 @@ export default function InviteStaffDialog({ open, onClose }: { open: boolean; on
     >
       {!result ? (
         <div className="space-y-4">
-          <Field label="员工花名" hint="邀请成功后将以该花名登记员工档案">
+          <Field label="员工花名" hint={sf('staff.inviteNameHint')}>
             <input
               className={inputCls}
               value={name}
@@ -104,7 +105,7 @@ export default function InviteStaffDialog({ open, onClose }: { open: boolean; on
             />
           </Field>
           <p className="text-caption text-ink-placeholder">
-            员工在员工端登录后输入邀请码即可绑定本店。邀请码 24 小时内有效、仅可使用一次。
+            {sf('staff.inviteGuide')}
           </p>
         </div>
       ) : (
@@ -131,7 +132,7 @@ export default function InviteStaffDialog({ open, onClose }: { open: boolean; on
           <div className="space-y-1 text-caption text-ink-secondary">
             <p>{result.notice}</p>
             <p>有效期至：{fmtDateTime(result.expiresAt)}（24 小时内有效、仅可使用一次）</p>
-            <p className="text-danger-deep">明文仅此一次展示，关闭本弹层后无法再次查看，请立即复制并转交员工。</p>
+            <p className="text-danger-deep">{sf('staff.inviteCodeOnce')}</p>
           </div>
         </div>
       )}

@@ -8,7 +8,7 @@
  *    处置走既有回收登记流程（本批只读展示，设计底稿 §六.2 在案）。
  */
 
-import { usePhiliaClient } from '@philia/shared';
+import { Skeleton, usePhiliaClient } from '@philia/shared';
 import type { inferRouterOutputs } from '@trpc/server';
 import type { AppRouter } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
@@ -17,6 +17,7 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/PageHeader';
 import { pad2 } from '@/components/today/utils';
+import { INVENTORY_COPY } from '@/copy/inventory';
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 type CountTask = RouterOutputs['inventory']['myCountTasks'][number];
@@ -85,7 +86,7 @@ export default function InventoryPage() {
           {tasksQuery.isPending ? (
             <div className="space-y-2.5" aria-label="加载中">
               {[0, 1, 2].map((i) => (
-                <div key={i} className="u1-card h-16 animate-pulse bg-sunken" />
+                <Skeleton key={i} className="u1-card h-16 !rounded-panel" />
               ))}
             </div>
           ) : tasksQuery.isError ? (
@@ -104,7 +105,7 @@ export default function InventoryPage() {
               <span className="flex h-20 w-20 items-center justify-center rounded-full bg-sunken" aria-hidden>
                 <ClipboardCheck className="h-9 w-9 text-ink" strokeWidth={1.5} />
               </span>
-              <p className="mt-4 text-body-sm text-ink-secondary">暂无待办盘点单——店长派单后会出现在这里</p>
+              <p className="mt-4 text-body-sm text-ink-secondary">{INVENTORY_COPY['inventory.tasks.empty']}</p>
             </div>
           ) : (
             <ul>
@@ -141,7 +142,9 @@ export default function InventoryPage() {
             安心包效期（30 天内到期）
           </h2>
           {expiryQuery.isPending ? (
-            <div className="u1-card h-16 animate-pulse bg-sunken" aria-label="加载中" />
+            <div aria-label="加载中">
+              <Skeleton className="u1-card h-16 !rounded-panel" />
+            </div>
           ) : expiryQuery.isError ? (
             <div className="u1-card p-4 text-center">
               <p className="text-body-sm text-ink-secondary">效期信息加载失败，请检查网络后重试</p>
@@ -158,7 +161,7 @@ export default function InventoryPage() {
               <span className="flex h-16 w-16 items-center justify-center rounded-full bg-sunken" aria-hidden>
                 <PackageOpen className="h-7 w-7 text-ink" strokeWidth={1.5} />
               </span>
-              <p className="mt-3 text-body-sm text-ink-secondary">30 天内没有临期安心包，继续保持</p>
+              <p className="mt-3 text-body-sm text-ink-secondary">{INVENTORY_COPY['inventory.expiry.empty']}</p>
             </div>
           ) : (
             <>
@@ -187,7 +190,7 @@ export default function InventoryPage() {
                 })}
               </ul>
               <p className="mt-1 px-1 text-caption-xs text-[rgba(59,46,36,.42)]">
-                临期/过期安心包请走回收登记流程处置，本页仅作提醒（只读）。
+                {INVENTORY_COPY['inventory.expiry.note']}
               </p>
             </>
           )}

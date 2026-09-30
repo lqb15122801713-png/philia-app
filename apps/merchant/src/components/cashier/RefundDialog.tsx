@@ -18,7 +18,8 @@
  *   本层只做入口过滤与预告提示，不做权限判定。
  */
 
-import { usePhiliaClient } from '@philia/shared'
+import { Skeleton, usePhiliaClient } from '@philia/shared'
+import { cc } from '@/copy/cashier'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -274,7 +275,7 @@ export default function RefundDialog({
         {billNo === null ? null : detailQ.isPending ? (
           <div className="space-y-2 py-2">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-8 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
+              <Skeleton key={i} className="h-8" />
             ))}
           </div>
         ) : detailQ.isError || !d || !bill ? (
@@ -298,7 +299,7 @@ export default function RefundDialog({
             {/* 涉储值预告（店长；真闸门在 server，错误原文透出） */}
             {!isOwner && hasStoredValueInvolvement ? (
               <p className="mt-2 rounded-[10px] bg-[#F1E8D4] px-3 py-2 text-caption-xs font-semibold text-[rgba(59,46,36,.75)]">
-                本单涉储值/次卡：退款须店主办理（负债科目不设阈值，server 同口径拦截）
+                {cc('cashier.refundSvNotice')}
               </p>
             ) : null}
 
@@ -371,7 +372,7 @@ export default function RefundDialog({
                   }}
                 />
                 <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
-                  按支付段占比同比例分摊回补（V3）；按金额退不回库存只退钱（口径写死）
+                  {cc('cashier.refundAllocNote')}
                 </p>
               </div>
             ) : null}
@@ -391,7 +392,7 @@ export default function RefundDialog({
                   }}
                 />
                 <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
-                  已发生晚一分不退；已住/剩余晚数与晚单价以六联动预览为准（分段明示）
+                  {cc('cashier.refundBoardingNote')}
                 </p>
               </div>
             ) : null}
@@ -490,7 +491,7 @@ export default function RefundDialog({
                   </div>
                 </div>
                 <p className="text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
-                  折算=剩余付费次数×（实付÷付费总次数），赠次不计价（随退作废）；退卡后卡作废留痕
+                  {cc('cashier.refundPassCancelNote')}
                 </p>
               </div>
             ) : null}
@@ -543,7 +544,7 @@ export default function RefundDialog({
                 <PreviewBlock title="退什么钱 · 支付段分摊回补">
                   {plan.anchorOnly ? (
                     <p className="text-caption-xs text-[rgba(59,46,36,.62)]">
-                      次卡退卡为锚点单口径：金额与原单支付段无关，按下方折算明细落地
+                      {cc('cashier.refundAnchorNote')}
                     </p>
                   ) : plan.segments.length === 0 ? (
                     <p className="text-caption-xs text-[rgba(59,46,36,.62)]">无支付段回补</p>
@@ -565,7 +566,7 @@ export default function RefundDialog({
                 <PreviewBlock title="补什么货 · 库存回补">
                   {plan.stockRestock.length === 0 ? (
                     <p className="text-caption-xs text-[rgba(59,46,36,.62)]">
-                      {plan.type === 'partial_amount' ? '按金额退不回库存只退钱（口径写死）' : '无商品行回补'}
+                      {plan.type === 'partial_amount' ? cc('cashier.refundAmountNoRestock') : cc('cashier.refundNoProductRestock')}
                     </p>
                   ) : (
                     plan.stockRestock.map((s) => (
@@ -664,8 +665,7 @@ export default function RefundDialog({
                 </PreviewBlock>
 
                 <p className="mt-2 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
-                  店长累计上限 <span className="font-number tabular-nums">¥{fenToYuan(plan.thresholdFen)}</span>（按原单累计校验，超阈值/涉储值须店主）·
-                  执行=同事务六联动落账，不可撤销（纠错=再开正单）
+                  店长累计上限 <span className="font-number tabular-nums">¥{fenToYuan(plan.thresholdFen)}</span>（按原单累计校验，超阈值/涉储值须店主）· {cc('cashier.refundExecuteNote')}
                 </p>
               </div>
             ) : null}
@@ -704,8 +704,7 @@ export default function RefundDialog({
         {plan === null ? null : (
           <div>
             <p className="rounded-[10px] bg-danger-light px-3 py-2 text-caption-xs font-semibold text-danger-deep">
-              危险操作：确认即同事务六联动落账（退款单/支付段回补/库存回补/储值次卡回补/财务口径/回馈金列位），
-              executed 后不可撤销，纠错=再开正单。
+              {cc('cashier.refundDangerBody')}
             </p>
             {/* 变更摘要 */}
             <div className="mt-3 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3 text-caption-xs text-[rgba(59,46,36,.62)]">
@@ -726,7 +725,7 @@ export default function RefundDialog({
                 <b className="text-ink">
                   {plan.type === 'pass_cancel'
                     ? REFUND_METHOD_LABEL[refundMethod ?? ''] ?? '—'
-                    : '线下原路（内测期口径，实退标记待登记）'}
+                    : cc('cashier.refundOfflineMethod')}
                 </b>
               </div>
               {plan.segments.length > 0 ? (

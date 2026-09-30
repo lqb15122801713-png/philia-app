@@ -8,6 +8,7 @@
  */
 
 import { WifiOff } from 'lucide-react'
+import { cc } from '@/copy/cashier'
 
 export default function OfflineBar({
   offline,
@@ -36,11 +37,11 @@ export default function OfflineBar({
     >
       <WifiOff size={15} strokeWidth={1.9} aria-hidden />
       {offline ? (
-        <span>离线中 —— 结账将先本地暂存，恢复网络后自动补传</span>
+        <span>{cc('cashier.offlineBar')}</span>
       ) : flushing ? (
-        <span>网络已恢复，正在补传暂存单…</span>
+        <span>{cc('cashier.offlineFlushing')}</span>
       ) : (
-        <span>暂存单待补传</span>
+        <span>{cc('cashier.offlinePending')}</span>
       )}
       {pendingCount > 0 ? (
         <span

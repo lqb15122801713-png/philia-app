@@ -9,7 +9,9 @@
  * 加载中骨架行（禁转圈）。
  */
 
+import { Skeleton } from '@philia/shared'
 import { useNavigate } from 'react-router-dom'
+import { dc } from '@/copy/dashboard'
 import { assignSourceLabel, paymentModeLabel } from '@/components/appointments/appt-utils'
 import type { StepProgress } from '@/components/appointments/useStepProgress'
 import { hhmm, type TodayApptItem } from './utils'
@@ -24,26 +26,6 @@ const CAPSULE: Record<string, { label: string; cls: string }> = {
   completed: { label: '已完成', cls: 'u3-st done' },
   cancel_requested: { label: '取消申请', cls: 'u3-st amber' },
   cancelled: { label: '已取消', cls: 'u3-st done' },
-}
-
-function RowSkeleton() {
-  return (
-    <tr className="animate-pulse">
-      <td>
-        <div className="h-3 w-9 rounded-md bg-[rgba(59,46,36,.08)]" />
-      </td>
-      <td>
-        <div className="h-3 w-32 rounded-md bg-[rgba(59,46,36,.08)]" />
-        <div className="mt-1.5 h-2.5 w-24 rounded-md bg-[rgba(59,46,36,.06)]" />
-      </td>
-      <td>
-        <div className="h-3 w-14 rounded-md bg-[rgba(59,46,36,.08)]" />
-      </td>
-      <td>
-        <div className="h-4 w-12 rounded-md bg-[rgba(59,46,36,.08)]" />
-      </td>
-    </tr>
-  )
 }
 
 export default function TodayTimeline({
@@ -61,23 +43,38 @@ export default function TodayTimeline({
   return (
     <section className="u3-panel">
       <div className="u3-panel-head">
-        <h3>今日预约</h3>
+        <h3>{dc('dash.timelineTitle')}</h3>
         <span className="aside">
           按时间 · <span className="font-number tabular-nums">{items.length}</span> 单
         </span>
       </div>
 
       {loading ? (
+        /* 加载中骨架块（animate-pulse，禁转圈）：表格行 = shared Skeleton 组合 */
         <table className="u3-tbl">
           <tbody>
             {[0, 1, 2, 3].map((i) => (
-              <RowSkeleton key={i} />
+              <tr key={i}>
+                <td>
+                  <Skeleton className="h-3 w-9" />
+                </td>
+                <td>
+                  <Skeleton className="h-3 w-32" />
+                  <Skeleton className="mt-1.5 h-2.5 w-24" />
+                </td>
+                <td>
+                  <Skeleton className="h-3 w-14" />
+                </td>
+                <td>
+                  <Skeleton className="h-4 w-12" />
+                </td>
+              </tr>
             ))}
           </tbody>
         </table>
       ) : items.length === 0 ? (
         <p className="px-[17px] pb-7 pt-3 text-center text-[12px] leading-6 text-[rgba(59,46,36,.62)]">
-          今天还没有预约——把预约页分享给老客，或等自动接单
+          {dc('dash.timelineEmpty')}
         </p>
       ) : (
         <table className="u3-tbl">

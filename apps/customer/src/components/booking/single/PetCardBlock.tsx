@@ -11,6 +11,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PawPrint } from 'lucide-react';
+import { Skeleton } from '@philia/shared';
+import { bkc } from '@/copy/booking';
 import PetPickerFlat from './PetPickerFlat';
 import BottomSheet from './BottomSheet';
 import type { PetItem } from '../types';
@@ -42,7 +44,11 @@ export default function PetCardBlock({
   const [forkDismissed, setForkDismissed] = useState(false);
 
   if (loading) {
-    return <div className="h-20 animate-pulse rounded-card bg-sunken" data-testid="gs-pet-loading" />;
+    return (
+      <div data-testid="gs-pet-loading">
+        <Skeleton className="h-20 rounded-card" />
+      </div>
+    );
   }
 
   /* 无宠物 → 先建档岔路卡（保留现状逻辑；v4.1：去卡片化，CTA 退让为细线+深棕墨文字） */
@@ -53,21 +59,21 @@ export default function PetCardBlock({
         data-testid="gs-no-pet-fork"
       >
         <img src="/brand/empty-appointments-800.png" alt="还没有宠物档案" className="w-40 max-w-full rounded-card" />
-        <p className="mt-3 text-title">还没有宠物档案</p>
-        <p className="mt-1 text-caption text-ink-secondary">预约前需要先为毛孩子建立档案</p>
+        <p className="mt-3 text-title">{bkc('booking.noPetTitle')}</p>
+        <p className="mt-1 text-caption text-ink-secondary">{bkc('booking.noPetBodyWizard')}</p>
         <button
           type="button"
           onClick={() => navigate('/philia/pets')}
           className="mt-4 flex h-11 items-center rounded-card border-[1.5px] border-ink px-8 text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
         >
-          先建立宠物档案
+          {bkc('booking.noPetCta')}
         </button>
         <button
           type="button"
           onClick={() => setForkDismissed(true)}
           className="mt-3 text-caption text-ink-secondary underline-offset-2 hover:underline"
         >
-          随便看看
+          {bkc('booking.noPetSkip')}
         </button>
       </div>
     );
@@ -118,8 +124,8 @@ export default function PetCardBlock({
               <PawPrint className="h-6 w-6 text-ink-secondary" strokeWidth={1.5} />
             </span>
             <span className="flex-1">
-              <span className="block text-body font-semibold text-ink-secondary">请选择宠物</span>
-              <span className="mt-0.5 block text-caption text-ink-placeholder">{pickerHint ?? '点按选择要洗护的毛孩子'}</span>
+              <span className="block text-body font-semibold text-ink-secondary">{bkc('booking.choosePet')}</span>
+              <span className="mt-0.5 block text-caption text-ink-placeholder">{pickerHint ?? bkc('booking.petPickHintGrooming')}</span>
             </span>
             <span className="border-b border-brand-secondary pb-px text-caption font-medium text-ink">选择 ▸</span>
           </>

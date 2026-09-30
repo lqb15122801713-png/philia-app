@@ -7,6 +7,7 @@
  */
 
 import { fmtDateTime, fenToYuan } from '@/components/mall-admin/format'
+import { cc } from '@/copy/cashier'
 import { CashierModal, SheetBtn } from './dialogs'
 import { PAY_METHOD_LABEL } from './model'
 import {
@@ -190,7 +191,7 @@ export default function RefundDetailDialog({
             </div>
           </div>
         ) : (
-          <p className="mt-3 text-caption-xs text-[rgba(59,46,36,.42)]">草稿单未执行，无六联动快照</p>
+          <p className="mt-3 text-caption-xs text-[rgba(59,46,36,.42)]">{cc('cashier.refundDraftEmpty')}</p>
         )}
       </div>
     </CashierModal>

@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react';
 import { errMsg } from './format';
 import { DAY_KEYS, DAY_LABEL, type DayKey, type StaffRow, type TimeRange } from './types';
 import { Btn, Modal, Switch, toast } from './ui';
+import { sf } from '../../copy/staff';
 
 interface DayEdit {
   off: boolean;
@@ -183,7 +184,7 @@ export default function ScheduleEditorDialog({
           );
         })}
         {error ? <p className="text-caption text-danger-deep">{error}</p> : null}
-        <p className="text-caption text-ink-placeholder">每天最多 {MAX_RANGES} 个时段；设为「休息」的当天不排班。</p>
+        <p className="text-caption text-ink-placeholder">{sf('staff.scheduleNote', { n: MAX_RANGES })}</p>
       </div>
     </Modal>
   );
