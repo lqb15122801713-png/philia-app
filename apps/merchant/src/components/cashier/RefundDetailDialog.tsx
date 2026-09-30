@@ -106,14 +106,14 @@ export default function RefundDetailDialog({
 
         {/* 六联动快照（linkage_json；draft 无快照） */}
         {link ? (
-          <div className="mt-3 rounded-[14px] bg-[#F6F1E3] px-3.5 py-3" data-testid="refund-detail-linkage">
-            <div className="mb-1 text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">六联动快照</div>
+          <div className="mt-3 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3" data-testid="refund-detail-linkage">
+            <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">六联动快照</div>
 
             {link.segments && link.segments.length > 0 ? (
               <div className="mb-1.5">
                 {link.segments.map((s, i) => (
                   <div key={s.paymentId ?? i} className="flex items-center justify-between py-0.5 text-caption-xs">
-                    <span className="text-[rgba(74,59,46,.62)]">
+                    <span className="text-[rgba(59,46,36,.62)]">
                       {PAY_METHOD_LABEL[s.method] ?? s.method}
                       {s.ratioBp > 0 ? <span className="ml-1.5 font-number tabular-nums">占比 {bpText(s.ratioBp)}</span> : null}
                       <span className="ml-1.5">{SEG_CHANNEL_LABEL[s.channel] ?? s.channel}</span>
@@ -125,12 +125,12 @@ export default function RefundDetailDialog({
             ) : null}
 
             {link.items && link.items.length > 0 ? (
-              <div className="mb-1.5 border-t border-dashed border-[rgba(74,59,46,.12)] pt-1.5">
+              <div className="mb-1.5 border-t border-dashed border-[rgba(59,46,36,.12)] pt-1.5">
                 {link.items.map((it, i) => (
                   <div key={it.billItemId ?? i} className="flex justify-between py-0.5 text-caption-xs">
-                    <span className="text-[rgba(74,59,46,.62)]">
+                    <span className="text-[rgba(59,46,36,.62)]">
                       {it.name}
-                      {it.qty != null ? ` ×${it.qty}` : ''}
+                      {it.qty != null ? <span className="font-number tabular-nums">{` ×${it.qty}`}</span> : null}
                       {it.apportioned ? '（按行分摊）' : ''}
                     </span>
                     <b className="font-number tabular-nums text-ink">¥{fenToYuan(it.amountFen)}</b>
@@ -140,33 +140,33 @@ export default function RefundDetailDialog({
             ) : null}
 
             {link.stockRestock && link.stockRestock.length > 0 ? (
-              <div className="mb-1.5 border-t border-dashed border-[rgba(74,59,46,.12)] pt-1.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+              <div className="mb-1.5 border-t border-dashed border-[rgba(59,46,36,.12)] pt-1.5 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]">
                 库存回补：{link.stockRestock.map((s) => `${s.name} +${s.qty}`).join(' · ')}
               </div>
             ) : null}
 
             {link.appointmentReverts && link.appointmentReverts.length > 0 ? (
-              <div className="mb-1.5 border-t border-dashed border-[rgba(74,59,46,.12)] pt-1.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+              <div className="mb-1.5 border-t border-dashed border-[rgba(59,46,36,.12)] pt-1.5 text-caption-xs text-[rgba(59,46,36,.62)]">
                 预约行回待收款：{link.appointmentReverts.map((a) => a.name).join(' · ')}
               </div>
             ) : null}
 
             {link.boarding ? (
-              <div className="mb-1.5 border-t border-dashed border-[rgba(74,59,46,.12)] pt-1.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+              <div className="mb-1.5 border-t border-dashed border-[rgba(59,46,36,.12)] pt-1.5 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]">
                 寄养：已住 {link.boarding.occurredNights} 晚不退 / 退 {link.boarding.nights} 晚 × 晚单价 ¥
                 {fenToYuan(link.boarding.perNightFen)}
               </div>
             ) : null}
 
             {link.passCancel ? (
-              <div className="mb-1.5 border-t border-dashed border-[rgba(74,59,46,.12)] pt-1.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+              <div className="mb-1.5 border-t border-dashed border-[rgba(59,46,36,.12)] pt-1.5 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]">
                 次卡退卡：实付 ¥{fenToYuan(link.passCancel.paidFen)} ÷ {link.passCancel.paidTimes} 次 × 剩余付费{' '}
                 {link.passCancel.remainingPaidTimes} 次；赠次 {link.passCancel.giftVoided} 次随退作废（不计价）；
                 退卡前剩余 {link.passCancel.remainTimesBefore} 次
               </div>
             ) : null}
 
-            <div className="border-t border-dashed border-[rgba(74,59,46,.12)] pt-1.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+            <div className="border-t border-dashed border-[rgba(59,46,36,.12)] pt-1.5 text-caption-xs text-[rgba(59,46,36,.62)]">
               {(link.storedValueRestoreFen ?? 0) > 0 ? (
                 <div className="flex justify-between py-0.5">
                   <span>储值余额回补</span>
@@ -190,7 +190,7 @@ export default function RefundDetailDialog({
             </div>
           </div>
         ) : (
-          <p className="mt-3 text-caption-xs text-[rgba(74,59,46,.42)]">草稿单未执行，无六联动快照</p>
+          <p className="mt-3 text-caption-xs text-[rgba(59,46,36,.42)]">草稿单未执行，无六联动快照</p>
         )}
       </div>
     </CashierModal>

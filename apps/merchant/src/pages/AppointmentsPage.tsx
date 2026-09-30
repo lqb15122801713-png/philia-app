@@ -11,8 +11,8 @@
  *   取消申请 = cancel_requested、寄养 = type boarding）。状态档点击 = 前端过滤
  *   （查询参数不变）；「日期 ›」就地展开原生 input[type=date]，选日才改 from/to
  *   （当日 0 点区间）。选中非今天时「今天」chip 不再 on。
- * - 表（u3-panel + u3-tbl）：时间(Montserrat)｜宠物+客户(昵称·尾号)｜服务｜员工+来源
- *   小签｜金额(tabular)｜状态胶囊(u3-st)｜›；tr.rowlink 点击进 /appointments/:id。
+ * - 表（u3-panel + u3-tbl）：时间(mono)｜宠物+客户(昵称·尾号)｜服务｜员工+来源
+ *   小签｜金额(mono 右对齐分组)｜状态胶囊(u3-st)｜›；tr.rowlink 点击进 /appointments/:id。
  *   列表纯读——S4 起确认/婉拒链路在详情页，行内按钮与 month 日历查询随批删除
  *   （CalendarView 已 git rm，日历视图=明确不做）。空态=「这一天没有预约」。
  * - 深链：?status=cancel_requested|pending|… 初始化状态档（总览待办行会跳）；
@@ -234,7 +234,7 @@ export default function AppointmentsPage() {
         <th>宠物 / 客户</th>
         <th>服务</th>
         <th>员工</th>
-        <th>金额</th>
+        <th className="text-right">金额</th>
         <th>状态</th>
         <th aria-label="详情" />
       </tr>
@@ -287,7 +287,7 @@ export default function AppointmentsPage() {
                     {[38, 120, 72, 88, 52, 76, 12].map((w, c) => (
                       <td key={c}>
                         <div
-                          className="h-3 animate-pulse rounded-[6px] bg-[rgba(74,59,46,.08)]"
+                          className="h-3 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.08)]"
                           style={{ width: w }}
                         />
                       </td>
@@ -317,7 +317,7 @@ export default function AppointmentsPage() {
               <tbody>
                 {visible.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-16 text-center text-[rgba(74,59,46,.42)]">
+                    <td colSpan={7} className="py-16 text-center text-[rgba(59,46,36,.42)]">
                       这一天没有预约
                     </td>
                   </tr>

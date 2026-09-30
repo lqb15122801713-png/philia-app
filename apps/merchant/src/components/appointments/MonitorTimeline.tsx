@@ -2,8 +2,8 @@
  * 单约监控 · 六步进度（U3 任务 N · 规格书 §13 · 母本 754-814 行右栏）。
  *
  * 由 T4.2 的「共享 StepTimeline 视觉 + 行内打标钮」改为 U3 本地档 u3-stepv
- * 竖向步进（index.css 同义类：薄荷 done 圆点 / 柠檬 now 圆点 / 墨灰未到描边点，
- * 2px 墨灰连接线），行内容：
+ * 竖向步进（index.css 同义类：done 深棕墨圆点 / now 淡黄圆点 / future 纸面点，
+ * 2px 墨灰连接线；future 点本组件补卡其描边 #B9A482，三态同客户端七节点），行内容：
  * - done：HH:MM · N 张；
  * - now：进行中 · X/Y 张（Y=maxPhotos，confirm 步 0-0 不显示张数）；
  * - 未到：「未到」；confirm 步补「完成后家长收到通知」；
@@ -66,12 +66,17 @@ export function MonitorTimeline({ steps }: { steps: StepListItem[] }) {
         const name = stepDisplayName(step.stepKey); // §13 同 §4 stepper 冻结口径
         return (
           <div key={step.id} className={`row ${rowCls}`}>
-            <i className="dt" />
+            <i
+              className="dt"
+              style={
+                rowCls === '' ? { boxShadow: '0 0 0 1px #B9A482' } : undefined
+              }
+            />
             <div className="tx">
               <b>{name}</b>
-              <small>{subLine(step)}</small>
+              <small className="font-number tabular-nums">{subLine(step)}</small>
               {step.flagged ? (
-                <small className="font-semibold text-[#D92D20]">已打标，等待重拍</small>
+                <small className="font-semibold text-[#B4502E]">已打标，等待重拍</small>
               ) : null}
             </div>
           </div>

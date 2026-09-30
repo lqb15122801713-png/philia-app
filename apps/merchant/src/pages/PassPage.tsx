@@ -7,9 +7,9 @@
  * - pass.listCustomers：可充次客户下拉（本店有预约或已持本店卡，服务端同口径校验）；
  * - pass.listLogs：扣次（-1）/ 回补（+1）/ 充次（+N）流水，倒序，上限 100。
  *
- * 结构：MainScaffold（title 会员 · 次卡 / sub 含冻结决策 15 原文 / 柠檬钮「＋ 售卡」）
+ * 结构：MainScaffold（title 会员 · 次卡 / sub 含冻结决策 15 原文 / 主钮「＋ 售卡」）
  * → 两栏（试样 .two-col 1.7fr:1fr）：左=在效次卡表（u3-panel + u3-tbl，按剩余次数排序），
- * 右=扣次流水（u3-todo 工艺：−1 薄荷点 / 正数木点 #D4B896）。
+ * 右=扣次流水（u3-todo 工艺：−1 深墨点 / 正数木点 #B9A482）。
  *
  * 操作（真实链路保留）：
  * - 「售卡 / 充次」→ TopUpDialog 选客户 + 次数 → pass.topUp（无卡建卡/有卡加次，
@@ -50,9 +50,9 @@ type LogRow = {
   appointmentCode: string | null;
 };
 
-/** 薄荷（扣次 −1）/ 浅木（回补 +1、充次 +N）——试样 todo-row 色点口径 */
-const DOT_MINT = '#7FD8BE';
-const DOT_WOOD = '#D4B896';
+/** 深墨（扣次 −1）/ 浅木（回补 +1、充次 +N）——试样 todo-row 色点口径（薄荷绿清场） */
+const DOT_INK = '#2E2318';
+const DOT_WOOD = '#B9A482';
 
 const pad2 = (n: number): string => String(n).padStart(2, '0');
 /** 有效期至：YYYY-MM-DD（Montserrat tabular；null=长期有效） */
@@ -189,12 +189,12 @@ function LogsModal({ pass, onClose }: { pass: PassRow | null; onClose: () => voi
             <div key={l.id} className="flex items-center gap-2.5 rounded-input bg-canvas px-3 py-2.5">
               <i
                 className="h-2 w-2 flex-none rounded-full"
-                style={{ background: l.delta === -1 ? DOT_MINT : DOT_WOOD }}
+                style={{ background: l.delta === -1 ? DOT_INK : DOT_WOOD }}
               />
               <div className="flex-1">
                 <span className="text-caption font-semibold text-ink">{logReason(l)}</span>
                 {l.appointmentCode ? (
-                  <span className="ml-2 text-caption text-ink-secondary">预约单 {l.appointmentCode}</span>
+                  <span className="ml-2 font-number text-caption tabular-nums text-ink-secondary">预约单 {l.appointmentCode}</span>
                 ) : null}
                 <span className="ml-2 block text-caption text-ink-placeholder sm:inline" style={numStyle}>
                   {fmtDateTime(l.createdAt)}
@@ -273,15 +273,15 @@ export default function PassPage() {
           {passesQ.isPending ? (
             <div className="space-y-2 px-[17px] pb-4">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-9 animate-pulse rounded-[6px] bg-[rgba(74,59,46,.06)]" />
+                <div key={i} className="h-9 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
               ))}
             </div>
           ) : passesQ.isError ? (
-            <p className="px-[17px] pb-5 pt-2 text-xs text-[rgba(74,59,46,.62)]">
+            <p className="px-[17px] pb-5 pt-2 text-xs text-[rgba(59,46,36,.62)]">
               次卡列表加载失败：{errMsg(passesQ.error)}
             </p>
           ) : passes.length === 0 ? (
-            <p className="px-[17px] pb-8 pt-3 text-center text-xs text-[rgba(74,59,46,.62)]">
+            <p className="px-[17px] pb-8 pt-3 text-center text-xs text-[rgba(59,46,36,.62)]">
               还没有客户买次卡——洗护 10 次卡是老客最爱
             </p>
           ) : (
@@ -290,7 +290,7 @@ export default function PassPage() {
                 <tr>
                   <th>客户</th>
                   <th>卡种</th>
-                  <th>剩余</th>
+                  <th className="text-right">剩余</th>
                   <th>有效期至</th>
                   <th>状态</th>
                   <th>操作</th>
@@ -304,22 +304,22 @@ export default function PassPage() {
                       <td>
                         <span className="font-bold text-ink">{p.customerNickname ?? '未命名'}</span>
                         {p.customerPhone ? (
-                          <div className="mt-0.5 font-number text-[11px] tabular-nums text-[rgba(74,59,46,.42)]">
+                          <div className="mt-0.5 font-number text-[11px] tabular-nums text-[rgba(59,46,36,.42)]">
                             尾号 {p.customerPhone.slice(-4)}
                           </div>
                         ) : null}
                       </td>
-                      <td className="text-[rgba(74,59,46,.62)]">
+                      <td className="text-[rgba(59,46,36,.62)]">
                         次卡
                         <span className="ml-1 font-number tabular-nums">共 {p.totalTimes} 次</span>
                       </td>
-                      <td>
+                      <td className="whitespace-nowrap text-right">
                         <span className="font-number text-sm font-bold tabular-nums text-ink">
                           {p.remainTimes}
                         </span>
-                        <span className="ml-0.5 text-[11px] text-[rgba(74,59,46,.42)]">次</span>
+                        <span className="ml-0.5 text-[11px] text-[rgba(59,46,36,.42)]">次</span>
                       </td>
-                      <td className="font-number tabular-nums text-[rgba(74,59,46,.62)]">
+                      <td className="whitespace-nowrap font-number tabular-nums text-[rgba(59,46,36,.62)]">
                         {isoDate(p.expiresAt)}
                       </td>
                       <td>
@@ -339,7 +339,7 @@ export default function PassPage() {
                             type="button"
                             data-testid={`pass-logs-${p.id}`}
                             onClick={() => setLogsFor(p)}
-                            className="text-[11px] font-semibold text-[rgba(74,59,46,.62)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+                            className="text-[11px] font-semibold text-[rgba(59,46,36,.62)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
                           >
                             记录
                           </button>
@@ -362,15 +362,15 @@ export default function PassPage() {
           {logsQ.isPending ? (
             <div className="space-y-2 px-[17px] pb-4">
               {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-9 animate-pulse rounded-[6px] bg-[rgba(74,59,46,.06)]" />
+                <div key={i} className="h-9 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
               ))}
             </div>
           ) : logsQ.isError ? (
-            <p className="px-[17px] pb-5 pt-2 text-xs text-[rgba(74,59,46,.62)]">
+            <p className="px-[17px] pb-5 pt-2 text-xs text-[rgba(59,46,36,.62)]">
               流水加载失败：{errMsg(logsQ.error)}
             </p>
           ) : logs.length === 0 ? (
-            <p className="px-[17px] pb-8 pt-3 text-center text-xs text-[rgba(74,59,46,.62)]">
+            <p className="px-[17px] pb-8 pt-3 text-center text-xs text-[rgba(59,46,36,.62)]">
               暂无扣次流水——预约扣次、取消/拒单回补、售卡充次都会记在这里
             </p>
           ) : (
@@ -379,11 +379,11 @@ export default function PassPage() {
                 <div key={l.id} className="u3-todo">
                   <i
                     className="dot"
-                    style={{ background: l.delta === -1 ? DOT_MINT : DOT_WOOD }}
+                    style={{ background: l.delta === -1 ? DOT_INK : DOT_WOOD }}
                   />
                   <div className="tx">
                     {l.customerNickname ?? '客户'} · {logReason(l)}
-                    <small>
+                    <small className="font-number tabular-nums">
                       {fmtDateTime(l.createdAt)}
                       {l.appointmentCode ? ` · 预约单 ${l.appointmentCode}` : ''}
                     </small>

@@ -634,7 +634,7 @@ export default function CashierPage() {
       {/* 标题行（页边距 16，对齐试样拼装规则） */}
       <header className="mb-4">
         <h1 className="text-title-lg font-bold leading-7">收银台</h1>
-        <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+        <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
           {fullDateLabel(now)}
           {/* M1-补2 R1：今日已收=统一聚合出口（同源三处同数）；clerk 隐藏整个金额块 */}
           {tender ? (
@@ -650,16 +650,16 @@ export default function CashierPage() {
         </div>
         {/* 分列小字：现金类三分列（计入已收）+ 参考列（次卡/储值，永不计入——裁定①） */}
         {tender?.tender ? (
-          <div className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.42)]" data-testid="cashier-today-tender-split">
-            现金 <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(tender.tender.cashFen)}</b>
+          <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="cashier-today-tender-split">
+            现金 <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(tender.tender.cashFen)}</b>
             {' · 微信 '}
-            <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(tender.tender.wechatFen)}</b>
+            <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(tender.tender.wechatFen)}</b>
             {' · 支付宝 '}
-            <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(tender.tender.alipayFen)}</b>
-            <span className="mx-1.5 text-[rgba(74,59,46,.2)]">｜</span>
-            参考（不计入已收）：次卡 <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(tender.tender.passFen)}</b>
+            <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(tender.tender.alipayFen)}</b>
+            <span className="mx-1.5 text-[rgba(59,46,36,.2)]">｜</span>
+            参考（不计入已收）：次卡 <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(tender.tender.passFen)}</b>
             {' · 储值 '}
-            <b className="font-number tabular-nums text-[rgba(74,59,46,.62)]">¥{fenToYuan(tender.tender.storedValueFen)}</b>
+            <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(tender.tender.storedValueFen)}</b>
           </div>
         ) : null}
       </header>
@@ -683,7 +683,7 @@ export default function CashierPage() {
             data-testid={`cashier-mtab-${t.key}`}
             onClick={() => setMobileTab(t.key)}
             className={`rounded-full px-3.5 py-[7px] text-caption ${
-              mobileTab === t.key ? 'bg-[#4A3B2E] font-semibold text-[#F6F1E3]' : 'text-[rgba(74,59,46,.6)]'
+              mobileTab === t.key ? 'bg-[#3B2E24] font-semibold text-[#FAF8F2]' : 'text-[rgba(59,46,36,.6)]'
             }`}
           >
             {t.label}
@@ -695,7 +695,7 @@ export default function CashierPage() {
       <div className="lg:grid lg:grid-cols-[1fr_380px_260px] lg:items-start lg:gap-4">
         {/* 左栏：开单区（P1 会员检索 + tabs/P2 选品） */}
         <section className={`flex-col gap-3 ${mobileTab === 'pick' ? 'flex' : 'hidden'} lg:flex`}>
-          <div className="rounded-[20px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(74,59,46,.09)]">
+          <div className="rounded-[20px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(59,46,36,.09)]">
             <MemberSearch
               member={member}
               membership={cachedMembership}
@@ -712,7 +712,7 @@ export default function CashierPage() {
               onOpenSell={openSell}
             />
           </div>
-          <div className="rounded-[20px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(74,59,46,.09)]">
+          <div className="rounded-[20px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(59,46,36,.09)]">
             <PickPanel
               tab={pickTab}
               onTab={setPickTab}
@@ -732,7 +732,7 @@ export default function CashierPage() {
 
         {/* 中栏：购物车（380px） */}
         <section className={`${mobileTab === 'cart' ? 'block' : 'hidden'} lg:block`}>
-          <div className="flex min-h-[320px] flex-col rounded-[20px] bg-[#FFFDF6] p-4 shadow-[0_0_0_1px_rgba(74,59,46,.09)] lg:h-full">
+          <div className="flex min-h-[320px] flex-col rounded-[20px] bg-[#FFFDF6] p-4 shadow-[0_0_0_1px_rgba(59,46,36,.09)] lg:h-full">
             <CartPanel
               lines={lines}
               memberBound={member !== null}

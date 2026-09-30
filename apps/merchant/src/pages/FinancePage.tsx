@@ -324,26 +324,26 @@ export default function FinancePage() {
           <div className="grid grid-cols-3 gap-3.5">
             {[0, 1, 2].map((i) => (
               <div key={i} className="u3-stat animate-pulse">
-                <div className="h-3 w-16 rounded-chip bg-[rgba(74,59,46,.08)]" />
-                <div className="mt-3 h-7 w-24 rounded-chip bg-[rgba(74,59,46,.08)]" />
-                <div className="mt-2.5 h-3 w-32 rounded-chip bg-[rgba(74,59,46,.06)]" />
+                <div className="h-3 w-16 rounded-chip bg-[rgba(59,46,36,.08)]" />
+                <div className="mt-3 h-7 w-24 rounded-chip bg-[rgba(59,46,36,.08)]" />
+                <div className="mt-2.5 h-3 w-32 rounded-chip bg-[rgba(59,46,36,.06)]" />
               </div>
             ))}
           </div>
           <div className="u3-panel mt-3.5 animate-pulse">
             <div className="u3-panel-head">
-              <div className="h-4 w-20 rounded-chip bg-[rgba(74,59,46,.08)]" />
+              <div className="h-4 w-20 rounded-chip bg-[rgba(59,46,36,.08)]" />
             </div>
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="border-t border-[rgba(74,59,46,.06)] px-[17px] py-3.5">
-                <div className="h-3 w-full rounded-chip bg-[rgba(74,59,46,.06)]" />
+              <div key={i} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3.5">
+                <div className="h-3 w-full rounded-chip bg-[rgba(59,46,36,.06)]" />
               </div>
             ))}
           </div>
         </div>
       ) : statsQuery.isError ? (
         <div className="u3-panel px-[17px] py-12 text-center">
-          <p className="text-body-sm text-[rgba(74,59,46,.62)]">财务数据加载失败，请检查网络后重试</p>
+          <p className="text-body-sm text-[rgba(59,46,36,.62)]">财务数据加载失败，请检查网络后重试</p>
           <div className="mt-4">
             <QuietButton onClick={() => void statsQuery.refetch()}>重新加载</QuietButton>
           </div>
@@ -357,19 +357,19 @@ export default function FinancePage() {
               <div className="v" data-testid="finance-received-card">
                 ¥{receivedCard ? formatYuan(receivedCard.fen) : '…'}
               </div>
-              <div className="d" data-testid="finance-received-count">
+              <div className="d u1-num" data-testid="finance-received-count">
                 {receivedCard?.caption ?? ''}
               </div>
             </div>
             <div className="u3-stat">
               <div className="cap">待收款</div>
               <div className="v">¥{formatYuan(data.totals.pendingPaymentFen)}</div>
-              <div className="d">{pendingBrief}</div>
+              <div className="d u1-num">{pendingBrief}</div>
             </div>
             <div className="u3-stat">
               <div className="cap">次卡扣次（非现金）</div>
               <div className="v u1-num">{deductCount}</div>
-              <div className="d">
+              <div className="d u1-num">
                 {mode === 'day' ? '今日' : '期内'}扣次 <b className="u1-num">{deductCount}</b> 次 · 不计入营业额
               </div>
             </div>
@@ -390,8 +390,8 @@ export default function FinancePage() {
                   {refundDayQ.data.totalFen > 0 ? `−¥${formatYuan(refundDayQ.data.totalFen)}` : '¥0'}
                 </b>
               </span>
-              <span className="text-[rgba(74,59,46,.42)]">｜</span>
-              <span className="text-[rgba(74,59,46,.62)]">
+              <span className="text-[rgba(59,46,36,.42)]">｜</span>
+              <span className="text-[rgba(59,46,36,.62)]">
                 当日净额=已收−退款：
                 <b className="u1-num text-ink">
                   ¥{todayReceivedFen !== null ? formatYuan(todayReceivedFen) : '…'} − ¥
@@ -401,7 +401,7 @@ export default function FinancePage() {
                     : '…'}
                 </b>
               </span>
-              <span className="text-caption-xs text-[rgba(74,59,46,.42)]">
+              <span className="text-caption-xs text-[rgba(59,46,36,.42)]">
                 （现金段净额=现金已收−现金退款，现金退款 ¥{formatYuan(refundDayQ.data.segments.cashFen)} 详见日结页；
                 跨日退款计入发生日，历史封箱不回填）
               </span>
@@ -415,7 +415,7 @@ export default function FinancePage() {
               <span className="aside">按时间倒序</span>
             </div>
             {ledgerRows.length === 0 ? (
-              <div className="border-t border-[rgba(74,59,46,.06)] px-[17px] py-12 text-center text-body-sm text-[rgba(74,59,46,.62)]">
+              <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center text-body-sm text-[rgba(59,46,36,.62)]">
                 {MODE_LABEL[mode]}还没有收款
               </div>
             ) : (
@@ -426,7 +426,7 @@ export default function FinancePage() {
                     <th>项目</th>
                     <th>客户</th>
                     <th>方式</th>
-                    <th>金额</th>
+                    <th className="text-right">金额</th>
                     <th>状态</th>
                     <th aria-label="操作" />
                   </tr>
@@ -445,8 +445,8 @@ export default function FinancePage() {
                         {r.item}
                       </td>
                       <td>{r.customer}</td>
-                      <td className="text-[rgba(74,59,46,.62)]">{r.modeLabel}</td>
-                      <td className="u1-num">¥{formatYuan(r.fen)}</td>
+                      <td className="text-[rgba(59,46,36,.62)]">{r.modeLabel}</td>
+                      <td className="u1-num whitespace-nowrap text-right font-bold">¥{formatYuan(r.fen)}</td>
                       <td>
                         {r.pending ? (
                           <span className="u3-st amber">待收</span>

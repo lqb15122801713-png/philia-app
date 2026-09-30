@@ -41,11 +41,11 @@ const TYPE_ORDER: RefundType[] = ['full', 'partial_items', 'partial_amount', 'bo
 
 const typeTabCls = (on: boolean) =>
   `min-h-[44px] rounded-full px-3.5 py-2 text-caption transition-transform duration-120 ease-philia-spring active:scale-[0.97] ${
-    on ? 'bg-[#4A3B2E] font-semibold text-[#F6F1E3]' : 'bg-[#F6F1E3] text-[rgba(74,59,46,.6)]'
+    on ? 'bg-[#3B2E24] font-semibold text-[#FAF8F2]' : 'bg-[#FAF8F2] text-[rgba(59,46,36,.6)]'
   }`
 
 const paramInputCls =
-  'w-full rounded-[14px] bg-[#FFFDF6] px-3 py-2 font-number text-body-sm font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(74,59,46,.12)] placeholder:font-sans placeholder:font-normal placeholder:text-[rgba(74,59,46,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(74,59,46,.3)]'
+  'w-full rounded-[14px] bg-[#FFFDF6] px-3 py-2 font-number text-body-sm font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:font-sans placeholder:font-normal placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]'
 
 /** 占比 bp → 展示串（6000 → 60%） */
 const bpText = (bp: number): string => `${(bp / 100).toFixed(bp % 100 === 0 ? 0 : 1)}%`
@@ -274,19 +274,19 @@ export default function RefundDialog({
         {billNo === null ? null : detailQ.isPending ? (
           <div className="space-y-2 py-2">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-8 animate-pulse rounded-[6px] bg-[rgba(74,59,46,.06)]" />
+              <div key={i} className="h-8 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
             ))}
           </div>
         ) : detailQ.isError || !d || !bill ? (
-          <p className="py-6 text-center text-caption text-[rgba(74,59,46,.62)]">
+          <p className="py-6 text-center text-caption text-[rgba(59,46,36,.62)]">
             原单加载失败{detailQ.isError ? `：${errMsg(detailQ.error)}` : ''}
           </p>
         ) : (
           <div>
             {/* 原单卡 */}
-            <div className="rounded-[14px] bg-[#F6F1E3] px-3.5 py-3">
+            <div className="rounded-[14px] bg-[#FAF8F2] px-3.5 py-3">
               <div className="font-number text-caption font-semibold tabular-nums">{bill.billNo}</div>
-              <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">
+              <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
                 {d.buyerName}
                 {' · 实收 '}
                 <span className="font-number tabular-nums">¥{fenToYuan(bill.paidFen)}</span>
@@ -297,13 +297,13 @@ export default function RefundDialog({
 
             {/* 涉储值预告（店长；真闸门在 server，错误原文透出） */}
             {!isOwner && hasStoredValueInvolvement ? (
-              <p className="mt-2 rounded-[10px] bg-[#F1E8D4] px-3 py-2 text-caption-xs font-semibold text-[rgba(74,59,46,.75)]">
+              <p className="mt-2 rounded-[10px] bg-[#F1E8D4] px-3 py-2 text-caption-xs font-semibold text-[rgba(59,46,36,.75)]">
                 本单涉储值/次卡：退款须店主办理（负债科目不设阈值，server 同口径拦截）
               </p>
             ) : null}
 
             {/* ① 选类型（按原单内容过滤） */}
-            <div className="mt-3 text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">退款类型</div>
+            <div className="mt-3 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">退款类型</div>
             <div className="mt-1.5 flex flex-wrap gap-1.5" role="tablist">
               {availTypes.map((t) => (
                 <button
@@ -326,23 +326,23 @@ export default function RefundDialog({
             {/* ② 按类型收集参数 */}
             {type === 'partial_items' ? (
               <div className="mt-3">
-                <div className="text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">勾选退款行</div>
-                <div className="mt-1.5 rounded-[14px] bg-[#F6F1E3] px-3.5 py-1">
+                <div className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">勾选退款行</div>
+                <div className="mt-1.5 rounded-[14px] bg-[#FAF8F2] px-3.5 py-1">
                   {items.map((it) => (
                     <label
                       key={it.id}
                       data-testid={`refund-item-${it.id}`}
-                      className="flex min-h-[44px] cursor-pointer items-center gap-2.5 border-b border-dashed border-[rgba(74,59,46,.09)] py-2 last:border-b-0"
+                      className="flex min-h-[44px] cursor-pointer items-center gap-2.5 border-b border-dashed border-[rgba(59,46,36,.09)] py-2 last:border-b-0"
                     >
                       <input
                         type="checkbox"
-                        className="h-[18px] w-[18px] accent-[#4A3B2E]"
+                        className="h-[18px] w-[18px] accent-[#3B2E24]"
                         checked={itemIds.has(it.id)}
                         onChange={() => toggleItem(it.id)}
                       />
                       <span className="min-w-0 flex-1 text-caption font-semibold">
                         {it.nameSnapshot}
-                        <span className="ml-1.5 font-normal text-[rgba(74,59,46,.42)]">
+                        <span className="ml-1.5 font-number font-normal tabular-nums text-[rgba(59,46,36,.42)]">
                           {it.kind === 'appointment' ? '预约行' : it.kind === 'service' ? '服务' : '商品'} · ×{it.qty}
                           {it.paidByPass ? ' · 扣次行' : ''}
                         </span>
@@ -358,7 +358,7 @@ export default function RefundDialog({
 
             {type === 'partial_amount' ? (
               <div className="mt-3">
-                <div className="text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">退款金额（元）</div>
+                <div className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">退款金额（元）</div>
                 <input
                   className={`${paramInputCls} mt-1.5`}
                   data-testid="refund-amount-input"
@@ -370,7 +370,7 @@ export default function RefundDialog({
                     touch()
                   }}
                 />
-                <p className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]">
+                <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
                   按支付段占比同比例分摊回补（V3）；按金额退不回库存只退钱（口径写死）
                 </p>
               </div>
@@ -378,7 +378,7 @@ export default function RefundDialog({
 
             {type === 'boarding_nights' ? (
               <div className="mt-3">
-                <div className="text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">退晚数</div>
+                <div className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">退晚数</div>
                 <input
                   className={`${paramInputCls} mt-1.5`}
                   data-testid="refund-nights-input"
@@ -390,7 +390,7 @@ export default function RefundDialog({
                     touch()
                   }}
                 />
-                <p className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]">
+                <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
                   已发生晚一分不退；已住/剩余晚数与晚单价以六联动预览为准（分段明示）
                 </p>
               </div>
@@ -399,9 +399,9 @@ export default function RefundDialog({
             {type === 'pass_cancel' ? (
               <div className="mt-3 space-y-2.5">
                 <div>
-                  <div className="text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">退卡次卡（该单客户名下 active 卡）</div>
+                  <div className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">退卡次卡（该单客户名下 active 卡）</div>
                   {passQ.isPending ? (
-                    <p className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]">次卡加载中…</p>
+                    <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">次卡加载中…</p>
                   ) : passOptions.length === 0 ? (
                     <p className="mt-1.5 text-caption-xs font-semibold text-danger-deep">
                       该客户名下无可退的 active 次卡
@@ -428,7 +428,7 @@ export default function RefundDialog({
                 {/* 次卡无金额台账：实付/付费次数/赠次由店主录入随快照留痕（server 报备偏差 1） */}
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <div className="text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">实付（元）</div>
+                    <div className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">实付（元）</div>
                     <input
                       className={`${paramInputCls} mt-1`}
                       data-testid="refund-pass-paid"
@@ -442,7 +442,7 @@ export default function RefundDialog({
                     />
                   </div>
                   <div>
-                    <div className="text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">付费总次数</div>
+                    <div className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">付费总次数</div>
                     <input
                       className={`${paramInputCls} mt-1`}
                       data-testid="refund-pass-times"
@@ -456,7 +456,7 @@ export default function RefundDialog({
                     />
                   </div>
                   <div>
-                    <div className="text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">赠次</div>
+                    <div className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">赠次</div>
                     <input
                       className={`${paramInputCls} mt-1`}
                       data-testid="refund-pass-gift"
@@ -471,7 +471,7 @@ export default function RefundDialog({
                   </div>
                 </div>
                 <div>
-                  <div className="text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">实退方式（必选）</div>
+                  <div className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">实退方式（必选）</div>
                   <div className="mt-1.5 flex gap-1.5">
                     {(['offline_original', 'to_stored_value'] as const).map((m) => (
                       <button
@@ -489,7 +489,7 @@ export default function RefundDialog({
                     ))}
                   </div>
                 </div>
-                <p className="text-caption-xs leading-relaxed text-[rgba(74,59,46,.42)]">
+                <p className="text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
                   折算=剩余付费次数×（实付÷付费总次数），赠次不计价（随退作废）；退卡后卡作废留痕
                 </p>
               </div>
@@ -497,9 +497,9 @@ export default function RefundDialog({
 
             {/* ③ 原因必填 */}
             <div className="mt-3">
-              <div className="text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">退款原因（必填，留痕）</div>
+              <div className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">退款原因（必填，留痕）</div>
               <textarea
-                className="mt-1.5 min-h-[64px] w-full resize-none rounded-[14px] bg-[#FFFDF6] px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(74,59,46,.12)] placeholder:text-[rgba(74,59,46,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(74,59,46,.3)]"
+                className="mt-1.5 min-h-[64px] w-full resize-none rounded-[14px] bg-[#FFFDF6] px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
                 data-testid="refund-reason"
                 placeholder="退款原因（必填，留痕在退款单）"
                 maxLength={200}
@@ -513,17 +513,17 @@ export default function RefundDialog({
 
             {/* ④ 六联动预览清单 */}
             {plan !== null ? (
-              <div className="mt-3 rounded-[14px] bg-[#F6F1E3] px-3.5 py-3" data-testid="refund-preview-panel">
+              <div className="mt-3 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3" data-testid="refund-preview-panel">
                 <div className="flex items-baseline justify-between">
                   <span className="text-caption font-semibold">六联动预览 · {REFUND_TYPE_LABEL[plan.type as RefundType] ?? plan.type}</span>
-                  <b className="font-number text-title font-bold tabular-nums text-danger-deep">
+                  <b className="whitespace-nowrap font-number text-title font-bold tabular-nums text-danger-deep">
                     −¥{fenToYuan(plan.refundFen)}
                   </b>
                 </div>
 
                 {/* 部分退三行明示（V3）：已退累计 / 可退余额 / 本次分摊明细 */}
                 {plan.type !== 'full' && plan.type !== 'pass_cancel' ? (
-                  <div className="mt-2 rounded-[10px] bg-[#FFFDF6] px-3 py-2 text-caption-xs text-[rgba(74,59,46,.62)]">
+                  <div className="mt-2 rounded-[10px] bg-[#FFFDF6] px-3 py-2 text-caption-xs text-[rgba(59,46,36,.62)]">
                     <div className="flex justify-between py-0.5">
                       <span>已退累计</span>
                       <b className="font-number tabular-nums text-ink">¥{fenToYuan(plan.refundedSoFarFen)}</b>
@@ -542,15 +542,15 @@ export default function RefundDialog({
                 {/* ① 退什么钱：支付段分摊明细（占比明示，6:4 类） */}
                 <PreviewBlock title="退什么钱 · 支付段分摊回补">
                   {plan.anchorOnly ? (
-                    <p className="text-caption-xs text-[rgba(74,59,46,.62)]">
+                    <p className="text-caption-xs text-[rgba(59,46,36,.62)]">
                       次卡退卡为锚点单口径：金额与原单支付段无关，按下方折算明细落地
                     </p>
                   ) : plan.segments.length === 0 ? (
-                    <p className="text-caption-xs text-[rgba(74,59,46,.62)]">无支付段回补</p>
+                    <p className="text-caption-xs text-[rgba(59,46,36,.62)]">无支付段回补</p>
                   ) : (
                     plan.segments.map((s) => (
                       <div key={s.paymentId} className="flex items-center justify-between py-0.5 text-caption-xs">
-                        <span className="text-[rgba(74,59,46,.62)]">
+                        <span className="text-[rgba(59,46,36,.62)]">
                           {PAY_METHOD_LABEL[s.method] ?? s.method}
                           <span className="ml-1.5 font-number tabular-nums">占比 {bpText(s.ratioBp)}</span>
                           <span className="ml-1.5">{SEG_CHANNEL_LABEL[s.channel] ?? s.channel}</span>
@@ -564,13 +564,13 @@ export default function RefundDialog({
                 {/* ② 补什么货 */}
                 <PreviewBlock title="补什么货 · 库存回补">
                   {plan.stockRestock.length === 0 ? (
-                    <p className="text-caption-xs text-[rgba(74,59,46,.62)]">
+                    <p className="text-caption-xs text-[rgba(59,46,36,.62)]">
                       {plan.type === 'partial_amount' ? '按金额退不回库存只退钱（口径写死）' : '无商品行回补'}
                     </p>
                   ) : (
                     plan.stockRestock.map((s) => (
                       <div key={s.productId} className="flex justify-between py-0.5 text-caption-xs">
-                        <span className="text-[rgba(74,59,46,.62)]">{s.name}</span>
+                        <span className="text-[rgba(59,46,36,.62)]">{s.name}</span>
                         <b className="font-number tabular-nums text-ink">+{s.qty}</b>
                       </div>
                     ))
@@ -580,18 +580,18 @@ export default function RefundDialog({
                 {/* ③ 回什么余额/次数 */}
                 <PreviewBlock title="回什么 · 储值/次卡回补">
                   {plan.storedValueRestoreFen === 0 && plan.passTimesRestore === 0 ? (
-                    <p className="text-caption-xs text-[rgba(74,59,46,.62)]">无储值余额/次卡次数回补</p>
+                    <p className="text-caption-xs text-[rgba(59,46,36,.62)]">无储值余额/次卡次数回补</p>
                   ) : (
                     <>
                       {plan.storedValueRestoreFen > 0 ? (
                         <div className="flex justify-between py-0.5 text-caption-xs">
-                          <span className="text-[rgba(74,59,46,.62)]">储值余额回补（前后余额留痕）</span>
+                          <span className="text-[rgba(59,46,36,.62)]">储值余额回补（前后余额留痕）</span>
                           <b className="font-number tabular-nums text-ink">+¥{fenToYuan(plan.storedValueRestoreFen)}</b>
                         </div>
                       ) : null}
                       {plan.passTimesRestore > 0 ? (
                         <div className="flex justify-between py-0.5 text-caption-xs">
-                          <span className="text-[rgba(74,59,46,.62)]">次卡次数回补</span>
+                          <span className="text-[rgba(59,46,36,.62)]">次卡次数回补</span>
                           <b className="font-number tabular-nums text-ink">+{plan.passTimesRestore} 次</b>
                         </div>
                       ) : null}
@@ -603,7 +603,7 @@ export default function RefundDialog({
                 {plan.appointmentReverts.length > 0 ? (
                   <PreviewBlock title="预约行 · 回待收款口径">
                     {plan.appointmentReverts.map((a) => (
-                      <div key={a.appointmentId} className="py-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+                      <div key={a.appointmentId} className="py-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
                         {a.name}（已收款清零回待收款）
                       </div>
                     ))}
@@ -613,7 +613,7 @@ export default function RefundDialog({
                 {/* 寄养分段明示（V4）：已住 N 晚不退 / 剩余 M 晚可退 ¥X */}
                 {plan.boarding ? (
                   <PreviewBlock title="寄养剩余晚 · 分段明示">
-                    <p className="text-caption-xs text-[rgba(74,59,46,.62)]">
+                    <p className="font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]">
                       总 {plan.boarding.totalNights} 晚 · 已住{' '}
                       <b className="text-ink">{plan.boarding.occurredNights} 晚不退</b> · 剩余{' '}
                       <b className="text-ink">
@@ -621,7 +621,7 @@ export default function RefundDialog({
                         {fenToYuan(plan.boarding.remainingNights * plan.boarding.perNightFen)}
                       </b>
                     </p>
-                    <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+                    <p className="mt-0.5 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]">
                       晚单价 ¥{fenToYuan(plan.boarding.perNightFen)} × 本次退 {plan.boarding.nights} 晚 ={' '}
                       <b className="font-number tabular-nums text-danger-deep">
                         ¥{fenToYuan(plan.boarding.perNightFen * plan.boarding.nights)}
@@ -633,12 +633,12 @@ export default function RefundDialog({
                 {/* 次卡退卡折算明细（V8） */}
                 {plan.passCancel ? (
                   <PreviewBlock title="次卡退卡 · 折算明细">
-                    <p className="text-caption-xs text-[rgba(74,59,46,.62)]">
+                    <p className="font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]">
                       实付 ¥{fenToYuan(plan.passCancel.paidFen)} ÷ 付费 {plan.passCancel.paidTimes} 次 × 剩余付费{' '}
                       {plan.passCancel.remainingPaidTimes} 次 ={' '}
                       <b className="font-number tabular-nums text-danger-deep">¥{fenToYuan(plan.refundFen)}</b>
                     </p>
-                    <p className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+                    <p className="mt-0.5 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]">
                       当前剩余 {plan.passCancel.remainTimesBefore} 次 · 赠次{' '}
                       <b className="text-ink">{plan.passCancel.giftVoided} 次随退作废（不计价）</b> · 退卡后卡作废留痕
                     </p>
@@ -648,7 +648,7 @@ export default function RefundDialog({
                 {/* ⑤ 提成冲减（预估） */}
                 <PreviewBlock title="提成冲减（预估）">
                   <div className="flex justify-between py-0.5 text-caption-xs">
-                    <span className="text-[rgba(74,59,46,.62)]">{plan.commissionNote}</span>
+                    <span className="text-[rgba(59,46,36,.62)]">{plan.commissionNote}</span>
                     <b className="font-number tabular-nums text-ink">
                       −¥{fenToYuan(plan.estimatedCommissionClawbackFen)}
                     </b>
@@ -658,13 +658,13 @@ export default function RefundDialog({
                 {/* ⑥ 回馈金扣回列位（冻结，R11 回归） */}
                 <PreviewBlock title="回馈金扣回列位">
                   <div className="flex justify-between py-0.5 text-caption-xs">
-                    <span className="text-[rgba(74,59,46,.62)]">{plan.rebateNote}</span>
+                    <span className="text-[rgba(59,46,36,.62)]">{plan.rebateNote}</span>
                     <b className="font-number tabular-nums text-ink">¥{fenToYuan(plan.rebateClawbackFen)}</b>
                   </div>
                 </PreviewBlock>
 
-                <p className="mt-2 text-caption-xs leading-relaxed text-[rgba(74,59,46,.42)]">
-                  店长累计上限 ¥{fenToYuan(plan.thresholdFen)}（按原单累计校验，超阈值/涉储值须店主）·
+                <p className="mt-2 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
+                  店长累计上限 <span className="font-number tabular-nums">¥{fenToYuan(plan.thresholdFen)}</span>（按原单累计校验，超阈值/涉储值须店主）·
                   执行=同事务六联动落账，不可撤销（纠错=再开正单）
                 </p>
               </div>
@@ -708,7 +708,7 @@ export default function RefundDialog({
               executed 后不可撤销，纠错=再开正单。
             </p>
             {/* 变更摘要 */}
-            <div className="mt-3 rounded-[14px] bg-[#F6F1E3] px-3.5 py-3 text-caption-xs text-[rgba(74,59,46,.62)]">
+            <div className="mt-3 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3 text-caption-xs text-[rgba(59,46,36,.62)]">
               <div className="flex justify-between py-0.5">
                 <span>原单</span>
                 <b className="font-number tabular-nums text-ink">{plan.billNo}</b>
@@ -745,7 +745,7 @@ export default function RefundDialog({
               </div>
             </div>
             <div className="mt-3">
-              <div className="text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">
+              <div className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
                 请输入「{CONFIRM_PHRASE}」以继续（防误触：口令与按钮双重确认）
               </div>
               <input
@@ -767,8 +767,8 @@ export default function RefundDialog({
 /** 预览分块（标题 + 内容） */
 function PreviewBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="mt-2.5 border-t border-dashed border-[rgba(74,59,46,.12)] pt-2">
-      <div className="mb-1 text-caption-xs font-semibold text-[rgba(74,59,46,.42)]">{title}</div>
+    <div className="mt-2.5 border-t border-dashed border-[rgba(59,46,36,.12)] pt-2">
+      <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{title}</div>
       {children}
     </div>
   )

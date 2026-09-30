@@ -25,7 +25,7 @@ function InfoRow({ label, value, danger }: { label: string; value: string; dange
   return (
     <div className="u3-field">
       <span className="lb">{label}</span>
-      <span className={`vl ${danger ? 'text-danger' : ''}`} style={numStyle}>
+      <span className={`vl font-number ${danger ? 'text-danger' : ''}`} style={numStyle}>
         {value}
       </span>
     </div>
@@ -39,9 +39,9 @@ export default function BoardingStayDetail({
 }) {
   const { stay, appointment, pet, customer } = row;
   return (
-    <div className="flex h-full flex-col rounded-panel bg-[#FFFDF6] shadow-[0_0_0_1px_rgba(74,59,46,.09),0_1px_2px_rgba(61,50,41,.04)]">
+    <div className="flex h-full flex-col rounded-panel bg-[#FFFDF6] shadow-[0_0_0_1px_rgba(59,46,36,.09),0_1px_2px_rgba(61,50,41,.04)]">
       {/* 宠物与客户 */}
-      <div className="flex items-center gap-3 border-b border-[rgba(74,59,46,.06)] px-[17px] py-4">
+      <div className="flex items-center gap-3 border-b border-[rgba(59,46,36,.06)] px-[17px] py-4">
         <PetAvatar url={pet.avatarUrl} name={pet.name} size={48} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -52,21 +52,31 @@ export default function BoardingStayDetail({
               <span className="u3-st live">在店</span>
             )}
           </div>
-          <div className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+          <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
             {SPECIES_LABEL[pet.species] ?? pet.species}
             {pet.breed ? ` · ${pet.breed}` : ''}
-            {pet.weightKg != null ? ` · 档案 ${pet.weightKg}kg` : ''}
+            {pet.weightKg != null ? (
+              <>
+                {' · 档案 '}
+                <span className="font-number tabular-nums">{pet.weightKg}kg</span>
+              </>
+            ) : null}
           </div>
-          <div className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.62)]">
+          <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
             客户：{customer.nickname ?? '—'}
-            {customer.phone ? ` · ${customer.phone}` : ''}
+            {customer.phone ? (
+              <>
+                {' · '}
+                <span className="font-number tabular-nums">{customer.phone}</span>
+              </>
+            ) : null}
           </div>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-[17px] py-3">
         {/* 入住信息 */}
-        <div className="mb-1 flex items-center gap-1.5 text-caption-xs font-semibold text-[rgba(74,59,46,.62)]">
+        <div className="mb-1 flex items-center gap-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">
           <DoorOpen size={14} strokeWidth={1.5} />
           入住信息
         </div>
@@ -80,7 +90,7 @@ export default function BoardingStayDetail({
         />
 
         {/* 物品清单 */}
-        <div className="mb-1 mt-3 flex items-center gap-1.5 text-caption-xs font-semibold text-[rgba(74,59,46,.62)]">
+        <div className="mb-1 mt-3 flex items-center gap-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">
           <Luggage size={14} strokeWidth={1.5} />
           随身物品
         </div>
@@ -89,28 +99,28 @@ export default function BoardingStayDetail({
             {stay.belongings.map((b, i) => (
               <li key={i} className="flex items-baseline justify-between text-caption">
                 <span className="font-semibold text-ink">{b.name}</span>
-                {b.note ? <span className="text-[rgba(74,59,46,.42)]">{b.note}</span> : null}
+                {b.note ? <span className="text-[rgba(59,46,36,.42)]">{b.note}</span> : null}
               </li>
             ))}
           </ul>
         ) : (
-          <p className="py-1 text-caption-xs text-[rgba(74,59,46,.42)]">无登记物品</p>
+          <p className="py-1 text-caption-xs text-[rgba(59,46,36,.42)]">无登记物品</p>
         )}
 
         {/* 每日打卡（明细为服务端缺口，见文件头注释） */}
-        <div className="mb-1 mt-3 flex items-center gap-1.5 text-caption-xs font-semibold text-[rgba(74,59,46,.62)]">
+        <div className="mb-1 mt-3 flex items-center gap-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">
           <ClipboardList size={14} strokeWidth={1.5} />
           每日打卡
         </div>
         <InfoRow label="最近打卡" value={fmtIsoDate(row.lastLogDate)} />
-        <p className="mt-1 rounded-control bg-canvas px-3 py-2 text-caption-xs text-[rgba(74,59,46,.42)]">
+        <p className="mt-1 rounded-control bg-canvas px-3 py-2 text-caption-xs text-[rgba(59,46,36,.42)]">
           打卡明细（喂食 / 遛弯 / 照片墙）的商家查看接口待服务端补齐（v2）；
           目前明细可在员工端寄养打卡页查看。
         </p>
 
         {/* 称重记录（入住称重之上无更多历史，保持简洁） */}
         {stay.checkinWeightKg != null ? (
-          <p className="mt-2 flex items-center gap-1 text-caption-xs text-[rgba(74,59,46,.42)]">
+          <p className="mt-2 flex items-center gap-1 text-caption-xs text-[rgba(59,46,36,.42)]">
             <Scale size={12} strokeWidth={1.5} />
             入住称重为登记时一次性记录
           </p>
@@ -118,9 +128,9 @@ export default function BoardingStayDetail({
       </div>
 
       {/* 结算区（商家端不办退房，钮恒禁用；收款仍由财务页 markPaid 完成） */}
-      <div className="border-t border-[rgba(74,59,46,.06)] px-[17px] py-3">
+      <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3">
         <div className="mb-2 flex items-baseline justify-between">
-          <span className="text-caption-xs text-[rgba(74,59,46,.62)]">
+          <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
             应收金额 · {PAYMENT_MODE_LABEL[appointment.paymentMode ?? ''] ?? '未记录'}
           </span>
           <span className="font-number text-title font-bold tabular-nums text-ink" style={numStyle}>
@@ -131,11 +141,11 @@ export default function BoardingStayDetail({
           type="button"
           disabled
           title="退房核销由员工办理"
-          className="w-full cursor-not-allowed rounded-control bg-[rgba(74,59,46,.06)] px-4 py-2.5 text-caption font-semibold text-[rgba(74,59,46,.42)]"
+          className="w-full cursor-not-allowed rounded-control bg-[rgba(59,46,36,.06)] px-4 py-2.5 text-caption font-semibold text-[rgba(59,46,36,.42)]"
         >
           退房结算
         </button>
-        <p className="mt-1.5 text-caption-xs text-[rgba(74,59,46,.42)]">
+        <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
           退房核销由员工在员工端办理（v1.1 起）；员工退房后本单转入「已完成」，
           {appointment.paymentMode === 'pay_at_store' ? '到店付请到财务页「待收款」确认收款。' : '款项以店内结算为准。'}
         </p>

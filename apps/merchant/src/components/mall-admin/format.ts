@@ -36,6 +36,14 @@ export const MAX_PRODUCT_IMAGES = 5
 export const fenToYuan = (fen: number): string =>
   fen % 100 === 0 ? String(fen / 100) : (fen / 100).toFixed(2)
 
+/** 分 → 元字符串（千分位分组；整数去 .00，带零头才两位小数——金额大数 ≥6 位用，
+    与 dashboard/utils fenToYuanGrouped 同族口径） */
+export const fenToYuanGrouped = (fen: number): string =>
+  (fen / 100).toLocaleString('zh-CN', {
+    minimumFractionDigits: fen % 100 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  })
+
 /** 分 → ¥元 */
 export const fmtMoney = (fen: number | null | undefined): string =>
   fen === null || fen === undefined ? '—' : `¥${fenToYuan(fen)}`

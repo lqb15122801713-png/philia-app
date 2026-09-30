@@ -6,8 +6,8 @@
  * 品牌 token（preset 类名）自绘按钮 / 弹层 / 开关 / 徽章 / 迷你 toast。
  * T4.1 落地全局 Toaster 后，可一键把本模块的 toast 调用替换为 sonner。
  *
- * 用色纪律（U3 v9.1）：柠檬底配墨字（无 text-white；danger 底配纸色 #FFFDF6）；
- * 圆角 20/14/6；深度=ring+近零影；按下 120ms scale；开关=薄荷开/墨 12% 关。
+ * 用色纪律（U3 v9.1 → v2.0）：淡黄点睛底配墨字（无 text-white；danger 底配纸色 #FFFDF6）；
+ * 圆角 20/14/6；深度=ring+近零影；按下 120ms scale；开关=卡其开/墨 12% 关。
  */
 
 import { X } from 'lucide-react';
@@ -21,14 +21,14 @@ import { createPortal } from 'react-dom';
 type BtnVariant = 'primary' | 'ghost' | 'danger' | 'subtle';
 type BtnSize = 'sm' | 'md';
 
-// U3 口径：控件圆角 14；柠檬底配墨字（禁 text-white），danger 底配纸色 #FFFDF6；按下 120ms scale
+// U3 口径：控件圆角 14；淡黄点睛底配墨字（禁 text-white），danger 底配纸色 #FFFDF6；按下 120ms scale
 const btnBase =
   'inline-flex items-center justify-center gap-1.5 rounded-control font-medium transition-[transform,background-color,color] duration-120 ease-philia-spring active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50';
 const btnVariant: Record<BtnVariant, string> = {
   primary: 'bg-brand-primary text-ink shadow-hairline hover:bg-brand-primary-hover active:bg-brand-primary-pressed',
   ghost: 'bg-card text-ink shadow-hairline ring-1 ring-line-ring hover:bg-canvas',
   danger: 'bg-danger text-[#FFFDF6] hover:bg-danger-deep',
-  subtle: 'text-ink-secondary hover:bg-[rgba(74,59,46,.06)] hover:text-ink',
+  subtle: 'text-ink-secondary hover:bg-[rgba(59,46,36,.06)] hover:text-ink',
 };
 const btnSize: Record<BtnSize, string> = {
   sm: 'px-3 py-1.5 text-caption',
@@ -55,7 +55,7 @@ export function Btn({
 /* ------------------------------------------------------------------ */
 
 export const inputCls =
-  'w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(74,59,46,.25)]';
+  'w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]';
 
 export function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
@@ -67,7 +67,7 @@ export function Field({ label, hint, children }: { label: string; hint?: string;
   );
 }
 
-/** 开关（U3 .sw 工艺：38×22，开=薄荷 / 关=墨 12%，纸面圆点 18） */
+/** 开关（U3 .sw 工艺：38×22，开=卡其 / 关=墨 12%，纸面圆点 18） */
 export function Switch({
   checked,
   onChange,
@@ -88,7 +88,7 @@ export function Switch({
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`relative h-[22px] w-[38px] shrink-0 rounded-full transition-colors duration-150 ${
-        checked ? 'bg-brand-secondary' : 'bg-[rgba(74,59,46,.12)]'
+        checked ? 'bg-brand-secondary' : 'bg-[rgba(59,46,36,.12)]'
       } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
     >
       <span
@@ -256,8 +256,8 @@ export function Loading({ text = '加载中…' }: { text?: string }) {
 export function Empty({ title, hint }: { title: string; hint?: string }) {
   return (
     <div className="rounded-panel bg-[#FFFDF6] py-12 text-center shadow-hairline ring-1 ring-line-ring">
-      <div className="text-body-sm text-[rgba(74,59,46,.62)]">{title}</div>
-      {hint ? <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.42)]">{hint}</div> : null}
+      <div className="text-body-sm text-[rgba(59,46,36,.62)]">{title}</div>
+      {hint ? <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">{hint}</div> : null}
     </div>
   );
 }

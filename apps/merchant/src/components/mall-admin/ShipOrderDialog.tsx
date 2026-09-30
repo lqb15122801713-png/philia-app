@@ -12,7 +12,7 @@ import { usePhiliaClient } from '@philia/shared'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { errMsg, STORE_ORDERS_KEY, type StoreOrder } from './format'
-import { Btn, Field, inputCls, Modal } from './ui'
+import { Btn, Field, inputCls, Modal, numStyle } from './ui'
 
 export default function ShipOrderDialog({
   open,
@@ -72,6 +72,7 @@ export default function ShipOrderDialog({
             maxLength={64}
             placeholder="如 SF1234567890"
             autoFocus
+            style={numStyle}
             onChange={(e) => setTrackingNo(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') void submit()

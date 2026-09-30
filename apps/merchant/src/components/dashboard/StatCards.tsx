@@ -1,7 +1,9 @@
 /**
  * 经营总览数据卡行（U3 §2 · 母本 .stats 四卡）：今日预约 / 今日营业额 / 在店寄养 / 接单模式
  *
- * - 视觉全部走 index.css 注入的 u3-stat（.cap/.v/.d），26px Montserrat tabular 大字由类承担；
+ * - 换皮批片 3（v2.0 §八：深色密度位留给驾驶舱总览卡）：四卡改深棕渐变 150deg
+ *   #3B2E24→#2A1F15（圆角 20），卡内大数=mono 轨 font-number tabular-nums 纸白
+ *   #FAF8F2（淡金点睛预算让位给页内既有件，见批 3 报告）；财务页 u3-stat 白卡不受影响；
  * - 今日预约副行 = byStatus 今日分状态聚合：服务中=in_service+in_boarding、
  *   待到店=confirmed+pending、已完成=completed；
  * - 今日营业额（M1-补2 R1 同源改造）：v=todayTender.receivedTotalFen（统一聚合出口，
@@ -11,7 +13,7 @@
  *   与本卡不再同源——server 保留字段仅存量兼容，本页不再消费）；
  * - 在店寄养：listForStore(status=in_boarding) 按 serviceName（寄养服务名即房型）前端聚合，
  *   零新接口（stayBoard 行不含 serviceName，故取 listForStore）；
- * - 接单模式：批次 S4 起自动接单常驻，静态卡 + 薄荷 pill（u3 未注入 pill 类，tailwind 同值实现）；
+ * - 接单模式：批次 S4 起自动接单常驻，静态卡 + livetag 同族 pill（深棕底淡金字）；
  * - 加载中骨架块（animate-pulse，禁转圈），查询失败显示 —（错误卡由页面层给出）。
  * - 本页 owner|manager 可见（dashboardStats 服务端闸门；clerk 路由层引导页）。
  */
@@ -20,10 +22,19 @@ import type { ReactNode } from 'react'
 import { fenToYuanGrouped, type DashboardStats, type TodayApptItem } from './utils'
 import { AmortizationDashNote } from '../member/amortization'
 
+/* 深棕渐变总览卡（§八 深色密度位）：150deg #3B2E24→#2A1F15 · 圆角 20 */
+const CARD_CLS =
+  'rounded-panel bg-[linear-gradient(150deg,#3B2E24,#2A1F15)] px-[17px] py-[15px]'
+/* 大数位：mono 轨 tabular 纸白，金额大数分组展示不断行 */
+const VALUE_CLS =
+  'mt-1.5 whitespace-nowrap font-number tabular-nums text-[26px] font-bold leading-8 text-[#FAF8F2]'
+const SUB_CLS = 'mt-1 text-[11px] text-[rgba(250,248,242,.62)]'
+const SUB_NUM_CLS = 'font-number tabular-nums font-bold text-[rgba(250,248,242,.92)]'
+
 function StatShell({ cap, children }: { cap: string; children: ReactNode }) {
   return (
-    <div className="u3-stat">
-      <div className="cap">{cap}</div>
+    <div className={CARD_CLS}>
+      <div className="text-[11px] font-semibold text-[rgba(250,248,242,.55)]">{cap}</div>
       {children}
     </div>
   )
@@ -31,10 +42,10 @@ function StatShell({ cap, children }: { cap: string; children: ReactNode }) {
 
 function StatSkeleton() {
   return (
-    <div className="u3-stat animate-pulse">
-      <div className="h-3 w-14 rounded-md bg-[rgba(74,59,46,.08)]" />
-      <div className="mt-3 h-6 w-20 rounded-md bg-[rgba(74,59,46,.08)]" />
-      <div className="mt-3 h-2.5 w-28 rounded-md bg-[rgba(74,59,46,.06)]" />
+    <div className={`${CARD_CLS} animate-pulse`}>
+      <div className="h-3 w-14 rounded-md bg-[rgba(250,248,242,.16)]" />
+      <div className="mt-3 h-6 w-20 rounded-md bg-[rgba(250,248,242,.16)]" />
+      <div className="mt-3 h-2.5 w-28 rounded-md bg-[rgba(250,248,242,.10)]" />
     </div>
   )
 }
@@ -80,34 +91,40 @@ export default function StatCards({
   return (
     <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
       <StatShell cap="今日预约">
-        <div className="v">{stats ? stats.todayCount : '—'}</div>
-        <div className="d">
-          服务中 <b>{serving}</b> · 待到店 <b>{waiting}</b> · 已完成 <b>{done}</b>
+        <div className={VALUE_CLS}>{stats ? stats.todayCount : '—'}</div>
+        <div className={SUB_CLS}>
+          服务中 <b className={SUB_NUM_CLS}>{serving}</b> · 待到店{' '}
+          <b className={SUB_NUM_CLS}>{waiting}</b> · 已完成 <b className={SUB_NUM_CLS}>{done}</b>
         </div>
       </StatShell>
 
       <StatShell cap="今日营业额">
         {/* M1-补2 R1：todayRevenueFen 退役 → todayTender.receivedTotalFen（同源出口） */}
-        <div className="v" data-testid="dashboard-today-revenue">
+        <div className={VALUE_CLS} data-testid="dashboard-today-revenue">
           {tender ? `¥${fenToYuanGrouped(tender.receivedTotalFen)}` : '—'}
         </div>
-        <div className="d">
-          已收 <b>{tenderPaidCount}</b> 笔 · 待收 <b>{stats?.todo.unpaid ?? 0}</b> 笔
+        <div className={SUB_CLS}>
+          已收 <b className={SUB_NUM_CLS}>{tenderPaidCount}</b> 笔 · 待收{' '}
+          <b className={SUB_NUM_CLS}>{stats?.todo.unpaid ?? 0}</b> 笔
         </div>
-        {/* QA40-D1（PD-03 件 2）：分摊口径注（参考口径小字，主数口径不变） */}
-        <AmortizationDashNote />
+        {/* QA40-D1（PD-03 件 2）：分摊口径注（参考口径小字，主数口径不变）；
+            深卡上反白由后代选择器覆写（amortization.tsx 属别批文件，不动） */}
+        <div className="[&>div]:text-[rgba(250,248,242,.55)]">
+          <AmortizationDashNote />
+        </div>
       </StatShell>
 
       <StatShell cap="在店寄养">
-        <div className="v">{boardingItems ? boardingCount : '—'}</div>
-        <div className="d">{roomText}</div>
+        <div className={VALUE_CLS}>{boardingItems ? boardingCount : '—'}</div>
+        <div className={SUB_CLS}>{roomText}</div>
       </StatShell>
 
       <StatShell cap="接单模式">
-        <div className="v" style={{ fontSize: 17, paddingTop: 6 }}>
+        <div className="mt-1.5 whitespace-nowrap text-[17px] font-semibold leading-8 text-[#FAF8F2]">
           自动接单
         </div>
-        <span className="mt-2 inline-block rounded-md bg-[#7FD8BE] px-[7px] py-[2px] text-[11px] font-bold text-ink">
+        {/* livetag 同族（深棕底淡金字）+ 淡金发丝圈在深卡上托出层次 */}
+        <span className="mt-2 inline-block rounded-md bg-[#2E2318] px-[7px] py-[2px] text-[11px] font-bold text-[#F2DFA6] ring-1 ring-[rgba(242,223,166,.28)]">
           已启用 · 新预约免确认
         </span>
       </StatShell>

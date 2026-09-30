@@ -78,21 +78,21 @@ export default function BoardingStayRow({
     <tr
       className="rowlink"
       onClick={onSelect}
-      style={selected ? { background: 'rgba(253,200,48,.14)' } : undefined}
+      style={selected ? { background: 'rgba(242,223,166,.45)' } : undefined}
       data-testid={`boarding-stay-${row.stay.id}`}
     >
       <td>
         <div className="font-semibold text-ink">{pet.name}</div>
-        <div className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.42)]">
+        <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
           {customer.nickname ?? '客户'}
           {tail ? ` · 尾号 ${tail}` : ''}
         </div>
       </td>
       <td>{roomName ?? '—'}</td>
-      <td className="font-number tabular-nums">
+      <td className="whitespace-nowrap text-right font-number tabular-nums">
         {fmtMD(appointment.scheduledStart)} → {fmtMD(appointment.scheduledEnd)}
       </td>
-      <td className="font-number tabular-nums">
+      <td className="whitespace-nowrap text-right font-number tabular-nums">
         {overdue ? (
           <span className="font-semibold text-danger">超期 {overdueDays} 天</span>
         ) : (

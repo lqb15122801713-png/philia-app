@@ -2,10 +2,10 @@
  * 经营总览（U3 §2 · 路由 /dashboard）—— 母本「2 · 总览」屏
  *
  * - MainScaffold 外包：title「经营总览」，sub=「YYYY年M月d日 周X · 营业中 HH:MM–HH:MM」
- *   （auth.me store.openHours 当天真值；当天无时段/店休 → 「今日店休」）；
+ *   （auth.me store.openHours 当天真值；当天无时段/店休 → 「今日店休」；营业时段=mono 数据位）；
  *   actions = 搜索框（点击即跳 /appointments——预约页暂无搜索聚焦深链，取最简真实落点）
- *   + 柠檬钮「＋ 新增预约」（/appointments 列表页，新建入口在预约流程内）；
- * - 数据卡 4 张（u3-stat）+ 两栏（1.7fr : 1fr，gap 14）：左今日预约表、右待办队列；
+ *   + 淡黄点睛钮「＋ 新增预约」（/appointments 列表页，新建入口在预约流程内）；
+ * - 数据卡 4 张（§八 深色密度位：深棕渐变总览卡）+ 两栏（1.7fr : 1fr，gap 14）：左今日预约表、右待办队列；
  * - 数据：store.dashboardStats + appointment.listForStore（今日区间 / in_boarding 全量，
  *   在店寄养按 serviceName=房型前端聚合，零新接口）；
  * - SSE 沿用 MerchantEventsProvider 全域单连接：appointment.* / boarding.* →
@@ -128,7 +128,12 @@ export default function DashboardPage() {
   return (
     <MainScaffold
       title="经营总览"
-      sub={`${fullDateLabel(now)} · ${openHoursLabel(openHours, now)}`}
+      sub={
+        <>
+          {fullDateLabel(now)} ·{' '}
+          <span className="font-number tabular-nums">{openHoursLabel(openHours, now)}</span>
+        </>
+      }
       actions={
         <>
           {/* 预约页暂无搜索聚焦深链：点击输入框即跳 /appointments（最简真实落点） */}
@@ -161,7 +166,7 @@ export default function DashboardPage() {
 
       {hasError && (
         <div className="u3-panel mt-3.5 flex items-center justify-between px-[17px] py-3">
-          <p className="text-[12px] text-[rgba(74,59,46,.62)]">数据加载失败，请检查网络后重试</p>
+          <p className="text-[12px] text-[rgba(59,46,36,.62)]">数据加载失败，请检查网络后重试</p>
           <QuietButton testid="dashboard-retry" onClick={refetchAll}>
             重新加载
           </QuietButton>

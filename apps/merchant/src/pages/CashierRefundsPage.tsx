@@ -183,7 +183,7 @@ export default function CashierRefundsPage() {
               data-testid="refunds-export-month"
               value={exportMonth}
               onChange={(e) => setExportMonth(e.target.value)}
-              className="u1-ring rounded-control bg-card px-3 py-2 font-number text-caption tabular-nums text-ink focus:outline-none focus:ring-[rgba(74,59,46,.25)]"
+              className="u1-ring rounded-control bg-card px-3 py-2 font-number text-caption tabular-nums text-ink focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
             />
             <QuietButton testid="refunds-export-btn" disabled={exporting} onClick={() => void doExport()}>
               {exporting ? '导出中…' : '导出 CSV'}
@@ -198,8 +198,8 @@ export default function CashierRefundsPage() {
           className="mb-3.5 rounded-[14px] bg-brand-primary-light px-[17px] py-3 text-caption text-ink"
           data-testid="refunds-pending-bar"
         >
-          <b>{pendings.length} 笔退款超 24 小时未登记实退</b>
-          <span className="ml-2 text-[rgba(74,59,46,.62)]">
+          <b><span className="font-number tabular-nums">{pendings.length}</span> 笔退款超 24 小时未登记实退</b>
+          <span className="ml-2 font-number tabular-nums text-[rgba(59,46,36,.62)]">
             {pendings
               .slice(0, 3)
               .map((p) => `${p.refundNo} ¥${fenToYuan(p.amountFen)}`)
@@ -229,12 +229,12 @@ export default function CashierRefundsPage() {
         {listQ.isPending ? (
           <div className="space-y-2 px-[17px] py-4">
             {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="h-9 animate-pulse rounded-[6px] bg-[rgba(74,59,46,.06)]" />
+              <div key={i} className="h-9 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
             ))}
           </div>
         ) : listQ.isError ? (
-          <div className="px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(74,59,46,.62)]">退款单加载失败：{errMsg(listQ.error)}</p>
+          <div className="px-[17px] py-10 text-center">
+            <p className="text-body-sm text-[rgba(59,46,36,.62)]">退款单加载失败：{errMsg(listQ.error)}</p>
             <div className="mt-4">
               <QuietButton testid="refunds-retry" onClick={() => void listQ.refetch()}>
                 重新加载
@@ -242,7 +242,7 @@ export default function CashierRefundsPage() {
             </div>
           </div>
         ) : rows.length === 0 ? (
-          <p className="px-[17px] py-12 text-center text-body-sm text-[rgba(74,59,46,.62)]">
+          <p className="px-[17px] py-10 text-center text-body-sm text-[rgba(59,46,36,.62)]">
             当前筛选无退款单——收银流水已收单的退款会出现在这里
           </p>
         ) : (
@@ -274,20 +274,20 @@ export default function CashierRefundsPage() {
                       onClick={() => setDetailRow(r)}
                     >
                       <td className="font-number font-semibold tabular-nums">{r.refundNo}</td>
-                      <td className="font-number tabular-nums text-[rgba(74,59,46,.62)]">{r.billNo}</td>
+                      <td className="font-number tabular-nums text-[rgba(59,46,36,.62)]">{r.billNo}</td>
                       <td>{REFUND_TYPE_LABEL[r.type as RefundType] ?? r.type}</td>
                       <td className="u1-num text-right font-bold text-danger-deep">
                         −¥{fenToYuan(r.amountFen)}
                       </td>
-                      <td className="max-w-[180px] truncate text-[rgba(74,59,46,.62)]" title={r.reason}>
+                      <td className="max-w-[180px] truncate text-[rgba(59,46,36,.62)]" title={r.reason}>
                         {r.reason}
                       </td>
-                      <td className="text-[rgba(74,59,46,.62)]">{r.operatorName ?? '—'}</td>
-                      <td className="text-[rgba(74,59,46,.62)]">{r.approverName ?? '—'}</td>
+                      <td className="text-[rgba(59,46,36,.62)]">{r.operatorName ?? '—'}</td>
+                      <td className="text-[rgba(59,46,36,.62)]">{r.approverName ?? '—'}</td>
                       <td>
                         <span className={chip.cls}>{chip.label}</span>
                         {r.refundMethod ? (
-                          <span className="block text-caption-xs text-[rgba(74,59,46,.42)]">
+                          <span className="block text-caption-xs text-[rgba(59,46,36,.42)]">
                             {REFUND_METHOD_LABEL[r.refundMethod] ?? r.refundMethod}
                           </span>
                         ) : null}
@@ -414,9 +414,9 @@ function RefundNoteDialog({
         </>
       }
     >
-      <div className="rounded-[14px] bg-[#F6F1E3] px-3.5 py-3">
+      <div className="rounded-[14px] bg-[#FAF8F2] px-3.5 py-3">
         <div className="font-number text-caption font-semibold tabular-nums">{row.refundNo}</div>
-        <div className="mt-1 text-caption-xs text-[rgba(74,59,46,.62)]">
+        <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
           原单 <span className="font-number tabular-nums">{row.billNo}</span>
           {' · '}
           {REFUND_TYPE_LABEL[row.type as RefundType] ?? row.type}
@@ -425,14 +425,14 @@ function RefundNoteDialog({
         </div>
       </div>
       <textarea
-        className="mt-3 min-h-[76px] w-full resize-none rounded-[14px] bg-[#FFFDF6] px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(74,59,46,.12)] placeholder:text-[rgba(74,59,46,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(74,59,46,.3)]"
+        className="mt-3 min-h-[76px] w-full resize-none rounded-[14px] bg-[#FFFDF6] px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
         data-testid={isSettle ? 'refund-settle-note' : 'refund-reject-note'}
         placeholder={isSettle ? '实退备注（必填，如：已微信原路退回）' : '驳回原因（必填，留痕）'}
         maxLength={200}
         value={note}
         onChange={(e) => setNote(e.target.value)}
       />
-      <p className="mt-1.5 text-caption-xs leading-relaxed text-[rgba(74,59,46,.42)]">
+      <p className="mt-1.5 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
         {isSettle
           ? '内测期实退=线下原路退回+系统内登记；登记后退款单置「实退完成」，账不再变（executed 不可撤销口径）。'
           : '驳回仅对草稿（draft）生效；驳回留痕 rejected+原因。已执行单不可撤销，纠错=再开正单。'}

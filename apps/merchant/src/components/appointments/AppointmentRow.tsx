@@ -1,7 +1,7 @@
 /**
  * 预约列表行（U3 任务 D · 规格书 §3 · 母本 279–284 行）：u3-tbl 的 tr.rowlink ——
- * 时间（Montserrat 数字字族）｜宠物+客户（副行 昵称·尾号）｜服务｜员工+来源小签
- * （assignSourceLabel 口径 appt-utils.ts）｜金额（priceFen→¥，tabular）｜状态胶囊｜›。
+ * 时间（mono 数字轨 tabular）｜宠物+客户（副行 昵称·尾号）｜服务｜员工+来源小签
+ * （assignSourceLabel 口径 appt-utils.ts）｜金额（priceFen→¥，mono 右对齐分组）｜状态胶囊｜›。
  *
  * S4 起列表纯读：行内确认/婉拒已迁入详情页。selected/confirming/onConfirm/onReject
  * 仅以 @deprecated 保留在签名里，供 MonitorHubPage（非本批授权文件）编译兼容，
@@ -44,10 +44,13 @@ function statusCapsule(
   }
 }
 
-/** 金额分 → ¥元：整数去小数（母本 ¥128 口径），非整数保留两位；数字字族由 u1-num 保证 */
+/** 金额分 → ¥元：整数去小数（母本 ¥128 口径），非整数保留两位；≥6 位大数千分分组
+    不断行（分组仅展示层，口径不变）；数字字族由 u1-num 保证 */
 const fmtPrice = (fen: number): string => {
   const yuan = fen / 100;
-  return Number.isInteger(yuan) ? `¥${yuan}` : `¥${yuan.toFixed(2)}`;
+  return Number.isInteger(yuan)
+    ? `¥${yuan.toLocaleString('en-US')}`
+    : `¥${yuan.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
 export function AppointmentRow({
@@ -80,13 +83,13 @@ export function AppointmentRow({
         if (e.key === 'Enter') onOpen();
       }}
     >
-      {/* 时间（Montserrat tabular） */}
+      {/* 时间（mono tabular） */}
       <td className="u1-num font-bold">{fmtTime(item.scheduledStart)}</td>
 
       {/* 宠物 + 客户（副行：昵称 · 尾号，customerPhoneTail 现成字段） */}
       <td>
         <span className="font-semibold">{item.petName ?? '宠物'}</span>
-        <span className="mt-0.5 block text-[11px] text-[rgba(74,59,46,.42)]">
+        <span className="mt-0.5 block text-[11px] text-[rgba(59,46,36,.42)]">
           {customerLabel(item.customerName, item.customerPhoneTail)}
         </span>
       </td>
@@ -98,12 +101,12 @@ export function AppointmentRow({
       <td>
         {item.staffName ?? '未指派'}
         {srcLabel ? (
-          <span className="ml-1 text-[11px] text-[rgba(74,59,46,.42)]">{srcLabel}</span>
+          <span className="ml-1 text-[11px] text-[rgba(59,46,36,.42)]">{srcLabel}</span>
         ) : null}
       </td>
 
-      {/* 金额（Montserrat tabular） */}
-      <td className="u1-num font-semibold">{fmtPrice(item.priceFen)}</td>
+      {/* 金额（mono tabular 右对齐，mono 加重位 700，大数分组不断行） */}
+      <td className="u1-num whitespace-nowrap text-right font-bold">{fmtPrice(item.priceFen)}</td>
 
       {/* 状态胶囊 */}
       <td>
@@ -111,7 +114,7 @@ export function AppointmentRow({
       </td>
 
       {/* › */}
-      <td className="text-[rgba(74,59,46,.42)]">›</td>
+      <td className="text-[rgba(59,46,36,.42)]">›</td>
     </tr>
   );
 }

@@ -146,14 +146,14 @@ export default function ScheduleEditorDialog({
                         type="time"
                         value={r.start}
                         onChange={(e) => patchRange(k, idx, { start: e.target.value })}
-                        className="rounded-chip bg-[#FFFDF6] px-2 py-1 text-caption text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(74,59,46,.25)]"
+                        className="rounded-chip bg-[#FFFDF6] px-2 py-1 text-caption text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
                       />
                       <span className="text-caption text-ink-placeholder">至</span>
                       <input
                         type="time"
                         value={r.end}
                         onChange={(e) => patchRange(k, idx, { end: e.target.value })}
-                        className="rounded-chip bg-[#FFFDF6] px-2 py-1 text-caption text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(74,59,46,.25)]"
+                        className="rounded-chip bg-[#FFFDF6] px-2 py-1 text-caption text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
                       />
                       <button
                         type="button"

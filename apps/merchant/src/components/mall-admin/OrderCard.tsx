@@ -59,7 +59,7 @@ export default function OrderRow({
       <td className="font-number font-semibold tabular-nums">{order.orderNo}</td>
       <td>
         <div className="font-semibold text-ink">{order.customerNickname ?? '客户'}</div>
-        <div className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.42)]">
+        <div className="mt-0.5 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
           下单 {fmtDateTime(order.createdAt)}
         </div>
       </td>
@@ -70,7 +70,7 @@ export default function OrderRow({
               {first.name} ×{first.quantity}
             </div>
             {lines.length > 1 ? (
-              <div className="mt-0.5 text-caption-xs text-[rgba(74,59,46,.42)]">
+              <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
                 另 {lines.length - 1} 种 · 共 {totalQty} 件
               </div>
             ) : null}
@@ -79,7 +79,7 @@ export default function OrderRow({
           '—'
         )}
       </td>
-      <td className="font-number font-semibold tabular-nums">{fmtMoney(order.totalFen)}</td>
+      <td className="whitespace-nowrap text-right font-number font-semibold tabular-nums">{fmtMoney(order.totalFen)}</td>
       <td>
         <span className="u3-st live">已支付</span>
       </td>
@@ -92,12 +92,12 @@ export default function OrderRow({
             type="button"
             onClick={() => onShip(order)}
             data-testid={`ship-${order.id}`}
-            className="rounded-chip px-2 py-1 text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring hover:bg-[rgba(74,59,46,.05)] active:scale-92"
+            className="rounded-chip px-2 py-1 text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring hover:bg-[rgba(59,46,36,.05)] active:scale-92"
           >
             发货 ›
           </button>
         ) : order.status === 'shipped' ? (
-          <span className="font-number text-caption-xs tabular-nums text-[rgba(74,59,46,.42)]">
+          <span className="font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
             单号 {order.trackingNo ?? '—'}
           </span>
         ) : null}

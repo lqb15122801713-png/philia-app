@@ -1,11 +1,13 @@
 /**
  * U3 任务 A · MerchantRail 墨轨（商家端全域唯一导航，冻结决策 #21 案 A）
  *
- * 规格书 §0：宽 190px 深棕墨底（#4A3B2E，与客户端 GUARDIAN 墨卡同族）；
+ * 规格书 §0：宽 190px 深棕墨底（#3B2E24，与客户端 GUARDIAN 墨卡同族）；
  * wordmark + 4 组直达（总览｜履约[预约/寄养/监控]｜商城[收银台/日结/退款/
  * 订单/商品]｜门店[会员·次卡/员工/财务/设置]）+ 底部门店/店主卡（auth.me 真值）。
- * 当前项=柠檬 14% 底+柠檬字；分组小标题 11px 宽距 35% 透明。
+ * 当前项=淡金 14% 底+淡金字（v2.0 §1.1 --gold；柠檬黄时代清场）；
+ * 分组小标题 11px 宽距 35% 透明（纸白 #FAF8F2 谱系透明，旧暖墨谱系清场）。
  * 无 TabBar（冻结）、无二级菜单、不折叠。按下 scale 0.92 + 120ms（动效纲领）。
+ * 触件 ≥44（min-h）；超高视口不足时轨内纵向滚动，入口可达性不降。
  */
 
 import { NavLink } from 'react-router-dom';
@@ -100,10 +102,10 @@ export default function MerchantRail() {
   return (
     <nav
       data-testid="merchant-rail"
-      className="flex h-full w-[56px] shrink-0 flex-col bg-ink px-1.5 py-[18px] text-[rgba(246,241,227,.72)] xl:w-[190px] xl:px-3"
+      className="flex h-full w-[56px] shrink-0 flex-col overflow-y-auto bg-ink px-1.5 py-[18px] text-[rgba(250,248,242,.72)] xl:w-[190px] xl:px-3"
     >
       {/* M1 收银台 390 降级配套：xl 以下图标轨（字标/组标/底卡收起，导航可达性保留），xl 起完整 190px */}
-      <div className="hidden px-2.5 pb-4 pt-1.5 font-display text-title font-bold tracking-[.05em] text-[#F6F1E3] xl:block">
+      <div className="hidden px-2.5 pb-4 pt-1.5 font-display text-title font-bold tracking-[.05em] text-[#FAF8F2] xl:block">
         PHILIA
       </div>
       <div className="pb-3 pt-1.5 text-center font-display text-title font-bold text-brand-primary xl:hidden" aria-hidden>
@@ -112,7 +114,7 @@ export default function MerchantRail() {
       {groups.map((g) => (
         <div key={g.label ?? 'top'}>
           {g.label ? (
-            <div className="hidden px-2.5 pb-1.5 pt-3.5 text-caption-xs tracking-[.14em] text-[rgba(246,241,227,.35)] xl:block">
+            <div className="hidden px-2.5 pb-1.5 pt-3.5 text-caption-xs tracking-[.14em] text-[rgba(250,248,242,.35)] xl:block">
               {g.label}
             </div>
           ) : null}
@@ -123,8 +125,8 @@ export default function MerchantRail() {
               data-testid={testid}
               title={label}
               className={({ isActive }) =>
-                `mb-0.5 flex items-center justify-center gap-2.5 rounded-chip px-0 py-[9px] text-caption font-medium transition-transform duration-120 ease-philia-spring active:scale-92 xl:justify-start xl:px-2.5 ${
-                  isActive ? 'bg-[rgba(253,200,48,.14)] font-semibold text-brand-primary' : ''
+                `mb-0.5 flex min-h-[44px] items-center justify-center gap-2.5 rounded-chip px-0 py-[9px] text-caption font-medium transition-transform duration-120 ease-philia-spring active:scale-92 xl:justify-start xl:px-2.5 ${
+                  isActive ? 'bg-[rgba(242,223,166,.14)] font-semibold text-brand-primary' : ''
                 }`
               }
             >
@@ -135,7 +137,7 @@ export default function MerchantRail() {
         </div>
       ))}
       {/* 底部：门店/账号卡（真值；M1-补2 G：三级账号角色签） */}
-      <div className="mt-auto hidden px-2.5 py-2.5 text-caption-xs leading-relaxed text-[rgba(246,241,227,.4)] xl:block" data-testid="rail-foot">
+      <div className="mt-auto hidden px-2.5 py-2.5 text-caption-xs leading-relaxed text-[rgba(250,248,242,.4)] xl:block" data-testid="rail-foot">
         {storeName}
         <br />
         {roleLabel} · {ownerName}

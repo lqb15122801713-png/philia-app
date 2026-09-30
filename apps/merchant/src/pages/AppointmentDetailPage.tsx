@@ -261,14 +261,14 @@ export default function AppointmentDetailPage() {
       <MainScaffold title="预约详情" sub={notFound ? '预约不存在' : '加载失败'}>
         <div className="u3-panel flex flex-col items-center px-6 py-12 text-center">
           {notFound ? (
-            <CalendarX className="h-9 w-9 text-[rgba(74,59,46,.35)]" strokeWidth={1.5} />
+            <CalendarX className="h-9 w-9 text-[rgba(59,46,36,.35)]" strokeWidth={1.5} />
           ) : (
-            <CircleX className="h-9 w-9 text-[rgba(74,59,46,.35)]" strokeWidth={1.5} />
+            <CircleX className="h-9 w-9 text-[rgba(59,46,36,.35)]" strokeWidth={1.5} />
           )}
           <p className="mt-3 text-[14px] font-bold">
             {notFound ? '找不到这个预约' : '打不开这个预约'}
           </p>
-          <p className="mt-1 text-[12px] text-[rgba(74,59,46,.62)]">
+          <p className="mt-1 text-[12px] text-[rgba(59,46,36,.62)]">
             {notFound
               ? '预约不存在或已被移除，回预约管理看看今天的单子。'
               : detailQuery.error instanceof Error
@@ -492,7 +492,7 @@ export default function AppointmentDetailPage() {
               <span className="aside">事件即轨迹 · 按时间排序</span>
             </div>
             {trail.length === 0 ? (
-              <p className="px-[17px] pb-4 text-[12px] text-[rgba(74,59,46,.42)]">
+              <p className="px-[17px] pb-4 text-[12px] text-[rgba(59,46,36,.42)]">
                 暂无可展示的事件
               </p>
             ) : (
@@ -557,7 +557,7 @@ export default function AppointmentDetailPage() {
               </FieldRow>
               <FieldRow label="疫苗">
                 {pet?.vaccineValidUntil ? (
-                  <span className={vaccineExpired ? 'text-[#D92D20]' : undefined}>
+                  <span className={vaccineExpired ? 'text-[#B4502E]' : undefined}>
                     有效期至 {pet.vaccineValidUntil}
                     {vaccineExpired ? '（已过期）' : ' ✓'}
                   </span>
@@ -575,7 +575,7 @@ export default function AppointmentDetailPage() {
               {(appt.status === 'pending' || appt.status === 'confirmed') && !appt.checkedInAt ? (
                 <FieldRow label="核销码">
                   <span className="u1-num tracking-[0.2em]">{appt.code}</span>
-                  <span className="ml-2 text-[11px] font-normal text-[rgba(74,59,46,.42)]">
+                  <span className="ml-2 text-[11px] font-normal text-[rgba(59,46,36,.42)]">
                     客户到店后由员工扫码或输入此码核销
                   </span>
                 </FieldRow>
@@ -607,7 +607,7 @@ export default function AppointmentDetailPage() {
               <div className="cell">
                 <div className="cap">状态</div>
                 <div
-                  className={`mt-1 text-body-sm font-bold ${payable ? 'text-[#D92D20]' : ''}`}
+                  className={`mt-1 text-body-sm font-bold ${payable ? 'text-[#B4502E]' : ''}`}
                 >
                   {appt.paidAt ? '已收' : appt.status === 'completed' ? '待收款' : '未收'}
                 </div>
@@ -658,7 +658,7 @@ export default function AppointmentDetailPage() {
         onClose={() => setReviewOpen(false)}
         widthClass="sm:max-w-md"
       >
-        <p className="text-[12px] leading-relaxed text-[rgba(74,59,46,.62)]">
+        <p className="text-[12px] leading-relaxed text-[rgba(59,46,36,.62)]">
           客户在开始前 4 小时内申请取消该预约。批准后槽位立即释放并通知客户；拒绝后预约恢复为「已确认」。
         </p>
         {appt.cancelReason ? (
@@ -680,7 +680,7 @@ export default function AppointmentDetailPage() {
             disabled={reviewCancelMut.isPending}
             onClick={() => reviewCancelMut.mutate(true)}
             data-testid="detail-approve-cancel"
-            className="h-11 flex-1 rounded-control bg-[#D92D20] text-body-sm font-bold text-[#FFFDF6] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+            className="h-11 flex-1 rounded-control bg-[#B4502E] text-body-sm font-bold text-[#FFFDF6] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
           >
             {reviewCancelMut.isPending ? '处理中…' : '批准取消'}
           </button>
@@ -743,7 +743,7 @@ function BoardingPanel({ stay, appt }: { stay: StayRow; appt: ApptRow }) {
           </FieldRow>
         </div>
       ) : (
-        <p className="px-[17px] pb-4 text-[12px] text-[rgba(74,59,46,.62)]">
+        <p className="px-[17px] pb-4 text-[12px] text-[rgba(59,46,36,.62)]">
           客户到店核销后，这里会登记房间、入住称重与随身物品。
         </p>
       )}
@@ -755,12 +755,12 @@ function BoardingPanel({ stay, appt }: { stay: StayRow; appt: ApptRow }) {
 function SkeletonPanel({ rows }: { rows: number }) {
   return (
     <div className="u3-panel px-[17px] py-4">
-      <div className="h-3.5 w-20 animate-pulse rounded-[6px] bg-[rgba(74,59,46,.08)]" />
+      <div className="h-3.5 w-20 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.08)]" />
       <div className="mt-3.5 flex flex-col gap-2.5">
         {Array.from({ length: rows }).map((_, i) => (
           <div
             key={i}
-            className="h-3 animate-pulse rounded-[6px] bg-[rgba(74,59,46,.06)]"
+            className="h-3 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]"
             style={{ width: `${88 - (i % 3) * 14}%` }}
           />
         ))}
