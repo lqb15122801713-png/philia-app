@@ -3,8 +3,9 @@
  *
  * 结构：MainScaffold（title「在店监控」+ sub 真值计数 + actions 两枚 u3-chipf
  * 过滤服务中/寄养）→ 三列 mon-card 卡墙（纸面 ring 20 圆角 overflow hidden）：
- * - 照片头 120px 定高（试样 .mon-card .ph 落值；该单最新过程照 thumbUrl，无照片=浅木
- *   色块 #B9A482）+ badge（洗护=纸面+淡黄点「服务中 · 实时」/寄养=墨底米白字「寄养 · 房型名」）；
+ * - 照片头 120px 定高（试样 .mon-card .ph 落值；该单最新过程照 thumbUrl，无照片=sunken
+ *   暖底 rgba(59,46,36,.06)，同骨架底色口径；卡其不作大面填充 §1.1）+ badge（洗护=纸面
+ *   文字自足「服务中 · 实时」/寄养=墨底米白字「寄养 · 房型名」）；
  * - 洗护卡：名+服务 + 6 段步进条（三态同客户端七节点：done 深棕/now 淡黄/future 卡其描边）
  *   + 员工·最新动态行；
  * - 寄养卡：第 N 晚（日界差+1）· 今日打卡态（lastLogDate===今天→已打卡 ✓）
@@ -26,7 +27,7 @@
  * 监控页不手动刷新也能翻步；其余事件仍由 SSE 即时驱动。
  */
 
-import { EventType, usePhiliaClient } from '@philia/shared';
+import { BoardSkeleton, EventType, usePhiliaClient } from '@philia/shared';
 import { useQueries, useQuery, type QueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -44,6 +45,7 @@ import {
   type MerchantEventsValue,
 } from '../components/dashboard/MerchantEventsProvider';
 import MainScaffold, { QuietButton } from '../components/MainScaffold';
+import { oc } from '../copy/monitor';
 
 /** 洗护卡步进兜底轮询（step_updated 仅 appointment 频道，store 频道盲区的安全网） */
 const STEP_POLL_MS = 15_000;
@@ -88,8 +90,10 @@ const cardCls =
   'block w-full overflow-hidden rounded-panel bg-[#FFFDF6] text-left shadow-[0_0_0_1px_rgba(59,46,36,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]';
 
 /** 照片头 + badge pill（试样 .mon-card：头高 120px 固定【规格书 §5「16:10」为裁切意图，
-    试样落 120px 定值——从试样，1920 大屏亦紧凑】；洗护 badge=纸面+淡黄点，
-    寄养 badge=墨底米白字无点【试样 inline 锁定，墨轨同族浅色字，仅此两式】） */
+    试样落 120px 定值——从试样，1920 大屏亦紧凑】；无照片兜底=sunken 暖底
+    rgba(59,46,36,.06)（卡其不作大面填充 §1.1，同卡片骨架底色）；洗护 badge=纸面文字自足
+    （片 5 去淡黄点，文字「服务中 · 实时」已自足），寄养 badge=墨底米白字无点【试样
+    inline 锁定，墨轨同族浅色字，仅此两式】） */
 function CardPhotoHead({
   thumbUrl,
   badge,
@@ -101,12 +105,11 @@ function CardPhotoHead({
 }) {
   return (
     <div
-      className="relative h-[120px] w-full bg-[#B9A482] bg-cover [background-position:center_60%]"
+      className="relative h-[120px] w-full bg-[rgba(59,46,36,.06)] bg-cover [background-position:center_60%]"
       style={thumbUrl ? { backgroundImage: `url(${thumbUrl})` } : undefined}
     >
       {tone === 'service' ? (
-        <span className="absolute left-2.5 top-2.5 flex items-center gap-[5px] rounded-full bg-[#FFFDF6] px-2.5 py-1 text-caption-xs font-bold">
-          <i className="h-1.5 w-1.5 rounded-full bg-[#F2DFA6]" />
+        <span className="absolute left-2.5 top-2.5 flex items-center rounded-full bg-[#FFFDF6] px-2.5 py-1 text-caption-xs font-bold">
           {badge}
         </span>
       ) : (
@@ -132,24 +135,6 @@ function StepBars({ steps }: { steps: StepListItem[] | undefined }) {
               : 'bg-transparent shadow-[inset_0_0_0_1px_#B9A482]';
         return <i key={i} className={`h-1 flex-1 rounded-full ${cls}`} />;
       })}
-    </div>
-  );
-}
-
-/** 卡片骨架（禁转圈：opacity 脉冲；轮廓与成片同构——120px 照片头 + 文本条 + 6 段条） */
-function CardSkeleton() {
-  return (
-    <div className="overflow-hidden rounded-panel bg-[#FFFDF6] shadow-[0_0_0_1px_rgba(59,46,36,.09)]">
-      <div className="h-[120px] w-full animate-pulse bg-[rgba(59,46,36,.06)]" />
-      <div className="p-[12px_14px]">
-        <div className="h-3.5 w-32 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
-        <div className="mt-2 h-3 w-44 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
-        <div className="mt-2.5 flex gap-1">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-1 flex-1 animate-pulse rounded-full bg-[rgba(59,46,36,.06)]" />
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
@@ -276,8 +261,8 @@ export default function MonitorHubPage() {
 
   return (
     <MainScaffold
-      title="在店监控"
-      sub={`服务中 ${serviceItems.length} 单 · 寄养 ${board.length} 只 · 实时同步`}
+      title={oc('mon.hubTitle')}
+      sub={oc('mon.hubSub', { a: serviceItems.length, b: board.length })}
       actions={
         <>
           {chip('service', `服务中 ${serviceItems.length}`)}
@@ -287,13 +272,10 @@ export default function MonitorHubPage() {
       testid="monitor-hub-page"
     >
       {pending ? (
-        <div
-          className="grid grid-cols-1 gap-3.5 md:grid-cols-2 xl:grid-cols-3"
-          aria-label="加载中"
-        >
-          {[0, 1, 2].map((i) => (
-            <CardSkeleton key={i} />
-          ))}
+        /* 加载中骨架块（animate-pulse，禁转圈）：看板卡 = shared BoardSkeleton
+           （!grid-cols-1 压成件自带 grid-cols-2，保移动端单列骨架口径） */
+        <div aria-label="加载中">
+          <BoardSkeleton cards={3} className="!grid-cols-1 gap-3.5 md:grid-cols-2 xl:grid-cols-3" />
         </div>
       ) : failed ? (
         <div className="u3-panel px-[17px] py-14 text-center">
@@ -316,7 +298,7 @@ export default function MonitorHubPage() {
       ) : totalVisible === 0 ? (
         <div className="u3-panel px-[17px] py-16 text-center">
           <div className="text-body-sm font-semibold text-[rgba(59,46,36,.62)]">
-            现在店里很安静——有单开工时这里会实时动起来
+            {oc('mon.hubEmpty')}
           </div>
         </div>
       ) : (
@@ -394,7 +376,7 @@ export default function MonitorHubPage() {
                     </div>
                     <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
                       {entry.overdue
-                        ? `应退未退 ${overdueDays(entry.appointment.scheduledEnd)} 天 · 联系主人或续住`
+                        ? oc('mon.hubBoardingOverdue', { n: overdueDays(entry.appointment.scheduledEnd) })
                         : `第 ${n} 晚 · ${checkedToday ? '今日已打卡 ✓' : '今日未打卡'} · ${fmtCheckout(entry.appointment.scheduledEnd)} 退房`}
                     </div>
                   </div>

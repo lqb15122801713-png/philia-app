@@ -7,10 +7,11 @@
  * 复合游标翻页（createdAt+id），limit ≤ 50。
  */
 
-import { usePhiliaClient } from '@philia/shared';
+import { Skeleton, usePhiliaClient } from '@philia/shared';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { MessagesSquare } from 'lucide-react';
 import PageHeader from '@/components/PageHeader';
+import { REVIEWS_COPY } from '@/copy/reviews';
 
 /** Date → 'YYYY-MM-DD HH:mm' */
 function fmtTs(d: Date): string {
@@ -67,8 +68,8 @@ export default function MyReviewsPage() {
           <div className="mt-2 space-y-2.5" aria-label="加载中">
             {[0, 1, 2].map((i) => (
               <div key={i} className="u1-card p-4">
-                <div className="h-4 w-24 animate-pulse rounded-chip bg-sunken" />
-                <div className="mt-2 h-5 w-48 animate-pulse rounded-chip bg-sunken" />
+                <Skeleton className="h-4 w-24 !rounded-chip" />
+                <Skeleton className="mt-2 h-5 w-48 !rounded-chip" />
               </div>
             ))}
           </div>
@@ -90,7 +91,7 @@ export default function MyReviewsPage() {
               <MessagesSquare className="h-9 w-9 text-ink" strokeWidth={1.5} />
             </span>
             <p className="mt-4 text-body-sm text-ink-secondary">
-              还没有收到客户评价——服务完成后客户可在预约详情留言，好评会同时长 XP
+              {REVIEWS_COPY['reviews.empty']}
             </p>
           </div>
         ) : (
@@ -101,7 +102,7 @@ export default function MyReviewsPage() {
               <div className="min-w-0 flex-1">
                 <Stars rating={Math.round(avg!)} />
                 <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
-                  已加载 <span className="u1-num">{items.length}</span> 条评价的平均分
+                  {REVIEWS_COPY['reviews.summary.lead']} <span className="u1-num">{items.length}</span> {REVIEWS_COPY['reviews.summary.tail']}
                 </p>
               </div>
             </section>
@@ -136,7 +137,7 @@ export default function MyReviewsPage() {
         )}
 
         <p className="mb-6 mt-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
-          仅本人可见 · 好评 +XP，≤2 星 −8（扣分不扣款）
+          {REVIEWS_COPY['reviews.footer']}
         </p>
       </div>
     </div>

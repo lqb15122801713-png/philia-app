@@ -6,19 +6,21 @@
  * - 结构：MainScaffold（title 商品 / sub 在售·已下架·低库存真值 / 搜索 + 主钮新增）
  *   → u3-chipf 分类 chips（当前墨底）→ 4 列商品卡（纸面 ring 20 圆角 overflow hidden）。
  * - 卡片：图区 110px 定高（试样 .prod .ph 落值；规格书 §8「4:3 图」为裁切意图，
- *   试样为落地数值——从试样，货架密度优先；images[0]，无图=浅木色块 #B9A482）+ 名 +
+ *   试样为落地数值——从试样，货架密度优先；images[0]，无图=sunken 暖底
+ *   rgba(59,46,36,.06)，同骨架底色口径；卡其不作大面填充 §1.1）+ 名 +
  *   价 Montserrat tabular（¥/件）+ 库存 + 状态（在售 live / 低库存 amber（库存<5） /
  *   已下架 done 半透明）。点击卡→编辑弹层。
  * - 上下架：不新造开关——ProductEditorDialog 内「上架销售」Switch 走 upsertProduct
  *   真实链路（失败原文 toast + invalidate 回拉），越店写 FORBIDDEN 由服务端强制。
  */
 
-import { usePhiliaClient } from '@philia/shared'
+import { Skeleton, usePhiliaClient } from '@philia/shared'
 import { useQuery } from '@tanstack/react-query'
 import { PackageOpen } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import MainScaffold, { LemonButton, QuietButton, SearchInput } from '@/components/MainScaffold'
 import ProductEditorDialog from '@/components/mall-admin/ProductEditorDialog'
+import { pd } from '@/copy/products'
 import {
   errMsg,
   fenToYuan,
@@ -75,11 +77,11 @@ export default function ProductsPage() {
 
   const sub = useMemo(() => {
     const all = statsQuery.data?.items
-    if (!all) return '门店商品库存、价格与上下架'
+    if (!all) return pd('prod.subFallback')
     const on = all.filter((p) => p.status === 'on').length
     const off = all.length - on
     const low = all.filter((p) => p.status === 'on' && p.stock < LOW_STOCK).length
-    return `在售 ${on} · 已下架 ${off} · 低库存 ${low}`
+    return pd('prod.sub', { on, off, low })
   }, [statsQuery.data])
 
   const openEditor = (p: StoreProduct | null) => {
@@ -90,13 +92,13 @@ export default function ProductsPage() {
   return (
     <MainScaffold
       testid="products-page"
-      title="商品"
+      title={pd('prod.title')}
       sub={sub}
       actions={
         <>
           <SearchInput placeholder="搜索商品…" value={kw} onChange={setKw} testid="products-search" />
           <LemonButton testid="products-create" onClick={() => openEditor(null)}>
-            ＋ 新增商品
+            {pd('prod.createCta')}
           </LemonButton>
         </>
       }
@@ -117,17 +119,17 @@ export default function ProductsPage() {
       </div>
 
       {listQuery.isPending ? (
-        /* 骨架（禁转圈）：纸面卡轮廓 pulse */
+        /* 加载中骨架块（animate-pulse，禁转圈）：纸面卡轮廓 = shared Skeleton 组合 */
         <div className="grid grid-cols-2 gap-[14px] lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
               className="overflow-hidden rounded-[20px] bg-[#FFFDF6] shadow-[0_0_0_1px_rgba(59,46,36,.09)]"
             >
-              <div className="h-[110px] w-full animate-pulse bg-[rgba(59,46,36,.06)]" />
+              <Skeleton className="h-[110px] w-full rounded-none" />
               <div className="space-y-2 px-[13px] py-[11px]">
-                <div className="h-3 w-3/4 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
-                <div className="h-3.5 w-1/3 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
+                <Skeleton className="h-3 w-3/4" />
+                <Skeleton className="h-3.5 w-1/3" />
               </div>
             </div>
           ))}
@@ -140,10 +142,10 @@ export default function ProductsPage() {
       ) : items.length === 0 ? (
         <div className="u3-panel flex flex-col items-center px-[17px] py-14">
           <PackageOpen size={34} strokeWidth={1.2} className="text-[rgba(59,46,36,.42)]" />
-          <p className="mt-3 text-sm font-bold text-ink">货架空空，去上架第一件商品</p>
+          <p className="mt-3 text-sm font-bold text-ink">{pd('prod.emptyTitle')}</p>
           <div className="mt-4">
             <QuietButton testid="products-empty-create" onClick={() => openEditor(null)}>
-              ＋ 新增商品
+              {pd('prod.createCta')}
             </QuietButton>
           </div>
         </div>
@@ -166,7 +168,7 @@ export default function ProductsPage() {
                 {cover ? (
                   <img src={cover} alt={p.name} className="h-[110px] w-full object-cover" />
                 ) : (
-                  <div className="h-[110px] w-full bg-[#B9A482]" />
+                  <div className="h-[110px] w-full bg-[rgba(59,46,36,.06)]" />
                 )}
                 <div className="px-[13px] py-[11px]">
                   <div className="truncate text-xs font-bold text-ink">{p.name}</div>

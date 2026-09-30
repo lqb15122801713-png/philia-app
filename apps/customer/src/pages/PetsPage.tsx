@@ -16,6 +16,7 @@ import { z } from 'zod'
 import { getApiBase, uploadImage, useMe, usePhiliaClient } from '@philia/shared'
 import PageHeader from '@/components/PageHeader'
 import { mc } from '../components/member/copy'
+import { pc } from '@/copy/pets'
 import {
   EmptyState,
   ErrorState,
@@ -94,7 +95,7 @@ function VaccineBadge({ until }: { until: string | null }) {
   if (!until) {
     return (
       <span className="rounded-chip bg-sunken px-2 py-1 text-caption-xs text-ink-placeholder">
-        未登记疫苗
+        {pc('pets.vaccineNone')}
       </span>
     )
   }
@@ -102,7 +103,7 @@ function VaccineBadge({ until }: { until: string | null }) {
   if (days < 0) {
     return (
       <span className="rounded-chip bg-danger-light px-2 py-1 text-caption-xs text-danger-deep">
-        疫苗已过期 · 寄养前需补种
+        {pc('pets.vaccineExpired')}
       </span>
     )
   }
@@ -110,14 +111,14 @@ function VaccineBadge({ until }: { until: string | null }) {
     /* U1-I：到期提醒=提示卡暖底（v2.0 §1.4 暖底辅助件；真实 vaccineValidUntil 驱动） */
     return (
       <span className="rounded-chip bg-brand-primary-light px-2 py-1 text-caption-xs text-ink">
-        疫苗 {days} 天后到期 · 寄养需有效期内
+        {pc('pets.vaccineSoon', { days })}
       </span>
     )
   }
   /* U1-I：正常=卡其族浅底（反馈件不设绿，45 号档 P1-1② 口径） */
   return (
     <span className="rounded-chip bg-brand-secondary-light px-2 py-1 text-caption-xs text-ink">
-      疫苗有效至 {until}
+      {pc('pets.vaccineOk', { date: until })}
     </span>
   )
 }
@@ -218,7 +219,7 @@ function PetForm({
 
   return (
     <div className="u1-card p-4">
-      <p className="text-title">{editingId ? '编辑档案' : '新增宠物'}</p>
+      <p className="text-title">{editingId ? '编辑档案' : pc('pets.addCta')}</p>
 
       {/* 头像 */}
       <div className="mt-4 flex items-center gap-4">
@@ -488,8 +489,8 @@ function PetGroomingHistory({ petId }: { petId: string }) {
   return (
     <div className="mt-3 border-t border-line-ring pt-2.5" data-testid={`pet-history-${petId}`}>
       <div className="flex items-baseline justify-between">
-        <p className="text-body-sm font-semibold">洗护史</p>
-        <p className="u1-num text-caption-xs text-ink-placeholder">共 {rowsAll.length} 次</p>
+        <p className="text-body-sm font-semibold">{pc('pets.historyTitle')}</p>
+        <p className="u1-num text-caption-xs text-ink-placeholder">{pc('pets.historyCount', { count: rowsAll.length })}</p>
       </div>
       <ul className="mt-1.5 flex flex-col gap-1.5">
         {rows.map((a) => {
@@ -505,7 +506,7 @@ function PetGroomingHistory({ petId }: { petId: string }) {
                 data-testid={`pet-rebook-${a.id}`}
                 className="shrink-0 text-caption-xs font-bold text-ink underline-offset-2 hover:underline"
               >
-                同款再约 ›
+                {pc('pets.rebook')}
               </Link>
             </li>
           )
@@ -549,17 +550,17 @@ export default function PetsPage() {
        实现=多宠列表页（/philia/pets）——信息架构维持现行不重构，逐格对齐卡工艺 */
     <div className="px-[22px] pb-6">
       {/* U1-A：统一返回条（←圆钮+标题），固定返回 philia 页 */}
-      <PageHeader title="宠物档案" fallback="/philia" className="pt-4" />
+      <PageHeader title={pc('pets.title')} fallback="/philia" className="pt-4" />
 
       <div className="mt-4 flex flex-col gap-3">
         {petsQuery.isPending ? <LoadingBlock lines={3} /> : null}
         {petsQuery.isError ? (
-          <ErrorState message="宠物档案加载失败" onRetry={() => void petsQuery.refetch()} />
+          <ErrorState message={pc('pets.loadFail')} onRetry={() => void petsQuery.refetch()} />
         ) : null}
         {petsQuery.data && petsQuery.data.length === 0 && !editing ? (
           <EmptyState
-            title="还没有宠物档案"
-            desc="建立档案后，预约洗护与寄养更省心"
+            title={pc('pets.emptyTitle')}
+            desc={pc('pets.emptyBody')}
             action={
               /* E 系空态深棕钮（.emptyc .go：深棕墨底 #2E2318 + 深底主文字 #F6EFDD，§4.11） */
               <button
@@ -567,7 +568,7 @@ export default function PetsPage() {
                 onClick={openCreate}
                 className="rounded-control bg-[#2E2318] px-[22px] py-3 text-[13px] font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92"
               >
-                建立档案
+                {pc('pets.emptyCta')}
               </button>
             }
           />
@@ -677,7 +678,7 @@ export default function PetsPage() {
             className="flex items-center justify-center gap-1.5 rounded-panel border border-dashed border-line-strong bg-card py-3.5 text-body-sm text-ink-secondary transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
             <Plus className="h-4 w-4" strokeWidth={1.5} />
-            新增宠物
+            {pc('pets.addCta')}
           </button>
         ) : null}
       </div>

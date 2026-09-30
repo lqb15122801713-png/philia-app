@@ -23,12 +23,13 @@
  * 「口令入内测 ›」= 口令门卡显隐开关；口令门卡/种子用户列表真实交互全保留。
  */
 
-import { devLogin, devLoginByPhone, getApiBase, logout, useMe, usePhiliaClient } from '@philia/shared'
+import { devLogin, devLoginByPhone, getApiBase, logout, Skeleton, useMe, usePhiliaClient } from '@philia/shared'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { mc } from '@/components/member/copy'
+import { dc } from '@/copy/devlogin'
 
 interface SeedUser {
   id: string
@@ -178,8 +179,8 @@ export default function DevLoginPage() {
           </svg>
         </span>
         {/* 衬线宣言（v2.0 §2.1 宣言档 34/900 lh1.5 + §4.11 淡黄刷底强调件，
-            登录页专用不泛滥；文案入 copy 键。旧注「试样 30px 越字阶取 20」作废——
-            片 1 字阶梯已落 34px 宣言档，本页即 L-01 唯一用位） */}
+            登录页专用不泛滥；文案入 copy 键（l1.* 在 MEMBER_COPY，其余在 copy/devlogin.ts）。
+            旧注「试样 30px 越字阶取 20」作废——片 1 字阶梯已落 34px 宣言档，本页即 L-01 唯一用位） */}
         <h1 className="u1-serif mt-[30px] text-v2-manifesto tracking-[.04em]">
           {mc('l1.manifestoA')}
           <br />
@@ -193,7 +194,7 @@ export default function DevLoginPage() {
           {mc('l1.manifestoC')}
         </h1>
         <p className="mt-[14px] text-caption-xs font-medium tracking-[.14em] text-ink-secondary">
-          PHILIA · 洗护 / 美容 / 寄养
+          {dc('devlogin.tagline')}
         </p>
         <span className="mt-[22px] block h-[1.5px] w-11 bg-brand-primary" aria-hidden="true" />
       </header>
@@ -220,7 +221,7 @@ export default function DevLoginPage() {
           onClick={() => accountsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
           className="mt-3 flex w-full items-center justify-center rounded-control bg-[#2E2318] py-[15px] text-body-sm font-semibold text-[#F6EFDD] shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
         >
-          手机号一键登录
+          {dc('devlogin.primaryCta')}
         </button>
         <button
           type="button"
@@ -229,7 +230,7 @@ export default function DevLoginPage() {
           onClick={() => setGateOpen((v) => !v)}
           className="mt-4 self-center text-caption font-semibold text-ink-secondary"
         >
-          口令入内测 ›
+          {dc('devlogin.gateLink')}
         </button>
       </div>
 
@@ -254,9 +255,9 @@ export default function DevLoginPage() {
         {/* 口令门卡：服务端 401/403 强制显示，或「口令入内测 ›」手动展开 */}
         {gateRequired || gateOpen ? (
           <section className="u1-card mt-4 p-4" aria-label="内测口令">
-            <p className="text-body-sm font-semibold">内测环境需要口令</p>
+            <p className="text-body-sm font-semibold">{dc('devlogin.gateTitle')}</p>
             <p className="mt-1 text-caption text-ink-secondary">
-              请输入内测口令后加载可登录账号；无口令或口令错误将无法登录。
+              {dc('devlogin.gateBody')}
             </p>
             <div className="mt-2 flex gap-2">
               <Input
@@ -284,9 +285,9 @@ export default function DevLoginPage() {
         {/* D-16 自助开户：口令通过（seeds 拉到）后出「手机号登录/注册」输入卡 */}
         {seeds !== null ? (
           <section className="u1-card mt-4 p-4" aria-label="手机号登录注册" data-testid="phone-login-card">
-            <p className="text-body-sm font-semibold">手机号登录 / 注册</p>
+            <p className="text-body-sm font-semibold">{dc('devlogin.phoneTitle')}</p>
             <p className="mt-1 text-caption text-ink-secondary">
-              输入手机号即登录；首次使用将自动注册（新客建档）。
+              {dc('devlogin.phoneBody')}
             </p>
             <div className="mt-2 flex gap-2">
               <Input
@@ -314,13 +315,15 @@ export default function DevLoginPage() {
 
         <section ref={accountsRef} className="mt-6 scroll-mt-4">
           <div className="flex items-baseline justify-between gap-3">
-            <h2 className="text-title">选择种子用户登录</h2>
-            <span className="shrink-0 text-caption-xs text-ink-placeholder">仅开发环境 · 生产环境请移除</span>
+            <h2 className="text-title">{dc('devlogin.seedTitle')}</h2>
+            <span className="shrink-0 text-caption-xs text-ink-placeholder">{dc('devlogin.devOnly')}</span>
           </div>
           {seeds === null && seedsError === null && !gateRequired ? (
             <ul className="mt-3 space-y-2">
               {[1, 2, 3].map((i) => (
-                <li key={i} className="h-14 animate-pulse rounded-panel bg-sunken" />
+                <li key={i}>
+                  <Skeleton className="h-14 rounded-panel" />
+                </li>
               ))}
             </ul>
           ) : seeds && seeds.length > 0 ? (
@@ -345,20 +348,20 @@ export default function DevLoginPage() {
               ))}
             </ul>
           ) : gateRequired && seeds === null ? (
-            <p className="mt-3 text-caption text-ink-secondary">口令通过后在上方选择账号一键登录。</p>
+            <p className="mt-3 text-caption text-ink-secondary">{dc('devlogin.gateHint')}</p>
           ) : (
             <p className="mt-3 rounded-panel bg-danger-light px-4 py-3 text-caption text-danger-deep">
               {seedsError
-                ? `种子用户拉取失败（网络连接失败：${seedsError}）——请检查网络或确认 server 已启动；若是口令问题请用上方口令门`
-                : '未拉到种子用户，请重跑 server 的 db:seed，或手动输入 userId'}
+                ? dc('devlogin.seedFail', { error: seedsError })
+                : dc('devlogin.seedEmpty')}
             </p>
           )}
         </section>
 
         <section className="mt-6">
-          <h2 className="text-title">手动输入 userId</h2>
+          <h2 className="text-title">{dc('devlogin.manualTitle')}</h2>
           <p className="mt-1 text-caption text-ink-secondary">
-            重跑 server 的 db:seed 后用户 ID 会变化，可在 server 库中查 users 表后粘贴到这里。
+            {dc('devlogin.manualBody')}
           </p>
           <div className="mt-2 flex gap-2">
             <Input
@@ -382,16 +385,15 @@ export default function DevLoginPage() {
         ) : null}
 
         <p className="mt-8 text-caption-xs text-ink-placeholder">
-          提示：种子用户一键登录 + 口令门内手机号自助开户（D-16：新号自动注册 customer）；
-          会话 cookie 有效期 7 天。
+          {dc('devlogin.seedNote')}
         </p>
       </main>
 
       {/* 底部协议小字（试样工艺：10px → 字阶取 11 caption-xs） */}
       <footer className="mt-10 px-10 text-center text-caption-xs leading-[1.8] text-ink-placeholder">
-        登录即同意《用户协议》与《隐私政策》
+        {dc('devlogin.footerA')}
         <br />
-        内测期间口令由门店发放
+        {dc('devlogin.footerB')}
       </footer>
     </div>
   )

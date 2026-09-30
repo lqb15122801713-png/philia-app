@@ -32,6 +32,7 @@ import { Check, CheckCircle2, WifiOff } from 'lucide-react'
 import { usePhiliaClient } from '@philia/shared'
 import { useQuery } from '@tanstack/react-query'
 import { fenToYuan, yuanToFen } from '@/components/mall-admin/format'
+import { cc } from '@/copy/cashier'
 import { MEMBER_FOR_USER_KEY } from './membership'
 import {
   finalizePayments,
@@ -132,11 +133,12 @@ export default function PaySheet({
   /** 次卡胶囊不可用原因（null = 可用） */
   const passBlockReason = useMemo((): string | null => {
     if (passCoveredFen > 0) return null // 已选态可点击取消
-    if (!member) return '次卡扣次：散客不可用——先检索会员'
+    if (!member) return cc('cashier.payPassNoMember')
     if (pass === undefined) return null // 加载中短暂可点无妨
-    if (pass === null || !passUsable) return '该会员无可用次卡'
-    if (groomCount === 0) return '车内无洗护服务行（次卡仅洗护可用）'
-    if (pass.remainTimes < groomCount) return `次卡余额不足：剩 ${pass.remainTimes} 次 · 需 ${groomCount} 次`
+    if (pass === null || !passUsable) return cc('cashier.payPassNoCard')
+    if (groomCount === 0) return cc('cashier.payPassNoGroom')
+    if (pass.remainTimes < groomCount)
+      return cc('cashier.payPassShort', { remain: pass.remainTimes, need: groomCount })
     return null
   }, [member, pass, passUsable, groomCount, passCoveredFen])
 
@@ -161,9 +163,9 @@ export default function PaySheet({
   /** 回馈金胶囊不可用原因（null = 可用；散客不出现该胶囊） */
   const rbBlockReason = useMemo((): string | null => {
     if (!member) return null // 散客无回馈金账户——不出现
-    if (prodFen <= 0) return '回馈金仅可抵商品——当单无商品行（服务/寄养行禁用回馈金段）'
-    if (dueFen <= 0) return '应收已为 0（次卡已全额抵扣）——无需回馈金段'
-    if (rbBalance !== null && rbBalance <= 0) return '回馈金已到账余额为 0（本期预计次月到账后可用）'
+    if (prodFen <= 0) return cc('cashier.payRebateNoProduct')
+    if (dueFen <= 0) return cc('cashier.payRebateZeroDue')
+    if (rbBalance !== null && rbBalance <= 0) return cc('cashier.payRebateZeroBalance')
     return null
   }, [member, prodFen, dueFen, rbBalance])
 
@@ -173,7 +175,7 @@ export default function PaySheet({
   /** 储值胶囊不可用原因（null = 可用；仅在有余额时出现，故仅负担保口径） */
   const svBlockReason = useMemo((): string | null => {
     if (!member || svBalance <= 0) return null // 不出现（无原因行）
-    if (dueFen <= 0) return '应收已为 0（次卡已全额抵扣）——无需储值段'
+    if (dueFen <= 0) return cc('cashier.paySvZeroDue')
     return null
   }, [member, svBalance, dueFen])
 
@@ -314,7 +316,7 @@ export default function PaySheet({
               已收款 ¥{fenToYuan(settledInfo.paidFen)}
             </div>
             <div className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
-              单号 <span className="font-number tabular-nums">{settledInfo.billNo}</span> · 3 秒后自动返回
+              单号 <span className="font-number tabular-nums">{settledInfo.billNo}</span> · {cc('cashier.paySuccessBack')}
             </div>
             <button
               type="button"
@@ -322,7 +324,7 @@ export default function PaySheet({
               onClick={onClose}
               className="mt-6 rounded-full bg-brand-primary px-6 py-2.5 text-caption font-bold text-ink shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
             >
-              再开一单
+              {cc('cashier.payNextCta')}
             </button>
           </div>
         ) : (
@@ -334,7 +336,7 @@ export default function PaySheet({
                 data-testid="cashier-pay-offline"
               >
                 <WifiOff size={13} strokeWidth={2} aria-hidden />
-                离线中 —— 确认后本地暂存，恢复网络自动补传
+                {cc('cashier.payOfflineBar')}
               </div>
             ) : null}
             <div className="mb-1.5 flex items-center justify-between">
@@ -517,13 +519,16 @@ export default function PaySheet({
                 ) : null}
                 {rbOn && rbOver ? (
                   <p className="py-1 text-caption-xs font-semibold text-danger-deep" data-testid="cashier-rebate-over">
-                    回馈金金额须 ≤ min(商品行合计 ¥{fenToYuan(prodFen)}, 应收 ¥{fenToYuan(dueFen)}
-                    {rbBalance !== null ? `, 余额 ¥${fenToYuan(rbBalance)}` : ''}），可混搭现金/扫码补足
+                    {cc('cashier.payRebateCap', {
+                      prod: fenToYuan(prodFen),
+                      due: fenToYuan(dueFen),
+                      bal: rbBalance !== null ? `, 余额 ¥${fenToYuan(rbBalance)}` : '',
+                    })}
                   </p>
                 ) : null}
                 {rbOn ? (
                   <p className="py-1 text-caption-xs text-[rgba(59,46,36,.42)]">
-                    已到账余额 1:1 抵扣（本期预计在途回馈金次月到账后可用）；用回馈金付的部分不再返
+                    {cc('cashier.payRebateNote')}
                   </p>
                 ) : null}
                 {selected.includes('cash') && cashApplied > 0 ? (
@@ -567,21 +572,21 @@ export default function PaySheet({
                     data-testid="cashier-pay-gap"
                   >
                     {sumMoney > moneyNeedFen
-                      ? `超出 ¥${fenToYuan(sumMoney - moneyNeedFen)}——调低任一段金额后才可确认`
-                      : `还差 ¥${fenToYuan(moneyNeedFen - sumMoney)}——补足后才可确认结账`}
+                      ? cc('cashier.payGapOver', { amt: fenToYuan(sumMoney - moneyNeedFen) })
+                      : cc('cashier.payGapUnder', { amt: fenToYuan(moneyNeedFen - sumMoney) })}
                   </div>
                 ) : null}
                 <div className="py-1 text-caption-xs text-[rgba(59,46,36,.42)]">
-                  可组合支付：Σ支付 = 应收 才放行确认
+                  {cc('cashier.payComboRule')}
                 </div>
                 {/* 副行口径（裁定①+R11a）：已收=现金类；次卡/储值/回馈金单列不计入已收 */}
                 <div className="border-t border-dashed border-[rgba(59,46,36,.12)] py-1 text-caption-xs text-[rgba(59,46,36,.42)]">
-                  已收口径=现金/微信/支付宝；次卡扣次 / 储值消费 / 回馈金抵扣单列，不计入今日已收
+                  {cc('cashier.payTenderNote')}
                 </div>
               </div>
             ) : passCoveredFen > 0 ? (
               <div className="mt-3.5 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3 text-caption-xs text-[rgba(59,46,36,.62)]">
-                全额次卡扣次——无需现金/扫码段（次卡单列，不计入已收）
+                {cc('cashier.payPassOnly')}
               </div>
             ) : null}
 

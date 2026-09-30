@@ -20,6 +20,8 @@
  */
 
 import { useState } from 'react'
+import { Skeleton } from '@philia/shared'
+import { cc } from '@/copy/cashier'
 import { BookCheck, Download, LogOut, PencilLine, RotateCcw } from 'lucide-react'
 import {
   type DayCloseRow,
@@ -59,7 +61,7 @@ export function ShiftCard({
           <span className="text-caption text-[rgba(59,46,36,.42)]">加载中…</span>
         ) : shift === null ? (
           <span className="text-caption text-[rgba(59,46,36,.62)]" data-testid="close-shift-none">
-            当前无开班班次 —— 首笔收银将自动开班（懒建）
+            {cc('cashier.shiftEmpty')}
           </span>
         ) : (
           <>
@@ -205,7 +207,7 @@ export function DayCloseForm({
         </button>
         {shift == null && overrideShiftId === null ? (
           <p className="mt-1.5 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
-            全日口径：当前无开班班次也可日结（账面按当日全部支付段计）
+            {cc('cashier.dayCloseFullNote')}
           </p>
         ) : null}
       </div>
@@ -242,13 +244,13 @@ export function RefundDayPanel({
     <div className="u3-panel" data-testid="refund-day-panel">
       <div className="u3-panel-head">
         <h3>当日退款（退款单列）</h3>
-        <span className="aside">当日净额=已收−退款 · 历史日结封箱不回填（只读）</span>
+        <span className="aside">{cc('cashier.refundDayAside')}</span>
       </div>
       <div className="px-[17px] pb-4">
         {loading ? (
           <div className="space-y-2">
             {[0, 1].map((i) => (
-              <div key={i} className="h-8 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
+              <Skeleton key={i} className="h-8" />
             ))}
           </div>
         ) : !stats ? (
@@ -292,7 +294,7 @@ export function RefundDayPanel({
               <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(stats.segments.storedValueFen)}</b>
             </p>
             <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
-              跨日退款计入退款发生日日结（V7）；已封箱历史日结单不回填，只读留痕。
+              {cc('cashier.refundCrossDayNote')}
             </p>
           </>
         )}
@@ -334,17 +336,17 @@ export function DayCloseList({
     <div className="u3-panel" data-testid="dayclose-list">
       <div className="u3-panel-head">
         <h3>日结留痕</h3>
-        <span className="aside">冲正单与原单双向可查 · 原单永存不涂改</span>
+        <span className="aside">{cc('cashier.dayCloseListAside')}</span>
       </div>
       {loading ? (
         <div className="space-y-2 px-[17px] pb-4">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-9 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
+            <Skeleton key={i} className="h-9" />
           ))}
         </div>
       ) : (rows ?? []).length === 0 ? (
         <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-body-sm text-[rgba(59,46,36,.62)]">
-          暂无日结单 —— 上方表单完成首次日结
+          {cc('cashier.dayCloseEmpty')}
         </p>
       ) : (
         <div className="u3-noscrollx overflow-x-auto">
@@ -638,8 +640,8 @@ export function CloseReasonDialog({
       />
       <p className="mt-1.5 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
         {isReverse
-          ? '拆箱将生成冲正关联单（含前后值快照/操作人/时间/原因），原日结单永存不涂改（置「已冲正」）；之后可对同日重新日结（全日口径）。'
-          : '备注追加进调整记录留痕，原冻结数字不涂改。'}
+          ? cc('cashier.reverseCloseNote')
+          : cc('cashier.adjustNote')}
       </p>
       {!valid ? (
         <p className="mt-2 text-caption-xs font-semibold text-danger-deep">

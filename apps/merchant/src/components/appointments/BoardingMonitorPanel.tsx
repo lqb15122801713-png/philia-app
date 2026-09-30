@@ -9,6 +9,7 @@
  */
 
 import { PawPrint } from 'lucide-react';
+import { oc } from '../../copy/monitor';
 import { fmtDateTime, type AppointmentGetResult, type StayBoardEntry } from './appt-utils';
 
 export interface LiveLogItem {
@@ -98,7 +99,7 @@ export function BoardingMonitorPanel({
           </ul>
         ) : (
           <p className="mt-2 px-[17px] pb-4 text-caption-xs text-[rgba(59,46,36,.42)]">
-            员工打卡后会实时出现在这里；历史打卡明细请在「寄养管理」页查看。
+            {oc('mon.boardingLogsEmpty')}
           </p>
         )}
       </section>

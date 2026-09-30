@@ -14,11 +14,12 @@
  * dev-login 种子登录链路（invalidateQueries + 回跳 from 或 /dashboard）不回归。
  */
 
-import { devLogin, getApiBase, logout, useMe, usePhiliaClient } from '@philia/shared'
+import { devLogin, getApiBase, logout, Skeleton, useMe, usePhiliaClient } from '@philia/shared'
 import { KeyRound, LogOut, Store } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
+import { au } from '@/copy/auth'
 
 interface SeedUser {
   id: string
@@ -157,15 +158,15 @@ export default function DevLoginPage() {
           className="rounded-[20px] bg-[#FFFDF6] px-8 pb-8 pt-[34px] text-center shadow-[0_0_0_1px_rgba(59,46,36,0.09)]"
         >
           <p className="font-display text-[14px] font-bold tracking-[.3em] text-[rgba(59,46,36,0.42)]">
-            PHILIA · 商家端
+            {au('auth.wordmark')}
           </p>
           <h1 className="u1-serif mt-3.5 text-[20px] font-bold leading-[34px]">
-            店里的每一件小事，
+            {au('auth.manifestoA')}
             <br />
-            都值得被认真对待
+            {au('auth.manifestoB')}
           </h1>
           <p className="mt-1.5 text-[12px] text-[rgba(59,46,36,0.62)]">
-            菲丽亚宠物 · 门店经营后台（内测）
+            {au('auth.subtitle')}
           </p>
 
           {user ? (
@@ -188,7 +189,7 @@ export default function DevLoginPage() {
                 onClick={() => navigate('/dashboard')}
                 className="mt-3 w-full rounded-[14px] bg-brand-primary py-3.5 text-[14px] font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
               >
-                进入门店
+                {au('auth.enterCta')}
               </button>
               <button
                 type="button"
@@ -210,12 +211,12 @@ export default function DevLoginPage() {
                 </p>
                 {gateRequired && seeds === null ? (
                   <p className={`${FLD} px-4 py-3.5 text-[12px] text-[rgba(59,46,36,0.42)]`}>
-                    内测环境需先在下方输入口令
+                    {au('auth.gateNotice')}
                   </p>
                 ) : seeds === null && seedsError === null ? (
                   <div className="space-y-2">
                     {[1].map((i) => (
-                      <div key={i} className="h-[52px] animate-pulse rounded-[14px] bg-sunken" />
+                      <Skeleton key={i} className="h-[52px] rounded-[14px]" />
                     ))}
                   </div>
                 ) : merchantSeeds.length > 0 ? (
@@ -247,7 +248,7 @@ export default function DevLoginPage() {
                   <p className="rounded-[14px] bg-danger-light px-4 py-3 text-[11px] text-danger-deep">
                     {seedsError
                       ? `种子用户拉取失败（${seedsError}），请确认 server 已启动，或手动输入 userId`
-                      : '未拉到店主种子用户，请重跑 server 的 db:seed，或手动输入 userId'}
+                      : au('auth.seedEmpty')}
                   </p>
                 )}
               </div>
@@ -281,14 +282,14 @@ export default function DevLoginPage() {
                 onClick={handlePrimary}
                 className="mt-3.5 w-full rounded-[14px] bg-brand-primary py-3.5 text-[14px] font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-60"
               >
-                {pendingId !== null ? '登录中…' : '进入门店'}
+                {pendingId !== null ? '登录中…' : au('auth.enterCta')}
               </button>
             </div>
           )}
 
           {/* 协议小字（试样所印 10px 越字阶闸门 → 11，员工端 E-19 同口径映射） */}
           <p className="mt-3.5 text-caption-xs leading-relaxed text-[rgba(59,46,36,0.42)]">
-            登录即同意《商家内测协议》· 遇到问题联系 philia 小助手
+            {au('auth.agreement')}
           </p>
         </div>
 
@@ -317,8 +318,7 @@ export default function DevLoginPage() {
               </p>
             ) : null}
             <p className="mt-4 text-center text-[11px] leading-relaxed text-[rgba(59,46,36,0.42)]">
-              仅开发环境：dev-login 仅允许种子用户（kimi_id 以 seed_ 前缀），会话 cookie 有效期 7 天。
-              非商家账号登录后会被引导回本页切换。
+              {au('auth.devNote')}
             </p>
           </div>
         ) : null}

@@ -20,8 +20,11 @@
 
 import {
   EventType,
+  PhotoViewer,
+  Skeleton,
   usePhiliaClient,
   type EventEnvelope,
+  type PhotoViewerPhoto,
   type ServiceStepKey,
 } from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -42,8 +45,8 @@ import {
 } from '../components/appointments/BoardingMonitorPanel';
 import { ConfirmDialog } from '../components/appointments/ConfirmDialog';
 import { MonitorTimeline, pickFlaggableStep } from '../components/appointments/MonitorTimeline';
-import { PhotoViewer, type ViewPhoto } from '../components/appointments/PhotoViewer';
 import { useMerchantEvents } from '../components/appointments/useMerchantEvents';
+import { oc } from '../copy/monitor';
 
 /** 员工角色 → 中文（staff.role 枚举：frontdesk=前台 / groomer=美容师，批次 S1） */
 const ROLE_LABEL: Record<string, string> = { frontdesk: '前台', groomer: '美容师' };
@@ -57,7 +60,7 @@ function todayScheduleLabel(staff: StaffListItem | null): string {
 }
 
 /** 墙照片：全步聚合，最新在前（takenAt 降序，空时间排末） */
-function wallPhotosOf(steps: StepListItem[]): ViewPhoto[] {
+function wallPhotosOf(steps: StepListItem[]): PhotoViewerPhoto[] {
   return steps
     .flatMap((s) => s.photos)
     .sort((a, b) => (b.takenAt?.getTime() ?? 0) - (a.takenAt?.getTime() ?? 0))
@@ -75,12 +78,11 @@ function ParentViewNote() {
   return (
     <>
       <div className="u3-panel-head border-t border-[rgba(59,46,36,.06)]">
-        <h3>家长端视角</h3>
-        <span className="aside">与客户端「服务中全程页」同源</span>
+        <h3>{oc('mon.parentViewTitle')}</h3>
+        <span className="aside">{oc('mon.parentViewAside')}</span>
       </div>
       <p className="px-[17px] pb-4 text-caption leading-[1.7] text-[rgba(59,46,36,.62)]">
-        家长看到的内容与这屏一致（六步进度+过程照）。照片一经上传即双频道推送，不可删除，仅可被商家「打标重拍」作废旧照（B3-1
-        在案）。
+        {oc('mon.parentViewBody')}
       </p>
     </>
   );
@@ -144,7 +146,7 @@ export default function AppointmentMonitorPage() {
   }, [queryClient, aid]);
 
   const [liveLogs, setLiveLogs] = useState<LiveLogItem[]>([]);
-  const [viewer, setViewer] = useState<{ photos: ViewPhoto[]; index: number } | null>(null);
+  const [viewer, setViewer] = useState<{ photos: PhotoViewerPhoto[]; index: number } | null>(null);
   const [staffOpen, setStaffOpen] = useState(false);
 
   const onEvent = useCallback(
@@ -245,26 +247,26 @@ export default function AppointmentMonitorPage() {
           index={viewer.index}
           onClose={() => setViewer(null)}
           onNavigate={(i) => setViewer((v) => (v ? { ...v, index: i } : v))}
+          loop
+          showTakenAt
+          keyboard={false}
         />
       ) : null}
 
       {detailQuery.isPending ? (
-        /* 加载骨架（禁转圈） */
+        /* 加载中骨架块（animate-pulse，禁转圈）：shared Skeleton 组合 */
         <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.6fr_1fr]" aria-label="加载中">
           <div className="u3-panel p-[14px_17px]">
-            <div className="h-3.5 w-28 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
+            <Skeleton className="h-3.5 w-28 rounded-chip" />
             <div className="mt-3 flex flex-wrap gap-2">
               {[0, 1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="h-24 w-32 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]"
-                />
+                <Skeleton key={i} className="h-24 w-32 rounded-chip" />
               ))}
             </div>
           </div>
           <div className="u3-panel p-[14px_17px]">
             {[0, 1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="mt-2.5 h-3.5 w-40 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
+              <Skeleton key={i} className="mt-2.5 h-3.5 w-40 rounded-chip" />
             ))}
           </div>
         </div>
@@ -292,12 +294,12 @@ export default function AppointmentMonitorPage() {
         /* 尚未开始 / 已取消 */
         <div className="u3-panel px-[17px] py-14 text-center">
           <div className="text-body-sm font-semibold text-[rgba(59,46,36,.62)]">
-            {appt.status === 'cancelled' ? '预约已取消' : '服务尚未开始'}
+            {appt.status === 'cancelled' ? oc('mon.cancelledTitle') : oc('mon.notStartedTitle')}
           </div>
           <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
             {appt.status === 'cancelled'
-              ? '该预约已取消，无服务过程可监视。'
-              : '客户到店核销后，这里会实时展示服务进度与照片。'}
+              ? oc('mon.cancelledBody')
+              : oc('mon.notStartedBody')}
           </div>
         </div>
       ) : isBoarding ? (
@@ -317,19 +319,16 @@ export default function AppointmentMonitorPage() {
             {stepsQuery.isPending ? (
               <div className="flex flex-wrap gap-2 px-[17px] pb-4">
                 {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="h-24 w-32 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]"
-                  />
+                  <Skeleton key={i} className="h-24 w-32 rounded-chip" />
                 ))}
               </div>
             ) : steps.length === 0 ? (
               <p className="px-[17px] pb-4 text-caption text-[rgba(59,46,36,.62)]">
-                六步流尚未初始化（等待员工核销）。
+                {oc('mon.stepsEmpty')}
               </p>
             ) : wallPhotos.length === 0 ? (
               <p className="px-[17px] pb-4 text-caption text-[rgba(59,46,36,.62)]">
-                员工上传过程照后会实时出现在这里。
+                {oc('mon.wallEmpty')}
               </p>
             ) : (
               <div className="flex flex-wrap gap-2 px-[17px] pb-4 pt-1">
@@ -365,15 +364,12 @@ export default function AppointmentMonitorPage() {
             {stepsQuery.isPending ? (
               <div className="px-[17px] pb-4">
                 {[0, 1, 2, 3, 4, 5].map((i) => (
-                  <div
-                    key={i}
-                    className="mt-2.5 h-3.5 w-40 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]"
-                  />
+                  <Skeleton key={i} className="mt-2.5 h-3.5 w-40 rounded-chip" />
                 ))}
               </div>
             ) : steps.length === 0 ? (
               <p className="px-[17px] pb-4 text-caption text-[rgba(59,46,36,.62)]">
-                六步流尚未初始化（等待员工核销）。
+                {oc('mon.stepsEmpty')}
               </p>
             ) : (
               <MonitorTimeline steps={steps} />
@@ -422,12 +418,12 @@ export default function AppointmentMonitorPage() {
                       </span>
                     </div>
                     <p className="pt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
-                      店内对讲或到工位找TA；联系方式请走门店内部渠道。
+                      {oc('mon.staffContactNote')}
                     </p>
                   </>
                 ) : (
                   <p className="py-1.5 text-caption text-[rgba(59,46,36,.62)]">
-                    该单尚未指派员工，可在预约详情页改派。
+                    {oc('mon.staffUnassigned')}
                   </p>
                 )}
               </div>
@@ -439,13 +435,13 @@ export default function AppointmentMonitorPage() {
       {/* 打标重拍确认弹层（现有链路：填原因 → flagForRedo） */}
       <ConfirmDialog
         open={flagOpen && flagTarget !== null}
-        title={`打标重拍「${flagTarget ? (stepDisplayName(flagTarget.stepKey)) : ''}」？`}
+        title={oc('mon.flagTitle', { step: flagTarget ? stepDisplayName(flagTarget.stepKey) : '' })}
         body={
           appt?.status === 'completed'
-            ? '该预约已完成：打标将重新开启本预约（打回「服务中」），该步骤回退为「进行中」，员工重拍后需重新确认完成。'
+            ? oc('mon.flagBodyReopen')
             : flagTarget?.status === 'done'
-              ? '该步骤将回退为「进行中」，已有照片全部作废，员工需重新拍摄上传。'
-              : '该步骤当前进行中，打标后员工会收到重拍提醒。'
+              ? oc('mon.flagBodyDone')
+              : oc('mon.flagBodyActive')
         }
         confirmText="确认打标"
         danger

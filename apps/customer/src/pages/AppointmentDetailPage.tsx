@@ -18,14 +18,15 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { EventType, getApiBase, safeUuid, useEventSource, useMe, usePhiliaClient, type EventEnvelope } from '@philia/shared';
+import { EventType, getApiBase, safeUuid, Skeleton, useEventSource, useMe, usePhiliaClient, type EventEnvelope } from '@philia/shared';
 import BookingCode from '@/components/booking/BookingCode';
 import PageHeader from '@/components/PageHeader';
 import ReviewPanel from '@/components/live/ReviewPanel';
 import BoardingDateRangePicker, { checkinAt } from '@/components/booking/BoardingDateRangePicker';
 import SlotPicker from '@/components/booking/SlotPicker';
 import { ErrorState } from '@/components/home/common';
-import { friendlyError, useToast } from '@/components/booking/Toast';
+import { friendlyError, useToast } from '@philia/shared';
+import { apc } from '@/copy/appointments';
 import {
   APPT_STATUS_META,
   APPT_TYPE_LABEL,
@@ -81,7 +82,7 @@ export default function AppointmentDetailPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const { trpc, queryClient } = usePhiliaClient();
-  const { toastEl, showToast } = useToast();
+  const { toastEl, showToast } = useToast({ durationMs: 3200 });
 
   const detailQ = useQuery({
     queryKey: ['appointment', 'get', id],
@@ -143,7 +144,7 @@ export default function AppointmentDetailPage() {
         'info',
       );
     },
-    onError: (err) => showToast(friendlyError(err, '取消失败，请稍后再试')),
+    onError: (err) => showToast(friendlyError(err, '取消失败，请稍后再试'), 'error'),
   });
 
   /* 评价（completed 态）：review 走 ReviewPanel 合规件（PR-2 A1）——评分 state 由组件自持 */
@@ -154,7 +155,7 @@ export default function AppointmentDetailPage() {
       invalidate();
       showToast('感谢评价！', 'info');
     },
-    onError: (err) => showToast(friendlyError(err, '评价提交失败')),
+    onError: (err) => showToast(friendlyError(err, '评价提交失败'), 'error'),
   });
 
   /** 分享到服务相册（同 live 页工艺：Web Share 优先，降级复制链接） */
@@ -200,7 +201,7 @@ export default function AppointmentDetailPage() {
       setNewCheckout(null);
       showToast('改期已提交，等待商家重新确认', 'info');
     },
-    onError: (err) => showToast(friendlyError(err, '改期失败，请稍后再试')),
+    onError: (err) => showToast(friendlyError(err, '改期失败，请稍后再试'), 'error'),
   });
 
   /* ---------------- SSE（v1.1-b3 B3-3）：user 频道收 appointment.rejected → 刷新详情 ---------------- */
@@ -278,7 +279,7 @@ export default function AppointmentDetailPage() {
     return (
       <div className="space-y-3 px-4 py-6">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-32 animate-pulse rounded-card bg-sunken" />
+          <Skeleton key={i} className="h-32 rounded-card" />
         ))}
       </div>
     );
@@ -288,14 +289,14 @@ export default function AppointmentDetailPage() {
       <div className="px-4 py-6">
         {/* W1 退回修：错误态补第四件出口（重试=柠檬主，出口=细线白底次钮回列表） */}
         <ErrorState
-          message="预约详情加载失败，请检查网络后重试"
+          message={apc('appointments.detailLoadFail')}
           onRetry={() => void detailQ.refetch()}
           action={
             <Link
               to="/appointments"
               className="u1-ring flex min-h-[44px] items-center rounded-full bg-card px-5 py-2 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
             >
-              返回我的预约
+              {apc('appointments.backToList')}
             </Link>
           }
         />
@@ -305,15 +306,16 @@ export default function AppointmentDetailPage() {
   if (!d || !appt) {
     return (
       <div className="px-4 py-6">
-        {/* W1 退回修：无效 id 死胡同——规范 E 三件套 + 第四件出口（唯一动作=柠檬主钮回列表） */}
+        {/* W1 退回修：无效 id 死胡同——规范 E 三件套 + 第四件出口；批片 5 P2：唯一出口钮
+            归 §4.11 空态/异常态件色（深棕墨底淡字），不再占淡金点睛预算 */}
         <ErrorState
-          message="预约不存在或无权查看"
+          message={apc('appointments.notFound')}
           action={
             <Link
               to="/appointments"
-              className="flex min-h-[44px] items-center rounded-full bg-brand-primary px-5 py-2 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+              className="flex min-h-[44px] items-center rounded-full bg-ink px-5 py-2 text-caption font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
             >
-              返回我的预约
+              {apc('appointments.backToList')}
             </Link>
           }
         />
@@ -344,7 +346,7 @@ export default function AppointmentDetailPage() {
 
       {/* U1-A：统一返回条（←圆钮+标题），右侧保留状态 pill */}
       <PageHeader
-        title="预约详情"
+        title={apc('appointments.detailTitle')}
         right={<span className={`rounded-full px-2.5 py-1 text-caption ${status.pill}`}>{status.label}</span>}
       />
 
@@ -357,9 +359,9 @@ export default function AppointmentDetailPage() {
           <span>
             <span className="flex items-center gap-2 text-title">
               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-card/25 animate-halo">●</span>
-              {appt.type === 'boarding' ? '寄养进行中' : '服务进行中'}
+              {appt.type === 'boarding' ? apc('appointments.liveBoarding') : apc('appointments.liveGrooming')}
             </span>
-            <span className="mt-0.5 block text-caption text-ink/85">点击查看实时进度与照片</span>
+            <span className="mt-0.5 block text-caption text-ink/85">{apc('appointments.liveSub')}</span>
           </span>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="m9 18 6-6-6-6" />
@@ -370,7 +372,7 @@ export default function AppointmentDetailPage() {
       {/* 预约码（pending/confirmed 可出示；滚动时间窗二维码 + 人工码） */}
       {cancellable ? (
         <section className="mt-4 rounded-card bg-card p-5 shadow-card">
-          <h2 className="text-center text-title">到店核销码</h2>
+          <h2 className="text-center text-title">{apc('appointments.codeTitle')}</h2>
           <div className="mt-3">
             <BookingCode appointmentId={id} />
           </div>
@@ -379,14 +381,14 @@ export default function AppointmentDetailPage() {
 
       {appt.status === 'cancel_requested' ? (
         <p className="mt-4 rounded-card bg-danger-light px-4 py-3 text-body text-danger-deep">
-          取消申请审核中，门店处理后会通知你；审核通过前预约仍然有效。
+          {apc('appointments.cancelReviewing')}
         </p>
       ) : null}
 
       {/* 商家婉拒（v1.1-b3 B3-3）：已取消 + 来源 merchant_reject 时展示拒单原因 */}
       {appt.status === 'cancelled' && appt.cancelSource === 'merchant_reject' ? (
         <p className="mt-4 rounded-card bg-danger-light px-4 py-3 text-body text-danger-deep">
-          商家已婉拒{appt.cancelReason ? `：${appt.cancelReason}` : ''}
+          {apc('appointments.rejectedPrefix')}{appt.cancelReason ? `：${appt.cancelReason}` : ''}
         </p>
       ) : null}
 
@@ -422,7 +424,7 @@ export default function AppointmentDetailPage() {
           </div>
           <div className="flex justify-between">
             <dt className="text-ink-secondary">金额</dt>
-            <dd className="font-number font-semibold text-brand-primary">{fenToYuan(appt.priceFen)}</dd>
+            <dd className="font-number font-semibold text-ink">{fenToYuan(appt.priceFen)}</dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-ink-secondary">收款方式</dt>
@@ -468,9 +470,9 @@ export default function AppointmentDetailPage() {
           completed 展示全部六步分组，进行中订单只显示已确认步骤的照片 */}
       {albumEnabled && albumSteps.length > 0 ? (
         <section className="mt-4 rounded-card bg-card p-4 shadow-card">
-          <h2 className="text-title">服务相册</h2>
+          <h2 className="text-title">{apc('appointments.albumTitle')}</h2>
           <p className="mt-0.5 text-caption text-ink-secondary">
-            共 {albumPhotoCount} 张照片，服务全程透明可查
+            {apc('appointments.albumSub', { count: albumPhotoCount })}
           </p>
           <div className="mt-3 space-y-4">
             {albumSteps.map((step) => (
@@ -526,7 +528,7 @@ export default function AppointmentDetailPage() {
           }
           className="mt-4 h-12 w-full rounded-full bg-brand-primary text-body font-semibold text-ink shadow-card transition-transform duration-120 ease-philia-spring active:scale-92"
         >
-          再次预约
+          {apc('appointments.rebook')}
         </button>
       ) : null}
 
@@ -573,10 +575,10 @@ export default function AppointmentDetailPage() {
           {rescheduling ? (
             <div className="rounded-card bg-card p-4 shadow-card">
               <p className="text-body font-semibold">
-                {appt.type === 'boarding' ? '重选入住 / 退房日期' : '选择新时间'}
+                {appt.type === 'boarding' ? apc('appointments.rescheduleTitleBoarding') : apc('appointments.rescheduleTitleGrooming')}
               </p>
               <p className="mt-1 text-caption text-ink-secondary">
-                {d.service?.name ?? '服务'} · {d.pet?.name ?? '宠物'}（改期后需商家重新确认）
+                {apc('appointments.rescheduleNote', { service: d.service?.name ?? '服务', pet: d.pet?.name ?? '宠物' })}
               </p>
               <div className="mt-3">
                 {appt.type === 'boarding' ? (
@@ -599,7 +601,7 @@ export default function AppointmentDetailPage() {
                   />
                 ) : (
                   <p className="rounded-card bg-sunken px-4 py-6 text-center text-caption text-ink-secondary">
-                    {rescheduleSlotsQ.isError ? '可约时段加载失败，请关闭后重试' : '正在加载可约时段…'}
+                    {rescheduleSlotsQ.isError ? apc('appointments.slotsLoadFail') : apc('appointments.slotsLoading')}
                   </p>
                 )}
               </div>
@@ -614,7 +616,7 @@ export default function AppointmentDetailPage() {
                   }}
                   className="h-11 flex-1 rounded-full bg-sunken text-body font-medium text-ink"
                 >
-                  再想想
+                  {apc('appointments.thinkMore')}
                 </button>
                 <button
                   type="button"
@@ -625,23 +627,23 @@ export default function AppointmentDetailPage() {
                   onClick={() => rescheduleM.mutate()}
                   className="h-11 flex-1 rounded-full bg-brand-primary text-body font-medium text-ink disabled:opacity-60"
                 >
-                  {rescheduleM.isPending ? '提交中…' : '确认改期'}
+                  {rescheduleM.isPending ? '提交中…' : apc('appointments.rescheduleSubmit')}
                 </button>
               </div>
             </div>
           ) : confirmingCancel ? (
             <div className="rounded-card bg-card p-4 shadow-card">
               <p className="text-body font-semibold">
-                {freeCancel ? '确认取消这次预约吗？' : '距开始不足 4 小时，取消需商家审核'}
+                {freeCancel ? apc('appointments.cancelAskFree') : apc('appointments.cancelAskLate')}
               </p>
               <p className="mt-1 text-caption text-ink-secondary">
                 {freeCancel
-                  ? '开始前 4 小时以上可免费取消，槽位将立即释放。'
-                  : '提交后预约转为「取消审核中」，门店审核通过才会取消并释放槽位。'}
+                  ? apc('appointments.cancelRuleFree')
+                  : apc('appointments.cancelRuleLate')}
               </p>
               {/* B3-5（W-14）：取消原因收集（选填 chips + 自由文本，商家端透出） */}
               <div className="mt-3">
-                <p className="text-caption text-ink-secondary">取消原因（选填，告诉我们为什么）</p>
+                <p className="text-caption text-ink-secondary">{apc('appointments.cancelReasonTitle')}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {CANCEL_REASON_CHIPS.map((c) => (
                     <button
@@ -673,7 +675,7 @@ export default function AppointmentDetailPage() {
                   onClick={() => setConfirmingCancel(false)}
                   className="h-11 flex-1 rounded-full bg-sunken text-body font-medium text-ink"
                 >
-                  再想想
+                  {apc('appointments.thinkMore')}
                 </button>
                 <button
                   type="button"
@@ -681,7 +683,7 @@ export default function AppointmentDetailPage() {
                   onClick={() => cancelM.mutate()}
                   className="h-11 flex-1 rounded-full bg-danger text-body font-medium text-white disabled:opacity-60"
                 >
-                  {cancelM.isPending ? '提交中…' : freeCancel ? '确认取消' : '提交取消申请'}
+                  {cancelM.isPending ? '提交中…' : freeCancel ? apc('appointments.cancelSubmitFree') : apc('appointments.cancelSubmitLate')}
                 </button>
               </div>
             </div>
@@ -712,7 +714,7 @@ export default function AppointmentDetailPage() {
                   }}
                   className="h-11 flex-1 rounded-full bg-brand-primary text-body font-medium text-ink shadow-card"
                 >
-                  改期
+                  {apc('appointments.rescheduleCta')}
                 </button>
               ) : null}
               <button
@@ -720,7 +722,7 @@ export default function AppointmentDetailPage() {
                 onClick={() => setConfirmingCancel(true)}
                 className={`h-11 rounded-full bg-card text-body font-medium text-danger-deep shadow-card ${reschedulable ? 'flex-1' : 'w-full'}`}
               >
-                {freeCancel ? '取消预约' : '申请取消（4 小时内需商家审核）'}
+                {freeCancel ? apc('appointments.cancelCtaFree') : apc('appointments.cancelCtaLate')}
               </button>
             </div>
           )}
@@ -730,16 +732,16 @@ export default function AppointmentDetailPage() {
       {/* 服务中：禁自助取消 */}
       {serving ? (
         <section className="mt-4 rounded-card bg-sunken p-4">
-          <p className="text-body text-ink">服务中，如需取消请联系门店</p>
+          <p className="text-body text-ink">{apc('appointments.servingTitle')}</p>
           {storePhone ? (
             <a
               href={`tel:${storePhone}`}
               className="mt-2 inline-flex h-10 items-center rounded-full bg-success px-5 text-body font-medium text-white"
             >
-              拨打门店电话
+              {apc('appointments.servingCall')}
             </a>
           ) : (
-            <p className="mt-1 text-caption text-ink-secondary">可到店或经商家端与门店协商处理</p>
+            <p className="mt-1 text-caption text-ink-secondary">{apc('appointments.servingNote')}</p>
           )}
         </section>
       ) : null}

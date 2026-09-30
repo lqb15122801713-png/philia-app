@@ -90,6 +90,7 @@ import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider
 import { fullDateLabel, fenToYuanGrouped, STATS_QUERY_KEY } from '@/components/dashboard/utils'
 import { errMsg, fmtDateTime, PRODUCTS_KEY, type StoreProduct } from '@/components/mall-admin/format'
 import { useMerchantRole } from '@/lib/roles'
+import { cc } from '@/copy/cashier'
 
 type PickTab = 'service' | 'product' | 'pending'
 type MobileTab = 'pick' | 'cart' | 'queue'
@@ -633,7 +634,7 @@ export default function CashierPage() {
     <div className="px-4 pb-6 pt-[22px]" data-testid="cashier-page">
       {/* 标题行（页边距 16，对齐试样拼装规则） */}
       <header className="mb-4">
-        <h1 className="text-title-lg font-bold leading-7">收银台</h1>
+        <h1 className="text-title-lg font-bold leading-7">{cc('cashier.title')}</h1>
         <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
           {fullDateLabel(now)}
           {/* M1-补2 R1：今日已收=统一聚合出口（同源三处同数）；clerk 隐藏整个金额块 */}
@@ -657,7 +658,7 @@ export default function CashierPage() {
             {' · 支付宝 '}
             <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(tender.tender.alipayFen)}</b>
             <span className="mx-1.5 text-[rgba(59,46,36,.2)]">｜</span>
-            参考（不计入已收）：次卡 <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(tender.tender.passFen)}</b>
+            {cc('cashier.headTenderRef')}：次卡{' '}<b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(tender.tender.passFen)}</b>
             {' · 储值 '}
             <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(tender.tender.storedValueFen)}</b>
           </div>

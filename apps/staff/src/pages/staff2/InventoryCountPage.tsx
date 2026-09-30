@@ -13,20 +13,20 @@
  *   手工录入为主（零新依赖），扫码定位留待专项。
  */
 
-import { usePhiliaClient } from '@philia/shared';
+import { Skeleton, usePhiliaClient, useToast } from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { PackageSearch } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import PageHeader from '@/components/PageHeader';
-import Toast, { useToast } from '@/components/today/Toast';
+import { INVENTORY_COPY } from '@/copy/inventory';
 
 const TYPE_LABEL: Record<string, string> = { daily: '日盘', weekly: '周盘', blind: '盲盘' };
 
 export default function InventoryCountPage() {
   const { id = '' } = useParams();
   const { trpc, queryClient } = usePhiliaClient();
-  const [toast, showToast] = useToast();
+  const { showToast, toastEl } = useToast();
 
   const tasksQuery = useQuery({
     queryKey: ['inventory', 'myCountTasks'],
@@ -90,7 +90,7 @@ export default function InventoryCountPage() {
         {tasksQuery.isPending ? (
           <div className="mt-2.5 space-y-2.5" aria-label="加载中">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="u1-card h-16 animate-pulse bg-sunken" />
+              <Skeleton key={i} className="u1-card h-16 !rounded-panel" />
             ))}
           </div>
         ) : tasksQuery.isError ? (
@@ -110,11 +110,12 @@ export default function InventoryCountPage() {
               <PackageSearch className="h-9 w-9 text-ink" strokeWidth={1.5} />
             </span>
             <p className="mt-4 text-body-sm text-ink-secondary">
-              该盘点单不在你的待办中——可能已确认入账或已处理
+              {INVENTORY_COPY['inventory.count.missing']}
             </p>
+            {/* P3-3：盘点单缺失引导态出口钮同族归色——深棕墨底淡金字（34 号档 §4.11） */}
             <Link
               to="/inventory"
-              className="mt-4 flex h-12 min-h-[44px] min-w-[160px] items-center justify-center rounded-control bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+              className="mt-4 flex h-12 min-h-[44px] min-w-[160px] items-center justify-center rounded-control bg-ink px-8 text-body-sm font-semibold text-brand-primary transition-transform duration-120 ease-philia-spring active:scale-92"
             >
               返回盘点任务
             </Link>
@@ -124,25 +125,25 @@ export default function InventoryCountPage() {
             {/* 状态条 */}
             {count.status === 'rejected' ? (
               <div className="u1-card mt-2.5 border-danger bg-danger-light p-4" role="alert" data-testid="inv-count-rejected">
-                <p className="text-body-sm font-bold text-danger-deep">已退回重盘</p>
-                <p className="mt-1 text-caption-xs text-danger-deep">店长退回了这张盘点单，请核对后修改实盘数重新提交。</p>
+                <p className="text-body-sm font-bold text-danger-deep">{INVENTORY_COPY['inventory.count.rejected.title']}</p>
+                <p className="mt-1 text-caption-xs text-danger-deep">{INVENTORY_COPY['inventory.count.rejected.desc']}</p>
               </div>
             ) : count.status === 'counted' ? (
               <div className="u1-card mt-2.5 bg-success-light p-4" data-testid="inv-count-counted">
-                <p className="text-body-sm font-bold text-success-deep">已提交，待店长确认后才入账</p>
-                <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">确认前库存不变；如被退回会出现在待办里可重盘。</p>
+                <p className="text-body-sm font-bold text-success-deep">{INVENTORY_COPY['inventory.count.counted.title']}</p>
+                <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">{INVENTORY_COPY['inventory.count.counted.desc']}</p>
               </div>
             ) : (
               <p className="mt-2.5 px-1 text-caption-xs text-[rgba(59,46,36,.62)]">
-                逐项填写实盘数量后提交；提交后待店长确认才入账，确认前库存不变。
-                {isBlind ? '本单为盲盘，不展示账面数。' : ''}
+                {INVENTORY_COPY['inventory.count.guide']}
+                {isBlind ? INVENTORY_COPY['inventory.count.blindNote'] : ''}
               </p>
             )}
 
             {/* 行项 */}
             {items.length === 0 ? (
               <div className="u1-card mt-3 p-4 text-center">
-                <p className="text-body-sm text-ink-secondary">这张单没有盘点行项，请联系店长确认派单范围</p>
+                <p className="text-body-sm text-ink-secondary">{INVENTORY_COPY['inventory.count.noItems']}</p>
               </div>
             ) : (
               <ul className="mt-3" data-testid="inv-count-items">
@@ -236,7 +237,7 @@ export default function InventoryCountPage() {
         )}
       </div>
 
-      <Toast message={toast} />
+      {toastEl}
     </div>
   );
 }

@@ -84,7 +84,16 @@
 
 /* R11b（设计规范 v2.0 §2.2 自托管）：serif 宣言/档名 900 档 + JetBrains Mono 等宽轨
    （400/500/700，latin 子集——mono 轨只承载数字/金额/编号/英文小签）。woff2 已入仓
-   public/fonts/，font-display: swap。 */
+   public/fonts/，font-display: swap。
+   换皮批片 5（R11b F-2 收尾）：serif 600 档补入；900/600=中文按用字子集化（src 用字 1454 形，
+   pyftsubset 施工机工具链，2.1MB→278KB）。 */
+@font-face {
+  font-family: 'Noto Serif SC';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/noto-serif-sc-chinese-simplified-600.woff2') format('woff2');
+}
 @font-face {
   font-family: 'Noto Serif SC';
   font-style: normal;

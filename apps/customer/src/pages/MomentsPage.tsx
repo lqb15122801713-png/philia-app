@@ -13,13 +13,14 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { Check, ChevronDown, Share2, X } from 'lucide-react'
+import { Check, ChevronDown, Share2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { PhotoWall, usePhiliaClient } from '@philia/shared'
+import { PhotoViewer, PhotoWall, usePhiliaClient } from '@philia/shared'
 import PageHeader from '@/components/PageHeader'
 import type { PhotoWallPhoto } from '@philia/shared'
 import { EmptyState, ErrorState, LoadingBlock, formatDateCn } from '../components/home/common'
+import { moc } from '@/copy/moments'
 
 /** 一册相册：一次完成服务 + 前后对比照 */
 interface Album {
@@ -33,31 +34,7 @@ interface Album {
   after: PhotoWallPhoto
 }
 
-/** 全屏照片查看器（90% 暖深棕底） */
-function PhotoViewer({ photo, onClose }: { photo: PhotoWallPhoto; onClose: () => void }) {
-  return (
-    <div
-      className="fixed inset-0 z-modal flex items-center justify-center bg-ink/90 p-4"
-      onClick={onClose}
-      role="dialog"
-      aria-label="查看照片"
-    >
-      <img
-        src={photo.url}
-        alt={photo.tag ?? '照片'}
-        className="max-h-full max-w-full rounded-card object-contain"
-      />
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label="关闭"
-        className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-card"
-      >
-        <X className="h-5 w-5 text-ink" strokeWidth={1.5} />
-      </button>
-    </div>
-  )
-}
+/** 全屏查看器：换皮批片 5 归并 @philia/shared PhotoViewer（单图 photos=[p]，无切换、无键盘） */
 
 /** 单册相册卡（hv2-case 同型同件：图不定高 + 题 13/600 两行截断 + mono 9 溯源行） */
 function AlbumCard({ album }: { album: Album }) {
@@ -66,8 +43,8 @@ function AlbumCard({ album }: { album: Album }) {
   const [copied, setCopied] = useState(false)
 
   const share = async () => {
-    const title = `${album.petName ?? '毛孩子'}的变美记录`
-    const text = `${album.doneAt ? formatDateCn(album.doneAt) : ''} 在菲丽亚完成了${album.serviceName ?? '洗护'}，看看前后对比！`
+    const title = moc('moments.shareTitle', { pet: album.petName ?? '毛孩子' })
+    const text = moc('moments.shareText', { date: album.doneAt ? formatDateCn(album.doneAt) : '', service: album.serviceName ?? '洗护' })
     const url = window.location.href
     if (typeof navigator.share === 'function') {
       try {
@@ -140,19 +117,27 @@ function AlbumCard({ album }: { album: Album }) {
             {copied ? (
               <>
                 <Check className="h-4 w-4" strokeWidth={1.5} />
-                链接已复制
+                {moc('moments.shareCopied')}
               </>
             ) : (
               <>
                 <Share2 className="h-4 w-4" strokeWidth={1.5} />
-                分享这份美好
+                {moc('moments.shareCta')}
               </>
             )}
           </button>
         </div>
       ) : null}
 
-      {viewing ? <PhotoViewer photo={viewing} onClose={() => setViewing(null)} /> : null}
+      {viewing ? (
+        <PhotoViewer
+          photos={[viewing]}
+          index={0}
+          onClose={() => setViewing(null)}
+          onNavigate={() => {}}
+          keyboard={false}
+        />
+      ) : null}
     </article>
   )
 }
@@ -196,23 +181,23 @@ export default function MomentsPage() {
   return (
     <div className="px-4 pb-6">
       {/* U1-A：统一返回条（←圆钮+标题），固定返回 philia 页 */}
-      <PageHeader title="服务相册" fallback="/philia" className="pt-6" />
+      <PageHeader title={moc('moments.title')} fallback="/philia" className="pt-6" />
 
       <div className="mt-4">
         {albumsQuery.isPending ? <LoadingBlock lines={3} /> : null}
         {albumsQuery.isError ? (
-          <ErrorState message="相册加载失败" onRetry={() => void albumsQuery.refetch()} />
+          <ErrorState message={moc('moments.loadFail')} onRetry={() => void albumsQuery.refetch()} />
         ) : null}
         {albumsQuery.data && albumsQuery.data.length === 0 ? (
           <EmptyState
-            title="相册还是空的"
-            desc="完成洗护服务后，前后对比照会自动收进这里"
+            title={moc('moments.emptyTitle')}
+            desc={moc('moments.emptyBody')}
             action={
               <Link
                 to="/booking/grooming"
                 className="inline-flex items-center rounded-control bg-philia-gradient px-[30px] py-[13px] text-body-sm font-semibold text-[#F6EFDD] shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92"
               >
-                去预约洗护
+                {moc('moments.emptyCta')}
               </Link>
             }
           />

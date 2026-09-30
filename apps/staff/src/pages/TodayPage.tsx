@@ -9,10 +9,11 @@
  * - 加载中显示骨架，分流前不闪任何一台的内容。
  */
 
-import { useMe } from '@philia/shared';
+import { Skeleton, useMe } from '@philia/shared';
 import { PawPrint } from 'lucide-react';
 import FrontdeskDesk from '@/components/today/FrontdeskDesk';
 import GroomerDesk from '@/components/today/GroomerDesk';
+import { TODAY_COPY } from '@/copy/today';
 
 export default function TodayPage() {
   const { user, loading } = useMe();
@@ -22,14 +23,14 @@ export default function TodayPage() {
     return (
       <div className="px-4 pb-6">
         <div className="pt-6">
-          <div className="h-8 w-32 animate-pulse rounded-chip bg-sunken" />
-          <div className="mt-2 h-5 w-48 animate-pulse rounded-chip bg-sunken" />
+          <Skeleton className="h-8 w-32 !rounded-chip" />
+          <Skeleton className="mt-2 h-5 w-48 !rounded-chip" />
         </div>
         <div className="mt-6 space-y-3" aria-label="加载中">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="u1-card animate-pulse p-4">
-              <div className="h-6 w-20 rounded-chip bg-sunken" />
-              <div className="mt-2 h-5 w-40 rounded-chip bg-sunken" />
+            <div key={i} className="u1-card p-4">
+              <Skeleton className="h-6 w-20 !rounded-chip" />
+              <Skeleton className="mt-2 h-5 w-40 !rounded-chip" />
             </div>
           ))}
         </div>
@@ -48,11 +49,11 @@ export default function TodayPage() {
         >
           <PawPrint className="h-11 w-11 text-ink" strokeWidth={1.5} />
         </span>
-        <h1 className="u1-serif mt-5 text-title-lg font-bold">还未分配员工角色</h1>
+        <h1 className="u1-serif mt-5 text-title-lg font-bold">{TODAY_COPY['today.noRole.title']}</h1>
         <p className="mt-2 text-body-sm text-ink-secondary">
-          当前账号「{user?.nickname ?? user?.id}」还没有绑定门店员工身份。
+          {TODAY_COPY['today.noRole.bodyLead'].replace('{name}', user?.nickname ?? user?.id ?? '')}
           <br />
-          请联系店主在商家端「员工管理」邀请入职并分配角色（前台 / 美容师）后再使用。
+          {TODAY_COPY['today.noRole.bodyGuide']}
         </p>
       </div>
     );

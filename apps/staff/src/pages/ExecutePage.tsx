@@ -25,7 +25,9 @@ import {
 } from 'lucide-react'
 import {
   EventType,
+  PhotoViewer,
   SERVICE_STEPS,
+  Skeleton,
   getApiBase,
   getStepDef,
   safeUuid,
@@ -33,6 +35,7 @@ import {
   useEventSource,
   useMe,
   usePhiliaClient,
+  useToast,
   type EventEnvelope,
   type ServiceStepKey,
 } from '@philia/shared'
@@ -45,13 +48,12 @@ import {
   type QueuedPhoto,
 } from '../lib/offlineQueue'
 import CelebrationOverlay from '../components/execute/CelebrationOverlay'
-import ExecuteToast from '../components/execute/ExecuteToast'
 import FlaggedBanner from '../components/execute/FlaggedBanner'
 import GuidePage from '../components/execute/GuidePage'
 import ExecuteStepper, { type ExecuteStepRow, type StepPhotoItem } from '../components/execute/ExecuteStepper'
 import PageHeader from '../components/PageHeader'
-import PhotoViewer from '../components/boarding/PhotoViewer'
 import { STEP_NAME } from '../components/today/deck/ServiceCard'
+import { EXECUTE_COPY } from '@/copy/execute'
 
 const CLIENT_ID_KEY = 'philia.sseClientId'
 
@@ -79,13 +81,9 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
   const clientId = useMemo(getClientId, [])
 
   /* ---------------- toast ---------------- */
-  const [toast, setToast] = useState<string | null>(null)
-  const toastTimerRef = useRef<number | undefined>(undefined)
-  const showToast = useCallback((msg: string) => {
-    setToast(msg)
-    window.clearTimeout(toastTimerRef.current)
-    toastTimerRef.current = window.setTimeout(() => setToast(null), 2500) // 动效纲领 §四.1：toast 2.5s 自消
-  }, [])
+  // 共享 useToast：bottom-28 避底钮（原执行页私有 toast 位）；durationMs=2500 与原页面计时一致
+  // （任务书注 3.2s 与代码不符——原页面计时实为 2500ms，按行为零改动取 2500）
+  const { showToast, toastEl } = useToast({ position: 'bottom', durationMs: 2500 })
 
   /* ---------------- 数据 ---------------- */
   const stepsQuery = useQuery({
@@ -343,18 +341,18 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
         : undefined
     if (code === 'FORBIDDEN') {
       return (
-        <GuidePage icon={ShieldBan} title="无法执行该预约" description="该预约未指派给你，或不属于本店（非本人单）" actionText="返回任务台" onAction={() => navigate('/today')} />
+        <GuidePage icon={ShieldBan} title={EXECUTE_COPY['execute.guide.forbidden.title']} description={EXECUTE_COPY['execute.guide.forbidden.desc']} actionText="返回任务台" onAction={() => navigate('/today')} />
       )
     }
     if (code === 'NOT_FOUND') {
       return (
-        <GuidePage icon={CircleSlash} title="预约不存在" description="可能已被取消或删除" actionText="返回任务台" onAction={() => navigate('/today')} />
+        <GuidePage icon={CircleSlash} title={EXECUTE_COPY['execute.guide.notFound.title']} description={EXECUTE_COPY['execute.guide.notFound.desc']} actionText="返回任务台" onAction={() => navigate('/today')} />
       )
     }
     return (
       <GuidePage
         icon={AlertTriangle}
-        title="加载失败"
+        title={EXECUTE_COPY['execute.guide.loadFailed.title']}
         description={queryError instanceof Error ? queryError.message : '网络异常，请稍后重试'}
         actionText="重试"
         onAction={() => {
@@ -370,23 +368,23 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
     return (
       <div className="px-[18px] pt-3">
         <div className="flex items-center gap-2.5">
-          <span className="h-9 w-9 animate-pulse rounded-full bg-sunken" />
-          <span className="h-6 w-24 animate-pulse rounded-chip bg-sunken" />
+          <Skeleton className="h-9 w-9 !rounded-full" />
+          <Skeleton className="h-6 w-24 !rounded-chip" />
         </div>
         <div className="u1-card mt-2 flex items-center gap-3 p-4">
-          <span className="h-[52px] w-[52px] animate-pulse rounded-full bg-sunken" />
+          <Skeleton className="h-[52px] w-[52px] !rounded-full" />
           <div className="flex-1">
-            <div className="h-5 w-28 animate-pulse rounded-chip bg-sunken" />
-            <div className="mt-2 h-4 w-44 animate-pulse rounded-chip bg-sunken" />
+            <Skeleton className="h-5 w-28 !rounded-chip" />
+            <Skeleton className="mt-2 h-4 w-44 !rounded-chip" />
           </div>
         </div>
         <div className="mt-4 space-y-4">
           {[0, 1, 2].map((i) => (
             <div key={i} className="flex gap-3">
-              <span className="h-7 w-7 animate-pulse rounded-full bg-sunken" />
+              <Skeleton className="h-7 w-7 !rounded-full" />
               <div className="flex-1">
-                <div className="h-5 w-24 animate-pulse rounded-chip bg-sunken" />
-                <div className="mt-2 h-4 w-36 animate-pulse rounded-chip bg-sunken" />
+                <Skeleton className="h-5 w-24 !rounded-chip" />
+                <Skeleton className="mt-2 h-4 w-36 !rounded-chip" />
               </div>
             </div>
           ))}
@@ -399,29 +397,29 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
 
   if (appointment.type === 'boarding') {
     return (
-      <GuidePage icon={PawPrint} title="这是寄养预约" description="寄养服务请走入住登记流程" actionText="前往入住登记" onAction={() => navigate(`/boarding/${aid}/checkin`)} />
+      <GuidePage icon={PawPrint} title={EXECUTE_COPY['execute.guide.boarding.title']} description={EXECUTE_COPY['execute.guide.boarding.desc']} actionText={EXECUTE_COPY['execute.guide.boarding.action']} onAction={() => navigate(`/boarding/${aid}/checkin`)} />
     )
   }
 
   if (appointment.status !== 'in_service' && !celebrating) {
     if (appointment.status === 'pending' || appointment.status === 'confirmed') {
       return (
-        <GuidePage icon={Clock3} title="该预约尚未核销" description="请先在任务台核销到店，再开始服务" actionText="返回任务台" onAction={() => navigate('/today')} />
+        <GuidePage icon={Clock3} title={EXECUTE_COPY['execute.guide.notCheckedIn.title']} description={EXECUTE_COPY['execute.guide.notCheckedIn.desc']} actionText="返回任务台" onAction={() => navigate('/today')} />
       )
     }
     if (appointment.status === 'completed') {
       return (
-        <GuidePage icon={CheckCircle2} title="服务已完成" description="该预约的六步服务已全部完成" actionText="返回任务台" onAction={() => navigate('/today')} />
+        <GuidePage icon={CheckCircle2} title={EXECUTE_COPY['execute.guide.completed.title']} description={EXECUTE_COPY['execute.guide.completed.desc']} actionText="返回任务台" onAction={() => navigate('/today')} />
       )
     }
     return (
-      <GuidePage icon={CircleSlash} title={appointment.status === 'cancel_requested' ? '取消审核中' : '预约已取消'} description="如有疑问请联系商家" actionText="返回任务台" onAction={() => navigate('/today')} />
+      <GuidePage icon={CircleSlash} title={appointment.status === 'cancel_requested' ? EXECUTE_COPY['execute.guide.cancelRequested.title'] : EXECUTE_COPY['execute.guide.cancelled.title']} description={EXECUTE_COPY['execute.guide.cancelled.desc']} actionText="返回任务台" onAction={() => navigate('/today')} />
     )
   }
 
   if (steps.length === 0) {
     return (
-      <GuidePage icon={AlertTriangle} title="六步服务流未初始化" description="请重新核销或联系商家处理" actionText="返回任务台" onAction={() => navigate('/today')} />
+      <GuidePage icon={AlertTriangle} title={EXECUTE_COPY['execute.guide.notInitialized.title']} description={EXECUTE_COPY['execute.guide.notInitialized.desc']} actionText="返回任务台" onAction={() => navigate('/today')} />
     )
   }
 
@@ -644,10 +642,10 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
       )}
 
       {viewer ? (
-        <PhotoViewer state={viewer} onClose={() => setViewer(null)} onIndexChange={(i) => setViewer((v) => (v ? { ...v, index: i } : v))} />
+        <PhotoViewer photos={viewer.photos} index={viewer.index} onClose={() => setViewer(null)} onNavigate={(i) => setViewer((v) => (v ? { ...v, index: i } : v))} />
       ) : null}
 
-      <ExecuteToast message={toast} />
+      {toastEl}
       {celebrating && <CelebrationOverlay petName={pet?.name ?? undefined} onDone={() => navigate('/today')} />}
     </div>
   )
@@ -665,7 +663,7 @@ function ResolveCurrentExecute() {
   if (todayQuery.isPending) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-8 pt-20">
-        <span className="h-8 w-8 animate-pulse rounded-full bg-sunken" />
+        <Skeleton className="h-8 w-8 !rounded-full" />
         <p className="text-body-sm text-ink-secondary">正在查找进行中的服务…</p>
       </div>
     )
@@ -677,9 +675,9 @@ function ResolveCurrentExecute() {
   return (
     <GuidePage
       icon={PawPrint}
-      title="当前没有进行中的服务"
-      description="到任务台核销客户预约码后，即可开始服务执行"
-      actionText="回到任务台"
+      title={EXECUTE_COPY['execute.guide.noCurrent.title']}
+      description={EXECUTE_COPY['execute.guide.noCurrent.desc']}
+      actionText={EXECUTE_COPY['execute.guide.noCurrent.action']}
       onAction={() => navigate('/today')}
     />
   )

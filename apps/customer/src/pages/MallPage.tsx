@@ -10,7 +10,7 @@
  *   localStorage 为跨页事实源）。
  */
 
-import { usePhiliaClient } from '@philia/shared';
+import { BoardSkeleton, usePhiliaClient } from '@philia/shared';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Plus, Search, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -19,9 +19,10 @@ import CartLink from '../components/mall/CartLink';
 import { mc } from '../components/member/copy';
 import ConfirmSheet from '../components/mall/ConfirmSheet';
 import { EmptyState } from '../components/home/common';
-import { useMallToast } from '../components/mall/MallToast';
+import { useToast } from '@philia/shared';
 import { CartProvider, useCart, type AddInput } from '../components/mall/cartStore';
 import { fenToYuan } from '../components/mall/format';
+import { mlc } from '../copy/mall';
 import ProductImage from '../components/mall/ProductImage';
 
 const CATEGORIES = ['全部', '主粮', '零食', '玩具', '清洁', '其他'] as const;
@@ -69,7 +70,7 @@ function ProductCard({
             <p className="u1-num text-body-sm font-bold text-ink">{fenToYuan(item.priceFen)}</p>
             {rebateFen > 0 ? (
               <span className="ml-auto font-number text-[8.5px] tabular-nums text-ink-secondary">
-                返 {fenToYuan(rebateFen)} 回馈金
+                {mlc('mall.rebateLine', { amt: fenToYuan(rebateFen) })}
               </span>
             ) : hookText ? (
               /* 体验急修批 B：微光/非会员=规则钩子（不上假数），点击→/member/open（J-01） */
@@ -88,7 +89,7 @@ function ProductCard({
             ) : null}
           </div>
           {item.stock <= 0 ? (
-            <span className="mt-1 inline-block rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">已售罄</span>
+            <span className="mt-1 inline-block rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">{mlc('mall.soldOut')}</span>
           ) : null}
         </div>
       </Link>
@@ -115,7 +116,7 @@ function ProductCard({
 function MallInner() {
   const { trpc } = usePhiliaClient();
   const cart = useCart();
-  const { toastEl, showToast } = useMallToast();
+  const { toastEl, showToast } = useToast({ durationMs: 3200 });
   const [category, setCategory] = useState<(typeof CATEGORIES)[number]>('全部');
   const [searchText, setSearchText] = useState('');
   const [keyword, setKeyword] = useState('');
@@ -212,8 +213,8 @@ function MallInner() {
     <div className="pb-28">
       {toastEl}
       <div className="m2-apphead">
-        <span className="tt">商城</span>
-        <span className="no">MALL · 给它买点好的</span>
+        <span className="tt">{mlc('mall.headTitle')}</span>
+        <span className="no">{mlc('mall.headSub')}</span>
       </div>
 
       {/* 配送条槽位（PD-15 V1.1 槽位 13：配送时效=运营后期端口；置灰不上假时效，留口注记） */}
@@ -225,8 +226,8 @@ function MallInner() {
         >
           <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0 text-ink-secondary" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 21s-7-5.5-7-11a7 7 0 0114 0c0 5.5-7 11-7 11z" /><circle cx="12" cy="10" r="2.4" /></svg>
           <div className="min-w-0 flex-1">
-            <p className="text-caption font-bold text-ink">配送至 · ——</p>
-            <p className="mt-0.5 font-number text-[9.5px] text-ink-placeholder">配送时效 · 即将点亮</p>
+            <p className="text-caption font-bold text-ink">{mlc('mall.deliveryTitle')}</p>
+            <p className="mt-0.5 font-number text-[9.5px] text-ink-placeholder">{mlc('mall.deliverySub')}</p>
           </div>
           <span className="text-caption-xs text-ink-placeholder" aria-hidden="true">›</span>
         </div>
@@ -244,7 +245,7 @@ function MallInner() {
         <input
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          placeholder="搜索主粮、零食、玩具…"
+          placeholder={mlc('mall.searchPlaceholder')}
           className="h-full w-full bg-transparent text-body-sm outline-none placeholder:text-ink-placeholder"
         />
         {searchText ? (
@@ -281,24 +282,15 @@ function MallInner() {
 
       {/* 商品流 */}
       {productsQ.isPending ? (
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="u1-card overflow-hidden">
-              <div className="aspect-[4/3] animate-pulse bg-sunken" />
-              <div className="space-y-2 px-3 pb-3 pt-2.5">
-                <div className="h-4 animate-pulse rounded-tag bg-sunken" />
-                <div className="h-4 w-2/3 animate-pulse rounded-tag bg-sunken" />
-              </div>
-            </div>
-          ))}
-        </div>
+        /* 换皮批片 5 B 块：瀑布卡占位归并 BoardSkeleton 成件（卡片网格型） */
+        <BoardSkeleton cards={4} className="mt-4" />
       ) : productsQ.isError ? (
         <div className="mt-10 text-center">
-          <p className="text-body-sm text-ink-secondary">商品加载失败，请稍后重试</p>
+          <p className="text-body-sm text-ink-secondary">{mlc('mall.loadFail')}</p>
           <button
             type="button"
             onClick={() => void productsQ.refetch()}
-            className="mt-4 rounded-control bg-brand-primary px-[30px] py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+            className="mt-4 rounded-control bg-ink px-[30px] py-[13px] text-body-sm font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             重新加载
           </button>
@@ -306,16 +298,16 @@ function MallInner() {
       ) : items.length === 0 ? (
         /* 空态：U1-I 全域统一组件（philia 精灵 + 一句话 + 一行动）；U4-D3 试样 12 工艺 */
         <EmptyState
-          title="没有找到相关商品"
-          desc={keyword ? '换个关键词试试，或看看其他分类' : '这个分类暂时没有商品，看看别的吧'}
+          title={mlc('mall.emptyTitle')}
+          desc={keyword ? mlc('mall.emptyBodyKeyword') : mlc('mall.emptyBodyCategory')}
           action={
             keyword ? (
               <button
                 type="button"
                 onClick={() => setSearchText('')}
-                className="rounded-control bg-brand-primary px-[30px] py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                className="rounded-control bg-ink px-[30px] py-[13px] text-body-sm font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
               >
-                清空搜索
+                {mlc('mall.emptyClearSearch')}
               </button>
             ) : undefined
           }
@@ -333,16 +325,16 @@ function MallInner() {
             {isFetchingNextPage
               ? '正在加载更多…'
               : hasNextPage
-                ? '上拉加载更多'
-                : `共 ${total} 件商品 · 到底啦`}
+                ? mlc('mall.pullMore')
+                : mlc('mall.endLine', { total })}
           </p>
 
           {/* U1-G 快加购跨店确认（与 PDP 同链路） */}
           <ConfirmSheet
             open={!!pendingAdd}
-            title="购物车仅限同一门店商品"
-            desc={`购物车内已有「${cart.items[0]?.storeName ?? '其他门店'}」的商品，加入本商品将清空原购物车。`}
-            confirmText="清空并加入"
+            title={mlc('mall.conflictTitle')}
+            desc={mlc('mall.conflictBody', { store: cart.items[0]?.storeName ?? '其他门店' })}
+            confirmText={mlc('mall.conflictOk')}
             onCancel={() => setPendingAdd(null)}
             onConfirm={() => {
               if (pendingAdd) {

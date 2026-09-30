@@ -27,6 +27,7 @@ import {
   type MembershipRow,
 } from './membership'
 import type { CashierMember } from './model'
+import { cc } from '@/copy/cashier'
 
 export default function MemberSearch({
   member,
@@ -212,7 +213,7 @@ export default function MemberSearch({
         </div>
       ) : missed ? (
         <p className="mt-2 flex items-center gap-1.5 px-1 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="cashier-member-miss">
-          未找到会员，按散客结账
+          {cc('cashier.memberSearchEmpty')}
           {/* R11a §四.6：新客快速开卡旁路（手机号建档+售卡一气呵成） */}
           <button
             type="button"

@@ -1,0 +1,38 @@
+/**
+ * 服务执行域文案键表（copy key 一期硬约定 · 换皮批片 5 C 块）
+ *
+ * 纪律：执行页异常态/引导态题+说明一律经本表取值，组件内零硬编码；
+ * 文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名小写点分、冻结不改。
+ *
+ * 入键位置=GuidePage 调用方（GuidePage 的 title/description 为 props，组件本身不改）。
+ * 不抽：通用 UI 词（返回任务台/重试）、server 错误透传、六步轨道步名（冻结，走 STEP_NAME）、
+ * 吸底主钮随态文案（操作反馈）。
+ */
+
+export const EXECUTE_COPY = {
+  /* ---- 守卫/异常引导页（GuidePage 调用侧） ---- */
+  'execute.guide.forbidden.title': '无法执行该预约',
+  'execute.guide.forbidden.desc': '该预约未指派给你，或不属于本店（非本人单）',
+  'execute.guide.notFound.title': '预约不存在',
+  'execute.guide.notFound.desc': '可能已被取消或删除',
+  'execute.guide.loadFailed.title': '加载失败',
+  'execute.guide.boarding.title': '这是寄养预约',
+  'execute.guide.boarding.desc': '寄养服务请走入住登记流程',
+  'execute.guide.boarding.action': '前往入住登记',
+  'execute.guide.notCheckedIn.title': '该预约尚未核销',
+  'execute.guide.notCheckedIn.desc': '请先在任务台核销到店，再开始服务',
+  'execute.guide.completed.title': '服务已完成',
+  'execute.guide.completed.desc': '该预约的六步服务已全部完成',
+  'execute.guide.cancelled.title': '预约已取消',
+  'execute.guide.cancelRequested.title': '取消审核中',
+  'execute.guide.cancelled.desc': '如有疑问请联系商家',
+  'execute.guide.notInitialized.title': '六步服务流未初始化',
+  'execute.guide.notInitialized.desc': '请重新核销或联系商家处理',
+
+  /* ---- /execute/current 兼容入口空引导 ---- */
+  'execute.guide.noCurrent.title': '当前没有进行中的服务',
+  'execute.guide.noCurrent.desc': '到任务台核销客户预约码后，即可开始服务执行',
+  'execute.guide.noCurrent.action': '回到任务台',
+} as const;
+
+export type ExecuteCopyKey = keyof typeof EXECUTE_COPY;

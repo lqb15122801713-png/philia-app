@@ -13,6 +13,7 @@
 
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { dc } from '@/copy/dashboard'
 import { fenToYuanGrouped, hhmm, type DashboardStats, type TodayApptItem } from './utils'
 
 /* 样例小字里的数据位（时间/金额/天数）：mono 轨 tabular（§八 mono 数据位加重） */
@@ -39,10 +40,10 @@ function overdueHint(item: TodayApptItem, nowTs: number): ReactNode {
       {item.petName ?? '宠物'} · {item.serviceName ?? '寄养'} ·{' '}
       {days >= 1 ? (
         <>
-          应退未退 <span className={HINT_NUM_CLS}>{days}</span> 天
+          {dc('dash.todoOverdueLead')} <span className={HINT_NUM_CLS}>{days}</span> {dc('dash.todoOverdueUnit')}
         </>
       ) : (
-        '今日到期未退'
+        dc('dash.todoOverdueToday')
       )}
     </>
   )
@@ -71,7 +72,7 @@ export default function TodoSection({
     {
       key: 'cancelRequested',
       dot: DOT_RED,
-      label: '取消申请待审',
+      label: dc('dash.todoCancelLabel'),
       hint: cancelSample ? (
         <>
           {cancelSample.petName ?? '宠物'} ·{' '}
@@ -79,7 +80,7 @@ export default function TodoSection({
           {cancelSample.serviceName ?? ''}
         </>
       ) : (
-        '客户申请取消，待审批'
+        dc('dash.todoCancelHint')
       ),
       count: stats?.todo.cancelRequested ?? 0,
       to: '/appointments?status=cancel_requested&from=todo',
@@ -87,14 +88,14 @@ export default function TodoSection({
     {
       key: 'unpaid',
       dot: DOT_LEMON,
-      label: '待收款',
+      label: dc('dash.todoUnpaidLabel'),
       hint: unpaidSample ? (
         <>
           {unpaidSample.petName ?? '宠物'} {unpaidSample.serviceName ?? ''}{' '}
           <span className={HINT_NUM_CLS}>¥{fenToYuanGrouped(unpaidSample.priceFen)}</span>
         </>
       ) : (
-        '服务已完成，未登记收款'
+        dc('dash.todoUnpaidHint')
       ),
       count: stats?.todo.unpaid ?? 0,
       // 批次 M1 联动（任务书 §1.5.1）：待收款 → 收银台并自动拉入该预约；
@@ -104,16 +105,16 @@ export default function TodoSection({
     {
       key: 'overdue',
       dot: DOT_RED,
-      label: '超期寄养',
-      hint: overdueSample ? overdueHint(overdueSample, nowTs) : '超过预计退房时间仍在店',
+      label: dc('dash.todoOverdueLabel'),
+      hint: overdueSample ? overdueHint(overdueSample, nowTs) : dc('dash.todoOverdueHint'),
       count: stats?.overdueBoardingCount ?? 0,
       to: '/boarding',
     },
     {
       key: 'pending',
       dot: DOT_MINT,
-      label: '历史待确认单',
-      hint: '自动接单已启用 · 仅旧单与改期回退单在此',
+      label: dc('dash.todoPendingLabel'),
+      hint: dc('dash.todoPendingHint'),
       count: stats?.todo.pending ?? 0,
       to: '/appointments?status=pending&from=todo',
     },
@@ -122,7 +123,7 @@ export default function TodoSection({
   return (
     <section className="u3-panel">
       <div className="u3-panel-head">
-        <h3>待办</h3>
+        <h3>{dc('dash.todoTitle')}</h3>
         <span className="aside">
           <span className={HINT_NUM_CLS}>{rows.length}</span> 项
         </span>

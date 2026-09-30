@@ -18,7 +18,9 @@
  * - 本页 owner|manager 可见（dashboardStats 服务端闸门；clerk 路由层引导页）。
  */
 
+import { Skeleton } from '@philia/shared'
 import type { ReactNode } from 'react'
+import { dc } from '@/copy/dashboard'
 import { fenToYuanGrouped, type DashboardStats, type TodayApptItem } from './utils'
 import { AmortizationDashNote } from '../member/amortization'
 
@@ -40,16 +42,6 @@ function StatShell({ cap, children }: { cap: string; children: ReactNode }) {
   )
 }
 
-function StatSkeleton() {
-  return (
-    <div className={`${CARD_CLS} animate-pulse`}>
-      <div className="h-3 w-14 rounded-md bg-[rgba(250,248,242,.16)]" />
-      <div className="mt-3 h-6 w-20 rounded-md bg-[rgba(250,248,242,.16)]" />
-      <div className="mt-3 h-2.5 w-28 rounded-md bg-[rgba(250,248,242,.10)]" />
-    </div>
-  )
-}
-
 export default function StatCards({
   stats,
   boardingItems,
@@ -62,10 +54,16 @@ export default function StatCards({
   loading: boolean
 }) {
   if (loading && !stats) {
+    /* 加载中骨架块（animate-pulse，禁转圈）：深卡壳保留 + shared Skeleton 组合
+       （bg-sunken 浅条在深棕卡上替代原反白条，归一即本意） */
     return (
       <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
-          <StatSkeleton key={i} />
+          <div key={i} className={CARD_CLS}>
+            <Skeleton className="h-3 w-14" />
+            <Skeleton className="mt-3 h-6 w-20" />
+            <Skeleton className="mt-3 h-2.5 w-28" />
+          </div>
         ))}
       </div>
     )
@@ -82,7 +80,7 @@ export default function StatCards({
     roomGroups.set(room, (roomGroups.get(room) ?? 0) + 1)
   }
   const roomText =
-    [...roomGroups.entries()].map(([name, n]) => `${name} ${n}`).join(' · ') || '当前无在店寄养'
+    [...roomGroups.entries()].map(([name, n]) => `${name} ${n}`).join(' · ') || dc('dash.statBoardingEmpty')
 
   /* M1-补2 R1：今日营业额卡改接同源内嵌块 todayTender（与收银台头部/财务页头部同值） */
   const tender = stats?.todayTender
@@ -90,7 +88,7 @@ export default function StatCards({
 
   return (
     <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
-      <StatShell cap="今日预约">
+      <StatShell cap={dc('dash.statCapAppt')}>
         <div className={VALUE_CLS}>{stats ? stats.todayCount : '—'}</div>
         <div className={SUB_CLS}>
           服务中 <b className={SUB_NUM_CLS}>{serving}</b> · 待到店{' '}
@@ -98,7 +96,7 @@ export default function StatCards({
         </div>
       </StatShell>
 
-      <StatShell cap="今日营业额">
+      <StatShell cap={dc('dash.statCapRevenue')}>
         {/* M1-补2 R1：todayRevenueFen 退役 → todayTender.receivedTotalFen（同源出口） */}
         <div className={VALUE_CLS} data-testid="dashboard-today-revenue">
           {tender ? `¥${fenToYuanGrouped(tender.receivedTotalFen)}` : '—'}
@@ -114,18 +112,18 @@ export default function StatCards({
         </div>
       </StatShell>
 
-      <StatShell cap="在店寄养">
+      <StatShell cap={dc('dash.statCapBoarding')}>
         <div className={VALUE_CLS}>{boardingItems ? boardingCount : '—'}</div>
         <div className={SUB_CLS}>{roomText}</div>
       </StatShell>
 
-      <StatShell cap="接单模式">
+      <StatShell cap={dc('dash.statCapMode')}>
         <div className="mt-1.5 whitespace-nowrap text-[17px] font-semibold leading-8 text-[#FAF8F2]">
-          自动接单
+          {dc('dash.statModeValue')}
         </div>
         {/* livetag 同族（深棕底淡金字）+ 淡金发丝圈在深卡上托出层次 */}
         <span className="mt-2 inline-block rounded-md bg-[#2E2318] px-[7px] py-[2px] text-[11px] font-bold text-[#F2DFA6] ring-1 ring-[rgba(242,223,166,.28)]">
-          已启用 · 新预约免确认
+          {dc('dash.statModePill')}
         </span>
       </StatShell>
     </div>

@@ -19,6 +19,8 @@
 
 import { useState } from 'react';
 import { Bath, Scissors } from 'lucide-react';
+import { Skeleton } from '@philia/shared';
+import { bkc } from '@/copy/booking';
 import type { ServiceItem } from '../types';
 import { fenToYuan } from '../format';
 
@@ -50,7 +52,7 @@ export default function ServiceChipsBlock({
     return (
       <div className="flex gap-2" data-testid="gs-service-loading">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-14 w-28 animate-pulse rounded-control bg-sunken" />
+          <Skeleton key={i} className="h-14 w-28 rounded-control" />
         ))}
       </div>
     );
@@ -62,7 +64,7 @@ export default function ServiceChipsBlock({
         className="rounded-control bg-sunken px-4 py-6 text-center text-caption text-ink-secondary"
         data-testid="gs-service-empty"
       >
-        该门店暂无可约洗护服务，换家门店看看
+        {bkc('booking.noGroomingSingle')}
       </p>
     );
   }

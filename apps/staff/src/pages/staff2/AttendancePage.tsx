@@ -14,16 +14,16 @@
  *    剩余额度 3 次/月由 myApprovals 前端计算；结果列表透出审批状态与备注）。
  */
 
-import { usePhiliaClient } from '@philia/shared';
+import { Skeleton, usePhiliaClient, useToast } from '@philia/shared';
 import type { inferRouterOutputs } from '@trpc/server';
 import type { AppRouter } from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { CalendarClock, MapPin } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import PageHeader from '@/components/PageHeader';
-import Toast, { useToast } from '@/components/today/Toast';
 import { dayKeyOf, hhmm, pad2, weekdayLabel } from '@/components/today/utils';
 import { INSECURE_CONTEXT_GEO_MESSAGE, isSecureContextOk } from '@/lib/secureContext';
+import { ATTENDANCE_COPY } from '@/copy/attendance';
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 type AttRecord = RouterOutputs['attendance']['myRecords']['records'][number];
@@ -77,7 +77,7 @@ function StatusChip({ r }: { r: AttRecord }) {
 
 export default function AttendancePage() {
   const { trpc, queryClient } = usePhiliaClient();
-  const [toast, showToast] = useToast();
+  const { showToast, toastEl } = useToast();
   const now = useMemo(() => new Date(), []);
   const todayStr = localDateStr(now);
   const monthStr = todayStr.slice(0, 7);
@@ -156,7 +156,7 @@ export default function AttendancePage() {
       return;
     }
     if (!('geolocation' in navigator)) {
-      setGeoError('当前设备不支持定位，请更换设备或联系店长');
+      setGeoError(ATTENDANCE_COPY['attendance.geo.unsupported']);
       return;
     }
     setBusy(kind);
@@ -168,10 +168,10 @@ export default function AttendancePage() {
         setBusy(null);
         setGeoError(
           err.code === err.PERMISSION_DENIED
-            ? '定位权限被拒绝：请在浏览器设置中允许定位后重试'
+            ? ATTENDANCE_COPY['attendance.geo.denied']
             : err.code === err.TIMEOUT
-              ? '定位超时，请到开阔处重试'
-              : '定位失败，请检查定位开关后重试',
+              ? ATTENDANCE_COPY['attendance.geo.timeout']
+              : ATTENDANCE_COPY['attendance.geo.failed'],
         );
       },
       { timeout: 10_000, maximumAge: 30_000 },
@@ -208,8 +208,8 @@ export default function AttendancePage() {
 
   const fenceText =
     store && store.lat !== null && store.lng !== null
-      ? '打卡范围：门店 300 米内'
-      : '门店未配置坐标，本次打卡不校验距离';
+      ? ATTENDANCE_COPY['attendance.fence.range']
+      : ATTENDANCE_COPY['attendance.fence.noCoord'];
 
   const punchBtnCls = (disabled: boolean) =>
     `flex h-14 min-h-[56px] w-full items-center justify-center rounded-control text-body-lg font-bold transition-transform duration-120 ease-philia-spring ${
@@ -255,11 +255,14 @@ export default function AttendancePage() {
           >
             {busy === 'in' ? '定位打卡中…' : todayIn ? <>已打上班卡 <span className="u1-num">{hhmm(todayIn.ts)}</span></> : '上班打卡'}
           </button>
+          {/* P3-1：下班打卡=次钮，卡其不作大面填充——白卡描边次钮工艺（u1-ring=既有
+              token 组合 shadow-hairline + ring-1 ring-line-ring，同登录页「口令入内测」先例）；
+              上班打卡主钮淡金不动；disabled 态逻辑不动 */}
           <button
             type="button"
             disabled={busy !== null || !!todayOut}
             onClick={() => punch('out')}
-            className={`${punchBtnCls(busy !== null || !!todayOut)} ${todayOut ? '' : 'bg-brand-secondary text-ink'}`}
+            className={`${punchBtnCls(busy !== null || !!todayOut)} ${todayOut ? '' : 'u1-ring bg-card text-ink'}`}
             data-testid="att-punch-out"
           >
             {busy === 'out' ? '定位打卡中…' : todayOut ? <>已打下班卡 <span className="u1-num">{hhmm(todayOut.ts)}</span></> : '下班打卡'}
@@ -284,7 +287,7 @@ export default function AttendancePage() {
           {recordsQuery.isPending ? (
             <div className="space-y-2.5" aria-label="加载中">
               {[0, 1, 2].map((i) => (
-                <div key={i} className="u1-card h-16 animate-pulse bg-sunken" />
+                <Skeleton key={i} className="u1-card h-16 !rounded-panel" />
               ))}
             </div>
           ) : recordsQuery.isError ? (
@@ -300,7 +303,7 @@ export default function AttendancePage() {
             </div>
           ) : dayRows.length === 0 && missingDays.length === 0 ? (
             <div className="u1-card p-4 text-center">
-              <p className="text-body-sm text-ink-secondary">本月还没有考勤记录——到店后点上方按钮打卡</p>
+              <p className="text-body-sm text-ink-secondary">{ATTENDANCE_COPY['attendance.records.empty']}</p>
             </div>
           ) : (
             <ul>
@@ -445,7 +448,7 @@ export default function AttendancePage() {
         </section>
       </div>
 
-      <Toast message={toast} />
+      {toastEl}
     </div>
   );
 }

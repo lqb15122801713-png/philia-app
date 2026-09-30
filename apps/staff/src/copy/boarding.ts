@@ -1,0 +1,40 @@
+/**
+ * 寄养打卡域文案键表（copy key 一期硬约定 · 换皮批片 5 C 块）
+ *
+ * 纪律：寄养入住登记/每日打卡页的经营性文案（异常态题、核销前置引导、超期/退房说明）
+ * 一律经本表取值，组件内零硬编码；文案端口建成后迁移为后台可改——
+ * 本表即端口 schema 的种子键集，键名小写点分、冻结不改。
+ *
+ * 不抽：通用 UI 词（办理退房/确认退房/再想想/返回任务台）、toast 操作反馈、
+ * server 错误透传（detailQuery.error.message 原样透出）。
+ * 动态位：晚数/时刻走 JSX 内 u1-num 片段，键只持静态 Lead/Tail 碎片（同 me.ts 纪律）。
+ */
+
+export const BOARDING_COPY = {
+  /* ---- 异常态（无法查看 / 非寄养单） ---- */
+  'boarding.error.title': '无法查看该寄养单',
+  'boarding.error.fallbackDesc': '预约不存在或无权查看',
+  'boarding.error.notBoarding': '该预约不是寄养单',
+
+  /* ---- 核销前置引导（未核销不可入住登记） ---- */
+  'boarding.preCheckin.title': '客户还未到店核销',
+  'boarding.preCheckin.desc': '请先在任务台扫码或手动核销该预约，核销后才能办理入住登记。',
+  'boarding.preCheckin.action': '去任务台核销',
+
+  /* ---- 已取消 / 取消审核中 ---- */
+  'boarding.cancelled.title': '该预约已取消',
+  'boarding.cancelRequested.title': '该预约正在取消审核中',
+  'boarding.cancelled.desc': '如有疑问请到商家端查看处理。',
+
+  /* ---- 超期横幅 + 完成态横幅 ---- */
+  'boarding.overdue.title': '已超期，请提醒商家安排退房',
+  'boarding.overdue.dueLead': '应于',
+  'boarding.overdue.dueTail': '退房',
+  'boarding.completed.banner': '本单已完成退房结算',
+
+  /* ---- 退房二次确认（内联展开） ---- */
+  'boarding.checkout.confirmTitle': '确认办理退房？',
+  'boarding.checkout.confirmDesc': '退房后预约转入「已完成」；到店付订单请提醒商家在财务页确认收款。',
+} as const;
+
+export type BoardingCopyKey = keyof typeof BOARDING_COPY;

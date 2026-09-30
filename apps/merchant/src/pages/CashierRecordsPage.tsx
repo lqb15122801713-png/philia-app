@@ -23,7 +23,7 @@
  * - 路由层：clerk 直达本页由 App.tsx ClerkRouteGuard 给引导页（矩阵总规则②）。
  */
 
-import { EventType, usePhiliaClient } from '@philia/shared'
+import { EventType, Skeleton, usePhiliaClient } from '@philia/shared'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -49,6 +49,7 @@ import RefundDialog from '@/components/cashier/RefundDialog'
 import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider'
 import { STATS_QUERY_KEY } from '@/components/dashboard/utils'
 import MainScaffold, { QuietButton, SearchInput } from '@/components/MainScaffold'
+import { cc } from '@/copy/cashier'
 import { formatDateTime, formatTime } from '@/components/finance/utils'
 import { errMsg } from '@/components/mall-admin/format'
 import { useMerchantRole } from '@/lib/roles'
@@ -186,8 +187,8 @@ export default function CashierRecordsPage() {
   return (
     <MainScaffold
       testid="cashier-records-page"
-      title="收银流水"
-      sub={`挂单 / 结账 / 撤单 / 冲正全留痕 · 共 ${listQ.data?.length ?? '…'} 单`}
+      title={cc('cashier.recordsTitle')}
+      sub={cc('cashier.recordsSub', { n: listQ.data?.length ?? '…' })}
       actions={
         <SearchInput placeholder="搜索买家（昵称/手机号/散客）…" value={buyer} onChange={setBuyer} testid="cashier-records-search" />
       }
@@ -221,9 +222,10 @@ export default function CashierRecordsPage() {
 
       <div className="u3-panel">
         {listQ.isPending ? (
+          /* 加载中骨架块（animate-pulse，禁转圈）：shared Skeleton 组合 */
           <div className="space-y-2 px-[17px] py-4">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-9 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
+              <Skeleton key={i} className="h-9" />
             ))}
           </div>
         ) : listQ.isError ? (
@@ -237,7 +239,7 @@ export default function CashierRecordsPage() {
           </div>
         ) : rows.length === 0 ? (
           <p className="px-[17px] py-10 text-center text-body-sm text-[rgba(59,46,36,.62)]">
-            当前筛选无流水——收银台结账后单据会出现在这里
+            {cc('cashier.recordsEmpty')}
           </p>
         ) : (
           /* 390 降级：横滑容器（u3-noscrollx），表本体保底宽 */

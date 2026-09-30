@@ -11,6 +11,7 @@
  * - 商品仅列在架（status='on'）；三态齐全（骨架 / 错误重试 / 空态安静灰字）。
  */
 
+import { Skeleton } from '@philia/shared'
 import { Package, type LucideIcon } from 'lucide-react'
 import { fmtDateTime, type StoreProduct } from '@/components/mall-admin/format'
 import { fenToYuan, serviceIcon, type PendingAppt, type StoreService } from './model'
@@ -118,9 +119,9 @@ export default function PickPanel({
                 key={i}
                 className="rounded-[14px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(59,46,36,.09)]"
               >
-                <div className="h-10 w-10 animate-pulse rounded-[10px] bg-[rgba(59,46,36,.06)]" />
-                <div className="mt-2.5 h-3.5 w-3/4 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
-                <div className="mt-2 h-3 w-1/3 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
+                <Skeleton className="h-10 w-10 rounded-[10px]" />
+                <Skeleton className="mt-2.5 h-3.5 w-3/4" />
+                <Skeleton className="mt-2 h-3 w-1/3" />
               </div>
             ))}
           </div>

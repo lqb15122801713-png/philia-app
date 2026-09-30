@@ -22,13 +22,14 @@
  * - 新规只约束生效后的单，不回溯历史月份与已快照数据（页面小字明示）。
  */
 
-import { usePhiliaClient, type PhiliaClient } from '@philia/shared';
+import { Skeleton, usePhiliaClient, type PhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import MainScaffold from '../components/MainScaffold';
 import RoleGuidePage from '../components/RoleGuidePage';
 import { errMsg, fmtDateTime } from '../components/staff-admin/format';
 import { Badge, Btn, Empty, Field, Modal, numStyle, toast, ToasterMount } from '../components/staff-admin/ui';
+import { rc } from '../copy/rules';
 import { useMerchantRole } from '../lib/roles';
 
 /* ------------------------------------------------------------------ */
@@ -61,12 +62,9 @@ const DOMAIN_TITLE: Record<RulesDomain, string> = {
 
 /** 域页签分区顶部小字（duration 占位待供给 / member_plans R11a 可调口径明示 / refund PR-4 B1 口径） */
 const DOMAIN_NOTICE: Partial<Record<RulesDomain, string>> = {
-  duration:
-    '占位待供给——当前为引擎占位值照转，老板完整供给表到后在此直接改值，保存即生效、不回溯既有单据。',
-  member_plans:
-    '档位/价格/回馈金比例/服务折扣/多宠规则老板可调，保存即生效、新规只管新单（不回溯既有会员与单据）。',
-  refund:
-    '店长可办退款的累计阈值（超过须店主审批）与超阈值留口开关（默认关=维持硬拒）。保存即生效、只管新单不回溯；开关属流程留口，改动前先与产品侧对齐口径。',
+  duration: rc('rules.noticeDuration'),
+  member_plans: rc('rules.noticeMemberPlans'),
+  refund: rc('rules.noticeRefund'),
 };
 
 /* ------------------------------------------------------------------ */
@@ -106,7 +104,7 @@ const FIELD_META: Record<string, FieldMeta> = {
     label: '服务折扣',
     conv: 'percent',
     suffix: '%',
-    hint: '按百分比填写：88 折 = 88%',
+    hint: rc('rules.discountHint'),
   },
   included_pets: { label: '含宠物数', conv: 'plain', suffix: '只' },
   extra_pet_fen: { label: '超出每只加收', conv: 'yuan', suffix: '元' },
@@ -219,15 +217,15 @@ const INACTIVE_STATUS: Record<string, string> = {
 };
 
 /** 危险操作 D 套：须键入的确认口令 */
-const CONFIRM_PHRASE = '确认保存';
+const CONFIRM_PHRASE = rc('rules.confirmPhrase');
 
 /** 重确认警示文案分域（PR-4 D6 警示文案错域修复：各域只说自己的影响面） */
 const CONFIRM_WARN: Record<RulesDomain, string> = {
-  commission: '影响全员提成与绩效核算',
-  xp: '影响全员 XP 核算',
-  duration: '影响预约引擎时长与可约槽位',
-  member_plans: '影响会员档权益与新售卡结算',
-  refund: '影响退款审批闸门与超阈值口径',
+  commission: rc('rules.warnCommission'),
+  xp: rc('rules.warnXp'),
+  duration: rc('rules.warnDuration'),
+  member_plans: rc('rules.warnMemberPlans'),
+  refund: rc('rules.warnRefund'),
 };
 
 /* ------------------------------------------------------------------ */
@@ -1010,16 +1008,16 @@ function DomainPanel({ domain }: { domain: RulesDomain }) {
 
   /* ---------------- 渲染 ---------------- */
   if (rulesQuery.isPending) {
-    // 骨架（禁转圈）
+    // 加载中骨架块（animate-pulse，禁转圈）：shared Skeleton 组合
     return (
-      <div className="u3-panel animate-pulse" aria-label="加载中">
+      <div className="u3-panel" aria-label="加载中">
         <div className="u3-panel-head">
-          <div className="h-4 w-24 rounded-chip bg-[rgba(59,46,36,.08)]" />
+          <Skeleton className="h-4 w-24 rounded-chip" />
         </div>
-        {[0, 1, 2, 3, 4].map((i) => (
+        {(['w-[46%]', 'w-[55%]', 'w-[64%]', 'w-[73%]', 'w-[82%]']).map((w, i) => (
           <div key={i} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-4">
-            <div className="h-3 rounded-chip bg-[rgba(59,46,36,.06)]" style={{ width: `${46 + i * 9}%` }} />
-            <div className="mt-2 h-8 w-2/3 rounded-control bg-[rgba(59,46,36,.05)]" />
+            <Skeleton className={`h-3 rounded-chip ${w}`} />
+            <Skeleton className="mt-2 h-8 w-2/3 rounded-control" />
           </div>
         ))}
       </div>
@@ -1030,7 +1028,7 @@ function DomainPanel({ domain }: { domain: RulesDomain }) {
     return (
       <Empty
         title={`规则加载失败：${errMsg(rulesQuery.error)}`}
-        hint="仅店主可读取规则配置；请确认登录态后重试"
+        hint={rc('rules.errorHint')}
       />
     );
   }
@@ -1098,7 +1096,7 @@ function DomainPanel({ domain }: { domain: RulesDomain }) {
                               {ed.mapLabel}
                             </span>
                             {ed.key === 'split_bp' ? (
-                              <span className="text-caption-xs text-[rgba(59,46,36,.42)]">合计须为 100%</span>
+                              <span className="text-caption-xs text-[rgba(59,46,36,.42)]">{rc('rules.splitNote')}</span>
                             ) : null}
                           </div>
                           <div className="flex flex-wrap items-start gap-3">
@@ -1280,12 +1278,12 @@ function DomainPanel({ domain }: { domain: RulesDomain }) {
       <div className="u3-panel mt-3.5" data-testid="rules-versions">
         <div className="u3-panel-head">
           <h3>修改留痕</h3>
-          <span className="aside">谁 / 何时 / 前后值（最近 20 条）</span>
+          <span className="aside">{rc('rules.versionsAside')}</span>
         </div>
         {versionsQuery.isPending ? (
           <div className="space-y-2 px-[17px] py-4" aria-label="加载中">
             {[0, 1, 2].map((i) => (
-              <div key={i} className="h-9 animate-pulse rounded-control bg-canvas" />
+              <Skeleton key={i} className="h-9 rounded-control" />
             ))}
           </div>
         ) : versionsQuery.isError ? (
@@ -1301,7 +1299,7 @@ function DomainPanel({ domain }: { domain: RulesDomain }) {
           </div>
         ) : (versionsQuery.data?.versions.length ?? 0) === 0 ? (
           <div className="px-[17px] py-6 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
-            暂无修改记录（当前为初始种子版本）
+            {rc('rules.versionsEmpty')}
           </div>
         ) : (
           versionsQuery.data!.versions.map((v: VersionRow) => {
@@ -1353,7 +1351,7 @@ function DomainPanel({ domain }: { domain: RulesDomain }) {
 
       {/* 口径小字（V1.3 冻结：不回溯） */}
       <p className="mt-3 px-1 text-caption-xs text-[rgba(59,46,36,.42)]">
-        小字口径：规则保存即生效；新规只约束生效后的单，不回溯历史月份与已快照数据。本页仅店主可见可改，每次修改全留痕。
+        {rc('rules.caliberNote')}
       </p>
 
       {/* 危险操作 D 套：重确认弹层（变更摘要 + 键入口令） */}
@@ -1362,7 +1360,7 @@ function DomainPanel({ domain }: { domain: RulesDomain }) {
         onClose={() => {
           if (!saving) setConfirmOpen(false);
         }}
-        title="确认保存规则修改"
+        title={rc('rules.confirmTitle')}
         widthClass="max-w-xl"
         footer={
           <>
@@ -1382,7 +1380,7 @@ function DomainPanel({ domain }: { domain: RulesDomain }) {
       >
         <div className="space-y-3" data-testid="rules-confirm-modal">
           <p className="rounded-input bg-danger-light px-3 py-2 text-caption text-danger-deep">
-            危险操作：保存后立即生效，{CONFIRM_WARN[domain]}。新规只约束生效后的单，不回溯历史月份与已快照数据。
+            {rc('rules.confirmDanger', { warn: CONFIRM_WARN[domain] })}
           </p>
           <div className="space-y-2">
             {pending.map((p) => (
@@ -1398,7 +1396,7 @@ function DomainPanel({ domain }: { domain: RulesDomain }) {
               </div>
             ))}
           </div>
-          <Field label={`请输入「${CONFIRM_PHRASE}」以继续`} hint="防误触：口令与按钮双重确认">
+          <Field label={`请输入「${CONFIRM_PHRASE}」以继续`} hint={rc('rules.confirmHint')}>
             <input
               className="w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
               data-testid="rules-confirm-input"
@@ -1422,8 +1420,8 @@ function OwnerRulesConfig() {
   const [domain, setDomain] = useState<RulesDomain>('commission');
   return (
     <MainScaffold
-      title="规则配置管理"
-      sub="提成与 XP 全参数 · 页面可改 · 保存即生效 · 每次修改留痕版本化"
+      title={rc('rules.pageTitle')}
+      sub={rc('rules.pageSub')}
       testid="rules-config-page"
     >
       <ToasterMount />
@@ -1452,7 +1450,7 @@ function OwnerRulesConfig() {
 export default function RulesConfigPage() {
   const role = useMerchantRole();
   if (!role.isOwner) {
-    return <RoleGuidePage title="规则配置仅店主可用" hint="提成与 XP 参数的调整入口只对店主开放。" />;
+    return <RoleGuidePage title={rc('rules.guideTitle')} hint={rc('rules.guideHint')} />;
   }
   return <OwnerRulesConfig />;
 }

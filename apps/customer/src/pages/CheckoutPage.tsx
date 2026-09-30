@@ -26,8 +26,9 @@ import PageHeader from '../components/PageHeader';
 import { EmptyState } from '../components/home/common';
 import { CartProvider, useCart, type AddInput } from '../components/mall/cartStore';
 import { fenToYuan } from '../components/mall/format';
-import { friendlyError, useMallToast } from '../components/mall/MallToast';
+import { friendlyError, useToast } from '@philia/shared';
 import ProductImage from '../components/mall/ProductImage';
+import { mlc } from '../copy/mall';
 import { mc } from '../components/member/copy';
 
 const ADDRESS_KEY = 'philia.address';
@@ -68,7 +69,7 @@ function CheckoutInner() {
   const cart = useCart();
   const navigate = useNavigate();
   const location = useLocation();
-  const { toastEl, showToast } = useMallToast();
+  const { toastEl, showToast } = useToast({ durationMs: 3200 });
 
   // 立即购买单品（详情页 navigate state 带入）
   const buyNow = (location.state as { buyNow?: AddInput } | null)?.buyNow;
@@ -134,7 +135,7 @@ function CheckoutInner() {
     },
     onError: (err) => {
       // CONFLICT「库存不足（剩余 N 件）」/ BAD_REQUEST「已下架 / 仅支持同一门店」等服务端原文
-      showToast(friendlyError(err, '下单失败，请稍后再试'));
+      showToast(friendlyError(err, '下单失败，请稍后再试', 80), 'error');
     },
   });
 
@@ -164,13 +165,13 @@ function CheckoutInner() {
     return (
       <div className="px-4 py-6">
         {toastEl}
-        <PageHeader title="支付成功" to="/home" />
+        <PageHeader title={mlc('mall.paySuccessTitle')} to="/home" />
         <div className="flex flex-col items-center pt-2">
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-success-light">
             <BadgeCheck className="h-7 w-7 text-success-deep" strokeWidth={1.5} />
           </span>
-          <p className="mt-3 text-title-lg">支付成功</p>
-          <p className="mt-1 text-body text-ink-secondary">门店会尽快为你发货，进度可在订单列表查看</p>
+          <p className="mt-3 text-title-lg">{mlc('mall.paySuccessTitle')}</p>
+          <p className="mt-1 text-body text-ink-secondary">{mlc('mall.paySuccessSub')}</p>
         </div>
 
         {/* 单据摘要卡（订单号 / 实付金额 / 收货信息快照）；金额 mono 深棕（成功不设绿不设金） */}
@@ -200,19 +201,19 @@ function CheckoutInner() {
             to="/mall/orders"
             className="flex h-12 w-full items-center justify-center rounded-full bg-[#2E2318] text-body font-semibold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92"
           >
-            查看订单
+            {mlc('mall.viewOrders')}
           </Link>
           <Link
             to="/home"
             className="u1-ring flex h-12 w-full items-center justify-center rounded-full bg-card text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
           >
-            返回首页
+            {mlc('mall.backHome')}
           </Link>
           <Link
             to="/mall"
             className="flex w-full items-center justify-center py-2 text-caption font-medium text-ink-secondary underline-offset-2 hover:underline"
           >
-            再逛逛商城 ›
+            {mlc('mall.keepShopping')}
           </Link>
         </div>
       </div>
@@ -227,24 +228,24 @@ function CheckoutInner() {
     /* U1-J 一致性修正：空态分支补统一返回条 + 统一空态组件 */
     return (
       <div className="px-4 pb-10 pt-6">
-        <PageHeader title="确认订单" />
+        <PageHeader title={mlc('mall.checkoutTitle')} />
         <div className="mt-6">
           <EmptyState
-            title="没有待结算的商品"
-            desc="去商城挑点好物，或回购物袋勾选商品"
+            title={mlc('mall.checkoutEmptyTitle')}
+            desc={mlc('mall.checkoutEmptyBody')}
             action={
               <div className="flex gap-3">
                 <Link
                   to="/mall"
-                  className="inline-flex items-center rounded-control bg-brand-primary px-[30px] py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                  className="inline-flex items-center rounded-control bg-ink px-[30px] py-[13px] text-body-sm font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
                 >
-                  去逛逛
+                  {mlc('mall.checkoutGoMall')}
                 </Link>
                 <Link
                   to="/mall/cart"
                   className="inline-flex items-center rounded-control bg-card px-[30px] py-[13px] text-body-sm font-semibold text-ink ring-1 ring-line-ring transition-transform duration-120 ease-philia-spring active:scale-92"
                 >
-                  回购物袋
+                  {mlc('mall.checkoutGoCart')}
                 </Link>
               </div>
             }
@@ -259,7 +260,7 @@ function CheckoutInner() {
     <div className="px-4 pb-32 pt-6">
       {toastEl}
       {/* U1-A：统一返回条（←圆钮+标题） */}
-      <PageHeader title="确认订单" />
+      <PageHeader title={mlc('mall.checkoutTitle')} />
 
       {/* 收货地址（§4.7 f-field 工艺：mono 9.5 签 + 纸白底细线输入框，:focus 深棕边；
           单地址能力保留，多地址簿无 UI 雏形不画假簿——PD-15 V1.1 槽位 3 不适用） */}
@@ -320,7 +321,7 @@ function CheckoutInner() {
       <section className="u1-ring mt-3 rounded-[18px] bg-card px-4 py-1.5">
         <div className="flex items-baseline justify-between py-2.5">
           <p className="text-title">商品清单</p>
-          <p className="font-number text-v2-trace text-ink-secondary">{lines[0]?.storeName} · 门店发货</p>
+          <p className="font-number text-v2-trace text-ink-secondary">{mlc('mall.listShip', { store: lines[0]?.storeName ?? '' })}</p>
         </div>
         <div className="divide-y divide-line-divider">
           {lines.map((l) => (
@@ -340,7 +341,7 @@ function CheckoutInner() {
           <span className="text-body-sm font-extrabold">合计（{lines.reduce((n, l) => n + l.qty, 0)} 件）</span>
           <span className="font-number text-body-lg font-bold tabular-nums text-[#2E2318]">{fenToYuan(totalFen)}</span>
         </div>
-        <p className="pb-2.5 text-right text-caption text-ink-placeholder">金额以提交时门店现价为准</p>
+        <p className="pb-2.5 text-right text-caption text-ink-placeholder">{mlc('mall.priceNote')}</p>
       </section>
 
       {/* 吸底提交栏（片 2 M-03 定稿 ctabar：渐出底 + 合计 mono 19/700 + 深棕主钮 16/700；
@@ -360,7 +361,7 @@ function CheckoutInner() {
             onClick={handleSubmit}
             className="flex w-full flex-col items-center justify-center rounded-[18px] bg-[#2E2318] py-3 text-body-lg font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
           >
-            <span>{createOrderM.isPending ? '提交中…' : '提交订单'}</span>
+            <span>{createOrderM.isPending ? '提交中…' : mlc('mall.submitOrder')}</span>
             {rebateFen > 0 && !createOrderM.isPending ? (
               <span className="mt-0.5 font-number text-[10.5px] font-normal text-[#C9BBA0]">
                 {mc('mall.rebateEarnCta', { amt: fenToYuan(rebateFen) })}

@@ -15,11 +15,12 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { Link, useSearchParams } from 'react-router-dom';
-import { usePhiliaClient } from '@philia/shared';
+import { Skeleton, usePhiliaClient } from '@philia/shared';
 import PageHeader from '@/components/PageHeader';
 import BookingCode from '@/components/booking/BookingCode';
 import { ErrorState } from '@/components/home/common';
 import { APPT_TYPE_LABEL, fmtDateTime, fmtHM, fmtMD, fmtRange, weekCN } from '@/components/booking/format';
+import { bkc } from '@/copy/booking';
 
 /** 生成 ICS 日历文件内容（本地时间浮点格式，免时区歧义） */
 function buildIcs(opts: {
@@ -88,16 +89,16 @@ export default function BookingSuccessPage() {
       <div className="px-4 py-6">
         {/* W1-D1：异常分支同样导航闭环（返回键 + 明确出口）；
             W1 退回修：链接形出口按钮化（唯一动作=点睛主钮回列表） */}
-        <PageHeader title="预约成功" to="/home" />
+        <PageHeader title={bkc('booking.successTitle')} to="/home" />
         <div className="mt-4">
           <ErrorState
-            message="缺少预约参数"
+            message={bkc('booking.missingParam')}
             action={
               <Link
                 to="/appointments"
                 className="flex min-h-[44px] items-center rounded-full bg-brand-primary px-5 py-2 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
               >
-                查看我的预约
+                {bkc('booking.viewAppointments')}
               </Link>
             }
           />
@@ -109,7 +110,7 @@ export default function BookingSuccessPage() {
   return (
     <div className="px-4 py-6">
       {/* W1-D1 导航闭环：返回键（固定落点 /home；直访兜底同）——交易成功页不回已消耗的下单页 */}
-      <PageHeader title="预约成功" to="/home" />
+      <PageHeader title={bkc('booking.successTitle')} to="/home" />
       <div className="flex flex-col items-center pt-2">
         <span className="flex h-14 w-14 items-center justify-center rounded-full bg-success-light">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-success-deep" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -117,9 +118,9 @@ export default function BookingSuccessPage() {
           </svg>
         </span>
         {/* 视觉主标（页首 h1 在 PageHeader 返回条，避免双 h1） */}
-        <p className="mt-3 text-title-lg">预约成功</p>
+        <p className="mt-3 text-title-lg">{bkc('booking.successTitle')}</p>
         {/* 批次 S4：免商家确认——create 落库即 confirmed */}
-        <p className="mt-1 text-body text-ink-secondary">已自动确认，请按时到店并出示预约码</p>
+        <p className="mt-1 text-body text-ink-secondary">{bkc('booking.successSub')}</p>
       </div>
 
       {/* 预约摘要 */}
@@ -150,7 +151,7 @@ export default function BookingSuccessPage() {
         </section>
       ) : detailQ.isError ? (
         <div className="mt-5 rounded-card bg-sunken px-4 py-6 text-center">
-          <p className="text-caption text-ink-secondary">预约摘要加载失败</p>
+          <p className="text-caption text-ink-secondary">{bkc('booking.summaryLoadFail')}</p>
           <button
             type="button"
             onClick={() => void detailQ.refetch()}
@@ -160,12 +161,12 @@ export default function BookingSuccessPage() {
           </button>
         </div>
       ) : (
-        <div className="mt-5 h-32 animate-pulse rounded-card bg-sunken" />
+        <Skeleton className="mt-5 h-32 rounded-card" />
       )}
 
       {/* 预约码（滚动时间窗二维码 + 人工核销码） */}
       <section className="mt-5 rounded-card bg-card p-5 shadow-card">
-        <h2 className="text-center text-title">到店核销码</h2>
+        <h2 className="text-center text-title">{bkc('booking.codeTitle')}</h2>
         <div className="mt-3">
           <BookingCode appointmentId={aid} />
         </div>
@@ -178,13 +179,13 @@ export default function BookingSuccessPage() {
           to="/appointments"
           className="flex h-12 w-full items-center justify-center rounded-full bg-brand-primary text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
         >
-          查看我的预约
+          {bkc('booking.viewAppointments')}
         </Link>
         <Link
           to="/home"
           className="u1-ring flex h-12 w-full items-center justify-center rounded-full bg-card text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
         >
-          返回首页
+          {bkc('booking.backHome')}
         </Link>
         <button
           type="button"
@@ -196,19 +197,19 @@ export default function BookingSuccessPage() {
             <rect x="3" y="4" width="18" height="18" rx="2" />
             <path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4" />
           </svg>
-          添加到日历
+          {bkc('booking.addCalendar')}
         </button>
         <Link
           to={`/appointments/${aid}`}
           className="flex w-full items-center justify-center gap-1 py-2 text-caption font-medium text-ink-secondary underline-offset-2 hover:underline"
         >
-          需要改期？前往预约详情改期 ›
+          {bkc('booking.rescheduleLink')}
         </Link>
       </div>
 
       {d ? (
         <p className="mt-4 text-center text-caption text-ink-placeholder">
-          {weekCN(d.appointment.scheduledStart)}见 · 如需取消请提前 4 小时
+          {bkc('booking.cancelNote', { week: weekCN(d.appointment.scheduledStart) })}
         </p>
       ) : null}
     </div>

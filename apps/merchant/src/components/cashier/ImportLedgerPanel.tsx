@@ -15,12 +15,13 @@
  * 红线：本组件不出现任何充值/新售入口（裁定①新售冻结回归保护）。
  */
 
-import { usePhiliaClient } from '@philia/shared'
+import { Skeleton, usePhiliaClient } from '@philia/shared'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { FileUp, Trash2 } from 'lucide-react'
 import { useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { errMsg, fenToYuan } from '@/components/mall-admin/format'
+import { cc } from '@/copy/cashier'
 import { IMPORT_BATCHES_KEY, type ImportReport } from './model'
 import { CashierModal, SheetBtn } from './dialogs'
 
@@ -155,7 +156,7 @@ export default function ImportLedgerPanel({ storeId }: { storeId: string | undef
     <div className="u3-panel" data-testid="sv-import-panel">
       <div className="u3-panel-head">
         <h3>储值台账导入（R5b · 仅店主）</h3>
-        <span className="aside">只交付不执行——真台账导入等老板令；演示台账试导可标记清除</span>
+        <span className="aside">{cc('cashier.importAside')}</span>
       </div>
       <div className="px-[17px] pb-4">
         {/* 文件选择 + mapping */}
@@ -191,7 +192,7 @@ export default function ImportLedgerPanel({ storeId }: { storeId: string | undef
         {file && Object.keys(mapping).length > 0 ? (
           <div className="mt-3 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3" data-testid="sv-import-mapping">
             <div className="mb-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
-              门店映射（台账店名 → 系统门店；未映射行将失败留痕）
+              {cc('cashier.importMappingTitle')}
             </div>
             {Object.keys(mapping).map((name) => (
               <div key={name} className="flex items-center justify-between py-1 text-caption">
@@ -271,7 +272,7 @@ export default function ImportLedgerPanel({ storeId }: { storeId: string | undef
         <div className="mt-4">
           <div className="mb-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">导入批次（留痕可查 · 批次行永存）</div>
           {batchesQ.isPending ? (
-            <div className="h-9 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
+            <Skeleton className="h-9" />
           ) : (batchesQ.data ?? []).length === 0 ? (
             <p className="text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="sv-import-batches-empty">
               暂无导入批次
@@ -336,11 +337,10 @@ export default function ImportLedgerPanel({ storeId }: { storeId: string | undef
         }
       >
         <p className="py-2 text-body-sm leading-relaxed text-ink">
-          将对 <b className="font-number tabular-nums">{report?.importPlan.okRows ?? 0}</b> 行可导记录开户/加账并写流水（批次留痕可查）。
+          {cc('cashier.importConfirmPre')} <b className="font-number tabular-nums">{report?.importPlan.okRows ?? 0}</b> {cc('cashier.importConfirmPost')}
         </p>
         <p className="text-caption leading-relaxed text-[rgba(59,46,36,.62)]">
-          真台账（907 人 / ¥671,264.42）执行等老板令；本次为演示台账试导，试导后可用「标记清除」回滚。
-          重复 execute 会重复入账（无文件级幂等），请勿重复提交。
+          {cc('cashier.importConfirmNote')}
         </p>
       </CashierModal>
 
@@ -365,10 +365,10 @@ export default function ImportLedgerPanel({ storeId }: { storeId: string | undef
         }
       >
         <p className="py-2 text-body-sm leading-relaxed text-ink">
-          将删除该批次写入的流水并按日志反向冲减账户；批次行永存（置「已清除」留痕）。
+          {cc('cashier.importClearNote')}
         </p>
         <p className="text-caption leading-relaxed text-[rgba(59,46,36,.62)]">
-          已产生消费的批次拒绝清除（保护真账）——差错请走对账调整留痕。
+          {cc('cashier.importClearReject')}
         </p>
       </CashierModal>
     </div>

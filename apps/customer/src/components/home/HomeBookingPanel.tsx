@@ -40,6 +40,7 @@ import {
   getApiBase,
   getStepDef,
   safeUuid,
+  Skeleton,
   useEventSource,
   useMe,
   usePhiliaClient,
@@ -47,6 +48,7 @@ import {
 } from '@philia/shared';
 import type { AppointmentListItem } from '@/components/booking/types';
 import { readLastBooking, resolvePetId, resolveServiceId } from '@/lib/bookingPrefill';
+import { hc } from '@/copy/home';
 import RebookPanel from './RebookPanel';
 import InServicePanel from './InServicePanel';
 
@@ -325,15 +327,15 @@ export default function HomeBookingPanel({
       <div
         data-testid="home-booking-loading"
         aria-label="加载中"
-        className="animate-pulse rounded-card bg-card p-4 shadow-card"
+        className="rounded-card bg-card p-4 shadow-card"
       >
-        <div className="h-5 w-24 rounded-tag bg-sunken" />
+        <Skeleton className="h-5 w-24 rounded-tag" />
         <div className="mt-3 space-y-2.5">
-          <div className="h-4 rounded-tag bg-sunken" />
-          <div className="h-4 rounded-tag bg-sunken" />
-          <div className="h-4 w-3/4 rounded-tag bg-sunken" />
+          <Skeleton className="h-4 rounded-tag" />
+          <Skeleton className="h-4 rounded-tag" />
+          <Skeleton className="h-4 w-3/4 rounded-tag" />
         </div>
-        <div className="mt-4 h-12 rounded-card bg-sunken" />
+        <Skeleton className="mt-4 h-12 rounded-card" />
       </div>
     );
   }
@@ -401,8 +403,8 @@ export default function HomeBookingPanel({
         <path d="M9 9.5c.8-.8 1.9-1.3 3-1.3" />
       </svg>
       <span className="min-w-0 flex-1">
-        <span className="block text-body font-semibold">预约洗护</span>
-        <span className="block text-caption text-ink-secondary">选择门店、服务和时间</span>
+        <span className="block text-body font-semibold">{hc('home.panelEntryTitle')}</span>
+        <span className="block text-caption text-ink-secondary">{hc('home.panelEntrySub')}</span>
       </span>
       <span className="shrink-0 text-body text-ink-secondary" aria-hidden="true">
         ›

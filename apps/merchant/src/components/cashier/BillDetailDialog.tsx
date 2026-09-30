@@ -15,7 +15,8 @@
  *   - reversal 冲正单：签 + 关联原单号 + 「不计入已收」口径行；永驻流水无动作。
  */
 
-import { usePhiliaClient } from '@philia/shared'
+import { Skeleton, usePhiliaClient } from '@philia/shared'
+import { cc } from '@/copy/cashier'
 import { useQuery } from '@tanstack/react-query'
 import { fmtDateTime } from '@/components/mall-admin/format'
 import { CashierModal, SheetBtn } from './dialogs'
@@ -136,7 +137,7 @@ export default function BillDetailDialog({
       {detailQ.isPending ? (
         <div className="space-y-2 py-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="h-8 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]" />
+            <Skeleton key={i} className="h-8" />
           ))}
         </div>
       ) : detailQ.isError || !d || !bill ? (
@@ -148,14 +149,14 @@ export default function BillDetailDialog({
             <div className="mb-3 rounded-[10px] bg-[#F1E8D4] px-3 py-2 text-caption-xs text-[rgba(59,46,36,.62)]" data-testid="cashier-detail-reversal-banner">
               本单为冲正单 · 关联原单{' '}
               <b className="font-number tabular-nums text-ink">{bill.reversalOfBillNo ?? '—'}</b>
-              {' · 金额镜像负值，不计入已收'}
+              {cc('cashier.billReversalNote')}
             </div>
           ) : null}
           {reversed ? (
             <div className="mb-3 rounded-[10px] bg-[rgba(59,46,36,.06)] px-3 py-2 text-caption-xs text-[rgba(59,46,36,.62)]" data-testid="cashier-detail-reversed-banner">
               本单已被反结账冲正 · 冲正单{' '}
               <b className="font-number tabular-nums text-ink">{bill.reversalBillNo ?? '—'}</b>
-              {' · 不再计入已收（原单永存不涂改）'}
+              {cc('cashier.billReversedNote')}
             </div>
           ) : null}
 
@@ -186,7 +187,7 @@ export default function BillDetailDialog({
               ) : (
                 <span className="ml-2 text-[rgba(59,46,36,.62)]">
                   退款单 <b className="font-number tabular-nums text-ink">{bill.refundBillNo ?? '—'}</b>
-                  （详情见「退款」列表页）
+                  {cc('cashier.billRefundDetailLink')}
                 </span>
               )}
             </div>

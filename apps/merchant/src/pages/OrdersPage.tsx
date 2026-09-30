@@ -20,7 +20,7 @@
  *   收不到，支付到「待发货」出现的最坏延迟 = 60s 轮询兜底。
  */
 
-import { EventType, usePhiliaClient } from '@philia/shared'
+import { EventType, Skeleton, usePhiliaClient } from '@philia/shared'
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -28,38 +28,19 @@ import MainScaffold, { QuietButton, SearchInput } from '@/components/MainScaffol
 import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider'
 import OrderRow from '@/components/mall-admin/OrderCard'
 import ShipOrderDialog from '@/components/mall-admin/ShipOrderDialog'
+import { od } from '@/copy/orders'
 import { errMsg, STORE_ORDERS_KEY, type StoreOrder } from '@/components/mall-admin/format'
 
 type QueueKey = 'paid' | 'shipped' | 'refunding'
 
 const TABS: Array<{ key: QueueKey; label: string; empty: string }> = [
-  { key: 'paid', label: '待发货', empty: '没有待发货订单' },
-  { key: 'shipped', label: '已发货', empty: '没有已发货订单' },
-  { key: 'refunding', label: '售后·退款', empty: '没有售后订单' },
+  { key: 'paid', label: '待发货', empty: od('order.emptyPaid') },
+  { key: 'shipped', label: '已发货', empty: od('order.emptyShipped') },
+  { key: 'refunding', label: '售后·退款', empty: od('order.emptyRefunding') },
 ]
 
 /** 轮询兜底间隔（SSE 在线时也保留：order.paid 不到商家频道，见头注） */
 const POLL_MS = 60_000
-
-/** 订单表骨架（禁转圈：opacity 脉冲骨架条） */
-function TableSkeleton() {
-  return (
-    <div>
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-6 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3.5"
-        >
-          <div className="h-3.5 w-32 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
-          <div className="h-3.5 w-20 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
-          <div className="h-3.5 w-28 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
-          <div className="h-3.5 w-14 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
-          <div className="ml-auto h-3.5 w-16 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
-        </div>
-      ))}
-    </div>
-  )
-}
 
 export default function OrdersPage() {
   const { trpc, queryClient } = usePhiliaClient()
@@ -130,15 +111,15 @@ export default function OrdersPage() {
 
   const searching = keyword.trim().length > 0
   const emptyText = searching
-    ? '没有找到匹配的订单'
+    ? od('order.emptySearch')
     : allEmpty
-      ? '还没有订单'
-      : (TABS.find((t) => t.key === tab)?.empty ?? '还没有订单')
+      ? od('order.emptyAll')
+      : (TABS.find((t) => t.key === tab)?.empty ?? od('order.emptyAll'))
 
   return (
     <MainScaffold
-      title="商城订单"
-      sub={`待发货 ${countOf('paid')} · 已发货 ${countOf('shipped')} · 售后 ${countOf('refunding')}`}
+      title={od('order.title')}
+      sub={od('order.sub', { a: countOf('paid'), b: countOf('shipped'), c: countOf('refunding') })}
       actions={
         <SearchInput
           placeholder="搜索单号 / 客户…"
@@ -171,7 +152,21 @@ export default function OrdersPage() {
       {/* 订单表 */}
       <div className="u3-panel">
         {ordersQuery.isPending ? (
-          <TableSkeleton />
+          /* 加载中骨架块（animate-pulse，禁转圈）：订单表行 = shared Skeleton 组合 */
+          <div>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-6 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3.5"
+              >
+                <Skeleton className="h-3.5 w-32 rounded-chip" />
+                <Skeleton className="h-3.5 w-20 rounded-chip" />
+                <Skeleton className="h-3.5 w-28 rounded-chip" />
+                <Skeleton className="h-3.5 w-14 rounded-chip" />
+                <Skeleton className="ml-auto h-3.5 w-16 rounded-chip" />
+              </div>
+            ))}
+          </div>
         ) : ordersQuery.isError ? (
           <div className="px-[17px] py-10 text-center">
             <div className="text-caption text-[rgba(59,46,36,.62)]">

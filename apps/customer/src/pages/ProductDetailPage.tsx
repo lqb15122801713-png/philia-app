@@ -10,7 +10,7 @@
  *   （对齐服务端 createOrder 的 BAD_REQUEST 口径）。
  */
 
-import { usePhiliaClient } from '@philia/shared';
+import { Skeleton, usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Minus, Plus, Store } from 'lucide-react';
 import { useRef, useState } from 'react';
@@ -19,8 +19,9 @@ import { BackButton } from '../components/PageHeader';
 import { CartProvider, MAX_QTY, useCart, type AddInput } from '../components/mall/cartStore';
 import ConfirmSheet from '../components/mall/ConfirmSheet';
 import { fenToYuan } from '../components/mall/format';
-import { friendlyError, useMallToast } from '../components/mall/MallToast';
+import { friendlyError, useToast } from '@philia/shared';
 import ProductImage from '../components/mall/ProductImage';
+import { mlc } from '../copy/mall';
 import { mc } from '../components/member/copy';
 
 function DetailInner() {
@@ -28,7 +29,7 @@ function DetailInner() {
   const navigate = useNavigate();
   const { trpc } = usePhiliaClient();
   const cart = useCart();
-  const { toastEl, showToast } = useMallToast();
+  const { toastEl, showToast } = useToast({ durationMs: 3200 });
 
   const [qty, setQty] = useState(1);
   const [slide, setSlide] = useState(0);
@@ -106,9 +107,9 @@ function DetailInner() {
   if (productQ.isPending) {
     return (
       <div className="px-[22px] py-6">
-        <div className="h-[270px] animate-pulse rounded-panel bg-sunken" />
-        <div className="mt-4 h-5 w-2/3 animate-pulse rounded-tag bg-sunken" />
-        <div className="mt-2 h-5 w-1/3 animate-pulse rounded-tag bg-sunken" />
+        <Skeleton className="h-[270px] rounded-panel" />
+        <Skeleton className="mt-4 h-5 w-2/3 rounded-tag" />
+        <Skeleton className="mt-2 h-5 w-1/3 rounded-tag" />
       </div>
     );
   }
@@ -117,13 +118,13 @@ function DetailInner() {
       <div className="flex flex-col items-center px-[22px] py-16">
         <img src="/brand/empty-appointments-800.png" alt="商品不存在" className="w-48 max-w-full rounded-panel" />
         <p className="mt-4 text-title">
-          {productQ.isError ? friendlyError(productQ.error, '商品不存在或已下架') : '商品不存在或已下架'}
+          {productQ.isError ? friendlyError(productQ.error, '商品不存在或已下架', 80) : '商品不存在或已下架'}
         </p>
         <Link
           to="/mall"
-          className="mt-6 flex items-center rounded-control bg-brand-primary px-[30px] py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="mt-6 flex items-center rounded-control bg-ink px-[30px] py-[13px] text-body-sm font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
         >
-          返回商城
+          {mlc('mall.pdpBackMall')}
         </Link>
       </div>
     );
@@ -180,17 +181,17 @@ function DetailInner() {
           {/* 「会员价」小签已摘除（任务卡 9-29 附①：全员同价无会员价=冻结红线 rules.r8，
               错误口径不是未建功能，摘除即净——不留置灰） */}
           {soldOut ? (
-            <span className="rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">已售罄</span>
+            <span className="rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">{mlc('mall.soldOut')}</span>
           ) : stock < 10 ? (
             <span className="rounded-chip bg-danger-light px-2 py-0.5 font-number text-caption-xs text-danger-deep">
-              仅剩 {stock} 件
+              {mlc('mall.pdpStockLeft', { n: stock })}
             </span>
           ) : null}
         </div>
         {/* 溯源行（mono 10 muted；M-02 定稿「全员同价」注记位，文案口径保留既有） */}
         <p className="mt-2 flex items-center gap-1 font-number text-[10px] text-ink-secondary">
           <Store className="h-3.5 w-3.5" strokeWidth={1.5} />
-          {storeName} · 门店同价 · 正品保障
+          {mlc('mall.pdpStoreLine', { store: storeName })}
         </p>
 
         {/* 回馈金返显卡（M-02 定稿：白卡 + 淡黄点睛圆点 8 + 12/600；rebateBp=0 不渲染假数——
@@ -222,7 +223,7 @@ function DetailInner() {
         {product.description ? (
           <>
             <div className="mb-3 mt-6 flex items-baseline justify-between">
-              <h2 className="text-v2-section">商品详情</h2>
+              <h2 className="text-v2-section">{mlc('mall.pdpDetailTitle')}</h2>
             </div>
             <div className="u1-card p-4">
               <p className="whitespace-pre-line text-body-sm leading-relaxed text-ink-secondary">
@@ -272,7 +273,7 @@ function DetailInner() {
             data-testid="pdp-add-cart"
             className="u1-ring flex-1 rounded-[18px] bg-card py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
           >
-            加入购物袋
+            {mlc('mall.pdpAddCart')}
           </button>
           <button
             type="button"
@@ -281,7 +282,7 @@ function DetailInner() {
             data-testid="pdp-buy-now"
             className="flex flex-[1.4] flex-col items-center justify-center rounded-[18px] bg-[#2E2318] py-3 text-body-lg font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
           >
-            <span>{soldOut ? '已售罄' : '立即购买'}</span>
+            <span>{soldOut ? mlc('mall.soldOut') : mlc('mall.pdpBuyNow')}</span>
             {!soldOut ? (
               <span className="mt-0.5 font-number text-[10.5px] font-normal text-[#C9BBA0]">
                 共 {fenToYuan(product.priceFen * qty)}
@@ -294,9 +295,9 @@ function DetailInner() {
       {/* 跨店加车确认 */}
       <ConfirmSheet
         open={!!pendingAdd}
-        title="购物车仅限同一门店商品"
-        desc={`购物车内已有「${cart.items[0]?.storeName ?? '其他门店'}」的商品，加入本商品将清空原购物车。`}
-        confirmText="清空并加入"
+        title={mlc('mall.conflictTitle')}
+        desc={mlc('mall.conflictBody', { store: cart.items[0]?.storeName ?? '其他门店' })}
+        confirmText={mlc('mall.conflictOk')}
         onCancel={() => setPendingAdd(null)}
         onConfirm={() => {
           if (pendingAdd) {

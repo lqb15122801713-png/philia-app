@@ -24,6 +24,7 @@ import { CreditCard, Minus, Plus, RefreshCcw } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { errMsg, fenToYuan, yuanToFen } from '@/components/mall-admin/format'
+import { cc } from '@/copy/cashier'
 import { CashierModal, SheetBtn } from './dialogs'
 import {
   MEMBER_FOR_USER_KEY,
@@ -306,7 +307,7 @@ export default function MembershipPanel({
               </div>
             ) : (
               <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
-                会员状态以提交时 server 实算为准（内测期读路径缺口，错误原文透出）
+                {cc('cashier.memberStatusNote')}
               </div>
             )}
           </div>
@@ -334,7 +335,7 @@ export default function MembershipPanel({
               <p className="col-span-2 py-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">档位加载中…</p>
             ) : plans.length === 0 ? (
               <p className="col-span-2 py-4 text-center text-caption-xs text-danger-deep">
-                档位配置缺失——请在规则配置端口检查会员档（member_plans 域）
+                {cc('cashier.memberPlansMissing')}
               </p>
             ) : (
               plans.map((p) => {
@@ -427,7 +428,7 @@ export default function MembershipPanel({
               }}
               className="mt-2 min-h-[44px] w-full rounded-[10px] bg-[#F1E8D4] px-3 py-2 text-caption-xs font-semibold text-ink"
             >
-              该客户已是会员 —— 点这里切换到「续费」
+              {cc('cashier.memberAlreadyMember')}
             </button>
           ) : null}
         </>
@@ -437,10 +438,10 @@ export default function MembershipPanel({
           <div className="mt-3 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3 text-caption-xs leading-relaxed text-[rgba(59,46,36,.62)]">
             <p className="flex items-center gap-1.5">
               <RefreshCcw size={13} strokeWidth={1.8} aria-hidden />
-              续费=当前档位顺延 {validityDays} 天（到期冻结自今日顺延）+ 回馈金解冻；档位不变（变更请退会后重售）。
+              {cc('cashier.memberRenewNote', { days: validityDays })}
             </p>
             <p className="mt-1">
-              续费金额=当前档价+既有宠物只数附加费，由 server 实算——先点「计算续费金额」取得应收再收款。
+              {cc('cashier.memberRenewCalcNote')}
             </p>
           </div>
           {quoteFen !== null ? (
@@ -458,7 +459,7 @@ export default function MembershipPanel({
       {((mode === 'sell' && !isFree && plan != null) || (mode === 'renew' && quoteFen !== null)) ? (
         <div className="mt-3 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3" data-testid="membership-pay-segs">
           <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
-            到店付收款段（内测期现金/微信/支付宝登记，Σ须等于应收）
+            {cc('cashier.memberPaySectionNote')}
           </div>
           {(['cash', 'wechat', 'alipay'] as const).map((m) => (
             <div key={m} className="flex min-h-[44px] items-center justify-between py-1 text-caption">
@@ -486,8 +487,7 @@ export default function MembershipPanel({
 
       <p className="mt-3 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
         <CreditCard size={12} strokeWidth={1.8} className="mr-1 inline" aria-hidden />
-        会员费=权益服务费（年费 ≠ 储值，不计储值账户/不进储值看板）；有效期 {validityDays} 天自开通日；
-        到期不自动续费（到期=冻结，续费解冻，退会清零回馈金）。
+        {cc('cashier.memberRulesNote', { days: validityDays })}
       </p>
     </CashierModal>
   )

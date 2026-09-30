@@ -1,5 +1,6 @@
 /**
- * U2 任务 D · 竖向六步 stepper（员工端本地副本 ExecuteStepper；共享 StepTimeline 不动）
+ * U2 任务 D · 竖向六步 stepper（员工端 ExecuteStepper；节点三态换皮批片 5 归并共享 StepNode，
+ * 连接线/操作区（上传/删除/双槽）保留本地）
  *
  * 规格书 §4 + 试样 .ex-steps（§八 效率密度转译：页边距收紧 18，时刻/张数=mono 轨）：
  * - 连接线 2px 墨 6%；完成步=墨色圆 ✓ + 步名（墨 60%）+ 完成时刻·张数(mono) + 64×48 缩略（点击看大图）；
@@ -11,8 +12,8 @@
  */
 
 import { useRef } from 'react';
-import { Check, Flag } from 'lucide-react';
-import type { ServiceStepDef } from '@philia/shared';
+import { Flag } from 'lucide-react';
+import { StepNode, type ServiceStepDef } from '@philia/shared';
 import { STEP_NAME } from '../today/deck/ServiceCard';
 
 export interface StepPhotoItem {
@@ -207,17 +208,14 @@ export default function ExecuteStepper({
             {idx < rows.length - 1 ? (
               <i aria-hidden className="absolute bottom-0 left-[13px] top-[30px] w-0.5 bg-[rgba(59,46,36,.06)]" />
             ) : null}
-            {/* 圆点：done=墨色 ✓（不设绿）/ active=淡金序号 / locked=纸面 ring 序号 */}
-            <span
-              className={`z-[1] flex h-7 w-7 shrink-0 items-center justify-center rounded-full u1-num text-caption font-bold ${
-                status === 'done'
-                  ? 'bg-ink text-[#FAF8F2]'
-                  : status === 'active'
-                    ? 'bg-brand-primary text-ink'
-                    : 'u1-ring bg-card text-[rgba(59,46,36,.42)]'
-              }`}
-            >
-              {status === 'done' ? <Check className="h-4 w-4" strokeWidth={2.5} /> : def.stepOrder}
+            {/* 圆点：共享 StepNode 三态（28px：done 墨色✓ / active 淡金序号 / locked→future 描边序号）；
+                外层保留 z-[1] 抬层（压在 2px 连接线上方） */}
+            <span className="z-[1] shrink-0">
+              <StepNode
+                state={status === 'done' ? 'done' : status === 'active' ? 'active' : 'future'}
+                label={def.stepOrder}
+                size={28}
+              />
             </span>
 
             <div className="min-w-0 flex-1">

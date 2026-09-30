@@ -13,6 +13,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { Modal } from './Modal';
+import { ac } from '../../copy/appointments';
 import {
   addDays,
   dayKeyOf,
@@ -293,7 +294,7 @@ export function RescheduleSheet({
         <p className="py-8 text-center text-caption text-ink-secondary">加载可约时段…</p>
       ) : days.length === 0 ? (
         <p className="py-8 text-center text-caption text-ink-secondary">
-          未来 7 天暂无可约时段，请稍后再试或调整服务时长
+          {ac('appt.rescheduleEmpty')}
         </p>
       ) : (
         <>

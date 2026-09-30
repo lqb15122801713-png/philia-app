@@ -1,8 +1,10 @@
 import { useEffect } from 'react'
-import { Check } from 'lucide-react'
+import { CelebrationPop } from '@philia/shared'
 
 /**
  * 第 6 步 confirm 成功庆祝页：勾勾回弹 + "服务完成"，2s 后自动跳走。
+ * 换皮批片 5：圆勾原子件换共享 CelebrationPop（bg-ink 墨圆 + 淡金✓，顺带销绿）；
+ * 壳（全页式 / 文案 / 组件内 2s 自跳 /today 契约）不动。
  */
 export default function CelebrationOverlay({ petName, onDone }: { petName?: string; onDone: () => void }) {
   useEffect(() => {
@@ -12,19 +14,7 @@ export default function CelebrationOverlay({ petName, onDone }: { petName?: stri
 
   return (
     <div className="fixed inset-0 z-modal flex flex-col items-center justify-center bg-canvas px-8">
-      <style>{`
-        @keyframes celebrate-pop {
-          0% { transform: scale(0.3); opacity: 0; }
-          60% { transform: scale(1.12); opacity: 1; }
-          100% { transform: scale(1); opacity: 1; }
-        }
-      `}</style>
-      <div
-        className="flex h-28 w-28 items-center justify-center rounded-full bg-success shadow-elevated"
-        style={{ animation: 'celebrate-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both' }}
-      >
-        <Check className="h-14 w-14 text-[#FAF8F2]" strokeWidth={2.5} />
-      </div>
+      <CelebrationPop size={112} />
       <div className="u1-serif mt-8 text-title-lg text-ink">服务完成</div>
       <div className="mt-2 text-body-sm text-ink-secondary">
         {petName ? `${petName} 的服务照片与记录已同步给家长和商家` : '服务照片与记录已同步'}

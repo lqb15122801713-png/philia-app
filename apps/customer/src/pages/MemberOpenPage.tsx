@@ -14,7 +14,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { usePhiliaClient } from '@philia/shared'
-import { friendlyError, useToast } from '@/components/booking/Toast'
+import { friendlyError, useToast } from '@philia/shared'
 import { ErrorState, LoadingBlock } from '../components/home/common'
 import { mc } from '../components/member/copy'
 import {
@@ -48,7 +48,7 @@ const TIER_SWATCH: Record<string, string> = {
 
 export default function MemberOpenPage() {
   const { trpc, queryClient } = usePhiliaClient()
-  const { toastEl, showToast } = useToast()
+  const { toastEl, showToast } = useToast({ durationMs: 3200 })
   const navigate = useNavigate()
   const [step, setStep] = useState<Step>('select')
   const [doneOpened, setDoneOpened] = useState(false)
@@ -72,7 +72,7 @@ export default function MemberOpenPage() {
       showToast(r.idempotent ? '你已是会员' : '微光会员已开通，欢迎加入', 'info')
       void queryClient.invalidateQueries({ queryKey: ['membership'] })
     },
-    onError: (err) => showToast(friendlyError(err, '开通失败，请稍后再试')),
+    onError: (err) => showToast(friendlyError(err, '开通失败，请稍后再试'), 'error'),
   })
 
   const plans = (plansQ.data?.plans ?? []) as V2Plan[]

@@ -21,7 +21,15 @@
  * - 三态：加载骨架（禁转圈）/ 错误重试 / NOT_FOUND 引导回 /appointments。
  */
 
-import { EventType, usePhiliaClient, type EventEnvelope } from '@philia/shared';
+import {
+  EventType,
+  ListSkeleton,
+  PhotoViewer,
+  Skeleton,
+  usePhiliaClient,
+  type EventEnvelope,
+  type PhotoViewerPhoto,
+} from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { CalendarX, CircleX, RefreshCw } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
@@ -45,9 +53,9 @@ import {
 import { AssignStaffSheet } from '../components/appointments/AssignStaffSheet';
 import { ConfirmDialog } from '../components/appointments/ConfirmDialog';
 import { Modal } from '../components/appointments/Modal';
-import { PhotoViewer, type ViewPhoto } from '../components/appointments/PhotoViewer';
 import { RescheduleSheet } from '../components/appointments/RescheduleSheet';
 import { useMerchantEvents } from '../components/appointments/useMerchantEvents';
+import { ac } from '../copy/appointments';
 
 /** SSE 断线时的兜底轮询间隔（与总览页同值） */
 const POLL_FALLBACK_MS = 30_000;
@@ -163,7 +171,7 @@ export default function AppointmentDetailPage() {
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
   const [reviewOpen, setReviewOpen] = useState(false);
-  const [viewer, setViewer] = useState<{ photos: ViewPhoto[]; index: number } | null>(null);
+  const [viewer, setViewer] = useState<{ photos: PhotoViewerPhoto[]; index: number } | null>(null);
 
   const confirmMut = useMutation({
     mutationFn: () => trpc.appointment.confirm.mutate({ appointmentId: aid! }),
@@ -240,13 +248,26 @@ export default function AppointmentDetailPage() {
     return (
       <MainScaffold title="预约详情" sub="正在加载…" testid="appointment-detail">
         <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.6fr_1fr]">
+          {/* 加载中骨架块（animate-pulse，禁转圈）：纸面板 + shared Skeleton/ListSkeleton 组合 */}
           <div className="flex flex-col gap-3.5">
-            <SkeletonPanel rows={6} />
-            <SkeletonPanel rows={3} />
+            <div className="u3-panel px-[17px] py-4">
+              <Skeleton className="h-3.5 w-20" />
+              <ListSkeleton rows={6} className="mt-3.5" />
+            </div>
+            <div className="u3-panel px-[17px] py-4">
+              <Skeleton className="h-3.5 w-20" />
+              <ListSkeleton rows={3} className="mt-3.5" />
+            </div>
           </div>
           <div className="flex flex-col gap-3.5">
-            <SkeletonPanel rows={6} />
-            <SkeletonPanel rows={2} />
+            <div className="u3-panel px-[17px] py-4">
+              <Skeleton className="h-3.5 w-20" />
+              <ListSkeleton rows={6} className="mt-3.5" />
+            </div>
+            <div className="u3-panel px-[17px] py-4">
+              <Skeleton className="h-3.5 w-20" />
+              <ListSkeleton rows={2} className="mt-3.5" />
+            </div>
           </div>
         </div>
       </MainScaffold>
@@ -266,11 +287,11 @@ export default function AppointmentDetailPage() {
             <CircleX className="h-9 w-9 text-[rgba(59,46,36,.35)]" strokeWidth={1.5} />
           )}
           <p className="mt-3 text-[14px] font-bold">
-            {notFound ? '找不到这个预约' : '打不开这个预约'}
+            {notFound ? ac('appt.detailNotFoundTitle') : '打不开这个预约'}
           </p>
           <p className="mt-1 text-[12px] text-[rgba(59,46,36,.62)]">
             {notFound
-              ? '预约不存在或已被移除，回预约管理看看今天的单子。'
+              ? ac('appt.detailNotFoundBody')
               : detailQuery.error instanceof Error
                 ? detailQuery.error.message
                 : '预约不存在或无权限'}
@@ -328,15 +349,15 @@ export default function AppointmentDetailPage() {
   const activeIdx = STEP_ROWS.findIndex((d) => stepByKey.get(d.key)?.status === 'active');
   const progressAside =
     appt.status === 'completed'
-      ? '六步完成'
+      ? ac('appt.progressDone')
       : activeIdx >= 0
-        ? `第 ${activeIdx + 1}/6 步 · 实时同步`
+        ? ac('appt.progressActive', { n: activeIdx + 1 })
         : steps.length > 0
-          ? `${doneCount}/6 步`
-          : '等待到店核销';
+          ? ac('appt.progressCount', { done: doneCount })
+          : ac('appt.progressWait');
 
   // 过程照墙：全步骤未失效照片按步序拍平
-  const photoWall: ViewPhoto[] = steps.flatMap((s) =>
+  const photoWall: PhotoViewerPhoto[] = steps.flatMap((s) =>
     s.photos.map((p) => ({
       id: p.id,
       url: p.url,
@@ -418,6 +439,9 @@ export default function AppointmentDetailPage() {
           index={viewer.index}
           onClose={() => setViewer(null)}
           onNavigate={(i) => setViewer((v) => (v ? { ...v, index: i } : v))}
+          loop
+          showTakenAt
+          keyboard={false}
         />
       ) : null}
 
@@ -489,11 +513,11 @@ export default function AppointmentDetailPage() {
           <div className="u3-panel" data-testid="detail-trail">
             <div className="u3-panel-head">
               <h3>事件轨迹</h3>
-              <span className="aside">事件即轨迹 · 按时间排序</span>
+              <span className="aside">{ac('appt.trailAside')}</span>
             </div>
             {trail.length === 0 ? (
               <p className="px-[17px] pb-4 text-[12px] text-[rgba(59,46,36,.42)]">
-                暂无可展示的事件
+                {ac('appt.trailEmpty')}
               </p>
             ) : (
               <div className="u3-stepv px-[17px] pb-3.5 pt-1">
@@ -576,7 +600,7 @@ export default function AppointmentDetailPage() {
                 <FieldRow label="核销码">
                   <span className="u1-num tracking-[0.2em]">{appt.code}</span>
                   <span className="ml-2 text-[11px] font-normal text-[rgba(59,46,36,.42)]">
-                    客户到店后由员工扫码或输入此码核销
+                    {ac('appt.verifyCodeHint')}
                   </span>
                 </FieldRow>
               ) : null}
@@ -645,9 +669,12 @@ export default function AppointmentDetailPage() {
       />
       <ConfirmDialog
         open={payOpen}
-        title="登记收款？"
-        body={`${paymentModeLabel(appt.paymentMode)} · 应收 ${fenToYuan(appt.priceFen)}。登记后该预约转为「已收款」，不可撤销。`}
-        confirmText={`确认收款 ${fenToYuan(appt.priceFen)}`}
+        title={ac('appt.payDialogTitle')}
+        body={ac('appt.payDialogBody', {
+          mode: paymentModeLabel(appt.paymentMode),
+          amount: fenToYuan(appt.priceFen),
+        })}
+        confirmText={ac('appt.payDialogConfirm', { amount: fenToYuan(appt.priceFen) })}
         loading={markPaidMut.isPending}
         onConfirm={() => markPaidMut.mutate()}
         onCancel={() => setPayOpen(false)}
@@ -659,7 +686,7 @@ export default function AppointmentDetailPage() {
         widthClass="sm:max-w-md"
       >
         <p className="text-[12px] leading-relaxed text-[rgba(59,46,36,.62)]">
-          客户在开始前 4 小时内申请取消该预约。批准后槽位立即释放并通知客户；拒绝后预约恢复为「已确认」。
+          {ac('appt.reviewCancelBody', { hours: 4 })}
         </p>
         {appt.cancelReason ? (
           <p className="mt-2.5 rounded-control bg-danger-light px-3.5 py-2.5 text-[12px] text-danger-deep">
@@ -744,27 +771,9 @@ function BoardingPanel({ stay, appt }: { stay: StayRow; appt: ApptRow }) {
         </div>
       ) : (
         <p className="px-[17px] pb-4 text-[12px] text-[rgba(59,46,36,.62)]">
-          客户到店核销后，这里会登记房间、入住称重与随身物品。
+          {ac('appt.boardingStayEmpty')}
         </p>
       )}
-    </div>
-  );
-}
-
-/** 加载骨架（禁转圈：纸面板 + 脉冲条） */
-function SkeletonPanel({ rows }: { rows: number }) {
-  return (
-    <div className="u3-panel px-[17px] py-4">
-      <div className="h-3.5 w-20 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.08)]" />
-      <div className="mt-3.5 flex flex-col gap-2.5">
-        {Array.from({ length: rows }).map((_, i) => (
-          <div
-            key={i}
-            className="h-3 animate-pulse rounded-[6px] bg-[rgba(59,46,36,.06)]"
-            style={{ width: `${88 - (i % 3) * 14}%` }}
-          />
-        ))}
-      </div>
     </div>
   );
 }

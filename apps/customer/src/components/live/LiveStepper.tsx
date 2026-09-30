@@ -13,6 +13,11 @@
  *   serviceStep.list 既有字段，仅透传不新取数）；
  * - 左轨保留既有纵向轨道形态（功能零改动），连接线取齐发丝线 1px --line；
  *   before_after 步仍走共享 PhotoWall 前后并排（哇塞时刻既有特性保留）。
+ *
+ * 换皮批片 5 登记：步号圆不归并 @philia/shared StepNode——lv2-stepno 为
+ * S-01 定稿锚件级工艺（mono 9px 字 / done #2E2318·#F6EFDD / now 4px 静态
+ * 淡黄光晕 / future 字色 --muted），与 StepNode（text-caption 12px / bg-ink·
+ * text-canvas / 无光晕 / 字色 placeholder）差距大于描边粗细/尺寸级，报备保留原样。
  */
 
 import { Check } from 'lucide-react'

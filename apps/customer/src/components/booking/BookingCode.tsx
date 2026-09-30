@@ -15,7 +15,7 @@
 import QRCode from 'qrcode';
 import { useCallback, useEffect, useState } from 'react';
 import { usePhiliaClient } from '@philia/shared';
-import { friendlyError } from './Toast';
+import { friendlyError } from '@philia/shared';
 
 /** 二维码滚动时间窗粒度（秒）：5 分钟，与 server CODE_WINDOW_SEC 同步 */
 const CODE_WINDOW_SEC = 300;

@@ -25,7 +25,7 @@
  * 断线重连全量对齐。退房无商家端入口（checkout=staffProcedure，不造按钮）。
  */
 
-import { EventType, usePhiliaClient } from '@philia/shared';
+import { EventType, Skeleton, usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -34,6 +34,7 @@ import BoardingStayRow from '../components/staff-admin/BoardingStayCard';
 import BoardingStayDetail from '../components/staff-admin/BoardingStayDetail';
 import { useMerchantEvents } from '../components/staff-admin/useMerchantEvents';
 import type { StayBoardRow } from '../components/staff-admin/types';
+import { bc } from '../copy/boarding';
 
 /** 单晚价：分 → ¥ 整数优先（¥199），带零头才给两位小数（¥199.50）；≥6 位分组（仅展示层） */
 const fmtNightPrice = (fen: number): string =>
@@ -67,37 +68,6 @@ const stayCurrentNight = (row: StayBoardRow) =>
 /** 超期天数（今天 − 退房日，展示夹到 ≥1；超期真值以 row.overdue 为准） */
 const stayOverdueDays = (row: StayBoardRow) =>
   Math.max(1, dayDiff(new Date(), row.appointment.scheduledEnd));
-
-/** 房型卡骨架（禁转圈：opacity 脉冲骨架条） */
-function RoomSkeleton() {
-  return (
-    <div className="rounded-panel bg-[#FFFDF6] p-[15px_17px] shadow-[0_0_0_1px_rgba(59,46,36,.09)]">
-      <div className="h-3 w-24 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
-      <div className="mt-2.5 h-6 w-16 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
-      <div className="mt-2.5 h-3 w-28 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
-    </div>
-  );
-}
-
-/** 在店表骨架行 */
-function TableSkeleton() {
-  return (
-    <div>
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-6 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3.5"
-        >
-          <div className="h-3.5 w-28 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
-          <div className="h-3.5 w-16 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
-          <div className="h-3.5 w-24 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
-          <div className="h-3.5 w-14 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
-          <div className="ml-auto h-3.5 w-20 animate-pulse rounded-chip bg-[rgba(59,46,36,.06)]" />
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export default function BoardingPage() {
   const { trpc, queryClient } = usePhiliaClient();
@@ -208,23 +178,31 @@ export default function BoardingPage() {
 
   return (
     <MainScaffold
-      title="寄养"
-      sub={`在店 ${board.length} 只 · 今日退房 ${checkoutToday} 只 · ${unloggedToday} 只今日未打卡`}
+      title={bc('board.title')}
+      sub={bc('board.sub', { a: board.length, b: checkoutToday, c: unloggedToday })}
       actions={
         <LemonButton
           testid="boarding-checkin-entry"
-          onClick={() => toast('入住登记由前台在员工端办理（到店扫码）')}
+          onClick={() => toast(bc('board.checkinGuide'))}
         >
-          ＋ 入住登记
+          {bc('board.checkinCta')}
         </LemonButton>
       }
       testid="boarding-page"
     >
       {/* 房型卡行（.room 同工艺：纸面+ring+圆角 20，占用 Montserrat 20【试样所印 22 越字阶闸门，U4 映射】） */}
       {roomsLoading ? (
+        /* 加载中骨架块（animate-pulse，禁转圈）：房型卡 = shared Skeleton 组合（底色归一 bg-sunken） */
         <div className="mb-[18px] grid grid-cols-2 gap-3.5 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <RoomSkeleton key={i} />
+            <div
+              key={i}
+              className="rounded-panel bg-[#FFFDF6] p-[15px_17px] shadow-[0_0_0_1px_rgba(59,46,36,.09)]"
+            >
+              <Skeleton className="h-3 w-24 rounded-chip" />
+              <Skeleton className="mt-2.5 h-6 w-16 rounded-chip" />
+              <Skeleton className="mt-2.5 h-3 w-28 rounded-chip" />
+            </div>
           ))}
         </div>
       ) : rooms.length > 0 ? (
@@ -246,7 +224,7 @@ export default function BoardingPage() {
               </div>
               <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
                 {r.stays.length === 0
-                  ? '空 · 可订'
+                  ? bc('board.roomVacant')
                   : r.stays.map((s, i) => (
                       <span key={s.stay.id}>
                         {i > 0 ? ' · ' : ''}
@@ -271,10 +249,24 @@ export default function BoardingPage() {
         <div className="u3-panel">
           <div className="u3-panel-head">
             <h3>在店寄养</h3>
-            <span className="aside">按退房日排序</span>
+            <span className="aside">{bc('board.panelAside')}</span>
           </div>
           {boardQuery.isPending ? (
-            <TableSkeleton />
+            /* 加载中骨架块（animate-pulse，禁转圈）：在店表行 = shared Skeleton 组合 */
+            <div>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-6 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3.5"
+                >
+                  <Skeleton className="h-3.5 w-28 rounded-chip" />
+                  <Skeleton className="h-3.5 w-16 rounded-chip" />
+                  <Skeleton className="h-3.5 w-24 rounded-chip" />
+                  <Skeleton className="h-3.5 w-14 rounded-chip" />
+                  <Skeleton className="ml-auto h-3.5 w-20 rounded-chip" />
+                </div>
+              ))}
+            </div>
           ) : boardQuery.isError ? (
             <div className="px-[17px] py-10 text-center">
               <div className="text-caption text-[rgba(59,46,36,.62)]">寄养看板加载失败</div>
@@ -285,10 +277,10 @@ export default function BoardingPage() {
           ) : sorted.length === 0 ? (
             <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-14 text-center">
               <div className="text-body-sm font-semibold text-[rgba(59,46,36,.62)]">
-                现在没有寄养的毛孩子
+                {bc('board.emptyTitle')}
               </div>
               <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
-                客户寄养单核销入店后会出现在这里
+                {bc('board.emptyBody')}
               </div>
             </div>
           ) : (
@@ -331,7 +323,7 @@ export default function BoardingPage() {
             <BoardingStayDetail row={selected} />
           ) : (
             <div className="flex h-64 items-center justify-center rounded-panel bg-[#FFFDF6] text-caption text-[rgba(59,46,36,.42)] shadow-[0_0_0_1px_rgba(59,46,36,.09)]">
-              点选左侧在店行查看入住详情
+              {bc('board.detailPlaceholder')}
             </div>
           )}
         </div>

@@ -33,10 +33,13 @@
 import {
   EventType,
   getApiBase,
+  PhotoViewer,
   safeUuid,
+  Skeleton,
   useEventSource,
   useMe,
   usePhiliaClient,
+  useToast,
   type EventEnvelope,
   type PhotoWallPhoto,
 } from '@philia/shared';
@@ -54,10 +57,9 @@ import DailyLogForm, { type DailyLogSubmit } from '../components/boarding/DailyL
 import DailyLogList from '../components/boarding/DailyLogList';
 import BoardingPetCard from '../components/boarding/BoardingPetCard';
 import PageHeader from '../components/PageHeader';
-import PhotoViewer, { type PhotoViewerState } from '../components/boarding/PhotoViewer';
 import StayInfoCard from '../components/boarding/StayInfoCard';
-import Toast from '../components/boarding/Toast';
 import type { BelongingItem, BoardingLogRow, BoardingStayRow } from '../components/boarding/types';
+import { BOARDING_COPY } from '@/copy/boarding';
 
 /* ------------------------------------------------------------------ */
 /* 工具                                                                 */
@@ -109,15 +111,10 @@ export default function BoardingCheckinPage() {
 
   /* ---------------- toast / 查看器 / 编辑态 ---------------- */
 
-  const [toast, setToast] = useState<string | null>(null);
-  const toastTimerRef = useRef<number | undefined>(undefined);
-  const showToast = useCallback((msg: string) => {
-    setToast(msg);
-    window.clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = window.setTimeout(() => setToast(null), 2500); // 动效纲领 §四.1：toast 2.5s 自消
-  }, []);
+  // 共享 useToast：默认 top-4 居中胶囊；显式 durationMs=2500 与原页面计时一致（动效纲领 §四.1）
+  const { showToast, toastEl } = useToast({ durationMs: 2500 });
 
-  const [viewer, setViewer] = useState<PhotoViewerState | null>(null);
+  const [viewer, setViewer] = useState<{ photos: PhotoWallPhoto[]; index: number } | null>(null);
   const openViewer = useCallback((photos: PhotoWallPhoto[], index: number) => {
     if (photos.length > 0) setViewer({ photos, index });
   }, []);
@@ -328,14 +325,14 @@ export default function BoardingCheckinPage() {
     return (
       <div className="px-4 pt-3">
         <div className="flex items-center gap-2.5">
-          <span className="h-9 w-9 animate-pulse rounded-full bg-sunken" />
-          <span className="h-6 w-24 animate-pulse rounded-chip bg-sunken" />
+          <Skeleton className="h-9 w-9 !rounded-full" />
+          <Skeleton className="h-6 w-24 !rounded-chip" />
         </div>
         <div className="u1-card mt-2 overflow-hidden">
-          <div className="aspect-[16/10] animate-pulse bg-sunken" />
+          <Skeleton className="aspect-[16/10] !rounded-none" />
           <div className="p-4">
-            <div className="h-5 w-24 animate-pulse rounded-chip bg-sunken" />
-            <div className="mt-2 h-4 w-48 animate-pulse rounded-chip bg-sunken" />
+            <Skeleton className="h-5 w-24 !rounded-chip" />
+            <Skeleton className="mt-2 h-4 w-48 !rounded-chip" />
           </div>
         </div>
       </div>
@@ -346,14 +343,15 @@ export default function BoardingCheckinPage() {
     return (
       <div className="px-4 py-6">
         <section className="u1-card p-4">
-          <p className="text-body-sm text-ink">无法查看该寄养单</p>
+          <p className="text-body-sm text-ink">{BOARDING_COPY['boarding.error.title']}</p>
           <p className="mt-1 text-caption text-ink-secondary">
-            {detailQuery.error instanceof Error ? detailQuery.error.message : '预约不存在或无权查看'}
+            {detailQuery.error instanceof Error ? detailQuery.error.message : BOARDING_COPY['boarding.error.fallbackDesc']}
           </p>
-          {/* W1-D2 弱出口按钮化：异常页无返回条，唯一主出口=淡黄主钮（导航闭环规范②） */}
+          {/* W1-D2 弱出口按钮化：异常页无返回条，唯一主出口=按钮化（导航闭环规范②）；
+              换皮批片 5 P3-3：异常态出口钮淡金→深棕墨底淡金字（34 号档 §4.11 空态件=深棕钮） */}
           <Link
             to="/today"
-            className="mt-4 flex h-staff-btn items-center justify-center rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            className="mt-4 flex h-staff-btn items-center justify-center rounded-control bg-ink text-body-sm font-semibold text-brand-primary transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
             返回任务台
           </Link>
@@ -366,11 +364,11 @@ export default function BoardingCheckinPage() {
     return (
       <div className="px-4 py-6">
         <section className="u1-card p-4">
-          <p className="text-body-sm text-ink">该预约不是寄养单</p>
-          {/* W1-D2 弱出口按钮化：同上，唯一主出口=淡黄主钮 */}
+          <p className="text-body-sm text-ink">{BOARDING_COPY['boarding.error.notBoarding']}</p>
+          {/* W1-D2 弱出口按钮化：同上，唯一主出口=按钮化；P3-3 出口钮深棕归色 */}
           <Link
             to="/today"
-            className="mt-4 flex h-staff-btn items-center justify-center rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            className="mt-4 flex h-staff-btn items-center justify-center rounded-control bg-ink text-body-sm font-semibold text-brand-primary transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
             返回任务台
           </Link>
@@ -403,16 +401,17 @@ export default function BoardingCheckinPage() {
         <section className="u1-card mx-4 mt-3 p-4">
           <p className="flex items-center gap-2 text-body-sm font-semibold text-ink">
             <QrCode className="h-5 w-5 text-ink" strokeWidth={1.5} />
-            客户还未到店核销
+            {BOARDING_COPY['boarding.preCheckin.title']}
           </p>
           <p className="mt-1 text-caption text-ink-secondary">
-            请先在任务台扫码或手动核销该预约，核销后才能办理入住登记。
+            {BOARDING_COPY['boarding.preCheckin.desc']}
           </p>
+          {/* P3-3：未核销前置引导的出口钮同族归色——深棕墨底淡金字（34 号档 §4.11） */}
           <Link
             to="/today"
-            className="mt-4 flex h-staff-btn items-center justify-center rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            className="mt-4 flex h-staff-btn items-center justify-center rounded-control bg-ink text-body-sm font-semibold text-brand-primary transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
-            去任务台核销
+            {BOARDING_COPY['boarding.preCheckin.action']}
           </Link>
         </section>
       </div>
@@ -427,9 +426,9 @@ export default function BoardingCheckinPage() {
         <BoardingPetCard pet={pet} roomLabel={roomLabel} scheduledStart={appt.scheduledStart} scheduledEnd={appt.scheduledEnd} overdue={false} />
         <section className="u1-card mx-4 mt-3 p-4">
           <p className="text-body-sm text-ink">
-            {appt.status === 'cancelled' ? '该预约已取消' : '该预约正在取消审核中'}
+            {appt.status === 'cancelled' ? BOARDING_COPY['boarding.cancelled.title'] : BOARDING_COPY['boarding.cancelRequested.title']}
           </p>
-          <p className="mt-1 text-caption text-ink-secondary">如有疑问请到商家端查看处理。</p>
+          <p className="mt-1 text-caption text-ink-secondary">{BOARDING_COPY['boarding.cancelled.desc']}</p>
           {/* W1-D2 弱出口按钮化：本分支已有返回条，出口=细线白底次钮 */}
           <Link
             to="/today"
@@ -466,9 +465,9 @@ export default function BoardingCheckinPage() {
         >
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={1.5} />
           <span>
-            已超期，请提醒商家安排退房
+            {BOARDING_COPY['boarding.overdue.title']}
             <span className="mt-0.5 block text-caption font-normal">
-              应于 <span className="u1-num whitespace-nowrap">{format(appt.scheduledEnd, 'M月d日 HH:mm')}</span> 退房
+              {BOARDING_COPY['boarding.overdue.dueLead']} <span className="u1-num whitespace-nowrap">{format(appt.scheduledEnd, 'M月d日 HH:mm')}</span> {BOARDING_COPY['boarding.overdue.dueTail']}
             </span>
           </span>
         </p>
@@ -477,15 +476,15 @@ export default function BoardingCheckinPage() {
       {completed ? (
         <p className="mx-4 mt-3 flex items-center gap-2 rounded-control bg-success-light px-4 py-3 text-body-sm font-semibold text-success-deep">
           <CheckCircle2 className="h-5 w-5 shrink-0" strokeWidth={1.5} />
-          本单已完成退房结算
+          {BOARDING_COPY['boarding.completed.banner']}
         </p>
       ) : null}
 
       {/* 入住登记段 */}
       {stayQuery.isPending ? (
         <section className="u1-card mx-4 mt-3 p-4">
-          <div className="h-5 w-28 animate-pulse rounded-chip bg-sunken" />
-          <div className="mt-2 h-4 w-44 animate-pulse rounded-chip bg-sunken" />
+          <Skeleton className="h-5 w-28 !rounded-chip" />
+          <Skeleton className="mt-2 h-4 w-44 !rounded-chip" />
         </section>
       ) : stay === null ? (
         <div className="px-4">
@@ -542,9 +541,9 @@ export default function BoardingCheckinPage() {
       {!completed && stay !== null && appt.status === 'in_boarding' ? (
         confirmingCheckout ? (
           <div className="u1-card mx-4 mt-3 p-4">
-            <p className="text-body-sm font-semibold text-ink">确认办理退房？</p>
+            <p className="text-body-sm font-semibold text-ink">{BOARDING_COPY['boarding.checkout.confirmTitle']}</p>
             <p className="mt-1 text-caption text-ink-secondary">
-              退房后预约转入「已完成」；到店付订单请提醒商家在财务页确认收款。
+              {BOARDING_COPY['boarding.checkout.confirmDesc']}
             </p>
             <div className="mt-3 flex gap-2">
               <button
@@ -576,12 +575,13 @@ export default function BoardingCheckinPage() {
         )
       ) : null}
 
-      <Toast message={toast} />
+      {toastEl}
       {viewer ? (
         <PhotoViewer
-          state={viewer}
+          photos={viewer.photos}
+          index={viewer.index}
           onClose={() => setViewer(null)}
-          onIndexChange={(index) => setViewer((v) => (v ? { ...v, index } : v))}
+          onNavigate={(index) => setViewer((v) => (v ? { ...v, index } : v))}
         />
       ) : null}
     </div>
