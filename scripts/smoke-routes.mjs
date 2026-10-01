@@ -113,6 +113,8 @@ const ROUTES = [
   { app: 'customer', path: '/me/settings/phone/appeal', anchors: ['换绑申诉'], serverDep: true, note: '补缺批片 2 账户安全' },
   { app: 'customer', path: '/me/settings/devices', anchors: ['登录设备管理'], serverDep: true, note: '补缺批片 2 账户安全' },
   { app: 'customer', path: '/me/settings/privacy', anchors: ['权限与隐私'], serverDep: true, note: '补缺批片 2 账户安全' },
+  { app: 'customer', path: '/member/upgrade', anchors: ['升级会员'], serverDep: true, note: '补缺批片 3 会员域' },
+  { app: 'customer', path: '/member/change', anchors: ['预约下期档位'], serverDep: true, note: '补缺批片 3 会员域' },
   /* ---- 商家端 ---- */
   { app: 'merchant', path: '/dev-login', anchors: ['登录'] },
   { app: 'merchant', path: '/dashboard', anchors: ['今日', '仪表', '预约'] },

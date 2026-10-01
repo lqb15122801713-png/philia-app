@@ -35,6 +35,7 @@ const CLEAR_ORDER = [
   schema.serviceCertificates, // FK → appointments/users
   schema.serviceRules, // FK → users
   /* ---- R11a 会员前置批新表：子表先父表（rebate_logs.settlement_id→rebate_settlements），先于 users/stores 清空 ---- */
+  schema.membershipEvents, // 补缺-3（FK → users），先于 users 清空
   schema.rebateLogs, // FK → users/rebate_accounts/rebate_settlements
   schema.rebateAccounts, // FK → users
   schema.rebateSettlements, // 独立（被 rebate_logs 引用）
@@ -414,6 +415,11 @@ async function main() {
       planSeed('membership_validity_days', '会员有效期：365 天（到期不续费冻结，余额在不可用；续费解冻；退卡清零）', { days: 365 }),
       // 修复包 PR-4 读侧启用（PD-05 件 2 · CJ-0925-10②）：注册默认档端口化，本批先入种子
       planSeed('default_plan_key', '注册默认会员档（自助开档落档键；端口可改）', { value: 'plan_weiguang' }),
+      /* ---- 补缺-3（46 号档+PD-07）会员升级/换档/防滥用端口键（未知 rule_key 配置端口硬拒，
+         故必先入种子；存量库同值回挂见迁移 0017 尾部 WHERE NOT EXISTS 幂等段） ---- */
+      planSeed('member_change_window_days', '到期换档预约窗口：到期前 N 天开放预约下期档位（任意档；期内只升不降，低档走本预约通道）', { days: 30 }),
+      planSeed('member_cancel_cooldown_days', '退会重购留痕窗口：退会后 N 天内重购记 cancel_rebuy_note（只留痕不拦截）', { days: 90 }),
+      planSeed('member_cancel_count_threshold', '累计退会次数阈值：累计退会≥N 次再购记 cancel_rebuy_note（只留痕不拦截）', { threshold: 2 }),
     ]);
 
     /* ---- 补缺大批片 4：服务域规则配置种子（同构 commission_rules，version=1） ----
@@ -536,6 +542,8 @@ async function main() {
     ['support_tickets', 'support_tickets'],
     ['invoice_requests', 'invoice_requests'],
     ['service_rules', 'service_rules'],
+    /* 补缺-3 新表 */
+    ['membership_events', 'membership_events'],
   ];
 
   console.log('[seed] 完成，各表行数：');

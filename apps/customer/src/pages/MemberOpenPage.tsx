@@ -118,6 +118,14 @@ export default function MemberOpenPage() {
                       date: new Date(myQ.data.membership.expiresAt).toLocaleDateString('zh-CN'),
                     })}
               </TipCard>
+              {/* 补缺批片 3：升级路径句（upgradeAvailable=true 才显，→/member/upgrade） */}
+              {myQ.data.upgradeAvailable ? (
+                <div style={{ textAlign: 'center', marginTop: 8 }}>
+                  <button type="button" className="m2-link" data-testid="open-upgrade-entry" onClick={() => navigate('/member/upgrade')}>
+                    {mc('j1.upgradeEntry')}
+                  </button>
+                </div>
+              ) : null}
             </div>
           ) : null}
 

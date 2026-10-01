@@ -117,6 +117,20 @@
  *   51.5 registerDevice upsert 幂等 + listDevices 换绑留痕透出
  *   51.6 已注销用户 SSE/业务接口 401（middleware 软删闸实证）
  *
+ * 补缺大批片 3（会员升级/到期换档/防滥用/已省 · 46 号档+PD-07 冻结口径）段：
+ *   52.1 升档差价精确到分（萤火 199 剩 3 整月升暖阳 599 → 3×(59900−19900)÷12=10000 分=¥100.00）+
+ *        多宠附加行恒 0 透出 + 微光升档=新购全价口径（附加按现 petCount 重算）
+ *   52.2 升档原子事务：paySegments 缺额 → 整单回滚（memberships/收银单/membership_events/outbox 零写入）
+ *   52.3 期内降级明文拒「会员期内不降级，可在到期前 30 天预约下期档位」+ 同档重放幂等
+ *   52.4 到期换档：窗口外拒 / 窗口内预约落痕+my 透出 / 重复预约覆盖幂等 / 取消置空 /
+ *        到期 renew 按预约档全价收款+切档+置空+executed 留痕+执行幂等
+ *   52.5 防滥用两件：退会 90 天内重购 / 累计退会≥2 再购 → cancel_rebuy_note 留痕（不拦截放行）
+ *   52.6 mySavings 双源合计（已入账 grant 258 + 服务折扣 1056 = 1314 精确到分）
+ *   52.7 升档后在途回馈金不重算 + 旧档回馈金余额零动作
+ *   挂尾口径：52.x 续号挂尾（50/51 段编号属他批并行施工预留，本文件现序尾段为 49c）；
+ *   52.5 含 cancel 会生成 refund_bills，故整段挂 49c 移位段之前——段尾铁律：
+ *   createdAt 移位后不得再发生成退款单的动作（防 genRefundNo 撞号）。
+ *
  * 补缺大批片 4（服务闭环 server 侧：相册聚合/证书+报告生成链/客服工单/发票申请）段：
  *   （与片 1 同号撞号，合并消解改号 50.x→53.x，断言零删改）
  *   53.1 证书生成：有 before/after 图单完成 → service_certificates 落行+payload 齐+
@@ -3270,6 +3284,301 @@ async function main(): Promise<void> {
   check('C5 50.8 重购留痕：同客户同原单有 settled 历史 → reappliedAfterDays=10（只留痕不拦截，申请照常 submitted）',
     req508.idempotent === false && req508.request.status === 'submitted' && req508.request.reappliedAfterDays === 10,
     { reapplied: req508.request.reappliedAfterDays, status: req508.request.status });
+
+  /* ==================================================================
+   * 补缺大批片 3（46 号档+PD-07）验收段 —— 52.x 续号挂尾
+   * 挂尾口径：50/51 段编号属他批并行施工预留（本文件现序尾段为 49c）；52.5 含 cancel
+   * 会生成 refund_bills，故整段挂 49c 移位段之前（段尾铁律：移位后不再生成退款单）。
+   * ================================================================== */
+  console.log('\n[补缺-3] 52.x 会员升级 / 到期换档 / 防滥用 / 已省');
+  const mkM52User = async (tag: string, phone: string) => {
+    /* kimiId 须 seed_ 前缀（dev-login 仅允许种子用户，D-16 硬约束） */
+    const u = (await db.insert(schema.users).values({ kimiId: `seed_e2e_m52_${tag}`, nickname: `e2e 补缺3 ${tag}`, phone }).returning())[0]!;
+    await db.insert(schema.userRoles).values({ userId: u.id, role: 'customer' });
+    return u;
+  };
+  interface UpgradeQuoteRes {
+    currentPlan: { planKey: string; priceFen: number } | null;
+    targetPlans: Array<{
+      planKey: string; label: string; remainingMonths: number;
+      baseDiffFen: number; petDiffFen: number; totalDiffFen: number;
+      formula: { m: number; newMonthlyFen: number; oldMonthlyFen: number; perMonthDiffFen: number; newPurchase: boolean };
+    }>;
+    windowDays: number;
+  }
+  interface UpgradeRes {
+    billNo: string | null; billId: string | null;
+    membership: MembershipRowT & { nextPlanKey?: string | null };
+    diffFen: number; idempotent: boolean;
+  }
+  interface ScheduleRes {
+    membership: MembershipRowT & { nextPlanKey: string | null; nextPlanSetAt: Date | null };
+    idempotent: boolean;
+  }
+
+  /* ---------- 52.1 升档差价精确到分（46 号档例题逐字坐实）+ 微光新购口径 ---------- */
+  console.log('\n[补缺-3] 52.1 升档差价（46 号档例题）+ 微光新购口径');
+  const m52u1 = await mkM52User('u1', '13822220001');
+  const m52u1Cookie = await devLogin(m52u1.id);
+  const sellU1 = await sellPlan(managerCookie, {
+    userId: m52u1.id, planKey: 'plan_yinghuo', petCount: 0,
+    paySegments: [{ method: 'cash', amountFen: 19900 }],
+  });
+  /* 夹具：到期日=今日+3 个整月（同「日」不抹零头）→ remainingWholeMonths=3（既有同族函数口径） */
+  const m52exp3 = new Date();
+  m52exp3.setMonth(m52exp3.getMonth() + 3);
+  await db.update(schema.memberships).set({ expiresAt: m52exp3, updatedAt: new Date() })
+    .where(eq(schema.memberships.id, sellU1.membership.id));
+  const quoteU1 = await trpcQuery<UpgradeQuoteRes>('membership.upgradeQuote', { cookie: m52u1Cookie });
+  const quoteNuanyang = quoteU1.targetPlans.find((p) => p.planKey === 'plan_nuanyang');
+  /* 46 号档例题逐字：萤火 199 剩 3 整月升暖阳 599 → 3×(59900−19900)÷12=10000 分=¥100.00 */
+  check('补缺3-52.1 例题坐实：萤火剩 3 整月升暖阳 totalDiffFen=10000（¥100.00 精确到分；多宠附加行恒 0）',
+    !!quoteNuanyang && quoteNuanyang.remainingMonths === 3 && quoteNuanyang.totalDiffFen === 10000 &&
+      quoteNuanyang.baseDiffFen === 10000 && quoteNuanyang.petDiffFen === 0 &&
+      quoteNuanyang.formula.m === 3 && quoteNuanyang.formula.perMonthDiffFen === (59900 - 19900) / 12 &&
+      quoteNuanyang.formula.newPurchase === false,
+    quoteNuanyang);
+  check('补缺3-52.1 期内降级档不出现（萤火视角 targetPlans 仅 烛光/暖阳 两更高档）+ 窗口天数透出=30',
+    quoteU1.targetPlans.map((p) => p.planKey).sort().join(',') === 'plan_nuanyang,plan_zhuguang' && quoteU1.windowDays === 30,
+    quoteU1.targetPlans.map((p) => p.planKey));
+  const quoteU1m = await trpcQuery<UpgradeQuoteRes>('membership.upgradeQuoteForUser', { cookie: ownerCookie, input: { userId: m52u1.id } });
+  check('补缺3-52.1 收银台代客试算同帧（upgradeQuoteForUser 暖阳差价同=10000）',
+    quoteU1m.targetPlans.find((p) => p.planKey === 'plan_nuanyang')?.totalDiffFen === 10000,
+    quoteU1m.targetPlans.map((p) => `${p.planKey}:${p.totalDiffFen}`));
+  const upU1 = await trpcMutate<UpgradeRes>('membership.upgrade', {
+    cookie: managerCookie,
+    input: { userId: m52u1.id, targetPlanKey: 'plan_nuanyang', paySegments: [{ method: 'cash', amountFen: 10000 }] },
+  });
+  check('补缺3-52.1 升档成交：diffFen=10000 + paid_fen=原实付+补差=29900 + 到期日不动 + pet_count 不变',
+    upU1.diffFen === 10000 && upU1.membership.planKey === 'plan_nuanyang' && upU1.membership.paidFen === 29900 &&
+      Math.abs(new Date(upU1.membership.expiresAt).getTime() - m52exp3.getTime()) < 5000 && upU1.membership.petCount === 0,
+    { diff: upU1.diffFen, paid: upU1.membership.paidFen, plan: upU1.membership.planKey });
+  const upBill = await db.select().from(schema.cashierBills).where(eq(schema.cashierBills.id, upU1.billId!)).get();
+  const upBillItem = await db.select().from(schema.cashierBillItems).where(eq(schema.cashierBillItems.billId, upU1.billId!)).get();
+  check('补缺3-52.1 升级单=会员费类目（kind=membership / refId=plan_nuanyang / discountType=none / note「升级补差 萤火→暖阳」）',
+    upBill?.discountType === 'none' && (upBill.note ?? '').includes('升级补差 萤火→暖阳') &&
+      upBillItem?.kind === 'membership' && upBillItem.refId === 'plan_nuanyang' && upBillItem.unitPriceFen === 10000,
+    { note: upBill?.note, refId: upBillItem?.refId, discountType: upBill?.discountType });
+  const upEvent = (await db.select().from(schema.membershipEvents)
+    .where(and(eq(schema.membershipEvents.userId, m52u1.id), eq(schema.membershipEvents.type, 'upgrade'))))[0];
+  check('补缺3-52.1 membership_events 升级留痕（from=萤火 to=暖阳 diffFen=10000 billNo 回链）',
+    upEvent?.fromPlan === 'plan_yinghuo' && upEvent.toPlan === 'plan_nuanyang' && upEvent.diffFen === 10000 && upEvent.billNo === upU1.billNo,
+    upEvent && { from: upEvent.fromPlan, to: upEvent.toPlan, diff: upEvent.diffFen });
+  /* 微光档升档=新购口径：差价=新档全价+多宠附加按现 petCount 重算（petCount 直置 5 → 萤火 19900+2×5900=31700） */
+  const m52u2 = await mkM52User('u2', '13822220002');
+  const m52u2Cookie = await devLogin(m52u2.id);
+  await trpcMutate('membership.openFree', { cookie: m52u2Cookie });
+  await db.update(schema.memberships).set({ petCount: 5, updatedAt: new Date() }).where(eq(schema.memberships.userId, m52u2.id));
+  const quoteU2 = await trpcQuery<UpgradeQuoteRes>('membership.upgradeQuote', { cookie: m52u2Cookie });
+  const quoteU2yh = quoteU2.targetPlans.find((p) => p.planKey === 'plan_yinghuo');
+  check('补缺3-52.1 微光升档=新购口径（remainingMonths=0 / newPurchase=true / 全价+附加重算 19900+2×5900=31700）',
+    !!quoteU2yh && quoteU2yh.remainingMonths === 0 && quoteU2yh.formula.newPurchase === true && quoteU2yh.totalDiffFen === 31700,
+    quoteU2yh && { total: quoteU2yh.totalDiffFen, formula: quoteU2yh.formula });
+  const upU2 = await trpcMutate<UpgradeRes>('membership.upgrade', {
+    cookie: managerCookie,
+    input: { userId: m52u2.id, targetPlanKey: 'plan_yinghuo', paySegments: [{ method: 'cash', amountFen: 31700 }] },
+  });
+  const upU2Days = (new Date(upU2.membership.expiresAt).getTime() - Date.now()) / 86400_000;
+  check('补缺3-52.1 微光新购口径落库（paid_fen=31700 全价含附加 / expires 重起算 +365 天 / sold_store 补=办理店）',
+    upU2.diffFen === 31700 && upU2.membership.paidFen === 31700 && upU2.membership.soldStoreId === storeId &&
+      upU2Days > 364 && upU2Days < 366,
+    { diff: upU2.diffFen, paid: upU2.membership.paidFen, days: upU2Days });
+
+  /* ---------- 52.2 原子事务回滚：paySegments 缺额 → 三表零写入实证 ---------- */
+  console.log('\n[补缺-3] 52.2 升档原子性（缺额整单回滚）');
+  const m52u3 = await mkM52User('u3', '13822220003');
+  const sellU3 = await sellPlan(managerCookie, {
+    userId: m52u3.id, planKey: 'plan_yinghuo', petCount: 0,
+    paySegments: [{ method: 'cash', amountFen: 19900 }],
+  });
+  const m52exp3b = new Date();
+  m52exp3b.setMonth(m52exp3b.getMonth() + 3);
+  await db.update(schema.memberships).set({ expiresAt: m52exp3b, updatedAt: new Date() })
+    .where(eq(schema.memberships.id, sellU3.membership.id));
+  const bills52Before = (await db.select().from(schema.cashierBills).where(eq(schema.cashierBills.customerId, m52u3.id))).length;
+  const outbox52Before = (await db.select().from(schema.eventOutbox)).length;
+  const upU3 = await asErr(trpcMutate('membership.upgrade', {
+    cookie: managerCookie,
+    input: { userId: m52u3.id, targetPlanKey: 'plan_nuanyang', paySegments: [{ method: 'cash', amountFen: 9999 }] },
+  }));
+  check('补缺3-52.2 支付段缺额硬拒（server 兜底重算 10000 ≠ 入参 9999 → BAD_REQUEST「须等于升档补差」）',
+    upU3 instanceof TrpcHttpError && upU3.code === 'BAD_REQUEST' && upU3.message.includes('须等于升档补差'),
+    upU3 && { code: upU3.code, message: upU3.message });
+  const m52u3Row = await db.select().from(schema.memberships).where(eq(schema.memberships.id, sellU3.membership.id)).get();
+  const bills52After = (await db.select().from(schema.cashierBills).where(eq(schema.cashierBills.customerId, m52u3.id))).length;
+  const events52u3 = await db.select().from(schema.membershipEvents).where(eq(schema.membershipEvents.userId, m52u3.id));
+  const outbox52After = (await db.select().from(schema.eventOutbox)).length;
+  check('补缺3-52.2 整单回滚零半态（memberships 原档原值 / 收银单零新增 / membership_events 零行 / outbox 零新增）',
+    m52u3Row?.planKey === 'plan_yinghuo' && m52u3Row.paidFen === 19900 &&
+      bills52After === bills52Before && events52u3.length === 0 && outbox52After === outbox52Before,
+    { plan: m52u3Row?.planKey, paid: m52u3Row?.paidFen, bills: [bills52Before, bills52After], events: events52u3.length, outbox: [outbox52Before, outbox52After] });
+
+  /* ---------- 52.3 期内降级明文拒 + 同档重放幂等 ---------- */
+  console.log('\n[补缺-3] 52.3 期内不降级 + 同档重放幂等');
+  const upU1Down = await asErr(trpcMutate('membership.upgrade', {
+    cookie: managerCookie,
+    input: { userId: m52u1.id, targetPlanKey: 'plan_yinghuo', paySegments: [] },
+  }));
+  check('补缺3-52.3 期内降级明文拒（暖阳→萤火 BAD_REQUEST「会员期内不降级，可在到期前 30 天预约下期档位」逐字）',
+    upU1Down instanceof TrpcHttpError && upU1Down.code === 'BAD_REQUEST' &&
+      upU1Down.message === '会员期内不降级，可在到期前 30 天预约下期档位',
+    upU1Down && { code: upU1Down.code, message: upU1Down.message });
+  const upU1Replay = await trpcMutate<UpgradeRes>('membership.upgrade', {
+    cookie: managerCookie,
+    input: { userId: m52u1.id, targetPlanKey: 'plan_nuanyang', paySegments: [] },
+  });
+  const upEventsU1 = await db.select().from(schema.membershipEvents)
+    .where(and(eq(schema.membershipEvents.userId, m52u1.id), eq(schema.membershipEvents.type, 'upgrade')));
+  check('补缺3-52.3 同档重放幂等（idempotent=true / billNo=null / 会员行原值 / 升级事件仍恰 1 行）',
+    upU1Replay.idempotent === true && upU1Replay.billNo === null &&
+      upU1Replay.membership.planKey === 'plan_nuanyang' && upU1Replay.membership.paidFen === 29900 && upEventsU1.length === 1,
+    { idem: upU1Replay.idempotent, events: upEventsU1.length });
+
+  /* ---------- 52.4 到期换档：窗口外拒 / 窗口内预约 / 覆盖幂等 / 取消 / renew 执行 ---------- */
+  console.log('\n[补缺-3] 52.4 到期换档（预约→覆盖→取消→再约→renew 执行）');
+  const m52u4 = await mkM52User('u4', '13822220004');
+  const m52u4Cookie = await devLogin(m52u4.id);
+  const sellU4 = await sellPlan(managerCookie, {
+    userId: m52u4.id, planKey: 'plan_yinghuo', petCount: 0,
+    paySegments: [{ method: 'cash', amountFen: 19900 }],
+  });
+  const schedEarly = await asErr(trpcMutate('membership.scheduleChange', { cookie: m52u4Cookie, input: { targetPlanKey: 'plan_zhuguang' } }));
+  check('补缺3-52.4 窗口外预约明文拒（剩 ~365 天 > 30 → BAD_REQUEST「到期前 30 天开放预约下期档位」）',
+    schedEarly instanceof TrpcHttpError && schedEarly.code === 'BAD_REQUEST' && schedEarly.message.includes('到期前 30 天开放预约下期档位'),
+    schedEarly && { code: schedEarly.code, message: schedEarly.message });
+  /* 夹具：到期日拉近至 +15 天 → 进入预约窗口 */
+  await db.update(schema.memberships).set({ expiresAt: new Date(Date.now() + 15 * 86400_000), updatedAt: new Date() })
+    .where(eq(schema.memberships.id, sellU4.membership.id));
+  const sched1 = await trpcMutate<ScheduleRes>('membership.scheduleChange', { cookie: m52u4Cookie, input: { targetPlanKey: 'plan_zhuguang' } });
+  check('补缺3-52.4 窗口内预约落位（next_plan_key=plan_zhuguang + next_plan_set_at 非空）',
+    sched1.membership.nextPlanKey === 'plan_zhuguang' && !!sched1.membership.nextPlanSetAt && sched1.idempotent === false,
+    { next: sched1.membership.nextPlanKey, setAt: sched1.membership.nextPlanSetAt });
+  const schedEvent1 = (await db.select().from(schema.membershipEvents)
+    .where(and(eq(schema.membershipEvents.userId, m52u4.id), eq(schema.membershipEvents.type, 'change_schedule'))))[0];
+  check('补缺3-52.4 预约留痕（change_schedule from=萤火 to=烛光）',
+    schedEvent1?.fromPlan === 'plan_yinghuo' && schedEvent1.toPlan === 'plan_zhuguang',
+    schedEvent1 && { from: schedEvent1.fromPlan, to: schedEvent1.toPlan });
+  const my52u4 = await trpcQuery<{
+    nextPlanKey: string | null; upgradeAvailable: boolean; changeWindowDays: number;
+    membership: { planKey: string } | null;
+  }>('membership.my', { cookie: m52u4Cookie });
+  check('补缺3-52.4 my 透出 nextPlanKey + upgradeAvailable + changeWindowDays=30（客户端入口判定数据源）',
+    my52u4.nextPlanKey === 'plan_zhuguang' && my52u4.upgradeAvailable === true && my52u4.changeWindowDays === 30,
+    { next: my52u4.nextPlanKey, up: my52u4.upgradeAvailable, win: my52u4.changeWindowDays });
+  const sched2 = await trpcMutate<ScheduleRes>('membership.scheduleChange', { cookie: m52u4Cookie, input: { targetPlanKey: 'plan_nuanyang' } });
+  const sched2b = await trpcMutate<ScheduleRes>('membership.scheduleChange', { cookie: m52u4Cookie, input: { targetPlanKey: 'plan_nuanyang' } });
+  check('补缺3-52.4 重复预约覆盖更新幂等（覆盖→plan_nuanyang idempotent=false；同档重放 idempotent=true）',
+    sched2.idempotent === false && sched2.membership.nextPlanKey === 'plan_nuanyang' && sched2b.idempotent === true,
+    { a: sched2.idempotent, b: sched2b.idempotent });
+  const schedCancel = await trpcMutate<ScheduleRes>('membership.cancelScheduleChange', { cookie: m52u4Cookie });
+  const schedEvtsU4 = await db.select().from(schema.membershipEvents)
+    .where(and(eq(schema.membershipEvents.userId, m52u4.id), eq(schema.membershipEvents.type, 'change_schedule')));
+  const cancelEvU4 = schedEvtsU4.find((e) => (e.meta as Record<string, unknown> | null)?.cancelled === true);
+  check('补缺3-52.4 取消预约置空+留痕（next_plan_key=null + meta.cancelled=true 记被撤档 plan_nuanyang）',
+    schedCancel.membership.nextPlanKey === null && schedCancel.idempotent === false &&
+      !!cancelEvU4 && (cancelEvU4.meta as Record<string, unknown>).cancelledPlanKey === 'plan_nuanyang',
+    { next: schedCancel.membership.nextPlanKey, cancelled: (cancelEvU4?.meta as Record<string, unknown> | undefined)?.cancelledPlanKey });
+  await trpcMutate('membership.scheduleChange', { cookie: m52u4Cookie, input: { targetPlanKey: 'plan_zhuguang' } });
+  /* 到期执行：到期日置昨日（读路径懒冻结→renew 解冻）→ 按预约档全价 29900 收款+切档+置空 */
+  await db.update(schema.memberships).set({ expiresAt: new Date(Date.now() - 86400_000), updatedAt: new Date() })
+    .where(eq(schema.memberships.id, sellU4.membership.id));
+  const renewU4 = await trpcMutate<{ membership: MembershipRowT & { nextPlanKey: string | null }; amountFen: number; billNo: string }>('membership.renew', {
+    cookie: managerCookie,
+    input: { userId: m52u4.id, paySegments: [{ method: 'cash', amountFen: 29900 }] },
+  });
+  check('补缺3-52.4 到期 renew 按预约档收款（29900 烛光全价 / plan_key 切换 / next_plan_key 置空 / 解冻 active）',
+    renewU4.amountFen === 29900 && renewU4.membership.planKey === 'plan_zhuguang' &&
+      renewU4.membership.nextPlanKey === null && renewU4.membership.status === 'active',
+    { amount: renewU4.amountFen, plan: renewU4.membership.planKey, next: renewU4.membership.nextPlanKey });
+  const execEvU4 = (await db.select().from(schema.membershipEvents)
+    .where(and(eq(schema.membershipEvents.userId, m52u4.id), eq(schema.membershipEvents.type, 'change_schedule'))))
+    .find((e) => (e.meta as Record<string, unknown> | null)?.executed === true);
+  check('补缺3-52.4 换档执行留痕（change_schedule meta.executed=true from=萤火 to=烛光 + billNo 回链）',
+    !!execEvU4 && execEvU4.fromPlan === 'plan_yinghuo' && execEvU4.toPlan === 'plan_zhuguang' && execEvU4.billNo === renewU4.billNo,
+    execEvU4 && { from: execEvU4.fromPlan, to: execEvU4.toPlan, billNo: execEvU4.billNo });
+  const renewU4b = await trpcMutate<{ membership: MembershipRowT; amountFen: number }>('membership.renew', {
+    cookie: managerCookie,
+    input: { userId: m52u4.id, paySegments: [{ method: 'cash', amountFen: 29900 }] },
+  });
+  const execEvtsU4 = (await db.select().from(schema.membershipEvents)
+    .where(and(eq(schema.membershipEvents.userId, m52u4.id), eq(schema.membershipEvents.type, 'change_schedule'))))
+    .filter((e) => (e.meta as Record<string, unknown> | null)?.executed === true);
+  check('补缺3-52.4 执行幂等（预约已置空：再续费按新档常价 29900 顺延，executed 留痕不重复增发）',
+    renewU4b.amountFen === 29900 && renewU4b.membership.planKey === 'plan_zhuguang' && execEvtsU4.length === 1,
+    { amount: renewU4b.amountFen, execEvents: execEvtsU4.length });
+
+  /* ---------- 52.5 防滥用两件：退会窗口内重购 / 累计退会≥阈值再购 → 留痕不拦截 ---------- */
+  console.log('\n[补缺-3] 52.5 防滥用留痕（cancel_rebuy_note）');
+  const m52u5 = await mkM52User('u5', '13822220005');
+  await sellPlan(managerCookie, { userId: m52u5.id, planKey: 'plan_yinghuo', petCount: 0, paySegments: [{ method: 'cash', amountFen: 19900 }] });
+  await trpcMutate('membership.cancel', { cookie: managerCookie, input: { userId: m52u5.id, reason: '补缺3 防滥用验证退会 1' } });
+  const sellU5b = await sellPlan(managerCookie, { userId: m52u5.id, planKey: 'plan_yinghuo', petCount: 0, paySegments: [{ method: 'cash', amountFen: 19900 }] });
+  const notesU5a = await db.select().from(schema.membershipEvents)
+    .where(and(eq(schema.membershipEvents.userId, m52u5.id), eq(schema.membershipEvents.type, 'cancel_rebuy_note')));
+  check('补缺3-52.5 退会后 90 天内重购留痕（trigger=cooldown daysSinceLastCancel=0 + billNo=重购单号；不拦截放行）',
+    notesU5a.length === 1 && (notesU5a[0]!.meta as Record<string, unknown>).trigger === 'cooldown' &&
+      (notesU5a[0]!.meta as Record<string, unknown>).daysSinceLastCancel === 0 &&
+      (notesU5a[0]!.meta as Record<string, unknown>).cooldownDays === 90 &&
+      notesU5a[0]!.billNo === sellU5b.billNo && sellU5b.membership.status === 'active',
+    notesU5a.map((e) => e.meta));
+  await trpcMutate('membership.cancel', { cookie: managerCookie, input: { userId: m52u5.id, reason: '补缺3 防滥用验证退会 2' } });
+  const sellU5c = await sellPlan(managerCookie, { userId: m52u5.id, planKey: 'plan_yinghuo', petCount: 0, paySegments: [{ method: 'cash', amountFen: 19900 }] });
+  const notesU5b = await db.select().from(schema.membershipEvents)
+    .where(and(eq(schema.membershipEvents.userId, m52u5.id), eq(schema.membershipEvents.type, 'cancel_rebuy_note')));
+  const noteCountU5 = notesU5b.find((e) => (e.meta as Record<string, unknown>).trigger === 'count');
+  check('补缺3-52.5 累计退会≥2 再购留痕（trigger=count cancelCount=2 threshold=2；双触发共 3 行；不拦截放行）',
+    !!noteCountU5 && (noteCountU5.meta as Record<string, unknown>).cancelCount === 2 &&
+      (noteCountU5.meta as Record<string, unknown>).threshold === 2 &&
+      sellU5c.membership.status === 'active' && notesU5b.length === 3,
+    notesU5b.map((e) => e.meta));
+
+  /* ---------- 52.6 mySavings 双源合计（精确到分） ---------- */
+  console.log('\n[补缺-3] 52.6 mySavings 今年已省（回馈金+服务折扣两源分明）');
+  const m52u6 = await mkM52User('u6', '13822220006');
+  const m52u6Cookie = await devLogin(m52u6.id);
+  await sellPlan(managerCookie, { userId: m52u6.id, planKey: 'plan_yinghuo', petCount: 0, paySegments: [{ method: 'cash', amountFen: 19900 }] });
+  /* 源①：已入账 grant 夹具（入账行口径 source_id=settlement_id=批次 id，QA40-D10 同源；
+     期次取远期 2099-01 与 43/49b 段互不占期次） */
+  const m52u6Acc = await ensureRebateAccount(db, m52u6.id, new Date());
+  const m52batch = (await db.insert(schema.rebateSettlements).values({
+    period: '2099-01', grantedCount: 1, grantedFen: 258, scheduledDay: 5, status: 'done',
+    note: '补缺3 mySavings 已入账夹具批次',
+  }).returning())[0]!;
+  await db.insert(schema.rebateLogs).values({
+    userId: m52u6.id, accountId: m52u6Acc.id, type: 'grant', deltaFen: 258,
+    beforeFen: 0, afterFen: 258, sourceId: m52batch.id, settlementId: m52batch.id,
+    period: '2099-01', note: '补缺3 mySavings 已入账夹具（期次 2099-01 结算批次）',
+  });
+  /* 源②：服务折扣单（萤火 88 折：8800×0.88=7744 → 省 1056） */
+  await settleBill2([{ kind: 'service', refId: service.id }], { customerId: m52u6.id, note: 'e2e 补缺3 52.6 服务折扣单' });
+  const savings52 = await trpcQuery<{ year: number; rebateSettledFen: number; serviceDiscountFen: number; totalFen: number }>('membership.mySavings', { cookie: m52u6Cookie });
+  check('补缺3-52.6 mySavings 双源分明（rebateSettledFen=258 已入账 + serviceDiscountFen=1056=8800−7744 → totalFen=1314 精确到分）',
+    savings52.rebateSettledFen === 258 && savings52.serviceDiscountFen === 1056 &&
+      savings52.totalFen === 1314 && savings52.year === new Date().getFullYear(),
+    savings52);
+
+  /* ---------- 52.7 升档后在途回馈金不重算 + 旧档余额零动作 ---------- */
+  console.log('\n[补缺-3] 52.7 升档不动在途回馈金');
+  const m52u7 = await mkM52User('u7', '13822220007');
+  await sellPlan(managerCookie, { userId: m52u7.id, planKey: 'plan_yinghuo', petCount: 0, paySegments: [{ method: 'cash', amountFen: 19900 }] });
+  await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: m52u7.id, note: 'e2e 补缺3 52.7 在途 grant 单' }); // 萤火 2% → 计提 258（未结算在途）
+  const u7AccBefore = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, m52u7.id)).get();
+  const u7GrantsBefore = await db.select().from(schema.rebateLogs)
+    .where(and(eq(schema.rebateLogs.userId, m52u7.id), eq(schema.rebateLogs.type, 'grant')));
+  /* 新卡剩 12 整月：萤火→暖阳补差 = 12×(59900−19900)÷12 = 40000（全年差价） */
+  const upU7 = await trpcMutate<UpgradeRes>('membership.upgrade', {
+    cookie: managerCookie,
+    input: { userId: m52u7.id, targetPlanKey: 'plan_nuanyang', paySegments: [{ method: 'cash', amountFen: 40000 }] },
+  });
+  const u7AccAfter = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, m52u7.id)).get();
+  const u7LogsAfter = await db.select().from(schema.rebateLogs).where(eq(schema.rebateLogs.userId, m52u7.id));
+  check('补缺3-52.7 升档成交（剩 12 整月补差 40000=59900−19900，精确到分；paid_fen=19900+40000=59900）',
+    upU7.diffFen === 40000 && upU7.membership.planKey === 'plan_nuanyang' && upU7.membership.paidFen === 59900,
+    { diff: upU7.diffFen, paid: upU7.membership.paidFen });
+  check('补缺3-52.7 在途回馈金不重算 + 旧档余额零动作（grant 行原样 1 行 258 挂萤火口径 / 账户余额 0 不动 / rebate_logs 零新增）',
+    u7GrantsBefore.length === 1 && u7GrantsBefore[0]!.deltaFen === 258 && (u7GrantsBefore[0]!.note ?? '').includes('plan_yinghuo') &&
+      u7AccBefore?.balanceFen === 0 && u7AccAfter?.balanceFen === 0 && u7LogsAfter.length === 1,
+    { grants: [u7GrantsBefore.length, u7LogsAfter.length], balance: [u7AccBefore?.balanceFen, u7AccAfter?.balanceFen] });
 
   /* ---- 49c. 打回①收尾：实退待办移位（25h）→ settleActual 幂等 → 待办消失 ----
    * 段尾铁律（§34/§38 撞号教训）：createdAt 移位之后不得再发生成退款单的动作——

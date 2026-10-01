@@ -28,6 +28,7 @@ import {
   PerksWall,
   PushBar,
   RulesBlock,
+  SavingsSheet,
   SecH,
   Sheet,
   TipCard,
@@ -35,6 +36,7 @@ import {
   tierClaimOf,
   tierNameOf,
   yuanOf,
+  type SavingsData,
   type V2Plan,
 } from '../components/member/v2'
 import { ErrorState, LoadingBlock } from '../components/home/common'
@@ -44,7 +46,7 @@ const DAY_MS = 24 * 60 * 60 * 1000
 export default function MemberCenterPage() {
   const { trpc } = usePhiliaClient()
   const navigate = useNavigate()
-  const [sheet, setSheet] = useState<'renew' | 'quit' | null>(null)
+  const [sheet, setSheet] = useState<'renew' | 'quit' | 'saved' | null>(null)
 
   const myQ = useQuery({
     queryKey: ['membership', 'my'],
@@ -54,6 +56,12 @@ export default function MemberCenterPage() {
     queryKey: ['membership', 'plans'],
     queryFn: () => trpc.membership.plans.query(),
     staleTime: 60_000,
+  })
+  /* 补缺批片 3：今年已省双源聚合（仅会员态点亮；非会员分流 J-01 不查） */
+  const savingsQ = useQuery({
+    queryKey: ['membership', 'mySavings'],
+    queryFn: () => trpc.membership.mySavings.query(),
+    enabled: !!myQ.data?.membership,
   })
 
   return (
@@ -82,9 +90,12 @@ export default function MemberCenterPage() {
           plans={plansQ.data.plans as V2Plan[]}
           settlementDay={plansQ.data.rebateSettlementDay}
           validityDays={plansQ.data.membershipValidityDays}
+          savings={(savingsQ.data ?? null) as SavingsData | null}
           onSheet={setSheet}
           onGotoRebate={() => navigate('/member/rebate')}
           onGotoOpen={() => navigate('/member/open')}
+          onGotoUpgrade={() => navigate('/member/upgrade')}
+          onGotoChange={() => navigate('/member/change')}
         />
       )}
 
@@ -111,6 +122,13 @@ export default function MemberCenterPage() {
       <Sheet open={sheet === 'quit'} onClose={() => setSheet(null)} title={mc('a3.quitSheetTitle')}>
         <p className="m2-note">{mc('a3.quitSheetBody')}</p>
       </Sheet>
+
+      {/* 补缺批片 3：今年已省构成明面弹层（两源逐项 mono + 防夸大注，金额读 mySavings） */}
+      <SavingsSheet
+        open={sheet === 'saved'}
+        onClose={() => setSheet(null)}
+        savings={(savingsQ.data ?? null) as SavingsData | null}
+      />
     </div>
   )
 }
@@ -127,6 +145,11 @@ interface MyData {
   } | null
   plan: (V2Plan & { label: string }) | null
   rebate: { balanceFen: number; pendingFen: number; status: string } | null
+  /* 补缺批片 3 新增透出（入口判定字段） */
+  nextPlanKey: string | null
+  nextPlanSetAt: Date | string | null
+  upgradeAvailable: boolean
+  changeWindowDays: number
 }
 
 function A3Body({
@@ -134,17 +157,23 @@ function A3Body({
   plans,
   settlementDay,
   validityDays,
+  savings,
   onSheet,
   onGotoRebate,
   onGotoOpen,
+  onGotoUpgrade,
+  onGotoChange,
 }: {
   my: MyData
   plans: V2Plan[]
   settlementDay: number
   validityDays: number
-  onSheet: (s: 'renew' | 'quit') => void
+  savings: SavingsData | null
+  onSheet: (s: 'renew' | 'quit' | 'saved') => void
   onGotoRebate: () => void
   onGotoOpen: () => void
+  onGotoUpgrade: () => void
+  onGotoChange: () => void
 }) {
   const m = my.membership
   /* 分流（36 号档 §〇）：无档/已退会 → J-01 办理页 */
@@ -186,6 +215,15 @@ function A3Body({
         </TipCard>
       ) : null}
 
+      {/* 补缺批片 3：已预约下期档位入口条（nextPlanKey 非空才显，→/member/change） */}
+      {my.nextPlanKey ? (
+        <TipCard testId="member-change-entry">
+          <button type="button" className="m2-link" style={{ padding: 0 }} onClick={onGotoChange}>
+            {mc('chg.scheduledEntry', { plan: tierNameOf(my.nextPlanKey) })}
+          </button>
+        </TipCard>
+      ) : null}
+
       {/* 3. 三格账 ledger（兜底口径：余额/本期预计/到账日；点首格进 W-01） */}
       <Ledger
         cells={[
@@ -198,6 +236,19 @@ function A3Body({
         }}
       />
 
+      {/* 补缺批片 3：账区加一行「今年已省 ¥{total} ›」（mySavings 真值），点开构成明面弹层 */}
+      {savings ? (
+        <button
+          type="button"
+          data-testid="member-saved-row"
+          className="m2-card m2-press"
+          style={{ width: '100%', marginTop: 10, padding: '13px 16px', textAlign: 'left', fontSize: 13, fontWeight: 700, color: 'var(--v2ink)', cursor: 'pointer' }}
+          onClick={() => onSheet('saved')}
+        >
+          {mc('saved.rowLine', { total: yuanOf(savings.totalFen) })}
+        </button>
+      ) : null}
+
       {/* 4. 权益墙（档跟随） */}
       <SecH title={mc('a3.perksTitle', { tier })} more={mc('a3.perksAllOn')} />
       {plan ? <PerksWall plan={plan} /> : null}
@@ -208,7 +259,7 @@ function A3Body({
       {/* 6. 规则明面（红线 5：全量八条） */}
       <RulesBlock plan={plan} settlementDay={settlementDay} validityDays={validityDays} allPcts={allPcts} />
 
-      {/* 7. CTA 区（续费=到店付弹层；看看别的档 → J-01） */}
+      {/* 7. CTA 区（续费=到店付弹层；升级会员 →/member/upgrade（upgradeAvailable 才显）；看看别的档 → J-01） */}
       <div style={{ marginTop: 16 }}>
         <button
           type="button"
@@ -217,6 +268,13 @@ function A3Body({
         >
           {mc('a3.ctaRenew', { tier, daily: plan ? dailyOf(plan.priceFen) : '—' })}
         </button>
+        {my.upgradeAvailable ? (
+          <div style={{ textAlign: 'center', marginTop: 12 }}>
+            <button type="button" className="m2-link" data-testid="member-upgrade-entry" onClick={onGotoUpgrade}>
+              {mc('up.entryCta')}
+            </button>
+          </div>
+        ) : null}
         <div style={{ textAlign: 'center', marginTop: 12 }}>
           <button type="button" className="m2-link" onClick={onGotoOpen}>
             {mc('a3.ctaOtherTier')}

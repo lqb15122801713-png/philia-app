@@ -30,8 +30,10 @@ import DevicesPage from './pages/DevicesPage'
 import PrivacyPage from './pages/PrivacyPage'
 import MemberCardPage from './pages/MemberCardPage'
 import MemberCenterPage from './pages/MemberCenterPage'
+import MemberChangePage from './pages/MemberChangePage'
 import MemberOpenPage from './pages/MemberOpenPage'
 import MemberRebatePage from './pages/MemberRebatePage'
+import MemberUpgradePage from './pages/MemberUpgradePage'
 import MomentsPage from './pages/MomentsPage'
 import PetsPage from './pages/PetsPage'
 import PhiliaPage from './pages/PhiliaPage'
@@ -117,6 +119,10 @@ function ProtectedRoutes() {
       <Route path="/member/open" element={<MemberOpenPage />} />
       {/* R11b 视觉批：回馈金账本拆独立推送页（36 号档 §四 W-01；申报锚点=「回馈金」） */}
       <Route path="/member/rebate" element={<MemberRebatePage />} />
+      {/* 补缺批片 3 会员域：升档试算 / 到期换档预约（详情级无 dock，返回条兜底 /member；
+          申报锚点=「升级会员」/「预约下期档位」） */}
+      <Route path="/member/upgrade" element={<MemberUpgradePage />} />
+      <Route path="/member/change" element={<MemberChangePage />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )

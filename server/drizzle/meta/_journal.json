@@ -141,6 +141,13 @@
       "when": 1790864027440,
       "tag": "0019_rainy_cerebro",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1790864027441,
+      "tag": "0020_wild_johnny_storm",
+      "breakpoints": true
     }
   ]
 }
