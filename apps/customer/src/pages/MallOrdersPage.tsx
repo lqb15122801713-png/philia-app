@@ -15,7 +15,7 @@
 import { Skeleton, usePhiliaClient } from '@philia/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BadgeCheck, Package, Truck } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import CashierModal, { type CashierOrder } from '../components/mall/CashierModal';
 import PageHeader from '../components/PageHeader';
@@ -27,6 +27,7 @@ import { friendlyError, useToast } from '@philia/shared';
 import ProductImage from '../components/mall/ProductImage';
 import { useOrderEvents } from '../components/mall/useOrderEvents';
 import { MALL_COPY, mlc } from '../copy/mall';
+import { rc } from '../copy/refund';
 
 /* ---------------- 类型（与 T5.1 listMyOrders 返回对齐） ---------------- */
 
@@ -92,6 +93,7 @@ function OrderCard({
   onCancel,
   onReorder,
   receiving,
+  refundSlot,
 }: {
   order: OrderRow;
   onContinuePay: (o: OrderRow) => void;
@@ -100,6 +102,8 @@ function OrderCard({
   /** U1-G 再来一单（received 态真链路：重建购物车 → /mall/cart） */
   onReorder: (o: OrderRow) => void;
   receiving: boolean;
+  /** 补缺批片 1：退款/售后入口位（shipped/received/refunding；开关关=维护态明文） */
+  refundSlot?: ReactNode;
 }) {
   const meta = STATUS_META[order.status] ?? { label: order.status, pill: 'bg-sunken text-ink-secondary' };
   const qty = order.items.reduce((n, it) => n + it.quantity, 0);
@@ -202,7 +206,8 @@ function OrderCard({
         </div>
       ) : null}
       {/* U1-G 已完成态：再来一单（真链路）；「查看全程」无物流全程接口——不渲染该钮（铁则）。
-          U4-D3：试样已完成卡「再来一单」=柠檬主钮 → 对齐；「申请售后」无售后申请接口——不出 */}
+          U4-D3：试样已完成卡「再来一单」=柠檬主钮 → 对齐；「申请售后」已由补缺批片 1 落地
+          （refundRequest.create），入口位见卡底 refundSlot */}
       {order.status === 'received' ? (
         <div className="mt-3 flex justify-end border-t border-[rgba(59,46,36,.06)] pt-[11px]">
           <button
@@ -215,6 +220,10 @@ function OrderCard({
           </button>
         </div>
       ) : null}
+
+      {/* 补缺批片 1：退款/售后入口位（shipped/received→申请或进度；refunding→查看进度；
+          configView.enabled=false → 维护态明文，不隐藏不报错） */}
+      {refundSlot}
     </div>
   );
 }
@@ -244,6 +253,58 @@ function MallOrdersInner() {
     queryKey: ['mall', 'listMyOrders'],
     queryFn: () => trpc.mall.listMyOrders.query(),
   });
+
+  /* ---- 补缺批片 1：退款/售后入口数据源（开关端口 + 本人申请单） ---- */
+  const refundConfigQ = useQuery({
+    queryKey: ['refundRequest', 'configView'],
+    queryFn: () => trpc.refundRequest.configView.query(),
+  });
+  const refundsQ = useQuery({
+    queryKey: ['refundRequest', 'listMine'],
+    queryFn: () => trpc.refundRequest.listMine.query(),
+  });
+  const refundRows = refundsQ.data ?? [];
+
+  /** 订单卡退款入口位：shipped/received→申请（在途→进度）；refunding→查看进度；
+      开关关=维护态明文（PD-12：不隐藏不报错） */
+  const refundSlotOf = (order: OrderRow): ReactNode => {
+    const refundable = order.status === 'shipped' || order.status === 'received';
+    const isRefunding = order.status === 'refunding';
+    if (!refundable && !isRefunding) return null;
+    if (refundConfigQ.data?.enabled === false) {
+      return (
+        <p
+          data-testid={`refund-maintain-${order.id}`}
+          className="mt-3 border-t border-[rgba(59,46,36,.06)] pt-[11px] text-caption text-ink-secondary"
+        >
+          {rc('refund.maintainNotice')}
+        </p>
+      );
+    }
+    /* 在途申请（幂等闸同口径：submitted/approved/refunded）→ 入口变进度 */
+    const open = refundRows.find(
+      (r) => r.billId === order.id && ['submitted', 'approved', 'refunded'].includes(r.status),
+    );
+    const latest = refundRows.find((r) => r.billId === order.id);
+    const cta = open
+      ? { text: rc('refund.progressCta'), to: `/refunds/${open.id}` }
+      : isRefunding
+        ? latest
+          ? { text: rc('refund.viewProgressCta'), to: `/refunds/${latest.id}` }
+          : { text: rc('refund.viewProgressCta'), to: '/refunds' }
+        : { text: rc('refund.entryCta'), to: `/mall/orders/${order.id}/refund` };
+    return (
+      <div className="mt-3 flex justify-end border-t border-[rgba(59,46,36,.06)] pt-[11px]">
+        <Link
+          to={cta.to}
+          data-testid={`refund-entry-${order.id}`}
+          className="text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+        >
+          {cta.text}
+        </Link>
+      </div>
+    );
+  };
 
   // 滚动位置：持续记忆（rAF 节流）
   useEffect(() => {
@@ -435,6 +496,7 @@ function MallOrdersInner() {
                   key={o.id}
                   order={o}
                   receiving={receiveM.isPending}
+                  refundSlot={refundSlotOf(o)}
                   onContinuePay={(order) =>
                     setPayOrder({ id: order.id, orderNo: order.orderNo, totalFen: order.totalFen })
                   }

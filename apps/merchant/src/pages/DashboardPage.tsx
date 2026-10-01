@@ -25,7 +25,9 @@ import StatCards from '@/components/dashboard/StatCards'
 import TodayTimeline from '@/components/dashboard/TodayTimeline'
 import TodoSection from '@/components/dashboard/TodoSection'
 import { useStepProgress } from '@/components/appointments/useStepProgress'
+import { REFUND_REQUEST_PENDING_KEY } from '@/components/cashier/refund'
 import { dc } from '@/copy/dashboard'
+import { useMerchantRole } from '@/lib/roles'
 import {
   IN_BOARDING_QUERY_KEY,
   STATS_QUERY_KEY,
@@ -41,6 +43,7 @@ const POLL_FALLBACK_MS = 30_000
 export default function DashboardPage() {
   const { trpc, queryClient } = usePhiliaClient()
   const events = useMerchantEvents()
+  const role = useMerchantRole()
   const navigate = useNavigate()
   const now = new Date()
 
@@ -63,6 +66,15 @@ export default function DashboardPage() {
     refetchInterval: events.connected ? false : POLL_FALLBACK_MS,
   })
 
+  // 客户退款申请待办角标（批次 C5：listPending 独立查询挂 TodoSection 行；
+  // stats 聚合不含此项——报备口径内独立查询方案；clerk 无读口不查）
+  const refundRequestQ = useQuery({
+    queryKey: REFUND_REQUEST_PENDING_KEY,
+    queryFn: () => trpc.refundRequest.listPending.query(),
+    enabled: role.canManage,
+    refetchInterval: events.connected ? false : POLL_FALLBACK_MS,
+  })
+
   // 门店营业时段（auth.me 返回完整 store 行；独立键，不与 useMe 的镜像结构互相覆盖）
   const meQuery = useQuery({
     queryKey: ['auth', 'me', 'full'],
@@ -75,6 +87,7 @@ export default function DashboardPage() {
     void queryClient.invalidateQueries({ queryKey: STATS_QUERY_KEY })
     void queryClient.invalidateQueries({ queryKey: TODAY_QUERY_KEY })
     void queryClient.invalidateQueries({ queryKey: IN_BOARDING_QUERY_KEY })
+    void queryClient.invalidateQueries({ queryKey: REFUND_REQUEST_PENDING_KEY })
   }, [queryClient])
 
   // SSE：预约生命周期事件 → 联动刷新；新预约到达 toast
@@ -105,6 +118,9 @@ export default function DashboardPage() {
           case EventType.CashierBillHeld:
           case EventType.CashierBillSettled:
           case EventType.CashierBillVoided:
+          // 批次 C5：客户退款申请批准 → 待办角标对齐（shared EventType 常量同步属跨包改动，
+          // 本批范围=apps/merchant 暂以字面值对齐，已报备）
+          case 'refundRequest.approved':
             invalidateAll()
             break
           default:
@@ -183,6 +199,7 @@ export default function DashboardPage() {
           todayItems={todayQuery.data}
           boardingItems={boardingQuery.data}
           now={now}
+          refundRequests={role.canManage ? (refundRequestQ.data ?? []) : undefined}
         />
       </div>
     </MainScaffold>

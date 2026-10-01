@@ -27,6 +27,9 @@ export const DASH_COPY = {
   'dash.todoOverdueHint': '超过预计退房时间仍在店',
   'dash.todoPendingLabel': '历史待确认单',
   'dash.todoPendingHint': '自动接单已启用 · 仅旧单与改期回退单在此',
+  /* 客户退款申请待办（批次 C5 审批缝 · 计数=refundRequest.listPending 独立查询挂角标） */
+  'dash.todoRefundRequestLabel': '客户退款申请',
+  'dash.todoRefundRequestHint': '客户申请退款，待审批',
   /* 超期样例小字片段（mono 数字位在 JSX 内拼装，静片段入键——同 staff me.ts 先例） */
   'dash.todoOverdueLead': '应退未退',
   'dash.todoOverdueUnit': '天',

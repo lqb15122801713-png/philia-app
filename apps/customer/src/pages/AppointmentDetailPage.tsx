@@ -27,6 +27,7 @@ import SlotPicker from '@/components/booking/SlotPicker';
 import { ErrorState } from '@/components/home/common';
 import { friendlyError, useToast } from '@philia/shared';
 import { apc } from '@/copy/appointments';
+import { rc } from '@/copy/refund';
 import {
   APPT_STATUS_META,
   APPT_TYPE_LABEL,
@@ -99,6 +100,25 @@ export default function AppointmentDetailPage() {
     queryKey: ['appointment', 'serviceAlbum', id],
     queryFn: () => trpc.appointment.serviceAlbum.query({ appointmentId: id }),
     enabled: albumEnabled,
+  });
+
+  /* 补缺大批片 1：服务单退款/售后入口数据源——appointment.get 附 cashierBillId
+     （已结账即非空）；已结账=appt.paidAt 且 paidFen>0；服务中不挂入口 */
+  const refundBase =
+    !!d?.cashierBillId &&
+    !!appt?.paidAt &&
+    (appt?.paidFen ?? 0) > 0 &&
+    appt?.status !== 'in_service' &&
+    appt?.status !== 'in_boarding';
+  const refundConfigQ = useQuery({
+    queryKey: ['refundRequest', 'configView'],
+    queryFn: () => trpc.refundRequest.configView.query(),
+    enabled: refundBase,
+  });
+  const refundsQ = useQuery({
+    queryKey: ['refundRequest', 'listMine'],
+    queryFn: () => trpc.refundRequest.listMine.query(),
+    enabled: refundBase,
   });
 
   const [confirmingCancel, setConfirmingCancel] = useState(false);
@@ -331,6 +351,12 @@ export default function AppointmentDetailPage() {
   // v1.1-b2 B2-6 / v1.1-b3 B3-4：自助改期入口——与取消同 >4h 阈值（寄养以入住日首晚
   // 即 scheduledStart 计）；B3-4 起对寄养开放（两阶段日期组件重选入住/退房）
   const reschedulable = cancellable && freeCancel;
+  /* 补缺大批片 1：在途申请（幂等闸同口径 submitted/approved/refunded，同商城单判定）→ 入口变进度 */
+  const refundOpen = refundBase
+    ? (refundsQ.data ?? []).find(
+        (r) => r.billId === d.cashierBillId && ['submitted', 'approved', 'refunded'].includes(r.status),
+      )
+    : undefined;
   // stores 表暂无 phone 字段：有则渲染 tel:，无则提示到店/商家端联系
   const storePhone = (d.store as { phone?: string | null } | null)?.phone ?? null;
 
@@ -725,6 +751,27 @@ export default function AppointmentDetailPage() {
                 {freeCancel ? apc('appointments.cancelCtaFree') : apc('appointments.cancelCtaLate')}
               </button>
             </div>
+          )}
+        </section>
+      ) : null}
+
+      {/* 补缺大批片 1：退款/售后入口（已结账=有 cashierBillId 且已付，非服务中；
+          已结账且不可取消的服务完成单主入口。开关关=维护态明文；在途=进度入口） */}
+      {refundBase ? (
+        <section className="mt-4 flex items-center justify-between rounded-card bg-card p-4 shadow-card">
+          {refundConfigQ.data?.enabled === false ? (
+            <p className="text-caption text-ink-secondary">{rc('refund.maintainNotice')}</p>
+          ) : (
+            <>
+              <span className="text-body text-ink-secondary">{rc('refund.entryHint')}</span>
+              <Link
+                to={refundOpen ? `/refunds/${refundOpen.id}` : `/appointments/${id}/refund`}
+                data-testid={`refund-entry-appt-${id}`}
+                className="text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+              >
+                {refundOpen ? rc('refund.progressCta') : rc('refund.entryCta')}
+              </Link>
+            </>
           )}
         </section>
       ) : null}

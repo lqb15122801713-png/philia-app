@@ -56,6 +56,9 @@ export const EventType = {
   RefundSettled:         'refund.settled',          // 实退完成登记 → store
   RefundRejected:        'refund.rejected',         // 退款申请驳回（仅店主） → store
   RefundMonthExported:   'refund.monthExported',    // 退款月表导出审计（仅老板） → store
+  // 批次 C5 客户退款申请（客户端申请 → 商家审批缝；packages/shared 由补缺大批片 1 顺手收编同步）
+  RefundRequestSubmitted: 'refundRequest.submitted', // 客户退款申请提交（补缺大批片 1 补发） → store
+  RefundRequestApproved: 'refundRequest.approved',  // 客户退款申请批准（已生成 R12 退款单/商城售后） → store + user
   // 批次 R11a 会员前置批（双端同步）
   MembershipOpened:      'membership.opened',       // 售卡/微光开档 → user + store
   MembershipRenewed:     'membership.renewed',      // 续费解冻 → user

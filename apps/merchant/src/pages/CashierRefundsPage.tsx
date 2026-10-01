@@ -12,6 +12,9 @@
  *
  * 结构：
  * - pendingActual 超 24h 待办：顶部黄色提醒条（笔数 + 单号/金额简报）；
+ * - 客户退款申请待办（批次 C5 审批缝）：refundRequest.listPending + 批准/驳回行操作
+ *   （批准=二次确认弹层复述 → approve 直通 R12 内核；驳回=原因必填弹层 → reject；
+ *   SLA 超期=赭红签；反悔窗内标记弃件——listPending 不透出 freeRegretHours，报备）；
  * - 状态过滤 chips（全部/草稿/待实退登记/实退完成/已驳回）；
  * - refund.list 表格：退款单号/原单号/类型/金额/原因/发起/审批/实退标记/时间，
  *   行点击 → RefundDetailDialog（六联动快照详情）；
@@ -27,10 +30,12 @@ import {
   REFUND_LIST_KEY,
   REFUND_METHOD_LABEL,
   REFUND_PENDING_KEY,
+  REFUND_REQUEST_PENDING_KEY,
   REFUND_STATUS_CHIP,
   REFUND_TYPE_LABEL,
   storeTodayStr,
   type RefundListRow,
+  type RefundRequestPendingRow,
   type RefundType,
 } from '@/components/cashier/refund'
 import RefundDetailDialog from '@/components/cashier/RefundDetailDialog'
@@ -66,6 +71,8 @@ export default function CashierRefundsPage() {
   const [detailRow, setDetailRow] = useState<RefundListRow | null>(null)
   const [settleTarget, setSettleTarget] = useState<RefundListRow | null>(null)
   const [rejectTarget, setRejectTarget] = useState<RefundListRow | null>(null)
+  const [approveReqTarget, setApproveReqTarget] = useState<RefundRequestPendingRow | null>(null)
+  const [rejectReqTarget, setRejectReqTarget] = useState<RefundRequestPendingRow | null>(null)
   const [exportMonth, setExportMonth] = useState(() => storeTodayStr().slice(0, 7))
   const [exporting, setExporting] = useState(false)
 
@@ -83,10 +90,17 @@ export default function CashierRefundsPage() {
     queryFn: () => trpc.refund.pendingActual.query(),
     enabled: canManage,
   })
+  // 客户退款申请待办（批次 C5：本店 submitted 申请升序，先到先审）
+  const requestQ = useQuery({
+    queryKey: REFUND_REQUEST_PENDING_KEY,
+    queryFn: () => trpc.refundRequest.listPending.query(),
+    enabled: canManage,
+  })
 
   const invalidate = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: REFUND_LIST_KEY })
     void queryClient.invalidateQueries({ queryKey: REFUND_PENDING_KEY })
+    void queryClient.invalidateQueries({ queryKey: REFUND_REQUEST_PENDING_KEY })
     // 退款落账/实退影响流水标记与日结/财务口径，同源一并失效
     void queryClient.invalidateQueries({ queryKey: ['cashier'] })
     void queryClient.invalidateQueries({ queryKey: ['store', 'todayTenderStats'] })
@@ -102,6 +116,9 @@ export default function CashierRefundsPage() {
           case EventType.RefundExecuted:
           case EventType.RefundSettled:
           case EventType.RefundRejected:
+          // 批次 C5：客户退款申请批准（refundRequest.approved，server 已发；
+          // shared EventType 常量同步属跨包改动，本批范围=apps/merchant 暂以字面值对齐，已报备）
+          case 'refundRequest.approved':
             invalidate()
             break
           default:
@@ -132,6 +149,39 @@ export default function CashierRefundsPage() {
     onSuccess: (r) => {
       toast.success(`已驳回 ${r.refund.refundNo}（驳回留痕，原因见备注）`)
       setRejectTarget(null)
+      invalidate()
+    },
+    onError: (e) => toast.error(errMsg(e)),
+  })
+
+  /* ---- 客户退款申请审批（批次 C5；FORBIDDEN 等内核闸错误原样透出） ---- */
+  const approveReqM = useMutation({
+    mutationFn: (input: { requestId: string }) => trpc.refundRequest.approve.mutate(input),
+    onSuccess: (r) => {
+      if (r.idempotent) {
+        toast.success(`${r.request.requestNo} 此前已批准（幂等重入不重复执行）`)
+      } else if (r.draft) {
+        toast(`超审批阈值——已生成退款草稿单 ${r.refundNo}，须店主在收银台办理`)
+      } else if (r.refundNo) {
+        toast.success(`已批准 ${r.request.requestNo} · 退款单 ${r.refundNo} 已生成（按 R12 既有链路原路退回）`)
+      } else {
+        toast.success(`已批准 ${r.request.requestNo}（商城售后 · 线下原路退回）`)
+      }
+      setApproveReqTarget(null)
+      invalidate()
+    },
+    onError: (e) => toast.error(errMsg(e)),
+  })
+
+  const rejectReqM = useMutation({
+    mutationFn: (input: { requestId: string; reason: string }) => trpc.refundRequest.reject.mutate(input),
+    onSuccess: (r) => {
+      toast.success(
+        r.idempotent
+          ? `${r.request.requestNo} 此前已驳回（幂等重入）`
+          : `已驳回 ${r.request.requestNo}（驳回留痕，客户可见原因）`,
+      )
+      setRejectReqTarget(null)
       invalidate()
     },
     onError: (e) => toast.error(errMsg(e)),
@@ -170,6 +220,7 @@ export default function CashierRefundsPage() {
 
   const rows = listQ.data ?? []
   const pendings = pendingQ.data ?? []
+  const requests = requestQ.data ?? []
 
   return (
     <MainScaffold
@@ -208,6 +259,75 @@ export default function CashierRefundsPage() {
             {pendings.length > 3 ? ` 等 ${pendings.length} 笔` : ''}
             {cc('cashier.refundsPendingTail')}
           </span>
+        </div>
+      ) : null}
+
+      {/* 客户退款申请待办（批次 C5 审批缝：无待办不渲染区块；批准/驳回双钮 h≥44） */}
+      {requests.length > 0 ? (
+        <div className="u3-panel mb-3.5" data-testid="refund-requests-block">
+          <div className="u3-panel-head">
+            <h3>{cc('cashier.refundRequestTitle')}</h3>
+            <span className="aside">
+              <span className="font-number tabular-nums">{requests.length}</span> 笔
+            </span>
+          </div>
+          {requests.map((r) => (
+            <div
+              key={r.id}
+              data-testid={`refund-request-row-${r.requestNo}`}
+              className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-number text-caption font-semibold tabular-nums">{r.requestNo}</span>
+                  <span className="u3-st wait">
+                    {r.type === 'return_refund'
+                      ? cc('cashier.refundRequestTypeReturnRefund')
+                      : cc('cashier.refundRequestTypeRefundOnly')}
+                  </span>
+                  {r.slaOverdue ? (
+                    <span className="u3-st red">{cc('cashier.refundRequestSlaOverdue')}</span>
+                  ) : null}
+                </div>
+                <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
+                  {r.customerNickname ?? '—'}
+                  {' · 原单 '}
+                  <span className="font-number tabular-nums">{r.billNo}</span>
+                  {' · '}
+                  {r.reasonLabel}
+                </div>
+                {r.description ? (
+                  <div className="mt-0.5 max-w-[420px] truncate text-caption-xs text-[rgba(59,46,36,.42)]" title={r.description}>
+                    {r.description}
+                  </div>
+                ) : null}
+              </div>
+              <div className="text-right">
+                <div className="u1-num font-bold text-danger-deep">−¥{fenToYuan(r.amountFen)}</div>
+                <div className="u1-num mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                  {fmtDateTime(r.createdAt)}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <SheetBtn
+                  variant="primary"
+                  className="min-h-[44px]"
+                  data-testid={`refund-request-approve-${r.requestNo}`}
+                  onClick={() => setApproveReqTarget(r)}
+                >
+                  {cc('cashier.refundRequestApproveCta')}
+                </SheetBtn>
+                <SheetBtn
+                  variant="danger-outline"
+                  className="min-h-[44px]"
+                  data-testid={`refund-request-reject-${r.requestNo}`}
+                  onClick={() => setRejectReqTarget(r)}
+                >
+                  {cc('cashier.refundRequestRejectCta')}
+                </SheetBtn>
+              </div>
+            </div>
+          ))}
         </div>
       ) : null}
 
@@ -359,6 +479,70 @@ export default function CashierRefundsPage() {
         }}
         onClose={() => setRejectTarget(null)}
       />
+
+      {/* 客户退款申请：批准二次确认（金额/原单/类型复述 + R15 明面句） */}
+      <CashierModal
+        open={approveReqTarget !== null}
+        onClose={() => setApproveReqTarget(null)}
+        title={cc('cashier.refundRequestApproveConfirmTitle')}
+        testid="refund-request-approve-dialog"
+        footer={
+          <>
+            <SheetBtn className="min-h-[44px]" onClick={() => setApproveReqTarget(null)}>
+              取消
+            </SheetBtn>
+            <SheetBtn
+              variant="primary"
+              className="min-h-[44px]"
+              data-testid="refund-request-approve-confirm"
+              disabled={approveReqM.isPending}
+              onClick={() => {
+                if (!approveReqTarget) return
+                approveReqM.mutate({ requestId: approveReqTarget.id })
+              }}
+            >
+              {approveReqM.isPending ? '提交中…' : cc('cashier.refundRequestApproveCta')}
+            </SheetBtn>
+          </>
+        }
+      >
+        {approveReqTarget ? (
+          <>
+            <div className="rounded-[14px] bg-[#FAF8F2] px-3.5 py-3">
+              <div className="font-number text-caption font-semibold tabular-nums">
+                {approveReqTarget.requestNo}
+              </div>
+              <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
+                原单 <span className="font-number tabular-nums">{approveReqTarget.billNo}</span>
+                {' · '}
+                {approveReqTarget.type === 'return_refund'
+                  ? cc('cashier.refundRequestTypeReturnRefund')
+                  : cc('cashier.refundRequestTypeRefundOnly')}
+                {' · '}
+                {approveReqTarget.reasonLabel}
+                {' · '}
+                <b className="font-number tabular-nums text-danger-deep">
+                  −¥{fenToYuan(approveReqTarget.amountFen)}
+                </b>
+              </div>
+            </div>
+            <p className="mt-3 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
+              {cc('cashier.refundRequestApproveConfirmBody')}
+            </p>
+          </>
+        ) : null}
+      </CashierModal>
+
+      {/* 客户退款申请：驳回（原因必填，照既有 rejectDraft 交互同款） */}
+      <RefundRequestRejectDialog
+        row={rejectReqTarget}
+        pending={rejectReqM.isPending}
+        onConfirm={(reason) => {
+          if (!rejectReqTarget) return
+          rejectReqM.mutate({ requestId: rejectReqTarget.id, reason })
+        }}
+        onClose={() => setRejectReqTarget(null)}
+      />
     </MainScaffold>
   )
 }
@@ -443,6 +627,85 @@ function RefundNoteDialog({
         <p className="mt-2 text-caption-xs font-semibold text-danger-deep">
           {isSettle ? '实退登记须填备注' : '驳回须填原因'}
         </p>
+      ) : null}
+    </CashierModal>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* 客户退款申请 · 驳回弹层（原因必填留痕，照上方 RefundNoteDialog reject 同款） */
+/* ------------------------------------------------------------------ */
+
+function RefundRequestRejectDialog({
+  row,
+  pending,
+  onConfirm,
+  onClose,
+}: {
+  row: RefundRequestPendingRow | null
+  pending: boolean
+  onConfirm: (reason: string) => void
+  onClose: () => void
+}) {
+  const [reason, setReason] = useState('')
+  const [lastId, setLastId] = useState<string | null>(null)
+  if (row && row.id !== lastId) {
+    setLastId(row.id)
+    setReason('')
+  }
+  if (!row && lastId !== null) setLastId(null)
+  if (!row) return null
+
+  const valid = reason.trim().length > 0
+
+  return (
+    <CashierModal
+      open={row !== null}
+      onClose={onClose}
+      title={cc('cashier.refundRequestRejectTitle')}
+      testid="refund-request-reject-dialog"
+      footer={
+        <>
+          <SheetBtn className="min-h-[44px]" onClick={onClose}>
+            取消
+          </SheetBtn>
+          <SheetBtn
+            variant="danger-outline"
+            className="min-h-[44px]"
+            data-testid="refund-request-reject-confirm"
+            disabled={!valid || pending}
+            onClick={() => onConfirm(reason.trim())}
+          >
+            {pending ? '提交中…' : '确认驳回'}
+          </SheetBtn>
+        </>
+      }
+    >
+      <div className="rounded-[14px] bg-[#FAF8F2] px-3.5 py-3">
+        <div className="font-number text-caption font-semibold tabular-nums">{row.requestNo}</div>
+        <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
+          原单 <span className="font-number tabular-nums">{row.billNo}</span>
+          {' · '}
+          {row.type === 'return_refund'
+            ? cc('cashier.refundRequestTypeReturnRefund')
+            : cc('cashier.refundRequestTypeRefundOnly')}
+          {' · '}
+          <b className="font-number tabular-nums text-danger-deep">−¥{fenToYuan(row.amountFen)}</b>
+        </div>
+      </div>
+      <textarea
+        className="mt-3 min-h-[76px] w-full resize-none rounded-[14px] bg-[#FFFDF6] px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+        data-testid="refund-request-reject-reason"
+        placeholder="驳回原因（必填，留痕；客户侧申请单可见）"
+        maxLength={200}
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+      />
+      <p className="mt-1.5 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
+        {cc('cashier.refundRequestRejectNote')}
+      </p>
+      {!valid ? (
+        <p className="mt-2 text-caption-xs font-semibold text-danger-deep">驳回须填原因</p>
       ) : null}
     </CashierModal>
   )

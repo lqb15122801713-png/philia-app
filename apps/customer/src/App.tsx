@@ -25,6 +25,9 @@ import MomentsPage from './pages/MomentsPage'
 import PetsPage from './pages/PetsPage'
 import PhiliaPage from './pages/PhiliaPage'
 import ProductDetailPage from './pages/ProductDetailPage'
+import RefundApplyPage from './pages/RefundApplyPage'
+import RefundDetailPage from './pages/RefundDetailPage'
+import RefundListPage from './pages/RefundListPage'
 
 // B9.3 任务 B：/booking 中间层（类型选择 hub）退役——直接重定向单屏；
 // 兼容旧深链 ?type=boarding → 寄养单屏，?storeId= 透传（首页门店卡深链口径保留）。
@@ -48,6 +51,11 @@ function ProtectedRoutes() {
       <Route path="/mall/cart" element={<CartPage />} />
       <Route path="/mall/checkout" element={<CheckoutPage />} />
       <Route path="/mall/orders" element={<MallOrdersPage />} />
+      {/* 补缺批片 1 退款售后：表单双路由同组件双 orderKind 参数化 + 列表/进度详情 */}
+      <Route path="/mall/orders/:id/refund" element={<RefundApplyPage orderKind="order" />} />
+      <Route path="/appointments/:id/refund" element={<RefundApplyPage orderKind="appointment" />} />
+      <Route path="/refunds" element={<RefundListPage />} />
+      <Route path="/refunds/:id" element={<RefundDetailPage />} />
       <Route path="/philia" element={<PhiliaPage />} />
       <Route path="/philia/pets" element={<PetsPage />} />
       {/* R11a 裁定：旧路由 /philia/member 退役——重定向往 /member 会员中心（路径保留，
