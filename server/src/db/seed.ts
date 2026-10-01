@@ -28,6 +28,12 @@ import { client, db, schema } from './index';
 /* ---------------- 清空（子表 -> 父表） ---------------- */
 
 const CLEAR_ORDER = [
+  /* ---- 补缺大批片 4 新表：子表先父表，先于 users/stores/appointments 清空 ---- */
+  schema.invoiceRequests, // FK → users/stores
+  schema.supportTickets, // FK → users/stores
+  schema.serviceReports, // FK → appointments/users
+  schema.serviceCertificates, // FK → appointments/users
+  schema.serviceRules, // FK → users
   /* ---- R11a 会员前置批新表：子表先父表（rebate_logs.settlement_id→rebate_settlements），先于 users/stores 清空 ---- */
   schema.rebateLogs, // FK → users/rebate_accounts/rebate_settlements
   schema.rebateAccounts, // FK → users
@@ -410,6 +416,22 @@ async function main() {
       planSeed('default_plan_key', '注册默认会员档（自助开档落档键；端口可改）', { value: 'plan_weiguang' }),
     ]);
 
+    /* ---- 补缺大批片 4：服务域规则配置种子（同构 commission_rules，version=1） ----
+     * 配置端口第六域 domain='service'；service_hours=客服服务时间公示（客户端读口
+     * serviceLoop.serviceHours），0017 迁移同名幂等种子先行入库，本处为重置后补种。
+     */
+    await tx.insert(schema.serviceRules).values([
+      {
+        version: 1,
+        ruleKey: 'service_hours',
+        label: '客服服务时间（客户端公示文案）',
+        valueJson: { text: '09:00–21:00' },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+    ]);
+
     /* ---- staff-2 R10：XP 规则配置种子（附件一冻结版 V1.0 全表照转，version=1） ----
      * 分值单位 XP 点；段位门槛/保级线为累计/月增量 XP；拉新 referral 置灰（active=false，
      * 随会员游戏化批 G3 链路开通，server 拒写该来源）。
@@ -508,6 +530,12 @@ async function main() {
     ['rebate_accounts', 'rebate_accounts'],
     ['rebate_logs', 'rebate_logs'],
     ['rebate_settlements', 'rebate_settlements'],
+    /* 补缺大批片 4 新表 */
+    ['service_certificates', 'service_certificates'],
+    ['service_reports', 'service_reports'],
+    ['support_tickets', 'support_tickets'],
+    ['invoice_requests', 'invoice_requests'],
+    ['service_rules', 'service_rules'],
   ];
 
   console.log('[seed] 完成，各表行数：');

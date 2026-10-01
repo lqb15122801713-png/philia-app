@@ -3,7 +3,7 @@
  * 导航闭环体检（批次 W1 · 常备验收工具）：node scripts/check-nav-closure.mjs
  *
  * 来源：任务书 W1 §二冻结规则（每页①底栏常显 或 ②返回键+明确主出口；交易成功页双出口）
- *      + §五巡检地图（51 路由；后续批次申报补入，现 66 路由）+ §六 Harness 规格（四要素检测/死胡同判定）。
+ *      + §五巡检地图（51 路由；后续批次申报补入，现 80 路由）+ §六 Harness 规格（四要素检测/死胡同判定）。
  *
  * 检测要素（页内真实渲染断言）：
  *   - back   返回键（页首左上 aria-label 含「返回」的可点区）
@@ -24,7 +24,7 @@
  *
  * 环境变量：CUSTOMER_URL / MERCHANT_URL / STAFF_URL（默认 vite preview 7100/7101/7102）、
  *   API_BASE（默认 http://localhost:7200）、CDP_PORT（默认 9224，避免与 smoke-routes 撞车）、
- *   NAV_JSON（设置时把 66 行结果写 JSON 到该路径）。
+ *   NAV_JSON（设置时把 80 行结果写 JSON 到该路径）。
  * 退出码：0=无死胡同；1=存在死胡同；2=环境不可用。
  */
 
@@ -59,9 +59,9 @@ const BROWSER = [
   '/usr/bin/microsoft-edge',
 ].filter(Boolean).find((p) => existsSync(p));
 
-/** 66 路由体检表（任务书 W1 §五巡检地图 51 路由 + 后续批次申报补入；expect: tab=主tab页 / sub=子页 / success=交易成功页 / gate=门禁豁免） */
+/** 80 路由体检表（任务书 W1 §五巡检地图 51 路由 + 后续批次申报补入；expect: tab=主tab页 / sub=子页 / success=交易成功页 / gate=门禁豁免） */
 const ROUTES = [
-  /* 客户端 27 */
+  /* 客户端 41 */
   { app: 'customer', path: '/home', expect: 'tab' },
   { app: 'customer', path: '/mall', expect: 'tab' },
   { app: 'customer', path: '/me', expect: 'tab' },
@@ -94,6 +94,16 @@ const ROUTES = [
   { app: 'customer', path: `/refunds/${INVALID_ID}`, expect: 'sub', note: '补缺批片 1 退款售后：参数化照 INVALID 行写法（无种子申请单 id，异常态须出口）' },
   { app: 'customer', path: `/mall/orders/${INVALID_ID}/refund`, expect: 'sub', note: '补缺批片 1 退款售后：无效原单异常态须出口' },
   { app: 'customer', path: `/appointments/${APPT_ID}/refund`, expect: 'sub', note: '补缺批片 1 退款售后：服务单 billId 客户端无口径，页内诚实维护态+出口' },
+  /* 补缺批片 4 服务闭环（9 行；参数化照 INVALID_ID 写法，异常态页 PageHeader 返回出口常显） */
+  { app: 'customer', path: '/philia/certs', expect: 'sub', note: '补缺批片 4 服务闭环' },
+  { app: 'customer', path: `/philia/certs/${INVALID_ID}`, expect: 'sub', note: '补缺批片 4 服务闭环（无效 id 异常态须出口）' },
+  { app: 'customer', path: `/philia/reports/${INVALID_ID}`, expect: 'sub', note: '补缺批片 4 服务闭环（无效 id 异常态须出口）' },
+  { app: 'customer', path: '/support', expect: 'sub', note: '补缺批片 4 服务闭环' },
+  { app: 'customer', path: '/support/new', expect: 'sub', note: '补缺批片 4 服务闭环' },
+  { app: 'customer', path: `/support/${INVALID_ID}`, expect: 'sub', note: '补缺批片 4 服务闭环（无效 id 异常态须出口）' },
+  { app: 'customer', path: '/invoices', expect: 'sub', note: '补缺批片 4 服务闭环' },
+  { app: 'customer', path: `/invoice/apply/appointment/${INVALID_ID}`, expect: 'sub', note: '补缺批片 4 服务闭环（无效 id 异常态须出口）' },
+  { app: 'customer', path: `/invoices/${INVALID_ID}`, expect: 'sub', note: '补缺批片 4 服务闭环（无效 id 异常态须出口）' },
   /* 商家端 25 */
   { app: 'merchant', path: '/dashboard', expect: 'tab' },
   { app: 'merchant', path: '/appointments', expect: 'sub' },
@@ -252,7 +262,7 @@ async function checkRoute(cdp, route) {
 }
 
 async function main() {
-  console.log('导航闭环体检（W1 §六 harness）：66 路由 · 四要素检测');
+  console.log('导航闭环体检（W1 §六 harness）：80 路由 · 四要素检测');
   const results = [];
   for (const app of ['customer', 'merchant', 'staff']) {
     const routes = ROUTES.filter((r) => r.app === app);

@@ -1,7 +1,8 @@
 /**
  * 经营总览域文案键表（copy key 一期硬约定 · 纪律照 apps/customer/src/components/member/copy.ts）
  *
- * 覆盖：DashboardPage + dashboard/StatCards + dashboard/TodayTimeline + dashboard/TodoSection。
+ * 覆盖：DashboardPage + dashboard/StatCards + dashboard/TodayTimeline + dashboard/TodoSection
+ * + dashboard/TicketTodoSection + dashboard/InvoiceTodoSection（补缺大批片 4）。
  * 纪律：经营性文案（屏题/卡题/空态/待办引导）一律经本表取值，组件内零硬编码；
  * 文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名小写点分、冻结不改。
  * 数值不进本表：计数/金额到渲染层读聚合数据经 {var} 插值。
@@ -34,6 +35,52 @@ export const DASH_COPY = {
   'dash.todoOverdueLead': '应退未退',
   'dash.todoOverdueUnit': '天',
   'dash.todoOverdueToday': '今日到期未退',
+
+  /* ---- 补缺大批片 4：TodoSection 增两行计数（可选 props 传入才渲染，clerk 不出现） ---- */
+  'dash.todoTicketLabel': '客服工单',
+  'dash.todoTicketHint': '客户反馈待回复',
+  'dash.todoInvoiceLabel': '发票申请',
+  'dash.todoInvoiceHint': '客户开票申请待登记',
+  'dash.retry': '重试',
+  'dash.cancel': '取消',
+
+  /* ---- 客服工单待办块（TicketTodoSection）---- */
+  'dash.ticketBlockTitle': '客服工单',
+  'dash.ticketTypeSuggest': '建议',
+  'dash.ticketTypeComplaint': '投诉',
+  'dash.ticketTypePraise': '表扬',
+  'dash.ticketTypeOther': '其他',
+  'dash.ticketContactNone': '未留联系方式',
+  'dash.ticketPhotoCount': '附图 {n} 张',
+  'dash.ticketReplyCta': '回复',
+  'dash.ticketReplyTitle': '回复工单 {no}',
+  'dash.ticketReplyLabel': '回复内容（必填）',
+  'dash.ticketReplyPlaceholder': '写下给客户的回复…',
+  'dash.ticketReplyRequired': '请填写回复内容',
+  'dash.ticketReplySubmit': '提交回复',
+  'dash.ticketReplySubmitting': '提交中…',
+  'dash.ticketReplySuccess': '已回复工单 {no}',
+  'dash.ticketLoadFailed': '工单列表加载失败',
+
+  /* ---- 发票申请待办块（InvoiceTodoSection）---- */
+  'dash.invoiceBlockTitle': '发票申请',
+  'dash.invoiceTitlePersonal': '个人',
+  'dash.invoiceTitleBusiness': '企业',
+  'dash.invoiceDeliveryEmail': '邮箱发送',
+  'dash.invoiceDeliveryPickup': '到店自取',
+  'dash.invoiceBillLead': '原单',
+  'dash.invoiceTitleLead': '抬头',
+  'dash.invoiceTaxNoLead': '税号',
+  'dash.invoiceRegisterCta': '登记开票',
+  'dash.invoiceRegisterTitle': '登记开票 {no}',
+  'dash.invoiceAmountNote': '开票金额=订单实付 ¥{amount}',
+  'dash.invoiceNoLabel': '实际发票号（必填）',
+  'dash.invoiceNoPlaceholder': '输入已开具的发票号',
+  'dash.invoiceNoRequired': '请填写实际发票号',
+  'dash.invoiceRegisterSubmit': '确认登记',
+  'dash.invoiceRegistering': '登记中…',
+  'dash.invoiceRegisterSuccess': '已登记开票 {no}',
+  'dash.invoiceLoadFailed': '发票申请列表加载失败',
 } as const;
 
 export type DashCopyKey = keyof typeof DASH_COPY;

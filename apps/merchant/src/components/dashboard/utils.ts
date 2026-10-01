@@ -17,6 +17,17 @@ export const STATS_QUERY_KEY = ['store', 'dashboardStats'] as const
 export const TODAY_QUERY_KEY = ['appointment', 'listForStore', 'today'] as const
 /** 在店寄养（listForStore status=in_boarding 无日期档，房型分组用；U3 总览新增） */
 export const IN_BOARDING_QUERY_KEY = ['appointment', 'listForStore', 'in-boarding'] as const
+/* 补缺大批片 4：客服工单 / 发票申请待办（serviceLoop 读口，页面层与两待办块共用键） */
+export const TICKET_PENDING_QUERY_KEY = ['serviceLoop', 'ticketListPending'] as const
+export const INVOICE_PENDING_QUERY_KEY = ['serviceLoop', 'invoiceListPending'] as const
+/** TodoSection 新增两行计数的滚动锚点（同页下方面板块 id） */
+export const TICKET_SECTION_ID = 'dash-todo-tickets'
+export const INVOICE_SECTION_ID = 'dash-todo-invoices'
+
+/** serviceLoop.ticketListPending 返回行（本店 submitted 工单） */
+export type TicketPendingItem = RouterOutputs['serviceLoop']['ticketListPending'][number]
+/** serviceLoop.invoiceListPending 返回行（本店 submitted 发票申请） */
+export type InvoicePendingItem = RouterOutputs['serviceLoop']['invoiceListPending'][number]
 
 /** 待办合计（四项待办 + 异常超期寄养；TabBar 红点与「待办合计」卡同口径） */
 export const todoGrandTotal = (s: DashboardStats): number => s.todo.total + s.overdueBoardingCount

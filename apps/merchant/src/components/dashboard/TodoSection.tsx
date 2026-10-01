@@ -9,12 +9,21 @@
  * - 小字给一条真实样例：取消/待收款取今日 listForStore 首条命中单，超期寄养取在店
  *   in_boarding 首条应退未退单；今日无样例时回退事由说明；
  * - 数量为 0 行保留（信息密度与位置稳定），计数 Montserrat tabular 由 u3-todo .n 承担。
+ * - 补缺大批片 4：可选两行计数（客服工单 / 发票申请）——可选 props 传入才渲染
+ *   （clerk 不出现），点击滚动到同页下方面板块锚点（无独立页，勿给假跳转）。
  */
 
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { dc } from '@/copy/dashboard'
-import { fenToYuanGrouped, hhmm, type DashboardStats, type TodayApptItem } from './utils'
+import {
+  INVOICE_SECTION_ID,
+  TICKET_SECTION_ID,
+  fenToYuanGrouped,
+  hhmm,
+  type DashboardStats,
+  type TodayApptItem,
+} from './utils'
 
 /* 样例小字里的数据位（时间/金额/天数）：mono 轨 tabular（§八 mono 数据位加重） */
 const HINT_NUM_CLS = 'font-number tabular-nums'
@@ -29,7 +38,10 @@ interface TodoRowSpec {
   label: string
   hint: ReactNode
   count: number
-  to: string
+  /** 路由跳转目标（既有四行） */
+  to?: string
+  /** 同页面板块锚点 id（补缺大批片 4 新增两行：滚动落点，非路由跳转） */
+  anchorId?: string
 }
 
 /** 超期样例小字：应退未退 N 天（不足一天算「今日到期未退」） */
@@ -55,6 +67,8 @@ export default function TodoSection({
   boardingItems,
   now,
   refundRequests,
+  ticketCount,
+  invoiceCount,
 }: {
   stats: DashboardStats | undefined
   todayItems: TodayApptItem[] | undefined
@@ -64,6 +78,10 @@ export default function TodoSection({
   /** 客户退款申请待办（批次 C5 · refundRequest.listPending 独立查询挂角标；
       店主/店长传入数组即渲染本行，clerk 无读口不传→行不出现） */
   refundRequests?: Array<{ requestNo: string; amountFen: number }>
+  /** 补缺大批片 4：客服工单待办计数（undefined = 不渲染该行；clerk 恒 undefined） */
+  ticketCount?: number
+  /** 补缺大批片 4：发票申请待办计数（同上） */
+  invoiceCount?: number
 }) {
   const navigate = useNavigate()
   const nowTs = now.getTime()
@@ -142,6 +160,31 @@ export default function TodoSection({
       count: stats?.todo.pending ?? 0,
       to: '/appointments?status=pending&from=todo',
     },
+    /* 补缺大批片 4：可选两行（props 传入才渲染；点击滚动到同页待办块锚点） */
+    ...(ticketCount !== undefined
+      ? [
+          {
+            key: 'ticket',
+            dot: DOT_RED,
+            label: dc('dash.todoTicketLabel'),
+            hint: dc('dash.todoTicketHint'),
+            count: ticketCount,
+            anchorId: TICKET_SECTION_ID,
+          },
+        ]
+      : []),
+    ...(invoiceCount !== undefined
+      ? [
+          {
+            key: 'invoice',
+            dot: DOT_LEMON,
+            label: dc('dash.todoInvoiceLabel'),
+            hint: dc('dash.todoInvoiceHint'),
+            count: invoiceCount,
+            anchorId: INVOICE_SECTION_ID,
+          },
+        ]
+      : []),
   ]
 
   return (
@@ -154,7 +197,18 @@ export default function TodoSection({
       </div>
       <div>
         {rows.map((r) => (
-          <button key={r.key} type="button" className="u3-todo" onClick={() => navigate(r.to)}>
+          <button
+            key={r.key}
+            type="button"
+            className="u3-todo"
+            onClick={() => {
+              if (r.anchorId) {
+                document.getElementById(r.anchorId)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+              } else if (r.to) {
+                navigate(r.to)
+              }
+            }}
+          >
             <i className="dot" style={{ background: r.dot }} />
             <span className="tx">
               {r.label}

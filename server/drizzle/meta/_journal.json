@@ -127,6 +127,13 @@
       "when": 1790828524956,
       "tag": "0017_lonely_texas_twister",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1790864027439,
+      "tag": "0018_lucky_rafael_vega",
+      "breakpoints": true
     }
   ]
 }

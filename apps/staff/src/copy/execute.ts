@@ -7,6 +7,9 @@
  * 入键位置=GuidePage 调用方（GuidePage 的 title/description 为 props，组件本身不改）。
  * 不抽：通用 UI 词（返回任务台/重试）、server 错误透传、六步轨道步名（冻结，走 STEP_NAME）、
  * 吸底主钮随态文案（操作反馈）。
+ *
+ * 补缺大批片 4：增 exec.report* 组——第六步「美容报告卡」附加段全部文案
+ * （卡题/体征五项 label/三态 label/note 与建议 placeholder/送达承诺句/体重未登记兜底）。
  */
 
 export const EXECUTE_COPY = {
@@ -33,6 +36,22 @@ export const EXECUTE_COPY = {
   'execute.guide.noCurrent.title': '当前没有进行中的服务',
   'execute.guide.noCurrent.desc': '到任务台核销客户预约码后，即可开始服务执行',
   'execute.guide.noCurrent.action': '回到任务台',
+
+  /* ---- 补缺大批片 4 · 第六步「美容报告卡」（附加段；未动不传参=server 缺省口径） ---- */
+  'exec.report.title': '美容报告（随完成同步家长）',
+  'exec.report.delivery': '完成后，报告将在 30 分钟内送达家长',
+  'exec.report.vital.weight': '体重',
+  'exec.report.vital.skin': '皮肤',
+  'exec.report.vital.ear': '耳朵',
+  'exec.report.vital.coat': '被毛',
+  'exec.report.vital.nail': '指甲',
+  'exec.report.status.normal': '正常',
+  'exec.report.status.attention': '注意',
+  'exec.report.status.abnormal': '异常',
+  'exec.report.weight.empty': '档案未登记',
+  'exec.report.note.placeholder': '补充一句情况说明（选填）',
+  'exec.report.advice.label': '下次建议（选填）',
+  'exec.report.advice.placeholder': '如：两周后建议复查耳道',
 } as const;
 
 export type ExecuteCopyKey = keyof typeof EXECUTE_COPY;

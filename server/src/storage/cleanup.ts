@@ -7,7 +7,8 @@
  *
  * 引用来源（URL 取路径部分比对，忽略 sig/exp 查询串）：
  *   step_photos.url / thumb_url、products.images[]、boarding_daily_logs.photos[]、
- *   users.avatar_url、pets.avatar_url、refund_requests.photo_urls[]（C5 客户退款申请凭证）。
+ *   users.avatar_url、pets.avatar_url、refund_requests.photo_urls[]（C5 客户退款申请凭证）、
+ *   support_tickets.photo_urls[]（补缺大批片 4）。
  *
  * 导出 cleanupOrphanImages() 供定时任务调用；也可直接手动跑：
  *   npx tsx src/storage/cleanup.ts            # 实际回收
@@ -103,6 +104,14 @@ async function collectReferencedRelPaths(): Promise<Set<string>> {
     .select({ photoUrls: schema.refundRequests.photoUrls })
     .from(schema.refundRequests);
   for (const row of refundReqRows) {
+    if (Array.isArray(row.photoUrls)) row.photoUrls.forEach(add);
+  }
+
+  // 补缺大批片 4：客服工单附图（photo_urls JSON 数组）纳入白名单
+  const ticketRows = await db
+    .select({ photoUrls: schema.supportTickets.photoUrls })
+    .from(schema.supportTickets);
+  for (const row of ticketRows) {
     if (Array.isArray(row.photoUrls)) row.photoUrls.forEach(add);
   }
 
