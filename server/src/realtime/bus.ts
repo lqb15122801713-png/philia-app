@@ -169,6 +169,22 @@ function notificationCopy(
       return { title: '收银台结账', body: `单 ${data.billNo ?? ''} 已结账` };
     case EventType.CashierBillVoided:
       return { title: '收银台撤单', body: `单 ${data.billNo ?? ''} 已撤单` };
+    /* ---- 补缺大批片 5：片 1/片 4 事件槽位（事件到达即落通知；写入链路不新增，
+     * 仅映射表加行——对应业务方 emitEvent 挂接在片 1/片 4 分支落地） ---- */
+    case 'refundRequest.approved':
+      return { title: '退款申请已批准', body: '您的退款申请已批准，退款将按约定方式退回' };
+    case 'refundRequest.rejected': {
+      const reason = typeof data.reason === 'string' && data.reason ? `（原因：${data.reason}）` : '';
+      return { title: '退款申请已驳回', body: `您的退款申请已被驳回${reason}，如有疑问请联系门店` };
+    }
+    case 'certificate.ready':
+      return { title: '安心证书已生成', body: `${pet}安心证书已生成，点击查看` };
+    case 'report.ready':
+      return { title: '美容报告已送达', body: `${pet}美容报告已送达，点击查看` };
+    case 'ticket.replied':
+      return { title: '小棉花回复', body: '您有一条新的客服回复，点击查看' };
+    case 'invoice.issued':
+      return { title: '发票已开具', body: '您的发票已开具，点击查看' };
     default:
       return { title: '消息提醒', body: '您有一条新消息' };
   }
@@ -182,8 +198,42 @@ function linkFor(eventType: string, data: Record<string, unknown>): string | und
         ? data.appointment_id
         : undefined;
   const orderId = typeof data.orderId === 'string' ? data.orderId : undefined;
+  // 补缺大批片 5：片 1/片 4 事件槽位链接（先于 order./appointment 通用兜底判定）
+  if (eventType === 'refundRequest.approved' || eventType === 'refundRequest.rejected') return '/refunds';
+  if (eventType === 'certificate.ready') return aid ? `/philia/certs/${aid}` : undefined;
+  if (eventType === 'report.ready') return aid ? `/philia/reports/${aid}` : undefined;
+  if (eventType === 'ticket.replied') {
+    const ticketId = typeof data.ticketId === 'string' ? data.ticketId : undefined;
+    return ticketId ? `/support/${ticketId}` : undefined;
+  }
+  if (eventType === 'invoice.issued') return '/invoices';
   if (eventType.startsWith('order.')) return orderId ? `/orders/${orderId}` : undefined;
   return aid ? `/appointments/${aid}/live` : undefined;
+}
+
+/* ------------------------------------------------------------------ */
+/* 通知分类（补缺大批片 5 · 四类口径与迁移 0017 回填同帧）                  */
+/* ------------------------------------------------------------------ */
+
+export type NotifyCategory = 'trade' | 'service' | 'account' | 'marketing';
+
+/**
+ * 事件类型 → 通知分类（前缀映射）：
+ * - trade：appointment.paid / order.* / cashier.* / refund.* / refundRequest.* / invoice.*
+ * - service：appointment.* / step.* / step_* / boarding.* / certificate.* / report.*（含兜底）
+ * - account：membership.* / auth.* / account.* / phone.* / deactivation.*
+ * - marketing：marketing.*
+ * 硬口径：仅 marketing 可退订；trade/service/account 恒落通知（保障服务履约）。
+ */
+export function categoryOf(eventType: string): NotifyCategory {
+  const t = eventType.toLowerCase();
+  if (t.startsWith('marketing.')) return 'marketing';
+  if (t.startsWith('membership.') || t.startsWith('auth.') || t.startsWith('account.') ||
+      t.startsWith('phone.') || t.startsWith('deactivation.')) return 'account';
+  if (t === 'appointment.paid' || t.startsWith('order.') || t.startsWith('cashier.') ||
+      t.startsWith('refund.') || t.startsWith('refundrequest.') || t.startsWith('invoice.')) return 'trade';
+  // service：显式前缀命中 + 其余类型兜底（与列默认值 'service' 同帧）
+  return 'service';
 }
 
 /* ------------------------------------------------------------------ */
@@ -210,9 +260,29 @@ export async function emitEvent(
   if (targets.length > 0) {
     const { title, body } = notificationCopy(eventType, data);
     const link = linkFor(eventType, data);
-    await d.insert(schema.notifications).values(
-      targets.map((userId) => ({ userId, type: eventType, title, body, link })),
-    );
+    const category = categoryOf(eventType);
+    let receivers = targets;
+    // 补缺大批片 5 订阅拦截：仅 marketing 类查 user_notify_prefs（enabled=0 跳过该用户）；
+    // trade/service/account 恒落（保障服务履约硬口径）。
+    if (category === 'marketing') {
+      const disabledRows = await d
+        .select({ userId: schema.userNotifyPrefs.userId })
+        .from(schema.userNotifyPrefs)
+        .where(
+          and(
+            inArray(schema.userNotifyPrefs.userId, targets),
+            eq(schema.userNotifyPrefs.category, 'marketing'),
+            eq(schema.userNotifyPrefs.enabled, false),
+          ),
+        );
+      const disabled = new Set(disabledRows.map((r) => r.userId));
+      receivers = targets.filter((uid) => !disabled.has(uid));
+    }
+    if (receivers.length > 0) {
+      await d.insert(schema.notifications).values(
+        receivers.map((userId) => ({ userId, type: eventType, title, body, link, category })),
+      );
+    }
   }
   return outboxId;
 }

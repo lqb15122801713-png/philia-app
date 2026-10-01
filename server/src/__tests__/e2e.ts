@@ -88,6 +88,19 @@
  *      打回② 退会后结算日不到账：C 商品单 grant（期次移位至未结算期）→ cancel（作废
  *      未到账 clear 留痕行「退会作废未到账回馈金 258 分」）→ settleMonthly 合成到点 →
  *      C 余额不变/grant 未回标/批次单 granted_count 不含退会者，D 对照正常到账
+ *
+ * 补缺大批片 5（站内信分类 + 订阅退订 + 端点补齐 + 事件挂接槽位）段：
+ *   50.1 既有真事件全链：emitEvent（appointment.completed）→ notifications 落行
+ *      category='service' + listNotifications 可见（行带 category）+ unreadCount=1
+ *   50.2 已读幂等（markRead 重复调零副作用）+ markAllRead（幂等）+
+ *      deleteNotification 仅本人（他人 403 / 本人删后行消失）
+ *   50.3 分类：order.paid→trade / membership.opened→account / marketing.promo→marketing
+ *      落库 + list 按 category 过滤
+ *   50.4 订阅：marketing 置 0 → 营销事件不落该用户（outbox 仍写）/ trade·service 恒落；
+ *      非营销类置 0 硬拒明文「交易/服务/账户通知为保障服务履约不可关闭」；恢复 1 幂等
+ *   50.5 挂接槽位：certificate.ready / report.ready / ticket.replied /
+ *      refundRequest.approved / refundRequest.rejected / invoice.issued 直发 emitEvent →
+ *      通知落库文案/link/category 正确（片 1/片 4 合并后自动真实触发，本断言=槽位有效性实证）
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -2956,6 +2969,158 @@ async function main(): Promise<void> {
       settle49b.idempotent === true && settle49b.refund.status === 'settled' &&
       !todo49After.some((r) => r.id === cancelM1.refundId),
     { a: settle49a.refund.status, bIdem: settle49b.idempotent });
+
+  /* ==================================================================
+   * 补缺大批片 5（站内信分类 + 订阅退订 + 端点补齐 + 事件挂接槽位）验收段
+   * 干净夹具用户 seed_e2e_notify 隔离既有段通知存量（unreadCount 断言可精确）；
+   * 事件触发=直接调 emitEvent（本片写入口不新增链路，槽位有效性实证口径见 50.5）。
+   * ================================================================== */
+  console.log('\n[片5] 50. 站内信分类 / 订阅退订 / 端点补齐 / 挂接槽位');
+  const { emitEvent } = await import('../realtime/bus');
+  const { EventType } = await import('../realtime/events');
+
+  const notifyUser = (await db
+    .insert(schema.users)
+    .values({ kimiId: 'seed_e2e_notify', nickname: 'e2e 通知甲', phone: '13900001031' })
+    .returning())[0]!;
+  await db.insert(schema.userRoles).values({ userId: notifyUser.id, role: 'customer' });
+  const notifyCookie = await devLogin(notifyUser.id);
+
+  interface NotifyItem {
+    id: string; type: string; category: string;
+    title: string; body: string | null; link: string | null; readAt: Date | null;
+  }
+  interface NotifyListRes { items: NotifyItem[]; nextCursor: string | null }
+  const notifRowsOf = (uid: string) =>
+    db.select().from(schema.notifications).where(eq(schema.notifications.userId, uid));
+
+  /* ---- 50.1 既有真事件全链：落行含 category='service' + list 可见 + unreadCount=1 ---- */
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.AppointmentCompleted, { appointmentId: aid, petName: '球球' });
+  const row501 = (await notifRowsOf(notifyUser.id)).find((n) => n.type === 'appointment.completed');
+  check('50.1 emitEvent（appointment.completed）落行含 category=service + 文案/link 正确',
+    row501?.category === 'service' && row501.title === '服务已完成' && row501.link === `/appointments/${aid}/live`,
+    row501 && { category: row501.category, title: row501.title, link: row501.link });
+  const list501 = await trpcQuery<NotifyListRes>('push.listNotifications', { cookie: notifyCookie, input: {} });
+  check('50.1 listNotifications 可见该行且返回行带 category 字段',
+    list501.items.length === 1 && list501.items[0]!.id === row501?.id && list501.items[0]!.category === 'service',
+    list501.items.map((n) => `${n.type}:${n.category}`));
+  const uc501 = await trpcQuery<{ total: number; byCategory: Record<string, number> }>('push.unreadCount', { cookie: notifyCookie });
+  check('50.1 unreadCount=1（byCategory.service=1）',
+    uc501.total === 1 && uc501.byCategory.service === 1, uc501);
+
+  /* ---- 50.2 已读幂等 + markAllRead + 删除仅本人（他人 403） ---- */
+  const mr1 = await trpcMutate<{ marked: number }>('push.markRead', { cookie: notifyCookie, input: { ids: [row501!.id] } });
+  const mr2 = await trpcMutate<{ marked: number }>('push.markRead', { cookie: notifyCookie, input: { ids: [row501!.id] } });
+  check('50.2 markRead 幂等：首次 marked=1 / 重复调 marked=0（零副作用）',
+    mr1.marked === 1 && mr2.marked === 0, { mr1, mr2 });
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.BoardingCompleted, { appointmentId: aid });
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.AppointmentCancelled, { appointmentId: aid });
+  const uc502a = await trpcQuery<{ total: number }>('push.unreadCount', { cookie: notifyCookie });
+  const ma1 = await trpcMutate<{ marked: number }>('push.markAllRead', { cookie: notifyCookie, input: {} });
+  const ma2 = await trpcMutate<{ marked: number }>('push.markAllRead', { cookie: notifyCookie, input: {} });
+  const uc502b = await trpcQuery<{ total: number }>('push.unreadCount', { cookie: notifyCookie });
+  check('50.2 markAllRead 幂等：2 条未读全已读（marked=2）/ 重复调 marked=0 / unreadCount 归零',
+    uc502a.total === 2 && ma1.marked === 2 && ma2.marked === 0 && uc502b.total === 0,
+    { before: uc502a.total, ma1, ma2, after: uc502b.total });
+
+  const delForeign = await asErr(trpcMutate('push.deleteNotification', { cookie: ownerCookie, input: { id: row501!.id } }));
+  check('50.2 deleteNotification 他人通知 → 403 FORBIDDEN',
+    delForeign instanceof TrpcHttpError && delForeign.httpStatus === 403 && delForeign.code === 'FORBIDDEN',
+    delForeign && { status: delForeign.httpStatus, code: delForeign.code, message: delForeign.message });
+  const delOwn = await trpcMutate<{ deleted: boolean }>('push.deleteNotification', { cookie: notifyCookie, input: { id: row501!.id } });
+  const delGone = (await db.select().from(schema.notifications).where(eq(schema.notifications.id, row501!.id))).length === 0;
+  check('50.2 deleteNotification 本人删除成功且行消失',
+    delOwn.deleted === true && delGone, { deleted: delOwn.deleted, delGone });
+
+  /* ---- 50.3 分类：不同 eventType 落不同 category + list 按 category 过滤 ---- */
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.OrderPaid, { orderId: 'e2e-order-503' });
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.MembershipOpened, { planKey: 'plan_yinghuo' });
+  await emitEvent(db, `user:${notifyUser.id}`, 'marketing.promo', { text: 'e2e 营销' });
+  const rows503 = await notifRowsOf(notifyUser.id);
+  const cat503 = (t: string) => rows503.find((n) => n.type === t)?.category;
+  check('50.3 落库分类正确（order.paid→trade / membership.opened→account / marketing.promo→marketing）',
+    cat503('order.paid') === 'trade' && cat503('membership.opened') === 'account' && cat503('marketing.promo') === 'marketing',
+    rows503.map((n) => `${n.type}:${n.category}`));
+  const listTrade = await trpcQuery<NotifyListRes>('push.listNotifications', { cookie: notifyCookie, input: { category: 'trade' } });
+  check('50.3 list 按 category=trade 过滤（全部 trade 且含 order.paid）',
+    listTrade.items.length > 0 && listTrade.items.every((n) => n.category === 'trade') &&
+      listTrade.items.some((n) => n.type === 'order.paid'),
+    listTrade.items.map((n) => `${n.type}:${n.category}`));
+  const listMarketing = await trpcQuery<NotifyListRes>('push.listNotifications', { cookie: notifyCookie, input: { category: 'marketing' } });
+  check('50.3 list 按 category=marketing 过滤（恰含 marketing.promo）',
+    listMarketing.items.length === 1 && listMarketing.items[0]!.type === 'marketing.promo',
+    listMarketing.items.map((n) => `${n.type}:${n.category}`));
+
+  /* ---- 50.4 订阅：营销可关 / 交易·服务·账户不可关（硬口径） ---- */
+  const prefOff = await trpcMutate<{ category: string; enabled: boolean }>('push.setNotifyPref', {
+    cookie: notifyCookie, input: { category: 'marketing', enabled: false },
+  });
+  const prefs504 = await trpcQuery<{ prefs: Array<{ category: string; enabled: boolean; mutable: boolean }> }>('push.notifyPrefs', { cookie: notifyCookie });
+  check('50.4 setNotifyPref marketing=0 成功；notifyPrefs 透出（marketing enabled=false mutable=true，其余缺省全 1）',
+    prefOff.enabled === false &&
+      prefs504.prefs.length === 4 &&
+      prefs504.prefs.find((p) => p.category === 'marketing')?.enabled === false &&
+      prefs504.prefs.filter((p) => p.category !== 'marketing').every((p) => p.enabled === true && p.mutable === false),
+    prefs504.prefs);
+  await emitEvent(db, `user:${notifyUser.id}`, 'marketing.promo2', { text: 'e2e 退订后营销' });
+  const promo2Rows = (await notifRowsOf(notifyUser.id)).filter((n) => n.type === 'marketing.promo2');
+  const promo2Outbox = (await db.select().from(schema.eventOutbox)).filter((r) => r.eventType === 'marketing.promo2');
+  check('50.4 退订后营销事件不落该用户通知（notifications 0 行；outbox 仍写=事件本身不丢）',
+    promo2Rows.length === 0 && promo2Outbox.length === 1, { notif: promo2Rows.length, outbox: promo2Outbox.length });
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.OrderPaid, { orderId: 'e2e-order-504' });
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.AppointmentCompleted, { appointmentId: aid });
+  const rows504 = await notifRowsOf(notifyUser.id);
+  check('50.4 退订仅拦营销：trade（order.paid）/ service（appointment.completed）恒落',
+    rows504.some((n) => n.type === 'order.paid' && (n.link?.includes('e2e-order-504') ?? false)) &&
+      rows504.some((n) => n.type === 'appointment.completed'),
+    rows504.map((n) => `${n.type}:${n.category}`));
+  for (const cat of ['trade', 'service', 'account'] as const) {
+    const r = await asErr(trpcMutate('push.setNotifyPref', { cookie: notifyCookie, input: { category: cat, enabled: false } }));
+    check(`50.4 非营销类（${cat}）置 0 硬拒明文「交易/服务/账户通知为保障服务履约不可关闭」`,
+      r instanceof TrpcHttpError && r.code === 'BAD_REQUEST' && r.message.includes('交易/服务/账户通知为保障服务履约不可关闭'),
+      r && { status: r.httpStatus, code: r.code, message: r.message });
+  }
+  const prefOn = await trpcMutate<{ enabled: boolean }>('push.setNotifyPref', { cookie: notifyCookie, input: { category: 'marketing', enabled: true } });
+  await emitEvent(db, `user:${notifyUser.id}`, 'marketing.promo3', { text: 'e2e 恢复订阅营销' });
+  const promo3Rows = (await notifRowsOf(notifyUser.id)).filter((n) => n.type === 'marketing.promo3');
+  check('50.4 恢复订阅幂等（marketing=1 成功）→ 后续营销事件照常落库',
+    prefOn.enabled === true && promo3Rows.length === 1 && promo3Rows[0]!.category === 'marketing',
+    { enabled: prefOn.enabled, promo3: promo3Rows.length });
+
+  /* ---- 50.5 挂接槽位：片 1/片 4 事件名直发 → 通知落库文案/link/category 正确 ---- */
+  await emitEvent(db, `user:${notifyUser.id}`, 'certificate.ready', { appointmentId: aid, petName: '球球' });
+  await emitEvent(db, `user:${notifyUser.id}`, 'report.ready', { appointmentId: aid, petName: '球球' });
+  await emitEvent(db, `user:${notifyUser.id}`, 'ticket.replied', { ticketId: 'tk-e2e-1' });
+  await emitEvent(db, `user:${notifyUser.id}`, 'refundRequest.approved', { amountFen: 100 });
+  await emitEvent(db, `user:${notifyUser.id}`, 'refundRequest.rejected', { reason: '凭证不足' });
+  await emitEvent(db, `user:${notifyUser.id}`, 'invoice.issued', { invoiceNo: 'INV-E2E' });
+  const rows505 = await notifRowsOf(notifyUser.id);
+  const slotRow = (t: string) => rows505.find((n) => n.type === t);
+  check('50.5 certificate.ready 落库（安心证书已生成 / link=/philia/certs/:aid / service）',
+    slotRow('certificate.ready')?.title === '安心证书已生成' && slotRow('certificate.ready')?.link === `/philia/certs/${aid}` &&
+      slotRow('certificate.ready')?.category === 'service' && (slotRow('certificate.ready')?.body ?? '').includes('球球'),
+    slotRow('certificate.ready'));
+  check('50.5 report.ready 落库（美容报告已送达 / link=/philia/reports/:aid / service）',
+    slotRow('report.ready')?.title === '美容报告已送达' && slotRow('report.ready')?.link === `/philia/reports/${aid}` &&
+      slotRow('report.ready')?.category === 'service',
+    slotRow('report.ready'));
+  check('50.5 ticket.replied 落库（小棉花回复 / link=/support/:ticketId / service 兜底）',
+    slotRow('ticket.replied')?.title === '小棉花回复' && slotRow('ticket.replied')?.link === '/support/tk-e2e-1' &&
+      slotRow('ticket.replied')?.category === 'service',
+    slotRow('ticket.replied'));
+  check('50.5 refundRequest.approved 落库（退款申请已批准 / link=/refunds / trade）',
+    slotRow('refundRequest.approved')?.title === '退款申请已批准' && slotRow('refundRequest.approved')?.link === '/refunds' &&
+      slotRow('refundRequest.approved')?.category === 'trade',
+    slotRow('refundRequest.approved'));
+  check('50.5 refundRequest.rejected 落库（退款申请已驳回 / body 带 reason / trade）',
+    slotRow('refundRequest.rejected')?.title === '退款申请已驳回' &&
+      (slotRow('refundRequest.rejected')?.body ?? '').includes('凭证不足') &&
+      slotRow('refundRequest.rejected')?.link === '/refunds' && slotRow('refundRequest.rejected')?.category === 'trade',
+    slotRow('refundRequest.rejected'));
+  check('50.5 invoice.issued 落库（发票已开具 / link=/invoices / trade）',
+    slotRow('invoice.issued')?.title === '发票已开具' && slotRow('invoice.issued')?.link === '/invoices' &&
+      slotRow('invoice.issued')?.category === 'trade',
+    slotRow('invoice.issued'));
 
   client.close();
 }
