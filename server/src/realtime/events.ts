@@ -60,6 +60,8 @@ export const EventType = {
   MembershipOpened:      'membership.opened',       // 售卡/微光开档 → user + store
   MembershipRenewed:     'membership.renewed',      // 续费解冻 → user
   MembershipCancelled:   'membership.cancelled',    // 退会（折算+清零留痕） → user + store
+  // 补缺-3（46 号档+PD-07）：期内升档成交 → user（换档预约/取消走 membership_events 留痕，不发 SSE）
+  MembershipUpgraded:    'membership.upgraded',     // 升档补差成交 → user
   RebateSettled:         'rebate.settled',          // 回馈金月度到账批次 → store
 } as const;
 

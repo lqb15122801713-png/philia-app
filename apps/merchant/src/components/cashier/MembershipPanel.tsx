@@ -12,6 +12,13 @@
  *   续费金额由 server 按既有档位+宠物数实算——**读路径缺口报备**：无商家侧查询
  *   端点，先经 renew 空段探测解析错误原文「须等于续费金额（X 元）」取得应收，
  *   再收段提交（微光档探测即成交=免费续期）；
+ * - 升级补差模式（补缺-3 商家端代办升档）：active 且存在更高档
+ *   （upgradeQuoteForUser.targetPlans 非空）时亮「升级补差」页签；微光档（free）
+ *   仍走售卡 mode 不动，frozen 档不显（先续费解冻）。试算区=server quote 值逐行
+ *   明面（剩余整月×（新档月均价−旧档月均价）+ baseDiff/petDiff 分行，newPurchase 档标
+ *   「新购口径」），**前端零自算**；应收锁定=server totalDiffFen，到店付三段 Σ=差价
+ *   提交 upgrade（server 兜底重算硬校验）；成功后留痕可视补差单号 billNo（mono），
+ *   onSold 回写+forUser/quote 缓存失效刷新；
  * - 成交=开通确认 toast + onSold 回写（父层缓存会员状态 + 流水/已收失效刷新）；
  *   server 错误一律原文透出（已是会员/多宠封顶/支付合计不符等）。
  *
@@ -29,6 +36,7 @@ import { CashierModal, SheetBtn } from './dialogs'
 import {
   MEMBER_FOR_USER_KEY,
   MEMBER_PLANS_KEY,
+  MEMBER_UPGRADE_QUOTE_KEY,
   MEMBERSHIP_STATUS_LABEL,
   planShortLabel,
   rebatePercentLabel,
@@ -75,13 +83,17 @@ export default function MembershipPanel({
   const { trpc, queryClient } = usePhiliaClient()
 
   /* ---------------- 状态（打开即重置，wasOpen 模式同既有弹层） ---------------- */
-  const [mode, setMode] = useState<'sell' | 'renew'>('sell')
+  const [mode, setMode] = useState<'sell' | 'renew' | 'upgrade'>('sell')
   const [planKey, setPlanKey] = useState<string>('plan_yinghuo')
   const [petCount, setPetCount] = useState(1)
   const [phone, setPhone] = useState('')
   const [segInputs, setSegInputs] = useState<Record<PaySegMethod, string>>({ cash: '', wechat: '', alipay: '' })
   const [quoteFen, setQuoteFen] = useState<number | null>(null)
   const [sellErrorHint, setSellErrorHint] = useState<string | null>(null)
+  /** 升级 mode：目标档键（quote targetPlans 内） */
+  const [targetPlanKey, setTargetPlanKey] = useState('')
+  /** 升档成交留痕可视（成功后不即关层，补差单号 mono 明面，店员确认后关闭） */
+  const [upgradeDone, setUpgradeDone] = useState<{ billNo: string | null; planKey: string; diffFen: number } | null>(null)
   const [wasOpen, setWasOpen] = useState(false)
   if (open !== wasOpen) {
     setWasOpen(open)
@@ -93,6 +105,8 @@ export default function MembershipPanel({
       setSegInputs({ cash: '', wechat: '', alipay: '' })
       setQuoteFen(null)
       setSellErrorHint(null)
+      setTargetPlanKey('')
+      setUpgradeDone(null)
     }
   }
 
@@ -108,14 +122,43 @@ export default function MembershipPanel({
      未加载时回退 365 与 server planNum 同口径） */
   const validityDays = plansQ.data?.membershipValidityDays ?? 365
 
+  /* ---------------- 升档试算（补缺-3：识别会员后探测；钱域 server 实算，前端零自算） ---------------- */
+  const upgradeQuoteQ = useQuery({
+    queryKey: MEMBER_UPGRADE_QUOTE_KEY(member?.id ?? ''),
+    queryFn: () => trpc.membership.upgradeQuoteForUser.query({ userId: member!.id }),
+    enabled: open && member !== null,
+  })
+  const upgradeQuote = upgradeQuoteQ.data ?? null
+  /** active 判定取 forUser 正式通道真值（同 MemberSearch 口径；键同缓存命中），会话缓存兜底 */
+  const forUserQ = useQuery({
+    queryKey: MEMBER_FOR_USER_KEY(member?.id ?? ''),
+    queryFn: () => trpc.membership.forUser.query({ userId: member!.id }),
+    enabled: open && member !== null,
+  })
+  const effStatus = (forUserQ.data ? forUserQ.data.membership : membership)?.status ?? null
+  /** 升级页签判定：active 且存在更高档（targetPlans 非空）；微光档（free）仍走售卡 mode 不动；
+      frozen 档不显（先续费解冻）；降级档 server 已过滤不出现 */
+  const upgradeAvailable =
+    member !== null &&
+    effStatus === 'active' &&
+    upgradeQuote !== null &&
+    upgradeQuote.currentPlan !== null &&
+    upgradeQuote.currentPlan.free !== true &&
+    upgradeQuote.targetPlans.length > 0
+  /** 选中目标档（quote 重取后键失效时回退首档） */
+  const selTarget =
+    upgradeQuote?.targetPlans.find((t) => t.planKey === targetPlanKey) ??
+    (mode === 'upgrade' ? (upgradeQuote?.targetPlans[0] ?? null) : null)
+
   /* ---------------- 售卡金额（镜像 server membershipChargeFen：档价+多宠附加） ---------------- */
   const extraCount = plan ? Math.max(0, petCount - plan.includedPets) : 0
   const extraFen = plan ? extraCount * plan.extraPetFen : 0
   const sellAmountFen = plan ? plan.priceFen + extraFen : 0
   const isFree = plan?.free === true || sellAmountFen === 0
 
-  /** 目标应收（售卡=档价+附加；续费=server 探测实算 quoteFen） */
-  const targetFen = mode === 'sell' ? sellAmountFen : (quoteFen ?? 0)
+  /** 目标应收（售卡=档价+附加；续费=server 探测实算 quoteFen；升级=server quote totalDiffFen 锁定） */
+  const targetFen =
+    mode === 'sell' ? sellAmountFen : mode === 'upgrade' ? (selTarget?.totalDiffFen ?? 0) : (quoteFen ?? 0)
 
   const segFen = (m: PaySegMethod) => yuanToFen(segInputs[m]) ?? 0
   const segSum = segFen('cash') + segFen('wechat') + segFen('alipay')
@@ -133,6 +176,21 @@ export default function MembershipPanel({
       next.cash = remain > 0 ? String(remain / 100) : ''
     }
     setSegInputs(next)
+  }
+
+  /* ---------------- 升级补差：应收锁定=server quote totalDiffFen，默认全现金段 ---------------- */
+  const segPrefill = (fen: number) =>
+    setSegInputs({ cash: fen > 0 ? String(fen / 100) : '', wechat: '', alipay: '' })
+  const enterUpgradeMode = () => {
+    setMode('upgrade')
+    setUpgradeDone(null)
+    const first = upgradeQuote?.targetPlans[0] ?? null
+    setTargetPlanKey(first?.planKey ?? '')
+    segPrefill(first?.totalDiffFen ?? 0)
+  }
+  const onSelectTarget = (key: string, totalDiffFen: number) => {
+    setTargetPlanKey(key)
+    segPrefill(totalDiffFen)
   }
 
   /* ---------------- 客户解析（售卡：已识别会员 userId 或手机号建档旁路） ---------------- */
@@ -212,10 +270,43 @@ export default function MembershipPanel({
     onError: (e) => toast.error(errMsg(e)),
   })
 
-  const busy = sellM.isPending || quoteM.isPending || renewM.isPending
+  /** 升档（补缺-3：server 兜底重算差价不信入参；Σ段=差价硬拒；同档重放幂等零写入） */
+  const upgradeM = useMutation({
+    mutationFn: () =>
+      trpc.membership.upgrade.mutate({
+        userId: member!.id,
+        targetPlanKey: selTarget!.planKey,
+        paySegments:
+          selTarget!.totalDiffFen > 0
+            ? (['cash', 'wechat', 'alipay'] as const)
+                .map((m) => ({ method: m, amountFen: segFen(m) }))
+                .filter((s) => s.amountFen > 0)
+            : [],
+      }),
+    onSuccess: (r) => {
+      toast.success(
+        r.billNo
+          ? cc('cashier.upgradeSuccess', {
+              plan: planShortLabel(r.membership.planKey),
+              billNo: r.billNo,
+              amount: fenToYuan(r.diffFen),
+            })
+          : cc('cashier.upgradeSuccessIdempotent', { plan: planShortLabel(r.membership.planKey) }),
+      )
+      invalidateForUser(r.membership.userId)
+      void queryClient.invalidateQueries({ queryKey: MEMBER_UPGRADE_QUOTE_KEY(r.membership.userId) })
+      onSold(r.membership)
+      /* 留痕可视：不即关层，补差单号 mono 明面，店员确认后关闭 */
+      setUpgradeDone({ billNo: r.billNo ?? null, planKey: r.membership.planKey, diffFen: r.diffFen })
+    },
+    onError: (e) => toast.error(errMsg(e)), // 涉钱错误 server 明文原文透出（Σ段≠差价/已冻结等）
+  })
+
+  const busy = sellM.isPending || quoteM.isPending || renewM.isPending || upgradeM.isPending
   const canSell =
     !busy && plan != null && sellCustomerOk && (isFree || (segBalanced && !segInvalid))
   const canRenewSubmit = !busy && member !== null && quoteFen !== null && segBalanced && !segInvalid
+  const canUpgradeSubmit = !busy && member !== null && selTarget !== null && segBalanced && !segInvalid
 
   return (
     <CashierModal
@@ -228,7 +319,16 @@ export default function MembershipPanel({
           <SheetBtn className="min-h-[44px]" onClick={onClose}>
             取消
           </SheetBtn>
-          {mode === 'sell' ? (
+          {upgradeDone ? (
+            <SheetBtn
+              variant="primary"
+              className="min-h-[44px]"
+              data-testid="membership-upgrade-done"
+              onClick={onClose}
+            >
+              {cc('cashier.upgradeDone')}
+            </SheetBtn>
+          ) : mode === 'sell' ? (
             <SheetBtn
               variant="primary"
               className="min-h-[44px]"
@@ -241,6 +341,18 @@ export default function MembershipPanel({
                 : isFree
                   ? '免费开档（0 元成交）'
                   : `收款并开通 ¥${fenToYuan(sellAmountFen)}`}
+            </SheetBtn>
+          ) : mode === 'upgrade' ? (
+            <SheetBtn
+              variant="primary"
+              className="min-h-[44px]"
+              data-testid="membership-upgrade-submit"
+              disabled={!canUpgradeSubmit}
+              onClick={() => upgradeM.mutate()}
+            >
+              {upgradeM.isPending
+                ? cc('cashier.upgradeSubmitting')
+                : cc('cashier.upgradeSubmit', { amount: fenToYuan(selTarget?.totalDiffFen ?? 0) })}
             </SheetBtn>
           ) : quoteFen === null ? (
             <SheetBtn
@@ -266,7 +378,8 @@ export default function MembershipPanel({
         </>
       }
     >
-      {/* 模式页签（续费须先识别会员） */}
+      {/* 模式页签（续费须先识别会员；升级补差=补缺-3 代办升档，成交留痕态下隐去） */}
+      {!upgradeDone ? (
       <div className="flex gap-1.5" role="tablist">
         <button
           type="button"
@@ -290,7 +403,20 @@ export default function MembershipPanel({
         >
           续费
         </button>
+        {upgradeAvailable ? (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'upgrade'}
+            data-testid="membership-mode-upgrade"
+            className={`min-h-[44px] rounded-full px-4 py-2 text-caption ${mode === 'upgrade' ? 'bg-[#3B2E24] font-semibold text-[#FAF8F2]' : 'text-[rgba(59,46,36,.6)]'}`}
+            onClick={enterUpgradeMode}
+          >
+            {cc('cashier.upgradeModeTab')}
+          </button>
+        ) : null}
       </div>
+      ) : null}
 
       {/* 客户块 */}
       <div className="mt-3 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3">
@@ -327,7 +453,25 @@ export default function MembershipPanel({
         )}
       </div>
 
-      {mode === 'sell' ? (
+      {upgradeDone ? (
+        /* 升档成交留痕可视（补缺-3：补差单号 mono 明面，店员确认「完成」后关层） */
+        <div className="mt-3 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3" data-testid="membership-upgrade-done-note">
+          <p className="text-caption font-semibold text-ink">
+            {cc('cashier.upgradeDoneTitle', { plan: planShortLabel(upgradeDone.planKey) })}
+          </p>
+          <p className="mt-1 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]">
+            {cc('cashier.upgradeBillLabel')}：
+            {upgradeDone.billNo ? (
+              <b className="font-number tabular-nums" data-testid="membership-upgrade-bill-no">
+                {upgradeDone.billNo}
+              </b>
+            ) : (
+              cc('cashier.upgradeBillIdempotent')
+            )}
+            {upgradeDone.diffFen > 0 ? ` · ¥${fenToYuan(upgradeDone.diffFen)}` : ''}
+          </p>
+        </div>
+      ) : mode === 'sell' ? (
         <>
           {/* 四档对照卡（价格/回馈/折扣/多宠明面——plans 透出真值） */}
           <div className="mt-3 grid grid-cols-2 gap-2" data-testid="membership-plans">
@@ -432,6 +576,88 @@ export default function MembershipPanel({
             </button>
           ) : null}
         </>
+      ) : mode === 'upgrade' ? (
+        /* 升级补差模式（补缺-3 商家端代办升档）：试算区=server quote 值逐行明面，前端零自算 */
+        <>
+          {upgradeQuote && selTarget ? (
+            <>
+              {/* 目标档选择卡（targetPlans 渲染；降级档 server 已过滤不出现） */}
+              <div className="mt-3 grid grid-cols-2 gap-2" data-testid="membership-upgrade-targets">
+                {upgradeQuote.targetPlans.map((t) => {
+                  const on = t.planKey === selTarget.planKey
+                  return (
+                    <button
+                      key={t.planKey}
+                      type="button"
+                      data-testid={`membership-upgrade-target-${t.planKey}`}
+                      onClick={() => onSelectTarget(t.planKey, t.totalDiffFen)}
+                      className={`min-h-[44px] rounded-[14px] px-3 py-2.5 text-left transition-transform duration-120 ease-philia-spring active:scale-[0.98] ${
+                        on ? 'bg-brand-primary text-ink shadow-hairline' : 'bg-[#FFFDF6] text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)]'
+                      }`}
+                    >
+                      <div className="flex items-baseline justify-between">
+                        <b className="text-caption">{planShortLabel(t.planKey)}</b>
+                        <b className="font-number text-caption tabular-nums">
+                          补差 ¥{fenToYuan(t.totalDiffFen)}
+                        </b>
+                      </div>
+                      <div className={`mt-1 text-caption-xs ${on ? 'text-[rgba(59,46,36,.62)]' : 'text-[rgba(59,46,36,.42)]'}`}>
+                        {t.formula.newPurchase
+                          ? cc('cashier.upgradeNewPurchaseTag')
+                          : cc('cashier.upgradeDiffMonthsTag', { m: t.remainingMonths })}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* 试算区（R15 算式句族 + baseDiff/petDiff 分行 mono；值全部 server 透出） */}
+              <div className="mt-3 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3" data-testid="membership-upgrade-quote">
+                {selTarget.formula.newPurchase ? (
+                  <p
+                    className="text-caption-xs leading-relaxed text-[rgba(59,46,36,.62)]"
+                    data-testid="membership-upgrade-newpurchase"
+                  >
+                    {cc('cashier.upgradeNewPurchaseNote')}
+                  </p>
+                ) : (
+                  <p
+                    className="font-number text-caption-xs tabular-nums leading-relaxed text-[rgba(59,46,36,.62)]"
+                    data-testid="membership-upgrade-formula"
+                  >
+                    {cc('cashier.upgradeFormula', {
+                      m: selTarget.formula.m,
+                      newMonthly: fenToYuan(selTarget.formula.newMonthlyFen),
+                      oldMonthly: fenToYuan(selTarget.formula.oldMonthlyFen),
+                      total: fenToYuan(selTarget.totalDiffFen),
+                    })}
+                  </p>
+                )}
+                <div className="mt-1.5 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]">
+                  <p data-testid="membership-upgrade-diff-base">
+                    {cc('cashier.upgradeDiffBase', { amount: fenToYuan(selTarget.baseDiffFen) })}
+                  </p>
+                  <p data-testid="membership-upgrade-diff-pet">
+                    {cc('cashier.upgradeDiffPet', { amount: fenToYuan(selTarget.petDiffFen) })}
+                  </p>
+                </div>
+                <div className="mt-2 flex items-baseline justify-between rounded-[10px] bg-[#FFFDF6] px-3 py-2">
+                  <span className="text-caption text-[rgba(59,46,36,.62)]">{cc('cashier.upgradeQuoteTotal')}</span>
+                  <b className="font-number text-title font-bold tabular-nums" data-testid="membership-upgrade-amount">
+                    ¥{fenToYuan(selTarget.totalDiffFen)}
+                  </b>
+                </div>
+                <p className="mt-1.5 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
+                  {cc('cashier.upgradeNoDowngradeNote', { days: upgradeQuote.windowDays })}
+                </p>
+              </div>
+            </>
+          ) : (
+            <p className="mt-3 py-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
+              {cc('cashier.upgradeQuoteLoading')}
+            </p>
+          )}
+        </>
       ) : (
         /* 续费模式 */
         <>
@@ -455,8 +681,10 @@ export default function MembershipPanel({
         </>
       )}
 
-      {/* 到店付收款段（微光/未探测不渲染） */}
-      {((mode === 'sell' && !isFree && plan != null) || (mode === 'renew' && quoteFen !== null)) ? (
+      {/* 到店付收款段（微光/未探测不渲染；升级=应收锁定 server totalDiffFen） */}
+      {((mode === 'sell' && !isFree && plan != null) ||
+        (mode === 'renew' && quoteFen !== null) ||
+        (mode === 'upgrade' && !upgradeDone && selTarget !== null && selTarget.totalDiffFen > 0)) ? (
         <div className="mt-3 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3" data-testid="membership-pay-segs">
           <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
             {cc('cashier.memberPaySectionNote')}

@@ -92,6 +92,8 @@ const ROUTES = [
   { app: 'customer', path: '/member', anchors: ['会员'], serverDep: true, note: '批次 R11a' },
   { app: 'customer', path: '/member/open', anchors: ['开通会员'], serverDep: true, note: '批次 R11a' },
   { app: 'customer', path: '/member/rebate', anchors: ['回馈金'], serverDep: true, note: '批次 R11b 新路由申报（W-01）' },
+  { app: 'customer', path: '/member/upgrade', anchors: ['升级会员'], serverDep: true, note: '补缺批片 3 会员域' },
+  { app: 'customer', path: '/member/change', anchors: ['预约下期档位'], serverDep: true, note: '补缺批片 3 会员域' },
   /* ---- 商家端 ---- */
   { app: 'merchant', path: '/dev-login', anchors: ['登录'] },
   { app: 'merchant', path: '/dashboard', anchors: ['今日', '仪表', '预约'] },

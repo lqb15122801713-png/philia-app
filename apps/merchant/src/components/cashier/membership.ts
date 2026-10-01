@@ -37,10 +37,14 @@ export const MEMBER_PLANS_KEY = ['membership', 'plans'] as const
 export const MEMBER_STATUS_KEY = (userId: string) => ['membership', 'cashierStatus', userId] as const
 /** membership.forUser（merchantProcedure，clerk 放行）：识别后带出档位/回馈金余额/宠物数正式通道 */
 export const MEMBER_FOR_USER_KEY = (userId: string) => ['membership', 'forUser', userId] as const
+/** membership.upgradeQuoteForUser（merchantProcedure）：收银台代客升档试算（server 实算差价，前端零自算） */
+export const MEMBER_UPGRADE_QUOTE_KEY = (userId: string) => ['membership', 'upgradeQuote', userId] as const
 export const MEMBER_SAVINGS_KEY = ['membership', 'savingsPreview'] as const
 
 /** membership.forUser 返回（membership 非会员=null；plan=档位配置；rebate=balanceOf 余额视图） */
 export type MemberForUser = RouterOutputs['membership']['forUser']
+/** membership.upgradeQuoteForUser 返回（currentPlan/targetPlans 试算明面/windowDays 换档预约窗口） */
+export type MemberUpgradeQuote = RouterOutputs['membership']['upgradeQuoteForUser']
 
 /* ------------------------------------------------------------------ */
 /* 档位展示                                                            */
