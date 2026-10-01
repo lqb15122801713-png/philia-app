@@ -22,6 +22,12 @@ import InvoiceListPage from './pages/InvoiceListPage'
 import MallOrdersPage from './pages/MallOrdersPage'
 import MallPage from './pages/MallPage'
 import MePage from './pages/MePage'
+import SettingsPage from './pages/SettingsPage'
+import DeactivatePage from './pages/DeactivatePage'
+import ChangePhonePage from './pages/ChangePhonePage'
+import PhoneAppealPage from './pages/PhoneAppealPage'
+import DevicesPage from './pages/DevicesPage'
+import PrivacyPage from './pages/PrivacyPage'
 import MemberCardPage from './pages/MemberCardPage'
 import MemberCenterPage from './pages/MemberCenterPage'
 import MemberOpenPage from './pages/MemberOpenPage'
@@ -95,6 +101,14 @@ function ProtectedRoutes() {
       <Route path="/appointments/:id" element={<AppointmentDetailPage />} />
       <Route path="/appointments/:id/live" element={<AppointmentLivePage />} />
       <Route path="/me" element={<MePage />} />
+      {/* 补缺大批片 2 账户安全：设置 + 五子页（详情级无 dock，PushBar 返回条；
+          新路由已申报 check-nav-closure/smoke-routes 双表） */}
+      <Route path="/me/settings" element={<SettingsPage />} />
+      <Route path="/me/settings/deactivate" element={<DeactivatePage />} />
+      <Route path="/me/settings/phone" element={<ChangePhonePage />} />
+      <Route path="/me/settings/phone/appeal" element={<PhoneAppealPage />} />
+      <Route path="/me/settings/devices" element={<DevicesPage />} />
+      <Route path="/me/settings/privacy" element={<PrivacyPage />} />
       {/* U1-H：会员卡页新路由（信息展示 v0；详情级——无 dock，统一返回条） */}
       <Route path="/me/card" element={<MemberCardPage />} />
       {/* R11a 骨架批：会员中心/开通页新路由（详情级无 dock，统一返回条固定回 /me、/member；

@@ -105,6 +105,14 @@ export const users = sqliteTable('users', {
   avatarUrl: text('avatar_url'),
   /** 手机号 */
   phone: text('phone'),
+  /**
+   * 软注销时间（批次 R13a 账号安全 · 0017）：非 NULL=已注销——会话中间件视同
+   * 用户不存在（全接口/SSE 401），登录路径明文拒；手机号同步释放为
+   * `_deact_<uid>_<原号>`（同号可重新注册建档，与原账号互不可见）。
+   */
+  deactivatedAt: integer('deactivated_at', { mode: 'timestamp' }),
+  /** 注销原因（门店审批 note 快照） */
+  deactivateReason: text('deactivate_reason'),
   ...auditColumns,
 });
 
@@ -238,6 +246,13 @@ export const pets = sqliteTable('pets', {
   temperamentTags: text('temperament_tags', { mode: 'json' }).$type<string[]>(),
   /** 头像 URL */
   avatarUrl: text('avatar_url'),
+  /**
+   * 软删除标记（批次 R13a 账号注销联动 · 0017）：非 NULL=已随账号注销标记删除。
+   * 读侧不过滤（注销账号全接口 401 不可达；历史预约/单据保留可见，留痕口径）。
+   */
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }),
+  /** 软删除原因（如「账号注销」） */
+  deleteReason: text('delete_reason'),
   ...auditColumns,
 });
 
@@ -2355,6 +2370,148 @@ export const invoiceRequests = sqliteTable(
   ],
 );
 
+/* ------------------------------------------------------------------ */
+/* 批次 R13a 账号安全（注销 / 换绑 / 申诉 / 设备登记）                       */
+/* ------------------------------------------------------------------ */
+
+/** 申诉/审批时间线条目：{ at: ISO 时间, action, by?, note? }（只增追加） */
+export type AppealTimelineEntry = { at: string; action: string; by?: string; note?: string };
+
+/** 注销阻断校验快照条目（deactivation_requests.checklist_json） */
+export type DeactivationChecklistItem = {
+  kind: 'appointment' | 'order' | 'refund';
+  label: string;
+  count: number;
+};
+
+/**
+ * 手机验证码表（批次 R13a · 0017）：换绑双因子验证码。
+ * - code 只存 sha256(code+phone+purpose+salt) 哈希，绝不落明文；
+ * - expiry 为 ms epoch（本表特例，与全库 Unix 秒 timestamp 列不同——短时效毫秒口径）；
+ * - 一次性：验证通过置 used_at；attempts≤5 防爆破（服务端计数）。
+ */
+export const verificationCodes = sqliteTable(
+  'verification_codes',
+  {
+    id: id(),
+    /** 目标手机号（明文——发送/校验必需；透出侧一律走 maskPhone） */
+    phone: text('phone').notNull(),
+    /** 用途，取值：change_bind_old（原号验证） | change_bind_new（新号验证） */
+    purpose: text('purpose').notNull(),
+    /** 验证码哈希（sha256(code+phone+purpose+salt)，salt 为仓内常量，内测口径） */
+    codeHash: text('code_hash').notNull(),
+    /** 过期时间（ms epoch，10 分钟有效） */
+    expiry: integer('expiry').notNull(),
+    /** 已尝试次数（≤5） */
+    attempts: integer('attempts').notNull().default(0),
+    /** 使用时间（一次性；NULL=未使用） */
+    usedAt: integer('used_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [index('ix_verification_codes_phone_purpose').on(t.phone, t.purpose)],
+);
+
+/**
+ * 换绑申诉单表（批次 R13a · 0017）：原号不可用时的门店协助换绑通道。
+ * - request_no 日序单号 PC-yyyymmdd-NNN（门店规范时区 +8）；
+ * - 留痕列只存脱敏号（old/new_phone_masked）；**new_phone 明文列=审批通过时
+ *   写 users.phone 的执行载荷**（报备项：无此列审批无法落新号；透出/日志全 masked）；
+ * - timeline_json 只增追加（submitted/approved/rejected 各节点）。
+ */
+export const phoneChangeRequests = sqliteTable(
+  'phone_change_requests',
+  {
+    id: id(),
+    /** 申诉单号（全局唯一，PC-yyyymmdd-NNN 日序号） */
+    requestNo: text('request_no').notNull().unique(),
+    /** 申请人用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 原手机号（脱敏 138****0000） */
+    oldPhoneMasked: text('old_phone_masked').notNull(),
+    /** 新手机号（脱敏） */
+    newPhoneMasked: text('new_phone_masked').notNull(),
+    /** 新手机号明文（审批执行载荷；仅服务端使用，透出侧一律 masked——见表头注） */
+    newPhone: text('new_phone').notNull(),
+    /** 证明材料照片 URL 数组 JSON */
+    photoUrls: text('photo_urls', { mode: 'json' }).$type<string[]>().notNull().default(sql`'[]'`),
+    /** 申诉说明 */
+    note: text('note'),
+    /** 状态，取值：submitted | approved | rejected */
+    status: text('status').notNull().default('submitted'),
+    /** 时间线 JSON（AppealTimelineEntry[]，只增追加） */
+    timelineJson: text('timeline_json', { mode: 'json' }).$type<AppealTimelineEntry[]>().notNull(),
+    /** 审批人用户 ID -> users.id */
+    approverId: text('approver_id').references(() => users.id),
+    /** 审批时间 */
+    decidedAt: integer('decided_at', { mode: 'timestamp' }),
+    /** 审批备注（reject 必填，客户端可见） */
+    decideNote: text('decide_note'),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_phone_change_requests_user').on(t.userId),
+    index('ix_phone_change_requests_status').on(t.status),
+  ],
+);
+
+/**
+ * 换绑留痕表（批次 R13a · 0017）：只增不改审计行。
+ * channel=self（本人双码自助换绑） | assisted（门店申诉协助换绑，operator_id=审批人）。
+ * 手机号全列脱敏存储。
+ */
+export const phoneChangeLogs = sqliteTable(
+  'phone_change_logs',
+  {
+    id: id(),
+    /** 换绑用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 原手机号（脱敏） */
+    oldPhoneMasked: text('old_phone_masked').notNull(),
+    /** 新手机号（脱敏） */
+    newPhoneMasked: text('new_phone_masked').notNull(),
+    /** 通道，取值：self | assisted */
+    channel: text('channel').notNull(),
+    /** 操作人用户 ID（assisted=审批人；self=NULL） */
+    operatorId: text('operator_id'),
+    /** 换绑发生时间 */
+    at: integer('at', { mode: 'timestamp' }).notNull(),
+    ...auditColumns,
+  },
+  (t) => [index('ix_phone_change_logs_user').on(t.userId)],
+);
+
+/**
+ * 用户设备登记表（批次 R13a · 0017）：客户端登录后静默登记一次；
+ * (user_id, device_id) 唯一幂等 upsert，last_seen_at 刷新。
+ */
+export const userDevices = sqliteTable(
+  'user_devices',
+  {
+    id: id(),
+    /** 用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 设备标识（客户端生成） */
+    deviceId: text('device_id').notNull(),
+    /** 设备备注名（如「我的 iPhone」） */
+    label: text('label'),
+    /** 首次登记时间 */
+    firstSeenAt: integer('first_seen_at', { mode: 'timestamp' }).notNull(),
+    /** 最近活跃时间 */
+    lastSeenAt: integer('last_seen_at', { mode: 'timestamp' }).notNull(),
+    ...auditColumns,
+  },
+  (t) => [
+    uniqueIndex('uq_user_devices_user_device').on(t.userId, t.deviceId),
+    index('ix_user_devices_user').on(t.userId),
+  ],
+);
+
 /**
  * 服务域规则配置表（补缺大批片 4，同构 commission_rules）：配置端口第六域
  * domain='service'。种子 version=1 一行 service_hours（客服服务时间公示，
@@ -2383,4 +2540,37 @@ export const serviceRules = sqliteTable(
     ...auditColumns,
   },
   (t) => [index('ix_service_rules_key_active').on(t.ruleKey, t.active)],
+);
+
+/**
+ * 账号注销申请单表（批次 R13a · 0017）：
+ * - 同人仅一在途（status='submitted' 应用层判定幂等，不加部分索引）；
+ * - checklist_json=提交时阻断校验快照（须为空清单才放行）；impacts_json=三项影响
+ *   勾选快照（rebate/member/pets 缺一不可，服务端强校验）；
+ * - 审批通过=软注销（users.deactivated_at 置位 + phone 释放 + 回馈金清零 +
+ *   会员 cancelled（注销≠退会，不走折算退款——报备口径）+ pets 软删标记）。
+ */
+export const deactivationRequests = sqliteTable(
+  'deactivation_requests',
+  {
+    id: id(),
+    /** 申请用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 阻断校验快照（DeactivationChecklistItem[]，提交时重跑 precheck 的结果） */
+    checklistJson: text('checklist_json', { mode: 'json' }).$type<DeactivationChecklistItem[]>().notNull(),
+    /** 影响勾选快照（['rebate','member','pets'] 三项全勾选才可提交） */
+    impactsJson: text('impacts_json', { mode: 'json' }).$type<string[]>().notNull(),
+    /** 状态，取值：submitted | approved | rejected | cancelled */
+    status: text('status').notNull().default('submitted'),
+    /** 审批人用户 ID -> users.id */
+    approverId: text('approver_id').references(() => users.id),
+    /** 审批时间 */
+    decidedAt: integer('decided_at', { mode: 'timestamp' }),
+    /** 审批备注（reject 必填，客户端可见） */
+    decideNote: text('decide_note'),
+    ...auditColumns,
+  },
+  (t) => [index('ix_deactivation_requests_user').on(t.userId)],
 );

@@ -16,6 +16,7 @@ import { router } from '../trpc';
 import { appointmentRouter } from './appointment';
 import { attendanceRouter } from './attendance';
 import { authRouter } from './auth';
+import { authSecurityRouter } from './authSecurity';
 import { boardingRouter } from './boarding';
 import { cashierRouter } from './cashier';
 import { commissionRouter } from './commission';
@@ -55,6 +56,7 @@ export const appRouter = router({
   refundRequest: refundRequestRouter, // 批次 C5 客户退款申请（客户端申请实体+审批缝；批准复用 R12 executeRefundCore 内核）
   membership: membershipRouter, // 批次 R11a 会员前置批（档位透出/微光开档/售卡/续费/退会/立省钩子/年费分摊双口径）
   serviceLoop: serviceLoopRouter, // 补缺大批片 4（服务闭环：相册聚合/安心证书/美容报告/客服工单/发票申请/客服时间公示）
+  authSecurity: authSecurityRouter, // 批次 R13a 账号安全（注销/换绑双码/换绑申诉/设备登记）
 });
 
 /** 前端 tRPC client 的类型锚点（仅类型导出，无运行时开销） */

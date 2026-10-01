@@ -2,17 +2,19 @@
  * MePage e2e（CDP 直连，无 puppeteer 依赖）
  *
  * 前置：server dev 已监听 7200、customer dev 已监听 7100（脚本只做可达性检查，不自起服务）。
- * 流程：
+ * 流程（补缺大批片 2 对齐版——换皮批片 2 新皮现码真值，属修复非删改）：
  *   1. 起 Chrome headless（remote-debugging-port=9223，390x844 移动视口）；
  *   2. GET /api/auth/dev-seed-users 动态取种子客户（禁止硬编码 ULID）→ dev-login → 导航 /me；
  *   3. Runtime.evaluate 断言 DOM：
- *      - 用户卡渲染（昵称非空 + 加入天数文案）；
- *      - 5 个功能入口 Link href 逐一存在（对照 App.tsx 路由表）；
- *      - 宠物区渲染（有数据：含宠物名 + 「添加」按钮；或空态引导卡）；
- *   4. 静态断言 MePage.tsx 源码含宠物区空态分支（pets.length===0 → 引导卡 → /philia/pets），
- *      种子客户有宠物、真实空态无法在现场模拟，故以源码路径 + 运行时分支互证；
+ *      - 身份大卡 me-hero 渲染（登录态守卫放行）+ 回馈金格 me-rebate-cell；
+ *      - 功能网格 me-grid8 链接入口（/philia/pets、/member/rebate、/booking/boarding）
+ *        + 置灰槽位 testid（slot-gallery/coupons/address/concierge）+ me-qrrow；
+ *      - 订单五格 me-orderrow（4 条 /appointments 链接 + slot-refund 槽位）；
+ *      - 设置入口 me-settings 为 /me/settings 链接（R20 入口=出口）；
+ *   4. 静态断言 MePage.tsx 源码含 me-grid8 网格与 /me/settings 导航（互证）；
  *   5. 截图 shots/me-page.png（登录态）；
- *   6. 真实点击「退出登录」→ 确认弹窗 → 断言落在 /dev-login → 截图 shots/me-page-logout.png；
+ *   6. 退出流新路径：me-settings → /me/settings → settings-logout → 确认弹层
+ *      （me-logout-confirm）→ /dev-login + auth.me 401 → 截图 shots/me-page-logout.png；
  *   7. 杀掉本脚本启动的 Chrome。
  *
  * 运行：node scripts/me-page-e2e.mjs（工作目录 apps/customer）
@@ -163,55 +165,49 @@ async function main() {
 
   /* ---------- 导航 /me ---------- */
   await send('Page.navigate', { url: `http://localhost:${APP_PORT}/me` });
-  // 等用户卡渲染出来（auth.me raw 查询完成）
+  // 等身份大卡渲染出来（auth.me raw 查询完成）
   let domReady = false;
   for (let i = 0; i < 20; i++) {
-    domReady = await evalJs(`!!document.querySelector('[data-testid="me-user-card"]')`);
+    domReady = await evalJs(`!!document.querySelector('[data-testid="me-hero"]')`);
     if (domReady) break;
     await sleep(500);
   }
-  assert('用户卡渲染（登录态守卫放行）', domReady);
+  assert('身份大卡渲染（登录态守卫放行）', domReady);
 
-  /* ---------- 断言 1：用户信息卡 ---------- */
-  const nickname = await evalJs(`document.querySelector('[data-testid="me-nickname"]')?.textContent?.trim() ?? ''`);
-  assert('昵称文本非空（空则兜底「铲屎官」）', nickname.length > 0, nickname);
-  const joinText = await evalJs(`document.querySelector('[data-testid="me-user-card"]')?.textContent ?? ''`);
-  assert('加入天数文案存在', /加入菲丽亚第 \d+ 天/.test(joinText), joinText.match(/加入菲丽亚第 \d+ 天/)?.[0] ?? '');
+  /* ---------- 断言 1：身份大卡（新皮 mehero：昵称区文本非空 + 回馈金格真值） ---------- */
+  const heroText = await evalJs(`document.querySelector('[data-testid="me-hero"]')?.textContent?.trim() ?? ''`);
+  assert('身份大卡文本非空（昵称兜底「铲屎官」）', heroText.length > 0, heroText.slice(0, 24));
+  const rebateCell = await evalJs(`!!document.querySelector('[data-testid="me-rebate-cell"]')`);
+  assert('回馈金格渲染（membership.my 真值落地件）', rebateCell);
+  const qrrowHref = await evalJs(`document.querySelector('[data-testid="me-qrrow"]')?.getAttribute('href') ?? ''`);
+  assert('会员码 qrrow 入口在案（/me/card 或 /member/open）', qrrowHref === '/me/card' || qrrowHref === '/member/open', qrrowHref);
 
-  /* ---------- 断言 2：五个功能入口 href（对照 App.tsx 路由表） ---------- */
-  const entryHrefs = await evalJs(`Array.from(document.querySelectorAll('[data-testid="me-entries"] a')).map(a => a.getAttribute('href'))`);
-  // R11a 同步：会员入口已改指 /member（旧 /philia/member 退役重定向）；入口现为 6 项（U1-H /me/card 会员卡 + R11a /member 会员中心）
-  const expected = ['/appointments', '/mall/orders', '/member', '/me/card', '/philia/pets', '/philia/moments'];
-  assert('功能入口共 6 项', entryHrefs.length === 6, JSON.stringify(entryHrefs));
-  for (const href of expected) {
-    assert(`入口存在：${href}`, entryHrefs.includes(href));
+  /* ---------- 断言 2：功能网格 me-grid8 + 订单五格 me-orderrow（对照 App.tsx 路由表） ---------- */
+  const gridHrefs = await evalJs(`Array.from(document.querySelectorAll('[data-testid="me-grid8"] a')).map(a => a.getAttribute('href'))`);
+  const expectedGrid = ['/philia/pets', '/member/rebate', '/booking/boarding'];
+  for (const href of expectedGrid) {
+    assert(`网格入口存在：${href}`, gridHrefs.includes(href));
   }
+  const slotIds = await evalJs(`['slot-gallery','slot-coupons','slot-address','slot-concierge'].filter(id => !!document.querySelector('[data-testid="'+id+'"]'))`);
+  assert('置灰槽位 4 件在案（PD-15 V1.1 三规）', slotIds.length === 4, slotIds.join(','));
+  const settingsHref = await evalJs(`document.querySelector('[data-testid="me-settings"]')?.getAttribute('href') ?? ''`);
+  assert('设置入口=/me/settings 链接（补缺批片 2：R20 入口=出口）', settingsHref === '/me/settings', settingsHref);
+  const orderHrefs = await evalJs(`Array.from(document.querySelectorAll('[data-testid="me-orderrow"] a')).map(a => a.getAttribute('href'))`);
+  assert('订单五格 4 链接均指 /appointments', orderHrefs.length === 4 && orderHrefs.every(h => (h ?? '').startsWith('/appointments')), JSON.stringify(orderHrefs));
+  const slotRefund = await evalJs(`!!document.querySelector('[data-testid="slot-refund"]')`);
+  assert('退款售后=置灰槽位（PD-15 V1.1 槽位 10）', slotRefund);
 
-  /* ---------- 断言 3：宠物区（有数据 / 空态两分支之一必渲染） ---------- */
-  const petsInfo = await evalJs(`(() => {
-    const el = document.querySelector('[data-testid="me-pets"]');
-    if (!el) return null;
-    const empty = el.getAttribute('data-empty') === 'true';
-    const names = Array.from(el.querySelectorAll('p')).map(p => p.textContent.trim()).filter(Boolean);
-    const addBtn = !!el.querySelector('a[aria-label="添加宠物"]');
-    const emptyGuide = !!Array.from(el.querySelectorAll('a')).find(a => a.textContent.includes('建立宠物档案'));
-    return { empty, names, addBtn, emptyGuide };
+  /* ---------- 断言 3：宠物档案入口（grid8 首格，含宠物名/去建档副签） ---------- */
+  const petCell = await evalJs(`(() => {
+    const el = document.querySelector('[data-testid="me-grid8"] a[href="/philia/pets"]');
+    return el ? el.textContent.trim() : null;
   })()`);
-  assert('宠物区已渲染', petsInfo !== null);
-  if (petsInfo) {
-    if (petsInfo.empty) {
-      assert('空态引导卡含「建立宠物档案」→ /philia/pets', petsInfo.emptyGuide);
-    } else {
-      assert('宠物区渲染真实宠物（pet.list 有数据）', petsInfo.names.length > 0, petsInfo.names.join(' / '));
-      assert('末尾「添加」虚线圆按钮 → /philia/pets', petsInfo.addBtn);
-    }
-  }
+  assert('宠物档案入口渲染（含「宠物档案」签）', petCell !== null && petCell.includes('宠物档案'), petCell ?? '');
 
-  /* ---------- 断言 4：空态分支源码静态佐证（种子客户有宠物，真实空态现场不可达） ---------- */
+  /* ---------- 断言 4：空态分支源码静态佐证（网格结构 + 设置导航互证） ---------- */
   const src = readFileSync(resolve(__dirname, '..', 'src', 'pages', 'MePage.tsx'), 'utf8');
-  assert('源码含空态分支 pets.length === 0', /pets\.length === 0/.test(src));
-  assert('空态分支渲染「建立宠物档案」Link → /philia/pets',
-    /data-empty="true"[\s\S]*?建立宠物档案/.test(src) && /to="\/philia\/pets"[\s\S]*?建立宠物档案|建立宠物档案[\s\S]*?\/philia\/pets/.test(src));
+  assert('源码含功能网格 me-grid8', /data-testid="me-grid8"/.test(src));
+  assert('源码含设置入口导航 /me/settings', /data-testid="me-settings"[\s\S]{0,200}?\/me\/settings|\/me\/settings[\s\S]{0,200}?data-testid="me-settings"/.test(src));
 
   /* ---------- 截图 1：登录态 /me ---------- */
   await sleep(1200); // 图片等收尾渲染
@@ -219,8 +215,23 @@ async function main() {
   writeFileSync(resolve(SHOTS_DIR, 'me-page.png'), Buffer.from(shot1.data, 'base64'));
   console.log('saved shots/me-page.png');
 
-  /* ---------- 断言 5：退出登录真实流程 ---------- */
-  await evalJs(`document.querySelector('[data-testid="me-logout-btn"]').click()`);
+  /* ---------- 断言 5：退出登录真实流程（补缺批片 2 新路径：设置页内退出） ---------- */
+  await evalJs(`document.querySelector('[data-testid="me-settings"]').click()`);
+  let onSettings = '';
+  for (let i = 0; i < 12; i++) {
+    onSettings = await evalJs('location.pathname');
+    if (onSettings === '/me/settings') break;
+    await sleep(500);
+  }
+  assert('me-settings 导航落在 /me/settings', onSettings === '/me/settings', onSettings);
+  let logoutBtn = false;
+  for (let i = 0; i < 12; i++) {
+    logoutBtn = await evalJs(`!!document.querySelector('[data-testid="settings-logout"]')`);
+    if (logoutBtn) break;
+    await sleep(500);
+  }
+  assert('设置页渲染退出登录钮', logoutBtn);
+  await evalJs(`document.querySelector('[data-testid="settings-logout"]').click()`);
   await sleep(600);
   const dialogShown = await evalJs(`!!document.querySelector('[data-testid="me-logout-confirm"]')`);
   assert('点击「退出登录」弹出确认弹窗', dialogShown);

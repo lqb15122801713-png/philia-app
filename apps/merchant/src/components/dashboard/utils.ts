@@ -11,6 +11,8 @@ type RouterOutputs = inferRouterOutputs<AppRouter>
 export type DashboardStats = RouterOutputs['store']['dashboardStats']
 /** appointment.listForStore 返回行（今日时间轴用） */
 export type TodayApptItem = RouterOutputs['appointment']['listForStore'][number]
+/** authSecurity.listPhoneAppeals 返回行（批次 R13b 换绑申诉待办块用） */
+export type PhoneAppealItem = RouterOutputs['authSecurity']['listPhoneAppeals']['items'][number]
 
 /** React Query 键（TabBar 红点与 DashboardPage 共用，invalidate 互通） */
 export const STATS_QUERY_KEY = ['store', 'dashboardStats'] as const
@@ -28,6 +30,8 @@ export const INVOICE_SECTION_ID = 'dash-todo-invoices'
 export type TicketPendingItem = RouterOutputs['serviceLoop']['ticketListPending'][number]
 /** serviceLoop.invoiceListPending 返回行（本店 submitted 发票申请） */
 export type InvoicePendingItem = RouterOutputs['serviceLoop']['invoiceListPending'][number]
+/** 换绑申诉待审队列（manager|owner；DashboardPage 待办块 + TodoSection 计数行共用） */
+export const PHONE_APPEALS_QUERY_KEY = ['authSecurity', 'listPhoneAppeals'] as const
 
 /** 待办合计（四项待办 + 异常超期寄养；TabBar 红点与「待办合计」卡同口径） */
 export const todoGrandTotal = (s: DashboardStats): number => s.todo.total + s.overdueBoardingCount

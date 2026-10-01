@@ -81,6 +81,32 @@ export const DASH_COPY = {
   'dash.invoiceRegistering': '登记中…',
   'dash.invoiceRegisterSuccess': '已登记开票 {no}',
   'dash.invoiceLoadFailed': '发票申请列表加载失败',
+
+  /* 换绑申诉待办块（批次 R13b 大片 2 · authSecurity.listPhoneAppeals/reviewPhoneAppeal） */
+  'dash.appealBlockTitle': '换绑申诉',
+  'dash.appealCountUnit': '笔',
+  'dash.appealAssistCta': '协助换绑',
+  'dash.appealRejectCta': '驳回',
+  'dash.appealCancelCta': '取消',
+  'dash.appealSlaOverdue': '超期',
+  /* 协助换绑二次确认弹层（R15 明面句 + 核验说明必填，note 客户端可见） */
+  'dash.appealAssistConfirmTitle': '协助换绑确认',
+  'dash.appealAssistNotice': '确认已线下核验身份，换绑后数据全保留',
+  'dash.appealAssistNoteLabel': '核验说明（必填，客户端可见）',
+  'dash.appealAssistNotePlaceholder': '核验方式与结论留痕，如：已线下核对本人证件',
+  'dash.appealAssistNoteRequired': '请先填写核验说明',
+  'dash.appealAssistSubmit': '确认协助换绑',
+  'dash.appealAssistSuccess': '已协助换绑，新手机号已生效',
+  /* 驳回弹层（原因必填，客户端可见） */
+  'dash.appealRejectTitle': '驳回换绑申诉',
+  'dash.appealRejectNoteLabel': '驳回原因（必填，客户端可见）',
+  'dash.appealRejectNotePlaceholder': '驳回原因将展示给客户',
+  'dash.appealRejectNoteRequired': '请先填写驳回原因',
+  'dash.appealRejectSubmit': '确认驳回',
+  'dash.appealRejectSuccess': '已驳回该换绑申诉',
+  /* TodoSection 申诉计数行 */
+  'dash.todoAppealLabel': '换绑申诉',
+  'dash.todoAppealHint': '手机号换绑申诉，待协助核验',
 } as const;
 
 export type DashCopyKey = keyof typeof DASH_COPY;

@@ -26,6 +26,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import MainScaffold, { LemonButton, QuietButton, SearchInput } from '@/components/MainScaffold'
 import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider'
+import PhoneAppealSection from '@/components/dashboard/PhoneAppealSection'
 import StatCards from '@/components/dashboard/StatCards'
 import TodayTimeline from '@/components/dashboard/TodayTimeline'
 import TodoSection from '@/components/dashboard/TodoSection'
@@ -38,6 +39,7 @@ import { useMerchantRole } from '@/lib/roles'
 import {
   IN_BOARDING_QUERY_KEY,
   INVOICE_PENDING_QUERY_KEY,
+  PHONE_APPEALS_QUERY_KEY,
   STATS_QUERY_KEY,
   TICKET_PENDING_QUERY_KEY,
   TODAY_QUERY_KEY,
@@ -84,6 +86,15 @@ export default function DashboardPage() {
     refetchInterval: events.connected ? false : POLL_FALLBACK_MS,
   })
 
+  // 换绑申诉待审队列（批次 R13b；merchantManagerProcedure 硬闸——clerk enabled 关闸不发查询，
+  // 待办块同 role.canManage 不渲染；SSE 无申诉事件类型，断线 30s 轮询兜底照既有三查询模式）
+  const appealQuery = useQuery({
+    queryKey: PHONE_APPEALS_QUERY_KEY,
+    queryFn: () => trpc.authSecurity.listPhoneAppeals.query(),
+    enabled: role.canManage,
+    refetchInterval: events.connected ? false : POLL_FALLBACK_MS,
+  })
+
   // 门店营业时段（auth.me 返回完整 store 行；独立键，不与 useMe 的镜像结构互相覆盖）
   const meQuery = useQuery({
     queryKey: ['auth', 'me', 'full'],
@@ -114,6 +125,7 @@ export default function DashboardPage() {
     // 补缺大批片 4：重连全量对齐覆盖两待办块（无 store 频道事件，靠此追上）
     void queryClient.invalidateQueries({ queryKey: TICKET_PENDING_QUERY_KEY })
     void queryClient.invalidateQueries({ queryKey: INVOICE_PENDING_QUERY_KEY })
+    void queryClient.invalidateQueries({ queryKey: PHONE_APPEALS_QUERY_KEY })
   }, [queryClient])
 
   // SSE：预约生命周期事件 → 联动刷新；新预约到达 toast
@@ -217,7 +229,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* 两栏：左今日预约表（1.7fr）右待办队列（1fr），gap 14 */}
+      {/* 两栏：左今日预约表（1.7fr）右待办队列（1fr），gap 14；批次 R13b 右栏叠申诉待办块 */}
       <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.7fr_1fr]">
         <TodayTimeline items={todayQuery.data ?? []} loading={todayQuery.isPending} stepProgress={stepProgress} />
         <div className="flex flex-col gap-3.5">
@@ -229,7 +241,9 @@ export default function DashboardPage() {
             refundRequests={role.canManage ? (refundRequestQ.data ?? []) : undefined}
             ticketCount={role.canManage ? ticketQuery.data?.length : undefined}
             invoiceCount={role.canManage ? invoiceQuery.data?.length : undefined}
+            appealCount={role.canManage ? (appealQuery.data?.items.length ?? 0) : undefined}
           />
+          {role.canManage ? <PhoneAppealSection items={appealQuery.data?.items ?? []} /> : null}
           {/* 补缺大批片 4：两个待办块（clerk 不渲染；空态块内自处理不渲染） */}
           {role.canManage && (
             <>

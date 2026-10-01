@@ -92,7 +92,6 @@ const ROUTES = [
   { app: 'customer', path: '/member', anchors: ['会员'], serverDep: true, note: '批次 R11a' },
   { app: 'customer', path: '/member/open', anchors: ['开通会员'], serverDep: true, note: '批次 R11a' },
   { app: 'customer', path: '/member/rebate', anchors: ['回馈金'], serverDep: true, note: '批次 R11b 新路由申报（W-01）' },
-  /* 补缺批片 1 退款售后：锚点=页面真实 copy（listTitle「退款/售后」/ formTitle「申请退款」） */
   { app: 'customer', path: '/refunds', anchors: ['退款/售后'], note: '补缺批片 1 退款售后' },
   { app: 'customer', path: `/refunds/${INVALID_ID}`, anchors: ['退款详情'], serverDep: true, note: '补缺批片 1 退款售后：无效 id 异常态仍渲染页题+返回出口' },
   { app: 'customer', path: `/mall/orders/${INVALID_ID}/refund`, anchors: ['申请退款'], serverDep: true, note: '补缺批片 1 退款售后' },
@@ -107,6 +106,13 @@ const ROUTES = [
   { app: 'customer', path: '/invoices', anchors: ['发票'], serverDep: true, note: '补缺批片 4 服务闭环' },
   { app: 'customer', path: `/invoice/apply/appointment/${INVALID_ID}`, anchors: ['申请发票'], serverDep: true, note: '补缺批片 4 服务闭环（无效 id 异常态）' },
   { app: 'customer', path: `/invoices/${INVALID_ID}`, anchors: ['发票'], serverDep: true, note: '补缺批片 4 服务闭环（无效 id 异常态）' },
+  /* 补缺批片 2 账户安全（设置 + 五子页；serverDep 守卫口径兜底，锚点=PageHeader/AppHead 真实 copy 文案） */
+  { app: 'customer', path: '/me/settings', anchors: ['设置', '账号安全'], serverDep: true, note: '补缺批片 2 账户安全' },
+  { app: 'customer', path: '/me/settings/deactivate', anchors: ['注销账号'], serverDep: true, note: '补缺批片 2 账户安全' },
+  { app: 'customer', path: '/me/settings/phone', anchors: ['手机号换绑'], serverDep: true, note: '补缺批片 2 账户安全' },
+  { app: 'customer', path: '/me/settings/phone/appeal', anchors: ['换绑申诉'], serverDep: true, note: '补缺批片 2 账户安全' },
+  { app: 'customer', path: '/me/settings/devices', anchors: ['登录设备管理'], serverDep: true, note: '补缺批片 2 账户安全' },
+  { app: 'customer', path: '/me/settings/privacy', anchors: ['权限与隐私'], serverDep: true, note: '补缺批片 2 账户安全' },
   /* ---- 商家端 ---- */
   { app: 'merchant', path: '/dev-login', anchors: ['登录'] },
   { app: 'merchant', path: '/dashboard', anchors: ['今日', '仪表', '预约'] },

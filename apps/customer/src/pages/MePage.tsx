@@ -10,16 +10,16 @@
  * - 补缺大批片 4 点亮：服务相册（→/philia/moments）/ 小棉花客服（→/support/new），
  *   testid 原值保留（slot-gallery / slot-concierge）；退款售后=片 1 挂接口，本片不动；
  * 落地件：档章/回馈金余额/续费倒计时（membership.my 真值）/会员码 qrrow/订单五态入口/
- * 宠物档案/寄养预约/设置（退出登录入口保留件）。
+ * 宠物档案/寄养预约/设置（补缺大批片 2：设置钮改导航 /me/settings 独立设置页，
+ * 退出登录收进设置页——LogoutConfirmDialog 移用 components/account，逻辑零改动）。
  *
  * 功能入口保全：商城订单=商城域 /mall/orders 入口在案（M-01）；旧 EntryList 六行
  * 已由 orderrow+grid8 全量承接（预约/会员中心/会员卡/宠物/相册槽位）。
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { getApiBase, logout, useMe, usePhiliaClient } from '@philia/shared'
+import { Link } from 'react-router-dom'
+import { useMe, usePhiliaClient } from '@philia/shared'
 import { fenToYuan } from '@/components/booking/format'
 import { sl } from '@/copy/serviceloop'
 
@@ -27,84 +27,6 @@ const DAY_MS = 86_400_000
 
 /** 槽位置灰注记（PD-15 V1.1 三规②：UX 语感=克制高级，不写「功能缺失」） */
 const SLOT_NOTE = '即将点亮'
-
-/** 轻量 toast（本页自带，退出失败提示用） */
-function useMeToast(durationMs = 3200) {
-  const [msg, setMsg] = useState<{ id: number; text: string } | null>(null)
-  const showToast = useCallback((text: string) => setMsg({ id: Date.now(), text }), [])
-  useEffect(() => {
-    if (!msg) return
-    const t = window.setTimeout(() => setMsg(null), durationMs)
-    return () => window.clearTimeout(t)
-  }, [msg, durationMs])
-  const toastEl = msg ? (
-    <div
-      key={msg.id}
-      role="alert"
-      className="fixed left-1/2 top-5 z-toast max-w-[86vw] -translate-x-1/2 rounded-full bg-[#2E2318] px-4 py-2.5 text-body-sm text-[#F2DFA6] shadow-elevated"
-    >
-      {msg.text}
-    </div>
-  ) : null
-  return { toastEl, showToast }
-}
-
-/** 退出登录确认弹层（功能保留件；片 2 弹层核查：可点遮罩既有，补滚动锁——
-    居中确认件非底部弹层，§4.5 抓握手柄不适用，登记） */
-function LogoutConfirmDialog({
-  pending,
-  onCancel,
-  onConfirm,
-}: {
-  pending: boolean
-  onCancel: () => void
-  onConfirm: () => void
-}) {
-  /* 滚动锁：弹层挂载期间锁底层 body（调用方条件挂载） */
-  useEffect(() => {
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = prev
-    }
-  }, [])
-
-  return (
-    <div
-      className="fixed inset-0 z-modal flex items-center justify-center bg-ink/40 px-8"
-      onClick={onCancel}
-      role="dialog"
-      aria-label="退出登录确认"
-    >
-      <div
-        className="w-full max-w-sm rounded-panel bg-card p-5 shadow-elevated"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <p className="text-title">退出登录？</p>
-        <p className="mt-2 text-body-sm text-ink-secondary">退出后需要重新登录才能继续使用菲丽亚。</p>
-        <div className="mt-5 flex gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={pending}
-            className="flex-1 rounded-full border border-line py-2.5 text-body-sm text-ink-secondary"
-          >
-            取消
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={pending}
-            data-testid="me-logout-confirm"
-            className="flex-1 rounded-full bg-danger py-2.5 text-body-sm text-destructive-foreground transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
-          >
-            {pending ? '正在退出…' : '退出登录'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 /* 定稿线图标（§五：24 网格 stroke 1.55 round；同屏同宽） */
 const I = {
@@ -124,12 +46,8 @@ const I = {
 }
 
 export default function MePage() {
-  const navigate = useNavigate()
-  const { trpc, queryClient } = usePhiliaClient()
+  const { trpc } = usePhiliaClient()
   const { user } = useMe()
-  const { toastEl, showToast } = useMeToast()
-  const [confirmOpen, setConfirmOpen] = useState(false)
-  const [logoutPending, setLogoutPending] = useState(false)
 
   const meRawQ = useQuery({
     queryKey: ['auth', 'me', 'raw'],
@@ -161,19 +79,6 @@ export default function MePage() {
     : null
   const petCount = (petsQ.data ?? []).length
   const firstPetName = (petsQ.data ?? [])[0]?.name ?? null
-
-  const doLogout = async () => {
-    setLogoutPending(true)
-    try {
-      await logout(getApiBase())
-      queryClient.clear()
-      navigate('/dev-login', { replace: true })
-    } catch (err) {
-      setLogoutPending(false)
-      setConfirmOpen(false)
-      showToast(err instanceof Error ? err.message : '退出失败，请稍后再试')
-    }
-  }
 
   return (
     <div className="pb-28">
@@ -258,20 +163,11 @@ export default function MePage() {
           <span className="g slot" data-testid="slot-address" aria-disabled="true">{I.pin}<div className="t">常用地址<small>{SLOT_NOTE}</small></div></span>
           {/* 补缺大批片 4：小棉花客服点亮（testid 原值保留） */}
           <Link to="/support/new" className="g" data-testid="slot-concierge">{I.cotton}<div className="t">{sl('ticket.meEntryTitle')}<small>{sl('ticket.meEntrySub')}</small></div></Link>
-          <button type="button" className="g" data-testid="me-settings" onClick={() => setConfirmOpen(true)}>
-            {I.gear}<div className="t">设置<small>账号 · 退出</small></div>
-          </button>
+          <Link to="/me/settings" className="g" data-testid="me-settings">
+            {I.gear}<div className="t">设置<small>账号 · 安全</small></div>
+          </Link>
         </nav>
       </div>
-
-      {confirmOpen ? (
-        <LogoutConfirmDialog
-          pending={logoutPending}
-          onCancel={() => setConfirmOpen(false)}
-          onConfirm={() => void doLogout()}
-        />
-      ) : null}
-      {toastEl}
     </div>
   )
 }
