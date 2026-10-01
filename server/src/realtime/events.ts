@@ -61,6 +61,11 @@ export const EventType = {
   MembershipRenewed:     'membership.renewed',      // 续费解冻 → user
   MembershipCancelled:   'membership.cancelled',    // 退会（折算+清零留痕） → user + store
   RebateSettled:         'rebate.settled',          // 回馈金月度到账批次 → store
+  // 补缺大批片 4（服务闭环：证书/报告/工单/发票；本片范围=server/，packages/shared 同步留客户端批）
+  CertificateReady:      'certificate.ready',       // 安心证书生成 → user（客户）
+  ReportReady:           'report.ready',            // 美容报告生成 → user（客户）
+  TicketReplied:         'ticket.replied',          // 客服工单被回复 → user（客户）
+  InvoiceIssued:         'invoice.issued',          // 发票登记开出 → user（客户）
 } as const;
 
 export type EventTypeValue = (typeof EventType)[keyof typeof EventType];

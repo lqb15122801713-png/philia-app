@@ -27,6 +27,7 @@ import SlotPicker from '@/components/booking/SlotPicker';
 import { ErrorState } from '@/components/home/common';
 import { friendlyError, useToast } from '@philia/shared';
 import { apc } from '@/copy/appointments';
+import { sl } from '@/copy/serviceloop';
 import {
   APPT_STATUS_META,
   APPT_TYPE_LABEL,
@@ -100,6 +101,31 @@ export default function AppointmentDetailPage() {
     queryFn: () => trpc.appointment.serviceAlbum.query({ appointmentId: id }),
     enabled: albumEnabled,
   });
+
+  /* 补缺大批片 4：已完成单的安心证书/美容报告入口（myCertificates/myReports 匹配，
+     有才显——R10 无数据不渲染入口）；实付单的发票入口（invoiceListMine 匹配 billId，
+     在途/已开具=「发票进度 ›」，无申请=「申请发票 ›」） */
+  const completedAppt = !!appt && appt.status === 'completed';
+  const certsQ = useQuery({
+    queryKey: ['serviceLoop', 'myCertificates'],
+    queryFn: () => trpc.serviceLoop.myCertificates.query(),
+    enabled: completedAppt,
+  });
+  const reportsQ = useQuery({
+    queryKey: ['serviceLoop', 'myReports'],
+    queryFn: () => trpc.serviceLoop.myReports.query(),
+    enabled: completedAppt,
+  });
+  const invoicesQ = useQuery({
+    queryKey: ['serviceLoop', 'invoiceListMine'],
+    queryFn: () => trpc.serviceLoop.invoiceListMine.query(),
+    enabled: !!appt && (appt.paidFen ?? 0) > 0,
+  });
+  const hasCert = (certsQ.data ?? []).some((c) => c.appointmentId === id);
+  const hasReport = (reportsQ.data ?? []).some((r) => r.appointmentId === id);
+  const myInvoice = (invoicesQ.data ?? []).find(
+    (r) => r.orderKind === 'appointment' && r.billId === id,
+  );
 
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   // B3-5（W-14）：取消原因——chips 单选（选填）+ 自由文本；合成后随 cancel 提交
@@ -459,6 +485,18 @@ export default function AppointmentDetailPage() {
             <dd className="font-number text-caption text-ink-placeholder">{appt.id}</dd>
           </div>
         </dl>
+        {/* 补缺大批片 4：实付行后发票入口（paidFen>0 才显；在途/已开具=进度入口） */}
+        {(appt.paidFen ?? 0) > 0 ? (
+          <div className="mt-3 border-t border-line-divider pt-3">
+            <Link
+              to={myInvoice ? `/invoices/${myInvoice.id}` : `/invoice/apply/appointment/${id}`}
+              data-testid="appt-invoice-entry"
+              className="flex items-center justify-between text-body-sm font-semibold text-ink"
+            >
+              {myInvoice ? sl('inv.progressEntry') : sl('inv.applyEntry')}
+            </Link>
+          </div>
+        ) : null}
         {d.boardingStay?.roomNo ? (
           <p className="mt-2 rounded-tag bg-sunken px-3 py-2 text-caption text-ink-secondary">
             已入住房间：{d.boardingStay.roomNo}
@@ -530,6 +568,30 @@ export default function AppointmentDetailPage() {
         >
           {apc('appointments.rebook')}
         </button>
+      ) : null}
+
+      {/* 补缺大批片 4：已完成单操作区——安心证书/美容报告入口（有才显，R10 无数据不渲染） */}
+      {completedAppt && (hasCert || hasReport) ? (
+        <div className="mt-3 flex gap-2" data-testid="appt-artifacts">
+          {hasCert ? (
+            <Link
+              to={`/philia/certs/${id}`}
+              data-testid="appt-cert-entry"
+              className="flex h-11 flex-1 items-center justify-center rounded-full bg-card text-body font-medium text-ink shadow-card transition-transform duration-120 ease-philia-spring active:scale-92"
+            >
+              {sl('cert.detailEntry')}
+            </Link>
+          ) : null}
+          {hasReport ? (
+            <Link
+              to={`/philia/reports/${id}`}
+              data-testid="appt-report-entry"
+              className="flex h-11 flex-1 items-center justify-center rounded-full bg-card text-body font-medium text-ink shadow-card transition-transform duration-120 ease-philia-spring active:scale-92"
+            >
+              {sl('report.detailEntry')}
+            </Link>
+          ) : null}
+        </div>
       ) : null}
 
       {/* 门店与导航 */}

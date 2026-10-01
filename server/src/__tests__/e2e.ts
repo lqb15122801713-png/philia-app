@@ -88,6 +88,22 @@
  *      打回② 退会后结算日不到账：C 商品单 grant（期次移位至未结算期）→ cancel（作废
  *      未到账 clear 留痕行「退会作废未到账回馈金 258 分」）→ settleMonthly 合成到点 →
  *      C 余额不变/grant 未回标/批次单 granted_count 不含退会者，D 对照正常到账
+ *
+ * 补缺大批片 4（服务闭环 server 侧：相册聚合/证书+报告生成链/客服工单/发票申请）段：
+ *   50.1 证书生成：有 before/after 图单完成 → service_certificates 落行+payload 齐+
+ *      首读 deliveredAt 幂等置位；无图单（寄养）→ 不生成 + certificateFor 404 明文
+ *   50.2 报告生成：confirmStep 末步带 vitals（一项 abnormal）→ 快照+abnormalText 拼句+
+ *      体重=pets.weight_kg 服务端快照；无 vitals（主单）=各项 normal「本次未记录」；
+ *      首读 deliveredAt 幂等；certificate.ready/report.ready 落 outbox（payload 用 aid 键）
+ *   50.3 albumFeed：多单一次聚合返回（N+1 消除结构断言）+ in_service 单仅 done 步
+ *      照片透出 + 默认 limit=12 截顶
+ *   50.4 工单流：create（联系方式回显默认=users.phone）→店长 listPending→reply→
+ *      客户端 ticketGet 可见 replyText+status=replied+ticket.replied 落 outbox
+ *   50.5 发票流：已付闸（未收款预约拒）/金额=实付重算（传入假金额被忽略）/企业抬头
+ *      缺税号拒/同单在途幂等/merchant register 发票号→客户端可见 issued+invoiceNo+
+ *      invoice.issued 落 outbox
+ *   50.6 权限：他人证书/报告/工单/发票 403×4
+ *   50.7 serviceHours 端口读出（config.save 改值复读出=端口可调实证；改后还原）
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -2956,6 +2972,347 @@ async function main(): Promise<void> {
       settle49b.idempotent === true && settle49b.refund.status === 'settled' &&
       !todo49After.some((r) => r.id === cancelM1.refundId),
     { a: settle49a.refund.status, bIdem: settle49b.idempotent });
+
+  /* ==================================================================
+   * 补缺大批片 4（服务闭环 server 侧）验收段 —— 本片无 refund_bill 生成
+   * （49c 移位铁律不约束），断言挂尾 50.x。
+   * ================================================================== */
+
+  /* ---------- 50.1 证书生成链（R10 无数据不生成 + 首读 deliveredAt 幂等） ---------- */
+  console.log('\n[补缺4] 50.1 安心证书生成链');
+  const petRow = (await db.select().from(schema.pets).where(eq(schema.pets.id, petId)).get())!;
+  const storeRow50 = (await db.select().from(schema.stores).where(eq(schema.stores.id, storeId)).get())!;
+  interface CertPayloadT {
+    petName: string; serviceName: string; storeName: string; completedAt: string;
+    stepsSummary: Array<{ stepKey: string; label: string; photoCount: number }>;
+    beforeUrl: string; afterUrl: string;
+  }
+  const certRow = await db.select().from(schema.serviceCertificates).where(eq(schema.serviceCertificates.appointmentId, aid)).get();
+  check('50.1 有 before/after 图单完成 → service_certificates 落行（confirmStep 末步同事务）',
+    !!certRow && certRow.userId === customerUser!.id && certRow.generatedAt instanceof Date,
+    certRow && { id: certRow.id, userId: certRow.userId });
+  const certPayload = certRow?.payload as CertPayloadT | undefined;
+  check('50.1 证书 payload 齐（petName/serviceName/storeName/completedAt/六步汇总张数 1/2/3/2/2/0/before/after）',
+    !!certPayload &&
+      certPayload.petName === petRow.name && certPayload.serviceName === service.name &&
+      certPayload.storeName === storeRow50.name && typeof certPayload.completedAt === 'string' &&
+      certPayload.stepsSummary.length === 6 &&
+      certPayload.stepsSummary.map((s) => s.photoCount).join(',') === '1,2,3,2,2,0' &&
+      certPayload.stepsSummary.every((s) => typeof s.label === 'string' && s.label.length > 0) &&
+      certPayload.beforeUrl.includes('/api/img/') && certPayload.afterUrl.includes('/api/img/'),
+    certPayload && { steps: certPayload.stepsSummary.map((s) => `${s.stepKey}:${s.photoCount}`) });
+  const certReadyRows = (await db.select().from(schema.eventOutbox)).filter(
+    (r) => r.eventType === 'certificate.ready' && r.channel === `user:${customerUser!.id}` &&
+      (r.payload as Record<string, unknown> | null)?.aid === aid,
+  );
+  check('50.1 certificate.ready 落 outbox（user 频道，payload 用 aid 键避开 §11 计数口径）',
+    certReadyRows.length === 1, certReadyRows.map((r) => r.channel));
+  // 首读 deliveredAt 幂等置位
+  interface CertGetRes { certificate: { id: string; deliveredAt: Date | null } }
+  const certGet1 = await trpcQuery<CertGetRes>('serviceLoop.certificateFor', { cookie: customerCookie, input: { appointmentId: aid } });
+  check('50.1 certificateFor 首读 → deliveredAt 置位（幂等写 now）', certGet1.certificate.deliveredAt instanceof Date, certGet1.certificate.deliveredAt);
+  const certGet2 = await trpcQuery<CertGetRes>('serviceLoop.certificateFor', { cookie: customerCookie, input: { appointmentId: aid } });
+  check('50.1 复读 deliveredAt 不变（幂等置位只写一次）',
+    certGet2.certificate.deliveredAt instanceof Date &&
+      certGet2.certificate.deliveredAt.getTime() === certGet1.certificate.deliveredAt!.getTime(),
+    [certGet1.certificate.deliveredAt, certGet2.certificate.deliveredAt]);
+  // 无图单（寄养 completed，无六步流）→ 不生成 + 404 明文
+  const noCertRow = await db.select().from(schema.serviceCertificates).where(eq(schema.serviceCertificates.appointmentId, boardingAppt.id)).get();
+  const noCertGet = await asErr(trpcQuery('serviceLoop.certificateFor', { cookie: customerCookie, input: { appointmentId: boardingAppt.id } }));
+  check('50.1 R10 无数据不生成：寄养单无证书行 + certificateFor → 404 明文「该服务未生成证书（无前后对比照）」',
+    !noCertRow && noCertGet instanceof TrpcHttpError && noCertGet.code === 'NOT_FOUND' &&
+      noCertGet.message.includes('该服务未生成证书（无前后对比照）'),
+    noCertGet && { code: noCertGet.code, message: noCertGet.message });
+
+  /* ---------- 50.2 报告生成链（vitals 快照/缺省口径/体重档案快照/首读幂等） ---------- */
+  console.log('\n[补缺4] 50.2 美容报告生成链');
+  interface VitalT { key: string; label: string; value: string; status: string; note?: string }
+  interface ReportGetRes { report: { id: string; vitals: VitalT[]; abnormalText: string | null; nextAdvice: string | null; deliveredAt: Date | null } }
+  // 主单 aid（末步未传 vitals）→ 缺省口径：各项 normal +「本次未记录」，体重=档案快照
+  const repGet1 = await trpcQuery<ReportGetRes>('serviceLoop.reportFor', { cookie: customerCookie, input: { appointmentId: aid } });
+  const aidVitals = repGet1.report.vitals;
+  check('50.2 无 vitals 报告=五项 normal +「本次未记录」（留痕口径不阻塞完成），abnormalText=NULL',
+    aidVitals.length === 5 && aidVitals.every((v) => v.status === 'normal') &&
+      aidVitals.filter((v) => v.key !== 'weight').every((v) => v.value === '本次未记录' && v.note === '本次未记录') &&
+      repGet1.report.abnormalText === null,
+    aidVitals.map((v) => `${v.key}:${v.status}:${v.value}`));
+  check('50.2 体重项= pets.weight_kg 服务端快照（28.5 kg，不信客户端）',
+    aidVitals.find((v) => v.key === 'weight')?.value === `${petRow.weightKg} kg`,
+    aidVitals.find((v) => v.key === 'weight'));
+  const repGet2 = await trpcQuery<ReportGetRes>('serviceLoop.reportFor', { cookie: customerCookie, input: { appointmentId: aid } });
+  check('50.2 reportFor 首读置 deliveredAt + 复读不变（幂等）',
+    repGet1.report.deliveredAt instanceof Date && repGet2.report.deliveredAt instanceof Date &&
+      repGet2.report.deliveredAt.getTime() === repGet1.report.deliveredAt.getTime(),
+    [repGet1.report.deliveredAt, repGet2.report.deliveredAt]);
+  const reportReadyRows = (await db.select().from(schema.eventOutbox)).filter(
+    (r) => r.eventType === 'report.ready' && r.channel === `user:${customerUser!.id}` &&
+      (r.payload as Record<string, unknown> | null)?.aid === aid,
+  );
+  check('50.2 report.ready 落 outbox（user 频道）', reportReadyRows.length === 1, reportReadyRows.length);
+
+  // 带 vitals 的完整六步流（apptVit，丽丽执行；末步传 vitals 一项 abnormal + nextAdvice）
+  const slotVit = slotPool[slotPool.length - 1]!;
+  const apptVit = await trpcMutate<{ id: string }>('appointment.create', {
+    cookie: customerCookie,
+    input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: slotVit.slotStart, paymentMode: 'pay_at_store', note: 'e2e 补缺4 vitals 报告单', staffId: staffRow2.id },
+  });
+  createdAidExtras.push(apptVit.id);
+  await trpcMutate('appointment.confirm', { cookie: ownerCookie, input: { appointmentId: apptVit.id } });
+  const codeVit = await trpcQuery<{ code: string }>('appointment.getCode', { cookie: customerCookie, input: { appointmentId: apptVit.id } });
+  await trpcMutate('appointment.checkin', { cookie: staffCookie, input: { code: codeVit.code } });
+  let vitDone: { appointmentCompleted: boolean; certificateId: string | null; reportId: string | null } | null = null;
+  for (const plan of stepPlan) {
+    if (plan.count > 0) {
+      const up = await uploadFor(apptVit.id, plan.key, liliCookie);
+      await trpcMutate('serviceStep.addPhotos', {
+        cookie: liliCookie,
+        input: { appointmentId: apptVit.id, stepKey: plan.key, photos: Array.from({ length: plan.count }, (_, i) => ({ url: up.url, thumbUrl: up.thumbUrl, tag: plan.tags?.[i] ?? 'normal' })) },
+      });
+    }
+    vitDone = await trpcMutate<{ appointmentCompleted: boolean; certificateId: string | null; reportId: string | null }>('serviceStep.confirmStep', {
+      cookie: liliCookie,
+      input: plan.key === 'confirm'
+        ? {
+            appointmentId: apptVit.id, stepKey: plan.key,
+            vitals: [
+              { key: 'weight', label: '体重', value: '99.9 kg', status: 'normal' }, // 假体重：服务端应以档案快照覆盖
+              { key: 'skin', label: '皮肤', value: '后腿内侧红疹', status: 'abnormal', note: '建议就医复查' },
+            ],
+            nextAdvice: '两周后复查皮肤',
+          }
+        : { appointmentId: apptVit.id, stepKey: plan.key },
+    });
+  }
+  check('50.2 带 vitals 末步完成（appointmentCompleted + certificateId/reportId 双透出）',
+    vitDone!.appointmentCompleted === true && typeof vitDone!.certificateId === 'string' && typeof vitDone!.reportId === 'string',
+    vitDone);
+  const vitRep = await trpcQuery<ReportGetRes>('serviceLoop.reportFor', { cookie: customerCookie, input: { appointmentId: apptVit.id } });
+  const vitSkin = vitRep.report.vitals.find((v) => v.key === 'skin');
+  check('50.2 vitals 快照（skin=abnormal+note；ear/coat/nail 缺项=normal 本次未记录）',
+    vitRep.report.vitals.length === 5 &&
+      vitSkin?.status === 'abnormal' && vitSkin.note === '建议就医复查' && vitSkin.value === '后腿内侧红疹' &&
+      vitRep.report.vitals.filter((v) => ['ear', 'coat', 'nail'].includes(v.key)).every((v) => v.status === 'normal' && v.note === '本次未记录'),
+    vitRep.report.vitals.map((v) => `${v.key}:${v.status}`));
+  check('50.2 体重不被客户端输入污染（入参 99.9 kg 被拒，快照=档案 28.5 kg）',
+    vitRep.report.vitals.find((v) => v.key === 'weight')?.value === `${petRow.weightKg} kg`,
+    vitRep.report.vitals.find((v) => v.key === 'weight'));
+  check('50.2 abnormalText 拼句（皮肤：异常（建议就医复查））+ nextAdvice 落库',
+    vitRep.report.abnormalText === '皮肤：异常（建议就医复查）' && vitRep.report.nextAdvice === '两周后复查皮肤',
+    { abnormalText: vitRep.report.abnormalText, nextAdvice: vitRep.report.nextAdvice });
+  const vitCertRow = await db.select().from(schema.serviceCertificates).where(eq(schema.serviceCertificates.appointmentId, apptVit.id)).get();
+  check('50.2 apptVit 证书同生成（有 before/after 图）', !!vitCertRow, apptVit.id);
+
+  /* ---------- 50.3 albumFeed 相册聚合（一次批拉 N+1 消除 + 进行中口径 + limit 截顶） ---------- */
+  console.log('\n[补缺4] 50.3 albumFeed 服务相册聚合');
+  // 进行中夹具：apptProg 走完 disinfection+precheck 后停在 grooming（active）
+  // （ pinned 阿强执行：apptVit（丽丽）与其同日落相邻槽，同人会产生区间重叠 409）
+  const slotProg = slotPool[slotPool.length - 2]!;
+  const apptProg = await trpcMutate<{ id: string }>('appointment.create', {
+    cookie: customerCookie,
+    input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: slotProg.slotStart, paymentMode: 'pay_at_store', note: 'e2e 补缺4 进行中单', staffId: aqiang.id },
+  });
+  createdAidExtras.push(apptProg.id);
+  const codeProg = await trpcQuery<{ code: string }>('appointment.getCode', { cookie: customerCookie, input: { appointmentId: apptProg.id } });
+  await trpcMutate('appointment.checkin', { cookie: staffCookie, input: { code: codeProg.code } });
+  for (const plan of stepPlan.slice(0, 2)) { // 只做前两步（disinfection 1 图 / precheck 2 图）
+    const up = await uploadFor(apptProg.id, plan.key, groomerCookie);
+    await trpcMutate('serviceStep.addPhotos', {
+      cookie: groomerCookie,
+      input: { appointmentId: apptProg.id, stepKey: plan.key, photos: Array.from({ length: plan.count }, () => ({ url: up.url, thumbUrl: up.thumbUrl, tag: 'normal' })) },
+    });
+    await trpcMutate('serviceStep.confirmStep', { cookie: groomerCookie, input: { appointmentId: apptProg.id, stepKey: plan.key } });
+  }
+  interface FeedPhoto { url: string; thumbUrl: string | null; tag: string }
+  interface FeedStep { stepKey: string; label: string; status: string; photos: FeedPhoto[] }
+  interface FeedItem { appointmentId: string; petName: string; serviceName: string; storeName: string; status: string; completedAt: Date | null; steps: FeedStep[] }
+  const feed = await trpcQuery<FeedItem[]>('serviceLoop.albumFeed', { cookie: customerCookie, input: { limit: 50 } });
+  const feedAid = feed.find((f) => f.appointmentId === aid);
+  const feedAid2 = feed.find((f) => f.appointmentId === aid2);
+  const feedVit = feed.find((f) => f.appointmentId === apptVit.id);
+  check('50.3 多单一次聚合返回（aid/aid2/apptVit 同帧，六步+照片全嵌套=N+1 消除结构实证）',
+    !!feedAid && !!feedAid2 && !!feedVit &&
+      feedAid.steps.length === 6 && feedAid2.steps.length === 6 &&
+      feedAid.petName === petRow.name && feedAid.serviceName === service.name && feedAid.storeName === storeRow50.name,
+    feed.map((f) => `${f.appointmentId.slice(-4)}:${f.steps.length}`));
+  check('50.3 完成单照片分组正确（aid 张数 1/2/3/2/2/0，before_after 步带 before/after 标签）',
+    feedAid!.steps.map((s) => s.photos.length).join(',') === '1,2,3,2,2,0' &&
+      feedAid!.steps.find((s) => s.stepKey === 'before_after')!.photos.map((p) => p.tag).sort().join(',') === 'after,before',
+    feedAid!.steps.map((s) => `${s.stepKey}:${s.photos.length}`));
+  const feedProg = feed.find((f) => f.appointmentId === apptProg.id);
+  check('50.3 进行中单透出（in_service 在列）且仅 done 步照片可见（grooming=active 与 locked 步 photos 空）',
+    !!feedProg && feedProg.status === 'in_service' &&
+      feedProg.steps.find((s) => s.stepKey === 'disinfection')!.photos.length === 1 &&
+      feedProg.steps.find((s) => s.stepKey === 'precheck')!.photos.length === 2 &&
+      feedProg.steps.filter((s) => s.status !== 'done').every((s) => s.photos.length === 0),
+    feedProg?.steps.map((s) => `${s.stepKey}:${s.status}:${s.photos.length}`));
+  const feedDefault = await trpcQuery<FeedItem[]>('serviceLoop.albumFeed', { cookie: customerCookie });
+  check('50.3 默认 limit=12 截顶（默认调用恰 12 条 < limit=50 全量）',
+    feedDefault.length === 12 && feed.length > 12,
+    { def: feedDefault.length, full: feed.length });
+
+  /* ---------- 50.4 客服工单流（create→店长待办→reply→客户端可见+SSE 留痕） ---------- */
+  console.log('\n[补缺4] 50.4 客服工单流');
+  interface TicketT {
+    id: string; ticketNo: string; type: string; description: string; contactPhone: string | null;
+    status: string; replyText: string | null; repliedBy: string | null; repliedAt: Date | null;
+    timelineJson: Array<{ action: string; at: string; by: string; note?: string }>;
+  }
+  const tkCreate = await trpcMutate<{ ticket: TicketT; idempotent: boolean }>('serviceLoop.ticketCreate', {
+    cookie: customerCookie,
+    input: { storeId, type: 'suggest', description: '希望增加夜间洗护时段', photoUrls: [] },
+  });
+  check('50.4 ticketCreate 落单（ticketNo=TK-yyyymmdd-NNN 日序 + submitted + timeline 初始 submitted）',
+    /^TK-\d{8}-\d{3}$/.test(tkCreate.ticket.ticketNo) && tkCreate.ticket.status === 'submitted' &&
+      tkCreate.ticket.timelineJson.length === 1 && tkCreate.ticket.timelineJson[0]!.action === 'submitted' &&
+      tkCreate.ticket.timelineJson[0]!.by === customerUser!.id,
+    tkCreate.ticket);
+  check('50.4 联系方式回显默认=users.phone（缺省未传 → 13800000000）',
+    tkCreate.ticket.contactPhone === '13800000000', tkCreate.ticket.contactPhone);
+  const tkPending = await trpcQuery<TicketT[]>('serviceLoop.ticketListPending', { cookie: managerCookie });
+  check('50.4 店长待办可见本店 submitted 工单', tkPending.some((t) => t.id === tkCreate.ticket.id), tkPending.length);
+  const tkReply = await trpcMutate<{ ticket: TicketT }>('serviceLoop.ticketReply', {
+    cookie: managerCookie,
+    input: { ticketId: tkCreate.ticket.id, reply: '已收到建议，本月排期评估后答复您' },
+  });
+  check('50.4 店长回复 → replied + repliedBy/At + timeline 追加',
+    tkReply.ticket.status === 'replied' && tkReply.ticket.replyText === '已收到建议，本月排期评估后答复您' &&
+      tkReply.ticket.repliedBy === managerFix.id && tkReply.ticket.repliedAt instanceof Date &&
+      tkReply.ticket.timelineJson.length === 2 && tkReply.ticket.timelineJson[1]!.action === 'replied',
+    tkReply.ticket);
+  const tkRepliedEv = (await db.select().from(schema.eventOutbox)).filter(
+    (r) => r.eventType === 'ticket.replied' && r.channel === `user:${customerUser!.id}` &&
+      (r.payload as Record<string, unknown> | null)?.ticketId === tkCreate.ticket.id,
+  );
+  check('50.4 ticket.replied 落 outbox（user 频道，SSE 留痕可取证）', tkRepliedEv.length === 1, tkRepliedEv.map((r) => r.channel));
+  const tkGot = await trpcQuery<{ ticket: TicketT }>('serviceLoop.ticketGet', { cookie: customerCookie, input: { ticketId: tkCreate.ticket.id } });
+  check('50.4 客户端 ticketGet 可见 replyText + status=replied',
+    tkGot.ticket.status === 'replied' && tkGot.ticket.replyText === '已收到建议，本月排期评估后答复您', tkGot.ticket.status);
+  const tkMine = await trpcQuery<TicketT[]>('serviceLoop.ticketListMine', { cookie: customerCookie });
+  check('50.4 ticketListMine 仅本人含该单', tkMine.some((t) => t.id === tkCreate.ticket.id), tkMine.length);
+  const tkEmptyReply = await asErr(trpcMutate('serviceLoop.ticketReply', { cookie: managerCookie, input: { ticketId: tkCreate.ticket.id, reply: '   ' } }));
+  check('50.4 回复必填（空白 reply → 400）', tkEmptyReply instanceof TrpcHttpError && tkEmptyReply.code === 'BAD_REQUEST', tkEmptyReply && tkEmptyReply.code);
+
+  /* ---------- 50.5 发票申请流（已付闸/实付重算/税号闸/在途幂等/登记开票） ---------- */
+  console.log('\n[补缺4] 50.5 发票申请流');
+  const apptPaidRow = (await db.select().from(schema.appointments).where(eq(schema.appointments.id, aid)).get())!;
+  interface InvoiceT {
+    id: string; invoiceNo: string; orderKind: string; billId: string; billNo: string; amountFen: number;
+    titleType: string; title: string; taxNo: string | null; delivery: string; email: string | null;
+    status: string; issuedInvoiceNo: string | null; issuedAt: Date | null; issuedBy: string | null;
+  }
+  const invCreate = await trpcMutate<{ request: InvoiceT; idempotent: boolean }>('serviceLoop.invoiceCreate', {
+    cookie: customerCookie,
+    input: {
+      orderKind: 'appointment', billId: aid, amountFen: 1, // 假金额：服务端应忽略并按实付重算
+      titleType: 'personal', title: '个人', taxNo: 'SHOULD_BE_CLEARED', delivery: 'email', email: 'e2e@philia.test',
+    },
+  });
+  check('50.5 invoiceCreate 金额=实付重算（传入假 1 分被忽略 → paidFen 实额）+ personal 税号置空',
+    invCreate.request.amountFen === apptPaidRow.paidFen && invCreate.request.amountFen > 0 &&
+      invCreate.request.taxNo === null && invCreate.request.status === 'submitted' &&
+      invCreate.idempotent === false,
+    { amountFen: invCreate.request.amountFen, paidFen: apptPaidRow.paidFen, taxNo: invCreate.request.taxNo });
+  check('50.5 invoiceNo=IN-yyyymmdd-NNN 日序 + 来源单号快照（billNo=预约码）',
+    /^IN-\d{8}-\d{3}$/.test(invCreate.request.invoiceNo) && invCreate.request.billNo === apptPaidRow.code,
+    invCreate.request.invoiceNo);
+  const invDup = await trpcMutate<{ request: InvoiceT; idempotent: boolean }>('serviceLoop.invoiceCreate', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: aid, titleType: 'personal', title: '个人', delivery: 'pickup' },
+  });
+  check('50.5 同单在途幂等（重复申请返回原单 idempotent=true，不产生新行）',
+    invDup.idempotent === true && invDup.request.id === invCreate.request.id,
+    { dup: invDup.request.id, orig: invCreate.request.id });
+  const invNoTax = await asErr(trpcMutate('serviceLoop.invoiceCreate', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: aid2, titleType: 'business', title: '某某公司', delivery: 'pickup' },
+  }));
+  check('50.5 企业抬头缺税号 → 400「企业抬头必须填写税号」（形状校验先于单据闸）',
+    invNoTax instanceof TrpcHttpError && invNoTax.code === 'BAD_REQUEST' && invNoTax.message.includes('税号'),
+    invNoTax && { code: invNoTax.code, message: invNoTax.message });
+  const invUnpaid = await asErr(trpcMutate('serviceLoop.invoiceCreate', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: aid2, titleType: 'personal', title: '个人', delivery: 'pickup' },
+  }));
+  check('50.5 已付闸：未收款预约（aid2 未 markPaid）→ 400「尚未完成收款」',
+    invUnpaid instanceof TrpcHttpError && invUnpaid.code === 'BAD_REQUEST' && invUnpaid.message.includes('尚未完成收款'),
+    invUnpaid && { code: invUnpaid.code, message: invUnpaid.message });
+  const invBadEmail = await asErr(trpcMutate('serviceLoop.invoiceCreate', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: aid, titleType: 'personal', title: '个人', delivery: 'email', email: 'not-an-email' },
+  }));
+  check('50.5 email 交付格式校验（非法邮箱 → 400「邮箱格式不正确」，形状校验先于在途幂等）',
+    invBadEmail instanceof TrpcHttpError && invBadEmail.code === 'BAD_REQUEST' && invBadEmail.message.includes('邮箱'),
+    invBadEmail && { code: invBadEmail.code, message: invBadEmail.message });
+  // cashier 来源单路径（svcBillMember=§41 萤火服务单，customer=本人，settled，实付 7744）
+  const invCashier = await trpcMutate<{ request: InvoiceT; idempotent: boolean }>('serviceLoop.invoiceCreate', {
+    cookie: customerCookie,
+    input: { orderKind: 'cashier', billId: svcBillMember.billId, titleType: 'business', title: '菲丽亚测试公司', taxNo: '91330100TEST0001X', delivery: 'pickup' },
+  });
+  check('50.5 cashier 来源单：金额=paid_fen 实收（7744）+ 企业抬头税号留存',
+    invCashier.request.amountFen === 7744 && invCashier.request.billNo === svcBillMember.billNo &&
+      invCashier.request.taxNo === '91330100TEST0001X' && invCashier.idempotent === false,
+    invCashier.request);
+  const invPending = await trpcQuery<InvoiceT[]>('serviceLoop.invoiceListPending', { cookie: ownerCookie });
+  check('50.5 商家待办可见本店 submitted 申请（两单在列）',
+    invPending.some((r) => r.id === invCreate.request.id) && invPending.some((r) => r.id === invCashier.request.id),
+    invPending.length);
+  const invReg = await trpcMutate<{ request: InvoiceT }>('serviceLoop.invoiceRegister', {
+    cookie: ownerCookie,
+    input: { requestId: invCreate.request.id, invoiceNo: 'FP-2026-1001' },
+  });
+  check('50.5 invoiceRegister 登记发票号 → issued + issuedAt/By 留痕',
+    invReg.request.status === 'issued' && invReg.request.issuedInvoiceNo === 'FP-2026-1001' &&
+      invReg.request.issuedAt instanceof Date && invReg.request.issuedBy === ownerUser!.id,
+    invReg.request);
+  const invIssuedEv = (await db.select().from(schema.eventOutbox)).filter(
+    (r) => r.eventType === 'invoice.issued' && r.channel === `user:${customerUser!.id}` &&
+      (r.payload as Record<string, unknown> | null)?.requestId === invCreate.request.id,
+  );
+  check('50.5 invoice.issued 落 outbox（user 频道，SSE 留痕可取证）', invIssuedEv.length === 1, invIssuedEv.map((r) => r.channel));
+  const invGot = await trpcQuery<{ request: InvoiceT }>('serviceLoop.invoiceGet', { cookie: customerCookie, input: { requestId: invCreate.request.id } });
+  check('50.5 客户端 invoiceGet 可见 issued + 实际发票号',
+    invGot.request.status === 'issued' && invGot.request.issuedInvoiceNo === 'FP-2026-1001', invGot.request.status);
+  const invMine = await trpcQuery<InvoiceT[]>('serviceLoop.invoiceListMine', { cookie: customerCookie });
+  check('50.5 invoiceListMine 仅本人含两单', invMine.some((r) => r.id === invCreate.request.id) && invMine.some((r) => r.id === invCashier.request.id), invMine.length);
+  const invAgain = await asErr(trpcMutate('serviceLoop.invoiceCreate', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: aid, titleType: 'personal', title: '个人', delivery: 'pickup' },
+  }));
+  check('50.5 已开票单重复申请 → 400「已开票」明文拒',
+    invAgain instanceof TrpcHttpError && invAgain.code === 'BAD_REQUEST' && invAgain.message.includes('已开票'),
+    invAgain && { code: invAgain.code, message: invAgain.message });
+
+  /* ---------- 50.6 权限：他人 403×4（证书/报告/工单/发票） ---------- */
+  console.log('\n[补缺4] 50.6 权限闸（他人 403×4）');
+  const otherCert = await asErr(trpcQuery('serviceLoop.certificateFor', { cookie: d10Cookie, input: { appointmentId: aid } }));
+  const otherReport = await asErr(trpcQuery('serviceLoop.reportFor', { cookie: d10Cookie, input: { appointmentId: aid } }));
+  const otherTicket = await asErr(trpcQuery('serviceLoop.ticketGet', { cookie: d10Cookie, input: { ticketId: tkCreate.ticket.id } }));
+  const otherInvoice = await asErr(trpcQuery('serviceLoop.invoiceGet', { cookie: d10Cookie, input: { requestId: invCreate.request.id } }));
+  check('50.6 他人证书/报告/工单/发票 全 403 FORBIDDEN（客户只见本人数据）',
+    [otherCert, otherReport, otherTicket, otherInvoice].every(
+      (r) => r instanceof TrpcHttpError && r.httpStatus === 403 && r.code === 'FORBIDDEN',
+    ),
+    [otherCert, otherReport, otherTicket, otherInvoice].map((r) => r && `${r.httpStatus}:${r.code}`));
+
+  /* ---------- 50.7 serviceHours 公示读口（端口可调实证） ---------- */
+  console.log('\n[补缺4] 50.7 serviceHours 客服时间公示');
+  const hours1 = await trpcQuery<{ text: string | null }>('serviceLoop.serviceHours', { cookie: customerCookie });
+  check('50.7 serviceHours 读出种子值「09:00–21:00」（0017 幂等种子+seed 补种）',
+    hours1.text === '09:00–21:00', hours1);
+  const hoursSave = await trpcMutate<{ version: number; keys: string[] }>('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'service', changes: [{ ruleKey: 'service_hours', valueJson: { text: '10:00–22:00' } }] },
+  });
+  check('50.7 配置端口第六域 domain=service 保存即生效（version=2）',
+    hoursSave.version === 2 && hoursSave.keys.includes('service_hours'), hoursSave);
+  const hours2 = await trpcQuery<{ text: string | null }>('serviceLoop.serviceHours', { cookie: customerCookie });
+  check('50.7 改值复读出「10:00–22:00」（端口可调实证）', hours2.text === '10:00–22:00', hours2);
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'service', changes: [{ ruleKey: 'service_hours', valueJson: { text: '09:00–21:00' } }] },
+  });
+  const hours3 = await trpcQuery<{ text: string | null }>('serviceLoop.serviceHours', { cookie: customerCookie });
+  check('50.7 还原种子值（不留端口副作用）', hours3.text === '09:00–21:00', hours3);
 
   client.close();
 }

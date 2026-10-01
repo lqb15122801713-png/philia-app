@@ -92,6 +92,16 @@ const ROUTES = [
   { app: 'customer', path: '/member', anchors: ['会员'], serverDep: true, note: '批次 R11a' },
   { app: 'customer', path: '/member/open', anchors: ['开通会员'], serverDep: true, note: '批次 R11a' },
   { app: 'customer', path: '/member/rebate', anchors: ['回馈金'], serverDep: true, note: '批次 R11b 新路由申报（W-01）' },
+  /* ---- 补缺批片 4 服务闭环（9 行；anchors=SL_COPY 真实文案，数据依赖页全 serverDep 守卫口径） ---- */
+  { app: 'customer', path: '/philia/certs', anchors: ['安心证书'], serverDep: true, note: '补缺批片 4 服务闭环' },
+  { app: 'customer', path: `/philia/certs/${INVALID_ID}`, anchors: ['安心证书'], serverDep: true, note: '补缺批片 4 服务闭环（无效 id 异常态：标题+返回出口仍在）' },
+  { app: 'customer', path: `/philia/reports/${INVALID_ID}`, anchors: ['美容报告'], serverDep: true, note: '补缺批片 4 服务闭环（无效 id 异常态）' },
+  { app: 'customer', path: '/support', anchors: ['小棉花'], serverDep: true, note: '补缺批片 4 服务闭环' },
+  { app: 'customer', path: '/support/new', anchors: ['小棉花'], serverDep: true, note: '补缺批片 4 服务闭环' },
+  { app: 'customer', path: `/support/${INVALID_ID}`, anchors: ['工单'], serverDep: true, note: '补缺批片 4 服务闭环（无效 id 异常态）' },
+  { app: 'customer', path: '/invoices', anchors: ['发票'], serverDep: true, note: '补缺批片 4 服务闭环' },
+  { app: 'customer', path: `/invoice/apply/appointment/${INVALID_ID}`, anchors: ['申请发票'], serverDep: true, note: '补缺批片 4 服务闭环（无效 id 异常态）' },
+  { app: 'customer', path: `/invoices/${INVALID_ID}`, anchors: ['发票'], serverDep: true, note: '补缺批片 4 服务闭环（无效 id 异常态）' },
   /* ---- 商家端 ---- */
   { app: 'merchant', path: '/dev-login', anchors: ['登录'] },
   { app: 'merchant', path: '/dashboard', anchors: ['今日', '仪表', '预约'] },

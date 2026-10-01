@@ -27,6 +27,7 @@ import { passRouter } from './pass';
 import { petRouter } from './pet';
 import { pushRouter } from './push';
 import { refundRouter } from './refund';
+import { serviceLoopRouter } from './serviceLoop';
 import { serviceStepRouter } from './serviceStep';
 import { storeRouter } from './store';
 import { storedValueRouter } from './storedValue';
@@ -51,6 +52,7 @@ export const appRouter = router({
   config: configRulesRouter, // 批次 员工端2.0 R9-F 规则配置管理端口（仅 owner）
   refund: refundRouter, // 批次 R12 退款专项（六联动内核：退款单/支付段/库存/储值次卡/财务口径/回馈金列位）
   membership: membershipRouter, // 批次 R11a 会员前置批（档位透出/微光开档/售卡/续费/退会/立省钩子/年费分摊双口径）
+  serviceLoop: serviceLoopRouter, // 补缺大批片 4（服务闭环：相册聚合/安心证书/美容报告/客服工单/发票申请/客服时间公示）
 });
 
 /** 前端 tRPC client 的类型锚点（仅类型导出，无运行时开销） */

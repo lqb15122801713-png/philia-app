@@ -120,6 +120,13 @@
       "when": 1790300000000,
       "tag": "0016_powerless_ares",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1790864027439,
+      "tag": "0017_lucky_rafael_vega",
+      "breakpoints": true
     }
   ]
 }
