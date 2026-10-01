@@ -115,6 +115,8 @@ const ROUTES = [
   { app: 'customer', path: '/me/settings/privacy', anchors: ['权限与隐私'], serverDep: true, note: '补缺批片 2 账户安全' },
   { app: 'customer', path: '/member/upgrade', anchors: ['升级会员'], serverDep: true, note: '补缺批片 3 会员域' },
   { app: 'customer', path: '/member/change', anchors: ['预约下期档位'], serverDep: true, note: '补缺批片 3 会员域' },
+  { app: 'customer', path: '/notifications', anchors: ['消息'], serverDep: true, note: '补缺批片 5 站内信（消息中心）' },
+  { app: 'customer', path: '/notifications/prefs', anchors: ['订阅管理'], serverDep: true, note: '补缺批片 5 站内信（订阅管理）' },
   /* ---- 商家端 ---- */
   { app: 'merchant', path: '/dev-login', anchors: ['登录'] },
   { app: 'merchant', path: '/dashboard', anchors: ['今日', '仪表', '预约'] },

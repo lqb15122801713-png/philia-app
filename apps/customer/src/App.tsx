@@ -35,6 +35,8 @@ import MemberOpenPage from './pages/MemberOpenPage'
 import MemberRebatePage from './pages/MemberRebatePage'
 import MemberUpgradePage from './pages/MemberUpgradePage'
 import MomentsPage from './pages/MomentsPage'
+import NotifyCenterPage from './pages/NotifyCenterPage'
+import NotifyPrefsPage from './pages/NotifyPrefsPage'
 import PetsPage from './pages/PetsPage'
 import PhiliaPage from './pages/PhiliaPage'
 import ProductDetailPage from './pages/ProductDetailPage'
@@ -123,6 +125,10 @@ function ProtectedRoutes() {
           申报锚点=「升级会员」/「预约下期档位」） */}
       <Route path="/member/upgrade" element={<MemberUpgradePage />} />
       <Route path="/member/change" element={<MemberChangePage />} />
+      {/* 补缺批片 5 站内信：消息中心+订阅管理（详情级无 dock，统一返回条；
+          申报锚点=「消息」「订阅管理」） */}
+      <Route path="/notifications" element={<NotifyCenterPage />} />
+      <Route path="/notifications/prefs" element={<NotifyPrefsPage />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )

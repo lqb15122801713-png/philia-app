@@ -25,6 +25,7 @@ import { fenToYuan } from '@/components/booking/format'
 import { sl } from '@/copy/serviceloop'
 import { mc } from '../components/member/copy'
 import { SavingsSheet, yuanOf, type SavingsData } from '../components/member/v2'
+import { ntf } from '@/copy/notify'
 
 const DAY_MS = 86_400_000
 
@@ -46,6 +47,7 @@ const I = {
   pin: <svg viewBox="0 0 24 24"><path d="M12 21s-7-5.5-7-11a7 7 0 0114 0c0 5.5-7 11-7 11z" /><circle cx="12" cy="10" r="2.4" /></svg>,
   cotton: <svg viewBox="0 0 24 24"><path d="M5 18a7 7 0 0114 0" /><circle cx="12" cy="7" r="3" /></svg>,
   gear: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M19 12a7 7 0 01-.2 1.6l2 1.5-2 3.4-2.3-1a7 7 0 01-2.8 1.7L13.4 21h-2.8l-.3-2.5a7 7 0 01-2.8-1.6l-2.3 1-2-3.4 2-1.5A7 7 0 015 12c0-.6.1-1.1.2-1.6l-2-1.5 2-3.4 2.3 1a7 7 0 012.8-1.7L10.6 3h2.8l.3 2.5a7 7 0 012.8 1.6l2.3-1 2 3.4-2 1.5c.1.5.2 1 .2 1.6z" /></svg>,
+  bell: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9a6 6 0 0112 0c0 5 2 6 2 6H4s2-1 2-6" /><path d="M10 19a2 2 0 004 0" /></svg>,
 }
 
 export default function MePage() {
@@ -79,6 +81,14 @@ export default function MePage() {
     staleTime: 60_000,
   })
   const savings = (savingsQ.data ?? null) as SavingsData | null
+  /* 未读角标（补缺批片 5 站内信）：push.unreadCount，30s 轮询兜底（与首页同 queryKey 缓存共享） */
+  const unreadQ = useQuery({
+    queryKey: ['push', 'unreadCount'],
+    queryFn: () => trpc.push.unreadCount.query(),
+    enabled: !!user,
+    refetchInterval: 30_000,
+  })
+  const unreadTotal = unreadQ.data?.total ?? 0
 
   const nickname = meRawQ.data?.user?.nickname ?? '铲屎官'
   const avatarUrl = meRawQ.data?.user?.avatarUrl ?? null
@@ -159,6 +169,22 @@ export default function MePage() {
             <span className="c">到店即扫</span>
           </Link>
         </section>
+
+        {/* 补缺批片 5 站内信：消息行（身份卡区下，带未读点→/notifications） */}
+        <Link
+          to="/notifications"
+          data-testid="me-notify-entry"
+          className="mt-3 flex items-center gap-3 rounded-card bg-card px-4 py-3.5 text-body-sm shadow-card transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+        >
+          <span className="relative grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sunken text-brand-secondary" aria-hidden="true">
+            {I.bell}
+            {unreadTotal > 0 ? (
+              <span data-testid="me-notify-dot" className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-brand-primary" />
+            ) : null}
+          </span>
+          <span className="min-w-0 flex-1 font-semibold text-ink">{ntf('ntf.title')}</span>
+          <span className="shrink-0 text-ink-secondary" aria-hidden="true">›</span>
+        </Link>
 
         {/* 2. 订单五格（五态入口；退款售后=槽位置灰 PD-15 V1.1 槽位 10） */}
         <nav className="me2-orderrow" data-testid="me-orderrow" aria-label="订单五态">
