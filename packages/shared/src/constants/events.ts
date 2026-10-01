@@ -4,6 +4,7 @@
  * ⚠️ 与服务端同步：本文件抄自 server/src/realtime/events.ts（T2.0），
  * 为三端共用语义。服务端改动 EventType / EventEnvelope 时必须同步本文件，
  * 请勿在客户端单独增删事件类型。
+ * 补缺大批片 1：顺手收编 C5 refundRequest.submitted / refundRequest.approved 双常量。
  *
  * 事件信封统一结构：{ id, type, channel, data, ts }，SSE 消息按 id 续传。
  */
@@ -58,6 +59,9 @@ export const EventType = {
   RefundSettled:         'refund.settled',          // 实退完成登记 → store
   RefundRejected:        'refund.rejected',         // 退款申请驳回（仅店主） → store
   RefundMonthExported:   'refund.monthExported',    // 退款月表导出审计（仅老板） → store
+  // 批次 C5 客户退款申请（补缺大批片 1 顺手收编同步自 server realtime/events.ts）
+  RefundRequestSubmitted: 'refundRequest.submitted', // 客户退款申请提交 → store
+  RefundRequestApproved: 'refundRequest.approved',  // 客户退款申请批准 → store + user
   // 批次 R11a 会员前置批（双端同步）
   MembershipOpened:      'membership.opened',       // 售卡/微光开档 → user + store
   MembershipRenewed:     'membership.renewed',      // 续费解冻 → user

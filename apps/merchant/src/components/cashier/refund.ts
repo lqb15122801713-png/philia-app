@@ -28,6 +28,8 @@ export type RefundType = RefundPreviewInput['type']
 export type RefundListRow = RouterOutputs['refund']['list'][number]
 /** refund.pendingActual 行（超 24h 未登记实退待办） */
 export type RefundPendingRow = RouterOutputs['refund']['pendingActual'][number]
+/** refundRequest.listPending 行（客户退款申请待办：申请单全列 + customerNickname + slaOverdue） */
+export type RefundRequestPendingRow = RouterOutputs['refundRequest']['listPending'][number]
 /** refund.dayStats 返回（日结「退款单列」+ 支付段分列，V2/V7 口径） */
 export type RefundDayStats = RouterOutputs['refund']['dayStats']
 
@@ -38,6 +40,8 @@ export type RefundDayStats = RouterOutputs['refund']['dayStats']
 export const REFUND_ROOT_KEY = ['refund'] as const
 export const REFUND_LIST_KEY = ['refund', 'list'] as const
 export const REFUND_PENDING_KEY = ['refund', 'pendingActual'] as const
+/** 客户退款申请待办（refundRequest.listPending；总览 TodoSection 角标与退款页待办区同键共享缓存） */
+export const REFUND_REQUEST_PENDING_KEY = ['refundRequest', 'listPending'] as const
 export const REFUND_DAY_STATS_KEY = ['refund', 'dayStats'] as const
 
 /* ------------------------------------------------------------------ */

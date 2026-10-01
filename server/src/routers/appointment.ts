@@ -1146,7 +1146,11 @@ export const appointmentRouter = router({
 
   /** 3. get（customer/staff/merchant）：详情（归属校验由 assertAppointmentAccess 强制；
    *  B3-5 W-4：附 customer{ nickname, phoneTail }——仅本人/本店员工/本店商家可达本接口，
-   *  手机号只回后 4 位） */
+   *  手机号只回后 4 位）
+   *  补缺大批片 1（additive）：附 cashierBillId——经 cashier_bill_items 预约行
+   *  （kind='appointment' 且 ref_id=appointment.id，关联口径同 refund.ts 按行退取数）
+   *  反查 cashier_bills，取最新一笔已结账（status='settled'；部分退亦可——已结账即可退）
+   *  单的 billId，无则 null（客户端服务单退款入口的数据源，本人单闸既有） */
   get: publicProcedure.input(z.object({ appointmentId: z.string().min(1) })).query(async ({ ctx, input }) => {
     const appt = await assertAppointmentAccess(ctx, input.appointmentId);
     const pet = await ctx.db.select().from(schema.pets).where(eq(schema.pets.id, appt.petId)).get();
@@ -1162,6 +1166,20 @@ export const appointmentRouter = router({
       .where(eq(schema.users.id, appt.customerId))
       .get();
     const { steps, boardingStay } = await progressOf(ctx.db, appt);
+    const billLink = await ctx.db
+      .select({ billId: schema.cashierBillItems.billId })
+      .from(schema.cashierBillItems)
+      .innerJoin(schema.cashierBills, eq(schema.cashierBills.id, schema.cashierBillItems.billId))
+      .where(
+        and(
+          eq(schema.cashierBillItems.kind, 'appointment'),
+          eq(schema.cashierBillItems.refId, appt.id),
+          eq(schema.cashierBills.status, 'settled'),
+        ),
+      )
+      .orderBy(desc(schema.cashierBills.settledAt), desc(schema.cashierBills.createdAt))
+      .limit(1)
+      .then((r) => r[0]);
     return {
       appointment: appt,
       pet: pet ?? null,
@@ -1173,6 +1191,7 @@ export const appointmentRouter = router({
         nickname: customerRow?.nickname ?? null,
         phoneTail: customerRow?.phone ? customerRow.phone.slice(-4) : null,
       },
+      cashierBillId: billLink?.billId ?? null,
     };
   }),
 

@@ -103,6 +103,19 @@ export const CASHIER_COPY = {
   'cashier.refundOfflineMethod': '线下原路（内测期口径，实退标记待登记）',
   'cashier.refundDraftEmpty': '草稿单未执行，无六联动快照',
 
+  /* ---- 客户退款申请待办（/cashier/refunds 待办区 · 批次 C5 审批缝）---- */
+  'cashier.refundRequestTitle': '客户退款申请',
+  'cashier.refundRequestApproveCta': '批准',
+  'cashier.refundRequestRejectCta': '驳回',
+  'cashier.refundRequestApproveConfirmTitle': '批准退款申请',
+  'cashier.refundRequestApproveConfirmBody':
+    '批准后按 R12 既有链路原路退回并生成退款单（商城单走线下原路售后）；执行后不可撤销，纠错=再开正单。',
+  'cashier.refundRequestRejectTitle': '驳回退款申请',
+  'cashier.refundRequestRejectNote': '驳回留痕 rejected+原因，客户侧申请单可见驳回原因。',
+  'cashier.refundRequestSlaOverdue': '超期',
+  'cashier.refundRequestTypeRefundOnly': '仅退款',
+  'cashier.refundRequestTypeReturnRefund': '退货退款',
+
   /* ---- 售卡/续费面板（MembershipPanel）---- */
   'cashier.memberStatusNote': '会员状态以提交时 server 实算为准（内测期读路径缺口，错误原文透出）',
   'cashier.memberPlansMissing': '档位配置缺失——请在规则配置端口检查会员档（member_plans 域）',
