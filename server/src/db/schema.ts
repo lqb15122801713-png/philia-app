@@ -1114,6 +1114,12 @@ export const notifications = sqliteTable('notifications', {
     .references(() => users.id),
   /** 通知类型（应用层枚举，如 appointment.remind） */
   type: text('type').notNull(),
+  /**
+   * 通知分类（补缺大批片 5 站内信分类）：trade 交易 | service 服务 | account 账户 | marketing 营销。
+   * NOT NULL 默认 'service'（存量行迁移按 type 前缀回填，见 0017 迁移）；
+   * 硬口径：trade/service/account 不可退订（保障服务履约），仅 marketing 可关。
+   */
+  category: text('category').notNull().default('service'),
   /** 标题 */
   title: text('title').notNull(),
   /** 正文 */
@@ -1124,6 +1130,28 @@ export const notifications = sqliteTable('notifications', {
   readAt: integer('read_at', { mode: 'timestamp' }),
   ...auditColumns,
 });
+
+/**
+ * 站内信订阅偏好表（补缺大批片 5）：user × category 一行，enabled=0 即退订。
+ * 无行 = 默认全订阅（enabled=1）。硬口径：仅 marketing 行允许 enabled=0，
+ * trade/service/account 置 0 在 push.setNotifyPref 硬拒（闸在路由层，本表不做 DB 约束）。
+ */
+export const userNotifyPrefs = sqliteTable(
+  'user_notify_prefs',
+  {
+    id: id(),
+    /** 用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 分类，取值：trade | service | account | marketing */
+    category: text('category').notNull(),
+    /** 是否订阅（1/0，默认 1） */
+    enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
+    ...auditColumns,
+  },
+  (t) => [uniqueIndex('uq_user_notify_prefs_user_category').on(t.userId, t.category)],
+);
 
 /* ------------------------------------------------------------------ */
 /* 5.6 员工端 2.0（批次 staff-2 · R7~R10；字段级规格见 docs/staff2/R7-R10-DESIGN.md §一） */

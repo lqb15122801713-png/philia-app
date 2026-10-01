@@ -22,6 +22,8 @@ import MemberCenterPage from './pages/MemberCenterPage'
 import MemberOpenPage from './pages/MemberOpenPage'
 import MemberRebatePage from './pages/MemberRebatePage'
 import MomentsPage from './pages/MomentsPage'
+import NotifyCenterPage from './pages/NotifyCenterPage'
+import NotifyPrefsPage from './pages/NotifyPrefsPage'
 import PetsPage from './pages/PetsPage'
 import PhiliaPage from './pages/PhiliaPage'
 import ProductDetailPage from './pages/ProductDetailPage'
@@ -75,6 +77,10 @@ function ProtectedRoutes() {
       <Route path="/member/open" element={<MemberOpenPage />} />
       {/* R11b 视觉批：回馈金账本拆独立推送页（36 号档 §四 W-01；申报锚点=「回馈金」） */}
       <Route path="/member/rebate" element={<MemberRebatePage />} />
+      {/* 补缺批片 5 站内信：消息中心+订阅管理（详情级无 dock，统一返回条；
+          申报锚点=「消息」「订阅管理」） */}
+      <Route path="/notifications" element={<NotifyCenterPage />} />
+      <Route path="/notifications/prefs" element={<NotifyPrefsPage />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )

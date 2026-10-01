@@ -18,7 +18,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { Bell, Plus } from 'lucide-react'
 import { Skeleton, useMe, usePhiliaClient, getStepDef } from '@philia/shared'
 import HomeBookingPanel from '../components/home/HomeBookingPanel'
 import { ErrorState } from '../components/home/common'
@@ -26,6 +26,7 @@ import { fenToYuan, fmtHM } from '@/components/booking/format'
 import type { AppointmentListItem } from '@/components/booking/types'
 import { readLastBooking } from '@/lib/bookingPrefill'
 import { hc } from '@/copy/home'
+import { ntf } from '@/copy/notify'
 
 const DAY_MS = 86_400_000
 const HAIRLINE = 'border-t border-[rgba(59,46,36,.09)]'
@@ -91,6 +92,14 @@ export default function HomePage() {
     queryFn: () => trpc.pass.mine.query(),
     enabled: !!user,
   })
+  /* 未读角标（补缺批片 5 站内信）：push.unreadCount，30s 轮询兜底（SSE 通知增量另议） */
+  const unreadQ = useQuery({
+    queryKey: ['push', 'unreadCount'],
+    queryFn: () => trpc.push.unreadCount.query(),
+    enabled: !!user,
+    refetchInterval: 30_000,
+  })
+  const unreadTotal = unreadQ.data?.total ?? 0
   /* 会员域（身份带档名/回馈金/环行）：membership.my + plans（settlementDay/rebateBp 读表） */
   const myQ = useQuery({
     queryKey: ['membership', 'my'],
@@ -225,6 +234,23 @@ export default function HomePage() {
         ) : null}
         <header className="hv2-banner-top" data-testid="home-topbar">
           <p className="hv2-wordmark">PHILIA</p>
+          {/* 补缺批片 5 站内信：头部右侧铃铛入口（unreadCount.total>0 显数字点，>99 显 99+） */}
+          <Link
+            to="/notifications"
+            aria-label={ntf('ntf.title')}
+            data-testid="home-notify-entry"
+            className="relative grid h-9 w-9 place-items-center rounded-full bg-card/80 text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+          >
+            <Bell className="h-[18px] w-[18px]" strokeWidth={1.6} />
+            {unreadTotal > 0 ? (
+              <span
+                data-testid="home-notify-badge"
+                className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-brand-primary px-1 font-number text-[9px] font-bold leading-none text-ink"
+              >
+                {unreadTotal > 99 ? '99+' : unreadTotal}
+              </span>
+            ) : null}
+          </Link>
         </header>
         <div className="hv2-banner-space" />
       </section>
