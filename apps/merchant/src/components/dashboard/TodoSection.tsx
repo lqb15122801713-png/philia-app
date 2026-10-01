@@ -1,6 +1,8 @@
 /**
  * 待办队列（U3 §2 右栏 · 母本 .todo-row 四行）：
- * 取消申请待审（红点）/ 待收款（柠檬点）/ 超期寄养（红点）/ 历史待确认（薄荷点）。
+ * 取消申请待审（红点）/ 待收款（柠檬点）/ 超期寄养（红点）/ 历史待确认（薄荷点）；
+ * 批次 R13b 追加第五行「换绑申诉」（红点，仅 manager|owner 传入 appealCount 时渲染，
+ * 点击页内锚到 #phone-appeals 待办块，不走路由）。
  *
  * - 计数 = dashboardStats.todo.cancelRequested / todo.unpaid / overdueBoardingCount /
  *   todo.pending（批次 S4：新单免确认，pending 仅计历史单与改期回退单）；
@@ -54,12 +56,15 @@ export default function TodoSection({
   todayItems,
   boardingItems,
   now,
+  appealCount,
 }: {
   stats: DashboardStats | undefined
   todayItems: TodayApptItem[] | undefined
   boardingItems: TodayApptItem[] | undefined
   /** 页面层传入的当前时间（react-hooks/purity：组件内不调 Date.now） */
   now: Date
+  /** 换绑申诉在途计数（批次 R13b；manager|owner 由页面层传入，clerk/undefined=不加行——待办块同闸不渲染） */
+  appealCount?: number
 }) {
   const navigate = useNavigate()
   const nowTs = now.getTime()
@@ -120,6 +125,27 @@ export default function TodoSection({
     },
   ]
 
+  // 批次 R13b：换绑申诉计数行（manager|owner；点击锚到本页 #phone-appeals 待办块）
+  if (appealCount !== undefined) {
+    rows.push({
+      key: 'phoneAppeal',
+      dot: DOT_RED,
+      label: dc('dash.todoAppealLabel'),
+      hint: dc('dash.todoAppealHint'),
+      count: appealCount,
+      to: '#phone-appeals',
+    })
+  }
+
+  /** 行点击：# 开头=页内锚点滚动（待办块），否则路由跳转 */
+  const onRowClick = (to: string) => {
+    if (to.startsWith('#')) {
+      document.getElementById(to.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
+    navigate(to)
+  }
+
   return (
     <section className="u3-panel">
       <div className="u3-panel-head">
@@ -130,7 +156,7 @@ export default function TodoSection({
       </div>
       <div>
         {rows.map((r) => (
-          <button key={r.key} type="button" className="u3-todo" onClick={() => navigate(r.to)}>
+          <button key={r.key} type="button" className="u3-todo" onClick={() => onRowClick(r.to)}>
             <i className="dot" style={{ background: r.dot }} />
             <span className="tx">
               {r.label}

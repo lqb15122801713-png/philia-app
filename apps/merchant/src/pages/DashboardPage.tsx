@@ -21,13 +21,16 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import MainScaffold, { LemonButton, QuietButton, SearchInput } from '@/components/MainScaffold'
 import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider'
+import PhoneAppealSection from '@/components/dashboard/PhoneAppealSection'
 import StatCards from '@/components/dashboard/StatCards'
 import TodayTimeline from '@/components/dashboard/TodayTimeline'
 import TodoSection from '@/components/dashboard/TodoSection'
 import { useStepProgress } from '@/components/appointments/useStepProgress'
 import { dc } from '@/copy/dashboard'
+import { useMerchantRole } from '@/lib/roles'
 import {
   IN_BOARDING_QUERY_KEY,
+  PHONE_APPEALS_QUERY_KEY,
   STATS_QUERY_KEY,
   TODAY_QUERY_KEY,
   fullDateLabel,
@@ -42,6 +45,7 @@ export default function DashboardPage() {
   const { trpc, queryClient } = usePhiliaClient()
   const events = useMerchantEvents()
   const navigate = useNavigate()
+  const role = useMerchantRole()
   const now = new Date()
 
   const statsQuery = useQuery({
@@ -63,6 +67,15 @@ export default function DashboardPage() {
     refetchInterval: events.connected ? false : POLL_FALLBACK_MS,
   })
 
+  // 换绑申诉待审队列（批次 R13b；merchantManagerProcedure 硬闸——clerk enabled 关闸不发查询，
+  // 待办块同 role.canManage 不渲染；SSE 无申诉事件类型，断线 30s 轮询兜底照既有三查询模式）
+  const appealQuery = useQuery({
+    queryKey: PHONE_APPEALS_QUERY_KEY,
+    queryFn: () => trpc.authSecurity.listPhoneAppeals.query(),
+    enabled: role.canManage,
+    refetchInterval: events.connected ? false : POLL_FALLBACK_MS,
+  })
+
   // 门店营业时段（auth.me 返回完整 store 行；独立键，不与 useMe 的镜像结构互相覆盖）
   const meQuery = useQuery({
     queryKey: ['auth', 'me', 'full'],
@@ -75,6 +88,7 @@ export default function DashboardPage() {
     void queryClient.invalidateQueries({ queryKey: STATS_QUERY_KEY })
     void queryClient.invalidateQueries({ queryKey: TODAY_QUERY_KEY })
     void queryClient.invalidateQueries({ queryKey: IN_BOARDING_QUERY_KEY })
+    void queryClient.invalidateQueries({ queryKey: PHONE_APPEALS_QUERY_KEY })
   }, [queryClient])
 
   // SSE：预约生命周期事件 → 联动刷新；新预约到达 toast
@@ -175,15 +189,19 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* 两栏：左今日预约表（1.7fr）右待办队列（1fr），gap 14 */}
+      {/* 两栏：左今日预约表（1.7fr）右待办队列（1fr），gap 14；批次 R13b 右栏叠申诉待办块 */}
       <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.7fr_1fr]">
         <TodayTimeline items={todayQuery.data ?? []} loading={todayQuery.isPending} stepProgress={stepProgress} />
-        <TodoSection
-          stats={statsQuery.data}
-          todayItems={todayQuery.data}
-          boardingItems={boardingQuery.data}
-          now={now}
-        />
+        <div className="flex flex-col gap-3.5">
+          <TodoSection
+            stats={statsQuery.data}
+            todayItems={todayQuery.data}
+            boardingItems={boardingQuery.data}
+            now={now}
+            appealCount={role.canManage ? (appealQuery.data?.items.length ?? 0) : undefined}
+          />
+          {role.canManage ? <PhoneAppealSection items={appealQuery.data?.items ?? []} /> : null}
+        </div>
       </div>
     </MainScaffold>
   )

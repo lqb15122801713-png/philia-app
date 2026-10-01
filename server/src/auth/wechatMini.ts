@@ -108,6 +108,10 @@ wechatMiniAuthRoutes.post('/api/auth/wechat-mini', async (c) => {
     .then((r) => r[0]);
 
   let created = false;
+  // 批次 R13a 软删闸：已注销账号明文拒（wx_openid 唯一不可释放，命中即拒）
+  if (user?.deactivatedAt) {
+    return c.json({ ok: false, error: 'ACCOUNT_DEACTIVATED', message: '该账号已注销，如有疑问请联系门店' }, 403);
+  }
   if (!user) {
     await db.insert(schema.users).values({
       kimiId: `wxmini:${openid}`,
