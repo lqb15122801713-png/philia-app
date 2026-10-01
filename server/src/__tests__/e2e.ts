@@ -88,6 +88,18 @@
  *      打回② 退会后结算日不到账：C 商品单 grant（期次移位至未结算期）→ cancel（作废
  *      未到账 clear 留痕行「退会作废未到账回馈金 258 分」）→ settleMonthly 合成到点 →
  *      C 余额不变/grant 未回标/批次单 granted_count 不含退会者，D 对照正常到账
+ *
+ * 批次 R13a（账号安全大片 2 · server 侧）段（51.x 续号挂尾，注销/换绑不产生退款单，
+ * 不受段尾移位铁律约束）：
+ *   51.1 sendCode 限流（60s 一码）+ 原号不一致拒 + beta devCode 回显
+ *   51.2 changePhone 双码流（错码拒/换绑成功/会话零丢失/phone_change_logs 'self'）
+ *   51.3 换绑申诉全链（提交→待审队列→approve 新号生效/旧会话照旧有效/logs
+ *        'assisted'/reject 强制 note 客户端可见）
+ *   51.4 注销前置阻断 + 勾选缺项拒 + approve 软注销全联动（会话 401/登录明文拒/
+ *        phone suffix 释放同号重新注册互不可见/回馈金清零留痕/会员 cancelled 不退折算/
+ *        pets 软删标记）+ reject 路径可见
+ *   51.5 registerDevice upsert 幂等 + listDevices 换绑留痕透出
+ *   51.6 已注销用户 SSE/业务接口 401（middleware 软删闸实证）
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -2956,6 +2968,324 @@ async function main(): Promise<void> {
       settle49b.idempotent === true && settle49b.refund.status === 'settled' &&
       !todo49After.some((r) => r.id === cancelM1.refundId),
     { a: settle49a.refund.status, bIdem: settle49b.idempotent });
+
+  /* ==================================================================
+   * 批次 R13a（账号安全大片 2 · server 侧）验收段 51.x
+   * 夹具手机号段 1396666xxxx（避开种子/e2e 既有 13800000000/1381111xxxx/1390000xxxx/13977776666）。
+   * 注销/换绑不产生退款单——本段不触碰 refund_bills，不受段尾移位铁律约束。
+   * ================================================================== */
+  console.log('\n[R13a] 51. 账号安全（注销/换绑/申诉/设备登记）');
+  /* ---------- 51.1 sendCode 限流（60s 一码）+ 原号闸 + beta devCode 回显 ---------- */
+  console.log('\n[R13a] 51.1 sendCode（限流/原号闸/devCode 回显）');
+  const phoneA = '13966660001';
+  const reg51a = await devLoginPhone(phoneA);
+  check('51.1 换绑主线用户 A 自助开户（customer + 会话签发）',
+    reg51a.res.ok && reg51a.body.user?.roles?.includes('customer') === true && !!reg51a.cookie, reg51a.body);
+  const cookie51a = reg51a.cookie!;
+  const userAId = reg51a.body.user!.id!;
+  interface SendCodeRes { ok: boolean; ttlSec: number; devCode?: string }
+  const scOld1 = await trpcMutate<SendCodeRes>('authSecurity.sendCode', {
+    cookie: cookie51a, input: { purpose: 'change_bind_old', phone: phoneA },
+  });
+  check('51.1 sendCode 原号验证码发送成功 + beta devCode 回显（6 位数字，ttl=600s）',
+    scOld1.ok === true && scOld1.ttlSec === 600 && typeof scOld1.devCode === 'string' && /^\d{6}$/.test(scOld1.devCode), scOld1);
+  const scOldMismatch = await asErr(trpcMutate('authSecurity.sendCode', {
+    cookie: cookie51a, input: { purpose: 'change_bind_old', phone: '13966660999' },
+  }));
+  check('51.1 原号不一致 → BAD_REQUEST「与当前账号绑定手机号不一致」（原号闸）',
+    scOldMismatch instanceof TrpcHttpError && scOldMismatch.code === 'BAD_REQUEST' && scOldMismatch.message.includes('不一致'),
+    scOldMismatch && { code: scOldMismatch.code, message: scOldMismatch.message });
+  const scOldResend = await asErr(trpcMutate('authSecurity.sendCode', {
+    cookie: cookie51a, input: { purpose: 'change_bind_old', phone: phoneA },
+  }));
+  check('51.1 限流：同 phone+purpose 60s 一码（立即重发 → TOO_MANY_REQUESTS）',
+    scOldResend instanceof TrpcHttpError && scOldResend.code === 'TOO_MANY_REQUESTS',
+    scOldResend && { code: scOldResend.code, message: scOldResend.message });
+
+  /* ---------- 51.2 changePhone 双码流（错码拒/成功/会话零丢失/logs 'self'） ---------- */
+  console.log('\n[R13a] 51.2 changePhone 双码换绑');
+  const phoneA2 = '13966660002';
+  const scNewClash = await asErr(trpcMutate('authSecurity.sendCode', {
+    cookie: cookie51a, input: { purpose: 'change_bind_new', phone: '13977776666' }, // D-16 段在册号（他人账号）
+  }));
+  check('51.2 新号撞号闸（新号=他人在册号 → BAD_REQUEST「已被其他账号使用」）',
+    scNewClash instanceof TrpcHttpError && scNewClash.code === 'BAD_REQUEST' && scNewClash.message.includes('已被其他账号使用'),
+    scNewClash && { code: scNewClash.code, message: scNewClash.message });
+  const scNew1 = await trpcMutate<SendCodeRes>('authSecurity.sendCode', {
+    cookie: cookie51a, input: { purpose: 'change_bind_new', phone: phoneA2 },
+  });
+  check('51.2 sendCode 新号验证码发送成功（devCode 回显）', scNew1.ok === true && /^\d{6}$/.test(scNew1.devCode ?? ''), scNew1);
+  // 构造必错新码（真码 +1 取模，排除百万分之一撞码）
+  const wrongNewCode = String((parseInt(scNew1.devCode!, 10) + 1) % 1_000_000).padStart(6, '0');
+  const wrongChange = await asErr(trpcMutate('authSecurity.changePhone', {
+    cookie: cookie51a, input: { oldCode: scOld1.devCode!, newPhone: phoneA2, newCode: wrongNewCode },
+  }));
+  const userAAfterWrong = await db.select({ phone: schema.users.phone }).from(schema.users).where(eq(schema.users.id, userAId)).get();
+  check('51.2 错新码 → BAD_REQUEST「验证码错误」且事务回滚换绑未生效（users.phone 仍原号）',
+    wrongChange instanceof TrpcHttpError && wrongChange.code === 'BAD_REQUEST' && wrongChange.message.includes('验证码错误') &&
+      userAAfterWrong?.phone === phoneA,
+    wrongChange && { code: wrongChange.code, message: wrongChange.message, phone: userAAfterWrong?.phone });
+  const changed = await trpcMutate<{ user: { id: string; phone: string | null }; roles: string[] }>('authSecurity.changePhone', {
+    cookie: cookie51a, input: { oldCode: scOld1.devCode!, newPhone: phoneA2, newCode: scNew1.devCode! },
+  });
+  check('51.2 双码换绑成功（返回 auth.me 同构：user.phone=新号 + roles 透传）',
+    changed.user.id === userAId && changed.user.phone === phoneA2 && changed.roles.includes('customer'), changed.user);
+  const meAfterChange = await trpcQuery<{ user: { id: string; phone: string | null } }>('auth.me', { cookie: cookie51a });
+  check('51.2 换绑后原会话零丢失（auth.me 仍 200；会话载荷无 phone 字段，透出已为新号）',
+    meAfterChange.user.id === userAId && meAfterChange.user.phone === phoneA2, meAfterChange.user);
+  const logs51a = await db.select().from(schema.phoneChangeLogs).where(eq(schema.phoneChangeLogs.userId, userAId));
+  check("51.2 phone_change_logs 'self' 落行（全脱敏 139****0001→139****0002，operatorId 空）",
+    logs51a.length === 1 && logs51a[0]!.channel === 'self' && logs51a[0]!.operatorId === null &&
+      logs51a[0]!.oldPhoneMasked === '139****0001' && logs51a[0]!.newPhoneMasked === '139****0002',
+    logs51a.map((l) => ({ channel: l.channel, old: l.oldPhoneMasked, new: l.newPhoneMasked })));
+  const reuseChange = await asErr(trpcMutate('authSecurity.changePhone', {
+    cookie: cookie51a, input: { oldCode: scOld1.devCode!, newPhone: phoneA2, newCode: scNew1.devCode! },
+  }));
+  check('51.2 验证码一次性（已消费码重用 → BAD_REQUEST）',
+    reuseChange instanceof TrpcHttpError && reuseChange.code === 'BAD_REQUEST',
+    reuseChange && { code: reuseChange.code, message: reuseChange.message });
+
+  /* ---------- 51.3 换绑申诉全链（提交→待审→approve/reject） ---------- */
+  console.log('\n[R13a] 51.3 换绑申诉全链');
+  const phoneC = '13966660010';
+  const reg51c = await devLoginPhone(phoneC);
+  const cookie51c = reg51c.cookie!;
+  const userCId = reg51c.body.user!.id!;
+  interface AppealReqT {
+    id: string; requestNo: string; userId: string; status: string;
+    oldPhoneMasked: string; newPhoneMasked: string; decideNote: string | null;
+  }
+  const ap1 = await trpcMutate<{ request: AppealReqT; idempotent: boolean }>('authSecurity.submitPhoneAppeal', {
+    cookie: cookie51c, input: { oldPhone: phoneC, newPhone: '13966660011', note: '原手机丢失，凭身份证到店申诉换绑' },
+  });
+  check('51.3 申诉提交成功（PC-yyyymmdd-NNN 日序单号 + 脱敏落表 + submitted）',
+    ap1.idempotent === false && /^PC-\d{8}-\d{3}$/.test(ap1.request.requestNo) &&
+      ap1.request.oldPhoneMasked === '139****0010' && ap1.request.newPhoneMasked === '139****0011' &&
+      ap1.request.status === 'submitted',
+    ap1.request);
+  const ap1Again = await trpcMutate<{ request: AppealReqT; idempotent: boolean }>('authSecurity.submitPhoneAppeal', {
+    cookie: cookie51c, input: { oldPhone: phoneC, newPhone: '13966660011', note: '重复提交验证幂等' },
+  });
+  check('51.3 在途幂等（重复提交返回同一单 idempotent=true）',
+    ap1Again.idempotent === true && ap1Again.request.id === ap1.request.id, { first: ap1.request.id, second: ap1Again.request.id });
+  const apBadOld = await asErr(trpcMutate('authSecurity.submitPhoneAppeal', {
+    cookie: cookie51c, input: { oldPhone: '13966660999', newPhone: '13966660011', note: '原号不一致验证' },
+  }));
+  check('51.3 原号不一致 → BAD_REQUEST（原号一致闸）',
+    apBadOld instanceof TrpcHttpError && apBadOld.code === 'BAD_REQUEST' && apBadOld.message.includes('不一致'),
+    apBadOld && { code: apBadOld.code, message: apBadOld.message });
+  const appealList = await trpcQuery<{ items: Array<AppealReqT & { slaBreached: boolean }> }>('authSecurity.listPhoneAppeals', { cookie: managerCookie });
+  const appealHit = appealList.items.find((r) => r.id === ap1.request.id);
+  check('51.3 listPhoneAppeals 待审队列含该单（SLA 24h 内未超期标记）',
+    !!appealHit && appealHit.slaBreached === false, appealList.items.map((r) => r.requestNo));
+  const rvApNoNote = await asErr(trpcMutate('authSecurity.reviewPhoneAppeal', {
+    cookie: managerCookie, input: { requestId: ap1.request.id, approve: false },
+  }));
+  check('51.3 reject 强制 note（缺 note → BAD_REQUEST）',
+    rvApNoNote instanceof TrpcHttpError && rvApNoNote.code === 'BAD_REQUEST',
+    rvApNoNote && { code: rvApNoNote.code, message: rvApNoNote.message });
+  const rvApReject = await trpcMutate<{ request: AppealReqT }>('authSecurity.reviewPhoneAppeal', {
+    cookie: managerCookie, input: { requestId: ap1.request.id, approve: false, note: '材料不足，请补充购机凭证' },
+  });
+  check('51.3 reject 成功（rejected + decideNote 落库）',
+    rvApReject.request.status === 'rejected' && rvApReject.request.decideNote === '材料不足，请补充购机凭证', rvApReject.request);
+  const appealStatus51c = await trpcQuery<{ items: AppealReqT[] }>('authSecurity.appealStatus', { cookie: cookie51c });
+  check('51.3 本人 appealStatus 可见驳回原因（客户端可见）',
+    appealStatus51c.items.some((r) => r.id === ap1.request.id && r.decideNote === '材料不足，请补充购机凭证'),
+    appealStatus51c.items.map((r) => ({ id: r.id, note: r.decideNote })));
+  const ap2 = await trpcMutate<{ request: AppealReqT; idempotent: boolean }>('authSecurity.submitPhoneAppeal', {
+    cookie: cookie51c, input: { oldPhone: phoneC, newPhone: '13966660012', note: '已补充材料，再次申诉' },
+  });
+  const rvApApproveNoNote = await asErr(trpcMutate('authSecurity.reviewPhoneAppeal', {
+    cookie: managerCookie, input: { requestId: ap2.request.id, approve: true },
+  }));
+  check('51.3 approve 强制 note（缺 note → BAD_REQUEST）',
+    rvApApproveNoNote instanceof TrpcHttpError && rvApApproveNoNote.code === 'BAD_REQUEST',
+    rvApApproveNoNote && { code: rvApApproveNoNote.code, message: rvApApproveNoNote.message });
+  const rvApApprove = await trpcMutate<{ request: AppealReqT }>('authSecurity.reviewPhoneAppeal', {
+    cookie: managerCookie, input: { requestId: ap2.request.id, approve: true, note: '材料核验通过，协助换绑' },
+  });
+  check('51.3 approve 成功（approved）', rvApApprove.request.status === 'approved', rvApApprove.request);
+  const user51cRow = await db.select({ phone: schema.users.phone }).from(schema.users).where(eq(schema.users.id, userCId)).get();
+  check('51.3 approve 后 users.phone 落新号（申诉通道：原号失效无需验证码）',
+    user51cRow?.phone === '13966660012', user51cRow?.phone);
+  const logs51c = await db.select().from(schema.phoneChangeLogs).where(eq(schema.phoneChangeLogs.userId, userCId));
+  check("51.3 phone_change_logs 'assisted' 落行（operatorId=审批人 manager，全脱敏）",
+    logs51c.length === 1 && logs51c[0]!.channel === 'assisted' && logs51c[0]!.operatorId === managerFix.id &&
+      logs51c[0]!.oldPhoneMasked === '139****0010' && logs51c[0]!.newPhoneMasked === '139****0012',
+    logs51c.map((l) => ({ channel: l.channel, op: l.operatorId, old: l.oldPhoneMasked, new: l.newPhoneMasked })));
+  const me51cAfter = await trpcQuery<{ user: { id: string; phone: string | null } }>('auth.me', { cookie: cookie51c });
+  check('51.3 旧会话照旧有效（session 无 phone 载荷，auth.me 200 透出新号）',
+    me51cAfter.user.id === userCId && me51cAfter.user.phone === '13966660012', me51cAfter.user);
+  const relogin51c = await devLoginPhone('13966660012');
+  check('51.3 新号登录成功（同一用户 id，幂等建档不建行）',
+    relogin51c.res.ok && relogin51c.body.user?.id === userCId, { want: userCId, got: relogin51c.body.user?.id });
+
+  /* ---------- 51.4 注销流（阻断/勾选/approve 全联动/reject 可见） ---------- */
+  console.log('\n[R13a] 51.4 账号注销流');
+  const phoneD = '13966660020';
+  const reg51d = await devLoginPhone(phoneD);
+  const cookie51d = reg51d.cookie!;
+  const userDId = reg51d.body.user!.id!;
+  interface DeactReqT { id: string; userId: string; status: string; decideNote: string | null; impactsJson: string[] }
+  // 夹具：本人宠物 + 未完成预约（confirmed）→ 阻断
+  const pet51d = (await db.insert(schema.pets).values({ ownerId: userDId, name: '注销测试宠', species: 'dog' }).returning())[0]!;
+  await db.insert(schema.appointments).values({
+    code: 'D51D20', customerId: userDId, storeId, petId: pet51d.id, serviceId: service.id,
+    type: 'grooming', scheduledStart: new Date(Date.now() + 86400_000),
+    scheduledEnd: new Date(Date.now() + 86400_000 + 3600_000), status: 'confirmed', priceFen: 100,
+  });
+  const pre51a = await trpcQuery<{ blockers: Array<{ kind: string; label: string; count: number }>; deactivatable: boolean }>(
+    'authSecurity.deactivationPrecheck', { cookie: cookie51d });
+  check('51.4 未完成预约=阻断列明（appointment×1，deactivatable=false）',
+    pre51a.deactivatable === false && pre51a.blockers.some((b) => b.kind === 'appointment' && b.count === 1), pre51a.blockers);
+  const reqBlocked = await asErr(trpcMutate('authSecurity.requestDeactivation', {
+    cookie: cookie51d, input: { impacts: ['rebate', 'member', 'pets'] },
+  }));
+  check('51.4 有阻断项提交 → BAD_REQUEST（服务端 precheck 闸）',
+    reqBlocked instanceof TrpcHttpError && reqBlocked.code === 'BAD_REQUEST' && reqBlocked.message.includes('阻断'),
+    reqBlocked && { code: reqBlocked.code, message: reqBlocked.message });
+  await db.update(schema.appointments).set({ status: 'cancelled', updatedAt: new Date() })
+    .where(eq(schema.appointments.customerId, userDId)); // 清空阻断（夹具直改）
+  const pre51b = await trpcQuery<{ blockers: unknown[]; deactivatable: boolean }>('authSecurity.deactivationPrecheck', { cookie: cookie51d });
+  check('51.4 清空阻断后放行（blockers 空，deactivatable=true）',
+    pre51b.deactivatable === true && pre51b.blockers.length === 0, pre51b);
+  const reqMissing = await asErr(trpcMutate('authSecurity.requestDeactivation', {
+    cookie: cookie51d, input: { impacts: ['rebate', 'member'] },
+  }));
+  check('51.4 影响勾选缺项 → BAD_REQUEST（三项缺一不可，服务端强校验）',
+    reqMissing instanceof TrpcHttpError && reqMissing.code === 'BAD_REQUEST' && reqMissing.message.includes('三项'),
+    reqMissing && { code: reqMissing.code, message: reqMissing.message });
+  const dr1 = await trpcMutate<{ request: DeactReqT; idempotent: boolean }>('authSecurity.requestDeactivation', {
+    cookie: cookie51d, input: { impacts: ['pets', 'rebate', 'member'] },
+  });
+  check('51.4 三勾选提交成功（submitted + impacts 快照三项）',
+    dr1.idempotent === false && dr1.request.status === 'submitted' && dr1.request.impactsJson.length === 3, dr1.request);
+  const dr1Again = await trpcMutate<{ request: DeactReqT; idempotent: boolean }>('authSecurity.requestDeactivation', {
+    cookie: cookie51d, input: { impacts: ['rebate', 'member', 'pets'] },
+  });
+  check('51.4 在途幂等（重复提交返回同一单）',
+    dr1Again.idempotent === true && dr1Again.request.id === dr1.request.id, { first: dr1.request.id, second: dr1Again.request.id });
+  const cancel51d = await trpcMutate<{ request: DeactReqT }>('authSecurity.cancelDeactivation', { cookie: cookie51d });
+  check('51.4 本人撤销（submitted→cancelled）', cancel51d.request.status === 'cancelled', cancel51d.request);
+  const dr2 = await trpcMutate<{ request: DeactReqT; idempotent: boolean }>('authSecurity.requestDeactivation', {
+    cookie: cookie51d, input: { impacts: ['rebate', 'member', 'pets'] },
+  });
+  const rvDNoNote = await asErr(trpcMutate('authSecurity.reviewDeactivation', {
+    cookie: managerCookie, input: { requestId: dr2.request.id, approve: false },
+  }));
+  check('51.4 驳回强制 note（缺 note → BAD_REQUEST）',
+    rvDNoNote instanceof TrpcHttpError && rvDNoNote.code === 'BAD_REQUEST',
+    rvDNoNote && { code: rvDNoNote.code, message: rvDNoNote.message });
+  const rvDReject = await trpcMutate<{ request: DeactReqT }>('authSecurity.reviewDeactivation', {
+    cookie: managerCookie, input: { requestId: dr2.request.id, approve: false, note: '门店挽留成功，客户同意保留账号' },
+  });
+  check('51.4 门店驳回（rejected + decideNote 落库）',
+    rvDReject.request.status === 'rejected' && rvDReject.request.decideNote === '门店挽留成功，客户同意保留账号', rvDReject.request);
+  const dStatus51 = await trpcQuery<{ inflight: DeactReqT | null; latest: DeactReqT | null }>('authSecurity.deactivationStatus', { cookie: cookie51d });
+  check('51.4 本人可见驳回原因（deactivationStatus latest=reject 单带 decideNote）',
+    dStatus51.inflight === null && dStatus51.latest?.id === dr2.request.id && dStatus51.latest.decideNote === '门店挽留成功，客户同意保留账号',
+    dStatus51.latest);
+  // 最终提交 + 会员/回馈金夹具 → approve 全联动
+  const dr3 = await trpcMutate<{ request: DeactReqT; idempotent: boolean }>('authSecurity.requestDeactivation', {
+    cookie: cookie51d, input: { impacts: ['rebate', 'member', 'pets'] },
+  });
+  const of51d = await trpcMutate<{ membership: { status: string; planKey: string } }>('membership.openFree', { cookie: cookie51d });
+  check('51.4 夹具：微光会员 active（注销联动取消对象）', of51d.membership.status === 'active', of51d.membership);
+  await db.insert(schema.rebateAccounts).values({ userId: userDId, balanceFen: 500 })
+    .onConflictDoUpdate({ target: schema.rebateAccounts.userId, set: { balanceFen: 500 } }); // 夹具：余额 500（清零留痕对象）
+  const rvDApprove = await trpcMutate<{ request: DeactReqT; clearedRebateFen: number }>('authSecurity.reviewDeactivation', {
+    cookie: managerCookie, input: { requestId: dr3.request.id, approve: true, note: '客户坚持注销，门店确认无欠单' },
+  });
+  check('51.4 门店 approve（approved + 回馈金清零额 500 透出）',
+    rvDApprove.request.status === 'approved' && rvDApprove.clearedRebateFen === 500, rvDApprove);
+  const userDRow = await db.select().from(schema.users).where(eq(schema.users.id, userDId)).get();
+  check('51.4 deactivated 落库（deactivated_at 非空 + reason=审批 note + phone/kimiId 释放 `_deact_<uid>_<原值>`）',
+    !!userDRow?.deactivatedAt && userDRow.deactivateReason === '客户坚持注销，门店确认无欠单' &&
+      userDRow.phone === `_deact_${userDId}_${phoneD}` && userDRow.kimiId === `_deact_${userDId}_phone:${phoneD}`,
+    { deactivatedAt: userDRow?.deactivatedAt, phone: userDRow?.phone, kimiId: userDRow?.kimiId });
+  const me51dAfter = await asErr(trpcQuery('auth.me', { cookie: cookie51d }));
+  check('51.4 注销后原会话 401（middleware 软删闸即时生效）',
+    me51dAfter instanceof TrpcHttpError && me51dAfter.httpStatus === 401,
+    me51dAfter && { status: me51dAfter.httpStatus, code: me51dAfter.code });
+  const reloginDeactRes = await fetch(`${BASE}/api/auth/dev-login`, {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ userId: userDId }),
+  });
+  const reloginDeactBody = (await reloginDeactRes.json()) as { ok?: boolean; error?: string; message?: string };
+  check('51.4 已注销用户登录明文拒「该账号已注销，如有疑问请联系门店」',
+    reloginDeactRes.status === 403 && reloginDeactBody.ok === false && (reloginDeactBody.message ?? '').includes('该账号已注销'),
+    { status: reloginDeactRes.status, body: reloginDeactBody });
+  const reReg51d = await devLoginPhone(phoneD);
+  check('51.4 phone suffix 释放：同号重新注册建档成功（新档 ≠ 原账号）',
+    reReg51d.res.ok && !!reReg51d.body.user?.id && reReg51d.body.user.id !== userDId,
+    { old: userDId, neu: reReg51d.body.user?.id });
+  const reRegPets = await trpcQuery<Array<{ id: string }>>('pet.list', { cookie: reReg51d.cookie! });
+  check('51.4 新旧账号互不可见（新档 pet.list 空，原档数据不透出）', reRegPets.length === 0, reRegPets.length);
+  const acc51d = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, userDId)).get();
+  const clearLog51d = (await db.select().from(schema.rebateLogs)
+    .where(and(eq(schema.rebateLogs.userId, userDId), eq(schema.rebateLogs.type, 'clear'))))[0];
+  check('51.4 回馈金清零留痕（余额 500→0，clear 行前后值 + note 含「注销」——clearRebateAccount 工艺）',
+    acc51d?.balanceFen === 0 && clearLog51d?.deltaFen === -500 && clearLog51d.beforeFen === 500 && clearLog51d.afterFen === 0 &&
+      (clearLog51d.note ?? '').includes('注销'),
+    { balance: acc51d?.balanceFen, log: clearLog51d && { before: clearLog51d.beforeFen, after: clearLog51d.afterFen, note: clearLog51d.note } });
+  const m51d = await db.select().from(schema.memberships).where(eq(schema.memberships.userId, userDId)).get();
+  check('51.4 会员 active→cancelled（注销≠退会：无折算退款 refund_fen=NULL，cancelReason 注明）',
+    m51d?.status === 'cancelled' && m51d.refundFen === null && (m51d.cancelReason ?? '').includes('注销'),
+    { status: m51d?.status, refundFen: m51d?.refundFen, reason: m51d?.cancelReason });
+  const pet51dAfter = await db.select().from(schema.pets).where(eq(schema.pets.id, pet51d.id)).get();
+  check('51.4 pets 软删标记（deleted_at 置位 + 原因「账号注销」）',
+    !!pet51dAfter?.deletedAt && pet51dAfter.deleteReason === '账号注销',
+    { deletedAt: pet51dAfter?.deletedAt, reason: pet51dAfter?.deleteReason });
+  const rvAsCustomer = await asErr(trpcMutate('authSecurity.reviewDeactivation', {
+    cookie: customerCookie, input: { requestId: dr3.request.id, approve: true },
+  }));
+  check('51.4 客户越权审批 → 403 FORBIDDEN（merchantManagerProcedure 闸）',
+    rvAsCustomer instanceof TrpcHttpError && rvAsCustomer.httpStatus === 403 && rvAsCustomer.code === 'FORBIDDEN',
+    rvAsCustomer && { status: rvAsCustomer.httpStatus, code: rvAsCustomer.code });
+
+  /* ---------- 51.5 registerDevice upsert + listDevices 换绑留痕透出 ---------- */
+  console.log('\n[R13a] 51.5 设备登记');
+  interface RegDeviceRes { device: { id: string; deviceId: string }; created: boolean }
+  const rd1 = await trpcMutate<RegDeviceRes>('authSecurity.registerDevice', {
+    cookie: cookie51a, input: { deviceId: 'dev-51a-1', label: '主力机' },
+  });
+  const rd1b = await trpcMutate<RegDeviceRes>('authSecurity.registerDevice', {
+    cookie: cookie51a, input: { deviceId: 'dev-51a-1' },
+  });
+  check('51.5 registerDevice upsert（首登创建 → 重登幂等同行刷新，不增行）',
+    rd1.created === true && rd1b.created === false && rd1b.device.id === rd1.device.id,
+    { first: rd1.created, second: rd1b.created });
+  await trpcMutate<RegDeviceRes>('authSecurity.registerDevice', {
+    cookie: cookie51a, input: { deviceId: 'dev-51a-2', label: '备用机' },
+  });
+  const devRows51 = await db.select().from(schema.userDevices).where(eq(schema.userDevices.userId, userAId));
+  check('51.5 (user_id,device_id) 唯一防重（重登后仍 2 行）', devRows51.length === 2, devRows51.length);
+  const listDev51 = await trpcQuery<{
+    devices: Array<{ deviceId: string; label: string | null }>;
+    phoneChangeLogs: Array<{ channel: string; oldPhoneMasked: string; newPhoneMasked: string }>;
+  }>('authSecurity.listDevices', { cookie: cookie51a });
+  check('51.5 listDevices 设备倒序 2 行 + 换绑留痕透出（self 139****0001→139****0002，设备页数据源）',
+    listDev51.devices.length === 2 &&
+      listDev51.phoneChangeLogs.some((l) => l.channel === 'self' && l.oldPhoneMasked === '139****0001' && l.newPhoneMasked === '139****0002'),
+    { devices: listDev51.devices.length, logs: listDev51.phoneChangeLogs });
+
+  /* ---------- 51.6 已注销用户 SSE/业务接口 401（软删闸实证） ---------- */
+  console.log('\n[R13a] 51.6 软删闸（SSE/接口 401）');
+  const push51d = await asErr(trpcMutate('push.subscribe', {
+    cookie: cookie51d, input: { clientId: 'dev-51d-push', appType: 'customer' },
+  }));
+  check('51.6 已注销用户业务接口 401（push.subscribe UNAUTHORIZED）',
+    push51d instanceof TrpcHttpError && push51d.httpStatus === 401 && push51d.code === 'UNAUTHORIZED',
+    push51d && { status: push51d.httpStatus, code: push51d.code });
+  const sse51d = await fetch(`${BASE}/api/events?client_id=dev-51d-sse`, { headers: { cookie: cookie51d } });
+  const sse51dStatus = sse51d.status;
+  await sse51d.body?.cancel();
+  check('51.6 已注销用户 SSE 401（软删闸实证：loadSessionUser 视同不存在）', sse51dStatus === 401, sse51dStatus);
+  const sse51a = await fetch(`${BASE}/api/events?client_id=dev-51a-sse`, { headers: { cookie: cookie51a } });
+  const sse51aStatus = sse51a.status;
+  await sse51a.body?.cancel();
+  check('51.6 对照：正常用户过会话闸（403=client_id 未登记，非 401——401 确为注销闸语义）',
+    sse51aStatus === 403, sse51aStatus);
 
   client.close();
 }
