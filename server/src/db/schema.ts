@@ -1891,6 +1891,101 @@ export const refundRules = sqliteTable(
 );
 
 /* ------------------------------------------------------------------ */
+/* 5.6c 客户退款申请（C5 批次 · 客户端退款申请实体 + 审批缝）                 */
+/* ------------------------------------------------------------------ */
+
+/** 退款申请行项快照（按行退的行；全额退存空数组，明细由 R12 内核全量处理） */
+export type RefundRequestItem = { itemId: string; label: string; amountFen: number };
+
+/** 退款申请时间线条目（状态推进留痕，at=ISO 时间串） */
+export type RefundRequestTimelineEntry = { status: string; at: string; note?: string };
+
+/**
+ * 客户退款申请表（C5 批次）：客户端发起 → 商家审批 → 复用 R12 内核生成退款单。
+ *
+ * - 单号 request_no：RR-{YYYYMMDD}-{当日 3 位序号}（日序发生器仿 refund genRefundNo
+ *   口径，全局唯一靠 UNIQUE 索引 + 收银写锁串行分配）。
+ * - order_kind 双源：appointment=到店收银单（cashier_bills，预约/商品/混合单）；
+ *   order=商城订单（orders）。bill_id 因双源不加外键（appointment→cashier_bills.id，
+ *   order→orders.id），bill_no 冗余存原单号（HD-… / P…）供展示与 R12 内核入参。
+ * - 状态机：submitted→approved→refunded→settled；侧支 rejected（驳回留痕）/
+ *   cancelled（客户撤回）。到店单批准直通 R12 execute 时直接落 refunded
+ *   （已批准且已生成退款单=退款中），settleActual 实退登记后联动 settled；
+ *   商城单无 R12 挂接（refund_bills.bill_id NOT NULL→cashier_bills 红线），
+ *   批准落 approved + orders.status='refunding'，线下原路办理。
+ * - 幂等：同 (customer_id, bill_id) 有在途单（submitted/approved/refunded）→
+ *   create 返回现状不新建；approve/reject/cancel 重复调用返回 idempotent=true。
+ * - reapplied_after_days：退后重购留痕——同客户同原单再次申请时，填与上次
+ *   settled 申请单的间隔天数（不拦截，纯留痕）。
+ */
+export const refundRequests = sqliteTable(
+  'refund_requests',
+  {
+    id: id(),
+    /** 申请单号（全局唯一，幂等键）：RR-yyyymmdd-NNN（日序，同 refund_bills 发生器口径） */
+    requestNo: text('request_no').notNull(),
+    /** 客户用户 ID -> users.id */
+    customerId: text('customer_id')
+      .notNull()
+      .references(() => users.id),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 原单类型，取值：appointment 到店收银单（cashier_bills） | order 商城订单（orders） */
+    orderKind: text('order_kind').notNull(),
+    /** 原单 ID（双源不加 FK：appointment→cashier_bills.id | order→orders.id） */
+    billId: text('bill_id').notNull(),
+    /** 原单号冗余（HD-… / P…，展示 + R12 execute 入参） */
+    billNo: text('bill_no').notNull(),
+    /** 退款类型，取值：refund_only 仅退款 | return_refund 退货退款（到店单强制 refund_only） */
+    type: text('type').notNull(),
+    /** 退款原因码（固定 6 码族；label 随端口枚举 refund_reason_options 位置取值） */
+    reasonCode: text('reason_code').notNull(),
+    /** 退款原因文案（申请时端口枚举快照，端口后改不回溯） */
+    reasonLabel: text('reason_label').notNull(),
+    /** 补充说明（reasonCode=other 时必填） */
+    description: text('description'),
+    /** 凭证图片 URL 数组（客户端先经 POST /api/upload relDir=refund/<requestId> 上传） */
+    photoUrls: text('photo_urls', { mode: 'json' })
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'`),
+    /** 申请金额（分）=行合计（按行退）或可退余额全量（全额退），≤原单可退余额 */
+    amountFen: integer('amount_fen').notNull(),
+    /** 行项快照（按行退：[{itemId,label,amountFen}]；全额退：[]，明细由 R12 内核全量处理） */
+    itemsJson: text('items_json', { mode: 'json' })
+      .$type<RefundRequestItem[]>()
+      .notNull()
+      .default(sql`'[]'`),
+    /** 状态，取值：submitted | approved | refunded | settled | rejected | cancelled */
+    status: text('status').notNull().default('submitted'),
+    /** 时间线留痕 [{status,at,note?}]（提交/批准/退款中/实退/驳回/撤回逐条追加） */
+    timelineJson: text('timeline_json', { mode: 'json' })
+      .$type<RefundRequestTimelineEntry[]>()
+      .notNull()
+      .default(sql`'[]'`),
+    /** 审批人用户 ID -> users.id（NULL=未审批） */
+    approverId: text('approver_id').references(() => users.id),
+    /** 审批时间（NULL=未审批） */
+    approvedAt: integer('approved_at', { mode: 'timestamp' }),
+    /** 驳回理由（驳回必填，客户端可见；NULL=未驳回） */
+    rejectReason: text('reject_reason'),
+    /** 关联 R12 退款单号（批准直通 execute 后回挂；商城单恒 NULL=线下原路） */
+    refundBillNo: text('refund_bill_no'),
+    /** 退后重购留痕：与上次 settled 申请单的间隔天数（NULL=首次申请；不拦截） */
+    reappliedAfterDays: integer('reapplied_after_days'),
+    ...auditColumns,
+  },
+  (t) => [
+    uniqueIndex('uq_refund_requests_request_no').on(t.requestNo),
+    index('ix_refund_requests_customer').on(t.customerId),
+    index('ix_refund_requests_store_status').on(t.storeId, t.status),
+    index('ix_refund_requests_bill').on(t.billId),
+  ],
+);
+
+/* ------------------------------------------------------------------ */
 /* 5.7 会员（批次 R11a 会员前置批·骨架批 · 冻结版 V1.0，CJ-0922-12/-13）     */
 /* ------------------------------------------------------------------ */
 

@@ -54,12 +54,16 @@ export default function TodoSection({
   todayItems,
   boardingItems,
   now,
+  refundRequests,
 }: {
   stats: DashboardStats | undefined
   todayItems: TodayApptItem[] | undefined
   boardingItems: TodayApptItem[] | undefined
   /** 页面层传入的当前时间（react-hooks/purity：组件内不调 Date.now） */
   now: Date
+  /** 客户退款申请待办（批次 C5 · refundRequest.listPending 独立查询挂角标；
+      店主/店长传入数组即渲染本行，clerk 无读口不传→行不出现） */
+  refundRequests?: Array<{ requestNo: string; amountFen: number }>
 }) {
   const navigate = useNavigate()
   const nowTs = now.getTime()
@@ -85,6 +89,26 @@ export default function TodoSection({
       count: stats?.todo.cancelRequested ?? 0,
       to: '/appointments?status=cancel_requested&from=todo',
     },
+    /* 客户退款申请待办（批次 C5 审批缝）：点击 → /cashier/refunds 待办区 */
+    ...(refundRequests
+      ? [
+          {
+            key: 'refundRequest',
+            dot: DOT_RED,
+            label: dc('dash.todoRefundRequestLabel'),
+            hint: refundRequests[0] ? (
+              <>
+                <span className={HINT_NUM_CLS}>{refundRequests[0].requestNo}</span>{' '}
+                <span className={HINT_NUM_CLS}>¥{fenToYuanGrouped(refundRequests[0].amountFen)}</span>
+              </>
+            ) : (
+              dc('dash.todoRefundRequestHint')
+            ),
+            count: refundRequests.length,
+            to: '/cashier/refunds',
+          } satisfies TodoRowSpec,
+        ]
+      : []),
     {
       key: 'unpaid',
       dot: DOT_LEMON,

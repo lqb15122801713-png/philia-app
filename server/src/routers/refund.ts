@@ -87,6 +87,7 @@ import {
   merchantOwnerProcedure,
   publicProcedure,
   router,
+  type Context,
 } from '../trpc';
 import { storeDayStartMs, storeWallclock } from './appointment';
 import { withCashierWriteLock } from './cashier';
@@ -845,40 +846,44 @@ function planView(plan: RefundPlan) {
 /* router                                                               */
 /* ------------------------------------------------------------------ */
 
-export const refundRouter = router({
-  /**
-   * preview（owner|manager）：六联动干跑预览——退什么钱按段分摊明细/补什么货/回什么
-   * 余额或次数/提成冲减预估/rebate_clawback_fen:0 列位明示。零写入；
-   * 终态/权限/余额校验与 execute 同一内核同口径（computePlan）。
-   */
-  preview: merchantManagerProcedure.input(refundInputSchema).mutation(async ({ ctx, input }) => {
-    const callerIsOwner = ctx.user.roles.includes('merchant_owner');
-    const plan = await computePlan(ctx.db, ctx.user.storeId!, input, callerIsOwner, new Date());
-    return { plan: planView(plan) };
-  }),
+/* ------------------------------------------------------------------ */
+/* execute 内核（C5 批次抽出：refund.execute 与 refundRequest.approve 共用，   */
+/* 重构零行为变化——主体自 execute 原样平移，既有 e2e 全绿为证）              */
+/* ------------------------------------------------------------------ */
 
-  /**
-   * execute（owner|manager）★：退款确认=同事务六联动（红线 1，任一失败整体回滚）。
-   * 店长自批单发起即执行（approver=本人）；超阈值/涉储值天然被 computePlan 闸到店主。
-   * 幂等：同原单同参（type+金额+原因）重复提交 → 返回最新一笔现状不重复落账。
-   * 内测期实退=线下原路+「实退完成」登记（settleActual），现金/微信/支付宝段落
-   * segment 回补行后 settled_at 待登记（通道期换装 API 自动退，接口预留）。
-   */
-  execute: merchantManagerProcedure
-    .input(
-      refundInputSchema.extend({
-        reason: z.string().trim().min(1, '退款必须填写原因').max(200),
-        /** 实退方式（pass_cancel 必选）：offline_original 线下原路 | to_stored_value 退储值账户 */
-        refundMethod: z.enum(['offline_original', 'to_stored_value']).optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const storeId = ctx.user.storeId!;
-      const callerIsOwner = ctx.user.roles.includes('merchant_owner');
-      if (input.type === 'pass_cancel' && !input.refundMethod) {
-        badRequest('次卡退卡须选实退方式（退储值账户或线下原路）');
-      }
-      return withCashierWriteLock(async () => {
+/** execute 端点入参（refundInput + reason 必填 + refundMethod）；approve 由申请行项构造同型入参 */
+const refundExecuteInputSchema = refundInputSchema.extend({
+  reason: z.string().trim().min(1, '退款必须填写原因').max(200),
+  /** 实退方式（pass_cancel 必选）：offline_original 线下原路 | to_stored_value 退储值账户 */
+  refundMethod: z.enum(['offline_original', 'to_stored_value']).optional(),
+});
+export type RefundExecuteInput = z.infer<typeof refundExecuteInputSchema>;
+
+export interface RefundExecuteResult {
+  refund: typeof schema.refundBills.$inferSelect;
+  /** 幂等重放不重新干跑计划（原单可能已终态），plan=null 由退款单快照还原 */
+  plan: ReturnType<typeof planView> | null;
+  idempotent: boolean;
+  /** 留口开关（PD-02 件 6）：超阈值落 draft 申请行时=true（零联动） */
+  draft: boolean;
+}
+
+/**
+ * 退款确认内核 ★：同事务六联动（红线 1，任一失败整体回滚）。
+ * 店长自批单发起即执行（approver=本人）；超阈值/涉储值天然被 computePlan 闸到店主。
+ * 幂等：同原单同参（type+金额+原因）重复提交 → 返回最新一笔现状不重复落账。
+ * 内测期实退=线下原路+「实退完成」登记（settleActual），现金/微信/支付宝段落
+ * segment 回补行后 settled_at 待登记（通道期换装 API 自动退，接口预留）。
+ */
+export async function executeRefundCore(ctx: Context, input: RefundExecuteInput): Promise<RefundExecuteResult> {
+  const user = ctx.user;
+  if (!user?.storeId) throw new TRPCError({ code: 'UNAUTHORIZED', message: '未登录或会话已过期' });
+  const storeId = user.storeId;
+  const callerIsOwner = user.roles.includes('merchant_owner');
+  if (input.type === 'pass_cancel' && !input.refundMethod) {
+    badRequest('次卡退卡须选实退方式（退储值账户或线下原路）');
+  }
+  return withCashierWriteLock(async () => {
         const outboxIds: string[] = [];
         const result = await ctx.db.transaction(async (tx) => {
           const d = txDb(tx);
@@ -922,8 +927,8 @@ export const refundRouter = router({
           const linkage = {
             ...planView(plan),
             executedAt: now.toISOString(),
-            operatorId: ctx.user.id,
-            approverId: ctx.user.id, // 店长自批单发起即执行 approver=本人；店主执行 approver=店主
+            operatorId: user.id,
+            approverId: user.id, // 店长自批单发起即执行 approver=本人；店主执行 approver=店主
             refundMethod: input.refundMethod ?? null,
             reason: input.reason,
           };
@@ -944,7 +949,7 @@ export const refundRouter = router({
                 status: 'draft',
                 linkageJson: { ...linkage, draftNote: '超阈值申请（留口开关 on）——批准=店主重新执行，零联动占位' },
                 refundMethod: input.refundMethod ?? null,
-                operatorId: ctx.user.id,
+                operatorId: user.id,
               })
               .returning()
               .then((r) => r[0]!);
@@ -963,8 +968,8 @@ export const refundRouter = router({
               status: 'executed',
               linkageJson: linkage,
               refundMethod: input.refundMethod ?? null,
-              operatorId: ctx.user.id,
-              approverId: ctx.user.id,
+              operatorId: user.id,
+              approverId: user.id,
             })
             .returning()
             .then((r) => r[0]!);
@@ -1063,7 +1068,7 @@ export const refundRouter = router({
                 balanceBeforeFen: before,
                 balanceAfterFen: before + s.amountFen,
                 billNo: plan.bill.billNo,
-                operatorId: ctx.user.id,
+                operatorId: user.id,
                 note: `退款回补 ${refundNo}`,
               });
             } else if (s.channel === 'pass_times_restore') {
@@ -1145,7 +1150,7 @@ export const refundRouter = router({
               delta: r.qty,
               beforeStock,
               afterStock: beforeStock + r.qty,
-              operatorId: ctx.user.id,
+              operatorId: user.id,
               note: `退款回补 ${plan.bill.billNo}`,
             });
           }
@@ -1224,7 +1229,7 @@ export const refundRouter = router({
                 balanceBeforeFen: before,
                 balanceAfterFen: before + plan.refundFen,
                 billNo: null, // 退卡无原单支付段（锚点单非资金单）
-                operatorId: ctx.user.id,
+                operatorId: user.id,
                 note: `次卡退卡回补 ${refundNo}`,
               });
             }
@@ -1271,7 +1276,7 @@ export const refundRouter = router({
               billNo: plan.bill.billNo,
               amountFen: plan.refundFen,
               type: plan.type,
-              by: ctx.user.id,
+              by: user.id,
             }),
           );
           return { refund, plan, idempotent: false as const, draft: false as const };
@@ -1286,7 +1291,35 @@ export const refundRouter = router({
           draft: result.draft ?? false,
         };
       });
-    }),
+}
+
+/* ------------------------------------------------------------------ */
+/* router                                                               */
+/* ------------------------------------------------------------------ */
+
+export const refundRouter = router({
+  /**
+   * preview（owner|manager）：六联动干跑预览——退什么钱按段分摊明细/补什么货/回什么
+   * 余额或次数/提成冲减预估/rebate_clawback_fen:0 列位明示。零写入；
+   * 终态/权限/余额校验与 execute 同一内核同口径（computePlan）。
+   */
+  preview: merchantManagerProcedure.input(refundInputSchema).mutation(async ({ ctx, input }) => {
+    const callerIsOwner = ctx.user.roles.includes('merchant_owner');
+    const plan = await computePlan(ctx.db, ctx.user.storeId!, input, callerIsOwner, new Date());
+    return { plan: planView(plan) };
+  }),
+
+  /**
+   * execute（owner|manager）★：退款确认=同事务六联动（红线 1，任一失败整体回滚）。
+   * 店长自批单发起即执行（approver=本人）；超阈值/涉储值天然被 computePlan 闸到店主。
+   * 幂等：同原单同参（type+金额+原因）重复提交 → 返回最新一笔现状不重复落账。
+   * 内测期实退=线下原路+「实退完成」登记（settleActual），现金/微信/支付宝段落
+   * segment 回补行后 settled_at 待登记（通道期换装 API 自动退，接口预留）。
+   * 主体=executeRefundCore（C5 批次抽出，refundRequest.approve 复用同一内核）。
+   */
+  execute: merchantManagerProcedure
+    .input(refundExecuteInputSchema)
+    .mutation(async ({ ctx, input }) => executeRefundCore(ctx, input)),
 
   /**
    * rejectDraft（店主全域 | 店长本店——驳回权放开店长，矩阵 V1.3 · H4-01/修复包 PR-1）：
@@ -1375,6 +1408,32 @@ export const refundRouter = router({
         .where(eq(schema.refundBills.id, refund.id))
         .returning()
         .then((r) => r[0]!);
+      /* ---- 客户退款申请单联动（C5 批次）：本退款单若由客户申请批准生成
+         （refund_requests.refund_bill_no=本单 refundNo，在途=approved/refunded），
+         实退登记后申请单 → settled + timeline 追加（幂等：已 settled 不在在途集合，
+         重复登记走上方 idempotent 快路径不会触达此处） ---- */
+      const linkedReqs = await ctx.db
+        .select()
+        .from(schema.refundRequests)
+        .where(
+          and(
+            eq(schema.refundRequests.refundBillNo, refund.refundNo),
+            inArray(schema.refundRequests.status, ['approved', 'refunded']),
+          ),
+        );
+      for (const req of linkedReqs) {
+        await ctx.db
+          .update(schema.refundRequests)
+          .set({
+            status: 'settled',
+            timelineJson: [
+              ...(req.timelineJson ?? []),
+              { status: 'settled', at: now.toISOString(), note: '实退完成' },
+            ],
+            updatedAt: now,
+          })
+          .where(eq(schema.refundRequests.id, req.id));
+      }
       const bill = await ctx.db
         .select({ billNo: schema.cashierBills.billNo })
         .from(schema.cashierBills)

@@ -92,6 +92,11 @@ const ROUTES = [
   { app: 'customer', path: '/member', anchors: ['会员'], serverDep: true, note: '批次 R11a' },
   { app: 'customer', path: '/member/open', anchors: ['开通会员'], serverDep: true, note: '批次 R11a' },
   { app: 'customer', path: '/member/rebate', anchors: ['回馈金'], serverDep: true, note: '批次 R11b 新路由申报（W-01）' },
+  /* 补缺批片 1 退款售后：锚点=页面真实 copy（listTitle「退款/售后」/ formTitle「申请退款」） */
+  { app: 'customer', path: '/refunds', anchors: ['退款/售后'], note: '补缺批片 1 退款售后' },
+  { app: 'customer', path: `/refunds/${INVALID_ID}`, anchors: ['退款详情'], serverDep: true, note: '补缺批片 1 退款售后：无效 id 异常态仍渲染页题+返回出口' },
+  { app: 'customer', path: `/mall/orders/${INVALID_ID}/refund`, anchors: ['申请退款'], serverDep: true, note: '补缺批片 1 退款售后' },
+  { app: 'customer', path: `/appointments/${APPT_ID}/refund`, anchors: ['申请退款'], serverDep: true, note: '补缺批片 1 退款售后：服务单诚实维护态（billId 无客户端口径，已报备）' },
   /* ---- 商家端 ---- */
   { app: 'merchant', path: '/dev-login', anchors: ['登录'] },
   { app: 'merchant', path: '/dashboard', anchors: ['今日', '仪表', '预约'] },

@@ -88,6 +88,22 @@
  *      打回② 退会后结算日不到账：C 商品单 grant（期次移位至未结算期）→ cancel（作废
  *      未到账 clear 留痕行「退会作废未到账回馈金 258 分」）→ settleMonthly 合成到点 →
  *      C 余额不变/grant 未回标/批次单 granted_count 不含退会者，D 对照正常到账
+ *
+ * 批次 C5（客户退款申请实体+审批缝）段：
+ *   50. 客户端退款申请全链路（实体+端口五键+审批缝复用 R12 内核）：
+ *      50.1 商城单申请创建（received）+幂等重复提交 idempotent=true + configView 透出；
+ *      50.2 越权：客户 A 对客户 B 的单 create→403 / getById 他人单→403 / listMine 隔离；
+ *      50.3 时限闸（超 30 天窗）+ 原因闸（非法 reasonCode）+ 开关闸（enabled=false 拒后复原）；
+ *      50.4 撤回：submitted 可撤；approved（批准直通 refunded）后撤回拒；
+ *      50.5 驳回：reason 必填 + 客户端 getById 可见驳回理由 + listPending 待办进出；
+ *      50.6 批准联动 R12+C5-01 坐实：含回馈金 grant 的到店商品单 → 申请 → 店长 approve
+ *           → refund_bills executed 行 + refundBillNo 挂接 + rebateClawbackFen=258>0
+ *           + rebate_logs clawback −258 负向行落账 + 申请单 status='refunded'；
+ *      50.7 settleActual 联动：50.6 退款单实退登记 → 申请单='settled'+timeline 追加
+ *      50.8（补缺大批片 1 补缝）：appointment.get 返回体 cashierBillId 字段存在且
+ *          对到店已结账单非空；refundRequest.submitted SSE 到店频道；重购留痕
+ *          reappliedAfterDays=本次 createdAt−上次 settled 落写天数（只留痕不拦截）。
+ *      （50 全段挂 §49c 移位铁律之前：凡生成退款单的断言必须先于 createdAt 移位）。
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -2935,6 +2951,296 @@ async function main(): Promise<void> {
   check('复核② 批次单只计实际入账（granted_count=1 不含退会者，note 记跳过 1 行）',
     batch49?.grantedCount === 1 && batch49.grantedFen === 258 && (batch49.note ?? '').includes('退会用户跳过 1 行'),
     { count: batch49?.grantedCount, fen: batch49?.grantedFen, note: batch49?.note });
+
+  /* ==================================================================
+   * 批次 C5（客户退款申请实体+审批缝）验收段
+   * 纲：客户端申请实体 → 商家审批缝 → 到店单批准直通 R12 内核（executeRefundCore
+   * 复用，阈值/涉储值闸天然生效）；R12 链路本体零改动（旧断言全绿为证）。
+   * 位置铁律：本段挂 §49c createdAt 移位之前——50.4/50.6 会生成退款单（RB 日序
+   * 单号按 createdAt 计数），移位后生成会撞 UNIQUE（§34/§38 教训同帧）。
+   * ================================================================== */
+  console.log('\n[C5] 50. 客户退款申请：实体+端口+审批缝+R12 联动');
+  interface RefundRequestRowT {
+    id: string; requestNo: string; customerId: string; storeId: string; orderKind: string;
+    billId: string; billNo: string; type: string; reasonCode: string; reasonLabel: string;
+    description: string | null; photoUrls: string[]; amountFen: number;
+    itemsJson: Array<{ itemId: string; label: string; amountFen: number }>;
+    status: string; timelineJson: Array<{ status: string; at: string; note?: string }>;
+    approverId: string | null; approvedAt: Date | null; rejectReason: string | null;
+    refundBillNo: string | null; reappliedAfterDays: number | null;
+  }
+  interface ReqCreateRes { request: RefundRequestRowT; idempotent: boolean }
+  interface ReqApproveRes {
+    request: RefundRequestRowT; refundId: string | null; refundNo: string | null;
+    idempotent: boolean; draft: boolean;
+  }
+
+  /* ---------- 50.1 商城单申请创建（received）+ 幂等 + configView ---------- */
+  console.log('\n[C5] 50.1 商城单申请创建 + 幂等 + configView');
+  const mallOrder50 = await db
+    .insert(schema.orders)
+    .values({
+      orderNo: 'PE2E5000001A',
+      customerId: customerUser!.id,
+      storeId,
+      items: [{ product_id: staple.id, name: staple.name, quantity: 1, price_fen: 12900 }],
+      totalFen: 12900,
+      status: 'received',
+    })
+    .returning()
+    .then((r) => r[0]!);
+  const cfg50 = await trpcQuery<{
+    enabled: boolean; applyWindowDays: number; freeRegretHours: number;
+    reasonOptions: Array<{ code: string; label: string }>; slaHours: number;
+  }>('refundRequest.configView', { cookie: customerCookie });
+  check('C5 50.1 configView 透出端口五键（enabled=true/时限 30 天/反悔 24h/原因枚举 6 码/SLA 24h）',
+    cfg50.enabled === true && cfg50.applyWindowDays === 30 && cfg50.freeRegretHours === 24 &&
+      cfg50.slaHours === 24 && cfg50.reasonOptions.length === 6 &&
+      cfg50.reasonOptions[1]!.label === '商品与描述不符' && cfg50.reasonOptions[5]!.code === 'other',
+    cfg50);
+  const create50 = await trpcMutate<ReqCreateRes>('refundRequest.create', {
+    cookie: customerCookie,
+    input: {
+      orderKind: 'order', billId: mallOrder50.id, type: 'return_refund',
+      reasonCode: 'not_as_described', description: '包装破损，与描述不符',
+    },
+  });
+  check('C5 50.1 商城单（received）申请创建成（RR 日序单号/submitted/全额 12900/原因 label 端口快照）',
+    /^RR-\d{8}-\d{3}$/.test(create50.request.requestNo) && create50.idempotent === false &&
+      create50.request.status === 'submitted' && create50.request.amountFen === 12900 &&
+      create50.request.billNo === 'PE2E5000001A' && create50.request.reasonLabel === '商品与描述不符' &&
+      create50.request.timelineJson.length === 1 && create50.request.timelineJson[0]!.status === 'submitted',
+    create50.request);
+  const create50dup = await trpcMutate<ReqCreateRes>('refundRequest.create', {
+    cookie: customerCookie,
+    input: {
+      orderKind: 'order', billId: mallOrder50.id, type: 'return_refund',
+      reasonCode: 'not_as_described', description: '包装破损，与描述不符',
+    },
+  });
+  const reqRows50 = await db.select().from(schema.refundRequests)
+    .where(and(eq(schema.refundRequests.customerId, customerUser!.id), eq(schema.refundRequests.billId, mallOrder50.id)));
+  check('C5 50.1 幂等：同 (客户,原单) 在途单重复提交 → idempotent=true 返回现状不新建（库内仅 1 行）',
+    create50dup.idempotent === true && create50dup.request.id === create50.request.id && reqRows50.length === 1,
+    { dupId: create50dup.request.id, rows: reqRows50.length });
+
+  /* ---------- 50.2 越权：他人单 create→403 / getById 他人单→403 / listMine 隔离 ---------- */
+  console.log('\n[C5] 50.2 越权负例');
+  const cookieD50 = await (async () => {
+    /* 夹具：sellD 为手机号旁路建档用户（kimiId 非 seed_ 前缀），dev-login 仅允许种子用户
+       （D-16 硬约束）→ 临时库内补 seed_ 前缀 kimiId 再登录（验收语义不变，同 PR-4 mkUser 口径） */
+    await db.update(schema.users).set({ kimiId: 'seed_e2e_customer_d', updatedAt: new Date() })
+      .where(eq(schema.users.id, sellD.membership.userId));
+    return devLogin(sellD.membership.userId);
+  })();
+  const crossCreate = await asErr(trpcMutate('refundRequest.create', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: gBillD.billId, type: 'refund_only', reasonCode: 'wrong_order' },
+  }));
+  check('C5 50.2 客户 A 对客户 B 的到店单 create → 403 FORBIDDEN「非本人单据」',
+    crossCreate instanceof TrpcHttpError && crossCreate.httpStatus === 403 &&
+      crossCreate.code === 'FORBIDDEN' && crossCreate.message.includes('非本人单据'),
+    crossCreate && { code: crossCreate.code, message: crossCreate.message });
+  const crossGet = await asErr(trpcQuery('refundRequest.getById', { cookie: cookieD50, input: { requestId: create50.request.id } }));
+  check('C5 50.2 getById 他人申请单 → 403 FORBIDDEN（驳回理由/时间线不外泄）',
+    crossGet instanceof TrpcHttpError && crossGet.httpStatus === 403 && crossGet.code === 'FORBIDDEN',
+    crossGet && { code: crossGet.code, message: crossGet.message });
+  const listD50 = await trpcQuery<Array<{ id: string }>>('refundRequest.listMine', { cookie: cookieD50 });
+  check('C5 50.2 listMine 仅本人（D 的列表不含客户 A 的申请单）',
+    !listD50.some((r) => r.id === create50.request.id), listD50.length);
+
+  /* ---------- 50.3 时限闸 + 原因闸 + 开关闸 ---------- */
+  console.log('\n[C5] 50.3 时限/原因/开关三闸');
+  const billValid50 = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: customerUser!.id, note: 'e2e C5 有效单（撤回/驳回夹具）' });
+  const billOver50 = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: customerUser!.id, note: 'e2e C5 超时限单' });
+  await db.update(schema.cashierBills).set({ settledAt: new Date(Date.now() - 31 * 24 * 3600 * 1000) })
+    .where(eq(schema.cashierBills.id, billOver50.billId)); // 完成时移位 31 天（>端口 30 天窗）
+  const overWindow = await asErr(trpcMutate('refundRequest.create', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: billOver50.billId, type: 'refund_only', reasonCode: 'wrong_order' },
+  }));
+  check('C5 50.3 时限闸：完成超 30 天 → BAD_REQUEST「已超退款申请时限」',
+    overWindow instanceof TrpcHttpError && overWindow.code === 'BAD_REQUEST' && overWindow.message.includes('已超退款申请时限'),
+    overWindow && { code: overWindow.code, message: overWindow.message });
+  const badReason = await asErr(trpcMutate('refundRequest.create', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: billValid50.billId, type: 'refund_only', reasonCode: 'hacked_reason' },
+  }));
+  check('C5 50.3 原因闸：非法 reasonCode（禁手打）→ BAD_REQUEST「不在可选范围」',
+    badReason instanceof TrpcHttpError && badReason.code === 'BAD_REQUEST' && badReason.message.includes('不在可选范围'),
+    badReason && { code: badReason.code, message: badReason.message });
+  const otherNoDesc = await asErr(trpcMutate('refundRequest.create', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: billValid50.billId, type: 'refund_only', reasonCode: 'other' },
+  }));
+  check('C5 50.3 原因闸：other 缺 description → BAD_REQUEST「请补充说明」',
+    otherNoDesc instanceof TrpcHttpError && otherNoDesc.code === 'BAD_REQUEST' && otherNoDesc.message.includes('补充说明'),
+    otherNoDesc && { code: otherNoDesc.code, message: otherNoDesc.message });
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'refund', changes: [{ ruleKey: 'refund_request_enabled', valueJson: { enabled: false } }] },
+  });
+  const switchOff = await asErr(trpcMutate('refundRequest.create', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: billValid50.billId, type: 'refund_only', reasonCode: 'wrong_order' },
+  }));
+  check('C5 50.3 开关闸：enabled=false → 403 FORBIDDEN「退款申请通道维护中，请到店办理」',
+    switchOff instanceof TrpcHttpError && switchOff.httpStatus === 403 &&
+      switchOff.code === 'FORBIDDEN' && switchOff.message.includes('维护中'),
+    switchOff && { code: switchOff.code, message: switchOff.message });
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'refund', changes: [{ ruleKey: 'refund_request_enabled', valueJson: { enabled: true } }] },
+  }); // 复原（端口改值零改码实证：save 即生效）
+
+  /* ---------- 50.4 撤回：submitted 可撤；approved（直通 refunded）后撤回拒 ---------- */
+  console.log('\n[C5] 50.4 撤回闸');
+  const req504 = await trpcMutate<ReqCreateRes>('refundRequest.create', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: billValid50.billId, type: 'refund_only', reasonCode: 'wrong_order', description: '拍错了' },
+  });
+  check('C5 50.4 前置：到店商品单申请创建成（全额 12900/itemsJson 空=全额档）',
+    req504.request.status === 'submitted' && req504.request.amountFen === 12900 && req504.request.itemsJson.length === 0,
+    req504.request);
+  const cancel504 = await trpcMutate<{ request: RefundRequestRowT; idempotent: boolean }>('refundRequest.cancel', {
+    cookie: customerCookie, input: { requestId: req504.request.id },
+  });
+  check('C5 50.4 submitted 可撤 → cancelled + timeline 追加',
+    cancel504.request.status === 'cancelled' && cancel504.idempotent === false &&
+      cancel504.request.timelineJson.some((t) => t.status === 'cancelled'),
+    cancel504.request.status);
+  const req504b = await trpcMutate<ReqCreateRes>('refundRequest.create', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: billValid50.billId, type: 'refund_only', reasonCode: 'wrong_order', description: '再次申请' },
+  });
+  check('C5 50.4 撤回后可再申请（cancelled 不占在途）', req504b.idempotent === false && req504b.request.id !== req504.request.id,
+    { idem: req504b.idempotent });
+  const approve504 = await trpcMutate<ReqApproveRes>('refundRequest.approve', {
+    cookie: ownerCookie, input: { requestId: req504b.request.id, note: '店主批准（撤回闸夹具）' },
+  });
+  check('C5 50.4 店主批准直通 R12（refunded + refundBillNo 挂接）',
+    approve504.request.status === 'refunded' && !!approve504.refundNo && approve504.request.refundBillNo === approve504.refundNo,
+    { status: approve504.request.status, refundNo: approve504.refundNo });
+  const cancelAfterApprove = await asErr(trpcMutate('refundRequest.cancel', {
+    cookie: customerCookie, input: { requestId: req504b.request.id },
+  }));
+  check('C5 50.4 批准（refunded）后撤回 → BAD_REQUEST「不可撤回」',
+    cancelAfterApprove instanceof TrpcHttpError && cancelAfterApprove.code === 'BAD_REQUEST' &&
+      cancelAfterApprove.message.includes('不可撤回'),
+    cancelAfterApprove && { code: cancelAfterApprove.code, message: cancelAfterApprove.message });
+
+  /* ---------- 50.5 驳回：reason 必填 + 客户端可见 + listPending 待办进出 ---------- */
+  console.log('\n[C5] 50.5 驳回');
+  const bill505 = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: customerUser!.id, note: 'e2e C5 驳回夹具单' });
+  const req505 = await trpcMutate<ReqCreateRes>('refundRequest.create', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: bill505.billId, type: 'refund_only', reasonCode: 'service_unsatisfied' },
+  });
+  const pendingBefore = await trpcQuery<Array<{ id: string; requestNo: string; slaOverdue: boolean; customerNickname: string | null }>>(
+    'refundRequest.listPending', { cookie: managerCookie });
+  check('C5 50.5 listPending 含本店 submitted 申请（SLA 未超期 + 客户昵称透出）',
+    pendingBefore.some((r) => r.id === req505.request.id && r.slaOverdue === false),
+    pendingBefore.map((r) => r.requestNo));
+  const rejectNoReason = await asErr(trpcMutate('refundRequest.reject', {
+    cookie: managerCookie, input: { requestId: req505.request.id, reason: '' },
+  }));
+  check('C5 50.5 驳回强制理由（空 reason → BAD_REQUEST）',
+    rejectNoReason instanceof TrpcHttpError && rejectNoReason.code === 'BAD_REQUEST',
+    rejectNoReason && { code: rejectNoReason.code, message: rejectNoReason.message });
+  const reject505 = await trpcMutate<{ request: RefundRequestRowT; idempotent: boolean }>('refundRequest.reject', {
+    cookie: managerCookie, input: { requestId: req505.request.id, reason: '凭证不全，请补充后重新申请' },
+  });
+  const get505 = await trpcQuery<{ request: RefundRequestRowT }>('refundRequest.getById', {
+    cookie: customerCookie, input: { requestId: req505.request.id },
+  });
+  const pendingAfter = await trpcQuery<Array<{ id: string }>>('refundRequest.listPending', { cookie: managerCookie });
+  check('C5 50.5 驳回 → rejected + 客户端 getById 可见驳回理由 + timeline 留痕 + 待办消失',
+    reject505.request.status === 'rejected' && get505.request.rejectReason === '凭证不全，请补充后重新申请' &&
+      get505.request.timelineJson.some((t) => t.status === 'rejected') &&
+      !pendingAfter.some((r) => r.id === req505.request.id),
+    { status: get505.request.status, rejectReason: get505.request.rejectReason });
+
+  /* ---------- 50.6 批准联动 R12 + C5-01 坐实（含回馈金 grant 的到店商品单） ----------
+   * 夹具复用 R11a 段思路：D=萤火会员，gBillD=12900 现金商品单（grant 258 已到账，
+   * 49b 余额 0→258）；申请全额退 → 店长 approve（12900≤阈值 50000、纯现金不涉储值
+   * →直通）→ R12 六联动落 executed + 回馈金 1:1 扣回。 */
+  console.log('\n[C5] 50.6 批准联动 R12 + C5-01（回馈金扣回坐实）');
+  const req506 = await trpcMutate<ReqCreateRes>('refundRequest.create', {
+    cookie: cookieD50,
+    input: { orderKind: 'appointment', billId: gBillD.billId, type: 'refund_only', reasonCode: 'not_as_described', description: '临期商品' },
+  });
+  check('C5 50.6 D 对本人商品单申请创建成（全额 12900/reappliedAfterDays=null 首次）',
+    req506.request.status === 'submitted' && req506.request.amountFen === 12900 &&
+      req506.request.reappliedAfterDays === null,
+    { amount: req506.request.amountFen, reapplied: req506.request.reappliedAfterDays });
+  const approve506 = await trpcMutate<ReqApproveRes>('refundRequest.approve', {
+    cookie: managerCookie, input: { requestId: req506.request.id, note: '店长批准（≤阈值直通）' },
+  });
+  check('C5 50.6 店长 approve 直通 R12（申请单 refunded + refundBillNo 挂接 + approver=店长本人 + approvedAt 落时）',
+    approve506.idempotent === false && approve506.draft === false &&
+      approve506.request.status === 'refunded' && !!approve506.refundNo &&
+      approve506.request.refundBillNo === approve506.refundNo &&
+      approve506.request.approverId === managerFix.id && approve506.request.approvedAt !== null &&
+      approve506.request.timelineJson.some((t) => t.status === 'approved') &&
+      approve506.request.timelineJson.some((t) => t.status === 'refunded'),
+    { status: approve506.request.status, refundNo: approve506.refundNo, draft: approve506.draft });
+  const rb506 = await db.select().from(schema.refundBills).where(eq(schema.refundBills.refundNo, approve506.refundNo!)).get();
+  check('C5 50.6 R12 退款单落账（executed / type=full / bill_id=原单 / 金额 12900 / reason 含申请单号）',
+    rb506?.status === 'executed' && rb506.type === 'full' && rb506.billId === gBillD.billId &&
+      rb506.amountFen === 12900 && rb506.reason.includes(req506.request.requestNo),
+    rb506 && { status: rb506.status, type: rb506.type, amount: rb506.amountFen, reason: rb506.reason });
+  const linkage506 = (rb506?.linkageJson ?? {}) as { rebateClawbackFen?: number; rebateClawbackMissedFen?: number };
+  const claw506 = (await db.select().from(schema.rebateLogs)
+    .where(and(eq(schema.rebateLogs.type, 'clawback'), eq(schema.rebateLogs.sourceId, approve506.refundNo!))))[0];
+  const accD506 = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, sellD.membership.userId)).get();
+  check('C5-01 坐实：rebateClawbackFen=258>0（已发 258 全量扣回，linkage 填实值）+ clawback 负向行落账（−258，258→0）+ 余额 258→0 不负账',
+    linkage506.rebateClawbackFen === 258 && linkage506.rebateClawbackMissedFen === 0 &&
+      claw506?.deltaFen === -258 && claw506.beforeFen === 258 && claw506.afterFen === 0 &&
+      accD506?.balanceFen === 0,
+    { linkage: linkage506, claw: claw506 && { delta: claw506.deltaFen, before: claw506.beforeFen, after: claw506.afterFen }, balance: accD506?.balanceFen });
+  check('C5 50.6 refundRequest.approved 事件到店频道（SSE，客户端轮询兜底）',
+    (await storeEventsOf('refundRequest.approved', (p) => p.requestNo === req506.request.requestNo)).length === 1,
+    req506.request.requestNo);
+
+  /* ---------- 50.7 settleActual 联动：实退登记 → 申请单 settled ---------- */
+  console.log('\n[C5] 50.7 settleActual 联动');
+  const settle507 = await trpcMutate<{ refund: { status: string }; idempotent: boolean }>('refund.settleActual', {
+    cookie: managerCookie, input: { refundId: approve506.refundId!, note: '现金已退客户（线下原路）' },
+  });
+  const get507 = await trpcQuery<{ request: RefundRequestRowT }>('refundRequest.getById', {
+    cookie: cookieD50, input: { requestId: req506.request.id },
+  });
+  check('C5 50.7 settleActual → 退款单 settled + 申请单联动 settled + timeline 追加（全状态链 submitted→approved→refunded→settled 留痕）',
+    settle507.refund.status === 'settled' && settle507.idempotent === false &&
+      get507.request.status === 'settled' &&
+      ['submitted', 'approved', 'refunded', 'settled'].every((s) => get507.request.timelineJson.some((t) => t.status === s)),
+    { refund: settle507.refund.status, req: get507.request.status, timeline: get507.request.timelineJson.map((t) => t.status) });
+
+  /* ---------- 50.8（补缺大批片 1 补缝）：appointment.get 附 cashierBillId + submitted SSE + 重购留痕 ---------- */
+  console.log('\n[C5] 50.8 appointment.get cashierBillId + submitted SSE + 重购留痕');
+  const get508 = await trpcQuery<{ appointment: { id: string }; cashierBillId: string | null }>(
+    'appointment.get', { cookie: customerCookie, input: { appointmentId: appt3.id } });
+  check('C5 50.8 appointment.get 返回体含 cashierBillId 字段且对到店已结账单非空（appt3→billA，本人单闸既有）',
+    'cashierBillId' in get508 && get508.cashierBillId === billA.billId, get508.cashierBillId);
+  check('C5 50.8 refundRequest.submitted 事件到店频道（50.6 新申请提交已发，幂等返回不发）',
+    (await storeEventsOf('refundRequest.submitted', (p) => p.requestNo === req506.request.requestNo)).length === 1,
+    req506.request.requestNo);
+  /* 重购留痕坐实：夹具直插一笔 10 天前 settled 历史申请（bill505 已驳回单无实退，
+     可退余额仍全额）→ 新申请 reappliedAfterDays=10（只留痕不拦截，照常 submitted） */
+  const fakeSettledAt = new Date(Date.now() - 10 * 24 * 3600 * 1000);
+  await db.insert(schema.refundRequests).values({
+    requestNo: 'RR-FAKE508-001', customerId: customerUser!.id, storeId, orderKind: 'appointment',
+    billId: bill505.billId, billNo: bill505.billNo, type: 'refund_only',
+    reasonCode: 'other', reasonLabel: '其他（请补充说明）', amountFen: 12900,
+    status: 'settled', createdAt: fakeSettledAt, updatedAt: fakeSettledAt,
+  });
+  const req508 = await trpcMutate<ReqCreateRes>('refundRequest.create', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: bill505.billId, type: 'refund_only', reasonCode: 'pet_health' },
+  });
+  check('C5 50.8 重购留痕：同客户同原单有 settled 历史 → reappliedAfterDays=10（只留痕不拦截，申请照常 submitted）',
+    req508.idempotent === false && req508.request.status === 'submitted' && req508.request.reappliedAfterDays === 10,
+    { reapplied: req508.request.reappliedAfterDays, status: req508.request.status });
 
   /* ---- 49c. 打回①收尾：实退待办移位（25h）→ settleActual 幂等 → 待办消失 ----
    * 段尾铁律（§34/§38 撞号教训）：createdAt 移位之后不得再发生成退款单的动作——

@@ -90,6 +90,10 @@ const ROUTES = [
   { app: 'customer', path: '/member', expect: 'sub', note: '批次 R11a' },
   { app: 'customer', path: '/member/open', expect: 'sub', note: '批次 R11a' },
   { app: 'customer', path: '/member/rebate', expect: 'sub', note: '批次 R11b 新路由申报（W-01 账本独立页）' },
+  { app: 'customer', path: '/refunds', expect: 'sub', note: '补缺批片 1 退款售后' },
+  { app: 'customer', path: `/refunds/${INVALID_ID}`, expect: 'sub', note: '补缺批片 1 退款售后：参数化照 INVALID 行写法（无种子申请单 id，异常态须出口）' },
+  { app: 'customer', path: `/mall/orders/${INVALID_ID}/refund`, expect: 'sub', note: '补缺批片 1 退款售后：无效原单异常态须出口' },
+  { app: 'customer', path: `/appointments/${APPT_ID}/refund`, expect: 'sub', note: '补缺批片 1 退款售后：服务单 billId 客户端无口径，页内诚实维护态+出口' },
   /* 商家端 25 */
   { app: 'merchant', path: '/dashboard', expect: 'tab' },
   { app: 'merchant', path: '/appointments', expect: 'sub' },
