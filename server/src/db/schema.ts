@@ -1961,9 +1961,50 @@ export const memberships = sqliteTable(
     cancelReason: text('cancel_reason'),
     /** 退会折算退款额（分；剩余整月×月均价，CJ-0922-13 口径） */
     refundFen: integer('refund_fen'),
+    /**
+     * 预约下期档位键（补缺-3 · 46 号档+PD-07 到期换档，NULL=未预约）：
+     * 到期前 member_change_window_days 天（端口默认 30）内可预约任意档；
+     * renew 事务起读本列非空 → 按预约档全价收款+切档+置空（执行幂等）。
+     */
+    nextPlanKey: text('next_plan_key'),
+    /** 预约落位时间（最后一次预约/覆盖时间；随 next_plan_key 同置同清） */
+    nextPlanSetAt: integer('next_plan_set_at', { mode: 'timestamp' }),
     ...auditColumns,
   },
   (t) => [index('ix_memberships_user_status').on(t.userId, t.status)],
+);
+
+/**
+ * 会员事件留痕表（补缺-3 · 46 号档+PD-07，只增不改审计账）：
+ * - type='upgrade'：期内升档/微光新购口径升档（fromPlan/toPlan/diffFen=补差分/billNo=升级补差单号）；
+ * - type='change_schedule'：到期换档预约/覆盖/取消/到期执行（meta.cancelled=true 取消；
+ *   meta.executed=true 到期 renew 执行落档）；
+ * - type='cancel_rebuy_note'：防滥用留痕（退会后 member_cancel_cooldown_days 天内重购 /
+ *   累计退会≥member_cancel_count_threshold 再购；只留痕不拦截，meta 记距上次退会天数/累计次数）。
+ */
+export const membershipEvents = sqliteTable(
+  'membership_events',
+  {
+    id: id(),
+    /** 会员用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 事件类型，取值：upgrade | change_schedule | cancel_rebuy_note */
+    type: text('type').notNull(),
+    /** 原档位键（cancel_rebuy_note 重购留痕为 NULL） */
+    fromPlan: text('from_plan'),
+    /** 目标档位键（取消预约事件为 NULL） */
+    toPlan: text('to_plan'),
+    /** 补差价（分；仅 upgrade 有值，微光新购口径=新档全价含附加） */
+    diffFen: integer('diff_fen'),
+    /** 关联收银单号（升级补差单 / 换档执行续费单 / 重购售卡单；可空） */
+    billNo: text('bill_no'),
+    /** 扩展留痕 JSON（公式明面/executed/cancelled/daysSinceLastCancel/cancelCount 等） */
+    meta: text('meta', { mode: 'json' }).$type<Record<string, unknown>>(),
+    ...auditColumns,
+  },
+  (t) => [index('ix_membership_events_user_created').on(t.userId, t.createdAt)],
 );
 
 /**

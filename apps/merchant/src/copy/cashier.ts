@@ -103,15 +103,37 @@ export const CASHIER_COPY = {
   'cashier.refundOfflineMethod': '线下原路（内测期口径，实退标记待登记）',
   'cashier.refundDraftEmpty': '草稿单未执行，无六联动快照',
 
-  /* ---- 售卡/续费面板（MembershipPanel）---- */
+  /* ---- 售卡/续费/升级补差面板（MembershipPanel）---- */
   'cashier.memberStatusNote': '会员状态以提交时 server 实算为准（内测期读路径缺口，错误原文透出）',
   'cashier.memberPlansMissing': '档位配置缺失——请在规则配置端口检查会员档（member_plans 域）',
   'cashier.memberAlreadyMember': '该客户已是会员 —— 点这里切换到「续费」',
+  'cashier.memberNextPlanBadge': '已预约下期：{plan}',
   'cashier.memberRenewNote': '续费=当前档位顺延 {days} 天（到期冻结自今日顺延）+ 回馈金解冻；档位不变（变更请退会后重售）。',
   'cashier.memberRenewCalcNote': '续费金额=当前档价+既有宠物只数附加费，由 server 实算——先点「计算续费金额」取得应收再收款。',
   'cashier.memberPaySectionNote': '到店付收款段（内测期现金/微信/支付宝登记，Σ须等于应收）',
   'cashier.memberRulesNote':
     '会员费=权益服务费（年费 ≠ 储值，不计储值账户/不进储值看板）；有效期 {days} 天自开通日； 到期不自动续费（到期=冻结，续费解冻，退会清零回馈金）。',
+
+  /* ---- 升级补差（MembershipPanel 升级 mode · 补缺-3 商家端代办升档；钱域 server 兜底重算，本端零自算）---- */
+  'cashier.upgradeModeTab': '升级补差',
+  'cashier.upgradeQuoteLoading': '试算加载中…',
+  'cashier.upgradeNewPurchaseTag': '新购口径',
+  'cashier.upgradeDiffMonthsTag': '剩余 {m} 整月补差',
+  'cashier.upgradeFormula':
+    '剩余 {m} 整月 ×（新档月均价 ¥{newMonthly} − 旧档月均价 ¥{oldMonthly}）= 补差 ¥{total}',
+  'cashier.upgradeDiffBase': '档价补差 ¥{amount}',
+  'cashier.upgradeDiffPet': '多宠附加补差 ¥{amount}',
+  'cashier.upgradeQuoteTotal': '补差应收（server 实算）',
+  'cashier.upgradeNewPurchaseNote': '新购口径：按新档全价实收（多宠附加按当前只数重算），有效期自成交日重起算',
+  'cashier.upgradeNoDowngradeNote': '期内只升不降——如需换到更低档，可在到期前 {days} 天预约下期档位',
+  'cashier.upgradeSubmit': '收 ¥{amount} 升档',
+  'cashier.upgradeSubmitting': '升档中…',
+  'cashier.upgradeSuccess': '已升档「{plan}」· 补差单 {billNo}（¥{amount}）',
+  'cashier.upgradeSuccessIdempotent': '已是「{plan}」档——无需补差，未生成新单',
+  'cashier.upgradeDoneTitle': '升档完成 · 当前档「{plan}」（即时生效，到期日不变）',
+  'cashier.upgradeBillLabel': '补差单号',
+  'cashier.upgradeBillIdempotent': '（同档幂等，无新单）',
+  'cashier.upgradeDone': '完成',
 
   /* ---- 储值台账导入（ImportLedgerPanel，只交付不执行）---- */
   'cashier.importAside': '只交付不执行——真台账导入等老板令；演示台账试导可标记清除',

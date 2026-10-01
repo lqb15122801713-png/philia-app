@@ -54,6 +54,8 @@ export const MEMBER_COPY = {
   'j1.alreadyMember': '你已是会员（有效期至 {date}）。续费或升级请到店收银台办理。',
   /* PR-4 PD-05 件 1：微光态提示条不显示有效期（永久豁免，无到期语义） */
   'j1.alreadyMemberFree': '你已是会员（免费档永久有效）。升级付费档享回馈金与服务折扣，到店收银台即可办理。',
+  /* 补缺批片 3：已是会员提示条下升级路径句（upgradeAvailable 时显，→/member/upgrade） */
+  'j1.upgradeEntry': '升级更高档 ›',
   'j1.backMember': '回会员中心 ›',
   /* PR-5 UX P3-2：完成页下半屏配重——宠物档案引导（45 号档改进方向取实现净者） */
   'j1.doneGotoPets': '看看它的档案 ›',
@@ -197,6 +199,79 @@ export const MEMBER_COPY = {
      copy 域，就近挂本表，键名 live.* 前缀 ---- */
   'live.stepActive': '进行中',
   'live.stepPending': '未开始',
+
+  /* ---- 补缺批片 3 · 会员域新增（2026-10-01）：升档试算 up.* / 到期换档预约 chg.* /
+     今年已省 saved.*。钱域口径：金额一律读 server 透出值（upgradeQuote / mySavings），
+     本表零数值硬编码；内测期客户端无线上收款，成交=到店收银台代办（不画假支付钮 R10） ---- */
+
+  /* up.* 升档试算（/member/upgrade） */
+  'up.pushLabel': '升级会员 · UPGRADE',
+  'up.headTitle': '升级会员',
+  'up.headNo': 'UPGRADE QUOTE',
+  'up.entryCta': '升级会员 ›',
+  'up.currentTitle': '当前档位',
+  'up.paidLine': '已付 ¥{price}',
+  'up.expireLine': '有效期至 {date}',
+  'up.targetTitle': '可升档位 · 试算明面',
+  /* R15 算式明面：逐项 mono，m/newMonthly/oldMonthly/diff 全读 server formula+baseDiffFen */
+  'up.formulaLine': '剩余 {m} 整月 ×（新档月均价 ¥{newMonthly} − 旧档月均价 ¥{oldMonthly}）= ¥{diff}',
+  'up.formulaPet': '多宠附加差价 ¥{pet}',
+  'up.formulaTotal': '合计补差 ¥{total}',
+  'up.newPurchaseTag': '新购口径',
+  'up.newPurchaseLine': '新购口径 = 全档价（多宠附加按现有宠物数计），开通时点重起算有效期',
+  'up.freeTierGuide': '当前为免费档，升档按新购口径办理：全档价、到店收银台开通即时生效。',
+  'up.storeGuideTitle': '到店办理',
+  'up.storeGuideBody': '内测期升级请到店收银台办理：出示会员码，店员代办补差，成交即时生效。',
+  'up.notesTitle': '办理说明',
+  'up.noteEffective': '升档即时生效：新档权益只管新单，到期日不变。',
+  'up.noteInflight': '在途回馈金不重算，按下单时档位口径到账。',
+  'up.noteBalance': '旧档回馈金余额原样保留，零动作。',
+  'up.noteNoDowngrade': '期内不降级，可在到期前 {days} 天预约下期档位。',
+  'up.emptyTitle': '当前没有可升档位',
+  'up.emptyTopTier': '已是最高档，权益已全部点亮。',
+  'up.nonMemberTitle': '开通会员后可升档',
+  'up.nonMemberBody': '先开通会员（微光档免费一键开通），再按需要升档。',
+  'up.nonMemberCta': '去开通会员 ›',
+  'up.loadFail': '升级试算加载失败',
+
+  /* chg.* 到期换档预约（/member/change） */
+  'chg.pushLabel': '预约下期档位 · SCHEDULE',
+  'chg.headTitle': '到期换档',
+  'chg.headNo': 'PLAN CHANGE',
+  'chg.entryCta': '预约下期档位 ›',
+  'chg.scheduledEntry': '已预约下期：{plan} ›',
+  'chg.windowOpen': '到期前 {days} 天开放预约，窗口内可改约下期档位（含低档，期内不降级不变）。',
+  'chg.windowClosed': '到期前 {days} 天开放预约，请到期日临近时再来。',
+  'chg.expireLabel': '到期日',
+  'chg.targetTitle': '选择下期档位',
+  'chg.priceYear': '¥{price} / 年',
+  'chg.priceFree': '免费',
+  'chg.submitCta': '预约{tier}',
+  'chg.submitting': '提交中…',
+  'chg.scheduledTitle': '预约单',
+  'chg.scheduledLine': '已预约 {plan} · 到期按新档续费（到店办理）',
+  'chg.scheduledAtLabel': '预约时刻',
+  'chg.cancelCta': '取消预约',
+  'chg.cancelling': '取消中…',
+  'chg.execNote': '到期日到店续费时按预约档全价收款；取消或改约不影响当前权益。',
+  'chg.freeNote': '免费档永久有效，无到期换档；升档即时生效请走升级页。',
+  'chg.freeCta': '去升级页 ›',
+  'chg.nonMemberTitle': '开通会员后可预约下期档位',
+  'chg.nonMemberCta': '去开通会员 ›',
+  'chg.toastOk': '已预约下期档位',
+  'chg.toastCancel': '已取消预约',
+  'chg.actionFail': '预约操作失败，请稍后再试',
+
+  /* saved.* 今年已省（A-3 账区行 + A-4 me-saved-slot 点亮 + 构成明面弹层，两源分明） */
+  'saved.slotTitle': '今年已省',
+  'saved.rowLine': '今年已省 ¥{total} ›',
+  'saved.meSlotNote': '构成明面',
+  'saved.sheetTitle': '今年已省 · 构成明面',
+  'saved.yearNote': '{year} 年已发生口径',
+  'saved.rebateLine': '回馈金累计到账',
+  'saved.discountLine': '服务折扣节省',
+  'saved.totalLine': '合计',
+  'saved.noHypeNote': '只算已发生的回馈金与折扣，不含预计。',
 } as const;
 
 export type MemberCopyKey = keyof typeof MEMBER_COPY;

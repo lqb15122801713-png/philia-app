@@ -5,7 +5,7 @@
  * + 订单五格（白卡五列）+ 功能网格一层（4 列×2，禁多层卡片堆叠）。
  *
  * 槽位置灰（PD-15 V1.1 三规：不上数不上假件 + 注记 + data-testid）：
- * - 今年已省=「——」（省钱口径未冻结前不上数字；口径方案产品侧出）；
+ * - 今年已省：补缺批片 3 已点亮（mySavings 真值 + 构成明面弹层，testid me-saved-slot 保留）；
  * - 退款售后（orderrow）/ 服务相册 / 优惠券 / 常用地址 / 小棉花客服（grid8）=置灰槽位；
  * 落地件：档章/回馈金余额/续费倒计时（membership.my 真值）/会员码 qrrow/订单五态入口/
  * 宠物档案/寄养预约/设置（退出登录入口保留件）。
@@ -19,6 +19,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getApiBase, logout, useMe, usePhiliaClient } from '@philia/shared'
 import { fenToYuan } from '@/components/booking/format'
+import { mc } from '../components/member/copy'
+import { SavingsSheet, yuanOf, type SavingsData } from '../components/member/v2'
 
 const DAY_MS = 86_400_000
 
@@ -127,6 +129,8 @@ export default function MePage() {
   const { toastEl, showToast } = useMeToast()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [logoutPending, setLogoutPending] = useState(false)
+  /* 补缺批片 3：me-saved-slot 点亮——今年已省真值（mySavings）+ 构成明面弹层 */
+  const [savedOpen, setSavedOpen] = useState(false)
 
   const meRawQ = useQuery({
     queryKey: ['auth', 'me', 'raw'],
@@ -145,6 +149,14 @@ export default function MePage() {
     queryFn: () => trpc.pet.list.query(),
     enabled: !!user,
   })
+  /* 补缺批片 3：今年已省双源聚合（customer 本人；非会员返回零值口径） */
+  const savingsQ = useQuery({
+    queryKey: ['membership', 'mySavings'],
+    queryFn: () => trpc.membership.mySavings.query(),
+    enabled: !!user,
+    staleTime: 60_000,
+  })
+  const savings = (savingsQ.data ?? null) as SavingsData | null
 
   const nickname = meRawQ.data?.user?.nickname ?? '铲屎官'
   const avatarUrl = meRawQ.data?.user?.avatarUrl ?? null
@@ -202,10 +214,17 @@ export default function MePage() {
             ) : null}
           </div>
           <div className="nums">
-            {/* 今年已省=槽位置灰不上数（PD-15 V1.1 槽位 1：省钱口径未冻结前「——」） */}
-            <div className="dim" data-testid="me-saved-slot">
-              <div className="v">——</div>
-              <div className="k">今年已省 · {SLOT_NOTE}</div>
+            {/* 补缺批片 3：今年已省槽位点亮——「——」换 mySavings.totalFen 真值，注记换
+                「构成明面」，点按=构成弹层；testid me-saved-slot 原值保留 */}
+            <div
+              className="dim"
+              data-testid="me-saved-slot"
+              role="button"
+              style={{ cursor: 'pointer' }}
+              onClick={() => setSavedOpen(true)}
+            >
+              <div className="v">{savings ? `¥${yuanOf(savings.totalFen)}` : '——'}</div>
+              <div className="k">{mc('saved.slotTitle')} · {mc('saved.meSlotNote')}</div>
             </div>
             <div data-testid="me-rebate-cell">
               <div className="v">{fenToYuan(rebateBalance)}</div>
@@ -266,6 +285,8 @@ export default function MePage() {
           onConfirm={() => void doLogout()}
         />
       ) : null}
+      {/* 补缺批片 3：今年已省构成明面弹层（与 A-3 账区行同件 SavingsSheet） */}
+      <SavingsSheet open={savedOpen} onClose={() => setSavedOpen(false)} savings={savings} />
       {toastEl}
     </div>
   )

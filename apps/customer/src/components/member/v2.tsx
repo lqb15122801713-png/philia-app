@@ -461,3 +461,63 @@ export function useDeckSelect(count: number, initial: number) {
   }
   return { active, pick, deckRef, onScroll, count }
 }
+
+/* ------------------------------------------------------------------ */
+/* 今年已省 · 构成明面弹层（补缺批片 3：A-3 账区行与 A-4 me-saved-slot 共用；
+   两源逐项 mono + 防夸大注，金额全读 membership.mySavings server 透出值）         */
+/* ------------------------------------------------------------------ */
+
+export interface SavingsData {
+  year: number
+  rebateSettledFen: number
+  serviceDiscountFen: number
+  totalFen: number
+}
+
+export function SavingsSheet({
+  open,
+  onClose,
+  savings,
+}: {
+  open: boolean
+  onClose: () => void
+  savings: SavingsData | null
+}) {
+  const rows = [
+    { k: mc('saved.rebateLine'), v: savings?.rebateSettledFen ?? 0 },
+    { k: mc('saved.discountLine'), v: savings?.serviceDiscountFen ?? 0 },
+    { k: mc('saved.totalLine'), v: savings?.totalFen ?? 0 },
+  ]
+  return (
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title={mc('saved.sheetTitle')}
+      note={savings ? mc('saved.yearNote', { year: savings.year }) : undefined}
+    >
+      <div className="m2-card" data-testid="saved-sheet-rows" style={{ padding: '4px 16px' }}>
+        {rows.map((r) => (
+          <div className="m2-rowx" key={r.k}>
+            <div style={{ fontSize: '12.5px', fontWeight: 700 }}>{r.k}</div>
+            <span className="m2-mono" style={{ marginLeft: 'auto', fontWeight: 700, fontSize: 13 }}>
+              ¥{yuanOf(r.v)}
+            </span>
+          </div>
+        ))}
+      </div>
+      <p className="m2-note" style={{ marginTop: 10 }}>
+        {mc('saved.noHypeNote')}
+      </p>
+      {/* 纯信息弹层「知道了」次级钮（同 a3 续费弹层惯例） */}
+      <button
+        type="button"
+        data-testid="saved-sheet-got-it"
+        className="m2-press"
+        style={{ marginTop: 14, width: '100%', padding: '13px 22px', borderRadius: 18, border: '1px solid var(--v2line)', background: 'var(--v2card)', color: 'var(--v2ink)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}
+        onClick={onClose}
+      >
+        {mc('a3.sheetGotIt')}
+      </button>
+    </Sheet>
+  )
+}
