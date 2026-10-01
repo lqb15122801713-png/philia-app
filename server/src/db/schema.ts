@@ -2054,3 +2054,238 @@ export const rebateSettlements = sqliteTable(
   },
   (t) => [uniqueIndex('uq_rebate_settlements_period').on(t.period)],
 );
+
+/* ------------------------------------------------------------------ */
+/* 5.8 服务闭环补缺（补缺大批片 4 · server 侧）：证书/报告/工单/发票/服务规则  */
+/* ------------------------------------------------------------------ */
+
+/** 安心证书快照载荷（service_certificates.payload） */
+export type CertificatePayload = {
+  petName: string;
+  serviceName: string;
+  storeName: string;
+  /** 服务完成时间（ISO 串） */
+  completedAt: string;
+  /** 六步汇总（步骤 label + 有效照片计数，照片口径=invalidated_at IS NULL） */
+  stepsSummary: Array<{ stepKey: string; label: string; photoCount: number }>;
+  /** 交付检查步 before/after 各取最新一张有效图 */
+  beforeUrl: string;
+  afterUrl: string;
+};
+
+/** 美容报告体征项（service_reports.vitals 元素；status: normal | attention | abnormal） */
+export type ReportVital = {
+  key: 'weight' | 'skin' | 'ear' | 'coat' | 'nail';
+  label: string;
+  value: string;
+  status: 'normal' | 'attention' | 'abnormal';
+  note?: string;
+};
+
+/** 工单时间线条目（support_tickets.timeline_json 元素） */
+export type TicketTimelineItem = {
+  /** 动作，取值：submitted | replied | closed */
+  action: string;
+  /** 动作时间（ISO 串） */
+  at: string;
+  /** 操作人用户 ID */
+  by: string;
+  /** 附注（回复内容等） */
+  note?: string;
+};
+
+/**
+ * 安心证书表（补缺大批片 4）：一单一证（appointment_id 唯一）。
+ * 生成落点=serviceStep.confirmStep 末步三合一事务内（与预约 completed 同事务）；
+ * R10 无数据不生成：交付检查步无有效 before/after 图则不落行（读侧 404 明文）。
+ * deliveredAt=客户端首读时间（certificates 读口幂等置位，NULL=未读）。
+ */
+export const serviceCertificates = sqliteTable(
+  'service_certificates',
+  {
+    id: id(),
+    /** 预约单 ID -> appointments.id（一单一证） */
+    appointmentId: text('appointment_id')
+      .notNull()
+      .unique()
+      .references(() => appointments.id),
+    /** 客户用户 ID -> users.id（冗余列，本人列表免 join） */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 证书快照 JSON，结构见 CertificatePayload */
+    payload: text('payload', { mode: 'json' }).$type<CertificatePayload>().notNull(),
+    /** 生成时间（= 末步完成同事务时点） */
+    generatedAt: integer('generated_at', { mode: 'timestamp' }).notNull(),
+    /** 客户端首读时间（NULL = 未读；读口幂等置位） */
+    deliveredAt: integer('delivered_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [index('ix_service_certificates_user').on(t.userId, t.createdAt)],
+);
+
+/**
+ * 美容报告表（补缺大批片 4）：一单一报（appointment_id 唯一）。
+ * 生成落点同证书（confirmStep 末步同事务）；报告恒生成——员工端报告卡 vitals
+ * 缺省时各项 status='normal' + note='本次未记录'（留痕口径不阻塞完成）；
+ * 体重项恒为 pets.weight_kg 服务端快照（不信客户端输入值）。
+ */
+export const serviceReports = sqliteTable(
+  'service_reports',
+  {
+    id: id(),
+    /** 预约单 ID -> appointments.id（一单一报） */
+    appointmentId: text('appointment_id')
+      .notNull()
+      .unique()
+      .references(() => appointments.id),
+    /** 客户用户 ID -> users.id（冗余列，本人列表免 join） */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 体征快照 JSON 数组，结构见 ReportVital（五项：weight/skin/ear/coat/nail） */
+    vitals: text('vitals', { mode: 'json' }).$type<ReportVital[]>().notNull(),
+    /** 异常项拼句（任一 status≠normal 时生成；NULL=全正常） */
+    abnormalText: text('abnormal_text'),
+    /** 下次护理建议（员工端报告卡输入，可空） */
+    nextAdvice: text('next_advice'),
+    /** 生成时间（= 末步完成同事务时点） */
+    generatedAt: integer('generated_at', { mode: 'timestamp' }).notNull(),
+    /** 客户端首读时间（NULL = 未读；读口幂等置位） */
+    deliveredAt: integer('delivered_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [index('ix_service_reports_user').on(t.userId, t.createdAt)],
+);
+
+/**
+ * 客服工单表（补缺大批片 4）：客户提单（建议/投诉/表扬/其他）→ 本店店长/店主回复。
+ * ticket_no=TK-yyyymmdd-NNN（日序，全局唯一，与 HD/RB 单号发生器同口径）；
+ * 状态机：submitted → replied → closed；timeline_json 全留痕（只增不改）。
+ * photo_urls 为上传图 URL 列表（JSON 数组），已纳入 storage/cleanup 孤儿回收白名单。
+ */
+export const supportTickets = sqliteTable(
+  'support_tickets',
+  {
+    id: id(),
+    /** 工单号（全局唯一，幂等键）：TK-yyyymmdd-NNN */
+    ticketNo: text('ticket_no').notNull().unique(),
+    /** 提单客户用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 关联门店 ID -> stores.id（提单时选定的门店；店长待办按本店过滤） */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 工单类型，取值：suggest | complaint | praise | other */
+    type: text('type').notNull(),
+    /** 问题描述 */
+    description: text('description').notNull(),
+    /** 附图 URL 列表 JSON */
+    photoUrls: text('photo_urls', { mode: 'json' }).$type<string[]>().notNull().default([]),
+    /** 联系方式（缺省回显=users.phone，客户端可改） */
+    contactPhone: text('contact_phone'),
+    /** 状态，取值：submitted | replied | closed */
+    status: text('status').notNull().default('submitted'),
+    /** 回复内容（NULL = 未回复） */
+    replyText: text('reply_text'),
+    /** 回复人用户 ID -> users.id（owner|manager） */
+    repliedBy: text('replied_by').references(() => users.id),
+    /** 回复时间 */
+    repliedAt: integer('replied_at', { mode: 'timestamp' }),
+    /** 时间线 JSON 数组（只增不改），结构见 TicketTimelineItem */
+    timelineJson: text('timeline_json', { mode: 'json' }).$type<TicketTimelineItem[]>().notNull(),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_support_tickets_store_status').on(t.storeId, t.status),
+    index('ix_support_tickets_user').on(t.userId, t.createdAt),
+  ],
+);
+
+/**
+ * 发票申请表（补缺大批片 4）：客户对已付单据申请开票 → 本店店长/店主登记发票号。
+ * invoice_no=IN-yyyymmdd-NNN（日序，全局唯一）；order_kind 三类来源：
+ * appointment（appointments.paid_fen>0）/ cashier（settled 且未冲正）/ order（paid 及之后）；
+ * 金额=服务端按来源单实付重算（不信任入参金额）；同单在途（submitted）重复申请幂等返回原单。
+ * 状态机：submitted → issued（issued_invoice_no=实际发票号，register 登记）。
+ */
+export const invoiceRequests = sqliteTable(
+  'invoice_requests',
+  {
+    id: id(),
+    /** 申请单号（全局唯一，幂等键）：IN-yyyymmdd-NNN */
+    invoiceNo: text('invoice_no').notNull().unique(),
+    /** 申请客户用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 门店 ID -> stores.id（来源单所属店；店长待办按本店过滤） */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 来源单类型，取值：appointment | order | cashier */
+    orderKind: text('order_kind').notNull(),
+    /** 来源单 ID：appointments.id / orders.id / cashier_bills.id（按 order_kind 解释） */
+    billId: text('bill_id').notNull(),
+    /** 来源单号快照（预约码 / 订单号 / 收银单号） */
+    billNo: text('bill_no').notNull(),
+    /** 开票金额（分）= 来源单实付，服务端重算 */
+    amountFen: integer('amount_fen').notNull(),
+    /** 抬头类型，取值：personal | business（business 必填 tax_no；personal 置空） */
+    titleType: text('title_type').notNull(),
+    /** 发票抬头 */
+    title: text('title').notNull(),
+    /** 税号（仅 business；personal 恒 NULL） */
+    taxNo: text('tax_no'),
+    /** 交付方式，取值：email | pickup（email 必填邮箱） */
+    delivery: text('delivery').notNull(),
+    /** 接收邮箱（仅 delivery=email；pickup 恒 NULL） */
+    email: text('email'),
+    /** 状态，取值：submitted | issued */
+    status: text('status').notNull().default('submitted'),
+    /** 实际发票号（商家登记；NULL = 未开） */
+    issuedInvoiceNo: text('issued_invoice_no'),
+    /** 开票登记时间 */
+    issuedAt: integer('issued_at', { mode: 'timestamp' }),
+    /** 开票登记人用户 ID -> users.id（owner|manager） */
+    issuedBy: text('issued_by').references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_invoice_requests_store_status').on(t.storeId, t.status),
+    index('ix_invoice_requests_user').on(t.userId, t.createdAt),
+    index('ix_invoice_requests_bill').on(t.orderKind, t.billId),
+  ],
+);
+
+/**
+ * 服务域规则配置表（补缺大批片 4，同构 commission_rules）：配置端口第六域
+ * domain='service'。种子 version=1 一行 service_hours（客服服务时间公示，
+ * 客户端读口 serviceLoop.serviceHours）。保存即生效+版本化留痕，新值只管新读不回溯。
+ */
+export const serviceRules = sqliteTable(
+  'service_rules',
+  {
+    id: id(),
+    /** 规则版本（初始种子 =1） */
+    version: integer('version').notNull(),
+    /** 规则键（如 service_hours） */
+    ruleKey: text('rule_key').notNull(),
+    /** 规则中文名（配置页展示） */
+    label: text('label').notNull(),
+    /** 规则值 JSON（如 { text: '09:00–21:00' }），结构见 RuleConfigValue */
+    valueJson: text('value_json', { mode: 'json' }).$type<RuleConfigValue>().notNull(),
+    /** 生效时间（按此取规则版本；新规只管生效后的读） */
+    effectiveFrom: integer('effective_from', { mode: 'timestamp' }).notNull(),
+    /** 是否生效（0/1） */
+    active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    /** 创建/变更人用户 ID -> users.id */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_service_rules_key_active').on(t.ruleKey, t.active)],
+);

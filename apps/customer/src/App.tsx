@@ -10,10 +10,15 @@ import BookingGroomingPage from './pages/BookingGroomingPage'
 import BookingSuccessPage from './pages/BookingSuccessPage'
 import BoardingSinglePage from './pages/BoardingSinglePage'
 import CartPage from './pages/CartPage'
+import CertDetailPage from './pages/CertDetailPage'
+import CertListPage from './pages/CertListPage'
 import CheckoutPage from './pages/CheckoutPage'
 import DevLoginPage from './pages/DevLoginPage'
 import GroomingSinglePage from './pages/GroomingSinglePage'
 import HomePage from './pages/HomePage'
+import InvoiceApplyPage from './pages/InvoiceApplyPage'
+import InvoiceDetailPage from './pages/InvoiceDetailPage'
+import InvoiceListPage from './pages/InvoiceListPage'
 import MallOrdersPage from './pages/MallOrdersPage'
 import MallPage from './pages/MallPage'
 import MePage from './pages/MePage'
@@ -25,6 +30,10 @@ import MomentsPage from './pages/MomentsPage'
 import PetsPage from './pages/PetsPage'
 import PhiliaPage from './pages/PhiliaPage'
 import ProductDetailPage from './pages/ProductDetailPage'
+import ReportPage from './pages/ReportPage'
+import TicketDetailPage from './pages/TicketDetailPage'
+import TicketListPage from './pages/TicketListPage'
+import TicketNewPage from './pages/TicketNewPage'
 
 // B9.3 任务 B：/booking 中间层（类型选择 hub）退役——直接重定向单屏；
 // 兼容旧深链 ?type=boarding → 寄养单屏，?storeId= 透传（首页门店卡深链口径保留）。
@@ -54,6 +63,17 @@ function ProtectedRoutes() {
           兼容旧深链与 check-nav-closure 既有申报行） */}
       <Route path="/philia/member" element={<Navigate to="/member" replace />} />
       <Route path="/philia/moments" element={<MomentsPage />} />
+      {/* 补缺大批片 4（服务闭环点亮）：安心证书 / 美容报告 / 小棉花工单 / 发票申请
+          （9 条新路由；双表申报 8 行=/invoices/:id 详情行报备补登） */}
+      <Route path="/philia/certs" element={<CertListPage />} />
+      <Route path="/philia/certs/:appointmentId" element={<CertDetailPage />} />
+      <Route path="/philia/reports/:appointmentId" element={<ReportPage />} />
+      <Route path="/support" element={<TicketListPage />} />
+      <Route path="/support/new" element={<TicketNewPage />} />
+      <Route path="/support/:id" element={<TicketDetailPage />} />
+      <Route path="/invoices" element={<InvoiceListPage />} />
+      <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
+      <Route path="/invoice/apply/:kind/:id" element={<InvoiceApplyPage />} />
       {/* B9.3 任务 B：hub 退役，/booking 直达洗护单屏（?type=boarding 兼容深链寄养） */}
       <Route path="/booking" element={<BookingRedirect />} />
       {/* B4-1：默认路由换新单屏；旧 4 屏向导保留隐藏路由 /wizard（回滚保障，下批次再删） */}

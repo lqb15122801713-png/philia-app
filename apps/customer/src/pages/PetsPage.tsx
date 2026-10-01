@@ -15,8 +15,8 @@ import { Link } from 'react-router-dom'
 import { z } from 'zod'
 import { getApiBase, uploadImage, useMe, usePhiliaClient } from '@philia/shared'
 import PageHeader from '@/components/PageHeader'
-import { mc } from '../components/member/copy'
 import { pc } from '@/copy/pets'
+import { sl } from '@/copy/serviceloop'
 import {
   EmptyState,
   ErrorState,
@@ -646,19 +646,25 @@ export default function PetsPage() {
                 ) : null}
                 {/* U1-I 洗护史时间线：真实完成单 + 同款再约（现成预填链路） */}
                 <PetGroomingHistory petId={pet.id} />
-                {/* P-01 服务履历「证书 ›」位=置灰槽位（PD-15 三规：不上假件 + 注记
-                    「随体验批开通」+ data-testid；安心证书页随体验批开通后点亮）。
-                    注：多宠时本 testid 逐卡重复，QA 取 .first() */}
-                <div
-                  data-testid="slot-cert"
-                  aria-disabled="true"
-                  className="mt-3 flex items-center justify-between gap-2 border-t border-line-divider pt-2.5 opacity-60"
+                {/* 补缺大批片 4：洗护史区相册入口（Link /philia/moments） */}
+                <Link
+                  to="/philia/moments"
+                  data-testid={`pets-album-entry-${pet.id}`}
+                  className="mt-2.5 flex items-center justify-between gap-2 text-caption font-bold text-ink underline-offset-2 hover:underline"
                 >
-                  <span className="text-caption text-ink-secondary">{mc('p1.certSlotTitle')}</span>
-                  <span className="shrink-0 rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">
-                    {mc('slot.certSoon')}
-                  </span>
-                </div>
+                  {sl('album.petsEntry')}
+                </Link>
+                {/* 补缺大批片 4：服务履历「安心证书」点亮——Link /philia/certs
+                    （testid 原值保留 slot-cert，置灰样式+注记摘除）。
+                    注：多宠时本 testid 逐卡重复，QA 取 .first() */}
+                <Link
+                  to="/philia/certs"
+                  data-testid="slot-cert"
+                  className="mt-1 flex items-center justify-between gap-2 border-t border-line-divider pt-2.5"
+                >
+                  <span className="text-caption text-ink-secondary">{sl('cert.entryTitle')}</span>
+                  <span className="shrink-0 text-caption-xs font-bold text-ink">›</span>
+                </Link>
               </div>
             </div>
           </article>
