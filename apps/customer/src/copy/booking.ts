@@ -4,12 +4,14 @@
  * 覆盖：BookingSuccessPage（成功页）、BookingGroomingPage/BookingBoardingPage（旧向导）、
  * GroomingSinglePage/BoardingSinglePage（单屏族）、booking 组件族
  * （PetPicker/StaffPicker 与 single/* 区块）。
- * 文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名小写点分、冻结不改。
+ * 文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
  * 数值不进本表：价格/晚数/次数/时刻等到渲染层读端口插值（{var} 模板）。
  */
 
-export const BOOKING_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const BOOKING_COPY_TABLE = {
   /* ---- 成功页 /booking/success ---- */
   'booking.successTitle': '预约成功',
   'booking.successSub': '已自动确认，请按时到店并出示预约码',
@@ -80,6 +82,8 @@ export const BOOKING_COPY = {
   'booking.vaccineBlockedSuffix': '，寄养需疫苗在有效期内',
   'booking.vaccineFix': '去补录',
 } as const;
+
+export const BOOKING_COPY = withCopyOverrides(BOOKING_COPY_TABLE);
 
 export type BookingCopyKey = keyof typeof BOOKING_COPY;
 

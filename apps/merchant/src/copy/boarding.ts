@@ -3,11 +3,13 @@
  *
  * 覆盖：BoardingPage / staff-admin/BoardingStayDetail / staff-admin/CheckoutDialog。
  * 纪律：经营性文案（屏题副题/空态/退房与收款操作引导/规则明面）一律经本表取值，
- * 组件内零硬编码；文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名冻结不改。
+ * 组件内零硬编码；文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  * 数值不进本表：在店只数/晚数等到渲染层读看板数据经 {var} 插值。
  */
 
-export const BOARD_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const BOARD_COPY_TABLE = {
   /* ---- 寄养管理 /boarding ---- */
   'board.title': '寄养',
   'board.sub': '在店 {a} 只 · 今日退房 {b} 只 · {c} 只今日未打卡',
@@ -31,6 +33,8 @@ export const BOARD_COPY = {
   'board.checkoutPayNote': '本单为到店付：退房后请在财务页「待收款」确认收款，款项才会计入营业额。',
   'board.checkoutConfirmNote': '确认后预约转为「已完成」，房间立即释放；操作幂等，重复点击不会重复结算。',
 } as const;
+
+export const BOARD_COPY = withCopyOverrides(BOARD_COPY_TABLE);
 
 export type BoardCopyKey = keyof typeof BOARD_COPY;
 

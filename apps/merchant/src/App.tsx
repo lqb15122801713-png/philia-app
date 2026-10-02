@@ -24,6 +24,7 @@ import CashierClosePage from './pages/CashierClosePage'
 import CashierPage from './pages/CashierPage'
 import CashierRecordsPage from './pages/CashierRecordsPage'
 import CashierRefundsPage from './pages/CashierRefundsPage'
+import CopyConfigPage from './pages/CopyConfigPage'
 import DashboardPage from './pages/DashboardPage'
 import DevLoginPage from './pages/DevLoginPage'
 import FinancePage from './pages/FinancePage'
@@ -95,6 +96,8 @@ function ProtectedRoutes() {
         <Route path="/settings" element={<SettingsPage />} />
         {/* 批次 员工端2.0 R9-F：规则配置管理端口（owner-only；clerk 由 ClerkRouteGuard 拦，manager 页内引导页，server 硬 403） */}
         <Route path="/settings/rules" element={<RulesConfigPage />} />
+        {/* 端口批片 B：文案端口（控制台第七域「文案」；owner-only 同规则配置页口径） */}
+        <Route path="/settings/copy" element={<CopyConfigPage />} />
         <Route path="*" element={<RoleLanding />} />
       </Routes>
     </ClerkRouteGuard>

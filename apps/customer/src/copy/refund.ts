@@ -3,13 +3,14 @@
  *
  * 覆盖：RefundApplyPage（申请表单 /mall/orders/:id/refund、/appointments/:id/refund）、
  * RefundListPage（/refunds）、RefundDetailPage（/refunds/:id）、MallOrdersPage 订单卡
- * 退款入口位与 AppointmentDetailPage 服务单退款入口（补缺大批片 1）。文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，
- * 键名小写点分、冻结不改。
+ * 退款入口位与 AppointmentDetailPage 服务单退款入口（补缺大批片 1）。文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
  * 数值不进本表：时效/SLA/免费反悔窗小时数等到渲染层读 configView 端口插值（{var} 模板）。
  */
 
-export const REFUND_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const REFUND_COPY_TABLE = {
   /* ---- 入口（订单卡/详情页入口位） ---- */
   'refund.entryCta': '退款/售后 ›',
   /* 在途申请存在时入口文案（→ /refunds/:id） */
@@ -85,6 +86,8 @@ export const REFUND_COPY = {
   'refund.emptyBody': '对已完成的服务或商品单，可在详情页申请退款/售后',
   'refund.emptyCta': '去看看订单 ›',
 } as const;
+
+export const REFUND_COPY = withCopyOverrides(REFUND_COPY_TABLE);
 
 export type RefundCopyKey = keyof typeof REFUND_COPY;
 

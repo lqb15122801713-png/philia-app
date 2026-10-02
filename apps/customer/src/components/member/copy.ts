@@ -2,13 +2,14 @@
  * R11b 会员区文案键表（copy key 一期硬约定 · 38 号施工令 §三「凡内容皆留口」）
  *
  * 纪律：会员区四屏全部界面文案（屏题/卡面文案/权益名/规则明面/CTA/空态/弹层）
- * 一律经本表取值，组件内零硬编码文案；文案端口（18 号档 A4 升级版，连锁合批）建成后
- * 迁移为后台可改——本表即端口 schema 的种子键集，键名冻结不改。
+ * 一律经本表取值，组件内零硬编码文案；文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
  * 数值不进本表：价格/比例/折扣/天数等到渲染层读 member_plans 端口（38 号档 §二-①②）。
  */
 
-export const MEMBER_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const MEMBER_COPY_TABLE = {
   /* ---- A-3 会员页 · 持有态 ---- */
   'a3.headTitle': '会员',
   'a3.pushLabel': 'MEMBER',
@@ -279,6 +280,8 @@ export const MEMBER_COPY = {
   'saved.totalLine': '合计',
   'saved.noHypeNote': '只算已发生的回馈金与折扣，不含预计。',
 } as const;
+
+export const MEMBER_COPY = withCopyOverrides(MEMBER_COPY_TABLE);
 
 export type MemberCopyKey = keyof typeof MEMBER_COPY;
 

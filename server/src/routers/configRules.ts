@@ -17,7 +17,7 @@ import { z } from 'zod';
 import { schema } from '../db';
 import { emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
-import { merchantOwnerProcedure, router } from '../trpc';
+import { merchantOwnerProcedure, publicProcedure, router } from '../trpc';
 
 /** emitEvent 首参类型（全局 db；事务 handle 运行时接口一致，类型上做显式断言，同 cashier.ts 惯例） */
 type DbHandle = Parameters<typeof emitEvent>[0];
@@ -28,7 +28,7 @@ const txDb = (tx: unknown): DbHandle => tx as DbHandle;
 /* 后两者注释即「结构同 commission_rules」）                                 */
 /* ------------------------------------------------------------------ */
 
-const domainSchema = z.enum(['commission', 'xp', 'duration', 'refund', 'member_plans', 'service', 'pay']);
+const domainSchema = z.enum(['commission', 'xp', 'duration', 'refund', 'member_plans', 'service', 'pay', 'copy']);
 
 const RULES_TABLE = {
   commission: schema.commissionRules,
@@ -38,6 +38,7 @@ const RULES_TABLE = {
   member_plans: schema.memberPlans, // R11a 会员前置批：四档价格/回馈/折扣/多宠+到账日/有效期，同型天然兼容
   service: schema.serviceRules, // 补缺大批片 4：客服服务时间公示等服务域参数，同型天然兼容
   pay: schema.payRules, // 批次 6 补缺大批：支付超时关单时长/线上通道开关，同型天然兼容
+  copy: schema.copyOverrides, // 端口批片 B（CJ-1002-01）：文案端口——copy 键全表后台可改，保存即生效只管新渲染
 } as const;
 
 /* ------------------------------------------------------------------ */
@@ -195,6 +196,42 @@ const changeSchema = z.object({
 });
 
 /* ------------------------------------------------------------------ */
+/* 文案域（copy）双闸（端口批片 B · CJ-1002-01）：高危键重确认 + 禁令词校验      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 高危键前缀（涉钱/涉协议/涉会员口径，R15 域）：命中者保存须带 confirmedHighRisk 确认
+ * （端口页改前重确认弹层的服务端对应闸；宁可宽列=保守口径，端口页展示同名单）。
+ */
+const COPY_HIGH_RISK_PREFIX = [
+  'refund.', 'pay.', 'agreement.', 'rules.', 'deact.', 'up.', 'chg.', 'w1.', 'saved.',
+  'perk.', 'card.', 'a3.', 'j1.', 'cashier.', 'fin.', 'pass.',
+];
+/** 涉钱补充判定：键名含 rebate（回馈金）一律高危（member 域 mall.rebate* 等散键兜底） */
+export function isCopyHighRiskKey(ruleKey: string): boolean {
+  return COPY_HIGH_RISK_PREFIX.some((p) => ruleKey.startsWith(p)) || ruleKey.includes('rebate');
+}
+
+/** 禁令词（禁令四条+红线文案 grep 词表：充值/储值/自动续费/返现/返钱/疯抢/秒杀/守护值） */
+const COPY_BANNED_PATTERN = /充值|储值|自动续费|返现|返钱|疯抢|秒杀|守护值/;
+/** 否定明面句豁免（「年费≠储值」「到期不自动续费」等纪律明面件不算违禁——先剥除再判定） */
+const COPY_NEGATION_ALLOW = /年费\s*≠\s*储值|(非|不是|并非|≠)\s*储值|不自动续费|永不自动续费/g;
+/**
+ * 禁令词校验：命中即拒（返回命中词供明文提示）。否定明面句剥除后判定——
+ * 如「年费 ≠ 储值 · 到期不自动续费」可保存；「充值送好礼」拒。
+ */
+export function copyBannedHit(text: string): string | null {
+  const stripped = text.replace(COPY_NEGATION_ALLOW, '');
+  const m = stripped.match(COPY_BANNED_PATTERN);
+  return m ? m[0]! : null;
+}
+/** copy 域文案值形状：{ text: string } 且去空白非空（空文案=界面事故，硬拒） */
+function copyTextOf(valueJson: Record<string, unknown>): string | null {
+  const t = valueJson.text;
+  return typeof t === 'string' && t.trim().length > 0 ? t : null;
+}
+
+/* ------------------------------------------------------------------ */
 /* router：全部 merchantOwnerProcedure（clerk/manager → FORBIDDEN 硬拒）    */
 /* ------------------------------------------------------------------ */
 
@@ -229,8 +266,35 @@ export const configRulesRouter = router({
       for (const r of rows) {
         if (r.active && r.version > currentVersion) currentVersion = r.version;
       }
-      return { domain: input.domain, currentVersion, rules: rows };
+      /* 端口批片 B：copy 域行附高危标记（涉钱/涉协议/涉会员口径）——端口页改前重确认弹层用；
+         其他域恒 false（加字段不改形状） */
+      return {
+        domain: input.domain,
+        currentVersion,
+        rules: rows.map((r) => ({
+          ...r,
+          highRisk: input.domain === 'copy' && isCopyHighRiskKey(r.ruleKey),
+        })),
+      };
     }),
+
+  /**
+   * activeCopyTexts（public，端口批片 B）：文案端口客户端读口——copy_overrides 全量 active 行
+   * 透出 {key,text}（读取顺序=端口值→码内默认 fallback 在客户端覆盖层；码内不存在的键=只读
+   * 提示不拦截=本读口照常透出、客户端永不命中即零副作用）。保存即生效=只管新渲染。
+   */
+  activeCopyTexts: publicProcedure.query(async ({ ctx }) => {
+    const table = RULES_TABLE.copy;
+    const rows = await ctx.db
+      .select({ ruleKey: table.ruleKey, valueJson: table.valueJson })
+      .from(table)
+      .where(eq(table.active, true));
+    return {
+      rows: rows
+        .map((r) => ({ key: r.ruleKey, text: copyTextOf(r.valueJson as Record<string, unknown>) }))
+        .filter((r): r is { key: string; text: string } => r.text !== null),
+    };
+  }),
 
   /**
    * save：保存即生效（版本化事务）——
@@ -247,6 +311,8 @@ export const configRulesRouter = router({
       z.object({
         domain: domainSchema,
         changes: z.array(changeSchema).min(1, '变更不能为空'),
+        /* 文案域高危键重确认（端口页弹层确认后回传命中键名单；非 copy 域忽略） */
+        confirmedHighRisk: z.array(z.string()).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -264,6 +330,30 @@ export const configRulesRouter = router({
       /* 形状校验（纯 CPU，进事务前先拒，不产生半事务） */
       for (const c of input.changes) {
         validateValueJson(c.ruleKey, c.valueJson);
+      }
+      /* 文案域双闸（端口批片 B，进事务前硬拒）：
+         1. 值形状={text:非空文案}；2. 禁令词校验（命中即拒明文）；3. 高危键须重确认 */
+      if (input.domain === 'copy') {
+        const confirmed = new Set(input.confirmedHighRisk ?? []);
+        for (const c of input.changes) {
+          const text = copyTextOf(c.valueJson);
+          if (text === null) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: `文案键 ${c.ruleKey} 的值必须是 { text: 非空文案 }` });
+          }
+          const hit = copyBannedHit(text);
+          if (hit) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: `文案含禁令词「${hit}」（禁令四条红线：禁充值入口/年费≠储值文案/禁提自动续费/禁诱导词）——请改写后再保存`,
+            });
+          }
+          if (isCopyHighRiskKey(c.ruleKey) && !confirmed.has(c.ruleKey)) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: `「${c.ruleKey}」属涉钱/涉协议/涉会员口径高危键，请在端口页完成重确认后再保存`,
+            });
+          }
+        }
       }
 
       const table = RULES_TABLE[input.domain];

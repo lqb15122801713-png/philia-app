@@ -3,11 +3,13 @@
  *
  * 覆盖：AppointmentsPage / AppointmentDetailPage / appointments/RescheduleSheet。
  * 纪律：经营性文案（屏题副题/空态/核销与收款引导/规则明面）一律经本表取值，组件内零硬编码；
- * 文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名小写点分、冻结不改。
+ * 文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  * 数值不进本表：单数/金额/时限等到渲染层读数据经 {var} 插值（结构性口径数如六步之 6 除外）。
  */
 
-export const APPT_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const APPT_COPY_TABLE = {
   /* ---- 预约列表 /appointments ---- */
   'appt.listTitle': '预约',
   'appt.listSub': '{date} · 共 {count} 单 · 自动接单已启用',
@@ -36,6 +38,8 @@ export const APPT_COPY = {
   /* ---- 改期弹层（RescheduleSheet）---- */
   'appt.rescheduleEmpty': '未来 7 天暂无可约时段，请稍后再试或调整服务时长',
 } as const;
+
+export const APPT_COPY = withCopyOverrides(APPT_COPY_TABLE);
 
 export type ApptCopyKey = keyof typeof APPT_COPY;
 

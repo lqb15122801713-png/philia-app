@@ -2,13 +2,15 @@
  * 我的页 /me 文案键表（copy key 一期硬约定 · 换皮批片 5 UX 片 4 P2-1）
  *
  * 纪律：MePage 界面文案（列表行题/副注）一律经本表取值，组件内零硬编码文案；
- * 文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名冻结不改。
+ * 文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
  * 数值不进本表：绩效数字（已评条数/均分）由渲染层读聚合数据，经 {u1-num} 片段
  * 在 JSX 内拼装——副注拆为静片段键（Lead/Unit/Avg），动态数原位保留 u1-num 轨。
  */
 
-export const ME_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const ME_COPY_TABLE = {
   /* ---- P2-1：双「我的评价」同名歧义消解——
      上组（列表组 1，to=/history，testid=me-reviews）改题「评价总览」=绩效口径聚合入口；
      下组（员工端 2.0 组，to=/reviews，testid=me-reviews-list）保留「我的评价」=评价明细列表 ---- */
@@ -26,5 +28,7 @@ export const ME_COPY = {
   'me.help.flowBody': '客户到店出示预约码 → 前台扫码（无摄像头走手动 6 位码）→ 核销成功自动开单；寄养单核销后办理入住登记。',
   'me.settings.sync': '实时同步：派单/改期/取消即时推送（SSE 长连接，断线自动重连 + 60s 轮询兜底）。',
 } as const;
+
+export const ME_COPY = withCopyOverrides(ME_COPY_TABLE);
 
 export type MeCopyKey = keyof typeof ME_COPY;

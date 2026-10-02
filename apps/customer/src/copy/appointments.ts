@@ -3,12 +3,14 @@
  *
  * 覆盖：AppointmentsPage（我的预约列表 + 空态群）与 AppointmentDetailPage
  * （详情 / 取消规则明面 / 改期 / 服务中提示 / 服务相册）。
- * 文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名小写点分、冻结不改。
+ * 文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
  * 数值不进本表：数量/时长等到渲染层读端口插值（{var} 模板）。
  */
 
-export const APPOINTMENTS_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const APPOINTMENTS_COPY_TABLE = {
   /* ---- 我的预约 /appointments ---- */
   'appointments.title': '我的预约',
   'appointments.loadFail': '预约列表加载失败，请检查网络后重试',
@@ -68,6 +70,8 @@ export const APPOINTMENTS_COPY = {
   'appointments.servingCall': '拨打门店电话',
   'appointments.servingNote': '可到店或经商家端与门店协商处理',
 } as const;
+
+export const APPOINTMENTS_COPY = withCopyOverrides(APPOINTMENTS_COPY_TABLE);
 
 export type AppointmentsCopyKey = keyof typeof APPOINTMENTS_COPY;
 

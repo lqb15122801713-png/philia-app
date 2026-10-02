@@ -2,15 +2,16 @@
  * 盘点域文案键表（copy key 一期硬约定 · 换皮批片 5 C 块）
  *
  * 纪律：盘点域经营性文案（空态三句话/效期处置说明/盲盘口径/退回与待确认说明）
- * 一律经本表取值，组件内零硬编码；文案端口建成后迁移为后台可改——
- * 本表即端口 schema 的种子键集，键名小写点分、冻结不改。
+ * 一律经本表取值，组件内零硬编码；文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
  * 不抽：类型映射词（日盘/周盘/盲盘）、状态签（待盘点/待店长确认/退回重盘）、
  * 通用 UI 词（重新加载/提交盘点/返回盘点任务列表）、表单 label/placeholder、
  * 含业务参数的区题（「安心包效期（30 天内到期）」数值口径不入键）。
  */
 
-export const INVENTORY_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const INVENTORY_COPY_TABLE = {
   /* ---- /inventory 待办单 + 安心包效期 ---- */
   'inventory.tasks.empty': '暂无待办盘点单——店长派单后会出现在这里',
   'inventory.expiry.empty': '30 天内没有临期安心包，继续保持',
@@ -26,5 +27,7 @@ export const INVENTORY_COPY = {
   'inventory.count.blindNote': '本单为盲盘，不展示账面数。',
   'inventory.count.noItems': '这张单没有盘点行项，请联系店长确认派单范围',
 } as const;
+
+export const INVENTORY_COPY = withCopyOverrides(INVENTORY_COPY_TABLE);
 
 export type InventoryCopyKey = keyof typeof INVENTORY_COPY;

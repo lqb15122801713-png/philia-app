@@ -2,15 +2,16 @@
  * 寄养打卡域文案键表（copy key 一期硬约定 · 换皮批片 5 C 块）
  *
  * 纪律：寄养入住登记/每日打卡页的经营性文案（异常态题、核销前置引导、超期/退房说明）
- * 一律经本表取值，组件内零硬编码；文案端口建成后迁移为后台可改——
- * 本表即端口 schema 的种子键集，键名小写点分、冻结不改。
+ * 一律经本表取值，组件内零硬编码；文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
  * 不抽：通用 UI 词（办理退房/确认退房/再想想/返回任务台）、toast 操作反馈、
  * server 错误透传（detailQuery.error.message 原样透出）。
  * 动态位：晚数/时刻走 JSX 内 u1-num 片段，键只持静态 Lead/Tail 碎片（同 me.ts 纪律）。
  */
 
-export const BOARDING_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const BOARDING_COPY_TABLE = {
   /* ---- 异常态（无法查看 / 非寄养单） ---- */
   'boarding.error.title': '无法查看该寄养单',
   'boarding.error.fallbackDesc': '预约不存在或无权查看',
@@ -36,5 +37,7 @@ export const BOARDING_COPY = {
   'boarding.checkout.confirmTitle': '确认办理退房？',
   'boarding.checkout.confirmDesc': '退房后预约转入「已完成」；到店付订单请提醒商家在财务页确认收款。',
 } as const;
+
+export const BOARDING_COPY = withCopyOverrides(BOARDING_COPY_TABLE);
 
 export type BoardingCopyKey = keyof typeof BOARDING_COPY;

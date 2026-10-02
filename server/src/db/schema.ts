@@ -1795,7 +1795,8 @@ export const ruleConfigVersions = sqliteTable(
   'rule_config_versions',
   {
     id: id(),
-    /** 配置域，取值：commission | xp | duration（补充令①） | refund（R12） | member_plans（R11a） | pay（批次 6） */
+    /** 配置域，取值：commission | xp | duration（补充令①） | refund（R12） | member_plans（R11a）
+     *  | service（补缺大批片 4） | pay（批次 6） | copy（端口批片 B 文案端口，CJ-1002-01） */
     domain: text('domain').notNull(),
     /** 保存后的新版本号 */
     version: integer('version').notNull(),
@@ -2676,6 +2677,42 @@ export const serviceRules = sqliteTable(
     ...auditColumns,
   },
   (t) => [index('ix_service_rules_key_active').on(t.ruleKey, t.active)],
+);
+
+/**
+ * 文案端口覆盖表（端口批片 B · CJ-1002-01 内容层全端口化，控制台第七域 domain='copy'，
+ * 同构 commission_rules）：copy 键全表后台可改——界面文案老板/未来文案运营自管，
+ * 改完即生效（只管新渲染）零代码零部署。
+ * - 种子=三端 copy 键全表（迁移 0024 幂等落库；label=域分组：member/mall/refund/…）；
+ * - value_json={ text: '界面文案' }（STRING_KEYS 族校验既有）；
+ * - 读取顺序=端口值（active 行）→ 码内默认（copy 键 fallback 不改码）；
+ * - 高危键（涉钱/涉协议/涉会员口径）改前重确认（config.save confirmedHighRisk 闸）+
+ *   保存时禁令词校验（禁充值/储值文案/自动续费类命中即拒，否定明面句豁免）；
+ * - 保存=版本化事务留痕（rule_config_versions domain='copy' 每键前后值），新规只管新渲染不回溯。
+ */
+export const copyOverrides = sqliteTable(
+  'copy_overrides',
+  {
+    id: id(),
+    /** 版本（初始种子=1；域级单调，同 config.save 口径） */
+    version: integer('version').notNull(),
+    /** copy 键（如 'refund.submitCta'；=码内 copy 表键名小写点分） */
+    ruleKey: text('rule_key').notNull(),
+    /** 域分组（member / mall / refund / notify / pay / serviceloop / home / account / booking / appointments / pets / devlogin / merchant:xx / staff:xx） */
+    label: text('label').notNull(),
+    /** 文案值 JSON：{ text: string } */
+    valueJson: text('value_json', { mode: 'json' }).$type<RuleConfigValue>().notNull(),
+    /** 生效时间（保存即生效；只管新渲染） */
+    effectiveFrom: integer('effective_from', { mode: 'timestamp' }).notNull(),
+    /** 是否生效（0/1） */
+    active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    /** 创建/变更人用户 ID -> users.id */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_copy_overrides_key_active').on(t.ruleKey, t.active)],
 );
 
 /**

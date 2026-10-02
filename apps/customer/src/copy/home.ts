@@ -3,12 +3,14 @@
  *
  * 覆盖：HomePage（BANNER 槽 / 身份带 / LIVE 卡 / 浮动大卡 / 案例流 / 会员提醒条 /
  * 统计行 / 毛孩子行）+ home/HomeBookingPanel 降级入口卡。
- * 文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名小写点分、冻结不改。
+ * 文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
  * 数值不进本表：金额/次数/天数/比例等到渲染层读端口插值（{var} 模板）。
  */
 
-export const HOME_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const HOME_COPY_TABLE = {
   /* ---- A-2 服务中态 · LIVE 卡 ---- */
   'home.liveTag': 'LIVE · 洗护进行中',
   'home.liveEta': '预计 {time} 完成',
@@ -61,6 +63,8 @@ export const HOME_COPY = {
   'home.panelEntryTitle': '预约洗护',
   'home.panelEntrySub': '选择门店、服务和时间',
 } as const;
+
+export const HOME_COPY = withCopyOverrides(HOME_COPY_TABLE);
 
 export type HomeCopyKey = keyof typeof HOME_COPY;
 

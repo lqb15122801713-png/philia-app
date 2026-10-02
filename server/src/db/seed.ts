@@ -24,6 +24,7 @@
  */
 
 import { client, db, schema } from './index';
+import { COPY_SEED_ROWS } from './copySeedRows';
 
 /* ---------------- 清空（子表 -> 父表） ---------------- */
 
@@ -34,6 +35,7 @@ const CLEAR_ORDER = [
   schema.serviceReports, // FK → appointments/users
   schema.serviceCertificates, // FK → appointments/users
   schema.serviceRules, // FK → users
+  schema.copyOverrides, // 端口批片 B（FK → users），先于 users 清空
   /* ---- R11a 会员前置批新表：子表先父表（rebate_logs.settlement_id→rebate_settlements），先于 users/stores 清空 ---- */
   schema.membershipEvents, // 补缺-3（FK → users），先于 users 清空
   schema.rebateLogs, // FK → users/rebate_accounts/rebate_settlements
@@ -438,6 +440,24 @@ async function main() {
       },
     ]);
 
+    /* ---- 端口批片 B：文案端口 copy_overrides 种子（控制台第七域 domain='copy'） ----
+     * 三端 copy 键全表落库（单源=copySeedRows.ts 生成件；0024 迁移同名幂等种子先行入库，
+     * 本处为重置后补种）。分块 100 行/次（SQLite 绑定变量上限 999 口径）。
+     */
+    for (let i = 0; i < COPY_SEED_ROWS.length; i += 100) {
+      await tx.insert(schema.copyOverrides).values(
+        COPY_SEED_ROWS.slice(i, i + 100).map((r) => ({
+          version: 1,
+          ruleKey: r.key,
+          label: r.domain,
+          valueJson: { text: r.text },
+          effectiveFrom: RULES_EFFECTIVE_FROM,
+          active: true,
+          createdBy: owner.id,
+        })),
+      );
+    }
+
     /* ---- staff-2 R10：XP 规则配置种子（附件一冻结版 V1.0 全表照转，version=1） ----
      * 分值单位 XP 点；段位门槛/保级线为累计/月增量 XP；拉新 referral 置灰（active=false，
      * 随会员游戏化批 G3 链路开通，server 拒写该来源）。
@@ -539,6 +559,8 @@ async function main() {
     /* 补缺大批片 4 新表 */
     ['service_certificates', 'service_certificates'],
     ['service_reports', 'service_reports'],
+    /* 端口批片 B：文案端口（控制台第七域） */
+    ['copy_overrides', 'copy_overrides'],
     ['support_tickets', 'support_tickets'],
     ['invoice_requests', 'invoice_requests'],
     ['service_rules', 'service_rules'],

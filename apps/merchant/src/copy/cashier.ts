@@ -6,12 +6,14 @@
  * OfflineBar/dialogs/BillDetailDialog/RefundDialog/RefundDetailDialog/DayClosePanels/
  * ImportLedgerPanel）。
  * 纪律：经营性文案（屏题副题/空态/收银·退款·日结操作引导与口径明面）一律经本表取值，
- * 组件内零硬编码；文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名冻结不改。
+ * 组件内零硬编码；文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  * 数值不进本表：金额/次数/单数到渲染层读数据经 {var} 插值。
  * 不抽：toast 动态通知与错误透传、表单项 label、单据字段名、状态胶囊。
  */
 
-export const CASHIER_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const CASHIER_COPY_TABLE = {
   /* ---- 收银台主屏 /cashier ---- */
   'cashier.title': '收银台',
   'cashier.headTenderRef': '参考（不计入已收）',
@@ -158,6 +160,8 @@ export const CASHIER_COPY = {
   'cashier.importClearNote': '将删除该批次写入的流水并按日志反向冲减账户；批次行永存（置「已清除」留痕）。',
   'cashier.importClearReject': '已产生消费的批次拒绝清除（保护真账）——差错请走对账调整留痕。',
 } as const;
+
+export const CASHIER_COPY = withCopyOverrides(CASHIER_COPY_TABLE);
 
 export type CashierCopyKey = keyof typeof CASHIER_COPY;
 

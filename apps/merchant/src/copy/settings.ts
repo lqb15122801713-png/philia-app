@@ -3,11 +3,13 @@
  *
  * 覆盖：SettingsPage。
  * 纪律：经营性文案（屏题副题/空态/经营口径明面/通知偏好说明）一律经本表取值，
- * 组件内零硬编码；文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名冻结不改。
+ * 组件内零硬编码；文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  * 数值不进本表：通知阈值/时段等到渲染层读口径经 {var} 插值。
  */
 
-export const SETTINGS_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const SETTINGS_COPY_TABLE = {
   'set.title': '设置',
   'set.sub': '门店与经营口径 · 改动即生效（可约/派单联动）',
   'set.noStoreTitle': '未找到门店信息',
@@ -28,6 +30,8 @@ export const SETTINGS_COPY = {
   'set.notifyBoardingLabel': '寄养打卡提醒',
   'set.notifyBoardingHint': '每日 16:00 未打卡提醒员工',
 } as const;
+
+export const SETTINGS_COPY = withCopyOverrides(SETTINGS_COPY_TABLE);
 
 export type SettingsCopyKey = keyof typeof SETTINGS_COPY;
 

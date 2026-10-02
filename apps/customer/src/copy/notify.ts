@@ -4,10 +4,12 @@
  * 覆盖：NotifyCenterPage（/notifications 分类 chips / 列表行 / 空态三句话 / 全部已读 /
  * 删除二次确认 / 加载更多）+ NotifyPrefsPage（/notifications/prefs 营销开关卡 /
  * 不可关组 / 明示文案卡）+ HomePage 铃铛 aria / MePage 消息行。
- * 文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名小写点分、冻结不改。
+ * 文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  */
 
-export const NTF_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const NTF_COPY_TABLE = {
   /* ---- 消息中心页帧 ---- */
   'ntf.title': '消息',
   'ntf.catTrade': '交易',
@@ -44,6 +46,8 @@ export const NTF_COPY = {
   'ntf.offToast': '已关闭活动通知',
   'ntf.onToast': '已开启活动通知',
 } as const;
+
+export const NTF_COPY = withCopyOverrides(NTF_COPY_TABLE);
 
 export type NtfCopyKey = keyof typeof NTF_COPY;
 

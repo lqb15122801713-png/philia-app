@@ -9,7 +9,7 @@
  * main.tsx 中装配：<BrowserRouter><AppProviders><App /></AppProviders></BrowserRouter>
  */
 
-import { createPhiliaClient, getApiBase, PhiliaClientContext } from '@philia/shared';
+import { CopyOverridesLoader, createPhiliaClient, getApiBase, PhiliaClientContext } from '@philia/shared';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 
@@ -19,7 +19,11 @@ export default function AppProviders({ children }: { children: ReactNode }) {
 
   return (
     <PhiliaClientContext.Provider value={philia}>
-      <QueryClientProvider client={philia.queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={philia.queryClient}>
+        {/* 端口批片 B：文案覆盖表启动拉取（保存即生效只管新渲染） */}
+        <CopyOverridesLoader />
+        {children}
+      </QueryClientProvider>
     </PhiliaClientContext.Provider>
   );
 }

@@ -2,8 +2,7 @@
  * 账户安全域文案键表（补缺大批片 2 · copy key 一期硬约定，纪律同 copy/mall.ts）
  *
  * 纪律：设置/注销流/换绑流/申诉/设备/隐私六页界面文案（屏题/说明/CTA/空态/弹层/反馈）
- * 一律经本表取值，组件内零硬编码；文案端口建成后迁移为后台可改——本表即端口
- * schema 的种子键集，键名小写点分、冻结不改。
+ * 一律经本表取值，组件内零硬编码；文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
  * R13 敏感字段必填须解释「为什么要」（冻结口径，文案入键）：
  * - bind.whyCode    换绑页：为什么要验证码；
@@ -13,7 +12,9 @@
  * 数值不进本表：倒计时秒数/数量/时刻等到渲染层插值。
  */
 
-export const ACCOUNT_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const ACCOUNT_COPY_TABLE = {
   /* ---- 设置 /me/settings ---- */
   'settings.title': '设置',
   'settings.pushLabel': 'SETTINGS',
@@ -171,6 +172,8 @@ export const ACCOUNT_COPY = {
   'privacy.toggleFail': '设置失败，请重试',
   'privacy.footnote': '拒绝授权不影响基本功能使用（《个人信息保护法》最小必要口径）。',
 } as const;
+
+export const ACCOUNT_COPY = withCopyOverrides(ACCOUNT_COPY_TABLE);
 
 export type AccountCopyKey = keyof typeof ACCOUNT_COPY;
 

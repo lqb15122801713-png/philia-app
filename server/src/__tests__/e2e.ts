@@ -170,6 +170,11 @@
  *      与 create 闸同源；商城单 refundableFen=null；在途申请不计已退；他人单 403）
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
+ *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
+ *      56.1 种子 1391 键/38 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出；
+ *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
+ *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
+ *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
  *
  * 批次 6 补缺大批（server 侧支付骨架）段（施工令全清单；移位铁律：不得对
  * pay_orders.createdAt 移位——payNo 日序计号依赖，本批夹具只动 timeout_at）：
@@ -4832,6 +4837,108 @@ async function main(): Promise<void> {
     stOther instanceof TrpcHttpError && stOther.httpStatus === 403 && stOther.code === 'FORBIDDEN' &&
       rcOther instanceof TrpcHttpError && rcOther.httpStatus === 403 && rcOther.code === 'FORBIDDEN',
     { st: stOther instanceof Error ? stOther.message : String(stOther), rc: rcOther instanceof Error ? rcOther.message : String(rcOther) });
+
+  /* ==================================================================
+   * 端口批片 B（CJ-1002-01 文案端口 · 控制台第七域 domain='copy'）验收段
+   * ================================================================== */
+  console.log('\n[片B] 56. 文案端口（copy_overrides 种子/读口/保存双闸/权限/留痕）');
+  interface CopyListRes {
+    domain: string; currentVersion: number;
+    rules: Array<{ ruleKey: string; label: string; valueJson: { text?: string }; active: boolean; version: number }>;
+  }
+  interface CopyTextsRes { rows: Array<{ key: string; text: string }> }
+
+  /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证） */
+  const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
+  const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
+  const domainSet = new Set(copyList0.rules.map((r) => r.label));
+  check('56.1 copy 域种子全量落库（1391 键/38 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 1391 && domainSet.size === 38 &&
+      refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
+    { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
+  const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
+  check('56.1 公共读口透出 active 行全量（1391 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 1391 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+    texts0.rows.length);
+
+  /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
+  const save56 = await trpcMutate<{ version: number }>('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'copy', changes: [{ ruleKey: 'home.idFallback', valueJson: { text: '菲丽亚宠友·内测' } }] },
+  });
+  const texts1 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
+  check('56.2 端口值优先：save 改键 → 公共读口即新值（version 2；保存即生效）',
+    save56.version === 2 && texts1.rows.find((r) => r.key === 'home.idFallback')?.text === '菲丽亚宠友·内测',
+    { v: save56.version, now: texts1.rows.find((r) => r.key === 'home.idFallback')?.text });
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'copy', changes: [{ ruleKey: 'home.idFallback', valueJson: { text: '菲丽亚宠友' } }] },
+  });
+  const texts2 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
+  check('56.2 还原：读口回码内默认同值（不留副作用给后续段）',
+    texts2.rows.find((r) => r.key === 'home.idFallback')?.text === '菲丽亚宠友', texts2.rows.find((r) => r.key === 'home.idFallback'));
+
+  /* 56.3 高危键闸：refund.* 涉钱键无 confirmedHighRisk → 400；带确认 → 过 */
+  const hrNo = await asErr(trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'copy', changes: [{ ruleKey: 'refund.submitCta', valueJson: { text: '提交申请' } }] },
+  }));
+  const hrOk = await trpcMutate<{ version: number }>('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'copy', changes: [{ ruleKey: 'refund.submitCta', valueJson: { text: '提交申请' } }], confirmedHighRisk: ['refund.submitCta'] },
+  });
+  check('56.3 高危键重确认闸：涉钱键无确认 → 400 明文；带 confirmedHighRisk → 放行（同值重写幂等无害）',
+    hrNo instanceof TrpcHttpError && hrNo.code === 'BAD_REQUEST' && hrNo.message.includes('高危键') && hrOk.version >= 3,
+    { no: hrNo instanceof Error ? hrNo.message : null, ok: hrOk.version });
+
+  /* 56.4 禁令词闸：含「充值」→ 400 明文点名；否定明面句（年费≠储值·不自动续费）→ 放行 */
+  const banned = await asErr(trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'copy', changes: [{ ruleKey: 'home.idFallback', valueJson: { text: '充值立享好礼' } }] },
+  }));
+  const negAllowed = await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'copy', changes: [{ ruleKey: 'rules.r2', valueJson: { text: '年费 ≠ 储值 · 到期不自动续费' } }], confirmedHighRisk: ['rules.r2'] },
+  });
+  check('56.4 禁令词闸：「充值」命中即拒明文点名；否定明面句（≠储值/不自动续费）豁免放行',
+    banned instanceof TrpcHttpError && banned.code === 'BAD_REQUEST' && banned.message.includes('充值') &&
+      typeof (negAllowed as { version?: number }).version === 'number',
+    { banned: banned instanceof Error ? banned.message : null, neg: (negAllowed as { version?: number }).version });
+
+  /* 56.5 权限闸：clerk/manager 对 copy 域 list/save 全 403（仅 owner） */
+  const clerkList56 = await asErr(trpcQuery('config.list', { cookie: clerkCookie, input: { domain: 'copy' } }));
+  const mgrSave = await asErr(trpcMutate('config.save', {
+    cookie: managerCookie,
+    input: { domain: 'copy', changes: [{ ruleKey: 'home.idFallback', valueJson: { text: 'x' } }] },
+  }));
+  check('56.5 权限闸：clerk list / manager save → 403 FORBIDDEN（端口仅 owner）',
+    clerkList56 instanceof TrpcHttpError && clerkList56.httpStatus === 403 &&
+      mgrSave instanceof TrpcHttpError && mgrSave.httpStatus === 403,
+    { list: clerkList56 instanceof Error ? clerkList56.message : null, save: mgrSave instanceof Error ? mgrSave.message : null });
+
+  /* 56.6 未知键拒 + 空文案拒 + 留痕前后值（rule_config_versions domain='copy'） */
+  const unknownKey56 = await asErr(trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'copy', changes: [{ ruleKey: 'no.such.key', valueJson: { text: 'x' } }] },
+  }));
+  const emptyText = await asErr(trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'copy', changes: [{ ruleKey: 'home.idFallback', valueJson: { text: '  ' } }] },
+  }));
+  const ver56 = await trpcQuery<{
+    versions: Array<{ version: number; changerNickname: string | null; changesJson: Array<{ rule_key: string; before: { text?: string } | null; after: { text?: string } }> }>;
+  }>('config.versions', { cookie: ownerCookie, input: { domain: 'copy', limit: 5 } });
+  const vRow = ver56.versions.find((v) => v.changesJson.some((c) => c.rule_key === 'home.idFallback'));
+  /* 版本新→旧排序，首行=还原笔（内测→宠友）；正向笔（宠友→内测）按前后值特征定位 */
+  const vChange = ver56.versions
+    .flatMap((v) => v.changesJson)
+    .find((c) => c.rule_key === 'home.idFallback' && c.before?.text === '菲丽亚宠友' && c.after?.text === '菲丽亚宠友·内测');
+  check('56.6 未知键 400 + 空文案 400 + 留痕前后值在库（home.idFallback 菲丽亚宠友→菲丽亚宠友·内测，操作人昵称透出）',
+    unknownKey56 instanceof TrpcHttpError && unknownKey56.code === 'BAD_REQUEST' && unknownKey56.message.includes('未知规则键') &&
+      emptyText instanceof TrpcHttpError && emptyText.code === 'BAD_REQUEST' &&
+      !!vRow && vChange?.before?.text === '菲丽亚宠友' && vChange.after?.text === '菲丽亚宠友·内测' &&
+      typeof vRow.changerNickname === 'string',
+    { unknown: unknownKey56 instanceof Error ? unknownKey56.message : null, empty: emptyText instanceof Error ? emptyText.message : null, ver: vRow?.changesJson });
 
   client.close();
 }

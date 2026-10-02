@@ -3,11 +3,13 @@
  *
  * 覆盖：StaffPage / staff-admin/InviteStaffDialog / EditStaffDialog / ScheduleEditorDialog。
  * 纪律：经营性文案（屏题副题/空态/邀请与停用操作引导/角色口径明面）一律经本表取值，
- * 组件内零硬编码；文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名冻结不改。
+ * 组件内零硬编码；文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  * 数值不进本表：在职计数等到渲染层读列表数据经 {var} 插值。
  */
 
-export const STAFF_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const STAFF_COPY_TABLE = {
   'staff.title': '员工',
   'staff.sub': '在职 {a} · 美容师 {b} · 前台 {c} · 自动派单按排班+负荷（S4）',
   'staff.inviteCta': '＋ 邀请员工',
@@ -23,6 +25,8 @@ export const STAFF_COPY = {
   'staff.editSkillNote': '技能标签暂为只读（S4 派单批开放编辑）；排班请点员工行右侧的排班摘要编辑。',
   'staff.scheduleNote': '每天最多 {n} 个时段；设为「休息」的当天不排班。',
 } as const;
+
+export const STAFF_COPY = withCopyOverrides(STAFF_COPY_TABLE);
 
 export type StaffCopyKey = keyof typeof STAFF_COPY;
 
