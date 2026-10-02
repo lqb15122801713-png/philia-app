@@ -94,9 +94,11 @@ export default function MePage() {
   const avatarUrl = meRawQ.data?.user?.avatarUrl ?? null
   const membership = myQ.data?.membership ?? null
   const plan = myQ.data?.plan ?? null
+  /* 补缺修复小批 P1-3：免费档永久有效（数据层 expiresAt=2099 同帧），倒计时格不上数字 */
+  const isFreePlan = !!plan?.free
   const tierLabel = plan ? plan.label.replace(/^会员档·/, '').replace(/：.*$/, '') : '菲丽亚宠友'
   const rebateBalance = myQ.data?.rebate?.balanceFen ?? 0
-  /* 续费倒计时（PD-15：落地件=纯展示，membership.expiresAt 真值；非会员不上数） */
+  /* 续费倒计时（PD-15：落地件=纯展示，membership.expiresAt 真值；非会员不上数；免费档=永久有效豁免） */
   const renewDaysLeft = membership
     ? Math.max(0, Math.ceil((new Date(membership.expiresAt).getTime() - Date.now()) / DAY_MS))
     : null
@@ -150,7 +152,13 @@ export default function MePage() {
               <div className="k">回馈金</div>
             </div>
             <div data-testid="me-renew-countdown">
-              {renewDaysLeft !== null ? (
+              {membership && isFreePlan ? (
+                <>
+                  {/* P1-3：免费档「永久有效」（mono 小字不上数字；付费档照显倒计时真值） */}
+                  <div className="v" style={{ fontSize: 15 }}>永久有效</div>
+                  <div className="k">会员有效期</div>
+                </>
+              ) : renewDaysLeft !== null ? (
                 <>
                   <div className="v">{renewDaysLeft} <em>天</em></div>
                   <div className="k">续费倒计时</div>

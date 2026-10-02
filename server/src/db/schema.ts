@@ -2252,12 +2252,13 @@ export type CertificatePayload = {
   afterUrl: string;
 };
 
-/** 美容报告体征项（service_reports.vitals 元素；status: normal | attention | abnormal） */
+/** 美容报告体征项（service_reports.vitals 元素；status: normal | attention | abnormal |
+ *  unrecorded——补缺修复小批 UX 销项：未录入缺省项=unrecorded 中性签，不再挂「正常」） */
 export type ReportVital = {
   key: 'weight' | 'skin' | 'ear' | 'coat' | 'nail';
   label: string;
   value: string;
-  status: 'normal' | 'attention' | 'abnormal';
+  status: 'normal' | 'attention' | 'abnormal' | 'unrecorded';
   note?: string;
 };
 
@@ -2306,8 +2307,8 @@ export const serviceCertificates = sqliteTable(
 /**
  * 美容报告表（补缺大批片 4）：一单一报（appointment_id 唯一）。
  * 生成落点同证书（confirmStep 末步同事务）；报告恒生成——员工端报告卡 vitals
- * 缺省时各项 status='normal' + note='本次未记录'（留痕口径不阻塞完成）；
- * 体重项恒为 pets.weight_kg 服务端快照（不信客户端输入值）。
+ * 缺省时各项 status='unrecorded'（未记录中性签）+ note='本次未记录'（补缺修复小批 UX 销项：
+ * 缺项不再挂「正常」；留痕口径不阻塞完成）；体重项恒为 pets.weight_kg 服务端快照（不信客户端输入值）。
  */
 export const serviceReports = sqliteTable(
   'service_reports',

@@ -52,7 +52,8 @@ export const ACCOUNT_COPY = {
   /* R13：为什么要门店复核（敏感操作解释，入键） */
   'deact.whyReview': '为什么要门店复核：注销会清零回馈金、终止会员并删除宠物档案，且不可撤销。门店复核是为确认这是本人真实意愿，避免账号被盗后被恶意注销。',
   'deact.ctaSubmit': '确认注销账号',
-  'deact.confirmTitle': '确认注销账号？',
+  /* 补缺修复小批 UX 销项：第二框标题与第一框 CTA 重复 → 差异化（再次确认问句） */
+  'deact.confirmTitle': '再次确认注销账号？',
   'deact.confirmBody': '注销后回馈金清零、会员档终止、宠物档案删除。此操作不可撤销，复核通过即生效。',
   'deact.confirmOk': '我已知晓，确认注销',
   'deact.confirmCancel': '再想想',

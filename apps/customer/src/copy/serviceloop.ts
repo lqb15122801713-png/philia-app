@@ -62,10 +62,11 @@ export const SL_COPY = {
   'report.vitalEar': '耳朵',
   'report.vitalCoat': '被毛',
   'report.vitalNail': '指甲',
-  /* 三态 pill */
+  /* 三态 pill + 补缺修复小批 UX 销项：unrecorded 未记录中性签（弱色，缺项不再挂「正常」） */
   'report.statusNormal': '正常',
   'report.statusAttention': '注意',
   'report.statusAbnormal': '异常',
+  'report.statusUnrecorded': '未记录',
   /* 体征值缺省（server 留痕口径：缺省项 note='本次未记录'） */
   'report.notRecorded': '本次未记录',
   'report.abnormalTitle': '异常提示',

@@ -136,7 +136,8 @@
  *   53.1 证书生成：有 before/after 图单完成 → service_certificates 落行+payload 齐+
  *      首读 deliveredAt 幂等置位；无图单（寄养）→ 不生成 + certificateFor 404 明文
  *   53.2 报告生成：confirmStep 末步带 vitals（一项 abnormal）→ 快照+abnormalText 拼句+
- *      体重=pets.weight_kg 服务端快照；无 vitals（主单）=各项 normal「本次未记录」；
+ *      体重=pets.weight_kg 服务端快照；无 vitals（主单）=体重 normal 快照+其余缺项
+ *      unrecorded「本次未记录」（补缺修复小批 UX 销项：缺项不再挂「正常」）；
  *      首读 deliveredAt 幂等；certificate.ready/report.ready 落 outbox（payload 用 aid 键）
  *   53.3 albumFeed：多单一次聚合返回（N+1 消除结构断言）+ in_service 单仅 done 步
  *      照片透出 + 默认 limit=12 截顶
@@ -160,7 +161,15 @@
  *      非营销类置 0 硬拒明文「交易/服务/账户通知为保障服务履约不可关闭」；恢复 1 幂等
  *   54.5 挂接槽位：certificate.ready / report.ready / ticket.replied /
  *      refundRequest.approved / refundRequest.rejected / invoice.issued 直发 emitEvent →
- *      通知落库文案/link/category 正确（片 1/片 4 合并后自动真实触发，本断言=槽位有效性实证）
+ *      通知落库文案/link/category 正确（片 1/片 4 合并后自动真实触发，本断言=槽位有效性实证；
+ *      P2-2 口径适配：certificate/report 夹具用不同 aid 避同单同刻聚合）
+ *   54.6（补缺修复小批 P2-2）：同单同刻聚合——同用户同预约（link 族）同分钟桶事件合并
+ *      1 行进度卡（内容=最新+readAt 回未读）；分钟桶滚动另起行；主语完整式文案
+ *      （「【球球】的预约已确认」）；无预约键事件不聚合
+ *   50.7b（补缺修复小批 P1-1）：applyContext 算式明面三件套（原单−已退=本次可退，
+ *      与 create 闸同源；商城单 refundableFen=null；在途申请不计已退；他人单 403）
+ *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
+ *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *
  * 批次 6 补缺大批（server 侧支付骨架）段（施工令全清单；移位铁律：不得对
  * pay_orders.createdAt 移位——payNo 日序计号依赖，本批夹具只动 timeout_at）：
@@ -2574,9 +2583,13 @@ async function main(): Promise<void> {
     const p4u2 = await mkUser('e2e_pr4_u2', '19900000042');
 
     /* 件 2：openFree 读 default_plan_key 全局键（改键→新开档走新键→改回还原） */
-    const free0 = await trpcMutate<{ membership: { planKey: string } }>('membership.openFree', { cookie: await devLogin(p4u1.id) });
+    const free0 = await trpcMutate<{ membership: { planKey: string; expiresAt: Date } }>('membership.openFree', { cookie: await devLogin(p4u1.id) });
     check('PR-4 件 2 openFree 默认档=配置键现值（plan_weiguang，读 default_plan_key 非硬编码）',
       free0.membership.planKey === 'plan_weiguang', free0.membership.planKey);
+    /* 补缺修复小批 P1-3：免费档 expiresAt 置远端 2099（数据层永久有效，写侧=FREE_PLAN_EXPIRES_AT 同值） */
+    check('P1-3 openFree 免费档 expiresAt=2099-12-31 远端（数据层永久有效，与「永久有效」文案同帧）',
+      free0.membership.expiresAt.getTime() === 4102444799 * 1000,
+      free0.membership.expiresAt);
     await trpcMutate('config.save', {
       cookie: ownerCookie,
       input: { domain: 'member_plans', changes: [{ ruleKey: 'default_plan_key', valueJson: { value: 'plan_yinghuo' } }] },
@@ -2649,6 +2662,11 @@ async function main(): Promise<void> {
   check('R11a⑧ 烛光 29900（微信段）+ 微光 0 元单直接成交（无支付段）',
     sellZhuguang.amountFen === 29900 && sellWeiguang.amountFen === 0 && sellWeiguang.membership.status === 'active',
     { zg: sellZhuguang.amountFen, wg: sellWeiguang.amountFen });
+  /* 补缺修复小批 P1-3：收银台售微光（0 元单）expiresAt 同置远端 2099（sell 写侧口径） */
+  check('P1-3 sell 微光档 expiresAt=2099-12-31 远端（烛光付费档照 +365 天读表不动）',
+    sellWeiguang.membership.expiresAt.getTime() === 4102444799 * 1000 &&
+      Math.abs(sellZhuguang.membership.expiresAt.getTime() - (Date.now() + 365 * 86400_000)) < 2 * 86400_000,
+    { wg: sellWeiguang.membership.expiresAt, zg: sellZhuguang.membership.expiresAt });
 
   // ③ 售卡提成定额（commission.cardLines 接通）：归属=开单人 manager
   interface CardLineT { billId: string; plan: string; amountFen: number }
@@ -3286,6 +3304,34 @@ async function main(): Promise<void> {
       ['submitted', 'approved', 'refunded', 'settled'].every((s) => get507.request.timelineJson.some((t) => t.status === s)),
     { refund: settle507.refund.status, req: get507.request.status, timeline: get507.request.timelineJson.map((t) => t.status) });
 
+  /* ---------- 50.7b（补缺修复小批 P1-1）：applyContext 算式明面三件套（原单−已退=本次可退） ---------- */
+  console.log('\n[C5] 50.7b applyContext 算式明面（P1-1）');
+  interface ApplyCtxRes { originTotalFen: number; refundedSoFarFen: number; refundableFen: number | null }
+  /* 无历史退款行（bill505：仅 fake settled 申请行无实退单——钱是 refund_bills 口径，留痕行不计已退） */
+  const ctxNoHist = await trpcQuery<ApplyCtxRes>('refundRequest.applyContext', {
+    cookie: customerCookie, input: { orderKind: 'appointment', billId: bill505.billId } });
+  check('C5 50.7b 无实退历史 → 原单 12900 / 已退 0 / 本次可退 12900（照现值，算式不上屏条件）',
+    ctxNoHist.originTotalFen === 12900 && ctxNoHist.refundedSoFarFen === 0 && ctxNoHist.refundableFen === 12900,
+    ctxNoHist);
+  /* 有历史退款行（billValid50：50.4 全退 12900 executed）→ 已退 12900 / 本次可退 0 */
+  const ctxFull = await trpcQuery<ApplyCtxRes>('refundRequest.applyContext', {
+    cookie: customerCookie, input: { orderKind: 'appointment', billId: billValid50.billId } });
+  check('C5 50.7b 有历史退款行 → 原单 12900 − 已退 12900 = 本次可退 0（与 create 闸可退余额同源）',
+    ctxFull.originTotalFen === 12900 && ctxFull.refundedSoFarFen === 12900 && ctxFull.refundableFen === 0,
+    ctxFull);
+  /* 商城单：refundableFen=null（不走余额口径，客户端照现值）+ 在途申请不计已退 */
+  const ctxMall = await trpcQuery<ApplyCtxRes>('refundRequest.applyContext', {
+    cookie: customerCookie, input: { orderKind: 'order', billId: mallOrder50.id } });
+  check('C5 50.7b 商城单 → 原单 12900 / 已退 0（在途 submitted 不计）/ refundableFen=null',
+    ctxMall.originTotalFen === 12900 && ctxMall.refundedSoFarFen === 0 && ctxMall.refundableFen === null,
+    ctxMall);
+  /* 越权：他人单 applyContext → 403（resolveOrigin 归属闸同 create） */
+  const ctxCross = await asErr(trpcQuery('refundRequest.applyContext', {
+    cookie: cookieD50, input: { orderKind: 'appointment', billId: billValid50.billId } }));
+  check('C5 50.7b applyContext 他人单 → 403 FORBIDDEN「非本人单据」（金额三件套不外泄）',
+    ctxCross instanceof TrpcHttpError && ctxCross.httpStatus === 403,
+    ctxCross && { code: ctxCross.code, message: ctxCross.message });
+
   /* ---------- 50.8（补缺大批片 1 补缝）：appointment.get 附 cashierBillId + submitted SSE + 重购留痕 ---------- */
   console.log('\n[C5] 50.8 appointment.get cashierBillId + submitted SSE + 重购留痕');
   const get508 = await trpcQuery<{ appointment: { id: string }; cashierBillId: string | null }>(
@@ -3683,12 +3729,12 @@ async function main(): Promise<void> {
   console.log('\n[补缺4] 53.2 美容报告生成链');
   interface VitalT { key: string; label: string; value: string; status: string; note?: string }
   interface ReportGetRes { report: { id: string; vitals: VitalT[]; abnormalText: string | null; nextAdvice: string | null; deliveredAt: Date | null } }
-  // 主单 aid（末步未传 vitals）→ 缺省口径：各项 normal +「本次未记录」，体重=档案快照
+  // 主单 aid（末步未传 vitals）→ 补缺修复小批 UX 销项口径：体重=档案快照（normal），其余缺项=unrecorded「本次未记录」
   const repGet1 = await trpcQuery<ReportGetRes>('serviceLoop.reportFor', { cookie: customerCookie, input: { appointmentId: aid } });
   const aidVitals = repGet1.report.vitals;
-  check('53.2 无 vitals 报告=五项 normal +「本次未记录」（留痕口径不阻塞完成），abnormalText=NULL',
-    aidVitals.length === 5 && aidVitals.every((v) => v.status === 'normal') &&
-      aidVitals.filter((v) => v.key !== 'weight').every((v) => v.value === '本次未记录' && v.note === '本次未记录') &&
+  check('53.2 无 vitals 报告=体重 normal 快照 + 其余四项 unrecorded「本次未记录」（未记录中性签不挂「正常」；留痕口径不阻塞完成），abnormalText=NULL（unrecorded 不进异常拼句）',
+    aidVitals.length === 5 && aidVitals.find((v) => v.key === 'weight')?.status === 'normal' &&
+      aidVitals.filter((v) => v.key !== 'weight').every((v) => v.status === 'unrecorded' && v.value === '本次未记录' && v.note === '本次未记录') &&
       repGet1.report.abnormalText === null,
     aidVitals.map((v) => `${v.key}:${v.status}:${v.value}`));
   check('53.2 体重项= pets.weight_kg 服务端快照（28.5 kg，不信客户端）',
@@ -3743,10 +3789,10 @@ async function main(): Promise<void> {
     vitDone);
   const vitRep = await trpcQuery<ReportGetRes>('serviceLoop.reportFor', { cookie: customerCookie, input: { appointmentId: apptVit.id } });
   const vitSkin = vitRep.report.vitals.find((v) => v.key === 'skin');
-  check('53.2 vitals 快照（skin=abnormal+note；ear/coat/nail 缺项=normal 本次未记录）',
+  check('53.2 vitals 快照（skin=abnormal+note；ear/coat/nail 缺项=unrecorded 本次未记录——补缺修复小批 UX 销项口径）',
     vitRep.report.vitals.length === 5 &&
       vitSkin?.status === 'abnormal' && vitSkin.note === '建议就医复查' && vitSkin.value === '后腿内侧红疹' &&
-      vitRep.report.vitals.filter((v) => ['ear', 'coat', 'nail'].includes(v.key)).every((v) => v.status === 'normal' && v.note === '本次未记录'),
+      vitRep.report.vitals.filter((v) => ['ear', 'coat', 'nail'].includes(v.key)).every((v) => v.status === 'unrecorded' && v.note === '本次未记录'),
     vitRep.report.vitals.map((v) => `${v.key}:${v.status}`));
   check('53.2 体重不被客户端输入污染（入参 99.9 kg 被拒，快照=档案 28.5 kg）',
     vitRep.report.vitals.find((v) => v.key === 'weight')?.value === `${petRow.weightKg} kg`,
@@ -4330,8 +4376,10 @@ async function main(): Promise<void> {
   const mr2 = await trpcMutate<{ marked: number }>('push.markRead', { cookie: notifyCookie, input: { ids: [row501!.id] } });
   check('54.2 markRead 幂等：首次 marked=1 / 重复调 marked=0（零副作用）',
     mr1.marked === 1 && mr2.marked === 0, { mr1, mr2 });
-  await emitEvent(db, `user:${notifyUser.id}`, EventType.BoardingCompleted, { appointmentId: aid });
-  await emitEvent(db, `user:${notifyUser.id}`, EventType.AppointmentCancelled, { appointmentId: aid });
+  /* 补缺修复小批 P2-2 口径适配：同 aid 同分钟桶事件聚合为 1 条进度卡——本段测 markAllRead 幂等，
+     夹具两事件改用不同 appointmentId（避免撞聚合键；聚合行为本体见 54.6 专项断言） */
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.BoardingCompleted, { appointmentId: `${aid}-b2` });
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.AppointmentCancelled, { appointmentId: `${aid}-c2` });
   const uc502a = await trpcQuery<{ total: number }>('push.unreadCount', { cookie: notifyCookie });
   const ma1 = await trpcMutate<{ marked: number }>('push.markAllRead', { cookie: notifyCookie, input: {} });
   const ma2 = await trpcMutate<{ marked: number }>('push.markAllRead', { cookie: notifyCookie, input: {} });
@@ -4405,8 +4453,10 @@ async function main(): Promise<void> {
     { enabled: prefOn.enabled, promo3: promo3Rows.length });
 
   /* ---- 54.5 挂接槽位：片 1/片 4 事件名直发 → 通知落库文案/link/category 正确 ---- */
+  /* 补缺修复小批 P2-2 口径适配：certificate/report 夹具用不同 aid（同 aid 同分钟桶=聚合为 1 条进度卡，
+     见 54.6；本段测槽位文案/link 须各自成行） */
   await emitEvent(db, `user:${notifyUser.id}`, 'certificate.ready', { appointmentId: aid, petName: '球球' });
-  await emitEvent(db, `user:${notifyUser.id}`, 'report.ready', { appointmentId: aid, petName: '球球' });
+  await emitEvent(db, `user:${notifyUser.id}`, 'report.ready', { appointmentId: `${aid}-r`, petName: '球球' });
   await emitEvent(db, `user:${notifyUser.id}`, 'ticket.replied', { ticketId: 'tk-e2e-1' });
   await emitEvent(db, `user:${notifyUser.id}`, 'refundRequest.approved', { amountFen: 100 });
   await emitEvent(db, `user:${notifyUser.id}`, 'refundRequest.rejected', { reason: '凭证不足' });
@@ -4418,7 +4468,7 @@ async function main(): Promise<void> {
       slotRow('certificate.ready')?.category === 'service' && (slotRow('certificate.ready')?.body ?? '').includes('球球'),
     slotRow('certificate.ready'));
   check('54.5 report.ready 落库（美容报告已送达 / link=/philia/reports/:aid / service）',
-    slotRow('report.ready')?.title === '美容报告已送达' && slotRow('report.ready')?.link === `/philia/reports/${aid}` &&
+    slotRow('report.ready')?.title === '美容报告已送达' && slotRow('report.ready')?.link === `/philia/reports/${aid}-r` &&
       slotRow('report.ready')?.category === 'service',
     slotRow('report.ready'));
   check('54.5 ticket.replied 落库（小棉花回复 / link=/support/:ticketId / service 兜底）',
@@ -4438,6 +4488,40 @@ async function main(): Promise<void> {
     slotRow('invoice.issued')?.title === '发票已开具' && slotRow('invoice.issued')?.link === '/invoices' &&
       slotRow('invoice.issued')?.category === 'trade',
     slotRow('invoice.issued'));
+
+  /* ---- 54.6（补缺修复小批 P2-2）：同单同刻聚合（appointmentId+分钟桶）+ 主语完整式文案 ---- */
+  console.log('\n[片5] 54.6 同单同刻聚合 + 主语完整（补缺修复小批 P2-2）');
+  const aidM1 = 'e2e-merge-aid-1';
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.AppointmentConfirmed, { appointmentId: aidM1, petName: '球球' });
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.AppointmentAssigned, { appointmentId: aidM1, petName: '球球' });
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.AppointmentCheckedIn, { appointmentId: aidM1, petName: '球球' });
+  const m1Rows = (await notifRowsOf(notifyUser.id)).filter((n) => (n.link ?? '').includes(aidM1));
+  check('54.6 同单同刻三连事件聚合=1 行进度卡（内容=最新「已到店签到」，readAt 置回未读提示新进度）',
+    m1Rows.length === 1 && m1Rows[0]!.type === 'appointment.checkedin' &&
+      m1Rows[0]!.body === '【球球】已到店，服务即将开始' && m1Rows[0]!.readAt === null,
+    m1Rows.map((n) => `${n.type}:${n.body}`));
+  /* 分钟桶滚动：首行 createdAt 回拨 61 秒 → 同 aid 新事件出桶另起行 */
+  await db.update(schema.notifications)
+    .set({ createdAt: new Date(Date.now() - 61_000) })
+    .where(eq(schema.notifications.id, m1Rows[0]!.id));
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.AppointmentCompleted, { appointmentId: aidM1, petName: '球球' });
+  const m1Rows2 = (await notifRowsOf(notifyUser.id)).filter((n) => (n.link ?? '').includes(aidM1));
+  check('54.6 分钟桶滚动后同单新事件另起行（2 行=桶外不聚合；进度卡语义不吞跨分钟历史）',
+    m1Rows2.length === 2 && m1Rows2.some((n) => n.type === 'appointment.completed'),
+    m1Rows2.map((n) => `${n.type}`));
+  /* 主语完整式：预约已确认=「【球球】的预约已确认」（消「您旺财的预约」拼接语病） */
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.AppointmentConfirmed, { appointmentId: 'e2e-merge-aid-2', petName: '球球' });
+  const m2Row = (await notifRowsOf(notifyUser.id)).find((n) => (n.link ?? '').includes('e2e-merge-aid-2'));
+  check('54.6 主语完整式文案（「【球球】的预约已确认，请按时到店」）',
+    m2Row?.body === '【球球】的预约已确认，请按时到店', m2Row?.body);
+  /* 无预约键事件不聚合：refundRequest.approved 两连发各行其是 */
+  await emitEvent(db, `user:${notifyUser.id}`, 'refundRequest.approved', { amountFen: 200 });
+  await emitEvent(db, `user:${notifyUser.id}`, 'refundRequest.approved', { amountFen: 300 });
+  const noKeyRows = (await notifRowsOf(notifyUser.id)).filter((n) => n.type === 'refundRequest.approved');
+  check('54.6 无预约键事件不聚合（link=/refunds 无 aid → 两连发两行）',
+    noKeyRows.length === 3, noKeyRows.length); // 54.5 既有 1 行 + 本段 2 行
+  /* 54.6 收尾清零（防残留未读污染后续段计数口径） */
+  await trpcMutate('push.markAllRead', { cookie: notifyCookie, input: {} });
 
   /* ==================================================================
    * 批次 6 补缺大批（server 侧支付骨架）验收段

@@ -32,6 +32,12 @@ export const REFUND_COPY = {
   'refund.photoCta': '添加照片',
   'refund.descPlaceholder': '补充说明（选填）',
   'refund.amountLabel': '申请金额',
+  /* 补缺修复小批 P1-1：有历史退款行时金额区改算式明面（原单−已退=本次可退，值=applyContext 透出） */
+  'refund.originTotalLine': '原单',
+  'refund.refundedSoFarLine': '已退',
+  'refund.refundableLine': '本次可退',
+  /* 补缺修复小批 P2-3：未选原因置灰引导（提交钮下灰字） */
+  'refund.submitHintNoReason': '请先选择退款原因',
   'refund.submitCta': '提交申请',
   'refund.submitDone': '退款申请已提交',
   /* 直访异常态（原单不可退/不存在/已有在途申请） */

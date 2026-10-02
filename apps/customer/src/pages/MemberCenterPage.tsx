@@ -259,14 +259,18 @@ function A3Body({
       {/* 6. 规则明面（红线 5：全量八条） */}
       <RulesBlock plan={plan} settlementDay={settlementDay} validityDays={validityDays} allPcts={allPcts} />
 
-      {/* 7. CTA 区（续费=到店付弹层；升级会员 →/member/upgrade（upgradeAvailable 才显）；看看别的档 → J-01） */}
+      {/* 7. CTA 区（续费=到店付弹层；升级会员 →/member/upgrade（upgradeAvailable 才显）；看看别的档 → J-01；
+          补缺修复小批 UX 销项：免费档主 CTA=「免费在册 · 随时升级」→升级页，不谈续费） */}
       <div style={{ marginTop: 16 }}>
         <button
           type="button"
           className="m2-btn-primary m2-press"
-          onClick={() => onSheet('renew')}
+          data-testid="member-renew-cta"
+          onClick={() => (isFreePlan ? onGotoUpgrade() : onSheet('renew'))}
         >
-          {mc('a3.ctaRenew', { tier, daily: plan ? dailyOf(plan.priceFen) : '—' })}
+          {isFreePlan
+            ? mc('a3.ctaRenewFree')
+            : mc('a3.ctaRenew', { tier, daily: plan ? dailyOf(plan.priceFen) : '—' })}
         </button>
         {my.upgradeAvailable ? (
           <div style={{ textAlign: 'center', marginTop: 12 }}>

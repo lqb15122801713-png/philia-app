@@ -251,7 +251,7 @@ export function PerksWall({ plan }: { plan: V2Plan }) {
     { t: mc('perk.groomer'), s: mc('perk.groomerSub') },
     { t: mc('perk.birthday'), s: mc('perk.birthdaySub') },
     { t: mc('perk.skin'), s: mc('perk.skinSub') },
-    { t: mc('perk.boarding'), s: mc('perk.boardingSub') },
+    { t: mc('perk.boarding'), s: zhe ? mc('perk.boardingSub', { zhe }) : mc('perk.discountNone') },
     { t: mc('perk.archive'), s: mc('perk.archiveSub') },
   ]
   return (

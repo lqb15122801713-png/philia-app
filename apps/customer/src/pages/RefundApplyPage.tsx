@@ -111,6 +111,17 @@ export default function RefundApplyPage({ orderKind }: { orderKind: 'appointment
         ) ?? null)
       : null;
 
+  /* 补缺修复小批 P1-1：金额算式明面数据源（原单−已退=本次可退，server applyContext
+     与 create 闸单点同源口径）；到店单余额口径才出算式（refundableFen 非 null） */
+  const applyCtxQ = useQuery({
+    queryKey: ['refundRequest', 'applyContext', orderKind, billId],
+    queryFn: () => trpc.refundRequest.applyContext.query({ orderKind, billId }),
+    enabled: billId.length > 0,
+  });
+  const applyCtx = applyCtxQ.data ?? null;
+  const showFormula =
+    !!applyCtx && applyCtx.refundableFen !== null && applyCtx.refundedSoFarFen > 0;
+
   /* ---- 表单状态 ---- */
   const [refundType, setRefundType] = useState<'refund_only' | 'return_refund'>('refund_only');
   const [reasonCode, setReasonCode] = useState('');
@@ -370,7 +381,9 @@ export default function RefundApplyPage({ orderKind }: { orderKind: 'appointment
             />
           </section>
 
-          {/* 申请金额算式明面（R15：行金额逐项 mono + 合计=申请金额，可自验） */}
+          {/* 申请金额算式明面（R15：行金额逐项 mono + 合计=申请金额，可自验；
+              补缺修复小批 P1-1：有历史退款行 → 追加「原单−已退=本次可退」算式三行，
+              合计行改=本次可退真值，与 create 闸可退余额口径同帧，消「说好退 X 提交变 Y」打架） */}
           <section className="rounded-card bg-card p-4 shadow-card" data-testid="refund-amount-card">
             <h2 className="text-title">{rc('refund.amountLabel')}</h2>
             <dl className="mt-2 space-y-1.5 text-body">
@@ -380,17 +393,39 @@ export default function RefundApplyPage({ orderKind }: { orderKind: 'appointment
                   <dd className="font-number">{fenToYuan(l.amountFen)}</dd>
                 </div>
               ))}
-              <div className="flex justify-between border-t border-line-divider pt-2">
-                <dt className="font-medium">{rc('refund.amountLabel')}</dt>
-                <dd className="font-number font-semibold text-ink">{fenToYuan(totalFen)}</dd>
-              </div>
+              {showFormula && applyCtx ? (
+                <>
+                  <div
+                    className="flex justify-between border-t border-line-divider pt-2"
+                    data-testid="refund-amount-formula"
+                  >
+                    <dt className="text-ink-secondary">{rc('refund.originTotalLine')}</dt>
+                    <dd className="font-number">{fenToYuan(applyCtx.originTotalFen)}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-ink-secondary">{rc('refund.refundedSoFarLine')}</dt>
+                    <dd className="font-number">−{fenToYuan(applyCtx.refundedSoFarFen)}</dd>
+                  </div>
+                  <div className="flex justify-between border-t border-line-divider pt-2">
+                    <dt className="font-medium">{rc('refund.refundableLine')}</dt>
+                    <dd className="font-number font-semibold text-ink">
+                      {fenToYuan(applyCtx.refundableFen ?? 0)}
+                    </dd>
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-between border-t border-line-divider pt-2">
+                  <dt className="font-medium">{rc('refund.amountLabel')}</dt>
+                  <dd className="font-number font-semibold text-ink">{fenToYuan(totalFen)}</dd>
+                </div>
+              )}
             </dl>
           </section>
 
           {/* 时效公示卡（数值=configView 端口） */}
           <RefundTimingCard config={configQ.data ?? null} />
 
-          {/* 提交（h≥56 主钮；未填/上传中禁用） */}
+          {/* 提交（h≥56 主钮；未填/上传中禁用；P2-3：未选原因时钮下灰字引导） */}
           <button
             type="button"
             data-testid="refund-submit"
@@ -400,6 +435,14 @@ export default function RefundApplyPage({ orderKind }: { orderKind: 'appointment
           >
             {createM.isPending ? '提交中…' : rc('refund.submitCta')}
           </button>
+          {reasonCode.length === 0 ? (
+            <p
+              className="-mt-2 text-center text-caption text-ink-placeholder"
+              data-testid="refund-submit-hint"
+            >
+              {rc('refund.submitHintNoReason')}
+            </p>
+          ) : null}
         </div>
       )}
     </div>
