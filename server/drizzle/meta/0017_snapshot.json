@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "4fbdc1a0-780a-4a4e-a969-ebd97aa18819",
-  "prevId": "5b5ce17b-565c-4f0b-a2ae-e286980fc113",
+  "id": "f08a128c-f641-4676-84d2-653e21292b21",
+  "prevId": "976bba03-ced0-49e9-88a6-7f7cf29ca0c6",
   "tables": {
     "appointment_steps": {
       "name": "appointment_steps",
