@@ -10,7 +10,7 @@
  *   （对齐服务端 createOrder 的 BAD_REQUEST 口径）。
  */
 
-import { Skeleton, usePhiliaClient } from '@philia/shared';
+import { Skeleton, slotContentOf, resolveSlotUrl, usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Minus, Plus, Store } from 'lucide-react';
 import { useRef, useState } from 'react';
@@ -116,7 +116,7 @@ function DetailInner() {
   if (productQ.isError || !product) {
     return (
       <div className="flex flex-col items-center px-[22px] py-16">
-        <img src="/brand/empty-appointments-800.png" alt="商品不存在" className="w-48 max-w-full rounded-panel" />
+        <img src={resolveSlotUrl(slotContentOf('pets.emptyIllustration')?.url) ?? '/brand/empty-appointments-800.png'} alt={slotContentOf('pets.emptyIllustration')?.alt ?? '商品不存在'} className="w-48 max-w-full rounded-panel" />
         <p className="mt-4 text-title">
           {productQ.isError ? friendlyError(productQ.error, '商品不存在或已下架', 80) : '商品不存在或已下架'}
         </p>

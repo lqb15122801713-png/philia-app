@@ -131,7 +131,9 @@ export default function MePage() {
               <span className="tier">{tierLabel}</span>
             </div>
             {membership ? (
-              <Link to="/member" className="renew" data-testid="me-renew-link">续费 ›</Link>
+              /* 端口批片 C 顺带件②（片 A 观察 3）：免费档「续费 ›」同源分态——改指升级页
+                 （同会员页主 CTA「免费在册 · 随时升级」口径）；付费档照指 /member 不动 */
+              <Link to={isFreePlan ? '/member/upgrade' : '/member'} className="renew" data-testid="me-renew-link">续费 ›</Link>
             ) : null}
           </div>
           <div className="nums">

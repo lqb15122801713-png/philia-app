@@ -7,6 +7,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { resolveSlotUrl, slotContentOf } from '@philia/shared'
 import { mc } from './copy'
 
 /* ------------------------------------------------------------------ */
@@ -152,6 +153,9 @@ export function CardFace({
   testId?: string
 }) {
   const t = tierIdxOf(planKey)
+  /* 端口批片 C：卡面图槽 member.cardFace——有 live 真件则铺底（档位渐变仍在底层兜 fallback），
+     无=纯档色谱渐变（R10 不画假件；种子 url=null 即此态） */
+  const cardArt = resolveSlotUrl(slotContentOf('member.cardFace')?.url)
   return (
     <div
       className={`m2-cardface m2-cf-t${t}${selectable ? ' selable' : ''}${selected ? ' sel' : ''}`}
@@ -161,6 +165,7 @@ export function CardFace({
       aria-pressed={selectable ? selected : undefined}
       data-testid={testId}
     >
+      {cardArt ? <img className="cf-art" src={cardArt} alt="" aria-hidden="true" /> : null}
       <div className="cf-logo">{mc('card.logo')}</div>
       {stamp ? <div className="cf-stamp">{stamp}</div> : null}
       <div className="cf-name" style={{ fontSize: nameSize, marginTop: height >= 200 ? 16 : 3 }}>
@@ -317,9 +322,13 @@ export function RulesBlock({
 /* ------------------------------------------------------------------ */
 
 export function FamCard({ text }: { text: string }) {
+  /* 端口批片 C：多宠氛围卡槽 member.famCard——有 live 真件换图，无=占位渐变（R10） */
+  const art = resolveSlotUrl(slotContentOf('member.famCard')?.url)
   return (
     <div className="m2-famcard">
-      <div className="fc-img" role="img" aria-label={text} />
+      {art
+        ? <img className="fc-img" src={art} alt={text} />
+        : <div className="fc-img" role="img" aria-label={text} />}
       <div className="fc">{text}</div>
     </div>
   )

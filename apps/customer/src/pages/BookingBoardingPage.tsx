@@ -13,7 +13,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Skeleton, usePhiliaClient } from '@philia/shared';
+import { Skeleton, slotContentOf, resolveSlotUrl, usePhiliaClient } from '@philia/shared';
 import BoardingDateRangePicker, { checkinAt } from '@/components/booking/BoardingDateRangePicker';
 import PetPicker from '@/components/booking/PetPicker';
 import StepIndicator from '@/components/booking/StepIndicator';
@@ -205,7 +205,7 @@ export default function BookingBoardingPage() {
           {/* v1.1-b1：空宠物建档岔路卡（可跳过浏览，但确认屏不可达） */}
           {noPets && !forkDismissed ? (
             <div className="mb-4 flex flex-col items-center rounded-card bg-card px-4 py-6 text-center shadow-card">
-              <img src="/brand/empty-appointments-800.png" alt="还没有宠物档案" className="w-40 max-w-full rounded-card" />
+              <img src={resolveSlotUrl(slotContentOf('pets.emptyIllustration')?.url) ?? '/brand/empty-appointments-800.png'} alt={slotContentOf('pets.emptyIllustration')?.alt ?? '还没有宠物档案'} className="w-40 max-w-full rounded-card" />
               <p className="mt-3 text-title">{bkc('booking.noPetTitle')}</p>
               <p className="mt-1 text-caption text-ink-secondary">{bkc('booking.noPetBodyBoarding')}</p>
               <button

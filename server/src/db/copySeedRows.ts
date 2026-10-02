@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B）——生成件，勿手改（源=scripts/gen-copy-overrides-seed.mts）；
  * 重生成：仓库根 npx tsx scripts/gen-copy-overrides-seed.mts（copy 键表增删键后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-02T14:08:58.631Z；键数=1391
+ * 生成时间口径：2026-10-02T16:09:48.060Z；键数=1415
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }> = [
  {
@@ -3718,6 +3718,126 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "copyport.searchPlaceholder",
   "domain": "merchant:copyPort",
   "text": "搜索键名或文案…"
+ },
+ {
+  "key": "slotport.empty",
+  "domain": "merchant:copyPort",
+  "text": "槽位注册表为空（种子未落库）"
+ },
+ {
+  "key": "slotport.liveBadge",
+  "domain": "merchant:copyPort",
+  "text": "上线中"
+ },
+ {
+  "key": "slotport.loadFail",
+  "domain": "merchant:copyPort",
+  "text": "槽位数据加载失败，请检查网络后重试"
+ },
+ {
+  "key": "slotport.noLive",
+  "domain": "merchant:copyPort",
+  "text": "暂无上线版本"
+ },
+ {
+  "key": "slotport.ownerOnly",
+  "domain": "merchant:copyPort",
+  "text": "槽位端口仅店主可改"
+ },
+ {
+  "key": "slotport.ownerOnlyBody",
+  "domain": "merchant:copyPort",
+  "text": "展示素材涉门店门面口径，仅店主账号可上传与上线。如需调整请联系店主。"
+ },
+ {
+  "key": "slotport.pageSub",
+  "domain": "merchant:copyPort",
+  "text": "展示素材后台可换 · 新素材默认待审 · 点上线即生效（新渲染）"
+ },
+ {
+  "key": "slotport.pageTitle",
+  "domain": "merchant:copyPort",
+  "text": "槽位端口"
+ },
+ {
+  "key": "slotport.pendingBadge",
+  "domain": "merchant:copyPort",
+  "text": "待审"
+ },
+ {
+  "key": "slotport.pendingCount",
+  "domain": "merchant:copyPort",
+  "text": "{n} 个待审"
+ },
+ {
+  "key": "slotport.pendingTitle",
+  "domain": "merchant:copyPort",
+  "text": "待审版本"
+ },
+ {
+  "key": "slotport.placeholderBadge",
+  "domain": "merchant:copyPort",
+  "text": "占位中"
+ },
+ {
+  "key": "slotport.placeholderNote",
+  "domain": "merchant:copyPort",
+  "text": "码内默认渐变/图标占位，上传真件并点上线后替换"
+ },
+ {
+  "key": "slotport.publishCta",
+  "domain": "merchant:copyPort",
+  "text": "点上线"
+ },
+ {
+  "key": "slotport.publishedToast",
+  "domain": "merchant:copyPort",
+  "text": "已上线，客户端新渲染即生效"
+ },
+ {
+  "key": "slotport.publishFail",
+  "domain": "merchant:copyPort",
+  "text": "上线失败，请稍后再试"
+ },
+ {
+  "key": "slotport.revertCta",
+  "domain": "merchant:copyPort",
+  "text": "回退上一版"
+ },
+ {
+  "key": "slotport.revertedToast",
+  "domain": "merchant:copyPort",
+  "text": "已回退上一版，客户端新渲染即生效"
+ },
+ {
+  "key": "slotport.revertFail",
+  "domain": "merchant:copyPort",
+  "text": "回退失败，请稍后再试"
+ },
+ {
+  "key": "slotport.uploadCta",
+  "domain": "merchant:copyPort",
+  "text": "上传替换"
+ },
+ {
+  "key": "slotport.uploadedToast",
+  "domain": "merchant:copyPort",
+  "text": "已上传，待审中（点上线后生效）"
+ },
+ {
+  "key": "slotport.uploadFail",
+  "domain": "merchant:copyPort",
+  "text": "上传失败，请稍后再试"
+ },
+ {
+  "key": "slotport.uploading",
+  "domain": "merchant:copyPort",
+  "text": "上传中…"
+ },
+ {
+  "key": "slotport.versionInfo",
+  "domain": "merchant:copyPort",
+  "text": "v{version} · 共 {total} 版"
  },
  {
   "key": "dash.appealAssistConfirmTitle",

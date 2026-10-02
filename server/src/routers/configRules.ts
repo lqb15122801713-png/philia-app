@@ -12,7 +12,7 @@
  * - 无删除端点（规则行只增不改历史）。
  */
 import { TRPCError } from '@trpc/server';
-import { and, asc, desc, eq, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import { emitEvent } from '../realtime/bus';
@@ -332,20 +332,35 @@ export const configRulesRouter = router({
         validateValueJson(c.ruleKey, c.valueJson);
       }
       /* 文案域双闸（端口批片 B，进事务前硬拒）：
-         1. 值形状={text:非空文案}；2. 禁令词校验（命中即拒明文）；3. 高危键须重确认 */
+         1. 值形状={text:非空文案}；2. 禁令词校验（命中即拒明文）；3. 高危键须重确认。
+         片 C 顺带件③（产品侧自纠口径）：禁令词闸限对外域（customer 12 域+member）——
+         merchant:/staff: 域（label 前缀）豁免（内部操作面术语非对外文案）；高危重确认全端保留 */
       if (input.domain === 'copy') {
         const confirmed = new Set(input.confirmedHighRisk ?? []);
+        const tableForLabel = RULES_TABLE.copy;
+        const labelRows = await ctx.db
+          .select({ ruleKey: tableForLabel.ruleKey, label: tableForLabel.label })
+          .from(tableForLabel)
+          .where(inArray(tableForLabel.ruleKey, input.changes.map((c) => c.ruleKey)));
+        const domainByKey = new Map(labelRows.map((r) => [r.ruleKey, r.label]));
+        /** 对外域=非 merchant:/staff: 前缀（customer 12 域+member；未知键=null 照闸=保守） */
+        const isExternalKey = (key: string) => {
+          const d = domainByKey.get(key);
+          return d === undefined || (!d.startsWith('merchant:') && !d.startsWith('staff:'));
+        };
         for (const c of input.changes) {
           const text = copyTextOf(c.valueJson);
           if (text === null) {
             throw new TRPCError({ code: 'BAD_REQUEST', message: `文案键 ${c.ruleKey} 的值必须是 { text: 非空文案 }` });
           }
-          const hit = copyBannedHit(text);
-          if (hit) {
-            throw new TRPCError({
-              code: 'BAD_REQUEST',
-              message: `文案含禁令词「${hit}」（禁令四条红线：禁充值入口/年费≠储值文案/禁提自动续费/禁诱导词）——请改写后再保存`,
-            });
+          if (isExternalKey(c.ruleKey)) {
+            const hit = copyBannedHit(text);
+            if (hit) {
+              throw new TRPCError({
+                code: 'BAD_REQUEST',
+                message: `文案含禁令词「${hit}」（禁令四条红线：禁充值入口/年费≠储值文案/禁提自动续费/禁诱导词）——请改写后再保存`,
+              });
+            }
           }
           if (isCopyHighRiskKey(c.ruleKey) && !confirmed.has(c.ruleKey)) {
             throw new TRPCError({
