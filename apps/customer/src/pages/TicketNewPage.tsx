@@ -45,6 +45,8 @@ export default function TicketNewPage() {
   const [contactPhone, setContactPhone] = useState('')
   const [contactTouched, setContactTouched] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
+  /* 补缺修复小批 UX 销项（运营 P3-2）：字段级红标状态（空提交命中的字段） */
+  const [fieldError, setFieldError] = useState<'store' | 'desc' | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   // 门店列表=预约页同款取店口径（store.listNearby 公开读口）
@@ -102,12 +104,15 @@ export default function TicketNewPage() {
 
   const onSubmit = () => {
     setFormError(null)
+    setFieldError(null)
     if (!storeId) {
       setFormError(sl('ticket.storeRequired'))
+      setFieldError('store')
       return
     }
     if (!description.trim()) {
       setFormError(sl('ticket.descRequired'))
+      setFieldError('desc')
       return
     }
     createM.mutate()
@@ -115,6 +120,8 @@ export default function TicketNewPage() {
 
   const inputCls =
     'w-full rounded-control border border-line bg-card px-3 py-2.5 text-body-sm outline-none transition-colors focus:border-brand-primary'
+  /* 补缺修复小批 UX 销项（运营 P3-2）：空提交字段级红标（校验失败的字段边框转红，改值即消） */
+  const fieldErrCls = 'border-danger-deep focus:border-danger-deep'
   const labelCls = 'mb-1 block text-caption text-ink-secondary'
 
   return (
@@ -150,9 +157,13 @@ export default function TicketNewPage() {
           <label className={labelCls} htmlFor="ticket-store">{sl('ticket.storeLabel')}</label>
           <select
             id="ticket-store"
-            className={inputCls}
+            className={`${inputCls} ${fieldError === 'store' ? fieldErrCls : ''}`}
+            aria-invalid={fieldError === 'store'}
             value={storeId}
-            onChange={(e) => setStoreId(e.target.value)}
+            onChange={(e) => {
+              setStoreId(e.target.value)
+              if (fieldError === 'store') setFieldError(null)
+            }}
           >
             <option value="" disabled>
               {sl('ticket.storeRequired')}
@@ -170,11 +181,15 @@ export default function TicketNewPage() {
           <label className={labelCls} htmlFor="ticket-desc">{sl('ticket.descLabel')}</label>
           <textarea
             id="ticket-desc"
-            className={`${inputCls} min-h-[96px] resize-y`}
+            className={`${inputCls} min-h-[96px] resize-y ${fieldError === 'desc' ? fieldErrCls : ''}`}
+            aria-invalid={fieldError === 'desc'}
             maxLength={1000}
             placeholder={sl('ticket.descPlaceholder')}
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              setDescription(e.target.value)
+              if (fieldError === 'desc') setFieldError(null)
+            }}
           />
         </div>
 

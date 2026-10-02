@@ -80,6 +80,20 @@ function badRequest(message: string): never {
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
 /* ------------------------------------------------------------------ */
+/* 补缺修复小批 P1-3：免费档数据层永久有效（CJ-0925-10④ 微光=永久普通会员）      */
+/* ------------------------------------------------------------------ */
+
+/** 免费档到期日=远端 2099-12-31T23:59:59Z（unix 秒 4102444799；与迁移 0023 存量修正同值）。
+ *  展示侧永不显示该数字（plan.free 分支写「永久有效」）；懒冻结对免费档既有豁免（PR-4 件 1）。 */
+export const FREE_PLAN_EXPIRES_AT = new Date(4102444799 * 1000);
+
+/** 免费档判定=member_plans.value_json.free 真值（同 planPublicShape 透出口径，非硬编码档键） */
+function isFreePlanRow(plan: MemberPlanRow | undefined): boolean {
+  if (!plan) return false;
+  return planNum(plan, 'free', 0) === 1 || (plan.valueJson as Record<string, unknown>).free === true;
+}
+
+/* ------------------------------------------------------------------ */
 /* 打回①：退会折算自动挂退款单（R12 同通道）工具                            */
 /* ------------------------------------------------------------------ */
 
@@ -584,7 +598,8 @@ export const membershipRouter = router({
 
   /**
    * openFree（customer）：微光一键注册——免费档 0 元开档（paid_fen=0，
-   * expires=+membership_validity_days 读表默认 365 天，status=active）。
+   * expires=免费档置远端 2099（补缺修复小批 P1-3 数据层永久有效）/付费档 +membership_validity_days
+   * 读表默认 365 天，status=active）。
    * 手机号即会员=用户本身（users 行即会员身份，无需另建档案）。
    * 幂等：已有 active/frozen 会员直接返回现状；退会（cancelled）后可重新开通。
    */
@@ -601,6 +616,8 @@ export const membershipRouter = router({
        * 键值指向不存在的档行时回退 plan_weiguang（防端口误配致开档断链）。 */
       const configuredDefault = planStr(plans.get('default_plan_key'), 'value', 'plan_weiguang');
       const defaultPlanKey = plans.has(configuredDefault) ? configuredDefault : 'plan_weiguang';
+      /* 补缺修复小批 P1-3：免费档 expiresAt 置远端 2099（数据层永久有效，与「永久有效」文案同帧） */
+      const openingPlan = plans.get(defaultPlanKey);
       const row = await t
         .insert(schema.memberships)
         .values({
@@ -608,7 +625,9 @@ export const membershipRouter = router({
           planKey: defaultPlanKey,
           soldStoreId: null, // 微光自助开档无办卡店（决策 #41 双归属：NULL 或注册店，骨架批=NULL）
           startedAt: now,
-          expiresAt: new Date(now.getTime() + days * 24 * 3600 * 1000),
+          expiresAt: isFreePlanRow(openingPlan)
+            ? FREE_PLAN_EXPIRES_AT
+            : new Date(now.getTime() + days * 24 * 3600 * 1000),
           status: 'active',
           petCount: 0,
           paidFen: 0,
@@ -627,7 +646,8 @@ export const membershipRouter = router({
    * - 金额=档价+多宠附加费（petCount>included_pets 起每只 +extra_pet_fen，max_pets
    *   封顶硬校验）；微光档 price=0 → 0 元单直接成交（paySegments 须为空）；
    * - 事务：cashier 单落 kind='membership' 行+支付段（settled，不计服务折扣）+
-   *   memberships 落库（sold_store=本店，+365 天读表，status=active）+回馈金账户预建；
+   *   memberships 落库（sold_store=本店，免费档 expires=远端 2099（P1-3）/付费档 +365 天读表，
+   *   status=active）+回馈金账户预建；
    *   售卡提成由 commission 读侧自然计提（kind='membership' 行已落，不在本文件）；
    * - 已是会员（active/frozen）拒售卡，指引走 renew；退会后可重新购卡。
    */
@@ -720,7 +740,10 @@ export const membershipRouter = router({
               planKey: input.planKey,
               soldStoreId: storeId, // 决策 #41 双归属：售卡单 sold_store=本店
               startedAt: now,
-              expiresAt: new Date(now.getTime() + days * 24 * 3600 * 1000),
+              /* 补缺修复小批 P1-3：免费档（收银台 0 元售微光同口径）expiresAt 置远端 2099 */
+              expiresAt: isFreePlanRow(plan)
+                ? FREE_PLAN_EXPIRES_AT
+                : new Date(now.getTime() + days * 24 * 3600 * 1000),
               status: 'active',
               petCount: input.petCount,
               paidFen: amountFen, // 实付（多宠附加费含）
@@ -834,7 +857,10 @@ export const membershipRouter = router({
             .update(schema.memberships)
             .set({
               status: 'active', // 解冻 frozen→active（红线 4：续费解冻）
-              expiresAt: new Date(base.getTime() + days * 24 * 3600 * 1000),
+              /* 补缺修复小批 P1-3：续费目标档为免费档（含预约换档落免费档）→ expiresAt 置远端 2099 */
+              expiresAt: isFreePlanRow(chargePlan)
+                ? FREE_PLAN_EXPIRES_AT
+                : new Date(base.getTime() + days * 24 * 3600 * 1000),
               paidFen: amountFen, // 报备：当期实付口径（分摊/退会折算按当期卡价）
               /* 补缺-3：预约换档执行=切档+预约置空（幂等：置空后重复续费按新档常价顺延） */
               ...(scheduledPlan ? { planKey: chargePlan.ruleKey, nextPlanKey: null, nextPlanSetAt: null } : {}),

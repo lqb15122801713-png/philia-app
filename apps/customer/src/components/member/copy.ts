@@ -23,6 +23,8 @@ export const MEMBER_COPY = {
   'a3.perksAllOn': '8 项全部生效',
   'a3.remindExpire': '{days} 天后到期 · 续费即解冻',
   'a3.ctaRenew': '续费{tier} · 每天 ¥{daily}',
+  /* 补缺修复小批 UX 销项（运营 P3-1）：免费档主 CTA 不谈续费——「免费在册 · 随时升级」，点击→升级页 */
+  'a3.ctaRenewFree': '免费在册 · 随时升级',
   'a3.ctaOtherTier': '看看别的档 →',
   'a3.quitLink': '退会说明 ›',
   'a3.renewSheetTitle': '续费 · 到店办理',
@@ -124,7 +126,9 @@ export const MEMBER_COPY = {
   'perk.skin': '皮毛检测',
   'perk.skinSub': '每季一次',
   'perk.boarding': '寄养折扣',
-  'perk.boardingSub': '9 折',
+  /* 补缺修复小批 P1-2（PM 裁定：联动服务折扣参数不撤不新建）：副签读 member_plans
+     service_discount_bp 插值（同 perk.discountSub 口径），无折扣档回退 perk.discountNone */
+  'perk.boardingSub': '{zhe} 折',
   'perk.archive': '年度档案',
   'perk.archiveSub': '全年在册',
 

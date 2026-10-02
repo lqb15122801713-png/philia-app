@@ -189,6 +189,12 @@ interface OriginBill {
   lines: Array<{ itemId: string; label: string; amountFen: number }>;
   /** 按行已退（分/行；商城单恒空） */
   lineRefundedFen: Map<string, number>;
+  /* 补缺修复小批 P1-1：算式明面数据源（applyContext 透出；口径与 create 闸单点同源） */
+  /** 原单总额（分）：到店单=bill.paidFen；商城单=行合计 */
+  originTotalFen: number;
+  /** 已退累计（分）：到店单=refund_bills executed|settled 求和（除 pass_cancel 锚点）；
+      商城单=refund_requests refunded|settled 求和（线下原路无系统账，通常 0） */
+  refundedSoFarFen: number;
 }
 
 async function resolveOrigin(
@@ -244,6 +250,8 @@ async function resolveOrigin(
       refundableFen: bill.paidFen - refundedSoFarFen,
       lines: items.map((it) => ({ itemId: it.id, label: it.nameSnapshot, amountFen: eff(it) })),
       lineRefundedFen,
+      originTotalFen: bill.paidFen,
+      refundedSoFarFen,
     };
   }
   /* 商城订单（orders；pending=走取消，paid=待发货联系门店，shipped/received 可退——mall.ts 现状口径） */
@@ -256,17 +264,31 @@ async function resolveOrigin(
   if (order.status !== 'shipped' && order.status !== 'received') {
     badRequest('当前订单状态不可申请退款');
   }
+  /* P1-1：商城单已退累计=refund_requests refunded|settled 求和（线下原路无 refund_bills 账，
+     通常 0；仅作算式明面透出，create 金额口径不受影响） */
+  const postedReqs = await d
+    .select({ amountFen: schema.refundRequests.amountFen })
+    .from(schema.refundRequests)
+    .where(
+      and(
+        eq(schema.refundRequests.billId, order.id),
+        inArray(schema.refundRequests.status, ['refunded', 'settled']),
+      ),
+    );
+  const orderLines = order.items.map((it) => ({
+    itemId: it.product_id,
+    label: it.name,
+    amountFen: it.price_fen * it.quantity,
+  }));
   return {
     storeId: order.storeId,
     billNo: order.orderNo,
     completedAt: order.updatedAt, // 完成时代理（报备偏差 3）
     refundableFen: null,
-    lines: order.items.map((it) => ({
-      itemId: it.product_id,
-      label: it.name,
-      amountFen: it.price_fen * it.quantity,
-    })),
+    lines: orderLines,
     lineRefundedFen: new Map(),
+    originTotalFen: orderLines.reduce((s, l) => s + l.amountFen, 0),
+    refundedSoFarFen: postedReqs.reduce((s, r) => s + r.amountFen, 0),
   };
 }
 
@@ -298,6 +320,29 @@ export const refundRequestRouter = router({
       slaHours: cfg.slaHours,
     };
   }),
+
+  /**
+   * applyContext（customer，补缺修复小批 P1-1）：申请页金额算式明面数据源——
+   * 「原单 originTotalFen − 已退 refundedSoFarFen = 本次可退 refundableFen」三件套，
+   * 口径与 create 闸单点同源（resolveOrigin；到店单=refund_bills 余额口径除锚点，
+   * 商城单=refund_requests refunded|settled 求和、refundableFen=null 客户端照现值）。
+   * 归属/状态闸随 resolveOrigin 既有；时限闸属 create 域不在此查（展示层只读）。
+   */
+  applyContext: customerProcedure
+    .input(
+      z.object({
+        orderKind: z.enum(['appointment', 'order']),
+        billId: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const origin = await resolveOrigin(ctx.db, input.orderKind, input.billId, ctx.user.id);
+      return {
+        originTotalFen: origin.originTotalFen,
+        refundedSoFarFen: origin.refundedSoFarFen,
+        refundableFen: origin.refundableFen,
+      };
+    }),
 
   /**
    * create（customer）：退款申请创建。闸序见文件头；全部校验不过=中文明文拒。

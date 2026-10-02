@@ -162,6 +162,13 @@
       "when": 1790899666438,
       "tag": "0022_wooden_shatterstar",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "6",
+      "when": 1790942414395,
+      "tag": "0023_free_plan_expires_2099",
+      "breakpoints": true
     }
   ]
 }

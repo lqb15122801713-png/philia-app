@@ -17,7 +17,8 @@ import { fmtDateTime } from '@/components/booking/format'
 import { ErrorState, LoadingBlock } from '../components/home/common'
 import { sl, type ServiceLoopCopyKey } from '@/copy/serviceloop'
 
-/* 体征五项 key → copy 键 / 三态 → copy 键 + pill 样式（反馈件不设绿：正常=卡其浅底） */
+/* 体征五项 key → copy 键 / 四态 → copy 键 + pill 样式（反馈件不设绿：正常=卡其浅底；
+   补缺修复小批 UX 销项：unrecorded=未记录中性签（弱色无对勾），缺项不再挂「正常」） */
 const VITAL_LABEL_KEY: Record<string, ServiceLoopCopyKey> = {
   weight: 'report.vitalWeight',
   skin: 'report.vitalSkin',
@@ -29,6 +30,7 @@ const VITAL_STATUS: Record<string, { key: ServiceLoopCopyKey; pill: string }> = 
   normal: { key: 'report.statusNormal', pill: 'bg-brand-secondary-light text-ink' },
   attention: { key: 'report.statusAttention', pill: 'bg-brand-primary-light text-brand-primary-pressed' },
   abnormal: { key: 'report.statusAbnormal', pill: 'bg-danger-light text-danger-deep' },
+  unrecorded: { key: 'report.statusUnrecorded', pill: 'bg-sunken text-ink-placeholder' },
 }
 
 export default function ReportPage() {

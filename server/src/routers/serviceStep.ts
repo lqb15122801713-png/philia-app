@@ -208,9 +208,9 @@ async function petNameOf(d: Q, petId: string): Promise<string | undefined> {
  * 末步完成同事务生成安心证书 + 美容报告：
  * - 证书（R10 无数据不生成）：六步汇总（label+有效照片计数）+ before_after 步
  *   before/after 各取最新一张有效图；缺任一张即不落行（certificateId=null）；
- * - 报告恒生成：vitals 入参快照（缺项/全缺 → status='normal' + note「本次未记录」，
- *   留痕口径不阻塞完成）；体重项值恒为 pets.weight_kg 服务端快照（不信客户端）；
- *   任一 status≠normal → abnormalText 拼句；
+ * - 报告恒生成：vitals 入参快照（缺项/全缺 → status='unrecorded' 中性签 + note「本次未记录」，
+ *   补缺修复小批 UX 销项：缺项不再挂「正常」；留痕口径不阻塞完成）；体重项值恒为 pets.weight_kg
+ *   服务端快照（不信客户端）；status=attention|abnormal → abnormalText 拼句；
  * - SSE：certificate.ready / report.ready 落 event_outbox（user 频道，payload 用
  *   aid 键避开 e2e §11 既有断言的 appointmentId 计数口径）；两事件不做 broadcastNow
  *   即时广播（保 §10 SSE 实序断言冻结线），由 outboxSweeper/重连续传送达。
@@ -283,7 +283,8 @@ async function generateCompletionArtifacts(
     certificateId = row.id;
   }
 
-  /* ---- 报告：恒生成；vitals 缺省=normal+「本次未记录」；体重= pets.weight_kg 快照 ---- */
+  /* ---- 报告：恒生成；vitals 缺省=unrecorded 中性签+「本次未记录」（补缺修复小批 UX 销项：
+     缺项不再挂「正常」签，逻辑矛盾消除）；体重= pets.weight_kg 快照 ---- */
   const inputByKey = new Map((args.vitals ?? []).map((v) => [v.key, v]));
   const pet = await tx
     .select({ weightKg: schema.pets.weightKg })
@@ -292,21 +293,24 @@ async function generateCompletionArtifacts(
     .get();
   const vitalsSnapshot: schema.ReportVital[] = VITAL_KEYS.map((key) => {
     const fromInput = inputByKey.get(key);
+    /* 体重恒取档案快照；其余项取员工端输入。缺项=unrecorded（未记录中性签）：
+       体重无档案快照同属未记录；fromInput 存在但 status 缺省仍 normal（员工显式选了正常） */
+    const recorded = key === 'weight' ? pet?.weightKg != null : fromInput != null;
     return {
       key,
       label: VitalLabel[key],
-      // 体重恒取档案快照；其余项取员工端输入，缺项「本次未记录」
       value:
         key === 'weight'
           ? pet?.weightKg != null
             ? `${pet.weightKg} kg`
             : '未记录'
           : (fromInput?.value ?? '本次未记录'),
-      status: fromInput?.status ?? 'normal',
+      status: recorded ? (key === 'weight' ? 'normal' : (fromInput?.status ?? 'normal')) : 'unrecorded',
       ...(fromInput?.note ? { note: fromInput.note } : fromInput ? {} : { note: '本次未记录' }),
     };
   });
-  const abnormal = vitalsSnapshot.filter((v) => v.status !== 'normal');
+  /* 异常拼句只认 attention/abnormal（unrecorded 未记录不进异常口径） */
+  const abnormal = vitalsSnapshot.filter((v) => v.status === 'attention' || v.status === 'abnormal');
   const abnormalText =
     abnormal.length > 0
       ? abnormal

@@ -16,7 +16,7 @@
  * - resolveChannelTargets：频道 → 接收用户集合。
  */
 
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, lt } from 'drizzle-orm';
 import { db, schema } from '../db';
 import { EventType, StepKeyLabel, toEnvelope, type EventEnvelope } from './events';
 import * as hub from './hub';
@@ -110,18 +110,21 @@ function notificationCopy(
   eventType: string,
   data: Record<string, unknown>,
 ): { title: string; body: string } {
-  const pet = typeof data.petName === 'string' && data.petName ? `${data.petName}的` : '';
+  /* 补缺修复小批 P2-2：主语完整式（「【旺财】的预约已确认」——消「您旺财的预约」拼接语病）。
+     petN=【名】（主语位），pet=【名】的（领属位）；无 petName 回落通称 */
+  const petN = typeof data.petName === 'string' && data.petName ? `【${data.petName}】` : '';
+  const pet = petN ? `${petN}的` : '';
   const stepKey = typeof data.stepKey === 'string' ? data.stepKey : '';
   const step = StepKeyLabel[stepKey] ?? stepKey;
   switch (eventType) {
     case EventType.AppointmentCreated:
       return { title: '新预约提醒', body: `收到一条${pet}新预约，请及时确认` };
     case EventType.AppointmentConfirmed:
-      return { title: '预约已确认', body: `您${pet}预约已确认，请按时到店` };
+      return { title: '预约已确认', body: `${pet}预约已确认，请按时到店` };
     case EventType.AppointmentAssigned:
       return { title: '预约已派单', body: `${pet}预约已安排服务人员` };
     case EventType.AppointmentCheckedIn:
-      return { title: '已到店签到', body: `${pet}已到店，服务即将开始` };
+      return { title: '已到店签到', body: `${petN}已到店，服务即将开始` };
     case EventType.StepUpdated:
       return { title: '服务进度更新', body: `${pet}「${step}」步骤已更新` };
     case EventType.StepFlagged: {
@@ -191,12 +194,16 @@ function notificationCopy(
 }
 
 function linkFor(eventType: string, data: Record<string, unknown>): string | undefined {
+  /* 补缺修复小批 P2-2：payload 预约键三态兼容（appointmentId / appointment_id / aid——
+     aid=serviceStep 证书/报告事件键；兼容前证书/报告通知 link 落 undefined 无跳转） */
   const aid =
     typeof data.appointmentId === 'string'
       ? data.appointmentId
       : typeof data.appointment_id === 'string'
         ? data.appointment_id
-        : undefined;
+        : typeof data.aid === 'string'
+          ? data.aid
+          : undefined;
   const orderId = typeof data.orderId === 'string' ? data.orderId : undefined;
   // 补缺大批片 5：片 1/片 4 事件槽位链接（先于 order./appointment 通用兜底判定）
   if (eventType === 'refundRequest.approved' || eventType === 'refundRequest.rejected') return '/refunds';
@@ -209,6 +216,23 @@ function linkFor(eventType: string, data: Record<string, unknown>): string | und
   if (eventType === 'invoice.issued') return '/invoices';
   if (eventType.startsWith('order.')) return orderId ? `/orders/${orderId}` : undefined;
   return aid ? `/appointments/${aid}/live` : undefined;
+}
+
+/* ------------------------------------------------------------------ */
+/* 补缺修复小批 P2-2：同单同刻聚合（聚合键=appointmentId+分钟桶）              */
+/* ------------------------------------------------------------------ */
+
+/** 聚合键提取：payload 预约键三态（appointmentId / appointment_id / aid） */
+function appointmentKeyOf(data: Record<string, unknown>): string | undefined {
+  if (typeof data.appointmentId === 'string' && data.appointmentId) return data.appointmentId;
+  if (typeof data.appointment_id === 'string' && data.appointment_id) return data.appointment_id;
+  if (typeof data.aid === 'string' && data.aid) return data.aid;
+  return undefined;
+}
+
+/** 同预约通知 link 族（linkFor 三格式：live 进度页 / 证书 / 报告）——聚合匹配既有行用 */
+function appointmentLinksOf(aid: string): string[] {
+  return [`/appointments/${aid}/live`, `/philia/certs/${aid}`, `/philia/reports/${aid}`];
 }
 
 /* ------------------------------------------------------------------ */
@@ -279,9 +303,40 @@ export async function emitEvent(
       receivers = targets.filter((uid) => !disabled.has(uid));
     }
     if (receivers.length > 0) {
-      await d.insert(schema.notifications).values(
-        receivers.map((userId) => ({ userId, type: eventType, title, body, link, category })),
-      );
+      /* 补缺修复小批 P2-2：同单同刻聚合——同用户 + 同预约（link 族）+ 同分钟桶的后续事件
+         不新增行，更新既有进度卡（type/title/body/link/category=最新进度，readAt 置回未读
+         提示新进度）；无预约键的事件不聚合照常落行。零新迁移（不加业务键列，link 族反解）。 */
+      const mergeAid = appointmentKeyOf(data);
+      const now = new Date();
+      const bucketStartMs = Math.floor(now.getTime() / 60000) * 60000;
+      for (const userId of receivers) {
+        if (mergeAid) {
+          const existing = await d
+            .select({ id: schema.notifications.id })
+            .from(schema.notifications)
+            .where(
+              and(
+                eq(schema.notifications.userId, userId),
+                inArray(schema.notifications.link, appointmentLinksOf(mergeAid)),
+                gte(schema.notifications.createdAt, new Date(bucketStartMs)),
+                lt(schema.notifications.createdAt, new Date(bucketStartMs + 60000)),
+              ),
+            )
+            .orderBy(desc(schema.notifications.createdAt))
+            .limit(1)
+            .then((r) => r[0]);
+          if (existing) {
+            await d
+              .update(schema.notifications)
+              .set({ type: eventType, title, body, link, category, readAt: null, updatedAt: now })
+              .where(eq(schema.notifications.id, existing.id));
+            continue;
+          }
+        }
+        await d
+          .insert(schema.notifications)
+          .values({ userId, type: eventType, title, body, link, category });
+      }
     }
   }
   return outboxId;
