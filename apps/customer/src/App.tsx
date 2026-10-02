@@ -10,21 +10,46 @@ import BookingGroomingPage from './pages/BookingGroomingPage'
 import BookingSuccessPage from './pages/BookingSuccessPage'
 import BoardingSinglePage from './pages/BoardingSinglePage'
 import CartPage from './pages/CartPage'
+import CertDetailPage from './pages/CertDetailPage'
+import CertListPage from './pages/CertListPage'
 import CheckoutPage from './pages/CheckoutPage'
 import DevLoginPage from './pages/DevLoginPage'
 import GroomingSinglePage from './pages/GroomingSinglePage'
 import HomePage from './pages/HomePage'
+import InvoiceApplyPage from './pages/InvoiceApplyPage'
+import InvoiceDetailPage from './pages/InvoiceDetailPage'
+import InvoiceListPage from './pages/InvoiceListPage'
 import MallOrdersPage from './pages/MallOrdersPage'
 import MallPage from './pages/MallPage'
 import MePage from './pages/MePage'
+import SettingsPage from './pages/SettingsPage'
+import DeactivatePage from './pages/DeactivatePage'
+import ChangePhonePage from './pages/ChangePhonePage'
+import PhoneAppealPage from './pages/PhoneAppealPage'
+import DevicesPage from './pages/DevicesPage'
+import PrivacyPage from './pages/PrivacyPage'
 import MemberCardPage from './pages/MemberCardPage'
 import MemberCenterPage from './pages/MemberCenterPage'
+import MemberChangePage from './pages/MemberChangePage'
 import MemberOpenPage from './pages/MemberOpenPage'
+import MemberCheckoutPage from './pages/MemberCheckoutPage'
+import PayReconcilePage from './pages/PayReconcilePage'
+import PayStatePage from './pages/PayStatePage'
 import MemberRebatePage from './pages/MemberRebatePage'
+import MemberUpgradePage from './pages/MemberUpgradePage'
 import MomentsPage from './pages/MomentsPage'
+import NotifyCenterPage from './pages/NotifyCenterPage'
+import NotifyPrefsPage from './pages/NotifyPrefsPage'
 import PetsPage from './pages/PetsPage'
 import PhiliaPage from './pages/PhiliaPage'
 import ProductDetailPage from './pages/ProductDetailPage'
+import RefundApplyPage from './pages/RefundApplyPage'
+import RefundDetailPage from './pages/RefundDetailPage'
+import RefundListPage from './pages/RefundListPage'
+import ReportPage from './pages/ReportPage'
+import TicketDetailPage from './pages/TicketDetailPage'
+import TicketListPage from './pages/TicketListPage'
+import TicketNewPage from './pages/TicketNewPage'
 
 // B9.3 任务 B：/booking 中间层（类型选择 hub）退役——直接重定向单屏；
 // 兼容旧深链 ?type=boarding → 寄养单屏，?storeId= 透传（首页门店卡深链口径保留）。
@@ -48,12 +73,28 @@ function ProtectedRoutes() {
       <Route path="/mall/cart" element={<CartPage />} />
       <Route path="/mall/checkout" element={<CheckoutPage />} />
       <Route path="/mall/orders" element={<MallOrdersPage />} />
+      {/* 补缺批片 1 退款售后：表单双路由同组件双 orderKind 参数化 + 列表/进度详情 */}
+      <Route path="/mall/orders/:id/refund" element={<RefundApplyPage orderKind="order" />} />
+      <Route path="/appointments/:id/refund" element={<RefundApplyPage orderKind="appointment" />} />
+      <Route path="/refunds" element={<RefundListPage />} />
+      <Route path="/refunds/:id" element={<RefundDetailPage />} />
       <Route path="/philia" element={<PhiliaPage />} />
       <Route path="/philia/pets" element={<PetsPage />} />
       {/* R11a 裁定：旧路由 /philia/member 退役——重定向往 /member 会员中心（路径保留，
           兼容旧深链与 check-nav-closure 既有申报行） */}
       <Route path="/philia/member" element={<Navigate to="/member" replace />} />
       <Route path="/philia/moments" element={<MomentsPage />} />
+      {/* 补缺大批片 4（服务闭环点亮）：安心证书 / 美容报告 / 小棉花工单 / 发票申请
+          （9 条新路由；双表申报 8 行=/invoices/:id 详情行报备补登） */}
+      <Route path="/philia/certs" element={<CertListPage />} />
+      <Route path="/philia/certs/:appointmentId" element={<CertDetailPage />} />
+      <Route path="/philia/reports/:appointmentId" element={<ReportPage />} />
+      <Route path="/support" element={<TicketListPage />} />
+      <Route path="/support/new" element={<TicketNewPage />} />
+      <Route path="/support/:id" element={<TicketDetailPage />} />
+      <Route path="/invoices" element={<InvoiceListPage />} />
+      <Route path="/invoices/:id" element={<InvoiceDetailPage />} />
+      <Route path="/invoice/apply/:kind/:id" element={<InvoiceApplyPage />} />
       {/* B9.3 任务 B：hub 退役，/booking 直达洗护单屏（?type=boarding 兼容深链寄养） */}
       <Route path="/booking" element={<BookingRedirect />} />
       {/* B4-1：默认路由换新单屏；旧 4 屏向导保留隐藏路由 /wizard（回滚保障，下批次再删） */}
@@ -67,6 +108,14 @@ function ProtectedRoutes() {
       <Route path="/appointments/:id" element={<AppointmentDetailPage />} />
       <Route path="/appointments/:id/live" element={<AppointmentLivePage />} />
       <Route path="/me" element={<MePage />} />
+      {/* 补缺大批片 2 账户安全：设置 + 五子页（详情级无 dock，PushBar 返回条；
+          新路由已申报 check-nav-closure/smoke-routes 双表） */}
+      <Route path="/me/settings" element={<SettingsPage />} />
+      <Route path="/me/settings/deactivate" element={<DeactivatePage />} />
+      <Route path="/me/settings/phone" element={<ChangePhonePage />} />
+      <Route path="/me/settings/phone/appeal" element={<PhoneAppealPage />} />
+      <Route path="/me/settings/devices" element={<DevicesPage />} />
+      <Route path="/me/settings/privacy" element={<PrivacyPage />} />
       {/* U1-H：会员卡页新路由（信息展示 v0；详情级——无 dock，统一返回条） */}
       <Route path="/me/card" element={<MemberCardPage />} />
       {/* R11a 骨架批：会员中心/开通页新路由（详情级无 dock，统一返回条固定回 /me、/member；
@@ -75,6 +124,19 @@ function ProtectedRoutes() {
       <Route path="/member/open" element={<MemberOpenPage />} />
       {/* R11b 视觉批：回馈金账本拆独立推送页（36 号档 §四 W-01；申报锚点=「回馈金」） */}
       <Route path="/member/rebate" element={<MemberRebatePage />} />
+      {/* 补缺批片 3 会员域：升档试算 / 到期换档预约（详情级无 dock，返回条兜底 /member；
+          申报锚点=「升级会员」/「预约下期档位」） */}
+      <Route path="/member/upgrade" element={<MemberUpgradePage />} />
+      <Route path="/member/change" element={<MemberChangePage />} />
+      {/* 补缺批片 5 站内信：消息中心+订阅管理（详情级无 dock，统一返回条；
+          申报锚点=「消息」「订阅管理」） */}
+      <Route path="/notifications" element={<NotifyCenterPage />} />
+      <Route path="/notifications/prefs" element={<NotifyPrefsPage />} />
+      {/* 补缺批片 6 线上收单骨架（Mock 通道）：确认订单/支付态/掉单自助查询
+          （申报锚点=「确认订单」「付了没开」；/pay/reconcile 静态段优先于 /pay/:payNo 动态段） */}
+      <Route path="/member/checkout" element={<MemberCheckoutPage />} />
+      <Route path="/pay/reconcile" element={<PayReconcilePage />} />
+      <Route path="/pay/:payNo" element={<PayStatePage />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )

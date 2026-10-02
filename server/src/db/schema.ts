@@ -105,6 +105,14 @@ export const users = sqliteTable('users', {
   avatarUrl: text('avatar_url'),
   /** 手机号 */
   phone: text('phone'),
+  /**
+   * 软注销时间（批次 R13a 账号安全 · 0017）：非 NULL=已注销——会话中间件视同
+   * 用户不存在（全接口/SSE 401），登录路径明文拒；手机号同步释放为
+   * `_deact_<uid>_<原号>`（同号可重新注册建档，与原账号互不可见）。
+   */
+  deactivatedAt: integer('deactivated_at', { mode: 'timestamp' }),
+  /** 注销原因（门店审批 note 快照） */
+  deactivateReason: text('deactivate_reason'),
   ...auditColumns,
 });
 
@@ -238,6 +246,13 @@ export const pets = sqliteTable('pets', {
   temperamentTags: text('temperament_tags', { mode: 'json' }).$type<string[]>(),
   /** 头像 URL */
   avatarUrl: text('avatar_url'),
+  /**
+   * 软删除标记（批次 R13a 账号注销联动 · 0017）：非 NULL=已随账号注销标记删除。
+   * 读侧不过滤（注销账号全接口 401 不可达；历史预约/单据保留可见，留痕口径）。
+   */
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }),
+  /** 软删除原因（如「账号注销」） */
+  deleteReason: text('delete_reason'),
   ...auditColumns,
 });
 
@@ -1114,6 +1129,12 @@ export const notifications = sqliteTable('notifications', {
     .references(() => users.id),
   /** 通知类型（应用层枚举，如 appointment.remind） */
   type: text('type').notNull(),
+  /**
+   * 通知分类（补缺大批片 5 站内信分类）：trade 交易 | service 服务 | account 账户 | marketing 营销。
+   * NOT NULL 默认 'service'（存量行迁移按 type 前缀回填，见 0017 迁移）；
+   * 硬口径：trade/service/account 不可退订（保障服务履约），仅 marketing 可关。
+   */
+  category: text('category').notNull().default('service'),
   /** 标题 */
   title: text('title').notNull(),
   /** 正文 */
@@ -1124,6 +1145,28 @@ export const notifications = sqliteTable('notifications', {
   readAt: integer('read_at', { mode: 'timestamp' }),
   ...auditColumns,
 });
+
+/**
+ * 站内信订阅偏好表（补缺大批片 5）：user × category 一行，enabled=0 即退订。
+ * 无行 = 默认全订阅（enabled=1）。硬口径：仅 marketing 行允许 enabled=0，
+ * trade/service/account 置 0 在 push.setNotifyPref 硬拒（闸在路由层，本表不做 DB 约束）。
+ */
+export const userNotifyPrefs = sqliteTable(
+  'user_notify_prefs',
+  {
+    id: id(),
+    /** 用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 分类，取值：trade | service | account | marketing */
+    category: text('category').notNull(),
+    /** 是否订阅（1/0，默认 1） */
+    enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
+    ...auditColumns,
+  },
+  (t) => [uniqueIndex('uq_user_notify_prefs_user_category').on(t.userId, t.category)],
+);
 
 /* ------------------------------------------------------------------ */
 /* 5.6 员工端 2.0（批次 staff-2 · R7~R10；字段级规格见 docs/staff2/R7-R10-DESIGN.md §一） */
@@ -1752,7 +1795,7 @@ export const ruleConfigVersions = sqliteTable(
   'rule_config_versions',
   {
     id: id(),
-    /** 配置域，取值：commission | xp | duration（补充令①） | refund（R12） */
+    /** 配置域，取值：commission | xp | duration（补充令①） | refund（R12） | member_plans（R11a） | pay（批次 6） */
     domain: text('domain').notNull(),
     /** 保存后的新版本号 */
     version: integer('version').notNull(),
@@ -1891,6 +1934,101 @@ export const refundRules = sqliteTable(
 );
 
 /* ------------------------------------------------------------------ */
+/* 5.6c 客户退款申请（C5 批次 · 客户端退款申请实体 + 审批缝）                 */
+/* ------------------------------------------------------------------ */
+
+/** 退款申请行项快照（按行退的行；全额退存空数组，明细由 R12 内核全量处理） */
+export type RefundRequestItem = { itemId: string; label: string; amountFen: number };
+
+/** 退款申请时间线条目（状态推进留痕，at=ISO 时间串） */
+export type RefundRequestTimelineEntry = { status: string; at: string; note?: string };
+
+/**
+ * 客户退款申请表（C5 批次）：客户端发起 → 商家审批 → 复用 R12 内核生成退款单。
+ *
+ * - 单号 request_no：RR-{YYYYMMDD}-{当日 3 位序号}（日序发生器仿 refund genRefundNo
+ *   口径，全局唯一靠 UNIQUE 索引 + 收银写锁串行分配）。
+ * - order_kind 双源：appointment=到店收银单（cashier_bills，预约/商品/混合单）；
+ *   order=商城订单（orders）。bill_id 因双源不加外键（appointment→cashier_bills.id，
+ *   order→orders.id），bill_no 冗余存原单号（HD-… / P…）供展示与 R12 内核入参。
+ * - 状态机：submitted→approved→refunded→settled；侧支 rejected（驳回留痕）/
+ *   cancelled（客户撤回）。到店单批准直通 R12 execute 时直接落 refunded
+ *   （已批准且已生成退款单=退款中），settleActual 实退登记后联动 settled；
+ *   商城单无 R12 挂接（refund_bills.bill_id NOT NULL→cashier_bills 红线），
+ *   批准落 approved + orders.status='refunding'，线下原路办理。
+ * - 幂等：同 (customer_id, bill_id) 有在途单（submitted/approved/refunded）→
+ *   create 返回现状不新建；approve/reject/cancel 重复调用返回 idempotent=true。
+ * - reapplied_after_days：退后重购留痕——同客户同原单再次申请时，填与上次
+ *   settled 申请单的间隔天数（不拦截，纯留痕）。
+ */
+export const refundRequests = sqliteTable(
+  'refund_requests',
+  {
+    id: id(),
+    /** 申请单号（全局唯一，幂等键）：RR-yyyymmdd-NNN（日序，同 refund_bills 发生器口径） */
+    requestNo: text('request_no').notNull(),
+    /** 客户用户 ID -> users.id */
+    customerId: text('customer_id')
+      .notNull()
+      .references(() => users.id),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 原单类型，取值：appointment 到店收银单（cashier_bills） | order 商城订单（orders） */
+    orderKind: text('order_kind').notNull(),
+    /** 原单 ID（双源不加 FK：appointment→cashier_bills.id | order→orders.id） */
+    billId: text('bill_id').notNull(),
+    /** 原单号冗余（HD-… / P…，展示 + R12 execute 入参） */
+    billNo: text('bill_no').notNull(),
+    /** 退款类型，取值：refund_only 仅退款 | return_refund 退货退款（到店单强制 refund_only） */
+    type: text('type').notNull(),
+    /** 退款原因码（固定 6 码族；label 随端口枚举 refund_reason_options 位置取值） */
+    reasonCode: text('reason_code').notNull(),
+    /** 退款原因文案（申请时端口枚举快照，端口后改不回溯） */
+    reasonLabel: text('reason_label').notNull(),
+    /** 补充说明（reasonCode=other 时必填） */
+    description: text('description'),
+    /** 凭证图片 URL 数组（客户端先经 POST /api/upload relDir=refund/<requestId> 上传） */
+    photoUrls: text('photo_urls', { mode: 'json' })
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'`),
+    /** 申请金额（分）=行合计（按行退）或可退余额全量（全额退），≤原单可退余额 */
+    amountFen: integer('amount_fen').notNull(),
+    /** 行项快照（按行退：[{itemId,label,amountFen}]；全额退：[]，明细由 R12 内核全量处理） */
+    itemsJson: text('items_json', { mode: 'json' })
+      .$type<RefundRequestItem[]>()
+      .notNull()
+      .default(sql`'[]'`),
+    /** 状态，取值：submitted | approved | refunded | settled | rejected | cancelled */
+    status: text('status').notNull().default('submitted'),
+    /** 时间线留痕 [{status,at,note?}]（提交/批准/退款中/实退/驳回/撤回逐条追加） */
+    timelineJson: text('timeline_json', { mode: 'json' })
+      .$type<RefundRequestTimelineEntry[]>()
+      .notNull()
+      .default(sql`'[]'`),
+    /** 审批人用户 ID -> users.id（NULL=未审批） */
+    approverId: text('approver_id').references(() => users.id),
+    /** 审批时间（NULL=未审批） */
+    approvedAt: integer('approved_at', { mode: 'timestamp' }),
+    /** 驳回理由（驳回必填，客户端可见；NULL=未驳回） */
+    rejectReason: text('reject_reason'),
+    /** 关联 R12 退款单号（批准直通 execute 后回挂；商城单恒 NULL=线下原路） */
+    refundBillNo: text('refund_bill_no'),
+    /** 退后重购留痕：与上次 settled 申请单的间隔天数（NULL=首次申请；不拦截） */
+    reappliedAfterDays: integer('reapplied_after_days'),
+    ...auditColumns,
+  },
+  (t) => [
+    uniqueIndex('uq_refund_requests_request_no').on(t.requestNo),
+    index('ix_refund_requests_customer').on(t.customerId),
+    index('ix_refund_requests_store_status').on(t.storeId, t.status),
+    index('ix_refund_requests_bill').on(t.billId),
+  ],
+);
+
+/* ------------------------------------------------------------------ */
 /* 5.7 会员（批次 R11a 会员前置批·骨架批 · 冻结版 V1.0，CJ-0922-12/-13）     */
 /* ------------------------------------------------------------------ */
 
@@ -1961,9 +2099,50 @@ export const memberships = sqliteTable(
     cancelReason: text('cancel_reason'),
     /** 退会折算退款额（分；剩余整月×月均价，CJ-0922-13 口径） */
     refundFen: integer('refund_fen'),
+    /**
+     * 预约下期档位键（补缺-3 · 46 号档+PD-07 到期换档，NULL=未预约）：
+     * 到期前 member_change_window_days 天（端口默认 30）内可预约任意档；
+     * renew 事务起读本列非空 → 按预约档全价收款+切档+置空（执行幂等）。
+     */
+    nextPlanKey: text('next_plan_key'),
+    /** 预约落位时间（最后一次预约/覆盖时间；随 next_plan_key 同置同清） */
+    nextPlanSetAt: integer('next_plan_set_at', { mode: 'timestamp' }),
     ...auditColumns,
   },
   (t) => [index('ix_memberships_user_status').on(t.userId, t.status)],
+);
+
+/**
+ * 会员事件留痕表（补缺-3 · 46 号档+PD-07，只增不改审计账）：
+ * - type='upgrade'：期内升档/微光新购口径升档（fromPlan/toPlan/diffFen=补差分/billNo=升级补差单号）；
+ * - type='change_schedule'：到期换档预约/覆盖/取消/到期执行（meta.cancelled=true 取消；
+ *   meta.executed=true 到期 renew 执行落档）；
+ * - type='cancel_rebuy_note'：防滥用留痕（退会后 member_cancel_cooldown_days 天内重购 /
+ *   累计退会≥member_cancel_count_threshold 再购；只留痕不拦截，meta 记距上次退会天数/累计次数）。
+ */
+export const membershipEvents = sqliteTable(
+  'membership_events',
+  {
+    id: id(),
+    /** 会员用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 事件类型，取值：upgrade | change_schedule | cancel_rebuy_note */
+    type: text('type').notNull(),
+    /** 原档位键（cancel_rebuy_note 重购留痕为 NULL） */
+    fromPlan: text('from_plan'),
+    /** 目标档位键（取消预约事件为 NULL） */
+    toPlan: text('to_plan'),
+    /** 补差价（分；仅 upgrade 有值，微光新购口径=新档全价含附加） */
+    diffFen: integer('diff_fen'),
+    /** 关联收银单号（升级补差单 / 换档执行续费单 / 重购售卡单；可空） */
+    billNo: text('bill_no'),
+    /** 扩展留痕 JSON（公式明面/executed/cancelled/daysSinceLastCancel/cancelCount 等） */
+    meta: text('meta', { mode: 'json' }).$type<Record<string, unknown>>(),
+    ...auditColumns,
+  },
+  (t) => [index('ix_membership_events_user_created').on(t.userId, t.createdAt)],
 );
 
 /**
@@ -2053,4 +2232,542 @@ export const rebateSettlements = sqliteTable(
     ...auditColumns,
   },
   (t) => [uniqueIndex('uq_rebate_settlements_period').on(t.period)],
+);
+
+/* ------------------------------------------------------------------ */
+/* 5.8 服务闭环补缺（补缺大批片 4 · server 侧）：证书/报告/工单/发票/服务规则  */
+/* ------------------------------------------------------------------ */
+
+/** 安心证书快照载荷（service_certificates.payload） */
+export type CertificatePayload = {
+  petName: string;
+  serviceName: string;
+  storeName: string;
+  /** 服务完成时间（ISO 串） */
+  completedAt: string;
+  /** 六步汇总（步骤 label + 有效照片计数，照片口径=invalidated_at IS NULL） */
+  stepsSummary: Array<{ stepKey: string; label: string; photoCount: number }>;
+  /** 交付检查步 before/after 各取最新一张有效图 */
+  beforeUrl: string;
+  afterUrl: string;
+};
+
+/** 美容报告体征项（service_reports.vitals 元素；status: normal | attention | abnormal） */
+export type ReportVital = {
+  key: 'weight' | 'skin' | 'ear' | 'coat' | 'nail';
+  label: string;
+  value: string;
+  status: 'normal' | 'attention' | 'abnormal';
+  note?: string;
+};
+
+/** 工单时间线条目（support_tickets.timeline_json 元素） */
+export type TicketTimelineItem = {
+  /** 动作，取值：submitted | replied | closed */
+  action: string;
+  /** 动作时间（ISO 串） */
+  at: string;
+  /** 操作人用户 ID */
+  by: string;
+  /** 附注（回复内容等） */
+  note?: string;
+};
+
+/**
+ * 安心证书表（补缺大批片 4）：一单一证（appointment_id 唯一）。
+ * 生成落点=serviceStep.confirmStep 末步三合一事务内（与预约 completed 同事务）；
+ * R10 无数据不生成：交付检查步无有效 before/after 图则不落行（读侧 404 明文）。
+ * deliveredAt=客户端首读时间（certificates 读口幂等置位，NULL=未读）。
+ */
+export const serviceCertificates = sqliteTable(
+  'service_certificates',
+  {
+    id: id(),
+    /** 预约单 ID -> appointments.id（一单一证） */
+    appointmentId: text('appointment_id')
+      .notNull()
+      .unique()
+      .references(() => appointments.id),
+    /** 客户用户 ID -> users.id（冗余列，本人列表免 join） */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 证书快照 JSON，结构见 CertificatePayload */
+    payload: text('payload', { mode: 'json' }).$type<CertificatePayload>().notNull(),
+    /** 生成时间（= 末步完成同事务时点） */
+    generatedAt: integer('generated_at', { mode: 'timestamp' }).notNull(),
+    /** 客户端首读时间（NULL = 未读；读口幂等置位） */
+    deliveredAt: integer('delivered_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [index('ix_service_certificates_user').on(t.userId, t.createdAt)],
+);
+
+/**
+ * 美容报告表（补缺大批片 4）：一单一报（appointment_id 唯一）。
+ * 生成落点同证书（confirmStep 末步同事务）；报告恒生成——员工端报告卡 vitals
+ * 缺省时各项 status='normal' + note='本次未记录'（留痕口径不阻塞完成）；
+ * 体重项恒为 pets.weight_kg 服务端快照（不信客户端输入值）。
+ */
+export const serviceReports = sqliteTable(
+  'service_reports',
+  {
+    id: id(),
+    /** 预约单 ID -> appointments.id（一单一报） */
+    appointmentId: text('appointment_id')
+      .notNull()
+      .unique()
+      .references(() => appointments.id),
+    /** 客户用户 ID -> users.id（冗余列，本人列表免 join） */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 体征快照 JSON 数组，结构见 ReportVital（五项：weight/skin/ear/coat/nail） */
+    vitals: text('vitals', { mode: 'json' }).$type<ReportVital[]>().notNull(),
+    /** 异常项拼句（任一 status≠normal 时生成；NULL=全正常） */
+    abnormalText: text('abnormal_text'),
+    /** 下次护理建议（员工端报告卡输入，可空） */
+    nextAdvice: text('next_advice'),
+    /** 生成时间（= 末步完成同事务时点） */
+    generatedAt: integer('generated_at', { mode: 'timestamp' }).notNull(),
+    /** 客户端首读时间（NULL = 未读；读口幂等置位） */
+    deliveredAt: integer('delivered_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [index('ix_service_reports_user').on(t.userId, t.createdAt)],
+);
+
+/**
+ * 客服工单表（补缺大批片 4）：客户提单（建议/投诉/表扬/其他）→ 本店店长/店主回复。
+ * ticket_no=TK-yyyymmdd-NNN（日序，全局唯一，与 HD/RB 单号发生器同口径）；
+ * 状态机：submitted → replied → closed；timeline_json 全留痕（只增不改）。
+ * photo_urls 为上传图 URL 列表（JSON 数组），已纳入 storage/cleanup 孤儿回收白名单。
+ */
+export const supportTickets = sqliteTable(
+  'support_tickets',
+  {
+    id: id(),
+    /** 工单号（全局唯一，幂等键）：TK-yyyymmdd-NNN */
+    ticketNo: text('ticket_no').notNull().unique(),
+    /** 提单客户用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 关联门店 ID -> stores.id（提单时选定的门店；店长待办按本店过滤） */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 工单类型，取值：suggest | complaint | praise | other */
+    type: text('type').notNull(),
+    /** 问题描述 */
+    description: text('description').notNull(),
+    /** 附图 URL 列表 JSON */
+    photoUrls: text('photo_urls', { mode: 'json' }).$type<string[]>().notNull().default([]),
+    /** 联系方式（缺省回显=users.phone，客户端可改） */
+    contactPhone: text('contact_phone'),
+    /** 状态，取值：submitted | replied | closed */
+    status: text('status').notNull().default('submitted'),
+    /** 回复内容（NULL = 未回复） */
+    replyText: text('reply_text'),
+    /** 回复人用户 ID -> users.id（owner|manager） */
+    repliedBy: text('replied_by').references(() => users.id),
+    /** 回复时间 */
+    repliedAt: integer('replied_at', { mode: 'timestamp' }),
+    /** 时间线 JSON 数组（只增不改），结构见 TicketTimelineItem */
+    timelineJson: text('timeline_json', { mode: 'json' }).$type<TicketTimelineItem[]>().notNull(),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_support_tickets_store_status').on(t.storeId, t.status),
+    index('ix_support_tickets_user').on(t.userId, t.createdAt),
+  ],
+);
+
+/**
+ * 发票申请表（补缺大批片 4）：客户对已付单据申请开票 → 本店店长/店主登记发票号。
+ * invoice_no=IN-yyyymmdd-NNN（日序，全局唯一）；order_kind 三类来源：
+ * appointment（appointments.paid_fen>0）/ cashier（settled 且未冲正）/ order（paid 及之后）；
+ * 金额=服务端按来源单实付重算（不信任入参金额）；同单在途（submitted）重复申请幂等返回原单。
+ * 状态机：submitted → issued（issued_invoice_no=实际发票号，register 登记）。
+ */
+export const invoiceRequests = sqliteTable(
+  'invoice_requests',
+  {
+    id: id(),
+    /** 申请单号（全局唯一，幂等键）：IN-yyyymmdd-NNN */
+    invoiceNo: text('invoice_no').notNull().unique(),
+    /** 申请客户用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 门店 ID -> stores.id（来源单所属店；店长待办按本店过滤） */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 来源单类型，取值：appointment | order | cashier */
+    orderKind: text('order_kind').notNull(),
+    /** 来源单 ID：appointments.id / orders.id / cashier_bills.id（按 order_kind 解释） */
+    billId: text('bill_id').notNull(),
+    /** 来源单号快照（预约码 / 订单号 / 收银单号） */
+    billNo: text('bill_no').notNull(),
+    /** 开票金额（分）= 来源单实付，服务端重算 */
+    amountFen: integer('amount_fen').notNull(),
+    /** 抬头类型，取值：personal | business（business 必填 tax_no；personal 置空） */
+    titleType: text('title_type').notNull(),
+    /** 发票抬头 */
+    title: text('title').notNull(),
+    /** 税号（仅 business；personal 恒 NULL） */
+    taxNo: text('tax_no'),
+    /** 交付方式，取值：email | pickup（email 必填邮箱） */
+    delivery: text('delivery').notNull(),
+    /** 接收邮箱（仅 delivery=email；pickup 恒 NULL） */
+    email: text('email'),
+    /** 状态，取值：submitted | issued */
+    status: text('status').notNull().default('submitted'),
+    /** 实际发票号（商家登记；NULL = 未开） */
+    issuedInvoiceNo: text('issued_invoice_no'),
+    /** 开票登记时间 */
+    issuedAt: integer('issued_at', { mode: 'timestamp' }),
+    /** 开票登记人用户 ID -> users.id（owner|manager） */
+    issuedBy: text('issued_by').references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_invoice_requests_store_status').on(t.storeId, t.status),
+    index('ix_invoice_requests_user').on(t.userId, t.createdAt),
+    index('ix_invoice_requests_bill').on(t.orderKind, t.billId),
+  ],
+);
+
+/* ------------------------------------------------------------------ */
+/* 批次 R13a 账号安全（注销 / 换绑 / 申诉 / 设备登记）                       */
+/* ------------------------------------------------------------------ */
+
+/** 申诉/审批时间线条目：{ at: ISO 时间, action, by?, note? }（只增追加） */
+export type AppealTimelineEntry = { at: string; action: string; by?: string; note?: string };
+
+/** 注销阻断校验快照条目（deactivation_requests.checklist_json） */
+export type DeactivationChecklistItem = {
+  kind: 'appointment' | 'order' | 'refund';
+  label: string;
+  count: number;
+};
+
+/**
+ * 手机验证码表（批次 R13a · 0017）：换绑双因子验证码。
+ * - code 只存 sha256(code+phone+purpose+salt) 哈希，绝不落明文；
+ * - expiry 为 ms epoch（本表特例，与全库 Unix 秒 timestamp 列不同——短时效毫秒口径）；
+ * - 一次性：验证通过置 used_at；attempts≤5 防爆破（服务端计数）。
+ */
+export const verificationCodes = sqliteTable(
+  'verification_codes',
+  {
+    id: id(),
+    /** 目标手机号（明文——发送/校验必需；透出侧一律走 maskPhone） */
+    phone: text('phone').notNull(),
+    /** 用途，取值：change_bind_old（原号验证） | change_bind_new（新号验证） */
+    purpose: text('purpose').notNull(),
+    /** 验证码哈希（sha256(code+phone+purpose+salt)，salt 为仓内常量，内测口径） */
+    codeHash: text('code_hash').notNull(),
+    /** 过期时间（ms epoch，10 分钟有效） */
+    expiry: integer('expiry').notNull(),
+    /** 已尝试次数（≤5） */
+    attempts: integer('attempts').notNull().default(0),
+    /** 使用时间（一次性；NULL=未使用） */
+    usedAt: integer('used_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [index('ix_verification_codes_phone_purpose').on(t.phone, t.purpose)],
+);
+
+/**
+ * 换绑申诉单表（批次 R13a · 0017）：原号不可用时的门店协助换绑通道。
+ * - request_no 日序单号 PC-yyyymmdd-NNN（门店规范时区 +8）；
+ * - 留痕列只存脱敏号（old/new_phone_masked）；**new_phone 明文列=审批通过时
+ *   写 users.phone 的执行载荷**（报备项：无此列审批无法落新号；透出/日志全 masked）；
+ * - timeline_json 只增追加（submitted/approved/rejected 各节点）。
+ */
+export const phoneChangeRequests = sqliteTable(
+  'phone_change_requests',
+  {
+    id: id(),
+    /** 申诉单号（全局唯一，PC-yyyymmdd-NNN 日序号） */
+    requestNo: text('request_no').notNull().unique(),
+    /** 申请人用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 原手机号（脱敏 138****0000） */
+    oldPhoneMasked: text('old_phone_masked').notNull(),
+    /** 新手机号（脱敏） */
+    newPhoneMasked: text('new_phone_masked').notNull(),
+    /** 新手机号明文（审批执行载荷；仅服务端使用，透出侧一律 masked——见表头注） */
+    newPhone: text('new_phone').notNull(),
+    /** 证明材料照片 URL 数组 JSON */
+    photoUrls: text('photo_urls', { mode: 'json' }).$type<string[]>().notNull().default(sql`'[]'`),
+    /** 申诉说明 */
+    note: text('note'),
+    /** 状态，取值：submitted | approved | rejected */
+    status: text('status').notNull().default('submitted'),
+    /** 时间线 JSON（AppealTimelineEntry[]，只增追加） */
+    timelineJson: text('timeline_json', { mode: 'json' }).$type<AppealTimelineEntry[]>().notNull(),
+    /** 审批人用户 ID -> users.id */
+    approverId: text('approver_id').references(() => users.id),
+    /** 审批时间 */
+    decidedAt: integer('decided_at', { mode: 'timestamp' }),
+    /** 审批备注（reject 必填，客户端可见） */
+    decideNote: text('decide_note'),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_phone_change_requests_user').on(t.userId),
+    index('ix_phone_change_requests_status').on(t.status),
+  ],
+);
+
+/**
+ * 换绑留痕表（批次 R13a · 0017）：只增不改审计行。
+ * channel=self（本人双码自助换绑） | assisted（门店申诉协助换绑，operator_id=审批人）。
+ * 手机号全列脱敏存储。
+ */
+export const phoneChangeLogs = sqliteTable(
+  'phone_change_logs',
+  {
+    id: id(),
+    /** 换绑用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 原手机号（脱敏） */
+    oldPhoneMasked: text('old_phone_masked').notNull(),
+    /** 新手机号（脱敏） */
+    newPhoneMasked: text('new_phone_masked').notNull(),
+    /** 通道，取值：self | assisted */
+    channel: text('channel').notNull(),
+    /** 操作人用户 ID（assisted=审批人；self=NULL） */
+    operatorId: text('operator_id'),
+    /** 换绑发生时间 */
+    at: integer('at', { mode: 'timestamp' }).notNull(),
+    ...auditColumns,
+  },
+  (t) => [index('ix_phone_change_logs_user').on(t.userId)],
+);
+
+/**
+ * 用户设备登记表（批次 R13a · 0017）：客户端登录后静默登记一次；
+ * (user_id, device_id) 唯一幂等 upsert，last_seen_at 刷新。
+ */
+export const userDevices = sqliteTable(
+  'user_devices',
+  {
+    id: id(),
+    /** 用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 设备标识（客户端生成） */
+    deviceId: text('device_id').notNull(),
+    /** 设备备注名（如「我的 iPhone」） */
+    label: text('label'),
+    /** 首次登记时间 */
+    firstSeenAt: integer('first_seen_at', { mode: 'timestamp' }).notNull(),
+    /** 最近活跃时间 */
+    lastSeenAt: integer('last_seen_at', { mode: 'timestamp' }).notNull(),
+    ...auditColumns,
+  },
+  (t) => [
+    uniqueIndex('uq_user_devices_user_device').on(t.userId, t.deviceId),
+    index('ix_user_devices_user').on(t.userId),
+  ],
+);
+
+/* ------------------------------------------------------------------ */
+/* 批次 6 补缺大批 · server 侧支付骨架（pay_orders / agreements / pay_rules） */
+/* ------------------------------------------------------------------ */
+
+/** 支付单业务域，取值：membership_open 线上开通会员 | membership_upgrade 升级（片 3 未合，预留） | mall 商城（预留） */
+export type PayBizDomain = 'membership_open' | 'membership_upgrade' | 'mall';
+/** 支付单状态机：created→paying→paid（终）/closed（超时关单，终）/failed（通道失败，终）；非法迁移硬拒 */
+export type PayOrderStatus = 'created' | 'paying' | 'paid' | 'closed' | 'failed';
+/** 支付通道，取值：mock | wechat_jsapi | wechat_h5 | alipay_wap（内测=mock） */
+export type PayChannel = 'mock' | 'wechat_jsapi' | 'wechat_h5' | 'alipay_wap';
+/** 协议键，取值：member_service 会员服务协议 | not_prepaid 非预付卡声明 | no_auto_renew 到期不自动续费告知 */
+export type AgreementKey = 'member_service' | 'not_prepaid' | 'no_auto_renew';
+
+/**
+ * 线上支付单表（批次 6 补缺大批 · 涉钱最高戒律）：
+ * - 金额 server 重算落库（前端金额一律不信，createOrder 入参金额直接忽略）；
+ * - pay_no=PO-yyyymmdd-NNN 日序（storeWallclock +8 当日窗口 count+1，写串行锁内分配，
+ *   口径同 cashier genBillNo / refund genRefundNo；无门店维度=全局日序）；
+ * - biz_id 语义按域：membership_open=开通用户 users.id（归属/幂等/反查同键）；
+ *   membership_upgrade/mall 预留（后续片接入时注释补齐）；
+ * - idem_key 全局唯一=幂等闸：base=`{userId}|{bizDomain}|{planKey}|{当日}`，
+ *   同人同档当日在途（created/paying）重复创建=返回现状 idempotent=true；
+ *   在途单终结（closed/failed/paid）后再创建=base 加 `#a{N}` 尝试序号（审计可溯，
+ *   unique 不撞）；
+ * - biz_json=业务上下文快照（membership_open → {planKey, petCount, planLabel, phoneMasked}），
+ *   兑付/补兑付（reconcile）据此重建业务行，不依赖入参；
+ * - timeout_at=创建时快照 pay_timeout_minutes 端口值（超时关单 sweeper 按此比较；
+ *   端口改值只管新单，不回溯在途单——与规则配置「新规只管新单」同口径）；
+ * - 状态机硬拒：条件更新 WHERE status IN ('created','paying') 影响行数=0 且非 paid →
+ *   拒绝（closed/failed 再回调/再支付一律 400）；重复回调（已 paid）幂等零副作用。
+ * - 移位铁律：pay_no 日序按 created_at 计号，任何测试不得对 pay_orders.created_at 移位。
+ */
+export const payOrders = sqliteTable(
+  'pay_orders',
+  {
+    id: id(),
+    /** 支付单号（全局唯一）：PO-yyyymmdd-NNN 日序 */
+    payNo: text('pay_no').notNull().unique(),
+    /** 业务域，取值见 PayBizDomain */
+    bizDomain: text('biz_domain').notNull(),
+    /** 业务对象 ID（membership_open=users.id；其余域预留） */
+    bizId: text('biz_id').notNull(),
+    /** 业务上下文快照 JSON（兑付依据），结构见 PayOrderBizJson */
+    bizJson: text('biz_json', { mode: 'json' }).$type<Record<string, unknown>>(),
+    /** 金额（分，server 重算落库，前端金额一律不信） */
+    amountFen: integer('amount_fen').notNull(),
+    /** 支付通道，取值见 PayChannel */
+    channel: text('channel').notNull(),
+    /** 状态，取值见 PayOrderStatus */
+    status: text('status').notNull().default('created'),
+    /** 幂等键（全局唯一；base 或 base+#a{N} 尝试序号） */
+    idemKey: text('idem_key').notNull().unique(),
+    /** 通道侧支付单号（PaymentProvider.createPayment 返回；NULL=通道未下单） */
+    paymentId: text('payment_id'),
+    /** 回调原文 JSON（审计/对账用；NULL=未收回调） */
+    callbackJson: text('callback_json', { mode: 'json' }).$type<Record<string, unknown>>(),
+    /** 支付超时时间（创建时 pay_timeout_minutes 端口值快照；NULL 不用） */
+    timeoutAt: integer('timeout_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_pay_orders_biz').on(t.bizDomain, t.bizId),
+    index('ix_pay_orders_status').on(t.status),
+  ],
+);
+
+/**
+ * 服务域规则配置表（补缺大批片 4，同构 commission_rules）：配置端口第六域
+ * domain='service'。种子 version=1 一行 service_hours（客服服务时间公示，
+ * 客户端读口 serviceLoop.serviceHours）。保存即生效+版本化留痕，新值只管新读不回溯。
+ */
+export const serviceRules = sqliteTable(
+  'service_rules',
+  {
+    id: id(),
+    /** 规则版本（初始种子 =1） */
+    version: integer('version').notNull(),
+    /** 规则键（如 service_hours） */
+    ruleKey: text('rule_key').notNull(),
+    /** 规则中文名（配置页展示） */
+    label: text('label').notNull(),
+    /** 规则值 JSON（如 { text: '09:00–21:00' }），结构见 RuleConfigValue */
+    valueJson: text('value_json', { mode: 'json' }).$type<RuleConfigValue>().notNull(),
+    /** 生效时间（按此取规则版本；新规只管生效后的读） */
+    effectiveFrom: integer('effective_from', { mode: 'timestamp' }).notNull(),
+    /** 是否生效（0/1） */
+    active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    /** 创建/变更人用户 ID -> users.id */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_service_rules_key_active').on(t.ruleKey, t.active)],
+);
+
+/**
+ * 账号注销申请单表（批次 R13a · 0017）：
+ * - 同人仅一在途（status='submitted' 应用层判定幂等，不加部分索引）；
+ * - checklist_json=提交时阻断校验快照（须为空清单才放行）；impacts_json=三项影响
+ *   勾选快照（rebate/member/pets 缺一不可，服务端强校验）；
+ * - 审批通过=软注销（users.deactivated_at 置位 + phone 释放 + 回馈金清零 +
+ *   会员 cancelled（注销≠退会，不走折算退款——报备口径）+ pets 软删标记）。
+ */
+export const deactivationRequests = sqliteTable(
+  'deactivation_requests',
+  {
+    id: id(),
+    /** 申请用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 阻断校验快照（DeactivationChecklistItem[]，提交时重跑 precheck 的结果） */
+    checklistJson: text('checklist_json', { mode: 'json' }).$type<DeactivationChecklistItem[]>().notNull(),
+    /** 影响勾选快照（['rebate','member','pets'] 三项全勾选才可提交） */
+    impactsJson: text('impacts_json', { mode: 'json' }).$type<string[]>().notNull(),
+    /** 状态，取值：submitted | approved | rejected | cancelled */
+    status: text('status').notNull().default('submitted'),
+    /** 审批人用户 ID -> users.id */
+    approverId: text('approver_id').references(() => users.id),
+    /** 审批时间 */
+    decidedAt: integer('decided_at', { mode: 'timestamp' }),
+    /** 审批备注（reject 必填，客户端可见） */
+    decideNote: text('decide_note'),
+    ...auditColumns,
+  },
+  (t) => [index('ix_deactivation_requests_user').on(t.userId)],
+);
+
+/**
+ * 协议留痕表（批次 6 补缺大批）：线上开通会员三协议勾选快照——
+ * member_service 会员服务协议 / not_prepaid 非预付卡声明 / no_auto_renew 到期不自动续费告知。
+ * createOrder 事务内与 pay_orders 同落（三行必传缺一拒单）：content/version 全文快照
+ * （协议改版不回溯历史留痕）+ checked_at 勾选时刻 + user_snapshot（userId/phoneMasked/
+ * planKey/petCount，取证四要素）。只增不改（无更新端点）。
+ */
+export const agreements = sqliteTable(
+  'agreements',
+  {
+    id: id(),
+    /** 勾选用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 协议键，取值见 AgreementKey */
+    agreementKey: text('agreement_key').notNull(),
+    /** 协议版本（快照，如 'v1.0'） */
+    version: text('version').notNull(),
+    /** 协议全文快照（改版不回溯） */
+    content: text('content').notNull(),
+    /** 勾选时刻 */
+    checkedAt: integer('checked_at', { mode: 'timestamp' }).notNull(),
+    /** 用户快照 JSON：{userId, phoneMasked, planKey, petCount} */
+    userSnapshot: text('user_snapshot', { mode: 'json' }).$type<Record<string, unknown>>().notNull(),
+    ...auditColumns,
+  },
+  (t) => [index('ix_agreements_user_key').on(t.userId, t.agreementKey)],
+);
+
+/**
+ * 支付规则配置表（批次 6 补缺大批，同构 commission_rules，配置端口第五域 domain='pay'）：
+ * 种子 version=1 随 0017 幂等迁移落全库（created_by='system'，Y6 豁免件同 0016 工艺）——
+ * pay_timeout_minutes{minutes:30} 支付超时关单时长（分钟）/
+ * pay_channel_enabled{enabled:true} 线上支付通道开关（内测=mock）。
+ * 保存即生效+版本化留痕，新值只管新单（在途单 timeout_at 为创建时快照，不回溯）。
+ */
+export const payRules = sqliteTable(
+  'pay_rules',
+  {
+    id: id(),
+    /** 规则版本（初始种子 =1） */
+    version: integer('version').notNull(),
+    /** 规则键（pay_timeout_minutes / pay_channel_enabled） */
+    ruleKey: text('rule_key').notNull(),
+    /** 规则中文名（配置页展示） */
+    label: text('label').notNull(),
+    /** 规则值 JSON（minutes/enabled），结构见 RuleConfigValue */
+    valueJson: text('value_json', { mode: 'json' }).$type<RuleConfigValue>().notNull(),
+    /** 生效时间（按此取规则版本；新规只管生效后的单） */
+    effectiveFrom: integer('effective_from', { mode: 'timestamp' }).notNull(),
+    /** 是否生效（0/1） */
+    active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    /** 创建/变更人用户 ID -> users.id（迁移种子='system'，FK 豁免同 0016 工艺） */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_pay_rules_key_active').on(t.ruleKey, t.active)],
 );

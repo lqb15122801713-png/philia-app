@@ -120,6 +120,48 @@
       "when": 1790300000000,
       "tag": "0016_powerless_ares",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1790828524956,
+      "tag": "0017_lonely_texas_twister",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1790864027439,
+      "tag": "0018_lucky_rafael_vega",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1790864027440,
+      "tag": "0019_rainy_cerebro",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1790864027441,
+      "tag": "0020_wild_johnny_storm",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "6",
+      "when": 1790873096660,
+      "tag": "0021_outgoing_miek",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "6",
+      "when": 1790899666438,
+      "tag": "0022_wooden_shatterstar",
+      "breakpoints": true
     }
   ]
 }

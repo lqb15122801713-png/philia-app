@@ -9,6 +9,14 @@
  *   各 ≥1）：confirmStep 前置校验；张数口径只统计 invalidated_at IS NULL。
  * - 规则 4（第 6 步 confirm 三合一事务：step6 done + 预约 completed + 完成事件）：
  *   confirmStep 末步分支，三件事同一 db.transaction。
+ *   补缺大批片 4 扩展：末步分支同事务追加「安心证书 + 美容报告」生成链——
+ *   证书=六步汇总 + 交付检查步 before/after 各取最新一张有效图（无图=R10 不生成，
+ *   直接跳过不落行）；报告=员工端报告卡 vitals/nextAdvice 快照（缺省各项 normal
+ *   +「本次未记录」，体重项恒为 pets.weight_kg 服务端快照），任一 status≠normal
+ *   拼 abnormalText；生成后 user 频道各落一条 certificate.ready / report.ready
+ *   outbox 事件（payload 用 aid 键避开 e2e §11 断言计数口径；为保 §10 SSE 实序
+ *   断言冻结线，两事件不做 broadcastNow 即时广播，靠 outboxSweeper/重连续传送达，
+ *   客户端以首读拉取为主通道）。
  * - 规则 5（flagForRedo 为唯一回退边，前置条件二选一 (a)/(b)）：flagForRedo；
  *   (b) 路径事务内 done→active + flagged=1 + 旧照片批量 invalidated_at=now。
  *
@@ -31,6 +39,7 @@ import {
   publicProcedure,
   router,
   staffProcedure,
+  type AppointmentRow,
 } from '../trpc';
 
 /* ------------------------------------------------------------------ */
@@ -97,6 +106,33 @@ export const StepLabel: Record<StepKey, string> = {
   confirm: '完成确认',
 };
 
+/* ------------------------------------------------------------------ */
+/* 补缺大批片 4：美容报告卡 vitals 入参/体征项定义（confirmStep 末步快照用）   */
+/* ------------------------------------------------------------------ */
+
+/** 报告卡体征项 key（五项固定：体重/皮肤/耳朵/毛发/指甲） */
+export const VITAL_KEYS = ['weight', 'skin', 'ear', 'coat', 'nail'] as const;
+export type VitalKey = (typeof VITAL_KEYS)[number];
+
+/** 体征项中文名（报告快照 label 与异常拼句共用） */
+const VitalLabel: Record<VitalKey, string> = {
+  weight: '体重',
+  skin: '皮肤',
+  ear: '耳朵',
+  coat: '毛发',
+  nail: '指甲',
+};
+
+/** 员工端报告卡单项入参（confirmStep 末步生效） */
+const VitalInputSchema = z.object({
+  key: z.enum(VITAL_KEYS),
+  label: z.string().min(1).max(50),
+  value: z.string().min(1).max(100),
+  status: z.enum(['normal', 'attention', 'abnormal']),
+  note: z.string().max(200).optional(),
+});
+type VitalInput = z.infer<typeof VitalInputSchema>;
+
 /** 加载某预约的指定步骤；不存在（未核销初始化/ boarding 类）抛 NOT_FOUND */
 async function loadStep(d: Q, appointmentId: string, stepKey: StepKey) {
   const step = await d
@@ -162,6 +198,153 @@ async function petNameOf(d: Q, petId: string): Promise<string | undefined> {
     .where(eq(schema.pets.id, petId))
     .get();
   return pet?.name ?? undefined;
+}
+
+/* ------------------------------------------------------------------ */
+/* 补缺大批片 4：安心证书 + 美容报告生成链（confirmStep 末步同事务调用）        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 末步完成同事务生成安心证书 + 美容报告：
+ * - 证书（R10 无数据不生成）：六步汇总（label+有效照片计数）+ before_after 步
+ *   before/after 各取最新一张有效图；缺任一张即不落行（certificateId=null）；
+ * - 报告恒生成：vitals 入参快照（缺项/全缺 → status='normal' + note「本次未记录」，
+ *   留痕口径不阻塞完成）；体重项值恒为 pets.weight_kg 服务端快照（不信客户端）；
+ *   任一 status≠normal → abnormalText 拼句；
+ * - SSE：certificate.ready / report.ready 落 event_outbox（user 频道，payload 用
+ *   aid 键避开 e2e §11 既有断言的 appointmentId 计数口径）；两事件不做 broadcastNow
+ *   即时广播（保 §10 SSE 实序断言冻结线），由 outboxSweeper/重连续传送达。
+ */
+async function generateCompletionArtifacts(
+  tx: Q,
+  args: {
+    appt: AppointmentRow;
+    petName: string | undefined;
+    vitals: VitalInput[] | undefined;
+    nextAdvice: string | undefined;
+    now: Date;
+  },
+): Promise<{ certificateId: string | null; reportId: string; readyOutboxIds: string[] }> {
+  const { appt, now } = args;
+
+  /* ---- 六步 + 有效照片一次批拉（证书汇总数据源） ---- */
+  const steps = await tx
+    .select()
+    .from(schema.appointmentSteps)
+    .where(eq(schema.appointmentSteps.appointmentId, appt.id))
+    .orderBy(asc(schema.appointmentSteps.stepOrder));
+  const stepIds = steps.map((s) => s.id);
+  const photos =
+    stepIds.length === 0
+      ? []
+      : await tx
+          .select()
+          .from(schema.stepPhotos)
+          .where(and(inArray(schema.stepPhotos.stepId, stepIds), isNull(schema.stepPhotos.invalidatedAt)))
+          .orderBy(asc(schema.stepPhotos.takenAt), asc(schema.stepPhotos.id));
+  const countByStep = new Map<string, number>();
+  for (const p of photos) countByStep.set(p.stepId, (countByStep.get(p.stepId) ?? 0) + 1);
+
+  /* ---- 证书：R10 无数据不生成（无 before/after 有效图即跳过） ---- */
+  const baStep = steps.find((s) => s.stepKey === 'before_after');
+  const baPhotos = baStep ? photos.filter((p) => p.stepId === baStep.id) : [];
+  const beforeUrl = baPhotos.filter((p) => p.tag === 'before').at(-1)?.url ?? null; // 升序取尾=最新
+  const afterUrl = baPhotos.filter((p) => p.tag === 'after').at(-1)?.url ?? null;
+  let certificateId: string | null = null;
+  if (beforeUrl && afterUrl) {
+    const svc = await tx
+      .select({ name: schema.services.name })
+      .from(schema.services)
+      .where(eq(schema.services.id, appt.serviceId))
+      .get();
+    const store = await tx
+      .select({ name: schema.stores.name })
+      .from(schema.stores)
+      .where(eq(schema.stores.id, appt.storeId))
+      .get();
+    const payload: schema.CertificatePayload = {
+      petName: args.petName ?? '',
+      serviceName: svc?.name ?? '',
+      storeName: store?.name ?? '',
+      completedAt: now.toISOString(),
+      stepsSummary: steps.map((s) => ({
+        stepKey: s.stepKey,
+        label: StepLabel[s.stepKey as StepKey] ?? s.stepKey,
+        photoCount: countByStep.get(s.id) ?? 0,
+      })),
+      beforeUrl,
+      afterUrl,
+    };
+    const row = await tx
+      .insert(schema.serviceCertificates)
+      .values({ appointmentId: appt.id, userId: appt.customerId, payload, generatedAt: now })
+      .returning({ id: schema.serviceCertificates.id })
+      .then((r) => r[0]!);
+    certificateId = row.id;
+  }
+
+  /* ---- 报告：恒生成；vitals 缺省=normal+「本次未记录」；体重= pets.weight_kg 快照 ---- */
+  const inputByKey = new Map((args.vitals ?? []).map((v) => [v.key, v]));
+  const pet = await tx
+    .select({ weightKg: schema.pets.weightKg })
+    .from(schema.pets)
+    .where(eq(schema.pets.id, appt.petId))
+    .get();
+  const vitalsSnapshot: schema.ReportVital[] = VITAL_KEYS.map((key) => {
+    const fromInput = inputByKey.get(key);
+    return {
+      key,
+      label: VitalLabel[key],
+      // 体重恒取档案快照；其余项取员工端输入，缺项「本次未记录」
+      value:
+        key === 'weight'
+          ? pet?.weightKg != null
+            ? `${pet.weightKg} kg`
+            : '未记录'
+          : (fromInput?.value ?? '本次未记录'),
+      status: fromInput?.status ?? 'normal',
+      ...(fromInput?.note ? { note: fromInput.note } : fromInput ? {} : { note: '本次未记录' }),
+    };
+  });
+  const abnormal = vitalsSnapshot.filter((v) => v.status !== 'normal');
+  const abnormalText =
+    abnormal.length > 0
+      ? abnormal
+          .map((v) => `${v.label}：${v.status === 'attention' ? '注意' : '异常'}${v.note ? `（${v.note}）` : ''}`)
+          .join('；')
+      : null;
+  const report = await tx
+    .insert(schema.serviceReports)
+    .values({
+      appointmentId: appt.id,
+      userId: appt.customerId,
+      vitals: vitalsSnapshot,
+      abnormalText,
+      nextAdvice: args.nextAdvice ?? null,
+      generatedAt: now,
+    })
+    .returning({ id: schema.serviceReports.id })
+    .then((r) => r[0]!);
+
+  /* ---- SSE outbox（user 频道；刻意不 broadcastNow，见本函数头注） ---- */
+  const readyOutboxIds: string[] = [];
+  if (certificateId) {
+    readyOutboxIds.push(
+      await emitEvent(txBus(tx), `user:${appt.customerId}`, EventType.CertificateReady, {
+        aid: appt.id,
+        certificateId,
+        petName: args.petName,
+      }),
+    );
+  }
+  readyOutboxIds.push(
+    await emitEvent(txBus(tx), `user:${appt.customerId}`, EventType.ReportReady, {
+      aid: appt.id,
+      reportId: report.id,
+      petName: args.petName,
+    }),
+  );
+  return { certificateId, reportId: report.id, readyOutboxIds };
 }
 
 /* ------------------------------------------------------------------ */
@@ -372,12 +555,23 @@ export const serviceStepRouter = router({
    * 规则 3：未失效照片张数 ∈ [min,max]，before_after 步 before/after 各 ≥1；
    * 事务：本步 done（写 done_at、清 flagged）→ 下一步 locked→active（写 started_at）；
    * 规则 4：第 6 步为事务三合一（step6 done + 预约 in_service→completed 写 completed_at
-   *        + appointment.completed 事件）；
+   *        + appointment.completed 事件）；补缺大批片 4：同事务追加安心证书/美容报告
+   *        生成（certificate.ready / report.ready 落 outbox，不即时广播，见头注）；
    * 规则 1：事务内校验「恰好一个 active 且就是本步」不变量，破坏即回滚；
    * 每步完成事务内 emitEvent(step_updated) → 提交后 broadcastNow。
    */
   confirmStep: staffProcedure
-    .input(z.object({ appointmentId: z.string().min(1), stepKey: StepKeySchema }))
+    .input(
+      z.object({
+        appointmentId: z.string().min(1),
+        stepKey: StepKeySchema,
+        // 补缺大批片 4：员工端报告卡（仅末步 confirm 生效，其余步忽略）——
+        // vitals 五项 status/note/value 快照 + nextAdvice 建议；缺省=报告各项
+        // status='normal' + note「本次未记录」（留痕口径不阻塞完成）。
+        vitals: z.array(VitalInputSchema).max(VITAL_KEYS.length).optional(),
+        nextAdvice: z.string().max(500).optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const appt = await assertAppointmentAccess(ctx, input.appointmentId);
       const def = defOf(input.stepKey);
@@ -421,6 +615,10 @@ export const serviceStepRouter = router({
       const petName = await petNameOf(ctx.db, appt.petId);
       const now = new Date();
       const photoPayload = valid.map((p) => ({ url: p.url, thumbUrl: p.thumbUrl ?? null }));
+      // 补缺大批片 4：证书/报告生成结果与 outbox ids（仅末步写入；两事件不即时广播，见下）
+      let certificateId: string | null = null;
+      let reportId: string | null = null;
+      let readyOutboxIds: string[] = [];
 
       const outboxIds = await ctx.db.transaction(async (tx) => {
         // 规则 1 不变量：事务内复查——必须恰好 1 个 active 步且就是本步，否则回滚
@@ -490,6 +688,18 @@ export const serviceStepRouter = router({
             .set({ status: 'completed', completedAt: now, updatedAt: now })
             .where(eq(schema.appointments.id, appt.id));
           isFinalStep = true;
+          // 补缺大批片 4：证书 + 美容报告生成链（与 completed 同一事务，失败整体回滚；
+          // 证书无 before/after 有效图 = R10 不生成不落行，返回 certificateId=null）
+          const generated = await generateCompletionArtifacts(tx, {
+            appt,
+            petName,
+            vitals: input.vitals,
+            nextAdvice: input.nextAdvice,
+            now,
+          });
+          certificateId = generated.certificateId;
+          reportId = generated.reportId;
+          readyOutboxIds = generated.readyOutboxIds;
           // 注：completed 事件在 step_updated 之后发射（T1.6 修复）——SSE 续传去重依赖
           // 事件 id 单调序 = 广播序，先发射 step_updated 才能保证 completed 不被过滤。
         } else {
@@ -538,11 +748,18 @@ export const serviceStepRouter = router({
       });
 
       for (const id of outboxIds) broadcastNow(id); // 事务提交后即时广播（fire-and-forget）
+      // 补缺大批片 4：certificate.ready / report.ready 已落 event_outbox（留痕可取证），
+      // 刻意不做 broadcastNow 即时广播——e2e §10 SSE 实序断言冻结线（断言零删改）；
+      // 由 outboxSweeper ≤30s 兜底重投 / 客户端重连续传送达（首读拉取为主通道）。
+      void readyOutboxIds;
       return {
         stepKey: input.stepKey,
         status: 'done' as const,
         nextStepKey: nextDef?.stepKey ?? null,
         appointmentCompleted: nextDef === null,
+        // 补缺大批片 4：末步透出证书/报告行 ID（证书无对比图时为 null=R10 未生成）
+        certificateId,
+        reportId,
       };
     }),
 

@@ -28,7 +28,7 @@ const txDb = (tx: unknown): DbHandle => tx as DbHandle;
 /* 后两者注释即「结构同 commission_rules」）                                 */
 /* ------------------------------------------------------------------ */
 
-const domainSchema = z.enum(['commission', 'xp', 'duration', 'refund', 'member_plans']);
+const domainSchema = z.enum(['commission', 'xp', 'duration', 'refund', 'member_plans', 'service', 'pay']);
 
 const RULES_TABLE = {
   commission: schema.commissionRules,
@@ -36,6 +36,8 @@ const RULES_TABLE = {
   duration: schema.durationRules, // 补充令①：时长系数表配置化（决策 #39/#40），同型天然兼容
   refund: schema.refundRules, // R12 退款专项：退款阈值等（冻结版 V1.0 §九），同型天然兼容
   member_plans: schema.memberPlans, // R11a 会员前置批：四档价格/回馈/折扣/多宠+到账日/有效期，同型天然兼容
+  service: schema.serviceRules, // 补缺大批片 4：客服服务时间公示等服务域参数，同型天然兼容
+  pay: schema.payRules, // 批次 6 补缺大批：支付超时关单时长/线上通道开关，同型天然兼容
 } as const;
 
 /* ------------------------------------------------------------------ */
@@ -66,6 +68,7 @@ const NUMERIC_KEYS = new Set([
   'included_pets', // R11a 档内含宠物数
   'max_pets', // R11a 宠物数封顶
   'days', // R11a 有效期天数
+  'minutes', // 批次 6 补缺大批：pay_timeout_minutes 支付超时关单时长（分钟）
   'hour',
   'level',
 ]);
@@ -92,6 +95,7 @@ const NON_NEGATIVE_KEYS = new Set([
   'included_pets', // R11a 档内含宠物数
   'max_pets', // R11a 宠物数封顶
   'days', // R11a 有效期天数
+  'minutes', // 批次 6 补缺大批：pay_timeout_minutes 支付超时关单时长（分钟）
   'hour',
   'level',
 ]);
@@ -102,8 +106,8 @@ const NEGATIVE_POINTS_KEYS = new Set(['xp_penalty_low_star']);
 /** 值必须是「字符串→数值」映射的对象字段（定额分 / 师徒拆分 bp） */
 const NUMBER_MAP_KEYS = new Set(['fixed_fen_by_plan', 'split_bp']);
 
-/** 字符串字段（段位名 / 同口径引用） */
-const STRING_KEYS = new Set(['name', 'same_as']);
+/** 字符串字段（段位名 / 同口径引用 / 补缺大批片 4 service 域 text 公示文案） */
+const STRING_KEYS = new Set(['name', 'same_as', 'text']);
 
 /** 布尔字段（R11a 会员档：free=免费档标记，仅 true/false 放行） */
 const BOOL_KEYS = new Set(['free', 'enabled']);

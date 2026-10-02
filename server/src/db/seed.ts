@@ -28,13 +28,21 @@ import { client, db, schema } from './index';
 /* ---------------- 清空（子表 -> 父表） ---------------- */
 
 const CLEAR_ORDER = [
+  /* ---- 补缺大批片 4 新表：子表先父表，先于 users/stores/appointments 清空 ---- */
+  schema.invoiceRequests, // FK → users/stores
+  schema.supportTickets, // FK → users/stores
+  schema.serviceReports, // FK → appointments/users
+  schema.serviceCertificates, // FK → appointments/users
+  schema.serviceRules, // FK → users
   /* ---- R11a 会员前置批新表：子表先父表（rebate_logs.settlement_id→rebate_settlements），先于 users/stores 清空 ---- */
+  schema.membershipEvents, // 补缺-3（FK → users），先于 users 清空
   schema.rebateLogs, // FK → users/rebate_accounts/rebate_settlements
   schema.rebateAccounts, // FK → users
   schema.rebateSettlements, // 独立（被 rebate_logs 引用）
   schema.memberships, // FK → users/stores
   schema.memberPlans, // FK → users
   /* ---- R12 退款专项新表：子表先父表，先于 cashier 域与 users 清空 ---- */
+  schema.refundRequests, // C5 客户退款申请（FK → users/stores），先于父表清空
   schema.refundBillItems, // FK → refund_bills/cashier_bill_items/cashier_payments
   schema.refundBills, // FK → stores/cashier_bills/users
   schema.refundRules, // FK → users
@@ -373,6 +381,12 @@ async function main() {
       refundSeed('refund_threshold_fen', '退款店长阈值：原单累计退款额超过此额须店主（默认 ¥500，R12 冻结版 V1.0 §九待老板终拍口径）', { threshold_fen: 50000 }),
       // 修复包 PR-1（PD-02 件 6 · CJ-0923-20① 留口）：超阈值落 draft 开关，默认关=维持硬拒
       refundSeed('refund_over_threshold_to_draft', '退款超阈值落 draft 待批（默认关=维持硬拒；开=落申请行，店主重新执行）', { enabled: false }),
+      // C5 客户退款申请五键（同 0017 幂等迁移种子；seed 清表重建须保持配置宇宙完整，config.save 只改既有键）
+      refundSeed('refund_request_enabled', '客户退款申请开关', { enabled: true }),
+      refundSeed('refund_apply_window_days', '退款申请时限（天）', { days: 30 }),
+      refundSeed('refund_free_regret_hours', '免费反悔窗口（小时）', { hour: 24 }),
+      refundSeed('refund_reason_options', '退款原因枚举', { keywords: ['服务不满意', '商品与描述不符', '拍错/多拍', '未按约定时间服务', '宠物健康原因', '其他（请补充说明）'] }),
+      refundSeed('refund_sla_hours', '退款审批 SLA（小时）', { hour: 24 }),
     ]);
 
     /* ---- R11a 会员前置批：会员档位配置种子（冻结版 V1.0 §二 + CJ-0922-13，version=1） ----
@@ -401,6 +415,27 @@ async function main() {
       planSeed('membership_validity_days', '会员有效期：365 天（到期不续费冻结，余额在不可用；续费解冻；退卡清零）', { days: 365 }),
       // 修复包 PR-4 读侧启用（PD-05 件 2 · CJ-0925-10②）：注册默认档端口化，本批先入种子
       planSeed('default_plan_key', '注册默认会员档（自助开档落档键；端口可改）', { value: 'plan_weiguang' }),
+      /* ---- 补缺-3（46 号档+PD-07）会员升级/换档/防滥用端口键（未知 rule_key 配置端口硬拒，
+         故必先入种子；存量库同值回挂见迁移 0017 尾部 WHERE NOT EXISTS 幂等段） ---- */
+      planSeed('member_change_window_days', '到期换档预约窗口：到期前 N 天开放预约下期档位（任意档；期内只升不降，低档走本预约通道）', { days: 30 }),
+      planSeed('member_cancel_cooldown_days', '退会重购留痕窗口：退会后 N 天内重购记 cancel_rebuy_note（只留痕不拦截）', { days: 90 }),
+      planSeed('member_cancel_count_threshold', '累计退会次数阈值：累计退会≥N 次再购记 cancel_rebuy_note（只留痕不拦截）', { threshold: 2 }),
+    ]);
+
+    /* ---- 补缺大批片 4：服务域规则配置种子（同构 commission_rules，version=1） ----
+     * 配置端口第六域 domain='service'；service_hours=客服服务时间公示（客户端读口
+     * serviceLoop.serviceHours），0017 迁移同名幂等种子先行入库，本处为重置后补种。
+     */
+    await tx.insert(schema.serviceRules).values([
+      {
+        version: 1,
+        ruleKey: 'service_hours',
+        label: '客服服务时间（客户端公示文案）',
+        valueJson: { text: '09:00–21:00' },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
     ]);
 
     /* ---- staff-2 R10：XP 规则配置种子（附件一冻结版 V1.0 全表照转，version=1） ----
@@ -493,12 +528,27 @@ async function main() {
     ['refund_bills', 'refund_bills'],
     ['refund_bill_items', 'refund_bill_items'],
     ['refund_rules', 'refund_rules'],
+    /* C5 客户退款申请新表 */
+    ['refund_requests', 'refund_requests'],
     /* R11a 会员前置批新表 */
     ['member_plans', 'member_plans'],
     ['memberships', 'memberships'],
     ['rebate_accounts', 'rebate_accounts'],
     ['rebate_logs', 'rebate_logs'],
     ['rebate_settlements', 'rebate_settlements'],
+    /* 补缺大批片 4 新表 */
+    ['service_certificates', 'service_certificates'],
+    ['service_reports', 'service_reports'],
+    ['support_tickets', 'support_tickets'],
+    ['invoice_requests', 'invoice_requests'],
+    ['service_rules', 'service_rules'],
+    /* 补缺-3 新表 */
+    ['membership_events', 'membership_events'],
+    /* 批次 6 补缺大批新表（pay_rules 种子随 0017 幂等迁移落全库，created_by='system'，
+       本脚本不重复插行——防 0016 式双种子重复 active 行） */
+    ['pay_orders', 'pay_orders'],
+    ['agreements', 'agreements'],
+    ['pay_rules', 'pay_rules'],
   ];
 
   console.log('[seed] 完成，各表行数：');

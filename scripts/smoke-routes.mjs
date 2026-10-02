@@ -92,6 +92,34 @@ const ROUTES = [
   { app: 'customer', path: '/member', anchors: ['会员'], serverDep: true, note: '批次 R11a' },
   { app: 'customer', path: '/member/open', anchors: ['开通会员'], serverDep: true, note: '批次 R11a' },
   { app: 'customer', path: '/member/rebate', anchors: ['回馈金'], serverDep: true, note: '批次 R11b 新路由申报（W-01）' },
+  { app: 'customer', path: '/refunds', anchors: ['退款/售后'], note: '补缺批片 1 退款售后' },
+  { app: 'customer', path: `/refunds/${INVALID_ID}`, anchors: ['退款详情'], serverDep: true, note: '补缺批片 1 退款售后：无效 id 异常态仍渲染页题+返回出口' },
+  { app: 'customer', path: `/mall/orders/${INVALID_ID}/refund`, anchors: ['申请退款'], serverDep: true, note: '补缺批片 1 退款售后' },
+  { app: 'customer', path: `/appointments/${APPT_ID}/refund`, anchors: ['申请退款'], serverDep: true, note: '补缺批片 1 退款售后：服务单诚实维护态（billId 无客户端口径，已报备）' },
+  /* ---- 补缺批片 4 服务闭环（9 行；anchors=SL_COPY 真实文案，数据依赖页全 serverDep 守卫口径） ---- */
+  { app: 'customer', path: '/philia/certs', anchors: ['安心证书'], serverDep: true, note: '补缺批片 4 服务闭环' },
+  { app: 'customer', path: `/philia/certs/${INVALID_ID}`, anchors: ['安心证书'], serverDep: true, note: '补缺批片 4 服务闭环（无效 id 异常态：标题+返回出口仍在）' },
+  { app: 'customer', path: `/philia/reports/${INVALID_ID}`, anchors: ['美容报告'], serverDep: true, note: '补缺批片 4 服务闭环（无效 id 异常态）' },
+  { app: 'customer', path: '/support', anchors: ['小棉花'], serverDep: true, note: '补缺批片 4 服务闭环' },
+  { app: 'customer', path: '/support/new', anchors: ['小棉花'], serverDep: true, note: '补缺批片 4 服务闭环' },
+  { app: 'customer', path: `/support/${INVALID_ID}`, anchors: ['工单'], serverDep: true, note: '补缺批片 4 服务闭环（无效 id 异常态）' },
+  { app: 'customer', path: '/invoices', anchors: ['发票'], serverDep: true, note: '补缺批片 4 服务闭环' },
+  { app: 'customer', path: `/invoice/apply/appointment/${INVALID_ID}`, anchors: ['申请发票'], serverDep: true, note: '补缺批片 4 服务闭环（无效 id 异常态）' },
+  { app: 'customer', path: `/invoices/${INVALID_ID}`, anchors: ['发票'], serverDep: true, note: '补缺批片 4 服务闭环（无效 id 异常态）' },
+  /* 补缺批片 2 账户安全（设置 + 五子页；serverDep 守卫口径兜底，锚点=PageHeader/AppHead 真实 copy 文案） */
+  { app: 'customer', path: '/me/settings', anchors: ['设置', '账号安全'], serverDep: true, note: '补缺批片 2 账户安全' },
+  { app: 'customer', path: '/me/settings/deactivate', anchors: ['注销账号'], serverDep: true, note: '补缺批片 2 账户安全' },
+  { app: 'customer', path: '/me/settings/phone', anchors: ['手机号换绑'], serverDep: true, note: '补缺批片 2 账户安全' },
+  { app: 'customer', path: '/me/settings/phone/appeal', anchors: ['换绑申诉'], serverDep: true, note: '补缺批片 2 账户安全' },
+  { app: 'customer', path: '/me/settings/devices', anchors: ['登录设备管理'], serverDep: true, note: '补缺批片 2 账户安全' },
+  { app: 'customer', path: '/me/settings/privacy', anchors: ['权限与隐私'], serverDep: true, note: '补缺批片 2 账户安全' },
+  { app: 'customer', path: '/member/upgrade', anchors: ['升级会员'], serverDep: true, note: '补缺批片 3 会员域' },
+  { app: 'customer', path: '/member/change', anchors: ['预约下期档位'], serverDep: true, note: '补缺批片 3 会员域' },
+  { app: 'customer', path: '/notifications', anchors: ['消息'], serverDep: true, note: '补缺批片 5 站内信（消息中心）' },
+  { app: 'customer', path: '/notifications/prefs', anchors: ['订阅管理'], serverDep: true, note: '补缺批片 5 站内信（订阅管理）' },
+  { app: 'customer', path: '/member/checkout', anchors: ['确认订单'], serverDep: true, note: '补缺批片 6 线上收单骨架（Mock 通道）' },
+  { app: 'customer', path: `/pay/${INVALID_ID}`, anchors: ['付了没开'], serverDep: true, note: '补缺批片 6 线上收单骨架（Mock 通道）：参数化 INVALID_ID 异常态' },
+  { app: 'customer', path: '/pay/reconcile', anchors: ['付了没开', '对账补开'], serverDep: true, note: '补缺批片 6 线上收单骨架（Mock 通道）' },
   /* ---- 商家端 ---- */
   { app: 'merchant', path: '/dev-login', anchors: ['登录'] },
   { app: 'merchant', path: '/dashboard', anchors: ['今日', '仪表', '预约'] },
@@ -314,11 +342,24 @@ async function runRouteOnce(cdp, route) {
   clearInterval(watchInterval);
   await sleep(400); // console 尾帧
 
-  const state = JSON.parse(await cdp.eval(`JSON.stringify({
+  let state = JSON.parse(await cdp.eval(`JSON.stringify({
     rootChildren: document.getElementById('root')?.childElementCount ?? 0,
     text: (document.body?.innerText ?? '').slice(0, 4000),
     path: location.pathname,
   })`));
+  /* 补缺批收口实证：锚点先命中页题（「发票详情」4 字）时若终读恰在查询未回落间隙，
+     text<10 会误判 #root 空白——rootChildren>0（已渲染）时给 2s 复读窗口再判。 */
+  if (state.rootChildren > 0 && state.text.trim().length < 10) {
+    const t1 = Date.now();
+    while (Date.now() - t1 < 2000 && state.text.trim().length < 10) {
+      await sleep(400);
+      state = JSON.parse(await cdp.eval(`JSON.stringify({
+        rootChildren: document.getElementById('root')?.childElementCount ?? 0,
+        text: (document.body?.innerText ?? '').slice(0, 4000),
+        path: location.pathname,
+      })`));
+    }
+  }
   const reds = redConsoleEvents(cdp.events, url, base);
 
   const reasons = [];

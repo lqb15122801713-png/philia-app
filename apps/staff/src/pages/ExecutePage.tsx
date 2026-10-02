@@ -50,6 +50,14 @@ import {
 import CelebrationOverlay from '../components/execute/CelebrationOverlay'
 import FlaggedBanner from '../components/execute/FlaggedBanner'
 import GuidePage from '../components/execute/GuidePage'
+import ReportCard, {
+  emptyReportDraft,
+  isReportUntouched,
+  SELECTOR_KEYS,
+  type ReportDraft,
+  type ReportSelectorKey,
+  type ReportVitalStatus,
+} from '../components/execute/ReportCard'
 import ExecuteStepper, { type ExecuteStepRow, type StepPhotoItem } from '../components/execute/ExecuteStepper'
 import PageHeader from '../components/PageHeader'
 import { STEP_NAME } from '../components/today/deck/ServiceCard'
@@ -72,6 +80,18 @@ function getClientId(): string {
 }
 
 const fmtHM = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+
+/** 补缺大批片 4：美容报告卡随 confirmStep 末步提交的附加载荷（与 server VitalInputSchema 对齐） */
+type ReportPayload = {
+  vitals: {
+    key: 'weight' | ReportSelectorKey
+    label: string
+    value: string
+    status: ReportVitalStatus
+    note?: string
+  }[]
+  nextAdvice?: string
+}
 
 function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
   const aid = appointmentId
@@ -284,11 +304,14 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
 
   /* ---------------- confirm ---------------- */
   const [celebrating, setCelebrating] = useState(false)
+  // 补缺大批片 4：第六步美容报告卡草稿（附加段；未动=confirmStep 不带 vitals/nextAdvice）
+  const [reportDraft, setReportDraft] = useState<ReportDraft>(emptyReportDraft)
   const confirmMutation = useMutation({
-    mutationFn: (stepKey: string) =>
+    mutationFn: (vars: { stepKey: string; report?: ReportPayload }) =>
       trpc.serviceStep.confirmStep.mutate({
         appointmentId: aid,
-        stepKey: stepKey as ServiceStepKey,
+        stepKey: vars.stepKey as ServiceStepKey,
+        ...(vars.report ?? {}),
       }),
     onSuccess: (res) => {
       invalidateAll()
@@ -516,6 +539,38 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
     }
   }
 
+  // 补缺大批片 4：仅第六步且报告卡有改动才附 vitals/nextAdvice（未动=server 缺省口径落地）
+  const buildReportPayload = (): ReportPayload | undefined => {
+    if (activeRow?.def.stepKey !== 'confirm' || isReportUntouched(reportDraft)) return undefined
+    const statusLabel: Record<ReportVitalStatus, string> = {
+      normal: EXECUTE_COPY['exec.report.status.normal'],
+      attention: EXECUTE_COPY['exec.report.status.attention'],
+      abnormal: EXECUTE_COPY['exec.report.status.abnormal'],
+    }
+    const vitals: ReportPayload['vitals'] = [
+      // 体重只读回显项随卡入参：label/value 仅满足入参形状，服务端恒以 pets.weight_kg 快照覆盖
+      {
+        key: 'weight',
+        label: EXECUTE_COPY['exec.report.vital.weight'],
+        value: pet?.weightKg != null ? `${pet.weightKg} kg` : EXECUTE_COPY['exec.report.weight.empty'],
+        status: 'normal',
+      },
+      ...SELECTOR_KEYS.map((key) => {
+        const v = reportDraft.vitals[key]
+        const note = v.note.trim()
+        return {
+          key,
+          label: EXECUTE_COPY[`exec.report.vital.${key}` as const],
+          value: statusLabel[v.status],
+          status: v.status,
+          ...(v.status !== 'normal' && note ? { note } : {}),
+        }
+      }),
+    ]
+    const advice = reportDraft.nextAdvice.trim()
+    return { vitals, ...(advice ? { nextAdvice: advice } : {}) }
+  }
+
   const onPrimary = () => {
     if (!activeRow || primaryDisabled) return
     const isBA = activeRow.def.stepKey === 'before_after'
@@ -526,7 +581,7 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
       showToast(`还差 ${isBA ? baLack : lack} 张过程照，拍齐后可确认本步`)
       return
     }
-    confirmMutation.mutate(activeRow.def.stepKey)
+    confirmMutation.mutate({ stepKey: activeRow.def.stepKey, report: buildReportPayload() })
   }
 
   // 规格书 §4 摘要卡 meta=服务·时间·员工（员工=当前登录本人；非本人单已被守卫拦到引导页）
@@ -591,6 +646,18 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
             setViewer({ photos: all, index: Math.max(0, idx) })
           }}
         />
+        {/* 补缺大批片 4：第六步 active 时照片区下方附加「美容报告卡」（完成确认主流程不动，
+            报告随吸底主钮 confirmStep 同事务提交；未动不传参=server 缺省口径） */}
+        {activeRow?.def.stepKey === 'confirm' ? (
+          <div className="px-[18px] pb-5">
+            <ReportCard
+              draft={reportDraft}
+              weightKg={pet?.weightKg}
+              disabled={confirmMutation.isPending}
+              onChange={setReportDraft}
+            />
+          </div>
+        ) : null}
       </div>
 
       {/* 吸底淡金主钮（文案随态；主钮 h≥56 员工端硬性要求；顶部 hairline） */}

@@ -8,6 +8,11 @@
  * - 数据卡 4 张（§八 深色密度位：深棕渐变总览卡）+ 两栏（1.7fr : 1fr，gap 14）：左今日预约表、右待办队列；
  * - 数据：store.dashboardStats + appointment.listForStore（今日区间 / in_boarding 全量，
  *   在店寄养按 serviceName=房型前端聚合，零新接口）；
+ * - 补缺大批片 4：右栏 TodoSection 下方加「客服工单」/「发票申请」两个待办块
+ *   （serviceLoop.ticketListPending / invoiceListPending，enabled=role.canManage，
+ *   clerk 不渲染）；TodoSection 增两行可选计数（props 传入才渲染）；
+ *   ticket.replied / invoice.issued 为 user 频道客户侧事件，商家端无 store 频道
+ *   推送——两查询沿用断线轮询兜底 + 重连全量对齐（invalidateAll 扩两键），不新增订阅；
  * - SSE 沿用 MerchantEventsProvider 全域单连接：appointment.* / boarding.* →
  *   invalidate 三查询；appointment.created → toast「新预约：{宠物} {服务}」；
  * - 断线兜底：SSE 离线时三查询 30s 轮询，重连全量对齐；
@@ -21,14 +26,22 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import MainScaffold, { LemonButton, QuietButton, SearchInput } from '@/components/MainScaffold'
 import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider'
+import PhoneAppealSection from '@/components/dashboard/PhoneAppealSection'
 import StatCards from '@/components/dashboard/StatCards'
 import TodayTimeline from '@/components/dashboard/TodayTimeline'
 import TodoSection from '@/components/dashboard/TodoSection'
+import TicketTodoSection from '@/components/dashboard/TicketTodoSection'
+import InvoiceTodoSection from '@/components/dashboard/InvoiceTodoSection'
 import { useStepProgress } from '@/components/appointments/useStepProgress'
+import { REFUND_REQUEST_PENDING_KEY } from '@/components/cashier/refund'
 import { dc } from '@/copy/dashboard'
+import { useMerchantRole } from '@/lib/roles'
 import {
   IN_BOARDING_QUERY_KEY,
+  INVOICE_PENDING_QUERY_KEY,
+  PHONE_APPEALS_QUERY_KEY,
   STATS_QUERY_KEY,
+  TICKET_PENDING_QUERY_KEY,
   TODAY_QUERY_KEY,
   fullDateLabel,
   openHoursLabel,
@@ -41,6 +54,7 @@ const POLL_FALLBACK_MS = 30_000
 export default function DashboardPage() {
   const { trpc, queryClient } = usePhiliaClient()
   const events = useMerchantEvents()
+  const role = useMerchantRole()
   const navigate = useNavigate()
   const now = new Date()
 
@@ -63,6 +77,24 @@ export default function DashboardPage() {
     refetchInterval: events.connected ? false : POLL_FALLBACK_MS,
   })
 
+  // 客户退款申请待办角标（批次 C5：listPending 独立查询挂 TodoSection 行；
+  // stats 聚合不含此项——报备口径内独立查询方案；clerk 无读口不查）
+  const refundRequestQ = useQuery({
+    queryKey: REFUND_REQUEST_PENDING_KEY,
+    queryFn: () => trpc.refundRequest.listPending.query(),
+    enabled: role.canManage,
+    refetchInterval: events.connected ? false : POLL_FALLBACK_MS,
+  })
+
+  // 换绑申诉待审队列（批次 R13b；merchantManagerProcedure 硬闸——clerk enabled 关闸不发查询，
+  // 待办块同 role.canManage 不渲染；SSE 无申诉事件类型，断线 30s 轮询兜底照既有三查询模式）
+  const appealQuery = useQuery({
+    queryKey: PHONE_APPEALS_QUERY_KEY,
+    queryFn: () => trpc.authSecurity.listPhoneAppeals.query(),
+    enabled: role.canManage,
+    refetchInterval: events.connected ? false : POLL_FALLBACK_MS,
+  })
+
   // 门店营业时段（auth.me 返回完整 store 行；独立键，不与 useMe 的镜像结构互相覆盖）
   const meQuery = useQuery({
     queryKey: ['auth', 'me', 'full'],
@@ -71,10 +103,29 @@ export default function DashboardPage() {
   })
   const openHours = meQuery.data?.store?.openHours
 
+  // 补缺大批片 4：客服工单 / 发票申请待办（本店 owner|manager 读口，clerk 不发起）
+  const ticketQuery = useQuery({
+    queryKey: TICKET_PENDING_QUERY_KEY,
+    queryFn: () => trpc.serviceLoop.ticketListPending.query(),
+    enabled: role.canManage,
+    refetchInterval: events.connected ? false : POLL_FALLBACK_MS,
+  })
+  const invoiceQuery = useQuery({
+    queryKey: INVOICE_PENDING_QUERY_KEY,
+    queryFn: () => trpc.serviceLoop.invoiceListPending.query(),
+    enabled: role.canManage,
+    refetchInterval: events.connected ? false : POLL_FALLBACK_MS,
+  })
+
   const invalidateAll = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: STATS_QUERY_KEY })
     void queryClient.invalidateQueries({ queryKey: TODAY_QUERY_KEY })
     void queryClient.invalidateQueries({ queryKey: IN_BOARDING_QUERY_KEY })
+    void queryClient.invalidateQueries({ queryKey: REFUND_REQUEST_PENDING_KEY })
+    // 补缺大批片 4：重连全量对齐覆盖两待办块（无 store 频道事件，靠此追上）
+    void queryClient.invalidateQueries({ queryKey: TICKET_PENDING_QUERY_KEY })
+    void queryClient.invalidateQueries({ queryKey: INVOICE_PENDING_QUERY_KEY })
+    void queryClient.invalidateQueries({ queryKey: PHONE_APPEALS_QUERY_KEY })
   }, [queryClient])
 
   // SSE：预约生命周期事件 → 联动刷新；新预约到达 toast
@@ -105,6 +156,9 @@ export default function DashboardPage() {
           case EventType.CashierBillHeld:
           case EventType.CashierBillSettled:
           case EventType.CashierBillVoided:
+          // 批次 C5：客户退款申请批准 → 待办角标对齐（shared EventType 常量同步属跨包改动，
+          // 本批范围=apps/merchant 暂以字面值对齐，已报备）
+          case 'refundRequest.approved':
             invalidateAll()
             break
           default:
@@ -175,15 +229,39 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* 两栏：左今日预约表（1.7fr）右待办队列（1fr），gap 14 */}
+      {/* 两栏：左今日预约表（1.7fr）右待办队列（1fr），gap 14；批次 R13b 右栏叠申诉待办块 */}
       <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.7fr_1fr]">
         <TodayTimeline items={todayQuery.data ?? []} loading={todayQuery.isPending} stepProgress={stepProgress} />
-        <TodoSection
-          stats={statsQuery.data}
-          todayItems={todayQuery.data}
-          boardingItems={boardingQuery.data}
-          now={now}
-        />
+        <div className="flex flex-col gap-3.5">
+          <TodoSection
+            stats={statsQuery.data}
+            todayItems={todayQuery.data}
+            boardingItems={boardingQuery.data}
+            now={now}
+            refundRequests={role.canManage ? (refundRequestQ.data ?? []) : undefined}
+            ticketCount={role.canManage ? ticketQuery.data?.length : undefined}
+            invoiceCount={role.canManage ? invoiceQuery.data?.length : undefined}
+            appealCount={role.canManage ? (appealQuery.data?.items.length ?? 0) : undefined}
+          />
+          {role.canManage ? <PhoneAppealSection items={appealQuery.data?.items ?? []} /> : null}
+          {/* 补缺大批片 4：两个待办块（clerk 不渲染；空态块内自处理不渲染） */}
+          {role.canManage && (
+            <>
+              <TicketTodoSection
+                items={ticketQuery.data}
+                loading={ticketQuery.isPending}
+                error={ticketQuery.isError}
+                onRetry={() => void ticketQuery.refetch()}
+              />
+              <InvoiceTodoSection
+                items={invoiceQuery.data}
+                loading={invoiceQuery.isPending}
+                error={invoiceQuery.isError}
+                onRetry={() => void invoiceQuery.refetch()}
+              />
+            </>
+          )}
+        </div>
       </div>
     </MainScaffold>
   )

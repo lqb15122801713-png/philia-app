@@ -56,11 +56,23 @@ export const EventType = {
   RefundSettled:         'refund.settled',          // 实退完成登记 → store
   RefundRejected:        'refund.rejected',         // 退款申请驳回（仅店主） → store
   RefundMonthExported:   'refund.monthExported',    // 退款月表导出审计（仅老板） → store
+  // 批次 C5 客户退款申请（客户端申请 → 商家审批缝；packages/shared 由补缺大批片 1 顺手收编同步）
+  RefundRequestSubmitted: 'refundRequest.submitted', // 客户退款申请提交（补缺大批片 1 补发） → store
+  RefundRequestApproved: 'refundRequest.approved',  // 客户退款申请批准（已生成 R12 退款单/商城售后） → store + user
   // 批次 R11a 会员前置批（双端同步）
-  MembershipOpened:      'membership.opened',       // 售卡/微光开档 → user + store
+  MembershipOpened:      'membership.opened',       // 售卡/微光开档/线上开通兑付 → user + store
   MembershipRenewed:     'membership.renewed',      // 续费解冻 → user
   MembershipCancelled:   'membership.cancelled',    // 退会（折算+清零留痕） → user + store
+  // 补缺-3（46 号档+PD-07）：期内升档成交 → user（换档预约/取消走 membership_events 留痕，不发 SSE）
+  MembershipUpgraded:    'membership.upgraded',     // 升档补差成交 → user
   RebateSettled:         'rebate.settled',          // 回馈金月度到账批次 → store
+  // 补缺大批片 4（服务闭环：证书/报告/工单/发票；本片范围=server/，packages/shared 同步留客户端批）
+  CertificateReady:      'certificate.ready',       // 安心证书生成 → user（客户）
+  ReportReady:           'report.ready',            // 美容报告生成 → user（客户）
+  TicketReplied:         'ticket.replied',          // 客服工单被回复 → user（客户）
+  InvoiceIssued:         'invoice.issued',          // 发票登记开出 → user（客户）
+  // 批次 6 补缺大批 · server 侧支付骨架
+  PayOrderClosed:        'pay.orderClosed',         // 支付单超时关单（sweeper/懒超时） → user
 } as const;
 
 export type EventTypeValue = (typeof EventType)[keyof typeof EventType];

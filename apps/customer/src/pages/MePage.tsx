@@ -5,103 +5,32 @@
  * + 订单五格（白卡五列）+ 功能网格一层（4 列×2，禁多层卡片堆叠）。
  *
  * 槽位置灰（PD-15 V1.1 三规：不上数不上假件 + 注记 + data-testid）：
- * - 今年已省=「——」（省钱口径未冻结前不上数字；口径方案产品侧出）；
- * - 退款售后（orderrow）/ 服务相册 / 优惠券 / 常用地址 / 小棉花客服（grid8）=置灰槽位；
+ * - 今年已省：补缺批片 3 已点亮（mySavings 真值 + 构成明面弹层，testid me-saved-slot 保留）；
+ * - 退款售后（orderrow）/ 优惠券 / 常用地址（grid8）=置灰槽位；
+ * - 补缺大批片 4 点亮：服务相册（→/philia/moments）/ 小棉花客服（→/support/new），
+ *   testid 原值保留（slot-gallery / slot-concierge）；退款售后=片 1 挂接口，本片不动；
  * 落地件：档章/回馈金余额/续费倒计时（membership.my 真值）/会员码 qrrow/订单五态入口/
- * 宠物档案/寄养预约/设置（退出登录入口保留件）。
+ * 宠物档案/寄养预约/设置（补缺大批片 2：设置钮改导航 /me/settings 独立设置页，
+ * 退出登录收进设置页——LogoutConfirmDialog 移用 components/account，逻辑零改动）。
  *
  * 功能入口保全：商城订单=商城域 /mall/orders 入口在案（M-01）；旧 EntryList 六行
  * 已由 orderrow+grid8 全量承接（预约/会员中心/会员卡/宠物/相册槽位）。
  */
 
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { getApiBase, logout, useMe, usePhiliaClient } from '@philia/shared'
+import { Link } from 'react-router-dom'
+import { useMe, usePhiliaClient } from '@philia/shared'
 import { fenToYuan } from '@/components/booking/format'
+import { sl } from '@/copy/serviceloop'
+import { mc } from '../components/member/copy'
+import { SavingsSheet, yuanOf, type SavingsData } from '../components/member/v2'
+import { ntf } from '@/copy/notify'
 
 const DAY_MS = 86_400_000
 
 /** 槽位置灰注记（PD-15 V1.1 三规②：UX 语感=克制高级，不写「功能缺失」） */
 const SLOT_NOTE = '即将点亮'
-
-/** 轻量 toast（本页自带，退出失败提示用） */
-function useMeToast(durationMs = 3200) {
-  const [msg, setMsg] = useState<{ id: number; text: string } | null>(null)
-  const showToast = useCallback((text: string) => setMsg({ id: Date.now(), text }), [])
-  useEffect(() => {
-    if (!msg) return
-    const t = window.setTimeout(() => setMsg(null), durationMs)
-    return () => window.clearTimeout(t)
-  }, [msg, durationMs])
-  const toastEl = msg ? (
-    <div
-      key={msg.id}
-      role="alert"
-      className="fixed left-1/2 top-5 z-toast max-w-[86vw] -translate-x-1/2 rounded-full bg-[#2E2318] px-4 py-2.5 text-body-sm text-[#F2DFA6] shadow-elevated"
-    >
-      {msg.text}
-    </div>
-  ) : null
-  return { toastEl, showToast }
-}
-
-/** 退出登录确认弹层（功能保留件；片 2 弹层核查：可点遮罩既有，补滚动锁——
-    居中确认件非底部弹层，§4.5 抓握手柄不适用，登记） */
-function LogoutConfirmDialog({
-  pending,
-  onCancel,
-  onConfirm,
-}: {
-  pending: boolean
-  onCancel: () => void
-  onConfirm: () => void
-}) {
-  /* 滚动锁：弹层挂载期间锁底层 body（调用方条件挂载） */
-  useEffect(() => {
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = prev
-    }
-  }, [])
-
-  return (
-    <div
-      className="fixed inset-0 z-modal flex items-center justify-center bg-ink/40 px-8"
-      onClick={onCancel}
-      role="dialog"
-      aria-label="退出登录确认"
-    >
-      <div
-        className="w-full max-w-sm rounded-panel bg-card p-5 shadow-elevated"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <p className="text-title">退出登录？</p>
-        <p className="mt-2 text-body-sm text-ink-secondary">退出后需要重新登录才能继续使用菲丽亚。</p>
-        <div className="mt-5 flex gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={pending}
-            className="flex-1 rounded-full border border-line py-2.5 text-body-sm text-ink-secondary"
-          >
-            取消
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={pending}
-            data-testid="me-logout-confirm"
-            className="flex-1 rounded-full bg-danger py-2.5 text-body-sm text-destructive-foreground transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
-          >
-            {pending ? '正在退出…' : '退出登录'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 /* 定稿线图标（§五：24 网格 stroke 1.55 round；同屏同宽） */
 const I = {
@@ -118,15 +47,14 @@ const I = {
   pin: <svg viewBox="0 0 24 24"><path d="M12 21s-7-5.5-7-11a7 7 0 0114 0c0 5.5-7 11-7 11z" /><circle cx="12" cy="10" r="2.4" /></svg>,
   cotton: <svg viewBox="0 0 24 24"><path d="M5 18a7 7 0 0114 0" /><circle cx="12" cy="7" r="3" /></svg>,
   gear: <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" /><path d="M19 12a7 7 0 01-.2 1.6l2 1.5-2 3.4-2.3-1a7 7 0 01-2.8 1.7L13.4 21h-2.8l-.3-2.5a7 7 0 01-2.8-1.6l-2.3 1-2-3.4 2-1.5A7 7 0 015 12c0-.6.1-1.1.2-1.6l-2-1.5 2-3.4 2.3 1a7 7 0 012.8-1.7L10.6 3h2.8l.3 2.5a7 7 0 012.8 1.6l2.3-1 2 3.4-2 1.5c.1.5.2 1 .2 1.6z" /></svg>,
+  bell: <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9a6 6 0 0112 0c0 5 2 6 2 6H4s2-1 2-6" /><path d="M10 19a2 2 0 004 0" /></svg>,
 }
 
 export default function MePage() {
-  const navigate = useNavigate()
-  const { trpc, queryClient } = usePhiliaClient()
+  const { trpc } = usePhiliaClient()
   const { user } = useMe()
-  const { toastEl, showToast } = useMeToast()
-  const [confirmOpen, setConfirmOpen] = useState(false)
-  const [logoutPending, setLogoutPending] = useState(false)
+  /* 补缺批片 3：me-saved-slot 点亮——今年已省真值（mySavings）+ 构成明面弹层 */
+  const [savedOpen, setSavedOpen] = useState(false)
 
   const meRawQ = useQuery({
     queryKey: ['auth', 'me', 'raw'],
@@ -145,6 +73,22 @@ export default function MePage() {
     queryFn: () => trpc.pet.list.query(),
     enabled: !!user,
   })
+  /* 补缺批片 3：今年已省双源聚合（customer 本人；非会员返回零值口径） */
+  const savingsQ = useQuery({
+    queryKey: ['membership', 'mySavings'],
+    queryFn: () => trpc.membership.mySavings.query(),
+    enabled: !!user,
+    staleTime: 60_000,
+  })
+  const savings = (savingsQ.data ?? null) as SavingsData | null
+  /* 未读角标（补缺批片 5 站内信）：push.unreadCount，30s 轮询兜底（与首页同 queryKey 缓存共享） */
+  const unreadQ = useQuery({
+    queryKey: ['push', 'unreadCount'],
+    queryFn: () => trpc.push.unreadCount.query(),
+    enabled: !!user,
+    refetchInterval: 30_000,
+  })
+  const unreadTotal = unreadQ.data?.total ?? 0
 
   const nickname = meRawQ.data?.user?.nickname ?? '铲屎官'
   const avatarUrl = meRawQ.data?.user?.avatarUrl ?? null
@@ -158,19 +102,6 @@ export default function MePage() {
     : null
   const petCount = (petsQ.data ?? []).length
   const firstPetName = (petsQ.data ?? [])[0]?.name ?? null
-
-  const doLogout = async () => {
-    setLogoutPending(true)
-    try {
-      await logout(getApiBase())
-      queryClient.clear()
-      navigate('/dev-login', { replace: true })
-    } catch (err) {
-      setLogoutPending(false)
-      setConfirmOpen(false)
-      showToast(err instanceof Error ? err.message : '退出失败，请稍后再试')
-    }
-  }
 
   return (
     <div className="pb-28">
@@ -202,10 +133,17 @@ export default function MePage() {
             ) : null}
           </div>
           <div className="nums">
-            {/* 今年已省=槽位置灰不上数（PD-15 V1.1 槽位 1：省钱口径未冻结前「——」） */}
-            <div className="dim" data-testid="me-saved-slot">
-              <div className="v">——</div>
-              <div className="k">今年已省 · {SLOT_NOTE}</div>
+            {/* 补缺批片 3：今年已省槽位点亮——「——」换 mySavings.totalFen 真值，注记换
+                「构成明面」，点按=构成弹层；testid me-saved-slot 原值保留 */}
+            <div
+              className="dim"
+              data-testid="me-saved-slot"
+              role="button"
+              style={{ cursor: 'pointer' }}
+              onClick={() => setSavedOpen(true)}
+            >
+              <div className="v">{savings ? `¥${yuanOf(savings.totalFen)}` : '——'}</div>
+              <div className="k">{mc('saved.slotTitle')} · {mc('saved.meSlotNote')}</div>
             </div>
             <div data-testid="me-rebate-cell">
               <div className="v">{fenToYuan(rebateBalance)}</div>
@@ -232,6 +170,22 @@ export default function MePage() {
           </Link>
         </section>
 
+        {/* 补缺批片 5 站内信：消息行（身份卡区下，带未读点→/notifications） */}
+        <Link
+          to="/notifications"
+          data-testid="me-notify-entry"
+          className="mt-3 flex items-center gap-3 rounded-card bg-card px-4 py-3.5 text-body-sm shadow-card transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+        >
+          <span className="relative grid h-8 w-8 shrink-0 place-items-center rounded-full bg-sunken text-brand-secondary" aria-hidden="true">
+            {I.bell}
+            {unreadTotal > 0 ? (
+              <span data-testid="me-notify-dot" className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-brand-primary" />
+            ) : null}
+          </span>
+          <span className="min-w-0 flex-1 font-semibold text-ink">{ntf('ntf.title')}</span>
+          <span className="shrink-0 text-ink-secondary" aria-hidden="true">›</span>
+        </Link>
+
         {/* 2. 订单五格（五态入口；退款售后=槽位置灰 PD-15 V1.1 槽位 10） */}
         <nav className="me2-orderrow" data-testid="me-orderrow" aria-label="订单五态">
           <Link to="/appointments?tab=confirmed" className="o">{I.calendar}待到店</Link>
@@ -247,26 +201,21 @@ export default function MePage() {
         {/* 3. 功能网格（4 列×2 一层；置灰四件=PD-15 V1.1 槽位 2/3/4/11） */}
         <nav className="me2-grid8" data-testid="me-grid8" aria-label="功能网格">
           <Link to="/philia/pets" className="g">{I.petDoc}<div className="t">宠物档案<small>{firstPetName ?? (petCount > 0 ? `${petCount} 只` : '去建档')}</small></div></Link>
-          <span className="g slot" data-testid="slot-gallery" aria-disabled="true">{I.album}<div className="t">服务相册<small>{SLOT_NOTE}</small></div></span>
+          {/* 补缺大批片 4：服务相册点亮（testid 原值保留，置灰样式+「即将点亮」注记摘除） */}
+          <Link to="/philia/moments" className="g" data-testid="slot-gallery">{I.album}<div className="t">{sl('album.meEntryTitle')}<small>{sl('album.meEntrySub')}</small></div></Link>
           <Link to="/member/rebate" className="g">{I.rebate}<div className="t">回馈金账本<small>{fenToYuan(rebateBalance)}</small></div></Link>
           <Link to="/booking/boarding" className="g">{I.home}<div className="t">寄养预约<small>按晚</small></div></Link>
           <span className="g slot" data-testid="slot-coupons" aria-disabled="true">{I.coupon}<div className="t">优惠券<small>{SLOT_NOTE}</small></div></span>
           <span className="g slot" data-testid="slot-address" aria-disabled="true">{I.pin}<div className="t">常用地址<small>{SLOT_NOTE}</small></div></span>
-          <span className="g slot" data-testid="slot-concierge" aria-disabled="true">{I.cotton}<div className="t">小棉花<small>{SLOT_NOTE}</small></div></span>
-          <button type="button" className="g" data-testid="me-settings" onClick={() => setConfirmOpen(true)}>
-            {I.gear}<div className="t">设置<small>账号 · 退出</small></div>
-          </button>
+          {/* 补缺大批片 4：小棉花客服点亮（testid 原值保留） */}
+          <Link to="/support/new" className="g" data-testid="slot-concierge">{I.cotton}<div className="t">{sl('ticket.meEntryTitle')}<small>{sl('ticket.meEntrySub')}</small></div></Link>
+          <Link to="/me/settings" className="g" data-testid="me-settings">
+            {I.gear}<div className="t">设置<small>账号 · 安全</small></div>
+          </Link>
         </nav>
       </div>
-
-      {confirmOpen ? (
-        <LogoutConfirmDialog
-          pending={logoutPending}
-          onCancel={() => setConfirmOpen(false)}
-          onConfirm={() => void doLogout()}
-        />
-      ) : null}
-      {toastEl}
+      {/* 补缺批片 3：今年已省构成明面弹层（与 A-3 账区行同件 SavingsSheet） */}
+      <SavingsSheet open={savedOpen} onClose={() => setSavedOpen(false)} savings={savings} />
     </div>
   )
 }

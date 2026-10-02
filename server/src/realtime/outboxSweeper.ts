@@ -16,6 +16,7 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { and, eq, inArray, lt } from 'drizzle-orm';
 import { db, schema } from '../db';
+import { closeTimeoutPayOrders } from '../routers/pay';
 import { broadcastNow, emitEvent } from './bus';
 import { EventType, toEnvelope } from './events';
 import * as hub from './hub';
@@ -143,16 +144,18 @@ export async function emitBoardingOverdue(
   return emitted;
 }
 
-/** 启动后台清扫（默认重投 30s / 归档每日 / 超期检查 30min）。返回停止函数。 */
+/** 启动后台清扫（默认重投 30s / 归档每日 / 超期检查 30min / 支付超时关单 60s）。返回停止函数。 */
 export function startOutboxSweeper(opts?: {
   sweepIntervalMs?: number;
   archiveIntervalMs?: number;
   overdueIntervalMs?: number;
+  paySweepIntervalMs?: number;
   archiveFile?: string;
 }): { stop(): void } {
   const sweepIntervalMs = opts?.sweepIntervalMs ?? 30_000;
   const archiveIntervalMs = opts?.archiveIntervalMs ?? 24 * 3600 * 1000;
   const overdueIntervalMs = opts?.overdueIntervalMs ?? 30 * 60 * 1000;
+  const paySweepIntervalMs = opts?.paySweepIntervalMs ?? 60_000;
 
   const sweepTimer = setInterval(() => {
     sweepOnce().catch((err) => console.error('[realtime] outbox 重投失败:', err));
@@ -173,11 +176,20 @@ export function startOutboxSweeper(opts?: {
   }, overdueIntervalMs);
   overdueTimer.unref?.();
 
+  // 批次 6 补缺大批：支付单超时关单（pay_timeout_minutes 端口，创建时快照进 timeout_at）——
+  // 启动即扫一次，之后每 60s 把过点 created/paying 单事务置 closed + SSE user 频道 pay.orderClosed
+  closeTimeoutPayOrders().catch((err) => console.error('[pay] 超时关单扫描失败:', err));
+  const paySweepTimer = setInterval(() => {
+    closeTimeoutPayOrders().catch((err) => console.error('[pay] 超时关单扫描失败:', err));
+  }, paySweepIntervalMs);
+  paySweepTimer.unref?.();
+
   return {
     stop() {
       clearInterval(sweepTimer);
       clearInterval(archiveTimer);
       clearInterval(overdueTimer);
+      clearInterval(paySweepTimer);
     },
   };
 }

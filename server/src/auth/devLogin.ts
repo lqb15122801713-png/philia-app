@@ -98,6 +98,11 @@ authHttpRoutes.post('/api/auth/dev-login', async (c) => {
       .where(eq(schema.users.phone, phone))
       .limit(1)
       .then((r) => r[0]);
+    // 批次 R13a 软删闸：命中已注销账号明文拒（防御性——注销审批已把 phone 改写为
+    // `_deact_<uid>_<原号>` 释放，正常不会命中；同号重新注册=新档互不可见）
+    if (user?.deactivatedAt) {
+      return c.json({ ok: false, error: 'ACCOUNT_DEACTIVATED', message: '该账号已注销，如有疑问请联系门店' }, 403);
+    }
     if (!user) {
       await db.insert(schema.users).values({
         kimiId: `phone:${phone}`,
@@ -130,6 +135,11 @@ authHttpRoutes.post('/api/auth/dev-login', async (c) => {
     .where(eq(schema.users.id, body.data.userId!))
     .limit(1)
     .then((r) => r[0]);
+
+  // 批次 R13a 软删闸：已注销账号明文拒（先于种子前缀校验，注销语义优先）
+  if (user?.deactivatedAt) {
+    return c.json({ ok: false, error: 'ACCOUNT_DEACTIVATED', message: '该账号已注销，如有疑问请联系门店' }, 403);
+  }
 
   // 安全约束：仅允许种子用户（kimi_id 以 seed_ 开头），防止 dev 端点被用于登录任意账号
   if (!user || !user.kimiId.startsWith('seed_')) {

@@ -9,6 +9,8 @@
  *   冻结灰签/临期（≤30 天）续费钮逻辑不变；forUser 加载期/失败回落会话缓存
  *   （售卡/续费成交回写），非会员（membership=null）回落无档位签的原引导；
  * - 会员区常驻「售卡/开卡」入口（售卡面板：新客手机号建档旁路亦可）；
+ * - 补缺-3：nextPlanKey 非空 → 「已预约下期：{档}」淡金签（mono，只读展示，
+ *   forUser.membership 透出）；升档代办走售卡面板「升级补差」页签；
  * - 未命中 = 安静灰字「未找到会员，按散客结账」+ 建档开卡入口（R11a §四.6）；
  *   检索失败原文 toast。
  */
@@ -179,6 +181,15 @@ export default function MemberSearch({
                 >
                   回馈金 · 余 ¥{(rebate.balanceFen / 100).toFixed(2)}
                   {rebate.pendingFen > 0 ? `（+在途 ¥${(rebate.pendingFen / 100).toFixed(2)}）` : ''}
+                </span>
+              ) : null}
+              {/* 补缺-3：到期换档预约可视（forUser.membership.nextPlanKey 透出；mono+淡金签，只读展示） */}
+              {effMembership?.nextPlanKey ? (
+                <span
+                  className="ml-1.5 inline-flex items-center rounded-full bg-brand-primary px-2.5 py-[3px] font-number tabular-nums text-caption-xs text-ink"
+                  data-testid="cashier-member-next-plan"
+                >
+                  {cc('cashier.memberNextPlanBadge', { plan: planShortLabel(effMembership.nextPlanKey) })}
                 </span>
               ) : null}
             </div>

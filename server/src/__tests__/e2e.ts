@@ -88,6 +88,92 @@
  *      打回② 退会后结算日不到账：C 商品单 grant（期次移位至未结算期）→ cancel（作废
  *      未到账 clear 留痕行「退会作废未到账回馈金 258 分」）→ settleMonthly 合成到点 →
  *      C 余额不变/grant 未回标/批次单 granted_count 不含退会者，D 对照正常到账
+ *
+ * 批次 C5（客户退款申请实体+审批缝）段：
+ *   50. 客户端退款申请全链路（实体+端口五键+审批缝复用 R12 内核）：
+ *      50.1 商城单申请创建（received）+幂等重复提交 idempotent=true + configView 透出；
+ *      50.2 越权：客户 A 对客户 B 的单 create→403 / getById 他人单→403 / listMine 隔离；
+ *      50.3 时限闸（超 30 天窗）+ 原因闸（非法 reasonCode）+ 开关闸（enabled=false 拒后复原）；
+ *      50.4 撤回：submitted 可撤；approved（批准直通 refunded）后撤回拒；
+ *      50.5 驳回：reason 必填 + 客户端 getById 可见驳回理由 + listPending 待办进出；
+ *      50.6 批准联动 R12+C5-01 坐实：含回馈金 grant 的到店商品单 → 申请 → 店长 approve
+ *           → refund_bills executed 行 + refundBillNo 挂接 + rebateClawbackFen=258>0
+ *           + rebate_logs clawback −258 负向行落账 + 申请单 status='refunded'；
+ *      50.7 settleActual 联动：50.6 退款单实退登记 → 申请单='settled'+timeline 追加
+ *      50.8（补缺大批片 1 补缝）：appointment.get 返回体 cashierBillId 字段存在且
+ *          对到店已结账单非空；refundRequest.submitted SSE 到店频道；重购留痕
+ *          reappliedAfterDays=本次 createdAt−上次 settled 落写天数（只留痕不拦截）。
+ *      （50 全段挂 §49c 移位铁律之前：凡生成退款单的断言必须先于 createdAt 移位）。
+ *
+ * 批次 R13a（账号安全大片 2 · server 侧）段（51.x 续号挂尾，注销/换绑不产生退款单，
+ * 不受段尾移位铁律约束）：
+ *   51.1 sendCode 限流（60s 一码）+ 原号不一致拒 + beta devCode 回显
+ *   51.2 changePhone 双码流（错码拒/换绑成功/会话零丢失/phone_change_logs 'self'）
+ *   51.3 换绑申诉全链（提交→待审队列→approve 新号生效/旧会话照旧有效/logs
+ *        'assisted'/reject 强制 note 客户端可见）
+ *   51.4 注销前置阻断 + 勾选缺项拒 + approve 软注销全联动（会话 401/登录明文拒/
+ *        phone suffix 释放同号重新注册互不可见/回馈金清零留痕/会员 cancelled 不退折算/
+ *        pets 软删标记）+ reject 路径可见
+ *   51.5 registerDevice upsert 幂等 + listDevices 换绑留痕透出
+ *   51.6 已注销用户 SSE/业务接口 401（middleware 软删闸实证）
+ *
+ * 补缺大批片 3（会员升级/到期换档/防滥用/已省 · 46 号档+PD-07 冻结口径）段：
+ *   52.1 升档差价精确到分（萤火 199 剩 3 整月升暖阳 599 → 3×(59900−19900)÷12=10000 分=¥100.00）+
+ *        多宠附加行恒 0 透出 + 微光升档=新购全价口径（附加按现 petCount 重算）
+ *   52.2 升档原子事务：paySegments 缺额 → 整单回滚（memberships/收银单/membership_events/outbox 零写入）
+ *   52.3 期内降级明文拒「会员期内不降级，可在到期前 30 天预约下期档位」+ 同档重放幂等
+ *   52.4 到期换档：窗口外拒 / 窗口内预约落痕+my 透出 / 重复预约覆盖幂等 / 取消置空 /
+ *        到期 renew 按预约档全价收款+切档+置空+executed 留痕+执行幂等
+ *   52.5 防滥用两件：退会 90 天内重购 / 累计退会≥2 再购 → cancel_rebuy_note 留痕（不拦截放行）
+ *   52.6 mySavings 双源合计（已入账 grant 258 + 服务折扣 1056 = 1314 精确到分）
+ *   52.7 升档后在途回馈金不重算 + 旧档回馈金余额零动作
+ *   挂尾口径：52.x 续号挂尾（50/51 段编号属他批并行施工预留，本文件现序尾段为 49c）；
+ *   52.5 含 cancel 会生成 refund_bills，故整段挂 49c 移位段之前——段尾铁律：
+ *   createdAt 移位后不得再发生成退款单的动作（防 genRefundNo 撞号）。
+ *
+ * 补缺大批片 4（服务闭环 server 侧：相册聚合/证书+报告生成链/客服工单/发票申请）段：
+ *   （与片 1 同号撞号，合并消解改号 50.x→53.x，断言零删改）
+ *   53.1 证书生成：有 before/after 图单完成 → service_certificates 落行+payload 齐+
+ *      首读 deliveredAt 幂等置位；无图单（寄养）→ 不生成 + certificateFor 404 明文
+ *   53.2 报告生成：confirmStep 末步带 vitals（一项 abnormal）→ 快照+abnormalText 拼句+
+ *      体重=pets.weight_kg 服务端快照；无 vitals（主单）=各项 normal「本次未记录」；
+ *      首读 deliveredAt 幂等；certificate.ready/report.ready 落 outbox（payload 用 aid 键）
+ *   53.3 albumFeed：多单一次聚合返回（N+1 消除结构断言）+ in_service 单仅 done 步
+ *      照片透出 + 默认 limit=12 截顶
+ *   53.4 工单流：create（联系方式回显默认=users.phone）→店长 listPending→reply→
+ *      客户端 ticketGet 可见 replyText+status=replied+ticket.replied 落 outbox
+ *   53.5 发票流：已付闸（未收款预约拒）/金额=实付重算（传入假金额被忽略）/企业抬头
+ *      缺税号拒/同单在途幂等/merchant register 发票号→客户端可见 issued+invoiceNo+
+ *      invoice.issued 落 outbox
+ *   53.6 权限：他人证书/报告/工单/发票 403×4
+ *   53.7 serviceHours 端口读出（config.save 改值复读出=端口可调实证；改后还原）
+ *
+ * 补缺大批片 5（站内信分类 + 订阅退订 + 端点补齐 + 事件挂接槽位）段：
+ *   （与片 1 同号撞号，合并消解改号 50.x→54.x，断言零删改）
+ *   54.1 既有真事件全链：emitEvent（appointment.completed）→ notifications 落行
+ *      category='service' + listNotifications 可见（行带 category）+ unreadCount=1
+ *   54.2 已读幂等（markRead 重复调零副作用）+ markAllRead（幂等）+
+ *      deleteNotification 仅本人（他人 403 / 本人删后行消失）
+ *   54.3 分类：order.paid→trade / membership.opened→account / marketing.promo→marketing
+ *      落库 + list 按 category 过滤
+ *   54.4 订阅：marketing 置 0 → 营销事件不落该用户（outbox 仍写）/ trade·service 恒落；
+ *      非营销类置 0 硬拒明文「交易/服务/账户通知为保障服务履约不可关闭」；恢复 1 幂等
+ *   54.5 挂接槽位：certificate.ready / report.ready / ticket.replied /
+ *      refundRequest.approved / refundRequest.rejected / invoice.issued 直发 emitEvent →
+ *      通知落库文案/link/category 正确（片 1/片 4 合并后自动真实触发，本断言=槽位有效性实证）
+ *
+ * 批次 6 补缺大批（server 侧支付骨架）段（施工令全清单；移位铁律：不得对
+ * pay_orders.createdAt 移位——payNo 日序计号依赖，本批夹具只动 timeout_at）：
+ *   （与片 1 同号撞号，合并消解改号 50.x→55.x，断言零删改）
+ *   55.1 createOrder 幂等：同人同档重复创建=idem 返回现状+agreements 三行快照含
+ *       content/version/userSnapshot+金额 server 重算（入参假金额被覆盖）
+ *   55.2 回调全链：mock 签名回调→paid+memberships 落行+重放回调零副作用（幂等）+金额不符 400
+ *   55.3 状态机非法迁移硬拒（closed 单再回调/再支付拒）
+ *   55.4 Mock 四态：success/fail（failed 留痕）/timeout（sweeper 到点置 closed）/
+ *       drop（reconcile 自助补开成功=掉单补偿坐实）
+ *   55.5 退款联动：线上支付单退款→online_original+linkage.payOrderNo 快照+provider.refund 留痕
+ *   55.6 超时关单端口可调（config.save 改 minutes 生效复还原）
+ *   55.7 权限：他人 pay_orders status/reconcile 403
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -2936,6 +3022,591 @@ async function main(): Promise<void> {
     batch49?.grantedCount === 1 && batch49.grantedFen === 258 && (batch49.note ?? '').includes('退会用户跳过 1 行'),
     { count: batch49?.grantedCount, fen: batch49?.grantedFen, note: batch49?.note });
 
+  /* ==================================================================
+   * 批次 C5（客户退款申请实体+审批缝）验收段
+   * 纲：客户端申请实体 → 商家审批缝 → 到店单批准直通 R12 内核（executeRefundCore
+   * 复用，阈值/涉储值闸天然生效）；R12 链路本体零改动（旧断言全绿为证）。
+   * 位置铁律：本段挂 §49c createdAt 移位之前——50.4/50.6 会生成退款单（RB 日序
+   * 单号按 createdAt 计数），移位后生成会撞 UNIQUE（§34/§38 教训同帧）。
+   * ================================================================== */
+  console.log('\n[C5] 50. 客户退款申请：实体+端口+审批缝+R12 联动');
+  interface RefundRequestRowT {
+    id: string; requestNo: string; customerId: string; storeId: string; orderKind: string;
+    billId: string; billNo: string; type: string; reasonCode: string; reasonLabel: string;
+    description: string | null; photoUrls: string[]; amountFen: number;
+    itemsJson: Array<{ itemId: string; label: string; amountFen: number }>;
+    status: string; timelineJson: Array<{ status: string; at: string; note?: string }>;
+    approverId: string | null; approvedAt: Date | null; rejectReason: string | null;
+    refundBillNo: string | null; reappliedAfterDays: number | null;
+  }
+  interface ReqCreateRes { request: RefundRequestRowT; idempotent: boolean }
+  interface ReqApproveRes {
+    request: RefundRequestRowT; refundId: string | null; refundNo: string | null;
+    idempotent: boolean; draft: boolean;
+  }
+
+  /* ---------- 50.1 商城单申请创建（received）+ 幂等 + configView ---------- */
+  console.log('\n[C5] 50.1 商城单申请创建 + 幂等 + configView');
+  const mallOrder50 = await db
+    .insert(schema.orders)
+    .values({
+      orderNo: 'PE2E5000001A',
+      customerId: customerUser!.id,
+      storeId,
+      items: [{ product_id: staple.id, name: staple.name, quantity: 1, price_fen: 12900 }],
+      totalFen: 12900,
+      status: 'received',
+    })
+    .returning()
+    .then((r) => r[0]!);
+  const cfg50 = await trpcQuery<{
+    enabled: boolean; applyWindowDays: number; freeRegretHours: number;
+    reasonOptions: Array<{ code: string; label: string }>; slaHours: number;
+  }>('refundRequest.configView', { cookie: customerCookie });
+  check('C5 50.1 configView 透出端口五键（enabled=true/时限 30 天/反悔 24h/原因枚举 6 码/SLA 24h）',
+    cfg50.enabled === true && cfg50.applyWindowDays === 30 && cfg50.freeRegretHours === 24 &&
+      cfg50.slaHours === 24 && cfg50.reasonOptions.length === 6 &&
+      cfg50.reasonOptions[1]!.label === '商品与描述不符' && cfg50.reasonOptions[5]!.code === 'other',
+    cfg50);
+  const create50 = await trpcMutate<ReqCreateRes>('refundRequest.create', {
+    cookie: customerCookie,
+    input: {
+      orderKind: 'order', billId: mallOrder50.id, type: 'return_refund',
+      reasonCode: 'not_as_described', description: '包装破损，与描述不符',
+    },
+  });
+  check('C5 50.1 商城单（received）申请创建成（RR 日序单号/submitted/全额 12900/原因 label 端口快照）',
+    /^RR-\d{8}-\d{3}$/.test(create50.request.requestNo) && create50.idempotent === false &&
+      create50.request.status === 'submitted' && create50.request.amountFen === 12900 &&
+      create50.request.billNo === 'PE2E5000001A' && create50.request.reasonLabel === '商品与描述不符' &&
+      create50.request.timelineJson.length === 1 && create50.request.timelineJson[0]!.status === 'submitted',
+    create50.request);
+  const create50dup = await trpcMutate<ReqCreateRes>('refundRequest.create', {
+    cookie: customerCookie,
+    input: {
+      orderKind: 'order', billId: mallOrder50.id, type: 'return_refund',
+      reasonCode: 'not_as_described', description: '包装破损，与描述不符',
+    },
+  });
+  const reqRows50 = await db.select().from(schema.refundRequests)
+    .where(and(eq(schema.refundRequests.customerId, customerUser!.id), eq(schema.refundRequests.billId, mallOrder50.id)));
+  check('C5 50.1 幂等：同 (客户,原单) 在途单重复提交 → idempotent=true 返回现状不新建（库内仅 1 行）',
+    create50dup.idempotent === true && create50dup.request.id === create50.request.id && reqRows50.length === 1,
+    { dupId: create50dup.request.id, rows: reqRows50.length });
+
+  /* ---------- 50.2 越权：他人单 create→403 / getById 他人单→403 / listMine 隔离 ---------- */
+  console.log('\n[C5] 50.2 越权负例');
+  const cookieD50 = await (async () => {
+    /* 夹具：sellD 为手机号旁路建档用户（kimiId 非 seed_ 前缀），dev-login 仅允许种子用户
+       （D-16 硬约束）→ 临时库内补 seed_ 前缀 kimiId 再登录（验收语义不变，同 PR-4 mkUser 口径） */
+    await db.update(schema.users).set({ kimiId: 'seed_e2e_customer_d', updatedAt: new Date() })
+      .where(eq(schema.users.id, sellD.membership.userId));
+    return devLogin(sellD.membership.userId);
+  })();
+  const crossCreate = await asErr(trpcMutate('refundRequest.create', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: gBillD.billId, type: 'refund_only', reasonCode: 'wrong_order' },
+  }));
+  check('C5 50.2 客户 A 对客户 B 的到店单 create → 403 FORBIDDEN「非本人单据」',
+    crossCreate instanceof TrpcHttpError && crossCreate.httpStatus === 403 &&
+      crossCreate.code === 'FORBIDDEN' && crossCreate.message.includes('非本人单据'),
+    crossCreate && { code: crossCreate.code, message: crossCreate.message });
+  const crossGet = await asErr(trpcQuery('refundRequest.getById', { cookie: cookieD50, input: { requestId: create50.request.id } }));
+  check('C5 50.2 getById 他人申请单 → 403 FORBIDDEN（驳回理由/时间线不外泄）',
+    crossGet instanceof TrpcHttpError && crossGet.httpStatus === 403 && crossGet.code === 'FORBIDDEN',
+    crossGet && { code: crossGet.code, message: crossGet.message });
+  const listD50 = await trpcQuery<Array<{ id: string }>>('refundRequest.listMine', { cookie: cookieD50 });
+  check('C5 50.2 listMine 仅本人（D 的列表不含客户 A 的申请单）',
+    !listD50.some((r) => r.id === create50.request.id), listD50.length);
+
+  /* ---------- 50.3 时限闸 + 原因闸 + 开关闸 ---------- */
+  console.log('\n[C5] 50.3 时限/原因/开关三闸');
+  const billValid50 = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: customerUser!.id, note: 'e2e C5 有效单（撤回/驳回夹具）' });
+  const billOver50 = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: customerUser!.id, note: 'e2e C5 超时限单' });
+  await db.update(schema.cashierBills).set({ settledAt: new Date(Date.now() - 31 * 24 * 3600 * 1000) })
+    .where(eq(schema.cashierBills.id, billOver50.billId)); // 完成时移位 31 天（>端口 30 天窗）
+  const overWindow = await asErr(trpcMutate('refundRequest.create', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: billOver50.billId, type: 'refund_only', reasonCode: 'wrong_order' },
+  }));
+  check('C5 50.3 时限闸：完成超 30 天 → BAD_REQUEST「已超退款申请时限」',
+    overWindow instanceof TrpcHttpError && overWindow.code === 'BAD_REQUEST' && overWindow.message.includes('已超退款申请时限'),
+    overWindow && { code: overWindow.code, message: overWindow.message });
+  const badReason = await asErr(trpcMutate('refundRequest.create', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: billValid50.billId, type: 'refund_only', reasonCode: 'hacked_reason' },
+  }));
+  check('C5 50.3 原因闸：非法 reasonCode（禁手打）→ BAD_REQUEST「不在可选范围」',
+    badReason instanceof TrpcHttpError && badReason.code === 'BAD_REQUEST' && badReason.message.includes('不在可选范围'),
+    badReason && { code: badReason.code, message: badReason.message });
+  const otherNoDesc = await asErr(trpcMutate('refundRequest.create', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: billValid50.billId, type: 'refund_only', reasonCode: 'other' },
+  }));
+  check('C5 50.3 原因闸：other 缺 description → BAD_REQUEST「请补充说明」',
+    otherNoDesc instanceof TrpcHttpError && otherNoDesc.code === 'BAD_REQUEST' && otherNoDesc.message.includes('补充说明'),
+    otherNoDesc && { code: otherNoDesc.code, message: otherNoDesc.message });
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'refund', changes: [{ ruleKey: 'refund_request_enabled', valueJson: { enabled: false } }] },
+  });
+  const switchOff = await asErr(trpcMutate('refundRequest.create', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: billValid50.billId, type: 'refund_only', reasonCode: 'wrong_order' },
+  }));
+  check('C5 50.3 开关闸：enabled=false → 403 FORBIDDEN「退款申请通道维护中，请到店办理」',
+    switchOff instanceof TrpcHttpError && switchOff.httpStatus === 403 &&
+      switchOff.code === 'FORBIDDEN' && switchOff.message.includes('维护中'),
+    switchOff && { code: switchOff.code, message: switchOff.message });
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'refund', changes: [{ ruleKey: 'refund_request_enabled', valueJson: { enabled: true } }] },
+  }); // 复原（端口改值零改码实证：save 即生效）
+
+  /* ---------- 50.4 撤回：submitted 可撤；approved（直通 refunded）后撤回拒 ---------- */
+  console.log('\n[C5] 50.4 撤回闸');
+  const req504 = await trpcMutate<ReqCreateRes>('refundRequest.create', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: billValid50.billId, type: 'refund_only', reasonCode: 'wrong_order', description: '拍错了' },
+  });
+  check('C5 50.4 前置：到店商品单申请创建成（全额 12900/itemsJson 空=全额档）',
+    req504.request.status === 'submitted' && req504.request.amountFen === 12900 && req504.request.itemsJson.length === 0,
+    req504.request);
+  const cancel504 = await trpcMutate<{ request: RefundRequestRowT; idempotent: boolean }>('refundRequest.cancel', {
+    cookie: customerCookie, input: { requestId: req504.request.id },
+  });
+  check('C5 50.4 submitted 可撤 → cancelled + timeline 追加',
+    cancel504.request.status === 'cancelled' && cancel504.idempotent === false &&
+      cancel504.request.timelineJson.some((t) => t.status === 'cancelled'),
+    cancel504.request.status);
+  const req504b = await trpcMutate<ReqCreateRes>('refundRequest.create', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: billValid50.billId, type: 'refund_only', reasonCode: 'wrong_order', description: '再次申请' },
+  });
+  check('C5 50.4 撤回后可再申请（cancelled 不占在途）', req504b.idempotent === false && req504b.request.id !== req504.request.id,
+    { idem: req504b.idempotent });
+  const approve504 = await trpcMutate<ReqApproveRes>('refundRequest.approve', {
+    cookie: ownerCookie, input: { requestId: req504b.request.id, note: '店主批准（撤回闸夹具）' },
+  });
+  check('C5 50.4 店主批准直通 R12（refunded + refundBillNo 挂接）',
+    approve504.request.status === 'refunded' && !!approve504.refundNo && approve504.request.refundBillNo === approve504.refundNo,
+    { status: approve504.request.status, refundNo: approve504.refundNo });
+  const cancelAfterApprove = await asErr(trpcMutate('refundRequest.cancel', {
+    cookie: customerCookie, input: { requestId: req504b.request.id },
+  }));
+  check('C5 50.4 批准（refunded）后撤回 → BAD_REQUEST「不可撤回」',
+    cancelAfterApprove instanceof TrpcHttpError && cancelAfterApprove.code === 'BAD_REQUEST' &&
+      cancelAfterApprove.message.includes('不可撤回'),
+    cancelAfterApprove && { code: cancelAfterApprove.code, message: cancelAfterApprove.message });
+
+  /* ---------- 50.5 驳回：reason 必填 + 客户端可见 + listPending 待办进出 ---------- */
+  console.log('\n[C5] 50.5 驳回');
+  const bill505 = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: customerUser!.id, note: 'e2e C5 驳回夹具单' });
+  const req505 = await trpcMutate<ReqCreateRes>('refundRequest.create', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: bill505.billId, type: 'refund_only', reasonCode: 'service_unsatisfied' },
+  });
+  const pendingBefore = await trpcQuery<Array<{ id: string; requestNo: string; slaOverdue: boolean; customerNickname: string | null }>>(
+    'refundRequest.listPending', { cookie: managerCookie });
+  check('C5 50.5 listPending 含本店 submitted 申请（SLA 未超期 + 客户昵称透出）',
+    pendingBefore.some((r) => r.id === req505.request.id && r.slaOverdue === false),
+    pendingBefore.map((r) => r.requestNo));
+  const rejectNoReason = await asErr(trpcMutate('refundRequest.reject', {
+    cookie: managerCookie, input: { requestId: req505.request.id, reason: '' },
+  }));
+  check('C5 50.5 驳回强制理由（空 reason → BAD_REQUEST）',
+    rejectNoReason instanceof TrpcHttpError && rejectNoReason.code === 'BAD_REQUEST',
+    rejectNoReason && { code: rejectNoReason.code, message: rejectNoReason.message });
+  const reject505 = await trpcMutate<{ request: RefundRequestRowT; idempotent: boolean }>('refundRequest.reject', {
+    cookie: managerCookie, input: { requestId: req505.request.id, reason: '凭证不全，请补充后重新申请' },
+  });
+  const get505 = await trpcQuery<{ request: RefundRequestRowT }>('refundRequest.getById', {
+    cookie: customerCookie, input: { requestId: req505.request.id },
+  });
+  const pendingAfter = await trpcQuery<Array<{ id: string }>>('refundRequest.listPending', { cookie: managerCookie });
+  check('C5 50.5 驳回 → rejected + 客户端 getById 可见驳回理由 + timeline 留痕 + 待办消失',
+    reject505.request.status === 'rejected' && get505.request.rejectReason === '凭证不全，请补充后重新申请' &&
+      get505.request.timelineJson.some((t) => t.status === 'rejected') &&
+      !pendingAfter.some((r) => r.id === req505.request.id),
+    { status: get505.request.status, rejectReason: get505.request.rejectReason });
+
+  /* ---------- 50.6 批准联动 R12 + C5-01 坐实（含回馈金 grant 的到店商品单） ----------
+   * 夹具复用 R11a 段思路：D=萤火会员，gBillD=12900 现金商品单（grant 258 已到账，
+   * 49b 余额 0→258）；申请全额退 → 店长 approve（12900≤阈值 50000、纯现金不涉储值
+   * →直通）→ R12 六联动落 executed + 回馈金 1:1 扣回。 */
+  console.log('\n[C5] 50.6 批准联动 R12 + C5-01（回馈金扣回坐实）');
+  const req506 = await trpcMutate<ReqCreateRes>('refundRequest.create', {
+    cookie: cookieD50,
+    input: { orderKind: 'appointment', billId: gBillD.billId, type: 'refund_only', reasonCode: 'not_as_described', description: '临期商品' },
+  });
+  check('C5 50.6 D 对本人商品单申请创建成（全额 12900/reappliedAfterDays=null 首次）',
+    req506.request.status === 'submitted' && req506.request.amountFen === 12900 &&
+      req506.request.reappliedAfterDays === null,
+    { amount: req506.request.amountFen, reapplied: req506.request.reappliedAfterDays });
+  const approve506 = await trpcMutate<ReqApproveRes>('refundRequest.approve', {
+    cookie: managerCookie, input: { requestId: req506.request.id, note: '店长批准（≤阈值直通）' },
+  });
+  check('C5 50.6 店长 approve 直通 R12（申请单 refunded + refundBillNo 挂接 + approver=店长本人 + approvedAt 落时）',
+    approve506.idempotent === false && approve506.draft === false &&
+      approve506.request.status === 'refunded' && !!approve506.refundNo &&
+      approve506.request.refundBillNo === approve506.refundNo &&
+      approve506.request.approverId === managerFix.id && approve506.request.approvedAt !== null &&
+      approve506.request.timelineJson.some((t) => t.status === 'approved') &&
+      approve506.request.timelineJson.some((t) => t.status === 'refunded'),
+    { status: approve506.request.status, refundNo: approve506.refundNo, draft: approve506.draft });
+  const rb506 = await db.select().from(schema.refundBills).where(eq(schema.refundBills.refundNo, approve506.refundNo!)).get();
+  check('C5 50.6 R12 退款单落账（executed / type=full / bill_id=原单 / 金额 12900 / reason 含申请单号）',
+    rb506?.status === 'executed' && rb506.type === 'full' && rb506.billId === gBillD.billId &&
+      rb506.amountFen === 12900 && rb506.reason.includes(req506.request.requestNo),
+    rb506 && { status: rb506.status, type: rb506.type, amount: rb506.amountFen, reason: rb506.reason });
+  const linkage506 = (rb506?.linkageJson ?? {}) as { rebateClawbackFen?: number; rebateClawbackMissedFen?: number };
+  const claw506 = (await db.select().from(schema.rebateLogs)
+    .where(and(eq(schema.rebateLogs.type, 'clawback'), eq(schema.rebateLogs.sourceId, approve506.refundNo!))))[0];
+  const accD506 = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, sellD.membership.userId)).get();
+  check('C5-01 坐实：rebateClawbackFen=258>0（已发 258 全量扣回，linkage 填实值）+ clawback 负向行落账（−258，258→0）+ 余额 258→0 不负账',
+    linkage506.rebateClawbackFen === 258 && linkage506.rebateClawbackMissedFen === 0 &&
+      claw506?.deltaFen === -258 && claw506.beforeFen === 258 && claw506.afterFen === 0 &&
+      accD506?.balanceFen === 0,
+    { linkage: linkage506, claw: claw506 && { delta: claw506.deltaFen, before: claw506.beforeFen, after: claw506.afterFen }, balance: accD506?.balanceFen });
+  check('C5 50.6 refundRequest.approved 事件到店频道（SSE，客户端轮询兜底）',
+    (await storeEventsOf('refundRequest.approved', (p) => p.requestNo === req506.request.requestNo)).length === 1,
+    req506.request.requestNo);
+
+  /* ---------- 50.7 settleActual 联动：实退登记 → 申请单 settled ---------- */
+  console.log('\n[C5] 50.7 settleActual 联动');
+  const settle507 = await trpcMutate<{ refund: { status: string }; idempotent: boolean }>('refund.settleActual', {
+    cookie: managerCookie, input: { refundId: approve506.refundId!, note: '现金已退客户（线下原路）' },
+  });
+  const get507 = await trpcQuery<{ request: RefundRequestRowT }>('refundRequest.getById', {
+    cookie: cookieD50, input: { requestId: req506.request.id },
+  });
+  check('C5 50.7 settleActual → 退款单 settled + 申请单联动 settled + timeline 追加（全状态链 submitted→approved→refunded→settled 留痕）',
+    settle507.refund.status === 'settled' && settle507.idempotent === false &&
+      get507.request.status === 'settled' &&
+      ['submitted', 'approved', 'refunded', 'settled'].every((s) => get507.request.timelineJson.some((t) => t.status === s)),
+    { refund: settle507.refund.status, req: get507.request.status, timeline: get507.request.timelineJson.map((t) => t.status) });
+
+  /* ---------- 50.8（补缺大批片 1 补缝）：appointment.get 附 cashierBillId + submitted SSE + 重购留痕 ---------- */
+  console.log('\n[C5] 50.8 appointment.get cashierBillId + submitted SSE + 重购留痕');
+  const get508 = await trpcQuery<{ appointment: { id: string }; cashierBillId: string | null }>(
+    'appointment.get', { cookie: customerCookie, input: { appointmentId: appt3.id } });
+  check('C5 50.8 appointment.get 返回体含 cashierBillId 字段且对到店已结账单非空（appt3→billA，本人单闸既有）',
+    'cashierBillId' in get508 && get508.cashierBillId === billA.billId, get508.cashierBillId);
+  check('C5 50.8 refundRequest.submitted 事件到店频道（50.6 新申请提交已发，幂等返回不发）',
+    (await storeEventsOf('refundRequest.submitted', (p) => p.requestNo === req506.request.requestNo)).length === 1,
+    req506.request.requestNo);
+  /* 重购留痕坐实：夹具直插一笔 10 天前 settled 历史申请（bill505 已驳回单无实退，
+     可退余额仍全额）→ 新申请 reappliedAfterDays=10（只留痕不拦截，照常 submitted） */
+  const fakeSettledAt = new Date(Date.now() - 10 * 24 * 3600 * 1000);
+  await db.insert(schema.refundRequests).values({
+    requestNo: 'RR-FAKE508-001', customerId: customerUser!.id, storeId, orderKind: 'appointment',
+    billId: bill505.billId, billNo: bill505.billNo, type: 'refund_only',
+    reasonCode: 'other', reasonLabel: '其他（请补充说明）', amountFen: 12900,
+    status: 'settled', createdAt: fakeSettledAt, updatedAt: fakeSettledAt,
+  });
+  const req508 = await trpcMutate<ReqCreateRes>('refundRequest.create', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: bill505.billId, type: 'refund_only', reasonCode: 'pet_health' },
+  });
+  check('C5 50.8 重购留痕：同客户同原单有 settled 历史 → reappliedAfterDays=10（只留痕不拦截，申请照常 submitted）',
+    req508.idempotent === false && req508.request.status === 'submitted' && req508.request.reappliedAfterDays === 10,
+    { reapplied: req508.request.reappliedAfterDays, status: req508.request.status });
+
+  /* ==================================================================
+   * 补缺大批片 3（46 号档+PD-07）验收段 —— 52.x 续号挂尾
+   * 挂尾口径：50/51 段编号属他批并行施工预留（本文件现序尾段为 49c）；52.5 含 cancel
+   * 会生成 refund_bills，故整段挂 49c 移位段之前（段尾铁律：移位后不再生成退款单）。
+   * ================================================================== */
+  console.log('\n[补缺-3] 52.x 会员升级 / 到期换档 / 防滥用 / 已省');
+  const mkM52User = async (tag: string, phone: string) => {
+    /* kimiId 须 seed_ 前缀（dev-login 仅允许种子用户，D-16 硬约束） */
+    const u = (await db.insert(schema.users).values({ kimiId: `seed_e2e_m52_${tag}`, nickname: `e2e 补缺3 ${tag}`, phone }).returning())[0]!;
+    await db.insert(schema.userRoles).values({ userId: u.id, role: 'customer' });
+    return u;
+  };
+  interface UpgradeQuoteRes {
+    currentPlan: { planKey: string; priceFen: number } | null;
+    targetPlans: Array<{
+      planKey: string; label: string; remainingMonths: number;
+      baseDiffFen: number; petDiffFen: number; totalDiffFen: number;
+      formula: { m: number; newMonthlyFen: number; oldMonthlyFen: number; perMonthDiffFen: number; newPurchase: boolean };
+    }>;
+    windowDays: number;
+  }
+  interface UpgradeRes {
+    billNo: string | null; billId: string | null;
+    membership: MembershipRowT & { nextPlanKey?: string | null };
+    diffFen: number; idempotent: boolean;
+  }
+  interface ScheduleRes {
+    membership: MembershipRowT & { nextPlanKey: string | null; nextPlanSetAt: Date | null };
+    idempotent: boolean;
+  }
+
+  /* ---------- 52.1 升档差价精确到分（46 号档例题逐字坐实）+ 微光新购口径 ---------- */
+  console.log('\n[补缺-3] 52.1 升档差价（46 号档例题）+ 微光新购口径');
+  const m52u1 = await mkM52User('u1', '13822220001');
+  const m52u1Cookie = await devLogin(m52u1.id);
+  const sellU1 = await sellPlan(managerCookie, {
+    userId: m52u1.id, planKey: 'plan_yinghuo', petCount: 0,
+    paySegments: [{ method: 'cash', amountFen: 19900 }],
+  });
+  /* 夹具：到期日=今日+3 个整月（同「日」不抹零头）→ remainingWholeMonths=3（既有同族函数口径） */
+  const m52exp3 = new Date();
+  m52exp3.setMonth(m52exp3.getMonth() + 3);
+  await db.update(schema.memberships).set({ expiresAt: m52exp3, updatedAt: new Date() })
+    .where(eq(schema.memberships.id, sellU1.membership.id));
+  const quoteU1 = await trpcQuery<UpgradeQuoteRes>('membership.upgradeQuote', { cookie: m52u1Cookie });
+  const quoteNuanyang = quoteU1.targetPlans.find((p) => p.planKey === 'plan_nuanyang');
+  /* 46 号档例题逐字：萤火 199 剩 3 整月升暖阳 599 → 3×(59900−19900)÷12=10000 分=¥100.00 */
+  check('补缺3-52.1 例题坐实：萤火剩 3 整月升暖阳 totalDiffFen=10000（¥100.00 精确到分；多宠附加行恒 0）',
+    !!quoteNuanyang && quoteNuanyang.remainingMonths === 3 && quoteNuanyang.totalDiffFen === 10000 &&
+      quoteNuanyang.baseDiffFen === 10000 && quoteNuanyang.petDiffFen === 0 &&
+      quoteNuanyang.formula.m === 3 && quoteNuanyang.formula.perMonthDiffFen === (59900 - 19900) / 12 &&
+      quoteNuanyang.formula.newPurchase === false,
+    quoteNuanyang);
+  check('补缺3-52.1 期内降级档不出现（萤火视角 targetPlans 仅 烛光/暖阳 两更高档）+ 窗口天数透出=30',
+    quoteU1.targetPlans.map((p) => p.planKey).sort().join(',') === 'plan_nuanyang,plan_zhuguang' && quoteU1.windowDays === 30,
+    quoteU1.targetPlans.map((p) => p.planKey));
+  const quoteU1m = await trpcQuery<UpgradeQuoteRes>('membership.upgradeQuoteForUser', { cookie: ownerCookie, input: { userId: m52u1.id } });
+  check('补缺3-52.1 收银台代客试算同帧（upgradeQuoteForUser 暖阳差价同=10000）',
+    quoteU1m.targetPlans.find((p) => p.planKey === 'plan_nuanyang')?.totalDiffFen === 10000,
+    quoteU1m.targetPlans.map((p) => `${p.planKey}:${p.totalDiffFen}`));
+  const upU1 = await trpcMutate<UpgradeRes>('membership.upgrade', {
+    cookie: managerCookie,
+    input: { userId: m52u1.id, targetPlanKey: 'plan_nuanyang', paySegments: [{ method: 'cash', amountFen: 10000 }] },
+  });
+  check('补缺3-52.1 升档成交：diffFen=10000 + paid_fen=原实付+补差=29900 + 到期日不动 + pet_count 不变',
+    upU1.diffFen === 10000 && upU1.membership.planKey === 'plan_nuanyang' && upU1.membership.paidFen === 29900 &&
+      Math.abs(new Date(upU1.membership.expiresAt).getTime() - m52exp3.getTime()) < 5000 && upU1.membership.petCount === 0,
+    { diff: upU1.diffFen, paid: upU1.membership.paidFen, plan: upU1.membership.planKey });
+  const upBill = await db.select().from(schema.cashierBills).where(eq(schema.cashierBills.id, upU1.billId!)).get();
+  const upBillItem = await db.select().from(schema.cashierBillItems).where(eq(schema.cashierBillItems.billId, upU1.billId!)).get();
+  check('补缺3-52.1 升级单=会员费类目（kind=membership / refId=plan_nuanyang / discountType=none / note「升级补差 萤火→暖阳」）',
+    upBill?.discountType === 'none' && (upBill.note ?? '').includes('升级补差 萤火→暖阳') &&
+      upBillItem?.kind === 'membership' && upBillItem.refId === 'plan_nuanyang' && upBillItem.unitPriceFen === 10000,
+    { note: upBill?.note, refId: upBillItem?.refId, discountType: upBill?.discountType });
+  const upEvent = (await db.select().from(schema.membershipEvents)
+    .where(and(eq(schema.membershipEvents.userId, m52u1.id), eq(schema.membershipEvents.type, 'upgrade'))))[0];
+  check('补缺3-52.1 membership_events 升级留痕（from=萤火 to=暖阳 diffFen=10000 billNo 回链）',
+    upEvent?.fromPlan === 'plan_yinghuo' && upEvent.toPlan === 'plan_nuanyang' && upEvent.diffFen === 10000 && upEvent.billNo === upU1.billNo,
+    upEvent && { from: upEvent.fromPlan, to: upEvent.toPlan, diff: upEvent.diffFen });
+  /* 微光档升档=新购口径：差价=新档全价+多宠附加按现 petCount 重算（petCount 直置 5 → 萤火 19900+2×5900=31700） */
+  const m52u2 = await mkM52User('u2', '13822220002');
+  const m52u2Cookie = await devLogin(m52u2.id);
+  await trpcMutate('membership.openFree', { cookie: m52u2Cookie });
+  await db.update(schema.memberships).set({ petCount: 5, updatedAt: new Date() }).where(eq(schema.memberships.userId, m52u2.id));
+  const quoteU2 = await trpcQuery<UpgradeQuoteRes>('membership.upgradeQuote', { cookie: m52u2Cookie });
+  const quoteU2yh = quoteU2.targetPlans.find((p) => p.planKey === 'plan_yinghuo');
+  check('补缺3-52.1 微光升档=新购口径（remainingMonths=0 / newPurchase=true / 全价+附加重算 19900+2×5900=31700）',
+    !!quoteU2yh && quoteU2yh.remainingMonths === 0 && quoteU2yh.formula.newPurchase === true && quoteU2yh.totalDiffFen === 31700,
+    quoteU2yh && { total: quoteU2yh.totalDiffFen, formula: quoteU2yh.formula });
+  const upU2 = await trpcMutate<UpgradeRes>('membership.upgrade', {
+    cookie: managerCookie,
+    input: { userId: m52u2.id, targetPlanKey: 'plan_yinghuo', paySegments: [{ method: 'cash', amountFen: 31700 }] },
+  });
+  const upU2Days = (new Date(upU2.membership.expiresAt).getTime() - Date.now()) / 86400_000;
+  check('补缺3-52.1 微光新购口径落库（paid_fen=31700 全价含附加 / expires 重起算 +365 天 / sold_store 补=办理店）',
+    upU2.diffFen === 31700 && upU2.membership.paidFen === 31700 && upU2.membership.soldStoreId === storeId &&
+      upU2Days > 364 && upU2Days < 366,
+    { diff: upU2.diffFen, paid: upU2.membership.paidFen, days: upU2Days });
+
+  /* ---------- 52.2 原子事务回滚：paySegments 缺额 → 三表零写入实证 ---------- */
+  console.log('\n[补缺-3] 52.2 升档原子性（缺额整单回滚）');
+  const m52u3 = await mkM52User('u3', '13822220003');
+  const sellU3 = await sellPlan(managerCookie, {
+    userId: m52u3.id, planKey: 'plan_yinghuo', petCount: 0,
+    paySegments: [{ method: 'cash', amountFen: 19900 }],
+  });
+  const m52exp3b = new Date();
+  m52exp3b.setMonth(m52exp3b.getMonth() + 3);
+  await db.update(schema.memberships).set({ expiresAt: m52exp3b, updatedAt: new Date() })
+    .where(eq(schema.memberships.id, sellU3.membership.id));
+  const bills52Before = (await db.select().from(schema.cashierBills).where(eq(schema.cashierBills.customerId, m52u3.id))).length;
+  const outbox52Before = (await db.select().from(schema.eventOutbox)).length;
+  const upU3 = await asErr(trpcMutate('membership.upgrade', {
+    cookie: managerCookie,
+    input: { userId: m52u3.id, targetPlanKey: 'plan_nuanyang', paySegments: [{ method: 'cash', amountFen: 9999 }] },
+  }));
+  check('补缺3-52.2 支付段缺额硬拒（server 兜底重算 10000 ≠ 入参 9999 → BAD_REQUEST「须等于升档补差」）',
+    upU3 instanceof TrpcHttpError && upU3.code === 'BAD_REQUEST' && upU3.message.includes('须等于升档补差'),
+    upU3 && { code: upU3.code, message: upU3.message });
+  const m52u3Row = await db.select().from(schema.memberships).where(eq(schema.memberships.id, sellU3.membership.id)).get();
+  const bills52After = (await db.select().from(schema.cashierBills).where(eq(schema.cashierBills.customerId, m52u3.id))).length;
+  const events52u3 = await db.select().from(schema.membershipEvents).where(eq(schema.membershipEvents.userId, m52u3.id));
+  const outbox52After = (await db.select().from(schema.eventOutbox)).length;
+  check('补缺3-52.2 整单回滚零半态（memberships 原档原值 / 收银单零新增 / membership_events 零行 / outbox 零新增）',
+    m52u3Row?.planKey === 'plan_yinghuo' && m52u3Row.paidFen === 19900 &&
+      bills52After === bills52Before && events52u3.length === 0 && outbox52After === outbox52Before,
+    { plan: m52u3Row?.planKey, paid: m52u3Row?.paidFen, bills: [bills52Before, bills52After], events: events52u3.length, outbox: [outbox52Before, outbox52After] });
+
+  /* ---------- 52.3 期内降级明文拒 + 同档重放幂等 ---------- */
+  console.log('\n[补缺-3] 52.3 期内不降级 + 同档重放幂等');
+  const upU1Down = await asErr(trpcMutate('membership.upgrade', {
+    cookie: managerCookie,
+    input: { userId: m52u1.id, targetPlanKey: 'plan_yinghuo', paySegments: [] },
+  }));
+  check('补缺3-52.3 期内降级明文拒（暖阳→萤火 BAD_REQUEST「会员期内不降级，可在到期前 30 天预约下期档位」逐字）',
+    upU1Down instanceof TrpcHttpError && upU1Down.code === 'BAD_REQUEST' &&
+      upU1Down.message === '会员期内不降级，可在到期前 30 天预约下期档位',
+    upU1Down && { code: upU1Down.code, message: upU1Down.message });
+  const upU1Replay = await trpcMutate<UpgradeRes>('membership.upgrade', {
+    cookie: managerCookie,
+    input: { userId: m52u1.id, targetPlanKey: 'plan_nuanyang', paySegments: [] },
+  });
+  const upEventsU1 = await db.select().from(schema.membershipEvents)
+    .where(and(eq(schema.membershipEvents.userId, m52u1.id), eq(schema.membershipEvents.type, 'upgrade')));
+  check('补缺3-52.3 同档重放幂等（idempotent=true / billNo=null / 会员行原值 / 升级事件仍恰 1 行）',
+    upU1Replay.idempotent === true && upU1Replay.billNo === null &&
+      upU1Replay.membership.planKey === 'plan_nuanyang' && upU1Replay.membership.paidFen === 29900 && upEventsU1.length === 1,
+    { idem: upU1Replay.idempotent, events: upEventsU1.length });
+
+  /* ---------- 52.4 到期换档：窗口外拒 / 窗口内预约 / 覆盖幂等 / 取消 / renew 执行 ---------- */
+  console.log('\n[补缺-3] 52.4 到期换档（预约→覆盖→取消→再约→renew 执行）');
+  const m52u4 = await mkM52User('u4', '13822220004');
+  const m52u4Cookie = await devLogin(m52u4.id);
+  const sellU4 = await sellPlan(managerCookie, {
+    userId: m52u4.id, planKey: 'plan_yinghuo', petCount: 0,
+    paySegments: [{ method: 'cash', amountFen: 19900 }],
+  });
+  const schedEarly = await asErr(trpcMutate('membership.scheduleChange', { cookie: m52u4Cookie, input: { targetPlanKey: 'plan_zhuguang' } }));
+  check('补缺3-52.4 窗口外预约明文拒（剩 ~365 天 > 30 → BAD_REQUEST「到期前 30 天开放预约下期档位」）',
+    schedEarly instanceof TrpcHttpError && schedEarly.code === 'BAD_REQUEST' && schedEarly.message.includes('到期前 30 天开放预约下期档位'),
+    schedEarly && { code: schedEarly.code, message: schedEarly.message });
+  /* 夹具：到期日拉近至 +15 天 → 进入预约窗口 */
+  await db.update(schema.memberships).set({ expiresAt: new Date(Date.now() + 15 * 86400_000), updatedAt: new Date() })
+    .where(eq(schema.memberships.id, sellU4.membership.id));
+  const sched1 = await trpcMutate<ScheduleRes>('membership.scheduleChange', { cookie: m52u4Cookie, input: { targetPlanKey: 'plan_zhuguang' } });
+  check('补缺3-52.4 窗口内预约落位（next_plan_key=plan_zhuguang + next_plan_set_at 非空）',
+    sched1.membership.nextPlanKey === 'plan_zhuguang' && !!sched1.membership.nextPlanSetAt && sched1.idempotent === false,
+    { next: sched1.membership.nextPlanKey, setAt: sched1.membership.nextPlanSetAt });
+  const schedEvent1 = (await db.select().from(schema.membershipEvents)
+    .where(and(eq(schema.membershipEvents.userId, m52u4.id), eq(schema.membershipEvents.type, 'change_schedule'))))[0];
+  check('补缺3-52.4 预约留痕（change_schedule from=萤火 to=烛光）',
+    schedEvent1?.fromPlan === 'plan_yinghuo' && schedEvent1.toPlan === 'plan_zhuguang',
+    schedEvent1 && { from: schedEvent1.fromPlan, to: schedEvent1.toPlan });
+  const my52u4 = await trpcQuery<{
+    nextPlanKey: string | null; upgradeAvailable: boolean; changeWindowDays: number;
+    membership: { planKey: string } | null;
+  }>('membership.my', { cookie: m52u4Cookie });
+  check('补缺3-52.4 my 透出 nextPlanKey + upgradeAvailable + changeWindowDays=30（客户端入口判定数据源）',
+    my52u4.nextPlanKey === 'plan_zhuguang' && my52u4.upgradeAvailable === true && my52u4.changeWindowDays === 30,
+    { next: my52u4.nextPlanKey, up: my52u4.upgradeAvailable, win: my52u4.changeWindowDays });
+  const sched2 = await trpcMutate<ScheduleRes>('membership.scheduleChange', { cookie: m52u4Cookie, input: { targetPlanKey: 'plan_nuanyang' } });
+  const sched2b = await trpcMutate<ScheduleRes>('membership.scheduleChange', { cookie: m52u4Cookie, input: { targetPlanKey: 'plan_nuanyang' } });
+  check('补缺3-52.4 重复预约覆盖更新幂等（覆盖→plan_nuanyang idempotent=false；同档重放 idempotent=true）',
+    sched2.idempotent === false && sched2.membership.nextPlanKey === 'plan_nuanyang' && sched2b.idempotent === true,
+    { a: sched2.idempotent, b: sched2b.idempotent });
+  const schedCancel = await trpcMutate<ScheduleRes>('membership.cancelScheduleChange', { cookie: m52u4Cookie });
+  const schedEvtsU4 = await db.select().from(schema.membershipEvents)
+    .where(and(eq(schema.membershipEvents.userId, m52u4.id), eq(schema.membershipEvents.type, 'change_schedule')));
+  const cancelEvU4 = schedEvtsU4.find((e) => (e.meta as Record<string, unknown> | null)?.cancelled === true);
+  check('补缺3-52.4 取消预约置空+留痕（next_plan_key=null + meta.cancelled=true 记被撤档 plan_nuanyang）',
+    schedCancel.membership.nextPlanKey === null && schedCancel.idempotent === false &&
+      !!cancelEvU4 && (cancelEvU4.meta as Record<string, unknown>).cancelledPlanKey === 'plan_nuanyang',
+    { next: schedCancel.membership.nextPlanKey, cancelled: (cancelEvU4?.meta as Record<string, unknown> | undefined)?.cancelledPlanKey });
+  await trpcMutate('membership.scheduleChange', { cookie: m52u4Cookie, input: { targetPlanKey: 'plan_zhuguang' } });
+  /* 到期执行：到期日置昨日（读路径懒冻结→renew 解冻）→ 按预约档全价 29900 收款+切档+置空 */
+  await db.update(schema.memberships).set({ expiresAt: new Date(Date.now() - 86400_000), updatedAt: new Date() })
+    .where(eq(schema.memberships.id, sellU4.membership.id));
+  const renewU4 = await trpcMutate<{ membership: MembershipRowT & { nextPlanKey: string | null }; amountFen: number; billNo: string }>('membership.renew', {
+    cookie: managerCookie,
+    input: { userId: m52u4.id, paySegments: [{ method: 'cash', amountFen: 29900 }] },
+  });
+  check('补缺3-52.4 到期 renew 按预约档收款（29900 烛光全价 / plan_key 切换 / next_plan_key 置空 / 解冻 active）',
+    renewU4.amountFen === 29900 && renewU4.membership.planKey === 'plan_zhuguang' &&
+      renewU4.membership.nextPlanKey === null && renewU4.membership.status === 'active',
+    { amount: renewU4.amountFen, plan: renewU4.membership.planKey, next: renewU4.membership.nextPlanKey });
+  const execEvU4 = (await db.select().from(schema.membershipEvents)
+    .where(and(eq(schema.membershipEvents.userId, m52u4.id), eq(schema.membershipEvents.type, 'change_schedule'))))
+    .find((e) => (e.meta as Record<string, unknown> | null)?.executed === true);
+  check('补缺3-52.4 换档执行留痕（change_schedule meta.executed=true from=萤火 to=烛光 + billNo 回链）',
+    !!execEvU4 && execEvU4.fromPlan === 'plan_yinghuo' && execEvU4.toPlan === 'plan_zhuguang' && execEvU4.billNo === renewU4.billNo,
+    execEvU4 && { from: execEvU4.fromPlan, to: execEvU4.toPlan, billNo: execEvU4.billNo });
+  const renewU4b = await trpcMutate<{ membership: MembershipRowT; amountFen: number }>('membership.renew', {
+    cookie: managerCookie,
+    input: { userId: m52u4.id, paySegments: [{ method: 'cash', amountFen: 29900 }] },
+  });
+  const execEvtsU4 = (await db.select().from(schema.membershipEvents)
+    .where(and(eq(schema.membershipEvents.userId, m52u4.id), eq(schema.membershipEvents.type, 'change_schedule'))))
+    .filter((e) => (e.meta as Record<string, unknown> | null)?.executed === true);
+  check('补缺3-52.4 执行幂等（预约已置空：再续费按新档常价 29900 顺延，executed 留痕不重复增发）',
+    renewU4b.amountFen === 29900 && renewU4b.membership.planKey === 'plan_zhuguang' && execEvtsU4.length === 1,
+    { amount: renewU4b.amountFen, execEvents: execEvtsU4.length });
+
+  /* ---------- 52.5 防滥用两件：退会窗口内重购 / 累计退会≥阈值再购 → 留痕不拦截 ---------- */
+  console.log('\n[补缺-3] 52.5 防滥用留痕（cancel_rebuy_note）');
+  const m52u5 = await mkM52User('u5', '13822220005');
+  await sellPlan(managerCookie, { userId: m52u5.id, planKey: 'plan_yinghuo', petCount: 0, paySegments: [{ method: 'cash', amountFen: 19900 }] });
+  await trpcMutate('membership.cancel', { cookie: managerCookie, input: { userId: m52u5.id, reason: '补缺3 防滥用验证退会 1' } });
+  const sellU5b = await sellPlan(managerCookie, { userId: m52u5.id, planKey: 'plan_yinghuo', petCount: 0, paySegments: [{ method: 'cash', amountFen: 19900 }] });
+  const notesU5a = await db.select().from(schema.membershipEvents)
+    .where(and(eq(schema.membershipEvents.userId, m52u5.id), eq(schema.membershipEvents.type, 'cancel_rebuy_note')));
+  check('补缺3-52.5 退会后 90 天内重购留痕（trigger=cooldown daysSinceLastCancel=0 + billNo=重购单号；不拦截放行）',
+    notesU5a.length === 1 && (notesU5a[0]!.meta as Record<string, unknown>).trigger === 'cooldown' &&
+      (notesU5a[0]!.meta as Record<string, unknown>).daysSinceLastCancel === 0 &&
+      (notesU5a[0]!.meta as Record<string, unknown>).cooldownDays === 90 &&
+      notesU5a[0]!.billNo === sellU5b.billNo && sellU5b.membership.status === 'active',
+    notesU5a.map((e) => e.meta));
+  await trpcMutate('membership.cancel', { cookie: managerCookie, input: { userId: m52u5.id, reason: '补缺3 防滥用验证退会 2' } });
+  const sellU5c = await sellPlan(managerCookie, { userId: m52u5.id, planKey: 'plan_yinghuo', petCount: 0, paySegments: [{ method: 'cash', amountFen: 19900 }] });
+  const notesU5b = await db.select().from(schema.membershipEvents)
+    .where(and(eq(schema.membershipEvents.userId, m52u5.id), eq(schema.membershipEvents.type, 'cancel_rebuy_note')));
+  const noteCountU5 = notesU5b.find((e) => (e.meta as Record<string, unknown>).trigger === 'count');
+  check('补缺3-52.5 累计退会≥2 再购留痕（trigger=count cancelCount=2 threshold=2；双触发共 3 行；不拦截放行）',
+    !!noteCountU5 && (noteCountU5.meta as Record<string, unknown>).cancelCount === 2 &&
+      (noteCountU5.meta as Record<string, unknown>).threshold === 2 &&
+      sellU5c.membership.status === 'active' && notesU5b.length === 3,
+    notesU5b.map((e) => e.meta));
+
+  /* ---------- 52.6 mySavings 双源合计（精确到分） ---------- */
+  console.log('\n[补缺-3] 52.6 mySavings 今年已省（回馈金+服务折扣两源分明）');
+  const m52u6 = await mkM52User('u6', '13822220006');
+  const m52u6Cookie = await devLogin(m52u6.id);
+  await sellPlan(managerCookie, { userId: m52u6.id, planKey: 'plan_yinghuo', petCount: 0, paySegments: [{ method: 'cash', amountFen: 19900 }] });
+  /* 源①：已入账 grant 夹具（入账行口径 source_id=settlement_id=批次 id，QA40-D10 同源；
+     期次取远期 2099-01 与 43/49b 段互不占期次） */
+  const m52u6Acc = await ensureRebateAccount(db, m52u6.id, new Date());
+  const m52batch = (await db.insert(schema.rebateSettlements).values({
+    period: '2099-01', grantedCount: 1, grantedFen: 258, scheduledDay: 5, status: 'done',
+    note: '补缺3 mySavings 已入账夹具批次',
+  }).returning())[0]!;
+  await db.insert(schema.rebateLogs).values({
+    userId: m52u6.id, accountId: m52u6Acc.id, type: 'grant', deltaFen: 258,
+    beforeFen: 0, afterFen: 258, sourceId: m52batch.id, settlementId: m52batch.id,
+    period: '2099-01', note: '补缺3 mySavings 已入账夹具（期次 2099-01 结算批次）',
+  });
+  /* 源②：服务折扣单（萤火 88 折：8800×0.88=7744 → 省 1056） */
+  await settleBill2([{ kind: 'service', refId: service.id }], { customerId: m52u6.id, note: 'e2e 补缺3 52.6 服务折扣单' });
+  const savings52 = await trpcQuery<{ year: number; rebateSettledFen: number; serviceDiscountFen: number; totalFen: number }>('membership.mySavings', { cookie: m52u6Cookie });
+  check('补缺3-52.6 mySavings 双源分明（rebateSettledFen=258 已入账 + serviceDiscountFen=1056=8800−7744 → totalFen=1314 精确到分）',
+    savings52.rebateSettledFen === 258 && savings52.serviceDiscountFen === 1056 &&
+      savings52.totalFen === 1314 && savings52.year === new Date().getFullYear(),
+    savings52);
+
+  /* ---------- 52.7 升档后在途回馈金不重算 + 旧档余额零动作 ---------- */
+  console.log('\n[补缺-3] 52.7 升档不动在途回馈金');
+  const m52u7 = await mkM52User('u7', '13822220007');
+  await sellPlan(managerCookie, { userId: m52u7.id, planKey: 'plan_yinghuo', petCount: 0, paySegments: [{ method: 'cash', amountFen: 19900 }] });
+  await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: m52u7.id, note: 'e2e 补缺3 52.7 在途 grant 单' }); // 萤火 2% → 计提 258（未结算在途）
+  const u7AccBefore = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, m52u7.id)).get();
+  const u7GrantsBefore = await db.select().from(schema.rebateLogs)
+    .where(and(eq(schema.rebateLogs.userId, m52u7.id), eq(schema.rebateLogs.type, 'grant')));
+  /* 新卡剩 12 整月：萤火→暖阳补差 = 12×(59900−19900)÷12 = 40000（全年差价） */
+  const upU7 = await trpcMutate<UpgradeRes>('membership.upgrade', {
+    cookie: managerCookie,
+    input: { userId: m52u7.id, targetPlanKey: 'plan_nuanyang', paySegments: [{ method: 'cash', amountFen: 40000 }] },
+  });
+  const u7AccAfter = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, m52u7.id)).get();
+  const u7LogsAfter = await db.select().from(schema.rebateLogs).where(eq(schema.rebateLogs.userId, m52u7.id));
+  check('补缺3-52.7 升档成交（剩 12 整月补差 40000=59900−19900，精确到分；paid_fen=19900+40000=59900）',
+    upU7.diffFen === 40000 && upU7.membership.planKey === 'plan_nuanyang' && upU7.membership.paidFen === 59900,
+    { diff: upU7.diffFen, paid: upU7.membership.paidFen });
+  check('补缺3-52.7 在途回馈金不重算 + 旧档余额零动作（grant 行原样 1 行 258 挂萤火口径 / 账户余额 0 不动 / rebate_logs 零新增）',
+    u7GrantsBefore.length === 1 && u7GrantsBefore[0]!.deltaFen === 258 && (u7GrantsBefore[0]!.note ?? '').includes('plan_yinghuo') &&
+      u7AccBefore?.balanceFen === 0 && u7AccAfter?.balanceFen === 0 && u7LogsAfter.length === 1,
+    { grants: [u7GrantsBefore.length, u7LogsAfter.length], balance: [u7AccBefore?.balanceFen, u7AccAfter?.balanceFen] });
+
   /* ---- 49c. 打回①收尾：实退待办移位（25h）→ settleActual 幂等 → 待办消失 ----
    * 段尾铁律（§34/§38 撞号教训）：createdAt 移位之后不得再发生成退款单的动作——
    * genRefundNo 按 createdAt 计当日序号，移位减计数会致后续 RB 单号撞 UNIQUE。 */
@@ -2956,6 +3627,1127 @@ async function main(): Promise<void> {
       settle49b.idempotent === true && settle49b.refund.status === 'settled' &&
       !todo49After.some((r) => r.id === cancelM1.refundId),
     { a: settle49a.refund.status, bIdem: settle49b.idempotent });
+
+  /* ==================================================================
+   * 补缺大批片 4（服务闭环 server 侧）验收段 —— 本片无 refund_bill 生成
+   * （49c 移位铁律不约束），断言挂尾 53.x。
+   * ================================================================== */
+
+  /* ---------- 53.1 证书生成链（R10 无数据不生成 + 首读 deliveredAt 幂等） ---------- */
+  console.log('\n[补缺4] 53.1 安心证书生成链');
+  const petRow = (await db.select().from(schema.pets).where(eq(schema.pets.id, petId)).get())!;
+  const storeRow50 = (await db.select().from(schema.stores).where(eq(schema.stores.id, storeId)).get())!;
+  interface CertPayloadT {
+    petName: string; serviceName: string; storeName: string; completedAt: string;
+    stepsSummary: Array<{ stepKey: string; label: string; photoCount: number }>;
+    beforeUrl: string; afterUrl: string;
+  }
+  const certRow = await db.select().from(schema.serviceCertificates).where(eq(schema.serviceCertificates.appointmentId, aid)).get();
+  check('53.1 有 before/after 图单完成 → service_certificates 落行（confirmStep 末步同事务）',
+    !!certRow && certRow.userId === customerUser!.id && certRow.generatedAt instanceof Date,
+    certRow && { id: certRow.id, userId: certRow.userId });
+  const certPayload = certRow?.payload as CertPayloadT | undefined;
+  check('53.1 证书 payload 齐（petName/serviceName/storeName/completedAt/六步汇总张数 1/2/3/2/2/0/before/after）',
+    !!certPayload &&
+      certPayload.petName === petRow.name && certPayload.serviceName === service.name &&
+      certPayload.storeName === storeRow50.name && typeof certPayload.completedAt === 'string' &&
+      certPayload.stepsSummary.length === 6 &&
+      certPayload.stepsSummary.map((s) => s.photoCount).join(',') === '1,2,3,2,2,0' &&
+      certPayload.stepsSummary.every((s) => typeof s.label === 'string' && s.label.length > 0) &&
+      certPayload.beforeUrl.includes('/api/img/') && certPayload.afterUrl.includes('/api/img/'),
+    certPayload && { steps: certPayload.stepsSummary.map((s) => `${s.stepKey}:${s.photoCount}`) });
+  const certReadyRows = (await db.select().from(schema.eventOutbox)).filter(
+    (r) => r.eventType === 'certificate.ready' && r.channel === `user:${customerUser!.id}` &&
+      (r.payload as Record<string, unknown> | null)?.aid === aid,
+  );
+  check('53.1 certificate.ready 落 outbox（user 频道，payload 用 aid 键避开 §11 计数口径）',
+    certReadyRows.length === 1, certReadyRows.map((r) => r.channel));
+  // 首读 deliveredAt 幂等置位
+  interface CertGetRes { certificate: { id: string; deliveredAt: Date | null } }
+  const certGet1 = await trpcQuery<CertGetRes>('serviceLoop.certificateFor', { cookie: customerCookie, input: { appointmentId: aid } });
+  check('53.1 certificateFor 首读 → deliveredAt 置位（幂等写 now）', certGet1.certificate.deliveredAt instanceof Date, certGet1.certificate.deliveredAt);
+  const certGet2 = await trpcQuery<CertGetRes>('serviceLoop.certificateFor', { cookie: customerCookie, input: { appointmentId: aid } });
+  check('53.1 复读 deliveredAt 不变（幂等置位只写一次）',
+    certGet2.certificate.deliveredAt instanceof Date &&
+      certGet2.certificate.deliveredAt.getTime() === certGet1.certificate.deliveredAt!.getTime(),
+    [certGet1.certificate.deliveredAt, certGet2.certificate.deliveredAt]);
+  // 无图单（寄养 completed，无六步流）→ 不生成 + 404 明文
+  const noCertRow = await db.select().from(schema.serviceCertificates).where(eq(schema.serviceCertificates.appointmentId, boardingAppt.id)).get();
+  const noCertGet = await asErr(trpcQuery('serviceLoop.certificateFor', { cookie: customerCookie, input: { appointmentId: boardingAppt.id } }));
+  check('53.1 R10 无数据不生成：寄养单无证书行 + certificateFor → 404 明文「该服务未生成证书（无前后对比照）」',
+    !noCertRow && noCertGet instanceof TrpcHttpError && noCertGet.code === 'NOT_FOUND' &&
+      noCertGet.message.includes('该服务未生成证书（无前后对比照）'),
+    noCertGet && { code: noCertGet.code, message: noCertGet.message });
+
+  /* ---------- 53.2 报告生成链（vitals 快照/缺省口径/体重档案快照/首读幂等） ---------- */
+  console.log('\n[补缺4] 53.2 美容报告生成链');
+  interface VitalT { key: string; label: string; value: string; status: string; note?: string }
+  interface ReportGetRes { report: { id: string; vitals: VitalT[]; abnormalText: string | null; nextAdvice: string | null; deliveredAt: Date | null } }
+  // 主单 aid（末步未传 vitals）→ 缺省口径：各项 normal +「本次未记录」，体重=档案快照
+  const repGet1 = await trpcQuery<ReportGetRes>('serviceLoop.reportFor', { cookie: customerCookie, input: { appointmentId: aid } });
+  const aidVitals = repGet1.report.vitals;
+  check('53.2 无 vitals 报告=五项 normal +「本次未记录」（留痕口径不阻塞完成），abnormalText=NULL',
+    aidVitals.length === 5 && aidVitals.every((v) => v.status === 'normal') &&
+      aidVitals.filter((v) => v.key !== 'weight').every((v) => v.value === '本次未记录' && v.note === '本次未记录') &&
+      repGet1.report.abnormalText === null,
+    aidVitals.map((v) => `${v.key}:${v.status}:${v.value}`));
+  check('53.2 体重项= pets.weight_kg 服务端快照（28.5 kg，不信客户端）',
+    aidVitals.find((v) => v.key === 'weight')?.value === `${petRow.weightKg} kg`,
+    aidVitals.find((v) => v.key === 'weight'));
+  const repGet2 = await trpcQuery<ReportGetRes>('serviceLoop.reportFor', { cookie: customerCookie, input: { appointmentId: aid } });
+  check('53.2 reportFor 首读置 deliveredAt + 复读不变（幂等）',
+    repGet1.report.deliveredAt instanceof Date && repGet2.report.deliveredAt instanceof Date &&
+      repGet2.report.deliveredAt.getTime() === repGet1.report.deliveredAt.getTime(),
+    [repGet1.report.deliveredAt, repGet2.report.deliveredAt]);
+  const reportReadyRows = (await db.select().from(schema.eventOutbox)).filter(
+    (r) => r.eventType === 'report.ready' && r.channel === `user:${customerUser!.id}` &&
+      (r.payload as Record<string, unknown> | null)?.aid === aid,
+  );
+  check('53.2 report.ready 落 outbox（user 频道）', reportReadyRows.length === 1, reportReadyRows.length);
+
+  // 带 vitals 的完整六步流（apptVit，丽丽执行；末步传 vitals 一项 abnormal + nextAdvice）
+  const slotVit = slotPool[slotPool.length - 1]!;
+  const apptVit = await trpcMutate<{ id: string }>('appointment.create', {
+    cookie: customerCookie,
+    input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: slotVit.slotStart, paymentMode: 'pay_at_store', note: 'e2e 补缺4 vitals 报告单', staffId: staffRow2.id },
+  });
+  createdAidExtras.push(apptVit.id);
+  await trpcMutate('appointment.confirm', { cookie: ownerCookie, input: { appointmentId: apptVit.id } });
+  const codeVit = await trpcQuery<{ code: string }>('appointment.getCode', { cookie: customerCookie, input: { appointmentId: apptVit.id } });
+  await trpcMutate('appointment.checkin', { cookie: staffCookie, input: { code: codeVit.code } });
+  let vitDone: { appointmentCompleted: boolean; certificateId: string | null; reportId: string | null } | null = null;
+  for (const plan of stepPlan) {
+    if (plan.count > 0) {
+      const up = await uploadFor(apptVit.id, plan.key, liliCookie);
+      await trpcMutate('serviceStep.addPhotos', {
+        cookie: liliCookie,
+        input: { appointmentId: apptVit.id, stepKey: plan.key, photos: Array.from({ length: plan.count }, (_, i) => ({ url: up.url, thumbUrl: up.thumbUrl, tag: plan.tags?.[i] ?? 'normal' })) },
+      });
+    }
+    vitDone = await trpcMutate<{ appointmentCompleted: boolean; certificateId: string | null; reportId: string | null }>('serviceStep.confirmStep', {
+      cookie: liliCookie,
+      input: plan.key === 'confirm'
+        ? {
+            appointmentId: apptVit.id, stepKey: plan.key,
+            vitals: [
+              { key: 'weight', label: '体重', value: '99.9 kg', status: 'normal' }, // 假体重：服务端应以档案快照覆盖
+              { key: 'skin', label: '皮肤', value: '后腿内侧红疹', status: 'abnormal', note: '建议就医复查' },
+            ],
+            nextAdvice: '两周后复查皮肤',
+          }
+        : { appointmentId: apptVit.id, stepKey: plan.key },
+    });
+  }
+  check('53.2 带 vitals 末步完成（appointmentCompleted + certificateId/reportId 双透出）',
+    vitDone!.appointmentCompleted === true && typeof vitDone!.certificateId === 'string' && typeof vitDone!.reportId === 'string',
+    vitDone);
+  const vitRep = await trpcQuery<ReportGetRes>('serviceLoop.reportFor', { cookie: customerCookie, input: { appointmentId: apptVit.id } });
+  const vitSkin = vitRep.report.vitals.find((v) => v.key === 'skin');
+  check('53.2 vitals 快照（skin=abnormal+note；ear/coat/nail 缺项=normal 本次未记录）',
+    vitRep.report.vitals.length === 5 &&
+      vitSkin?.status === 'abnormal' && vitSkin.note === '建议就医复查' && vitSkin.value === '后腿内侧红疹' &&
+      vitRep.report.vitals.filter((v) => ['ear', 'coat', 'nail'].includes(v.key)).every((v) => v.status === 'normal' && v.note === '本次未记录'),
+    vitRep.report.vitals.map((v) => `${v.key}:${v.status}`));
+  check('53.2 体重不被客户端输入污染（入参 99.9 kg 被拒，快照=档案 28.5 kg）',
+    vitRep.report.vitals.find((v) => v.key === 'weight')?.value === `${petRow.weightKg} kg`,
+    vitRep.report.vitals.find((v) => v.key === 'weight'));
+  check('53.2 abnormalText 拼句（皮肤：异常（建议就医复查））+ nextAdvice 落库',
+    vitRep.report.abnormalText === '皮肤：异常（建议就医复查）' && vitRep.report.nextAdvice === '两周后复查皮肤',
+    { abnormalText: vitRep.report.abnormalText, nextAdvice: vitRep.report.nextAdvice });
+  const vitCertRow = await db.select().from(schema.serviceCertificates).where(eq(schema.serviceCertificates.appointmentId, apptVit.id)).get();
+  check('53.2 apptVit 证书同生成（有 before/after 图）', !!vitCertRow, apptVit.id);
+
+  /* ---------- 53.3 albumFeed 相册聚合（一次批拉 N+1 消除 + 进行中口径 + limit 截顶） ---------- */
+  console.log('\n[补缺4] 53.3 albumFeed 服务相册聚合');
+  // 进行中夹具：apptProg 走完 disinfection+precheck 后停在 grooming（active）
+  // （ pinned 阿强执行：apptVit（丽丽）与其同日落相邻槽，同人会产生区间重叠 409）
+  const slotProg = slotPool[slotPool.length - 2]!;
+  const apptProg = await trpcMutate<{ id: string }>('appointment.create', {
+    cookie: customerCookie,
+    input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: slotProg.slotStart, paymentMode: 'pay_at_store', note: 'e2e 补缺4 进行中单', staffId: aqiang.id },
+  });
+  createdAidExtras.push(apptProg.id);
+  const codeProg = await trpcQuery<{ code: string }>('appointment.getCode', { cookie: customerCookie, input: { appointmentId: apptProg.id } });
+  await trpcMutate('appointment.checkin', { cookie: staffCookie, input: { code: codeProg.code } });
+  for (const plan of stepPlan.slice(0, 2)) { // 只做前两步（disinfection 1 图 / precheck 2 图）
+    const up = await uploadFor(apptProg.id, plan.key, groomerCookie);
+    await trpcMutate('serviceStep.addPhotos', {
+      cookie: groomerCookie,
+      input: { appointmentId: apptProg.id, stepKey: plan.key, photos: Array.from({ length: plan.count }, () => ({ url: up.url, thumbUrl: up.thumbUrl, tag: 'normal' })) },
+    });
+    await trpcMutate('serviceStep.confirmStep', { cookie: groomerCookie, input: { appointmentId: apptProg.id, stepKey: plan.key } });
+  }
+  interface FeedPhoto { url: string; thumbUrl: string | null; tag: string }
+  interface FeedStep { stepKey: string; label: string; status: string; photos: FeedPhoto[] }
+  interface FeedItem { appointmentId: string; petName: string; serviceName: string; storeName: string; status: string; completedAt: Date | null; steps: FeedStep[] }
+  const feed = await trpcQuery<FeedItem[]>('serviceLoop.albumFeed', { cookie: customerCookie, input: { limit: 50 } });
+  const feedAid = feed.find((f) => f.appointmentId === aid);
+  const feedAid2 = feed.find((f) => f.appointmentId === aid2);
+  const feedVit = feed.find((f) => f.appointmentId === apptVit.id);
+  check('53.3 多单一次聚合返回（aid/aid2/apptVit 同帧，六步+照片全嵌套=N+1 消除结构实证）',
+    !!feedAid && !!feedAid2 && !!feedVit &&
+      feedAid.steps.length === 6 && feedAid2.steps.length === 6 &&
+      feedAid.petName === petRow.name && feedAid.serviceName === service.name && feedAid.storeName === storeRow50.name,
+    feed.map((f) => `${f.appointmentId.slice(-4)}:${f.steps.length}`));
+  check('53.3 完成单照片分组正确（aid 张数 1/2/3/2/2/0，before_after 步带 before/after 标签）',
+    feedAid!.steps.map((s) => s.photos.length).join(',') === '1,2,3,2,2,0' &&
+      feedAid!.steps.find((s) => s.stepKey === 'before_after')!.photos.map((p) => p.tag).sort().join(',') === 'after,before',
+    feedAid!.steps.map((s) => `${s.stepKey}:${s.photos.length}`));
+  const feedProg = feed.find((f) => f.appointmentId === apptProg.id);
+  check('53.3 进行中单透出（in_service 在列）且仅 done 步照片可见（grooming=active 与 locked 步 photos 空）',
+    !!feedProg && feedProg.status === 'in_service' &&
+      feedProg.steps.find((s) => s.stepKey === 'disinfection')!.photos.length === 1 &&
+      feedProg.steps.find((s) => s.stepKey === 'precheck')!.photos.length === 2 &&
+      feedProg.steps.filter((s) => s.status !== 'done').every((s) => s.photos.length === 0),
+    feedProg?.steps.map((s) => `${s.stepKey}:${s.status}:${s.photos.length}`));
+  const feedDefault = await trpcQuery<FeedItem[]>('serviceLoop.albumFeed', { cookie: customerCookie });
+  check('53.3 默认 limit=12 截顶（默认调用恰 12 条 < limit=50 全量）',
+    feedDefault.length === 12 && feed.length > 12,
+    { def: feedDefault.length, full: feed.length });
+
+  /* ---------- 53.4 客服工单流（create→店长待办→reply→客户端可见+SSE 留痕） ---------- */
+  console.log('\n[补缺4] 53.4 客服工单流');
+  interface TicketT {
+    id: string; ticketNo: string; type: string; description: string; contactPhone: string | null;
+    status: string; replyText: string | null; repliedBy: string | null; repliedAt: Date | null;
+    timelineJson: Array<{ action: string; at: string; by: string; note?: string }>;
+  }
+  const tkCreate = await trpcMutate<{ ticket: TicketT; idempotent: boolean }>('serviceLoop.ticketCreate', {
+    cookie: customerCookie,
+    input: { storeId, type: 'suggest', description: '希望增加夜间洗护时段', photoUrls: [] },
+  });
+  check('53.4 ticketCreate 落单（ticketNo=TK-yyyymmdd-NNN 日序 + submitted + timeline 初始 submitted）',
+    /^TK-\d{8}-\d{3}$/.test(tkCreate.ticket.ticketNo) && tkCreate.ticket.status === 'submitted' &&
+      tkCreate.ticket.timelineJson.length === 1 && tkCreate.ticket.timelineJson[0]!.action === 'submitted' &&
+      tkCreate.ticket.timelineJson[0]!.by === customerUser!.id,
+    tkCreate.ticket);
+  check('53.4 联系方式回显默认=users.phone（缺省未传 → 13800000000）',
+    tkCreate.ticket.contactPhone === '13800000000', tkCreate.ticket.contactPhone);
+  const tkPending = await trpcQuery<TicketT[]>('serviceLoop.ticketListPending', { cookie: managerCookie });
+  check('53.4 店长待办可见本店 submitted 工单', tkPending.some((t) => t.id === tkCreate.ticket.id), tkPending.length);
+  const tkReply = await trpcMutate<{ ticket: TicketT }>('serviceLoop.ticketReply', {
+    cookie: managerCookie,
+    input: { ticketId: tkCreate.ticket.id, reply: '已收到建议，本月排期评估后答复您' },
+  });
+  check('53.4 店长回复 → replied + repliedBy/At + timeline 追加',
+    tkReply.ticket.status === 'replied' && tkReply.ticket.replyText === '已收到建议，本月排期评估后答复您' &&
+      tkReply.ticket.repliedBy === managerFix.id && tkReply.ticket.repliedAt instanceof Date &&
+      tkReply.ticket.timelineJson.length === 2 && tkReply.ticket.timelineJson[1]!.action === 'replied',
+    tkReply.ticket);
+  const tkRepliedEv = (await db.select().from(schema.eventOutbox)).filter(
+    (r) => r.eventType === 'ticket.replied' && r.channel === `user:${customerUser!.id}` &&
+      (r.payload as Record<string, unknown> | null)?.ticketId === tkCreate.ticket.id,
+  );
+  check('53.4 ticket.replied 落 outbox（user 频道，SSE 留痕可取证）', tkRepliedEv.length === 1, tkRepliedEv.map((r) => r.channel));
+  const tkGot = await trpcQuery<{ ticket: TicketT }>('serviceLoop.ticketGet', { cookie: customerCookie, input: { ticketId: tkCreate.ticket.id } });
+  check('53.4 客户端 ticketGet 可见 replyText + status=replied',
+    tkGot.ticket.status === 'replied' && tkGot.ticket.replyText === '已收到建议，本月排期评估后答复您', tkGot.ticket.status);
+  const tkMine = await trpcQuery<TicketT[]>('serviceLoop.ticketListMine', { cookie: customerCookie });
+  check('53.4 ticketListMine 仅本人含该单', tkMine.some((t) => t.id === tkCreate.ticket.id), tkMine.length);
+  const tkEmptyReply = await asErr(trpcMutate('serviceLoop.ticketReply', { cookie: managerCookie, input: { ticketId: tkCreate.ticket.id, reply: '   ' } }));
+  check('53.4 回复必填（空白 reply → 400）', tkEmptyReply instanceof TrpcHttpError && tkEmptyReply.code === 'BAD_REQUEST', tkEmptyReply && tkEmptyReply.code);
+
+  /* ---------- 53.5 发票申请流（已付闸/实付重算/税号闸/在途幂等/登记开票） ---------- */
+  console.log('\n[补缺4] 53.5 发票申请流');
+  const apptPaidRow = (await db.select().from(schema.appointments).where(eq(schema.appointments.id, aid)).get())!;
+  interface InvoiceT {
+    id: string; invoiceNo: string; orderKind: string; billId: string; billNo: string; amountFen: number;
+    titleType: string; title: string; taxNo: string | null; delivery: string; email: string | null;
+    status: string; issuedInvoiceNo: string | null; issuedAt: Date | null; issuedBy: string | null;
+  }
+  const invCreate = await trpcMutate<{ request: InvoiceT; idempotent: boolean }>('serviceLoop.invoiceCreate', {
+    cookie: customerCookie,
+    input: {
+      orderKind: 'appointment', billId: aid, amountFen: 1, // 假金额：服务端应忽略并按实付重算
+      titleType: 'personal', title: '个人', taxNo: 'SHOULD_BE_CLEARED', delivery: 'email', email: 'e2e@philia.test',
+    },
+  });
+  check('53.5 invoiceCreate 金额=实付重算（传入假 1 分被忽略 → paidFen 实额）+ personal 税号置空',
+    invCreate.request.amountFen === apptPaidRow.paidFen && invCreate.request.amountFen > 0 &&
+      invCreate.request.taxNo === null && invCreate.request.status === 'submitted' &&
+      invCreate.idempotent === false,
+    { amountFen: invCreate.request.amountFen, paidFen: apptPaidRow.paidFen, taxNo: invCreate.request.taxNo });
+  check('53.5 invoiceNo=IN-yyyymmdd-NNN 日序 + 来源单号快照（billNo=预约码）',
+    /^IN-\d{8}-\d{3}$/.test(invCreate.request.invoiceNo) && invCreate.request.billNo === apptPaidRow.code,
+    invCreate.request.invoiceNo);
+  const invDup = await trpcMutate<{ request: InvoiceT; idempotent: boolean }>('serviceLoop.invoiceCreate', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: aid, titleType: 'personal', title: '个人', delivery: 'pickup' },
+  });
+  check('53.5 同单在途幂等（重复申请返回原单 idempotent=true，不产生新行）',
+    invDup.idempotent === true && invDup.request.id === invCreate.request.id,
+    { dup: invDup.request.id, orig: invCreate.request.id });
+  const invNoTax = await asErr(trpcMutate('serviceLoop.invoiceCreate', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: aid2, titleType: 'business', title: '某某公司', delivery: 'pickup' },
+  }));
+  check('53.5 企业抬头缺税号 → 400「企业抬头必须填写税号」（形状校验先于单据闸）',
+    invNoTax instanceof TrpcHttpError && invNoTax.code === 'BAD_REQUEST' && invNoTax.message.includes('税号'),
+    invNoTax && { code: invNoTax.code, message: invNoTax.message });
+  const invUnpaid = await asErr(trpcMutate('serviceLoop.invoiceCreate', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: aid2, titleType: 'personal', title: '个人', delivery: 'pickup' },
+  }));
+  check('53.5 已付闸：未收款预约（aid2 未 markPaid）→ 400「尚未完成收款」',
+    invUnpaid instanceof TrpcHttpError && invUnpaid.code === 'BAD_REQUEST' && invUnpaid.message.includes('尚未完成收款'),
+    invUnpaid && { code: invUnpaid.code, message: invUnpaid.message });
+  const invBadEmail = await asErr(trpcMutate('serviceLoop.invoiceCreate', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: aid, titleType: 'personal', title: '个人', delivery: 'email', email: 'not-an-email' },
+  }));
+  check('53.5 email 交付格式校验（非法邮箱 → 400「邮箱格式不正确」，形状校验先于在途幂等）',
+    invBadEmail instanceof TrpcHttpError && invBadEmail.code === 'BAD_REQUEST' && invBadEmail.message.includes('邮箱'),
+    invBadEmail && { code: invBadEmail.code, message: invBadEmail.message });
+  // cashier 来源单路径（svcBillMember=§41 萤火服务单，customer=本人，settled，实付 7744）
+  const invCashier = await trpcMutate<{ request: InvoiceT; idempotent: boolean }>('serviceLoop.invoiceCreate', {
+    cookie: customerCookie,
+    input: { orderKind: 'cashier', billId: svcBillMember.billId, titleType: 'business', title: '菲丽亚测试公司', taxNo: '91330100TEST0001X', delivery: 'pickup' },
+  });
+  check('53.5 cashier 来源单：金额=paid_fen 实收（7744）+ 企业抬头税号留存',
+    invCashier.request.amountFen === 7744 && invCashier.request.billNo === svcBillMember.billNo &&
+      invCashier.request.taxNo === '91330100TEST0001X' && invCashier.idempotent === false,
+    invCashier.request);
+  const invPending = await trpcQuery<InvoiceT[]>('serviceLoop.invoiceListPending', { cookie: ownerCookie });
+  check('53.5 商家待办可见本店 submitted 申请（两单在列）',
+    invPending.some((r) => r.id === invCreate.request.id) && invPending.some((r) => r.id === invCashier.request.id),
+    invPending.length);
+  const invReg = await trpcMutate<{ request: InvoiceT }>('serviceLoop.invoiceRegister', {
+    cookie: ownerCookie,
+    input: { requestId: invCreate.request.id, invoiceNo: 'FP-2026-1001' },
+  });
+  check('53.5 invoiceRegister 登记发票号 → issued + issuedAt/By 留痕',
+    invReg.request.status === 'issued' && invReg.request.issuedInvoiceNo === 'FP-2026-1001' &&
+      invReg.request.issuedAt instanceof Date && invReg.request.issuedBy === ownerUser!.id,
+    invReg.request);
+  const invIssuedEv = (await db.select().from(schema.eventOutbox)).filter(
+    (r) => r.eventType === 'invoice.issued' && r.channel === `user:${customerUser!.id}` &&
+      (r.payload as Record<string, unknown> | null)?.requestId === invCreate.request.id,
+  );
+  check('53.5 invoice.issued 落 outbox（user 频道，SSE 留痕可取证）', invIssuedEv.length === 1, invIssuedEv.map((r) => r.channel));
+  const invGot = await trpcQuery<{ request: InvoiceT }>('serviceLoop.invoiceGet', { cookie: customerCookie, input: { requestId: invCreate.request.id } });
+  check('53.5 客户端 invoiceGet 可见 issued + 实际发票号',
+    invGot.request.status === 'issued' && invGot.request.issuedInvoiceNo === 'FP-2026-1001', invGot.request.status);
+  const invMine = await trpcQuery<InvoiceT[]>('serviceLoop.invoiceListMine', { cookie: customerCookie });
+  check('53.5 invoiceListMine 仅本人含两单', invMine.some((r) => r.id === invCreate.request.id) && invMine.some((r) => r.id === invCashier.request.id), invMine.length);
+  const invAgain = await asErr(trpcMutate('serviceLoop.invoiceCreate', {
+    cookie: customerCookie,
+    input: { orderKind: 'appointment', billId: aid, titleType: 'personal', title: '个人', delivery: 'pickup' },
+  }));
+  check('53.5 已开票单重复申请 → 400「已开票」明文拒',
+    invAgain instanceof TrpcHttpError && invAgain.code === 'BAD_REQUEST' && invAgain.message.includes('已开票'),
+    invAgain && { code: invAgain.code, message: invAgain.message });
+
+  /* ---------- 53.6 权限：他人 403×4（证书/报告/工单/发票） ---------- */
+  console.log('\n[补缺4] 53.6 权限闸（他人 403×4）');
+  const otherCert = await asErr(trpcQuery('serviceLoop.certificateFor', { cookie: d10Cookie, input: { appointmentId: aid } }));
+  const otherReport = await asErr(trpcQuery('serviceLoop.reportFor', { cookie: d10Cookie, input: { appointmentId: aid } }));
+  const otherTicket = await asErr(trpcQuery('serviceLoop.ticketGet', { cookie: d10Cookie, input: { ticketId: tkCreate.ticket.id } }));
+  const otherInvoice = await asErr(trpcQuery('serviceLoop.invoiceGet', { cookie: d10Cookie, input: { requestId: invCreate.request.id } }));
+  check('53.6 他人证书/报告/工单/发票 全 403 FORBIDDEN（客户只见本人数据）',
+    [otherCert, otherReport, otherTicket, otherInvoice].every(
+      (r) => r instanceof TrpcHttpError && r.httpStatus === 403 && r.code === 'FORBIDDEN',
+    ),
+    [otherCert, otherReport, otherTicket, otherInvoice].map((r) => r && `${r.httpStatus}:${r.code}`));
+
+  /* ---------- 53.7 serviceHours 公示读口（端口可调实证） ---------- */
+  console.log('\n[补缺4] 53.7 serviceHours 客服时间公示');
+  const hours1 = await trpcQuery<{ text: string | null }>('serviceLoop.serviceHours', { cookie: customerCookie });
+  check('53.7 serviceHours 读出种子值「09:00–21:00」（0017 幂等种子+seed 补种）',
+    hours1.text === '09:00–21:00', hours1);
+  const hoursSave = await trpcMutate<{ version: number; keys: string[] }>('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'service', changes: [{ ruleKey: 'service_hours', valueJson: { text: '10:00–22:00' } }] },
+  });
+  check('53.7 配置端口第六域 domain=service 保存即生效（version=2）',
+    hoursSave.version === 2 && hoursSave.keys.includes('service_hours'), hoursSave);
+  const hours2 = await trpcQuery<{ text: string | null }>('serviceLoop.serviceHours', { cookie: customerCookie });
+  check('53.7 改值复读出「10:00–22:00」（端口可调实证）', hours2.text === '10:00–22:00', hours2);
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'service', changes: [{ ruleKey: 'service_hours', valueJson: { text: '09:00–21:00' } }] },
+  });
+  const hours3 = await trpcQuery<{ text: string | null }>('serviceLoop.serviceHours', { cookie: customerCookie });
+  check('53.7 还原种子值（不留端口副作用）', hours3.text === '09:00–21:00', hours3);
+
+  /* ==================================================================
+   * 批次 R13a（账号安全大片 2 · server 侧）验收段 51.x
+   * 夹具手机号段 1396666xxxx（避开种子/e2e 既有 13800000000/1381111xxxx/1390000xxxx/13977776666）。
+   * 注销/换绑不产生退款单——本段不触碰 refund_bills，不受段尾移位铁律约束。
+   * ================================================================== */
+  console.log('\n[R13a] 51. 账号安全（注销/换绑/申诉/设备登记）');
+  /* ---------- 51.1 sendCode 限流（60s 一码）+ 原号闸 + beta devCode 回显 ---------- */
+  console.log('\n[R13a] 51.1 sendCode（限流/原号闸/devCode 回显）');
+  const phoneA = '13966660001';
+  const reg51a = await devLoginPhone(phoneA);
+  check('51.1 换绑主线用户 A 自助开户（customer + 会话签发）',
+    reg51a.res.ok && reg51a.body.user?.roles?.includes('customer') === true && !!reg51a.cookie, reg51a.body);
+  const cookie51a = reg51a.cookie!;
+  const userAId = reg51a.body.user!.id!;
+  interface SendCodeRes { ok: boolean; ttlSec: number; devCode?: string }
+  const scOld1 = await trpcMutate<SendCodeRes>('authSecurity.sendCode', {
+    cookie: cookie51a, input: { purpose: 'change_bind_old', phone: phoneA },
+  });
+  check('51.1 sendCode 原号验证码发送成功 + beta devCode 回显（6 位数字，ttl=600s）',
+    scOld1.ok === true && scOld1.ttlSec === 600 && typeof scOld1.devCode === 'string' && /^\d{6}$/.test(scOld1.devCode), scOld1);
+  const scOldMismatch = await asErr(trpcMutate('authSecurity.sendCode', {
+    cookie: cookie51a, input: { purpose: 'change_bind_old', phone: '13966660999' },
+  }));
+  check('51.1 原号不一致 → BAD_REQUEST「与当前账号绑定手机号不一致」（原号闸）',
+    scOldMismatch instanceof TrpcHttpError && scOldMismatch.code === 'BAD_REQUEST' && scOldMismatch.message.includes('不一致'),
+    scOldMismatch && { code: scOldMismatch.code, message: scOldMismatch.message });
+  const scOldResend = await asErr(trpcMutate('authSecurity.sendCode', {
+    cookie: cookie51a, input: { purpose: 'change_bind_old', phone: phoneA },
+  }));
+  check('51.1 限流：同 phone+purpose 60s 一码（立即重发 → TOO_MANY_REQUESTS）',
+    scOldResend instanceof TrpcHttpError && scOldResend.code === 'TOO_MANY_REQUESTS',
+    scOldResend && { code: scOldResend.code, message: scOldResend.message });
+
+  /* ---------- 51.2 changePhone 双码流（错码拒/成功/会话零丢失/logs 'self'） ---------- */
+  console.log('\n[R13a] 51.2 changePhone 双码换绑');
+  const phoneA2 = '13966660002';
+  const scNewClash = await asErr(trpcMutate('authSecurity.sendCode', {
+    cookie: cookie51a, input: { purpose: 'change_bind_new', phone: '13977776666' }, // D-16 段在册号（他人账号）
+  }));
+  check('51.2 新号撞号闸（新号=他人在册号 → BAD_REQUEST「已被其他账号使用」）',
+    scNewClash instanceof TrpcHttpError && scNewClash.code === 'BAD_REQUEST' && scNewClash.message.includes('已被其他账号使用'),
+    scNewClash && { code: scNewClash.code, message: scNewClash.message });
+  const scNew1 = await trpcMutate<SendCodeRes>('authSecurity.sendCode', {
+    cookie: cookie51a, input: { purpose: 'change_bind_new', phone: phoneA2 },
+  });
+  check('51.2 sendCode 新号验证码发送成功（devCode 回显）', scNew1.ok === true && /^\d{6}$/.test(scNew1.devCode ?? ''), scNew1);
+  // 构造必错新码（真码 +1 取模，排除百万分之一撞码）
+  const wrongNewCode = String((parseInt(scNew1.devCode!, 10) + 1) % 1_000_000).padStart(6, '0');
+  const wrongChange = await asErr(trpcMutate('authSecurity.changePhone', {
+    cookie: cookie51a, input: { oldCode: scOld1.devCode!, newPhone: phoneA2, newCode: wrongNewCode },
+  }));
+  const userAAfterWrong = await db.select({ phone: schema.users.phone }).from(schema.users).where(eq(schema.users.id, userAId)).get();
+  check('51.2 错新码 → BAD_REQUEST「验证码错误」且事务回滚换绑未生效（users.phone 仍原号）',
+    wrongChange instanceof TrpcHttpError && wrongChange.code === 'BAD_REQUEST' && wrongChange.message.includes('验证码错误') &&
+      userAAfterWrong?.phone === phoneA,
+    wrongChange && { code: wrongChange.code, message: wrongChange.message, phone: userAAfterWrong?.phone });
+  const changed = await trpcMutate<{ user: { id: string; phone: string | null }; roles: string[] }>('authSecurity.changePhone', {
+    cookie: cookie51a, input: { oldCode: scOld1.devCode!, newPhone: phoneA2, newCode: scNew1.devCode! },
+  });
+  check('51.2 双码换绑成功（返回 auth.me 同构：user.phone=新号 + roles 透传）',
+    changed.user.id === userAId && changed.user.phone === phoneA2 && changed.roles.includes('customer'), changed.user);
+  const meAfterChange = await trpcQuery<{ user: { id: string; phone: string | null } }>('auth.me', { cookie: cookie51a });
+  check('51.2 换绑后原会话零丢失（auth.me 仍 200；会话载荷无 phone 字段，透出已为新号）',
+    meAfterChange.user.id === userAId && meAfterChange.user.phone === phoneA2, meAfterChange.user);
+  const logs51a = await db.select().from(schema.phoneChangeLogs).where(eq(schema.phoneChangeLogs.userId, userAId));
+  check("51.2 phone_change_logs 'self' 落行（全脱敏 139****0001→139****0002，operatorId 空）",
+    logs51a.length === 1 && logs51a[0]!.channel === 'self' && logs51a[0]!.operatorId === null &&
+      logs51a[0]!.oldPhoneMasked === '139****0001' && logs51a[0]!.newPhoneMasked === '139****0002',
+    logs51a.map((l) => ({ channel: l.channel, old: l.oldPhoneMasked, new: l.newPhoneMasked })));
+  const reuseChange = await asErr(trpcMutate('authSecurity.changePhone', {
+    cookie: cookie51a, input: { oldCode: scOld1.devCode!, newPhone: phoneA2, newCode: scNew1.devCode! },
+  }));
+  check('51.2 验证码一次性（已消费码重用 → BAD_REQUEST）',
+    reuseChange instanceof TrpcHttpError && reuseChange.code === 'BAD_REQUEST',
+    reuseChange && { code: reuseChange.code, message: reuseChange.message });
+
+  /* ---------- 51.3 换绑申诉全链（提交→待审→approve/reject） ---------- */
+  console.log('\n[R13a] 51.3 换绑申诉全链');
+  const phoneC = '13966660010';
+  const reg51c = await devLoginPhone(phoneC);
+  const cookie51c = reg51c.cookie!;
+  const userCId = reg51c.body.user!.id!;
+  interface AppealReqT {
+    id: string; requestNo: string; userId: string; status: string;
+    oldPhoneMasked: string; newPhoneMasked: string; decideNote: string | null;
+  }
+  const ap1 = await trpcMutate<{ request: AppealReqT; idempotent: boolean }>('authSecurity.submitPhoneAppeal', {
+    cookie: cookie51c, input: { oldPhone: phoneC, newPhone: '13966660011', note: '原手机丢失，凭身份证到店申诉换绑' },
+  });
+  check('51.3 申诉提交成功（PC-yyyymmdd-NNN 日序单号 + 脱敏落表 + submitted）',
+    ap1.idempotent === false && /^PC-\d{8}-\d{3}$/.test(ap1.request.requestNo) &&
+      ap1.request.oldPhoneMasked === '139****0010' && ap1.request.newPhoneMasked === '139****0011' &&
+      ap1.request.status === 'submitted',
+    ap1.request);
+  const ap1Again = await trpcMutate<{ request: AppealReqT; idempotent: boolean }>('authSecurity.submitPhoneAppeal', {
+    cookie: cookie51c, input: { oldPhone: phoneC, newPhone: '13966660011', note: '重复提交验证幂等' },
+  });
+  check('51.3 在途幂等（重复提交返回同一单 idempotent=true）',
+    ap1Again.idempotent === true && ap1Again.request.id === ap1.request.id, { first: ap1.request.id, second: ap1Again.request.id });
+  const apBadOld = await asErr(trpcMutate('authSecurity.submitPhoneAppeal', {
+    cookie: cookie51c, input: { oldPhone: '13966660999', newPhone: '13966660011', note: '原号不一致验证' },
+  }));
+  check('51.3 原号不一致 → BAD_REQUEST（原号一致闸）',
+    apBadOld instanceof TrpcHttpError && apBadOld.code === 'BAD_REQUEST' && apBadOld.message.includes('不一致'),
+    apBadOld && { code: apBadOld.code, message: apBadOld.message });
+  const appealList = await trpcQuery<{ items: Array<AppealReqT & { slaBreached: boolean }> }>('authSecurity.listPhoneAppeals', { cookie: managerCookie });
+  const appealHit = appealList.items.find((r) => r.id === ap1.request.id);
+  check('51.3 listPhoneAppeals 待审队列含该单（SLA 24h 内未超期标记）',
+    !!appealHit && appealHit.slaBreached === false, appealList.items.map((r) => r.requestNo));
+  const rvApNoNote = await asErr(trpcMutate('authSecurity.reviewPhoneAppeal', {
+    cookie: managerCookie, input: { requestId: ap1.request.id, approve: false },
+  }));
+  check('51.3 reject 强制 note（缺 note → BAD_REQUEST）',
+    rvApNoNote instanceof TrpcHttpError && rvApNoNote.code === 'BAD_REQUEST',
+    rvApNoNote && { code: rvApNoNote.code, message: rvApNoNote.message });
+  const rvApReject = await trpcMutate<{ request: AppealReqT }>('authSecurity.reviewPhoneAppeal', {
+    cookie: managerCookie, input: { requestId: ap1.request.id, approve: false, note: '材料不足，请补充购机凭证' },
+  });
+  check('51.3 reject 成功（rejected + decideNote 落库）',
+    rvApReject.request.status === 'rejected' && rvApReject.request.decideNote === '材料不足，请补充购机凭证', rvApReject.request);
+  const appealStatus51c = await trpcQuery<{ items: AppealReqT[] }>('authSecurity.appealStatus', { cookie: cookie51c });
+  check('51.3 本人 appealStatus 可见驳回原因（客户端可见）',
+    appealStatus51c.items.some((r) => r.id === ap1.request.id && r.decideNote === '材料不足，请补充购机凭证'),
+    appealStatus51c.items.map((r) => ({ id: r.id, note: r.decideNote })));
+  const ap2 = await trpcMutate<{ request: AppealReqT; idempotent: boolean }>('authSecurity.submitPhoneAppeal', {
+    cookie: cookie51c, input: { oldPhone: phoneC, newPhone: '13966660012', note: '已补充材料，再次申诉' },
+  });
+  const rvApApproveNoNote = await asErr(trpcMutate('authSecurity.reviewPhoneAppeal', {
+    cookie: managerCookie, input: { requestId: ap2.request.id, approve: true },
+  }));
+  check('51.3 approve 强制 note（缺 note → BAD_REQUEST）',
+    rvApApproveNoNote instanceof TrpcHttpError && rvApApproveNoNote.code === 'BAD_REQUEST',
+    rvApApproveNoNote && { code: rvApApproveNoNote.code, message: rvApApproveNoNote.message });
+  const rvApApprove = await trpcMutate<{ request: AppealReqT }>('authSecurity.reviewPhoneAppeal', {
+    cookie: managerCookie, input: { requestId: ap2.request.id, approve: true, note: '材料核验通过，协助换绑' },
+  });
+  check('51.3 approve 成功（approved）', rvApApprove.request.status === 'approved', rvApApprove.request);
+  const user51cRow = await db.select({ phone: schema.users.phone }).from(schema.users).where(eq(schema.users.id, userCId)).get();
+  check('51.3 approve 后 users.phone 落新号（申诉通道：原号失效无需验证码）',
+    user51cRow?.phone === '13966660012', user51cRow?.phone);
+  const logs51c = await db.select().from(schema.phoneChangeLogs).where(eq(schema.phoneChangeLogs.userId, userCId));
+  check("51.3 phone_change_logs 'assisted' 落行（operatorId=审批人 manager，全脱敏）",
+    logs51c.length === 1 && logs51c[0]!.channel === 'assisted' && logs51c[0]!.operatorId === managerFix.id &&
+      logs51c[0]!.oldPhoneMasked === '139****0010' && logs51c[0]!.newPhoneMasked === '139****0012',
+    logs51c.map((l) => ({ channel: l.channel, op: l.operatorId, old: l.oldPhoneMasked, new: l.newPhoneMasked })));
+  const me51cAfter = await trpcQuery<{ user: { id: string; phone: string | null } }>('auth.me', { cookie: cookie51c });
+  check('51.3 旧会话照旧有效（session 无 phone 载荷，auth.me 200 透出新号）',
+    me51cAfter.user.id === userCId && me51cAfter.user.phone === '13966660012', me51cAfter.user);
+  const relogin51c = await devLoginPhone('13966660012');
+  check('51.3 新号登录成功（同一用户 id，幂等建档不建行）',
+    relogin51c.res.ok && relogin51c.body.user?.id === userCId, { want: userCId, got: relogin51c.body.user?.id });
+
+  /* ---------- 51.4 注销流（阻断/勾选/approve 全联动/reject 可见） ---------- */
+  console.log('\n[R13a] 51.4 账号注销流');
+  const phoneD = '13966660020';
+  const reg51d = await devLoginPhone(phoneD);
+  const cookie51d = reg51d.cookie!;
+  const userDId = reg51d.body.user!.id!;
+  interface DeactReqT { id: string; userId: string; status: string; decideNote: string | null; impactsJson: string[] }
+  // 夹具：本人宠物 + 未完成预约（confirmed）→ 阻断
+  const pet51d = (await db.insert(schema.pets).values({ ownerId: userDId, name: '注销测试宠', species: 'dog' }).returning())[0]!;
+  await db.insert(schema.appointments).values({
+    code: 'D51D20', customerId: userDId, storeId, petId: pet51d.id, serviceId: service.id,
+    type: 'grooming', scheduledStart: new Date(Date.now() + 86400_000),
+    scheduledEnd: new Date(Date.now() + 86400_000 + 3600_000), status: 'confirmed', priceFen: 100,
+  });
+  const pre51a = await trpcQuery<{ blockers: Array<{ kind: string; label: string; count: number }>; deactivatable: boolean }>(
+    'authSecurity.deactivationPrecheck', { cookie: cookie51d });
+  check('51.4 未完成预约=阻断列明（appointment×1，deactivatable=false）',
+    pre51a.deactivatable === false && pre51a.blockers.some((b) => b.kind === 'appointment' && b.count === 1), pre51a.blockers);
+  const reqBlocked = await asErr(trpcMutate('authSecurity.requestDeactivation', {
+    cookie: cookie51d, input: { impacts: ['rebate', 'member', 'pets'] },
+  }));
+  check('51.4 有阻断项提交 → BAD_REQUEST（服务端 precheck 闸）',
+    reqBlocked instanceof TrpcHttpError && reqBlocked.code === 'BAD_REQUEST' && reqBlocked.message.includes('阻断'),
+    reqBlocked && { code: reqBlocked.code, message: reqBlocked.message });
+  await db.update(schema.appointments).set({ status: 'cancelled', updatedAt: new Date() })
+    .where(eq(schema.appointments.customerId, userDId)); // 清空阻断（夹具直改）
+  const pre51b = await trpcQuery<{ blockers: unknown[]; deactivatable: boolean }>('authSecurity.deactivationPrecheck', { cookie: cookie51d });
+  check('51.4 清空阻断后放行（blockers 空，deactivatable=true）',
+    pre51b.deactivatable === true && pre51b.blockers.length === 0, pre51b);
+  const reqMissing = await asErr(trpcMutate('authSecurity.requestDeactivation', {
+    cookie: cookie51d, input: { impacts: ['rebate', 'member'] },
+  }));
+  check('51.4 影响勾选缺项 → BAD_REQUEST（三项缺一不可，服务端强校验）',
+    reqMissing instanceof TrpcHttpError && reqMissing.code === 'BAD_REQUEST' && reqMissing.message.includes('三项'),
+    reqMissing && { code: reqMissing.code, message: reqMissing.message });
+  const dr1 = await trpcMutate<{ request: DeactReqT; idempotent: boolean }>('authSecurity.requestDeactivation', {
+    cookie: cookie51d, input: { impacts: ['pets', 'rebate', 'member'] },
+  });
+  check('51.4 三勾选提交成功（submitted + impacts 快照三项）',
+    dr1.idempotent === false && dr1.request.status === 'submitted' && dr1.request.impactsJson.length === 3, dr1.request);
+  const dr1Again = await trpcMutate<{ request: DeactReqT; idempotent: boolean }>('authSecurity.requestDeactivation', {
+    cookie: cookie51d, input: { impacts: ['rebate', 'member', 'pets'] },
+  });
+  check('51.4 在途幂等（重复提交返回同一单）',
+    dr1Again.idempotent === true && dr1Again.request.id === dr1.request.id, { first: dr1.request.id, second: dr1Again.request.id });
+  const cancel51d = await trpcMutate<{ request: DeactReqT }>('authSecurity.cancelDeactivation', { cookie: cookie51d });
+  check('51.4 本人撤销（submitted→cancelled）', cancel51d.request.status === 'cancelled', cancel51d.request);
+  const dr2 = await trpcMutate<{ request: DeactReqT; idempotent: boolean }>('authSecurity.requestDeactivation', {
+    cookie: cookie51d, input: { impacts: ['rebate', 'member', 'pets'] },
+  });
+  const rvDNoNote = await asErr(trpcMutate('authSecurity.reviewDeactivation', {
+    cookie: managerCookie, input: { requestId: dr2.request.id, approve: false },
+  }));
+  check('51.4 驳回强制 note（缺 note → BAD_REQUEST）',
+    rvDNoNote instanceof TrpcHttpError && rvDNoNote.code === 'BAD_REQUEST',
+    rvDNoNote && { code: rvDNoNote.code, message: rvDNoNote.message });
+  const rvDReject = await trpcMutate<{ request: DeactReqT }>('authSecurity.reviewDeactivation', {
+    cookie: managerCookie, input: { requestId: dr2.request.id, approve: false, note: '门店挽留成功，客户同意保留账号' },
+  });
+  check('51.4 门店驳回（rejected + decideNote 落库）',
+    rvDReject.request.status === 'rejected' && rvDReject.request.decideNote === '门店挽留成功，客户同意保留账号', rvDReject.request);
+  const dStatus51 = await trpcQuery<{ inflight: DeactReqT | null; latest: DeactReqT | null }>('authSecurity.deactivationStatus', { cookie: cookie51d });
+  check('51.4 本人可见驳回原因（deactivationStatus latest=reject 单带 decideNote）',
+    dStatus51.inflight === null && dStatus51.latest?.id === dr2.request.id && dStatus51.latest.decideNote === '门店挽留成功，客户同意保留账号',
+    dStatus51.latest);
+  // 最终提交 + 会员/回馈金夹具 → approve 全联动
+  const dr3 = await trpcMutate<{ request: DeactReqT; idempotent: boolean }>('authSecurity.requestDeactivation', {
+    cookie: cookie51d, input: { impacts: ['rebate', 'member', 'pets'] },
+  });
+  const of51d = await trpcMutate<{ membership: { status: string; planKey: string } }>('membership.openFree', { cookie: cookie51d });
+  check('51.4 夹具：微光会员 active（注销联动取消对象）', of51d.membership.status === 'active', of51d.membership);
+  await db.insert(schema.rebateAccounts).values({ userId: userDId, balanceFen: 500 })
+    .onConflictDoUpdate({ target: schema.rebateAccounts.userId, set: { balanceFen: 500 } }); // 夹具：余额 500（清零留痕对象）
+  const rvDApprove = await trpcMutate<{ request: DeactReqT; clearedRebateFen: number }>('authSecurity.reviewDeactivation', {
+    cookie: managerCookie, input: { requestId: dr3.request.id, approve: true, note: '客户坚持注销，门店确认无欠单' },
+  });
+  check('51.4 门店 approve（approved + 回馈金清零额 500 透出）',
+    rvDApprove.request.status === 'approved' && rvDApprove.clearedRebateFen === 500, rvDApprove);
+  const userDRow = await db.select().from(schema.users).where(eq(schema.users.id, userDId)).get();
+  check('51.4 deactivated 落库（deactivated_at 非空 + reason=审批 note + phone/kimiId 释放 `_deact_<uid>_<原值>`）',
+    !!userDRow?.deactivatedAt && userDRow.deactivateReason === '客户坚持注销，门店确认无欠单' &&
+      userDRow.phone === `_deact_${userDId}_${phoneD}` && userDRow.kimiId === `_deact_${userDId}_phone:${phoneD}`,
+    { deactivatedAt: userDRow?.deactivatedAt, phone: userDRow?.phone, kimiId: userDRow?.kimiId });
+  const me51dAfter = await asErr(trpcQuery('auth.me', { cookie: cookie51d }));
+  check('51.4 注销后原会话 401（middleware 软删闸即时生效）',
+    me51dAfter instanceof TrpcHttpError && me51dAfter.httpStatus === 401,
+    me51dAfter && { status: me51dAfter.httpStatus, code: me51dAfter.code });
+  const reloginDeactRes = await fetch(`${BASE}/api/auth/dev-login`, {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ userId: userDId }),
+  });
+  const reloginDeactBody = (await reloginDeactRes.json()) as { ok?: boolean; error?: string; message?: string };
+  check('51.4 已注销用户登录明文拒「该账号已注销，如有疑问请联系门店」',
+    reloginDeactRes.status === 403 && reloginDeactBody.ok === false && (reloginDeactBody.message ?? '').includes('该账号已注销'),
+    { status: reloginDeactRes.status, body: reloginDeactBody });
+  const reReg51d = await devLoginPhone(phoneD);
+  check('51.4 phone suffix 释放：同号重新注册建档成功（新档 ≠ 原账号）',
+    reReg51d.res.ok && !!reReg51d.body.user?.id && reReg51d.body.user.id !== userDId,
+    { old: userDId, neu: reReg51d.body.user?.id });
+  const reRegPets = await trpcQuery<Array<{ id: string }>>('pet.list', { cookie: reReg51d.cookie! });
+  check('51.4 新旧账号互不可见（新档 pet.list 空，原档数据不透出）', reRegPets.length === 0, reRegPets.length);
+  const acc51d = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, userDId)).get();
+  const clearLog51d = (await db.select().from(schema.rebateLogs)
+    .where(and(eq(schema.rebateLogs.userId, userDId), eq(schema.rebateLogs.type, 'clear'))))[0];
+  check('51.4 回馈金清零留痕（余额 500→0，clear 行前后值 + note 含「注销」——clearRebateAccount 工艺）',
+    acc51d?.balanceFen === 0 && clearLog51d?.deltaFen === -500 && clearLog51d.beforeFen === 500 && clearLog51d.afterFen === 0 &&
+      (clearLog51d.note ?? '').includes('注销'),
+    { balance: acc51d?.balanceFen, log: clearLog51d && { before: clearLog51d.beforeFen, after: clearLog51d.afterFen, note: clearLog51d.note } });
+  const m51d = await db.select().from(schema.memberships).where(eq(schema.memberships.userId, userDId)).get();
+  check('51.4 会员 active→cancelled（注销≠退会：无折算退款 refund_fen=NULL，cancelReason 注明）',
+    m51d?.status === 'cancelled' && m51d.refundFen === null && (m51d.cancelReason ?? '').includes('注销'),
+    { status: m51d?.status, refundFen: m51d?.refundFen, reason: m51d?.cancelReason });
+  const pet51dAfter = await db.select().from(schema.pets).where(eq(schema.pets.id, pet51d.id)).get();
+  check('51.4 pets 软删标记（deleted_at 置位 + 原因「账号注销」）',
+    !!pet51dAfter?.deletedAt && pet51dAfter.deleteReason === '账号注销',
+    { deletedAt: pet51dAfter?.deletedAt, reason: pet51dAfter?.deleteReason });
+  const rvAsCustomer = await asErr(trpcMutate('authSecurity.reviewDeactivation', {
+    cookie: customerCookie, input: { requestId: dr3.request.id, approve: true },
+  }));
+  check('51.4 客户越权审批 → 403 FORBIDDEN（merchantManagerProcedure 闸）',
+    rvAsCustomer instanceof TrpcHttpError && rvAsCustomer.httpStatus === 403 && rvAsCustomer.code === 'FORBIDDEN',
+    rvAsCustomer && { status: rvAsCustomer.httpStatus, code: rvAsCustomer.code });
+
+  /* ---------- 51.5 registerDevice upsert + listDevices 换绑留痕透出 ---------- */
+  console.log('\n[R13a] 51.5 设备登记');
+  interface RegDeviceRes { device: { id: string; deviceId: string }; created: boolean }
+  const rd1 = await trpcMutate<RegDeviceRes>('authSecurity.registerDevice', {
+    cookie: cookie51a, input: { deviceId: 'dev-51a-1', label: '主力机' },
+  });
+  const rd1b = await trpcMutate<RegDeviceRes>('authSecurity.registerDevice', {
+    cookie: cookie51a, input: { deviceId: 'dev-51a-1' },
+  });
+  check('51.5 registerDevice upsert（首登创建 → 重登幂等同行刷新，不增行）',
+    rd1.created === true && rd1b.created === false && rd1b.device.id === rd1.device.id,
+    { first: rd1.created, second: rd1b.created });
+  await trpcMutate<RegDeviceRes>('authSecurity.registerDevice', {
+    cookie: cookie51a, input: { deviceId: 'dev-51a-2', label: '备用机' },
+  });
+  const devRows51 = await db.select().from(schema.userDevices).where(eq(schema.userDevices.userId, userAId));
+  check('51.5 (user_id,device_id) 唯一防重（重登后仍 2 行）', devRows51.length === 2, devRows51.length);
+  const listDev51 = await trpcQuery<{
+    devices: Array<{ deviceId: string; label: string | null }>;
+    phoneChangeLogs: Array<{ channel: string; oldPhoneMasked: string; newPhoneMasked: string }>;
+  }>('authSecurity.listDevices', { cookie: cookie51a });
+  check('51.5 listDevices 设备倒序 2 行 + 换绑留痕透出（self 139****0001→139****0002，设备页数据源）',
+    listDev51.devices.length === 2 &&
+      listDev51.phoneChangeLogs.some((l) => l.channel === 'self' && l.oldPhoneMasked === '139****0001' && l.newPhoneMasked === '139****0002'),
+    { devices: listDev51.devices.length, logs: listDev51.phoneChangeLogs });
+
+  /* ---------- 51.6 已注销用户 SSE/业务接口 401（软删闸实证） ---------- */
+  console.log('\n[R13a] 51.6 软删闸（SSE/接口 401）');
+  const push51d = await asErr(trpcMutate('push.subscribe', {
+    cookie: cookie51d, input: { clientId: 'dev-51d-push', appType: 'customer' },
+  }));
+  check('51.6 已注销用户业务接口 401（push.subscribe UNAUTHORIZED）',
+    push51d instanceof TrpcHttpError && push51d.httpStatus === 401 && push51d.code === 'UNAUTHORIZED',
+    push51d && { status: push51d.httpStatus, code: push51d.code });
+  const sse51d = await fetch(`${BASE}/api/events?client_id=dev-51d-sse`, { headers: { cookie: cookie51d } });
+  const sse51dStatus = sse51d.status;
+  await sse51d.body?.cancel();
+  check('51.6 已注销用户 SSE 401（软删闸实证：loadSessionUser 视同不存在）', sse51dStatus === 401, sse51dStatus);
+  const sse51a = await fetch(`${BASE}/api/events?client_id=dev-51a-sse`, { headers: { cookie: cookie51a } });
+  const sse51aStatus = sse51a.status;
+  await sse51a.body?.cancel();
+  check('51.6 对照：正常用户过会话闸（403=client_id 未登记，非 401——401 确为注销闸语义）',
+    sse51aStatus === 403, sse51aStatus);
+
+  /* ==================================================================
+   * 补缺大批片 5（站内信分类 + 订阅退订 + 端点补齐 + 事件挂接槽位）验收段
+   * 干净夹具用户 seed_e2e_notify 隔离既有段通知存量（unreadCount 断言可精确）；
+   * 事件触发=直接调 emitEvent（本片写入口不新增链路，槽位有效性实证口径见 54.5）。
+   * ================================================================== */
+  console.log('\n[片5] 54. 站内信分类 / 订阅退订 / 端点补齐 / 挂接槽位');
+  const { emitEvent } = await import('../realtime/bus');
+  const { EventType } = await import('../realtime/events');
+
+  const notifyUser = (await db
+    .insert(schema.users)
+    .values({ kimiId: 'seed_e2e_notify', nickname: 'e2e 通知甲', phone: '13900001031' })
+    .returning())[0]!;
+  await db.insert(schema.userRoles).values({ userId: notifyUser.id, role: 'customer' });
+  const notifyCookie = await devLogin(notifyUser.id);
+
+  interface NotifyItem {
+    id: string; type: string; category: string;
+    title: string; body: string | null; link: string | null; readAt: Date | null;
+  }
+  interface NotifyListRes { items: NotifyItem[]; nextCursor: string | null }
+  const notifRowsOf = (uid: string) =>
+    db.select().from(schema.notifications).where(eq(schema.notifications.userId, uid));
+
+  /* ---- 54.1 既有真事件全链：落行含 category='service' + list 可见 + unreadCount=1 ---- */
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.AppointmentCompleted, { appointmentId: aid, petName: '球球' });
+  const row501 = (await notifRowsOf(notifyUser.id)).find((n) => n.type === 'appointment.completed');
+  check('54.1 emitEvent（appointment.completed）落行含 category=service + 文案/link 正确',
+    row501?.category === 'service' && row501.title === '服务已完成' && row501.link === `/appointments/${aid}/live`,
+    row501 && { category: row501.category, title: row501.title, link: row501.link });
+  const list501 = await trpcQuery<NotifyListRes>('push.listNotifications', { cookie: notifyCookie, input: {} });
+  check('54.1 listNotifications 可见该行且返回行带 category 字段',
+    list501.items.length === 1 && list501.items[0]!.id === row501?.id && list501.items[0]!.category === 'service',
+    list501.items.map((n) => `${n.type}:${n.category}`));
+  const uc501 = await trpcQuery<{ total: number; byCategory: Record<string, number> }>('push.unreadCount', { cookie: notifyCookie });
+  check('54.1 unreadCount=1（byCategory.service=1）',
+    uc501.total === 1 && uc501.byCategory.service === 1, uc501);
+
+  /* ---- 54.2 已读幂等 + markAllRead + 删除仅本人（他人 403） ---- */
+  const mr1 = await trpcMutate<{ marked: number }>('push.markRead', { cookie: notifyCookie, input: { ids: [row501!.id] } });
+  const mr2 = await trpcMutate<{ marked: number }>('push.markRead', { cookie: notifyCookie, input: { ids: [row501!.id] } });
+  check('54.2 markRead 幂等：首次 marked=1 / 重复调 marked=0（零副作用）',
+    mr1.marked === 1 && mr2.marked === 0, { mr1, mr2 });
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.BoardingCompleted, { appointmentId: aid });
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.AppointmentCancelled, { appointmentId: aid });
+  const uc502a = await trpcQuery<{ total: number }>('push.unreadCount', { cookie: notifyCookie });
+  const ma1 = await trpcMutate<{ marked: number }>('push.markAllRead', { cookie: notifyCookie, input: {} });
+  const ma2 = await trpcMutate<{ marked: number }>('push.markAllRead', { cookie: notifyCookie, input: {} });
+  const uc502b = await trpcQuery<{ total: number }>('push.unreadCount', { cookie: notifyCookie });
+  check('54.2 markAllRead 幂等：2 条未读全已读（marked=2）/ 重复调 marked=0 / unreadCount 归零',
+    uc502a.total === 2 && ma1.marked === 2 && ma2.marked === 0 && uc502b.total === 0,
+    { before: uc502a.total, ma1, ma2, after: uc502b.total });
+
+  const delForeign = await asErr(trpcMutate('push.deleteNotification', { cookie: ownerCookie, input: { id: row501!.id } }));
+  check('54.2 deleteNotification 他人通知 → 403 FORBIDDEN',
+    delForeign instanceof TrpcHttpError && delForeign.httpStatus === 403 && delForeign.code === 'FORBIDDEN',
+    delForeign && { status: delForeign.httpStatus, code: delForeign.code, message: delForeign.message });
+  const delOwn = await trpcMutate<{ deleted: boolean }>('push.deleteNotification', { cookie: notifyCookie, input: { id: row501!.id } });
+  const delGone = (await db.select().from(schema.notifications).where(eq(schema.notifications.id, row501!.id))).length === 0;
+  check('54.2 deleteNotification 本人删除成功且行消失',
+    delOwn.deleted === true && delGone, { deleted: delOwn.deleted, delGone });
+
+  /* ---- 54.3 分类：不同 eventType 落不同 category + list 按 category 过滤 ---- */
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.OrderPaid, { orderId: 'e2e-order-503' });
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.MembershipOpened, { planKey: 'plan_yinghuo' });
+  await emitEvent(db, `user:${notifyUser.id}`, 'marketing.promo', { text: 'e2e 营销' });
+  const rows503 = await notifRowsOf(notifyUser.id);
+  const cat503 = (t: string) => rows503.find((n) => n.type === t)?.category;
+  check('54.3 落库分类正确（order.paid→trade / membership.opened→account / marketing.promo→marketing）',
+    cat503('order.paid') === 'trade' && cat503('membership.opened') === 'account' && cat503('marketing.promo') === 'marketing',
+    rows503.map((n) => `${n.type}:${n.category}`));
+  const listTrade = await trpcQuery<NotifyListRes>('push.listNotifications', { cookie: notifyCookie, input: { category: 'trade' } });
+  check('54.3 list 按 category=trade 过滤（全部 trade 且含 order.paid）',
+    listTrade.items.length > 0 && listTrade.items.every((n) => n.category === 'trade') &&
+      listTrade.items.some((n) => n.type === 'order.paid'),
+    listTrade.items.map((n) => `${n.type}:${n.category}`));
+  const listMarketing = await trpcQuery<NotifyListRes>('push.listNotifications', { cookie: notifyCookie, input: { category: 'marketing' } });
+  check('54.3 list 按 category=marketing 过滤（恰含 marketing.promo）',
+    listMarketing.items.length === 1 && listMarketing.items[0]!.type === 'marketing.promo',
+    listMarketing.items.map((n) => `${n.type}:${n.category}`));
+
+  /* ---- 54.4 订阅：营销可关 / 交易·服务·账户不可关（硬口径） ---- */
+  const prefOff = await trpcMutate<{ category: string; enabled: boolean }>('push.setNotifyPref', {
+    cookie: notifyCookie, input: { category: 'marketing', enabled: false },
+  });
+  const prefs504 = await trpcQuery<{ prefs: Array<{ category: string; enabled: boolean; mutable: boolean }> }>('push.notifyPrefs', { cookie: notifyCookie });
+  check('54.4 setNotifyPref marketing=0 成功；notifyPrefs 透出（marketing enabled=false mutable=true，其余缺省全 1）',
+    prefOff.enabled === false &&
+      prefs504.prefs.length === 4 &&
+      prefs504.prefs.find((p) => p.category === 'marketing')?.enabled === false &&
+      prefs504.prefs.filter((p) => p.category !== 'marketing').every((p) => p.enabled === true && p.mutable === false),
+    prefs504.prefs);
+  await emitEvent(db, `user:${notifyUser.id}`, 'marketing.promo2', { text: 'e2e 退订后营销' });
+  const promo2Rows = (await notifRowsOf(notifyUser.id)).filter((n) => n.type === 'marketing.promo2');
+  const promo2Outbox = (await db.select().from(schema.eventOutbox)).filter((r) => r.eventType === 'marketing.promo2');
+  check('54.4 退订后营销事件不落该用户通知（notifications 0 行；outbox 仍写=事件本身不丢）',
+    promo2Rows.length === 0 && promo2Outbox.length === 1, { notif: promo2Rows.length, outbox: promo2Outbox.length });
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.OrderPaid, { orderId: 'e2e-order-504' });
+  await emitEvent(db, `user:${notifyUser.id}`, EventType.AppointmentCompleted, { appointmentId: aid });
+  const rows504 = await notifRowsOf(notifyUser.id);
+  check('54.4 退订仅拦营销：trade（order.paid）/ service（appointment.completed）恒落',
+    rows504.some((n) => n.type === 'order.paid' && (n.link?.includes('e2e-order-504') ?? false)) &&
+      rows504.some((n) => n.type === 'appointment.completed'),
+    rows504.map((n) => `${n.type}:${n.category}`));
+  for (const cat of ['trade', 'service', 'account'] as const) {
+    const r = await asErr(trpcMutate('push.setNotifyPref', { cookie: notifyCookie, input: { category: cat, enabled: false } }));
+    check(`54.4 非营销类（${cat}）置 0 硬拒明文「交易/服务/账户通知为保障服务履约不可关闭」`,
+      r instanceof TrpcHttpError && r.code === 'BAD_REQUEST' && r.message.includes('交易/服务/账户通知为保障服务履约不可关闭'),
+      r && { status: r.httpStatus, code: r.code, message: r.message });
+  }
+  const prefOn = await trpcMutate<{ enabled: boolean }>('push.setNotifyPref', { cookie: notifyCookie, input: { category: 'marketing', enabled: true } });
+  await emitEvent(db, `user:${notifyUser.id}`, 'marketing.promo3', { text: 'e2e 恢复订阅营销' });
+  const promo3Rows = (await notifRowsOf(notifyUser.id)).filter((n) => n.type === 'marketing.promo3');
+  check('54.4 恢复订阅幂等（marketing=1 成功）→ 后续营销事件照常落库',
+    prefOn.enabled === true && promo3Rows.length === 1 && promo3Rows[0]!.category === 'marketing',
+    { enabled: prefOn.enabled, promo3: promo3Rows.length });
+
+  /* ---- 54.5 挂接槽位：片 1/片 4 事件名直发 → 通知落库文案/link/category 正确 ---- */
+  await emitEvent(db, `user:${notifyUser.id}`, 'certificate.ready', { appointmentId: aid, petName: '球球' });
+  await emitEvent(db, `user:${notifyUser.id}`, 'report.ready', { appointmentId: aid, petName: '球球' });
+  await emitEvent(db, `user:${notifyUser.id}`, 'ticket.replied', { ticketId: 'tk-e2e-1' });
+  await emitEvent(db, `user:${notifyUser.id}`, 'refundRequest.approved', { amountFen: 100 });
+  await emitEvent(db, `user:${notifyUser.id}`, 'refundRequest.rejected', { reason: '凭证不足' });
+  await emitEvent(db, `user:${notifyUser.id}`, 'invoice.issued', { invoiceNo: 'INV-E2E' });
+  const rows505 = await notifRowsOf(notifyUser.id);
+  const slotRow = (t: string) => rows505.find((n) => n.type === t);
+  check('54.5 certificate.ready 落库（安心证书已生成 / link=/philia/certs/:aid / service）',
+    slotRow('certificate.ready')?.title === '安心证书已生成' && slotRow('certificate.ready')?.link === `/philia/certs/${aid}` &&
+      slotRow('certificate.ready')?.category === 'service' && (slotRow('certificate.ready')?.body ?? '').includes('球球'),
+    slotRow('certificate.ready'));
+  check('54.5 report.ready 落库（美容报告已送达 / link=/philia/reports/:aid / service）',
+    slotRow('report.ready')?.title === '美容报告已送达' && slotRow('report.ready')?.link === `/philia/reports/${aid}` &&
+      slotRow('report.ready')?.category === 'service',
+    slotRow('report.ready'));
+  check('54.5 ticket.replied 落库（小棉花回复 / link=/support/:ticketId / service 兜底）',
+    slotRow('ticket.replied')?.title === '小棉花回复' && slotRow('ticket.replied')?.link === '/support/tk-e2e-1' &&
+      slotRow('ticket.replied')?.category === 'service',
+    slotRow('ticket.replied'));
+  check('54.5 refundRequest.approved 落库（退款申请已批准 / link=/refunds / trade）',
+    slotRow('refundRequest.approved')?.title === '退款申请已批准' && slotRow('refundRequest.approved')?.link === '/refunds' &&
+      slotRow('refundRequest.approved')?.category === 'trade',
+    slotRow('refundRequest.approved'));
+  check('54.5 refundRequest.rejected 落库（退款申请已驳回 / body 带 reason / trade）',
+    slotRow('refundRequest.rejected')?.title === '退款申请已驳回' &&
+      (slotRow('refundRequest.rejected')?.body ?? '').includes('凭证不足') &&
+      slotRow('refundRequest.rejected')?.link === '/refunds' && slotRow('refundRequest.rejected')?.category === 'trade',
+    slotRow('refundRequest.rejected'));
+  check('54.5 invoice.issued 落库（发票已开具 / link=/invoices / trade）',
+    slotRow('invoice.issued')?.title === '发票已开具' && slotRow('invoice.issued')?.link === '/invoices' &&
+      slotRow('invoice.issued')?.category === 'trade',
+    slotRow('invoice.issued'));
+
+  /* ==================================================================
+   * 批次 6 补缺大批（server 侧支付骨架）验收段
+   * 移位铁律遵守：全程不对 pay_orders.createdAt 移位（payNo 日序计号依赖）；
+   * 超时夹具只改 timeout_at（业务字段，非计号依据）。
+   * ================================================================== */
+  console.log('\n[批次6] 55. server 侧支付骨架（收单/回调/状态机/四态/退款联动/端口/权限）');
+  const { signMockCallback, MOCK_SIGNATURE_HEADER } = await import('../payments/mockPay');
+  const { closeTimeoutPayOrders } = await import('../routers/pay');
+
+  interface PayOrderRowT {
+    id: string; payNo: string; bizDomain: string; bizId: string; amountFen: number;
+    channel: string; status: string; paymentId: string | null; idemKey: string;
+    timeoutAt: Date | null; callbackJson: Record<string, unknown> | null;
+  }
+  interface CreateOrderRes {
+    order: PayOrderRowT; idempotent: boolean;
+    paymentId: string | null; payParams: Record<string, string> | null;
+  }
+  /** 协议三件套夹具（member_service/not_prepaid/no_auto_renew 必传） */
+  const AGREEMENTS_FIXTURE = [
+    { agreementKey: 'member_service', version: 'v1.0', content: '《菲丽亚会员服务协议》全文快照：会员权益/年费/多宠附加费/回馈金规则……' },
+    { agreementKey: 'not_prepaid', version: 'v1.0', content: '《非预付卡声明》全文快照：会员年费为权益服务费，非单用途预付卡……' },
+    { agreementKey: 'no_auto_renew', version: 'v1.0', content: '《到期不自动续费告知》全文快照：会员到期不自动续费，到期冻结……' },
+  ];
+  /** 原生 POST（回调/演示端点用；body 对象自动 JSON 化，字符串原文直发） */
+  async function postRaw(
+    path: string,
+    body: unknown,
+    headers: Record<string, string> = {},
+    cookie?: string,
+  ): Promise<{ status: number; json: any }> {
+    const raw = typeof body === 'string' ? body : JSON.stringify(body);
+    const res = await fetch(`${BASE}${path}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', ...headers, ...(cookie ? { cookie } : {}) },
+      body: raw,
+    });
+    return { status: res.status, json: await res.json().catch(() => null) };
+  }
+  /** 支付验收客户建档（直插 users+user_roles 后 dev-login；kimiId 须 seed_ 前缀——dev-login 仅允许种子用户，D-16 硬约束） */
+  async function mkPayCustomer(phone: string, nickname: string): Promise<{ id: string; cookie: string }> {
+    const row = await db
+      .insert(schema.users)
+      .values({ kimiId: `seed_pay_e2e_${phone}`, phone, nickname })
+      .returning({ id: schema.users.id })
+      .then((r) => r[0]!);
+    await db.insert(schema.userRoles).values({ userId: row.id, role: 'customer' });
+    return { id: row.id, cookie: await devLogin(row.id) };
+  }
+  const createPayOrder = (cookie: string, input: Record<string, unknown>) =>
+    trpcMutate<CreateOrderRes>('pay.createOrder', { cookie, input });
+
+  /* ---- 55.1 createOrder 幂等 + 协议留痕 + 金额 server 重算 ---- */
+  console.log('\n[批次6] 55.1 createOrder 幂等 + 协议三行快照 + 金额 server 重算');
+  const p1 = await mkPayCustomer('13922220001', '支付客一');
+  const quote1 = await trpcQuery<{
+    amountFen: number; priceFen: number; extraCount: number; channelEnabled: boolean; timeoutMinutes: number;
+  }>('pay.quote', { cookie: p1.cookie, input: { bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 4 } });
+  check('55.1 quote server 重算透出（萤火 4 只=19900+5900=25800；通道开/超时 30min 端口值）',
+    quote1.amountFen === 25800 && quote1.priceFen === 19900 && quote1.extraCount === 1 &&
+      quote1.channelEnabled === true && quote1.timeoutMinutes === 30, quote1);
+
+  const co1 = await createPayOrder(p1.cookie, {
+    bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 4,
+    amountFen: 1, // 假金额：server 必须忽略并重算覆盖
+    agreements: AGREEMENTS_FIXTURE,
+  });
+  check('55.1 createOrder 金额 server 重算（入参假金额 1 分被覆盖 → 25800）+ paying + mock 单号',
+    co1.order.amountFen === 25800 && co1.order.status === 'paying' && co1.idempotent === false &&
+      !!co1.paymentId && co1.paymentId.startsWith('mock_') && co1.payParams?.mock === '1' &&
+      co1.payParams?.scenario === 'success' && co1.order.payNo.startsWith('PO-'),
+    { amountFen: co1.order.amountFen, status: co1.order.status, payNo: co1.order.payNo });
+  check('55.1 timeoutAt=now+端口 30min 快照（通道开关/时长读 pay_rules）',
+    !!co1.order.timeoutAt &&
+      Math.abs(co1.order.timeoutAt.getTime() - (Date.now() + 30 * 60_000)) < 120_000,
+    co1.order.timeoutAt);
+
+  const agrRows1 = await db.select().from(schema.agreements).where(eq(schema.agreements.userId, p1.id));
+  const agrKeys1 = agrRows1.map((r) => r.agreementKey).sort();
+  const agrSnap1 = agrRows1[0]?.userSnapshot as Record<string, unknown> | undefined;
+  check('55.1 agreements 三行快照（三键齐/content/version/checkedAt 全落）',
+    agrRows1.length === 3 &&
+      agrKeys1.join(',') === 'member_service,no_auto_renew,not_prepaid' &&
+      agrRows1.every((r) => r.content.length > 10 && r.version === 'v1.0' && !!r.checkedAt),
+    agrRows1.map((r) => r.agreementKey));
+  check('55.1 userSnapshot 取证四要素（userId/phoneMasked/planKey/petCount）',
+    agrSnap1?.userId === p1.id && agrSnap1?.phoneMasked === '139****0001' &&
+      agrSnap1?.planKey === 'plan_yinghuo' && agrSnap1?.petCount === 4, agrSnap1);
+
+  const co1b = await createPayOrder(p1.cookie, {
+    bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 4, agreements: AGREEMENTS_FIXTURE,
+  });
+  const co1Count = await db.select({ id: schema.payOrders.id }).from(schema.payOrders)
+    .where(and(eq(schema.payOrders.bizDomain, 'membership_open'), eq(schema.payOrders.bizId, p1.id)));
+  const agrCount1 = await db.select({ id: schema.agreements.id }).from(schema.agreements)
+    .where(eq(schema.agreements.userId, p1.id));
+  check('55.1 幂等：同人同档当日在途重复创建=返回现状（idempotent=true/同 payNo/零新行/协议不重复留痕）',
+    co1b.idempotent === true && co1b.order.payNo === co1.order.payNo &&
+      co1Count.length === 1 && agrCount1.length === 3,
+    { idempotent: co1b.idempotent, orders: co1Count.length, agreements: agrCount1.length });
+  const listMine1 = await trpcQuery<{ items: Array<{ order: PayOrderRowT; biz: { planKey: string | null; petCount: number | null } }> }>(
+    'pay.listMine', { cookie: p1.cookie });
+  check('55.1 listMine 本人单+业务摘要（planKey/petCount 透出）',
+    listMine1.items.length === 1 && listMine1.items[0]!.order.payNo === co1.order.payNo &&
+      listMine1.items[0]!.biz.planKey === 'plan_yinghuo' && listMine1.items[0]!.biz.petCount === 4,
+    listMine1.items.length);
+
+  /* ---- 55.2 回调全链：签名回调→paid+memberships 落行；重放零副作用；金额不符 400 ---- */
+  console.log('\n[批次6] 55.2 回调全链（mock 签名回调/兑付/重放幂等/金额不符拒）');
+  const mc1 = await postRaw('/api/pay/orders/mock-callback', { orderId: co1.order.id }, {}, p1.cookie);
+  check('55.2 mock-callback success → 200 SUCCESS', mc1.status === 200 && mc1.json?.code === 'SUCCESS', mc1);
+  const st1 = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: p1.cookie, input: { payNo: co1.order.payNo } });
+  check('55.2 回调后 status=paid + callbackJson 存档（含 paymentId）',
+    st1.order.status === 'paid' && !!st1.order.callbackJson &&
+      (st1.order.callbackJson as Record<string, unknown>).paymentId === co1.paymentId,
+    { status: st1.order.status, callbackJson: st1.order.callbackJson });
+  const m1 = await db.select().from(schema.memberships).where(eq(schema.memberships.userId, p1.id)).get();
+  check('55.2 同事务兑付：memberships 落行（萤火/4 只/25800/active/soldStore=null 线上域）',
+    m1?.planKey === 'plan_yinghuo' && m1.petCount === 4 && m1.paidFen === 25800 &&
+      m1.status === 'active' && m1.soldStoreId === null,
+    m1 && { planKey: m1.planKey, petCount: m1.petCount, paidFen: m1.paidFen, soldStoreId: m1.soldStoreId });
+  const ev1 = await db.select().from(schema.eventOutbox)
+    .where(and(eq(schema.eventOutbox.channel, `user:${p1.id}`), eq(schema.eventOutbox.eventType, 'membership.opened')));
+  check('55.2 SSE user 频道 membership.opened 事件已落 outbox',
+    ev1.length >= 1 && (ev1[0]!.payload as Record<string, unknown>).payNo === co1.order.payNo,
+    ev1.map((e) => e.eventType));
+
+  const rawReplay = JSON.stringify({ paymentId: co1.paymentId, orderId: co1.order.id, paidFen: 25800 });
+  const replay = await postRaw('/api/pay/orders/callback', rawReplay, { [MOCK_SIGNATURE_HEADER]: signMockCallback(rawReplay) });
+  const m1Count = await db.select({ id: schema.memberships.id }).from(schema.memberships)
+    .where(eq(schema.memberships.userId, p1.id));
+  check('55.2 重放回调零副作用（idempotent=true/memberships 不重建）',
+    replay.status === 200 && replay.json?.code === 'SUCCESS' && replay.json?.idempotent === true &&
+      m1Count.length === 1,
+    { status: replay.status, json: replay.json, memberships: m1Count.length });
+  const rawBadAmt = JSON.stringify({ paymentId: co1.paymentId, orderId: co1.order.id, paidFen: 999 });
+  const badAmt = await postRaw('/api/pay/orders/callback', rawBadAmt, { [MOCK_SIGNATURE_HEADER]: signMockCallback(rawBadAmt) });
+  const st1b = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: p1.cookie, input: { payNo: co1.order.payNo } });
+  check('55.2 金额不符 400（AMOUNT_MISMATCH，单不动仍 paid）',
+    badAmt.status === 400 && badAmt.json?.code === 'AMOUNT_MISMATCH' && st1b.order.status === 'paid',
+    badAmt);
+  const rawBadSig = JSON.stringify({ paymentId: co1.paymentId, orderId: co1.order.id, paidFen: 25800 });
+  const badSig = await postRaw('/api/pay/orders/callback', rawBadSig, { [MOCK_SIGNATURE_HEADER]: '0'.repeat(64) });
+  check('55.2 验签失败 400（INVALID_SIGNATURE，Mock 也走验签流程）',
+    badSig.status === 400 && badSig.json?.code === 'INVALID_SIGNATURE', badSig);
+
+  /* ---- 55.3 状态机非法迁移硬拒（closed 单再回调/再支付拒） ---- */
+  console.log('\n[批次6] 55.3 状态机非法迁移硬拒');
+  const p2 = await mkPayCustomer('13922220002', '支付客二');
+  const co2 = await createPayOrder(p2.cookie, {
+    bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+  });
+  // 超时夹具：只改 timeout_at（铁律：不动 created_at——payNo 日序计号依赖）
+  await db.update(schema.payOrders).set({ timeoutAt: new Date(Date.now() - 1000) })
+    .where(eq(schema.payOrders.id, co2.order.id));
+  const st2 = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: p2.cookie, input: { payNo: co2.order.payNo } });
+  check('55.3 懒超时：paying 过 timeoutAt → status 查询事务置 closed', st2.order.status === 'closed', st2.order.status);
+  const rawC2 = JSON.stringify({ paymentId: co2.paymentId, orderId: co2.order.id, paidFen: 19900 });
+  const cbClosed = await postRaw('/api/pay/orders/callback', rawC2, { [MOCK_SIGNATURE_HEADER]: signMockCallback(rawC2) });
+  check('55.3 closed 单再回调 → 400 STATE_CONFLICT（状态机硬拒，不置 paid）',
+    cbClosed.status === 400 && cbClosed.json?.code === 'STATE_CONFLICT', cbClosed);
+  const mcClosed = await postRaw('/api/pay/orders/mock-callback', { orderId: co2.order.id }, {}, p2.cookie);
+  check('55.3 closed 单再支付（mock-callback）→ 400 硬拒',
+    mcClosed.status === 400 && mcClosed.json?.code === 'STATE_CONFLICT', mcClosed);
+  const m2 = await db.select().from(schema.memberships).where(eq(schema.memberships.userId, p2.id)).get();
+  check('55.3 硬拒后零副作用（closed 单未兑付会员）', !m2, m2?.id);
+
+  /* ---- 55.4 Mock 四态：fail/timeout/drop（success 已在 55.2 坐实） ---- */
+  console.log('\n[批次6] 55.4 Mock 四态（fail 留痕 / timeout sweeper 关单 / drop reconcile 补开）');
+  const p3 = await mkPayCustomer('13922220003', '支付客三');
+  const co3 = await createPayOrder(p3.cookie, {
+    bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+  });
+  const mc3 = await postRaw('/api/pay/orders/mock-callback', { orderId: co3.order.id, scenario: 'fail' }, {}, p3.cookie);
+  const st3 = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: p3.cookie, input: { payNo: co3.order.payNo } });
+  const m3 = await db.select().from(schema.memberships).where(eq(schema.memberships.userId, p3.id)).get();
+  check('55.4 fail：通道支付失败 → status=failed 留痕 + 零兑付',
+    mc3.status === 200 && st3.order.status === 'failed' && !m3, { mc: mc3.status, status: st3.order.status });
+
+  const p4 = await mkPayCustomer('13922220004', '支付客四');
+  const co4 = await createPayOrder(p4.cookie, {
+    bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+  });
+  const mc4 = await postRaw('/api/pay/orders/mock-callback', { orderId: co4.order.id, scenario: 'timeout' }, {}, p4.cookie);
+  const st4a = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: p4.cookie, input: { payNo: co4.order.payNo } });
+  check('55.4 timeout：用户不付留 paying（不动通道不发回调）',
+    mc4.status === 200 && st4a.order.status === 'paying', { mc: mc4.status, status: st4a.order.status });
+  // 超时夹具：timeout_at 拨到过去（不动 created_at）→ sweeper 直调到点关单
+  await db.update(schema.payOrders).set({ timeoutAt: new Date(Date.now() - 1000) })
+    .where(eq(schema.payOrders.id, co4.order.id));
+  const swept4 = await closeTimeoutPayOrders(db, new Date());
+  const st4b = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: p4.cookie, input: { payNo: co4.order.payNo } });
+  const ev4 = await db.select().from(schema.eventOutbox)
+    .where(and(eq(schema.eventOutbox.channel, `user:${p4.id}`), eq(schema.eventOutbox.eventType, 'pay.orderClosed')));
+  check('55.4 timeout：sweeper 到点置 closed + SSE user 频道 pay.orderClosed',
+    swept4 >= 1 && st4b.order.status === 'closed' &&
+      ev4.length >= 1 && (ev4[0]!.payload as Record<string, unknown>).payNo === co4.order.payNo,
+    { swept: swept4, status: st4b.order.status, events: ev4.length });
+
+  const p5 = await mkPayCustomer('13922220005', '支付客五');
+  const co5 = await createPayOrder(p5.cookie, {
+    bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+  });
+  const mc5 = await postRaw('/api/pay/orders/mock-callback', { orderId: co5.order.id, scenario: 'drop' }, {}, p5.cookie);
+  const st5a = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: p5.cookie, input: { payNo: co5.order.payNo } });
+  check('55.4 drop：通道已扣款但回调丢弃 → 单留 paying（掉单场景）',
+    mc5.status === 200 && st5a.order.status === 'paying', { mc: mc5.status, status: st5a.order.status });
+  const rc5 = await trpcMutate<{ order: PayOrderRowT; reconciled: boolean; message: string }>('pay.reconcile', {
+    cookie: p5.cookie, input: { payNo: co5.order.payNo },
+  });
+  const m5 = await db.select().from(schema.memberships).where(eq(schema.memberships.userId, p5.id)).get();
+  check('55.4 drop：reconcile 自助补开成功=掉单补偿坐实（paid + memberships 落行）',
+    rc5.reconciled === true && rc5.order.status === 'paid' &&
+      m5?.planKey === 'plan_yinghuo' && m5.paidFen === 19900 && m5.soldStoreId === null,
+    { reconciled: rc5.reconciled, status: rc5.order.status, membership: m5?.id });
+  const rc5b = await trpcMutate<{ order: PayOrderRowT; reconciled: boolean }>('pay.reconcile', {
+    cookie: p5.cookie, input: { payNo: co5.order.payNo },
+  });
+  const m5Count = await db.select({ id: schema.memberships.id }).from(schema.memberships)
+    .where(eq(schema.memberships.userId, p5.id));
+  check('55.4 reconcile 幂等（已 paid 返回现状，会员不重建）',
+    rc5b.reconciled === false && rc5b.order.status === 'paid' && m5Count.length === 1,
+    { reconciled: rc5b.reconciled, memberships: m5Count.length });
+
+  /* ---- 55.5 退款联动：online_original + linkage.payOrderNo + provider.refund 留痕 ---- */
+  console.log('\n[批次6] 55.5 退款联动（线上原路骨架）');
+  /* §49c 段尾铁律兼容：退会退款单 createdAt 移位 25h 会使 genRefundNo 当日计数 −1，
+   * 其后任何新退款单必撞 uq_refund_bills_refund_no（§49 设计前提=「移位后不再生成退款单」）。
+   * 本段须走 refund.execute 生成新退款单，故先把 §49 夹具的移位复原（count 复归正确→
+   * 下一个日序不撞号）——只动夹具数据，不触碰 §49 任何已断言内容（断言在其时已闭环）。 */
+  await db.update(schema.refundBills).set({ createdAt: new Date() })
+    .where(eq(schema.refundBills.id, cancelM1.refundId));
+  const p6 = await mkPayCustomer('13922220006', '支付客六');
+  // 到店售卡（现金原单）→ 同人线上重复支付（已是会员：兑付幂等不重建只置 paid）
+  const sellP6 = await sellPlan(managerCookie, {
+    userId: p6.id, planKey: 'plan_yinghuo', petCount: 0,
+    paySegments: [{ method: 'cash', amountFen: 19900 }],
+  });
+  const co6 = await createPayOrder(p6.cookie, {
+    bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+  });
+  await postRaw('/api/pay/orders/mock-callback', { orderId: co6.order.id }, {}, p6.cookie);
+  const m6Count = await db.select({ id: schema.memberships.id }).from(schema.memberships)
+    .where(eq(schema.memberships.userId, p6.id));
+  check('55.5 前置：已是会员线上重复支付 → paid 但 memberships 不重建（幂等兑付）',
+    m6Count.length === 1, m6Count.length);
+  const rf6 = await trpcMutate<{
+    refund: { id: string; refundNo: string; refundMethod: string | null; linkageJson: Record<string, unknown> | null; amountFen: number };
+    idempotent: boolean;
+  }>('refund.execute', {
+    cookie: managerCookie,
+    input: { billNo: sellP6.billNo, type: 'full', reason: '批次6 线上原路联动验证（重复支付退线上单）' },
+  });
+  const linkage6 = (rf6.refund.linkageJson ?? {}) as Record<string, unknown>;
+  const online6 = (linkage6.onlineRefund ?? {}) as Record<string, unknown>;
+  check('55.5 线上支付单退款 → refundMethod=online_original（server 强制）',
+    rf6.refund.refundMethod === 'online_original' && rf6.idempotent === false,
+    { refundMethod: rf6.refund.refundMethod });
+  check('55.5 linkage.payOrderNo 快照 + provider.refund 留痕（mock=ok，两路单据同源）',
+    linkage6.payOrderNo === co6.order.payNo &&
+      online6.paymentId === co6.paymentId && online6.channel === 'mock' &&
+      online6.provider === 'mock' && online6.refundFen === 19900 && online6.result === 'ok',
+    { payOrderNo: linkage6.payOrderNo, onlineRefund: online6 });
+
+  /* ---- 55.6 超时关单端口可调（config.save 改 minutes 生效复还原） ---- */
+  console.log('\n[批次6] 55.6 超时关单端口可调');
+  const payCfgList = await trpcQuery<{ rules: Array<{ ruleKey: string; active: boolean }> }>('config.list', {
+    cookie: ownerCookie, input: { domain: 'pay' },
+  });
+  check('55.6 pay 域种子两行在库（pay_timeout_minutes/pay_channel_enabled，0017 幂等迁移落）',
+    payCfgList.rules.some((r) => r.ruleKey === 'pay_timeout_minutes' && r.active) &&
+      payCfgList.rules.some((r) => r.ruleKey === 'pay_channel_enabled' && r.active),
+    payCfgList.rules.map((r) => r.ruleKey));
+  const save6 = await trpcMutate<{ version: number }>('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'pay', changes: [{ ruleKey: 'pay_timeout_minutes', valueJson: { minutes: 1 } }] },
+  });
+  const p7 = await mkPayCustomer('13922220007', '支付客七');
+  const co7 = await createPayOrder(p7.cookie, {
+    bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+  });
+  check('55.6 端口改值即生效：minutes=1 → 新单 timeoutAt≈now+60s（不再 30min）',
+    save6.version >= 2 && !!co7.order.timeoutAt &&
+      Math.abs(co7.order.timeoutAt.getTime() - (Date.now() + 60_000)) < 30_000,
+    { version: save6.version, timeoutAt: co7.order.timeoutAt });
+  const swept6 = await closeTimeoutPayOrders(db, new Date(Date.now() + 120_000)); // 合成到点
+  const st6 = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: p7.cookie, input: { payNo: co7.order.payNo } });
+  check('55.6 sweeper 按新 timeoutAt 到点关单（closed）',
+    swept6 >= 1 && st6.order.status === 'closed', { swept: swept6, status: st6.order.status });
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'pay', changes: [{ ruleKey: 'pay_timeout_minutes', valueJson: { minutes: 30 } }] },
+  });
+  const quote6 = await trpcQuery<{ timeoutMinutes: number }>('pay.quote', {
+    cookie: p7.cookie, input: { bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0 },
+  });
+  check('55.6 复还原：minutes 回 30（quote 透出还原值）', quote6.timeoutMinutes === 30, quote6.timeoutMinutes);
+
+  /* ---- 55.7 权限：他人 pay_orders status/reconcile 403 ---- */
+  console.log('\n[批次6] 55.7 权限（他人单 403）');
+  const p8 = await mkPayCustomer('13922220008', '支付客八');
+  const [stOther, rcOther] = await Promise.all([
+    trpcQuery('pay.status', { cookie: p8.cookie, input: { payNo: co1.order.payNo } }).catch((e) => e),
+    trpcMutate('pay.reconcile', { cookie: p8.cookie, input: { payNo: co1.order.payNo } }).catch((e) => e),
+  ]);
+  check('55.7 他人 pay_orders status/reconcile → 403 FORBIDDEN',
+    stOther instanceof TrpcHttpError && stOther.httpStatus === 403 && stOther.code === 'FORBIDDEN' &&
+      rcOther instanceof TrpcHttpError && rcOther.httpStatus === 403 && rcOther.code === 'FORBIDDEN',
+    { st: stOther instanceof Error ? stOther.message : String(stOther), rc: rcOther instanceof Error ? rcOther.message : String(rcOther) });
 
   client.close();
 }

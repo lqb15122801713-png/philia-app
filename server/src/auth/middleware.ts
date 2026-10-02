@@ -40,6 +40,9 @@ export async function loadSessionUser(userId: string): Promise<SessionUser | nul
     .limit(1)
     .then((r) => r[0]);
   if (!user) return null;
+  // 批次 R13a 软删闸：已注销账号（deactivated_at 非空）视同不存在——全 tRPC 接口
+  // 与 SSE/上传等 Hono 端点一律 401，即时生效（不等 7 天会话过期）
+  if (user.deactivatedAt) return null;
 
   const roleRows = await db
     .select({ role: schema.userRoles.role })
