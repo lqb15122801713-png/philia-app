@@ -161,6 +161,19 @@
  *   54.5 挂接槽位：certificate.ready / report.ready / ticket.replied /
  *      refundRequest.approved / refundRequest.rejected / invoice.issued 直发 emitEvent →
  *      通知落库文案/link/category 正确（片 1/片 4 合并后自动真实触发，本断言=槽位有效性实证）
+ *
+ * 批次 6 补缺大批（server 侧支付骨架）段（施工令全清单；移位铁律：不得对
+ * pay_orders.createdAt 移位——payNo 日序计号依赖，本批夹具只动 timeout_at）：
+ *   （与片 1 同号撞号，合并消解改号 50.x→55.x，断言零删改）
+ *   55.1 createOrder 幂等：同人同档重复创建=idem 返回现状+agreements 三行快照含
+ *       content/version/userSnapshot+金额 server 重算（入参假金额被覆盖）
+ *   55.2 回调全链：mock 签名回调→paid+memberships 落行+重放回调零副作用（幂等）+金额不符 400
+ *   55.3 状态机非法迁移硬拒（closed 单再回调/再支付拒）
+ *   55.4 Mock 四态：success/fail（failed 留痕）/timeout（sweeper 到点置 closed）/
+ *       drop（reconcile 自助补开成功=掉单补偿坐实）
+ *   55.5 退款联动：线上支付单退款→online_original+linkage.payOrderNo 快照+provider.refund 留痕
+ *   55.6 超时关单端口可调（config.save 改 minutes 生效复还原）
+ *   55.7 权限：他人 pay_orders status/reconcile 403
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -4425,6 +4438,316 @@ async function main(): Promise<void> {
     slotRow('invoice.issued')?.title === '发票已开具' && slotRow('invoice.issued')?.link === '/invoices' &&
       slotRow('invoice.issued')?.category === 'trade',
     slotRow('invoice.issued'));
+
+  /* ==================================================================
+   * 批次 6 补缺大批（server 侧支付骨架）验收段
+   * 移位铁律遵守：全程不对 pay_orders.createdAt 移位（payNo 日序计号依赖）；
+   * 超时夹具只改 timeout_at（业务字段，非计号依据）。
+   * ================================================================== */
+  console.log('\n[批次6] 55. server 侧支付骨架（收单/回调/状态机/四态/退款联动/端口/权限）');
+  const { signMockCallback, MOCK_SIGNATURE_HEADER } = await import('../payments/mockPay');
+  const { closeTimeoutPayOrders } = await import('../routers/pay');
+
+  interface PayOrderRowT {
+    id: string; payNo: string; bizDomain: string; bizId: string; amountFen: number;
+    channel: string; status: string; paymentId: string | null; idemKey: string;
+    timeoutAt: Date | null; callbackJson: Record<string, unknown> | null;
+  }
+  interface CreateOrderRes {
+    order: PayOrderRowT; idempotent: boolean;
+    paymentId: string | null; payParams: Record<string, string> | null;
+  }
+  /** 协议三件套夹具（member_service/not_prepaid/no_auto_renew 必传） */
+  const AGREEMENTS_FIXTURE = [
+    { agreementKey: 'member_service', version: 'v1.0', content: '《菲丽亚会员服务协议》全文快照：会员权益/年费/多宠附加费/回馈金规则……' },
+    { agreementKey: 'not_prepaid', version: 'v1.0', content: '《非预付卡声明》全文快照：会员年费为权益服务费，非单用途预付卡……' },
+    { agreementKey: 'no_auto_renew', version: 'v1.0', content: '《到期不自动续费告知》全文快照：会员到期不自动续费，到期冻结……' },
+  ];
+  /** 原生 POST（回调/演示端点用；body 对象自动 JSON 化，字符串原文直发） */
+  async function postRaw(
+    path: string,
+    body: unknown,
+    headers: Record<string, string> = {},
+    cookie?: string,
+  ): Promise<{ status: number; json: any }> {
+    const raw = typeof body === 'string' ? body : JSON.stringify(body);
+    const res = await fetch(`${BASE}${path}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', ...headers, ...(cookie ? { cookie } : {}) },
+      body: raw,
+    });
+    return { status: res.status, json: await res.json().catch(() => null) };
+  }
+  /** 支付验收客户建档（直插 users+user_roles 后 dev-login；kimiId 须 seed_ 前缀——dev-login 仅允许种子用户，D-16 硬约束） */
+  async function mkPayCustomer(phone: string, nickname: string): Promise<{ id: string; cookie: string }> {
+    const row = await db
+      .insert(schema.users)
+      .values({ kimiId: `seed_pay_e2e_${phone}`, phone, nickname })
+      .returning({ id: schema.users.id })
+      .then((r) => r[0]!);
+    await db.insert(schema.userRoles).values({ userId: row.id, role: 'customer' });
+    return { id: row.id, cookie: await devLogin(row.id) };
+  }
+  const createPayOrder = (cookie: string, input: Record<string, unknown>) =>
+    trpcMutate<CreateOrderRes>('pay.createOrder', { cookie, input });
+
+  /* ---- 55.1 createOrder 幂等 + 协议留痕 + 金额 server 重算 ---- */
+  console.log('\n[批次6] 55.1 createOrder 幂等 + 协议三行快照 + 金额 server 重算');
+  const p1 = await mkPayCustomer('13922220001', '支付客一');
+  const quote1 = await trpcQuery<{
+    amountFen: number; priceFen: number; extraCount: number; channelEnabled: boolean; timeoutMinutes: number;
+  }>('pay.quote', { cookie: p1.cookie, input: { bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 4 } });
+  check('55.1 quote server 重算透出（萤火 4 只=19900+5900=25800；通道开/超时 30min 端口值）',
+    quote1.amountFen === 25800 && quote1.priceFen === 19900 && quote1.extraCount === 1 &&
+      quote1.channelEnabled === true && quote1.timeoutMinutes === 30, quote1);
+
+  const co1 = await createPayOrder(p1.cookie, {
+    bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 4,
+    amountFen: 1, // 假金额：server 必须忽略并重算覆盖
+    agreements: AGREEMENTS_FIXTURE,
+  });
+  check('55.1 createOrder 金额 server 重算（入参假金额 1 分被覆盖 → 25800）+ paying + mock 单号',
+    co1.order.amountFen === 25800 && co1.order.status === 'paying' && co1.idempotent === false &&
+      !!co1.paymentId && co1.paymentId.startsWith('mock_') && co1.payParams?.mock === '1' &&
+      co1.payParams?.scenario === 'success' && co1.order.payNo.startsWith('PO-'),
+    { amountFen: co1.order.amountFen, status: co1.order.status, payNo: co1.order.payNo });
+  check('55.1 timeoutAt=now+端口 30min 快照（通道开关/时长读 pay_rules）',
+    !!co1.order.timeoutAt &&
+      Math.abs(co1.order.timeoutAt.getTime() - (Date.now() + 30 * 60_000)) < 120_000,
+    co1.order.timeoutAt);
+
+  const agrRows1 = await db.select().from(schema.agreements).where(eq(schema.agreements.userId, p1.id));
+  const agrKeys1 = agrRows1.map((r) => r.agreementKey).sort();
+  const agrSnap1 = agrRows1[0]?.userSnapshot as Record<string, unknown> | undefined;
+  check('55.1 agreements 三行快照（三键齐/content/version/checkedAt 全落）',
+    agrRows1.length === 3 &&
+      agrKeys1.join(',') === 'member_service,no_auto_renew,not_prepaid' &&
+      agrRows1.every((r) => r.content.length > 10 && r.version === 'v1.0' && !!r.checkedAt),
+    agrRows1.map((r) => r.agreementKey));
+  check('55.1 userSnapshot 取证四要素（userId/phoneMasked/planKey/petCount）',
+    agrSnap1?.userId === p1.id && agrSnap1?.phoneMasked === '139****0001' &&
+      agrSnap1?.planKey === 'plan_yinghuo' && agrSnap1?.petCount === 4, agrSnap1);
+
+  const co1b = await createPayOrder(p1.cookie, {
+    bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 4, agreements: AGREEMENTS_FIXTURE,
+  });
+  const co1Count = await db.select({ id: schema.payOrders.id }).from(schema.payOrders)
+    .where(and(eq(schema.payOrders.bizDomain, 'membership_open'), eq(schema.payOrders.bizId, p1.id)));
+  const agrCount1 = await db.select({ id: schema.agreements.id }).from(schema.agreements)
+    .where(eq(schema.agreements.userId, p1.id));
+  check('55.1 幂等：同人同档当日在途重复创建=返回现状（idempotent=true/同 payNo/零新行/协议不重复留痕）',
+    co1b.idempotent === true && co1b.order.payNo === co1.order.payNo &&
+      co1Count.length === 1 && agrCount1.length === 3,
+    { idempotent: co1b.idempotent, orders: co1Count.length, agreements: agrCount1.length });
+  const listMine1 = await trpcQuery<{ items: Array<{ order: PayOrderRowT; biz: { planKey: string | null; petCount: number | null } }> }>(
+    'pay.listMine', { cookie: p1.cookie });
+  check('55.1 listMine 本人单+业务摘要（planKey/petCount 透出）',
+    listMine1.items.length === 1 && listMine1.items[0]!.order.payNo === co1.order.payNo &&
+      listMine1.items[0]!.biz.planKey === 'plan_yinghuo' && listMine1.items[0]!.biz.petCount === 4,
+    listMine1.items.length);
+
+  /* ---- 55.2 回调全链：签名回调→paid+memberships 落行；重放零副作用；金额不符 400 ---- */
+  console.log('\n[批次6] 55.2 回调全链（mock 签名回调/兑付/重放幂等/金额不符拒）');
+  const mc1 = await postRaw('/api/pay/orders/mock-callback', { orderId: co1.order.id }, {}, p1.cookie);
+  check('55.2 mock-callback success → 200 SUCCESS', mc1.status === 200 && mc1.json?.code === 'SUCCESS', mc1);
+  const st1 = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: p1.cookie, input: { payNo: co1.order.payNo } });
+  check('55.2 回调后 status=paid + callbackJson 存档（含 paymentId）',
+    st1.order.status === 'paid' && !!st1.order.callbackJson &&
+      (st1.order.callbackJson as Record<string, unknown>).paymentId === co1.paymentId,
+    { status: st1.order.status, callbackJson: st1.order.callbackJson });
+  const m1 = await db.select().from(schema.memberships).where(eq(schema.memberships.userId, p1.id)).get();
+  check('55.2 同事务兑付：memberships 落行（萤火/4 只/25800/active/soldStore=null 线上域）',
+    m1?.planKey === 'plan_yinghuo' && m1.petCount === 4 && m1.paidFen === 25800 &&
+      m1.status === 'active' && m1.soldStoreId === null,
+    m1 && { planKey: m1.planKey, petCount: m1.petCount, paidFen: m1.paidFen, soldStoreId: m1.soldStoreId });
+  const ev1 = await db.select().from(schema.eventOutbox)
+    .where(and(eq(schema.eventOutbox.channel, `user:${p1.id}`), eq(schema.eventOutbox.eventType, 'membership.opened')));
+  check('55.2 SSE user 频道 membership.opened 事件已落 outbox',
+    ev1.length >= 1 && (ev1[0]!.payload as Record<string, unknown>).payNo === co1.order.payNo,
+    ev1.map((e) => e.eventType));
+
+  const rawReplay = JSON.stringify({ paymentId: co1.paymentId, orderId: co1.order.id, paidFen: 25800 });
+  const replay = await postRaw('/api/pay/orders/callback', rawReplay, { [MOCK_SIGNATURE_HEADER]: signMockCallback(rawReplay) });
+  const m1Count = await db.select({ id: schema.memberships.id }).from(schema.memberships)
+    .where(eq(schema.memberships.userId, p1.id));
+  check('55.2 重放回调零副作用（idempotent=true/memberships 不重建）',
+    replay.status === 200 && replay.json?.code === 'SUCCESS' && replay.json?.idempotent === true &&
+      m1Count.length === 1,
+    { status: replay.status, json: replay.json, memberships: m1Count.length });
+  const rawBadAmt = JSON.stringify({ paymentId: co1.paymentId, orderId: co1.order.id, paidFen: 999 });
+  const badAmt = await postRaw('/api/pay/orders/callback', rawBadAmt, { [MOCK_SIGNATURE_HEADER]: signMockCallback(rawBadAmt) });
+  const st1b = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: p1.cookie, input: { payNo: co1.order.payNo } });
+  check('55.2 金额不符 400（AMOUNT_MISMATCH，单不动仍 paid）',
+    badAmt.status === 400 && badAmt.json?.code === 'AMOUNT_MISMATCH' && st1b.order.status === 'paid',
+    badAmt);
+  const rawBadSig = JSON.stringify({ paymentId: co1.paymentId, orderId: co1.order.id, paidFen: 25800 });
+  const badSig = await postRaw('/api/pay/orders/callback', rawBadSig, { [MOCK_SIGNATURE_HEADER]: '0'.repeat(64) });
+  check('55.2 验签失败 400（INVALID_SIGNATURE，Mock 也走验签流程）',
+    badSig.status === 400 && badSig.json?.code === 'INVALID_SIGNATURE', badSig);
+
+  /* ---- 55.3 状态机非法迁移硬拒（closed 单再回调/再支付拒） ---- */
+  console.log('\n[批次6] 55.3 状态机非法迁移硬拒');
+  const p2 = await mkPayCustomer('13922220002', '支付客二');
+  const co2 = await createPayOrder(p2.cookie, {
+    bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+  });
+  // 超时夹具：只改 timeout_at（铁律：不动 created_at——payNo 日序计号依赖）
+  await db.update(schema.payOrders).set({ timeoutAt: new Date(Date.now() - 1000) })
+    .where(eq(schema.payOrders.id, co2.order.id));
+  const st2 = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: p2.cookie, input: { payNo: co2.order.payNo } });
+  check('55.3 懒超时：paying 过 timeoutAt → status 查询事务置 closed', st2.order.status === 'closed', st2.order.status);
+  const rawC2 = JSON.stringify({ paymentId: co2.paymentId, orderId: co2.order.id, paidFen: 19900 });
+  const cbClosed = await postRaw('/api/pay/orders/callback', rawC2, { [MOCK_SIGNATURE_HEADER]: signMockCallback(rawC2) });
+  check('55.3 closed 单再回调 → 400 STATE_CONFLICT（状态机硬拒，不置 paid）',
+    cbClosed.status === 400 && cbClosed.json?.code === 'STATE_CONFLICT', cbClosed);
+  const mcClosed = await postRaw('/api/pay/orders/mock-callback', { orderId: co2.order.id }, {}, p2.cookie);
+  check('55.3 closed 单再支付（mock-callback）→ 400 硬拒',
+    mcClosed.status === 400 && mcClosed.json?.code === 'STATE_CONFLICT', mcClosed);
+  const m2 = await db.select().from(schema.memberships).where(eq(schema.memberships.userId, p2.id)).get();
+  check('55.3 硬拒后零副作用（closed 单未兑付会员）', !m2, m2?.id);
+
+  /* ---- 55.4 Mock 四态：fail/timeout/drop（success 已在 55.2 坐实） ---- */
+  console.log('\n[批次6] 55.4 Mock 四态（fail 留痕 / timeout sweeper 关单 / drop reconcile 补开）');
+  const p3 = await mkPayCustomer('13922220003', '支付客三');
+  const co3 = await createPayOrder(p3.cookie, {
+    bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+  });
+  const mc3 = await postRaw('/api/pay/orders/mock-callback', { orderId: co3.order.id, scenario: 'fail' }, {}, p3.cookie);
+  const st3 = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: p3.cookie, input: { payNo: co3.order.payNo } });
+  const m3 = await db.select().from(schema.memberships).where(eq(schema.memberships.userId, p3.id)).get();
+  check('55.4 fail：通道支付失败 → status=failed 留痕 + 零兑付',
+    mc3.status === 200 && st3.order.status === 'failed' && !m3, { mc: mc3.status, status: st3.order.status });
+
+  const p4 = await mkPayCustomer('13922220004', '支付客四');
+  const co4 = await createPayOrder(p4.cookie, {
+    bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+  });
+  const mc4 = await postRaw('/api/pay/orders/mock-callback', { orderId: co4.order.id, scenario: 'timeout' }, {}, p4.cookie);
+  const st4a = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: p4.cookie, input: { payNo: co4.order.payNo } });
+  check('55.4 timeout：用户不付留 paying（不动通道不发回调）',
+    mc4.status === 200 && st4a.order.status === 'paying', { mc: mc4.status, status: st4a.order.status });
+  // 超时夹具：timeout_at 拨到过去（不动 created_at）→ sweeper 直调到点关单
+  await db.update(schema.payOrders).set({ timeoutAt: new Date(Date.now() - 1000) })
+    .where(eq(schema.payOrders.id, co4.order.id));
+  const swept4 = await closeTimeoutPayOrders(db, new Date());
+  const st4b = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: p4.cookie, input: { payNo: co4.order.payNo } });
+  const ev4 = await db.select().from(schema.eventOutbox)
+    .where(and(eq(schema.eventOutbox.channel, `user:${p4.id}`), eq(schema.eventOutbox.eventType, 'pay.orderClosed')));
+  check('55.4 timeout：sweeper 到点置 closed + SSE user 频道 pay.orderClosed',
+    swept4 >= 1 && st4b.order.status === 'closed' &&
+      ev4.length >= 1 && (ev4[0]!.payload as Record<string, unknown>).payNo === co4.order.payNo,
+    { swept: swept4, status: st4b.order.status, events: ev4.length });
+
+  const p5 = await mkPayCustomer('13922220005', '支付客五');
+  const co5 = await createPayOrder(p5.cookie, {
+    bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+  });
+  const mc5 = await postRaw('/api/pay/orders/mock-callback', { orderId: co5.order.id, scenario: 'drop' }, {}, p5.cookie);
+  const st5a = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: p5.cookie, input: { payNo: co5.order.payNo } });
+  check('55.4 drop：通道已扣款但回调丢弃 → 单留 paying（掉单场景）',
+    mc5.status === 200 && st5a.order.status === 'paying', { mc: mc5.status, status: st5a.order.status });
+  const rc5 = await trpcMutate<{ order: PayOrderRowT; reconciled: boolean; message: string }>('pay.reconcile', {
+    cookie: p5.cookie, input: { payNo: co5.order.payNo },
+  });
+  const m5 = await db.select().from(schema.memberships).where(eq(schema.memberships.userId, p5.id)).get();
+  check('55.4 drop：reconcile 自助补开成功=掉单补偿坐实（paid + memberships 落行）',
+    rc5.reconciled === true && rc5.order.status === 'paid' &&
+      m5?.planKey === 'plan_yinghuo' && m5.paidFen === 19900 && m5.soldStoreId === null,
+    { reconciled: rc5.reconciled, status: rc5.order.status, membership: m5?.id });
+  const rc5b = await trpcMutate<{ order: PayOrderRowT; reconciled: boolean }>('pay.reconcile', {
+    cookie: p5.cookie, input: { payNo: co5.order.payNo },
+  });
+  const m5Count = await db.select({ id: schema.memberships.id }).from(schema.memberships)
+    .where(eq(schema.memberships.userId, p5.id));
+  check('55.4 reconcile 幂等（已 paid 返回现状，会员不重建）',
+    rc5b.reconciled === false && rc5b.order.status === 'paid' && m5Count.length === 1,
+    { reconciled: rc5b.reconciled, memberships: m5Count.length });
+
+  /* ---- 55.5 退款联动：online_original + linkage.payOrderNo + provider.refund 留痕 ---- */
+  console.log('\n[批次6] 55.5 退款联动（线上原路骨架）');
+  /* §49c 段尾铁律兼容：退会退款单 createdAt 移位 25h 会使 genRefundNo 当日计数 −1，
+   * 其后任何新退款单必撞 uq_refund_bills_refund_no（§49 设计前提=「移位后不再生成退款单」）。
+   * 本段须走 refund.execute 生成新退款单，故先把 §49 夹具的移位复原（count 复归正确→
+   * 下一个日序不撞号）——只动夹具数据，不触碰 §49 任何已断言内容（断言在其时已闭环）。 */
+  await db.update(schema.refundBills).set({ createdAt: new Date() })
+    .where(eq(schema.refundBills.id, cancelM1.refundId));
+  const p6 = await mkPayCustomer('13922220006', '支付客六');
+  // 到店售卡（现金原单）→ 同人线上重复支付（已是会员：兑付幂等不重建只置 paid）
+  const sellP6 = await sellPlan(managerCookie, {
+    userId: p6.id, planKey: 'plan_yinghuo', petCount: 0,
+    paySegments: [{ method: 'cash', amountFen: 19900 }],
+  });
+  const co6 = await createPayOrder(p6.cookie, {
+    bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+  });
+  await postRaw('/api/pay/orders/mock-callback', { orderId: co6.order.id }, {}, p6.cookie);
+  const m6Count = await db.select({ id: schema.memberships.id }).from(schema.memberships)
+    .where(eq(schema.memberships.userId, p6.id));
+  check('55.5 前置：已是会员线上重复支付 → paid 但 memberships 不重建（幂等兑付）',
+    m6Count.length === 1, m6Count.length);
+  const rf6 = await trpcMutate<{
+    refund: { id: string; refundNo: string; refundMethod: string | null; linkageJson: Record<string, unknown> | null; amountFen: number };
+    idempotent: boolean;
+  }>('refund.execute', {
+    cookie: managerCookie,
+    input: { billNo: sellP6.billNo, type: 'full', reason: '批次6 线上原路联动验证（重复支付退线上单）' },
+  });
+  const linkage6 = (rf6.refund.linkageJson ?? {}) as Record<string, unknown>;
+  const online6 = (linkage6.onlineRefund ?? {}) as Record<string, unknown>;
+  check('55.5 线上支付单退款 → refundMethod=online_original（server 强制）',
+    rf6.refund.refundMethod === 'online_original' && rf6.idempotent === false,
+    { refundMethod: rf6.refund.refundMethod });
+  check('55.5 linkage.payOrderNo 快照 + provider.refund 留痕（mock=ok，两路单据同源）',
+    linkage6.payOrderNo === co6.order.payNo &&
+      online6.paymentId === co6.paymentId && online6.channel === 'mock' &&
+      online6.provider === 'mock' && online6.refundFen === 19900 && online6.result === 'ok',
+    { payOrderNo: linkage6.payOrderNo, onlineRefund: online6 });
+
+  /* ---- 55.6 超时关单端口可调（config.save 改 minutes 生效复还原） ---- */
+  console.log('\n[批次6] 55.6 超时关单端口可调');
+  const payCfgList = await trpcQuery<{ rules: Array<{ ruleKey: string; active: boolean }> }>('config.list', {
+    cookie: ownerCookie, input: { domain: 'pay' },
+  });
+  check('55.6 pay 域种子两行在库（pay_timeout_minutes/pay_channel_enabled，0017 幂等迁移落）',
+    payCfgList.rules.some((r) => r.ruleKey === 'pay_timeout_minutes' && r.active) &&
+      payCfgList.rules.some((r) => r.ruleKey === 'pay_channel_enabled' && r.active),
+    payCfgList.rules.map((r) => r.ruleKey));
+  const save6 = await trpcMutate<{ version: number }>('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'pay', changes: [{ ruleKey: 'pay_timeout_minutes', valueJson: { minutes: 1 } }] },
+  });
+  const p7 = await mkPayCustomer('13922220007', '支付客七');
+  const co7 = await createPayOrder(p7.cookie, {
+    bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+  });
+  check('55.6 端口改值即生效：minutes=1 → 新单 timeoutAt≈now+60s（不再 30min）',
+    save6.version >= 2 && !!co7.order.timeoutAt &&
+      Math.abs(co7.order.timeoutAt.getTime() - (Date.now() + 60_000)) < 30_000,
+    { version: save6.version, timeoutAt: co7.order.timeoutAt });
+  const swept6 = await closeTimeoutPayOrders(db, new Date(Date.now() + 120_000)); // 合成到点
+  const st6 = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: p7.cookie, input: { payNo: co7.order.payNo } });
+  check('55.6 sweeper 按新 timeoutAt 到点关单（closed）',
+    swept6 >= 1 && st6.order.status === 'closed', { swept: swept6, status: st6.order.status });
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'pay', changes: [{ ruleKey: 'pay_timeout_minutes', valueJson: { minutes: 30 } }] },
+  });
+  const quote6 = await trpcQuery<{ timeoutMinutes: number }>('pay.quote', {
+    cookie: p7.cookie, input: { bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0 },
+  });
+  check('55.6 复还原：minutes 回 30（quote 透出还原值）', quote6.timeoutMinutes === 30, quote6.timeoutMinutes);
+
+  /* ---- 55.7 权限：他人 pay_orders status/reconcile 403 ---- */
+  console.log('\n[批次6] 55.7 权限（他人单 403）');
+  const p8 = await mkPayCustomer('13922220008', '支付客八');
+  const [stOther, rcOther] = await Promise.all([
+    trpcQuery('pay.status', { cookie: p8.cookie, input: { payNo: co1.order.payNo } }).catch((e) => e),
+    trpcMutate('pay.reconcile', { cookie: p8.cookie, input: { payNo: co1.order.payNo } }).catch((e) => e),
+  ]);
+  check('55.7 他人 pay_orders status/reconcile → 403 FORBIDDEN',
+    stOther instanceof TrpcHttpError && stOther.httpStatus === 403 && stOther.code === 'FORBIDDEN' &&
+      rcOther instanceof TrpcHttpError && rcOther.httpStatus === 403 && rcOther.code === 'FORBIDDEN',
+    { st: stOther instanceof Error ? stOther.message : String(stOther), rc: rcOther instanceof Error ? rcOther.message : String(rcOther) });
 
   client.close();
 }

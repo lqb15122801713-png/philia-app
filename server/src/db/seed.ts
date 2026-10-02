@@ -544,6 +544,11 @@ async function main() {
     ['service_rules', 'service_rules'],
     /* 补缺-3 新表 */
     ['membership_events', 'membership_events'],
+    /* 批次 6 补缺大批新表（pay_rules 种子随 0017 幂等迁移落全库，created_by='system'，
+       本脚本不重复插行——防 0016 式双种子重复 active 行） */
+    ['pay_orders', 'pay_orders'],
+    ['agreements', 'agreements'],
+    ['pay_rules', 'pay_rules'],
   ];
 
   console.log('[seed] 完成，各表行数：');

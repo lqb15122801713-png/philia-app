@@ -32,6 +32,9 @@ import MemberCardPage from './pages/MemberCardPage'
 import MemberCenterPage from './pages/MemberCenterPage'
 import MemberChangePage from './pages/MemberChangePage'
 import MemberOpenPage from './pages/MemberOpenPage'
+import MemberCheckoutPage from './pages/MemberCheckoutPage'
+import PayReconcilePage from './pages/PayReconcilePage'
+import PayStatePage from './pages/PayStatePage'
 import MemberRebatePage from './pages/MemberRebatePage'
 import MemberUpgradePage from './pages/MemberUpgradePage'
 import MomentsPage from './pages/MomentsPage'
@@ -129,6 +132,11 @@ function ProtectedRoutes() {
           申报锚点=「消息」「订阅管理」） */}
       <Route path="/notifications" element={<NotifyCenterPage />} />
       <Route path="/notifications/prefs" element={<NotifyPrefsPage />} />
+      {/* 补缺批片 6 线上收单骨架（Mock 通道）：确认订单/支付态/掉单自助查询
+          （申报锚点=「确认订单」「付了没开」；/pay/reconcile 静态段优先于 /pay/:payNo 动态段） */}
+      <Route path="/member/checkout" element={<MemberCheckoutPage />} />
+      <Route path="/pay/reconcile" element={<PayReconcilePage />} />
+      <Route path="/pay/:payNo" element={<PayStatePage />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )

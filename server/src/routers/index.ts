@@ -25,6 +25,7 @@ import { inventoryRouter } from './inventory';
 import { mallRouter } from './mall';
 import { membershipRouter } from './membership';
 import { passRouter } from './pass';
+import { payRouter } from './pay';
 import { petRouter } from './pet';
 import { pushRouter } from './push';
 import { refundRouter } from './refund';
@@ -57,6 +58,7 @@ export const appRouter = router({
   membership: membershipRouter, // 批次 R11a 会员前置批（档位透出/微光开档/售卡/续费/退会/立省钩子/年费分摊双口径）
   serviceLoop: serviceLoopRouter, // 补缺大批片 4（服务闭环：相册聚合/安心证书/美容报告/客服工单/发票申请/客服时间公示）
   authSecurity: authSecurityRouter, // 批次 R13a 账号安全（注销/换绑双码/换绑申诉/设备登记）
+  pay: payRouter, // 批次 6 补缺大批 server 侧收单骨架（quote/createOrder/status/listMine/reconcile + 超时关单）
 });
 
 /** 前端 tRPC client 的类型锚点（仅类型导出，无运行时开销） */
