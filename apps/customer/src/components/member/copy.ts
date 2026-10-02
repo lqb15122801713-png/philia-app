@@ -67,6 +67,8 @@ export const MEMBER_COPY = {
   'j1.storePayNote': '内测期仅支持到店收银台开通；线上支付通道开通后将在本页直接开放。',
   'j1.storePayBack': '重新选档',
   'j1.storePayOk': '我知道了',
+  /* 补缺批片 6：付费档 CTA 改跳线上确认订单（/member/checkout）；到店办理降级为旁路链接 */
+  'j1.storeBypass': '想到店办理？收银台指引 ›',
 
   /* ---- W-01 回馈金账本 ---- */
   'w1.pushLabel': '回馈金 · REBATE LEDGER',

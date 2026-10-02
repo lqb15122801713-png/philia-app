@@ -32,6 +32,7 @@ import { clientErrorRoute } from './routes/clientError';
 import { eventsRoute } from './routes/events';
 import { imagesRoute } from './routes/images';
 import { payCallbackRoute } from './routes/payCallback';
+import { payOrdersCallbackRoute } from './routes/payOrdersCallback';
 import { uploadRoute } from './routes/upload';
 import { serveStatic } from './static/spa';
 import { assertPaymentConfig } from './payments/provider';
@@ -75,6 +76,7 @@ export function createApp(): Hono<{ Variables: AppVariables }> {
   app.route('/', uploadRoute); // POST /api/upload
   app.route('/', imagesRoute); // GET /api/img/*
   app.route('/', payCallbackRoute); // POST /api/pay/callback、/api/pay/mock-callback（mock 模式）
+  app.route('/', payOrdersCallbackRoute); // POST /api/pay/orders/callback、/api/pay/orders/mock-callback（批次 6 补缺大批）
   app.route('/', clientErrorRoute); // POST /api/client-error（批次 9a 任务 E：三端 ErrorBoundary 错误摘要上报，落 JSONL 日志+限流）
 
   // 5) tRPC：context 取会话中间件注入的 sessionUser

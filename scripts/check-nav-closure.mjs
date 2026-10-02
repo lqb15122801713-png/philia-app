@@ -90,6 +90,9 @@ const ROUTES = [
   { app: 'customer', path: '/member', expect: 'sub', note: '批次 R11a' },
   { app: 'customer', path: '/member/open', expect: 'sub', note: '批次 R11a' },
   { app: 'customer', path: '/member/rebate', expect: 'sub', note: '批次 R11b 新路由申报（W-01 账本独立页）' },
+  { app: 'customer', path: '/member/checkout', expect: 'sub', note: '补缺批片 6 线上收单骨架（Mock 通道）' },
+  { app: 'customer', path: `/pay/${INVALID_ID}`, expect: 'sub', note: '补缺批片 6 线上收单骨架（Mock 通道）：参数化 INVALID_ID 异常态须出口' },
+  { app: 'customer', path: '/pay/reconcile', expect: 'sub', note: '补缺批片 6 线上收单骨架（Mock 通道）' },
   /* 商家端 25 */
   { app: 'merchant', path: '/dashboard', expect: 'tab' },
   { app: 'merchant', path: '/appointments', expect: 'sub' },

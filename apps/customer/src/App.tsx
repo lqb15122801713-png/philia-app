@@ -20,6 +20,9 @@ import MePage from './pages/MePage'
 import MemberCardPage from './pages/MemberCardPage'
 import MemberCenterPage from './pages/MemberCenterPage'
 import MemberOpenPage from './pages/MemberOpenPage'
+import MemberCheckoutPage from './pages/MemberCheckoutPage'
+import PayReconcilePage from './pages/PayReconcilePage'
+import PayStatePage from './pages/PayStatePage'
 import MemberRebatePage from './pages/MemberRebatePage'
 import MomentsPage from './pages/MomentsPage'
 import PetsPage from './pages/PetsPage'
@@ -75,6 +78,11 @@ function ProtectedRoutes() {
       <Route path="/member/open" element={<MemberOpenPage />} />
       {/* R11b 视觉批：回馈金账本拆独立推送页（36 号档 §四 W-01；申报锚点=「回馈金」） */}
       <Route path="/member/rebate" element={<MemberRebatePage />} />
+      {/* 补缺批片 6 线上收单骨架（Mock 通道）：确认订单/支付态/掉单自助查询
+          （申报锚点=「确认订单」「付了没开」；/pay/reconcile 静态段优先于 /pay/:payNo 动态段） */}
+      <Route path="/member/checkout" element={<MemberCheckoutPage />} />
+      <Route path="/pay/reconcile" element={<PayReconcilePage />} />
+      <Route path="/pay/:payNo" element={<PayStatePage />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   )

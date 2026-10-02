@@ -57,10 +57,12 @@ export const EventType = {
   RefundRejected:        'refund.rejected',         // 退款申请驳回（仅店主） → store
   RefundMonthExported:   'refund.monthExported',    // 退款月表导出审计（仅老板） → store
   // 批次 R11a 会员前置批（双端同步）
-  MembershipOpened:      'membership.opened',       // 售卡/微光开档 → user + store
+  MembershipOpened:      'membership.opened',       // 售卡/微光开档/线上开通兑付 → user + store
   MembershipRenewed:     'membership.renewed',      // 续费解冻 → user
   MembershipCancelled:   'membership.cancelled',    // 退会（折算+清零留痕） → user + store
   RebateSettled:         'rebate.settled',          // 回馈金月度到账批次 → store
+  // 批次 6 补缺大批 · server 侧支付骨架
+  PayOrderClosed:        'pay.orderClosed',         // 支付单超时关单（sweeper/懒超时） → user
 } as const;
 
 export type EventTypeValue = (typeof EventType)[keyof typeof EventType];

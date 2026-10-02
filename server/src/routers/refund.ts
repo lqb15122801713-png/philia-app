@@ -80,6 +80,7 @@ import { TRPCError } from '@trpc/server';
 import { and, desc, eq, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
+import { getPaymentProvider } from '../payments/provider';
 import { broadcastNow, emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
 import {
@@ -868,8 +869,8 @@ export const refundRouter = router({
     .input(
       refundInputSchema.extend({
         reason: z.string().trim().min(1, '退款必须填写原因').max(200),
-        /** 实退方式（pass_cancel 必选）：offline_original 线下原路 | to_stored_value 退储值账户 */
-        refundMethod: z.enum(['offline_original', 'to_stored_value']).optional(),
+        /** 实退方式（pass_cancel 必选）：offline_original 线下原路 | to_stored_value 退储值账户 | online_original 线上原路退回（批次 6，线上支付单联动时 server 强制） */
+        refundMethod: z.enum(['offline_original', 'to_stored_value', 'online_original']).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -916,6 +917,63 @@ export const refundRouter = router({
           const overThresholdToDraft = await loadOverThresholdToDraft(d);
           const plan = await computePlan(d, storeId, input, callerIsOwner, now, overThresholdToDraft);
 
+          /* ---- 批次 6 补缺大批：线上原路联动骨架（R12 最小侵入，两路单据同源留痕） ----
+             原单为售卡单（含 kind='membership' 行）且该客户存在 paid 线上支付单
+             （pay_orders biz_domain='membership_open' AND biz_id=原单客户，按 bizId 反查
+             最新一单）→ refundMethod 默认/强制='online_original' + linkage 快照放
+             payOrderNo + 调 provider.refund（Mock=成功留痕；真通道 notImplemented 原文
+             透出拒——事务内抛出整体回滚，半态零容忍）。draft 申请行（超阈值留口）
+             零联动纯留痕，不触发本联动。 */
+          let onlineRefund: Record<string, unknown> | null = null;
+          if (!plan.draftRequired) {
+            const hasMembershipItem = await d
+              .select({ id: schema.cashierBillItems.id })
+              .from(schema.cashierBillItems)
+              .where(
+                and(
+                  eq(schema.cashierBillItems.billId, plan.bill.id),
+                  eq(schema.cashierBillItems.kind, 'membership'),
+                ),
+              )
+              .get();
+            if (hasMembershipItem && plan.bill.customerId) {
+              const payOrder = await d
+                .select()
+                .from(schema.payOrders)
+                .where(
+                  and(
+                    eq(schema.payOrders.bizDomain, 'membership_open'),
+                    eq(schema.payOrders.bizId, plan.bill.customerId),
+                    eq(schema.payOrders.status, 'paid'),
+                  ),
+                )
+                .orderBy(desc(schema.payOrders.createdAt), desc(schema.payOrders.id))
+                .limit(1)
+                .then((r) => r[0]);
+              if (payOrder?.paymentId) {
+                const provider = getPaymentProvider();
+                try {
+                  await provider.refund(payOrder.paymentId, plan.refundFen);
+                } catch (err) {
+                  // 真通道骨架 notImplemented 原文透出拒：事务内抛出 → 整体回滚（半态零容忍）
+                  badRequest(
+                    `线上原路退回失败（${payOrder.payNo}）：${err instanceof Error ? err.message : String(err)}`,
+                  );
+                }
+                onlineRefund = {
+                  payOrderNo: payOrder.payNo,
+                  paymentId: payOrder.paymentId,
+                  channel: payOrder.channel,
+                  provider: provider.name,
+                  refundFen: plan.refundFen,
+                  result: 'ok', // Mock=成功留痕；真通道接入后改落通道退款单号
+                };
+              }
+            }
+          }
+          /** 实退方式终值：线上联动命中=强制 online_original；否则=入参（可空） */
+          const refundMethodFinal = onlineRefund ? ('online_original' as const) : (input.refundMethod ?? null);
+
           /* ---- ① 退款单落库（RB 日序单号；biz_date=执行日 V7；快照含 rebate 列位） ---- */
           const refundNo = await genRefundNo(d, storeId, now);
           const bizDate = storeLocalDateStr(now);
@@ -924,8 +982,9 @@ export const refundRouter = router({
             executedAt: now.toISOString(),
             operatorId: ctx.user.id,
             approverId: ctx.user.id, // 店长自批单发起即执行 approver=本人；店主执行 approver=店主
-            refundMethod: input.refundMethod ?? null,
+            refundMethod: refundMethodFinal,
             reason: input.reason,
+            ...(onlineRefund ? { payOrderNo: onlineRefund.payOrderNo, onlineRefund } : {}),
           };
 
           /* 留口开关 on 且超阈值 → 落 draft 申请行（零联动纯留痕：不返库存/不动余额/
@@ -962,7 +1021,7 @@ export const refundRouter = router({
               reason: input.reason,
               status: 'executed',
               linkageJson: linkage,
-              refundMethod: input.refundMethod ?? null,
+              refundMethod: refundMethodFinal,
               operatorId: ctx.user.id,
               approverId: ctx.user.id,
             })
@@ -1513,6 +1572,7 @@ export const refundRouter = router({
       const METHOD_LABEL: Record<string, string> = {
         offline_original: '线下原路退回',
         to_stored_value: '退储值账户',
+        online_original: '线上原路退回', // 批次 6 补缺大批：线上支付单退款联动
       };
       const cell = (v: string | number | null | undefined): string => {
         const s = v === null || v === undefined ? '' : String(v);
