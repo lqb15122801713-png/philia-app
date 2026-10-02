@@ -342,11 +342,24 @@ async function runRouteOnce(cdp, route) {
   clearInterval(watchInterval);
   await sleep(400); // console 尾帧
 
-  const state = JSON.parse(await cdp.eval(`JSON.stringify({
+  let state = JSON.parse(await cdp.eval(`JSON.stringify({
     rootChildren: document.getElementById('root')?.childElementCount ?? 0,
     text: (document.body?.innerText ?? '').slice(0, 4000),
     path: location.pathname,
   })`));
+  /* 补缺批收口实证：锚点先命中页题（「发票详情」4 字）时若终读恰在查询未回落间隙，
+     text<10 会误判 #root 空白——rootChildren>0（已渲染）时给 2s 复读窗口再判。 */
+  if (state.rootChildren > 0 && state.text.trim().length < 10) {
+    const t1 = Date.now();
+    while (Date.now() - t1 < 2000 && state.text.trim().length < 10) {
+      await sleep(400);
+      state = JSON.parse(await cdp.eval(`JSON.stringify({
+        rootChildren: document.getElementById('root')?.childElementCount ?? 0,
+        text: (document.body?.innerText ?? '').slice(0, 4000),
+        path: location.pathname,
+      })`));
+    }
+  }
   const reds = redConsoleEvents(cdp.events, url, base);
 
   const reasons = [];
