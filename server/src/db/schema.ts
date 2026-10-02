@@ -1752,7 +1752,7 @@ export const ruleConfigVersions = sqliteTable(
   'rule_config_versions',
   {
     id: id(),
-    /** 配置域，取值：commission | xp | duration（补充令①） | refund（R12） */
+    /** 配置域，取值：commission | xp | duration（补充令①） | refund（R12） | member_plans（R11a） | pay（批次 6） */
     domain: text('domain').notNull(),
     /** 保存后的新版本号 */
     version: integer('version').notNull(),
@@ -2053,4 +2053,132 @@ export const rebateSettlements = sqliteTable(
     ...auditColumns,
   },
   (t) => [uniqueIndex('uq_rebate_settlements_period').on(t.period)],
+);
+
+/* ------------------------------------------------------------------ */
+/* 批次 6 补缺大批 · server 侧支付骨架（pay_orders / agreements / pay_rules） */
+/* ------------------------------------------------------------------ */
+
+/** 支付单业务域，取值：membership_open 线上开通会员 | membership_upgrade 升级（片 3 未合，预留） | mall 商城（预留） */
+export type PayBizDomain = 'membership_open' | 'membership_upgrade' | 'mall';
+/** 支付单状态机：created→paying→paid（终）/closed（超时关单，终）/failed（通道失败，终）；非法迁移硬拒 */
+export type PayOrderStatus = 'created' | 'paying' | 'paid' | 'closed' | 'failed';
+/** 支付通道，取值：mock | wechat_jsapi | wechat_h5 | alipay_wap（内测=mock） */
+export type PayChannel = 'mock' | 'wechat_jsapi' | 'wechat_h5' | 'alipay_wap';
+/** 协议键，取值：member_service 会员服务协议 | not_prepaid 非预付卡声明 | no_auto_renew 到期不自动续费告知 */
+export type AgreementKey = 'member_service' | 'not_prepaid' | 'no_auto_renew';
+
+/**
+ * 线上支付单表（批次 6 补缺大批 · 涉钱最高戒律）：
+ * - 金额 server 重算落库（前端金额一律不信，createOrder 入参金额直接忽略）；
+ * - pay_no=PO-yyyymmdd-NNN 日序（storeWallclock +8 当日窗口 count+1，写串行锁内分配，
+ *   口径同 cashier genBillNo / refund genRefundNo；无门店维度=全局日序）；
+ * - biz_id 语义按域：membership_open=开通用户 users.id（归属/幂等/反查同键）；
+ *   membership_upgrade/mall 预留（后续片接入时注释补齐）；
+ * - idem_key 全局唯一=幂等闸：base=`{userId}|{bizDomain}|{planKey}|{当日}`，
+ *   同人同档当日在途（created/paying）重复创建=返回现状 idempotent=true；
+ *   在途单终结（closed/failed/paid）后再创建=base 加 `#a{N}` 尝试序号（审计可溯，
+ *   unique 不撞）；
+ * - biz_json=业务上下文快照（membership_open → {planKey, petCount, planLabel, phoneMasked}），
+ *   兑付/补兑付（reconcile）据此重建业务行，不依赖入参；
+ * - timeout_at=创建时快照 pay_timeout_minutes 端口值（超时关单 sweeper 按此比较；
+ *   端口改值只管新单，不回溯在途单——与规则配置「新规只管新单」同口径）；
+ * - 状态机硬拒：条件更新 WHERE status IN ('created','paying') 影响行数=0 且非 paid →
+ *   拒绝（closed/failed 再回调/再支付一律 400）；重复回调（已 paid）幂等零副作用。
+ * - 移位铁律：pay_no 日序按 created_at 计号，任何测试不得对 pay_orders.created_at 移位。
+ */
+export const payOrders = sqliteTable(
+  'pay_orders',
+  {
+    id: id(),
+    /** 支付单号（全局唯一）：PO-yyyymmdd-NNN 日序 */
+    payNo: text('pay_no').notNull().unique(),
+    /** 业务域，取值见 PayBizDomain */
+    bizDomain: text('biz_domain').notNull(),
+    /** 业务对象 ID（membership_open=users.id；其余域预留） */
+    bizId: text('biz_id').notNull(),
+    /** 业务上下文快照 JSON（兑付依据），结构见 PayOrderBizJson */
+    bizJson: text('biz_json', { mode: 'json' }).$type<Record<string, unknown>>(),
+    /** 金额（分，server 重算落库，前端金额一律不信） */
+    amountFen: integer('amount_fen').notNull(),
+    /** 支付通道，取值见 PayChannel */
+    channel: text('channel').notNull(),
+    /** 状态，取值见 PayOrderStatus */
+    status: text('status').notNull().default('created'),
+    /** 幂等键（全局唯一；base 或 base+#a{N} 尝试序号） */
+    idemKey: text('idem_key').notNull().unique(),
+    /** 通道侧支付单号（PaymentProvider.createPayment 返回；NULL=通道未下单） */
+    paymentId: text('payment_id'),
+    /** 回调原文 JSON（审计/对账用；NULL=未收回调） */
+    callbackJson: text('callback_json', { mode: 'json' }).$type<Record<string, unknown>>(),
+    /** 支付超时时间（创建时 pay_timeout_minutes 端口值快照；NULL 不用） */
+    timeoutAt: integer('timeout_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_pay_orders_biz').on(t.bizDomain, t.bizId),
+    index('ix_pay_orders_status').on(t.status),
+  ],
+);
+
+/**
+ * 协议留痕表（批次 6 补缺大批）：线上开通会员三协议勾选快照——
+ * member_service 会员服务协议 / not_prepaid 非预付卡声明 / no_auto_renew 到期不自动续费告知。
+ * createOrder 事务内与 pay_orders 同落（三行必传缺一拒单）：content/version 全文快照
+ * （协议改版不回溯历史留痕）+ checked_at 勾选时刻 + user_snapshot（userId/phoneMasked/
+ * planKey/petCount，取证四要素）。只增不改（无更新端点）。
+ */
+export const agreements = sqliteTable(
+  'agreements',
+  {
+    id: id(),
+    /** 勾选用户 ID -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 协议键，取值见 AgreementKey */
+    agreementKey: text('agreement_key').notNull(),
+    /** 协议版本（快照，如 'v1.0'） */
+    version: text('version').notNull(),
+    /** 协议全文快照（改版不回溯） */
+    content: text('content').notNull(),
+    /** 勾选时刻 */
+    checkedAt: integer('checked_at', { mode: 'timestamp' }).notNull(),
+    /** 用户快照 JSON：{userId, phoneMasked, planKey, petCount} */
+    userSnapshot: text('user_snapshot', { mode: 'json' }).$type<Record<string, unknown>>().notNull(),
+    ...auditColumns,
+  },
+  (t) => [index('ix_agreements_user_key').on(t.userId, t.agreementKey)],
+);
+
+/**
+ * 支付规则配置表（批次 6 补缺大批，同构 commission_rules，配置端口第五域 domain='pay'）：
+ * 种子 version=1 随 0017 幂等迁移落全库（created_by='system'，Y6 豁免件同 0016 工艺）——
+ * pay_timeout_minutes{minutes:30} 支付超时关单时长（分钟）/
+ * pay_channel_enabled{enabled:true} 线上支付通道开关（内测=mock）。
+ * 保存即生效+版本化留痕，新值只管新单（在途单 timeout_at 为创建时快照，不回溯）。
+ */
+export const payRules = sqliteTable(
+  'pay_rules',
+  {
+    id: id(),
+    /** 规则版本（初始种子 =1） */
+    version: integer('version').notNull(),
+    /** 规则键（pay_timeout_minutes / pay_channel_enabled） */
+    ruleKey: text('rule_key').notNull(),
+    /** 规则中文名（配置页展示） */
+    label: text('label').notNull(),
+    /** 规则值 JSON（minutes/enabled），结构见 RuleConfigValue */
+    valueJson: text('value_json', { mode: 'json' }).$type<RuleConfigValue>().notNull(),
+    /** 生效时间（按此取规则版本；新规只管生效后的单） */
+    effectiveFrom: integer('effective_from', { mode: 'timestamp' }).notNull(),
+    /** 是否生效（0/1） */
+    active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    /** 创建/变更人用户 ID -> users.id（迁移种子='system'，FK 豁免同 0016 工艺） */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_pay_rules_key_active').on(t.ruleKey, t.active)],
 );

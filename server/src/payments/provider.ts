@@ -29,6 +29,12 @@ export interface PaymentProvider {
     headers: Record<string, string>,
     rawBody: string,
   ): Promise<{ paymentId: string; orderId: string; paidFen: number }>;
+  /**
+   * 查单（批次 6 补缺大批 · reconcile 自助补开用）：
+   * 按通道侧支付单号查询支付结果；mock=回本地通道状态，wechat/alipay=TODO 规格骨架。
+   * status='paid' 时必须带 paidFen（业务侧据此做金额核对红线，不符拒兑付）。
+   */
+  queryOrder(paymentId: string): Promise<{ paymentId: string; status: 'paid' | 'unpaid'; paidFen?: number }>;
   /** 退款（v1 仅接口占位） */
   refund(paymentId: string, amountFen: number): Promise<void>;
 }

@@ -144,8 +144,9 @@ function planPublicShape(row: MemberPlanRow | undefined) {
   };
 }
 
-/** 售卡/续费金额=档价+多宠附加费（含 included_pets 只，超出每只 +extra_pet_fen；max_pets 封顶硬校验） */
-function membershipChargeFen(
+/** 售卡/续费金额=档价+多宠附加费（含 included_pets 只，超出每只 +extra_pet_fen；max_pets 封顶硬校验）。
+ *  批次 6 补缺大批：export 供 routers/pay.ts 线上开通 server 重算金额同源（前端金额一律不信）。 */
+export function membershipChargeFen(
   plan: MemberPlanRow,
   petCount: number,
 ): { amountFen: number; extraCount: number; priceFen: number } {

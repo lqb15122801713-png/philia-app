@@ -23,6 +23,17 @@
  *    再用 API v3 密钥 AEAD_AES_256_GCM 解密 resource 得到
  *    out_trade_no(=orderId) / transaction_id(=paymentId) / amount.total(=paidFen)。
  * 3. refund → POST /v3/refund/domestic/refunds。
+ * 4. queryOrder（批次 6 补缺大批 · reconcile 自助补开用）→
+ *    GET /v3/pay/transactions/out-trade-no/{out_trade_no}（商户私钥签名请求），
+ *    trade_state==='SUCCESS' → { status:'paid', paidFen: amount.total }。
+ *
+ * H5（wechat_h5）接入规格（批次 6 补缺大批 · 通道枚举预留，接入时实现）：
+ * - 下单：POST /v3/pay/transactions/h5，trade_type=MWEB，scene_info 必填
+ *   （payer_client_ip / h5_info{ type:'Wap', wap_url, wap_name }）；
+ * - 响应 mweb_url 直接透传给前端跳转（无须二次签名；mweb_url 禁Referer 空窗）；
+ * - 回调验签/解密与 JSAPI 完全一致（平台证书 + AEAD_AES_256_GCM），
+ *   二次签名仅 JSAPI 调起需要（appId/timeStamp/nonceStr/package/signType/paySign 六参），
+ *   H5 无调起签名环节。
  */
 
 import type { PaymentProvider } from './provider';
@@ -96,6 +107,15 @@ export class WechatPayProvider implements PaymentProvider {
     //   3. 解析明文：trade_state==='SUCCESS' 才返回 {
     //        paymentId: transaction_id, orderId: out_trade_no, paidFen: amount.total }
     notImplemented('verifyCallback');
+  }
+
+  async queryOrder(
+    _paymentId: string,
+  ): Promise<{ paymentId: string; status: 'paid' | 'unpaid'; paidFen?: number }> {
+    // TODO(微信接入)：GET /v3/pay/transactions/out-trade-no/{out_trade_no}
+    //   （paymentId=下单时落库的 transaction_id 或 out_trade_no 映射），商户私钥签名请求；
+    //   trade_state==='SUCCESS' → { status:'paid', paidFen: amount.total }，其余 → unpaid。
+    notImplemented('queryOrder');
   }
 
   async refund(_paymentId: string, _amountFen: number): Promise<void> {
