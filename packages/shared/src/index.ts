@@ -23,6 +23,9 @@ export * from './api/devAuth';
 export { safeUuid } from './lib/safeUuid';
 // 文案端口覆盖层（端口批片 B · CJ-1002-01）：端口值→码内默认 fallback；代理包装+拉取器
 export { setCopyOverrides, copyOverrideOf, withCopyOverrides, CopyOverridesLoader } from './copyOverrides';
+// 展示槽位覆盖层（端口批片 C · CJ-1002-01）：槽位 live 值→码内默认 fallback
+export { setSlotContents, slotContentOf, resolveSlotUrl, SlotContentLoader } from './slotContents';
+export type { SlotContent } from './slotContents';
 // hooks 显式导出：EventEnvelope 以契约形（data: any）覆盖 constants/events 的同名导出
 export { useMe, useEventSource, SSE_BACKOFF_DELAYS, backoffDelay } from './api/hooks';
 export type { EventEnvelope } from './api/hooks';

@@ -3,7 +3,7 @@
  * 未必存在，真实上传图走后端签名 URL，经 resolveImgSrc 归一化）。
  */
 
-import { getApiBase } from '@philia/shared';
+import { getApiBase, slotContentOf, resolveSlotUrl } from '@philia/shared';
 import { PawPrint } from 'lucide-react';
 import { useState } from 'react';
 import { resolveImgSrc } from './format';
@@ -20,9 +20,25 @@ export default function ProductImage({
   imgClassName?: string;
 }) {
   const [broken, setBroken] = useState(false);
+  const [slotBroken, setSlotBroken] = useState(false);
   const resolved = resolveImgSrc(src, getApiBase());
 
+  /* 端口批片 C：无图/破图兜底先读槽位 product.placeholder live 真件，再无=爪印占位（R10） */
   if (!resolved || broken) {
+    const slotUrl = slotBroken ? null : resolveSlotUrl(slotContentOf('product.placeholder')?.url);
+    if (slotUrl) {
+      return (
+        <div className={`overflow-hidden bg-sunken ${className}`}>
+          <img
+            src={slotUrl}
+            alt={alt}
+            loading="lazy"
+            onError={() => setSlotBroken(true)}
+            className={`h-full w-full object-cover ${imgClassName}`}
+          />
+        </div>
+      );
+    }
     return (
       <div className={`flex items-center justify-center bg-sunken ${className}`} aria-label={alt}>
         <PawPrint className="h-8 w-8 text-ink-placeholder" strokeWidth={1.5} />

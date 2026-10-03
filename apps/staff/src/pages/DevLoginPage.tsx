@@ -9,7 +9,7 @@
  * （批次 6 B2 真实链路）。dev-login 种子登录链路不回归。
  */
 
-import { devLogin, getApiBase, logout, Skeleton, useMe, usePhiliaClient } from '@philia/shared'
+import { devLogin, getApiBase, logout, Skeleton, useMe, usePhiliaClient, resolveSlotUrl, slotContentOf } from '@philia/shared'
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Input } from '@/components/ui/input'
@@ -120,12 +120,12 @@ export default function DevLoginPage() {
 
   return (
     <div className="pb-10">
-      {/* 1. 主视觉卡（340 高；既有品牌资产 /brand/banner-home-1200.png；试样 .lg-hero margin 10px 22px 0）
-             UX-06 P3-2 素材通道登记：门店晨间实拍替换排期中（拍摄清单在 UX 侧），到位前沿用品牌资产 banner-home-1200.png */}
+      {/* 1. 主视觉卡（340 高；端口批片 C：读槽位 login.hero.staff live 值，无=码内默认品牌资产；
+             UX-06 P3-2 素材通道登记：门店晨间实拍替换排期中——到位后端口页换图零代码） */}
       <div className="u1-card mx-[22px] mt-2.5 flex h-[340px] items-center justify-center overflow-hidden">
         <img
-          src="/brand/banner-home-1200.png"
-          alt="菲丽亚宠物门店"
+          src={resolveSlotUrl(slotContentOf('login.hero.staff')?.url) ?? '/brand/banner-home-1200.png'}
+          alt={slotContentOf('login.hero.staff')?.alt ?? '菲丽亚宠物门店'}
           className="h-full w-full rounded-panel object-cover"
           onError={(e) => ((e.target as HTMLImageElement).style.display = 'none')}
         />

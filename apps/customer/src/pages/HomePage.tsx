@@ -19,7 +19,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Bell, Plus } from 'lucide-react'
-import { Skeleton, useMe, usePhiliaClient, getStepDef } from '@philia/shared'
+import { Skeleton, useMe, usePhiliaClient, getStepDef, resolveSlotUrl, slotContentOf } from '@philia/shared'
 import HomeBookingPanel from '../components/home/HomeBookingPanel'
 import { ErrorState } from '../components/home/common'
 import { fenToYuan, fmtHM } from '@/components/booking/format'
@@ -221,12 +221,13 @@ export default function HomePage() {
 
   return (
     <div className="pb-32">
-      {/* 1. BANNER 槽（§4.2：高 190+底垫 96；内容=A5 端口槽位；既有照片资产优先，加载失败回退占位渐变） */}
+      {/* 1. BANNER 槽（§4.2：高 190+底垫 96；内容=A5 端口槽位；既有照片资产优先，加载失败回退占位渐变；
+             端口批片 C：读槽位 home.banner live 值，无=码内默认 /brand/banner-home-1200.png） */}
       <section className="hv2-banner" data-testid="home-banner" aria-label="品牌横幅">
         {bannerImgOk ? (
           <img
-            src="/brand/banner-home-1200.png"
-            alt="菲丽亚宠物门店"
+            src={resolveSlotUrl(slotContentOf('home.banner')?.url) ?? '/brand/banner-home-1200.png'}
+            alt={slotContentOf('home.banner')?.alt ?? '菲丽亚宠物门店'}
             data-testid="home-banner-img"
             onError={() => setBannerImgOk(false)}
             className="hv2-banner-img"

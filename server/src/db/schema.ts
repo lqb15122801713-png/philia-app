@@ -2716,6 +2716,39 @@ export const copyOverrides = sqliteTable(
 );
 
 /**
+ * 展示槽位表（端口批片 C · A5 落地，控制台第八域「槽位」）：
+ * BANNER/卡面/登录宣言图/空态插画/商品占位模板等展示内容后台可换——换内容零代码零部署。
+ * - 每槽多版本行：新上传=status='pending'（待审，新素材默认待审不上线 D-6 纪律）；点上线=
+ *   该版本 'live'（同槽唯一 live）旧 live→'archived'；回退=上一版重新 live；
+ * - content_json={url, alt}：url=null=渐变/图标占位（R10 不画假件——无真件不落假图，
+ *   前端 fallback 纪律=码内渐变/默认图）；url 支持 /api/img 签名件与 public 静态路径；
+ * - 权限：写与全量读=仅 owner（merchantOwnerProcedure）；客户端读口=仅 live 行公开透出。
+ */
+export const slotContents = sqliteTable(
+  'slot_contents',
+  {
+    id: id(),
+    /** 槽位键（如 home.banner / member.cardFace；注册表=种子七槽） */
+    slotKey: text('slot_key').notNull(),
+    /** 槽内版本（每槽自增，种子=1） */
+    version: integer('version').notNull(),
+    /** 内容 JSON：{ url: string|null, alt: string } */
+    contentJson: text('content_json', { mode: 'json' }).$type<{ url: string | null; alt: string }>().notNull(),
+    /** 状态：pending（待审） | live（上线） | archived（历史版） */
+    status: text('status').notNull().default('pending'),
+    /** 创建/操作人用户 ID -> users.id */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_slot_contents_key_status').on(t.slotKey, t.status),
+    index('ix_slot_contents_key_version').on(t.slotKey, t.version),
+  ],
+);
+
+/**
  * 账号注销申请单表（批次 R13a · 0017）：
  * - 同人仅一在途（status='submitted' 应用层判定幂等，不加部分索引）；
  * - checklist_json=提交时阻断校验快照（须为空清单才放行）；impacts_json=三项影响
