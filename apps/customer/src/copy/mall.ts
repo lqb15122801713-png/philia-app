@@ -2,12 +2,14 @@
  * 商城域文案键表（copy key 一期硬约定 · 纪律同 components/member/copy.ts）
  *
  * 纪律：商城域界面文案（屏题/空态/CTA/提示）一律经本表取值，组件内零硬编码；
- * 文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名小写点分、冻结不改。
+ * 文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
  * 数值不进本表：价格/比例/折扣等到渲染层读端口插值。
  */
 
-export const MALL_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const MALL_COPY_TABLE = {
   /* ---- 商品订单 /mall/orders（换皮批片 5 · UX 片 2 走查 P2 群：空态错配购物车文案，
      改订单系三句话——题（是什么）/说明（为什么）/出口（去哪→服务预约入口 /booking）） ---- */
   'mall.orders.emptyTitle': '还没有订单',
@@ -87,6 +89,8 @@ export const MALL_COPY = {
   'mall.cancelConfirmTitle': '取消该订单？',
   'mall.cancelConfirmBody': '取消后库存将释放，订单不可恢复。',
 } as const;
+
+export const MALL_COPY = withCopyOverrides(MALL_COPY_TABLE);
 
 export type MallCopyKey = keyof typeof MALL_COPY;
 

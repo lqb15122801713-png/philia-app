@@ -3,11 +3,13 @@
  *
  * 覆盖：OrdersPage。
  * 纪律：经营性文案（屏题副题/队列空态）一律经本表取值，组件内零硬编码；
- * 文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名小写点分、冻结不改。
+ * 文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  * 数值不进本表：队列计数到渲染层读分组数据经 {var} 插值。
  */
 
-export const ORDER_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const ORDER_COPY_TABLE = {
   'order.title': '商城订单',
   'order.sub': '待发货 {a} · 已发货 {b} · 售后 {c}',
   'order.emptyAll': '还没有订单',
@@ -16,6 +18,8 @@ export const ORDER_COPY = {
   'order.emptyShipped': '没有已发货订单',
   'order.emptyRefunding': '没有售后订单',
 } as const;
+
+export const ORDER_COPY = withCopyOverrides(ORDER_COPY_TABLE);
 
 export type OrderCopyKey = keyof typeof ORDER_COPY;
 

@@ -4,7 +4,7 @@
  *
  * 覆盖：MemberCheckoutPage（确认订单 /member/checkout）、PayStatePage（支付态 /pay/:payNo）、
  * PayReconcilePage（掉单自助查询 /pay/reconcile）。
- * 文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名小写点分、冻结不改。
+ * 文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
  * 数值不进本表：金额/天数/只数等到渲染层读 pay.quote / member_plans 端口插值（{var} 模板）。
  *
@@ -12,7 +12,9 @@
  * 《年费≠储值明示》（冻结口径例外，协议标题本身含「储值」）；支付/会员费语境正文零命中。
  */
 
-export const PAY_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const PAY_COPY_TABLE = {
   /* ---- Mock 水印（R10 最高水位：内测通道全程明示，页面/按钮/结果页三处同文案） ---- */
   'mock.watermark': '内测通道 · 演示支付，不会真实扣款',
 
@@ -118,6 +120,8 @@ export const PAY_COPY = {
   'payStatus.failed': '支付失败',
   'payStatus.closed': '已关闭',
 } as const;
+
+export const PAY_COPY = withCopyOverrides(PAY_COPY_TABLE);
 
 export type PayCopyKey = keyof typeof PAY_COPY;
 

@@ -3,11 +3,13 @@
  *
  * 覆盖：DevLoginPage（/login · /dev-login 同组件）。
  * 纪律：经营性文案（wordmark/屏题宣言/协议小字/内测环境明面说明）一律经本表取值，
- * 组件内零硬编码；文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名冻结不改。
+ * 组件内零硬编码；文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  * 数值不进本表：会话有效期等口径数字随文本冻结（本页为内测登录闸，无端口数据源）。
  */
 
-export const AUTH_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const AUTH_COPY_TABLE = {
   'auth.wordmark': 'PHILIA · 商家端',
   'auth.manifestoA': '店里的每一件小事，',
   'auth.manifestoB': '都值得被认真对待',
@@ -19,6 +21,8 @@ export const AUTH_COPY = {
   'auth.devNote':
     '仅开发环境：dev-login 仅允许种子用户（kimi_id 以 seed_ 前缀），会话 cookie 有效期 7 天。 非商家账号登录后会被引导回本页切换。',
 } as const;
+
+export const AUTH_COPY = withCopyOverrides(AUTH_COPY_TABLE);
 
 export type AuthCopyKey = keyof typeof AUTH_COPY;
 

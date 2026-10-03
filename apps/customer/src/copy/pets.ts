@@ -2,12 +2,14 @@
  * 宠物档案（pets）域文案键表（copy key 一期硬约定 · 纪律同 components/member/copy.ts）
  *
  * 覆盖：PetsPage /philia/pets（档案列表 / 空态三句话 / 疫苗状态规则明面 / 洗护史）。
- * 文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名小写点分、冻结不改。
+ * 文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
  * 数值不进本表：天数/次数/日期等到渲染层读数据插值（{var} 模板）。
  */
 
-export const PETS_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const PETS_COPY_TABLE = {
   'pets.title': '宠物档案',
   'pets.loadFail': '宠物档案加载失败',
   /* 空态三句话（题/说明/出口） */
@@ -25,6 +27,8 @@ export const PETS_COPY = {
   'pets.historyCount': '共 {count} 次',
   'pets.rebook': '同款再约 ›',
 } as const;
+
+export const PETS_COPY = withCopyOverrides(PETS_COPY_TABLE);
 
 export type PetsCopyKey = keyof typeof PETS_COPY;
 

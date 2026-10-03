@@ -4,13 +4,15 @@
  * 覆盖五域：相册 album.*（MomentsPage /philia/moments + 各入口）、证书 cert.*
  * （/philia/certs 列表与详情）、报告 report.*（/philia/reports/:appointmentId）、
  * 工单 ticket.*（小棉花 /support*）、发票 inv.*（/invoice/apply、/invoices*）。
- * 文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名小写点分、冻结不改。
+ * 文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
  * 数值不进本表：时刻/金额/计数/门店名等到渲染层读数据插值（{var} 模板）；
  * moments.ts 既有相册键本片全量迁入 album.*（值逐字保留，含 smoke 锚点「服务相册」）。
  */
 
-export const SL_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const SL_COPY_TABLE = {
   /* ---- 服务相册 album.*（/philia/moments；迁入自 copy/moments.ts，值逐字保留） ---- */
   'album.title': '服务相册',
   'album.loadFail': '相册加载失败',
@@ -183,6 +185,8 @@ export const SL_COPY = {
   'inv.billNotFound': '未找到该单据，无法申请开票',
   'inv.cashierUnsupported': '收银单开票请到店办理，或联系小棉花协助',
 } as const;
+
+export const SL_COPY = withCopyOverrides(SL_COPY_TABLE);
 
 export type ServiceLoopCopyKey = keyof typeof SL_COPY;
 

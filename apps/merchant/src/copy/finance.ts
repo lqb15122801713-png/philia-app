@@ -3,11 +3,13 @@
  *
  * 覆盖：FinancePage。
  * 纪律：经营性文案（屏题副题/口径明面/空态）一律经本表取值，组件内零硬编码；
- * 文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名小写点分、冻结不改。
+ * 文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  * 数值不进本表：金额/笔数到渲染层读统计经 {var} 插值。
  */
 
-export const FIN_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const FIN_COPY_TABLE = {
   'fin.title': '财务',
   'fin.sub': '今日已收 ¥{received} · 待收 ¥{pending} · 口径=收款登记（到店付）',
   'fin.capReceivedDay': '今日已收',
@@ -24,6 +26,8 @@ export const FIN_COPY = {
   'fin.ledgerAside': '按时间倒序',
   'fin.ledgerEmpty': '{period}还没有收款',
 } as const;
+
+export const FIN_COPY = withCopyOverrides(FIN_COPY_TABLE);
 
 export type FinCopyKey = keyof typeof FIN_COPY;
 

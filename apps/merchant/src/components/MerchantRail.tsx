@@ -24,12 +24,14 @@ import {
   Settings,
   ShoppingBag,
   SlidersHorizontal,
+  Type,
   CreditCard,
   Users,
 } from 'lucide-react';
 import { usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { roleLabelCn, useMerchantRole, type MerchantRole } from '@/lib/roles';
+import { cp } from '@/copy/copyPort';
 
 type RailItem = { to: string; label: string; icon: typeof House; testid: string };
 
@@ -80,6 +82,10 @@ function groupsFor(role: MerchantRole): Array<{ label: string | null; items: Rai
         // 批次 员工端2.0 R9-F：规则配置管理端口（仅 owner 可见入口；server 端 merchantOwnerProcedure 硬闸门）
         ...(role.isOwner
           ? [{ to: '/settings/rules', label: '规则配置', icon: SlidersHorizontal, testid: 'rail-rules-config' }]
+          : []),
+        // 端口批片 B：文案端口（仅 owner 可见入口；label 走端口文案键 copyport.pageTitle）
+        ...(role.isOwner
+          ? [{ to: '/settings/copy', label: cp('copyport.pageTitle'), icon: Type, testid: 'rail-copy-config' }]
           : []),
       ],
     },

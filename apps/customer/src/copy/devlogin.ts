@@ -3,12 +3,14 @@
  *
  * 覆盖：DevLoginPage /dev-login（L-01 宣言档之外的页面文案——宣言三段已入
  * components/member/copy.ts 的 l1.* 键，本表不重复收录）。
- * 文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名小写点分、冻结不改。
+ * 文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
  * 数值不进本表：错误详情等到渲染层插值（{var} 模板）。
  */
 
-export const DEVLOGIN_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const DEVLOGIN_COPY_TABLE = {
   'devlogin.tagline': 'PHILIA · 洗护 / 美容 / 寄养',
   'devlogin.primaryCta': '手机号一键登录',
   'devlogin.gateLink': '口令入内测 ›',
@@ -32,6 +34,8 @@ export const DEVLOGIN_COPY = {
   'devlogin.footerA': '登录即同意《用户协议》与《隐私政策》',
   'devlogin.footerB': '内测期间口令由门店发放',
 } as const;
+
+export const DEVLOGIN_COPY = withCopyOverrides(DEVLOGIN_COPY_TABLE);
 
 export type DevloginCopyKey = keyof typeof DEVLOGIN_COPY;
 

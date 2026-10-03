@@ -2,8 +2,7 @@
  * 薪资提成域文案键表（copy key 一期硬约定 · 换皮批片 5 C 块）
  *
  * 纪律：薪资域说明文（口径注脚/绩效池说明/扣减口径/快照说明）与空态一律经本表取值，
- * 组件内零硬编码；文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，
- * 键名小写点分、冻结不改。
+ * 组件内零硬编码；文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
  * 数值不进本表：金额/比例/系数/版本号到渲染层读端口插值（JSX 内 u1-num 片段，
  * 键只持静态 Lead/Tail 碎片，同 me.ts 纪律）。
@@ -11,7 +10,9 @@
  * server 下发文案（policyNote/cardNote/perf.note）、通用 UI 词（重新加载）。
  */
 
-export const PAY_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const PAY_COPY_TABLE = {
   /* ---- 分列空态 ---- */
   'pay.empty.service': '本月暂无服务计提单',
   'pay.empty.product': '本月暂无商品计提单',
@@ -36,5 +37,7 @@ export const PAY_COPY = {
   /* ---- 页脚口径 ---- */
   'pay.footer.lead': '仅本人可见 · 规则版本',
 } as const;
+
+export const PAY_COPY = withCopyOverrides(PAY_COPY_TABLE);
 
 export type PayCopyKey = keyof typeof PAY_COPY;

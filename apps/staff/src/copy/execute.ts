@@ -2,7 +2,7 @@
  * 服务执行域文案键表（copy key 一期硬约定 · 换皮批片 5 C 块）
  *
  * 纪律：执行页异常态/引导态题+说明一律经本表取值，组件内零硬编码；
- * 文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名小写点分、冻结不改。
+ * 文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
  * 入键位置=GuidePage 调用方（GuidePage 的 title/description 为 props，组件本身不改）。
  * 不抽：通用 UI 词（返回任务台/重试）、server 错误透传、六步轨道步名（冻结，走 STEP_NAME）、
@@ -12,7 +12,9 @@
  * （卡题/体征五项 label/三态 label/note 与建议 placeholder/送达承诺句/体重未登记兜底）。
  */
 
-export const EXECUTE_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const EXECUTE_COPY_TABLE = {
   /* ---- 守卫/异常引导页（GuidePage 调用侧） ---- */
   'execute.guide.forbidden.title': '无法执行该预约',
   'execute.guide.forbidden.desc': '该预约未指派给你，或不属于本店（非本人单）',
@@ -53,5 +55,7 @@ export const EXECUTE_COPY = {
   'exec.report.advice.label': '下次建议（选填）',
   'exec.report.advice.placeholder': '如：两周后建议复查耳道',
 } as const;
+
+export const EXECUTE_COPY = withCopyOverrides(EXECUTE_COPY_TABLE);
 
 export type ExecuteCopyKey = keyof typeof EXECUTE_COPY;

@@ -4,11 +4,13 @@
  * 覆盖：DashboardPage + dashboard/StatCards + dashboard/TodayTimeline + dashboard/TodoSection
  * + dashboard/TicketTodoSection + dashboard/InvoiceTodoSection（补缺大批片 4）。
  * 纪律：经营性文案（屏题/卡题/空态/待办引导）一律经本表取值，组件内零硬编码；
- * 文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名小写点分、冻结不改。
+ * 文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  * 数值不进本表：计数/金额到渲染层读聚合数据经 {var} 插值。
  */
 
-export const DASH_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const DASH_COPY_TABLE = {
   'dash.title': '经营总览',
   'dash.statCapAppt': '今日预约',
   'dash.statCapRevenue': '今日营业额',
@@ -108,6 +110,8 @@ export const DASH_COPY = {
   'dash.todoAppealLabel': '换绑申诉',
   'dash.todoAppealHint': '手机号换绑申诉，待协助核验',
 } as const;
+
+export const DASH_COPY = withCopyOverrides(DASH_COPY_TABLE);
 
 export type DashCopyKey = keyof typeof DASH_COPY;
 

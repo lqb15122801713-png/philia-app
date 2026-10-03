@@ -3,11 +3,13 @@
  *
  * 覆盖：RulesConfigPage（五域说明文 = 域分区 notice × 3 + 重确认警示 × 5 + 口径小字）。
  * 纪律：经营性文案（屏题副题/域说明文/危险操作警示/口径明面）一律经本表取值，
- * 组件内零硬编码；文案端口建成后迁移为后台可改——本表即端口 schema 的种子键集，键名冻结不改。
+ * 组件内零硬编码；文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  * 数值不进本表：版本号/条数等到渲染层读数据经 {var} 插值。
  */
 
-export const RULES_COPY = {
+import { withCopyOverrides } from '@philia/shared';
+
+const RULES_COPY_TABLE = {
   'rules.pageTitle': '规则配置管理',
   'rules.pageSub': '提成与 XP 全参数 · 页面可改 · 保存即生效 · 每次修改留痕版本化',
   'rules.guideTitle': '规则配置仅店主可用',
@@ -41,6 +43,8 @@ export const RULES_COPY = {
   'rules.discountHint': '按百分比填写：88 折 = 88%',
   'rules.splitNote': '合计须为 100%',
 } as const;
+
+export const RULES_COPY = withCopyOverrides(RULES_COPY_TABLE);
 
 export type RulesCopyKey = keyof typeof RULES_COPY;
 
