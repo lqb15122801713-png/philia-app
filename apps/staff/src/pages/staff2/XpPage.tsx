@@ -10,13 +10,21 @@
  * - xp.rulesView：冻结一句话 + 六来源分值 + 段位门槛保级（levels 五段，徽章墙同源）；
  *   拉新行置灰（随会员游戏化批开通，不可点）；
  * - xp.myEvents：本人事件流（复合游标翻页），dropped=1 行划线 + 「超出日上限」明示。
+ *
+ * 薪资/XP 面扩（coder K）：
+ * - 「申报积分」弹层（分值+理由）→ xp.raiseApplication(award)；
+ * - 扣分异议：penalty 负分行行内「异议」→ raiseApplication(revoke_appeal，挂该事件）；
+ * - 我的申请列表（xp.myApplications：状态/审核注透出；approved 且已落分=回链注记）；
+ * - copy 注记：审核由店长/老板在管理端处理（员工不可自审）。
+ * 数据口=payrollPort（server xp 申报口由 coder J 并行施工，签名冻结）。
  */
 
-import { ListSkeleton, Skeleton, usePhiliaClient } from '@philia/shared';
+import { ListSkeleton, Skeleton, usePhiliaClient, useToast } from '@philia/shared';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import type { CSSProperties, ReactNode } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { XP_COPY } from '@/copy/xp';
+import { listApplications, payrollOf, type XpAppKind } from '@/lib/payrollPort';
 import { SkBackBar, SkBtnAction, SkNote, SkRows } from '../../components/skeleton';
 import '../../styles/skeleton.css';
 
@@ -65,8 +73,122 @@ function EmptyRow({ text }: { text: string }) {
   );
 }
 
+/* ---------------- 申报/异议弹层（分值+理由；弹层三件套之滚动锁） ---------------- */
+
+const APPS_KEY = ['xp', 'myApplications'] as const;
+
+function XpAppModal({
+  mode,
+  targetEventId,
+  defaultPoints,
+  port,
+  showToast,
+  onClose,
+}: {
+  mode: XpAppKind; // award=申报积分 / revoke_appeal=扣分异议
+  targetEventId?: string;
+  defaultPoints?: number;
+  port: ReturnType<typeof payrollOf>;
+  showToast: (text: string) => void;
+  onClose: () => void;
+}) {
+  const { queryClient } = usePhiliaClient();
+  const [points, setPoints] = useState(defaultPoints && defaultPoints > 0 ? String(defaultPoints) : '');
+  const [reason, setReason] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  const submit = async () => {
+    const n = Number(points);
+    if (!Number.isInteger(n) || n <= 0) {
+      showToast(XP_COPY['xp.app.pointsInvalid']);
+      return;
+    }
+    if (!reason.trim()) {
+      showToast(XP_COPY['xp.app.reasonRequired']);
+      return;
+    }
+    setBusy(true);
+    try {
+      await port.xpApps.raiseApplication.mutate({
+        appKind: mode,
+        ...(targetEventId ? { targetEventId } : {}),
+        pointsRequested: n,
+        reason: reason.trim(),
+      });
+      showToast(XP_COPY['xp.app.submitted']);
+      void queryClient.invalidateQueries({ queryKey: APPS_KEY });
+      onClose();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : XP_COPY['xp.app.loadFail']);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-modal flex items-center justify-center px-6"
+      role="dialog"
+      aria-modal="true"
+      aria-label={mode === 'award' ? XP_COPY['xp.app.title'] : XP_COPY['xp.app.appealTitle']}
+    >
+      <button type="button" aria-label={XP_COPY['xp.app.cancel']} className="absolute inset-0 bg-[rgba(59,46,36,.4)]" onClick={onClose} />
+      <div className="u1-card relative w-full max-w-sm p-4" data-testid="xp-app-modal">
+        <p className="text-title text-ink">{mode === 'award' ? XP_COPY['xp.app.title'] : XP_COPY['xp.app.appealTitle']}</p>
+        <input
+          value={points}
+          onChange={(e) => setPoints(e.target.value.replace(/[^\d]/g, ''))}
+          inputMode="numeric"
+          maxLength={6}
+          placeholder={XP_COPY['xp.app.pointsPh']}
+          data-testid="xp-app-points"
+          className="u1-ring mt-2 h-12 min-h-[44px] w-full rounded-input bg-card px-3 text-body-sm text-ink placeholder:text-ink-placeholder"
+        />
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          rows={3}
+          maxLength={500}
+          placeholder={mode === 'award' ? XP_COPY['xp.app.reasonPh'] : XP_COPY['xp.app.appealReasonPh']}
+          data-testid="xp-app-reason"
+          className="u1-ring mt-2 w-full rounded-input bg-card px-3 py-2.5 text-body-sm text-ink placeholder:text-ink-placeholder"
+        />
+        <div className="mt-3 flex gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-11 min-h-[44px] flex-1 rounded-control bg-sunken text-body-sm font-semibold text-[rgba(59,46,36,.62)]"
+          >
+            {XP_COPY['xp.app.cancel']}
+          </button>
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void submit()}
+            data-testid="xp-app-submit"
+            className="h-11 min-h-[44px] flex-1 rounded-control bg-brand-primary text-body-sm font-semibold text-ink disabled:opacity-50"
+          >
+            {busy ? XP_COPY['xp.app.submitting'] : XP_COPY['xp.app.submit']}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function XpPage() {
   const { trpc } = usePhiliaClient();
+  const { showToast, toastEl } = useToast();
+  const port = useMemo(() => payrollOf(trpc), [trpc]);
+  const [appModal, setAppModal] = useState<{ mode: XpAppKind; eventId?: string; points?: number } | null>(null);
 
   const summaryQuery = useQuery({
     queryKey: ['xp', 'mySummary'],
@@ -88,6 +210,12 @@ export default function XpPage() {
     initialPageParam: null as EventCursor | null,
     getNextPageParam: (last) => last.nextCursor,
   });
+  /* 我的申请（申报/扣分异议，状态+审核注透出） */
+  const appsQuery = useQuery({
+    queryKey: APPS_KEY,
+    queryFn: () => port.xpApps.myApplications.query(),
+  });
+  const applications = useMemo(() => listApplications(appsQuery.data), [appsQuery.data]);
 
   const s = summaryQuery.data;
   const full = s ? s.today.earned >= s.today.cap : false;
@@ -177,6 +305,13 @@ export default function XpPage() {
           </>
         )}
       </section>
+
+      {/* 申报积分入口（award；审核由店长/老板在管理端处理） */}
+      <div style={{ margin: '10px 22px 0' }}>
+        <SkBtnAction onClick={() => setAppModal({ mode: 'award' })} testId="xp-app-cta">
+          {XP_COPY['xp.app.cta']}
+        </SkBtnAction>
+      </div>
 
       {/* 今日经验 */}
       <SkRows testId="xp-today">
@@ -342,6 +477,20 @@ export default function XpPage() {
                   ) : null}
                 </span>
               </span>
+              {/* 扣分异议入口（penalty 负分行；挂该事件 raiseApplication revoke_appeal） */}
+              {ev.source === 'penalty' && ev.points < 0 && !ev.dropped ? (
+                <button
+                  type="button"
+                  onClick={() => setAppModal({ mode: 'revoke_appeal', eventId: ev.id, points: Math.abs(ev.points) })}
+                  data-testid={`xp-appeal-${ev.id}`}
+                  style={{
+                    flex: 'none', marginRight: 8, borderRadius: 999, background: 'var(--paper)',
+                    padding: '3px 10px', fontSize: 10, color: 'var(--ink)', border: 0, cursor: 'pointer',
+                  }}
+                >
+                  {XP_COPY['xp.app.appealCta']}
+                </button>
+              ) : null}
               <span
                 className={`vl${!ev.dropped && ev.points < 0 ? ' red' : ''}`}
                 style={ev.dropped ? { color: 'var(--muted)', textDecoration: 'line-through', fontWeight: 500 } : undefined}
@@ -364,7 +513,72 @@ export default function XpPage() {
         </button>
       ) : null}
 
+      {/* 我的申请（申报/扣分异议：状态/审核注透出；approved 且已落分=回链注记） */}
+      <SecTitle>{XP_COPY['xp.app.sec.list']}</SecTitle>
+      <SkRows testId="xp-apps">
+        {appsQuery.isPending ? (
+          <div style={{ padding: '8px 0' }}><ListSkeleton rows={2} /></div>
+        ) : appsQuery.isError ? (
+          <EmptyRow text={XP_COPY['xp.app.loadFail']} />
+        ) : applications.length === 0 ? (
+          <EmptyRow text={XP_COPY['xp.app.empty']} />
+        ) : (
+          applications.map((a) => {
+            const resolved = a.status === 'approved' && (a.resolvedEventId != null || a.resolvedAt != null);
+            return (
+              <div className="row" key={a.id}>
+                <span className="lb" style={{ minWidth: 0, flex: 1 }}>
+                  <span style={{ display: 'block', fontWeight: 700 }}>
+                    {a.appKind === 'revoke_appeal' ? XP_COPY['xp.app.kindAppeal'] : XP_COPY['xp.app.kindAward']}{' '}
+                    <span className="sk-mono">
+                      {XP_COPY['xp.app.pointsLead']} {a.pointsRequested}
+                    </span>
+                    <span
+                      style={{
+                        ...chipSt,
+                        background: a.status === 'approved' ? 'var(--gold-pale)' : 'var(--paper)',
+                        color: a.status === 'approved' ? 'var(--ink-deep)' : 'var(--muted)',
+                      }}
+                    >
+                      {a.status === 'approved'
+                        ? XP_COPY['xp.app.statusApproved']
+                        : a.status === 'rejected'
+                          ? XP_COPY['xp.app.statusRejected']
+                          : XP_COPY['xp.app.statusPending']}
+                    </span>
+                    {resolved ? (
+                      <span style={{ ...chipSt, background: 'var(--gold)', color: 'var(--ink-deep)' }}>
+                        {XP_COPY['xp.app.resolvedNote']}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span style={{ display: 'block', marginTop: 2, fontSize: 11, fontWeight: 400 }}>{a.reason}</span>
+                  <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
+                    {fmtTs(a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt))}
+                    {a.reviewNote ? ` · ${XP_COPY['xp.app.reviewLead']}：${a.reviewNote}` : ''}
+                  </span>
+                </span>
+              </div>
+            );
+          })
+        )}
+      </SkRows>
+      <SkNote>{XP_COPY['xp.app.note']}</SkNote>
+
       <p className="sk-note" style={{ textAlign: 'center', paddingBottom: 32 }}>{XP_COPY['xp.footer']}</p>
+
+      {/* 申报/异议弹层 */}
+      {appModal ? (
+        <XpAppModal
+          mode={appModal.mode}
+          targetEventId={appModal.eventId}
+          defaultPoints={appModal.points}
+          port={port}
+          showToast={showToast}
+          onClose={() => setAppModal(null)}
+        />
+      ) : null}
+      {toastEl}
     </div>
   );
 }

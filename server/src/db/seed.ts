@@ -30,6 +30,12 @@ import { SLOT_SEED_ROWS } from './slotSeedRows';
 /* ---------------- 清空（子表 -> 父表） ---------------- */
 
 const CLEAR_ORDER = [
+  /* ---- 片 4 薪资+XP 域新表（迁移 0033）：子表先父表，先于 users/stores/staff/appointments/xpEvents 清空 ---- */
+  schema.payrollItems, // FK → payroll_runs/stores/staff
+  schema.payrollRuns, // FK → stores/users
+  schema.payrollAppeals, // FK → stores/staff/users
+  schema.xpApplications, // FK → stores/staff/users/xp_events（先于 xpEvents 清空）
+  schema.appointmentCollaborators, // FK → appointments/staff/users（先于 appointments 清空）
   /* ---- 片 3 任务协作域新表：子表先父表，先于 users/stores/appointments 清空（e2e 自建夹具，无种子数据） ---- */
   schema.announcementReads, // FK → announcements/users
   schema.announcements, // FK → stores/users
@@ -353,6 +359,8 @@ async function main() {
       commissionSeed('perf_deduction_cap_bp', '绩效扣减当月累计上限：≤当月绩效 50%（只扣绩效不扣提成，超限拒写）', { cap_bp: 5000 }),
       commissionSeed('settlement_day', '结算日：次月 15 日随工资发放', { day: 15 }),
       commissionSeed('snapshot_day', '月度快照：每月 1 日 02:00（季度绩效同 15 日口径快照）', { day: 1, hour: 2 }),
+      /* —— 片 4 B3-2 协作拆分缺省建议比（同 0033 迁移种子口径；重置后补种） —— */
+      commissionSeed('commission_collab_split_default', '多人协作单拆分缺省建议比例：协作人默认 50%（5000bp；setCollaborators 缺省建议值，页面注记数据源）', { splitBp: 5000 }),
     ]);
 
     /* ---- 补充令①：时长规则配置种子（决策 #39/#40，version=1） ----
@@ -500,6 +508,17 @@ async function main() {
         ruleKey: 'pdca_categories',
         label: 'PDCA 问题类目集（巡检排行分组维度；店长在配置端口维护类目集）',
         valueJson: { categories: ['卫生', '设备', '服务', '安全', '其他'] },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      /* 片 4 B3-5/6：薪资异议申诉 SLA（同 0033 迁移种子口径；service_rules 在 CLEAR_ORDER
+         内会被重置，本处为重置后补种——不补则端口键被种子抹掉） */
+      {
+        version: 1,
+        ruleKey: 'payroll_appeal_sla_hours',
+        label: '薪资异议申诉处理时限（小时）：店长/老板须在该时限内复核，页面注记数据源',
+        valueJson: { hours: 24 },
         effectiveFrom: RULES_EFFECTIVE_FROM,
         active: true,
         createdBy: owner.id,

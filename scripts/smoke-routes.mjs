@@ -140,6 +140,9 @@ const ROUTES = [
   { app: 'merchant', path: '/settings/announcements', anchors: ['公告'], serverDep: true, note: '片 3：公告（owner|manager 渲染「公告」页题；锚点=页题/引导页稳定文案）' },
   { app: 'merchant', path: '/ops', anchors: ['运营'], serverDep: true, note: '片 3：运营（owner|manager 渲染「运营」页题；墨轨「门店」组入口 rail-ops）' },
   { app: 'merchant', path: '/settings/tasks', anchors: ['任务模板'], serverDep: true, note: '片 3：循环任务模板自管（owner|manager 渲染「任务模板」页题）' },
+  /* 员工端骨架整建批 片 4 两条新路由（闸径照上行片 3 先例：owner|manager 页题渲染，clerk 引导页标题同含锚点） */
+  { app: 'merchant', path: '/payroll', anchors: ['薪资'], serverDep: true, note: '片 4：薪资（owner|manager 渲染「薪资」页题；墨轨「门店」组入口 rail-payroll）' },
+  { app: 'merchant', path: '/xp-admin', anchors: ['XP 审核'], serverDep: true, note: '片 4：XP 审核（owner|manager 渲染「XP 审核」页题；墨轨「门店」组入口 rail-xp-admin）' },
   { app: 'merchant', path: '/live', anchors: ['在店监控'], expectPath: '/monitor', note: 'B2 重定向；U3 锚点' },
   { app: 'merchant', path: '/appointments', anchors: ['预约'], note: 'A3 白屏群' },
   { app: 'merchant', path: `/appointments/${APPT_ID}/monitor`, anchors: ['实时监控', '预约'], serverDep: true, note: 'P4 原深链；U3 锚点' },

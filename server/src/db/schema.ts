@@ -1529,6 +1529,11 @@ export const deductionRecords = sqliteTable(
     createdBy: text('created_by')
       .notNull()
       .references(() => users.id),
+        /** 状态：active | reverted（申诉成立返还=置 reverted 留痕不删行，只增不改同族口径——片 4 B3-6） */
+    status: text('status').notNull().default('active'),
+    revertedBy: text('reverted_by').references(() => users.id),
+    revertedAt: integer('reverted_at', { mode: 'timestamp' }),
+    revertNote: text('revert_note'),
     ...auditColumns,
   },
   (t) => [
@@ -1667,7 +1672,7 @@ export const xpEvents = sqliteTable(
     userId: text('user_id')
       .notNull()
       .references(() => users.id),
-    /** 来源，取值：attendance | service | review | exam | referral | cover | penalty */
+    /** 来源，取值：attendance | service | review | exam | referral | cover | penalty | application（片 4 申报审核） | revoke_offset（片 4 扣分异议对冲） */
     source: text('source').notNull(),
     /** 来源单据 ID（打卡记录/预约单/评价/考试级别等） */
     sourceId: text('source_id').notNull(),
@@ -3212,4 +3217,138 @@ export const staffExitHandoffs = sqliteTable(
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   },
   (t) => [index('ix_exit_handoffs_store').on(t.storeId, t.fromStaffId)],
+);
+
+/* ==================== 员工端骨架整建批 片 4（薪资+XP，涉钱批，迁移 0033） ==================== */
+
+/** 工资条批次（片 4 B3-4）：生成→老板确认两态；一店一月一批（uq 幂等锚） */
+export const payrollRuns = sqliteTable(
+  'payroll_runs',
+  {
+    id: id(),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    /** 工资月份 'YYYY-MM' */
+    month: text('month').notNull(),
+    /** 状态：generated（已生成待确认）| confirmed（老板确认定稿） */
+    status: text('status').notNull().default('generated'),
+    generatedBy: text('generated_by').notNull().references(() => users.id),
+    generatedAt: integer('generated_at', { mode: 'timestamp' }).notNull(),
+    confirmedBy: text('confirmed_by').references(() => users.id),
+    confirmedAt: integer('confirmed_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [uniqueIndex('uq_payroll_runs_store_month').on(t.storeId, t.month)],
+);
+
+/**
+ * 员工工资条行（片 4 B3-4）：四费列+净额快照（payload_json=computeMonth 同构载荷）；
+ * net = commission + performance − deduction + adjustment（adjustment 带符号，负=跨月回冲调整项）；
+ * 发放=标记留痕（marked_by/at/method_note，开口项 3 裁：不碰真钱，全链路零支付通道）。
+ */
+export const payrollItems = sqliteTable(
+  'payroll_items',
+  {
+    id: id(),
+    runId: text('run_id').notNull().references(() => payrollRuns.id),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    staffId: text('staff_id').notNull().references(() => staff.id),
+    month: text('month').notNull(),
+    /** computeMonth 同构载荷快照（服务/商品/售卡/绩效/扣减/调整项全明细） */
+    payloadJson: text('payload_json', { mode: 'json' }).$type<Record<string, unknown>>().notNull(),
+    commissionFen: integer('commission_fen').notNull().default(0),
+    performanceFen: integer('performance_fen').notNull().default(0),
+    deductionFen: integer('deduction_fen').notNull().default(0),
+    /** 调整项（带符号：负=跨月回冲，正=补调） */
+    adjustmentFen: integer('adjustment_fen').notNull().default(0),
+    netFen: integer('net_fen').notNull().default(0),
+    ruleVersion: integer('rule_version'),
+    snapshotId: text('snapshot_id'),
+    /** 发放标记（标记留痕不碰真钱；重复标记幂等） */
+    markedBy: text('marked_by').references(() => users.id),
+    markedAt: integer('marked_at', { mode: 'timestamp' }),
+    methodNote: text('method_note'),
+    ...auditColumns,
+  },
+  (t) => [
+    uniqueIndex('uq_payroll_items_run_staff').on(t.runId, t.staffId),
+    index('ix_payroll_items_staff').on(t.staffId, t.month),
+  ],
+);
+
+/** 多人协作单提成拆分（片 4 B3-2）：一单 N 人 split_bp 万分比；主操作人吃余数（Σ协作 + 主 = 10000） */
+export const appointmentCollaborators = sqliteTable(
+  'appointment_collaborators',
+  {
+    id: id(),
+    appointmentId: text('appointment_id').notNull().references(() => appointments.id),
+    staffId: text('staff_id').notNull().references(() => staff.id),
+    /** 协作角色注记（wash|groom|assist 等，文案走端口） */
+    role: text('role').notNull(),
+    /** 拆分比例（万分比 bp，如 4000=40%） */
+    splitBp: integer('split_bp').notNull(),
+    createdBy: text('created_by').notNull().references(() => users.id),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  },
+  (t) => [
+    uniqueIndex('uq_collab_appt_staff').on(t.appointmentId, t.staffId),
+    index('ix_collab_staff').on(t.staffId),
+  ],
+);
+
+/** 薪资异议申诉（片 4 B3-5/6；仿 attendance_approvals 工艺：挂目标单+返还额闭环+审批前后值） */
+export const payrollAppeals = sqliteTable(
+  'payroll_appeals',
+  {
+    id: id(),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    staffId: text('staff_id').notNull().references(() => staff.id),
+    /** 申诉目标类：deduction（扣款/罚单）| slip_line（工资条行）| adjustment（调整项） */
+    targetKind: text('target_kind').notNull(),
+    targetId: text('target_id').notNull(),
+    /** 申诉涉月 'YYYY-MM' */
+    month: text('month').notNull(),
+    reason: text('reason').notNull(),
+    evidenceUrls: text('evidence_urls', { mode: 'json' }).$type<string[]>(),
+    /** 状态：pending | approved | rejected */
+    status: text('status').notNull().default('pending'),
+    reviewerId: text('reviewer_id').references(() => users.id),
+    reviewedAt: integer('reviewed_at', { mode: 'timestamp' }),
+    reviewNote: text('review_note'),
+    /** 返还额（分；approved 且 target=deduction 时落 deduction.status=reverted 返还留痕） */
+    refundFen: integer('refund_fen'),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_payroll_appeals_store').on(t.storeId, t.status),
+    index('ix_payroll_appeals_staff').on(t.staffId, t.status),
+  ],
+);
+
+/** XP 积分申请+扣分异议（片 4 B4；审核通过才落正式 xp_events——awardXp/正向对冲行；xp_events 只增流水零污染） */
+export const xpApplications = sqliteTable(
+  'xp_applications',
+  {
+    id: id(),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    staffId: text('staff_id').notNull().references(() => staff.id),
+    /** 申请类：award（积分申报）| revoke_appeal（扣分异议，挂原 penalty 事件） */
+    appKind: text('app_kind').notNull(),
+    /** revoke_appeal 时挂原 xp_events 事件 id */
+    targetEventId: text('target_event_id').references(() => xpEvents.id),
+    /** 请求分值（award=正分；revoke_appeal=请求对冲的正分值） */
+    pointsRequested: integer('points_requested').notNull(),
+    reason: text('reason').notNull(),
+    /** 状态：pending | approved | rejected */
+    status: text('status').notNull().default('pending'),
+    reviewerId: text('reviewer_id').references(() => users.id),
+    reviewedAt: integer('reviewed_at', { mode: 'timestamp' }),
+    reviewNote: text('review_note'),
+    /** 审核通过落正式事件的回链（awardXp 落行 id / 对冲行 id） */
+    resolvedEventId: text('resolved_event_id').references(() => xpEvents.id),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_xp_applications_store').on(t.storeId, t.status),
+    index('ix_xp_applications_staff').on(t.staffId, t.status),
+  ],
 );

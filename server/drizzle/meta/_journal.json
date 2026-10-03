@@ -232,6 +232,20 @@
       "when": 1791036459428,
       "tag": "0032_copy_task_collab_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "6",
+      "when": 1791042537824,
+      "tag": "0033_payroll_xp_domain",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "6",
+      "when": 1791045684607,
+      "tag": "0034_copy_payroll_xp_keys",
+      "breakpoints": true
     }
   ]
 }

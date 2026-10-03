@@ -62,6 +62,33 @@ const XP_COPY_TABLE = {
   'xp.events.boardingLead': '寄养',
   'xp.events.boardingTail': '晚',
   'xp.badge.thresholdLead': '门槛',
+
+  /* ---- 积分申报 / 扣分异议（xp.app 族 · 薪资/XP 面扩，coder K） ---- */
+  'xp.app.cta': '申报积分',
+  'xp.app.title': '积分申报',
+  'xp.app.pointsPh': '申报分值（正整数）',
+  'xp.app.reasonPh': '申报理由（必填，说明依据）',
+  'xp.app.pointsInvalid': '请填写有效分值（正整数）',
+  'xp.app.reasonRequired': '请先填写理由',
+  'xp.app.submit': '提交申报',
+  'xp.app.submitting': '提交中…',
+  'xp.app.submitted': '已提交，等待审核',
+  'xp.app.cancel': '取消',
+  'xp.app.appealCta': '异议',
+  'xp.app.appealTitle': '扣分异议',
+  'xp.app.appealReasonPh': '异议理由（必填，说明不该扣的依据）',
+  'xp.app.sec.list': '我的申请',
+  'xp.app.empty': '暂无申请记录',
+  'xp.app.kindAward': '积分申报',
+  'xp.app.kindAppeal': '扣分异议',
+  'xp.app.pointsLead': '申报',
+  'xp.app.statusPending': '待审核',
+  'xp.app.statusApproved': '已通过',
+  'xp.app.statusRejected': '已驳回',
+  'xp.app.reviewLead': '审核注',
+  'xp.app.resolvedNote': '已落分，见近期事件',
+  'xp.app.note': '申报与异议由店长/老板在管理端审核，员工不可自审',
+  'xp.app.loadFail': '申请记录加载失败，请稍后重试',
 } as const;
 
 export const XP_COPY = withCopyOverrides(XP_COPY_TABLE);

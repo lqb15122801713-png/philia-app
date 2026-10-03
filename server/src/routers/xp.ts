@@ -16,6 +16,10 @@
  *   出参本就不含客户字段，anonymous 标记原样返回）；
  * - monthlySettleNow（owner）：月度保级结算手动触发（e2e 实证 + 补跑入口；
  *   生产路径为 index.ts 每月 1 日定时器，两者同走 settleXpMonth，unique(staff_id,month) 幂等）。
+ * - 片 4 B4 XP 申请审核（xp_applications）：raiseApplication / myApplications（staff）、
+ *   listApplications / reviewApplication（manager|owner）——审核通过才落正式 xp_events
+ *   （award→source='application'；revoke_appeal→source='revoke_offset' 正向对冲，原负分保留），
+ *   pending 零污染，xp_events 只增不改红线。
  */
 import { TRPCError } from '@trpc/server';
 import { and, asc, desc, eq, gte, inArray, lt, or, sql, type SQLWrapper } from 'drizzle-orm';
@@ -541,6 +545,228 @@ export const xpRouter = router({
         .orderBy(desc(schema.reviews.createdAt))
         .limit(input.limit);
       return { items: rows };
+    }),
+
+  /* ------------------------------------------------------------------ */
+  /* 片 4 B4：XP 申请审核（xp_applications；审核通过才落正式 xp_events——   */
+  /* pending 零污染，xp_events 只增不改红线）                              */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * raiseApplication（staff）：XP 积分申报/扣分异议。
+   * - award：积分申报，pointsRequested 须 >0；
+   * - revoke_appeal：扣分异议，须挂本人 penalty 事件（source='penalty'，校验存在）；
+   * - 同人同事件 pending 在途幂等拒（返回现状 duplicated=true，不重复建行）；
+   * - 本端点只建申请单，xp_events 零写入（pending 不污染正式流水）。
+   */
+  raiseApplication: staffProcedure
+    .input(
+      z
+        .object({
+          appKind: z.enum(['award', 'revoke_appeal']),
+          targetEventId: z.string().min(1).optional(),
+          pointsRequested: z.number().int('分值必须是整数'),
+          reason: z.string().trim().min(1, '请填写申请原因').max(500),
+        })
+        .strict(),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
+      const staffId = ctx.user.staffId!;
+      if (input.appKind === 'award') {
+        if (input.pointsRequested <= 0) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: '积分申报分值必须大于 0' });
+        }
+      } else {
+        if (!input.targetEventId) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: '扣分异议须挂原扣分事件' });
+        }
+        const ev = await ctx.db
+          .select()
+          .from(schema.xpEvents)
+          .where(eq(schema.xpEvents.id, input.targetEventId))
+          .get();
+        if (!ev || ev.staffId !== staffId || ev.source !== 'penalty') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: '扣分异议须挂本人的扣分（penalty）事件' });
+        }
+      }
+      // 同人同事件 pending 幂等拒（award 无事件 → 按同人同类同分值判重）
+      const dupConds = [
+        eq(schema.xpApplications.staffId, staffId),
+        eq(schema.xpApplications.appKind, input.appKind),
+        eq(schema.xpApplications.status, 'pending'),
+      ];
+      if (input.targetEventId) {
+        dupConds.push(eq(schema.xpApplications.targetEventId, input.targetEventId));
+      } else {
+        dupConds.push(eq(schema.xpApplications.pointsRequested, input.pointsRequested));
+      }
+      const existing = await ctx.db
+        .select()
+        .from(schema.xpApplications)
+        .where(and(...dupConds))
+        .get();
+      if (existing) return { application: existing, duplicated: true };
+      const application = await ctx.db
+        .insert(schema.xpApplications)
+        .values({
+          storeId,
+          staffId,
+          appKind: input.appKind,
+          targetEventId: input.targetEventId ?? null,
+          pointsRequested: input.pointsRequested,
+          reason: input.reason,
+        })
+        .returning()
+        .then((r) => r[0]!);
+      return { application, duplicated: false };
+    }),
+
+  /** myApplications（staff）：本人 XP 申请列表（新→旧）。 */
+  myApplications: staffProcedure.query(async ({ ctx }) => {
+    const rows = await ctx.db
+      .select()
+      .from(schema.xpApplications)
+      .where(eq(schema.xpApplications.staffId, ctx.user.staffId!))
+      .orderBy(desc(schema.xpApplications.createdAt));
+    return { items: rows };
+  }),
+
+  /** listApplications（店长或老板）：本店 XP 申请列表（status 过滤，含员工名）。 */
+  listApplications: merchantManagerProcedure
+    .input(
+      z
+        .object({ status: z.enum(['pending', 'approved', 'rejected']).optional() })
+        .strict(),
+    )
+    .query(async ({ ctx, input }) => {
+      const rows = await ctx.db
+        .select({
+          id: schema.xpApplications.id,
+          staffId: schema.xpApplications.staffId,
+          staffName: schema.staff.name,
+          appKind: schema.xpApplications.appKind,
+          targetEventId: schema.xpApplications.targetEventId,
+          pointsRequested: schema.xpApplications.pointsRequested,
+          reason: schema.xpApplications.reason,
+          status: schema.xpApplications.status,
+          reviewerId: schema.xpApplications.reviewerId,
+          reviewedAt: schema.xpApplications.reviewedAt,
+          reviewNote: schema.xpApplications.reviewNote,
+          resolvedEventId: schema.xpApplications.resolvedEventId,
+          createdAt: schema.xpApplications.createdAt,
+        })
+        .from(schema.xpApplications)
+        .leftJoin(schema.staff, eq(schema.xpApplications.staffId, schema.staff.id))
+        .where(
+          and(
+            eq(schema.xpApplications.storeId, ctx.user.storeId!),
+            input.status ? eq(schema.xpApplications.status, input.status) : undefined,
+          ),
+        )
+        .orderBy(desc(schema.xpApplications.createdAt));
+      /* revoke_appeal 原事件分值透出（审批比对用——左联 xp_events 取 points，负数） */
+      const evIds = rows.map((r) => r.targetEventId).filter((x): x is string => !!x);
+      const evMap = new Map<string, number>();
+      if (evIds.length > 0) {
+        const evs = await ctx.db
+          .select({ id: schema.xpEvents.id, points: schema.xpEvents.points })
+          .from(schema.xpEvents)
+          .where(inArray(schema.xpEvents.id, evIds));
+        for (const e of evs) evMap.set(e.id, e.points);
+      }
+      return { applications: rows.map((r) => ({ ...r, targetEventPoints: r.targetEventId ? (evMap.get(r.targetEventId) ?? null) : null })) };
+    }),
+
+  /**
+   * reviewApplication（店长或老板）：XP 申请审核。
+   * - approved + award → awardXp 落正式事件（source='application'，source_id=申请单 id，
+   *   points=pointsRequested）+ resolved_event_id 回链；
+   * - approved + revoke_appeal → 正向对冲行（source='revoke_offset'，points=+原 penalty
+   *   绝对值，source_id=原事件 id）回链；原负分保留（xp_events 只增不改红线）；
+   * - 日上限/dropped 语义照 awardXp 既有（对冲/申报行同走 daily 通道日上限闸——
+   *   超限落 dropped=1 留痕不计分，口径注释明面）；
+   * - rejected → 仅置状态，xp_events 零写入；重复复核幂等拒（BAD_REQUEST 明文）。
+   */
+  reviewApplication: merchantManagerProcedure
+    .input(
+      z
+        .object({
+          applicationId: z.string().min(1),
+          result: z.enum(['approved', 'rejected']),
+          note: z.string().trim().min(1, '请填写审核说明').max(500),
+        })
+        .strict(),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
+      const app = await ctx.db
+        .select()
+        .from(schema.xpApplications)
+        .where(eq(schema.xpApplications.id, input.applicationId))
+        .get();
+      if (!app || app.storeId !== storeId) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: '申请单不存在或不属于本店' });
+      }
+      if (app.status !== 'pending') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '该申请已审核，不可重复处理' });
+      }
+      const staffRow = await ctx.db
+        .select()
+        .from(schema.staff)
+        .where(eq(schema.staff.id, app.staffId))
+        .get();
+      if (!staffRow) throw new TRPCError({ code: 'NOT_FOUND', message: '申请人员工记录不存在' });
+
+      let resolvedEventId: string | null = null;
+      if (input.result === 'approved') {
+        if (app.appKind === 'award') {
+          const res = await awardXp(ctx.db, {
+            storeId,
+            staffId: app.staffId,
+            userId: staffRow.userId,
+            source: 'application',
+            sourceId: app.id, // 留痕=申请单 id（resolved_event_id 回链正式事件）
+            points: app.pointsRequested,
+          });
+          resolvedEventId = res.eventId;
+        } else {
+          const orig = app.targetEventId
+            ? await ctx.db
+                .select()
+                .from(schema.xpEvents)
+                .where(eq(schema.xpEvents.id, app.targetEventId))
+                .get()
+            : undefined;
+          if (!orig || orig.source !== 'penalty') {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: '原扣分事件不存在或非 penalty 来源' });
+          }
+          // 正向对冲：+原 penalty 绝对值；原负分保留（只增不改），月结=对冲净值
+          const res = await awardXp(ctx.db, {
+            storeId,
+            staffId: app.staffId,
+            userId: staffRow.userId,
+            source: 'revoke_offset',
+            sourceId: orig.id,
+            points: Math.abs(orig.points),
+          });
+          resolvedEventId = res.eventId;
+        }
+      }
+      const updated = await ctx.db
+        .update(schema.xpApplications)
+        .set({
+          status: input.result,
+          reviewerId: ctx.user.id,
+          reviewedAt: new Date(),
+          reviewNote: input.note,
+          resolvedEventId,
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.xpApplications.id, app.id))
+        .returning()
+        .then((r) => r[0]!);
+      return { application: updated, resolvedEventId };
     }),
 });
 

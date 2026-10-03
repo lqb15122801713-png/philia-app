@@ -88,6 +88,12 @@ export function clerkGuideText(pathname: string): { title: string; hint: string 
   if (pathname.startsWith('/ops')) {
     return { title: '运营闭环由店长或店主处理', hint: '问题复检与自检审核属管理层动作；店员账号的工作面是收银台。' }
   }
+  if (pathname.startsWith('/payroll')) {
+    return { title: '薪资管理由店长或店主处理', hint: '工资条生成、申诉审批与罚单录入属管理层动作；店员账号的工作面是收银台。' }
+  }
+  if (pathname.startsWith('/xp-admin')) {
+    return { title: 'XP 审核由店长或店主处理', hint: '积分申报与扣分异议的审批属管理层动作；店员账号的工作面是收银台。' }
+  }
   if (pathname.startsWith('/settings/announcements')) {
     return { title: '公告发布由店长或店主处理', hint: '发布与回执对账属管理层动作；店员账号的工作面是收银台。' }
   }

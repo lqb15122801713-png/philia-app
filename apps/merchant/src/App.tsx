@@ -33,6 +33,8 @@ import MonitorHubPage from './pages/MonitorHubPage'
 import OpsPage from './pages/OpsPage'
 import OrdersPage from './pages/OrdersPage'
 import PassPage from './pages/PassPage'
+import PayrollPage from './pages/PayrollPage'
+import XpAdminPage from './pages/XpAdminPage'
 import ProductsPage from './pages/ProductsPage'
 import SettingsPage from './pages/SettingsPage'
 import RulesConfigPage from './pages/RulesConfigPage'
@@ -113,6 +115,10 @@ function ProtectedRoutes() {
         <Route path="/ops" element={<OpsPage />} />
         {/* 员工端骨架整建批 片 3：循环任务模板自管（owner|manager；同排班页闸径） */}
         <Route path="/settings/tasks" element={<TaskTemplatesPage />} />
+        {/* 员工端骨架整建批 片 4：薪资管理（工资条+申诉审批+罚单录入；owner|manager；同排班页闸径） */}
+        <Route path="/payroll" element={<PayrollPage />} />
+        {/* 员工端骨架整建批 片 4：XP 审核（积分申报+扣分异议审批；owner|manager；同排班页闸径） */}
+        <Route path="/xp-admin" element={<XpAdminPage />} />
         <Route path="*" element={<RoleLanding />} />
       </Routes>
     </ClerkRouteGuard>
