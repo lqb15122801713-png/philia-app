@@ -25,6 +25,7 @@
 
 import { client, db, schema } from './index';
 import { COPY_SEED_ROWS } from './copySeedRows';
+import { SLOT_SEED_ROWS } from './slotSeedRows';
 
 /* ---------------- 清空（子表 -> 父表） ---------------- */
 
@@ -36,6 +37,7 @@ const CLEAR_ORDER = [
   schema.serviceCertificates, // FK → appointments/users
   schema.serviceRules, // FK → users
   schema.copyOverrides, // 端口批片 B（FK → users），先于 users 清空
+  schema.slotContents, // 端口批片 C（FK → users），先于 users 清空
   /* ---- R11a 会员前置批新表：子表先父表（rebate_logs.settlement_id→rebate_settlements），先于 users/stores 清空 ---- */
   schema.membershipEvents, // 补缺-3（FK → users），先于 users 清空
   schema.rebateLogs, // FK → users/rebate_accounts/rebate_settlements
@@ -458,6 +460,17 @@ async function main() {
       );
     }
 
+    /* ---- 端口批片 C：槽位注册表种子（控制台第八域；SLOT_SEED_ROWS 单源，0025 迁移同口径） ---- */
+    await tx.insert(schema.slotContents).values(
+      SLOT_SEED_ROWS.map((r) => ({
+        slotKey: r.key,
+        version: 1,
+        contentJson: { url: r.url, alt: r.alt },
+        status: 'live' as const,
+        createdBy: owner.id,
+      })),
+    );
+
     /* ---- staff-2 R10：XP 规则配置种子（附件一冻结版 V1.0 全表照转，version=1） ----
      * 分值单位 XP 点；段位门槛/保级线为累计/月增量 XP；拉新 referral 置灰（active=false，
      * 随会员游戏化批 G3 链路开通，server 拒写该来源）。
@@ -561,6 +574,8 @@ async function main() {
     ['service_reports', 'service_reports'],
     /* 端口批片 B：文案端口（控制台第七域） */
     ['copy_overrides', 'copy_overrides'],
+    /* 端口批片 C：展示槽位（控制台第八域） */
+    ['slot_contents', 'slot_contents'],
     ['support_tickets', 'support_tickets'],
     ['invoice_requests', 'invoice_requests'],
     ['service_rules', 'service_rules'],

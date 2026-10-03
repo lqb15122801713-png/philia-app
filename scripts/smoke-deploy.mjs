@@ -257,7 +257,7 @@ if (sessions.customer && sessions.merchant && sessions.staff) {
               type: 'grooming',
               scheduledStart: scheduledStart.toISOString(),
               paymentMode: 'pay_at_store',
-              note: 'smoke-deploy 演示单（可安全取消）',
+              note: '【测试】smoke-deploy 演示单（可安全取消）',
             },
             { scheduledStart: ['Date'] },
           );
@@ -362,7 +362,7 @@ if (sessions.merchant && seedCustomer && sessions.customer) {
       ],
       discountType: 'none',
       discountValue: 0,
-      note: 'smoke-deploy 收银演示单',
+      note: '【测试】smoke-deploy 收银演示单',
     };
     const held = await trpcMutate(sessions.merchant, 'cashier.hold', cart1);
     billNo1 = held?.bill?.billNo ?? held?.billNo ?? null;
@@ -429,7 +429,7 @@ if (sessions.merchant && seedCustomer && sessions.customer) {
       items: [{ kind: 'service', refId: service.id, qty: 1, paidByPass: true }],
       discountType: 'none',
       discountValue: 0,
-      note: 'smoke-deploy 扣次联动单',
+      note: '【测试】smoke-deploy 扣次联动单',
     };
     // 先 hold 取服务端重算应收（扣次行有效价=pass 段金额）
     const held2 = await trpcMutate(sessions.merchant, 'cashier.hold', cart2);
@@ -459,7 +459,7 @@ if (sessions.merchant && seedCustomer && sessions.customer) {
       items: [{ kind: 'product', refId: product.id, qty: 1 }],
       discountType: 'none',
       discountValue: 0,
-      note: 'smoke-deploy 撤单验证单',
+      note: '【测试】smoke-deploy 撤单验证单',
     });
     const billNo3 = held3?.bill?.billNo ?? null;
     if (billNo3) {
@@ -576,13 +576,13 @@ if (sessions.merchant && seedCustomer && sessions.customer) {
       const itemsR1 = [{ kind: 'service', refId: service.id, qty: 1 }, { kind: 'product', refId: product.id, qty: 1 }];
       const stockR1Before = (await trpcQuery(sessions.merchant, 'mall.listProductsForStore', { page: 1, pageSize: 100 }))?.items?.find((p) => p.id === product.id)?.stock;
       const heldR1 = await trpcMutate(sessions.merchant, 'cashier.hold', {
-        items: itemsR1, discountType: 'none', discountValue: 0, note: 'smoke R12 现金全额退单',
+        items: itemsR1, discountType: 'none', discountValue: 0, note: '【测试】smoke R12 现金全额退单',
       }).catch((e) => ({ err: String(e?.message ?? e) }));
       const r1No = heldR1?.bill?.billNo ?? null;
       const r1Payable = heldR1?.bill?.payableFen ?? 0;
       if (r1No) {
         await trpcMutate(sessions.merchant, 'cashier.settle', {
-          items: itemsR1, billNo: r1No, discountType: 'none', discountValue: 0, note: 'smoke R12 现金全额退单',
+          items: itemsR1, billNo: r1No, discountType: 'none', discountValue: 0, note: '【测试】smoke R12 现金全额退单',
           payments: [{ method: 'cash', amountFen: r1Payable }],
         }).catch(() => null);
         const rf1 = await trpcMutate(sessions.merchant, 'refund.execute', { billNo: r1No, type: 'full', reason: 'smoke R12 现金单全额退' })
@@ -626,7 +626,7 @@ if (sessions.merchant && seedCustomer && sessions.customer) {
       const balBefore = (await trpcQuery(sessions.merchant, 'cashier.searchMember', { phone: '13800000000' }))?.storedValueBalanceFen ?? null;
       const heldR2 = await trpcMutate(sessions.merchant, 'cashier.hold', {
         customerId: seedCustomer.id, items: [{ kind: 'service', refId: service.id, qty: 1 }],
-        discountType: 'none', discountValue: 0, note: 'smoke R12 储值组合单',
+        discountType: 'none', discountValue: 0, note: '【测试】smoke R12 储值组合单',
       }).catch((e) => ({ err: String(e?.message ?? e) }));
       const r2No = heldR2?.bill?.billNo ?? null;
       const r2Payable = heldR2?.bill?.payableFen ?? 0;
@@ -635,7 +635,7 @@ if (sessions.merchant && seedCustomer && sessions.customer) {
       if (r2No && balBefore !== null && balBefore >= svPart) {
         await trpcMutate(sessions.merchant, 'cashier.settle', {
           customerId: seedCustomer.id, items: [{ kind: 'service', refId: service.id, qty: 1 }],
-          billNo: r2No, discountType: 'none', discountValue: 0, note: 'smoke R12 储值组合单',
+          billNo: r2No, discountType: 'none', discountValue: 0, note: '【测试】smoke R12 储值组合单',
           payments: [{ method: 'cash', amountFen: cashPart }, { method: 'stored_value', amountFen: svPart }],
         }).catch(() => null);
         const balAfterSettle = (await trpcQuery(sessions.merchant, 'cashier.searchMember', { phone: '13800000000' }))?.storedValueBalanceFen;
@@ -671,7 +671,7 @@ if (sessions.merchant && seedCustomer && sessions.customer) {
       const bAppt = await trpcMutate(sessions.customer, 'appointment.create', {
         storeId: store5.id, petId: petR.id, serviceId: boardingSvc5.id, type: 'boarding',
         scheduledStart: bStart.toISOString(), scheduledEnd: bEnd.toISOString(),
-        paymentMode: 'pay_at_store', note: 'smoke R12 寄养 3 晚单',
+        paymentMode: 'pay_at_store', note: '【测试】smoke R12 寄养 3 晚单',
       }, { scheduledStart: ['Date'], scheduledEnd: ['Date'] }).catch((e) => ({ err: String(e?.message ?? e) }));
       const bAid = bAppt?.id ?? null;
       check('R12 寄养预约创建（明天入住共 3 晚）', !bAppt?.err && !!bAid, bAppt?.err ?? `id=${bAid}`);
@@ -683,14 +683,14 @@ if (sessions.merchant && seedCustomer && sessions.customer) {
         const bOut = await trpcMutate(sessions.staff, 'boarding.checkout', { appointmentId: bAid }).catch((e) => ({ err: String(e?.message ?? e) }));
         check('R12 寄养核销 + 退房（in_boarding → completed）', !bCheckin?.err && !bOut?.err, bCheckin?.err ?? bOut?.err ?? 'ok');
         const heldB = await trpcMutate(sessions.merchant, 'cashier.hold', {
-          items: [{ kind: 'appointment', refId: bAid, qty: 1 }], discountType: 'none', discountValue: 0, note: 'smoke R12 寄养结账',
+          items: [{ kind: 'appointment', refId: bAid, qty: 1 }], discountType: 'none', discountValue: 0, note: '【测试】smoke R12 寄养结账',
         }).catch((e) => ({ err: String(e?.message ?? e) }));
         const bNo = heldB?.bill?.billNo ?? null;
         const bPayable = heldB?.bill?.payableFen ?? 0;
         if (bNo) {
           await trpcMutate(sessions.merchant, 'cashier.settle', {
             items: [{ kind: 'appointment', refId: bAid, qty: 1 }], billNo: bNo, discountType: 'none', discountValue: 0,
-            note: 'smoke R12 寄养结账', payments: [{ method: 'cash', amountFen: bPayable }],
+            note: '【测试】smoke R12 寄养结账', payments: [{ method: 'cash', amountFen: bPayable }],
           }).catch(() => null);
           const rfB = await trpcMutate(sessions.merchant, 'refund.execute', { billNo: bNo, type: 'boarding_nights', nights: 2, reason: 'smoke R12 寄养退剩余 2 晚' })
             .catch((e) => ({ err: String(e?.message ?? e) }));
@@ -755,14 +755,14 @@ if (sessions.merchant && seedCustomer && sessions.customer) {
       const prodPrice = product.priceFen ?? 0;
       const heldG = await trpcMutate(sessions.merchant, 'cashier.hold', {
         customerId: yhUserId, items: [{ kind: 'product', refId: product.id, qty: 1 }],
-        discountType: 'none', discountValue: 0, note: 'smoke R11a 回馈金商品单',
+        discountType: 'none', discountValue: 0, note: '【测试】smoke R11a 回馈金商品单',
       }).catch((e) => ({ err: String(e?.message ?? e) }));
       const gNo = heldG?.bill?.billNo ?? null;
       const gPayable = heldG?.bill?.payableFen ?? 0;
       if (gNo) {
         await trpcMutate(sessions.merchant, 'cashier.settle', {
           customerId: yhUserId, items: [{ kind: 'product', refId: product.id, qty: 1 }],
-          billNo: gNo, discountType: 'none', discountValue: 0, note: 'smoke R11a 回馈金商品单',
+          billNo: gNo, discountType: 'none', discountValue: 0, note: '【测试】smoke R11a 回馈金商品单',
           payments: [{ method: 'cash', amountFen: gPayable }],
         }).catch(() => null);
         const fu1 = await trpcQuery(sessions.merchant, 'membership.forUser', { userId: yhUserId }).catch(() => null);
@@ -778,7 +778,7 @@ if (sessions.merchant && seedCustomer && sessions.customer) {
       // 会员折扣后应收≠门市价（萤火 88 折 8800→7744）：先 hold 取服务端重算应收再 settle（5.6 同口径），否则先撞合计闸
       const svcCart = {
         customerId: yhUserId, items: [{ kind: 'service', refId: service.id, qty: 1 }],
-        discountType: 'none', discountValue: 0, note: 'smoke R11a 服务行 rebate 验证',
+        discountType: 'none', discountValue: 0, note: '【测试】smoke R11a 服务行 rebate 验证',
       };
       const heldSvc = await trpcMutate(sessions.merchant, 'cashier.hold', svcCart).catch(() => null);
       const svcBillNo = heldSvc?.bill?.billNo ?? null;
@@ -793,7 +793,7 @@ if (sessions.merchant && seedCustomer && sessions.customer) {
         /FORBIDDEN/.test(svcRebate?.err ?? '') && /仅可抵商品/.test(svcRebate?.err ?? ''), svcRebate?.err ?? '未被拒（异常）');
       const prodRebate = await trpcMutate(sessions.merchant, 'cashier.settle', {
         customerId: yhUserId, items: [{ kind: 'product', refId: product.id, qty: 1 }],
-        discountType: 'none', discountValue: 0, note: 'smoke R11a 商品行 rebate 验证',
+        discountType: 'none', discountValue: 0, note: '【测试】smoke R11a 商品行 rebate 验证',
         payments: [{ method: 'rebate', amountFen: 100 }, { method: 'cash', amountFen: prodPrice - 100 }],
       }).then((r) => ({ err: null, ok: (r?.bill?.status ?? r?.status) === 'settled' })).catch((e) => ({ err: String(e?.message ?? e) }));
       // 余额未到账（grant 次月才入账）时明文「余额不足」= 已过「仅商品」闸；余额足够则直接成交
@@ -860,7 +860,7 @@ if (sessions.merchant) {
     if (service6) {
       const clerkHold = await trpcMutate(clerkCookie, 'cashier.hold', {
         items: [{ kind: 'service', refId: service6.id, qty: 1 }],
-        discountType: 'none', discountValue: 0, note: 'smoke clerk 开单验证',
+        discountType: 'none', discountValue: 0, note: '【测试】smoke clerk 开单验证',
       }).then((r) => ({ ok: true, bill: r?.bill ?? r })).catch((e) => ({ ok: false, err: String(e?.message ?? e) }));
       clerkBillNo = clerkHold.bill?.billNo ?? null;
       check('clerk 开单 cashier.hold 放行', clerkHold.ok === true, clerkHold.ok ? `billNo=${clerkBillNo}` : clerkHold.err);
@@ -868,7 +868,7 @@ if (sessions.merchant) {
     if (service6) {
       const clerkPriced = await trpcMutate(clerkCookie, 'cashier.hold', {
         items: [{ kind: 'service', refId: service6.id, qty: 1, adjustedPriceFen: 100 }],
-        discountType: 'none', discountValue: 0, note: 'smoke clerk 改价验证（应被拒）',
+        discountType: 'none', discountValue: 0, note: '【测试】smoke clerk 改价验证（应被拒）',
       }).then(() => false).catch((e) => /店主|FORBIDDEN|改价/.test(String(e?.message ?? e)));
       check('clerk 改价 403（服务端硬闸门）', clerkPriced === true, '');
     }
@@ -887,7 +887,7 @@ if (sessions.merchant) {
   check('日结 当前班次可查（懒建开班）', !!(shift?.shift?.id ?? shift?.id), `shift=${shift?.shift?.id ?? shift?.id ?? 'none'}`);
   const tenderNow = await trpcQuery(sessions.merchant, 'store.todayTenderStats', {});
   const bookCash = tenderNow?.tender?.cashFen ?? 0;
-  const closeRes = await trpcMutate(sessions.merchant, 'cashier.dayClose', { actualCashFen: bookCash, note: 'smoke 日结验证' })
+  const closeRes = await trpcMutate(sessions.merchant, 'cashier.dayClose', { actualCashFen: bookCash, note: '【测试】smoke 日结验证' })
     .then((r) => ({ ok: true, close: r?.close ?? r }))
     .catch((e) => ({ ok: false, err: String(e?.message ?? e) }));
   const closeOk = closeRes.ok || /已冻结|已日结|CONFLICT|已存在|已结/.test(closeRes.err ?? '');
@@ -951,7 +951,7 @@ if (sessions.merchant && sessions.customer && heldBaseline) {
   const heldX = svcX
     ? await trpcMutate(sessions.merchant, 'cashier.hold', {
         customerId: seedCustomer?.id, items: [{ kind: 'service', refId: svcX.id }],
-        discountType: 'none', discountValue: 0, note: 'smoke PR-3 C2c held 不计合计验证',
+        discountType: 'none', discountValue: 0, note: '【测试】smoke PR-3 C2c held 不计合计验证',
       }).catch((e) => ({ err: String(e?.message ?? e) }))
     : { err: '无洗护服务项（前置）' };
   const heldXNo = heldX?.bill?.billNo ?? null;

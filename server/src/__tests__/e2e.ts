@@ -171,10 +171,13 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 1391 键/38 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出；
+ *      56.1 种子 1415 键/38 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
+ *   57（端口批片 C 槽位端口 slot_contents）：57.1 六槽 live 种子+liveMap 透出；
+ *      57.2 上传=pending 待审+liveMap 不透出；57.3 publish 上线即新值+旧版 archived；
+ *      57.4 revert 回退上一版；57.5 clerk 403+未知槽键 400
  *
  * 批次 6 补缺大批（server 侧支付骨架）段（施工令全清单；移位铁律：不得对
  * pay_orders.createdAt 移位——payNo 日序计号依赖，本批夹具只动 timeout_at）：
@@ -488,7 +491,7 @@ async function main(): Promise<void> {
       type: 'grooming',
       scheduledStart: slot.slotStart,
       paymentMode: 'pay_at_store',
-      note: 'e2e 验收单',
+      note: '【测试】e2e 验收单',
     },
   });
   // 批次 S4（任务 A）：免商家确认——create 落库即 confirmed（原断言 pending 已退役）
@@ -761,7 +764,7 @@ async function main(): Promise<void> {
       type: 'grooming',
       scheduledStart: slot2.slotStart,
       paymentMode: 'pay_at_store',
-      note: 'e2e S1-R1 未指派核销单',
+      note: '【测试】e2e S1-R1 未指派核销单',
     },
   });
   const aid2 = appt2.id;
@@ -1433,7 +1436,7 @@ async function main(): Promise<void> {
   console.log('\n[staff-2] 19. R9 绩效扣减：50% 上限 FORBIDDEN');
   const grade = await trpcMutate<{ grade: { grade: string }; changed: boolean }>('commission.gradePerformance', {
     cookie: ownerCookie,
-    input: { staffId: aqiang.id, quarter: currentQuarter, grade: 'A', note: 'e2e 季度评级' },
+    input: { staffId: aqiang.id, quarter: currentQuarter, grade: 'A', note: '【测试】e2e 季度评级' },
   });
   check('R9⑥ 季度评级录入（阿强 当季 A 档，系数 1.0）', grade.grade.grade === 'A', grade);
 
@@ -1595,7 +1598,7 @@ async function main(): Promise<void> {
   check('R10⑯ 补位 ×4 填满日上限（+15×4=60，均未丢弃）', lastCover!.awarded === 15 && lastCover!.dropped === false, lastCover);
   const cover5 = await trpcMutate<AwardRes>('xp.assignCover', {
     cookie: ownerCookie,
-    input: { staffId: extraS2.id, note: 'e2e 补位第 5 次（应超限丢弃）' },
+    input: { staffId: extraS2.id, note: '【测试】e2e 补位第 5 次（应超限丢弃）' },
   });
   check('R10⑯ 第 5 次补位超限丢弃留痕（dropped=1 / awarded=0，不报错）', cover5.dropped === true && cover5.awarded === 0, cover5);
   interface XpSummary { totalXp: number; today: { earned: number; cap: number } }
@@ -1645,7 +1648,7 @@ async function main(): Promise<void> {
   for (let i = 1; i <= 3; i++) {
     await trpcMutate<AwardRes>('xp.assignCover', { cookie: ownerCookie, input: { staffId: extraS3.id, note: `e2e 新参补位 ${i}/3` } });
   }
-  const coverE3Over = await trpcMutate<AwardRes>('xp.assignCover', { cookie: ownerCookie, input: { staffId: extraS3.id, note: 'e2e 新参第 4 次（应按 50 丢弃）' } });
+  const coverE3Over = await trpcMutate<AwardRes>('xp.assignCover', { cookie: ownerCookie, input: { staffId: extraS3.id, note: '【测试】e2e 新参第 4 次（应按 50 丢弃）' } });
   const sumE3 = await trpcQuery<XpSummary>('xp.mySummary', { cookie: extra3Cookie });
   check('R9-F③ 新参只管新单：cap=50 后第 4 次补位丢弃（today 45/50）',
     coverE3Over.dropped === true && coverE3Over.awarded === 0 && sumE3.today.earned === 45 && sumE3.today.cap === 50,
@@ -1813,7 +1816,7 @@ async function main(): Promise<void> {
   if (!slotD1 || !slotD2) throw new Error('可约槽不足（duration 段）');
   const apptD1 = await trpcMutate<{ id: string; scheduledStart: Date; scheduledEnd: Date }>('appointment.create', {
     cookie: customerCookie,
-    input: { storeId: store.id, petId: midDog.id, serviceId: service.id, type: 'grooming', scheduledStart: slotD1.slotStart, paymentMode: 'pay_at_store', note: 'e2e 时长 apptD1（改系数前）' },
+    input: { storeId: store.id, petId: midDog.id, serviceId: service.id, type: 'grooming', scheduledStart: slotD1.slotStart, paymentMode: 'pay_at_store', note: '【测试】e2e 时长 apptD1（改系数前）' },
   });
   const d1Min = (apptD1.scheduledEnd.getTime() - apptD1.scheduledStart.getTime()) / 60000;
   // 引擎口径：bath 基础 60 × medium 1.5 × short 1.0 = 90min（30min 栅格已整除）
@@ -1826,7 +1829,7 @@ async function main(): Promise<void> {
     saveSizeCoef.version === 2 && saveSizeCoef.keys.includes('duration_size_coef'), saveSizeCoef);
   const apptD2 = await trpcMutate<{ id: string; scheduledStart: Date; scheduledEnd: Date }>('appointment.create', {
     cookie: customerCookie,
-    input: { storeId: store.id, petId: midDog.id, serviceId: service.id, type: 'grooming', scheduledStart: slotD2.slotStart, paymentMode: 'pay_at_store', note: 'e2e 时长 apptD2（改系数后）' },
+    input: { storeId: store.id, petId: midDog.id, serviceId: service.id, type: 'grooming', scheduledStart: slotD2.slotStart, paymentMode: 'pay_at_store', note: '【测试】e2e 时长 apptD2（改系数后）' },
   });
   const d2Min = (apptD2.scheduledEnd.getTime() - apptD2.scheduledStart.getTime()) / 60000;
   check('时长① 改系数后：同宠物同服务新预约 scheduledEnd=新系数 120min（60×2.0×1.0）', d2Min === 120, { d2Min });
@@ -1971,7 +1974,7 @@ async function main(): Promise<void> {
   const prod28 = (await db.select().from(schema.products).where(eq(schema.products.id, prod.id)).get())!;
   const mgrBill = await settleBill2(
     [{ kind: 'service', refId: service.id }, { kind: 'product', refId: prod.id }],
-    { note: 'e2e R12 店长全额退单' },
+    { note: '【测试】e2e R12 店长全额退单' },
   ); // 8800 + 商品价 ≤ 50000 阈值
   const stockAtSettle28 = prod28.stock - 1; // 结账已扣 1
   const fullRefund = await execRefund(managerCookie, { billNo: mgrBill.billNo, type: 'full', reason: '店长全额退（≤阈值六联动）' });
@@ -2010,7 +2013,7 @@ async function main(): Promise<void> {
   /* ---------- 29. 清单③（V1）：拆分两笔累计超阈值顶到店主 ---------- */
   console.log('\n[R12] 29. V1 拆分累计阈值（清单③）');
   const staple = (await db.select().from(schema.products).where(and(eq(schema.products.storeId, storeId), eq(schema.products.name, '全价成犬粮 2kg'))).get())!;
-  const bigBill = await settleBill2([{ kind: 'product', refId: staple.id, qty: 5 }], { note: 'e2e R12 V1 拆分阈值单' }); // 12900×5=64500
+  const bigBill = await settleBill2([{ kind: 'product', refId: staple.id, qty: 5 }], { note: '【测试】e2e R12 V1 拆分阈值单' }); // 12900×5=64500
   check('R12③ 前置：大单 64500 分 settled（店长阈值 50000 分）', bigBill.payableFen === 64500, bigBill);
   const split1 = await execRefund(managerCookie, { billNo: bigBill.billNo, type: 'partial_amount', amountFen: 30000, reason: 'V1 拆分第一笔' });
   check('R12③ 店长第一笔 30000 成（原单累计 30000 ≤ 50000）',
@@ -2027,7 +2030,7 @@ async function main(): Promise<void> {
   console.log('\n[R12] 30. V2 日结退款单列 + 现金段净额（清单④）');
   const comboBill = await settleBill2([{ kind: 'service', refId: service.id }], {
     payments: (p) => [{ method: 'cash', amountFen: 5000 }, { method: 'wechat', amountFen: p - 5000 }],
-    note: 'e2e R12 V2 现金微信组合单',
+    note: '【测试】e2e R12 V2 现金微信组合单',
   }); // 8800 = cash 5000 + wechat 3800
   interface TenderRes { receivedTotalFen: number; tender: { cashFen: number } }
   const v2StatsBefore = await dayStats(storeToday);
@@ -2055,7 +2058,7 @@ async function main(): Promise<void> {
   const svBill = await settleBill2([{ kind: 'service', refId: service.id }], {
     customerId: customerUser!.id,
     payments: (p) => [{ method: 'cash', amountFen: Math.round(p * 0.6) }, { method: 'stored_value', amountFen: p - Math.round(p * 0.6) }],
-    note: 'e2e R12 V3 现金6储值4组合单',
+    note: '【测试】e2e R12 V3 现金6储值4组合单',
   }); // 8800 = cash 5280 + 储值 3520
   const accAfterSettle = await db.select().from(schema.storedValueAccounts).where(eq(schema.storedValueAccounts.id, svAcc.id)).get();
   check('R12⑤ 前置：储值段结账扣减（余额 100000 → 96480，先本金后赠送）',
@@ -2090,9 +2093,9 @@ async function main(): Promise<void> {
   const boardingAppt = (await db.insert(schema.appointments).values({
     code: 'E2EBD1', customerId: customerUser!.id, storeId, petId, serviceId: boardingSvc.id,
     type: 'boarding', scheduledStart: bStart, scheduledEnd: new Date(bStart.getTime() + 3 * 86400_000),
-    status: 'completed', priceFen: 59700, completedAt: new Date(), note: 'e2e R12 寄养 3 晚单（夹具直插）',
+    status: 'completed', priceFen: 59700, completedAt: new Date(), note: '【测试】e2e R12 寄养 3 晚单（夹具直插）',
   }).returning())[0]!;
-  const bBill = await settleBill2([{ kind: 'appointment', refId: boardingAppt.id }], { note: 'e2e R12 寄养结账' }); // 19900×3=59700 全现金
+  const bBill = await settleBill2([{ kind: 'appointment', refId: boardingAppt.id }], { note: '【测试】e2e R12 寄养结账' }); // 19900×3=59700 全现金
   const tooMany = await asErr(execRefund(ownerCookie, { billNo: bBill.billNo, type: 'boarding_nights', nights: 3, reason: '超剩余晚数验证' }));
   check('R12⑥ 已发生晚一分不退（退 3 晚 > 剩余 2 晚 → BAD_REQUEST「剩余可退晚数不足」明文）',
     tooMany instanceof TrpcHttpError && tooMany.code === 'BAD_REQUEST' && tooMany.message.includes('剩余可退晚数不足'),
@@ -2114,13 +2117,13 @@ async function main(): Promise<void> {
 
   /* ---------- 33. 清单⑦（V5）：已冲正/已撤单无退款入口 ---------- */
   console.log('\n[R12] 33. V5 终态禁退（清单⑦）');
-  const rvBill = await settleBill2([{ kind: 'product', refId: prod.id }], { note: 'e2e R12 V5 冲正单' });
+  const rvBill = await settleBill2([{ kind: 'product', refId: prod.id }], { note: '【测试】e2e R12 V5 冲正单' });
   await trpcMutate('cashier.reverseBill', { cookie: ownerCookie, input: { billNo: rvBill.billNo, reason: 'R12 冲正禁退验证' } });
   const rvRow = await db.select().from(schema.cashierBills).where(eq(schema.cashierBills.id, rvBill.billId)).get();
   const rvRefund = await asErr(execRefund(ownerCookie, { billNo: rvBill.billNo, type: 'full', reason: '冲正单退款验证' }));
   const vdHeld = await trpcMutate<{ bill: { billNo: string } }>('cashier.hold', {
     cookie: ownerCookie,
-    input: { items: [{ kind: 'product', refId: prod.id }], discountType: 'none', discountValue: 0, note: 'e2e R12 V5 撤单' },
+    input: { items: [{ kind: 'product', refId: prod.id }], discountType: 'none', discountValue: 0, note: '【测试】e2e R12 V5 撤单' },
   });
   await trpcMutate('cashier.voidBill', { cookie: ownerCookie, input: { billNo: vdHeld.bill.billNo, reason: 'R12 撤单禁退验证' } });
   const vdRefund = await asErr(execRefund(ownerCookie, { billNo: vdHeld.bill.billNo, type: 'full', reason: '撤单退款验证' }));
@@ -2146,9 +2149,9 @@ async function main(): Promise<void> {
   const apptV6 = (await db.insert(schema.appointments).values({
     code: 'E2EV6A', customerId: customerUser!.id, storeId, petId, serviceId: service.id,
     type: 'grooming', scheduledStart: new Date(), scheduledEnd: new Date(),
-    status: 'completed', priceFen: 10000, completedAt: new Date(), staffId: aqiang.id, note: 'e2e R12 V6 同月单',
+    status: 'completed', priceFen: 10000, completedAt: new Date(), staffId: aqiang.id, note: '【测试】e2e R12 V6 同月单',
   }).returning())[0]!;
-  const billV6 = await settleBill2([{ kind: 'appointment', refId: apptV6.id }], { note: 'e2e R12 V6 同月冲减单' });
+  const billV6 = await settleBill2([{ kind: 'appointment', refId: apptV6.id }], { note: '【测试】e2e R12 V6 同月冲减单' });
   await execRefund(ownerCookie, { billNo: billV6.billNo, type: 'partial_amount', amountFen: 5000, reason: 'V6 部分退 50%' });
   const sumV6a = await trpcQuery<R12SummaryT>('commission.mySummary', { cookie: groomerCookie, input: {} });
   const lineV6a = sumV6a.payload.serviceLines.find((l) => l.billId === billV6.billId);
@@ -2172,9 +2175,9 @@ async function main(): Promise<void> {
   const apptV6X = (await db.insert(schema.appointments).values({
     code: 'E2EV6X', customerId: customerUser!.id, storeId, petId, serviceId: service.id,
     type: 'grooming', scheduledStart: backTs, scheduledEnd: backTs,
-    status: 'completed', priceFen: 20000, completedAt: backTs, staffId: aqiang.id, note: 'e2e R12 V6 跨月源单',
+    status: 'completed', priceFen: 20000, completedAt: backTs, staffId: aqiang.id, note: '【测试】e2e R12 V6 跨月源单',
   }).returning())[0]!;
-  const billV6X = await settleBill2([{ kind: 'appointment', refId: apptV6X.id }], { note: 'e2e R12 V6 跨月源单结账' });
+  const billV6X = await settleBill2([{ kind: 'appointment', refId: apptV6X.id }], { note: '【测试】e2e R12 V6 跨月源单结账' });
   // 结账时点回填上月（计提月份+规则时序同按 settled_at）。
   // 注意：createdAt 一律不回填——cashier.genBillNo 按 createdAt 计当日单数分配单号，
   // 回填会减少当日计数导致后续单号复用撞 UNIQUE（本轮实测 HD-…-021 撞号 500）。
@@ -2207,7 +2210,7 @@ async function main(): Promise<void> {
 
   /* ---------- 35. 清单⑨（V7）：跨日退款入发生日日结，不回填封箱历史 ---------- */
   console.log('\n[R12] 35. V7 跨日退款（清单⑨）');
-  const yBill = await settleBill2([{ kind: 'product', refId: prod.id }], { note: 'e2e R12 V7 昨日单' });
+  const yBill = await settleBill2([{ kind: 'product', refId: prod.id }], { note: '【测试】e2e R12 V7 昨日单' });
   const yTs = new Date(`${storeYesterday}T12:00:00+08:00`);
   await db.update(schema.cashierBills).set({ settledAt: yTs, updatedAt: new Date() })
     .where(eq(schema.cashierBills.id, yBill.billId)); // 仅回填 settledAt（createdAt 回填会撞 genBillNo 当日序号，见 §34 注释）
@@ -2239,7 +2242,7 @@ async function main(): Promise<void> {
   check('R12⑩ 前置：次卡建卡（total=12 remain=12）', passRow0?.totalTimes === 12 && passRow0.remainTimes === 12, passRow0 && { total: passRow0.totalTimes, remain: passRow0.remainTimes });
   const passBill = await settleBill2(
     Array.from({ length: 6 }, () => ({ kind: 'service' as const, refId: service.id, paidByPass: true })),
-    { customerId: customerUser!.id, payments: (p) => [{ method: 'pass', amountFen: p }], note: 'e2e R12 V8 扣次 6 行单' },
+    { customerId: customerUser!.id, payments: (p) => [{ method: 'pass', amountFen: p }], note: '【测试】e2e R12 V8 扣次 6 行单' },
   );
   void passBill;
   const passRow1 = await db.select().from(schema.memberPasses).where(and(eq(schema.memberPasses.userId, customerUser!.id), eq(schema.memberPasses.storeId, storeId))).get();
@@ -2282,7 +2285,7 @@ async function main(): Promise<void> {
 
   /* ---------- 37. 清单⑫：部分退款余额内可再退 ---------- */
   console.log('\n[R12] 37. 部分退款余额内可再退（清单⑫）');
-  const reBill = await settleBill2([{ kind: 'service', refId: service.id }], { note: 'e2e R12 余额再退单' }); // 8800 现金
+  const reBill = await settleBill2([{ kind: 'service', refId: service.id }], { note: '【测试】e2e R12 余额再退单' }); // 8800 现金
   const re1 = await execRefund(managerCookie, { billNo: reBill.billNo, type: 'partial_amount', amountFen: 2640, reason: '先退 30%' });
   const re2 = await execRefund(managerCookie, { billNo: reBill.billNo, type: 'partial_amount', amountFen: 1760, reason: '再退 20%' });
   check('R12⑫ 余额内可再退（30%→2640 成，再 20%→1760 成；累计 4400 ≤ 8800）',
@@ -2332,7 +2335,7 @@ async function main(): Promise<void> {
   console.log('\n[修复包PR-1] D10 账本双倍计数 + 驳回权店长 + 留口开关');
 
   /* ---- 件③a 留口开关默认硬拒（回归：V1 已实证 split2 403，此处坐实开关缺行/关=同口径） ---- */
-  const bigBill2 = await settleBill2([{ kind: 'product', refId: staple.id, qty: 5 }], { note: 'e2e PR-1 留口开关单' }); // 64500
+  const bigBill2 = await settleBill2([{ kind: 'product', refId: staple.id, qty: 5 }], { note: '【测试】e2e PR-1 留口开关单' }); // 64500
   const draftOff = await asErr(execRefund(managerCookie, { billNo: bigBill2.billNo, type: 'partial_amount', amountFen: 60000, reason: 'PR-1 开关默认关验证' }));
   check('PR-1 留口开关默认关=维持硬拒（超阈值 FORBIDDEN「须店主」）',
     draftOff instanceof TrpcHttpError && draftOff.code === 'FORBIDDEN' && draftOff.message.includes('须店主'),
@@ -2395,7 +2398,7 @@ async function main(): Promise<void> {
     afterFen: 0,
     sourceId: 'HD-E2E-D10-001',
     period: nextPeriod,
-    note: 'e2e D10 计提行（下一期次）',
+    note: '【测试】e2e D10 计提行（下一期次）',
   });
   const ledgerBefore = await trpcQuery<{ yearGrantFen: number }>('membership.ledger', { cookie: d10Cookie });
   const settle1st = await settleMonthlyPr1(db, settleClock);
@@ -2419,7 +2422,7 @@ async function main(): Promise<void> {
     const a5Appt = (await db.insert(schema.appointments).values({
       code: 'E2EA55', customerId: customerUser!.id, storeId, petId, serviceId: bSvc.id,
       type: 'boarding', scheduledStart: a5Start, scheduledEnd: new Date(a5Start.getTime() + 2 * 86400_000),
-      status: 'confirmed', priceFen: 39800, note: 'e2e PR-2 A5 寄养 2 晚单（夹具直插）',
+      status: 'confirmed', priceFen: 39800, note: '【测试】e2e PR-2 A5 寄养 2 晚单（夹具直插）',
     }).returning())[0]!;
 
     /* ① 核销入住（默认=当班寄养岗：本店首位 boarding 技能在职员工） */
@@ -2517,7 +2520,7 @@ async function main(): Promise<void> {
     /* ① trpc 造单（走 occupy 占槽）→ 核销入住 */
     const p3Appt = await trpcMutate<{ id: string; status: string }>('appointment.create', {
       cookie: customerCookie,
-      input: { storeId, petId, serviceId: p3Svc.id, type: 'boarding', scheduledStart: p3Start, scheduledEnd: p3End, paymentMode: 'pay_at_store', note: 'e2e PR-3 寄养 3 晚槽位夹具' },
+      input: { storeId, petId, serviceId: p3Svc.id, type: 'boarding', scheduledStart: p3Start, scheduledEnd: p3End, paymentMode: 'pay_at_store', note: '【测试】e2e PR-3 寄养 3 晚槽位夹具' },
     });
     const p3Before = await Promise.all(p3Nights.map(slotOf));
     check('PR-3 C2 前置：造单占槽（3 晚 booked≥1）',
@@ -2530,7 +2533,7 @@ async function main(): Promise<void> {
     /* ② 增补：dailyLog 本店任意店员放行（丽丽=非负责人非店长；打卡人=操作人留痕） */
     const p3Log = await trpcMutate<{ log: { staffId: string } }>('boarding.dailyLog', {
       cookie: liliCookie,
-      input: { stayId: p3Stay.id, logDate: storeToday, walks: 1, note: 'e2e PR-3 增补：非负责人打卡' },
+      input: { stayId: p3Stay.id, logDate: storeToday, walks: 1, note: '【测试】e2e PR-3 增补：非负责人打卡' },
     });
     check('PR-3 增补 dailyLog 本店任意店员放行（打卡=班次共享动作，daily_logs.staff_id=操作人留痕）',
       p3Log.log.staffId === staffRow2.id,
@@ -2544,7 +2547,7 @@ async function main(): Promise<void> {
       p3Nights.map((n, i) => `${n}=${p3After[i]?.bookedCount}`));
     const p3Rebook = await trpcMutate<{ id: string }>('appointment.create', {
       cookie: customerCookie,
-      input: { storeId, petId, serviceId: p3Svc.id, type: 'boarding', scheduledStart: p3Start, scheduledEnd: p3End, paymentMode: 'pay_at_store', note: 'e2e PR-3 槽释放后再订验证' },
+      input: { storeId, petId, serviceId: p3Svc.id, type: 'boarding', scheduledStart: p3Start, scheduledEnd: p3End, paymentMode: 'pay_at_store', note: '【测试】e2e PR-3 槽释放后再订验证' },
     }).then((r) => ({ id: r.id, err: null as string | null }))
       .catch((e) => ({ id: null as string | null, err: String(e?.message ?? e) }));
     check('PR-3 C2①B 释放后同区间可再订（无 CONFLICT 已订满）', p3Rebook.err === null, p3Rebook.err ?? p3Rebook.id);
@@ -2559,7 +2562,7 @@ async function main(): Promise<void> {
     const tenderC0 = await trpcQuery<{ receivedTotalFen: number }>('store.todayTenderStats', { cookie: ownerCookie });
     const heldC = await trpcMutate<{ bill: { billNo: string } }>('cashier.hold', {
       cookie: ownerCookie,
-      input: { items: [{ kind: 'service', refId: service.id }], discountType: 'none', discountValue: 0, note: 'e2e PR-3 C2c held 不计合计验证' },
+      input: { items: [{ kind: 'service', refId: service.id }], discountType: 'none', discountValue: 0, note: '【测试】e2e PR-3 C2c held 不计合计验证' },
     });
     const tenderC1 = await trpcQuery<{ receivedTotalFen: number }>('store.todayTenderStats', { cookie: ownerCookie });
     check('PR-3 C2c 日结/已收合计不含 held 单（held 前后 todayTenderStats 逐值相等）',
@@ -2734,14 +2737,14 @@ async function main(): Promise<void> {
 
   /* ---------- 41. 清单⑦：服务 88 折自动 + 门市价划线 ---------- */
   console.log('\n[R11a] 41. 会员服务折扣（清单⑦）');
-  const svcBillMember = await settleBill2([{ kind: 'service', refId: service.id }], { customerId: customerUser!.id, note: 'e2e R11a 萤火服务单' });
+  const svcBillMember = await settleBill2([{ kind: 'service', refId: service.id }], { customerId: customerUser!.id, note: '【测试】e2e R11a 萤火服务单' });
   const svcItemMember = await db.select().from(schema.cashierBillItems).where(eq(schema.cashierBillItems.billId, svcBillMember.billId)).get();
   check('R11a⑦ 萤火服务单自动 88 折（adjusted=8800×0.88=7744 精确到分，应收=7744）',
     svcItemMember?.adjustedPriceFen === 7744 && svcBillMember.payableFen === 7744,
     { adjusted: svcItemMember?.adjustedPriceFen, payable: svcBillMember.payableFen });
   check('R11a⑦ 门市价划线对照（unit_price_fen=8800 门市价原值不动）', svcItemMember?.unitPriceFen === 8800, svcItemMember?.unitPriceFen);
   const wgUserId = sellWeiguang.membership.userId;
-  const svcBillWeiguang = await settleBill2([{ kind: 'service', refId: service.id }], { customerId: wgUserId, note: 'e2e R11a 微光服务单' });
+  const svcBillWeiguang = await settleBill2([{ kind: 'service', refId: service.id }], { customerId: wgUserId, note: '【测试】e2e R11a 微光服务单' });
   const svcItemWeiguang = await db.select().from(schema.cashierBillItems).where(eq(schema.cashierBillItems.billId, svcBillWeiguang.billId)).get();
   check('R11a⑦ 对照：微光（10000bp）无折扣=门市价 8800（adjusted 留空）',
     svcItemWeiguang?.adjustedPriceFen === null && svcBillWeiguang.payableFen === 8800, svcItemWeiguang?.adjustedPriceFen);
@@ -2749,8 +2752,8 @@ async function main(): Promise<void> {
   /* ---------- 42. 清单③+①：回馈金 grant 无月上限 + 三本账无互转 ---------- */
   console.log('\n[R11a] 42. grant 无月上限 + 三本账（清单③+①）');
   // 同月两笔商品单（萤火 2%）：12900×2% = 258/笔
-  const gBill1 = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: customerUser!.id, note: 'e2e R11a grant 商品单 1' });
-  const gBill2 = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: customerUser!.id, note: 'e2e R11a grant 商品单 2' });
+  const gBill1 = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: customerUser!.id, note: '【测试】e2e R11a grant 商品单 1' });
+  const gBill2 = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: customerUser!.id, note: '【测试】e2e R11a grant 商品单 2' });
   const myAfterGrants = await trpcQuery<{ rebate: { balanceFen: number; pendingFen: number; status: string } | null }>('membership.my', { cookie: customerCookie });
   check('R11a③ 无月上限：同月两笔 grant 累计 258+258=516 全挂期次（无 cap 截断），未到账口径 balance=0',
     myAfterGrants.rebate?.pendingFen === 516 && myAfterGrants.rebate.balanceFen === 0,
@@ -2798,7 +2801,7 @@ async function main(): Promise<void> {
     cookie: ownerCookie,
     input: {
       customerId: customerUser!.id, items: [{ kind: 'service', refId: service.id }],
-      discountType: 'none', discountValue: 0, note: 'e2e R11a 服务行 rebate 段验证',
+      discountType: 'none', discountValue: 0, note: '【测试】e2e R11a 服务行 rebate 段验证',
       payments: [{ method: 'rebate', amountFen: 100 }, { method: 'cash', amountFen: 7644 }],
     },
   }));
@@ -2809,7 +2812,7 @@ async function main(): Promise<void> {
   const dBill = await settleBill2([{ kind: 'product', refId: staple.id }], {
     customerId: customerUser!.id,
     payments: () => [{ method: 'rebate', amountFen: 300 }, { method: 'cash', amountFen: 12600 }],
-    note: 'e2e R11a 商品行 rebate 抵扣单',
+    note: '【测试】e2e R11a 商品行 rebate 抵扣单',
   }); // 12900 = rebate 300 + cash 12600
   const accAfterDeduct = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, customerUser!.id)).get();
   const deductLog = (await db.select().from(schema.rebateLogs)
@@ -2867,14 +2870,14 @@ async function main(): Promise<void> {
     cookie: ownerCookie,
     input: {
       customerId: customerUser!.id, items: [{ kind: 'product', refId: staple.id }],
-      discountType: 'none', discountValue: 0, note: 'e2e R11a 冻结抵扣验证',
+      discountType: 'none', discountValue: 0, note: '【测试】e2e R11a 冻结抵扣验证',
       payments: [{ method: 'rebate', amountFen: 100 }, { method: 'cash', amountFen: 12800 }],
     },
   }));
   check('R11a④ 冻结期抵扣不可用（FORBIDDEN「回馈金账户冻结中」，余额在不可用）',
     frozenDeduct instanceof TrpcHttpError && frozenDeduct.code === 'FORBIDDEN' && frozenDeduct.message.includes('冻结'),
     frozenDeduct && { code: frozenDeduct.code, message: frozenDeduct.message });
-  const frozenDiscount = await settleBill2([{ kind: 'service', refId: service.id }], { customerId: customerUser!.id, note: 'e2e R11a 冻结期服务单' });
+  const frozenDiscount = await settleBill2([{ kind: 'service', refId: service.id }], { customerId: customerUser!.id, note: '【测试】e2e R11a 冻结期服务单' });
   check('R11a④ 冻结期服务折扣同步失效（门市价 8800 不打折）', frozenDiscount.payableFen === 8800, frozenDiscount.payableFen);
   const renewRes = await trpcMutate<{ membership: MembershipRowT; amountFen: number }>('membership.renew', {
     cookie: managerCookie,
@@ -3000,8 +3003,8 @@ async function main(): Promise<void> {
    * 结算对象为 futurePeriod，与 §43 批次和 server 真实定时器（真实上一期次）均不相撞。 */
   const sellC = await sellPlan(managerCookie, { phone: '13811110007', planKey: 'plan_yinghuo', petCount: 0, paySegments: [{ method: 'cash', amountFen: 19900 }] });
   const sellD = await sellPlan(managerCookie, { phone: '13811110008', planKey: 'plan_yinghuo', petCount: 0, paySegments: [{ method: 'cash', amountFen: 19900 }] });
-  const gBillC = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: sellC.membership.userId, note: 'e2e 复核② C 商品单（grant 258）' });
-  const gBillD = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: sellD.membership.userId, note: 'e2e 复核② D 商品单（grant 258，对照组）' });
+  const gBillC = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: sellC.membership.userId, note: '【测试】e2e 复核② C 商品单（grant 258）' });
+  const gBillD = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: sellD.membership.userId, note: '【测试】e2e 复核② D 商品单（grant 258，对照组）' });
   const fpDate = new Date(py, pm, 1); // periodNow 的次月（pm 为 1 基月名 → Date 月份索引 pm 即次月）
   const futurePeriod = `${fpDate.getFullYear()}-${pad2l(fpDate.getMonth() + 1)}`;
   const settleNow2 = new Date(fpDate.getFullYear(), fpDate.getMonth() + 1, 10); // 期次次月 10 日 ≥ 结算日 5
@@ -3144,8 +3147,8 @@ async function main(): Promise<void> {
 
   /* ---------- 50.3 时限闸 + 原因闸 + 开关闸 ---------- */
   console.log('\n[C5] 50.3 时限/原因/开关三闸');
-  const billValid50 = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: customerUser!.id, note: 'e2e C5 有效单（撤回/驳回夹具）' });
-  const billOver50 = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: customerUser!.id, note: 'e2e C5 超时限单' });
+  const billValid50 = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: customerUser!.id, note: '【测试】e2e C5 有效单（撤回/驳回夹具）' });
+  const billOver50 = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: customerUser!.id, note: '【测试】e2e C5 超时限单' });
   await db.update(schema.cashierBills).set({ settledAt: new Date(Date.now() - 31 * 24 * 3600 * 1000) })
     .where(eq(schema.cashierBills.id, billOver50.billId)); // 完成时移位 31 天（>端口 30 天窗）
   const overWindow = await asErr(trpcMutate('refundRequest.create', {
@@ -3224,7 +3227,7 @@ async function main(): Promise<void> {
 
   /* ---------- 50.5 驳回：reason 必填 + 客户端可见 + listPending 待办进出 ---------- */
   console.log('\n[C5] 50.5 驳回');
-  const bill505 = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: customerUser!.id, note: 'e2e C5 驳回夹具单' });
+  const bill505 = await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: customerUser!.id, note: '【测试】e2e C5 驳回夹具单' });
   const req505 = await trpcMutate<ReqCreateRes>('refundRequest.create', {
     cookie: customerCookie,
     input: { orderKind: 'appointment', billId: bill505.billId, type: 'refund_only', reasonCode: 'service_unsatisfied' },
@@ -3628,7 +3631,7 @@ async function main(): Promise<void> {
     period: '2099-01', note: '补缺3 mySavings 已入账夹具（期次 2099-01 结算批次）',
   });
   /* 源②：服务折扣单（萤火 88 折：8800×0.88=7744 → 省 1056） */
-  await settleBill2([{ kind: 'service', refId: service.id }], { customerId: m52u6.id, note: 'e2e 补缺3 52.6 服务折扣单' });
+  await settleBill2([{ kind: 'service', refId: service.id }], { customerId: m52u6.id, note: '【测试】e2e 补缺3 52.6 服务折扣单' });
   const savings52 = await trpcQuery<{ year: number; rebateSettledFen: number; serviceDiscountFen: number; totalFen: number }>('membership.mySavings', { cookie: m52u6Cookie });
   check('补缺3-52.6 mySavings 双源分明（rebateSettledFen=258 已入账 + serviceDiscountFen=1056=8800−7744 → totalFen=1314 精确到分）',
     savings52.rebateSettledFen === 258 && savings52.serviceDiscountFen === 1056 &&
@@ -3639,7 +3642,7 @@ async function main(): Promise<void> {
   console.log('\n[补缺-3] 52.7 升档不动在途回馈金');
   const m52u7 = await mkM52User('u7', '13822220007');
   await sellPlan(managerCookie, { userId: m52u7.id, planKey: 'plan_yinghuo', petCount: 0, paySegments: [{ method: 'cash', amountFen: 19900 }] });
-  await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: m52u7.id, note: 'e2e 补缺3 52.7 在途 grant 单' }); // 萤火 2% → 计提 258（未结算在途）
+  await settleBill2([{ kind: 'product', refId: staple.id }], { customerId: m52u7.id, note: '【测试】e2e 补缺3 52.7 在途 grant 单' }); // 萤火 2% → 计提 258（未结算在途）
   const u7AccBefore = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, m52u7.id)).get();
   const u7GrantsBefore = await db.select().from(schema.rebateLogs)
     .where(and(eq(schema.rebateLogs.userId, m52u7.id), eq(schema.rebateLogs.type, 'grant')));
@@ -3760,7 +3763,7 @@ async function main(): Promise<void> {
   const slotVit = slotPool[slotPool.length - 1]!;
   const apptVit = await trpcMutate<{ id: string }>('appointment.create', {
     cookie: customerCookie,
-    input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: slotVit.slotStart, paymentMode: 'pay_at_store', note: 'e2e 补缺4 vitals 报告单', staffId: staffRow2.id },
+    input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: slotVit.slotStart, paymentMode: 'pay_at_store', note: '【测试】e2e 补缺4 vitals 报告单', staffId: staffRow2.id },
   });
   createdAidExtras.push(apptVit.id);
   await trpcMutate('appointment.confirm', { cookie: ownerCookie, input: { appointmentId: apptVit.id } });
@@ -3815,7 +3818,7 @@ async function main(): Promise<void> {
   const slotProg = slotPool[slotPool.length - 2]!;
   const apptProg = await trpcMutate<{ id: string }>('appointment.create', {
     cookie: customerCookie,
-    input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: slotProg.slotStart, paymentMode: 'pay_at_store', note: 'e2e 补缺4 进行中单', staffId: aqiang.id },
+    input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: slotProg.slotStart, paymentMode: 'pay_at_store', note: '【测试】e2e 补缺4 进行中单', staffId: aqiang.id },
   });
   createdAidExtras.push(apptProg.id);
   const codeProg = await trpcQuery<{ code: string }>('appointment.getCode', { cookie: customerCookie, input: { appointmentId: apptProg.id } });
@@ -4852,13 +4855,13 @@ async function main(): Promise<void> {
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（1391 键/38 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 1391 && domainSet.size === 38 &&
+  check('56.1 copy 域种子全量落库（1415 键/38 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 1415 && domainSet.size === 38 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（1391 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 1391 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（1415 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 1415 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -4905,6 +4908,21 @@ async function main(): Promise<void> {
       typeof (negAllowed as { version?: number }).version === 'number',
     { banned: banned instanceof Error ? banned.message : null, neg: (negAllowed as { version?: number }).version });
 
+  /* 56.4b（片 C 顺带件③ 禁令词闸分端）：merchant:/staff: 内部域含「储值」放行；customer 域照拒 */
+  const staffOk = await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'copy', changes: [{ ruleKey: 'cashier.refundSvNotice', valueJson: { text: '本单涉储值/次卡：退款须店主办理（负债科目不设阈值，server 同口径拦截）' } }], confirmedHighRisk: ['cashier.refundSvNotice'] },
+  });
+  const custNo = await asErr(trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'copy', changes: [{ ruleKey: 'home.idFallback', valueJson: { text: '储值有好礼' } }] },
+  }));
+  check('56.4b 禁令词闸分端：merchant 域含「储值」内部文案放行；customer 域「储值」照拒（对外红线不变）',
+    typeof (staffOk as { version?: number }).version === 'number' &&
+      custNo instanceof TrpcHttpError && custNo.code === 'BAD_REQUEST' && custNo.message.includes('储值'),
+    { staff: (staffOk as { version?: number }).version, cust: custNo instanceof Error ? custNo.message : null });
+  /* 56.4b 守尾：staffOk 为同值重写（现金 cashier.refundSvNotice 首尾同文），零内容副作用 */
+
   /* 56.5 权限闸：clerk/manager 对 copy 域 list/save 全 403（仅 owner） */
   const clerkList56 = await asErr(trpcQuery('config.list', { cookie: clerkCookie, input: { domain: 'copy' } }));
   const mgrSave = await asErr(trpcMutate('config.save', {
@@ -4939,6 +4957,79 @@ async function main(): Promise<void> {
       !!vRow && vChange?.before?.text === '菲丽亚宠友' && vChange.after?.text === '菲丽亚宠友·内测' &&
       typeof vRow.changerNickname === 'string',
     { unknown: unknownKey56 instanceof Error ? unknownKey56.message : null, empty: emptyText instanceof Error ? emptyText.message : null, ver: vRow?.changesJson });
+
+  /* ==================================================================
+   * 端口批片 C（CJ-1002-01 槽位端口 · slot_contents · 控制台第八域）验收段
+   * ================================================================== */
+  console.log('\n[片C] 57. 展示槽位（注册表/上传待审/上线/回退/权限）');
+  interface SlotLiveMap { slots: Array<{ key: string; url: string | null; alt: string }> }
+  interface SlotListRes {
+    slots: Array<{
+      slotKey: string;
+      live: { id: string; version: number; contentJson: { url: string | null } } | null;
+      pending: Array<{ id: string; version: number; contentJson: { url: string | null } }>;
+      totalVersions: number;
+    }>;
+  }
+
+  /* 57.1 种子六槽 live + liveMap 公开透出（pending 不透出语义随后证） */
+  const liveMap0 = await trpcQuery<SlotLiveMap>('slotPort.liveMap', { cookie: customerCookie });
+  check('57.1 种子六槽 live 注册（home.banner 等）+ liveMap 透出（url/alt 齐）',
+    liveMap0.slots.length === 6 &&
+      liveMap0.slots.some((s) => s.key === 'home.banner' && s.url === '/brand/banner-home-1200.png') &&
+      liveMap0.slots.some((s) => s.key === 'member.cardFace' && s.url === null),
+    liveMap0.slots.map((s) => s.key));
+
+  /* 57.2 upload → pending（liveMap 不透出待审件，列表可见） */
+  const up57 = await trpcMutate<{ version: { id: string; version: number; status: string } }>('slotPort.upload', {
+    cookie: ownerCookie,
+    input: { slotKey: 'home.banner', content: { url: '/api/img/slots/home.banner/e2e57.jpg', alt: '首页品牌横幅（内测换图）' } },
+  });
+  const list57a = await trpcQuery<SlotListRes>('slotPort.list', { cookie: ownerCookie });
+  const banner57a = list57a.slots.find((s) => s.slotKey === 'home.banner')!;
+  const liveMapAfterUp = await trpcQuery<SlotLiveMap>('slotPort.liveMap', { cookie: customerCookie });
+  check('57.2 上传=新版本 pending 待审（v2 在列表 pending 区）+ liveMap 仍旧值（待审不上线）',
+    up57.version.status === 'pending' && up57.version.version === 2 &&
+      banner57a.pending.some((p) => p.id === up57.version.id) &&
+      banner57a.live?.contentJson.url === '/brand/banner-home-1200.png' &&
+      liveMapAfterUp.slots.find((s) => s.key === 'home.banner')?.url === '/brand/banner-home-1200.png',
+    { v: up57.version, pending: banner57a.pending.length });
+
+  /* 57.3 publish 点上线 → liveMap 即新值（保存即生效）+ 旧 live→archived */
+  await trpcMutate('slotPort.publish', { cookie: ownerCookie, input: { versionId: up57.version.id } });
+  const liveMapAfterPub = await trpcQuery<SlotLiveMap>('slotPort.liveMap', { cookie: customerCookie });
+  const list57b = await trpcQuery<SlotListRes>('slotPort.list', { cookie: ownerCookie });
+  const banner57b = list57b.slots.find((s) => s.slotKey === 'home.banner')!;
+  check('57.3 点上线：v2 → live + liveMap 即新值 + pending 清空 + 旧版转 archived（版本历史留）',
+    liveMapAfterPub.slots.find((s) => s.key === 'home.banner')?.url === '/api/img/slots/home.banner/e2e57.jpg' &&
+      banner57b.live?.id === up57.version.id && banner57b.pending.length === 0 && banner57b.totalVersions === 2,
+    { live: banner57b.live?.version, total: banner57b.totalVersions });
+
+  /* 57.4 revert 回退上一版 → liveMap 回码内默认路径 */
+  const rev57 = await trpcMutate<{ version: { version: number }; revertedFrom: number }>('slotPort.revert', {
+    cookie: ownerCookie, input: { slotKey: 'home.banner' },
+  });
+  const liveMapAfterRev = await trpcQuery<SlotLiveMap>('slotPort.liveMap', { cookie: customerCookie });
+  check('57.4 回退上一版：live 回 v1（/brand 默认）+ liveMap 同帧（revertedFrom=2）',
+    rev57.version.version === 1 && rev57.revertedFrom === 2 &&
+      liveMapAfterRev.slots.find((s) => s.key === 'home.banner')?.url === '/brand/banner-home-1200.png',
+    rev57);
+
+  /* 57.5 权限+未知槽闸：clerk list/upload 403；未知 slotKey 400 明文 */
+  const clerkList57 = await asErr(trpcQuery('slotPort.list', { cookie: clerkCookie }));
+  const clerkUp57 = await asErr(trpcMutate('slotPort.upload', {
+    cookie: clerkCookie,
+    input: { slotKey: 'home.banner', content: { url: '/x.jpg', alt: 'x' } },
+  }));
+  const badSlot57 = await asErr(trpcMutate('slotPort.upload', {
+    cookie: ownerCookie,
+    input: { slotKey: 'no.such.slot', content: { url: '/x.jpg', alt: 'x' } },
+  }));
+  check('57.5 clerk list/upload 403（仅 owner）+ 未知槽位键 400「未知槽位键」（注册表纪律）',
+    clerkList57 instanceof TrpcHttpError && clerkList57.httpStatus === 403 &&
+      clerkUp57 instanceof TrpcHttpError && clerkUp57.httpStatus === 403 &&
+      badSlot57 instanceof TrpcHttpError && badSlot57.code === 'BAD_REQUEST' && badSlot57.message.includes('未知槽位键'),
+    { list: clerkList57 instanceof Error ? clerkList57.message : null, bad: badSlot57 instanceof Error ? badSlot57.message : null });
 
   client.close();
 }

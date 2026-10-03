@@ -11,7 +11,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PawPrint } from 'lucide-react';
-import { Skeleton } from '@philia/shared';
+import { Skeleton, slotContentOf, resolveSlotUrl } from '@philia/shared';
 import { bkc } from '@/copy/booking';
 import PetPickerFlat from './PetPickerFlat';
 import BottomSheet from './BottomSheet';
@@ -58,7 +58,7 @@ export default function PetCardBlock({
         className="flex flex-col items-center py-4 text-center"
         data-testid="gs-no-pet-fork"
       >
-        <img src="/brand/empty-appointments-800.png" alt="还没有宠物档案" className="w-40 max-w-full rounded-card" />
+        <img src={resolveSlotUrl(slotContentOf('pets.emptyIllustration')?.url) ?? '/brand/empty-appointments-800.png'} alt={slotContentOf('pets.emptyIllustration')?.alt ?? '还没有宠物档案'} className="w-40 max-w-full rounded-card" />
         <p className="mt-3 text-title">{bkc('booking.noPetTitle')}</p>
         <p className="mt-1 text-caption text-ink-secondary">{bkc('booking.noPetBodyWizard')}</p>
         <button

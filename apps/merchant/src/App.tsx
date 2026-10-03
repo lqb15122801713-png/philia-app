@@ -34,6 +34,7 @@ import PassPage from './pages/PassPage'
 import ProductsPage from './pages/ProductsPage'
 import SettingsPage from './pages/SettingsPage'
 import RulesConfigPage from './pages/RulesConfigPage'
+import SlotPortPage from './pages/SlotPortPage'
 import StaffPage from './pages/StaffPage'
 
 // 受商家身份保护的主内容路由（P0 路由表原样保留；U3 追加 /login 与 /pass 规范名）
@@ -98,6 +99,8 @@ function ProtectedRoutes() {
         <Route path="/settings/rules" element={<RulesConfigPage />} />
         {/* 端口批片 B：文案端口（控制台第七域「文案」；owner-only 同规则配置页口径） */}
         <Route path="/settings/copy" element={<CopyConfigPage />} />
+        {/* 端口批片 C：槽位端口（控制台第八域「槽位」；owner-only 同规则配置页口径） */}
+        <Route path="/settings/slots" element={<SlotPortPage />} />
         <Route path="*" element={<RoleLanding />} />
       </Routes>
     </ClerkRouteGuard>

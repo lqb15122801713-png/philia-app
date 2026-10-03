@@ -17,6 +17,7 @@ import {
   BedDouble,
   Calculator,
   House,
+  Image,
   MonitorDot,
   Package,
   ReceiptText,
@@ -86,6 +87,10 @@ function groupsFor(role: MerchantRole): Array<{ label: string | null; items: Rai
         // 端口批片 B：文案端口（仅 owner 可见入口；label 走端口文案键 copyport.pageTitle）
         ...(role.isOwner
           ? [{ to: '/settings/copy', label: cp('copyport.pageTitle'), icon: Type, testid: 'rail-copy-config' }]
+          : []),
+        // 端口批片 C：槽位端口（仅 owner 可见入口；label 走端口文案键 slotport.pageTitle）
+        ...(role.isOwner
+          ? [{ to: '/settings/slots', label: cp('slotport.pageTitle'), icon: Image, testid: 'rail-slot-port' }]
           : []),
       ],
     },

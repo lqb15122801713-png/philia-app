@@ -772,6 +772,30 @@ WITH s(rule_key, label, text) AS (VALUES
   ('copyport.savedToast', 'merchant:copyPort', '文案已保存，客户端新渲染即生效'),
   ('copyport.saveFail', 'merchant:copyPort', '保存失败，请稍后再试'),
   ('copyport.searchPlaceholder', 'merchant:copyPort', '搜索键名或文案…'),
+  ('slotport.empty', 'merchant:copyPort', '槽位注册表为空（种子未落库）'),
+  ('slotport.liveBadge', 'merchant:copyPort', '上线中'),
+  ('slotport.loadFail', 'merchant:copyPort', '槽位数据加载失败，请检查网络后重试'),
+  ('slotport.noLive', 'merchant:copyPort', '暂无上线版本'),
+  ('slotport.ownerOnly', 'merchant:copyPort', '槽位端口仅店主可改'),
+  ('slotport.ownerOnlyBody', 'merchant:copyPort', '展示素材涉门店门面口径，仅店主账号可上传与上线。如需调整请联系店主。'),
+  ('slotport.pageSub', 'merchant:copyPort', '展示素材后台可换 · 新素材默认待审 · 点上线即生效（新渲染）'),
+  ('slotport.pageTitle', 'merchant:copyPort', '槽位端口'),
+  ('slotport.pendingBadge', 'merchant:copyPort', '待审'),
+  ('slotport.pendingCount', 'merchant:copyPort', '{n} 个待审'),
+  ('slotport.pendingTitle', 'merchant:copyPort', '待审版本'),
+  ('slotport.placeholderBadge', 'merchant:copyPort', '占位中'),
+  ('slotport.placeholderNote', 'merchant:copyPort', '码内默认渐变/图标占位，上传真件并点上线后替换'),
+  ('slotport.publishCta', 'merchant:copyPort', '点上线'),
+  ('slotport.publishedToast', 'merchant:copyPort', '已上线，客户端新渲染即生效'),
+  ('slotport.publishFail', 'merchant:copyPort', '上线失败，请稍后再试'),
+  ('slotport.revertCta', 'merchant:copyPort', '回退上一版'),
+  ('slotport.revertedToast', 'merchant:copyPort', '已回退上一版，客户端新渲染即生效'),
+  ('slotport.revertFail', 'merchant:copyPort', '回退失败，请稍后再试'),
+  ('slotport.uploadCta', 'merchant:copyPort', '上传替换'),
+  ('slotport.uploadedToast', 'merchant:copyPort', '已上传，待审中（点上线后生效）'),
+  ('slotport.uploadFail', 'merchant:copyPort', '上传失败，请稍后再试'),
+  ('slotport.uploading', 'merchant:copyPort', '上传中…'),
+  ('slotport.versionInfo', 'merchant:copyPort', 'v{version} · 共 {total} 版'),
   ('dash.appealAssistConfirmTitle', 'merchant:dashboard', '协助换绑确认'),
   ('dash.appealAssistCta', 'merchant:dashboard', '协助换绑'),
   ('dash.appealAssistNoteLabel', 'merchant:dashboard', '核验说明（必填，客户端可见）'),
@@ -804,7 +828,14 @@ WITH s(rule_key, label, text) AS (VALUES
   ('dash.invoiceRegisterCta', 'merchant:dashboard', '登记开票'),
   ('dash.invoiceRegistering', 'merchant:dashboard', '登记中…'),
   ('dash.invoiceRegisterSubmit', 'merchant:dashboard', '确认登记'),
-  ('dash.invoiceRegisterSuccess', 'merchant:dashboard', '已登记开票 {no}'),
+  ('dash.invoiceRegisterSuccess', 'merchant:dashboard', '已登记开票 {no}')
+)
+INSERT INTO `copy_overrides` (`id`,`version`,`rule_key`,`label`,`value_json`,`effective_from`,`active`,`created_by`,`created_at`,`updated_at`)
+SELECT 'seedcopy_' || lower(hex(randomblob(8))), 1, s.rule_key, s.label, json_object('text', s.text), unixepoch(), 1, 'system', unixepoch(), unixepoch()
+FROM s
+WHERE NOT EXISTS (SELECT 1 FROM `copy_overrides` WHERE `rule_key` = s.rule_key AND `active` = 1);
+--> statement-breakpoint
+WITH s(rule_key, label, text) AS (VALUES
   ('dash.invoiceRegisterTitle', 'merchant:dashboard', '登记开票 {no}'),
   ('dash.invoiceTaxNoLead', 'merchant:dashboard', '税号'),
   ('dash.invoiceTitleBusiness', 'merchant:dashboard', '企业'),
@@ -828,14 +859,7 @@ WITH s(rule_key, label, text) AS (VALUES
   ('dash.ticketReplyRequired', 'merchant:dashboard', '请填写回复内容'),
   ('dash.ticketReplySubmit', 'merchant:dashboard', '提交回复'),
   ('dash.ticketReplySubmitting', 'merchant:dashboard', '提交中…'),
-  ('dash.ticketReplySuccess', 'merchant:dashboard', '已回复工单 {no}')
-)
-INSERT INTO `copy_overrides` (`id`,`version`,`rule_key`,`label`,`value_json`,`effective_from`,`active`,`created_by`,`created_at`,`updated_at`)
-SELECT 'seedcopy_' || lower(hex(randomblob(8))), 1, s.rule_key, s.label, json_object('text', s.text), unixepoch(), 1, 'system', unixepoch(), unixepoch()
-FROM s
-WHERE NOT EXISTS (SELECT 1 FROM `copy_overrides` WHERE `rule_key` = s.rule_key AND `active` = 1);
---> statement-breakpoint
-WITH s(rule_key, label, text) AS (VALUES
+  ('dash.ticketReplySuccess', 'merchant:dashboard', '已回复工单 {no}'),
   ('dash.ticketReplyTitle', 'merchant:dashboard', '回复工单 {no}'),
   ('dash.ticketTypeComplaint', 'merchant:dashboard', '投诉'),
   ('dash.ticketTypeOther', 'merchant:dashboard', '其他'),
@@ -1211,7 +1235,14 @@ WITH s(rule_key, label, text) AS (VALUES
   ('inv.kindOrder', 'serviceloop', '商城订单'),
   ('inv.listTitle', 'serviceloop', '我的发票'),
   ('inv.loadFail', 'serviceloop', '加载失败，请稍后重试'),
-  ('inv.progressEntry', 'serviceloop', '发票进度 ›'),
+  ('inv.progressEntry', 'serviceloop', '发票进度 ›')
+)
+INSERT INTO `copy_overrides` (`id`,`version`,`rule_key`,`label`,`value_json`,`effective_from`,`active`,`created_by`,`created_at`,`updated_at`)
+SELECT 'seedcopy_' || lower(hex(randomblob(8))), 1, s.rule_key, s.label, json_object('text', s.text), unixepoch(), 1, 'system', unixepoch(), unixepoch()
+FROM s
+WHERE NOT EXISTS (SELECT 1 FROM `copy_overrides` WHERE `rule_key` = s.rule_key AND `active` = 1);
+--> statement-breakpoint
+WITH s(rule_key, label, text) AS (VALUES
   ('inv.statusIssued', 'serviceloop', '已开具'),
   ('inv.statusSubmitted', 'serviceloop', '申请中'),
   ('inv.store', 'serviceloop', '门店'),
@@ -1235,14 +1266,7 @@ WITH s(rule_key, label, text) AS (VALUES
   ('report.notRecorded', 'serviceloop', '本次未记录'),
   ('report.promiseLine', 'serviceloop', '美容报告 30 分钟内送达'),
   ('report.statusAbnormal', 'serviceloop', '异常'),
-  ('report.statusAttention', 'serviceloop', '注意')
-)
-INSERT INTO `copy_overrides` (`id`,`version`,`rule_key`,`label`,`value_json`,`effective_from`,`active`,`created_by`,`created_at`,`updated_at`)
-SELECT 'seedcopy_' || lower(hex(randomblob(8))), 1, s.rule_key, s.label, json_object('text', s.text), unixepoch(), 1, 'system', unixepoch(), unixepoch()
-FROM s
-WHERE NOT EXISTS (SELECT 1 FROM `copy_overrides` WHERE `rule_key` = s.rule_key AND `active` = 1);
---> statement-breakpoint
-WITH s(rule_key, label, text) AS (VALUES
+  ('report.statusAttention', 'serviceloop', '注意'),
   ('report.statusNormal', 'serviceloop', '正常'),
   ('report.statusUnrecorded', 'serviceloop', '未记录'),
   ('report.title', 'serviceloop', '美容报告'),

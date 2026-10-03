@@ -96,6 +96,9 @@
 .m2-cardface .cf-price { font-family: var(--v2mono); font-weight: 700; }
 .m2-cardface .cf-claim { font-size: 11px; opacity: .85; }
 .m2-cardface .cf-no { position: absolute; left: 20px; bottom: 12px; font-family: var(--v2mono); font-size: 9px; letter-spacing: .14em; opacity: .75; }
+/* 端口批片 C：卡面真件铺底层（member.cardFace 槽 live 时渲染；文字层全压其上） */
+.m2-cardface .cf-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.m2-cardface > *:not(.cf-art) { position: relative; }
 /* 状态章（CJ-0923-16⑤：冻结态=卡面保持+右上状态章，蜡封槽位同位复用） */
 .m2-cardface .cf-stamp {
   position: absolute; top: 14px; right: 16px; padding: 5px 10px; border-radius: 99px;

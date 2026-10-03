@@ -31,6 +31,7 @@ import { pushRouter } from './push';
 import { refundRouter } from './refund';
 import { refundRequestRouter } from './refundRequest';
 import { serviceLoopRouter } from './serviceLoop';
+import { slotPortRouter } from './slotPort';
 import { serviceStepRouter } from './serviceStep';
 import { storeRouter } from './store';
 import { storedValueRouter } from './storedValue';
@@ -59,6 +60,7 @@ export const appRouter = router({
   serviceLoop: serviceLoopRouter, // 补缺大批片 4（服务闭环：相册聚合/安心证书/美容报告/客服工单/发票申请/客服时间公示）
   authSecurity: authSecurityRouter, // 批次 R13a 账号安全（注销/换绑双码/换绑申诉/设备登记）
   pay: payRouter, // 批次 6 补缺大批 server 侧收单骨架（quote/createOrder/status/listMine/reconcile + 超时关单）
+  slotPort: slotPortRouter, // 端口批片 C（CJ-1002-01）：展示槽位端口（控制台第八域；liveMap 公开读/管理仅 owner）
 });
 
 /** 前端 tRPC client 的类型锚点（仅类型导出，无运行时开销） */
