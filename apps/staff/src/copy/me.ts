@@ -55,6 +55,19 @@ const ME_COPY_TABLE = {
   'me.offDuty': '今日休息',
   'me.joined': '入职 {ym}',
   'me.version': 'Philia 员工端 · 内测 v1.1',
+
+  /* ---- 片 3（任务协同批）：协作入口卡区五行（通知/公告/心声/自检/问题上报） ---- */
+  'me.groupCollab': '通知 / 公告 / 心声 / 自检 / 问题上报',
+  'me.row.notifications': '消息通知',
+  'me.row.notificationsSub': '派单 · 系统消息 · 未读高亮',
+  'me.row.notices': '门店公告',
+  'me.row.noticesSub': '置顶在前 · 已读回执',
+  'me.row.voice': '员工心声',
+  'me.row.voiceSub': '建议吐槽 · 限时响应',
+  'me.row.selfCheck': '每日自检',
+  'me.row.selfCheckSub': '逐项打点 · 照片留证',
+  'me.row.pdca': '问题上报',
+  'me.row.pdcaSub': 'PDCA 整改闭环',
 } as const;
 
 export const ME_COPY = withCopyOverrides(ME_COPY_TABLE);

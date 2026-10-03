@@ -218,6 +218,20 @@
       "when": 1791021552532,
       "tag": "0030_copy_sched_att_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "6",
+      "when": 1791026092804,
+      "tag": "0031_task_collab_domain",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "6",
+      "when": 1791036459428,
+      "tag": "0032_copy_task_collab_keys",
+      "breakpoints": true
     }
   ]
 }

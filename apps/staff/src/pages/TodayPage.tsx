@@ -51,6 +51,8 @@ import { useStaffEvents } from '@/components/today/useStaffEvents';
 import { hhmm } from '@/components/today/utils';
 import { skc } from '@/copy/skeleton';
 import { TODAY_COPY } from '@/copy/today';
+import { ttc } from '@/copy/taskToday';
+import { collabOf, minToHm, toDate } from '@/lib/collabPort';
 
 // 契约1：QrScanner（T3.2 components/scan/QrScanner.tsx）懒加载接入（复用不动）
 const QrScanner = lazy(() => import('@/components/scan/QrScanner'));
@@ -59,6 +61,9 @@ const TODAY_QUERY_KEY = ['appointment', 'listTodayForStaff'] as const;
 const ME_RAW_KEY = ['auth', 'me', 'raw', 'staff-deck'] as const;
 const STAFF_PUBLIC_KEY = ['store', 'listStaffPublic'] as const;
 const BUS_QUERY_KEY = ['staffTask', 'listMy'] as const;
+/* 片 3：循环任务今日落实例 + 未读通知徽（dock「我的」槽） */
+const TASK_TODAY_KEY = ['taskExec', 'listToday'] as const;
+const UNREAD_QUERY_KEY = ['push', 'unreadCount'] as const;
 
 export default function TodayPage() {
   const navigate = useNavigate();
@@ -89,6 +94,22 @@ export default function TodayPage() {
     refetchInterval: 60_000,
     enabled: staffId !== null,
   });
+  // 片 3：协同域端口（server 侧 taskExec 由 coder G 并行施工，签名冻结见 lib/collabPort.ts）
+  const port = useMemo(() => collabOf(trpc), [trpc]);
+  // 片 3：今日循环任务落实例（触读即补生成；60s 轮询兜底）
+  const taskTodayQ = useQuery({
+    queryKey: TASK_TODAY_KEY,
+    queryFn: () => port.taskExec.listToday.query(),
+    refetchInterval: 60_000,
+    enabled: staffId !== null,
+  });
+  // 片 3：未读通知数（dock「我的」槽徽标；SSE 事件/重连即 invalidate，60s 轮询兜底）
+  const unreadQ = useQuery({
+    queryKey: UNREAD_QUERY_KEY,
+    queryFn: () => trpc.push.unreadCount.query(),
+    refetchInterval: 60_000,
+    enabled: staffId !== null,
+  });
   const storeId = meRawQ.data?.store?.id ?? null;
   const staffPublicQ = useQuery({
     queryKey: [...STAFF_PUBLIC_KEY, storeId],
@@ -113,7 +134,28 @@ export default function TodayPage() {
     void queryClient.invalidateQueries({ queryKey: TODAY_QUERY_KEY });
     void queryClient.invalidateQueries({ queryKey: BUS_QUERY_KEY });
     void queryClient.invalidateQueries({ queryKey: ['serviceStep', 'list'] });
+    void queryClient.invalidateQueries({ queryKey: TASK_TODAY_KEY });
+    void queryClient.invalidateQueries({ queryKey: UNREAD_QUERY_KEY });
   }, [queryClient]);
+
+  /* 片 3：任务卡「完成」打点（幂等；成功后 invalidate 灰态回显） */
+  const [taskDoneBusy, setTaskDoneBusy] = useState<string | null>(null);
+  const markTaskDone = useCallback(
+    async (runId: string) => {
+      if (taskDoneBusy) return;
+      setTaskDoneBusy(runId);
+      try {
+        await port.taskExec.done.mutate({ runId });
+        showToast(ttc('ttd.doneOk'));
+        void queryClient.invalidateQueries({ queryKey: TASK_TODAY_KEY });
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : ttc('ttd.loadFail'));
+      } finally {
+        setTaskDoneBusy(null);
+      }
+    },
+    [port, queryClient, showToast, taskDoneBusy],
+  );
 
   // 事件去重：envelope.id Set（FIFO 500；续传补发/多端同事件会重复到达）
   const seenRef = useRef<{ set: Set<string>; queue: string[] }>({ set: new Set(), queue: [] });
@@ -172,6 +214,9 @@ export default function TodayPage() {
   const hasApprovalTask = busTasks.some((t) => t.kind === 'approval');
   const hasInventoryTask = busTasks.some((t) => t.kind === 'inventory');
   const boardingTasks = useMemo(() => busTasks.filter((t) => t.kind === 'boarding'), [busTasks]);
+  // 片 3：今日循环任务落实例 + 未读通知数
+  const taskRuns = useMemo(() => taskTodayQ.data?.runs ?? [], [taskTodayQ.data]);
+  const unreadTotal = unreadQ.data?.total ?? 0;
 
   const staffNameById = useMemo(() => {
     const m = new Map<string, string>();
@@ -402,6 +447,51 @@ export default function TodayPage() {
             </>
           ) : null}
 
+          {/* 片 3：今日任务区（taskExec 循环任务落实例；pending 卡「完成」打点，done 灰态+完成时刻） */}
+          {taskRuns.length > 0 ? (
+            <>
+              <SkNote>{ttc('ttd.title')}</SkNote>
+              <div className="mx-[22px]" data-testid="task-today">
+                {taskRuns.map((r) => {
+                  const done = r.status === 'done';
+                  const doneAt = toDate(r.doneAt);
+                  return (
+                    <div
+                      key={r.id}
+                      data-testid={`task-today-${r.id}`}
+                      className={`u1-card mb-2 flex items-center gap-2 px-4 py-3 ${done ? 'opacity-60' : ''}`}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className={`text-body-sm ${done ? 'text-[rgba(59,46,36,.62)] line-through' : 'font-semibold text-ink'}`}>
+                          {r.title}
+                        </div>
+                        <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                          <span className="sk-mono">{ttc('ttd.due', { hm: minToHm(r.dueMin) })}</span>
+                          {r.detail ? ` · ${r.detail}` : ''}
+                        </div>
+                      </div>
+                      {done ? (
+                        <span className="shrink-0 rounded-chip bg-success-light px-1.5 py-px text-caption-xs font-bold text-success-deep">
+                          {doneAt ? ttc('ttd.doneAt', { hm: `${String(doneAt.getHours()).padStart(2, '0')}:${String(doneAt.getMinutes()).padStart(2, '0')}` }) : ttc('ttd.statusDone')}
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={taskDoneBusy !== null}
+                          onClick={() => void markTaskDone(r.id)}
+                          data-testid={`task-done-${r.id}`}
+                          className="h-10 min-h-[44px] shrink-0 rounded-control bg-brand-primary px-4 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+                        >
+                          {taskDoneBusy === r.id ? ttc('ttd.doing') : ttc('ttd.doneCta')}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          ) : null}
+
           {/* 下一单 nextrow */}
           {nextUpItem ? (
             <SkNextRow
@@ -465,8 +555,8 @@ export default function TodayPage() {
         />
       </Suspense>
 
-      {/* dock 四槽冻结「工位/预约/打卡/我的」（data-testid=staff-dock 组件内置） */}
-      <SkDock active="work" />
+      {/* dock 四槽冻结「工位/预约/打卡/我的」（data-testid=staff-dock 组件内置；片 3：「我的」槽未读通知徽） */}
+      <SkDock active="work" badges={{ me: unreadTotal }} />
     </div>
   );
 }

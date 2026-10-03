@@ -30,6 +30,15 @@ import { SLOT_SEED_ROWS } from './slotSeedRows';
 /* ---------------- 清空（子表 -> 父表） ---------------- */
 
 const CLEAR_ORDER = [
+  /* ---- 片 3 任务协作域新表：子表先父表，先于 users/stores/appointments 清空（e2e 自建夹具，无种子数据） ---- */
+  schema.announcementReads, // FK → announcements/users
+  schema.announcements, // FK → stores/users
+  schema.shiftHandoverLogs, // FK → shifts/stores/users
+  schema.staffExitHandoffs, // FK → stores/staff/users
+  schema.selfCheckRuns, // FK → stores/users
+  schema.pdcaIssues, // FK → stores/users/staff
+  schema.taskRuns, // FK → task_templates/stores/staff/users
+  schema.taskTemplates, // FK → stores/staff/users
   /* ---- 补缺大批片 4 新表：子表先父表，先于 users/stores/appointments 清空 ---- */
   schema.invoiceRequests, // FK → users/stores
   schema.supportTickets, // FK → users/stores
@@ -455,6 +464,42 @@ async function main() {
         ruleKey: 'staff_skill_tags',
         label: '员工技能标签集（排班技能匹配用；店长在配置端口维护标签集）',
         valueJson: { tags: ['洗护', '寄养', '美容', '造型', '前台'] },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      /* 片 3：自检表项/心声 SLA/PDCA 类目集（同 0031 迁移种子口径；service_rules 在
+         CLEAR_ORDER 内会被重置，本处为重置后补种——不补则端口键被种子抹掉） */
+      {
+        version: 1,
+        ruleKey: 'self_check_items',
+        label: '门店每日自检表项（员工逐项打点+拍照留证；店长在配置端口维护表项与分值）',
+        valueJson: {
+          items: [
+            { key: 'disinfect', label: '消毒备台完成', score: 25 },
+            { key: 'stock', label: '安心包/库存盘点', score: 25 },
+            { key: 'device', label: '设备巡检正常', score: 25 },
+            { key: 'env', label: '店堂环境整洁', score: 25 },
+          ],
+        },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'voice_sla_hours',
+        label: '员工心声响应时限（小时）：店长须在该时限内回复，页面注记明面',
+        valueJson: { hours: 24 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'pdca_categories',
+        label: 'PDCA 问题类目集（巡检排行分组维度；店长在配置端口维护类目集）',
+        valueJson: { categories: ['卫生', '设备', '服务', '安全', '其他'] },
         effectiveFrom: RULES_EFFECTIVE_FROM,
         active: true,
         createdBy: owner.id,

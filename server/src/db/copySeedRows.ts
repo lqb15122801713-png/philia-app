@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B）——生成件，勿手改（源=scripts/gen-copy-overrides-seed.mts）；
  * 重生成：仓库根 npx tsx scripts/gen-copy-overrides-seed.mts（copy 键表增删键后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-03T09:56:13.688Z；键数=1827
+ * 生成时间口径：2026-10-03T14:07:00.293Z；键数=2118
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }> = [
  {
@@ -2755,6 +2755,186 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "本年累计 ¥{amount}"
  },
  {
+  "key": "ann.common.loadFail",
+  "domain": "merchant:announcements",
+  "text": "数据加载失败，请检查网络后重试"
+ },
+ {
+  "key": "ann.common.retry",
+  "domain": "merchant:announcements",
+  "text": "重新加载"
+ },
+ {
+  "key": "ann.guideHint",
+  "domain": "merchant:announcements",
+  "text": "发布与回执对账属管理层动作；店员账号的工作面是收银台。"
+ },
+ {
+  "key": "ann.guideTitle",
+  "domain": "merchant:announcements",
+  "text": "公告发布由店长或店主处理"
+ },
+ {
+  "key": "ann.list.archiveCta",
+  "domain": "merchant:announcements",
+  "text": "撤下"
+ },
+ {
+  "key": "ann.list.archived",
+  "domain": "merchant:announcements",
+  "text": "公告已撤下（留痕，员工端不再展示）"
+ },
+ {
+  "key": "ann.list.archivedBadge",
+  "domain": "merchant:announcements",
+  "text": "已撤下"
+ },
+ {
+  "key": "ann.list.aside",
+  "domain": "merchant:announcements",
+  "text": "新→旧 · 置顶在前 · 撤下为灰态留痕"
+ },
+ {
+  "key": "ann.list.empty",
+  "domain": "merchant:announcements",
+  "text": "暂无公告——上方表单发布第一条"
+ },
+ {
+  "key": "ann.list.pinnedBadge",
+  "domain": "merchant:announcements",
+  "text": "置顶"
+ },
+ {
+  "key": "ann.list.readCount",
+  "domain": "merchant:announcements",
+  "text": "已读 {x}/{y}"
+ },
+ {
+  "key": "ann.list.readCountNoTotal",
+  "domain": "merchant:announcements",
+  "text": "已读 {x} 人"
+ },
+ {
+  "key": "ann.list.receiptsCta",
+  "domain": "merchant:announcements",
+  "text": "回执 ›"
+ },
+ {
+  "key": "ann.list.title",
+  "domain": "merchant:announcements",
+  "text": "公告列表"
+ },
+ {
+  "key": "ann.pageSub",
+  "domain": "merchant:announcements",
+  "text": "定向发布 · 已读回执对账 · 撤下留痕"
+ },
+ {
+  "key": "ann.pageTitle",
+  "domain": "merchant:announcements",
+  "text": "公告"
+ },
+ {
+  "key": "ann.pub.aside",
+  "domain": "merchant:announcements",
+  "text": "发布即推送员工端 · 置顶在前"
+ },
+ {
+  "key": "ann.pub.bodyLabel",
+  "domain": "merchant:announcements",
+  "text": "正文"
+ },
+ {
+  "key": "ann.pub.bodyPh",
+  "domain": "merchant:announcements",
+  "text": "正文（全员可见口径按定向角色投递）"
+ },
+ {
+  "key": "ann.pub.invalid",
+  "domain": "merchant:announcements",
+  "text": "请填齐标题与正文"
+ },
+ {
+  "key": "ann.pub.pinnedLabel",
+  "domain": "merchant:announcements",
+  "text": "置顶"
+ },
+ {
+  "key": "ann.pub.published",
+  "domain": "merchant:announcements",
+  "text": "公告已发布"
+ },
+ {
+  "key": "ann.pub.publishing",
+  "domain": "merchant:announcements",
+  "text": "发布中…"
+ },
+ {
+  "key": "ann.pub.submitCta",
+  "domain": "merchant:announcements",
+  "text": "发布"
+ },
+ {
+  "key": "ann.pub.targetAll",
+  "domain": "merchant:announcements",
+  "text": "全员"
+ },
+ {
+  "key": "ann.pub.targetFrontdesk",
+  "domain": "merchant:announcements",
+  "text": "前台"
+ },
+ {
+  "key": "ann.pub.targetGroomer",
+  "domain": "merchant:announcements",
+  "text": "美容师"
+ },
+ {
+  "key": "ann.pub.targetLabel",
+  "domain": "merchant:announcements",
+  "text": "定向角色"
+ },
+ {
+  "key": "ann.pub.title",
+  "domain": "merchant:announcements",
+  "text": "发布公告"
+ },
+ {
+  "key": "ann.pub.titleLabel",
+  "domain": "merchant:announcements",
+  "text": "标题"
+ },
+ {
+  "key": "ann.pub.titlePh",
+  "domain": "merchant:announcements",
+  "text": "标题（如：本周六店休盘点）"
+ },
+ {
+  "key": "ann.reads.close",
+  "domain": "merchant:announcements",
+  "text": "关闭"
+ },
+ {
+  "key": "ann.reads.empty",
+  "domain": "merchant:announcements",
+  "text": "暂无回执数据"
+ },
+ {
+  "key": "ann.reads.readCol",
+  "domain": "merchant:announcements",
+  "text": "已读（{n}）"
+ },
+ {
+  "key": "ann.reads.title",
+  "domain": "merchant:announcements",
+  "text": "已读回执对账"
+ },
+ {
+  "key": "ann.reads.unreadCol",
+  "domain": "merchant:announcements",
+  "text": "未读（{n}）"
+ },
+ {
   "key": "appt.boardingStayEmpty",
   "domain": "merchant:appointments",
   "text": "客户到店核销后，这里会登记房间、入住称重与随身物品。"
@@ -3053,6 +3233,86 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "cashier.flowEmpty",
   "domain": "merchant:cashier",
   "text": "今日暂无流水"
+ },
+ {
+  "key": "cashier.handoverCashLabel",
+  "domain": "merchant:cashier",
+  "text": "现金"
+ },
+ {
+  "key": "cashier.handoverCashPh",
+  "domain": "merchant:cashier",
+  "text": "现金注记（选填，如：备用金 500 已点）"
+ },
+ {
+  "key": "cashier.handoverComplaintsLabel",
+  "domain": "merchant:cashier",
+  "text": "客诉"
+ },
+ {
+  "key": "cashier.handoverComplaintsPh",
+  "domain": "merchant:cashier",
+  "text": "客诉注记（选填，如：无 / 1 起待跟进）"
+ },
+ {
+  "key": "cashier.handoverKeysLabel",
+  "domain": "merchant:cashier",
+  "text": "钥匙"
+ },
+ {
+  "key": "cashier.handoverKeysPh",
+  "domain": "merchant:cashier",
+  "text": "钥匙交接注记（选填，如：前门钥匙 2 把已交班）"
+ },
+ {
+  "key": "cashier.handoverLogEmpty",
+  "domain": "merchant:cashier",
+  "text": "该班次无交接班留痕"
+ },
+ {
+  "key": "cashier.handoverLogFromTo",
+  "domain": "merchant:cashier",
+  "text": "交 {from} → 接 {to}"
+ },
+ {
+  "key": "cashier.handoverLogLoadFail",
+  "domain": "merchant:cashier",
+  "text": "交接班日志加载失败"
+ },
+ {
+  "key": "cashier.handoverLogNoTo",
+  "domain": "merchant:cashier",
+  "text": "未指定接棒人"
+ },
+ {
+  "key": "cashier.handoverLogTitle",
+  "domain": "merchant:cashier",
+  "text": "交接班日志"
+ },
+ {
+  "key": "cashier.handoverTitle",
+  "domain": "merchant:cashier",
+  "text": "交接班四节"
+ },
+ {
+  "key": "cashier.handoverToLabel",
+  "domain": "merchant:cashier",
+  "text": "接棒人（选填）"
+ },
+ {
+  "key": "cashier.handoverToPh",
+  "domain": "merchant:cashier",
+  "text": "不指定接棒人"
+ },
+ {
+  "key": "cashier.handoverWashingLabel",
+  "domain": "merchant:cashier",
+  "text": "在洗清单"
+ },
+ {
+  "key": "cashier.handoverWashingNote",
+  "domain": "merchant:cashier",
+  "text": "提交闭班时由系统自动快照当前在洗清单，无需手填"
  },
  {
   "key": "cashier.headTenderRef",
@@ -4440,6 +4700,246 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "员工上传过程照后会实时出现在这里。"
  },
  {
+  "key": "ops.common.cancel",
+  "domain": "merchant:ops",
+  "text": "取消"
+ },
+ {
+  "key": "ops.common.confirm",
+  "domain": "merchant:ops",
+  "text": "确认提交"
+ },
+ {
+  "key": "ops.common.loadFail",
+  "domain": "merchant:ops",
+  "text": "数据加载失败，请检查网络后重试"
+ },
+ {
+  "key": "ops.common.retry",
+  "domain": "merchant:ops",
+  "text": "重新加载"
+ },
+ {
+  "key": "ops.common.submitting",
+  "domain": "merchant:ops",
+  "text": "提交中…"
+ },
+ {
+  "key": "ops.guideHint",
+  "domain": "merchant:ops",
+  "text": "问题复检与自检审核属管理层动作；店员账号的工作面是收银台。"
+ },
+ {
+  "key": "ops.guideTitle",
+  "domain": "merchant:ops",
+  "text": "运营闭环由店长或店主处理"
+ },
+ {
+  "key": "ops.pageSub",
+  "domain": "merchant:ops",
+  "text": "问题闭环 PDCA · 每日自检审核 · 巡检汇总（单店口径）"
+ },
+ {
+  "key": "ops.pageTitle",
+  "domain": "merchant:ops",
+  "text": "运营"
+ },
+ {
+  "key": "ops.pdca.aside",
+  "domain": "merchant:ops",
+  "text": "提出→整改→复检，复检不通过回到待整改"
+ },
+ {
+  "key": "ops.pdca.collapseCta",
+  "domain": "merchant:ops",
+  "text": "收起 ›"
+ },
+ {
+  "key": "ops.pdca.empty",
+  "domain": "merchant:ops",
+  "text": "当前筛选无问题单"
+ },
+ {
+  "key": "ops.pdca.expandCta",
+  "domain": "merchant:ops",
+  "text": "详情 ›"
+ },
+ {
+  "key": "ops.pdca.filterAll",
+  "domain": "merchant:ops",
+  "text": "全部"
+ },
+ {
+  "key": "ops.pdca.fixNoteLabel",
+  "domain": "merchant:ops",
+  "text": "整改说明"
+ },
+ {
+  "key": "ops.pdca.notePh",
+  "domain": "merchant:ops",
+  "text": "复检备注（必填，留痕）"
+ },
+ {
+  "key": "ops.pdca.noteRequired",
+  "domain": "merchant:ops",
+  "text": "复检备注不能为空"
+ },
+ {
+  "key": "ops.pdca.recheckDone",
+  "domain": "merchant:ops",
+  "text": "复检结论已登记"
+ },
+ {
+  "key": "ops.pdca.recheckFail",
+  "domain": "merchant:ops",
+  "text": "复检不通过"
+ },
+ {
+  "key": "ops.pdca.recheckNoteLabel",
+  "domain": "merchant:ops",
+  "text": "复检结论"
+ },
+ {
+  "key": "ops.pdca.recheckPass",
+  "domain": "merchant:ops",
+  "text": "复检通过"
+ },
+ {
+  "key": "ops.pdca.statusClosed",
+  "domain": "merchant:ops",
+  "text": "已闭环"
+ },
+ {
+  "key": "ops.pdca.statusFixing",
+  "domain": "merchant:ops",
+  "text": "整改中"
+ },
+ {
+  "key": "ops.pdca.statusOpen",
+  "domain": "merchant:ops",
+  "text": "待整改"
+ },
+ {
+  "key": "ops.pdca.statusRecheck",
+  "domain": "merchant:ops",
+  "text": "待复检"
+ },
+ {
+  "key": "ops.pdca.timelineTitle",
+  "domain": "merchant:ops",
+  "text": "留痕时间线"
+ },
+ {
+  "key": "ops.pdca.title",
+  "domain": "merchant:ops",
+  "text": "问题闭环（PDCA）"
+ },
+ {
+  "key": "ops.self.aside",
+  "domain": "merchant:ops",
+  "text": "员工每日自检提交后在此审核；审核意见必填并留痕"
+ },
+ {
+  "key": "ops.self.collapseCta",
+  "domain": "merchant:ops",
+  "text": "收起 ›"
+ },
+ {
+  "key": "ops.self.empty",
+  "domain": "merchant:ops",
+  "text": "暂无待审核的自检表"
+ },
+ {
+  "key": "ops.self.expandCta",
+  "domain": "merchant:ops",
+  "text": "展开自检快照 ›"
+ },
+ {
+  "key": "ops.self.filledBy",
+  "domain": "merchant:ops",
+  "text": "填报人 {name}"
+ },
+ {
+  "key": "ops.self.itemFailed",
+  "domain": "merchant:ops",
+  "text": "未达标"
+ },
+ {
+  "key": "ops.self.itemPassed",
+  "domain": "merchant:ops",
+  "text": "已打点"
+ },
+ {
+  "key": "ops.self.notePh",
+  "domain": "merchant:ops",
+  "text": "审核意见（必填，随单留痕）"
+ },
+ {
+  "key": "ops.self.noteRequired",
+  "domain": "merchant:ops",
+  "text": "审核意见不能为空"
+ },
+ {
+  "key": "ops.self.reviewCta",
+  "domain": "merchant:ops",
+  "text": "审核（写意见）"
+ },
+ {
+  "key": "ops.self.reviewDone",
+  "domain": "merchant:ops",
+  "text": "审核意见已登记"
+ },
+ {
+  "key": "ops.self.scoreLabel",
+  "domain": "merchant:ops",
+  "text": "得分 {n}"
+ },
+ {
+  "key": "ops.self.title",
+  "domain": "merchant:ops",
+  "text": "自检审核"
+ },
+ {
+  "key": "ops.sum.aside",
+  "domain": "merchant:ops",
+  "text": "单店口径"
+ },
+ {
+  "key": "ops.sum.byCategory",
+  "domain": "merchant:ops",
+  "text": "类目排行（Top）"
+ },
+ {
+  "key": "ops.sum.byStatus",
+  "domain": "merchant:ops",
+  "text": "按状态计数"
+ },
+ {
+  "key": "ops.sum.closed30d",
+  "domain": "merchant:ops",
+  "text": "近 30 天闭环"
+ },
+ {
+  "key": "ops.sum.emptyCategory",
+  "domain": "merchant:ops",
+  "text": "暂无类目数据"
+ },
+ {
+  "key": "ops.sum.loadFail",
+  "domain": "merchant:ops",
+  "text": "汇总加载失败，请检查网络后重试"
+ },
+ {
+  "key": "ops.sum.storeScopeNote",
+  "domain": "merchant:ops",
+  "text": "本卡为单店口径；跨店排行属开口项，待连锁合批（5 候）后透出。"
+ },
+ {
+  "key": "ops.sum.title",
+  "domain": "merchant:ops",
+  "text": "巡检汇总"
+ },
+ {
   "key": "order.emptyAll",
   "domain": "merchant:orders",
   "text": "还没有订单"
@@ -5005,6 +5505,46 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "S4 口径 · 默认开（无开关项，仅口径展示）"
  },
  {
+  "key": "set.entriesAside",
+  "domain": "merchant:settings",
+  "text": "排班 / 公告 / 循环任务模板直达"
+ },
+ {
+  "key": "set.entryAnnouncements",
+  "domain": "merchant:settings",
+  "text": "公告"
+ },
+ {
+  "key": "set.entryAnnouncementsHint",
+  "domain": "merchant:settings",
+  "text": "定向发布 · 已读回执对账"
+ },
+ {
+  "key": "set.entryGo",
+  "domain": "merchant:settings",
+  "text": "进入 ›"
+ },
+ {
+  "key": "set.entrySchedules",
+  "domain": "merchant:settings",
+  "text": "排班管理"
+ },
+ {
+  "key": "set.entrySchedulesHint",
+  "domain": "merchant:settings",
+  "text": "周视图拖拽排班 · 模板生成 · 换班审批"
+ },
+ {
+  "key": "set.entryTasks",
+  "domain": "merchant:settings",
+  "text": "任务模板"
+ },
+ {
+  "key": "set.entryTasksHint",
+  "domain": "merchant:settings",
+  "text": "循环任务自管 · 近 7 天落实例"
+ },
+ {
   "key": "set.hoursHint",
   "domain": "merchant:settings",
   "text": "可约栅格之源"
@@ -5053,6 +5593,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "set.notifyNewLabel",
   "domain": "merchant:settings",
   "text": "新预约通知"
+ },
+ {
+  "key": "set.panelEntries",
+  "domain": "merchant:settings",
+  "text": "管理入口"
  },
  {
   "key": "set.panelRules",
@@ -5115,6 +5660,86 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "去邀请第一位员工"
  },
  {
+  "key": "staff.exitCta",
+  "domain": "merchant:staff",
+  "text": "离职交接 ›"
+ },
+ {
+  "key": "staff.exitDialogTitle",
+  "domain": "merchant:staff",
+  "text": "离职交接 · {name}"
+ },
+ {
+  "key": "staff.exitHandoffKindAppointment",
+  "domain": "merchant:staff",
+  "text": "预约改挂"
+ },
+ {
+  "key": "staff.exitHandoffPrevNext",
+  "domain": "merchant:staff",
+  "text": "{prev} → {next}"
+ },
+ {
+  "key": "staff.exitHandoffsEmpty",
+  "domain": "merchant:staff",
+  "text": "暂无交接留痕"
+ },
+ {
+  "key": "staff.exitHandoffsTitle",
+  "domain": "merchant:staff",
+  "text": "交接留痕"
+ },
+ {
+  "key": "staff.exitMemberNote",
+  "domain": "merchant:staff",
+  "text": "会员档案无员工负责人列，不在改挂范围（口径明面）。"
+ },
+ {
+  "key": "staff.exitNoCandidates",
+  "domain": "merchant:staff",
+  "text": "暂无其他在职员工可接手"
+ },
+ {
+  "key": "staff.exitNoTarget",
+  "domain": "merchant:staff",
+  "text": "请先选择接手员工"
+ },
+ {
+  "key": "staff.exitNotePh",
+  "domain": "merchant:staff",
+  "text": "备注（选填，随改挂留痕）"
+ },
+ {
+  "key": "staff.exitReassigned",
+  "domain": "merchant:staff",
+  "text": "改挂完成：共改挂 {n} 单"
+ },
+ {
+  "key": "staff.exitReassignHint",
+  "domain": "merchant:staff",
+  "text": "将该员工名下未完结预约改挂给接手人；改挂留痕前后值快照"
+ },
+ {
+  "key": "staff.exitReassigning",
+  "domain": "merchant:staff",
+  "text": "改挂中…"
+ },
+ {
+  "key": "staff.exitReassignSubmit",
+  "domain": "merchant:staff",
+  "text": "确认改挂"
+ },
+ {
+  "key": "staff.exitReassignTitle",
+  "domain": "merchant:staff",
+  "text": "改挂未完结单"
+ },
+ {
+  "key": "staff.exitToStaffPh",
+  "domain": "merchant:staff",
+  "text": "选择接手员工"
+ },
+ {
   "key": "staff.inviteCodeOnce",
   "domain": "merchant:staff",
   "text": "明文仅此一次展示，关闭本弹层后无法再次查看，请立即复制并转交员工。"
@@ -5158,6 +5783,271 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "staff.title",
   "domain": "merchant:staff",
   "text": "员工"
+ },
+ {
+  "key": "tasktpl.common.loadFail",
+  "domain": "merchant:tasks",
+  "text": "数据加载失败，请检查网络后重试"
+ },
+ {
+  "key": "tasktpl.common.retry",
+  "domain": "merchant:tasks",
+  "text": "重新加载"
+ },
+ {
+  "key": "tasktpl.form.aside",
+  "domain": "merchant:tasks",
+  "text": "频率=每日 或 每周（每周须选周日）"
+ },
+ {
+  "key": "tasktpl.form.cancelEdit",
+  "domain": "merchant:tasks",
+  "text": "取消编辑"
+ },
+ {
+  "key": "tasktpl.form.detailLabel",
+  "domain": "merchant:tasks",
+  "text": "说明"
+ },
+ {
+  "key": "tasktpl.form.detailPh",
+  "domain": "merchant:tasks",
+  "text": "说明（选填，员工端任务卡透出）"
+ },
+ {
+  "key": "tasktpl.form.dueLabel",
+  "domain": "merchant:tasks",
+  "text": "截止时刻"
+ },
+ {
+  "key": "tasktpl.form.freqDaily",
+  "domain": "merchant:tasks",
+  "text": "每日"
+ },
+ {
+  "key": "tasktpl.form.freqLabel",
+  "domain": "merchant:tasks",
+  "text": "频率"
+ },
+ {
+  "key": "tasktpl.form.freqWeekly",
+  "domain": "merchant:tasks",
+  "text": "每周"
+ },
+ {
+  "key": "tasktpl.form.invalid",
+  "domain": "merchant:tasks",
+  "text": "请填齐标题与截止时刻；按员工指派须选人；每周频率须至少选一天"
+ },
+ {
+  "key": "tasktpl.form.remindLabel",
+  "domain": "merchant:tasks",
+  "text": "提前提醒（分钟，选填）"
+ },
+ {
+  "key": "tasktpl.form.remindPh",
+  "domain": "merchant:tasks",
+  "text": "如 30"
+ },
+ {
+  "key": "tasktpl.form.roleFrontdesk",
+  "domain": "merchant:tasks",
+  "text": "前台"
+ },
+ {
+  "key": "tasktpl.form.roleGroomer",
+  "domain": "merchant:tasks",
+  "text": "美容师"
+ },
+ {
+  "key": "tasktpl.form.saveCta",
+  "domain": "merchant:tasks",
+  "text": "保存模板"
+ },
+ {
+  "key": "tasktpl.form.saved",
+  "domain": "merchant:tasks",
+  "text": "模板已保存"
+ },
+ {
+  "key": "tasktpl.form.saving",
+  "domain": "merchant:tasks",
+  "text": "保存中…"
+ },
+ {
+  "key": "tasktpl.form.scopeLabel",
+  "domain": "merchant:tasks",
+  "text": "指派范围"
+ },
+ {
+  "key": "tasktpl.form.scopeRole",
+  "domain": "merchant:tasks",
+  "text": "按角色"
+ },
+ {
+  "key": "tasktpl.form.scopeStaff",
+  "domain": "merchant:tasks",
+  "text": "按员工"
+ },
+ {
+  "key": "tasktpl.form.staffPh",
+  "domain": "merchant:tasks",
+  "text": "选择员工"
+ },
+ {
+  "key": "tasktpl.form.titleEdit",
+  "domain": "merchant:tasks",
+  "text": "编辑模板"
+ },
+ {
+  "key": "tasktpl.form.titleLabel",
+  "domain": "merchant:tasks",
+  "text": "任务标题"
+ },
+ {
+  "key": "tasktpl.form.titleNew",
+  "domain": "merchant:tasks",
+  "text": "新建模板"
+ },
+ {
+  "key": "tasktpl.form.titlePh",
+  "domain": "merchant:tasks",
+  "text": "任务标题（如：打烊前消毒备台）"
+ },
+ {
+  "key": "tasktpl.guideHint",
+  "domain": "merchant:tasks",
+  "text": "循环任务模板的新建与停用属管理层动作；店员账号的工作面是收银台。"
+ },
+ {
+  "key": "tasktpl.guideTitle",
+  "domain": "merchant:tasks",
+  "text": "任务模板由店长或店主处理"
+ },
+ {
+  "key": "tasktpl.list.aside",
+  "domain": "merchant:tasks",
+  "text": "停用=不再生成新例（active=false 留痕不删行）"
+ },
+ {
+  "key": "tasktpl.list.deactivateCta",
+  "domain": "merchant:tasks",
+  "text": "停用"
+ },
+ {
+  "key": "tasktpl.list.deactivated",
+  "domain": "merchant:tasks",
+  "text": "模板已停用"
+ },
+ {
+  "key": "tasktpl.list.dueLine",
+  "domain": "merchant:tasks",
+  "text": "截止 {hm}"
+ },
+ {
+  "key": "tasktpl.list.editCta",
+  "domain": "merchant:tasks",
+  "text": "编辑 ›"
+ },
+ {
+  "key": "tasktpl.list.empty",
+  "domain": "merchant:tasks",
+  "text": "暂无模板——上方表单新建第一条"
+ },
+ {
+  "key": "tasktpl.list.freqDailyLine",
+  "domain": "merchant:tasks",
+  "text": "每日"
+ },
+ {
+  "key": "tasktpl.list.freqWeeklyLine",
+  "domain": "merchant:tasks",
+  "text": "每周 {days}"
+ },
+ {
+  "key": "tasktpl.list.inactiveBadge",
+  "domain": "merchant:tasks",
+  "text": "已停用"
+ },
+ {
+  "key": "tasktpl.list.remindLine",
+  "domain": "merchant:tasks",
+  "text": "提前 {n} 分钟提醒"
+ },
+ {
+  "key": "tasktpl.list.scopeRoleLine",
+  "domain": "merchant:tasks",
+  "text": "角色·{role}"
+ },
+ {
+  "key": "tasktpl.list.scopeStaffLine",
+  "domain": "merchant:tasks",
+  "text": "指定员工"
+ },
+ {
+  "key": "tasktpl.list.title",
+  "domain": "merchant:tasks",
+  "text": "模板列表"
+ },
+ {
+  "key": "tasktpl.pageSub",
+  "domain": "merchant:tasks",
+  "text": "循环任务自管 · 每日/每周按模板生成落实例 · 停用不删行"
+ },
+ {
+  "key": "tasktpl.pageTitle",
+  "domain": "merchant:tasks",
+  "text": "任务模板"
+ },
+ {
+  "key": "tasktpl.runs.aside",
+  "domain": "merchant:tasks",
+  "text": "模板按日生成实例；完成人=员工端打点人"
+ },
+ {
+  "key": "tasktpl.runs.colDate",
+  "domain": "merchant:tasks",
+  "text": "日期"
+ },
+ {
+  "key": "tasktpl.runs.colDoneBy",
+  "domain": "merchant:tasks",
+  "text": "完成人"
+ },
+ {
+  "key": "tasktpl.runs.colStatus",
+  "domain": "merchant:tasks",
+  "text": "状态"
+ },
+ {
+  "key": "tasktpl.runs.colTemplate",
+  "domain": "merchant:tasks",
+  "text": "模板"
+ },
+ {
+  "key": "tasktpl.runs.empty",
+  "domain": "merchant:tasks",
+  "text": "近 7 天暂无落实例"
+ },
+ {
+  "key": "tasktpl.runs.statusDone",
+  "domain": "merchant:tasks",
+  "text": "已完成"
+ },
+ {
+  "key": "tasktpl.runs.statusMissed",
+  "domain": "merchant:tasks",
+  "text": "已过截止"
+ },
+ {
+  "key": "tasktpl.runs.statusPending",
+  "domain": "merchant:tasks",
+  "text": "待完成"
+ },
+ {
+  "key": "tasktpl.runs.title",
+  "domain": "merchant:tasks",
+  "text": "近 7 天落实例"
  },
  {
   "key": "ntf.allTab",
@@ -7055,6 +7945,31 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "寄养打卡"
  },
  {
+  "key": "exec.draft.banner",
+  "domain": "staff:execute",
+  "text": "检测到上次未提交的填写（{time} 暂存）"
+ },
+ {
+  "key": "exec.draft.discard",
+  "domain": "staff:execute",
+  "text": "丢弃"
+ },
+ {
+  "key": "exec.draft.localNote",
+  "domain": "staff:execute",
+  "text": "暂存仅保存在本机，换设备或清缓存不保留"
+ },
+ {
+  "key": "exec.draft.restore",
+  "domain": "staff:execute",
+  "text": "继续上次填写"
+ },
+ {
+  "key": "exec.photo.onsiteNote",
+  "domain": "staff:execute",
+  "text": "照片须现场拍摄（服务端校验拍摄时刻），相册旧图将被拒收或标记"
+ },
+ {
   "key": "exec.report.advice.label",
   "domain": "staff:execute",
   "text": "下次建议（选填）"
@@ -7825,6 +8740,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "店长视图"
  },
  {
+  "key": "me.groupCollab",
+  "domain": "staff:me",
+  "text": "通知 / 公告 / 心声 / 自检 / 问题上报"
+ },
+ {
   "key": "me.help.flowBody",
   "domain": "staff:me",
   "text": "客户到店出示预约码 → 前台扫码（无摄像头走手动 6 位码）→ 核销成功自动开单；寄养单核销后办理入住登记。"
@@ -7950,6 +8870,26 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "店长视界 · 审批 · 日结确认"
  },
  {
+  "key": "me.row.notices",
+  "domain": "staff:me",
+  "text": "门店公告"
+ },
+ {
+  "key": "me.row.noticesSub",
+  "domain": "staff:me",
+  "text": "置顶在前 · 已读回执"
+ },
+ {
+  "key": "me.row.notifications",
+  "domain": "staff:me",
+  "text": "消息通知"
+ },
+ {
+  "key": "me.row.notificationsSub",
+  "domain": "staff:me",
+  "text": "派单 · 系统消息 · 未读高亮"
+ },
+ {
   "key": "me.row.pay",
   "domain": "staff:me",
   "text": "薪资提成"
@@ -7960,9 +8900,29 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "本月提成逐单明细 · 绩效 · 扣减"
  },
  {
+  "key": "me.row.pdca",
+  "domain": "staff:me",
+  "text": "问题上报"
+ },
+ {
+  "key": "me.row.pdcaSub",
+  "domain": "staff:me",
+  "text": "PDCA 整改闭环"
+ },
+ {
   "key": "me.row.schedule",
   "domain": "staff:me",
   "text": "我的排班"
+ },
+ {
+  "key": "me.row.selfCheck",
+  "domain": "staff:me",
+  "text": "每日自检"
+ },
+ {
+  "key": "me.row.selfCheckSub",
+  "domain": "staff:me",
+  "text": "逐项打点 · 照片留证"
  },
  {
   "key": "me.row.settings",
@@ -7973,6 +8933,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "me.row.settingsSub",
   "domain": "staff:me",
   "text": "实时同步与通知"
+ },
+ {
+  "key": "me.row.voice",
+  "domain": "staff:me",
+  "text": "员工心声"
+ },
+ {
+  "key": "me.row.voiceSub",
+  "domain": "staff:me",
+  "text": "建议吐槽 · 限时响应"
  },
  {
   "key": "me.row.xp",
@@ -8008,6 +8978,101 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "me.version",
   "domain": "staff:me",
   "text": "Philia 员工端 · 内测 v1.1"
+ },
+ {
+  "key": "ntc.badgeRead",
+  "domain": "staff:notices",
+  "text": "已读"
+ },
+ {
+  "key": "ntc.badgeUnread",
+  "domain": "staff:notices",
+  "text": "未读"
+ },
+ {
+  "key": "ntc.empty",
+  "domain": "staff:notices",
+  "text": "暂无公告"
+ },
+ {
+  "key": "ntc.emptyBody",
+  "domain": "staff:notices",
+  "text": "店长发布公告后会出现在这里"
+ },
+ {
+  "key": "ntc.loadFail",
+  "domain": "staff:notices",
+  "text": "公告加载失败，请检查网络后重试"
+ },
+ {
+  "key": "ntc.no",
+  "domain": "staff:notices",
+  "text": "NOTICES"
+ },
+ {
+  "key": "ntc.pinned",
+  "domain": "staff:notices",
+  "text": "置顶"
+ },
+ {
+  "key": "ntc.retry",
+  "domain": "staff:notices",
+  "text": "重新加载"
+ },
+ {
+  "key": "ntc.title",
+  "domain": "staff:notices",
+  "text": "门店公告"
+ },
+ {
+  "key": "ntc.unreadLead",
+  "domain": "staff:notices",
+  "text": "未读 {n} 条"
+ },
+ {
+  "key": "snt.empty",
+  "domain": "staff:notifications",
+  "text": "没有通知"
+ },
+ {
+  "key": "snt.emptyBody",
+  "domain": "staff:notifications",
+  "text": "派单、改期与系统消息会出现在这里"
+ },
+ {
+  "key": "snt.loadFail",
+  "domain": "staff:notifications",
+  "text": "通知加载失败，请检查网络后重试"
+ },
+ {
+  "key": "snt.markAll",
+  "domain": "staff:notifications",
+  "text": "全部已读"
+ },
+ {
+  "key": "snt.markAllDone",
+  "domain": "staff:notifications",
+  "text": "已全部标记为已读"
+ },
+ {
+  "key": "snt.no",
+  "domain": "staff:notifications",
+  "text": "NOTIFICATIONS"
+ },
+ {
+  "key": "snt.retry",
+  "domain": "staff:notifications",
+  "text": "重新加载"
+ },
+ {
+  "key": "snt.title",
+  "domain": "staff:notifications",
+  "text": "通知"
+ },
+ {
+  "key": "snt.unreadLead",
+  "domain": "staff:notifications",
+  "text": "未读 {n} 条"
  },
  {
   "key": "pay.aside.frozen",
@@ -8278,6 +9343,146 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "pay.trio.service",
   "domain": "staff:pay",
   "text": "服务"
+ },
+ {
+  "key": "pdc.categoryPh",
+  "domain": "staff:pdca",
+  "text": "选择类目"
+ },
+ {
+  "key": "pdc.detailPh",
+  "domain": "staff:pdca",
+  "text": "补充说明（选填）"
+ },
+ {
+  "key": "pdc.empty",
+  "domain": "staff:pdca",
+  "text": "该状态下暂无问题单"
+ },
+ {
+  "key": "pdc.fixNotePh",
+  "domain": "staff:pdca",
+  "text": "整改说明（怎么处理的）…"
+ },
+ {
+  "key": "pdc.fixNoteRequired",
+  "domain": "staff:pdca",
+  "text": "请填写整改说明"
+ },
+ {
+  "key": "pdc.fixStarted",
+  "domain": "staff:pdca",
+  "text": "已认领整改"
+ },
+ {
+  "key": "pdc.fixSubmitted",
+  "domain": "staff:pdca",
+  "text": "整改已提交，待复检"
+ },
+ {
+  "key": "pdc.listTitle",
+  "domain": "staff:pdca",
+  "text": "问题单"
+ },
+ {
+  "key": "pdc.loadFail",
+  "domain": "staff:pdca",
+  "text": "加载失败，请检查网络后重试"
+ },
+ {
+  "key": "pdc.mine",
+  "domain": "staff:pdca",
+  "text": "我负责"
+ },
+ {
+  "key": "pdc.no",
+  "domain": "staff:pdca",
+  "text": "PDCA"
+ },
+ {
+  "key": "pdc.photoCta",
+  "domain": "staff:pdca",
+  "text": "＋拍照留证（选传，最多 {max} 张）"
+ },
+ {
+  "key": "pdc.photoFull",
+  "domain": "staff:pdca",
+  "text": "最多传 {max} 张图"
+ },
+ {
+  "key": "pdc.raiseTitle",
+  "domain": "staff:pdca",
+  "text": "上报问题"
+ },
+ {
+  "key": "pdc.retry",
+  "domain": "staff:pdca",
+  "text": "重新加载"
+ },
+ {
+  "key": "pdc.startFix",
+  "domain": "staff:pdca",
+  "text": "开始整改"
+ },
+ {
+  "key": "pdc.submit",
+  "domain": "staff:pdca",
+  "text": "提交"
+ },
+ {
+  "key": "pdc.submitFix",
+  "domain": "staff:pdca",
+  "text": "提交整改"
+ },
+ {
+  "key": "pdc.submitted",
+  "domain": "staff:pdca",
+  "text": "已上报，店长会分派整改"
+ },
+ {
+  "key": "pdc.submitting",
+  "domain": "staff:pdca",
+  "text": "提交中…"
+ },
+ {
+  "key": "pdc.tabAll",
+  "domain": "staff:pdca",
+  "text": "全部"
+ },
+ {
+  "key": "pdc.tabClosed",
+  "domain": "staff:pdca",
+  "text": "已关闭"
+ },
+ {
+  "key": "pdc.tabFixing",
+  "domain": "staff:pdca",
+  "text": "整改中"
+ },
+ {
+  "key": "pdc.tabOpen",
+  "domain": "staff:pdca",
+  "text": "待整改"
+ },
+ {
+  "key": "pdc.tabRecheck",
+  "domain": "staff:pdca",
+  "text": "待复检"
+ },
+ {
+  "key": "pdc.title",
+  "domain": "staff:pdca",
+  "text": "问题上报"
+ },
+ {
+  "key": "pdc.titlePh",
+  "domain": "staff:pdca",
+  "text": "一句话说清问题"
+ },
+ {
+  "key": "pdc.titleRequired",
+  "domain": "staff:pdca",
+  "text": "请先填写问题标题"
  },
  {
   "key": "reviews.anonymous",
@@ -8595,6 +9800,111 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "休息"
  },
  {
+  "key": "sck.aside",
+  "domain": "staff:selfcheck",
+  "text": "逐项打点后提交；照片选传，用于留证"
+ },
+ {
+  "key": "sck.auditApproved",
+  "domain": "staff:selfcheck",
+  "text": "复核通过"
+ },
+ {
+  "key": "sck.auditPending",
+  "domain": "staff:selfcheck",
+  "text": "待店长复核"
+ },
+ {
+  "key": "sck.auditRejected",
+  "domain": "staff:selfcheck",
+  "text": "复核驳回"
+ },
+ {
+  "key": "sck.doneTitle",
+  "domain": "staff:selfcheck",
+  "text": "今日已提交"
+ },
+ {
+  "key": "sck.empty",
+  "domain": "staff:selfcheck",
+  "text": "今日没有自检表项"
+ },
+ {
+  "key": "sck.emptyBody",
+  "domain": "staff:selfcheck",
+  "text": "表项由店长在配置端口维护"
+ },
+ {
+  "key": "sck.fail",
+  "domain": "staff:selfcheck",
+  "text": "未完成"
+ },
+ {
+  "key": "sck.loadFail",
+  "domain": "staff:selfcheck",
+  "text": "加载失败，请检查网络后重试"
+ },
+ {
+  "key": "sck.no",
+  "domain": "staff:selfcheck",
+  "text": "SELF-CHECK"
+ },
+ {
+  "key": "sck.notePh",
+  "domain": "staff:selfcheck",
+  "text": "备注（选填）"
+ },
+ {
+  "key": "sck.pass",
+  "domain": "staff:selfcheck",
+  "text": "完成"
+ },
+ {
+  "key": "sck.photoCta",
+  "domain": "staff:selfcheck",
+  "text": "＋拍照留证（选传）"
+ },
+ {
+  "key": "sck.photoOn",
+  "domain": "staff:selfcheck",
+  "text": "已附图 ✓"
+ },
+ {
+  "key": "sck.retry",
+  "domain": "staff:selfcheck",
+  "text": "重新加载"
+ },
+ {
+  "key": "sck.score",
+  "domain": "staff:selfcheck",
+  "text": "得分 {score}"
+ },
+ {
+  "key": "sck.submit",
+  "domain": "staff:selfcheck",
+  "text": "提交今日自检"
+ },
+ {
+  "key": "sck.submitted",
+  "domain": "staff:selfcheck",
+  "text": "今日自检已提交"
+ },
+ {
+  "key": "sck.submitting",
+  "domain": "staff:selfcheck",
+  "text": "提交中…"
+ },
+ {
+  "key": "sck.title",
+  "domain": "staff:selfcheck",
+  "text": "每日自检"
+ },
+ {
+  "key": "sck.unmarked",
+  "domain": "staff:selfcheck",
+  "text": "还有 {n} 项未打点"
+ },
+ {
   "key": "sk.apptEmpty",
   "domain": "staff:skeleton",
   "text": "这一天没有预约"
@@ -8855,6 +10165,46 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "昨天"
  },
  {
+  "key": "ttd.doing",
+  "domain": "staff:taskToday",
+  "text": "打点中…"
+ },
+ {
+  "key": "ttd.doneAt",
+  "domain": "staff:taskToday",
+  "text": "{hm} 已完成"
+ },
+ {
+  "key": "ttd.doneCta",
+  "domain": "staff:taskToday",
+  "text": "完成"
+ },
+ {
+  "key": "ttd.doneOk",
+  "domain": "staff:taskToday",
+  "text": "已完成"
+ },
+ {
+  "key": "ttd.due",
+  "domain": "staff:taskToday",
+  "text": "截止 {hm}"
+ },
+ {
+  "key": "ttd.loadFail",
+  "domain": "staff:taskToday",
+  "text": "任务加载失败"
+ },
+ {
+  "key": "ttd.statusDone",
+  "domain": "staff:taskToday",
+  "text": "已完成"
+ },
+ {
+  "key": "ttd.title",
+  "domain": "staff:taskToday",
+  "text": "今日任务"
+ },
+ {
   "key": "today.frontdesk.empty",
   "domain": "staff:today",
   "text": "今天全店无预约——等自动接单，或把预约页分享给老客"
@@ -8938,6 +10288,111 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "today.todo.title",
   "domain": "staff:today",
   "text": "待办"
+ },
+ {
+  "key": "vce.descPh",
+  "domain": "staff:voice",
+  "text": "想对店里说的话…"
+ },
+ {
+  "key": "vce.descRequired",
+  "domain": "staff:voice",
+  "text": "请先填写心声内容"
+ },
+ {
+  "key": "vce.empty",
+  "domain": "staff:voice",
+  "text": "还没有提交过心声"
+ },
+ {
+  "key": "vce.formAside",
+  "domain": "staff:voice",
+  "text": "建议、吐槽、求助都可以写；店长会在工作时段处理"
+ },
+ {
+  "key": "vce.formTitle",
+  "domain": "staff:voice",
+  "text": "提交心声"
+ },
+ {
+  "key": "vce.loadFail",
+  "domain": "staff:voice",
+  "text": "加载失败，请检查网络后重试"
+ },
+ {
+  "key": "vce.myList",
+  "domain": "staff:voice",
+  "text": "我的心声"
+ },
+ {
+  "key": "vce.no",
+  "domain": "staff:voice",
+  "text": "VOICE"
+ },
+ {
+  "key": "vce.phonePh",
+  "domain": "staff:voice",
+  "text": "联系方式（选填，便于回复）"
+ },
+ {
+  "key": "vce.photoCta",
+  "domain": "staff:voice",
+  "text": "＋附图（选传，最多 {max} 张）"
+ },
+ {
+  "key": "vce.photoFull",
+  "domain": "staff:voice",
+  "text": "最多传 {max} 张图"
+ },
+ {
+  "key": "vce.replyLead",
+  "domain": "staff:voice",
+  "text": "门店回复"
+ },
+ {
+  "key": "vce.retry",
+  "domain": "staff:voice",
+  "text": "重新加载"
+ },
+ {
+  "key": "vce.slaNote",
+  "domain": "staff:voice",
+  "text": "门店承诺 {h} 小时内响应（时限口径来自配置端口）"
+ },
+ {
+  "key": "vce.statusClosed",
+  "domain": "staff:voice",
+  "text": "已关闭"
+ },
+ {
+  "key": "vce.statusReplied",
+  "domain": "staff:voice",
+  "text": "已回复"
+ },
+ {
+  "key": "vce.statusSubmitted",
+  "domain": "staff:voice",
+  "text": "已提交"
+ },
+ {
+  "key": "vce.submit",
+  "domain": "staff:voice",
+  "text": "提交"
+ },
+ {
+  "key": "vce.submitted",
+  "domain": "staff:voice",
+  "text": "已提交，感谢你的声音"
+ },
+ {
+  "key": "vce.submitting",
+  "domain": "staff:voice",
+  "text": "提交中…"
+ },
+ {
+  "key": "vce.title",
+  "domain": "staff:voice",
+  "text": "员工心声"
  },
  {
   "key": "xp.aside.lead",

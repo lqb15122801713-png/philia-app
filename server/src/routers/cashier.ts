@@ -2048,31 +2048,115 @@ export const cashierRouter = router({
    * 7d. closeShift（owner|manager · 补丁①②：交接班确认=店长/店主，clerk 无入口）：
    * 闭当前 open 班次（不含账目冻结——冻结走 dayClose）。闭班后下一笔收银写
    * 懒建下一班。emit cashier.shiftClosed。
+   * 片 3 B6-3：入参加可选 handover 四节注记——闭班成功后同事务落
+   * shift_handover_logs（washing_json=服务端按本店当时 in_service/in_boarding
+   * 预约自动快照 [{appointmentId,label=宠物名+服务名}]，不信前端清单；
+   * uq_handover_shift 幂等锚——重关同班不双写，onConflictDoNothing 后读回现有行）。
    */
-  closeShift: merchantManagerProcedure.mutation(async ({ ctx }) => {
-    const storeId = ctx.user.storeId!;
-    const shift = await ctx.db
-      .select()
-      .from(schema.shifts)
-      .where(and(eq(schema.shifts.storeId, storeId), eq(schema.shifts.status, 'open')))
-      .orderBy(desc(schema.shifts.openedAt))
-      .limit(1)
-      .then((r) => r[0]);
-    if (!shift) badRequest('当前无开班班次');
-    const now = new Date();
-    const updated = await ctx.db
-      .update(schema.shifts)
-      .set({ status: 'closed', closedAt: now, closedBy: ctx.user.id, updatedAt: now })
-      .where(eq(schema.shifts.id, shift.id))
-      .returning()
-      .then((r) => r[0]!);
-    const outboxId = await emitEvent(ctx.db, `store:${storeId}`, EventType.CashierShiftClosed, {
-      shiftId: shift.id,
-      by: ctx.user.id,
-    });
-    broadcastNow(outboxId);
-    return { shift: updated };
-  }),
+  closeShift: merchantManagerProcedure
+    .input(
+      z
+        .object({
+          handover: z
+            .object({
+              keysNote: z.string().trim().max(500).optional(),
+              cashNote: z.string().trim().max(500).optional(),
+              complaintsNote: z.string().trim().max(500).optional(),
+              toUserId: z.string().min(1).optional(),
+            })
+            .optional(),
+        })
+        .optional(),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
+      const shift = await ctx.db
+        .select()
+        .from(schema.shifts)
+        .where(and(eq(schema.shifts.storeId, storeId), eq(schema.shifts.status, 'open')))
+        .orderBy(desc(schema.shifts.openedAt))
+        .limit(1)
+        .then((r) => r[0]);
+      if (!shift) badRequest('当前无开班班次');
+      const now = new Date();
+      let outboxId = '';
+      const { updated, handoverId } = await ctx.db.transaction(async (tx) => {
+        const closed = await tx
+          .update(schema.shifts)
+          .set({ status: 'closed', closedAt: now, closedBy: ctx.user.id, updatedAt: now })
+          .where(eq(schema.shifts.id, shift.id))
+          .returning()
+          .then((r) => r[0]!);
+        let handoverId: string | null = null;
+        if (input?.handover) {
+          /* 在洗/在养清单=服务端快照（当时本店 in_service/in_boarding 预约，
+             label=宠物名+服务名——交接双方对的是「店里还有哪些活物在流程中」） */
+          const washing = await tx
+            .select({
+              appointmentId: schema.appointments.id,
+              petName: schema.pets.name,
+              serviceName: schema.services.name,
+            })
+            .from(schema.appointments)
+            .innerJoin(schema.pets, eq(schema.pets.id, schema.appointments.petId))
+            .innerJoin(schema.services, eq(schema.services.id, schema.appointments.serviceId))
+            .where(
+              and(
+                eq(schema.appointments.storeId, storeId),
+                inArray(schema.appointments.status, ['in_service', 'in_boarding']),
+              ),
+            );
+          await tx
+            .insert(schema.shiftHandoverLogs)
+            .values({
+              shiftId: shift.id,
+              storeId,
+              washingJson: washing.map((w) => ({
+                appointmentId: w.appointmentId,
+                label: `${w.petName}·${w.serviceName}`,
+              })),
+              keysNote: input.handover.keysNote ?? null,
+              cashNote: input.handover.cashNote ?? null,
+              complaintsNote: input.handover.complaintsNote ?? null,
+              fromUserId: ctx.user.id,
+              toUserId: input.handover.toUserId ?? null,
+              createdAt: now,
+            })
+            .onConflictDoNothing({ target: schema.shiftHandoverLogs.shiftId });
+          // 幂等锚命中（重关同班）时读回现有行，保证 handoverId 恒有值
+          const log = await tx
+            .select({ id: schema.shiftHandoverLogs.id })
+            .from(schema.shiftHandoverLogs)
+            .where(eq(schema.shiftHandoverLogs.shiftId, shift.id))
+            .get();
+          handoverId = log?.id ?? null;
+        }
+        outboxId = await emitEvent(txDb(tx), `store:${storeId}`, EventType.CashierShiftClosed, {
+          shiftId: shift.id,
+          by: ctx.user.id,
+        });
+        return { updated: closed, handoverId };
+      });
+      broadcastNow(outboxId);
+      return { shift: updated, handoverId };
+    }),
+
+  /** 7d2. handoverOf（owner|manager · 片 3 B6-3）：按班次读交接班日志（无=NULL） */
+  handoverOf: merchantManagerProcedure
+    .input(z.object({ shiftId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const row = await ctx.db
+        .select()
+        .from(schema.shiftHandoverLogs)
+        .where(
+          and(
+            eq(schema.shiftHandoverLogs.shiftId, input.shiftId),
+            eq(schema.shiftHandoverLogs.storeId, ctx.user.storeId!), // 店域闸：他店班次查无此物
+          ),
+        )
+        .get();
+      return { handover: row ?? null };
+    }),
 
   /**
    * 7e0. dayClosePreview（owner|manager · M1-补2 条件②）：日结预览=冻结同源同值

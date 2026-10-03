@@ -3,7 +3,7 @@
  * 导航闭环体检（批次 W1 · 常备验收工具）：node scripts/check-nav-closure.mjs
  *
  * 来源：任务书 W1 §二冻结规则（每页①底栏常显 或 ②返回键+明确主出口；交易成功页双出口）
- *      + §五巡检地图（51 路由；后续批次申报补入，现 95 路由（含骨架批片 2 新增 2 行））+ §六 Harness 规格（四要素检测/死胡同判定）。
+ *      + §五巡检地图（51 路由；后续批次申报补入，现 105 路由（含骨架批片 3 新增 8 行：商家 3 + 员工 5））+ §六 Harness 规格（四要素检测/死胡同判定）。
  *
  * 检测要素（页内真实渲染断言）：
  *   - back   返回键（页首左上 aria-label 含「返回」的可点区）
@@ -59,7 +59,7 @@ const BROWSER = [
   '/usr/bin/microsoft-edge',
 ].filter(Boolean).find((p) => existsSync(p));
 
-/** 93 路由体检表（任务书 W1 §五巡检地图 51 路由 + 后续批次申报补入；expect: tab=主tab页 / sub=子页 / success=交易成功页 / gate=门禁豁免） */
+/** 105 路由体检表（任务书 W1 §五巡检地图 51 路由 + 后续批次申报补入；expect: tab=主tab页 / sub=子页 / success=交易成功页 / gate=门禁豁免） */
 const ROUTES = [
   /* 客户端 54 */
   { app: 'customer', path: '/home', expect: 'tab' },
@@ -137,6 +137,10 @@ const ROUTES = [
   { app: 'merchant', path: '/settings/copy', expect: 'sub', note: '端口批片 B：文案端口（控制台第七域；owner 专属，同 /settings/rules 闸径）' },
   { app: 'merchant', path: '/settings/slots', expect: 'sub', note: '端口批片 C：槽位端口（控制台第八域「槽位」；owner 专属，同 /settings/rules 闸径）' },
   { app: 'merchant', path: '/settings/schedules', expect: 'sub', note: '员工端骨架整建批 片 2：排班管理（owner|manager，墨轨「门店」组；clerk 守卫引导页）' },
+  /* 员工端骨架整建批 片 3 三条（expect=sub 照上行片 2 先例：rail 常驻导航即 dock 要素；clerk 守卫引导页） */
+  { app: 'merchant', path: '/settings/announcements', expect: 'sub', note: '片 3：公告（owner|manager，设置入口卡+守卫引导页同径）' },
+  { app: 'merchant', path: '/ops', expect: 'sub', note: '片 3：运营（owner|manager，墨轨「门店」组 rail-ops 常驻）' },
+  { app: 'merchant', path: '/settings/tasks', expect: 'sub', note: '片 3：循环任务模板自管（owner|manager，设置入口卡）' },
   { app: 'merchant', path: '/cashier', expect: 'sub' },
   { app: 'merchant', path: '/cashier/records', expect: 'sub' },
   { app: 'merchant', path: '/cashier/close', expect: 'sub' },
@@ -147,7 +151,7 @@ const ROUTES = [
   { app: 'merchant', path: '/live', expect: 'sub', note: '重定向→/monitor' },
   { app: 'merchant', path: '/', expect: 'sub', note: '重定向→/dashboard' },
   { app: 'merchant', path: '/dev-login', expect: 'gate' },
-  /* 员工端 15 */
+  /* 员工端 20 */
   { app: 'staff', path: '/today', expect: 'tab' },
   { app: 'staff', path: '/schedule', expect: 'tab', note: '骨架批片 1：S-02 预约·当天（dock 四槽第二槽）；/history 重定向至此（S-12 切日态）' },
   { app: 'staff', path: '/me', expect: 'tab' },
@@ -164,6 +168,12 @@ const ROUTES = [
   { app: 'staff', path: '/reviews', expect: 'sub', note: '批次 staff-2 R7~R10' },
   { app: 'staff', path: '/manager', expect: 'sub', note: '批次 staff-2 R7~R10；非店长登录渲染引导卡（「返回我的」按钮出口）' },
   { app: 'staff', path: '/my-schedule', expect: 'sub', note: '员工端骨架整建批 片 2：我的排班（SkBackBar 返回条，fallback=/me）' },
+  /* 骨架批片 3（任务协同 · coder H）：五新屏二级页，统一 SkBackBar 返回条（aria-label 返回，fallback=/me） */
+  { app: 'staff', path: '/notifications', expect: 'sub', note: '骨架批片 3：通知中心' },
+  { app: 'staff', path: '/notices', expect: 'sub', note: '骨架批片 3：门店公告' },
+  { app: 'staff', path: '/voice', expect: 'sub', note: '骨架批片 3：员工心声' },
+  { app: 'staff', path: '/self-check', expect: 'sub', note: '骨架批片 3：每日自检' },
+  { app: 'staff', path: '/pdca', expect: 'sub', note: '骨架批片 3：问题上报' },
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -280,7 +290,7 @@ async function checkRoute(cdp, route) {
 }
 
 async function main() {
-  console.log('导航闭环体检（W1 §六 harness）：95 路由 · 四要素检测');
+  console.log('导航闭环体检（W1 §六 harness）：105 路由 · 四要素检测');
   const results = [];
   for (const app of ['customer', 'merchant', 'staff']) {
     const routes = ROUTES.filter((r) => r.app === app);

@@ -20,8 +20,10 @@
  */
 
 import { useState } from 'react'
-import { Skeleton } from '@philia/shared'
+import { Skeleton, usePhiliaClient } from '@philia/shared'
+import { useQuery } from '@tanstack/react-query'
 import { cc } from '@/copy/cashier'
+import { cashierHandoverOf } from '@/lib/taskCollabPort'
 import { BookCheck, Download, LogOut, PencilLine, RotateCcw } from 'lucide-react'
 import {
   type DayCloseRow,
@@ -477,6 +479,58 @@ export function DayCloseList({
 }
 
 /* ------------------------------------------------------------------ */
+/* 交接班日志（片 3 B6-3 · 只读四节：在洗清单/钥匙/现金/客诉 + 交接人）        */
+/* ------------------------------------------------------------------ */
+
+/** 在洗清单快照行防御渲染：常见字段优先，兜底 JSON 串 */
+function washingLine(row: Record<string, unknown>): string {
+  const parts = ['code', 'petName', 'pet', 'service', 'serviceName', 'name']
+    .map((k) => row[k])
+    .filter((v) => typeof v === 'string' && v.length > 0) as string[]
+  return parts.length > 0 ? parts.join(' · ') : JSON.stringify(row)
+}
+
+export function HandoverBlock({ shiftId }: { shiftId: string }) {
+  const { trpc } = usePhiliaClient()
+  const handoverQ = useQuery({
+    queryKey: ['cashier', 'handoverOf', shiftId],
+    queryFn: () => cashierHandoverOf(trpc).handoverOf.query({ shiftId }),
+  })
+  const h = handoverQ.data?.handover ?? null
+
+  return (
+    <div className="mt-3" data-testid={`handover-log-${shiftId}`}>
+      <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{cc('cashier.handoverLogTitle')}</div>
+      {handoverQ.isPending ? (
+        <Skeleton className="h-12" />
+      ) : handoverQ.isError ? (
+        <p className="text-caption-xs text-[rgba(59,46,36,.42)]">{cc('cashier.handoverLogLoadFail')}</p>
+      ) : !h ? (
+        <p className="text-caption-xs text-[rgba(59,46,36,.42)]">{cc('cashier.handoverLogEmpty')}</p>
+      ) : (
+        <div className="rounded-[10px] bg-[#FAF8F2] px-3 py-2 text-caption-xs text-[rgba(59,46,36,.62)]">
+          <div className="mb-1 font-semibold text-ink">
+            {cc('cashier.handoverLogFromTo', {
+              from: h.fromUserName ?? '—',
+              to: h.toUserName ?? cc('cashier.handoverLogNoTo'),
+            })}
+            <span className="u1-num ml-2 font-normal">{fmtDateTime(typeof h.createdAt === 'string' ? new Date(h.createdAt) : h.createdAt)}</span>
+          </div>
+          <div className="u3-field"><span className="lb">{cc('cashier.handoverWashingLabel')}</span><span className="vl">
+            {h.washing && h.washing.length > 0
+              ? h.washing.map((w, i) => <span key={i} className="block">{washingLine(w)}</span>)
+              : '—'}
+          </span></div>
+          <div className="u3-field"><span className="lb">{cc('cashier.handoverKeysLabel')}</span><span className="vl">{h.keysNote ?? '—'}</span></div>
+          <div className="u3-field"><span className="lb">{cc('cashier.handoverCashLabel')}</span><span className="vl">{h.cashNote ?? '—'}</span></div>
+          <div className="u3-field"><span className="lb">{cc('cashier.handoverComplaintsLabel')}</span><span className="vl">{h.complaintsNote ?? '—'}</span></div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
 /* 日结单详情弹层（前后值快照 + 调整记录）                                      */
 /* ------------------------------------------------------------------ */
 
@@ -566,6 +620,9 @@ export function DayCloseDetailDialog({
             ))}
           </div>
         ) : null}
+
+        {/* 片 3 B6-3：交接班日志只读四节（handoverOf；该班次无留痕时空态注记） */}
+        <HandoverBlock shiftId={row.shiftId} />
       </div>
     </CashierModal>
   )

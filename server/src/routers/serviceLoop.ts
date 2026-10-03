@@ -33,6 +33,7 @@ import {
   merchantManagerProcedure,
   publicProcedure,
   router,
+  staffProcedure,
   type Context,
 } from '../trpc';
 import { storeDayStartMs, storeWallclock } from './appointment';
@@ -352,6 +353,77 @@ export const serviceLoopRouter = router({
       .select()
       .from(schema.supportTickets)
       .where(eq(schema.supportTickets.userId, ctx.user.id))
+      .orderBy(desc(schema.supportTickets.createdAt))
+      .limit(50);
+  }),
+
+  /** voiceSlaHours（staff · 片 3 B6-4）：心声响应时限端口值（service_rules.voice_sla_hours；缺省 24h，页面注记数据源） */
+  voiceSlaHours: staffProcedure.query(async ({ ctx }) => {
+    const row = await ctx.db
+      .select({ valueJson: schema.serviceRules.valueJson })
+      .from(schema.serviceRules)
+      .where(and(eq(schema.serviceRules.ruleKey, 'voice_sla_hours'), eq(schema.serviceRules.active, true)))
+      .orderBy(desc(schema.serviceRules.version))
+      .get();
+    const hours = Number((row?.valueJson as { hours?: unknown } | undefined)?.hours);
+    return { hours: Number.isFinite(hours) && hours > 0 ? hours : 24 };
+  }),
+
+  /**
+   * ticketCreateStaff（staff · 片 3 B6-4 员工心声）：员工侧提单口。
+   * type 强制 'staff_voice'、createdVia='staff'、storeId=我本店、userId=我
+   * （全服务端钉死，入参没有这些键——心声单与客户单同表同单号器，靠两列分流）；
+   * 复用 genDailyNo 日序器（TK-）+ timeline 首条 submitted；回复链/SSE 复用
+   * 既有 ticketReply 不动（心声单在店长 ticketListPending 待办自然出现）。
+   */
+  ticketCreateStaff: staffProcedure
+    .input(
+      z.object({
+        description: z.string().trim().min(1, '请填写心声内容').max(1000, '内容不能超过 1000 字'),
+        photoUrls: z.array(z.string().min(1).max(1024)).max(9, '附图最多 9 张').default([]),
+        contactPhone: z.string().trim().min(3).max(20).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) =>
+      withServiceLoopWriteLock(async () => {
+        const me = await ctx.db
+          .select({ phone: schema.users.phone })
+          .from(schema.users)
+          .where(eq(schema.users.id, ctx.user.id))
+          .get();
+        const now = new Date();
+        return ctx.db.transaction(async (tx) => {
+          const ticketNo = await genDailyNo(txDb(tx), 'TK', schema.supportTickets, now);
+          const timeline: schema.TicketTimelineItem[] = [
+            { action: 'submitted', at: now.toISOString(), by: ctx.user.id },
+          ];
+          const row = await tx
+            .insert(schema.supportTickets)
+            .values({
+              ticketNo,
+              userId: ctx.user.id,
+              storeId: ctx.user.storeId!, // 心声单恒挂我本店（入参无 storeId）
+              type: 'staff_voice',
+              createdVia: 'staff',
+              description: input.description,
+              photoUrls: input.photoUrls,
+              contactPhone: input.contactPhone ?? me?.phone ?? null,
+              status: 'submitted',
+              timelineJson: timeline,
+            })
+            .returning()
+            .then((r) => r[0]!);
+          return { ticket: row, ticketNo, idempotent: false as const };
+        });
+      }),
+    ),
+
+  /** ticketListMineStaff（staff · 片 3 B6-4）：我提的心声单（创建倒序，上限 50） */
+  ticketListMineStaff: staffProcedure.query(async ({ ctx }) => {
+    return ctx.db
+      .select()
+      .from(schema.supportTickets)
+      .where(and(eq(schema.supportTickets.userId, ctx.user.id), eq(schema.supportTickets.createdVia, 'staff')))
       .orderBy(desc(schema.supportTickets.createdAt))
       .limit(50);
   }),

@@ -116,6 +116,14 @@ export default function MePage() {
   });
   const pendingApprovals = exceptionQ.data?.approvals.length ?? 0;
 
+  /* 片 3：未读通知数（协作入口卡区「消息通知」行红点） */
+  const unreadQ = useQuery({
+    queryKey: ['push', 'unreadCount'],
+    queryFn: () => trpc.push.unreadCount.query(),
+    refetchInterval: 60_000,
+  });
+  const unreadTotal = unreadQ.data?.total ?? 0;
+
   const doLogout = async () => {
     setLoggingOut(true);
     try {
@@ -263,6 +271,67 @@ export default function MePage() {
             <p className="mt-1">通知权限：{typeof Notification !== 'undefined' ? (Notification.permission === 'granted' ? '已开启' : Notification.permission === 'denied' ? '已拒绝（浏览器地址栏可改）' : '未开启') : '当前环境不支持'}</p>
           </div>
         ) : null}
+      </SkRows>
+
+      {/* 片 3：协作入口卡区（通知/公告/心声/自检/问题上报；通知行红点=push.unreadCount） */}
+      <p className="px-1 pb-1.5 pt-3 text-caption-xs text-[rgba(59,46,36,.42)]">{mc('me.groupCollab')}</p>
+      <SkRows testId="me-list-collab">
+        <SkRow
+          to="/notifications"
+          testId="me-notifications"
+          dot={unreadTotal > 0}
+          label={
+            <span>
+              {mc('me.row.notifications')}
+              <small className="mt-0.5 block text-caption-xs text-[rgba(59,46,36,.42)]">{mc('me.row.notificationsSub')}</small>
+            </span>
+          }
+          value={unreadTotal > 0 ? <span className="sk-mono">{unreadTotal}</span> : '›'}
+        />
+        <SkRow
+          to="/notices"
+          testId="me-notices"
+          label={
+            <span>
+              {mc('me.row.notices')}
+              <small className="mt-0.5 block text-caption-xs text-[rgba(59,46,36,.42)]">{mc('me.row.noticesSub')}</small>
+            </span>
+          }
+          value="›"
+        />
+        <SkRow
+          to="/voice"
+          testId="me-voice"
+          label={
+            <span>
+              {mc('me.row.voice')}
+              <small className="mt-0.5 block text-caption-xs text-[rgba(59,46,36,.42)]">{mc('me.row.voiceSub')}</small>
+            </span>
+          }
+          value="›"
+        />
+        <SkRow
+          to="/self-check"
+          testId="me-selfcheck"
+          label={
+            <span>
+              {mc('me.row.selfCheck')}
+              <small className="mt-0.5 block text-caption-xs text-[rgba(59,46,36,.42)]">{mc('me.row.selfCheckSub')}</small>
+            </span>
+          }
+          value="›"
+        />
+        <SkRow
+          to="/pdca"
+          testId="me-pdca"
+          label={
+            <span>
+              {mc('me.row.pdca')}
+              <small className="mt-0.5 block text-caption-xs text-[rgba(59,46,36,.42)]">{mc('me.row.pdcaSub')}</small>
+            </span>
+          }
+          value="›"
+        />
       </SkRows>
 
       {/* 组 C：帮助与规范（就地展开）+ 退出登录（真 logout） */}

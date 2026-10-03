@@ -171,7 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 1827 键/41 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出；
+ *      56.1 种子 2118 键/50 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -4851,17 +4852,19 @@ async function main(): Promise<void> {
   }
   interface CopyTextsRes { rows: Array<{ key: string; text: string }> }
 
-  /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证） */
+  /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
+     计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
+     文案批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（1827 键/41 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 1827 && domainSet.size === 41 &&
+  check('56.1 copy 域种子全量落库（2118 键/50 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 2118 && domainSet.size === 50 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（1827 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 1827 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（2118 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 2118 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -5038,9 +5041,11 @@ async function main(): Promise<void> {
   console.log('\n[骨架批片1] 57.6 任务总线（listMy 聚合在途件）');
   interface StaffTaskT { kind: string; refId: string; title: string; sub: string; link: string; alert: boolean }
   /* 夹具：丽丽名下今日 confirmed 预约一单——**db 直插不走 create 闸**（复核意见书件 1：
-     本段测 listMy 投影非 create，直插时段永不敏感；午后窗口再窄亦不复「今日时段全撞」）。
+     本段测 listMy 投影非 create，直插时段永不敏感；钉今日正午 12:00——now+2h 在 22:00 后跑
+     会跨午夜滑出「今日」窗口（22:05 红一实证），正午钉=当日任意时刻跑都落在 [dayStart, dayEnd)）。
      下接：本店 pending 补卡审批一行 + 盘点草稿一单 + 在住寄养一卡 */
-  const busStart = new Date(Date.now() + 2 * 3600 * 1000);
+  const busStart = new Date();
+  busStart.setHours(12, 0, 0, 0);
   const busEnd = new Date(busStart.getTime() + 60 * 60 * 1000);
   const busAppt = await db
     .insert(schema.appointments)
@@ -5576,6 +5581,377 @@ async function main(): Promise<void> {
   check('59.7 申诉幂等：同卡同人 pending 在途 → 返回现状（duplicated=true，同一条，零新增）',
     appeal2.duplicated === true && appeal2.approval.id === appeal1.approval.id,
     { id: appeal2.approval.id, expect: appeal1.approval.id });
+
+  /* ==================================================================
+   * 员工端骨架整建批 片 3（任务执行+通讯+权限 · 迁移 0031）验收段 60/61/62
+   * 既有断言零删改；本段夹具全部自建（模板/公告/PDCA/心声/交接班/离职）。
+   * ================================================================== */
+  console.log('\n[片3 任务协作] 60/61/62 任务执行+PDCA+自检 / 公告+交接班+心声 / 离职+跨店');
+  {
+    const isoDay60 = (d: Date) => d.toISOString().slice(0, 10);
+    const addDays60 = (n: number) => isoDay60(new Date(Date.now() + n * 86400e3));
+    // 门店规范时区（+8）今日与当日分钟数（与 server storeWallclock 同帧）
+    const storeNow60 = new Date(Date.now() + 8 * 3600e3);
+    const storeToday60 = storeNow60.toISOString().slice(0, 10);
+    const storeMin60 = storeNow60.getUTCHours() * 60 + storeNow60.getUTCMinutes();
+    interface TaskRun60 {
+      id: string; templateId: string; bizDate: string; staffId: string | null;
+      status: string; doneBy: string | null; doneAt: Date | null; remindedAt: Date | null;
+      title: string; dueMin: number; remindMin: number | null;
+    }
+    interface Tpl60 { id: string; title: string; active: boolean }
+
+    /* ---- 60.1 模板建档 + listToday 触读即补生成 + 重跑幂等不双行 ---- */
+    const tpl60 = await trpcMutate<{ template: Tpl60 }>('taskExec.upsertTemplate', {
+      cookie: managerCookie,
+      input: { title: '每日闭店消毒', assignScope: 'role', assignRole: 'groomer', freq: 'daily', weekdays: [], dueMin: 1439, remindMin: 30 },
+    });
+    const today60a = await trpcQuery<{ bizDate: string; runs: TaskRun60[] }>('taskExec.listToday', { cookie: liliCookie });
+    const run60 = today60a.runs.find((r) => r.templateId === tpl60.template.id);
+    const runsInDb60a = await db.select().from(schema.taskRuns).where(eq(schema.taskRuns.templateId, tpl60.template.id));
+    check('60.1 daily 模板建档 + listToday 触读生成 run（groomer 角色池行 staffId=NULL 落库，bizDate=门店今日）',
+      !!run60 && run60.staffId === null && run60.status === 'pending' && run60.bizDate === storeToday60 &&
+        runsInDb60a.length === 1,
+      { run: run60?.id, rows: runsInDb60a.length });
+    const today60b = await trpcQuery<{ runs: TaskRun60[] }>('taskExec.listToday', { cookie: liliCookie });
+    const runsInDb60b = await db.select().from(schema.taskRuns).where(eq(schema.taskRuns.templateId, tpl60.template.id));
+    check('60.1 重跑 listToday 幂等不双行（(template_id,biz_date) 锚，返回同一 run）',
+      runsInDb60b.length === 1 && today60b.runs.find((r) => r.templateId === tpl60.template.id)?.id === run60!.id,
+      { rows: runsInDb60b.length });
+
+    /* ---- 60.2 提醒一发闸：dueMin 设 30 分钟内 → 事件+通知+remindedAt；再调零新增 ---- */
+    const tpl60b = await trpcMutate<{ template: Tpl60 }>('taskExec.upsertTemplate', {
+      cookie: managerCookie,
+      input: {
+        title: '临期任务（e2e）', assignScope: 'role', assignRole: 'groomer', freq: 'daily', weekdays: [],
+        dueMin: Math.min(1440, storeMin60 + 5), remindMin: 30,
+      },
+    });
+    const notifCount60 = async () =>
+      (await db.select().from(schema.notifications))
+        .filter((n) => n.userId === liliUser.id && n.type === 'task.reminder').length;
+    const outboxCount60 = async () =>
+      (await db.select().from(schema.eventOutbox)).filter((r) => r.eventType === 'task.reminder').length;
+    const notifBefore60 = await notifCount60();
+    const outboxBefore60 = await outboxCount60();
+    await trpcQuery('taskExec.listToday', { cookie: liliCookie });
+    const run60bRow = await db.select().from(schema.taskRuns).where(eq(schema.taskRuns.templateId, tpl60b.template.id)).then((r) => r[0]);
+    const notifAfter60 = await notifCount60();
+    const outboxAfter60 = await outboxCount60();
+    check('60.2 提醒：到点（now ≥ due−remindMin）→ notifications 落 task.reminder 行 + outbox 落事件 + remindedAt 置位',
+      notifAfter60 > notifBefore60 && outboxAfter60 > outboxBefore60 && !!run60bRow && run60bRow.remindedAt !== null,
+      { notif: `${notifBefore60}→${notifAfter60}`, outbox: `${outboxBefore60}→${outboxAfter60}`, remindedAt: run60bRow?.remindedAt });
+    await trpcQuery('taskExec.listToday', { cookie: liliCookie });
+    check('60.2 提醒幂等一发：再调 listToday 零新增（通知/事件计数不变）',
+      (await notifCount60()) === notifAfter60 && (await outboxCount60()) === outboxAfter60,
+      { notif: await notifCount60(), outbox: await outboxCount60() });
+
+    /* ---- 60.3 done：他人 403 / 本人完成 / 重复 done 幂等返回现状 ---- */
+    const doneByOther = await asErr(trpcMutate('taskExec.done', { cookie: staffCookie, input: { runId: run60!.id } }));
+    check('60.3 他人（小美=frontdesk 非角色池非 manager）done → 403',
+      doneByOther instanceof TrpcHttpError && doneByOther.httpStatus === 403,
+      doneByOther && { status: doneByOther.httpStatus, code: doneByOther.code, message: doneByOther.message });
+    const done60 = await trpcMutate<{ run: TaskRun60; idempotent: boolean }>('taskExec.done', {
+      cookie: liliCookie, input: { runId: run60!.id },
+    });
+    check('60.3 本人（角色匹配）done 落 doneBy/doneAt',
+      done60.run.status === 'done' && done60.run.doneBy === liliUser.id && !!done60.run.doneAt && done60.idempotent === false,
+      { status: done60.run.status, doneBy: done60.run.doneBy });
+    const done60dup = await trpcMutate<{ run: TaskRun60; idempotent: boolean }>('taskExec.done', {
+      cookie: liliCookie, input: { runId: run60!.id },
+    });
+    check('60.3 重复 done 幂等返回现状（doneBy/doneAt 不变）',
+      done60dup.idempotent === true && done60dup.run.doneBy === liliUser.id &&
+        new Date(done60dup.run.doneAt!).getTime() === new Date(done60.run.doneAt!).getTime(),
+      { idem: done60dup.idempotent, doneAt: done60dup.run.doneAt });
+
+    /* ---- 60.4 PDCA 全状态机 + 类目集闸 + timeline 只增 ---- */
+    interface Pdca60 {
+      id: string; status: string; category: string | null; assignStaffId: string | null;
+      fixedBy: string | null; recheckResult: string | null;
+      timelineJson: Array<{ at: number; by: string; action: string; note?: string }>;
+    }
+    const raise60 = await trpcMutate<{ issue: Pdca60 }>('pdca.raise', {
+      cookie: liliCookie,
+      input: { title: '美容室地板水渍', category: '卫生', detail: '【测试】吹水区积水' },
+    });
+    const raise60bad = await asErr(trpcMutate('pdca.raise', {
+      cookie: liliCookie, input: { title: '集外类目', category: '不存在的类目' },
+    }));
+    const startFix60 = await trpcMutate<{ issue: Pdca60 }>('pdca.startFix', { cookie: liliCookie, input: { issueId: raise60.issue.id } });
+    const submitFix60 = await trpcMutate<{ issue: Pdca60 }>('pdca.submitFix', {
+      cookie: liliCookie, input: { issueId: raise60.issue.id, fixNote: '【测试】已擦净并拖干' },
+    });
+    const recheckFail60 = await trpcMutate<{ issue: Pdca60 }>('pdca.recheck', {
+      cookie: managerCookie, input: { issueId: raise60.issue.id, result: 'fail', note: '复检仍湿滑' },
+    });
+    const submitFix60b = await trpcMutate<{ issue: Pdca60 }>('pdca.submitFix', {
+      cookie: liliCookie, input: { issueId: raise60.issue.id, fixNote: '【测试】已加防滑垫' },
+    });
+    const recheckPass60 = await trpcMutate<{ issue: Pdca60 }>('pdca.recheck', {
+      cookie: managerCookie, input: { issueId: raise60.issue.id, result: 'pass', note: '复检通过' },
+    });
+    const tlActions60 = recheckPass60.issue.timelineJson.map((t) => t.action);
+    check('60.4 PDCA：raise(open)→startFix(fixing+认领)→submitFix(recheck)→recheck fail 回炉 fixing→再 submitFix→recheck pass→closed',
+      raise60.issue.status === 'open' && raise60.issue.category === '卫生' &&
+        startFix60.issue.status === 'fixing' && startFix60.issue.assignStaffId === staffRow2.id &&
+        submitFix60.issue.status === 'recheck' && submitFix60.issue.fixedBy === liliUser.id &&
+        recheckFail60.issue.status === 'fixing' && recheckFail60.issue.recheckResult === 'fail' &&
+        submitFix60b.issue.status === 'recheck' &&
+        recheckPass60.issue.status === 'closed' && recheckPass60.issue.recheckResult === 'pass',
+      { final: recheckPass60.issue.status });
+    check('60.4 类目集闸：集外 category → 400「不在类目集」；timeline 只增逐条在（6 条动作链）',
+      raise60bad instanceof TrpcHttpError && raise60bad.code === 'BAD_REQUEST' && raise60bad.message.includes('不在类目集') &&
+        tlActions60.join(',') === 'raise,startFix,submitFix,recheckFail,submitFix,recheckPass',
+      { err: raise60bad?.message, tl: tlActions60 });
+
+    /* ---- 60.5 自检：端口表项 → 服务端算分 → 同日幂等 → 店长审 ---- */
+    interface SelfCheck60 {
+      id: string; bizDate: string; score: number; status: string; reviewBy: string | null;
+      itemsJson: Array<{ key: string; label: string; score: number; pass: boolean }>;
+    }
+    const items60 = await trpcQuery<{ items: Array<{ key: string; label: string; score: number }> }>('selfCheck.items', { cookie: liliCookie });
+    const submit60 = await trpcMutate<{ run: SelfCheck60; idempotent: boolean }>('selfCheck.submit', {
+      cookie: liliCookie,
+      input: { items: [
+        { key: 'disinfect', pass: true },
+        { key: 'stock', pass: true },
+        { key: 'device', pass: false, note: '【测试】吹水机异响' },
+        { key: 'env', pass: true },
+      ] },
+    });
+    const submit60dup = await trpcMutate<{ run: SelfCheck60; idempotent: boolean }>('selfCheck.submit', {
+      cookie: liliCookie,
+      input: { items: [{ key: 'disinfect', pass: true }, { key: 'stock', pass: true }, { key: 'device', pass: true }, { key: 'env', pass: true }] },
+    });
+    const todayRun60 = await trpcQuery<{ run: SelfCheck60 | null }>('selfCheck.today', { cookie: liliCookie });
+    check('60.5 自检：读端口 4 表项 → submit 服务端算分=75（3×25，device 未过）→ 快照含 label/score',
+      items60.items.length === 4 && submit60.run.score === 75 && submit60.run.status === 'submitted' &&
+        submit60.run.itemsJson.length === 4 && submit60.run.itemsJson.every((i) => typeof i.label === 'string' && i.label.length > 0),
+      { items: items60.items.length, score: submit60.run.score });
+    check('60.5 同日重交幂等返回现状（不双写不覆盖：全 pass 重交仍 75 分同一行）',
+      submit60dup.idempotent === true && submit60dup.run.id === submit60.run.id && submit60dup.run.score === 75 &&
+        todayRun60.run?.id === submit60.run.id,
+      { idem: submit60dup.idempotent, score: submit60dup.run.score });
+    const pending60 = await trpcQuery<{ runs: SelfCheck60[] }>('selfCheck.listPending', { cookie: managerCookie });
+    const review60 = await trpcMutate<{ run: SelfCheck60; idempotent: boolean }>('selfCheck.review', {
+      cookie: managerCookie, input: { runId: submit60.run.id, note: '【测试】异响已报修，通过' },
+    });
+    check('60.5 店长审：listPending 含本行 → review → reviewed + reviewBy=店长',
+      pending60.runs.some((r) => r.id === submit60.run.id) &&
+        review60.run.status === 'reviewed' && review60.run.reviewBy === managerFix.id,
+      { status: review60.run.status, reviewBy: review60.run.reviewBy });
+
+    /* ---- 60.6 巡检聚合：byCategory 排行含所造类目 ---- */
+    const summary60 = await trpcQuery<{
+      byStatus: Record<string, number>;
+      byCategory: Array<{ category: string; count: number }>;
+      closedLast30d: number;
+    }>('pdca.summary', { cookie: managerCookie });
+    check('60.6 巡检聚合：byStatus.closed≥1 + byCategory 排行含「卫生」+ 近 30 天 closed≥1',
+      (summary60.byStatus.closed ?? 0) >= 1 &&
+        summary60.byCategory.some((c) => c.category === '卫生' && c.count >= 1) &&
+        summary60.closedLast30d >= 1,
+      summary60);
+
+    /* ---- 61.1 公告定向发布：groomer 可见+通知+事件；frontdesk 不可见 ---- */
+    interface Ann61 { id: string; title: string; targetRole: string; status: string; pinned: boolean; readAt?: Date | null; readCount?: number }
+    const pub61 = await trpcMutate<{ announcement: Ann61 }>('announce.publish', {
+      cookie: managerCookie,
+      input: { title: '【测试】下周团建通知', body: '下周日闭店团建，美容师全员参加', targetRole: 'groomer', pinned: true },
+    });
+    const liliAnnList = await trpcQuery<{ view: string; announcements: Ann61[] }>('announce.list', { cookie: liliCookie });
+    const xiaomeiAnnList = await trpcQuery<{ view: string; announcements: Ann61[] }>('announce.list', { cookie: staffCookie });
+    const annNotifs61 = (await db.select().from(schema.notifications))
+      .filter((n) => n.type === 'announcement.published' && n.body === '【测试】下周团建通知');
+    const annOutbox61 = (await db.select().from(schema.eventOutbox))
+      .filter((r) => r.eventType === 'announcement.published' && r.channel === `store:${storeId}`);
+    check('61.1 定向发布：丽丽（groomer）list 可见且未读 + 通知落行（type/link=/notices）+ outbox 落 store 频道事件',
+      liliAnnList.announcements.some((a) => a.id === pub61.announcement.id && a.readAt === null) &&
+        annNotifs61.some((n) => n.userId === liliUser.id && n.link === '/notices') &&
+        annOutbox61.length >= 1,
+      { list: liliAnnList.announcements.length, notif: annNotifs61.length, outbox: annOutbox61.length });
+    check('61.1 定向闸：小美（frontdesk）list 不可见 + 零通知落行',
+      !xiaomeiAnnList.announcements.some((a) => a.id === pub61.announcement.id) &&
+        !annNotifs61.some((n) => n.userId === staffUser!.id),
+      { xmList: xiaomeiAnnList.announcements.map((a) => a.id.slice(-6)) });
+
+    /* ---- 61.2 已读回执：markRead 幂等 + reads 对账双名单 ---- */
+    await trpcMutate('announce.markRead', { cookie: liliCookie, input: { announcementId: pub61.announcement.id } });
+    await trpcMutate('announce.markRead', { cookie: liliCookie, input: { announcementId: pub61.announcement.id } });
+    const readsRows61 = await db.select().from(schema.announcementReads)
+      .where(eq(schema.announcementReads.announcementId, pub61.announcement.id));
+    const reads61 = await trpcQuery<{ read: Array<{ staffId: string; name: string }>; unread: Array<{ staffId: string; name: string }> }>(
+      'announce.reads', { cookie: managerCookie, input: { announcementId: pub61.announcement.id } });
+    check('61.2 已读回执：markRead 落行 + 重标幂等零双行（(announcement_id,user_id) 锚）；reads 对账=丽丽 read / 阿强 unread',
+      readsRows61.length === 1 && readsRows61[0]!.userId === liliUser.id &&
+        reads61.read.some((r) => r.staffId === staffRow2.id && r.name === '丽丽') &&
+        reads61.unread.some((r) => r.staffId === staffRow.id && r.name === '阿强'),
+      { rows: readsRows61.length, read: reads61.read.map((r) => r.name), unread: reads61.unread.map((r) => r.name) });
+
+    /* ---- 61.3 交接班：closeShift 带 handover 四节 + 在洗快照 + handoverOf + 幂等锚 ---- */
+    // 夹具：在洗单一单（in_service），washing_json 服务端快照须含它
+    const washAppt61 = await db.insert(schema.appointments).values({
+      code: `E2EHO${String(Date.now()).slice(-8)}`,
+      customerId: customerUser!.id, storeId, staffId: staffRow.id, assignSource: 'merchant',
+      petId, serviceId: service.id, type: 'grooming',
+      scheduledStart: new Date(Date.now() - 30 * 60000), scheduledEnd: new Date(Date.now() + 30 * 60000),
+      status: 'in_service', priceFen: 8800, paymentMode: 'pay_at_store', note: '【测试】交接班在洗快照单',
+    }).returning({ id: schema.appointments.id }).then((r) => r[0]!);
+    const shift61 = await db.insert(schema.shifts).values({
+      storeId, openedBy: ownerUser!.id, openedAt: new Date(), status: 'open',
+    }).returning().then((r) => r[0]!);
+    interface CloseShift61 { shift: { id: string; status: string }; handoverId: string | null }
+    const closed61 = await trpcMutate<CloseShift61>('cashier.closeShift', {
+      cookie: managerCookie,
+      input: { handover: { keysNote: '【测试】钥匙已交前台', cashNote: '【测试】现金 500 已点', complaintsNote: '【测试】无客诉', toUserId: liliUser.id } },
+    });
+    const handoverRow61 = await db.select().from(schema.shiftHandoverLogs)
+      .where(eq(schema.shiftHandoverLogs.shiftId, shift61.id)).then((r) => r[0]);
+    const handoverOf61 = await trpcQuery<{ handover: { id: string; keysNote: string | null; washingJson: Array<{ appointmentId: string; label: string }> | null } | null }>(
+      'cashier.handoverOf', { cookie: managerCookie, input: { shiftId: shift61.id } });
+    check('61.3 闭班带 handover 四节：shift_handover_logs 落行（返回 handoverId）+ washing_json 服务端快照含在洗单',
+      closed61.shift.id === shift61.id && closed61.shift.status === 'closed' && !!closed61.handoverId &&
+        !!handoverRow61 && handoverRow61.keysNote === '【测试】钥匙已交前台' &&
+        (handoverRow61.washingJson ?? []).some((w) => w.appointmentId === washAppt61.id),
+      { handoverId: closed61.handoverId, washing: handoverRow61?.washingJson });
+    check('61.3 handoverOf 读回同一份（keysNote/washing 一致）',
+      handoverOf61.handover?.id === closed61.handoverId && handoverOf61.handover?.keysNote === '【测试】钥匙已交前台',
+      { id: handoverOf61.handover?.id });
+    await asErr(trpcMutate('cashier.closeShift', { cookie: managerCookie, input: { handover: { keysNote: '重关' } } }));
+    const handoverRows61b = await db.select().from(schema.shiftHandoverLogs)
+      .where(eq(schema.shiftHandoverLogs.shiftId, shift61.id));
+    check('61.3 重关幂等不双写（uq_handover_shift 锚：同班恒 1 行）',
+      handoverRows61b.length === 1, { rows: handoverRows61b.length });
+
+    /* ---- 61.4 员工心声：ticketCreateStaff → 店长待办 → 回复链通 ---- */
+    interface Ticket61 { id: string; ticketNo: string; type: string; createdVia: string; storeId: string; status: string; replyText: string | null; repliedBy: string | null; timelineJson: Array<{ action: string }> }
+    const voice61 = await trpcMutate<{ ticket: Ticket61; ticketNo: string }>('serviceLoop.ticketCreateStaff', {
+      cookie: liliCookie,
+      input: { description: '【测试】希望周日排班轮休更均匀', contactPhone: '13900000004' },
+    });
+    const voiceRow61 = await db.select().from(schema.supportTickets)
+      .where(eq(schema.supportTickets.ticketNo, voice61.ticketNo)).then((r) => r[0]);
+    const pending61 = await trpcQuery<Ticket61[]>('serviceLoop.ticketListPending', { cookie: managerCookie });
+    check('61.4 心声提单：TK 日序单号 + type=staff_voice + created_via=staff + 挂我本店 + 店长待办可见',
+      voice61.ticketNo.startsWith('TK-') && !!voiceRow61 &&
+        voiceRow61.type === 'staff_voice' && voiceRow61.createdVia === 'staff' && voiceRow61.storeId === storeId &&
+        pending61.some((t) => t.id === voice61.ticket.id),
+      { ticketNo: voice61.ticketNo, type: voiceRow61?.type, via: voiceRow61?.createdVia });
+    const reply61 = await trpcMutate<{ ticket: Ticket61 }>('serviceLoop.ticketReply', {
+      cookie: managerCookie, input: { ticketId: voice61.ticket.id, reply: '【测试】收到，下周班表调整' },
+    });
+    const mine61 = await trpcQuery<Ticket61[]>('serviceLoop.ticketListMineStaff', { cookie: liliCookie });
+    const voiceNotif61 = (await db.select().from(schema.notifications))
+      .filter((n) => n.userId === liliUser.id && n.type === 'ticket.replied');
+    check('61.4 回复链通：replied + timeline 追加 + 本人 ticketListMineStaff 读回 replyText + ticket.replied 通知落行',
+      reply61.ticket.status === 'replied' && reply61.ticket.repliedBy === managerFix.id &&
+        reply61.ticket.timelineJson.map((t) => t.action).join(',') === 'submitted,replied' &&
+        mine61.some((t) => t.id === voice61.ticket.id && t.replyText === '【测试】收到，下周班表调整') &&
+        voiceNotif61.length >= 1,
+      { status: reply61.ticket.status, notif: voiceNotif61.length });
+
+    /* ---- 61.5 排班发布透出（片 2 事件的 server 侧断言）：publishWeek → 丽丽通知+未读+1 → markRead 回落 ---- */
+    const pubWeek61 = addDays60(21); // 三周后（避开 58.x 已发布的两周）
+    await db.insert(schema.shiftAssignments).values({
+      storeId, staffId: staffRow2.id, date: pubWeek61, startMin: 600, endMin: 1080,
+      source: 'manual', status: 'active', createdBy: ownerUser!.id,
+    });
+    const unreadBefore61 = (await trpcQuery<{ total: number }>('push.unreadCount', { cookie: liliCookie })).total;
+    const pubRes61 = await trpcMutate<{ published: number; perStaff: Array<{ staffId: string; count: number }> }>(
+      'schedule.publishWeek', { cookie: managerCookie, input: { weekStart: pubWeek61 } });
+    const schedNotifs61 = (await db.select().from(schema.notifications))
+      .filter((n) => n.userId === liliUser.id && n.type === 'schedule.published' && n.readAt === null);
+    const unreadAfter61 = (await trpcQuery<{ total: number }>('push.unreadCount', { cookie: liliCookie })).total;
+    check('61.5 publishWeek → 丽丽 notifications 落 schedule.published 未读行 + unreadCount +1',
+      pubRes61.published === 1 && pubRes61.perStaff.some((p) => p.staffId === staffRow2.id) &&
+        schedNotifs61.length >= 1 && unreadAfter61 === unreadBefore61 + 1,
+      { published: pubRes61.published, unread: `${unreadBefore61}→${unreadAfter61}` });
+    await trpcMutate('push.markRead', { cookie: liliCookie, input: { ids: [schedNotifs61[0]!.id] } });
+    const unreadBack61 = (await trpcQuery<{ total: number }>('push.unreadCount', { cookie: liliCookie })).total;
+    check('61.5 markRead 后 unreadCount 回落（=发布前水位）',
+      unreadBack61 === unreadBefore61, { unread: unreadBack61, expect: unreadBefore61 });
+
+    /* ---- 62.1 离职即时锁：停职 → 丽丽下一请求 staffProcedure FORBIDDEN → 恢复 ---- */
+    await trpcMutate('store.updateStaff', { cookie: ownerCookie, input: { staffId: staffRow2.id, status: 'suspended' } });
+    const locked62 = await asErr(trpcQuery('taskExec.listToday', { cookie: liliCookie }));
+    check('62.1 停职即时生效：丽丽 taskExec.listToday → 403 FORBIDDEN（每请求校 staff.status，不等会话过期）',
+      locked62 instanceof TrpcHttpError && locked62.httpStatus === 403 && locked62.code === 'FORBIDDEN' &&
+        locked62.message.includes('停职'),
+      locked62 && { status: locked62.httpStatus, message: locked62.message });
+    await trpcMutate('store.updateStaff', { cookie: ownerCookie, input: { staffId: staffRow2.id, status: 'active' } });
+    const unlocked62 = await trpcQuery<{ runs: unknown[] }>('taskExec.listToday', { cookie: liliCookie });
+    check('62.1 恢复 active 后即恢复可用（listToday 200）', Array.isArray(unlocked62.runs));
+
+    /* ---- 62.2 离职交接：丽丽名下未来单改挂阿强 + 逐行留痕 + 零单幂等 ---- */
+    const futureStart62 = new Date(Date.now() + 3 * 86400e3);
+    const exitAppt62a = await db.insert(schema.appointments).values({
+      code: `E2EEX${String(Date.now()).slice(-7)}A`,
+      customerId: customerUser!.id, storeId, staffId: staffRow2.id, assignSource: 'merchant',
+      petId, serviceId: service.id, type: 'grooming',
+      scheduledStart: futureStart62, scheduledEnd: new Date(futureStart62.getTime() + 3600e3),
+      status: 'confirmed', priceFen: 8800, paymentMode: 'pay_at_store', note: '【测试】离职交接-洗护单',
+    }).returning({ id: schema.appointments.id }).then((r) => r[0]!);
+    const exitAppt62b = await db.insert(schema.appointments).values({
+      code: `E2EEX${String(Date.now()).slice(-7)}B`,
+      customerId: customerUser!.id, storeId, staffId: staffRow2.id, assignSource: 'merchant',
+      petId, serviceId: service.id, type: 'boarding',
+      scheduledStart: futureStart62, scheduledEnd: new Date(futureStart62.getTime() + 2 * 86400e3),
+      status: 'confirmed', priceFen: 30000, paymentMode: 'pay_at_store', note: '【测试】离职交接-寄养单',
+    }).returning({ id: schema.appointments.id }).then((r) => r[0]!);
+    const reassign62 = await trpcMutate<{ moved: number }>('staffExit.reassignAppointments', {
+      cookie: managerCookie,
+      input: { fromStaffId: staffRow2.id, toStaffId: staffRow.id, note: '【测试】丽丽离职交接' },
+    });
+    const appt62aAfter = await db.select().from(schema.appointments).where(eq(schema.appointments.id, exitAppt62a.id)).then((r) => r[0]!);
+    const appt62bAfter = await db.select().from(schema.appointments).where(eq(schema.appointments.id, exitAppt62b.id)).then((r) => r[0]!);
+    const handoffs62 = await trpcQuery<{ handoffs: Array<{ kind: string; refId: string; prevValue: string | null; newValue: string | null }> }>(
+      'staffExit.listHandoffs', { cookie: managerCookie, input: { staffId: staffRow2.id } });
+    const ho62a = handoffs62.handoffs.find((h) => h.refId === exitAppt62a.id);
+    const ho62b = handoffs62.handoffs.find((h) => h.refId === exitAppt62b.id);
+    check('62.2 改挂：丽丽未完结 2 单全换挂阿强（moved≥2，含 57.6 残留的今日在途单）+ appointments.staffId 实改',
+      reassign62.moved >= 2 && appt62aAfter.staffId === staffRow.id && appt62bAfter.staffId === staffRow.id,
+      { moved: reassign62.moved, a: appt62aAfter.staffId, b: appt62bAfter.staffId });
+    check('62.2 留痕：staff_exit_handoffs 两行 kind 分别 appointment/boarding + 前后值快照对（丽丽→阿强）',
+      ho62a?.kind === 'appointment' && ho62b?.kind === 'boarding' &&
+        (ho62a.prevValue ?? '').includes(staffRow2.id) && (ho62a.newValue ?? '').includes(staffRow.id) &&
+        (ho62b.prevValue ?? '').includes(staffRow2.id) && (ho62b.newValue ?? '').includes(staffRow.id),
+      { a: ho62a?.kind, b: ho62b?.kind });
+    const reassign62zero = await trpcMutate<{ moved: number }>('staffExit.reassignAppointments', {
+      cookie: managerCookie, input: { fromStaffId: staffRow2.id, toStaffId: staffRow.id },
+    });
+    check('62.2 零单再调幂等 moved=0（丽丽名下已无未完结单）', reassign62zero.moved === 0, reassign62zero);
+
+    /* ---- 62.3 跨店隔离：第二门店店主 B 传 A 店资源 → 查无此物，A 店数据零变化 ---- */
+    const [ownerB] = await db.insert(schema.users).values({
+      kimiId: 'seed_e2e_ownerb', nickname: 'e2e B 店主', phone: '13900002001',
+    }).returning();
+    await db.insert(schema.userRoles).values({ userId: ownerB!.id, role: 'merchant_owner' });
+    const [storeBRow] = await db.insert(schema.stores).values({
+      ownerId: ownerB!.id, name: 'e2e 隔离 B 店', status: 'active',
+    }).returning();
+    const ownerBCookie = await devLogin(ownerB!.id);
+    const crossPdca = await asErr(trpcMutate('pdca.recheck', {
+      cookie: ownerBCookie, input: { issueId: raise60.issue.id, result: 'pass' },
+    }));
+    const crossExit = await asErr(trpcMutate('staffExit.reassignAppointments', {
+      cookie: ownerBCookie, input: { fromStaffId: staffRow2.id, toStaffId: staffRow.id },
+    }));
+    const crossAnn = await asErr(trpcMutate('announce.archive', {
+      cookie: ownerBCookie, input: { announcementId: pub61.announcement.id },
+    }));
+    const pdcaAfter62 = await db.select().from(schema.pdcaIssues).where(eq(schema.pdcaIssues.id, raise60.issue.id)).then((r) => r[0]!);
+    const annAfter62 = await db.select().from(schema.announcements).where(eq(schema.announcements.id, pub61.announcement.id)).then((r) => r[0]!);
+    check('62.3 跨店隔离：B 店店主 recheck/reassign/archive A 店资源 → 全部查无此物（NOT_FOUND）',
+      crossPdca instanceof TrpcHttpError && crossPdca.code === 'NOT_FOUND' &&
+        crossExit instanceof TrpcHttpError && crossExit.code === 'NOT_FOUND' &&
+        crossAnn instanceof TrpcHttpError && crossAnn.code === 'NOT_FOUND',
+      { pdca: crossPdca?.code, exit: crossExit?.code, ann: crossAnn?.code });
+    check('62.3 A 店数据零变化（PDCA 仍 closed / 公告仍 published）',
+      pdcaAfter62.status === 'closed' && annAfter62.status === 'published',
+      { pdca: pdcaAfter62.status, ann: annAfter62.status });
+    void storeBRow;
+  }
 
   client.close();
 }

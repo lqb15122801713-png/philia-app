@@ -464,6 +464,10 @@ export const stepPhotos = sqliteTable(
     takenAt: integer('taken_at', { mode: 'timestamp' }),
     /** 作废时间（NULL = 有效；作废不删除，保留审计） */
     invalidatedAt: integer('invalidated_at', { mode: 'timestamp' }),
+    /** 拍摄时刻（秒；server 从原图 EXIF DateTimeOriginal 解析，jimp 剥离前留痕——片 3 B5-2 只许现场拍兜底闸） */
+    clientTakenAt: integer('client_taken_at', { mode: 'timestamp' }),
+    /** 校验留痕（如「EXIF 缺失放行留痕」；NULL=校验通过或无异常） */
+    flagReason: text('flag_reason'),
     ...auditColumns,
   },
   (t) => [index('ix_step_photos_step').on(t.stepId)],
@@ -2370,12 +2374,14 @@ export const supportTickets = sqliteTable(
     storeId: text('store_id')
       .notNull()
       .references(() => stores.id),
-    /** 工单类型，取值：suggest | complaint | praise | other */
+    /** 工单类型，取值：suggest | complaint | praise | other | staff_voice（员工心声，片 3 B6-4 同族留痕） */
     type: text('type').notNull(),
     /** 问题描述 */
     description: text('description').notNull(),
     /** 附图 URL 列表 JSON */
     photoUrls: text('photo_urls', { mode: 'json' }).$type<string[]>().notNull().default([]),
+    /** 提单通道：customer（客户端）| staff（员工心声，片 3） */
+    createdVia: text('created_via').notNull().default('customer'),
     /** 联系方式（缺省回显=users.phone，客户端可改） */
     contactPhone: text('contact_phone'),
     /** 状态，取值：submitted | replied | closed */
@@ -3019,4 +3025,191 @@ export const payRules = sqliteTable(
     ...auditColumns,
   },
   (t) => [index('ix_pay_rules_key_active').on(t.ruleKey, t.active)],
+);
+
+/* ==================== 员工端骨架整建批 片 3（任务执行+通讯+权限，迁移 0031） ==================== */
+
+/** 循环任务模板（片 3 B5-1；店长自管；freq=daily|weekly，weekly 用 weekdays 集；提醒 remind_min 分钟前置） */
+export const taskTemplates = sqliteTable(
+  'task_templates',
+  {
+    id: id(),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    title: text('title').notNull(),
+    detail: text('detail'),
+    /** 指派范围：role（按角色全员可见）| staff（指定到人） */
+    assignScope: text('assign_scope').notNull(),
+    /** assignScope=role 时：frontdesk | groomer */
+    assignRole: text('assign_role'),
+    /** assignScope=staff 时 -> staff.id */
+    assignStaffId: text('assign_staff_id').references(() => staff.id),
+    /** 循环频率：daily | weekly */
+    freq: text('freq').notNull(),
+    /** 适用周日 JSON 数组（1=周一…0/7=周日；daily=全集） */
+    weekdays: text('weekdays', { mode: 'json' }).$type<number[]>().notNull(),
+    /** 当日截止时刻（当日起算分钟数，如 1080=18:00） */
+    dueMin: integer('due_min').notNull(),
+    /** 截止前提醒分钟（NULL=不提醒；提醒=task.reminder 事件+notifications 落行） */
+    remindMin: integer('remind_min'),
+    active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    createdBy: text('created_by').notNull().references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_task_templates_store').on(t.storeId, t.active)],
+);
+
+/** 循环任务落实例（触读即补生成=ensureOpenShift 懒建同工艺；(template_id,biz_date) 幂等锚；scope=role 时 staffId=NULL 该角色全员可见，完成落 doneBy） */
+export const taskRuns = sqliteTable(
+  'task_runs',
+  {
+    id: id(),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    templateId: text('template_id').notNull().references(() => taskTemplates.id),
+    /** 业务日期 ISO 'YYYY-MM-DD' */
+    bizDate: text('biz_date').notNull(),
+    /** 落实例到人（scope=staff 即定；scope=role=NULL 全员可见） */
+    staffId: text('staff_id').references(() => staff.id),
+    /** 状态：pending | done */
+    status: text('status').notNull().default('pending'),
+    doneBy: text('done_by').references(() => users.id),
+    doneAt: integer('done_at', { mode: 'timestamp' }),
+    /** 提醒已发时刻（幂等锚，一发不再发） */
+    remindedAt: integer('reminded_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [
+    uniqueIndex('uq_task_runs_tpl_date').on(t.templateId, t.bizDate),
+    index('ix_task_runs_store_date').on(t.storeId, t.bizDate, t.status),
+  ],
+);
+
+/** PDCA 问题-整改-复检闭环（片 3 B5-4；状态机 open→fixing→recheck→closed(pass)/fixing(fail 回炉)；timeline_json 只增留痕照 support_tickets 工艺） */
+export const pdcaIssues = sqliteTable(
+  'pdca_issues',
+  {
+    id: id(),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    title: text('title').notNull(),
+    detail: text('detail'),
+    /** 问题类目（巡检排行分组维度；类目集入端口 pdca_categories） */
+    category: text('category'),
+    /** 照片留证 URL 列表 JSON（现场拍，走 /api/upload 既有链） */
+    photoUrls: text('photo_urls', { mode: 'json' }).$type<string[]>().notNull().default([]),
+    raisedBy: text('raised_by').notNull().references(() => users.id),
+    /** 整改责任人 -> staff.id */
+    assignStaffId: text('assign_staff_id').references(() => staff.id),
+    /** 状态：open | fixing | recheck | closed */
+    status: text('status').notNull().default('open'),
+    fixNote: text('fix_note'),
+    fixedBy: text('fixed_by').references(() => users.id),
+    fixedAt: integer('fixed_at', { mode: 'timestamp' }),
+    recheckNote: text('recheck_note'),
+    recheckBy: text('recheck_by').references(() => users.id),
+    recheckAt: integer('recheck_at', { mode: 'timestamp' }),
+    /** 复检结果：pass | fail（fail=回炉 fixing） */
+    recheckResult: text('recheck_result'),
+    /** 时间线 JSON 数组（只增不改） */
+    timelineJson: text('timeline_json', { mode: 'json' }).$type<Array<{ at: number; by: string; action: string; note?: string }>>().notNull(),
+    ...auditColumns,
+  },
+  (t) => [index('ix_pdca_issues_store').on(t.storeId, t.status)],
+);
+
+/** 门店每日自检+上级审核（片 3 B5-5；表项=service_rules.self_check_items 端口值提交时快照；(store_id,biz_date) 一店一日一表幂等锚） */
+export const selfCheckRuns = sqliteTable(
+  'self_check_runs',
+  {
+    id: id(),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    bizDate: text('biz_date').notNull(),
+    /** 提交时自检表快照：[{key,label,score,pass,photoUrl?,note?}] */
+    itemsJson: text('items_json', { mode: 'json' }).$type<Array<{ key: string; label: string; score: number; pass: boolean; photoUrl?: string; note?: string }>>().notNull(),
+    /** 总分（服务端按快照算，不信前端） */
+    score: integer('score').notNull(),
+    filledBy: text('filled_by').notNull().references(() => users.id),
+    /** 状态：submitted | reviewed（上级审核） */
+    status: text('status').notNull().default('submitted'),
+    reviewNote: text('review_note'),
+    reviewBy: text('review_by').references(() => users.id),
+    reviewAt: integer('review_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [uniqueIndex('uq_self_check_store_date').on(t.storeId, t.bizDate)],
+);
+
+/** 公告（片 3 B6-1；target_role=all|frontdesk|groomer 定向；发布即 published，archived 撤下） */
+export const announcements = sqliteTable(
+  'announcements',
+  {
+    id: id(),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    title: text('title').notNull(),
+    body: text('body').notNull(),
+    /** 定向：all | frontdesk | groomer */
+    targetRole: text('target_role').notNull().default('all'),
+    pinned: integer('pinned', { mode: 'boolean' }).notNull().default(false),
+    /** 状态：published | archived */
+    status: text('status').notNull().default('published'),
+    publishedBy: text('published_by').notNull().references(() => users.id),
+    publishedAt: integer('published_at', { mode: 'timestamp' }).notNull(),
+    ...auditColumns,
+  },
+  (t) => [index('ix_announcements_store').on(t.storeId, t.status, t.publishedAt)],
+);
+
+/** 公告已读回执（片 3 B6-1；(announcement_id,user_id) 幂等锚；回执=店长可读名单对账） */
+export const announcementReads = sqliteTable(
+  'announcement_reads',
+  {
+    id: id(),
+    announcementId: text('announcement_id').notNull().references(() => announcements.id),
+    userId: text('user_id').notNull().references(() => users.id),
+    readAt: integer('read_at', { mode: 'timestamp' }).notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  },
+  (t) => [uniqueIndex('uq_announcement_reads').on(t.announcementId, t.userId)],
+);
+
+/** 交接班结构化日志（片 3 B6-3；挂收银员交接班 shifts 既有件，一班一份；不碰 shifts 列——收银/日结快照口径冻结） */
+export const shiftHandoverLogs = sqliteTable(
+  'shift_handover_logs',
+  {
+    id: id(),
+    shiftId: text('shift_id').notNull().references(() => shifts.id),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    /** 在洗清单 JSON：[{appointmentId, petName, stepLabel}]（服务端按在店单快照，可手工增补注记） */
+    washingJson: text('washing_json', { mode: 'json' }).$type<Array<{ appointmentId: string; label: string }>>(),
+    /** 钥匙交接注记 */
+    keysNote: text('keys_note'),
+    /** 现金交接注记 */
+    cashNote: text('cash_note'),
+    /** 客诉/异常注记 */
+    complaintsNote: text('complaints_note'),
+    fromUserId: text('from_user_id').notNull().references(() => users.id),
+    /** 接棒人（NULL=未指定，下一班开岗人即接棒） */
+    toUserId: text('to_user_id').references(() => users.id),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  },
+  (t) => [uniqueIndex('uq_handover_shift').on(t.shiftId)],
+);
+
+/** 离职资源改挂留痕（片 3 B7-4；仿 reception_logs 前后值口径：prev_value→new_value 快照+操作人；kind=appointment|boarding|member） */
+export const staffExitHandoffs = sqliteTable(
+  'staff_exit_handoffs',
+  {
+    id: id(),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    /** 资源类：appointment（未完结服务单）| boarding（在养宠物单）| member（会员档案） */
+    kind: text('kind').notNull(),
+    refId: text('ref_id').notNull(),
+    fromStaffId: text('from_staff_id').notNull().references(() => staff.id),
+    toStaffId: text('to_staff_id').references(() => staff.id),
+    /** 前后值快照（JSON 字符串） */
+    prevValue: text('prev_value'),
+    newValue: text('new_value'),
+    note: text('note'),
+    changedBy: text('changed_by').notNull().references(() => users.id),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  },
+  (t) => [index('ix_exit_handoffs_store').on(t.storeId, t.fromStaffId)],
 );

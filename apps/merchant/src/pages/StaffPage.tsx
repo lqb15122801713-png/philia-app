@@ -22,6 +22,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import MainScaffold, { LemonButton, QuietButton } from '../components/MainScaffold';
 import EditStaffDialog from '../components/staff-admin/EditStaffDialog';
+import ExitHandoffDialog from '../components/staff-admin/ExitHandoffDialog';
 import InviteStaffDialog from '../components/staff-admin/InviteStaffDialog';
 import ScheduleEditorDialog from '../components/staff-admin/ScheduleEditorDialog';
 import { errMsg } from '../components/staff-admin/format';
@@ -130,6 +131,8 @@ export default function StaffPage() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [scheduleFor, setScheduleFor] = useState<StaffRow | null>(null);
   const [editFor, setEditFor] = useState<StaffRow | null>(null);
+  /** 片 3 B7-4：离职交接弹层目标行（改挂未完结单 + 交接留痕） */
+  const [exitFor, setExitFor] = useState<StaffRow | null>(null);
   /** 正在启用中的停职行（行级 loading，防重复点击） */
   const [enablingId, setEnablingId] = useState<string | null>(null);
 
@@ -256,7 +259,16 @@ export default function StaffPage() {
                 </button>
 
                 {/* 行动作=纯文字 12/700 墨字（试样「编辑 ›」11.5/700 映射入闸门；按下 120ms） */}
-                <span className="ml-3.5 shrink-0">
+                <span className="ml-3.5 flex shrink-0 items-center gap-2.5">
+                  {/* 片 3 B7-4：离职交接（改挂未完结单 + 留痕；停职本体在「编辑 ›」） */}
+                  <button
+                    type="button"
+                    onClick={() => setExitFor(s)}
+                    data-testid={`staff-exit-${s.id}`}
+                    className="text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                  >
+                    {sf('staff.exitCta')}
+                  </button>
                   {suspended ? (
                     <button
                       type="button"
@@ -295,6 +307,8 @@ export default function StaffPage() {
         onClose={() => setScheduleFor(null)}
         onSaved={invalidateStaff}
       />
+      {/* 片 3 B7-4：离职交接（停职本体在编辑弹层；本弹层=改挂未完结单+交接留痕） */}
+      <ExitHandoffDialog staff={exitFor} open={exitFor !== null} onClose={() => setExitFor(null)} />
     </MainScaffold>
   );
 }

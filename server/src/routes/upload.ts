@@ -10,6 +10,7 @@
  */
 
 import { Hono } from 'hono';
+import { readExifTakenAt } from '../lib/exifLite';
 import {
   ImageValidationError,
   isSafeRelDir,
@@ -50,8 +51,11 @@ export const uploadRoute = new Hono<UploadEnv>().post('/api/upload', async (c) =
 
   const buf = Buffer.from(await file.arrayBuffer());
   try {
+    /* 片 3 B5-2 现场拍兜底闸取数：jimp 转码会剥离 EXIF，必须在原 buf 上先解析
+       （只在服务端透传拍摄时刻，校验闸在 serviceStep.addPhotos） */
+    const exifTakenAt = buf[0] === 0xff && buf[1] === 0xd8 ? readExifTakenAt(buf) : null;
     const result = await processAndStoreImage(buf, relDir);
-    return c.json(result, 200);
+    return c.json({ ...result, exifTakenAt }, 200);
   } catch (err) {
     if (err instanceof ImageValidationError) {
       return c.json({ error: 'BAD_REQUEST', message: err.message }, 400);

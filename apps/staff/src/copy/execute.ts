@@ -54,6 +54,15 @@ const EXECUTE_COPY_TABLE = {
   'exec.report.note.placeholder': '补充一句情况说明（选填）',
   'exec.report.advice.label': '下次建议（选填）',
   'exec.report.advice.placeholder': '如：两周后建议复查耳道',
+
+  /* ---- 片 3 B5-2：拍照只许现场拍（诚实口径注记：服务端校验拍摄时刻，不吹「防住」） ---- */
+  'exec.photo.onsiteNote': '照片须现场拍摄（服务端校验拍摄时刻），相册旧图将被拒收或标记',
+
+  /* ---- 片 3 B5-3：中途退出记忆续做（暂存仅本机，明面注记） ---- */
+  'exec.draft.banner': '检测到上次未提交的填写（{time} 暂存）',
+  'exec.draft.restore': '继续上次填写',
+  'exec.draft.discard': '丢弃',
+  'exec.draft.localNote': '暂存仅保存在本机，换设备或清缓存不保留',
 } as const;
 
 export const EXECUTE_COPY = withCopyOverrides(EXECUTE_COPY_TABLE);

@@ -188,6 +188,14 @@ function notificationCopy(
       return { title: '小棉花回复', body: '您有一条新的客服回复，点击查看' };
     case 'invoice.issued':
       return { title: '发票已开具', body: '您的发票已开具，点击查看' };
+    // 片 3：任务提醒 / 公告（staff/store 频道，payload.title=任务/公告标题）
+    case 'task.reminder':
+      return {
+        title: '任务临期提醒',
+        body: `「${typeof data.title === 'string' ? data.title : '任务'}」临近截止，请尽快完成`,
+      };
+    case 'announcement.published':
+      return { title: '新公告', body: typeof data.title === 'string' ? data.title : '门店发布了新公告' };
     default:
       return { title: '消息提醒', body: '您有一条新消息' };
   }
@@ -214,6 +222,9 @@ function linkFor(eventType: string, data: Record<string, unknown>): string | und
     return ticketId ? `/support/${ticketId}` : undefined;
   }
   if (eventType === 'invoice.issued') return '/invoices';
+  // 片 3：公告 → /notices；任务提醒 → /tasks（员工端任务页）
+  if (eventType === 'announcement.published') return '/notices';
+  if (eventType === 'task.reminder') return '/tasks';
   if (eventType.startsWith('order.')) return orderId ? `/orders/${orderId}` : undefined;
   return aid ? `/appointments/${aid}/live` : undefined;
 }

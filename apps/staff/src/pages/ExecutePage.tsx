@@ -47,6 +47,7 @@ import {
   type PhotoTag,
   type QueuedPhoto,
 } from '../lib/offlineQueue'
+import { clearDraft, readDraft, saveDraft, type ExecDraft } from '../lib/executeDraft'
 import CelebrationOverlay from '../components/execute/CelebrationOverlay'
 import FlaggedBanner from '../components/execute/FlaggedBanner'
 import GuidePage from '../components/execute/GuidePage'
@@ -91,6 +92,35 @@ type ReportPayload = {
     note?: string
   }[]
   nextAdvice?: string
+}
+
+/* ---- 片 3 B5-3：报告卡草稿 ↔ 扁平 fields（Record<string,string>，executeDraft 存取形状） ---- */
+const reportToFields = (d: ReportDraft): Record<string, string> => {
+  const f: Record<string, string> = {}
+  for (const k of SELECTOR_KEYS) {
+    const v = d.vitals[k]
+    if (v.status !== 'normal') f[`vital.${k}.status`] = v.status
+    if (v.note.trim()) f[`vital.${k}.note`] = v.note
+  }
+  if (d.nextAdvice.trim()) f.nextAdvice = d.nextAdvice
+  return f
+}
+const fieldsToReport = (fields: Record<string, string>): ReportDraft => {
+  const d = emptyReportDraft()
+  for (const k of SELECTOR_KEYS) {
+    const s = fields[`vital.${k}.status`]
+    if (s === 'normal' || s === 'attention' || s === 'abnormal') d.vitals[k].status = s
+    const n = fields[`vital.${k}.note`]
+    if (n) d.vitals[k].note = n
+  }
+  if (fields.nextAdvice) d.nextAdvice = fields.nextAdvice
+  return d
+}
+/** B5-3：读某单待恢复草稿（无草稿/空 fields → null；过期与坏值由 executeDraft 自清） */
+const loadPendingDraft = (appointmentId: string): ExecDraft | null => {
+  if (!appointmentId) return null
+  const d = readDraft(appointmentId)
+  return d && Object.keys(d.fields).length > 0 ? d : null
 }
 
 function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
@@ -160,20 +190,25 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
     if (!aid) return
     const stop = startQueueFlusher({
       upload: (blob, relDir) => uploadImage(getApiBase(), blob, relDir),
-      register: (raid, stepKey, photo) =>
-        trpc.serviceStep.addPhotos
+      register: (raid, stepKey, photo) => {
+        // 片 3 B5-2：photo 可携 clientTakenAt（upload 响应 exifTakenAt 原样透传）——
+        // addPhotos 入参透传（server 侧输入扩展由 coder G 落地，类型上做一次断言）
+        const p = photo as { url: string; thumbUrl: string; tag?: PhotoTag; clientTakenAt?: number | string }
+        return trpc.serviceStep.addPhotos
           .mutate({
             appointmentId: raid,
             stepKey: stepKey as ServiceStepKey,
             photos: [
               {
-                url: photo.url,
-                thumbUrl: photo.thumbUrl,
-                tag: (photo as { tag?: PhotoTag }).tag ?? 'normal',
+                url: p.url,
+                thumbUrl: p.thumbUrl,
+                tag: p.tag ?? 'normal',
+                ...(p.clientTakenAt != null ? { clientTakenAt: p.clientTakenAt } : {}),
               },
             ],
-          })
-          .then(() => {}),
+          } as Parameters<typeof trpc.serviceStep.addPhotos.mutate>[0])
+          .then(() => {})
+      },
       onChange: () => {
         void refreshPending()
         void queryClient.invalidateQueries({ queryKey: ['serviceStep', 'list', aid] })
@@ -306,6 +341,23 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
   const [celebrating, setCelebrating] = useState(false)
   // 补缺大批片 4：第六步美容报告卡草稿（附加段；未动=confirmStep 不带 vitals/nextAdvice）
   const [reportDraft, setReportDraft] = useState<ReportDraft>(emptyReportDraft)
+
+  /* ---- 片 3 B5-3：中途退出记忆续做（暂存仅本机，executeDraft 纯模块） ---- */
+  // 进入页面检测草稿 →「继续上次填写」恢复条（可一键丢弃）；pendingDraft 非空期间不自动覆写。
+  // 惰性初始化 + 渲染期随 aid 换单重读（React 官方「渲染期间调整 state」模式，避免 effect 级联）
+  const [pendingDraft, setPendingDraft] = useState<ExecDraft | null>(() => loadPendingDraft(aid))
+  const [draftAid, setDraftAid] = useState(aid)
+  if (draftAid !== aid) {
+    setDraftAid(aid)
+    setPendingDraft(loadPendingDraft(aid))
+  }
+  // 表单字段（体征 note/下次建议等文本输入）变更即暂存；全空（未动）=清草稿
+  useEffect(() => {
+    if (!aid || pendingDraft) return
+    if (isReportUntouched(reportDraft)) clearDraft(aid)
+    else saveDraft(aid, { stepId: 'confirm', fields: reportToFields(reportDraft) })
+  }, [aid, reportDraft, pendingDraft])
+
   const confirmMutation = useMutation({
     mutationFn: (vars: { stepKey: string; report?: ReportPayload }) =>
       trpc.serviceStep.confirmStep.mutate({
@@ -315,7 +367,10 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
       }),
     onSuccess: (res) => {
       invalidateAll()
-      if (res.appointmentCompleted) setCelebrating(true)
+      if (res.appointmentCompleted) {
+        clearDraft(aid) // B5-3：提交成功清草稿
+        setCelebrating(true)
+      }
     },
     onError: (err) => {
       showToast(err instanceof Error ? err.message : '确认失败，请稍后重试')
@@ -632,6 +687,40 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
       </section>
 
       {flaggedNames.length > 0 && <FlaggedBanner stepNames={flaggedNames} />}
+
+      {/* 片 3 B5-3：草稿恢复条（继续上次填写 / 一键丢弃；暂存仅本机明面注记） */}
+      {pendingDraft ? (
+        <div className="u1-card mx-[18px] mt-2 p-3" data-testid="exec-draft-banner">
+          <p className="text-caption text-ink">
+            {EXECUTE_COPY['exec.draft.banner'].replace('{time}', fmtHM(new Date(pendingDraft.savedAt)))}
+          </p>
+          <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">{EXECUTE_COPY['exec.draft.localNote']}</p>
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              data-testid="exec-draft-restore"
+              onClick={() => {
+                setReportDraft(fieldsToReport(pendingDraft.fields))
+                setPendingDraft(null)
+              }}
+              className="h-10 min-h-[44px] flex-1 rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+            >
+              {EXECUTE_COPY['exec.draft.restore']}
+            </button>
+            <button
+              type="button"
+              data-testid="exec-draft-discard"
+              onClick={() => {
+                clearDraft(aid)
+                setPendingDraft(null)
+              }}
+              className="h-10 min-h-[44px] flex-1 rounded-control bg-sunken text-body-sm text-ink-secondary transition-transform duration-120 ease-philia-spring active:scale-92"
+            >
+              {EXECUTE_COPY['exec.draft.discard']}
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {/* 竖向 stepper（可滚动区） */}
       <div className="flex-1">

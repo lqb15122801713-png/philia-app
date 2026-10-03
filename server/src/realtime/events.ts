@@ -77,6 +77,9 @@ export const EventType = {
   // 员工端骨架整建批 片 2（排班域；与 packages/shared constants/events.ts 同步）
   SchedulePublished:     'schedule.published',      // 周班表发布 → 逐受影响员工 staff:{staffId} 频道
   ShiftSwapResolved:     'shift.swapResolved',      // 换班审批结果（批准换挂/驳回留痕） → 双方 staff 频道
+  // 员工端骨架整建批 片 3（任务执行+通讯；与 packages/shared constants/events.ts 同步）
+  TaskReminder:          'task.reminder',           // 循环任务截止前提醒 → staff:{staffId}（assignee 或该角色全员逐一）
+  AnnouncementPublished: 'announcement.published',  // 公告发布 → store 频道（员工定向通知=announce.publish 逐人补写）
 } as const;
 
 export type EventTypeValue = (typeof EventType)[keyof typeof EventType];

@@ -19,6 +19,7 @@ import { CLERK_ALLOWED_PATHS, clerkGuideText, useMerchantRole } from '@/lib/role
 import AppointmentDetailPage from './pages/AppointmentDetailPage'
 import AppointmentMonitorPage from './pages/AppointmentMonitorPage'
 import AppointmentsPage from './pages/AppointmentsPage'
+import AnnouncementsPage from './pages/AnnouncementsPage'
 import BoardingPage from './pages/BoardingPage'
 import CashierClosePage from './pages/CashierClosePage'
 import CashierPage from './pages/CashierPage'
@@ -29,6 +30,7 @@ import DashboardPage from './pages/DashboardPage'
 import DevLoginPage from './pages/DevLoginPage'
 import FinancePage from './pages/FinancePage'
 import MonitorHubPage from './pages/MonitorHubPage'
+import OpsPage from './pages/OpsPage'
 import OrdersPage from './pages/OrdersPage'
 import PassPage from './pages/PassPage'
 import ProductsPage from './pages/ProductsPage'
@@ -37,6 +39,7 @@ import RulesConfigPage from './pages/RulesConfigPage'
 import ScheduleManagePage from './pages/ScheduleManagePage'
 import SlotPortPage from './pages/SlotPortPage'
 import StaffPage from './pages/StaffPage'
+import TaskTemplatesPage from './pages/TaskTemplatesPage'
 
 // 受商家身份保护的主内容路由（P0 路由表原样保留；U3 追加 /login 与 /pass 规范名）
 /** B8-B2：/live/:id → /monitor/:id 重定向（保留参数） */
@@ -104,6 +107,12 @@ function ProtectedRoutes() {
         <Route path="/settings/slots" element={<SlotPortPage />} />
         {/* 员工端骨架整建批 片 2：排班管理（owner|manager；clerk 由 ClerkRouteGuard 拦 + 页内 canManage 闸门） */}
         <Route path="/settings/schedules" element={<ScheduleManagePage />} />
+        {/* 员工端骨架整建批 片 3：公告（owner|manager；同排班页闸径） */}
+        <Route path="/settings/announcements" element={<AnnouncementsPage />} />
+        {/* 员工端骨架整建批 片 3：运营（PDCA 问题闭环+自检审核+巡检汇总；owner|manager；同排班页闸径） */}
+        <Route path="/ops" element={<OpsPage />} />
+        {/* 员工端骨架整建批 片 3：循环任务模板自管（owner|manager；同排班页闸径） */}
+        <Route path="/settings/tasks" element={<TaskTemplatesPage />} />
         <Route path="*" element={<RoleLanding />} />
       </Routes>
     </ClerkRouteGuard>

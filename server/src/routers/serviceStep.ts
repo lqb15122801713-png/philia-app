@@ -418,6 +418,10 @@ export const serviceStepRouter = router({
    * 归属：本店且（未指派或指派给自己）（assertAppointmentAccess staff 分支）；
    * 上限：未失效照片总数（含本次）不得超 max，超限 BAD_REQUEST；
    * before_after 步每张照片必须带 before/after 标签；staff 未开始时补写 started_at。
+   * 片 3 B5-2 现场拍兜底闸：photos 项可带 clientTakenAt（=上传口返回的 EXIF
+   * 拍摄时刻秒值）；存在且落在 [step.startedAt−30min, now+5min] 窗外 → 400 明文拒
+   * 「照片拍摄时刻不在服务窗口内，须现场拍摄」；缺省 → 放行但落
+   * flag_reason='EXIF 缺失或未提供'（只标记不阻断，考勤 flagged 同口径）。
    */
   addPhotos: staffProcedure
     .input(
@@ -430,6 +434,8 @@ export const serviceStepRouter = router({
               url: z.string().min(1).max(1024),
               thumbUrl: z.string().min(1).max(1024).optional(),
               tag: PhotoTagSchema.default('normal'),
+              /** 拍摄时刻（Unix 秒；=POST /api/upload 返回的 exifTakenAt） */
+              clientTakenAt: z.number().int().positive().optional(),
             }),
           )
           .min(1)
@@ -457,6 +463,20 @@ export const serviceStepRouter = router({
       }
 
       const now = new Date();
+      /* 片 3 B5-2 服务窗口=[步骤开始−30min, now+5min]：开始前 30 分钟内的备台照放行，
+         未来 5 分钟容忍时钟漂移；startedAt 未落（本批首开）时按 now 起算窗口 */
+      const windowStartMs = (step.startedAt ?? now).getTime() - 30 * 60_000;
+      const windowEndMs = now.getTime() + 5 * 60_000;
+      for (const p of input.photos) {
+        if (p.clientTakenAt === undefined) continue; // 缺 EXIF=放行留痕（落库时写 flag_reason）
+        const takenMs = p.clientTakenAt * 1000;
+        if (takenMs < windowStartMs || takenMs > windowEndMs) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: '照片拍摄时刻不在服务窗口内，须现场拍摄',
+          });
+        }
+      }
       return await ctx.db.transaction(async (tx) => {
         // max 上限（未失效口径，事务内复查防并发超限）
         const existing = await validPhotosOf(tx, step.id);
@@ -476,6 +496,9 @@ export const serviceStepRouter = router({
               tag: p.tag,
               takenBy: ctx.user.id,
               takenAt: now,
+              // B5-2：EXIF 时刻落列；缺省=放行留痕（只标记不阻断）
+              clientTakenAt: p.clientTakenAt !== undefined ? new Date(p.clientTakenAt * 1000) : null,
+              flagReason: p.clientTakenAt === undefined ? 'EXIF 缺失或未提供' : null,
             })),
           )
           .returning();

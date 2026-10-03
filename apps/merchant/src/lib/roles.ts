@@ -85,5 +85,14 @@ export function clerkGuideText(pathname: string): { title: string; hint: string 
   if (pathname.startsWith('/settings/schedules')) {
     return { title: '排班管理由店长或店主处理', hint: '排班、发布与换班审批属管理层动作；店员账号的工作面是收银台。' }
   }
+  if (pathname.startsWith('/ops')) {
+    return { title: '运营闭环由店长或店主处理', hint: '问题复检与自检审核属管理层动作；店员账号的工作面是收银台。' }
+  }
+  if (pathname.startsWith('/settings/announcements')) {
+    return { title: '公告发布由店长或店主处理', hint: '发布与回执对账属管理层动作；店员账号的工作面是收银台。' }
+  }
+  if (pathname.startsWith('/settings/tasks')) {
+    return { title: '任务模板由店长或店主处理', hint: '循环任务模板的新建与停用属管理层动作；店员账号的工作面是收银台。' }
+  }
   return { title: '该功能由店长或店主处理', hint: '店员账号的工作面是收银台；如需协助请找店长。' }
 }
