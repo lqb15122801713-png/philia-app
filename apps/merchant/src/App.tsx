@@ -34,6 +34,7 @@ import PassPage from './pages/PassPage'
 import ProductsPage from './pages/ProductsPage'
 import SettingsPage from './pages/SettingsPage'
 import RulesConfigPage from './pages/RulesConfigPage'
+import ScheduleManagePage from './pages/ScheduleManagePage'
 import SlotPortPage from './pages/SlotPortPage'
 import StaffPage from './pages/StaffPage'
 
@@ -101,6 +102,8 @@ function ProtectedRoutes() {
         <Route path="/settings/copy" element={<CopyConfigPage />} />
         {/* 端口批片 C：槽位端口（控制台第八域「槽位」；owner-only 同规则配置页口径） */}
         <Route path="/settings/slots" element={<SlotPortPage />} />
+        {/* 员工端骨架整建批 片 2：排班管理（owner|manager；clerk 由 ClerkRouteGuard 拦 + 页内 canManage 闸门） */}
+        <Route path="/settings/schedules" element={<ScheduleManagePage />} />
         <Route path="*" element={<RoleLanding />} />
       </Routes>
     </ClerkRouteGuard>

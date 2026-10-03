@@ -82,5 +82,8 @@ export function clerkGuideText(pathname: string): { title: string; hint: string 
   if (pathname.startsWith('/finance')) {
     return { title: '财务由店长或店主查看', hint: '店员不看营业额（门店规矩）；收款在收银台主屏完成。' }
   }
+  if (pathname.startsWith('/settings/schedules')) {
+    return { title: '排班管理由店长或店主处理', hint: '排班、发布与换班审批属管理层动作；店员账号的工作面是收银台。' }
+  }
   return { title: '该功能由店长或店主处理', hint: '店员账号的工作面是收银台；如需协助请找店长。' }
 }

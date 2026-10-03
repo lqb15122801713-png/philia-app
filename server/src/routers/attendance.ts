@@ -1,7 +1,23 @@
 /**
  * 考勤 router（批次 员工端2.0 · R7，任务书 V1.1 §二 + docs/staff2/R7-R10-DESIGN.md §一.1/§四）
- * 冻结规则：≤2 击 / 围栏 300m（圆心=门店经纬度）/ 容差 10min / 围栏外拦截不写异常 /
+ * 冻结规则：围栏 300m（圆心=门店经纬度）/ 容差 10min / 围栏外拦截不写异常（外勤除外，见下）/
  * 异常审批+员工补卡双流（补卡限当月、每人≤3 次/月） / 月表导出仅老板 / 防代打标记（只标记不阻断）。
+ *
+ * 员工端骨架整建批片 2（冻结版 V1.0 §二.B1 七件，本片全落）：
+ * - 读序切换：班次比对改 当日 shift_assignments(active) 优先 → 无则 staff.schedule 周模板兜底（零中断）；
+ * - B1-1 WiFi 打卡：mark 入参 bssid；本店 attendance_wifi_bssids 有 active 行=启用校验——
+ *   命中白名单=到岗直接过（免围栏）；未命中回落围栏判定；白名单为空=现状不变；
+ * - B1-2 外勤打卡：围栏外 + photoUrl 非空 → 放行落行（source='field'）+ 自动挂 exception 审批；
+ *   围栏外无照片照旧拒（零写入）；
+ * - B1-3 断网补传：入参 clientTs（秒）+source='offline_relay' → ts=clientTs（实际打点时刻），
+ *   拒绝未来时刻；now−clientTs 超 service_rules.attendance_offline_stale_hours 端口值 →
+ *   放行落行+自动挂 exception 审批（不无声丢卡）；
+ * - B1-5 多对打卡：kind 由当日末行推导（无记录/末行 out → 下一击 in；末行 in → 下一击 out），
+ *   同 kind 60 秒内重击=幂等返回末行（防双击）；状态逐对判定（in 对班始/out 对班末）；
+ * - B1-6 员工确认 confirmDay（幂等置位 confirmed_by/at）+ 店长 managerAdjust（改 ts + type='adjust'
+ *   approved 留痕行，确认后改考勤同样 manager-only+留痕；员工无改权）；
+ * - B1-7 申诉 appeal（type='exception' pending 挂原卡，同卡同人 pending 在途幂等）；
+ * - B1-4 异常实时推送：late/early/field 落行 → AttendanceException → store + staff 双频道。
  *
  * 报备偏差（schema 实证适配，PR 中显式列）：
  * 1. attendance_records.lat/lng/distance_m/device_id 均为 NOT NULL —— 补卡行无真实坐标，
@@ -10,11 +26,15 @@
  * 3. stores.lat/lng 可空：门店未配置坐标时无法围栏校验，放行打卡并落 distance_m=-1（未校验标记），
  *    不伪造拦截也不伪造正常距离；
  * 4. 月表导出留痕事件：EventType 常量表（realtime/events.ts）不在本任务文件范围，
- *    审计事件 EventType.AttendanceMonthExported（payload {by, month, rows}）。
+ *    审计事件 EventType.AttendanceMonthExported（payload {by, month, rows}）；
+ * 5. 片 2：attendance_approvals.type 增 'adjust' 取值（店长改打卡时刻留痕行；schema 注释枚举
+ *    仅 exception|makeup，列无 CHECK 约束故零迁移；applicantUserId 落操作人=店长本人）；
+ * 6. 片 2：bssid 列仅 WiFi 命中时落库（未命中=回落围栏判定，不落尝试值，与列注释「命中 BSSID」一致）；
+ * 7. 片 2：WiFi 命中免围栏时 distance_m 仍如实落实测距离（不伪造 0，留审计真值）。
  */
 
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, gte, inArray, lt } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, isNull, lt } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import type { StaffSchedule } from '../db/schema';
@@ -72,8 +92,27 @@ function minutesOf(d: Date): number {
   return d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
 }
 
+/** 多段取最近：in 对班始 / out 对班末，取与打卡时刻距离最近的一段（周模板/按日排班共用语义） */
+function pickNearestShift(
+  shifts: Array<{ start: number; end: number }>,
+  d: Date,
+  kind: 'in' | 'out',
+): { start: number; end: number } {
+  const nowMin = minutesOf(d);
+  let best = shifts[0]!;
+  let bestDiff = Infinity;
+  for (const s of shifts) {
+    const diff = Math.abs(nowMin - (kind === 'in' ? s.start : s.end));
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      best = s;
+    }
+  }
+  return best;
+}
+
 /**
- * 从 staff.schedule 周模板取当日班次；一天多班时取与打卡时刻最近的班次。
+ * 从 staff.schedule 周模板取当日班次（读序兜底档）；一天多班时取与打卡时刻最近的班次。
  * 当日无排班返回 null。
  */
 function pickShift(
@@ -83,31 +122,82 @@ function pickShift(
 ): { start: number; end: number } | null {
   const shifts = schedule?.[DAY_KEYS[d.getDay()]];
   if (!shifts || shifts.length === 0) return null;
-  const nowMin = minutesOf(d);
-  let best = shifts[0]!;
-  let bestDiff = Infinity;
-  for (const s of shifts) {
-    const target = kind === 'in' ? hmToMinutes(s.start) : hmToMinutes(s.end);
-    const diff = Math.abs(nowMin - target);
-    if (diff < bestDiff) {
-      bestDiff = diff;
-      best = s;
-    }
+  return pickNearestShift(
+    shifts.map((s) => ({ start: hmToMinutes(s.start), end: hmToMinutes(s.end) })),
+    d,
+    kind,
+  );
+}
+
+/**
+ * 班次读序（片 2 硬骨头 · 读序切换）：
+ * 当日 shift_assignments（status='active'）优先 → 无则 staff.schedule 周模板兜底（零中断）。
+ * 当日多段 assignment 取离打卡时刻最近者（同周模板 pickShift 语义）。
+ */
+async function resolveShiftForPunch(
+  db: DbHandle,
+  storeId: string,
+  staffId: string,
+  date: string,
+  d: Date,
+  kind: 'in' | 'out',
+): Promise<{ start: number; end: number; from: 'assignment' | 'template' } | null> {
+  const assigns = await db
+    .select({ startMin: schema.shiftAssignments.startMin, endMin: schema.shiftAssignments.endMin })
+    .from(schema.shiftAssignments)
+    .where(
+      and(
+        eq(schema.shiftAssignments.storeId, storeId),
+        eq(schema.shiftAssignments.staffId, staffId),
+        eq(schema.shiftAssignments.date, date),
+        eq(schema.shiftAssignments.status, 'active'),
+      ),
+    );
+  if (assigns.length > 0) {
+    const s = pickNearestShift(
+      assigns.map((a) => ({ start: a.startMin, end: a.endMin })),
+      d,
+      kind,
+    );
+    return { ...s, from: 'assignment' };
   }
-  return { start: hmToMinutes(best.start), end: hmToMinutes(best.end) };
+  const staffRow = await db
+    .select({ schedule: schema.staff.schedule })
+    .from(schema.staff)
+    .where(eq(schema.staff.id, staffId))
+    .get();
+  const t = pickShift(staffRow?.schedule, d, kind);
+  return t ? { ...t, from: 'template' } : null;
+}
+
+/** 断网暂存兜底时限（小时）读口：service_rules.attendance_offline_stale_hours 生效最新版；缺行/坏值回落 24（种子值） */
+async function offlineStaleHours(db: DbHandle): Promise<number> {
+  const row = await db
+    .select({ valueJson: schema.serviceRules.valueJson })
+    .from(schema.serviceRules)
+    .where(
+      and(
+        eq(schema.serviceRules.ruleKey, 'attendance_offline_stale_hours'),
+        eq(schema.serviceRules.active, true),
+      ),
+    )
+    .orderBy(desc(schema.serviceRules.version))
+    .limit(1)
+    .then((r) => r[0]);
+  const h = row?.valueJson?.hours;
+  return typeof h === 'number' && Number.isFinite(h) && h > 0 ? h : 24;
 }
 
 /**
  * 打卡×班次自动比对（容差 10min）：
  * in 晚于班次开始+10 → late；out 早于班次结束-10 → early；否则 normal。
- * 当日无排班 → normal（shiftFound=false，说明随响应/事件透出，不落库——无 note 列）。
+ * shift=null（当日无排班） → normal（shiftFound=false，说明随响应/事件透出，不落库——无 note 列）。
  */
 function computeStatus(
   kind: 'in' | 'out',
   now: Date,
-  schedule: StaffSchedule | null | undefined,
+  shift: { start: number; end: number } | null,
 ): { status: 'normal' | 'late' | 'early'; shiftFound: boolean } {
-  const shift = pickShift(schedule, now, kind);
   if (!shift) return { status: 'normal', shiftFound: false };
   const nowMin = minutesOf(now);
   if (kind === 'in') {
@@ -156,13 +246,20 @@ const DATE_RE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 
 export const attendanceRouter = router({
   /**
-   * mark（staff）：打卡 ≤2 击。
+   * mark（staff）：打卡（片 2 B1-5 起改多对：中途离岗/返岗还原，不再 ≤2 击封顶）。
+   * - kind 由服务端按当日末行推导（无记录/末行 out → 本击 in；末行 in → 本击 out），
+   *   入参 kind 仅用于「同 kind 60 秒内重击=幂等返回末行」防双击判定（客户端可按其预期传）；
    * - 围栏 300m：围栏外 BAD_REQUEST「不在门店范围，无法打卡」，零写入（不写异常记录）；
-   * - 幂等：同 staff+date+kind 重复打卡返回已有记录（UX 重试安全）；
+   *   B1-2 外勤：围栏外 + photoUrl 非空 → 放行落行（source='field'）+ 自动挂 exception 审批；
+   * - B1-1 WiFi 打卡：本店白名单（attendance_wifi_bssids active 行）非空=启用校验——
+   *   命中=到岗直接过（免围栏）；未命中回落围栏判定；白名单为空=现状不变；
+   * - B1-3 断网补传：source='offline_relay' 须带 clientTs（秒）→ ts=clientTs（实际打点时刻），
+   *   拒绝未来时刻；超 attendance_offline_stale_hours 端口值 → 落行+自动挂 exception 审批；
    * - late/early 自动生成 type='exception' pending 审批（挂原卡 record_id）；
    * - 防代打：同 device_id 同日 >2 个不同 user_id → 该批记录 flagged=1（只标记不阻断）；
    * - kind='out' 且当日完整正常 → awardXp(source='attendance')（分值/日上限由 xp_rules 决定）；
-   * - emitEvent AttendanceMarked → staff + store 双频道，事务提交后 broadcastNow。
+   * - emitEvent AttendanceMarked → staff + store 双频道（载荷含 status），事务提交后 broadcastNow；
+   * - B1-4：late/early/field 落行 → AttendanceException → store + staff 双频道。
    */
   mark: staffProcedure
     .input(
@@ -171,81 +268,125 @@ export const attendanceRouter = router({
         lat: z.number().min(-90).max(90),
         lng: z.number().min(-180).max(180),
         deviceId: z.string().min(1, '缺少设备标识'),
+        /** B1-1：当前连接的门店 WiFi BSSID（Web 端=手动选择映射，见 AttendancePage 注记） */
+        bssid: z.string().min(1).optional(),
+        /** B1-2：外勤打卡现场照片 URL（围栏外放行双要件之一） */
+        photoUrl: z.string().min(1).optional(),
+        /** B1-3：设备端打点时刻（Unix 秒；仅 source='offline_relay' 时有效） */
+        clientTs: z.number().int().positive().optional(),
+        /** B1-3：断网暂存补传标记 */
+        source: z.enum(['offline_relay']).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const storeId = ctx.user.storeId!;
       const staffId = ctx.user.staffId!;
       const userId = ctx.user.id;
+      const wallNow = new Date(); // 服务器真实时刻（留痕/XP 日用）
 
-      /* 围栏：圆心=门店经纬度，半径 300m；围栏外拦截+零写入 */
+      /* B1-3 断网补传：ts=clientTs（考勤口径=实际打点时刻）；拒绝未来时刻；超时兜底时限读端口 */
+      let punchAt = wallNow;
+      let staleRelay = false;
+      let staleHours = 0;
+      if (input.source === 'offline_relay') {
+        if (!input.clientTs) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: '离线补传须携带设备端打点时刻（clientTs）' });
+        }
+        punchAt = new Date(input.clientTs * 1000);
+        if (punchAt.getTime() > wallNow.getTime()) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: '打点时刻晚于当前时刻，拒绝补传未来卡' });
+        }
+        staleHours = await offlineStaleHours(ctx.db);
+        staleRelay = wallNow.getTime() - punchAt.getTime() > staleHours * 3600 * 1000;
+      } else if (input.clientTs !== undefined) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: 'clientTs 仅断网补传（source=offline_relay）可携带' });
+      }
+      const date = localDateStr(punchAt);
+
       const store = await ctx.db
         .select({ id: schema.stores.id, lat: schema.stores.lat, lng: schema.stores.lng })
         .from(schema.stores)
         .where(eq(schema.stores.id, storeId))
         .get();
       if (!store) throw new TRPCError({ code: 'NOT_FOUND', message: '门店不存在' });
+
+      /* B1-1 WiFi 白名单：本店 active 行非空=启用校验 */
+      const wifiRows = await ctx.db
+        .select({ bssid: schema.attendanceWifiBssids.bssid })
+        .from(schema.attendanceWifiBssids)
+        .where(
+          and(
+            eq(schema.attendanceWifiBssids.storeId, storeId),
+            eq(schema.attendanceWifiBssids.active, true),
+          ),
+        );
+      const wifiHit =
+        wifiRows.length > 0 && !!input.bssid && wifiRows.some((w) => w.bssid === input.bssid);
+
+      /* 围栏：圆心=门店经纬度，半径 300m。WiFi 命中免围栏；未命中回落围栏；围栏外+照片=外勤放行 */
       let distanceM: number;
-      if (store.lat === null || store.lng === null) {
+      let field = false;
+      if (wifiHit) {
+        distanceM =
+          store.lat === null || store.lng === null
+            ? -1
+            : Math.round(haversineM(store.lat, store.lng, input.lat, input.lng)); // 免围栏但如实记距（报备偏差 7）
+      } else if (store.lat === null || store.lng === null) {
         distanceM = -1; // 门店未配置坐标：跳过围栏校验，-1 = 未校验标记（报备偏差 3）
       } else {
         distanceM = Math.round(haversineM(store.lat, store.lng, input.lat, input.lng));
         if (distanceM > GEOFENCE_RADIUS_M) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: '不在门店范围，无法打卡' });
+          if (input.photoUrl) {
+            field = true; // B1-2 外勤：围栏外+照片 → 放行落行+自动挂 exception（下方统一处理）
+          } else {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: '不在门店范围，无法打卡' });
+          }
         }
       }
+      const source = input.source === 'offline_relay' ? 'offline_relay' : field ? 'field' : null;
 
-      const now = new Date();
-      const date = localDateStr(now);
-
-      /* 幂等：同 staff+date+kind 已有记录 → 直接返回（≤2 击重试安全） */
-      const existing = await ctx.db
+      /* B1-5 多对打卡：kind 由当日末行推导；同 kind 60 秒内重击=幂等返回末行 */
+      const dayRowsPre = await ctx.db
         .select()
         .from(schema.attendanceRecords)
         .where(
           and(
             eq(schema.attendanceRecords.staffId, staffId),
             eq(schema.attendanceRecords.date, date),
-            eq(schema.attendanceRecords.kind, input.kind),
           ),
         )
-        .get();
-      if (existing) {
-        const dayRows = await ctx.db
-          .select()
-          .from(schema.attendanceRecords)
-          .where(
-            and(
-              eq(schema.attendanceRecords.staffId, staffId),
-              eq(schema.attendanceRecords.date, date),
-            ),
-          );
-        return { record: existing, dayStatus: summarizeDay(date, dayRows), duplicated: true };
+        .orderBy(schema.attendanceRecords.ts);
+      const lastPre = dayRowsPre[dayRowsPre.length - 1];
+      if (
+        lastPre &&
+        lastPre.kind === input.kind &&
+        Math.abs(punchAt.getTime() - lastPre.ts.getTime()) < 60_000
+      ) {
+        return { record: lastPre, dayStatus: summarizeDay(date, dayRowsPre), duplicated: true };
       }
+      const kind: 'in' | 'out' = !lastPre ? 'in' : lastPre.kind === 'in' ? 'out' : 'in';
 
-      /* 班次比对（staff.schedule 周模板只读，容差 10min） */
-      const staffRow = await ctx.db
-        .select({ schedule: schema.staff.schedule })
-        .from(schema.staff)
-        .where(eq(schema.staff.id, staffId))
-        .get();
-      const { status, shiftFound } = computeStatus(input.kind, now, staffRow?.schedule);
+      /* 班次比对（读序切换：当日 shift_assignments 优先 → staff.schedule 周模板兜底，容差 10min 既有口径） */
+      const shift = await resolveShiftForPunch(ctx.db, storeId, staffId, date, punchAt, kind);
+      const { status, shiftFound } = computeStatus(kind, punchAt, shift);
 
       const result = await ctx.db.transaction(async (tx) => {
         const t = txDb(tx);
-        /* 事务内幂等复核（并发双击竞态兜底） */
-        const dup = await t
+        /* 事务内幂等复核（并发双击竞态兜底，同 60 秒同 kind 口径） */
+        const txRows = await t
           .select()
           .from(schema.attendanceRecords)
           .where(
             and(
               eq(schema.attendanceRecords.staffId, staffId),
               eq(schema.attendanceRecords.date, date),
-              eq(schema.attendanceRecords.kind, input.kind),
             ),
           )
-          .get();
-        if (dup) return { record: dup, outboxIds: [] as string[], duplicated: true };
+          .orderBy(schema.attendanceRecords.ts);
+        const lastTx = txRows[txRows.length - 1];
+        if (lastTx && lastTx.kind === kind && Math.abs(punchAt.getTime() - lastTx.ts.getTime()) < 60_000) {
+          return { record: lastTx, outboxIds: [] as string[], duplicated: true };
+        }
 
         const record = await t
           .insert(schema.attendanceRecords)
@@ -254,8 +395,8 @@ export const attendanceRouter = router({
             staffId,
             userId,
             date,
-            kind: input.kind,
-            ts: now,
+            kind,
+            ts: punchAt, // B1-3：补传落实际打点时刻；现场=服务器当前时刻
             lat: input.lat,
             lng: input.lng,
             distanceM,
@@ -263,12 +404,22 @@ export const attendanceRouter = router({
             makeup: false,
             deviceId: input.deviceId,
             flagged: false,
+            source,
+            clientTs: input.source === 'offline_relay' ? punchAt : null,
+            bssid: wifiHit ? input.bssid! : null, // 仅命中落库（报备偏差 6）
+            photoUrl: field ? input.photoUrl! : null,
           })
           .returning()
           .then((r) => r[0]!);
 
-        /* 异常（迟到/早退）自动生成 pending 审批，挂原卡 record_id */
+        /* 异常自动生成 pending 审批，挂原卡 record_id：late/early（既有）+ 外勤（B1-2）+ 断网补传超时（B1-3 兜底） */
+        const exceptionReasons: string[] = [];
         if (status !== 'normal') {
+          exceptionReasons.push(`系统自动生成：${status === 'late' ? '迟到' : '早退'}打卡，待店长确认`);
+        }
+        if (field) exceptionReasons.push('外勤打卡待店长确认');
+        if (staleRelay) exceptionReasons.push(`断网补传超时（超 ${staleHours} 小时）待店长确认`);
+        for (const reason of exceptionReasons) {
           await t.insert(schema.attendanceApprovals).values({
             storeId,
             staffId,
@@ -276,9 +427,9 @@ export const attendanceRouter = router({
             type: 'exception',
             recordId: record.id,
             date,
-            kind: input.kind,
+            kind,
             requestedTs: null,
-            reason: `系统自动生成：${status === 'late' ? '迟到' : '早退'}打卡，待店长确认`,
+            reason,
             status: 'pending',
           });
         }
@@ -296,7 +447,7 @@ export const attendanceRouter = router({
         if (new Set(deviceRows.map((r) => r.userId)).size > 2) {
           await t
             .update(schema.attendanceRecords)
-            .set({ flagged: true, updatedAt: now })
+            .set({ flagged: true, updatedAt: wallNow })
             .where(
               and(
                 eq(schema.attendanceRecords.deviceId, input.deviceId),
@@ -307,7 +458,7 @@ export const attendanceRouter = router({
         }
 
         /* kind='out' 且当日完整正常 → 考勤 XP（分值 xp_attendance_daily 读 xp_rules，日上限由 awardXp 处理） */
-        if (input.kind === 'out') {
+        if (kind === 'out') {
           const dayRows = await t
             .select()
             .from(schema.attendanceRecords)
@@ -324,7 +475,7 @@ export const attendanceRouter = router({
               userId,
               source: 'attendance',
               sourceId: record.id,
-              now,
+              now: wallNow,
             });
           }
         }
@@ -334,16 +485,26 @@ export const attendanceRouter = router({
           storeId,
           staffId,
           date,
-          kind: input.kind,
-          status,
+          kind,
+          status, // B1-4：既有载荷透出 status（staff 频道本人收）
           distanceM,
           flagged: record.flagged,
         };
+        if (source) payload.source = source;
         if (!shiftFound) payload.note = '今日无排班，按正常计';
         const outboxIds = [
           await emitEvent(t, `staff:${staffId}`, EventType.AttendanceMarked, payload),
           await emitEvent(t, `store:${storeId}`, EventType.AttendanceMarked, payload),
         ];
+        /* B1-4 异常实时推送：late/early/field → AttendanceException → store（主管）+ staff（本人） */
+        if (status !== 'normal' || field) {
+          const exPayload: Record<string, unknown> = { recordId: record.id, storeId, staffId, date, kind, status };
+          if (source) exPayload.source = source;
+          outboxIds.push(
+            await emitEvent(t, `store:${storeId}`, EventType.AttendanceException, exPayload),
+            await emitEvent(t, `staff:${staffId}`, EventType.AttendanceException, exPayload),
+          );
+        }
         return { record, outboxIds, duplicated: false };
       });
       result.outboxIds.forEach(broadcastNow);
@@ -474,6 +635,176 @@ export const attendanceRouter = router({
       .where(eq(schema.attendanceApprovals.staffId, ctx.user.staffId!))
       .orderBy(desc(schema.attendanceApprovals.createdAt));
   }),
+
+  /**
+   * wifiBssids（staff，B1-1）：本店 WiFi 白名单 active 行（bssid+label）。
+   * 员工端打卡页「门店 WiFi」下拉数据源；空数组=未启用 WiFi 校验（页面不显示胶囊）。
+   */
+  wifiBssids: staffProcedure.query(async ({ ctx }) => {
+    return ctx.db
+      .select({ bssid: schema.attendanceWifiBssids.bssid, label: schema.attendanceWifiBssids.label })
+      .from(schema.attendanceWifiBssids)
+      .where(
+        and(
+          eq(schema.attendanceWifiBssids.storeId, ctx.user.storeId!),
+          eq(schema.attendanceWifiBssids.active, true),
+        ),
+      )
+      .orderBy(schema.attendanceWifiBssids.label);
+  }),
+
+  /**
+   * confirmDay（staff，B1-6 闸门件 §五.2 已签）：本人当日全部打卡行置 confirmed_by/at。
+   * 幂等：当日行全部已确认 → 零写入返回现状（alreadyConfirmed=true）；当日无记录 → 400。
+   */
+  confirmDay: staffProcedure
+    .input(z.object({ date: z.string().regex(DATE_RE, '日期格式须为 YYYY-MM-DD') }))
+    .mutation(async ({ ctx, input }) => {
+      const staffId = ctx.user.staffId!;
+      const rows = await ctx.db
+        .select()
+        .from(schema.attendanceRecords)
+        .where(
+          and(
+            eq(schema.attendanceRecords.staffId, staffId),
+            eq(schema.attendanceRecords.date, input.date),
+          ),
+        )
+        .orderBy(schema.attendanceRecords.ts);
+      if (rows.length === 0) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '当日无考勤记录，无需确认' });
+      }
+      const unconfirmed = rows.filter((r) => !r.confirmedAt);
+      if (unconfirmed.length > 0) {
+        const now = new Date();
+        await ctx.db
+          .update(schema.attendanceRecords)
+          .set({ confirmedBy: ctx.user.id, confirmedAt: now, updatedAt: now })
+          .where(
+            and(
+              eq(schema.attendanceRecords.staffId, staffId),
+              eq(schema.attendanceRecords.date, input.date),
+              isNull(schema.attendanceRecords.confirmedAt),
+            ),
+          );
+      }
+      const records = await ctx.db
+        .select()
+        .from(schema.attendanceRecords)
+        .where(
+          and(
+            eq(schema.attendanceRecords.staffId, staffId),
+            eq(schema.attendanceRecords.date, input.date),
+          ),
+        )
+        .orderBy(schema.attendanceRecords.ts);
+      return { date: input.date, records, confirmedNow: unconfirmed.length, alreadyConfirmed: unconfirmed.length === 0 };
+    }),
+
+  /**
+   * appeal（staff，B1-7 考勤申诉入口）：本人打卡记录建 type='exception' pending 审批（挂原卡 recordId）。
+   * 幂等：同卡同人已有 pending 在途 → 零写入返回现状（duplicated=true）。
+   */
+  appeal: staffProcedure
+    .input(
+      z.object({
+        recordId: z.string().min(1),
+        reason: z.string().min(1, '请填写申诉原因'),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const staffId = ctx.user.staffId!;
+      const record = await ctx.db
+        .select()
+        .from(schema.attendanceRecords)
+        .where(eq(schema.attendanceRecords.id, input.recordId))
+        .get();
+      if (!record || record.staffId !== staffId) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: '打卡记录不存在' });
+      }
+      const existing = await ctx.db
+        .select()
+        .from(schema.attendanceApprovals)
+        .where(
+          and(
+            eq(schema.attendanceApprovals.recordId, record.id),
+            eq(schema.attendanceApprovals.applicantUserId, ctx.user.id),
+            eq(schema.attendanceApprovals.type, 'exception'),
+            eq(schema.attendanceApprovals.status, 'pending'),
+          ),
+        )
+        .get();
+      if (existing) return { approval: existing, duplicated: true };
+      const approval = await ctx.db
+        .insert(schema.attendanceApprovals)
+        .values({
+          storeId: record.storeId,
+          staffId,
+          applicantUserId: ctx.user.id,
+          type: 'exception',
+          recordId: record.id,
+          date: record.date,
+          kind: record.kind,
+          requestedTs: null,
+          reason: input.reason,
+          status: 'pending',
+        })
+        .returning()
+        .then((r) => r[0]!);
+      return { approval, duplicated: false };
+    }),
+
+  /**
+   * managerAdjust（merchantManager 本店，B1-6）：店长改打卡时刻（员工无改权——本端点 manager-only）。
+   * 确认后改考勤同样放行+留痕：无论行是否已确认，均写 attendance_approvals type='adjust'
+   * approved 留痕行（reason=note 必填，reviewer=操作人，requestedTs=新时刻）。
+   */
+  managerAdjust: merchantManagerProcedure
+    .input(
+      z.object({
+        recordId: z.string().min(1),
+        ts: z.date(),
+        note: z.string().min(1, '请填写调整原因（留痕用）'),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
+      const record = await ctx.db
+        .select()
+        .from(schema.attendanceRecords)
+        .where(eq(schema.attendanceRecords.id, input.recordId))
+        .get();
+      if (!record || record.storeId !== storeId) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: '打卡记录不存在' });
+      }
+      const now = new Date();
+      const updated = await ctx.db.transaction(async (tx) => {
+        const t = txDb(tx);
+        const row = await t
+          .update(schema.attendanceRecords)
+          .set({ ts: input.ts, updatedAt: now })
+          .where(eq(schema.attendanceRecords.id, record.id))
+          .returning()
+          .then((r) => r[0]!);
+        /* 留痕行：type='adjust'（新取值，报备偏差 5）+ status='approved'（店长操作即时生效，无需二审） */
+        await t.insert(schema.attendanceApprovals).values({
+          storeId,
+          staffId: record.staffId,
+          applicantUserId: ctx.user.id,
+          type: 'adjust',
+          recordId: record.id,
+          date: record.date,
+          kind: record.kind,
+          requestedTs: input.ts,
+          reason: input.note,
+          status: 'approved',
+          reviewerId: ctx.user.id,
+          reviewedAt: now,
+        });
+        return row;
+      });
+      return updated;
+    }),
 
   /**
    * exceptionQueue（merchantManager 本店）：店长审批队列 =

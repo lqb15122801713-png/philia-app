@@ -4,18 +4,34 @@
  * S-03 骨架（UX 语言包 V1.1 §三）：apphead → S6 打卡卡（SkPunchCard：mono 大钟 34/700
  * 真实时钟 + 班次 mono 9.5 + 围栏胶囊 + btn-action 上下文主钮）→ S7 周记录（SkRows/SkRow，
  * 异常=赭红 tone）→ 补卡口径注（SkNote sk.punchFixNote）。升主级入 dock（App.tsx DOCK_TABS），
- * 返回条摘除；打卡/围栏/补卡申请全部 trpc 调用与逻辑零回退（attendance.mark ≤2 击、
+ * 返回条摘除；打卡/围栏/补卡申请全部 trpc 调用与逻辑零回退（attendance.mark、
  * geolocation 前置分支、requestMakeup 限当月 ≤3 次/月、myRecords/myApprovals 原样）。
+ *
+ * 片 2 考勤域（冻结版 V1.0 §二.B1）页面增量：
+ * - B1-5 多对打卡：主钮永可用，in/out 由服务端按当日末行推导；今日明细逐行展示（成对）；
+ * - B1-1 WiFi：本店白名单非空时出「门店 WiFi」下拉——Web 端无 BSSID 直读 API，
+ *   口径=手动选择门店 WiFi 名（label）映射 bssid（技术上限明面注记 attendance.wifi.manual）；
+ * - B1-2 外勤：server 拒「不在门店范围」时出拍照位，上传后 photoUrl 随 mark 重发；
+ * - B1-3 断网暂存：mark 网络失败入 offlinePunch 队列（lib/offlinePunch.ts），
+ *   提示条（暂存 N 条）+ online/聚焦/30s 定时自动补传（source='offline_relay'）；
+ * - B1-6 确认：「确认今日考勤」（当日有未确认行才可用）→ confirmDay；
+ * - B1-7 申诉：每条今日记录行「申诉」→ reason 弹层 → appeal。
  */
 
-import { Skeleton, usePhiliaClient, useToast } from '@philia/shared';
+import { Skeleton, getApiBase, uploadImage, usePhiliaClient, useToast } from '@philia/shared';
 import type { inferRouterOutputs } from '@trpc/server';
 import type { AppRouter } from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { SkAppHead, SkNote, SkPunchCard, SkRow, SkRows } from '@/components/skeleton';
 import { dayKeyOf, hhmm, pad2, weekdayLabel } from '@/components/today/utils';
 import { INSECURE_CONTEXT_GEO_MESSAGE, isSecureContextOk } from '@/lib/secureContext';
+import {
+  enqueuePunch,
+  isNetworkFailure,
+  pendingPunches,
+  startPunchRelayer,
+} from '@/lib/offlinePunch';
 import { ATTENDANCE_COPY } from '@/copy/attendance';
 import { skc } from '@/copy/skeleton';
 
@@ -108,8 +124,26 @@ export default function AttendancePage() {
   const missingDays = useMemo(() => recordsQuery.data?.missingDays ?? [], [recordsQuery.data]);
   const approvals = useMemo(() => approvalsQuery.data ?? [], [approvalsQuery.data]);
 
-  const todayIn = records.find((r) => r.date === todayStr && r.kind === 'in') ?? null;
-  const todayOut = records.find((r) => r.date === todayStr && r.kind === 'out') ?? null;
+  /* 片 2 B1-5 多对打卡：当日全部行（ts 升序，server 已按 date/ts 排序）；下一击由末行推导 */
+  const todayRows = useMemo(() => records.filter((r) => r.date === todayStr), [records, todayStr]);
+  const lastToday = todayRows[todayRows.length - 1] ?? null;
+  const todayIn = todayRows.find((r) => r.kind === 'in') ?? null;
+  const todayOut = [...todayRows].reverse().find((r) => r.kind === 'out') ?? null; // 多对：下班取最后一击
+  /** B1-6：当日有记录且全部 confirmedAt 置位 = 已确认态 */
+  const todayAllConfirmed = todayRows.length > 0 && todayRows.every((r) => !!r.confirmedAt);
+
+  /* B1-1 WiFi 白名单（非空=本店启用 WiFi 校验，出下拉胶囊） */
+  const wifiQuery = useQuery({
+    queryKey: ['attendance', 'wifiBssids'],
+    queryFn: () => trpc.attendance.wifiBssids.query(),
+  });
+  const wifiList = useMemo(() => wifiQuery.data ?? [], [wifiQuery.data]);
+  const [selectedBssid, setSelectedBssid] = useState('');
+
+  /* B1-3 断网暂存队列计数（提示条） */
+  const [queueCount, setQueueCount] = useState(() =>
+    typeof window === 'undefined' ? 0 : pendingPunches().length,
+  );
 
   /** 本月补卡额度：pending+approved 的 makeup 申请计入（与 server 同口径） */
   const makeupUsed = approvals.filter(
@@ -123,7 +157,7 @@ export default function AttendancePage() {
     for (const r of records) {
       const cell = map.get(r.date) ?? { date: r.date };
       if (r.kind === 'in') cell.in = cell.in ?? r;
-      else cell.out = cell.out ?? r;
+      else cell.out = r; // 片 2 多对打卡：日聚合下班取最后一击
       map.set(r.date, cell);
     }
     return [...map.values()].sort((a, b) => (a.date < b.date ? 1 : -1));
@@ -147,24 +181,82 @@ export default function AttendancePage() {
   const weekRows = useMemo(() => dayRows.filter((d) => d.date >= weekStartStr), [dayRows, weekStartStr]);
   const weekMissing = useMemo(() => missingDays.filter((ds) => ds >= weekStartStr), [missingDays, weekStartStr]);
 
-  /* ---------------- 打卡（≤2 击） ---------------- */
+  /* ---------------- 打卡（片 2 多对：主钮永可用，in/out 服务端推导） ---------------- */
   const [busy, setBusy] = useState<'in' | 'out' | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
-  const [pendingKind, setPendingKind] = useState<'in' | 'out' | null>(null);
+  const [pendingKind, setPendingKind] = useState<'in' | 'out'>('in');
+  /** B1-2 外勤：server 拒「不在门店范围」→ 出拍照位；上传后 photoUrl 随 mark 重发 */
+  const [fieldNeeded, setFieldNeeded] = useState(false);
+  const [fieldPhotoUrl, setFieldPhotoUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  /** 打点时刻戳（入队暂存用，打点附近取定） */
+  const punchStampRef = useRef(0);
+
+  type MarkInput = {
+    kind: 'in' | 'out';
+    lat: number;
+    lng: number;
+    deviceId: string;
+    bssid?: string;
+    photoUrl?: string;
+    clientTs?: number;
+    source?: 'offline_relay';
+  };
 
   const markMut = useMutation({
-    mutationFn: (input: { kind: 'in' | 'out'; lat: number; lng: number; deviceId: string }) =>
-      trpc.attendance.mark.mutate(input),
+    mutationFn: (input: MarkInput) => trpc.attendance.mark.mutate(input),
     onSuccess: (r) => {
       showToast(r.duplicated ? '今日已打过卡，无需重复操作' : '已打卡，辛苦了');
+      setGeoError(null);
+      setFieldNeeded(false);
+      setFieldPhotoUrl(null);
       void queryClient.invalidateQueries({ queryKey: ['attendance'] });
     },
-    onError: (err) => {
+    onError: (err, vars) => {
+      if (vars.source !== 'offline_relay' && isNetworkFailure(err)) {
+        /* B1-3 断网暂存：网络层失败入队（业务拒绝不入队），恢复后自动补传 */
+        enqueuePunch({
+          kind: vars.kind,
+          lat: vars.lat,
+          lng: vars.lng,
+          deviceId: vars.deviceId,
+          ...(vars.bssid ? { bssid: vars.bssid } : {}),
+          ...(vars.photoUrl ? { photoUrl: vars.photoUrl } : {}),
+          clientTs: punchStampRef.current || Math.floor(Date.now() / 1000),
+        });
+        setQueueCount(pendingPunches().length);
+        showToast(ATTENDANCE_COPY['attendance.offline.saved']);
+        return;
+      }
+      if (err.message.includes('不在门店范围')) setFieldNeeded(true);
       // server 拒写文案原样透出（如「不在门店范围，无法打卡」），附重试钮不转死圈
       setGeoError(err.message);
     },
     onSettled: () => setBusy(null),
   });
+
+  /* B1-3 后台补传器：online/聚焦/30s 定时重放暂存队列（source='offline_relay'+原打点时刻） */
+  useEffect(() => {
+    const stop = startPunchRelayer({
+      relay: (p) =>
+        trpc.attendance.mark.mutate({
+          kind: p.kind,
+          lat: p.lat,
+          lng: p.lng,
+          deviceId: p.deviceId,
+          ...(p.bssid ? { bssid: p.bssid } : {}),
+          ...(p.photoUrl ? { photoUrl: p.photoUrl } : {}),
+          clientTs: p.clientTs,
+          source: 'offline_relay',
+        }),
+      onChange: () => {
+        setQueueCount(pendingPunches().length);
+        void queryClient.invalidateQueries({ queryKey: ['attendance'] });
+      },
+    });
+    return stop;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const punch = (kind: 'in' | 'out') => {
     setGeoError(null);
@@ -181,7 +273,15 @@ export default function AttendancePage() {
     setBusy(kind);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        markMut.mutate({ kind, lat: pos.coords.latitude, lng: pos.coords.longitude, deviceId: deviceId() });
+        punchStampRef.current = Math.floor(Date.now() / 1000);
+        markMut.mutate({
+          kind,
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          deviceId: deviceId(),
+          ...(selectedBssid ? { bssid: selectedBssid } : {}),
+          ...(fieldPhotoUrl ? { photoUrl: fieldPhotoUrl } : {}),
+        });
       },
       (err) => {
         setBusy(null);
@@ -195,6 +295,53 @@ export default function AttendancePage() {
       },
       { timeout: 10_000, maximumAge: 30_000 },
     );
+  };
+
+  /* B1-2 外勤拍照上传（上传成功 → photoUrl 随下一次 mark） */
+  const uploadFieldPhoto = async (file: File) => {
+    setUploading(true);
+    try {
+      const { url } = await uploadImage(
+        getApiBase(),
+        file,
+        `attendance/${staff?.id ?? 'unknown'}/${todayStr}`,
+      );
+      setFieldPhotoUrl(url);
+      showToast(ATTENDANCE_COPY['attendance.field.ready']);
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : String(e));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  /* ---------------- B1-6 确认今日考勤 ---------------- */
+  const confirmMut = useMutation({
+    mutationFn: () => trpc.attendance.confirmDay.mutate({ date: todayStr }),
+    onSuccess: () => {
+      showToast(ATTENDANCE_COPY['attendance.confirm.toast']);
+      void queryClient.invalidateQueries({ queryKey: ['attendance'] });
+    },
+    onError: (err) => showToast(err.message),
+  });
+
+  /* ---------------- B1-7 申诉 ---------------- */
+  const [appealFor, setAppealFor] = useState<string | null>(null);
+  const [appealReason, setAppealReason] = useState('');
+  const appealMut = useMutation({
+    mutationFn: (input: { recordId: string; reason: string }) =>
+      trpc.attendance.appeal.mutate(input),
+    onSuccess: () => {
+      showToast(ATTENDANCE_COPY['attendance.appeal.toast']);
+      setAppealFor(null);
+      setAppealReason('');
+      void queryClient.invalidateQueries({ queryKey: ['attendance'] });
+    },
+    onError: (err) => showToast(err.message),
+  });
+  const submitAppeal = () => {
+    if (!appealFor || !appealReason.trim()) return;
+    appealMut.mutate({ recordId: appealFor, reason: appealReason.trim() });
   };
 
   /* ---------------- 补卡申请 ---------------- */
@@ -230,8 +377,8 @@ export default function AttendancePage() {
       ? ATTENDANCE_COPY['attendance.fence.range']
       : ATTENDANCE_COPY['attendance.fence.noCoord'];
 
-  /* ---- S6 打卡卡上下文主钮（两击确认：点按 → 定位 → 打卡；已打卡种自动轮到下一种） ---- */
-  const nextKind: 'in' | 'out' | null = !todayIn ? 'in' : !todayOut ? 'out' : null;
+  /* ---- S6 打卡卡上下文主钮（片 2 B1-5 多对打卡：主钮永可用，下一击=当日末行异向，服务端同口径推导） ---- */
+  const nextKind: 'in' | 'out' = !lastToday || lastToday.kind === 'out' ? 'in' : 'out';
   const shiftParts: string[] = [
     todayShifts.length
       ? ac('attendance.shift.line', { range: todayShifts.map((s) => `${s.start}–${s.end}`).join(' / ') })
@@ -243,9 +390,7 @@ export default function AttendancePage() {
     ? ac('attendance.punch.busy')
     : nextKind === 'in'
       ? skc('sk.punchIn')
-      : nextKind === 'out'
-        ? skc('sk.punchOut')
-        : ac('attendance.punch.allDone');
+      : skc('sk.punchOut');
 
   /** 行内状态签：仅异常/补卡透出（正常不铺 chip 噪音） */
   const chipOf = (r?: AttRecord) => (r && (r.makeup || r.status !== 'normal') ? <StatusChip r={r} /> : null);
@@ -262,12 +407,72 @@ export default function AttendancePage() {
             shiftLine={shiftParts.join(' · ')}
             fence={{ text: `${fenceText} · ${store?.name ?? '门店'}`, ok: !!(store && store.lat !== null && store.lng !== null) }}
             cta={ctaText}
-            onCta={nextKind ? () => punch(nextKind) : undefined}
-            ctaDisabled={busy !== null || nextKind === null}
-            ctaTestId={nextKind === 'in' ? 'att-punch-in' : nextKind === 'out' ? 'att-punch-out' : 'att-punch-done'}
+            onCta={() => punch(nextKind)}
+            ctaDisabled={busy !== null}
+            ctaTestId={nextKind === 'in' ? 'att-punch-in' : 'att-punch-out'}
           />
         </div>
       </div>
+
+      {/* B1-3 断网暂存提示条（有积压才显示） */}
+      {queueCount > 0 ? (
+        <div className="px-[22px]">
+          <div className="u1-card mt-3 px-4 py-3 text-body-sm font-semibold text-ink" role="status" data-testid="att-offline-banner">
+            {ac('attendance.offline.banner', { count: queueCount })}
+          </div>
+        </div>
+      ) : null}
+
+      {/* B1-1 WiFi 打卡胶囊（白名单启用才显示；Web 端无 BSSID 直读 API → 手动选择门店 WiFi 名映射 bssid，技术上限明面注记） */}
+      {wifiList.length > 0 ? (
+        <div className="px-[22px]">
+          <div className="u1-card mt-3 p-4" data-testid="att-wifi">
+            <label className="block text-caption-xs font-semibold text-[rgba(59,46,36,.62)]" htmlFor="att-wifi-select">
+              {ATTENDANCE_COPY['attendance.wifi.title']}
+            </label>
+            <select
+              id="att-wifi-select"
+              value={selectedBssid}
+              onChange={(e) => setSelectedBssid(e.target.value)}
+              className="u1-ring mt-1.5 h-12 min-h-[44px] w-full rounded-input bg-card px-3 text-body-sm text-ink"
+            >
+              <option value="">{ATTENDANCE_COPY['attendance.wifi.none']}</option>
+              {wifiList.map((w) => (
+                <option key={w.bssid} value={w.bssid}>
+                  {w.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+              {ATTENDANCE_COPY['attendance.wifi.manual']}
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      {/* B1-2 外勤拍照位（server 拒「不在门店范围」后出现；上传后 photoUrl 随 mark 重发） */}
+      {fieldNeeded && !fieldPhotoUrl ? (
+        <div className="px-[22px]">
+          <div className="u1-card mt-3 p-4" data-testid="att-field">
+            <p className="text-body-sm font-semibold text-ink">{ATTENDANCE_COPY['attendance.field.tip']}</p>
+            <label className="mt-3 flex h-12 min-h-[44px] w-full cursor-pointer items-center justify-center rounded-control bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92">
+              {uploading ? ATTENDANCE_COPY['attendance.field.uploading'] : ATTENDANCE_COPY['attendance.field.upload']}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                disabled={uploading}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void uploadFieldPhoto(f);
+                  e.target.value = '';
+                }}
+              />
+            </label>
+          </div>
+        </div>
+      ) : null}
 
       {/* 定位/围栏失败：错误文案原样透出（赭红仅异常）+ 重试钮（不转死圈） */}
       {geoError ? (
@@ -276,7 +481,7 @@ export default function AttendancePage() {
             <p className="text-body-sm font-semibold text-danger-deep">{geoError}</p>
             <button
               type="button"
-              onClick={() => punch(pendingKind ?? 'in')}
+              onClick={() => punch(pendingKind)}
               className="mt-3 h-12 min-h-[44px] min-w-[160px] rounded-control bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
             >
               重试打卡
@@ -365,6 +570,110 @@ export default function AttendancePage() {
           </SkRows>
         )}
       </section>
+
+      {/* 片 2：今日打卡明细（B1-5 多对逐行 / B1-6 确认 / B1-7 申诉） */}
+      {todayRows.length > 0 ? (
+        <section className="mt-5" data-testid="att-today-detail">
+          <h2 className="px-[22px] pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">
+            {ATTENDANCE_COPY['attendance.today.detail']}
+          </h2>
+          <SkRows>
+            {todayRows.map((r) => (
+              <SkRow
+                key={r.id}
+                testId={`att-today-${r.id}`}
+                tone={r.status !== 'normal' ? 'red' : undefined}
+                label={
+                  <>
+                    <span className="sk-mono">{hhmm(r.ts)}</span>{' '}
+                    {r.kind === 'in'
+                      ? ATTENDANCE_COPY['attendance.records.in']
+                      : ATTENDANCE_COPY['attendance.records.out']}
+                    {r.source === 'field' ? (
+                      <b className="ml-1.5 rounded-chip bg-brand-primary-light px-1.5 py-0.5 text-caption-xs font-bold text-ink">
+                        {ATTENDANCE_COPY['attendance.source.field']}
+                      </b>
+                    ) : null}
+                    {r.source === 'offline_relay' ? (
+                      <b className="ml-1.5 rounded-chip bg-brand-primary-light px-1.5 py-0.5 text-caption-xs font-bold text-ink">
+                        {ATTENDANCE_COPY['attendance.source.offline']}
+                      </b>
+                    ) : null}
+                    {r.confirmedAt ? (
+                      <b className="ml-1.5 rounded-chip bg-success-light px-1.5 py-0.5 text-caption-xs font-bold text-success-deep">
+                        {ATTENDANCE_COPY['attendance.confirmed.chip']}
+                      </b>
+                    ) : null}
+                  </>
+                }
+                value={
+                  <span className="inline-flex items-center gap-1.5">
+                    <StatusChip r={r} />
+                    <button
+                      type="button"
+                      data-testid={`att-appeal-${r.id}`}
+                      onClick={() => {
+                        setAppealFor(r.id);
+                        setAppealReason('');
+                      }}
+                      className="rounded-chip bg-sunken px-2 py-1 text-caption-xs font-bold text-ink-secondary"
+                    >
+                      {ATTENDANCE_COPY['attendance.appeal.cta']}
+                    </button>
+                  </span>
+                }
+              />
+            ))}
+          </SkRows>
+          <div className="px-[22px]">
+            <button
+              type="button"
+              data-testid="att-confirm-day"
+              disabled={todayAllConfirmed || confirmMut.isPending}
+              onClick={() => confirmMut.mutate()}
+              className={`mt-3 h-12 min-h-[44px] w-full rounded-control text-body-sm font-bold transition-transform duration-120 ease-philia-spring ${
+                todayAllConfirmed || confirmMut.isPending
+                  ? 'bg-sunken text-ink-placeholder'
+                  : 'bg-brand-primary text-ink active:scale-92'
+              }`}
+            >
+              {todayAllConfirmed
+                ? ATTENDANCE_COPY['attendance.confirm.done']
+                : ATTENDANCE_COPY['attendance.confirm.cta']}
+            </button>
+          </div>
+        </section>
+      ) : null}
+
+      {/* B1-7 申诉弹层（行内卡：选记录 → 填原因 → appeal） */}
+      {appealFor ? (
+        <div className="px-[22px]">
+          <div className="u1-card mt-3 p-4" data-testid="att-appeal-sheet" role="dialog" aria-label={ATTENDANCE_COPY['attendance.appeal.title']}>
+            <p className="text-body-sm font-bold text-ink">{ATTENDANCE_COPY['attendance.appeal.title']}</p>
+            <textarea
+              value={appealReason}
+              onChange={(e) => setAppealReason(e.target.value)}
+              rows={3}
+              maxLength={200}
+              placeholder={ATTENDANCE_COPY['attendance.appeal.placeholder']}
+              className="u1-ring mt-2 w-full rounded-input bg-card px-3 py-2.5 text-body-sm text-ink placeholder:text-ink-placeholder"
+            />
+            <button
+              type="button"
+              data-testid="att-appeal-submit"
+              disabled={appealMut.isPending || !appealReason.trim()}
+              onClick={submitAppeal}
+              className={`mt-3 h-12 min-h-[44px] w-full rounded-control text-body-sm font-bold transition-transform duration-120 ease-philia-spring ${
+                appealMut.isPending || !appealReason.trim()
+                  ? 'bg-sunken text-ink-placeholder'
+                  : 'bg-brand-primary text-ink active:scale-92'
+              }`}
+            >
+              {ATTENDANCE_COPY['attendance.appeal.submit']}
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       {/* 补卡口径注（SkNote；补卡申请真功能保留在下方） */}
       <SkNote>{skc('sk.punchFixNote')}</SkNote>

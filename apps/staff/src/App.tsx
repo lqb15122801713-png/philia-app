@@ -13,6 +13,7 @@ import InventoryCountPage from './pages/staff2/InventoryCountPage'
 import InventoryPage from './pages/staff2/InventoryPage'
 import ManagerPage from './pages/staff2/ManagerPage'
 import MyReviewsPage from './pages/staff2/MyReviewsPage'
+import MySchedulePage from './pages/MySchedulePage'
 import PayPage from './pages/staff2/PayPage'
 import XpPage from './pages/staff2/XpPage'
 import TodayPage from './pages/TodayPage'
@@ -37,6 +38,8 @@ function ProtectedRoutes() {
       <Route path="/xp" element={<XpPage />} />
       <Route path="/reviews" element={<MyReviewsPage />} />
       <Route path="/manager" element={<ManagerPage />} />
+      {/* 骨架批片 2：我的排班（二级页，SkBackBar 返回条，不入 dock） */}
+      <Route path="/my-schedule" element={<MySchedulePage />} />
       <Route path="*" element={<Navigate to="/today" replace />} />
     </Routes>
   )

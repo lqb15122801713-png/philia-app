@@ -44,6 +44,7 @@ export const EventType = {
   CashierBillReversed:   'cashier.billReversed',     // 收银台反结账单（已支付单冲正，仅店主） → store
   // 批次 员工端2.0（R7~R10；与 packages/shared constants/events.ts 同步）
   AttendanceMarked:      'attendance.marked',        // 打卡落痕 → staff + store
+  AttendanceException:   'attendance.exception',     // 考勤异常（迟到/早退/外勤，片 2 B1-4） → store + staff
   AttendanceApprovalResolved: 'attendance.approvalResolved', // 异常/补卡审批结果 → staff
   AttendanceMonthExported: 'attendance.monthExported', // 考勤月表导出审计（仅老板） → store
   StockCountConfirmed:   'stock.countConfirmed',     // 盘点店长确认入账 → store
@@ -73,6 +74,9 @@ export const EventType = {
   InvoiceIssued:         'invoice.issued',          // 发票登记开出 → user（客户）
   // 批次 6 补缺大批 · server 侧支付骨架
   PayOrderClosed:        'pay.orderClosed',         // 支付单超时关单（sweeper/懒超时） → user
+  // 员工端骨架整建批 片 2（排班域；与 packages/shared constants/events.ts 同步）
+  SchedulePublished:     'schedule.published',      // 周班表发布 → 逐受影响员工 staff:{staffId} 频道
+  ShiftSwapResolved:     'shift.swapResolved',      // 换班审批结果（批准换挂/驳回留痕） → 双方 staff 频道
 } as const;
 
 export type EventTypeValue = (typeof EventType)[keyof typeof EventType];

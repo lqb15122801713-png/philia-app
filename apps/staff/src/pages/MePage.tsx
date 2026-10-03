@@ -18,10 +18,11 @@
 import { getApiBase, logout, useMe, usePhiliaClient, useToast } from '@philia/shared';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { SkAppHead, SkIdCard, SkNote, SkRow, SkRows } from '@/components/skeleton';
 import { dayKeyOf, SCHEDULE_DAYS, type HistoryItem } from '@/components/today/utils';
 import { ME_COPY } from '@/copy/me';
+import { sdc } from '@/copy/schedule';
 import { skc } from '@/copy/skeleton';
 
 type Schedule = Partial<Record<string, Array<{ start: string; end: string }> | null>>;
@@ -206,6 +207,12 @@ export default function MePage() {
                 </li>
               );
             })}
+            {/* 骨架批片 2：保留就地展开（周模板只读）+ 链接进 /my-schedule（按日实例/换班/请假） */}
+            <li className="pt-1">
+              <Link to="/my-schedule" data-testid="me-schedule-full" className="text-caption-xs font-bold text-ink underline underline-offset-2">
+                {sdc('sched.meFullLink')}
+              </Link>
+            </li>
           </ul>
         ) : null}
         <SkRow
