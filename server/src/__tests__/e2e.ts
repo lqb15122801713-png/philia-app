@@ -171,7 +171,7 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 1415 键/38 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出；
+ *      56.1 种子 1694 键/39 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -1051,7 +1051,7 @@ async function main(): Promise<void> {
   /* ==================================================================
    * 批次 staff-2（R7~R10）验收段（设计稿 §五清单 / 任务书 §七）
    * ================================================================== */
-  const { and, inArray } = await import('drizzle-orm');
+  const { and, inArray, gte, lt, isNull } = await import('drizzle-orm');
 
   /* ---------- 14. 前置夹具 ----------
    * - 12b 收尾将阿强置 groomer/suspended；本批验收需其在岗（staffProcedure 每请求在职校验）→ 复职；
@@ -4855,13 +4855,13 @@ async function main(): Promise<void> {
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（1415 键/38 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 1415 && domainSet.size === 38 &&
+  check('56.1 copy 域种子全量落库（1694 键/39 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 1694 && domainSet.size === 39 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（1415 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 1415 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（1694 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 1694 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -4966,7 +4966,7 @@ async function main(): Promise<void> {
   interface SlotListRes {
     slots: Array<{
       slotKey: string;
-      live: { id: string; version: number; contentJson: { url: string | null } } | null;
+      live: { id: string; version: number; contentJson: { url: string | null }; actedBy: string | null; actedByNickname: string | null } | null;
       pending: Array<{ id: string; version: number; contentJson: { url: string | null } }>;
       totalVersions: number;
     }>;
@@ -5000,10 +5000,11 @@ async function main(): Promise<void> {
   const liveMapAfterPub = await trpcQuery<SlotLiveMap>('slotPort.liveMap', { cookie: customerCookie });
   const list57b = await trpcQuery<SlotListRes>('slotPort.list', { cookie: ownerCookie });
   const banner57b = list57b.slots.find((s) => s.slotKey === 'home.banner')!;
-  check('57.3 点上线：v2 → live + liveMap 即新值 + pending 清空 + 旧版转 archived（版本历史留）',
+  check('57.3 点上线：v2 → live + liveMap 即新值 + pending 清空 + 旧版转 archived（版本历史留）+ 操作人留痕补列（actedBy=owner，顺带件②）',
     liveMapAfterPub.slots.find((s) => s.key === 'home.banner')?.url === '/api/img/slots/home.banner/e2e57.jpg' &&
-      banner57b.live?.id === up57.version.id && banner57b.pending.length === 0 && banner57b.totalVersions === 2,
-    { live: banner57b.live?.version, total: banner57b.totalVersions });
+      banner57b.live?.id === up57.version.id && banner57b.pending.length === 0 && banner57b.totalVersions === 2 &&
+      banner57b.live?.actedBy === ownerUser!.id && banner57b.live?.actedByNickname === '菲丽亚店主',
+    { live: banner57b.live?.version, total: banner57b.totalVersions, acted: banner57b.live?.actedByNickname });
 
   /* 57.4 revert 回退上一版 → liveMap 回码内默认路径 */
   const rev57 = await trpcMutate<{ version: { version: number }; revertedFrom: number }>('slotPort.revert', {
@@ -5030,6 +5031,68 @@ async function main(): Promise<void> {
       clerkUp57 instanceof TrpcHttpError && clerkUp57.httpStatus === 403 &&
       badSlot57 instanceof TrpcHttpError && badSlot57.code === 'BAD_REQUEST' && badSlot57.message.includes('未知槽位键'),
     { list: clerkList57 instanceof Error ? clerkList57.message : null, bad: badSlot57 instanceof Error ? badSlot57.message : null });
+
+  /* ==================================================================
+   * 员工端骨架批片 1（任务总线骨架 · staff_tasks 只读投影）验收段
+   * ================================================================== */
+  console.log('\n[骨架批片1] 57.6 任务总线（listMy 聚合在途件）');
+  interface StaffTaskT { kind: string; refId: string; title: string; sub: string; link: string; alert: boolean }
+  /* 夹具：丽丽名下今日 confirmed 预约一单（读她今日占用找空档，防撞时段） + 本店 pending 补卡审批一行 + 盘点草稿一单 + 在住寄养一卡 */
+  const dayStartBus = new Date(); dayStartBus.setHours(0, 0, 0, 0);
+  const dayEndBus = new Date(dayStartBus.getTime() + 24 * 3600 * 1000);
+  const herBusy = await db
+    .select({ s: schema.appointments.scheduledStart, e: schema.appointments.scheduledEnd })
+    .from(schema.appointments)
+    .where(and(
+      eq(schema.appointments.staffId, staffRow2.id),
+      gte(schema.appointments.scheduledStart, dayStartBus),
+      lt(schema.appointments.scheduledStart, dayEndBus),
+      inArray(schema.appointments.status, ['pending', 'confirmed', 'in_service']),
+    ));
+  let busAppt: { id: string } | null = null;
+  for (let h = 9; h <= 18 && !busAppt; h += 1) {
+    for (const mm of [0, 30]) {
+      const t = new Date(dayStartBus); t.setHours(h, mm, 0, 0);
+      const end = new Date(t.getTime() + 60 * 60 * 1000);
+      if (t.getTime() < Date.now() + 30 * 60 * 1000) continue; // 过去/半小时内不约
+      const clash = herBusy.some((b) => b.s.getTime() < end.getTime() && b.e.getTime() > t.getTime());
+      if (clash) continue;
+      try {
+        busAppt = await trpcMutate<{ id: string }>('appointment.create', {
+          cookie: customerCookie,
+          input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: t, paymentMode: 'pay_at_store', note: '【测试】骨架批任务总线单', staffId: staffRow2.id },
+        });
+      } catch { /* 撞单换下一个 */ }
+      if (busAppt) break;
+    }
+  }
+  if (!busAppt) throw new Error('任务总线夹具：今日时段全撞');
+  await trpcMutate('appointment.confirm', { cookie: ownerCookie, input: { appointmentId: busAppt.id } });
+  const liliUserRow = await db.select({ userId: schema.staff.userId }).from(schema.staff).where(eq(schema.staff.id, staffRow2.id)).get();
+  await db.insert(schema.attendanceApprovals).values({
+    storeId, staffId: staffRow2.id, applicantUserId: liliUserRow!.userId,
+    type: 'makeup', date: '2026-10-03', kind: 'in', requestedTs: new Date(), reason: '【测试】任务总线夹具', status: 'pending',
+  });
+  const busCount = await db.insert(schema.inventoryCounts).values({
+    storeId, type: 'daily', status: 'draft', createdBy: ownerUser!.id,
+  }).returning().then((r) => r[0]!);
+  const busStay = await db.insert(schema.boardingStays).values({
+    appointmentId: busAppt.id, roomNo: 'R-TEST',
+  }).returning().then((r) => r[0]!);
+  const liliBus = await trpcQuery<{ tasks: StaffTaskT[] }>('staffTask.listMy', { cookie: liliCookie });
+  check('57.6 美容师视界：名下今日预约入列（appointment 类 link=/schedule）+盘点草稿入列+寄养今日未打卡入列+审批不入列（非管理层）',
+    liliBus.tasks.some((t) => t.kind === 'appointment' && t.refId === busAppt.id) &&
+      liliBus.tasks.some((t) => t.kind === 'inventory' && t.refId === busCount.id) &&
+      liliBus.tasks.some((t) => t.kind === 'boarding' && t.refId === busStay.id) &&
+      !liliBus.tasks.some((t) => t.kind === 'approval'),
+    liliBus.tasks.map((t) => `${t.kind}:${t.refId.slice(-6)}`));
+  const mgrBus = await trpcQuery<{ tasks: StaffTaskT[] }>('staffTask.listMy', { cookie: managerCookie });
+  check('57.6 店长视界：补卡审批 pending 入列（approval 类 alert=true link=/manager）',
+    mgrBus.tasks.some((t) => t.kind === 'approval' && t.alert === true && t.link === '/manager'),
+    mgrBus.tasks.filter((t) => t.kind === 'approval').map((t) => t.refId));
+  /* 守尾清零：审批行置 rejected（不留 pending 污染后续段）；盘点草稿/寄养卡留在临时库无后续段读 */
+  await db.update(schema.attendanceApprovals).set({ status: 'rejected' })
+    .where(eq(schema.attendanceApprovals.storeId, storeId));
 
   client.close();
 }

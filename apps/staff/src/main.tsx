@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { ErrorBoundary } from '@philia/shared'
 import './index.css'
+// 员工端骨架整建批片 1：骨架样式库（.sk 作用域；照 index.css 同位全局挂载惯例）
+import './styles/skeleton.css'
 import App from './App.tsx'
 import AppProviders from './providers.tsx'
 

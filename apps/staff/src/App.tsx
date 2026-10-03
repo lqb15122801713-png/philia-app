@@ -6,8 +6,8 @@ import StaffDock, { type StaffDockActive } from './components/StaffDock'
 import BoardingCheckinPage from './pages/BoardingCheckinPage'
 import DevLoginPage from './pages/DevLoginPage'
 import ExecutePage from './pages/ExecutePage'
-import HistoryPage from './pages/HistoryPage'
 import MePage from './pages/MePage'
+import SchedulePage from './pages/SchedulePage'
 import AttendancePage from './pages/staff2/AttendancePage'
 import InventoryCountPage from './pages/staff2/InventoryCountPage'
 import InventoryPage from './pages/staff2/InventoryPage'
@@ -25,7 +25,9 @@ function ProtectedRoutes() {
       <Route path="/today" element={<TodayPage />} />
       <Route path="/execute/:appointmentId" element={<ExecutePage />} />
       <Route path="/boarding/:id/checkin" element={<BoardingCheckinPage />} />
-      <Route path="/history" element={<HistoryPage />} />
+      {/* 骨架批片 1：历史单回看并入 S-02 切日态（S-12），/history 重定向 /schedule；HistoryPage 文件保留 */}
+      <Route path="/schedule" element={<SchedulePage />} />
+      <Route path="/history" element={<Navigate to="/schedule" replace />} />
       <Route path="/me" element={<MePage />} />
       {/* 批次 员工端2.0（R7~R10）：子页统一 PageHeader 返回条（W1 导航闭环） */}
       <Route path="/attendance" element={<AttendancePage />} />
@@ -40,8 +42,10 @@ function ProtectedRoutes() {
   )
 }
 
-// U2 任务 A：dock 仅主级三屏（任务台/历史/我的）；详情级（执行/打卡）走 PageHeader 返回条
-const DOCK_TABS: Record<string, StaffDockActive> = { '/today': 'today', '/history': 'history', '/me': 'me' }
+// U2 任务 A：dock 仅主级屏；/today 由 S-01 工位台自渲染 SkDock（骨架批片 1，此处摘除旧 StaffDock 防双 dock）；
+// 批片 1 结构组：/schedule（S-02，active=history→appt）与 /attendance（S-03，active=punch）升主级入 dock；
+// /history 已重定向 /schedule（不再出现）；S-05~S-11 二级页无 dock（backbar 取代）
+const DOCK_TABS: Record<string, StaffDockActive> = { '/schedule': 'history', '/attendance': 'punch', '/me': 'me' }
 
 export default function App() {
   const { pathname } = useLocation()

@@ -148,7 +148,7 @@ const ROUTES = [
   { app: 'merchant', path: '/dev-login', expect: 'gate' },
   /* 员工端 14 */
   { app: 'staff', path: '/today', expect: 'tab' },
-  { app: 'staff', path: '/history', expect: 'tab' },
+  { app: 'staff', path: '/schedule', expect: 'tab', note: '骨架批片 1：S-02 预约·当天（dock 四槽第二槽）；/history 重定向至此（S-12 切日态）' },
   { app: 'staff', path: '/me', expect: 'tab' },
   { app: 'staff', path: `/execute/${APPT_ID}`, expect: 'sub', note: '异常态守卫页亦须出口' },
   { app: 'staff', path: `/boarding/${STAY_ID}/checkin`, expect: 'sub', note: '异常态守卫页（W1 弱出口已按钮化）' },

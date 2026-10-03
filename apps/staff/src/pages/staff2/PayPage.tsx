@@ -1,24 +1,22 @@
 /**
  * 薪资提成 /pay（批次 员工端2.0 · R9 · docs/staff2/R7-R10-DESIGN.md §一.4/§一.5）
+ * 骨架批片 1（S-05）：外框换骨架——SkBackBar（二级页无 dock）→ 大数字卡（mono 34 +
+ * trio 分项）→ S7 明细（SkRows/SkRow 分组）→ 口径注（SkNote）。数据流/权限零回退。
  *
  * 仅本人页：server commission.mySummary 已硬过滤（employeeId=ctx.user，越权传参 FORBIDDEN），
  * 前端无任何选人控件。单查询渲染（<2s 约束）：整页只调一次 mySummary；
  * 历史快照展开时才懒查对应月份（同一端点带 month）。
- *
- * 区块：口径小字 → 本月提成三分列（服务/售卡/商品，售卡恒空明示不悬空）→
- * 绩效区（当季基数/档位/系数/预估绩效，仅本人适用池）→ 扣减记录（扣绩效不扣提成）→
- * 历史月份快照（点展开该月 payload 分列）。
  *
  * 金额：库内 integer 分，显示一律 fenToYuan；比例 bp → %；系数 bp → 倍。
  */
 
 import { Skeleton, usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronDown, Wallet } from 'lucide-react';
-import { useState } from 'react';
-import PageHeader from '@/components/PageHeader';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 import { fenToYuan } from '@/components/today/utils';
 import { PAY_COPY } from '@/copy/pay';
+import { SkBackBar, SkBtnAction, SkNote, SkRows } from '../../components/skeleton';
+import '../../styles/skeleton.css';
 
 /* ---------------- 与 server computeMonth 载荷同构的本地类型 ---------------- */
 
@@ -77,7 +75,7 @@ interface MonthPayload {
   probation: boolean;
   serviceLines: CommissionLine[];
   productLines: CommissionLine[];
-  cardLines: never[];
+  cardLines: CommissionLine[];
   cardNote: string;
   storeLines: StoreLine[];
   commissionTotalFen: number;
@@ -110,34 +108,67 @@ function pickPool(p: MonthPayload): { label: string; pool: PerfPool } {
     : { label: PAY_COPY['pay.pool.frontdesk'], pool: p.performance.frontdeskPool };
 }
 
+/* ---------------- 骨架内联样（.sk 作用域 token，一次性件不新造构件） ---------------- */
+
+const cardSt: CSSProperties = {
+  margin: '12px 22px 0',
+  background: 'var(--card)',
+  borderRadius: 18,
+  padding: '14px 16px',
+  boxShadow: '0 1px 2px rgba(42, 31, 21, .05)',
+};
+const monoSm: CSSProperties = { fontFamily: 'var(--mono)', fontSize: 9.5, color: 'var(--muted)' };
+const chipSt: CSSProperties = {
+  marginLeft: 4, borderRadius: 999, padding: '1px 6px', fontSize: 9, whiteSpace: 'nowrap',
+};
+
+/** S7 分组题（12.5/800 + 右 mono 注） */
+function SecTitle({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
+  return (
+    <p style={{ margin: '16px 22px 0', display: 'flex', alignItems: 'baseline', gap: 8, fontSize: 12.5, fontWeight: 800 }}>
+      {children}
+      {aside ? <span className="sk-mono" style={{ marginLeft: 'auto', fontSize: 9.5, fontWeight: 500, color: 'var(--muted)' }}>{aside}</span> : null}
+    </p>
+  );
+}
+
+/** SkRows 内的空态/说明行（muted） */
+function EmptyRow({ text }: { text: string }) {
+  return (
+    <div className="row">
+      <span className="lb" style={{ color: 'var(--muted)', fontSize: 11 }}>{text}</span>
+    </div>
+  );
+}
+
 /* ---------------- 提成单列 ---------------- */
 
 function LineRow({ line, probation }: { line: CommissionLine; probation: boolean }) {
   return (
-    <li className="flex items-center gap-3 py-2.5">
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-body-sm font-bold text-ink">{line.name}</p>
-        <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
-          <span className="u1-num">{line.date.slice(5)}</span> · 单号 <span className="u1-num">{line.billNo}</span>
+    <div className="row">
+      <span className="lb" style={{ minWidth: 0, flex: 1 }}>
+        <span style={{ display: 'block', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{line.name}</span>
+        <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
+          {line.date.slice(5)} · {PAY_COPY['pay.line.billNo']} {line.billNo}
           {line.pendingApproval ? (
-            <span className="ml-1 rounded-chip bg-brand-primary-light px-1 py-0.5 text-ink">超产能·待店长批准</span>
+            <span style={{ ...chipSt, background: 'var(--gold-pale)', color: 'var(--ink-deep)' }}>{PAY_COPY['pay.line.pending']}</span>
           ) : line.overwork ? (
-            <span className="ml-1 rounded-chip bg-brand-secondary-light px-1 py-0.5 text-ink">超产能·1.5 倍已批准</span>
+            <span style={{ ...chipSt, background: 'var(--gold)', color: 'var(--ink-deep)' }}>{PAY_COPY['pay.line.overwork']}</span>
           ) : null}
           {probation && line.multiplierBp !== 10000 ? (
-            <span className="ml-1 rounded-chip bg-sunken px-1 py-0.5 text-[rgba(59,46,36,.62)]">试用期 ×50%</span>
+            <span style={{ ...chipSt, background: 'var(--paper)', color: 'var(--muted)' }}>{PAY_COPY['pay.line.probation']}</span>
           ) : null}
-        </p>
-        <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
-          基数 <span className="u1-num">{fenToYuan(line.baseFen)}</span> × {bpToPct(line.rateBp)}
-        </p>
-      </div>
-      <span className="u1-num shrink-0 text-body-sm font-bold text-ink">{fenToYuan(line.amountFen)}</span>
-    </li>
+        </span>
+        <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
+          {PAY_COPY['pay.line.base']} {fenToYuan(line.baseFen)} × {bpToPct(line.rateBp)}
+        </span>
+      </span>
+      <span className="vl">{fenToYuan(line.amountFen)}</span>
+    </div>
   );
 }
 
-/** 分列小节（标题+逐行+小节合计；空态文案可选） */
+/** 分列小节（题+小计 → SkRows 逐行；空态文案可选） */
 function Section({
   title,
   lines,
@@ -153,25 +184,16 @@ function Section({
 }) {
   const total = lines.reduce((s, l) => s + l.amountFen, 0);
   return (
-    <section className="u1-card mt-3.5 px-4 py-3.5" data-testid={testid}>
-      <header className="flex items-baseline">
-        <h2 className="text-body-sm font-bold">{title}</h2>
-        <span className="ml-auto text-caption-xs text-[rgba(59,46,36,.42)]">
-          小计 <b className="u1-num text-ink">{fenToYuan(total)}</b>
-        </span>
-      </header>
-      {lines.length === 0 ? (
-        <p className="py-3 text-caption-xs text-[rgba(59,46,36,.42)]">
-          {emptyNote ?? PAY_COPY['pay.empty.default']}
-        </p>
-      ) : (
-        <ul className="divide-y divide-[rgba(59,46,36,.06)]">
-          {lines.map((l) => (
-            <LineRow key={l.itemId} line={l} probation={probation} />
-          ))}
-        </ul>
-      )}
-    </section>
+    <>
+      <SecTitle aside={<>{PAY_COPY['pay.sec.subtotal']} {fenToYuan(total)}</>}>{title}</SecTitle>
+      <SkRows testId={testid}>
+        {lines.length === 0 ? (
+          <EmptyRow text={emptyNote ?? PAY_COPY['pay.empty.default']} />
+        ) : (
+          lines.map((l) => <LineRow key={l.itemId} line={l} probation={probation} />)
+        )}
+      </SkRows>
+    </>
   );
 }
 
@@ -193,63 +215,75 @@ function SnapshotRow({ period, kind, totalFen }: { period: string; kind: string;
 
   const inner = (
     <>
-      <div className="min-w-0 flex-1">
-        <p className="text-body-sm font-bold text-ink">
-          <span className="u1-num">{period}</span>
-          <span className="ml-1.5 text-caption-xs font-normal text-[rgba(59,46,36,.62)]">
-            {kind === 'commission' ? '提成月结' : '绩效季结'}
+      <span className="lb" style={{ minWidth: 0, flex: 1 }}>
+        <span style={{ display: 'block', fontWeight: 700 }}>
+          <span className="sk-mono">{period}</span>
+          <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 400, color: 'var(--muted)' }}>
+            {kind === 'commission' ? PAY_COPY['pay.history.kind.commission'] : PAY_COPY['pay.history.kind.perf']}
           </span>
-        </p>
-        <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
-          <span className="rounded-chip bg-success-light px-1 py-0.5 text-success-deep">已结算</span>
-          {expandable ? '' : ' · 季度绩效快照'}
-        </p>
-      </div>
-      <span className="u1-num shrink-0 text-body-sm font-bold text-ink">{fenToYuan(totalFen)}</span>
+        </span>
+        <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
+          <span style={{ ...chipSt, marginLeft: 0, background: 'var(--paper)', color: 'var(--ink)' }}>{PAY_COPY['pay.history.settled']}</span>
+          {expandable ? '' : ` · ${PAY_COPY['pay.history.quarterTag']}`}
+        </span>
+      </span>
+      <span className="vl">{fenToYuan(totalFen)}</span>
       {expandable ? (
-        <ChevronDown
-          className={`h-4 w-4 shrink-0 text-[rgba(59,46,36,.42)] transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+        <span
           aria-hidden
-        />
+          style={{
+            width: 26, height: 26, borderRadius: '50%', background: 'var(--paper)', flex: 'none',
+            display: 'grid', placeItems: 'center', color: 'var(--ink)',
+            transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .2s',
+          }}
+        >
+          ›
+        </span>
       ) : null}
     </>
   );
 
+  const resetBtn: CSSProperties = {
+    background: 'none', border: 0, font: 'inherit', color: 'inherit', textAlign: 'left', width: '100%', cursor: 'pointer',
+  };
+
   return (
-    <li>
+    <div>
       {expandable ? (
         <button
           type="button"
-          className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+          className="row"
+          style={resetBtn}
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
+          aria-label={PAY_COPY['pay.history.expand']}
           data-testid={`snapshot-${period}`}
         >
           {inner}
         </button>
       ) : (
-        <div className="flex items-center gap-3 px-4 py-3.5">{inner}</div>
+        <div className="row">{inner}</div>
       )}
       {open && expandable ? (
-        <div className="px-4 pb-3 text-caption-xs text-[rgba(59,46,36,.62)]">
+        <div className="sk-mono" style={{ padding: '0 0 11px', fontSize: 9.5, color: 'var(--muted)', lineHeight: 1.8 }}>
           {detailQuery.isPending ? (
-            <p>快照明细加载中…</p>
+            PAY_COPY['pay.history.loading']
           ) : detailQuery.isError || !detail ? (
-            <p>明细加载失败，请稍后重试</p>
+            PAY_COPY['pay.history.fail']
           ) : (
-            <p className="u1-num leading-relaxed">
-              服务 {fenToYuan(detail.serviceLines.reduce((s, l) => s + l.amountFen, 0))}
-              {' · '}商品 {fenToYuan(detail.productLines.reduce((s, l) => s + l.amountFen, 0))}
+            <>
+              {PAY_COPY['pay.snap.service']} {fenToYuan(detail.serviceLines.reduce((s, l) => s + l.amountFen, 0))}
+              {' · '}{PAY_COPY['pay.snap.product']} {fenToYuan(detail.productLines.reduce((s, l) => s + l.amountFen, 0))}
               {detail.storeLines.length > 0
-                ? ` · 全店 ${fenToYuan(detail.storeLines.reduce((s, l) => s + l.amountFen, 0))}`
+                ? ` · ${PAY_COPY['pay.snap.store']} ${fenToYuan(detail.storeLines.reduce((s, l) => s + l.amountFen, 0))}`
                 : ''}
-              {' · '}提成合计 {fenToYuan(detail.commissionTotalFen)}
-              {' · '}绩效应付 {fenToYuan(detail.performance.payableFen)}
-            </p>
+              {' · '}{PAY_COPY['pay.snap.commission']} {fenToYuan(detail.commissionTotalFen)}
+              {' · '}{PAY_COPY['pay.snap.perf']} {fenToYuan(detail.performance.payableFen)}
+            </>
           )}
         </div>
       ) : null}
-    </li>
+    </div>
   );
 }
 
@@ -270,193 +304,182 @@ export default function PayPage() {
   const perf = payload?.performance ?? null;
   const my = payload ? pickPool(payload) : null;
 
+  const trioCells = payload
+    ? [
+        { k: PAY_COPY['pay.trio.service'], v: fenToYuan(payload.serviceLines.reduce((s, l) => s + l.amountFen, 0)) },
+        { k: PAY_COPY['pay.trio.card'], v: fenToYuan(payload.cardLines.reduce((s, l) => s + l.amountFen, 0)) },
+        { k: PAY_COPY['pay.trio.product'], v: fenToYuan(payload.productLines.reduce((s, l) => s + l.amountFen, 0)) },
+      ]
+    : [];
+
   return (
-    <div className="pb-6">
-      <PageHeader
-        title="薪资提成"
-        backTo="/me"
-        aside={
-          data ? (
-            <span>
-              <span className="u1-num">{data.month}</span>
-              {data.frozen ? ' · 已快照冻结' : ' · 实时计算'}
-            </span>
-          ) : null
-        }
+    <div className="sk">
+      <SkBackBar
+        title={PAY_COPY['pay.title']}
+        fallback="/me"
+        note={data ? `${data.month} · ${data.frozen ? PAY_COPY['pay.aside.frozen'] : PAY_COPY['pay.aside.realtime']}` : undefined}
       />
 
-      <div className="px-[22px]">
-        {summaryQuery.isPending ? (
-          <div className="mt-2 space-y-2.5" aria-label="加载中">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="u1-card p-4">
-                <Skeleton className="h-5 w-28 !rounded-chip" />
-                <Skeleton className="mt-2 h-4 w-44 !rounded-chip" />
-              </div>
-            ))}
+      {summaryQuery.isPending ? (
+        <div style={{ margin: '12px 22px 0', display: 'grid', gap: 10 }} aria-label="加载中">
+          {[0, 1, 2].map((i) => (
+            <div key={i} style={cardSt}>
+              <Skeleton className="h-5 w-28 !rounded-chip" />
+              <Skeleton className="mt-2 h-4 w-44 !rounded-chip" />
+            </div>
+          ))}
+        </div>
+      ) : summaryQuery.isError || !data || !payload || !perf || !my ? (
+        <div style={{ ...cardSt, textAlign: 'center' }}>
+          <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>{PAY_COPY['pay.load.fail']}</p>
+          <div style={{ marginTop: 12 }}>
+            <SkBtnAction onClick={() => void summaryQuery.refetch()} testId="sk-pay-retry">
+              {PAY_COPY['pay.retry']}
+            </SkBtnAction>
           </div>
-        ) : summaryQuery.isError || !data || !payload || !perf || !my ? (
-          <div className="u1-card mt-2 p-4 text-center">
-            <p className="text-body-sm text-ink-secondary">薪资提成加载失败，请检查网络后重试</p>
-            <button
-              type="button"
-              onClick={() => void summaryQuery.refetch()}
-              className="mt-4 h-12 min-w-[160px] rounded-control bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
-            >
-              重新加载
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* 口径小字（server policyNote：计提时点/冲减/次月结算日/每月快照，数值读规则表） */}
-            <section className="u1-card mt-2 p-4" data-testid="pay-policy">
-              <p className="text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">{data.policyNote}</p>
-            </section>
-
-            {/* 本月提成合计 */}
-            <section className="u1-card mt-3.5 p-4 text-center" data-testid="pay-total">
-              <p className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">本月提成合计</p>
-              <p className="u1-num mt-1 text-detail-lg font-bold text-ink">
-                {fenToYuan(payload.commissionTotalFen)}
-              </p>
-              {payload.probation ? (
-                <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">{PAY_COPY['pay.probation.note']}</p>
-              ) : null}
-            </section>
-
-            {/* 三分列：服务 / 售卡 / 商品 */}
-            <Section
-              title="服务提成"
-              lines={payload.serviceLines}
-              emptyNote={PAY_COPY['pay.empty.service']}
-              probation={payload.probation}
-              testid="pay-service"
-            />
-            <Section
-              title="售卡提成"
-              lines={[...payload.cardLines]}
-              emptyNote={payload.cardNote /* server 明示：随会员前置批开通（不悬空、不虚构行） */}
-              probation={payload.probation}
-              testid="pay-card"
-            />
-            <Section
-              title="商品提成"
-              lines={payload.productLines}
-              emptyNote={PAY_COPY['pay.empty.product']}
-              probation={payload.probation}
-              testid="pay-product"
-            />
-
-            {/* 全店提成（G4/P3 档才出；计入口径随行 label 明示） */}
-            {payload.storeLines.length > 0 ? (
-              <section className="u1-card mt-3.5 px-4 py-3.5" data-testid="pay-store">
-                <h2 className="text-body-sm font-bold">全店提成</h2>
-                <ul className="divide-y divide-[rgba(59,46,36,.06)]">
-                  {payload.storeLines.map((l) => (
-                    <li key={l.kind} className="flex items-center gap-3 py-2.5">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-body-sm font-bold text-ink">{l.label}</p>
-                        <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
-                          基数 <span className="u1-num">{fenToYuan(l.baseFen)}</span> × {bpToPct(l.rateBp)}
-                        </p>
-                      </div>
-                      <span className="u1-num shrink-0 text-body-sm font-bold text-ink">{fenToYuan(l.amountFen)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ) : null}
-
-            {/* 绩效区：当季基数/档位/系数/预估绩效，仅本人适用池（两池不并显） */}
-            <section className="u1-card mt-3.5 px-4 py-3.5" data-testid="pay-performance">
-              <header className="flex items-baseline">
-                <h2 className="text-body-sm font-bold">绩效</h2>
-                <span className="ml-auto text-caption-xs text-[rgba(59,46,36,.42)]">
-                  <span className="u1-num">{perf.quarter}</span> 季度
-                </span>
-              </header>
-              {!perf.applicable ? (
-                <p className="py-3 text-caption-xs text-[rgba(59,46,36,.42)]">{perf.note ?? '试用期不设绩效与全勤'}</p>
-              ) : (
-                <>
-                  <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]">{my.label}</p>
-                  <div className="mt-2 grid grid-cols-3 rounded-control bg-sunken px-2 py-3 text-center">
-                    <div>
-                      <div className="u1-num text-title font-bold leading-6">{fenToYuan(my.pool.baseFen)}</div>
-                      <div className="mt-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">当季基数</div>
-                    </div>
-                    <div>
-                      <div className="u1-num text-title font-bold leading-6">{perf.grade}</div>
-                      <div className="mt-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">档位</div>
-                    </div>
-                    <div>
-                      <div className="u1-num text-title font-bold leading-6">
-                        {perf.coeffBp === null ? '—' : `×${bpToCoeff(perf.coeffBp)}`}
-                      </div>
-                      <div className="mt-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">系数</div>
-                    </div>
-                  </div>
-                  <p className="mt-2.5 flex items-baseline justify-between">
-                    <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
-                      {PAY_COPY['pay.perf.estimateLead']} {bpToPct(my.pool.rateBp)} {PAY_COPY['pay.perf.estimateTail']}
-                    </span>
-                    <span className="u1-num text-body-sm font-bold text-ink">{fenToYuan(perf.payableFen)}</span>
-                  </p>
-                  {perf.coeffBp === null ? (
-                    <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">{PAY_COPY['pay.perf.noGrade']}</p>
-                  ) : null}
-                </>
-              )}
-            </section>
-
-            {/* 扣减记录（只扣绩效不扣提成） */}
-            <section className="u1-card mt-3.5 px-4 py-3.5" data-testid="pay-deductions">
-              <h2 className="text-body-sm font-bold">扣减记录</h2>
-              {payload.deductions.length === 0 ? (
-                <p className="py-3 text-caption-xs text-[rgba(59,46,36,.42)]">{PAY_COPY['pay.deductions.empty']}</p>
-              ) : (
-                <ul className="divide-y divide-[rgba(59,46,36,.06)]">
-                  {payload.deductions.map((d) => (
-                    <li key={d.id} className="flex items-center gap-3 py-2.5">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-body-sm font-bold text-ink">{d.reason}</p>
-                        <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
-                          <span className="u1-num">{fmtTs(d.createdAt)}</span> · 录入人 <span className="u1-num">{d.createdBy.slice(-6)}</span>
-                        </p>
-                      </div>
-                      <span className="u1-num shrink-0 text-body-sm font-bold text-danger">−{fenToYuan(d.amountFen)}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <p className="pt-1 text-caption-xs text-[rgba(59,46,36,.42)]">{PAY_COPY['pay.deductions.note']}</p>
-            </section>
-
-            {/* 历史月份快照（新→旧；提成月结点展开分列明细） */}
-            <section className="u1-card mt-3.5 divide-y divide-[rgba(59,46,36,.06)]" data-testid="pay-history">
-              <h2 className="px-4 pt-3.5 text-body-sm font-bold">历史月份</h2>
-              {data.snapshots.length === 0 ? (
-                <p className="px-4 py-3 text-caption-xs text-[rgba(59,46,36,.42)]">
-                  {PAY_COPY['pay.history.empty']}
-                </p>
-              ) : (
-                <ul className="divide-y divide-[rgba(59,46,36,.06)]">
-                  {data.snapshots.map((s) => (
-                    <SnapshotRow key={`${s.period}-${s.kind}`} period={s.period} kind={s.kind} totalFen={s.totalFen} />
-                  ))}
-                </ul>
-              )}
-              <p className="px-4 pb-3.5 pt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
-                {PAY_COPY['pay.history.note']}
-              </p>
-            </section>
-
-            <p className="mb-6 mt-4 flex items-center justify-center gap-1 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
-              <Wallet className="h-3.5 w-3.5" aria-hidden /> {PAY_COPY['pay.footer.lead']} <span className="u1-num">v{data.ruleVersion}</span>
+        </div>
+      ) : (
+        <>
+          {/* 大数字卡（mono 34 合计 + trio 分项） */}
+          <section style={{ ...cardSt, borderRadius: 20, padding: '18px 20px', textAlign: 'center' }} data-testid="pay-total">
+            <p className="sk-mono" style={{ fontSize: 9.5, letterSpacing: '.12em', color: 'var(--muted)' }}>
+              {PAY_COPY['pay.total.label']}
             </p>
-          </>
-        )}
-      </div>
+            <p className="sk-mono" style={{ marginTop: 4, fontSize: 34, fontWeight: 700, letterSpacing: '.02em' }}>
+              {fenToYuan(payload.commissionTotalFen)}
+            </p>
+            {payload.probation ? (
+              <p style={{ marginTop: 4, fontSize: 10, color: 'var(--muted)' }}>{PAY_COPY['pay.probation.note']}</p>
+            ) : null}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', marginTop: 14, borderTop: '1px solid var(--hairline-soft)', paddingTop: 12 }}>
+              {trioCells.map((c, i) => (
+                <div key={c.k} style={i > 0 ? { boxShadow: 'inset 1px 0 0 var(--hairline-soft)' } : undefined}>
+                  <div className="sk-mono" style={{ fontSize: 13, fontWeight: 700 }}>{c.v}</div>
+                  <div style={{ marginTop: 2, fontSize: 10, color: 'var(--muted)' }}>{c.k}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* S7 明细：服务 / 售卡 / 商品 */}
+          <Section
+            title={PAY_COPY['pay.sec.service']}
+            lines={payload.serviceLines}
+            emptyNote={PAY_COPY['pay.empty.service']}
+            probation={payload.probation}
+            testid="pay-service"
+          />
+          <Section
+            title={PAY_COPY['pay.sec.card']}
+            lines={[...payload.cardLines]}
+            emptyNote={payload.cardNote /* server 明示：随会员前置批开通（不悬空、不虚构行） */}
+            probation={payload.probation}
+            testid="pay-card"
+          />
+          <Section
+            title={PAY_COPY['pay.sec.product']}
+            lines={payload.productLines}
+            emptyNote={PAY_COPY['pay.empty.product']}
+            probation={payload.probation}
+            testid="pay-product"
+          />
+
+          {/* 全店提成（G4/P3 档才出；计入口径随行 label 明示） */}
+          {payload.storeLines.length > 0 ? (
+            <>
+              <SecTitle>{PAY_COPY['pay.sec.store']}</SecTitle>
+              <SkRows testId="pay-store">
+                {payload.storeLines.map((l) => (
+                  <div className="row" key={l.kind}>
+                    <span className="lb" style={{ minWidth: 0, flex: 1 }}>
+                      <span style={{ display: 'block', fontWeight: 700 }}>{l.label}</span>
+                      <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
+                        {PAY_COPY['pay.line.base']} {fenToYuan(l.baseFen)} × {bpToPct(l.rateBp)}
+                      </span>
+                    </span>
+                    <span className="vl">{fenToYuan(l.amountFen)}</span>
+                  </div>
+                ))}
+              </SkRows>
+            </>
+          ) : null}
+
+          {/* 绩效区：当季基数/档位/系数/预估绩效，仅本人适用池（两池不并显） */}
+          <SecTitle aside={`${perf.quarter} ${PAY_COPY['pay.perf.quarterTail']}`}>{PAY_COPY['pay.sec.perf']}</SecTitle>
+          <SkRows testId="pay-performance">
+            {!perf.applicable ? (
+              <EmptyRow text={perf.note ?? PAY_COPY['pay.perf.na']} />
+            ) : (
+              <>
+                <div className="row">
+                  <span className="lb" style={{ color: 'var(--muted)', fontSize: 11 }}>{my.label}</span>
+                </div>
+                <div className="row">
+                  <span className="lb">{PAY_COPY['pay.perf.base']}</span>
+                  <span className="vl">{fenToYuan(my.pool.baseFen)}</span>
+                </div>
+                <div className="row">
+                  <span className="lb">{PAY_COPY['pay.perf.grade']}</span>
+                  <span className="vl">{perf.grade}</span>
+                </div>
+                <div className="row">
+                  <span className="lb">{PAY_COPY['pay.perf.coeff']}</span>
+                  <span className="vl">{perf.coeffBp === null ? '—' : `×${bpToCoeff(perf.coeffBp)}`}</span>
+                </div>
+                <div className="row">
+                  <span className="lb" style={{ fontSize: 11 }}>
+                    {PAY_COPY['pay.perf.estimateLead']} {bpToPct(my.pool.rateBp)} {PAY_COPY['pay.perf.estimateTail']}
+                  </span>
+                  <span className="vl">{fenToYuan(perf.payableFen)}</span>
+                </div>
+                {perf.coeffBp === null ? <EmptyRow text={PAY_COPY['pay.perf.noGrade']} /> : null}
+              </>
+            )}
+          </SkRows>
+
+          {/* 扣减记录（只扣绩效不扣提成） */}
+          <SecTitle>{PAY_COPY['pay.sec.deductions']}</SecTitle>
+          <SkRows testId="pay-deductions">
+            {payload.deductions.length === 0 ? (
+              <EmptyRow text={PAY_COPY['pay.deductions.empty']} />
+            ) : (
+              payload.deductions.map((d) => (
+                <div className="row" key={d.id}>
+                  <span className="lb" style={{ minWidth: 0, flex: 1 }}>
+                    <span style={{ display: 'block', fontWeight: 700 }}>{d.reason}</span>
+                    <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
+                      {fmtTs(d.createdAt)} · {PAY_COPY['pay.deductions.creatorLead']} {d.createdBy.slice(-6)}
+                    </span>
+                  </span>
+                  <span className="vl red">−{fenToYuan(d.amountFen)}</span>
+                </div>
+              ))
+            )}
+          </SkRows>
+          <SkNote>{PAY_COPY['pay.deductions.note']}</SkNote>
+
+          {/* 历史月份快照（新→旧；提成月结点展开分列明细） */}
+          <SecTitle>{PAY_COPY['pay.sec.history']}</SecTitle>
+          <SkRows testId="pay-history">
+            {data.snapshots.length === 0 ? (
+              <EmptyRow text={PAY_COPY['pay.history.empty']} />
+            ) : (
+              data.snapshots.map((s) => (
+                <SnapshotRow key={`${s.period}-${s.kind}`} period={s.period} kind={s.kind} totalFen={s.totalFen} />
+              ))
+            )}
+          </SkRows>
+          <SkNote>{PAY_COPY['pay.history.note']}</SkNote>
+
+          {/* 口径注（server policyNote：计提时点/冲减/次月结算日/每月快照，数值读规则表） */}
+          <div data-testid="pay-policy">
+            <SkNote>{data.policyNote}</SkNote>
+          </div>
+          <p className="sk-note" style={{ textAlign: 'center', paddingBottom: 32 }}>
+            {PAY_COPY['pay.footer.lead']} v{data.ruleVersion}
+          </p>
+        </>
+      )}
     </div>
   );
 }

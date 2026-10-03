@@ -4,9 +4,9 @@
  * 纪律：寄养入住登记/每日打卡页的经营性文案（异常态题、核销前置引导、超期/退房说明）
  * 一律经本表取值，组件内零硬编码；文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
- * 不抽：通用 UI 词（办理退房/确认退房/再想想/返回任务台）、toast 操作反馈、
- * server 错误透传（detailQuery.error.message 原样透出）。
- * 动态位：晚数/时刻走 JSX 内 u1-num 片段，键只持静态 Lead/Tail 碎片（同 me.ts 纪律）。
+ * 骨架批片 1（S-10）：页题/晚数注/出口钮已随骨架帧抽键（boarding.title/boarding.night.* 等）。
+ * 不抽：toast 操作反馈、server 错误透传（detailQuery.error.message 原样透出）。
+ * 动态位：晚数/时刻走 JSX 内 mono 片段，键只持静态 Lead/Tail 碎片（同 me.ts 纪律）。
  */
 
 import { withCopyOverrides } from '@philia/shared';
@@ -36,6 +36,17 @@ const BOARDING_COPY_TABLE = {
   /* ---- 退房二次确认（内联展开） ---- */
   'boarding.checkout.confirmTitle': '确认办理退房？',
   'boarding.checkout.confirmDesc': '退房后预约转入「已完成」；到店付订单请提醒商家在财务页确认收款。',
+
+  /* ---- 骨架帧（S-10：backbar 题 + mono 晚数注 + 出口钮） ---- */
+  'boarding.title': '寄养打卡',
+  'boarding.night.lead': '第',
+  'boarding.night.mid': '晚 · 共',
+  'boarding.night.tail': '晚',
+  'boarding.backToday': '返回任务台',
+  'boarding.checkout.action': '办理退房',
+  'boarding.checkout.confirm': '确认退房',
+  'boarding.checkout.cancel': '再想想',
+  'boarding.checkout.pending': '办理中…',
 } as const;
 
 export const BOARDING_COPY = withCopyOverrides(BOARDING_COPY_TABLE);

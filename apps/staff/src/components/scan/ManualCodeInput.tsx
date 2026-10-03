@@ -63,7 +63,7 @@ export default function ManualCodeInput({ onCheckedIn }: ManualCodeInputProps) {
         maxLength={6}
         placeholder="例如 3K7M9P"
         aria-label="人工核销码"
-        className="h-14 w-full rounded-xl border border-[#FAF8F2]/30 bg-[#FAF8F2]/10 text-center font-mono text-2xl font-semibold tracking-[0.5em] text-[#FAF8F2] placeholder:text-[#FAF8F2]/30 focus:border-[#F2DFA6] focus:outline-none"
+        className="h-14 w-full rounded-xl border-2 border-[#3B2E24] bg-[#1d1712] text-center font-mono text-2xl font-semibold tracking-[0.5em] text-[#FAF8F2] placeholder:text-[#FAF8F2]/30 focus:border-[#F2DFA6] focus:outline-none"
       />
       <p className="text-sm text-[#FAF8F2]/60">
         核销码为 6 位字母数字，不含易混淆的 0/O、1/I/L；可在预约详情页查看，或按手机号核对。

@@ -275,13 +275,14 @@ export default function QrScanner({ open, onClose, onCheckedIn }: QrScannerProps
               </div>
             ) : (
               <>
-                {/* 中央扫描框 + 四角品牌色描边 */}
+                {/* 中央扫描框：深棕框+淡黄角标（9-27 拍色样，照 .sk-scanframe：22px 角标 3px 淡黄描边，
+                    深棕 2px 框 20 圆角；功能/解码逻辑不动） */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative h-60 w-60">
-                    <span className="absolute left-0 top-0 h-8 w-8 rounded-tl-lg border-l-4 border-t-4" style={{ borderColor: BRAND }} />
-                    <span className="absolute right-0 top-0 h-8 w-8 rounded-tr-lg border-r-4 border-t-4" style={{ borderColor: BRAND }} />
-                    <span className="absolute bottom-0 left-0 h-8 w-8 rounded-bl-lg border-b-4 border-l-4" style={{ borderColor: BRAND }} />
-                    <span className="absolute bottom-0 right-0 h-8 w-8 rounded-br-lg border-b-4 border-r-4" style={{ borderColor: BRAND }} />
+                  <div className="relative h-60 w-60 rounded-[20px] border-2 border-[#3B2E24]">
+                    <span className="absolute -left-[3px] -top-[3px] h-[22px] w-[22px] rounded-tl-[16px] border-l-[3px] border-t-[3px]" style={{ borderColor: BRAND }} />
+                    <span className="absolute -right-[3px] -top-[3px] h-[22px] w-[22px] rounded-tr-[16px] border-r-[3px] border-t-[3px]" style={{ borderColor: BRAND }} />
+                    <span className="absolute -bottom-[3px] -left-[3px] h-[22px] w-[22px] rounded-bl-[16px] border-b-[3px] border-l-[3px]" style={{ borderColor: BRAND }} />
+                    <span className="absolute -bottom-[3px] -right-[3px] h-[22px] w-[22px] rounded-br-[16px] border-b-[3px] border-r-[3px]" style={{ borderColor: BRAND }} />
                   </div>
                 </div>
                 <p className="absolute inset-x-0 bottom-16 text-center text-base text-[#FAF8F2]/90">

@@ -14,6 +14,7 @@
  */
 import { TRPCError } from '@trpc/server';
 import { and, desc, eq, ne } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/sqlite-core';
 import { z } from 'zod';
 import { schema } from '../db';
 import { merchantOwnerProcedure, publicProcedure, router } from '../trpc';
@@ -48,8 +49,9 @@ export const slotPortRouter = router({
     };
   }),
 
-  /** list（owner）：全槽注册表（live+pending 行 + 版本计数 + 操作人昵称） */
+  /** list（owner）：全槽注册表（live+pending 行 + 版本计数 + 上传人/发布回退操作人昵称） */
   list: merchantOwnerProcedure.query(async ({ ctx }) => {
+    const actors = alias(schema.users, 'slot_actor');
     const rows = await ctx.db
       .select({
         id: schema.slotContents.id,
@@ -59,10 +61,14 @@ export const slotPortRouter = router({
         status: schema.slotContents.status,
         createdBy: schema.slotContents.createdBy,
         creatorNickname: schema.users.nickname,
+        actedBy: schema.slotContents.actedBy,
+        actedByNickname: actors.nickname,
+        actedAt: schema.slotContents.actedAt,
         createdAt: schema.slotContents.createdAt,
       })
       .from(schema.slotContents)
       .leftJoin(schema.users, eq(schema.users.id, schema.slotContents.createdBy))
+      .leftJoin(actors, eq(actors.id, schema.slotContents.actedBy))
       .orderBy(schema.slotContents.slotKey, desc(schema.slotContents.version));
     /* 按槽聚组：live 行 + pending 行 + 总版本数 */
     const bySlot = new Map<string, { live: (typeof rows)[number] | null; pending: (typeof rows)[number][]; totalVersions: number }>();
@@ -126,13 +132,15 @@ export const slotPortRouter = router({
         if (!target) notFound('版本不存在');
         if (target.status === 'live') return { version: target, idempotent: true as const };
         if (target.status !== 'pending') badRequest('仅待审版本可点上线（历史版请走回退）');
+        /* 旧 live→archived（连带留痕=同一次上线操作） */
         await tx
           .update(schema.slotContents)
-          .set({ status: 'archived', updatedAt: now })
+          .set({ status: 'archived', actedBy: ctx.user.id, actedAt: now, updatedAt: now })
           .where(and(eq(schema.slotContents.slotKey, target.slotKey), eq(schema.slotContents.status, 'live')));
+        /* 该版→live（留痕=发布人） */
         const live = await tx
           .update(schema.slotContents)
-          .set({ status: 'live', updatedAt: now })
+          .set({ status: 'live', actedBy: ctx.user.id, actedAt: now, updatedAt: now })
           .where(eq(schema.slotContents.id, target.id))
           .returning()
           .then((r) => r[0]!);
@@ -168,11 +176,11 @@ export const slotPortRouter = router({
         if (!prev) badRequest('无上一版可回退（当前已是首个版本）');
         await tx
           .update(schema.slotContents)
-          .set({ status: 'archived', updatedAt: now })
+          .set({ status: 'archived', actedBy: ctx.user.id, actedAt: now, updatedAt: now })
           .where(eq(schema.slotContents.id, cur.id));
         const live = await tx
           .update(schema.slotContents)
-          .set({ status: 'live', updatedAt: now })
+          .set({ status: 'live', actedBy: ctx.user.id, actedAt: now, updatedAt: now })
           .where(eq(schema.slotContents.id, prev.id))
           .returning()
           .then((r) => r[0]!);

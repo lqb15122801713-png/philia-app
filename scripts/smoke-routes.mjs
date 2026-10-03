@@ -140,11 +140,11 @@ const ROUTES = [
   { app: 'merchant', path: `/appointments/${APPT_ID}/monitor`, anchors: ['实时监控', '预约'], serverDep: true, note: 'P4 原深链；U3 锚点' },
   /* ---- 员工端 ---- */
   { app: 'staff', path: '/dev-login', anchors: ['登录'] },
-  { app: 'staff', path: '/today', anchors: ['今天 ·', '任务台', '核销台'], note: 'U2 时间轴台 B′：顶栏「今天 · M月d日」+ dock 首栏（groomer=任务台/frontdesk=核销台）' },
+  { app: 'staff', path: '/today', anchors: ['工位', '预约'], note: '骨架批片 1（S-01 工位台）：apphead「工位」+ dock 四槽（工位/预约/打卡/我的）' },
   { app: 'staff', path: `/execute/${APPT_ID}`, anchors: ['第', '步', '核销', '无法执行该预约'], serverDep: true, note: 'B1 修复路由；U4：smoke 以首个 staff 种子（前台）登录，进他人 groomer 单命中设计内守卫态「无法执行该预约」' },
   { app: 'staff', path: `/execute/${APPT_ID}/`, anchors: ['第', '步', '核销', '无法执行该预约'], serverDep: true, note: '尾斜杠变体（同上守卫态口径）' },
   { app: 'staff', path: `/boarding/${process.env.SMOKE_STAY_ID ?? APPT_ID}/checkin`, anchors: ['无法查看该寄养单', '返回任务台', '寄养打卡', '打卡'], serverDep: true, note: 'W1：checkin 异常态弱出口已按钮化' },
-  { app: 'staff', path: '/history', anchors: ['记录', '历史'] },
+  { app: 'staff', path: '/schedule', anchors: ['预约', 'SCHEDULE'], note: '骨架批片 1（S-02 预约·当天+S-12 切日态）：/history 重定向并入（历史单=切日唯一入口）' },
   { app: 'staff', path: '/me', anchors: ['我的', '员工'] },
   /* 批次 staff-2（R7~R10）：/me 列表进入的子页，锚点均命中 PageHeader 静态标题，数据异常态不悬空 */
   { app: 'staff', path: '/attendance', anchors: ['打卡', '补卡'], note: '批次 staff-2 R7' },

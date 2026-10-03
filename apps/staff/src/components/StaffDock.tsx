@@ -1,57 +1,28 @@
 /**
- * U2 任务 A · 全域 StaffDock（员工端唯一底部导航）
+ * 全域 StaffDock（员工端唯一底部导航）——骨架整建批片 1：内部改渲染 SkDock（S1 flatdock）。
  *
- * 规格书 §0 冻结口径：3 栏「任务台 / 历史 / 我的」，无中央悬浮钮（员工端不是
- * 客户旅程，无 philia 养成入口）；高 78px + 安全区；frontdesk 态首栏文案改
- * 「核销台」、图标改扫码——同一组件，props 仅 active + role。
- * 详情级页面（执行/打卡）不渲染 dock（统一走 PageHeader 返回条）。
+ * dock 四槽冻结「工位/预约/打卡/我的」（UX 语言包 V1.1 §二 S1）；
+ * 高 58+safe-area、白卡底+顶发丝线、icon 20 stroke1.6+10.5 签、激活=深棕字+顶部 22×3 淡黄短划
+ * （样式全在 styles/skeleton.css .sk-dock，本件零样式）。
  *
- * 工艺：纸面卡底 + 顶部 1px 暖墨 hairline（试样 .sdock）；当前栏墨色 600，
- * 非当前 --muted #8A7D6B；按下 scale 0.92 + duration-120 + ease-philia-spring
- * （动效纲领 §三）；lucide 墨色线图标，禁彩色图标。
- * 换皮批片 4 复核：平铺条在码照卡（无爪钮凸起——爪印=客户端私有）；旧暖墨谱系色值换代。
+ * 签名兼容：active 沿用旧键（today/history/me，新增 punch 对应 /attendance 主级屏），
+ * 内部映射 today→work、history→appt、me→me；role prop 忽略但保留（调用点零改动）。
+ * 详情级页面（S-05~S-11 二级页）不渲染 dock（统一走返回条）。
  */
 
-import { Link } from 'react-router-dom'
-import { CalendarDays, Clock3, ScanLine, UserRound } from 'lucide-react'
+import { SkDock, type SkDockActive } from './skeleton'
 
-export type StaffDockActive = 'today' | 'history' | 'me'
+export type StaffDockActive = 'today' | 'history' | 'punch' | 'me'
 export type StaffDockRole = 'groomer' | 'frontdesk'
 
+const ACTIVE_MAP: Record<StaffDockActive, SkDockActive> = {
+  today: 'work',
+  history: 'appt',
+  punch: 'punch',
+  me: 'me',
+}
+
 export default function StaffDock({ active, role }: { active: StaffDockActive; role: StaffDockRole }) {
-  const first =
-    role === 'frontdesk'
-      ? { to: '/today', label: '核销台', icon: ScanLine, testid: 'dock-checkin' }
-      : { to: '/today', label: '任务台', icon: CalendarDays, testid: 'dock-today' }
-  const tabs = [
-    { ...first, key: 'today' as const },
-    { to: '/history', label: '历史', icon: Clock3, key: 'history' as const, testid: 'dock-history' },
-    { to: '/me', label: '我的', icon: UserRound, key: 'me' as const, testid: 'dock-me' },
-  ]
-  return (
-    <nav
-      data-testid="staff-dock"
-      className="fixed inset-x-0 bottom-0 z-tabbar bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-1px_0_rgba(59,46,36,.06)]"
-    >
-      <div className="mx-auto grid h-[78px] w-full max-w-lg grid-cols-3 px-2.5 pb-2.5">
-        {tabs.map(({ key, to, label, icon: Icon, testid }) => {
-          const on = active === key
-          return (
-            <Link
-              key={key}
-              to={to}
-              data-testid={testid}
-              aria-current={on ? 'page' : undefined}
-              className={`flex flex-col items-center justify-center gap-1 text-caption-xs transition-transform duration-120 ease-philia-spring active:scale-92 ${
-                on ? 'font-semibold text-ink' : 'font-medium text-[#8A7D6B]'
-              }`}
-            >
-              <Icon className="h-[22px] w-[22px]" strokeWidth={1.6} aria-hidden />
-              {label}
-            </Link>
-          )
-        })}
-      </div>
-    </nav>
-  )
+  void role // 四槽冻结后角色不再分流 dock 形态；保留 prop 兼容旧调用点
+  return <SkDock active={ACTIVE_MAP[active]} />
 }
