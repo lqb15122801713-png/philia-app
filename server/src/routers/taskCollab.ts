@@ -674,7 +674,7 @@ export const selfCheckRouter = router({
       return { run: row, idempotent: false as const };
     }),
 
-  /** today（员工）：本店今日 run 或 null */
+  /** today（员工）：本店今日 run 或 null；透出 items 数组（=itemsJson 同帧，页面已交态回显形状——片 3 复核打回件：原样行缺 items 致 .find 崩） */
   today: staffProcedure.query(async ({ ctx }) => {
     const { bizDate } = storeToday(new Date());
     const row = await ctx.db
@@ -682,7 +682,7 @@ export const selfCheckRouter = router({
       .from(schema.selfCheckRuns)
       .where(and(eq(schema.selfCheckRuns.storeId, ctx.user.storeId!), eq(schema.selfCheckRuns.bizDate, bizDate)))
       .get();
-    return { run: row ?? null };
+    return { run: row ? { ...row, items: row.itemsJson } : null };
   }),
 
   /** listPending（店长）：submitted 未审（提交升序=先交先审） */

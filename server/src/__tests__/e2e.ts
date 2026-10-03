@@ -5724,11 +5724,15 @@ async function main(): Promise<void> {
       cookie: liliCookie,
       input: { items: [{ key: 'disinfect', pass: true }, { key: 'stock', pass: true }, { key: 'device', pass: true }, { key: 'env', pass: true }] },
     });
-    const todayRun60 = await trpcQuery<{ run: SelfCheck60 | null }>('selfCheck.today', { cookie: liliCookie });
+    const todayRun60 = await trpcQuery<{ run: (SelfCheck60 & { items?: Array<{ key: string; pass: boolean }> }) | null }>('selfCheck.today', { cookie: liliCookie });
     check('60.5 自检：读端口 4 表项 → submit 服务端算分=75（3×25，device 未过）→ 快照含 label/score',
       items60.items.length === 4 && submit60.run.score === 75 && submit60.run.status === 'submitted' &&
         submit60.run.itemsJson.length === 4 && submit60.run.itemsJson.every((i) => typeof i.label === 'string' && i.label.length > 0),
       { items: items60.items.length, score: submit60.run.score });
+    check('60.5 today 透出 items 数组（页面已交态回显形状；与 itemsJson 同帧——片 3 复核打回件防再漏）',
+      Array.isArray(todayRun60.run?.items) && todayRun60.run.items.length === 4 &&
+        todayRun60.run.items.some((i) => i.key === 'device' && i.pass === false),
+      { hasItems: Array.isArray(todayRun60.run?.items), len: todayRun60.run?.items?.length });
     check('60.5 同日重交幂等返回现状（不双写不覆盖：全 pass 重交仍 75 分同一行）',
       submit60dup.idempotent === true && submit60dup.run.id === submit60.run.id && submit60dup.run.score === 75 &&
         todayRun60.run?.id === submit60.run.id,
