@@ -5037,37 +5037,31 @@ async function main(): Promise<void> {
    * ================================================================== */
   console.log('\n[骨架批片1] 57.6 任务总线（listMy 聚合在途件）');
   interface StaffTaskT { kind: string; refId: string; title: string; sub: string; link: string; alert: boolean }
-  /* 夹具：丽丽名下今日 confirmed 预约一单（读她今日占用找空档，防撞时段） + 本店 pending 补卡审批一行 + 盘点草稿一单 + 在住寄养一卡 */
-  const dayStartBus = new Date(); dayStartBus.setHours(0, 0, 0, 0);
-  const dayEndBus = new Date(dayStartBus.getTime() + 24 * 3600 * 1000);
-  const herBusy = await db
-    .select({ s: schema.appointments.scheduledStart, e: schema.appointments.scheduledEnd })
-    .from(schema.appointments)
-    .where(and(
-      eq(schema.appointments.staffId, staffRow2.id),
-      gte(schema.appointments.scheduledStart, dayStartBus),
-      lt(schema.appointments.scheduledStart, dayEndBus),
-      inArray(schema.appointments.status, ['pending', 'confirmed', 'in_service']),
-    ));
-  let busAppt: { id: string } | null = null;
-  for (let h = 9; h <= 18 && !busAppt; h += 1) {
-    for (const mm of [0, 30]) {
-      const t = new Date(dayStartBus); t.setHours(h, mm, 0, 0);
-      const end = new Date(t.getTime() + 60 * 60 * 1000);
-      if (t.getTime() < Date.now() + 30 * 60 * 1000) continue; // 过去/半小时内不约
-      const clash = herBusy.some((b) => b.s.getTime() < end.getTime() && b.e.getTime() > t.getTime());
-      if (clash) continue;
-      try {
-        busAppt = await trpcMutate<{ id: string }>('appointment.create', {
-          cookie: customerCookie,
-          input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: t, paymentMode: 'pay_at_store', note: '【测试】骨架批任务总线单', staffId: staffRow2.id },
-        });
-      } catch { /* 撞单换下一个 */ }
-      if (busAppt) break;
-    }
-  }
-  if (!busAppt) throw new Error('任务总线夹具：今日时段全撞');
-  await trpcMutate('appointment.confirm', { cookie: ownerCookie, input: { appointmentId: busAppt.id } });
+  /* 夹具：丽丽名下今日 confirmed 预约一单——**db 直插不走 create 闸**（复核意见书件 1：
+     本段测 listMy 投影非 create，直插时段永不敏感；午后窗口再窄亦不复「今日时段全撞」）。
+     下接：本店 pending 补卡审批一行 + 盘点草稿一单 + 在住寄养一卡 */
+  const busStart = new Date(Date.now() + 2 * 3600 * 1000);
+  const busEnd = new Date(busStart.getTime() + 60 * 60 * 1000);
+  const busAppt = await db
+    .insert(schema.appointments)
+    .values({
+      code: `E2EBUS${String(Date.now()).slice(-8)}`,
+      customerId: customerUser!.id,
+      storeId,
+      staffId: staffRow2.id,
+      assignSource: 'merchant',
+      petId,
+      serviceId: service.id,
+      type: 'grooming',
+      scheduledStart: busStart,
+      scheduledEnd: busEnd,
+      status: 'confirmed',
+      priceFen: 8800,
+      paymentMode: 'pay_at_store',
+      note: '【测试】骨架批任务总线单',
+    })
+    .returning({ id: schema.appointments.id })
+    .then((r) => r[0]!);
   const liliUserRow = await db.select({ userId: schema.staff.userId }).from(schema.staff).where(eq(schema.staff.id, staffRow2.id)).get();
   await db.insert(schema.attendanceApprovals).values({
     storeId, staffId: staffRow2.id, applicantUserId: liliUserRow!.userId,
