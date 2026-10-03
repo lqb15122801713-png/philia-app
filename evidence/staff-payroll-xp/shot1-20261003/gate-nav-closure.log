@@ -1,0 +1,113 @@
+导航闭环体检（W1 §六 harness）：107 路由 · 四要素检测
+[customer] dev-login ✓
+✅ [customer] /home —— OK back=false dock=true 出口钮=false
+✅ [customer] /mall —— OK back=false dock=true 出口钮=false
+✅ [customer] /me —— OK back=false dock=true 出口钮=false
+✅ [customer] /philia —— OK back=false dock=true 出口钮=false
+✅ [customer] /booking —— OK back=true dock=false 出口钮=false
+✅ [customer] /booking/grooming —— OK back=true dock=false 出口钮=false
+✅ [customer] /booking/grooming/wizard —— OK back=true dock=false 出口钮=false
+✅ [customer] /booking/boarding —— OK back=true dock=false 出口钮=false
+✅ [customer] /booking/boarding/wizard —— OK back=true dock=false 出口钮=false
+✅ [customer] /booking/success?aid=01M2SW1M3YQ9AT8SH6T05Z69M3 —— OK back=true dock=false 出口钮=true
+✅ [customer] /appointments —— OK back=true dock=false 出口钮=false
+✅ [customer] /appointments/01M2SW1M3YQ9AT8SH6T05Z69M3 —— OK back=false dock=false 出口钮=true
+✅ [customer] /appointments/01000000000000000000000000 —— OK（无效 id 异常态须出口（W1 补改）） back=false dock=false 出口钮=true
+✅ [customer] /appointments/01M2SW1M3YQ9AT8SH6T05Z69M3/live —— OK back=true dock=false 出口钮=false
+✅ [customer] /mall/orders —— OK back=true dock=false 出口钮=false
+✅ [customer] /mall/cart —— OK back=true dock=false 出口钮=true
+✅ [customer] /mall/checkout —— OK back=true dock=false 出口钮=true
+✅ [customer] /mall/product/01M2S57Y960FYBQ4H8SQGP2396 —— OK（商品 id 缺失时守卫口径） back=false dock=false 出口钮=true
+✅ [customer] /mall/product/01000000000000000000000000 —— OK（无效 id 异常态须出口（W1 补改）） back=false dock=false 出口钮=true
+✅ [customer] /me/card —— OK back=true dock=false 出口钮=false
+✅ [customer] /philia/member —— OK back=true dock=false 出口钮=false
+✅ [customer] /philia/moments —— OK back=true dock=false 出口钮=false
+✅ [customer] /philia/pets —— OK back=true dock=false 出口钮=false
+➖ [customer] /dev-login —— 豁免 门禁页
+➖ [customer] /login —— 豁免（门禁别名） 门禁页
+✅ [customer] /member —— OK（批次 R11a） back=true dock=false 出口钮=false
+✅ [customer] /member/open —— OK（批次 R11a） back=true dock=false 出口钮=false
+✅ [customer] /member/rebate —— OK（批次 R11b 新路由申报（W-01 账本独立页）） back=true dock=false 出口钮=false
+✅ [customer] /refunds —— OK（补缺批片 1 退款售后） back=true dock=false 出口钮=false
+✅ [customer] /refunds/01000000000000000000000000 —— OK（补缺批片 1 退款售后：参数化照 INVALID 行写法（无种子申请单 id，异常态须出口）） back=true dock=false 出口钮=true
+✅ [customer] /mall/orders/01000000000000000000000000/refund —— OK（补缺批片 1 退款售后：无效原单异常态须出口） back=true dock=false 出口钮=true
+✅ [customer] /appointments/01M2SW1M3YQ9AT8SH6T05Z69M3/refund —— OK（补缺批片 1 退款售后：服务单 billId 客户端无口径，页内诚实维护态+出口） back=true dock=false 出口钮=false
+✅ [customer] /philia/certs —— OK（补缺批片 4 服务闭环） back=true dock=false 出口钮=false
+✅ [customer] /philia/certs/01000000000000000000000000 —— OK（补缺批片 4 服务闭环（无效 id 异常态须出口）） back=true dock=false 出口钮=false
+✅ [customer] /philia/reports/01000000000000000000000000 —— OK（补缺批片 4 服务闭环（无效 id 异常态须出口）） back=true dock=false 出口钮=false
+✅ [customer] /support —— OK（补缺批片 4 服务闭环） back=true dock=false 出口钮=false
+✅ [customer] /support/new —— OK（补缺批片 4 服务闭环） back=true dock=false 出口钮=false
+✅ [customer] /support/01000000000000000000000000 —— OK（补缺批片 4 服务闭环（无效 id 异常态须出口）） back=true dock=false 出口钮=false
+✅ [customer] /invoices —— OK（补缺批片 4 服务闭环） back=true dock=false 出口钮=false
+✅ [customer] /invoice/apply/appointment/01000000000000000000000000 —— OK（补缺批片 4 服务闭环（无效 id 异常态须出口）） back=true dock=false 出口钮=false
+✅ [customer] /invoices/01000000000000000000000000 —— OK（补缺批片 4 服务闭环（无效 id 异常态须出口）） back=true dock=false 出口钮=false
+✅ [customer] /me/settings —— OK（补缺批片 2 账户安全） back=true dock=false 出口钮=false
+✅ [customer] /me/settings/deactivate —— OK（补缺批片 2 账户安全） back=true dock=false 出口钮=false
+✅ [customer] /me/settings/phone —— OK（补缺批片 2 账户安全） back=true dock=false 出口钮=false
+✅ [customer] /me/settings/phone/appeal —— OK（补缺批片 2 账户安全） back=true dock=false 出口钮=false
+✅ [customer] /me/settings/devices —— OK（补缺批片 2 账户安全） back=true dock=false 出口钮=true
+✅ [customer] /me/settings/privacy —— OK（补缺批片 2 账户安全） back=true dock=false 出口钮=false
+✅ [customer] /member/upgrade —— OK（补缺批片 3 会员域） back=true dock=false 出口钮=false
+✅ [customer] /member/change —— OK（补缺批片 3 会员域） back=true dock=false 出口钮=false
+✅ [customer] /notifications —— OK（补缺批片 5 站内信（消息中心）） back=true dock=false 出口钮=false
+✅ [customer] /notifications/prefs —— OK（补缺批片 5 站内信（订阅管理）） back=true dock=false 出口钮=false
+✅ [customer] /member/checkout —— OK（补缺批片 6 线上收单骨架（Mock 通道）） back=true dock=false 出口钮=false
+✅ [customer] /pay/01000000000000000000000000 —— OK（补缺批片 6 线上收单骨架（Mock 通道）：参数化 INVALID_ID 异常态须出口） back=true dock=false 出口钮=false
+✅ [customer] /pay/reconcile —— OK（补缺批片 6 线上收单骨架（Mock 通道）） back=true dock=false 出口钮=false
+[merchant] dev-login ✓
+✅ [merchant] /dashboard —— OK back=false dock=true 出口钮=false
+✅ [merchant] /appointments —— OK back=false dock=true 出口钮=false
+✅ [merchant] /appointments/01M2SW1M3YQ9AT8SH6T05Z69M3 —— OK back=false dock=true 出口钮=false
+✅ [merchant] /appointments/01000000000000000000000000 —— OK（无效 id 异常态须出口（W1 补改）） back=false dock=true 出口钮=false
+✅ [merchant] /monitor —— OK back=false dock=true 出口钮=false
+✅ [merchant] /monitor/01M2SW1M3YQ9AT8SH6T05Z69M3 —— OK back=false dock=true 出口钮=false
+✅ [merchant] /monitor/01000000000000000000000000 —— OK（无效 id 异常态须出口（W1 补改）） back=false dock=true 出口钮=false
+✅ [merchant] /boarding —— OK back=false dock=true 出口钮=false
+✅ [merchant] /orders —— OK back=false dock=true 出口钮=false
+✅ [merchant] /products —— OK back=false dock=true 出口钮=false
+✅ [merchant] /pass —— OK back=false dock=true 出口钮=false
+✅ [merchant] /staff —— OK back=false dock=true 出口钮=false
+✅ [merchant] /finance —— OK back=false dock=true 出口钮=false
+✅ [merchant] /settings —— OK back=false dock=true 出口钮=false
+✅ [merchant] /settings/rules —— OK（批次 staff-2 R9-F：owner 专属（clerk 守卫引导页 / manager 页内引导卡，rail 布局内）） back=false dock=true 出口钮=false
+✅ [merchant] /settings/copy —— OK（端口批片 B：文案端口（控制台第七域；owner 专属，同 /settings/rules 闸径）） back=false dock=true 出口钮=false
+✅ [merchant] /settings/slots —— OK（端口批片 C：槽位端口（控制台第八域「槽位」；owner 专属，同 /settings/rules 闸径）） back=false dock=true 出口钮=false
+✅ [merchant] /settings/schedules —— OK（员工端骨架整建批 片 2：排班管理（owner|manager，墨轨「门店」组；clerk 守卫引导页）） back=false dock=true 出口钮=false
+✅ [merchant] /settings/announcements —— OK（片 3：公告（owner|manager，设置入口卡+守卫引导页同径）） back=false dock=true 出口钮=false
+✅ [merchant] /ops —— OK（片 3：运营（owner|manager，墨轨「门店」组 rail-ops 常驻）） back=false dock=true 出口钮=false
+✅ [merchant] /settings/tasks —— OK（片 3：循环任务模板自管（owner|manager，设置入口卡）） back=false dock=true 出口钮=false
+✅ [merchant] /payroll —— OK（片 4：薪资（owner|manager，墨轨「门店」组 rail-payroll 常驻）） back=false dock=true 出口钮=false
+✅ [merchant] /xp-admin —— OK（片 4：XP 审核（owner|manager，墨轨「门店」组 rail-xp-admin 常驻）） back=false dock=true 出口钮=false
+✅ [merchant] /cashier —— OK back=false dock=true 出口钮=false
+✅ [merchant] /cashier/records —— OK back=false dock=true 出口钮=false
+✅ [merchant] /cashier/close —— OK back=false dock=true 出口钮=false
+✅ [merchant] /cashier/refunds —— OK（批次 R12 退款单列表（墨轨常驻；clerk 引导页）） back=false dock=true 出口钮=false
+➖ [merchant] /dev-login —— 豁免 门禁页
+➖ [merchant] /login —— 豁免 门禁页
+✅ [merchant] /passes —— OK（重定向兼容） back=false dock=true 出口钮=false
+✅ [merchant] /live —— OK（重定向→/monitor） back=false dock=true 出口钮=false
+✅ [merchant] / —— OK（重定向→/dashboard） back=false dock=true 出口钮=false
+➖ [merchant] /dev-login —— 豁免 门禁页
+[staff] dev-login ✓
+✅ [staff] /today —— OK back=false dock=true 出口钮=false
+✅ [staff] /schedule —— OK（骨架批片 1：S-02 预约·当天（dock 四槽第二槽）；/history 重定向至此（S-12 切日态）） back=false dock=true 出口钮=false
+✅ [staff] /me —— OK back=false dock=true 出口钮=false
+✅ [staff] /execute/01M2SW1M3YQ9AT8SH6T05Z69M3 —— OK（异常态守卫页亦须出口） back=false dock=false 出口钮=true
+✅ [staff] /boarding/01000000000000000000000000/checkin —— OK（异常态守卫页（W1 弱出口已按钮化）） back=true dock=false 出口钮=true
+➖ [staff] /dev-login —— 豁免 门禁页
+✅ [staff] / —— OK（重定向→/today） back=false dock=true 出口钮=false
+✅ [staff] /attendance —— OK（批次 staff-2 R7~R10） back=false dock=true 出口钮=false
+✅ [staff] /inventory —— OK（批次 staff-2 R7~R10） back=true dock=false 出口钮=false
+✅ [staff] /inventory/01000000000000000000000000 —— OK（无效 id 异常态须出口（批次 staff-2 R7~R10；无种子盘点单 id，INVALID 行即可）） back=true dock=false 出口钮=true
+✅ [staff] /pay —— OK（批次 staff-2 R7~R10） back=true dock=false 出口钮=false
+✅ [staff] /xp —— OK（批次 staff-2 R7~R10） back=true dock=false 出口钮=false
+✅ [staff] /reviews —— OK（批次 staff-2 R7~R10） back=true dock=false 出口钮=false
+✅ [staff] /manager —— OK（批次 staff-2 R7~R10；非店长登录渲染引导卡（「返回我的」按钮出口）） back=true dock=false 出口钮=true
+✅ [staff] /my-schedule —— OK（员工端骨架整建批 片 2：我的排班（SkBackBar 返回条，fallback=/me）） back=true dock=false 出口钮=false
+✅ [staff] /notifications —— OK（骨架批片 3：通知中心） back=true dock=false 出口钮=false
+✅ [staff] /notices —— OK（骨架批片 3：门店公告） back=true dock=false 出口钮=false
+✅ [staff] /voice —— OK（骨架批片 3：员工心声） back=true dock=false 出口钮=false
+✅ [staff] /self-check —— OK（骨架批片 3：每日自检） back=true dock=false 出口钮=false
+✅ [staff] /pdca —— OK（骨架批片 3：问题上报） back=true dock=false 出口钮=false
+
+===== 体检汇总：107 路由 · 死胡同 0 · 弱 0 · 豁免 6 =====
