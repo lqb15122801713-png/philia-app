@@ -742,6 +742,7 @@
   ✓ 60.4 PDCA：raise(open)→startFix(fixing+认领)→submitFix(recheck)→recheck fail 回炉 fixing→再 submitFix→recheck pass→closed
   ✓ 60.4 类目集闸：集外 category → 400「不在类目集」；timeline 只增逐条在（6 条动作链）
   ✓ 60.5 自检：读端口 4 表项 → submit 服务端算分=75（3×25，device 未过）→ 快照含 label/score
+  ✓ 60.5 today 透出 items 数组（页面已交态回显形状；与 itemsJson 同帧——片 3 复核打回件防再漏）
   ✓ 60.5 同日重交幂等返回现状（不双写不覆盖：全 pass 重交仍 75 分同一行）
   ✓ 60.5 店长审：listPending 含本行 → review → reviewed + reviewBy=店长
   ✓ 60.6 巡检聚合：byStatus.closed≥1 + byCategory 排行含「卫生」+ 近 30 天 closed≥1
@@ -763,14 +764,14 @@
   ✓ 62.3 跨店隔离：B 店店主 recheck/reassign/archive A 店资源 → 全部查无此物（NOT_FOUND）
   ✓ 62.3 A 店数据零变化（PDCA 仍 closed / 公告仍 published）
   ✓ 验收结束：7220 端口无残留监听
-[e2e] 临时库目录清理失败（Windows libsql 句柄滞后，可手工删）: C:\Users\lqb15\AppData\Local\Temp\philia-e2e-HRYnGD Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-HRYnGD '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-HRYnGD'
+[e2e] 临时库目录清理失败（Windows libsql 句柄滞后，可手工删）: C:\Users\lqb15\AppData\Local\Temp\philia-e2e-mYWeg5 Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-mYWeg5 '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-mYWeg5'
     at rmSync (node:fs:1282:18)
-    at cleanup (E:\KIMI code\philia-app\server\src\__tests__\e2e.ts:5982:5)
+    at cleanup (E:\KIMI code\philia-app\server\src\__tests__\e2e.ts:5986:5)
     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
-    at async <anonymous> (E:\KIMI code\philia-app\server\src\__tests__\e2e.ts:6020:3) {
+    at async <anonymous> (E:\KIMI code\philia-app\server\src\__tests__\e2e.ts:6024:3) {
   errno: 1,
   code: 'EPERM',
-  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-e2e-HRYnGD',
+  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-e2e-mYWeg5',
   syscall: 'rm'
 }
   ✓ 种子库 data/philia.db 原样（size/mtime 未变）
