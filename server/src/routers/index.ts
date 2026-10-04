@@ -26,6 +26,7 @@ import { mallRouter } from './mall';
 import { membershipRouter } from './membership';
 import { passRouter } from './pass';
 import { payRouter } from './pay';
+import { payrollRouter } from './payroll';
 import { petRouter } from './pet';
 import { pushRouter } from './push';
 import { refundRouter } from './refund';
@@ -73,6 +74,7 @@ export const appRouter = router({
   selfCheck: selfCheckRouter, // 片 3：门店每日自检+上级审核（服务端算分，一店一日一表幂等锚）
   announce: announceRouter, // 片 3：公告+已读回执（定向发布+逐人通知+对账名单）
   staffExit: staffExitRouter, // 片 3：离职交接（未完结单改挂+前后值留痕；锁定本体=staffProcedure 既有闸）
+  payroll: payrollRouter, // 片 4：薪资域（协作拆分/工资条两态/发放标记留痕/异议申诉返还，涉钱批）
 });
 
 /** 前端 tRPC client 的类型锚点（仅类型导出，无运行时开销） */

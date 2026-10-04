@@ -3,6 +3,14 @@
  * 骨架批片 1（S-05）：外框换骨架——SkBackBar（二级页无 dock）→ 大数字卡（mono 34 +
  * trio 分项）→ S7 明细（SkRows/SkRow 分组）→ 口径注（SkNote）。数据流/权限零回退。
  *
+ * 薪资/XP 面扩（coder K）：双轨注记（劳动业绩 laborTotalFen/销售业绩 salesTotalFen，
+ * 快照月份无此字段=不渲染）· 协作拆分行尾注（splitBp→「协作拆得 xx%」）· 回冲明面
+ * （refundClawbackTotalFen+adjustments，负=跨月回冲红/正=补调）· 工资条区
+ * （payroll.mySlip：四费列+净额+已发放标记态/未发放置灰；无=空态生成中；发放=标记
+ * 留痕不碰真钱）· 扣减行内申诉（active 才显示；reverted 灰态「已返还」）+ 工资条
+ * 行申诉（slip_line）+ 我的申诉列表 + 复核时限注记（payroll.appealSlaHours 缺省 24）。
+ * 数据口=payrollPort（server payroll/xp 申报口由 coder J 并行施工，签名冻结）。
+ *
  * 仅本人页：server commission.mySummary 已硬过滤（employeeId=ctx.user，越权传参 FORBIDDEN），
  * 前端无任何选人控件。单查询渲染（<2s 约束）：整页只调一次 mySummary；
  * 历史快照展开时才懒查对应月份（同一端点带 month）。
@@ -10,11 +18,18 @@
  * 金额：库内 integer 分，显示一律 fenToYuan；比例 bp → %；系数 bp → 倍。
  */
 
-import { Skeleton, usePhiliaClient } from '@philia/shared';
+import { getApiBase, Skeleton, uploadImage, usePhiliaClient, useToast } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
-import { useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { fenToYuan } from '@/components/today/utils';
 import { PAY_COPY } from '@/copy/pay';
+import { pcc } from '@/copy/payroll';
+import {
+  listAppeals,
+  payrollOf,
+  readAppealSlaHours,
+  type AppealTargetKind,
+} from '@/lib/payrollPort';
 import { SkBackBar, SkBtnAction, SkNote, SkRows } from '../../components/skeleton';
 import '../../styles/skeleton.css';
 
@@ -33,6 +48,9 @@ interface CommissionLine {
   amountFen: number;
   overwork: boolean;
   pendingApproval: boolean;
+  /** 协作拆分注记（薪资/XP 面扩）：拆分行=按比拆得；splitBp=拆分比例 bp，splitFrom=来源单/协作方（契约预留，本版不透出） */
+  splitFrom?: string;
+  splitBp?: number;
 }
 
 interface StoreLine {
@@ -66,6 +84,14 @@ interface DeductionRow {
   reason: string;
   createdBy: string;
   createdAt: string | Date; // live=Date（superjson），快照 payload 内=string
+  /** active | reverted（薪资/XP 面扩；缺省按 active 透出，快照向后兼容） */
+  status?: string;
+}
+
+interface AdjustmentRow {
+  label: string;
+  amountFen: number;
+  sourceMonth: string;
 }
 
 interface MonthPayload {
@@ -81,6 +107,12 @@ interface MonthPayload {
   commissionTotalFen: number;
   performance: PerformanceBlock;
   deductions: DeductionRow[];
+  /** 双轨业绩（薪资/XP 面扩；快照月份无此字段） */
+  laborTotalFen?: number;
+  salesTotalFen?: number;
+  /** 回冲明面（薪资/XP 面扩） */
+  refundClawbackTotalFen?: number;
+  adjustments?: AdjustmentRow[];
 }
 
 /* ---------------- 格式化小函数 ---------------- */
@@ -157,6 +189,11 @@ function LineRow({ line, probation }: { line: CommissionLine; probation: boolean
           ) : null}
           {probation && line.multiplierBp !== 10000 ? (
             <span style={{ ...chipSt, background: 'var(--paper)', color: 'var(--muted)' }}>{PAY_COPY['pay.line.probation']}</span>
+          ) : null}
+          {line.splitBp != null ? (
+            <span style={{ ...chipSt, background: 'var(--paper)', color: 'var(--ink)' }}>
+              {pcc('prl.line.splitLead')} {bpToPct(line.splitBp)}
+            </span>
           ) : null}
         </span>
         <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
@@ -287,10 +324,165 @@ function SnapshotRow({ period, kind, totalFen }: { period: string; kind: string;
   );
 }
 
+/* ---------------- 申诉弹层（reason 必填 + 附图选传 ≤3；弹层三件套之滚动锁） ---------------- */
+
+const MAX_APPEAL_PHOTOS = 3;
+const APPEALS_KEY = ['payroll', 'myAppeals'] as const;
+
+function AppealModal({
+  month,
+  target,
+  port,
+  showToast,
+  onClose,
+}: {
+  month: string;
+  target: { kind: AppealTargetKind; targetId: string };
+  port: ReturnType<typeof payrollOf>;
+  showToast: (text: string) => void;
+  onClose: () => void;
+}) {
+  const { queryClient } = usePhiliaClient();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [reason, setReason] = useState('');
+  const [photos, setPhotos] = useState<Array<{ url: string; thumbUrl: string }>>([]);
+  const [uploading, setUploading] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  /* 弹层打开期间锁底层 body 滚动 */
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  const onFiles = async (files: FileList) => {
+    const room = MAX_APPEAL_PHOTOS - photos.length;
+    if (room <= 0) {
+      showToast(pcc('prl.appeal.photoFull', { max: MAX_APPEAL_PHOTOS }));
+      return;
+    }
+    setUploading(true);
+    try {
+      for (const f of Array.from(files).slice(0, room)) {
+        const up = await uploadImage(getApiBase(), f, 'payroll/appeal');
+        setPhotos((prev) => [...prev, { url: up.url, thumbUrl: up.thumbUrl }]);
+      }
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : pcc('prl.appeals.loadFail'));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const submit = async () => {
+    if (!reason.trim()) {
+      showToast(pcc('prl.appeal.reasonRequired'));
+      return;
+    }
+    setBusy(true);
+    try {
+      await port.payroll.raiseAppeal.mutate({
+        targetKind: target.kind,
+        targetId: target.targetId,
+        month,
+        reason: reason.trim(),
+        ...(photos.length > 0 ? { evidenceUrls: photos.map((p) => p.url) } : {}),
+      });
+      showToast(pcc('prl.appeal.submitted'));
+      void queryClient.invalidateQueries({ queryKey: APPEALS_KEY });
+      onClose();
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : pcc('prl.appeals.loadFail'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-modal flex items-center justify-center px-6" role="dialog" aria-modal="true" aria-label={pcc('prl.appeal.title')}>
+      <button type="button" aria-label={pcc('prl.appeal.cancel')} className="absolute inset-0 bg-[rgba(59,46,36,.4)]" onClick={onClose} />
+      <div className="u1-card relative w-full max-w-sm p-4" data-testid="pay-appeal-modal">
+        <p className="text-title text-ink">{pcc('prl.appeal.title')}</p>
+        <textarea
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          rows={3}
+          maxLength={500}
+          placeholder={pcc('prl.appeal.reasonPh')}
+          data-testid="pay-appeal-reason"
+          className="u1-ring mt-2 w-full rounded-input bg-card px-3 py-2.5 text-body-sm text-ink placeholder:text-ink-placeholder"
+        />
+        {/* 附图（选传 ≤3，现场拍） */}
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          {photos.map((p) => (
+            <span key={p.url} className="relative inline-block h-12 w-16 shrink-0">
+              <img src={p.thumbUrl} alt="附图" className="h-full w-full rounded-chip object-cover" />
+              <button
+                type="button"
+                aria-label="删除这张附图"
+                onClick={() => setPhotos((prev) => prev.filter((x) => x.url !== p.url))}
+                className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[11px] text-[#FAF8F2]"
+              >
+                ×
+              </button>
+            </span>
+          ))}
+          {photos.length < MAX_APPEAL_PHOTOS ? (
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => fileRef.current?.click()}
+              data-testid="pay-appeal-photo-add"
+              className="flex h-12 items-center rounded-chip bg-card px-3 text-caption-xs text-[rgba(59,46,36,.42)] [border:1px_dashed_rgba(59,46,36,.25)] disabled:opacity-50"
+            >
+              {pcc('prl.appeal.photoCta', { max: MAX_APPEAL_PHOTOS })}
+            </button>
+          ) : null}
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              if (e.target.files?.length) void onFiles(e.target.files);
+              e.target.value = '';
+            }}
+          />
+        </div>
+        <div className="mt-3 flex gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-11 min-h-[44px] flex-1 rounded-control bg-sunken text-body-sm font-semibold text-[rgba(59,46,36,.62)]"
+          >
+            {pcc('prl.appeal.cancel')}
+          </button>
+          <button
+            type="button"
+            disabled={busy || uploading}
+            onClick={() => void submit()}
+            data-testid="pay-appeal-submit"
+            className="h-11 min-h-[44px] flex-1 rounded-control bg-brand-primary text-body-sm font-semibold text-ink disabled:opacity-50"
+          >
+            {busy ? pcc('prl.appeal.submitting') : pcc('prl.appeal.submit')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ---------------- 页面 ---------------- */
 
 export default function PayPage() {
   const { trpc } = usePhiliaClient();
+  const { showToast, toastEl } = useToast();
+  const port = useMemo(() => payrollOf(trpc), [trpc]);
 
   // 单查询渲染（<2s 约束）：口径小字/三分列/绩效/扣减/历史快照全在此响应内
   const summaryQuery = useQuery({
@@ -303,6 +495,30 @@ export default function PayPage() {
   const payload = data ? (data.payload as unknown as MonthPayload) : null;
   const perf = payload?.performance ?? null;
   const my = payload ? pickPool(payload) : null;
+
+  /* ---- 薪资域扩：工资条 / 我的申诉 / 申诉时限（端口读，缺省 24） ---- */
+  const slipQuery = useQuery({
+    queryKey: ['payroll', 'mySlip', data?.month],
+    queryFn: () => port.payroll.mySlip.query({ month: data!.month }),
+    enabled: !!data,
+  });
+  const appealsQuery = useQuery({
+    queryKey: APPEALS_KEY,
+    queryFn: () => port.payroll.myAppeals.query(),
+    enabled: !!data,
+  });
+  const slaQuery = useQuery({
+    queryKey: ['payroll', 'appealSlaHours'],
+    queryFn: () => readAppealSlaHours(port),
+    staleTime: 300_000,
+    enabled: !!data,
+  });
+  const slip = slipQuery.data?.item ?? null;
+  const appeals = useMemo(() => listAppeals(appealsQuery.data), [appealsQuery.data]);
+  const slaHours = slaQuery.data ?? 24;
+
+  /* 申诉弹层目标（deduction 行 id / slip_line 行 / adjustment 行 label） */
+  const [appealTarget, setAppealTarget] = useState<{ kind: AppealTargetKind; targetId: string } | null>(null);
 
   const trioCells = payload
     ? [
@@ -359,6 +575,20 @@ export default function PayPage() {
                 </div>
               ))}
             </div>
+            {/* 双轨注记：劳动业绩/销售业绩（快照月份无字段=不渲染） */}
+            {payload.laborTotalFen != null || payload.salesTotalFen != null ? (
+              <div style={{ marginTop: 12, borderTop: '1px solid var(--hairline-soft)', paddingTop: 10 }} data-testid="pay-dual-track">
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', fontSize: 11 }}>
+                  <span style={{ color: 'var(--muted)' }}>{pcc('prl.track.labor')}</span>
+                  <span className="sk-mono" style={{ fontWeight: 700 }}>{fenToYuan(payload.laborTotalFen ?? 0)}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 4, fontSize: 11 }}>
+                  <span style={{ color: 'var(--muted)' }}>{pcc('prl.track.sales')}</span>
+                  <span className="sk-mono" style={{ fontWeight: 700 }}>{fenToYuan(payload.salesTotalFen ?? 0)}</span>
+                </div>
+                <p style={{ ...monoSm, marginTop: 6 }}>{pcc('prl.track.note')}</p>
+              </div>
+            ) : null}
           </section>
 
           {/* S7 明细：服务 / 售卡 / 商品 */}
@@ -437,26 +667,183 @@ export default function PayPage() {
             )}
           </SkRows>
 
-          {/* 扣减记录（只扣绩效不扣提成） */}
+          {/* 扣减记录（只扣绩效不扣提成；active 行行内申诉，reverted 灰态已返还） */}
           <SecTitle>{PAY_COPY['pay.sec.deductions']}</SecTitle>
           <SkRows testId="pay-deductions">
             {payload.deductions.length === 0 ? (
               <EmptyRow text={PAY_COPY['pay.deductions.empty']} />
             ) : (
-              payload.deductions.map((d) => (
-                <div className="row" key={d.id}>
-                  <span className="lb" style={{ minWidth: 0, flex: 1 }}>
-                    <span style={{ display: 'block', fontWeight: 700 }}>{d.reason}</span>
-                    <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
-                      {fmtTs(d.createdAt)} · {PAY_COPY['pay.deductions.creatorLead']} {d.createdBy.slice(-6)}
+              payload.deductions.map((d) => {
+                const reverted = d.status === 'reverted';
+                return (
+                  <div className="row" key={d.id} style={reverted ? { opacity: 0.55 } : undefined}>
+                    <span className="lb" style={{ minWidth: 0, flex: 1 }}>
+                      <span style={{ display: 'block', fontWeight: 700 }}>
+                        {d.reason}
+                        {reverted ? (
+                          <span style={{ ...chipSt, background: 'var(--paper)', color: 'var(--muted)' }}>{pcc('prl.deduction.reverted')}</span>
+                        ) : null}
+                      </span>
+                      <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
+                        {fmtTs(d.createdAt)} · {PAY_COPY['pay.deductions.creatorLead']} {d.createdBy.slice(-6)}
+                      </span>
                     </span>
-                  </span>
-                  <span className="vl red">−{fenToYuan(d.amountFen)}</span>
-                </div>
-              ))
+                    {!reverted ? (
+                      <button
+                        type="button"
+                        onClick={() => setAppealTarget({ kind: 'deduction', targetId: d.id })}
+                        data-testid={`pay-appeal-${d.id}`}
+                        style={{
+                          flex: 'none', marginRight: 8, borderRadius: 999, background: 'var(--paper)',
+                          padding: '3px 10px', fontSize: 10, color: 'var(--ink)', border: 0, cursor: 'pointer',
+                        }}
+                      >
+                        {pcc('prl.deduction.appeal')}
+                      </button>
+                    ) : null}
+                    <span className="vl red">−{fenToYuan(d.amountFen)}</span>
+                  </div>
+                );
+              })
             )}
           </SkRows>
           <SkNote>{PAY_COPY['pay.deductions.note']}</SkNote>
+
+          {/* 回冲与调整（refundClawbackTotalFen/adjustments；负=跨月回冲红、正=补调） */}
+          {(payload.refundClawbackTotalFen ?? 0) !== 0 || (payload.adjustments?.length ?? 0) > 0 ? (
+            <>
+              <SecTitle>{pcc('prl.sec.refund')}</SecTitle>
+              <SkRows testId="pay-refunds">
+                {(payload.refundClawbackTotalFen ?? 0) !== 0 ? (
+                  <div className="row">
+                    <span className="lb" style={{ fontWeight: 700 }}>{pcc('prl.refund.row')}</span>
+                    <span className="vl red">−{fenToYuan(Math.abs(payload.refundClawbackTotalFen ?? 0))}</span>
+                  </div>
+                ) : null}
+                {(payload.adjustments ?? []).map((a, i) => (
+                  <div className="row" key={`${a.label}-${a.sourceMonth}-${i}`}>
+                    <span className="lb" style={{ minWidth: 0, flex: 1 }}>
+                      <span style={{ display: 'block', fontWeight: 700 }}>{a.label}</span>
+                      <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
+                        {pcc('prl.adjust.sourceLead')} {a.sourceMonth}
+                      </span>
+                    </span>
+                    <span className={`vl${a.amountFen < 0 ? ' red' : ''}`}>
+                      {a.amountFen < 0 ? `−${fenToYuan(Math.abs(a.amountFen))}` : `+${fenToYuan(a.amountFen)}`}
+                    </span>
+                  </div>
+                ))}
+              </SkRows>
+              <SkNote>{pcc('prl.adjust.note')}</SkNote>
+            </>
+          ) : null}
+
+          {/* 工资条（payroll.mySlip；发放=标记留痕，不碰真钱口径） */}
+          <SecTitle>{pcc('prl.sec.slip')}</SecTitle>
+          <SkRows testId="pay-slip">
+            {slipQuery.isPending ? (
+              <div className="row"><span className="lb"><Skeleton className="h-4 w-40 !rounded-chip" /></span></div>
+            ) : !slip ? (
+              <EmptyRow text={`${pcc('prl.slip.empty')}——${pcc('prl.slip.emptyBody')}`} />
+            ) : (
+              <>
+                <div className="row" style={{ display: 'block' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', textAlign: 'center' }}>
+                    {([
+                      [pcc('prl.slip.commission'), slip.commissionFen],
+                      [pcc('prl.slip.performance'), slip.performanceFen],
+                      [pcc('prl.slip.deduction'), slip.deductionFen],
+                      [pcc('prl.slip.adjustment'), slip.adjustmentFen],
+                    ] as Array<[string, number]>).map(([k, v], i) => (
+                      <div key={k} style={i > 0 ? { boxShadow: 'inset 1px 0 0 var(--hairline-soft)' } : undefined}>
+                        <div className="sk-mono" style={{ fontSize: 12, fontWeight: 700 }}>{fenToYuan(v)}</div>
+                        <div style={{ marginTop: 2, fontSize: 9.5, color: 'var(--muted)' }}>{k}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: 10, borderTop: '1px solid var(--hairline-soft)', paddingTop: 10, textAlign: 'center' }}>
+                    <span style={{ fontSize: 10, color: 'var(--muted)' }}>{pcc('prl.slip.netLabel')}</span>
+                    <span className="sk-mono" style={{ marginLeft: 8, fontSize: 24, fontWeight: 700 }}>{fenToYuan(slip.netFen)}</span>
+                    {slip.markedAt ? (
+                      <span style={{ ...chipSt, background: 'var(--gold-pale)', color: 'var(--ink-deep)', fontWeight: 700 }}>
+                        {pcc('prl.slip.marked')} {fmtTs(slip.markedAt)}
+                      </span>
+                    ) : (
+                      <span style={{ ...chipSt, background: 'var(--paper)', color: 'var(--muted)' }}>{pcc('prl.slip.unmarked')}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="row" style={{ justifyContent: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => setAppealTarget({ kind: 'slip_line', targetId: slip.id ?? slip.month })}
+                    data-testid="pay-slip-appeal"
+                    style={{
+                      borderRadius: 999, background: 'var(--paper)', padding: '4px 14px',
+                      fontSize: 10.5, color: 'var(--ink)', border: 0, cursor: 'pointer',
+                    }}
+                  >
+                    {pcc('prl.slip.appeal')}
+                  </button>
+                </div>
+              </>
+            )}
+          </SkRows>
+          <SkNote>{pcc('prl.slip.markNote')}</SkNote>
+
+          {/* 我的申诉（状态/复核注/返还额透出 + 复核时限注记） */}
+          <SecTitle>{pcc('prl.sec.myAppeals')}</SecTitle>
+          <SkRows testId="pay-appeals">
+            {appealsQuery.isPending ? (
+              <div className="row"><span className="lb"><Skeleton className="h-4 w-40 !rounded-chip" /></span></div>
+            ) : appealsQuery.isError ? (
+              <EmptyRow text={pcc('prl.appeals.loadFail')} />
+            ) : appeals.length === 0 ? (
+              <EmptyRow text={pcc('prl.appeals.empty')} />
+            ) : (
+              appeals.map((a) => {
+                const targetLabel =
+                  a.targetKind === 'deduction'
+                    ? pcc('prl.appeals.target.deduction')
+                    : a.targetKind === 'adjustment'
+                      ? pcc('prl.appeals.target.adjustment')
+                      : pcc('prl.appeals.target.slipLine');
+                return (
+                  <div className="row" key={a.id}>
+                    <span className="lb" style={{ minWidth: 0, flex: 1 }}>
+                      <span style={{ display: 'block', fontWeight: 700 }}>
+                        {targetLabel}
+                        <span
+                          style={{
+                            ...chipSt,
+                            background: a.status === 'approved' ? 'var(--gold-pale)' : 'var(--paper)',
+                            color: a.status === 'approved' ? 'var(--ink-deep)' : 'var(--muted)',
+                          }}
+                        >
+                          {a.status === 'approved'
+                            ? pcc('prl.appeals.statusApproved')
+                            : a.status === 'rejected'
+                              ? pcc('prl.appeals.statusRejected')
+                              : pcc('prl.appeals.statusPending')}
+                        </span>
+                      </span>
+                      <span style={{ display: 'block', marginTop: 2, fontSize: 11, color: 'var(--ink)', fontWeight: 400 }}>{a.reason}</span>
+                      <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
+                        <span className="sk-mono">{a.month}</span> · {fmtTs(a.createdAt)}
+                        {a.reviewNote ? ` · ${pcc('prl.appeals.reviewLead')}：${a.reviewNote}` : ''}
+                      </span>
+                    </span>
+                    {a.refundFen != null && a.refundFen > 0 ? (
+                      <span className="vl" style={{ color: 'var(--ink-deep)' }}>
+                        {pcc('prl.appeals.refundLead')} {fenToYuan(a.refundFen)}
+                      </span>
+                    ) : null}
+                  </div>
+                );
+              })
+            )}
+          </SkRows>
+          <SkNote>{pcc('prl.appeals.slaNote', { h: slaHours })}</SkNote>
 
           {/* 历史月份快照（新→旧；提成月结点展开分列明细） */}
           <SecTitle>{PAY_COPY['pay.sec.history']}</SecTitle>
@@ -480,6 +867,18 @@ export default function PayPage() {
           </p>
         </>
       )}
+
+      {/* 申诉弹层（deduction 行内 / slip_line 行） */}
+      {appealTarget && data ? (
+        <AppealModal
+          month={data.month}
+          target={appealTarget}
+          port={port}
+          showToast={showToast}
+          onClose={() => setAppealTarget(null)}
+        />
+      ) : null}
+      {toastEl}
     </div>
   );
 }

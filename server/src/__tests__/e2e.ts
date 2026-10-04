@@ -171,8 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 2118 键/50 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50）；
+ *      56.1 种子 2330 键/53 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -4854,17 +4854,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（2118 键/50 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 2118 && domainSet.size === 50 &&
+  check('56.1 copy 域种子全量落库（2330 键/53 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 2330 && domainSet.size === 53 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（2118 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 2118 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（2330 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 2330 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -5370,10 +5370,6 @@ async function main(): Promise<void> {
 
   const now59 = new Date();
   const DAY_KEYS_59 = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
-  const dayKey59 = DAY_KEYS_59[now59.getDay()]!;
-  const hm59 = (d: Date) => `${pad2l(d.getHours())}:${pad2l(d.getMinutes())}`;
-  const nowMin59 = now59.getHours() * 60 + now59.getMinutes();
-  const tpl59 = (start: string, end: string): import('../db/schema').StaffSchedule => ({ [dayKey59]: [{ start, end }] });
   interface MarkRes59 {
     record: {
       id: string; kind: string; status: string;
@@ -5385,28 +5381,39 @@ async function main(): Promise<void> {
 
   /* ---- 59.1 读序切换：当日 shift_assignments(active) 优先 → 无则 staff.schedule 周模板兜底 ---- */
   /* 附加乙：周模板给「+120min 班」（in 击按模板应判 normal）+ assignment 给「-60min 班」（in 击判 late）
-     ——判 late 即坐实 assignment 优先于模板（若误读模板会得 normal） */
+     ——判 late 即坐实 assignment 优先于模板（若误读模板会得 normal）。
+     时刻钉法（跨午夜红一实证，57.6 先例）：打卡锚=punch59（now≥今日正午取今日正午，否则取昨日正午——
+     恒为过去且 ±300 分钟不跨日）；打卡走 offline_relay+clientTs（直带 clientTs 非补传 400，状态判定以
+     punchAt 为锚走 attendance.ts:370 同径，判定语义不变）；模板/指派全按 punch59 的周日/日期对齐——
+     任意时刻跑判定一致。 */
+  const noon59 = new Date();
+  noon59.setHours(12, 0, 0, 0);
+  const punch59 = now59.getTime() >= noon59.getTime() ? noon59 : new Date(noon59.getTime() - 24 * 3600 * 1000);
+  const punchTs59 = Math.floor(punch59.getTime() / 1000);
+  const punchDayKey59 = DAY_KEYS_59[punch59.getDay()]!;
+  const punchDate59 = `${punch59.getFullYear()}-${pad2l(punch59.getMonth() + 1)}-${pad2l(punch59.getDate())}`;
+  const tpl59p = (start: string, end: string): import('../db/schema').StaffSchedule => ({ [punchDayKey59]: [{ start, end }] });
   await db.update(schema.staff)
-    .set({ schedule: tpl59(hm59(new Date(now59.getTime() + 120 * 60000)), hm59(new Date(now59.getTime() + 300 * 60000))) })
+    .set({ schedule: tpl59p('14:00', '17:00') })
     .where(eq(schema.staff.id, extraS2.id));
   const asg59 = await db.insert(schema.shiftAssignments).values({
-    storeId, staffId: extraS2.id, date: todayStr,
-    startMin: Math.max(0, nowMin59 - 60), endMin: nowMin59 + 240,
+    storeId, staffId: extraS2.id, date: punchDate59,
+    startMin: 11 * 60, endMin: 16 * 60,
     source: 'manual', status: 'active', createdBy: ownerUser!.id,
   }).returning().then((r) => r[0]!);
   const markAssign = await trpcMutate<MarkRes59>('attendance.mark', {
     cookie: extra2Cookie,
-    input: { kind: 'in', lat: 30.2741, lng: 120.1551, deviceId: 'e2e-dev-extra2' },
+    input: { kind: 'in', lat: 30.2741, lng: 120.1551, deviceId: 'e2e-dev-extra2', source: 'offline_relay', clientTs: punchTs59 },
   });
   check('59.1 读序①：有当日 assignment → 按排班表判定（-60min 班 in 击=late；误读周模板则为 normal）',
     markAssign.record.kind === 'in' && markAssign.record.status === 'late', markAssign.record);
   /* 附加丙：无 assignment、周模板「-60min 班」→ in 击判 late（周模板兜底实证，零中断） */
   await db.update(schema.staff)
-    .set({ schedule: tpl59(hm59(new Date(now59.getTime() - 60 * 60000)), hm59(new Date(now59.getTime() + 300 * 60000))) })
+    .set({ schedule: tpl59p('11:00', '16:00') })
     .where(eq(schema.staff.id, extraS3.id));
   const markTpl = await trpcMutate<MarkRes59>('attendance.mark', {
     cookie: extra3Cookie,
-    input: { kind: 'in', lat: 30.2741, lng: 120.1551, deviceId: 'e2e-dev-extra3' },
+    input: { kind: 'in', lat: 30.2741, lng: 120.1551, deviceId: 'e2e-dev-extra3', source: 'offline_relay', clientTs: punchTs59 },
   });
   check('59.1 读序②：无 assignment → staff.schedule 周模板兜底（模板 -60min 班 in 击=late）',
     markTpl.record.kind === 'in' && markTpl.record.status === 'late', markTpl.record);
@@ -5956,6 +5963,335 @@ async function main(): Promise<void> {
       { pdca: pdcaAfter62.status, ann: annAfter62.status });
     void storeBRow;
   }
+
+  /* ==================================================================
+   * 片 4（薪资+XP，涉钱批）验收段：63 薪资族 / 64 XP 族
+   * 口径：金额 integer 分、比例 bp 万分比、规则全端口零常量、算式明面 R15 同口径
+   * ================================================================== */
+  console.log('\n[片4] 63. 薪资：双轨透出 / 协作拆分 / 回冲 / 工资条 / 发放留痕 / 申诉返还');
+  interface S4CommLine {
+    billId: string; itemId: string; amountFen: number;
+    refundRatioBp: number; refundClawbackFen: number; refunded: boolean;
+    splitFrom?: string; splitBp?: number;
+  }
+  interface S4Summary {
+    payload: {
+      serviceLines: S4CommLine[]; productLines: S4CommLine[];
+      laborTotalFen: number; salesTotalFen: number; refundClawbackTotalFen: number;
+      commissionTotalFen: number;
+      adjustments: Array<{ refundNo: string; billNo: string; clawbackFen: number }>;
+      adjustmentsTotalFen: number;
+    };
+  }
+  const sumLinesOf = (ls: S4CommLine[]) => ls.reduce((s, l) => s + l.amountFen, 0);
+
+  /* ---- 63.1 双轨分账透出：laborTotalFen/salesTotalFen 与行求和恒等（分明面） ---- */
+  const sum631aq = await trpcQuery<S4Summary>('commission.mySummary', { cookie: groomerCookie, input: { month: currentMonth } });
+  const sum631xm = await trpcQuery<S4Summary>('commission.mySummary', { cookie: staffCookie, input: { month: currentMonth } });
+  check('63.1 双轨透出：mySummary 含 laborTotalFen/salesTotalFen 且与 serviceLines/productLines 求和一致（阿强+小美双视角，分明面）',
+    sum631aq.payload.laborTotalFen === sumLinesOf(sum631aq.payload.serviceLines) &&
+      sum631aq.payload.salesTotalFen === sumLinesOf(sum631aq.payload.productLines) &&
+      sum631xm.payload.laborTotalFen === sumLinesOf(sum631xm.payload.serviceLines) &&
+      sum631xm.payload.salesTotalFen === sumLinesOf(sum631xm.payload.productLines),
+    {
+      aq: [sum631aq.payload.laborTotalFen, sumLinesOf(sum631aq.payload.serviceLines), sum631aq.payload.salesTotalFen],
+      xm: [sum631xm.payload.laborTotalFen, sum631xm.payload.salesTotalFen, sumLinesOf(sum631xm.payload.productLines)],
+    });
+
+  /* ---- 63.2 协作拆分：洗护单 100 元提成额、协作人 4000bp → 协作人 40 元 / 主操作人 60 元 ---- */
+  // 夹具定价：读当前生效 commission_grooming_rate，门市价=10000×10000/rateBp → 行毛提成恰 10000 分
+  const rateRow632 = await db
+    .select({ valueJson: schema.commissionRules.valueJson })
+    .from(schema.commissionRules)
+    .where(and(eq(schema.commissionRules.ruleKey, 'commission_grooming_rate'), eq(schema.commissionRules.active, true)))
+    .get();
+  const groomRateBp632 = Number((rateRow632?.valueJson as { rate_bp?: number } | undefined)?.rate_bp ?? 0);
+  if (groomRateBp632 <= 0 || (10000 * 10000) % groomRateBp632 !== 0) {
+    throw new Error(`63 夹具：当前提成率 ${groomRateBp632}bp 不可整除出 10000 分提成额`);
+  }
+  const price632 = (10000 * 10000) / groomRateBp632;
+  const appt632 = (await db.insert(schema.appointments).values({
+    code: 'E2ES4A', customerId: customerUser!.id, storeId, petId, serviceId: service.id,
+    type: 'grooming', scheduledStart: new Date(), scheduledEnd: new Date(),
+    status: 'in_service', priceFen: price632, staffId: aqiang.id, note: '【测试】e2e 片4 协作拆分单',
+  }).returning())[0]!;
+
+  const collabOf632 = await trpcQuery<{ defaultSplitBp: number; collaborators: Array<{ staffId: string }> }>(
+    'payroll.collabOf', { cookie: managerCookie, input: { appointmentId: appt632.id } });
+  check('63.2 collabOf 透出单信息+端口缺省建议比（commission_collab_split_default=5000bp）',
+    collabOf632.defaultSplitBp === 5000 && collabOf632.collaborators.length === 0, collabOf632.defaultSplitBp);
+
+  // 负例前置（单未 completed 时验）：超 10000 → 400；主操作人重复 → 400；越店单 → 403
+  const collabOverBp = await asErr(trpcMutate('payroll.setCollaborators', {
+    cookie: managerCookie,
+    input: { appointmentId: appt632.id, collaborators: [{ staffId: staffRow2.id, role: 'wash', splitBp: 10000 }] },
+  }));
+  const collabMainDup = await asErr(trpcMutate('payroll.setCollaborators', {
+    cookie: managerCookie,
+    input: { appointmentId: appt632.id, collaborators: [{ staffId: aqiang.id, role: 'wash', splitBp: 1000 }] },
+  }));
+  const storeB632 = await db.select().from(schema.stores).where(eq(schema.stores.name, 'e2e 隔离 B 店')).get();
+  const apptCross632 = (await db.insert(schema.appointments).values({
+    code: 'E2ES4X', customerId: customerUser!.id, storeId: storeB632!.id, petId, serviceId: service.id,
+    type: 'grooming', scheduledStart: new Date(), scheduledEnd: new Date(),
+    status: 'in_service', priceFen: 10000, staffId: aqiang.id, note: '【测试】e2e 片4 越店协作拆分负例',
+  }).returning())[0]!;
+  const collabCross = await asErr(trpcMutate('payroll.setCollaborators', {
+    cookie: managerCookie,
+    input: { appointmentId: apptCross632.id, collaborators: [{ staffId: staffRow2.id, role: 'wash', splitBp: 4000 }] },
+  }));
+  check('63.2 setCollaborators 负例：Σ≥10000 → 400 / 主操作人重复 → 400 / 越店单 → 403',
+    collabOverBp instanceof TrpcHttpError && collabOverBp.httpStatus === 400 && collabOverBp.message.includes('留余数') &&
+      collabMainDup instanceof TrpcHttpError && collabMainDup.httpStatus === 400 && collabMainDup.message.includes('主操作人') &&
+      collabCross instanceof TrpcHttpError && collabCross.httpStatus === 403 && collabCross.code === 'FORBIDDEN',
+    { over: collabOverBp && { s: collabOverBp.httpStatus, m: collabOverBp.message }, main: collabMainDup && { s: collabMainDup.httpStatus, m: collabMainDup.message }, cross: collabCross && { s: collabCross.httpStatus, c: collabCross.code } });
+
+  const setCollab632 = await trpcMutate<{ count: number; collaborators: Array<{ splitBp: number }> }>('payroll.setCollaborators', {
+    cookie: managerCookie,
+    input: { appointmentId: appt632.id, collaborators: [{ staffId: staffRow2.id, role: 'wash', splitBp: 4000 }] },
+  });
+  await db.update(schema.appointments).set({ status: 'completed', completedAt: new Date(), updatedAt: new Date() })
+    .where(eq(schema.appointments.id, appt632.id));
+  const bill632 = await settleBill2([{ kind: 'appointment', refId: appt632.id }], { note: '【测试】e2e 片4 协作拆分结账' });
+  await db.update(schema.cashierBills).set({ settledAt: new Date(`${currentMonth}-15T12:00:00`), updatedAt: new Date() })
+    .where(eq(schema.cashierBills.id, bill632.billId)); // 63.x 钉时刻：账单归属月钉死（跨零点/跨月界同稳）
+  const sumAq632 = await trpcQuery<S4Summary>('commission.mySummary', { cookie: groomerCookie, input: { month: currentMonth } });
+  const sumLl632 = await trpcQuery<S4Summary>('commission.mySummary', { cookie: liliCookie, input: { month: currentMonth } });
+  const lineAq632 = sumAq632.payload.serviceLines.find((l) => l.billId === bill632.billId);
+  const lineLl632 = sumLl632.payload.serviceLines.find((l) => l.billId === bill632.billId);
+  check('63.2 协作拆分：丽丽 4000bp 得 40 元（splitFrom=阿强/splitBp=4000 注记），主操作人阿强得 60 元（余数落主），合计=毛额 100 元，精确到分',
+    setCollab632.count === 1 &&
+      lineLl632?.amountFen === 4000 && lineLl632.splitFrom === aqiang.id && lineLl632.splitBp === 4000 &&
+      lineAq632?.amountFen === 6000 && lineAq632.amountFen + lineLl632.amountFen === 10000,
+    { aq: lineAq632?.amountFen, ll: lineLl632 && { amount: lineLl632.amountFen, from: lineLl632.splitFrom, bp: lineLl632.splitBp } });
+
+  /* ---- 63.3 拆分单回冲：同月退 50% → 两人 refundClawback 各按分得比精确到分 ---- */
+  await execRefund(ownerCookie, { billNo: bill632.billNo, type: 'partial_amount', amountFen: price632 / 2, reason: '片4 协作单同月退 50%' });
+  const sumAq633 = await trpcQuery<S4Summary>('commission.mySummary', { cookie: groomerCookie, input: { month: currentMonth } });
+  const sumLl633 = await trpcQuery<S4Summary>('commission.mySummary', { cookie: liliCookie, input: { month: currentMonth } });
+  const lineAq633 = sumAq633.payload.serviceLines.find((l) => l.billId === bill632.billId);
+  const lineLl633 = sumLl633.payload.serviceLines.find((l) => l.billId === bill632.billId);
+  check('63.3 同月退 50%：两人 refundClawback 各按分得比精确到分（阿强 6000×50%=3000 / 丽丽 4000×50%=2000，行净额同步减半）',
+    lineAq633?.refundClawbackFen === 3000 && lineAq633.amountFen === 3000 &&
+      lineLl633?.refundClawbackFen === 2000 && lineLl633.amountFen === 2000 &&
+      sumAq633.payload.refundClawbackTotalFen >= 3000,
+    { aq: lineAq633 && [lineAq633.amountFen, lineAq633.refundClawbackFen], ll: lineLl633 && [lineLl633.amountFen, lineLl633.refundClawbackFen] });
+
+  // 跨月：同款协作单回填上月+上月已快照（R12⑧ 已全店快照）→ 退款差额进本月 adjustments，源月快照 total_fen 不动
+  const backTs633 = new Date(`${prevMonthStr}-16T12:00:00`);
+  /* 跨月源单按 settled_at 时序解析规则（回溯口径：上月单早于现行版 effective_from →
+     命中 R12⑧ 回填的 v0 历史行）——期望值按同一口径现算，不写死率 */
+  const histRows633 = await db
+    .select({ valueJson: schema.commissionRules.valueJson, effectiveFrom: schema.commissionRules.effectiveFrom })
+    .from(schema.commissionRules)
+    .where(eq(schema.commissionRules.ruleKey, 'commission_grooming_rate'));
+  const histSorted633 = histRows633.map((r) => ({ effMs: r.effectiveFrom.getTime(), bp: Number((r.valueJson as { rate_bp?: number }).rate_bp ?? 0) }))
+    .sort((a, b) => a.effMs - b.effMs);
+  let histBp633 = histSorted633[0]!.bp;
+  for (const r of histSorted633) { if (r.effMs >= backTs633.getTime()) break; histBp633 = r.bp; }
+  const gross633 = Math.round((price632 * histBp633) / 10000); // 行毛提成（源单时序率）
+  const collabShare633 = Math.round((gross633 * 4000) / 10000); // 协作人分得（4000bp）
+  const mainShare633 = gross633 - collabShare633; // 主操作人余数
+  const expAdjAq633 = Math.round(mainShare633 * 0.5); // 各人 adjustments=本人分得×退款比例 50%
+  const expAdjLl633 = Math.round(collabShare633 * 0.5);
+  const appt633 = (await db.insert(schema.appointments).values({
+    code: 'E2ES4B', customerId: customerUser!.id, storeId, petId, serviceId: service.id,
+    type: 'grooming', scheduledStart: backTs633, scheduledEnd: backTs633,
+    status: 'in_service', priceFen: price632, staffId: aqiang.id, note: '【测试】e2e 片4 跨月协作拆分单',
+  }).returning())[0]!;
+  await trpcMutate('payroll.setCollaborators', {
+    cookie: managerCookie,
+    input: { appointmentId: appt633.id, collaborators: [{ staffId: staffRow2.id, role: 'wash', splitBp: 4000 }] },
+  });
+  await db.update(schema.appointments).set({ status: 'completed', completedAt: backTs633, updatedAt: new Date() })
+    .where(eq(schema.appointments.id, appt633.id));
+  const bill633 = await settleBill2([{ kind: 'appointment', refId: appt633.id }], { note: '【测试】e2e 片4 跨月协作源单结账' });
+  await db.update(schema.cashierBills).set({ settledAt: backTs633, updatedAt: new Date() })
+    .where(eq(schema.cashierBills.id, bill633.billId));
+  const snapAq633 = await db.select().from(schema.commissionSnapshots)
+    .where(and(eq(schema.commissionSnapshots.staffId, aqiang.id), eq(schema.commissionSnapshots.period, prevMonthStr), eq(schema.commissionSnapshots.kind, 'commission')))
+    .get();
+  const v633 = await execRefund(ownerCookie, { billNo: bill633.billNo, type: 'partial_amount', amountFen: price632 / 2, reason: '片4 跨月协作单退 50%' });
+  const sumAq633x = await trpcQuery<S4Summary>('commission.mySummary', { cookie: groomerCookie, input: { month: currentMonth } });
+  const sumLl633x = await trpcQuery<S4Summary>('commission.mySummary', { cookie: liliCookie, input: { month: currentMonth } });
+  const adjAq633 = sumAq633x.payload.adjustments.find((a) => a.refundNo === v633.refund.refundNo);
+  const adjLl633 = sumLl633x.payload.adjustments.find((a) => a.refundNo === v633.refund.refundNo);
+  const snapAq633after = await db.select().from(schema.commissionSnapshots)
+    .where(and(eq(schema.commissionSnapshots.staffId, aqiang.id), eq(schema.commissionSnapshots.period, prevMonthStr), eq(schema.commissionSnapshots.kind, 'commission')))
+    .get();
+  check('63.3 跨月回冲：差额按分得比进本月 adjustments（主操作人=余数×50% / 协作人=分得×50%，源单时序率现算）且源月快照 total_fen 不动',
+    adjAq633?.clawbackFen === expAdjAq633 && adjLl633?.clawbackFen === expAdjLl633 &&
+      !!snapAq633 && !!snapAq633after && snapAq633after.totalFen === snapAq633.totalFen,
+    { aq: [adjAq633?.clawbackFen, expAdjAq633], ll: [adjLl633?.clawbackFen, expAdjLl633], snapBefore: snapAq633?.totalFen, snapAfter: snapAq633after?.totalFen });
+
+  /* ---- 63.4 工资条：generateMonth → 幂等 → confirmRun 两态 → 重复确认幂等 ---- */
+  interface S4Run { id: string; status: string; month: string }
+  const gen634a = await trpcMutate<{ run: S4Run; staffCount: number; itemsInserted: number; duplicated: boolean }>(
+    'payroll.generateMonth', { cookie: ownerCookie, input: { month: currentMonth } });
+  const itemAq634 = await db.select().from(schema.payrollItems)
+    .where(and(eq(schema.payrollItems.runId, gen634a.run.id), eq(schema.payrollItems.staffId, aqiang.id)))
+    .get();
+  check('63.4 generateMonth 落 run+逐人 items（generated 态）+ net 逐分对账=commission+performance−deduction+adjustment',
+    gen634a.run.status === 'generated' && gen634a.staffCount > 0 && gen634a.itemsInserted === gen634a.staffCount &&
+      !!itemAq634 && itemAq634.netFen === itemAq634.commissionFen + itemAq634.performanceFen - itemAq634.deductionFen + itemAq634.adjustmentFen,
+    { run: gen634a.run.status, inserted: gen634a.itemsInserted, net: itemAq634 && [itemAq634.netFen, itemAq634.commissionFen, itemAq634.performanceFen, itemAq634.deductionFen, itemAq634.adjustmentFen] });
+  const gen634b = await trpcMutate<{ run: S4Run; itemsInserted: number; duplicated: boolean }>(
+    'payroll.generateMonth', { cookie: ownerCookie, input: { month: currentMonth } });
+  check('63.4 重复生成幂等返回现状（同 run id，itemsInserted=0）',
+    gen634b.run.id === gen634a.run.id && gen634b.itemsInserted === 0 && gen634b.duplicated === true, gen634b);
+  const conf634a = await trpcMutate<{ run: S4Run; duplicated: boolean }>(
+    'payroll.confirmRun', { cookie: ownerCookie, input: { month: currentMonth } });
+  const conf634b = await trpcMutate<{ run: S4Run; duplicated: boolean }>(
+    'payroll.confirmRun', { cookie: ownerCookie, input: { month: currentMonth } });
+  check('63.4 confirmRun 两态（generated→confirmed）+ 重复确认幂等',
+    conf634a.run.status === 'confirmed' && conf634a.duplicated === false && conf634b.duplicated === true, { a: conf634a.run.status, b: conf634b.duplicated });
+  const list634 = await trpcQuery<{ run: S4Run | null; items: Array<{ staffId: string; staffName: string | null; netFen: number }> }>(
+    'payroll.listRun', { cookie: managerCookie, input: { month: currentMonth } });
+  check('63.4 listRun（manager）透出 run+items 含员工名',
+    list634.run?.id === gen634a.run.id && list634.items.length === gen634a.staffCount &&
+      list634.items.some((i) => i.staffId === aqiang.id && typeof i.staffName === 'string' && i.staffName.length > 0),
+    { items: list634.items.length, expect: gen634a.staffCount });
+
+  /* ---- 63.5 本人闸+发放：mySlip 本人 200 / 他人 FORBIDDEN / markDisbursed 留痕不碰真钱 ---- */
+  const slip635 = await trpcQuery<{ item: { id: string; staffId: string; netFen: number } | null }>(
+    'payroll.mySlip', { cookie: liliCookie, input: { month: currentMonth } });
+  check('63.5 mySlip 本人 200（丽丽本人工资条透出）', slip635.item?.staffId === staffRow2.id, slip635.item?.staffId);
+  const slip635cross = await asErr(trpcQuery('payroll.mySlip', {
+    cookie: liliCookie, input: { month: currentMonth, staffId: aqiang.id }, // 丽丽传他人 staffId
+  }));
+  check('63.5 mySlip 丽丽传他人 staffId → FORBIDDEN（仅本人硬过滤）',
+    slip635cross instanceof TrpcHttpError && slip635cross.httpStatus === 403 && slip635cross.code === 'FORBIDDEN',
+    slip635cross && { s: slip635cross.httpStatus, c: slip635cross.code });
+  const payOrdersBefore635 = (await db.select().from(schema.payOrders)).length;
+  const mark635a = await trpcMutate<{ item: { id: string; markedBy: string | null; markedAt: Date | null }; duplicated: boolean }>(
+    'payroll.markDisbursed', { cookie: ownerCookie, input: { itemId: slip635.item!.id, methodNote: '现金发放（e2e 留痕，不碰真钱）' } });
+  const mark635b = await trpcMutate<{ item: { id: string; markedBy: string | null; markedAt: Date | null }; duplicated: boolean }>(
+    'payroll.markDisbursed', { cookie: ownerCookie, input: { itemId: slip635.item!.id } });
+  const payOrdersAfter635 = (await db.select().from(schema.payOrders)).length;
+  check('63.5 markDisbursed 落标记+重复幂等+零 pay_orders 新行（发放留痕不碰真钱实证）',
+    !!mark635a.item.markedBy && !!mark635a.item.markedAt && mark635a.duplicated === false &&
+      mark635b.duplicated === true && String(mark635b.item.markedAt) === String(mark635a.item.markedAt) &&
+      payOrdersAfter635 === payOrdersBefore635,
+    { marked: !!mark635a.item.markedAt, dup: mark635b.duplicated, payOrders: [payOrdersBefore635, payOrdersAfter635] });
+
+  /* ---- 63.6 罚单申诉返还：approved → reverted+refund_fen=20000 / rejected=原扣减 active 不变 ---- */
+  // 扣减行夹具直插（绕开 50% 闸——闸门已在 R9 段实证，本段专验申诉返还链）
+  const ded636 = (await db.insert(schema.deductionRecords).values({
+    storeId, staffId: staffRow2.id, month: currentMonth, amountFen: 20000,
+    reason: '【测试】e2e 片4 罚单申诉返还（approved 案例）', createdBy: managerFix.id,
+  }).returning())[0]!;
+  const appeal636a = await trpcMutate<{ appeal: { id: string; status: string }; duplicated: boolean }>('payroll.raiseAppeal', {
+    cookie: liliCookie,
+    input: { targetKind: 'deduction', targetId: ded636.id, month: currentMonth, reason: '罚单金额有误，申请复核' },
+  });
+  const appeal636dup = await trpcMutate<{ appeal: { id: string; status: string }; duplicated: boolean }>('payroll.raiseAppeal', {
+    cookie: liliCookie,
+    input: { targetKind: 'deduction', targetId: ded636.id, month: currentMonth, reason: '重复提交验证幂等' },
+  });
+  check('63.6 raiseAppeal 建行 + 同人同目标 pending 在途幂等拒（返回现状，零新增）',
+    appeal636a.appeal.status === 'pending' && appeal636a.duplicated === false &&
+      appeal636dup.duplicated === true && appeal636dup.appeal.id === appeal636a.appeal.id,
+    { a: appeal636a.appeal.id, dup: appeal636dup.duplicated });
+  const review636 = await trpcMutate<{ appeal: { id: string; status: string; refundFen: number | null; reviewerId: string | null }; refundFen: number | null }>(
+    'payroll.reviewAppeal', { cookie: managerCookie, input: { appealId: appeal636a.appeal.id, result: 'approved', note: '属实，全额返还' } });
+  const ded636after = await db.select().from(schema.deductionRecords).where(eq(schema.deductionRecords.id, ded636.id)).get();
+  const review636again = await asErr(trpcMutate('payroll.reviewAppeal', {
+    cookie: managerCookie, input: { appealId: appeal636a.appeal.id, result: 'approved', note: '重复复核验证' },
+  }));
+  check('63.6 approved → deduction.status=reverted+refund_fen=20000（返还留痕不删行）+ reviewer 落列 + 重复复核幂等拒 400',
+    review636.appeal.status === 'approved' && review636.refundFen === 20000 &&
+      ded636after?.status === 'reverted' && ded636after.revertedBy === managerFix.id && !!ded636after.revertedAt &&
+      review636again instanceof TrpcHttpError && review636again.httpStatus === 400 && review636again.message.includes('已复核'),
+    { st: ded636after?.status, refund: review636.refundFen, again: review636again && { s: review636again.httpStatus, m: review636again.message } });
+  const ded636b = (await db.insert(schema.deductionRecords).values({
+    storeId, staffId: staffRow2.id, month: currentMonth, amountFen: 20000,
+    reason: '【测试】e2e 片4 罚单申诉返还（rejected 案例）', createdBy: managerFix.id,
+  }).returning())[0]!;
+  const appeal636b = await trpcMutate<{ appeal: { id: string } }>('payroll.raiseAppeal', {
+    cookie: liliCookie,
+    input: { targetKind: 'deduction', targetId: ded636b.id, month: currentMonth, reason: '驳回案例验证' },
+  });
+  await trpcMutate('payroll.reviewAppeal', {
+    cookie: managerCookie, input: { appealId: appeal636b.appeal.id, result: 'rejected', note: '证据不足，维持原扣减' },
+  });
+  const ded636bafter = await db.select().from(schema.deductionRecords).where(eq(schema.deductionRecords.id, ded636b.id)).get();
+  check('63.6 rejected 案例=原扣减 active 不变（零返还零置位）',
+    ded636bafter?.status === 'active' && !ded636bafter.revertedAt, { st: ded636bafter?.status });
+  const dedList636 = await trpcQuery<{ deductions: Array<{ id: string; staffName: string | null; status: string; revertedAt: Date | null }> }>(
+    'payroll.listDeductions', { cookie: managerCookie, input: { month: currentMonth } });
+  check('63.6 listDeductions 罚单表读口：含员工名+reverted/active 两态透出（UI 区 3 数据源）',
+    dedList636.deductions.some((d) => d.id === ded636.id && d.status === 'reverted' && !!d.staffName) &&
+      dedList636.deductions.some((d) => d.id === ded636b.id && d.status === 'active'),
+    { n: dedList636.deductions.length });
+  const sla636 = await trpcQuery<{ hours: number; source: string }>('payroll.appealSlaHours', { cookie: liliCookie });
+  check('63.6 appealSlaHours 读端口 service_rules.payroll_appeal_sla_hours=24（页面注记数据源）',
+    sla636.hours === 24 && sla636.source === 'service_rules.payroll_appeal_sla_hours', sla636);
+
+  /* ---- 64.1 XP 申报审核：pending 零污染 → approved 落行+回链+月增量含 5 分；rejected=零事件 ---- */
+  console.log('\n[片4] 64. XP：申报审核 / 扣分异议对冲');
+  const xpSumBefore641 = await trpcQuery<{ monthGained: number }>('xp.mySummary', { cookie: liliCookie });
+  const app641 = await trpcMutate<{ application: { id: string; status: string }; duplicated: boolean }>('xp.raiseApplication', {
+    cookie: liliCookie, input: { appKind: 'award', pointsRequested: 5, reason: '周末加班支援前台' },
+  });
+  const evAfterRaise641 = await db.select().from(schema.xpEvents)
+    .where(and(eq(schema.xpEvents.staffId, staffRow2.id), eq(schema.xpEvents.source, 'application')));
+  const app641dup = await trpcMutate<{ application: { id: string }; duplicated: boolean }>('xp.raiseApplication', {
+    cookie: liliCookie, input: { appKind: 'award', pointsRequested: 5, reason: '重复提交验证幂等' },
+  });
+  check('64.1 raiseApplication 建行 + pending 不污染 xp_events（零新增）+ 同人同分值 pending 幂等拒',
+    app641.application.status === 'pending' && evAfterRaise641.length === 0 &&
+      app641dup.duplicated === true && app641dup.application.id === app641.application.id,
+    { ev: evAfterRaise641.length, dup: app641dup.duplicated });
+  const rev641 = await trpcMutate<{ application: { id: string; status: string; resolvedEventId: string | null }; resolvedEventId: string | null }>(
+    'xp.reviewApplication', { cookie: managerCookie, input: { applicationId: app641.application.id, result: 'approved', note: '属实，同意加分' } });
+  const evApp641 = await db.select().from(schema.xpEvents)
+    .where(and(eq(schema.xpEvents.staffId, staffRow2.id), eq(schema.xpEvents.source, 'application')));
+  const xpSumAfter641 = await trpcQuery<{ monthGained: number }>('xp.mySummary', { cookie: liliCookie });
+  check('64.1 approved → awardXp 落行（source=application/+5）+resolved_event_id 回链+月增量含 5 分',
+    rev641.application.status === 'approved' && evApp641.length === 1 && evApp641[0]!.points === 5 &&
+      rev641.resolvedEventId === evApp641[0]!.id && rev641.application.resolvedEventId === evApp641[0]!.id &&
+      xpSumAfter641.monthGained === xpSumBefore641.monthGained + 5,
+    { ev: evApp641.map((e) => [e.points, e.id]), monthGained: [xpSumBefore641.monthGained, xpSumAfter641.monthGained] });
+  const app641b = await trpcMutate<{ application: { id: string } }>('xp.raiseApplication', {
+    cookie: liliCookie, input: { appKind: 'award', pointsRequested: 3, reason: '驳回案例验证' },
+  });
+  await trpcMutate('xp.reviewApplication', {
+    cookie: managerCookie, input: { applicationId: app641b.application.id, result: 'rejected', note: '不符合发放口径' },
+  });
+  const evApp641b = await db.select().from(schema.xpEvents)
+    .where(and(eq(schema.xpEvents.staffId, staffRow2.id), eq(schema.xpEvents.source, 'application')));
+  check('64.1 rejected 案例=零事件（xp_events 仍仅 1 行 application）', evApp641b.length === 1, evApp641b.length);
+
+  /* ---- 64.2 扣分异议：penalty −8 → revoke_appeal approved → 对冲 +8（revoke_offset），原负分保留 ---- */
+  const penEv642 = (await db.insert(schema.xpEvents).values({
+    storeId, staffId: staffRow2.id, userId: liliUser.id, source: 'penalty', sourceId: 'e2e-s4-penalty',
+    points: -8, channel: 'daily', ruleVersion: 1, dropped: false,
+  }).returning())[0]!;
+  const ra642 = await trpcMutate<{ application: { id: string; status: string }; duplicated: boolean }>('xp.raiseApplication', {
+    cookie: liliCookie,
+    input: { appKind: 'revoke_appeal', targetEventId: penEv642.id, pointsRequested: 8, reason: '差评非本人服务责任，申请复核' },
+  });
+  const ra642dup = await trpcMutate<{ application: { id: string }; duplicated: boolean }>('xp.raiseApplication', {
+    cookie: liliCookie,
+    input: { appKind: 'revoke_appeal', targetEventId: penEv642.id, pointsRequested: 8, reason: '同事件重复申请验证' },
+  });
+  check('64.2 revoke_appeal 挂本人 penalty 事件建行 + 同事件重复申请幂等拒',
+    ra642.application.status === 'pending' && ra642dup.duplicated === true && ra642dup.application.id === ra642.application.id,
+    { a: ra642.application.id, dup: ra642dup.duplicated });
+  const rev642 = await trpcMutate<{ application: { status: string; resolvedEventId: string | null }; resolvedEventId: string | null }>(
+    'xp.reviewApplication', { cookie: managerCookie, input: { applicationId: ra642.application.id, result: 'approved', note: '属实，对冲扣分' } });
+  const offset642 = await db.select().from(schema.xpEvents)
+    .where(and(eq(schema.xpEvents.source, 'revoke_offset'), eq(schema.xpEvents.sourceId, penEv642.id)));
+  const penAfter642 = await db.select().from(schema.xpEvents).where(eq(schema.xpEvents.id, penEv642.id)).get();
+  const rev642again = await asErr(trpcMutate('xp.reviewApplication', {
+    cookie: managerCookie, input: { applicationId: ra642.application.id, result: 'approved', note: '重复复核验证' },
+  }));
+  check('64.2 approved → 对冲行 +8 落（source=revoke_offset 回链）+ 原负分 −8 保留 + 合计=对冲净值 0 + 重复复核幂等拒 400',
+    rev642.application.status === 'approved' && offset642.length === 1 && offset642[0]!.points === 8 &&
+      rev642.resolvedEventId === offset642[0]!.id &&
+      penAfter642?.points === -8 && offset642[0]!.points + penAfter642.points === 0 &&
+      rev642again instanceof TrpcHttpError && rev642again.httpStatus === 400,
+    { offset: offset642.map((e) => e.points), pen: penAfter642?.points, again: rev642again && rev642again.httpStatus });
 
   client.close();
 }

@@ -296,6 +296,11 @@ interface CommissionLine {
   refundClawbackFen: number;
   /** 全额退标记：该行提成全额冲减、行归零 */
   refunded: boolean;
+  /* ---- 片 4 B3-2 协作拆分注记（仅协作人侧行带出） ---- */
+  /** 主操作人 staffId（本行=协作拆分所得时透出） */
+  splitFrom?: string;
+  /** 本人拆分比例 bp（万分比） */
+  splitBp?: number;
 }
 
 interface StoreLine {
@@ -400,6 +405,12 @@ export interface CommissionMonthPayload {
   }>;
   /** 调整项冲减合计（分，≥0；commissionTotalFen 已减除） */
   adjustmentsTotalFen: number;
+  /** B3-1 双轨分账透出：劳动业绩=服务行净额合计（分；=serviceLines.amountFen 求和，含协作拆分所得） */
+  laborTotalFen: number;
+  /** B3-1 双轨分账透出：销售业绩=商品行净额合计（分；=productLines.amountFen 求和） */
+  salesTotalFen: number;
+  /** B3-3 行内回冲合计（分，≥0；=serviceLines+productLines 的 refundClawbackFen 求和，页面展示用） */
+  refundClawbackTotalFen: number;
   performance: PerformanceBlock;
   deductions: Array<{
     id: string;
@@ -407,6 +418,8 @@ export interface CommissionMonthPayload {
     reason: string;
     createdBy: string;
     createdAt: Date;
+    /** active | reverted（B3-6 申诉成立返还置 reverted 留痕不删行；净额只计 active） */
+    status: string;
   }>;
   ruleVersion: number;
 }
@@ -506,6 +519,23 @@ export async function computeMonth(
   const monthData = await loadSettledBills(d, storeId, start, end);
   const billById = new Map(monthData.bills.map((b) => [b.id, b]));
 
+  /* 片 4 B3-2 协作拆分：本月账单域内预约的协作行一次取齐（无 N+1） */
+  const monthApptIds = [...monthData.appts.keys()];
+  const collabRows = monthApptIds.length
+    ? await d
+        .select()
+        .from(schema.appointmentCollaborators)
+        .where(inArray(schema.appointmentCollaborators.appointmentId, monthApptIds))
+    : [];
+  const collabsByAppt = new Map<string, typeof collabRows>();
+  for (const c of collabRows) {
+    const arr = collabsByAppt.get(c.appointmentId) ?? [];
+    arr.push(c);
+    collabsByAppt.set(c.appointmentId, arr);
+  }
+  /** 本人=协作人的协作行（协作人侧拆分用；协作人不限岗位） */
+  const myCollabRows = collabRows.filter((c) => c.staffId === staffRow.id);
+
   /* 产能红线批准留痕（本月，按日） */
   const approvals = await d
     .select({ date: schema.overworkApprovals.date })
@@ -522,9 +552,10 @@ export async function computeMonth(
   /* ---- 服务提成（groomer）：仅 kind='appointment' 行可归属操作美容师（备案③散客单不计） ---- */
   const serviceLines: CommissionLine[] = [];
   const lineTs = new Map<string, Date>(); // itemId → 源单时间（产能加计逐行时序解析用）
+  const splitSumByItemId = new Map<string, number>(); // itemId → 协作分合计（主操作人侧余数口径；产能加计重算时用）
   const isGroomer = staffRow.role === 'groomer' || (staffRow.grade ?? '').startsWith('G');
   /* G0 判别关键词（决策 #40：读 duration_service_kind_keywords 当前生效行，与时长引擎共用一表） */
-  const kwRow = isGroomer && staffRow.grade === 'G0'
+  const kwRow = (isGroomer && staffRow.grade === 'G0') || myCollabRows.length > 0
     ? await d
         .select({ valueJson: schema.durationRules.valueJson })
         .from(schema.durationRules)
@@ -556,6 +587,14 @@ export async function computeMonth(
       const rateBp = num(ruleAt(key, ts)?.rate_bp, 0);
       const baseFen = it.unitPriceFen; // 门市价快照（券单/会员差额门店担，同按门市价）
       lineTs.set(it.id, ts);
+      const grossFen = Math.round((baseFen * rateBp) / 10000);
+      // B3-2 协作拆分（主操作人侧）：协作人各得 round(行毛提成×splitBp/10000)，
+      // 余数（含取整零头）落主操作人=行毛提成−Σ协作分，精确到分；主+Σ协作=毛额
+      let splitSumFen = 0;
+      for (const c of collabsByAppt.get(it.refId) ?? []) {
+        splitSumFen += Math.round((grossFen * c.splitBp) / 10000);
+      }
+      if (splitSumFen > 0) splitSumByItemId.set(it.id, splitSumFen);
       serviceLines.push({
         billId: bill.id,
         billNo: bill.billNo,
@@ -566,7 +605,7 @@ export async function computeMonth(
         baseFen,
         rateBp,
         multiplierBp: 10000,
-        amountFen: Math.round((baseFen * rateBp) / 10000),
+        amountFen: grossFen - splitSumFen,
         overwork: false,
         pendingApproval: false,
         refundRatioBp: 0, // R12 V6：退款冲减在总额聚合前统一按行结算（见下方 V6 段）
@@ -593,12 +632,77 @@ export async function computeMonth(
         if (approved) {
           const multiplierBp = num(cfg.multiplier_bp, 15000);
           l.multiplierBp = multiplierBp;
-          l.amountFen = Math.round((l.baseFen * l.rateBp * multiplierBp) / 10000 / 10000);
+          // B3-2：产能加计全额归主操作人（协作分按 1×基线另算，口径写死），重算后仍扣协作分
+          l.amountFen =
+            Math.round((l.baseFen * l.rateBp * multiplierBp) / 10000 / 10000) -
+            (splitSumByItemId.get(l.itemId) ?? 0);
           l.overwork = true;
         } else {
           l.pendingApproval = true; // 未批准按 1 倍计提，页面据此明示「待店长批准」
         }
       });
+    }
+  }
+
+  /* ---- 片 4 B3-2 协作拆分（协作人侧）：本人=协作人的预约行按 split_bp 拆入行毛提成。
+     行毛提成按主操作人 grade/规则时序算出（与主操作人侧同一算式），协作人得
+     round(行毛提成×splitBp/10000)，余数落主操作人（精确到分）；协作人不限岗位。
+     产能加计不拆（主操作人产能行为，协作分按 1×基线，口径写死）；
+     G0 主操作人的洗护 scope 约束同样生效（主侧不计的行协作侧也不计）。 ---- */
+  if (myCollabRows.length > 0) {
+    const mainStaffIds = [
+      ...new Set(
+        myCollabRows
+          .map((c) => monthData.appts.get(c.appointmentId)?.staffId)
+          .filter((x): x is string => !!x),
+      ),
+    ];
+    const mainStaffRows = mainStaffIds.length
+      ? await d.select().from(schema.staff).where(inArray(schema.staff.id, mainStaffIds))
+      : [];
+    const mainById = new Map(mainStaffRows.map((s) => [s.id, s]));
+    for (const c of myCollabRows) {
+      const appt = monthData.appts.get(c.appointmentId);
+      if (!appt || appt.type !== 'grooming' || !appt.staffId) continue;
+      const main = mainById.get(appt.staffId);
+      if (!main) continue;
+      for (const it of monthData.items) {
+        if (it.kind !== 'appointment' || it.refId !== c.appointmentId) continue;
+        const bill = billById.get(it.billId)!;
+        const ts = bill.settledAt ?? bill.createdAt;
+        if (main.grade === 'G0') {
+          const g0Rule = ruleAt('commission_grooming_assistant_g0_rate', ts);
+          const scope = typeof g0Rule?.scope === 'string' ? g0Rule.scope : 'bath';
+          if (scope !== 'all' && (!serviceKindKeywords || !isWashService(it.nameSnapshot, serviceKindKeywords))) {
+            continue;
+          }
+        }
+        const key = main.grade === 'G0' ? 'commission_grooming_assistant_g0_rate' : 'commission_grooming_rate';
+        const rateBp = num(ruleAt(key, ts)?.rate_bp, 0);
+        const baseFen = it.unitPriceFen; // 门市价快照（与主操作人侧同基数）
+        const grossFen = Math.round((baseFen * rateBp) / 10000);
+        // 协作人所得=round(行毛提成×splitBp/10000)；余数（含取整零头）落主操作人，精确到分
+        const shareFen = Math.round((grossFen * c.splitBp) / 10000);
+        serviceLines.push({
+          billId: bill.id,
+          billNo: bill.billNo,
+          itemId: it.id,
+          refId: it.refId,
+          name: it.nameSnapshot,
+          date: localDateStr(ts),
+          baseFen,
+          rateBp,
+          multiplierBp: 10000,
+          amountFen: shareFen,
+          overwork: false,
+          pendingApproval: false,
+          refundRatioBp: 0,
+          refundClawbackFen: 0,
+          refunded: false,
+          splitFrom: main.id, // B3-2 注记：拆分来源=主操作人
+          splitBp: c.splitBp,
+        });
+      }
     }
   }
 
@@ -778,7 +882,7 @@ export async function computeMonth(
     payableFen,
   };
 
-  /* ---- 扣减（只扣绩效不扣提成，列示含原因） ---- */
+  /* ---- 扣减（只扣绩效不扣提成，列示含原因；B3-6 起带 status——reverted=申诉返还留痕，净额只计 active） ---- */
   const deductions = await d
     .select({
       id: schema.deductionRecords.id,
@@ -786,6 +890,7 @@ export async function computeMonth(
       reason: schema.deductionRecords.reason,
       createdBy: schema.deductionRecords.createdBy,
       createdAt: schema.deductionRecords.createdAt,
+      status: schema.deductionRecords.status,
     })
     .from(schema.deductionRecords)
     .where(
@@ -904,6 +1009,24 @@ export async function computeMonth(
           .where(inArray(schema.appointments.id, srcApptIds))
       : [];
     const srcApptById = new Map(srcAppts.map((a) => [a.id, a]));
+    /* B3-2：跨月源单的协作行+主操作人 staff 行一次取齐（协作人侧按主 grade 重算行毛提成） */
+    const srcCollabRows = srcApptIds.length
+      ? await d
+          .select()
+          .from(schema.appointmentCollaborators)
+          .where(inArray(schema.appointmentCollaborators.appointmentId, srcApptIds))
+      : [];
+    const srcCollabsByAppt = new Map<string, typeof srcCollabRows>();
+    for (const c of srcCollabRows) {
+      const arr = srcCollabsByAppt.get(c.appointmentId) ?? [];
+      arr.push(c);
+      srcCollabsByAppt.set(c.appointmentId, arr);
+    }
+    const srcMainIds = [...new Set(srcAppts.map((a) => a.staffId).filter((x): x is string => !!x))];
+    const srcMainRows = srcMainIds.length
+      ? await d.select().from(schema.staff).where(inArray(schema.staff.id, srcMainIds))
+      : [];
+    const srcMainById = new Map(srcMainRows.map((s) => [s.id, s]));
     for (const rfIt of rfItems) {
       const src = srcItems.find((i) => i.id === rfIt.billItemId);
       if (!src) continue;
@@ -911,18 +1034,33 @@ export async function computeMonth(
       if (lineEffFen <= 0) continue;
       const ratio = Math.min(1, rfIt.amountFen / lineEffFen);
       let grossFen = 0;
-      if (src.kind === 'appointment' && isGroomer) {
+      if (src.kind === 'appointment') {
         const appt = srcApptById.get(src.refId);
-        if (!appt || appt.type !== 'grooming' || appt.staffId !== staffRow.id) continue;
-        if (staffRow.grade === 'G0') {
+        if (!appt || appt.type !== 'grooming' || !appt.staffId) continue;
+        const isMain = appt.staffId === staffRow.id;
+        const myCollab = (srcCollabsByAppt.get(src.refId) ?? []).find((c) => c.staffId === staffRow.id);
+        if (!isMain && !myCollab) continue; // 非本人归属行（非主操作人且非协作人）不进本人调整项
+        if (isMain && !isGroomer) continue; // 主操作人侧仍走美容师闸（与行内计提同口径）
+        const main = isMain ? staffRow : srcMainById.get(appt.staffId);
+        if (!main) continue;
+        if (main.grade === 'G0') {
           const g0Rule = ruleAt('commission_grooming_assistant_g0_rate', srcTs);
           const scope = typeof g0Rule?.scope === 'string' ? g0Rule.scope : 'bath';
           if (scope !== 'all' && (!serviceKindKeywords || !isWashService(src.nameSnapshot, serviceKindKeywords))) {
             continue;
           }
         }
-        const key = staffRow.grade === 'G0' ? 'commission_grooming_assistant_g0_rate' : 'commission_grooming_rate';
-        grossFen = Math.round((src.unitPriceFen * num(ruleAt(key, srcTs)?.rate_bp, 0)) / 10000);
+        const key = main.grade === 'G0' ? 'commission_grooming_assistant_g0_rate' : 'commission_grooming_rate';
+        const baseGrossFen = Math.round((src.unitPriceFen * num(ruleAt(key, srcTs)?.rate_bp, 0)) / 10000);
+        // B3-2：跨月回冲同乘各自分得比——主操作人=毛额−Σ协作分；协作人=round(毛额×splitBp/10000)
+        // （与行内拆分同一算式，精确到分；各人 adjustments 按本人分得额×退款比例结算）
+        grossFen = isMain
+          ? baseGrossFen -
+            (srcCollabsByAppt.get(src.refId) ?? []).reduce(
+              (s, c) => s + Math.round((baseGrossFen * c.splitBp) / 10000),
+              0,
+            )
+          : Math.round((baseGrossFen * myCollab!.splitBp) / 10000);
       } else if (src.kind === 'product' && frontdeskLike) {
         if (srcBill.operatorId !== staffRow.userId) continue;
         const rateBp = num(ruleAt('commission_product_rate', srcTs)?.rate_bp, 0);
@@ -946,6 +1084,11 @@ export async function computeMonth(
   }
   const adjustmentsTotalFen = adjustments.reduce((s, a) => s + a.clawbackFen, 0);
 
+  /* B3-1/B3-3 透出列（分；与行求和恒等，页面据此对账） */
+  const laborTotalFen = serviceLines.reduce((s, l) => s + l.amountFen, 0); // 劳动业绩=服务行净额合计（含协作拆分所得）
+  const salesTotalFen = productLines.reduce((s, l) => s + l.amountFen, 0); // 销售业绩=商品行净额合计
+  const refundClawbackTotalFen = [...serviceLines, ...productLines].reduce((s, l) => s + l.refundClawbackFen, 0); // 行内回冲合计
+
   const commissionTotalFen =
     serviceLines.reduce((s, l) => s + l.amountFen, 0) +
     productLines.reduce((s, l) => s + l.amountFen, 0) +
@@ -968,6 +1111,9 @@ export async function computeMonth(
     commissionTotalFen,
     adjustments,
     adjustmentsTotalFen,
+    laborTotalFen,
+    salesTotalFen,
+    refundClawbackTotalFen,
     performance,
     deductions,
     ruleVersion: currentVersion,

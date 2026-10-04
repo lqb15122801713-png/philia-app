@@ -27,9 +27,11 @@ import {
   Settings,
   ShoppingBag,
   SlidersHorizontal,
+  Sparkles,
   Type,
   CreditCard,
   Users,
+  Wallet,
 } from 'lucide-react';
 import { usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
@@ -84,6 +86,10 @@ function groupsFor(role: MerchantRole): Array<{ label: string | null; items: Rai
         { to: '/settings/schedules', label: '排班', icon: CalendarRange, testid: 'rail-schedules' },
         // 员工端骨架整建批 片 3：运营（PDCA 闭环+自检审核+巡检汇总；owner/manager 可见）
         { to: '/ops', label: '运营', icon: ClipboardCheck, testid: 'rail-ops' },
+        // 员工端骨架整建批 片 4：薪资管理（工资条+申诉审批+罚单录入；owner/manager 可见）
+        { to: '/payroll', label: '薪资', icon: Wallet, testid: 'rail-payroll' },
+        // 员工端骨架整建批 片 4：XP 审核（积分申报+扣分异议；owner/manager 可见）
+        { to: '/xp-admin', label: 'XP 审核', icon: Sparkles, testid: 'rail-xp-admin' },
         { to: '/finance', label: '财务', icon: ReceiptText, testid: 'rail-finance' },
         { to: '/settings', label: '设置', icon: Settings, testid: 'rail-settings' },
         // 批次 员工端2.0 R9-F：规则配置管理端口（仅 owner 可见入口；server 端 merchantOwnerProcedure 硬闸门）

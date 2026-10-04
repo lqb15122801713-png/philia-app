@@ -27,7 +27,9 @@ export type XpSource =
   | 'exam'
   | 'referral'
   | 'cover'
-  | 'penalty';
+  | 'penalty'
+  | 'application' // 片 4 B4：XP 申报审核通过落行（points 由申请单带入）
+  | 'revoke_offset'; // 片 4 B4：扣分异议通过的正向对冲行（原负分保留，只增不改）
 
 export interface XpRuleSet {
   /** 当前生效版本号（active 行中最大 version） */

@@ -55,6 +55,7 @@ import { ConfirmDialog } from '../components/appointments/ConfirmDialog';
 import { Modal } from '../components/appointments/Modal';
 import { RescheduleSheet } from '../components/appointments/RescheduleSheet';
 import { useMerchantEvents } from '../components/appointments/useMerchantEvents';
+import { CollabSplitSection } from '../components/payroll/CollabSplitSection';
 import { ac } from '../copy/appointments';
 
 /** SSE 断线时的兜底轮询间隔（与总览页同值） */
@@ -638,6 +639,15 @@ export default function AppointmentDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* 片 4 B3-2：协作拆分（洗护单；已完成单只读透出；契约经 payrollXpPort 桥接） */}
+          {!isBoarding ? (
+            <CollabSplitSection
+              appointmentId={appt.id}
+              appointmentStatus={appt.status}
+              mainStaffId={appt.staffId}
+            />
+          ) : null}
         </div>
       </div>
 

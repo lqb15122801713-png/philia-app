@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B）——生成件，勿手改（源=scripts/gen-copy-overrides-seed.mts）；
  * 重生成：仓库根 npx tsx scripts/gen-copy-overrides-seed.mts（copy 键表增删键后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-03T14:07:00.293Z；键数=2118
+ * 生成时间口径：2026-10-03T16:40:40.052Z；键数=2330
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }> = [
  {
@@ -5020,6 +5020,531 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "1-999；次卡仅适用于洗护服务"
  },
  {
+  "key": "payroll.appeal.approveCta",
+  "domain": "merchant:payroll",
+  "text": "批准"
+ },
+ {
+  "key": "payroll.appeal.approved",
+  "domain": "merchant:payroll",
+  "text": "申诉已批准"
+ },
+ {
+  "key": "payroll.appeal.approveNotePh",
+  "domain": "merchant:payroll",
+  "text": "审批意见（选填，随单留痕）"
+ },
+ {
+  "key": "payroll.appeal.approveTitle",
+  "domain": "merchant:payroll",
+  "text": "批准申诉 · {name}"
+ },
+ {
+  "key": "payroll.appeal.aside",
+  "domain": "merchant:payroll",
+  "text": "员工对罚单/工资条行/调整项的异议在此审批，审批意见留痕"
+ },
+ {
+  "key": "payroll.appeal.collapseCta",
+  "domain": "merchant:payroll",
+  "text": "收起 ›"
+ },
+ {
+  "key": "payroll.appeal.empty",
+  "domain": "merchant:payroll",
+  "text": "当前筛选无申诉单"
+ },
+ {
+  "key": "payroll.appeal.evidenceLabel",
+  "domain": "merchant:payroll",
+  "text": "附图"
+ },
+ {
+  "key": "payroll.appeal.expandCta",
+  "domain": "merchant:payroll",
+  "text": "展开 ›"
+ },
+ {
+  "key": "payroll.appeal.filterAll",
+  "domain": "merchant:payroll",
+  "text": "全部"
+ },
+ {
+  "key": "payroll.appeal.kindAdjustment",
+  "domain": "merchant:payroll",
+  "text": "调整项"
+ },
+ {
+  "key": "payroll.appeal.kindDeduction",
+  "domain": "merchant:payroll",
+  "text": "罚单申诉"
+ },
+ {
+  "key": "payroll.appeal.kindSlipLine",
+  "domain": "merchant:payroll",
+  "text": "工资条行"
+ },
+ {
+  "key": "payroll.appeal.monthLine",
+  "domain": "merchant:payroll",
+  "text": "涉月 {month}"
+ },
+ {
+  "key": "payroll.appeal.notePh",
+  "domain": "merchant:payroll",
+  "text": "审批意见（必填，随单留痕）"
+ },
+ {
+  "key": "payroll.appeal.noteRequired",
+  "domain": "merchant:payroll",
+  "text": "审批意见不能为空"
+ },
+ {
+  "key": "payroll.appeal.reasonLabel",
+  "domain": "merchant:payroll",
+  "text": "申诉理由"
+ },
+ {
+  "key": "payroll.appeal.refundInvalid",
+  "domain": "merchant:payroll",
+  "text": "返还金额须为不小于 0 的两位小数"
+ },
+ {
+  "key": "payroll.appeal.refundLabel",
+  "domain": "merchant:payroll",
+  "text": "返还金额（元，默认原额可改）"
+ },
+ {
+  "key": "payroll.appeal.refundLine",
+  "domain": "merchant:payroll",
+  "text": "返还 {amount}"
+ },
+ {
+  "key": "payroll.appeal.refundPh",
+  "domain": "merchant:payroll",
+  "text": "如 120.00"
+ },
+ {
+  "key": "payroll.appeal.rejectCta",
+  "domain": "merchant:payroll",
+  "text": "驳回"
+ },
+ {
+  "key": "payroll.appeal.rejected",
+  "domain": "merchant:payroll",
+  "text": "申诉已驳回"
+ },
+ {
+  "key": "payroll.appeal.rejectTitle",
+  "domain": "merchant:payroll",
+  "text": "驳回申诉 · {name}"
+ },
+ {
+  "key": "payroll.appeal.reviewLine",
+  "domain": "merchant:payroll",
+  "text": "{result} · {note}"
+ },
+ {
+  "key": "payroll.appeal.statusApproved",
+  "domain": "merchant:payroll",
+  "text": "已批准"
+ },
+ {
+  "key": "payroll.appeal.statusPending",
+  "domain": "merchant:payroll",
+  "text": "待审批"
+ },
+ {
+  "key": "payroll.appeal.statusRejected",
+  "domain": "merchant:payroll",
+  "text": "已驳回"
+ },
+ {
+  "key": "payroll.appeal.targetAmountLine",
+  "domain": "merchant:payroll",
+  "text": "原额 {amount}"
+ },
+ {
+  "key": "payroll.appeal.title",
+  "domain": "merchant:payroll",
+  "text": "薪资申诉审批"
+ },
+ {
+  "key": "payroll.collab.addCta",
+  "domain": "merchant:payroll",
+  "text": "添加"
+ },
+ {
+  "key": "payroll.collab.aside",
+  "domain": "merchant:payroll",
+  "text": "多人协作单按万分比拆分提成；拆分比入端口"
+ },
+ {
+  "key": "payroll.collab.cancelEdit",
+  "domain": "merchant:payroll",
+  "text": "取消"
+ },
+ {
+  "key": "payroll.collab.editCta",
+  "domain": "merchant:payroll",
+  "text": "编辑拆分"
+ },
+ {
+  "key": "payroll.collab.empty",
+  "domain": "merchant:payroll",
+  "text": "未登记协作人，本单提成全归主操作人"
+ },
+ {
+  "key": "payroll.collab.mainNote",
+  "domain": "merchant:payroll",
+  "text": "主操作人吃余数：协作人合计 + 主操作人 = 100%"
+ },
+ {
+  "key": "payroll.collab.readonlyNote",
+  "domain": "merchant:payroll",
+  "text": "已完成单的拆分只读透出；服务中/已确认可编辑"
+ },
+ {
+  "key": "payroll.collab.removeCta",
+  "domain": "merchant:payroll",
+  "text": "移除"
+ },
+ {
+  "key": "payroll.collab.roleAssist",
+  "domain": "merchant:payroll",
+  "text": "助理"
+ },
+ {
+  "key": "payroll.collab.roleGroom",
+  "domain": "merchant:payroll",
+  "text": "美容"
+ },
+ {
+  "key": "payroll.collab.roleLabel",
+  "domain": "merchant:payroll",
+  "text": "协作角色"
+ },
+ {
+  "key": "payroll.collab.roleWash",
+  "domain": "merchant:payroll",
+  "text": "洗护"
+ },
+ {
+  "key": "payroll.collab.saveCta",
+  "domain": "merchant:payroll",
+  "text": "保存拆分"
+ },
+ {
+  "key": "payroll.collab.saved",
+  "domain": "merchant:payroll",
+  "text": "协作拆分已保存"
+ },
+ {
+  "key": "payroll.collab.saving",
+  "domain": "merchant:payroll",
+  "text": "保存中…"
+ },
+ {
+  "key": "payroll.collab.splitInvalid",
+  "domain": "merchant:payroll",
+  "text": "拆分比须为 0~100 的数，且合计不得超过 100%"
+ },
+ {
+  "key": "payroll.collab.splitLabel",
+  "domain": "merchant:payroll",
+  "text": "拆分比（%）"
+ },
+ {
+  "key": "payroll.collab.staffPh",
+  "domain": "merchant:payroll",
+  "text": "添加协作员工"
+ },
+ {
+  "key": "payroll.collab.sumLine",
+  "domain": "merchant:payroll",
+  "text": "协作合计 {sum}%（余 {rest}% 归主操作人）"
+ },
+ {
+  "key": "payroll.collab.title",
+  "domain": "merchant:payroll",
+  "text": "协作拆分"
+ },
+ {
+  "key": "payroll.common.cancel",
+  "domain": "merchant:payroll",
+  "text": "取消"
+ },
+ {
+  "key": "payroll.common.confirm",
+  "domain": "merchant:payroll",
+  "text": "确认提交"
+ },
+ {
+  "key": "payroll.common.loadFail",
+  "domain": "merchant:payroll",
+  "text": "数据加载失败，请检查网络后重试"
+ },
+ {
+  "key": "payroll.common.retry",
+  "domain": "merchant:payroll",
+  "text": "重新加载"
+ },
+ {
+  "key": "payroll.common.submitting",
+  "domain": "merchant:payroll",
+  "text": "提交中…"
+ },
+ {
+  "key": "payroll.ded.amountInvalid",
+  "domain": "merchant:payroll",
+  "text": "扣减金额须为大于 0 的两位小数"
+ },
+ {
+  "key": "payroll.ded.amountLabel",
+  "domain": "merchant:payroll",
+  "text": "扣减金额（元）"
+ },
+ {
+  "key": "payroll.ded.amountPh",
+  "domain": "merchant:payroll",
+  "text": "如 200.00"
+ },
+ {
+  "key": "payroll.ded.aside",
+  "domain": "merchant:payroll",
+  "text": "扣减只扣绩效不扣提成；当月累计达上限 server 硬拒（50% 红线）"
+ },
+ {
+  "key": "payroll.ded.created",
+  "domain": "merchant:payroll",
+  "text": "罚单已录入"
+ },
+ {
+  "key": "payroll.ded.empty",
+  "domain": "merchant:payroll",
+  "text": "暂无罚单记录"
+ },
+ {
+  "key": "payroll.ded.invalid",
+  "domain": "merchant:payroll",
+  "text": "请选员工并填写金额与原因"
+ },
+ {
+  "key": "payroll.ded.listTitle",
+  "domain": "merchant:payroll",
+  "text": "近 20 条罚单"
+ },
+ {
+  "key": "payroll.ded.monthLabel",
+  "domain": "merchant:payroll",
+  "text": "归属月份"
+ },
+ {
+  "key": "payroll.ded.reasonLabel",
+  "domain": "merchant:payroll",
+  "text": "原因"
+ },
+ {
+  "key": "payroll.ded.reasonPh",
+  "domain": "merchant:payroll",
+  "text": "必填，随单留痕"
+ },
+ {
+  "key": "payroll.ded.revertedBadge",
+  "domain": "merchant:payroll",
+  "text": "已返还"
+ },
+ {
+  "key": "payroll.ded.revertLine",
+  "domain": "merchant:payroll",
+  "text": "返还留痕 · {at}"
+ },
+ {
+  "key": "payroll.ded.staffLabel",
+  "domain": "merchant:payroll",
+  "text": "员工"
+ },
+ {
+  "key": "payroll.ded.staffPh",
+  "domain": "merchant:payroll",
+  "text": "选择员工"
+ },
+ {
+  "key": "payroll.ded.submitCta",
+  "domain": "merchant:payroll",
+  "text": "录入罚单"
+ },
+ {
+  "key": "payroll.ded.submitting",
+  "domain": "merchant:payroll",
+  "text": "录入中…"
+ },
+ {
+  "key": "payroll.ded.title",
+  "domain": "merchant:payroll",
+  "text": "罚单录入"
+ },
+ {
+  "key": "payroll.guideHint",
+  "domain": "merchant:payroll",
+  "text": "工资条生成、申诉审批与罚单录入属管理层动作；店员账号的工作面是收银台。"
+ },
+ {
+  "key": "payroll.guideTitle",
+  "domain": "merchant:payroll",
+  "text": "薪资管理由店长或店主处理"
+ },
+ {
+  "key": "payroll.pageSub",
+  "domain": "merchant:payroll",
+  "text": "工资条生成与确认 · 申诉审批 · 罚单录入（发放=标记留痕，不碰真钱）"
+ },
+ {
+  "key": "payroll.pageTitle",
+  "domain": "merchant:payroll",
+  "text": "薪资"
+ },
+ {
+  "key": "payroll.slip.aside",
+  "domain": "merchant:payroll",
+  "text": "月份生成 → 老板确认定稿 → 逐人标记发放（标记留痕不碰真钱）"
+ },
+ {
+  "key": "payroll.slip.colAction",
+  "domain": "merchant:payroll",
+  "text": "操作"
+ },
+ {
+  "key": "payroll.slip.colAdjustment",
+  "domain": "merchant:payroll",
+  "text": "调整项"
+ },
+ {
+  "key": "payroll.slip.colCommission",
+  "domain": "merchant:payroll",
+  "text": "提成"
+ },
+ {
+  "key": "payroll.slip.colDeduction",
+  "domain": "merchant:payroll",
+  "text": "扣减"
+ },
+ {
+  "key": "payroll.slip.colDisburse",
+  "domain": "merchant:payroll",
+  "text": "发放"
+ },
+ {
+  "key": "payroll.slip.colNet",
+  "domain": "merchant:payroll",
+  "text": "净额"
+ },
+ {
+  "key": "payroll.slip.colPerformance",
+  "domain": "merchant:payroll",
+  "text": "绩效"
+ },
+ {
+  "key": "payroll.slip.colStaff",
+  "domain": "merchant:payroll",
+  "text": "员工"
+ },
+ {
+  "key": "payroll.slip.confirmCta",
+  "domain": "merchant:payroll",
+  "text": "老板确认"
+ },
+ {
+  "key": "payroll.slip.confirmed",
+  "domain": "merchant:payroll",
+  "text": "工资条已定稿"
+ },
+ {
+  "key": "payroll.slip.confirming",
+  "domain": "merchant:payroll",
+  "text": "确认中…"
+ },
+ {
+  "key": "payroll.slip.disbursedNote",
+  "domain": "merchant:payroll",
+  "text": "发放=标记留痕不碰真钱；重复标记幂等，留痕可溯。"
+ },
+ {
+  "key": "payroll.slip.empty",
+  "domain": "merchant:payroll",
+  "text": "该月份尚未生成工资条"
+ },
+ {
+  "key": "payroll.slip.generateCta",
+  "domain": "merchant:payroll",
+  "text": "生成工资条"
+ },
+ {
+  "key": "payroll.slip.generated",
+  "domain": "merchant:payroll",
+  "text": "工资条已生成"
+ },
+ {
+  "key": "payroll.slip.generating",
+  "domain": "merchant:payroll",
+  "text": "生成中…"
+ },
+ {
+  "key": "payroll.slip.markCta",
+  "domain": "merchant:payroll",
+  "text": "标记发放"
+ },
+ {
+  "key": "payroll.slip.markDone",
+  "domain": "merchant:payroll",
+  "text": "发放标记已登记"
+ },
+ {
+  "key": "payroll.slip.markedBadge",
+  "domain": "merchant:payroll",
+  "text": "已发放"
+ },
+ {
+  "key": "payroll.slip.markedByLine",
+  "domain": "merchant:payroll",
+  "text": "标记人 {by} · {at}"
+ },
+ {
+  "key": "payroll.slip.markNote",
+  "domain": "merchant:payroll",
+  "text": "发放=标记留痕（记账动作），系统不碰真钱、不走支付通道。"
+ },
+ {
+  "key": "payroll.slip.markTitle",
+  "domain": "merchant:payroll",
+  "text": "标记发放 · {name}"
+ },
+ {
+  "key": "payroll.slip.methodNotePh",
+  "domain": "merchant:payroll",
+  "text": "发放方式备注（选填，如「现金」/「转账尾号」）"
+ },
+ {
+  "key": "payroll.slip.monthLabel",
+  "domain": "merchant:payroll",
+  "text": "工资月份"
+ },
+ {
+  "key": "payroll.slip.statusConfirmed",
+  "domain": "merchant:payroll",
+  "text": "已定稿"
+ },
+ {
+  "key": "payroll.slip.statusGenerated",
+  "domain": "merchant:payroll",
+  "text": "待确认"
+ },
+ {
+  "key": "payroll.slip.title",
+  "domain": "merchant:payroll",
+  "text": "工资条"
+ },
+ {
   "key": "prod.createCta",
   "domain": "merchant:products",
   "text": "＋ 新增商品"
@@ -6048,6 +6573,196 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "tasktpl.runs.title",
   "domain": "merchant:tasks",
   "text": "近 7 天落实例"
+ },
+ {
+  "key": "xpadmin.award.aside",
+  "domain": "merchant:xpAdmin",
+  "text": "员工申报的正向积分；批准才落正式 XP 事件"
+ },
+ {
+  "key": "xpadmin.award.empty",
+  "domain": "merchant:xpAdmin",
+  "text": "暂无待审批的积分申报"
+ },
+ {
+  "key": "xpadmin.award.pointsLine",
+  "domain": "merchant:xpAdmin",
+  "text": "申报 +{n} 分"
+ },
+ {
+  "key": "xpadmin.award.title",
+  "domain": "merchant:xpAdmin",
+  "text": "积分申报审批"
+ },
+ {
+  "key": "xpadmin.common.cancel",
+  "domain": "merchant:xpAdmin",
+  "text": "取消"
+ },
+ {
+  "key": "xpadmin.common.confirm",
+  "domain": "merchant:xpAdmin",
+  "text": "确认提交"
+ },
+ {
+  "key": "xpadmin.common.loadFail",
+  "domain": "merchant:xpAdmin",
+  "text": "数据加载失败，请检查网络后重试"
+ },
+ {
+  "key": "xpadmin.common.retry",
+  "domain": "merchant:xpAdmin",
+  "text": "重新加载"
+ },
+ {
+  "key": "xpadmin.common.submitting",
+  "domain": "merchant:xpAdmin",
+  "text": "提交中…"
+ },
+ {
+  "key": "xpadmin.guideHint",
+  "domain": "merchant:xpAdmin",
+  "text": "积分申报与扣分异议的审批属管理层动作；店员账号的工作面是收银台。"
+ },
+ {
+  "key": "xpadmin.guideTitle",
+  "domain": "merchant:xpAdmin",
+  "text": "XP 审核由店长或店主处理"
+ },
+ {
+  "key": "xpadmin.history.aside",
+  "domain": "merchant:xpAdmin",
+  "text": "审核结论随单留痕；通过单含落行回链"
+ },
+ {
+  "key": "xpadmin.history.empty",
+  "domain": "merchant:xpAdmin",
+  "text": "暂无审批历史"
+ },
+ {
+  "key": "xpadmin.history.kindAward",
+  "domain": "merchant:xpAdmin",
+  "text": "积分申报"
+ },
+ {
+  "key": "xpadmin.history.kindRevoke",
+  "domain": "merchant:xpAdmin",
+  "text": "扣分异议"
+ },
+ {
+  "key": "xpadmin.history.reviewedAt",
+  "domain": "merchant:xpAdmin",
+  "text": "审批于 {at}"
+ },
+ {
+  "key": "xpadmin.history.reviewLine",
+  "domain": "merchant:xpAdmin",
+  "text": "{result} · {note}"
+ },
+ {
+  "key": "xpadmin.history.statusApproved",
+  "domain": "merchant:xpAdmin",
+  "text": "已批准"
+ },
+ {
+  "key": "xpadmin.history.statusRejected",
+  "domain": "merchant:xpAdmin",
+  "text": "已驳回"
+ },
+ {
+  "key": "xpadmin.history.title",
+  "domain": "merchant:xpAdmin",
+  "text": "审批历史"
+ },
+ {
+  "key": "xpadmin.pageSub",
+  "domain": "merchant:xpAdmin",
+  "text": "积分申报与扣分异议审批；审核通过才落正式流水，XP 事件只增不改"
+ },
+ {
+  "key": "xpadmin.pageTitle",
+  "domain": "merchant:xpAdmin",
+  "text": "XP 审核"
+ },
+ {
+  "key": "xpadmin.review.appliedAt",
+  "domain": "merchant:xpAdmin",
+  "text": "提交于 {at}"
+ },
+ {
+  "key": "xpadmin.review.approveCta",
+  "domain": "merchant:xpAdmin",
+  "text": "批准"
+ },
+ {
+  "key": "xpadmin.review.approved",
+  "domain": "merchant:xpAdmin",
+  "text": "已批准，正式流水已落"
+ },
+ {
+  "key": "xpadmin.review.approveTitle",
+  "domain": "merchant:xpAdmin",
+  "text": "批准申请 · {name}"
+ },
+ {
+  "key": "xpadmin.review.notePh",
+  "domain": "merchant:xpAdmin",
+  "text": "审批意见（必填，随单留痕）"
+ },
+ {
+  "key": "xpadmin.review.noteRequired",
+  "domain": "merchant:xpAdmin",
+  "text": "审批意见不能为空"
+ },
+ {
+  "key": "xpadmin.review.reasonLabel",
+  "domain": "merchant:xpAdmin",
+  "text": "申请理由"
+ },
+ {
+  "key": "xpadmin.review.rejectCta",
+  "domain": "merchant:xpAdmin",
+  "text": "驳回"
+ },
+ {
+  "key": "xpadmin.review.rejected",
+  "domain": "merchant:xpAdmin",
+  "text": "已驳回"
+ },
+ {
+  "key": "xpadmin.review.rejectTitle",
+  "domain": "merchant:xpAdmin",
+  "text": "驳回申请 · {name}"
+ },
+ {
+  "key": "xpadmin.revoke.aside",
+  "domain": "merchant:xpAdmin",
+  "text": "批准=对冲：原负分保留不删，另写一条正向对冲行（明面对冲注记）"
+ },
+ {
+  "key": "xpadmin.revoke.empty",
+  "domain": "merchant:xpAdmin",
+  "text": "暂无待审批的扣分异议"
+ },
+ {
+  "key": "xpadmin.revoke.hedgeNote",
+  "domain": "merchant:xpAdmin",
+  "text": "批准口径：原负分保留，按请求分值写对冲行，事件流水只增不改。"
+ },
+ {
+  "key": "xpadmin.revoke.originalLine",
+  "domain": "merchant:xpAdmin",
+  "text": "原扣分事件 {n} 分"
+ },
+ {
+  "key": "xpadmin.revoke.pointsLine",
+  "domain": "merchant:xpAdmin",
+  "text": "请求对冲 +{n} 分"
+ },
+ {
+  "key": "xpadmin.revoke.title",
+  "domain": "merchant:xpAdmin",
+  "text": "扣分异议审批"
  },
  {
   "key": "ntf.allTab",
@@ -9345,6 +10060,226 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "服务"
  },
  {
+  "key": "prl.adjust.note",
+  "domain": "staff:payroll",
+  "text": "负数=跨月回冲 · 正数=补调"
+ },
+ {
+  "key": "prl.adjust.sourceLead",
+  "domain": "staff:payroll",
+  "text": "原属"
+ },
+ {
+  "key": "prl.appeal.cancel",
+  "domain": "staff:payroll",
+  "text": "取消"
+ },
+ {
+  "key": "prl.appeal.photoCta",
+  "domain": "staff:payroll",
+  "text": "＋附图（选传，最多 {max} 张）"
+ },
+ {
+  "key": "prl.appeal.photoFull",
+  "domain": "staff:payroll",
+  "text": "最多传 {max} 张图"
+ },
+ {
+  "key": "prl.appeal.reasonPh",
+  "domain": "staff:payroll",
+  "text": "申诉理由（必填，说明情况）"
+ },
+ {
+  "key": "prl.appeal.reasonRequired",
+  "domain": "staff:payroll",
+  "text": "请先填写申诉理由"
+ },
+ {
+  "key": "prl.appeal.submit",
+  "domain": "staff:payroll",
+  "text": "提交申诉"
+ },
+ {
+  "key": "prl.appeal.submitted",
+  "domain": "staff:payroll",
+  "text": "申诉已提交，等待复核"
+ },
+ {
+  "key": "prl.appeal.submitting",
+  "domain": "staff:payroll",
+  "text": "提交中…"
+ },
+ {
+  "key": "prl.appeal.title",
+  "domain": "staff:payroll",
+  "text": "提交申诉"
+ },
+ {
+  "key": "prl.appeals.empty",
+  "domain": "staff:payroll",
+  "text": "暂无申诉记录"
+ },
+ {
+  "key": "prl.appeals.loadFail",
+  "domain": "staff:payroll",
+  "text": "申诉记录加载失败，请稍后重试"
+ },
+ {
+  "key": "prl.appeals.refundLead",
+  "domain": "staff:payroll",
+  "text": "返还"
+ },
+ {
+  "key": "prl.appeals.reviewLead",
+  "domain": "staff:payroll",
+  "text": "复核注"
+ },
+ {
+  "key": "prl.appeals.slaNote",
+  "domain": "staff:payroll",
+  "text": "申诉将在 {h} 小时内复核（时限口径来自配置端口）"
+ },
+ {
+  "key": "prl.appeals.statusApproved",
+  "domain": "staff:payroll",
+  "text": "复核通过"
+ },
+ {
+  "key": "prl.appeals.statusPending",
+  "domain": "staff:payroll",
+  "text": "待复核"
+ },
+ {
+  "key": "prl.appeals.statusRejected",
+  "domain": "staff:payroll",
+  "text": "复核驳回"
+ },
+ {
+  "key": "prl.appeals.target.adjustment",
+  "domain": "staff:payroll",
+  "text": "调整项"
+ },
+ {
+  "key": "prl.appeals.target.deduction",
+  "domain": "staff:payroll",
+  "text": "扣减"
+ },
+ {
+  "key": "prl.appeals.target.slipLine",
+  "domain": "staff:payroll",
+  "text": "工资条"
+ },
+ {
+  "key": "prl.deduction.appeal",
+  "domain": "staff:payroll",
+  "text": "申诉"
+ },
+ {
+  "key": "prl.deduction.reverted",
+  "domain": "staff:payroll",
+  "text": "已返还"
+ },
+ {
+  "key": "prl.line.splitLead",
+  "domain": "staff:payroll",
+  "text": "协作拆得"
+ },
+ {
+  "key": "prl.refund.row",
+  "domain": "staff:payroll",
+  "text": "跨月退款回冲"
+ },
+ {
+  "key": "prl.retry",
+  "domain": "staff:payroll",
+  "text": "重新加载"
+ },
+ {
+  "key": "prl.sec.myAppeals",
+  "domain": "staff:payroll",
+  "text": "我的申诉"
+ },
+ {
+  "key": "prl.sec.refund",
+  "domain": "staff:payroll",
+  "text": "回冲与调整"
+ },
+ {
+  "key": "prl.sec.slip",
+  "domain": "staff:payroll",
+  "text": "工资条"
+ },
+ {
+  "key": "prl.slip.adjustment",
+  "domain": "staff:payroll",
+  "text": "调整"
+ },
+ {
+  "key": "prl.slip.appeal",
+  "domain": "staff:payroll",
+  "text": "对工资条申诉"
+ },
+ {
+  "key": "prl.slip.commission",
+  "domain": "staff:payroll",
+  "text": "提成"
+ },
+ {
+  "key": "prl.slip.deduction",
+  "domain": "staff:payroll",
+  "text": "扣减"
+ },
+ {
+  "key": "prl.slip.empty",
+  "domain": "staff:payroll",
+  "text": "工资条生成中"
+ },
+ {
+  "key": "prl.slip.emptyBody",
+  "domain": "staff:payroll",
+  "text": "每月结算核对后生成，请稍后再看"
+ },
+ {
+  "key": "prl.slip.marked",
+  "domain": "staff:payroll",
+  "text": "已发放"
+ },
+ {
+  "key": "prl.slip.markNote",
+  "domain": "staff:payroll",
+  "text": "发放为标记留痕，不代表银行到账"
+ },
+ {
+  "key": "prl.slip.netLabel",
+  "domain": "staff:payroll",
+  "text": "本月实发"
+ },
+ {
+  "key": "prl.slip.performance",
+  "domain": "staff:payroll",
+  "text": "绩效"
+ },
+ {
+  "key": "prl.slip.unmarked",
+  "domain": "staff:payroll",
+  "text": "尚未标记发放"
+ },
+ {
+  "key": "prl.track.labor",
+  "domain": "staff:payroll",
+  "text": "劳动业绩"
+ },
+ {
+  "key": "prl.track.note",
+  "domain": "staff:payroll",
+  "text": "劳动=服务操作营收门市价 · 销售=商品实收"
+ },
+ {
+  "key": "prl.track.sales",
+  "domain": "staff:payroll",
+  "text": "销售业绩"
+ },
+ {
   "key": "pdc.categoryPh",
   "domain": "staff:pdca",
   "text": "选择类目"
@@ -10393,6 +11328,131 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "vce.title",
   "domain": "staff:voice",
   "text": "员工心声"
+ },
+ {
+  "key": "xp.app.appealCta",
+  "domain": "staff:xp",
+  "text": "异议"
+ },
+ {
+  "key": "xp.app.appealReasonPh",
+  "domain": "staff:xp",
+  "text": "异议理由（必填，说明不该扣的依据）"
+ },
+ {
+  "key": "xp.app.appealTitle",
+  "domain": "staff:xp",
+  "text": "扣分异议"
+ },
+ {
+  "key": "xp.app.cancel",
+  "domain": "staff:xp",
+  "text": "取消"
+ },
+ {
+  "key": "xp.app.cta",
+  "domain": "staff:xp",
+  "text": "申报积分"
+ },
+ {
+  "key": "xp.app.empty",
+  "domain": "staff:xp",
+  "text": "暂无申请记录"
+ },
+ {
+  "key": "xp.app.kindAppeal",
+  "domain": "staff:xp",
+  "text": "扣分异议"
+ },
+ {
+  "key": "xp.app.kindAward",
+  "domain": "staff:xp",
+  "text": "积分申报"
+ },
+ {
+  "key": "xp.app.loadFail",
+  "domain": "staff:xp",
+  "text": "申请记录加载失败，请稍后重试"
+ },
+ {
+  "key": "xp.app.note",
+  "domain": "staff:xp",
+  "text": "申报与异议由店长/老板在管理端审核，员工不可自审"
+ },
+ {
+  "key": "xp.app.pointsInvalid",
+  "domain": "staff:xp",
+  "text": "请填写有效分值（正整数）"
+ },
+ {
+  "key": "xp.app.pointsLead",
+  "domain": "staff:xp",
+  "text": "申报"
+ },
+ {
+  "key": "xp.app.pointsPh",
+  "domain": "staff:xp",
+  "text": "申报分值（正整数）"
+ },
+ {
+  "key": "xp.app.reasonPh",
+  "domain": "staff:xp",
+  "text": "申报理由（必填，说明依据）"
+ },
+ {
+  "key": "xp.app.reasonRequired",
+  "domain": "staff:xp",
+  "text": "请先填写理由"
+ },
+ {
+  "key": "xp.app.resolvedNote",
+  "domain": "staff:xp",
+  "text": "已落分，见近期事件"
+ },
+ {
+  "key": "xp.app.reviewLead",
+  "domain": "staff:xp",
+  "text": "审核注"
+ },
+ {
+  "key": "xp.app.sec.list",
+  "domain": "staff:xp",
+  "text": "我的申请"
+ },
+ {
+  "key": "xp.app.statusApproved",
+  "domain": "staff:xp",
+  "text": "已通过"
+ },
+ {
+  "key": "xp.app.statusPending",
+  "domain": "staff:xp",
+  "text": "待审核"
+ },
+ {
+  "key": "xp.app.statusRejected",
+  "domain": "staff:xp",
+  "text": "已驳回"
+ },
+ {
+  "key": "xp.app.submit",
+  "domain": "staff:xp",
+  "text": "提交申报"
+ },
+ {
+  "key": "xp.app.submitted",
+  "domain": "staff:xp",
+  "text": "已提交，等待审核"
+ },
+ {
+  "key": "xp.app.submitting",
+  "domain": "staff:xp",
+  "text": "提交中…"
+ },
+ {
+  "key": "xp.app.title",
+  "domain": "staff:xp",
+  "text": "积分申报"
  },
  {
   "key": "xp.aside.lead",
