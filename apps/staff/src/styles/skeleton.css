@@ -43,6 +43,12 @@
   content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
   width: 22px; height: 3px; border-radius: 0 0 3px 3px; background: var(--gold-pale);
 }
+/* 未读徽数（片 3：dock 槽红点计数，如「我的」槽 push.unreadCount） */
+.sk-dock .bdg {
+  position: absolute; top: 4px; right: calc(50% - 22px); min-width: 15px; height: 15px;
+  padding: 0 4px; border-radius: 999px; background: var(--danger); color: var(--card);
+  font-family: var(--mono); font-size: 9px; font-weight: 700; line-height: 15px; text-align: center;
+}
 
 /* ---- G2 淡黄主行动钮（语义=此刻要做的，每屏至多 1 颗；淡黄底深棕字 15.5/800 圆角 16+mono 9.5 副行） ---- */
 .sk-btn-action {

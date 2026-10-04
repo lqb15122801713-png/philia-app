@@ -75,9 +75,9 @@ export function SkChips<T extends string>({
   );
 }
 
-/* ---- S1 平铺 dock（四槽冻结；激活=深棕字+顶淡黄短划） ---- */
+/* ---- S1 平铺 dock（四槽冻结；激活=深棕字+顶淡黄短划；badges=未读徽数（片 3，如「我的」槽）） ---- */
 export type SkDockActive = 'work' | 'appt' | 'punch' | 'me';
-export function SkDock({ active }: { active: SkDockActive }) {
+export function SkDock({ active, badges }: { active: SkDockActive; badges?: Partial<Record<SkDockActive, number>> }) {
   const tabs: Array<{ key: SkDockActive; to: string; label: string; testId: string; icon: ReactNode }> = [
     {
       key: 'work', to: '/today', label: skc('sk.dockWork'), testId: 'dock-work',
@@ -103,6 +103,11 @@ export function SkDock({ active }: { active: SkDockActive }) {
           <Link key={t.key} to={t.to} data-testid={t.testId} aria-current={active === t.key ? 'page' : undefined} className={active === t.key ? 'on' : ''}>
             {t.icon}
             {t.label}
+            {(badges?.[t.key] ?? 0) > 0 ? (
+              <span className="bdg" data-testid={`${t.testId}-badge`} aria-label={`${badges![t.key]} 条未读`}>
+                {badges![t.key]! > 99 ? '99+' : badges![t.key]}
+              </span>
+            ) : null}
           </Link>
         ))}
       </div>

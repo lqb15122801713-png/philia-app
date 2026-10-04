@@ -33,10 +33,13 @@ import { refundRequestRouter } from './refundRequest';
 import { scheduleRouter } from './schedule';
 import { serviceLoopRouter } from './serviceLoop';
 import { slotPortRouter } from './slotPort';
+import { staffExitRouter } from './staffExit';
 import { staffTaskRouter } from './staffTask';
 import { serviceStepRouter } from './serviceStep';
 import { storeRouter } from './store';
 import { storedValueRouter } from './storedValue';
+import { announceRouter } from './announce';
+import { pdcaRouter, selfCheckRouter, taskExecRouter } from './taskCollab';
 import { xpRouter } from './xp';
 
 export const appRouter = router({
@@ -65,6 +68,11 @@ export const appRouter = router({
   slotPort: slotPortRouter, // 端口批片 C（CJ-1002-01）：展示槽位端口（控制台第八域；liveMap 公开读/管理仅 owner）
   staffTask: staffTaskRouter, // 员工端骨架批片 1：任务总线骨架（staff_tasks 只读投影——聚合既有域在途件，不建第二口径不写业务表）
   schedule: scheduleRouter, // 员工端骨架批片 2：排班域（模板/生成/发布/换班/请假/调休/技能/CSV 导入，冻结版 V1.0 §二.B2）
+  taskExec: taskExecRouter, // 员工端骨架批片 3：循环任务（模板自管+触读即补生成+提醒一发闸）
+  pdca: pdcaRouter, // 片 3：PDCA 问题-整改-复检闭环（类目集入端口，timeline 只增留痕）
+  selfCheck: selfCheckRouter, // 片 3：门店每日自检+上级审核（服务端算分，一店一日一表幂等锚）
+  announce: announceRouter, // 片 3：公告+已读回执（定向发布+逐人通知+对账名单）
+  staffExit: staffExitRouter, // 片 3：离职交接（未完结单改挂+前后值留痕；锁定本体=staffProcedure 既有闸）
 });
 
 /** 前端 tRPC client 的类型锚点（仅类型导出，无运行时开销） */

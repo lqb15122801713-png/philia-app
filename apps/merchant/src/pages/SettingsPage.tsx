@@ -19,6 +19,7 @@
 import { Skeleton, usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import MainScaffold, { QuietButton } from '../components/MainScaffold';
 import ServiceEditorDialog from '../components/staff-admin/ServiceEditorDialog';
 import { errMsg, fmtMoney } from '../components/staff-admin/format';
@@ -577,24 +578,54 @@ export default function SettingsPage() {
             </ExpandRow>
           </div>
 
-          {/* 右栏：经营口径 */}
-          <div className="u3-panel">
-            <div className="u3-panel-head">
-              <h3>{st('set.panelRules')}</h3>
-              <span className="aside">{st('set.notifyAside')}</span>
-            </div>
-            <SetRow title="自动接单" hint={st('set.autoAcceptHint')}>
-              <span className="shrink-0 text-caption font-bold text-ink">已启用</span>
-            </SetRow>
-            {NOTIFY_ITEMS.map((item) => (
-              <SetRow key={item.key} title={item.label} hint={item.hint}>
-                <Switch
-                  checked={notify[item.key]}
-                  onChange={(v) => changeNotify(item.key, v)}
-                  label={item.label}
-                />
+          {/* 右栏：经营口径 + 管理入口（片 3：公告/任务模板入口卡，行式同 .set-row 工艺） */}
+          <div className="space-y-3.5">
+            <div className="u3-panel">
+              <div className="u3-panel-head">
+                <h3>{st('set.panelRules')}</h3>
+                <span className="aside">{st('set.notifyAside')}</span>
+              </div>
+              <SetRow title="自动接单" hint={st('set.autoAcceptHint')}>
+                <span className="shrink-0 text-caption font-bold text-ink">已启用</span>
               </SetRow>
-            ))}
+              {NOTIFY_ITEMS.map((item) => (
+                <SetRow key={item.key} title={item.label} hint={item.hint}>
+                  <Switch
+                    checked={notify[item.key]}
+                    onChange={(v) => changeNotify(item.key, v)}
+                    label={item.label}
+                  />
+                </SetRow>
+              ))}
+            </div>
+
+            {/* 管理入口（owner|manager 页——clerk 由 ClerkRouteGuard 拦在 /settings 外） */}
+            <div className="u3-panel" data-testid="settings-entries">
+              <div className="u3-panel-head">
+                <h3>{st('set.panelEntries')}</h3>
+                <span className="aside">{st('set.entriesAside')}</span>
+              </div>
+              {(
+                [
+                  ['/settings/schedules', st('set.entrySchedules'), st('set.entrySchedulesHint'), 'entry-schedules'],
+                  ['/settings/announcements', st('set.entryAnnouncements'), st('set.entryAnnouncementsHint'), 'entry-announcements'],
+                  ['/settings/tasks', st('set.entryTasks'), st('set.entryTasksHint'), 'entry-tasks'],
+                ] as const
+              ).map(([to, title, hint, tid]) => (
+                <Link
+                  key={to}
+                  to={to}
+                  data-testid={tid}
+                  className="flex items-center gap-3 border-t border-[rgba(59,46,36,.06)] px-[17px] py-[13px] text-caption transition-colors duration-150 hover:bg-[rgba(59,46,36,.03)]"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="text-ink">{title}</div>
+                    <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]">{hint}</div>
+                  </div>
+                  <span className="shrink-0 text-caption font-bold text-[rgba(59,46,36,.62)]">{st('set.entryGo')}</span>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       )}

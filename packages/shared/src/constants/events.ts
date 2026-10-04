@@ -71,6 +71,9 @@ export const EventType = {
   // 员工端骨架整建批 片 2（排班域；同步自 server realtime/events.ts）
   SchedulePublished:     'schedule.published',      // 周班表发布 → 逐受影响员工 staff:{staffId} 频道
   ShiftSwapResolved:     'shift.swapResolved',      // 换班审批结果（批准换挂/驳回留痕） → 双方 staff 频道
+  // 员工端骨架整建批 片 3（任务执行+通讯；同步自 server realtime/events.ts）
+  TaskReminder:          'task.reminder',           // 循环任务截止前提醒 → staff:{staffId}
+  AnnouncementPublished: 'announcement.published',  // 公告发布 → store 频道
 } as const;
 
 export type EventTypeValue = (typeof EventType)[keyof typeof EventType];

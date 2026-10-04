@@ -29,6 +29,17 @@ const SETTINGS_COPY_TABLE = {
   'set.notifyCancelHint': '≤4h 申请需审批',
   'set.notifyBoardingLabel': '寄养打卡提醒',
   'set.notifyBoardingHint': '每日 16:00 未打卡提醒员工',
+
+  /* ---- 管理入口卡（片 3：公告/任务模板/排班直达，行式同 .set-row 工艺） ---- */
+  'set.panelEntries': '管理入口',
+  'set.entriesAside': '排班 / 公告 / 循环任务模板直达',
+  'set.entrySchedules': '排班管理',
+  'set.entrySchedulesHint': '周视图拖拽排班 · 模板生成 · 换班审批',
+  'set.entryAnnouncements': '公告',
+  'set.entryAnnouncementsHint': '定向发布 · 已读回执对账',
+  'set.entryTasks': '任务模板',
+  'set.entryTasksHint': '循环任务自管 · 近 7 天落实例',
+  'set.entryGo': '进入 ›',
 } as const;
 
 export const SETTINGS_COPY = withCopyOverrides(SETTINGS_COPY_TABLE);

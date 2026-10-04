@@ -45,6 +45,8 @@ import { STATS_QUERY_KEY } from '@/components/dashboard/utils'
 import MainScaffold from '@/components/MainScaffold'
 import { cc } from '@/copy/cashier'
 import { errMsg } from '@/components/mall-admin/format'
+import { cashierHandoverOf, type HandoverInput } from '@/lib/taskCollabPort'
+import type { StaffRow } from '@/components/staff-admin/types'
 import { useMerchantRole } from '@/lib/roles'
 
 const FINANCE_ROOT = ['store', 'financeStats'] as const
@@ -71,6 +73,11 @@ export default function CashierClosePage() {
   const refundDayQ = useQuery({
     queryKey: [...REFUND_DAY_STATS_KEY, storeTodayStr()],
     queryFn: () => trpc.refund.dayStats.query({ date: storeTodayStr() }),
+  })
+  // 片 3 B6-3：交接班「接棒人」下拉候选（在职员工；toUserId=users.id）
+  const staffQ = useQuery({
+    queryKey: ['store', 'staffList'],
+    queryFn: () => trpc.store.staffList.query(),
   })
 
   const invalidateAll = useCallback(() => {
@@ -112,6 +119,29 @@ export default function CashierClosePage() {
   const [overrideShiftId, setOverrideShiftId] = useState<string | null>(null)
   const [exportingId, setExportingId] = useState<string | null>(null)
   const [confirmCloseShift, setConfirmCloseShift] = useState(false)
+  /* 片 3 B6-3：交接班四节表单（在洗清单=server 自动快照只读注记，三区注记+接棒人手填） */
+  const [hvKeys, setHvKeys] = useState('')
+  const [hvCash, setHvCash] = useState('')
+  const [hvComplaints, setHvComplaints] = useState('')
+  const [hvToUserId, setHvToUserId] = useState('')
+
+  const openCloseShift = () => {
+    setHvKeys('')
+    setHvCash('')
+    setHvComplaints('')
+    setHvToUserId('')
+    setConfirmCloseShift(true)
+  }
+
+  const submitCloseShift = () => {
+    const handover: HandoverInput = {
+      ...(hvKeys.trim() ? { keysNote: hvKeys.trim() } : {}),
+      ...(hvCash.trim() ? { cashNote: hvCash.trim() } : {}),
+      ...(hvComplaints.trim() ? { complaintsNote: hvComplaints.trim() } : {}),
+      ...(hvToUserId ? { toUserId: hvToUserId } : {}),
+    }
+    closeShiftM.mutate(Object.keys(handover).length > 0 ? handover : undefined)
+  }
 
   /* ?reclose=<shiftId> 深链（列表「重新日结」同页内直填，预留外部跳转） */
   const [searchParams, setSearchParams] = useSearchParams()
@@ -124,8 +154,11 @@ export default function CashierClosePage() {
   }, [searchParams, setSearchParams])
 
   /* ---------------- 动作 ---------------- */
+  /* 片 3 B6-3：closeShift 入参加可选 handover 四节（在洗清单=server 闭班自动快照，
+     前端只发 钥匙/现金/客诉 注记+接棒人；全部留空则按旧口径无参闭班） */
   const closeShiftM = useMutation({
-    mutationFn: () => trpc.cashier.closeShift.mutate(),
+    mutationFn: (handover?: HandoverInput) =>
+      cashierHandoverOf(trpc).closeShift.mutate(handover ? { handover } : undefined),
     onSuccess: () => {
       setConfirmCloseShift(false)
       toast.success('已交接班（闭班）—— 下一笔收银将自动开新班；账目冻结请走日结')
@@ -210,7 +243,7 @@ export default function CashierClosePage() {
           shift={shiftQ.data?.shift}
           todayCashierCount={tender?.counts.cashierPaidCount ?? null}
           closing={closeShiftM.isPending}
-          onCloseShift={() => setConfirmCloseShift(true)}
+          onCloseShift={openCloseShift}
         />
 
         {/* 日结表单（账面 vs 实点 · 差异红字 · 分列） */}
@@ -251,19 +284,66 @@ export default function CashierClosePage() {
         {role.isOwner ? <ImportLedgerPanel storeId={role.storeId} /> : null}
       </div>
 
-      {/* 交接班确认 */}
+      {/* 交接班确认（片 3 B6-3：四节结构化——在洗清单只读注记（server 自动快照）+
+          钥匙/现金/客诉注记 + 接棒人下拉（可选）） */}
       {confirmCloseShift ? (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           data-testid="close-shift-confirm"
         >
           <div className="absolute inset-0 bg-[rgba(59,46,36,.28)]" onClick={() => setConfirmCloseShift(false)} aria-hidden />
-          <div className="relative w-full max-w-[380px] rounded-[20px] bg-[#FFFDF6] p-5 shadow-[0_8px_40px_rgba(59,46,36,.18)]">
-            <h3 className="text-title font-semibold">{cc('cashier.closeShiftConfirmTitle')}</h3>
-            <p className="mt-2 text-caption leading-relaxed text-[rgba(59,46,36,.62)]">
-              {cc('cashier.closeShiftConfirmBody')}
-            </p>
-            <div className="mt-4 flex justify-end gap-2">
+          <div className="relative flex max-h-[85vh] w-full max-w-[440px] flex-col overflow-hidden rounded-[20px] bg-[#FFFDF6] shadow-[0_8px_40px_rgba(59,46,36,.18)]">
+            <div className="px-5 pt-5">
+              <h3 className="text-title font-semibold">{cc('cashier.closeShiftConfirmTitle')}</h3>
+              <p className="mt-2 text-caption leading-relaxed text-[rgba(59,46,36,.62)]">
+                {cc('cashier.closeShiftConfirmBody')}
+              </p>
+            </div>
+            <div className="overflow-y-auto px-5 py-3">
+              <p className="mb-2 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{cc('cashier.handoverTitle')}</p>
+
+              {/* 在洗清单：只读快照透出（server 闭班时自动快照，本端不采） */}
+              <div className="rounded-[10px] bg-[#FAF8F2] px-3 py-2">
+                <span className="text-caption-xs font-semibold text-ink">{cc('cashier.handoverWashingLabel')}</span>
+                <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">{cc('cashier.handoverWashingNote')}</p>
+              </div>
+
+              {([
+                [cc('cashier.handoverKeysLabel'), cc('cashier.handoverKeysPh'), hvKeys, setHvKeys, 'handover-keys'],
+                [cc('cashier.handoverCashLabel'), cc('cashier.handoverCashPh'), hvCash, setHvCash, 'handover-cash'],
+                [cc('cashier.handoverComplaintsLabel'), cc('cashier.handoverComplaintsPh'), hvComplaints, setHvComplaints, 'handover-complaints'],
+              ] as const).map(([label, ph, val, setVal, tid]) => (
+                <label key={tid} className="mt-2.5 block">
+                  <span className="mb-1 block text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">{label}</span>
+                  <input
+                    value={val}
+                    onChange={(e) => setVal(e.target.value)}
+                    placeholder={ph}
+                    maxLength={200}
+                    data-testid={tid}
+                    className="w-full rounded-[10px] bg-[#FFFDF6] px-3 py-2 text-caption text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+                  />
+                </label>
+              ))}
+
+              <label className="mt-2.5 block">
+                <span className="mb-1 block text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">{cc('cashier.handoverToLabel')}</span>
+                <select
+                  value={hvToUserId}
+                  onChange={(e) => setHvToUserId(e.target.value)}
+                  data-testid="handover-to-user"
+                  className="w-full rounded-[10px] bg-[#FFFDF6] px-3 py-2 text-caption text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+                >
+                  <option value="">{cc('cashier.handoverToPh')}</option>
+                  {(((staffQ.data?.staff ?? []) as StaffRow[]).filter((s) => s.status === 'active')).map((s) => (
+                    <option key={s.id} value={s.userId}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="flex justify-end gap-2 px-5 pb-5 pt-2">
               <button
                 type="button"
                 onClick={() => setConfirmCloseShift(false)}
@@ -275,7 +355,7 @@ export default function CashierClosePage() {
                 type="button"
                 data-testid="close-shift-confirm-ok"
                 disabled={closeShiftM.isPending}
-                onClick={() => closeShiftM.mutate()}
+                onClick={submitCloseShift}
                 className="rounded-full bg-brand-primary px-4 py-2.5 text-caption font-bold text-ink shadow-hairline disabled:opacity-50"
               >
                 {closeShiftM.isPending ? '交接中…' : '确认交接班'}

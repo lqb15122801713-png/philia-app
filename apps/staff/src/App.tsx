@@ -14,6 +14,11 @@ import InventoryPage from './pages/staff2/InventoryPage'
 import ManagerPage from './pages/staff2/ManagerPage'
 import MyReviewsPage from './pages/staff2/MyReviewsPage'
 import MySchedulePage from './pages/MySchedulePage'
+import NoticesPage from './pages/staff2/NoticesPage'
+import NotificationsPage from './pages/staff2/NotificationsPage'
+import PdcaPage from './pages/staff2/PdcaPage'
+import SelfCheckPage from './pages/staff2/SelfCheckPage'
+import VoicePage from './pages/staff2/VoicePage'
 import PayPage from './pages/staff2/PayPage'
 import XpPage from './pages/staff2/XpPage'
 import TodayPage from './pages/TodayPage'
@@ -40,6 +45,12 @@ function ProtectedRoutes() {
       <Route path="/manager" element={<ManagerPage />} />
       {/* 骨架批片 2：我的排班（二级页，SkBackBar 返回条，不入 dock） */}
       <Route path="/my-schedule" element={<MySchedulePage />} />
+      {/* 骨架批片 3（任务协同）：通知/公告/心声/自检/问题上报（统一 SkBackBar 二级页，fallback=/me） */}
+      <Route path="/notifications" element={<NotificationsPage />} />
+      <Route path="/notices" element={<NoticesPage />} />
+      <Route path="/voice" element={<VoicePage />} />
+      <Route path="/self-check" element={<SelfCheckPage />} />
+      <Route path="/pdca" element={<PdcaPage />} />
       <Route path="*" element={<Navigate to="/today" replace />} />
     </Routes>
   )

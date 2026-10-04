@@ -24,6 +24,24 @@ const STAFF_COPY_TABLE = {
   'staff.editSuspendNote': '停用后该员工立即无法操作员工端（历史业绩保留）',
   'staff.editSkillNote': '技能标签暂为只读（S4 派单批开放编辑）；排班请点员工行右侧的排班摘要编辑。',
   'staff.scheduleNote': '每天最多 {n} 个时段；设为「休息」的当天不排班。',
+
+  /* ---- 离职交接（片 3 B7-4：改挂未完结单 + 交接留痕） ---- */
+  'staff.exitCta': '离职交接 ›',
+  'staff.exitDialogTitle': '离职交接 · {name}',
+  'staff.exitReassignTitle': '改挂未完结单',
+  'staff.exitReassignHint': '将该员工名下未完结预约改挂给接手人；改挂留痕前后值快照',
+  'staff.exitToStaffPh': '选择接手员工',
+  'staff.exitNotePh': '备注（选填，随改挂留痕）',
+  'staff.exitReassignSubmit': '确认改挂',
+  'staff.exitReassigning': '改挂中…',
+  'staff.exitReassigned': '改挂完成：共改挂 {n} 单',
+  'staff.exitNoTarget': '请先选择接手员工',
+  'staff.exitNoCandidates': '暂无其他在职员工可接手',
+  'staff.exitMemberNote': '会员档案无员工负责人列，不在改挂范围（口径明面）。',
+  'staff.exitHandoffsTitle': '交接留痕',
+  'staff.exitHandoffsEmpty': '暂无交接留痕',
+  'staff.exitHandoffKindAppointment': '预约改挂',
+  'staff.exitHandoffPrevNext': '{prev} → {next}',
 } as const;
 
 export const STAFF_COPY = withCopyOverrides(STAFF_COPY_TABLE);

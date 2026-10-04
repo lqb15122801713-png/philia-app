@@ -15,6 +15,7 @@ import { useRef } from 'react';
 import { Flag } from 'lucide-react';
 import { StepNode, type ServiceStepDef } from '@philia/shared';
 import { STEP_NAME } from '../today/deck/ServiceCard';
+import { EXECUTE_COPY } from '@/copy/execute';
 
 export interface StepPhotoItem {
   key: string;
@@ -291,6 +292,8 @@ export default function ExecuteStepper({
                         </div>
                       )}
                       <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.62)]">过程照实时同步给家长（服务中全程页）</p>
+                      {/* 片 3 B5-2：拍照只许现场拍（诚实口径注记：服务端校验拍摄时刻，不吹「防住」） */}
+                      <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">{EXECUTE_COPY['exec.photo.onsiteNote']}</p>
                     </div>
                   ) : null}
                 </>

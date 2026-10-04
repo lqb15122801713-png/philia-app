@@ -20,6 +20,9 @@
  *   register 回调时透传（register 的 photo 实参上会多出可选 tag 字段，契约类型不变）。
  * - startQueueFlusher 的 opts 增加可选 onDropped(rec, err)：登记被服务端永久拒绝（步骤状态
  *   已变 / 超上限）而丢弃记录时回调，供 UI toast。
+ * - 片 3 B5-2（拍照只许现场拍，前端半）：upload 响应可携 exifTakenAt（server 从原图 EXIF
+ *   DateTimeOriginal 解析；秒 epoch 或 ISO 串，原样透传不解释），flushRound 冲一条时把它
+ *   放进 register 的 photo.clientTakenAt（addPhotos 入参透传，契约类型不变的可选扩展）。
  *
  * 不丢照片证明链（冲一条的顺序）：upload 成功 → register(addPhotos 落库) 成功 → 才删队列记录。
  * 任一步失败记录保留：瞬态失败按 2s/5s/15s/60s 退避重试同一条（不跳过、保序）；
@@ -195,11 +198,12 @@ export async function removePhoto(id: string): Promise<void> {
 export interface FlushEngineDeps {
   loadAll(): Promise<QueuedPhotoRecord[]>
   remove(id: string): Promise<void>
-  upload(blob: Blob, relDir: string): Promise<{ url: string; thumbUrl: string }>
+  /** 片 3 B5-2：上传响应可携 exifTakenAt（服务端 EXIF 拍摄时刻，原样透传） */
+  upload(blob: Blob, relDir: string): Promise<{ url: string; thumbUrl: string; exifTakenAt?: number | string | null }>
   register(
     aid: string,
     stepKey: string,
-    photo: { url: string; thumbUrl: string; tag?: PhotoTag },
+    photo: { url: string; thumbUrl: string; tag?: PhotoTag; clientTakenAt?: number | string },
   ): Promise<void>
   onChange?: () => void
   onDropped?: (rec: QueuedPhoto, err: unknown) => void
@@ -271,6 +275,8 @@ export function createFlushEngine(deps: FlushEngineDeps): FlushEngine {
             url: up.url,
             thumbUrl: up.thumbUrl,
             ...(tag !== 'normal' ? { tag } : {}),
+            // 片 3 B5-2：EXIF 拍摄时刻随登记透传（clientTakenAt；无则不传，服务端按缺失口径留痕）
+            ...(up.exifTakenAt != null ? { clientTakenAt: up.exifTakenAt } : {}),
           })
           await deps.remove(rec.id)
           failures = 0 // 有进展即清退避
@@ -336,8 +342,9 @@ export function createFlushEngine(deps: FlushEngineDeps): FlushEngine {
  * - 返回 cleanup：移除监听、清定时器、停引擎。
  */
 export function startQueueFlusher(opts: {
-  upload: (blob: Blob, relDir: string) => Promise<{ url: string; thumbUrl: string }>
-  register: (aid: string, stepKey: string, photo: { url: string; thumbUrl: string }) => Promise<void> // serviceStep.addPhotos
+  /** 片 3 B5-2：上传响应可携 exifTakenAt（服务端 EXIF 拍摄时刻，原样透传进 register） */
+  upload: (blob: Blob, relDir: string) => Promise<{ url: string; thumbUrl: string; exifTakenAt?: number | string | null }>
+  register: (aid: string, stepKey: string, photo: { url: string; thumbUrl: string; tag?: PhotoTag; clientTakenAt?: number | string }) => Promise<void> // serviceStep.addPhotos
   onChange?: () => void
   /** 兼容扩展：记录被永久拒绝丢弃时回调（供 UI toast） */
   onDropped?: (rec: QueuedPhoto, err: unknown) => void

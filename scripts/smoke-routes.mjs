@@ -136,6 +136,10 @@ const ROUTES = [
   { app: 'merchant', path: '/settings/copy', anchors: ['文案端口'], serverDep: true, note: '端口批片 B：文案端口（控制台第七域；owner 登录渲染「文案端口」页题）' },
   { app: 'merchant', path: '/settings/slots', anchors: ['槽位'], serverDep: true, note: '端口批片 C：槽位端口（控制台第八域「槽位」；owner 登录渲染「槽位端口」页题，非 owner 引导页标题同含锚点）' },
   { app: 'merchant', path: '/settings/schedules', anchors: ['排班'], serverDep: true, note: '员工端骨架整建批 片 2：排班管理（owner|manager 渲染「排班管理」页题；clerk 引导页标题同含锚点）' },
+  /* 员工端骨架整建批 片 3 三条新路由（闸径照上行片 2 先例：owner|manager 页题渲染，clerk 引导页标题同含锚点） */
+  { app: 'merchant', path: '/settings/announcements', anchors: ['公告'], serverDep: true, note: '片 3：公告（owner|manager 渲染「公告」页题；锚点=页题/引导页稳定文案）' },
+  { app: 'merchant', path: '/ops', anchors: ['运营'], serverDep: true, note: '片 3：运营（owner|manager 渲染「运营」页题；墨轨「门店」组入口 rail-ops）' },
+  { app: 'merchant', path: '/settings/tasks', anchors: ['任务模板'], serverDep: true, note: '片 3：循环任务模板自管（owner|manager 渲染「任务模板」页题）' },
   { app: 'merchant', path: '/live', anchors: ['在店监控'], expectPath: '/monitor', note: 'B2 重定向；U3 锚点' },
   { app: 'merchant', path: '/appointments', anchors: ['预约'], note: 'A3 白屏群' },
   { app: 'merchant', path: `/appointments/${APPT_ID}/monitor`, anchors: ['实时监控', '预约'], serverDep: true, note: 'P4 原深链；U3 锚点' },
@@ -156,6 +160,12 @@ const ROUTES = [
   { app: 'staff', path: '/reviews', anchors: ['评价'], note: '批次 staff-2 R10' },
   { app: 'staff', path: '/manager', anchors: ['店长视图'], note: '批次 staff-2：smoke 以首个 staff 种子（非店长）登录渲染引导卡；锚点命中 PageHeader 标题与引导卡 h1' },
   { app: 'staff', path: '/my-schedule', anchors: ['排班', '班次'], serverDep: true, note: '员工端骨架整建批 片 2：我的排班（SkBackBar 标题「我的排班」）' },
+  /* 骨架批片 3（任务协同 · coder H）：五新屏，锚点=页内稳定 copy（SkBackBar 页题），数据依赖页全 serverDep 守卫口径 */
+  { app: 'staff', path: '/notifications', anchors: ['通知', 'NOTIFICATIONS'], serverDep: true, note: '骨架批片 3：通知中心（push.listNotifications，未读高亮+全部已读）' },
+  { app: 'staff', path: '/notices', anchors: ['门店公告', 'NOTICES'], serverDep: true, note: '骨架批片 3：公告列表（announce.list，pinned 在前，点开即 markRead）' },
+  { app: 'staff', path: '/voice', anchors: ['员工心声', 'VOICE'], serverDep: true, note: '骨架批片 3：员工心声（提交单+我的心声列表+SLA 注记）' },
+  { app: 'staff', path: '/self-check', anchors: ['每日自检', 'SELF-CHECK'], serverDep: true, note: '骨架批片 3：每日自检（表项端口读+逐项打点）' },
+  { app: 'staff', path: '/pdca', anchors: ['问题上报', 'PDCA'], serverDep: true, note: '骨架批片 3：问题上报（状态滤签+责任人整改）' },
 ];
 
 const APP_URLS = { customer: CUSTOMER_URL, merchant: MERCHANT_URL, staff: STAFF_URL };

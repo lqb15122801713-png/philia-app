@@ -6,7 +6,12 @@
  *   原图已 ≤ 2000 或环境不支持 canvas 解码时直接传原图。
  * - POST {baseUrl}/api/upload（multipart：file + relDir，credentials:'include'），
  *   成功返回 { url, thumbUrl }（后端签名 URL，可直接 <img src>）。
+ * - 片 3 B5-2（拍照只许现场拍）：响应可携 exifTakenAt——**canvas 重采样会剥 EXIF**，
+ *   故上传前先从原始文件预解析（./exifLite，零依赖）；server 响应的 exifTakenAt
+ *   （≤2000px 原图直传时 server 自解析）优先，缺省回落前端预解析值。
  */
+
+import { readExifTakenAt } from './exifLite';
 
 /** 重采样目标：最长边像素 */
 const MAX_EDGE = 2000;
@@ -45,12 +50,13 @@ async function downscaleImage(file: Blob): Promise<Blob> {
   }
 }
 
-/** 上传图片，返回 { url, thumbUrl }（契约签名） */
+/** 上传图片，返回 { url, thumbUrl }（契约签名；片 3 B5-2 增可选 exifTakenAt 透传字段） */
 export async function uploadImage(
   baseUrl: string,
   file: Blob,
   relDir: string,
-): Promise<{ url: string; thumbUrl: string }> {
+): Promise<{ url: string; thumbUrl: string; exifTakenAt?: number | string | null }> {
+  const clientExif = await readExifTakenAt(file); // 重采样剥 EXIF，先留真值
   const blob = await downscaleImage(file);
 
   const form = new FormData();
@@ -74,5 +80,10 @@ export async function uploadImage(
     throw new Error(message);
   }
 
-  return (await res.json()) as { url: string; thumbUrl: string };
+  const body = (await res.json()) as { url: string; thumbUrl: string; exifTakenAt?: number | string | null };
+  /* server 解析（原图直传）优先；重采样件 server 解析不到 → 回落前端预解析真值 */
+  if ((body.exifTakenAt === null || body.exifTakenAt === undefined) && clientExif !== null) {
+    body.exifTakenAt = clientExif;
+  }
+  return body;
 }

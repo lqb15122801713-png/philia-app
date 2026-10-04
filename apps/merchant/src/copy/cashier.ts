@@ -82,6 +82,24 @@ const CASHIER_COPY_TABLE = {
     '拆箱将生成冲正关联单（含前后值快照/操作人/时间/原因），原日结单永存不涂改（置「已冲正」）；之后可对同日重新日结（全日口径）。',
   'cashier.adjustNote': '备注追加进调整记录留痕，原冻结数字不涂改。',
 
+  /* ---- 交接班结构化四节（片 3 B6-3：在洗清单/钥匙/现金/客诉 + 接棒人） ---- */
+  'cashier.handoverTitle': '交接班四节',
+  'cashier.handoverWashingLabel': '在洗清单',
+  'cashier.handoverWashingNote': '提交闭班时由系统自动快照当前在洗清单，无需手填',
+  'cashier.handoverKeysLabel': '钥匙',
+  'cashier.handoverKeysPh': '钥匙交接注记（选填，如：前门钥匙 2 把已交班）',
+  'cashier.handoverCashLabel': '现金',
+  'cashier.handoverCashPh': '现金注记（选填，如：备用金 500 已点）',
+  'cashier.handoverComplaintsLabel': '客诉',
+  'cashier.handoverComplaintsPh': '客诉注记（选填，如：无 / 1 起待跟进）',
+  'cashier.handoverToLabel': '接棒人（选填）',
+  'cashier.handoverToPh': '不指定接棒人',
+  'cashier.handoverLogTitle': '交接班日志',
+  'cashier.handoverLogEmpty': '该班次无交接班留痕',
+  'cashier.handoverLogFromTo': '交 {from} → 接 {to}',
+  'cashier.handoverLogNoTo': '未指定接棒人',
+  'cashier.handoverLogLoadFail': '交接班日志加载失败',
+
   /* ---- 退款单 /cashier/refunds + RefundDialog / RefundDetailDialog ---- */
   'cashier.refundsTitle': '退款单',
   'cashier.refundsSub': '退款 ≠ 反结账 · 经营行为计退款单列 · 当日净额=已收−退款 · 原单永存不涂改',
