@@ -82,6 +82,7 @@ const ROUTES = [
   { app: 'customer', path: `/mall/product/${PRODUCT_ID}`, expect: 'sub', note: '商品 id 缺失时守卫口径' },
   { app: 'customer', path: `/mall/product/${INVALID_ID}`, expect: 'sub', note: '无效 id 异常态须出口（W1 补改）' },
   { app: 'customer', path: '/me/card', expect: 'sub' },
+  { app: 'customer', path: '/me/coupons', expect: 'sub', note: '客户端体验大批 片 3（优惠券+心愿单双 tab 新屏）' },
   { app: 'customer', path: '/philia/member', expect: 'sub' },
   { app: 'customer', path: '/philia/moments', expect: 'sub' },
   { app: 'customer', path: '/philia/pets', expect: 'sub' },

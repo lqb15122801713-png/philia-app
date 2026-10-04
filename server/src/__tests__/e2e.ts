@@ -171,8 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 2716 键/63 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63）；
+ *      56.1 种子 2801 键/66 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -211,6 +211,30 @@
  *       （不碰真钱实证）；跨店 NOT_FOUND 不透出
  *   66.2 recordsMine：造本人支付单+商城订单+发票各一 → 聚合三类齐+createdAt 倒序；
  *       他人零透出
+ *
+ * 客户端体验大批 片 3（会员体系 9+商城 5 · server 侧）段（68 会员族 / 69 商城族，
+ * 续号挂尾；券核销=登记制不接真抵扣（开口项 1 裁）；时刻敏感件一律钉时刻）：
+ *   68.1 未用权益：myUnused 次卡余额并显不并账+grants 行；consume 台账核销
+ *        2→1→0→exhausted→归零再核 400（真核销链=结账联动候批，本片不落）
+ *   68.2 续费优惠：端口改 renew_discount_bp=8000 → version+1 留痕 + pay.quote
+ *        renewal=全价×bp/10000 精确到分（19900→15920）；缺键回落 10000=无优惠；复原
+ *   68.3 生日礼：birthday=今日（MMDD 钉 +8 墙钟）用户+宠物 → 直调 sweepBirthdayPerks
+ *        → grants 双行（year/pet_id 入锚）+notifications marketing 行；同年重扫零新增
+ *   68.4 新人礼包：新注册 → welcome_pack 行+营销通知；重复注册零重复；
+ *        首单 paid 翻转（mock-callback 真链）→ upgrade_gift 行；重复回调+次单零重复
+ *   68.5 会员码：openFree→myCardToken 签发→verifyCardToken 通过+planKey 透出；
+ *        篡改签名/过期（signMemberCardPayload 合法签名伪造过期件）400 明文
+ *   69.1 券：领取 claimed+uq 幂等；availableCoupons 门槛过滤；couponUse 核销=
+ *        orders.total_fen/payments 前后零变动仅 grant 翻 used；配额满 400
+ *   69.2 收藏：toggle 幂等（在=删/不在=插）+favList+favCheck 同帧
+ *   69.3 晒单：received 单可评落行+pending 单 400+复评 409+均分聚合（5+3→4.0）
+ *        +匿名匿名录名+他人单 403（订单 received 翻转为夹具直改，不走支付通道）
+ *   69.4 配送：pickup 落列+地址可缺省；缺省 express；express 缺地址 400；读口透出
+ *   69.5 超时收货：shipped_at=8 天前单→直调 sweepAutoReceive 翻 received+OrderReceived
+ *        落 outbox；6 天内不动；重扫零新增+receiveOrder 并发硬拒（条件更新幂等）
+ *   69.6 叠加公示：couponStackRule 缺省 none → config.save 改值→读口即新+留痕行；复原
+ *   69.7 涉钱全件零真通道实证：69 族全链 cashier_bills/payments/rebate_accounts/
+ *        pay_orders 计数前后相等
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -4874,17 +4898,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 2801/66（体验大批片 3 客户端文案批，cpn·fav·rev 等族 85 键/3 域入册） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（2716 键/63 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 2716 && domainSet.size === 63 &&
+  check('56.1 copy 域种子全量落库（2801 键/66 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 2801 && domainSet.size === 66 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（2716 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 2716 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（2801 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 2801 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -6676,6 +6700,407 @@ async function main(): Promise<void> {
   check('66.2 他人零透出（66d 无数据账号读不到 66c 三行任一 id）',
     rec662d.items.every((r) => ![payRow662.id, order662.id, inv662.id].includes(r.id)),
     rec662d.items.length);
+
+  /* ==================================================================
+   * 客户端体验大批 片 3（会员体系+商城 · server 侧）验收段 68/69
+   * 68 会员族：未用权益/续费优惠试算/生日礼/新人礼包+升级礼遇/会员码
+   * 69 商城族：优惠券/收藏/晒单/配送方式/超时自动收货/叠加公示/涉钱零通道
+   * ================================================================== */
+  console.log('\n[片3] 68. 会员族（未用权益/续费优惠/生日礼/新人礼包/会员码）');
+
+  /* ---------- 68.1 未用权益（myUnused 并显不并账 + consume 台账核销） ---------- */
+  console.log('\n[片3] 68.1 未用权益');
+  const reg681 = await devLoginPhone('13966680001');
+  const cookie681 = reg681.cookie!;
+  const user681Id = reg681.body.user!.id!;
+  // 夹具：次卡一张（剩 5 次）+ 次数型权益行（total 3 / remain 2）
+  await db.insert(schema.memberPasses).values({ userId: user681Id, storeId, totalTimes: 10, remainTimes: 5, status: 'active' });
+  const perkRow681 = (await db.insert(schema.memberPerkGrants).values({
+    userId: user681Id, kind: 'service_discount_count', totalCount: 3, remainCount: 2,
+    meta: { note: '【测试】e2e 次数型权益夹具' },
+  }).returning())[0]!;
+  const myUnused681 = await trpcQuery<{
+    passTimes: number; passNote: string;
+    grants: Array<{ id: string; kind: string; remainCount: number | null }>;
+  }>('perk.myUnused', { cookie: cookie681 });
+  check('68.1 myUnused：次卡余额并显（passTimes=5）+ 不并账注记 + grants 含次数型行与注册 welcome_pack 行',
+    myUnused681.passTimes === 5 && myUnused681.passNote.includes('不并账') &&
+      myUnused681.grants.some((g) => g.id === perkRow681.id && g.remainCount === 2) &&
+      myUnused681.grants.some((g) => g.kind === 'welcome_pack'),
+    { passTimes: myUnused681.passTimes, grants: myUnused681.grants.map((g) => g.kind) });
+  // 核销写口（台账先行——真核销链=收银台结账联动候批，本片不落，perks.ts 注释明面）
+  const consume681a = await trpcMutate<{ grant: { remainCount: number | null; status: string } }>(
+    'perk.consume', { cookie: ownerCookie, input: { grantId: perkRow681.id } });
+  const consume681b = await trpcMutate<{ grant: { remainCount: number | null; status: string } }>(
+    'perk.consume', { cookie: ownerCookie, input: { grantId: perkRow681.id } });
+  const consume681c = await asErr(trpcMutate('perk.consume', { cookie: ownerCookie, input: { grantId: perkRow681.id } }));
+  check('68.1 consume 台账核销：2→1→0 翻 exhausted，归零后再核销 400 明文（不碰钱域）',
+    consume681a.grant.remainCount === 1 && consume681a.grant.status === 'granted' &&
+      consume681b.grant.remainCount === 0 && consume681b.grant.status === 'exhausted' &&
+      consume681c instanceof TrpcHttpError && consume681c.httpStatus === 400,
+    { a: consume681a.grant.remainCount, b: consume681b.grant, c: consume681c && consume681c.message });
+
+  /* ---------- 68.2 续费优惠试算（renew_discount_bp 端口读档 + 缺键回落） ---------- */
+  console.log('\n[片3] 68.2 续费优惠试算');
+  const planRow682 = await db.select().from(schema.memberPlans)
+    .where(and(eq(schema.memberPlans.ruleKey, 'plan_yinghuo'), eq(schema.memberPlans.active, true))).get();
+  const origVal682 = planRow682!.valueJson as Record<string, unknown>;
+  const cfgList682 = await trpcQuery<{ currentVersion: number }>('config.list', { cookie: ownerCookie, input: { domain: 'member_plans' } });
+  const save682 = await trpcMutate<{ version: number }>('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'member_plans', changes: [{ ruleKey: 'plan_yinghuo', valueJson: { ...origVal682, renew_discount_bp: 8000 } }] },
+  });
+  const quote682 = await trpcQuery<{ amountFen: number; renewal: { discountBp: number; amountFen: number } | null }>(
+    'pay.quote', { cookie: cookie681, input: { bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, renewal: true } });
+  check('68.2 端口改 renew_discount_bp=8000 → version+1 留痕 + quote renewal=全价×bp/10000 精确到分（19900×0.8=15920）',
+    save682.version === cfgList682.currentVersion + 1 &&
+      quote682.amountFen === 19900 && quote682.renewal?.discountBp === 8000 && quote682.renewal?.amountFen === 15920,
+    { version: [cfgList682.currentVersion, save682.version], renewal: quote682.renewal });
+  const vers682 = await trpcQuery<{ versions: Array<{ changesJson: Array<{ rule_key: string; before: unknown; after: unknown }> }> }>(
+    'config.versions', { cookie: ownerCookie, input: { domain: 'member_plans', limit: 5 } });
+  check('68.2 端口改值留痕行在案（rule_config_versions 含 plan_yinghuo 前后值）',
+    vers682.versions.some((v) => v.changesJson.some((c) => c.rule_key === 'plan_yinghuo')),
+    vers682.versions.length);
+  /* 缺键回落实证：摘键保存 → renewal 按缺省 10000=无优惠（fresh 库/未配档口径） */
+  const noRenewVal682: Record<string, unknown> = { ...origVal682, renew_discount_bp: 8000 };
+  delete noRenewVal682['renew_discount_bp'];
+  await trpcMutate('config.save', { cookie: ownerCookie, input: { domain: 'member_plans', changes: [{ ruleKey: 'plan_yinghuo', valueJson: noRenewVal682 }] } });
+  const quote682b = await trpcQuery<{ amountFen: number; renewal: { discountBp: number; amountFen: number } | null }>(
+    'pay.quote', { cookie: cookie681, input: { bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, renewal: true } });
+  check('68.2 缺键回落 10000=无优惠（renewal.amountFen=全价 19900）',
+    quote682b.renewal?.discountBp === 10000 && quote682b.renewal?.amountFen === 19900, quote682b.renewal);
+  // 复原（段尾复原纪律：恢复原值含 renew_discount_bp=10000）
+  await trpcMutate('config.save', { cookie: ownerCookie, input: { domain: 'member_plans', changes: [{ ruleKey: 'plan_yinghuo', valueJson: origVal682 }] } });
+  const quote682c = await trpcQuery<{ renewal: { discountBp: number; amountFen: number } | null }>(
+    'pay.quote', { cookie: cookie681, input: { bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, renewal: true } });
+  check('68.2 复原后 quote 回种子口径（bp=10000，试算=全价）',
+    quote682c.renewal?.discountBp === 10000 && quote682c.renewal?.amountFen === 19900, quote682c.renewal);
+
+  /* ---------- 68.3 生日礼（滴答扫描→资格行+营销通知；同年重扫零新增） ---------- */
+  console.log('\n[片3] 68.3 生日礼');
+  const { sweepBirthdayPerks } = await import('../routers/perks');
+  // 钉时刻先例：扫描按门店规范时区 +8 的 MM-DD 匹配，夹具生日按同一墙钟钉「今日」
+  const w683 = new Date(Date.now() + 8 * 3600 * 1000);
+  const mmdd683 = `${String(w683.getUTCMonth() + 1).padStart(2, '0')}-${String(w683.getUTCDate()).padStart(2, '0')}`;
+  const year683 = w683.getUTCFullYear();
+  const reg683 = await devLoginPhone('13966680003');
+  const cookie683 = reg683.cookie!;
+  const user683Id = reg683.body.user!.id!;
+  await trpcMutate('auth.updateProfile', { cookie: cookie683, input: { birthday: `1990-${mmdd683}` } });
+  const pet683 = (await db.insert(schema.pets).values({
+    ownerId: user683Id, name: '生日喵', species: 'cat', birthday: `2020-${mmdd683}`,
+  }).returning())[0]!;
+  await sweepBirthdayPerks(db); // 服务级直调（43/55.4 先例；server 30min 滴答同函数）
+  const grants683 = await db.select().from(schema.memberPerkGrants)
+    .where(and(eq(schema.memberPerkGrants.userId, user683Id), inArray(schema.memberPerkGrants.kind, ['birthday_owner', 'birthday_pet'])));
+  const notif683 = (await db.select().from(schema.notifications))
+    .filter((n) => n.userId === user683Id && n.category === 'marketing' && (n.type === 'perk.birthday' || n.type === 'perk.birthday_pet'));
+  check('68.3 birthday=今日（MMDD 匹配）→ grants 双行（birthday_owner year 入锚 + birthday_pet pet_id 入锚）+ notifications marketing 双行',
+    grants683.some((g) => g.kind === 'birthday_owner' && g.year === year683) &&
+      grants683.some((g) => g.kind === 'birthday_pet' && g.petId === pet683.id && g.year === year683) &&
+      notif683.some((n) => n.type === 'perk.birthday') && notif683.some((n) => n.type === 'perk.birthday_pet'),
+    { grants: grants683.map((g) => [g.kind, g.year, g.petId]), notif: notif683.map((n) => n.type) });
+  await sweepBirthdayPerks(db); // 同年重扫
+  const grants683b = await db.select().from(schema.memberPerkGrants)
+    .where(and(eq(schema.memberPerkGrants.userId, user683Id), inArray(schema.memberPerkGrants.kind, ['birthday_owner', 'birthday_pet'])));
+  const notif683b = (await db.select().from(schema.notifications))
+    .filter((n) => n.userId === user683Id && n.category === 'marketing' && (n.type === 'perk.birthday' || n.type === 'perk.birthday_pet'));
+  check('68.3 同年重扫零新增（幂等锚：grants/通知计数全不变）',
+    grants683b.length === grants683.length && notif683b.length === notif683.length,
+    { grants: [grants683.length, grants683b.length], notif: [notif683.length, notif683b.length] });
+
+  /* ---------- 68.4 新人礼包（注册触发）+ 升级礼遇（首单 paid 翻转） ---------- */
+  console.log('\n[片3] 68.4 新人礼包 + 升级礼遇');
+  const reg684 = await devLoginPhone('13966680004');
+  const cookie684 = reg684.cookie!;
+  const user684Id = reg684.body.user!.id!;
+  const welcome684a = await db.select().from(schema.memberPerkGrants)
+    .where(and(eq(schema.memberPerkGrants.userId, user684Id), eq(schema.memberPerkGrants.kind, 'welcome_pack')));
+  const notif684a = (await db.select().from(schema.notifications))
+    .filter((n) => n.userId === user684Id && n.type === 'perk.welcome_pack' && n.category === 'marketing');
+  check('68.4 新注册（devLogin 建档）→ welcome_pack 资格行 + notifications marketing 行（资格留痕不真发）',
+    welcome684a.length === 1 && notif684a.length === 1,
+    { grants: welcome684a.length, notif: notif684a.length });
+  await devLoginPhone('13966680004'); // 重复注册（同号再登录=不重复建档）
+  const welcome684b = await db.select().from(schema.memberPerkGrants)
+    .where(and(eq(schema.memberPerkGrants.userId, user684Id), eq(schema.memberPerkGrants.kind, 'welcome_pack')));
+  check('68.4 重复注册零重复（welcome_pack 仍 1 行）', welcome684b.length === 1, welcome684b.length);
+  const prods684 = await trpcQuery<{ items: Array<{ id: string; priceFen: number; stock: number }> }>(
+    'mall.listProducts', { cookie: cookie684, input: { storeId } });
+  const prod684 = prods684.items.find((p) => p.priceFen > 0 && p.stock > 0)!;
+  check('68.4 夹具：在售商品可取（供 68/69 族共用）', !!prod684, prods684.items.length);
+  const addr684 = { name: '六八四', phone: '13966680004', detail: '测试路 684 号' };
+  const order684a = await trpcMutate<{ id: string; orderNo: string; totalFen: number }>(
+    'mall.createOrder', { cookie: cookie684, input: { items: [{ productId: prod684.id, qty: 1 }], address: addr684 } });
+  const mc684a = await postRaw('/api/pay/mock-callback', { orderId: order684a.id }, {}, cookie684);
+  const gifts684a = await db.select().from(schema.memberPerkGrants)
+    .where(and(eq(schema.memberPerkGrants.userId, user684Id), eq(schema.memberPerkGrants.kind, 'upgrade_gift')));
+  check('68.4 首单 pending→paid 翻转（mock-callback 真回调链）→ upgrade_gift 资格行（source_id=首单 id）',
+    mc684a.status === 200 && gifts684a.length === 1 && gifts684a[0]!.sourceId === order684a.id,
+    { cb: mc684a.status, gifts: gifts684a.map((g) => g.sourceId) });
+  await postRaw('/api/pay/mock-callback', { orderId: order684a.id }, {}, cookie684); // 重复回调
+  const order684b = await trpcMutate<{ id: string }>(
+    'mall.createOrder', { cookie: cookie684, input: { items: [{ productId: prod684.id, qty: 1 }], address: addr684 } });
+  await postRaw('/api/pay/mock-callback', { orderId: order684b.id }, {}, cookie684); // 次单 paid
+  const gifts684b = await db.select().from(schema.memberPerkGrants)
+    .where(and(eq(schema.memberPerkGrants.userId, user684Id), eq(schema.memberPerkGrants.kind, 'upgrade_gift')));
+  check('68.4 重复回调 + 次单 paid 零重复（upgrade_gift 仍 1 行）', gifts684b.length === 1, gifts684b.length);
+
+  /* ---------- 68.5 会员码（签发/核验/篡改/过期） ---------- */
+  console.log('\n[片3] 68.5 会员码');
+  const card685nonMember = await asErr(trpcMutate('membership.myCardToken', { cookie: cookie683 }));
+  check('68.5 非会员签发 → 400 明文「非会员无会员码」',
+    card685nonMember instanceof TrpcHttpError && card685nonMember.httpStatus === 400 && card685nonMember.message.includes('非会员'),
+    card685nonMember && card685nonMember.message);
+  await trpcMutate('membership.openFree', { cookie: cookie684 });
+  const card685 = await trpcMutate<{ token: string; planKey: string; ttlSec: number }>(
+    'membership.myCardToken', { cookie: cookie684 });
+  const verify685 = await trpcMutate<{ userId: string; planKey: string; planLabel: string; membershipStatus: string | null }>(
+    'membership.verifyCardToken', { cookie: ownerCookie, input: { token: card685.token } });
+  check('68.5 myCardToken 签发（5min 时效）→ verifyCardToken 收银台核验通过 + planKey/档名透出（微光）',
+    card685.planKey === 'plan_weiguang' && card685.ttlSec === 300 &&
+      verify685.userId === user684Id && verify685.planKey === 'plan_weiguang' &&
+      verify685.planLabel.includes('微光') && verify685.membershipStatus === 'active',
+    verify685);
+  const tampered685 = card685.token.slice(0, -1) + (card685.token.endsWith('0') ? '1' : '0');
+  const verTamper685 = await asErr(trpcMutate('membership.verifyCardToken', { cookie: ownerCookie, input: { token: tampered685 } }));
+  check('68.5 篡改签名 → 400 明文「签名不符」',
+    verTamper685 instanceof TrpcHttpError && verTamper685.httpStatus === 400 && verTamper685.message.includes('签名不符'),
+    verTamper685 && verTamper685.message);
+  /* 过期件：合法签名+过期 exp（signMemberCardPayload export 复用，仿预约码 signCode 冒烟先例） */
+  const { signMemberCardPayload } = await import('../routers/membership');
+  const expired685 = signMemberCardPayload(user684Id, 'plan_weiguang', Math.floor(Date.now() / 1000) - 10);
+  const verExpired685 = await asErr(trpcMutate('membership.verifyCardToken', { cookie: ownerCookie, input: { token: expired685 } }));
+  check('68.5 过期 token（合法签名）→ 400 明文「已过期」',
+    verExpired685 instanceof TrpcHttpError && verExpired685.httpStatus === 400 && verExpired685.message.includes('已过期'),
+    verExpired685 && verExpired685.message);
+
+  /* ================================================================== */
+  console.log('\n[片3] 69. 商城族（券/收藏/晒单/配送/超时收货/叠加公示/涉钱零通道）');
+
+  /* 69.7 口径基线：69 族全链涉钱四表计数基线（69 族订单夹具一律不走支付通道） */
+  const moneyBefore69 = {
+    cashierBills: (await db.select().from(schema.cashierBills)).length,
+    payments: (await db.select().from(schema.payments)).length,
+    rebateAccounts: (await db.select().from(schema.rebateAccounts)).length,
+    payOrders: (await db.select().from(schema.payOrders)).length,
+  };
+
+  /* ---------- 69.1 优惠券（领取幂等/门槛过滤/核销登记零触碰钱域/配额满 400） ---------- */
+  console.log('\n[片3] 69.1 优惠券');
+  const couponA691 = (await db.insert(schema.coupons).values({
+    title: '满10减5券', amountFen: 500, thresholdFen: 1000, validDays: 30, createdBy: ownerUser!.id,
+  }).returning())[0]!;
+  const couponB691 = (await db.insert(schema.coupons).values({
+    title: '满100减20券', amountFen: 2000, thresholdFen: 10000, validDays: 30, createdBy: ownerUser!.id,
+  }).returning())[0]!;
+  const couponC691 = (await db.insert(schema.coupons).values({
+    title: '限量体验券', amountFen: 100, thresholdFen: 0, validDays: 7, totalQuota: 1, createdBy: ownerUser!.id,
+  }).returning())[0]!;
+  const tpl691 = await trpcQuery<{ items: Array<{ id: string; claimedCount: number }> }>('mall.couponTemplates', { cookie: cookie681 });
+  check('69.1 couponTemplates 在售券模板透出（三券在列）',
+    [couponA691, couponB691, couponC691].every((c) => tpl691.items.some((t) => t.id === c.id)),
+    tpl691.items.length);
+  const claim691a = await trpcMutate<{ grant: { id: string; status: string }; idempotent: boolean }>(
+    'mall.couponClaim', { cookie: cookie684, input: { couponId: couponA691.id } });
+  const claim691dup = await trpcMutate<{ grant: { id: string; status: string }; idempotent: boolean }>(
+    'mall.couponClaim', { cookie: cookie684, input: { couponId: couponA691.id } });
+  check('69.1 领取 → claimed 落行 + uq 锚幂等（重复领=返回现状 idempotent 零新增）',
+    claim691a.grant.status === 'claimed' && claim691a.idempotent === false &&
+      claim691dup.idempotent === true && claim691dup.grant.id === claim691a.grant.id,
+    { a: claim691a.idempotent, dup: claim691dup.idempotent });
+  const avail691 = await trpcQuery<{ items: Array<{ couponId: string }> }>(
+    'mall.availableCoupons', { cookie: cookie684, input: { totalFen: 5000 } });
+  check('69.1 availableCoupons 按门槛过滤（5000 分单：满10减5 在列 / 满100减20 不在列）',
+    avail691.items.some((i) => i.couponId === couponA691.id) && !avail691.items.some((i) => i.couponId === couponB691.id),
+    avail691.items.map((i) => i.couponId));
+  const myCoupons691 = await trpcQuery<{ items: Array<{ id: string; status: string; coupon: { title: string } }> }>(
+    'mall.myCoupons', { cookie: cookie684 });
+  check('69.1 myCoupons 本人台账透出（claimed 行+券模板联表）',
+    myCoupons691.items.some((i) => i.id === claim691a.grant.id && i.status === 'claimed' && i.coupon.title === '满10减5券'),
+    myCoupons691.items.length);
+  /* 核销登记（开口项 1 裁）：仅 grant 翻 used+登记 order_id，orders.total_fen/payments 零变动 */
+  const order691 = await trpcMutate<{ id: string; totalFen: number }>(
+    'mall.createOrder', { cookie: cookie684, input: { items: [{ productId: prod684.id, qty: 1 }], address: addr684 } });
+  const used691 = await trpcMutate<{ grant: { status: string; orderId: string | null }; idempotent: boolean }>(
+    'mall.couponUse', { cookie: cookie684, input: { grantId: claim691a.grant.id, orderId: order691.id } });
+  const order691after = await db.select().from(schema.orders).where(eq(schema.orders.id, order691.id)).get();
+  const payments691now = (await db.select().from(schema.payments)).length;
+  check('69.1 couponUse 核销=仅 grant 翻 used 登记 order_id（orders.total_fen/payments 前后零变动——不接真抵扣实证）',
+    used691.grant.status === 'used' && used691.grant.orderId === order691.id && used691.idempotent === false &&
+      order691after?.totalFen === order691.totalFen && payments691now === moneyBefore69.payments,
+    { grant: used691.grant, totalFen: [order691.totalFen, order691after?.totalFen], payments: [moneyBefore69.payments, payments691now] });
+  const useDup691 = await trpcMutate<{ idempotent: boolean }>(
+    'mall.couponUse', { cookie: cookie684, input: { grantId: claim691a.grant.id, orderId: order691.id } });
+  check('69.1 couponUse 幂等重调=返回现状（idempotent=true）', useDup691.idempotent === true, useDup691);
+  /* 配额闸：quota=1 首领成、次领 400 明文 */
+  const claimC691a = await trpcMutate<{ idempotent: boolean }>(
+    'mall.couponClaim', { cookie: cookie684, input: { couponId: couponC691.id } });
+  const claimC691b = await asErr(trpcMutate('mall.couponClaim', { cookie: cookie681, input: { couponId: couponC691.id } }));
+  check('69.1 配额满 400 明文（quota=1：首领成 / 次领拒「已领完」且事务回滚零落行）',
+    claimC691a.idempotent === false &&
+      claimC691b instanceof TrpcHttpError && claimC691b.code === 'BAD_REQUEST' && claimC691b.message.includes('已领完'),
+    claimC691b && { code: claimC691b.code, message: claimC691b.message });
+
+  /* ---------- 69.2 收藏（toggle 幂等 + favList + favCheck 同帧） ---------- */
+  console.log('\n[片3] 69.2 收藏');
+  const fav692a = await trpcMutate<{ fav: boolean }>('mall.favToggle', { cookie: cookie681, input: { productId: prod684.id } });
+  const favCheck692a = await trpcQuery<{ fav: boolean }>('mall.favCheck', { cookie: cookie681, input: { productId: prod684.id } });
+  const favList692a = await trpcQuery<{ items: Array<{ productId: string; name: string; image: string | null }> }>('mall.favList', { cookie: cookie681 });
+  check('69.2 toggle 收藏 → fav=true + favCheck 同帧 true + favList 含该商品（联表快照透出）',
+    fav692a.fav === true && favCheck692a.fav === true &&
+      favList692a.items.some((i) => i.productId === prod684.id && typeof i.name === 'string'),
+    { fav: fav692a.fav, list: favList692a.items.length });
+  const fav692b = await trpcMutate<{ fav: boolean }>('mall.favToggle', { cookie: cookie681, input: { productId: prod684.id } });
+  const favCheck692b = await trpcQuery<{ fav: boolean }>('mall.favCheck', { cookie: cookie681, input: { productId: prod684.id } });
+  const favList692b = await trpcQuery<{ items: Array<{ productId: string }> }>('mall.favList', { cookie: cookie681 });
+  check('69.2 再 toggle → fav=false（uq 锚幂等删）+ favCheck/favList 同帧',
+    fav692b.fav === false && favCheck692b.fav === false && !favList692b.items.some((i) => i.productId === prod684.id),
+    { fav: fav692b.fav, list: favList692b.items.length });
+  const fav692c = await trpcMutate<{ fav: boolean }>('mall.favToggle', { cookie: cookie681, input: { productId: prod684.id } });
+  const favCheck692c = await trpcQuery<{ fav: boolean }>('mall.favCheck', { cookie: cookie681, input: { productId: prod684.id } });
+  check('69.2 复加 → fav=true（删后重插幂等锚不残留）', fav692c.fav === true && favCheck692c.fav === true, fav692c);
+
+  /* ---------- 69.3 商品评价晒单（received 闸/复评 409/均分聚合/匿名） ---------- */
+  console.log('\n[片3] 69.3 商品评价晒单');
+  const order693a = await trpcMutate<{ id: string }>(
+    'mall.createOrder', { cookie: cookie684, input: { items: [{ productId: prod684.id, qty: 1 }], address: addr684 } });
+  const rvPending693 = await asErr(trpcMutate('mall.reviewProduct', {
+    cookie: cookie684, input: { orderId: order693a.id, productId: prod684.id, rating: 5 },
+  }));
+  check('69.3 pending 单评价 → 400 明文（未收货不可评）',
+    rvPending693 instanceof TrpcHttpError && rvPending693.code === 'BAD_REQUEST' && rvPending693.message.includes('收货'),
+    rvPending693 && rvPending693.message);
+  /* 订单状态翻转=夹具直改（69.7 零真通道口径：不走 mock-callback，payments 零写入） */
+  await db.update(schema.orders).set({ status: 'received' }).where(eq(schema.orders.id, order693a.id));
+  const rv693a = await trpcMutate<{ review: { id: string; rating: number } }>('mall.reviewProduct', {
+    cookie: cookie684, input: { orderId: order693a.id, productId: prod684.id, rating: 5, text: '【测试】很好用', photoUrls: [] },
+  });
+  check('69.3 received 单可评落行（rating=5）', !!rv693a.review.id && rv693a.review.rating === 5, rv693a.review);
+  const rvDup693 = await asErr(trpcMutate('mall.reviewProduct', {
+    cookie: cookie684, input: { orderId: order693a.id, productId: prod684.id, rating: 4 },
+  }));
+  check('69.3 复评 → 409 明文（一单一件一评 uq 锚）',
+    rvDup693 instanceof TrpcHttpError && rvDup693.httpStatus === 409 && rvDup693.code === 'CONFLICT' && rvDup693.message.includes('已评价'),
+    rvDup693 && { status: rvDup693.httpStatus, message: rvDup693.message });
+  const rvOther693 = await asErr(trpcMutate('mall.reviewProduct', {
+    cookie: cookie681, input: { orderId: order693a.id, productId: prod684.id, rating: 1 },
+  }));
+  check('69.3 他人订单评价 → 403（本人闸）',
+    rvOther693 instanceof TrpcHttpError && rvOther693.httpStatus === 403, rvOther693 && rvOther693.httpStatus);
+  const order693b = await trpcMutate<{ id: string }>(
+    'mall.createOrder', { cookie: cookie681, input: { items: [{ productId: prod684.id, qty: 1 }], address: { name: '六八一', phone: '13966680001', detail: '测试路 681 号' } } });
+  await db.update(schema.orders).set({ status: 'received' }).where(eq(schema.orders.id, order693b.id));
+  await trpcMutate('mall.reviewProduct', {
+    cookie: cookie681, input: { orderId: order693b.id, productId: prod684.id, rating: 3, text: '【测试】一般', anonymous: true },
+  });
+  const revs693 = await trpcQuery<{
+    total: number; avgRating: number | null;
+    items: Array<{ rating: number; nickname: string; anonymous: boolean }>;
+  }>('mall.productReviews', { cookie: cookie684, input: { productId: prod684.id } });
+  check('69.3 均分聚合正确（5+3→avg 4.0，total=2）+ 匿名匿名录名（anonymous 行昵称不透出=「匿名用户」）',
+    revs693.total === 2 && revs693.avgRating === 4 &&
+      revs693.items.some((i) => i.anonymous === true && i.nickname === '匿名用户') &&
+      revs693.items.some((i) => i.anonymous === false && i.nickname !== '匿名用户'),
+    { total: revs693.total, avg: revs693.avgRating, items: revs693.items.map((i) => [i.rating, i.nickname, i.anonymous]) });
+
+  /* ---------- 69.4 配送方式（pickup 地址可缺省/缺省 express/读口透出） ---------- */
+  console.log('\n[片3] 69.4 配送方式');
+  const orderPickup694 = await trpcMutate<{ id: string; deliveryMethod: string; address: unknown }>(
+    'mall.createOrder', { cookie: cookie681, input: { items: [{ productId: prod684.id, qty: 1 }], deliveryMethod: 'pickup' } });
+  check('69.4 pickup 落列 + 地址可缺省（address=null）',
+    orderPickup694.deliveryMethod === 'pickup' && orderPickup694.address === null,
+    { dm: orderPickup694.deliveryMethod, addr: orderPickup694.address });
+  const orderExpress694 = await trpcMutate<{ id: string; deliveryMethod: string }>(
+    'mall.createOrder', { cookie: cookie681, input: { items: [{ productId: prod684.id, qty: 1 }], address: { name: '六八一', phone: '13966680001', detail: '测试路 681 号' } } });
+  check('69.4 缺省 express（传地址不带 deliveryMethod）', orderExpress694.deliveryMethod === 'express', orderExpress694.deliveryMethod);
+  const orderNoAddr694 = await asErr(trpcMutate('mall.createOrder', {
+    cookie: cookie681, input: { items: [{ productId: prod684.id, qty: 1 }] },
+  }));
+  check('69.4 express 缺地址 → 400 明文「须填写收货地址」',
+    orderNoAddr694 instanceof TrpcHttpError && orderNoAddr694.code === 'BAD_REQUEST' && orderNoAddr694.message.includes('收货地址'),
+    orderNoAddr694 && orderNoAddr694.message);
+  const myOrders694 = await trpcQuery<{ groups: Record<string, Array<{ id: string; deliveryMethod: string }>> }>(
+    'mall.listMyOrders', { cookie: cookie681 });
+  check('69.4 读口透出（listMyOrders 行带 deliveryMethod：pickup 单=pickup / 缺省单=express）',
+    myOrders694.groups['pending']?.some((o) => o.id === orderPickup694.id && o.deliveryMethod === 'pickup') === true &&
+      myOrders694.groups['pending']?.some((o) => o.id === orderExpress694.id && o.deliveryMethod === 'express') === true,
+    myOrders694.groups['pending']?.length);
+
+  /* ---------- 69.5 超时自动收货（shipped_at 锚 + 端口天数 + 幂等） ---------- */
+  console.log('\n[片3] 69.5 超时自动收货');
+  const { sweepAutoReceive } = await import('../routers/mall');
+  const t695 = Date.now();
+  const order695old = (await db.insert(schema.orders).values({
+    orderNo: `PE2E695A${String(t695).slice(-6)}`, customerId: user681Id, storeId,
+    items: [{ product_id: prod684.id, name: '超时单钉 8 天', quantity: 1, price_fen: 100 }],
+    totalFen: 100, status: 'shipped', trackingNo: 'SF695OLD',
+    shippedAt: new Date(t695 - 8 * 86400e3), // 钉时刻：8 天前发货（> 端口 7 天）
+  }).returning())[0]!;
+  const order695new = (await db.insert(schema.orders).values({
+    orderNo: `PE2E695B${String(t695).slice(-6)}`, customerId: user681Id, storeId,
+    items: [{ product_id: prod684.id, name: '超时单钉 6 天', quantity: 1, price_fen: 100 }],
+    totalFen: 100, status: 'shipped', trackingNo: 'SF695NEW',
+    shippedAt: new Date(t695 - 6 * 86400e3), // 钉时刻：6 天前发货（< 端口 7 天=不动）
+  }).returning())[0]!;
+  await sweepAutoReceive(db); // 服务级直调（server 60s 滴答同函数；69.7 口径=只翻状态不发支付）
+  const order695oldAfter = await db.select().from(schema.orders).where(eq(schema.orders.id, order695old.id)).get();
+  const order695newAfter = await db.select().from(schema.orders).where(eq(schema.orders.id, order695new.id)).get();
+  const ob695 = (await db.select().from(schema.eventOutbox))
+    .filter((r) => r.eventType === 'order.received' && (r.payload as Record<string, unknown>)?.['orderId'] === order695old.id);
+  check('69.5 shipped_at=8 天前单 → 扫描翻 received + OrderReceived 事件落 outbox；7 天内（6 天）单不动',
+    order695oldAfter?.status === 'received' && order695newAfter?.status === 'shipped' && ob695.length === 1,
+    { old: order695oldAfter?.status, new: order695newAfter?.status, outbox: ob695.length });
+  const swept695b = await sweepAutoReceive(db);
+  const recvManual695 = await asErr(trpcMutate('mall.receiveOrder', { cookie: cookie681, input: { orderId: order695old.id } }));
+  check('69.5 幂等：重扫零新增（sweep=0）+ 已翻单 receiveOrder 并发硬拒 400（条件更新互撞零副作用）',
+    swept695b === 0 && recvManual695 instanceof TrpcHttpError && recvManual695.code === 'BAD_REQUEST',
+    { swept: swept695b, manual: recvManual695 && recvManual695.message });
+  /* 物流半程注记：已发货单读口 trackingNote 透出 */
+  const myOrders695 = await trpcQuery<{ groups: Record<string, Array<{ id: string; trackingNo: string | null; trackingNote?: string | null }>> }>(
+    'mall.listMyOrders', { cookie: cookie681 });
+  const shippedRow695 = myOrders695.groups['shipped']?.find((o) => o.id === order695new.id);
+  check('69.5 物流半程注记透出（shipped 单 trackingNote=「物流轨迹以快递公司为准」）',
+    shippedRow695?.trackingNote === '物流轨迹以快递公司为准', shippedRow695?.trackingNote);
+
+  /* ---------- 69.6 券叠加规则公示（端口改值→读口即新+留痕行） ---------- */
+  console.log('\n[片3] 69.6 券叠加规则公示');
+  const rule696a = await trpcQuery<{ rule: string; note: string; source: string }>('mall.couponStackRule', { cookie: cookie681 });
+  check('69.6 缺省公示口径（rule=none + note + source 明面）',
+    rule696a.rule === 'none' && rule696a.note.includes('不与会员折扣叠加') && rule696a.source === 'service_rules.coupon_stack_rule',
+    rule696a);
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'service', changes: [{ ruleKey: 'coupon_stack_rule', valueJson: { rule: 'with_member_discount', note: '【测试】e2e 端口改值：可与会员折扣叠加' } }] },
+  });
+  const rule696b = await trpcQuery<{ rule: string }>('mall.couponStackRule', { cookie: cookie681 });
+  const vers696 = await trpcQuery<{ versions: Array<{ changesJson: Array<{ rule_key: string }> }> }>(
+    'config.versions', { cookie: ownerCookie, input: { domain: 'service', limit: 5 } });
+  check('69.6 端口改值 → 读口即新（rule=with_member_discount）+ 留痕行在案',
+    rule696b.rule === 'with_member_discount' &&
+      vers696.versions.some((v) => v.changesJson.some((c) => c.rule_key === 'coupon_stack_rule')),
+    { rule: rule696b.rule, vers: vers696.versions.length });
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'service', changes: [{ ruleKey: 'coupon_stack_rule', valueJson: { rule: 'none', note: '优惠券不与会员折扣叠加；每单限用 1 张（公示口径）' } }] },
+  });
+  const rule696c = await trpcQuery<{ rule: string }>('mall.couponStackRule', { cookie: cookie681 });
+  check('69.6 复原公示口径（rule=none）', rule696c.rule === 'none', rule696c);
+
+  /* ---------- 69.7 涉钱全件零真通道实证 ---------- */
+  console.log('\n[片3] 69.7 涉钱零真通道');
+  const moneyAfter69 = {
+    cashierBills: (await db.select().from(schema.cashierBills)).length,
+    payments: (await db.select().from(schema.payments)).length,
+    rebateAccounts: (await db.select().from(schema.rebateAccounts)).length,
+    payOrders: (await db.select().from(schema.payOrders)).length,
+  };
+  check('69.7 69 族全链 cashier_bills/payments/rebate_accounts/pay_orders 计数前后相等（券/收藏/晒单/配送/超时收货零真通道）',
+    moneyAfter69.cashierBills === moneyBefore69.cashierBills &&
+      moneyAfter69.payments === moneyBefore69.payments &&
+      moneyAfter69.rebateAccounts === moneyBefore69.rebateAccounts &&
+      moneyAfter69.payOrders === moneyBefore69.payOrders,
+    { before: moneyBefore69, after: moneyAfter69 });
 
   client.close();
 }

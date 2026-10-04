@@ -89,6 +89,7 @@ const ROUTES = [
   { app: 'customer', path: '/philia/moments', anchors: ['服务相册', '相册'], note: 'A4 白屏群' },
   // U1-H：会员卡页新路由（任务书许可补充锚点行，PR 注明）；R11b：Q-01 码屏重构，锚点改「会员码」
   { app: 'customer', path: '/me/card', anchors: ['会员码'], serverDep: true, note: 'U1-H 新路由；R11b Q-01 重构换锚' },
+  { app: 'customer', path: '/me/coupons', anchors: ['优惠券'], serverDep: true, note: '客户端体验大批 片 3（优惠券+心愿单双 tab 新屏；锚点=页题）' },
   { app: 'customer', path: '/member', anchors: ['会员'], serverDep: true, note: '批次 R11a' },
   { app: 'customer', path: '/member/open', anchors: ['开通会员'], serverDep: true, note: '批次 R11a' },
   { app: 'customer', path: '/member/rebate', anchors: ['回馈金'], serverDep: true, note: '批次 R11b 新路由申报（W-01）' },

@@ -8,32 +8,196 @@
  * - 底部吸底栏（详情级无 dock，落底 safe-area）：数量步进 +「加入购物袋」+「立即购买」；
  * - 单店限制：跨店加车返回 conflict → ConfirmSheet 确认「清空原购物车」→ replaceWith
  *   （对齐服务端 createOrder 的 BAD_REQUEST 口径）。
+ *
+ * 客户端体验大批 片 3：图区右上角收藏钮（favToggle 幂等，已收藏实色）+ 描述卡后
+ * 「商品评价」区（productReviews 列表+均分+晒单图墙+写评价弹层——仅 received 订单
+ * 可评，订单列表「写评价」入口带 reviewOrderId 直入；晒图走既有 /api/upload 链
+ * relDir='review/product' ≤3 张）。
  */
 
 import { Skeleton, slotContentOf, resolveSlotUrl, usePhiliaClient } from '@philia/shared';
-import { useQuery } from '@tanstack/react-query';
-import { Minus, Plus, Store } from 'lucide-react';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Heart, Minus, Plus, Star, Store } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { BackButton } from '../components/PageHeader';
 import { CartProvider, MAX_QTY, useCart, type AddInput } from '../components/mall/cartStore';
 import ConfirmSheet from '../components/mall/ConfirmSheet';
 import { fenToYuan } from '../components/mall/format';
-import { friendlyError, useToast } from '@philia/shared';
+import { friendlyError, getApiBase, uploadImage, useToast } from '@philia/shared';
 import ProductImage from '../components/mall/ProductImage';
+import { Sheet } from '../components/member/v2';
+import { fmtDateTime } from '../components/account/common';
 import { mlc } from '../copy/mall';
 import { mc } from '../components/member/copy';
+import { fvc } from '../copy/favorites';
+import { rvc } from '../copy/productReviews';
+
+type Trpc = ReturnType<typeof usePhiliaClient>['trpc'];
+type ReviewRow = Awaited<ReturnType<Trpc['mall']['productReviews']['query']>>['items'][number];
+
+/* 片 3：评价星级行（只读展示件；晒单评分 1-5） */
+function Stars({ n, className = '' }: { n: number; className?: string }) {
+  return (
+    <span className={`inline-flex items-center gap-0.5 ${className}`} aria-label={`${n} 分`}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star
+          key={i}
+          className={`h-3.5 w-3.5 ${i <= n ? 'fill-brand-primary text-brand-primary' : 'text-line-ring'}`}
+          strokeWidth={1.5}
+        />
+      ))}
+    </span>
+  );
+}
+
+/* 片 3：写评价弹层（仅 received 订单可评；晒图走既有 /api/upload 链 ≤3 张） */
+function ReviewSheet({
+  open,
+  orderId,
+  productId,
+  showToast,
+  onClose,
+  onDone,
+}: {
+  open: boolean;
+  orderId: string | null;
+  productId: string;
+  showToast: (msg: string, kind?: 'info' | 'error') => void;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const { trpc } = usePhiliaClient();
+  const [rating, setRating] = useState(5);
+  const [text, setText] = useState('');
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [anonymous, setAnonymous] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement | null>(null);
+
+  const submitM = useMutation({
+    mutationFn: () =>
+      trpc.mall.reviewProduct.mutate({
+        orderId: orderId!,
+        productId,
+        rating,
+        text: text.trim() || undefined,
+        photoUrls: photos.length > 0 ? photos : undefined,
+        anonymous: anonymous || undefined,
+      }),
+    onSuccess: () => {
+      showToast(rvc('rev.toastOk'), 'info');
+      onDone();
+      onClose();
+    },
+    onError: (err) => showToast(friendlyError(err, rvc('rev.submitFail'), 80), 'error'),
+  });
+
+  const onPickPhoto = async (file: File) => {
+    setUploading(true);
+    try {
+      const up = await uploadImage(getApiBase(), file, 'review/product');
+      setPhotos((p) => [...p, up.url].slice(0, 3));
+    } catch (e) {
+      showToast(friendlyError(e, '上传失败，请稍后再试', 80), 'error');
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
+    }
+  };
+
+  return (
+    <Sheet open={open} onClose={onClose} title={rvc('rev.sheetTitle')}>
+      <div className="mt-3">
+        <p className="mb-1.5 font-number text-v2-trace text-ink-secondary">{rvc('rev.ratingLabel')}</p>
+        <div className="flex gap-1.5" data-testid="review-rating">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <button key={i} type="button" aria-label={`${i} 分`} onClick={() => setRating(i)} className="p-1">
+              <Star
+                className={`h-6 w-6 ${i <= rating ? 'fill-brand-primary text-brand-primary' : 'text-line-ring'}`}
+                strokeWidth={1.5}
+              />
+            </button>
+          ))}
+        </div>
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={rvc('rev.textPlaceholder')}
+          maxLength={500}
+          rows={3}
+          className="mt-3 w-full resize-none rounded-input border border-line bg-canvas px-3.5 py-2.5 text-body outline-none transition placeholder:text-ink-placeholder focus:border-ink"
+        />
+        {/* 晒图（≤3 张，既有 /api/upload 链 relDir='review/product'） */}
+        <div className="mt-3 flex items-center gap-2">
+          {photos.map((u, i) => (
+            <button
+              key={u}
+              type="button"
+              aria-label={`删除晒图 ${i + 1}`}
+              onClick={() => setPhotos((p) => p.filter((x) => x !== u))}
+              className="relative"
+            >
+              <ProductImage src={u} alt="" className="h-14 w-14 rounded-control" />
+            </button>
+          ))}
+          {photos.length < 3 ? (
+            <button
+              type="button"
+              disabled={uploading}
+              onClick={() => fileRef.current?.click()}
+              data-testid="review-photo-add"
+              className="u1-ring flex h-14 w-14 flex-col items-center justify-center rounded-control bg-card text-caption-xs text-ink-secondary"
+            >
+              <Plus className="h-4 w-4" strokeWidth={1.8} />
+              {rvc('rev.photoAdd')}
+            </button>
+          ) : null}
+          <span className="ml-auto font-number text-[9.5px] text-ink-placeholder">{rvc('rev.photoLimit')}</span>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void onPickPhoto(f);
+            }}
+          />
+        </div>
+        <label className="mt-3 flex items-center gap-2 text-caption text-ink-secondary">
+          <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
+          {rvc('rev.anonymous')}
+        </label>
+        <button
+          type="button"
+          disabled={!orderId || submitM.isPending || uploading}
+          onClick={() => submitM.mutate()}
+          data-testid="review-submit"
+          className="mt-4 flex w-full items-center justify-center rounded-[18px] bg-[#2E2318] py-3 text-body font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
+        >
+          {submitM.isPending ? rvc('rev.submitting') : rvc('rev.submit')}
+        </button>
+      </div>
+    </Sheet>
+  );
+}
 
 function DetailInner() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { trpc } = usePhiliaClient();
+  const queryClient = useQueryClient();
   const cart = useCart();
   const { toastEl, showToast } = useToast({ durationMs: 3200 });
 
   const [qty, setQty] = useState(1);
   const [slide, setSlide] = useState(0);
   const [pendingAdd, setPendingAdd] = useState<AddInput | null>(null); // 跨店冲突待确认
+  /* 片 3：写评价弹层（订单列表「写评价」入口带 reviewOrderId 直入——初始即开，免 effect 级联） */
+  const reviewEntryOrderId = (location.state as { reviewOrderId?: string } | null)?.reviewOrderId ?? null;
+  const [reviewOpen, setReviewOpen] = useState(() => reviewEntryOrderId !== null);
   const trackRef = useRef<HTMLDivElement | null>(null);
 
   const productQ = useQuery({
@@ -42,6 +206,49 @@ function DetailInner() {
     enabled: !!id,
     retry: false,
   });
+
+  /* 片 3：收藏钮（favCheck 初态 + favToggle 幂等；已收藏实色） */
+  const favQ = useQuery({
+    queryKey: ['mall', 'favCheck', id],
+    queryFn: () => trpc.mall.favCheck.query({ productId: id! }),
+    enabled: !!id,
+    retry: false,
+  });
+  const faved = favQ.data?.fav ?? false;
+  const favM = useMutation({
+    mutationFn: () => trpc.mall.favToggle.mutate({ productId: id! }),
+    onSuccess: (r) => {
+      showToast(r.fav ? fvc('fav.addToast') : fvc('fav.removeToast'), 'info');
+      void queryClient.invalidateQueries({ queryKey: ['mall', 'favCheck', id] });
+      void queryClient.invalidateQueries({ queryKey: ['mall', 'favList'] });
+    },
+    onError: (err) => showToast(friendlyError(err, fvc('fav.toggleFail'), 80), 'error'),
+  });
+
+  /* 片 3：商品评价区（productReviews 列表+均分+晒单图墙；page 分页加载更多） */
+  const reviewsQ = useInfiniteQuery({
+    queryKey: ['mall', 'productReviews', id],
+    queryFn: ({ pageParam }) => trpc.mall.productReviews.query({ productId: id!, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (last) => (last.page * last.pageSize < last.total ? last.page + 1 : undefined),
+    enabled: !!id,
+    retry: false,
+  });
+  const reviewRows: ReviewRow[] = reviewsQ.data?.pages.flatMap((p) => p.items) ?? [];
+  const reviewAvg = reviewsQ.data?.pages[0]?.avgRating ?? null;
+  const reviewCount = reviewsQ.data?.pages[0]?.total ?? 0;
+
+  /* 片 3：写评价闸=仅 received 订单可评（一单一件一评；listMyOrders 同源找可评单） */
+  const ordersQ = useQuery({
+    queryKey: ['mall', 'listMyOrders'],
+    queryFn: () => trpc.mall.listMyOrders.query(),
+    retry: false,
+  });
+  const eligibleOrder = (
+    (ordersQ.data?.groups as Record<string, Array<{ id: string; items: Array<{ product_id: string }> }>> | undefined)
+      ?.received ?? []
+  ).find((o) => o.items.some((it) => it.product_id === id));
+  const reviewOrderId = reviewEntryOrderId ?? eligibleOrder?.id ?? null;
 
   const product = productQ.data?.product;
   const storeName = productQ.data?.storeName ?? '菲丽亚门店';
@@ -155,6 +362,21 @@ function DetailInner() {
           </div>
           {/* 返回按钮（U1-A：统一圆钮 36px，主图场景保持浮动形态） */}
           <BackButton className="absolute left-3 top-3" />
+          {/* 片 3：收藏钮（图区右上角 36 圆白卡；favToggle 幂等，已收藏实色） */}
+          <button
+            type="button"
+            aria-label={faved ? fvc('fav.pdpAdded') : fvc('fav.pdpAdd')}
+            aria-pressed={faved}
+            disabled={favM.isPending}
+            onClick={() => favM.mutate()}
+            data-testid="pdp-fav"
+            className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-card/95 ring-1 ring-line-ring transition-transform duration-120 ease-philia-spring active:scale-90"
+          >
+            <Heart
+              className={`h-[18px] w-[18px] ${faved ? 'fill-brand-primary text-brand-primary' : 'text-ink'}`}
+              strokeWidth={1.6}
+            />
+          </button>
           {/* 圆点指示 */}
           {images.length > 1 ? (
             <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
@@ -218,7 +440,7 @@ function DetailInner() {
           </Link>
         ) : null}
 
-        {/* 详情描述（真实字段；试样规格表/评价区无真实字段来源，不出——U4-D3 登记；
+        {/* 详情描述（真实字段；试样规格表无真实字段来源，不出——U4-D3 登记；
             片 2 M-02：截面题 16/800） */}
         {product.description ? (
           <>
@@ -232,6 +454,84 @@ function DetailInner() {
             </div>
           </>
         ) : null}
+
+        {/* 片 3：商品评价区（描述卡后；productReviews 列表+均分+晒单图墙+写评价入口——
+            写评价闸=仅 received 订单可评，无可评单=诚实注记不画假入口） */}
+        <div className="mb-3 mt-6 flex items-baseline justify-between">
+          <h2 className="text-v2-section">{rvc('rev.title')}</h2>
+          {reviewCount > 0 && reviewAvg !== null ? (
+            <span className="flex items-center gap-1.5 font-number text-[10px] text-ink-secondary">
+              <Stars n={Math.round(reviewAvg)} />
+              {rvc('rev.summary', { avg: reviewAvg.toFixed(1), count: reviewCount })}
+            </span>
+          ) : null}
+        </div>
+        <div className="u1-card p-4" data-testid="pdp-reviews">
+          {reviewsQ.isPending ? (
+            <Skeleton className="h-16 rounded-control" />
+          ) : reviewsQ.isError ? (
+            <button type="button" className="text-caption text-ink-secondary" onClick={() => void reviewsQ.refetch()}>
+              {rvc('rev.loadFail')}
+            </button>
+          ) : reviewRows.length === 0 ? (
+            <p className="text-caption text-ink-placeholder">{rvc('rev.empty')}</p>
+          ) : (
+            <div className="space-y-3.5">
+              {reviewRows.map((r) => (
+                <div key={r.id} data-testid={`review-${r.id}`}>
+                  <div className="flex items-center gap-2">
+                    <Stars n={r.rating} />
+                    <span className="text-caption-xs font-semibold text-ink">
+                      {/* server 匿名录名口径：anonymous=「匿名用户」，昵称不透出 */}
+                      {r.nickname}
+                    </span>
+                    <span className="ml-auto font-number text-[9.5px] text-ink-placeholder">
+                      {fmtDateTime(r.createdAt)}
+                    </span>
+                  </div>
+                  {r.text ? (
+                    <p className="mt-1 whitespace-pre-line text-body-sm leading-relaxed text-ink-secondary">{r.text}</p>
+                  ) : null}
+                  {/* 晒单图墙 */}
+                  {r.photoUrls.length > 0 ? (
+                    <div className="mt-1.5 flex gap-1.5">
+                      {r.photoUrls.map((u) => (
+                        <ProductImage key={u} src={u} alt="" className="h-14 w-14 rounded-control" />
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+              {reviewsQ.hasNextPage ? (
+                <button
+                  type="button"
+                  disabled={reviewsQ.isFetchingNextPage}
+                  onClick={() => void reviewsQ.fetchNextPage()}
+                  className="w-full text-center text-caption font-medium text-ink-secondary"
+                >
+                  {rvc('rev.more')}
+                </button>
+              ) : null}
+            </div>
+          )}
+          {/* 写评价入口（仅 received 订单可评；无单=注记） */}
+          <div className="mt-3 border-t border-line-divider pt-3">
+            {reviewOrderId ? (
+              <button
+                type="button"
+                onClick={() => setReviewOpen(true)}
+                data-testid="pdp-review-entry"
+                className="rounded-full bg-brand-primary px-4 py-2 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+              >
+                {rvc('rev.writeCta')}
+              </button>
+            ) : (
+              <p className="text-caption text-ink-placeholder" data-testid="pdp-review-need">
+                {rvc('rev.needReceived')}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* 吸底 CTA（片 2 M-02 定稿 ctabar：渐出底 linear-gradient(transparent→纸白 40%)、
@@ -306,6 +606,16 @@ function DetailInner() {
           }
           setPendingAdd(null);
         }}
+      />
+
+      {/* 片 3：写评价弹层（仅 received 订单可评，一单一件一评） */}
+      <ReviewSheet
+        open={reviewOpen}
+        orderId={reviewOrderId}
+        productId={product.id}
+        showToast={showToast}
+        onClose={() => setReviewOpen(false)}
+        onDone={() => void reviewsQ.refetch()}
       />
     </div>
   );

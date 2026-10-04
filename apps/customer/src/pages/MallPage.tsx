@@ -23,6 +23,7 @@ import { useToast } from '@philia/shared';
 import { CartProvider, useCart, type AddInput } from '../components/mall/cartStore';
 import { fenToYuan } from '../components/mall/format';
 import { mlc } from '../copy/mall';
+import { fvc } from '../copy/favorites';
 import ProductImage from '../components/mall/ProductImage';
 
 const CATEGORIES = ['全部', '主粮', '零食', '玩具', '清洁', '其他'] as const;
@@ -234,8 +235,18 @@ function MallInner() {
       </div>
 
       <div className="px-[22px] pt-1">
-      {/* 购物袋入口（头部右上，试样 07 细线 pill） */}
-      <div className="mt-3 flex items-center justify-end">
+      {/* 购物袋入口（头部右上，试样 07 细线 pill）+ 片 3 心愿单入口链（→/me/coupons?tab=favs） */}
+      <div className="mt-3 flex items-center justify-end gap-2">
+        <Link
+          to="/me/coupons?tab=favs"
+          data-testid="mall-fav-entry"
+          className="u1-ring flex h-9 items-center gap-1.5 rounded-full bg-card px-3.5 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4 text-brand-primary" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 20s-7-4.3-9-9a5 5 0 019-4 5 5 0 019 4c-2 4.7-9 9-9 9z" />
+          </svg>
+          {fvc('fav.mallEntry')}
+        </Link>
         <CartLink />
       </div>
 

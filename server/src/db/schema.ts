@@ -643,6 +643,10 @@ export const orders = sqliteTable('orders', {
   status: text('status').notNull().default('pending'),
   /** 快递单号 */
   trackingNo: text('tracking_no'),
+  /** 配送方式（体验大批片 3 · 0040：express 快递|same_city 同城|pickup 自提；默认 express 存量零破坏） */
+  deliveryMethod: text('delivery_method').notNull().default('express'),
+  /** 发货时刻（超时自动收货锚=shipped_at+order_auto_receive_days 端口值） */
+  shippedAt: integer('shipped_at', { mode: 'timestamp' }),
   ...auditColumns,
 });
 
@@ -3418,5 +3422,111 @@ export const depositRecords = sqliteTable(
   (t) => [
     index('ix_deposit_records_customer').on(t.customerId, t.status),
     index('ix_deposit_records_store').on(t.storeId, t.status),
+  ],
+);
+
+/* ==================== 客户端体验大批 片 3（会员体系+商城，迁移 0040） ==================== */
+
+/** 会员权益台账（片 3：未用权益+生日礼+新人礼包+升级礼遇共用；发放=资格留痕不真发，候资质批） */
+export const memberPerkGrants = sqliteTable(
+  'member_perk_grants',
+  {
+    id: id(),
+    userId: text('user_id').notNull().references(() => users.id),
+    /** 权益类：service_discount_count（服务折扣次数）| care_package（安心包）| birthday_owner | birthday_pet | welcome_pack | upgrade_gift */
+    kind: text('kind').notNull(),
+    storeId: text('store_id').references(() => stores.id),
+    /** 次数型权益：总数/剩余（生日/礼包类=NULL） */
+    totalCount: integer('total_count'),
+    remainCount: integer('remain_count'),
+    /** 来源锚（单号/宠物 id 等） */
+    sourceId: text('source_id'),
+    /** 生日礼年度幂等锚（year+pet_id 入唯一索引） */
+    year: integer('year'),
+    petId: text('pet_id').references(() => pets.id),
+    /** 状态：granted | exhausted | voided */
+    status: text('status').notNull().default('granted'),
+    meta: text('meta', { mode: 'json' }).$type<Record<string, unknown>>(),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_perk_grants_user').on(t.userId, t.kind, t.status),
+    uniqueIndex('uq_perk_grants_birthday').on(t.userId, t.kind, t.year, t.petId),
+  ],
+);
+
+/** 优惠券模板（片 3：面额/门槛/有效天数/叠加规则/配额；store_id NULL=全场） */
+export const coupons = sqliteTable(
+  'coupons',
+  {
+    id: id(),
+    storeId: text('store_id').references(() => stores.id),
+    title: text('title').notNull(),
+    amountFen: integer('amount_fen').notNull(),
+    thresholdFen: integer('threshold_fen').notNull().default(0),
+    validDays: integer('valid_days').notNull(),
+    /** 叠加规则：none（不与会员折扣叠加）| with_member_discount */
+    stackRule: text('stack_rule').notNull().default('none'),
+    totalQuota: integer('total_quota'),
+    status: text('status').notNull().default('on'),
+    createdBy: text('created_by').notNull().references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_coupons_store').on(t.storeId, t.status)],
+);
+
+/**
+ * 优惠券领用台账（片 3 · 开口项 1 裁：不接真抵扣结算）：
+ * 状态机 claimed→used|expired|voided；used 仅登记 order_id（orders/payments 零触碰）。
+ */
+export const couponGrants = sqliteTable(
+  'coupon_grants',
+  {
+    id: id(),
+    couponId: text('coupon_id').notNull().references(() => coupons.id),
+    userId: text('user_id').notNull().references(() => users.id),
+    status: text('status').notNull().default('claimed'),
+    claimedAt: integer('claimed_at', { mode: 'timestamp' }),
+    usedAt: integer('used_at', { mode: 'timestamp' }),
+    /** 登记用（核销留痕），不碰订单金额 */
+    orderId: text('order_id').references(() => orders.id),
+    ...auditColumns,
+  },
+  (t) => [
+    uniqueIndex('uq_coupon_grants_user_coupon').on(t.couponId, t.userId),
+    index('ix_coupon_grants_user').on(t.userId, t.status),
+  ],
+);
+
+/** 收藏/心愿单（片 3：(user_id,product_id) 唯一锚幂等） */
+export const favorites = sqliteTable(
+  'favorites',
+  {
+    id: id(),
+    userId: text('user_id').notNull().references(() => users.id),
+    productId: text('product_id').notNull().references(() => products.id),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  },
+  (t) => [uniqueIndex('uq_favorites_user_product').on(t.userId, t.productId)],
+);
+
+/** 商品评价晒单（片 3：挂 order_id+product_id 一单一件一评；与服务评价域分键不混 reviews） */
+export const productReviews = sqliteTable(
+  'product_reviews',
+  {
+    id: id(),
+    orderId: text('order_id').notNull().references(() => orders.id),
+    productId: text('product_id').notNull().references(() => products.id),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    customerId: text('customer_id').notNull().references(() => users.id),
+    rating: integer('rating').notNull(),
+    text: text('text'),
+    photoUrls: text('photo_urls', { mode: 'json' }).$type<string[]>().notNull().default([]),
+    anonymous: integer('anonymous', { mode: 'boolean' }).notNull().default(false),
+    ...auditColumns,
+  },
+  (t) => [
+    uniqueIndex('uq_product_reviews_order_product').on(t.orderId, t.productId),
+    index('ix_product_reviews_product').on(t.productId, t.createdAt),
   ],
 );

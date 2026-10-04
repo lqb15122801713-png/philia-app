@@ -30,6 +30,7 @@ import { membershipRouter } from './membership';
 import { passRouter } from './pass';
 import { payRouter } from './pay';
 import { payrollRouter } from './payroll';
+import { perkRouter } from './perks';
 import { petRouter } from './pet';
 import { pushRouter } from './push';
 import { refundRouter } from './refund';
@@ -81,6 +82,7 @@ export const appRouter = router({
   address: addressRouter, // 客户端体验大批片 1：收货地址 CRUD+默认（本人闸，默认唯一应用层保）
   invoiceTitle: invoiceTitleRouter, // 客户端体验大批片 1：发票抬头 CRUD+默认（business 须税号；发票申请可选引用=前端活）
   deposit: depositRouter, // 客户端体验大批片 1：押金台账（留痕不碰真钱·开口项 2 裁：held→refunding→refunded 登记制，零支付通道写）
+  perk: perkRouter, // 客户端体验大批片 3：会员权益台账（未用权益并显/核销写口台账先行/生日礼/新人礼包/升级礼遇）
 });
 
 /** 前端 tRPC client 的类型锚点（仅类型导出，无运行时开销） */

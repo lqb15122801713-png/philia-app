@@ -40,6 +40,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { and, desc, eq, gte, inArray, isNotNull, isNull, lt, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
@@ -404,6 +405,48 @@ async function quoteUpgrade(
 }
 
 const MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+/* ------------------------------------------------------------------ */
+/* 片 3：会员码签发/核验（HMAC token，时效 5min）                            */
+/* ------------------------------------------------------------------ */
+
+/** 会员码签名密钥（内测口径：仓内常量缺省，生产经环境变量覆盖——仿 IMG_SECRET /
+ *  BOOKING_CODE_SECRET 纪律；哈希不留明文同 verificationCodes 哈希纪律） */
+const MEMBER_CARD_SECRET = process.env.MEMBER_CARD_SECRET ?? 'philia-dev-member-card-secret-do-not-use-in-prod';
+/** 会员码时效：5 分钟（超时须客户重新出示） */
+export const MEMBER_CARD_TTL_SEC = 300;
+
+/** 会员码签发（纯函数，供 myCardToken 与 e2e 过期件伪造复用）：
+ *  token = base64url(`${uid}|${planKey}|${exp}`) + '.' + hmac_sha256_hex(payload) */
+export function signMemberCardPayload(uid: string, planKey: string, expSec: number): string {
+  const payload = Buffer.from(`${uid}|${planKey}|${expSec}`, 'utf8').toString('base64url');
+  const sig = createHmac('sha256', MEMBER_CARD_SECRET).update(payload).digest('hex');
+  return `${payload}.${sig}`;
+}
+
+/** 会员码验签+解析（纯函数）：结构/签名/时效三闸；失败抛 400 明文（篡改/过期分明） */
+function parseMemberCardToken(token: string): { uid: string; planKey: string; expSec: number } {
+  const dot = token.lastIndexOf('.');
+  if (dot <= 0) badRequest('会员码格式不正确，请客户重新出示');
+  const payload = token.slice(0, dot);
+  const sig = token.slice(dot + 1);
+  if (!/^[0-9a-f]{64}$/.test(sig)) badRequest('会员码格式不正确，请客户重新出示');
+  const expected = Buffer.from(createHmac('sha256', MEMBER_CARD_SECRET).update(payload).digest('hex'), 'utf8');
+  const actual = Buffer.from(sig, 'utf8');
+  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
+    badRequest('会员码校验失败（签名不符，可能被篡改），请客户重新出示');
+  }
+  const raw = Buffer.from(payload, 'base64url').toString('utf8');
+  const parts = raw.split('|');
+  const expSec = Number(parts[2]);
+  if (parts.length !== 3 || !parts[0] || !parts[1] || !Number.isInteger(expSec)) {
+    badRequest('会员码格式不正确，请客户重新出示');
+  }
+  if (expSec < Math.floor(Date.now() / 1000)) {
+    badRequest('会员码已过期（5 分钟时效），请客户重新出示');
+  }
+  return { uid: parts[0]!, planKey: parts[1]!, expSec };
+}
 
 export const membershipRouter = router({
   /**
@@ -1139,6 +1182,48 @@ export const membershipRouter = router({
       totalFen: rebateSettledFen + serviceDiscountFen,
     };
   }),
+
+  /**
+   * myCardToken（customer 本人 · 片 3）：会员码签发——
+   * token=base64url(`{uid}|{planKey}|{exp}`)+'.'+hmac_sha256_hex(payload)（仓内常量
+   * 缺省密钥，内测口径明面注记，仿 verificationCodes 哈希纪律/预约码签名同族工艺），
+   * 时效 5 分钟；本人 active 会员才签发（非会员/冻结明文拒）。
+   */
+  myCardToken: customerProcedure.mutation(async ({ ctx }) => {
+    const now = new Date();
+    const m = await currentMembership(ctx.db, ctx.user.id, now);
+    if (!m) badRequest('非会员无会员码，请先开通会员');
+    if (m.status !== 'active') badRequest('会员已冻结或已退会，会员码不可用（续费解冻后可出示）');
+    const expSec = Math.floor(now.getTime() / 1000) + MEMBER_CARD_TTL_SEC;
+    return {
+      token: signMemberCardPayload(ctx.user.id, m.planKey, expSec),
+      planKey: m.planKey,
+      expiresAt: new Date(expSec * 1000),
+      ttlSec: MEMBER_CARD_TTL_SEC,
+    };
+  }),
+
+  /**
+   * verifyCardToken（merchantManager 收银台核验口 · 片 3）：验签+时效+档透出。
+   * 篡改（签名不符）/过期/畸形一律 400 明文；通过后透出 uid+planKey+档位名+
+   * 当前会员状态（核销/权益使用以本口透出档位为准，签后状态变更以库为准）。
+   */
+  verifyCardToken: merchantManagerProcedure
+    .input(z.object({ token: z.string().min(1).max(512) }))
+    .mutation(async ({ ctx, input }) => {
+      const claims = parseMemberCardToken(input.token);
+      const now = new Date();
+      const m = await currentMembership(ctx.db, claims.uid, now);
+      const plans = await loadMemberPlans(ctx.db);
+      const plan = plans.get(claims.planKey);
+      return {
+        userId: claims.uid,
+        planKey: claims.planKey,
+        planLabel: plan?.label ?? claims.planKey,
+        membershipStatus: m?.status ?? null, // 签发后状态变更（退会/冻结）以库为准透出
+        expiresAt: new Date(claims.expSec * 1000),
+      };
+    }),
 
   /**
    * cancel（manager|owner · 任务书 §六 退会审批档）：退会。

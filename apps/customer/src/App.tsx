@@ -13,6 +13,7 @@ import CartPage from './pages/CartPage'
 import CertDetailPage from './pages/CertDetailPage'
 import CertListPage from './pages/CertListPage'
 import CheckoutPage from './pages/CheckoutPage'
+import CouponsPage from './pages/CouponsPage'
 import DevLoginPage from './pages/DevLoginPage'
 import GroomingSinglePage from './pages/GroomingSinglePage'
 import HomePage from './pages/HomePage'
@@ -132,6 +133,9 @@ function ProtectedRoutes() {
       <Route path="/records" element={<RecordsPage />} />
       {/* U1-H：会员卡页新路由（信息展示 v0；详情级——无 dock，统一返回条） */}
       <Route path="/me/card" element={<MemberCardPage />} />
+      {/* 客户端体验大批 片 3：优惠券+心愿单（详情级无 dock，PushBar 返回条兜底 /me；
+          心愿单并入本页 tab 取少路由；申报锚点=「优惠券」） */}
+      <Route path="/me/coupons" element={<CouponsPage />} />
       {/* R11a 骨架批：会员中心/开通页新路由（详情级无 dock，统一返回条固定回 /me、/member；
           申报锚点=页面标题「会员中心」「开通会员」） */}
       <Route path="/member" element={<MemberCenterPage />} />

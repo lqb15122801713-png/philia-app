@@ -30,6 +30,12 @@ import { SLOT_SEED_ROWS } from './slotSeedRows';
 /* ---------------- 清空（子表 -> 父表） ---------------- */
 
 const CLEAR_ORDER = [
+  /* ---- 客户端体验大批 片 3 新表（迁移 0040）：子父序，先于 users/stores/pets/products/orders 清空 ---- */
+  schema.couponGrants, // FK → coupons/users/orders，先于三者清空
+  schema.coupons, // FK → stores/users
+  schema.productReviews, // FK → orders/products/stores/users
+  schema.favorites, // FK → users/products
+  schema.memberPerkGrants, // FK → users/stores/pets
   /* ---- 客户端体验大批 片 1 新表（迁移 0036）：先于 users/stores/appointments 清空（子父序）；
      users 扩列 birthday/gender 不种（空=诚实未填） ---- */
   schema.depositRecords, // FK → stores/users/appointments（ref_appointment_id），先于三者清空
@@ -419,6 +425,8 @@ async function main() {
      * 四档数值照 27 号档照转：微光免费（无回馈金无折扣）/萤火 ¥199·2%·88折/烛光 ¥299·5%·85折/
      * 暖阳 ¥599·10%·8折；多宠全档统一：含 3 只、第 4 只起 +¥59/年/只、10 只封顶；
      * 回馈金次月 5 日到账（故障顺延≤3 天页面明示）；回馈金/会员有效期均 365 天。
+     * 片 3：四档 value_json 补种 renew_discount_bp=10000（续费优惠端口键，10000=无优惠
+     * 缺省口径；存量库同值回挂见迁移 0040 json_set 幂等段）。
      * 配置端口域 domain='member_plans'，保存即生效+版本化留痕，新值只管新单。
      * 既有种子客户「示例客户」不开会员（留 e2e 自造）。
      */
@@ -432,10 +440,10 @@ async function main() {
       createdBy: owner.id,
     });
     await tx.insert(schema.memberPlans).values([
-      planSeed('plan_weiguang', '会员档·微光：免费档（手机号即会员）；无回馈金、无服务折扣；安心包全员免费（钩子仅权益表述，微光不设钩子）', { free: true, price_fen: 0, rebate_bp: 0, service_discount_bp: 10000, included_pets: 3, extra_pet_fen: 5900, max_pets: 10 }),
-      planSeed('plan_yinghuo', '会员档·萤火：¥199/年；商品消费回馈金 2%；服务 88 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 19900, rebate_bp: 200, service_discount_bp: 8800, included_pets: 3, extra_pet_fen: 5900, max_pets: 10 }),
-      planSeed('plan_zhuguang', '会员档·烛光：¥299/年；商品消费回馈金 5%；服务 85 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 29900, rebate_bp: 500, service_discount_bp: 8500, included_pets: 3, extra_pet_fen: 5900, max_pets: 10 }),
-      planSeed('plan_nuanyang', '会员档·暖阳：¥599/年；商品消费回馈金 10%；服务 8 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 59900, rebate_bp: 1000, service_discount_bp: 8000, included_pets: 3, extra_pet_fen: 5900, max_pets: 10 }),
+      planSeed('plan_weiguang', '会员档·微光：免费档（手机号即会员）；无回馈金、无服务折扣；安心包全员免费（钩子仅权益表述，微光不设钩子）', { free: true, price_fen: 0, rebate_bp: 0, service_discount_bp: 10000, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, renew_discount_bp: 10000 }),
+      planSeed('plan_yinghuo', '会员档·萤火：¥199/年；商品消费回馈金 2%；服务 88 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 19900, rebate_bp: 200, service_discount_bp: 8800, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, renew_discount_bp: 10000 }),
+      planSeed('plan_zhuguang', '会员档·烛光：¥299/年；商品消费回馈金 5%；服务 85 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 29900, rebate_bp: 500, service_discount_bp: 8500, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, renew_discount_bp: 10000 }),
+      planSeed('plan_nuanyang', '会员档·暖阳：¥599/年；商品消费回馈金 10%；服务 8 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 59900, rebate_bp: 1000, service_discount_bp: 8000, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, renew_discount_bp: 10000 }),
       planSeed('rebate_settlement_day', '回馈金到账日：次月 5 日统一到账（故障顺延≤3 天，会员页明示口径）', { day: 5 }),
       planSeed('rebate_validity_days', '回馈金有效期：365 天', { days: 365 }),
       planSeed('membership_validity_days', '会员有效期：365 天（到期不续费冻结，余额在不可用；续费解冻；退卡清零）', { days: 365 }),
@@ -524,6 +532,26 @@ async function main() {
         ruleKey: 'payroll_appeal_sla_hours',
         label: '薪资异议申诉处理时限（小时）：店长/老板须在该时限内复核，页面注记数据源',
         valueJson: { hours: 24 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      /* 片 3（迁移 0040 种子口径；service_rules 在 CLEAR_ORDER 内会被重置，本处为重置后
+         补种——不补则端口键被种子抹掉，读口回落缺省同帧） */
+      {
+        version: 1,
+        ruleKey: 'coupon_stack_rule',
+        label: '优惠券叠加规则公示（与会员折扣是否同享；公示=只读展示，真抵扣结算候线上收单批）',
+        valueJson: { rule: 'none', note: '优惠券不与会员折扣叠加；每单限用 1 张（公示口径）' },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'order_auto_receive_days',
+        label: '商城订单发货后自动确认收货天数（超时未点=系统确认，台账留痕）',
+        valueJson: { days: 7 },
         effectiveFrom: RULES_EFFECTIVE_FROM,
         active: true,
         createdBy: owner.id,
@@ -674,6 +702,12 @@ async function main() {
     ['pay_orders', 'pay_orders'],
     ['agreements', 'agreements'],
     ['pay_rules', 'pay_rules'],
+    /* 片 3（客户端体验大批 · 迁移 0040）新表 */
+    ['member_perk_grants', 'member_perk_grants'],
+    ['coupons', 'coupons'],
+    ['coupon_grants', 'coupon_grants'],
+    ['favorites', 'favorites'],
+    ['product_reviews', 'product_reviews'],
   ];
 
   console.log('[seed] 完成，各表行数：');

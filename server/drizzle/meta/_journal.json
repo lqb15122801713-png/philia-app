@@ -267,6 +267,20 @@
       "when": 1791089876609,
       "tag": "0037_copy_client_exp1_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "6",
+      "when": 1791121367949,
+      "tag": "0040_client_exp3_domain",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "6",
+      "when": 1791123733475,
+      "tag": "0041_copy_client_exp3_keys",
+      "breakpoints": true
     }
   ]
 }

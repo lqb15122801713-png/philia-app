@@ -410,6 +410,9 @@ export const payRouter = router({
         bizDomain: z.enum(IMPLEMENTED_BIZ_DOMAINS),
         planKey: z.string().min(1),
         petCount: z.number().int().min(0).max(99),
+        /* 片 3 续费优惠试算（开口项 1 裁：只试算透出不碰真收——续费真收=商家端
+           到店付既有链 membership.renew，本分支不落任何单据） */
+        renewal: z.boolean().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -417,6 +420,17 @@ export const payRouter = router({
       const plan = plans.get(input.planKey);
       if (!plan || !plan.ruleKey.startsWith('plan_')) badRequest('档位不存在或已停用');
       const { amountFen, extraCount, priceFen } = membershipChargeFen(plan, input.petCount);
+      /* 续费优惠：读档 renew_discount_bp（缺键回落 10000=无优惠——fresh 库/未配档
+         安全口径）；折后价=全价（档价+多宠附加合计）×bp/10000 精确到分 */
+      let renewalQuote: { discountBp: number; amountFen: number; note: string } | null = null;
+      if (input.renewal === true) {
+        const discountBp = planNum(plan, 'renew_discount_bp', 10000);
+        renewalQuote = {
+          discountBp,
+          amountFen: Math.round((amountFen * discountBp) / 10000),
+          note: '续费优惠试算透出（真收走商家端到店付既有链，本片不碰）',
+        };
+      }
       return {
         bizDomain: input.bizDomain,
         planKey: input.planKey,
@@ -425,6 +439,7 @@ export const payRouter = router({
         priceFen,
         extraCount,
         amountFen, // server 重算值（前端展示口径=下单口径，唯一可信源）
+        renewal: renewalQuote,
         channelEnabled: await loadPayChannelEnabled(ctx.db),
         timeoutMinutes: await loadPayTimeoutMinutes(ctx.db),
       };

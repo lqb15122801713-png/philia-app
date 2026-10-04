@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B）——生成件，勿手改（源=scripts/gen-copy-overrides-seed.mts）；
  * 重生成：仓库根 npx tsx scripts/gen-copy-overrides-seed.mts（copy 键表增删键后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-04T04:57:15.987Z；键数=2716
+ * 生成时间口径：2026-10-04T14:21:54.049Z；键数=2801
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }> = [
  {
@@ -1495,6 +1495,126 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "查看我的预约"
  },
  {
+  "key": "cpn.centerEmpty",
+  "domain": "coupons",
+  "text": "暂时没有可领的券"
+ },
+ {
+  "key": "cpn.centerTitle",
+  "domain": "coupons",
+  "text": "领用中心"
+ },
+ {
+  "key": "cpn.claimCta",
+  "domain": "coupons",
+  "text": "领取"
+ },
+ {
+  "key": "cpn.claimedAt",
+  "domain": "coupons",
+  "text": "领取 {time}"
+ },
+ {
+  "key": "cpn.claimedCta",
+  "domain": "coupons",
+  "text": "已领取"
+ },
+ {
+  "key": "cpn.claimFail",
+  "domain": "coupons",
+  "text": "领取失败，请稍后再试"
+ },
+ {
+  "key": "cpn.claimToast",
+  "domain": "coupons",
+  "text": "已领取，结算时出示登记抵扣"
+ },
+ {
+  "key": "cpn.loadFail",
+  "domain": "coupons",
+  "text": "券加载失败，请稍后重试"
+ },
+ {
+  "key": "cpn.mineEmpty",
+  "domain": "coupons",
+  "text": "还没有券，去领用中心看看"
+ },
+ {
+  "key": "cpn.mineTitle",
+  "domain": "coupons",
+  "text": "我的券"
+ },
+ {
+  "key": "cpn.pushLabel",
+  "domain": "coupons",
+  "text": "COUPONS"
+ },
+ {
+  "key": "cpn.soldOutCta",
+  "domain": "coupons",
+  "text": "已领完"
+ },
+ {
+  "key": "cpn.stackTitle",
+  "domain": "coupons",
+  "text": "叠加规则公示"
+ },
+ {
+  "key": "cpn.statusClaimed",
+  "domain": "coupons",
+  "text": "待使用"
+ },
+ {
+  "key": "cpn.statusExpired",
+  "domain": "coupons",
+  "text": "已过期"
+ },
+ {
+  "key": "cpn.statusUsed",
+  "domain": "coupons",
+  "text": "已核销"
+ },
+ {
+  "key": "cpn.statusVoided",
+  "domain": "coupons",
+  "text": "已作废"
+ },
+ {
+  "key": "cpn.tabMine",
+  "domain": "coupons",
+  "text": "优惠券"
+ },
+ {
+  "key": "cpn.threshold",
+  "domain": "coupons",
+  "text": "满 {amt} 可用"
+ },
+ {
+  "key": "cpn.thresholdNone",
+  "domain": "coupons",
+  "text": "无门槛"
+ },
+ {
+  "key": "cpn.title",
+  "domain": "coupons",
+  "text": "优惠券"
+ },
+ {
+  "key": "cpn.usedAt",
+  "domain": "coupons",
+  "text": "核销 {time}"
+ },
+ {
+  "key": "cpn.useNote",
+  "domain": "coupons",
+  "text": "核销=登记抵扣，线下结算时出示"
+ },
+ {
+  "key": "cpn.validDays",
+  "domain": "coupons",
+  "text": "领取后 {days} 天有效"
+ },
+ {
   "key": "devlogin.devOnly",
   "domain": "devlogin",
   "text": "仅开发环境 · 生产环境请移除"
@@ -1583,6 +1703,61 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "devlogin.wechatNote",
   "domain": "devlogin",
   "text": "微信授权登录属小程序/资质批，PWA 端暂以手机号+种子账号入内测"
+ },
+ {
+  "key": "fav.addToast",
+  "domain": "favorites",
+  "text": "已加入心愿单"
+ },
+ {
+  "key": "fav.emptyBody",
+  "domain": "favorites",
+  "text": "看中的好物点右上角小心心，会在这里等你"
+ },
+ {
+  "key": "fav.emptyCta",
+  "domain": "favorites",
+  "text": "去商城逛逛 ›"
+ },
+ {
+  "key": "fav.emptyTitle",
+  "domain": "favorites",
+  "text": "心愿单还空着呢"
+ },
+ {
+  "key": "fav.loadFail",
+  "domain": "favorites",
+  "text": "心愿单加载失败，请稍后重试"
+ },
+ {
+  "key": "fav.mallEntry",
+  "domain": "favorites",
+  "text": "心愿单"
+ },
+ {
+  "key": "fav.pdpAdd",
+  "domain": "favorites",
+  "text": "加入心愿单"
+ },
+ {
+  "key": "fav.pdpAdded",
+  "domain": "favorites",
+  "text": "已收藏"
+ },
+ {
+  "key": "fav.removeToast",
+  "domain": "favorites",
+  "text": "已移出心愿单"
+ },
+ {
+  "key": "fav.title",
+  "domain": "favorites",
+  "text": "心愿单"
+ },
+ {
+  "key": "fav.toggleFail",
+  "domain": "favorites",
+  "text": "操作失败，请稍后再试"
  },
  {
   "key": "home.casesMore",
@@ -1920,6 +2095,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "个人"
  },
  {
+  "key": "mall.addrOptionalNote",
+  "domain": "mall",
+  "text": "自提 / 同城可暂不填收货地址，到店报手机号即可"
+ },
+ {
   "key": "mall.backHome",
   "domain": "mall",
   "text": "返回首页"
@@ -2008,6 +2188,56 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "mall.conflictTitle",
   "domain": "mall",
   "text": "购物车仅限同一门店商品"
+ },
+ {
+  "key": "mall.couponOff",
+  "domain": "mall",
+  "text": "减 {amt}"
+ },
+ {
+  "key": "mall.couponPick",
+  "domain": "mall",
+  "text": "选用"
+ },
+ {
+  "key": "mall.couponPicked",
+  "domain": "mall",
+  "text": "已选 · 登记抵扣"
+ },
+ {
+  "key": "mall.couponTitle",
+  "domain": "mall",
+  "text": "可用券"
+ },
+ {
+  "key": "mall.couponUseNote",
+  "domain": "mall",
+  "text": "核销=登记抵扣，线下结算时出示"
+ },
+ {
+  "key": "mall.deliveryExpress",
+  "domain": "mall",
+  "text": "快递"
+ },
+ {
+  "key": "mall.deliveryFreeNote",
+  "domain": "mall",
+  "text": "内测期免运费"
+ },
+ {
+  "key": "mall.deliveryMethod",
+  "domain": "mall",
+  "text": "配送方式"
+ },
+ {
+  "key": "mall.deliveryPickup",
+  "domain": "mall",
+  "text": "自提"
+ },
+ {
+  "key": "mall.deliverySameCity",
+  "domain": "mall",
+  "text": "同城"
  },
  {
   "key": "mall.deliverySub",
@@ -2203,6 +2433,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "mall.submitOrder",
   "domain": "mall",
   "text": "提交订单"
+ },
+ {
+  "key": "mall.trackingNote",
+  "domain": "mall",
+  "text": "轨迹以快递公司为准"
  },
  {
   "key": "mall.viewOrders",
@@ -2830,6 +3065,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "{zhe} 折"
  },
  {
+  "key": "perk.grantedAt",
+  "domain": "member",
+  "text": "发放 {time}"
+ },
+ {
   "key": "perk.groomer",
   "domain": "member",
   "text": "专属洗护师"
@@ -2838,6 +3078,51 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "perk.groomerSub",
   "domain": "member",
   "text": "点名安排"
+ },
+ {
+  "key": "perk.kindBirthdayOwner",
+  "domain": "member",
+  "text": "生日礼 · 主人"
+ },
+ {
+  "key": "perk.kindBirthdayPet",
+  "domain": "member",
+  "text": "生日礼 · 宠物"
+ },
+ {
+  "key": "perk.kindCarePack",
+  "domain": "member",
+  "text": "安心包"
+ },
+ {
+  "key": "perk.kindFallback",
+  "domain": "member",
+  "text": "权益"
+ },
+ {
+  "key": "perk.kindNewbie",
+  "domain": "member",
+  "text": "新人礼包"
+ },
+ {
+  "key": "perk.kindServiceDiscount",
+  "domain": "member",
+  "text": "服务折扣次数"
+ },
+ {
+  "key": "perk.kindUpgrade",
+  "domain": "member",
+  "text": "升级礼遇"
+ },
+ {
+  "key": "perk.ledgerNote",
+  "domain": "member",
+  "text": "权益台账=资格留痕，发放候资质批"
+ },
+ {
+  "key": "perk.passTimesLine",
+  "domain": "member",
+  "text": "次卡剩余 {n} 次"
  },
  {
   "key": "perk.pets",
@@ -2865,6 +3150,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "{pct}%"
  },
  {
+  "key": "perk.remainLine",
+  "domain": "member",
+  "text": "剩余 {remain} / 共 {total} 次"
+ },
+ {
+  "key": "perk.renewOff",
+  "domain": "member",
+  "text": "续费 {zhe} 折 · 折后 ¥{amount}"
+ },
+ {
   "key": "perk.skin",
   "domain": "member",
   "text": "皮毛检测"
@@ -2873,6 +3168,21 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "perk.skinSub",
   "domain": "member",
   "text": "每季一次"
+ },
+ {
+  "key": "perk.unusedEmpty",
+  "domain": "member",
+  "text": "暂无未用权益"
+ },
+ {
+  "key": "perk.unusedTitle",
+  "domain": "member",
+  "text": "未用权益"
+ },
+ {
+  "key": "perk.usedUp",
+  "domain": "member",
+  "text": "已用完"
  },
  {
   "key": "q1.codeFooter",
@@ -2948,6 +3258,26 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "q1.refreshNote",
   "domain": "member",
   "text": "{mm}:{ss} 后自动刷新"
+ },
+ {
+  "key": "q1.tokenFail",
+  "domain": "member",
+  "text": "会员码加载失败"
+ },
+ {
+  "key": "q1.tokenRetry",
+  "domain": "member",
+  "text": "重试"
+ },
+ {
+  "key": "q1.tokenTitle",
+  "domain": "member",
+  "text": "会员码"
+ },
+ {
+  "key": "q1.verifyNote",
+  "domain": "member",
+  "text": "核验走收银台 · 店员扫录或核对码文本"
  },
  {
   "key": "rules.r1",
@@ -9128,6 +9458,101 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "pets.vaccineSoon",
   "domain": "pets",
   "text": "疫苗 {days} 天后到期 · 寄养需有效期内"
+ },
+ {
+  "key": "rev.anonymous",
+  "domain": "productReviews",
+  "text": "匿名评价"
+ },
+ {
+  "key": "rev.anonymousName",
+  "domain": "productReviews",
+  "text": "匿名用户"
+ },
+ {
+  "key": "rev.empty",
+  "domain": "productReviews",
+  "text": "还没有评价，收货后来写第一条"
+ },
+ {
+  "key": "rev.loadFail",
+  "domain": "productReviews",
+  "text": "评价加载失败，请稍后重试"
+ },
+ {
+  "key": "rev.more",
+  "domain": "productReviews",
+  "text": "加载更多"
+ },
+ {
+  "key": "rev.needReceived",
+  "domain": "productReviews",
+  "text": "确认收货后即可评价本商品"
+ },
+ {
+  "key": "rev.orderEntry",
+  "domain": "productReviews",
+  "text": "写评价"
+ },
+ {
+  "key": "rev.photoAdd",
+  "domain": "productReviews",
+  "text": "晒图"
+ },
+ {
+  "key": "rev.photoLimit",
+  "domain": "productReviews",
+  "text": "最多 3 张"
+ },
+ {
+  "key": "rev.ratingLabel",
+  "domain": "productReviews",
+  "text": "评分"
+ },
+ {
+  "key": "rev.sheetTitle",
+  "domain": "productReviews",
+  "text": "写评价"
+ },
+ {
+  "key": "rev.submit",
+  "domain": "productReviews",
+  "text": "提交评价"
+ },
+ {
+  "key": "rev.submitFail",
+  "domain": "productReviews",
+  "text": "评价提交失败，请稍后再试"
+ },
+ {
+  "key": "rev.submitting",
+  "domain": "productReviews",
+  "text": "提交中…"
+ },
+ {
+  "key": "rev.summary",
+  "domain": "productReviews",
+  "text": "{avg} 分 · {count} 条评价"
+ },
+ {
+  "key": "rev.textPlaceholder",
+  "domain": "productReviews",
+  "text": "说说商品怎么样…（可不填）"
+ },
+ {
+  "key": "rev.title",
+  "domain": "productReviews",
+  "text": "商品评价"
+ },
+ {
+  "key": "rev.toastOk",
+  "domain": "productReviews",
+  "text": "评价已提交"
+ },
+ {
+  "key": "rev.writeCta",
+  "domain": "productReviews",
+  "text": "写评价"
  },
  {
   "key": "profile.avatarChange",

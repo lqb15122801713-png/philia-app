@@ -110,6 +110,32 @@ const MEMBER_COPY_TABLE = {
   'q1.passRemain': '剩余 {remain} 次 / 共 {total} 次',
   'q1.passStoreFallback': '菲丽亚门店',
   'q1.passEmpty': '暂无次卡。次卡余额为实时数据。',
+  /* 客户端体验大批 片 3：码区点亮——membership.myCardToken 真 token 渲码
+     （零新依赖：文本码 mono 大字；5min 时效自动刷新；核验=收银台 verifyCardToken） */
+  'q1.tokenTitle': '会员码',
+  'q1.verifyNote': '核验走收银台 · 店员扫录或核对码文本',
+  'q1.tokenFail': '会员码加载失败',
+  'q1.tokenRetry': '重试',
+
+  /* 客户端体验大批 片 3：A-3 权益墙上方「未用权益」区（perk.myUnused：
+     次卡剩余并显行 + grants 资格行（生日礼双行/新人礼包/升级礼遇 + 发放时刻）+
+     台账口径注记。发放=资格留痕不真发，候资质批——注记明面不上假权益） */
+  'perk.unusedTitle': '未用权益',
+  'perk.passTimesLine': '次卡剩余 {n} 次',
+  'perk.kindServiceDiscount': '服务折扣次数',
+  'perk.kindCarePack': '安心包',
+  'perk.kindBirthdayOwner': '生日礼 · 主人',
+  'perk.kindBirthdayPet': '生日礼 · 宠物',
+  'perk.kindNewbie': '新人礼包',
+  'perk.kindUpgrade': '升级礼遇',
+  'perk.kindFallback': '权益',
+  'perk.remainLine': '剩余 {remain} / 共 {total} 次',
+  'perk.grantedAt': '发放 {time}',
+  'perk.usedUp': '已用完',
+  'perk.ledgerNote': '权益台账=资格留痕，发放候资质批',
+  'perk.unusedEmpty': '暂无未用权益',
+  /* 续费优惠透出（pay.quote renewal 分支：renewDiscountBp<10000 才显折后价行，无优惠不显） */
+  'perk.renewOff': '续费 {zhe} 折 · 折后 ¥{amount}',
 
   /* ---- 权益墙 8 枚（档跟随） ---- */
   'perk.pets': '多宠覆盖',

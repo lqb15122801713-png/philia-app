@@ -28,6 +28,7 @@ import ProductImage from '../components/mall/ProductImage';
 import { useOrderEvents } from '../components/mall/useOrderEvents';
 import { MALL_COPY, mlc } from '../copy/mall';
 import { rc } from '../copy/refund';
+import { rvc } from '../copy/productReviews';
 import { sl } from '@/copy/serviceloop';
 
 /* ---------------- 类型（与 T5.1 listMyOrders 返回对齐） ---------------- */
@@ -53,6 +54,8 @@ interface OrderRow {
   storeName: string | null;
   /** 服务端 listMyOrders 经 orders 全列透传（r.order spread），U1-G 再来一单取店用 */
   storeId: string;
+  /** 片 3：orders 扩列配送方式（express|same_city|pickup，存量默认 express） */
+  deliveryMethod?: string;
 }
 
 type OrderGroups = Record<string, OrderRow[]>;
@@ -72,6 +75,13 @@ const TABS = [
 const TAB_KEYS = new Set<string>(TABS.map((t) => t.key));
 /** W1 R-Nav-2：滚动位置会话级记忆 key（sessionStorage，会话结束自清） */
 const SCROLL_KEY = 'w1.scroll.mall-orders';
+
+/* 片 3：配送方式徽文案（orders.delivery_method 枚举） */
+const DELIVERY_LABEL: Record<string, string> = {
+  express: MALL_COPY['mall.deliveryExpress'],
+  same_city: MALL_COPY['mall.deliverySameCity'],
+  pickup: MALL_COPY['mall.deliveryPickup'],
+};
 
 /* U4-D3 状态胶囊对齐试样 .opill：小签档 6 圆角 + 11px/600；
    待支付=柠檬底（试样 opill.pay）、进行中（待发货/待收货）=薄荷洗（opill.doing）、
@@ -126,11 +136,16 @@ function OrderCard({
     /* U1-G 换肤：订单卡=U1-B 细线卡（ring + 近零影，去 shadow-card）
        U4-D3 对齐试样 09 .order：卡 padding 14/16、缩略图 52×52、价格墨色等宽 */
     <div className="u1-card px-4 py-3.5">
-      {/* 头部：门店 + 状态 */}
+      {/* 头部：门店 + 状态（片 3：配送方式徽并显） */}
       <div className="flex items-center justify-between">
         <p className="flex items-center gap-1.5 text-body-sm font-semibold">
           <Package className="h-4 w-4 text-ink-secondary" strokeWidth={1.5} />
           {order.storeName ?? '菲丽亚门店'}
+          {order.deliveryMethod ? (
+            <span className="rounded-chip bg-sunken px-[7px] py-0.5 font-number text-[9px] text-ink-secondary" data-testid={`order-delivery-${order.id}`}>
+              {DELIVERY_LABEL[order.deliveryMethod] ?? order.deliveryMethod}
+            </span>
+          ) : null}
         </p>
         <span className={`rounded-chip px-[7px] py-0.5 text-caption-xs font-semibold ${meta.pill}`}>{meta.label}</span>
       </div>
@@ -172,11 +187,13 @@ function OrderCard({
       ) : null}
 
       {order.status === 'shipped' ? (
-        <div className="mt-3 flex items-center gap-2 rounded-control bg-sunken px-3.5 py-2.5 text-caption text-ink-secondary">
-          <Truck className="h-4 w-4 shrink-0 text-brand-primary" strokeWidth={1.5} />
-          <p>
+        <div className="mt-3 rounded-control bg-sunken px-3.5 py-2.5 text-caption text-ink-secondary">
+          <p className="flex items-center gap-2">
+            <Truck className="h-4 w-4 shrink-0 text-brand-primary" strokeWidth={1.5} />
             快递单号 <span className="font-number text-ink">{order.trackingNo ?? '—'}</span>
           </p>
+          {/* 片 3：物流注记（不接真轨迹接口，口径明面） */}
+          <p className="mt-1 pl-6 text-ink-placeholder">{mlc('mall.trackingNote')}</p>
         </div>
       ) : null}
 
@@ -231,6 +248,17 @@ function OrderCard({
       {order.status === 'received' ? (
         <div className="mt-3 flex justify-end gap-2 border-t border-[rgba(59,46,36,.06)] pt-[11px]">
           {invoiceEntry}
+          {/* 片 3：写评价入口（received 态；带 reviewOrderId 直入 PDP 评价弹层，一单一件一评） */}
+          {order.items[0] ? (
+            <Link
+              to={`/mall/product/${order.items[0].product_id}`}
+              state={{ reviewOrderId: order.id }}
+              data-testid={`order-review-${order.id}`}
+              className="rounded-full bg-card px-4 py-2 text-body-sm font-semibold text-ink ring-1 ring-line-ring transition-transform duration-120 ease-philia-spring active:scale-92"
+            >
+              {rvc('rev.orderEntry')}
+            </Link>
+          ) : null}
           <button
             type="button"
             onClick={() => onReorder(order)}
