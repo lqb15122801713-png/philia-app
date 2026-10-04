@@ -200,7 +200,8 @@ export default function DevLoginPage() {
       </header>
 
       {/* 主行动区：L-01 微信一键登录=置灰槽位（WECHAT env 未配，留口在案；
-          PD-15 三规：置灰不上假件 + 注记「即将点亮」+ data-testid=slot-wechat）；
+          PD-15 三规：置灰不上假件 + data-testid=slot-wechat；客户端体验大批 片 1
+          开口项 1 裁——注记写准「微信授权登录属小程序/资质批」，不吹不删槽）；
           主钮真实落点=锚滚至种子账号区（拍板 2：无真接口不造假，员工端 U3 同口径）——
           换皮批片 2 主钮入 v2.0 深棕 btn-primary 纪律（点睛预算：刷底+分隔线=2，主钮不再占淡黄）；
           「口令入内测 ›」= 口令门卡显隐开关（真实交互） */}
@@ -211,8 +212,9 @@ export default function DevLoginPage() {
           className="flex w-full items-center justify-between rounded-control border border-dashed border-line bg-card px-5 py-[15px] opacity-60"
         >
           <span className="text-body-sm font-semibold text-ink-secondary">{mc('l1.wechatSlot')}</span>
-          <span className="rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">
-            {mc('slot.soon')}
+          {/* 开口项 1 裁：写准注记（不吹不删槽；原「即将点亮」注记退役） */}
+          <span className="max-w-[52%] text-right text-caption-xs leading-4 text-ink-placeholder">
+            {dc('devlogin.wechatNote')}
           </span>
         </div>
         <button

@@ -10,15 +10,19 @@
  * - R15 金额明面句「开票金额=订单实付 {amount}」（金额=来源单实付，server 重算为准）
  *   + 诚实口径「提交后门店为您开具」；
  * - 提交 → serviceLoop.invoiceCreate（同单在途幂等返回原单）→ /invoices/:id。
+ * - 客户端体验大批 片 1：「选常用抬头」入口（invoiceTitle.list 有抬头时出，
+ *   BottomSheet 点选即回填 类型/抬头/税号）。
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { friendlyError, usePhiliaClient } from '@philia/shared'
+import { friendlyError, useMe, usePhiliaClient } from '@philia/shared'
 import PageHeader from '@/components/PageHeader'
 import { fenToYuan } from '@/components/booking/format'
+import BottomSheet from '../components/booking/single/BottomSheet'
 import { ErrorState, LoadingBlock } from '../components/home/common'
+import { itc } from '../copy/invoiceTitles'
 import { sl } from '@/copy/serviceloop'
 
 /** 与 server invoiceCreate 同款的邮箱格式校验（提交前客户端先拦一次） */
@@ -36,6 +40,7 @@ export default function InvoiceApplyPage() {
   const { kind = '', id = '' } = useParams()
   const navigate = useNavigate()
   const { trpc, queryClient } = usePhiliaClient()
+  const { user } = useMe()
 
   const orderKind: OrderKind | null =
     kind === 'appointment' || kind === 'order' || kind === 'cashier' ? kind : null
@@ -58,6 +63,14 @@ export default function InvoiceApplyPage() {
   const [delivery, setDelivery] = useState<'email' | 'pickup'>('email')
   const [email, setEmail] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
+  /* 客户端体验大批 片 1：「选常用抬头」回填（invoiceTitle.list 有抬头时出快速回填入口） */
+  const [pickOpen, setPickOpen] = useState(false)
+  const titlesQ = useQuery({
+    queryKey: ['invoiceTitle', 'list'],
+    queryFn: () => trpc.invoiceTitle.list.query(),
+    enabled: !!user,
+  })
+  const savedTitles = titlesQ.data?.items ?? []
 
   const summaryQ = orderKind === 'appointment' ? apptQ : orderKind === 'order' ? ordersQ : null
   let summary: BillSummary | null = null
@@ -191,6 +204,19 @@ export default function InvoiceApplyPage() {
 
             {/* 抬头类型 + 抬头 + 税号（企业条件必填） */}
             <section className="u1-card p-4">
+              {/* 客户端体验大批 片 1：常用抬头快速回填入口（有抬头时才出） */}
+              {savedTitles.length > 0 ? (
+                <div className="mb-2 flex justify-end">
+                  <button
+                    type="button"
+                    data-testid="invoice-pick-title"
+                    onClick={() => setPickOpen(true)}
+                    className="text-caption font-semibold text-ink"
+                  >
+                    {itc('invt.pickCta')}
+                  </button>
+                </div>
+              ) : null}
               <span className={labelCls}>{sl('inv.titleTypeLabel')}</span>
               <div className="flex gap-2">
                 <button
@@ -291,6 +317,43 @@ export default function InvoiceApplyPage() {
           </div>
         )}
       </div>
+
+      {/* 选常用抬头弹层：点选即回填 类型/抬头/税号 */}
+      {pickOpen ? (
+        <BottomSheet title={itc('invt.pickTitle')} onClose={() => setPickOpen(false)} testId="invoice-pick-sheet">
+          <div className="space-y-2">
+            {savedTitles.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                data-testid={`invoice-pick-${t.id}`}
+                onClick={() => {
+                  setTitleType(t.titleType === 'business' ? 'business' : 'personal')
+                  setTitle(t.title)
+                  setTaxNo(t.taxNo ?? '')
+                  setPickOpen(false)
+                }}
+                className="w-full rounded-card border border-line p-4 text-left transition active:scale-[0.99]"
+              >
+                <span className="flex items-center gap-2">
+                  <span className="rounded-chip bg-sunken px-[7px] py-0.5 text-caption-xs font-semibold text-ink-secondary">
+                    {t.titleType === 'business' ? itc('invt.typeBusiness') : itc('invt.typePersonal')}
+                  </span>
+                  <span className="text-body font-semibold">{t.title}</span>
+                  {t.isDefault ? (
+                    <span className="rounded-chip bg-brand-primary px-[7px] py-0.5 text-caption-xs font-semibold text-ink">
+                      {itc('invt.defaultBadge')}
+                    </span>
+                  ) : null}
+                </span>
+                {t.titleType === 'business' && t.taxNo ? (
+                  <span className="mt-0.5 block font-number text-caption text-ink-secondary">{t.taxNo}</span>
+                ) : null}
+              </button>
+            ))}
+          </div>
+        </BottomSheet>
+      ) : null}
     </div>
   )
 }

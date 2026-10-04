@@ -17,6 +17,10 @@ import LogoutConfirmDialog from '../components/account/LogoutConfirmDialog'
 import { maskPhone, useAccountToast } from '../components/account/common'
 import { PushBar, SecH } from '../components/member/v2'
 import { acc } from '../copy/account'
+import { pfc } from '../copy/profile'
+import { adc } from '../copy/addresses'
+import { itc } from '../copy/invoiceTitles'
+import { abc } from '../copy/about'
 
 /** 列表行（链接形/按钮形两用；sub=副签行） */
 function Row({
@@ -113,6 +117,8 @@ export default function SettingsPage() {
 
         <div className="flex flex-col gap-1">
           <Group title={acc('settings.groupAccount')}>
+            {/* 客户端体验大批 片 1：编辑资料入口（账户体系域） */}
+            <Row to="/settings/profile" title={pfc('profile.meEntry')} sub={pfc('profile.meEntrySub')} testId="settings-profile" />
             <Row to="/me/settings/phone" title={acc('settings.phoneBind')} sub={phoneMasked} testId="settings-phone-bind" />
             <Row to="/me/settings/phone/appeal" title={acc('settings.appeal')} sub={acc('settings.appealSub')} testId="settings-appeal" />
           </Group>
@@ -120,6 +126,13 @@ export default function SettingsPage() {
           <Group title={acc('settings.groupGeneral')}>
             <Row to="/me/settings/devices" title={acc('settings.devices')} testId="settings-devices" />
             <Row to="/me/settings/privacy" title={acc('settings.privacy')} testId="settings-privacy" />
+          </Group>
+
+          {/* 客户端体验大批 片 1：通用组（收货地址 / 发票抬头 / 关于与协议） */}
+          <Group title={acc('settings.groupCommon')}>
+            <Row to="/settings/addresses" title={adc('addr.title')} testId="settings-addresses" />
+            <Row to="/settings/invoice-titles" title={itc('invt.title')} testId="settings-invoice-titles" />
+            <Row to="/settings/about" title={abc('about.title')} sub={abc('about.agreementsSub')} testId="settings-about" />
           </Group>
 
           <div className="m2-card mt-[26px] overflow-hidden">

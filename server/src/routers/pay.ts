@@ -624,6 +624,71 @@ export const payRouter = router({
   }),
 
   /**
+   * recordsMine（customer · 客户端体验大批 片 1 · 开口项 3 裁）：消费记录统一入口——
+   * 聚合本人 支付单（pay_orders，pay.listMine 同源口径）+ 商城订单（orders，mall
+   * 域本人订单读口同源口径）+ 发票申请（invoice_requests，serviceLoop 发票列表同源
+   * 口径）三源，按 createdAt 倒序合并返回。
+   * **纯聚合只读视图：零新表零新账，不互相调路由（三源各直接查表）**；他人数据零透出
+   * （三源均按本人 userId/customerId 过滤）。
+   */
+  recordsMine: customerProcedure.query(async ({ ctx }) => {
+    const uid = ctx.user.id;
+    const [payRows, orderRows, invoiceRows] = await Promise.all([
+      // 源① 支付单（同 pay.listMine 口径：本批唯一实现域 membership_open，biz_id=users.id）
+      ctx.db
+        .select()
+        .from(schema.payOrders)
+        .where(and(eq(schema.payOrders.bizDomain, 'membership_open'), eq(schema.payOrders.bizId, uid)))
+        .orderBy(desc(schema.payOrders.createdAt), desc(schema.payOrders.id))
+        .limit(50),
+      // 源② 商城订单（同 mall.listMyOrders 口径：customer_id=本人）
+      ctx.db
+        .select()
+        .from(schema.orders)
+        .where(eq(schema.orders.customerId, uid))
+        .orderBy(desc(schema.orders.createdAt), desc(schema.orders.id))
+        .limit(50),
+      // 源③ 发票申请（同 serviceLoop.invoiceListMine 口径：user_id=本人）
+      ctx.db
+        .select()
+        .from(schema.invoiceRequests)
+        .where(eq(schema.invoiceRequests.userId, uid))
+        .orderBy(desc(schema.invoiceRequests.createdAt), desc(schema.invoiceRequests.id))
+        .limit(50),
+    ]);
+    const items = [
+      ...payRows.map((o) => ({
+        kind: 'pay' as const,
+        id: o.id,
+        title: `线上支付·${String((o.bizJson as Record<string, unknown> | null)?.planLabel ?? o.payNo)}`,
+        amountFen: o.amountFen,
+        status: o.status,
+        createdAt: o.createdAt,
+        link: `/pay/${o.payNo}`,
+      })),
+      ...orderRows.map((o) => ({
+        kind: 'order' as const,
+        id: o.id,
+        title: `商城订单 ${o.orderNo}`,
+        amountFen: o.totalFen,
+        status: o.status,
+        createdAt: o.createdAt,
+        link: '/mall/orders', // 客户侧无 /orders/:id 详情页——订单行跳商城订单列表（coder N 报备，主窗对齐）
+      })),
+      ...invoiceRows.map((r) => ({
+        kind: 'invoice' as const,
+        id: r.id,
+        title: `发票申请 ${r.invoiceNo}`,
+        amountFen: r.amountFen,
+        status: r.status,
+        createdAt: r.createdAt,
+        link: '/invoices',
+      })),
+    ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime() || (a.id < b.id ? 1 : -1));
+    return { items };
+  }),
+
+  /**
    * reconcile（customer）：「付了没开」自助补开（掉单补偿）。
    * - 本人单 + 在途（created/paying；先走懒超时，过点置 closed 返回现状明文）；
    * - 查通道 queryOrder（mock=本地账本）：通道侧已付且金额核对过 →

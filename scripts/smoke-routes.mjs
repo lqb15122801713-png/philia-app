@@ -113,6 +113,13 @@ const ROUTES = [
   { app: 'customer', path: '/me/settings/phone/appeal', anchors: ['换绑申诉'], serverDep: true, note: '补缺批片 2 账户安全' },
   { app: 'customer', path: '/me/settings/devices', anchors: ['登录设备管理'], serverDep: true, note: '补缺批片 2 账户安全' },
   { app: 'customer', path: '/me/settings/privacy', anchors: ['权限与隐私'], serverDep: true, note: '补缺批片 2 账户安全' },
+  /* 客户端体验大批 片 1（账户体系+支付售后面：六屏新路由；锚点=AppHead 页题稳定文案） */
+  { app: 'customer', path: '/settings/profile', anchors: ['编辑资料'], serverDep: true, note: '客户端体验大批 片 1（编辑资料）' },
+  { app: 'customer', path: '/settings/addresses', anchors: ['收货地址'], serverDep: true, note: '客户端体验大批 片 1（收货地址）' },
+  { app: 'customer', path: '/settings/about', anchors: ['关于'], serverDep: true, note: '客户端体验大批 片 1（关于）' },
+  { app: 'customer', path: '/settings/agreements', anchors: ['协议中心'], serverDep: true, note: '客户端体验大批 片 1（协议中心）' },
+  { app: 'customer', path: '/settings/invoice-titles', anchors: ['发票抬头'], serverDep: true, note: '客户端体验大批 片 1（发票抬头）' },
+  { app: 'customer', path: '/records', anchors: ['消费记录'], serverDep: true, note: '客户端体验大批 片 1（消费记录+押金进度）' },
   { app: 'customer', path: '/member/upgrade', anchors: ['升级会员'], serverDep: true, note: '补缺批片 3 会员域' },
   { app: 'customer', path: '/member/change', anchors: ['预约下期档位'], serverDep: true, note: '补缺批片 3 会员域' },
   { app: 'customer', path: '/notifications', anchors: ['消息'], serverDep: true, note: '补缺批片 5 站内信（消息中心）' },

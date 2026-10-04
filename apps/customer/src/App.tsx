@@ -50,6 +50,12 @@ import ReportPage from './pages/ReportPage'
 import TicketDetailPage from './pages/TicketDetailPage'
 import TicketListPage from './pages/TicketListPage'
 import TicketNewPage from './pages/TicketNewPage'
+import ProfileEditPage from './pages/ProfileEditPage'
+import AddressesPage from './pages/AddressesPage'
+import AboutPage from './pages/AboutPage'
+import AgreementsPage from './pages/AgreementsPage'
+import InvoiceTitlesPage from './pages/InvoiceTitlesPage'
+import RecordsPage from './pages/RecordsPage'
 
 // B9.3 任务 B：/booking 中间层（类型选择 hub）退役——直接重定向单屏；
 // 兼容旧深链 ?type=boarding → 寄养单屏，?storeId= 透传（首页门店卡深链口径保留）。
@@ -116,6 +122,14 @@ function ProtectedRoutes() {
       <Route path="/me/settings/phone/appeal" element={<PhoneAppealPage />} />
       <Route path="/me/settings/devices" element={<DevicesPage />} />
       <Route path="/me/settings/privacy" element={<PrivacyPage />} />
+      {/* 客户端体验大批 片 1（账户体系+支付售后面）：六屏新路由（详情级无 dock，
+          PushBar 返回条；已申报 check-nav-closure/smoke-routes 双表） */}
+      <Route path="/settings/profile" element={<ProfileEditPage />} />
+      <Route path="/settings/addresses" element={<AddressesPage />} />
+      <Route path="/settings/about" element={<AboutPage />} />
+      <Route path="/settings/agreements" element={<AgreementsPage />} />
+      <Route path="/settings/invoice-titles" element={<InvoiceTitlesPage />} />
+      <Route path="/records" element={<RecordsPage />} />
       {/* U1-H：会员卡页新路由（信息展示 v0；详情级——无 dock，统一返回条） */}
       <Route path="/me/card" element={<MemberCardPage />} />
       {/* R11a 骨架批：会员中心/开通页新路由（详情级无 dock，统一返回条固定回 /me、/member；

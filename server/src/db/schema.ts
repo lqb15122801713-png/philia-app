@@ -113,6 +113,10 @@ export const users = sqliteTable('users', {
   deactivatedAt: integer('deactivated_at', { mode: 'timestamp' }),
   /** 注销原因（门店审批 note 快照） */
   deactivateReason: text('deactivate_reason'),
+  /** 生日（体验大批片 1 · 0036：'YYYY-MM-DD'，资料收集/生日礼数据源） */
+  birthday: text('birthday'),
+  /** 性别（male|female|secret；资料收集） */
+  gender: text('gender'),
   ...auditColumns,
 });
 
@@ -3350,5 +3354,69 @@ export const xpApplications = sqliteTable(
   (t) => [
     index('ix_xp_applications_store').on(t.storeId, t.status),
     index('ix_xp_applications_staff').on(t.staffId, t.status),
+  ],
+);
+
+/* ==================== 客户端体验大批 片 1（账户体系+支付售后，迁移 0036） ==================== */
+
+/** 收货地址（片 1：CRUD+默认；默认唯一=应用层保（setDefault 同事务清同用户其他默认）） */
+export const addresses = sqliteTable(
+  'addresses',
+  {
+    id: id(),
+    userId: text('user_id').notNull().references(() => users.id),
+    receiver: text('receiver').notNull(),
+    phone: text('phone').notNull(),
+    region: text('region').notNull(),
+    detail: text('detail').notNull(),
+    isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
+    ...auditColumns,
+  },
+  (t) => [index('ix_addresses_user').on(t.userId)],
+);
+
+/** 发票抬头（片 1：CRUD+默认；titleType=personal|business，business 须税号） */
+export const invoiceTitles = sqliteTable(
+  'invoice_titles',
+  {
+    id: id(),
+    userId: text('user_id').notNull().references(() => users.id),
+    titleType: text('title_type').notNull(),
+    title: text('title').notNull(),
+    taxNo: text('tax_no'),
+    isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
+    ...auditColumns,
+  },
+  (t) => [index('ix_invoice_titles_user').on(t.userId)],
+);
+
+/**
+ * 押金收取与退还进度台账（片 1 涉钱件·开口项 2 裁：留痕不碰真钱）：
+ * - 状态机 held（已收在押）→ refunding（退还登记在途）→ refunded（已退还）；
+ * - 收取/退还全为登记留痕（created_by=登记人；无任何支付通道写）；
+ * - ref_appointment_id=关联预约（可空）；客户经 listMine 读进度。
+ */
+export const depositRecords = sqliteTable(
+  'deposit_records',
+  {
+    id: id(),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    customerId: text('customer_id').notNull().references(() => users.id),
+    /** 类型：kennel（寄养押金）| goods（物品押金）| other */
+    kind: text('kind').notNull(),
+    amountFen: integer('amount_fen').notNull(),
+    /** 状态机：held | refunding | refunded */
+    status: text('status').notNull().default('held'),
+    refAppointmentId: text('ref_appointment_id').references(() => appointments.id),
+    note: text('note'),
+    heldAt: integer('held_at', { mode: 'timestamp' }),
+    refundRequestedAt: integer('refund_requested_at', { mode: 'timestamp' }),
+    refundedAt: integer('refunded_at', { mode: 'timestamp' }),
+    createdBy: text('created_by').notNull().references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_deposit_records_customer').on(t.customerId, t.status),
+    index('ix_deposit_records_store').on(t.storeId, t.status),
   ],
 );

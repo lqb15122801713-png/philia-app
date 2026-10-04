@@ -6,7 +6,10 @@
  *
  * 槽位置灰（PD-15 V1.1 三规：不上数不上假件 + 注记 + data-testid）：
  * - 今年已省：补缺批片 3 已点亮（mySavings 真值 + 构成明面弹层，testid me-saved-slot 保留）；
- * - 退款售后（orderrow）/ 优惠券 / 常用地址（grid8）=置灰槽位；
+ * - 退款售后（orderrow）/ 优惠券 =置灰槽位；
+ * - 客户端体验大批 片 1 点亮：常用地址（→/settings/addresses，testid slot-address 原值保留），
+ *   新增「编辑资料」（→/settings/profile，me-profile-entry）/「消费记录」（→/records，
+ *   me-records-entry）双行入口卡；
  * - 补缺大批片 4 点亮：服务相册（→/philia/moments）/ 小棉花客服（→/support/new），
  *   testid 原值保留（slot-gallery / slot-concierge）；退款售后=片 1 挂接口，本片不动；
  * 落地件：档章/回馈金余额/续费倒计时（membership.my 真值）/会员码 qrrow/订单五态入口/
@@ -26,6 +29,9 @@ import { sl } from '@/copy/serviceloop'
 import { mc } from '../components/member/copy'
 import { SavingsSheet, yuanOf, type SavingsData } from '../components/member/v2'
 import { ntf } from '@/copy/notify'
+import { pfc } from '@/copy/profile'
+import { rcc } from '@/copy/records'
+import { adc } from '@/copy/addresses'
 
 const DAY_MS = 86_400_000
 
@@ -196,6 +202,32 @@ export default function MePage() {
           <span className="shrink-0 text-ink-secondary" aria-hidden="true">›</span>
         </Link>
 
+        {/* 客户端体验大批 片 1：编辑资料 / 消费记录双行入口卡（账户体系+支付售后面） */}
+        <div className="mt-3 overflow-hidden rounded-card bg-card shadow-card">
+          <Link
+            to="/settings/profile"
+            data-testid="me-profile-entry"
+            className="flex items-center gap-3 px-4 py-3.5 text-body-sm transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold text-ink">{pfc('profile.meEntry')}</span>
+              <span className="mt-0.5 block text-caption-xs text-ink-secondary">{pfc('profile.meEntrySub')}</span>
+            </span>
+            <span className="shrink-0 text-ink-secondary" aria-hidden="true">›</span>
+          </Link>
+          <Link
+            to="/records"
+            data-testid="me-records-entry"
+            className="flex items-center gap-3 border-t border-line-divider px-4 py-3.5 text-body-sm transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold text-ink">{rcc('rec.meEntry')}</span>
+              <span className="mt-0.5 block text-caption-xs text-ink-secondary">{rcc('rec.meEntrySub')}</span>
+            </span>
+            <span className="shrink-0 text-ink-secondary" aria-hidden="true">›</span>
+          </Link>
+        </div>
+
         {/* 2. 订单五格（五态入口；退款售后=槽位置灰 PD-15 V1.1 槽位 10） */}
         <nav className="me2-orderrow" data-testid="me-orderrow" aria-label="订单五态">
           <Link to="/appointments?tab=confirmed" className="o">{I.calendar}待到店</Link>
@@ -216,7 +248,8 @@ export default function MePage() {
           <Link to="/member/rebate" className="g">{I.rebate}<div className="t">回馈金账本<small>{fenToYuan(rebateBalance)}</small></div></Link>
           <Link to="/booking/boarding" className="g">{I.home}<div className="t">寄养预约<small>按晚</small></div></Link>
           <span className="g slot" data-testid="slot-coupons" aria-disabled="true">{I.coupon}<div className="t">优惠券<small>{SLOT_NOTE}</small></div></span>
-          <span className="g slot" data-testid="slot-address" aria-disabled="true">{I.pin}<div className="t">常用地址<small>{SLOT_NOTE}</small></div></span>
+          {/* 客户端体验大批 片 1：常用地址点亮 → /settings/addresses（testid 原值保留） */}
+          <Link to="/settings/addresses" className="g" data-testid="slot-address">{I.pin}<div className="t">常用地址<small>{adc('addr.title')}</small></div></Link>
           {/* 补缺大批片 4：小棉花客服点亮（testid 原值保留） */}
           <Link to="/support/new" className="g" data-testid="slot-concierge">{I.cotton}<div className="t">{sl('ticket.meEntryTitle')}<small>{sl('ticket.meEntrySub')}</small></div></Link>
           <Link to="/me/settings" className="g" data-testid="me-settings">

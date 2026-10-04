@@ -6,11 +6,13 @@
  * 当前设备卡（命中本机 deviceId 的标「当前设备」，兜底=lastSeenAt 最新行）+
  * 设备列表 + 换绑记录时间线（phoneChangeLogs：masked 原号→新号 + 渠道签
  * 自助/门店协助 + mono 时刻）；无换绑记录=空态三句话。
+ * 客户端体验大批 片 1：顶部加「新设备登录提醒」说明行（security.new_device
+ * 事件落消息中心，本页只加说明+链 → /notifications）。
  */
 
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { safeUuid, useMe, usePhiliaClient } from '@philia/shared'
 import { EmptyC } from '../components/member/v2'
 import { ErrorState, LoadingBlock } from '../components/home/common'
@@ -99,6 +101,14 @@ export default function DevicesPage() {
       </div>
 
       <div className="m2-pad" style={{ marginTop: 14, paddingBottom: 60 }}>
+        {/* 异常登录透出（客户端体验大批 片 1）：security.new_device 事件落消息中心，本页只加说明+链 */}
+        <div className="m2-card mb-3 flex items-center gap-3 px-4 py-3" data-testid="device-newdevice-note">
+          <p className="min-w-0 flex-1 text-caption leading-5 text-ink-secondary">{acc('device.newDeviceNote')}</p>
+          <Link to="/notifications" className="flex-none text-caption font-semibold text-ink">
+            {acc('device.newDeviceLink')}
+          </Link>
+        </div>
+
         <SecH title={acc('device.listTitle')} />
         {listQ.isPending ? (
           <LoadingBlock lines={3} />

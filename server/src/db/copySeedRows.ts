@@ -1,9 +1,79 @@
 /**
  * 文案端口种子行（端口批片 B）——生成件，勿手改（源=scripts/gen-copy-overrides-seed.mts）；
  * 重生成：仓库根 npx tsx scripts/gen-copy-overrides-seed.mts（copy 键表增删键后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-04T01:05:01.739Z；键数=2571
+ * 生成时间口径：2026-10-04T04:57:15.987Z；键数=2716
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }> = [
+ {
+  "key": "about.agreements",
+  "domain": "about",
+  "text": "协议中心"
+ },
+ {
+  "key": "about.agreementsSub",
+  "domain": "about",
+  "text": "用户协议 / 隐私政策 / 会员服务协议 / 寄养协议"
+ },
+ {
+  "key": "about.betaNote",
+  "domain": "about",
+  "text": "内测版本，功能与文案以门店公示为准。"
+ },
+ {
+  "key": "about.clearCache",
+  "domain": "about",
+  "text": "清除缓存"
+ },
+ {
+  "key": "about.clearCacheDesc",
+  "domain": "about",
+  "text": "清除本机缓存的图片与偏好，页面随后自动重新加载"
+ },
+ {
+  "key": "about.clearCancel",
+  "domain": "about",
+  "text": "再想想"
+ },
+ {
+  "key": "about.clearConfirmBody",
+  "domain": "about",
+  "text": "将清除本机缓存数据与本端偏好设置（含本机设备标识），账号数据不受影响；确认后页面自动重新加载。"
+ },
+ {
+  "key": "about.clearConfirmTitle",
+  "domain": "about",
+  "text": "清除缓存并重新加载？"
+ },
+ {
+  "key": "about.clearing",
+  "domain": "about",
+  "text": "正在清除…"
+ },
+ {
+  "key": "about.clearOk",
+  "domain": "about",
+  "text": "确认清除"
+ },
+ {
+  "key": "about.pushLabel",
+  "domain": "about",
+  "text": "ABOUT"
+ },
+ {
+  "key": "about.title",
+  "domain": "about",
+  "text": "关于"
+ },
+ {
+  "key": "about.versionLabel",
+  "domain": "about",
+  "text": "版本号"
+ },
+ {
+  "key": "about.versionValue",
+  "domain": "about",
+  "text": "0.9.0 内测版"
+ },
  {
   "key": "appeal.addPhoto",
   "domain": "account",
@@ -550,6 +620,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "换绑记录"
  },
  {
+  "key": "device.newDeviceLink",
+  "domain": "account",
+  "text": "查看消息 ›"
+ },
+ {
+  "key": "device.newDeviceNote",
+  "domain": "account",
+  "text": "新设备登录提醒：账号在新设备登录时，消息中心会收到安全提醒"
+ },
+ {
   "key": "device.pushLabel",
   "domain": "account",
   "text": "DEVICES"
@@ -565,6 +645,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "未命名设备"
  },
  {
+  "key": "privacy.accountDesc",
+  "domain": "account",
+  "text": "登录安全与账号变动"
+ },
+ {
+  "key": "privacy.accountLabel",
+  "domain": "account",
+  "text": "账户通知"
+ },
+ {
   "key": "privacy.footnote",
   "domain": "account",
   "text": "拒绝授权不影响基本功能使用（《个人信息保护法》最小必要口径）。"
@@ -577,7 +667,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
  {
   "key": "privacy.locationNote",
   "domain": "account",
-  "text": "当前版本无定位功能消费点：门店距离展示走门店地址，不取您的定位。"
+  "text": "当前定位消费点=附近门店距离展示：内测版距离行尚未点亮，门店展示走门店地址、不取您的定位；开关先行保存偏好，距离展示点亮后自动生效。"
  },
  {
   "key": "privacy.locationOffHint",
@@ -590,19 +680,29 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "定位"
  },
  {
-  "key": "privacy.notifyDesc",
+  "key": "privacy.lockedNote",
   "domain": "account",
-  "text": "预约进度、退款结果等实时提醒"
+  "text": "不可关闭"
  },
  {
-  "key": "privacy.notifyOffHint",
+  "key": "privacy.lockedWhy",
   "domain": "account",
-  "text": "关闭后，预约进度与退款结果请在订单页查看"
+  "text": "交易/服务/账户通知为保障服务履约不可关闭"
  },
  {
-  "key": "privacy.notifyTitle",
+  "key": "privacy.marketingDesc",
   "domain": "account",
-  "text": "消息通知"
+  "text": "会员日、回馈金到账提醒、门店活动"
+ },
+ {
+  "key": "privacy.marketingLabel",
+  "domain": "account",
+  "text": "活动与优惠"
+ },
+ {
+  "key": "privacy.marketingOffHint",
+  "domain": "account",
+  "text": "关闭后，活动与优惠消息不再推送"
  },
  {
   "key": "privacy.notifyUnread",
@@ -615,6 +715,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "PRIVACY"
  },
  {
+  "key": "privacy.serviceDesc",
+  "domain": "account",
+  "text": "预约进度、证书与报告"
+ },
+ {
+  "key": "privacy.serviceLabel",
+  "domain": "account",
+  "text": "服务通知"
+ },
+ {
   "key": "privacy.title",
   "domain": "account",
   "text": "权限与隐私"
@@ -623,6 +733,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "privacy.toggleFail",
   "domain": "account",
   "text": "设置失败，请重试"
+ },
+ {
+  "key": "privacy.tradeDesc",
+  "domain": "account",
+  "text": "订单支付与退款结果"
+ },
+ {
+  "key": "privacy.tradeLabel",
+  "domain": "account",
+  "text": "交易通知"
  },
  {
   "key": "settings.appeal",
@@ -653,6 +773,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "settings.groupAccount",
   "domain": "account",
   "text": "账号安全"
+ },
+ {
+  "key": "settings.groupCommon",
+  "domain": "account",
+  "text": "通用"
  },
  {
   "key": "settings.groupDanger",
@@ -703,6 +828,226 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "settings.title",
   "domain": "account",
   "text": "设置"
+ },
+ {
+  "key": "addr.add",
+  "domain": "addresses",
+  "text": "新增地址"
+ },
+ {
+  "key": "addr.addTitle",
+  "domain": "addresses",
+  "text": "新增地址"
+ },
+ {
+  "key": "addr.defaultBadge",
+  "domain": "addresses",
+  "text": "默认"
+ },
+ {
+  "key": "addr.delCancel",
+  "domain": "addresses",
+  "text": "再想想"
+ },
+ {
+  "key": "addr.delConfirmBody",
+  "domain": "addresses",
+  "text": "删除后不可恢复。"
+ },
+ {
+  "key": "addr.delConfirmTitle",
+  "domain": "addresses",
+  "text": "删除该地址？"
+ },
+ {
+  "key": "addr.delDefaultNote",
+  "domain": "addresses",
+  "text": "这是默认地址，删除后最早添加的地址将自动升为默认。"
+ },
+ {
+  "key": "addr.delete",
+  "domain": "addresses",
+  "text": "删除"
+ },
+ {
+  "key": "addr.delFail",
+  "domain": "addresses",
+  "text": "删除失败，请稍后再试"
+ },
+ {
+  "key": "addr.delOk",
+  "domain": "addresses",
+  "text": "地址已删除"
+ },
+ {
+  "key": "addr.detailLabel",
+  "domain": "addresses",
+  "text": "详细地址"
+ },
+ {
+  "key": "addr.detailPlaceholder",
+  "domain": "addresses",
+  "text": "小区、楼栋、门牌号等"
+ },
+ {
+  "key": "addr.detailRequired",
+  "domain": "addresses",
+  "text": "请填写详细地址"
+ },
+ {
+  "key": "addr.edit",
+  "domain": "addresses",
+  "text": "编辑"
+ },
+ {
+  "key": "addr.editTitle",
+  "domain": "addresses",
+  "text": "编辑地址"
+ },
+ {
+  "key": "addr.emptyBody",
+  "domain": "addresses",
+  "text": "添加常用收货地址，商城下单结算时一键带出"
+ },
+ {
+  "key": "addr.emptyCta",
+  "domain": "addresses",
+  "text": "新增地址"
+ },
+ {
+  "key": "addr.emptyTitle",
+  "domain": "addresses",
+  "text": "还没有收货地址"
+ },
+ {
+  "key": "addr.loadFail",
+  "domain": "addresses",
+  "text": "地址加载失败，请检查网络后重试"
+ },
+ {
+  "key": "addr.phoneInvalid",
+  "domain": "addresses",
+  "text": "请输入 11 位手机号"
+ },
+ {
+  "key": "addr.phoneLabel",
+  "domain": "addresses",
+  "text": "手机号"
+ },
+ {
+  "key": "addr.phonePlaceholder",
+  "domain": "addresses",
+  "text": "输入 11 位手机号"
+ },
+ {
+  "key": "addr.pushLabel",
+  "domain": "addresses",
+  "text": "ADDRESSES"
+ },
+ {
+  "key": "addr.receiverLabel",
+  "domain": "addresses",
+  "text": "收货人"
+ },
+ {
+  "key": "addr.receiverPlaceholder",
+  "domain": "addresses",
+  "text": "输入收货人姓名"
+ },
+ {
+  "key": "addr.receiverRequired",
+  "domain": "addresses",
+  "text": "请填写收货人"
+ },
+ {
+  "key": "addr.regionLabel",
+  "domain": "addresses",
+  "text": "所在地区"
+ },
+ {
+  "key": "addr.regionPlaceholder",
+  "domain": "addresses",
+  "text": "省 / 市 / 区"
+ },
+ {
+  "key": "addr.regionRequired",
+  "domain": "addresses",
+  "text": "请填写所在地区"
+ },
+ {
+  "key": "addr.save",
+  "domain": "addresses",
+  "text": "保存"
+ },
+ {
+  "key": "addr.saveFail",
+  "domain": "addresses",
+  "text": "保存失败，请稍后再试"
+ },
+ {
+  "key": "addr.saveOk",
+  "domain": "addresses",
+  "text": "地址已保存"
+ },
+ {
+  "key": "addr.saving",
+  "domain": "addresses",
+  "text": "保存中…"
+ },
+ {
+  "key": "addr.setDefault",
+  "domain": "addresses",
+  "text": "设为默认地址"
+ },
+ {
+  "key": "addr.title",
+  "domain": "addresses",
+  "text": "收货地址"
+ },
+ {
+  "key": "agr.betaMark",
+  "domain": "agreements",
+  "text": "内测期简版"
+ },
+ {
+  "key": "agr.betaNote",
+  "domain": "agreements",
+  "text": "本协议为内测期简版文本，正式条款以上线版本与门店公示为准。"
+ },
+ {
+  "key": "agr.boarding",
+  "domain": "agreements",
+  "text": "《寄养协议》"
+ },
+ {
+  "key": "agr.memberService",
+  "domain": "agreements",
+  "text": "《会员服务协议》"
+ },
+ {
+  "key": "agr.privacy",
+  "domain": "agreements",
+  "text": "《隐私政策》"
+ },
+ {
+  "key": "agr.pushLabel",
+  "domain": "agreements",
+  "text": "AGREEMENTS"
+ },
+ {
+  "key": "agr.title",
+  "domain": "agreements",
+  "text": "协议中心"
+ },
+ {
+  "key": "agr.user",
+  "domain": "agreements",
+  "text": "《用户协议》"
+ },
+ {
+  "key": "agr.version",
+  "domain": "agreements",
+  "text": "版本 {version}"
  },
  {
   "key": "appointments.albumSub",
@@ -1235,6 +1580,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "PHILIA · 洗护 / 美容 / 寄养"
  },
  {
+  "key": "devlogin.wechatNote",
+  "domain": "devlogin",
+  "text": "微信授权登录属小程序/资质批，PWA 端暂以手机号+种子账号入内测"
+ },
+ {
   "key": "home.casesMore",
   "domain": "home",
   "text": "每日更新 ›"
@@ -1398,6 +1748,176 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "home.statsSpend",
   "domain": "home",
   "text": "累计消费"
+ },
+ {
+  "key": "invt.add",
+  "domain": "invoiceTitles",
+  "text": "新增抬头"
+ },
+ {
+  "key": "invt.addTitle",
+  "domain": "invoiceTitles",
+  "text": "新增抬头"
+ },
+ {
+  "key": "invt.defaultBadge",
+  "domain": "invoiceTitles",
+  "text": "默认"
+ },
+ {
+  "key": "invt.delCancel",
+  "domain": "invoiceTitles",
+  "text": "再想想"
+ },
+ {
+  "key": "invt.delConfirmBody",
+  "domain": "invoiceTitles",
+  "text": "删除后不可恢复。"
+ },
+ {
+  "key": "invt.delConfirmTitle",
+  "domain": "invoiceTitles",
+  "text": "删除该抬头？"
+ },
+ {
+  "key": "invt.delete",
+  "domain": "invoiceTitles",
+  "text": "删除"
+ },
+ {
+  "key": "invt.delFail",
+  "domain": "invoiceTitles",
+  "text": "删除失败，请稍后再试"
+ },
+ {
+  "key": "invt.delOk",
+  "domain": "invoiceTitles",
+  "text": "抬头已删除"
+ },
+ {
+  "key": "invt.edit",
+  "domain": "invoiceTitles",
+  "text": "编辑"
+ },
+ {
+  "key": "invt.editTitle",
+  "domain": "invoiceTitles",
+  "text": "编辑抬头"
+ },
+ {
+  "key": "invt.emptyBody",
+  "domain": "invoiceTitles",
+  "text": "保存常用抬头，申请发票时一键回填"
+ },
+ {
+  "key": "invt.emptyCta",
+  "domain": "invoiceTitles",
+  "text": "新增抬头"
+ },
+ {
+  "key": "invt.emptyTitle",
+  "domain": "invoiceTitles",
+  "text": "还没有发票抬头"
+ },
+ {
+  "key": "invt.loadFail",
+  "domain": "invoiceTitles",
+  "text": "抬头加载失败，请检查网络后重试"
+ },
+ {
+  "key": "invt.pickCta",
+  "domain": "invoiceTitles",
+  "text": "选常用抬头 ›"
+ },
+ {
+  "key": "invt.pickTitle",
+  "domain": "invoiceTitles",
+  "text": "选择常用抬头"
+ },
+ {
+  "key": "invt.pushLabel",
+  "domain": "invoiceTitles",
+  "text": "INVOICE TITLES"
+ },
+ {
+  "key": "invt.save",
+  "domain": "invoiceTitles",
+  "text": "保存"
+ },
+ {
+  "key": "invt.saveFail",
+  "domain": "invoiceTitles",
+  "text": "保存失败，请稍后再试"
+ },
+ {
+  "key": "invt.saveOk",
+  "domain": "invoiceTitles",
+  "text": "抬头已保存"
+ },
+ {
+  "key": "invt.saving",
+  "domain": "invoiceTitles",
+  "text": "保存中…"
+ },
+ {
+  "key": "invt.setDefault",
+  "domain": "invoiceTitles",
+  "text": "设为默认抬头"
+ },
+ {
+  "key": "invt.taxNoLabel",
+  "domain": "invoiceTitles",
+  "text": "税号（统一社会信用代码）"
+ },
+ {
+  "key": "invt.taxNoPlaceholder",
+  "domain": "invoiceTitles",
+  "text": "企业抬头必填"
+ },
+ {
+  "key": "invt.taxNoRequired",
+  "domain": "invoiceTitles",
+  "text": "企业抬头须填写税号"
+ },
+ {
+  "key": "invt.title",
+  "domain": "invoiceTitles",
+  "text": "发票抬头"
+ },
+ {
+  "key": "invt.titleLabel",
+  "domain": "invoiceTitles",
+  "text": "抬头名称"
+ },
+ {
+  "key": "invt.titlePlaceholderBusiness",
+  "domain": "invoiceTitles",
+  "text": "输入企业全称"
+ },
+ {
+  "key": "invt.titlePlaceholderPersonal",
+  "domain": "invoiceTitles",
+  "text": "输入姓名"
+ },
+ {
+  "key": "invt.titleRequired",
+  "domain": "invoiceTitles",
+  "text": "请填写抬头名称"
+ },
+ {
+  "key": "invt.typeBusiness",
+  "domain": "invoiceTitles",
+  "text": "企业"
+ },
+ {
+  "key": "invt.typeLabel",
+  "domain": "invoiceTitles",
+  "text": "抬头类型"
+ },
+ {
+  "key": "invt.typePersonal",
+  "domain": "invoiceTitles",
+  "text": "个人"
  },
  {
   "key": "mall.backHome",
@@ -8608,6 +9128,211 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "pets.vaccineSoon",
   "domain": "pets",
   "text": "疫苗 {days} 天后到期 · 寄养需有效期内"
+ },
+ {
+  "key": "profile.avatarChange",
+  "domain": "profile",
+  "text": "更换头像"
+ },
+ {
+  "key": "profile.avatarLabel",
+  "domain": "profile",
+  "text": "头像"
+ },
+ {
+  "key": "profile.birthdayLabel",
+  "domain": "profile",
+  "text": "生日"
+ },
+ {
+  "key": "profile.genderFemale",
+  "domain": "profile",
+  "text": "女"
+ },
+ {
+  "key": "profile.genderLabel",
+  "domain": "profile",
+  "text": "性别"
+ },
+ {
+  "key": "profile.genderMale",
+  "domain": "profile",
+  "text": "男"
+ },
+ {
+  "key": "profile.genderSecret",
+  "domain": "profile",
+  "text": "保密"
+ },
+ {
+  "key": "profile.loadFail",
+  "domain": "profile",
+  "text": "资料加载失败，请检查网络后重试"
+ },
+ {
+  "key": "profile.meEntry",
+  "domain": "profile",
+  "text": "编辑资料"
+ },
+ {
+  "key": "profile.meEntrySub",
+  "domain": "profile",
+  "text": "头像 · 昵称 · 生日 · 性别"
+ },
+ {
+  "key": "profile.nicknameLabel",
+  "domain": "profile",
+  "text": "昵称"
+ },
+ {
+  "key": "profile.nicknamePlaceholder",
+  "domain": "profile",
+  "text": "输入昵称"
+ },
+ {
+  "key": "profile.nicknameRequired",
+  "domain": "profile",
+  "text": "昵称不能为空"
+ },
+ {
+  "key": "profile.pushLabel",
+  "domain": "profile",
+  "text": "PROFILE"
+ },
+ {
+  "key": "profile.save",
+  "domain": "profile",
+  "text": "保存"
+ },
+ {
+  "key": "profile.saveFail",
+  "domain": "profile",
+  "text": "保存失败，请稍后再试"
+ },
+ {
+  "key": "profile.saveOk",
+  "domain": "profile",
+  "text": "资料已保存"
+ },
+ {
+  "key": "profile.saving",
+  "domain": "profile",
+  "text": "保存中…"
+ },
+ {
+  "key": "profile.title",
+  "domain": "profile",
+  "text": "编辑资料"
+ },
+ {
+  "key": "profile.uploadFail",
+  "domain": "profile",
+  "text": "头像上传失败，请重试"
+ },
+ {
+  "key": "profile.uploading",
+  "domain": "profile",
+  "text": "上传中…"
+ },
+ {
+  "key": "rec.depHeld",
+  "domain": "records",
+  "text": "在押"
+ },
+ {
+  "key": "rec.depHeldAt",
+  "domain": "records",
+  "text": "收取 {time}"
+ },
+ {
+  "key": "rec.depositEmpty",
+  "domain": "records",
+  "text": "暂无押金记录"
+ },
+ {
+  "key": "rec.depositNote",
+  "domain": "records",
+  "text": "押金收退=门店登记留痕，进度以此为准"
+ },
+ {
+  "key": "rec.depositTitle",
+  "domain": "records",
+  "text": "押金进度"
+ },
+ {
+  "key": "rec.depRefunded",
+  "domain": "records",
+  "text": "已退还"
+ },
+ {
+  "key": "rec.depRefundedAt",
+  "domain": "records",
+  "text": "退还完成 {time}"
+ },
+ {
+  "key": "rec.depRefunding",
+  "domain": "records",
+  "text": "退还在途"
+ },
+ {
+  "key": "rec.depRefundReqAt",
+  "domain": "records",
+  "text": "申请退还 {time}"
+ },
+ {
+  "key": "rec.emptyBody",
+  "domain": "records",
+  "text": "支付单、商城订单与发票记录会在这里汇总"
+ },
+ {
+  "key": "rec.emptyCta",
+  "domain": "records",
+  "text": "去商城逛逛 ›"
+ },
+ {
+  "key": "rec.emptyTitle",
+  "domain": "records",
+  "text": "还没有消费记录"
+ },
+ {
+  "key": "rec.kindInvoice",
+  "domain": "records",
+  "text": "发票"
+ },
+ {
+  "key": "rec.kindOrder",
+  "domain": "records",
+  "text": "订单"
+ },
+ {
+  "key": "rec.kindPay",
+  "domain": "records",
+  "text": "支付"
+ },
+ {
+  "key": "rec.loadFail",
+  "domain": "records",
+  "text": "记录加载失败，请检查网络后重试"
+ },
+ {
+  "key": "rec.meEntry",
+  "domain": "records",
+  "text": "消费记录"
+ },
+ {
+  "key": "rec.meEntrySub",
+  "domain": "records",
+  "text": "支付 · 订单 · 发票 · 押金"
+ },
+ {
+  "key": "rec.pushLabel",
+  "domain": "records",
+  "text": "RECORDS"
+ },
+ {
+  "key": "rec.title",
+  "domain": "records",
+  "text": "消费记录"
  },
  {
   "key": "refund.amountLabel",

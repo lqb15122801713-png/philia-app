@@ -74,6 +74,8 @@ export const EventType = {
   // 员工端骨架整建批 片 3（任务执行+通讯；同步自 server realtime/events.ts）
   TaskReminder:          'task.reminder',           // 循环任务截止前提醒 → staff:{staffId}
   AnnouncementPublished: 'announcement.published',  // 公告发布 → store 频道
+  // 客户端体验大批 片 1（账户体系；同步自 server realtime/events.ts）
+  SecurityNewDevice:     'security.newDevice',      // 新设备登录提醒（首见设备登记） → user 频道
 } as const;
 
 export type EventTypeValue = (typeof EventType)[keyof typeof EventType];

@@ -13,6 +13,7 @@
  */
 
 import { router } from '../trpc';
+import { addressRouter } from './addresses';
 import { appointmentRouter } from './appointment';
 import { attendanceRouter } from './attendance';
 import { authRouter } from './auth';
@@ -21,7 +22,9 @@ import { boardingRouter } from './boarding';
 import { cashierRouter } from './cashier';
 import { commissionRouter } from './commission';
 import { configRulesRouter } from './configRules';
+import { depositRouter } from './deposits';
 import { inventoryRouter } from './inventory';
+import { invoiceTitleRouter } from './invoiceTitles';
 import { mallRouter } from './mall';
 import { membershipRouter } from './membership';
 import { passRouter } from './pass';
@@ -75,6 +78,9 @@ export const appRouter = router({
   announce: announceRouter, // 片 3：公告+已读回执（定向发布+逐人通知+对账名单）
   staffExit: staffExitRouter, // 片 3：离职交接（未完结单改挂+前后值留痕；锁定本体=staffProcedure 既有闸）
   payroll: payrollRouter, // 片 4：薪资域（协作拆分/工资条两态/发放标记留痕/异议申诉返还，涉钱批）
+  address: addressRouter, // 客户端体验大批片 1：收货地址 CRUD+默认（本人闸，默认唯一应用层保）
+  invoiceTitle: invoiceTitleRouter, // 客户端体验大批片 1：发票抬头 CRUD+默认（business 须税号；发票申请可选引用=前端活）
+  deposit: depositRouter, // 客户端体验大批片 1：押金台账（留痕不碰真钱·开口项 2 裁：held→refunding→refunded 登记制，零支付通道写）
 });
 
 /** 前端 tRPC client 的类型锚点（仅类型导出，无运行时开销） */
