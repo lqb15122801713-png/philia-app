@@ -111,6 +111,13 @@ const ROUTES = [
   { app: 'customer', path: '/me/settings/phone/appeal', expect: 'sub', note: '补缺批片 2 账户安全' },
   { app: 'customer', path: '/me/settings/devices', expect: 'sub', note: '补缺批片 2 账户安全' },
   { app: 'customer', path: '/me/settings/privacy', expect: 'sub', note: '补缺批片 2 账户安全' },
+  /* 客户端体验大批 片 1（账户体系+支付售后面：六屏新路由，PushBar 返回条四要素闭环） */
+  { app: 'customer', path: '/settings/profile', expect: 'sub', note: '客户端体验大批 片 1（编辑资料）' },
+  { app: 'customer', path: '/settings/addresses', expect: 'sub', note: '客户端体验大批 片 1（收货地址）' },
+  { app: 'customer', path: '/settings/about', expect: 'sub', note: '客户端体验大批 片 1（关于）' },
+  { app: 'customer', path: '/settings/agreements', expect: 'sub', note: '客户端体验大批 片 1（协议中心）' },
+  { app: 'customer', path: '/settings/invoice-titles', expect: 'sub', note: '客户端体验大批 片 1（发票抬头）' },
+  { app: 'customer', path: '/records', expect: 'sub', note: '客户端体验大批 片 1（消费记录+押金进度）' },
   { app: 'customer', path: '/member/upgrade', expect: 'sub', note: '补缺批片 3 会员域' },
   { app: 'customer', path: '/member/change', expect: 'sub', note: '补缺批片 3 会员域' },
   { app: 'customer', path: '/notifications', expect: 'sub', note: '补缺批片 5 站内信（消息中心）' },

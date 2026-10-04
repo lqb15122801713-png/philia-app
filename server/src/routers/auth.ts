@@ -13,7 +13,15 @@ import { TRPCError } from '@trpc/server';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
-import { publicProcedure, router } from '../trpc';
+import { customerProcedure, publicProcedure, router } from '../trpc';
+
+/** 生日格式：'YYYY-MM-DD' 且须为真实历日（非法 400） */
+const BIRTHDAY_RE = /^\d{4}-\d{2}-\d{2}$/;
+function isValidBirthday(s: string): boolean {
+  if (!BIRTHDAY_RE.test(s)) return false;
+  const d = new Date(`${s}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+}
 
 export const authRouter = router({
   /** 当前登录用户：用户行 + 角色集 + staff/store 绑定信息 */
@@ -179,5 +187,65 @@ export const authRouter = router({
       });
 
       return { store, created: true as const };
+    }),
+
+  /**
+   * 资料编辑（客户端体验大批 片 1 · customer）：{nickname?, avatarUrl?, birthday?, gender?}
+   * 全可选、传啥改啥（未传字段不动；显式传空串=清空该字段）。
+   * - nickname 非空 1-20 字；birthday 须 'YYYY-MM-DD' 真实历日（非法 400）；
+   * - gender ∈ male|female|secret（枚举外 400 明文）。
+   * 返回更新后 user 行。
+   */
+  updateProfile: customerProcedure
+    .input(
+      z.object({
+        nickname: z.string().trim().min(1, '昵称不能为空').max(20, '昵称不能超过 20 字').optional(),
+        avatarUrl: z.string().trim().max(500, '头像地址过长').optional(),
+        birthday: z.string().trim().optional(),
+        gender: z.string().trim().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const set: Partial<{
+        nickname: string;
+        avatarUrl: string | null;
+        birthday: string | null;
+        gender: string | null;
+      }> = {};
+      if (input.nickname !== undefined) set.nickname = input.nickname;
+      if (input.avatarUrl !== undefined) set.avatarUrl = input.avatarUrl === '' ? null : input.avatarUrl;
+      if (input.birthday !== undefined) {
+        if (input.birthday === '') {
+          set.birthday = null; // 显式清空
+        } else {
+          if (!isValidBirthday(input.birthday)) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: '生日格式应为 YYYY-MM-DD（如 1999-12-31）' });
+          }
+          set.birthday = input.birthday;
+        }
+      }
+      if (input.gender !== undefined) {
+        if (input.gender === '') {
+          set.gender = null; // 显式清空
+        } else if (input.gender === 'male' || input.gender === 'female' || input.gender === 'secret') {
+          set.gender = input.gender;
+        } else {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: '性别取值仅支持 male（男）/ female（女）/ secret（保密）' });
+        }
+      }
+      if (Object.keys(set).length > 0) {
+        await ctx.db
+          .update(schema.users)
+          .set({ ...set, updatedAt: new Date() })
+          .where(eq(schema.users.id, ctx.user.id));
+      }
+      const user = await ctx.db
+        .select()
+        .from(schema.users)
+        .where(eq(schema.users.id, ctx.user.id))
+        .limit(1)
+        .then((r) => r[0]);
+      if (!user) throw new TRPCError({ code: 'UNAUTHORIZED', message: '账号不存在或已被删除' });
+      return { user };
     }),
 });

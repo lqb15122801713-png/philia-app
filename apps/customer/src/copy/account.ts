@@ -20,6 +20,8 @@ const ACCOUNT_COPY_TABLE = {
   'settings.pushLabel': 'SETTINGS',
   'settings.groupAccount': '账号安全',
   'settings.groupGeneral': '设备与隐私',
+  /* 客户端体验大批 片 1：通用组（收货地址 / 发票抬头 / 关于与协议） */
+  'settings.groupCommon': '通用',
   'settings.phoneBind': '手机号换绑',
   'settings.appeal': '换绑申诉',
   'settings.appealSub': '原号已不可用？门店协助换绑',
@@ -153,22 +155,38 @@ const ACCOUNT_COPY_TABLE = {
   'device.channelSelf': '自助换绑',
   'device.channelAssisted': '门店协助',
   'device.logLine': '{old} → {new}',
+  /* 异常登录透出（客户端体验大批 片 1）：新设备登录 → security.new_device 事件落消息中心 */
+  'device.newDeviceNote': '新设备登录提醒：账号在新设备登录时，消息中心会收到安全提醒',
+  'device.newDeviceLink': '查看消息 ›',
   /* 空态三句话（无换绑记录）：是什么 / 为什么 / 去哪 */
   'device.emptyTitle': '还没有换绑记录',
   'device.emptyBody': '手机号每次换绑都会在这里留痕，方便核对账号变动',
   'device.emptyCta': '返回设置',
 
-  /* ---- 隐私 /me/settings/privacy ---- */
+  /* ---- 隐私 /me/settings/privacy ----
+     客户端体验大批 片 1 修两截：通知开关改读 push.notifyPrefs 真值（去本地镜像），
+     写走 setNotifyPref；仅 marketing 可关，交易/服务/账户置灰 +「不可关闭」注记
+     （写死口径与 e2e 54.4 断言同源）；定位开关持久化 client 偏好 + 消费点诚实注记。 */
   'privacy.pushLabel': 'PRIVACY',
   'privacy.title': '权限与隐私',
-  'privacy.notifyTitle': '消息通知',
-  'privacy.notifyDesc': '预约进度、退款结果等实时提醒',
+  'privacy.marketingLabel': '活动与优惠',
+  'privacy.marketingDesc': '会员日、回馈金到账提醒、门店活动',
+  'privacy.marketingOffHint': '关闭后，活动与优惠消息不再推送',
   'privacy.notifyUnread': '当前有未读通知',
-  'privacy.notifyOffHint': '关闭后，预约进度与退款结果请在订单页查看',
+  'privacy.tradeLabel': '交易通知',
+  'privacy.tradeDesc': '订单支付与退款结果',
+  'privacy.serviceLabel': '服务通知',
+  'privacy.serviceDesc': '预约进度、证书与报告',
+  'privacy.accountLabel': '账户通知',
+  'privacy.accountDesc': '登录安全与账号变动',
+  'privacy.lockedNote': '不可关闭',
+  /* 写死口径（e2e 54.4 断言同源明文） */
+  'privacy.lockedWhy': '交易/服务/账户通知为保障服务履约不可关闭',
   'privacy.locationTitle': '定位',
   'privacy.locationDesc': '用于展示附近门店距离',
   'privacy.locationOffHint': '关闭不影响预约与下单',
-  'privacy.locationNote': '当前版本无定位功能消费点：门店距离展示走门店地址，不取您的定位。',
+  /* 定位消费点诚实注记（无真消费展示点不造假）：开关先行落偏好，消费点点亮即生效 */
+  'privacy.locationNote': '当前定位消费点=附近门店距离展示：内测版距离行尚未点亮，门店展示走门店地址、不取您的定位；开关先行保存偏好，距离展示点亮后自动生效。',
   'privacy.toggleFail': '设置失败，请重试',
   'privacy.footnote': '拒绝授权不影响基本功能使用（《个人信息保护法》最小必要口径）。',
 } as const;

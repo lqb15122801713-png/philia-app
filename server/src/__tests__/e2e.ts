@@ -171,8 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 2571 键/57 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57）；
+ *      56.1 种子 2716 键/63 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -192,6 +192,25 @@
  *   55.5 退款联动：线上支付单退款→online_original+linkage.payOrderNo 快照+provider.refund 留痕
  *   55.6 超时关单端口可调（config.save 改 minutes 生效复还原）
  *   55.7 权限：他人 pay_orders status/reconcile 403
+ *
+ * 客户端体验大批 片 1（账户体系+支付售后 · server 侧）段（65 账户族 / 66 支付售后族，
+ * 续号挂尾；押金留痕不碰真钱（开口项 2 裁），recordsMine 纯聚合只读（开口项 3 裁））：
+ *   65.1 updateProfile：改昵称/生日/性别落库 + auth.me 读回一致；非法 birthday /
+ *       性别枚举外 / 空昵称 400 明文；传啥改啥（未传字段不动）
+ *   65.2 地址 CRUD+默认：create 两条（第二条 isDefault=true）→ list 默认在前+第一条
+ *       默认被清；update 改 detail；remove 默认行→剩余第一条自动升默认；setDefault
+ *       同事务清其他；他人 id 操作一律 NOT_FOUND 不透出
+ *   65.3 抬头 CRUD+默认：business 缺 taxNo 400 明文 / titleType 枚举外 400；personal
+ *       建 + business 建（默认）+ setDefault + remove 默认行自动升默认链
+ *   65.4 异常登录提醒：registerDevice 首见设备 → notifications 落 security.new_device
+ *       行（link=/settings/devices，category=account）+ security.newDevice 事件落
+ *       outbox；同设备重登记=零新增零通知（幂等语义不动）
+ *   66.1 押金全链：create（本店客户校验：无在店痕迹 400 明文）→ held → markRefunding
+ *       → markRefunded → 幂等重调零副作用；listMine 客户读见进度三时点+门店名透出；
+ *       storeSummary 在押合计=Σheld+refunding 精确到分；**断言零 pay_orders 新行**
+ *       （不碰真钱实证）；跨店 NOT_FOUND 不透出
+ *   66.2 recordsMine：造本人支付单+商城订单+发票各一 → 聚合三类齐+createdAt 倒序；
+ *       他人零透出
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -4855,17 +4874,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（2571 键/57 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 2571 && domainSet.size === 57 &&
+  check('56.1 copy 域种子全量落库（2716 键/63 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 2716 && domainSet.size === 63 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（2571 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 2571 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（2716 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 2716 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -6293,6 +6312,370 @@ async function main(): Promise<void> {
       penAfter642?.points === -8 && offset642[0]!.points + penAfter642.points === 0 &&
       rev642again instanceof TrpcHttpError && rev642again.httpStatus === 400,
     { offset: offset642.map((e) => e.points), pen: penAfter642?.points, again: rev642again && rev642again.httpStatus });
+
+  /* ==================================================================
+   * 客户端体验大批 片 1（账户体系+支付售后 · server 侧）验收段 65/66
+   * 65 账户族：资料编辑 / 收货地址 / 发票抬头 / 异常登录提醒
+   * 66 支付售后族：押金台账（留痕不碰真钱）/ 消费记录统一入口（纯聚合只读）
+   * ================================================================== */
+  console.log('\n[片1] 65. 账户族（资料编辑/地址/抬头/异常登录提醒）');
+
+  /* ---------- 65.1 updateProfile：资料编辑落库+读回一致+非法输入 400 ---------- */
+  console.log('\n[片1] 65.1 updateProfile 资料编辑');
+  const reg65a = await devLoginPhone('13966660050');
+  const cookie65a = reg65a.cookie!;
+  const user65aId = reg65a.body.user!.id!;
+  interface MeUser65 { id: string; nickname: string | null; birthday: string | null; gender: string | null }
+  const upd651 = await trpcMutate<{ user: MeUser65 }>('auth.updateProfile', {
+    cookie: cookie65a,
+    input: { nickname: '体验喵', birthday: '1999-12-31', gender: 'female' },
+  });
+  check('65.1 updateProfile 改昵称/生日/性别落库（返回 user 三字段一致）',
+    upd651.user.id === user65aId && upd651.user.nickname === '体验喵' &&
+      upd651.user.birthday === '1999-12-31' && upd651.user.gender === 'female',
+    upd651.user);
+  const me651 = await trpcQuery<{ user: MeUser65 }>('auth.me', { cookie: cookie65a });
+  check('65.1 auth.me 读回一致（昵称/生日/性别）',
+    me651.user.nickname === '体验喵' && me651.user.birthday === '1999-12-31' && me651.user.gender === 'female',
+    me651.user);
+  const updBadBirth651 = await asErr(trpcMutate('auth.updateProfile', {
+    cookie: cookie65a, input: { birthday: '2026-13-40' },
+  }));
+  const updBadBirthFmt651 = await asErr(trpcMutate('auth.updateProfile', {
+    cookie: cookie65a, input: { birthday: '1999/01/01' },
+  }));
+  check('65.1 非法 birthday 400 明文（不存在历日 + 非法格式双闸）',
+    updBadBirth651 instanceof TrpcHttpError && updBadBirth651.code === 'BAD_REQUEST' && updBadBirth651.message.includes('生日') &&
+      updBadBirthFmt651 instanceof TrpcHttpError && updBadBirthFmt651.code === 'BAD_REQUEST' && updBadBirthFmt651.message.includes('生日'),
+    { a: updBadBirth651 && updBadBirth651.message, b: updBadBirthFmt651 && updBadBirthFmt651.message });
+  const updBadGender651 = await asErr(trpcMutate('auth.updateProfile', {
+    cookie: cookie65a, input: { gender: 'other' },
+  }));
+  check('65.1 性别枚举外 400 明文（male/female/secret）',
+    updBadGender651 instanceof TrpcHttpError && updBadGender651.code === 'BAD_REQUEST' && updBadGender651.message.includes('性别'),
+    updBadGender651 && updBadGender651.message);
+  const updBadNick651 = await asErr(trpcMutate('auth.updateProfile', {
+    cookie: cookie65a, input: { nickname: '' },
+  }));
+  check('65.1 空昵称 400（非空 1-20 字闸）',
+    updBadNick651 instanceof TrpcHttpError && updBadNick651.code === 'BAD_REQUEST',
+    updBadNick651 && updBadNick651.message);
+  const updPartial651 = await trpcMutate<{ user: MeUser65 }>('auth.updateProfile', {
+    cookie: cookie65a, input: { nickname: '只改昵称' },
+  });
+  check('65.1 传啥改啥：仅改昵称，生日/性别原值不动',
+    updPartial651.user.nickname === '只改昵称' && updPartial651.user.birthday === '1999-12-31' && updPartial651.user.gender === 'female',
+    updPartial651.user);
+
+  /* ---------- 65.2 收货地址 CRUD+默认 ---------- */
+  console.log('\n[片1] 65.2 收货地址 CRUD+默认');
+  interface AddrRow65 { id: string; receiver: string; detail: string; isDefault: boolean }
+  const addrA1 = await trpcMutate<{ address: AddrRow65 }>('address.create', {
+    cookie: cookie65a,
+    input: { receiver: '喵收件', phone: '13966660050', region: '浙江省杭州市西湖区', detail: '文三路 1 号' },
+  });
+  const addrA2 = await trpcMutate<{ address: AddrRow65 }>('address.create', {
+    cookie: cookie65a,
+    input: { receiver: '汪收件', phone: '13966660051', region: '浙江省杭州市拱墅区', detail: '莫干山路 2 号', isDefault: true },
+  });
+  const addrList652 = await trpcQuery<{ items: AddrRow65[] }>('address.list', { cookie: cookie65a });
+  check('65.2 create 两条（第二条 isDefault=true）→ list 默认在前 + 第一条默认被同事务清掉',
+    addrA1.address.isDefault === false && addrA2.address.isDefault === true &&
+      addrList652.items.length === 2 && addrList652.items[0]!.id === addrA2.address.id &&
+      addrList652.items[0]!.isDefault === true && addrList652.items[1]!.isDefault === false,
+    addrList652.items.map((a) => ({ id: a.id, d: a.isDefault })));
+  const addrBadPhone = await asErr(trpcMutate('address.create', {
+    cookie: cookie65a,
+    input: { receiver: '错号', phone: '123', region: 'x', detail: 'y' },
+  }));
+  check('65.2 手机号 11 位校验（非法 → 400 明文）',
+    addrBadPhone instanceof TrpcHttpError && addrBadPhone.code === 'BAD_REQUEST' && addrBadPhone.message.includes('手机号'),
+    addrBadPhone && addrBadPhone.message);
+  const addrUpd = await trpcMutate<{ address: AddrRow65 }>('address.update', {
+    cookie: cookie65a, input: { id: addrA1.address.id, detail: '文三路 2 号（已改）' },
+  });
+  check('65.2 update 改 detail 落库', addrUpd.address.detail === '文三路 2 号（已改）', addrUpd.address);
+  const addrRm = await trpcMutate<{ removed: boolean; promotedId: string | null }>('address.remove', {
+    cookie: cookie65a, input: { id: addrA2.address.id },
+  });
+  const addrListAfterRm = await trpcQuery<{ items: AddrRow65[] }>('address.list', { cookie: cookie65a });
+  check('65.2 remove 默认行 → 剩余第一条自动升默认（promotedId=剩余行 + list 读回 isDefault=true）',
+    addrRm.removed === true && addrRm.promotedId === addrA1.address.id &&
+      addrListAfterRm.items.length === 1 && addrListAfterRm.items[0]!.isDefault === true,
+    { promotedId: addrRm.promotedId, list: addrListAfterRm.items.map((a) => ({ id: a.id, d: a.isDefault })) });
+  const addrCrossUpd = await asErr(trpcMutate('address.update', {
+    cookie: customerCookie, input: { id: addrA1.address.id, detail: '越权改' },
+  }));
+  const addrCrossRm = await asErr(trpcMutate('address.remove', {
+    cookie: customerCookie, input: { id: addrA1.address.id },
+  }));
+  const addrCrossDef = await asErr(trpcMutate('address.setDefault', {
+    cookie: customerCookie, input: { id: addrA1.address.id },
+  }));
+  check('65.2 他人 id 操作一律 NOT_FOUND 不透出（update/remove/setDefault 三连）',
+    [addrCrossUpd, addrCrossRm, addrCrossDef].every(
+      (e) => e instanceof TrpcHttpError && e.code === 'NOT_FOUND',
+    ),
+    [addrCrossUpd?.code, addrCrossRm?.code, addrCrossDef?.code]);
+  const addrA3 = await trpcMutate<{ address: AddrRow65 }>('address.create', {
+    cookie: cookie65a,
+    input: { receiver: '兔收件', phone: '13966660052', region: '浙江省杭州市滨江区', detail: '江南大道 3 号' },
+  });
+  const addrSetDef = await trpcMutate<{ address: AddrRow65 }>('address.setDefault', {
+    cookie: cookie65a, input: { id: addrA3.address.id },
+  });
+  const addrListFinal = await trpcQuery<{ items: AddrRow65[] }>('address.list', { cookie: cookie65a });
+  check('65.2 setDefault 同事务清其他默认（a3 升默认 + a1 被清，list 默认在前）',
+    addrSetDef.address.isDefault === true && addrListFinal.items[0]!.id === addrA3.address.id &&
+      addrListFinal.items[0]!.isDefault === true &&
+      addrListFinal.items.every((a) => a.id === addrA3.address.id || a.isDefault === false),
+    addrListFinal.items.map((a) => ({ id: a.id, d: a.isDefault })));
+
+  /* ---------- 65.3 发票抬头 CRUD+默认 ---------- */
+  console.log('\n[片1] 65.3 发票抬头 CRUD+默认');
+  interface TitleRow65 { id: string; titleType: string; title: string; taxNo: string | null; isDefault: boolean }
+  const titleBadNoTax = await asErr(trpcMutate('invoiceTitle.create', {
+    cookie: cookie65a, input: { titleType: 'business', title: '菲丽亚测试公司' },
+  }));
+  check('65.3 business 缺 taxNo → 400 明文「企业抬头必须填写税号」',
+    titleBadNoTax instanceof TrpcHttpError && titleBadNoTax.code === 'BAD_REQUEST' && titleBadNoTax.message.includes('税号'),
+    titleBadNoTax && titleBadNoTax.message);
+  const titleBadType = await asErr(trpcMutate('invoiceTitle.create', {
+    cookie: cookie65a, input: { titleType: 'corp', title: 'x' },
+  }));
+  check('65.3 titleType 枚举外 → 400 明文（personal/business）',
+    titleBadType instanceof TrpcHttpError && titleBadType.code === 'BAD_REQUEST' && titleBadType.message.includes('抬头类型'),
+    titleBadType && titleBadType.message);
+  const titleT1 = await trpcMutate<{ title: TitleRow65 }>('invoiceTitle.create', {
+    cookie: cookie65a, input: { titleType: 'personal', title: '个人抬头' },
+  });
+  const titleT2 = await trpcMutate<{ title: TitleRow65 }>('invoiceTitle.create', {
+    cookie: cookie65a, input: { titleType: 'business', title: '菲丽亚测试公司', taxNo: '91330100TEST0001X', isDefault: true },
+  });
+  const titleList653 = await trpcQuery<{ items: TitleRow65[] }>('invoiceTitle.list', { cookie: cookie65a });
+  check('65.3 personal 建（taxNo 恒 NULL）+ business 建默认 → list 默认在前 + personal 默认被清',
+    titleT1.title.titleType === 'personal' && titleT1.title.taxNo === null &&
+      titleT2.title.titleType === 'business' && titleT2.title.taxNo === '91330100TEST0001X' &&
+      titleList653.items[0]!.id === titleT2.title.id && titleList653.items[0]!.isDefault === true &&
+      titleList653.items[1]!.isDefault === false,
+    titleList653.items.map((t) => ({ id: t.id, type: t.titleType, d: t.isDefault })));
+  await trpcMutate('invoiceTitle.setDefault', { cookie: cookie65a, input: { id: titleT1.title.id } });
+  const titleRm = await trpcMutate<{ removed: boolean; promotedId: string | null }>('invoiceTitle.remove', {
+    cookie: cookie65a, input: { id: titleT1.title.id },
+  });
+  const titleListAfterRm = await trpcQuery<{ items: TitleRow65[] }>('invoiceTitle.list', { cookie: cookie65a });
+  check('65.3 setDefault 换默认 + remove 默认行 → 剩余自动升默认（personal 建+setDefault+remove 链）',
+    titleRm.promotedId === titleT2.title.id &&
+      titleListAfterRm.items.length === 1 && titleListAfterRm.items[0]!.id === titleT2.title.id &&
+      titleListAfterRm.items[0]!.isDefault === true,
+    { promotedId: titleRm.promotedId, list: titleListAfterRm.items.map((t) => ({ id: t.id, d: t.isDefault })) });
+  const titleCrossUpd = await asErr(trpcMutate('invoiceTitle.update', {
+    cookie: customerCookie, input: { id: titleT2.title.id, title: '越权改' },
+  }));
+  check('65.3 他人 id 操作 NOT_FOUND 不透出',
+    titleCrossUpd instanceof TrpcHttpError && titleCrossUpd.code === 'NOT_FOUND',
+    titleCrossUpd && titleCrossUpd.code);
+
+  /* ---------- 65.4 异常登录提醒（首见设备 → 事件+站内信；重登记零新增） ---------- */
+  console.log('\n[片1] 65.4 异常登录提醒');
+  const reg65d = await devLoginPhone('13966660053');
+  const cookie65d = reg65d.cookie!;
+  const user65dId = reg65d.body.user!.id!;
+  const notif654before = (await db.select().from(schema.notifications))
+    .filter((n) => n.userId === user65dId && n.type === 'security.new_device');
+  const outbox654before = (await db.select().from(schema.eventOutbox))
+    .filter((r) => r.eventType === 'security.newDevice' && r.channel === `user:${user65dId}`);
+  const rd654a = await trpcMutate<{ device: { id: string; deviceId: string }; created: boolean }>(
+    'authSecurity.registerDevice', { cookie: cookie65d, input: { deviceId: 'dev-65d-1', label: '新手机' } });
+  const notif654after = (await db.select().from(schema.notifications))
+    .filter((n) => n.userId === user65dId && n.type === 'security.new_device');
+  const outbox654after = (await db.select().from(schema.eventOutbox))
+    .filter((r) => r.eventType === 'security.newDevice' && r.channel === `user:${user65dId}`);
+  const notif654row = notif654after[0];
+  check('65.4 首见设备登记 → notifications 落 security.new_device 行（新设备登录提醒，link=/settings/devices，category=account）+ security.newDevice 事件落 outbox（user 频道）',
+    rd654a.created === true &&
+      notif654after.length === notif654before.length + 1 &&
+      !!notif654row && notif654row.title.includes('新设备') &&
+      notif654row.link === '/settings/devices' && notif654row.category === 'account' &&
+      outbox654after.length === outbox654before.length + 1,
+    { created: rd654a.created, notif: notif654row && { title: notif654row.title, link: notif654row.link, category: notif654row.category }, outbox: [outbox654before.length, outbox654after.length] });
+  const rd654b = await trpcMutate<{ device: { id: string }; created: boolean }>(
+    'authSecurity.registerDevice', { cookie: cookie65d, input: { deviceId: 'dev-65d-1' } });
+  const notif654final = (await db.select().from(schema.notifications))
+    .filter((n) => n.userId === user65dId && n.type === 'security.new_device');
+  const outbox654final = (await db.select().from(schema.eventOutbox))
+    .filter((r) => r.eventType === 'security.newDevice' && r.channel === `user:${user65dId}`);
+  const devRows654 = await db.select().from(schema.userDevices)
+    .where(eq(schema.userDevices.userId, user65dId));
+  check('65.4 同设备重登记=零新增零通知（设备行/通知行/outbox 事件三计数全不变）',
+    rd654b.created === false && rd654b.device.id === rd654a.device.id &&
+      devRows654.length === 1 &&
+      notif654final.length === notif654after.length && outbox654final.length === outbox654after.length,
+    { created: rd654b.created, dev: devRows654.length, notif: [notif654after.length, notif654final.length], outbox: [outbox654after.length, outbox654final.length] });
+
+  /* ================================================================== */
+  console.log('\n[片1] 66. 支付售后族（押金台账/消费记录统一入口）');
+
+  /* ---------- 66.1 押金全链（留痕不碰真钱） ---------- */
+  console.log('\n[片1] 66.1 押金台账全链');
+  const reg66a = await devLoginPhone('13966660060');
+  const cookie66a = reg66a.cookie!;
+  const user66aId = reg66a.body.user!.id!;
+  const reg66b = await devLoginPhone('13966660061'); // 无在店痕迹客户（负例）
+  const user66bId = reg66b.body.user!.id!;
+  // 在店痕迹夹具：user66a 直插本店预约行（appointments=三痕迹源之一）
+  const appt66 = (await db.insert(schema.appointments).values({
+    code: `E2E66${String(Date.now()).slice(-6)}`,
+    customerId: user66aId, storeId, petId, serviceId: service.id,
+    type: 'boarding',
+    scheduledStart: new Date(), scheduledEnd: new Date(Date.now() + 86400e3),
+    status: 'completed', priceFen: 100, note: '【测试】押金在店痕迹夹具',
+  }).returning())[0]!;
+  interface DepRow66 {
+    id: string; status: string; amountFen: number; kind: string;
+    heldAt: Date | null; refundRequestedAt: Date | null; refundedAt: Date | null;
+    storeName?: string;
+  }
+  const dep661bad = await asErr(trpcMutate('deposit.create', {
+    cookie: ownerCookie, input: { customerId: user66bId, kind: 'kennel', amountFen: 1000 },
+  }));
+  check('66.1 非本店客户（无预约/会员/储值任一在店痕迹）登记押金 → 400 明文拒',
+    dep661bad instanceof TrpcHttpError && dep661bad.code === 'BAD_REQUEST' && dep661bad.message.includes('在店痕迹'),
+    dep661bad && { code: dep661bad.code, message: dep661bad.message });
+  const payOrdersBefore661 = (await db.select().from(schema.payOrders)).length;
+  const dep1 = await trpcMutate<{ deposit: DepRow66 }>('deposit.create', {
+    cookie: ownerCookie,
+    input: { customerId: user66aId, kind: 'kennel', amountFen: 50000, refAppointmentId: appt66.id, note: '寄养押金' },
+  });
+  check('66.1 create 落 held + held_at 置位（在押，金额 50000 分）',
+    dep1.deposit.status === 'held' && dep1.deposit.amountFen === 50000 && !!dep1.deposit.heldAt,
+    dep1.deposit);
+  const mine661a = await trpcQuery<{ items: DepRow66[] }>('deposit.listMine', { cookie: cookie66a });
+  check('66.1 listMine 时点①：客户读见 held 在押 + 门店名透出',
+    mine661a.items.some((d) => d.id === dep1.deposit.id && d.status === 'held' && typeof d.storeName === 'string' && d.storeName.length > 0),
+    mine661a.items.map((d) => ({ id: d.id, st: d.status, store: d.storeName })));
+  const dep1Refunding = await trpcMutate<{ deposit: DepRow66 }>('deposit.markRefunding', {
+    cookie: ownerCookie, input: { id: dep1.deposit.id, note: '客户申请退还' },
+  });
+  check('66.1 markRefunding：held→refunding + refund_requested_at 置位',
+    dep1Refunding.deposit.status === 'refunding' && !!dep1Refunding.deposit.refundRequestedAt, dep1Refunding.deposit);
+  const mine661b = await trpcQuery<{ items: DepRow66[] }>('deposit.listMine', { cookie: cookie66a });
+  check('66.1 listMine 时点②：客户读见 refunding 退还登记在途',
+    mine661b.items.some((d) => d.id === dep1.deposit.id && d.status === 'refunding'),
+    mine661b.items.map((d) => ({ id: d.id, st: d.status })));
+  const dep1Refunded = await trpcMutate<{ deposit: DepRow66; idempotent: boolean }>('deposit.markRefunded', {
+    cookie: ownerCookie, input: { id: dep1.deposit.id },
+  });
+  check('66.1 markRefunded：refunding→refunded + refunded_at 置位（idempotent=false）',
+    dep1Refunded.deposit.status === 'refunded' && !!dep1Refunded.deposit.refundedAt && dep1Refunded.idempotent === false,
+    dep1Refunded.deposit);
+  const dep1RefundedAgain = await trpcMutate<{ deposit: DepRow66; idempotent: boolean }>('deposit.markRefunded', {
+    cookie: ownerCookie, input: { id: dep1.deposit.id },
+  });
+  check('66.1 markRefunded 幂等重调零副作用（已 refunded 返回现状，refundedAt 不变）',
+    dep1RefundedAgain.idempotent === true && dep1RefundedAgain.deposit.status === 'refunded' &&
+      String(dep1RefundedAgain.deposit.refundedAt) === String(dep1Refunded.deposit.refundedAt),
+    dep1RefundedAgain);
+  const depRefundingOnRefunded = await asErr(trpcMutate('deposit.markRefunding', {
+    cookie: ownerCookie, input: { id: dep1.deposit.id },
+  }));
+  check('66.1 非 held 调 markRefunding → 400 明文（状态机硬拒）',
+    depRefundingOnRefunded instanceof TrpcHttpError && depRefundingOnRefunded.code === 'BAD_REQUEST' &&
+      depRefundingOnRefunded.message.includes('在押'),
+    depRefundingOnRefunded && depRefundingOnRefunded.message);
+  const mine661c = await trpcQuery<{ items: DepRow66[] }>('deposit.listMine', { cookie: cookie66a });
+  check('66.1 listMine 时点③：客户读见 refunded 已退还',
+    mine661c.items.some((d) => d.id === dep1.deposit.id && d.status === 'refunded'),
+    mine661c.items.map((d) => ({ id: d.id, st: d.status })));
+  const dep2 = await trpcMutate<{ deposit: DepRow66 }>('deposit.create', {
+    cookie: ownerCookie, input: { customerId: user66aId, kind: 'goods', amountFen: 30000, note: '物品押金' },
+  });
+  const dep3 = await trpcMutate<{ deposit: DepRow66 }>('deposit.create', {
+    cookie: ownerCookie, input: { customerId: user66aId, kind: 'other', amountFen: 12000 },
+  });
+  await trpcMutate('deposit.markRefunding', { cookie: ownerCookie, input: { id: dep3.deposit.id } });
+  const sum661 = await trpcQuery<{ heldCount: number; heldFen: number; refundingCount: number; refundingFen: number; inCustodyFen: number }>(
+    'deposit.storeSummary', { cookie: ownerCookie });
+  check('66.1 storeSummary 在押合计=Σheld+refunding 精确到分（held 30000 + refunding 12000 = 42000；refunded 50000 不计入）',
+    sum661.heldFen === 30000 && sum661.refundingFen === 12000 && sum661.inCustodyFen === 42000 &&
+      sum661.heldCount === 1 && sum661.refundingCount === 1,
+    sum661);
+  const listStore661 = await trpcQuery<{ items: DepRow66[] }>('deposit.listStore', { cookie: ownerCookie });
+  const listStore661Refunded = await trpcQuery<{ items: DepRow66[] }>('deposit.listStore', {
+    cookie: ownerCookie, input: { status: 'refunded' },
+  });
+  check('66.1 listStore 本店全量含三行 + 状态过滤可选（refunded 过滤仅 dep1）',
+    [dep1, dep2, dep3].every((d) => listStore661.items.some((r) => r.id === d.deposit.id)) &&
+      listStore661Refunded.items.some((r) => r.id === dep1.deposit.id) &&
+      listStore661Refunded.items.every((r) => r.status === 'refunded'),
+    { all: listStore661.items.length, refunded: listStore661Refunded.items.length });
+  const payOrdersAfter661 = (await db.select().from(schema.payOrders)).length;
+  check('66.1 留痕不碰真钱实证：押金全链（create×3 + 状态推进×3）零 pay_orders 新行',
+    payOrdersAfter661 === payOrdersBefore661, { before: payOrdersBefore661, after: payOrdersAfter661 });
+  // 跨店闸：B 店店主对 A 店押金行操作 → NOT_FOUND 不透出；listStore 仅本店
+  const [ownerB66] = await db.insert(schema.users).values({
+    kimiId: 'seed_e2e_ownerb66', nickname: 'e2e B 店主66', phone: '13966660066',
+  }).returning();
+  await db.insert(schema.userRoles).values({ userId: ownerB66!.id, role: 'merchant_owner' });
+  await db.insert(schema.stores).values({ ownerId: ownerB66!.id, name: 'e2e 隔离 B 店66', status: 'active' });
+  const ownerB66Cookie = await devLogin(ownerB66!.id);
+  const depCross661 = await asErr(trpcMutate('deposit.markRefunded', {
+    cookie: ownerB66Cookie, input: { id: dep2.deposit.id },
+  }));
+  const depCrossList661 = await trpcQuery<{ items: DepRow66[] }>('deposit.listStore', { cookie: ownerB66Cookie });
+  check('66.1 跨店闸：B 店店主操作 A 店押金行 → NOT_FOUND 不透出 + listStore 零透出',
+    depCross661 instanceof TrpcHttpError && depCross661.code === 'NOT_FOUND' &&
+      depCrossList661.items.every((r) => ![dep1, dep2, dep3].some((d) => d.deposit.id === r.id)),
+    { cross: depCross661 && depCross661.code, bRows: depCrossList661.items.length });
+
+  /* ---------- 66.2 recordsMine 消费记录统一入口（纯聚合只读） ---------- */
+  console.log('\n[片1] 66.2 pay.recordsMine 三源聚合');
+  const reg66c = await devLoginPhone('13966660062');
+  const cookie66c = reg66c.cookie!;
+  const user66cId = reg66c.body.user!.id!;
+  const reg66d = await devLoginPhone('13966660063'); // 零数据他人（零透出对照）
+  const cookie66d = reg66d.cookie!;
+  const t662 = Date.now();
+  // 夹具直插三源各一行（createdAt 钉死梯度：发票最新 > 订单 > 支付单；同日窗口不移位铁律无碍）
+  const payRow662 = (await db.insert(schema.payOrders).values({
+    payNo: `PO-E2E66-${String(t662).slice(-4)}`,
+    bizDomain: 'membership_open', bizId: user66cId,
+    bizJson: { planKey: 'plan_yinghuo', planLabel: '萤火', petCount: 1 },
+    amountFen: 19900, channel: 'mock', status: 'paid',
+    idemKey: `e2e66c|membership_open|plan_yinghuo|${t662}`,
+    createdAt: new Date(t662 - 3000), updatedAt: new Date(t662 - 3000),
+  }).returning())[0]!;
+  const order662 = (await db.insert(schema.orders).values({
+    orderNo: `PE2E66${String(t662).slice(-6)}`,
+    customerId: user66cId, storeId, items: [], totalFen: 5600, status: 'received',
+    createdAt: new Date(t662 - 2000), updatedAt: new Date(t662 - 2000),
+  }).returning())[0]!;
+  const inv662 = (await db.insert(schema.invoiceRequests).values({
+    invoiceNo: `IN-E2E66-${String(t662).slice(-4)}`,
+    userId: user66cId, storeId, orderKind: 'order', billId: order662.id, billNo: order662.orderNo,
+    amountFen: 5600, titleType: 'personal', title: '个人', delivery: 'pickup', status: 'issued',
+    createdAt: new Date(t662 - 1000), updatedAt: new Date(t662 - 1000),
+  }).returning())[0]!;
+  interface RecItem662 { kind: string; id: string; title: string; amountFen: number | null; status: string; createdAt: Date; link: string }
+  const rec662 = await trpcQuery<{ items: RecItem662[] }>('pay.recordsMine', { cookie: cookie66c });
+  const recKinds662 = rec662.items.map((r) => r.kind);
+  check('66.2 聚合三类齐（pay/order/invoice 各一）+ createdAt 倒序（发票最新在前，支付单最旧在尾）',
+    rec662.items.length === 3 &&
+      recKinds662.includes('pay') && recKinds662.includes('order') && recKinds662.includes('invoice') &&
+      rec662.items[0]!.id === inv662.id && rec662.items[0]!.kind === 'invoice' &&
+      rec662.items[1]!.id === order662.id && rec662.items[1]!.kind === 'order' &&
+      rec662.items[2]!.id === payRow662.id && rec662.items[2]!.kind === 'pay',
+    rec662.items.map((r) => ({ kind: r.kind, id: r.id })));
+  check('66.2 行字段齐（title/amountFen/status/link 透出，金额=各源实额）',
+    rec662.items.find((r) => r.kind === 'pay')?.amountFen === 19900 &&
+      rec662.items.find((r) => r.kind === 'order')?.amountFen === 5600 &&
+      rec662.items.find((r) => r.kind === 'invoice')?.amountFen === 5600 &&
+      rec662.items.every((r) => typeof r.title === 'string' && r.title.length > 0 && typeof r.link === 'string' && r.link.length > 0),
+    rec662.items.map((r) => ({ kind: r.kind, amt: r.amountFen, title: r.title, link: r.link })));
+  const rec662d = await trpcQuery<{ items: RecItem662[] }>('pay.recordsMine', { cookie: cookie66d });
+  check('66.2 他人零透出（66d 无数据账号读不到 66c 三行任一 id）',
+    rec662d.items.every((r) => ![payRow662.id, order662.id, inv662.id].includes(r.id)),
+    rec662d.items.length);
 
   client.close();
 }

@@ -33,6 +33,8 @@ const DEVLOGIN_COPY_TABLE = {
   /* 底部协议小字 */
   'devlogin.footerA': '登录即同意《用户协议》与《隐私政策》',
   'devlogin.footerB': '内测期间口令由门店发放',
+  /* 微信槽写准注记（客户端体验大批 片 1 · 开口项 1 裁：不吹不删槽） */
+  'devlogin.wechatNote': '微信授权登录属小程序/资质批，PWA 端暂以手机号+种子账号入内测',
 } as const;
 
 export const DEVLOGIN_COPY = withCopyOverrides(DEVLOGIN_COPY_TABLE);

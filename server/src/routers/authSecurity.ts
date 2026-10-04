@@ -28,7 +28,9 @@
  *                          意义）+ phone_change_logs('assisted', operator=审批人)；
  *                          reject=note 必填客户端可见）
  * - registerDevice         设备登记（customer；(user_id, device_id) 唯一 upsert，
- *                          客户端登录后静默调一次）
+ *                          客户端登录后静默调一次；片 1 起首见设备插入时落
+ *                          security.newDevice outbox 事件 + security.new_device
+ *                          站内信「新设备登录提醒」，同设备重登记零新增零通知）
  * - listDevices            本人设备倒序 + 换绑留痕记录（customer；设备页数据源）
  *
  * 报备项（冻结口径）：
@@ -54,6 +56,8 @@ import { TRPCError } from '@trpc/server';
 import { and, desc, eq, gte, inArray, isNull, lt, ne, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { client, schema } from '../db';
+import { broadcastNow } from '../realtime/bus';
+import { EventType } from '../realtime/events';
 import { clearRebateAccount } from '../services/rebate';
 import { maskPhone } from '../services/phoneMask';
 import { smsProvider } from '../services/sms';
@@ -793,7 +797,12 @@ export const authSecurityRouter = router({
   /* 设备登记                                                           */
   /* ---------------------------------------------------------------- */
 
-  /** 设备登记（customer）：(user_id, device_id) 唯一 upsert，lastSeenAt=now；客户端登录后静默调一次 */
+  /** 设备登记（customer）：(user_id, device_id) 唯一 upsert，lastSeenAt=now；客户端登录后静默调一次。
+   *  片 1 异常登录提醒：首见设备（插入新行）→ event_outbox 落 security.newDevice 事件（user 频道，
+   *  提交后 broadcastNow）+ notifications 落行（type='security.new_device'，link='/settings/devices'，
+   *  「新设备登录提醒」）。同设备重登记=零新增零通知（既有幂等语义不动）。
+   *  注：事件类型枚举（security.newDevice）与站内信 type（security.new_device）两族口径不同，
+   *  emitEvent 的通知 type 恒=eventType 无法表达异构，故照 announce.ts 手动落行工艺同事务手写两步。 */
   registerDevice: customerProcedure
     .input(z.object({ deviceId: z.string().min(1).max(128), label: z.string().max(64).optional() }))
     .mutation(async ({ ctx, input }) => {
@@ -822,17 +831,40 @@ export const authSecurityRouter = router({
           .then((r) => r[0]!);
         return { device: updated, created: false as const };
       }
-      const inserted = await ctx.db
-        .insert(schema.userDevices)
-        .values({
+      let outboxId = '';
+      const inserted = await ctx.db.transaction(async (tx) => {
+        const row = await tx
+          .insert(schema.userDevices)
+          .values({
+            userId: ctx.user.id,
+            deviceId: input.deviceId,
+            label: input.label ?? null,
+            firstSeenAt: now,
+            lastSeenAt: now,
+          })
+          .returning()
+          .then((r) => r[0]!);
+        // 首见设备=异常登录提醒（片 1）：outbox 事件 + 站内信同事务落行
+        const ob = await tx
+          .insert(schema.eventOutbox)
+          .values({
+            channel: `user:${ctx.user.id}`,
+            eventType: EventType.SecurityNewDevice,
+            payload: { userId: ctx.user.id, deviceId: input.deviceId, label: input.label ?? null },
+          })
+          .returning({ id: schema.eventOutbox.id });
+        outboxId = ob[0]!.id;
+        await tx.insert(schema.notifications).values({
           userId: ctx.user.id,
-          deviceId: input.deviceId,
-          label: input.label ?? null,
-          firstSeenAt: now,
-          lastSeenAt: now,
-        })
-        .returning()
-        .then((r) => r[0]!);
+          type: 'security.new_device',
+          category: 'account',
+          title: '新设备登录提醒',
+          body: `您的账号在新设备${input.label ? `「${input.label}」` : ''}上登录，如非本人操作请及时修改密码或联系门店`,
+          link: '/settings/devices',
+        });
+        return row;
+      });
+      broadcastNow(outboxId);
       return { device: inserted, created: true as const };
     }),
 
