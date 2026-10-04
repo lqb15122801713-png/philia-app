@@ -240,6 +240,8 @@ export const pets = sqliteTable('pets', {
   weightKg: real('weight_kg'),
   /** 疫苗有效期至，ISO 日期 'YYYY-MM-DD' */
   vaccineValidUntil: text('vaccine_valid_until'),
+  /** 疫苗证明图片 URL 数组（片 2 · 0038：仅留证不改寄养硬闸——行为变更报备在案） */
+  vaccineProofUrls: text('vaccine_proof_urls', { mode: 'json' }).$type<string[]>().notNull().default([]),
   /** 是否已绝育 */
   neutered: integer('neutered', { mode: 'boolean' }).notNull().default(false),
   /** 性格标签 JSON，如 ["亲人","胆小"] */
@@ -263,7 +265,7 @@ export const services = sqliteTable('services', {
   storeId: text('store_id')
     .notNull()
     .references(() => stores.id),
-  /** 服务大类，取值：grooming | boarding */
+  /** 服务大类，取值：grooming | boarding | addon（片 2 · 0038：附加项加购——仅作预约加购行，不占槽不参与时长引擎） */
   type: text('type').notNull(),
   /** 服务名称 */
   name: text('name').notNull(),
@@ -344,6 +346,12 @@ export const appointments = sqliteTable('appointments', {
    * W-14 起填） | merchant_review（商家批准 ≤4h 取消申请）。NULL = 未取消/历史数据。
    */
   cancelSource: text('cancel_source'),
+  /** 紧急联系人快照（体验大批片 2 · 0038：{name,phone,relation} 按单一填） */
+  emergencyContactJson: text('emergency_contact_json', { mode: 'json' }).$type<{ name: string; phone: string; relation: string } | null>(),
+  /** 医疗授权快照（{agreed, contentVersion, checkedAt}；寄养单缺 agreed=true 即 400 硬闸） */
+  medicalAuthJson: text('medical_auth_json', { mode: 'json' }).$type<{ agreed: boolean; contentVersion: string; checkedAt: number } | null>(),
+  /** 寄养遛弯次数/日（下单选项；仅 boarding 生效；执行实遛=boarding_daily_logs.walks 对账） */
+  walkTimesPerDay: integer('walk_times_per_day'),
   /** 到店签到时间 */
   checkedInAt: integer('checked_in_at', { mode: 'timestamp' }),
   /** 服务完成时间 */
@@ -2615,8 +2623,8 @@ export type PayBizDomain = 'membership_open' | 'membership_upgrade' | 'mall';
 export type PayOrderStatus = 'created' | 'paying' | 'paid' | 'closed' | 'failed';
 /** 支付通道，取值：mock | wechat_jsapi | wechat_h5 | alipay_wap（内测=mock） */
 export type PayChannel = 'mock' | 'wechat_jsapi' | 'wechat_h5' | 'alipay_wap';
-/** 协议键，取值：member_service 会员服务协议 | not_prepaid 非预付卡声明 | no_auto_renew 到期不自动续费告知 */
-export type AgreementKey = 'member_service' | 'not_prepaid' | 'no_auto_renew';
+/** 协议键，取值：member_service 会员服务协议 | not_prepaid 非预付卡声明 | no_auto_renew 到期不自动续费告知（boarding_consent 寄养协议 / medical_auth 医疗授权=片 2 · 0038 预约链路自助签署两键，零新表） */
+export type AgreementKey = 'member_service' | 'not_prepaid' | 'no_auto_renew' | 'boarding_consent' | 'medical_auth';
 
 /**
  * 线上支付单表（批次 6 补缺大批 · 涉钱最高戒律）：
@@ -2972,7 +2980,9 @@ export const deactivationRequests = sqliteTable(
 
 /**
  * 协议留痕表（批次 6 补缺大批）：线上开通会员三协议勾选快照——
- * member_service 会员服务协议 / not_prepaid 非预付卡声明 / no_auto_renew 到期不自动续费告知。
+ * member_service 会员服务协议 / not_prepaid 非预付卡声明 / no_auto_renew 到期不自动续费告知；
+ * 片 2（0038）增 boarding_consent 寄养协议 / medical_auth 医疗授权两键（客户端自助签署走 pay.signAgreement，
+ * 同快照工艺：content/version 快照 + user_snapshot，只增不改）。
  * createOrder 事务内与 pay_orders 同落（三行必传缺一拒单）：content/version 全文快照
  * （协议改版不回溯历史留痕）+ checked_at 勾选时刻 + user_snapshot（userId/phoneMasked/
  * planKey/petCount，取证四要素）。只增不改（无更新端点）。
@@ -3351,4 +3361,63 @@ export const xpApplications = sqliteTable(
     index('ix_xp_applications_store').on(t.storeId, t.status),
     index('ix_xp_applications_staff').on(t.staffId, t.status),
   ],
+);
+
+/* ==================== 客户端体验大批 片 2（预约链路 12，迁移 0038） ==================== */
+
+/** 附加项加购留痕（片 2：快照名+价；预约价=主价+Σ附加快照；services.type 枚举扩 'addon' 零迁移） */
+export const appointmentAddons = sqliteTable(
+  'appointment_addons',
+  {
+    id: id(),
+    appointmentId: text('appointment_id').notNull().references(() => appointments.id),
+    addonServiceId: text('addon_service_id').notNull().references(() => services.id),
+    nameSnapshot: text('name_snapshot').notNull(),
+    priceFen: integer('price_fen').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  },
+  (t) => [index('ix_appointment_addons_appt').on(t.appointmentId)],
+);
+
+/**
+ * 预约即预付台账（片 2 · 开口项 1 裁：留痕不碰真钱）：
+ * 状态机 prepaid_pending（登记中）→ prepaid_registered（商家登记已收）→
+ * checked_deducted（到店核销抵扣）| refunded（取消退还）；全程零支付通道写。
+ */
+export const prepaidRecords = sqliteTable(
+  'prepaid_records',
+  {
+    id: id(),
+    appointmentId: text('appointment_id').notNull().references(() => appointments.id),
+    customerId: text('customer_id').notNull().references(() => users.id),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    amountFen: integer('amount_fen').notNull(),
+    /** 状态机：prepaid_pending | prepaid_registered | checked_deducted | refunded */
+    status: text('status').notNull().default('prepaid_pending'),
+    operatorId: text('operator_id').references(() => users.id),
+    note: text('note'),
+    ...auditColumns,
+  },
+  (t) => [
+    uniqueIndex('uq_prepaid_appointment').on(t.appointmentId),
+    index('ix_prepaid_store').on(t.storeId, t.status),
+  ],
+);
+
+/** 预约改约历史（片 2：before/after 快照+操作人+角色；读口并进 appointment.get 响应） */
+export const appointmentRescheduleLogs = sqliteTable(
+  'appointment_reschedule_logs',
+  {
+    id: id(),
+    appointmentId: text('appointment_id').notNull().references(() => appointments.id),
+    beforeStart: integer('before_start', { mode: 'timestamp' }).notNull(),
+    beforeEnd: integer('before_end', { mode: 'timestamp' }).notNull(),
+    afterStart: integer('after_start', { mode: 'timestamp' }).notNull(),
+    afterEnd: integer('after_end', { mode: 'timestamp' }).notNull(),
+    changedBy: text('changed_by').notNull().references(() => users.id),
+    /** 操作角色：customer | merchant */
+    byRole: text('by_role').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  },
+  (t) => [index('ix_reschedule_logs_appt').on(t.appointmentId)],
 );

@@ -98,6 +98,10 @@ const CLEAR_ORDER = [
   schema.appointmentSteps,
   schema.boardingDailyLogs,
   schema.boardingStays,
+  /* ---- 客户端体验大批片 2 新表（迁移 0038）：子表先父表，先于 appointments 清空 ---- */
+  schema.appointmentAddons, // FK → appointments/services
+  schema.prepaidRecords, // FK → appointments/users/stores
+  schema.appointmentRescheduleLogs, // FK → appointments/users
   schema.passDeductLogs, // B2-7 表（FK → appointments/member_pass），须先于父表清空
   schema.memberPasses,
   schema.appointments,
@@ -427,10 +431,10 @@ async function main() {
       createdBy: owner.id,
     });
     await tx.insert(schema.memberPlans).values([
-      planSeed('plan_weiguang', '会员档·微光：免费档（手机号即会员）；无回馈金、无服务折扣；安心包全员免费（钩子仅权益表述，微光不设钩子）', { free: true, price_fen: 0, rebate_bp: 0, service_discount_bp: 10000, included_pets: 3, extra_pet_fen: 5900, max_pets: 10 }),
-      planSeed('plan_yinghuo', '会员档·萤火：¥199/年；商品消费回馈金 2%；服务 88 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 19900, rebate_bp: 200, service_discount_bp: 8800, included_pets: 3, extra_pet_fen: 5900, max_pets: 10 }),
-      planSeed('plan_zhuguang', '会员档·烛光：¥299/年；商品消费回馈金 5%；服务 85 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 29900, rebate_bp: 500, service_discount_bp: 8500, included_pets: 3, extra_pet_fen: 5900, max_pets: 10 }),
-      planSeed('plan_nuanyang', '会员档·暖阳：¥599/年；商品消费回馈金 10%；服务 8 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 59900, rebate_bp: 1000, service_discount_bp: 8000, included_pets: 3, extra_pet_fen: 5900, max_pets: 10 }),
+      planSeed('plan_weiguang', '会员档·微光：免费档（手机号即会员）；无回馈金、无服务折扣；安心包全员免费（钩子仅权益表述，微光不设钩子）', { free: true, price_fen: 0, rebate_bp: 0, service_discount_bp: 10000, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, advance_book_days: 3 }),
+      planSeed('plan_yinghuo', '会员档·萤火：¥199/年；商品消费回馈金 2%；服务 88 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 19900, rebate_bp: 200, service_discount_bp: 8800, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, advance_book_days: 7 }),
+      planSeed('plan_zhuguang', '会员档·烛光：¥299/年；商品消费回馈金 5%；服务 85 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 29900, rebate_bp: 500, service_discount_bp: 8500, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, advance_book_days: 7 }),
+      planSeed('plan_nuanyang', '会员档·暖阳：¥599/年；商品消费回馈金 10%；服务 8 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 59900, rebate_bp: 1000, service_discount_bp: 8000, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, advance_book_days: 14 }),
       planSeed('rebate_settlement_day', '回馈金到账日：次月 5 日统一到账（故障顺延≤3 天，会员页明示口径）', { day: 5 }),
       planSeed('rebate_validity_days', '回馈金有效期：365 天', { days: 365 }),
       planSeed('membership_validity_days', '会员有效期：365 天（到期不续费冻结，余额在不可用；续费解冻；退卡清零）', { days: 365 }),
@@ -523,6 +527,25 @@ async function main() {
         active: true,
         createdBy: owner.id,
       },
+      /* 客户端体验大批片 2（迁移 0038 同口径；service_rules 在 CLEAR_ORDER 内会被重置，
+         本处为重置后补种——不补则端口键被种子抹掉，config.save 未知键硬拒）：
+         取消/爽约阶梯收费公示档（公示=只读展示不扣真费——开口项 1 裁，真通道候资质批；
+         读口 appointment.cancelFeeTiers） */
+      {
+        version: 1,
+        ruleKey: 'cancel_fee_tiers',
+        label: '取消/爽约阶梯收费公示档（距开 N 小时→费比 bp；公示口径=只读展示不扣真费，真通道候资质批）',
+        valueJson: {
+          tiers: [
+            { hoursBefore: 24, feeBp: 0, label: '24 小时前免费取消' },
+            { hoursBefore: 4, feeBp: 0, label: '4–24 小时免费（需门店审核）' },
+            { hoursBefore: 0, feeBp: 3000, label: '4 小时内/爽约 30%（公示口径，暂不扣款）' },
+          ],
+        },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
     ]);
 
     /* ---- 端口批片 B：文案端口 copy_overrides 种子（控制台第七域 domain='copy'） ----
@@ -542,6 +565,19 @@ async function main() {
         })),
       );
     }
+    /* 客户端体验大批片 2：满档推荐留口注记 copy 键（server 侧专用键，生成件未含——
+       store.fullAlternatives 的 note 读端口；本处补种保端口宇宙完整，56.1 计数断言同步 +1） */
+    await tx.insert(schema.copyOverrides).values([
+      {
+        version: 1,
+        ruleKey: 'booking.fullAlternativesNote',
+        label: 'booking',
+        valueJson: { text: '当前单店在线，满档推荐待连锁批开通' },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+    ]);
 
     /* ---- 端口批片 C：槽位注册表种子（控制台第八域；SLOT_SEED_ROWS 单源，0025 迁移同口径） ---- */
     await tx.insert(schema.slotContents).values(

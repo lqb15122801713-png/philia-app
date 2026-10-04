@@ -69,6 +69,29 @@ const APPOINTMENTS_COPY_TABLE = {
   'appointments.servingTitle': '服务中，如需取消请联系门店',
   'appointments.servingCall': '拨打门店电话',
   'appointments.servingNote': '可到店或经商家端与门店协商处理',
+
+  /* ---- 体验大批片 2：改约历史（rescheduleLogs，空态不渲染） ---- */
+  'appointments.rescheduleHistory': '改约历史',
+  'appointments.rescheduleRoleCustomer': '客户自助',
+  'appointments.rescheduleRoleMerchant': '门店改期',
+
+  /* ---- 体验大批片 2：附加项 / 寄养快照透出（预约信息卡） ---- */
+  'appointments.addonsTitle': '附加项',
+  'appointments.emergencyContact': '紧急联系人',
+  'appointments.medicalAuthLabel': '医疗授权',
+  'appointments.medicalAuthSigned': '已签署（{version}）',
+  'appointments.walkTimes': '每日遛弯 {n} 次',
+
+  /* ---- 体验大批片 2：取消阶梯收费公示卡（cancelFeeTiers 端口值，暂不扣款） ---- */
+  'appointments.cancelFeeTitle': '取消阶梯收费公示',
+  'appointments.cancelFeeNote': '以上为公示口径，暂不实际扣款',
+
+  /* ---- 体验大批片 2：预付台账四态徽（prepaidOf） ---- */
+  'appointments.prepaidLabel': '预付台账',
+  'appointments.prepaidPending': '预付登记中',
+  'appointments.prepaidRegistered': '已预付',
+  'appointments.prepaidDeducted': '已核销抵扣',
+  'appointments.prepaidRefunded': '已退还',
 } as const;
 
 export const APPOINTMENTS_COPY = withCopyOverrides(APPOINTMENTS_COPY_TABLE);

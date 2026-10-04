@@ -129,7 +129,7 @@ async function main() {
   const appt = await trpcMutate(customer, 'appointment.create', {
     storeId: store.id, petId: pet.id, serviceId: boardingSvc.id, type: 'boarding',
     scheduledStart: bStart.toISOString(), scheduledEnd: bEnd.toISOString(),
-    paymentMode: 'pay_at_store', note: 'review-e2e 寄养夹具单',
+    paymentMode: 'pay_at_store', note: 'review-e2e 寄养夹具单', medicalAuth: { agreed: true }, // 片 2 硬闸机械适配（寄养缺授权=400）
   }, { scheduledStart: ['Date'], scheduledEnd: ['Date'] });
   check('夹具：寄养预约创建（2 晚）', !!appt?.id, `id=${appt?.id}`);
 

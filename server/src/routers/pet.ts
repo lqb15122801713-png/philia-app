@@ -29,6 +29,9 @@ const petUpsertInput = z.object({
   neutered: z.boolean().optional(),
   temperamentTags: z.array(z.string().trim().min(1).max(16)).max(12).optional(),
   avatarUrl: z.string().max(255).optional(),
+  /** 片 2：疫苗证明图片 URL 数组（先经 /api/upload relDir=vaccine/<petId> 上传；
+   *  仅留证不改寄养硬闸——寄养下单校验口径不变，行为变更报备在案） */
+  vaccineProofUrls: z.array(z.string().max(512)).max(10, '疫苗证明最多 10 张').optional(),
 });
 
 export const petRouter = router({

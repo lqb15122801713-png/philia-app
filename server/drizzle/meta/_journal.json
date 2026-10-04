@@ -253,6 +253,20 @@
       "when": 1791075902427,
       "tag": "0035_copy_console17_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "6",
+      "when": 1791093208351,
+      "tag": "0038_client_exp2_domain",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "6",
+      "when": 1791106918567,
+      "tag": "0039_copy_client_exp2_keys",
+      "breakpoints": true
     }
   ]
 }

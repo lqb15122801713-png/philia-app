@@ -671,7 +671,7 @@ if (sessions.merchant && seedCustomer && sessions.customer) {
       const bAppt = await trpcMutate(sessions.customer, 'appointment.create', {
         storeId: store5.id, petId: petR.id, serviceId: boardingSvc5.id, type: 'boarding',
         scheduledStart: bStart.toISOString(), scheduledEnd: bEnd.toISOString(),
-        paymentMode: 'pay_at_store', note: '【测试】smoke R12 寄养 3 晚单',
+        paymentMode: 'pay_at_store', note: '【测试】smoke R12 寄养 3 晚单', medicalAuth: { agreed: true }, // 片 2 硬闸机械适配
       }, { scheduledStart: ['Date'], scheduledEnd: ['Date'] }).catch((e) => ({ err: String(e?.message ?? e) }));
       const bAid = bAppt?.id ?? null;
       check('R12 寄养预约创建（明天入住共 3 晚）', !bAppt?.err && !!bAid, bAppt?.err ?? `id=${bAid}`);

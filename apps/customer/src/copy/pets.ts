@@ -26,6 +26,11 @@ const PETS_COPY_TABLE = {
   'pets.historyTitle': '洗护史',
   'pets.historyCount': '共 {count} 次',
   'pets.rebook': '同款再约 ›',
+  /* 体验大批片 2：疫苗证明留证（/api/upload relDir=vaccine/<petId>；行为不变口径明面） */
+  'pets.vaccineProofTitle': '疫苗证明',
+  'pets.vaccineProofNote': '仅留证，寄养校验仍以疫苗有效期为准',
+  'pets.vaccineProofAdd': '上传证明',
+  'pets.vaccineProofCount': '疫苗证明 {count} 张',
 } as const;
 
 export const PETS_COPY = withCopyOverrides(PETS_COPY_TABLE);

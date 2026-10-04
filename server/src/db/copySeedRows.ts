@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B）——生成件，勿手改（源=scripts/gen-copy-overrides-seed.mts）；
  * 重生成：仓库根 npx tsx scripts/gen-copy-overrides-seed.mts（copy 键表增删键后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-04T01:05:01.739Z；键数=2571
+ * 生成时间口径：2026-10-04T09:41:57.898Z；键数=2615
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }> = [
  {
@@ -705,6 +705,36 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "设置"
  },
  {
+  "key": "agreement.agreeCta",
+  "domain": "agreement",
+  "text": "已阅读并同意"
+ },
+ {
+  "key": "agreement.agreeLabel",
+  "domain": "agreement",
+  "text": "我已阅读并同意"
+ },
+ {
+  "key": "agreement.boarding_consent",
+  "domain": "agreement",
+  "text": "《寄养服务协议》"
+ },
+ {
+  "key": "agreement.medical_auth",
+  "domain": "agreement",
+  "text": "《医疗授权书》"
+ },
+ {
+  "key": "agreement.versionNote",
+  "domain": "agreement",
+  "text": "版本 {version}"
+ },
+ {
+  "key": "appointments.addonsTitle",
+  "domain": "appointments",
+  "text": "附加项"
+ },
+ {
   "key": "appointments.albumSub",
   "domain": "appointments",
   "text": "共 {count} 张照片，服务全程透明可查"
@@ -738,6 +768,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "appointments.cancelCtaLate",
   "domain": "appointments",
   "text": "申请取消（4 小时内需商家审核）"
+ },
+ {
+  "key": "appointments.cancelFeeNote",
+  "domain": "appointments",
+  "text": "以上为公示口径，暂不实际扣款"
+ },
+ {
+  "key": "appointments.cancelFeeTitle",
+  "domain": "appointments",
+  "text": "取消阶梯收费公示"
  },
  {
   "key": "appointments.cancelReasonTitle",
@@ -785,6 +825,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "预约详情"
  },
  {
+  "key": "appointments.emergencyContact",
+  "domain": "appointments",
+  "text": "紧急联系人"
+ },
+ {
   "key": "appointments.emptyBody",
   "domain": "appointments",
   "text": "给毛孩子安排一次舒服的洗护吧"
@@ -820,9 +865,44 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "预约列表加载失败，请检查网络后重试"
  },
  {
+  "key": "appointments.medicalAuthLabel",
+  "domain": "appointments",
+  "text": "医疗授权"
+ },
+ {
+  "key": "appointments.medicalAuthSigned",
+  "domain": "appointments",
+  "text": "已签署（{version}）"
+ },
+ {
   "key": "appointments.notFound",
   "domain": "appointments",
   "text": "预约不存在或无权查看"
+ },
+ {
+  "key": "appointments.prepaidDeducted",
+  "domain": "appointments",
+  "text": "已核销抵扣"
+ },
+ {
+  "key": "appointments.prepaidLabel",
+  "domain": "appointments",
+  "text": "预付台账"
+ },
+ {
+  "key": "appointments.prepaidPending",
+  "domain": "appointments",
+  "text": "预付登记中"
+ },
+ {
+  "key": "appointments.prepaidRefunded",
+  "domain": "appointments",
+  "text": "已退还"
+ },
+ {
+  "key": "appointments.prepaidRegistered",
+  "domain": "appointments",
+  "text": "已预付"
  },
  {
   "key": "appointments.rebook",
@@ -840,9 +920,24 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "改期"
  },
  {
+  "key": "appointments.rescheduleHistory",
+  "domain": "appointments",
+  "text": "改约历史"
+ },
+ {
   "key": "appointments.rescheduleNote",
   "domain": "appointments",
   "text": "{service} · {pet}（改期后需商家重新确认）"
+ },
+ {
+  "key": "appointments.rescheduleRoleCustomer",
+  "domain": "appointments",
+  "text": "客户自助"
+ },
+ {
+  "key": "appointments.rescheduleRoleMerchant",
+  "domain": "appointments",
+  "text": "门店改期"
  },
  {
   "key": "appointments.rescheduleSubmit",
@@ -900,9 +995,34 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "我的预约"
  },
  {
+  "key": "appointments.walkTimes",
+  "domain": "appointments",
+  "text": "每日遛弯 {n} 次"
+ },
+ {
   "key": "booking.addCalendar",
   "domain": "booking",
   "text": "添加到日历"
+ },
+ {
+  "key": "booking.addonPriceNote",
+  "domain": "booking",
+  "text": "合计含附加项，最终金额以门店结算为准"
+ },
+ {
+  "key": "booking.addonSummary",
+  "domain": "booking",
+  "text": "已选 {count} 项"
+ },
+ {
+  "key": "booking.addonSummaryNone",
+  "domain": "booking",
+  "text": "选加附加项"
+ },
+ {
+  "key": "booking.addonTitle",
+  "domain": "booking",
+  "text": "附加项（选加）"
  },
  {
   "key": "booking.backHome",
@@ -960,6 +1080,41 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "到店核销码"
  },
  {
+  "key": "booking.ecIncomplete",
+  "domain": "booking",
+  "text": "请补全紧急联系人信息"
+ },
+ {
+  "key": "booking.ecNamePh",
+  "domain": "booking",
+  "text": "联系人姓名"
+ },
+ {
+  "key": "booking.ecPhoneInvalid",
+  "domain": "booking",
+  "text": "请输入 11 位手机号"
+ },
+ {
+  "key": "booking.ecPhonePh",
+  "domain": "booking",
+  "text": "11 位手机号"
+ },
+ {
+  "key": "booking.ecRelationPh",
+  "domain": "booking",
+  "text": "关系，如：家人"
+ },
+ {
+  "key": "booking.emergencyTitle",
+  "domain": "booking",
+  "text": "紧急联系人（建议填写）"
+ },
+ {
+  "key": "booking.fullSlotFallback",
+  "domain": "booking",
+  "text": "当日已约满，可改选其他日期或门店"
+ },
+ {
   "key": "booking.groomingTitle",
   "domain": "booking",
   "text": "预约洗护"
@@ -968,6 +1123,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "booking.missingParam",
   "domain": "booking",
   "text": "缺少预约参数"
+ },
+ {
+  "key": "booking.needBoardingConsent",
+  "domain": "booking",
+  "text": "请阅读并勾选寄养协议"
+ },
+ {
+  "key": "booking.needMedicalAuth",
+  "domain": "booking",
+  "text": "请阅读并勾选医疗授权"
  },
  {
   "key": "booking.needPet",
@@ -1060,6 +1225,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "房型加载失败，请检查网络"
  },
  {
+  "key": "booking.signedBadge",
+  "domain": "booking",
+  "text": "已签署"
+ },
+ {
+  "key": "booking.signPendingNote",
+  "domain": "booking",
+  "text": "本单尚未完成签署，请到店补签"
+ },
+ {
   "key": "booking.staffAny",
   "domain": "booking",
   "text": "随缘派单"
@@ -1085,6 +1260,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "指定洗护师会写在预约备注里传达给门店"
  },
  {
+  "key": "booking.storeCountNote",
+  "domain": "booking",
+  "text": "当前仅 {count} 家门店可约，通用范围以门店列表为准"
+ },
+ {
   "key": "booking.storeLinePost",
   "domain": "booking",
   "text": "（可在下一步更换）"
@@ -1093,6 +1273,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "booking.storeLinePre",
   "domain": "booking",
   "text": "寄养门店："
+ },
+ {
+  "key": "booking.successSignEntry",
+  "domain": "booking",
+  "text": "寄养协议与医疗授权"
+ },
+ {
+  "key": "booking.successSignView",
+  "domain": "booking",
+  "text": "查看全文 ›"
  },
  {
   "key": "booking.successSub",
@@ -1148,6 +1338,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "booking.viewAppointments",
   "domain": "booking",
   "text": "查看我的预约"
+ },
+ {
+  "key": "booking.walkTimesLabel",
+  "domain": "booking",
+  "text": "每日遛弯次数（选填）"
+ },
+ {
+  "key": "booking.walkTimesPh",
+  "domain": "booking",
+  "text": "如：2"
  },
  {
   "key": "devlogin.devOnly",
@@ -8603,6 +8803,26 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "pets.vaccineOk",
   "domain": "pets",
   "text": "疫苗有效至 {date}"
+ },
+ {
+  "key": "pets.vaccineProofAdd",
+  "domain": "pets",
+  "text": "上传证明"
+ },
+ {
+  "key": "pets.vaccineProofCount",
+  "domain": "pets",
+  "text": "疫苗证明 {count} 张"
+ },
+ {
+  "key": "pets.vaccineProofNote",
+  "domain": "pets",
+  "text": "仅留证，寄养校验仍以疫苗有效期为准"
+ },
+ {
+  "key": "pets.vaccineProofTitle",
+  "domain": "pets",
+  "text": "疫苗证明"
  },
  {
   "key": "pets.vaccineSoon",
