@@ -23,6 +23,21 @@ const TODAY_COPY_TABLE = {
   /* ---- FrontdeskDesk 轴空态 + 核销台引导语 ---- */
   'today.frontdesk.empty': '今天全店无预约——等自动接单，或把预约页分享给老客',
   'today.frontdesk.scanHint': '无摄像头环境走「手动输入 6 位核销码」',
+
+  /* ---- S-01 工位台 · 前台核销大卡 + 今日接待分组（骨架批片 1 追加） ---- */
+  'today.frontdesk.scanCta': '扫码核销 · 到店登记',
+  'today.frontdesk.tag': '今日接待',
+  'today.frontdesk.pendingCount': '待核销 {n} 单',
+  'today.frontdesk.stats': '已核销 {checked} · 待核销 {waiting} · 服务中 {inService}',
+  'today.frontdesk.groupPending': '待核销',
+  'today.frontdesk.groupDone': '已核销',
+
+  /* ---- S-01 工位台 · 待办行（改期回退/寄养入住/寄养照护，承自 FrontdeskDesk/AllDayRow） ---- */
+  'today.todo.title': '待办',
+  'today.todo.reschedule': '改期回退 {n} 单待确认',
+  'today.todo.boardingIn': '寄养入住 {n} 只待登记',
+  'today.todo.boardingInCta': '入住 ›',
+  'today.todo.boardingCareCta': '去打卡 ›',
 } as const;
 
 export const TODAY_COPY = withCopyOverrides(TODAY_COPY_TABLE);

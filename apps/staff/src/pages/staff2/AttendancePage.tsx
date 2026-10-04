@@ -1,29 +1,23 @@
 /**
- * 打卡考勤 /attendance（批次 员工端2.0 · R7，docs/staff2/R7-R10-DESIGN.md §一.1/§三）
+ * 打卡考勤 /attendance（S-03 · 员工端骨架整建批片 1 结构组；原批次 员工端2.0 · R7）
  *
- * 三区结构（mobile-first，单手可达）：
- * 1. 今日班次（auth.me → staff.schedule 周模板，只读）+ 围栏状态（门店坐标 300m，
- *    未配置坐标时明示不校验）；
- * 2. 两大打卡钮（≥56px 全宽，「≤2 击」：点按 → navigator.geolocation 浏览器原生定位
- *    → attendance.mark → toast「已打卡，辛苦了」）；定位失败给明确文案+重试钮（不转死圈）；
- *    围栏外 server 拒写，错误文案原样透出（「不在门店范围，无法打卡」）；当日已打的卡种置灰；
- *    deviceId = localStorage 'philia-device-id' 惰性 UUID；
- * 3. 本月记录（myRecords：按日聚合 上/下班 + 状态签 正常/迟到/早退/补卡；缺卡日由
- *    endpoint missingDays 给出；补卡行视觉区分；flagged=防代打「标记」chip 只标记不阻断）；
- * 4. 补卡申请（requestMakeup：限当月 date min/max、班次 kind、实际时间 time、原因必填；
- *    剩余额度 3 次/月由 myApprovals 前端计算；结果列表透出审批状态与备注）。
+ * S-03 骨架（UX 语言包 V1.1 §三）：apphead → S6 打卡卡（SkPunchCard：mono 大钟 34/700
+ * 真实时钟 + 班次 mono 9.5 + 围栏胶囊 + btn-action 上下文主钮）→ S7 周记录（SkRows/SkRow，
+ * 异常=赭红 tone）→ 补卡口径注（SkNote sk.punchFixNote）。升主级入 dock（App.tsx DOCK_TABS），
+ * 返回条摘除；打卡/围栏/补卡申请全部 trpc 调用与逻辑零回退（attendance.mark ≤2 击、
+ * geolocation 前置分支、requestMakeup 限当月 ≤3 次/月、myRecords/myApprovals 原样）。
  */
 
 import { Skeleton, usePhiliaClient, useToast } from '@philia/shared';
 import type { inferRouterOutputs } from '@trpc/server';
 import type { AppRouter } from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { CalendarClock, MapPin } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import PageHeader from '@/components/PageHeader';
+import { useEffect, useMemo, useState } from 'react';
+import { SkAppHead, SkNote, SkPunchCard, SkRow, SkRows } from '@/components/skeleton';
 import { dayKeyOf, hhmm, pad2, weekdayLabel } from '@/components/today/utils';
 import { INSECURE_CONTEXT_GEO_MESSAGE, isSecureContextOk } from '@/lib/secureContext';
 import { ATTENDANCE_COPY } from '@/copy/attendance';
+import { skc } from '@/copy/skeleton';
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 type AttRecord = RouterOutputs['attendance']['myRecords']['records'][number];
@@ -57,23 +51,30 @@ function deviceId(): string {
   }
 }
 
-/** 打卡记录状态签（补卡优先于 normal 展示） */
+/** 打卡记录状态签（补卡优先于 normal 展示；异常=赭红） */
 function StatusChip({ r }: { r: AttRecord }) {
   if (r.makeup) {
     return (
       <b className="rounded-chip bg-brand-secondary-light px-1.5 py-0.5 text-caption-xs font-bold text-ink">
-        补卡
+        {ATTENDANCE_COPY['attendance.status.makeup']}
       </b>
     );
   }
   if (r.status === 'late') {
-    return <b className="rounded-chip bg-danger-light px-1.5 py-0.5 text-caption-xs font-bold text-danger-deep">迟到</b>;
+    return <b className="rounded-chip bg-danger-light px-1.5 py-0.5 text-caption-xs font-bold text-danger-deep">{ATTENDANCE_COPY['attendance.status.late']}</b>;
   }
   if (r.status === 'early') {
-    return <b className="rounded-chip bg-danger-light px-1.5 py-0.5 text-caption-xs font-bold text-danger-deep">早退</b>;
+    return <b className="rounded-chip bg-danger-light px-1.5 py-0.5 text-caption-xs font-bold text-danger-deep">{ATTENDANCE_COPY['attendance.status.early']}</b>;
   }
-  return <b className="rounded-chip bg-success-light px-1.5 py-0.5 text-caption-xs font-bold text-success-deep">正常</b>;
+  return <b className="rounded-chip bg-success-light px-1.5 py-0.5 text-caption-xs font-bold text-success-deep">{ATTENDANCE_COPY['attendance.status.normal']}</b>;
 }
+
+/** attendance 域 copy 取值 + {var} 插值 */
+const ac = (key: keyof typeof ATTENDANCE_COPY, vars?: Record<string, string | number>): string => {
+  const tpl: string = ATTENDANCE_COPY[key];
+  if (!vars) return tpl;
+  return tpl.replace(/\{(\w+)\}/g, (_, k: string) => (k in vars ? String(vars[k]) : `{${k}}`));
+};
 
 export default function AttendancePage() {
   const { trpc, queryClient } = usePhiliaClient();
@@ -127,6 +128,24 @@ export default function AttendancePage() {
     }
     return [...map.values()].sort((a, b) => (a.date < b.date ? 1 : -1));
   }, [records]);
+
+  /* ---- S6 mono 大钟：真实时钟 1s 自刷 ---- */
+  const [clockNow, setClockNow] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setClockNow(new Date()), 1_000);
+    return () => clearInterval(t);
+  }, []);
+  const clockText = `${hhmm(clockNow)}:${pad(clockNow.getSeconds())}`;
+
+  /* ---- S7 周记录：语言包冻结「本周」口径——本周段（周一起）前端过滤，myRecords 接口不动 ---- */
+  const weekStartStr = useMemo(() => {
+    const d = new Date(now);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+    return localDateStr(d);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const weekRows = useMemo(() => dayRows.filter((d) => d.date >= weekStartStr), [dayRows, weekStartStr]);
+  const weekMissing = useMemo(() => missingDays.filter((ds) => ds >= weekStartStr), [missingDays, weekStartStr]);
 
   /* ---------------- 打卡（≤2 击） ---------------- */
   const [busy, setBusy] = useState<'in' | 'out' | null>(null);
@@ -211,86 +230,72 @@ export default function AttendancePage() {
       ? ATTENDANCE_COPY['attendance.fence.range']
       : ATTENDANCE_COPY['attendance.fence.noCoord'];
 
-  const punchBtnCls = (disabled: boolean) =>
-    `flex h-14 min-h-[56px] w-full items-center justify-center rounded-control text-body-lg font-bold transition-transform duration-120 ease-philia-spring ${
-      disabled ? 'bg-sunken text-ink-placeholder' : 'active:scale-92'
-    }`;
+  /* ---- S6 打卡卡上下文主钮（两击确认：点按 → 定位 → 打卡；已打卡种自动轮到下一种） ---- */
+  const nextKind: 'in' | 'out' | null = !todayIn ? 'in' : !todayOut ? 'out' : null;
+  const shiftParts: string[] = [
+    todayShifts.length
+      ? ac('attendance.shift.line', { range: todayShifts.map((s) => `${s.start}–${s.end}`).join(' / ') })
+      : ac('attendance.shift.none'),
+  ];
+  if (todayIn) shiftParts.push(ac('attendance.punch.doneIn', { time: hhmm(todayIn.ts) }));
+  if (todayOut) shiftParts.push(ac('attendance.punch.doneOut', { time: hhmm(todayOut.ts) }));
+  const ctaText = busy
+    ? ac('attendance.punch.busy')
+    : nextKind === 'in'
+      ? skc('sk.punchIn')
+      : nextKind === 'out'
+        ? skc('sk.punchOut')
+        : ac('attendance.punch.allDone');
+
+  /** 行内状态签：仅异常/补卡透出（正常不铺 chip 噪音） */
+  const chipOf = (r?: AttRecord) => (r && (r.makeup || r.status !== 'normal') ? <StatusChip r={r} /> : null);
 
   return (
-    <div className="pb-6">
-      <PageHeader
-        title="打卡考勤"
-        backTo="/me"
-        aside={
-          <span>
-            <span className="u1-num">{now.getMonth() + 1}</span> 月
-          </span>
-        }
-      />
+    <div className="sk pb-6">
+      <SkAppHead title={skc('sk.punchTitle')} no={skc('sk.punchNo')} />
 
-      <div className="px-[22px]">
-        {/* 今日班次 + 围栏状态 */}
-        <section className="u1-card mt-2.5 p-4" data-testid="att-today">
-          <p className="flex items-center gap-1.5 text-body-sm font-bold">
-            <CalendarClock className="h-4 w-4 text-[rgba(59,46,36,.62)]" strokeWidth={1.8} aria-hidden />
-            今日班次
-            <span className="u1-num ml-auto font-bold text-ink">
-              {todayShifts.length ? todayShifts.map((s) => `${s.start}–${s.end}`).join(' / ') : '今日无排班'}
-            </span>
-          </p>
-          <p className="mt-2 flex items-center gap-1.5 text-caption-xs text-[rgba(59,46,36,.62)]">
-            <MapPin className="h-3.5 w-3.5" strokeWidth={1.8} aria-hidden />
-            {fenceText} · {store?.name ?? '门店'}
-          </p>
-        </section>
+      {/* S6 打卡卡（mono 大钟 34/700 + 班次 mono 9.5 + 围栏胶囊 + btn-action；wrapper 保留 att-today/att-actions 既有 testid 锚点） */}
+      <div data-testid="att-today">
+        <div data-testid="att-actions">
+          <SkPunchCard
+            clock={clockText}
+            shiftLine={shiftParts.join(' · ')}
+            fence={{ text: `${fenceText} · ${store?.name ?? '门店'}`, ok: !!(store && store.lat !== null && store.lng !== null) }}
+            cta={ctaText}
+            onCta={nextKind ? () => punch(nextKind) : undefined}
+            ctaDisabled={busy !== null || nextKind === null}
+            ctaTestId={nextKind === 'in' ? 'att-punch-in' : nextKind === 'out' ? 'att-punch-out' : 'att-punch-done'}
+          />
+        </div>
+      </div>
 
-        {/* 两大打卡钮（≤2 击：点按 → 定位 → 打卡 → toast） */}
-        <section className="mt-3.5 grid gap-3" data-testid="att-actions">
-          <button
-            type="button"
-            disabled={busy !== null || !!todayIn}
-            onClick={() => punch('in')}
-            className={`${punchBtnCls(busy !== null || !!todayIn)} ${todayIn ? '' : 'bg-brand-primary text-ink'}`}
-            data-testid="att-punch-in"
-          >
-            {busy === 'in' ? '定位打卡中…' : todayIn ? <>已打上班卡 <span className="u1-num">{hhmm(todayIn.ts)}</span></> : '上班打卡'}
-          </button>
-          {/* P3-1：下班打卡=次钮，卡其不作大面填充——白卡描边次钮工艺（u1-ring=既有
-              token 组合 shadow-hairline + ring-1 ring-line-ring，同登录页「口令入内测」先例）；
-              上班打卡主钮淡金不动；disabled 态逻辑不动 */}
-          <button
-            type="button"
-            disabled={busy !== null || !!todayOut}
-            onClick={() => punch('out')}
-            className={`${punchBtnCls(busy !== null || !!todayOut)} ${todayOut ? '' : 'u1-ring bg-card text-ink'}`}
-            data-testid="att-punch-out"
-          >
-            {busy === 'out' ? '定位打卡中…' : todayOut ? <>已打下班卡 <span className="u1-num">{hhmm(todayOut.ts)}</span></> : '下班打卡'}
-          </button>
-          {geoError ? (
-            <div className="u1-card p-4 text-center" role="alert">
-              <p className="text-body-sm font-semibold text-danger-deep">{geoError}</p>
-              <button
-                type="button"
-                onClick={() => punch(pendingKind ?? 'in')}
-                className="mt-3 h-12 min-h-[44px] min-w-[160px] rounded-control bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
-              >
-                重试打卡
-              </button>
-            </div>
-          ) : null}
-        </section>
+      {/* 定位/围栏失败：错误文案原样透出（赭红仅异常）+ 重试钮（不转死圈） */}
+      {geoError ? (
+        <div className="px-[22px]">
+          <div className="u1-card mt-3 p-4 text-center" role="alert">
+            <p className="text-body-sm font-semibold text-danger-deep">{geoError}</p>
+            <button
+              type="button"
+              onClick={() => punch(pendingKind ?? 'in')}
+              className="mt-3 h-12 min-h-[44px] min-w-[160px] rounded-control bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+            >
+              重试打卡
+            </button>
+          </div>
+        </div>
+      ) : null}
 
-        {/* 本月记录 */}
-        <section className="mt-5" data-testid="att-records">
-          <h2 className="pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">本月记录</h2>
-          {recordsQuery.isPending ? (
-            <div className="space-y-2.5" aria-label="加载中">
-              {[0, 1, 2].map((i) => (
-                <Skeleton key={i} className="u1-card h-16 !rounded-panel" />
-              ))}
-            </div>
-          ) : recordsQuery.isError ? (
+      {/* S7 周记录（SkRows/SkRow；异常标红；缺卡日透出） */}
+      <section className="mt-5" data-testid="att-records">
+        <h2 className="px-[22px] pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">{skc('sk.punchWeek')}</h2>
+        {recordsQuery.isPending ? (
+          <div className="space-y-2.5 px-[22px]" aria-label="加载中">
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} className="u1-card h-16 !rounded-panel" />
+            ))}
+          </div>
+        ) : recordsQuery.isError ? (
+          <div className="px-[22px]">
             <div className="u1-card p-4 text-center">
               <p className="text-body-sm text-ink-secondary">考勤记录加载失败，请检查网络后重试</p>
               <button
@@ -301,76 +306,70 @@ export default function AttendancePage() {
                 重新加载
               </button>
             </div>
-          ) : dayRows.length === 0 && missingDays.length === 0 ? (
+          </div>
+        ) : weekRows.length === 0 && weekMissing.length === 0 ? (
+          <div className="px-[22px]">
             <div className="u1-card p-4 text-center">
-              <p className="text-body-sm text-ink-secondary">{ATTENDANCE_COPY['attendance.records.empty']}</p>
+              <p className="text-body-sm text-ink-secondary">{ATTENDANCE_COPY['attendance.week.empty']}</p>
             </div>
-          ) : (
-            <ul>
-              {dayRows.map((d) => {
-                const dateObj = new Date(`${d.date}T00:00:00`);
-                const flagged = d.in?.flagged || d.out?.flagged;
-                const makeup = d.in?.makeup || d.out?.makeup;
-                return (
-                  <li
-                    key={d.date}
-                    className={`u1-card mb-2.5 px-4 py-3.5 ${makeup ? 'bg-oak-light' : ''}`}
-                    data-testid={`att-day-${d.date}`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="u1-num text-body-sm font-bold">{d.date.slice(5)}</span>
-                      <span className="text-caption-xs text-[rgba(59,46,36,.42)]">{weekdayLabel(dateObj)}</span>
+          </div>
+        ) : (
+          <SkRows>
+            {weekRows.map((d) => {
+              const dateObj = new Date(`${d.date}T00:00:00`);
+              const flagged = d.in?.flagged || d.out?.flagged;
+              const makeup = d.in?.makeup || d.out?.makeup;
+              const abnormal = !!(flagged || d.in?.status === 'late' || d.out?.status === 'early');
+              return (
+                <SkRow
+                  key={d.date}
+                  testId={`att-day-${d.date}`}
+                  tone={abnormal ? 'red' : undefined}
+                  label={
+                    <>
+                      <span className="sk-mono">{d.date.slice(5)}</span> {weekdayLabel(dateObj)}
                       {flagged ? (
-                        <b className="rounded-chip bg-danger-light px-1.5 py-0.5 text-caption-xs font-bold text-danger-deep">
-                          标记
+                        <b className="ml-1.5 rounded-chip bg-danger-light px-1.5 py-0.5 text-caption-xs font-bold text-danger-deep">
+                          {ATTENDANCE_COPY['attendance.records.flagged']}
                         </b>
                       ) : null}
                       {makeup ? (
-                        <span className="text-caption-xs text-[rgba(59,46,36,.42)]">补卡已通过</span>
+                        <span className="ml-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">{ATTENDANCE_COPY['attendance.records.makeupPassed']}</span>
                       ) : null}
-                    </div>
-                    <div className="mt-2 grid grid-cols-2 gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-caption-xs text-[rgba(59,46,36,.42)]">上班</span>
-                        {d.in ? (
-                          <>
-                            <span className="u1-num text-body-sm font-bold">{hhmm(d.in.ts)}</span>
-                            <StatusChip r={d.in} />
-                          </>
-                        ) : (
-                          <span className="text-body-sm text-ink-placeholder">—</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-caption-xs text-[rgba(59,46,36,.42)]">下班</span>
-                        {d.out ? (
-                          <>
-                            <span className="u1-num text-body-sm font-bold">{hhmm(d.out.ts)}</span>
-                            <StatusChip r={d.out} />
-                          </>
-                        ) : (
-                          <span className="text-body-sm text-ink-placeholder">—</span>
-                        )}
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-              {missingDays.map((ds) => (
-                <li key={ds} className="u1-card mb-2.5 flex items-center gap-2 px-4 py-3.5" data-testid={`att-missing-${ds}`}>
-                  <span className="u1-num text-body-sm font-bold">{ds.slice(5)}</span>
-                  <span className="text-caption-xs text-[rgba(59,46,36,.42)]">
-                    {weekdayLabel(new Date(`${ds}T00:00:00`))}
-                  </span>
-                  <b className="rounded-chip bg-danger-light px-1.5 py-0.5 text-caption-xs font-bold text-danger-deep">缺卡</b>
-                  <span className="ml-auto text-caption-xs text-[rgba(59,46,36,.42)]">可在下方申请补卡</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+                    </>
+                  }
+                  value={
+                    <span className="inline-flex items-center gap-1.5">
+                      {d.in ? <>{hhmm(d.in.ts)}{chipOf(d.in)}</> : '—'}
+                      {' / '}
+                      {d.out ? <>{hhmm(d.out.ts)}{chipOf(d.out)}</> : '—'}
+                    </span>
+                  }
+                />
+              );
+            })}
+            {weekMissing.map((ds) => (
+              <SkRow
+                key={ds}
+                testId={`att-missing-${ds}`}
+                tone="red"
+                label={
+                  <>
+                    <span className="sk-mono">{ds.slice(5)}</span> {weekdayLabel(new Date(`${ds}T00:00:00`))}
+                    <span className="ml-1.5 text-caption-xs font-normal text-[rgba(59,46,36,.42)]">{ATTENDANCE_COPY['attendance.records.missingHint']}</span>
+                  </>
+                }
+                value={ATTENDANCE_COPY['attendance.records.missing']}
+              />
+            ))}
+          </SkRows>
+        )}
+      </section>
 
-        {/* 补卡申请（限当月，每月 ≤3 次） */}
+      {/* 补卡口径注（SkNote；补卡申请真功能保留在下方） */}
+      <SkNote>{skc('sk.punchFixNote')}</SkNote>
+
+      <div className="px-[22px]">
         <section className="mt-5" data-testid="att-makeup">
           <h2 className="pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">
             补卡申请 · 本月还可补 <span className="u1-num">{makeupLeft}</span> 次（每月限 <span className="u1-num">{MAKEUP_MONTHLY_LIMIT}</span> 次）

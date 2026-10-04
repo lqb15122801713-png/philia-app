@@ -4,8 +4,9 @@
  * 纪律：店长视图的经营性文案（非授权引导页题/说明、各区空态、退款区口径说明）
  * 一律经本表取值，组件内零硬编码；文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
- * 不抽：通用 UI 词（通过/驳回/返回我的）、状态签/类型映射词（补卡/异常/日盘…）、
- * server 错误透传（errMsg）、window.prompt/confirm 对话框文案、表单 label。
+ * 骨架批片 1（S-11）：区题/审批钮/口径注已随骨架帧抽键（manager.sec·manager.approve 等族）。
+ * 不抽：状态签/类型映射词（补卡/异常/日盘…）、server 错误透传（errMsg）、
+ * window.prompt/confirm 对话框文案、toast 操作反馈、表单 label。
  */
 
 import { withCopyOverrides } from '@philia/shared';
@@ -31,6 +32,30 @@ const MANAGER_COPY_TABLE = {
 
   /* ---- 盘点区口径说明 ---- */
   'manager.inventory.countedNote': '待确认（店员已录入实盘）',
+
+  /* ---- 骨架帧（S-11：backbar + 异常卡批准/驳回 + 口径注） ---- */
+  'manager.title': '店长视图',
+  'manager.guide.back': '返回我的',
+  'manager.loading': '加载中…',
+  'manager.sec.attendance': '考勤审批',
+  'manager.sec.cancel': '取消审批',
+  'manager.sec.dayclose': '日结确认',
+  'manager.sec.refund': '退款',
+  'manager.sec.inventory': '盘点',
+  'manager.sec.reviews': '差评提示',
+  'manager.sec.movements': '库存流水',
+  'manager.sec.flagged': '防代打标记（本月 · 只读）',
+  'manager.sec.posted': '最近已入账',
+  'manager.aside.pending': '条待审',
+  'manager.aside.counted': '单待确认',
+  'manager.aside.refundPending': '单实退待办',
+  'manager.aside.dayclose': '限本店 · 一日一结',
+  'manager.aside.reviews': '仅提示 · 不构成工单',
+  'manager.aside.movements': '最新 20 条 · 只读',
+  'manager.approve': '通过',
+  'manager.reject': '驳回',
+  'manager.cancel.approve': '批准取消',
+  'manager.attendance.note': '驳回必须填写原因 · 通过/驳回全部留痕',
 } as const;
 
 export const MANAGER_COPY = withCopyOverrides(MANAGER_COPY_TABLE);

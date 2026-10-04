@@ -26,6 +26,17 @@ const LOGIN_COPY_TABLE = {
   'login.gate.hint': '输入口令后加载可登录账号；无口令或口令错误将无法登录。',
   'login.gate.required': '需先输入内测口令',
 
+  /* ---- 骨架批片 1（S-00 重排）：主钮/次级口令行/已登录态（原码内硬编码收键） ---- */
+  'login.primaryCta': '手机号一键登录',
+  'login.gateEntry': '口令入内测',
+  'login.loggedIn.lead': '当前已登录',
+  'login.loggedIn.enter': '进入任务台',
+  'login.loggedIn.logout': '退出登录',
+  'login.role.frontdesk': '前台 frontdesk',
+  'login.role.groomer': '美容师 groomer',
+  'login.gate.placeholder': '内测口令',
+  'login.manual.placeholder': '手动输入 userId（ULID）',
+
   /* ---- 账号选择区（说明文） ---- */
   'login.accounts.title': '选择员工账号',
   'login.seed.loadFailed': '种子用户拉取失败（{error}），请确认 server 已启动，或手动输入 userId',

@@ -24,6 +24,7 @@
 3. **端口纪律**：跑闸门前核 7100/7101/7102/7200 无残留进程占用——占用先看页面 `<title>` 是不是本仓应用（曾被「UX 预览台」类残留抢占致 smoke 假红）；e2e 前核 7200。
 4. **dev 账号**：`dev-seed-users` 动态取数（口令门启用时带 `BETA_GATE_CODE`）；生产/类生产环境跑 smoke-deploy 前确认口令门口径（无码 401/错码 403/对码 200）。
 5. **Node 版本**：≥20（check-nav-closure 建议 ≥22）；本机 Node 不在 PATH 时用 `tools/node`。
+6. **smoke-deploy 目标环境变量名=`PUBLIC_BASE_URL`**（非 BASE；BASE 是 review-e2e 的口径，两脚本不同名——片 C 消缺报备②）：并行窗占用 7200 时 smoke-deploy 用 `PUBLIC_BASE_URL=http://localhost:<port>` 避让，e2e 用 `E2E_PORT` 避让（e2e.ts:207 既有）；三端页连非 7200 后端时构建须带 `VITE_API_BASE`（import.meta 构建期烧死，preview 不重读）。
 
 ## 三、新路由申报（check-nav-closure 纪律）
 

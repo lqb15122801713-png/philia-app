@@ -4,10 +4,10 @@
  * 纪律：薪资域说明文（口径注脚/绩效池说明/扣减口径/快照说明）与空态一律经本表取值，
  * 组件内零硬编码；文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
- * 数值不进本表：金额/比例/系数/版本号到渲染层读端口插值（JSX 内 u1-num 片段，
+ * 数值不进本表：金额/比例/系数/版本号到渲染层读端口插值（JSX 内 mono 片段，
  * 键只持静态 Lead/Tail 碎片，同 me.ts 纪律）。
- * 不抽：区块题（服务提成/绩效/扣减记录/历史月份）、状态签（已结算/超产能…）、
- * server 下发文案（policyNote/cardNote/perf.note）、通用 UI 词（重新加载）。
+ * 骨架批片 1（S-05）：区块题/状态签/通用 UI 词已随骨架帧抽键（pay.sec·pay.line·pay.retry 等族）；
+ * 不抽：server 下发文案（policyNote/cardNote/perf.note）。
  */
 
 import { withCopyOverrides } from '@philia/shared';
@@ -36,6 +36,60 @@ const PAY_COPY_TABLE = {
 
   /* ---- 页脚口径 ---- */
   'pay.footer.lead': '仅本人可见 · 规则版本',
+
+  /* ---- 骨架帧（S-05：backbar + 大数字卡 mono34+trio 分项） ---- */
+  'pay.title': '薪资提成',
+  'pay.aside.frozen': '已快照冻结',
+  'pay.aside.realtime': '实时计算',
+  'pay.total.label': '本月提成合计',
+  'pay.trio.service': '服务',
+  'pay.trio.card': '售卡',
+  'pay.trio.product': '商品',
+
+  /* ---- 加载/失败 ---- */
+  'pay.load.fail': '薪资提成加载失败，请检查网络后重试',
+  'pay.retry': '重新加载',
+
+  /* ---- 区块题（S7 明细分组） ---- */
+  'pay.sec.service': '服务提成',
+  'pay.sec.card': '售卡提成',
+  'pay.sec.product': '商品提成',
+  'pay.sec.store': '全店提成',
+  'pay.sec.perf': '绩效',
+  'pay.sec.deductions': '扣减记录',
+  'pay.sec.history': '历史月份',
+  'pay.sec.subtotal': '小计',
+
+  /* ---- 计提行 ---- */
+  'pay.line.billNo': '单号',
+  'pay.line.pending': '超产能·待店长批准',
+  'pay.line.overwork': '超产能·1.5 倍已批准',
+  'pay.line.probation': '试用期 ×50%',
+  'pay.line.base': '基数',
+
+  /* ---- 绩效格 ---- */
+  'pay.perf.quarterTail': '季度',
+  'pay.perf.base': '当季基数',
+  'pay.perf.grade': '档位',
+  'pay.perf.coeff': '系数',
+  'pay.perf.na': '试用期不设绩效与全勤',
+
+  /* ---- 扣减行 ---- */
+  'pay.deductions.creatorLead': '录入人',
+
+  /* ---- 历史快照行 ---- */
+  'pay.history.kind.commission': '提成月结',
+  'pay.history.kind.perf': '绩效季结',
+  'pay.history.settled': '已结算',
+  'pay.history.quarterTag': '季度绩效快照',
+  'pay.history.loading': '快照明细加载中…',
+  'pay.history.fail': '明细加载失败，请稍后重试',
+  'pay.history.expand': '展开',
+  'pay.snap.service': '服务',
+  'pay.snap.product': '商品',
+  'pay.snap.store': '全店',
+  'pay.snap.commission': '提成合计',
+  'pay.snap.perf': '绩效应付',
 } as const;
 
 export const PAY_COPY = withCopyOverrides(PAY_COPY_TABLE);

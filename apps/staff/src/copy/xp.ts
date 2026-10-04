@@ -4,10 +4,10 @@
  * 纪律：XP 域说明文（今日经验口径/保级线/榜单口径/规则注脚）与空态一律经本表取值，
  * 组件内零硬编码；文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
- * 数值不进本表：段位名/经验数/上限等到渲染层读端口插值（JSX 内 u1-num 片段，
+ * 数值不进本表：段位名/经验数/上限等到渲染层读端口插值（JSX 内 mono 片段，
  * 键只持静态 Lead/Mid/Tail 碎片，同 me.ts 纪律）。
- * 不抽：区块题（本店榜/我的经验明细）、状态签、server 下发的 oneLiner/sources 文案、
- * 通用 UI 词（加载更多/重新加载）。
+ * 骨架批片 1（S-06）：区块题/状态签/通用 UI 词已随骨架帧抽键（xp.title·xp.sec·xp.retry 等族）；
+ * 不抽：server 下发文案（oneLiner/sources label/段位名）。
  */
 
 import { withCopyOverrides } from '@philia/shared';
@@ -34,6 +34,34 @@ const XP_COPY_TABLE = {
   /* ---- 经验明细空态 + 页脚说明 ---- */
   'xp.events.empty': '还没有经验记录——打卡、完成服务、收获好评都会长经验',
   'xp.footer': '每月 1 日段位结算 · 经验累计不清零',
+
+  /* ---- 骨架帧（S-06：backbar + XP 卡 mono30 + 段位五段条 + 徽章墙四列） ---- */
+  'xp.title': 'XP 成长',
+  'xp.aside.lead': '累计',
+  'xp.load.fail': 'XP 档案加载失败，请检查网络后重试',
+  'xp.retry': '重新加载',
+  'xp.sec.today': '今日经验',
+  'xp.sec.board': '本店榜',
+  'xp.sec.badges': '段位徽章',
+  'xp.sec.events': '近期事件',
+  'xp.board.self': '（我）',
+  'xp.board.loadFail': '榜单加载失败，请稍后重试',
+  'xp.rules.loadFail': '规则加载失败，请稍后重试',
+  'xp.rules.learningTag': '学习通道·不占日上限',
+  'xp.rules.disabledFallback': '暂未开通',
+  'xp.rules.footCap': '日上限',
+  'xp.rules.footReview': '同客户当日好评只计',
+  'xp.rules.footExamMid': '次 · 考试每级每月限',
+  'xp.rules.footExamTail': '次',
+  'xp.events.loadFail': '经验明细加载失败，请稍后重试',
+  'xp.events.more': '加载更多',
+  'xp.events.loading': '加载中…',
+  'xp.events.learningTag': '学习',
+  'xp.events.droppedTag': '超出日上限，未计分',
+  'xp.events.billLead': '单 …',
+  'xp.events.boardingLead': '寄养',
+  'xp.events.boardingTail': '晚',
+  'xp.badge.thresholdLead': '门槛',
 } as const;
 
 export const XP_COPY = withCopyOverrides(XP_COPY_TABLE);

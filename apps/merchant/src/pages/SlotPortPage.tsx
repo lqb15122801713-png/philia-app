@@ -20,7 +20,7 @@
  * - 生效口径：点上线/回退即生效=只管新渲染（客户端 120s 轮询兜底，invalidate 立即拉新）。
  */
 
-import { getApiBase, resolveSlotUrl, Skeleton, uploadImage, usePhiliaClient, type PhiliaClient } from '@philia/shared';
+import { getApiBase, gradients, resolveSlotUrl, Skeleton, uploadImage, usePhiliaClient, type PhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import MainScaffold from '../components/MainScaffold';
@@ -39,8 +39,8 @@ type ListOut = Awaited<ReturnType<Trpc['slotPort']['list']['query']>>;
 type SlotRow = ListOut['slots'][number];
 type SlotVersion = NonNullable<SlotRow['live']>;
 
-/** 占位块渐变（与客户端 home-v2 品牌淡金渐变同帧；url=null=占位，不画假图） */
-const PLACEHOLDER_GRADIENT = 'linear-gradient(165deg, #EFDCAB 0%, #EBD398 52%, #F2E7CB 100%)';
+/** 占位块渐变=shared tokens 唯一来源（端口批片 C 顺带件①：收编字面量，不另写） */
+const PLACEHOLDER_GRADIENT = gradients.philiaBanner;
 
 /** 槽内容预览（url 有值→img；null→渐变占位块+「占位中」签） */
 function SlotPreview({ url, alt, className }: { url: string | null; alt: string; className: string }) {

@@ -1,6 +1,9 @@
 /**
  * 批次 员工端2.0（R7~R10）· 店长视图 /manager
  * （任务书 V1.1 §六「店长视图」行 + docs/staff2/R7-R10-DESIGN.md §三/§四）
+ * 骨架批片 1（S-11 补卡审批·店长视界）：外框换骨架——SkBackBar（二级页无 dock）→
+ * 考勤异常卡 ×N（理由 + 批准 SkBtnAction / 驳回 sk-btn-ghost，左 3px 赭红）→
+ * S7 留痕行（防代打只读）→ 口径注（驳回强制原因 · 全留痕）。数据流/权限零回退。
  *
  * 闸门（双闸口径）：页内角色校验——roles 含 merchant_manager / merchant_owner 才渲染数据面；
  * 非授权渲染明确引导页（商家端 RoleGuidePage 同口径，非 403 白屏）。server 端点一律
@@ -14,7 +17,7 @@
  * 3. 日结确认（手机通道）：cashier.dayClosePreview（预览=冻结同源同值，UI 只展示不自算）
  *    → cashier.dayClose({actualCashFen})（一日一结 CONFLICT 由 server 硬拒，原文透出）；
  * 4. 退款（批次 R12 真功能，替换原补丁②拦截卡——任务书兑现承诺）：refund.pendingActual
- *    （executed 超 24h 未登记实退 → 黄色提醒待办）+ refund.list 本店退款单最近 20 条
+ *    （executed 超 24h 未登记实退 → 淡黄提醒待办）+ refund.list 本店退款单最近 20 条
  *    （类型中文/金额红字/状态签/发起与审批人）；实退登记=refund.settleActual（备注留空
  *    按「实退完成」登记，server 口径备注必填）。驳回权仅店主——店长视图不渲染驳回钮；
  *    draft（超阈值/涉储值申请）对店长只读提示须店主审批；发起入口在商家端收银台，本页不渲染；
@@ -28,12 +31,12 @@
 import { useMe, usePhiliaClient, useToast } from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { TRPCClientError } from '@trpc/client';
-import { ShieldCheck } from 'lucide-react';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PageHeader from '@/components/PageHeader';
 import { hhmm, mmdd } from '@/components/today/utils';
 import { MANAGER_COPY } from '@/copy/manager';
+import { SkBackBar, SkBtnAction, SkNote, SkRows } from '../../components/skeleton';
+import '../../styles/skeleton.css';
 
 /* ------------------------------------------------------------------ */
 /* 文案映射                                                              */
@@ -71,60 +74,99 @@ function parseYuanToFen(text: string): number | null {
 }
 
 /* ------------------------------------------------------------------ */
-/* 样式零件（≥44px 触达目标；遵守批次禁令色/字口径）                          */
+/* 骨架内联样（.sk 作用域 token；触件 ≥44px；零新色）                      */
 /* ------------------------------------------------------------------ */
 
-const BTN_PRIMARY =
-  'inline-flex min-h-[44px] items-center justify-center rounded-full bg-brand-primary px-5 text-body-sm font-semibold text-ink transition duration-120 active:scale-92 disabled:opacity-50';
-/* 换皮批片 5 P3-3（34 号档 §4.11 空态件=深棕钮）：BTN_PRIMARY 兼有主行动场景引用
-   （考勤通过/批准取消/确认日结/实退完成/确认入账），常量整体不动；引导卡出口钮
-   拆独立常量 BTN_GUIDE——深棕墨底淡金字（GuidePage 同族口径） */
-const BTN_GUIDE =
-  'inline-flex min-h-[44px] items-center justify-center rounded-full bg-ink px-5 text-body-sm font-semibold text-brand-primary transition duration-120 active:scale-92 disabled:opacity-50';
-const BTN_DANGER =
-  'inline-flex min-h-[44px] items-center justify-center rounded-full bg-danger-light px-5 text-body-sm font-semibold text-danger-deep transition duration-120 active:scale-92 disabled:opacity-50';
-const BTN_PLAIN =
-  'inline-flex min-h-[44px] items-center justify-center rounded-full bg-sunken px-4 text-body-sm font-semibold text-ink transition duration-120 active:scale-92 disabled:opacity-50';
+const cardSt: CSSProperties = {
+  margin: '12px 22px 0',
+  background: 'var(--card)',
+  borderRadius: 18,
+  padding: '14px 16px',
+  boxShadow: '0 1px 2px rgba(42, 31, 21, .05)',
+};
+const monoSm: CSSProperties = { fontFamily: 'var(--mono)', fontSize: 9.5, color: 'var(--muted)' };
+
+/** 淡黄主钮（页内区行动；G2 全宽主行动走 SkBtnAction） */
+const GOLD_BTN: CSSProperties = {
+  minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  borderRadius: 999, background: 'var(--gold-pale)', color: 'var(--ink-deep)',
+  fontSize: 12.5, fontWeight: 700, padding: '0 18px', border: 0, cursor: 'pointer', fontFamily: 'inherit',
+};
+/** 深棕出口钮（非授权引导页；34 号档 §4.11 空态件=深棕钮） */
+const GUIDE_BTN: CSSProperties = { ...GOLD_BTN, background: 'var(--ink-deep)', color: 'var(--gold-pale)' };
 
 function Chip({ tone = 'plain', children }: { tone?: 'plain' | 'warn' | 'danger' | 'ok'; children: ReactNode }) {
-  const cls =
+  const st: CSSProperties =
     tone === 'danger'
-      ? 'bg-danger-light text-danger-deep'
+      ? { background: 'rgba(180, 80, 46, .12)', color: 'var(--danger)' }
       : tone === 'warn'
-        ? 'bg-brand-primary-light text-ink'
+        ? { background: 'var(--gold-pale)', color: 'var(--ink-deep)' }
         : tone === 'ok'
-          ? 'bg-success-light text-success-deep'
-          : 'bg-sunken text-[rgba(59,46,36,.62)]';
-  return <span className={`inline-flex items-center rounded-chip px-1.5 py-0.5 text-caption-xs font-bold ${cls}`}>{children}</span>;
+          ? { background: 'var(--gold)', color: 'var(--ink-deep)' }
+          : { background: 'var(--paper)', color: 'var(--muted)' };
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', borderRadius: 999, padding: '2px 8px', fontSize: 9.5, fontWeight: 700, ...st }}>
+      {children}
+    </span>
+  );
 }
 
-function Section({
-  title,
-  aside,
-  testid,
-  children,
-}: {
-  title: string;
-  aside?: ReactNode;
-  testid: string;
-  children: ReactNode;
-}) {
+/** 区题（题 12.5/800 + 右 mono 注） */
+function SecTitle({ title, aside }: { title: string; aside?: ReactNode }) {
   return (
-    <section className="u1-card mt-3.5 p-4" data-testid={testid}>
-      <div className="flex items-baseline justify-between gap-2">
-        <h2 className="text-title font-bold">{title}</h2>
-        {aside ? <div className="text-caption-xs text-[rgba(59,46,36,.42)]">{aside}</div> : null}
-      </div>
-      <div className="mt-3">{children}</div>
+    <p style={{ margin: '18px 22px 0', display: 'flex', alignItems: 'baseline', gap: 8, fontSize: 12.5, fontWeight: 800 }}>
+      {title}
+      {aside ? <span className="sk-mono" style={{ marginLeft: 'auto', fontSize: 9.5, fontWeight: 500, color: 'var(--muted)' }}>{aside}</span> : null}
+    </p>
+  );
+}
+
+/** 白卡区（非异常卡区通用容器） */
+function Sec({ testid, children }: { testid: string; children: ReactNode }) {
+  return (
+    <section style={cardSt} data-testid={testid}>
+      {children}
     </section>
   );
 }
 
 function QueryState({ pending, error, empty, emptyText }: { pending: boolean; error: unknown; empty: boolean; emptyText: string }) {
-  if (pending) return <p className="py-2 text-caption-xs text-[rgba(59,46,36,.42)]">加载中…</p>;
-  if (error) return <p className="py-2 text-caption-xs text-danger">{errMsg(error)}</p>;
-  if (empty) return <p className="py-2 text-caption-xs text-[rgba(59,46,36,.42)]">{emptyText}</p>;
+  if (pending) return <p style={{ padding: '8px 2px 0', ...monoSm }}>{MANAGER_COPY['manager.loading']}</p>;
+  if (error) return <p style={{ padding: '8px 2px 0', ...monoSm, color: 'var(--danger)' }}>{errMsg(error)}</p>;
+  if (empty) return <p style={{ padding: '8px 2px 0', ...monoSm }}>{emptyText}</p>;
   return null;
+}
+
+/** 批准（SkBtnAction 淡黄）+ 驳回（sk-btn-ghost 描边）双钮行 */
+function ApproveRejectRow({
+  approveText,
+  rejectText,
+  busy,
+  onApprove,
+  onReject,
+  approveTestId,
+  rejectTestId,
+}: {
+  approveText: string;
+  rejectText: string;
+  busy: boolean;
+  onApprove: () => void;
+  onReject: () => void;
+  approveTestId?: string;
+  rejectTestId?: string;
+}) {
+  return (
+    <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
+      <div style={{ flex: 1 }}>
+        <SkBtnAction onClick={onApprove} disabled={busy} testId={approveTestId}>
+          {approveText}
+        </SkBtnAction>
+      </div>
+      <button type="button" className="sk-btn-ghost" style={{ flex: 1 }} disabled={busy} onClick={onReject} data-testid={rejectTestId}>
+        {rejectText}
+      </button>
+    </div>
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -134,28 +176,25 @@ function QueryState({ pending, error, empty, emptyText }: { pending: boolean; er
 function GuideCard() {
   const navigate = useNavigate();
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center" data-testid="manager-guide">
-      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-oak-light">
-        <ShieldCheck className="h-7 w-7 text-ink" strokeWidth={1.6} />
-      </span>
-      <h1 className="u1-serif mt-4 text-title-lg font-bold">{MANAGER_COPY['manager.guide.title']}</h1>
-      <p className="mt-2 text-body-sm text-ink-secondary">
+    <div style={{ display: 'flex', minHeight: '60vh', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 22px', textAlign: 'center' }} data-testid="manager-guide">
+      <h1 style={{ fontFamily: 'var(--serif)', fontSize: 20, fontWeight: 900 }}>{MANAGER_COPY['manager.guide.title']}</h1>
+      <p style={{ marginTop: 8, fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.8 }}>
         {MANAGER_COPY['manager.guide.desc']}
       </p>
       <button
         type="button"
         data-testid="manager-guide-back"
         onClick={() => navigate('/me', { replace: true })}
-        className={`${BTN_GUIDE} mt-6 min-w-[200px]`}
+        style={{ ...GUIDE_BTN, marginTop: 20, minWidth: 200 }}
       >
-        返回我的
+        {MANAGER_COPY['manager.guide.back']}
       </button>
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* 1. 考勤审批（exceptionQueue + resolveApproval）                        */
+/* 1. 考勤审批（S-11 主区：异常卡 ×N 左 3px 赭红 + 批准/驳回 + S7 留痕）     */
 /* ------------------------------------------------------------------ */
 
 function AttendanceSection({
@@ -195,76 +234,70 @@ function AttendanceSection({
   const busy = resolveM.isPending;
 
   return (
-    <Section
-      title="考勤审批"
-      aside={
-        approvals.length ? (
-          <span>
-            <span className="u1-num">{approvals.length}</span> 条待审
-          </span>
-        ) : undefined
-      }
-      testid="manager-attendance"
-    >
-      <QueryState pending={q.isPending} error={q.error} empty={approvals.length === 0 && flagged.length === 0} emptyText={MANAGER_COPY['manager.attendance.empty']} />
-      {approvals.length > 0 ? (
-        <ul className="divide-y divide-[rgba(59,46,36,.06)]">
+    <>
+      <SecTitle
+        title={MANAGER_COPY['manager.sec.attendance']}
+        aside={approvals.length ? `${approvals.length} ${MANAGER_COPY['manager.aside.pending']}` : undefined}
+      />
+      <div data-testid="manager-attendance">
+        <div style={{ margin: '0 22px' }}>
+          <QueryState pending={q.isPending} error={q.error} empty={approvals.length === 0 && flagged.length === 0} emptyText={MANAGER_COPY['manager.attendance.empty']} />
+        </div>
+        {/* 异常卡 ×N（理由 + 批准/驳回，左 3px 赭红） */}
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
           {approvals.map((a) => (
-            <li key={a.id} className="py-3" data-testid={`manager-attendance-row-${a.id}`}>
-              <div className="flex flex-wrap items-center gap-1.5">
+            <li
+              key={a.id}
+              style={{ ...cardSt, borderLeft: '3px solid var(--danger)' }}
+              data-testid={`manager-attendance-row-${a.id}`}
+            >
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
                 <Chip tone={a.type === 'makeup' ? 'warn' : 'danger'}>{a.type === 'makeup' ? '补卡' : '异常'}</Chip>
-                <span className="text-body-sm font-bold text-ink">{staffNameOf(a.staffId)}</span>
-                <span className="u1-num text-caption-xs text-[rgba(59,46,36,.62)]">{a.date}</span>
-                <span className="text-caption-xs text-[rgba(59,46,36,.62)]">· {KIND_LABEL[a.kind] ?? a.kind}</span>
+                <span style={{ fontSize: 12.5, fontWeight: 800 }}>{staffNameOf(a.staffId)}</span>
+                <span className="sk-mono" style={{ fontSize: 9.5, color: 'var(--muted)' }}>{a.date}</span>
+                <span style={{ fontSize: 10, color: 'var(--muted)' }}>· {KIND_LABEL[a.kind] ?? a.kind}</span>
               </div>
-              <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">{a.reason}</p>
+              <p style={{ marginTop: 6, fontSize: 11, color: 'var(--muted)', lineHeight: 1.7 }}>{a.reason}</p>
               {a.type === 'makeup' && a.requestedTs ? (
-                <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
-                  申请补卡时间 <span className="u1-num">{hhmm(a.requestedTs)}</span>
+                <p style={{ ...monoSm, marginTop: 2 }}>
+                  申请补卡时间 {hhmm(a.requestedTs)}
                 </p>
               ) : null}
-              <div className="mt-2 flex gap-2">
-                <button
-                  type="button"
-                  className={BTN_PRIMARY}
-                  disabled={busy}
-                  onClick={() => resolveM.mutate({ approvalId: a.id, approve: true })}
-                  data-testid={`manager-attendance-approve-${a.id}`}
-                >
-                  通过
-                </button>
-                <button
-                  type="button"
-                  className={BTN_DANGER}
-                  disabled={busy}
-                  onClick={() => reject(a.id)}
-                  data-testid={`manager-attendance-reject-${a.id}`}
-                >
-                  驳回
-                </button>
-              </div>
+              <ApproveRejectRow
+                approveText={MANAGER_COPY['manager.approve']}
+                rejectText={MANAGER_COPY['manager.reject']}
+                busy={busy}
+                onApprove={() => resolveM.mutate({ approvalId: a.id, approve: true })}
+                onReject={() => reject(a.id)}
+                approveTestId={`manager-attendance-approve-${a.id}`}
+                rejectTestId={`manager-attendance-reject-${a.id}`}
+              />
             </li>
           ))}
         </ul>
-      ) : null}
-      {flagged.length > 0 ? (
-        <div className={approvals.length > 0 ? 'mt-3 border-t border-[rgba(59,46,36,.06)] pt-3' : ''}>
-          <p className="text-caption-xs font-bold text-[rgba(59,46,36,.42)]">防代打标记（本月 · 只读）</p>
-          <ul className="mt-1 divide-y divide-[rgba(59,46,36,.06)]">
-            {flagged.map((r) => (
-              <li key={r.id} className="flex flex-wrap items-center gap-1.5 py-2" data-testid={`manager-flagged-row-${r.id}`}>
-                <Chip tone="danger">防代打</Chip>
-                <span className="text-body-sm font-bold text-ink">{staffNameOf(r.staffId)}</span>
-                <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
-                  <span className="u1-num">{r.date}</span> · {KIND_LABEL[r.kind] ?? r.kind} · {RECORD_STATUS_LABEL[r.status] ?? r.status} ·{' '}
-                  <span className="u1-num">{hhmm(r.ts)}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-    </Section>
+        {/* S7 留痕记录（防代打标记 · 本月 · 只读） */}
+        {flagged.length > 0 ? (
+          <>
+            <p style={{ margin: '14px 22px 0', fontSize: 10, fontWeight: 800, color: 'var(--muted)' }}>{MANAGER_COPY['manager.sec.flagged']}</p>
+            <SkRows>
+              {flagged.map((r) => (
+                <div className="row" key={r.id} data-testid={`manager-flagged-row-${r.id}`}>
+                  <span className="lb" style={{ minWidth: 0, flex: 1, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+                    <Chip tone="danger">防代打</Chip>
+                    <span style={{ fontWeight: 700 }}>{staffNameOf(r.staffId)}</span>
+                    <span className="sk-mono" style={{ fontSize: 9.5, color: 'var(--muted)' }}>
+                      {r.date} · {KIND_LABEL[r.kind] ?? r.kind} · {RECORD_STATUS_LABEL[r.status] ?? r.status} · {hhmm(r.ts)}
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </SkRows>
+          </>
+        ) : null}
+      </div>
+      {/* 口径注：驳回强制原因 · 全留痕 */}
+      <SkNote>{MANAGER_COPY['manager.attendance.note']}</SkNote>
+    </>
   );
 }
 
@@ -291,58 +324,43 @@ function CancelSection({ showToast }: { showToast: (m: string) => void }) {
   const busy = reviewM.isPending;
 
   return (
-    <Section
-      title="取消审批"
-      aside={
-        rows.length ? (
-          <span>
-            <span className="u1-num">{rows.length}</span> 条待审
-          </span>
-        ) : undefined
-      }
-      testid="manager-cancel"
-    >
-      <QueryState pending={q.isPending} error={q.error} empty={rows.length === 0} emptyText={MANAGER_COPY['manager.cancel.empty']} />
-      {rows.length > 0 ? (
-        <ul className="divide-y divide-[rgba(59,46,36,.06)]">
+    <>
+      <SecTitle
+        title={MANAGER_COPY['manager.sec.cancel']}
+        aside={rows.length ? `${rows.length} ${MANAGER_COPY['manager.aside.pending']}` : undefined}
+      />
+      <div data-testid="manager-cancel">
+        <div style={{ margin: '0 22px' }}>
+          <QueryState pending={q.isPending} error={q.error} empty={rows.length === 0} emptyText={MANAGER_COPY['manager.cancel.empty']} />
+        </div>
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
           {rows.map((a) => (
-            <li key={a.id} className="py-3" data-testid={`manager-cancel-row-${a.id}`}>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-body-sm font-bold text-ink">{a.petName ?? '宠物'}</span>
-                <span className="text-caption-xs text-[rgba(59,46,36,.62)]">{a.serviceName ?? ''}</span>
-                <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
-                  预约 <span className="u1-num">{`${mmdd(a.scheduledStart)} ${hhmm(a.scheduledStart)}`}</span>
+            <li key={a.id} style={{ ...cardSt, borderLeft: '3px solid var(--danger)' }} data-testid={`manager-cancel-row-${a.id}`}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 12.5, fontWeight: 800 }}>{a.petName ?? '宠物'}</span>
+                <span style={{ fontSize: 10, color: 'var(--muted)' }}>{a.serviceName ?? ''}</span>
+                <span className="sk-mono" style={{ fontSize: 9.5, color: 'var(--muted)' }}>
+                  预约 {`${mmdd(a.scheduledStart)} ${hhmm(a.scheduledStart)}`}
                 </span>
               </div>
-              <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
+              <p style={{ marginTop: 6, fontSize: 11, color: 'var(--muted)', lineHeight: 1.7 }}>
                 客户 {a.customerName ?? '—'}
                 {a.customerPhoneTail ? `（尾号 ${a.customerPhoneTail}）` : ''} · 原因：{a.cancelReason ?? '（未填）'}
               </p>
-              <div className="mt-2 flex gap-2">
-                <button
-                  type="button"
-                  className={BTN_PRIMARY}
-                  disabled={busy}
-                  onClick={() => reviewM.mutate({ appointmentId: a.id, approve: true })}
-                  data-testid={`manager-cancel-approve-${a.id}`}
-                >
-                  批准取消
-                </button>
-                <button
-                  type="button"
-                  className={BTN_DANGER}
-                  disabled={busy}
-                  onClick={() => reviewM.mutate({ appointmentId: a.id, approve: false })}
-                  data-testid={`manager-cancel-reject-${a.id}`}
-                >
-                  驳回
-                </button>
-              </div>
+              <ApproveRejectRow
+                approveText={MANAGER_COPY['manager.cancel.approve']}
+                rejectText={MANAGER_COPY['manager.reject']}
+                busy={busy}
+                onApprove={() => reviewM.mutate({ appointmentId: a.id, approve: true })}
+                onReject={() => reviewM.mutate({ appointmentId: a.id, approve: false })}
+                approveTestId={`manager-cancel-approve-${a.id}`}
+                rejectTestId={`manager-cancel-reject-${a.id}`}
+              />
             </li>
           ))}
         </ul>
-      ) : null}
-    </Section>
+      </div>
+    </>
   );
 }
 
@@ -388,70 +406,75 @@ function DayCloseSection({ showToast }: { showToast: (m: string) => void }) {
     closeM.mutate({ actualCashFen: actualFen });
   };
 
+  const dlRow: CSSProperties = { display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--muted)' };
+
   return (
-    <Section title="日结确认" aside="限本店 · 一日一结" testid="manager-dayclose">
-      <QueryState pending={previewQ.isPending} error={previewQ.error} empty={false} emptyText="" />
-      {p ? (
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="u1-num text-body-sm font-bold text-ink">{p.bizDate}</span>
-            {p.existingFrozenCloseId ? <Chip tone="ok">今日已日结冻结</Chip> : <Chip tone="warn">待日结</Chip>}
+    <>
+      <SecTitle title={MANAGER_COPY['manager.sec.dayclose']} aside={MANAGER_COPY['manager.aside.dayclose']} />
+      <Sec testid="manager-dayclose">
+        <QueryState pending={previewQ.isPending} error={previewQ.error} empty={false} emptyText="" />
+        {p ? (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span className="sk-mono" style={{ fontSize: 12.5, fontWeight: 700 }}>{p.bizDate}</span>
+              {p.existingFrozenCloseId ? <Chip tone="ok">今日已日结冻结</Chip> : <Chip tone="warn">待日结</Chip>}
+            </div>
+            <dl style={{ marginTop: 10, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px' }}>
+              <div style={dlRow}>
+                <dt>已收合计</dt>
+                <dd className="sk-mono" style={{ fontWeight: 700, color: 'var(--ink)' }}>{yuan(p.stats.receivedTotalFen)}</dd>
+              </div>
+              <div style={dlRow}>
+                <dt>笔数</dt>
+                <dd className="sk-mono" style={{ fontWeight: 700, color: 'var(--ink)' }}>{p.stats.counts.paidCount}</dd>
+              </div>
+              <div style={dlRow}>
+                <dt>现金</dt>
+                <dd className="sk-mono">{yuan(p.stats.tender.cashFen)}</dd>
+              </div>
+              <div style={dlRow}>
+                <dt>微信</dt>
+                <dd className="sk-mono">{yuan(p.stats.tender.wechatFen)}</dd>
+              </div>
+              <div style={dlRow}>
+                <dt>支付宝</dt>
+                <dd className="sk-mono">{yuan(p.stats.tender.alipayFen)}</dd>
+              </div>
+            </dl>
+            {p.existingFrozenCloseId ? null : (
+              <div style={{ marginTop: 12, borderTop: '1px solid var(--hairline-soft)', paddingTop: 12 }}>
+                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--muted)' }} htmlFor="manager-dayclose-cash">
+                  实点现金（元）· 账面 <span className="sk-mono">{yuan(bookCashFen)}</span>
+                </label>
+                <input
+                  id="manager-dayclose-cash"
+                  data-testid="manager-dayclose-cash"
+                  value={cashText}
+                  onChange={(e) => setCashText(e.target.value)}
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  className="sk-mono"
+                  style={{
+                    marginTop: 6, height: 44, width: '100%', borderRadius: 14, border: '1px solid var(--hairline)',
+                    background: 'var(--paper)', padding: '0 12px', fontSize: 13, color: 'var(--ink)', outline: 'none',
+                  }}
+                />
+                {diffFen !== null ? (
+                  <p className="sk-mono" style={{ marginTop: 6, fontSize: 10, fontWeight: 700, color: diffFen === 0 ? 'var(--muted)' : diffFen < 0 ? 'var(--danger)' : 'var(--ink-deep)' }}>
+                    差异 {signedYuan(diffFen)}
+                  </p>
+                ) : null}
+                <div style={{ marginTop: 10 }}>
+                  <SkBtnAction onClick={submit} disabled={closeM.isPending} testId="manager-dayclose-submit">
+                    {closeM.isPending ? '冻结中…' : '确认日结（冻结全日账目）'}
+                  </SkBtnAction>
+                </div>
+              </div>
+            )}
           </div>
-          <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-caption-xs text-[rgba(59,46,36,.62)]">
-            <div className="flex justify-between">
-              <dt>已收合计</dt>
-              <dd className="u1-num font-bold text-ink">{yuan(p.stats.receivedTotalFen)}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt>笔数</dt>
-              <dd className="u1-num font-bold text-ink">{p.stats.counts.paidCount}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt>现金</dt>
-              <dd className="u1-num">{yuan(p.stats.tender.cashFen)}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt>微信</dt>
-              <dd className="u1-num">{yuan(p.stats.tender.wechatFen)}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt>支付宝</dt>
-              <dd className="u1-num">{yuan(p.stats.tender.alipayFen)}</dd>
-            </div>
-          </dl>
-          {p.existingFrozenCloseId ? null : (
-            <div className="mt-3 border-t border-[rgba(59,46,36,.06)] pt-3">
-              <label className="block text-caption-xs font-bold text-[rgba(59,46,36,.62)]" htmlFor="manager-dayclose-cash">
-                实点现金（元）· 账面 <span className="u1-num">{yuan(bookCashFen)}</span>
-              </label>
-              <input
-                id="manager-dayclose-cash"
-                data-testid="manager-dayclose-cash"
-                value={cashText}
-                onChange={(e) => setCashText(e.target.value)}
-                inputMode="decimal"
-                placeholder="0.00"
-                className="u1-num mt-1 h-11 w-full rounded-input bg-sunken px-3 text-body-sm text-ink outline-none placeholder:text-ink-placeholder"
-              />
-              {diffFen !== null ? (
-                <p className={`mt-1 text-caption-xs font-bold ${diffFen === 0 ? 'text-[rgba(59,46,36,.62)]' : diffFen < 0 ? 'text-danger' : 'text-success-deep'}`}>
-                  差异 {signedYuan(diffFen)}
-                </p>
-              ) : null}
-              <button
-                type="button"
-                className={`${BTN_PRIMARY} mt-2 w-full`}
-                disabled={closeM.isPending}
-                onClick={submit}
-                data-testid="manager-dayclose-submit"
-              >
-                {closeM.isPending ? '冻结中…' : '确认日结（冻结全日账目）'}
-              </button>
-            </div>
-          )}
-        </div>
-      ) : null}
-    </Section>
+        ) : null}
+      </Sec>
+    </>
   );
 }
 
@@ -507,71 +530,65 @@ function RefundSection({ showToast }: { showToast: (m: string) => void }) {
   const nowMs = Date.now();
 
   return (
-    <Section
-      title="退款"
-      aside={
-        pending.length ? (
-          <span>
-            <span className="u1-num">{pending.length}</span> 单实退待办
-          </span>
-        ) : undefined
-      }
-      testid="manager-refund"
-    >
-      {/* 实退待办：executed 超 24h 未登记（黄色提醒列表） */}
-      <QueryState pending={pendingQ.isPending} error={pendingQ.error} empty={false} emptyText="" />
-      {pending.length > 0 ? (
-        <div className="rounded-control bg-brand-primary-light p-3">
-          <p className="text-caption-xs font-bold text-ink">{MANAGER_COPY['manager.refund.pendingNote']}</p>
-          <ul className="mt-1.5 divide-y divide-[rgba(59,46,36,.08)]">
-            {pending.map((r) => {
-              const overdueH = Math.max(1, Math.floor((nowMs - r.createdAt.getTime()) / 3_600_000));
-              return (
-                <li key={r.id} className="py-2.5" data-testid={`manager-refund-pending-${r.id}`}>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <Chip tone="warn">超 24h</Chip>
-                    <span className="u1-num text-body-sm font-bold text-ink">{r.refundNo}</span>
-                    <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
-                      原单 <span className="u1-num">{r.billNo}</span>
-                    </span>
-                  </div>
-                  <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
-                    金额 <span className="u1-num font-bold text-danger">−{yuan(r.amountFen)}</span> · 执行{' '}
-                    <span className="u1-num">{`${mmdd(r.createdAt)} ${hhmm(r.createdAt)}`}</span> · 已超时{' '}
-                    <span className="u1-num font-bold text-danger">{overdueH} 小时</span>
-                  </p>
-                  <button
-                    type="button"
-                    className={`${BTN_PRIMARY} mt-2`}
-                    disabled={busy}
-                    onClick={() => settle(r.id)}
-                    data-testid={`manager-refund-settle-${r.id}`}
-                  >
-                    实退完成
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      ) : null}
+    <>
+      <SecTitle
+        title={MANAGER_COPY['manager.sec.refund']}
+        aside={pending.length ? `${pending.length} ${MANAGER_COPY['manager.aside.refundPending']}` : undefined}
+      />
+      <Sec testid="manager-refund">
+        {/* 实退待办：executed 超 24h 未登记（淡黄提醒列表） */}
+        <QueryState pending={pendingQ.isPending} error={pendingQ.error} empty={false} emptyText="" />
+        {pending.length > 0 ? (
+          <div style={{ borderRadius: 14, background: 'var(--gold-pale)', padding: 12 }}>
+            <p style={{ fontSize: 10, fontWeight: 800, color: 'var(--ink-deep)' }}>{MANAGER_COPY['manager.refund.pendingNote']}</p>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              {pending.map((r) => {
+                const overdueH = Math.max(1, Math.floor((nowMs - r.createdAt.getTime()) / 3_600_000));
+                return (
+                  <li key={r.id} style={{ padding: '10px 0', boxShadow: 'inset 0 1px 0 rgba(59, 46, 36, .08)' }} data-testid={`manager-refund-pending-${r.id}`}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+                      <Chip>超 24h</Chip>
+                      <span className="sk-mono" style={{ fontSize: 12.5, fontWeight: 700 }}>{r.refundNo}</span>
+                      <span style={{ fontSize: 10, color: 'var(--ink)' }}>
+                        原单 <span className="sk-mono">{r.billNo}</span>
+                      </span>
+                    </div>
+                    <p style={{ marginTop: 4, fontSize: 10, color: 'var(--ink)' }}>
+                      金额 <span className="sk-mono" style={{ fontWeight: 700, color: 'var(--danger)' }}>−{yuan(r.amountFen)}</span> · 执行{' '}
+                      <span className="sk-mono">{`${mmdd(r.createdAt)} ${hhmm(r.createdAt)}`}</span> · 已超时{' '}
+                      <span className="sk-mono" style={{ fontWeight: 700, color: 'var(--danger)' }}>{overdueH} 小时</span>
+                    </p>
+                    <button
+                      type="button"
+                      style={{ ...GOLD_BTN, marginTop: 8, background: 'var(--card)' }}
+                      disabled={busy}
+                      onClick={() => settle(r.id)}
+                      data-testid={`manager-refund-settle-${r.id}`}
+                    >
+                      实退完成
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ) : null}
 
-      {/* 本店退款单（最近 20 条）：店长可办 executed 实退登记；draft 只读提示须店主（驳回权仅店主，不渲染驳回钮） */}
-      <p className={`text-caption-xs font-bold text-[rgba(59,46,36,.42)] ${pending.length > 0 ? 'mt-3' : ''}`}>
-        {MANAGER_COPY['manager.refund.listNote']}
-      </p>
-      <QueryState pending={listQ.isPending} error={listQ.error} empty={rows.length === 0} emptyText={MANAGER_COPY['manager.refund.empty']} />
-      {rows.length > 0 ? (
-        <ul className="divide-y divide-[rgba(59,46,36,.06)]">
+        {/* 本店退款单（最近 20 条）：店长可办 executed 实退登记；draft 只读提示须店主（驳回权仅店主，不渲染驳回钮） */}
+        <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', marginTop: pending.length > 0 ? 12 : 0 }}>
+          {MANAGER_COPY['manager.refund.listNote']}
+        </p>
+        <QueryState pending={listQ.isPending} error={listQ.error} empty={rows.length === 0} emptyText={MANAGER_COPY['manager.refund.empty']} />
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
           {rows.map((r) => (
-            <li key={r.id} className="py-2.5" data-testid={`manager-refund-row-${r.id}`}>
-              <div className="flex flex-wrap items-center gap-1.5">
+            <li key={r.id} style={{ padding: '10px 0', boxShadow: 'inset 0 1px 0 var(--hairline-soft)' }} data-testid={`manager-refund-row-${r.id}`}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
                 <Chip>{REFUND_TYPE_LABEL[r.type] ?? r.type}</Chip>
-                <span className="u1-num text-body-sm font-bold text-ink">{r.refundNo}</span>
-                <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
-                  原单 <span className="u1-num">{r.billNo}</span>
+                <span className="sk-mono" style={{ fontSize: 12.5, fontWeight: 700 }}>{r.refundNo}</span>
+                <span style={{ fontSize: 10, color: 'var(--muted)' }}>
+                  原单 <span className="sk-mono">{r.billNo}</span>
                 </span>
-                <span className="ml-auto">
+                <span style={{ marginLeft: 'auto' }}>
                   <Chip
                     tone={
                       r.status === 'settled' ? 'ok' : r.status === 'rejected' ? 'danger' : r.status === 'draft' ? 'warn' : 'plain'
@@ -581,28 +598,27 @@ function RefundSection({ showToast }: { showToast: (m: string) => void }) {
                   </Chip>
                 </span>
               </div>
-              <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
-                金额 <span className="u1-num font-bold text-danger">−{yuan(r.amountFen)}</span> · 退款日{' '}
-                <span className="u1-num">{r.bizDate}</span>
+              <p style={{ marginTop: 4, fontSize: 10, color: 'var(--muted)' }}>
+                金额 <span className="sk-mono" style={{ fontWeight: 700, color: 'var(--danger)' }}>−{yuan(r.amountFen)}</span> · 退款日{' '}
+                <span className="sk-mono">{r.bizDate}</span>
                 {r.settledAt ? (
                   <>
-                    {' '}
-                    · 实退 <span className="u1-num">{`${mmdd(r.settledAt)} ${hhmm(r.settledAt)}`}</span>
+                    {' '}· 实退 <span className="sk-mono">{`${mmdd(r.settledAt)} ${hhmm(r.settledAt)}`}</span>
                   </>
                 ) : null}
               </p>
-              <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+              <p style={{ marginTop: 2, fontSize: 10, color: 'var(--muted)' }}>
                 原因：{r.reason} · 发起 {r.operatorName ?? '—'} · 审批 {r.approverName ?? '—'}
               </p>
               {r.status === 'draft' ? (
-                <p className="mt-1 text-caption-xs font-bold text-[rgba(59,46,36,.62)]">
+                <p style={{ marginTop: 4, fontSize: 10, fontWeight: 700, color: 'var(--muted)' }}>
                   {MANAGER_COPY['manager.refund.draftNote']}
                 </p>
               ) : null}
               {r.status === 'executed' ? (
                 <button
                   type="button"
-                  className={`${BTN_PRIMARY} mt-2`}
+                  style={{ ...GOLD_BTN, marginTop: 8 }}
                   disabled={busy}
                   onClick={() => settle(r.id)}
                   data-testid={`manager-refund-settle-${r.id}`}
@@ -613,8 +629,8 @@ function RefundSection({ showToast }: { showToast: (m: string) => void }) {
             </li>
           ))}
         </ul>
-      ) : null}
-    </Section>
+      </Sec>
+    </>
   );
 }
 
@@ -674,66 +690,61 @@ function InventorySection({ showToast }: { showToast: (m: string) => void }) {
   const busy = confirmM.isPending || rejectM.isPending;
 
   return (
-    <Section
-      title="盘点"
-      aside={
-        counted.length ? (
-          <span>
-            <span className="u1-num">{counted.length}</span> 单待确认
-          </span>
-        ) : undefined
-      }
-      testid="manager-inventory"
-    >
-      {/* 派任务 */}
-      <div className="grid grid-cols-3 gap-2">
-        {(['daily', 'weekly', 'blind'] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            className={`${BTN_PLAIN} flex-col gap-0.5 px-2`}
-            disabled={assignM.isPending}
-            onClick={() => assignM.mutate(t)}
-            data-testid={`manager-assign-${t}`}
-          >
-            <span>{COUNT_TYPE_LABEL[t]}</span>
-            <span className="text-caption-xs font-normal text-[rgba(59,46,36,.62)]">
-              {t === 'daily' ? '单价≥100元' : t === 'weekly' ? '全量' : '盲盘'}
-            </span>
-          </button>
-        ))}
-      </div>
+    <>
+      <SecTitle
+        title={MANAGER_COPY['manager.sec.inventory']}
+        aside={counted.length ? `${counted.length} ${MANAGER_COPY['manager.aside.counted']}` : undefined}
+      />
+      <Sec testid="manager-inventory">
+        {/* 派任务 */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+          {(['daily', 'weekly', 'blind'] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              className="sk-btn-ghost"
+              style={{ flexDirection: 'column', gap: 2, padding: '6px 8px', height: 'auto' }}
+              disabled={assignM.isPending}
+              onClick={() => assignM.mutate(t)}
+              data-testid={`manager-assign-${t}`}
+            >
+              <span>{COUNT_TYPE_LABEL[t]}</span>
+              <span className="sk-mono" style={{ fontSize: 8.5, fontWeight: 400, color: 'var(--muted)' }}>
+                {t === 'daily' ? '单价≥100元' : t === 'weekly' ? '全量' : '盲盘'}
+              </span>
+            </button>
+          ))}
+        </div>
 
-      {/* counted 确认队列 */}
-      <p className="mt-3 text-caption-xs font-bold text-[rgba(59,46,36,.42)]">{MANAGER_COPY['manager.inventory.countedNote']}</p>
-      <QueryState pending={countedQ.isPending} error={countedQ.error} empty={counted.length === 0} emptyText={MANAGER_COPY['manager.inventory.countedEmpty']} />
-      {counted.length > 0 ? (
-        <ul className="divide-y divide-[rgba(59,46,36,.06)]">
+        {/* counted 确认队列 */}
+        <p style={{ marginTop: 12, fontSize: 10, fontWeight: 700, color: 'var(--muted)' }}>{MANAGER_COPY['manager.inventory.countedNote']}</p>
+        <QueryState pending={countedQ.isPending} error={countedQ.error} empty={counted.length === 0} emptyText={MANAGER_COPY['manager.inventory.countedEmpty']} />
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
           {counted.map((c) => {
             const diffs = c.items.filter((it) => it.actualStock !== null && it.actualStock !== it.systemStock);
             const unfilled = c.items.filter((it) => it.actualStock === null).length;
             return (
-              <li key={c.id} className="py-3" data-testid={`manager-count-row-${c.id}`}>
-                <div className="flex flex-wrap items-center gap-1.5">
+              <li key={c.id} style={{ padding: '12px 0', boxShadow: 'inset 0 1px 0 var(--hairline-soft)' }} data-testid={`manager-count-row-${c.id}`}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
                   <Chip tone="warn">{COUNT_TYPE_LABEL[c.type] ?? c.type}</Chip>
-                  <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
-                    建单 <span className="u1-num">{`${mmdd(c.createdAt)} ${hhmm(c.createdAt)}`}</span> · 共 <span className="u1-num">{c.items.length}</span> 项 · 差异 <span className="u1-num">{diffs.length}</span> 项
+                  <span className="sk-mono" style={{ fontSize: 9.5, color: 'var(--muted)' }}>
+                    建单 {`${mmdd(c.createdAt)} ${hhmm(c.createdAt)}`} · 共 {c.items.length} 项 · 差异 {diffs.length} 项
                   </span>
                 </div>
                 {unfilled > 0 ? (
-                  <p className="mt-1 text-caption-xs text-danger">有 <span className="u1-num">{unfilled}</span> 项未录入实盘，确认将被 server 拒绝</p>
+                  <p style={{ marginTop: 4, fontSize: 10, color: 'var(--danger)' }}>有 {unfilled} 项未录入实盘，确认将被 server 拒绝</p>
                 ) : null}
                 {diffs.length > 0 ? (
-                  <ul className="mt-1.5 space-y-1">
+                  <ul style={{ listStyle: 'none', margin: '6px 0 0', padding: 0, display: 'grid', gap: 4 }}>
                     {diffs.map((it) => {
                       const d = it.actualStock! - it.systemStock;
                       return (
-                        <li key={it.id} className="flex items-center justify-between text-caption-xs">
-                          <span className="min-w-0 flex-1 truncate text-[rgba(59,46,36,.62)]">{it.productName ?? '（商品已删）'}</span>
-                          <span className="u1-num shrink-0 text-[rgba(59,46,36,.62)]">
+                        <li key={it.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 10 }}>
+                          <span style={{ minWidth: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{it.productName ?? '（商品已删）'}</span>
+                          <span className="sk-mono" style={{ flex: 'none', color: 'var(--muted)' }}>
                             {it.systemStock} → {it.actualStock}
                           </span>
-                          <span className={`u1-num w-10 shrink-0 text-right font-bold ${d < 0 ? 'text-danger' : 'text-success-deep'}`}>
+                          <span className="sk-mono" style={{ flex: 'none', width: 40, textAlign: 'right', fontWeight: 700, color: d < 0 ? 'var(--danger)' : 'var(--ink-deep)' }}>
                             {d > 0 ? `+${d}` : `−${Math.abs(d)}`}
                           </span>
                         </li>
@@ -741,50 +752,37 @@ function InventorySection({ showToast }: { showToast: (m: string) => void }) {
                     })}
                   </ul>
                 ) : (
-                  <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">账实一致，无差异</p>
+                  <p style={{ marginTop: 4, fontSize: 10, color: 'var(--muted)' }}>账实一致，无差异</p>
                 )}
-                <div className="mt-2 flex gap-2">
-                  <button
-                    type="button"
-                    className={BTN_PRIMARY}
-                    disabled={busy}
-                    onClick={() => confirmM.mutate(c.id)}
-                    data-testid={`manager-count-confirm-${c.id}`}
-                  >
-                    确认入账
-                  </button>
-                  <button
-                    type="button"
-                    className={BTN_DANGER}
-                    disabled={busy}
-                    onClick={() => reject(c.id)}
-                    data-testid={`manager-count-reject-${c.id}`}
-                  >
-                    驳回
-                  </button>
-                </div>
+                <ApproveRejectRow
+                  approveText="确认入账"
+                  rejectText={MANAGER_COPY['manager.reject']}
+                  busy={busy}
+                  onApprove={() => confirmM.mutate(c.id)}
+                  onReject={() => reject(c.id)}
+                  approveTestId={`manager-count-confirm-${c.id}`}
+                  rejectTestId={`manager-count-reject-${c.id}`}
+                />
               </li>
             );
           })}
         </ul>
-      ) : null}
 
-      {/* 最近已入账 */}
-      <p className="mt-3 text-caption-xs font-bold text-[rgba(59,46,36,.42)]">最近已入账</p>
-      <QueryState pending={postedQ.isPending} error={postedQ.error} empty={posted.length === 0} emptyText={MANAGER_COPY['manager.inventory.postedEmpty']} />
-      {posted.length > 0 ? (
-        <ul className="divide-y divide-[rgba(59,46,36,.06)]">
+        {/* 最近已入账 */}
+        <p style={{ marginTop: 12, fontSize: 10, fontWeight: 700, color: 'var(--muted)' }}>{MANAGER_COPY['manager.sec.posted']}</p>
+        <QueryState pending={postedQ.isPending} error={postedQ.error} empty={posted.length === 0} emptyText={MANAGER_COPY['manager.inventory.postedEmpty']} />
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
           {posted.map((c) => (
-            <li key={c.id} className="flex items-center gap-1.5 py-2" data-testid={`manager-count-posted-${c.id}`}>
+            <li key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 0', boxShadow: 'inset 0 1px 0 var(--hairline-soft)' }} data-testid={`manager-count-posted-${c.id}`}>
               <Chip tone="ok">{COUNT_TYPE_LABEL[c.type] ?? c.type}</Chip>
-              <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
-                入账 <span className="u1-num">{c.postedAt ? `${mmdd(c.postedAt)} ${hhmm(c.postedAt)}` : '—'}</span> · 共 <span className="u1-num">{c.items.length}</span> 项
+              <span className="sk-mono" style={{ fontSize: 9.5, color: 'var(--muted)' }}>
+                入账 {c.postedAt ? `${mmdd(c.postedAt)} ${hhmm(c.postedAt)}` : '—'} · 共 {c.items.length} 项
               </span>
             </li>
           ))}
         </ul>
-      ) : null}
-    </Section>
+      </Sec>
+    </>
   );
 }
 
@@ -801,28 +799,29 @@ function ReviewsSection() {
   const rows = q.data?.items ?? [];
 
   return (
-    <Section title="差评提示" aside="仅提示 · 不构成工单" testid="manager-reviews">
-      <QueryState pending={q.isPending} error={q.error} empty={rows.length === 0} emptyText={MANAGER_COPY['manager.reviews.empty']} />
-      {rows.length > 0 ? (
-        <ul className="divide-y divide-[rgba(59,46,36,.06)]">
+    <>
+      <SecTitle title={MANAGER_COPY['manager.sec.reviews']} aside={MANAGER_COPY['manager.aside.reviews']} />
+      <Sec testid="manager-reviews">
+        <QueryState pending={q.isPending} error={q.error} empty={rows.length === 0} emptyText={MANAGER_COPY['manager.reviews.empty']} />
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
           {rows.map((r) => (
-            <li key={r.id} className="py-2.5" data-testid={`manager-review-row-${r.id}`}>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-body-sm font-bold text-ink">{r.staffName ?? '—'}</span>
-                <span className="text-caption-xs font-bold text-danger" aria-label={`${r.rating} 星`}>
+            <li key={r.id} style={{ padding: '10px 0', boxShadow: 'inset 0 1px 0 var(--hairline-soft)' }} data-testid={`manager-review-row-${r.id}`}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 12.5, fontWeight: 800 }}>{r.staffName ?? '—'}</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--danger)' }} aria-label={`${r.rating} 星`}>
                   {'★'.repeat(r.rating)}
                 </span>
                 {r.anonymous ? <Chip>匿名</Chip> : null}
-                <span className="u1-num ml-auto text-caption-xs text-[rgba(59,46,36,.42)]">
+                <span className="sk-mono" style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--muted)' }}>
                   {`${mmdd(r.createdAt)} ${hhmm(r.createdAt)}`}
                 </span>
               </div>
-              <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">{r.text ?? '（未留文字）'}</p>
+              <p style={{ marginTop: 2, fontSize: 11, color: 'var(--muted)' }}>{r.text ?? '（未留文字）'}</p>
             </li>
           ))}
         </ul>
-      ) : null}
-    </Section>
+      </Sec>
+    </>
   );
 }
 
@@ -839,22 +838,23 @@ function MovementsSection({ operatorNameOf }: { operatorNameOf: (userId: string)
   const rows = q.data ?? [];
 
   return (
-    <Section title="库存流水" aside="最新 20 条 · 只读" testid="manager-movements">
-      <QueryState pending={q.isPending} error={q.error} empty={rows.length === 0} emptyText={MANAGER_COPY['manager.movements.empty']} />
-      {rows.length > 0 ? (
-        <ul className="divide-y divide-[rgba(59,46,36,.06)]">
+    <>
+      <SecTitle title={MANAGER_COPY['manager.sec.movements']} aside={MANAGER_COPY['manager.aside.movements']} />
+      <Sec testid="manager-movements">
+        <QueryState pending={q.isPending} error={q.error} empty={rows.length === 0} emptyText={MANAGER_COPY['manager.movements.empty']} />
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
           {rows.map((m) => (
-            <li key={m.id} className="py-2.5" data-testid={`manager-movement-row-${m.id}`}>
-              <div className="flex items-center gap-1.5">
-                <span className="u1-num text-caption-xs text-[rgba(59,46,36,.42)]">{`${mmdd(m.createdAt)} ${hhmm(m.createdAt)}`}</span>
-                <span className="min-w-0 flex-1 truncate text-body-sm font-bold text-ink">{m.productName ?? '（商品已删）'}</span>
-                <span className={`u1-num shrink-0 text-body-sm font-bold ${m.delta < 0 ? 'text-danger' : 'text-success-deep'}`}>
+            <li key={m.id} style={{ padding: '10px 0', boxShadow: 'inset 0 1px 0 var(--hairline-soft)' }} data-testid={`manager-movement-row-${m.id}`}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span className="sk-mono" style={{ fontSize: 9, color: 'var(--muted)' }}>{`${mmdd(m.createdAt)} ${hhmm(m.createdAt)}`}</span>
+                <span style={{ minWidth: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 12.5, fontWeight: 700 }}>{m.productName ?? '（商品已删）'}</span>
+                <span className="sk-mono" style={{ flex: 'none', fontSize: 12.5, fontWeight: 700, color: m.delta < 0 ? 'var(--danger)' : 'var(--ink-deep)' }}>
                   {m.delta > 0 ? `+${m.delta}` : `−${Math.abs(m.delta)}`}
                 </span>
               </div>
-              <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+              <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, fontSize: 10, color: 'var(--muted)' }}>
                 <Chip>{SOURCE_TYPE_LABEL[m.sourceType] ?? m.sourceType}</Chip>
-                <span className="u1-num">
+                <span className="sk-mono">
                   {m.beforeStock} → {m.afterStock}
                 </span>
                 <span>操作人 {operatorNameOf(m.operatorId)}</span>
@@ -862,8 +862,8 @@ function MovementsSection({ operatorNameOf }: { operatorNameOf: (userId: string)
             </li>
           ))}
         </ul>
-      ) : null}
-    </Section>
+      </Sec>
+    </>
   );
 }
 
@@ -876,7 +876,7 @@ export default function ManagerPage() {
   const { user, loading } = useMe();
   const { showToast, toastEl } = useToast();
 
-  // 店名（header aside；与 MePage 同 queryKey 共享缓存）
+  // 店名（backbar mono 注；与 MePage 同 queryKey 共享缓存）
   const meQuery = useQuery({
     queryKey: ['auth', 'me', 'staffDetail'],
     queryFn: () => trpc.auth.me.query(),
@@ -886,15 +886,16 @@ export default function ManagerPage() {
   const isManager = (user?.roles ?? []).some((r) => r === 'merchant_manager' || r === 'merchant_owner');
 
   return (
-    <div className="pb-6">
-      <PageHeader title="店长视图" backTo="/me" aside={storeName ?? undefined} />
+    <div className="sk">
+      <SkBackBar title={MANAGER_COPY['manager.title']} fallback="/me" note={storeName ?? undefined} />
       {loading ? (
-        <p className="px-[22px] text-body-sm text-[rgba(59,46,36,.62)]">加载中…</p>
+        <p style={{ padding: '8px 22px 0', fontSize: 12.5, color: 'var(--muted)' }}>{MANAGER_COPY['manager.loading']}</p>
       ) : !isManager ? (
         <GuideCard />
       ) : (
         <ManagerBody userId={user!.id} userNickname={user!.nickname} showToast={showToast} />
       )}
+      <div style={{ paddingBottom: 32 }} />
       {toastEl}
     </div>
   );
@@ -930,7 +931,7 @@ function ManagerBody({
     staffNameByUserId.get(opId) ?? (opId === userId ? (userNickname ?? '本人') : '—');
 
   return (
-    <div className="px-[22px]">
+    <div>
       <AttendanceSection showToast={showToast} staffNameOf={staffNameOf} />
       <CancelSection showToast={showToast} />
       <DayCloseSection showToast={showToast} />

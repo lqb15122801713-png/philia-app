@@ -1,13 +1,17 @@
 /**
  * 盘点执行 /inventory/:id（批次 员工端2.0 · R8，docs/staff2/R7-R10-DESIGN.md §一.3/§三）
+ * 骨架批片 1（S-09）：外框换骨架——SkBackBar（二级页无 dock）→ 录入卡 ×N
+ * （品名 + 货号 mono + 系统量 + 实盘输入位）→ 吸底 G2（渐出底 + SkBtnAction）。
+ * 数据流/权限零回退。
  *
  * - 数据源：inventory.myCountTasks（staff 可读端点，含行项+商品名/分类；按 id 取单）。
  *   listCounts 为 merchantProcedure，员工不可调，不做 fallback。
  * - 盲盘（type='blind'）不展示账面数，提交后也不展示差异（盲盘口径：不见账面）；
- *   日盘/周盘展示账面数，提交后差异预览：盘亏 text-danger / 盘盈 text-success-deep。
+ *   日盘/周盘展示账面数，提交后差异预览：盘亏赭红 / 盘盈深棕墨。
  * - 录入：每行实盘数量大输入框（≥44px 触控），全部行必填才可提交 → recordItems
  *   （confirm 前零库存写入，仅写盘点行）；rejected=退回重盘可重新录入，提交后回 counted。
  * - 状态条：counted → 「已提交，待店长确认后才入账」；rejected → 退回重盘横幅+可再编辑。
+ * - 行项无 SKU 字段（schema 只有 product_id）——mono 货号位以 productId 尾号顶替（偏差已报备）。
  * - 扫码定位行（复用 QrScanner）本批不接：QrScanner 与核销 useCheckin 强耦合
  *   （解码即触发核销 mutation），跨域复用需改动共享组件（超本任务文件范围）；
  *   手工录入为主（零新依赖），扫码定位留待专项。
@@ -15,13 +19,21 @@
 
 import { Skeleton, usePhiliaClient, useToast } from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { PackageSearch } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import PageHeader from '@/components/PageHeader';
 import { INVENTORY_COPY } from '@/copy/inventory';
+import { SkBackBar, SkBtnAction, SkEmpty, SkNote } from '../../components/skeleton';
+import '../../styles/skeleton.css';
 
 const TYPE_LABEL: Record<string, string> = { daily: '日盘', weekly: '周盘', blind: '盲盘' };
+
+const cardSt: CSSProperties = {
+  margin: '12px 22px 0',
+  background: 'var(--card)',
+  borderRadius: 18,
+  padding: '14px 16px',
+  boxShadow: '0 1px 2px rgba(42, 31, 21, .05)',
+};
 
 export default function InventoryCountPage() {
   const { id = '' } = useParams();
@@ -73,169 +85,176 @@ export default function InventoryCountPage() {
   };
 
   return (
-    <div className="pb-6">
-      <PageHeader
-        title={count ? `${TYPE_LABEL[count.type] ?? '盘点'}执行` : '盘点执行'}
-        backTo="/me"
-        aside={
-          count ? (
-            <span>
-              <span className="u1-num">{items.length}</span> 项
-            </span>
-          ) : undefined
-        }
+    <div className="sk">
+      <SkBackBar
+        title={count ? `${TYPE_LABEL[count.type] ?? INVENTORY_COPY['inventory.title']}${INVENTORY_COPY['inventory.count.execSuffix']}` : INVENTORY_COPY['inventory.count.fallbackTitle']}
+        fallback="/inventory"
+        note={count ? `${items.length} ${INVENTORY_COPY['inventory.count.itemsAside']}` : undefined}
       />
 
-      <div className="px-[22px]">
-        {tasksQuery.isPending ? (
-          <div className="mt-2.5 space-y-2.5" aria-label="加载中">
-            {[0, 1, 2].map((i) => (
-              <Skeleton key={i} className="u1-card h-16 !rounded-panel" />
-            ))}
+      {tasksQuery.isPending ? (
+        <div style={{ margin: '12px 22px 0', display: 'grid', gap: 10 }} aria-label="加载中">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="u1-card h-16 !rounded-panel" />
+          ))}
+        </div>
+      ) : tasksQuery.isError ? (
+        <div style={{ ...cardSt, textAlign: 'center' }}>
+          <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.count.loadFail']}</p>
+          <div style={{ marginTop: 12 }}>
+            <SkBtnAction onClick={() => void tasksQuery.refetch()} testId="sk-inv-count-retry">
+              {INVENTORY_COPY['inventory.retry']}
+            </SkBtnAction>
           </div>
-        ) : tasksQuery.isError ? (
-          <div className="u1-card mt-2.5 p-4 text-center">
-            <p className="text-body-sm text-ink-secondary">盘点单加载失败，请检查网络后重试</p>
-            <button
-              type="button"
-              onClick={() => void tasksQuery.refetch()}
-              className="mt-4 h-12 min-h-[44px] min-w-[160px] rounded-control bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
-            >
-              重新加载
-            </button>
-          </div>
-        ) : !count ? (
-          <div className="flex flex-col items-center px-6 py-10 text-center" data-testid="inv-count-missing">
-            <span className="flex h-20 w-20 items-center justify-center rounded-full bg-sunken" aria-hidden>
-              <PackageSearch className="h-9 w-9 text-ink" strokeWidth={1.5} />
-            </span>
-            <p className="mt-4 text-body-sm text-ink-secondary">
-              {INVENTORY_COPY['inventory.count.missing']}
-            </p>
-            {/* P3-3：盘点单缺失引导态出口钮同族归色——深棕墨底淡金字（34 号档 §4.11） */}
-            <Link
-              to="/inventory"
-              className="mt-4 flex h-12 min-h-[44px] min-w-[160px] items-center justify-center rounded-control bg-ink px-8 text-body-sm font-semibold text-brand-primary transition-transform duration-120 ease-philia-spring active:scale-92"
-            >
-              返回盘点任务
+        </div>
+      ) : !count ? (
+        <div data-testid="inv-count-missing" style={{ paddingTop: 16 }}>
+          <SkEmpty title={INVENTORY_COPY['inventory.count.missing']} />
+          <div style={{ margin: '16px 22px 0' }}>
+            <Link to="/inventory" className="sk-btn-ghost" style={{ display: 'flex', width: '100%', textDecoration: 'none' }}>
+              {INVENTORY_COPY['inventory.count.backList']}
             </Link>
           </div>
-        ) : (
-          <>
-            {/* 状态条 */}
-            {count.status === 'rejected' ? (
-              <div className="u1-card mt-2.5 border-danger bg-danger-light p-4" role="alert" data-testid="inv-count-rejected">
-                <p className="text-body-sm font-bold text-danger-deep">{INVENTORY_COPY['inventory.count.rejected.title']}</p>
-                <p className="mt-1 text-caption-xs text-danger-deep">{INVENTORY_COPY['inventory.count.rejected.desc']}</p>
-              </div>
-            ) : count.status === 'counted' ? (
-              <div className="u1-card mt-2.5 bg-success-light p-4" data-testid="inv-count-counted">
-                <p className="text-body-sm font-bold text-success-deep">{INVENTORY_COPY['inventory.count.counted.title']}</p>
-                <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">{INVENTORY_COPY['inventory.count.counted.desc']}</p>
-              </div>
-            ) : (
-              <p className="mt-2.5 px-1 text-caption-xs text-[rgba(59,46,36,.62)]">
-                {INVENTORY_COPY['inventory.count.guide']}
-                {isBlind ? INVENTORY_COPY['inventory.count.blindNote'] : ''}
-              </p>
-            )}
+        </div>
+      ) : (
+        <>
+          {/* 状态条（rejected=赭红左条异常卡 / counted=锁定提示 / draft=录入引导） */}
+          {count.status === 'rejected' ? (
+            <div
+              role="alert"
+              data-testid="inv-count-rejected"
+              style={{ ...cardSt, borderLeft: '3px solid var(--danger)' }}
+            >
+              <p style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--danger)' }}>{INVENTORY_COPY['inventory.count.rejected.title']}</p>
+              <p style={{ marginTop: 4, fontSize: 11, color: 'var(--danger)' }}>{INVENTORY_COPY['inventory.count.rejected.desc']}</p>
+            </div>
+          ) : count.status === 'counted' ? (
+            <div data-testid="inv-count-counted" style={{ ...cardSt, borderLeft: '3px solid var(--gold)' }}>
+              <p style={{ fontSize: 12.5, fontWeight: 800 }}>{INVENTORY_COPY['inventory.count.counted.title']}</p>
+              <p style={{ marginTop: 4, fontSize: 11, color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.count.counted.desc']}</p>
+            </div>
+          ) : (
+            <SkNote>
+              {INVENTORY_COPY['inventory.count.guide']}
+              {isBlind ? INVENTORY_COPY['inventory.count.blindNote'] : ''}
+            </SkNote>
+          )}
 
-            {/* 行项 */}
-            {items.length === 0 ? (
-              <div className="u1-card mt-3 p-4 text-center">
-                <p className="text-body-sm text-ink-secondary">{INVENTORY_COPY['inventory.count.noItems']}</p>
-              </div>
-            ) : (
-              <ul className="mt-3" data-testid="inv-count-items">
-                {items.map((it) => {
-                  const actual = editable
-                    ? values[it.id] !== undefined && values[it.id]!.trim() !== ''
-                      ? parseInt(values[it.id]!.trim(), 10)
-                      : null
-                    : it.actualStock;
-                  const diff = actual !== null ? actual - it.systemStock : null;
-                  return (
-                    <li key={it.id} className="u1-card mb-2.5 px-4 py-3.5" data-testid={`inv-item-${it.id}`}>
-                      <div className="flex items-center gap-2">
-                        <p className="min-w-0 flex-1 text-body-sm font-bold">{it.productName ?? '商品'}</p>
-                        {it.productCategory ? (
-                          <span className="shrink-0 text-caption-xs text-[rgba(59,46,36,.42)]">{it.productCategory}</span>
-                        ) : null}
-                      </div>
-                      <div className="mt-2 flex items-center gap-3">
-                        {!isBlind ? (
-                          <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
-                            账面 <b className="u1-num text-body-sm font-bold text-ink">{it.systemStock}</b>
-                          </span>
-                        ) : null}
-                        {editable ? (
-                          <input
-                            type="number"
-                            inputMode="numeric"
-                            min={0}
-                            step={1}
-                            placeholder="实盘数量"
-                            aria-label={`${it.productName ?? '商品'}实盘数量`}
-                            value={values[it.id] ?? ''}
-                            onChange={(e) => setValues((v) => ({ ...v, [it.id]: e.target.value }))}
-                            className="u1-num u1-ring ml-auto h-12 min-h-[44px] w-32 rounded-input bg-card px-3 text-right text-body-lg font-bold text-ink placeholder:text-caption-xs placeholder:font-normal placeholder:text-ink-placeholder"
-                          />
-                        ) : (
-                          <span className="ml-auto text-caption-xs text-[rgba(59,46,36,.62)]">
-                            实盘 <b className="u1-num text-body-sm font-bold text-ink">{it.actualStock ?? '—'}</b>
-                          </span>
-                        )}
-                      </div>
-                      {/* 提交后差异预览（盲盘不透出差异） */}
-                      {!isBlind && !editable && diff !== null ? (
-                        <p className="mt-1.5 text-caption-xs">
-                          {diff === 0 ? (
-                            <span className="text-[rgba(59,46,36,.42)]">账实相符</span>
-                          ) : diff < 0 ? (
-                            <span className="font-bold text-danger">盘亏 {diff}</span>
-                          ) : (
-                            <span className="font-bold text-success-deep">盘盈 +{diff}</span>
-                          )}
-                        </p>
+          {/* 录入卡 ×N（品名 + 货号 mono + 系统量 + 实盘输入位） */}
+          {items.length === 0 ? (
+            <div style={{ ...cardSt, textAlign: 'center' }}>
+              <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.count.noItems']}</p>
+            </div>
+          ) : (
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }} data-testid="inv-count-items">
+              {items.map((it) => {
+                const actual = editable
+                  ? values[it.id] !== undefined && values[it.id]!.trim() !== ''
+                    ? parseInt(values[it.id]!.trim(), 10)
+                    : null
+                  : it.actualStock;
+                const diff = actual !== null ? actual - it.systemStock : null;
+                return (
+                  <li key={it.id} style={cardSt} data-testid={`inv-item-${it.id}`}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                      <p style={{ minWidth: 0, flex: 1, fontSize: 13.5, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {it.productName ?? INVENTORY_COPY['inventory.count.productFallback']}
+                      </p>
+                      {it.productCategory ? (
+                        <span style={{ flex: 'none', fontSize: 9.5, color: 'var(--muted)' }}>{it.productCategory}</span>
                       ) : null}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+                    </div>
+                    <p className="sk-mono" style={{ marginTop: 3, fontSize: 9, color: 'var(--muted)', letterSpacing: '.06em' }}>
+                      SKU …{it.productId.slice(-6)}
+                    </p>
+                    <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
+                      {!isBlind ? (
+                        <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+                          {INVENTORY_COPY['inventory.count.systemStock']}{' '}
+                          <b className="sk-mono" style={{ fontSize: 13, color: 'var(--ink)' }}>{it.systemStock}</b>
+                        </span>
+                      ) : null}
+                      {editable ? (
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          min={0}
+                          step={1}
+                          placeholder={INVENTORY_COPY['inventory.count.inputPlaceholder']}
+                          aria-label={`${it.productName ?? INVENTORY_COPY['inventory.count.productFallback']}${INVENTORY_COPY['inventory.count.inputPlaceholder']}`}
+                          value={values[it.id] ?? ''}
+                          onChange={(e) => setValues((v) => ({ ...v, [it.id]: e.target.value }))}
+                          className="sk-mono"
+                          style={{
+                            marginLeft: 'auto', height: 48, minHeight: 44, width: 128, borderRadius: 14,
+                            border: '1px solid var(--hairline)', background: 'var(--card)',
+                            padding: '0 12px', textAlign: 'right', fontSize: 17, fontWeight: 700, color: 'var(--ink)',
+                            outline: 'none',
+                          }}
+                        />
+                      ) : (
+                        <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' }}>
+                          {INVENTORY_COPY['inventory.count.actualStock']}{' '}
+                          <b className="sk-mono" style={{ fontSize: 13, color: 'var(--ink)' }}>{it.actualStock ?? '—'}</b>
+                        </span>
+                      )}
+                    </div>
+                    {/* 提交后差异预览（盲盘不透出差异） */}
+                    {!isBlind && !editable && diff !== null ? (
+                      <p style={{ marginTop: 6, fontSize: 11 }}>
+                        {diff === 0 ? (
+                          <span style={{ color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.count.diffSame']}</span>
+                        ) : diff < 0 ? (
+                          <span style={{ fontWeight: 700, color: 'var(--danger)' }}>{INVENTORY_COPY['inventory.count.diffLoss']} {diff}</span>
+                        ) : (
+                          <span style={{ fontWeight: 700, color: 'var(--ink-deep)' }}>{INVENTORY_COPY['inventory.count.diffGain']} +{diff}</span>
+                        )}
+                      </p>
+                    ) : null}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
 
-            {/* 提交（全部行必填） */}
-            {editable && items.length > 0 ? (
-              <button
-                type="button"
+          {/* 返回列表（次行 ghost） */}
+          <Link
+            to="/inventory"
+            className="sk-btn-ghost"
+            style={{ display: 'flex', width: 'calc(100% - 44px)', margin: '12px 22px 0', textDecoration: 'none' }}
+          >
+            {INVENTORY_COPY['inventory.count.backListPlain']}
+          </Link>
+
+          {/* 吸底 G2（渐出底 + btn-action；行项不全不能提交，提交即锁定待店长过账） */}
+          {editable && items.length > 0 ? (
+            <div
+              style={{
+                position: 'sticky', bottom: 0, marginTop: 14,
+                padding: '18px 22px calc(14px + env(safe-area-inset-bottom))',
+                background: 'linear-gradient(to bottom, rgba(250, 248, 242, 0), var(--paper) 40%)',
+              }}
+            >
+              <SkBtnAction
+                testId="inv-count-submit"
                 disabled={!allFilled || recordMut.isPending}
                 onClick={submit}
-                className={`mt-2 h-14 min-h-[56px] w-full rounded-control text-body-lg font-bold transition-transform duration-120 ease-philia-spring ${
-                  !allFilled || recordMut.isPending
-                    ? 'bg-sunken text-ink-placeholder'
-                    : 'bg-brand-primary text-ink active:scale-92'
-                }`}
-                data-testid="inv-count-submit"
+                sub={allFilled ? INVENTORY_COPY['inventory.count.submitSub'] : undefined}
               >
                 {recordMut.isPending
-                  ? '提交中…'
+                  ? INVENTORY_COPY['inventory.count.submitPending']
                   : allFilled
                     ? count.status === 'rejected'
-                      ? '重新提交盘点'
-                      : '提交盘点'
-                    : '请填完全部实盘数量'}
-              </button>
-            ) : null}
-
-            <Link
-              to="/inventory"
-              className="mt-3 flex h-12 min-h-[44px] w-full items-center justify-center rounded-control text-body-sm font-semibold text-[rgba(59,46,36,.62)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
-            >
-              返回盘点任务列表
-            </Link>
-          </>
-        )}
-      </div>
+                      ? INVENTORY_COPY['inventory.count.submitAgain']
+                      : INVENTORY_COPY['inventory.count.submit']
+                    : INVENTORY_COPY['inventory.count.submitNeedAll']}
+              </SkBtnAction>
+            </div>
+          ) : (
+            <div style={{ paddingBottom: 32 }} />
+          )}
+        </>
+      )}
 
       {toastEl}
     </div>

@@ -2736,10 +2736,14 @@ export const slotContents = sqliteTable(
     contentJson: text('content_json', { mode: 'json' }).$type<{ url: string | null; alt: string }>().notNull(),
     /** 状态：pending（待审） | live（上线） | archived（历史版） */
     status: text('status').notNull().default('pending'),
-    /** 创建/操作人用户 ID -> users.id */
+    /** 创建/操作人用户 ID -> users.id（上传人） */
     createdBy: text('created_by')
       .notNull()
       .references(() => users.id),
+    /** 最近一次发布/回退操作人（0026 补列：对齐文案域留痕治理口径；存量行=NULL 诚实空） */
+    actedBy: text('acted_by').references(() => users.id),
+    /** 最近一次发布/回退时刻 */
+    actedAt: integer('acted_at', { mode: 'timestamp' }),
     ...auditColumns,
   },
   (t) => [

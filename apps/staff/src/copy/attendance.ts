@@ -25,6 +25,25 @@ const ATTENDANCE_COPY_TABLE = {
 
   /* ---- 本月记录空态 ---- */
   'attendance.records.empty': '本月还没有考勤记录——到店后点上方按钮打卡',
+
+  /* ---- 骨架批片 1（S-03 重排）：打卡卡班次行/周记录行/状态签（原码内硬编码收键） ---- */
+  'attendance.shift.line': '班次 {range}',
+  'attendance.shift.none': '今日无排班',
+  'attendance.punch.busy': '定位打卡中…',
+  'attendance.punch.doneIn': '已打上班卡 {time}',
+  'attendance.punch.doneOut': '已打下班卡 {time}',
+  'attendance.punch.allDone': '今日上下班都已打卡',
+  'attendance.records.in': '上班',
+  'attendance.records.out': '下班',
+  'attendance.records.missing': '缺卡',
+  'attendance.records.missingHint': '可在下方申请补卡',
+  'attendance.records.makeupPassed': '补卡已通过',
+  'attendance.records.flagged': '标记',
+  'attendance.status.normal': '正常',
+  'attendance.status.late': '迟到',
+  'attendance.status.early': '早退',
+  'attendance.status.makeup': '补卡',
+  'attendance.week.empty': '本周还没有考勤记录——到店后点上方按钮打卡',
 } as const;
 
 export const ATTENDANCE_COPY = withCopyOverrides(ATTENDANCE_COPY_TABLE);

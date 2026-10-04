@@ -1,5 +1,8 @@
 /**
  * 盘点任务 /inventory（批次 员工端2.0 · R8，docs/staff2/R7-R10-DESIGN.md §一.3/§三）
+ * 骨架批片 1（S-08）：外框换骨架——SkAppHead → 今日胶囊（SkClockRow）→ appt 卡列
+ * （草稿=淡金左条 / 待确认=done 淡化 / 退回=赭红左条）→ 口径注（SkNote）。
+ * 二级页无 dock；数据流/权限零回退。
  *
  * 两区结构：
  * 1. 待办盘点单（inventory.myCountTasks：draft 待盘 / counted 待确认 / rejected 退回重盘）——
@@ -12,12 +15,13 @@ import { Skeleton, usePhiliaClient } from '@philia/shared';
 import type { inferRouterOutputs } from '@trpc/server';
 import type { AppRouter } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, ClipboardCheck, PackageOpen } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PageHeader from '@/components/PageHeader';
-import { pad2 } from '@/components/today/utils';
+import { pad2, weekdayLabel } from '@/components/today/utils';
 import { INVENTORY_COPY } from '@/copy/inventory';
+import { skc } from '@/copy/skeleton';
+import { SkBackBar, SkBtnAction, SkClockRow, SkEmpty, SkNote, SkRows } from '../../components/skeleton';
+import '../../styles/skeleton.css';
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
 type CountTask = RouterOutputs['inventory']['myCountTasks'][number];
@@ -30,24 +34,32 @@ function ymd(d: Date): string {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }
 
+const cardSt: CSSProperties = {
+  margin: '12px 22px 0',
+  background: 'var(--card)',
+  borderRadius: 18,
+  padding: '14px 16px',
+  boxShadow: '0 1px 2px rgba(42, 31, 21, .05)',
+};
+
 function TypeChip({ type }: { type: string }) {
-  const cls =
+  const st: CSSProperties =
     type === 'blind'
-      ? 'bg-ink text-card'
+      ? { background: 'var(--ink)', color: 'var(--paper)' }
       : type === 'daily'
-        ? 'bg-brand-primary-light text-ink'
-        : 'bg-brand-secondary-light text-ink';
-  return <b className={`rounded-chip px-1.5 py-0.5 text-caption-xs font-bold ${cls}`}>{TYPE_LABEL[type] ?? type}</b>;
+        ? { background: 'var(--gold-pale)', color: 'var(--ink-deep)' }
+        : { background: 'var(--gold)', color: 'var(--ink-deep)' };
+  return <b style={{ borderRadius: 999, padding: '2px 8px', fontSize: 9.5, ...st }}>{TYPE_LABEL[type] ?? type}</b>;
 }
 
 function StatusSign({ status }: { status: string }) {
   if (status === 'rejected') {
-    return <b className="rounded-chip bg-danger-light px-1.5 py-0.5 text-caption-xs font-bold text-danger-deep">退回重盘</b>;
+    return <b style={{ borderRadius: 999, padding: '2px 8px', fontSize: 9.5, background: 'rgba(180, 80, 46, .12)', color: 'var(--danger)' }}>{INVENTORY_COPY['inventory.status.rejected']}</b>;
   }
   if (status === 'counted') {
-    return <b className="rounded-chip bg-success-light px-1.5 py-0.5 text-caption-xs font-bold text-success-deep">待店长确认</b>;
+    return <b style={{ borderRadius: 999, padding: '2px 8px', fontSize: 9.5, background: 'var(--paper)', color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.status.counted']}</b>;
   }
-  return <b className="rounded-chip bg-sunken px-1.5 py-0.5 text-caption-xs font-bold text-ink">待盘点</b>;
+  return <b style={{ borderRadius: 999, padding: '2px 8px', fontSize: 9.5, background: 'var(--paper)', color: 'var(--ink)' }}>{INVENTORY_COPY['inventory.status.draft']}</b>;
 }
 
 export default function InventoryPage() {
@@ -66,136 +78,128 @@ export default function InventoryPage() {
   const tasks: CountTask[] = useMemo(() => tasksQuery.data ?? [], [tasksQuery.data]);
   const expiry: ExpiryItem[] = useMemo(() => expiryQuery.data ?? [], [expiryQuery.data]);
 
-  return (
-    <div className="pb-6">
-      <PageHeader
-        title="盘点任务"
-        backTo="/me"
-        aside={
-          tasks.length ? (
-            <span>
-              <span className="u1-num">{tasks.length}</span> 单待办
-            </span>
-          ) : undefined
-        }
-      />
+  const now = new Date();
+  const clockText = `${skc('sk.today')} ${ymd(now)} ${weekdayLabel(now)}${tasks.length ? ` · ${tasks.length} ${INVENTORY_COPY['inventory.aside.pending']}` : ''}`;
 
-      <div className="px-[22px]">
-        {/* 待办盘点单 */}
-        <section className="mt-2.5" data-testid="inv-tasks">
-          {tasksQuery.isPending ? (
-            <div className="space-y-2.5" aria-label="加载中">
-              {[0, 1, 2].map((i) => (
-                <Skeleton key={i} className="u1-card h-16 !rounded-panel" />
-              ))}
+  return (
+    <div className="sk">
+      {/* S-08 属二级页组（dock 四槽冻结不含盘点）——二级页制=SkBackBar（nav 铁律四要素），
+          语言包 apphead 位由 backbar 题注同帧承接 */}
+      <SkBackBar title={INVENTORY_COPY['inventory.title']} note={INVENTORY_COPY['inventory.no']} fallback="/me" />
+      <SkClockRow text={clockText} />
+
+      {/* 待办盘点单（appt 卡列：草稿 gold 左条 / counted done 淡化 / rejected 赭红左条） */}
+      <section data-testid="inv-tasks">
+        {tasksQuery.isPending ? (
+          <div style={{ margin: '12px 22px 0', display: 'grid', gap: 10 }} aria-label="加载中">
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} className="u1-card h-16 !rounded-panel" />
+            ))}
+          </div>
+        ) : tasksQuery.isError ? (
+          <div style={{ ...cardSt, textAlign: 'center' }}>
+            <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.load.fail']}</p>
+            <div style={{ marginTop: 12 }}>
+              <SkBtnAction onClick={() => void tasksQuery.refetch()} testId="sk-inv-retry">
+                {INVENTORY_COPY['inventory.retry']}
+              </SkBtnAction>
             </div>
-          ) : tasksQuery.isError ? (
-            <div className="u1-card p-4 text-center">
-              <p className="text-body-sm text-ink-secondary">盘点任务加载失败，请检查网络后重试</p>
-              <button
-                type="button"
-                onClick={() => void tasksQuery.refetch()}
-                className="mt-4 h-12 min-h-[44px] min-w-[160px] rounded-control bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
-              >
-                重新加载
-              </button>
-            </div>
-          ) : tasks.length === 0 ? (
-            <div className="flex flex-col items-center px-6 py-10 text-center" data-testid="inv-tasks-empty">
-              <span className="flex h-20 w-20 items-center justify-center rounded-full bg-sunken" aria-hidden>
-                <ClipboardCheck className="h-9 w-9 text-ink" strokeWidth={1.5} />
-              </span>
-              <p className="mt-4 text-body-sm text-ink-secondary">{INVENTORY_COPY['inventory.tasks.empty']}</p>
-            </div>
-          ) : (
-            <ul>
-              {tasks.map((c) => (
+          </div>
+        ) : tasks.length === 0 ? (
+          <div data-testid="inv-tasks-empty" style={{ paddingTop: 16 }}>
+            <SkEmpty title={INVENTORY_COPY['inventory.tasks.empty']} />
+          </div>
+        ) : (
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            {tasks.map((c) => {
+              const bar =
+                c.status === 'rejected' ? 'var(--danger)' : c.status === 'draft' ? 'var(--gold)' : 'var(--hairline)';
+              return (
                 <li key={c.id}>
                   <button
                     type="button"
                     onClick={() => navigate(`/inventory/${c.id}`)}
-                    className="u1-card mb-2.5 flex w-full items-center gap-3 px-4 py-3.5 text-left transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+                    style={{
+                      ...cardSt,
+                      display: 'flex', alignItems: 'center', gap: 10, width: 'calc(100% - 44px)',
+                      border: 0, borderLeft: `3px solid ${bar}`, textAlign: 'left', cursor: 'pointer',
+                      font: 'inherit', color: 'inherit',
+                      opacity: c.status === 'counted' ? 0.62 : 1,
+                    }}
                     data-testid={`inv-task-${c.id}`}
                   >
-                    <div className="min-w-0 flex-1">
-                      <p className="flex items-center gap-1.5">
+                    <span style={{ minWidth: 0, flex: 1 }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <TypeChip type={c.type} />
                         <StatusSign status={c.status} />
-                      </p>
-                      <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.62)]">
-                        建单 <span className="u1-num">{ymd(c.createdAt)}</span> · 共{' '}
-                        <span className="u1-num">{c.items.length}</span> 项
-                        {c.status === 'rejected' ? ' · 可重新录入' : ''}
-                      </p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-[rgba(59,46,36,.42)]" aria-hidden />
+                      </span>
+                      <span style={{ display: 'block', marginTop: 6, fontFamily: 'var(--mono)', fontSize: 9.5, color: 'var(--muted)' }}>
+                        {INVENTORY_COPY['inventory.task.created']} {ymd(c.createdAt)} · {INVENTORY_COPY['inventory.task.countLead']}{' '}
+                        {c.items.length} {INVENTORY_COPY['inventory.task.countTail']}
+                        {c.status === 'rejected' ? ` · ${INVENTORY_COPY['inventory.task.rejectedEditable']}` : ''}
+                      </span>
+                    </span>
+                    <span aria-hidden style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--paper)', display: 'grid', placeItems: 'center', color: 'var(--ink)', flex: 'none' }}>›</span>
                   </button>
                 </li>
-              ))}
-            </ul>
-          )}
-        </section>
+              );
+            })}
+          </ul>
+        )}
+      </section>
 
-        {/* 安心包效期（只读 · 处置走回收登记流程） */}
-        <section className="mt-5" data-testid="inv-expiry">
-          <h2 className="pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">
-            安心包效期（30 天内到期）
-          </h2>
-          {expiryQuery.isPending ? (
-            <div aria-label="加载中">
-              <Skeleton className="u1-card h-16 !rounded-panel" />
+      {/* 口径注：日盘门槛 ≥¥100 · 盲盘不显系统库存 */}
+      <SkNote>{INVENTORY_COPY['inventory.list.note']}</SkNote>
+
+      {/* 安心包效期（只读 · 处置走回收登记流程） */}
+      <p style={{ margin: '20px 22px 0', fontSize: 11, fontWeight: 800, letterSpacing: '.08em', color: 'var(--muted)' }}>
+        {INVENTORY_COPY['inventory.expiry.title']}
+      </p>
+      <section data-testid="inv-expiry">
+        {expiryQuery.isPending ? (
+          <div style={{ margin: '12px 22px 0' }} aria-label="加载中">
+            <Skeleton className="u1-card h-16 !rounded-panel" />
+          </div>
+        ) : expiryQuery.isError ? (
+          <div style={{ ...cardSt, textAlign: 'center' }}>
+            <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.expiry.loadFail']}</p>
+            <div style={{ marginTop: 12 }}>
+              <SkBtnAction onClick={() => void expiryQuery.refetch()} testId="sk-inv-expiry-retry">
+                {INVENTORY_COPY['inventory.retry']}
+              </SkBtnAction>
             </div>
-          ) : expiryQuery.isError ? (
-            <div className="u1-card p-4 text-center">
-              <p className="text-body-sm text-ink-secondary">效期信息加载失败，请检查网络后重试</p>
-              <button
-                type="button"
-                onClick={() => void expiryQuery.refetch()}
-                className="mt-4 h-12 min-h-[44px] min-w-[160px] rounded-control bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
-              >
-                重新加载
-              </button>
-            </div>
-          ) : expiry.length === 0 ? (
-            <div className="flex flex-col items-center px-6 py-10 text-center" data-testid="inv-expiry-empty">
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-sunken" aria-hidden>
-                <PackageOpen className="h-7 w-7 text-ink" strokeWidth={1.5} />
-              </span>
-              <p className="mt-3 text-body-sm text-ink-secondary">{INVENTORY_COPY['inventory.expiry.empty']}</p>
-            </div>
-          ) : (
-            <>
-              <ul>
-                {expiry.map((p) => {
-                  const expired = p.daysLeft < 0;
-                  const urgent = !expired && p.daysLeft <= 7;
-                  return (
-                    <li key={p.id} className="u1-card mb-2.5 flex items-center gap-3 px-4 py-3.5" data-testid={`inv-expiry-${p.id}`}>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-body-sm font-bold">{p.name}</p>
-                        <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
-                          效期至 <span className="u1-num">{ymd(p.expiresAt)}</span> · 库存{' '}
-                          <span className="u1-num">{p.stock}</span>
-                        </p>
-                      </div>
-                      <b
-                        className={`u1-num shrink-0 text-body-sm font-bold ${
-                          expired || urgent ? 'text-danger' : 'text-ink'
-                        }`}
-                      >
-                        {expired ? '已过期' : `剩 ${p.daysLeft} 天`}
-                      </b>
-                    </li>
-                  );
-                })}
-              </ul>
-              <p className="mt-1 px-1 text-caption-xs text-[rgba(59,46,36,.42)]">
-                {INVENTORY_COPY['inventory.expiry.note']}
-              </p>
-            </>
-          )}
-        </section>
-      </div>
+          </div>
+        ) : expiry.length === 0 ? (
+          <div data-testid="inv-expiry-empty" style={{ paddingTop: 8 }}>
+            <SkEmpty title={INVENTORY_COPY['inventory.expiry.empty']} />
+          </div>
+        ) : (
+          <>
+            <SkRows>
+              {expiry.map((p) => {
+                const expired = p.daysLeft < 0;
+                const urgent = !expired && p.daysLeft <= 7;
+                return (
+                  <div className="row" key={p.id} data-testid={`inv-expiry-${p.id}`}>
+                    <span className="lb" style={{ minWidth: 0, flex: 1 }}>
+                      <span style={{ display: 'block', fontWeight: 700 }}>{p.name}</span>
+                      <span style={{ display: 'block', marginTop: 2, fontFamily: 'var(--mono)', fontSize: 9.5, color: 'var(--muted)' }}>
+                        {INVENTORY_COPY['inventory.expiry.until']} {ymd(p.expiresAt)} · {INVENTORY_COPY['inventory.expiry.stock']} {p.stock}
+                      </span>
+                    </span>
+                    <span className={`vl${expired || urgent ? ' red' : ''}`}>
+                      {expired ? INVENTORY_COPY['inventory.expiry.expired'] : `${INVENTORY_COPY['inventory.expiry.leftLead']} ${p.daysLeft} ${INVENTORY_COPY['inventory.expiry.leftTail']}`}
+                    </span>
+                  </div>
+                );
+              })}
+            </SkRows>
+            <SkNote>{INVENTORY_COPY['inventory.expiry.note']}</SkNote>
+          </>
+        )}
+      </section>
+
+      <div style={{ paddingBottom: 32 }} />
     </div>
   );
 }

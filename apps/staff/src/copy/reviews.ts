@@ -4,9 +4,9 @@
  * 纪律：评价域说明文（摘要口径/页脚规则）与空态一律经本表取值，组件内零硬编码；
  * 文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
- * 数值不进本表：均分/条数到渲染层读聚合数据插值（JSX 内 u1-num 片段，
+ * 数值不进本表：均分/条数到渲染层读聚合数据插值（JSX 内 mono 片段，
  * 键只持静态 Lead/Tail 碎片，同 me.ts 纪律）。
- * 不抽：展示词（匿名客户/客户/未留言）、通用 UI 词（加载更多/重新加载）。
+ * 骨架批片 1（S-07）：展示词/通用 UI 词已随骨架帧抽键（reviews.trio·reviews.retry 等族）。
  */
 
 import { withCopyOverrides } from '@philia/shared';
@@ -21,6 +21,23 @@ const REVIEWS_COPY_TABLE = {
 
   /* ---- 页脚规则说明 ---- */
   'reviews.footer': '仅本人可见 · 好评 +XP，≤2 星 −8（扣分不扣款）',
+
+  /* ---- 骨架帧（S-07：backbar + trio 均分/条数/差评 + 评价卡） ---- */
+  'reviews.title': '我的评价',
+  'reviews.aside.lead': '已加载',
+  'reviews.aside.tail': '条',
+  'reviews.load.fail': '评价加载失败，请检查网络后重试',
+  'reviews.retry': '重新加载',
+  'reviews.trio.avg': '均分',
+  'reviews.trio.count': '条数',
+  'reviews.trio.bad': '差评',
+  'reviews.anonymous': '匿名客户',
+  'reviews.customer': '客户',
+  'reviews.noText': '未留言',
+  'reviews.more': '加载更多',
+  'reviews.loading': '加载中…',
+  'reviews.starUnit': '星',
+  'reviews.callbackNote': '差评 24 小时内由店长回访 · 评价不可删改',
 } as const;
 
 export const REVIEWS_COPY = withCopyOverrides(REVIEWS_COPY_TABLE);

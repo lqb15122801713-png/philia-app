@@ -162,6 +162,9 @@ export const gradients = {
   philia: 'linear-gradient(135deg, #3B2E24 0%, #2E2318 100%)',
   /** philia 渐变 hover：同谱系微提亮。 */
   philiaHover: 'linear-gradient(135deg, #46382A 0%, #332A1E 100%)',
+  /** BANNER 占位淡金渐变：165°（home-v2 .hv2-banner 同帧；槽位占位块共用——
+   *  端口批片 C 顺带件①：字面量收编唯一来源，三端引用不另写）。 */
+  philiaBanner: 'linear-gradient(165deg, #EFDCAB 0%, #EBD398 52%, #F2E7CB 100%)',
 } as const;
 
 /* ------------------------------------------------------------------------ */

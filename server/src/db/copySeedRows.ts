@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B）——生成件，勿手改（源=scripts/gen-copy-overrides-seed.mts）；
  * 重生成：仓库根 npx tsx scripts/gen-copy-overrides-seed.mts（copy 键表增删键后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-02T16:09:48.060Z；键数=1415
+ * 生成时间口径：2026-10-03T05:20:37.228Z；键数=1694
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }> = [
  {
@@ -6400,9 +6400,99 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "当前设备不支持定位，请更换设备或联系店长"
  },
  {
+  "key": "attendance.punch.allDone",
+  "domain": "staff:attendance",
+  "text": "今日上下班都已打卡"
+ },
+ {
+  "key": "attendance.punch.busy",
+  "domain": "staff:attendance",
+  "text": "定位打卡中…"
+ },
+ {
+  "key": "attendance.punch.doneIn",
+  "domain": "staff:attendance",
+  "text": "已打上班卡 {time}"
+ },
+ {
+  "key": "attendance.punch.doneOut",
+  "domain": "staff:attendance",
+  "text": "已打下班卡 {time}"
+ },
+ {
   "key": "attendance.records.empty",
   "domain": "staff:attendance",
   "text": "本月还没有考勤记录——到店后点上方按钮打卡"
+ },
+ {
+  "key": "attendance.records.flagged",
+  "domain": "staff:attendance",
+  "text": "标记"
+ },
+ {
+  "key": "attendance.records.in",
+  "domain": "staff:attendance",
+  "text": "上班"
+ },
+ {
+  "key": "attendance.records.makeupPassed",
+  "domain": "staff:attendance",
+  "text": "补卡已通过"
+ },
+ {
+  "key": "attendance.records.missing",
+  "domain": "staff:attendance",
+  "text": "缺卡"
+ },
+ {
+  "key": "attendance.records.missingHint",
+  "domain": "staff:attendance",
+  "text": "可在下方申请补卡"
+ },
+ {
+  "key": "attendance.records.out",
+  "domain": "staff:attendance",
+  "text": "下班"
+ },
+ {
+  "key": "attendance.shift.line",
+  "domain": "staff:attendance",
+  "text": "班次 {range}"
+ },
+ {
+  "key": "attendance.shift.none",
+  "domain": "staff:attendance",
+  "text": "今日无排班"
+ },
+ {
+  "key": "attendance.status.early",
+  "domain": "staff:attendance",
+  "text": "早退"
+ },
+ {
+  "key": "attendance.status.late",
+  "domain": "staff:attendance",
+  "text": "迟到"
+ },
+ {
+  "key": "attendance.status.makeup",
+  "domain": "staff:attendance",
+  "text": "补卡"
+ },
+ {
+  "key": "attendance.status.normal",
+  "domain": "staff:attendance",
+  "text": "正常"
+ },
+ {
+  "key": "attendance.week.empty",
+  "domain": "staff:attendance",
+  "text": "本周还没有考勤记录——到店后点上方按钮打卡"
+ },
+ {
+  "key": "boarding.backToday",
+  "domain": "staff:boarding",
+  "text": "返回任务台"
  },
  {
   "key": "boarding.cancelled.desc",
@@ -6420,6 +6510,21 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "该预约正在取消审核中"
  },
  {
+  "key": "boarding.checkout.action",
+  "domain": "staff:boarding",
+  "text": "办理退房"
+ },
+ {
+  "key": "boarding.checkout.cancel",
+  "domain": "staff:boarding",
+  "text": "再想想"
+ },
+ {
+  "key": "boarding.checkout.confirm",
+  "domain": "staff:boarding",
+  "text": "确认退房"
+ },
+ {
   "key": "boarding.checkout.confirmDesc",
   "domain": "staff:boarding",
   "text": "退房后预约转入「已完成」；到店付订单请提醒商家在财务页确认收款。"
@@ -6428,6 +6533,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "boarding.checkout.confirmTitle",
   "domain": "staff:boarding",
   "text": "确认办理退房？"
+ },
+ {
+  "key": "boarding.checkout.pending",
+  "domain": "staff:boarding",
+  "text": "办理中…"
  },
  {
   "key": "boarding.completed.banner",
@@ -6448,6 +6558,21 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "boarding.error.title",
   "domain": "staff:boarding",
   "text": "无法查看该寄养单"
+ },
+ {
+  "key": "boarding.night.lead",
+  "domain": "staff:boarding",
+  "text": "第"
+ },
+ {
+  "key": "boarding.night.mid",
+  "domain": "staff:boarding",
+  "text": "晚 · 共"
+ },
+ {
+  "key": "boarding.night.tail",
+  "domain": "staff:boarding",
+  "text": "晚"
  },
  {
   "key": "boarding.overdue.dueLead",
@@ -6478,6 +6603,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "boarding.preCheckin.title",
   "domain": "staff:boarding",
   "text": "客户还未到店核销"
+ },
+ {
+  "key": "boarding.title",
+  "domain": "staff:boarding",
+  "text": "寄养打卡"
  },
  {
   "key": "exec.report.advice.label",
@@ -6650,9 +6780,99 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "六步服务流未初始化"
  },
  {
+  "key": "history.axis.boarding",
+  "domain": "staff:history",
+  "text": "寄养中"
+ },
+ {
+  "key": "history.axis.cancelled",
+  "domain": "staff:history",
+  "text": "已取消"
+ },
+ {
+  "key": "history.axis.confirmed",
+  "domain": "staff:history",
+  "text": "待到店"
+ },
+ {
+  "key": "history.axis.done",
+  "domain": "staff:history",
+  "text": "已完成"
+ },
+ {
+  "key": "history.axis.future",
+  "domain": "staff:history",
+  "text": "排定"
+ },
+ {
+  "key": "history.axis.minutes",
+  "domain": "staff:history",
+  "text": "{n} 分钟"
+ },
+ {
+  "key": "history.axis.nights",
+  "domain": "staff:history",
+  "text": "{n} 晚"
+ },
+ {
+  "key": "history.axis.now",
+  "domain": "staff:history",
+  "text": "服务中"
+ },
+ {
+  "key": "history.axis.pending",
+  "domain": "staff:history",
+  "text": "待确认"
+ },
+ {
+  "key": "history.axis.rating",
+  "domain": "staff:history",
+  "text": "★ {n}"
+ },
+ {
+  "key": "history.clock.noShift",
+  "domain": "staff:history",
+  "text": "今日无排班"
+ },
+ {
+  "key": "history.clock.shift",
+  "domain": "staff:history",
+  "text": "班次 {range}"
+ },
+ {
+  "key": "history.dayFoot.past",
+  "domain": "staff:history",
+  "text": "{date} 班结 · 共 {n} 单"
+ },
+ {
   "key": "history.empty",
   "domain": "staff:history",
   "text": "还没有历史单——第一单完成后会出现在这里"
+ },
+ {
+  "key": "history.loadFailed",
+  "domain": "staff:history",
+  "text": "预约加载失败，请检查网络后重试"
+ },
+ {
+  "key": "inventory.aside.pending",
+  "domain": "staff:inventory",
+  "text": "单待办"
+ },
+ {
+  "key": "inventory.count.actualStock",
+  "domain": "staff:inventory",
+  "text": "实盘"
+ },
+ {
+  "key": "inventory.count.backList",
+  "domain": "staff:inventory",
+  "text": "返回盘点任务"
+ },
+ {
+  "key": "inventory.count.backListPlain",
+  "domain": "staff:inventory",
+  "text": "返回盘点任务列表"
  },
  {
   "key": "inventory.count.blindNote",
@@ -6670,9 +6890,49 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "已提交，待店长确认后才入账"
  },
  {
+  "key": "inventory.count.diffGain",
+  "domain": "staff:inventory",
+  "text": "盘盈"
+ },
+ {
+  "key": "inventory.count.diffLoss",
+  "domain": "staff:inventory",
+  "text": "盘亏"
+ },
+ {
+  "key": "inventory.count.diffSame",
+  "domain": "staff:inventory",
+  "text": "账实相符"
+ },
+ {
+  "key": "inventory.count.execSuffix",
+  "domain": "staff:inventory",
+  "text": "执行"
+ },
+ {
+  "key": "inventory.count.fallbackTitle",
+  "domain": "staff:inventory",
+  "text": "盘点执行"
+ },
+ {
   "key": "inventory.count.guide",
   "domain": "staff:inventory",
   "text": "逐项填写实盘数量后提交；提交后待店长确认才入账，确认前库存不变。"
+ },
+ {
+  "key": "inventory.count.inputPlaceholder",
+  "domain": "staff:inventory",
+  "text": "实盘数量"
+ },
+ {
+  "key": "inventory.count.itemsAside",
+  "domain": "staff:inventory",
+  "text": "项"
+ },
+ {
+  "key": "inventory.count.loadFail",
+  "domain": "staff:inventory",
+  "text": "盘点单加载失败，请检查网络后重试"
  },
  {
   "key": "inventory.count.missing",
@@ -6685,6 +6945,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "这张单没有盘点行项，请联系店长确认派单范围"
  },
  {
+  "key": "inventory.count.productFallback",
+  "domain": "staff:inventory",
+  "text": "商品"
+ },
+ {
   "key": "inventory.count.rejected.desc",
   "domain": "staff:inventory",
   "text": "店长退回了这张盘点单，请核对后修改实盘数重新提交。"
@@ -6695,9 +6960,59 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "已退回重盘"
  },
  {
+  "key": "inventory.count.submit",
+  "domain": "staff:inventory",
+  "text": "提交盘点"
+ },
+ {
+  "key": "inventory.count.submitAgain",
+  "domain": "staff:inventory",
+  "text": "重新提交盘点"
+ },
+ {
+  "key": "inventory.count.submitNeedAll",
+  "domain": "staff:inventory",
+  "text": "请填完全部实盘数量"
+ },
+ {
+  "key": "inventory.count.submitPending",
+  "domain": "staff:inventory",
+  "text": "提交中…"
+ },
+ {
+  "key": "inventory.count.submitSub",
+  "domain": "staff:inventory",
+  "text": "提交即锁定 · 待店长过账才入账"
+ },
+ {
+  "key": "inventory.count.systemStock",
+  "domain": "staff:inventory",
+  "text": "账面"
+ },
+ {
   "key": "inventory.expiry.empty",
   "domain": "staff:inventory",
   "text": "30 天内没有临期安心包，继续保持"
+ },
+ {
+  "key": "inventory.expiry.expired",
+  "domain": "staff:inventory",
+  "text": "已过期"
+ },
+ {
+  "key": "inventory.expiry.leftLead",
+  "domain": "staff:inventory",
+  "text": "剩"
+ },
+ {
+  "key": "inventory.expiry.leftTail",
+  "domain": "staff:inventory",
+  "text": "天"
+ },
+ {
+  "key": "inventory.expiry.loadFail",
+  "domain": "staff:inventory",
+  "text": "效期信息加载失败，请检查网络后重试"
  },
  {
   "key": "inventory.expiry.note",
@@ -6705,9 +7020,84 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "临期/过期安心包请走回收登记流程处置，本页仅作提醒（只读）。"
  },
  {
+  "key": "inventory.expiry.stock",
+  "domain": "staff:inventory",
+  "text": "库存"
+ },
+ {
+  "key": "inventory.expiry.title",
+  "domain": "staff:inventory",
+  "text": "安心包效期（30 天内到期）"
+ },
+ {
+  "key": "inventory.expiry.until",
+  "domain": "staff:inventory",
+  "text": "效期至"
+ },
+ {
+  "key": "inventory.list.note",
+  "domain": "staff:inventory",
+  "text": "日盘门槛：单价 ≥¥100 · 盲盘不显示系统库存"
+ },
+ {
+  "key": "inventory.load.fail",
+  "domain": "staff:inventory",
+  "text": "盘点任务加载失败，请检查网络后重试"
+ },
+ {
+  "key": "inventory.no",
+  "domain": "staff:inventory",
+  "text": "INVENTORY"
+ },
+ {
+  "key": "inventory.retry",
+  "domain": "staff:inventory",
+  "text": "重新加载"
+ },
+ {
+  "key": "inventory.status.counted",
+  "domain": "staff:inventory",
+  "text": "待店长确认"
+ },
+ {
+  "key": "inventory.status.draft",
+  "domain": "staff:inventory",
+  "text": "待盘点"
+ },
+ {
+  "key": "inventory.status.rejected",
+  "domain": "staff:inventory",
+  "text": "退回重盘"
+ },
+ {
+  "key": "inventory.task.countLead",
+  "domain": "staff:inventory",
+  "text": "共"
+ },
+ {
+  "key": "inventory.task.countTail",
+  "domain": "staff:inventory",
+  "text": "项"
+ },
+ {
+  "key": "inventory.task.created",
+  "domain": "staff:inventory",
+  "text": "建单"
+ },
+ {
+  "key": "inventory.task.rejectedEditable",
+  "domain": "staff:inventory",
+  "text": "可重新录入"
+ },
+ {
   "key": "inventory.tasks.empty",
   "domain": "staff:inventory",
   "text": "暂无待办盘点单——店长派单后会出现在这里"
+ },
+ {
+  "key": "inventory.title",
+  "domain": "staff:inventory",
+  "text": "盘点"
  },
  {
   "key": "login.accounts.title",
@@ -6725,6 +7115,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "输入口令后加载可登录账号；无口令或口令错误将无法登录。"
  },
  {
+  "key": "login.gate.placeholder",
+  "domain": "staff:login",
+  "text": "内测口令"
+ },
+ {
   "key": "login.gate.required",
   "domain": "staff:login",
   "text": "需先输入内测口令"
@@ -6735,6 +7130,26 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "内测口令"
  },
  {
+  "key": "login.gateEntry",
+  "domain": "staff:login",
+  "text": "口令入内测"
+ },
+ {
+  "key": "login.loggedIn.enter",
+  "domain": "staff:login",
+  "text": "进入任务台"
+ },
+ {
+  "key": "login.loggedIn.lead",
+  "domain": "staff:login",
+  "text": "当前已登录"
+ },
+ {
+  "key": "login.loggedIn.logout",
+  "domain": "staff:login",
+  "text": "退出登录"
+ },
+ {
   "key": "login.manifesto.line1",
   "domain": "staff:login",
   "text": "照顾好每一个"
@@ -6743,6 +7158,26 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "login.manifesto.line2",
   "domain": "staff:login",
   "text": "被托付的小生命"
+ },
+ {
+  "key": "login.manual.placeholder",
+  "domain": "staff:login",
+  "text": "手动输入 userId（ULID）"
+ },
+ {
+  "key": "login.primaryCta",
+  "domain": "staff:login",
+  "text": "手机号一键登录"
+ },
+ {
+  "key": "login.role.frontdesk",
+  "domain": "staff:login",
+  "text": "前台 frontdesk"
+ },
+ {
+  "key": "login.role.groomer",
+  "domain": "staff:login",
+  "text": "美容师 groomer"
  },
  {
   "key": "login.seed.empty",
@@ -6770,14 +7205,64 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "PHILIA · 员工端"
  },
  {
+  "key": "manager.approve",
+  "domain": "staff:manager",
+  "text": "通过"
+ },
+ {
+  "key": "manager.aside.counted",
+  "domain": "staff:manager",
+  "text": "单待确认"
+ },
+ {
+  "key": "manager.aside.dayclose",
+  "domain": "staff:manager",
+  "text": "限本店 · 一日一结"
+ },
+ {
+  "key": "manager.aside.movements",
+  "domain": "staff:manager",
+  "text": "最新 20 条 · 只读"
+ },
+ {
+  "key": "manager.aside.pending",
+  "domain": "staff:manager",
+  "text": "条待审"
+ },
+ {
+  "key": "manager.aside.refundPending",
+  "domain": "staff:manager",
+  "text": "单实退待办"
+ },
+ {
+  "key": "manager.aside.reviews",
+  "domain": "staff:manager",
+  "text": "仅提示 · 不构成工单"
+ },
+ {
   "key": "manager.attendance.empty",
   "domain": "staff:manager",
   "text": "暂无待审批与防代打标记"
  },
  {
+  "key": "manager.attendance.note",
+  "domain": "staff:manager",
+  "text": "驳回必须填写原因 · 通过/驳回全部留痕"
+ },
+ {
+  "key": "manager.cancel.approve",
+  "domain": "staff:manager",
+  "text": "批准取消"
+ },
+ {
   "key": "manager.cancel.empty",
   "domain": "staff:manager",
   "text": "暂无待审核的取消申请"
+ },
+ {
+  "key": "manager.guide.back",
+  "domain": "staff:manager",
+  "text": "返回我的"
  },
  {
   "key": "manager.guide.desc",
@@ -6805,6 +7290,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "暂无已入账盘点单"
  },
  {
+  "key": "manager.loading",
+  "domain": "staff:manager",
+  "text": "加载中…"
+ },
+ {
   "key": "manager.movements.empty",
   "domain": "staff:manager",
   "text": "暂无库存流水"
@@ -6830,9 +7320,64 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "实退待办（执行超 24 小时未登记）"
  },
  {
+  "key": "manager.reject",
+  "domain": "staff:manager",
+  "text": "驳回"
+ },
+ {
   "key": "manager.reviews.empty",
   "domain": "staff:manager",
   "text": "暂无 ≤2 星差评"
+ },
+ {
+  "key": "manager.sec.attendance",
+  "domain": "staff:manager",
+  "text": "考勤审批"
+ },
+ {
+  "key": "manager.sec.cancel",
+  "domain": "staff:manager",
+  "text": "取消审批"
+ },
+ {
+  "key": "manager.sec.dayclose",
+  "domain": "staff:manager",
+  "text": "日结确认"
+ },
+ {
+  "key": "manager.sec.flagged",
+  "domain": "staff:manager",
+  "text": "防代打标记（本月 · 只读）"
+ },
+ {
+  "key": "manager.sec.inventory",
+  "domain": "staff:manager",
+  "text": "盘点"
+ },
+ {
+  "key": "manager.sec.movements",
+  "domain": "staff:manager",
+  "text": "库存流水"
+ },
+ {
+  "key": "manager.sec.posted",
+  "domain": "staff:manager",
+  "text": "最近已入账"
+ },
+ {
+  "key": "manager.sec.refund",
+  "domain": "staff:manager",
+  "text": "退款"
+ },
+ {
+  "key": "manager.sec.reviews",
+  "domain": "staff:manager",
+  "text": "差评提示"
+ },
+ {
+  "key": "manager.title",
+  "domain": "staff:manager",
+  "text": "店长视图"
  },
  {
   "key": "me.help.flowBody",
@@ -6855,6 +7400,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "六步影像规范"
  },
  {
+  "key": "me.idcard.no",
+  "domain": "staff:me",
+  "text": "工号 {no}"
+ },
+ {
+  "key": "me.joined",
+  "domain": "staff:me",
+  "text": "入职 {ym}"
+ },
+ {
   "key": "me.myReviews",
   "domain": "staff:me",
   "text": "我的评价"
@@ -6863,6 +7418,21 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "me.myReviewsSub",
   "domain": "staff:me",
   "text": "本人收到的客户评价"
+ },
+ {
+  "key": "me.offDuty",
+  "domain": "staff:me",
+  "text": "今日休息"
+ },
+ {
+  "key": "me.onDuty",
+  "domain": "staff:me",
+  "text": "在班"
+ },
+ {
+  "key": "me.reviewMonthLead",
+  "domain": "staff:me",
+  "text": "本月已评"
  },
  {
   "key": "me.reviewSummary",
@@ -6885,9 +7455,129 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "条"
  },
  {
+  "key": "me.row.boarding",
+  "domain": "staff:me",
+  "text": "寄养负责中"
+ },
+ {
+  "key": "me.row.boardingSub",
+  "domain": "staff:me",
+  "text": "{n} 只在店（任务台全天行打卡）"
+ },
+ {
+  "key": "me.row.help",
+  "domain": "staff:me",
+  "text": "帮助与规范"
+ },
+ {
+  "key": "me.row.helpSub",
+  "domain": "staff:me",
+  "text": "六步影像规范 · 核销流程"
+ },
+ {
+  "key": "me.row.inventory",
+  "domain": "staff:me",
+  "text": "盘点任务"
+ },
+ {
+  "key": "me.row.inventorySub",
+  "domain": "staff:me",
+  "text": "日盘/周盘执行 · 安心包效期"
+ },
+ {
+  "key": "me.row.loggingOut",
+  "domain": "staff:me",
+  "text": "退出中…"
+ },
+ {
+  "key": "me.row.logout",
+  "domain": "staff:me",
+  "text": "退出登录"
+ },
+ {
+  "key": "me.row.manager",
+  "domain": "staff:me",
+  "text": "补卡审批"
+ },
+ {
+  "key": "me.row.managerSub",
+  "domain": "staff:me",
+  "text": "店长视界 · 审批 · 日结确认"
+ },
+ {
+  "key": "me.row.pay",
+  "domain": "staff:me",
+  "text": "薪资提成"
+ },
+ {
+  "key": "me.row.paySub",
+  "domain": "staff:me",
+  "text": "本月提成逐单明细 · 绩效 · 扣减"
+ },
+ {
+  "key": "me.row.schedule",
+  "domain": "staff:me",
+  "text": "我的排班"
+ },
+ {
+  "key": "me.row.settings",
+  "domain": "staff:me",
+  "text": "设置"
+ },
+ {
+  "key": "me.row.settingsSub",
+  "domain": "staff:me",
+  "text": "实时同步与通知"
+ },
+ {
+  "key": "me.row.xp",
+  "domain": "staff:me",
+  "text": "XP 成长"
+ },
+ {
+  "key": "me.row.xpSub",
+  "domain": "staff:me",
+  "text": "段位 · 本店榜 · 规则一句话"
+ },
+ {
   "key": "me.settings.sync",
   "domain": "staff:me",
   "text": "实时同步：派单/改期/取消即时推送（SSE 长连接，断线自动重连 + 60s 轮询兜底）。"
+ },
+ {
+  "key": "me.stat.boardingLogs",
+  "domain": "staff:me",
+  "text": "本月寄养打卡"
+ },
+ {
+  "key": "me.stat.done",
+  "domain": "staff:me",
+  "text": "本月完成单"
+ },
+ {
+  "key": "me.stat.goodRate",
+  "domain": "staff:me",
+  "text": "好评率"
+ },
+ {
+  "key": "me.version",
+  "domain": "staff:me",
+  "text": "Philia 员工端 · 内测 v1.1"
+ },
+ {
+  "key": "pay.aside.frozen",
+  "domain": "staff:pay",
+  "text": "已快照冻结"
+ },
+ {
+  "key": "pay.aside.realtime",
+  "domain": "staff:pay",
+  "text": "实时计算"
+ },
+ {
+  "key": "pay.deductions.creatorLead",
+  "domain": "staff:pay",
+  "text": "录入人"
  },
  {
   "key": "pay.deductions.empty",
@@ -6925,9 +7615,84 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "暂无历史快照——每月结算后自动生成"
  },
  {
+  "key": "pay.history.expand",
+  "domain": "staff:pay",
+  "text": "展开"
+ },
+ {
+  "key": "pay.history.fail",
+  "domain": "staff:pay",
+  "text": "明细加载失败，请稍后重试"
+ },
+ {
+  "key": "pay.history.kind.commission",
+  "domain": "staff:pay",
+  "text": "提成月结"
+ },
+ {
+  "key": "pay.history.kind.perf",
+  "domain": "staff:pay",
+  "text": "绩效季结"
+ },
+ {
+  "key": "pay.history.loading",
+  "domain": "staff:pay",
+  "text": "快照明细加载中…"
+ },
+ {
   "key": "pay.history.note",
   "domain": "staff:pay",
   "text": "已快照月份按冻结口径展示，冲减差额进当月调整项"
+ },
+ {
+  "key": "pay.history.quarterTag",
+  "domain": "staff:pay",
+  "text": "季度绩效快照"
+ },
+ {
+  "key": "pay.history.settled",
+  "domain": "staff:pay",
+  "text": "已结算"
+ },
+ {
+  "key": "pay.line.base",
+  "domain": "staff:pay",
+  "text": "基数"
+ },
+ {
+  "key": "pay.line.billNo",
+  "domain": "staff:pay",
+  "text": "单号"
+ },
+ {
+  "key": "pay.line.overwork",
+  "domain": "staff:pay",
+  "text": "超产能·1.5 倍已批准"
+ },
+ {
+  "key": "pay.line.pending",
+  "domain": "staff:pay",
+  "text": "超产能·待店长批准"
+ },
+ {
+  "key": "pay.line.probation",
+  "domain": "staff:pay",
+  "text": "试用期 ×50%"
+ },
+ {
+  "key": "pay.load.fail",
+  "domain": "staff:pay",
+  "text": "薪资提成加载失败，请检查网络后重试"
+ },
+ {
+  "key": "pay.perf.base",
+  "domain": "staff:pay",
+  "text": "当季基数"
+ },
+ {
+  "key": "pay.perf.coeff",
+  "domain": "staff:pay",
+  "text": "系数"
  },
  {
   "key": "pay.perf.estimateLead",
@@ -6940,9 +7705,24 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "× 系数，季度发放）"
  },
  {
+  "key": "pay.perf.grade",
+  "domain": "staff:pay",
+  "text": "档位"
+ },
+ {
+  "key": "pay.perf.na",
+  "domain": "staff:pay",
+  "text": "试用期不设绩效与全勤"
+ },
+ {
   "key": "pay.perf.noGrade",
   "domain": "staff:pay",
   "text": "本季尚未评级，评级后核算应付绩效"
+ },
+ {
+  "key": "pay.perf.quarterTail",
+  "domain": "staff:pay",
+  "text": "季度"
  },
  {
   "key": "pay.pool.frontdesk",
@@ -6960,6 +7740,126 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "试用期：商品/售卡类提成 ×50%"
  },
  {
+  "key": "pay.retry",
+  "domain": "staff:pay",
+  "text": "重新加载"
+ },
+ {
+  "key": "pay.sec.card",
+  "domain": "staff:pay",
+  "text": "售卡提成"
+ },
+ {
+  "key": "pay.sec.deductions",
+  "domain": "staff:pay",
+  "text": "扣减记录"
+ },
+ {
+  "key": "pay.sec.history",
+  "domain": "staff:pay",
+  "text": "历史月份"
+ },
+ {
+  "key": "pay.sec.perf",
+  "domain": "staff:pay",
+  "text": "绩效"
+ },
+ {
+  "key": "pay.sec.product",
+  "domain": "staff:pay",
+  "text": "商品提成"
+ },
+ {
+  "key": "pay.sec.service",
+  "domain": "staff:pay",
+  "text": "服务提成"
+ },
+ {
+  "key": "pay.sec.store",
+  "domain": "staff:pay",
+  "text": "全店提成"
+ },
+ {
+  "key": "pay.sec.subtotal",
+  "domain": "staff:pay",
+  "text": "小计"
+ },
+ {
+  "key": "pay.snap.commission",
+  "domain": "staff:pay",
+  "text": "提成合计"
+ },
+ {
+  "key": "pay.snap.perf",
+  "domain": "staff:pay",
+  "text": "绩效应付"
+ },
+ {
+  "key": "pay.snap.product",
+  "domain": "staff:pay",
+  "text": "商品"
+ },
+ {
+  "key": "pay.snap.service",
+  "domain": "staff:pay",
+  "text": "服务"
+ },
+ {
+  "key": "pay.snap.store",
+  "domain": "staff:pay",
+  "text": "全店"
+ },
+ {
+  "key": "pay.title",
+  "domain": "staff:pay",
+  "text": "薪资提成"
+ },
+ {
+  "key": "pay.total.label",
+  "domain": "staff:pay",
+  "text": "本月提成合计"
+ },
+ {
+  "key": "pay.trio.card",
+  "domain": "staff:pay",
+  "text": "售卡"
+ },
+ {
+  "key": "pay.trio.product",
+  "domain": "staff:pay",
+  "text": "商品"
+ },
+ {
+  "key": "pay.trio.service",
+  "domain": "staff:pay",
+  "text": "服务"
+ },
+ {
+  "key": "reviews.anonymous",
+  "domain": "staff:reviews",
+  "text": "匿名客户"
+ },
+ {
+  "key": "reviews.aside.lead",
+  "domain": "staff:reviews",
+  "text": "已加载"
+ },
+ {
+  "key": "reviews.aside.tail",
+  "domain": "staff:reviews",
+  "text": "条"
+ },
+ {
+  "key": "reviews.callbackNote",
+  "domain": "staff:reviews",
+  "text": "差评 24 小时内由店长回访 · 评价不可删改"
+ },
+ {
+  "key": "reviews.customer",
+  "domain": "staff:reviews",
+  "text": "客户"
+ },
+ {
   "key": "reviews.empty",
   "domain": "staff:reviews",
   "text": "还没有收到客户评价——服务完成后客户可在预约详情留言，好评会同时长 XP"
@@ -6968,6 +7868,36 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "reviews.footer",
   "domain": "staff:reviews",
   "text": "仅本人可见 · 好评 +XP，≤2 星 −8（扣分不扣款）"
+ },
+ {
+  "key": "reviews.load.fail",
+  "domain": "staff:reviews",
+  "text": "评价加载失败，请检查网络后重试"
+ },
+ {
+  "key": "reviews.loading",
+  "domain": "staff:reviews",
+  "text": "加载中…"
+ },
+ {
+  "key": "reviews.more",
+  "domain": "staff:reviews",
+  "text": "加载更多"
+ },
+ {
+  "key": "reviews.noText",
+  "domain": "staff:reviews",
+  "text": "未留言"
+ },
+ {
+  "key": "reviews.retry",
+  "domain": "staff:reviews",
+  "text": "重新加载"
+ },
+ {
+  "key": "reviews.starUnit",
+  "domain": "staff:reviews",
+  "text": "星"
  },
  {
   "key": "reviews.summary.lead",
@@ -6980,14 +7910,324 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "条评价的平均分"
  },
  {
+  "key": "reviews.title",
+  "domain": "staff:reviews",
+  "text": "我的评价"
+ },
+ {
+  "key": "reviews.trio.avg",
+  "domain": "staff:reviews",
+  "text": "均分"
+ },
+ {
+  "key": "reviews.trio.bad",
+  "domain": "staff:reviews",
+  "text": "差评"
+ },
+ {
+  "key": "reviews.trio.count",
+  "domain": "staff:reviews",
+  "text": "条数"
+ },
+ {
+  "key": "sk.apptEmpty",
+  "domain": "staff:skeleton",
+  "text": "这一天没有预约"
+ },
+ {
+  "key": "sk.apptGap",
+  "domain": "staff:skeleton",
+  "text": "空档 {n} 分钟"
+ },
+ {
+  "key": "sk.apptHistoryNote",
+  "domain": "staff:skeleton",
+  "text": "切到过去=历史单回看（唯一入口）"
+ },
+ {
+  "key": "sk.apptNo",
+  "domain": "staff:skeleton",
+  "text": "SCHEDULE"
+ },
+ {
+  "key": "sk.apptTitle",
+  "domain": "staff:skeleton",
+  "text": "预约"
+ },
+ {
+  "key": "sk.apptTomorrowNote",
+  "domain": "staff:skeleton",
+  "text": "明日 {n} 单 · 早点休息"
+ },
+ {
+  "key": "sk.back",
+  "domain": "staff:skeleton",
+  "text": "返回"
+ },
+ {
+  "key": "sk.busPending",
+  "domain": "staff:skeleton",
+  "text": "在途 {n} 件"
+ },
+ {
+  "key": "sk.dayFoot",
+  "domain": "staff:skeleton",
+  "text": "今日班结 · 收工前记得盘点与打卡"
+ },
+ {
+  "key": "sk.dockAppt",
+  "domain": "staff:skeleton",
+  "text": "预约"
+ },
+ {
+  "key": "sk.dockMe",
+  "domain": "staff:skeleton",
+  "text": "我的"
+ },
+ {
+  "key": "sk.dockPunch",
+  "domain": "staff:skeleton",
+  "text": "打卡"
+ },
+ {
+  "key": "sk.dockWork",
+  "domain": "staff:skeleton",
+  "text": "工位"
+ },
+ {
+  "key": "sk.idleBody",
+  "domain": "staff:skeleton",
+  "text": "来新单会自动顶上来；先去喝口水"
+ },
+ {
+  "key": "sk.idleTitle",
+  "domain": "staff:skeleton",
+  "text": "现在没有进行中的服务"
+ },
+ {
+  "key": "sk.meGroupA",
+  "domain": "staff:skeleton",
+  "text": "提成 / XP / 评价"
+ },
+ {
+  "key": "sk.meGroupB",
+  "domain": "staff:skeleton",
+  "text": "盘点 / 审批 / 寄养 / 设置"
+ },
+ {
+  "key": "sk.meNo",
+  "domain": "staff:skeleton",
+  "text": "ME"
+ },
+ {
+  "key": "sk.meTitle",
+  "domain": "staff:skeleton",
+  "text": "我的"
+ },
+ {
+  "key": "sk.nextEmpty",
+  "domain": "staff:skeleton",
+  "text": "今天后面没有预约了"
+ },
+ {
+  "key": "sk.nextTitle",
+  "domain": "staff:skeleton",
+  "text": "下一单"
+ },
+ {
+  "key": "sk.offDuty",
+  "domain": "staff:skeleton",
+  "text": "未打卡"
+ },
+ {
+  "key": "sk.onDuty",
+  "domain": "staff:skeleton",
+  "text": "在岗"
+ },
+ {
+  "key": "sk.pickDate",
+  "domain": "staff:skeleton",
+  "text": "选日期"
+ },
+ {
+  "key": "sk.punchAgain",
+  "domain": "staff:skeleton",
+  "text": "再确认一次"
+ },
+ {
+  "key": "sk.punchDone",
+  "domain": "staff:skeleton",
+  "text": "已打卡"
+ },
+ {
+  "key": "sk.punchFixNote",
+  "domain": "staff:skeleton",
+  "text": "漏打卡找店长补录：补卡审批走「我的 → 补卡审批」"
+ },
+ {
+  "key": "sk.punchIn",
+  "domain": "staff:skeleton",
+  "text": "上班打卡"
+ },
+ {
+  "key": "sk.punchInFence",
+  "domain": "staff:skeleton",
+  "text": "距店 {n} m · 在围栏内"
+ },
+ {
+  "key": "sk.punchNo",
+  "domain": "staff:skeleton",
+  "text": "ATTENDANCE"
+ },
+ {
+  "key": "sk.punchOut",
+  "domain": "staff:skeleton",
+  "text": "下班打卡"
+ },
+ {
+  "key": "sk.punchOutFence",
+  "domain": "staff:skeleton",
+  "text": "距店 {n} m · 不在围栏"
+ },
+ {
+  "key": "sk.punchTitle",
+  "domain": "staff:skeleton",
+  "text": "打卡"
+ },
+ {
+  "key": "sk.punchWeek",
+  "domain": "staff:skeleton",
+  "text": "本周记录"
+ },
+ {
+  "key": "sk.queueTitle",
+  "domain": "staff:skeleton",
+  "text": "排队 {n} 单"
+ },
+ {
+  "key": "sk.stepDone",
+  "domain": "staff:skeleton",
+  "text": "已完成"
+ },
+ {
+  "key": "sk.stepNow",
+  "domain": "staff:skeleton",
+  "text": "进行中"
+ },
+ {
+  "key": "sk.stepTodo",
+  "domain": "staff:skeleton",
+  "text": "待做"
+ },
+ {
+  "key": "sk.today",
+  "domain": "staff:skeleton",
+  "text": "今天"
+ },
+ {
+  "key": "sk.tomorrow",
+  "domain": "staff:skeleton",
+  "text": "明天"
+ },
+ {
+  "key": "sk.trioApproval",
+  "domain": "staff:skeleton",
+  "text": "补卡审批"
+ },
+ {
+  "key": "sk.trioApprovalSub",
+  "domain": "staff:skeleton",
+  "text": "店长视界"
+ },
+ {
+  "key": "sk.trioInventory",
+  "domain": "staff:skeleton",
+  "text": "盘点"
+ },
+ {
+  "key": "sk.trioInventorySub",
+  "domain": "staff:skeleton",
+  "text": "日盘 ≥¥100"
+ },
+ {
+  "key": "sk.trioPunch",
+  "domain": "staff:skeleton",
+  "text": "打卡"
+ },
+ {
+  "key": "sk.trioPunchSub",
+  "domain": "staff:skeleton",
+  "text": "上下班打卡"
+ },
+ {
+  "key": "sk.workCount",
+  "domain": "staff:skeleton",
+  "text": "六步进度 {done}/{total}"
+ },
+ {
+  "key": "sk.workCta",
+  "domain": "staff:skeleton",
+  "text": "继续执行"
+ },
+ {
+  "key": "sk.workCtaStart",
+  "domain": "staff:skeleton",
+  "text": "开始执行"
+ },
+ {
+  "key": "sk.workNo",
+  "domain": "staff:skeleton",
+  "text": "WORKSTATION"
+ },
+ {
+  "key": "sk.workTitle",
+  "domain": "staff:skeleton",
+  "text": "工位"
+ },
+ {
+  "key": "sk.yesterday",
+  "domain": "staff:skeleton",
+  "text": "昨天"
+ },
+ {
   "key": "today.frontdesk.empty",
   "domain": "staff:today",
   "text": "今天全店无预约——等自动接单，或把预约页分享给老客"
  },
  {
+  "key": "today.frontdesk.groupDone",
+  "domain": "staff:today",
+  "text": "已核销"
+ },
+ {
+  "key": "today.frontdesk.groupPending",
+  "domain": "staff:today",
+  "text": "待核销"
+ },
+ {
+  "key": "today.frontdesk.pendingCount",
+  "domain": "staff:today",
+  "text": "待核销 {n} 单"
+ },
+ {
+  "key": "today.frontdesk.scanCta",
+  "domain": "staff:today",
+  "text": "扫码核销 · 到店登记"
+ },
+ {
   "key": "today.frontdesk.scanHint",
   "domain": "staff:today",
   "text": "无摄像头环境走「手动输入 6 位核销码」"
+ },
+ {
+  "key": "today.frontdesk.stats",
+  "domain": "staff:today",
+  "text": "已核销 {checked} · 待核销 {waiting} · 服务中 {inService}"
+ },
+ {
+  "key": "today.frontdesk.tag",
+  "domain": "staff:today",
+  "text": "今日接待"
  },
  {
   "key": "today.groomer.empty",
@@ -7010,14 +8250,99 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "还未分配员工角色"
  },
  {
+  "key": "today.todo.boardingCareCta",
+  "domain": "staff:today",
+  "text": "去打卡 ›"
+ },
+ {
+  "key": "today.todo.boardingIn",
+  "domain": "staff:today",
+  "text": "寄养入住 {n} 只待登记"
+ },
+ {
+  "key": "today.todo.boardingInCta",
+  "domain": "staff:today",
+  "text": "入住 ›"
+ },
+ {
+  "key": "today.todo.reschedule",
+  "domain": "staff:today",
+  "text": "改期回退 {n} 单待确认"
+ },
+ {
+  "key": "today.todo.title",
+  "domain": "staff:today",
+  "text": "待办"
+ },
+ {
+  "key": "xp.aside.lead",
+  "domain": "staff:xp",
+  "text": "累计"
+ },
+ {
+  "key": "xp.badge.thresholdLead",
+  "domain": "staff:xp",
+  "text": "门槛"
+ },
+ {
+  "key": "xp.board.loadFail",
+  "domain": "staff:xp",
+  "text": "榜单加载失败，请稍后重试"
+ },
+ {
   "key": "xp.board.note",
   "domain": "staff:xp",
   "text": "榜单只显示前三与你相邻的名次"
  },
  {
+  "key": "xp.board.self",
+  "domain": "staff:xp",
+  "text": "（我）"
+ },
+ {
+  "key": "xp.events.billLead",
+  "domain": "staff:xp",
+  "text": "单 …"
+ },
+ {
+  "key": "xp.events.boardingLead",
+  "domain": "staff:xp",
+  "text": "寄养"
+ },
+ {
+  "key": "xp.events.boardingTail",
+  "domain": "staff:xp",
+  "text": "晚"
+ },
+ {
+  "key": "xp.events.droppedTag",
+  "domain": "staff:xp",
+  "text": "超出日上限，未计分"
+ },
+ {
   "key": "xp.events.empty",
   "domain": "staff:xp",
   "text": "还没有经验记录——打卡、完成服务、收获好评都会长经验"
+ },
+ {
+  "key": "xp.events.learningTag",
+  "domain": "staff:xp",
+  "text": "学习"
+ },
+ {
+  "key": "xp.events.loadFail",
+  "domain": "staff:xp",
+  "text": "经验明细加载失败，请稍后重试"
+ },
+ {
+  "key": "xp.events.loading",
+  "domain": "staff:xp",
+  "text": "加载中…"
+ },
+ {
+  "key": "xp.events.more",
+  "domain": "staff:xp",
+  "text": "加载更多"
  },
  {
   "key": "xp.footer",
@@ -7045,6 +8370,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "已达最高段位"
  },
  {
+  "key": "xp.load.fail",
+  "domain": "staff:xp",
+  "text": "XP 档案加载失败，请检查网络后重试"
+ },
+ {
   "key": "xp.retention.lead",
   "domain": "staff:xp",
   "text": "保级线：月增量"
@@ -7058,6 +8388,71 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "xp.retention.none",
   "domain": "staff:xp",
   "text": "当前段位无保级要求，经验累计不清零"
+ },
+ {
+  "key": "xp.retry",
+  "domain": "staff:xp",
+  "text": "重新加载"
+ },
+ {
+  "key": "xp.rules.disabledFallback",
+  "domain": "staff:xp",
+  "text": "暂未开通"
+ },
+ {
+  "key": "xp.rules.footCap",
+  "domain": "staff:xp",
+  "text": "日上限"
+ },
+ {
+  "key": "xp.rules.footExamMid",
+  "domain": "staff:xp",
+  "text": "次 · 考试每级每月限"
+ },
+ {
+  "key": "xp.rules.footExamTail",
+  "domain": "staff:xp",
+  "text": "次"
+ },
+ {
+  "key": "xp.rules.footReview",
+  "domain": "staff:xp",
+  "text": "同客户当日好评只计"
+ },
+ {
+  "key": "xp.rules.learningTag",
+  "domain": "staff:xp",
+  "text": "学习通道·不占日上限"
+ },
+ {
+  "key": "xp.rules.loadFail",
+  "domain": "staff:xp",
+  "text": "规则加载失败，请稍后重试"
+ },
+ {
+  "key": "xp.sec.badges",
+  "domain": "staff:xp",
+  "text": "段位徽章"
+ },
+ {
+  "key": "xp.sec.board",
+  "domain": "staff:xp",
+  "text": "本店榜"
+ },
+ {
+  "key": "xp.sec.events",
+  "domain": "staff:xp",
+  "text": "近期事件"
+ },
+ {
+  "key": "xp.sec.today",
+  "domain": "staff:xp",
+  "text": "今日经验"
+ },
+ {
+  "key": "xp.title",
+  "domain": "staff:xp",
+  "text": "XP 成长"
  },
  {
   "key": "xp.today.capLead",

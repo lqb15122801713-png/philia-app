@@ -18,6 +18,7 @@ const ME_COPY_TABLE = {
   'me.reviewSummaryLead': '近 30 天口径看历史页 · 本月已评',
   'me.reviewSummaryUnit': '条',
   'me.reviewSummaryAvg': '均分',
+  'me.reviewMonthLead': '本月已评',
   'me.myReviews': '我的评价',
   'me.myReviewsSub': '本人收到的客户评价',
 
@@ -27,6 +28,33 @@ const ME_COPY_TABLE = {
   'me.help.flowTitle': '核销流程',
   'me.help.flowBody': '客户到店出示预约码 → 前台扫码（无摄像头走手动 6 位码）→ 核销成功自动开单；寄养单核销后办理入住登记。',
   'me.settings.sync': '实时同步：派单/改期/取消即时推送（SSE 长连接，断线自动重连 + 60s 轮询兜底）。',
+
+  /* ---- 骨架批片 1（S-04 重排）：身份卡/两组链接行/三格账（原码内硬编码收键） ---- */
+  'me.idcard.no': '工号 {no}',
+  'me.stat.done': '本月完成单',
+  'me.stat.goodRate': '好评率',
+  'me.stat.boardingLogs': '本月寄养打卡',
+  'me.row.pay': '薪资提成',
+  'me.row.paySub': '本月提成逐单明细 · 绩效 · 扣减',
+  'me.row.xp': 'XP 成长',
+  'me.row.xpSub': '段位 · 本店榜 · 规则一句话',
+  'me.row.inventory': '盘点任务',
+  'me.row.inventorySub': '日盘/周盘执行 · 安心包效期',
+  'me.row.manager': '补卡审批',
+  'me.row.managerSub': '店长视界 · 审批 · 日结确认',
+  'me.row.boarding': '寄养负责中',
+  'me.row.boardingSub': '{n} 只在店（任务台全天行打卡）',
+  'me.row.settings': '设置',
+  'me.row.settingsSub': '实时同步与通知',
+  'me.row.schedule': '我的排班',
+  'me.row.help': '帮助与规范',
+  'me.row.helpSub': '六步影像规范 · 核销流程',
+  'me.row.logout': '退出登录',
+  'me.row.loggingOut': '退出中…',
+  'me.onDuty': '在班',
+  'me.offDuty': '今日休息',
+  'me.joined': '入职 {ym}',
+  'me.version': 'Philia 员工端 · 内测 v1.1',
 } as const;
 
 export const ME_COPY = withCopyOverrides(ME_COPY_TABLE);

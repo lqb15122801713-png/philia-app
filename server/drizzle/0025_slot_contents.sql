@@ -1,4 +1,4 @@
--- 端口批片 C（CJ-1002-01 内容层全端口化 · A5 落地）：展示槽位 slot_contents 建表 + 七槽注册种子
+-- 端口批片 C（CJ-1002-01 内容层全端口化 · A5 落地）：展示槽位 slot_contents 建表 + 六槽注册种子
 -- （BANNER/卡面/登录宣言图/空态插画/多宠氛围卡/商品占位模板；现状值=码内默认路径或渐变占位 url=NULL——
 --  R10 不画假件：无真件不落假图，前端 fallback=码内渐变/默认图）。
 -- 幂等：种子段 slot_key NOT EXISTS 守卫（重放零副作用）；created_by='system'
@@ -17,7 +17,7 @@ CREATE TABLE `slot_contents` (
 --> statement-breakpoint
 CREATE INDEX `ix_slot_contents_key_status` ON `slot_contents` (`slot_key`,`status`);--> statement-breakpoint
 CREATE INDEX `ix_slot_contents_key_version` ON `slot_contents` (`slot_key`,`version`);--> statement-breakpoint
--- 七槽注册种子（status='live' 版本 1=码内现状值；famCard/cardFace/product.placeholder 渐变占位 url=NULL）
+-- 六槽注册种子（status='live' 版本 1=码内现状值；famCard/cardFace/product.placeholder 渐变占位 url=NULL）
 WITH s(slot_key, url, alt) AS (VALUES
   ('home.banner', '/brand/banner-home-1200.png', '首页品牌横幅'),
   ('login.hero.staff', '/brand/banner-home-1200.png', '员工端登录页主视觉'),

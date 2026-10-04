@@ -1,98 +1,37 @@
 /**
- * 我的 /me（批次 U2 任务 G · 试样 .me-* 重做）
+ * 我的 /me（S-04 · 员工端骨架整建批片 1 结构组；原批次 U2 任务 G）
  *
- * 规格书 §7：用户卡（头像卡其环+角色卡其签+入职年月+在班态）→ 三格数字
- * （本月完成单/好评率/本月寄养打卡，mono 20/700，三连圆角 20）→
- * 列表组 1（我的排班=本周段·休日[只读]/评价总览[原「我的评价」P2-1 改名]/寄养负责中）→
- * 列表组 2（帮助与规范/设置/退出登录 danger）→ 版本小字。
+ * S-04 骨架（UX 语言包 V1.1 §三）：apphead → SkIdCard 身份卡（字像金边 + mono 工号 +
+ * trio 三格账=既有绩效数据点）→ SkRows 两组链接行（提成/XP/评价 → /pay /xp /reviews｜
+ * 盘点/审批/寄养/设置 → /inventory /manager /today /就地展开）。三级视界：补卡审批行仅
+ * 店长/店主可见（merchant_manager/merchant_owner），有 pending 审批才亮红点（exceptionQueue
+ *  gated 调用）。历史单入口摘除（归 S-02 切日态）：原「评价总览 → /history」行移除，
+ * 其绩效口径数据（已评条数/均分）并入「我的评价」行右值；「打卡考勤」行移除（dock 四槽已含打卡）。
  *
- * 数据（零新接口，前端聚合）：
+ * 数据（零新接口，前端聚合，原逻辑不动）：
  * - auth.me 原始响应（staff 行：role/schedule/createdAt；store 名）；
- * - listForStaff 本月：完成单数 + 好评率（≥4 占比，staffList 同口径前端自算——
- *   staffList 为 merchantProcedure 员工不可调，疑点 U2-2 在案）+ 评价条数/均分 +
- *   在店寄养数（in_boarding）；
- * - 本月寄养打卡数：本月 boarding 单 × stayForStaff.logs（staffId=本人）前端聚合
- *   （无员工可读聚合接口，零点查询但 N 小）；
- * - 帮助与规范/设置=就地展开真实内容（规范文案 / SSE 实时同步状态与重连）——
- *   无对应页面，不做假跳转（铁律）；退出登录=真 logout。
+ * - listForStaff 本月：完成单数 + 好评率（≥4 占比）+ 评价条数/均分 + 在店寄养数（in_boarding）；
+ * - 本月寄养打卡数：本月 boarding 单 × stayForStaff.logs（staffId=本人）前端聚合；
+ * - 帮助与规范/设置=就地展开真实内容（无对应页面，不做假跳转）；退出登录=真 logout。
  */
 
 import { getApiBase, logout, useMe, usePhiliaClient, useToast } from '@philia/shared';
 import { useQueries, useQuery } from '@tanstack/react-query';
-import {
-  BedDouble,
-  CalendarDays,
-  ChevronDown,
-  ChevronRight,
-  CircleHelp,
-  ClipboardCheck,
-  Fingerprint,
-  LogOut,
-  MessagesSquare,
-  Settings,
-  ShieldCheck,
-  Star,
-  Trophy,
-  Wallet,
-} from 'lucide-react';
-import { useMemo, useState, type ReactNode } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { SkAppHead, SkIdCard, SkNote, SkRow, SkRows } from '@/components/skeleton';
 import { dayKeyOf, SCHEDULE_DAYS, type HistoryItem } from '@/components/today/utils';
 import { ME_COPY } from '@/copy/me';
+import { skc } from '@/copy/skeleton';
 
 type Schedule = Partial<Record<string, Array<{ start: string; end: string }> | null>>;
 
-/** 列表行（组内 hairline 分隔； › 仅真实落点） */
-function ListRow({
-  icon: Icon,
-  label,
-  sub,
-  to,
-  onClick,
-  expanded,
-  danger,
-  testid,
-}: {
-  icon: typeof CalendarDays;
-  label: string;
-  sub?: ReactNode;
-  to?: string;
-  onClick?: () => void;
-  expanded?: boolean;
-  danger?: boolean;
-  testid?: string;
-}) {
-  const inner = (
-    <>
-      <Icon className={`h-[22px] w-[22px] shrink-0 ${danger ? 'text-danger' : 'text-[rgba(59,46,36,.62)]'}`} strokeWidth={1.6} aria-hidden />
-      <span className={`min-w-0 flex-1 text-body-sm ${danger ? 'text-danger' : 'text-ink'}`}>
-        {label}
-        {sub ? <small className="mt-0.5 block text-caption-xs text-[rgba(59,46,36,.42)]">{sub}</small> : null}
-      </span>
-      {danger ? null : to ? (
-        <ChevronRight className="h-4 w-4 shrink-0 text-[rgba(59,46,36,.42)]" aria-hidden />
-      ) : onClick ? (
-        <ChevronDown
-          className={`h-4 w-4 shrink-0 text-[rgba(59,46,36,.42)] transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
-          aria-hidden
-        />
-      ) : null}
-    </>
-  );
-  const cls = `flex w-full items-center gap-3 px-4 py-3.5 text-left transition-transform duration-120 ease-philia-spring active:scale-[0.98]`;
-  if (to) {
-    return (
-      <Link to={to} data-testid={testid} className={cls}>
-        {inner}
-      </Link>
-    );
-  }
-  return (
-    <button type="button" data-testid={testid} onClick={onClick} className={cls} aria-expanded={onClick ? expanded : undefined}>
-      {inner}
-    </button>
-  );
-}
+/** me 域 copy 取值 + {var} 插值 */
+const mc = (key: keyof typeof ME_COPY, vars?: Record<string, string | number>): string => {
+  const tpl: string = ME_COPY[key];
+  if (!vars) return tpl;
+  return tpl.replace(/\{(\w+)\}/g, (_, k: string) => (k in vars ? String(vars[k]) : `{${k}}`));
+};
 
 export default function MePage() {
   const navigate = useNavigate();
@@ -163,9 +102,18 @@ export default function MePage() {
   const todayKey = dayKeyOf(new Date());
   const todayRanges = schedule?.[todayKey] ?? [];
   const onDuty = todayRanges.length > 0;
-  const offDays = SCHEDULE_DAYS.filter((d) => !(schedule?.[d.key]?.length)).map((d) => d.label.replace('周', ''));
   const roleLabel = staff?.role === 'frontdesk' ? '前台 frontdesk' : '美容师 groomer';
   const joinDate = staff?.createdAt ? `${staff.createdAt.getFullYear()}-${String(staff.createdAt.getMonth() + 1).padStart(2, '0')}` : null;
+
+  /* ---- 三级视界：补卡审批仅店长/店主可见；红点=有 pending 才点（gated 调用，员工不触merchantManager接口） ---- */
+  const isManager = (user?.roles ?? []).some((r) => r === 'merchant_manager' || r === 'merchant_owner');
+  const exceptionQ = useQuery({
+    queryKey: ['attendance', 'exceptionQueue'],
+    queryFn: () => trpc.attendance.exceptionQueue.query(),
+    enabled: isManager,
+    staleTime: 60_000,
+  });
+  const pendingApprovals = exceptionQ.data?.approvals.length ?? 0;
 
   const doLogout = async () => {
     setLoggingOut(true);
@@ -179,67 +127,76 @@ export default function MePage() {
     }
   };
 
+  const avatarUrl = user && 'avatarUrl' in user ? ((user as { avatarUrl?: string | null }).avatarUrl ?? null) : null;
+  const idShort = (staff?.id ?? user?.staffId ?? user?.id ?? '').slice(-8).toUpperCase() || '—';
+
   return (
-    <div className="px-[22px] pb-6">
-      {/* 用户卡（试样 .me-user margin 10px 22px 0）：头像卡其环 + 角色卡其签 + 入职年月 + 在班态；
-          无头像=E-补1 字圈工艺（浅木底+衬线首字，客户端 D-补3 同口径） */}
-      <section className="u1-card mt-2.5 flex items-center gap-3.5 p-4" data-testid="me-user-card">
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FFFDF6,0_0_0_3.5px_#B9A482]">
-          {user && 'avatarUrl' in user && (user as { avatarUrl?: string }).avatarUrl ? (
-            <img src={(user as { avatarUrl?: string }).avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
-          ) : (
-            <span className="flex h-full w-full items-center justify-center rounded-full bg-oak-light" aria-hidden>
-              <span className="u1-serif text-title-lg font-semibold text-ink">
-                {(staff?.name ?? user?.nickname ?? '员').slice(0, 1)}
-              </span>
-            </span>
-          )}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-title font-bold">{staff?.name ?? user?.nickname ?? '员工'}</p>
-          <p className="mt-1 flex flex-wrap items-center gap-1.5 text-caption-xs text-[rgba(59,46,36,.62)]">
-            <b className="rounded-chip bg-brand-secondary px-1.5 py-0.5 font-bold text-ink">{roleLabel}</b>
-            {joinDate ? <span>· 入职 <span className="u1-num">{joinDate}</span></span> : null}
-            <span>· {onDuty ? '在班' : '今日休息'}</span>
-          </p>
+    <div className="sk pb-6">
+      <SkAppHead title={skc('sk.meTitle')} no={skc('sk.meNo')} />
+
+      {/* 身份卡（字像金边 + mono 工号 + trio 三格账=既有绩效数据点） */}
+      <div data-testid="me-user-card">
+        <div data-testid="me-stats">
+          <SkIdCard
+            name={staff?.name ?? user?.nickname ?? '员工'}
+            no={`${roleLabel} · ${mc('me.idcard.no', { no: idShort })}${joinDate ? ` · ${mc('me.joined', { ym: joinDate })}` : ''} · ${onDuty ? mc('me.onDuty') : mc('me.offDuty')}`}
+            photoUrl={avatarUrl}
+            cells={[
+              { v: monthQuery.isPending ? '…' : String(perf.doneCount), k: mc('me.stat.done') },
+              { v: monthQuery.isPending ? '…' : perf.goodRate !== null ? `${Math.round(perf.goodRate * 100)}%` : '—', k: mc('me.stat.goodRate') },
+              { v: monthLogCount === null ? '—' : String(monthLogCount), k: mc('me.stat.boardingLogs') },
+            ]}
+          />
         </div>
-      </section>
+      </div>
 
-      {/* 三格数字（试样 .me-nums：22/800 越字阶闸门 → 20/700 u1-num（JetBrains Mono 自托管 700，
-          客户端 D2-12 同口径映射）；三连圆角 panel 20；无绩效数据=「—」不落死灰） */}
-      <section className="mt-3.5 grid grid-cols-3" data-testid="me-stats">
-        {[
-          { v: monthQuery.isPending ? '…' : String(perf.doneCount), c: '本月完成单' },
-          { v: monthQuery.isPending ? '…' : perf.goodRate !== null ? `${Math.round(perf.goodRate * 100)}%` : '—', c: '好评率' },
-          { v: monthLogCount === null ? '—' : String(monthLogCount), c: '本月寄养打卡' },
-        ].map((cell, i) => (
-          <div
-            key={cell.c}
-            className={`u1-ring bg-card px-2 py-3.5 text-center ${i === 0 ? 'rounded-l-panel' : ''} ${i === 2 ? 'rounded-r-panel' : ''}`}
-          >
-            <div className="u1-num text-title-lg font-bold leading-7">{cell.v}</div>
-            <div className="mt-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{cell.c}</div>
-          </div>
-        ))}
-      </section>
-
-      {/* 列表组 1 */}
-      <section className="u1-card mt-3.5 divide-y divide-[rgba(59,46,36,.06)]" data-testid="me-list-1">
-        <ListRow
-          icon={CalendarDays}
-          label="我的排班"
-          sub={
-            <>
-              本周<span className="u1-num">{(schedule?.[todayKey]?.map((r) => `${r.start}–${r.end}`).join(' / ')) ?? '—'}</span>
-              {offDays.length ? ` · 周${offDays.join('、')}休` : ''}（只读，店长排）
-            </>
+      {/* 组 A：提成 / XP / 评价 */}
+      <SkRows testId="me-list-staff2">
+        <SkRow
+          to="/pay"
+          testId="me-pay"
+          label={
+            <span>
+              {mc('me.row.pay')}
+              <small className="mt-0.5 block text-caption-xs text-[rgba(59,46,36,.42)]">{mc('me.row.paySub')}</small>
+            </span>
           }
-          testid="me-schedule"
+          value="›"
+        />
+        <SkRow
+          to="/xp"
+          testId="me-xp"
+          label={
+            <span>
+              {mc('me.row.xp')}
+              <small className="mt-0.5 block text-caption-xs text-[rgba(59,46,36,.42)]">{mc('me.row.xpSub')}</small>
+            </span>
+          }
+          value="›"
+        />
+        <SkRow
+          to="/reviews"
+          testId="me-reviews-list"
+          label={
+            <span>
+              {ME_COPY['me.myReviews']}
+              <small className="mt-0.5 block text-caption-xs text-[rgba(59,46,36,.42)]">{ME_COPY['me.myReviewsSub']}</small>
+            </span>
+          }
+          value={`${ME_COPY['me.reviewMonthLead']} ${perf.ratedCount} ${ME_COPY['me.reviewSummaryUnit']}${perf.avg !== null ? ` · ${ME_COPY['me.reviewSummaryAvg']} ${perf.avg.toFixed(1)}` : ''}`}
+        />
+      </SkRows>
+
+      {/* 组 B：盘点 / 审批（店长视界+红点）/ 寄养 / 设置（+我的排班=既有只读排班保留） */}
+      <SkRows testId="me-list-2">
+        <SkRow
+          testId="me-schedule"
           onClick={() => setExpandKey((k) => (k === 'schedule' ? null : 'schedule'))}
-          expanded={expandKey === 'schedule'}
+          label={mc('me.row.schedule')}
+          value={todayRanges.length ? todayRanges.map((r) => `${r.start}–${r.end}`).join(' / ') : '—'}
         />
         {expandKey === 'schedule' ? (
-          <ul className="px-4 pb-3">
+          <ul className="px-1 pb-3">
             {SCHEDULE_DAYS.map(({ key, label }) => {
               const ranges = schedule?.[key] ?? [];
               return (
@@ -251,87 +208,86 @@ export default function MePage() {
             })}
           </ul>
         ) : null}
-        {/* P2-1 同名歧义消解：本条改题「评价总览」（绩效口径聚合入口，/history）；
-            下组员工端 2.0 的「我的评价」（/reviews 明细列表）保留原题——文案走 copy/me 键 */}
-        <ListRow
-          icon={Star}
-          label={ME_COPY['me.reviewSummary']}
-          sub={
-            <>
-              {ME_COPY['me.reviewSummaryLead']} <span className="u1-num">{perf.ratedCount}</span> {ME_COPY['me.reviewSummaryUnit']}
-              {perf.avg !== null ? <> · {ME_COPY['me.reviewSummaryAvg']} <span className="u1-num">{perf.avg.toFixed(1)}</span></> : ''}
-            </>
+        <SkRow
+          to="/inventory"
+          testId="me-inventory"
+          label={
+            <span>
+              {mc('me.row.inventory')}
+              <small className="mt-0.5 block text-caption-xs text-[rgba(59,46,36,.42)]">{mc('me.row.inventorySub')}</small>
+            </span>
           }
-          to="/history"
-          testid="me-reviews"
+          value="›"
         />
-        <ListRow
-          icon={BedDouble}
-          label="寄养负责中"
-          sub={
-            <>
-              <span className="u1-num">{perf.boardingInStore}</span> 只在店（任务台全天行打卡）
-            </>
-          }
-          to="/today"
-          testid="me-boarding"
-        />
-      </section>
-
-      {/* 列表组 1.5：员工端 2.0（R7~R10）——打卡/盘点/薪资/XP/评价；店长视图仅店长与老板可见 */}
-      <section className="u1-card mt-3.5 divide-y divide-[rgba(59,46,36,.06)]" data-testid="me-list-staff2">
-        <ListRow icon={Fingerprint} label="打卡考勤" sub="上班/下班打卡 · 补卡申请" to="/attendance" testid="me-attendance" />
-        <ListRow icon={ClipboardCheck} label="盘点任务" sub="日盘/周盘执行 · 安心包效期" to="/inventory" testid="me-inventory" />
-        <ListRow icon={Wallet} label="薪资提成" sub="本月提成逐单明细 · 绩效 · 扣减" to="/pay" testid="me-pay" />
-        <ListRow icon={Trophy} label="XP 成长" sub="段位 · 本店榜 · 规则一句话" to="/xp" testid="me-xp" />
-        <ListRow icon={MessagesSquare} label={ME_COPY['me.myReviews']} sub={ME_COPY['me.myReviewsSub']} to="/reviews" testid="me-reviews-list" />
-        {(user?.roles ?? []).some((r) => r === 'merchant_manager' || r === 'merchant_owner') ? (
-          <ListRow icon={ShieldCheck} label="店长视图" sub="审批 · 日结确认 · 差评提示" to="/manager" testid="me-manager" />
+        {isManager ? (
+          <SkRow
+            to="/manager"
+            testId="me-manager"
+            dot={pendingApprovals > 0}
+            label={
+              <span>
+                {mc('me.row.manager')}
+                <small className="mt-0.5 block text-caption-xs text-[rgba(59,46,36,.42)]">{mc('me.row.managerSub')}</small>
+              </span>
+            }
+            value={pendingApprovals > 0 ? `${pendingApprovals} 待审` : '›'}
+          />
         ) : null}
-      </section>
+        <SkRow
+          to="/today"
+          testId="me-boarding"
+          label={mc('me.row.boarding')}
+          value={mc('me.row.boardingSub', { n: perf.boardingInStore })}
+        />
+        <SkRow
+          testId="me-settings"
+          onClick={() => setExpandKey((k) => (k === 'settings' ? null : 'settings'))}
+          label={
+            <span>
+              {mc('me.row.settings')}
+              <small className="mt-0.5 block text-caption-xs text-[rgba(59,46,36,.42)]">{mc('me.row.settingsSub')}</small>
+            </span>
+          }
+          value={expandKey === 'settings' ? '⌄' : '›'}
+        />
+        {expandKey === 'settings' ? (
+          <div className="px-1 pb-3 text-caption-xs leading-relaxed text-[rgba(59,46,36,.62)]">
+            <p>{ME_COPY['me.settings.sync']}</p>
+            <p className="mt-1">通知权限：{typeof Notification !== 'undefined' ? (Notification.permission === 'granted' ? '已开启' : Notification.permission === 'denied' ? '已拒绝（浏览器地址栏可改）' : '未开启') : '当前环境不支持'}</p>
+          </div>
+        ) : null}
+      </SkRows>
 
-      {/* 列表组 2 */}
-      <section className="u1-card mt-3.5 divide-y divide-[rgba(59,46,36,.06)]" data-testid="me-list-2">
-        <ListRow
-          icon={CircleHelp}
-          label="帮助与规范"
-          sub="六步影像规范 · 核销流程"
-          testid="me-help"
+      {/* 组 C：帮助与规范（就地展开）+ 退出登录（真 logout） */}
+      <SkRows testId="me-list-help">
+        <SkRow
+          testId="me-help"
           onClick={() => setExpandKey((k) => (k === 'help' ? null : 'help'))}
-          expanded={expandKey === 'help'}
+          label={
+            <span>
+              {mc('me.row.help')}
+              <small className="mt-0.5 block text-caption-xs text-[rgba(59,46,36,.42)]">{mc('me.row.helpSub')}</small>
+            </span>
+          }
+          value={expandKey === 'help' ? '⌄' : '›'}
         />
         {expandKey === 'help' ? (
-          <div className="px-4 pb-3 text-caption-xs leading-relaxed text-[rgba(59,46,36,.62)]">
+          <div className="px-1 pb-3 text-caption-xs leading-relaxed text-[rgba(59,46,36,.62)]">
             <p className="font-bold text-ink">{ME_COPY['me.help.specTitle']}</p>
             <p className="mt-1">{ME_COPY['me.help.specBody']}</p>
             <p className="mt-2 font-bold text-ink">{ME_COPY['me.help.flowTitle']}</p>
             <p className="mt-1">{ME_COPY['me.help.flowBody']}</p>
           </div>
         ) : null}
-        <ListRow
-          icon={Settings}
-          label="设置"
-          sub="实时同步与通知"
-          testid="me-settings"
-          onClick={() => setExpandKey((k) => (k === 'settings' ? null : 'settings'))}
-          expanded={expandKey === 'settings'}
-        />
-        {expandKey === 'settings' ? (
-          <div className="px-4 pb-3 text-caption-xs leading-relaxed text-[rgba(59,46,36,.62)]">
-            <p>{ME_COPY['me.settings.sync']}</p>
-            <p className="mt-1">通知权限：{typeof Notification !== 'undefined' ? (Notification.permission === 'granted' ? '已开启' : Notification.permission === 'denied' ? '已拒绝（浏览器地址栏可改）' : '未开启') : '当前环境不支持'}</p>
-          </div>
-        ) : null}
-        <ListRow
-          icon={LogOut}
-          label={loggingOut ? '退出中…' : '退出登录'}
-          danger
-          testid="me-logout"
+        <SkRow
+          testId="me-logout"
           onClick={() => void doLogout()}
+          label={loggingOut ? mc('me.row.loggingOut') : mc('me.row.logout')}
+          value=""
         />
-      </section>
+      </SkRows>
 
-      <p className="mb-6 mt-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">Philia 员工端 · 内测 v1.1</p>
+      <SkNote>{mc('me.version')}</SkNote>
 
       {toastEl}
     </div>

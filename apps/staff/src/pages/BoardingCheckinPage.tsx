@@ -6,8 +6,10 @@
  *    登记成功 → StayInfoCard 只读信息卡（可点「修改」回到编辑表单，checkinStay 幂等更新）。
  * 2. 每日打卡段：stay 已登记 → DailyLogForm（喂食 segment/遛狗步进/照片≥1/备注选填，
  *    吸底淡黄主钮）+ DailyLogList 历史倒序行。dailyLog 是 UPSERT by (stay_id, log_date)。
- * U2 版式：PageHeader 返回条（‹ 寄养打卡 + 右「第 N 晚·共 M 晚」）+ BoardingPetCard
- * （16:10 照片头+「在店寄养·房型」签+状态签）。.
+ * U2 版式：返回条（‹ 寄养打卡 + 右「第 N 晚·共 M 晚」）+ BoardingPetCard
+ * （16:10 照片头+「在店寄养·房型」签+状态签）。
+ * 骨架批片 1（S-10）：外框换骨架——页根 .sk + SkBackBar（mono 晚数注，二级页无 dock）；
+ * 功能件（CheckinForm/DailyLogForm/DailyLogList/StayInfoCard/BoardingPetCard）保数据接插不动。
  *
  * 数据：
  * - appointment.get（publicProcedure，员工本店可见）→ 顶部宠物信息条
@@ -56,8 +58,9 @@ import CheckinForm, {
 import DailyLogForm, { type DailyLogSubmit } from '../components/boarding/DailyLogForm';
 import DailyLogList from '../components/boarding/DailyLogList';
 import BoardingPetCard from '../components/boarding/BoardingPetCard';
-import PageHeader from '../components/PageHeader';
 import StayInfoCard from '../components/boarding/StayInfoCard';
+import { SkBackBar } from '../components/skeleton';
+import '../styles/skeleton.css';
 import type { BelongingItem, BoardingLogRow, BoardingStayRow } from '../components/boarding/types';
 import { BOARDING_COPY } from '@/copy/boarding';
 
@@ -323,7 +326,7 @@ export default function BoardingCheckinPage() {
   if (detailQuery.isPending) {
     // 加载 >300ms 骨架（禁转圈，动效纲领 §四.2）
     return (
-      <div className="px-4 pt-3">
+      <div className="sk px-4 pt-3">
         <div className="flex items-center gap-2.5">
           <Skeleton className="h-9 w-9 !rounded-full" />
           <Skeleton className="h-6 w-24 !rounded-chip" />
@@ -341,19 +344,20 @@ export default function BoardingCheckinPage() {
 
   if (detailQuery.isError || !appt) {
     return (
-      <div className="px-4 py-6">
+      <div className="sk px-4 py-6">
+        <SkBackBar title={BOARDING_COPY['boarding.title']} fallback="/today" />
         <section className="u1-card p-4">
           <p className="text-body-sm text-ink">{BOARDING_COPY['boarding.error.title']}</p>
           <p className="mt-1 text-caption text-ink-secondary">
             {detailQuery.error instanceof Error ? detailQuery.error.message : BOARDING_COPY['boarding.error.fallbackDesc']}
           </p>
-          {/* W1-D2 弱出口按钮化：异常页无返回条，唯一主出口=按钮化（导航闭环规范②）；
+          {/* W1-D2 弱出口按钮化：异常页主出口=按钮化（导航闭环规范②）；
               换皮批片 5 P3-3：异常态出口钮淡金→深棕墨底淡金字（34 号档 §4.11 空态件=深棕钮） */}
           <Link
             to="/today"
             className="mt-4 flex h-staff-btn items-center justify-center rounded-control bg-ink text-body-sm font-semibold text-brand-primary transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
-            返回任务台
+            {BOARDING_COPY['boarding.backToday']}
           </Link>
         </section>
       </div>
@@ -362,7 +366,8 @@ export default function BoardingCheckinPage() {
 
   if (!isBoarding) {
     return (
-      <div className="px-4 py-6">
+      <div className="sk px-4 py-6">
+        <SkBackBar title={BOARDING_COPY['boarding.title']} fallback="/today" />
         <section className="u1-card p-4">
           <p className="text-body-sm text-ink">{BOARDING_COPY['boarding.error.notBoarding']}</p>
           {/* W1-D2 弱出口按钮化：同上，唯一主出口=按钮化；P3-3 出口钮深棕归色 */}
@@ -370,33 +375,28 @@ export default function BoardingCheckinPage() {
             to="/today"
             className="mt-4 flex h-staff-btn items-center justify-center rounded-control bg-ink text-body-sm font-semibold text-brand-primary transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
-            返回任务台
+            {BOARDING_COPY['boarding.backToday']}
           </Link>
         </section>
       </div>
     );
   }
 
-  // 第 N 晚 · 共 M 晚（PageHeader 右侧摘要，规格书 §5）
+  // 第 N 晚 · 共 M 晚（backbar 右侧 mono 注，规格书 §5）
   const nightsTotal = Math.max(1, Math.round((appt.scheduledEnd.getTime() - appt.scheduledStart.getTime()) / 86_400_000));
   const nightNow = Math.min(
     nightsTotal,
     Math.max(1, Math.floor((Date.now() - appt.scheduledStart.getTime()) / 86_400_000) + 1),
   );
   const roomLabel = detailQuery.data?.service?.name ?? '寄养';
-  // 晚数=数据位，走 mono 轨 tabular-nums（v2.0 §二 三轨不串）
-  const nightAside = (
-    <>
-      第 <span className="u1-num">{nightNow}</span> 晚 · 共 <span className="u1-num">{nightsTotal}</span> 晚
-    </>
-  );
+  const nightNote = `${BOARDING_COPY['boarding.night.lead']} ${nightNow} ${BOARDING_COPY['boarding.night.mid']} ${nightsTotal} ${BOARDING_COPY['boarding.night.tail']}`;
 
 
   // 尚未核销入店：入住登记前置（checkinStay 服务端也强制 in_boarding）
   if (appt.status === 'pending' || appt.status === 'confirmed') {
     return (
-      <div className="pb-6">
-        <PageHeader title="寄养打卡" aside={nightAside} backTo="/today" />
+      <div className="sk pb-6">
+        <SkBackBar title={BOARDING_COPY['boarding.title']} note={nightNote} fallback="/today" />
         <BoardingPetCard pet={pet} roomLabel={roomLabel} scheduledStart={appt.scheduledStart} scheduledEnd={appt.scheduledEnd} overdue={false} />
         <section className="u1-card mx-4 mt-3 p-4">
           <p className="flex items-center gap-2 text-body-sm font-semibold text-ink">
@@ -421,8 +421,8 @@ export default function BoardingCheckinPage() {
   // 已取消 / 取消审核中：不可入住登记
   if (appt.status === 'cancelled' || appt.status === 'cancel_requested') {
     return (
-      <div className="pb-6">
-        <PageHeader title="寄养打卡" aside={nightAside} backTo="/today" />
+      <div className="sk pb-6">
+        <SkBackBar title={BOARDING_COPY['boarding.title']} note={nightNote} fallback="/today" />
         <BoardingPetCard pet={pet} roomLabel={roomLabel} scheduledStart={appt.scheduledStart} scheduledEnd={appt.scheduledEnd} overdue={false} />
         <section className="u1-card mx-4 mt-3 p-4">
           <p className="text-body-sm text-ink">
@@ -434,7 +434,7 @@ export default function BoardingCheckinPage() {
             to="/today"
             className="u1-ring mt-4 flex h-staff-btn items-center justify-center rounded-control bg-card text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
-            返回任务台
+            {BOARDING_COPY['boarding.backToday']}
           </Link>
         </section>
       </div>
@@ -444,9 +444,9 @@ export default function BoardingCheckinPage() {
   const completed = appt.status === 'completed';
 
   return (
-    <div className="pb-6">
-      {/* 返回条（‹ 寄养打卡 + 右「第 N 晚·共 M 晚」） */}
-      <PageHeader title="寄养打卡" aside={nightAside} backTo="/today" />
+    <div className="sk pb-6">
+      {/* 返回条（‹ 寄养打卡 + 右 mono 注「第 N 晚·共 M 晚」；二级页无 dock） */}
+      <SkBackBar title={BOARDING_COPY['boarding.title']} note={nightNote} fallback="/today" />
 
       {/* 宠物卡（16:10 照片 + 在店寄养·房型签 + 状态签） */}
       <BoardingPetCard
@@ -551,7 +551,7 @@ export default function BoardingCheckinPage() {
                 onClick={() => setConfirmingCheckout(false)}
                 className="h-staff-btn flex-1 rounded-control bg-sunken text-body-sm font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
               >
-                再想想
+                {BOARDING_COPY['boarding.checkout.cancel']}
               </button>
               <button
                 type="button"
@@ -559,7 +559,7 @@ export default function BoardingCheckinPage() {
                 onClick={() => checkoutMutation.mutate()}
                 className="h-staff-btn flex-1 rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
               >
-                {checkoutMutation.isPending ? '办理中…' : '确认退房'}
+                {checkoutMutation.isPending ? BOARDING_COPY['boarding.checkout.pending'] : BOARDING_COPY['boarding.checkout.confirm']}
               </button>
             </div>
           </div>
@@ -570,7 +570,7 @@ export default function BoardingCheckinPage() {
             className="u1-ring mx-4 mt-3 flex h-staff-btn w-[calc(100%-32px)] items-center justify-center gap-2 rounded-control bg-card text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
             <DoorOpen className="h-4 w-4" strokeWidth={1.5} />
-            办理退房
+            {BOARDING_COPY['boarding.checkout.action']}
           </button>
         )
       ) : null}
