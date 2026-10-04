@@ -1,25 +1,23 @@
 /**
- * 经营总览（U3 §2 · 路由 /dashboard）—— 母本「2 · 总览」屏
+ * 经营总览 /dashboard（W-01 驾驶舱 · 片 5 段 1 校形重建）
  *
- * - MainScaffold 外包：title「经营总览」，sub=「YYYY年M月d日 周X · 营业中 HH:MM–HH:MM」
- *   （auth.me store.openHours 当天真值；当天无时段/店休 → 「今日店休」；营业时段=mono 数据位）；
- *   actions = 搜索框（点击即跳 /appointments——预约页暂无搜索聚焦深链，取最简真实落点）
- *   + 淡黄点睛钮「＋ 新增预约」（/appointments 列表页，新建入口在预约流程内）；
- * - 数据卡 4 张（§八 深色密度位：深棕渐变总览卡）+ 两栏（1.7fr : 1fr，gap 14）：左今日预约表、右待办队列；
- * - 数据：store.dashboardStats + appointment.listForStore（今日区间 / in_boarding 全量，
- *   在店寄养按 serviceName=房型前端聚合，零新接口）；
- * - 补缺大批片 4：右栏 TodoSection 下方加「客服工单」/「发票申请」两个待办块
- *   （serviceLoop.ticketListPending / invoiceListPending，enabled=role.canManage，
- *   clerk 不渲染）；TodoSection 增两行可选计数（props 传入才渲染）；
- *   ticket.replied / invoice.issued 为 user 频道客户侧事件，商家端无 store 频道
- *   推送——两查询沿用断线轮询兜底 + 重连全量对齐（invalidateAll 扩两键），不新增订阅；
- * - SSE 沿用 MerchantEventsProvider 全域单连接：appointment.* / boarding.* →
- *   invalidate 三查询；appointment.created → toast「新预约：{宠物} {服务}」；
- * - 断线兜底：SSE 离线时三查询 30s 轮询，重连全量对齐；
- * - 加载骨架（禁转圈）；任一查询失败 = 错误卡 + 重试钮（真 refetch）。
+ * 区块序（UX-02 语言包 §四 W-01）：
+ *   M2 异常卡（WAlert，待办/超期寄养/退款/申诉/工单/发票聚合，空态「当前没有异常」）
+ *   → M3 单店口径一栏卡（原四 stat 重排；多店三栏=连锁预留开口项，注记明面）
+ *   → M4 合计条（WTotal：今日营业额大数+已收/待收分列+近 14 日 spark 槽——
+ *     逐日营收序列无读口，槽位空态置灰不造假）
+ *   → 双列 [今日预约 wlist + 审批 wlist ｜ M6 晨报卡（WPostcard：今日营收大数+
+ *     在店/待办/超期三行；昨日营收无读口不虚造，取 stats 真值）]
+ *   → 快捷/系统状态双列收尾（既有 PhoneAppealSection/TicketTodoSection/
+ *     InvoiceTodoSection 原位保留，role.canManage 闸不变）。
+ *
+ * 数据接线/SSE 全保留（stats/今日/寄养/待办 七查询 + MerchantEventsProvider
+ * 全域单连接 + 断线 30s 轮询兜底 + 重连全量对齐）；原 TodoSection 行跳转口径
+ * 全部迁进 M2 异常卡与审批 wlist（含 /cashier?pull= 与页内锚点滚动），零回退。
+ * u3 旧件零改：StatCards/TodayTimeline/TodoSection 文件不动（本页不再装配）。
  */
 
-import { EventType, usePhiliaClient } from '@philia/shared'
+import { EventType, Skeleton, usePhiliaClient } from '@philia/shared'
 import { useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -27,29 +25,48 @@ import { toast } from 'sonner'
 import MainScaffold, { LemonButton, QuietButton, SearchInput } from '@/components/MainScaffold'
 import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider'
 import PhoneAppealSection from '@/components/dashboard/PhoneAppealSection'
-import StatCards from '@/components/dashboard/StatCards'
-import TodayTimeline from '@/components/dashboard/TodayTimeline'
-import TodoSection from '@/components/dashboard/TodoSection'
 import TicketTodoSection from '@/components/dashboard/TicketTodoSection'
 import InvoiceTodoSection from '@/components/dashboard/InvoiceTodoSection'
+import { WAlert, WList, WPostcard, WTotal, type WAlertItem } from '@/components/skeleton'
 import { useStepProgress } from '@/components/appointments/useStepProgress'
 import { REFUND_REQUEST_PENDING_KEY } from '@/components/cashier/refund'
+import { AmortizationDashNote } from '@/components/member/amortization'
 import { dc } from '@/copy/dashboard'
 import { useMerchantRole } from '@/lib/roles'
 import {
+  INVOICE_SECTION_ID,
   IN_BOARDING_QUERY_KEY,
   INVOICE_PENDING_QUERY_KEY,
   PHONE_APPEALS_QUERY_KEY,
   STATS_QUERY_KEY,
   TICKET_PENDING_QUERY_KEY,
+  TICKET_SECTION_ID,
   TODAY_QUERY_KEY,
+  fenToYuanGrouped,
   fullDateLabel,
+  hhmm,
   openHoursLabel,
+  todoGrandTotal,
   todayRange,
 } from '@/components/dashboard/utils'
 
 /** SSE 断线时的兜底轮询间隔 */
 const POLL_FALLBACK_MS = 30_000
+
+/** 今日预约 wlist 状态签（原 TodayTimeline 胶囊口径的文字化） */
+const STATUS_LABEL: Record<string, string> = {
+  pending: '待确认',
+  confirmed: '待到店',
+  in_service: '服务中',
+  in_boarding: '寄养中',
+  completed: '已完成',
+  cancel_requested: '取消申请',
+  cancelled: '已取消',
+}
+
+/** 页内锚点滚动（原 TodoSection 行点击口径：# 开头=同页待办块锚点） */
+const scrollToAnchor = (id: string) =>
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
 export default function DashboardPage() {
   const { trpc, queryClient } = usePhiliaClient()
@@ -181,6 +198,154 @@ export default function DashboardPage() {
   /* 今日表服务中行六步进度（胶囊「服务中 N/6」，试样 §2；现成接口共享缓存） */
   const stepProgress = useStepProgress(todayQuery.data ?? [])
 
+  /* ---------------- M2 异常卡聚合（原 TodoSection 行口径全迁：路由+锚点零回退） ---------------- */
+
+  const stats = statsQuery.data
+  const todayItems = todayQuery.data
+  const boardingItems = boardingQuery.data
+  const refundRequests = role.canManage ? (refundRequestQ.data ?? []) : undefined
+  const ticketCount = role.canManage ? ticketQuery.data?.length : undefined
+  const invoiceCount = role.canManage ? invoiceQuery.data?.length : undefined
+  const appealCount = role.canManage ? (appealQuery.data?.items.length ?? 0) : undefined
+
+  const unpaidSample = todayItems?.find((i) => i.status === 'completed' && i.paidAt == null)
+
+  const alertItems: WAlertItem[] = []
+  if (stats) {
+    if (stats.todo.cancelRequested > 0) {
+      alertItems.push({
+        key: 'cancel',
+        text: dc('dash.todoCancelLabel'),
+        count: stats.todo.cancelRequested,
+        to: '/appointments?status=cancel_requested&from=todo',
+      })
+    }
+    if (refundRequests && refundRequests.length > 0) {
+      alertItems.push({
+        key: 'refund',
+        text: dc('dash.todoRefundRequestLabel'),
+        count: refundRequests.length,
+        to: '/cashier/refunds',
+      })
+    }
+    if (stats.todo.unpaid > 0) {
+      alertItems.push({
+        key: 'unpaid',
+        text: dc('dash.todoUnpaidLabel'),
+        count: stats.todo.unpaid,
+        // 批次 M1 联动口径沿用：有样例单 → 收银台自动拉入该预约
+        to: unpaidSample ? `/cashier?pull=${unpaidSample.id}` : '/cashier',
+      })
+    }
+    if (stats.overdueBoardingCount > 0) {
+      alertItems.push({
+        key: 'overdue',
+        text: dc('dash.todoOverdueLabel'),
+        count: stats.overdueBoardingCount,
+        to: '/boarding',
+      })
+    }
+    if (stats.todo.pending > 0) {
+      alertItems.push({
+        key: 'pending',
+        text: dc('dash.todoPendingLabel'),
+        count: stats.todo.pending,
+        to: '/appointments?status=pending&from=todo',
+      })
+    }
+    if (ticketCount !== undefined && ticketCount > 0) {
+      alertItems.push({
+        key: 'ticket',
+        text: dc('dash.todoTicketLabel'),
+        count: ticketCount,
+        onClick: () => scrollToAnchor(TICKET_SECTION_ID),
+      })
+    }
+    if (invoiceCount !== undefined && invoiceCount > 0) {
+      alertItems.push({
+        key: 'invoice',
+        text: dc('dash.todoInvoiceLabel'),
+        count: invoiceCount,
+        onClick: () => scrollToAnchor(INVOICE_SECTION_ID),
+      })
+    }
+    if (appealCount !== undefined && appealCount > 0) {
+      alertItems.push({
+        key: 'phoneAppeal',
+        text: dc('dash.todoAppealLabel'),
+        count: appealCount,
+        onClick: () => scrollToAnchor('phone-appeals'),
+      })
+    }
+  }
+
+  /* ---------------- M3 单店口径一栏（原 StatCards 四 stat 重排，派生口径不变） ---------------- */
+
+  const serving = (stats?.byStatus.in_service ?? 0) + (stats?.byStatus.in_boarding ?? 0)
+  const waiting = (stats?.byStatus.confirmed ?? 0) + (stats?.byStatus.pending ?? 0)
+  const doneCount = stats?.byStatus.completed ?? 0
+  const boardingCount = boardingItems?.length ?? 0
+  const roomGroups = new Map<string, number>()
+  for (const b of boardingItems ?? []) {
+    const room = b.serviceName ?? '寄养'
+    roomGroups.set(room, (roomGroups.get(room) ?? 0) + 1)
+  }
+  const roomText =
+    [...roomGroups.entries()].map(([name, n]) => `${name} ${n}`).join(' · ') ||
+    dc('dash.statBoardingEmpty')
+  /* M1-补2 R1 同源口径沿用：今日营业额=todayTender.receivedTotalFen（已收=现金类三分列） */
+  const tender = stats?.todayTender
+  const tenderPaidCount = tender?.counts.paidCount ?? 0
+
+  /* ---------------- wlist 双列数据 ---------------- */
+
+  const todayListItems = (todayItems ?? []).map((item) => {
+    const prog = stepProgress.get(item.id)
+    const statusText =
+      item.status === 'in_service' && prog
+        ? `服务中 ${prog.done}/${prog.total}`
+        : item.status === 'completed' && item.paidAt == null
+          ? '已完成 · 待收款'
+          : (STATUS_LABEL[item.status] ?? item.status)
+    return {
+      key: item.id,
+      title: `${hhmm(item.scheduledStart)} ${item.petName ?? '宠物'} · ${item.serviceName ?? '服务'}`,
+      sub: `${statusText} · ${item.staffName ?? '未指派'}`,
+      to: `/appointments/${item.id}`,
+      dot: item.status === 'cancel_requested',
+    }
+  })
+
+  const approvalItems = [
+    ...(todayItems ?? [])
+      .filter((i) => i.status === 'cancel_requested')
+      .map((i) => ({
+        key: `cancel-${i.id}`,
+        title: `${i.petName ?? '宠物'} · ${dc('dash.todoCancelLabel')}`,
+        sub: `${hhmm(i.scheduledStart)} ${i.serviceName ?? ''}`,
+        to: `/appointments/${i.id}`,
+        dot: true,
+      })),
+    ...(refundRequests ?? []).map((r) => ({
+      key: `refund-${r.requestNo}`,
+      title: `${dc('dash.todoRefundRequestLabel')} ${r.requestNo}`,
+      sub: `¥${fenToYuanGrouped(r.amountFen)}`,
+      to: '/cashier/refunds',
+      dot: true,
+    })),
+    ...(appealCount !== undefined && appealCount > 0
+      ? [
+          {
+            key: 'appeals',
+            title: dc('dash.todoAppealLabel'),
+            sub: dc('dash.todoAppealHint'),
+            onClick: () => scrollToAnchor('phone-appeals'),
+            dot: true,
+          },
+        ]
+      : []),
+  ]
+
   return (
     <MainScaffold
       title={dc('dash.title')}
@@ -213,40 +378,195 @@ export default function DashboardPage() {
         </>
       }
     >
-      <StatCards
-        stats={statsQuery.data}
-        todayItems={todayQuery.data}
-        boardingItems={boardingQuery.data}
-        loading={statsQuery.isPending}
-      />
+      <div className="wsk">
+        {/* M2 异常卡：永远第一屏第一位（加载中给骨架，不抢「当前没有异常」空态） */}
+        {statsQuery.isPending ? (
+          <section className="wsk-alert" aria-label="加载中">
+            {[0, 1].map((i) => (
+              <div className="row" key={i}>
+                <Skeleton className="h-3.5 w-40" />
+                <Skeleton className="ml-auto h-3.5 w-6" />
+              </div>
+            ))}
+          </section>
+        ) : (
+          <WAlert items={alertItems} testId="dash-alert" />
+        )}
 
-      {hasError && (
-        <div className="u3-panel mt-3.5 flex items-center justify-between px-[17px] py-3">
-          <p className="text-[12px] text-[rgba(59,46,36,.62)]">数据加载失败，请检查网络后重试</p>
-          <QuietButton testid="dashboard-retry" onClick={refetchAll}>
-            重新加载
-          </QuietButton>
-        </div>
-      )}
+        {hasError && (
+          <div className="u3-panel mt-3.5 flex items-center justify-between px-[17px] py-3">
+            <p className="text-[12px] text-[rgba(59,46,36,.62)]">数据加载失败，请检查网络后重试</p>
+            <QuietButton testid="dashboard-retry" onClick={refetchAll}>
+              重新加载
+            </QuietButton>
+          </div>
+        )}
 
-      {/* 两栏：左今日预约表（1.7fr）右待办队列（1fr），gap 14；批次 R13b 右栏叠申诉待办块 */}
-      <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.7fr_1fr]">
-        <TodayTimeline items={todayQuery.data ?? []} loading={todayQuery.isPending} stepProgress={stepProgress} />
-        <div className="flex flex-col gap-3.5">
-          <TodoSection
-            stats={statsQuery.data}
-            todayItems={todayQuery.data}
-            boardingItems={boardingQuery.data}
-            now={now}
-            refundRequests={role.canManage ? (refundRequestQ.data ?? []) : undefined}
-            ticketCount={role.canManage ? ticketQuery.data?.length : undefined}
-            invoiceCount={role.canManage ? invoiceQuery.data?.length : undefined}
-            appealCount={role.canManage ? (appealQuery.data?.items.length ?? 0) : undefined}
+        {/* M3 单店口径一栏卡（四 stat 重排；多店三栏=连锁预留开口项注记） */}
+        <section className="wsk-card mt-3.5" data-testid="dash-m3">
+          <div className="wsk-hd">
+            <span className="t">{dc('dash.m3Title')}</span>
+            <span className="a">{dc('dash.m3ChainNote')}</span>
+          </div>
+          {statsQuery.isPending && !stats ? (
+            <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i}>
+                  <Skeleton className="h-3 w-14" />
+                  <Skeleton className="mt-2.5 h-6 w-20" />
+                  <Skeleton className="mt-2.5 h-2.5 w-28" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+              <div>
+                <div className="text-[11px] font-semibold text-[rgba(59,46,36,.42)]">
+                  {dc('dash.statCapAppt')}
+                </div>
+                <div className="mt-1 font-number text-[24px] font-bold tabular-nums">
+                  {stats ? stats.todayCount : '—'}
+                </div>
+                <div className="mt-0.5 text-[11px] text-[rgba(59,46,36,.62)]">
+                  服务中 <b className="font-number tabular-nums">{serving}</b> · 待到店{' '}
+                  <b className="font-number tabular-nums">{waiting}</b> · 已完成{' '}
+                  <b className="font-number tabular-nums">{doneCount}</b>
+                </div>
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold text-[rgba(59,46,36,.42)]">
+                  {dc('dash.statCapRevenue')}
+                </div>
+                <div
+                  className="mt-1 whitespace-nowrap font-number text-[24px] font-bold tabular-nums"
+                  data-testid="dashboard-today-revenue"
+                >
+                  {tender ? `¥${fenToYuanGrouped(tender.receivedTotalFen)}` : '—'}
+                </div>
+                <div className="mt-0.5 text-[11px] text-[rgba(59,46,36,.62)]">
+                  已收 <b className="font-number tabular-nums">{tenderPaidCount}</b> 笔 · 待收{' '}
+                  <b className="font-number tabular-nums">{stats?.todo.unpaid ?? 0}</b> 笔
+                </div>
+                {/* QA40-D1（PD-03 件 2）：分摊口径注原位保留 */}
+                <AmortizationDashNote />
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold text-[rgba(59,46,36,.42)]">
+                  {dc('dash.statCapBoarding')}
+                </div>
+                <div className="mt-1 font-number text-[24px] font-bold tabular-nums">
+                  {boardingItems ? boardingCount : '—'}
+                </div>
+                <div className="mt-0.5 text-[11px] text-[rgba(59,46,36,.62)]">{roomText}</div>
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold text-[rgba(59,46,36,.42)]">
+                  {dc('dash.statCapMode')}
+                </div>
+                <div className="mt-1 text-[17px] font-semibold leading-8">
+                  {dc('dash.statModeValue')}
+                </div>
+                <span className="mt-1 inline-block rounded-md bg-[#F2DFA6] px-[7px] py-[2px] text-[11px] font-bold text-[#3B2E24]">
+                  {dc('dash.statModePill')}
+                </span>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* M4 合计条（今日营业额大数+已收/待收分列+近 14 日 spark 槽：无逐日读口，置灰不造假） */}
+        <div className="mt-3.5">
+          <WTotal
+            cap={dc('dash.totalCap')}
+            value={tender ? `¥${fenToYuanGrouped(tender.receivedTotalFen)}` : '—'}
+            cells={[
+              { k: dc('dash.totalPaidCell'), v: String(tenderPaidCount) },
+              { k: dc('dash.totalUnpaidCell'), v: String(stats?.todo.unpaid ?? 0) },
+            ]}
+            spark={
+              <div
+                className="flex items-end gap-[3px] opacity-40"
+                title={dc('dash.sparkEmpty')}
+                aria-label={dc('dash.sparkEmpty')}
+              >
+                {Array.from({ length: 14 }).map((_, i) => (
+                  <i key={i} className="h-[10px] w-[4px] rounded-sm bg-[hsl(var(--background)/.5)]" />
+                ))}
+              </div>
+            }
           />
-          {role.canManage ? <PhoneAppealSection items={appealQuery.data?.items ?? []} /> : null}
-          {/* 补缺大批片 4：两个待办块（clerk 不渲染；空态块内自处理不渲染） */}
-          {role.canManage && (
-            <>
+        </div>
+
+        {/* 双列：今日预约 wlist + 审批 wlist ｜ M6 晨报卡右栏 */}
+        <div className="mt-3.5 grid gap-3.5 lg:grid-cols-[1.7fr_1fr]">
+          <div className="flex min-w-0 flex-col gap-3.5">
+            <div>
+              <div className="wsk-hd">
+                <span className="t">{dc('dash.todayListTitle')}</span>
+                <span className="a">
+                  按时间 · <span className="font-number tabular-nums">{todayItems?.length ?? 0}</span> 单
+                </span>
+              </div>
+              {todayQuery.isPending ? (
+                <section className="wsk-list" aria-label="加载中">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div className="it" key={i}>
+                      <Skeleton className="h-3.5 w-44" />
+                      <Skeleton className="ml-auto h-3 w-16" />
+                    </div>
+                  ))}
+                </section>
+              ) : (
+                <WList
+                  items={todayListItems}
+                  emptyText={dc('dash.timelineEmpty')}
+                  testId="dash-today-list"
+                />
+              )}
+            </div>
+            <div>
+              <div className="wsk-hd">
+                <span className="t">{dc('dash.approvalListTitle')}</span>
+                <span className="a">
+                  <span className="font-number tabular-nums">{approvalItems.length}</span> 项
+                </span>
+              </div>
+              <WList
+                items={approvalItems}
+                emptyText={dc('dash.approvalEmpty')}
+                testId="dash-approval-list"
+              />
+            </div>
+          </div>
+          <WPostcard
+            figure={tender ? `¥${fenToYuanGrouped(tender.receivedTotalFen)}` : '—'}
+            figureCap={dc('dash.postcardFigCap')}
+            rows={[
+              {
+                key: 'boarding',
+                label: dc('dash.postcardRowBoarding'),
+                value: String(boardingCount),
+              },
+              {
+                key: 'todo',
+                label: dc('dash.postcardRowTodo'),
+                value: stats ? String(todoGrandTotal(stats)) : '—',
+              },
+              {
+                key: 'overdue',
+                label: dc('dash.postcardRowOverdue'),
+                value: String(stats?.overdueBoardingCount ?? 0),
+                tone: (stats?.overdueBoardingCount ?? 0) > 0 ? 'red' : undefined,
+              },
+            ]}
+            testId="dash-postcard"
+          />
+        </div>
+
+        {/* 快捷/系统状态双列收尾（既有待办块原位保留；clerk 不渲染同原口径） */}
+        {role.canManage && (
+          <div className="mt-3.5 grid items-start gap-3.5 lg:grid-cols-2">
+            <div className="flex flex-col gap-3.5">
               <TicketTodoSection
                 items={ticketQuery.data}
                 loading={ticketQuery.isPending}
@@ -259,9 +579,10 @@ export default function DashboardPage() {
                 error={invoiceQuery.isError}
                 onRetry={() => void invoiceQuery.refetch()}
               />
-            </>
-          )}
-        </div>
+            </div>
+            <PhoneAppealSection items={appealQuery.data?.items ?? []} />
+          </div>
+        )}
       </div>
     </MainScaffold>
   )

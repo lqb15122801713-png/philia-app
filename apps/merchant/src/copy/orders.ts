@@ -17,6 +17,9 @@ const ORDER_COPY_TABLE = {
   'order.emptyPaid': '没有待发货订单',
   'order.emptyShipped': '没有已发货订单',
   'order.emptyRefunding': '没有售后订单',
+  /* ---- W-09 回馈金红字列：订单域未透出回馈金字段（schema orders 无列位），置灰待口 ---- */
+  'order.rebateCol': '回馈金',
+  'order.rebatePendingNote': '回馈金列读口待补——订单域未透出回馈金字段，待 server 开口；回馈金仅抵商品',
 } as const;
 
 export const ORDER_COPY = withCopyOverrides(ORDER_COPY_TABLE);

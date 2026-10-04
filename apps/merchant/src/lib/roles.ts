@@ -100,5 +100,11 @@ export function clerkGuideText(pathname: string): { title: string; hint: string 
   if (pathname.startsWith('/settings/tasks')) {
     return { title: '任务模板由店长或店主处理', hint: '循环任务模板的新建与停用属管理层动作；店员账号的工作面是收银台。' }
   }
+  if (pathname.startsWith('/matrix')) {
+    return { title: '权限矩阵由店长或店主查看', hint: '角色×权限矩阵属管理层视界；店员账号的工作面是收银台。' }
+  }
+  if (pathname.startsWith('/console')) {
+    return { title: '开发者管理端由店长或店主处理', hint: '端口配置与发布属管理层动作；店员账号的工作面是收银台。' }
+  }
   return { title: '该功能由店长或店主处理', hint: '店员账号的工作面是收银台；如需协助请找店长。' }
 }

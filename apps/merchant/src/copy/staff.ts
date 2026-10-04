@@ -25,6 +25,13 @@ const STAFF_COPY_TABLE = {
   'staff.editSkillNote': '技能标签暂为只读（S4 派单批开放编辑）；排班请点员工行右侧的排班摘要编辑。',
   'staff.scheduleNote': '每天最多 {n} 个时段；设为「休息」的当天不排班。',
 
+  /* ---- 片 5 段 3（W-12 校形）：M5 台账考勤列 + 权限口径卡 ---- */
+  'staff.attFlagged': '打卡异常',
+  'staff.attNote': '考勤红字=当日打卡异常（防代打标记，attendance.exceptionQueue 真值）；「应班未打卡」店级读口待补，不画假件',
+  'staff.permTitle': '权限口径',
+  'staff.permBody': '提成与绩效明细全员仅本人可见（V1.3 员工端口径）；角色×权限四态（收银/退款/日结/反结账…）见权限矩阵。',
+  'staff.permLink': '查看权限矩阵 ›',
+
   /* ---- 离职交接（片 3 B7-4：改挂未完结单 + 交接留痕） ---- */
   'staff.exitCta': '离职交接 ›',
   'staff.exitDialogTitle': '离职交接 · {name}',

@@ -1,27 +1,26 @@
 /**
- * 财务 /finance（U3 批次 · 任务 L · 规格书 §11 · 母本试样 659-705 行）
+ * 报表 /finance（商家端控制台骨架批 · 片 5 段 3 · W-13 重建；底版=U3 批次任务 L）
  *
- * 数据源（全部现成接口，零新增）：
- * - store.financeStats({from,to})：totals（serviceFen/paidCount/pendingPaymentFen/
- *   pendingPaymentCount）+ pendingPayments 明细 + byDay（仅用于顶行「今日已收」取数）；
- * - appointment.listForStore({from,to}) 过滤 paidAt 非空 → 已收流水明细
- *   （行含 customerName/petName/serviceName/paidAt/paidFen/paymentMode）；
- * - pass.listLogs({})：次卡扣次卡计数（delta<0 且 createdAt 落在区间内；接口上限 100 条）。
+ * 区块序（UX-02 语言包 §四 W-13，路由 /finance 不动）：
+ *   wtop（MainScaffold：title/sub 今日已收·待收 + 期间 chips 三档——chips 只驱动
+ *   台账区间，四格恒取本月口径）
+ *   → M3 四格：本月营收（financeStats 月档真值）/ 储值负债（无店级聚合读口，
+ *     段 2 已核 → 置灰「读口待补」不造假）/ 回馈金负债（同置灰）/ 本月退款红
+ *     （refund.list 月区间真值，已执行+已实退口径同日结单列）
+ *   → R12 当日退款汇总一行（refund.dayStats 真值，当日净额=已收−退款，原位保留）
+ *   → 左 M5 月度台账（现状流水重排：日期/类型/金额/支付方式/单号 + 状态/操作，
+ *     已收 live / 待收 amber +「收款 ›」markPaid 真链路，#pending-payments 深链不动）
+ *   → 右报表目录 wlist D1–D9（开口项=18 号档 E4「D1-D9 报表口径/导出 🆕立项」
+ *     → 全量置灰「立项待供给」R10 不画假件）+ 月结快照/三本账永不混列注。
  *
- * 结构：MainScaffold（title 财务 / sub 今日已收·待收·口径 / actions=期间 chips 三档
- * 今天/近 7 天/本月，当前墨底）→ u3-stat 数据卡 3 张 → u3-panel+u3-tbl 收款流水
- * （按时间倒序，已收 live / 待收 amber，待收行末「收款 ›」→ appointment.markPaid 真链路）。
- *
- * U3 取舍（红线执行）：趋势图/环比同比无日序列接口口径=花架子——TrendChart 删除
- * （git rm）；PaymentSplit/StaffTable/SummaryCards/PeriodSwitcher/EmptyState/
- * PendingPayments 一并退役出页面（git rm，待收款「确认收款」并入流水表）。
+ * 数据源（全部现成接口，零新增）：store.financeStats（期间档 + 月档）/
+ * appointment.listForStore / refund.dayStats / refund.list（月区间）。
+ * U3 退役件口径不变（TrendChart 等已 git rm）；旧「已收/待收/扣次」三卡随四格
+ * 冻结布局收起（待收进台账状态列+sub，扣次口径见日结页）。
  *
  * SSE（store 频道）：appointment.paid → toast + invalidate；completed/reviewed/
- * cancelled → invalidate；refund.executed/settled/rejected → 退款汇总行联动刷新；
+ * cancelled → invalidate；refund.executed/settled/rejected → 退款汇总行+月格联动刷新；
  * 断线重连全量对齐；60s 轮询兜底（沿用 T4.4 接线）。
- * v1.1-b1：/finance#pending-payments 深链 → 滚动到流水表（待收行所在面板）。
- * R12：三卡下加一行「今日退款汇总」（refund.dayStats · 当日净额=已收−退款，
- * 最小侵入不自建大块）。
  */
 
 import { EventType, Skeleton, usePhiliaClient, useToast, type EventEnvelope } from '@philia/shared';
@@ -32,6 +31,7 @@ import { useLocation } from 'react-router-dom';
 import MainScaffold, { QuietButton } from '@/components/MainScaffold';
 import { REFUND_DAY_STATS_KEY, storeTodayStr } from '@/components/cashier/refund';
 import { useMerchantEvents } from '@/components/finance/useMerchantEvents';
+import { WList } from '@/components/skeleton';
 import {
   chipRange,
   formatDateTime,
@@ -40,16 +40,11 @@ import {
   type ChipMode,
 } from '@/components/finance/utils';
 import { fc } from '@/copy/finance';
+import { rpt } from '@/copy/report';
 
 const FINANCE_QUERY_ROOT = ['store', 'financeStats'] as const;
 
 const MODE_LABEL: Record<ChipMode, string> = { day: '今天', '7d': '近 7 天', month: '本月' };
-/** 数据卡 1 标题随期间档走 */
-const CAP_RECEIVED: Record<ChipMode, string> = {
-  day: fc('fin.capReceivedDay'),
-  '7d': fc('fin.capReceived7d'),
-  month: fc('fin.capReceivedMonth'),
-};
 const PAYMENT_MODE_LABEL: Record<string, string> = { pay_at_store: '到店付', pass_deduct: '次卡扣次' };
 /** M1-补2 R5/R6-1：收银流水方式五分列标签（组合支付全显；储值单列不计已收） */
 const CASHIER_METHOD_LABEL: Record<string, string> = {
@@ -72,7 +67,22 @@ interface LedgerRow {
   fen: number;
   /** 批次 M1：来源签（'cashier'=收银台 settled 单；预约行不标） */
   source?: 'cashier';
+  /** 单号（W-13 台账列）：收银台=billNo；预约行=预约 code（无则 —） */
+  code: string | null;
 }
+
+/** 报表目录 D1–D9（开口项：18 号档 E4 立项待供给，全量置灰不画假件） */
+const REPORT_DIR_ITEMS = [
+  { key: 'd1', title: rpt('rpt.dirD1') },
+  { key: 'd2', title: rpt('rpt.dirD2') },
+  { key: 'd3', title: rpt('rpt.dirD3') },
+  { key: 'd4', title: rpt('rpt.dirD4') },
+  { key: 'd5', title: rpt('rpt.dirD5') },
+  { key: 'd6', title: rpt('rpt.dirD6') },
+  { key: 'd7', title: rpt('rpt.dirD7') },
+  { key: 'd8', title: rpt('rpt.dirD8') },
+  { key: 'd9', title: rpt('rpt.dirD9') },
+].map((d) => ({ ...d, sub: rpt('rpt.dirPending') }));
 
 export default function FinancePage() {
   const { trpc, queryClient } = usePhiliaClient();
@@ -96,13 +106,6 @@ export default function FinancePage() {
     refetchInterval: 60_000,
   });
 
-  // 次卡扣次计数（接口上限 100 条，按区间过滤 delta<0）
-  const logsQuery = useQuery({
-    queryKey: ['pass', 'listLogs', 'finance'],
-    queryFn: () => trpc.pass.listLogs.query({}),
-    refetchInterval: 60_000,
-  });
-
   // R12：当日退款汇总（refund.dayStats · 当日净额=已收−退款；最小侵入一行，不自建大块）
   const refundDayQ = useQuery({
     queryKey: [...REFUND_DAY_STATS_KEY, storeTodayStr()],
@@ -110,11 +113,32 @@ export default function FinancePage() {
     refetchInterval: 60_000,
   });
 
+  /* ---- W-13 M3 四格数据源（月口径恒取本月，不随期间档漂移） ---- */
+  const monthRange = useMemo(() => chipRange('month', new Date()), []);
+  // 本月营收：financeStats 月档（key 与「本月」chip 同形，切档即共享缓存）
+  const monthStatsQ = useQuery({
+    queryKey: [...FINANCE_QUERY_ROOT, 'month', monthRange.from.getTime(), monthRange.to.getTime()],
+    queryFn: () => trpc.store.financeStats.query({ from: monthRange.from, to: monthRange.to }),
+    refetchInterval: 60_000,
+  });
+  // 本月退款：refund.list 月区间真值（与退款单列表页同源；已执行+已实退口径同日结单列）
+  const monthStr = storeTodayStr().slice(0, 7);
+  const refundMonthQ = useQuery({
+    queryKey: ['refund', 'list', 'month', monthStr],
+    queryFn: () => trpc.refund.list.query({ from: `${monthStr}-01`, to: storeTodayStr() }),
+    refetchInterval: 60_000,
+  });
+  const monthRefund = useMemo(() => {
+    const rows = (refundMonthQ.data ?? []).filter((r) => r.status === 'executed' || r.status === 'settled');
+    return { count: rows.length, fen: rows.reduce((s, r) => s + r.amountFen, 0) };
+  }, [refundMonthQ.data]);
+
   const invalidateFinance = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: FINANCE_QUERY_ROOT });
     void queryClient.invalidateQueries({ queryKey: ['appointment', 'listForStore'] });
     void queryClient.invalidateQueries({ queryKey: ['pass', 'listLogs'] });
     void queryClient.invalidateQueries({ queryKey: REFUND_DAY_STATS_KEY });
+    void queryClient.invalidateQueries({ queryKey: ['refund', 'list'] });
   }, [queryClient]);
 
   // 事件去重（续传补发 / 多端同事件会重复到达）
@@ -189,9 +213,11 @@ export default function FinancePage() {
           customer: r.customerName ?? '—',
           modeLabel: PAYMENT_MODE_LABEL[r.paymentMode ?? ''] ?? '到店付',
           fen: r.paidFen ?? r.priceFen,
+          code: r.code ?? null,
         }),
       );
     const customerById = new Map((ledgerQuery.data ?? []).map((r) => [r.id, r.customerName] as const));
+    const codeById = new Map((ledgerQuery.data ?? []).map((r) => [r.id, r.code ?? null] as const));
     const pending = (data?.pendingPayments ?? []).map(
       (p): LedgerRow => ({
         id: p.id,
@@ -202,6 +228,7 @@ export default function FinancePage() {
         customer: customerById.get(p.id) ?? '—',
         modeLabel: PAYMENT_MODE_LABEL[p.paymentMode ?? ''] ?? '到店付',
         fen: p.priceFen,
+        code: codeById.get(p.id) ?? null,
       }),
     );
     // 批次 M1（任务书 §1.5.5，零结构改动）：收银台 settled 单并入流水表，来源签「收银台」。
@@ -220,42 +247,11 @@ export default function FinancePage() {
           '—',
         fen: c.payableFen,
         source: 'cashier',
+        code: c.billNo,
       }),
     );
     return [...paid, ...pending, ...cashier].sort((a, b) => b.sortKey - a.sortKey);
   }, [ledgerQuery.data, data]);
-
-  /**
-   * 卡 1（M1-补2 R1③ 同源改造，消除「洗护 0 笔」矛盾）：
-   * - 今日档：金额=todayTender.receivedTotalFen（统一聚合出口，与收银台头部/总览同值）；
-   *   副行笔数=todayTender.counts 合并流水行数（收银 settled 单 + 预约域收款笔数）；
-   * - 7 天/本月档：金额=totals.totalFen（服务+商品，与下方合并流水列表同帧）；
-   *   副行笔数=收银单数（cashierPaidCount）+预约收款笔数（totals.paidCount）。
-   * 旧副行「洗护 N 笔 · 寄养 N 笔」（预约域口径，与合并流水列表矛盾）随本改造删除。
-   */
-  const receivedCard = useMemo(() => {
-    if (!data) return null;
-    if (mode === 'day') {
-      const t = data.todayTender;
-      return {
-        fen: t.receivedTotalFen,
-        caption: `共 ${t.counts.paidCount} 笔（收银 ${t.counts.cashierPaidCount} 单 · 预约收款 ${t.counts.appointmentPaidCount} 笔）`,
-      };
-    }
-    return {
-      fen: data.totals.totalFen,
-      caption: `收银 ${data.totals.cashierPaidCount} 单 · 预约收款 ${data.totals.paidCount} 笔`,
-    };
-  }, [data, mode]);
-
-  /** 卡 3：区间内次卡扣次次数 */
-  const deductCount = useMemo(
-    () =>
-      (logsQuery.data ?? []).filter(
-        (l) => l.delta < 0 && l.createdAt.getTime() >= from.getTime() && l.createdAt.getTime() < to.getTime(),
-      ).length,
-    [logsQuery.data, from, to],
-  );
 
   /** 顶行「今日已收」（M1-补2 R1）：恒为今日同源口径（todayTender.receivedTotalFen），
       不随期间档漂移；与收银台头部/经营总览三处同数。 */
@@ -287,12 +283,6 @@ export default function FinancePage() {
     return () => window.clearTimeout(id);
   }, [hash, data]);
 
-  const pendingBrief =
-    (data?.pendingPayments ?? [])
-      .slice(0, 2)
-      .map((p) => `${p.petName}·${p.serviceName} ¥${formatYuan(p.priceFen)}`)
-      .join(' · ') || fc('fin.pendingEmpty');
-
   return (
     <MainScaffold
       title={fc('fin.title')}
@@ -320,10 +310,10 @@ export default function FinancePage() {
       testid="finance-page"
     >
       {statsQuery.isPending ? (
-        // 加载中骨架块（animate-pulse，禁转圈）：3 卡 + 面板 = shared Skeleton 组合
+        // 加载中骨架块（animate-pulse，禁转圈）：四格 + 面板 = shared Skeleton 组合
         <div aria-label="加载中">
-          <div className="grid grid-cols-3 gap-3.5">
-            {[0, 1, 2].map((i) => (
+          <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+            {[0, 1, 2, 3].map((i) => (
               <div key={i} className="u3-stat">
                 <Skeleton className="h-3 w-16 rounded-chip" />
                 <Skeleton className="mt-3 h-7 w-24 rounded-chip" />
@@ -351,30 +341,39 @@ export default function FinancePage() {
         </div>
       ) : data ? (
         <>
-          {/* 数据卡 3 张（u3-stat） */}
-          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
+          {/* M3 四格（W-13：本月营收真值 / 储值负债·回馈金负债置灰读口待补 / 本月退款红真值） */}
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
             <div className="u3-stat">
-              <div className="cap">{CAP_RECEIVED[mode]}</div>
+              <div className="cap">{rpt('rpt.quadRevenue')}</div>
               <div className="v" data-testid="finance-received-card">
-                ¥{receivedCard ? formatYuan(receivedCard.fen) : '…'}
+                ¥{monthStatsQ.data ? formatYuan(monthStatsQ.data.totals.totalFen) : '…'}
               </div>
               <div className="d u1-num" data-testid="finance-received-count">
-                {receivedCard?.caption ?? ''}
+                {monthStatsQ.data
+                  ? `收银 ${monthStatsQ.data.totals.cashierPaidCount} 单 · 预约收款 ${monthStatsQ.data.totals.paidCount} 笔`
+                  : ''}
               </div>
             </div>
-            <div className="u3-stat">
-              <div className="cap">{fc('fin.capPending')}</div>
-              <div className="v">¥{formatYuan(data.totals.pendingPaymentFen)}</div>
-              <div className="d u1-num">{pendingBrief}</div>
+            <div className="u3-stat opacity-60" data-testid="finance-quad-stored" aria-disabled="true">
+              <div className="cap">{rpt('rpt.quadStored')}</div>
+              <div className="v text-[rgba(59,46,36,.42)]">—</div>
+              <div className="d">{rpt('rpt.quadPending')} · {rpt('rpt.quadStoredNote')}</div>
             </div>
-            <div className="u3-stat">
-              <div className="cap">{fc('fin.capDeduct')}</div>
-              <div className="v u1-num">{deductCount}</div>
-              <div className="d u1-num">
-                {mode === 'day' ? '今日' : '期内'}扣次 <b className="u1-num">{deductCount}</b> 次 · {fc('fin.deductNote')}
+            <div className="u3-stat opacity-60" data-testid="finance-quad-rebate" aria-disabled="true">
+              <div className="cap">{rpt('rpt.quadRebate')}</div>
+              <div className="v text-[rgba(59,46,36,.42)]">—</div>
+              <div className="d">{rpt('rpt.quadPending')} · {rpt('rpt.quadRebateNote')}</div>
+            </div>
+            <div className="u3-stat" data-testid="finance-quad-refund">
+              <div className="cap">{rpt('rpt.quadRefund')}</div>
+              <div className={`v ${monthRefund.fen > 0 ? 'text-danger-deep' : ''}`}>
+                {refundMonthQ.data ? (monthRefund.fen > 0 ? `−¥${formatYuan(monthRefund.fen)}` : '¥0') : '…'}
               </div>
+              <div className="d u1-num">{rpt('rpt.quadRefundCount', { n: monthRefund.count })}</div>
             </div>
           </div>
+
+          {/* 期间档 chips 只驱动下方台账区间（四格恒取本月口径，不随档漂移） */}
 
           {/* R12：当日退款汇总一行（同口径退款列：当日净额=已收−退款；最小侵入不自建大块）。
               退款笔数/金额=refund.dayStats（biz_date=执行日，executed|settled 口径）；
@@ -408,72 +407,90 @@ export default function FinancePage() {
             </div>
           ) : null}
 
-          {/* 收款流水（已收 + 待收合并，按时间倒序） */}
-          <div id="pending-payments" className="u3-panel mt-3.5 scroll-mt-4">
-            <div className="u3-panel-head">
-              <h3>{fc('fin.ledgerTitle')}</h3>
-              <span className="aside">{fc('fin.ledgerAside')}</span>
-            </div>
-            {ledgerRows.length === 0 ? (
-              <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center text-body-sm text-[rgba(59,46,36,.62)]">
-                {fc('fin.ledgerEmpty', { period: MODE_LABEL[mode] })}
+          {/* 左 M5 月度台账 ｜ 右报表目录（W-13 双列） */}
+          <div className="mt-3.5 grid items-start gap-3.5 xl:grid-cols-[1.7fr_1fr]">
+            {/* 月度台账（现状流水重排：日期/类型/金额/支付方式/单号 + 状态/操作） */}
+            <div id="pending-payments" className="u3-panel scroll-mt-4">
+              <div className="u3-panel-head">
+                <h3>{rpt('rpt.ledgerTitle')}</h3>
+                <span className="aside">{rpt('rpt.ledgerAside')}</span>
               </div>
-            ) : (
-              <table className="u3-tbl">
-                <thead>
-                  <tr>
-                    <th>时间</th>
-                    <th>项目</th>
-                    <th>客户</th>
-                    <th>方式</th>
-                    <th className="text-right">金额</th>
-                    <th>状态</th>
-                    <th aria-label="操作" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {ledgerRows.map((r) => (
-                    <tr key={`${r.pending ? 'p' : 'r'}-${r.id}`}>
-                      <td className="u1-num font-bold">
-                        {r.time ? (mode === 'day' ? formatTime(r.time) : formatDateTime(r.time)) : '—'}
-                      </td>
-                      <td className="font-semibold">
-                        {/* 批次 M1：来源签「收银台」（最小渲染分支，其余结构不动） */}
-                        {r.source === 'cashier' ? (
-                          <span className="u3-st wait mr-1.5">收银台</span>
-                        ) : null}
-                        {r.item}
-                      </td>
-                      <td>{r.customer}</td>
-                      <td className="text-[rgba(59,46,36,.62)]">{r.modeLabel}</td>
-                      <td className="u1-num whitespace-nowrap text-right font-bold">¥{formatYuan(r.fen)}</td>
-                      <td>
-                        {r.pending ? (
-                          <span className="u3-st amber">待收</span>
-                        ) : (
-                          <span className="u3-st live">已收</span>
-                        )}
-                      </td>
-                      <td>
-                        {r.pending ? (
-                          <button
-                            type="button"
-                            disabled={settlingId === r.id}
-                            onClick={() => {
-                              setSettlingId(r.id);
-                              markPaid.mutate(r.id);
-                            }}
-                            className="text-caption-xs font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.92] disabled:opacity-50"
-                          >
-                            {settlingId === r.id ? '收款中…' : '收款 ›'}
-                          </button>
-                        ) : null}
-                      </td>
+              {ledgerRows.length === 0 ? (
+                <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center text-body-sm text-[rgba(59,46,36,.62)]">
+                  {fc('fin.ledgerEmpty', { period: MODE_LABEL[mode] })}
+                </div>
+              ) : (
+                <table className="u3-tbl">
+                  <thead>
+                    <tr>
+                      <th>日期</th>
+                      <th>类型</th>
+                      <th className="text-right">金额</th>
+                      <th>支付方式</th>
+                      <th>单号</th>
+                      <th>状态</th>
+                      <th aria-label="操作" />
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                  </thead>
+                  <tbody>
+                    {ledgerRows.map((r) => (
+                      <tr key={`${r.pending ? 'p' : 'r'}-${r.id}`}>
+                        <td className="u1-num font-bold">
+                          {r.time ? (mode === 'day' ? formatTime(r.time) : formatDateTime(r.time)) : '—'}
+                        </td>
+                        <td className="font-semibold">
+                          {/* 批次 M1：来源签「收银台」（最小渲染分支，其余结构不动） */}
+                          {r.source === 'cashier' ? (
+                            <span className="u3-st wait mr-1.5">收银台</span>
+                          ) : null}
+                          {r.item}
+                        </td>
+                        <td className="u1-num whitespace-nowrap text-right font-bold">¥{formatYuan(r.fen)}</td>
+                        <td className="text-[rgba(59,46,36,.62)]">{r.modeLabel}</td>
+                        <td className="u1-num text-[rgba(59,46,36,.62)]">{r.code ?? '—'}</td>
+                        <td>
+                          {r.pending ? (
+                            <span className="u3-st amber">待收</span>
+                          ) : (
+                            <span className="u3-st live">已收</span>
+                          )}
+                        </td>
+                        <td>
+                          {r.pending ? (
+                            <button
+                              type="button"
+                              disabled={settlingId === r.id}
+                              onClick={() => {
+                                setSettlingId(r.id);
+                                markPaid.mutate(r.id);
+                              }}
+                              className="text-caption-xs font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.92] disabled:opacity-50"
+                            >
+                              {settlingId === r.id ? '收款中…' : '收款 ›'}
+                            </button>
+                          ) : null}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {/* 报表目录 wlist D1–D9（开口项全量置灰「立项待供给」）+ 口径注 */}
+            <div className="wsk">
+              <div className="wsk-hd">
+                <span className="t">{rpt('rpt.dirTitle')}</span>
+                <span className="a">{rpt('rpt.dirPending')}</span>
+              </div>
+              <div className="pointer-events-none opacity-60" aria-disabled="true">
+                <WList items={REPORT_DIR_ITEMS} testId="report-dir" />
+              </div>
+              <p className="wsk-note mt-2.5 px-1">{rpt('rpt.dirNote')}</p>
+              <p className="wsk-note mt-1 px-1">
+                {rpt('rpt.monthCloseNote')} · {rpt('rpt.threeBooksNote')}
+              </p>
+            </div>
           </div>
         </>
       ) : null}

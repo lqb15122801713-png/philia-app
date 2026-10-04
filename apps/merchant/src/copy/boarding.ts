@@ -32,6 +32,16 @@ const BOARD_COPY_TABLE = {
   'board.checkoutOverdue': '本单已超期，请与客户确认续住或按约结算。',
   'board.checkoutPayNote': '本单为到店付：退房后请在财务页「待收款」确认收款，款项才会计入营业额。',
   'board.checkoutConfirmNote': '确认后预约转为「已完成」，房间立即释放；操作幂等，重复点击不会重复结算。',
+
+  /* ---- 片 5 段 1 · W-05 校形（M3 四格 / M7 容量日历 / 疫苗硬规则置灰注） ---- */
+  'board.m3InStore': '在店',
+  'board.m3Checkin': '今日入住',
+  'board.m3Checkout': '今日退房',
+  'board.m3Overdue': '超期',
+  'board.capCalNote': '容量=在架房型间数合计，已住=逐晚预订槽位（boardingAvailability 预订口径，与上方在店口径不同源）',
+  'board.capCalLoading': '容量日历加载中…',
+  'board.capCalError': '容量日历加载失败',
+  'board.vaccineNote': '疫苗硬规则：员工端入住页透出疫苗有效期（过期赭红、30 天内到期提醒），过期不可入住的置灰拦截以员工端为准',
 } as const;
 
 export const BOARD_COPY = withCopyOverrides(BOARD_COPY_TABLE);

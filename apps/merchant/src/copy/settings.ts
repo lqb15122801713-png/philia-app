@@ -40,6 +40,15 @@ const SETTINGS_COPY_TABLE = {
   'set.entryTasks': '任务模板',
   'set.entryTasksHint': '循环任务自管 · 近 7 天落实例',
   'set.entryGo': '进入 ›',
+
+  /* ---- 片 5 段 3（W-15 校形）：槽位/文案端口入口行（owner-only）+ 带端口出生注 ---- */
+  'set.panelPorts': '端口入口',
+  'set.portsAside': 'owner 专属 · 带端口出生',
+  'set.entryCopy': '文案端口',
+  'set.entryCopyHint': '控制台第七域 · 三端文案后台改',
+  'set.entrySlots': '槽位端口',
+  'set.entrySlotsHint': '控制台第八域 · 素材上传→待审→上线/回退',
+  'set.portBornNote': '带端口出生，后台可改不动代码',
 } as const;
 
 export const SETTINGS_COPY = withCopyOverrides(SETTINGS_COPY_TABLE);

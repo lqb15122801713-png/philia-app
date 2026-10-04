@@ -1,21 +1,22 @@
 /**
- * 在店监控 Hub /monitor（U3 任务 F · 规格书 §5 · 母本 §5 屏 371-426 行）
+ * 在店监控 Hub /monitor（W-04 · 片 5 段 1 校形）
  *
- * 结构：MainScaffold（title「在店监控」+ sub 真值计数 + actions 两枚 u3-chipf
- * 过滤服务中/寄养）→ 三列 mon-card 卡墙（纸面 ring 20 圆角 overflow hidden）：
- * - 照片头 120px 定高（试样 .mon-card .ph 落值；该单最新过程照 thumbUrl，无照片=sunken
- *   暖底 rgba(59,46,36,.06)，同骨架底色口径；卡其不作大面填充 §1.1）+ badge（洗护=纸面
- *   文字自足「服务中 · 实时」/寄养=墨底米白字「寄养 · 房型名」）；
- * - 洗护卡：名+服务 + 6 段步进条（三态同客户端七节点：done 深棕/now 淡黄/future 卡其描边）
- *   + 员工·最新动态行；
- * - 寄养卡：第 N 晚（日界差+1）· 今日打卡态（lastLogDate===今天→已打卡 ✓）
- *   · 退房日；超期红字「超期」+「应退未退 N 天」。
+ * 区块序（UX-02 语言包 §四 W-04）：M2 预警卡（WAlert：单步超 45 分钟未翻步的单
+ * + 超期寄养聚合，红字计数+点击定位 /monitor/:id）→ 单卡网格（stepdots 六段
+ * 【公共件 WStepDots 已抽进 skeleton】+ ETA 行【预计完成=scheduledEnd 现成字段】
+ * + LIVE 胶囊【「服务中 · 实时」文字 badge 现状保留】）。
+ * 45 分钟亮红口径：卡内当前步（active）startedAt 距今 >45min → 卡面赭红 ring +
+ * 红字「本步耗时已超 45 分钟」，并同步进 M2 预警卡。
+ *
+ * 卡墙结构（U3 任务 F 母本）：三列 mon-card（纸面 ring 20 圆角 overflow hidden）：
+ * - 照片头 120px 定高 + badge（洗护=纸面文字自足/寄养=墨底米白字）；
+ * - 洗护卡：名+服务 + stepdots 六段 + 员工·最新动态行 + ETA 行；
+ * - 寄养卡：第 N 晚 · 今日打卡态 · 退房日；超期红字「超期」+「应退未退 N 天」。
  * 点击卡 → /monitor/:id（单约监控别名深链，同组件）。
  *
  * 数据（全现成，零新接口）：listForStore(in_service/in_boarding) + 每卡
- * serviceStep.list + boarding.stayBoard（含 stay/appointment/pet/customer
- * /lastLogDate/overdue）；寄养卡的房型名/员工名按 appointmentId 与
- * listForStore(in_boarding) 行拼合。
+ * serviceStep.list + boarding.stayBoard；寄养卡的房型名/员工名按 appointmentId
+ * 与 listForStore(in_boarding) 行拼合。
  *
  * SSE（全局单连接 context，见 dashboard/MerchantEventsProvider，不自建第二连接）：
  * step_updated/step_flagged → 对应卡 invalidate serviceStep.list；
@@ -45,10 +46,14 @@ import {
   type MerchantEventsValue,
 } from '../components/dashboard/MerchantEventsProvider';
 import MainScaffold, { QuietButton } from '../components/MainScaffold';
+import { WAlert, WStepDots, type WAlertItem, type WStepDotState } from '../components/skeleton';
 import { oc } from '../copy/monitor';
 
 /** 洗护卡步进兜底轮询（step_updated 仅 appointment 频道，store 频道盲区的安全网） */
 const STEP_POLL_MS = 15_000;
+
+/** 单步超 45 分钟亮红口径（UX-02 §四 W-04） */
+const STUCK_MS = 45 * 60_000;
 
 type FilterKey = 'all' | 'service' | 'boarding';
 
@@ -121,22 +126,19 @@ function CardPhotoHead({
   );
 }
 
-/** 6 段步进条：三态同客户端七节点（done 深棕 #3B2E24 / now 淡黄 #F2DFA6 / future 卡其描边 #B9A482） */
-function StepBars({ steps }: { steps: StepListItem[] | undefined }) {
-  return (
-    <div className="mt-2.5 flex gap-1">
-      {Array.from({ length: 6 }).map((_, i) => {
-        const st = steps?.[i]?.status;
-        const cls =
-          st === 'done'
-            ? 'bg-[#3B2E24]'
-            : st === 'active'
-              ? 'bg-[#F2DFA6]'
-              : 'bg-transparent shadow-[inset_0_0_0_1px_#B9A482]';
-        return <i key={i} className={`h-1 flex-1 rounded-full ${cls}`} />;
-      })}
-    </div>
-  );
+/** 6 段步进（公共件 WStepDots；三态同客户端七节点：done 深棕/active 淡黄/todo 卡其描边） */
+function stepDotStates(steps: StepListItem[] | undefined): WStepDotState[] {
+  return Array.from({ length: 6 }).map((_, i) => {
+    const st = steps?.[i]?.status;
+    return st === 'done' ? 'done' : st === 'active' ? 'active' : 'todo';
+  });
+}
+
+/** 当前步（active）耗时（分钟）；无 active 步或未开局 → null */
+function activeStepElapsedMin(steps: StepListItem[] | undefined, nowTs: number): number | null {
+  const active = steps?.find((s) => s.status === 'active');
+  if (!active?.startedAt) return null;
+  return Math.max(0, Math.floor((nowTs - new Date(active.startedAt).getTime()) / 60_000));
 }
 
 /** Hub 事件接线：在 effect 中注册/注销（context 的 onEvent/onReconnect 返回取消函数） */
@@ -248,6 +250,42 @@ export default function MonitorHubPage() {
   const visibleBoarding = filter === 'service' ? [] : board;
   const totalVisible = visibleService.length + visibleBoarding.length;
 
+  /* ---------------- M2 预警卡聚合（超 45 分钟未翻步 + 超期寄养；点击定位单卡深链） ---------------- */
+
+  // 当前时刻（react-hooks/purity：组件内不调 Date.now，照 DashboardPage `new Date()` 先例；
+  // 洗护卡 15s 轮询驱动重渲染，分钟级口径足够）
+  const nowTs = new Date().getTime();
+  const stuckMinByAid = new Map<string, number>();
+  for (const it of serviceItems) {
+    const elapsed = activeStepElapsedMin(stepsByAid.get(it.id), nowTs);
+    if (elapsed !== null && elapsed * 60_000 > STUCK_MS) stuckMinByAid.set(it.id, elapsed);
+  }
+  const alertItems: WAlertItem[] = [
+    ...serviceItems
+      .filter((it) => stuckMinByAid.has(it.id))
+      .map((it) => ({
+        key: `stuck-${it.id}`,
+        text: oc('mon.alertStuckLine', {
+          pet: it.petName ?? '宠物',
+          svc: it.serviceName ?? '服务',
+          n: stuckMinByAid.get(it.id)!,
+        }),
+        count: stuckMinByAid.get(it.id),
+        onClick: () => navigate(`/monitor/${it.id}`),
+      })),
+    ...board
+      .filter((entry) => entry.overdue)
+      .map((entry) => ({
+        key: `overdue-${entry.appointment.id}`,
+        text: oc('mon.alertOverdueLine', {
+          pet: entry.pet.name,
+          n: overdueDays(entry.appointment.scheduledEnd),
+        }),
+        count: overdueDays(entry.appointment.scheduledEnd),
+        onClick: () => navigate(`/monitor/${entry.appointment.id}`),
+      })),
+  ];
+
   const chip = (key: FilterKey, label: string) => (
     <button
       type="button"
@@ -271,6 +309,13 @@ export default function MonitorHubPage() {
       }
       testid="monitor-hub-page"
     >
+      {/* M2 预警卡：永远第一屏第一位（加载完成才聚合，避免假空态） */}
+      {!pending && !failed ? (
+        <div className="wsk mb-3.5">
+          <WAlert items={alertItems} testId="mon-alert" />
+        </div>
+      ) : null}
+
       {pending ? (
         /* 加载中骨架块（animate-pulse，禁转圈）：看板卡 = shared BoardSkeleton
            （!grid-cols-1 压成件自带 grid-cols-2，保移动端单列骨架口径） */
@@ -302,17 +347,19 @@ export default function MonitorHubPage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2 xl:grid-cols-3">
-          {/* 洗护卡（listForStore 已按预约开始时间升序） */}
+        <div className="wsk grid grid-cols-1 gap-3.5 md:grid-cols-2 xl:grid-cols-3">
+          {/* 洗护卡（listForStore 已按预约开始时间升序）；45 分钟亮红=当前步耗时超阈 */}
           {visibleService.map((it) => {
             const steps = stepsByAid.get(it.id);
             const photo = latestPhoto(steps);
             const doneCount = steps?.filter((s) => s.status === 'done').length ?? 0;
+            const stuck = stuckMinByAid.has(it.id);
             return (
               <button
                 key={it.id}
                 type="button"
                 className={cardCls}
+                style={stuck ? { boxShadow: '0 0 0 1.5px #B4502E' } : undefined}
                 onClick={() => navigate(`/monitor/${it.id}`)}
                 data-testid={`monitor-card-${it.id}`}
               >
@@ -333,7 +380,18 @@ export default function MonitorHubPage() {
                   <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
                     {activityLine(it.staffName, steps)}
                   </div>
-                  <StepBars steps={steps} />
+                  {stuck ? (
+                    <div className="mt-1 text-caption-xs font-bold text-[#B4502E]">
+                      {oc('mon.stuck')}
+                    </div>
+                  ) : null}
+                  {/* ETA 行：预计完成=预约 scheduledEnd（现成字段，无伪造） */}
+                  <div className="mt-1 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
+                    {oc('mon.eta', { t: fmtTime(it.scheduledEnd) })}
+                  </div>
+                  <div className="mt-2.5">
+                    <WStepDots states={stepDotStates(steps)} testId={`stepdots-${it.id}`} />
+                  </div>
                 </div>
               </button>
             );

@@ -32,6 +32,7 @@ import { Check, CheckCircle2, WifiOff } from 'lucide-react'
 import { usePhiliaClient } from '@philia/shared'
 import { useQuery } from '@tanstack/react-query'
 import { fenToYuan, yuanToFen } from '@/components/mall-admin/format'
+import { WFolio, WRedline } from '@/components/skeleton'
 import { cc } from '@/copy/cashier'
 import { MEMBER_FOR_USER_KEY } from './membership'
 import {
@@ -355,6 +356,27 @@ export default function PaySheet({
                 : ''}
             </div>
 
+            {/* W-06 M7 folio 金额件（UX-02 §四）：应收构成行式明面——次卡/储值/回馈金单列不混，
+                现金类承担合计=唯一待收真值（与顶部大数字同源 dueFen 派生） */}
+            <div className="wsk mb-3.5">
+              <WFolio
+                testId="cashier-pay-folio"
+                rows={[
+                  { key: 'due', label: '应收', value: `¥${fenToYuan(dueFen)}` },
+                  ...(passCoveredFen > 0
+                    ? [{ key: 'pass', label: '次卡扣次已抵（不计入已收）', value: `−¥${fenToYuan(passCoveredFen)}`, tone: 'mut' as const }]
+                    : []),
+                  ...(svApplied > 0
+                    ? [{ key: 'sv', label: '储值支付（不计入已收）', value: `−¥${fenToYuan(svApplied)}`, tone: 'mut' as const }]
+                    : []),
+                  ...(rbApplied > 0
+                    ? [{ key: 'rb', label: '回馈金抵扣（仅商品·不计入已收）', value: `−¥${fenToYuan(rbApplied)}`, tone: 'mut' as const }]
+                    : []),
+                  { key: 'money', label: '现金类合计承担', value: `¥${fenToYuan(moneyNeedFen)}`, tone: 'total' as const },
+                ]}
+              />
+            </div>
+
             {/* 支付胶囊六分列（储值仅会员有储值余额时出现；回馈金仅会员出现——R11a） */}
             <div
               className={`grid gap-2 ${
@@ -621,6 +643,12 @@ export default function PaySheet({
             </div>
           </>
         )}
+
+        {/* W-06 红线明面带（UX-02 §四：钉在收款面板下，常显不折叠）——
+            无充值/年费≠储值/四分列/扣次非现金 四句走 console 键（wsk.redline1-4） */}
+        <div className="wsk mt-4">
+          <WRedline testId="cashier-pay-redline" />
+        </div>
       </div>
     </div>,
     document.body,

@@ -171,8 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 2330 键/53 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53）；
+ *      56.1 种子 2571 键/57 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -2419,7 +2419,8 @@ async function main(): Promise<void> {
   {
     /* 夹具：寄养单（confirmed 未核销；code 直插绕开扫码环节） */
     const bSvc = (await db.select().from(schema.services).where(and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'boarding'))).get())!;
-    const a5Start = new Date(`${storeToday}T15:00:00+08:00`);
+    /* 时刻钉法（57.6 先例扩展）：起始钉 15:30 半点——e2e 槽位选取器只取整点（getUTCMinutes()===0），任何夹具单不可能与半点撞同一 scheduled_start（assign 冲突闸=同员工同刻 exact 等值）；整点钉法与时长族 apptD1（15:00 自动派单）部分时辰撞员工撞刻（01:05 两见红实证）。 */
+    const a5Start = new Date(`${storeToday}T15:30:00+08:00`);
     const a5Appt = (await db.insert(schema.appointments).values({
       code: 'E2EA55', customerId: customerUser!.id, storeId, petId, serviceId: bSvc.id,
       type: 'boarding', scheduledStart: a5Start, scheduledEnd: new Date(a5Start.getTime() + 2 * 86400_000),
@@ -4854,17 +4855,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（2330 键/53 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 2330 && domainSet.size === 53 &&
+  check('56.1 copy 域种子全量落库（2571 键/57 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 2571 && domainSet.size === 57 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（2330 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 2330 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（2571 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 2571 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */

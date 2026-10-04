@@ -1,15 +1,12 @@
 /**
- * 商品 /products（U3 批次 · 任务 I · 规格书 §8 · 母本试样 519-556 行 + .prod CSS 124-132 行）
+ * 商品 /products（U3 批次 · 任务 I · 规格书 §8；片 5 段 2 W-10 校形：卡墙→M5 台账）
  *
  * - 数据：mall.listProductsForStore（merchantProcedure，本店全部商品含下架；
  *   分类筛选 + 关键词搜索在服务端过滤，搜索 300ms 防抖沿用）。
- * - 结构：MainScaffold（title 商品 / sub 在售·已下架·低库存真值 / 搜索 + 主钮新增）
- *   → u3-chipf 分类 chips（当前墨底）→ 4 列商品卡（纸面 ring 20 圆角 overflow hidden）。
- * - 卡片：图区 110px 定高（试样 .prod .ph 落值；规格书 §8「4:3 图」为裁切意图，
- *   试样为落地数值——从试样，货架密度优先；images[0]，无图=sunken 暖底
- *   rgba(59,46,36,.06)，同骨架底色口径；卡其不作大面填充 §1.1）+ 名 +
- *   价 Montserrat tabular（¥/件）+ 库存 + 状态（在售 live / 低库存 amber（库存<5） /
- *   已下架 done 半透明）。点击卡→编辑弹层。
+ * - 结构（W-10 序位）：wtop（CSV 置灰注「待供给」+ G2 新增 + 搜索）→ G1 类目 chips
+ *   → M5 台账（商品/类目/价/库存（低库存红字）/状态/日盘档；日盘档=单价 ≥¥100
+ *   每日盘点门槛，S-08 同口径）。
+ * - CSV 导入：端口未开口——置灰留位不画假件（R10），开口后接真链路。
  * - 上下架：不新造开关——ProductEditorDialog 内「上架销售」Switch 走 upsertProduct
  *   真实链路（失败原文 toast + invalidate 回拉），越店写 FORBIDDEN 由服务端强制。
  */
@@ -97,6 +94,15 @@ export default function ProductsPage() {
       actions={
         <>
           <SearchInput placeholder="搜索商品…" value={kw} onChange={setKw} testid="products-search" />
+          {/* W-10 wtop CSV 入口：端口未开口——置灰注「待供给」（R10 不画假件） */}
+          <span className="flex items-center gap-1.5">
+            <QuietButton testid="products-csv" disabled>
+              {pd('prod.csvCta')}
+            </QuietButton>
+            <span className="text-caption-xs text-[rgba(59,46,36,.42)]" title={pd('prod.csvPendingNote')}>
+              待供给
+            </span>
+          </span>
           <LemonButton testid="products-create" onClick={() => openEditor(null)}>
             {pd('prod.createCta')}
           </LemonButton>
@@ -119,19 +125,10 @@ export default function ProductsPage() {
       </div>
 
       {listQuery.isPending ? (
-        /* 加载中骨架块（animate-pulse，禁转圈）：纸面卡轮廓 = shared Skeleton 组合 */
-        <div className="grid grid-cols-2 gap-[14px] lg:grid-cols-3 xl:grid-cols-4">
+        /* 加载中骨架块（animate-pulse，禁转圈）：台账行 = shared Skeleton 组合 */
+        <div className="u3-panel space-y-2 px-[17px] py-4">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div
-              key={i}
-              className="overflow-hidden rounded-[20px] bg-[#FFFDF6] shadow-[0_0_0_1px_rgba(59,46,36,.09)]"
-            >
-              <Skeleton className="h-[110px] w-full rounded-none" />
-              <div className="space-y-2 px-[13px] py-[11px]">
-                <Skeleton className="h-3 w-3/4" />
-                <Skeleton className="h-3.5 w-1/3" />
-              </div>
-            </div>
+            <Skeleton key={i} className="h-9" />
           ))}
         </div>
       ) : listQuery.isError ? (
@@ -150,41 +147,68 @@ export default function ProductsPage() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-[14px] lg:grid-cols-3 xl:grid-cols-4">
-          {items.map((p) => {
-            const cover = p.images?.[0]
-            const st = prodStatus(p)
-            const off = p.status !== 'on'
-            return (
-              <button
-                key={p.id}
-                type="button"
-                data-testid={`product-card-${p.id}`}
-                onClick={() => openEditor(p)}
-                className={`overflow-hidden rounded-[20px] bg-[#FFFDF6] text-left shadow-[0_0_0_1px_rgba(59,46,36,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] ${
-                  off ? 'opacity-60' : ''
-                }`}
-              >
-                {cover ? (
-                  <img src={cover} alt={p.name} className="h-[110px] w-full object-cover" />
-                ) : (
-                  <div className="h-[110px] w-full bg-[rgba(59,46,36,.06)]" />
-                )}
-                <div className="px-[13px] py-[11px]">
-                  <div className="truncate text-xs font-bold text-ink">{p.name}</div>
-                  <div className="mt-[5px] whitespace-nowrap font-number text-sm font-bold tabular-nums text-ink">
-                    ¥{fenToYuan(p.priceFen)}
-                    <small className="ml-1 text-[11px] font-medium text-[rgba(59,46,36,.42)]">/ 件</small>
-                  </div>
-                  <div className="mt-[3px] flex items-center gap-1.5 text-[11px] text-[rgba(59,46,36,.62)]">
-                    <span className="font-number tabular-nums">库存 {p.stock}</span>
-                    <span aria-hidden>·</span>
-                    <span className={st.cls}>{st.label}</span>
-                  </div>
-                </div>
-              </button>
-            )
-          })}
+        /* W-10 M5 台账（商品/类目/价/库存低库存红字/状态/日盘档）；行点→编辑弹层（真实链路保留） */
+        <div className="u3-panel">
+          <div className="u3-noscrollx overflow-x-auto">
+            <table className="u3-tbl min-w-[760px]">
+              <thead>
+                <tr>
+                  <th>商品</th>
+                  <th>类目</th>
+                  <th className="!text-right">价</th>
+                  <th className="!text-right">库存</th>
+                  <th>状态</th>
+                  <th>{pd('prod.dailyCountCol')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((p) => {
+                  const st = prodStatus(p)
+                  const off = p.status !== 'on'
+                  const low = !off && p.stock < LOW_STOCK
+                  const dailyCount = p.priceFen >= 10000
+                  return (
+                    <tr
+                      key={p.id}
+                      className={`rowlink ${off ? 'opacity-60' : ''}`}
+                      data-testid={`product-card-${p.id}`}
+                      onClick={() => openEditor(p)}
+                    >
+                      <td>
+                        <span className="font-bold text-ink">{p.name}</span>
+                      </td>
+                      <td className="text-[rgba(59,46,36,.62)]">{p.category}</td>
+                      <td className="whitespace-nowrap text-right">
+                        <span className="font-number font-bold tabular-nums text-ink">¥{fenToYuan(p.priceFen)}</span>
+                        <span className="ml-1 text-caption-xs text-[rgba(59,46,36,.42)]">/ 件</span>
+                      </td>
+                      <td
+                        className={`whitespace-nowrap text-right font-number tabular-nums ${
+                          low ? 'font-bold text-danger-deep' : 'text-ink'
+                        }`}
+                        data-testid={`product-stock-${p.id}`}
+                      >
+                        {p.stock}
+                      </td>
+                      <td>
+                        <span className={st.cls}>{st.label}</span>
+                      </td>
+                      <td>
+                        {dailyCount ? (
+                          <span className="u3-st amber">{pd('prod.dailyCountYes')}</span>
+                        ) : (
+                          <span className="text-caption-xs text-[rgba(59,46,36,.3)]">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="products-daily-count-note">
+            {pd('prod.dailyCountNote')}
+          </p>
         </div>
       )}
 

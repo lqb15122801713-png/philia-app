@@ -80,6 +80,13 @@ export default function OrderRow({
         )}
       </td>
       <td className="whitespace-nowrap text-right font-number font-semibold tabular-nums">{fmtMoney(order.totalFen)}</td>
+      {/* W-09 回馈金列：读口待补置灰（订单行无回馈金字段，透出即接红字口径） */}
+      <td
+        className="whitespace-nowrap text-right font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.3)]"
+        data-testid={`order-rebate-${order.id}`}
+      >
+        —
+      </td>
       <td>
         <span className="u3-st live">已支付</span>
       </td>

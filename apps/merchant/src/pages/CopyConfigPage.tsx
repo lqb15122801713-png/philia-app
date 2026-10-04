@@ -53,7 +53,9 @@ function textOf(valueJson: unknown): string {
 /* 页面主体（owner）                                                     */
 /* ------------------------------------------------------------------ */
 
-function OwnerCopyConfig() {
+/* 片 5 段 3（W-16 共构不分叉）：页面内核导出（含三态与 ToasterMount，不含
+   MainScaffold 页头），供 ConsolePage 右栏直嵌；本页默认出口行为不变 */
+export function CopyConfigBody() {
   const { trpc, queryClient } = usePhiliaClient();
 
   const listQuery = useQuery({
@@ -178,37 +180,33 @@ function OwnerCopyConfig() {
   /* ---------------- 加载 / 错误三态 ---------------- */
   if (listQuery.isPending) {
     return (
-      <MainScaffold title={cp('copyport.pageTitle')} sub={cp('copyport.pageSub')} testid="copyport-page">
-        <div className="u3-panel" aria-label="加载中">
-          <div className="u3-panel-head">
-            <Skeleton className="h-4 w-24 rounded-chip" />
-          </div>
-          {['w-[46%]', 'w-[55%]', 'w-[64%]', 'w-[73%]', 'w-[82%]'].map((w, i) => (
-            <div key={i} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-4">
-              <Skeleton className={`h-3 rounded-chip ${w}`} />
-              <Skeleton className="mt-2 h-8 w-2/3 rounded-control" />
-            </div>
-          ))}
+      <div className="u3-panel" aria-label="加载中">
+        <div className="u3-panel-head">
+          <Skeleton className="h-4 w-24 rounded-chip" />
         </div>
-      </MainScaffold>
+        {['w-[46%]', 'w-[55%]', 'w-[64%]', 'w-[73%]', 'w-[82%]'].map((w, i) => (
+          <div key={i} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-4">
+            <Skeleton className={`h-3 rounded-chip ${w}`} />
+            <Skeleton className="mt-2 h-8 w-2/3 rounded-control" />
+          </div>
+        ))}
+      </div>
     );
   }
 
   if (listQuery.isError) {
     return (
-      <MainScaffold title={cp('copyport.pageTitle')} sub={cp('copyport.pageSub')} testid="copyport-page">
-        <div className="rounded-panel bg-[#FFFDF6] py-12 text-center shadow-hairline ring-1 ring-line-ring">
-          <div className="text-body-sm text-[rgba(59,46,36,.62)]">{errMsg(listQuery.error)}</div>
-          <Btn variant="ghost" size="sm" className="mt-3" onClick={() => void listQuery.refetch()}>
-            {cp('copyport.loadFail')}
-          </Btn>
-        </div>
-      </MainScaffold>
+      <div className="rounded-panel bg-[#FFFDF6] py-12 text-center shadow-hairline ring-1 ring-line-ring">
+        <div className="text-body-sm text-[rgba(59,46,36,.62)]">{errMsg(listQuery.error)}</div>
+        <Btn variant="ghost" size="sm" className="mt-3" onClick={() => void listQuery.refetch()}>
+          {cp('copyport.loadFail')}
+        </Btn>
+      </div>
     );
   }
 
   return (
-    <MainScaffold title={cp('copyport.pageTitle')} sub={cp('copyport.pageSub')} testid="copyport-page">
+    <>
       <ToasterMount />
 
       {/* 工具行：搜索 + 域下拉 + 只看高危/只看已改 */}
@@ -456,6 +454,15 @@ function OwnerCopyConfig() {
           ) : null}
         </div>
       </Modal>
+    </>
+  );
+}
+
+/** 页头装配（默认出口行为不变：MainScaffold + 内核体） */
+function OwnerCopyConfig() {
+  return (
+    <MainScaffold title={cp('copyport.pageTitle')} sub={cp('copyport.pageSub')} testid="copyport-page">
+      <CopyConfigBody />
     </MainScaffold>
   );
 }

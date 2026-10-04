@@ -74,6 +74,10 @@ const CASHIER_COPY_TABLE = {
     '交接班=关闭当前班次（不冻结账目）；下一笔收银将自动开新班。 如需冻结当班账目，请用「日结」。',
   'cashier.shiftEmpty': '当前无开班班次 —— 首笔收银将自动开班（懒建）',
   'cashier.dayCloseFullNote': '全日口径：当前无开班班次也可日结（账面按当日全部支付段计）',
+  /* ---- W-07 序位：M5 四分列前置（todayTenderStats 同源出口） ---- */
+  'cashier.tenderSplitTitle': '今日账面四分列',
+  'cashier.tenderSplitAside': '现金/微信/支付宝计入已收 · 储值为参考列不计入（裁定①）',
+  'cashier.tenderSplitRef': '次卡等值（参考·不计入）',
   'cashier.refundDayAside': '当日净额=已收−退款 · 历史日结封箱不回填（只读）',
   'cashier.refundCrossDayNote': '跨日退款计入退款发生日日结（V7）；已封箱历史日结单不回填，只读留痕。',
   'cashier.dayCloseListAside': '冲正单与原单双向可查 · 原单永存不涂改',
@@ -108,6 +112,12 @@ const CASHIER_COPY_TABLE = {
   'cashier.refundsPendingBold': '笔退款超 24 小时未登记实退',
   'cashier.refundsPendingTail': '——线下原路退回后请点行内「实退登记」',
   'cashier.refundsEmpty': '当前筛选无退款单——收银流水已收单的退款会出现在这里',
+  /* ---- W-08 校形：发起入口指引 + executed 不可撤销注 + 驳回权口径卡 ---- */
+  'cashier.refundsCreateLink': '发起退款 ›',
+  'cashier.refundsCreateHint': '退款从收银流水发起：已收单 → 详情 → 退款',
+  'cashier.refundExecutedNote': '已执行落账 · 不可撤销',
+  'cashier.refundPolicyTitle': '驳回权口径',
+  'cashier.refundPolicyReject': '草稿单（gold 审批位）可驳回——店长（本店）/店主（全域），原因必填留痕',
   'cashier.refundSettleNote': '内测期实退=线下原路退回+系统内登记；登记后退款单置「实退完成」，账不再变（executed 不可撤销口径）。',
   'cashier.refundRejectNote': '驳回仅对草稿（draft）生效；驳回留痕 rejected+原因。已执行单不可撤销，纠错=再开正单。',
   'cashier.refundSvNotice': '本单涉储值/次卡：退款须店主办理（负债科目不设阈值，server 同口径拦截）',

@@ -13,6 +13,7 @@ import { PageErrorBoundary } from '@philia/shared'
 import { Toaster } from '@/components/ui/sonner'
 import RequireMerchant from './components/RequireMerchant'
 import MerchantRail from './components/MerchantRail'
+import ConsoleDock from './components/ConsoleDock'
 import RoleGuidePage from './components/RoleGuidePage'
 import MerchantEventsProvider from './components/dashboard/MerchantEventsProvider'
 import { CLERK_ALLOWED_PATHS, clerkGuideText, useMerchantRole } from '@/lib/roles'
@@ -26,9 +27,11 @@ import CashierPage from './pages/CashierPage'
 import CashierRecordsPage from './pages/CashierRecordsPage'
 import CashierRefundsPage from './pages/CashierRefundsPage'
 import CopyConfigPage from './pages/CopyConfigPage'
+import ConsolePage from './pages/ConsolePage'
 import DashboardPage from './pages/DashboardPage'
 import DevLoginPage from './pages/DevLoginPage'
 import FinancePage from './pages/FinancePage'
+import MatrixPage from './pages/MatrixPage'
 import MonitorHubPage from './pages/MonitorHubPage'
 import OpsPage from './pages/OpsPage'
 import OrdersPage from './pages/OrdersPage'
@@ -119,6 +122,11 @@ function ProtectedRoutes() {
         <Route path="/payroll" element={<PayrollPage />} />
         {/* 员工端骨架整建批 片 4：XP 审核（积分申报+扣分异议审批；owner|manager；同排班页闸径） */}
         <Route path="/xp-admin" element={<XpAdminPage />} />
+        {/* 商家端控制台骨架批 片 5 段 3：权限矩阵（W-14 真页：静态四态矩阵只读；rail 管理组 rail-matrix） */}
+        <Route path="/matrix" element={<MatrixPage />} />
+        {/* 商家端控制台骨架批 片 5 段 3：开发者管理端（W-16 聚合：直嵌 rules/copy/slots 三页内核；
+            旧三路由 /settings/rules|copy|slots 保留可直达不重定向，rail foot 子行不动） */}
+        <Route path="/console" element={<ConsolePage />} />
         <Route path="*" element={<RoleLanding />} />
       </Routes>
     </ClerkRouteGuard>
@@ -137,14 +145,16 @@ export default function App() {
           element={
             <RequireMerchant>
               <MerchantEventsProvider>
-                {/* U3 案 A 墨轨：左导航 190px 常驻 + 右主区滚动；页级错误边界崩一屏不塌全端 */}
+                {/* 片 5 段 0：M1 墨轨 236px（≥xl）/ 手机 dock 五槽（<xl）双形态互斥
+                    （CSS 显隐互斥，同挂不双显）；页级错误边界崩一屏不塌全端 */}
                 <div className="flex h-screen overflow-hidden">
                   <MerchantRail />
-                  <main className="min-w-0 flex-1 overflow-y-auto bg-canvas">
+                  <main className="min-w-0 flex-1 overflow-y-auto bg-canvas pb-[74px] xl:pb-0">
                     <PageErrorBoundary app="merchant">
                       <ProtectedRoutes />
                     </PageErrorBoundary>
                   </main>
+                  <ConsoleDock />
                 </div>
               </MerchantEventsProvider>
             </RequireMerchant>

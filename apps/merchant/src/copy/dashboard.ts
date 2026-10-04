@@ -109,6 +109,21 @@ const DASH_COPY_TABLE = {
   /* TodoSection 申诉计数行 */
   'dash.todoAppealLabel': '换绑申诉',
   'dash.todoAppealHint': '手机号换绑申诉，待协助核验',
+
+  /* ---- 片 5 段 1 · W-01 校形（M2 异常卡/M3 单店一栏/M4 合计条/wlist 双列/M6 晨报卡） ---- */
+  'dash.m3Title': '单店口径',
+  'dash.m3ChainNote': '多店三栏=连锁预留开口项，当前按单店口径呈现',
+  'dash.totalCap': '今日营业额',
+  'dash.totalPaidCell': '已收笔数',
+  'dash.totalUnpaidCell': '待收笔数',
+  'dash.sparkEmpty': '近 14 日营收曲线读口待接入，槽位预留不造假',
+  'dash.todayListTitle': '今日预约',
+  'dash.approvalListTitle': '审批',
+  'dash.approvalEmpty': '当前没有待审批事项',
+  'dash.postcardFigCap': '今日营业额 · 实时',
+  'dash.postcardRowBoarding': '在店寄养',
+  'dash.postcardRowTodo': '待办合计',
+  'dash.postcardRowOverdue': '超期寄养',
 } as const;
 
 export const DASH_COPY = withCopyOverrides(DASH_COPY_TABLE);

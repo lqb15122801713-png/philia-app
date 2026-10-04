@@ -3,11 +3,11 @@
  * 导航闭环体检（批次 W1 · 常备验收工具）：node scripts/check-nav-closure.mjs
  *
  * 来源：任务书 W1 §二冻结规则（每页①底栏常显 或 ②返回键+明确主出口；交易成功页双出口）
- *      + §五巡检地图（51 路由；后续批次申报补入，现 107 路由（含骨架批片 3 新增 8 行：商家 3 + 员工 5；骨架批片 4 新增 2 行：商家 2））+ §六 Harness 规格（四要素检测/死胡同判定）。
+ *      + §五巡检地图（51 路由；后续批次申报补入，现 109 路由（含骨架批片 3 新增 8 行：商家 3 + 员工 5；骨架批片 4 新增 2 行：商家 2；商家端控制台骨架批片 5 段 0 新增 2 行：商家 /matrix /console））+ §六 Harness 规格（四要素检测/死胡同判定）。
  *
  * 检测要素（页内真实渲染断言）：
  *   - back   返回键（页首左上 aria-label 含「返回」的可点区）
- *   - dock   底部工具栏（客户端 app-dock / 员工端 staff-dock / 商家端 merchant-rail 常驻导航）
+ *   - dock   底部工具栏（客户端 app-dock / 员工端 staff-dock / 商家端 merchant-rail（≥xl）或 merchant-dock（<xl）常驻导航）
  *   - home   首页链接（指向 /home 或底栏首页槽位）
  *   - exit   出口按钮/链接（返回|回首页|任务台|查看我的预约|查看订单|去逛逛|查看全程 类动作）
  * 判定（§六）：四者全无=死胡同（阻断，exit 1）；仅有链接形出口=弱（整改项，不阻断）；
@@ -59,7 +59,7 @@ const BROWSER = [
   '/usr/bin/microsoft-edge',
 ].filter(Boolean).find((p) => existsSync(p));
 
-/** 107 路由体检表（任务书 W1 §五巡检地图 51 路由 + 后续批次申报补入；expect: tab=主tab页 / sub=子页 / success=交易成功页 / gate=门禁豁免） */
+/** 109 路由体检表（任务书 W1 §五巡检地图 51 路由 + 后续批次申报补入；expect: tab=主tab页 / sub=子页 / success=交易成功页 / gate=门禁豁免） */
 const ROUTES = [
   /* 客户端 54 */
   { app: 'customer', path: '/home', expect: 'tab' },
@@ -144,6 +144,9 @@ const ROUTES = [
   /* 员工端骨架整建批 片 4 两条（expect=sub 照片 3 先例：rail 常驻导航即 dock 要素；clerk 守卫引导页） */
   { app: 'merchant', path: '/payroll', expect: 'sub', note: '片 4：薪资（owner|manager，墨轨「门店」组 rail-payroll 常驻）' },
   { app: 'merchant', path: '/xp-admin', expect: 'sub', note: '片 4：XP 审核（owner|manager，墨轨「门店」组 rail-xp-admin 常驻）' },
+  /* 商家端控制台骨架批 片 5 段 3 两条（expect=sub 照片 3/4 先例：rail≥xl/dock<xl 常驻导航即 dock 要素；clerk 守卫引导页） */
+  { app: 'merchant', path: '/matrix', expect: 'sub', note: '片 5 段 3：权限矩阵 W-14 真页（rail 管理组 rail-matrix / 手机 dock 常驻）' },
+  { app: 'merchant', path: '/console', expect: 'sub', note: '片 5 段 3：开发者管理端 W-16 聚合真页（rail foot rail-console / 手机 dock 常驻；旧三端口路由保留直达）' },
   { app: 'merchant', path: '/cashier', expect: 'sub' },
   { app: 'merchant', path: '/cashier/records', expect: 'sub' },
   { app: 'merchant', path: '/cashier/close', expect: 'sub' },
@@ -259,7 +262,7 @@ async function seedUserId(role) {
 /** 四要素检测表达式（页内执行） */
 const DETECT = `(() => {
   const back = !!document.querySelector('button[aria-label*="返回"], a[aria-label*="返回"]');
-  const dock = !!document.querySelector('[data-testid="app-dock"], [data-testid="staff-dock"], [data-testid="merchant-rail"]');
+  const dock = !!document.querySelector('[data-testid="app-dock"], [data-testid="staff-dock"], [data-testid="merchant-rail"], [data-testid="merchant-dock"]');
   const homeLink = !!document.querySelector('a[href="/home"], [data-testid="app-dock-home"], [data-testid="app-dock-首页"], [data-testid="staff-dock-today"]');
   const EXIT_RE = /返回|回首页|回到首页|任务台|查看我的预约|查看订单|查看全程|去逛逛|再逛逛/;
   let exitBtn = false, exitLink = false;
@@ -293,7 +296,7 @@ async function checkRoute(cdp, route) {
 }
 
 async function main() {
-  console.log('导航闭环体检（W1 §六 harness）：107 路由 · 四要素检测');
+  console.log('导航闭环体检（W1 §六 harness）：109 路由 · 四要素检测');
   const results = [];
   for (const app of ['customer', 'merchant', 'staff']) {
     const routes = ROUTES.filter((r) => r.app === app);

@@ -33,6 +33,7 @@ import {
 } from '../components/staff-admin/types';
 import { Empty, Field, inputCls, numStyle, Switch, toast, ToasterMount } from '../components/staff-admin/ui';
 import { st } from '../copy/settings';
+import { useMerchantRole } from '../lib/roles';
 
 /* ------------------------------------------------------------------ */
 /* 营业时间                                                             */
@@ -181,6 +182,7 @@ function ExpandRow({
 
 export default function SettingsPage() {
   const { trpc, queryClient } = usePhiliaClient();
+  const role = useMerchantRole();
 
   const meQuery = useQuery({ queryKey: ['auth', 'me', 'full'], queryFn: () => trpc.auth.me.query() });
   const store = meQuery.data?.store ?? null;
@@ -626,6 +628,39 @@ export default function SettingsPage() {
                 </Link>
               ))}
             </div>
+
+            {/* 端口入口（片 5 段 3 · W-15 槽位端口行：A5 槽位端口 + 文案端口；
+                owner-only 闸现状——rail foot 同径，非 owner 不渲染） */}
+            {role.isOwner ? (
+              <div className="u3-panel" data-testid="settings-port-entries">
+                <div className="u3-panel-head">
+                  <h3>{st('set.panelPorts')}</h3>
+                  <span className="aside">{st('set.portsAside')}</span>
+                </div>
+                {(
+                  [
+                    ['/settings/copy', st('set.entryCopy'), st('set.entryCopyHint'), 'entry-copy-port'],
+                    ['/settings/slots', st('set.entrySlots'), st('set.entrySlotsHint'), 'entry-slot-port'],
+                  ] as const
+                ).map(([to, title, hint, tid]) => (
+                  <Link
+                    key={to}
+                    to={to}
+                    data-testid={tid}
+                    className="flex items-center gap-3 border-t border-[rgba(59,46,36,.06)] px-[17px] py-[13px] text-caption transition-colors duration-150 hover:bg-[rgba(59,46,36,.03)]"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="text-ink">{title}</div>
+                      <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]">{hint}</div>
+                    </div>
+                    <span className="shrink-0 text-caption font-bold text-[rgba(59,46,36,.62)]">{st('set.entryGo')}</span>
+                  </Link>
+                ))}
+                <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                  {st('set.portBornNote')}
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       )}

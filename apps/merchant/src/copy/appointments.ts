@@ -37,6 +37,48 @@ const APPT_COPY_TABLE = {
 
   /* ---- 改期弹层（RescheduleSheet）---- */
   'appt.rescheduleEmpty': '未来 7 天暂无可约时段，请稍后再试或调整服务时长',
+
+  /* ---- 片 5 段 1 · W-02 校形（M5 台账七列 + 双归属口径注） ---- */
+  'appt.thCode': '核销码',
+  'appt.thPetService': '宠物 / 服务',
+  'appt.thStaff': '员工',
+  'appt.thTime': '时间',
+  'appt.thAmount': '金额',
+  'appt.thStatus': '状态',
+  'appt.thAction': '操作',
+  'appt.openDetail': '详情',
+  'appt.dualOwnerNote': '单据双归属：客户指定的洗护师会写在预约备注里传达门店，派单以门店安排为准',
+
+  /* ---- 片 5 段 1 · W-03 校形（fdot 状态流/操作钮组/提示卡/M7 folio） ---- */
+  'appt.infoTitle': '服务信息',
+  'appt.flowTitle': '状态流',
+  'appt.flowConfirm': '确认',
+  'appt.flowCheckin': '核销',
+  'appt.flowServing': '服务中',
+  'appt.flowBoarding': '寄养中',
+  'appt.flowDone': '完成',
+  'appt.flowPaid': '收款',
+  'appt.flowCancelled': '已取消',
+  'appt.flowPending': '待确认',
+  'appt.flowWaitCheckin': '待到店核销',
+  'appt.flowWaitPay': '待收款',
+  'appt.opsTitle': '操作',
+  'appt.hintTitle': '提示',
+  'appt.hintPending': '确认预约后等待客户到店，核销码见左侧服务信息',
+  'appt.hintReview': '客户申请取消本单，请在操作区审批',
+  'appt.hintPay': '服务已完成，登记收款后本单闭环',
+  'appt.hintReassign': '商家改派会覆盖自动派单结果并留痕，员工行来源签同步变更',
+  'appt.folioTitle': '金额',
+  'appt.folioAmount': '服务金额',
+  'appt.folioPayMode': '收款方式',
+  'appt.folioDiscount': '会员折扣',
+  'appt.folioDiscountPass': '次卡扣次',
+  'appt.folioDiscountNone': '无',
+  'appt.folioNet': '实收',
+  'appt.folioPayState': '支付状态',
+  'appt.folioPaid': '已收',
+  'appt.folioUnpaid': '待收款',
+  'appt.folioNotYet': '未收',
 } as const;
 
 export const APPT_COPY = withCopyOverrides(APPT_COPY_TABLE);

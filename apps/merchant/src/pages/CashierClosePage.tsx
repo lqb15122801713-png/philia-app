@@ -37,6 +37,7 @@ import {
   DayCloseList,
   RefundDayPanel,
   ShiftCard,
+  TenderSplitPanel,
 } from '@/components/cashier/DayClosePanels'
 import ImportLedgerPanel from '@/components/cashier/ImportLedgerPanel'
 import { REFUND_DAY_STATS_KEY, storeTodayStr } from '@/components/cashier/refund'
@@ -245,6 +246,9 @@ export default function CashierClosePage() {
           closing={closeShiftM.isPending}
           onCloseShift={openCloseShift}
         />
+
+        {/* W-07 序位①：M5 四分列（现金/微信/支付宝/储值 · R1 同源出口前置） */}
+        <TenderSplitPanel tender={tender} />
 
         {/* 日结表单（账面 vs 实点 · 差异红字 · 分列） */}
         <DayCloseForm
