@@ -1,20 +1,25 @@
 /**
- * 寄养管理（/boarding · U3 任务 G · 规格书 §6）
+ * 寄养管理 /boarding（W-05 · 片 5 段 1 校形）
  *
- * 结构：MainScaffold（副行真值三计数 + 柠檬「＋ 入住登记」）→ 房型卡行
- * （房名+单晚价+占用 N/间数+在店名·晚数，超期红字）→ 在店表（u3-panel +
- * u3-tbl：宠物+客户｜房型｜入住→退房｜进度 D N/M 晚｜今日打卡｜状态｜›）
- * + 选中详情侧栏（BoardingStayDetail，lg 右栏 / 窄屏下方展开，交互保留）。
+ * 区块序（UX-02 语言包 §四 W-05）：M3 四格（在店/今日入住/今日退房/超期红）
+ * → 房型卡行（现状保留：房名+单晚价+占用 N/间数+在店名·晚数）
+ * → M5 在店台账（现状 u3-tbl 表保留 + 选中详情侧栏交互保留）
+ * → M7 容量日历（WCapCal 首用：月格按日容量态 ok/tight/full/off——数据源=
+ *   store.boardingAvailability 月窗逐晚 remaining（≤31 晚硬闸内），容量=在架
+ *   房型 roomCount 合计、已住=capacity−remaining（预订口径，与 M3 在店口径
+ *   不同源，注记明面））
+ * → 疫苗硬规则置灰注（现状口径透出：员工端入住页透出疫苗有效期，过期不可
+ *   入住的置灰拦截以员工端为准）。
  *
  * 数据（全现成，零新接口）：
  * - boarding.stayBoard（merchant 本店在店看板：stay+appointment+pet+customer
  *   +lastLogDate+overdue）——在店表与占用聚合的数据源；
- * - store.boardingAvailability（public，入参 {storeId, from, to} 今晚 1 晚）——
- *   在架寄养房型 serviceId 与 roomCount（服务端已做 room_count 空值兜底）；
+ * - store.boardingAvailability（public，入参 {storeId, from, to}）——今晚 1 晚窗
+ *   给在架房型 serviceId 与 roomCount（房型卡）；本月整月窗给容量日历逐晚剩余；
  * - store.getWithServices（public）——房型名与单晚价（boardingAvailability
  *   不回 name/priceFen，两接口按 serviceId 拼合）。
  * 「今日打卡」= lastLogDate === 今日（YYYY-MM-DD 本地日界）；
- * 「今日退房」= scheduledEnd 日历日 = 今天。
+ * 「今日退房」= scheduledEnd 日历日 = 今天；「今日入住」= stay.createdAt 日历日 = 今天。
  *
  * 柠檬钮真实落点说明：入住登记链路在员工端（boarding.checkinStay 为
  * staffProcedure，商家端不可办；零新接口红线）——点击仅 toast 指引，不做假表单。
@@ -30,6 +35,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import MainScaffold, { LemonButton, QuietButton } from '../components/MainScaffold';
+import { WCapCal, type WCapCalDay } from '../components/skeleton';
 import BoardingStayRow from '../components/staff-admin/BoardingStayCard';
 import BoardingStayDetail from '../components/staff-admin/BoardingStayDetail';
 import { useMerchantEvents } from '../components/staff-admin/useMerchantEvents';
@@ -96,6 +102,20 @@ export default function BoardingPage() {
   const servicesQuery = useQuery({
     queryKey: ['store', 'getWithServices', storeId],
     queryFn: () => trpc.store.getWithServices.query({ storeId: storeId! }),
+    enabled: !!storeId,
+  });
+
+  // M7 容量日历：本月整月窗（首日至次月首日，晚数=当月天数 ≤31，接口硬闸内）
+  const calWindow = useMemo(() => {
+    const n = new Date();
+    return {
+      from: new Date(n.getFullYear(), n.getMonth(), 1),
+      to: new Date(n.getFullYear(), n.getMonth() + 1, 1),
+    };
+  }, []);
+  const calQuery = useQuery({
+    queryKey: ['store', 'boardingAvailability', 'capcal', storeId, calWindow.from.toISOString()],
+    queryFn: () => trpc.store.boardingAvailability.query({ storeId: storeId!, ...calWindow }),
     enabled: !!storeId,
   });
 
@@ -173,6 +193,39 @@ export default function BoardingPage() {
     [board, today],
   );
 
+  /* M3 四格派生：今日入住=stay.createdAt 日历日（入住登记真值）；超期=overdue 真值 */
+  const checkinToday = useMemo(
+    () => board.filter((r) => isToday(r.stay.createdAt)).length,
+    [board],
+  );
+  const overdueCount = useMemo(() => board.filter((r) => r.overdue).length, [board]);
+
+  /* M7 容量日历格：周一起手补位 + 逐日容量态（算法：容量=在架房型 roomCount 合计；
+     已住=Σ(roomCount−remaining[d])，口径=boardingAvailability 预订槽位；
+     满=已住≥容量，紧=已住/容量≥75%，余=ok；无在架房型/读口未回=off 置灰不造假） */
+  const calDays = useMemo<WCapCalDay[]>(() => {
+    const y = calWindow.from.getFullYear();
+    const m = calWindow.from.getMonth();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const leadPad = (new Date(y, m, 1).getDay() + 6) % 7; // 周一=0
+    const cells: WCapCalDay[] = Array.from({ length: leadPad }, () => ({ day: null }));
+    const services = calQuery.data?.services;
+    const capacity = (services ?? []).reduce((s, x) => s + x.roomCount, 0);
+    for (let d = 1; d <= daysInMonth; d += 1) {
+      let state: WCapCalDay['state'] = 'off';
+      if (services && capacity > 0) {
+        const occupied = services.reduce(
+          (s, x) => s + (x.roomCount - (x.remaining[d - 1] ?? x.roomCount)),
+          0,
+        );
+        state = occupied >= capacity ? 'full' : occupied / capacity >= 0.75 ? 'tight' : 'ok';
+      }
+      cells.push({ day: d, state });
+    }
+    return cells;
+  }, [calWindow, calQuery.data]);
+  const calMonthLabel = `${calWindow.from.getFullYear()}年${calWindow.from.getMonth() + 1}月`;
+
   const roomsLoading =
     (availQuery.isPending || servicesQuery.isPending) && !!storeId;
 
@@ -190,6 +243,38 @@ export default function BoardingPage() {
       }
       testid="boarding-page"
     >
+      <div className="wsk">
+        {/* M3 四格（在店/今日入住/今日退房/超期红）——永远第一屏第一位 */}
+        <div className="mb-[18px] grid grid-cols-2 gap-3.5 lg:grid-cols-4" data-testid="board-m3">
+          {boardQuery.isPending ? (
+            [0, 1, 2, 3].map((i) => (
+              <div className="wsk-card" key={i}>
+                <Skeleton className="h-3 w-14" />
+                <Skeleton className="mt-2.5 h-7 w-10" />
+              </div>
+            ))
+          ) : (
+            [
+              { key: 'inStore', label: bc('board.m3InStore'), value: board.length, red: false },
+              { key: 'checkin', label: bc('board.m3Checkin'), value: checkinToday, red: false },
+              { key: 'checkout', label: bc('board.m3Checkout'), value: checkoutToday, red: false },
+              { key: 'overdue', label: bc('board.m3Overdue'), value: overdueCount, red: overdueCount > 0 },
+            ].map((q) => (
+              <div className="wsk-card" key={q.key} data-testid={`board-m3-${q.key}`}>
+                <div className="text-[11px] font-semibold text-[rgba(59,46,36,.42)]">{q.label}</div>
+                <div
+                  className={`mt-1.5 font-number text-[26px] font-bold leading-8 tabular-nums${
+                    q.red ? ' text-[#B4502E]' : ''
+                  }`}
+                >
+                  {q.value}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
       {/* 房型卡行（.room 同工艺：纸面+ring+圆角 20，占用 Montserrat 20【试样所印 22 越字阶闸门，U4 映射】） */}
       {roomsLoading ? (
         /* 加载中骨架块（animate-pulse，禁转圈）：房型卡 = shared Skeleton 组合（底色归一 bg-sunken） */
@@ -334,6 +419,36 @@ export default function BoardingPage() {
             <BoardingStayDetail row={selected} />
           </div>
         ) : null}
+      </div>
+
+      {/* M7 容量日历（WCapCal 首用：月格按日容量态；口径注记明面） */}
+      <div className="wsk mt-[18px]">
+        {calQuery.isPending && storeId ? (
+          <section className="wsk-capcal" aria-label={bc('board.capCalLoading')}>
+            <Skeleton className="h-3.5 w-24" />
+            <div className="mt-3 grid grid-cols-7 gap-1">
+              {Array.from({ length: 35 }).map((_, i) => (
+                <Skeleton key={i} className="h-[40px] rounded-[10px]" />
+              ))}
+            </div>
+          </section>
+        ) : calQuery.isError ? (
+          <section className="wsk-card text-center">
+            <div className="text-caption text-[rgba(59,46,36,.62)]">{bc('board.capCalError')}</div>
+            <div className="mt-3 flex justify-center">
+              <QuietButton onClick={() => void calQuery.refetch()}>重试</QuietButton>
+            </div>
+          </section>
+        ) : (
+          <WCapCal
+            monthLabel={calMonthLabel}
+            weekdays={['一', '二', '三', '四', '五', '六', '日']}
+            days={calDays}
+          />
+        )}
+        <p className="wsk-note mt-2 px-1">{bc('board.capCalNote')}</p>
+        {/* 疫苗硬规则置灰注（现状校验口径透出：硬拦截在员工端入住页） */}
+        <p className="wsk-note mt-1 px-1 opacity-70">{bc('board.vaccineNote')}</p>
       </div>
     </MainScaffold>
   );

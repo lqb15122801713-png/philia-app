@@ -1,13 +1,19 @@
 /**
- * U3 任务 A · MerchantRail 墨轨（商家端全域唯一导航，冻结决策 #21 案 A）
+ * 商家端控制台骨架批 · 片 5 段 0：MerchantRail M1 深棕导航轨重建
+ * （UX-02 两端定稿语言包 V1.1 §一.4 十五口冻结结构，9-27 老板拍板转正）。
  *
- * 规格书 §0：宽 190px 深棕墨底（#3B2E24，与客户端 GUARDIAN 墨卡同族）；
- * wordmark + 4 组直达（总览｜履约[预约/寄养/监控]｜商城[收银台/日结/退款/
- * 订单/商品]｜门店[会员·次卡/员工/财务/设置]）+ 底部门店/店主卡（auth.me 真值）。
- * 当前项=淡金 14% 底+淡金字（v2.0 §1.1 --gold；柠檬黄时代清场）；
- * 分组小标题 11px 宽距 35% 透明（纸白 #FAF8F2 谱系透明，旧暖墨谱系清场）。
- * 无 TabBar（冻结）、无二级菜单、不折叠。按下 scale 0.92 + 120ms（动效纲领）。
- * 触件 ≥44（min-h）；超高视口不足时轨内纵向滚动，入口可达性不降。
+ * 结构（冻结，改=新裁定）：
+ * - 经营：总览·驾驶舱 / 门店端·预约 / 寄养 / 收银台 / 日结 / 退款；
+ * - 商城：商城订单 / 商品 / 会员·次卡；
+ * - 管理：员工 / 审批中心 / 监控 Hub / 报表 / 权限矩阵 / 门店档案·设置；
+ * - 批次扩口（第四组明面列示不删）：排班 / 运营（与审批中心同屏注记合一）/ 薪资 / XP 审核；
+ * - foot=开发者管理端 /console（owner-only 规则配置/文案端口/槽位端口三口收编为其子行）。
+ *
+ * 规格（§二 M1）：宽 236px 深棕渐变 160°（tokens.gradients.philiaRail）；
+ * 激活=淡金 3px 左条+浅金底；bd 角标=赭红胶囊（异常计数槽，数据源先留 props 空态）；
+ * 分组签 mono 8.5 宽距。样式全在 styles/console.css（.wrail）。
+ * 断点：<xl 藏形走 ConsoleDock（桌面 rail/手机 dock 双形态互斥）。
+ * clerk 分流保留（矩阵总规则②）：仅「收银台」单口。
  */
 
 import { NavLink } from 'react-router-dom';
@@ -25,9 +31,11 @@ import {
   ReceiptText,
   RotateCcw,
   Settings,
+  ShieldCheck,
   ShoppingBag,
   SlidersHorizontal,
   Sparkles,
+  SquareTerminal,
   Type,
   CreditCard,
   Users,
@@ -37,79 +45,85 @@ import { usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { roleLabelCn, useMerchantRole, type MerchantRole } from '@/lib/roles';
 import { cp } from '@/copy/copyPort';
+import { cc } from '@/copy/console';
 
-type RailItem = { to: string; label: string; icon: typeof House; testid: string };
+type RailItem = {
+  to: string;
+  key: string;
+  label: string;
+  icon: typeof House;
+  testid: string;
+  /** 激活口径=精确匹配（子路径不联动高亮，如 /cashier vs /cashier/close） */
+  end?: boolean;
+  /** 行下 mono 注记（如批次扩口「运营」与审批中心同屏注记合一） */
+  sub?: string;
+};
+
+type RailGroup = { key: string; label: string | null; note?: string; items: RailItem[] };
 
 /**
- * M1-补2 G：墨轨按角色分流（矩阵总规则② 店员不见流水与看板）：
- * - clerk：仅「收银台」工作面入口（单组单项，组标收起）；
- * - owner/manager：现状四组不动，「商城」组收银台下方插「日结」（R3 交接班/日结页）。
+ * 角色分流：clerk=仅收银台工作面（总规则②）；owner/manager=十五口+批次扩口+foot。
  */
-function groupsFor(role: MerchantRole): Array<{ label: string | null; items: RailItem[] }> {
+function groupsFor(role: MerchantRole): RailGroup[] {
   if (role.isClerk) {
     return [
       {
+        key: 'clerk',
         label: null,
-        items: [{ to: '/cashier', label: '收银台', icon: Calculator, testid: 'rail-cashier' }],
+        items: [{ to: '/cashier', key: 'cashier', label: cc('wnav.cashier'), icon: Calculator, testid: 'rail-cashier', end: true }],
       },
     ];
   }
   return [
-    { label: null, items: [{ to: '/dashboard', label: '总览', icon: House, testid: 'rail-dashboard' }] },
     {
-      label: '履约',
+      key: 'ops',
+      label: cc('wnav.groupOps'),
       items: [
-        { to: '/appointments', label: '预约', icon: CalendarDays, testid: 'rail-appointments' },
-        { to: '/boarding', label: '寄养', icon: BedDouble, testid: 'rail-boarding' },
-        { to: '/monitor', label: '监控', icon: MonitorDot, testid: 'rail-monitor' },
+        { to: '/dashboard', key: 'dashboard', label: cc('wnav.overview'), icon: House, testid: 'rail-dashboard', end: true },
+        { to: '/appointments', key: 'appointments', label: cc('wnav.appts'), icon: CalendarDays, testid: 'rail-appointments' },
+        { to: '/boarding', key: 'boarding', label: cc('wnav.boarding'), icon: BedDouble, testid: 'rail-boarding' },
+        { to: '/cashier', key: 'cashier', label: cc('wnav.cashier'), icon: Calculator, testid: 'rail-cashier', end: true },
+        { to: '/cashier/close', key: 'close', label: cc('wnav.close'), icon: BookCheck, testid: 'rail-cashier-close', end: true },
+        { to: '/cashier/refunds', key: 'refunds', label: cc('wnav.refunds'), icon: RotateCcw, testid: 'rail-refunds', end: true },
       ],
     },
     {
-      label: '商城',
+      key: 'mall',
+      label: cc('wnav.groupMall'),
       items: [
-        // 批次 M1：收银台=商城组首位（任务书 §1.7，lucide Calculator）
-        { to: '/cashier', label: '收银台', icon: Calculator, testid: 'rail-cashier' },
-        // M1-补2 C：日结/交接班页（owner|manager 可见；clerk 无入口）
-        { to: '/cashier/close', label: '日结', icon: BookCheck, testid: 'rail-cashier-close' },
-        // 批次 R12 退款专项：退款单列表页（owner|manager 可见；clerk 无入口）
-        { to: '/cashier/refunds', label: '退款', icon: RotateCcw, testid: 'rail-refunds' },
-        { to: '/orders', label: '订单', icon: ShoppingBag, testid: 'rail-orders' },
-        { to: '/products', label: '商品', icon: Package, testid: 'rail-products' },
+        { to: '/orders', key: 'orders', label: cc('wnav.orders'), icon: ShoppingBag, testid: 'rail-orders' },
+        { to: '/products', key: 'products', label: cc('wnav.products'), icon: Package, testid: 'rail-products' },
+        { to: '/pass', key: 'pass', label: cc('wnav.pass'), icon: CreditCard, testid: 'rail-pass' },
       ],
     },
     {
-      label: '门店',
+      key: 'admin',
+      label: cc('wnav.groupAdmin'),
       items: [
-        { to: '/pass', label: '会员·次卡', icon: CreditCard, testid: 'rail-pass' },
-        { to: '/staff', label: '员工', icon: Users, testid: 'rail-staff' },
-        // 员工端骨架整建批 片 2：排班管理（owner/manager 可见；clerk 经 groupsFor 分流不见本组）
-        { to: '/settings/schedules', label: '排班', icon: CalendarRange, testid: 'rail-schedules' },
-        // 员工端骨架整建批 片 3：运营（PDCA 闭环+自检审核+巡检汇总；owner/manager 可见）
-        { to: '/ops', label: '运营', icon: ClipboardCheck, testid: 'rail-ops' },
-        // 员工端骨架整建批 片 4：薪资管理（工资条+申诉审批+罚单录入；owner/manager 可见）
-        { to: '/payroll', label: '薪资', icon: Wallet, testid: 'rail-payroll' },
-        // 员工端骨架整建批 片 4：XP 审核（积分申报+扣分异议；owner/manager 可见）
-        { to: '/xp-admin', label: 'XP 审核', icon: Sparkles, testid: 'rail-xp-admin' },
-        { to: '/finance', label: '财务', icon: ReceiptText, testid: 'rail-finance' },
-        { to: '/settings', label: '设置', icon: Settings, testid: 'rail-settings' },
-        // 批次 员工端2.0 R9-F：规则配置管理端口（仅 owner 可见入口；server 端 merchantOwnerProcedure 硬闸门）
-        ...(role.isOwner
-          ? [{ to: '/settings/rules', label: '规则配置', icon: SlidersHorizontal, testid: 'rail-rules-config' }]
-          : []),
-        // 端口批片 B：文案端口（仅 owner 可见入口；label 走端口文案键 copyport.pageTitle）
-        ...(role.isOwner
-          ? [{ to: '/settings/copy', label: cp('copyport.pageTitle'), icon: Type, testid: 'rail-copy-config' }]
-          : []),
-        // 端口批片 C：槽位端口（仅 owner 可见入口；label 走端口文案键 slotport.pageTitle）
-        ...(role.isOwner
-          ? [{ to: '/settings/slots', label: cp('slotport.pageTitle'), icon: Image, testid: 'rail-slot-port' }]
-          : []),
+        { to: '/staff', key: 'staff', label: cc('wnav.staff'), icon: Users, testid: 'rail-staff' },
+        { to: '/ops', key: 'opsCenter', label: cc('wnav.ops'), icon: ClipboardCheck, testid: 'rail-ops' },
+        { to: '/monitor', key: 'monitor', label: cc('wnav.monitor'), icon: MonitorDot, testid: 'rail-monitor' },
+        { to: '/finance', key: 'finance', label: cc('wnav.finance'), icon: ReceiptText, testid: 'rail-finance' },
+        { to: '/matrix', key: 'matrix', label: cc('wnav.matrix'), icon: ShieldCheck, testid: 'rail-matrix', end: true },
+        { to: '/settings', key: 'settings', label: cc('wnav.settings'), icon: Settings, testid: 'rail-settings', end: true },
+      ],
+    },
+    {
+      // 批次扩口：现状多 4 口保留明面列示不删（转正后归并；运营与审批中心同屏注记合一）
+      key: 'batch',
+      label: cc('wnav.groupBatch'),
+      note: cc('wnav.batchNote'),
+      items: [
+        { to: '/settings/schedules', key: 'schedules', label: cc('wnav.schedules'), icon: CalendarRange, testid: 'rail-schedules', end: true },
+        { to: '/ops', key: 'opsBatch', label: cc('wnav.opsBatch'), icon: ClipboardCheck, testid: 'rail-ops-batch', sub: cc('wnav.opsBatchNote') },
+        { to: '/payroll', key: 'payroll', label: cc('wnav.payroll'), icon: Wallet, testid: 'rail-payroll' },
+        { to: '/xp-admin', key: 'xpAdmin', label: cc('wnav.xpAdmin'), icon: Sparkles, testid: 'rail-xp-admin' },
       ],
     },
   ];
 }
 
-export default function MerchantRail() {
+export default function MerchantRail({ badges }: { badges?: Record<string, number> }) {
   const { trpc } = usePhiliaClient();
   const role = useMerchantRole();
   const meQ = useQuery({
@@ -123,48 +137,70 @@ export default function MerchantRail() {
   const groups = groupsFor(role);
 
   return (
-    <nav
-      data-testid="merchant-rail"
-      className="flex h-full w-[56px] shrink-0 flex-col overflow-y-auto bg-ink px-1.5 py-[18px] text-[rgba(250,248,242,.72)] xl:w-[190px] xl:px-3"
-    >
-      {/* M1 收银台 390 降级配套：xl 以下图标轨（字标/组标/底卡收起，导航可达性保留），xl 起完整 190px */}
-      <div className="hidden px-2.5 pb-4 pt-1.5 font-display text-title font-bold tracking-[.05em] text-[#FAF8F2] xl:block">
-        PHILIA
-      </div>
-      <div className="pb-3 pt-1.5 text-center font-display text-title font-bold text-brand-primary xl:hidden" aria-hidden>
-        P
-      </div>
+    <nav data-testid="merchant-rail" className="wrail" aria-label="主导航">
+      <div className="wm">PHILIA</div>
       {groups.map((g) => (
-        <div key={g.label ?? 'top'}>
+        <div key={g.key}>
           {g.label ? (
-            <div className="hidden px-2.5 pb-1.5 pt-3.5 text-caption-xs tracking-[.14em] text-[rgba(250,248,242,.35)] xl:block">
+            <div className="gp">
               {g.label}
+              {g.note ? <span className="nt">{g.note}</span> : null}
             </div>
           ) : null}
-          {g.items.map(({ to, label, icon: Icon, testid }) => (
+          {g.items.map(({ to, key, label, icon: Icon, testid, end, sub }) => (
             <NavLink
-              key={to}
+              key={`${to}-${key}`}
               to={to}
+              end={end}
               data-testid={testid}
               title={label}
-              className={({ isActive }) =>
-                `mb-0.5 flex min-h-[44px] items-center justify-center gap-2.5 rounded-chip px-0 py-[9px] text-caption font-medium transition-transform duration-120 ease-philia-spring active:scale-92 xl:justify-start xl:px-2.5 ${
-                  isActive ? 'bg-[rgba(242,223,166,.14)] font-semibold text-brand-primary' : ''
-                }`
-              }
+              className={({ isActive }) => `it${isActive ? ' on' : ''}`}
             >
-              <Icon className="h-[19px] w-[19px]" strokeWidth={1.6} aria-hidden />
-              <span className="hidden xl:inline">{label}</span>
+              <Icon strokeWidth={1.6} aria-hidden />
+              <span>
+                {label}
+                {sub ? <span className="sub">{sub}</span> : null}
+              </span>
+              {(badges?.[key] ?? 0) > 0 ? (
+                <span className="bd" data-testid={`${testid}-badge`} aria-label={`${badges![key]} 条待处理`}>
+                  {badges![key]! > 99 ? '99+' : badges![key]}
+                </span>
+              ) : null}
             </NavLink>
           ))}
         </div>
       ))}
-      {/* 底部：门店/账号卡（真值；M1-补2 G：三级账号角色签） */}
-      <div className="mt-auto hidden px-2.5 py-2.5 text-caption-xs leading-relaxed text-[rgba(250,248,242,.4)] xl:block" data-testid="rail-foot">
-        {storeName}
-        <br />
-        {roleLabel} · {ownerName}
-      </div>
+      {/* foot=开发者管理端（owner-only 三端口收编为其子行；clerk 经 groupsFor 分流不见） */}
+      {!role.isClerk ? (
+        <div className="ft" data-testid="rail-foot">
+          <div className="gp">{cc('wnav.footConsole')}</div>
+          <NavLink to="/console" end data-testid="rail-console" title={cc('wnav.footConsole')} className={({ isActive }) => `it${isActive ? ' on' : ''}`}>
+            <SquareTerminal strokeWidth={1.6} aria-hidden />
+            <span>{cc('wnav.footConsole')}</span>
+          </NavLink>
+          {role.isOwner ? (
+            <>
+              <NavLink to="/settings/rules" end data-testid="rail-rules-config" title={cc('wnav.footRules')} className={({ isActive }) => `it${isActive ? ' on' : ''}`}>
+                <SlidersHorizontal strokeWidth={1.6} aria-hidden />
+                <span>{cc('wnav.footRules')}</span>
+              </NavLink>
+              <NavLink to="/settings/copy" end data-testid="rail-copy-config" title={cp('copyport.pageTitle')} className={({ isActive }) => `it${isActive ? ' on' : ''}`}>
+                <Type strokeWidth={1.6} aria-hidden />
+                <span>{cp('copyport.pageTitle')}</span>
+              </NavLink>
+              <NavLink to="/settings/slots" end data-testid="rail-slot-port" title={cp('slotport.pageTitle')} className={({ isActive }) => `it${isActive ? ' on' : ''}`}>
+                <Image strokeWidth={1.6} aria-hidden />
+                <span>{cp('slotport.pageTitle')}</span>
+              </NavLink>
+            </>
+          ) : null}
+          <div className="card">
+            {storeName}
+            <br />
+            {roleLabel} · {ownerName}
+          </div>
+        </div>
+      ) : null}
     </nav>
   );
 }

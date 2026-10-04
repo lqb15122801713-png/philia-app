@@ -44,6 +44,9 @@ type VersionRow = VersionsOut['versions'][number];
 
 type RulesDomain = 'commission' | 'xp' | 'duration' | 'member_plans' | 'refund';
 
+/* 片 5 段 3（W-16 共构不分叉）：域类型与域面板导出，供 ConsolePage 按域直嵌（不复制码） */
+export type { RulesDomain };
+
 const DOMAIN_TABS: Array<{ key: RulesDomain; label: string }> = [
   { key: 'commission', label: '提成与绩效' },
   { key: 'xp', label: 'XP 成长' },
@@ -915,7 +918,9 @@ function NumInput({
 /* 域面板（每个页签一份：规则编辑 + 保存条 + 重确认弹层 + 修改留痕）          */
 /* ------------------------------------------------------------------ */
 
-function DomainPanel({ domain }: { domain: RulesDomain }) {
+/* 片 5 段 3（W-16 共构不分叉）：export 供 ConsolePage 按域直嵌（单域面板=规则编辑+
+   保存条+重确认弹层+留痕；页签条/ToasterMount 由宿主页挂） */
+export function DomainPanel({ domain }: { domain: RulesDomain }) {
   const { trpc, queryClient } = usePhiliaClient();
 
   const rulesQuery = useQuery({

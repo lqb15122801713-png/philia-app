@@ -15,6 +15,12 @@ const PRODUCT_COPY_TABLE = {
   'prod.subFallback': '门店商品库存、价格与上下架',
   'prod.createCta': '＋ 新增商品',
   'prod.emptyTitle': '货架空空，去上架第一件商品',
+  /* ---- W-10 校形：CSV 入口置灰待供给 + M5 台账日盘档（≥¥100 日盘门槛） ---- */
+  'prod.csvCta': 'CSV 导入',
+  'prod.csvPendingNote': '待供给——CSV 导入端口未开口，留位不画假件',
+  'prod.dailyCountCol': '日盘档',
+  'prod.dailyCountYes': '日盘',
+  'prod.dailyCountNote': '日盘档=单价 ≥¥100 商品每日盘点门槛（S-08 同口径）',
 } as const;
 
 export const PRODUCT_COPY = withCopyOverrides(PRODUCT_COPY_TABLE);

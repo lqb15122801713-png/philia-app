@@ -1,26 +1,32 @@
 /**
- * 员工 /staff（U3 批次 · 任务 K · 规格书 §10 · 母本试样 608-657 行 / .staff-card CSS 133-140）
+ * 员工 /staff（商家端控制台骨架批 · 片 5 段 3 · W-12 校形；底版=U3 批次任务 K）
  *
- * 数据源：store.staffList（员工 + 岗位角色 + 技能 + 排班 + 绩效聚合：完成单数/好评率/平均分）。
- * 布局：MainScaffold（title 员工 / sub 在职·角色计数·S4 派单口径 / 主钮「＋ 邀请员工」）
- * → u3-panel 行式员工卡（staff-card 工艺：42 圆头像占位 + 名 + 角色签（美容师=livetag 同族 /
- * 前台=浅木，u3-chip 圆角 6）+ 绩效行 + 右侧排班摘要（周模板压缩「一至五 09:00–18:00」+休日）
- * + 在班态（今日排班覆盖当前时刻→今日在班）+「编辑 ›」）。
+ * 区块序（UX-02 语言包 §四 W-12）：
+ *   wtop（MainScaffold + G2 邀请主钮，现状入口原位）
+ *   → M5 台账（u3-panel + u3-tbl：员工 / 角色 pill2（WPill 双态：美容师=hot /
+ *     前台=gold）/ 技能 / 排班摘要（可点→排班编辑器）/ 考勤列（在班态真值 +
+ *     当日打卡异常红字=attendance.exceptionQueue 本月 flagged 记录；「应班未
+ *     打卡」店级读口待补，不画假件）/ 状态 / 操作）
+ *   → 权限口径卡（提成仅本人可见注 + 链 /matrix）。
  *
- * 真链路（全部保留）：
+ * 真链路（全部原位保留）：
  * - 邀请：InviteStaffDialog → store.inviteStaff（24h 明文码一次展示 + 复制）；
  * - 「编辑 ›」→ EditStaffDialog → store.updateStaff（角色 + 在职状态）；
- * - 排班摘要块（可点）→ ScheduleEditorDialog → store.setSchedule（周模板）；
- * - 停职行 55% 透明 +「启用 ›」→ store.updateStaff status=active（部分更新，role 不动）。
+ * - 排班摘要格（可点）→ ScheduleEditorDialog → store.setSchedule（周模板）；
+ * - 停职行 55% 透明 +「启用 ›」→ store.updateStaff status=active（部分更新，role 不动）；
+ * - 离职交接：ExitHandoffDialog（改挂未完结单 + 交接留痕，testid staff-exit-* 不动）。
  *
  * 口径备注：stats.completedCount 为全部已完成预约聚合（接口无「本月」维度），
- * 故绩效行写「完成 N 单」不挂「本月」字样，避免口径虚标。
+ * 绩效数字不挂「本月」字样，避免口径虚标；考勤红字只染「当日打卡异常（防代打
+ * 标记）」真值，未打卡红字待店级读口补齐（列下注明）。
  */
 
 import { Skeleton, usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import MainScaffold, { LemonButton, QuietButton } from '../components/MainScaffold';
+import { WPill } from '../components/skeleton';
 import EditStaffDialog from '../components/staff-admin/EditStaffDialog';
 import ExitHandoffDialog from '../components/staff-admin/ExitHandoffDialog';
 import InviteStaffDialog from '../components/staff-admin/InviteStaffDialog';
@@ -31,6 +37,7 @@ import { sf } from '../copy/staff';
 import {
   DAY_KEYS,
   DAY_SHORT,
+  SKILL_LABEL,
   STAFF_ROLE_LABEL,
   type DayKey,
   type StaffRow,
@@ -100,22 +107,9 @@ function joinMonth(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
-/* ------------------------------------------------------------------ */
-/* 角色签（美容师=livetag 同族 #2E2318 底淡金字 / 前台=浅木 #B9A482 底墨字 · 圆角 6） */
-/* ------------------------------------------------------------------ */
-
-function RoleChip({ role }: { role: string }) {
-  const front = role === 'frontdesk';
-  return (
-    <span
-      className={`rounded-chip px-[7px] py-[2px] text-caption-xs font-bold ${
-        front ? 'text-ink' : 'text-[#F2DFA6]'
-      }`}
-      style={{ background: front ? '#B9A482' : '#2E2318' }}
-    >
-      {STAFF_ROLE_LABEL[role] ?? role}
-    </span>
-  );
+/** 本地日界 YYYY-MM-DD（与 attendance 记录 date 列同口径） */
+function localDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 /* ------------------------------------------------------------------ */
@@ -127,6 +121,13 @@ export default function StaffPage() {
   const staffQuery = useQuery({
     queryKey: ['store', 'staffList'],
     queryFn: () => trpc.store.staffList.query(),
+  });
+  // 考勤红字数据源（merchantManager 本店读口）：本月 flagged（防代打标记）记录；
+  // 只取「当日」行染红——「应班未打卡」无店级读口，不画假件（列下注明）
+  const attQuery = useQuery({
+    queryKey: ['attendance', 'exceptionQueue', 'staff-ledger'],
+    queryFn: () => trpc.attendance.exceptionQueue.query(),
+    enabled: (staffQuery.data?.staff?.length ?? 0) > 0,
   });
   const [inviteOpen, setInviteOpen] = useState(false);
   const [scheduleFor, setScheduleFor] = useState<StaffRow | null>(null);
@@ -142,6 +143,14 @@ export default function StaffPage() {
   const active = staff.filter((s) => s.status === 'active');
   const groomerCount = active.filter((s) => s.role === 'groomer').length;
   const frontdeskCount = active.filter((s) => s.role === 'frontdesk').length;
+
+  /** 当日打卡异常员工集合（flagged 且 date=今日） */
+  const todayStr = localDateStr(new Date());
+  const flaggedToday = new Set(
+    (attQuery.data?.flaggedRecords ?? [])
+      .filter((r) => r.date === todayStr)
+      .map((r) => r.staffId),
+  );
 
   const enableStaff = async (s: StaffRow) => {
     setEnablingId(s.id);
@@ -163,135 +172,195 @@ export default function StaffPage() {
       actions={<LemonButton onClick={() => setInviteOpen(true)}>{sf('staff.inviteCta')}</LemonButton>}
       testid="staff-page"
     >
-      <ToasterMount />
+      <div className="wsk">
+        <ToasterMount />
 
-      <div className="u3-panel">
-        <div className="u3-panel-head">
-          <h3>在职员工</h3>
-          <span className="aside">{sf('staff.panelAside')}</span>
+        {/* M5 台账 */}
+        <div className="u3-panel">
+          <div className="u3-panel-head">
+            <h3>在职员工</h3>
+            <span className="aside">{sf('staff.panelAside')}</span>
+          </div>
+
+          {staffQuery.isPending ? (
+            // 加载中骨架块（animate-pulse，禁转圈）：三行台账脉冲 = shared Skeleton 组合
+            <div aria-label="加载中">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-[13px] border-t border-[rgba(59,46,36,.06)] px-[17px] py-3"
+                >
+                  <Skeleton className="h-[42px] w-[42px] rounded-full" />
+                  <div className="flex-1">
+                    <Skeleton className="h-3.5 w-28 rounded-chip" />
+                    <Skeleton className="mt-2 h-3 w-44 rounded-chip" />
+                  </div>
+                  <Skeleton className="h-3 w-32 rounded-chip" />
+                </div>
+              ))}
+            </div>
+          ) : staffQuery.isError ? (
+            <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
+              <p className="text-body-sm text-[rgba(59,46,36,.62)]">员工列表加载失败，请检查网络后重试</p>
+              <div className="mt-4">
+                <QuietButton onClick={() => void staffQuery.refetch()}>重新加载</QuietButton>
+              </div>
+            </div>
+          ) : staff.length === 0 ? (
+            <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
+              <p className="text-body-sm text-[rgba(59,46,36,.62)]">{sf('staff.empty')}</p>
+              <div className="mt-4">
+                <LemonButton onClick={() => setInviteOpen(true)}>{sf('staff.emptyCta')}</LemonButton>
+              </div>
+            </div>
+          ) : (
+            <table className="u3-tbl">
+              <thead>
+                <tr>
+                  <th>员工</th>
+                  <th>角色</th>
+                  <th>技能</th>
+                  <th>排班摘要</th>
+                  <th>考勤</th>
+                  <th>状态</th>
+                  <th aria-label="操作" />
+                </tr>
+              </thead>
+              <tbody>
+                {staff.map((s) => {
+                  const suspended = s.status !== 'active';
+                  const duty = todayStatus(s.schedule);
+                  const flagged = flaggedToday.has(s.id);
+                  return (
+                    <tr key={s.id} style={suspended ? { opacity: 0.55 } : undefined}>
+                      {/* 员工（头像占位 + 名 + 入职/绩效行） */}
+                      <td>
+                        <div className="flex items-center gap-[13px]">
+                          <span className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-full bg-[rgba(59,46,36,.12)]" />
+                          <div className="min-w-0">
+                            <div className="text-body-sm font-bold text-ink">{s.name}</div>
+                            <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.62)]">
+                              {suspended ? (
+                                <>
+                                  入职 <span className="u1-num">{joinMonth(s.createdAt)}</span> · {sf('staff.suspendedNote')}
+                                </>
+                              ) : (
+                                <>
+                                  入职 <span className="u1-num">{joinMonth(s.createdAt)}</span> · 完成{' '}
+                                  <span className="u1-num">{s.stats.completedCount}</span> 单 · 好评{' '}
+                                  <span className="u1-num">
+                                    {s.stats.goodRate !== null ? `${Math.round(s.stats.goodRate * 100)}%` : '—'}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      {/* 角色 pill2（双态：美容师=hot 深棕底淡金字 / 前台=gold 淡黄底） */}
+                      <td>
+                        <WPill tone={s.role === 'frontdesk' ? 'gold' : 'hot'}>
+                          {STAFF_ROLE_LABEL[s.role] ?? s.role}
+                        </WPill>
+                      </td>
+                      {/* 技能 */}
+                      <td className="text-[rgba(59,46,36,.62)]">
+                        {s.skills && s.skills.length > 0
+                          ? s.skills.map((k) => SKILL_LABEL[k] ?? k).join('、')
+                          : '—'}
+                      </td>
+                      {/* 排班摘要（点击 → 排班编辑器，setSchedule 真链路） */}
+                      <td>
+                        <button
+                          type="button"
+                          onClick={() => setScheduleFor(s)}
+                          className="rounded-chip px-2 py-1 text-left transition-colors duration-150 hover:bg-[rgba(59,46,36,.04)]"
+                          aria-label={`编辑${s.name}的排班`}
+                        >
+                          <span className="u1-num text-caption-xs text-[rgba(59,46,36,.62)]">
+                            {weekSummary(s.schedule)}
+                          </span>
+                        </button>
+                      </td>
+                      {/* 考勤（在班态真值；当日打卡异常红字=flagged 真值） */}
+                      <td>
+                        {suspended ? (
+                          <span className="text-caption-xs text-[rgba(59,46,36,.42)]">—</span>
+                        ) : flagged ? (
+                          <span className="text-caption-xs font-bold text-danger-deep">{sf('staff.attFlagged')}</span>
+                        ) : (
+                          <span
+                            className={`u1-num text-caption-xs ${
+                              duty.onDuty ? 'font-semibold text-ink' : 'text-[rgba(59,46,36,.42)]'
+                            }`}
+                          >
+                            {duty.label}
+                          </span>
+                        )}
+                      </td>
+                      {/* 状态 */}
+                      <td>
+                        {suspended ? (
+                          <span className="u3-st done">已停职</span>
+                        ) : (
+                          <span className="u3-st live">在职</span>
+                        )}
+                      </td>
+                      {/* 操作（纯文字 12/700 墨字；按下 120ms） */}
+                      <td>
+                        <span className="flex shrink-0 items-center gap-2.5">
+                          {/* 片 3 B7-4：离职交接（改挂未完结单 + 留痕；停职本体在「编辑 ›」） */}
+                          <button
+                            type="button"
+                            onClick={() => setExitFor(s)}
+                            data-testid={`staff-exit-${s.id}`}
+                            className="text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                          >
+                            {sf('staff.exitCta')}
+                          </button>
+                          {suspended ? (
+                            <button
+                              type="button"
+                              disabled={enablingId === s.id}
+                              onClick={() => void enableStaff(s)}
+                              className="text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+                            >
+                              {enablingId === s.id ? '启用中…' : '启用 ›'}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setEditFor(s)}
+                              className="text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                            >
+                              编辑 ›
+                            </button>
+                          )}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+          {!staffQuery.isPending && !staffQuery.isError && staff.length > 0 ? (
+            <p className="wsk-note border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5">
+              {sf('staff.attNote')}
+            </p>
+          ) : null}
         </div>
 
-        {staffQuery.isPending ? (
-          // 加载中骨架块（animate-pulse，禁转圈）：三条脉冲行 = shared Skeleton 组合
-          <div aria-label="加载中">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="flex items-center gap-[13px] border-t border-[rgba(59,46,36,.06)] px-[17px] py-3"
-              >
-                <Skeleton className="h-[42px] w-[42px] rounded-full" />
-                <div className="flex-1">
-                  <Skeleton className="h-3.5 w-28 rounded-chip" />
-                  <Skeleton className="mt-2 h-3 w-44 rounded-chip" />
-                </div>
-                <Skeleton className="h-3 w-32 rounded-chip" />
-              </div>
-            ))}
+        {/* 权限口径卡（提成仅本人可见注 + 链 /matrix） */}
+        <section className="wsk-card mt-3.5" data-testid="staff-perm-card">
+          <div className="wsk-hd">
+            <span className="t">{sf('staff.permTitle')}</span>
+            <Link className="wsk-go" to="/matrix">
+              {sf('staff.permLink')}
+            </Link>
           </div>
-        ) : staffQuery.isError ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">员工列表加载失败，请检查网络后重试</p>
-            <div className="mt-4">
-              <QuietButton onClick={() => void staffQuery.refetch()}>重新加载</QuietButton>
-            </div>
-          </div>
-        ) : staff.length === 0 ? (
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{sf('staff.empty')}</p>
-            <div className="mt-4">
-              <LemonButton onClick={() => setInviteOpen(true)}>{sf('staff.emptyCta')}</LemonButton>
-            </div>
-          </div>
-        ) : (
-          staff.map((s) => {
-            const suspended = s.status !== 'active';
-            const duty = todayStatus(s.schedule);
-            return (
-              <div
-                key={s.id}
-                className="flex items-center gap-[13px] border-t border-[rgba(59,46,36,.06)] px-[17px] py-3 text-caption"
-                style={suspended ? { opacity: 0.55 } : undefined}
-              >
-                {/* 头像 42 圆（staff 表无 avatarUrl 字段 → 试样占位口径：纯墨 12% 圆，不堆图标） */}
-                <span className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-full bg-[rgba(59,46,36,.12)]" />
-
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-body-sm font-bold text-ink">{s.name}</span>
-                    <RoleChip role={s.role} />
-                  </div>
-                  <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.62)]">
-                    {suspended ? (
-                      <>
-                        入职 <span className="u1-num">{joinMonth(s.createdAt)}</span> · {sf('staff.suspendedNote')}
-                      </>
-                    ) : (
-                      <>
-                        入职 <span className="u1-num">{joinMonth(s.createdAt)}</span> · 完成{' '}
-                        <span className="u1-num">{s.stats.completedCount}</span> 单 · 好评{' '}
-                        <span className="u1-num">
-                          {s.stats.goodRate !== null ? `${Math.round(s.stats.goodRate * 100)}%` : '—'}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* 右侧排班摘要（点击 → 排班编辑器，setSchedule 真链路） */}
-                <button
-                  type="button"
-                  onClick={() => setScheduleFor(s)}
-                  className="ml-auto shrink-0 rounded-chip px-2 py-1 text-right transition-colors duration-150 hover:bg-[rgba(59,46,36,.04)]"
-                  aria-label={`编辑${s.name}的排班`}
-                >
-                  <div className="u1-num text-caption-xs text-[rgba(59,46,36,.62)]">排班 {weekSummary(s.schedule)}</div>
-                  <div
-                    className={`u1-num mt-[2px] text-caption-xs ${
-                      suspended
-                        ? 'text-[rgba(59,46,36,.42)]'
-                        : duty.onDuty
-                          ? 'font-semibold text-ink'
-                          : 'text-[rgba(59,46,36,.42)]'
-                    }`}
-                  >
-                    {suspended ? '已停职' : duty.label}
-                  </div>
-                </button>
-
-                {/* 行动作=纯文字 12/700 墨字（试样「编辑 ›」11.5/700 映射入闸门；按下 120ms） */}
-                <span className="ml-3.5 flex shrink-0 items-center gap-2.5">
-                  {/* 片 3 B7-4：离职交接（改挂未完结单 + 留痕；停职本体在「编辑 ›」） */}
-                  <button
-                    type="button"
-                    onClick={() => setExitFor(s)}
-                    data-testid={`staff-exit-${s.id}`}
-                    className="text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
-                  >
-                    {sf('staff.exitCta')}
-                  </button>
-                  {suspended ? (
-                    <button
-                      type="button"
-                      disabled={enablingId === s.id}
-                      onClick={() => void enableStaff(s)}
-                      className="text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
-                    >
-                      {enablingId === s.id ? '启用中…' : '启用 ›'}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setEditFor(s)}
-                      className="text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
-                    >
-                      编辑 ›
-                    </button>
-                  )}
-                </span>
-              </div>
-            );
-          })
-        )}
+          <p className="text-caption text-[rgba(59,46,36,.62)]">{sf('staff.permBody')}</p>
+        </section>
       </div>
 
       <InviteStaffDialog open={inviteOpen} onClose={() => setInviteOpen(false)} />

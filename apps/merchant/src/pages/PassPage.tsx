@@ -20,8 +20,9 @@
  */
 
 import { EventType, Skeleton, usePhiliaClient } from '@philia/shared';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useState } from 'react';
+import { MEMBER_FOR_USER_KEY, planShortLabel } from '../components/cashier/membership';
 import { useMerchantEvents } from '../components/dashboard/MerchantEventsProvider';
 import MainScaffold, { LemonButton } from '../components/MainScaffold';
 import { errMsg, fmtDateTime } from '../components/staff-admin/format';
@@ -54,6 +55,27 @@ type LogRow = {
 /** 深墨（扣次 −1）/ 浅木（回补 +1、充次 +N）——试样 todo-row 色点口径（薄荷绿清场） */
 const DOT_INK = '#2E2318';
 const DOT_WOOD = '#B9A482';
+
+/** W-11 档色点（档色即身份 · 客户端 1.0 定稿 §1.3 档色谱：微光纸白/萤火淡金/烛光卡其铜/暖阳深棕） */
+const PLAN_TIER_COLOR: Record<string, string> = {
+  plan_weiguang: '#FBF6EA',
+  plan_yinghuo: '#F2DFA6',
+  plan_zhuguang: '#A08B62',
+  plan_nuanyang: '#34271C',
+};
+const TIER_DOT_LOADING = 'rgba(59,46,36,.15)';
+
+/** 档色点（行首身份点；loading/无档=灰点，不造档） */
+function TierDot({ planKey }: { planKey: string | null | undefined }) {
+  const color = planKey ? (PLAN_TIER_COLOR[planKey] ?? TIER_DOT_LOADING) : TIER_DOT_LOADING;
+  return (
+    <i
+      aria-hidden
+      className="inline-block h-2.5 w-2.5 flex-none rounded-full"
+      style={{ background: color, boxShadow: 'inset 0 0 0 1px rgba(59,46,36,.18)' }}
+    />
+  );
+}
 
 const pad2 = (n: number): string => String(n).padStart(2, '0');
 /** 有效期至：YYYY-MM-DD（Montserrat tabular；null=长期有效） */
@@ -246,6 +268,24 @@ export default function PassPage() {
   const sorted = [...passes].sort((a, b) => b.remainTimes - a.remainTimes);
   const logs = (logsQ.data ?? []) as LogRow[];
   const activeCount = passes.filter((p) => p.usable).length;
+  /** W-11 M3 次数包真值：本店次卡张数 + 剩余可扣总次数（pass.listForStore 同源性） */
+  const remainSum = passes.reduce((s, p) => s + p.remainTimes, 0);
+
+  /** W-11 档色点读口：membership.forUser 按人真值（React Query 按 userId 缓存；
+      无店级档位名册端点——台账规模=本店次卡客户数，逐行查询可承载，已报备口径） */
+  const tierQs = useQueries({
+    queries: sorted.map((p) => ({
+      queryKey: MEMBER_FOR_USER_KEY(p.userId),
+      queryFn: () => trpc.membership.forUser.query({ userId: p.userId }),
+      staleTime: 60_000,
+    })),
+  });
+  /** userId → planKey（null=无档会员；缺 key=加载中→灰点） */
+  const tierByUser = new Map<string, string | null>();
+  sorted.forEach((p, i) => {
+    const d = tierQs[i]?.data;
+    if (d) tierByUser.set(p.userId, d.membership?.planKey ?? null);
+  });
 
   const openTopUp = (userId: string | null) => {
     setPresetUserId(userId);
@@ -264,12 +304,44 @@ export default function PassPage() {
       }
     >
       <ToasterMount />
+
+      {/* W-11 M3 四格（持卡/储值负债/次数包/回馈金负债）——真值只接次数包；
+          储值/回馈金负债与持卡名册无本店聚合读口（membership.forUser=按人查、
+          storedValue 路由=owner 台账导入族）→ 置灰注记不造数，读口待补已报备 */}
+      <div className="mb-[14px]" data-testid="pass-stats">
+        <div className="grid grid-cols-2 gap-[14px] lg:grid-cols-4">
+          <div className="u3-stat" data-testid="pass-stat-cards">
+            <div className="cap">{pc('pass.statCards')}</div>
+            <div className="v text-[rgba(59,46,36,.3)]">—</div>
+            <div className="d" title={pc('pass.statPendingNote')}>{pc('pass.statPending')}</div>
+          </div>
+          <div className="u3-stat" data-testid="pass-stat-sv">
+            <div className="cap">{pc('pass.statSv')}</div>
+            <div className="v text-[rgba(59,46,36,.3)]">—</div>
+            <div className="d" title={pc('pass.statPendingNote')}>{pc('pass.statPending')}</div>
+          </div>
+          <div className="u3-stat" data-testid="pass-stat-pass">
+            <div className="cap">{pc('pass.statPass')}</div>
+            <div className="v">{passesQ.isPending ? '…' : `${passes.length} 张`}</div>
+            <div className="d">{pc('pass.statPassSub', { n: remainSum })}</div>
+          </div>
+          <div className="u3-stat" data-testid="pass-stat-rebate">
+            <div className="cap">{pc('pass.statRebate')}</div>
+            <div className="v text-[rgba(59,46,36,.3)]">—</div>
+            <div className="d" title={pc('pass.statPendingNote')}>{pc('pass.statPending')}</div>
+          </div>
+        </div>
+        <p className="mt-2 text-[11px] text-[rgba(59,46,36,.42)]" data-testid="pass-three-books-note">
+          {pc('pass.threeBooksNote')}
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 gap-[14px] xl:grid-cols-[1.7fr_1fr]">
         {/* 左：在效次卡表 */}
         <div className="u3-panel">
           <div className="u3-panel-head">
             <h3>在效次卡</h3>
-            <span className="aside">{pc('pass.listAside')}</span>
+            <span className="aside" title={pc('pass.dualHomeNote')}>{pc('pass.listAside')}</span>
           </div>
           {passesQ.isPending ? (
             <div className="space-y-2 px-[17px] pb-4">
@@ -286,10 +358,12 @@ export default function PassPage() {
               {pc('pass.empty')}
             </p>
           ) : (
+            <>
             <table className="u3-tbl">
               <thead>
                 <tr>
                   <th>客户</th>
+                  <th>{pc('pass.cardNoCol')}</th>
                   <th>卡种</th>
                   <th className="text-right">剩余</th>
                   <th>有效期至</th>
@@ -300,15 +374,28 @@ export default function PassPage() {
               <tbody>
                 {sorted.map((p) => {
                   const st = passStatus(p);
+                  const tier = tierByUser.has(p.userId) ? tierByUser.get(p.userId) : undefined;
                   return (
                     <tr key={p.id}>
                       <td>
-                        <span className="font-bold text-ink">{p.customerNickname ?? '未命名'}</span>
-                        {p.customerPhone ? (
-                          <div className="mt-0.5 font-number text-[11px] tabular-nums text-[rgba(59,46,36,.42)]">
-                            尾号 {p.customerPhone.slice(-4)}
-                          </div>
-                        ) : null}
+                        <span className="flex items-center gap-2">
+                          {/* W-11 档色点行首（档色即身份；无档/加载中=灰点不造档） */}
+                          <TierDot planKey={tier} />
+                          <span>
+                            <span className="font-bold text-ink">{p.customerNickname ?? '未命名'}</span>
+                            <span className="ml-1.5 text-[11px] text-[rgba(59,46,36,.42)]">
+                              {tier ? planShortLabel(tier) : pc('pass.tierNone')}
+                            </span>
+                            {p.customerPhone ? (
+                              <div className="mt-0.5 font-number text-[11px] tabular-nums text-[rgba(59,46,36,.42)]">
+                                尾号 {p.customerPhone.slice(-4)}
+                              </div>
+                            ) : null}
+                          </span>
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap font-number text-[11px] tabular-nums text-[rgba(59,46,36,.62)]" title={p.id}>
+                        #{p.id.slice(-8)}
                       </td>
                       <td className="text-[rgba(59,46,36,.62)]">
                         次卡
@@ -351,6 +438,11 @@ export default function PassPage() {
                 })}
               </tbody>
             </table>
+            {/* W-11 双归属注（售卡店/通用店口径明面） */}
+            <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5 text-[11px] text-[rgba(59,46,36,.42)]" data-testid="pass-dual-home-note">
+              {pc('pass.dualHomeNote')}
+            </p>
+            </>
           )}
         </div>
 

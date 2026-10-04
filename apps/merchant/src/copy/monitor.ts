@@ -16,6 +16,12 @@ const MONITOR_COPY_TABLE = {
   'mon.hubEmpty': '现在店里很安静——有单开工时这里会实时动起来',
   'mon.hubBoardingOverdue': '应退未退 {n} 天 · 联系主人或续住',
 
+  /* ---- 片 5 段 1 · W-04 校形（M2 预警卡/stepdots 六段/ETA/45 分钟亮红） ---- */
+  'mon.alertStuckLine': '{pet} · {svc} · 本步 {n} 分钟未翻步',
+  'mon.alertOverdueLine': '{pet} · 寄养超期 {n} 天未退',
+  'mon.eta': '预计完成 {t}',
+  'mon.stuck': '本步耗时已超 45 分钟',
+
   /* ---- 单约监控 /monitor/:id ---- */
   'mon.parentViewTitle': '家长端视角',
   'mon.parentViewAside': '与客户端「服务中全程页」同源',

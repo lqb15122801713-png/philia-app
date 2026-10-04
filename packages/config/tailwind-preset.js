@@ -151,6 +151,7 @@ module.exports = {
       backgroundImage: {
         'philia-gradient': 'linear-gradient(135deg, #3B2E24 0%, #2E2318 100%)', // 135° 深棕谱系（身份带 §1.2；柠檬黄渐变已退役）
         'philia-gradient-hover': 'linear-gradient(135deg, #46382A 0%, #332A1E 100%)',
+        'philia-gradient-rail': 'linear-gradient(160deg, #3B2E24 0%, #2E2318 100%)', // 商家端 M1 导航轨 160°（tokens.gradients.philiaRail 同名同值）
       },
 
       keyframes: {

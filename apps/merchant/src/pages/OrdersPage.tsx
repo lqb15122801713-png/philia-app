@@ -182,13 +182,16 @@ export default function OrdersPage() {
           </div>
         ) : (
           <div className="u3-noscrollx overflow-x-auto">
-            <table className="u3-tbl min-w-[820px]">
+            <table className="u3-tbl min-w-[900px]">
               <thead>
                 <tr>
                   <th>单号</th>
                   <th>客户</th>
                   <th>商品</th>
                   <th className="text-right">金额</th>
+                  {/* W-09 回馈金红字列：订单域读口未透出（schema orders 无回馈金列位，
+                      listStoreOrders 仅透出行真值）——列置灰待口，不造假数 */}
+                  <th className="text-right">{od('order.rebateCol')}</th>
                   <th>支付</th>
                   <th>状态</th>
                   <th>操作</th>
@@ -207,6 +210,11 @@ export default function OrdersPage() {
           </div>
         )}
       </div>
+
+      {/* W-09 回馈金列口径注（读口待补 · 回馈金仅抵商品） */}
+      <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="orders-rebate-note">
+        {od('order.rebatePendingNote')}
+      </p>
 
       {/* key=order.id：每次打开重挂载，表单态天然重置（配合 ShipOrderDialog 头注） */}
       <ShipOrderDialog

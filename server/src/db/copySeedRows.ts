@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B）——生成件，勿手改（源=scripts/gen-copy-overrides-seed.mts）；
  * 重生成：仓库根 npx tsx scripts/gen-copy-overrides-seed.mts（copy 键表增删键后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-03T16:40:40.052Z；键数=2330
+ * 生成时间口径：2026-10-04T01:05:01.739Z；键数=2571
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }> = [
  {
@@ -2960,6 +2960,151 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "找不到这个预约"
  },
  {
+  "key": "appt.dualOwnerNote",
+  "domain": "merchant:appointments",
+  "text": "单据双归属：客户指定的洗护师会写在预约备注里传达门店，派单以门店安排为准"
+ },
+ {
+  "key": "appt.flowBoarding",
+  "domain": "merchant:appointments",
+  "text": "寄养中"
+ },
+ {
+  "key": "appt.flowCancelled",
+  "domain": "merchant:appointments",
+  "text": "已取消"
+ },
+ {
+  "key": "appt.flowCheckin",
+  "domain": "merchant:appointments",
+  "text": "核销"
+ },
+ {
+  "key": "appt.flowConfirm",
+  "domain": "merchant:appointments",
+  "text": "确认"
+ },
+ {
+  "key": "appt.flowDone",
+  "domain": "merchant:appointments",
+  "text": "完成"
+ },
+ {
+  "key": "appt.flowPaid",
+  "domain": "merchant:appointments",
+  "text": "收款"
+ },
+ {
+  "key": "appt.flowPending",
+  "domain": "merchant:appointments",
+  "text": "待确认"
+ },
+ {
+  "key": "appt.flowServing",
+  "domain": "merchant:appointments",
+  "text": "服务中"
+ },
+ {
+  "key": "appt.flowTitle",
+  "domain": "merchant:appointments",
+  "text": "状态流"
+ },
+ {
+  "key": "appt.flowWaitCheckin",
+  "domain": "merchant:appointments",
+  "text": "待到店核销"
+ },
+ {
+  "key": "appt.flowWaitPay",
+  "domain": "merchant:appointments",
+  "text": "待收款"
+ },
+ {
+  "key": "appt.folioAmount",
+  "domain": "merchant:appointments",
+  "text": "服务金额"
+ },
+ {
+  "key": "appt.folioDiscount",
+  "domain": "merchant:appointments",
+  "text": "会员折扣"
+ },
+ {
+  "key": "appt.folioDiscountNone",
+  "domain": "merchant:appointments",
+  "text": "无"
+ },
+ {
+  "key": "appt.folioDiscountPass",
+  "domain": "merchant:appointments",
+  "text": "次卡扣次"
+ },
+ {
+  "key": "appt.folioNet",
+  "domain": "merchant:appointments",
+  "text": "实收"
+ },
+ {
+  "key": "appt.folioNotYet",
+  "domain": "merchant:appointments",
+  "text": "未收"
+ },
+ {
+  "key": "appt.folioPaid",
+  "domain": "merchant:appointments",
+  "text": "已收"
+ },
+ {
+  "key": "appt.folioPayMode",
+  "domain": "merchant:appointments",
+  "text": "收款方式"
+ },
+ {
+  "key": "appt.folioPayState",
+  "domain": "merchant:appointments",
+  "text": "支付状态"
+ },
+ {
+  "key": "appt.folioTitle",
+  "domain": "merchant:appointments",
+  "text": "金额"
+ },
+ {
+  "key": "appt.folioUnpaid",
+  "domain": "merchant:appointments",
+  "text": "待收款"
+ },
+ {
+  "key": "appt.hintPay",
+  "domain": "merchant:appointments",
+  "text": "服务已完成，登记收款后本单闭环"
+ },
+ {
+  "key": "appt.hintPending",
+  "domain": "merchant:appointments",
+  "text": "确认预约后等待客户到店，核销码见左侧服务信息"
+ },
+ {
+  "key": "appt.hintReassign",
+  "domain": "merchant:appointments",
+  "text": "商家改派会覆盖自动派单结果并留痕，员工行来源签同步变更"
+ },
+ {
+  "key": "appt.hintReview",
+  "domain": "merchant:appointments",
+  "text": "客户申请取消本单，请在操作区审批"
+ },
+ {
+  "key": "appt.hintTitle",
+  "domain": "merchant:appointments",
+  "text": "提示"
+ },
+ {
+  "key": "appt.infoTitle",
+  "domain": "merchant:appointments",
+  "text": "服务信息"
+ },
+ {
   "key": "appt.listEmpty",
   "domain": "merchant:appointments",
   "text": "这一天没有预约"
@@ -2978,6 +3123,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "appt.listTitle",
   "domain": "merchant:appointments",
   "text": "预约"
+ },
+ {
+  "key": "appt.openDetail",
+  "domain": "merchant:appointments",
+  "text": "详情"
+ },
+ {
+  "key": "appt.opsTitle",
+  "domain": "merchant:appointments",
+  "text": "操作"
  },
  {
   "key": "appt.payDialogBody",
@@ -3023,6 +3178,41 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "appt.reviewCancelBody",
   "domain": "merchant:appointments",
   "text": "客户在开始前 {hours} 小时内申请取消该预约。批准后槽位立即释放并通知客户；拒绝后预约恢复为「已确认」。"
+ },
+ {
+  "key": "appt.thAction",
+  "domain": "merchant:appointments",
+  "text": "操作"
+ },
+ {
+  "key": "appt.thAmount",
+  "domain": "merchant:appointments",
+  "text": "金额"
+ },
+ {
+  "key": "appt.thCode",
+  "domain": "merchant:appointments",
+  "text": "核销码"
+ },
+ {
+  "key": "appt.thPetService",
+  "domain": "merchant:appointments",
+  "text": "宠物 / 服务"
+ },
+ {
+  "key": "appt.thStaff",
+  "domain": "merchant:appointments",
+  "text": "员工"
+ },
+ {
+  "key": "appt.thStatus",
+  "domain": "merchant:appointments",
+  "text": "状态"
+ },
+ {
+  "key": "appt.thTime",
+  "domain": "merchant:appointments",
+  "text": "时间"
  },
  {
   "key": "appt.trailAside",
@@ -3085,6 +3275,21 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "PHILIA · 商家端"
  },
  {
+  "key": "board.capCalError",
+  "domain": "merchant:boarding",
+  "text": "容量日历加载失败"
+ },
+ {
+  "key": "board.capCalLoading",
+  "domain": "merchant:boarding",
+  "text": "容量日历加载中…"
+ },
+ {
+  "key": "board.capCalNote",
+  "domain": "merchant:boarding",
+  "text": "容量=在架房型间数合计，已住=逐晚预订槽位（boardingAvailability 预订口径，与上方在店口径不同源）"
+ },
+ {
   "key": "board.checkinCta",
   "domain": "merchant:boarding",
   "text": "＋ 入住登记"
@@ -3125,6 +3330,26 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "现在没有寄养的毛孩子"
  },
  {
+  "key": "board.m3Checkin",
+  "domain": "merchant:boarding",
+  "text": "今日入住"
+ },
+ {
+  "key": "board.m3Checkout",
+  "domain": "merchant:boarding",
+  "text": "今日退房"
+ },
+ {
+  "key": "board.m3InStore",
+  "domain": "merchant:boarding",
+  "text": "在店"
+ },
+ {
+  "key": "board.m3Overdue",
+  "domain": "merchant:boarding",
+  "text": "超期"
+ },
+ {
   "key": "board.panelAside",
   "domain": "merchant:boarding",
   "text": "按退房日排序"
@@ -3163,6 +3388,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "board.title",
   "domain": "merchant:boarding",
   "text": "寄养"
+ },
+ {
+  "key": "board.vaccineNote",
+  "domain": "merchant:boarding",
+  "text": "疫苗硬规则：员工端入住页透出疫苗有效期（过期赭红、30 天内到期提醒），过期不可入住的置灰拦截以员工端为准"
  },
  {
   "key": "cashier.adjustNote",
@@ -3580,6 +3810,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "草稿单未执行，无六联动快照"
  },
  {
+  "key": "cashier.refundExecutedNote",
+  "domain": "merchant:cashier",
+  "text": "已执行落账 · 不可撤销"
+ },
+ {
   "key": "cashier.refundExecuteNote",
   "domain": "merchant:cashier",
   "text": "执行=同事务六联动落账，不可撤销（纠错=再开正单）"
@@ -3598,6 +3833,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "cashier.refundPassCancelNote",
   "domain": "merchant:cashier",
   "text": "折算=剩余付费次数×（实付÷付费总次数），赠次不计价（随退作废）；退卡后卡作废留痕"
+ },
+ {
+  "key": "cashier.refundPolicyReject",
+  "domain": "merchant:cashier",
+  "text": "草稿单（gold 审批位）可驳回——店长（本店）/店主（全域），原因必填留痕"
+ },
+ {
+  "key": "cashier.refundPolicyTitle",
+  "domain": "merchant:cashier",
+  "text": "驳回权口径"
  },
  {
   "key": "cashier.refundRejectNote",
@@ -3653,6 +3898,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "cashier.refundRequestTypeReturnRefund",
   "domain": "merchant:cashier",
   "text": "退货退款"
+ },
+ {
+  "key": "cashier.refundsCreateHint",
+  "domain": "merchant:cashier",
+  "text": "退款从收银流水发起：已收单 → 详情 → 退款"
+ },
+ {
+  "key": "cashier.refundsCreateLink",
+  "domain": "merchant:cashier",
+  "text": "发起退款 ›"
  },
  {
   "key": "cashier.refundsEmpty",
@@ -3723,6 +3978,21 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "cashier.stockShort",
   "domain": "merchant:cashier",
   "text": "库存不足：余 {n} 件，结账将按实际库存扣减"
+ },
+ {
+  "key": "cashier.tenderSplitAside",
+  "domain": "merchant:cashier",
+  "text": "现金/微信/支付宝计入已收 · 储值为参考列不计入（裁定①）"
+ },
+ {
+  "key": "cashier.tenderSplitRef",
+  "domain": "merchant:cashier",
+  "text": "次卡等值（参考·不计入）"
+ },
+ {
+  "key": "cashier.tenderSplitTitle",
+  "domain": "merchant:cashier",
+  "text": "今日账面四分列"
  },
  {
   "key": "cashier.title",
@@ -3823,6 +4093,456 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "cashier.voidNote",
   "domain": "merchant:cashier",
   "text": "撤单后单据留痕为「已撤单」，不会物理删除；仅未支付单可撤（已结账请店主用反结账）"
+ },
+ {
+  "key": "cadm.coexistNote",
+  "domain": "merchant:consoleAdmin",
+  "text": "共构不分叉：右栏直接复用规则配置/文案端口/槽位端口三页内核；旧路由 /settings/rules · /settings/copy · /settings/slots 保留可直达。"
+ },
+ {
+  "key": "cadm.dangerFrozen",
+  "domain": "merchant:consoleAdmin",
+  "text": "冻结项只读：作废/备用/预留规则行与结构字段（如会员档免费属性）不给改。"
+ },
+ {
+  "key": "cadm.dangerNoBackdate",
+  "domain": "merchant:consoleAdmin",
+  "text": "动规则不动账：规则改动只约束生效后的单，不回溯历史月份与已快照数据。"
+ },
+ {
+  "key": "cadm.dangerPin",
+  "domain": "merchant:consoleAdmin",
+  "text": "二次确认=L2-④ 二次 PIN：保存须键入「确认保存」口令（文案高危键逐键确认），沿用既有 highRisk 口令闸，非独立 PIN 件。"
+ },
+ {
+  "key": "cadm.groupA",
+  "domain": "merchant:consoleAdmin",
+  "text": "A · 内容运营"
+ },
+ {
+  "key": "cadm.groupC",
+  "domain": "merchant:consoleAdmin",
+  "text": "C · 会员机制"
+ },
+ {
+  "key": "cadm.groupD",
+  "domain": "merchant:consoleAdmin",
+  "text": "D · 员工规则"
+ },
+ {
+  "key": "cadm.groupE",
+  "domain": "merchant:consoleAdmin",
+  "text": "E · 门店·数据"
+ },
+ {
+  "key": "cadm.logAside",
+  "domain": "merchant:consoleAdmin",
+  "text": "config.versions / 槽位版本计数现状透出"
+ },
+ {
+  "key": "cadm.logTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "留痕"
+ },
+ {
+  "key": "cadm.ownerOnlyBody",
+  "domain": "merchant:consoleAdmin",
+  "text": "端口配置与发布属店主专属（页内闸门 + server 硬闸门兜底）；请切换店主账号。"
+ },
+ {
+  "key": "cadm.ownerOnlyTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "开发者管理端仅店主可用"
+ },
+ {
+  "key": "cadm.pageSub",
+  "domain": "merchant:consoleAdmin",
+  "text": "端口配置与发布 · 店主专属 · 共构不分叉"
+ },
+ {
+  "key": "cadm.pageTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "开发者管理端"
+ },
+ {
+  "key": "cadm.portCommission",
+  "domain": "merchant:consoleAdmin",
+  "text": "提成"
+ },
+ {
+  "key": "cadm.portCopy",
+  "domain": "merchant:consoleAdmin",
+  "text": "文案端口"
+ },
+ {
+  "key": "cadm.portMember",
+  "domain": "merchant:consoleAdmin",
+  "text": "会员档"
+ },
+ {
+  "key": "cadm.portPendingNote",
+  "domain": "merchant:consoleAdmin",
+  "text": "置灰 · 端口待立"
+ },
+ {
+  "key": "cadm.portProfile",
+  "domain": "merchant:consoleAdmin",
+  "text": "门店档案"
+ },
+ {
+  "key": "cadm.portReportSpec",
+  "domain": "merchant:consoleAdmin",
+  "text": "报表口径"
+ },
+ {
+  "key": "cadm.portSlots",
+  "domain": "merchant:consoleAdmin",
+  "text": "槽位端口"
+ },
+ {
+  "key": "cadm.portStored",
+  "domain": "merchant:consoleAdmin",
+  "text": "储值"
+ },
+ {
+  "key": "cadm.portXp",
+  "domain": "merchant:consoleAdmin",
+  "text": "XP"
+ },
+ {
+  "key": "cadm.profileEmptyBody",
+  "domain": "merchant:consoleAdmin",
+  "text": "门店档案维护在「门店档案·设置」页（W-15）；本口立项后收编，当前只读占位。"
+ },
+ {
+  "key": "cadm.profileEmptyTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "档案端口未收编"
+ },
+ {
+  "key": "cadm.pubNote",
+  "domain": "merchant:consoleAdmin",
+  "text": "发布流透出：草稿→预览→发布推三端；回滚=槽位卡「回退上一版」真链路（publish/revert 同管道，虚线注非新件）。"
+ },
+ {
+  "key": "cadm.reportSpecEmptyBody",
+  "domain": "merchant:consoleAdmin",
+  "text": "D1–D9 报表口径/导出=开口项（18 号档 E4 🆕立项待供给）；本口只读占位。"
+ },
+ {
+  "key": "cadm.reportSpecEmptyTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "报表口径端口待立"
+ },
+ {
+  "key": "cadm.storedEmptyBody",
+  "domain": "merchant:consoleAdmin",
+  "text": "储值参数暂无独立配置域（储值提成规则已作废置灰，归提成域只读行）；立项前本口只读占位。"
+ },
+ {
+  "key": "cadm.storedEmptyTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "储值端口待立"
+ },
+ {
+  "key": "wnav.appts",
+  "domain": "merchant:console",
+  "text": "门店端·预约"
+ },
+ {
+  "key": "wnav.batchNote",
+  "domain": "merchant:console",
+  "text": "批次扩口 · 明面保留不删，转正后归并"
+ },
+ {
+  "key": "wnav.boarding",
+  "domain": "merchant:console",
+  "text": "寄养"
+ },
+ {
+  "key": "wnav.cashier",
+  "domain": "merchant:console",
+  "text": "收银台"
+ },
+ {
+  "key": "wnav.close",
+  "domain": "merchant:console",
+  "text": "日结"
+ },
+ {
+  "key": "wnav.dockCashier",
+  "domain": "merchant:console",
+  "text": "收银"
+ },
+ {
+  "key": "wnav.dockMe",
+  "domain": "merchant:console",
+  "text": "我的"
+ },
+ {
+  "key": "wnav.dockMeNote",
+  "domain": "merchant:console",
+  "text": "「我的」槽映射门店档案·设置"
+ },
+ {
+  "key": "wnav.dockOverview",
+  "domain": "merchant:console",
+  "text": "总览"
+ },
+ {
+  "key": "wnav.dockReport",
+  "domain": "merchant:console",
+  "text": "报表"
+ },
+ {
+  "key": "wnav.dockStore",
+  "domain": "merchant:console",
+  "text": "门店"
+ },
+ {
+  "key": "wnav.finance",
+  "domain": "merchant:console",
+  "text": "报表"
+ },
+ {
+  "key": "wnav.footConsole",
+  "domain": "merchant:console",
+  "text": "开发者管理端"
+ },
+ {
+  "key": "wnav.footRules",
+  "domain": "merchant:console",
+  "text": "规则配置"
+ },
+ {
+  "key": "wnav.groupAdmin",
+  "domain": "merchant:console",
+  "text": "管理"
+ },
+ {
+  "key": "wnav.groupBatch",
+  "domain": "merchant:console",
+  "text": "批次扩口"
+ },
+ {
+  "key": "wnav.groupMall",
+  "domain": "merchant:console",
+  "text": "商城"
+ },
+ {
+  "key": "wnav.groupOps",
+  "domain": "merchant:console",
+  "text": "经营"
+ },
+ {
+  "key": "wnav.matrix",
+  "domain": "merchant:console",
+  "text": "权限矩阵"
+ },
+ {
+  "key": "wnav.monitor",
+  "domain": "merchant:console",
+  "text": "监控 Hub"
+ },
+ {
+  "key": "wnav.ops",
+  "domain": "merchant:console",
+  "text": "审批中心"
+ },
+ {
+  "key": "wnav.opsBatch",
+  "domain": "merchant:console",
+  "text": "运营"
+ },
+ {
+  "key": "wnav.opsBatchNote",
+  "domain": "merchant:console",
+  "text": "与审批中心同屏"
+ },
+ {
+  "key": "wnav.orders",
+  "domain": "merchant:console",
+  "text": "商城订单"
+ },
+ {
+  "key": "wnav.overview",
+  "domain": "merchant:console",
+  "text": "总览·驾驶舱"
+ },
+ {
+  "key": "wnav.pass",
+  "domain": "merchant:console",
+  "text": "会员·次卡"
+ },
+ {
+  "key": "wnav.payroll",
+  "domain": "merchant:console",
+  "text": "薪资"
+ },
+ {
+  "key": "wnav.placeholderBody",
+  "domain": "merchant:console",
+  "text": "本屏锚点与导航结构段 0 先冻结，内容与交互段 3 落位。"
+ },
+ {
+  "key": "wnav.placeholderPending",
+  "domain": "merchant:console",
+  "text": "待段 3 落位"
+ },
+ {
+  "key": "wnav.products",
+  "domain": "merchant:console",
+  "text": "商品"
+ },
+ {
+  "key": "wnav.refunds",
+  "domain": "merchant:console",
+  "text": "退款"
+ },
+ {
+  "key": "wnav.schedules",
+  "domain": "merchant:console",
+  "text": "排班"
+ },
+ {
+  "key": "wnav.settings",
+  "domain": "merchant:console",
+  "text": "门店档案·设置"
+ },
+ {
+  "key": "wnav.staff",
+  "domain": "merchant:console",
+  "text": "员工"
+ },
+ {
+  "key": "wnav.xpAdmin",
+  "domain": "merchant:console",
+  "text": "XP 审核"
+ },
+ {
+  "key": "wsk.alertEmpty",
+  "domain": "merchant:console",
+  "text": "当前没有异常"
+ },
+ {
+  "key": "wsk.alertGo",
+  "domain": "merchant:console",
+  "text": "去处理"
+ },
+ {
+  "key": "wsk.capCalFull",
+  "domain": "merchant:console",
+  "text": "满"
+ },
+ {
+  "key": "wsk.capCalLegend",
+  "domain": "merchant:console",
+  "text": "容量点=已住/容量"
+ },
+ {
+  "key": "wsk.dangerTitle",
+  "domain": "merchant:console",
+  "text": "危险区"
+ },
+ {
+  "key": "wsk.empty",
+  "domain": "merchant:console",
+  "text": "暂无内容"
+ },
+ {
+  "key": "wsk.folioTotal",
+  "domain": "merchant:console",
+  "text": "合计"
+ },
+ {
+  "key": "wsk.logEmpty",
+  "domain": "merchant:console",
+  "text": "还没有留痕"
+ },
+ {
+  "key": "wsk.matrixLocked",
+  "domain": "merchant:console",
+  "text": "锁死"
+ },
+ {
+  "key": "wsk.matrixNo",
+  "domain": "merchant:console",
+  "text": "—"
+ },
+ {
+  "key": "wsk.matrixOk",
+  "domain": "merchant:console",
+  "text": "✓"
+ },
+ {
+  "key": "wsk.matrixReadonly",
+  "domain": "merchant:console",
+  "text": "只读"
+ },
+ {
+  "key": "wsk.postcardEyebrow",
+  "domain": "merchant:console",
+  "text": "MORNING POST"
+ },
+ {
+  "key": "wsk.postcardMore",
+  "domain": "merchant:console",
+  "text": "读完整晨报"
+ },
+ {
+  "key": "wsk.postcardTitle",
+  "domain": "merchant:console",
+  "text": "晨报。"
+ },
+ {
+  "key": "wsk.pubDraft",
+  "domain": "merchant:console",
+  "text": "草稿"
+ },
+ {
+  "key": "wsk.pubPreview",
+  "domain": "merchant:console",
+  "text": "预览"
+ },
+ {
+  "key": "wsk.pubPush",
+  "domain": "merchant:console",
+  "text": "发布推三端"
+ },
+ {
+  "key": "wsk.pubRollback",
+  "domain": "merchant:console",
+  "text": "回滚"
+ },
+ {
+  "key": "wsk.redline1",
+  "domain": "merchant:console",
+  "text": "无充值入口"
+ },
+ {
+  "key": "wsk.redline2",
+  "domain": "merchant:console",
+  "text": "年费≠储值"
+ },
+ {
+  "key": "wsk.redline3",
+  "domain": "merchant:console",
+  "text": "四分列对账"
+ },
+ {
+  "key": "wsk.redline4",
+  "domain": "merchant:console",
+  "text": "扣次非现金"
+ },
+ {
+  "key": "wsk.redlineTitle",
+  "domain": "merchant:console",
+  "text": "红线明面"
+ },
+ {
+  "key": "wsk.totalSpark",
+  "domain": "merchant:console",
+  "text": "近 14 日"
  },
  {
   "key": "copyport.changedBadge",
@@ -4195,6 +4915,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "超期"
  },
  {
+  "key": "dash.approvalEmpty",
+  "domain": "merchant:dashboard",
+  "text": "当前没有待审批事项"
+ },
+ {
+  "key": "dash.approvalListTitle",
+  "domain": "merchant:dashboard",
+  "text": "审批"
+ },
+ {
   "key": "dash.cancel",
   "domain": "merchant:dashboard",
   "text": "取消"
@@ -4290,9 +5020,44 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "个人"
  },
  {
+  "key": "dash.m3ChainNote",
+  "domain": "merchant:dashboard",
+  "text": "多店三栏=连锁预留开口项，当前按单店口径呈现"
+ },
+ {
+  "key": "dash.m3Title",
+  "domain": "merchant:dashboard",
+  "text": "单店口径"
+ },
+ {
+  "key": "dash.postcardFigCap",
+  "domain": "merchant:dashboard",
+  "text": "今日营业额 · 实时"
+ },
+ {
+  "key": "dash.postcardRowBoarding",
+  "domain": "merchant:dashboard",
+  "text": "在店寄养"
+ },
+ {
+  "key": "dash.postcardRowOverdue",
+  "domain": "merchant:dashboard",
+  "text": "超期寄养"
+ },
+ {
+  "key": "dash.postcardRowTodo",
+  "domain": "merchant:dashboard",
+  "text": "待办合计"
+ },
+ {
   "key": "dash.retry",
   "domain": "merchant:dashboard",
   "text": "重试"
+ },
+ {
+  "key": "dash.sparkEmpty",
+  "domain": "merchant:dashboard",
+  "text": "近 14 日营收曲线读口待接入，槽位预留不造假"
  },
  {
   "key": "dash.statBoardingEmpty",
@@ -4425,6 +5190,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "经营总览"
  },
  {
+  "key": "dash.todayListTitle",
+  "domain": "merchant:dashboard",
+  "text": "今日预约"
+ },
+ {
   "key": "dash.todoAppealHint",
   "domain": "merchant:dashboard",
   "text": "手机号换绑申诉，待协助核验"
@@ -4525,6 +5295,21 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "待收款"
  },
  {
+  "key": "dash.totalCap",
+  "domain": "merchant:dashboard",
+  "text": "今日营业额"
+ },
+ {
+  "key": "dash.totalPaidCell",
+  "domain": "merchant:dashboard",
+  "text": "已收笔数"
+ },
+ {
+  "key": "dash.totalUnpaidCell",
+  "domain": "merchant:dashboard",
+  "text": "待收笔数"
+ },
+ {
   "key": "fin.capDeduct",
   "domain": "merchant:finance",
   "text": "次卡扣次（非现金）"
@@ -4600,6 +5385,146 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "财务"
  },
  {
+  "key": "mtx.colCashier",
+  "domain": "merchant:matrix",
+  "text": "收银"
+ },
+ {
+  "key": "mtx.colClose",
+  "domain": "merchant:matrix",
+  "text": "日结"
+ },
+ {
+  "key": "mtx.colCopy",
+  "domain": "merchant:matrix",
+  "text": "文案端口"
+ },
+ {
+  "key": "mtx.colMatrix",
+  "domain": "merchant:matrix",
+  "text": "权限矩阵"
+ },
+ {
+  "key": "mtx.colMember",
+  "domain": "merchant:matrix",
+  "text": "会员"
+ },
+ {
+  "key": "mtx.colRefund",
+  "domain": "merchant:matrix",
+  "text": "退款"
+ },
+ {
+  "key": "mtx.colReport",
+  "domain": "merchant:matrix",
+  "text": "报表"
+ },
+ {
+  "key": "mtx.colReverse",
+  "domain": "merchant:matrix",
+  "text": "反结账"
+ },
+ {
+  "key": "mtx.colRules",
+  "domain": "merchant:matrix",
+  "text": "规则配置"
+ },
+ {
+  "key": "mtx.colSlots",
+  "domain": "merchant:matrix",
+  "text": "槽位"
+ },
+ {
+  "key": "mtx.colStaff",
+  "domain": "merchant:matrix",
+  "text": "员工"
+ },
+ {
+  "key": "mtx.colStock",
+  "domain": "merchant:matrix",
+  "text": "库存"
+ },
+ {
+  "key": "mtx.lockedPill",
+  "domain": "merchant:matrix",
+  "text": "锁死区 · 反结账/导出/储值导入仅店主"
+ },
+ {
+  "key": "mtx.noteLocked",
+  "domain": "merchant:matrix",
+  "text": "锁死区：反结账/导出/储值台账导入仅店主，任何端不可下放"
+ },
+ {
+  "key": "mtx.noteMatrix",
+  "domain": "merchant:matrix",
+  "text": "权限矩阵：本页只读；编辑归控制台（开发侧发布），任何端不可页内改"
+ },
+ {
+  "key": "mtx.noteMember",
+  "domain": "merchant:matrix",
+  "text": "会员：前台=仅收银识别时可见档位/余额/次卡，不可翻台账"
+ },
+ {
+  "key": "mtx.noteRefund",
+  "domain": "merchant:matrix",
+  "text": "退款：店长=本店≤阈值（默认 ¥500，配置端口店主可调）且非涉储值；超阈值/涉储值锁死仅店主（V1.2/V1.3 并轨）"
+ },
+ {
+  "key": "mtx.noteReport",
+  "domain": "merchant:matrix",
+  "text": "报表：店员不看营业额（总规则②）；导出仅店主（总规则③）"
+ },
+ {
+  "key": "mtx.noteSource",
+  "domain": "merchant:matrix",
+  "text": "数据真源：lib/roles.ts 头注冻结口径 + 20 号档 V1.2（退款行）+ 26 号档 V1.3（驳回权/运营）；改矩阵先改真源"
+ },
+ {
+  "key": "mtx.noteStock",
+  "domain": "merchant:matrix",
+  "text": "库存：店长=本店盘点派任务+确认差异；商品与服务定价仅店主"
+ },
+ {
+  "key": "mtx.pageSub",
+  "domain": "merchant:matrix",
+  "text": "角色×权限四态 · 本页只读"
+ },
+ {
+  "key": "mtx.pageTitle",
+  "domain": "merchant:matrix",
+  "text": "权限矩阵"
+ },
+ {
+  "key": "mtx.roleFront",
+  "domain": "merchant:matrix",
+  "text": "前台"
+ },
+ {
+  "key": "mtx.roleGroomer",
+  "domain": "merchant:matrix",
+  "text": "美容师"
+ },
+ {
+  "key": "mtx.roleManager",
+  "domain": "merchant:matrix",
+  "text": "店长"
+ },
+ {
+  "key": "mtx.roleOwner",
+  "domain": "merchant:matrix",
+  "text": "店主"
+ },
+ {
+  "key": "mon.alertOverdueLine",
+  "domain": "merchant:monitor",
+  "text": "{pet} · 寄养超期 {n} 天未退"
+ },
+ {
+  "key": "mon.alertStuckLine",
+  "domain": "merchant:monitor",
+  "text": "{pet} · {svc} · 本步 {n} 分钟未翻步"
+ },
+ {
   "key": "mon.boardingLogsEmpty",
   "domain": "merchant:monitor",
   "text": "员工打卡后会实时出现在这里；历史打卡明细请在「寄养管理」页查看。"
@@ -4613,6 +5538,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "mon.cancelledTitle",
   "domain": "merchant:monitor",
   "text": "预约已取消"
+ },
+ {
+  "key": "mon.eta",
+  "domain": "merchant:monitor",
+  "text": "预计完成 {t}"
  },
  {
   "key": "mon.flagBodyActive",
@@ -4693,6 +5623,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "mon.stepsEmpty",
   "domain": "merchant:monitor",
   "text": "六步流尚未初始化（等待员工核销）。"
+ },
+ {
+  "key": "mon.stuck",
+  "domain": "merchant:monitor",
+  "text": "本步耗时已超 45 分钟"
  },
  {
   "key": "mon.wallEmpty",
@@ -4965,6 +5900,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "没有已发货订单"
  },
  {
+  "key": "order.rebateCol",
+  "domain": "merchant:orders",
+  "text": "回馈金"
+ },
+ {
+  "key": "order.rebatePendingNote",
+  "domain": "merchant:orders",
+  "text": "回馈金列读口待补——订单域未透出回馈金字段，待 server 开口；回馈金仅抵商品"
+ },
+ {
   "key": "order.sub",
   "domain": "merchant:orders",
   "text": "待发货 {a} · 已发货 {b} · 售后 {c}"
@@ -4973,6 +5918,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "order.title",
   "domain": "merchant:orders",
   "text": "商城订单"
+ },
+ {
+  "key": "pass.cardNoCol",
+  "domain": "merchant:pass",
+  "text": "卡号"
+ },
+ {
+  "key": "pass.dualHomeNote",
+  "domain": "merchant:pass",
+  "text": "双归属：次卡=售卡店（本店）归属 · 会员档=办卡店归属 + 全店通用"
  },
  {
   "key": "pass.empty",
@@ -5000,9 +5955,54 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "＋ 售卡"
  },
  {
+  "key": "pass.statCards",
+  "domain": "merchant:pass",
+  "text": "持卡会员"
+ },
+ {
+  "key": "pass.statPass",
+  "domain": "merchant:pass",
+  "text": "次数包"
+ },
+ {
+  "key": "pass.statPassSub",
+  "domain": "merchant:pass",
+  "text": "剩余可扣 {n} 次"
+ },
+ {
+  "key": "pass.statPending",
+  "domain": "merchant:pass",
+  "text": "读口待补"
+ },
+ {
+  "key": "pass.statPendingNote",
+  "domain": "merchant:pass",
+  "text": "会员域暂无本店聚合读口（现仅按人查），待 server 开口——不造数"
+ },
+ {
+  "key": "pass.statRebate",
+  "domain": "merchant:pass",
+  "text": "回馈金负债"
+ },
+ {
+  "key": "pass.statSv",
+  "domain": "merchant:pass",
+  "text": "储值负债"
+ },
+ {
   "key": "pass.sub",
   "domain": "merchant:pass",
   "text": "在效次卡 {n} 张 · 年费会员细则待定（冻结决策 15）"
+ },
+ {
+  "key": "pass.threeBooksNote",
+  "domain": "merchant:pass",
+  "text": "三本账分离明面：次卡次数 / 储值 / 回馈金各自单列，永不混列；年费≠储值"
+ },
+ {
+  "key": "pass.tierNone",
+  "domain": "merchant:pass",
+  "text": "无档"
  },
  {
   "key": "pass.title",
@@ -5550,6 +6550,31 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "＋ 新增商品"
  },
  {
+  "key": "prod.csvCta",
+  "domain": "merchant:products",
+  "text": "CSV 导入"
+ },
+ {
+  "key": "prod.csvPendingNote",
+  "domain": "merchant:products",
+  "text": "待供给——CSV 导入端口未开口，留位不画假件"
+ },
+ {
+  "key": "prod.dailyCountCol",
+  "domain": "merchant:products",
+  "text": "日盘档"
+ },
+ {
+  "key": "prod.dailyCountNote",
+  "domain": "merchant:products",
+  "text": "日盘档=单价 ≥¥100 商品每日盘点门槛（S-08 同口径）"
+ },
+ {
+  "key": "prod.dailyCountYes",
+  "domain": "merchant:products",
+  "text": "日盘"
+ },
+ {
   "key": "prod.emptyTitle",
   "domain": "merchant:products",
   "text": "货架空空，去上架第一件商品"
@@ -5568,6 +6593,126 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "prod.title",
   "domain": "merchant:products",
   "text": "商品"
+ },
+ {
+  "key": "rpt.dirD1",
+  "domain": "merchant:report",
+  "text": "D1"
+ },
+ {
+  "key": "rpt.dirD2",
+  "domain": "merchant:report",
+  "text": "D2"
+ },
+ {
+  "key": "rpt.dirD3",
+  "domain": "merchant:report",
+  "text": "D3"
+ },
+ {
+  "key": "rpt.dirD4",
+  "domain": "merchant:report",
+  "text": "D4"
+ },
+ {
+  "key": "rpt.dirD5",
+  "domain": "merchant:report",
+  "text": "D5"
+ },
+ {
+  "key": "rpt.dirD6",
+  "domain": "merchant:report",
+  "text": "D6"
+ },
+ {
+  "key": "rpt.dirD7",
+  "domain": "merchant:report",
+  "text": "D7"
+ },
+ {
+  "key": "rpt.dirD8",
+  "domain": "merchant:report",
+  "text": "D8"
+ },
+ {
+  "key": "rpt.dirD9",
+  "domain": "merchant:report",
+  "text": "D9"
+ },
+ {
+  "key": "rpt.dirNote",
+  "domain": "merchant:report",
+  "text": "D1–D9 报表口径/导出=开口项（18 号档 E4 🆕立项），全量置灰不画假件"
+ },
+ {
+  "key": "rpt.dirPending",
+  "domain": "merchant:report",
+  "text": "立项待供给"
+ },
+ {
+  "key": "rpt.dirTitle",
+  "domain": "merchant:report",
+  "text": "报表目录"
+ },
+ {
+  "key": "rpt.ledgerAside",
+  "domain": "merchant:report",
+  "text": "收款流水 · 按时间倒序"
+ },
+ {
+  "key": "rpt.ledgerTitle",
+  "domain": "merchant:report",
+  "text": "月度台账"
+ },
+ {
+  "key": "rpt.monthCloseNote",
+  "domain": "merchant:report",
+  "text": "月结快照：每月封箱留存，历史封箱不回填"
+ },
+ {
+  "key": "rpt.quadPending",
+  "domain": "merchant:report",
+  "text": "读口待补"
+ },
+ {
+  "key": "rpt.quadRebate",
+  "domain": "merchant:report",
+  "text": "回馈金负债"
+ },
+ {
+  "key": "rpt.quadRebateNote",
+  "domain": "merchant:report",
+  "text": "店级聚合读口待补（段 2 已核），置灰不造假"
+ },
+ {
+  "key": "rpt.quadRefund",
+  "domain": "merchant:report",
+  "text": "本月退款"
+ },
+ {
+  "key": "rpt.quadRefundCount",
+  "domain": "merchant:report",
+  "text": "共 {n} 笔（已执行+已实退）"
+ },
+ {
+  "key": "rpt.quadRevenue",
+  "domain": "merchant:report",
+  "text": "本月营收"
+ },
+ {
+  "key": "rpt.quadStored",
+  "domain": "merchant:report",
+  "text": "储值负债"
+ },
+ {
+  "key": "rpt.quadStoredNote",
+  "domain": "merchant:report",
+  "text": "店级聚合读口待补（段 2 已核），置灰不造假"
+ },
+ {
+  "key": "rpt.threeBooksNote",
+  "domain": "merchant:report",
+  "text": "三本账永不混列：营收 / 储值 / 回馈金各自单列"
  },
  {
   "key": "rules.caliberNote",
@@ -6045,6 +7190,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "定向发布 · 已读回执对账"
  },
  {
+  "key": "set.entryCopy",
+  "domain": "merchant:settings",
+  "text": "文案端口"
+ },
+ {
+  "key": "set.entryCopyHint",
+  "domain": "merchant:settings",
+  "text": "控制台第七域 · 三端文案后台改"
+ },
+ {
   "key": "set.entryGo",
   "domain": "merchant:settings",
   "text": "进入 ›"
@@ -6058,6 +7213,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "set.entrySchedulesHint",
   "domain": "merchant:settings",
   "text": "周视图拖拽排班 · 模板生成 · 换班审批"
+ },
+ {
+  "key": "set.entrySlots",
+  "domain": "merchant:settings",
+  "text": "槽位端口"
+ },
+ {
+  "key": "set.entrySlotsHint",
+  "domain": "merchant:settings",
+  "text": "控制台第八域 · 素材上传→待审→上线/回退"
  },
  {
   "key": "set.entryTasks",
@@ -6125,6 +7290,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "管理入口"
  },
  {
+  "key": "set.panelPorts",
+  "domain": "merchant:settings",
+  "text": "端口入口"
+ },
+ {
   "key": "set.panelRules",
   "domain": "merchant:settings",
   "text": "经营口径"
@@ -6133,6 +7303,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "set.panelStore",
   "domain": "merchant:settings",
   "text": "门店"
+ },
+ {
+  "key": "set.portBornNote",
+  "domain": "merchant:settings",
+  "text": "带端口出生，后台可改不动代码"
+ },
+ {
+  "key": "set.portsAside",
+  "domain": "merchant:settings",
+  "text": "owner 专属 · 带端口出生"
  },
  {
   "key": "set.servicesEmpty",
@@ -6158,6 +7338,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "set.title",
   "domain": "merchant:settings",
   "text": "设置"
+ },
+ {
+  "key": "staff.attFlagged",
+  "domain": "merchant:staff",
+  "text": "打卡异常"
+ },
+ {
+  "key": "staff.attNote",
+  "domain": "merchant:staff",
+  "text": "考勤红字=当日打卡异常（防代打标记，attendance.exceptionQueue 真值）；「应班未打卡」店级读口待补，不画假件"
  },
  {
   "key": "staff.editRoleHint",
@@ -6288,6 +7478,21 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "staff.panelAside",
   "domain": "merchant:staff",
   "text": "排班=自动派单与可约判定之源"
+ },
+ {
+  "key": "staff.permBody",
+  "domain": "merchant:staff",
+  "text": "提成与绩效明细全员仅本人可见（V1.3 员工端口径）；角色×权限四态（收银/退款/日结/反结账…）见权限矩阵。"
+ },
+ {
+  "key": "staff.permLink",
+  "domain": "merchant:staff",
+  "text": "查看权限矩阵 ›"
+ },
+ {
+  "key": "staff.permTitle",
+  "domain": "merchant:staff",
+  "text": "权限口径"
  },
  {
   "key": "staff.scheduleNote",

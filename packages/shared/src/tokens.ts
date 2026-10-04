@@ -165,6 +165,9 @@ export const gradients = {
   /** BANNER 占位淡金渐变：165°（home-v2 .hv2-banner 同帧；槽位占位块共用——
    *  端口批片 C 顺带件①：字面量收编唯一来源，三端引用不另写）。 */
   philiaBanner: 'linear-gradient(165deg, #EFDCAB 0%, #EBD398 52%, #F2E7CB 100%)',
+  /** 商家端 M1 导航轨深棕渐变：160° 同双色（UX-02 V1.1 §二 M1 wnav；同谱系不同角，
+   *  片 5 段 0 收编为 token 唯一来源，CSS/TSX 引用不另写字面量）。 */
+  philiaRail: 'linear-gradient(160deg, #3B2E24 0%, #2E2318 100%)',
 } as const;
 
 /* ------------------------------------------------------------------------ */

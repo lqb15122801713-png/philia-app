@@ -1,21 +1,22 @@
 /**
- * U3 任务 E · 预约详情 /appointments/:id —— 母本「4 · 预约详情」屏 / 规格书 §4 整页重写
+ * 预约详情 /appointments/:id（W-03 · 片 5 段 1 校形）
  *
- * - MainScaffold 外包：title=「{宠物} · {服务}」，sub=「单号 {code} · 时间 · 时长/晚数」+ 状态胶囊；
- *   actions 按态切换（每屏至多一个柠檬钮）：
- *   pending → 柠檬「确认预约」（confirm 幂等保留）；confirmed → 细线「改期/改派(洗护)」；
- *   in_service/in_boarding/completed → 细线「服务监视」（打标重拍入口在监控页，不在此页）；
- *   completed 且未 paid → 柠檬「去收款 · ¥X」（markPaid 真链路，ConfirmDialog 防误触）；
- *   cancel_requested → 柠檬位换「审批取消申请」（Modal 透出客户原因 + 批准/拒绝 reviewCancel）。
- * - 两栏（1.6fr:1fr gap 14）：
- *   左 = 服务进度卡（u3-stepv 六步：薄荷 done 含 ✓ / 柠檬 now / 墨灰未到 + 时间戳 + 张数）
- *       + 过程照 56×42 缩略墙（点击放大复用 PhotoViewer）+ 事件轨迹卡；
- *   右 = 预约信息卡（u3-field）+ 金额卡（u3-kv 四格，金额 Montserrat tabular）。
+ * 区块序（UX-02 语言包 §四 W-03）：wtop（MainScaffold 页头 title=「{宠物} · {服务}」，
+ * sub=「单号 {code} · 时间 · 时长/晚数」）→ 两栏（1.6fr:1fr gap 14）：
+ *   左 = M5 服务信息（原「预约信息」卡重排至左栏首序，u3-field 全字段保留）
+ *       + M7 folio 金额件（WFolio：服务金额/收款方式/会员折扣/实收/支付态行）
+ *       + 服务进度卡（u3-stepv 六步+过程照墙，零回退）/寄养信息块 + 事件轨迹卡；
+ *   右 = fdot 状态流五节点（确认→核销→服务中→完成→收款，按现状状态机映射；
+ *       寄养单第三步=「寄养中」；已取消单=确认节点留痕其余封口）
+ *       + 操作钮组（原 MainScaffold actions 全量迁入：改期/改派/服务监视/确认预约/
+ *       审批取消申请/去收款，testid 不变，每屏至多一个柠檬钮口径不变）
+ *       + 提示卡（按态一句引导+改派覆盖 merchant 留痕注，语言包 W-03 注记明面）
+ *       + 协作拆分块（段 4 既有 CollabSplitSection 原位保留）。
  * - 寄养单：六步卡不渲染（无 steps），换 boardingStay 信息块（房间/称重/物品/退住）+ 轨迹卡。
  * - 轨迹口径（S4：事件即轨迹，零新接口）：createdAt=自动确认 by=auto / assignSource=auto
  *   → 自动派单（ts=createdAt 同事务）/ checkedInAt=到店核销 / steps.doneAt=步骤更新 /
  *   completedAt=完成；按时间升序，无对应时间戳的事件不合成（商家改派无独立时间戳 →
- *   轨迹不出行，来源签由预约信息卡员工行承载）。
+ *   轨迹不出行，来源签由服务信息卡员工行+右侧提示卡留痕注承载）。
  * - 实时：useMerchantEvents（watch=aid，与监控页同法）→ step/checkedin/completed 等事件
  *   invalidate 本单查询；SSE 离线时 30s 轮询兜底，onReconnect 全量对齐。
  * - 三态：加载骨架（禁转圈）/ 错误重试 / NOT_FOUND 引导回 /appointments。
@@ -36,6 +37,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import MainScaffold, { LemonButton, QuietButton } from '../components/MainScaffold';
+import { WFolio, WFlowDots, type WFlowNode } from '../components/skeleton';
 import {
   assignSourceLabel,
   cancelSourceLabel,
@@ -421,6 +423,75 @@ export default function AppointmentDetailPage() {
     </>
   );
 
+  /* ---------------- fdot 状态流五节点（确认→核销→服务中→完成→收款，按现状状态机映射） ---------------- */
+
+  const cancelled = appt.status === 'cancelled';
+  const checked = !!appt.checkedInAt;
+  const serving = appt.status === 'in_service' || appt.status === 'in_boarding';
+  const finished = !!appt.completedAt;
+  const paid = !!appt.paidAt;
+  const flowNodes: WFlowNode[] = [
+    {
+      key: 'confirm',
+      label: ac('appt.flowConfirm'),
+      // S4 落库即 confirmed（by=auto）；历史 pending=唯一「待确认」态
+      state: cancelled ? 'done' : appt.status === 'pending' ? 'now' : 'done',
+      hint:
+        appt.status === 'pending'
+          ? ac('appt.flowPending')
+          : cancelled
+            ? ac('appt.flowCancelled')
+            : `${fmtDateTime(appt.createdAt)} · by=auto`,
+    },
+    {
+      key: 'checkin',
+      label: ac('appt.flowCheckin'),
+      state: cancelled ? 'todo' : checked ? 'done' : appt.status === 'pending' ? 'todo' : 'now',
+      hint: cancelled
+        ? undefined
+        : checked
+          ? fmtDateTime(appt.checkedInAt!)
+          : appt.status === 'pending'
+            ? undefined
+            : ac('appt.flowWaitCheckin'),
+    },
+    {
+      key: 'serving',
+      label: ac(isBoarding ? 'appt.flowBoarding' : 'appt.flowServing'),
+      state: cancelled ? 'todo' : finished ? 'done' : serving ? 'now' : 'todo',
+    },
+    {
+      key: 'done',
+      label: ac('appt.flowDone'),
+      state: cancelled ? 'todo' : finished ? 'done' : 'todo',
+      hint: finished ? fmtDateTime(appt.completedAt!) : undefined,
+    },
+    {
+      key: 'paid',
+      label: ac('appt.flowPaid'),
+      state: cancelled ? 'todo' : paid ? 'done' : finished ? 'now' : 'todo',
+      hint: cancelled
+        ? undefined
+        : paid
+          ? fmtDateTime(appt.paidAt!)
+          : finished
+            ? ac('appt.flowWaitPay')
+            : undefined,
+    },
+  ];
+
+  /* 提示卡：按态一句引导 + 改派覆盖留痕注（语言包 §四 W-03 注记） */
+  const hintLine =
+    appt.status === 'pending'
+      ? ac('appt.hintPending')
+      : appt.status === 'confirmed' && !checked
+        ? ac('appt.verifyCodeHint')
+        : appt.status === 'cancel_requested'
+          ? ac('appt.hintReview')
+          : payable
+            ? ac('appt.hintPay')
+            : null;
+
   /* ---------------- 渲染 ---------------- */
 
   return (
@@ -432,7 +503,6 @@ export default function AppointmentDetailPage() {
           单号 <span className="u1-num">{appt.code}</span> · {timeLabel} · {durLabel}
         </span>
       }
-      actions={actions}
     >
       {viewer ? (
         <PhotoViewer
@@ -446,208 +516,251 @@ export default function AppointmentDetailPage() {
         />
       ) : null}
 
-      <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.6fr_1fr]">
-        {/* 左栏：服务进度（洗护）/ 寄养信息（寄养）+ 事件轨迹 */}
-        <div className="flex min-w-0 flex-col gap-3.5">
-          {isBoarding ? (
-            <BoardingPanel stay={detailQuery.data?.boardingStay ?? null} appt={appt} />
-          ) : (
-            <div className="u3-panel" data-testid="detail-progress">
+      <div className="wsk">
+        <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.6fr_1fr]">
+          {/* 左栏：M5 服务信息 + M7 folio + 服务进度（洗护）/寄养信息 + 事件轨迹 */}
+          <div className="flex min-w-0 flex-col gap-3.5">
+            <div className="u3-panel" data-testid="detail-info">
               <div className="u3-panel-head">
-                <h3>服务进度</h3>
-                <span className="aside">{progressAside}</span>
+                <h3>{ac('appt.infoTitle')}</h3>
               </div>
-              <div className="u3-stepv px-[17px] pb-3.5 pt-1">
-                {STEP_ROWS.map((def) => {
-                  const row = stepByKey.get(def.key) ?? null;
-                  const st = row?.status ?? 'locked';
-                  const count = row?.photos.length ?? 0;
-                  const small =
-                    st === 'done'
-                      ? `${row?.doneAt ? `${fmtTime(row.doneAt)} 完成` : '已完成'}${
-                          count > 0 ? ` · ${count} 张照片` : ''
-                        }`
-                      : st === 'active'
-                        ? `进行中 · 已传 ${count}/${row?.requiredPhotos ?? 0} 张${
-                            row?.flagged ? ' · 已打标待重拍' : ''
-                          }`
-                        : '未到';
-                  return (
-                    <div
-                      key={def.key}
-                      className={`row ${st === 'done' ? 'done' : st === 'active' ? 'now' : ''}`}
-                    >
-                      {/* 试样同值锁定：done=纯薄荷圆点（无内嵌图标）/ now=柠檬 / 未到=描边 */}
-                      <i className="dt flex items-center justify-center" />
-                      <div className="tx">
-                        <b>{def.name}</b>
-                        <small>{small}</small>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="px-[17px] pb-3.5">
+                <FieldRow label="宠物">
+                  {pet
+                    ? [
+                        pet.name,
+                        pet.breed ?? SPECIES_LABEL[pet.species] ?? null,
+                        pet.weightKg !== null ? `${pet.weightKg}kg` : null,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')
+                    : '—'}
+                </FieldRow>
+                <FieldRow label="客户">
+                  {customerLabel(
+                    detailQuery.data?.customer?.nickname,
+                    detailQuery.data?.customer?.phoneTail,
+                  )}
+                </FieldRow>
+                <FieldRow label="员工">
+                  {appt.staffId
+                    ? staffQuery.isPending
+                      ? '加载中…'
+                      : (staffName ?? '（已指派）')
+                    : '未指派'}
+                  {appt.staffId && srcLabel ? (
+                    <span className="u3-st wait ml-1.5">{srcLabel}</span>
+                  ) : null}
+                </FieldRow>
+                <FieldRow label="收款">
+                  {paymentModeLabel(appt.paymentMode)} ·{' '}
+                  <span className="u1-num">{fenToYuan(appt.priceFen)}</span> ·{' '}
+                  {appt.paidAt ? '已收' : '未收'}
+                </FieldRow>
+                <FieldRow label="疫苗">
+                  {pet?.vaccineValidUntil ? (
+                    <span className={vaccineExpired ? 'text-[#B4502E]' : undefined}>
+                      有效期至 {pet.vaccineValidUntil}
+                      {vaccineExpired ? '（已过期）' : ' ✓'}
+                    </span>
+                  ) : (
+                    '未记录'
+                  )}
+                </FieldRow>
+                <FieldRow label="备注">{appt.note?.trim() ? appt.note : '无'}</FieldRow>
+                {appt.status === 'cancelled' && (appt.cancelReason || appt.cancelSource) ? (
+                  <FieldRow label="取消信息">
+                    {cancelSourceLabel(appt.cancelSource)}
+                    {appt.cancelReason ? `：${appt.cancelReason}` : ''}
+                  </FieldRow>
+                ) : null}
+                {(appt.status === 'pending' || appt.status === 'confirmed') && !appt.checkedInAt ? (
+                  <FieldRow label="核销码">
+                    <span className="u1-num tracking-[0.2em]">{appt.code}</span>
+                    <span className="ml-2 text-[11px] font-normal text-[rgba(59,46,36,.42)]">
+                      {ac('appt.verifyCodeHint')}
+                    </span>
+                  </FieldRow>
+                ) : null}
               </div>
-              {photoWall.length > 0 ? (
-                <div className="flex flex-wrap gap-[5px] px-[17px] pb-3.5">
-                  {photoWall.map((p, i) => (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => setViewer({ photos: photoWall, index: i })}
-                      className="h-[42px] w-[56px] overflow-hidden rounded-[6px] shadow-[inset_0_0_0_1px_rgba(0,0,0,.08)] transition-transform duration-120 ease-philia-spring active:scale-95"
-                      aria-label={`查看照片 ${i + 1}`}
-                    >
-                      <img
-                        src={p.thumbUrl ?? p.url}
-                        alt={p.tag ?? `过程照 ${i + 1}`}
-                        loading="lazy"
-                        className="h-full w-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              ) : null}
             </div>
-          )}
 
-          {/* 事件轨迹 */}
-          <div className="u3-panel" data-testid="detail-trail">
-            <div className="u3-panel-head">
-              <h3>事件轨迹</h3>
-              <span className="aside">{ac('appt.trailAside')}</span>
+            {/* M7 folio 金额件（服务金额/折扣/实收/支付态行） */}
+            <div data-testid="detail-amount">
+              <div className="wsk-hd">
+                <span className="t">{ac('appt.folioTitle')}</span>
+              </div>
+              <WFolio
+                rows={[
+                  {
+                    key: 'amount',
+                    label: ac('appt.folioAmount'),
+                    value: fenToYuan(appt.priceFen),
+                  },
+                  {
+                    key: 'mode',
+                    label: ac('appt.folioPayMode'),
+                    value: paymentModeLabel(appt.paymentMode),
+                    tone: 'mut',
+                  },
+                  {
+                    key: 'discount',
+                    label: ac('appt.folioDiscount'),
+                    value:
+                      appt.paymentMode === 'pass_deduct'
+                        ? ac('appt.folioDiscountPass')
+                        : ac('appt.folioDiscountNone'),
+                    tone: appt.paymentMode === 'pass_deduct' ? 'red' : undefined,
+                  },
+                  {
+                    key: 'net',
+                    label: ac('appt.folioNet'),
+                    value: fenToYuan(appt.paidFen ?? appt.priceFen),
+                    tone: 'total',
+                  },
+                  {
+                    key: 'state',
+                    label: ac('appt.folioPayState'),
+                    value: appt.paidAt
+                      ? ac('appt.folioPaid')
+                      : appt.status === 'completed'
+                        ? ac('appt.folioUnpaid')
+                        : ac('appt.folioNotYet'),
+                    tone: payable ? 'red' : undefined,
+                  },
+                ]}
+              />
             </div>
-            {trail.length === 0 ? (
-              <p className="px-[17px] pb-4 text-[12px] text-[rgba(59,46,36,.42)]">
-                {ac('appt.trailEmpty')}
-              </p>
+
+            {isBoarding ? (
+              <BoardingPanel stay={detailQuery.data?.boardingStay ?? null} appt={appt} />
             ) : (
-              <div className="u3-stepv px-[17px] pb-3.5 pt-1">
-                {trail.map((t, i) => (
-                  <div
-                    key={`${t.ts}-${t.sub}-${i}`}
-                    className={`row ${live && i === trail.length - 1 ? 'now' : 'done'}`}
-                  >
-                    <i className="dt" />
-                    <div className="tx">
-                      <b>
-                        <span className="u1-num">{fmtTime(new Date(t.ts))}</span> {t.title}
-                      </b>
-                      <small>{t.sub}</small>
-                    </div>
+              <div className="u3-panel" data-testid="detail-progress">
+                <div className="u3-panel-head">
+                  <h3>服务进度</h3>
+                  <span className="aside">{progressAside}</span>
+                </div>
+                <div className="u3-stepv px-[17px] pb-3.5 pt-1">
+                  {STEP_ROWS.map((def) => {
+                    const row = stepByKey.get(def.key) ?? null;
+                    const st = row?.status ?? 'locked';
+                    const count = row?.photos.length ?? 0;
+                    const small =
+                      st === 'done'
+                        ? `${row?.doneAt ? `${fmtTime(row.doneAt)} 完成` : '已完成'}${
+                            count > 0 ? ` · ${count} 张照片` : ''
+                          }`
+                        : st === 'active'
+                          ? `进行中 · 已传 ${count}/${row?.requiredPhotos ?? 0} 张${
+                              row?.flagged ? ' · 已打标待重拍' : ''
+                            }`
+                          : '未到';
+                    return (
+                      <div
+                        key={def.key}
+                        className={`row ${st === 'done' ? 'done' : st === 'active' ? 'now' : ''}`}
+                      >
+                        {/* 试样同值锁定：done=纯薄荷圆点（无内嵌图标）/ now=柠檬 / 未到=描边 */}
+                        <i className="dt flex items-center justify-center" />
+                        <div className="tx">
+                          <b>{def.name}</b>
+                          <small>{small}</small>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {photoWall.length > 0 ? (
+                  <div className="flex flex-wrap gap-[5px] px-[17px] pb-3.5">
+                    {photoWall.map((p, i) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setViewer({ photos: photoWall, index: i })}
+                        className="h-[42px] w-[56px] overflow-hidden rounded-[6px] shadow-[inset_0_0_0_1px_rgba(0,0,0,.08)] transition-transform duration-120 ease-philia-spring active:scale-95"
+                        aria-label={`查看照片 ${i + 1}`}
+                      >
+                        <img
+                          src={p.thumbUrl ?? p.url}
+                          alt={p.tag ?? `过程照 ${i + 1}`}
+                          loading="lazy"
+                          className="h-full w-full object-cover"
+                        />
+                      </button>
+                    ))}
                   </div>
-                ))}
+                ) : null}
               </div>
             )}
-          </div>
-        </div>
 
-        {/* 右栏：预约信息 + 金额 */}
-        <div className="flex min-w-0 flex-col gap-3.5">
-          <div className="u3-panel" data-testid="detail-info">
-            <div className="u3-panel-head">
-              <h3>预约信息</h3>
+            {/* 事件轨迹 */}
+            <div className="u3-panel" data-testid="detail-trail">
+              <div className="u3-panel-head">
+                <h3>事件轨迹</h3>
+                <span className="aside">{ac('appt.trailAside')}</span>
+              </div>
+              {trail.length === 0 ? (
+                <p className="px-[17px] pb-4 text-[12px] text-[rgba(59,46,36,.42)]">
+                  {ac('appt.trailEmpty')}
+                </p>
+              ) : (
+                <div className="u3-stepv px-[17px] pb-3.5 pt-1">
+                  {trail.map((t, i) => (
+                    <div
+                      key={`${t.ts}-${t.sub}-${i}`}
+                      className={`row ${live && i === trail.length - 1 ? 'now' : 'done'}`}
+                    >
+                      <i className="dt" />
+                      <div className="tx">
+                        <b>
+                          <span className="u1-num">{fmtTime(new Date(t.ts))}</span> {t.title}
+                        </b>
+                        <small>{t.sub}</small>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div className="px-[17px] pb-3.5">
-              <FieldRow label="宠物">
-                {pet
-                  ? [
-                      pet.name,
-                      pet.breed ?? SPECIES_LABEL[pet.species] ?? null,
-                      pet.weightKg !== null ? `${pet.weightKg}kg` : null,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')
-                  : '—'}
-              </FieldRow>
-              <FieldRow label="客户">
-                {customerLabel(
-                  detailQuery.data?.customer?.nickname,
-                  detailQuery.data?.customer?.phoneTail,
-                )}
-              </FieldRow>
-              <FieldRow label="员工">
-                {appt.staffId
-                  ? staffQuery.isPending
-                    ? '加载中…'
-                    : (staffName ?? '（已指派）')
-                  : '未指派'}
-                {appt.staffId && srcLabel ? (
-                  <span className="u3-st wait ml-1.5">{srcLabel}</span>
+          </div>
+
+          {/* 右栏：fdot 状态流 + 操作钮组 + 提示卡 + 协作拆分（原位） */}
+          <div className="flex min-w-0 flex-col gap-3.5">
+            <section className="wsk-card" data-testid="detail-flow">
+              <div className="wsk-hd">
+                <span className="t">{ac('appt.flowTitle')}</span>
+              </div>
+              <WFlowDots nodes={flowNodes} />
+            </section>
+
+            <section className="wsk-card" data-testid="detail-ops">
+              <div className="wsk-hd">
+                <span className="t">{ac('appt.opsTitle')}</span>
+              </div>
+              <div className="flex flex-wrap gap-2.5">{actions}</div>
+            </section>
+
+            {hintLine || appt.assignSource === 'merchant' ? (
+              <section className="wsk-card" data-testid="detail-hint">
+                <div className="wsk-hd">
+                  <span className="t">{ac('appt.hintTitle')}</span>
+                </div>
+                {hintLine ? <p className="wsk-note">{hintLine}</p> : null}
+                {appt.assignSource === 'merchant' ? (
+                  <p className="wsk-note mt-1">{ac('appt.hintReassign')}</p>
                 ) : null}
-              </FieldRow>
-              <FieldRow label="收款">
-                {paymentModeLabel(appt.paymentMode)} ·{' '}
-                <span className="u1-num">{fenToYuan(appt.priceFen)}</span> ·{' '}
-                {appt.paidAt ? '已收' : '未收'}
-              </FieldRow>
-              <FieldRow label="疫苗">
-                {pet?.vaccineValidUntil ? (
-                  <span className={vaccineExpired ? 'text-[#B4502E]' : undefined}>
-                    有效期至 {pet.vaccineValidUntil}
-                    {vaccineExpired ? '（已过期）' : ' ✓'}
-                  </span>
-                ) : (
-                  '未记录'
-                )}
-              </FieldRow>
-              <FieldRow label="备注">{appt.note?.trim() ? appt.note : '无'}</FieldRow>
-              {appt.status === 'cancelled' && (appt.cancelReason || appt.cancelSource) ? (
-                <FieldRow label="取消信息">
-                  {cancelSourceLabel(appt.cancelSource)}
-                  {appt.cancelReason ? `：${appt.cancelReason}` : ''}
-                </FieldRow>
-              ) : null}
-              {(appt.status === 'pending' || appt.status === 'confirmed') && !appt.checkedInAt ? (
-                <FieldRow label="核销码">
-                  <span className="u1-num tracking-[0.2em]">{appt.code}</span>
-                  <span className="ml-2 text-[11px] font-normal text-[rgba(59,46,36,.42)]">
-                    {ac('appt.verifyCodeHint')}
-                  </span>
-                </FieldRow>
-              ) : null}
-            </div>
-          </div>
+              </section>
+            ) : null}
 
-          <div className="u3-panel" data-testid="detail-amount">
-            <div className="u3-panel-head">
-              <h3>金额</h3>
-            </div>
-            <div className="u3-kv">
-              <div className="cell">
-                <div className="cap">服务金额</div>
-                <div className="v">{fenToYuan(appt.priceFen)}</div>
-              </div>
-              <div className="cell">
-                <div className="cap">收款方式</div>
-                <div className="mt-1 text-body-sm font-bold">
-                  {paymentModeLabel(appt.paymentMode)}
-                </div>
-              </div>
-              <div className="cell">
-                <div className="cap">会员折扣</div>
-                <div className="mt-1 text-body-sm font-bold">
-                  {appt.paymentMode === 'pass_deduct' ? '次卡扣次' : '无'}
-                </div>
-              </div>
-              <div className="cell">
-                <div className="cap">状态</div>
-                <div
-                  className={`mt-1 text-body-sm font-bold ${payable ? 'text-[#B4502E]' : ''}`}
-                >
-                  {appt.paidAt ? '已收' : appt.status === 'completed' ? '待收款' : '未收'}
-                </div>
-              </div>
-            </div>
+            {/* 片 4 B3-2：协作拆分（洗护单；已完成单只读透出；契约经 payrollXpPort 桥接） */}
+            {!isBoarding ? (
+              <CollabSplitSection
+                appointmentId={appt.id}
+                appointmentStatus={appt.status}
+                mainStaffId={appt.staffId}
+              />
+            ) : null}
           </div>
-
-          {/* 片 4 B3-2：协作拆分（洗护单；已完成单只读透出；契约经 payrollXpPort 桥接） */}
-          {!isBoarding ? (
-            <CollabSplitSection
-              appointmentId={appt.id}
-              appointmentStatus={appt.status}
-              mainStaffId={appt.staffId}
-            />
-          ) : null}
         </div>
       </div>
 

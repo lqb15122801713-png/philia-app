@@ -94,6 +94,58 @@ export function ShiftCard({
 }
 
 /* ------------------------------------------------------------------ */
+/* W-07 序位①：今日账面四分列（现金/微信/支付宝/储值 · todayTenderStats 同源）  */
+/* ------------------------------------------------------------------ */
+
+export function TenderSplitPanel({
+  tender,
+}: {
+  /** R1 同源出口（restricted=false；本页 owner|manager 恒可见金额） */
+  tender: Extract<TodayTenderStats, { restricted: false }> | undefined
+}) {
+  return (
+    <div className="u3-panel" data-testid="tender-split-panel">
+      <div className="u3-panel-head">
+        <h3>{cc('cashier.tenderSplitTitle')}</h3>
+        <span className="aside">{cc('cashier.tenderSplitAside')}</span>
+      </div>
+      <div className="u3-kv sm:grid-cols-4">
+        <div className="cell">
+          <div className="cap">现金</div>
+          <div className="v" data-testid="tender-split-cash">
+            {tender ? `¥${fenToYuan(tender.tender.cashFen)}` : '…'}
+          </div>
+        </div>
+        <div className="cell">
+          <div className="cap">微信</div>
+          <div className="v" data-testid="tender-split-wechat">
+            {tender ? `¥${fenToYuan(tender.tender.wechatFen)}` : '…'}
+          </div>
+        </div>
+        <div className="cell">
+          <div className="cap">支付宝</div>
+          <div className="v" data-testid="tender-split-alipay">
+            {tender ? `¥${fenToYuan(tender.tender.alipayFen)}` : '…'}
+          </div>
+        </div>
+        <div className="cell">
+          <div className="cap">储值（参考）</div>
+          <div className="v text-[rgba(59,46,36,.62)]" data-testid="tender-split-sv">
+            {tender ? `¥${fenToYuan(tender.tender.storedValueFen)}` : '…'}
+          </div>
+        </div>
+      </div>
+      {/* 次卡等值参考行（原 DayCloseForm 分列行迁此——裁定①口径小字不动） */}
+      <p className="px-[17px] pb-4 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]" data-testid="dayclose-split">
+        {cc('cashier.tenderSplitRef')}{' '}
+        <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{tender ? fenToYuan(tender.tender.passFen) : '…'}</b>
+        {' ｜ 参考列（次卡/储值）永不计入已收'}
+      </p>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
 /* 日结表单（账面 vs 实点 · 差异红字 · 分列）                                  */
 /* ------------------------------------------------------------------ */
 
@@ -169,17 +221,6 @@ export function DayCloseForm({
             {diff === null ? '—' : `${diff > 0 ? '+' : diff < 0 ? '−' : ''}¥${fenToYuan(Math.abs(diff))}`}
           </b>
         </div>
-
-        {/* 微信/支付宝/次卡等值/储值分列（参考列口径小字——裁定①） */}
-        <p className="mt-2 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]" data-testid="dayclose-split">
-          微信 <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{tender ? fenToYuan(tender.tender.wechatFen) : '…'}</b>
-          {' · 支付宝 '}
-          <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{tender ? fenToYuan(tender.tender.alipayFen) : '…'}</b>
-          {' ｜ 参考（不计入已收）：次卡等值 '}
-          <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{tender ? fenToYuan(tender.tender.passFen) : '…'}</b>
-          {' · 储值消费 '}
-          <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{tender ? fenToYuan(tender.tender.storedValueFen) : '…'}</b>
-        </p>
 
         {/* QA40-D1（PD-03 件 2）：年费分摊双口径参考行——参考口径，不入任何合计 */}
         <AmortizationDayLine />

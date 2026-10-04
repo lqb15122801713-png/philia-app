@@ -24,6 +24,7 @@
 import { EventType, Skeleton, usePhiliaClient } from '@philia/shared'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { CashierModal, SheetBtn } from '@/components/cashier/dialogs'
 import {
@@ -228,20 +229,31 @@ export default function CashierRefundsPage() {
       title={cc('cashier.refundsTitle')}
       sub={cc('cashier.refundsSub')}
       actions={
-        role.isOwner ? (
-          <span className="flex items-center gap-2">
-            <input
-              type="month"
-              data-testid="refunds-export-month"
-              value={exportMonth}
-              onChange={(e) => setExportMonth(e.target.value)}
-              className="u1-ring rounded-control bg-card px-3 py-2 font-number text-caption tabular-nums text-ink focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
-            />
-            <QuietButton testid="refunds-export-btn" disabled={exporting} onClick={() => void doExport()}>
-              {exporting ? '导出中…' : '导出 CSV'}
-            </QuietButton>
-          </span>
-        ) : undefined
+        <span className="flex items-center gap-2">
+          {/* W-08 wtop+G2 发起：现状入口=收银流水单详情（不新造发起链路） */}
+          <Link
+            to="/cashier/records"
+            data-testid="refunds-create-link"
+            title={cc('cashier.refundsCreateHint')}
+            className="u1-ring rounded-control bg-card px-4 py-3.5 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+          >
+            {cc('cashier.refundsCreateLink')}
+          </Link>
+          {role.isOwner ? (
+            <>
+              <input
+                type="month"
+                data-testid="refunds-export-month"
+                value={exportMonth}
+                onChange={(e) => setExportMonth(e.target.value)}
+                className="u1-ring rounded-control bg-card px-3 py-2 font-number text-caption tabular-nums text-ink focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+              />
+              <QuietButton testid="refunds-export-btn" disabled={exporting} onClick={() => void doExport()}>
+                {exporting ? '导出中…' : '导出 CSV'}
+              </QuietButton>
+            </>
+          ) : null}
+        </span>
       }
     >
       {/* 超 24h 待办黄色提醒条（冻结版 §三：实退待办进店长提醒） */}
@@ -413,6 +425,12 @@ export default function CashierRefundsPage() {
                             {REFUND_METHOD_LABEL[r.refundMethod] ?? r.refundMethod}
                           </span>
                         ) : null}
+                        {/* W-08：executed 行「不可撤销」明面注（纠错=再开正单） */}
+                        {r.status === 'executed' ? (
+                          <span className="block text-caption-xs text-[rgba(59,46,36,.42)]">
+                            {cc('cashier.refundExecutedNote')}
+                          </span>
+                        ) : null}
                       </td>
                       <td className="u1-num">{fmtDateTime(r.createdAt)}</td>
                       <td onClick={(e) => e.stopPropagation()}>
@@ -452,6 +470,18 @@ export default function CashierRefundsPage() {
             </table>
           </div>
         )}
+      </div>
+
+      {/* W-08 驳回权口径卡（wtip：draft gold 审批位 / executed 不可撤销 / 涉储值只读须店主） */}
+      <div className="u3-panel mt-3.5" data-testid="refund-policy-card">
+        <div className="u3-panel-head">
+          <h3>{cc('cashier.refundPolicyTitle')}</h3>
+        </div>
+        <ul className="space-y-1.5 px-[17px] pb-4 text-caption-xs leading-relaxed text-[rgba(59,46,36,.62)]">
+          <li>· {cc('cashier.refundPolicyReject')}</li>
+          <li>· {cc('cashier.refundSvNotice')}</li>
+          <li>· {cc('cashier.refundExecuteNote')}</li>
+        </ul>
       </div>
 
       {/* 详情（六联动快照） */}

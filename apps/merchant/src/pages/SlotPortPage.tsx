@@ -203,7 +203,9 @@ function SlotCard({
 /* 页面主体（owner）                                                     */
 /* ------------------------------------------------------------------ */
 
-function OwnerSlotPort() {
+/* 片 5 段 3（W-16 共构不分叉）：页面内核导出（含三态与 ToasterMount，不含
+   MainScaffold 页头），供 ConsolePage 右栏直嵌；本页默认出口行为不变 */
+export function SlotPortBody() {
   const { trpc, queryClient } = usePhiliaClient();
 
   const listQuery = useQuery({
@@ -274,37 +276,33 @@ function OwnerSlotPort() {
   /* ---------------- 加载 / 错误 / 空三态 ---------------- */
   if (listQuery.isPending) {
     return (
-      <MainScaffold title={cp('slotport.pageTitle')} sub={cp('slotport.pageSub')} testid="slotport-page">
-        <div className="u3-panel" aria-label="加载中">
-          <div className="u3-panel-head">
-            <Skeleton className="h-4 w-24 rounded-chip" />
-          </div>
-          {['w-[46%]', 'w-[58%]', 'w-[70%]'].map((w, i) => (
-            <div key={i} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-4">
-              <Skeleton className={`h-3 rounded-chip ${w}`} />
-              <Skeleton className="mt-2 h-20 w-32 rounded-input" />
-            </div>
-          ))}
+      <div className="u3-panel" aria-label="加载中">
+        <div className="u3-panel-head">
+          <Skeleton className="h-4 w-24 rounded-chip" />
         </div>
-      </MainScaffold>
+        {['w-[46%]', 'w-[58%]', 'w-[70%]'].map((w, i) => (
+          <div key={i} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-4">
+            <Skeleton className={`h-3 rounded-chip ${w}`} />
+            <Skeleton className="mt-2 h-20 w-32 rounded-input" />
+          </div>
+        ))}
+      </div>
     );
   }
 
   if (listQuery.isError) {
     return (
-      <MainScaffold title={cp('slotport.pageTitle')} sub={cp('slotport.pageSub')} testid="slotport-page">
-        <div className="rounded-panel bg-[#FFFDF6] py-12 text-center shadow-hairline ring-1 ring-line-ring">
-          <div className="text-body-sm text-[rgba(59,46,36,.62)]">{errMsg(listQuery.error)}</div>
-          <Btn variant="ghost" size="sm" className="mt-3" onClick={() => void listQuery.refetch()}>
-            {cp('slotport.loadFail')}
-          </Btn>
-        </div>
-      </MainScaffold>
+      <div className="rounded-panel bg-[#FFFDF6] py-12 text-center shadow-hairline ring-1 ring-line-ring">
+        <div className="text-body-sm text-[rgba(59,46,36,.62)]">{errMsg(listQuery.error)}</div>
+        <Btn variant="ghost" size="sm" className="mt-3" onClick={() => void listQuery.refetch()}>
+          {cp('slotport.loadFail')}
+        </Btn>
+      </div>
     );
   }
 
   return (
-    <MainScaffold title={cp('slotport.pageTitle')} sub={cp('slotport.pageSub')} testid="slotport-page">
+    <>
       <ToasterMount />
       {slots.length === 0 ? (
         <div className="rounded-panel bg-[#FFFDF6] py-12 text-center shadow-hairline ring-1 ring-line-ring">
@@ -324,6 +322,15 @@ function OwnerSlotPort() {
           />
         ))
       )}
+    </>
+  );
+}
+
+/** 页头装配（默认出口行为不变：MainScaffold + 内核体） */
+function OwnerSlotPort() {
+  return (
+    <MainScaffold title={cp('slotport.pageTitle')} sub={cp('slotport.pageSub')} testid="slotport-page">
+      <SlotPortBody />
     </MainScaffold>
   );
 }

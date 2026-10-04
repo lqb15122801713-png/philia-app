@@ -143,6 +143,9 @@ const ROUTES = [
   /* 员工端骨架整建批 片 4 两条新路由（闸径照上行片 3 先例：owner|manager 页题渲染，clerk 引导页标题同含锚点） */
   { app: 'merchant', path: '/payroll', anchors: ['薪资'], serverDep: true, note: '片 4：薪资（owner|manager 渲染「薪资」页题；墨轨「门店」组入口 rail-payroll）' },
   { app: 'merchant', path: '/xp-admin', anchors: ['XP 审核'], serverDep: true, note: '片 4：XP 审核（owner|manager 渲染「XP 审核」页题；墨轨「门店」组入口 rail-xp-admin）' },
+  /* 商家端控制台骨架批 片 5 段 3 两条路由（锚点=真页稳定文案；owner 登录渲染页题，manager /console 页内引导卡标题同含锚点，clerk 由 ClerkRouteGuard 拦截） */
+  { app: 'merchant', path: '/matrix', anchors: ['权限矩阵'], serverDep: true, note: '片 5 段 3：W-14 真页（静态四态矩阵+锁死区红胶囊；rail 管理组 rail-matrix）' },
+  { app: 'merchant', path: '/console', anchors: ['开发者管理端'], serverDep: true, note: '片 5 段 3：W-16 聚合真页（端口目录+三页内核直嵌；manager 引导卡标题同含锚点；旧三路由 /settings/rules|copy|slots 保留直达）' },
   { app: 'merchant', path: '/live', anchors: ['在店监控'], expectPath: '/monitor', note: 'B2 重定向；U3 锚点' },
   { app: 'merchant', path: '/appointments', anchors: ['预约'], note: 'A3 白屏群' },
   { app: 'merchant', path: `/appointments/${APPT_ID}/monitor`, anchors: ['实时监控', '预约'], serverDep: true, note: 'P4 原深链；U3 锚点' },
