@@ -171,7 +171,7 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 1694 键/39 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出；
+ *      56.1 种子 1827 键/41 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -4855,13 +4855,13 @@ async function main(): Promise<void> {
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（1694 键/39 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 1694 && domainSet.size === 39 &&
+  check('56.1 copy 域种子全量落库（1827 键/41 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 1827 && domainSet.size === 41 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（1694 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 1694 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（1827 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 1827 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -5087,6 +5087,495 @@ async function main(): Promise<void> {
   /* 守尾清零：审批行置 rejected（不留 pending 污染后续段）；盘点草稿/寄养卡留在临时库无后续段读 */
   await db.update(schema.attendanceApprovals).set({ status: 'rejected' })
     .where(eq(schema.attendanceApprovals.storeId, storeId));
+
+  /* ==================================================================
+   * 员工端骨架整建批 片 2（排班域 · 冻结版 V1.0 §二.B2）验收段
+   * ================================================================== */
+  console.log('\n[片2 排班] 58 排班域（模板/生成/发布/换班/请假/调休/技能/CSV 导入/权限）');
+  {
+    const isoDay = (d: Date) => d.toISOString().slice(0, 10);
+    const addDays58 = (s: string, n: number) => {
+      const d = new Date(`${s}T00:00:00Z`);
+      d.setUTCDate(d.getUTCDate() + n);
+      return isoDay(d);
+    };
+    const now58 = new Date();
+    const toNextMon = ((8 - now58.getUTCDay()) % 7) || 7;
+    const weekStart = addDays58(isoDay(now58), toNextMon); // 下周一（全员未来班，换班「未过」闸安全）
+    const monDate = weekStart;
+    const friDate = addDays58(weekStart, 4);
+    const week2Start = addDays58(weekStart, 7);
+    interface Tpl58 { id: string; name: string; startMin: number; endMin: number; weekdays: number[]; active: boolean }
+    interface Asg58 { id: string; staffId: string; date: string; startMin: number; endMin: number; source: string; status: string; note: string | null; publishedAt: Date | null }
+    interface Swap58 { id: string; assignmentId: string; fromStaffId: string; toStaffId: string | null; status: string; decideNote: string | null }
+    const allAssignments = () => db.select().from(schema.shiftAssignments);
+    const outboxOf = (type: string) =>
+      db.select().from(schema.eventOutbox).then((rows) => rows.filter((r) => r.eventType === type));
+
+    /* ---- 58.1 模板建 + 同参重放幂等 + 停用 ---- */
+    const tplUp = await trpcMutate<{ template: Tpl58; idempotent: boolean }>('schedule.templateUpsert', {
+      cookie: managerCookie,
+      input: { name: '早班', startMin: 600, endMin: 1080, weekdays: [1, 2, 3, 4, 5] },
+    });
+    const tplUpReplay = await trpcMutate<{ template: Tpl58; idempotent: boolean }>('schedule.templateUpsert', {
+      cookie: managerCookie,
+      input: { name: '早班', startMin: 600, endMin: 1080, weekdays: [1, 2, 3, 4, 5] },
+    });
+    const tplList1 = await trpcQuery<{ templates: Tpl58[] }>('schedule.templates', { cookie: managerCookie });
+    check('58.1 模板建立 + 同 name 同参数重放幂等（同 id 返回现状，模板数不增）',
+      tplUp.template.name === '早班' && tplUp.idempotent === false &&
+        tplUpReplay.idempotent === true && tplUpReplay.template.id === tplUp.template.id &&
+        tplList1.templates.filter((t) => t.name === '早班').length === 1,
+      { first: tplUp.template.id, replay: tplUpReplay.template.id });
+
+    /* ---- 58.2 请假：申请幂等 + 批准后 assign 准假日硬拒明文 ---- */
+    const leave58 = await trpcMutate<{ leave: { id: string; status: string }; idempotent: boolean }>('schedule.leaveRequest', {
+      cookie: liliCookie,
+      input: { kind: 'leave', startDate: friDate, endDate: friDate, reason: '【测试】周五事假' },
+    });
+    const leave58dup = await trpcMutate<{ leave: { id: string }; idempotent: boolean }>('schedule.leaveRequest', {
+      cookie: liliCookie,
+      input: { kind: 'leave', startDate: friDate, endDate: friDate, reason: '【测试】周五事假' },
+    });
+    const leaveResolve58 = await trpcMutate<{ leave: { id: string; status: string } }>('schedule.leaveResolve', {
+      cookie: managerCookie,
+      input: { leaveId: leave58.leave.id, approve: true },
+    });
+    const assignOnLeave = await asErr(trpcMutate('schedule.assign', {
+      cookie: managerCookie,
+      input: { staffId: staffRow2.id, date: friDate, startMin: 600, endMin: 1080 },
+    }));
+    const myLeaves58 = await trpcQuery<{ leaves: Array<{ id: string; status: string }> }>('schedule.myLeaves', { cookie: liliCookie });
+    const leaveQueue58 = await trpcQuery<{ queue: Array<{ id: string }> }>('schedule.leaveQueue', { cookie: managerCookie });
+    check('58.2 请假申请同人同期幂等 + 批准后 assign 准假日硬拒明文「排到请假人=系统责任」+ myLeaves 可见 / leaveQueue 出队',
+      leave58dup.idempotent === true && leave58dup.leave.id === leave58.leave.id &&
+        leaveResolve58.leave.status === 'approved' &&
+        assignOnLeave instanceof TrpcHttpError && assignOnLeave.code === 'BAD_REQUEST' &&
+        assignOnLeave.message.includes(`该员工当日已准假（请假单 ${leave58.leave.id}）`) &&
+        assignOnLeave.message.includes('排到请假人=系统责任') &&
+        myLeaves58.leaves.some((l) => l.id === leave58.leave.id && l.status === 'approved') &&
+        !leaveQueue58.queue.some((l) => l.id === leave58.leave.id),
+      assignOnLeave instanceof Error ? assignOnLeave.message : null);
+
+    /* ---- 58.3 模板生成：全员铺 + 请假跳过 skipReport + 连跑幂等零新增 ---- */
+    const gen1 = await trpcMutate<{ created: number; skippedExisting: number; skipReport: Array<{ staffId: string; date: string; reason: string }> }>(
+      'schedule.generate', { cookie: managerCookie, input: { weekStart } });
+    const gen2 = await trpcMutate<{ created: number; skippedExisting: number; skipReport: Array<{ staffId: string; date: string }> }>(
+      'schedule.generate', { cookie: managerCookie, input: { weekStart } });
+    check('58.3 generate 全员铺班（丽丽周五准假跳过并列 skipReport「已准假」）+ 连跑第二次零新增（幂等，同键全跳过）',
+      gen1.created > 0 &&
+        gen1.skipReport.some((s) => s.staffId === staffRow2.id && s.date === friDate && s.reason.includes('已准假')) &&
+        gen2.created === 0 && gen2.skippedExisting === gen1.created,
+      { gen1: { created: gen1.created, skips: gen1.skipReport.length }, gen2 });
+
+    /* ---- 58.4 取消排班：note 必填 + 留痕不删行 ---- */
+    const aqiangMon = (await allAssignments()).find((r) => r.staffId === aqiang.id && r.date === monDate && r.status === 'active')!;
+    const cancelNoNote = await asErr(trpcMutate('schedule.cancelAssignment', {
+      cookie: managerCookie, input: { assignmentId: aqiangMon.id },
+    }));
+    const cancelled58 = await trpcMutate<{ assignment: Asg58; idempotent: boolean }>('schedule.cancelAssignment', {
+      cookie: managerCookie, input: { assignmentId: aqiangMon.id, note: '【测试】顶班调整' },
+    });
+    const cancelRow = (await allAssignments()).find((r) => r.id === aqiangMon.id);
+    check('58.4 cancelAssignment：缺 note 400 + status=cancelled 留痕不删行（行仍在，note 落注记）',
+      cancelNoNote instanceof TrpcHttpError && cancelNoNote.code === 'BAD_REQUEST' &&
+        cancelled58.assignment.status === 'cancelled' &&
+        cancelRow?.status === 'cancelled' && cancelRow.note === '【测试】顶班调整',
+      { err: cancelNoNote instanceof Error ? cancelNoNote.message : null, row: cancelRow?.status });
+
+    /* ---- 58.5 换班责任链：未批原人不动 / 幂等 / 驳回 note 强制 / 批准换挂+双方事件 ---- */
+    const liliMon = (await allAssignments()).find((r) => r.staffId === staffRow2.id && r.date === monDate && r.status === 'active')!;
+    const swap1 = await trpcMutate<{ swap: Swap58; idempotent: boolean }>('schedule.swapRequest', {
+      cookie: liliCookie, input: { assignmentId: liliMon.id, toStaffId: aqiang.id, reason: '【测试】家中有事' },
+    });
+    const swap1dup = await trpcMutate<{ swap: Swap58; idempotent: boolean }>('schedule.swapRequest', {
+      cookie: liliCookie, input: { assignmentId: liliMon.id, toStaffId: aqiang.id, reason: '【测试】家中有事' },
+    });
+    const asgDuringPending = (await allAssignments()).find((r) => r.id === liliMon.id)!;
+    const rejNoNote = await asErr(trpcMutate('schedule.swapResolve', {
+      cookie: managerCookie, input: { swapId: swap1.swap.id, approve: false },
+    }));
+    const rej58 = await trpcMutate<{ swap: Swap58 }>('schedule.swapResolve', {
+      cookie: managerCookie, input: { swapId: swap1.swap.id, approve: false, note: '【测试】当日人手足够' },
+    });
+    check('58.5a 换班申请幂等（同单一 pending 返回现状）+ pending 期间 assignment 原人不动 + 驳回 note 强制（缺 note 400）',
+      swap1dup.idempotent === true && swap1dup.swap.id === swap1.swap.id &&
+        asgDuringPending.staffId === staffRow2.id &&
+        rejNoNote instanceof TrpcHttpError && rejNoNote.code === 'BAD_REQUEST' &&
+        rej58.swap.status === 'rejected' && rej58.swap.decideNote === '【测试】当日人手足够',
+      { dup: swap1dup.swap.id, heldBy: asgDuringPending.staffId });
+    const swap2 = await trpcMutate<{ swap: Swap58; idempotent: boolean }>('schedule.swapRequest', {
+      cookie: liliCookie, input: { assignmentId: liliMon.id, toStaffId: aqiang.id, reason: '【测试】家中有事再提' },
+    });
+    const apv58 = await trpcMutate<{ swap: Swap58 }>('schedule.swapResolve', {
+      cookie: managerCookie, input: { swapId: swap2.swap.id, approve: true },
+    });
+    const asgAfterSwap = (await allAssignments()).find((r) => r.id === liliMon.id)!;
+    const swapEvents = await outboxOf('shift.swapResolved');
+    check('58.5b 批准=换挂（assignment.staffId→阿强）+ shift.swapResolved 双方 staff 频道落 outbox',
+      apv58.swap.status === 'approved' && asgAfterSwap.staffId === aqiang.id &&
+        swapEvents.some((e) => e.channel === `staff:${staffRow2.id}` && (e.payload as { swapId?: string })?.swapId === swap2.swap.id) &&
+        swapEvents.some((e) => e.channel === `staff:${aqiang.id}` && (e.payload as { swapId?: string })?.swapId === swap2.swap.id),
+      { heldBy: asgAfterSwap.staffId, ev: swapEvents.map((e) => e.channel) });
+    /* 开放认领单：申请不带 toStaffId，批准不指定 → 明文「请指定接手员工」；随后驳回清场 */
+    const liliTue = (await allAssignments()).find((r) => r.staffId === staffRow2.id && r.date === addDays58(weekStart, 1) && r.status === 'active')!;
+    const swapOpen = await trpcMutate<{ swap: Swap58 }>('schedule.swapRequest', {
+      cookie: liliCookie, input: { assignmentId: liliTue.id, reason: '【测试】开放认领' },
+    });
+    const apvNoTarget = await asErr(trpcMutate('schedule.swapResolve', {
+      cookie: managerCookie, input: { swapId: swapOpen.swap.id, approve: true },
+    }));
+    await trpcMutate('schedule.swapResolve', {
+      cookie: managerCookie, input: { swapId: swapOpen.swap.id, approve: false, note: '【测试】清场' },
+    });
+    check('58.5c 开放认领单批准未指定接手 → 400 明文「请指定接手员工」',
+      apvNoTarget instanceof TrpcHttpError && apvNoTarget.code === 'BAD_REQUEST' && apvNoTarget.message.includes('请指定接手员工'),
+      apvNoTarget instanceof Error ? apvNoTarget.message : null);
+
+    /* ---- 58.6 可用时间 upsert 幂等 ---- */
+    const av1 = await trpcMutate<{ availability: { id: string; endMin: number }; idempotent: boolean }>('schedule.upsertAvailability', {
+      cookie: liliCookie, input: { weekday: 1, startMin: 600, endMin: 1080, note: '上午可' },
+    });
+    const av2 = await trpcMutate<{ availability: { id: string; endMin: number }; idempotent: boolean }>('schedule.upsertAvailability', {
+      cookie: liliCookie, input: { weekday: 1, startMin: 600, endMin: 1080, note: '上午可' },
+    });
+    const av3 = await trpcMutate<{ availability: { id: string; endMin: number }; idempotent: boolean }>('schedule.upsertAvailability', {
+      cookie: liliCookie, input: { weekday: 1, startMin: 600, endMin: 1140, note: '上午可' },
+    });
+    const myAv58 = await trpcQuery<{ availability: Array<{ id: string; weekday: number; startMin: number; endMin: number }> }>(
+      'schedule.myAvailability', { cookie: liliCookie });
+    const avRows = myAv58.availability.filter((a) => a.weekday === 1 && a.startMin === 600);
+    check('58.6 可用时间按 (staff,weekday,startMin) upsert 幂等（重放同行不增；改 endMin 同键更新）',
+      av1.idempotent === false && av2.idempotent === true && av3.idempotent === true &&
+        av2.availability.id === av1.availability.id && av3.availability.id === av1.availability.id &&
+        avRows.length === 1 && avRows[0]!.endMin === 1140,
+      { rows: avRows.length, endMin: avRows[0]?.endMin });
+
+    /* ---- 58.7 调休台账：adjust 留痕 + 余额读（90 分钟=1.5 小时） ---- */
+    await trpcMutate('schedule.compOffAdjust', {
+      cookie: managerCookie, input: { staffId: staffRow2.id, deltaMinutes: 120, reason: '【测试】加班补时' },
+    });
+    await trpcMutate('schedule.compOffAdjust', {
+      cookie: managerCookie, input: { staffId: staffRow2.id, deltaMinutes: -30, reason: '【测试】调休抵扣' },
+    });
+    const bal58 = await trpcQuery<{ balanceMinutes: number; balanceHours: number; logs: Array<{ deltaMinutes: number; reason: string }> }>(
+      'schedule.compOffBalance', { cookie: liliCookie });
+    check('58.7 调休 adjust 两笔留痕 + 余额=sum(delta)/60（120−30=90 分钟=1.5 小时，流水近 20 条透出）',
+      bal58.balanceMinutes === 90 && bal58.balanceHours === 1.5 &&
+        bal58.logs.some((l) => l.deltaMinutes === 120) && bal58.logs.some((l) => l.deltaMinutes === -30),
+      bal58);
+
+    /* ---- 58.8 技能标签：端口集外硬拒「不在标签集」+ 全量覆盖写 ---- */
+    const skillTags58 = await trpcQuery<{ tags: string[] }>('schedule.skillTags', { cookie: customerCookie });
+    const badSkill = await asErr(trpcMutate('schedule.setSkills', {
+      cookie: managerCookie, input: { staffId: staffRow2.id, tags: ['洗护', '飞盘'] },
+    }));
+    const setOk58 = await trpcMutate<{ staffId: string; tags: string[] }>('schedule.setSkills', {
+      cookie: managerCookie, input: { staffId: staffRow2.id, tags: ['洗护', '美容'] },
+    });
+    const allSkills58 = await trpcQuery<{ staff: Array<{ id: string; name: string; tags: string[] }> }>(
+      'schedule.staffSkills', { cookie: managerCookie });
+    check('58.8 技能标签端口集公开读（含「洗护」）+ 集外标签 400 明文「不在标签集」+ 全量覆盖写后 staffSkills 透出',
+      skillTags58.tags.includes('洗护') &&
+        badSkill instanceof TrpcHttpError && badSkill.code === 'BAD_REQUEST' && badSkill.message.includes('不在标签集') &&
+        setOk58.tags.length === 2 &&
+        (allSkills58.staff.find((s) => s.id === staffRow2.id)?.tags.slice().sort().join(',') === '洗护,美容'),
+      { tags: skillTags58.tags, err: badSkill instanceof Error ? badSkill.message : null });
+
+    /* ---- 58.9 CSV 导入：preview 零写入 + execute 落行 + 幂等跳过 + 列名漂移/斜杠日期容错 + 请假行逐行拒 ---- */
+    const csvA = `员工,日期,开始,结束\n丽丽,${week2Start},09:30,17:30\n${aqiang.id},${addDays58(week2Start, 1)},10:00,18:00`;
+    const beforeImport = (await allAssignments()).filter((r) => r.date >= week2Start).length;
+    const pv1 = await trpcMutate<{ okRows: number; failRows: number }>('schedule.importPreview', {
+      cookie: managerCookie, input: { csvText: csvA },
+    });
+    const afterPreview = (await allAssignments()).filter((r) => r.date >= week2Start).length;
+    const ex1 = await trpcMutate<{ inserted: number; skippedDuplicates: number; failRows: number }>('schedule.importExecute', {
+      cookie: managerCookie, input: { csvText: csvA },
+    });
+    const ex1replay = await trpcMutate<{ inserted: number; skippedDuplicates: number }>('schedule.importExecute', {
+      cookie: managerCookie, input: { csvText: csvA },
+    });
+    check('58.9a 导入 preview 零写入 + execute 落 2 行（员工列姓名/id 双匹配）+ 重放幂等全跳过',
+      beforeImport === 0 && pv1.okRows === 2 && pv1.failRows === 0 && afterPreview === 0 &&
+        ex1.inserted === 2 && ex1.failRows === 0 &&
+        ex1replay.inserted === 0 && ex1replay.skippedDuplicates === 2,
+      { pv1, ex1, ex1replay });
+    /* 列序漂移（日期,结束,员工,开始）+ 斜杠日期 + 请假覆盖行 + 查无此人 行逐行拒 */
+    const csvB = `日期,结束,员工,开始\n${addDays58(week2Start, 2)},17:30,丽丽,09:30\n${friDate.replaceAll('-', '/')},18:00,丽丽,10:00\n${week2Start},18:00,查无此人,10:00`;
+    const pv2 = await trpcMutate<{ okRows: number; failRows: number; rows: Array<{ line: number; ok: boolean; failReason?: string }> }>(
+      'schedule.importPreview', { cookie: managerCookie, input: { csvText: csvB } });
+    const ex2 = await trpcMutate<{ inserted: number; failRows: number; rows: Array<{ line: number; ok: boolean; failReason?: string }> }>(
+      'schedule.importExecute', { cookie: managerCookie, input: { csvText: csvB } });
+    check('58.9b 列名漂移换列序照导（按表头名定位）+ 请假覆盖行逐行拒（「已准假」明文）+ 查无此人拒',
+      pv2.okRows === 1 && pv2.failRows === 2 &&
+        pv2.rows.some((r) => !r.ok && (r.failReason ?? '').includes('已准假')) &&
+        pv2.rows.some((r) => !r.ok && (r.failReason ?? '').includes('不在本店员工名册')) &&
+        ex2.inserted === 1 && ex2.failRows === 2,
+      { pv2: pv2.rows, ex2: { inserted: ex2.inserted, failRows: ex2.failRows } });
+
+    /* ---- 58.10 周发布：幂等 + schedule.published 逐员工落 outbox + weekView published 透出 ---- */
+    const pub1 = await trpcMutate<{ published: number; perStaff: Array<{ staffId: string; count: number }> }>(
+      'schedule.publishWeek', { cookie: managerCookie, input: { weekStart } });
+    const pubEvents1 = (await outboxOf('schedule.published')).filter(
+      (e) => (e.payload as { weekStart?: string })?.weekStart === weekStart);
+    const pub2 = await trpcMutate<{ published: number }>('schedule.publishWeek', {
+      cookie: managerCookie, input: { weekStart } });
+    const pubEvents2 = (await outboxOf('schedule.published')).filter(
+      (e) => (e.payload as { weekStart?: string })?.weekStart === weekStart);
+    const weekView58 = await trpcQuery<{ assignments: Array<Asg58 & { published: boolean; staffName: string }> }>(
+      'schedule.weekView', { cookie: liliCookie, input: { weekStart } });
+    check('58.10 publishWeek 幂等（再发零新增零重复事件）+ schedule.published 逐受影响员工落 outbox（payload.weekStart/count）+ weekView published 透出',
+      pub1.published > 0 && pub1.perStaff.some((p) => p.staffId === staffRow2.id) &&
+        pubEvents1.length === pub1.perStaff.length &&
+        pubEvents1.every((e) => typeof (e.payload as { count?: number })?.count === 'number') &&
+        pub2.published === 0 && pubEvents2.length === pubEvents1.length &&
+        weekView58.assignments.length > 0 &&
+        weekView58.assignments.filter((a) => a.status === 'active').every((a) => a.published) &&
+        weekView58.assignments.some((a) => a.staffName === '丽丽'),
+      { pub1: pub1.published, pub2: pub2.published, ev1: pubEvents1.length, ev2: pubEvents2.length });
+
+    /* ---- 58.11 权限：clerk/普通 staff 对 manager 端点 403；clerk/customer 对 weekView 403 ---- */
+    const clerkTpl = await asErr(trpcQuery('schedule.templates', { cookie: clerkCookie }));
+    const clerkAssign = await asErr(trpcMutate('schedule.assign', {
+      cookie: clerkCookie, input: { staffId: staffRow2.id, date: monDate, startMin: 600, endMin: 1080 },
+    }));
+    const staffAssign = await asErr(trpcMutate('schedule.assign', {
+      cookie: liliCookie, input: { staffId: staffRow2.id, date: monDate, startMin: 600, endMin: 1080 },
+    }));
+    const clerkWeek = await asErr(trpcQuery('schedule.weekView', { cookie: clerkCookie, input: { weekStart } }));
+    const customerWeek = await asErr(trpcQuery('schedule.weekView', { cookie: customerCookie, input: { weekStart } }));
+    check('58.11 权限闸：clerk templates/assign 403 + 普通 staff assign 403 + clerk/customer weekView 403',
+      [clerkTpl, clerkAssign, staffAssign, clerkWeek, customerWeek].every(
+        (e) => e instanceof TrpcHttpError && e.httpStatus === 403),
+      [clerkTpl, clerkAssign, staffAssign, clerkWeek, customerWeek].map((e) => (e instanceof Error ? e.httpStatus : 'ok')));
+
+    /* ---- 58.12 模板停用（留尾，generate 已用完） ---- */
+    await trpcMutate('schedule.templateDeactivate', { cookie: managerCookie, input: { id: tplUp.template.id } });
+    const tplList2 = await trpcQuery<{ templates: Tpl58[] }>('schedule.templates', { cookie: managerCookie });
+    check('58.12 templateDeactivate：模板置 active=false（不删行）',
+      tplList2.templates.find((t) => t.id === tplUp.template.id)?.active === false,
+      tplList2.templates.find((t) => t.id === tplUp.template.id));
+  }
+
+
+  /* ==================================================================
+   * 员工端骨架整建批片 2 · 考勤域七件（冻结版 V1.0 §二.B1）+ 读序切换 验收段
+   * ================================================================== */
+  console.log('\n[片2] 59. 考勤域 B1（读序切换 / WiFi / 外勤 / 断网补传 / 多对打卡 / 确认+改考勤 / 申诉）');
+
+  const now59 = new Date();
+  const DAY_KEYS_59 = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
+  const dayKey59 = DAY_KEYS_59[now59.getDay()]!;
+  const hm59 = (d: Date) => `${pad2l(d.getHours())}:${pad2l(d.getMinutes())}`;
+  const nowMin59 = now59.getHours() * 60 + now59.getMinutes();
+  const tpl59 = (start: string, end: string): import('../db/schema').StaffSchedule => ({ [dayKey59]: [{ start, end }] });
+  interface MarkRes59 {
+    record: {
+      id: string; kind: string; status: string;
+      source: string | null; bssid: string | null; photoUrl: string | null;
+      ts: string | Date; clientTs: string | Date | null;
+    };
+    duplicated: boolean;
+  }
+
+  /* ---- 59.1 读序切换：当日 shift_assignments(active) 优先 → 无则 staff.schedule 周模板兜底 ---- */
+  /* 附加乙：周模板给「+120min 班」（in 击按模板应判 normal）+ assignment 给「-60min 班」（in 击判 late）
+     ——判 late 即坐实 assignment 优先于模板（若误读模板会得 normal） */
+  await db.update(schema.staff)
+    .set({ schedule: tpl59(hm59(new Date(now59.getTime() + 120 * 60000)), hm59(new Date(now59.getTime() + 300 * 60000))) })
+    .where(eq(schema.staff.id, extraS2.id));
+  const asg59 = await db.insert(schema.shiftAssignments).values({
+    storeId, staffId: extraS2.id, date: todayStr,
+    startMin: Math.max(0, nowMin59 - 60), endMin: nowMin59 + 240,
+    source: 'manual', status: 'active', createdBy: ownerUser!.id,
+  }).returning().then((r) => r[0]!);
+  const markAssign = await trpcMutate<MarkRes59>('attendance.mark', {
+    cookie: extra2Cookie,
+    input: { kind: 'in', lat: 30.2741, lng: 120.1551, deviceId: 'e2e-dev-extra2' },
+  });
+  check('59.1 读序①：有当日 assignment → 按排班表判定（-60min 班 in 击=late；误读周模板则为 normal）',
+    markAssign.record.kind === 'in' && markAssign.record.status === 'late', markAssign.record);
+  /* 附加丙：无 assignment、周模板「-60min 班」→ in 击判 late（周模板兜底实证，零中断） */
+  await db.update(schema.staff)
+    .set({ schedule: tpl59(hm59(new Date(now59.getTime() - 60 * 60000)), hm59(new Date(now59.getTime() + 300 * 60000))) })
+    .where(eq(schema.staff.id, extraS3.id));
+  const markTpl = await trpcMutate<MarkRes59>('attendance.mark', {
+    cookie: extra3Cookie,
+    input: { kind: 'in', lat: 30.2741, lng: 120.1551, deviceId: 'e2e-dev-extra3' },
+  });
+  check('59.1 读序②：无 assignment → staff.schedule 周模板兜底（模板 -60min 班 in 击=late）',
+    markTpl.record.kind === 'in' && markTpl.record.status === 'late', markTpl.record);
+  await db.delete(schema.shiftAssignments).where(eq(schema.shiftAssignments.id, asg59.id)); // 守尾清理
+
+  /* ---- 59.2 WiFi BSSID 闸（白名单启用：命中过 / 未命中回落围栏 / 未命中+围栏外无照拒） ---- */
+  const wifi59 = await db.insert(schema.attendanceWifiBssids).values({
+    storeId, bssid: 'aa:bb:cc:dd:ee:ff', label: '门店 WiFi（e2e）', active: true, createdBy: ownerUser!.id,
+  }).returning().then((r) => r[0]!);
+  /* 阿强今日 0 行（R7② 围栏外拦截零写入后未再打卡）；种子带 09:00-18:00 周模板，运行时刻午后
+     会出 late/early 自动审批——本段不断言状态，只断 WiFi 闸行为 */
+  const wifiHit = await trpcMutate<MarkRes59>('attendance.mark', {
+    cookie: groomerCookie,
+    // 上海坐标（距店 ~165km）：WiFi 命中免围栏
+    input: { kind: 'in', lat: 31.2304, lng: 121.4737, deviceId: 'e2e-dev-aq-wifi', bssid: 'aa:bb:cc:dd:ee:ff' },
+  });
+  check('59.2 WiFi 命中白名单=到岗直接过（免围栏：上海坐标放行 + bssid 落库）',
+    wifiHit.record.kind === 'in' && wifiHit.record.bssid === 'aa:bb:cc:dd:ee:ff', wifiHit.record);
+  const wifiMissIn = await trpcMutate<MarkRes59>('attendance.mark', {
+    cookie: groomerCookie,
+    input: { kind: 'out', lat: 30.2741, lng: 120.1551, deviceId: 'e2e-dev-aq-wifi', bssid: '11:22:33:44:55:66' },
+  });
+  check('59.2 WiFi 未命中+围栏内 → 回落围栏判定放行（bssid 不落库）',
+    wifiMissIn.record.kind === 'out' && wifiMissIn.record.bssid === null, wifiMissIn.record);
+  const wifiMissFar = await asErr(trpcMutate('attendance.mark', {
+    cookie: groomerCookie,
+    input: { kind: 'in', lat: 31.2304, lng: 121.4737, deviceId: 'e2e-dev-aq-wifi', bssid: '11:22:33:44:55:66' },
+  }));
+  check('59.2 WiFi 未命中+围栏外无照 → 照旧拒（400「不在门店范围，无法打卡」零写入）',
+    wifiMissFar instanceof TrpcHttpError && wifiMissFar.code === 'BAD_REQUEST' && wifiMissFar.message.includes('不在门店范围'),
+    wifiMissFar && { code: wifiMissFar.code, message: wifiMissFar.message });
+  await db.delete(schema.attendanceWifiBssids).where(eq(schema.attendanceWifiBssids.id, wifi59.id)); // 守尾：白名单清空=恢复现状
+
+  /* ---- 59.3 外勤打卡（围栏外+photoUrl 放行 + 自动挂 exception）+ B1-4 异常推送 ---- */
+  const fieldMark = await trpcMutate<MarkRes59>('attendance.mark', {
+    cookie: groomerCookie,
+    input: { kind: 'in', lat: 31.2304, lng: 121.4737, deviceId: 'e2e-dev-aq-wifi', photoUrl: '/api/img/e2e/field-59.jpg' },
+  });
+  const fieldApprovals = await db.select().from(schema.attendanceApprovals)
+    .where(and(
+      eq(schema.attendanceApprovals.recordId, fieldMark.record.id),
+      eq(schema.attendanceApprovals.type, 'exception'),
+      eq(schema.attendanceApprovals.status, 'pending'),
+    ));
+  check('59.3 外勤：围栏外+photoUrl 放行落行（source=field，photo_url 落列，状态照算）+ 自动挂 exception（「外勤打卡待店长确认」）',
+    fieldMark.record.source === 'field' && fieldMark.record.photoUrl === '/api/img/e2e/field-59.jpg' &&
+      fieldApprovals.some((a) => a.reason === '外勤打卡待店长确认'),
+    { source: fieldMark.record.source, reasons: fieldApprovals.map((a) => a.reason) });
+  const fieldEvents = (await db.select().from(schema.eventOutbox)).filter(
+    (r) => r.eventType === 'attendance.exception' &&
+      (r.payload as { recordId?: string } | null)?.recordId === fieldMark.record.id,
+  );
+  check('59.3 B1-4：AttendanceException 双频道落 outbox（store 主管 + staff 本人）',
+    fieldEvents.some((r) => r.channel === `store:${storeId}`) &&
+      fieldEvents.some((r) => r.channel === `staff:${aqiang.id}`),
+    fieldEvents.map((r) => r.channel));
+
+  /* ---- 59.4 断网离线补传 + 超时兜底 + 未来时刻拒 ---- */
+  /* 丽丽今日已有 makeup in 行（R7③）→ 下一击=out */
+  const relayOkTs = Math.floor(now59.getTime() / 1000) - 3600; // 1 小时前（未超种子兜底 24h）
+  const relayOk = await trpcMutate<MarkRes59>('attendance.mark', {
+    cookie: liliCookie,
+    input: { kind: 'out', lat: 30.2741, lng: 120.1551, deviceId: 'e2e-dev-lili', source: 'offline_relay', clientTs: relayOkTs },
+  });
+  check('59.4 断网补传：ts=clientTs 实际打点时刻落库（source=offline_relay + client_ts 落列）',
+    relayOk.record.source === 'offline_relay' &&
+      Math.floor(new Date(relayOk.record.ts).getTime() / 1000) === relayOkTs &&
+      relayOk.record.clientTs !== null &&
+      Math.floor(new Date(relayOk.record.clientTs!).getTime() / 1000) === relayOkTs,
+    { ts: relayOk.record.ts, clientTs: relayOk.record.clientTs, expect: relayOkTs });
+  const relayStaleTs = relayOkTs - 25 * 3600; // 超 attendance_offline_stale_hours（种子 {hours:24}）
+  const relayStale = await trpcMutate<MarkRes59>('attendance.mark', {
+    cookie: liliCookie,
+    input: { kind: 'in', lat: 30.2741, lng: 120.1551, deviceId: 'e2e-dev-lili', source: 'offline_relay', clientTs: relayStaleTs },
+  });
+  const staleApprovals = await db.select().from(schema.attendanceApprovals)
+    .where(and(
+      eq(schema.attendanceApprovals.recordId, relayStale.record.id),
+      eq(schema.attendanceApprovals.type, 'exception'),
+      eq(schema.attendanceApprovals.status, 'pending'),
+    ));
+  check('59.4 超时兜底：clientTs 超 24h → 放行落行 + 自动挂 exception（「断网补传超时（超 24 小时）」，不无声丢卡）',
+    relayStale.record.source === 'offline_relay' &&
+      Math.floor(new Date(relayStale.record.ts).getTime() / 1000) === relayStaleTs &&
+      staleApprovals.some((a) => a.reason.includes('断网补传超时') && a.reason.includes('24')),
+    { source: relayStale.record.source, reasons: staleApprovals.map((a) => a.reason) });
+  const relayFuture = await asErr(trpcMutate('attendance.mark', {
+    cookie: liliCookie,
+    input: { kind: 'in', lat: 30.2741, lng: 120.1551, deviceId: 'e2e-dev-lili', source: 'offline_relay', clientTs: Math.floor(Date.now() / 1000) + 3600 },
+  }));
+  check('59.4 未来时刻拒：clientTs 晚于当前 → 400「拒绝补传未来卡」',
+    relayFuture instanceof TrpcHttpError && relayFuture.code === 'BAD_REQUEST' && relayFuture.message.includes('未来'),
+    relayFuture && { code: relayFuture.code, message: relayFuture.message });
+
+  /* ---- 59.5 班内多次打卡/中途离岗还原（多对）+ 同 kind 60s 重击幂等 ---- */
+  /* 阿强当日已有 in(WiFi)→out(围栏)→in(外勤) → 续 out→in→(in 重击幂等) */
+  const aqOut2 = await trpcMutate<MarkRes59>('attendance.mark', {
+    cookie: groomerCookie, input: { kind: 'out', lat: 30.2741, lng: 120.1551, deviceId: 'e2e-dev-aq-wifi' },
+  });
+  const aqIn3 = await trpcMutate<MarkRes59>('attendance.mark', {
+    cookie: groomerCookie, input: { kind: 'in', lat: 30.2741, lng: 120.1551, deviceId: 'e2e-dev-aq-wifi' },
+  });
+  const aqIn3Dup = await trpcMutate<MarkRes59>('attendance.mark', {
+    cookie: groomerCookie, input: { kind: 'in', lat: 30.2741, lng: 120.1551, deviceId: 'e2e-dev-aq-wifi' },
+  });
+  const aqRows59 = await db.select().from(schema.attendanceRecords)
+    .where(and(eq(schema.attendanceRecords.staffId, aqiang.id), eq(schema.attendanceRecords.date, todayStr)));
+  check('59.5 多对打卡：in→out→in(外勤)→out→in 多对落行（当日恰 5 行：3 in + 2 out）',
+    aqOut2.record.kind === 'out' && aqIn3.record.kind === 'in' && aqRows59.length === 5 &&
+      aqRows59.filter((r) => r.kind === 'in').length === 3 && aqRows59.filter((r) => r.kind === 'out').length === 2,
+    aqRows59.map((r) => r.kind));
+  check('59.5 同 kind 60 秒内重击=幂等返回末行（防双击，零新增落行）',
+    aqIn3Dup.duplicated === true && aqIn3Dup.record.id === aqIn3.record.id && aqRows59.length === 5,
+    { dup: aqIn3Dup.duplicated, id: aqIn3Dup.record.id, expect: aqIn3.record.id });
+
+  /* ---- 59.6 员工确认（confirmDay 幂等）+ 确认后改考勤（managerAdjust 放行+adjust 留痕）+ 员工无改权 ---- */
+  interface ConfirmRes59 {
+    date: string;
+    records: Array<{ id: string; confirmedAt: string | Date | null }>;
+    confirmedNow: number;
+    alreadyConfirmed: boolean;
+  }
+  const confirm59a = await trpcMutate<ConfirmRes59>('attendance.confirmDay', { cookie: groomerCookie, input: { date: todayStr } });
+  check('59.6 员工确认：confirmDay 置位当日全部行 confirmed_by/at（5 行）',
+    confirm59a.confirmedNow === 5 && confirm59a.records.length === 5 && confirm59a.records.every((r) => r.confirmedAt !== null),
+    { confirmedNow: confirm59a.confirmedNow, total: confirm59a.records.length });
+  const confirm59b = await trpcMutate<ConfirmRes59>('attendance.confirmDay', { cookie: groomerCookie, input: { date: todayStr } });
+  check('59.6 确认幂等：重复 confirmDay 零写入返回现状（alreadyConfirmed=true，confirmedAt 不变）',
+    confirm59b.alreadyConfirmed === true && confirm59b.confirmedNow === 0 &&
+      confirm59b.records.every((r, i) => String(r.confirmedAt) === String(confirm59a.records[i]!.confirmedAt)),
+    { already: confirm59b.alreadyConfirmed, now: confirm59b.confirmedNow });
+  const adjustTs59 = new Date(now59.getTime() - 30 * 60000);
+  const adjusted59 = await trpcMutate<{ id: string; ts: string | Date }>('attendance.managerAdjust', {
+    cookie: managerCookie,
+    input: { recordId: confirm59a.records[0]!.id, ts: adjustTs59, note: '【测试】59.6 店长调整打卡时刻' },
+  });
+  const adjustTrail59 = await db.select().from(schema.attendanceApprovals)
+    .where(and(
+      eq(schema.attendanceApprovals.recordId, confirm59a.records[0]!.id),
+      eq(schema.attendanceApprovals.type, 'adjust'),
+    ));
+  check('59.6 确认后改考勤：managerAdjust 放行（ts 已改）+ adjust 留痕行（approved / reason=note / reviewer=店长本人）',
+    Math.abs(new Date(adjusted59.ts).getTime() - adjustTs59.getTime()) < 1000 &&
+      adjustTrail59.length === 1 && adjustTrail59[0]!.status === 'approved' &&
+      adjustTrail59[0]!.reason === '【测试】59.6 店长调整打卡时刻' &&
+      adjustTrail59[0]!.reviewerId === managerFix.id,
+    { ts: adjusted59.ts, trail: adjustTrail59.map((a) => `${a.status}:${a.reason}`) });
+  const staffAdjust59 = await asErr(trpcMutate('attendance.managerAdjust', {
+    cookie: groomerCookie,
+    input: { recordId: confirm59a.records[1]!.id, ts: adjustTs59, note: '员工试图改考勤' },
+  }));
+  check('59.6 员工无改权：staff 调 managerAdjust → 403（manager-only 闸门）',
+    staffAdjust59 instanceof TrpcHttpError && staffAdjust59.httpStatus === 403,
+    staffAdjust59 && { status: staffAdjust59.httpStatus, code: staffAdjust59.code });
+
+  /* ---- 59.7 申诉入队（appeal → type=exception pending 挂原卡；同卡同人 pending 在途幂等） ---- */
+  /* 小美 markIn 原卡：若有自动 exception（迟到）已在 57.6 守尾被置 rejected，此处必新落 pending */
+  interface AppealRes59 {
+    approval: { id: string; type: string; status: string; recordId: string | null; reason: string };
+    duplicated: boolean;
+  }
+  const appeal1 = await trpcMutate<AppealRes59>('attendance.appeal', {
+    cookie: staffCookie, input: { recordId: markIn.record.id, reason: '【测试】59.7 申诉：当日定位漂移' },
+  });
+  const appeal2 = await trpcMutate<AppealRes59>('attendance.appeal', {
+    cookie: staffCookie, input: { recordId: markIn.record.id, reason: '重复提交同一申诉' },
+  });
+  check('59.7 申诉入队：type=exception pending 挂原卡 recordId（本人）',
+    appeal1.duplicated === false && appeal1.approval.type === 'exception' &&
+      appeal1.approval.status === 'pending' && appeal1.approval.recordId === markIn.record.id,
+    appeal1.approval);
+  check('59.7 申诉幂等：同卡同人 pending 在途 → 返回现状（duplicated=true，同一条，零新增）',
+    appeal2.duplicated === true && appeal2.approval.id === appeal1.approval.id,
+    { id: appeal2.approval.id, expect: appeal1.approval.id });
 
   client.close();
 }

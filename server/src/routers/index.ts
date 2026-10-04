@@ -30,6 +30,7 @@ import { petRouter } from './pet';
 import { pushRouter } from './push';
 import { refundRouter } from './refund';
 import { refundRequestRouter } from './refundRequest';
+import { scheduleRouter } from './schedule';
 import { serviceLoopRouter } from './serviceLoop';
 import { slotPortRouter } from './slotPort';
 import { staffTaskRouter } from './staffTask';
@@ -63,6 +64,7 @@ export const appRouter = router({
   pay: payRouter, // 批次 6 补缺大批 server 侧收单骨架（quote/createOrder/status/listMine/reconcile + 超时关单）
   slotPort: slotPortRouter, // 端口批片 C（CJ-1002-01）：展示槽位端口（控制台第八域；liveMap 公开读/管理仅 owner）
   staffTask: staffTaskRouter, // 员工端骨架批片 1：任务总线骨架（staff_tasks 只读投影——聚合既有域在途件，不建第二口径不写业务表）
+  schedule: scheduleRouter, // 员工端骨架批片 2：排班域（模板/生成/发布/换班/请假/调休/技能/CSV 导入，冻结版 V1.0 §二.B2）
 });
 
 /** 前端 tRPC client 的类型锚点（仅类型导出，无运行时开销） */

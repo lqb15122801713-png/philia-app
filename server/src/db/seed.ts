@@ -440,6 +440,25 @@ async function main() {
         active: true,
         createdBy: owner.id,
       },
+      /* 片 2：考勤断网兜底时限+技能标签集（同 0028 迁移种子口径；重置后补种） */
+      {
+        version: 1,
+        ruleKey: 'attendance_offline_stale_hours',
+        label: '断网打卡暂存兜底时限（小时）：本地暂存超 N 小时未补传=自动挂考勤异常申诉链',
+        valueJson: { hours: 24 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'staff_skill_tags',
+        label: '员工技能标签集（排班技能匹配用；店长在配置端口维护标签集）',
+        valueJson: { tags: ['洗护', '寄养', '美容', '造型', '前台'] },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
     ]);
 
     /* ---- 端口批片 B：文案端口 copy_overrides 种子（控制台第七域 domain='copy'） ----

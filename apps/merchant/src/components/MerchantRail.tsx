@@ -14,6 +14,7 @@ import { NavLink } from 'react-router-dom';
 import {
   BookCheck,
   CalendarDays,
+  CalendarRange,
   BedDouble,
   Calculator,
   House,
@@ -78,6 +79,8 @@ function groupsFor(role: MerchantRole): Array<{ label: string | null; items: Rai
       items: [
         { to: '/pass', label: '会员·次卡', icon: CreditCard, testid: 'rail-pass' },
         { to: '/staff', label: '员工', icon: Users, testid: 'rail-staff' },
+        // 员工端骨架整建批 片 2：排班管理（owner/manager 可见；clerk 经 groupsFor 分流不见本组）
+        { to: '/settings/schedules', label: '排班', icon: CalendarRange, testid: 'rail-schedules' },
         { to: '/finance', label: '财务', icon: ReceiptText, testid: 'rail-finance' },
         { to: '/settings', label: '设置', icon: Settings, testid: 'rail-settings' },
         // 批次 员工端2.0 R9-F：规则配置管理端口（仅 owner 可见入口；server 端 merchantOwnerProcedure 硬闸门）

@@ -1226,6 +1226,17 @@ export const attendanceRecords = sqliteTable(
     deviceId: text('device_id').notNull(),
     /** 防代打标记（0/1，只标记不阻断） */
     flagged: integer('flagged', { mode: 'boolean' }).notNull().default(false),
+    /** 打卡来源：NULL=现场在线 | offline_relay=断网暂存补传（片 2 考勤 B1-3） */
+    source: text('source'),
+    /** 设备端打卡时刻（补传=客户侧实际打点时刻；现场=NULL 同 ts） */
+    clientTs: integer('client_ts', { mode: 'timestamp' }),
+    /** WiFi 打卡命中 BSSID（片 2 B1-1；NULL=未走 WiFi 校验） */
+    bssid: text('bssid'),
+    /** 外勤拍照 URL（片 2 B1-2 双要件之一） */
+    photoUrl: text('photo_url'),
+    /** 员工确认链（片 2 B1-6 · 闸门件 §五.2 已签：确认后改考勤须店长+留痕） */
+    confirmedBy: text('confirmed_by').references(() => users.id),
+    confirmedAt: integer('confirmed_at', { mode: 'timestamp' }),
     ...auditColumns,
   },
   (t) => [
@@ -2750,6 +2761,169 @@ export const slotContents = sqliteTable(
     index('ix_slot_contents_key_status').on(t.slotKey, t.status),
     index('ix_slot_contents_key_version').on(t.slotKey, t.version),
   ],
+);
+
+/* ------------------------------------------------------------------ */
+/* 员工端骨架整建批 片 2（排班 10+考勤 7）：排班域八表（0028）                   */
+/* 命名注：按日排班实例=shift_assignments（shifts 名=收银交接班域既有占用，不撞名）   */
+/* ------------------------------------------------------------------ */
+
+/** 班次模板（规律性轮班来源；店域） */
+export const shiftTemplates = sqliteTable(
+  'shift_templates',
+  {
+    id: id(),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    /** 班次名（如「早班」） */
+    name: text('name').notNull(),
+    /** 起止（当日起算分钟数，如 600=10:00） */
+    startMin: integer('start_min').notNull(),
+    endMin: integer('end_min').notNull(),
+    /** 适用周日 JSON 数组（1=周一…0/7=周日） */
+    weekdays: text('weekdays', { mode: 'json' }).$type<number[]>().notNull(),
+    active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    createdBy: text('created_by').notNull().references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_shift_templates_store').on(t.storeId, t.active)],
+);
+
+/** 按日排班实例（模板生成/手动/拖拽调整均落此；source=manual|template） */
+export const shiftAssignments = sqliteTable(
+  'shift_assignments',
+  {
+    id: id(),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    staffId: text('staff_id').notNull().references(() => staff.id),
+    /** 排班日期 ISO 'YYYY-MM-DD' */
+    date: text('date').notNull(),
+    startMin: integer('start_min').notNull(),
+    endMin: integer('end_min').notNull(),
+    templateId: text('template_id').references(() => shiftTemplates.id),
+    /** 来源：manual | template（规律轮班自动生成） */
+    source: text('source').notNull().default('manual'),
+    /** 状态：active | cancelled */
+    status: text('status').notNull().default('active'),
+    /** 顶班/临时调整注记（留痕） */
+    note: text('note'),
+    /** 班表发布时刻（NULL=未发布；发布=推送员工可见，publishedAt 置位） */
+    publishedAt: integer('published_at', { mode: 'timestamp' }),
+    createdBy: text('created_by').notNull().references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_shift_assignments_store_date').on(t.storeId, t.date, t.status),
+    uniqueIndex('uq_shift_assignments_staff_date_start').on(t.staffId, t.date, t.startMin),
+  ],
+);
+
+/** 换班申请审批（未认领前责任归原人：批准才换挂 assignment.staff_id） */
+export const shiftSwaps = sqliteTable(
+  'shift_swaps',
+  {
+    id: id(),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    assignmentId: text('assignment_id').notNull().references(() => shiftAssignments.id),
+    fromStaffId: text('from_staff_id').notNull().references(() => staff.id),
+    /** 目标员工（NULL=开放认领） */
+    toStaffId: text('to_staff_id').references(() => staff.id),
+    reason: text('reason').notNull(),
+    /** 状态：pending | approved | rejected */
+    status: text('status').notNull().default('pending'),
+    decidedBy: text('decided_by').references(() => users.id),
+    decidedAt: integer('decided_at', { mode: 'timestamp' }),
+    decideNote: text('decide_note'),
+    ...auditColumns,
+  },
+  (t) => [index('ix_shift_swaps_store_status').on(t.storeId, t.status)],
+);
+
+/** 员工自主可用时间/偏好（按周日） */
+export const staffAvailability = sqliteTable(
+  'staff_availability',
+  {
+    id: id(),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    staffId: text('staff_id').notNull().references(() => staff.id),
+    /** 周日序号（1=周一…0=周日） */
+    weekday: integer('weekday').notNull(),
+    startMin: integer('start_min').notNull(),
+    endMin: integer('end_min').notNull(),
+    note: text('note'),
+    ...auditColumns,
+  },
+  (t) => [uniqueIndex('uq_staff_availability').on(t.staffId, t.weekday, t.startMin)],
+);
+
+/** 请假/调休申请（排到请假人=系统责任：发布/排班硬校验闸读此表） */
+export const leaveRequests = sqliteTable(
+  'leave_requests',
+  {
+    id: id(),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    staffId: text('staff_id').notNull().references(() => staff.id),
+    /** 类型：leave=请假 | comp_off=调休 */
+    kind: text('kind').notNull(),
+    startDate: text('start_date').notNull(),
+    endDate: text('end_date').notNull(),
+    reason: text('reason').notNull(),
+    status: text('status').notNull().default('pending'),
+    decidedBy: text('decided_by').references(() => users.id),
+    decidedAt: integer('decided_at', { mode: 'timestamp' }),
+    decideNote: text('decide_note'),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_leave_requests_store_status').on(t.storeId, t.status),
+    index('ix_leave_requests_staff_range').on(t.staffId, t.startDate, t.endDate),
+  ],
+);
+
+/** 调休余额台账（员工自助查；余额=sum(delta_minutes)） */
+export const compOffLedger = sqliteTable(
+  'comp_off_ledger',
+  {
+    id: id(),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    staffId: text('staff_id').notNull().references(() => staff.id),
+    /** 变动分钟（正=增加/负=使用） */
+    deltaMinutes: integer('delta_minutes').notNull(),
+    reason: text('reason').notNull(),
+    /** 来源单（如换班/审批 id） */
+    sourceId: text('source_id'),
+    createdBy: text('created_by').notNull().references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_comp_off_staff').on(t.staffId)],
+);
+
+/** 技能标签指派（标签集入配置端口 service 域 staff_skill_tags 键；本表=指派关系） */
+export const staffSkills = sqliteTable(
+  'staff_skills',
+  {
+    id: id(),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    staffId: text('staff_id').notNull().references(() => staff.id),
+    tag: text('tag').notNull(),
+    ...auditColumns,
+  },
+  (t) => [uniqueIndex('uq_staff_skills').on(t.staffId, t.tag)],
+);
+
+/** WiFi 打卡 BSSID 白名单（片 2 B1-1；店长自管=商家端配置页；空=不做 WiFi 校验） */
+export const attendanceWifiBssids = sqliteTable(
+  'attendance_wifi_bssids',
+  {
+    id: id(),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    /** BSSID（AP MAC，形如 aa:bb:cc:dd:ee:ff） */
+    bssid: text('bssid').notNull(),
+    label: text('label').notNull(),
+    active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    createdBy: text('created_by').notNull().references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [uniqueIndex('uq_wifi_bssids').on(t.storeId, t.bssid)],
 );
 
 /**

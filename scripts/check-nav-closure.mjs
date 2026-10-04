@@ -3,7 +3,7 @@
  * 导航闭环体检（批次 W1 · 常备验收工具）：node scripts/check-nav-closure.mjs
  *
  * 来源：任务书 W1 §二冻结规则（每页①底栏常显 或 ②返回键+明确主出口；交易成功页双出口）
- *      + §五巡检地图（51 路由；后续批次申报补入，现 93 路由（含补缺批片 3 新增 2 行））+ §六 Harness 规格（四要素检测/死胡同判定）。
+ *      + §五巡检地图（51 路由；后续批次申报补入，现 95 路由（含骨架批片 2 新增 2 行））+ §六 Harness 规格（四要素检测/死胡同判定）。
  *
  * 检测要素（页内真实渲染断言）：
  *   - back   返回键（页首左上 aria-label 含「返回」的可点区）
@@ -24,7 +24,7 @@
  *
  * 环境变量：CUSTOMER_URL / MERCHANT_URL / STAFF_URL（默认 vite preview 7100/7101/7102）、
  *   API_BASE（默认 http://localhost:7200）、CDP_PORT（默认 9224，避免与 smoke-routes 撞车）、
- *   NAV_JSON（设置时把 93 行结果写 JSON 到该路径）。
+ *   NAV_JSON（设置时把结果写 JSON 到该路径）。
  * 退出码：0=无死胡同；1=存在死胡同；2=环境不可用。
  */
 
@@ -118,7 +118,7 @@ const ROUTES = [
   { app: 'customer', path: '/member/checkout', expect: 'sub', note: '补缺批片 6 线上收单骨架（Mock 通道）' },
   { app: 'customer', path: `/pay/${INVALID_ID}`, expect: 'sub', note: '补缺批片 6 线上收单骨架（Mock 通道）：参数化 INVALID_ID 异常态须出口' },
   { app: 'customer', path: '/pay/reconcile', expect: 'sub', note: '补缺批片 6 线上收单骨架（Mock 通道）' },
-  /* 商家端 25 */
+  /* 商家端 26 */
   { app: 'merchant', path: '/dashboard', expect: 'tab' },
   { app: 'merchant', path: '/appointments', expect: 'sub' },
   { app: 'merchant', path: `/appointments/${APPT_ID}`, expect: 'sub' },
@@ -136,6 +136,7 @@ const ROUTES = [
   { app: 'merchant', path: '/settings/rules', expect: 'sub', note: '批次 staff-2 R9-F：owner 专属（clerk 守卫引导页 / manager 页内引导卡，rail 布局内）' },
   { app: 'merchant', path: '/settings/copy', expect: 'sub', note: '端口批片 B：文案端口（控制台第七域；owner 专属，同 /settings/rules 闸径）' },
   { app: 'merchant', path: '/settings/slots', expect: 'sub', note: '端口批片 C：槽位端口（控制台第八域「槽位」；owner 专属，同 /settings/rules 闸径）' },
+  { app: 'merchant', path: '/settings/schedules', expect: 'sub', note: '员工端骨架整建批 片 2：排班管理（owner|manager，墨轨「门店」组；clerk 守卫引导页）' },
   { app: 'merchant', path: '/cashier', expect: 'sub' },
   { app: 'merchant', path: '/cashier/records', expect: 'sub' },
   { app: 'merchant', path: '/cashier/close', expect: 'sub' },
@@ -146,7 +147,7 @@ const ROUTES = [
   { app: 'merchant', path: '/live', expect: 'sub', note: '重定向→/monitor' },
   { app: 'merchant', path: '/', expect: 'sub', note: '重定向→/dashboard' },
   { app: 'merchant', path: '/dev-login', expect: 'gate' },
-  /* 员工端 14 */
+  /* 员工端 15 */
   { app: 'staff', path: '/today', expect: 'tab' },
   { app: 'staff', path: '/schedule', expect: 'tab', note: '骨架批片 1：S-02 预约·当天（dock 四槽第二槽）；/history 重定向至此（S-12 切日态）' },
   { app: 'staff', path: '/me', expect: 'tab' },
@@ -162,6 +163,7 @@ const ROUTES = [
   { app: 'staff', path: '/xp', expect: 'sub', note: '批次 staff-2 R7~R10' },
   { app: 'staff', path: '/reviews', expect: 'sub', note: '批次 staff-2 R7~R10' },
   { app: 'staff', path: '/manager', expect: 'sub', note: '批次 staff-2 R7~R10；非店长登录渲染引导卡（「返回我的」按钮出口）' },
+  { app: 'staff', path: '/my-schedule', expect: 'sub', note: '员工端骨架整建批 片 2：我的排班（SkBackBar 返回条，fallback=/me）' },
 ];
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -278,7 +280,7 @@ async function checkRoute(cdp, route) {
 }
 
 async function main() {
-  console.log('导航闭环体检（W1 §六 harness）：93 路由 · 四要素检测');
+  console.log('导航闭环体检（W1 §六 harness）：95 路由 · 四要素检测');
   const results = [];
   for (const app of ['customer', 'merchant', 'staff']) {
     const routes = ROUTES.filter((r) => r.app === app);

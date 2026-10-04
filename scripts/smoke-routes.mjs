@@ -135,6 +135,7 @@ const ROUTES = [
   { app: 'merchant', path: '/settings/rules', anchors: ['规则配置'], serverDep: true, note: '批次 staff-2 R9-F：owner 登录渲染「规则配置管理」；manager 页内引导卡标题同含锚点，clerk 由 ClerkRouteGuard 拦截' },
   { app: 'merchant', path: '/settings/copy', anchors: ['文案端口'], serverDep: true, note: '端口批片 B：文案端口（控制台第七域；owner 登录渲染「文案端口」页题）' },
   { app: 'merchant', path: '/settings/slots', anchors: ['槽位'], serverDep: true, note: '端口批片 C：槽位端口（控制台第八域「槽位」；owner 登录渲染「槽位端口」页题，非 owner 引导页标题同含锚点）' },
+  { app: 'merchant', path: '/settings/schedules', anchors: ['排班'], serverDep: true, note: '员工端骨架整建批 片 2：排班管理（owner|manager 渲染「排班管理」页题；clerk 引导页标题同含锚点）' },
   { app: 'merchant', path: '/live', anchors: ['在店监控'], expectPath: '/monitor', note: 'B2 重定向；U3 锚点' },
   { app: 'merchant', path: '/appointments', anchors: ['预约'], note: 'A3 白屏群' },
   { app: 'merchant', path: `/appointments/${APPT_ID}/monitor`, anchors: ['实时监控', '预约'], serverDep: true, note: 'P4 原深链；U3 锚点' },
@@ -154,6 +155,7 @@ const ROUTES = [
   { app: 'staff', path: '/xp', anchors: ['经验', '段位'], note: '批次 staff-2 R10' },
   { app: 'staff', path: '/reviews', anchors: ['评价'], note: '批次 staff-2 R10' },
   { app: 'staff', path: '/manager', anchors: ['店长视图'], note: '批次 staff-2：smoke 以首个 staff 种子（非店长）登录渲染引导卡；锚点命中 PageHeader 标题与引导卡 h1' },
+  { app: 'staff', path: '/my-schedule', anchors: ['排班', '班次'], serverDep: true, note: '员工端骨架整建批 片 2：我的排班（SkBackBar 标题「我的排班」）' },
 ];
 
 const APP_URLS = { customer: CUSTOMER_URL, merchant: MERCHANT_URL, staff: STAFF_URL };

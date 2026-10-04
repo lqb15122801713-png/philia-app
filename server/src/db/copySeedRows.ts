@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B）——生成件，勿手改（源=scripts/gen-copy-overrides-seed.mts）；
  * 重生成：仓库根 npx tsx scripts/gen-copy-overrides-seed.mts（copy 键表增删键后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-03T05:20:37.228Z；键数=1694
+ * 生成时间口径：2026-10-03T09:56:13.688Z；键数=1827
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }> = [
  {
@@ -4655,6 +4655,346 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "影响全员 XP 核算"
  },
  {
+  "key": "sched.block.draft",
+  "domain": "merchant:schedule",
+  "text": "未发布"
+ },
+ {
+  "key": "sched.block.dragHint",
+  "domain": "merchant:schedule",
+  "text": "拖动班次块到其他格子即可调班"
+ },
+ {
+  "key": "sched.block.manual",
+  "domain": "merchant:schedule",
+  "text": "手动"
+ },
+ {
+  "key": "sched.block.published",
+  "domain": "merchant:schedule",
+  "text": "已发布"
+ },
+ {
+  "key": "sched.block.template",
+  "domain": "merchant:schedule",
+  "text": "模板"
+ },
+ {
+  "key": "sched.common.loadFail",
+  "domain": "merchant:schedule",
+  "text": "数据加载失败，请检查网络后重试"
+ },
+ {
+  "key": "sched.common.retry",
+  "domain": "merchant:schedule",
+  "text": "重新加载"
+ },
+ {
+  "key": "sched.drop.done",
+  "domain": "merchant:schedule",
+  "text": "已调整并留痕"
+ },
+ {
+  "key": "sched.drop.note",
+  "domain": "merchant:schedule",
+  "text": "拖拽调整留痕"
+ },
+ {
+  "key": "sched.gen.done",
+  "domain": "merchant:schedule",
+  "text": "生成完成：新增 {created} 班、跳过 {skipped} 班"
+ },
+ {
+  "key": "sched.gen.generateCta",
+  "domain": "merchant:schedule",
+  "text": "按模板生成本周"
+ },
+ {
+  "key": "sched.gen.generating",
+  "domain": "merchant:schedule",
+  "text": "生成中…"
+ },
+ {
+  "key": "sched.gen.publishCta",
+  "domain": "merchant:schedule",
+  "text": "发布本周班表"
+ },
+ {
+  "key": "sched.gen.published",
+  "domain": "merchant:schedule",
+  "text": "发布完成：新发布 {n} 班（幂等，已发布不重发）"
+ },
+ {
+  "key": "sched.gen.publishing",
+  "domain": "merchant:schedule",
+  "text": "发布中…"
+ },
+ {
+  "key": "sched.gen.publishNote",
+  "domain": "merchant:schedule",
+  "text": "发布后员工端可见并收到推送；重复发布幂等"
+ },
+ {
+  "key": "sched.guideHint",
+  "domain": "merchant:schedule",
+  "text": "排班、发布与换班审批属管理层动作；店员账号的工作面是收银台。"
+ },
+ {
+  "key": "sched.guideTitle",
+  "domain": "merchant:schedule",
+  "text": "排班管理由店长或店主处理"
+ },
+ {
+  "key": "sched.import.aside",
+  "domain": "merchant:schedule",
+  "text": "列名=员工/日期/开始/结束；先预览对账再落库"
+ },
+ {
+  "key": "sched.import.colDate",
+  "domain": "merchant:schedule",
+  "text": "日期"
+ },
+ {
+  "key": "sched.import.colLine",
+  "domain": "merchant:schedule",
+  "text": "行"
+ },
+ {
+  "key": "sched.import.colRange",
+  "domain": "merchant:schedule",
+  "text": "时段"
+ },
+ {
+  "key": "sched.import.colResult",
+  "domain": "merchant:schedule",
+  "text": "结果"
+ },
+ {
+  "key": "sched.import.colStaff",
+  "domain": "merchant:schedule",
+  "text": "员工"
+ },
+ {
+  "key": "sched.import.empty",
+  "domain": "merchant:schedule",
+  "text": "请先粘贴 CSV 文本"
+ },
+ {
+  "key": "sched.import.executeCta",
+  "domain": "merchant:schedule",
+  "text": "确认导入"
+ },
+ {
+  "key": "sched.import.executed",
+  "domain": "merchant:schedule",
+  "text": "导入完成：落库 {inserted} 行、跳过 {skipped} 行"
+ },
+ {
+  "key": "sched.import.placeholder",
+  "domain": "merchant:schedule",
+  "text": "粘贴 CSV 文本，如：\n员工,日期,开始,结束\n小王,2026-10-05,10:00,19:00"
+ },
+ {
+  "key": "sched.import.previewCta",
+  "domain": "merchant:schedule",
+  "text": "预览对账"
+ },
+ {
+  "key": "sched.import.rowOk",
+  "domain": "merchant:schedule",
+  "text": "可导入"
+ },
+ {
+  "key": "sched.import.summary",
+  "domain": "merchant:schedule",
+  "text": "可导入 {ok} 行 · 失败 {fail} 行"
+ },
+ {
+  "key": "sched.import.title",
+  "domain": "merchant:schedule",
+  "text": "CSV 批量导入"
+ },
+ {
+  "key": "sched.pageSub",
+  "domain": "merchant:schedule",
+  "text": "周视图拖拽排班 · 模板生成 · 发布推送 · 换班审批 · 批量导入"
+ },
+ {
+  "key": "sched.pageTitle",
+  "domain": "merchant:schedule",
+  "text": "排班管理"
+ },
+ {
+  "key": "sched.skill.aside",
+  "domain": "merchant:schedule",
+  "text": "点选切换即保存；标签集由配置端口供给"
+ },
+ {
+  "key": "sched.skill.empty",
+  "domain": "merchant:schedule",
+  "text": "暂无在职员工"
+ },
+ {
+  "key": "sched.skill.noTags",
+  "domain": "merchant:schedule",
+  "text": "标签集为空（配置端口 staff_skill_tags 未供给）"
+ },
+ {
+  "key": "sched.skill.saved",
+  "domain": "merchant:schedule",
+  "text": "技能标签已更新"
+ },
+ {
+  "key": "sched.skill.title",
+  "domain": "merchant:schedule",
+  "text": "技能标签"
+ },
+ {
+  "key": "sched.swap.approve",
+  "domain": "merchant:schedule",
+  "text": "批准"
+ },
+ {
+  "key": "sched.swap.aside",
+  "domain": "merchant:schedule",
+  "text": "批准后班次换挂接手人；未认领前责任归原人"
+ },
+ {
+  "key": "sched.swap.empty",
+  "domain": "merchant:schedule",
+  "text": "暂无待审批的换班申请"
+ },
+ {
+  "key": "sched.swap.noQueue",
+  "domain": "merchant:schedule",
+  "text": "换班队列读口（swapQueue）server 端未透出，审批区待接上；员工发起换班后可在此批准/驳回。"
+ },
+ {
+  "key": "sched.swap.notePh",
+  "domain": "merchant:schedule",
+  "text": "审批备注（驳回必填）"
+ },
+ {
+  "key": "sched.swap.noteRequired",
+  "domain": "merchant:schedule",
+  "text": "驳回换班须填写备注"
+ },
+ {
+  "key": "sched.swap.openTarget",
+  "domain": "merchant:schedule",
+  "text": "开放认领"
+ },
+ {
+  "key": "sched.swap.reject",
+  "domain": "merchant:schedule",
+  "text": "驳回"
+ },
+ {
+  "key": "sched.swap.resolved",
+  "domain": "merchant:schedule",
+  "text": "已处理该换班申请"
+ },
+ {
+  "key": "sched.swap.title",
+  "domain": "merchant:schedule",
+  "text": "换班审批"
+ },
+ {
+  "key": "sched.tpl.aside",
+  "domain": "merchant:schedule",
+  "text": "模板按周生成排班；停用后不再参与生成"
+ },
+ {
+  "key": "sched.tpl.days",
+  "domain": "merchant:schedule",
+  "text": "适用周日"
+ },
+ {
+  "key": "sched.tpl.deactivate",
+  "domain": "merchant:schedule",
+  "text": "停用"
+ },
+ {
+  "key": "sched.tpl.deactivated",
+  "domain": "merchant:schedule",
+  "text": "模板已停用"
+ },
+ {
+  "key": "sched.tpl.empty",
+  "domain": "merchant:schedule",
+  "text": "暂无模板；新增后可一键生成整周排班"
+ },
+ {
+  "key": "sched.tpl.invalid",
+  "domain": "merchant:schedule",
+  "text": "请填齐班次名与起止时间，且至少选一天"
+ },
+ {
+  "key": "sched.tpl.namePh",
+  "domain": "merchant:schedule",
+  "text": "班次名（如 早班）"
+ },
+ {
+  "key": "sched.tpl.saveCta",
+  "domain": "merchant:schedule",
+  "text": "保存模板"
+ },
+ {
+  "key": "sched.tpl.saved",
+  "domain": "merchant:schedule",
+  "text": "模板已保存"
+ },
+ {
+  "key": "sched.tpl.title",
+  "domain": "merchant:schedule",
+  "text": "班次模板"
+ },
+ {
+  "key": "sched.week.draft",
+  "domain": "merchant:schedule",
+  "text": "本周未发布"
+ },
+ {
+  "key": "sched.week.empty",
+  "domain": "merchant:schedule",
+  "text": "本店暂无在职员工"
+ },
+ {
+  "key": "sched.week.next",
+  "domain": "merchant:schedule",
+  "text": "下一周 ›"
+ },
+ {
+  "key": "sched.week.prev",
+  "domain": "merchant:schedule",
+  "text": "‹ 上一周"
+ },
+ {
+  "key": "sched.week.published",
+  "domain": "merchant:schedule",
+  "text": "本周已发布"
+ },
+ {
+  "key": "sched.week.staffCol",
+  "domain": "merchant:schedule",
+  "text": "员工 \\ 日期"
+ },
+ {
+  "key": "sched.week.this",
+  "domain": "merchant:schedule",
+  "text": "本周"
+ },
+ {
+  "key": "sched.wifi.pending",
+  "domain": "merchant:schedule",
+  "text": "BSSID 白名单由考勤批提供端口页（attendance_wifi_bssids），本区暂为只读注记，端点落地后接上。"
+ },
+ {
+  "key": "sched.wifi.title",
+  "domain": "merchant:schedule",
+  "text": "WiFi 打卡白名单"
+ },
+ {
   "key": "set.addrHint",
   "domain": "merchant:settings",
   "text": "listNearby 距离粗排之用"
@@ -6370,6 +6710,51 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "照片上传失败，请重试"
  },
  {
+  "key": "attendance.appeal.cta",
+  "domain": "staff:attendance",
+  "text": "申诉"
+ },
+ {
+  "key": "attendance.appeal.placeholder",
+  "domain": "staff:attendance",
+  "text": "请填写申诉原因（必填）"
+ },
+ {
+  "key": "attendance.appeal.submit",
+  "domain": "staff:attendance",
+  "text": "提交申诉"
+ },
+ {
+  "key": "attendance.appeal.title",
+  "domain": "staff:attendance",
+  "text": "考勤申诉"
+ },
+ {
+  "key": "attendance.appeal.toast",
+  "domain": "staff:attendance",
+  "text": "申诉已提交，待店长处理"
+ },
+ {
+  "key": "attendance.confirm.cta",
+  "domain": "staff:attendance",
+  "text": "确认今日考勤"
+ },
+ {
+  "key": "attendance.confirm.done",
+  "domain": "staff:attendance",
+  "text": "今日考勤已确认"
+ },
+ {
+  "key": "attendance.confirm.toast",
+  "domain": "staff:attendance",
+  "text": "已确认今日考勤"
+ },
+ {
+  "key": "attendance.confirmed.chip",
+  "domain": "staff:attendance",
+  "text": "已确认"
+ },
+ {
   "key": "attendance.fence.noCoord",
   "domain": "staff:attendance",
   "text": "门店未配置坐标，本次打卡不校验距离"
@@ -6378,6 +6763,26 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "attendance.fence.range",
   "domain": "staff:attendance",
   "text": "打卡范围：门店 300 米内"
+ },
+ {
+  "key": "attendance.field.ready",
+  "domain": "staff:attendance",
+  "text": "照片已上传，点上方打卡按钮完成外勤打卡"
+ },
+ {
+  "key": "attendance.field.tip",
+  "domain": "staff:attendance",
+  "text": "当前在打卡范围外：外勤打卡需上传现场照片，提交后待店长确认"
+ },
+ {
+  "key": "attendance.field.upload",
+  "domain": "staff:attendance",
+  "text": "上传现场照片"
+ },
+ {
+  "key": "attendance.field.uploading",
+  "domain": "staff:attendance",
+  "text": "照片上传中…"
  },
  {
   "key": "attendance.geo.denied",
@@ -6398,6 +6803,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "attendance.geo.unsupported",
   "domain": "staff:attendance",
   "text": "当前设备不支持定位，请更换设备或联系店长"
+ },
+ {
+  "key": "attendance.offline.banner",
+  "domain": "staff:attendance",
+  "text": "断网暂存 {count} 条打卡，恢复网络后自动补传"
+ },
+ {
+  "key": "attendance.offline.saved",
+  "domain": "staff:attendance",
+  "text": "网络异常，本次打卡已暂存，恢复网络后自动补传"
  },
  {
   "key": "attendance.punch.allDone",
@@ -6465,6 +6880,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "今日无排班"
  },
  {
+  "key": "attendance.source.field",
+  "domain": "staff:attendance",
+  "text": "外勤"
+ },
+ {
+  "key": "attendance.source.offline",
+  "domain": "staff:attendance",
+  "text": "补传"
+ },
+ {
   "key": "attendance.status.early",
   "domain": "staff:attendance",
   "text": "早退"
@@ -6485,9 +6910,29 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "正常"
  },
  {
+  "key": "attendance.today.detail",
+  "domain": "staff:attendance",
+  "text": "今日打卡明细"
+ },
+ {
   "key": "attendance.week.empty",
   "domain": "staff:attendance",
   "text": "本周还没有考勤记录——到店后点上方按钮打卡"
+ },
+ {
+  "key": "attendance.wifi.manual",
+  "domain": "staff:attendance",
+  "text": "网页版无法自动读取 WiFi，请手动选择当前连接的门店 WiFi（选中所连 WiFi 后到岗打卡免定位围栏）"
+ },
+ {
+  "key": "attendance.wifi.none",
+  "domain": "staff:attendance",
+  "text": "不使用 WiFi 打卡"
+ },
+ {
+  "key": "attendance.wifi.title",
+  "domain": "staff:attendance",
+  "text": "门店 WiFi"
  },
  {
   "key": "boarding.backToday",
@@ -7928,6 +8373,226 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "reviews.trio.count",
   "domain": "staff:reviews",
   "text": "条数"
+ },
+ {
+  "key": "sched.avail.aside",
+  "domain": "staff:schedule",
+  "text": "填每周可上班时段，店长排班会参考"
+ },
+ {
+  "key": "sched.avail.empty",
+  "domain": "staff:schedule",
+  "text": "还没有填过可用时间"
+ },
+ {
+  "key": "sched.avail.invalid",
+  "domain": "staff:schedule",
+  "text": "请选择周日并填对起止时间"
+ },
+ {
+  "key": "sched.avail.notePh",
+  "domain": "staff:schedule",
+  "text": "备注（可空，如 只能晚班）"
+ },
+ {
+  "key": "sched.avail.saveCta",
+  "domain": "staff:schedule",
+  "text": "保存可用时间"
+ },
+ {
+  "key": "sched.avail.saved",
+  "domain": "staff:schedule",
+  "text": "可用时间已保存"
+ },
+ {
+  "key": "sched.avail.title",
+  "domain": "staff:schedule",
+  "text": "我的可用时间"
+ },
+ {
+  "key": "sched.comp.empty",
+  "domain": "staff:schedule",
+  "text": "暂无变动记录"
+ },
+ {
+  "key": "sched.comp.entries",
+  "domain": "staff:schedule",
+  "text": "变动流水"
+ },
+ {
+  "key": "sched.comp.hours",
+  "domain": "staff:schedule",
+  "text": "{h} 小时"
+ },
+ {
+  "key": "sched.comp.title",
+  "domain": "staff:schedule",
+  "text": "调休余额"
+ },
+ {
+  "key": "sched.leave.approved",
+  "domain": "staff:schedule",
+  "text": "已通过"
+ },
+ {
+  "key": "sched.leave.empty",
+  "domain": "staff:schedule",
+  "text": "还没有申请记录"
+ },
+ {
+  "key": "sched.leave.end",
+  "domain": "staff:schedule",
+  "text": "结束日期"
+ },
+ {
+  "key": "sched.leave.invalid",
+  "domain": "staff:schedule",
+  "text": "请填齐起止日期与原因"
+ },
+ {
+  "key": "sched.leave.kindCompOff",
+  "domain": "staff:schedule",
+  "text": "调休"
+ },
+ {
+  "key": "sched.leave.kindLeave",
+  "domain": "staff:schedule",
+  "text": "请假"
+ },
+ {
+  "key": "sched.leave.myList",
+  "domain": "staff:schedule",
+  "text": "我的申请"
+ },
+ {
+  "key": "sched.leave.pending",
+  "domain": "staff:schedule",
+  "text": "待审批"
+ },
+ {
+  "key": "sched.leave.reasonPh",
+  "domain": "staff:schedule",
+  "text": "请写明原因（必填）"
+ },
+ {
+  "key": "sched.leave.rejected",
+  "domain": "staff:schedule",
+  "text": "已驳回"
+ },
+ {
+  "key": "sched.leave.start",
+  "domain": "staff:schedule",
+  "text": "开始日期"
+ },
+ {
+  "key": "sched.leave.submitCta",
+  "domain": "staff:schedule",
+  "text": "提交申请"
+ },
+ {
+  "key": "sched.leave.submitted",
+  "domain": "staff:schedule",
+  "text": "已提交，待店长审批"
+ },
+ {
+  "key": "sched.leave.submitting",
+  "domain": "staff:schedule",
+  "text": "提交中…"
+ },
+ {
+  "key": "sched.leave.title",
+  "domain": "staff:schedule",
+  "text": "请假 / 调休申请"
+ },
+ {
+  "key": "sched.meFullLink",
+  "domain": "staff:schedule",
+  "text": "完整排班与换班 ›"
+ },
+ {
+  "key": "sched.myweek.draft",
+  "domain": "staff:schedule",
+  "text": "待发布"
+ },
+ {
+  "key": "sched.myweek.empty",
+  "domain": "staff:schedule",
+  "text": "本周还没有排班"
+ },
+ {
+  "key": "sched.myweek.next",
+  "domain": "staff:schedule",
+  "text": "下周 ›"
+ },
+ {
+  "key": "sched.myweek.prev",
+  "domain": "staff:schedule",
+  "text": "‹ 上周"
+ },
+ {
+  "key": "sched.myweek.published",
+  "domain": "staff:schedule",
+  "text": "已发布"
+ },
+ {
+  "key": "sched.no",
+  "domain": "staff:schedule",
+  "text": "MY SCHEDULE"
+ },
+ {
+  "key": "sched.swap.cancel",
+  "domain": "staff:schedule",
+  "text": "收起"
+ },
+ {
+  "key": "sched.swap.cta",
+  "domain": "staff:schedule",
+  "text": "发起换班"
+ },
+ {
+  "key": "sched.swap.invalid",
+  "domain": "staff:schedule",
+  "text": "请填写换班理由"
+ },
+ {
+  "key": "sched.swap.openPool",
+  "domain": "staff:schedule",
+  "text": "开放认领（不指定）"
+ },
+ {
+  "key": "sched.swap.pickTarget",
+  "domain": "staff:schedule",
+  "text": "选择接手同事"
+ },
+ {
+  "key": "sched.swap.reasonPh",
+  "domain": "staff:schedule",
+  "text": "换班理由（必填）"
+ },
+ {
+  "key": "sched.swap.submitCta",
+  "domain": "staff:schedule",
+  "text": "提交换班申请"
+ },
+ {
+  "key": "sched.swap.submitted",
+  "domain": "staff:schedule",
+  "text": "换班申请已提交，待店长审批"
+ },
+ {
+  "key": "sched.title",
+  "domain": "staff:schedule",
+  "text": "我的排班"
+ },
+ {
+  "key": "sched.week.mine",
+  "domain": "staff:schedule",
+  "text": "我"
+ },
+ {
+  "key": "sched.week.rest",
+  "domain": "staff:schedule",
+  "text": "休息"
  },
  {
   "key": "sk.apptEmpty",
