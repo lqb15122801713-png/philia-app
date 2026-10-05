@@ -1,0 +1,140 @@
+/* ============================================================
+   Philia 方向稿评审包 · 共享设计系统
+   色纪律 = V3 冻结口径（CJ-0921-12③④）：
+   深棕主体 / 纸白底 / 淡黄点睛(每屏≤2处) / 卡其次阶
+   卡面四色 = CJ-0922-04 冻结（暖阳深棕金/烛光卡其铜/萤火淡金/微光纸白墨）
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+:root{
+  /* VI 三色纪律（冻结） */
+  --paper:#FAF8F2;        /* 纸白 — 页面背景 */
+  --card:#FFFFFF;         /* 白卡（主卡=白卡+墨描边） */
+  --ink:#3B2E24;          /* 深棕墨 — 主文字 */
+  --ink-deep:#2E2318;     /* 深棕 — 深色密度位/主行动/导航激活 */
+  --gold:#F2DFA6;         /* 淡黄 — 点睛小件（每屏≤2处） */
+  --gold-deep:#E8CF8C;    /* 淡金 — 深棕底上的金色文字/蜡封 */
+  --khaki:#B9A482;        /* 卡其 — 次阶/分隔/次要标签 */
+  --muted:#8A7D6B;        /* 次要文字（暖灰，同温） */
+  --line:rgba(59,46,36,.14);
+  --line-soft:rgba(59,46,36,.08);
+  /* 四档卡面色（冻结 CJ-0922-04） */
+  --t3:#34271C;           /* 暖阳 · 深棕金卡面 */
+  --t3-metal:#D9C08A;     /* 暖阳 · 淡金件 */
+  --t2:#A08B62;           /* 烛光 · 卡其铜 */
+  --t1:#F2DFA6;           /* 萤火 · 淡金 */
+  --t0:#FBF6EA;           /* 微光 · 纸白 */
+  --ease:cubic-bezier(.32,.86,.28,1);
+  --serif:'Noto Serif SC',"Songti SC","SimSun",serif;
+  --sans:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  --mono:'JetBrains Mono',"SF Mono",monospace;
+}
+
+html,body{height:100%}
+body{
+  background:#EFE9DC;
+  color:var(--ink);
+  font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;
+  overflow-x:clip;
+}
+
+/* ---------- 评审站页面骨架 ---------- */
+.wrap{max-width:1440px;margin:0 auto;padding:0 40px}
+.site-head{padding:56px 0 8px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+h1.display{font-family:var(--serif);font-weight:900;font-size:clamp(34px,4.2vw,56px);line-height:1.16;letter-spacing:-.01em;margin-top:14px}
+.lede{margin-top:16px;font-size:15px;line-height:1.9;color:var(--ink);max-width:760px}
+.lede b{font-weight:700}
+.rule{height:1px;background:var(--line);margin:40px 0}
+
+/* ---------- 手机框（评审用） ---------- */
+.stage{display:flex;gap:36px;overflow-x:auto;padding:44px 40px 56px;scroll-snap-type:x proximity}
+.stage::-webkit-scrollbar{height:0}
+.frame{
+  flex:none;width:402px;border-radius:48px;position:relative;overflow:hidden;
+  background:var(--paper);
+  border:1px solid rgba(59,46,36,.2);
+  box-shadow:0 50px 110px -34px rgba(46,35,24,.5),0 0 0 10px #251D15;
+  scroll-snap-align:center;
+}
+.screen{height:836px;overflow-y:auto;overflow-x:clip;position:relative;border-radius:38px;background:var(--paper)}
+.screen::-webkit-scrollbar{width:0}
+.screen-tag{position:absolute;top:-34px;left:6px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--muted)}
+
+/* 状态栏（真实时钟） */
+.status{display:flex;justify-content:space-between;align-items:center;padding:16px 26px 4px;font-size:12.5px;font-weight:600;position:relative;z-index:20}
+.status .ico{display:flex;gap:5px;align-items:center}
+.status svg{display:block}
+
+/* Dock：深色悬浮胶囊（案A） */
+.dock{
+  position:absolute;left:16px;right:16px;bottom:14px;z-index:30;
+  height:64px;border-radius:99px;
+  background:rgba(46,35,24,.94);backdrop-filter:blur(18px) saturate(140%);
+  display:flex;align-items:center;justify-content:space-around;padding:0 12px;
+  box-shadow:0 18px 40px -16px rgba(46,35,24,.55);
+}
+.dock button{width:44px;height:44px;border-radius:50%;border:0;background:transparent;display:grid;place-items:center;color:#B9A98F;cursor:pointer;transition:all .26s var(--ease)}
+.dock button.on{background:var(--gold);color:var(--ink-deep)}
+.dock button.paw{width:58px;height:58px;background:var(--gold);color:var(--ink-deep);transform:translateY(-16px);border:3px solid var(--paper);box-shadow:0 10px 24px -6px rgba(46,35,24,.5)}
+.dock button.paw:active{transform:translateY(-16px) scale(.92)}
+.dock svg{width:21px;height:21px;stroke-width:1.7;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+.dock button.paw svg{width:24px;height:24px}
+
+/* ---------- App 通用件 ---------- */
+.pad{padding:0 22px}
+.mono{font-family:var(--mono)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px}
+.press{transition:transform .18s var(--ease)}
+.press:active{transform:scale(.97)}
+
+/* 主行动钮（深棕主体） */
+.btn-primary{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  background:var(--ink-deep);color:#F6EFDD;border-radius:18px;
+  font-size:16px;font-weight:700;padding:18px 22px;border:0;width:100%;
+}
+.btn-primary .sub{display:block;font-size:11px;font-weight:400;color:#C9BBA0;margin-top:2px}
+
+/* 案例流（双列不等高，小红书节奏） */
+.cases{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.case{background:var(--card);border:1px solid var(--line-soft);border-radius:16px;overflow:hidden}
+.case img{width:100%;display:block;object-fit:cover}
+.case .tt{font-size:13px;font-weight:600;line-height:1.5;padding:10px 12px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.case .src{font-family:var(--mono);font-size:9px;color:var(--muted);padding:6px 12px 12px;letter-spacing:.02em}
+
+/* 截面标题 */
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;margin:26px 0 12px}
+.sec-h h3{font-size:16px;font-weight:800;letter-spacing:.01em}
+.sec-h .more{font-size:11px;color:var(--muted)}
+
+/* 卡面槽位（卡面艺术=23号标准件/A5槽位，本稿只定摆放） */
+.cardface{position:relative;border-radius:18px;overflow:hidden;color:var(--gold-deep)}
+.cardface .cf-logo{font-family:var(--mono);font-size:10px;letter-spacing:.3em}
+.cardface .cf-name{font-family:var(--serif);font-weight:900}
+.cardface .cf-price{font-family:var(--mono);font-weight:700}
+.cardface .cf-slot{position:absolute;border:1px dashed rgba(217,192,138,.5);border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:8px;letter-spacing:.1em;color:rgba(217,192,138,.75)}
+.cardface .cf-note{position:absolute;bottom:8px;right:12px;font-family:var(--mono);font-size:8px;letter-spacing:.08em;color:rgba(217,192,138,.6)}
+
+/* 文档表格 */
+table.spec{width:100%;border-collapse:collapse;font-size:13px}
+table.spec th{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-align:left;color:var(--muted);padding:10px 12px;border-bottom:1px solid var(--line);font-weight:500}
+table.spec td{padding:12px;border-bottom:1px solid var(--line-soft);line-height:1.7;vertical-align:top}
+table.spec tr td:first-child{font-weight:700;white-space:nowrap}
+
+/* 评审标注 */
+.note{font-size:12px;color:var(--muted);line-height:1.8}
+.tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;padding:3px 10px;border-radius:99px;border:1px solid var(--line);color:var(--muted);margin-right:6px}
+.tag.gold{background:var(--gold);border-color:transparent;color:var(--ink-deep);font-weight:700}
+.tag.deep{background:var(--ink-deep);border-color:transparent;color:#F6EFDD}
+
+/* 两版徽标 */
+.dir-badge{display:inline-flex;align-items:center;gap:10px;padding:8px 18px;border-radius:99px;font-weight:800;font-size:13px}
+.dir-badge.a{background:var(--ink-deep);color:var(--gold)}
+.dir-badge.b{background:var(--gold);color:var(--ink-deep);border:1px solid var(--line)}
+
+@media (max-width:720px){.wrap{padding:0 20px}.stage{padding:32px 20px 44px;gap:24px}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}

@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03 · 方向 B「档案装帧」 · Philia 方向稿评审包</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+/* ============ 方向 B 专有件 ============ */
+/* 宣言区 */
+.mani{padding:14px 22px 0}
+.mani .ey{font-family:var(--mono);font-size:9.5px;letter-spacing:.24em;color:var(--muted);text-transform:uppercase}
+.mani h2{font-family:var(--serif);font-size:27px;font-weight:900;line-height:1.42;margin-top:10px}
+.mani h2 em{font-style:normal;background:linear-gradient(transparent 62%,var(--gold) 62%)}
+
+/* 档案封卡 */
+.fcover{margin-top:16px;position:relative}
+.fcover .ph{border-radius:24px;overflow:hidden;position:relative;box-shadow:0 22px 44px -20px rgba(46,35,24,.4)}
+.fcover .ph img{width:100%;height:300px;object-fit:cover;display:block}
+.fcover .ph::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(42,31,21,.08),transparent 30%)}
+.fcover .seal{position:absolute;top:14px;right:14px;width:46px;height:46px;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%,#4A3626,#2E2318 70%);
+  border:1.5px solid rgba(217,192,138,.75);display:grid;place-items:center;color:var(--gold-deep);
+  box-shadow:0 4px 12px rgba(0,0,0,.35), inset 0 1px 2px rgba(217,192,138,.3)}
+.fcover .seal svg{width:22px;height:22px}
+.fcover .plate{display:flex;align-items:baseline;justify-content:space-between;margin-top:12px;padding:0 2px}
+.fcover .plate .pnm{font-family:var(--serif);font-size:21px;font-weight:900}
+.fcover .plate .psub{font-size:11px;color:var(--muted);margin-top:3px}
+.fcover .plate .pno{font-family:var(--mono);font-size:11px;color:var(--khaki);letter-spacing:.16em}
+.fcover .meta{display:flex;gap:0;margin-top:12px;border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden}
+.fcover .meta div{flex:1;padding:9px 6px;text-align:center;font-family:var(--mono);font-size:9.5px;color:var(--muted)}
+.fcover .meta div+div{border-left:1px solid var(--line-soft)}
+.fcover .meta b{display:block;font-size:11.5px;color:var(--ink);font-weight:700;margin-bottom:2px}
+
+/* 文字链行 */
+.linkrow{display:flex;justify-content:center;gap:26px;margin-top:14px}
+.linkrow span{font-size:12.5px;color:var(--ink);border-bottom:1px solid var(--khaki);padding-bottom:2px}
+
+/* 档案摘页 */
+.leaf .fno{font-family:var(--mono);font-size:9px;color:var(--khaki);letter-spacing:.12em;padding:10px 12px 0}
+
+/* LIVE 档案页卡 */
+.livdoc{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px;box-shadow:0 16px 34px -18px rgba(46,35,24,.28)}
+.livdoc .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.livdoc .tt{font-family:var(--serif);font-weight:900;font-size:16px}
+.livdoc .pg{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.livdoc .ph{border-radius:14px;overflow:hidden;position:relative}
+.livdoc .ph img{width:100%;height:190px;object-fit:cover;display:block}
+.livdoc .ph .cap{position:absolute;left:12px;bottom:10px;font-size:12px;font-weight:600;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.5)}
+.track{display:flex;justify-content:space-between;margin-top:14px;position:relative;padding:0 4px}
+.track::before{content:'';position:absolute;top:7px;left:10px;right:10px;height:1px;background:var(--line)}
+.track .nd{width:15px;height:15px;border-radius:50%;border:1.5px solid var(--khaki);background:var(--card);position:relative;z-index:1;display:grid;place-items:center;font-family:var(--mono);font-size:7.5px;color:var(--muted)}
+.track .nd.done{background:var(--ink-deep);border-color:var(--ink-deep);color:#F6EFDD}
+.track .nd.now{background:var(--gold);border-color:var(--gold);color:var(--ink-deep);font-weight:700;box-shadow:0 0 0 4px rgba(242,223,166,.35)}
+.livdoc .quiet{margin-top:13px;padding-top:12px;border-top:1px dashed var(--line);font-size:11.5px;color:var(--muted);line-height:1.8}
+
+/* 备台记录（档案语气） */
+.logrow{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px;display:flex;gap:12px;align-items:center}
+.logrow img{width:54px;height:54px;border-radius:12px;object-fit:cover}
+.logrow .t{font-size:13px;font-weight:700}
+.logrow .s{font-family:var(--mono);font-size:9.5px;color:var(--muted);margin-top:3px}
+
+/* 会员页·账页 */
+.acct{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px 18px;display:flex;align-items:baseline;justify-content:space-between}
+.acct .v{font-family:var(--mono);font-size:23px;font-weight:700;letter-spacing:-.02em}
+.acct .k{font-size:10.5px;color:var(--muted)}
+.acct .side{text-align:right;font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.8}
+
+/* 保障清单（仪器表） */
+.assure{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:6px 18px}
+.assure .row{display:flex;align-items:baseline;gap:14px;padding:12px 0;border-top:1px solid var(--line-soft)}
+.assure .row:first-child{border-top:0}
+.assure .no{font-family:var(--mono);font-size:10px;color:var(--khaki);flex:none;width:22px}
+.assure .t{font-size:13px;font-weight:700}
+.assure .v{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted)}
+
+/* 装帧墙（四档竖排） */
+.bindwall{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.bindrow{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:13px 16px}
+.bindrow .sw{width:44px;height:30px;border-radius:7px;flex:none;position:relative}
+.bindrow .sw::after{content:'';position:absolute;inset:3px;border:1px solid rgba(217,192,138,.45);border-radius:4px}
+.bindrow.t3 .sw{background:linear-gradient(135deg,#433225,#2A1F15);border:1px solid rgba(217,192,138,.4)}
+.bindrow.t2 .sw{background:linear-gradient(135deg,#B39A6E,#8F7850)}
+.bindrow.t2 .sw::after{border-color:rgba(251,243,224,.5)}
+.bindrow.t1 .sw{background:linear-gradient(135deg,#F6E7BE,#EBD494)}
+.bindrow.t1 .sw::after{border-color:rgba(92,74,40,.35)}
+.bindrow.t0 .sw{background:var(--card);border:1px solid var(--line)}
+.bindrow.t0 .sw::after{border-color:rgba(59,46,36,.25)}
+.bindrow .nm{font-family:var(--serif);font-weight:900;font-size:15px}
+.bindrow .pr{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px}
+.bindrow .cl{margin-left:auto;font-size:11px;color:var(--muted);text-align:right;line-height:1.5}
+.bindrow.cur{border:1.5px solid var(--ink-deep)}
+.bindrow .here{font-family:var(--mono);font-size:9px;color:var(--ink-deep);border:1px solid var(--ink-deep);border-radius:99px;padding:2px 8px;margin-left:8px}
+
+/* 卡面复用（同 A） */
+.cardface{display:block}
+.memcard{margin-top:14px;border-radius:18px;overflow:hidden;position:relative;color:var(--gold-deep);
+  background:linear-gradient(140deg,#433225,#2A1F15);border:1px solid rgba(217,192,138,.4);height:204px;padding:18px 20px}
+.memcard::before{content:'';position:absolute;inset:7px;border:1px solid rgba(217,192,138,.3);border-radius:12px;pointer-events:none}
+.memcard .cf-logo{font-family:var(--mono);font-size:10px;letter-spacing:.3em}
+.memcard .cf-slot{position:absolute;border:1px dashed rgba(217,192,138,.5);border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:8px;letter-spacing:.1em;color:rgba(217,192,138,.75);text-align:center}
+.memcard .cf-name{font-family:var(--serif);font-weight:900;font-size:25px;margin-top:16px}
+.memcard .cf-price{font-family:var(--mono);font-size:13px;font-weight:700;margin-top:6px}
+.memcard .cf-claim{font-size:11px;margin-top:9px;opacity:.85}
+.memcard .cf-no{position:absolute;left:20px;bottom:12px;font-family:var(--mono);font-size:9px;letter-spacing:.14em;opacity:.75}
+.memcard .cf-note{position:absolute;bottom:8px;right:12px;font-family:var(--mono);font-size:8px;color:rgba(217,192,138,.6)}
+
+/* 多宠氛围件（档案语气：图 + 铭牌） */
+.famcard{margin-top:12px;border-radius:18px;overflow:hidden}
+.famcard img{width:100%;height:150px;object-fit:cover;display:block;object-position:50% 62%}
+.plate2{display:flex;justify-content:space-between;align-items:baseline;margin-top:9px;padding:0 2px;font-size:11px;color:var(--muted)}
+.plate2 span{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--khaki)}
+
+/* 我的页（同构 A，语气 B） */
+.mehero{background:linear-gradient(150deg,#3B2E24,#2A1F15);border-radius:24px;padding:20px 18px 16px;color:#F6EFDD;min-height:312px;display:flex;flex-direction:column}
+.mehero .r1{display:flex;align-items:center;gap:13px}
+.mehero .av{width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid rgba(217,192,138,.5)}
+.mehero .nm{font-size:18px;font-weight:800}
+.mehero .tier{display:inline-block;margin-top:5px;font-family:var(--serif);font-weight:900;font-size:12px;color:var(--gold);border:1px solid rgba(217,192,138,.5);border-radius:99px;padding:3px 11px}
+.mehero .renew{margin-left:auto;font-size:12px;color:#C9BBA0;border-bottom:1px solid rgba(217,192,138,.4);padding-bottom:1px}
+.mehero .nums{display:grid;grid-template-columns:1.2fr 1fr 1fr;margin-top:20px;padding-top:16px;border-top:1px solid rgba(217,192,138,.22)}
+.mehero .nums .v{font-family:var(--mono);font-size:17px;font-weight:700;color:#F6EFDD;letter-spacing:-.02em}
+.mehero .nums .v em{font-style:normal;font-size:10px;color:#C9BBA0}
+.mehero .nums .k{font-size:10px;color:#C9BBA0;margin-top:5px}
+.mehero .qrrow{margin-top:auto;background:var(--paper);color:var(--ink-deep);border-radius:14px;padding:13px 16px;display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:800}
+.mehero .qrrow svg{width:18px;height:18px}
+.mehero .qrrow .c{font-family:var(--mono);font-size:9.5px;color:var(--muted);margin-left:auto;font-weight:400}
+.orderrow{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:18px;display:grid;grid-template-columns:repeat(5,1fr);padding:13px 0}
+.orderrow .o{text-align:center;font-size:10.5px;color:var(--ink)}
+.orderrow .o svg{width:21px;height:21px;stroke-width:1.6;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;margin:0 auto 5px;display:block}
+.grid8{margin-top:14px;display:grid;grid-template-columns:repeat(4,1fr);gap:16px 4px}
+.grid8 .g{text-align:center}
+.grid8 .g svg{width:23px;height:23px;stroke-width:1.55;fill:none;stroke:var(--ink);stroke-linecap:round;stroke-linejoin:round;margin:0 auto 7px;display:block}
+.grid8 .g .t{font-size:11px;color:var(--ink)}
+.grid8 .g .t small{display:block;font-family:var(--mono);font-size:8.5px;color:var(--muted);margin-top:2px}
+
+.apphead{display:flex;align-items:flex-end;justify-content:space-between;padding:10px 22px 0}
+.apphead .tt{font-family:var(--serif);font-size:27px;font-weight:900}
+.apphead .no{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.12em;padding-bottom:6px}
+.greet{padding:8px 22px 0}
+.greet .row{display:flex;align-items:baseline;justify-content:space-between}
+.greet .ey{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
+.greet .shop{font-family:var(--mono);font-size:9.5px;color:var(--muted)}
+.mt{margin-top:14px}
+.pad{padding:0 22px}
+.btn-primary{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;background:var(--ink-deep);color:#F6EFDD;border-radius:18px;font-size:16px;font-weight:700;padding:16px 22px;border:0;width:100%}
+.btn-primary .sub{display:block;font-size:10.5px;font-weight:400;color:#C9BBA0;font-family:var(--mono);letter-spacing:.03em}
+.cases{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.case{background:var(--card);border:1px solid var(--line-soft);border-radius:16px;overflow:hidden}
+.case img{width:100%;display:block;object-fit:cover}
+.case .tt{font-size:13px;font-weight:600;line-height:1.5;padding:10px 12px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.case .src{font-family:var(--mono);font-size:9.5px;color:var(--muted);padding:6px 12px 12px;letter-spacing:.02em}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;margin:26px 0 12px}
+.sec-h h3{font-size:16px;font-weight:800}
+.sec-h .more{font-size:11px;color:var(--muted)}
+.mono{font-family:var(--mono)}
+.press{transition:transform .18s var(--ease)}
+.press:active{transform:scale(.97)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="site-head">
+    <span class="dir-badge b">方向 B · 档案装帧 THE ARCHIVE</span>
+    <h1 class="display" style="font-size:clamp(28px,3.4vw,44px);margin-top:20px">打开，先是它。</h1>
+    <p class="lede">安心研究所正传 × 星巴克纪律：首屏=它的档案封面；会员卡=这份档案的装帧级别——只露印，不叫卖。星巴克被拆进会员页：大卡、账页、保障清单、四档装帧墙。全链路最静的一版。</p>
+    <div class="rule"></div>
+    <div>
+      <span class="tag deep">骨架：宠物状态优先</span>
+      <span class="tag">密度：首屏 4 / 证书 2</span>
+      <span class="tag gold">签名构件：档案页码轨道</span>
+      <span class="tag">卡：印章 / 装帧 / 账页 / 手持</span>
+    </div>
+  </header>
+</div>
+
+<div class="wrap" style="margin-top:22px">
+  <a href="screens.html" style="display:block;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 24px;text-decoration:none;color:var(--ink)">
+    <span style="font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--muted)">CLIENT ATLAS</span>
+    <div style="font-family:var(--serif);font-size:20px;font-weight:900;margin-top:6px">客户端全屏陈列馆 · 24 屏 →</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:5px">（方向 B 为落选备选存档；定稿方向 A 的 24 屏全量在这里）</div>
+  </a>
+</div>
+
+<div class="stage">
+
+  <!-- ============ B-1 首页·常态 ============ -->
+  <div class="frame"><div class="screen-tag">B-1 · 首页 · 常态</div><div class="screen">
+    <div class="status"><span class="clock">--:--</span><div class="ico">
+      <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13" y="0" width="3" height="11" rx="1" opacity=".35"/></svg>
+      <svg width="15" height="11" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1.5 4.5a9 9 0 0113 0M4 7a5.6 5.6 0 018 0"/><circle cx="8" cy="9.8" r="1.2" fill="currentColor" stroke="none"/></svg>
+      <svg width="24" height="11" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="20" height="11" rx="3" stroke="currentColor" opacity=".4"/><rect x="2.5" y="2.5" width="14" height="7" rx="1.5" fill="currentColor"/><path d="M23 4v4a2 2 0 000-4z" fill="currentColor" opacity=".4"/></svg>
+    </div></div>
+
+    <div class="mani">
+      <div class="ey">PHILIA ARCHIVE · EVERY VISIT, ON RECORD</div>
+      <h2>每一次被照顾，<br>都<em>值得被记录</em>。</h2>
+    </div>
+
+    <!-- 档案封卡 -->
+    <div class="pad">
+      <div class="fcover">
+        <div class="ph press">
+          <img src="assets/hero-bath.jpg" alt="">
+          <div class="seal"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 13.5c-2.8 0-5 2-5 4.2 0 1.4 1 2.3 2.4 2.3 1 0 1.7-.5 2.6-.5s1.6.5 2.6.5c1.4 0 2.4-.9 2.4-2.3 0-2.2-2.2-4.2-5-4.2z"/><circle cx="6.5" cy="10" r="1.6"/><circle cx="10" cy="7.5" r="1.7"/><circle cx="14" cy="7.5" r="1.7"/><circle cx="17.5" cy="10" r="1.6"/></svg></div>
+        </div>
+        <div class="plate">
+          <div>
+            <div class="pnm">旺财</div>
+            <div class="psub">金毛寻回犬 · 它的档案</div>
+          </div>
+          <div class="pno">NO.0086</div>
+        </div>
+        <div class="meta">
+          <div><b>28.5kg</b>最新体重</div>
+          <div><b>23 天</b>距上次洗护</div>
+          <div><b>68 张</b>在册照片</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pad mt">
+      <button class="btn-primary press"><span>为它预约本周洗护</span><span class="sub">今天 15:30 还有 2 个空位</span></button>
+      <div class="linkrow">
+        <span>预约寄养</span><span>逛逛商城</span><span>它的档案</span>
+      </div>
+    </div>
+
+    <!-- 档案摘页（案例流） -->
+    <div class="pad">
+      <div class="sec-h"><h3>档案摘页</h3><span class="more mono">店里今天的故事</span></div>
+      <div class="cases leaf">
+        <div class="case press"><div class="fno">FIG. 0919-A</div><img src="assets/poodle.jpg" alt="" style="height:150px"><div class="tt">刚吹干的豆豆，蓬成了一朵云</div><div class="src">贝肯山店 · 深层洗护 · 阿梨</div></div>
+        <div class="case press"><div class="fno">FIG. 0919-B</div><img src="assets/corgi.jpg" alt="" style="height:196px"><div class="tt">布丁剪完毛，腿长三公分</div><div class="src">生活馆店 · 造型精修 · 阿禾</div></div>
+        <div class="case press"><div class="fno">FIG. 0920-A</div><img src="assets/cat.jpg" alt="" style="height:140px"><div class="tt">梳毛的时候，它眯起了眼睛</div><div class="src">贝肯山店 · 猫咪精护 · 阿棠</div></div>
+        <div class="case press"><div class="fno">FIG. 0920-B</div><img src="assets/sleep.jpg" alt="" style="height:170px"><div class="tt">等家长来接的午后</div><div class="src">贝肯山店 · 寄养日报 · 16:20</div></div>
+      </div>
+      <div style="height:100px"></div>
+    </div>
+
+    <nav class="dock">
+      <button class="on"><svg viewBox="0 0 24 24"><path d="M4 11l8-6 8 6v8a1 1 0 01-1 1h-5v-6h-4v6H5a1 1 0 01-1-1z"/></svg></button>
+      <button><svg viewBox="0 0 24 24"><circle cx="6.5" cy="7" r="2.4"/><circle cx="6.5" cy="17" r="2.4"/><path d="M8.5 8.8L19.5 19M8.5 15.2L19.5 5"/></svg></button>
+      <button class="paw"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 13.5c-2.8 0-5 2-5 4.2 0 1.4 1 2.3 2.4 2.3 1 0 1.7-.5 2.6-.5s1.6.5 2.6.5c1.4 0 2.4-.9 2.4-2.3 0-2.2-2.2-4.2-5-4.2z"/><circle cx="6.5" cy="10" r="1.6"/><circle cx="10" cy="7.5" r="1.7"/><circle cx="14" cy="7.5" r="1.7"/><circle cx="17.5" cy="10" r="1.6"/></svg></button>
+      <button><svg viewBox="0 0 24 24"><path d="M6 8h12l-1.1 12H7.1L6 8z"/><path d="M9 8a3 3 0 016 0"/></svg></button>
+      <button><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c1-3.4 3.5-5 6.5-5s5.5 1.6 6.5 5"/></svg></button>
+    </nav>
+  </div></div>
+
+  <!-- ============ B-2 首页·服务中态 ============ -->
+  <div class="frame"><div class="screen-tag">B-2 · 首页 · 服务中态（档案书写中）</div><div class="screen">
+    <div class="status"><span class="clock">--:--</span><div class="ico">
+      <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13" y="0" width="3" height="11" rx="1" opacity=".35"/></svg>
+      <svg width="15" height="11" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1.5 4.5a9 9 0 0113 0M4 7a5.6 5.6 0 018 0"/><circle cx="8" cy="9.8" r="1.2" fill="currentColor" stroke="none"/></svg>
+      <svg width="24" height="11" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="20" height="11" rx="3" stroke="currentColor" opacity=".4"/><rect x="2.5" y="2.5" width="14" height="7" rx="1.5" fill="currentColor"/><path d="M23 4v4a2 2 0 000-4z" fill="currentColor" opacity=".4"/></svg>
+    </div></div>
+
+    <div class="greet">
+      <div class="row"><span class="ey">PHILIA ARCHIVE · 贝肯山店</span><span class="shop">它在店里</span></div>
+    </div>
+
+    <!-- 档案页 LIVE -->
+    <div class="pad mt">
+      <div class="livdoc">
+        <div class="top"><span class="tt">档案书写中</span><span class="pg">第 3 页 · 共 7 页</span></div>
+        <div class="ph"><img src="assets/hero-bath.jpg" alt=""><div class="cap">洗护中 · 吹干 · 阿梨在陪着它</div></div>
+        <div class="track">
+          <span class="nd done">1</span><span class="nd done">2</span><span class="nd now">3</span>
+          <span class="nd">4</span><span class="nd">5</span><span class="nd">6</span><span class="nd">7</span>
+        </div>
+        <div class="quiet">它在店的这段时间，照片会一张张进来。不用守着——洗好了，证书和报告会来找你。</div>
+      </div>
+    </div>
+
+    <!-- 备台记录 -->
+    <div class="pad">
+      <div class="logrow press">
+        <img src="assets/salon.jpg" alt="">
+        <div>
+          <div class="t">备台记录 · 一客一消</div>
+          <div class="s">06:40 已归档 · 安心包 待入场拆封</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 身份窄行（印章态降级） -->
+    <div class="pad">
+      <div class="logrow press" style="border-radius:99px;padding:9px 16px">
+        <div class="seal" style="position:static;width:26px;height:26px;border-radius:50%;background:radial-gradient(circle at 34% 30%,#4A3626,#2E2318 70%);border:1.5px solid rgba(217,192,138,.75);display:grid;place-items:center;color:var(--gold-deep);flex:none"><svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px"><path d="M12 13.5c-2.8 0-5 2-5 4.2 0 1.4 1 2.3 2.4 2.3 1 0 1.7-.5 2.6-.5s1.6.5 2.6.5c1.4 0 2.4-.9 2.4-2.3 0-2.2-2.2-4.2-5-4.2z"/><circle cx="6.5" cy="10" r="1.6"/><circle cx="10" cy="7.5" r="1.7"/><circle cx="14" cy="7.5" r="1.7"/><circle cx="17.5" cy="10" r="1.6"/></svg></div>
+        <div>
+          <div class="t" style="font-size:12px">暖阳会员 <span class="mono" style="font-size:9.5px;color:var(--muted);font-weight:400">回馈金 ¥58.40 · 会员码 ›</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pad">
+      <div class="sec-h"><h3>档案摘页</h3><span class="more mono">店里今天的故事</span></div>
+      <div class="cases leaf">
+        <div class="case press"><div class="fno">FIG. 0919-A</div><img src="assets/poodle.jpg" alt="" style="height:150px"><div class="tt">刚吹干的豆豆，蓬成了一朵云</div><div class="src">贝肯山店 · 深层洗护 · 阿梨</div></div>
+        <div class="case press"><div class="fno">FIG. 0920-A</div><img src="assets/cat.jpg" alt="" style="height:140px"><div class="tt">梳毛的时候，它眯起了眼睛</div><div class="src">贝肯山店 · 猫咪精护 · 阿棠</div></div>
+      </div>
+      <div style="height:100px"></div>
+    </div>
+
+    <nav class="dock">
+      <button class="on"><svg viewBox="0 0 24 24"><path d="M4 11l8-6 8 6v8a1 1 0 01-1 1h-5v-6h-4v6H5a1 1 0 01-1-1z"/></svg></button>
+      <button><svg viewBox="0 0 24 24"><circle cx="6.5" cy="7" r="2.4"/><circle cx="6.5" cy="17" r="2.4"/><path d="M8.5 8.8L19.5 19M8.5 15.2L19.5 5"/></svg></button>
+      <button class="paw"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 13.5c-2.8 0-5 2-5 4.2 0 1.4 1 2.3 2.4 2.3 1 0 1.7-.5 2.6-.5s1.6.5 2.6.5c1.4 0 2.4-.9 2.4-2.3 0-2.2-2.2-4.2-5-4.2z"/><circle cx="6.5" cy="10" r="1.6"/><circle cx="10" cy="7.5" r="1.7"/><circle cx="14" cy="7.5" r="1.7"/><circle cx="17.5" cy="10" r="1.6"/></svg></button>
+      <button><svg viewBox="0 0 24 24"><path d="M6 8h12l-1.1 12H7.1L6 8z"/><path d="M9 8a3 3 0 016 0"/></svg></button>
+      <button><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c1-3.4 3.5-5 6.5-5s5.5 1.6 6.5 5"/></svg></button>
+    </nav>
+  </div></div>
+
+  <!-- ============ B-3 会员页（装帧） ============ -->
+  <div class="frame"><div class="screen-tag">B-3 · 会员页（装帧选择）</div><div class="screen">
+    <div class="status"><span class="clock">--:--</span><div class="ico">
+      <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13" y="0" width="3" height="11" rx="1" opacity=".35"/></svg>
+      <svg width="15" height="11" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1.5 4.5a9 9 0 0113 0M4 7a5.6 5.6 0 018 0"/><circle cx="8" cy="9.8" r="1.2" fill="currentColor" stroke="none"/></svg>
+      <svg width="24" height="11" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="20" height="11" rx="3" stroke="currentColor" opacity=".4"/><rect x="2.5" y="2.5" width="14" height="7" rx="1.5" fill="currentColor"/><path d="M23 4v4a2 2 0 000-4z" fill="currentColor" opacity=".4"/></svg>
+    </div></div>
+
+    <div class="apphead"><span class="tt">装帧</span><span class="no">PHILIA CLUB · NO.0086</span></div>
+    <div class="pad"><p class="mono" style="font-size:10px;color:var(--muted);margin-top:8px;letter-spacing:.06em">这份档案的保障级别 = 它的装帧。</p></div>
+
+    <!-- 当前装帧大卡 -->
+    <div class="pad">
+      <div class="memcard">
+        <div class="cf-logo">PHILIA · LOVE BOND LIFE</div>
+        <div class="cf-slot" style="top:14px;right:16px;width:46px;height:46px">蜡封<br>槽位</div>
+        <div class="cf-name">暖阳会员</div>
+        <div class="cf-price">¥599 / 年</div>
+        <div class="cf-claim">含 3 只毛孩子 · 都被叫得出名字</div>
+        <div class="cf-slot" style="bottom:26px;right:16px;width:76px;height:44px;border-radius:8px">线稿槽位</div>
+        <div class="cf-no">NO.0086 · 旺财家长</div>
+        <div class="cf-note">卡面=23号标准件槽位</div>
+      </div>
+    </div>
+
+    <!-- 账页 -->
+    <div class="pad">
+      <div class="acct">
+        <div>
+          <div class="v">¥486.20</div>
+          <div class="k">今年，会员身份为你省下的</div>
+        </div>
+        <div class="side">回馈金 ¥58.40<br>11 月 5 日到账<br>年费回本 81%</div>
+      </div>
+    </div>
+
+    <!-- 保障清单（仪器表） -->
+    <div class="pad">
+      <div class="sec-h"><h3>保障清单</h3><span class="more mono">8 条在册</span></div>
+      <div class="assure">
+        <div class="row"><span class="no">01</span><span class="t">多宠覆盖</span><span class="v">含 3 只 · 第 4 只 +¥59/年</span></div>
+        <div class="row"><span class="no">02</span><span class="t">服务折扣</span><span class="v">85 折 · 全服务</span></div>
+        <div class="row"><span class="no">03</span><span class="t">回馈金</span><span class="v">10% · 仅抵商品</span></div>
+        <div class="row"><span class="no">04</span><span class="t">专属洗护师</span><span class="v">点名安排</span></div>
+        <div class="row"><span class="no">05</span><span class="t">生日礼遇</span><span class="v">年度特辑</span></div>
+        <div class="row"><span class="no">06</span><span class="t">皮毛检测</span><span class="v">每季一次</span></div>
+        <div class="row"><span class="no">07</span><span class="t">寄养折扣</span><span class="v">9 折 · 按晚</span></div>
+        <div class="row"><span class="no">08</span><span class="t">年度档案</span><span class="v">全年在册</span></div>
+      </div>
+    </div>
+
+    <!-- 装帧墙（四档竖排） -->
+    <div class="pad">
+      <div class="sec-h"><h3>四种装帧</h3><span class="more mono">档色即身份</span></div>
+      <div class="bindwall">
+        <div class="bindrow t0 press"><span class="sw"></span><div><div class="nm">微光</div><div class="pr">免费注册</div></div><div class="cl">先领个身份</div></div>
+        <div class="bindrow t1 press"><span class="sw"></span><div><div class="nm">萤火</div><div class="pr">¥199 / 年</div></div><div class="cl">一年省下一顿火锅</div></div>
+        <div class="bindrow t2 press"><span class="sw"></span><div><div class="nm">烛光</div><div class="pr">¥299 / 年</div></div><div class="cl">每月一次眼耳甲，不用记</div></div>
+        <div class="bindrow t3 cur press"><span class="sw"></span><div><div class="nm">暖阳<span class="here">当前装帧</span></div><div class="pr">¥599 / 年 · 每天 ¥1.6</div></div><div class="cl">含 3 只毛孩子<br>都被叫得出名字</div></div>
+      </div>
+    </div>
+
+    <!-- 装帧之外（多宠氛围件） -->
+    <div class="pad">
+      <div class="famcard press"><img src="assets/family.jpg" alt=""></div>
+      <div class="plate2">暖阳装帧之外 · 它们仨的午后<span>FIG. F-01</span></div>
+    </div>
+
+    <!-- 规则明面 -->
+    <div class="pad">
+      <div class="rules" style="margin-top:12px;border-radius:18px;border:1px dashed var(--line);padding:14px 16px">
+        <div style="font-size:12.5px;font-weight:800">年费 ≠ 储值 · 到期不自动续费</div>
+        <ul style="margin-top:8px;list-style:none">
+          <li style="font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.9">回馈金比例 10%（暖阳档）· 仅抵商品 · 单笔不设上限</li>
+          <li style="font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.9">上月 26 日 – 本月 25 日结算 · 次月 5 日前到账</li>
+          <li style="font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.9">365 天有效 · 到期未续冻结 · 续费即解冻 · 退卡清零</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="pad mt">
+      <button class="btn-primary press">续费装帧 · 每天 ¥1.6</button>
+      <div style="height:96px"></div>
+    </div>
+
+    <nav class="dock">
+      <button><svg viewBox="0 0 24 24"><path d="M4 11l8-6 8 6v8a1 1 0 01-1 1h-5v-6h-4v6H5a1 1 0 01-1-1z"/></svg></button>
+      <button><svg viewBox="0 0 24 24"><circle cx="6.5" cy="7" r="2.4"/><circle cx="6.5" cy="17" r="2.4"/><path d="M8.5 8.8L19.5 19M8.5 15.2L19.5 5"/></svg></button>
+      <button class="paw on"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 13.5c-2.8 0-5 2-5 4.2 0 1.4 1 2.3 2.4 2.3 1 0 1.7-.5 2.6-.5s1.6.5 2.6.5c1.4 0 2.4-.9 2.4-2.3 0-2.2-2.2-4.2-5-4.2z"/><circle cx="6.5" cy="10" r="1.6"/><circle cx="10" cy="7.5" r="1.7"/><circle cx="14" cy="7.5" r="1.7"/><circle cx="17.5" cy="10" r="1.6"/></svg></button>
+      <button><svg viewBox="0 0 24 24"><path d="M6 8h12l-1.1 12H7.1L6 8z"/><path d="M9 8a3 3 0 016 0"/></svg></button>
+      <button><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c1-3.4 3.5-5 6.5-5s5.5 1.6 6.5 5"/></svg></button>
+    </nav>
+  </div></div>
+
+  <!-- ============ B-4 我的页 ============ -->
+  <div class="frame"><div class="screen-tag">B-4 · 我的页（山姆骨架 · 冻结件）</div><div class="screen">
+    <div class="status"><span class="clock">--:--</span><div class="ico">
+      <svg width="16" height="11" viewBox="0 0 16 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"/><rect x="4.5" y="5" width="3" height="6" rx="1"/><rect x="9" y="2.5" width="3" height="8.5" rx="1"/><rect x="13" y="0" width="3" height="11" rx="1" opacity=".35"/></svg>
+      <svg width="15" height="11" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1.5 4.5a9 9 0 0113 0M4 7a5.6 5.6 0 018 0"/><circle cx="8" cy="9.8" r="1.2" fill="currentColor" stroke="none"/></svg>
+      <svg width="24" height="11" viewBox="0 0 25 12" fill="none"><rect x="0.5" y="0.5" width="20" height="11" rx="3" stroke="currentColor" opacity=".4"/><rect x="2.5" y="2.5" width="14" height="7" rx="1.5" fill="currentColor"/><path d="M23 4v4a2 2 0 000-4z" fill="currentColor" opacity=".4"/></svg>
+    </div></div>
+
+    <div class="apphead"><span class="tt">我的</span><span class="no">MY PHILIA</span></div>
+
+    <div class="pad mt">
+      <div class="mehero">
+        <div class="r1">
+          <img class="av" src="assets/sleep.jpg" alt="">
+          <div>
+            <div class="nm">旺财家长</div>
+            <span class="tier">暖阳会员</span>
+          </div>
+          <span class="renew">续费 ›</span>
+        </div>
+        <div class="nums">
+          <div><div class="v">¥486.20</div><div class="k">今年已省</div></div>
+          <div><div class="v">¥58.40</div><div class="k">回馈金</div></div>
+          <div><div class="v">286 <em>天</em></div><div class="k">续费倒计时</div></div>
+        </div>
+        <div class="qrrow press"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="4" width="6" height="6" rx="1.2"/><rect x="14" y="4" width="6" height="6" rx="1.2"/><rect x="4" y="14" width="6" height="6" rx="1.2"/><path d="M14 14h2.5v2.5H14zM20 14v6M14 20h6"/></svg>出示会员码<span class="c">到店即扫</span></div>
+      </div>
+    </div>
+
+    <div class="pad">
+      <div class="orderrow">
+        <div class="o"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>待到店</div>
+        <div class="o"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3.5 2"/></svg>服务中</div>
+        <div class="o"><svg viewBox="0 0 24 24"><path d="M12 4l2.2 4.6 5 .6-3.7 3.4 1 4.9-4.5-2.5-4.5 2.5 1-4.9L4.8 9.2l5-.6z"/></svg>待评价</div>
+        <div class="o"><svg viewBox="0 0 24 24"><path d="M4 9V7a2 2 0 012-2h12a2 2 0 012 2v2M4 9h16v8a2 2 0 01-2 2H6a2 2 0 01-2-2zM4 9v8"/></svg>退款售后</div>
+        <div class="o"><svg viewBox="0 0 24 24"><path d="M5 6h14M5 12h14M5 18h14"/></svg>全部订单</div>
+      </div>
+    </div>
+
+    <div class="pad">
+      <div class="grid8">
+        <div class="g press"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="16" rx="2"/><path d="M9 9h6M9 13h6M9 17h4"/></svg><div class="t">它的档案<small>NO.0086</small></div></div>
+        <div class="g press"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-4 4 3 3-2 4 3"/></svg><div class="t">服务相册<small>68 张在册</small></div></div>
+        <div class="g press"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3.5 2"/></svg><div class="t">回馈金账本<small>¥58.40</small></div></div>
+        <div class="g press"><svg viewBox="0 0 24 24"><path d="M4 11l8-6 8 6v8a1 1 0 01-1 1h-5v-6h-4v6H5a1 1 0 01-1-1z"/></svg><div class="t">寄养预约<small>按晚</small></div></div>
+        <div class="g press"><svg viewBox="0 0 24 24"><path d="M5 5h14v6a2 2 0 000 4v4H5v-4a2 2 0 000-4z"/><path d="M12 8v8" stroke-dasharray="2.5 2.5"/></svg><div class="t">优惠券<small>2 张</small></div></div>
+        <div class="g press"><svg viewBox="0 0 24 24"><path d="M12 21s-7-5.5-7-11a7 7 0 0114 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg><div class="t">常用地址<small>家</small></div></div>
+        <div class="g press"><svg viewBox="0 0 24 24"><path d="M5 18a7 7 0 0114 0"/><circle cx="12" cy="7" r="3"/></svg><div class="t">小棉花<small>替你陪着它</small></div></div>
+        <div class="g press"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 01-.2 1.6l2 1.5-2 3.4-2.3-1a7 7 0 01-2.8 1.7L13.4 21h-2.8l-.3-2.5a7 7 0 01-2.8-1.6l-2.3 1-2-3.4 2-1.5A7 7 0 015 12c0-.6.1-1.1.2-1.6l-2-1.5 2-3.4 2.3 1a7 7 0 012.8-1.7L10.6 3h2.8l.3 2.5a7 7 0 012.8 1.6l2.3-1 2 3.4-2 1.5c.1.5.2 1 .2 1.6z"/></svg><div class="t">设置<small>账号</small></div></div>
+      </div>
+      <div style="height:100px"></div>
+    </div>
+
+    <nav class="dock">
+      <button><svg viewBox="0 0 24 24"><path d="M4 11l8-6 8 6v8a1 1 0 01-1 1h-5v-6h-4v6H5a1 1 0 01-1-1z"/></svg></button>
+      <button><svg viewBox="0 0 24 24"><circle cx="6.5" cy="7" r="2.4"/><circle cx="6.5" cy="17" r="2.4"/><path d="M8.5 8.8L19.5 19M8.5 15.2L19.5 5"/></svg></button>
+      <button class="paw"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 13.5c-2.8 0-5 2-5 4.2 0 1.4 1 2.3 2.4 2.3 1 0 1.7-.5 2.6-.5s1.6.5 2.6.5c1.4 0 2.4-.9 2.4-2.3 0-2.2-2.2-4.2-5-4.2z"/><circle cx="6.5" cy="10" r="1.6"/><circle cx="10" cy="7.5" r="1.7"/><circle cx="14" cy="7.5" r="1.7"/><circle cx="17.5" cy="10" r="1.6"/></svg></button>
+      <button><svg viewBox="0 0 24 24"><path d="M6 8h12l-1.1 12H7.1L6 8z"/><path d="M9 8a3 3 0 016 0"/></svg></button>
+      <button class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20c1-3.4 3.5-5 6.5-5s5.5 1.6 6.5 5"/></svg></button>
+    </nav>
+  </div></div>
+</div>
+
+<!-- ============ B 版规格区 ============ -->
+<div class="wrap">
+  <div class="rule"></div>
+  <div class="eyebrow">会员卡怎么摆 · 方向 B 答案</div>
+  <h2 style="font-family:var(--serif);font-size:26px;font-weight:900;margin:12px 0 6px">装帧制：卡不抢戏，印在那里就够了。</h2>
+  <p class="note" style="max-width:720px">首页不出现完整卡面——只有一枚档色蜡封小章。高端品牌的会员身份从不挂在门口，它印在档案封面。完整卡面只在会员页（装帧）与我的页（身份大卡）现身。</p>
+  <table class="spec" style="margin-top:20px">
+    <tr><th>状态</th><th>位置</th><th>尺寸（390 宽）</th><th>呈现</th></tr>
+    <tr><td>印章态</td><td>首页档案封卡右上（B-1）</td><td>46px 圆形档色蜡封</td><td>只露印，不露卡。档位=封面上的那枚印，一眼知级别，零叫卖。</td></tr>
+    <tr><td>降级态</td><td>首页服务中态（B-2）</td><td>26px 小印 + 一行字</td><td>LIVE 优先，会员信息收成「印 + 一行」，与 A 同纪律。</td></tr>
+    <tr><td>装帧态</td><td>会员页（B-3）</td><td>大卡全幅 + 四档装帧墙</td><td>当前装帧大卡置顶；下方「四种装帧」竖排全宽条（档色样片 44×30 + 档名衬线 + 一句话主张）——像为档案选封面，不是比价做题。</td></tr>
+    <tr><td>账页态</td><td>会员页卡下（B-3）</td><td>全宽 −44 横条</td><td>回馈金=这份档案的价值页：「今年已省 ¥486.20」mono 大数字承重。</td></tr>
+    <tr><td>手持态</td><td>会员码屏 + 我的页（B-4）</td><td>卡头 64px 档色 + 白卡墨码</td><td>与 A 同构（扫码识别率是物理约束，两版不分叉）。</td></tr>
+  </table>
+
+  <div class="rule"></div>
+  <div class="eyebrow">密度节奏 · 方向 B</div>
+  <table class="spec" style="margin-top:14px">
+    <tr><th>屏</th><th>密度</th><th>节奏理由</th></tr>
+    <tr><td>首页常态</td><td>松（4/10）</td><td>宣言 + 一张大卡 + 一个按钮 + 一行文字链——首屏只有它，该松的松。</td></tr>
+    <tr><td>首页服务中态</td><td>中（5/10）</td><td>档案页卡 + 页码轨道承重，无痕语气（「证书和报告会来找你」）。</td></tr>
+    <tr><td>会员页</td><td>中（5/10）</td><td>卡 + 账 + 编号清单 + 装帧墙——仪器表的秩序，不是货架。</td></tr>
+    <tr><td>我的页</td><td>松（4/10）</td><td>同 A（冻结骨架），语气更静。</td></tr>
+    <tr><td>安心证书（签名时刻）</td><td>最松（2/10）</td><td>归档仪式：编号 + 蜡封 + 毕业照，全 App 最静的一屏。</td></tr>
+  </table>
+
+  <div class="links" style="margin:36px 0 56px">
+    <a href="dir-a.html">← 回看方向 A</a>
+    <a href="compare.html">去并排对比 · 总监推荐 →</a>
+  </div>
+</div>
+
+<script>
+  (function(){var t=new Date(),s=t.toTimeString().slice(0,5);document.querySelectorAll('.clock').forEach(function(c){c.textContent=s})})();
+</script>
+</body>
+</html>

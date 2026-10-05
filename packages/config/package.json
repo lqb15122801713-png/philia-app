@@ -1,0 +1,9 @@
+{
+  "name": "@philia/config",
+  "private": true,
+  "version": "0.0.0",
+  "description": "三端共享配置：tsconfig.base、Tailwind preset 等（P0 仅占位 tsconfig，preset 由后续任务写入）",
+  "files": [
+    "tsconfig.base.json"
+  ]
+}

@@ -1,0 +1,496 @@
+/**
+ * 会员 · 次卡 /pass（U3 批次 · 任务 J · 规格书 §9 · 母本试样 558-606 行）
+ * （/passes 重定向兼容在路由层；v1.1-b2 B2-7 · P0 资损配套）
+ *
+ * 数据源：
+ * - pass.listForStore：本店全部次卡 + 持卡人昵称/手机号 + usable 快照；
+ * - pass.listCustomers：可充次客户下拉（本店有预约或已持本店卡，服务端同口径校验）；
+ * - pass.listLogs：扣次（-1）/ 回补（+1）/ 充次（+N）流水，倒序，上限 100。
+ *
+ * 结构：MainScaffold（title 会员 · 次卡 / sub 含冻结决策 15 原文 / 主钮「＋ 售卡」）
+ * → 两栏（试样 .two-col 1.7fr:1fr）：左=在效次卡表（u3-panel + u3-tbl，按剩余次数排序），
+ * 右=扣次流水（u3-todo 工艺：−1 深墨点 / 正数木点 #B9A482）。
+ *
+ * 操作（真实链路保留）：
+ * - 「售卡 / 充次」→ TopUpDialog 选客户 + 次数 → pass.topUp（无卡建卡/有卡加次，
+ *   事务内写 +N 流水）；
+ * - 行内「记录」→ LogsModal 看该卡流水。
+ * 归属红线由服务端强制（pass.* 均 merchantProcedure 且限定本店 storeId，越店 FORBIDDEN）。
+ * 禁编造年费档位/价格；储值不做。次卡无卡种字段——卡种列仅展示 member_pass 行真值（累计充次）。
+ */
+
+import { EventType, Skeleton, usePhiliaClient } from '@philia/shared';
+import { useMutation, useQueries, useQuery } from '@tanstack/react-query';
+import { useCallback, useEffect, useState } from 'react';
+import { MEMBER_FOR_USER_KEY, planShortLabel } from '../components/cashier/membership';
+import { useMerchantEvents } from '../components/dashboard/MerchantEventsProvider';
+import MainScaffold, { LemonButton } from '../components/MainScaffold';
+import { errMsg, fmtDateTime } from '../components/staff-admin/format';
+import { Btn, Field, inputCls, Modal, numStyle, toast, ToasterMount } from '../components/staff-admin/ui';
+import { pc } from '../copy/pass';
+
+type PassRow = {
+  id: string;
+  userId: string;
+  totalTimes: number;
+  remainTimes: number;
+  status: string;
+  expiresAt: Date | null;
+  createdAt: Date;
+  customerNickname: string | null;
+  customerPhone: string | null;
+  usable: boolean;
+};
+
+type LogRow = {
+  id: string;
+  passId: string;
+  appointmentId: string | null;
+  delta: number;
+  createdAt: Date;
+  customerNickname: string | null;
+  appointmentCode: string | null;
+};
+
+/** 深墨（扣次 −1）/ 浅木（回补 +1、充次 +N）——试样 todo-row 色点口径（薄荷绿清场） */
+const DOT_INK = '#2E2318';
+const DOT_WOOD = '#B9A482';
+
+/** W-11 档色点（档色即身份 · 客户端 1.0 定稿 §1.3 档色谱：微光纸白/萤火淡金/烛光卡其铜/暖阳深棕） */
+const PLAN_TIER_COLOR: Record<string, string> = {
+  plan_weiguang: '#FBF6EA',
+  plan_yinghuo: '#F2DFA6',
+  plan_zhuguang: '#A08B62',
+  plan_nuanyang: '#34271C',
+};
+const TIER_DOT_LOADING = 'rgba(59,46,36,.15)';
+
+/** 档色点（行首身份点；loading/无档=灰点，不造档） */
+function TierDot({ planKey }: { planKey: string | null | undefined }) {
+  const color = planKey ? (PLAN_TIER_COLOR[planKey] ?? TIER_DOT_LOADING) : TIER_DOT_LOADING;
+  return (
+    <i
+      aria-hidden
+      className="inline-block h-2.5 w-2.5 flex-none rounded-full"
+      style={{ background: color, boxShadow: 'inset 0 0 0 1px rgba(59,46,36,.18)' }}
+    />
+  );
+}
+
+const pad2 = (n: number): string => String(n).padStart(2, '0');
+/** 有效期至：YYYY-MM-DD（Montserrat tabular；null=长期有效） */
+function isoDate(d: Date | null | undefined): string {
+  if (!d) return '长期有效';
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
+/** 卡状态胶囊：在效 live / 将尽 amber（剩余 ≤2） / 已用完·已过期·已停用 done */
+function passStatus(p: PassRow): { cls: string; label: string } {
+  if (p.status !== 'active') return { cls: 'u3-st done', label: '已停用' };
+  if (p.expiresAt && p.expiresAt.getTime() <= Date.now()) return { cls: 'u3-st done', label: '已过期' };
+  if (p.remainTimes <= 0) return { cls: 'u3-st done', label: '已用完' };
+  if (p.remainTimes <= 2) return { cls: 'u3-st amber', label: '将尽' };
+  return { cls: 'u3-st live', label: '在效' };
+}
+
+/** 流水事由（B3-3 口径：+1 含取消回补与商家拒单自动回补，流水字段不区分来源，并列标注；
+ *  批次 M1：收银台扣次 appointment_id=NULL（裁定③）→ 标「收银台扣次」，与预约扣次区分） */
+function logReason(l: LogRow): string {
+  if (l.delta === -1) return l.appointmentId ? '预约扣次 1 次' : '收银台扣次 1 次';
+  if (l.delta === 1) return '取消/拒单回补 1 次';
+  return `商家充次 ${l.delta} 次`;
+}
+
+/** 充次对话框：选客户 + 次数（售卡=无卡客户自动建卡，同一条 topUp 链路） */
+function TopUpDialog({
+  open,
+  onClose,
+  presetUserId,
+}: {
+  open: boolean;
+  onClose: () => void;
+  presetUserId?: string | null;
+}) {
+  const { trpc, queryClient } = usePhiliaClient();
+  const customersQ = useQuery({
+    queryKey: ['pass', 'listCustomers'],
+    queryFn: () => trpc.pass.listCustomers.query(),
+    enabled: open,
+  });
+  const [userId, setUserId] = useState<string>(presetUserId ?? '');
+  const [times, setTimes] = useState('10');
+
+  // 每次打开对话框时同步预设客户（行内「充次」带入该持卡人）
+  const [lastPreset, setLastPreset] = useState<string | null | undefined>(undefined);
+  if (open && presetUserId !== lastPreset) {
+    setLastPreset(presetUserId);
+    if (presetUserId) setUserId(presetUserId);
+  }
+  if (!open && lastPreset !== undefined) {
+    setLastPreset(undefined);
+    setUserId('');
+    setTimes('10');
+  }
+
+  const topUpM = useMutation({
+    mutationFn: () => trpc.pass.topUp.mutate({ userId, times: Number(times) }),
+    onSuccess: (r) => {
+      toast(`充次成功：剩余 ${r.pass.remainTimes} 次（共 ${r.pass.totalTimes} 次）`);
+      void queryClient.invalidateQueries({ queryKey: ['pass'] });
+      onClose();
+    },
+    onError: (e) => toast(errMsg(e), 'error'),
+  });
+
+  const customers = customersQ.data?.customers ?? [];
+  const timesNum = Number(times);
+  const valid = userId !== '' && Number.isInteger(timesNum) && timesNum >= 1 && timesNum <= 999;
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="售卡 / 充次"
+      footer={
+        <>
+          <Btn variant="ghost" onClick={onClose}>取消</Btn>
+          <Btn variant="primary" disabled={!valid || topUpM.isPending} onClick={() => topUpM.mutate()}>
+            {topUpM.isPending ? '提交中…' : '确认充次'}
+          </Btn>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <Field label="客户" hint={pc('pass.topUpCustomerHint')}>
+          <select className={inputCls} value={userId} onChange={(e) => setUserId(e.target.value)}>
+            <option value="">请选择客户</option>
+            {customers.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nickname ?? '未命名'}{c.phone ? `（${c.phone}）` : ''}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="次数" hint={pc('pass.topUpTimesHint')}>
+          <input
+            className={inputCls}
+            type="number"
+            min={1}
+            max={999}
+            value={times}
+            onChange={(e) => setTimes(e.target.value)}
+            style={numStyle}
+          />
+        </Field>
+      </div>
+    </Modal>
+  );
+}
+
+/** 流水对话框：某张卡的扣次/回补/充次记录（现有链路保留） */
+function LogsModal({ pass, onClose }: { pass: PassRow | null; onClose: () => void }) {
+  const { trpc } = usePhiliaClient();
+  const logsQ = useQuery({
+    queryKey: ['pass', 'listLogs', pass?.id],
+    queryFn: () => trpc.pass.listLogs.query({ passId: pass!.id }),
+    enabled: pass !== null,
+  });
+  const logs = (logsQ.data ?? []) as LogRow[];
+  return (
+    <Modal open={pass !== null} onClose={onClose} title={`次卡流水 · ${pass?.customerNickname ?? ''}`}>
+      {logsQ.isPending ? (
+        <div className="space-y-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 rounded-input" />
+          ))}
+        </div>
+      ) : logs.length === 0 ? (
+        <p className="py-6 text-center text-caption text-ink-placeholder">暂无流水</p>
+      ) : (
+        <div className="space-y-2">
+          {logs.map((l) => (
+            <div key={l.id} className="flex items-center gap-2.5 rounded-input bg-canvas px-3 py-2.5">
+              <i
+                className="h-2 w-2 flex-none rounded-full"
+                style={{ background: l.delta === -1 ? DOT_INK : DOT_WOOD }}
+              />
+              <div className="flex-1">
+                <span className="text-caption font-semibold text-ink">{logReason(l)}</span>
+                {l.appointmentCode ? (
+                  <span className="ml-2 font-number text-caption tabular-nums text-ink-secondary">预约单 {l.appointmentCode}</span>
+                ) : null}
+                <span className="ml-2 block text-caption text-ink-placeholder sm:inline" style={numStyle}>
+                  {fmtDateTime(l.createdAt)}
+                </span>
+              </div>
+              <span className="font-number text-caption font-bold tabular-nums text-ink">
+                {l.delta > 0 ? `+${l.delta}` : l.delta}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+export default function PassPage() {
+  const { trpc, queryClient } = usePhiliaClient();
+  const events = useMerchantEvents();
+  const passesQ = useQuery({
+    queryKey: ['pass', 'listForStore'],
+    queryFn: () => trpc.pass.listForStore.query(),
+  });
+  const logsQ = useQuery({
+    queryKey: ['pass', 'listLogs', 'store'],
+    queryFn: () => trpc.pass.listLogs.query({}),
+  });
+
+  // 批次 M1（任务书 §1.5.3）：收银台结账含次卡扣次 → 次卡余额/扣次流水即时刷新；
+  // 断线重连全量对齐（MerchantEventsProvider 全域单连接，零新建连）
+  const invalidatePass = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ['pass'] });
+  }, [queryClient]);
+  useEffect(
+    () =>
+      events.onEvent((envelope) => {
+        if (envelope.type === EventType.CashierBillSettled) invalidatePass();
+      }),
+    [events, invalidatePass],
+  );
+  useEffect(() => events.onReconnect(invalidatePass), [events, invalidatePass]);
+  const [topUpOpen, setTopUpOpen] = useState(false);
+  const [presetUserId, setPresetUserId] = useState<string | null>(null);
+  const [logsFor, setLogsFor] = useState<PassRow | null>(null);
+
+  const passes = (passesQ.data ?? []) as PassRow[];
+  /** 左栏按剩余次数排序（母本「按剩余次数」口径；剩余相同按创建倒序稳定） */
+  const sorted = [...passes].sort((a, b) => b.remainTimes - a.remainTimes);
+  const logs = (logsQ.data ?? []) as LogRow[];
+  const activeCount = passes.filter((p) => p.usable).length;
+  /** W-11 M3 次数包真值：本店次卡张数 + 剩余可扣总次数（pass.listForStore 同源性） */
+  const remainSum = passes.reduce((s, p) => s + p.remainTimes, 0);
+
+  /** W-11 档色点读口：membership.forUser 按人真值（React Query 按 userId 缓存；
+      无店级档位名册端点——台账规模=本店次卡客户数，逐行查询可承载，已报备口径） */
+  const tierQs = useQueries({
+    queries: sorted.map((p) => ({
+      queryKey: MEMBER_FOR_USER_KEY(p.userId),
+      queryFn: () => trpc.membership.forUser.query({ userId: p.userId }),
+      staleTime: 60_000,
+    })),
+  });
+  /** userId → planKey（null=无档会员；缺 key=加载中→灰点） */
+  const tierByUser = new Map<string, string | null>();
+  sorted.forEach((p, i) => {
+    const d = tierQs[i]?.data;
+    if (d) tierByUser.set(p.userId, d.membership?.planKey ?? null);
+  });
+
+  const openTopUp = (userId: string | null) => {
+    setPresetUserId(userId);
+    setTopUpOpen(true);
+  };
+
+  return (
+    <MainScaffold
+      testid="pass-page"
+      title={pc('pass.title')}
+      sub={pc('pass.sub', { n: activeCount })}
+      actions={
+        <LemonButton testid="pass-sell" onClick={() => openTopUp(null)}>
+          {pc('pass.sellCta')}
+        </LemonButton>
+      }
+    >
+      <ToasterMount />
+
+      {/* W-11 M3 四格（持卡/储值负债/次数包/回馈金负债）——真值只接次数包；
+          储值/回馈金负债与持卡名册无本店聚合读口（membership.forUser=按人查、
+          storedValue 路由=owner 台账导入族）→ 置灰注记不造数，读口待补已报备 */}
+      <div className="mb-[14px]" data-testid="pass-stats">
+        <div className="grid grid-cols-2 gap-[14px] lg:grid-cols-4">
+          <div className="u3-stat" data-testid="pass-stat-cards">
+            <div className="cap">{pc('pass.statCards')}</div>
+            <div className="v text-[rgba(59,46,36,.3)]">—</div>
+            <div className="d" title={pc('pass.statPendingNote')}>{pc('pass.statPending')}</div>
+          </div>
+          <div className="u3-stat" data-testid="pass-stat-sv">
+            <div className="cap">{pc('pass.statSv')}</div>
+            <div className="v text-[rgba(59,46,36,.3)]">—</div>
+            <div className="d" title={pc('pass.statPendingNote')}>{pc('pass.statPending')}</div>
+          </div>
+          <div className="u3-stat" data-testid="pass-stat-pass">
+            <div className="cap">{pc('pass.statPass')}</div>
+            <div className="v">{passesQ.isPending ? '…' : `${passes.length} 张`}</div>
+            <div className="d">{pc('pass.statPassSub', { n: remainSum })}</div>
+          </div>
+          <div className="u3-stat" data-testid="pass-stat-rebate">
+            <div className="cap">{pc('pass.statRebate')}</div>
+            <div className="v text-[rgba(59,46,36,.3)]">—</div>
+            <div className="d" title={pc('pass.statPendingNote')}>{pc('pass.statPending')}</div>
+          </div>
+        </div>
+        <p className="mt-2 text-[11px] text-[rgba(59,46,36,.42)]" data-testid="pass-three-books-note">
+          {pc('pass.threeBooksNote')}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-[14px] xl:grid-cols-[1.7fr_1fr]">
+        {/* 左：在效次卡表 */}
+        <div className="u3-panel">
+          <div className="u3-panel-head">
+            <h3>在效次卡</h3>
+            <span className="aside" title={pc('pass.dualHomeNote')}>{pc('pass.listAside')}</span>
+          </div>
+          {passesQ.isPending ? (
+            <div className="space-y-2 px-[17px] pb-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-9" />
+              ))}
+            </div>
+          ) : passesQ.isError ? (
+            <p className="px-[17px] pb-5 pt-2 text-xs text-[rgba(59,46,36,.62)]">
+              次卡列表加载失败：{errMsg(passesQ.error)}
+            </p>
+          ) : passes.length === 0 ? (
+            <p className="px-[17px] pb-8 pt-3 text-center text-xs text-[rgba(59,46,36,.62)]">
+              {pc('pass.empty')}
+            </p>
+          ) : (
+            <>
+            <table className="u3-tbl">
+              <thead>
+                <tr>
+                  <th>客户</th>
+                  <th>{pc('pass.cardNoCol')}</th>
+                  <th>卡种</th>
+                  <th className="text-right">剩余</th>
+                  <th>有效期至</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sorted.map((p) => {
+                  const st = passStatus(p);
+                  const tier = tierByUser.has(p.userId) ? tierByUser.get(p.userId) : undefined;
+                  return (
+                    <tr key={p.id}>
+                      <td>
+                        <span className="flex items-center gap-2">
+                          {/* W-11 档色点行首（档色即身份；无档/加载中=灰点不造档） */}
+                          <TierDot planKey={tier} />
+                          <span>
+                            <span className="font-bold text-ink">{p.customerNickname ?? '未命名'}</span>
+                            <span className="ml-1.5 text-[11px] text-[rgba(59,46,36,.42)]">
+                              {tier ? planShortLabel(tier) : pc('pass.tierNone')}
+                            </span>
+                            {p.customerPhone ? (
+                              <div className="mt-0.5 font-number text-[11px] tabular-nums text-[rgba(59,46,36,.42)]">
+                                尾号 {p.customerPhone.slice(-4)}
+                              </div>
+                            ) : null}
+                          </span>
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap font-number text-[11px] tabular-nums text-[rgba(59,46,36,.62)]" title={p.id}>
+                        #{p.id.slice(-8)}
+                      </td>
+                      <td className="text-[rgba(59,46,36,.62)]">
+                        次卡
+                        <span className="ml-1 font-number tabular-nums">共 {p.totalTimes} 次</span>
+                      </td>
+                      <td className="whitespace-nowrap text-right">
+                        <span className="font-number text-sm font-bold tabular-nums text-ink">
+                          {p.remainTimes}
+                        </span>
+                        <span className="ml-0.5 text-[11px] text-[rgba(59,46,36,.42)]">次</span>
+                      </td>
+                      <td className="whitespace-nowrap font-number tabular-nums text-[rgba(59,46,36,.62)]">
+                        {isoDate(p.expiresAt)}
+                      </td>
+                      <td>
+                        <span className={st.cls}>{st.label}</span>
+                      </td>
+                      <td>
+                        <div className="flex gap-3">
+                          <button
+                            type="button"
+                            data-testid={`pass-topup-${p.id}`}
+                            onClick={() => openTopUp(p.userId)}
+                            className="text-[11px] font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+                          >
+                            充次
+                          </button>
+                          <button
+                            type="button"
+                            data-testid={`pass-logs-${p.id}`}
+                            onClick={() => setLogsFor(p)}
+                            className="text-[11px] font-semibold text-[rgba(59,46,36,.62)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+                          >
+                            记录
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {/* W-11 双归属注（售卡店/通用店口径明面） */}
+            <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5 text-[11px] text-[rgba(59,46,36,.42)]" data-testid="pass-dual-home-note">
+              {pc('pass.dualHomeNote')}
+            </p>
+            </>
+          )}
+        </div>
+
+        {/* 右：扣次流水（todo-row 工艺） */}
+        <div className="u3-panel">
+          <div className="u3-panel-head">
+            <h3>扣次流水</h3>
+            <span className="aside">{pc('pass.logsAside')}</span>
+          </div>
+          {logsQ.isPending ? (
+            <div className="space-y-2 px-[17px] pb-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-9" />
+              ))}
+            </div>
+          ) : logsQ.isError ? (
+            <p className="px-[17px] pb-5 pt-2 text-xs text-[rgba(59,46,36,.62)]">
+              流水加载失败：{errMsg(logsQ.error)}
+            </p>
+          ) : logs.length === 0 ? (
+            <p className="px-[17px] pb-8 pt-3 text-center text-xs text-[rgba(59,46,36,.62)]">
+              {pc('pass.logsEmpty')}
+            </p>
+          ) : (
+            <div>
+              {logs.map((l) => (
+                <div key={l.id} className="u3-todo">
+                  <i
+                    className="dot"
+                    style={{ background: l.delta === -1 ? DOT_INK : DOT_WOOD }}
+                  />
+                  <div className="tx">
+                    {l.customerNickname ?? '客户'} · {logReason(l)}
+                    <small className="font-number tabular-nums">
+                      {fmtDateTime(l.createdAt)}
+                      {l.appointmentCode ? ` · 预约单 ${l.appointmentCode}` : ''}
+                    </small>
+                  </div>
+                  <span className="n">{l.delta > 0 ? `+${l.delta}` : `−${Math.abs(l.delta)}`}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <TopUpDialog open={topUpOpen} onClose={() => setTopUpOpen(false)} presetUserId={presetUserId} />
+      <LogsModal pass={logsFor} onClose={() => setLogsFor(null)} />
+    </MainScaffold>
+  );
+}

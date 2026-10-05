@@ -1,0 +1,421 @@
+/**
+ * 【批次 4 起为旧版向导】B4-1 后默认路由 /booking/grooming 已切换为单屏页
+ * （GroomingSinglePage）；本文件整体保留于隐藏路由 /booking/grooming/wizard
+ * 作回滚保障，验收通过后下批次再删。以下历史注释保留原样。
+ *
+ * 洗护预约（T2.2 · ≤4 屏硬指标）：
+ *   屏1 选服务项（getWithServices 的 grooming 卡：名称/时长/价格）
+ *   屏2 选门店（listNearby 卡；切换联动刷新服务与槽位）
+ *   屏3 选员工（随缘 + listStaffPublic 横滑）+ 选时间（SlotPicker 日分组 30min 槽格，满槽灰显）
+ *   屏4 确认（选宠物 / 收款方式 / 备注 → appointment.create → /booking/success?aid=）
+ * 顶部步骤条 + 已选条件摘要胶囊（点击回跳修改）；提交 loading；冲突/满槽友好 toast。
+ * v1.1-b3 B3-5（W-1）：仅 1 家门店时自动选中并跳过屏2（屏1→屏3、屏3 返回直回屏1），
+ * 摘要胶囊「门店」chip 仍可点回屏2 修改。
+ * v1.1-b3 B3-5（W-2）：屏3 时间槽允许当天——可约口径「当前时间 +1h 缓冲」之后，
+ * 由 getWithServices 服务端统一供给，过期/临近/满槽格灰显禁用（前后端同拦）。
+ *
+ * 说明：appointment.create 暂无 staffId 入参，指定员工以备注前缀「【希望洗护师：X】」
+ * 传达门店，待服务端加字段后可无损迁移。
+ */
+
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Skeleton, slotContentOf, resolveSlotUrl, usePhiliaClient } from '@philia/shared';
+import PetPicker from '@/components/booking/PetPicker';
+import SlotPicker from '@/components/booking/SlotPicker';
+import StaffPicker from '@/components/booking/StaffPicker';
+import StepIndicator from '@/components/booking/StepIndicator';
+import SummaryChips from '@/components/booking/SummaryChips';
+import { friendlyError, useToast } from '@philia/shared';
+import { fenToYuan, fmtDateTime, PAYMENT_MODE_META } from '@/components/booking/format';
+import { bkc } from '@/copy/booking';
+
+const STEPS = ['选服务', '选门店', '选时间', '确认'];
+
+export default function BookingGroomingPage() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { trpc, queryClient } = usePhiliaClient();
+  const { toastEl, showToast } = useToast({ durationMs: 3200 });
+
+  const [step, setStep] = useState(1);
+  const [storeId, setStoreId] = useState<string | null>(searchParams.get('storeId'));
+  // v1.1-b1：?serviceId= 预填（首页推荐服务 / philia 一键复购链接均带该参数）
+  const [serviceId, setServiceId] = useState<string | null>(searchParams.get('serviceId'));
+  const [staffId, setStaffId] = useState<string | null>(null); // null = 随缘
+  const [slot, setSlot] = useState<Date | null>(null);
+  // v1.1-b2：?petId= 预填（B2-3 完成单「再次预约」链接带该参数，与 serviceId 预填同模式）
+  const [petId, setPetId] = useState<string | null>(searchParams.get('petId'));
+  const [paymentMode, setPaymentMode] = useState<'pay_at_store' | 'pass_deduct'>('pay_at_store');
+  const [note, setNote] = useState('');
+
+  /* ---- 数据 ---- */
+  const nearbyQ = useQuery({
+    queryKey: ['store', 'listNearby'],
+    queryFn: () => trpc.store.listNearby.query({}),
+  });
+  // URL ?storeId= 优先，否则最近门店（无坐标时列表第一家）
+  const effStoreId = storeId ?? nearbyQ.data?.stores[0]?.id ?? null;
+  // v1.1-b3 B3-5（W-1 单店跳步）：仅 1 家门店时自动选中并跳过屏2（选门店）；
+  // 已选摘要胶囊的「门店」chip 仍可点回屏2 修改（保留可返回修改）
+  const singleStore = (nearbyQ.data?.stores.length ?? 0) === 1;
+
+  const servicesQ = useQuery({
+    queryKey: ['store', 'getWithServices', effStoreId, serviceId],
+    queryFn: () =>
+      trpc.store.getWithServices.query({
+        storeId: effStoreId!,
+        serviceId: serviceId ?? undefined,
+      }),
+    enabled: effStoreId !== null,
+  });
+
+  const staffQ = useQuery({
+    queryKey: ['store', 'listStaffPublic', effStoreId],
+    queryFn: () => trpc.store.listStaffPublic.query({ storeId: effStoreId! }),
+    enabled: effStoreId !== null && step >= 3,
+  });
+
+  const petsQ = useQuery({
+    queryKey: ['pet', 'list'],
+    queryFn: () => trpc.pet.list.query(),
+    // v1.1-b1：首屏即查（空宠物 → 建档岔路卡），不再等确认屏
+    enabled: true,
+  });
+  /** 空宠物：第一屏显示建档岔路卡；「随便看看」仅浏览，确认屏不可达 */
+  const noPets = petsQ.isSuccess && (petsQ.data?.length ?? 0) === 0;
+  const [forkDismissed, setForkDismissed] = useState(false);
+
+  // v1.1-b2 B2-7：本人该店次卡（确认屏「次卡扣次」剩余次数/置灰的数据源；一店一卡，取首张）
+  const passQ = useQuery({
+    queryKey: ['pass', 'mine', effStoreId],
+    queryFn: () => trpc.pass.mine.query({ storeId: effStoreId! }),
+    enabled: effStoreId !== null,
+  });
+  const usablePass = (passQ.data ?? []).find((p) => p.usable) ?? null;
+  // 次卡不可用（无卡/余额不足/已过期）时若仍选中 pass_deduct → 强制回退到店付（换店后余额联动变化）
+  useEffect(() => {
+    if (paymentMode === 'pass_deduct' && passQ.isSuccess && !usablePass) {
+      setPaymentMode('pay_at_store');
+    }
+  }, [paymentMode, passQ.isSuccess, usablePass]);
+
+  // v1.1-b2：URL 预填的 petId 若不在本人宠物列表则清掉（避免看不见的选中态直接放行提交）
+  useEffect(() => {
+    if (petsQ.isSuccess && petId && !(petsQ.data ?? []).some((p) => p.id === petId)) {
+      setPetId(null);
+    }
+  }, [petsQ.isSuccess, petsQ.data, petId]);
+
+  const groomingServices = useMemo(
+    () => (servicesQ.data?.services ?? []).filter((s) => s.type === 'grooming'),
+    [servicesQ.data],
+  );
+  const service = groomingServices.find((s) => s.id === serviceId) ?? null;
+
+  // v1.1-b1：URL 预填的 serviceId 若不属于该店洗护服务项则清掉（避免看不见的选中态放行下一步）
+  useEffect(() => {
+    if (servicesQ.isSuccess && serviceId && !groomingServices.some((s) => s.id === serviceId)) {
+      setServiceId(null);
+    }
+  }, [servicesQ.isSuccess, groomingServices, serviceId]);
+  const store = servicesQ.data?.store ?? nearbyQ.data?.stores.find((s) => s.id === effStoreId) ?? null;
+  const staffName = staffQ.data?.staff.find((s) => s.id === staffId)?.name ?? null;
+
+  /* ---- 联动：换门店清服务/员工/时间；换服务清时间 ---- */
+  const pickStore = (id: string) => {
+    if (id === effStoreId) return;
+    setStoreId(id);
+    setServiceId(null);
+    setStaffId(null);
+    setSlot(null);
+  };
+  const pickService = (id: string) => {
+    setServiceId(id);
+    setSlot(null);
+  };
+
+  /* ---- 提交 ---- */
+  const createM = useMutation({
+    mutationFn: () => {
+      const noteParts = [
+        staffName ? `【希望洗护师：${staffName}】` : '',
+        note.trim(),
+      ].filter(Boolean);
+      return trpc.appointment.create.mutate({
+        storeId: effStoreId!,
+        petId: petId!,
+        serviceId: serviceId!,
+        type: 'grooming',
+        scheduledStart: slot!,
+        paymentMode,
+        ...(noteParts.length > 0 ? { note: noteParts.join(' ') } : {}),
+      });
+    },
+    onSuccess: (appt) => {
+      void queryClient.invalidateQueries({ queryKey: ['appointment'] });
+      void queryClient.invalidateQueries({ queryKey: ['pass'] }); // B2-7：扣次后刷新次卡余额
+      navigate(`/booking/success?aid=${encodeURIComponent(appt.id)}`, { replace: true });
+    },
+    onError: (err) => {
+      showToast(friendlyError(err, '预约失败，请稍后再试'), 'error');
+      // 满槽/冲突：刷新槽位数据让用户重选
+      void servicesQ.refetch();
+    },
+  });
+
+  // 门店无洗护服务（或门店无效致查询失败）时，屏1 允许直接去屏2 换店，不卡死
+  const noServices =
+    (servicesQ.isSuccess && groomingServices.length === 0) || servicesQ.isError;
+  const canNext =
+    (step === 1 && (serviceId !== null || noServices)) ||
+    (step === 2 && effStoreId !== null) ||
+    // v1.1-b1：空宠物不得进确认屏（屏4 选宠物为空也无法提交，双保险）
+    (step === 3 && slot !== null && !noPets);
+
+  /* ---- 渲染 ---- */
+  return (
+    <div className="px-4 py-6">
+      {toastEl}
+
+      <header className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => {
+            if (step <= 1) return navigate(-1);
+            // W-1 单店跳步：屏3 返回时越过屏2（选门店）
+            setStep(singleStore && step === 3 ? 1 : step - 1);
+          }}
+          aria-label="返回"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-card shadow-card active:scale-92"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ink-secondary" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+        </button>
+        <h1 className="text-title-lg">{bkc('booking.groomingTitle')}</h1>
+      </header>
+
+      <div className="mt-4">
+        <StepIndicator steps={STEPS} current={step} />
+      </div>
+
+      {/* 已选条件摘要胶囊（点击回跳） */}
+      <div className="mt-4">
+        <SummaryChips
+          chips={[
+            ...(service && step > 1
+              ? [{ label: '服务', value: service.name, onClick: () => setStep(1) }]
+              : []),
+            ...(store && step > 2 ? [{ label: '门店', value: store.name, onClick: () => setStep(2) }] : []),
+            ...(slot && step > 3
+              ? [{ label: '时间', value: fmtDateTime(slot), onClick: () => setStep(3) }]
+              : []),
+          ]}
+        />
+      </div>
+
+      {/* 屏1：选服务项 */}
+      {step === 1 ? (
+        <section className="mt-4">
+          {/* v1.1-b1：空宠物建档岔路卡（可跳过浏览，但确认屏不可达） */}
+          {noPets && !forkDismissed ? (
+            <div className="mb-4 flex flex-col items-center rounded-card bg-card px-4 py-6 text-center shadow-card">
+              <img src={resolveSlotUrl(slotContentOf('pets.emptyIllustration')?.url) ?? '/brand/empty-appointments-800.png'} alt={slotContentOf('pets.emptyIllustration')?.alt ?? '还没有宠物档案'} className="w-40 max-w-full rounded-card" />
+              <p className="mt-3 text-title">{bkc('booking.noPetTitle')}</p>
+              <p className="mt-1 text-caption text-ink-secondary">{bkc('booking.noPetBodyWizard')}</p>
+              <button
+                type="button"
+                onClick={() => navigate('/philia/pets')}
+                className="mt-4 flex h-11 items-center rounded-full bg-ink px-8 text-body font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
+              >
+                {bkc('booking.noPetCta')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setForkDismissed(true)}
+                className="mt-3 text-caption text-ink-secondary underline-offset-2 hover:underline"
+              >
+                {bkc('booking.noPetSkip')}
+              </button>
+            </div>
+          ) : null}
+          {servicesQ.isPending ? (
+            <div className="space-y-2">{[1, 2].map((i) => <Skeleton key={i} className="h-20 rounded-card" />)}</div>
+          ) : groomingServices.length === 0 ? (
+            <p className="rounded-card bg-sunken px-4 py-8 text-center text-caption text-ink-secondary">
+              {bkc('booking.noGroomingWizard')}
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {groomingServices.map((s) => {
+                const active = s.id === serviceId;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => pickService(s.id)}
+                    className={`flex w-full items-center justify-between rounded-card bg-card p-4 text-left shadow-card transition active:scale-[0.99] ${active ? 'ring-2 ring-brand-primary' : ''}`}
+                  >
+                    <span>
+                      <span className="block text-body font-semibold">{s.name}</span>
+                      <span className="mt-0.5 block text-caption text-ink-secondary">
+                        约 {s.durationMin ?? 60} 分钟
+                      </span>
+                    </span>
+                    <span className="font-number text-price text-ink">{fenToYuan(s.priceFen)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      ) : null}
+
+      {/* 屏2：选门店 */}
+      {step === 2 ? (
+        <section className="mt-4 space-y-2">
+          {nearbyQ.isPending ? (
+            [1, 2].map((i) => <Skeleton key={i} className="h-20 rounded-card" />)
+          ) : (
+            (nearbyQ.data?.stores ?? []).map((s) => {
+              const active = s.id === effStoreId;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => pickStore(s.id)}
+                  className={`w-full rounded-card bg-card p-4 text-left shadow-card transition active:scale-[0.99] ${active ? 'ring-2 ring-brand-primary' : ''}`}
+                >
+                  <span className="flex items-center justify-between">
+                    <span className="text-body font-semibold">{s.name}</span>
+                    {active ? <span className="text-caption text-brand-primary">当前选择</span> : null}
+                  </span>
+                  {s.address ? (
+                    <span className="mt-0.5 block text-caption text-ink-secondary">{s.address}</span>
+                  ) : null}
+                </button>
+              );
+            })
+          )}
+        </section>
+      ) : null}
+
+      {/* 屏3：选员工 + 选时间 */}
+      {step === 3 ? (
+        <section className="mt-4">
+          <h2 className="text-title">选择洗护师</h2>
+          <div className="mt-2">
+            <StaffPicker
+              staff={staffQ.data?.staff ?? []}
+              selectedId={staffId}
+              onSelect={setStaffId}
+              loading={staffQ.isPending}
+            />
+          </div>
+
+          <h2 className="mt-5 text-title">选择时间</h2>
+          <div className="mt-2">
+            {store ? (
+              <SlotPicker
+                store={store}
+                slots={servicesQ.data?.slots ?? []}
+                selected={slot}
+                onSelect={setSlot}
+                loading={servicesQ.isPending || servicesQ.isFetching}
+              />
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      {/* 屏4：确认 */}
+      {step === 4 ? (
+        <section className="mt-4">
+          <h2 className="text-title">选择宠物</h2>
+          <div className="mt-2">
+            <PetPicker
+              pets={petsQ.data ?? []}
+              selectedId={petId}
+              onSelect={setPetId}
+              loading={petsQ.isPending}
+            />
+          </div>
+
+          <h2 className="mt-5 text-title">收款方式</h2>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {(['pay_at_store', 'pass_deduct'] as const).map((m) => {
+              const active = paymentMode === m;
+              // B2-7（W-6）：次卡扣次需可用次卡；无卡/余额不足/过期 → 置灰 + 明确提示
+              const passDisabled = m === 'pass_deduct' && passQ.isSuccess && !usablePass;
+              const hint =
+                m === 'pass_deduct'
+                  ? passQ.isPending
+                    ? '正在查询次卡余额…'
+                    : usablePass
+                      ? bkc('booking.passHint', { remain: usablePass.remainTimes })
+                      : bkc('booking.passNone')
+                  : PAYMENT_MODE_META[m].hint;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  disabled={passDisabled}
+                  onClick={() => setPaymentMode(m)}
+                  className={`rounded-card bg-card p-3.5 text-left shadow-card transition active:scale-[0.99] ${active ? 'ring-2 ring-brand-primary' : ''} ${passDisabled ? 'cursor-not-allowed opacity-50' : ''}`}
+                >
+                  <span className="block text-body font-semibold">{PAYMENT_MODE_META[m].label}</span>
+                  <span className="mt-0.5 block text-caption text-ink-secondary">{hint}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <h2 className="mt-5 text-title">备注</h2>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            maxLength={500}
+            rows={3}
+            placeholder="毛孩子的注意事项，如怕水、需剃脚底毛…"
+            className="mt-2 w-full rounded-input border border-line bg-card px-3.5 py-3 text-body placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
+          />
+
+          {service ? (
+            <div className="mt-4 flex items-center justify-between rounded-card bg-card px-4 py-3 shadow-card">
+              <span className="text-body text-ink-secondary">合计</span>
+              <span className="font-number text-price text-ink">{fenToYuan(service.priceFen)}</span>
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      {/* 底部 CTA */}
+      <div className="mt-6">
+        {step < 4 ? (
+          <button
+            type="button"
+            disabled={!canNext}
+            onClick={() => {
+              // W-1 单店跳步：屏1 直进屏3（门店已自动选中）
+              setStep(singleStore && step === 1 ? 3 : step + 1);
+            }}
+            className="h-12 w-full rounded-full bg-brand-primary text-body font-semibold text-ink shadow-card transition-transform duration-120 ease-philia-spring active:scale-92 disabled:bg-line disabled:text-ink-placeholder"
+          >
+            下一步
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={petId === null || createM.isPending}
+            onClick={() => createM.mutate()}
+            className="h-12 w-full rounded-full bg-philia-gradient text-body font-semibold text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+          >
+            {createM.isPending ? '提交中…' : '确认预约'}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}

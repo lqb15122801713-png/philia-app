@@ -1,0 +1,48 @@
+# Philia Docker 构建上下文瘦身（批次 6 任务 A）
+
+# VCS 与本地产物
+.git
+.github
+
+# 依赖（镜像内 npm ci 重装）
+node_modules
+**/node_modules
+
+# 构建产物（镜像内重新构建）
+dist
+**/dist
+dev-dist
+**/dev-dist
+build
+*.tsbuildinfo
+
+# 证据与截图（不入库目录同理不入镜像）
+evidence
+shots
+
+# 运行时数据（volume 挂载，绝不打进镜像）
+server/data
+server/uploads
+*.db
+*.db-journal
+
+# 环境变量真值（env_file 运行时注入）
+.env
+.env.*
+!.env.example
+
+# 日志与系统
+*.log
+logs
+.DS_Store
+Thumbs.db
+
+# VI 源资产与预览件（构建不需要，仅为设计源文件）
+assets
+PHiLIA-preview-vectors-pdf
+
+# Docker 自身（注意：docker/ 目录含 entrypoint.sh，构建要用，不能排除）
+Dockerfile
+.dockerignore
+docker-compose.yml
+caddy

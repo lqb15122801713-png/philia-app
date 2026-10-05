@@ -1,0 +1,156 @@
+/**
+ * 客户端页面公共小组件与格式化工具（T2.1）
+ *
+ * - Loading/Error/Empty 三态组件：空态插画沿用 /brand/empty-appointments-800.png 风格
+ * - formatFen：分 → 元显示（去尾零，配合 font-number 等宽数字）
+ * - haversineKm：两点球面距离（km），门店卡距离显示用
+ * - todayIso / daysUntil：疫苗有效期临期/过期判断
+ */
+
+import { AlertCircle, RefreshCw } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { ListSkeleton } from '@philia/shared'
+import { PawMark } from '../AppDock'
+
+/** 区块外壳：标题 + 可选右侧动作 + 内容 */
+export function SectionShell({
+  title,
+  action,
+  children,
+}: {
+  title: string
+  action?: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <section className="mt-6">
+      <div className="mb-3 flex items-baseline justify-between">
+        <h2 className="text-title">{title}</h2>
+        {action}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+/** 加载骨架：白卡 + ListSkeleton 成件（换皮批片 5 B 块归并，原手写递减宽脉冲行退役） */
+export function LoadingBlock({ lines = 3, className = '' }: { lines?: number; className?: string }) {
+  return (
+    <div className={`rounded-card bg-card p-4 shadow-card ${className}`} aria-label="加载中">
+      <ListSkeleton rows={lines} />
+    </div>
+  )
+}
+
+/** 错误态：陶红提示 + 重试按钮 + 可选导航出口件
+ *  W1 退回修（规范 E 第四件「能回哪去」）：action=出口按钮（调用方按页型给真实落点
+ *  ——回列表/回首页；重试已是点睛主钮时出口走细线白底次钮，无重试时出口可为主钮）。
+ *  三件套（图标/文案/重试）原貌不动，action 追加在最下。 */
+export function ErrorState({
+  message,
+  onRetry,
+  action,
+}: {
+  message?: string
+  onRetry?: () => void
+  /** W1：导航出口件（规范 E 第四件） */
+  action?: ReactNode
+}) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-card bg-card px-4 py-8 text-center shadow-card">
+      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-danger-light">
+        <AlertCircle className="h-5 w-5 text-danger-deep" strokeWidth={1.5} />
+      </span>
+      <p className="text-body text-ink-secondary">{message ?? '加载失败，请稍后重试'}</p>
+      {onRetry ? (
+        <button
+          type="button"
+          onClick={onRetry}
+          className="flex min-h-[44px] items-center gap-1.5 rounded-full bg-brand-primary px-5 py-2 text-caption text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+        >
+          <RefreshCw className="h-3.5 w-3.5" strokeWidth={1.5} />
+          重新加载
+        </button>
+      ) : null}
+      {action}
+    </div>
+  )
+}
+
+/** 空态（U1-I 全域统一组件；E-01/02/03 三句话结构铁律 §4.11）：爪章/图标
+ *  54 圆 #F4EDDC（bg-sunken + 更软发丝线边，图标 26 卡其次阶色）+ serif 21/900 题
+ *  （是什么）+ 12 说明（为什么，lh 1.9）+ 深棕钮（去哪，调用方传入，色值走 token：
+ *  rounded-control bg-ink px-[30px] py-[13px] text-body-sm font-semibold text-canvas，
+ *  仓内同型件见 MallPage/MallOrdersPage 空态；批片 5 P2 起空态/异常态出口钮一律
+ *  深棕墨底淡字，不再用 bg-brand-primary 淡金——淡金只留主行动 CTA）。
+ *  直上画布不套卡（定稿 .emptyc）；各页空态一律走本组件，不再手写内联空态。
+ *  E-02/E-03 换图标经 icon 传入（默认爪章 PawMark，VI 私有实心件）。 */
+export function EmptyState({
+  title,
+  desc,
+  action,
+  icon,
+}: {
+  title: string
+  desc?: ReactNode
+  action?: ReactNode
+  /** 图标位（默认爪章；E-02 相册 / E-03 购物车等换线性 icon，stroke 1.6） */
+  icon?: ReactNode
+}) {
+  return (
+    <div className="flex flex-col items-center px-[30px] py-[34px] text-center">
+      <span className="flex h-[54px] w-[54px] items-center justify-center rounded-full bg-sunken text-brand-secondary ring-1 ring-line-divider">
+        {icon ?? <PawMark className="h-[26px] w-[26px]" />}
+      </span>
+      <p className="u1-serif mt-3 text-[21px] font-black leading-[1.5]">{title}</p>
+      {desc ? <p className="mt-2.5 text-caption leading-[1.9] text-ink-secondary">{desc}</p> : null}
+      {action ? <div className="mt-[18px]">{action}</div> : null}
+    </div>
+  )
+}
+
+/** 分 → 元显示字符串（去尾零：1200 → "12"，1250 → "12.5"） */
+export function formatFen(fen: number): string {
+  const yuan = fen / 100
+  return yuan % 1 === 0 ? String(yuan) : yuan.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')
+}
+
+/** 数字等宽样式（价格/日期用，搭配 font-number 类） */
+export const tabularNums: React.CSSProperties = { fontVariantNumeric: 'tabular-nums' }
+
+/** 两点球面距离（km，保留 1 位小数）；任一缺坐标返回 null */
+export function haversineKm(
+  lat1: number | null | undefined,
+  lng1: number | null | undefined,
+  lat2: number | null | undefined,
+  lng2: number | null | undefined,
+): number | null {
+  if (lat1 == null || lng1 == null || lat2 == null || lng2 == null) return null
+  const rad = Math.PI / 180
+  const dLat = (lat2 - lat1) * rad
+  const dLng = (lng2 - lng1) * rad
+  const a =
+    Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLng / 2) ** 2
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+/** 今天（本地）ISO 'YYYY-MM-DD' */
+export function todayIso(): string {
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
+
+/** 距离某 ISO 日期的天数（负数 = 已过期） */
+export function daysUntil(iso: string): number {
+  const today = todayIso()
+  const ms = new Date(`${iso}T00:00:00`).getTime() - new Date(`${today}T00:00:00`).getTime()
+  return Math.round(ms / 86_400_000)
+}
+
+/** Date/ISO → 'YYYY年M月D日' */
+export function formatDateCn(input: Date | string): string {
+  const d = typeof input === 'string' ? new Date(input) : input
+  if (Number.isNaN(d.getTime())) return ''
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
+}

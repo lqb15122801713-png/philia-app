@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 · 并排对比 · 总监推荐 · 自检记录 · Philia 方向稿评审包</title>
+<link rel="stylesheet" href="shared.css">
+<style>
+  .fork{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin:30px 0}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:26px}
+  .panel h3{font-family:var(--serif);font-size:19px;font-weight:900;margin-bottom:4px}
+  .panel .sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+  .panel.dark{background:var(--ink-deep);color:#F6EFDD;border-color:transparent}
+  .panel.dark h3{color:var(--gold)}
+  .panel.dark .sub{color:#B9A98F}
+  .kv{display:flex;gap:12px;padding:10px 0;border-top:1px solid var(--line-soft);font-size:12.5px;line-height:1.75}
+  .kv:first-of-type{border-top:0}
+  .kv .k{flex:none;width:86px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--muted);padding-top:2px}
+  .dark .kv{border-top-color:rgba(217,192,138,.18)}
+  .dark .kv .k{color:#B9A98F}
+  /* 首屏结构线框（结构示意，非像素稿） */
+  .wire{border-radius:18px;border:1px solid var(--line);padding:10px;background:var(--paper)}
+  .wire .bl{border-radius:8px;margin-bottom:6px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:8.5px;letter-spacing:.06em;color:var(--muted);border:1px dashed var(--line);text-align:center;padding:4px}
+  .wire .bl.deep{background:var(--ink-deep);color:#F6EFDD;border-style:solid;border-color:transparent}
+  .wire .bl.white{background:var(--card);border-style:solid}
+  .wire .bl.goldline{border-left:3px solid var(--gold)}
+  .wire .row2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .verdict{background:var(--gold);border-radius:22px;padding:30px 32px;color:var(--ink-deep);margin:36px 0}
+  .verdict h3{font-family:var(--serif);font-size:22px;font-weight:900}
+  .verdict p{font-size:13.5px;line-height:1.9;margin-top:10px}
+  .verdict b{font-weight:800}
+  .decide{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:26px;margin-bottom:34px}
+  .decide ol{margin:12px 0 0 20px;font-size:13.5px;line-height:2}
+  .selfcheck{background:#FBF6EA;border:1px solid #E8D9B8;border-radius:22px;padding:26px;margin-bottom:60px}
+  .selfcheck h3{font-family:var(--serif);font-size:19px;font-weight:900;margin-bottom:10px}
+  .selfcheck li{font-size:12.5px;line-height:1.95}
+  .selfcheck ul{margin:8px 0 0 18px}
+  .selfcheck .ok{color:#5C7A4A;font-weight:700}
+  @media(max-width:900px){.fork{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="site-head">
+    <div class="eyebrow">04 · SIDE BY SIDE · 并排对比与推荐</div>
+    <h1 class="display" style="font-size:clamp(28px,3.4vw,44px)">同一套三色，两种骨架。</h1>
+    <p class="lede"><b>终审状态（2026-09-22）：方向 A 已选定（V1.1 细节调整在案：首屏身份带+双入口+结算环合一为贴边大卡，dock 中央爪钮改星巴克式凸起）。</b>B 封存为落选备选，不再演进。以下为评审记录。</p>
+    <div class="rule"></div>
+  </header>
+
+  <!-- 首屏第一眼对比（结构示意） -->
+  <div class="fork">
+    <div class="panel dark">
+      <h3>A · 会员吧台</h3>
+      <div class="sub">第一眼 = 你是谁（会员状态优先）</div>
+      <div class="wire">
+        <div class="bl" style="background:#EBD398;color:#6B5A33;border-style:solid;border-color:transparent">BANNER 色卡槽位（可点击 · 内容=平面设计后期）</div>
+        <div class="bl deep" style="height:30px">身份带（深色横卡 · 压 BANNER 下沿）</div>
+        <div class="bl white" style="height:86px;flex-direction:column;gap:5px;padding:10px">
+          <span>浮动圆角大卡（压身份带下沿 · 无缝）</span>
+          <span style="opacity:.65">双入口横排（竖线分隔）｜回馈金结算环</span>
+          <span style="opacity:.65">内部发丝线分区 · 内容位全部留口</span>
+        </div>
+        <div class="bl white" style="height:40px">案例流 · 双列</div>
+        <div class="bl deep" style="height:16px">dock 胶囊 · 中央爪钮凸起</div>
+      </div>
+      <div class="kv" style="margin-top:14px"><span class="k">气质</span><div>贵的效率。像走进俱乐部前台：递卡、扫码、约位，一气呵成。</div></div>
+      <div class="kv"><span class="k">强项</span><div>会员体系=App 骨架（星巴克正传）；回馈金天天有存在感；到店扫码动作零跳转。</div></div>
+      <div class="kv"><span class="k">弱项</span><div>首屏商业感重一分；它的照片退到案例流，第一眼不是活物。</div></div>
+    </div>
+    <div class="panel">
+      <h3>B · 档案装帧</h3>
+      <div class="sub">第一眼 = 它（宠物状态优先）</div>
+      <div class="wire">
+        <div class="bl white">宣言（衬线大标题）</div>
+        <div class="bl white" style="height:96px">档案封卡：它的大图出血 + 右上档色蜡封小章</div>
+        <div class="bl white" style="height:24px">档案行 mono：体重 / 距上次 / 在册照片</div>
+        <div class="bl deep" style="height:34px">为它预约本周洗护（单主钮）</div>
+        <div class="bl white" style="height:18px">寄养 · 商城 · 档案（文字链）</div>
+        <div class="bl white" style="height:34px">档案摘页 · 双列</div>
+        <div class="bl deep" style="height:16px">dock 胶囊</div>
+      </div>
+      <div class="kv" style="margin-top:14px"><span class="k">气质</span><div>托付感的贵。像把毛孩子交给一个会建档的研究所：安静、有序、被认真保管。</div></div>
+      <div class="kv"><span class="k">强项</span><div>否决项满分：第一眼就是活物；陪伴哲学落在首屏；会员身份克制（印章态）更高端。</div></div>
+      <div class="kv"><span class="k">弱项</span><div>回馈金/会员码日常曝光弱一档；到店亮码要多一步（首页窄行或我的页）。</div></div>
+    </div>
+  </div>
+
+  <!-- 逐项对比表 -->
+  <table class="spec">
+    <tr><th>维度</th><th>A · 会员吧台</th><th>B · 档案装帧</th></tr>
+    <tr><td>框架</td><td>首页=会员吧台（身份带+双入口+结算环+案例流）</td><td>首页=档案封面（宣言+封卡+单主钮+摘页）</td></tr>
+    <tr><td>会员卡摆法</td><td>三态制：在岗（贴边大卡会员行）/ 全身大卡 deck / 手持码态——卡在手边，随时亮码</td><td>装帧制：印章 46px / 装帧墙竖排 / 账页 / 手持码态——卡不抢戏，印在那里</td></tr>
+    <tr><td>四档呈现</td><td>横滑 deck：当前档居中全幅，其余档两侧窥视</td><td>竖排装帧墙：四档全宽条，像为档案选封面</td></tr>
+    <tr><td>回馈金</td><td>结算环：周期可视 + 到账日 + 一句话规则（星巴克星数条转译）</td><td>账页：mono 大数字「今年已省 ¥486.20」承重（山姆省钱账单同构）</td></tr>
+    <tr><td>服务中态</td><td>进行中卡=数据语言（节点 3/7 · 预计 17:40）</td><td>进行中卡=档案语言（第 3 页 / 共 7 页 · 页码轨道）</td></tr>
+    <tr><td>权益陈列</td><td>图标墙 8 枚（山姆同构）</td><td>编号保障清单 01–08（仪器表）</td></tr>
+    <tr><td>密度节奏</td><td>7 / 5 / 6 / 4 / 3（首屏密，证书松）</td><td>4 / 5 / 5 / 4 / 2（全链路更静一档）</td></tr>
+    <tr><td>气质</td><td>贵的效率 · 俱乐部前台</td><td>托付感的贵 · 研究所档案</td></tr>
+    <tr><td>签名时刻</td><td>安心证书（共用冻结件）+ 结算环点亮</td><td>安心证书（共用冻结件）+ 归档盖章仪式</td></tr>
+  </table>
+
+  <!-- 总监推荐 -->
+  <div class="verdict">
+    <h3>总监推荐：B 为体，A 为用。</h3>
+    <p>主体骨架取 <b>B「档案装帧」</b>——Philia 是宠物垂类，不是咖啡连锁；「这个是宠物垂类 app」（CJ-0921-21）的终审感觉，B 的命中率更高：第一眼是活物，会员卡收进装帧，安心研究所的蓝图语言在证书与编号里延续。从 A 吸收两件进 B：① <b>回馈金结算环</b>（周期可视 + 到账日）放进会员页账页位——「钱什么时候到账」是年费会员最该天天看见的东西；② <b>会员码首屏窄行</b>保留——到店亮码不拐弯。若老板终审感觉 B 太静、商业感不足，切换 A 的代价=只换首页一屏，其余三屏两版本就同构。</p>
+  </div>
+
+  <!-- 请老板拍的点 -->
+  <div class="decide">
+    <div class="eyebrow">请老板终审拍板（三件事）</div>
+    <ol>
+      <li><b>定骨架</b>：A（会员状态优先）/ B（宠物状态优先）/ B 体 A 用（总监推荐）。</li>
+      <li><b>会员卡摆放口径</b>：三态制（卡在手边）还是装帧制（印在那里）——这是 T8 线遗留的「大小和状态」问题的正式答案。</li>
+      <li><b>回馈金构件形态</b>：结算环（周期可视）还是账页（大数字承重）——两版都画了，可跨版取用。</li>
+    </ol>
+    <p class="note" style="margin-top:14px">定一版后：48h 出《设计规范 v2.0》（token / 字体 / 组件 / 间距 / 槽位标注规则 / 门店拍摄清单）→ 产品侧施工示意图 → K3 换皮批。</p>
+  </div>
+
+  <!-- 自检记录（军规二双件套） -->
+  <div class="selfcheck">
+    <h3>自检记录（军规二 · 双件套）</h3>
+    <ul>
+      <li><span class="ok">✓</span> <b>终审调整台账</b>：V1.1 色块合一贴边大卡/紧凑化/dock 爪钮凸起；V1.2 双入口改横排（星巴克/瑞幸横向入口列）+ 深色身份带保留回原位；V1.3 双入口列间加竖向发丝线（老板手画图落位）；V1.4 大卡收回边界+圆角浮起（两侧 14px 边距/圆角 20/浮影），顶部加奶油色带图层、白卡上压色带下沿（星巴克绿头层压结构转译），服务中态进行中卡同步套用同一图层逻辑；V1.5 交界处消灭缝隙——大卡上沿压住身份带下沿 16px（星巴克图 2 白卡压条带的叠法），上向投影强化"压"感；V1.6 会员码去文字改纯二维码图标钮 + 身份带光学居中修正；V2.0 问候行三文字模块（PHILIA·店名 / 距离·营业态 / 早安语）取消，顶部色带图层升格为 BANNER 本体（可点击槽位 · 内容归平面设计后期 · A5 端口承载），大卡整体下移露出 BANNER——层叠秩序：BANNER → 身份带压其下沿 → 大卡压身份带下沿 → 案例流。服务中态同构（LIVE 卡压 BANNER 下沿）。全部只动布局，未碰平面内容。复检截图通过。</li>
+      <li><span class="ok">✓</span> <b>14 号四铁律</b>：①未画不存在的功能——身份带 / 结算环 / 案例流 / 权益墙 / 档案封卡全部可回挂对账表（APP-03 回馈金账本、APP-10 证书、APP-18 回馈金展示、七节点=CJ-0919-01、四档=CJ-0921-09）；②步数未改——预约仍 ≤3 步（入口文案不构成新步骤）；③入口未丢——dock 五槽 / 会员码 / 我的页网格全数在列；④计时项——照片 105–182KB 压缩件、环 / 轨道为内联 SVG 零请求，LCP 与 v9.1 同级。</li>
+      <li><span class="ok">✓</span> <b>11 号六条</b>：点睛（淡黄每屏 ≤2 处：结算环 + dock 爪钮 / 页码当前点 + dock 爪钮）/ 编辑感（衬线宣言 + mono 编号档案体）/ 摄影 + 私有画法（真素材 7 件 + 蜡封 / 线稿槽位制）/ 密度节奏（两版各有一条密→松曲线，非全屏同密度）/ 情绪场（服务中 LIVE + 证书预留位）/ 工程纪律（单 token 源 shared.css，换皮改一处）。</li>
+      <li><span class="ok">✓</span> <b>否决项</b>（21 号档修订版）：每屏自问「本屏活物是什么 / hero 在哪」——A-2/B-2 hero=LIVE 浴中实拍；B-1 hero=档案封卡大图；A-1 hero=身份带 + 结算环（数据构件承重，案例流真人照四张）；会员页 hero=卡面大卡。逐屏截图目检两轮，第一轮修复项见下。</li>
+      <li><span class="ok">✓</span> <b>红线 grep</b>：返现 / 返钱 / 疯抢 / 秒杀 / 守护值 / #D97B4A / FDC830 / 充值 = 0 命中；「年费≠储值 · 到期不自动续费」明写（共创会明面要求）。</li>
+      <li><span class="ok">✓</span> <b>素材死规 v2</b>：7 件全真素材过五检（毛发 / 人手 / 文字 / 色温 / 网红脸）；水印裁除；单主角 / 近景 / 暖调 / 真实洗护场景；三狗为日常画面非摆拍；卡面零生成（全部槽位制，不产平面物料）。</li>
+      <li><span class="ok">✓</span> <b>渲染目检两轮</b>（Chromium 逐屏截图亲眼看）：第一轮抓出 4 处——① A-1 身份带「回馈金 ¥58.40 · 11.5 到账」折行挂字（「账」字孤行）→ 精简为单行；② A-1 主入口箭头误用淡黄（全屏点睛预算超 2 处）→ 改纸白；③ B-1 档案封卡 caption 压字不可读（白字压亮毛巾）→ 铭牌下移出图，档案感反而更强；④ B-1 主按钮文案折行孤字 → 改上下两行居中——均已修复复检通过；残留风险：评审临时字体（Noto Serif SC / JetBrains Mono 为 Google Fonts 在线加载），定稿后随规范 v2.0 自托管。</li>
+    </ul>
+    <h3 style="margin-top:22px">反对意见与风险（军规一）</h3>
+    <ul>
+      <li>① <b>A 版首屏的商业密度是双刃剑</b>：身份带 + 双入口 + 结算环同屏，信息效率高，但「宠物是主角」（CJ-0921-19①）的浓度被摊薄——若老板最近对「像生意工具」敏感，A 有这个风险，如实上报。</li>
+      <li>② <b>B 版会员码曝光弱</b>：收银台 S7 新客现场开卡 ≤30 秒链路里，首页亮码入口深一层会拖秒数——已在 B-2/B-1 用窄行胶囊补救，真机计时后如超线，把窄行升为常驻。</li>
+      <li>③ <b>两版都没动员工端 / 商家端</b>：本次呈审范围=客户端四屏（开工令口径）。三端统一品牌语言裁定（一个品牌三种密度）随《设计规范 v2.0》一并交付，不在本包。</li>
+    </ul>
+  </div>
+
+  <div class="links" style="margin:0 0 56px">
+    <a href="index.html">← 返回索引</a>
+    <a href="dir-a.html">方向 A 四屏 →</a>
+    <a href="dir-b.html">方向 B 四屏 →</a>
+  </div>
+</div>
+</body>
+</html>

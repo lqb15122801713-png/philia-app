@@ -1,0 +1,33 @@
+{
+  "name": "@philia/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:seed": "tsx src/db/seed.ts",
+    "test:e2e": "tsx src/__tests__/e2e.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.1",
+    "@hono/trpc-server": "^0.4.2",
+    "@libsql/client": "^0.15.0",
+    "@trpc/server": "^11.18.0",
+    "drizzle-orm": "^0.44.0",
+    "hono": "^4.13.5",
+    "jimp": "^1.6.1",
+    "superjson": "^2.2.6",
+    "ulid": "^3.0.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "drizzle-kit": "^0.31.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.0"
+  }
+}

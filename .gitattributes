@@ -1,0 +1,7 @@
+# Docker 构建上下文内的行尾必须 LF（Windows 工作区 core.autocrlf=true 会转 CRLF，
+# shell 脚本带 \r 在 Linux 容器内会直接报错）
+*.sh text eol=lf
+Dockerfile text eol=lf
+.dockerignore text eol=lf
+docker-compose.yml text eol=lf
+caddy/Caddyfile text eol=lf

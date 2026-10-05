@@ -1,0 +1,402 @@
+/**
+ * 开发登录页（契约 docs/CLIENT-CONTRACTS.md · T2.0）—— 路由 /dev-login
+ *
+ * ⚠️ 仅开发环境：Kimi 登录是线上平台能力，本地用 dev-login 适配
+ * （服务端=种子用户 + 口令门内手机号自助开户（D-16 · CJ-0925-07），
+ * 见 server/src/auth/devLogin.ts）。
+ *
+ * - 种子用户列表：启动时 fetch GET /api/auth/dev-seed-users 动态渲染（v1.1-b1，
+ *   不再硬编码 ULID——重跑 db:seed 后 ID 变化也能直接登录）；
+ *   fetch 失败/为空 → 错误提示 + 手动输入兜底。
+ * - 内测口令门（批次 6 任务 B2）：服务端设置 BETA_GATE_CODE 后，dev-seed-users
+ *   无口令返回 401 → 页面显示口令输入框；登录请求 body 携带 code。
+ * - 点击调 devLogin(baseUrl, userId, code?) → 失效全部查询缓存 → 跳回 from 或 /home。
+ *
+ * U4-D2（试样 01 逐格收口 · 拍板 2 内测口径）：视觉骨架向试样靠拢——
+ * 左对齐 hero（54px 细线爪印圆标 + 衬线宣言 +
+ * 「PHILIA · 洗护 / 美容 / 寄养」宽距小字 + 淡黄短分隔线 44×1.5）+
+ * 主钮「手机号一键登录」+「口令入内测 ›」+ 底部协议小字。
+ * 换皮批片 2（L-01 定稿落地，2026-09-29）：宣言升 v2.0 §2.1 宣言档 34/900
+ * + §4.11 淡黄刷底强调；主钮入深棕 btn-primary 纪律（点睛=刷底+分隔线 2 处）；
+ * 微信一键登录=置灰槽位 slot-wechat（WECHAT env 未配，留口在案）。
+ * 无真接口不造假：主钮真实落点=锚滚至种子账号区（员工端 U3 同口径），
+ * 「口令入内测 ›」= 口令门卡显隐开关；口令门卡/种子用户列表真实交互全保留。
+ */
+
+import { devLogin, devLoginByPhone, getApiBase, logout, Skeleton, useMe, usePhiliaClient } from '@philia/shared'
+import { useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { mc } from '@/components/member/copy'
+import { dc } from '@/copy/devlogin'
+
+interface SeedUser {
+  id: string
+  nickname: string
+  roles: string[]
+}
+
+const ROLE_LABEL: Record<string, string> = {
+  merchant_owner: '店主',
+  merchant_admin: '店员管理',
+  staff: '员工',
+  customer: '客户',
+}
+const roleLabel = (roles: string[]) => roles.map((r) => ROLE_LABEL[r] ?? r).join(' / ')
+
+export default function DevLoginPage() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const from = (location.state as { from?: string } | null)?.from
+  const { queryClient } = usePhiliaClient()
+  const { user, refetch } = useMe()
+
+  const [pendingId, setPendingId] = useState<string | null>(null)
+  const [manualId, setManualId] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  /* D-16 自助开户（CJ-0925-07）：手机号输入卡（口令通过=seeds 拉到后展示） */
+  const [phone, setPhone] = useState('')
+  const [phonePending, setPhonePending] = useState(false)
+
+  /* ---- v1.1-b1：动态拉取种子用户（客户端展示全部角色，便于切换身份调试） ---- */
+  const [seeds, setSeeds] = useState<SeedUser[] | null>(null)
+  const [seedsError, setSeedsError] = useState<string | null>(null)
+  /* ---- 批次 6 任务 B2：内测口令门（服务端 BETA_GATE_CODE 设置后须带口令） ---- */
+  const [gateRequired, setGateRequired] = useState(false)
+  const [gateCode, setGateCode] = useState('')
+  const [gateError, setGateError] = useState<string | null>(null)
+  /* ---- U4-D2：口令门卡显隐开关（「口令入内测 ›」真实交互）+ 账号区锚滚 ---- */
+  const [gateOpen, setGateOpen] = useState(false)
+  const accountsRef = useRef<HTMLElement>(null)
+
+  const loadSeeds = (code?: string) => {
+    const qs = code ? `?code=${encodeURIComponent(code)}` : ''
+    fetch(`${getApiBase()}/api/auth/dev-seed-users${qs}`)
+      .then(async (r) => {
+        if (r.status === 401) {
+          // 服务端要求内测口令 → 显示口令输入框
+          setGateRequired(true)
+          setGateError(null)
+          return null
+        }
+        if (r.status === 403) {
+          setGateRequired(true)
+          setGateError('内测口令错误，请重新输入')
+          return null
+        }
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return (await r.json()) as { users?: SeedUser[] }
+      })
+      .then((d) => {
+        if (d) {
+          setSeeds(d.users ?? [])
+          setSeedsError(null)
+          setGateError(null)
+        }
+      })
+      .catch((e) => {
+        // QA40-D8：网络/连接失败与 401/403 分文案——401/403 已在上方分支走口令门提示，
+        // 到这里的是真网络层失败，不再误导「口令/账号」问题
+        setSeedsError(e instanceof Error ? e.message : '拉取失败')
+      })
+  }
+
+  useEffect(() => {
+    loadSeeds()
+    // 仅首挂载拉一次；口令提交由 submitGate 显式触发
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const submitGate = () => {
+    const code = gateCode.trim()
+    if (!code) return
+    loadSeeds(code)
+  }
+
+  const doLogin = async (userId: string) => {
+    setPendingId(userId)
+    setError(null)
+    try {
+      await devLogin(getApiBase(), userId, gateCode.trim() || undefined)
+      await queryClient.invalidateQueries()
+      navigate(from && from !== '/dev-login' ? from : '/home', { replace: true })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '登录失败'
+      // 口令缺失/错误 → 强制显示口令输入框
+      if (msg.includes('口令')) setGateRequired(true)
+      setError(msg)
+    } finally {
+      setPendingId(null)
+    }
+  }
+
+  /* D-16 自助开户（CJ-0925-07）：口令门内手机号登录/注册——新号自动建档 */
+  const phoneValid = /^1\d{10}$/.test(phone.trim())
+  const doLoginByPhone = async () => {
+    if (!phoneValid || phonePending) return
+    setPhonePending(true)
+    setError(null)
+    try {
+      await devLoginByPhone(getApiBase(), phone.trim(), gateCode.trim() || undefined)
+      await queryClient.invalidateQueries()
+      navigate(from && from !== '/dev-login' ? from : '/home', { replace: true })
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '登录失败'
+      if (msg.includes('口令')) setGateRequired(true)
+      setError(msg)
+    } finally {
+      setPhonePending(false)
+    }
+  }
+
+  const doLogout = async () => {
+    setError(null)
+    try {
+      await logout(getApiBase())
+      await queryClient.invalidateQueries()
+      refetch()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '登出失败')
+    }
+  }
+
+  return (
+    <div className="flex min-h-screen flex-col pb-8">
+      {/* U4-D2 hero：试样 01 左对齐工艺——细线爪印圆标 + 衬线宣言 + 宽距小字 + 淡黄短分隔线 */}
+      <header className="px-8 pt-14">
+        <span
+          className="u1-ring flex h-[54px] w-[54px] items-center justify-center rounded-full bg-card"
+          aria-hidden="true"
+        >
+          {/* 实心爪印（VI 同 dock 中央钮，试样 01 同枚 SVG） */}
+          <svg width="26" height="26" viewBox="0 0 32 32" fill="#3B2E24">
+            <circle cx="10.4" cy="11" r="3.1" />
+            <circle cx="21.6" cy="11" r="3.1" />
+            <circle cx="6.9" cy="17.2" r="2.7" />
+            <circle cx="25.1" cy="17.2" r="2.7" />
+            <path d="M16 15.5c-3.9 0-7 2.9-7 6 0 2 1.5 3.4 3.3 3.4 1.3 0 2.4-.7 3.7-.7s2.4.7 3.7.7c1.8 0 3.3-1.4 3.3-3.4 0-3.1-3.1-6-7-6z" />
+          </svg>
+        </span>
+        {/* 衬线宣言（v2.0 §2.1 宣言档 34/900 lh1.5 + §4.11 淡黄刷底强调件，
+            登录页专用不泛滥；文案入 copy 键（l1.* 在 MEMBER_COPY，其余在 copy/devlogin.ts）。
+            旧注「试样 30px 越字阶取 20」作废——片 1 字阶梯已落 34px 宣言档，本页即 L-01 唯一用位） */}
+        <h1 className="u1-serif mt-[30px] text-v2-manifesto tracking-[.04em]">
+          {mc('l1.manifestoA')}
+          <br />
+          {mc('l1.manifestoB')}
+          <em
+            className="not-italic"
+            style={{ background: 'linear-gradient(transparent 62%, #F2DFA6 62%)' }}
+          >
+            {mc('l1.manifestoEm')}
+          </em>
+          {mc('l1.manifestoC')}
+        </h1>
+        <p className="mt-[14px] text-caption-xs font-medium tracking-[.14em] text-ink-secondary">
+          {dc('devlogin.tagline')}
+        </p>
+        <span className="mt-[22px] block h-[1.5px] w-11 bg-brand-primary" aria-hidden="true" />
+      </header>
+
+      {/* 主行动区：L-01 微信一键登录=置灰槽位（WECHAT env 未配，留口在案；
+          PD-15 三规：置灰不上假件 + data-testid=slot-wechat；客户端体验大批 片 1
+          开口项 1 裁——注记写准「微信授权登录属小程序/资质批」，不吹不删槽）；
+          主钮真实落点=锚滚至种子账号区（拍板 2：无真接口不造假，员工端 U3 同口径）——
+          换皮批片 2 主钮入 v2.0 深棕 btn-primary 纪律（点睛预算：刷底+分隔线=2，主钮不再占淡黄）；
+          「口令入内测 ›」= 口令门卡显隐开关（真实交互） */}
+      <div className="mt-9 flex flex-col px-8">
+        <div
+          data-testid="slot-wechat"
+          aria-disabled="true"
+          className="flex w-full items-center justify-between rounded-control border border-dashed border-line bg-card px-5 py-[15px] opacity-60"
+        >
+          <span className="text-body-sm font-semibold text-ink-secondary">{mc('l1.wechatSlot')}</span>
+          {/* 开口项 1 裁：写准注记（不吹不删槽；原「即将点亮」注记退役） */}
+          <span className="max-w-[52%] text-right text-caption-xs leading-4 text-ink-placeholder">
+            {dc('devlogin.wechatNote')}
+          </span>
+        </div>
+        <button
+          type="button"
+          data-testid="login-primary"
+          onClick={() => accountsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          className="mt-3 flex w-full items-center justify-center rounded-control bg-[#2E2318] py-[15px] text-body-sm font-semibold text-[#F6EFDD] shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+        >
+          {dc('devlogin.primaryCta')}
+        </button>
+        <button
+          type="button"
+          data-testid="login-gate"
+          aria-expanded={gateRequired || gateOpen}
+          onClick={() => setGateOpen((v) => !v)}
+          className="mt-4 self-center text-caption font-semibold text-ink-secondary"
+        >
+          {dc('devlogin.gateLink')}
+        </button>
+      </div>
+
+      <main className="mt-8 flex-1 px-4">
+        {user ? (
+          <div className="u1-card p-4">
+            <p className="text-body-sm">
+              当前已登录：<span className="font-semibold">{user.nickname ?? user.id}</span>
+            </p>
+            <p className="mt-1 text-caption text-ink-secondary">角色：{user.roles.join(' / ')}</p>
+            <div className="mt-3 flex gap-2">
+              <Button variant="outline" size="sm" className="rounded-control" onClick={() => navigate('/home')}>
+                进入首页
+              </Button>
+              <Button variant="outline" size="sm" className="rounded-control" onClick={doLogout}>
+                退出登录
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
+        {/* 口令门卡：服务端 401/403 强制显示，或「口令入内测 ›」手动展开 */}
+        {gateRequired || gateOpen ? (
+          <section className="u1-card mt-4 p-4" aria-label="内测口令">
+            <p className="text-body-sm font-semibold">{dc('devlogin.gateTitle')}</p>
+            <p className="mt-1 text-caption text-ink-secondary">
+              {dc('devlogin.gateBody')}
+            </p>
+            <div className="mt-2 flex gap-2">
+              <Input
+                type="password"
+                value={gateCode}
+                onChange={(e) => setGateCode(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') submitGate()
+                }}
+                placeholder="内测口令"
+                className="rounded-control bg-card text-body-sm"
+              />
+              <Button
+                disabled={gateCode.trim().length === 0}
+                onClick={submitGate}
+                className="rounded-control bg-brand-primary text-ink hover:bg-brand-primary-hover"
+              >
+                确认
+              </Button>
+            </div>
+            {gateError ? <p className="mt-2 text-caption text-danger-deep">{gateError}</p> : null}
+          </section>
+        ) : null}
+
+        {/* D-16 自助开户：口令通过（seeds 拉到）后出「手机号登录/注册」输入卡 */}
+        {seeds !== null ? (
+          <section className="u1-card mt-4 p-4" aria-label="手机号登录注册" data-testid="phone-login-card">
+            <p className="text-body-sm font-semibold">{dc('devlogin.phoneTitle')}</p>
+            <p className="mt-1 text-caption text-ink-secondary">
+              {dc('devlogin.phoneBody')}
+            </p>
+            <div className="mt-2 flex gap-2">
+              <Input
+                inputMode="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void doLoginByPhone()
+                }}
+                placeholder="11 位手机号"
+                className="rounded-control bg-card text-body-sm"
+                data-testid="phone-login-input"
+              />
+              <Button
+                disabled={!phoneValid || phonePending}
+                onClick={() => void doLoginByPhone()}
+                className="rounded-control bg-brand-primary text-ink hover:bg-brand-primary-hover"
+                data-testid="phone-login-submit"
+              >
+                {phonePending ? '登录中…' : '登录'}
+              </Button>
+            </div>
+          </section>
+        ) : null}
+
+        <section ref={accountsRef} className="mt-6 scroll-mt-4">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="text-title">{dc('devlogin.seedTitle')}</h2>
+            <span className="shrink-0 text-caption-xs text-ink-placeholder">{dc('devlogin.devOnly')}</span>
+          </div>
+          {seeds === null && seedsError === null && !gateRequired ? (
+            <ul className="mt-3 space-y-2">
+              {[1, 2, 3].map((i) => (
+                <li key={i}>
+                  <Skeleton className="h-14 rounded-panel" />
+                </li>
+              ))}
+            </ul>
+          ) : seeds && seeds.length > 0 ? (
+            <ul className="mt-3 space-y-2">
+              {seeds.map((u) => (
+                <li key={u.id}>
+                  <button
+                    type="button"
+                    disabled={pendingId !== null}
+                    onClick={() => void doLogin(u.id)}
+                    className="u1-card flex w-full items-center justify-between px-4 py-3 text-left transition active:scale-[0.99] disabled:opacity-60"
+                  >
+                    <span>
+                      <span className="block text-body-sm font-semibold">{u.nickname}</span>
+                      <span className="block text-caption-xs text-ink-secondary">{roleLabel(u.roles)}</span>
+                    </span>
+                    <span className="text-caption text-ink-secondary">
+                      {pendingId === u.id ? '登录中…' : '登录 →'}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : gateRequired && seeds === null ? (
+            <p className="mt-3 text-caption text-ink-secondary">{dc('devlogin.gateHint')}</p>
+          ) : (
+            <p className="mt-3 rounded-panel bg-danger-light px-4 py-3 text-caption text-danger-deep">
+              {seedsError
+                ? dc('devlogin.seedFail', { error: seedsError })
+                : dc('devlogin.seedEmpty')}
+            </p>
+          )}
+        </section>
+
+        <section className="mt-6">
+          <h2 className="text-title">{dc('devlogin.manualTitle')}</h2>
+          <p className="mt-1 text-caption text-ink-secondary">
+            {dc('devlogin.manualBody')}
+          </p>
+          <div className="mt-2 flex gap-2">
+            <Input
+              value={manualId}
+              onChange={(e) => setManualId(e.target.value)}
+              placeholder="users.id（ULID）"
+              className="rounded-control bg-card text-body-sm"
+            />
+            <Button
+              disabled={pendingId !== null || manualId.trim().length === 0}
+              onClick={() => void doLogin(manualId.trim())}
+              className="rounded-control bg-brand-primary text-ink hover:bg-brand-primary-hover"
+            >
+              登录
+            </Button>
+          </div>
+        </section>
+
+        {error ? (
+          <p className="mt-4 rounded-panel bg-danger-light px-4 py-3 text-caption text-danger-deep">{error}</p>
+        ) : null}
+
+        <p className="mt-8 text-caption-xs text-ink-placeholder">
+          {dc('devlogin.seedNote')}
+        </p>
+      </main>
+
+      {/* 底部协议小字（试样工艺：10px → 字阶取 11 caption-xs） */}
+      <footer className="mt-10 px-10 text-center text-caption-xs leading-[1.8] text-ink-placeholder">
+        {dc('devlogin.footerA')}
+        <br />
+        {dc('devlogin.footerB')}
+      </footer>
+    </div>
+  )
+}

@@ -1,0 +1,430 @@
+/**
+ * 预约列表 /appointments（W-02 · 片 5 段 1 校形）
+ *
+ * 区块序（UX-02 语言包 §四 W-02）：wtop（MainScaffold 页头 title/sub/actions，
+ * +G2 新开单=「＋ 新增预约」现状入口保留）→ G1 筛选行（StatusChips 现状
+ * chips+日期›保留）→ M5 台账七列：核销码(mono)｜宠物/服务｜员工｜时间｜金额｜
+ * 状态｜操作（详情 ›）；底部注「单据双归属」口径明面。
+ *
+ * - sub「M月d日 · 共 N 单 · 自动接单已启用」；SearchInput 纯前端按
+ *   petName/customerName/code 过滤（零新接口）；「＋ 新增预约」toast 引导
+ *   （商家端无新建表单：客户端预约 / 前台手动核销登记）。
+ * - 筛选 chips（u3-chipf，当前墨底）：今天 N / 待到店 N / 服务中 N / 已完成 N /
+ *   取消申请 N / 寄养 N / 日期 ›。计数真值 = 今日 listForStore 全量在前端按口径聚合。
+ *   状态档点击 = 前端过滤（查询参数不变）；「日期 ›」就地展开原生 input[type=date]，
+ *   选日才改 from/to（当日 0 点区间）。选中非今天时「今天」chip 不再 on。
+ * - 表（u3-panel + u3-tbl）：行点击进入 /appointments/:id；列表纯读——S4 起
+ *   确认/婉拒链路在详情页。空态=「这一天没有预约」。
+ *   （片 5 段 1：行渲染由 AppointmentRow 收进本页内联——七列含核销码列，
+ *   AppointmentRow 文件零改留给编译兼容；状态胶囊口径与其一致。）
+ * - 深链：?status=cancel_requested|pending|… 初始化状态档（总览异常卡会跳）；
+ *   ?from=todo 兼容 = 不锁当天（from/to 省略查全量），防异常卡「去处理」被「今天」吞单。
+ * - SSE（store 频道）：appointment.created / cancel_requested → 红点 toast + invalidate；
+ *   其余预约状态事件静默 invalidate；断线重连 onReconnect 全量对齐。
+ * - 计数跨日真值：主列表已是今日时直接复用；选了其他日期（或 from=todo 全量档）时
+ *   补一档同接口的今日查询（enabled 条件触发），chips 计数恒为今日口径。
+ */
+
+import { EventType, Skeleton, usePhiliaClient, type EventEnvelope } from '@philia/shared';
+import { useQuery } from '@tanstack/react-query';
+import { useCallback, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import MainScaffold, { LemonButton, QuietButton, SearchInput } from '../components/MainScaffold';
+import {
+  StatusChips,
+  type CategoryKey,
+  type ChipCounts,
+} from '../components/appointments/StatusChips';
+import { showToast, ToastHost } from '../components/appointments/Toast';
+import { useMerchantEvents } from '../components/appointments/useMerchantEvents';
+import { useStepProgress, type StepProgress } from '../components/appointments/useStepProgress';
+import {
+  addDays,
+  assignSourceLabel,
+  customerLabel,
+  fmtDate,
+  fmtTime,
+  localDayKey,
+  type ListForStoreItem,
+} from '../components/appointments/appt-utils';
+import { ac } from '../copy/appointments';
+
+/** 状态胶囊口径（规格书 §3，与 AppointmentRow 一致；进度未回=裸「服务中」不伪造） */
+function statusCapsule(
+  item: ListForStoreItem,
+  progress?: StepProgress | null,
+): { cls: 'live' | 'wait' | 'done' | 'amber'; text: string } {
+  switch (item.status) {
+    case 'pending':
+      return { cls: 'wait', text: '待确认' };
+    case 'confirmed':
+      return { cls: 'wait', text: '待到店' };
+    case 'in_service':
+      return {
+        cls: 'live',
+        text: progress ? `服务中 ${progress.done}/${progress.total}` : '服务中',
+      };
+    case 'in_boarding':
+      return { cls: 'live', text: '寄养中' };
+    case 'completed':
+      return { cls: 'done', text: item.paidAt ? '已完成' : '已完成 · 待收款' };
+    case 'cancel_requested':
+      return { cls: 'amber', text: '取消申请待审' };
+    default:
+      return { cls: 'done', text: '已取消' };
+  }
+}
+
+/** 金额分 → ¥元：整数去小数，非整数保留两位；≥6 位大数千分分组（仅展示层） */
+const fmtPrice = (fen: number): string => {
+  const yuan = fen / 100;
+  return Number.isInteger(yuan)
+    ? `¥${yuan.toLocaleString('en-US')}`
+    : `¥${yuan.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
+/* ------------------------------------------------------------------ */
+/* 状态档口径（规格书 §3；appt-utils.ts 只读不改，故聚合逻辑就地）          */
+/* ------------------------------------------------------------------ */
+
+const CATEGORY_MATCH: Record<CategoryKey, (i: ListForStoreItem) => boolean> = {
+  /** 待到店 = confirmed + pending 且未核销 */
+  arriving: (i) => (i.status === 'confirmed' || i.status === 'pending') && !i.checkedInAt,
+  /** 服务中 = in_service */
+  serving: (i) => i.status === 'in_service',
+  /** 已完成 = completed */
+  done: (i) => i.status === 'completed',
+  /** 取消申请 = cancel_requested */
+  cancel: (i) => i.status === 'cancel_requested',
+  /** 寄养 = type boarding */
+  boarding: (i) => i.type === 'boarding',
+};
+
+/** ?status= 深链 → 状态档（总览待办行：cancel_requested / pending；非法值忽略） */
+function initCategory(raw: string | null): CategoryKey | null {
+  switch (raw) {
+    case 'pending':
+    case 'confirmed':
+      return 'arriving';
+    case 'in_service':
+      return 'serving';
+    case 'completed':
+      return 'done';
+    case 'cancel_requested':
+      return 'cancel';
+    case 'in_boarding':
+      return 'boarding';
+    default:
+      return null;
+  }
+}
+
+/** 需要列表静默 invalidate 的预约状态事件（store 频道可达） */
+const QUIET_INVALIDATE = new Set<string>([
+  EventType.AppointmentConfirmed,
+  EventType.AppointmentAssigned,
+  EventType.AppointmentCheckedIn,
+  EventType.AppointmentCompleted,
+  EventType.AppointmentCancelled,
+  EventType.AppointmentRejected, // v1.1-b3 B3-3：他端拒单后本端列表静默对齐
+  EventType.AppointmentRescheduled,
+  EventType.AppointmentPaid,
+  EventType.AppointmentReviewed,
+]);
+
+/** 当日 0 点区间（服务端 from=gte / to=lte，to 取次日 -1ms） */
+const dayRange = (dayKey: string): { from: Date; to: Date } => {
+  const from = new Date(`${dayKey}T00:00:00`);
+  return { from, to: new Date(addDays(from, 1).getTime() - 1) };
+};
+
+export default function AppointmentsPage() {
+  const { trpc, queryClient } = usePhiliaClient();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const todayKey = localDayKey(new Date());
+
+  /** 日期档：yyyy-MM-dd 本地键；null = 全部（?from=todo 兼容档，不锁当天防吞单） */
+  const [day, setDay] = useState<string | null>(() =>
+    searchParams.get('from') === 'todo' ? null : todayKey,
+  );
+  const [category, setCategory] = useState<CategoryKey | null>(() =>
+    initCategory(searchParams.get('status')),
+  );
+  const [search, setSearch] = useState('');
+
+  const isToday = day === todayKey;
+
+  /* ---------------- 列表查询（当日区间 / from=todo 全量） ---------------- */
+
+  const listQuery = useQuery({
+    queryKey: [
+      'appointment',
+      'listForStore',
+      day === null
+        ? { all: true }
+        : { from: dayRange(day).from.toISOString(), to: dayRange(day).to.toISOString() },
+    ],
+    queryFn: () =>
+      day === null
+        ? trpc.appointment.listForStore.query({})
+        : trpc.appointment.listForStore.query(dayRange(day)),
+  });
+
+  /**
+   * chips 计数真值 = 今日 listForStore 全量。主列表已是今日时复用；选了其他日期
+   * （或全量档）时补一档同接口今日查询（enabled 条件触发，零新接口）。
+   */
+  const todayQuery = useQuery({
+    queryKey: ['appointment', 'listForStore', { day: todayKey }],
+    queryFn: () => trpc.appointment.listForStore.query(dayRange(todayKey)),
+    enabled: !isToday,
+  });
+
+  const items = useMemo(() => listQuery.data ?? [], [listQuery.data]);
+  const todayItems = isToday ? items : (todayQuery.data ?? []);
+
+  const counts: ChipCounts = useMemo(
+    () => ({
+      today: todayItems.length,
+      arriving: todayItems.filter(CATEGORY_MATCH.arriving).length,
+      serving: todayItems.filter(CATEGORY_MATCH.serving).length,
+      done: todayItems.filter(CATEGORY_MATCH.done).length,
+      cancel: todayItems.filter(CATEGORY_MATCH.cancel).length,
+      boarding: todayItems.filter(CATEGORY_MATCH.boarding).length,
+    }),
+    [todayItems],
+  );
+
+  /* ---------------- 前端过滤：状态档 + 搜索（petName/customerName/code） ---------------- */
+
+  const q = search.trim().toLowerCase();
+  const visible = useMemo(
+    () =>
+      items
+        .filter((i) => (category ? CATEGORY_MATCH[category](i) : true))
+        .filter(
+          (i) =>
+            q.length === 0 ||
+            [i.petName, i.customerName, i.code].some(
+              (s) => typeof s === 'string' && s.toLowerCase().includes(q),
+            ),
+        ),
+    [items, category, q],
+  );
+
+  /* 服务中行六步进度（胶囊「服务中 N/6」；现成接口一单一查，跨页共享缓存） */
+  const stepProgress = useStepProgress(visible);
+
+  /* ---------------- SSE：store 频道 ---------------- */
+
+  const invalidateLists = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ['appointment', 'listForStore'] });
+    // 仪表盘待办聚合同步刷新（T4.1 的 dashboardStats；未挂载时无副作用）
+    void queryClient.invalidateQueries({ queryKey: ['store', 'dashboardStats'] });
+  }, [queryClient]);
+
+  const onEvent = useCallback(
+    (envelope: EventEnvelope) => {
+      const data = (envelope.data ?? {}) as Record<string, unknown>;
+      switch (envelope.type) {
+        case EventType.AppointmentCreated:
+          invalidateLists();
+          showToast(
+            `新预约到店：${typeof data.petName === 'string' ? data.petName : '宠物'} · ${
+              typeof data.serviceName === 'string' ? data.serviceName : '服务'
+            }，待确认`,
+            'alert',
+          );
+          break;
+        case EventType.AppointmentCancelRequested:
+          invalidateLists();
+          showToast(
+            `${typeof data.petName === 'string' ? data.petName : '客户'} 申请取消预约，待审核`,
+            'alert',
+          );
+          break;
+        default:
+          if (QUIET_INVALIDATE.has(envelope.type)) invalidateLists();
+          break;
+      }
+    },
+    [invalidateLists],
+  );
+
+  useMerchantEvents({ onEvent, onReconnect: invalidateLists });
+
+  /* ---------------- 交互 ---------------- */
+
+  const sub = ac('appt.listSub', {
+    date: day === null ? ac('appt.listSubAllDates') : fmtDate(new Date(`${day}T00:00:00`)),
+    count: items.length,
+  });
+
+  const openNewAppointmentHint = () => showToast(ac('appt.createGuide'), 'info');
+
+  /* ---------------- 渲染 ---------------- */
+
+  /* M5 台账七列（语言包 §四 W-02）：核销码｜宠物/服务｜员工｜时间｜金额｜状态｜操作 */
+  const tableHead = (
+    <thead>
+      <tr>
+        <th>{ac('appt.thCode')}</th>
+        <th>{ac('appt.thPetService')}</th>
+        <th>{ac('appt.thStaff')}</th>
+        <th>{ac('appt.thTime')}</th>
+        <th className="text-right">{ac('appt.thAmount')}</th>
+        <th>{ac('appt.thStatus')}</th>
+        <th>{ac('appt.thAction')}</th>
+      </tr>
+    </thead>
+  );
+
+  return (
+    <MainScaffold
+      title={ac('appt.listTitle')}
+      sub={sub}
+      testid="appointments-page"
+      actions={
+        <>
+          <SearchInput
+            placeholder="搜索宠物 / 客户 / 单号…"
+            value={search}
+            onChange={setSearch}
+            testid="appointments-search"
+          />
+          <LemonButton testid="appointment-create" onClick={openNewAppointmentHint}>
+            {ac('appt.createCta')}
+          </LemonButton>
+        </>
+      }
+    >
+      <ToastHost />
+
+      <StatusChips
+        counts={counts}
+        isToday={isToday}
+        category={category}
+        pickedDate={day ?? todayKey}
+        onToday={() => {
+          setDay(todayKey);
+          setCategory(null);
+        }}
+        onCategory={(c) => setCategory((cur) => (cur === c ? null : c))}
+        onPickDate={(d) => setDay(d)}
+      />
+
+      <div className="mt-3.5">
+        {listQuery.isPending ? (
+          /* 加载：骨架行（禁转圈） */
+          <div className="u3-panel" aria-busy="true" aria-label="加载中">
+            <table className="u3-tbl">
+              {tableHead}
+              <tbody>
+                {[0, 1, 2, 3, 4].map((r) => (
+                  <tr key={r}>
+                    {['w-[64px]', 'w-[120px]', 'w-[88px]', 'w-[52px]', 'w-[52px]', 'w-[76px]', 'w-[44px]'].map(
+                      (w, c) => (
+                        <td key={c}>
+                          <Skeleton className={`h-3 ${w}`} />
+                        </td>
+                      ),
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : listQuery.isError ? (
+          /* 错误：文案 + 重试 */
+          <div className="u3-panel px-[17px] py-16 text-center">
+            <p className="text-[12px] text-danger-deep">
+              {listQuery.error instanceof Error ? listQuery.error.message : '加载失败，请稍后再试'}
+            </p>
+            <div className="mt-4 flex justify-center">
+              <QuietButton testid="appointments-retry" onClick={() => void listQuery.refetch()}>
+                重试
+              </QuietButton>
+            </div>
+          </div>
+        ) : (
+          /* 数据 / 空态 */
+          <div className="u3-panel">
+            <table className="u3-tbl">
+              {tableHead}
+              <tbody>
+                {visible.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-16 text-center text-[rgba(59,46,36,.42)]">
+                      {ac('appt.listEmpty')}
+                    </td>
+                  </tr>
+                ) : (
+                  visible.map((item) => {
+                    const cap = statusCapsule(item, stepProgress.get(item.id) ?? null);
+                    const srcLabel = assignSourceLabel(item.assignSource);
+                    const cancelled = item.status === 'cancelled';
+                    return (
+                      <tr
+                        key={item.id}
+                        className={`rowlink ${cancelled ? 'opacity-50' : ''}`}
+                        onClick={() => navigate(`/appointments/${item.id}`)}
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') navigate(`/appointments/${item.id}`);
+                        }}
+                      >
+                        {/* 核销码（mono 数据位） */}
+                        <td className="u1-num font-bold tracking-[0.08em]">{item.code}</td>
+                        {/* 宠物 / 服务（副行：客户昵称·尾号） */}
+                        <td>
+                          <span className="font-semibold">{item.petName ?? '宠物'}</span>
+                          <span className="mt-0.5 block text-[11px] text-[rgba(59,46,36,.42)]">
+                            {item.serviceName ?? '服务'} ·{' '}
+                            {customerLabel(item.customerName, item.customerPhoneTail)}
+                          </span>
+                        </td>
+                        {/* 员工 + 来源小签 */}
+                        <td>
+                          {item.staffName ?? '未指派'}
+                          {srcLabel ? (
+                            <span className="ml-1 text-[11px] text-[rgba(59,46,36,.42)]">
+                              {srcLabel}
+                            </span>
+                          ) : null}
+                        </td>
+                        {/* 时间（今日档=HH:mm；跨日档带日期） */}
+                        <td className="u1-num whitespace-nowrap">
+                          {isToday ? fmtTime(item.scheduledStart) : `${fmtDate(item.scheduledStart)} ${fmtTime(item.scheduledStart)}`}
+                        </td>
+                        {/* 金额（mono 右对齐分组） */}
+                        <td className="u1-num whitespace-nowrap text-right font-bold">
+                          {fmtPrice(item.priceFen)}
+                        </td>
+                        {/* 状态胶囊 */}
+                        <td>
+                          <span className={`u3-st ${cap.cls}`}>{cap.text}</span>
+                        </td>
+                        {/* 操作：详情链 */}
+                        <td className="whitespace-nowrap text-[rgba(59,46,36,.42)]">
+                          {ac('appt.openDetail')} ›
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+            {/* 双归属口径注（语言包 §四 W-02 注记明面） */}
+            <div className="wsk">
+              <p className="wsk-note border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5">
+                {ac('appt.dualOwnerNote')}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </MainScaffold>
+  );
+}

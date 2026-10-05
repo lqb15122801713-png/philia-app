@@ -1,0 +1,16 @@
+# Philia Caddy 反代（批次 6 任务 A · 可选 https profile）
+# 三子域名 → 单容器 app:7200；Caddy 默认透传 Host 头，
+# server 静态托管按 Host 子域分发三端（方案一），反代零适配。
+# SSE（/api/events）：Caddy reverse_proxy 默认流式透传，无需额外配置。
+
+{$APP_DOMAIN} {
+	reverse_proxy app:7200
+}
+
+{$M_DOMAIN} {
+	reverse_proxy app:7200
+}
+
+{$S_DOMAIN} {
+	reverse_proxy app:7200
+}
