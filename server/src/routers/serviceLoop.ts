@@ -442,7 +442,7 @@ export const serviceLoopRouter = router({
       return { ticket };
     }),
 
-  /** ticketListPending（merchant 本店 owner|manager）：待回复工单（submitted，创建升序） */
+  /** ticketListPending（merchant 本店 owner|manager）：待处理工单（submitted+escalated 升级件，创建升序） */
   ticketListPending: merchantManagerProcedure.query(async ({ ctx }) => {
     return ctx.db
       .select()
@@ -450,12 +450,66 @@ export const serviceLoopRouter = router({
       .where(
         and(
           eq(schema.supportTickets.storeId, ctx.user.storeId!),
-          eq(schema.supportTickets.status, 'submitted'),
+          inArray(schema.supportTickets.status, ['submitted', 'escalated']),
         ),
       )
       .orderBy(asc(schema.supportTickets.createdAt))
       .limit(100);
   }),
+
+  /**
+   * ticketEscalate（customer · 体验批片 4 C5 店长介入仲裁通道）：客户对本人工单
+   * 申请店长介入——status submitted|replied → escalated + escalatedAt/By/note 落列
+   * + timeline 追加 + SSE store 频道 ticket.escalated（店长/店主即时收到）。
+   * 已升级幂等返回现状；已关闭硬拒（仲裁=在途件语义，关闭件走新单）。
+   */
+  ticketEscalate: customerProcedure
+    .input(
+      z.object({
+        ticketId: z.string().min(1),
+        note: z.string().trim().max(500).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const ticket = await ctx.db
+        .select()
+        .from(schema.supportTickets)
+        .where(eq(schema.supportTickets.id, input.ticketId))
+        .get();
+      if (!ticket) throw new TRPCError({ code: 'NOT_FOUND', message: '工单不存在' });
+      if (ticket.userId !== ctx.user.id) forbidden('只能升级本人工单');
+      if (ticket.status === 'closed') badRequest('工单已关闭，不可升级——如有新问题请新建工单');
+      if (ticket.status === 'escalated') return { ticket, alreadyEscalated: true as const };
+      const now = new Date();
+      let outboxId = '';
+      const updated = await ctx.db.transaction(async (tx) => {
+        const timeline: schema.TicketTimelineItem[] = [
+          ...(ticket.timelineJson ?? []),
+          { action: 'escalated', at: now.toISOString(), by: ctx.user.id, note: input.note ?? '申请店长介入' },
+        ];
+        const row = await tx
+          .update(schema.supportTickets)
+          .set({
+            status: 'escalated',
+            escalatedAt: now,
+            escalatedBy: ctx.user.id,
+            escalateNote: input.note ?? null,
+            timelineJson: timeline,
+            updatedAt: now,
+          })
+          .where(eq(schema.supportTickets.id, ticket.id))
+          .returning()
+          .then((r) => r[0]!);
+        outboxId = await emitEvent(txDb(tx), `store:${ticket.storeId}`, EventType.TicketEscalated, {
+          ticketId: ticket.id,
+          ticketNo: ticket.ticketNo,
+          by: ctx.user.id,
+        });
+        return row;
+      });
+      broadcastNow(outboxId);
+      return { ticket: updated, alreadyEscalated: false as const };
+    }),
 
   /**
    * ticketReply（merchant 本店 owner|manager）：回复工单——reply 必填 →

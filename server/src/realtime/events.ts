@@ -82,6 +82,14 @@ export const EventType = {
   AnnouncementPublished: 'announcement.published',  // 公告发布 → store 频道（员工定向通知=announce.publish 逐人补写）
   // 客户端体验大批 片 1（账户体系）：首见设备登记 → user 频道（异常登录提醒）
   SecurityNewDevice:     'security.newDevice',      // 新设备登录提醒 → user（registerDevice 首见设备插入时）
+  // 客户端体验大批 片 4（异常通报域/寄养拆封；与 packages/shared constants/events.ts 同步）
+  IncidentReported:      'incident.reported',       // 异常通报落行 → appointment 频道（主人+门店+被指员工=双通知 0 分钟达标）
+  IncidentHandled:       'incident.handled',        // 异常处置登记 → appointment 频道
+  IncidentEscalated:     'incident.escalated',      // 15 分钟未处置升级 → user + store（定时器直插通知，事件留痕备用）
+  BoardingUnsealed:      'boarding.unsealed',       // 寄养用品拆封 → user（主人）+ store
+  TicketEscalated:       'ticket.escalated',        // 工单升级店长介入 → store（店长/店主仲裁通道，体验批片 4 C5）
+  // 客户端体验大批 片 5（N6 海底捞铁规·申诉通道；与 packages/shared constants/events.ts 同步）
+  MetricAppealResolved:  'metric.appealResolved',   // 指标申诉复核结果 → staff
 } as const;
 
 export type EventTypeValue = (typeof EventType)[keyof typeof EventType];

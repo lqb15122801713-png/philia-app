@@ -26,6 +26,23 @@ const PETS_COPY_TABLE = {
   'pets.historyTitle': '洗护史',
   'pets.historyCount': '共 {count} 次',
   'pets.rebook': '同款再约 ›',
+  /* 体验大批片 2：疫苗证明留证（/api/upload relDir=vaccine/<petId>；行为不变口径明面） */
+  'pets.vaccineProofTitle': '疫苗证明',
+  'pets.vaccineProofNote': '仅留证，寄养校验仍以疫苗有效期为准',
+  'pets.vaccineProofAdd': '上传证明',
+  'pets.vaccineProofCount': '疫苗证明 {count} 张',
+  /* 芯片号 / 花色（体验批片 4 扩字段） */
+  'pets.chipNoLabel': '芯片号',
+  'pets.chipNoPlaceholder': '如：900123456789012',
+  'pets.coatColorLabel': '花色',
+  'pets.coatColorPlaceholder': '如：橘白 / 三花',
+  /* 健康档案入口（/philia/pets/:id/health） */
+  'pets.healthEntry': '健康档案 ›',
+  /* 多宠物全局切换器（ActivePetSwitcher） */
+  'pets.switcherAll': '全部宠物',
+  'pets.switcherTitle': '切换宠物',
+  'pets.switcherSingleNote': '单宠档案已选定',
+  'pets.switcherFail': '切换失败，请稍后重试',
 } as const;
 
 export const PETS_COPY = withCopyOverrides(PETS_COPY_TABLE);

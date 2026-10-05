@@ -26,6 +26,7 @@ import {
   sqliteTable,
   text,
   uniqueIndex,
+  type AnySQLiteColumn,
 } from 'drizzle-orm/sqlite-core';
 import { monotonicFactory, ulid } from 'ulid';
 
@@ -117,6 +118,12 @@ export const users = sqliteTable('users', {
   birthday: text('birthday'),
   /** 性别（male|female|secret；资料收集） */
   gender: text('gender'),
+  /**
+   * 全局当前宠物（客户端体验大批片 4 · 0042）：多宠物全局切换落点。
+   * NULL=未选定（客户端回落「全部/第一只」展示口径）；与 pets.ownerId 互为
+   * 环形外键——users 先建（本列可空）、pets 后建，写入侧 pet.setActive 校验本人归属。
+   */
+  activePetId: text('active_pet_id').references((): AnySQLiteColumn => pets.id),
   ...auditColumns,
 });
 
@@ -155,6 +162,11 @@ export const stores = sqliteTable('stores', {
   openHours: text('open_hours', { mode: 'json' }).$type<StoreOpenHours>(),
   /** 门店状态，取值：active | closed */
   status: text('status').notNull().default('active'),
+  /**
+   * 门店联系电话（客户端体验大批片 4 · 0042）：客户端「联系门店」透出 + tel: 直拨。
+   * NULL=未登记（客户端隐藏电话行，诚实空态）；维护口=商家端门店资料/店长配置。
+   */
+  phone: text('phone'),
   ...auditColumns,
 });
 
@@ -244,12 +256,18 @@ export const pets = sqliteTable('pets', {
   weightKg: real('weight_kg'),
   /** 疫苗有效期至，ISO 日期 'YYYY-MM-DD' */
   vaccineValidUntil: text('vaccine_valid_until'),
+  /** 疫苗证明图片 URL 数组（片 2 · 0038：仅留证不改寄养硬闸——行为变更报备在案） */
+  vaccineProofUrls: text('vaccine_proof_urls', { mode: 'json' }).$type<string[]>().notNull().default([]),
   /** 是否已绝育 */
   neutered: integer('neutered', { mode: 'boolean' }).notNull().default(false),
   /** 性格标签 JSON，如 ["亲人","胆小"] */
   temperamentTags: text('temperament_tags', { mode: 'json' }).$type<string[]>(),
   /** 头像 URL */
   avatarUrl: text('avatar_url'),
+  /** 芯片号（客户端体验大批片 4 · 0042；15 位数字常见但不做硬校验，留文本） */
+  chipNo: text('chip_no'),
+  /** 花色（客户端体验大批片 4 · 0042；如「橘白」「三花」） */
+  coatColor: text('coat_color'),
   /**
    * 软删除标记（批次 R13a 账号注销联动 · 0017）：非 NULL=已随账号注销标记删除。
    * 读侧不过滤（注销账号全接口 401 不可达；历史预约/单据保留可见，留痕口径）。
@@ -260,6 +278,73 @@ export const pets = sqliteTable('pets', {
   ...auditColumns,
 });
 
+/**
+ * 宠物健康记录表（客户端体验大批片 4 · 0042）：疫苗/驱虫/用药/就医四类记录型档案。
+ * - record_date=发生日（ISO 纯日期）；next_due_date=下次到期日（vaccine/deworm 可填，
+ *   到期扫描提醒的数据源，见 services/careReminders.ts）；
+ * - created_via：customer=主人自助建档 | staff=门店代录（reportedBy 留痕操作人）；
+ * - 删除=硬删（本人本人宠物数据自管，无账务留痕义务）。
+ */
+export const petHealthRecords = sqliteTable(
+  'pet_health_records',
+  {
+    id: id(),
+    /** 宠物 ID -> pets.id */
+    petId: text('pet_id')
+      .notNull()
+      .references(() => pets.id),
+    /** 记录类型，取值：vaccine | deworm | medication | vet_visit */
+    type: text('type').notNull(),
+    /** 标题（疫苗名/驱虫药/药品名/就诊事由） */
+    title: text('title').notNull(),
+    /** 发生日期，ISO 日期 'YYYY-MM-DD' */
+    recordDate: text('record_date').notNull(),
+    /** 下次到期日，ISO 日期（vaccine/deworm 到期提醒扫描锚；NULL=无到期概念） */
+    nextDueDate: text('next_due_date'),
+    /** 备注（剂量/诊所/医嘱等） */
+    note: text('note'),
+    /** 建档人用户 ID -> users.id */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    /** 建档通道：customer | staff */
+    createdVia: text('created_via').notNull().default('customer'),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_pet_health_records_pet_date').on(t.petId, t.recordDate),
+    index('ix_pet_health_records_due').on(t.nextDueDate),
+  ],
+);
+
+/**
+ * 宠物体重记录表（客户端体验大批片 4 · 0042，盘点表第 63 行备查件照收）：
+ * 逐次称重历史（趋势图数据源）；最新一次同事务回写 pets.weight_kg 快照
+ * （快照=当前值口径不变，本表=时序真值）。
+ */
+export const petWeightLogs = sqliteTable(
+  'pet_weight_logs',
+  {
+    id: id(),
+    /** 宠物 ID -> pets.id */
+    petId: text('pet_id')
+      .notNull()
+      .references(() => pets.id),
+    /** 体重（kg） */
+    weightKg: real('weight_kg').notNull(),
+    /** 称重日期，ISO 日期 'YYYY-MM-DD' */
+    measuredAt: text('measured_at').notNull(),
+    /** 备注 */
+    note: text('note'),
+    /** 记录人用户 ID -> users.id */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_pet_weight_logs_pet_date').on(t.petId, t.measuredAt)],
+);
+
 /** 服务项表（洗护 / 寄养） */
 export const services = sqliteTable('services', {
   id: id(),
@@ -267,7 +352,7 @@ export const services = sqliteTable('services', {
   storeId: text('store_id')
     .notNull()
     .references(() => stores.id),
-  /** 服务大类，取值：grooming | boarding */
+  /** 服务大类，取值：grooming | boarding | addon（片 2 · 0038：附加项加购——仅作预约加购行，不占槽不参与时长引擎） */
   type: text('type').notNull(),
   /** 服务名称 */
   name: text('name').notNull(),
@@ -348,6 +433,12 @@ export const appointments = sqliteTable('appointments', {
    * W-14 起填） | merchant_review（商家批准 ≤4h 取消申请）。NULL = 未取消/历史数据。
    */
   cancelSource: text('cancel_source'),
+  /** 紧急联系人快照（体验大批片 2 · 0038：{name,phone,relation} 按单一填） */
+  emergencyContactJson: text('emergency_contact_json', { mode: 'json' }).$type<{ name: string; phone: string; relation: string } | null>(),
+  /** 医疗授权快照（{agreed, contentVersion, checkedAt}；寄养单缺 agreed=true 即 400 硬闸） */
+  medicalAuthJson: text('medical_auth_json', { mode: 'json' }).$type<{ agreed: boolean; contentVersion: string; checkedAt: number } | null>(),
+  /** 寄养遛弯次数/日（下单选项；仅 boarding 生效；执行实遛=boarding_daily_logs.walks 对账） */
+  walkTimesPerDay: integer('walk_times_per_day'),
   /** 到店签到时间 */
   checkedInAt: integer('checked_in_at', { mode: 'timestamp' }),
   /** 服务完成时间 */
@@ -524,6 +615,32 @@ export const boardingDailyLogs = sqliteTable(
   (t) => [uniqueIndex('uq_boarding_daily_logs_stay_date').on(t.stayId, t.logDate)],
 );
 
+/**
+ * 寄养用品拆封留痕表（客户端体验大批片 4 · 0042）：员工拆封主人随身物品
+ * （自带粮/零食/用品包）时落行 + 即时通知主人（boarding.unsealed）。
+ * 只增不改——拆封=事实留痕，无撤销语义。
+ */
+export const boardingUnsealLogs = sqliteTable(
+  'boarding_unseal_logs',
+  {
+    id: id(),
+    /** 住宿记录 ID -> boarding_stays.id */
+    stayId: text('stay_id')
+      .notNull()
+      .references(() => boardingStays.id),
+    /** 拆封物品名（对应 belongings 清单项 name 快照） */
+    itemName: text('item_name').notNull(),
+    /** 备注（拆封缘由/用量等） */
+    note: text('note'),
+    /** 拆封操作人员工 ID -> staff.id */
+    openedBy: text('opened_by')
+      .notNull()
+      .references(() => staff.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_boarding_unseal_stay').on(t.stayId, t.createdAt)],
+);
+
 /* ------------------------------------------------------------------ */
 /* 5.3b 次卡（v1.1-b2 B2-7 · 资损红标：扣减/回补与建单/取消同事务）        */
 /* ------------------------------------------------------------------ */
@@ -643,6 +760,10 @@ export const orders = sqliteTable('orders', {
   status: text('status').notNull().default('pending'),
   /** 快递单号 */
   trackingNo: text('tracking_no'),
+  /** 配送方式（体验大批片 3 · 0040：express 快递|same_city 同城|pickup 自提；默认 express 存量零破坏） */
+  deliveryMethod: text('delivery_method').notNull().default('express'),
+  /** 发货时刻（超时自动收货锚=shipped_at+order_auto_receive_days 端口值） */
+  shippedAt: integer('shipped_at', { mode: 'timestamp' }),
   ...auditColumns,
 });
 
@@ -1798,6 +1919,18 @@ export const reviews = sqliteTable(
     text: text('text'),
     /** 是否匿名（0/1，匿名同权计分） */
     anonymous: integer('anonymous', { mode: 'boolean' }).notNull().default(false),
+    /**
+     * 差评原因标签 JSON（体验批片 5 · 0044，N4 差评聚类）：商家回复差评时勾选，
+     * 取值集=REVIEW_TAG_SET（洗护质量/态度/等待/价格/宠物状态，应用层 zod 约束）。
+     * NULL=未打标（好评/未处理差评）。
+     */
+    tags: text('tags', { mode: 'json' }).$type<string[]>(),
+    /** 商家回复内容（NULL=未回复；N4 差评回复率口径分母含未回复） */
+    replyText: text('reply_text'),
+    /** 商家回复时间 */
+    repliedAt: integer('replied_at', { mode: 'timestamp' }),
+    /** 回复人用户 ID -> users.id（owner|manager） */
+    repliedBy: text('replied_by').references(() => users.id),
     ...auditColumns,
   },
   (t) => [
@@ -2289,7 +2422,7 @@ export type ReportVital = {
 
 /** 工单时间线条目（support_tickets.timeline_json 元素） */
 export type TicketTimelineItem = {
-  /** 动作，取值：submitted | replied | closed */
+  /** 动作，取值：submitted | replied | escalated（体验批片 4 店长介入升级） | closed */
   action: string;
   /** 动作时间（ISO 串） */
   at: string;
@@ -2364,6 +2497,63 @@ export const serviceReports = sqliteTable(
 );
 
 /**
+ * 服务异常通报表（客户端体验大批片 4 · 0042 新域）：服务/寄养过程中受伤、应激、
+ * 就医三类异常的即时通报通道。
+ * - 落行=员工端/商家端即时填报（reported_by 留痕），同事务双通知主人+门店
+ *   （incident.reported 事件，0 分钟达标）；customer_id 冗余列=本人列表免 join；
+ * - 15 分钟口径：created_at 起超 incident_escalate_minutes（service_rules 端口，
+ *   缺省 15）未处置（handled_at IS NULL）→ 定时器升级再通知一轮并置 escalated_at
+ *   （services/careReminders.ts，escalated_at 非空即幂等锚）；
+ * - 处置=handled_at + handled_note + handled_by（只增不改口径，处置后通报行保留）。
+ */
+export const serviceIncidents = sqliteTable(
+  'service_incidents',
+  {
+    id: id(),
+    /** 预约单 ID -> appointments.id */
+    appointmentId: text('appointment_id')
+      .notNull()
+      .references(() => appointments.id),
+    /** 门店 ID -> stores.id（冗余，门店待办免 join） */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 宠物 ID -> pets.id（冗余） */
+    petId: text('pet_id')
+      .notNull()
+      .references(() => pets.id),
+    /** 主人用户 ID -> users.id（冗余，通知/列表免 join） */
+    customerId: text('customer_id')
+      .notNull()
+      .references(() => users.id),
+    /** 异常类型，取值：injury（受伤） | stress（应激） | vet_visit（就医） */
+    type: text('type').notNull(),
+    /** 情况描述 */
+    description: text('description').notNull(),
+    /** 发生时间（缺省=填报时刻） */
+    occurredAt: integer('occurred_at', { mode: 'timestamp' }).notNull(),
+    /** 填报人用户 ID -> users.id */
+    reportedBy: text('reported_by')
+      .notNull()
+      .references(() => users.id),
+    /** 处置时间（NULL=未处置，升级扫描锚） */
+    handledAt: integer('handled_at', { mode: 'timestamp' }),
+    /** 处置说明 */
+    handledNote: text('handled_note'),
+    /** 处置人用户 ID -> users.id */
+    handledBy: text('handled_by').references(() => users.id),
+    /** 升级通知时间（NULL=未升级；升级扫描幂等锚） */
+    escalatedAt: integer('escalated_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_service_incidents_appt').on(t.appointmentId, t.createdAt),
+    index('ix_service_incidents_store').on(t.storeId, t.createdAt),
+    index('ix_service_incidents_customer').on(t.customerId, t.createdAt),
+  ],
+);
+
+/**
  * 客服工单表（补缺大批片 4）：客户提单（建议/投诉/表扬/其他）→ 本店店长/店主回复。
  * ticket_no=TK-yyyymmdd-NNN（日序，全局唯一，与 HD/RB 单号发生器同口径）；
  * 状态机：submitted → replied → closed；timeline_json 全留痕（只增不改）。
@@ -2393,7 +2583,7 @@ export const supportTickets = sqliteTable(
     createdVia: text('created_via').notNull().default('customer'),
     /** 联系方式（缺省回显=users.phone，客户端可改） */
     contactPhone: text('contact_phone'),
-    /** 状态，取值：submitted | replied | closed */
+    /** 状态，取值：submitted | replied | escalated（体验批片 4 店长介入仲裁升级） | closed */
     status: text('status').notNull().default('submitted'),
     /** 回复内容（NULL = 未回复） */
     replyText: text('reply_text'),
@@ -2401,6 +2591,12 @@ export const supportTickets = sqliteTable(
     repliedBy: text('replied_by').references(() => users.id),
     /** 回复时间 */
     repliedAt: integer('replied_at', { mode: 'timestamp' }),
+    /** 升级店长介入时间（客户端体验大批片 4 · 0042；NULL=未升级） */
+    escalatedAt: integer('escalated_at', { mode: 'timestamp' }),
+    /** 升级操作人用户 ID -> users.id（客户本人发起） */
+    escalatedBy: text('escalated_by').references(() => users.id),
+    /** 升级留言（客户升级时补充说明，可空） */
+    escalateNote: text('escalate_note'),
     /** 时间线 JSON 数组（只增不改），结构见 TicketTimelineItem */
     timelineJson: text('timeline_json', { mode: 'json' }).$type<TicketTimelineItem[]>().notNull(),
     ...auditColumns,
@@ -2619,8 +2815,8 @@ export type PayBizDomain = 'membership_open' | 'membership_upgrade' | 'mall';
 export type PayOrderStatus = 'created' | 'paying' | 'paid' | 'closed' | 'failed';
 /** 支付通道，取值：mock | wechat_jsapi | wechat_h5 | alipay_wap（内测=mock） */
 export type PayChannel = 'mock' | 'wechat_jsapi' | 'wechat_h5' | 'alipay_wap';
-/** 协议键，取值：member_service 会员服务协议 | not_prepaid 非预付卡声明 | no_auto_renew 到期不自动续费告知 */
-export type AgreementKey = 'member_service' | 'not_prepaid' | 'no_auto_renew';
+/** 协议键，取值：member_service 会员服务协议 | not_prepaid 非预付卡声明 | no_auto_renew 到期不自动续费告知（boarding_consent 寄养协议 / medical_auth 医疗授权=片 2 · 0038 预约链路自助签署两键，零新表） */
+export type AgreementKey = 'member_service' | 'not_prepaid' | 'no_auto_renew' | 'boarding_consent' | 'medical_auth';
 
 /**
  * 线上支付单表（批次 6 补缺大批 · 涉钱最高戒律）：
@@ -2976,7 +3172,9 @@ export const deactivationRequests = sqliteTable(
 
 /**
  * 协议留痕表（批次 6 补缺大批）：线上开通会员三协议勾选快照——
- * member_service 会员服务协议 / not_prepaid 非预付卡声明 / no_auto_renew 到期不自动续费告知。
+ * member_service 会员服务协议 / not_prepaid 非预付卡声明 / no_auto_renew 到期不自动续费告知；
+ * 片 2（0038）增 boarding_consent 寄养协议 / medical_auth 医疗授权两键（客户端自助签署走 pay.signAgreement，
+ * 同快照工艺：content/version 快照 + user_snapshot，只增不改）。
  * createOrder 事务内与 pay_orders 同落（三行必传缺一拒单）：content/version 全文快照
  * （协议改版不回溯历史留痕）+ checked_at 勾选时刻 + user_snapshot（userId/phoneMasked/
  * planKey/petCount，取证四要素）。只增不改（无更新端点）。
@@ -3419,4 +3617,281 @@ export const depositRecords = sqliteTable(
     index('ix_deposit_records_customer').on(t.customerId, t.status),
     index('ix_deposit_records_store').on(t.storeId, t.status),
   ],
+);
+/* ==================== 客户端体验大批 片 2（预约链路 12，迁移 0038） ==================== */
+
+/** 附加项加购留痕（片 2：快照名+价；预约价=主价+Σ附加快照；services.type 枚举扩 'addon' 零迁移） */
+export const appointmentAddons = sqliteTable(
+  'appointment_addons',
+  {
+    id: id(),
+    appointmentId: text('appointment_id').notNull().references(() => appointments.id),
+    addonServiceId: text('addon_service_id').notNull().references(() => services.id),
+    nameSnapshot: text('name_snapshot').notNull(),
+    priceFen: integer('price_fen').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  },
+  (t) => [index('ix_appointment_addons_appt').on(t.appointmentId)],
+);
+
+/**
+ * 预约即预付台账（片 2 · 开口项 1 裁：留痕不碰真钱）：
+ * 状态机 prepaid_pending（登记中）→ prepaid_registered（商家登记已收）→
+ * checked_deducted（到店核销抵扣）| refunded（取消退还）；全程零支付通道写。
+ */
+export const prepaidRecords = sqliteTable(
+  'prepaid_records',
+  {
+    id: id(),
+    appointmentId: text('appointment_id').notNull().references(() => appointments.id),
+    customerId: text('customer_id').notNull().references(() => users.id),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    amountFen: integer('amount_fen').notNull(),
+    /** 状态机：prepaid_pending | prepaid_registered | checked_deducted | refunded */
+    status: text('status').notNull().default('prepaid_pending'),
+    operatorId: text('operator_id').references(() => users.id),
+    note: text('note'),
+    ...auditColumns,
+  },
+  (t) => [
+    uniqueIndex('uq_prepaid_appointment').on(t.appointmentId),
+    index('ix_prepaid_store').on(t.storeId, t.status),
+  ],
+);
+
+/** 预约改约历史（片 2：before/after 快照+操作人+角色；读口并进 appointment.get 响应） */
+export const appointmentRescheduleLogs = sqliteTable(
+  'appointment_reschedule_logs',
+  {
+    id: id(),
+    appointmentId: text('appointment_id').notNull().references(() => appointments.id),
+    beforeStart: integer('before_start', { mode: 'timestamp' }).notNull(),
+    beforeEnd: integer('before_end', { mode: 'timestamp' }).notNull(),
+    afterStart: integer('after_start', { mode: 'timestamp' }).notNull(),
+    afterEnd: integer('after_end', { mode: 'timestamp' }).notNull(),
+    changedBy: text('changed_by').notNull().references(() => users.id),
+    /** 操作角色：customer | merchant */
+    byRole: text('by_role').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  },
+  (t) => [index('ix_reschedule_logs_appt').on(t.appointmentId)],
+);
+
+/* ==================== 客户端体验大批 片 3（会员体系+商城，迁移 0040） ==================== */
+
+/** 会员权益台账（片 3：未用权益+生日礼+新人礼包+升级礼遇共用；发放=资格留痕不真发，候资质批） */
+export const memberPerkGrants = sqliteTable(
+  'member_perk_grants',
+  {
+    id: id(),
+    userId: text('user_id').notNull().references(() => users.id),
+    /** 权益类：service_discount_count（服务折扣次数）| care_package（安心包）| birthday_owner | birthday_pet | welcome_pack | upgrade_gift */
+    kind: text('kind').notNull(),
+    storeId: text('store_id').references(() => stores.id),
+    /** 次数型权益：总数/剩余（生日/礼包类=NULL） */
+    totalCount: integer('total_count'),
+    remainCount: integer('remain_count'),
+    /** 来源锚（单号/宠物 id 等） */
+    sourceId: text('source_id'),
+    /** 生日礼年度幂等锚（year+pet_id 入唯一索引） */
+    year: integer('year'),
+    petId: text('pet_id').references(() => pets.id),
+    /** 状态：granted | exhausted | voided */
+    status: text('status').notNull().default('granted'),
+    meta: text('meta', { mode: 'json' }).$type<Record<string, unknown>>(),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_perk_grants_user').on(t.userId, t.kind, t.status),
+    uniqueIndex('uq_perk_grants_birthday').on(t.userId, t.kind, t.year, t.petId),
+  ],
+);
+
+/** 优惠券模板（片 3：面额/门槛/有效天数/叠加规则/配额；store_id NULL=全场） */
+export const coupons = sqliteTable(
+  'coupons',
+  {
+    id: id(),
+    storeId: text('store_id').references(() => stores.id),
+    title: text('title').notNull(),
+    amountFen: integer('amount_fen').notNull(),
+    thresholdFen: integer('threshold_fen').notNull().default(0),
+    validDays: integer('valid_days').notNull(),
+    /** 叠加规则：none（不与会员折扣叠加）| with_member_discount */
+    stackRule: text('stack_rule').notNull().default('none'),
+    totalQuota: integer('total_quota'),
+    status: text('status').notNull().default('on'),
+    createdBy: text('created_by').notNull().references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_coupons_store').on(t.storeId, t.status)],
+);
+
+/**
+ * 优惠券领用台账（片 3 · 开口项 1 裁：不接真抵扣结算）：
+ * 状态机 claimed→used|expired|voided；used 仅登记 order_id（orders/payments 零触碰）。
+ */
+export const couponGrants = sqliteTable(
+  'coupon_grants',
+  {
+    id: id(),
+    couponId: text('coupon_id').notNull().references(() => coupons.id),
+    userId: text('user_id').notNull().references(() => users.id),
+    status: text('status').notNull().default('claimed'),
+    claimedAt: integer('claimed_at', { mode: 'timestamp' }),
+    usedAt: integer('used_at', { mode: 'timestamp' }),
+    /** 登记用（核销留痕），不碰订单金额 */
+    orderId: text('order_id').references(() => orders.id),
+    ...auditColumns,
+  },
+  (t) => [
+    uniqueIndex('uq_coupon_grants_user_coupon').on(t.couponId, t.userId),
+    index('ix_coupon_grants_user').on(t.userId, t.status),
+  ],
+);
+
+/** 收藏/心愿单（片 3：(user_id,product_id) 唯一锚幂等） */
+export const favorites = sqliteTable(
+  'favorites',
+  {
+    id: id(),
+    userId: text('user_id').notNull().references(() => users.id),
+    productId: text('product_id').notNull().references(() => products.id),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  },
+  (t) => [uniqueIndex('uq_favorites_user_product').on(t.userId, t.productId)],
+);
+
+/** 商品评价晒单（片 3：挂 order_id+product_id 一单一件一评；与服务评价域分键不混 reviews） */
+export const productReviews = sqliteTable(
+  'product_reviews',
+  {
+    id: id(),
+    orderId: text('order_id').notNull().references(() => orders.id),
+    productId: text('product_id').notNull().references(() => products.id),
+    storeId: text('store_id').notNull().references(() => stores.id),
+    customerId: text('customer_id').notNull().references(() => users.id),
+    rating: integer('rating').notNull(),
+    text: text('text'),
+    photoUrls: text('photo_urls', { mode: 'json' }).$type<string[]>().notNull().default([]),
+    anonymous: integer('anonymous', { mode: 'boolean' }).notNull().default(false),
+    ...auditColumns,
+  },
+  (t) => [
+    uniqueIndex('uq_product_reviews_order_product').on(t.orderId, t.productId),
+    index('ix_product_reviews_product').on(t.productId, t.createdAt),
+  ],
+);
+
+/* ------------------------------------------------------------------ */
+/* 客户端体验大批 片 5（尾牙读口+报表 17 张点亮 · 迁移 0044）               */
+/* ------------------------------------------------------------------ */
+
+/** 差评原因标签集（N4 差评聚类口径，任务书附录 A 写死；应用层 zod 约束同集） */
+export const REVIEW_TAG_SET = ['洗护质量', '态度', '等待', '价格', '宠物状态'] as const;
+
+/**
+ * 指标申诉表（体验批片 5 · N6 海底捞铁规两件之一=申诉通道；D7 同配）：
+ * 员工对服务质量指标数据异议（差评归属/报告时效/复购统计）可申诉留痕，
+ * pending → reviewed（approved=纠错成立 correction_json 落前后值 / rejected 驳回须 note）。
+ * 报表读口径即时扣减 approved 申诉（算错即更正+明示纠错记录），只增不改。
+ * 幂等：同人同目标 pending 在途即 duplicated 返回原行（payrollAppeals 同族工艺）。
+ */
+export const metricAppeals = sqliteTable(
+  'metric_appeals',
+  {
+    id: id(),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 申诉人员工 ID -> staff.id */
+    staffId: text('staff_id')
+      .notNull()
+      .references(() => staff.id),
+    /** 申诉对象类型：review（差评归属） | report_metric（报表指标值） */
+    targetType: text('target_type').notNull(),
+    /** 申诉对象 ID（review.id 或报表指标键，如 n6:{month}:{staffId}） */
+    targetId: text('target_id').notNull(),
+    /** 申诉理由 */
+    reason: text('reason').notNull(),
+    /** 状态：pending | approved | rejected */
+    status: text('status').notNull().default('pending'),
+    /** 复核人用户 ID -> users.id */
+    reviewerId: text('reviewer_id').references(() => users.id),
+    /** 复核时间 */
+    reviewedAt: integer('reviewed_at', { mode: 'timestamp' }),
+    /** 复核意见（驳回必填） */
+    reviewNote: text('review_note'),
+    /** 纠错留痕 JSON：{ before: unknown, after: unknown, note }（approved 必填） */
+    correctionJson: text('correction_json', { mode: 'json' }).$type<Record<string, unknown>>(),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_metric_appeals_store_status').on(t.storeId, t.status),
+    index('ix_metric_appeals_staff').on(t.staffId, t.createdAt),
+  ],
+);
+
+/**
+ * 内容埋点事件表（体验批片 5 · N7/N8=埋点预埋不出表，任务书开口项+H 表 §方向三清单）：
+ * 瀑布流未建——本表=埋点数据底座，客户端瀑布流批上线即有数。
+ * event_type 清单（写死，H 表 §方向三）：case_impression（案例曝光）/
+ * case_detail_view（详情）/case_dwell（停留时长，meta.ms）/case_read_finish（完读）/
+ * case_interact（互动：赞/藏/评分层，meta.kind=like|favorite|rate）/
+ * book_same_impression（「预约同款」组件曝光）/book_same_click（组件点击）/
+ * booking_attributed（预约来源归因，meta.caseId）/booking_verified（核销回传）。
+ */
+export const contentEvents = sqliteTable(
+  'content_events',
+  {
+    id: id(),
+    /** 事件类型（取值见表头注清单，应用层 zod 约束） */
+    eventType: text('event_type').notNull(),
+    /** 案例 ID（瀑布流内容件；本批无案例域表=文本键预留） */
+    caseId: text('case_id'),
+    /** 用户 ID -> users.id（可空=匿名浏览预埋） */
+    userId: text('user_id').references(() => users.id),
+    /** 关联预约单 ID -> appointments.id（归因/核销回传用） */
+    appointmentId: text('appointment_id').references(() => appointments.id),
+    /** 门店 ID -> stores.id（单店口径写死，连锁预留注记） */
+    storeId: text('store_id').references(() => stores.id),
+    /** 事件载荷 JSON（停留 ms/互动 kind/来源等） */
+    meta: text('meta', { mode: 'json' }).$type<Record<string, unknown>>(),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_content_events_type_created').on(t.eventType, t.createdAt),
+    index('ix_content_events_case').on(t.caseId, t.createdAt),
+  ],
+);
+
+/**
+ * 商品 CSV 导入批次留痕表（体验批片 5 · B1 点亮件）：
+ * 硬口径=失败行回显零落账（任一行校验失败→整批不写一行商品，报告全量回显）；
+ * 落账批次行留痕（成功/失败行全量 report_json），储值导入同族工艺（storedValue.ts）。
+ */
+export const productImportBatches = sqliteTable(
+  'product_import_batches',
+  {
+    id: id(),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 导入文件名 */
+    filename: text('filename').notNull(),
+    /** 总行数 / 成功行数 / 失败行数 */
+    totalRows: integer('total_rows').notNull(),
+    okRows: integer('ok_rows').notNull(),
+    failRows: integer('fail_rows').notNull(),
+    /** 逐行报告 JSON（成功/失败行+原因全量留痕） */
+    reportJson: text('report_json', { mode: 'json' }).$type<Record<string, unknown>>().notNull(),
+    /** 导入人用户 ID -> users.id */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_product_import_batches_store').on(t.storeId, t.createdAt)],
 );

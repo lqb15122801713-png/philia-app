@@ -23,6 +23,7 @@ import { cashierRouter } from './cashier';
 import { commissionRouter } from './commission';
 import { configRulesRouter } from './configRules';
 import { depositRouter } from './deposits';
+import { incidentRouter } from './incident';
 import { inventoryRouter } from './inventory';
 import { invoiceTitleRouter } from './invoiceTitles';
 import { mallRouter } from './mall';
@@ -30,8 +31,11 @@ import { membershipRouter } from './membership';
 import { passRouter } from './pass';
 import { payRouter } from './pay';
 import { payrollRouter } from './payroll';
+import { perkRouter } from './perks';
 import { petRouter } from './pet';
+import { petHealthRouter } from './petHealth';
 import { pushRouter } from './push';
+import { reportRouter } from './report';
 import { refundRouter } from './refund';
 import { refundRequestRouter } from './refundRequest';
 import { scheduleRouter } from './schedule';
@@ -81,6 +85,10 @@ export const appRouter = router({
   address: addressRouter, // 客户端体验大批片 1：收货地址 CRUD+默认（本人闸，默认唯一应用层保）
   invoiceTitle: invoiceTitleRouter, // 客户端体验大批片 1：发票抬头 CRUD+默认（business 须税号；发票申请可选引用=前端活）
   deposit: depositRouter, // 客户端体验大批片 1：押金台账（留痕不碰真钱·开口项 2 裁：held→refunding→refunded 登记制，零支付通道写）
+  perk: perkRouter, // 客户端体验大批片 3：会员权益台账（未用权益并显/核销写口台账先行/生日礼/新人礼包/升级礼遇）
+  petHealth: petHealthRouter, // 客户端体验大批片 4：宠物健康记录族+体重时序（主人自管档案）
+  incident: incidentRouter, // 客户端体验大批片 4：服务异常即时通报域（双通知+15min 升级）
+  report: reportRouter, // 客户端体验大批片 5：尾牙读口 5+报表 17 张点亮（W-13）+N6 申诉铁规两件+CSV 导出仅店主
 });
 
 /** 前端 tRPC client 的类型锚点（仅类型导出，无运行时开销） */

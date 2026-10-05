@@ -16,13 +16,20 @@
  *   order.shipped → customer；order.received → store。
  * - 支付回调（验签/幂等/流水）不在本文件，见 routes/payCallback.ts（原生端点，
  *   无登录态，由 T1.6 集成挂载）。
+ * - 片 3（客户端体验大批）追加：优惠券（模板/领取/台账/结算推荐/核销登记——
+ *   **不接真抵扣**：used 仅登记 order_id，orders.total_fen/payments 零触碰）/
+ *   收藏（唯一锚幂等 toggle）/商品评价晒单（received 闸+一单一件一评 409）/
+ *   配送方式（delivery_method 落列，pickup/same_city 地址可缺省）/超时自动收货
+ *   （shipOrder 置 shipped_at 锚 + sweepAutoReceive 60s 滴答，读端口
+ *   order_auto_receive_days）/物流半程注记（trackingNote 常量透出，copy 键候批）。
  */
 
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, gte, like, lt, ne, or, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, isNotNull, like, lt, ne, or, sql, type SQL } from 'drizzle-orm';
 import { randomInt } from 'node:crypto';
 import { z } from 'zod';
 import { db, schema } from '../db';
+import { parseCsv } from '../lib/csvParse';
 import { customerProcedure, merchantManagerProcedure, merchantOwnerProcedure, merchantProcedure, publicProcedure, router } from '../trpc';
 import { broadcastNow, emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
@@ -107,8 +114,12 @@ async function getOrderOrThrow(d: DbHandle, orderId: string): Promise<OrderRow> 
   return row;
 }
 
-/** 列表项：订单行 + 门店名（+ 商家端队列里的客户昵称） */
-type OrderListItem = OrderRow & { storeName: string | null; customerNickname?: string | null };
+/** 列表项：订单行 + 门店名（+ 商家端队列里的客户昵称 + 物流半程注记 + 回馈金抵扣额真值列 W-09） */
+type OrderListItem = OrderRow & { storeName: string | null; customerNickname?: string | null; trackingNote?: string | null; rebateFen?: number };
+
+/** 物流跟踪半程口径（片 3 · 无全程物流接口=现状单号展示保留）：已发货单读口附注记。 */
+const TRACKING_NOTE = '物流轨迹以快递公司为准';
+
 
 const groupOrders = (statuses: readonly string[]) =>
   Object.fromEntries(statuses.map((s) => [s, [] as OrderListItem[]])) as Record<string, OrderListItem[]>;
@@ -200,6 +211,99 @@ export async function expirePendingOrders(
     if (!r.idempotent) cancelled++;
   }
   return cancelled;
+}
+
+/* ------------------------------------------------------------------ */
+/* 片 3：超时自动确认收货（order_auto_receive_days 端口值）+ 端口读件          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 超时自动收货天数：service_rules active 行 order_auto_receive_days.days，
+ * 缺行/缺键回落 7（迁移 0040 种子口径；fresh 库=seed 补种先于迁移，读口一律回落缺省）。
+ */
+async function loadAutoReceiveDays(d: DbHandle): Promise<number> {
+  const row = await d
+    .select({ valueJson: schema.serviceRules.valueJson })
+    .from(schema.serviceRules)
+    .where(and(eq(schema.serviceRules.ruleKey, 'order_auto_receive_days'), eq(schema.serviceRules.active, true)))
+    .orderBy(desc(schema.serviceRules.version))
+    .get();
+  const v = (row?.valueJson as Record<string, unknown> | undefined)?.days;
+  return typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : 7;
+}
+
+/** 券叠加规则公示：service_rules active 行 coupon_stack_rule.value_json，缺行回落默认公示口径 */
+async function loadCouponStackRule(d: DbHandle): Promise<{ rule: string; note: string }> {
+  const row = await d
+    .select({ valueJson: schema.serviceRules.valueJson })
+    .from(schema.serviceRules)
+    .where(and(eq(schema.serviceRules.ruleKey, 'coupon_stack_rule'), eq(schema.serviceRules.active, true)))
+    .orderBy(desc(schema.serviceRules.version))
+    .get();
+  const v = row?.valueJson as Record<string, unknown> | undefined;
+  return {
+    rule: typeof v?.rule === 'string' ? v.rule : 'none',
+    note:
+      typeof v?.note === 'string'
+        ? v.note
+        : '优惠券不与会员折扣叠加；每单限用 1 张（公示口径）',
+  };
+}
+
+/**
+ * 超时自动确认收货（片 3 · 60s 滴答，e2e 可直调）：
+ * status='shipped' 且 shipped_at < now − order_auto_receive_days 天的订单，
+ * 逐单条件更新 shipped→received + emitEvent(store, order.received)（同 receiveOrder
+ * 工艺：业务写库与事件同事务，提交后 broadcastNow）。
+ * 幂等=条件更新天然（与 receiveOrder 并发互撞/滴答重入均零副作用：影响行数=0 即跳过）；
+ * 边界同 expirePendingOrders：单实例串行锁，逐单失败不阻断整轮。
+ */
+export async function sweepAutoReceive(
+  d: DbHandle = db,
+  now: Date = new Date(),
+): Promise<number> {
+  const days = await loadAutoReceiveDays(d);
+  const cutoff = new Date(now.getTime() - days * 24 * 3600 * 1000);
+  const stale = await d
+    .select({ id: schema.orders.id })
+    .from(schema.orders)
+    .where(
+      and(
+        eq(schema.orders.status, 'shipped'),
+        isNotNull(schema.orders.shippedAt), // 存量 shipped 单无发货时刻锚=不自动收（保守口径明面）
+        lt(schema.orders.shippedAt, cutoff),
+      ),
+    )
+    .limit(200);
+  let received = 0;
+  for (const row of stale) {
+    try {
+      let outboxId = '';
+      const flipped = await withOrderWriteLock(async () => {
+        return d.transaction(async (tx) => {
+          /* 条件更新：仍 shipped 才翻（receiveOrder 并发/重入互撞=影响行数 0 幂等跳过） */
+          const updated = await tx
+            .update(schema.orders)
+            .set({ status: 'received', updatedAt: now })
+            .where(and(eq(schema.orders.id, row.id), eq(schema.orders.status, 'shipped')))
+            .returning();
+          if (updated.length === 0) return false;
+          outboxId = await emitEvent(txDb(tx), `store:${updated[0]!.storeId}`, EventType.OrderReceived, {
+            orderId: updated[0]!.id,
+            orderNo: updated[0]!.orderNo,
+            by: 'system_auto_receive', // 超时自动确认（与 customer 手动收货区分留痕）
+          });
+          return true;
+        });
+      });
+      if (outboxId) broadcastNow(outboxId);
+      if (flipped) received++;
+    } catch (err) {
+      console.error(`[mall] 超时自动收货失败 order=${row.id}:`, err);
+    }
+  }
+  if (received > 0) console.log(`[mall] 超时自动收货：本轮翻转 ${received} 单（阈值 ${days} 天）`);
+  return received;
 }
 
 /* ------------------------------------------------------------------ */
@@ -372,6 +476,9 @@ export const mallRouter = router({
    * CONFLICT 回滚）→ 服务端口径重算 total_fen → 生成订单号 → 建 pending 订单
    * （items 快照含 name/priceFen/image）→ emitEvent(store, order.created)。
    * 订单号撞唯一索引时换号整体重试（同预约人工码模式）。
+   * 片 3：deliveryMethod（express 快递|same_city 同城|pickup 自提，缺省 express
+   * 存量零破坏）落 orders.delivery_method 列；pickup/same_city 时 address 可缺省
+   * （自提/同城无快递地址诉求），express 必传（硬校验明文）。
    */
   createOrder: customerProcedure
     .input(
@@ -385,14 +492,20 @@ export const mallRouter = router({
           )
           .min(1)
           .max(20),
-        address: z.object({
-          name: z.string().min(1).max(64),
-          phone: z.string().min(3).max(20),
-          detail: z.string().min(1).max(255),
-        }),
+        address: z
+          .object({
+            name: z.string().min(1).max(64),
+            phone: z.string().min(3).max(20),
+            detail: z.string().min(1).max(255),
+          })
+          .optional(), // 片 3：pickup/same_city 可缺省（express 在 mutation 内硬校验必传）
+        deliveryMethod: z.enum(['express', 'same_city', 'pickup']).default('express'),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      if (input.deliveryMethod === 'express' && !input.address) {
+        badRequest('快递配送须填写收货地址（自提/同城可缺省）');
+      }
       // 同商品多行先合并数量，保证库存语义与金额口径一致
       const merged = new Map<string, number>();
       for (const it of input.items) merged.set(it.productId, (merged.get(it.productId) ?? 0) + it.qty);
@@ -469,11 +582,14 @@ export const mallRouter = router({
                 storeId,
                 items: lines,
                 totalFen,
-                address: {
-                  receiver: input.address.name,
-                  phone: input.address.phone,
-                  detail: input.address.detail,
-                },
+                address: input.address
+                  ? {
+                      receiver: input.address.name,
+                      phone: input.address.phone,
+                      detail: input.address.detail,
+                    }
+                  : null, // 片 3：pickup/same_city 可缺省（express 已在入参后硬校验必传）
+                deliveryMethod: input.deliveryMethod, // 片 3：配送方式落列（缺省 express）
                 status: 'pending',
               })
               .returning()
@@ -532,7 +648,9 @@ export const mallRouter = router({
       };
     }),
 
-  /** 6. listMyOrders（customer）：我的订单按状态分组（六态齐全，附门店名） */
+  /** 6. listMyOrders（customer）：我的订单按状态分组（六态齐全，附门店名）；
+   *  片 3：已发货单附 trackingNote 半程注记「物流轨迹以快递公司为准」（常量透出，
+   *  copy 端口键入册候批——注记明面）；deliveryMethod 随订单行透出。 */
   listMyOrders: customerProcedure.query(async ({ ctx }) => {
     const rows = await ctx.db
       .select({ order: schema.orders, storeName: schema.stores.name })
@@ -543,7 +661,13 @@ export const mallRouter = router({
     const groups = groupOrders(ORDER_STATUSES) as Record<OrderStatus, OrderListItem[]>;
     for (const r of rows) {
       const bucket = groups[r.order.status as OrderStatus];
-      if (bucket) bucket.push({ ...r.order, storeName: r.storeName });
+      if (bucket) {
+        bucket.push({
+          ...r.order,
+          storeName: r.storeName,
+          trackingNote: r.order.trackingNo ? TRACKING_NOTE : null, // 物流半程注记（有单号才附）
+        });
+      }
     }
     return { groups };
   }),
@@ -570,6 +694,7 @@ export const mallRouter = router({
 
   /**
    * 7. shipOrder（merchant 本店）：paid → shipped + 填物流单号；
+   * 片 3：同事置 shipped_at=now（超时自动收货锚=shipped_at+order_auto_receive_days 端口值）；
    * emitEvent(user:{customerId}, order.shipped)。
    */
   shipOrder: merchantManagerProcedure // M1-补2 条件①：订单履约管理 owner|manager，clerk 403
@@ -590,7 +715,7 @@ export const mallRouter = router({
       const updated = await ctx.db.transaction(async (tx) => {
         const row = await tx
           .update(schema.orders)
-          .set({ status: 'shipped', trackingNo: input.trackingNo, updatedAt: now })
+          .set({ status: 'shipped', trackingNo: input.trackingNo, shippedAt: now, updatedAt: now })
           .where(eq(schema.orders.id, order.id))
           .returning()
           .then((r) => r[0]!);
@@ -639,6 +764,9 @@ export const mallRouter = router({
   /**
    * 9. listStoreOrders（merchant 本店）：待办队列——待发货 paid / 已发货 shipped /
    * 售后 refunding 三组（附客户昵称，按创建时间倒序）。
+   * 体验批片 5（B 区点亮）：行附 rebateFen=回馈金抵扣额真值（rebate_logs type='deduct'
+   * 联 source_id=order_no 聚合；商城结算当前无回馈金抵扣写入口——列真值恒 0 是诚实
+   * 现状，通道开通即自动有值；W-09 红字口径接真值，不画假数）。
    */
   listStoreOrders: merchantManagerProcedure.query(async ({ ctx }) => { // M1-补2 条件①：商城订单流水 clerk 403
     const rows = await ctx.db
@@ -656,14 +784,500 @@ export const mallRouter = router({
         ),
       )
       .orderBy(desc(schema.orders.createdAt));
+    /* 回馈金列透出：rebate_logs deduct 联 order_no（无行=0） */
+    const orderNos = rows.map((r) => r.order.orderNo);
+    const rebateRows = orderNos.length
+      ? await ctx.db
+          .select({ sourceId: schema.rebateLogs.sourceId, deltaFen: schema.rebateLogs.deltaFen })
+          .from(schema.rebateLogs)
+          .where(and(eq(schema.rebateLogs.type, 'deduct'), inArray(schema.rebateLogs.sourceId, orderNos)))
+      : [];
+    const rebateByOrderNo = new Map<string, number>();
+    for (const r of rebateRows) {
+      if (!r.sourceId) continue;
+      rebateByOrderNo.set(r.sourceId, (rebateByOrderNo.get(r.sourceId) ?? 0) + Math.abs(r.deltaFen));
+    }
     const groups = groupOrders(STORE_QUEUE_STATUSES);
     for (const r of rows) {
       groups[r.order.status]?.push({
         ...r.order,
         storeName: null,
         customerNickname: r.customerNickname,
+        rebateFen: rebateByOrderNo.get(r.order.orderNo) ?? 0,
       });
     }
     return { groups };
   }),
+
+  /* ------------------------------------------------------------------ */
+  /* 片 3：优惠券（开口项 1 裁：不接真抵扣结算——used 仅登记 order_id，        */
+  /* orders.total_fen/payments 一字不碰，注释明面）                            */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * couponTemplates（public 登录可读）：在售券模板列表（status='on'），
+   * 附已领计数（配额进度 UI 用）；store_id NULL=全场通用券。
+   */
+  couponTemplates: publicProcedure.query(async ({ ctx }) => {
+    const rows = await ctx.db
+      .select()
+      .from(schema.coupons)
+      .where(eq(schema.coupons.status, 'on'))
+      .orderBy(desc(schema.coupons.createdAt));
+    const counts = await ctx.db
+      .select({ couponId: schema.couponGrants.couponId, n: sql<number>`count(*)` })
+      .from(schema.couponGrants)
+      .groupBy(schema.couponGrants.couponId);
+    const countMap = new Map(counts.map((c) => [c.couponId, Number(c.n)]));
+    return {
+      items: rows.map((c) => ({ ...c, claimedCount: countMap.get(c.id) ?? 0 })),
+    };
+  }),
+
+  /**
+   * couponClaim（customer）：领券。幂等=uq_coupon_grants_user_coupon(coupon_id,
+   * user_id) 唯一锚——重复领=返回现状 idempotent=true 零新增；配额（total_quota
+   * 非空）满 → 400 明文「已领完」（事务内计数+唯一锚双保险，并发超额由锚兜底）。
+   */
+  couponClaim: customerProcedure
+    .input(z.object({ couponId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      return withOrderWriteLock(async () => {
+        return ctx.db.transaction(async (tx) => {
+          const t = txDb(tx);
+          const coupon = await t
+            .select()
+            .from(schema.coupons)
+            .where(eq(schema.coupons.id, input.couponId))
+            .get();
+          if (!coupon || coupon.status !== 'on') badRequest('优惠券不存在或已下架');
+          const now = new Date();
+          const inserted = await t
+            .insert(schema.couponGrants)
+            .values({ couponId: coupon.id, userId: ctx.user.id, status: 'claimed', claimedAt: now })
+            .onConflictDoNothing({ target: [schema.couponGrants.couponId, schema.couponGrants.userId] })
+            .returning();
+          if (inserted.length === 0) {
+            /* 唯一锚命中：重复领=返回现状幂等 */
+            const existing = await t
+              .select()
+              .from(schema.couponGrants)
+              .where(
+                and(
+                  eq(schema.couponGrants.couponId, coupon.id),
+                  eq(schema.couponGrants.userId, ctx.user.id),
+                ),
+              )
+              .get();
+            return { grant: existing!, idempotent: true as const };
+          }
+          if (coupon.totalQuota !== null) {
+            const cnt = await t
+              .select({ n: sql<number>`count(*)` })
+              .from(schema.couponGrants)
+              .where(eq(schema.couponGrants.couponId, coupon.id))
+              .get();
+            if (Number(cnt?.n ?? 0) > coupon.totalQuota) {
+              badRequest('该优惠券已领完（配额已满）'); // 抛错整体回滚，本行不落
+            }
+          }
+          return { grant: inserted[0]!, idempotent: false as const };
+        });
+      });
+    }),
+
+  /** myCoupons（customer）：本人领用台账（可按状态过滤），联券模板透出面额/门槛/效期 */
+  myCoupons: customerProcedure
+    .input(
+      z
+        .object({ status: z.enum(['claimed', 'used', 'expired', 'voided']).optional() })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const conds = [eq(schema.couponGrants.userId, ctx.user.id)];
+      if (input?.status) conds.push(eq(schema.couponGrants.status, input.status));
+      const rows = await ctx.db
+        .select({ grant: schema.couponGrants, coupon: schema.coupons })
+        .from(schema.couponGrants)
+        .innerJoin(schema.coupons, eq(schema.coupons.id, schema.couponGrants.couponId))
+        .where(and(...conds))
+        .orderBy(desc(schema.couponGrants.createdAt));
+      return { items: rows.map((r) => ({ ...r.grant, coupon: r.coupon })) };
+    }),
+
+  /**
+   * availableCoupons（customer · 结算推荐读口）：{totalFen} 按门槛过滤的可用券——
+   * 本人 status='claimed' 且未过效期（claimed_at+valid_days 天）且 threshold_fen ≤
+   * totalFen。**只读推荐，不做任何抵扣登记**（开口项 1 裁）。
+   */
+  availableCoupons: customerProcedure
+    .input(z.object({ totalFen: z.number().int().min(0).max(100_000_000) }))
+    .query(async ({ ctx, input }) => {
+      const nowSec = Math.floor(Date.now() / 1000);
+      const rows = await ctx.db
+        .select({ grant: schema.couponGrants, coupon: schema.coupons })
+        .from(schema.couponGrants)
+        .innerJoin(schema.coupons, eq(schema.coupons.id, schema.couponGrants.couponId))
+        .where(
+          and(
+            eq(schema.couponGrants.userId, ctx.user.id),
+            eq(schema.couponGrants.status, 'claimed'),
+            sql`${schema.coupons.thresholdFen} <= ${input.totalFen}`,
+            /* 效期：claimed_at + valid_days 天 > now（缺 claimed_at 保守视为可用——种子/迁移期口径） */
+            sql`(${schema.couponGrants.claimedAt} IS NULL OR ${schema.couponGrants.claimedAt} + ${schema.coupons.validDays} * 86400 > ${nowSec})`,
+          ),
+        )
+        .orderBy(desc(schema.coupons.amountFen));
+      return { items: rows.map((r) => ({ ...r.grant, coupon: r.coupon })) };
+    }),
+
+  /**
+   * couponUse（customer）：核销登记——claimed→used，仅登记 order_id 留痕。
+   * **开口项 1 裁（明面）：不接真抵扣结算——orders.total_fen / payments 一字
+   * 不碰**（真抵扣候线上收单批）；幂等=已 used 返回现状（idempotent=true）；
+   * 本人闸：券/单均须属本人（他人券 NOT_FOUND 不透出，他人单 403）。
+   */
+  couponUse: customerProcedure
+    .input(z.object({ grantId: z.string().min(1), orderId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      return withOrderWriteLock(async () => {
+        return ctx.db.transaction(async (tx) => {
+          const t = txDb(tx);
+          const grant = await t
+            .select()
+            .from(schema.couponGrants)
+            .where(and(eq(schema.couponGrants.id, input.grantId), eq(schema.couponGrants.userId, ctx.user.id)))
+            .get();
+          if (!grant) throw new TRPCError({ code: 'NOT_FOUND', message: '券记录不存在' });
+          const order = await t
+            .select({ id: schema.orders.id, customerId: schema.orders.customerId })
+            .from(schema.orders)
+            .where(eq(schema.orders.id, input.orderId))
+            .get();
+          if (!order) throw new TRPCError({ code: 'NOT_FOUND', message: '订单不存在' });
+          if (order.customerId !== ctx.user.id) forbidden('只能核销到本人订单');
+          if (grant.status === 'used') return { grant, idempotent: true as const };
+          if (grant.status !== 'claimed') badRequest('券状态不可核销（已作废或已过期）');
+          /* 条件更新 claimed→used（并发双核销=影响行数 0 幂等）；**只动 grant 行，
+             订单金额/支付流水零触碰**（开口项 1 裁，注释明面） */
+          const now = new Date();
+          const updated = await t
+            .update(schema.couponGrants)
+            .set({ status: 'used', usedAt: now, orderId: order.id, updatedAt: now })
+            .where(and(eq(schema.couponGrants.id, grant.id), eq(schema.couponGrants.status, 'claimed')))
+            .returning();
+          if (updated.length === 0) return { grant: { ...grant, status: 'used' }, idempotent: true as const };
+          return { grant: updated[0]!, idempotent: false as const };
+        });
+      });
+    }),
+
+  /** couponStackRule（public 登录可读）：券叠加规则公示（service_rules.coupon_stack_rule
+   *  端口值，保存即生效只管新读；缺行回落默认公示口径） */
+  couponStackRule: publicProcedure.query(async ({ ctx }) => {
+    const v = await loadCouponStackRule(ctx.db);
+    return { ...v, source: 'service_rules.coupon_stack_rule' };
+  }),
+
+  /* ------------------------------------------------------------------ */
+  /* 片 3：收藏/心愿单（(user_id,product_id) 唯一锚幂等）                     */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * favToggle（customer）：收藏开关——在=删（fav:false）/不在=插（fav:true）；
+   * uq_favorites_user_product 唯一锚幂等（并发双击撞锚按已收藏处理）。
+   */
+  favToggle: customerProcedure
+    .input(z.object({ productId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const product = await ctx.db
+        .select({ id: schema.products.id })
+        .from(schema.products)
+        .where(eq(schema.products.id, input.productId))
+        .get();
+      if (!product) throw new TRPCError({ code: 'NOT_FOUND', message: '商品不存在' });
+      return ctx.db.transaction(async (tx) => {
+        const t = txDb(tx);
+        const existing = await t
+          .select({ id: schema.favorites.id })
+          .from(schema.favorites)
+          .where(and(eq(schema.favorites.userId, ctx.user.id), eq(schema.favorites.productId, input.productId)))
+          .get();
+        if (existing) {
+          await t.delete(schema.favorites).where(eq(schema.favorites.id, existing.id));
+          return { fav: false as const };
+        }
+        await t
+          .insert(schema.favorites)
+          .values({ userId: ctx.user.id, productId: input.productId, createdAt: new Date() })
+          .onConflictDoNothing({ target: [schema.favorites.userId, schema.favorites.productId] });
+        return { fav: true as const };
+      });
+    }),
+
+  /** favList（customer）：本人收藏列表（联商品快照：名/价/首图/上架状态，新→旧） */
+  favList: customerProcedure.query(async ({ ctx }) => {
+    const rows = await ctx.db
+      .select({
+        id: schema.favorites.id,
+        productId: schema.favorites.productId,
+        createdAt: schema.favorites.createdAt,
+        name: schema.products.name,
+        priceFen: schema.products.priceFen,
+        images: schema.products.images,
+        status: schema.products.status,
+        storeId: schema.products.storeId,
+      })
+      .from(schema.favorites)
+      .innerJoin(schema.products, eq(schema.products.id, schema.favorites.productId))
+      .where(eq(schema.favorites.userId, ctx.user.id))
+      .orderBy(desc(schema.favorites.createdAt));
+    return {
+      items: rows.map((r) => ({
+        id: r.id,
+        productId: r.productId,
+        name: r.name,
+        priceFen: r.priceFen,
+        image: r.images?.[0] ?? null,
+        status: r.status,
+        storeId: r.storeId,
+        createdAt: r.createdAt,
+      })),
+    };
+  }),
+
+  /** favCheck（customer）：{productId} 是否已收藏（商详页星标读口） */
+  favCheck: customerProcedure
+    .input(z.object({ productId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const row = await ctx.db
+        .select({ id: schema.favorites.id })
+        .from(schema.favorites)
+        .where(and(eq(schema.favorites.userId, ctx.user.id), eq(schema.favorites.productId, input.productId)))
+        .get();
+      return { fav: !!row };
+    }),
+
+  /* ------------------------------------------------------------------ */
+  /* 片 3：商品评价晒单（挂 order_id+product_id 一单一件一评；与服务评价域      */
+  /* reviews 分键不混——schema 头注口径）                                       */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * reviewProduct（customer）：晒单评价——
+   * - 闸：订单须属本人（他人 403）且 status='received'（未收货 400 明文）；
+   *   productId 须在该单 items 内（否则 400）；
+   * - 幂等：uq_product_reviews_order_product(order_id,product_id) 一单一件一评，
+   *   重复评 → 409 CONFLICT 明文；
+   * - anonymous=匿名（读口匿名录名处理，见 productReviews）。
+   */
+  reviewProduct: customerProcedure
+    .input(
+      z.object({
+        orderId: z.string().min(1),
+        productId: z.string().min(1),
+        rating: z.number().int().min(1, '评分须为 1-5 星').max(5, '评分须为 1-5 星'),
+        text: z.string().max(500).optional(),
+        photoUrls: z.array(z.string().max(255)).max(9).optional(),
+        anonymous: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const order = await getOrderOrThrow(ctx.db, input.orderId);
+      if (order.customerId !== ctx.user.id) forbidden('只能评价本人订单');
+      if (order.status !== 'received') badRequest('订单确认收货后才能评价（当前状态不可评）');
+      if (!order.items.some((it) => it.product_id === input.productId)) {
+        badRequest('该订单不含此商品，无法评价');
+      }
+      const inserted = await ctx.db
+        .insert(schema.productReviews)
+        .values({
+          orderId: order.id,
+          productId: input.productId,
+          storeId: order.storeId,
+          customerId: ctx.user.id,
+          rating: input.rating,
+          text: input.text ?? null,
+          photoUrls: input.photoUrls ?? [],
+          anonymous: input.anonymous ?? false,
+        })
+        .onConflictDoNothing({ target: [schema.productReviews.orderId, schema.productReviews.productId] })
+        .returning();
+      if (inserted.length === 0) {
+        throw new TRPCError({ code: 'CONFLICT', message: '该订单此商品已评价过，请勿重复评价' });
+      }
+      return { review: inserted[0]! };
+    }),
+
+  /**
+   * productReviews（public 登录可读）：{productId} 评价分页 + 均分聚合
+   * （avgRating 精确到 0.1，count 总数）；anonymous=匿名录名（昵称不透出，
+   * 透出「匿名用户」）。
+   */
+  productReviews: publicProcedure
+    .input(
+      z.object({
+        productId: z.string().min(1),
+        page: z.number().int().min(1).default(1),
+        pageSize: z.number().int().min(1).max(50).default(10),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const agg = await ctx.db
+        .select({ n: sql<number>`count(*)`, avg: sql<number>`avg(${schema.productReviews.rating})` })
+        .from(schema.productReviews)
+        .where(eq(schema.productReviews.productId, input.productId))
+        .get();
+      const rows = await ctx.db
+        .select({ review: schema.productReviews, nickname: schema.users.nickname })
+        .from(schema.productReviews)
+        .innerJoin(schema.users, eq(schema.users.id, schema.productReviews.customerId))
+        .where(eq(schema.productReviews.productId, input.productId))
+        .orderBy(desc(schema.productReviews.createdAt))
+        .limit(input.pageSize)
+        .offset((input.page - 1) * input.pageSize);
+      const count = Number(agg?.n ?? 0);
+      return {
+        total: count,
+        avgRating: count > 0 ? Math.round(Number(agg?.avg ?? 0) * 10) / 10 : null,
+        page: input.page,
+        pageSize: input.pageSize,
+        items: rows.map((r) => ({
+          ...r.review,
+          nickname: r.review.anonymous ? '匿名用户' : (r.nickname ?? '匿名用户'),
+        })),
+      };
+    }),
+  /* 体验批片 5 · B 区点亮：商品 CSV 导入端口（W-10 商品屏；模板下载+预览     */
+  /* dry-run+落账+失败行回显零落账+留痕；闸=owner|manager，开工令 §一.B）      */
+  /* 模板列写死（任务书 §三.2 名单内字段写死）：分类/商品名/描述/价格(元)/库存/   */
+  /* 是否消毒耗材——六列顺序固定，表头行固定。                                  */
+  /* ------------------------------------------------------------------ */
+
+  /** 模板下载（登录即可读=公开形状；写闸在 preview/execute） */
+  productImportTemplate: merchantManagerProcedure.query(() => {
+    const csv =
+      '﻿分类,商品名,描述,价格(元),库存,是否消毒耗材\n' +
+      '主粮,全价成犬粮 2kg,鸡肉味全价犬粮,129.00,50,否\n' +
+      '清洁,宠物消毒液 500ml,环境消杀用,39.90,30,是\n';
+    return { filename: 'product-import-template.csv', csv, columns: ['分类', '商品名', '描述', '价格(元)', '库存', '是否消毒耗材'] };
+  }),
+
+  /** 预览 dry-run（零写入）：解析+逐行校验+对账报告（失败行原因分布全量回显） */
+  productImportPreview: merchantManagerProcedure
+    .input(z.object({ csvText: z.string().min(1, 'CSV 内容为空').max(1024 * 1024, 'CSV 超出 1MB 上限'), filename: z.string().max(255).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const plan = buildProductImportPlan(input.csvText);
+      void ctx;
+      return { report: plan.report, rows: plan.rows.map((r) => ({ line: r.line, ok: r.ok, error: r.error ?? null, name: r.name })) };
+    }),
+
+  /**
+   * 落账（全量或零：任一行校验失败 → 400+失败行回显，零落账零批次行）；
+   * 全量合法 → 事务内逐行插 products（status='on' 上架）+ product_import_batches 批次行
+   * 留痕（report_json=逐行报告全量）。储值导入同族工艺（storedValue.executeImport）。
+   */
+  productImportExecute: merchantManagerProcedure
+    .input(z.object({ csvText: z.string().min(1, 'CSV 内容为空').max(1024 * 1024, 'CSV 超出 1MB 上限'), filename: z.string().max(255).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const plan = buildProductImportPlan(input.csvText);
+      if (plan.rows.length === 0) throw new TRPCError({ code: 'BAD_REQUEST', message: '无可导入数据行' });
+      const failRows = plan.rows.filter((r) => !r.ok);
+      if (failRows.length > 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `存在 ${failRows.length} 行校验失败，已零落账：${failRows.map((r) => `行${r.line}（${r.error}）`).join('；')}`,
+        });
+      }
+      const batch = await ctx.db.transaction(async (tx) => {
+        for (const r of plan.rows) {
+          await tx.insert(schema.products).values({
+            storeId: ctx.user.storeId!,
+            category: r.category!,
+            name: r.name!,
+            description: r.description ?? null,
+            priceFen: r.priceFen!,
+            stock: r.stock!,
+            status: 'on',
+            isDisinfectionSupply: r.isSupply,
+          });
+        }
+        const [batch] = await tx
+          .insert(schema.productImportBatches)
+          .values({
+            storeId: ctx.user.storeId!,
+            filename: input.filename ?? '未命名.csv',
+            totalRows: plan.rows.length,
+            okRows: plan.rows.length,
+            failRows: 0,
+            reportJson: { lines: plan.rows.map((r) => ({ line: r.line, name: r.name, ok: true })) } as Record<string, unknown>,
+            createdBy: ctx.user.id,
+          })
+          .returning();
+        return batch;
+      });
+      return { batchId: batch.id, okRows: batch.okRows, failRows: 0 };
+    }),
 });
+
+/* ------------------------------------------------------------------ */
+/* 商品 CSV 导入：解析+校验计划（模板六列写死；失败行零落账判定在 execute）   */
+/* ------------------------------------------------------------------ */
+
+interface ProductImportRow {
+  line: number;
+  ok: boolean;
+  error?: string;
+  category?: string;
+  name?: string;
+  description?: string;
+  priceFen?: number;
+  stock?: number;
+  isSupply?: boolean;
+}
+
+/** 模板六列（写死）：分类/商品名/描述/价格(元)/库存/是否消毒耗材 */
+const PRODUCT_IMPORT_HEADER = ['分类', '商品名', '描述', '价格(元)', '库存', '是否消毒耗材'];
+
+function buildProductImportPlan(csvText: string): { rows: ProductImportRow[]; report: Record<string, unknown> } {
+  const table = parseCsv(csvText);
+  const rows: ProductImportRow[] = [];
+  const header = table[0] ?? [];
+  const headerOk = PRODUCT_IMPORT_HEADER.every((h, i) => (header[i] ?? '').trim() === h);
+  if (!headerOk) {
+    return {
+      rows: [],
+      report: { totalRows: 0, okRows: 0, failRows: Math.max(0, table.length - 1), headerError: `表头须为：${PRODUCT_IMPORT_HEADER.join('/')}`, templateHint: '先下载模板再填' },
+    };
+  }
+  for (let i = 1; i < table.length; i++) {
+    const cells = table[i]!.map((c) => c.trim());
+    const line = i + 1; // 含表头行的物理行号
+    const [category, name, description, priceRaw, stockRaw, supplyRaw] = cells;
+    const fail = (error: string): ProductImportRow => ({ line, ok: false, error, name: name || undefined });
+    if (cells.every((c) => c === '')) continue; // 空行跳过
+    if (!category || category.length > 32) { rows.push(fail('分类必填且 ≤32 字')); continue; }
+    if (!name || name.length > 64) { rows.push(fail('商品名必填且 ≤64 字')); continue; }
+    if (description && description.length > 255) { rows.push(fail('描述 ≤255 字')); continue; }
+    const priceMatch = /^(\d+)(\.\d{1,2})?$/.exec(priceRaw ?? '');
+    if (!priceMatch) { rows.push(fail('价格须为数字（最多两位小数）')); continue; }
+    const priceFen = Math.round(parseFloat(priceRaw!) * 100);
+    if (priceFen <= 0 || priceFen > 100_000_00) { rows.push(fail('价格须 >0 且 ≤100 万元')); continue; }
+    if (!/^\d+$/.test(stockRaw ?? '')) { rows.push(fail('库存须为非负整数')); continue; }
+    const stock = parseInt(stockRaw!, 10);
+    if (stock > 1_000_000) { rows.push(fail('库存超出合理上限')); continue; }
+    if (supplyRaw !== '是' && supplyRaw !== '否') { rows.push(fail('是否消毒耗材仅可填 是/否')); continue; }
+    rows.push({ line, ok: true, category, name, description: description || undefined, priceFen, stock, isSupply: supplyRaw === '是' });
+  }
+  const failRows = rows.filter((r) => !r.ok);
+  return {
+    rows,
+    report: {
+      totalRows: rows.length,
+      okRows: rows.length - failRows.length,
+      failRows: failRows.length,
+      failReasons: failRows.map((r) => ({ line: r.line, error: r.error })),
+      note: 'preview 零写入；execute=全量或零（失败行回显零落账）',
+    },
+  };
+}

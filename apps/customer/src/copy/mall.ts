@@ -73,6 +73,24 @@ const MALL_COPY_TABLE = {
   'mall.priceNote': '金额以提交时门店现价为准',
   'mall.submitOrder': '提交订单',
 
+  /* ---- 客户端体验大批 片 3：结算配送方式（createOrder 入参 deliveryMethod；
+     pickup/same_city 时地址非必填 + 内测期免运费注记） ---- */
+  'mall.deliveryMethod': '配送方式',
+  'mall.deliveryExpress': '快递',
+  'mall.deliverySameCity': '同城',
+  'mall.deliveryPickup': '自提',
+  'mall.deliveryFreeNote': '内测期免运费',
+  'mall.addrOptionalNote': '自提 / 同城可暂不填收货地址，到店报手机号即可',
+  /* 结算「可用券推荐」区（availableCoupons 按门槛过滤；核销=登记抵扣口径注记） */
+  'mall.couponTitle': '可用券',
+  'mall.couponUseNote': '核销=登记抵扣，线下结算时出示',
+  'mall.couponPick': '选用',
+  'mall.couponPicked': '已选 · 登记抵扣',
+  'mall.couponOff': '减 {amt}',
+
+  /* ---- 客户端体验大批 片 3：订单卡配送方式徽 + 物流注记 + 写评价入口 ---- */
+  'mall.trackingNote': '轨迹以快递公司为准',
+
   /* ---- 商品订单 /mall/orders（页面与订单卡） ---- */
   'mall.ordersTitle': '商品订单',
   'mall.ordersLoadFail': '订单加载失败，请稍后重试',

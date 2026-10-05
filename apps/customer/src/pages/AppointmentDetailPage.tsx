@@ -29,6 +29,7 @@ import { friendlyError, useToast } from '@philia/shared';
 import { apc } from '@/copy/appointments';
 import { rc } from '@/copy/refund';
 import { sl } from '@/copy/serviceloop';
+import { queryCancelFeeTiers, queryPrepaidOf, readDetailExtras } from '@/lib/exp2Api';
 import {
   APPT_STATUS_META,
   APPT_TYPE_LABEL,
@@ -47,7 +48,28 @@ const CANCEL_FREE_BEFORE_SEC = 4 * 3600;
 /** v1.1-b3 B3-5（W-14）：取消原因快捷选项（选填，可再补充自由文本） */
 const CANCEL_REASON_CHIPS = ['行程有变', '时间不合适', '价格因素', '其他'] as const;
 
+/** 服务明细分项状态徽（done=沉底 / active=淡金 / locked=占位灰） */
+const STEP_STATUS_META: Record<string, { key: 'appointments.stepDone' | 'appointments.stepDoing' | 'appointments.stepPending'; pill: string }> = {
+  done: { key: 'appointments.stepDone', pill: 'bg-sunken text-ink-secondary' },
+  active: { key: 'appointments.stepDoing', pill: 'bg-brand-primary-light text-brand-primary-pressed' },
+  locked: { key: 'appointments.stepPending', pill: 'bg-sunken text-ink-placeholder' },
+};
+
 const CLIENT_ID_KEY = 'philia.sseClientId';
+
+/** 体验大批片 2：预付台账四态徽文案（prepaidOf.status → copy 键；未知态回退登记中） */
+function prepaidStatusLabel(status: string): string {
+  switch (status) {
+    case 'prepaid_registered':
+      return apc('appointments.prepaidRegistered');
+    case 'checked_deducted':
+      return apc('appointments.prepaidDeducted');
+    case 'refunded':
+      return apc('appointments.prepaidRefunded');
+    default:
+      return apc('appointments.prepaidPending');
+  }
+}
 
 /** SSE clientId：localStorage 持久化（契约 · push.subscribe 与 /api/events 共用，同 live 页口径） */
 function getClientId(): string {
@@ -103,6 +125,13 @@ export default function AppointmentDetailPage() {
     enabled: albumEnabled,
   });
 
+  // 服务明细（体验批片 4 B15）：洗护单 in_service/completed 透出分项时长+耗材扣减
+  const detailSheetQ = useQuery({
+    queryKey: ['serviceStep', 'detailSheet', id],
+    queryFn: () => trpc.serviceStep.detailSheet.query({ appointmentId: id }),
+    enabled: albumEnabled,
+  });
+
   /* 补缺大批片 1：服务单退款/售后入口数据源——appointment.get 附 cashierBillId
      （已结账即非空）；已结账=appt.paidAt 且 paidFen>0；服务中不挂入口 */
   const refundBase =
@@ -150,6 +179,24 @@ export default function AppointmentDetailPage() {
   // B3-5（W-14）：取消原因——chips 单选（选填）+ 自由文本；合成后随 cancel 提交
   const [cancelChip, setCancelChip] = useState<string | null>(null);
   const [cancelNote, setCancelNote] = useState('');
+
+  /* 体验大批片 2：契约边界查询（端点等 coder O 落；失败静默，不阻断既有渲染） */
+  // 预付台账（四态徽；null=无台账行不渲染）
+  const prepaidQ = useQuery({
+    queryKey: ['appointment', 'prepaidOf', id],
+    queryFn: () => queryPrepaidOf(trpc, id),
+    enabled: id.length > 0,
+    retry: 0,
+  });
+  // 取消阶梯收费公示（端口值；取消面板展开时才拉取）
+  const cancelTiersQ = useQuery({
+    queryKey: ['appointment', 'cancelFeeTiers'],
+    queryFn: () => queryCancelFeeTiers(trpc),
+    enabled: confirmingCancel,
+    retry: 0,
+  });
+  // appointment.get 响应扩展（addons / rescheduleLogs；缺省空数组）
+  const detailExtras = readDetailExtras(d);
   // v1.1-b2 B2-6：改期面板状态 + 新选时段
   const [rescheduling, setRescheduling] = useState(false);
   const [newSlot, setNewSlot] = useState<Date | null>(null);
@@ -382,8 +429,8 @@ export default function AppointmentDetailPage() {
         (r) => r.billId === d.cashierBillId && ['submitted', 'approved', 'refunded'].includes(r.status),
       )
     : undefined;
-  // stores 表暂无 phone 字段：有则渲染 tel:，无则提示到店/商家端联系
-  const storePhone = (d.store as { phone?: string | null } | null)?.phone ?? null;
+  // 门店电话：stores.phone 已在仓（0042 迁移），无值提示到店/商家端联系
+  const storePhone = d.store?.phone ?? null;
 
   // 服务相册分组：completed 展示全部六步；进行中订单只显示已确认（done）步骤的照片
   const albumRawSteps = albumQ.data?.steps ?? [];
@@ -487,6 +534,21 @@ export default function AppointmentDetailPage() {
               <dd className="font-number">{fenToYuan(appt.paidFen ?? appt.priceFen)}（已付）</dd>
             </div>
           ) : null}
+          {/* 体验大批片 2：预付台账四态徽（prepaidOf；null=无台账行不渲染） */}
+          {prepaidQ.data ? (
+            <div className="flex items-center justify-between">
+              <dt className="text-ink-secondary">{apc('appointments.prepaidLabel')}</dt>
+              <dd>
+                <span
+                  data-testid="appt-prepaid-badge"
+                  data-status={prepaidQ.data.status}
+                  className="rounded-chip bg-sunken px-2 py-1 text-caption-xs text-ink"
+                >
+                  {prepaidStatusLabel(prepaidQ.data.status)}
+                </span>
+              </dd>
+            </div>
+          ) : null}
           {appt.checkedInAt ? (
             <div className="flex justify-between">
               <dt className="text-ink-secondary">到店核销</dt>
@@ -505,11 +567,46 @@ export default function AppointmentDetailPage() {
               <dd className="text-right">{appt.note}</dd>
             </div>
           ) : null}
+          {/* 体验大批片 2：寄养快照透出（紧急联系人 / 医疗授权 / 遛弯次数；有才显示） */}
+          {appt.emergencyContactJson ? (
+            <div className="flex justify-between gap-4">
+              <dt className="shrink-0 text-ink-secondary">{apc('appointments.emergencyContact')}</dt>
+              <dd className="text-right">
+                {appt.emergencyContactJson.name} {appt.emergencyContactJson.phone}（{appt.emergencyContactJson.relation}）
+              </dd>
+            </div>
+          ) : null}
+          {appt.medicalAuthJson?.agreed ? (
+            <div className="flex justify-between">
+              <dt className="text-ink-secondary">{apc('appointments.medicalAuthLabel')}</dt>
+              <dd>{apc('appointments.medicalAuthSigned', { version: appt.medicalAuthJson.contentVersion })}</dd>
+            </div>
+          ) : null}
+          {appt.walkTimesPerDay ? (
+            <div className="flex justify-between">
+              <dt className="text-ink-secondary">遛弯次数</dt>
+              <dd className="font-number">{apc('appointments.walkTimes', { n: appt.walkTimesPerDay })}</dd>
+            </div>
+          ) : null}
           <div className="flex justify-between">
             <dt className="text-ink-secondary">预约编号</dt>
             <dd className="font-number text-caption text-ink-placeholder">{appt.id}</dd>
           </div>
         </dl>
+        {/* 体验大批片 2：附加项透出（名称 + 快照价；空数组不渲染） */}
+        {detailExtras.addons.length > 0 ? (
+          <div className="mt-3 border-t border-line-divider pt-3" data-testid="appt-addons">
+            <p className="text-caption text-ink-secondary">{apc('appointments.addonsTitle')}</p>
+            <ul className="mt-1.5 space-y-1 text-body">
+              {detailExtras.addons.map((a, i) => (
+                <li key={`${a.nameSnapshot}-${i}`} className="flex justify-between">
+                  <span>{a.nameSnapshot}</span>
+                  <span className="font-number">{fenToYuan(a.priceFen)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         {/* 补缺大批片 4：实付行后发票入口（paidFen>0 才显；在途/已开具=进度入口） */}
         {(appt.paidFen ?? 0) > 0 ? (
           <div className="mt-3 border-t border-line-divider pt-3">
@@ -528,6 +625,79 @@ export default function AppointmentDetailPage() {
           </p>
         ) : null}
       </section>
+
+      {/* 体验大批片 2：改约历史（rescheduleLogs 按序渲染 before→after+操作人角色+时刻；
+          空态不渲染） */}
+      {detailExtras.rescheduleLogs.length > 0 ? (
+        <section className="mt-4 rounded-card bg-card p-4 shadow-card" data-testid="appt-reschedule-history">
+          <h2 className="text-title">{apc('appointments.rescheduleHistory')}</h2>
+          <ul className="mt-2 space-y-2.5">
+            {detailExtras.rescheduleLogs.map((log, i) => (
+              <li key={i} className="border-l-2 border-line pl-3">
+                <p className="font-number text-body-sm">
+                  {fmtRange(new Date(log.beforeStart), new Date(log.beforeEnd))}
+                  <span className="mx-1 text-ink-placeholder">→</span>
+                  {fmtRange(new Date(log.afterStart), new Date(log.afterEnd))}
+                </p>
+                <p className="mt-0.5 text-caption-xs text-ink-placeholder">
+                  {log.byRole === 'customer'
+                    ? apc('appointments.rescheduleRoleCustomer')
+                    : apc('appointments.rescheduleRoleMerchant')}
+                  {' · '}
+                  {fmtDateTime(new Date(log.createdAt))}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {/* 服务明细（体验批片 4 B15）：洗护单 in_service/completed——分项时长（durationSec→X 分钟，
+          进行中/待开始文签）+ 耗材扣减透出（空数组=诚实空态注记） */}
+      {albumEnabled && detailSheetQ.data ? (
+        <section className="mt-4 rounded-card bg-card p-4 shadow-card" data-testid="service-detail-sheet">
+          <h2 className="text-title">{apc('appointments.detailSheetTitle')}</h2>
+          <ul className="mt-3 space-y-2">
+            {detailSheetQ.data.steps.map((s) => {
+              const stepMeta = STEP_STATUS_META[s.status] ?? STEP_STATUS_META.locked!;
+              return (
+                <li key={s.stepKey} className="flex items-center justify-between gap-2 text-body">
+                  <span className="flex items-center gap-2">
+                    <span>{s.label}</span>
+                    <span className={`rounded-tag px-1.5 py-0.5 text-caption ${stepMeta.pill}`}>
+                      {apc(stepMeta.key)}
+                    </span>
+                  </span>
+                  <span className="font-number shrink-0 text-caption text-ink-secondary">
+                    {s.status === 'done' && s.durationSec != null
+                      ? apc('appointments.stepDuration', { min: Math.max(1, Math.round(s.durationSec / 60)) })
+                      : s.status === 'active'
+                        ? apc('appointments.stepDoing')
+                        : apc('appointments.stepPending')}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="mt-3 border-t border-line-divider pt-3" data-testid="service-materials">
+            <p className="text-caption text-ink-secondary">{apc('appointments.materialsTitle')}</p>
+            {detailSheetQ.data.materials.length === 0 ? (
+              <p className="mt-1 text-caption text-ink-secondary">{apc('appointments.materialsEmpty')}</p>
+            ) : (
+              <ul className="mt-1.5 space-y-1">
+                {detailSheetQ.data.materials.map((m, i) => (
+                  <li key={`${m.name}-${i}`} className="flex items-baseline justify-between gap-2 text-body-sm">
+                    <span className="text-ink">{m.name}</span>
+                    <span className="font-number shrink-0 text-ink-secondary">
+                      {apc('appointments.materialQty', { n: m.quantity })}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
+      ) : null}
 
       {/* 服务相册（v1.1-b2 B2-4）：按六步分组网格展示，before/after 打标；
           completed 展示全部六步分组，进行中订单只显示已确认步骤的照片 */}
@@ -728,6 +898,25 @@ export default function AppointmentDetailPage() {
                   ? apc('appointments.cancelRuleFree')
                   : apc('appointments.cancelRuleLate')}
               </p>
+              {/* 体验大批片 2：取消阶梯收费公示卡（cancelFeeTiers 端口值；
+                  公示口径暂不扣款注记明面；查询失败/空档不渲染，不阻断取消主流程） */}
+              {cancelTiersQ.data && cancelTiersQ.data.tiers.length > 0 ? (
+                <div
+                  className="mt-3 rounded-tag bg-sunken px-3.5 py-3"
+                  data-testid="appt-cancel-tiers"
+                >
+                  <p className="text-caption font-semibold text-ink">{apc('appointments.cancelFeeTitle')}</p>
+                  <ul className="mt-1.5 space-y-1">
+                    {cancelTiersQ.data.tiers.map((t, i) => (
+                      <li key={i} className="flex items-center justify-between text-caption text-ink-secondary">
+                        <span>{t.label}</span>
+                        <span className="font-number">{t.feeBp / 100}%</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-1.5 text-caption-xs text-ink-placeholder">{apc('appointments.cancelFeeNote')}</p>
+                </div>
+              ) : null}
               {/* B3-5（W-14）：取消原因收集（选填 chips + 自由文本，商家端透出） */}
               <div className="mt-3">
                 <p className="text-caption text-ink-secondary">{apc('appointments.cancelReasonTitle')}</p>

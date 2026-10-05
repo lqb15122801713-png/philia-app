@@ -171,8 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 2716 键/63 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63）；
+ *      56.1 种子 3134 键/68 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote））；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -211,10 +211,60 @@
  *       （不碰真钱实证）；跨店 NOT_FOUND 不透出
  *   66.2 recordsMine：造本人支付单+商城订单+发票各一 → 聚合三类齐+createdAt 倒序；
  *       他人零透出
+ * 客户端体验大批 片 2（预约链路 12 · server 侧 + e2e 断言族 67；时刻敏感一律钉时刻——
+ * storeFuture 按门店规范时区 +8 钉墙钟，同 57.6/59.1/63.x 先例）：
+ *   67.1 附加项加购：建 addon 服务行→create 带 addonServiceIds→priceFen=主价+Σ附加精确到分
+ *        +快照行落库+get 透出；他店/非 addon type → 400
+ *   67.2 合规三件套：boarding 缺 medicalAuth → 400 明文；签署两键（boarding_consent/
+ *        medical_auth）agreements 落行 content/version 快照；带 medicalAuth+emergencyContact
+ *        → 落两快照列+get 透出一致
+ *   67.3 阶梯公示：cancelFeeTiers 读口=端口值；config.save 改值→读口即新+
+ *        rule_config_versions 留痕；改后还原
+ *   67.4 预付台账：register→pending+零 payments/pay_orders/stored_value_logs 写入（不碰真钱
+ *        实证）→confirm→registered（重复确认幂等）→取消→refunded（重复退幂等）；uq 锚重登拒；
+ *        核销→checked_deducted；prepaidOf 本人/本店透出+越权 403
+ *   67.5 提前期上限：非会员（微光口径 3 天）约第 4 天→400 明文；暖阳档第 14 天可约；
+ *        getWithServices 栅格按档截断（微光第 4 天槽不出现/暖阳出现）+boardingAvailability
+ *        晚数按档截断（能看=能约同帧）
+ *   67.6 满档推荐留口：fullAlternatives 形状齐全+enabled=false+candidates 空+note 注记
+ *        读端口（防假推荐；端口改值即新+还原）
+ *   67.7 疫苗证明：/api/upload relDir=vaccine/<petId> 白名单实证+upsert 写 vaccineProofUrls
+ *        →list 回读；寄养下单校验口径不变（无证明+已授权仍可下——仅留证不拦）
+ *   67.8 遛弯次数：boarding create 带 walkTimesPerDay=2 落列+透出；grooming 传→400；
+ *        顺带合笼房型实证（upsertService 加「标准间·合笼」房型行→boardingAvailability
+ *        各房型逐晚余量独立）
+ *   67.9 改约历史：reschedule 两次（客户+商家）→reschedule_logs 两行 before/after 正确+
+ *        byRole 正确；get 透出按序；取消后改期仍拒且零新增行
+ *   67.10 三店通用标注：copy 键存在（booking.storeCountNote）+端口可覆盖（activeCopyTexts
+ *        透出即新+还原）+listNearby 仅 active 店（回归）
+ *
+ * 客户端体验大批 片 3（会员体系 9+商城 5 · server 侧）段（68 会员族 / 69 商城族，
+ * 续号挂尾；券核销=登记制不接真抵扣（开口项 1 裁）；时刻敏感件一律钉时刻）：
+ *   68.1 未用权益：myUnused 次卡余额并显不并账+grants 行；consume 台账核销
+ *        2→1→0→exhausted→归零再核 400（真核销链=结账联动候批，本片不落）
+ *   68.2 续费优惠：端口改 renew_discount_bp=8000 → version+1 留痕 + pay.quote
+ *        renewal=全价×bp/10000 精确到分（19900→15920）；缺键回落 10000=无优惠；复原
+ *   68.3 生日礼：birthday=今日（MMDD 钉 +8 墙钟）用户+宠物 → 直调 sweepBirthdayPerks
+ *        → grants 双行（year/pet_id 入锚）+notifications marketing 行；同年重扫零新增
+ *   68.4 新人礼包：新注册 → welcome_pack 行+营销通知；重复注册零重复；
+ *        首单 paid 翻转（mock-callback 真链）→ upgrade_gift 行；重复回调+次单零重复
+ *   68.5 会员码：openFree→myCardToken 签发→verifyCardToken 通过+planKey 透出；
+ *        篡改签名/过期（signMemberCardPayload 合法签名伪造过期件）400 明文
+ *   69.1 券：领取 claimed+uq 幂等；availableCoupons 门槛过滤；couponUse 核销=
+ *        orders.total_fen/payments 前后零变动仅 grant 翻 used；配额满 400
+ *   69.2 收藏：toggle 幂等（在=删/不在=插）+favList+favCheck 同帧
+ *   69.3 晒单：received 单可评落行+pending 单 400+复评 409+均分聚合（5+3→4.0）
+ *        +匿名匿名录名+他人单 403（订单 received 翻转为夹具直改，不走支付通道）
+ *   69.4 配送：pickup 落列+地址可缺省；缺省 express；express 缺地址 400；读口透出
+ *   69.5 超时收货：shipped_at=8 天前单→直调 sweepAutoReceive 翻 received+OrderReceived
+ *        落 outbox；6 天内不动；重扫零新增+receiveOrder 并发硬拒（条件更新幂等）
+ *   69.6 叠加公示：couponStackRule 缺省 none → config.save 改值→读口即新+留痕行；复原
+ *   69.7 涉钱全件零真通道实证：69 族全链 cashier_bills/payments/rebate_accounts/
+ *        pay_orders 计数前后相等
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -382,6 +432,7 @@ let server: ChildProcess | undefined;
 let serverLog = '';
 let createdAid = ''; // main() 内赋值，cleanup 精准删除本次上传目录
 const createdAidExtras: string[] = []; // staff-2 段补充上传的预约（aid2 六步走完），cleanup 一并删除
+const createdVaccineDirs: string[] = []; // 片 2（67.7）：vaccine/<petId> 上传目录，cleanup 一并删除
 const seedStatBefore = existsSync(SEED_DB_FILE) ? statSync(SEED_DB_FILE) : null;
 
 async function main(): Promise<void> {
@@ -2538,10 +2589,11 @@ async function main(): Promise<void> {
         .where(and(eq(schema.boardingSlots.storeId, storeId), eq(schema.boardingSlots.serviceId, p3Svc.id), eq(schema.boardingSlots.nightDate, night)))
         .get();
 
-    /* ① trpc 造单（走 occupy 占槽）→ 核销入住 */
+    /* ① trpc 造单（走 occupy 占槽）→ 核销入住
+       （片 2 适配：寄养单 create 医疗授权硬闸——夹具补 medicalAuth.agreed=true，断言口径不变） */
     const p3Appt = await trpcMutate<{ id: string; status: string }>('appointment.create', {
       cookie: customerCookie,
-      input: { storeId, petId, serviceId: p3Svc.id, type: 'boarding', scheduledStart: p3Start, scheduledEnd: p3End, paymentMode: 'pay_at_store', note: '【测试】e2e PR-3 寄养 3 晚槽位夹具' },
+      input: { storeId, petId, serviceId: p3Svc.id, type: 'boarding', scheduledStart: p3Start, scheduledEnd: p3End, paymentMode: 'pay_at_store', medicalAuth: { agreed: true }, note: '【测试】e2e PR-3 寄养 3 晚槽位夹具' },
     });
     const p3Before = await Promise.all(p3Nights.map(slotOf));
     check('PR-3 C2 前置：造单占槽（3 晚 booked≥1）',
@@ -2568,7 +2620,7 @@ async function main(): Promise<void> {
       p3Nights.map((n, i) => `${n}=${p3After[i]?.bookedCount}`));
     const p3Rebook = await trpcMutate<{ id: string }>('appointment.create', {
       cookie: customerCookie,
-      input: { storeId, petId, serviceId: p3Svc.id, type: 'boarding', scheduledStart: p3Start, scheduledEnd: p3End, paymentMode: 'pay_at_store', note: '【测试】e2e PR-3 槽释放后再订验证' },
+      input: { storeId, petId, serviceId: p3Svc.id, type: 'boarding', scheduledStart: p3Start, scheduledEnd: p3End, paymentMode: 'pay_at_store', medicalAuth: { agreed: true }, note: '【测试】e2e PR-3 槽释放后再订验证' },
     }).then((r) => ({ id: r.id, err: null as string | null }))
       .catch((e) => ({ id: null as string | null, err: String(e?.message ?? e) }));
     check('PR-3 C2①B 释放后同区间可再订（无 CONFLICT 已订满）', p3Rebook.err === null, p3Rebook.err ?? p3Rebook.id);
@@ -3835,22 +3887,29 @@ async function main(): Promise<void> {
   /* ---------- 53.3 albumFeed 相册聚合（一次批拉 N+1 消除 + 进行中口径 + limit 截顶） ---------- */
   console.log('\n[补缺4] 53.3 albumFeed 服务相册聚合');
   // 进行中夹具：apptProg 走完 disinfection+precheck 后停在 grooming（active）
-  // （ pinned 阿强执行：apptVit（丽丽）与其同日落相邻槽，同人会产生区间重叠 409）
-  const slotProg = slotPool[slotPool.length - 2]!;
-  const apptProg = await trpcMutate<{ id: string }>('appointment.create', {
-    cookie: customerCookie,
-    input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: slotProg.slotStart, paymentMode: 'pay_at_store', note: '【测试】e2e 补缺4 进行中单', staffId: aqiang.id },
-  });
+  // （片 2 适配：栅格按档收窄（微光 3 天）后夹具槽位拥挤——阿强被 PR-3 寄养负责人区间
+  //   整段覆盖（跨 3 天，completed 也计占用），钉阿强已无槽可落；改钉丽丽并从末位起探测
+  //   其实际可接槽（跳过 slotVit 同槽；CONFLICT=区间重叠，事务回滚零副作用，顺延探测），
+  //   执行 cookie 同步换 liliCookie；断言口径零改动）
+  let apptProg: { id: string } | null = null;
+  for (let i = slotPool.length - 2; i >= 0 && !apptProg; i--) {
+    if (slotPool[i]!.slotStart.getTime() === slotVit.slotStart.getTime()) continue;
+    apptProg = await trpcMutate<{ id: string }>('appointment.create', {
+      cookie: customerCookie,
+      input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: slotPool[i]!.slotStart, paymentMode: 'pay_at_store', note: '【测试】e2e 补缺4 进行中单', staffId: staffRow2.id },
+    }).catch(() => null);
+  }
+  if (!apptProg) throw new Error('53.3 进行中单：栅格内无丽丽可接槽');
   createdAidExtras.push(apptProg.id);
   const codeProg = await trpcQuery<{ code: string }>('appointment.getCode', { cookie: customerCookie, input: { appointmentId: apptProg.id } });
   await trpcMutate('appointment.checkin', { cookie: staffCookie, input: { code: codeProg.code } });
   for (const plan of stepPlan.slice(0, 2)) { // 只做前两步（disinfection 1 图 / precheck 2 图）
-    const up = await uploadFor(apptProg.id, plan.key, groomerCookie);
+    const up = await uploadFor(apptProg.id, plan.key, liliCookie);
     await trpcMutate('serviceStep.addPhotos', {
-      cookie: groomerCookie,
+      cookie: liliCookie,
       input: { appointmentId: apptProg.id, stepKey: plan.key, photos: Array.from({ length: plan.count }, () => ({ url: up.url, thumbUrl: up.thumbUrl, tag: 'normal' })) },
     });
-    await trpcMutate('serviceStep.confirmStep', { cookie: groomerCookie, input: { appointmentId: apptProg.id, stepKey: plan.key } });
+    await trpcMutate('serviceStep.confirmStep', { cookie: liliCookie, input: { appointmentId: apptProg.id, stepKey: plan.key } });
   }
   interface FeedPhoto { url: string; thumbUrl: string | null; tag: string }
   interface FeedStep { stepKey: string; label: string; status: string; photos: FeedPhoto[] }
@@ -4874,17 +4933,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（2716 键/63 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 2716 && domainSet.size === 63 &&
+  check('56.1 copy 域种子全量落库（3134 键/68 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 3134 && domainSet.size === 68 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（2716 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 2716 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（3134 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 3134 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -6676,6 +6735,1844 @@ async function main(): Promise<void> {
   check('66.2 他人零透出（66d 无数据账号读不到 66c 三行任一 id）',
     rec662d.items.every((r) => ![payRow662.id, order662.id, inv662.id].includes(r.id)),
     rec662d.items.length);
+  /* ==================================================================
+   * 客户端体验大批 片 2（预约链路 12 · 断言族 67）
+   * 钉时刻纪律：storeFuture 按门店规范时区（+8）钉 dayOffset 天后 hh:mm 墙钟——
+   * 与 assertBookableTime/栅格合成同帧，宿主时区漂移免疫（同 57.6/59.1/63.x 先例）。
+   * ================================================================== */
+  console.log('\n[体验片2] 67. 预约链路族（附加项/合规三件套/阶梯公示/预付/提前期/留口/疫苗/遛弯/改约史/三店标注）');
+  /** 门店规范时区（+8）dayOffset 天后 hh:mm 的 epoch（钉时刻；与 storeWallclock 位移法同帧） */
+  const storeFuture = (dayOffset: number, hh: number, mm: number): Date => {
+    const shifted = new Date(Date.now() + dayOffset * 86400_000 + 8 * 3600_000);
+    return new Date(Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate(), hh, mm) - 8 * 3600_000);
+  };
+  const DAY_MS = 86400_000;
+  /** 片 2 夹具选槽：从栅格选 n 个两两间隔 ≥170min 的槽（本批引擎时长 150min，区间互不重叠——
+   *  收窄栅格内空闲 groomer 有限（阿强被 PR-3 寄养负责人区间整段覆盖），邻槽连撞 409；
+   *  栅格本身已按 groomer 空闲过滤，选出的槽互不重疊即可顺序建单） */
+  const pickSpreadSlots = <T extends { slotStart: Date }>(slots: T[], n: number, minGapMs = 170 * 60_000): T[] => {
+    const sorted = [...slots].sort((a, b) => a.slotStart.getTime() - b.slotStart.getTime());
+    const picked: T[] = [];
+    for (const s of sorted) {
+      if (picked.every((p) => Math.abs(p.slotStart.getTime() - s.slotStart.getTime()) >= minGapMs)) picked.push(s);
+      if (picked.length === n) break;
+    }
+    return picked;
+  };
+
+  /* ---- 67.1 附加项加购：建 addon 服务行 → create 带 addonServiceIds → 价=主价+Σ附加精确到分 ---- */
+  console.log('\n[体验片2] 67.1 附加项加购（价=主价+Σ附加 / 快照行 / 他店+非 addon 400）');
+  const addon671a = await trpcMutate<{ service: { id: string; priceFen: number; type: string }; created: boolean }>('store.upsertService', {
+    cookie: ownerCookie,
+    input: { type: 'addon', name: '加购·口腔护理', priceFen: 1500 },
+  });
+  const addon671b = await trpcMutate<{ service: { id: string; priceFen: number; type: string }; created: boolean }>('store.upsertService', {
+    cookie: ownerCookie,
+    input: { type: 'addon', name: '加购·精油护理', priceFen: 3000 },
+  });
+  check('67.1 upsertService 接受 type=addon（枚举扩位，本店在架两行）',
+    addon671a.created === true && addon671a.service.type === 'addon' && addon671b.created === true,
+    { a: addon671a.service.type, b: addon671b.created });
+  // 他店 addon 夹具（跨店负例）
+  const storeB671 = await db.select().from(schema.stores).where(eq(schema.stores.name, 'e2e 他店')).get();
+  const addonOther671 = (await db.insert(schema.services).values({
+    storeId: storeB671!.id, type: 'addon', name: '他店附加项', priceFen: 999, active: true,
+  }).returning())[0]!;
+  const mainPrice671 = (await db.select().from(schema.services).where(eq(schema.services.id, service.id)).get())!.priceFen;
+  // 67 族建单槽一次取齐：>6h（可直消口径）+ 两两间隔 ≥170min（互不重叠防邻槽 409）；
+  // 顺序分配：slot671=67.1 加购单 / slot674=67.4 预付 A / slot674b=67.4 预付 B / slot679=67.9 改约单
+  const grid671 = await trpcQuery<{ slots: Array<{ slotStart: Date }> }>('store.getWithServices', {
+    cookie: customerCookie, input: { storeId, serviceId: service.id, petId },
+  });
+  const spread671 = pickSpreadSlots(grid671.slots.filter((s) => s.slotStart.getTime() > Date.now() + 6 * 3600_000), 4);
+  check('67.1 前置：可约槽 ×4（>6h 可直消口径，两两间隔 ≥170min）', spread671.length === 4, grid671.slots.length);
+  if (spread671.length < 4) throw new Error('67 族可约槽不足');
+  const [slot671, slot674, slot674b, slot679] = spread671 as [
+    (typeof spread671)[number],
+    (typeof spread671)[number],
+    (typeof spread671)[number],
+    (typeof spread671)[number],
+  ];
+  const appt671 = await trpcMutate<{ id: string; priceFen: number; status: string }>('appointment.create', {
+    cookie: customerCookie,
+    input: {
+      storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: slot671.slotStart,
+      paymentMode: 'pay_at_store', addonServiceIds: [addon671a.service.id, addon671b.service.id],
+      note: '【测试】e2e 67.1 附加项加购单',
+    },
+  });
+  check('67.1 create 带附加项：预约价=主价+Σ附加快照价精确到分（priceFen=主价+1500+3000）',
+    appt671.status === 'confirmed' && appt671.priceFen === mainPrice671 + 1500 + 3000,
+    { priceFen: appt671.priceFen, expect: mainPrice671 + 4500, main: mainPrice671 });
+  const addonRows671 = await db.select().from(schema.appointmentAddons).where(eq(schema.appointmentAddons.appointmentId, appt671.id));
+  check('67.1 appointment_addons 快照行落库（2 行，name/priceFen 快照正确）',
+    addonRows671.length === 2 &&
+      addonRows671.some((r) => r.nameSnapshot === '加购·口腔护理' && r.priceFen === 1500) &&
+      addonRows671.some((r) => r.nameSnapshot === '加购·精油护理' && r.priceFen === 3000),
+    addonRows671.map((r) => `${r.nameSnapshot}:${r.priceFen}`));
+  const get671 = await trpcQuery<{ addons: Array<{ nameSnapshot: string; priceFen: number }> }>('appointment.get', {
+    cookie: customerCookie, input: { appointmentId: appt671.id },
+  });
+  check('67.1 详情读口透出 addons 列表（2 行）', get671.addons.length === 2, get671.addons.length);
+  const addonCross671 = await asErr(trpcMutate('appointment.create', {
+    cookie: customerCookie,
+    input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: slot671.slotStart, paymentMode: 'pay_at_store', addonServiceIds: [addonOther671.id] },
+  }));
+  const addonNonType671 = await asErr(trpcMutate('appointment.create', {
+    cookie: customerCookie,
+    input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: slot671.slotStart, paymentMode: 'pay_at_store', addonServiceIds: [service.id] },
+  }));
+  check('67.1 负例：他店附加项 / 非 addon 类型服务 → 400 明文「附加项无效或不属于本店」×2',
+    addonCross671 instanceof TrpcHttpError && addonCross671.code === 'BAD_REQUEST' && addonCross671.message.includes('附加项无效或不属于本店') &&
+      addonNonType671 instanceof TrpcHttpError && addonNonType671.code === 'BAD_REQUEST' && addonNonType671.message.includes('附加项无效或不属于本店'),
+    { cross: addonCross671 && addonCross671.message, nonType: addonNonType671 && addonNonType671.message });
+
+  /* ---- 67.2 合规三件套：寄养协议+医疗授权签署落行 / 寄养单医疗授权硬闸 / 紧急联系人快照 ---- */
+  console.log('\n[体验片2] 67.2 合规三件套（协议签署快照 / 医疗授权硬闸 / 紧急联系人）');
+  const sign672a = await trpcMutate<{ agreement: { agreementKey: string; version: string; content: string } }>('pay.signAgreement', {
+    cookie: customerCookie, input: { agreementKey: 'boarding_consent' },
+  });
+  const sign672b = await trpcMutate<{ agreement: { agreementKey: string; version: string; content: string } }>('pay.signAgreement', {
+    cookie: customerCookie, input: { agreementKey: 'medical_auth' },
+  });
+  const agrRows672 = await db.select().from(schema.agreements)
+    .where(and(eq(schema.agreements.userId, customerUser!.id), inArray(schema.agreements.agreementKey, ['boarding_consent', 'medical_auth'])));
+  check('67.2 两键签署落行（agreements content/version 快照工艺，user_snapshot 取证要素齐全）',
+    sign672a.agreement.version === 'v1.0-beta' && sign672b.agreement.version === 'v1.0-beta' &&
+      agrRows672.length === 2 &&
+      agrRows672.every((r) => (r.content.includes('寄养照看服务') || r.content.includes('紧急医疗授权')) && (r.userSnapshot as Record<string, unknown>).userId === customerUser!.id),
+    agrRows672.map((r) => `${r.agreementKey}:${r.version}`));
+  const boardingSvc672 = (await db.select().from(schema.services)
+    .where(and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'boarding'))).get())!;
+  const bStart672 = storeFuture(1, 15, 0);
+  const bEnd672 = storeFuture(3, 12, 0); // 2 晚（d+1/d+2）
+  const noAuth672 = await asErr(trpcMutate('appointment.create', {
+    cookie: customerCookie,
+    input: { storeId, petId, serviceId: boardingSvc672.id, type: 'boarding', scheduledStart: bStart672, scheduledEnd: bEnd672, paymentMode: 'pay_at_store' },
+  }));
+  check('67.2 寄养单缺医疗授权 → 400 明文「寄养单须先签署医疗授权」（硬闸）',
+    noAuth672 instanceof TrpcHttpError && noAuth672.code === 'BAD_REQUEST' && noAuth672.message.includes('寄养单须先签署医疗授权'),
+    noAuth672 && noAuth672.message);
+  const appt672 = await trpcMutate<{ id: string; status: string }>('appointment.create', {
+    cookie: customerCookie,
+    input: {
+      storeId, petId, serviceId: boardingSvc672.id, type: 'boarding', scheduledStart: bStart672, scheduledEnd: bEnd672,
+      paymentMode: 'pay_at_store', medicalAuth: { agreed: true },
+      emergencyContact: { name: '张三', phone: '13800001111', relation: '家人' },
+      note: '【测试】e2e 67.2 合规三件套单',
+    },
+  });
+  check('67.2 带医疗授权+紧急联系人 → 寄养单建成（confirmed）', appt672.status === 'confirmed', appt672);
+  const get672 = await trpcQuery<{
+    appointment: {
+      emergencyContactJson: { name: string; phone: string; relation: string } | null;
+      medicalAuthJson: { agreed: boolean; contentVersion: string; checkedAt: number } | null;
+    };
+  }>('appointment.get', { cookie: customerCookie, input: { appointmentId: appt672.id } });
+  check('67.2 两快照列落库+get 透出一致（emergencyContactJson 全字段 / medicalAuthJson.agreed=true+版本快照）',
+    get672.appointment.emergencyContactJson?.name === '张三' &&
+      get672.appointment.emergencyContactJson?.phone === '13800001111' &&
+      get672.appointment.emergencyContactJson?.relation === '家人' &&
+      get672.appointment.medicalAuthJson?.agreed === true &&
+      get672.appointment.medicalAuthJson.contentVersion === 'v1.0-beta' &&
+      typeof get672.appointment.medicalAuthJson.checkedAt === 'number',
+    get672.appointment.emergencyContactJson ?? get672.appointment.medicalAuthJson);
+  const badPhone672 = await asErr(trpcMutate('appointment.create', {
+    cookie: customerCookie,
+    input: {
+      storeId, petId, serviceId: boardingSvc672.id, type: 'boarding', scheduledStart: bStart672, scheduledEnd: bEnd672,
+      paymentMode: 'pay_at_store', medicalAuth: { agreed: true },
+      emergencyContact: { name: '张三', phone: '12345', relation: '家人' },
+    },
+  }));
+  check('67.2 紧急联系人手机号 11 位硬校验（非法 → 400）',
+    badPhone672 instanceof TrpcHttpError && badPhone672.code === 'BAD_REQUEST' && badPhone672.message.includes('手机号'),
+    badPhone672 && badPhone672.message);
+
+  /* ---- 67.3 阶梯公示：cancelFeeTiers 读口=端口值；改端口→读口即新+留痕；还原 ---- */
+  console.log('\n[体验片2] 67.3 取消/爽约阶梯收费公示（读口=端口值 / 改值即新+留痕）');
+  interface FeeTier { hoursBefore: number; feeBp: number; label: string }
+  const tiers673a = await trpcQuery<{ tiers: FeeTier[] }>('appointment.cancelFeeTiers', { cookie: customerCookie });
+  check('67.3 cancelFeeTiers 读口=端口种子值（3 档，4 小时内/爽约 30%）',
+    tiers673a.tiers.length === 3 && tiers673a.tiers[2]!.feeBp === 3000 && tiers673a.tiers[0]!.hoursBefore === 24,
+    tiers673a.tiers);
+  const seedTiers673 = tiers673a.tiers; // 还原用快照
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'service', changes: [{ ruleKey: 'cancel_fee_tiers', valueJson: { tiers: [{ hoursBefore: 12, feeBp: 1000, label: '12 小时内 10%（e2e 改值）' }] } }] },
+  });
+  const tiers673b = await trpcQuery<{ tiers: FeeTier[] }>('appointment.cancelFeeTiers', { cookie: customerCookie });
+  check('67.3 端口改值→读口即新（公示=只读展示不扣真费，1 档 1000bp）',
+    tiers673b.tiers.length === 1 && tiers673b.tiers[0]!.feeBp === 1000 && tiers673b.tiers[0]!.hoursBefore === 12,
+    tiers673b.tiers);
+  const verRows673 = (await db.select().from(schema.ruleConfigVersions).where(eq(schema.ruleConfigVersions.domain, 'service')))
+    .sort((a, b) => b.version - a.version);
+  const latestVer673 = verRows673[0];
+  const feeChange673 = latestVer673?.changesJson.find((c) => c.rule_key === 'cancel_fee_tiers');
+  check('67.3 rule_config_versions 留痕行（domain=service 最新版含 cancel_fee_tiers 前后值）',
+    !!latestVer673 && !!feeChange673 &&
+      ((feeChange673.before as { tiers?: unknown[] } | null)?.tiers?.length ?? 0) === 3 &&
+      ((feeChange673.after as { tiers?: unknown[] }).tiers?.length ?? 0) === 1,
+    latestVer673 && { version: latestVer673.version, keys: latestVer673.changesJson.map((c) => c.rule_key) });
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'service', changes: [{ ruleKey: 'cancel_fee_tiers', valueJson: { tiers: seedTiers673 } }] },
+  });
+  const tiers673c = await trpcQuery<{ tiers: FeeTier[] }>('appointment.cancelFeeTiers', { cookie: customerCookie });
+  check('67.3 改后还原（读口回种子值，不留副作用给后续段）',
+    tiers673c.tiers.length === 3 && tiers673c.tiers[2]!.feeBp === 3000, tiers673c.tiers.length);
+
+  /* ---- 67.4 预付台账：登记→确认→取消退/核销抵 + 不碰真钱实证 + 幂等族 ---- */
+  console.log('\n[体验片2] 67.4 预约即预付台账（留痕不碰真钱）');
+  const moneyTabs674 = async () => ({
+    payments: (await db.select().from(schema.payments)).length,
+    payOrders: (await db.select().from(schema.payOrders)).length,
+    svLogs: (await db.select().from(schema.storedValueLogs)).length,
+  });
+  const before674 = await moneyTabs674();
+  const appt674 = await trpcMutate<{ id: string }>('appointment.create', {
+    cookie: customerCookie,
+    input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: slot674.slotStart, paymentMode: 'pay_at_store', note: '【测试】e2e 67.4 预付台账单 A' },
+  });
+  const reg674 = await trpcMutate<{ record: { id: string; status: string; amountFen: number } }>('appointment.prepaidRegister', {
+    cookie: ownerCookie, input: { appointmentId: appt674.id, amountFen: 8800, note: 'e2e 预付登记' },
+  });
+  check('67.4 prepaidRegister 落 prepaid_pending（金额快照 8800 分）',
+    reg674.record.status === 'prepaid_pending' && reg674.record.amountFen === 8800, reg674.record);
+  const reg674dup = await asErr(trpcMutate('appointment.prepaidRegister', {
+    cookie: ownerCookie, input: { appointmentId: appt674.id, amountFen: 8800 },
+  }));
+  check('67.4 uq 锚重登幂等拒（一单一笔，400 明文）',
+    reg674dup instanceof TrpcHttpError && reg674dup.code === 'BAD_REQUEST' && reg674dup.message.includes('已登记预付'),
+    reg674dup && reg674dup.message);
+  const conf674a = await trpcMutate<{ record: { status: string }; idempotent: boolean }>('appointment.prepaidConfirm', {
+    cookie: ownerCookie, input: { appointmentId: appt674.id } },
+  );
+  const conf674b = await trpcMutate<{ record: { status: string }; idempotent: boolean }>('appointment.prepaidConfirm', {
+    cookie: ownerCookie, input: { appointmentId: appt674.id } },
+  );
+  check('67.4 prepaidConfirm → prepaid_registered + 重复确认幂等（idempotent=true 零副作用）',
+    conf674a.record.status === 'prepaid_registered' && conf674a.idempotent === false &&
+      conf674b.idempotent === true && conf674b.record.status === 'prepaid_registered',
+    { a: conf674a.record.status, dup: conf674b.idempotent });
+  // 读口：本人 200 / 本店商家 200 / 他店商家 403 / 他人客户 403
+  const of674Self = await trpcQuery<{ record: { status: string } | null }>('appointment.prepaidOf', {
+    cookie: customerCookie, input: { appointmentId: appt674.id } });
+  const of674Merchant = await trpcQuery<{ record: { status: string } | null }>('appointment.prepaidOf', {
+    cookie: ownerCookie, input: { appointmentId: appt674.id } });
+  const of674Cross = await asErr(trpcQuery('appointment.prepaidOf', { cookie: owner2Cookie, input: { appointmentId: appt674.id } }));
+  const cust674b = (await db.insert(schema.users).values({ kimiId: 'seed_e2e_cust674', nickname: 'e2e 他人客户', phone: '13900003001' }).returning())[0]!;
+  await db.insert(schema.userRoles).values({ userId: cust674b.id, role: 'customer' });
+  const cust674bCookie = await devLogin(cust674b.id);
+  const of674Other = await asErr(trpcQuery('appointment.prepaidOf', { cookie: cust674bCookie, input: { appointmentId: appt674.id } }));
+  check('67.4 prepaidOf 本人/本店透出 + 他店商家/他人客户 403（本人闸+店域闸卡死）',
+    of674Self.record?.status === 'prepaid_registered' && of674Merchant.record?.status === 'prepaid_registered' &&
+      of674Cross instanceof TrpcHttpError && of674Cross.code === 'FORBIDDEN' &&
+      of674Other instanceof TrpcHttpError && of674Other.code === 'FORBIDDEN',
+    { cross: of674Cross && of674Cross.code, other: of674Other && of674Other.code });
+  // 客户取消（>4h 直消）→ refunded；重复取消拒且台账不再翻动（重复退幂等）
+  const cancel674 = await trpcMutate<{ outcome: string }>('appointment.cancel', {
+    cookie: customerCookie, input: { appointmentId: appt674.id, reason: 'e2e 67.4 预付退' } });
+  const rec674AfterCancel = await db.select().from(schema.prepaidRecords).where(eq(schema.prepaidRecords.appointmentId, appt674.id)).get();
+  const cancel674again = await asErr(trpcMutate('appointment.cancel', { cookie: customerCookie, input: { appointmentId: appt674.id } }));
+  const rec674Final = await db.select().from(schema.prepaidRecords).where(eq(schema.prepaidRecords.appointmentId, appt674.id)).get();
+  check('67.4 客户取消联动翻 refunded（cancel 事务内联动）+ 重复取消拒且台账保持 refunded（幂等）',
+    cancel674.outcome === 'cancelled' && rec674AfterCancel?.status === 'refunded' &&
+      cancel674again instanceof TrpcHttpError && cancel674again.code === 'BAD_REQUEST' &&
+      rec674Final?.status === 'refunded',
+    { outcome: cancel674.outcome, after: rec674AfterCancel?.status, again: cancel674again && cancel674again.message });
+  // 核销联动：registered → checked_deducted
+  const appt674b = await trpcMutate<{ id: string }>('appointment.create', {
+    cookie: customerCookie,
+    input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: slot674b.slotStart, paymentMode: 'pay_at_store', note: '【测试】e2e 67.4 预付台账单 B' },
+  });
+  await trpcMutate('appointment.prepaidRegister', { cookie: ownerCookie, input: { appointmentId: appt674b.id, amountFen: 8800 } });
+  await trpcMutate('appointment.prepaidConfirm', { cookie: ownerCookie, input: { appointmentId: appt674b.id } });
+  const code674b = await trpcQuery<{ code: string }>('appointment.getCode', { cookie: customerCookie, input: { appointmentId: appt674b.id } });
+  await trpcMutate('appointment.checkin', { cookie: staffCookie, input: { code: code674b.code } });
+  const rec674b = await db.select().from(schema.prepaidRecords).where(eq(schema.prepaidRecords.appointmentId, appt674b.id)).get();
+  check('67.4 核销联动翻 checked_deducted（checkin 事务内联动）', rec674b?.status === 'checked_deducted', rec674b?.status);
+  const after674 = await moneyTabs674();
+  check('67.4 不碰真钱实证：payments/pay_orders/stored_value_logs 三表全程零写入',
+    after674.payments === before674.payments && after674.payOrders === before674.payOrders && after674.svLogs === before674.svLogs,
+    { before: before674, after: after674 });
+
+  /* ---- 67.5 提前预约期上限：档位 3/14 天 + 读侧收窄（能看=能约同帧） ---- */
+  console.log('\n[体验片2] 67.5 提前预约期上限（档位口径 + 栅格/晚数按档截断）');
+  const tooFar675 = await asErr(trpcMutate('appointment.create', {
+    cookie: customerCookie,
+    input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: storeFuture(4, 12, 0), paymentMode: 'pay_at_store', note: '【测试】e2e 67.5 微光第 4 天' },
+  }));
+  check('67.5 非会员（微光 3 天口径）约第 4 天 → 400 明文「最多可提前 3 天」',
+    tooFar675 instanceof TrpcHttpError && tooFar675.code === 'BAD_REQUEST' && tooFar675.message.includes('最多可提前 3 天'),
+    tooFar675 && tooFar675.message);
+  // 暖阳档夹具：新会员客户（plan_nuanyang active）→ 第 14 天可约
+  const nyUser675 = (await db.insert(schema.users).values({ kimiId: 'seed_e2e_nuanyang', nickname: 'e2e 暖阳客户', phone: '13900003002' }).returning())[0]!;
+  await db.insert(schema.userRoles).values({ userId: nyUser675.id, role: 'customer' });
+  await db.insert(schema.memberships).values({
+    userId: nyUser675.id, planKey: 'plan_nuanyang',
+    startedAt: new Date(), expiresAt: new Date(Date.now() + 365 * DAY_MS), status: 'active',
+  });
+  const nyCookie675 = await devLogin(nyUser675.id);
+  const nyPet675 = (await db.insert(schema.pets).values({ ownerId: nyUser675.id, name: 'e2e 暖阳犬', species: 'dog', breed: '柯基', weightKg: 10 }).returning())[0]!;
+  const appt675 = await trpcMutate<{ id: string; status: string; scheduledStart: Date }>('appointment.create', {
+    cookie: nyCookie675,
+    input: { storeId, petId: nyPet675.id, serviceId: service.id, type: 'grooming', scheduledStart: storeFuture(13, 12, 0), paymentMode: 'pay_at_store', note: '【测试】e2e 67.5 暖阳第 14 天' },
+  });
+  check('67.5 暖阳档（14 天口径）约第 14 天可约（confirmed）', appt675.status === 'confirmed', appt675.status);
+  // 读侧收窄：微光栅格超上限槽不返回；暖阳栅格第 4 天后的槽出现（档差实证）
+  const grid675wg = await trpcQuery<{ slots: Array<{ slotStart: Date }> }>('store.getWithServices', {
+    cookie: customerCookie, input: { storeId } });
+  const grid675ny = await trpcQuery<{ slots: Array<{ slotStart: Date }> }>('store.getWithServices', {
+    cookie: nyCookie675, input: { storeId } });
+  const maxWg675 = Math.max(...grid675wg.slots.map((s) => s.slotStart.getTime()));
+  const maxNy675 = Math.max(...grid675ny.slots.map((s) => s.slotStart.getTime()));
+  check('67.5 栅格按档截断（能看=能约同帧）：微光全部槽 ≤ now+3d（第 4 天槽不出现）',
+    grid675wg.slots.length > 0 && maxWg675 <= Date.now() + 3 * DAY_MS + 60_000,
+    { slots: grid675wg.slots.length, maxWg: new Date(maxWg675).toISOString() });
+  check('67.5 暖阳栅格放宽：存在 > now+3d 的槽（与微光同店同刻对照）',
+    maxNy675 > Date.now() + 3 * DAY_MS && maxNy675 > maxWg675,
+    { maxNy: new Date(maxNy675).toISOString(), maxWg: new Date(maxWg675).toISOString() });
+  // boardingAvailability 晚数按档截断：10 晚窗口，微光=4 晚（今日~d+3）/暖阳=全量 10 晚
+  const ba675wg = await trpcQuery<{ nights: string[] }>('store.boardingAvailability', {
+    cookie: customerCookie, input: { storeId, from: new Date(), to: new Date(Date.now() + 10 * DAY_MS) } });
+  const ba675ny = await trpcQuery<{ nights: string[] }>('store.boardingAvailability', {
+    cookie: nyCookie675, input: { storeId, from: new Date(), to: new Date(Date.now() + 10 * DAY_MS) } });
+  check('67.5 boardingAvailability 晚数按档截断（微光 4 晚 / 暖阳 10 晚全量）',
+    ba675wg.nights.length === 4 && ba675ny.nights.length === 10,
+    { wg: ba675wg.nights.length, ny: ba675ny.nights.length });
+
+  /* ---- 67.6 满档推荐留口：形状定死（enabled=false/candidates 空/note 读端口） ---- */
+  console.log('\n[体验片2] 67.6 跨店满档推荐留口（单店·防假推荐）');
+  const fa676 = await trpcQuery<{ enabled: boolean; candidates: unknown[]; note: string }>('store.fullAlternatives', {
+    cookie: customerCookie, input: { storeId, date: new Date() } });
+  check('67.6 fullAlternatives 形状定死（enabled=false + candidates 空 + note=端口注记）——防假推荐',
+    fa676.enabled === false && fa676.candidates.length === 0 && fa676.note === '当前单店在线，满档推荐待连锁批开通',
+    fa676);
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'copy', changes: [{ ruleKey: 'booking.fullAlternativesNote', valueJson: { text: 'e2e 覆盖值·满档推荐注记' } }] },
+  });
+  const fa676b = await trpcQuery<{ note: string }>('store.fullAlternatives', {
+    cookie: customerCookie, input: { storeId, date: new Date() } });
+  check('67.6 note 读端口（改值即新）', fa676b.note === 'e2e 覆盖值·满档推荐注记', fa676b.note);
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'copy', changes: [{ ruleKey: 'booking.fullAlternativesNote', valueJson: { text: '当前单店在线，满档推荐待连锁批开通' } }] },
+  });
+  const fa676c = await trpcQuery<{ note: string }>('store.fullAlternatives', {
+    cookie: customerCookie, input: { storeId, date: new Date() } });
+  check('67.6 还原（note 回种子值，不留副作用）', fa676c.note === '当前单店在线，满档推荐待连锁批开通', fa676c.note);
+
+  /* ---- 67.7 疫苗证明：上传白名单实证 + upsert 写回 + list 回读 + 寄养口径不变（仅留证不拦） ---- */
+  console.log('\n[体验片2] 67.7 疫苗证明（留证不改寄养硬闸）');
+  const vacImg677 = await new Jimp({ width: 320, height: 240, color: 0x66cc88ff }).getBuffer('image/jpeg');
+  const vacFd677 = new FormData();
+  vacFd677.append('file', new File([vacImg677], 'e2e-vaccine.jpg', { type: 'image/jpeg' }));
+  vacFd677.append('relDir', `vaccine/${petId}`);
+  const vacRes677 = await fetch(`${BASE}/api/upload`, { method: 'POST', headers: { cookie: customerCookie }, body: vacFd677 });
+  const vacBody677 = (await vacRes677.json()) as { url?: string };
+  check('67.7 /api/upload relDir=vaccine/<petId> 白名单放行（200 + 签名 URL）',
+    vacRes677.status === 200 && typeof vacBody677.url === 'string' && vacBody677.url.length > 0,
+    vacRes677.status);
+  createdVaccineDirs.push(petId); // cleanup 精准删除本次上传目录
+  const up677 = await trpcMutate<{ pet: { vaccineProofUrls: string[] } }>('pet.upsert', {
+    cookie: customerCookie,
+    input: { id: petId, name: '旺财', species: 'dog', vaccineProofUrls: [vacBody677.url!] },
+  });
+  check('67.7 pet.upsert 写 vaccineProofUrls（响应透出 1 张）',
+    up677.pet.vaccineProofUrls.length === 1 && up677.pet.vaccineProofUrls[0] === vacBody677.url,
+    up677.pet.vaccineProofUrls);
+  const petList677 = await trpcQuery<Array<{ id: string; name: string; vaccineProofUrls: string[] }>>('pet.list', { cookie: customerCookie });
+  check('67.7 pet.list 回读 vaccineProofUrls 一致',
+    petList677.find((p) => p.id === petId)?.vaccineProofUrls[0] === vacBody677.url,
+    petList677.find((p) => p.id === petId)?.vaccineProofUrls);
+  // 寄养下单校验口径不变：咪咪（无疫苗证明）+ 已签署医疗授权 → 仍可下单（仅留证不拦）
+  const mimi677 = petList677.find((p) => p.name === '咪咪')!;
+  check('67.7 前置：咪咪无疫苗证明（留证对照组）', mimi677.vaccineProofUrls.length === 0, mimi677.vaccineProofUrls);
+  const appt677 = await trpcMutate<{ id: string; status: string }>('appointment.create', {
+    cookie: customerCookie,
+    input: {
+      storeId, petId: mimi677.id, serviceId: boardingSvc672.id, type: 'boarding',
+      scheduledStart: bStart672, scheduledEnd: bEnd672, paymentMode: 'pay_at_store',
+      medicalAuth: { agreed: true }, note: '【测试】e2e 67.7 无疫苗证明寄养单（口径不变实证）',
+    },
+  });
+  check('67.7 寄养下单校验口径不变（无疫苗证明不拦，仅留证；行为变更报备在案）',
+    appt677.status === 'confirmed', appt677.status);
+
+  /* ---- 67.8 遛弯次数 + 合笼房型（寄养特殊选项） ---- */
+  console.log('\n[体验片2] 67.8 遛弯次数/合笼房型（寄养特殊选项）');
+  // 合笼=店家经 upsertService 加 boarding 房型行（零施工实证）：boardingAvailability 各房型逐晚余量独立
+  const helong678 = await trpcMutate<{ service: { id: string; boardingRoomType: string | null; roomCount: number | null } }>('store.upsertService', {
+    cookie: ownerCookie,
+    input: { type: 'boarding', name: '标准间·合笼', boardingRoomType: '标准间·合笼', roomCount: 1, priceFen: 15900 },
+  });
+  const ba678 = await trpcQuery<{ nights: string[]; services: Array<{ serviceId: string; roomCount: number; remaining: number[] }> }>('store.boardingAvailability', {
+    cookie: customerCookie, input: { storeId, from: bStart672, to: bEnd672 } });
+  const baStd678 = ba678.services.find((s) => s.serviceId === boardingSvc672.id);
+  const baHl678 = ba678.services.find((s) => s.serviceId === helong678.service.id);
+  check('67.8 合笼房型行新增后 boardingAvailability 各房型逐晚余量独立（标准间=已订 2 间余 0 / 合笼=满额 1）',
+    !!baStd678 && !!baHl678 && baStd678.remaining.every((r) => r === 0) && baHl678.remaining.every((r) => r === 1),
+    { std: baStd678?.remaining, hl: baHl678?.remaining });
+  const appt678 = await trpcMutate<{ id: string; walkTimesPerDay: number | null }>('appointment.create', {
+    cookie: customerCookie,
+    input: {
+      storeId, petId, serviceId: helong678.service.id, type: 'boarding',
+      scheduledStart: bStart672, scheduledEnd: bEnd672, paymentMode: 'pay_at_store',
+      medicalAuth: { agreed: true }, walkTimesPerDay: 2, note: '【测试】e2e 67.8 遛弯 2 次/日单',
+    },
+  });
+  const get678 = await trpcQuery<{ appointment: { walkTimesPerDay: number | null } }>('appointment.get', {
+    cookie: customerCookie, input: { appointmentId: appt678.id } });
+  check('67.8 boarding create 带 walkTimesPerDay=2 落列+详情透出一致',
+    appt678.walkTimesPerDay === 2 && get678.appointment.walkTimesPerDay === 2,
+    { create: appt678.walkTimesPerDay, get: get678.appointment.walkTimesPerDay });
+  const gWalk678 = await asErr(trpcMutate('appointment.create', {
+    cookie: customerCookie,
+    input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: storeFuture(1, 13, 0), paymentMode: 'pay_at_store', walkTimesPerDay: 2 },
+  }));
+  check('67.8 grooming 传 walkTimesPerDay → 400 明文（仅寄养单可填）',
+    gWalk678 instanceof TrpcHttpError && gWalk678.code === 'BAD_REQUEST' && gWalk678.message.includes('遛弯次数仅寄养单可填'),
+    gWalk678 && gWalk678.message);
+
+  /* ---- 67.9 改约历史：两次改期（客户+商家）留痕 + get 透出按序 + 取消后改期拒零新增 ---- */
+  console.log('\n[体验片2] 67.9 预约状态时间线（改约历史留痕）');
+  const appt679 = await trpcMutate<{ id: string; scheduledStart: Date; scheduledEnd: Date }>('appointment.create', {
+    cookie: customerCookie,
+    input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: slot679.slotStart, paymentMode: 'pay_at_store', note: '【测试】e2e 67.9 改约历史单' },
+  });
+  const origStart679 = appt679.scheduledStart.getTime();
+  const origEnd679 = appt679.scheduledEnd.getTime();
+  const newStart679a = storeFuture(1, 14, 0);
+  const rs679a = await trpcMutate<{ scheduledStart: Date; scheduledEnd: Date; status: string }>('appointment.reschedule', {
+    cookie: customerCookie, input: { appointmentId: appt679.id, scheduledStart: newStart679a } });
+  await sleep(1100); // 钉时刻：两条留痕跨秒界，createdAt 升序确定（同 24 段秒界先例）
+  const newStart679b = storeFuture(2, 10, 0);
+  const rs679b = await trpcMutate<{ scheduledStart: Date; scheduledEnd: Date; status: string }>('appointment.reschedule', {
+    cookie: ownerCookie, input: { appointmentId: appt679.id, scheduledStart: newStart679b } });
+  const logs679 = await db.select().from(schema.appointmentRescheduleLogs)
+    .where(eq(schema.appointmentRescheduleLogs.appointmentId, appt679.id));
+  const logsSorted679 = [...logs679].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  check('67.9 reschedule 两次 → reschedule_logs 两行 before/after 正确 + byRole 正确（customer→merchant）',
+    rs679a.status === 'pending' && rs679b.status === 'pending' && logsSorted679.length === 2 &&
+      logsSorted679[0]!.beforeStart.getTime() === origStart679 &&
+      logsSorted679[0]!.afterStart.getTime() === newStart679a.getTime() &&
+      logsSorted679[0]!.byRole === 'customer' && logsSorted679[0]!.changedBy === customerUser!.id &&
+      logsSorted679[1]!.beforeStart.getTime() === newStart679a.getTime() &&
+      logsSorted679[1]!.afterStart.getTime() === newStart679b.getTime() &&
+      logsSorted679[1]!.byRole === 'merchant' && logsSorted679[1]!.changedBy === ownerUser!.id,
+    logsSorted679.map((l) => `${l.byRole}:${l.beforeStart.toISOString()}→${l.afterStart.toISOString()}`));
+  void origEnd679;
+  const get679 = await trpcQuery<{ rescheduleLogs: Array<{ beforeStart: Date; afterStart: Date; byRole: string; createdAt: Date }> }>('appointment.get', {
+    cookie: customerCookie, input: { appointmentId: appt679.id } });
+  check('67.9 get 透出 rescheduleLogs 按 createdAt 升序（两行，首=客户改期）',
+    get679.rescheduleLogs.length === 2 && get679.rescheduleLogs[0]!.byRole === 'customer' &&
+      get679.rescheduleLogs[1]!.byRole === 'merchant' &&
+      get679.rescheduleLogs[0]!.createdAt.getTime() <= get679.rescheduleLogs[1]!.createdAt.getTime(),
+    get679.rescheduleLogs.map((l) => l.byRole));
+  // 取消后改期仍拒且零新增行（既有闸回归）
+  await trpcMutate('appointment.cancel', { cookie: customerCookie, input: { appointmentId: appt679.id, reason: 'e2e 67.9 取消后改期回归' } });
+  const rs679c = await asErr(trpcMutate('appointment.reschedule', {
+    cookie: customerCookie, input: { appointmentId: appt679.id, scheduledStart: storeFuture(2, 15, 0) } }));
+  const logs679after = await db.select().from(schema.appointmentRescheduleLogs)
+    .where(eq(schema.appointmentRescheduleLogs.appointmentId, appt679.id));
+  check('67.9 取消后改期仍拒（400 不可改期）且零新增留痕行',
+    rs679c instanceof TrpcHttpError && rs679c.code === 'BAD_REQUEST' && rs679c.message.includes('不可改期') &&
+      logs679after.length === 2,
+    { err: rs679c && rs679c.message, logs: logs679after.length });
+
+  /* ---- 67.10 三店通用标注：copy 键存在+端口可覆盖 + listNearby 仅 active 店（回归） ---- */
+  console.log('\n[体验片2] 67.10 选门店三店通用标注（copy 注记 + listNearby 回归）');
+  const texts6710a = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
+  check('67.10 copy 键存在（booking.storeCountNote 三店通用注记 / booking.fullAlternativesNote 满档留口注记）',
+    texts6710a.rows.some((r) => r.key === 'booking.storeCountNote' && r.text.length > 0) &&
+      texts6710a.rows.some((r) => r.key === 'booking.fullAlternativesNote' && r.text === '当前单店在线，满档推荐待连锁批开通'),
+    texts6710a.rows.filter((r) => r.key.startsWith('booking.storeCountNote') || r.key.startsWith('booking.fullAlternativesNote')));
+  const storeCountSeed6710 = texts6710a.rows.find((r) => r.key === 'booking.storeCountNote')!.text;
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'copy', changes: [{ ruleKey: 'booking.storeCountNote', valueJson: { text: 'e2e 覆盖值·三店通用注记' } }] },
+  });
+  const texts6710b = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
+  check('67.10 端口可覆盖（save 改键→activeCopyTexts 即新值）',
+    texts6710b.rows.find((r) => r.key === 'booking.storeCountNote')?.text === 'e2e 覆盖值·三店通用注记',
+    texts6710b.rows.find((r) => r.key === 'booking.storeCountNote'));
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'copy', changes: [{ ruleKey: 'booking.storeCountNote', valueJson: { text: storeCountSeed6710 } }] },
+  });
+  const texts6710c = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
+  check('67.10 还原（读口回种子值，不留副作用）',
+    texts6710c.rows.find((r) => r.key === 'booking.storeCountNote')?.text === storeCountSeed6710,
+    texts6710c.rows.find((r) => r.key === 'booking.storeCountNote'));
+  // listNearby 仅 active 店（既有断言回归：新建 closed 店不进列表）
+  const closedStore6710 = (await db.insert(schema.stores).values({
+    ownerId: ownerUser!.id, name: 'e2e 关停店（67.10 回归）', status: 'closed',
+  }).returning())[0]!;
+  const nearby6710 = await trpcQuery<{ stores: Array<{ id: string; status: string }> }>('store.listNearby', { cookie: customerCookie });
+  check('67.10 listNearby 仅 active 店（closed 店不出现；三店通用=通用范围以 active 门店列表为准）',
+    !nearby6710.stores.some((s) => s.id === closedStore6710.id) &&
+      nearby6710.stores.every((s) => s.status === 'active'),
+    nearby6710.stores.map((s) => s.status));
+
+  /* ===========================================================   * 客户端体验大批 片 3（会员体系+商城 · server 侧）验收段 68/69
+   * 68 会员族：未用权益/续费优惠试算/生日礼/新人礼包+升级礼遇/会员码
+   * 69 商城族：优惠券/收藏/晒单/配送方式/超时自动收货/叠加公示/涉钱零通道
+   * ================================================================== */
+  console.log('\n[片3] 68. 会员族（未用权益/续费优惠/生日礼/新人礼包/会员码）');
+
+  /* ---------- 68.1 未用权益（myUnused 并显不并账 + consume 台账核销） ---------- */
+  console.log('\n[片3] 68.1 未用权益');
+  const reg681 = await devLoginPhone('13966680001');
+  const cookie681 = reg681.cookie!;
+  const user681Id = reg681.body.user!.id!;
+  // 夹具：次卡一张（剩 5 次）+ 次数型权益行（total 3 / remain 2）
+  await db.insert(schema.memberPasses).values({ userId: user681Id, storeId, totalTimes: 10, remainTimes: 5, status: 'active' });
+  const perkRow681 = (await db.insert(schema.memberPerkGrants).values({
+    userId: user681Id, kind: 'service_discount_count', totalCount: 3, remainCount: 2,
+    meta: { note: '【测试】e2e 次数型权益夹具' },
+  }).returning())[0]!;
+  const myUnused681 = await trpcQuery<{
+    passTimes: number; passNote: string;
+    grants: Array<{ id: string; kind: string; remainCount: number | null }>;
+  }>('perk.myUnused', { cookie: cookie681 });
+  check('68.1 myUnused：次卡余额并显（passTimes=5）+ 不并账注记 + grants 含次数型行与注册 welcome_pack 行',
+    myUnused681.passTimes === 5 && myUnused681.passNote.includes('不并账') &&
+      myUnused681.grants.some((g) => g.id === perkRow681.id && g.remainCount === 2) &&
+      myUnused681.grants.some((g) => g.kind === 'welcome_pack'),
+    { passTimes: myUnused681.passTimes, grants: myUnused681.grants.map((g) => g.kind) });
+  // 核销写口（台账先行——真核销链=收银台结账联动候批，本片不落，perks.ts 注释明面）
+  const consume681a = await trpcMutate<{ grant: { remainCount: number | null; status: string } }>(
+    'perk.consume', { cookie: ownerCookie, input: { grantId: perkRow681.id } });
+  const consume681b = await trpcMutate<{ grant: { remainCount: number | null; status: string } }>(
+    'perk.consume', { cookie: ownerCookie, input: { grantId: perkRow681.id } });
+  const consume681c = await asErr(trpcMutate('perk.consume', { cookie: ownerCookie, input: { grantId: perkRow681.id } }));
+  check('68.1 consume 台账核销：2→1→0 翻 exhausted，归零后再核销 400 明文（不碰钱域）',
+    consume681a.grant.remainCount === 1 && consume681a.grant.status === 'granted' &&
+      consume681b.grant.remainCount === 0 && consume681b.grant.status === 'exhausted' &&
+      consume681c instanceof TrpcHttpError && consume681c.httpStatus === 400,
+    { a: consume681a.grant.remainCount, b: consume681b.grant, c: consume681c && consume681c.message });
+
+  /* ---------- 68.2 续费优惠试算（renew_discount_bp 端口读档 + 缺键回落） ---------- */
+  console.log('\n[片3] 68.2 续费优惠试算');
+  const planRow682 = await db.select().from(schema.memberPlans)
+    .where(and(eq(schema.memberPlans.ruleKey, 'plan_yinghuo'), eq(schema.memberPlans.active, true))).get();
+  const origVal682 = planRow682!.valueJson as Record<string, unknown>;
+  const cfgList682 = await trpcQuery<{ currentVersion: number }>('config.list', { cookie: ownerCookie, input: { domain: 'member_plans' } });
+  const save682 = await trpcMutate<{ version: number }>('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'member_plans', changes: [{ ruleKey: 'plan_yinghuo', valueJson: { ...origVal682, renew_discount_bp: 8000 } }] },
+  });
+  const quote682 = await trpcQuery<{ amountFen: number; renewal: { discountBp: number; amountFen: number } | null }>(
+    'pay.quote', { cookie: cookie681, input: { bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, renewal: true } });
+  check('68.2 端口改 renew_discount_bp=8000 → version+1 留痕 + quote renewal=全价×bp/10000 精确到分（19900×0.8=15920）',
+    save682.version === cfgList682.currentVersion + 1 &&
+      quote682.amountFen === 19900 && quote682.renewal?.discountBp === 8000 && quote682.renewal?.amountFen === 15920,
+    { version: [cfgList682.currentVersion, save682.version], renewal: quote682.renewal });
+  const vers682 = await trpcQuery<{ versions: Array<{ changesJson: Array<{ rule_key: string; before: unknown; after: unknown }> }> }>(
+    'config.versions', { cookie: ownerCookie, input: { domain: 'member_plans', limit: 5 } });
+  check('68.2 端口改值留痕行在案（rule_config_versions 含 plan_yinghuo 前后值）',
+    vers682.versions.some((v) => v.changesJson.some((c) => c.rule_key === 'plan_yinghuo')),
+    vers682.versions.length);
+  /* 缺键回落实证：摘键保存 → renewal 按缺省 10000=无优惠（fresh 库/未配档口径） */
+  const noRenewVal682: Record<string, unknown> = { ...origVal682, renew_discount_bp: 8000 };
+  delete noRenewVal682['renew_discount_bp'];
+  await trpcMutate('config.save', { cookie: ownerCookie, input: { domain: 'member_plans', changes: [{ ruleKey: 'plan_yinghuo', valueJson: noRenewVal682 }] } });
+  const quote682b = await trpcQuery<{ amountFen: number; renewal: { discountBp: number; amountFen: number } | null }>(
+    'pay.quote', { cookie: cookie681, input: { bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, renewal: true } });
+  check('68.2 缺键回落 10000=无优惠（renewal.amountFen=全价 19900）',
+    quote682b.renewal?.discountBp === 10000 && quote682b.renewal?.amountFen === 19900, quote682b.renewal);
+  // 复原（段尾复原纪律：恢复原值含 renew_discount_bp=10000）
+  await trpcMutate('config.save', { cookie: ownerCookie, input: { domain: 'member_plans', changes: [{ ruleKey: 'plan_yinghuo', valueJson: origVal682 }] } });
+  const quote682c = await trpcQuery<{ renewal: { discountBp: number; amountFen: number } | null }>(
+    'pay.quote', { cookie: cookie681, input: { bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, renewal: true } });
+  check('68.2 复原后 quote 回种子口径（bp=10000，试算=全价）',
+    quote682c.renewal?.discountBp === 10000 && quote682c.renewal?.amountFen === 19900, quote682c.renewal);
+
+  /* ---------- 68.3 生日礼（滴答扫描→资格行+营销通知；同年重扫零新增） ---------- */
+  console.log('\n[片3] 68.3 生日礼');
+  const { sweepBirthdayPerks } = await import('../routers/perks');
+  // 钉时刻先例：扫描按门店规范时区 +8 的 MM-DD 匹配，夹具生日按同一墙钟钉「今日」
+  const w683 = new Date(Date.now() + 8 * 3600 * 1000);
+  const mmdd683 = `${String(w683.getUTCMonth() + 1).padStart(2, '0')}-${String(w683.getUTCDate()).padStart(2, '0')}`;
+  const year683 = w683.getUTCFullYear();
+  const reg683 = await devLoginPhone('13966680003');
+  const cookie683 = reg683.cookie!;
+  const user683Id = reg683.body.user!.id!;
+  await trpcMutate('auth.updateProfile', { cookie: cookie683, input: { birthday: `1990-${mmdd683}` } });
+  const pet683 = (await db.insert(schema.pets).values({
+    ownerId: user683Id, name: '生日喵', species: 'cat', birthday: `2020-${mmdd683}`,
+  }).returning())[0]!;
+  await sweepBirthdayPerks(db); // 服务级直调（43/55.4 先例；server 30min 滴答同函数）
+  const grants683 = await db.select().from(schema.memberPerkGrants)
+    .where(and(eq(schema.memberPerkGrants.userId, user683Id), inArray(schema.memberPerkGrants.kind, ['birthday_owner', 'birthday_pet'])));
+  const notif683 = (await db.select().from(schema.notifications))
+    .filter((n) => n.userId === user683Id && n.category === 'marketing' && (n.type === 'perk.birthday' || n.type === 'perk.birthday_pet'));
+  check('68.3 birthday=今日（MMDD 匹配）→ grants 双行（birthday_owner year 入锚 + birthday_pet pet_id 入锚）+ notifications marketing 双行',
+    grants683.some((g) => g.kind === 'birthday_owner' && g.year === year683) &&
+      grants683.some((g) => g.kind === 'birthday_pet' && g.petId === pet683.id && g.year === year683) &&
+      notif683.some((n) => n.type === 'perk.birthday') && notif683.some((n) => n.type === 'perk.birthday_pet'),
+    { grants: grants683.map((g) => [g.kind, g.year, g.petId]), notif: notif683.map((n) => n.type) });
+  await sweepBirthdayPerks(db); // 同年重扫
+  const grants683b = await db.select().from(schema.memberPerkGrants)
+    .where(and(eq(schema.memberPerkGrants.userId, user683Id), inArray(schema.memberPerkGrants.kind, ['birthday_owner', 'birthday_pet'])));
+  const notif683b = (await db.select().from(schema.notifications))
+    .filter((n) => n.userId === user683Id && n.category === 'marketing' && (n.type === 'perk.birthday' || n.type === 'perk.birthday_pet'));
+  check('68.3 同年重扫零新增（幂等锚：grants/通知计数全不变）',
+    grants683b.length === grants683.length && notif683b.length === notif683.length,
+    { grants: [grants683.length, grants683b.length], notif: [notif683.length, notif683b.length] });
+
+  /* ---------- 68.4 新人礼包（注册触发）+ 升级礼遇（首单 paid 翻转） ---------- */
+  console.log('\n[片3] 68.4 新人礼包 + 升级礼遇');
+  const reg684 = await devLoginPhone('13966680004');
+  const cookie684 = reg684.cookie!;
+  const user684Id = reg684.body.user!.id!;
+  const welcome684a = await db.select().from(schema.memberPerkGrants)
+    .where(and(eq(schema.memberPerkGrants.userId, user684Id), eq(schema.memberPerkGrants.kind, 'welcome_pack')));
+  const notif684a = (await db.select().from(schema.notifications))
+    .filter((n) => n.userId === user684Id && n.type === 'perk.welcome_pack' && n.category === 'marketing');
+  check('68.4 新注册（devLogin 建档）→ welcome_pack 资格行 + notifications marketing 行（资格留痕不真发）',
+    welcome684a.length === 1 && notif684a.length === 1,
+    { grants: welcome684a.length, notif: notif684a.length });
+  await devLoginPhone('13966680004'); // 重复注册（同号再登录=不重复建档）
+  const welcome684b = await db.select().from(schema.memberPerkGrants)
+    .where(and(eq(schema.memberPerkGrants.userId, user684Id), eq(schema.memberPerkGrants.kind, 'welcome_pack')));
+  check('68.4 重复注册零重复（welcome_pack 仍 1 行）', welcome684b.length === 1, welcome684b.length);
+  const prods684 = await trpcQuery<{ items: Array<{ id: string; priceFen: number; stock: number }> }>(
+    'mall.listProducts', { cookie: cookie684, input: { storeId } });
+  const prod684 = prods684.items.find((p) => p.priceFen > 0 && p.stock > 0)!;
+  check('68.4 夹具：在售商品可取（供 68/69 族共用）', !!prod684, prods684.items.length);
+  const addr684 = { name: '六八四', phone: '13966680004', detail: '测试路 684 号' };
+  const order684a = await trpcMutate<{ id: string; orderNo: string; totalFen: number }>(
+    'mall.createOrder', { cookie: cookie684, input: { items: [{ productId: prod684.id, qty: 1 }], address: addr684 } });
+  const mc684a = await postRaw('/api/pay/mock-callback', { orderId: order684a.id }, {}, cookie684);
+  const gifts684a = await db.select().from(schema.memberPerkGrants)
+    .where(and(eq(schema.memberPerkGrants.userId, user684Id), eq(schema.memberPerkGrants.kind, 'upgrade_gift')));
+  check('68.4 首单 pending→paid 翻转（mock-callback 真回调链）→ upgrade_gift 资格行（source_id=首单 id）',
+    mc684a.status === 200 && gifts684a.length === 1 && gifts684a[0]!.sourceId === order684a.id,
+    { cb: mc684a.status, gifts: gifts684a.map((g) => g.sourceId) });
+  await postRaw('/api/pay/mock-callback', { orderId: order684a.id }, {}, cookie684); // 重复回调
+  const order684b = await trpcMutate<{ id: string }>(
+    'mall.createOrder', { cookie: cookie684, input: { items: [{ productId: prod684.id, qty: 1 }], address: addr684 } });
+  await postRaw('/api/pay/mock-callback', { orderId: order684b.id }, {}, cookie684); // 次单 paid
+  const gifts684b = await db.select().from(schema.memberPerkGrants)
+    .where(and(eq(schema.memberPerkGrants.userId, user684Id), eq(schema.memberPerkGrants.kind, 'upgrade_gift')));
+  check('68.4 重复回调 + 次单 paid 零重复（upgrade_gift 仍 1 行）', gifts684b.length === 1, gifts684b.length);
+
+  /* ---------- 68.5 会员码（签发/核验/篡改/过期） ---------- */
+  console.log('\n[片3] 68.5 会员码');
+  const card685nonMember = await asErr(trpcMutate('membership.myCardToken', { cookie: cookie683 }));
+  check('68.5 非会员签发 → 400 明文「非会员无会员码」',
+    card685nonMember instanceof TrpcHttpError && card685nonMember.httpStatus === 400 && card685nonMember.message.includes('非会员'),
+    card685nonMember && card685nonMember.message);
+  await trpcMutate('membership.openFree', { cookie: cookie684 });
+  const card685 = await trpcMutate<{ token: string; planKey: string; ttlSec: number }>(
+    'membership.myCardToken', { cookie: cookie684 });
+  const verify685 = await trpcMutate<{ userId: string; planKey: string; planLabel: string; membershipStatus: string | null }>(
+    'membership.verifyCardToken', { cookie: ownerCookie, input: { token: card685.token } });
+  check('68.5 myCardToken 签发（5min 时效）→ verifyCardToken 收银台核验通过 + planKey/档名透出（微光）',
+    card685.planKey === 'plan_weiguang' && card685.ttlSec === 300 &&
+      verify685.userId === user684Id && verify685.planKey === 'plan_weiguang' &&
+      verify685.planLabel.includes('微光') && verify685.membershipStatus === 'active',
+    verify685);
+  const tampered685 = card685.token.slice(0, -1) + (card685.token.endsWith('0') ? '1' : '0');
+  const verTamper685 = await asErr(trpcMutate('membership.verifyCardToken', { cookie: ownerCookie, input: { token: tampered685 } }));
+  check('68.5 篡改签名 → 400 明文「签名不符」',
+    verTamper685 instanceof TrpcHttpError && verTamper685.httpStatus === 400 && verTamper685.message.includes('签名不符'),
+    verTamper685 && verTamper685.message);
+  /* 过期件：合法签名+过期 exp（signMemberCardPayload export 复用，仿预约码 signCode 冒烟先例） */
+  const { signMemberCardPayload } = await import('../routers/membership');
+  const expired685 = signMemberCardPayload(user684Id, 'plan_weiguang', Math.floor(Date.now() / 1000) - 10);
+  const verExpired685 = await asErr(trpcMutate('membership.verifyCardToken', { cookie: ownerCookie, input: { token: expired685 } }));
+  check('68.5 过期 token（合法签名）→ 400 明文「已过期」',
+    verExpired685 instanceof TrpcHttpError && verExpired685.httpStatus === 400 && verExpired685.message.includes('已过期'),
+    verExpired685 && verExpired685.message);
+
+  /* ================================================================== */
+  console.log('\n[片3] 69. 商城族（券/收藏/晒单/配送/超时收货/叠加公示/涉钱零通道）');
+
+  /* 69.7 口径基线：69 族全链涉钱四表计数基线（69 族订单夹具一律不走支付通道） */
+  const moneyBefore69 = {
+    cashierBills: (await db.select().from(schema.cashierBills)).length,
+    payments: (await db.select().from(schema.payments)).length,
+    rebateAccounts: (await db.select().from(schema.rebateAccounts)).length,
+    payOrders: (await db.select().from(schema.payOrders)).length,
+  };
+
+  /* ---------- 69.1 优惠券（领取幂等/门槛过滤/核销登记零触碰钱域/配额满 400） ---------- */
+  console.log('\n[片3] 69.1 优惠券');
+  const couponA691 = (await db.insert(schema.coupons).values({
+    title: '满10减5券', amountFen: 500, thresholdFen: 1000, validDays: 30, createdBy: ownerUser!.id,
+  }).returning())[0]!;
+  const couponB691 = (await db.insert(schema.coupons).values({
+    title: '满100减20券', amountFen: 2000, thresholdFen: 10000, validDays: 30, createdBy: ownerUser!.id,
+  }).returning())[0]!;
+  const couponC691 = (await db.insert(schema.coupons).values({
+    title: '限量体验券', amountFen: 100, thresholdFen: 0, validDays: 7, totalQuota: 1, createdBy: ownerUser!.id,
+  }).returning())[0]!;
+  const tpl691 = await trpcQuery<{ items: Array<{ id: string; claimedCount: number }> }>('mall.couponTemplates', { cookie: cookie681 });
+  check('69.1 couponTemplates 在售券模板透出（三券在列）',
+    [couponA691, couponB691, couponC691].every((c) => tpl691.items.some((t) => t.id === c.id)),
+    tpl691.items.length);
+  const claim691a = await trpcMutate<{ grant: { id: string; status: string }; idempotent: boolean }>(
+    'mall.couponClaim', { cookie: cookie684, input: { couponId: couponA691.id } });
+  const claim691dup = await trpcMutate<{ grant: { id: string; status: string }; idempotent: boolean }>(
+    'mall.couponClaim', { cookie: cookie684, input: { couponId: couponA691.id } });
+  check('69.1 领取 → claimed 落行 + uq 锚幂等（重复领=返回现状 idempotent 零新增）',
+    claim691a.grant.status === 'claimed' && claim691a.idempotent === false &&
+      claim691dup.idempotent === true && claim691dup.grant.id === claim691a.grant.id,
+    { a: claim691a.idempotent, dup: claim691dup.idempotent });
+  const avail691 = await trpcQuery<{ items: Array<{ couponId: string }> }>(
+    'mall.availableCoupons', { cookie: cookie684, input: { totalFen: 5000 } });
+  check('69.1 availableCoupons 按门槛过滤（5000 分单：满10减5 在列 / 满100减20 不在列）',
+    avail691.items.some((i) => i.couponId === couponA691.id) && !avail691.items.some((i) => i.couponId === couponB691.id),
+    avail691.items.map((i) => i.couponId));
+  const myCoupons691 = await trpcQuery<{ items: Array<{ id: string; status: string; coupon: { title: string } }> }>(
+    'mall.myCoupons', { cookie: cookie684 });
+  check('69.1 myCoupons 本人台账透出（claimed 行+券模板联表）',
+    myCoupons691.items.some((i) => i.id === claim691a.grant.id && i.status === 'claimed' && i.coupon.title === '满10减5券'),
+    myCoupons691.items.length);
+  /* 核销登记（开口项 1 裁）：仅 grant 翻 used+登记 order_id，orders.total_fen/payments 零变动 */
+  const order691 = await trpcMutate<{ id: string; totalFen: number }>(
+    'mall.createOrder', { cookie: cookie684, input: { items: [{ productId: prod684.id, qty: 1 }], address: addr684 } });
+  const used691 = await trpcMutate<{ grant: { status: string; orderId: string | null }; idempotent: boolean }>(
+    'mall.couponUse', { cookie: cookie684, input: { grantId: claim691a.grant.id, orderId: order691.id } });
+  const order691after = await db.select().from(schema.orders).where(eq(schema.orders.id, order691.id)).get();
+  const payments691now = (await db.select().from(schema.payments)).length;
+  check('69.1 couponUse 核销=仅 grant 翻 used 登记 order_id（orders.total_fen/payments 前后零变动——不接真抵扣实证）',
+    used691.grant.status === 'used' && used691.grant.orderId === order691.id && used691.idempotent === false &&
+      order691after?.totalFen === order691.totalFen && payments691now === moneyBefore69.payments,
+    { grant: used691.grant, totalFen: [order691.totalFen, order691after?.totalFen], payments: [moneyBefore69.payments, payments691now] });
+  const useDup691 = await trpcMutate<{ idempotent: boolean }>(
+    'mall.couponUse', { cookie: cookie684, input: { grantId: claim691a.grant.id, orderId: order691.id } });
+  check('69.1 couponUse 幂等重调=返回现状（idempotent=true）', useDup691.idempotent === true, useDup691);
+  /* 配额闸：quota=1 首领成、次领 400 明文 */
+  const claimC691a = await trpcMutate<{ idempotent: boolean }>(
+    'mall.couponClaim', { cookie: cookie684, input: { couponId: couponC691.id } });
+  const claimC691b = await asErr(trpcMutate('mall.couponClaim', { cookie: cookie681, input: { couponId: couponC691.id } }));
+  check('69.1 配额满 400 明文（quota=1：首领成 / 次领拒「已领完」且事务回滚零落行）',
+    claimC691a.idempotent === false &&
+      claimC691b instanceof TrpcHttpError && claimC691b.code === 'BAD_REQUEST' && claimC691b.message.includes('已领完'),
+    claimC691b && { code: claimC691b.code, message: claimC691b.message });
+
+  /* ---------- 69.2 收藏（toggle 幂等 + favList + favCheck 同帧） ---------- */
+  console.log('\n[片3] 69.2 收藏');
+  const fav692a = await trpcMutate<{ fav: boolean }>('mall.favToggle', { cookie: cookie681, input: { productId: prod684.id } });
+  const favCheck692a = await trpcQuery<{ fav: boolean }>('mall.favCheck', { cookie: cookie681, input: { productId: prod684.id } });
+  const favList692a = await trpcQuery<{ items: Array<{ productId: string; name: string; image: string | null }> }>('mall.favList', { cookie: cookie681 });
+  check('69.2 toggle 收藏 → fav=true + favCheck 同帧 true + favList 含该商品（联表快照透出）',
+    fav692a.fav === true && favCheck692a.fav === true &&
+      favList692a.items.some((i) => i.productId === prod684.id && typeof i.name === 'string'),
+    { fav: fav692a.fav, list: favList692a.items.length });
+  const fav692b = await trpcMutate<{ fav: boolean }>('mall.favToggle', { cookie: cookie681, input: { productId: prod684.id } });
+  const favCheck692b = await trpcQuery<{ fav: boolean }>('mall.favCheck', { cookie: cookie681, input: { productId: prod684.id } });
+  const favList692b = await trpcQuery<{ items: Array<{ productId: string }> }>('mall.favList', { cookie: cookie681 });
+  check('69.2 再 toggle → fav=false（uq 锚幂等删）+ favCheck/favList 同帧',
+    fav692b.fav === false && favCheck692b.fav === false && !favList692b.items.some((i) => i.productId === prod684.id),
+    { fav: fav692b.fav, list: favList692b.items.length });
+  const fav692c = await trpcMutate<{ fav: boolean }>('mall.favToggle', { cookie: cookie681, input: { productId: prod684.id } });
+  const favCheck692c = await trpcQuery<{ fav: boolean }>('mall.favCheck', { cookie: cookie681, input: { productId: prod684.id } });
+  check('69.2 复加 → fav=true（删后重插幂等锚不残留）', fav692c.fav === true && favCheck692c.fav === true, fav692c);
+
+  /* ---------- 69.3 商品评价晒单（received 闸/复评 409/均分聚合/匿名） ---------- */
+  console.log('\n[片3] 69.3 商品评价晒单');
+  const order693a = await trpcMutate<{ id: string }>(
+    'mall.createOrder', { cookie: cookie684, input: { items: [{ productId: prod684.id, qty: 1 }], address: addr684 } });
+  const rvPending693 = await asErr(trpcMutate('mall.reviewProduct', {
+    cookie: cookie684, input: { orderId: order693a.id, productId: prod684.id, rating: 5 },
+  }));
+  check('69.3 pending 单评价 → 400 明文（未收货不可评）',
+    rvPending693 instanceof TrpcHttpError && rvPending693.code === 'BAD_REQUEST' && rvPending693.message.includes('收货'),
+    rvPending693 && rvPending693.message);
+  /* 订单状态翻转=夹具直改（69.7 零真通道口径：不走 mock-callback，payments 零写入） */
+  await db.update(schema.orders).set({ status: 'received' }).where(eq(schema.orders.id, order693a.id));
+  const rv693a = await trpcMutate<{ review: { id: string; rating: number } }>('mall.reviewProduct', {
+    cookie: cookie684, input: { orderId: order693a.id, productId: prod684.id, rating: 5, text: '【测试】很好用', photoUrls: [] },
+  });
+  check('69.3 received 单可评落行（rating=5）', !!rv693a.review.id && rv693a.review.rating === 5, rv693a.review);
+  const rvDup693 = await asErr(trpcMutate('mall.reviewProduct', {
+    cookie: cookie684, input: { orderId: order693a.id, productId: prod684.id, rating: 4 },
+  }));
+  check('69.3 复评 → 409 明文（一单一件一评 uq 锚）',
+    rvDup693 instanceof TrpcHttpError && rvDup693.httpStatus === 409 && rvDup693.code === 'CONFLICT' && rvDup693.message.includes('已评价'),
+    rvDup693 && { status: rvDup693.httpStatus, message: rvDup693.message });
+  const rvOther693 = await asErr(trpcMutate('mall.reviewProduct', {
+    cookie: cookie681, input: { orderId: order693a.id, productId: prod684.id, rating: 1 },
+  }));
+  check('69.3 他人订单评价 → 403（本人闸）',
+    rvOther693 instanceof TrpcHttpError && rvOther693.httpStatus === 403, rvOther693 && rvOther693.httpStatus);
+  const order693b = await trpcMutate<{ id: string }>(
+    'mall.createOrder', { cookie: cookie681, input: { items: [{ productId: prod684.id, qty: 1 }], address: { name: '六八一', phone: '13966680001', detail: '测试路 681 号' } } });
+  await db.update(schema.orders).set({ status: 'received' }).where(eq(schema.orders.id, order693b.id));
+  await trpcMutate('mall.reviewProduct', {
+    cookie: cookie681, input: { orderId: order693b.id, productId: prod684.id, rating: 3, text: '【测试】一般', anonymous: true },
+  });
+  const revs693 = await trpcQuery<{
+    total: number; avgRating: number | null;
+    items: Array<{ rating: number; nickname: string; anonymous: boolean }>;
+  }>('mall.productReviews', { cookie: cookie684, input: { productId: prod684.id } });
+  check('69.3 均分聚合正确（5+3→avg 4.0，total=2）+ 匿名匿名录名（anonymous 行昵称不透出=「匿名用户」）',
+    revs693.total === 2 && revs693.avgRating === 4 &&
+      revs693.items.some((i) => i.anonymous === true && i.nickname === '匿名用户') &&
+      revs693.items.some((i) => i.anonymous === false && i.nickname !== '匿名用户'),
+    { total: revs693.total, avg: revs693.avgRating, items: revs693.items.map((i) => [i.rating, i.nickname, i.anonymous]) });
+
+  /* ---------- 69.4 配送方式（pickup 地址可缺省/缺省 express/读口透出） ---------- */
+  console.log('\n[片3] 69.4 配送方式');
+  const orderPickup694 = await trpcMutate<{ id: string; deliveryMethod: string; address: unknown }>(
+    'mall.createOrder', { cookie: cookie681, input: { items: [{ productId: prod684.id, qty: 1 }], deliveryMethod: 'pickup' } });
+  check('69.4 pickup 落列 + 地址可缺省（address=null）',
+    orderPickup694.deliveryMethod === 'pickup' && orderPickup694.address === null,
+    { dm: orderPickup694.deliveryMethod, addr: orderPickup694.address });
+  const orderExpress694 = await trpcMutate<{ id: string; deliveryMethod: string }>(
+    'mall.createOrder', { cookie: cookie681, input: { items: [{ productId: prod684.id, qty: 1 }], address: { name: '六八一', phone: '13966680001', detail: '测试路 681 号' } } });
+  check('69.4 缺省 express（传地址不带 deliveryMethod）', orderExpress694.deliveryMethod === 'express', orderExpress694.deliveryMethod);
+  const orderNoAddr694 = await asErr(trpcMutate('mall.createOrder', {
+    cookie: cookie681, input: { items: [{ productId: prod684.id, qty: 1 }] },
+  }));
+  check('69.4 express 缺地址 → 400 明文「须填写收货地址」',
+    orderNoAddr694 instanceof TrpcHttpError && orderNoAddr694.code === 'BAD_REQUEST' && orderNoAddr694.message.includes('收货地址'),
+    orderNoAddr694 && orderNoAddr694.message);
+  const myOrders694 = await trpcQuery<{ groups: Record<string, Array<{ id: string; deliveryMethod: string }>> }>(
+    'mall.listMyOrders', { cookie: cookie681 });
+  check('69.4 读口透出（listMyOrders 行带 deliveryMethod：pickup 单=pickup / 缺省单=express）',
+    myOrders694.groups['pending']?.some((o) => o.id === orderPickup694.id && o.deliveryMethod === 'pickup') === true &&
+      myOrders694.groups['pending']?.some((o) => o.id === orderExpress694.id && o.deliveryMethod === 'express') === true,
+    myOrders694.groups['pending']?.length);
+
+  /* ---------- 69.5 超时自动收货（shipped_at 锚 + 端口天数 + 幂等） ---------- */
+  console.log('\n[片3] 69.5 超时自动收货');
+  const { sweepAutoReceive } = await import('../routers/mall');
+  const t695 = Date.now();
+  const order695old = (await db.insert(schema.orders).values({
+    orderNo: `PE2E695A${String(t695).slice(-6)}`, customerId: user681Id, storeId,
+    items: [{ product_id: prod684.id, name: '超时单钉 8 天', quantity: 1, price_fen: 100 }],
+    totalFen: 100, status: 'shipped', trackingNo: 'SF695OLD',
+    shippedAt: new Date(t695 - 8 * 86400e3), // 钉时刻：8 天前发货（> 端口 7 天）
+  }).returning())[0]!;
+  const order695new = (await db.insert(schema.orders).values({
+    orderNo: `PE2E695B${String(t695).slice(-6)}`, customerId: user681Id, storeId,
+    items: [{ product_id: prod684.id, name: '超时单钉 6 天', quantity: 1, price_fen: 100 }],
+    totalFen: 100, status: 'shipped', trackingNo: 'SF695NEW',
+    shippedAt: new Date(t695 - 6 * 86400e3), // 钉时刻：6 天前发货（< 端口 7 天=不动）
+  }).returning())[0]!;
+  await sweepAutoReceive(db); // 服务级直调（server 60s 滴答同函数；69.7 口径=只翻状态不发支付）
+  const order695oldAfter = await db.select().from(schema.orders).where(eq(schema.orders.id, order695old.id)).get();
+  const order695newAfter = await db.select().from(schema.orders).where(eq(schema.orders.id, order695new.id)).get();
+  const ob695 = (await db.select().from(schema.eventOutbox))
+    .filter((r) => r.eventType === 'order.received' && (r.payload as Record<string, unknown>)?.['orderId'] === order695old.id);
+  check('69.5 shipped_at=8 天前单 → 扫描翻 received + OrderReceived 事件落 outbox；7 天内（6 天）单不动',
+    order695oldAfter?.status === 'received' && order695newAfter?.status === 'shipped' && ob695.length === 1,
+    { old: order695oldAfter?.status, new: order695newAfter?.status, outbox: ob695.length });
+  const swept695b = await sweepAutoReceive(db);
+  const recvManual695 = await asErr(trpcMutate('mall.receiveOrder', { cookie: cookie681, input: { orderId: order695old.id } }));
+  check('69.5 幂等：重扫零新增（sweep=0）+ 已翻单 receiveOrder 并发硬拒 400（条件更新互撞零副作用）',
+    swept695b === 0 && recvManual695 instanceof TrpcHttpError && recvManual695.code === 'BAD_REQUEST',
+    { swept: swept695b, manual: recvManual695 && recvManual695.message });
+  /* 物流半程注记：已发货单读口 trackingNote 透出 */
+  const myOrders695 = await trpcQuery<{ groups: Record<string, Array<{ id: string; trackingNo: string | null; trackingNote?: string | null }>> }>(
+    'mall.listMyOrders', { cookie: cookie681 });
+  const shippedRow695 = myOrders695.groups['shipped']?.find((o) => o.id === order695new.id);
+  check('69.5 物流半程注记透出（shipped 单 trackingNote=「物流轨迹以快递公司为准」）',
+    shippedRow695?.trackingNote === '物流轨迹以快递公司为准', shippedRow695?.trackingNote);
+
+  /* ---------- 69.6 券叠加规则公示（端口改值→读口即新+留痕行） ---------- */
+  console.log('\n[片3] 69.6 券叠加规则公示');
+  const rule696a = await trpcQuery<{ rule: string; note: string; source: string }>('mall.couponStackRule', { cookie: cookie681 });
+  check('69.6 缺省公示口径（rule=none + note + source 明面）',
+    rule696a.rule === 'none' && rule696a.note.includes('不与会员折扣叠加') && rule696a.source === 'service_rules.coupon_stack_rule',
+    rule696a);
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'service', changes: [{ ruleKey: 'coupon_stack_rule', valueJson: { rule: 'with_member_discount', note: '【测试】e2e 端口改值：可与会员折扣叠加' } }] },
+  });
+  const rule696b = await trpcQuery<{ rule: string }>('mall.couponStackRule', { cookie: cookie681 });
+  const vers696 = await trpcQuery<{ versions: Array<{ changesJson: Array<{ rule_key: string }> }> }>(
+    'config.versions', { cookie: ownerCookie, input: { domain: 'service', limit: 5 } });
+  check('69.6 端口改值 → 读口即新（rule=with_member_discount）+ 留痕行在案',
+    rule696b.rule === 'with_member_discount' &&
+      vers696.versions.some((v) => v.changesJson.some((c) => c.rule_key === 'coupon_stack_rule')),
+    { rule: rule696b.rule, vers: vers696.versions.length });
+  await trpcMutate('config.save', {
+    cookie: ownerCookie,
+    input: { domain: 'service', changes: [{ ruleKey: 'coupon_stack_rule', valueJson: { rule: 'none', note: '优惠券不与会员折扣叠加；每单限用 1 张（公示口径）' } }] },
+  });
+  const rule696c = await trpcQuery<{ rule: string }>('mall.couponStackRule', { cookie: cookie681 });
+  check('69.6 复原公示口径（rule=none）', rule696c.rule === 'none', rule696c);
+
+  /* ---------- 69.7 涉钱全件零真通道实证 ---------- */
+  console.log('\n[片3] 69.7 涉钱零真通道');
+  const moneyAfter69 = {
+    cashierBills: (await db.select().from(schema.cashierBills)).length,
+    payments: (await db.select().from(schema.payments)).length,
+    rebateAccounts: (await db.select().from(schema.rebateAccounts)).length,
+    payOrders: (await db.select().from(schema.payOrders)).length,
+  };
+  check('69.7 69 族全链 cashier_bills/payments/rebate_accounts/pay_orders 计数前后相等（券/收藏/晒单/配送/超时收货零真通道）',
+    moneyAfter69.cashierBills === moneyBefore69.cashierBills &&
+      moneyAfter69.payments === moneyBefore69.payments &&
+      moneyAfter69.rebateAccounts === moneyBefore69.rebateAccounts &&
+      moneyAfter69.payOrders === moneyBefore69.payOrders,
+    { before: moneyBefore69, after: moneyAfter69 });
+  /* ==================================================================
+   * 客户端体验大批 片 4（服务过程 7+软性体验 6+通知触达 2+品牌 1+触达配套 3）段：
+   *   70.x 宠物域（芯片/花色/全局切换/健康记录族/体重时序）；
+   *   71.x 服务过程+通知（异常通报双通知/15min 升级/拆封/安心卡/早晚推送/4h 提醒/到期提醒）；
+   *   72.x 明细透出/电话公示/工单升级/色板与空态骨架静态闸门。
+   * 时刻敏感全钉时刻：夹具单钉 16:30/17:30 半点（57.6 先例：槽位选取器只取整点，
+   * 半点永不撞刻）；扫描族直调 services/careReminders 同函数+钉 now（片 3 报备工艺）。
+   * ================================================================== */
+  console.log('\n[体验批片4] 70. 宠物域：档案扩字段 / 全局切换 / 健康记录族 / 体重时序');
+  {
+    const { sweepPetDueReminders, sweepBoardingDayNight, sweepCareLogReminders, sweepIncidentEscalations } =
+      await import('../services/careReminders');
+    const storeStaffRows = await db.select().from(schema.staff)
+      .where(and(eq(schema.staff.storeId, storeId), eq(schema.staff.status, 'active')));
+    const aStaff = storeStaffRows[0]!;
+
+    /* ---- 70.1 芯片号/花色：upsert 新建带值+回读+编辑改值 ---- */
+    const chipPet = await trpcMutate<{ pet: { id: string; chipNo: string | null; coatColor: string | null }; created: boolean }>('pet.upsert', {
+      cookie: customerCookie,
+      input: { name: '芯片测试犬', species: 'dog', breed: '边牧', chipNo: '900123000000001', coatColor: '黑白' },
+    });
+    check('70.1 pet.upsert 新建带芯片号/花色落库（created=true + 两列回读）',
+      chipPet.created === true && chipPet.pet.chipNo === '900123000000001' && chipPet.pet.coatColor === '黑白',
+      chipPet.pet);
+    const chipPetUpd = await trpcMutate<{ pet: { chipNo: string | null; coatColor: string | null } }>('pet.upsert', {
+      cookie: customerCookie,
+      input: { id: chipPet.pet.id, name: '芯片测试犬', species: 'dog', coatColor: '黑白陨石' },
+    });
+    check('70.1 编辑改花色+芯片号保留（部分字段更新不覆盖空缺列）',
+      chipPetUpd.pet.coatColor === '黑白陨石' && chipPetUpd.pet.chipNo === '900123000000001', chipPetUpd.pet);
+
+    /* 第二客户夹具（越权负例用） */
+    const exp4bUser = (await db.insert(schema.users).values({ kimiId: 'seed_e2e_exp4_b', nickname: 'e2e 片4 B 客', phone: '13811110011' }).returning())[0]!;
+    await db.insert(schema.userRoles).values({ userId: exp4bUser.id, role: 'customer' });
+    const exp4bCookie = await devLogin(exp4bUser.id);
+    const exp4bPet = await trpcMutate<{ pet: { id: string } }>('pet.upsert', {
+      cookie: exp4bCookie, input: { name: '别人家的猫', species: 'cat' },
+    });
+
+    /* ---- 70.2 多宠物全局切换：setActive 写口 + me 透出 + 越权 403 + 清除 ---- */
+    const setA = await trpcMutate<{ activePetId: string | null }>('pet.setActive', {
+      cookie: customerCookie, input: { petId: chipPet.pet.id },
+    });
+    const meAfterSet = await trpcQuery<{ user: { activePetId: string | null } }>('auth.me', { cookie: customerCookie });
+    check('70.2 setActive 落库 + auth.me 透出 activePetId（全局切换数据源）',
+      setA.activePetId === chipPet.pet.id && meAfterSet.user.activePetId === chipPet.pet.id,
+      { set: setA.activePetId, me: meAfterSet.user.activePetId });
+    const setOther = await asErr(trpcMutate('pet.setActive', { cookie: customerCookie, input: { petId: exp4bPet.pet.id } }));
+    const setByB = await asErr(trpcMutate('pet.setActive', { cookie: exp4bCookie, input: { petId: chipPet.pet.id } }));
+    check('70.2 越权切换他人宠物双向 403',
+      setOther instanceof TrpcHttpError && setOther.httpStatus === 403 &&
+      setByB instanceof TrpcHttpError && setByB.httpStatus === 403,
+      { a: setOther && setOther.httpStatus, b: setByB && setByB.httpStatus });
+    const setNull = await trpcMutate<{ activePetId: string | null }>('pet.setActive', {
+      cookie: customerCookie, input: { petId: null },
+    });
+    const meAfterClear = await trpcQuery<{ user: { activePetId: string | null } }>('auth.me', { cookie: customerCookie });
+    check('70.2 清除选定（null）幂等回落', setNull.activePetId === null && meAfterClear.user.activePetId === null,
+      meAfterClear.user.activePetId);
+    // 恢复选定=芯片测试犬（后续 72.x/截图口径无关，仅保持账号态干净）
+    await trpcMutate('pet.setActive', { cookie: customerCookie, input: { petId } });
+
+    /* ---- 70.3 健康记录族：四类 add/list/过滤/remove + 未来日期 400 + 他人 403 ---- */
+    const rec1 = await trpcMutate<{ record: { id: string; type: string; nextDueDate: string | null } }>('petHealth.healthAdd', {
+      cookie: customerCookie,
+      input: { petId: chipPet.pet.id, type: 'vaccine', title: '狂犬疫苗', recordDate: storeToday, nextDueDate: storeDayStr(new Date(Date.now() + 365 * 86400_000)) },
+    });
+    const rec2 = await trpcMutate<{ record: { id: string; type: string } }>('petHealth.healthAdd', {
+      cookie: customerCookie,
+      input: { petId: chipPet.pet.id, type: 'deworm', title: '体内驱虫（片剂）', recordDate: storeToday },
+    });
+    const recFuture = await asErr(trpcMutate('petHealth.healthAdd', {
+      cookie: customerCookie,
+      input: { petId: chipPet.pet.id, type: 'medication', title: '未来药', recordDate: storeDayStr(new Date(Date.now() + 86400_000)) },
+    }));
+    const recByB = await asErr(trpcMutate('petHealth.healthAdd', {
+      cookie: exp4bCookie,
+      input: { petId: chipPet.pet.id, type: 'vet_visit', title: '越权就诊', recordDate: storeToday },
+    }));
+    check('70.3 记录落库 + 发生日期晚于今天 400 + 他人宠物建档 403',
+      rec1.record.type === 'vaccine' && !!rec1.record.nextDueDate && rec2.record.type === 'deworm' &&
+      recFuture instanceof TrpcHttpError && recFuture.httpStatus === 400 &&
+      recByB instanceof TrpcHttpError && recByB.httpStatus === 403,
+      { future: recFuture && recFuture.httpStatus, byB: recByB && recByB.httpStatus });
+    const recListAll = await trpcQuery<{ records: Array<{ id: string; type: string }> }>('petHealth.healthList', {
+      cookie: customerCookie, input: { petId: chipPet.pet.id },
+    });
+    const recListVac = await trpcQuery<{ records: Array<{ id: string; type: string }> }>('petHealth.healthList', {
+      cookie: customerCookie, input: { petId: chipPet.pet.id, type: 'vaccine' },
+    });
+    check('70.3 列表全量 2 行 + 类型过滤 vaccine 仅 1 行',
+      recListAll.records.length === 2 && recListVac.records.length === 1 && recListVac.records[0]!.id === rec1.record.id,
+      { all: recListAll.records.length, vac: recListVac.records.length });
+    await trpcMutate('petHealth.healthRemove', { cookie: customerCookie, input: { id: rec2.record.id } });
+    const recListAfterRm = await trpcQuery<{ records: Array<{ id: string }> }>('petHealth.healthList', {
+      cookie: customerCookie, input: { petId: chipPet.pet.id },
+    });
+    const recRmByB = await asErr(trpcMutate('petHealth.healthRemove', { cookie: exp4bCookie, input: { id: rec1.record.id } }));
+    check('70.3 删除生效（剩 1 行）+ 他人删除 403',
+      recListAfterRm.records.length === 1 && recRmByB instanceof TrpcHttpError && recRmByB.httpStatus === 403,
+      { left: recListAfterRm.records.length, byB: recRmByB && recRmByB.httpStatus });
+
+    /* ---- 70.4 体重记录：时序落库 + 最新日回写快照 + 历史补录不覆盖 ---- */
+    const wToday = await trpcMutate<{ log: { id: string } }>('petHealth.weightAdd', {
+      cookie: customerCookie, input: { petId: chipPet.pet.id, weightKg: 10.5, measuredAt: storeToday },
+    });
+    const wYest = await trpcMutate<{ log: { id: string } }>('petHealth.weightAdd', {
+      cookie: customerCookie, input: { petId: chipPet.pet.id, weightKg: 10.1, measuredAt: storeYesterday },
+    });
+    const petAfterW = await db.select().from(schema.pets).where(eq(schema.pets.id, chipPet.pet.id)).get();
+    const wList = await trpcQuery<{ logs: Array<{ weightKg: number; measuredAt: string }> }>('petHealth.weightList', {
+      cookie: customerCookie, input: { petId: chipPet.pet.id },
+    });
+    check('70.4 体重两行升序 + pets.weight_kg 快照=最新称重日值（历史补录不覆盖）',
+      wList.logs.length === 2 && wList.logs[0]!.measuredAt === storeYesterday && wList.logs[1]!.measuredAt === storeToday &&
+      petAfterW?.weightKg === 10.5,
+      { logs: wList.logs.map((l) => [l.measuredAt, l.weightKg]), snapshot: petAfterW?.weightKg });
+    void wToday; void wYest;
+    const ov = await trpcQuery<{ pet: { id: string }; records: unknown[]; weights: unknown[] }>('petHealth.overview', {
+      cookie: customerCookie, input: { petId: chipPet.pet.id },
+    });
+    const ovByB = await asErr(trpcQuery('petHealth.overview', { cookie: exp4bCookie, input: { petId: chipPet.pet.id } }));
+    check('70.4 overview 聚合读口（档案+记录 1+体重 2）+ 他人 403',
+      ov.pet.id === chipPet.pet.id && ov.records.length === 1 && ov.weights.length === 2 &&
+      ovByB instanceof TrpcHttpError && ovByB.httpStatus === 403,
+      { recs: ov.records.length, w: ov.weights.length, byB: ovByB && ovByB.httpStatus });
+
+    /* ================================================================== */
+    console.log('\n[体验批片4] 71. 服务过程+通知：异常通报 / 升级 / 拆封 / 安心卡 / 定时推送族');
+
+    /* ---- 71.1 异常通报：in_service 洗护单夹具 → report → 双通知（主人+门店）落行 ---- */
+    const gSvc71 = (await db.select().from(schema.services)
+      .where(and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'grooming'))).get())!;
+    // 时刻钉法：16:30 半点（槽位选取器只取整点，半点永不撞刻——57.6 先例）
+    const i71Start = new Date(`${storeToday}T16:30:00+08:00`);
+    const i71Appt = (await db.insert(schema.appointments).values({
+      code: 'E2EANC', customerId: customerUser.id, storeId, petId, serviceId: gSvc71.id,
+      type: 'grooming', scheduledStart: i71Start, scheduledEnd: new Date(i71Start.getTime() + 2 * 3600_000),
+      status: 'confirmed', priceFen: 12800, note: '【测试】e2e 片4 异常通报洗护单',
+    }).returning())[0]!;
+    await trpcMutate('appointment.checkin', { cookie: staffCookie, input: { code: 'E2EANC' } });
+    const rep711 = await trpcMutate<{ incident: { id: string; type: string; handledAt: Date | null } }>('incident.report', {
+      cookie: staffCookie,
+      input: { appointmentId: i71Appt.id, type: 'stress', description: '洗护中出现应激反应，已暂停操作并安抚' },
+    });
+    check('71.1 incident.report 落行（type=stress + handledAt=null 待处置）',
+      rep711.incident.type === 'stress' && rep711.incident.handledAt === null, rep711.incident);
+    const n711c = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'incident.reported'))))
+      .filter((n) => n.link === `/appointments/${i71Appt.id}/live#incident`);
+    const n711o = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, ownerUser.id), eq(schema.notifications.type, 'incident.reported'))))
+      .filter((n) => n.link === `/appointments/${i71Appt.id}/live#incident`);
+    check('71.1 双通知同事务落行（主人+店主各一条 incident.reported，link 带 #incident 锚避同刻聚合）',
+      n711c.length === 1 && n711o.length === 1 && n711c[0]!.category === 'service',
+      { customer: n711c.length, owner: n711o.length });
+    const list711 = await trpcQuery<{ incidents: Array<{ id: string }> }>('incident.listForAppointment', {
+      cookie: customerCookie, input: { appointmentId: i71Appt.id },
+    });
+    const list711b = await asErr(trpcQuery('incident.listForAppointment', { cookie: exp4bCookie, input: { appointmentId: i71Appt.id } }));
+    check('71.1 listForAppointment 本人可见（live 页高亮条数据源）+ 非当事人 403',
+      list711.incidents.some((i) => i.id === rep711.incident.id) &&
+      list711b instanceof TrpcHttpError && list711b.httpStatus === 403,
+      { n: list711.incidents.length, byB: list711b && list711b.httpStatus });
+    /* 状态闸负例：pending 单不可填报 */
+    const i71bAppt = (await db.insert(schema.appointments).values({
+      code: 'E2EANB', customerId: customerUser.id, storeId, petId, serviceId: gSvc71.id,
+      type: 'grooming', scheduledStart: i71Start, scheduledEnd: new Date(i71Start.getTime() + 2 * 3600_000),
+      status: 'pending', priceFen: 12800, note: '【测试】e2e 片4 异常状态闸负例单',
+    }).returning())[0]!;
+    const repPending = await asErr(trpcMutate('incident.report', {
+      cookie: staffCookie, input: { appointmentId: i71bAppt.id, type: 'injury', description: '状态闸负例' },
+    }));
+    const repByCustomer = await asErr(trpcMutate('incident.report', {
+      cookie: customerCookie, input: { appointmentId: i71Appt.id, type: 'injury', description: '客户越权填报' },
+    }));
+    check('71.1 状态闸：pending 单填报 400；客户无 staff 身份填报 401/403',
+      repPending instanceof TrpcHttpError && repPending.httpStatus === 400 &&
+      repByCustomer instanceof TrpcHttpError && (repByCustomer.httpStatus === 403 || repByCustomer.httpStatus === 401),
+      { pending: repPending && repPending.httpStatus, byC: repByCustomer && repByCustomer.httpStatus });
+
+    /* ---- 71.2 处置：markHandled（店长）→ handled 落列+主人通知；幂等二次 ---- */
+    const han712 = await trpcMutate<{ incident: { handledAt: Date | null; handledNote: string | null }; alreadyHandled: boolean }>('incident.markHandled', {
+      cookie: managerCookie, input: { incidentId: rep711.incident.id, note: '已安抚观察，状态平稳，继续完成服务' },
+    });
+    const n712 = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'incident.handled'))))
+      .filter((n) => n.link === `/appointments/${i71Appt.id}/live#incident`);
+    const han712b = await trpcMutate<{ alreadyHandled: boolean }>('incident.markHandled', {
+      cookie: managerCookie, input: { incidentId: rep711.incident.id, note: '重复处置验证幂等' },
+    });
+    check('71.2 markHandled 落列+incident.handled 通知主人+重复处置幂等（alreadyHandled=true 零副作用）',
+      han712.incident.handledAt instanceof Date && han712.incident.handledNote!.includes('安抚') &&
+      n712.length === 1 && han712b.alreadyHandled === true,
+      { handled: !!han712.incident.handledAt, notify: n712.length, dup: han712b.alreadyHandled });
+
+    /* ---- 71.3 15 分钟升级扫描：钉 created_at=16 分钟前 → sweep 置 escalated_at + 双方升级通知；重扫零增量 ---- */
+    const sixteenAgo = new Date(Date.now() - 16 * 60_000);
+    const inc713 = (await db.insert(schema.serviceIncidents).values({
+      appointmentId: i71Appt.id, storeId, petId, customerId: customerUser.id,
+      type: 'injury', description: '【测试】超时未处置升级夹具', occurredAt: sixteenAgo, reportedBy: aStaff.userId,
+      createdAt: sixteenAgo, updatedAt: sixteenAgo,
+    }).returning())[0]!;
+    const esc1 = await sweepIncidentEscalations(db, new Date());
+    const inc713After = await db.select().from(schema.serviceIncidents).where(eq(schema.serviceIncidents.id, inc713.id)).get();
+    const n713c = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'incident.escalated'))))
+      .filter((n) => n.link === `/appointments/${i71Appt.id}/live#incident`);
+    const n713o = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, ownerUser.id), eq(schema.notifications.type, 'incident.escalated'))))
+      .filter((n) => n.link === `/appointments/${i71Appt.id}/live#incident`);
+    check('71.3 超 15 分钟未处置 → 升级扫描置 escalated_at + 主人/店主双通知（incident.escalated）',
+      esc1 >= 1 && inc713After?.escalatedAt instanceof Date && n713c.length === 1 && n713o.length === 1,
+      { swept: esc1, esc: !!inc713After?.escalatedAt, c: n713c.length, o: n713o.length });
+    const esc2 = await sweepIncidentEscalations(db, new Date());
+    const n713c2 = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'incident.escalated'))))
+      .filter((n) => n.link === `/appointments/${i71Appt.id}/live#incident`);
+    check('71.3 升级幂等：escalated_at 锚重扫零增量（主人仍 1 条）', esc2 === 0 && n713c2.length === 1,
+      { second: esc2, n: n713c2.length });
+
+    /* ---- 71.4 寄养夹具（in_boarding + stay）→ 用品拆封通知 + 安心卡读口 ---- */
+    const bSvc71 = (await db.select().from(schema.services)
+      .where(and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'boarding'))).get())!;
+    const b71Start = new Date(`${storeToday}T17:30:00+08:00`); // 钉 17:30 半点
+    const b71Appt = (await db.insert(schema.appointments).values({
+      code: 'E2EBRD', customerId: customerUser.id, storeId, petId, serviceId: bSvc71.id,
+      type: 'boarding', scheduledStart: b71Start, scheduledEnd: new Date(b71Start.getTime() + 2 * 86400_000),
+      status: 'confirmed', priceFen: 39800, note: '【测试】e2e 片4 拆封/安心卡/推送寄养单',
+    }).returning())[0]!;
+    await trpcMutate('appointment.checkin', { cookie: staffCookie, input: { code: 'E2EBRD' } });
+    const b71Stay = await trpcMutate<{ stay: { id: string }; created: boolean }>('boarding.checkinStay', {
+      cookie: staffCookie,
+      input: { appointmentId: b71Appt.id, checkinWeightKg: 28.6, belongings: [{ name: '自带粮一袋' }, { name: '玩具球' }], roomNo: 'A-03' },
+    });
+    const un714 = await trpcMutate<{ log: { id: string; itemName: string } }>('boarding.unsealBelonging', {
+      cookie: staffCookie, input: { stayId: b71Stay.stay.id, itemName: '自带粮一袋', note: '晚餐开封投喂' },
+    });
+    const n714 = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'boarding.unsealed'))))
+      .filter((n) => n.link === `/appointments/${b71Appt.id}/live#unseal`);
+    check('71.4 用品拆封落痕 + 主人即时通知（boarding.unsealed，link 带 #unseal 锚）',
+      un714.log.itemName === '自带粮一袋' && n714.length === 1, { log: un714.log.id, notify: n714.length });
+    const ac714 = await trpcQuery<{
+      stay: { roomNo: string | null; checkinWeightKg: number | null } | null;
+      latestLog: unknown; unsealLogs: Array<{ itemName: string }>; petName: string | null;
+    }>('boarding.assuranceCard', { cookie: customerCookie, input: { appointmentId: b71Appt.id } });
+    const ac714b = await asErr(trpcQuery('boarding.assuranceCard', { cookie: exp4bCookie, input: { appointmentId: b71Appt.id } }));
+    check('71.4 安心卡读口聚合（房间/入住体重/拆封留痕 1 条/宠物名）+ 他人 403',
+      ac714.stay?.roomNo === 'A-03' && ac714.stay.checkinWeightKg === 28.6 &&
+      ac714.unsealLogs.length === 1 && ac714.unsealLogs[0]!.itemName === '自带粮一袋' && !!ac714.petName &&
+      ac714b instanceof TrpcHttpError && ac714b.httpStatus === 403,
+      { room: ac714.stay?.roomNo, unseal: ac714.unsealLogs.length, byB: ac714b && ac714b.httpStatus });
+
+    /* ---- 71.6 早晚定时推送：钉 08:35/20:35 窗内扫 → 早安/晚安播报各一；同窗重扫零增量 ---- */
+    await trpcMutate('boarding.dailyLog', {
+      cookie: staffCookie,
+      input: { stayId: b71Stay.stay.id, logDate: storeToday, walks: 2, meals: [{ time: '08:00', food: '自带粮', amount: '一碗', finished: true }] },
+    });
+    const dnLink = `/appointments/${b71Appt.id}/live`;
+    const dnBefore = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'boarding.daynight'))))
+      .filter((n) => n.link === dnLink);
+    // 钉 08:35（早窗 08:30–09:00 内；扫描粒度 5min 必扫到，当日当槽幂等锚兜底）
+    const amPin = new Date(`${storeToday}T08:35:00+08:00`);
+    await sweepBoardingDayNight(db, amPin);
+    await sweepBoardingDayNight(db, amPin); // 同窗重扫
+    const dnAm = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'boarding.daynight'))))
+      .filter((n) => n.link === dnLink);
+    check('71.6 早安播报落行（含当日打卡摘要「遛放 2 次」）+ 同窗重扫零增量',
+      dnAm.length - dnBefore.length === 1 && dnAm.some((n) => n.title === '早安播报' && (n.body ?? '').includes('遛放 2 次')),
+      { before: dnBefore.length, after: dnAm.length, titles: dnAm.map((n) => n.title) });
+    const pmPin = new Date(`${storeToday}T20:35:00+08:00`); // 晚窗 20:30–21:00
+    await sweepBoardingDayNight(db, pmPin);
+    await sweepBoardingDayNight(db, pmPin);
+    const dnPm = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'boarding.daynight'))))
+      .filter((n) => n.link === dnLink);
+    check('71.6 晚安播报另起一条（同槽不同行=早/晚各一）+ 重扫零增量',
+      dnPm.length - dnBefore.length === 2 && dnPm.some((n) => n.title === '晚安播报'),
+      { after: dnPm.length, titles: dnPm.map((n) => n.title) });
+
+    /* ---- 71.7 照护 4h 提醒：lastLog 钉 5h 前 → 本店在职员工各落一条；间隔内重扫零增量 ---- */
+    const carePin = new Date(`${storeToday}T12:00:00+08:00`); // 钉正午（白天窗 08:00–22:00 内）
+    await db.update(schema.boardingDailyLogs)
+      .set({ updatedAt: new Date(carePin.getTime() - 5 * 3600_000) })
+      .where(eq(schema.boardingDailyLogs.stayId, b71Stay.stay.id));
+    const careLink = `/boarding/${b71Appt.id}/checkin`;
+    const careBefore = (await db.select().from(schema.notifications)
+      .where(eq(schema.notifications.type, 'boarding.careRemind'))).filter((n) => n.link === careLink);
+    await sweepCareLogReminders(db, carePin);
+    let careAfter = (await db.select().from(schema.notifications)
+      .where(eq(schema.notifications.type, 'boarding.careRemind'))).filter((n) => n.link === careLink);
+    /* 幂等钉法：落行 created_at=真实时刻，dedupe 窗口按钉时刻起算——若真实时刻早于钉时刻 4h+
+       （凌晨跑批场景）重扫会误增；统一把本次落行 created_at 归位到钉时刻，第二扫确定性命中锚 */
+    for (const n of careAfter.filter((n) => !careBefore.some((b) => b.id === n.id))) {
+      await db.update(schema.notifications).set({ createdAt: carePin }).where(eq(schema.notifications.id, n.id));
+    }
+    await sweepCareLogReminders(db, carePin); // 间隔内重扫
+    careAfter = (await db.select().from(schema.notifications)
+      .where(eq(schema.notifications.type, 'boarding.careRemind'))).filter((n) => n.link === careLink);
+    check('71.7 4h 照护提醒：超期间隔 → 本店在职员工全员各一条（boarding.careRemind）+ 间隔内重扫零增量',
+      careAfter.length - careBefore.length === storeStaffRows.length,
+      { before: careBefore.length, after: careAfter.length, staff: storeStaffRows.length });
+
+    /* ---- 71.8 疫苗/驱虫到期提醒：双源扫描（pets.vaccine_valid_until + health.next_due_date）当日当项幂等 ---- */
+    const dueSoon = storeDayStr(new Date(Date.now() + 5 * 86400_000)); // 到期=5 天后（缺省提前 7 天窗口内）
+    const duePet = (await db.insert(schema.pets).values({
+      ownerId: customerUser.id, name: '到期提醒测试兔', species: 'other', vaccineValidUntil: dueSoon,
+    }).returning())[0]!;
+    const dueRec = await trpcMutate<{ record: { id: string } }>('petHealth.healthAdd', {
+      cookie: customerCookie,
+      input: { petId: duePet.id, type: 'deworm', title: '体外驱虫（滴剂）', recordDate: storeToday, nextDueDate: storeDayStr(new Date(Date.now() + 3 * 86400_000)) },
+    });
+    await sweepPetDueReminders(db, new Date());
+    await sweepPetDueReminders(db, new Date()); // 当日重扫
+    const n718v = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'pet.vaccineDue'))))
+      .filter((n) => n.link === `/philia/pets/${duePet.id}`);
+    const n718h = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'pet.healthDue'))))
+      .filter((n) => n.link === `/philia/pets/${duePet.id}/health?rec=${dueRec.record.id}`);
+    check('71.8 到期双源各落一条（疫苗字段源 pet.vaccineDue + 记录源 pet.healthDue）+ 当日当项幂等重扫零增量',
+      n718v.length === 1 && n718h.length === 1 && (n718v[0]!.body ?? '').includes(dueSoon),
+      { v: n718v.length, h: n718h.length });
+
+    /* ================================================================== */
+    console.log('\n[体验批片4] 72. 明细透出 / 电话公示 / 工单升级 / 静态闸门');
+
+    /* ---- 72.1 服务明细：分项时长（六步逐起讫）+ 用料透出（消毒耗材扣减流水） ---- */
+    const d72Start = new Date(`${storeToday}T18:30:00+08:00`); // 钉 18:30 半点
+    const d72Appt = (await db.insert(schema.appointments).values({
+      code: 'E2ED72', customerId: customerUser.id, storeId, petId, serviceId: gSvc71.id,
+      type: 'grooming', scheduledStart: d72Start, scheduledEnd: new Date(d72Start.getTime() + 2 * 3600_000),
+      status: 'in_service', priceFen: 12800, note: '【测试】e2e 片4 服务明细单',
+    }).returning())[0]!;
+    const d72Step1 = (await db.insert(schema.appointmentSteps).values({
+      appointmentId: d72Appt.id, stepKey: 'disinfection', stepOrder: 1, status: 'done', requiredPhotos: 1,
+      startedAt: new Date(d72Start.getTime()), doneAt: new Date(d72Start.getTime() + 600_000),
+    }).returning())[0]!;
+    await db.insert(schema.appointmentSteps).values({
+      appointmentId: d72Appt.id, stepKey: 'precheck', stepOrder: 2, status: 'active', requiredPhotos: 2,
+      startedAt: new Date(d72Start.getTime() + 600_000),
+    });
+    const d72Supply = (await db.select().from(schema.products)
+      .where(and(eq(schema.products.storeId, storeId), eq(schema.products.isDisinfectionSupply, true))).get())!;
+    await db.insert(schema.stockMovements).values({
+      storeId, productId: d72Supply.id, sourceType: 'disinfection', sourceId: d72Step1.id,
+      delta: -1, beforeStock: 10, afterStock: 9, operatorId: aStaff.userId, note: '【测试】片4 明细透出夹具',
+    });
+    const sheet721 = await trpcQuery<{
+      appointmentStatus: string;
+      steps: Array<{ stepKey: string; label: string; status: string; durationSec: number | null }>;
+      materials: Array<{ name: string; quantity: number }>;
+    }>('serviceStep.detailSheet', { cookie: customerCookie, input: { appointmentId: d72Appt.id } });
+    const sheet721b = await asErr(trpcQuery('serviceStep.detailSheet', { cookie: exp4bCookie, input: { appointmentId: d72Appt.id } }));
+    check('72.1 detailSheet：分项时长（消毒步 600s/中文名/进行中步 duration=null）+ 用料透出（耗材名×1）+ 非当事人 403',
+      sheet721.steps.length === 2 &&
+      sheet721.steps[0]!.stepKey === 'disinfection' && sheet721.steps[0]!.label === '消毒' && sheet721.steps[0]!.durationSec === 600 &&
+      sheet721.steps[1]!.status === 'active' && sheet721.steps[1]!.durationSec === null &&
+      sheet721.materials.length === 1 && sheet721.materials[0]!.name === d72Supply.name && sheet721.materials[0]!.quantity === 1 &&
+      sheet721b instanceof TrpcHttpError && sheet721b.httpStatus === 403,
+      { steps: sheet721.steps.map((s) => [s.stepKey, s.durationSec]), mats: sheet721.materials, byB: sheet721b && sheet721b.httpStatus });
+    /* 无耗材空单=空数组诚实空态（不画假用料） */
+    const sheet721c = await trpcQuery<{ materials: unknown[] }>('serviceStep.detailSheet', {
+      cookie: customerCookie, input: { appointmentId: i71Appt.id },
+    });
+    check('72.1 无耗材扣减单 materials=空数组（诚实空态口径）', sheet721c.materials.length === 0, sheet721c.materials.length);
+
+    /* ---- 72.2 电话客服公示：stores.phone 透出 + owner 维护口 + 非 owner 403 ---- */
+    const nearby722 = await trpcQuery<{ stores: Array<{ id: string; phone: string | null }> }>('store.listNearby', { cookie: customerCookie });
+    const store722 = nearby722.stores.find((s) => s.id === storeId);
+    check('72.2 listNearby 透出门店电话（种子值 0571-88886666；ContactStore/AppDock 数据源）',
+      store722?.phone === '0571-88886666', store722?.phone);
+    const upd722 = await trpcMutate<{ store: { phone: string | null } }>('auth.updateStoreProfile', {
+      cookie: ownerCookie, input: { phone: '0571-11112222' },
+    });
+    const upd722b = await asErr(trpcMutate('auth.updateStoreProfile', { cookie: customerCookie, input: { phone: '0571-99998888' } }));
+    check('72.2 门店电话维护口：owner 改值生效 + 非 owner 403（带端口出生）',
+      upd722.store.phone === '0571-11112222' && upd722b instanceof TrpcHttpError && upd722b.httpStatus === 403,
+      { phone: upd722.store.phone, byC: upd722b && upd722b.httpStatus });
+    await trpcMutate('auth.updateStoreProfile', { cookie: ownerCookie, input: { phone: '0571-88886666' } }); // 复原种子值
+
+    /* ---- 72.3 工单升级店长介入：escalated 状态机 + 时间线 + 门店通知 + 待办含升级件 ---- */
+    const tk723 = await trpcMutate<{ ticket: { id: string; ticketNo: string; status: string } }>('serviceLoop.ticketCreate', {
+      cookie: customerCookie, input: { storeId, type: 'complaint', description: '等待时间过长，要求店长跟进', photoUrls: [] },
+    });
+    const esc723 = await trpcMutate<{
+      ticket: { status: string; escalatedAt: Date | null; escalateNote: string | null; timelineJson: Array<{ action: string }> };
+      alreadyEscalated: boolean;
+    }>('serviceLoop.ticketEscalate', {
+      cookie: customerCookie, input: { ticketId: tk723.ticket.id, note: '已等 3 天无人回复' },
+    });
+    const n723 = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, ownerUser.id), eq(schema.notifications.type, 'ticket.escalated'))))
+      .filter((n) => (n.body ?? '').includes(tk723.ticket.ticketNo) || n.link === '/');
+    const pend723 = await trpcQuery<Array<{ id: string; status: string }>>('serviceLoop.ticketListPending', { cookie: managerCookie });
+    check('72.3 ticketEscalate：status=escalated + escalatedAt/Note 落列 + timeline 追加 escalated + 店主通知 + 店长待办含升级件',
+      esc723.ticket.status === 'escalated' && esc723.ticket.escalatedAt instanceof Date &&
+      esc723.ticket.escalateNote === '已等 3 天无人回复' &&
+      esc723.ticket.timelineJson.some((t) => t.action === 'escalated') &&
+      n723.length >= 1 && pend723.some((t) => t.id === tk723.ticket.id && t.status === 'escalated'),
+      { st: esc723.ticket.status, tl: esc723.ticket.timelineJson.map((t) => t.action), notify: n723.length });
+    const esc723dup = await trpcMutate<{ alreadyEscalated: boolean }>('serviceLoop.ticketEscalate', {
+      cookie: customerCookie, input: { ticketId: tk723.ticket.id },
+    });
+    const esc723byB = await asErr(trpcMutate('serviceLoop.ticketEscalate', { cookie: exp4bCookie, input: { ticketId: tk723.ticket.id } }));
+    const reply723 = await trpcMutate<{ ticket: { status: string } }>('serviceLoop.ticketReply', {
+      cookie: managerCookie, input: { ticketId: tk723.ticket.id, reply: '店长已介入：本单免等待优先处理，稍后电话回访' },
+    });
+    check('72.3 重复升级幂等 + 他人升级 403 + 升级后店长可回复（escalated→replied）',
+      esc723dup.alreadyEscalated === true &&
+      esc723byB instanceof TrpcHttpError && esc723byB.httpStatus === 403 &&
+      reply723.ticket.status === 'replied',
+      { dup: esc723dup.alreadyEscalated, byB: esc723byB && esc723byB.httpStatus, after: reply723.ticket.status });
+    await db.update(schema.supportTickets).set({ status: 'closed' }).where(eq(schema.supportTickets.id, tk723.ticket.id));
+    const esc723closed = await asErr(trpcMutate('serviceLoop.ticketEscalate', { cookie: customerCookie, input: { ticketId: tk723.ticket.id } }));
+    check('72.3 已关闭工单升级硬拒 400（仲裁=在途件语义）',
+      esc723closed instanceof TrpcHttpError && esc723closed.httpStatus === 400, esc723closed && esc723closed.httpStatus);
+
+    /* ---- 72.4 品牌色板级闸门：VI V3 深棕口径——已退役柠檬黄主色全仓零命中（customer-mini 换皮残留已清） ---- */
+    const REPO_ROOT = join(SERVER_ROOT, '..');
+    const miniCss = readFileSync(join(REPO_ROOT, 'apps', 'customer-mini', 'src', 'app.css'), 'utf8');
+    const walkSrc = (dir: string, out: string[] = []): string[] => {
+      for (const ent of readdirSync(dir, { withFileTypes: true })) {
+        if (ent.name === 'node_modules' || ent.name.startsWith('.')) continue;
+        const p = join(dir, ent.name);
+        if (ent.isDirectory()) walkSrc(p, out);
+        else if (/\.(ts|tsx|css|html)$/.test(ent.name)) out.push(p);
+      }
+      return out;
+    };
+    const lemonHits: string[] = [];
+    for (const dir of [join(REPO_ROOT, 'apps', 'customer', 'src'), join(REPO_ROOT, 'apps', 'customer-mini', 'src'), join(REPO_ROOT, 'packages', 'shared', 'src')]) {
+      for (const f of walkSrc(dir)) {
+        if (/#fdc830/i.test(readFileSync(f, 'utf8'))) lemonHits.push(f);
+      }
+    }
+    check('72.4 色板闸门：柠檬黄（已退役 v1.1 主色）在 customer/customer-mini/shared 源码全域零命中（VI V3 深棕主体）',
+      lemonHits.length === 0 && !/#fdc830/i.test(miniCss) && miniCss.includes('#3B2E24'),
+      { hits: lemonHits.slice(0, 5) });
+
+    /* ---- 72.5 空态/骨架源码级闸门（盘点表 D6 差额：页面级断言补位——纯 UI 件无 server 闸，
+         以源码覆盖断言钉回归：六页空态组件引用 + 骨架三件导出 + 全端骨架引用面 ≥10 页） ---- */
+    const emptyPages = ['PetsPage.tsx', 'PetHealthPage.tsx', 'AppointmentsPage.tsx', 'MallOrdersPage.tsx', 'NotifyCenterPage.tsx', 'TicketListPage.tsx'];
+    const emptyMiss = emptyPages.filter((f) =>
+      !readFileSync(join(REPO_ROOT, 'apps', 'customer', 'src', 'pages', f), 'utf8').includes('EmptyState'));
+    const skeletonSrc = readFileSync(join(REPO_ROOT, 'packages', 'shared', 'src', 'components', 'Skeleton.tsx'), 'utf8');
+    const skelPages = walkSrc(join(REPO_ROOT, 'apps', 'customer', 'src')).filter((f) =>
+      f.endsWith('.tsx') && /Skeleton|ListSkeleton|BoardSkeleton/.test(readFileSync(f, 'utf8')));
+    check('72.5 空态闸门：六页 EmptyState 引用全命中 + 骨架三件导出在仓',
+      emptyMiss.length === 0 &&
+      /export (function|const) Skeleton/.test(skeletonSrc) && skeletonSrc.includes('ListSkeleton') && skeletonSrc.includes('BoardSkeleton'),
+      { miss: emptyMiss });
+    check('72.5 骨架闸门：客户端骨架组件引用面 ≥10 个 tsx（广泛应用回归钉）', skelPages.length >= 10, skelPages.length);
+
+    /* ---- 72.6 PWA 静态闸门：离线兜底配置+离线页+安装引导组件+挂载 ----
+       （开口项 3 实证修正：navigateFallback=壳 /index.html——离线页直连+预缓存双轨，
+       SPA 深链不被离线页接管，review-e2e 实证锚） */
+    const viteCfg = readFileSync(join(REPO_ROOT, 'apps', 'customer', 'vite.config.ts'), 'utf8');
+    const offlineHtml = readFileSync(join(REPO_ROOT, 'apps', 'customer', 'public', 'offline.html'), 'utf8');
+    const bannerSrc = readFileSync(join(REPO_ROOT, 'apps', 'customer', 'src', 'components', 'pwa', 'InstallBanner.tsx'), 'utf8');
+    const appTsx = readFileSync(join(REPO_ROOT, 'apps', 'customer', 'src', 'App.tsx'), 'utf8');
+    check('72.6 PWA 闸门：navigateFallback→/index.html 壳（API 前缀豁免）+ offline.html 品牌离线页在仓 + 安装引导（beforeinstallprompt/appinstalled）+ App.tsx 已挂载',
+      /navigateFallback:\s*'\/index\.html'/.test(viteCfg) && /navigateFallbackDenylist/.test(viteCfg) &&
+      offlineHtml.includes('菲丽亚') && bannerSrc.includes('beforeinstallprompt') && bannerSrc.includes('appinstalled') &&
+      /<InstallBanner\s*\/>/.test(appTsx),
+      { cfg: /navigateFallback/.test(viteCfg), mounted: /<InstallBanner\s*\/>/.test(appTsx) });
+  }
+
+  /* ==================================================================
+   * 客户端体验大批 片 5（尾牙读口 5+点亮 2+报表 17 张点亮）段：
+   *   73.x 尾牙读口 5（前后值断言+financeStats 同源出口对账）；
+   *   74.x 报表读口 D1-D9/N1-N6 形状+前后值（N7/N8=埋点预埋 75.3）；
+   *   75.x 写口与闸（差评回复/N6 申诉铁规两件/埋点/CSV 导出仅店主/CSV 导入零落账/回馈金列真值）。
+   * 钉法：报表月入参=当月（界内）；夹具时刻=真实 now 偏移，断言一律前后值 delta 不钉绝对值
+   *   （套内既有数据未知量隔离）；核销码字符集去 0/O/1/I/L（片 4 坑档）。
+   * ================================================================== */
+  console.log('\n[体验批片5] 73. 尾牙读口 5 件（前后值+对账）');
+  {
+    const { storeWallclock } = await import('../routers/appointment');
+    const now0 = new Date();
+    const w0 = storeWallclock(now0);
+    const monthNow = `${w0.y}-${String(w0.m).padStart(2, '0')}`;
+    /* 月位移（与 report.ts shiftMonth 同式） */
+    const shiftMonthE5 = (month: string, delta: number): string => {
+      const [y, m] = month.split('-').map((s) => parseInt(s, 10));
+      const t = y * 12 + (m - 1) + delta;
+      return `${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, '0')}`;
+    };
+    /* 本店洗护服务项 id（夹具单共用） */
+    const gSvcId73 = (await db.select().from(schema.services)
+      .where(and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'grooming'))).get())!.id;
+    const mkUser = async (kimiId: string, nickname: string) => {
+      const u = (await db.insert(schema.users).values({ kimiId, nickname, phone: `139${Date.now() % 100000000}` }).returning())[0]!;
+      await db.insert(schema.userRoles).values({ userId: u.id, role: 'customer' });
+      return u;
+    };
+
+    /* ---- 73.1 储值负债店级聚合：前后值 + clerk 403 ---- */
+    const svBefore = await trpcQuery<{ totalFen: number; principalFen: number; bonusFen: number; accountCount: number }>('report.storedValueLiability', { cookie: ownerCookie });
+    const svUser = await mkUser('seed_e2e_exp5_sv', 'e2e 片5 储值户');
+    await db.insert(schema.storedValueAccounts).values({ userId: svUser.id, storeId, principalFen: 50000, bonusFen: 5000 });
+    const svAfter = await trpcQuery<typeof svBefore>('report.storedValueLiability', { cookie: ownerCookie });
+    const svClerk = await asErr(trpcQuery('report.storedValueLiability', { cookie: clerkCookie }));
+    check('73.1 储值负债聚合：本金/赠送分列前后值 +50000/+5000，合计+55000，户数+1；clerk 403',
+      svAfter.principalFen - svBefore.principalFen === 50000 && svAfter.bonusFen - svBefore.bonusFen === 5000 &&
+      svAfter.totalFen - svBefore.totalFen === 55000 && svAfter.accountCount - svBefore.accountCount === 1 &&
+      svClerk instanceof TrpcHttpError && svClerk.httpStatus === 403,
+      { d: svAfter.totalFen - svBefore.totalFen, clerk: svClerk && svClerk.httpStatus });
+
+    /* ---- 73.2 回馈金负债店级聚合（本店会员口径=办卡店 ∪ 微光 NULL） ---- */
+    const rbBefore = await trpcQuery<{ totalFen: number; accountCount: number }>('report.rebateLiability', { cookie: ownerCookie });
+    const rbUser = await mkUser('seed_e2e_exp5_rb', 'e2e 片5 回馈金户');
+    await db.insert(schema.memberships).values({
+      userId: rbUser.id, planKey: 'plan_yinghuo', soldStoreId: storeId,
+      startedAt: new Date(now0.getTime() - 30 * 86400_000), expiresAt: new Date(now0.getTime() + 335 * 86400_000), paidFen: 19900,
+    });
+    const rbAcc = (await db.insert(schema.rebateAccounts).values({ userId: rbUser.id, balanceFen: 25800 }).returning())[0]!;
+    const rbAfter = await trpcQuery<typeof rbBefore>('report.rebateLiability', { cookie: ownerCookie });
+    check('73.2 回馈金负债聚合：新会员开户 25800 → 负债 +25800，账户 +1',
+      rbAfter.totalFen - rbBefore.totalFen === 25800 && rbAfter.accountCount - rbBefore.accountCount === 1,
+      { d: rbAfter.totalFen - rbBefore.totalFen });
+
+    /* ---- 73.3 昨日营收 + financeStats 同源对账 ---- */
+    const yW = storeWallclock(new Date(now0.getTime() - 24 * 3600_000));
+    const yesterdayStr = `${yW.y}-${String(yW.m).padStart(2, '0')}-${String(yW.day).padStart(2, '0')}`;
+    const ydBefore = await trpcQuery<{ date: string; totalFen: number; serviceFen: number }>('report.yesterdayRevenue', { cookie: ownerCookie });
+    /* 夹具：昨日已收款预约一单 8800（钉昨日 15:30 半点——半点永不撞槽位整点闸） */
+    const ydAppt = (await db.insert(schema.appointments).values({
+      code: 'EXP5YD', customerId: customerUser.id, storeId, petId, serviceId: gSvcId73,
+      type: 'grooming', scheduledStart: new Date(`${yesterdayStr}T15:30:00+08:00`), scheduledEnd: new Date(`${yesterdayStr}T17:30:00+08:00`),
+      status: 'completed', priceFen: 8800, paidFen: 8800, paymentMode: 'pay_at_store',
+      paidAt: new Date(`${yesterdayStr}T17:30:00+08:00`), completedAt: new Date(`${yesterdayStr}T17:30:00+08:00`),
+      note: '【测试】e2e 片5 昨日营收夹具',
+    }).returning())[0]!;
+    const ydAfter = await trpcQuery<typeof ydBefore>('report.yesterdayRevenue', { cookie: ownerCookie });
+    const finYd = await trpcQuery<{ totals: { serviceFen: number; totalFen: number } }>('store.financeStats', {
+      cookie: ownerCookie,
+      input: { from: new Date(`${yesterdayStr}T00:00:00+08:00`), to: new Date(`${yesterdayStr}T23:59:59+08:00`) },
+    });
+    check('73.3 昨日营收：日期=昨日 + 夹具单 +8800 前后值 + 与 financeStats 同区间 serviceFen 同值（同源对账）',
+      ydAfter.date === yesterdayStr && ydAfter.serviceFen - ydBefore.serviceFen === 8800 &&
+      ydAfter.totalFen - ydBefore.totalFen === 8800 && ydAfter.serviceFen === finYd.totals.serviceFen,
+      { date: ydAfter.date, d: ydAfter.serviceFen - ydBefore.serviceFen, fin: finYd.totals.serviceFen, mine: ydAfter.serviceFen });
+    void ydAppt;
+
+    /* ---- 73.4 近 14 日 spark：14 格连续 + 昨日格=昨日读口同值 ---- */
+    const spark = await trpcQuery<{ days: Array<{ date: string; totalFen: number }> }>('report.revenueSpark14', { cookie: ownerCookie });
+    const sparkYd = spark.days.find((d) => d.date === yesterdayStr);
+    check('73.4 近 14 日 spark：14 格 + 昨日格与 yesterdayRevenue.totalFen 同值（同源）',
+      spark.days.length === 14 && sparkYd?.totalFen === ydAfter.totalFen,
+      { n: spark.days.length, sparkYd: sparkYd?.totalFen, yd: ydAfter.totalFen });
+
+    /* ---- 73.5 差评聚合（reviews 底座） ---- */
+    const brBefore = await trpcQuery<{ total: number; badCount: number; avgRating: number | null }>('report.badReviewAgg', { cookie: ownerCookie });
+    const mkAppt = async (code: string, offsetH: number) =>
+      (await db.insert(schema.appointments).values({
+        code, customerId: customerUser.id, storeId, petId, serviceId: gSvcId73,
+        type: 'grooming', scheduledStart: new Date(now0.getTime() + offsetH * 3600_000), scheduledEnd: new Date(now0.getTime() + (offsetH + 2) * 3600_000),
+        status: 'completed', priceFen: 8800, note: '【测试】e2e 片5 评价夹具单',
+      }).returning())[0]!;
+    const rvAppt1 = await mkAppt('EXP5RV', 26 * 30); // 远未来避撞（不核销不占槽）
+    const rvAppt2 = await mkAppt('EXP5RW', 26 * 30 + 3);
+    const rvBad = (await db.insert(schema.reviews).values({
+      appointmentId: rvAppt1.id, storeId, customerId: customerUser.id, staffId: staffRow2!.id,
+      rating: 2, text: '【测试】等待太久，体验不佳', anonymous: false,
+    }).returning())[0]!;
+    await db.insert(schema.reviews).values({
+      appointmentId: rvAppt2.id, storeId, customerId: customerUser.id, staffId: staffRow2!.id,
+      rating: 5, text: '【测试】很好', anonymous: true,
+    });
+    const brAfter = await trpcQuery<{ total: number; badCount: number; recent: Array<{ id: string; replied: boolean }> }>('report.badReviewAgg', { cookie: ownerCookie });
+    check('73.5 差评聚合：总评 +2 / 差评 +1（≤2 星界值）/ 近十条含新差评行（未回复态）',
+      brAfter.total - brBefore.total === 2 && brAfter.badCount - brBefore.badCount === 1 &&
+      brAfter.recent.some((r) => r.id === rvBad.id && r.replied === false),
+      { dTotal: brAfter.total - brBefore.total, dBad: brAfter.badCount - brBefore.badCount });
+
+    /* ================================================================ */
+    console.log('\n[体验批片5] 74. 报表读口 D1-D9 / N1-N6（前后值+形状）');
+    type AnyRec = Record<string, unknown>;
+    const call = <T>(p: string) => trpcQuery<T>(p, { cookie: ownerCookie, input: { month: monthNow } });
+
+    /* ---- 74.1 D1 营收双口径：夹具已收单 → cashFen delta + 会员散客占比非会员桶 + 双口径并显字段 ---- */
+    const d1Before = await call<AnyRec>('report.d1Revenue');
+    const d1Appt = (await db.insert(schema.appointments).values({
+      code: 'EXP5D1', customerId: svUser.id, storeId, petId, serviceId: gSvcId73,
+      type: 'grooming', scheduledStart: now0, scheduledEnd: new Date(now0.getTime() + 3600_000),
+      status: 'completed', priceFen: 12800, paidFen: 12800, paymentMode: 'pay_at_store', paidAt: now0, completedAt: now0,
+      note: '【测试】e2e 片5 D1 夹具单',
+    }).returning())[0]!;
+    const d1After = await call<AnyRec>('report.d1Revenue');
+    const d1b = d1Before.breakdown as AnyRec;
+    check('74.1 D1：收现口径 cashFen +12800（夹具散客单）+ 分摊口径字段在 + 会员散客分拆 nonMemberFen +12800 + byDay 下钻序列在',
+      (d1After.cashFen as number) - (d1Before.cashFen as number) === 12800 &&
+      typeof d1After.amortizedFen === 'number' && typeof (d1After.breakdown as AnyRec).memberFeeCashFen === 'number' &&
+      ((d1After.memberVsGuest as AnyRec).nonMemberFen as number) - ((d1Before.memberVsGuest as AnyRec).nonMemberFen as number) === 12800 &&
+      Array.isArray(d1After.byDay),
+      { d: (d1After.cashFen as number) - (d1Before.cashFen as number) });
+    void d1b; void d1Appt;
+
+    /* ---- 74.2 D2 服务构成+附加项搭售率（appointment_addons 片 2 域真值） ---- */
+    const d2Before = await call<AnyRec>('report.d2ServiceMix');
+    const addonSvc = (await db.select().from(schema.services).where(eq(schema.services.storeId, storeId)).get())!;
+    await db.insert(schema.appointmentAddons).values({ appointmentId: d1Appt.id, addonServiceId: addonSvc.id, nameSnapshot: '刷牙', priceFen: 3000, createdAt: new Date() });
+    const d2After = await call<AnyRec>('report.d2ServiceMix');
+    const ad2b = d2Before.addon as AnyRec;
+    const ad2a = d2After.addon as AnyRec;
+    check('74.2 D2：byService 聚合 + 搭售率前后值（有附加项单 +1/总单已在 74.1 入月 delta=0）+ 附加项金额 +3000',
+      (d2After.totalCount as number) - (d2Before.totalCount as number) === 0 &&
+      (ad2a.attachCount as number) - (ad2b.attachCount as number) === 1 &&
+      (ad2a.addonFen as number) - (ad2b.addonFen as number) === 3000 &&
+      Array.isArray(d2After.byService),
+      { cnt: (d2After.totalCount as number) - (d2Before.totalCount as number), attach: ad2a.attachCount });
+
+    /* ---- 74.3 D3 会员增长：新会员落当月 newCount+1 ---- */
+    const d3Before = await call<AnyRec>('report.d3MemberGrowth');
+    const d3User = await mkUser('seed_e2e_exp5_d3', 'e2e 片5 增长户');
+    await db.insert(schema.memberships).values({
+      userId: d3User.id, planKey: 'plan_zhuguang', soldStoreId: storeId,
+      startedAt: now0, expiresAt: new Date(now0.getTime() + 365 * 86400_000), paidFen: 29900,
+    });
+    const d3After = await call<AnyRec>('report.d3MemberGrowth');
+    check('74.3 D3：新增 +1（plan_zhuguang 档）+ 存量/活跃率字段在',
+      (d3After.newCount as number) - (d3Before.newCount as number) === 1 &&
+      (d3After.newByPlan as Array<{ planKey: string; count: number }>).some((p) => p.planKey === 'plan_zhuguang') &&
+      typeof d3After.activeTotal === 'number',
+      { d: (d3After.newCount as number) - (d3Before.newCount as number) });
+
+    /* ---- 74.4 D4 次卡台账：充次/扣次/剩余负债前后值 + 消耗趋势 6 格 ---- */
+    const d4Before = await call<AnyRec>('report.d4PassLedger');
+    const d4Pass = (await db.insert(schema.memberPasses).values({ userId: svUser.id, storeId, totalTimes: 10, remainTimes: 4 }).returning())[0]!;
+    await db.insert(schema.passDeductLogs).values({ passId: d4Pass.id, delta: -2, note: '【测试】片5 扣次' });
+    await db.insert(schema.passDeductLogs).values({ passId: d4Pass.id, delta: 10, note: '【测试】片5 充次' });
+    const d4After = await call<AnyRec>('report.d4PassLedger');
+    check('74.4 D4：售卡充次 +10 / 扣次当月 +2 / 剩余次数负债 +4（次数口径）+ 趋势 6 格',
+      (d4After.totalTimes as number) - (d4Before.totalTimes as number) === 10 &&
+      (d4After.remainTimes as number) - (d4Before.remainTimes as number) === 4 &&
+      (d4After.deductedTimesInMonth as number) - (d4Before.deductedTimesInMonth as number) === 2 &&
+      (d4After.consumeTrend6m as unknown[]).length === 6,
+      { remain: (d4After.remainTimes as number) - (d4Before.remainTimes as number) });
+
+    /* ---- 74.5 D5 储值台账负债视角 + 预收负债总额行=储值+回馈金 ---- */
+    const d5Before = await call<AnyRec>('report.d5StoredValue');
+    const svAcc = (await db.select().from(schema.storedValueAccounts).where(and(eq(schema.storedValueAccounts.userId, svUser.id), eq(schema.storedValueAccounts.storeId, storeId))).get())!;
+    await db.insert(schema.storedValueLogs).values({
+      accountId: svAcc.id, userId: svUser.id, storeId, deltaPrincipalFen: 11000, deltaBonusFen: 0, deltaFen: 11000,
+      balanceBeforeFen: 55000, balanceAfterFen: 66000, operatorId: ownerUser.id, note: '【测试】片5 储值充值',
+    });
+    const d5After = await call<AnyRec>('report.d5StoredValue');
+    check('74.5 D5：本月充值 +11000 + 期末负债字段 + 预收负债总额=储值负债+回馈金负债（恒等式）',
+      (d5After.rechargeFen as number) - (d5Before.rechargeFen as number) === 11000 &&
+      d5After.prepaidLiabilityTotalFen === (d5After.liabilityFen as number) + (d5After.rebateLiabilityFen as number),
+      { d: (d5After.rechargeFen as number) - (d5Before.rechargeFen as number) });
+
+    /* ---- 74.6 D6 退款售后：环比突增预警（上月 10000→本月 15000=+50%>30% 阈值 warn=true） ---- */
+    const anyBill = (await db.select({ id: schema.cashierBills.id }).from(schema.cashierBills).limit(1).get())!;
+    const prevRange = { m: shiftMonthE5(monthNow, -1) };
+    const prevMonthStart = new Date(`${prevRange.m}-15T12:00:00+08:00`);
+    await db.insert(schema.refundBills).values({
+      storeId, refundNo: 'RB-EXP5-P01', bizDate: prevRange.m + '-15', billId: anyBill.id, type: 'full', amountFen: 10000,
+      reason: '【测试】片5 上月退款基准', status: 'settled', operatorId: ownerUser.id, createdAt: prevMonthStart, updatedAt: prevMonthStart,
+    });
+    await db.insert(schema.refundBills).values({
+      storeId, refundNo: 'RB-EXP5-C01', bizDate: storeToday, billId: anyBill.id, type: 'partial_amount', amountFen: 15000,
+      reason: '【测试】片5 本月退款', status: 'executed', operatorId: ownerUser.id,
+    });
+    await db.insert(schema.refundRequests).values({
+      requestNo: 'RR-EXP5-001', customerId: customerUser.id, storeId, orderKind: 'appointment', billId: anyBill.id, billNo: 'HD-TEST',
+      type: 'refund_only', reasonCode: 'service_unhappy', reasonLabel: '服务不满意', amountFen: 15000, status: 'rejected',
+    });
+    await db.insert(schema.refundRequests).values({
+      requestNo: 'RR-EXP5-002', customerId: customerUser.id, storeId, orderKind: 'appointment', billId: anyBill.id, billNo: 'HD-TEST',
+      type: 'refund_only', reasonCode: 'price_dispute', reasonLabel: '价格争议', amountFen: 3000, status: 'approved',
+    });
+    const d6 = await call<AnyRec>('report.d6Refunds');
+    const d6Spike = d6.spike as AnyRec;
+    const d6Req = d6.requests as AnyRec;
+    check('74.6 D6：笔数/金额/类型分布+驳回率 1/2+原因聚类（服务不满意/价格争议）+环比增幅越过 30% 阈值预警亮',
+      (d6.count as number) >= 1 && (d6.amountFen as number) >= 15000 &&
+      (d6.byType as Array<{ type: string }>).some((t) => t.type === 'partial_amount') &&
+      (d6Req.total as number) >= 2 && (d6Req.rejected as number) >= 1 &&
+      (d6.reasonCluster as Array<{ label: string; count: number }>).some((r) => r.label === '服务不满意' && r.count >= 1) &&
+      d6Spike.warn === true && (d6Spike.momBp as number) > 3000,
+      { spike: d6Spike, count: d6.count, fen: d6.amountFen, byType: d6.byType, req: d6Req, cluster: d6.reasonCluster });
+
+    /* ---- 74.7 D7 员工绩效：行在+质量指标列+海底捞 guard 透出 ---- */
+    const d7 = await call<AnyRec>('report.d7StaffPerf');
+    const d7rows = d7.rows as Array<AnyRec>;
+    const d7lili = d7rows.find((r) => r.staffId === staffRow2!.id);
+    check('74.7 D7：员工行（丽丽）差评率/报告时效/复购率/申诉数列在 + guard 两件配齐透出',
+      !!d7lili && 'badRate' in d7lili && 'reportAvgMinutes' in d7lili && 'repurchaseRate' in d7lili &&
+      'appealCount' in d7lili && 'correctedCount' in d7lili &&
+      (d7.guard as AnyRec).appealChannel === true && (d7.guard as AnyRec).correctionLog === true,
+      { lili: d7lili?.staffName });
+
+    /* ---- 74.8 D8 寄养经营：夹具寄养单跨月交叠 → 宠物夜数>0 + 字段全 ---- */
+    const d8Before = await call<AnyRec>('report.d8Boarding');
+    const bSvc73 = (await db.select().from(schema.services).where(and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'boarding'))).get())!;
+    await db.insert(schema.appointments).values({
+      code: 'EXP5D8', customerId: customerUser.id, storeId, petId, serviceId: bSvc73.id,
+      type: 'boarding', scheduledStart: new Date(now0.getTime() - 86400_000), scheduledEnd: new Date(now0.getTime() + 2 * 86400_000),
+      status: 'in_boarding', priceFen: 39800, paidFen: 39800, paymentMode: 'pay_at_store', paidAt: now0,
+      note: '【测试】e2e 片5 D8 夹具单',
+    });
+    const d8After = await call<AnyRec>('report.d8Boarding');
+    check('74.8 D8：宠物夜数前后值 +3（跨月交叠 3 晚）+ 入住率/每宠物夜营收/搭售率/超期字段在',
+      (d8After.petNights as number) - (d8Before.petNights as number) === 3 &&
+      typeof d8After.occupancyRate === 'number' && 'revenuePerPetNightFen' in d8After && 'addonAttachRate' in d8After && 'overdueCount' in d8After,
+      { d: (d8After.petNights as number) - (d8Before.petNights as number) });
+
+    /* ---- 74.9 D9 商品销售：夹具成交单 → 销量/销售额前后值 ---- */
+    const d9Before = await call<AnyRec>('report.d9Goods');
+    const prod73 = (await db.select().from(schema.products).where(eq(schema.products.storeId, storeId)).get())!;
+    await db.insert(schema.orders).values({
+      orderNo: 'P-EXP5-001', customerId: customerUser.id, storeId,
+      items: [{ product_id: prod73.id, name: prod73.name, quantity: 2, price_fen: 5900 }],
+      totalFen: 11800, status: 'paid',
+    });
+    const d9After = await call<AnyRec>('report.d9Goods');
+    check('74.9 D9：成交单销量 +2 / 销售额 +11800 + 动销率/周转字段在',
+      (d9After.unitsSold as number) - (d9Before.unitsSold as number) === 2 &&
+      (d9After.salesFen as number) - (d9Before.salesFen as number) === 11800 &&
+      'sellThroughRate' in d9After && 'turnoverDays' in d9After,
+      { d: (d9After.salesFen as number) - (d9Before.salesFen as number) });
+
+    /* ---- 74.10 N1 等级分布与升级转化：四档容器 + cohort + 新增档前后值 ---- */
+    const n1 = await call<AnyRec>('report.n1LevelDist');
+    const n1Yh = (n1.newInMonth as Array<{ planKey: string; count: number }>).find((p) => p.planKey === 'plan_zhuguang');
+    check('74.10 N1：plans 四档 + 存量/新增/退出/升降级字段 + cohort 数组 + 74.3 夹具档新增可见',
+      (n1.plans as string[]).length === 4 && Array.isArray(n1.stock) && Array.isArray(n1.cohorts) &&
+      typeof n1.exitCount === 'number' && typeof n1.upgradeCount === 'number' && !!n1Yh && n1Yh.count >= 1,
+      { plans: n1.plans, yh: n1Yh });
+
+    /* ---- 74.11 N2 续费与回本：到期 cohort 续费率（顺延口径）+预警名单+回本率 ---- */
+    const n2Before = await call<AnyRec>('report.n2Renewal');
+    const n2u1 = await mkUser('seed_e2e_exp5_n2a', 'e2e 片5 续费户A'); // 顺延过=曾续
+    const n2u2 = await mkUser('seed_e2e_exp5_n2b', 'e2e 片5 续费户B'); // 未续
+    const dueMonthStart = new Date(now0.getTime() - 10 * 86400_000);
+    await db.insert(schema.memberships).values({
+      userId: n2u1.id, planKey: 'plan_yinghuo', soldStoreId: storeId,
+      startedAt: new Date(dueMonthStart.getTime() - 770 * 86400_000), expiresAt: dueMonthStart, paidFen: 19900,
+    });
+    await db.insert(schema.memberships).values({
+      userId: n2u2.id, planKey: 'plan_yinghuo', soldStoreId: storeId,
+      startedAt: new Date(dueMonthStart.getTime() - 365 * 86400_000), expiresAt: dueMonthStart, paidFen: 19900,
+    });
+    const n2u3 = await mkUser('seed_e2e_exp5_n2c', 'e2e 片5 预警户'); // 15 天后到期 → 预警名单
+    await db.insert(schema.memberships).values({
+      userId: n2u3.id, planKey: 'plan_zhuguang', soldStoreId: storeId,
+      startedAt: new Date(now0.getTime() - 350 * 86400_000), expiresAt: new Date(now0.getTime() + 15 * 86400_000), status: 'active', paidFen: 29900,
+    });
+    const n2After = await call<AnyRec>('report.n2Renewal');
+    const n2Cohorts = n2After.cohorts as Array<{ month: string; dueCount: number; renewedCount: number }>;
+    const n2BeforeCohortTotal = (n2Before.cohorts as typeof n2Cohorts).reduce((s, c) => s + c.dueCount, 0);
+    const n2AfterCohortTotal = n2Cohorts.reduce((s, c) => s + c.dueCount, 0);
+    const n2RenewedDelta = n2Cohorts.reduce((s, c) => s + c.renewedCount, 0) - (n2Before.cohorts as typeof n2Cohorts).reduce((s, c) => s + c.renewedCount, 0);
+    check('74.11 N2：到期 cohort 前后值（到期 +3=两夹具+预警户同窗口 / 顺延续费 +1）+ 预警名单含 15 天后到期户 + 回本率结构在',
+      n2AfterCohortTotal - n2BeforeCohortTotal === 3 && n2RenewedDelta === 1 &&
+      (n2After.warnList as Array<{ userId: string }>).some((w) => w.userId === n2u3.id) &&
+      typeof (n2After.payback as AnyRec).paidFen === 'number',
+      { due: n2AfterCohortTotal - n2BeforeCohortTotal, renewed: n2RenewedDelta });
+
+    /* ---- 74.12 N3 回馈金滚动：独立期次夹具精确断言 + 期末负债=账户余额 Σ ---- */
+    const n3Before = await call<AnyRec>('report.n3RebateRoll');
+    await db.insert(schema.rebateLogs).values({ userId: rbUser.id, accountId: rbAcc.id, type: 'grant', deltaFen: 1000, beforeFen: 0, afterFen: 1000, sourceId: 'HD-EXP5-N3', period: '2099-01', note: '【测试】片5 N3 发行' });
+    await db.insert(schema.rebateLogs).values({ userId: rbUser.id, accountId: rbAcc.id, type: 'deduct', deltaFen: -300, beforeFen: 1000, afterFen: 700, sourceId: 'HD-EXP5-N3', period: '2099-01', note: '【测试】片5 N3 核销' });
+    const n3After = await call<AnyRec>('report.n3RebateRoll');
+    const n3PeriodBefore = (n3Before.periods as Array<AnyRec>).find((p) => p.period === '2099-01');
+    const n3Period = (n3After.periods as Array<AnyRec>).find((p) => p.period === '2099-01');
+    check('74.12 N3：期次行 发行/核销前后值 +1000/+300 精确（2099-01 期次套内已有夹具，钉 delta） + 期末负债=账户余额（25800 夹具含）+ 核销率字段在',
+      (n3Period!.grantFen as number) - ((n3PeriodBefore?.grantFen as number) ?? 0) === 1000 && (n3Period!.deductFen as number) - ((n3PeriodBefore?.deductFen as number) ?? 0) === 300 &&
+      (n3After.closingLiabilityFen as number) - (n3Before.closingLiabilityFen as number) === 0 &&
+      n3After.redeemRate !== undefined,
+      { p: n3Period });
+
+    /* ---- 74.13 N4 评价分布与差评聚类：差评回复+标签聚类+纠错扣减（75.2 批准后再读） ---- */
+    const n4Before = await call<AnyRec>('report.n4ReviewDist');
+    const reply74 = await trpcMutate<{ review: { id: string; repliedAt: Date | null; tags: string[] | null } }>('report.reviewReply', {
+      cookie: ownerCookie,
+      input: { reviewId: rvBad.id, reply: '非常抱歉让您久等，已优化排班', tags: ['等待', '态度'] },
+    });
+    const n4Mid = await call<AnyRec>('report.n4ReviewDist');
+    const n4Reply = n4Mid.reply as AnyRec;
+    check('74.13 N4：差评回复落列（repliedAt+tags）+ 回复率/标签聚类/分布字段透出',
+      reply74.review.repliedAt instanceof Date && reply74.review.tags?.includes('等待') === true &&
+      (n4Reply.repliedCount as number) >= 1 &&
+      (n4Mid.tagCluster as Array<{ tag: string; count: number }>).some((t) => t.tag === '等待' && t.count >= 1) &&
+      Array.isArray(n4Mid.dist) && Array.isArray(n4Mid.byStaff) && Array.isArray(n4Mid.byService),
+      { tags: reply74.review.tags });
+    void n4Before;
+
+    /* ---- 74.14 N5 交付合规与时效：夹具完成单+步+照片+报告时效桶 ---- */
+    const n5Before = await call<AnyRec>('report.n5Delivery');
+    const n5Appt = (await db.insert(schema.appointments).values({
+      code: 'EXP5N5', customerId: customerUser.id, storeId, petId, serviceId: gSvcId73,
+      type: 'grooming', scheduledStart: new Date(now0.getTime() - 3 * 3600_000), scheduledEnd: new Date(now0.getTime() - 2 * 3600_000),
+      status: 'completed', priceFen: 8800, completedAt: new Date(now0.getTime() - 2 * 3600_000),
+      note: '【测试】e2e 片5 N5 夹具单',
+    }).returning())[0]!;
+    const n5Step1 = (await db.insert(schema.appointmentSteps).values({
+      appointmentId: n5Appt.id, stepKey: 'disinfection', stepOrder: 1, status: 'done', requiredPhotos: 1,
+      startedAt: new Date(now0.getTime() - 150 * 60_000), doneAt: new Date(now0.getTime() - 120 * 60_000), flagged: true,
+    }).returning())[0]!;
+    await db.insert(schema.stepPhotos).values({ stepId: n5Step1.id, url: '/test/n5-1.jpg', takenAt: new Date(now0.getTime() - 140 * 60_000) });
+    await db.insert(schema.serviceReports).values({
+      appointmentId: n5Appt.id, userId: customerUser.id, vitals: [],
+      generatedAt: new Date(now0.getTime() - 90 * 60_000), deliveredAt: new Date(now0.getTime() - 30 * 60_000),
+    });
+    const n5After = await call<AnyRec>('report.n5Delivery');
+    const n5Buckets = n5After.deliveryBuckets as AnyRec;
+    const n5BucketsBefore = n5Before.deliveryBuckets as AnyRec;
+    check('74.14 N5：完成单 +1 + 报告时效桶 within120 +1（60min 夹具）+ 照片覆盖/抽检字段在',
+      (n5After.completedCount as number) - (n5Before.completedCount as number) === 1 &&
+      (n5Buckets.within120 as number) - (n5BucketsBefore.within120 as number) === 1 &&
+      'photoCoverage' in n5After && 'sampleRate' in n5After,
+      { d: (n5After.completedCount as number) - (n5Before.completedCount as number), b: n5Buckets });
+
+    /* ---- 74.15 N6 员工×服务质量：gate 铁规两件透出 + 行结构 ---- */
+    const n6 = await call<AnyRec>('report.n6StaffQuality');
+    const n6Gate = n6.gate as AnyRec;
+    const n6Lili = (n6.rows as Array<AnyRec>).find((r) => r.staffId === staffRow2!.id);
+    check('74.15 N6：gate.appealChannel/correctionLog 双 true（附录 B 两件配齐点亮）+ 员工行差评率/时效/复购/申诉列在',
+      n6Gate.appealChannel === true && n6Gate.correctionLog === true &&
+      !!n6Lili && 'badRate' in n6Lili && 'reportAvgMinutes' in n6Lili && 'repurchaseRate' in n6Lili && 'appealCount' in n6Lili,
+      { gate: n6Gate });
+
+    /* ================================================================ */
+    console.log('\n[体验批片5] 75. 写口与闸（差评回复/N6 申诉/埋点/导出/导入/回馈金列）');
+
+    /* ---- 75.1 差评回复闸：标签越集 400 + clerk 403 + 非本店 403（本店实证已在 74.13） ---- */
+    const badTag = await asErr(trpcMutate('report.reviewReply', {
+      cookie: ownerCookie, input: { reviewId: rvBad.id, reply: '标签越集负例', tags: ['莫须有标签'] },
+    }));
+    const clerkReply = await asErr(trpcMutate('report.reviewReply', {
+      cookie: clerkCookie, input: { reviewId: rvBad.id, reply: '店员越权回复' },
+    }));
+    check('75.1 差评回复闸：标签越集 400 + clerk 403',
+      badTag instanceof TrpcHttpError && badTag.httpStatus === 400 &&
+      clerkReply instanceof TrpcHttpError && clerkReply.httpStatus === 403,
+      { tag: badTag && badTag.httpStatus, clerk: clerkReply && clerkReply.httpStatus });
+
+    /* ---- 75.2 N6 申诉全链：raise→pending→幂等→复核两负例→approved 纠错留痕+员工通知+读口径即时扣减 ---- */
+    const ap1 = await trpcMutate<{ appeal: { id: string; status: string }; duplicated: boolean }>('report.raiseMetricAppeal', {
+      cookie: liliCookie, input: { targetType: 'review', targetId: rvBad.id, reason: '该差评对应订单非本人服务，申请复核归属' },
+    });
+    const ap1dup = await trpcMutate<{ duplicated: boolean }>('report.raiseMetricAppeal', {
+      cookie: liliCookie, input: { targetType: 'review', targetId: rvBad.id, reason: '重复提交验证幂等' },
+    });
+    const apQueue = await trpcQuery<{ pending: Array<{ id: string; staffName: string }> }>('report.listMetricAppeals', { cookie: managerCookie });
+    check('75.2 申诉入队 pending + 同人同目标幂等 duplicated + 审批队列可见（审批中心数据源）',
+      ap1.appeal.status === 'pending' && ap1dup.duplicated === true && apQueue.pending.some((a) => a.id === ap1.appeal.id),
+      { dup: ap1dup.duplicated, queue: apQueue.pending.length });
+    const rvNoCorr = await asErr(trpcMutate('report.reviewMetricAppeal', {
+      cookie: managerCookie, input: { appealId: ap1.appeal.id, result: 'approved' },
+    }));
+    const rvNoNote = await asErr(trpcMutate('report.reviewMetricAppeal', {
+      cookie: managerCookie, input: { appealId: ap1.appeal.id, result: 'rejected' },
+    }));
+    check('75.2 复核负例：approved 缺 correction 400（兜底留痕铁规）+ rejected 缺 note 400',
+      rvNoCorr instanceof TrpcHttpError && rvNoCorr.httpStatus === 400 &&
+      rvNoNote instanceof TrpcHttpError && rvNoNote.httpStatus === 400,
+      { a: rvNoCorr && rvNoCorr.httpStatus, b: rvNoNote && rvNoNote.httpStatus });
+    const rvOk = await trpcMutate<{ appeal: { status: string; correctionJson: { before: unknown } | null } }>('report.reviewMetricAppeal', {
+      cookie: managerCookie,
+      input: { appealId: ap1.appeal.id, result: 'approved', note: '核查属实，非丽丽服务单', correction: { before: '差评计入丽丽', after: '纠错扣减不计入', note: '排班记录佐证' } },
+    });
+    const rvAgain = await asErr(trpcMutate('report.reviewMetricAppeal', {
+      cookie: managerCookie, input: { appealId: ap1.appeal.id, result: 'approved', note: 'x', correction: { before: 1, after: 2 } },
+    }));
+    const n6Notice = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, liliUser.id), eq(schema.notifications.type, 'metric.appealResolved'))));
+    const n4AfterAppeal = await call<AnyRec>('report.n4ReviewDist');
+    check('75.2 approved → correction_json 留痕 + 员工通知落行 + N4 纠错扣减读口径即时生效（correctedCount +1）+ 重复复核 400',
+      rvOk.appeal.status === 'approved' && rvOk.appeal.correctionJson !== null &&
+      rvAgain instanceof TrpcHttpError && rvAgain.httpStatus === 400 &&
+      n6Notice.length >= 1 &&
+      (n4AfterAppeal.correctedCount as number) - (n4Mid.correctedCount as number) === 1,
+      { notice: n6Notice.length, corrected: n4AfterAppeal.correctedCount });
+
+    /* ---- 75.3 N7/N8 埋点预埋：九类枚举写口 + stats 读数 + 非法类型 400 ---- */
+    const ceBefore = await trpcQuery<{ byType: Array<{ eventType: string; count: number }> }>('report.contentEventStats', { cookie: ownerCookie });
+    const ceCount = (rows: typeof ceBefore.byType, t: string) => rows.find((r) => r.eventType === t)?.count ?? 0;
+    await trpcMutate('report.trackContentEvent', { cookie: customerCookie, input: { eventType: 'case_impression', caseId: 'case-demo-1' } });
+    await trpcMutate('report.trackContentEvent', { cookie: customerCookie, input: { eventType: 'book_same_click', caseId: 'case-demo-1' } });
+    await trpcMutate('report.trackContentEvent', { cookie: customerCookie, input: { eventType: 'booking_verified', appointmentId: n5Appt.id, meta: { caseId: 'case-demo-1' } } });
+    const ceBad = await asErr(trpcMutate('report.trackContentEvent', { cookie: customerCookie, input: { eventType: 'not_a_event' } }));
+    const ceAfter = await trpcQuery<{ byType: Array<{ eventType: string; count: number }> }>('report.contentEventStats', { cookie: ownerCookie });
+    check('75.3 埋点预埋：曝光/组件点击/核销回传三件落库（stats 前后值各 +1）+ 非法 eventType 400',
+      ceCount(ceAfter.byType, 'case_impression') - ceCount(ceBefore.byType, 'case_impression') === 1 &&
+      ceCount(ceAfter.byType, 'book_same_click') - ceCount(ceBefore.byType, 'book_same_click') === 1 &&
+      ceCount(ceAfter.byType, 'booking_verified') - ceCount(ceBefore.byType, 'booking_verified') === 1 &&
+      ceBad instanceof TrpcHttpError && ceBad.httpStatus === 400,
+      { after: ceAfter.byType.length });
+
+    /* ---- 75.4 CSV 导出闸：owner 成（BOM+表头+真值行）/manager 403/clerk 403/N7N8 枚举外 400 ---- */
+    const csvOk = await trpcQuery<{ filename: string; csv: string; rows: number }>('report.exportCsv', {
+      cookie: ownerCookie, input: { report: 'd1', month: monthNow },
+    });
+    const csvMgr = await asErr(trpcQuery('report.exportCsv', { cookie: managerCookie, input: { report: 'd1', month: monthNow } }));
+    const csvClerk = await asErr(trpcQuery('report.exportCsv', { cookie: clerkCookie, input: { report: 'd1', month: monthNow } }));
+    const csvN7 = await asErr(trpcQuery('report.exportCsv', { cookie: ownerCookie, input: { report: 'n7' } }));
+    check('75.4 CSV 导出=仅店主（manager/clerk 403）+ BOM 表头 + 真值行（12800 夹具在文）+ N7/N8 枚举外 400',
+      csvOk.filename === `report-d1-${monthNow}.csv` && csvOk.csv.includes('指标') &&
+      csvOk.csv.includes('cashFen') &&
+      csvMgr instanceof TrpcHttpError && csvMgr.httpStatus === 403 &&
+      csvClerk instanceof TrpcHttpError && csvClerk.httpStatus === 403 &&
+      csvN7 instanceof TrpcHttpError && csvN7.httpStatus === 400,
+      { rows: csvOk.rows, mgr: csvMgr && csvMgr.httpStatus });
+
+    /* ---- 75.5 商品 CSV 导入：模板/预览失败行零落账/全量落账+批次留痕/clerk 403 ---- */
+    const tpl = await trpcQuery<{ filename: string; csv: string; columns: string[] }>('mall.productImportTemplate', { cookie: managerCookie });
+    const prodCount0 = (await db.select({ id: schema.products.id }).from(schema.products).where(eq(schema.products.storeId, storeId))).length;
+    const csvBad = '分类,商品名,描述,价格(元),库存,是否消毒耗材\n玩具,测试逗猫棒,好,29.90,10,否\n零食,坏行,价错,abc,5,否\n';
+    const pv = await trpcMutate<{ report: { totalRows: number; failRows: number; failReasons: Array<{ line: number }> } }>('mall.productImportPreview', {
+      cookie: managerCookie, input: { csvText: csvBad, filename: 'bad.csv' },
+    });
+    const prodCountAfterPreview = (await db.select({ id: schema.products.id }).from(schema.products).where(eq(schema.products.storeId, storeId))).length;
+    const exBad = await asErr(trpcMutate('mall.productImportExecute', { cookie: managerCookie, input: { csvText: csvBad, filename: 'bad.csv' } }));
+    const prodCountAfterBad = (await db.select({ id: schema.products.id }).from(schema.products).where(eq(schema.products.storeId, storeId))).length;
+    const batchCount0 = (await db.select({ id: schema.productImportBatches.id }).from(schema.productImportBatches)).length;
+    check('75.5 模板六列形状 + 预览失败行回显（行 3 价格非法）零写入 + execute 失败行 400 零落账零批次行',
+      tpl.columns.length === 6 && tpl.csv.includes('分类,商品名') &&
+      pv.report.totalRows === 2 && pv.report.failRows === 1 && pv.report.failReasons[0]!.line === 3 &&
+      prodCountAfterPreview === prodCount0 && prodCountAfterBad === prodCount0 &&
+      exBad instanceof TrpcHttpError && exBad.httpStatus === 400 &&
+      (await db.select({ id: schema.productImportBatches.id }).from(schema.productImportBatches)).length === batchCount0,
+      { fail: pv.report.failReasons, prod: [prodCount0, prodCountAfterBad] });
+    const csvGood = '分类,商品名,描述,价格(元),库存,是否消毒耗材\n玩具,e2e 导入逗猫棒,片5 夹具,29.90,10,否\n清洁,e2e 导入消毒喷雾,片5 夹具,39.90,20,是\n';
+    const exGood = await trpcMutate<{ batchId: string; okRows: number; failRows: number }>('mall.productImportExecute', {
+      cookie: managerCookie, input: { csvText: csvGood, filename: 'good.csv' },
+    });
+    const prodCountAfterGood = (await db.select({ id: schema.products.id }).from(schema.products).where(eq(schema.products.storeId, storeId))).length;
+    const batchRows = await db.select().from(schema.productImportBatches);
+    const exClerk = await asErr(trpcMutate('mall.productImportExecute', { cookie: clerkCookie, input: { csvText: csvGood } }));
+    check('75.5 全量合法 → 落账 +2 商品 + 批次行留痕（okRows=2/failRows=0）+ clerk 403',
+      exGood.okRows === 2 && exGood.failRows === 0 && prodCountAfterGood === prodCount0 + 2 &&
+      batchRows.some((b) => b.id === exGood.batchId && b.okRows === 2 && b.filename === 'good.csv') &&
+      exClerk instanceof TrpcHttpError && exClerk.httpStatus === 403,
+      { ok: exGood.okRows, prod: prodCountAfterGood - prodCount0 });
+
+    /* ---- 75.6 商城订单回馈金列透出（W-09 红字口径接真值）：rebate_logs deduct 联 order_no ---- */
+    const order75 = (await db.insert(schema.orders).values({
+      orderNo: 'P-EXP5-002', customerId: customerUser.id, storeId,
+      items: [{ product_id: prod73.id, name: prod73.name, quantity: 1, price_fen: 5900 }],
+      totalFen: 5900, status: 'paid',
+    }).returning())[0]!;
+    await db.insert(schema.rebateLogs).values({
+      userId: rbUser.id, accountId: rbAcc.id, type: 'deduct', deltaFen: -500, beforeFen: 700, afterFen: 200,
+      sourceId: 'P-EXP5-002', period: '2099-01', note: '【测试】片5 回馈金抵扣单',
+    });
+    const storeOrders = await trpcQuery<{ groups: Record<string, Array<{ id: string; rebateFen?: number }>> }>('mall.listStoreOrders', { cookie: ownerCookie });
+    const row75 = (storeOrders.groups.paid ?? []).find((o) => o.id === order75.id);
+    check('75.6 商城订单回馈金列透出真值（deduct 联单号=500）+ 无抵扣单=0（诚实零值）',
+      row75?.rebateFen === 500 && (storeOrders.groups.paid ?? []).some((o) => o.id !== order75.id && (o.rebateFen ?? 0) >= 0),
+      { rebate: row75?.rebateFen });
+  }
 
   client.close();
 }
@@ -6712,6 +8609,13 @@ async function cleanup(): Promise<void> {
     for (const aidX of [createdAid, ...createdAidExtras]) {
       if (aidX && existsSync(join(UPLOAD_APPT_ROOT, aidX))) {
         rmSync(join(UPLOAD_APPT_ROOT, aidX), { recursive: true, force: true, maxRetries: 3, retryDelay: 300 });
+      }
+    }
+    // 片 2（67.7）：vaccine/<petId> 上传目录一并精准删除
+    for (const pidX of createdVaccineDirs) {
+      const dir = join(SERVER_ROOT, 'uploads', 'vaccine', pidX);
+      if (pidX && existsSync(dir)) {
+        rmSync(dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 300 });
       }
     }
   } catch (e) {

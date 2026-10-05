@@ -15,8 +15,10 @@ import { Link } from 'react-router-dom'
 import { z } from 'zod'
 import { getApiBase, uploadImage, useMe, usePhiliaClient } from '@philia/shared'
 import PageHeader from '@/components/PageHeader'
+import ActivePetSwitcher from '@/components/pets/ActivePetSwitcher'
 import { pc } from '@/copy/pets'
 import { sl } from '@/copy/serviceloop'
+import { upsertPetExp2 } from '@/lib/exp2Api'
 import {
   EmptyState,
   ErrorState,
@@ -38,6 +40,8 @@ const petFormSchema = z.object({
   name: z.string().trim().min(1, '宠物名不能为空').max(32, '名字最长 32 字'),
   species: z.enum(['dog', 'cat', 'other'], { message: '请选择物种' }),
   breed: z.string().trim().max(64, '品种最长 64 字').optional(),
+  chipNo: z.string().trim().max(64, '芯片号最长 64 字').optional(),
+  coatColor: z.string().trim().max(32, '花色最长 32 字').optional(),
   birthday: isoDate.optional(),
   weightKg: z
     .number({ message: '体重须为数字' })
@@ -59,24 +63,31 @@ interface FormState {
   name: string
   species: 'dog' | 'cat' | 'other'
   breed: string
+  chipNo: string
+  coatColor: string
   birthday: string
   weightKg: string
   vaccineValidUntil: string
   neutered: boolean
   temperamentTags: string[]
   avatarUrl: string | null
+  /** 体验大批片 2：已留存的疫苗证明图 URL（pet.upsert vaccineProofUrls 契约字段） */
+  vaccineProofUrls: string[]
 }
 
 const EMPTY_FORM: FormState = {
   name: '',
   species: 'dog',
   breed: '',
+  chipNo: '',
+  coatColor: '',
   birthday: '',
   weightKg: '',
   vaccineValidUntil: '',
   neutered: false,
   temperamentTags: [],
   avatarUrl: null,
+  vaccineProofUrls: [],
 }
 
 const PRESET_TAGS = ['亲人', '胆小', '活泼', '安静', '好动', '粘人', '怕生', '友好']
@@ -145,6 +156,10 @@ function PetForm({
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(initial.avatarUrl)
   const fileRef = useRef<HTMLInputElement>(null)
+  // 体验大批片 2：疫苗证明——已留存 URL（可删）+ 待上传新文件（保存时统一上传回写）
+  const [proofs, setProofs] = useState<string[]>(initial.vaccineProofUrls)
+  const [proofFiles, setProofFiles] = useState<File[]>([])
+  const proofFileRef = useRef<HTMLInputElement>(null)
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((f) => ({ ...f, [key]: value }))
@@ -171,10 +186,27 @@ function PetForm({
       // 第一步：upsert 档案（拿到 petId）
       const res = await trpc.pet.upsert.mutate({ ...values, id: editingId ?? undefined })
       const petId = res.pet.id
-      // 第二步：有新头像则上传到 pets/<petId> 并回写 avatarUrl
+      // 第二步：有新头像/疫苗证明变动则上传后回写（证明 relDir=vaccine/<petId>，
+      // 契约字段 vaccineProofUrls 经 exp2 边界提交——O 落点后边界退役）
+      const patch: { avatarUrl?: string; vaccineProofUrls?: string[] } = {}
       if (avatarFile) {
         const { url } = await uploadImage(getApiBase(), avatarFile, `pets/${petId}`)
-        await trpc.pet.upsert.mutate({ ...values, id: petId, avatarUrl: url })
+        patch.avatarUrl = url
+      }
+      const proofsChanged =
+        proofFiles.length > 0 ||
+        proofs.length !== initial.vaccineProofUrls.length ||
+        proofs.some((u, i) => u !== initial.vaccineProofUrls[i])
+      if (proofsChanged) {
+        const uploaded: string[] = []
+        for (const f of proofFiles) {
+          const { url } = await uploadImage(getApiBase(), f, `vaccine/${petId}`)
+          uploaded.push(url)
+        }
+        patch.vaccineProofUrls = [...proofs, ...uploaded]
+      }
+      if (patch.avatarUrl !== undefined || patch.vaccineProofUrls !== undefined) {
+        await upsertPetExp2(trpc, { ...values, id: petId, ...patch })
       }
       return petId
     },
@@ -193,6 +225,8 @@ function PetForm({
       name: form.name,
       species: form.species,
       breed: form.breed.trim() || undefined,
+      chipNo: form.chipNo.trim() || undefined,
+      coatColor: form.coatColor.trim() || undefined,
       birthday: form.birthday || undefined,
       weightKg: form.weightKg.trim() === '' ? undefined : Number(form.weightKg),
       vaccineValidUntil: form.vaccineValidUntil || undefined,
@@ -289,7 +323,7 @@ function PetForm({
         {errors.species ? <p className={errCls}>{errors.species}</p> : null}
       </div>
 
-      {/* 品种 / 生日 / 体重 / 疫苗 */}
+      {/* 品种 / 生日 / 体重 / 疫苗 / 芯片号 / 花色 */}
       <div className="mt-4 grid grid-cols-2 gap-3">
         <div>
           <label className={labelCls} htmlFor="pet-breed">品种</label>
@@ -340,6 +374,30 @@ function PetForm({
           />
           {errors.vaccineValidUntil ? <p className={errCls}>{errors.vaccineValidUntil}</p> : null}
         </div>
+        <div>
+          <label className={labelCls} htmlFor="pet-chip-no">{pc('pets.chipNoLabel')}</label>
+          <input
+            id="pet-chip-no"
+            className={inputCls}
+            value={form.chipNo}
+            maxLength={64}
+            placeholder={pc('pets.chipNoPlaceholder')}
+            onChange={(e) => set('chipNo', e.target.value)}
+          />
+          {errors.chipNo ? <p className={errCls}>{errors.chipNo}</p> : null}
+        </div>
+        <div>
+          <label className={labelCls} htmlFor="pet-coat-color">{pc('pets.coatColorLabel')}</label>
+          <input
+            id="pet-coat-color"
+            className={inputCls}
+            value={form.coatColor}
+            maxLength={32}
+            placeholder={pc('pets.coatColorPlaceholder')}
+            onChange={(e) => set('coatColor', e.target.value)}
+          />
+          {errors.coatColor ? <p className={errCls}>{errors.coatColor}</p> : null}
+        </div>
       </div>
 
       {/* 绝育（W1-D2：整行 label 可点 + 行高 ≥44px） */}
@@ -352,6 +410,62 @@ function PetForm({
         />
         已绝育
       </label>
+
+      {/* 体验大批片 2：疫苗证明多图留证（/api/upload relDir=vaccine/<petId>；
+          缩略图回显 + 删除；行为不变口径注记明面——寄养校验仍以疫苗有效期为准） */}
+      <div className="mt-4" data-testid="pet-vaccine-proofs">
+        <span className={labelCls}>{pc('pets.vaccineProofTitle')}</span>
+        <div className="flex flex-wrap gap-2">
+          {proofs.map((url) => (
+            <span key={url} className="relative h-16 w-16 overflow-hidden rounded-control bg-sunken">
+              <img src={url} alt={pc('pets.vaccineProofTitle')} className="h-full w-full object-cover" />
+              <button
+                type="button"
+                aria-label="删除"
+                data-testid="pet-vaccine-proof-remove"
+                onClick={() => setProofs((cur) => cur.filter((u) => u !== url))}
+                className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink/60 text-canvas"
+              >
+                <X className="h-3 w-3" strokeWidth={2} />
+              </button>
+            </span>
+          ))}
+          {proofFiles.map((f, i) => (
+            <span key={`${f.name}-${i}`} className="relative h-16 w-16 overflow-hidden rounded-control bg-sunken">
+              <img src={URL.createObjectURL(f)} alt={f.name} className="h-full w-full object-cover" />
+              <button
+                type="button"
+                aria-label="删除"
+                onClick={() => setProofFiles((cur) => cur.filter((_, j) => j !== i))}
+                className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink/60 text-canvas"
+              >
+                <X className="h-3 w-3" strokeWidth={2} />
+              </button>
+            </span>
+          ))}
+          <button
+            type="button"
+            onClick={() => proofFileRef.current?.click()}
+            data-testid="pet-vaccine-proof-add"
+            className="flex h-16 w-16 items-center justify-center rounded-control border border-dashed border-line-strong text-caption-xs text-ink-secondary"
+          >
+            {pc('pets.vaccineProofAdd')}
+          </button>
+          <input
+            ref={proofFileRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              const files = Array.from(e.target.files ?? [])
+              if (files.length > 0) setProofFiles((cur) => [...cur, ...files])
+              e.target.value = ''
+            }}
+          />
+        </div>
+        <p className="mt-1 text-caption-xs text-ink-placeholder">{pc('pets.vaccineProofNote')}</p>
+      </div>
 
       {/* 性格标签 */}
       <div className="mt-4">
@@ -536,12 +650,15 @@ export default function PetsPage() {
         name: pet.name,
         species: (pet.species as FormState['species']) ?? 'dog',
         breed: pet.breed ?? '',
+        chipNo: pet.chipNo ?? '',
+        coatColor: pet.coatColor ?? '',
         birthday: pet.birthday ?? '',
         weightKg: pet.weightKg !== null ? String(pet.weightKg) : '',
         vaccineValidUntil: pet.vaccineValidUntil ?? '',
         neutered: pet.neutered,
         temperamentTags: pet.temperamentTags ?? [],
         avatarUrl: pet.avatarUrl,
+        vaccineProofUrls: pet.vaccineProofUrls ?? [],
       },
     })
 
@@ -551,6 +668,9 @@ export default function PetsPage() {
     <div className="px-[22px] pb-6">
       {/* U1-A：统一返回条（←圆钮+标题），固定返回 philia 页 */}
       <PageHeader title={pc('pets.title')} fallback="/philia" className="pt-4" />
+
+      {/* 体验批片 4：多宠物全局切换器（零宠不渲染 / 单宠不展开 / 多宠底部 sheet 切换） */}
+      <ActivePetSwitcher />
 
       <div className="mt-4 flex flex-col gap-3">
         {petsQuery.isPending ? <LoadingBlock lines={3} /> : null}
@@ -615,6 +735,15 @@ export default function PetsPage() {
                   <div className="flex items-center gap-1.5">
                     <Syringe className="h-3.5 w-3.5 text-ink-placeholder" strokeWidth={1.5} />
                     <VaccineBadge until={pet.vaccineValidUntil} />
+                    {/* 体验大批片 2：疫苗证明留证计数（有才显示；编辑落点=表单内上传区） */}
+                    {(pet.vaccineProofUrls?.length ?? 0) > 0 ? (
+                      <span
+                        data-testid={`pet-vaccine-proof-count-${pet.id}`}
+                        className="rounded-chip bg-sunken px-2 py-1 text-caption-xs text-ink-secondary"
+                      >
+                        {pc('pets.vaccineProofCount', { count: pet.vaccineProofUrls.length })}
+                      </span>
+                    ) : null}
                   </div>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-caption text-ink-secondary">
                     {pet.birthday ? (
@@ -631,6 +760,21 @@ export default function PetsPage() {
                     ) : null}
                     {pet.neutered ? <span>已绝育</span> : null}
                   </div>
+                  {/* 体验批片 4：芯片号 / 花色徽章（有值才渲染） */}
+                  {pet.chipNo || pet.coatColor ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {pet.chipNo ? (
+                        <span className="rounded-full bg-sunken px-2 py-0.5 text-caption-xs text-ink-secondary">
+                          {pc('pets.chipNoLabel')} <span className="u1-num">{pet.chipNo}</span>
+                        </span>
+                      ) : null}
+                      {pet.coatColor ? (
+                        <span className="rounded-full bg-sunken px-2 py-0.5 text-caption-xs text-ink-secondary">
+                          {pc('pets.coatColorLabel')} {pet.coatColor}
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
                 {pet.temperamentTags && pet.temperamentTags.length > 0 ? (
                   <div className="mt-2 flex flex-wrap gap-1.5">
@@ -646,6 +790,15 @@ export default function PetsPage() {
                 ) : null}
                 {/* U1-I 洗护史时间线：真实完成单 + 同款再约（现成预填链路） */}
                 <PetGroomingHistory petId={pet.id} />
+                {/* 体验批片 4：健康档案入口（/philia/pets/:id/health 体重+健康记录）；
+                    注：多宠时本 testid 逐卡重复，QA 取 .first() */}
+                <Link
+                  to={`/philia/pets/${pet.id}/health`}
+                  data-testid="pet-health-link"
+                  className="mt-2.5 flex items-center justify-between gap-2 text-caption font-bold text-ink underline-offset-2 hover:underline"
+                >
+                  {pc('pets.healthEntry')}
+                </Link>
                 {/* 补缺大批片 4：洗护史区相册入口（Link /philia/moments） */}
                 <Link
                   to="/philia/moments"

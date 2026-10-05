@@ -62,6 +62,12 @@ const HOME_COPY_TABLE = {
   /* ---- HomeBookingPanel 降级入口卡 ---- */
   'home.panelEntryTitle': '预约洗护',
   'home.panelEntrySub': '选择门店、服务和时间',
+
+  /* ---- PWA 安装引导条（components/pwa/InstallBanner） ---- */
+  'home.pwaInstallTitle': '把菲丽亚装到主屏',
+  'home.pwaInstallAction': '安装',
+  'home.pwaInstallDismiss': '暂不',
+  'home.pwaInstallIosGuide': '用 Safari 分享 → 添加到主屏幕',
 } as const;
 
 export const HOME_COPY = withCopyOverrides(HOME_COPY_TABLE);

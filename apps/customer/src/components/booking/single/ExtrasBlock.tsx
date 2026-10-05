@@ -8,12 +8,20 @@
  */
 
 import { useState } from 'react';
-import { PAYMENT_MODE_META } from '../format';
+import { PAYMENT_MODE_META, fenToYuan } from '../format';
+import { bkc } from '@/copy/booking';
 
 type PaymentMode = 'pay_at_store' | 'pass_deduct';
 
 interface PassInfo {
   remainTimes: number;
+}
+
+/** 附加项（体验大批片 2：本店 type='addon' 服务，多选 chips + 价签） */
+export interface AddonOption {
+  id: string;
+  name: string;
+  priceFen: number;
 }
 
 function ChevronRow({
@@ -51,6 +59,9 @@ export default function ExtrasBlock({
   passLoading,
   note,
   onNoteChange,
+  addons = [],
+  selectedAddonIds = [],
+  onToggleAddon,
 }: {
   paymentMode: PaymentMode;
   onPaymentModeChange: (m: PaymentMode) => void;
@@ -58,9 +69,14 @@ export default function ExtrasBlock({
   passLoading: boolean;
   note: string;
   onNoteChange: (v: string) => void;
+  /** 体验大批片 2：本店 addon 类服务（type='addon' 筛出）；空数组=本节不渲染 */
+  addons?: AddonOption[];
+  selectedAddonIds?: string[];
+  onToggleAddon?: (id: string) => void;
 }) {
   const [payOpen, setPayOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
+  const [addonOpen, setAddonOpen] = useState(true);
 
   const paySummary =
     paymentMode === 'pass_deduct' && usablePass
@@ -125,6 +141,48 @@ export default function ExtrasBlock({
       ) : null}
 
       <div className="border-t border-line-ring" />
+
+      {/* 体验大批片 2：附加项节（本店 type='addon' 服务多选 chips + 价签；
+          无 addon 服务=整节不渲染，R10 无数据不渲染口径） */}
+      {addons.length > 0 && onToggleAddon ? (
+        <>
+          <ChevronRow
+            label={bkc('booking.addonTitle')}
+            summary={
+              selectedAddonIds.length > 0
+                ? bkc('booking.addonSummary', { count: selectedAddonIds.length })
+                : bkc('booking.addonSummaryNone')
+            }
+            open={addonOpen}
+            onToggle={() => setAddonOpen((v) => !v)}
+            testId="gs-addon-toggle"
+          />
+          {addonOpen ? (
+            <div className="flex flex-wrap gap-2 pb-3" data-testid="gs-addon-list">
+              {addons.map((a) => {
+                const on = selectedAddonIds.includes(a.id);
+                return (
+                  <button
+                    key={a.id}
+                    type="button"
+                    onClick={() => onToggleAddon(a.id)}
+                    data-testid={`gs-addon-${a.id}`}
+                    aria-pressed={on}
+                    className={`rounded-full border px-3.5 py-2 text-caption transition active:scale-95 ${
+                      on
+                        ? 'border-[1.5px] border-ink bg-brand-primary-light font-semibold text-ink'
+                        : 'border-line bg-card text-ink-secondary'
+                    }`}
+                  >
+                    {a.name} <span className="font-number">{fenToYuan(a.priceFen)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+          <div className="border-t border-line-ring" />
+        </>
+      ) : null}
 
       {/* 添加备注（默认收起） */}
       <ChevronRow

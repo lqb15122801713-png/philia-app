@@ -2,7 +2,7 @@
  * TicketListPage · /support 我的工单（补缺大批片 4 · 小棉花）
  *
  * - 数据：serviceLoop.ticketListMine（本人工单，创建倒序，上限 50）；
- * - 行=状态 pill（已提交/已回复/已关闭）+ 类型 + 描述截断 + 时刻 mono + 工单号；
+ * - 行=状态 pill（已提交/已回复/已关闭/已升级店长介入）+ 类型 + 描述截断 + 时刻 mono + 工单号；
  * - 空态三句话（出口=写一封给小棉花 /support/new）。
  */
 
@@ -14,11 +14,12 @@ import { fmtDateTime } from '@/components/booking/format'
 import { EmptyState, ErrorState, LoadingBlock } from '../components/home/common'
 import { sl } from '@/copy/serviceloop'
 
-/** 状态 pill（提交=淡金 / 已回复=卡其浅底 / 已关闭=沉底；反馈件不设绿） */
-const STATUS_META: Record<string, { key: 'ticket.statusSubmitted' | 'ticket.statusReplied' | 'ticket.statusClosed'; pill: string }> = {
+/** 状态 pill（提交=淡金 / 已回复=卡其浅底 / 已关闭=沉底 / 已升级=赭红浅底；反馈件不设绿） */
+const STATUS_META: Record<string, { key: 'ticket.statusSubmitted' | 'ticket.statusReplied' | 'ticket.statusClosed' | 'ticket.statusEscalated'; pill: string }> = {
   submitted: { key: 'ticket.statusSubmitted', pill: 'bg-brand-primary-light text-brand-primary-pressed' },
   replied: { key: 'ticket.statusReplied', pill: 'bg-brand-secondary-light text-ink' },
   closed: { key: 'ticket.statusClosed', pill: 'bg-sunken text-ink-placeholder' },
+  escalated: { key: 'ticket.statusEscalated', pill: 'bg-danger-light text-danger-deep' },
 }
 
 const TYPE_LABEL: Record<string, 'ticket.typeSuggest' | 'ticket.typeComplaint' | 'ticket.typePraise' | 'ticket.typeOther'> = {

@@ -8,11 +8,14 @@
  * 出参不含任何客户身份字段——匿名行展示「匿名客户」，非匿名行也只能显示「客户」。
  * 均分/条数/差评摘要 = 已加载页面前端自算（零新接口）。
  * 复合游标翻页（createdAt+id），limit ≤ 50。
+ * N6 申诉通道：行尾「申诉」钮 → 行内卡填理由 → report.raiseMetricAppeal
+ * （targetType='review'、targetId=评价 id；同人同目标 pending 服务端幂等，
+ * duplicated=true 时 toast 提示已有申诉在途）。
  */
 
-import { Skeleton, usePhiliaClient } from '@philia/shared';
-import { useInfiniteQuery } from '@tanstack/react-query';
-import type { CSSProperties } from 'react';
+import { Skeleton, usePhiliaClient, useToast } from '@philia/shared';
+import { useInfiniteQuery, useMutation } from '@tanstack/react-query';
+import { useState, type CSSProperties } from 'react';
 import { REVIEWS_COPY } from '@/copy/reviews';
 import { SkBackBar, SkBtnAction, SkEmpty, SkNote } from '../../components/skeleton';
 import '../../styles/skeleton.css';
@@ -35,6 +38,7 @@ const cardSt: CSSProperties = {
 
 export default function MyReviewsPage() {
   const { trpc } = usePhiliaClient();
+  const { showToast, toastEl } = useToast();
 
   const reviewsQuery = useInfiniteQuery({
     queryKey: ['xp', 'myReviews'],
@@ -43,6 +47,31 @@ export default function MyReviewsPage() {
     initialPageParam: null as ReviewCursor | null,
     getNextPageParam: (last) => last.nextCursor,
   });
+
+  /* ---- N6 申诉通道（report.raiseMetricAppeal；targetId=评价 id，同人同目标 pending 服务端幂等） ---- */
+  const [appealFor, setAppealFor] = useState<string | null>(null);
+  const [appealReason, setAppealReason] = useState('');
+  // 本会话已提交申诉的评价 id（员工侧无自有申诉列表口，行内态仅标本次会话动作）
+  const [appealedIds, setAppealedIds] = useState<ReadonlySet<string>>(new Set());
+  const appealMut = useMutation({
+    mutationFn: (input: { targetId: string; reason: string }) =>
+      trpc.report.raiseMetricAppeal.mutate({ targetType: 'review', targetId: input.targetId, reason: input.reason }),
+    onSuccess: (res, vars) => {
+      setAppealedIds((cur) => new Set(cur).add(vars.targetId));
+      showToast(res.duplicated ? REVIEWS_COPY['reviews.appeal.duplicated'] : REVIEWS_COPY['reviews.appeal.toast']);
+      setAppealFor(null);
+      setAppealReason('');
+    },
+    onError: (err) => showToast(err.message),
+  });
+  const submitAppeal = () => {
+    if (!appealFor) return;
+    if (!appealReason.trim()) {
+      showToast(REVIEWS_COPY['reviews.appeal.required']);
+      return;
+    }
+    appealMut.mutate({ targetId: appealFor, reason: appealReason.trim() });
+  };
 
   const items = reviewsQuery.data?.pages.flatMap((p) => p.items) ?? [];
   // 摘要：基于已加载条目前端自算（零新接口）；差评=≤2 星（与 xp 扣分口径一致）
@@ -117,6 +146,27 @@ export default function MyReviewsPage() {
                 <p style={{ marginTop: 8, fontSize: 12.5, lineHeight: 1.8, color: r.text ? 'var(--ink)' : 'var(--muted)' }}>
                   {r.text ?? REVIEWS_COPY['reviews.noText']}
                 </p>
+                {/* 行尾申诉入口（N6）：已提交（本会话）→ 待复核态 */}
+                <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
+                  {appealedIds.has(r.id) ? (
+                    <span style={{ fontSize: 10.5, color: 'var(--khaki)' }} data-testid="metric-appeal-pending">
+                      {REVIEWS_COPY['reviews.appeal.pending']}
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="sk-btn-ghost"
+                      style={{ minHeight: 30, padding: '0 14px', fontSize: 11.5 }}
+                      data-testid="metric-appeal-btn"
+                      onClick={() => {
+                        setAppealFor(r.id);
+                        setAppealReason('');
+                      }}
+                    >
+                      {REVIEWS_COPY['reviews.appeal.cta']}
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
@@ -135,11 +185,63 @@ export default function MyReviewsPage() {
         </>
       )}
 
+      {/* 申诉弹层（行内卡：填理由 → raiseMetricAppeal；理由必填，500 字上限同服务端口径） */}
+      {appealFor ? (
+        <div style={cardSt} data-testid="metric-appeal-sheet" role="dialog" aria-label={REVIEWS_COPY['reviews.appeal.title']}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)' }}>{REVIEWS_COPY['reviews.appeal.title']}</p>
+          <textarea
+            value={appealReason}
+            onChange={(e) => setAppealReason(e.target.value)}
+            rows={3}
+            maxLength={500}
+            placeholder={REVIEWS_COPY['reviews.appeal.placeholder']}
+            data-testid="metric-appeal-reason"
+            style={{
+              marginTop: 8,
+              width: '100%',
+              resize: 'none',
+              borderRadius: 12,
+              border: '1px solid var(--hairline)',
+              padding: '10px 12px',
+              fontSize: 12.5,
+              fontFamily: 'inherit',
+              color: 'var(--ink)',
+              background: 'var(--paper)',
+            }}
+          />
+          <div style={{ marginTop: 10, display: 'flex', gap: 10 }}>
+            <button
+              type="button"
+              className="sk-btn-ghost"
+              style={{ flex: 1, minHeight: 44 }}
+              data-testid="metric-appeal-cancel"
+              disabled={appealMut.isPending}
+              onClick={() => {
+                setAppealFor(null);
+                setAppealReason('');
+              }}
+            >
+              {REVIEWS_COPY['reviews.appeal.cancel']}
+            </button>
+            <div style={{ flex: 2 }}>
+              <SkBtnAction
+                onClick={submitAppeal}
+                disabled={appealMut.isPending || !appealReason.trim()}
+                testId="metric-appeal-submit"
+              >
+                {REVIEWS_COPY['reviews.appeal.submit']}
+              </SkBtnAction>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {/* 口径注：差评 24h 回访 · 不可删改 */}
       <SkNote>{REVIEWS_COPY['reviews.callbackNote']}</SkNote>
       <p className="sk-note" style={{ textAlign: 'center', paddingBottom: 32 }}>
         {REVIEWS_COPY['reviews.footer']}
       </p>
+      {toastEl}
     </div>
   );
 }

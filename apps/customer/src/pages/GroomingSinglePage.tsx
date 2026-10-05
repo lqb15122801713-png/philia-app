@@ -31,6 +31,7 @@ import StaffPickerFlat from '@/components/booking/single/StaffPickerFlat';
 import { buildWeekGrid, isSameDay } from '@/components/booking/single/slotGrid';
 import { dayLabel, fmtHM } from '@/components/booking/format';
 import { readLastBooking, resolvePetId, resolveServiceId, resolveStoreId, writeLastBooking } from '@/lib/bookingPrefill';
+import { createAppointmentExp2, queryFullAlternatives } from '@/lib/exp2Api';
 import { bkc } from '@/copy/booking';
 
 export default function GroomingSinglePage() {
@@ -50,6 +51,8 @@ export default function GroomingSinglePage() {
   const [slot, setSlot] = useState<Date | null>(null);
   const [paymentMode, setPaymentMode] = useState<'pay_at_store' | 'pass_deduct'>('pay_at_store');
   const [note, setNote] = useState('');
+  // 体验大批片 2：附加项多选（本店 type='addon' 服务 id 集）
+  const [addonIds, setAddonIds] = useState<string[]>([]);
 
   /* ---- 数据 ---- */
   const nearbyQ = useQuery({
@@ -120,6 +123,15 @@ export default function GroomingSinglePage() {
     [servicesQ.data],
   );
 
+  // 体验大批片 2：附加项=本店 type='addon' 服务（同一 getWithServices 读口筛出，不新增接口）
+  const addonServices = useMemo(
+    () =>
+      (servicesQ.data?.services ?? [])
+        .filter((s) => s.type === 'addon')
+        .map((s) => ({ id: s.id, name: s.name, priceFen: s.priceFen })),
+    [servicesQ.data],
+  );
+
   // 服务：URL 有效则保留，否则上次记忆，否则该店首个在架洗护项（推荐位）
   useEffect(() => {
     if (!servicesQ.isSuccess) return;
@@ -167,6 +179,17 @@ export default function GroomingSinglePage() {
 
   const selectedDayGrid = day ? (days.find((d) => isSameDay(d.date, day)) ?? null) : null;
 
+  // 体验大批片 2：满档留口——选中日栅格全满时查 fullAlternatives（形状定死
+  // enabled=false，不画假推荐；仅渲染 note 置灰注记，note 缺省回退 copy 键）
+  const dayFull =
+    !!selectedDayGrid && !selectedDayGrid.closed && selectedDayGrid.grid.length > 0 && !selectedDayGrid.hasAvailable;
+  const fullAltQ = useQuery({
+    queryKey: ['store', 'fullAlternatives', effStoreId, day?.getTime()],
+    queryFn: () => queryFullAlternatives(trpc, effStoreId!, day!),
+    enabled: dayFull && effStoreId !== null && day !== null,
+    retry: 0,
+  });
+
   // U1-D：日期余量透出——逐日可约槽计数（slots 为服务端过滤后可约集，key=yyyy-m-d）
   const remainByDay = useMemo(() => {
     const map = new Map<string, number>();
@@ -188,6 +211,7 @@ export default function GroomingSinglePage() {
     setDayTouched(false);
     setSlot(null);
     setPassTouched(false);
+    setAddonIds([]); // 附加项为本店服务，换店即清
   };
   const pickService = (id: string) => {
     if (id !== serviceId) setSlot(null);
@@ -238,10 +262,19 @@ export default function GroomingSinglePage() {
   );
   const engineDurationMin = serviceId ? (durationById?.[serviceId] ?? null) : null;
 
+  // 体验大批片 2：确认条价格=主价+Σ附加（前端估，与 server 算同口径，最终以 server 结算为准）
+  const addonTotalFen = addonServices
+    .filter((a) => addonIds.includes(a.id))
+    .reduce((sum, a) => sum + a.priceFen, 0);
+  const totalFen = service ? service.priceFen + addonTotalFen : null;
+
+  const toggleAddon = (id: string) =>
+    setAddonIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
+
   const createM = useMutation({
     mutationFn: () => {
       const noteParts = [staffName ? `【希望洗护师：${staffName}】` : '', note.trim()].filter(Boolean);
-      return trpc.appointment.create.mutate({
+      return createAppointmentExp2(trpc, {
         storeId: effStoreId!,
         petId: petId!,
         serviceId: serviceId!,
@@ -249,6 +282,7 @@ export default function GroomingSinglePage() {
         scheduledStart: slot!,
         paymentMode,
         ...(noteParts.length > 0 ? { note: noteParts.join(' ') } : {}),
+        ...(addonIds.length > 0 ? { addonServiceIds: addonIds } : {}),
       });
     },
     onSuccess: (appt) => {
@@ -370,6 +404,16 @@ export default function GroomingSinglePage() {
             onSelect={setSlot}
             loading={servicesQ.isPending || servicesQ.isFetching}
           />
+          {/* 体验大批片 2：满档注记行（fullAlternatives 定死 enabled=false → 只渲染
+              note 置灰注记，不画假推荐；查询失败静默，不阻断改选日期/门店主路径） */}
+          {dayFull && fullAltQ.isSuccess ? (
+            <p
+              data-testid="gs-full-note"
+              className="mt-3 rounded-tag bg-sunken px-3 py-2 text-caption text-ink-placeholder"
+            >
+              {fullAltQ.data.note ?? bkc('booking.fullSlotFallback')}
+            </p>
+          ) : null}
         </div>
         {/* U1-D：时间摘要行（选中时段后透出，真实数据；未选不渲染）
             换皮批片 2：tfield 时间卡工艺（§4.4）——白卡 18，主行 14.5/800 + mono 9.5 副行；
@@ -389,7 +433,7 @@ export default function GroomingSinglePage() {
         ) : null}
       </section>
 
-      {/* 折叠区：收款方式 + 备注（U1-D：洗护师迁出为独立横卡区） */}
+      {/* 折叠区：收款方式 + 附加项 + 备注（U1-D：洗护师迁出为独立横卡区） */}
       <section className={SECTION}>
         <ExtrasBlock
           paymentMode={paymentMode}
@@ -401,13 +445,20 @@ export default function GroomingSinglePage() {
           passLoading={passQ.isPending}
           note={note}
           onNoteChange={setNote}
+          addons={addonServices}
+          selectedAddonIds={addonIds}
+          onToggleAddon={toggleAddon}
         />
+        {/* 附加项计价口径明面（前端估=server 算同口径，以 server 结算为准） */}
+        {addonIds.length > 0 ? (
+          <p className="mt-1 text-caption-xs text-ink-placeholder">{bkc('booking.addonPriceNote')}</p>
+        ) : null}
       </section>
 
       {/* 吸底确认条（fixed 于 TabBar 上方；B9a 任务 C：约 N 分钟 = 时长引擎输出，
-          引擎未输出时回退服务默认 durationMin） */}
+          引擎未输出时回退服务默认 durationMin；体验大批片 2：价=主价+Σ附加） */}
       <ConfirmBar
-        priceFen={service?.priceFen ?? null}
+        priceFen={totalFen}
         durationMin={engineDurationMin ?? service?.durationMin ?? null}
         missingLabel={missingLabel}
         submitting={createM.isPending}

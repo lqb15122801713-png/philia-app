@@ -266,6 +266,53 @@
       "version": "6",
       "when": 1791089876609,
       "tag": "0037_copy_client_exp1_keys",
+      "idx": 38,
+      "version": "6",
+      "when": 1791093208351,
+      "tag": "0038_client_exp2_domain",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "6",
+      "when": 1791106918567,
+      "tag": "0039_copy_client_exp2_keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "6",
+      "when": 1791121367949,
+      "tag": "0040_client_exp3_domain",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "6",
+      "when": 1791123733475,
+      "tag": "0041_copy_client_exp3_keys",
+      "idx": 42,
+      "version": "6",
+      "when": 1791168000000,
+      "tag": "0042_client_exp4_domain",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "6",
+      "when": 1791171600000,
+      "tag": "0043_copy_client_exp4_keys",
+      "idx": 44,
+      "version": "6",
+      "when": 1791184800000,
+      "tag": "0044_client_exp5_domain",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "6",
+      "when": 1791188400000,
+      "tag": "0045_copy_client_exp5_keys",
       "breakpoints": true
     }
   ]

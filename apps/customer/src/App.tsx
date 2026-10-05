@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useLocation, useSearchParams } from 'react-rou
 import { PageErrorBoundary } from '@philia/shared'
 import RequireAuth from './components/RequireAuth'
 import AppDock from './components/AppDock'
+import InstallBanner from './components/pwa/InstallBanner'
 import AppointmentDetailPage from './pages/AppointmentDetailPage'
 import AppointmentLivePage from './pages/AppointmentLivePage'
 import AppointmentsPage from './pages/AppointmentsPage'
@@ -13,6 +14,7 @@ import CartPage from './pages/CartPage'
 import CertDetailPage from './pages/CertDetailPage'
 import CertListPage from './pages/CertListPage'
 import CheckoutPage from './pages/CheckoutPage'
+import CouponsPage from './pages/CouponsPage'
 import DevLoginPage from './pages/DevLoginPage'
 import GroomingSinglePage from './pages/GroomingSinglePage'
 import HomePage from './pages/HomePage'
@@ -41,6 +43,7 @@ import MomentsPage from './pages/MomentsPage'
 import NotifyCenterPage from './pages/NotifyCenterPage'
 import NotifyPrefsPage from './pages/NotifyPrefsPage'
 import PetsPage from './pages/PetsPage'
+import PetHealthPage from './pages/PetHealthPage'
 import PhiliaPage from './pages/PhiliaPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import RefundApplyPage from './pages/RefundApplyPage'
@@ -86,6 +89,9 @@ function ProtectedRoutes() {
       <Route path="/refunds/:id" element={<RefundDetailPage />} />
       <Route path="/philia" element={<PhiliaPage />} />
       <Route path="/philia/pets" element={<PetsPage />} />
+      {/* 体验批片 4：宠物健康档案（健康记录族+体重趋势；详情级无 dock；
+          申报锚点=「健康档案」，双表已申报 check-nav-closure/smoke-routes） */}
+      <Route path="/philia/pets/:id/health" element={<PetHealthPage />} />
       {/* R11a 裁定：旧路由 /philia/member 退役——重定向往 /member 会员中心（路径保留，
           兼容旧深链与 check-nav-closure 既有申报行） */}
       <Route path="/philia/member" element={<Navigate to="/member" replace />} />
@@ -132,6 +138,9 @@ function ProtectedRoutes() {
       <Route path="/records" element={<RecordsPage />} />
       {/* U1-H：会员卡页新路由（信息展示 v0；详情级——无 dock，统一返回条） */}
       <Route path="/me/card" element={<MemberCardPage />} />
+      {/* 客户端体验大批 片 3：优惠券+心愿单（详情级无 dock，PushBar 返回条兜底 /me；
+          心愿单并入本页 tab 取少路由；申报锚点=「优惠券」） */}
+      <Route path="/me/coupons" element={<CouponsPage />} />
       {/* R11a 骨架批：会员中心/开通页新路由（详情级无 dock，统一返回条固定回 /me、/member；
           申报锚点=页面标题「会员中心」「开通会员」） */}
       <Route path="/member" element={<MemberCenterPage />} />
@@ -189,6 +198,9 @@ export default function App() {
         </Routes>
       </main>
       {!isDevLogin && isMainPath && <AppDock />}
+      {/* 体验批片 4：PWA 安装引导条（beforeinstallprompt 拦存+自定义条；
+          登录守卫内全页可出，自身持关闭/已装持久化，非主级页不吃 isMainPath 限制） */}
+      {!isDevLogin && <InstallBanner />}
     </div>
   )
 }

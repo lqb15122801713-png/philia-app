@@ -6,11 +6,15 @@
  *   （≤6，九宫格 PhotoWall 复用——定稿「照片挂时刻」因 boarding log 照片无时刻
  *   字段不落位，数据口径不动，已报备）；
  * - 卡件统一 u1-card（细线 ring + 近零影，v2.0 层级纪律）。
- * 数据源：boarding.myStay（T2.3 新增，customer 本人）。
+ * 数据源：boarding.myStay（T2.3 新增，customer 本人）；
+ * 安心卡（体验批片 4 B17）=boarding.assuranceCard 聚合读口（房间/入住体重/随身物品
+ * + 最新打卡摘要 + 拆封留痕列表），stay=null 显示「待入住登记」空态。
  */
 
 import { PhotoWall, type PhotoWallPhoto } from '@philia/shared'
-import { BedDouble, Scale } from 'lucide-react'
+import { format } from 'date-fns'
+import { BedDouble, PackageOpen, Scale } from 'lucide-react'
+import { apc } from '../../copy/appointments'
 import '../../styles/live-v2.css'
 
 export interface BoardingStayInfo {
@@ -30,9 +34,18 @@ export interface BoardingLogItem {
   photos: string[] | null
 }
 
+/** 安心卡聚合信息（boarding.assuranceCard 透出列，页面层组装） */
+export interface BoardingAssuranceInfo {
+  stay: BoardingStayInfo | null
+  latestLog: { logDate: string; note: string | null } | null
+  unsealLogs: Array<{ id: string; itemName: string; note: string | null; createdAt: Date }>
+}
+
 export interface BoardingLiveProps {
   stay: BoardingStayInfo | null
   logs: BoardingLogItem[]
+  /** 安心卡数据；undefined=未取到（不渲染安心卡） */
+  assurance?: BoardingAssuranceInfo
   /** 照片点击（页面层全屏查看器） */
   onPhotoClick?: (photos: PhotoWallPhoto[], index: number) => void
 }
@@ -92,6 +105,92 @@ function StayCard({ stay }: { stay: BoardingStayInfo | null }) {
   )
 }
 
+/** 安心卡（体验批片 4 B17）：房间/入住体重/随身物品 + 最新打卡摘要 + 拆封留痕（物品+时刻）；
+    stay=null=「待入住登记」空态；拆封零记录=诚实空态「暂无拆封记录」 */
+function AssuranceCard({ info }: { info: BoardingAssuranceInfo }) {
+  return (
+    <section className="u1-card p-4" data-testid="boarding-assurance-card">
+      <h2 className="text-title">{apc('appointments.assuranceTitle')}</h2>
+      {!info.stay ? (
+        <div className="mt-2">
+          <p className="text-body font-medium text-ink">{apc('appointments.assuranceEmpty')}</p>
+          <p className="mt-1 text-caption text-ink-secondary">{apc('appointments.assuranceEmptyBody')}</p>
+        </div>
+      ) : (
+        <>
+          <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
+            <p className="flex items-center gap-1.5 text-body text-ink">
+              <BedDouble className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
+              {apc('appointments.assuranceRoom')}{' '}
+              <span className="font-semibold">{info.stay.roomNo ?? apc('appointments.roomPending')}</span>
+            </p>
+            {info.stay.checkinWeightKg != null ? (
+              <p className="flex items-center gap-1.5 text-body text-ink">
+                <Scale className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
+                {apc('appointments.assuranceWeight')}{' '}
+                <span className="font-number font-semibold">{info.stay.checkinWeightKg} kg</span>
+              </p>
+            ) : null}
+          </div>
+          {info.stay.belongings && info.stay.belongings.length > 0 ? (
+            <div className="mt-3">
+              <p className="text-caption text-ink-secondary">{apc('appointments.assuranceBelongings')}</p>
+              <ul className="mt-1.5 flex flex-wrap gap-1.5">
+                {info.stay.belongings.map((b, i) => (
+                  <li
+                    key={`${b.name}-${i}`}
+                    className="rounded-tag bg-sunken px-2 py-1 text-caption text-ink"
+                    title={b.note}
+                  >
+                    {b.name}
+                    {b.note ? <span className="text-ink-secondary">（{b.note}）</span> : null}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          <div className="mt-3">
+            <p className="text-caption text-ink-secondary">{apc('appointments.assuranceLatestLog')}</p>
+            {info.latestLog ? (
+              <p className="mt-1 text-body-sm text-ink">
+                {fmtLogDate(info.latestLog.logDate)}
+                {info.latestLog.note
+                  ? ` · ${info.latestLog.note}`
+                  : ` · ${apc('appointments.assuranceLogDone')}`}
+              </p>
+            ) : (
+              <p className="mt-1 text-caption text-ink-secondary">{apc('appointments.assuranceNoLog')}</p>
+            )}
+          </div>
+          <div className="mt-3 border-t border-line-divider pt-3" data-testid="boarding-unseal-list">
+            <p className="flex items-center gap-1.5 text-caption text-ink-secondary">
+              <PackageOpen className="h-4 w-4" strokeWidth={1.5} />
+              {apc('appointments.assuranceUnsealTitle')}
+            </p>
+            {info.unsealLogs.length === 0 ? (
+              <p className="mt-1 text-caption text-ink-secondary">{apc('appointments.assuranceUnsealEmpty')}</p>
+            ) : (
+              <ul className="mt-1.5 space-y-1">
+                {info.unsealLogs.map((u) => (
+                  <li key={u.id} className="flex items-baseline justify-between gap-2 text-caption">
+                    <span className="text-ink">
+                      {u.itemName}
+                      {u.note ? <span className="text-ink-secondary">（{u.note}）</span> : null}
+                    </span>
+                    <span className="u1-num shrink-0 text-ink-placeholder">
+                      {format(u.createdAt, 'M月d日 HH:mm')}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </>
+      )}
+    </section>
+  )
+}
+
 function DailyLogCard({
   log,
   onPhotoClick,
@@ -145,10 +244,11 @@ function DailyLogCard({
   )
 }
 
-export default function BoardingLive({ stay, logs, onPhotoClick }: BoardingLiveProps) {
+export default function BoardingLive({ stay, logs, assurance, onPhotoClick }: BoardingLiveProps) {
   return (
     <div className="space-y-3">
       <StayCard stay={stay} />
+      {assurance ? <AssuranceCard info={assurance} /> : null}
       {logs.length === 0 ? (
         <section className="u1-card p-4">
           <h2 className="text-title">每日打卡</h2>

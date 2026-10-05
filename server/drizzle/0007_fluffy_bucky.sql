@@ -1,1 +1,0 @@
-ALTER TABLE `appointments` ADD `assign_source` text;

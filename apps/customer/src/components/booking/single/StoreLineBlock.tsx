@@ -54,6 +54,13 @@ export default function StoreLineBlock({
         <span className="ml-3 shrink-0 border-b border-brand-secondary pb-px text-caption font-medium text-ink">更换 ▸</span>
       </button>
 
+      {/* 体验大批片 2：门店计数诚实口径注记（读 listNearby 计数渲染；三店通用实证标注） */}
+      {stores.length > 0 ? (
+        <p data-testid="gs-store-count-note" className="mt-0.5 text-caption-xs text-ink-placeholder">
+          {bkc('booking.storeCountNote', { count: stores.length })}
+        </p>
+      ) : null}
+
       {sheetOpen ? (
         <BottomSheet title={bkc('booking.chooseStore')} onClose={() => setSheetOpen(false)} testId="gs-store-sheet">
           <div className="space-y-2">

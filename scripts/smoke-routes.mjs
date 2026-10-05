@@ -86,9 +86,11 @@ const ROUTES = [
   { app: 'customer', path: '/appointments', anchors: ['预约'] },
   { app: 'customer', path: `/appointments/${APPT_ID}`, anchors: ['预约', '核销'], serverDep: true, note: 'A1 白屏群' },
   { app: 'customer', path: '/philia/pets', anchors: ['宠物'], note: 'A4 白屏群' },
+  { app: 'customer', path: `/philia/pets/${INVALID_ID}/health`, anchors: ['健康档案'], serverDep: true, note: '体验批片 4 宠物健康档案（无效 id 异常态：页题+返回出口仍在）' },
   { app: 'customer', path: '/philia/moments', anchors: ['服务相册', '相册'], note: 'A4 白屏群' },
   // U1-H：会员卡页新路由（任务书许可补充锚点行，PR 注明）；R11b：Q-01 码屏重构，锚点改「会员码」
   { app: 'customer', path: '/me/card', anchors: ['会员码'], serverDep: true, note: 'U1-H 新路由；R11b Q-01 重构换锚' },
+  { app: 'customer', path: '/me/coupons', anchors: ['优惠券'], serverDep: true, note: '客户端体验大批 片 3（优惠券+心愿单双 tab 新屏；锚点=页题）' },
   { app: 'customer', path: '/member', anchors: ['会员'], serverDep: true, note: '批次 R11a' },
   { app: 'customer', path: '/member/open', anchors: ['开通会员'], serverDep: true, note: '批次 R11a' },
   { app: 'customer', path: '/member/rebate', anchors: ['回馈金'], serverDep: true, note: '批次 R11b 新路由申报（W-01）' },
@@ -156,6 +158,7 @@ const ROUTES = [
   { app: 'merchant', path: '/live', anchors: ['在店监控'], expectPath: '/monitor', note: 'B2 重定向；U3 锚点' },
   { app: 'merchant', path: '/appointments', anchors: ['预约'], note: 'A3 白屏群' },
   { app: 'merchant', path: `/appointments/${APPT_ID}/monitor`, anchors: ['实时监控', '预约'], serverDep: true, note: 'P4 原深链；U3 锚点' },
+  { app: 'merchant', path: '/finance/report/d1', anchors: ['营收', '报表'], serverDep: true, note: '体验批片 5：W-13 报表目录点亮（:key 同模板 17 页同构，d1 代表行；返回目录出口锚）' },
   /* ---- 员工端 ---- */
   { app: 'staff', path: '/dev-login', anchors: ['登录'] },
   { app: 'staff', path: '/today', anchors: ['工位', '预约'], note: '骨架批片 1（S-01 工位台）：apphead「工位」+ dock 四槽（工位/预约/打卡/我的）' },

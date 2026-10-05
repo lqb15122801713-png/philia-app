@@ -25,6 +25,7 @@ import { EventType } from '../realtime/events';
 import { getPaymentProvider, type PaymentProvider } from '../payments/provider';
 import { MOCK_SIGNATURE_HEADER, signMockCallback } from '../payments/mockPay';
 import { withOrderWriteLock } from '../routers/mall';
+import { grantFirstOrderGift } from '../routers/perks';
 
 /** 会话用户（结构对齐契约 1 SessionUser；仅 mock 演示端点做归属校验用） */
 export interface SessionUserLike {
@@ -164,6 +165,9 @@ export async function processPayCallback(
         provider: provider.name,
       },
     );
+    /* 片 3 升级礼遇：首单 paid 翻转点触发（同事务同生共死；资格留痕不真发，
+       幂等=本人已有 upgrade_gift 行即跳过——重复回调上方幂等闸已拦，双保险） */
+    await grantFirstOrderGift(tx as unknown as Parameters<typeof emitEvent>[0], order);
     return { order: updated[0]!, idempotent: false };
     }),
   );

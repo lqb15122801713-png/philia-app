@@ -17,6 +17,10 @@
  * - boarding.stayForStaff：staff 本店（P3 T3.4 员工端寄养打卡页数据源）。
  *   员工查看单个寄养单现状（stay + 每日打卡按 log_date 升序）；myStay 是
  *   customerProcedure、stayBoard 是 merchantProcedure，员工均不可用，故增设。
+ * - boarding.unsealBelonging：staff 本店（体验批片 4 B17）。用品拆封留痕+
+ *   主人即时通知（boarding.unsealed → user+store）；已退住硬闸。
+ * - boarding.assuranceCard：customer 本人（体验批片 4 B17 安心卡读口）——
+ *   stay+最新打卡+拆封留痕聚合，未入住 stay=null 不视为错误。
  */
 
 import { TRPCError } from '@trpc/server';
@@ -298,6 +302,113 @@ export const boardingRouter = router({
 
       for (const id of outboxIds) broadcastNow(id);
       return { log };
+    }),
+
+  /**
+   * 用品拆封通知（体验批片 4 · B17）：staff 本店任意店员。拆封主人随身物品
+   * （自带粮/用品包）时落 boarding_unseal_logs（只增不改）+ 同事务
+   * boarding.unsealed → user（主人）+ store 双频道（主人即时知情）。
+   * 闸：预约须在住（in_boarding）。
+   */
+  unsealBelonging: staffProcedure
+    .input(
+      z.object({
+        stayId: z.string().min(1),
+        itemName: z.string().trim().min(1, '物品名不能为空').max(64),
+        note: z.string().trim().max(255).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const stay = await ctx.db
+        .select()
+        .from(schema.boardingStays)
+        .where(eq(schema.boardingStays.id, input.stayId))
+        .limit(1)
+        .then((r) => r[0]);
+      if (!stay) throw new TRPCError({ code: 'NOT_FOUND', message: '寄养住宿记录不存在' });
+      const appt = await getBoardingAppointment(ctx, stay.appointmentId, { staffStorewide: true });
+      if (appt.status !== 'in_boarding' || stay.checkoutAt) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '该寄养单已退住，不可再登记拆封' });
+      }
+      const petName = await petNameOf(ctx, appt.petId);
+
+      const { log, outboxIds } = await ctx.db.transaction(async (tx) => {
+        const [log] = await tx
+          .insert(schema.boardingUnsealLogs)
+          .values({
+            stayId: stay.id,
+            itemName: input.itemName,
+            note: input.note ?? null,
+            openedBy: ctx.user.staffId!,
+          })
+          .returning();
+        const txBus = tx as unknown as BusDb;
+        const payload = {
+          appointmentId: appt.id,
+          stayId: stay.id,
+          itemName: input.itemName,
+          petName,
+        };
+        const outboxIds = [
+          await emitEvent(txBus, `user:${appt.customerId}`, EventType.BoardingUnsealed, payload),
+          await emitEvent(txBus, `store:${appt.storeId}`, EventType.BoardingUnsealed, payload),
+        ];
+        return { log, outboxIds };
+      });
+      for (const id of outboxIds) broadcastNow(id);
+      return { log };
+    }),
+
+  /**
+   * 主人端安心卡（体验批片 4 · B17，customer 本人）：寄养在住状况一卡聚合——
+   * stay（房间/入住体重/随身物品）+ 最新一条照护打卡 + 拆封留痕列表 + 宠物名。
+   * 尚未入住登记返回 { stay: null, ... } 不视为错误（同 myStay 口径）。
+   */
+  assuranceCard: customerProcedure
+    .input(z.object({ appointmentId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const appt = await ctx.db
+        .select()
+        .from(schema.appointments)
+        .where(eq(schema.appointments.id, input.appointmentId))
+        .limit(1)
+        .then((r) => r[0]);
+      if (!appt) throw new TRPCError({ code: 'NOT_FOUND', message: '预约不存在' });
+      if (appt.customerId !== ctx.user.id) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: '只能查看本人名下的寄养单' });
+      }
+      if (appt.type !== 'boarding') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '该预约不是寄养单' });
+      }
+      const pet = await ctx.db
+        .select({ name: schema.pets.name })
+        .from(schema.pets)
+        .where(eq(schema.pets.id, appt.petId))
+        .get();
+
+      const stay = await ctx.db
+        .select()
+        .from(schema.boardingStays)
+        .where(eq(schema.boardingStays.appointmentId, appt.id))
+        .limit(1)
+        .then((r) => r[0]);
+      if (!stay) {
+        return { stay: null, latestLog: null, unsealLogs: [] as const, petName: pet?.name ?? null, appointment: appt };
+      }
+      const latestLog = await ctx.db
+        .select()
+        .from(schema.boardingDailyLogs)
+        .where(eq(schema.boardingDailyLogs.stayId, stay.id))
+        .orderBy(desc(schema.boardingDailyLogs.logDate))
+        .limit(1)
+        .then((r) => r[0]);
+      const unsealLogs = await ctx.db
+        .select()
+        .from(schema.boardingUnsealLogs)
+        .where(eq(schema.boardingUnsealLogs.stayId, stay.id))
+        .orderBy(desc(schema.boardingUnsealLogs.createdAt))
+        .limit(50);
+      return { stay, latestLog: latestLog ?? null, unsealLogs, petName: pet?.name ?? null, appointment: appt };
     }),
 
   /**

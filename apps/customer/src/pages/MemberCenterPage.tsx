@@ -13,13 +13,18 @@
  * - 文案全走文案键（copy.ts），禁用色 grep=0。
  *
  * 待裁定挂账（开工回执疑点 1/2）：卡面 NO. 号源未拍——本期 cf-no 只落昵称，不留假号。
+ *
+ * 客户端体验大批 片 3：权益墙上方加「未用权益」区（perk.myUnused 台账：次卡剩余
+ * 并显行 + grants 资格行（生日礼双行/新人礼包 + 发放时刻）+「资格留痕，发放候
+ * 资质批」注记）；CTA 区续费优惠透出（pay.quote renewal 分支折后价行，无优惠不显）。
  */
 
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { usePhiliaClient } from '@philia/shared'
 import { mc } from '../components/member/copy'
+import { fmtDateTime } from '../components/account/common'
 import {
   AppHead,
   CardFace,
@@ -36,12 +41,18 @@ import {
   tierClaimOf,
   tierNameOf,
   yuanOf,
+  zheOf,
   type SavingsData,
   type V2Plan,
 } from '../components/member/v2'
 import { ErrorState, LoadingBlock } from '../components/home/common'
 
 const DAY_MS = 24 * 60 * 60 * 1000
+
+type Trpc = ReturnType<typeof usePhiliaClient>['trpc']
+/* 片 3：perk.myUnused 透出类型（server 契约：{passTimes, passNote, grants[]}） */
+type MyUnused = Awaited<ReturnType<Trpc['perk']['myUnused']['query']>>
+type PerkGrant = MyUnused['grants'][number]
 
 export default function MemberCenterPage() {
   const { trpc } = usePhiliaClient()
@@ -63,6 +74,33 @@ export default function MemberCenterPage() {
     queryFn: () => trpc.membership.mySavings.query(),
     enabled: !!myQ.data?.membership,
   })
+  /* 客户端体验大批 片 3：未用权益台账（perk.myUnused，仅会员态点亮） */
+  const unusedQ = useQuery({
+    queryKey: ['perk', 'myUnused'],
+    queryFn: () => trpc.perk.myUnused.query(),
+    enabled: !!myQ.data?.membership,
+  })
+  /* 客户端体验大批 片 3：续费优惠透出（pay.quote renewal=true 分支；免费档不谈续费不查） */
+  const isFree = !!myQ.data?.plan?.free
+  const renewQuoteQ = useQuery({
+    queryKey: ['pay', 'quote', 'renewal', myQ.data?.membership?.planKey, myQ.data?.membership?.petCount],
+    queryFn: () =>
+      trpc.pay.quote.query({
+        bizDomain: 'membership_open',
+        planKey: myQ.data!.membership!.planKey,
+        petCount: myQ.data!.membership!.petCount,
+        renewal: true,
+      }),
+    enabled: !!myQ.data?.membership && !isFree,
+    staleTime: 60_000,
+    retry: false,
+  })
+  /* 折后价行：renewal.discountBp<10000=有优惠才显，无优惠不显（不上假行） */
+  const renewal = renewQuoteQ.data?.renewal ?? null
+  const renewLine =
+    renewal && renewal.discountBp < 10000
+      ? mc('perk.renewOff', { zhe: zheOf(renewal.discountBp) ?? '', amount: yuanOf(renewal.amountFen) })
+      : null
 
   return (
     <div className="m2" data-testid="member-center-page" style={{ minHeight: '100vh' }}>
@@ -91,6 +129,8 @@ export default function MemberCenterPage() {
           settlementDay={plansQ.data.rebateSettlementDay}
           validityDays={plansQ.data.membershipValidityDays}
           savings={(savingsQ.data ?? null) as SavingsData | null}
+          unusedQ={unusedQ}
+          renewLine={renewLine}
           onSheet={setSheet}
           onGotoRebate={() => navigate('/member/rebate')}
           onGotoOpen={() => navigate('/member/open')}
@@ -158,6 +198,8 @@ function A3Body({
   settlementDay,
   validityDays,
   savings,
+  unusedQ,
+  renewLine,
   onSheet,
   onGotoRebate,
   onGotoOpen,
@@ -169,6 +211,8 @@ function A3Body({
   settlementDay: number
   validityDays: number
   savings: SavingsData | null
+  unusedQ: UseQueryResult<MyUnused>
+  renewLine: string | null
   onSheet: (s: 'renew' | 'quit' | 'saved') => void
   onGotoRebate: () => void
   onGotoOpen: () => void
@@ -249,6 +293,21 @@ function A3Body({
         </button>
       ) : null}
 
+      {/* 客户端体验大批 片 3：未用权益区（权益墙上方；perk.myUnused 台账——
+          次卡剩余并显行 + grants 资格行（生日礼双行/新人礼包等 + 发放时刻）+
+          台账口径注记「资格留痕，发放候资质批」） */}
+      <SecH title={mc('perk.unusedTitle')} />
+      {unusedQ.isPending ? (
+        <LoadingBlock lines={1} />
+      ) : unusedQ.isError ? (
+        <ErrorState message={mc('common.memberLoadFail')} onRetry={() => void unusedQ.refetch()} />
+      ) : (
+        <UnusedPerks data={unusedQ.data} />
+      )}
+      <p className="m2-note" style={{ marginTop: 8, padding: '0 4px' }} data-testid="perk-ledger-note">
+        {mc('perk.ledgerNote')}
+      </p>
+
       {/* 4. 权益墙（档跟随） */}
       <SecH title={mc('a3.perksTitle', { tier })} more={mc('a3.perksAllOn')} />
       {plan ? <PerksWall plan={plan} /> : null}
@@ -262,6 +321,16 @@ function A3Body({
       {/* 7. CTA 区（续费=到店付弹层；升级会员 →/member/upgrade（upgradeAvailable 才显）；看看别的档 → J-01；
           补缺修复小批 UX 销项：免费档主 CTA=「免费在册 · 随时升级」→升级页，不谈续费） */}
       <div style={{ marginTop: 16 }}>
+        {/* 客户端体验大批 片 3：续费优惠透出（quote renewal 折后价行，无优惠不显） */}
+        {renewLine ? (
+          <p
+            className="m2-mono"
+            data-testid="member-renew-discount"
+            style={{ margin: '0 0 8px', textAlign: 'center', fontSize: 11, color: 'var(--v2ink)' }}
+          >
+            {renewLine}
+          </p>
+        ) : null}
         <button
           type="button"
           className="m2-btn-primary m2-press"
@@ -290,6 +359,83 @@ function A3Body({
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/* 客户端体验大批 片 3：未用权益台账区                                       */
+/* ------------------------------------------------------------------ */
+
+/** grants kind → 资格行文案（枚举值对齐 server PERK_KINDS；未知 kind 兜「权益」不裸枚举） */
+function perkKindLabel(kind: string): string {
+  switch (kind) {
+    case 'service_discount_count':
+      return mc('perk.kindServiceDiscount')
+    case 'care_package':
+      return mc('perk.kindCarePack')
+    case 'birthday_owner':
+      return mc('perk.kindBirthdayOwner')
+    case 'birthday_pet':
+      return mc('perk.kindBirthdayPet')
+    case 'welcome_pack':
+      return mc('perk.kindNewbie')
+    case 'upgrade_gift':
+      return mc('perk.kindUpgrade')
+    default:
+      return mc('perk.kindFallback')
+  }
+}
+
+function UnusedPerks({ data }: { data: MyUnused | undefined }) {
+  const passTimes = data?.passTimes ?? 0
+  const grants = data?.grants ?? []
+  if (passTimes <= 0 && grants.length === 0) {
+    return (
+      <p className="m2-note" style={{ padding: '0 4px' }} data-testid="perk-unused-empty">
+        {mc('perk.unusedEmpty')}
+      </p>
+    )
+  }
+  return (
+    <div className="m2-card" style={{ padding: '4px 16px' }} data-testid="perk-unused-list">
+      {/* 次卡剩余次数并显行（与台账 grants 同区，真实值） */}
+      {passTimes > 0 ? (
+        <div className="m2-rowx" data-testid="perk-pass-times">
+          <span style={{ fontSize: 12.5, fontWeight: 700 }}>{mc('perk.passTimesLine', { n: passTimes })}</span>
+        </div>
+      ) : null}
+      {grants.map((g: PerkGrant) => {
+        const usedUp = g.totalCount != null && g.remainCount != null && g.remainCount <= 0
+        return (
+          <div className="m2-rowx" key={g.id} data-testid={`perk-grant-${g.id}`}>
+            <span style={{ fontSize: 12.5, fontWeight: 700 }}>
+              {perkKindLabel(g.kind)}
+              {/* 资格徽（发放=资格留痕，候资质批） */}
+              <span
+                className="m2-mono"
+                style={{
+                  marginLeft: 8,
+                  padding: '2px 7px',
+                  borderRadius: 999,
+                  border: '1px solid var(--v2line)',
+                  fontSize: 9,
+                  color: usedUp ? 'var(--v2muted)' : 'var(--v2ink)',
+                }}
+              >
+                {usedUp ? mc('perk.usedUp') : g.status}
+              </span>
+            </span>
+            <span className="m2-mono" style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--v2muted)' }}>
+              {g.totalCount != null && g.remainCount != null
+                ? mc('perk.remainLine', { remain: g.remainCount, total: g.totalCount })
+                : null}
+              {g.totalCount != null && g.remainCount != null ? ' · ' : ''}
+              {mc('perk.grantedAt', { time: fmtDateTime(g.createdAt) })}
+            </span>
+          </div>
+        )
+      })}
     </div>
   )
 }

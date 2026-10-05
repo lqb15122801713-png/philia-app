@@ -20,7 +20,7 @@
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { usePhiliaClient } from '@philia/shared';
 import { checkinAt } from '@/components/booking/BoardingDateRangePicker';
@@ -33,9 +33,12 @@ import BoardingRangeSheet from '@/components/booking/single/BoardingRangeSheet';
 import RoomTypeBlock from '@/components/booking/single/RoomTypeBlock';
 import StoreLineBlock from '@/components/booking/single/StoreLineBlock';
 import NoteFoldBlock from '@/components/booking/single/NoteFoldBlock';
+import BottomSheet from '@/components/booking/single/BottomSheet';
 import BoardingConfirmBar, { type VaccineBlock } from '@/components/booking/single/BoardingConfirmBar';
 import { mc } from '@/components/member/copy';
+import { agc, BOARDING_AGREEMENTS, type BoardingAgreementKey } from '@/copy/agreement';
 import { bkc } from '@/copy/booking';
+import { createAppointmentExp2, queryFullAlternatives } from '@/lib/exp2Api';
 import { readLastBooking, resolvePetId, resolveServiceId, resolveStoreId, writeLastBooking } from '@/lib/bookingPrefill';
 
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
@@ -63,6 +66,34 @@ export default function BoardingSinglePage() {
     open: false,
     phase: 'checkin',
   });
+
+  /* ---- 体验大批片 2：折叠区扩展状态（紧急联系人 / 遛弯次数 / 协议勾选） ---- */
+  const [ecName, setEcName] = useState('');
+  const [ecPhone, setEcPhone] = useState('');
+  const [ecRelation, setEcRelation] = useState('');
+  const [walkTimes, setWalkTimes] = useState('');
+  const [medicalAgreed, setMedicalAgreed] = useState(false);
+  const [consentAgreed, setConsentAgreed] = useState(false);
+  // 协议全文底部半屏（点协议名展开；「已阅读并同意」落勾并收起）
+  const [agreeSheetKey, setAgreeSheetKey] = useState<BoardingAgreementKey | null>(null);
+  const agreeSheetDoc = BOARDING_AGREEMENTS.find((a) => a.agreementKey === agreeSheetKey) ?? null;
+  // 签署落点=pay.signAgreement（agreements 表快照留痕，server 常量版本）；
+  // 每键每页只签一次（重复签署留新行，防连点重复留痕）
+  const signedKeysRef = useRef<Set<BoardingAgreementKey>>(new Set());
+  const signAgreement = (key: BoardingAgreementKey) => {
+    if (signedKeysRef.current.has(key)) return;
+    signedKeysRef.current.add(key);
+    // 留痕失败不阻断本地勾选态（签署闸以 appointment.create 的 medicalAuth 为准）
+    void trpc.pay.signAgreement.mutate({ agreementKey: key }).catch(() => {
+      signedKeysRef.current.delete(key);
+    });
+  };
+
+  // 紧急联系人：任一填写即须补全三字段；手机号须 11 位（1 开头）
+  const ecAnyFilled = ecName.trim().length > 0 || ecPhone.length > 0 || ecRelation.trim().length > 0;
+  const ecAllFilled = ecName.trim().length > 0 && ecPhone.length > 0 && ecRelation.trim().length > 0;
+  const ecPhoneValid = /^1\d{10}$/.test(ecPhone);
+  const ecError = ecPhone.length > 0 && !ecPhoneValid ? bkc('booking.ecPhoneInvalid') : null;
 
   /* ---- 数据 ---- */
   const nearbyQ = useQuery({
@@ -143,6 +174,17 @@ export default function BoardingSinglePage() {
     return Math.min(...row.remaining);
   };
 
+  // 体验大批片 2：满档留口——已选区间且选中房型余量=0 时查 fullAlternatives
+  // （形状定死 enabled=false，不画假推荐；仅渲染 note 置灰注记）
+  const boardingFull =
+    !!checkin && !!checkout && serviceId !== null && remainingOf(serviceId) === 0;
+  const fullAltQ = useQuery({
+    queryKey: ['store', 'fullAlternatives', effStoreId, checkin?.getTime()],
+    queryFn: () => queryFullAlternatives(trpc, effStoreId!, checkin!),
+    enabled: boardingFull && effStoreId !== null,
+    retry: 0,
+  });
+
   /* ---- 联动：换门店清房型（触发重解析），落在休息日的日期清掉（旧向导逻辑保留） ---- */
   const pickStore = (id: string) => {
     if (id === effStoreId) return;
@@ -165,11 +207,14 @@ export default function BoardingSinglePage() {
     return ok ? null : { petName: pet.name, until: pet.vaccineValidUntil ?? null };
   }, [pet, checkout]);
 
-  /* ---- 提交（现有 appointment.create，入参不动） ---- */
+  /* ---- 提交（体验大批片 2：走契约边界 createAppointmentExp2——入参加
+     emergencyContact（三字段齐才传）/ medicalAuth（勾选闸已过，必传）/
+     walkTimesPerDay（>0 才传）；O 落点后包装退役、签名不变） ---- */
   const createM = useMutation({
     mutationFn: () => {
       if (!store || !checkin || !checkout) throw new Error('信息不完整');
-      return trpc.appointment.create.mutate({
+      const wt = Number.parseInt(walkTimes, 10);
+      return createAppointmentExp2(trpc, {
         storeId: store.id,
         petId: petId!,
         serviceId: serviceId!,
@@ -178,6 +223,11 @@ export default function BoardingSinglePage() {
         scheduledEnd: checkinAt(store, checkout),
         paymentMode,
         ...(note.trim() ? { note: note.trim() } : {}),
+        ...(ecAllFilled
+          ? { emergencyContact: { name: ecName.trim(), phone: ecPhone, relation: ecRelation.trim() } }
+          : {}),
+        medicalAuth: { agreed: true },
+        ...(Number.isFinite(wt) && wt > 0 ? { walkTimesPerDay: wt } : {}),
       });
     },
     onSuccess: (appt) => {
@@ -195,7 +245,8 @@ export default function BoardingSinglePage() {
     },
   });
 
-  /* ---- 确认按钮三态：缺项点名（顺序同屏面区块） ---- */
+  /* ---- 确认按钮三态：缺项点名（顺序同屏面区块；体验大批片 2 追加：
+     紧急联系人补全/手机号校验 → 医疗授权硬闸（与 server 400 同源）→ 寄养协议勾选） ---- */
   const noPets = petsQ.isSuccess && (petsQ.data?.length ?? 0) === 0;
   const missingLabel = noPets
     ? bkc('booking.needPet')
@@ -211,7 +262,15 @@ export default function BoardingSinglePage() {
               ? bkc('booking.chooseRoom')
               : effStoreId === null
                 ? bkc('booking.chooseStore')
-                : null;
+                : ecAnyFilled && !ecAllFilled
+                  ? bkc('booking.ecIncomplete')
+                  : ecPhone.length > 0 && !ecPhoneValid
+                    ? bkc('booking.ecPhoneInvalid')
+                    : !medicalAgreed
+                      ? bkc('booking.needMedicalAuth')
+                      : !consentAgreed
+                        ? bkc('booking.needBoardingConsent')
+                        : null;
 
   /* ---- 渲染：单屏区块化（v4.1：留白 + hairline 分节） ---- */
   // 节间 hairline：token 深棕墨 #3B2E24 的 9% 透明度（line.ring；换皮批片 2 换代旧暖墨谱系）
@@ -281,6 +340,16 @@ export default function BoardingSinglePage() {
             error={servicesQ.isError}
             onRetry={() => void servicesQ.refetch()}
           />
+          {/* 体验大批片 2：满档注记行（fullAlternatives 定死 enabled=false → 只渲染
+              note 置灰注记，不画假推荐；查询失败静默） */}
+          {boardingFull && fullAltQ.isSuccess ? (
+            <p
+              data-testid="bs-full-note"
+              className="mt-3 rounded-tag bg-sunken px-3 py-2 text-caption text-ink-placeholder"
+            >
+              {fullAltQ.data.note ?? bkc('booking.fullSlotFallback')}
+            </p>
+          ) : null}
         </div>
       </section>
 
@@ -298,10 +367,61 @@ export default function BoardingSinglePage() {
         </div>
       </section>
 
-      {/* 折叠区：备注（寄养固定到店付，无收款选择器） */}
+      {/* 折叠区：备注 + 紧急联系人 + 遛弯次数 + 协议勾选（寄养固定到店付，无收款选择器） */}
       <section className={SECTION}>
-        <NoteFoldBlock note={note} onNoteChange={setNote} />
+        <NoteFoldBlock
+          note={note}
+          onNoteChange={setNote}
+          extras={{
+            ecName,
+            ecPhone,
+            ecRelation,
+            onEcName: setEcName,
+            onEcPhone: setEcPhone,
+            onEcRelation: setEcRelation,
+            ecError,
+            walkTimes,
+            onWalkTimes: setWalkTimes,
+            medicalAgreed,
+            consentAgreed,
+            onToggleMedical: () => setMedicalAgreed((v) => !v),
+            onToggleConsent: () => setConsentAgreed((v) => !v),
+            onOpenAgreement: setAgreeSheetKey,
+          }}
+        />
       </section>
+
+      {/* 协议全文底部半屏（copy 键长文 + 「已阅读并同意」落勾收起） */}
+      {agreeSheetDoc ? (
+        <BottomSheet
+          title={agc(agreeSheetDoc.titleKey)}
+          onClose={() => setAgreeSheetKey(null)}
+          testId="bs-agreement-sheet"
+        >
+          <p className="text-caption-xs text-ink-placeholder">
+            {agc('agreement.versionNote', { version: agreeSheetDoc.version })}
+          </p>
+          <p
+            data-testid="bs-agreement-body"
+            className="mt-2 whitespace-pre-wrap text-body-sm leading-6 text-ink"
+          >
+            {agreeSheetDoc.content}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              if (agreeSheetDoc.agreementKey === 'medical_auth') setMedicalAgreed(true);
+              else setConsentAgreed(true);
+              signAgreement(agreeSheetDoc.agreementKey);
+              setAgreeSheetKey(null);
+            }}
+            data-testid="bs-agreement-agree"
+            className="mt-4 h-11 w-full rounded-full bg-[#2E2318] text-body-sm font-semibold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92"
+          >
+            {agc('agreement.agreeCta')}
+          </button>
+        </BottomSheet>
+      ) : null}
 
       {/* 底部半屏单列月历 range picker（点入住 → 点退房自动应用并关闭） */}
       {sheet.open ? (

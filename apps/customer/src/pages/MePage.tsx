@@ -6,7 +6,8 @@
  *
  * 槽位置灰（PD-15 V1.1 三规：不上数不上假件 + 注记 + data-testid）：
  * - 今年已省：补缺批片 3 已点亮（mySavings 真值 + 构成明面弹层，testid me-saved-slot 保留）；
- * - 退款售后（orderrow）/ 优惠券 =置灰槽位；
+ * - 退款售后（orderrow）=置灰槽位；优惠券=片 3 点亮（→/me/coupons 券+心愿单双 tab，
+ *   testid slot-coupons 原值保留）；
  * - 客户端体验大批 片 1 点亮：常用地址（→/settings/addresses，testid slot-address 原值保留），
  *   新增「编辑资料」（→/settings/profile，me-profile-entry）/「消费记录」（→/records，
  *   me-records-entry）双行入口卡；
@@ -247,7 +248,8 @@ export default function MePage() {
           <Link to="/philia/moments" className="g" data-testid="slot-gallery">{I.album}<div className="t">{sl('album.meEntryTitle')}<small>{sl('album.meEntrySub')}</small></div></Link>
           <Link to="/member/rebate" className="g">{I.rebate}<div className="t">回馈金账本<small>{fenToYuan(rebateBalance)}</small></div></Link>
           <Link to="/booking/boarding" className="g">{I.home}<div className="t">寄养预约<small>按晚</small></div></Link>
-          <span className="g slot" data-testid="slot-coupons" aria-disabled="true">{I.coupon}<div className="t">优惠券<small>{SLOT_NOTE}</small></div></span>
+          {/* 客户端体验大批 片 3：优惠券点亮 → /me/coupons（券+心愿单双 tab；testid 原值保留） */}
+          <Link to="/me/coupons" className="g" data-testid="slot-coupons">{I.coupon}<div className="t">优惠券<small>领券 · 心愿单</small></div></Link>
           {/* 客户端体验大批 片 1：常用地址点亮 → /settings/addresses（testid 原值保留） */}
           <Link to="/settings/addresses" className="g" data-testid="slot-address">{I.pin}<div className="t">常用地址<small>{adc('addr.title')}</small></div></Link>
           {/* 补缺大批片 4：小棉花客服点亮（testid 原值保留） */}

@@ -9,6 +9,9 @@
  *   分值）+ score → review（note 必填同弹层）；
  * - 区 3 巡检汇总：pdca.summary 卡（byStatus 计数 chips / byCategory 排行 top5 /
  *   closed30d）+ 单店口径注记（跨店排行=开口项 5 候连锁合批）。
+ * - 区 4 指标申诉复核（N6 申诉通道）：report.listMetricAppeals pending 队列
+ *   → 通过（弹层必填纠错前后值留痕）/ 驳回（弹层必填复核意见）→ reviewMetricAppeal；
+ *   已审近 50 条只读（状态徽 + 复核意见 + correctionJson 前后值透出）。
  *
  * server 命名空间由 coder G 并行施工，契约经 lib/taskCollabPort.ts 收窄桥接。
  * 权限三层照排班页：MerchantRail groupsFor 分流 + ClerkRouteGuard + 页内
@@ -21,7 +24,7 @@ import { useMemo, useState } from 'react';
 import MainScaffold from '../components/MainScaffold';
 import RoleGuidePage from '../components/RoleGuidePage';
 import { errMsg } from '../components/staff-admin/format';
-import { Badge, Btn, Modal, toast, ToasterMount } from '../components/staff-admin/ui';
+import { Badge, Btn, Field, inputCls, Modal, toast, ToasterMount } from '../components/staff-admin/ui';
 import { op } from '../copy/ops';
 import { collabOf, type SelfCheckRunRow } from '../lib/taskCollabPort';
 import { useMerchantRole } from '../lib/roles';
@@ -66,6 +69,21 @@ type NoteAsk =
   | { kind: 'recheck'; id: string; result: 'pass' | 'fail'; title: string }
   | { kind: 'selfReview'; runId: string; title: string };
 
+/** 申诉对象类型键 → 中文口径（未知键原样透出） */
+function appealTargetLabel(t: string): string {
+  switch (t) {
+    case 'review':
+      return op('ops.appeal.targetReview');
+    case 'report_metric':
+      return op('ops.appeal.targetMetric');
+    default:
+      return t;
+  }
+}
+
+/** 申诉复核弹层诉求（approve=必填纠错前后值 / reject=必填复核意见） */
+type AppealAsk = { kind: 'approve' | 'reject'; id: string; staffName: string };
+
 /* ------------------------------------------------------------------ */
 /* 页面                                                                */
 /* ------------------------------------------------------------------ */
@@ -94,6 +112,12 @@ export default function OpsPage() {
   const summaryQ = useQuery({
     queryKey: ['ops', 'summary'],
     queryFn: () => collab.pdca.summary.query(),
+  });
+
+  /* ---- 区 4 指标申诉复核（N6 · report 命名空间 server 已就绪，直连不桥接） ---- */
+  const appealQ = useQuery({
+    queryKey: ['ops', 'metricAppeals'],
+    queryFn: () => trpc.report.listMetricAppeals.query(),
   });
 
   const invalidateAll = () => void queryClient.invalidateQueries({ queryKey: ['ops'] });
@@ -130,6 +154,61 @@ export default function OpsPage() {
     }
   };
 
+  /* ---- 申诉复核弹层（通过=纠错前后值必填 / 驳回=复核意见必填） ---- */
+  const [appealAsk, setAppealAsk] = useState<AppealAsk | null>(null);
+  const [corrBefore, setCorrBefore] = useState('');
+  const [corrAfter, setCorrAfter] = useState('');
+  const [corrNote, setCorrNote] = useState('');
+  const [appealNote, setAppealNote] = useState('');
+  const [appealBusy, setAppealBusy] = useState(false);
+  const openAppealAsk = (a: AppealAsk) => {
+    setCorrBefore('');
+    setCorrAfter('');
+    setCorrNote('');
+    setAppealNote('');
+    setAppealAsk(a);
+  };
+  const submitAppealReview = async () => {
+    if (!appealAsk) return;
+    if (appealAsk.kind === 'approve' && (!corrBefore.trim() || !corrAfter.trim())) {
+      toast(op('ops.appeal.correctionRequired'), 'error');
+      return;
+    }
+    if (appealAsk.kind === 'reject' && !appealNote.trim()) {
+      toast(op('ops.appeal.rejectNoteRequired'), 'error');
+      return;
+    }
+    setAppealBusy(true);
+    try {
+      if (appealAsk.kind === 'approve') {
+        await trpc.report.reviewMetricAppeal.mutate({
+          appealId: appealAsk.id,
+          result: 'approved',
+          correction: {
+            before: corrBefore.trim(),
+            after: corrAfter.trim(),
+            ...(corrNote.trim() ? { note: corrNote.trim() } : {}),
+          },
+          ...(appealNote.trim() ? { note: appealNote.trim() } : {}),
+        });
+        toast(op('ops.appeal.approveDone'));
+      } else {
+        await trpc.report.reviewMetricAppeal.mutate({
+          appealId: appealAsk.id,
+          result: 'rejected',
+          note: appealNote.trim(),
+        });
+        toast(op('ops.appeal.rejectDone'));
+      }
+      setAppealAsk(null);
+      invalidateAll();
+    } catch (err) {
+      toast(errMsg(err), 'error');
+    } finally {
+      setAppealBusy(false);
+    }
+  };
+
   if (!role.canManage) {
     return <RoleGuidePage title={op('ops.guideTitle')} hint={op('ops.guideHint')} />;
   }
@@ -137,6 +216,8 @@ export default function OpsPage() {
   const issues = pdcaQ.data?.issues ?? [];
   const runs = selfQ.data?.runs ?? [];
   const summary = summaryQ.data;
+  const pendingAppeals = appealQ.data?.pending ?? [];
+  const reviewedAppeals = appealQ.data?.reviewed ?? [];
   const topCategories = useMemo(
     () => [...(summary?.byCategory ?? [])].sort((a, b) => b.count - a.count).slice(0, 5),
     [summary],
@@ -404,6 +485,107 @@ export default function OpsPage() {
         )}
       </div>
 
+      {/* 区 4 指标申诉复核（N6 申诉通道；pending 在前，已审近 50 条只读在后） */}
+      <div className="u3-panel mb-4" data-testid="metric-appeal-queue">
+        <div className="u3-panel-head">
+          <h3>{op('ops.appeal.title')}</h3>
+          <span className="aside">{op('ops.appeal.aside')}</span>
+        </div>
+        {appealQ.isPending ? (
+          <div className="px-[17px] py-3" aria-label="加载中">
+            {[0, 1].map((i) => (
+              <Skeleton key={i} className="mb-2.5 h-12 !rounded-[16px]" />
+            ))}
+          </div>
+        ) : appealQ.isError ? (
+          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{op('ops.common.loadFail')}</p>
+            <div className="mt-4">
+              <Btn variant="subtle" size="sm" onClick={() => void appealQ.refetch()}>
+                {op('ops.common.retry')}
+              </Btn>
+            </div>
+          </div>
+        ) : (
+          <>
+            {pendingAppeals.length === 0 ? (
+              <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+                {op('ops.appeal.empty')}
+              </p>
+            ) : (
+              pendingAppeals.map((a) => (
+                <div key={a.id} className="border-t border-[rgba(59,46,36,.06)]" data-testid={`metric-appeal-row-${a.id}`}>
+                  <div className="flex flex-wrap items-center gap-2 px-[17px] py-2.5">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-body-sm font-bold text-ink">{a.staffName}</span>
+                        <Badge tone="brand">{appealTargetLabel(a.targetType)}</Badge>
+                      </div>
+                      <p className="mt-0.5 text-caption text-ink">
+                        {op('ops.appeal.reasonLabel')}：{a.reason}
+                      </p>
+                      <div className="u1-num mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">{fmtAt(a.createdAt)}</div>
+                    </div>
+                    <Btn
+                      variant="primary"
+                      size="sm"
+                      onClick={() => openAppealAsk({ kind: 'approve', id: a.id, staffName: a.staffName })}
+                      data-testid={`metric-appeal-approve-${a.id}`}
+                    >
+                      {op('ops.appeal.approveCta')}
+                    </Btn>
+                    <Btn
+                      variant="subtle"
+                      size="sm"
+                      onClick={() => openAppealAsk({ kind: 'reject', id: a.id, staffName: a.staffName })}
+                      data-testid={`metric-appeal-reject-${a.id}`}
+                    >
+                      {op('ops.appeal.rejectCta')}
+                    </Btn>
+                  </div>
+                </div>
+              ))
+            )}
+            {reviewedAppeals.length > 0 ? (
+              <div className="border-t border-[rgba(59,46,36,.06)] bg-canvas px-[17px] py-3" data-testid="metric-appeal-reviewed">
+                <p className="mb-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{op('ops.appeal.reviewedTitle')}</p>
+                {reviewedAppeals.map((a) => (
+                  <div key={a.id} className="border-t border-[rgba(59,46,36,.06)] py-2 first:border-t-0" data-testid={`metric-appeal-reviewed-${a.id}`}>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-caption font-semibold text-ink">{a.staffName}</span>
+                      <Badge tone="muted">{appealTargetLabel(a.targetType)}</Badge>
+                      <Badge tone={a.status === 'approved' ? 'success' : 'danger'}>
+                        {a.status === 'approved' ? op('ops.appeal.statusApproved') : op('ops.appeal.statusRejected')}
+                      </Badge>
+                      <span className="u1-num ml-auto text-caption-xs text-[rgba(59,46,36,.42)]">
+                        {op('ops.appeal.reviewedAtLabel')} {fmtAt(a.reviewedAt)}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+                      {op('ops.appeal.reasonLabel')}：{a.reason}
+                    </p>
+                    {a.reviewNote ? (
+                      <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+                        {op('ops.appeal.reviewNoteLabel')}：{a.reviewNote}
+                      </p>
+                    ) : null}
+                    {a.correctionJson ? (
+                      <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+                        {op('ops.appeal.correctionLabel')}：
+                        <span className="u1-num">
+                          {String(a.correctionJson.before ?? '—')} → {String(a.correctionJson.after ?? '—')}
+                        </span>
+                        {a.correctionJson.note ? `（${String(a.correctionJson.note)}）` : ''}
+                      </p>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </>
+        )}
+      </div>
+
       {/* note 必填弹层（复检 pass/fail / 自检审核共用） */}
       <Modal
         open={ask !== null}
@@ -429,6 +611,68 @@ export default function OpsPage() {
           data-testid="ops-note-input"
           className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
         />
+      </Modal>
+
+      {/* 申诉复核弹层（approve=纠错前后值必填+可选说明/意见；reject=复核意见必填） */}
+      <Modal
+        open={appealAsk !== null}
+        onClose={() => setAppealAsk(null)}
+        title={`${appealAsk?.kind === 'approve' ? op('ops.appeal.approveTitle') : op('ops.appeal.rejectTitle')}${appealAsk ? ` · ${appealAsk.staffName}` : ''}`}
+        footer={
+          <>
+            <Btn variant="ghost" onClick={() => setAppealAsk(null)} disabled={appealBusy}>
+              {op('ops.common.cancel')}
+            </Btn>
+            <Btn variant="primary" onClick={() => void submitAppealReview()} disabled={appealBusy} data-testid="metric-appeal-submit">
+              {appealBusy ? op('ops.common.submitting') : op('ops.common.confirm')}
+            </Btn>
+          </>
+        }
+      >
+        <div className="grid gap-3">
+          {appealAsk?.kind === 'approve' ? (
+            <>
+              <Field label={op('ops.appeal.beforeLabel')}>
+                <input
+                  value={corrBefore}
+                  onChange={(e) => setCorrBefore(e.target.value)}
+                  maxLength={255}
+                  placeholder={op('ops.appeal.beforePh')}
+                  data-testid="metric-appeal-before"
+                  className={inputCls}
+                />
+              </Field>
+              <Field label={op('ops.appeal.afterLabel')}>
+                <input
+                  value={corrAfter}
+                  onChange={(e) => setCorrAfter(e.target.value)}
+                  maxLength={255}
+                  placeholder={op('ops.appeal.afterPh')}
+                  data-testid="metric-appeal-after"
+                  className={inputCls}
+                />
+              </Field>
+              <textarea
+                value={corrNote}
+                onChange={(e) => setCorrNote(e.target.value)}
+                rows={2}
+                maxLength={255}
+                placeholder={op('ops.appeal.correctionNotePh')}
+                data-testid="metric-appeal-correction-note"
+                className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+              />
+            </>
+          ) : null}
+          <textarea
+            value={appealNote}
+            onChange={(e) => setAppealNote(e.target.value)}
+            rows={3}
+            maxLength={500}
+            placeholder={appealAsk?.kind === 'approve' ? op('ops.appeal.approveNotePh') : op('ops.appeal.rejectNotePh')}
+            data-testid="metric-appeal-note"
+            className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+          />
+        </div>
       </Modal>
     </MainScaffold>
   );

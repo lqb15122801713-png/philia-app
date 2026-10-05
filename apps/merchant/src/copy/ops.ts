@@ -1,7 +1,7 @@
 /**
  * 运营域文案键表（员工端骨架整建批 片 3 · 商家端 /ops）
  *
- * 覆盖：OpsPage（PDCA 问题闭环 + 自检审核 + 巡检汇总，一页三竖排分区，
+ * 覆盖：OpsPage（PDCA 问题闭环 + 自检审核 + 巡检汇总 + 指标申诉复核，
  * 分区工艺照 ScheduleManagePage u3-panel 竖排）。
  * 纪律：键名小写点分、as const 冻结；数值不进表（{var} 插值）；
  * 文案端口已落（withCopyOverrides 代理——端口值优先、码内默认 fallback）。
@@ -60,6 +60,35 @@ const OPS_COPY_TABLE = {
   'ops.sum.emptyCategory': '暂无类目数据',
   'ops.sum.storeScopeNote': '本卡为单店口径；跨店排行属开口项，待连锁合批（5 候）后透出。',
   'ops.sum.loadFail': '汇总加载失败，请检查网络后重试',
+
+  /* ---- 区 4 指标申诉复核（N6 申诉通道 · report.listMetricAppeals / reviewMetricAppeal） ---- */
+  'ops.appeal.title': '指标申诉复核',
+  'ops.appeal.aside': '差评归属/报表指标异议；通过必留纠错前后值',
+  'ops.appeal.empty': '暂无待复核申诉',
+  'ops.appeal.targetReview': '差评归属',
+  'ops.appeal.targetMetric': '报表指标',
+  'ops.appeal.reasonLabel': '申诉理由',
+  'ops.appeal.approveCta': '通过（纠错）',
+  'ops.appeal.rejectCta': '驳回',
+  'ops.appeal.approveTitle': '通过申诉 · 纠错留痕',
+  'ops.appeal.rejectTitle': '驳回申诉',
+  'ops.appeal.beforeLabel': '纠错前取值',
+  'ops.appeal.afterLabel': '纠错后取值',
+  'ops.appeal.beforePh': '如：差评误挂到该员工 / 指标原值 82',
+  'ops.appeal.afterPh': '如：差评归属更正 / 更正后 79',
+  'ops.appeal.correctionNotePh': '纠错说明（可选）',
+  'ops.appeal.approveNotePh': '复核意见（可选）',
+  'ops.appeal.rejectNotePh': '复核意见（必填，随单留痕）',
+  'ops.appeal.correctionRequired': '通过必须填写纠错前后值——兜底留痕铁规',
+  'ops.appeal.rejectNoteRequired': '驳回必须填写复核意见',
+  'ops.appeal.approveDone': '申诉已通过，纠错留痕已登记',
+  'ops.appeal.rejectDone': '申诉已驳回',
+  'ops.appeal.statusApproved': '已通过',
+  'ops.appeal.statusRejected': '已驳回',
+  'ops.appeal.reviewedTitle': '已复核（近 50 条）',
+  'ops.appeal.reviewNoteLabel': '复核意见',
+  'ops.appeal.correctionLabel': '纠错留痕',
+  'ops.appeal.reviewedAtLabel': '复核时间',
 
   /* ---- 通用 ---- */
   'ops.common.loadFail': '数据加载失败，请检查网络后重试',

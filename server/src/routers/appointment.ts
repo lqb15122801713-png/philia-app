@@ -56,6 +56,8 @@ import { TRPCError } from '@trpc/server';
 import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, lte, ne, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
+import { CLIENT_AGREEMENT_CONTENT } from '../config/agreements';
+import { currentMembership, loadMemberPlans, planNum } from '../services/rebate';
 import {
   DURATION_SLOT_MIN,
   loadDurationRules,
@@ -133,6 +135,20 @@ const TYPE_ACCEPT_SKILLS: Record<'grooming' | 'boarding', string[]> = {
 
 /** store_slots UPSERT 新行时的默认容量（与种子数据 capacity=2 对齐） */
 export const DEFAULT_SLOT_CAPACITY = 2;
+
+/**
+ * 片 2（体验大批）：提前预约期上限（毫秒）。读会员当前档 member_plans.value_json
+ * .advance_book_days（端口可调，保存即生效只管新单）；非会员=微光档 3 天口径；
+ * 档无该键=3 天兜底。create/reschedule 写闸与 getWithServices/boardingAvailability
+ * 读侧收窄共用本函数（能看=能约同帧）。
+ */
+export async function maxAdvanceMsOf(d: DbHandle, userId: string): Promise<number> {
+  const m = await currentMembership(d, userId, new Date());
+  const plans = await loadMemberPlans(d);
+  const plan = plans.get(m?.planKey ?? 'plan_weiguang');
+  const days = planNum(plan, 'advance_book_days', 3);
+  return days * 24 * 3600 * 1000;
+}
 
 /**
  * 可约时段前瞻缓冲（v1.1-b3 B3-5 W-2 产品裁定：允许当天预约）：
@@ -562,17 +578,41 @@ async function refundPassIfDeducted(tx: DbHandle, appt: AppointmentRow): Promise
   await tx.insert(schema.passDeductLogs).values({ passId: pass.id, appointmentId: appt.id, delta: 1 });
 }
 
-/** 营业时间校验：开始时间须超过「当前时间 +1h 缓冲」（B3-5 W-2）、按 30min 粒度对齐、落在当日营业区间内；grooming 还要求当日打烊前服务得完 */
+/**
+ * 片 2（体验大批 · 开口项 1 裁：预约即预付=留痕不碰真钱）：取消联动预付台账。
+ * 所有「置 cancelled」路径（客户 >4h 直消 / reviewCancel 批准 / 商家拒单）同事务调用：
+ * prepaid_pending / prepaid_registered → refunded（幂等——已 refunded/checked_deducted
+ * 或本无预付行的单一律不动；全程零支付通道写，payments/pay_orders/stored_value_logs 零触碰）。
+ */
+async function flipPrepaidOnCancel(tx: DbHandle, appointmentId: string, operatorId: string): Promise<void> {
+  await tx
+    .update(schema.prepaidRecords)
+    .set({ status: 'refunded', operatorId, updatedAt: new Date() })
+    .where(
+      and(
+        eq(schema.prepaidRecords.appointmentId, appointmentId),
+        inArray(schema.prepaidRecords.status, ['prepaid_pending', 'prepaid_registered']),
+      ),
+    );
+}
+
+/** 营业时间校验：开始时间须超过「当前时间 +1h 缓冲」（B3-5 W-2）、按 30min 粒度对齐、落在当日营业区间内；grooming 还要求当日打烊前服务得完。
+ *  片 2：opts.maxAdvanceMs=提前预约期上限（会员档位口径，maxAdvanceMsOf），超时→400 明文 */
 function assertBookableTime(
   store: StoreRow,
   type: 'grooming' | 'boarding',
   start: Date,
   end: Date,
+  opts?: { maxAdvanceMs?: number },
 ): void {
   // B3-5（W-2 产品裁定：允许当天预约）：统一「当前时间 +1h 缓冲」口径——
   // 过期与临近（+1h 内）时段前后端同拦；该检查置于营业时间之前，报错文案不被覆盖
   if (start.getTime() < Date.now() + BOOKING_LEAD_BUFFER_MS) {
     badRequest('仅可预约 1 小时之后的时段，请改约稍晚时间');
+  }
+  // 片 2：提前预约期上限（档位 3/7/14 天口径；紧随 +1h 缓冲下限检查，上下限同点卡死）
+  if (opts?.maxAdvanceMs !== undefined && start.getTime() > Date.now() + opts.maxAdvanceMs) {
+    badRequest(`当前会员档最多可提前 ${Math.round(opts.maxAdvanceMs / (24 * 3600 * 1000))} 天预约，请改选更近的日期`);
   }
   if (end.getTime() <= start.getTime()) badRequest('结束时间必须晚于开始时间');
   if (start.getSeconds() !== 0 || start.getMilliseconds() !== 0 || start.getMinutes() % 30 !== 0) {
@@ -859,6 +899,41 @@ export const appointmentRouter = router({
          * 「该时段已约满，请换个时间」）。boarding 按晚占房无需美容师，传了直接拒绝。
          */
         staffId: z.string().min(1).optional(),
+        /**
+         * 片 2：紧急联系人快照（可选；按单落 emergency_contact_json，详情读口透出）。
+         * phone 11 位手机号硬校验（与 membership.sell 同口径正则）。
+         */
+        emergencyContact: z
+          .object({
+            name: z.string().trim().min(1, '紧急联系人姓名不能为空').max(32),
+            phone: z.string().regex(/^1\d{10}$/, '紧急联系人手机号须为 11 位手机号'),
+            relation: z.string().trim().min(1, '与联系人关系不能为空').max(16),
+          })
+          .optional(),
+        /**
+         * 片 2：医疗授权勾选（寄养单硬闸：type=boarding 且缺 agreed=true → 400
+         * 「寄养单须先签署医疗授权」）；落 medical_auth_json 快照
+         * （agreed + contentVersion=服务端常量版本 + checkedAt=勾选时刻 Unix 秒）。
+         * grooming 传了不存（仅 boarding 有医疗授权语义）。
+         */
+        medicalAuth: z.object({ agreed: z.boolean() }).optional(),
+        /**
+         * 片 2：附加项加购——services.type='addon' 的本店在架行 id 列表（去重后逐项
+         * 事务内校验：属本店 + active + type='addon'，否则 400 明文）；落 appointment_addons
+         * 快照行（name/priceFen 快照），预约价=主价+Σ附加快照价。
+         */
+        addonServiceIds: z.array(z.string().min(1)).max(10, '附加项一次最多加购 10 项').optional(),
+        /**
+         * 片 2：寄养遛弯次数/日（仅 boarding 生效，>0 整数；grooming 传了 400）。
+         * 落 walk_times_per_day 列+详情透出；执行实遛=boarding_daily_logs.walks 对账，
+         * 不受下单值改写。
+         */
+        walkTimesPerDay: z
+          .number()
+          .int('遛弯次数须为整数')
+          .positive('遛弯次数须大于 0')
+          .max(20, '遛弯次数超出合理范围')
+          .optional(),
       }),
     )
     .mutation(async ({ ctx, input }) =>
@@ -918,7 +993,19 @@ export const appointmentRouter = router({
         input.type === 'boarding'
           ? input.scheduledEnd! // boarding 上面已强制非空且晚于开始
           : new Date(start.getTime() + (groomingDuration?.durationMin ?? 60) * 60_000);
-      assertBookableTime(store, input.type, start, end);
+      // 片 2：提前预约期上限（会员档位口径，create/reschedule 两调用点统一过）——
+      // create 按下单人（customer 本人）档位；微光 3 天 / 萤火·烛光 7 天 / 暖阳 14 天
+      const maxAdvanceMs = await maxAdvanceMsOf(ctx.db, ctx.user.id);
+      assertBookableTime(store, input.type, start, end, { maxAdvanceMs });
+
+      /* ---- 片 2 合规闸：寄养单须先签署医疗授权（缺 medicalAuth.agreed=true → 400 明文） ---- */
+      if (input.type === 'boarding' && input.medicalAuth?.agreed !== true) {
+        badRequest('寄养单须先签署医疗授权');
+      }
+      /* 片 2：遛弯次数仅寄养单可填（grooming 传了 400 明文） */
+      if (input.type === 'grooming' && input.walkTimesPerDay !== undefined) {
+        badRequest('遛弯次数仅寄养单可填');
+      }
 
       // 批次 S4（任务 C）：boarding 按晚占房无需美容师——staffId 仅 grooming 可用
       if (input.type === 'boarding' && input.staffId) {
@@ -926,12 +1013,13 @@ export const appointmentRouter = router({
       }
 
       // v1.1 A-P0-10：寄养金额 = 单晚价 × 晚数（晚数 = ceil((end−start)/24h)，快照入 price_fen）；
-      // grooming 保持单次服务价不变
+      // grooming 保持单次服务价不变。
+      // 片 2：本值为主价（base）；附加项快照价在事务内校验后累加，预约价=主价+Σ附加（注释明面）
       const nights =
         input.type === 'boarding'
           ? Math.ceil((end.getTime() - start.getTime()) / (24 * 3600 * 1000))
           : 1;
-      const priceFen = service.priceFen * nights;
+      const basePriceFen = service.priceFen * nights;
 
       /* ---- 事务占位 + 建单（人工码撞唯一索引时整体重试） ---- */
       const MAX_CODE_RETRIES = 5;
@@ -941,6 +1029,25 @@ export const appointmentRouter = router({
         try {
           const outboxIds: string[] = [];
           const created = await ctx.db.transaction(async (tx) => {
+            /* ---- 片 2 附加项加购：事务内校验各 addon 属本店 active 且 type='addon'
+               （否则 400 明文，事务整体回滚零占位）；name/priceFen 快照入行 ---- */
+            const addonRows: Array<{ id: string; name: string; priceFen: number }> = [];
+            if (input.addonServiceIds && input.addonServiceIds.length > 0) {
+              for (const addonId of [...new Set(input.addonServiceIds)]) {
+                const addon = await tx
+                  .select()
+                  .from(schema.services)
+                  .where(eq(schema.services.id, addonId))
+                  .get();
+                if (!addon || addon.storeId !== input.storeId || !addon.active || addon.type !== 'addon') {
+                  badRequest('附加项无效或不属于本店（须为本店在架附加项）');
+                }
+                addonRows.push({ id: addon.id, name: addon.name, priceFen: addon.priceFen });
+              }
+            }
+            // 片 2 预约价=主价+Σ附加快照价（金额分，精确到分；涉钱算式明面）
+            const addonTotalFen = addonRows.reduce((s, a) => s + a.priceFen, 0);
+            const totalPriceFen = basePriceFen + addonTotalFen;
             // B2-7 资损红标：次卡扣次——先校验并扣减（同一事务），后续占槽/建单
             // 任一步失败（如该时段已约满 CONFLICT）整体回滚，remain_times 随之还原。
             let deductedPassId: string | null = null;
@@ -1051,12 +1158,37 @@ export const appointmentRouter = router({
                 // 批次 S4（任务 A）：免商家确认——落库直接 confirmed（grooming/boarding 同口径）；
                 // pending 仅保留给历史单与客户改期回退单（不迁移）
                 status: 'confirmed',
-                priceFen, // 金额快照（A-P0-10：寄养=单晚价×晚数，grooming=单次价）
+                // 片 2 金额快照=主价+Σ附加快照价（A-P0-10 主价口径：寄养=单晚价×晚数，grooming=单次价）
+                priceFen: totalPriceFen,
                 paymentMode: input.paymentMode, // 收款方式快照（§3.1 结算规则）
                 note: input.note ?? null,
+                // 片 2：合规三件套快照列（紧急联系人按单一填；医疗授权仅 boarding 存——
+                // grooming 传了不落，contentVersion=服务端常量版本，checkedAt=Unix 秒）
+                emergencyContactJson: input.emergencyContact ?? null,
+                medicalAuthJson:
+                  input.type === 'boarding' && input.medicalAuth
+                    ? {
+                        agreed: input.medicalAuth.agreed,
+                        contentVersion: CLIENT_AGREEMENT_CONTENT.medical_auth.version,
+                        checkedAt: Math.floor(Date.now() / 1000),
+                      }
+                    : null,
+                walkTimesPerDay: input.type === 'boarding' ? (input.walkTimesPerDay ?? null) : null,
               })
               .returning()
               .then((r) => r[0]!);
+            // 片 2：附加项快照行（name/priceFen 快照，预约行存续期不随 services 改价/下架漂移）
+            if (addonRows.length > 0) {
+              await tx.insert(schema.appointmentAddons).values(
+                addonRows.map((a) => ({
+                  appointmentId: appt.id,
+                  addonServiceId: a.id,
+                  nameSnapshot: a.name,
+                  priceFen: a.priceFen,
+                  createdAt: new Date(),
+                })),
+              );
+            }
             // B2-7：扣次流水（同事务；若上面占槽已抛 CONFLICT，此处不会执行且扣减已回滚）
             if (deductedPassId) {
               await tx.insert(schema.passDeductLogs).values({
@@ -1166,6 +1298,17 @@ export const appointmentRouter = router({
       .where(eq(schema.users.id, appt.customerId))
       .get();
     const { steps, boardingStay } = await progressOf(ctx.db, appt);
+    // 片 2：附加项快照列表 + 改约历史（按 createdAt 升序，同刻按 id 字典序=时间序兜底）
+    const addons = await ctx.db
+      .select()
+      .from(schema.appointmentAddons)
+      .where(eq(schema.appointmentAddons.appointmentId, appt.id))
+      .orderBy(asc(schema.appointmentAddons.createdAt), asc(schema.appointmentAddons.id));
+    const rescheduleLogs = await ctx.db
+      .select()
+      .from(schema.appointmentRescheduleLogs)
+      .where(eq(schema.appointmentRescheduleLogs.appointmentId, appt.id))
+      .orderBy(asc(schema.appointmentRescheduleLogs.createdAt), asc(schema.appointmentRescheduleLogs.id));
     const billLink = await ctx.db
       .select({ billId: schema.cashierBillItems.billId })
       .from(schema.cashierBillItems)
@@ -1192,6 +1335,8 @@ export const appointmentRouter = router({
         phoneTail: customerRow?.phone ? customerRow.phone.slice(-4) : null,
       },
       cashierBillId: billLink?.billId ?? null,
+      addons, // 片 2：附加项加购快照列表（无加购=空数组）
+      rescheduleLogs, // 片 2：改约历史（createdAt 升序；无改期=空数组）
     };
   }),
 
@@ -1299,6 +1444,8 @@ export const appointmentRouter = router({
         await releaseAppointmentSlots(txDb(tx), appt);
         // B2-7 联动（验收门禁 3）：已扣次单同事务回补，幂等不重复回补
         await refundPassIfDeducted(txDb(tx), appt);
+        // 片 2：商家拒单同属取消——联动预付台账翻 refunded（留痕不碰真钱，幂等）
+        await flipPrepaidOnCancel(txDb(tx), appt.id, ctx.user.id);
         const row = await tx
           .update(schema.appointments)
           .set({
@@ -1432,6 +1579,8 @@ export const appointmentRouter = router({
         const updated = await ctx.db.transaction(async (tx) => {
           await releaseAppointmentSlots(txDb(tx), appt);
           await refundPassIfDeducted(txDb(tx), appt);
+          // 片 2：客户直消联动预付台账翻 refunded（留痕不碰真钱，幂等）
+          await flipPrepaidOnCancel(txDb(tx), appt.id, ctx.user.id);
           const row = await tx
             .update(schema.appointments)
             .set({
@@ -1498,6 +1647,8 @@ export const appointmentRouter = router({
           // B3-2：寄养批准取消释放住宿区间全部晚（releaseBoardingSlots，幂等）
           await releaseAppointmentSlots(txDb(tx), appt);
           await refundPassIfDeducted(txDb(tx), appt); // B2-7：批准取消同事务回补次卡
+          // 片 2：批准取消联动预付台账翻 refunded（留痕不碰真钱，幂等）
+          await flipPrepaidOnCancel(txDb(tx), appt.id, ctx.user.id);
         }
         const row = await tx
           .update(schema.appointments)
@@ -1600,7 +1751,10 @@ export const appointmentRouter = router({
         appt.type === 'boarding'
           ? input.scheduledEnd! // boarding 上面已强制非空且晚于开始
           : new Date(start.getTime() + (groomingDuration?.durationMin ?? 60) * 60_000);
-      assertBookableTime(store, appt.type as 'grooming' | 'boarding', start, end);
+      // 片 2：提前预约期上限——按预约归属客户（appt.customerId）档位口径
+      // （商家代客改期同口径：上限管的是「这单约到多远」，不是操作人身份）
+      const maxAdvanceMs = await maxAdvanceMsOf(ctx.db, appt.customerId);
+      assertBookableTime(store, appt.type as 'grooming' | 'boarding', start, end, { maxAdvanceMs });
 
       const petName = await petNameOf(ctx.db, appt.petId);
       const outboxIds: string[] = [];
@@ -1643,6 +1797,18 @@ export const appointmentRouter = router({
           .where(eq(schema.appointments.id, appt.id))
           .returning()
           .then((r) => r[0]!);
+        // 片 2：改约历史留痕（before/after 快照+操作人+角色；appointment_reschedule_logs，
+        // 取消/完成单走不到此处——状态闸在前，仍拒且不落行）
+        await tx.insert(schema.appointmentRescheduleLogs).values({
+          appointmentId: appt.id,
+          beforeStart: appt.scheduledStart,
+          beforeEnd: appt.scheduledEnd,
+          afterStart: start,
+          afterEnd: end,
+          changedBy: ctx.user.id,
+          byRole: isMerchant ? 'merchant' : 'customer',
+          createdAt: new Date(),
+        });
         const payload = {
           appointmentId: appt.id,
           petName,
@@ -1829,6 +1995,18 @@ export const appointmentRouter = router({
           .where(eq(schema.appointments.id, appt.id))
           .returning()
           .then((r) => r[0]!);
+
+        /* 片 2：核销联动预付台账——prepaid_registered → checked_deducted（到店核销抵扣，
+           留痕不碰真钱；prepaid_pending 未确认登记不核销，留店家 prepaidConfirm 先行） */
+        await tx
+          .update(schema.prepaidRecords)
+          .set({ status: 'checked_deducted', updatedAt: now })
+          .where(
+            and(
+              eq(schema.prepaidRecords.appointmentId, appt.id),
+              eq(schema.prepaidRecords.status, 'prepaid_registered'),
+            ),
+          );
 
         /* R9-C 改挂留痕：reception_logs 挂 appointment_id（前后值）；
            该预约若已有结算账单（经 cashier_bill_items 预约行反查），同步更新账单接待人并挂 bill_id */
@@ -2266,6 +2444,123 @@ export const appointmentRouter = router({
           storeName: r.stores.name,
         }),
       );
+    }),
+
+  /**
+   * 16. cancelFeeTiers（public · 片 2）：取消/爽约阶梯收费公示读口。
+   * 读 service_rules.cancel_fee_tiers 端口值（active 行）返回；公示=只读展示不扣真费
+   * （开口项 1 裁：真扣费候支付通道批）——配置端口改值→本读口即新值（保存即生效只管新读）。
+   */
+  cancelFeeTiers: publicProcedure.query(async ({ ctx }) => {
+    const row = await ctx.db
+      .select({ valueJson: schema.serviceRules.valueJson })
+      .from(schema.serviceRules)
+      .where(and(eq(schema.serviceRules.ruleKey, 'cancel_fee_tiers'), eq(schema.serviceRules.active, true)))
+      .get();
+    const tiers = (row?.valueJson as Record<string, unknown> | undefined)?.tiers;
+    return {
+      tiers: (Array.isArray(tiers) ? tiers : []) as Array<{ hoursBefore: number; feeBp: number; label: string }>,
+    };
+  }),
+
+  /**
+   * 17. prepaidRegister（merchantManager 本店 · 片 2 · 开口项 1 裁：预约即预付=台账留痕，
+   * 全程零支付通道写——payments/pay_orders/stored_value_logs 零触碰，涉钱纪律明面）：
+   * 单须本店 + 状态 confirmed/pending + 无既有行（uq_prepaid_appointment 锚幂等——
+   * 重登一律 400 明文拒，一单一笔）；落 prepaid_pending。
+   */
+  prepaidRegister: merchantManagerProcedure
+    .input(
+      z.object({
+        appointmentId: z.string().min(1),
+        amountFen: z.number().int('预付金额须为整数分').min(1, '预付金额须 ≥1 分').max(100_000_000),
+        note: z.string().trim().max(200, '备注不能超过 200 字').optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const appt = await getAppointmentOrThrow(ctx.db, input.appointmentId);
+      if (appt.storeId !== ctx.user.storeId) forbidden('非本店预约，无权操作');
+      if (appt.status !== 'confirmed' && appt.status !== 'pending') {
+        badRequest(`当前状态（${appt.status}）不可登记预付，仅 pending/confirmed 可登记`);
+      }
+      // uq 锚幂等拒：一单一笔预付台账（先查快路 + 撞唯一索引兜底同文案）
+      const existing = await ctx.db
+        .select({ id: schema.prepaidRecords.id })
+        .from(schema.prepaidRecords)
+        .where(eq(schema.prepaidRecords.appointmentId, appt.id))
+        .get();
+      if (existing) badRequest('该预约已登记预付（一单一笔，重复登记已拒）');
+      try {
+        const record = await ctx.db
+          .insert(schema.prepaidRecords)
+          .values({
+            appointmentId: appt.id,
+            customerId: appt.customerId,
+            storeId: appt.storeId,
+            amountFen: input.amountFen,
+            status: 'prepaid_pending',
+            operatorId: ctx.user.id,
+            note: input.note ?? null,
+          })
+          .returning()
+          .then((r) => r[0]!);
+        return { record, idempotent: false as const };
+      } catch (err) {
+        if (err instanceof Error && /UNIQUE constraint failed: prepaid_records\.appointment_id/.test(err.message)) {
+          badRequest('该预约已登记预付（一单一笔，重复登记已拒）');
+        }
+        throw err;
+      }
+    }),
+
+  /**
+   * 18. prepaidConfirm（merchantManager 本店 · 片 2）：商家确认预付已收——
+   * prepaid_pending → prepaid_registered；重复确认幂等（返回现状 idempotent=true 零写库）；
+   * refunded/checked_deducted 等其余态 400（状态机非法迁移硬拒）。
+   */
+  prepaidConfirm: merchantManagerProcedure
+    .input(z.object({ appointmentId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const rec = await ctx.db
+        .select()
+        .from(schema.prepaidRecords)
+        .where(eq(schema.prepaidRecords.appointmentId, input.appointmentId))
+        .get();
+      if (!rec) throw new TRPCError({ code: 'NOT_FOUND', message: '该预约无预付登记' });
+      if (rec.storeId !== ctx.user.storeId) forbidden('非本店预约，无权操作');
+      if (rec.status === 'prepaid_registered') return { record: rec, idempotent: true as const }; // 重复确认幂等
+      if (rec.status !== 'prepaid_pending') {
+        badRequest(`当前预付状态（${rec.status}）不可确认登记`);
+      }
+      const record = await ctx.db
+        .update(schema.prepaidRecords)
+        .set({ status: 'prepaid_registered', operatorId: ctx.user.id, updatedAt: new Date() })
+        .where(eq(schema.prepaidRecords.id, rec.id))
+        .returning()
+        .then((r) => r[0]!);
+      return { record, idempotent: false as const };
+    }),
+
+  /**
+   * 19. prepaidOf（片 2 读口）：预约预付台账透出——customer 仅本人单 / merchant 本店
+   * （其余一律 403，本人闸/店域闸卡死）；无登记返回 record=null。
+   */
+  prepaidOf: publicProcedure
+    .input(z.object({ appointmentId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const appt = await getAppointmentOrThrow(ctx.db, input.appointmentId);
+      const isOwnerCustomer = ctx.user.roles.includes('customer') && appt.customerId === ctx.user.id;
+      const isMerchant =
+        (ctx.user.roles.includes('merchant_owner') || ctx.user.roles.includes('merchant_manager')) &&
+        ctx.user.storeId === appt.storeId;
+      if (!isOwnerCustomer && !isMerchant) forbidden('无权查看该预约的预付台账');
+      const record =
+        (await ctx.db
+          .select()
+          .from(schema.prepaidRecords)
+          .where(eq(schema.prepaidRecords.appointmentId, appt.id))
+          .get()) ?? null;
+      return { record };
     }),
 });
 

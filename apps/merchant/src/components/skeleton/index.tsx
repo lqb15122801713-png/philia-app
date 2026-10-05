@@ -142,9 +142,9 @@ export function WFolio({ rows, testId }: {
   );
 }
 
-/* ---- wlist 行（今日预约/审批/报表目录通用；dot=赭红异常点） ---- */
+/* ---- wlist 行（今日预约/审批/报表目录通用；dot=赭红异常点；badge=行内注记签 amber，如 N7/N8「埋点预埋中」） ---- */
 export function WList({ items, emptyText, testId }: {
-  items: Array<{ key: string; title: string; sub?: string; to?: string; onClick?: () => void; dot?: boolean }>;
+  items: Array<{ key: string; title: string; sub?: string; to?: string; onClick?: () => void; dot?: boolean; badge?: string }>;
   /** 域空态文案（不传=通用「暂无内容」） */
   emptyText?: string;
   testId?: string;
@@ -157,7 +157,10 @@ export function WList({ items, emptyText, testId }: {
           <>
             {it.dot ? <span className="dotr" aria-hidden /> : null}
             <span>
-              <span className="t">{it.title}</span>
+              <span className="t">
+                {it.title}
+                {it.badge ? <span className="u3-st amber ml-1.5">{it.badge}</span> : null}
+              </span>
               {it.sub ? <span className="s" style={{ display: 'block' }}>{it.sub}</span> : null}
             </span>
             <span className="caret" aria-hidden>›</span>

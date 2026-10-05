@@ -30,11 +30,26 @@ import { SLOT_SEED_ROWS } from './slotSeedRows';
 /* ---------------- 清空（子表 -> 父表） ---------------- */
 
 const CLEAR_ORDER = [
+  /* ---- 客户端体验大批 片 3 新表（迁移 0040）：子父序，先于 users/stores/pets/products/orders 清空 ---- */
+  schema.couponGrants, // FK → coupons/users/orders，先于三者清空
+  schema.coupons, // FK → stores/users
+  schema.productReviews, // FK → orders/products/stores/users
+  schema.favorites, // FK → users/products
+  schema.memberPerkGrants, // FK → users/stores/pets
   /* ---- 客户端体验大批 片 1 新表（迁移 0036）：先于 users/stores/appointments 清空（子父序）；
      users 扩列 birthday/gender 不种（空=诚实未填） ---- */
   schema.depositRecords, // FK → stores/users/appointments（ref_appointment_id），先于三者清空
   schema.addresses, // FK → users
   schema.invoiceTitles, // FK → users
+  /* ---- 客户端体验大批片 4 新表（迁移 0042）：子表先父表，先于 appointments/boardingStays/pets/users 清空 ---- */
+  schema.serviceIncidents, // FK → appointments/stores/pets/users
+  schema.boardingUnsealLogs, // FK → boarding_stays/staff
+  schema.petHealthRecords, // FK → pets/users
+  schema.petWeightLogs, // FK → pets/users
+  /* ---- 客户端体验大批片 5 新表（迁移 0044）：子表先父表，先于 stores/staff/users/appointments 清空 ---- */
+  schema.metricAppeals, // FK → stores/staff/users
+  schema.contentEvents, // FK → users/appointments/stores
+  schema.productImportBatches, // FK → stores/users
   /* ---- 片 4 薪资+XP 域新表（迁移 0033）：子表先父表，先于 users/stores/staff/appointments/xpEvents 清空 ---- */
   schema.payrollItems, // FK → payroll_runs/stores/staff
   schema.payrollRuns, // FK → stores/users
@@ -103,6 +118,10 @@ const CLEAR_ORDER = [
   schema.appointmentSteps,
   schema.boardingDailyLogs,
   schema.boardingStays,
+  /* ---- 客户端体验大批片 2 新表（迁移 0038）：子表先父表，先于 appointments 清空 ---- */
+  schema.appointmentAddons, // FK → appointments/services
+  schema.prepaidRecords, // FK → appointments/users/stores
+  schema.appointmentRescheduleLogs, // FK → appointments/users
   schema.passDeductLogs, // B2-7 表（FK → appointments/member_pass），须先于父表清空
   schema.memberPasses,
   schema.appointments,
@@ -203,6 +222,7 @@ async function main() {
         ownerId: owner.id,
         name: '菲丽亚宠物·示例店',
         address: '杭州市西湖区文三路 100 号',
+        phone: '0571-88886666', // 体验批片 4：电话客服公示种子（联系门店 tel: 透出）
         lat: 30.2741,
         lng: 120.1551,
         openHours: OPEN_HOURS_ALL_WEEK,
@@ -259,30 +279,71 @@ async function main() {
       .returning();
     void staffRows;
 
-    /* ---- 宠物（1 狗 1 猫，含疫苗有效期） ---- */
-    await tx.insert(schema.pets).values([
+    /* ---- 宠物（1 狗 1 猫，含疫苗有效期；体验批片 4：芯片号/花色示范值） ---- */
+    const petRows = await tx
+      .insert(schema.pets)
+      .values([
+        {
+          ownerId: customer.id,
+          name: '旺财',
+          species: 'dog',
+          breed: '金毛寻回犬',
+          birthday: '2021-03-15',
+          weightKg: 28.5,
+          vaccineValidUntil: '2027-03-01',
+          neutered: true,
+          temperamentTags: ['亲人', '好动'],
+          chipNo: '900118000123456',
+          coatColor: '金色',
+        },
+        {
+          ownerId: customer.id,
+          name: '咪咪',
+          species: 'cat',
+          breed: '英国短毛猫',
+          birthday: '2022-07-01',
+          weightKg: 4.2,
+          vaccineValidUntil: '2026-12-01',
+          neutered: false,
+          temperamentTags: ['胆小', '安静'],
+          coatColor: '蓝白',
+        },
+      ])
+      .returning();
+
+    /* ---- 体验批片 4：健康记录/体重记录示范数据（宠物页趋势雏形有真值可看） ---- */
+    const wc = petRows.find((p) => p.name === '旺财')!;
+    await tx.insert(schema.petHealthRecords).values([
       {
-        ownerId: customer.id,
-        name: '旺财',
-        species: 'dog',
-        breed: '金毛寻回犬',
-        birthday: '2021-03-15',
-        weightKg: 28.5,
-        vaccineValidUntil: '2027-03-01',
-        neutered: true,
-        temperamentTags: ['亲人', '好动'],
+        petId: wc.id,
+        type: 'vaccine',
+        title: '犬四联疫苗（加强）',
+        recordDate: '2026-03-01',
+        nextDueDate: '2027-03-01',
+        note: '示例宠物医院接种',
+        createdBy: customer.id,
       },
       {
-        ownerId: customer.id,
-        name: '咪咪',
-        species: 'cat',
-        breed: '英国短毛猫',
-        birthday: '2022-07-01',
-        weightKg: 4.2,
-        vaccineValidUntil: '2026-12-01',
-        neutered: false,
-        temperamentTags: ['胆小', '安静'],
+        petId: wc.id,
+        type: 'deworm',
+        title: '体内外同驱（滴剂）',
+        recordDate: '2026-09-10',
+        nextDueDate: '2026-12-10',
+        createdBy: customer.id,
       },
+      {
+        petId: wc.id,
+        type: 'vet_visit',
+        title: '年度体检',
+        recordDate: '2026-06-18',
+        note: '指标正常，注意控制体重',
+        createdBy: customer.id,
+      },
+    ]);
+    await tx.insert(schema.petWeightLogs).values([
+      { petId: wc.id, weightKg: 27.2, measuredAt: '2026-07-01', createdBy: customer.id },
+      { petId: wc.id, weightKg: 27.9, measuredAt: '2026-08-01', createdBy: customer.id },
+      { petId: wc.id, weightKg: 28.5, measuredAt: '2026-09-01', createdBy: customer.id, note: '入住前称重同步' },
     ]);
 
     /* ---- 服务项：grooming 6 + boarding 4（boarding 含房型，按晚计费 duration 留空） ---- */
@@ -419,6 +480,8 @@ async function main() {
      * 四档数值照 27 号档照转：微光免费（无回馈金无折扣）/萤火 ¥199·2%·88折/烛光 ¥299·5%·85折/
      * 暖阳 ¥599·10%·8折；多宠全档统一：含 3 只、第 4 只起 +¥59/年/只、10 只封顶；
      * 回馈金次月 5 日到账（故障顺延≤3 天页面明示）；回馈金/会员有效期均 365 天。
+     * 片 3：四档 value_json 补种 renew_discount_bp=10000（续费优惠端口键，10000=无优惠
+     * 缺省口径；存量库同值回挂见迁移 0040 json_set 幂等段）。
      * 配置端口域 domain='member_plans'，保存即生效+版本化留痕，新值只管新单。
      * 既有种子客户「示例客户」不开会员（留 e2e 自造）。
      */
@@ -432,10 +495,10 @@ async function main() {
       createdBy: owner.id,
     });
     await tx.insert(schema.memberPlans).values([
-      planSeed('plan_weiguang', '会员档·微光：免费档（手机号即会员）；无回馈金、无服务折扣；安心包全员免费（钩子仅权益表述，微光不设钩子）', { free: true, price_fen: 0, rebate_bp: 0, service_discount_bp: 10000, included_pets: 3, extra_pet_fen: 5900, max_pets: 10 }),
-      planSeed('plan_yinghuo', '会员档·萤火：¥199/年；商品消费回馈金 2%；服务 88 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 19900, rebate_bp: 200, service_discount_bp: 8800, included_pets: 3, extra_pet_fen: 5900, max_pets: 10 }),
-      planSeed('plan_zhuguang', '会员档·烛光：¥299/年；商品消费回馈金 5%；服务 85 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 29900, rebate_bp: 500, service_discount_bp: 8500, included_pets: 3, extra_pet_fen: 5900, max_pets: 10 }),
-      planSeed('plan_nuanyang', '会员档·暖阳：¥599/年；商品消费回馈金 10%；服务 8 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 59900, rebate_bp: 1000, service_discount_bp: 8000, included_pets: 3, extra_pet_fen: 5900, max_pets: 10 }),
+      planSeed('plan_weiguang', '会员档·微光：免费档（手机号即会员）；无回馈金、无服务折扣；安心包全员免费（钩子仅权益表述，微光不设钩子）', { free: true, price_fen: 0, rebate_bp: 0, service_discount_bp: 10000, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, renew_discount_bp: 10000, advance_book_days: 3 }),
+      planSeed('plan_yinghuo', '会员档·萤火：¥199/年；商品消费回馈金 2%；服务 88 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 19900, rebate_bp: 200, service_discount_bp: 8800, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, renew_discount_bp: 10000, advance_book_days: 7 }),
+      planSeed('plan_zhuguang', '会员档·烛光：¥299/年；商品消费回馈金 5%；服务 85 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 29900, rebate_bp: 500, service_discount_bp: 8500, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, renew_discount_bp: 10000, advance_book_days: 7 }),
+      planSeed('plan_nuanyang', '会员档·暖阳：¥599/年；商品消费回馈金 10%；服务 8 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 59900, rebate_bp: 1000, service_discount_bp: 8000, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, renew_discount_bp: 10000, advance_book_days: 14 }),
       planSeed('rebate_settlement_day', '回馈金到账日：次月 5 日统一到账（故障顺延≤3 天，会员页明示口径）', { day: 5 }),
       planSeed('rebate_validity_days', '回馈金有效期：365 天', { days: 365 }),
       planSeed('membership_validity_days', '会员有效期：365 天（到期不续费冻结，余额在不可用；续费解冻；退卡清零）', { days: 365 }),
@@ -528,6 +591,90 @@ async function main() {
         active: true,
         createdBy: owner.id,
       },
+      /* 片 3（迁移 0040 种子口径；service_rules 在 CLEAR_ORDER 内会被重置，本处为重置后
+         补种——不补则端口键被种子抹掉，读口回落缺省同帧） */
+      {
+        version: 1,
+        ruleKey: 'coupon_stack_rule',
+        label: '优惠券叠加规则公示（与会员折扣是否同享；公示=只读展示，真抵扣结算候线上收单批）',
+        valueJson: { rule: 'none', note: '优惠券不与会员折扣叠加；每单限用 1 张（公示口径）' },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      /* 客户端体验大批片 2（迁移 0038 同口径补种——合部缝合找回：service_rules 重置后补种，
+         不补则端口键被种子抹掉，config.save 未知键硬拒） */
+      {
+        version: 1,
+        ruleKey: 'cancel_fee_tiers',
+        label: '取消/爽约阶梯收费公示档（距开 N 小时→费比 bp；公示口径=只读展示不扣真费，真通道候资质批）',
+        valueJson: {
+          tiers: [
+            { hoursBefore: 24, feeBp: 0, label: '24 小时前免费取消' },
+            { hoursBefore: 4, feeBp: 0, label: '4–24 小时免费（需门店审核）' },
+            { hoursBefore: 0, feeBp: 3000, label: '4 小时内/爽约 30%（公示口径，暂不扣款）' },
+          ],
+        },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      /* 客户端体验大批片 4：定时器四参数（同 0042 迁移种子口径；重置后补种） */
+      {
+        version: 1,
+        ruleKey: 'boarding_daynight_push',
+        label: '寄养早晚定时推送刻点（门店时区 HH:MM；窗口 30 分钟内扫到即推，当日当槽幂等）',
+        valueJson: { morning: '08:30', evening: '20:30' },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'order_auto_receive_days',
+        label: '商城订单发货后自动确认收货天数（超时未点=系统确认，台账留痕）',
+        valueJson: { days: 7 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'care_log_remind_hours',
+        label: '照护打卡提醒间隔（小时）：在住寄养单距上次打卡超 N 小时→提醒本店员工打卡',
+        valueJson: { hours: 4 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'incident_escalate_minutes',
+        label: '异常通报升级时限（分钟）：通报落行超 N 分钟未处置→升级再通知门店与主人一轮',
+        valueJson: { minutes: 15 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'pet_due_remind_days',
+        label: '宠物疫苗/驱虫到期提前提醒天数：到期日前 N 天内→通知主人（当日当项幂等）',
+        valueJson: { days: 7 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      /* 客户端体验大批片 5（迁移 0044 同口径；重置后补种）：D6 退款率环比突增预警阈值 */
+      {
+        version: 1,
+        ruleKey: 'd6_refund_spike_warn_bp',
+        label: 'D6 退款率环比突增预警阈值（万分比）：本月退款金额环比增幅超该值→报表预警行（缺省 3000=30%）',
+        valueJson: { bp: 3000 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
     ]);
 
     /* ---- 端口批片 B：文案端口 copy_overrides 种子（控制台第七域 domain='copy'） ----
@@ -547,6 +694,19 @@ async function main() {
         })),
       );
     }
+    /* 客户端体验大批片 2：满档推荐留口注记 copy 键（server 侧专用键，生成件未含——
+       store.fullAlternatives 的 note 读端口；本处补种保端口宇宙完整，56.1 计数断言同步 +1） */
+    await tx.insert(schema.copyOverrides).values([
+      {
+        version: 1,
+        ruleKey: 'booking.fullAlternativesNote',
+        label: 'booking',
+        valueJson: { text: '当前单店在线，满档推荐待连锁批开通' },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+    ]);
 
     /* ---- 端口批片 C：槽位注册表种子（控制台第八域；SLOT_SEED_ROWS 单源，0025 迁移同口径） ---- */
     await tx.insert(schema.slotContents).values(
@@ -674,6 +834,12 @@ async function main() {
     ['pay_orders', 'pay_orders'],
     ['agreements', 'agreements'],
     ['pay_rules', 'pay_rules'],
+    /* 片 3（客户端体验大批 · 迁移 0040）新表 */
+    ['member_perk_grants', 'member_perk_grants'],
+    ['coupons', 'coupons'],
+    ['coupon_grants', 'coupon_grants'],
+    ['favorites', 'favorites'],
+    ['product_reviews', 'product_reviews'],
   ];
 
   console.log('[seed] 完成，各表行数：');

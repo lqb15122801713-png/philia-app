@@ -33,6 +33,8 @@ export interface SessionUser {
   storeId?: string;
   /** 批次 S1：staff 岗位角色（frontdesk=前台 / groomer=美容师），来自 auth.me 的 staff.role；非 staff 无此字段 */
   staffRole?: 'frontdesk' | 'groomer';
+  /** 全局当前宠物（体验批片 4；auth.me 的 user.activePetId 随列透出；null=未选定） */
+  activePetId?: string | null;
 }
 
 /** createPhiliaClient 返回体（契约签名） */

@@ -28,7 +28,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema, type db } from '../db';
 import { broadcastNow, emitEvent, type Db as BusDb } from '../realtime/bus';
@@ -971,6 +971,67 @@ export const serviceStepRouter = router({
         doneCount: steps.filter((s) => s.status === 'done').length,
         total: STEP_DEFS.length, // 6
         status: appt.status,
+      };
+    }),
+
+  /**
+   * 服务明细清单（体验批片 4 · B15 差额补齐：分项时长+用料透出）：
+   * - steps：六步逐项 label/status/startedAt/doneAt/durationSec（进行中步 duration=null
+   *   恒等式——时长只对已完成步出数；未开始步 started/done 皆 null 透出）；
+   * - materials：消毒耗材扣减流水透出（stock_movements source_type='disinfection' 且
+   *   source_id=本单步骤 id，联 products 取名，quantity=-delta 正数口径；无扣减=空数组
+   *   诚实空态，不画假用料）。
+   * 权限：复用 assertAppointmentAccess（本人客户/本店员工/本店商家）。
+   */
+  detailSheet: publicProcedure
+    .input(z.object({ appointmentId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const appt = await assertAppointmentAccess(ctx, input.appointmentId);
+      const steps = await ctx.db
+        .select({
+          id: schema.appointmentSteps.id,
+          stepKey: schema.appointmentSteps.stepKey,
+          status: schema.appointmentSteps.status,
+          startedAt: schema.appointmentSteps.startedAt,
+          doneAt: schema.appointmentSteps.doneAt,
+        })
+        .from(schema.appointmentSteps)
+        .where(eq(schema.appointmentSteps.appointmentId, input.appointmentId))
+        .orderBy(asc(schema.appointmentSteps.stepOrder));
+      const stepIds = steps.map((s) => s.id);
+      const materials =
+        stepIds.length === 0
+          ? []
+          : await ctx.db
+              .select({
+                name: schema.products.name,
+                delta: schema.stockMovements.delta,
+                createdAt: schema.stockMovements.createdAt,
+              })
+              .from(schema.stockMovements)
+              .innerJoin(schema.products, eq(schema.stockMovements.productId, schema.products.id))
+              .where(
+                and(
+                  eq(schema.stockMovements.sourceType, 'disinfection'),
+                  inArray(schema.stockMovements.sourceId, stepIds),
+                  lt(schema.stockMovements.delta, 0),
+                ),
+              )
+              .orderBy(asc(schema.stockMovements.createdAt));
+      return {
+        appointmentStatus: appt.status,
+        steps: steps.map((s) => ({
+          stepKey: s.stepKey as StepKey,
+          label: StepLabel[s.stepKey as StepKey],
+          status: s.status,
+          startedAt: s.startedAt,
+          doneAt: s.doneAt,
+          durationSec:
+            s.startedAt && s.doneAt
+              ? Math.max(0, Math.round((s.doneAt.getTime() - s.startedAt.getTime()) / 1000))
+              : null,
+        })),
+        materials: materials.map((m) => ({ name: m.name, quantity: -m.delta, usedAt: m.createdAt })),
       };
     }),
 });

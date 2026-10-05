@@ -32,6 +32,7 @@ import { db, schema } from '../db';
 import { SESSION_COOKIE, SESSION_TTL_SEC, createSessionPayload, signSession } from './session';
 import { loadSessionUser, type AuthVariables } from './middleware';
 import { getBetaGateCode } from '../config/deploy';
+import { grantWelcomePack } from '../routers/perks';
 
 export const authHttpRoutes = new Hono<{ Variables: AuthVariables }>();
 
@@ -119,6 +120,14 @@ authHttpRoutes.post('/api/auth/dev-login', async (c) => {
         return c.json({ ok: false, error: 'INTERNAL', message: '用户创建失败' }, 500);
       }
       await db.insert(schema.userRoles).values({ userId: user.id, role: 'customer' });
+      /* 片 3 新人礼包：注册建档触发（资格留痕不真发，候资质批——注释明面）；
+         幂等锚 (user_id,kind='welcome_pack',source_id=user_id) 先查后插，
+         重复注册/重放零重复（失败不阻断登录，台账可补） */
+      try {
+        await grantWelcomePack(db, user.id);
+      } catch (err) {
+        console.error('[perk] 新人礼包登记失败（不阻断登录）:', err);
+      }
     }
     setCookie(c, SESSION_COOKIE, signSession(createSessionPayload(user)), {
       httpOnly: true,

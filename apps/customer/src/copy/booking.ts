@@ -81,6 +81,36 @@ const BOOKING_COPY_TABLE = {
   'booking.vaccineBlockedNone': '档案中还没有疫苗有效期记录',
   'booking.vaccineBlockedSuffix': '，寄养需疫苗在有效期内',
   'booking.vaccineFix': '去补录',
+
+  /* ---- 体验大批片 2：附加项（addon 服务多选，确认条价=主价+Σ附加） ---- */
+  'booking.addonTitle': '附加项（选加）',
+  'booking.addonSummaryNone': '选加附加项',
+  'booking.addonSummary': '已选 {count} 项',
+  'booking.addonPriceNote': '合计含附加项，最终金额以门店结算为准',
+
+  /* ---- 体验大批片 2：满档留口（fullAlternatives 定死 enabled=false，只渲染注记） ---- */
+  'booking.fullSlotFallback': '当日已约满，可改选其他日期或门店',
+
+  /* ---- 体验大批片 2：门店计数诚实口径注记（StoreLineBlock 下，读 listNearby 计数） ---- */
+  'booking.storeCountNote': '当前仅 {count} 家门店可约，通用范围以门店列表为准',
+
+  /* ---- 体验大批片 2：寄养折叠区（紧急联系人 / 遛弯次数 / 协议勾选闸） ---- */
+  'booking.emergencyTitle': '紧急联系人（建议填写）',
+  'booking.ecNamePh': '联系人姓名',
+  'booking.ecPhonePh': '11 位手机号',
+  'booking.ecRelationPh': '关系，如：家人',
+  'booking.ecPhoneInvalid': '请输入 11 位手机号',
+  'booking.ecIncomplete': '请补全紧急联系人信息',
+  'booking.walkTimesLabel': '每日遛弯次数（选填）',
+  'booking.walkTimesPh': '如：2',
+  'booking.needMedicalAuth': '请阅读并勾选医疗授权',
+  'booking.needBoardingConsent': '请阅读并勾选寄养协议',
+
+  /* ---- 体验大批片 2：成功页协议签署入口（寄养单） ---- */
+  'booking.successSignEntry': '寄养协议与医疗授权',
+  'booking.successSignView': '查看全文 ›',
+  'booking.signedBadge': '已签署',
+  'booking.signPendingNote': '本单尚未完成签署，请到店补签',
 } as const;
 
 export const BOOKING_COPY = withCopyOverrides(BOOKING_COPY_TABLE);

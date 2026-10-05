@@ -76,6 +76,14 @@ export const EventType = {
   AnnouncementPublished: 'announcement.published',  // 公告发布 → store 频道
   // 客户端体验大批 片 1（账户体系；同步自 server realtime/events.ts）
   SecurityNewDevice:     'security.newDevice',      // 新设备登录提醒（首见设备登记） → user 频道
+  // 客户端体验大批 片 4（异常通报域/寄养拆封；同步自 server realtime/events.ts）
+  IncidentReported:      'incident.reported',       // 异常通报落行 → appointment 频道
+  IncidentHandled:       'incident.handled',        // 异常处置登记 → appointment 频道
+  IncidentEscalated:     'incident.escalated',      // 超时未处置升级 → user + store
+  BoardingUnsealed:      'boarding.unsealed',       // 寄养用品拆封 → user + store
+  TicketEscalated:       'ticket.escalated',        // 工单升级店长介入 → store
+  // 客户端体验大批 片 5（N6 申诉通道；同步自 server realtime/events.ts）
+  MetricAppealResolved:  'metric.appealResolved',   // 指标申诉复核结果 → staff
 } as const;
 
 export type EventTypeValue = (typeof EventType)[keyof typeof EventType];

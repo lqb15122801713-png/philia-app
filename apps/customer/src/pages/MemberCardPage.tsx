@@ -5,20 +5,44 @@
  * 本批动作：卡面横卡（92 高 §4.8 码屏规格，档色谱 §1.3，档位联动沿用 R11a 真实数据）+
  * 页面骨架按图重构。
  *
- * ⚠️ 码区=诚实占位（开工回执疑点 1，待裁定）：server 无会员码签发端点（R11a 未落
- * 「扫会员码」，收银台识别=手机号降级在跑）——按「防假功能/禁止第三态」红线不画假码，
- * 码区明文提示现状口径（报手机号即享权益）。裁定到后换装真码（接口预留位=本页 qrwrap）。
+ * 客户端体验大批 片 3：码区点亮——membership.myCardToken 真 token 渲码
+ * （零新依赖纪律：禁加 qrcode 库，码=文本码 mono 大字，可被 verifyCardToken
+ * 核验；5min 时效自动刷新+倒计时；「核验走收银台」注记；占位注记撤）。
+ * 非会员态不查不渲（防假功能红线=不画假码）。
  *
  * 保留件（四铁律③不丢功能入口）：次卡余额（真实 pass.mine）入 m2 卡；
  * 权益对照不再重复（入口=/member 权益墙+规则明面、/member/open 对比弹层，三处同源）。
  */
 
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMe, usePhiliaClient } from '@philia/shared'
 import { ErrorState, LoadingBlock } from '../components/home/common'
 import { mc } from '../components/member/copy'
 import { CardFace, PushBar, TipCard, tierClaimOf, type V2Plan } from '../components/member/v2'
+
+/** 码文本分组成 4 字簇（mono 大字可核对；token 原文不动） */
+function chunkToken(token: string): string {
+  return token.replace(/(.{4})/g, '$1 ').trim()
+}
+
+/** 到期倒计时（mm/ss；到期自动刷新取新 token） */
+function useCountdown(expiresAt: Date | string | undefined): { mm: string; ss: string; expired: boolean } {
+  const [now, setNow] = useState(() => Date.now())
+  const expMs = expiresAt ? new Date(expiresAt).getTime() : 0
+  useEffect(() => {
+    if (!expMs) return
+    const t = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(t)
+  }, [expMs])
+  const left = Math.max(0, Math.floor((expMs - now) / 1000))
+  return {
+    mm: String(Math.floor(left / 60)).padStart(2, '0'),
+    ss: String(left % 60).padStart(2, '0'),
+    expired: !!expMs && left <= 0,
+  }
+}
 
 export default function MemberCardPage() {
   const { trpc } = usePhiliaClient()
@@ -45,6 +69,26 @@ export default function MemberCardPage() {
   const plan = (plansQ.data?.plans as V2Plan[] | undefined)?.find((p) => p.planKey === m?.planKey) ?? null
   const passes = passQ.data ?? []
   const totalRemain = passes.reduce((s, p) => s + p.remainTimes, 0)
+
+  /* 片 3：会员码真 token（server 契约=myCardToken **mutation** 签发，时效 5min；
+     进屏即签发 + 到期/每 5min 自动重签；非会员不签不渲，防假功能红线=不画假码） */
+  const tokenM = useMutation({
+    mutationFn: () => trpc.membership.myCardToken.mutate(),
+  })
+  const { mutate: issueToken } = tokenM
+  const issue = useCallback(() => issueToken(), [issueToken])
+  const isMember = !!user && !!m
+  useEffect(() => {
+    if (!isMember) return
+    issue()
+    const t = window.setInterval(issue, 5 * 60_000)
+    return () => window.clearInterval(t)
+  }, [isMember, issue])
+  const countdown = useCountdown(tokenM.data?.expiresAt)
+  /* 到期即换新码（双保险：5min 定时 + 到期触发） */
+  useEffect(() => {
+    if (countdown.expired) issue()
+  }, [countdown.expired, issue])
 
   return (
     <div className="m2" data-testid="member-card-page" style={{ minHeight: '100vh' }}>
@@ -82,12 +126,54 @@ export default function MemberCardPage() {
             testId="membercard-tier"
           />
 
-          {/* 码区（诚实占位，待疑点 1 裁定；防假功能红线=不画假码） */}
-          <div className="m2-qrwrap" style={{ marginTop: 14 }} data-testid="membercard-qr-pending">
-            <p style={{ fontSize: 12.5, fontWeight: 700 }}>{mc('q1.pendingTitle')}</p>
-            <p className="m2-note" style={{ marginTop: 6 }}>
-              {mc('q1.pendingBody')}
-            </p>
+          {/* 码区（片 3 点亮：真 token 渲码——文本码 mono 大字，零新依赖；
+              5min 时效自动刷新+倒计时；核验走收银台 verifyCardToken） */}
+          <div className="m2-qrwrap" style={{ marginTop: 14 }} data-testid="membercard-qr">
+            {m ? (
+              tokenM.isPending && !tokenM.data ? (
+                <LoadingBlock lines={2} />
+              ) : tokenM.isError && !tokenM.data ? (
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontSize: 12.5, fontWeight: 700 }}>{mc('q1.tokenFail')}</p>
+                  <button
+                    type="button"
+                    className="m2-link"
+                    data-testid="membercard-token-retry"
+                    style={{ marginTop: 6 }}
+                    onClick={issue}
+                  >
+                    {mc('q1.tokenRetry')}
+                  </button>
+                </div>
+              ) : tokenM.data ? (
+                <>
+                  <p style={{ fontSize: 12.5, fontWeight: 700 }}>{mc('q1.tokenTitle')}</p>
+                  {/* 文本码（mono 大字分簇，可被收银台 verifyCardToken 核验；到期即换新码） */}
+                  <p
+                    className="m2-mono"
+                    data-testid="membercard-token"
+                    style={{
+                      marginTop: 10,
+                      fontSize: 15,
+                      fontWeight: 700,
+                      letterSpacing: '.08em',
+                      wordBreak: 'break-all',
+                      lineHeight: 1.9,
+                    }}
+                  >
+                    {chunkToken(tokenM.data.token)}
+                  </p>
+                  <p className="m2-note" style={{ marginTop: 8 }}>
+                    {mc('q1.refreshNote', { mm: countdown.mm, ss: countdown.ss })}
+                  </p>
+                  <p className="m2-mono" style={{ marginTop: 6, fontSize: 9, color: 'var(--v2muted)' }}>
+                    {mc('q1.verifyNote')}
+                  </p>
+                </>
+              ) : null
+            ) : (
+              <p className="m2-note">{mc('q1.nonMemberGuide')}</p>
+            )}
           </div>
 
           {/* 非会员引导（微光免费一键开 → /member/open） */}

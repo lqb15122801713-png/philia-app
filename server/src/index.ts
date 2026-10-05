@@ -39,7 +39,14 @@ import { assertPaymentConfig } from './payments/provider';
 import { assertSecretsConfigured } from './config/secrets';
 import { assertDeployConfig, getCorsOrigins, getPublicBaseUrl, warnStagingConfig } from './config/deploy';
 import { startOutboxSweeper } from './realtime/outboxSweeper';
-import { expirePendingOrders } from './routers/mall';
+import { expirePendingOrders, sweepAutoReceive } from './routers/mall';
+import { sweepBirthdayPerks } from './routers/perks';
+import {
+  sweepBoardingDayNight,
+  sweepCareLogReminders,
+  sweepIncidentEscalations,
+  sweepPetDueReminders,
+} from './services/careReminders';
 import { awardXp, settleXpMonth } from './services/xpAward';
 import { settleMonthly as settleRebateMonth } from './services/rebate';
 import { snapshotStoreMonth } from './routers/commission';
@@ -315,6 +322,47 @@ if (isMain) {
   }, 30 * 60_000);
   rebateSettleTimer.unref?.();
 
+  /* 片 3（客户端体验大批）：生日礼扫描——启动即扫一次，之后每 30min 滴答
+     （users/pets birthday MM-DD=今日且当年未发 → 资格行+营销通知；幂等锚重扫零新增） */
+  sweepBirthdayPerks(db).catch((err) => console.error('[perk] 生日礼扫描失败:', err));
+  const birthdayPerkTimer = setInterval(() => {
+    sweepBirthdayPerks(db).catch((err) => console.error('[perk] 生日礼扫描失败:', err));
+  }, 30 * 60_000);
+  birthdayPerkTimer.unref?.();
+
+  /* 片 3：商城超时自动确认收货——启动即扫一次，之后每 60s 滴答
+     （shipped 且 shipped_at < now−order_auto_receive_days 端口值 → 条件更新翻 received，
+     幂等=条件更新天然，与 receiveOrder 互撞零副作用） */
+  sweepAutoReceive(db).catch((err) => console.error('[mall] 超时自动收货扫描失败:', err));
+  const autoReceiveTimer = setInterval(() => {
+    sweepAutoReceive(db).catch((err) => console.error('[mall] 超时自动收货扫描失败:', err));
+  }, 60_000);
+  autoReceiveTimer.unref?.();
+  /* ---- 客户端体验大批片 4：照护/提醒扫描族（services/careReminders.ts，全幂等——
+     存在性锚/escalated_at 锚兜底，重扫零副作用；e2e 直调同函数钉时刻断言） ---- */
+  // 异常通报升级：60s 滴答（15 分钟时限口径，扫描粒度须远小于时限）
+  sweepIncidentEscalations(db, new Date()).catch((err) => console.error('[care] 异常升级扫描失败:', err));
+  const incidentTimer = setInterval(() => {
+    sweepIncidentEscalations(db, new Date()).catch((err) => console.error('[care] 异常升级扫描失败:', err));
+  }, 60_000);
+  incidentTimer.unref?.();
+
+  // 寄养早晚定时推送：5min 滴答（刻点窗 30 分钟，5min 粒度必扫到且当日当槽幂等）
+  sweepBoardingDayNight(db, new Date()).catch((err) => console.error('[care] 早晚推送扫描失败:', err));
+  const dayNightTimer = setInterval(() => {
+    sweepBoardingDayNight(db, new Date()).catch((err) => console.error('[care] 早晚推送扫描失败:', err));
+  }, 5 * 60_000);
+  dayNightTimer.unref?.();
+
+  // 照护 4h 打卡提醒 + 疫苗/驱虫到期提醒：30min 滴答（间隔/天粒度口径，幂等锚兜底）
+  const runSlowSweeps = () => {
+    sweepCareLogReminders(db, new Date()).catch((err) => console.error('[care] 照护提醒扫描失败:', err));
+    sweepPetDueReminders(db, new Date()).catch((err) => console.error('[care] 到期提醒扫描失败:', err));
+  };
+  runSlowSweeps();
+  const careSlowTimer = setInterval(runSlowSweeps, 30 * 60_000);
+  careSlowTimer.unref?.();
+
   const server: ServerType = serve({ fetch: app.fetch, port }, (info) => {
     const publicBase = getPublicBaseUrl();
     console.log(`[philia-server] 已启动: http://localhost:${info.port} （tRPC: /trpc/*, SSE: /api/events）`);
@@ -332,6 +380,11 @@ if (isMain) {
     clearInterval(xpCompletionTimer);
     clearInterval(commissionSnapshotTimer);
     clearInterval(rebateSettleTimer);
+    clearInterval(birthdayPerkTimer);
+    clearInterval(autoReceiveTimer);
+    clearInterval(incidentTimer);
+    clearInterval(dayNightTimer);
+    clearInterval(careSlowTimer);
     server.close(() => {
       client.close();
       console.log('[philia-server] 已退出');

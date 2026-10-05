@@ -41,6 +41,7 @@ import { TRPCError } from '@trpc/server';
 import { and, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { db, schema } from '../db';
+import { CLIENT_AGREEMENT_CONTENT } from '../config/agreements';
 import { getPaymentProvider } from '../payments/provider';
 import { broadcastNow, emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
@@ -77,6 +78,10 @@ const IMPLEMENTED_BIZ_DOMAINS = ['membership_open'] as const;
 
 /** 协议三键（线上开通必传，缺一拒单） */
 const AGREEMENT_KEYS = ['member_service', 'not_prepaid', 'no_auto_renew'] as const;
+
+/** 片 2（体验大批）：客户端自助签署协议键（寄养协议/医疗授权）——内容为服务端常量
+ *  快照（config/agreements.ts，内测简版明面注记；真实文本进 copy 键族由 UI coder 读） */
+const SELF_SIGN_AGREEMENT_KEYS = ['boarding_consent', 'medical_auth'] as const;
 
 /* ------------------------------------------------------------------ */
 /* 单号 / 端口 / 归属                                                    */
@@ -410,6 +415,9 @@ export const payRouter = router({
         bizDomain: z.enum(IMPLEMENTED_BIZ_DOMAINS),
         planKey: z.string().min(1),
         petCount: z.number().int().min(0).max(99),
+        /* 片 3 续费优惠试算（开口项 1 裁：只试算透出不碰真收——续费真收=商家端
+           到店付既有链 membership.renew，本分支不落任何单据） */
+        renewal: z.boolean().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -417,6 +425,17 @@ export const payRouter = router({
       const plan = plans.get(input.planKey);
       if (!plan || !plan.ruleKey.startsWith('plan_')) badRequest('档位不存在或已停用');
       const { amountFen, extraCount, priceFen } = membershipChargeFen(plan, input.petCount);
+      /* 续费优惠：读档 renew_discount_bp（缺键回落 10000=无优惠——fresh 库/未配档
+         安全口径）；折后价=全价（档价+多宠附加合计）×bp/10000 精确到分 */
+      let renewalQuote: { discountBp: number; amountFen: number; note: string } | null = null;
+      if (input.renewal === true) {
+        const discountBp = planNum(plan, 'renew_discount_bp', 10000);
+        renewalQuote = {
+          discountBp,
+          amountFen: Math.round((amountFen * discountBp) / 10000),
+          note: '续费优惠试算透出（真收走商家端到店付既有链，本片不碰）',
+        };
+      }
       return {
         bizDomain: input.bizDomain,
         planKey: input.planKey,
@@ -425,9 +444,40 @@ export const payRouter = router({
         priceFen,
         extraCount,
         amountFen, // server 重算值（前端展示口径=下单口径，唯一可信源）
+        renewal: renewalQuote,
         channelEnabled: await loadPayChannelEnabled(ctx.db),
         timeoutMinutes: await loadPayTimeoutMinutes(ctx.db),
       };
+    }),
+
+  /**
+   * signAgreement（customer · 片 2）：预约链路协议自助签署——boarding_consent 寄养协议 /
+   * medical_auth 医疗授权。复用 agreements 表快照工艺：content/version=服务端常量快照
+   * （config/agreements.ts，签署时点固化、改版不回溯）+ checked_at + user_snapshot
+   * （userId/phoneMasked 取证要素）。只增不改，重复签署留新行（幂等不做去重——留痕口径）。
+   */
+  signAgreement: customerProcedure
+    .input(z.object({ agreementKey: z.enum(SELF_SIGN_AGREEMENT_KEYS) }))
+    .mutation(async ({ ctx, input }) => {
+      const def = CLIENT_AGREEMENT_CONTENT[input.agreementKey];
+      const user = await ctx.db
+        .select({ phone: schema.users.phone })
+        .from(schema.users)
+        .where(eq(schema.users.id, ctx.user.id))
+        .get();
+      const row = await ctx.db
+        .insert(schema.agreements)
+        .values({
+          userId: ctx.user.id,
+          agreementKey: input.agreementKey,
+          version: def.version,
+          content: def.content, // 服务端常量快照（不信客户端传入文本）
+          checkedAt: new Date(),
+          userSnapshot: { userId: ctx.user.id, phoneMasked: maskPhone(user?.phone) },
+        })
+        .returning()
+        .then((r) => r[0]!);
+      return { agreement: row };
     }),
 
   /**

@@ -69,6 +69,70 @@ const APPOINTMENTS_COPY_TABLE = {
   'appointments.servingTitle': '服务中，如需取消请联系门店',
   'appointments.servingCall': '拨打门店电话',
   'appointments.servingNote': '可到店或经商家端与门店协商处理',
+
+  /* ---- 体验大批片 2：改约历史（rescheduleLogs，空态不渲染） ---- */
+  'appointments.rescheduleHistory': '改约历史',
+  'appointments.rescheduleRoleCustomer': '客户自助',
+  'appointments.rescheduleRoleMerchant': '门店改期',
+
+  /* ---- 体验大批片 2：附加项 / 寄养快照透出（预约信息卡） ---- */
+  'appointments.addonsTitle': '附加项',
+  'appointments.emergencyContact': '紧急联系人',
+  'appointments.medicalAuthLabel': '医疗授权',
+  'appointments.medicalAuthSigned': '已签署（{version}）',
+  'appointments.walkTimes': '每日遛弯 {n} 次',
+
+  /* ---- 体验大批片 2：取消阶梯收费公示卡（cancelFeeTiers 端口值，暂不扣款） ---- */
+  'appointments.cancelFeeTitle': '取消阶梯收费公示',
+  'appointments.cancelFeeNote': '以上为公示口径，暂不实际扣款',
+
+  /* ---- 体验大批片 2：预付台账四态徽（prepaidOf） ---- */
+  'appointments.prepaidLabel': '预付台账',
+  'appointments.prepaidPending': '预付登记中',
+  'appointments.prepaidRegistered': '已预付',
+  'appointments.prepaidDeducted': '已核销抵扣',
+  'appointments.prepaidRefunded': '已退还',
+  /* ---- 异常通报条（live 页高亮 · 体验批片 4） ---- */
+  'appointments.incidentTitle': '异常通报',
+  /* 异常类型三枚举 */
+  'appointments.incidentTypeInjury': '受伤',
+  'appointments.incidentTypeStress': '应激',
+  'appointments.incidentTypeVetVisit': '就医',
+  'appointments.incidentHandling': '门店处理中',
+  'appointments.incidentOccurredAt': '发生于 {time}',
+  /* 全部已处置暖底细条（{note}=最近一条处置说明） */
+  'appointments.incidentHandledLine': '异常已处置：{note}',
+  /* SSE 即时提示 */
+  'appointments.incidentToastReported': '{pet}有异常通报，门店正在处理',
+  'appointments.incidentToastHandled': '异常情况已处置，可下滑查看说明',
+  'appointments.unsealToast': '{pet}的用品「{item}」已拆封使用',
+
+  /* ---- 服务明细（详情页 · serviceStep.detailSheet） ---- */
+  'appointments.detailSheetTitle': '服务明细',
+  /* 分项状态徽 */
+  'appointments.stepDone': '已完成',
+  'appointments.stepDoing': '进行中',
+  'appointments.stepPending': '待开始',
+  'appointments.stepDuration': '{min} 分钟',
+  /* 用料透出（诚实空态） */
+  'appointments.materialsTitle': '耗材使用',
+  'appointments.materialsEmpty': '本单无耗材扣减记录',
+  'appointments.materialQty': '× {n}',
+
+  /* ---- 寄养安心卡（boarding.assuranceCard） ---- */
+  'appointments.assuranceTitle': '寄养安心卡',
+  'appointments.assuranceRoom': '房间',
+  'appointments.roomPending': '待分配',
+  'appointments.assuranceWeight': '入住体重',
+  'appointments.assuranceBelongings': '随身物品',
+  'appointments.assuranceLatestLog': '最新打卡',
+  'appointments.assuranceLogDone': '当日照护已完成打卡',
+  'appointments.assuranceNoLog': '暂无打卡记录',
+  'appointments.assuranceUnsealTitle': '拆封留痕',
+  'appointments.assuranceUnsealEmpty': '暂无拆封记录',
+  /* stay=null 空态（待入住登记） */
+  'appointments.assuranceEmpty': '待入住登记',
+  'appointments.assuranceEmptyBody': '店员办理入住后，房间、体重与物品清单会在这里更新',
 } as const;
 
 export const APPOINTMENTS_COPY = withCopyOverrides(APPOINTMENTS_COPY_TABLE);

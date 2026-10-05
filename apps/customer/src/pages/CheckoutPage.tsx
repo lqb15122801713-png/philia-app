@@ -14,11 +14,16 @@
  * → 自动打开 CashierModal（内部 createPayment → mock-callback 三步演示流）
  * → 成功：清空已结算勾选项 + 支付成功页（订单号 + 查看订单）；
  * → 放弃：订单留 pending，跳 /mall/orders「待支付」可继续支付。
+ *
+ * 客户端体验大批 片 3：地址卡首行配送方式三 chips（express/same_city/pickup；
+ * pickup/same_city 详细地址非必填+「内测期免运费」注记）+ 清单与吸底之间「可用券
+ * 推荐」区（availableCoupons 按门槛过滤；核销=登记抵扣、线下结算出示口径注记；
+ * 下单成功回 couponUse 登记 grantId）；createOrder 入参 deliveryMethod。
  */
 
 import { usePhiliaClient } from '@philia/shared';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { BadgeCheck, MapPin } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { BadgeCheck, MapPin, Ticket } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import CashierModal, { type CashierOrder } from '../components/mall/CashierModal';
@@ -29,10 +34,21 @@ import { fenToYuan } from '../components/mall/format';
 import { friendlyError, useToast } from '@philia/shared';
 import ProductImage from '../components/mall/ProductImage';
 import { mlc } from '../copy/mall';
+import { cpc } from '../copy/coupons';
 import { mc } from '../components/member/copy';
 
 const ADDRESS_KEY = 'philia.address';
 const PHONE_RE = /^1[3-9]\d{9}$/;
+
+/* 客户端体验大批 片 3：配送方式三态（createOrder 入参 deliveryMethod） */
+type DeliveryMethod = 'express' | 'same_city' | 'pickup';
+type Trpc = ReturnType<typeof usePhiliaClient>['trpc'];
+type AvailableCoupon = Awaited<ReturnType<Trpc['mall']['availableCoupons']['query']>>['items'][number];
+const DELIVERY_METHODS: Array<{ key: DeliveryMethod; label: string }> = [
+  { key: 'express', label: mlc('mall.deliveryExpress') },
+  { key: 'same_city', label: mlc('mall.deliverySameCity') },
+  { key: 'pickup', label: mlc('mall.deliveryPickup') },
+];
 
 interface AddressForm {
   name: string;
@@ -66,6 +82,7 @@ interface CheckoutLine {
 
 function CheckoutInner() {
   const { trpc } = usePhiliaClient();
+  const queryClient = useQueryClient();
   const cart = useCart();
   const navigate = useNavigate();
   const location = useLocation();
@@ -116,11 +133,31 @@ function CheckoutInner() {
   const [errors, setErrors] = useState<Partial<AddressForm>>({});
   const [cashierOrder, setCashierOrder] = useState<CashierOrder | null>(null);
   const [paidOrder, setPaidOrder] = useState<CashierOrder | null>(null);
+  /* 片 3：配送方式（默认快递；pickup/same_city 地址非必填）+ 选中券（登记抵扣口径） */
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('express');
+  const [pickedCoupon, setPickedCoupon] = useState<AvailableCoupon | null>(null);
+  const addressRequired = deliveryMethod === 'express';
+
+  /* 片 3：可用券推荐（availableCoupons 按本单合计门槛过滤；核销=登记抵扣口径） */
+  const couponsQ = useQuery({
+    queryKey: ['mall', 'availableCoupons', totalFen],
+    queryFn: () => trpc.mall.availableCoupons.query({ totalFen }),
+    enabled: totalFen > 0,
+    staleTime: 30_000,
+    retry: false,
+  });
+  const availableCoupons = couponsQ.data?.items ?? [];
+  /* 片 3：结算成功回把 grantId 登记 couponUse（登记口径，不碰订单金额） */
+  const couponUseM = useMutation({
+    mutationFn: (input: { grantId: string; orderId: string }) => trpc.mall.couponUse.mutate(input),
+    onSettled: () => void queryClient.invalidateQueries({ queryKey: ['mall', 'myCoupons'] }),
+  });
 
   const createOrderM = useMutation({
     mutationFn: (input: {
       items: Array<{ productId: string; qty: number }>;
-      address: { name: string; phone: string; detail: string };
+      address?: { name: string; phone: string; detail: string };
+      deliveryMethod: DeliveryMethod;
     }) => trpc.mall.createOrder.mutate(input),
     onSuccess: (order) => {
       // 地址记忆（下单成功即记，与是否支付解耦）
@@ -131,6 +168,13 @@ function CheckoutInner() {
       }
       // 购物车结算：移除已下单的勾选项（订单留 pending 时走订单列表继续支付）
       if (fromCart) cart.clearChecked();
+      /* 片 3：选中券登记核销（couponUse 登记口径；失败不阻收银台，台账可后补） */
+      if (pickedCoupon) {
+        couponUseM.mutate(
+          { grantId: pickedCoupon.id, orderId: order.id },
+          { onError: (err) => showToast(friendlyError(err, '券登记失败，请到店出示券码核销', 80), 'error') },
+        );
+      }
       setCashierOrder({ id: order.id, orderNo: order.orderNo, totalFen: order.totalFen });
     },
     onError: (err) => {
@@ -141,9 +185,10 @@ function CheckoutInner() {
 
   const validate = (): boolean => {
     const next: Partial<AddressForm> = {};
+    /* 片 3：pickup/same_city 地址非必填（姓名/电话留作联系口径仍必填） */
     if (!form.name.trim()) next.name = '请填写收货人姓名';
     if (!PHONE_RE.test(form.phone.trim())) next.phone = '请填写正确的 11 位手机号';
-    if (!form.detail.trim()) next.detail = '请填写详细收货地址';
+    if (addressRequired && !form.detail.trim()) next.detail = '请填写详细收货地址';
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -151,9 +196,13 @@ function CheckoutInner() {
   const handleSubmit = () => {
     if (lines.length === 0) return;
     if (!validate()) return;
+    const addr = { name: form.name.trim(), phone: form.phone.trim(), detail: form.detail.trim() };
+    /* 片 3：pickup/same_city 且详细地址留空 → 不带 address（server 契约：express 必传硬校验） */
+    const withAddress = addressRequired || !!addr.detail;
     createOrderM.mutate({
       items: lines.map((l) => ({ productId: l.productId, qty: l.qty })),
-      address: { name: form.name.trim(), phone: form.phone.trim(), detail: form.detail.trim() },
+      ...(withAddress ? { address: addr } : {}),
+      deliveryMethod,
     });
   };
 
@@ -269,6 +318,31 @@ function CheckoutInner() {
           <MapPin className="h-4 w-4 text-ink" strokeWidth={1.5} />
           收货地址
         </p>
+        {/* 片 3：配送方式三 chips（卡内首行；pickup/same_city 地址非必填+内测期免运费注记） */}
+        <div className="mt-3" data-testid="delivery-method">
+          <p className="mb-1.5 font-number text-v2-trace text-ink-secondary">{mlc('mall.deliveryMethod')}</p>
+          <div className="flex gap-2">
+            {DELIVERY_METHODS.map((d) => (
+              <button
+                key={d.key}
+                type="button"
+                onClick={() => setDeliveryMethod(d.key)}
+                data-testid={`delivery-${d.key}`}
+                className={`flex-1 rounded-full px-3 py-2 text-caption transition ${
+                  deliveryMethod === d.key
+                    ? 'bg-ink font-semibold text-canvas'
+                    : 'bg-card font-medium text-ink-secondary ring-1 ring-line-ring'
+                }`}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1.5 font-number text-[9.5px] text-ink-placeholder">
+            {mlc('mall.deliveryFreeNote')}
+            {!addressRequired ? ` · ${mlc('mall.addrOptionalNote')}` : ''}
+          </p>
+        </div>
         <div className="mt-3 space-y-3">
           <div>
             <label className="mb-1 block font-number text-v2-trace text-ink-secondary" htmlFor="ck-name">
@@ -301,7 +375,7 @@ function CheckoutInner() {
           </div>
           <div>
             <label className="mb-1 block font-number text-v2-trace text-ink-secondary" htmlFor="ck-detail">
-              详细地址
+              详细地址{!addressRequired ? '（选填）' : ''}
             </label>
             <textarea
               id="ck-detail"
@@ -343,6 +417,50 @@ function CheckoutInner() {
         </div>
         <p className="pb-2.5 text-right text-caption text-ink-placeholder">{mlc('mall.priceNote')}</p>
       </section>
+
+      {/* 片 3：可用券推荐区（availableCoupons 按门槛过滤；选中=登记抵扣口径注记，
+          核销=couponUse 登记、线下结算出示——不接真抵扣结算） */}
+      {!couponsQ.isPending && availableCoupons.length > 0 ? (
+        <section className="u1-card mt-3 p-4" data-testid="checkout-coupons">
+          <p className="flex items-center gap-1.5 text-title">
+            <Ticket className="h-4 w-4 text-ink" strokeWidth={1.5} />
+            {mlc('mall.couponTitle')}
+          </p>
+          <div className="mt-3 space-y-2">
+            {availableCoupons.map((c) => {
+              const picked = pickedCoupon?.id === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setPickedCoupon(picked ? null : c)}
+                  data-testid={`checkout-coupon-${c.id}`}
+                  className={`flex w-full items-center gap-3 rounded-control px-3.5 py-2.5 text-left transition ${
+                    picked ? 'bg-brand-secondary-light ring-1 ring-ink' : 'bg-canvas ring-1 ring-line-ring'
+                  }`}
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-body-sm font-semibold text-ink">
+                      {c.coupon.title} <span className="u1-num">{mlc('mall.couponOff', { amt: fenToYuan(c.coupon.amountFen) })}</span>
+                    </span>
+                    <span className="mt-0.5 block font-number text-[9.5px] text-ink-placeholder">
+                      {c.coupon.thresholdFen > 0
+                        ? cpc('cpn.threshold', { amt: fenToYuan(c.coupon.thresholdFen) })
+                        : cpc('cpn.thresholdNone')}
+                    </span>
+                  </span>
+                  <span className={`shrink-0 text-caption font-semibold ${picked ? 'text-ink' : 'text-ink-secondary'}`}>
+                    {picked ? mlc('mall.couponPicked') : mlc('mall.couponPick')}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="mt-2 font-number text-[9.5px] text-ink-placeholder" data-testid="checkout-coupon-note">
+            {mlc('mall.couponUseNote')}
+          </p>
+        </section>
+      ) : null}
 
       {/* 吸底提交栏（片 2 M-03 定稿 ctabar：渐出底 + 合计 mono 19/700 + 深棕主钮 16/700；
           详情级无 dock（App.tsx 白名单），落底 safe-area——修 bottom-14 悬空） */}

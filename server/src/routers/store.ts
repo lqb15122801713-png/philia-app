@@ -40,7 +40,7 @@ import { z } from 'zod';
 import { schema } from '../db';
 import { merchantManagerProcedure, merchantOwnerProcedure, merchantProcedure, publicProcedure, router, type Context } from '../trpc';
 import { loadDurationRules, resolveServiceDuration, type ServiceDuration } from '../config/durationEngine';
-import { boardingNightDates, BOOKING_LEAD_BUFFER_MS, DEFAULT_BOARDING_ROOM_COUNT, freeGroomersInInterval, loadGroomerOccupancy, storeDayStartMs, storeWallclock } from './appointment';
+import { boardingNightDates, BOOKING_LEAD_BUFFER_MS, DEFAULT_BOARDING_ROOM_COUNT, freeGroomersInInterval, loadGroomerOccupancy, maxAdvanceMsOf, storeDayStartMs, storeWallclock } from './appointment';
 import { computeDayTender, loadCashierFinance, type DayTenderStats } from './cashier';
 
 /** 时间槽粒度：30min（与 seed 的 store_slots 生成粒度一致） */
@@ -238,6 +238,14 @@ export const storeRouter = router({
       // S4：一次性取 7 天窗口的 groomer 占用快照，逐槽内存计算空闲数（不做缓存表）
       const occupancy = await loadGroomerOccupancy(ctx.db, store.id, day0ms, gridEnd);
 
+      /* 片 2：提前预约期上限读侧收窄（能看=能约同帧，超上限槽不返回）——
+         客户访客按其会员档 advance_book_days（maxAdvanceMsOf，与 create 闸同函数同口径）；
+         商家/员工管理视角不截断（Infinity=不拦，7 天栅格合成上限不动） */
+      const viewerMaxAdvanceMs = ctx.user.roles.includes('customer')
+        ? await maxAdvanceMsOf(ctx.db, ctx.user.id)
+        : Number.POSITIVE_INFINITY;
+      const latestBookableMs = now.getTime() + viewerMaxAdvanceMs;
+
       const earliest = now.getTime() + BOOKING_LEAD_BUFFER_MS;
       const openSlots: (typeof schema.storeSlots.$inferSelect)[] = [];
       for (let i = 0; i < 7; i++) {
@@ -250,6 +258,7 @@ export const storeRouter = router({
         for (let min = oh * 60 + om; min + slotsNeeded * 30 <= ch * 60 + cm; min += 30) {
           const t = new Date(dateMs + min * 60_000);
           if (t.getTime() < earliest) continue; // +1h 缓冲内（含已过期）时段不可约
+          if (t.getTime() > latestBookableMs) continue; // 片 2：超提前预约期上限槽不返回（与 create 闸同帧）
           // S4 任务 B：目标区间 = 自该槽起 slotsNeeded 个连续 30min（9a 时长连续口径），
           // 全程有 ≥1 名 groomer 空闲才可约；容量 = 空闲 groomer 数（动态）
           const freeCount = freeGroomersInInterval(
@@ -301,6 +310,16 @@ export const storeRouter = router({
       if (nights.length > 31) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: '查询区间最长 31 晚' });
       }
+      /* 片 2：提前预约期上限读侧收窄（能看=能约同帧）——客户视角按档截断
+         （晚起始日 > now+advance 上限的晚不返回）；商家/员工管理视角不截断 */
+      let shownNights = nights;
+      if (ctx.user.roles.includes('customer')) {
+        const limitMs = Date.now() + (await maxAdvanceMsOf(ctx.db, ctx.user.id));
+        shownNights = nights.filter((n) => {
+          const [y = 0, m = 1, d = 1] = n.split('-').map(Number);
+          return storeDayStartMs(y, m, d) <= limitMs;
+        });
+      }
       const boardingServices = await ctx.db
         .select({ id: schema.services.id, roomCount: schema.services.roomCount })
         .from(schema.services)
@@ -312,30 +331,74 @@ export const storeRouter = router({
           ),
         )
         .orderBy(schema.services.createdAt);
+      // 截断后零晚：直接返回空 nights（各房型 remaining 同空），避免空 inArray 查询
+      if (shownNights.length === 0) {
+        return {
+          nights: [],
+          services: boardingServices.map((s) => ({
+            serviceId: s.id,
+            roomCount: s.roomCount ?? DEFAULT_BOARDING_ROOM_COUNT,
+            remaining: [],
+          })),
+        };
+      }
       const rows = await ctx.db
         .select()
         .from(schema.boardingSlots)
         .where(
           and(
             eq(schema.boardingSlots.storeId, store.id),
-            inArray(schema.boardingSlots.nightDate, nights),
+            inArray(schema.boardingSlots.nightDate, shownNights),
           ),
         );
       const byKey = new Map(rows.map((r) => [`${r.serviceId}|${r.nightDate}`, r]));
       return {
-        nights,
+        nights: shownNights,
         services: boardingServices.map((s) => {
           const full = s.roomCount ?? DEFAULT_BOARDING_ROOM_COUNT;
           return {
             serviceId: s.id,
             roomCount: full,
             /** 与 nights 等长逐晚剩余间数 */
-            remaining: nights.map((n) => {
+            remaining: shownNights.map((n) => {
               const row = byKey.get(`${s.id}|${n}`);
               return row ? row.capacity - row.bookedCount : full;
             }),
           };
         }),
+      };
+    }),
+
+  /**
+   * 片 2：跨店满档推荐留口（public · 开口项 2 裁：单店留口，数据待连锁批）。
+   * 形状定死：enabled 恒 false、candidates 恒空——单店架构下不画假推荐；
+   * note 读文案端口（copy 域 booking.fullAlternativesNote，保存即生效；缺行回退码内默认）。
+   */
+  fullAlternatives: publicProcedure
+    .input(z.object({ storeId: z.string().min(1), date: z.date() }))
+    .query(async ({ ctx, input }) => {
+      const store = await ctx.db
+        .select({ id: schema.stores.id })
+        .from(schema.stores)
+        .where(eq(schema.stores.id, input.storeId))
+        .limit(1)
+        .then((r) => r[0]);
+      if (!store) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: '门店不存在' });
+      }
+      const noteRow = await ctx.db
+        .select({ valueJson: schema.copyOverrides.valueJson })
+        .from(schema.copyOverrides)
+        .where(and(eq(schema.copyOverrides.ruleKey, 'booking.fullAlternativesNote'), eq(schema.copyOverrides.active, true)))
+        .get();
+      const noteText = (noteRow?.valueJson as Record<string, unknown> | undefined)?.text;
+      return {
+        enabled: false as const, // 单店架构：满档推荐数据待连锁批，恒 false
+        candidates: [] as unknown[], // 恒空——防假推荐（形状定死）
+        note:
+          typeof noteText === 'string' && noteText.trim().length > 0
+            ? noteText
+            : '当前单店在线，满档推荐待连锁批开通',
       };
     }),
 
@@ -360,7 +423,7 @@ export const storeRouter = router({
     .input(
       z.object({
         id: z.string().min(1).optional(),
-        type: z.enum(['grooming', 'boarding'], { message: '服务大类仅支持 grooming/boarding' }),
+        type: z.enum(['grooming', 'boarding', 'addon'], { message: '服务大类仅支持 grooming/boarding/addon' }),
         name: z.string().trim().min(1, '服务名称不能为空').max(64),
         durationMin: z.number().int().positive().max(24 * 60).optional(),
         priceFen: z.number().int().min(0, '价格不能为负'),

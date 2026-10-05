@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B）——生成件，勿手改（源=scripts/gen-copy-overrides-seed.mts）；
  * 重生成：仓库根 npx tsx scripts/gen-copy-overrides-seed.mts（copy 键表增删键后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-04T04:57:15.987Z；键数=2716
+ * 生成时间口径：2026-10-05T10:55:49.103Z；键数=3133
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }> = [
  {
@@ -1005,6 +1005,31 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "收货地址"
  },
  {
+  "key": "agreement.agreeCta",
+  "domain": "agreement",
+  "text": "已阅读并同意"
+ },
+ {
+  "key": "agreement.agreeLabel",
+  "domain": "agreement",
+  "text": "我已阅读并同意"
+ },
+ {
+  "key": "agreement.boarding_consent",
+  "domain": "agreement",
+  "text": "《寄养服务协议》"
+ },
+ {
+  "key": "agreement.medical_auth",
+  "domain": "agreement",
+  "text": "《医疗授权书》"
+ },
+ {
+  "key": "agreement.versionNote",
+  "domain": "agreement",
+  "text": "版本 {version}"
+ },
+ {
   "key": "agr.betaMark",
   "domain": "agreements",
   "text": "内测期简版"
@@ -1050,6 +1075,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "版本 {version}"
  },
  {
+  "key": "appointments.addonsTitle",
+  "domain": "appointments",
+  "text": "附加项"
+ },
+ {
   "key": "appointments.albumSub",
   "domain": "appointments",
   "text": "共 {count} 张照片，服务全程透明可查"
@@ -1058,6 +1088,61 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "appointments.albumTitle",
   "domain": "appointments",
   "text": "服务相册"
+ },
+ {
+  "key": "appointments.assuranceBelongings",
+  "domain": "appointments",
+  "text": "随身物品"
+ },
+ {
+  "key": "appointments.assuranceEmpty",
+  "domain": "appointments",
+  "text": "待入住登记"
+ },
+ {
+  "key": "appointments.assuranceEmptyBody",
+  "domain": "appointments",
+  "text": "店员办理入住后，房间、体重与物品清单会在这里更新"
+ },
+ {
+  "key": "appointments.assuranceLatestLog",
+  "domain": "appointments",
+  "text": "最新打卡"
+ },
+ {
+  "key": "appointments.assuranceLogDone",
+  "domain": "appointments",
+  "text": "当日照护已完成打卡"
+ },
+ {
+  "key": "appointments.assuranceNoLog",
+  "domain": "appointments",
+  "text": "暂无打卡记录"
+ },
+ {
+  "key": "appointments.assuranceRoom",
+  "domain": "appointments",
+  "text": "房间"
+ },
+ {
+  "key": "appointments.assuranceTitle",
+  "domain": "appointments",
+  "text": "寄养安心卡"
+ },
+ {
+  "key": "appointments.assuranceUnsealEmpty",
+  "domain": "appointments",
+  "text": "暂无拆封记录"
+ },
+ {
+  "key": "appointments.assuranceUnsealTitle",
+  "domain": "appointments",
+  "text": "拆封留痕"
+ },
+ {
+  "key": "appointments.assuranceWeight",
+  "domain": "appointments",
+  "text": "入住体重"
  },
  {
   "key": "appointments.backToList",
@@ -1083,6 +1168,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "appointments.cancelCtaLate",
   "domain": "appointments",
   "text": "申请取消（4 小时内需商家审核）"
+ },
+ {
+  "key": "appointments.cancelFeeNote",
+  "domain": "appointments",
+  "text": "以上为公示口径，暂不实际扣款"
+ },
+ {
+  "key": "appointments.cancelFeeTitle",
+  "domain": "appointments",
+  "text": "取消阶梯收费公示"
  },
  {
   "key": "appointments.cancelReasonTitle",
@@ -1125,9 +1220,19 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "预约详情加载失败，请检查网络后重试"
  },
  {
+  "key": "appointments.detailSheetTitle",
+  "domain": "appointments",
+  "text": "服务明细"
+ },
+ {
   "key": "appointments.detailTitle",
   "domain": "appointments",
   "text": "预约详情"
+ },
+ {
+  "key": "appointments.emergencyContact",
+  "domain": "appointments",
+  "text": "紧急联系人"
  },
  {
   "key": "appointments.emptyBody",
@@ -1143,6 +1248,51 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "appointments.emptyTitle",
   "domain": "appointments",
   "text": "还没有预约"
+ },
+ {
+  "key": "appointments.incidentHandledLine",
+  "domain": "appointments",
+  "text": "异常已处置：{note}"
+ },
+ {
+  "key": "appointments.incidentHandling",
+  "domain": "appointments",
+  "text": "门店处理中"
+ },
+ {
+  "key": "appointments.incidentOccurredAt",
+  "domain": "appointments",
+  "text": "发生于 {time}"
+ },
+ {
+  "key": "appointments.incidentTitle",
+  "domain": "appointments",
+  "text": "异常通报"
+ },
+ {
+  "key": "appointments.incidentToastHandled",
+  "domain": "appointments",
+  "text": "异常情况已处置，可下滑查看说明"
+ },
+ {
+  "key": "appointments.incidentToastReported",
+  "domain": "appointments",
+  "text": "{pet}有异常通报，门店正在处理"
+ },
+ {
+  "key": "appointments.incidentTypeInjury",
+  "domain": "appointments",
+  "text": "受伤"
+ },
+ {
+  "key": "appointments.incidentTypeStress",
+  "domain": "appointments",
+  "text": "应激"
+ },
+ {
+  "key": "appointments.incidentTypeVetVisit",
+  "domain": "appointments",
+  "text": "就医"
  },
  {
   "key": "appointments.liveBoarding",
@@ -1165,9 +1315,59 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "预约列表加载失败，请检查网络后重试"
  },
  {
+  "key": "appointments.materialQty",
+  "domain": "appointments",
+  "text": "× {n}"
+ },
+ {
+  "key": "appointments.materialsEmpty",
+  "domain": "appointments",
+  "text": "本单无耗材扣减记录"
+ },
+ {
+  "key": "appointments.materialsTitle",
+  "domain": "appointments",
+  "text": "耗材使用"
+ },
+ {
+  "key": "appointments.medicalAuthLabel",
+  "domain": "appointments",
+  "text": "医疗授权"
+ },
+ {
+  "key": "appointments.medicalAuthSigned",
+  "domain": "appointments",
+  "text": "已签署（{version}）"
+ },
+ {
   "key": "appointments.notFound",
   "domain": "appointments",
   "text": "预约不存在或无权查看"
+ },
+ {
+  "key": "appointments.prepaidDeducted",
+  "domain": "appointments",
+  "text": "已核销抵扣"
+ },
+ {
+  "key": "appointments.prepaidLabel",
+  "domain": "appointments",
+  "text": "预付台账"
+ },
+ {
+  "key": "appointments.prepaidPending",
+  "domain": "appointments",
+  "text": "预付登记中"
+ },
+ {
+  "key": "appointments.prepaidRefunded",
+  "domain": "appointments",
+  "text": "已退还"
+ },
+ {
+  "key": "appointments.prepaidRegistered",
+  "domain": "appointments",
+  "text": "已预付"
  },
  {
   "key": "appointments.rebook",
@@ -1185,9 +1385,24 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "改期"
  },
  {
+  "key": "appointments.rescheduleHistory",
+  "domain": "appointments",
+  "text": "改约历史"
+ },
+ {
   "key": "appointments.rescheduleNote",
   "domain": "appointments",
   "text": "{service} · {pet}（改期后需商家重新确认）"
+ },
+ {
+  "key": "appointments.rescheduleRoleCustomer",
+  "domain": "appointments",
+  "text": "客户自助"
+ },
+ {
+  "key": "appointments.rescheduleRoleMerchant",
+  "domain": "appointments",
+  "text": "门店改期"
  },
  {
   "key": "appointments.rescheduleSubmit",
@@ -1203,6 +1418,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "appointments.rescheduleTitleGrooming",
   "domain": "appointments",
   "text": "选择新时间"
+ },
+ {
+  "key": "appointments.roomPending",
+  "domain": "appointments",
+  "text": "待分配"
  },
  {
   "key": "appointments.servingCall",
@@ -1230,6 +1450,26 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "正在加载可约时段…"
  },
  {
+  "key": "appointments.stepDoing",
+  "domain": "appointments",
+  "text": "进行中"
+ },
+ {
+  "key": "appointments.stepDone",
+  "domain": "appointments",
+  "text": "已完成"
+ },
+ {
+  "key": "appointments.stepDuration",
+  "domain": "appointments",
+  "text": "{min} 分钟"
+ },
+ {
+  "key": "appointments.stepPending",
+  "domain": "appointments",
+  "text": "待开始"
+ },
+ {
   "key": "appointments.tabEmpty",
   "domain": "appointments",
   "text": "暂无{status}的预约"
@@ -1245,9 +1485,39 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "我的预约"
  },
  {
+  "key": "appointments.unsealToast",
+  "domain": "appointments",
+  "text": "{pet}的用品「{item}」已拆封使用"
+ },
+ {
+  "key": "appointments.walkTimes",
+  "domain": "appointments",
+  "text": "每日遛弯 {n} 次"
+ },
+ {
   "key": "booking.addCalendar",
   "domain": "booking",
   "text": "添加到日历"
+ },
+ {
+  "key": "booking.addonPriceNote",
+  "domain": "booking",
+  "text": "合计含附加项，最终金额以门店结算为准"
+ },
+ {
+  "key": "booking.addonSummary",
+  "domain": "booking",
+  "text": "已选 {count} 项"
+ },
+ {
+  "key": "booking.addonSummaryNone",
+  "domain": "booking",
+  "text": "选加附加项"
+ },
+ {
+  "key": "booking.addonTitle",
+  "domain": "booking",
+  "text": "附加项（选加）"
  },
  {
   "key": "booking.backHome",
@@ -1305,6 +1575,41 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "到店核销码"
  },
  {
+  "key": "booking.ecIncomplete",
+  "domain": "booking",
+  "text": "请补全紧急联系人信息"
+ },
+ {
+  "key": "booking.ecNamePh",
+  "domain": "booking",
+  "text": "联系人姓名"
+ },
+ {
+  "key": "booking.ecPhoneInvalid",
+  "domain": "booking",
+  "text": "请输入 11 位手机号"
+ },
+ {
+  "key": "booking.ecPhonePh",
+  "domain": "booking",
+  "text": "11 位手机号"
+ },
+ {
+  "key": "booking.ecRelationPh",
+  "domain": "booking",
+  "text": "关系，如：家人"
+ },
+ {
+  "key": "booking.emergencyTitle",
+  "domain": "booking",
+  "text": "紧急联系人（建议填写）"
+ },
+ {
+  "key": "booking.fullSlotFallback",
+  "domain": "booking",
+  "text": "当日已约满，可改选其他日期或门店"
+ },
+ {
   "key": "booking.groomingTitle",
   "domain": "booking",
   "text": "预约洗护"
@@ -1313,6 +1618,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "booking.missingParam",
   "domain": "booking",
   "text": "缺少预约参数"
+ },
+ {
+  "key": "booking.needBoardingConsent",
+  "domain": "booking",
+  "text": "请阅读并勾选寄养协议"
+ },
+ {
+  "key": "booking.needMedicalAuth",
+  "domain": "booking",
+  "text": "请阅读并勾选医疗授权"
  },
  {
   "key": "booking.needPet",
@@ -1405,6 +1720,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "房型加载失败，请检查网络"
  },
  {
+  "key": "booking.signedBadge",
+  "domain": "booking",
+  "text": "已签署"
+ },
+ {
+  "key": "booking.signPendingNote",
+  "domain": "booking",
+  "text": "本单尚未完成签署，请到店补签"
+ },
+ {
   "key": "booking.staffAny",
   "domain": "booking",
   "text": "随缘派单"
@@ -1430,6 +1755,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "指定洗护师会写在预约备注里传达给门店"
  },
  {
+  "key": "booking.storeCountNote",
+  "domain": "booking",
+  "text": "当前仅 {count} 家门店可约，通用范围以门店列表为准"
+ },
+ {
   "key": "booking.storeLinePost",
   "domain": "booking",
   "text": "（可在下一步更换）"
@@ -1438,6 +1768,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "booking.storeLinePre",
   "domain": "booking",
   "text": "寄养门店："
+ },
+ {
+  "key": "booking.successSignEntry",
+  "domain": "booking",
+  "text": "寄养协议与医疗授权"
+ },
+ {
+  "key": "booking.successSignView",
+  "domain": "booking",
+  "text": "查看全文 ›"
  },
  {
   "key": "booking.successSub",
@@ -1493,6 +1833,136 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "booking.viewAppointments",
   "domain": "booking",
   "text": "查看我的预约"
+ },
+ {
+  "key": "booking.walkTimesLabel",
+  "domain": "booking",
+  "text": "每日遛弯次数（选填）"
+ },
+ {
+  "key": "booking.walkTimesPh",
+  "domain": "booking",
+  "text": "如：2"
+ },
+ {
+  "key": "cpn.centerEmpty",
+  "domain": "coupons",
+  "text": "暂时没有可领的券"
+ },
+ {
+  "key": "cpn.centerTitle",
+  "domain": "coupons",
+  "text": "领用中心"
+ },
+ {
+  "key": "cpn.claimCta",
+  "domain": "coupons",
+  "text": "领取"
+ },
+ {
+  "key": "cpn.claimedAt",
+  "domain": "coupons",
+  "text": "领取 {time}"
+ },
+ {
+  "key": "cpn.claimedCta",
+  "domain": "coupons",
+  "text": "已领取"
+ },
+ {
+  "key": "cpn.claimFail",
+  "domain": "coupons",
+  "text": "领取失败，请稍后再试"
+ },
+ {
+  "key": "cpn.claimToast",
+  "domain": "coupons",
+  "text": "已领取，结算时出示登记抵扣"
+ },
+ {
+  "key": "cpn.loadFail",
+  "domain": "coupons",
+  "text": "券加载失败，请稍后重试"
+ },
+ {
+  "key": "cpn.mineEmpty",
+  "domain": "coupons",
+  "text": "还没有券，去领用中心看看"
+ },
+ {
+  "key": "cpn.mineTitle",
+  "domain": "coupons",
+  "text": "我的券"
+ },
+ {
+  "key": "cpn.pushLabel",
+  "domain": "coupons",
+  "text": "COUPONS"
+ },
+ {
+  "key": "cpn.soldOutCta",
+  "domain": "coupons",
+  "text": "已领完"
+ },
+ {
+  "key": "cpn.stackTitle",
+  "domain": "coupons",
+  "text": "叠加规则公示"
+ },
+ {
+  "key": "cpn.statusClaimed",
+  "domain": "coupons",
+  "text": "待使用"
+ },
+ {
+  "key": "cpn.statusExpired",
+  "domain": "coupons",
+  "text": "已过期"
+ },
+ {
+  "key": "cpn.statusUsed",
+  "domain": "coupons",
+  "text": "已核销"
+ },
+ {
+  "key": "cpn.statusVoided",
+  "domain": "coupons",
+  "text": "已作废"
+ },
+ {
+  "key": "cpn.tabMine",
+  "domain": "coupons",
+  "text": "优惠券"
+ },
+ {
+  "key": "cpn.threshold",
+  "domain": "coupons",
+  "text": "满 {amt} 可用"
+ },
+ {
+  "key": "cpn.thresholdNone",
+  "domain": "coupons",
+  "text": "无门槛"
+ },
+ {
+  "key": "cpn.title",
+  "domain": "coupons",
+  "text": "优惠券"
+ },
+ {
+  "key": "cpn.usedAt",
+  "domain": "coupons",
+  "text": "核销 {time}"
+ },
+ {
+  "key": "cpn.useNote",
+  "domain": "coupons",
+  "text": "核销=登记抵扣，线下结算时出示"
+ },
+ {
+  "key": "cpn.validDays",
+  "domain": "coupons",
+  "text": "领取后 {days} 天有效"
  },
  {
   "key": "devlogin.devOnly",
@@ -1583,6 +2053,236 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "devlogin.wechatNote",
   "domain": "devlogin",
   "text": "微信授权登录属小程序/资质批，PWA 端暂以手机号+种子账号入内测"
+ },
+ {
+  "key": "fav.addToast",
+  "domain": "favorites",
+  "text": "已加入心愿单"
+ },
+ {
+  "key": "fav.emptyBody",
+  "domain": "favorites",
+  "text": "看中的好物点右上角小心心，会在这里等你"
+ },
+ {
+  "key": "fav.emptyCta",
+  "domain": "favorites",
+  "text": "去商城逛逛 ›"
+ },
+ {
+  "key": "fav.emptyTitle",
+  "domain": "favorites",
+  "text": "心愿单还空着呢"
+ },
+ {
+  "key": "fav.loadFail",
+  "domain": "favorites",
+  "text": "心愿单加载失败，请稍后重试"
+ },
+ {
+  "key": "fav.mallEntry",
+  "domain": "favorites",
+  "text": "心愿单"
+ },
+ {
+  "key": "fav.pdpAdd",
+  "domain": "favorites",
+  "text": "加入心愿单"
+ },
+ {
+  "key": "fav.pdpAdded",
+  "domain": "favorites",
+  "text": "已收藏"
+ },
+ {
+  "key": "fav.removeToast",
+  "domain": "favorites",
+  "text": "已移出心愿单"
+ },
+ {
+  "key": "fav.title",
+  "domain": "favorites",
+  "text": "心愿单"
+ },
+ {
+  "key": "fav.toggleFail",
+  "domain": "favorites",
+  "text": "操作失败，请稍后再试"
+ },
+ {
+  "key": "health.dueExpired",
+  "domain": "health",
+  "text": "已过期 {date}"
+ },
+ {
+  "key": "health.dueOk",
+  "domain": "health",
+  "text": "下次到期 {date}"
+ },
+ {
+  "key": "health.dueSoon",
+  "domain": "health",
+  "text": "下次到期 {date} · {days} 天后"
+ },
+ {
+  "key": "health.loadFail",
+  "domain": "health",
+  "text": "健康档案加载失败"
+ },
+ {
+  "key": "health.recordAddTitle",
+  "domain": "health",
+  "text": "记一笔"
+ },
+ {
+  "key": "health.recordDateLabel",
+  "domain": "health",
+  "text": "发生日期"
+ },
+ {
+  "key": "health.recordDelete",
+  "domain": "health",
+  "text": "删除"
+ },
+ {
+  "key": "health.recordDeleteConfirm",
+  "domain": "health",
+  "text": "再点一次确认删除"
+ },
+ {
+  "key": "health.recordDeleted",
+  "domain": "health",
+  "text": "记录已删除"
+ },
+ {
+  "key": "health.recordNextDueLabel",
+  "domain": "health",
+  "text": "下次到期日（可选）"
+ },
+ {
+  "key": "health.recordNoteLabel",
+  "domain": "health",
+  "text": "备注（可选）"
+ },
+ {
+  "key": "health.recordNotePlaceholder",
+  "domain": "health",
+  "text": "如：宠物医院名称 / 剂量"
+ },
+ {
+  "key": "health.recordsTabEmpty",
+  "domain": "health",
+  "text": "暂无{type}记录"
+ },
+ {
+  "key": "health.recordsTitle",
+  "domain": "health",
+  "text": "健康记录"
+ },
+ {
+  "key": "health.recordSubmit",
+  "domain": "health",
+  "text": "保存记录"
+ },
+ {
+  "key": "health.recordTitleLabel",
+  "domain": "health",
+  "text": "标题"
+ },
+ {
+  "key": "health.recordTitlePlaceholder",
+  "domain": "health",
+  "text": "如：狂犬疫苗第三针"
+ },
+ {
+  "key": "health.recordTypeLabel",
+  "domain": "health",
+  "text": "类型"
+ },
+ {
+  "key": "health.saveFail",
+  "domain": "health",
+  "text": "保存失败，请稍后重试"
+ },
+ {
+  "key": "health.saving",
+  "domain": "health",
+  "text": "保存中…"
+ },
+ {
+  "key": "health.tabDeworm",
+  "domain": "health",
+  "text": "驱虫"
+ },
+ {
+  "key": "health.tabMedication",
+  "domain": "health",
+  "text": "用药"
+ },
+ {
+  "key": "health.tabVaccine",
+  "domain": "health",
+  "text": "疫苗"
+ },
+ {
+  "key": "health.tabVetVisit",
+  "domain": "health",
+  "text": "就医"
+ },
+ {
+  "key": "health.title",
+  "domain": "health",
+  "text": "健康档案"
+ },
+ {
+  "key": "health.weightAddTitle",
+  "domain": "health",
+  "text": "记体重"
+ },
+ {
+  "key": "health.weightDateLabel",
+  "domain": "health",
+  "text": "称重日期"
+ },
+ {
+  "key": "health.weightEmptyBody",
+  "domain": "health",
+  "text": "定期称重，掌握 TA 的健康变化"
+ },
+ {
+  "key": "health.weightEmptyTitle",
+  "domain": "health",
+  "text": "还没有体重记录"
+ },
+ {
+  "key": "health.weightKgLabel",
+  "domain": "health",
+  "text": "体重（kg）"
+ },
+ {
+  "key": "health.weightKgPlaceholder",
+  "domain": "health",
+  "text": "如：4.5"
+ },
+ {
+  "key": "health.weightNoteLabel",
+  "domain": "health",
+  "text": "备注（可选）"
+ },
+ {
+  "key": "health.weightSubmit",
+  "domain": "health",
+  "text": "保存体重"
+ },
+ {
+  "key": "health.weightTrend",
+  "domain": "health",
+  "text": "体重趋势"
+ },
+ {
+  "key": "health.weightUnit",
+  "domain": "health",
+  "text": "kg"
  },
  {
   "key": "home.casesMore",
@@ -1703,6 +2403,26 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "home.preprowTitle",
   "domain": "home",
   "text": "消毒备台 · 一客一消"
+ },
+ {
+  "key": "home.pwaInstallAction",
+  "domain": "home",
+  "text": "安装"
+ },
+ {
+  "key": "home.pwaInstallDismiss",
+  "domain": "home",
+  "text": "暂不"
+ },
+ {
+  "key": "home.pwaInstallIosGuide",
+  "domain": "home",
+  "text": "用 Safari 分享 → 添加到主屏幕"
+ },
+ {
+  "key": "home.pwaInstallTitle",
+  "domain": "home",
+  "text": "把菲丽亚装到主屏"
  },
  {
   "key": "home.rebateBalanceLine",
@@ -1920,6 +2640,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "个人"
  },
  {
+  "key": "mall.addrOptionalNote",
+  "domain": "mall",
+  "text": "自提 / 同城可暂不填收货地址，到店报手机号即可"
+ },
+ {
   "key": "mall.backHome",
   "domain": "mall",
   "text": "返回首页"
@@ -2008,6 +2733,56 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "mall.conflictTitle",
   "domain": "mall",
   "text": "购物车仅限同一门店商品"
+ },
+ {
+  "key": "mall.couponOff",
+  "domain": "mall",
+  "text": "减 {amt}"
+ },
+ {
+  "key": "mall.couponPick",
+  "domain": "mall",
+  "text": "选用"
+ },
+ {
+  "key": "mall.couponPicked",
+  "domain": "mall",
+  "text": "已选 · 登记抵扣"
+ },
+ {
+  "key": "mall.couponTitle",
+  "domain": "mall",
+  "text": "可用券"
+ },
+ {
+  "key": "mall.couponUseNote",
+  "domain": "mall",
+  "text": "核销=登记抵扣，线下结算时出示"
+ },
+ {
+  "key": "mall.deliveryExpress",
+  "domain": "mall",
+  "text": "快递"
+ },
+ {
+  "key": "mall.deliveryFreeNote",
+  "domain": "mall",
+  "text": "内测期免运费"
+ },
+ {
+  "key": "mall.deliveryMethod",
+  "domain": "mall",
+  "text": "配送方式"
+ },
+ {
+  "key": "mall.deliveryPickup",
+  "domain": "mall",
+  "text": "自提"
+ },
+ {
+  "key": "mall.deliverySameCity",
+  "domain": "mall",
+  "text": "同城"
  },
  {
   "key": "mall.deliverySub",
@@ -2203,6 +2978,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "mall.submitOrder",
   "domain": "mall",
   "text": "提交订单"
+ },
+ {
+  "key": "mall.trackingNote",
+  "domain": "mall",
+  "text": "轨迹以快递公司为准"
  },
  {
   "key": "mall.viewOrders",
@@ -2830,6 +3610,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "{zhe} 折"
  },
  {
+  "key": "perk.grantedAt",
+  "domain": "member",
+  "text": "发放 {time}"
+ },
+ {
   "key": "perk.groomer",
   "domain": "member",
   "text": "专属洗护师"
@@ -2838,6 +3623,51 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "perk.groomerSub",
   "domain": "member",
   "text": "点名安排"
+ },
+ {
+  "key": "perk.kindBirthdayOwner",
+  "domain": "member",
+  "text": "生日礼 · 主人"
+ },
+ {
+  "key": "perk.kindBirthdayPet",
+  "domain": "member",
+  "text": "生日礼 · 宠物"
+ },
+ {
+  "key": "perk.kindCarePack",
+  "domain": "member",
+  "text": "安心包"
+ },
+ {
+  "key": "perk.kindFallback",
+  "domain": "member",
+  "text": "权益"
+ },
+ {
+  "key": "perk.kindNewbie",
+  "domain": "member",
+  "text": "新人礼包"
+ },
+ {
+  "key": "perk.kindServiceDiscount",
+  "domain": "member",
+  "text": "服务折扣次数"
+ },
+ {
+  "key": "perk.kindUpgrade",
+  "domain": "member",
+  "text": "升级礼遇"
+ },
+ {
+  "key": "perk.ledgerNote",
+  "domain": "member",
+  "text": "权益台账=资格留痕，发放候资质批"
+ },
+ {
+  "key": "perk.passTimesLine",
+  "domain": "member",
+  "text": "次卡剩余 {n} 次"
  },
  {
   "key": "perk.pets",
@@ -2865,6 +3695,16 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "{pct}%"
  },
  {
+  "key": "perk.remainLine",
+  "domain": "member",
+  "text": "剩余 {remain} / 共 {total} 次"
+ },
+ {
+  "key": "perk.renewOff",
+  "domain": "member",
+  "text": "续费 {zhe} 折 · 折后 ¥{amount}"
+ },
+ {
   "key": "perk.skin",
   "domain": "member",
   "text": "皮毛检测"
@@ -2873,6 +3713,21 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "perk.skinSub",
   "domain": "member",
   "text": "每季一次"
+ },
+ {
+  "key": "perk.unusedEmpty",
+  "domain": "member",
+  "text": "暂无未用权益"
+ },
+ {
+  "key": "perk.unusedTitle",
+  "domain": "member",
+  "text": "未用权益"
+ },
+ {
+  "key": "perk.usedUp",
+  "domain": "member",
+  "text": "已用完"
  },
  {
   "key": "q1.codeFooter",
@@ -2948,6 +3803,26 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "q1.refreshNote",
   "domain": "member",
   "text": "{mm}:{ss} 后自动刷新"
+ },
+ {
+  "key": "q1.tokenFail",
+  "domain": "member",
+  "text": "会员码加载失败"
+ },
+ {
+  "key": "q1.tokenRetry",
+  "domain": "member",
+  "text": "重试"
+ },
+ {
+  "key": "q1.tokenTitle",
+  "domain": "member",
+  "text": "会员码"
+ },
+ {
+  "key": "q1.verifyNote",
+  "domain": "member",
+  "text": "核验走收银台 · 店员扫录或核对码文本"
  },
  {
   "key": "rules.r1",
@@ -6155,6 +7030,141 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "员工上传过程照后会实时出现在这里。"
  },
  {
+  "key": "ops.appeal.afterLabel",
+  "domain": "merchant:ops",
+  "text": "纠错后取值"
+ },
+ {
+  "key": "ops.appeal.afterPh",
+  "domain": "merchant:ops",
+  "text": "如：差评归属更正 / 更正后 79"
+ },
+ {
+  "key": "ops.appeal.approveCta",
+  "domain": "merchant:ops",
+  "text": "通过（纠错）"
+ },
+ {
+  "key": "ops.appeal.approveDone",
+  "domain": "merchant:ops",
+  "text": "申诉已通过，纠错留痕已登记"
+ },
+ {
+  "key": "ops.appeal.approveNotePh",
+  "domain": "merchant:ops",
+  "text": "复核意见（可选）"
+ },
+ {
+  "key": "ops.appeal.approveTitle",
+  "domain": "merchant:ops",
+  "text": "通过申诉 · 纠错留痕"
+ },
+ {
+  "key": "ops.appeal.aside",
+  "domain": "merchant:ops",
+  "text": "差评归属/报表指标异议；通过必留纠错前后值"
+ },
+ {
+  "key": "ops.appeal.beforeLabel",
+  "domain": "merchant:ops",
+  "text": "纠错前取值"
+ },
+ {
+  "key": "ops.appeal.beforePh",
+  "domain": "merchant:ops",
+  "text": "如：差评误挂到该员工 / 指标原值 82"
+ },
+ {
+  "key": "ops.appeal.correctionLabel",
+  "domain": "merchant:ops",
+  "text": "纠错留痕"
+ },
+ {
+  "key": "ops.appeal.correctionNotePh",
+  "domain": "merchant:ops",
+  "text": "纠错说明（可选）"
+ },
+ {
+  "key": "ops.appeal.correctionRequired",
+  "domain": "merchant:ops",
+  "text": "通过必须填写纠错前后值——兜底留痕铁规"
+ },
+ {
+  "key": "ops.appeal.empty",
+  "domain": "merchant:ops",
+  "text": "暂无待复核申诉"
+ },
+ {
+  "key": "ops.appeal.reasonLabel",
+  "domain": "merchant:ops",
+  "text": "申诉理由"
+ },
+ {
+  "key": "ops.appeal.rejectCta",
+  "domain": "merchant:ops",
+  "text": "驳回"
+ },
+ {
+  "key": "ops.appeal.rejectDone",
+  "domain": "merchant:ops",
+  "text": "申诉已驳回"
+ },
+ {
+  "key": "ops.appeal.rejectNotePh",
+  "domain": "merchant:ops",
+  "text": "复核意见（必填，随单留痕）"
+ },
+ {
+  "key": "ops.appeal.rejectNoteRequired",
+  "domain": "merchant:ops",
+  "text": "驳回必须填写复核意见"
+ },
+ {
+  "key": "ops.appeal.rejectTitle",
+  "domain": "merchant:ops",
+  "text": "驳回申诉"
+ },
+ {
+  "key": "ops.appeal.reviewedAtLabel",
+  "domain": "merchant:ops",
+  "text": "复核时间"
+ },
+ {
+  "key": "ops.appeal.reviewedTitle",
+  "domain": "merchant:ops",
+  "text": "已复核（近 50 条）"
+ },
+ {
+  "key": "ops.appeal.reviewNoteLabel",
+  "domain": "merchant:ops",
+  "text": "复核意见"
+ },
+ {
+  "key": "ops.appeal.statusApproved",
+  "domain": "merchant:ops",
+  "text": "已通过"
+ },
+ {
+  "key": "ops.appeal.statusRejected",
+  "domain": "merchant:ops",
+  "text": "已驳回"
+ },
+ {
+  "key": "ops.appeal.targetMetric",
+  "domain": "merchant:ops",
+  "text": "报表指标"
+ },
+ {
+  "key": "ops.appeal.targetReview",
+  "domain": "merchant:ops",
+  "text": "差评归属"
+ },
+ {
+  "key": "ops.appeal.title",
+  "domain": "merchant:ops",
+  "text": "指标申诉复核"
+ },
+ {
   "key": "ops.common.cancel",
   "domain": "merchant:ops",
   "text": "取消"
@@ -6422,12 +7432,12 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
  {
   "key": "order.rebateCol",
   "domain": "merchant:orders",
-  "text": "回馈金"
+  "text": "回馈金抵扣"
  },
  {
   "key": "order.rebatePendingNote",
   "domain": "merchant:orders",
-  "text": "回馈金列读口待补——订单域未透出回馈金字段，待 server 开口；回馈金仅抵商品"
+  "text": "回馈金抵扣（真值；商城结算当前无抵扣通道=恒 0 是诚实现状）——回馈金仅抵商品"
  },
  {
   "key": "order.sub",
@@ -7070,14 +8080,59 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "＋ 新增商品"
  },
  {
+  "key": "prod.csvAllOk",
+  "domain": "merchant:products",
+  "text": "全部合法，可确认导入"
+ },
+ {
+  "key": "prod.csvClose",
+  "domain": "merchant:products",
+  "text": "收起"
+ },
+ {
   "key": "prod.csvCta",
   "domain": "merchant:products",
   "text": "CSV 导入"
  },
  {
-  "key": "prod.csvPendingNote",
+  "key": "prod.csvDone",
   "domain": "merchant:products",
-  "text": "待供给——CSV 导入端口未开口，留位不画假件"
+  "text": "导入成功 {n} 行"
+ },
+ {
+  "key": "prod.csvExecuteCta",
+  "domain": "merchant:products",
+  "text": "确认导入"
+ },
+ {
+  "key": "prod.csvFileCta",
+  "domain": "merchant:products",
+  "text": "选择 CSV 文件"
+ },
+ {
+  "key": "prod.csvImportTitle",
+  "domain": "merchant:products",
+  "text": "CSV 批量导入"
+ },
+ {
+  "key": "prod.csvNoFile",
+  "domain": "merchant:products",
+  "text": "请先选择 CSV 文件"
+ },
+ {
+  "key": "prod.csvPreviewCta",
+  "domain": "merchant:products",
+  "text": "预览校验"
+ },
+ {
+  "key": "prod.csvSummary",
+  "domain": "merchant:products",
+  "text": "共 {t} 行 · 可导入 {ok} · 失败 {f}"
+ },
+ {
+  "key": "prod.csvTemplateCta",
+  "domain": "merchant:products",
+  "text": "下载模板"
  },
  {
   "key": "prod.dailyCountCol",
@@ -7115,64 +8170,439 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "商品"
  },
  {
+  "key": "rpt.d1.amortCard",
+  "domain": "merchant:report",
+  "text": "分摊口径 ②"
+ },
+ {
+  "key": "rpt.d1.amortSub",
+  "domain": "merchant:report",
+  "text": "服务+商品+年费按 12 月分摊（防收钱当月虚胖）"
+ },
+ {
+  "key": "rpt.d1.byDayTitle",
+  "domain": "merchant:report",
+  "text": "逐日营收"
+ },
+ {
+  "key": "rpt.d1.cashCard",
+  "domain": "merchant:report",
+  "text": "收现口径 ①"
+ },
+ {
+  "key": "rpt.d1.cashSub",
+  "domain": "merchant:report",
+  "text": "服务+商品+年费收现"
+ },
+ {
+  "key": "rpt.d1.guestLabel",
+  "domain": "merchant:report",
+  "text": "散客"
+ },
+ {
+  "key": "rpt.d1.memberLabel",
+  "domain": "merchant:report",
+  "text": "会员"
+ },
+ {
+  "key": "rpt.d1.memberShareTitle",
+  "domain": "merchant:report",
+  "text": "会员 vs 散客消费占比"
+ },
+ {
+  "key": "rpt.d1.momLabel",
+  "domain": "merchant:report",
+  "text": "环比"
+ },
+ {
+  "key": "rpt.d1.noBase",
+  "domain": "merchant:report",
+  "text": "无基数"
+ },
+ {
+  "key": "rpt.d1.nonCashNote",
+  "domain": "merchant:report",
+  "text": "非现金单列（不计已收）：次卡 {pass} · 储值 {sv} · 回馈金 {rb}"
+ },
+ {
+  "key": "rpt.d1.yoyLabel",
+  "domain": "merchant:report",
+  "text": "同比"
+ },
+ {
+  "key": "rpt.d2.attachCard",
+  "domain": "merchant:report",
+  "text": "附加项目搭售率"
+ },
+ {
+  "key": "rpt.d2.attachSub",
+  "domain": "merchant:report",
+  "text": "搭售 {n}/{t} 单 · 附加金额 {amt}"
+ },
+ {
+  "key": "rpt.d2.tableTitle",
+  "domain": "merchant:report",
+  "text": "按服务项构成"
+ },
+ {
+  "key": "rpt.d3.active90Card",
+  "domain": "merchant:report",
+  "text": "90 天活跃率"
+ },
+ {
+  "key": "rpt.d3.active90Sub",
+  "domain": "merchant:report",
+  "text": "{n}/{t} 人 90 天内有交易"
+ },
+ {
+  "key": "rpt.d3.activeCard",
+  "domain": "merchant:report",
+  "text": "存量活跃会员"
+ },
+ {
+  "key": "rpt.d3.byPlanTitle",
+  "domain": "merchant:report",
+  "text": "本月新增按档分布"
+ },
+ {
+  "key": "rpt.d3.newCard",
+  "domain": "merchant:report",
+  "text": "本月新增会员"
+ },
+ {
+  "key": "rpt.d4.deductedCard",
+  "domain": "merchant:report",
+  "text": "本月扣次"
+ },
+ {
+  "key": "rpt.d4.grantedCard",
+  "domain": "merchant:report",
+  "text": "本月售卡充次"
+ },
+ {
+  "key": "rpt.d4.remainCard",
+  "domain": "merchant:report",
+  "text": "剩余次数负债"
+ },
+ {
+  "key": "rpt.d4.stockSub",
+  "domain": "merchant:report",
+  "text": "在册 {n} 张 · 总 {t} 次"
+ },
+ {
+  "key": "rpt.d4.trendTitle",
+  "domain": "merchant:report",
+  "text": "近 6 月扣次趋势"
+ },
+ {
+  "key": "rpt.d5.consumeCard",
+  "domain": "merchant:report",
+  "text": "本月消耗"
+ },
+ {
+  "key": "rpt.d5.liabilityCard",
+  "domain": "merchant:report",
+  "text": "期末储值负债"
+ },
+ {
+  "key": "rpt.d5.prepaidRow",
+  "domain": "merchant:report",
+  "text": "预收负债总额（储值 ¥{sv} + 回馈金 ¥{rb}）"
+ },
+ {
+  "key": "rpt.d5.rechargeCard",
+  "domain": "merchant:report",
+  "text": "本月充值"
+ },
+ {
+  "key": "rpt.d6.amountCard",
+  "domain": "merchant:report",
+  "text": "退款金额"
+ },
+ {
+  "key": "rpt.d6.byTypeTitle",
+  "domain": "merchant:report",
+  "text": "类型分布"
+ },
+ {
+  "key": "rpt.d6.countCard",
+  "domain": "merchant:report",
+  "text": "退款笔数（已执行+已实退）"
+ },
+ {
+  "key": "rpt.d6.linkedBad",
+  "domain": "merchant:report",
+  "text": "退款关联差评 {n} 件"
+ },
+ {
+  "key": "rpt.d6.reasonTitle",
+  "domain": "merchant:report",
+  "text": "申请原因聚类"
+ },
+ {
+  "key": "rpt.d6.rejectCard",
+  "domain": "merchant:report",
+  "text": "申请驳回率"
+ },
+ {
+  "key": "rpt.d6.rejectSub",
+  "domain": "merchant:report",
+  "text": "{r}/{t} 件被驳回"
+ },
+ {
+  "key": "rpt.d6.spikeNa",
+  "domain": "merchant:report",
+  "text": "上月无退款基数，环比不出数"
+ },
+ {
+  "key": "rpt.d6.spikeOk",
+  "domain": "merchant:report",
+  "text": "退款金额环比 {pct}（预警阈值 {th}）"
+ },
+ {
+  "key": "rpt.d6.spikeWarn",
+  "domain": "merchant:report",
+  "text": "退款金额环比 {pct}，超预警阈值（{th}）——请核查异常"
+ },
+ {
+  "key": "rpt.d7.tableTitle",
+  "domain": "merchant:report",
+  "text": "员工 × 绩效交叉"
+ },
+ {
+  "key": "rpt.d8.attachCard",
+  "domain": "merchant:report",
+  "text": "增值服务搭售率"
+ },
+ {
+  "key": "rpt.d8.nightsCard",
+  "domain": "merchant:report",
+  "text": "宠物夜数"
+ },
+ {
+  "key": "rpt.d8.occCard",
+  "domain": "merchant:report",
+  "text": "入住率"
+ },
+ {
+  "key": "rpt.d8.occSub",
+  "domain": "merchant:report",
+  "text": "{pets} 宠物夜 / 容量 {cap} 晚"
+ },
+ {
+  "key": "rpt.d8.overdueCard",
+  "domain": "merchant:report",
+  "text": "超期单数"
+ },
+ {
+  "key": "rpt.d8.perNightCard",
+  "domain": "merchant:report",
+  "text": "每宠物夜营收"
+ },
+ {
+  "key": "rpt.d9.byProductTitle",
+  "domain": "merchant:report",
+  "text": "按商品明细"
+ },
+ {
+  "key": "rpt.d9.ordersSub",
+  "domain": "merchant:report",
+  "text": "成交 {n} 单"
+ },
+ {
+  "key": "rpt.d9.salesCard",
+  "domain": "merchant:report",
+  "text": "销售额"
+ },
+ {
+  "key": "rpt.d9.sellThroughCard",
+  "domain": "merchant:report",
+  "text": "动销率"
+ },
+ {
+  "key": "rpt.d9.turnoverCard",
+  "domain": "merchant:report",
+  "text": "周转天数"
+ },
+ {
+  "key": "rpt.d9.unitsCard",
+  "domain": "merchant:report",
+  "text": "销量（件）"
+ },
+ {
+  "key": "rpt.dirAside",
+  "domain": "merchant:report",
+  "text": "17 张已点亮 · 导出 CSV 仅店主"
+ },
+ {
   "key": "rpt.dirD1",
   "domain": "merchant:report",
-  "text": "D1"
+  "text": "D1 营收双口径"
  },
  {
   "key": "rpt.dirD2",
   "domain": "merchant:report",
-  "text": "D2"
+  "text": "D2 服务营收构成"
  },
  {
   "key": "rpt.dirD3",
   "domain": "merchant:report",
-  "text": "D3"
+  "text": "D3 会员增长"
  },
  {
   "key": "rpt.dirD4",
   "domain": "merchant:report",
-  "text": "D4"
+  "text": "D4 次卡台账"
  },
  {
   "key": "rpt.dirD5",
   "domain": "merchant:report",
-  "text": "D5"
+  "text": "D5 储值台账"
  },
  {
   "key": "rpt.dirD6",
   "domain": "merchant:report",
-  "text": "D6"
+  "text": "D6 退款售后"
  },
  {
   "key": "rpt.dirD7",
   "domain": "merchant:report",
-  "text": "D7"
+  "text": "D7 员工绩效"
  },
  {
   "key": "rpt.dirD8",
   "domain": "merchant:report",
-  "text": "D8"
+  "text": "D8 寄养经营"
  },
  {
   "key": "rpt.dirD9",
   "domain": "merchant:report",
-  "text": "D9"
+  "text": "D9 商品销售周转"
+ },
+ {
+  "key": "rpt.dirEmbedBadge",
+  "domain": "merchant:report",
+  "text": "埋点预埋中"
+ },
+ {
+  "key": "rpt.dirN1",
+  "domain": "merchant:report",
+  "text": "N1 等级分布与升级"
+ },
+ {
+  "key": "rpt.dirN2",
+  "domain": "merchant:report",
+  "text": "N2 续费与回本"
+ },
+ {
+  "key": "rpt.dirN3",
+  "domain": "merchant:report",
+  "text": "N3 回馈金发行核销"
+ },
+ {
+  "key": "rpt.dirN4",
+  "domain": "merchant:report",
+  "text": "N4 评价分布与差评"
+ },
+ {
+  "key": "rpt.dirN5",
+  "domain": "merchant:report",
+  "text": "N5 交付合规与时效"
+ },
+ {
+  "key": "rpt.dirN6",
+  "domain": "merchant:report",
+  "text": "N6 员工×服务质量"
+ },
+ {
+  "key": "rpt.dirN7",
+  "domain": "merchant:report",
+  "text": "N7 内容曝光互动"
+ },
+ {
+  "key": "rpt.dirN8",
+  "domain": "merchant:report",
+  "text": "N8 种草预约归因"
  },
  {
   "key": "rpt.dirNote",
   "domain": "merchant:report",
-  "text": "D1–D9 报表口径/导出=开口项（18 号档 E4 🆕立项），全量置灰不画假件"
- },
- {
-  "key": "rpt.dirPending",
-  "domain": "merchant:report",
-  "text": "立项待供给"
+  "text": "D1–D9 / N1–N6 已点亮（月份口径；导出 CSV 仅店主）；N7/N8 埋点预埋中——瀑布流批出表"
  },
  {
   "key": "rpt.dirTitle",
   "domain": "merchant:report",
   "text": "报表目录"
+ },
+ {
+  "key": "rpt.embed.ev1",
+  "domain": "merchant:report",
+  "text": "case_impression 案例曝光"
+ },
+ {
+  "key": "rpt.embed.ev2",
+  "domain": "merchant:report",
+  "text": "case_detail_view 案例详情浏览"
+ },
+ {
+  "key": "rpt.embed.ev3",
+  "domain": "merchant:report",
+  "text": "case_dwell 案例停留时长"
+ },
+ {
+  "key": "rpt.embed.ev4",
+  "domain": "merchant:report",
+  "text": "case_read_finish 案例读完"
+ },
+ {
+  "key": "rpt.embed.ev5",
+  "domain": "merchant:report",
+  "text": "case_interact 案例互动"
+ },
+ {
+  "key": "rpt.embed.ev6",
+  "domain": "merchant:report",
+  "text": "book_same_impression 预约同款曝光"
+ },
+ {
+  "key": "rpt.embed.ev7",
+  "domain": "merchant:report",
+  "text": "book_same_click 预约同款点击"
+ },
+ {
+  "key": "rpt.embed.ev8",
+  "domain": "merchant:report",
+  "text": "booking_attributed 预约归因"
+ },
+ {
+  "key": "rpt.embed.ev9",
+  "domain": "merchant:report",
+  "text": "booking_verified 到店核销确认"
+ },
+ {
+  "key": "rpt.embed.eventsTitle",
+  "domain": "merchant:report",
+  "text": "九类预埋事件（名单写死）"
+ },
+ {
+  "key": "rpt.embed.intro",
+  "domain": "merchant:report",
+  "text": "本报表为埋点预埋项：埋点底座已落（content_events 九类事件写口+读数），出表排期=瀑布流批——本页先实证预埋有效性"
+ },
+ {
+  "key": "rpt.embed.outNote",
+  "domain": "merchant:report",
+  "text": "出表=瀑布流批（H 表 §方向三清单）；导出 CSV 不对预埋项开放（server 400 明文）"
+ },
+ {
+  "key": "rpt.embed.statsEmpty",
+  "domain": "merchant:report",
+  "text": "暂无事件落账——写口就绪，待客户端行为接入"
+ },
+ {
+  "key": "rpt.embed.statsTitle",
+  "domain": "merchant:report",
+  "text": "预埋有效性实证（本店事件计数）"
  },
  {
   "key": "rpt.ledgerAside",
@@ -7190,9 +8620,359 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "月结快照：每月封箱留存，历史封箱不回填"
  },
  {
-  "key": "rpt.quadPending",
+  "key": "rpt.n1.cohortTitle",
   "domain": "merchant:report",
-  "text": "读口待补"
+  "text": "入会月份 cohort（新增 → 至今仍活跃）"
+ },
+ {
+  "key": "rpt.n1.downgradeCard",
+  "domain": "merchant:report",
+  "text": "降级率"
+ },
+ {
+  "key": "rpt.n1.exitCard",
+  "domain": "merchant:report",
+  "text": "本月退出"
+ },
+ {
+  "key": "rpt.n1.newTitle",
+  "domain": "merchant:report",
+  "text": "本月新增按档"
+ },
+ {
+  "key": "rpt.n1.stockTitle",
+  "domain": "merchant:report",
+  "text": "四档存量（活跃会员）"
+ },
+ {
+  "key": "rpt.n1.upDownSub",
+  "domain": "merchant:report",
+  "text": "升级 {u} · 降级 {d}（分母=期初存量）"
+ },
+ {
+  "key": "rpt.n1.upgradeCard",
+  "domain": "merchant:report",
+  "text": "升级率"
+ },
+ {
+  "key": "rpt.n2.cohortTitle",
+  "domain": "merchant:report",
+  "text": "到期 cohort 续费率（近 6 月+本月）"
+ },
+ {
+  "key": "rpt.n2.paybackCard",
+  "domain": "merchant:report",
+  "text": "回本率（店级均值）"
+ },
+ {
+  "key": "rpt.n2.paybackDetailTitle",
+  "domain": "merchant:report",
+  "text": "逐员回本明细"
+ },
+ {
+  "key": "rpt.n2.paybackSub",
+  "domain": "merchant:report",
+  "text": "{n} 位活跃会员 · 年费 ¥{paid} · 实省 ¥{saved}"
+ },
+ {
+  "key": "rpt.n2.warnEmpty",
+  "domain": "merchant:report",
+  "text": "30 天内无到期会员"
+ },
+ {
+  "key": "rpt.n2.warnTitle",
+  "domain": "merchant:report",
+  "text": "到期预警名单（30 天内）"
+ },
+ {
+  "key": "rpt.n3.closingCard",
+  "domain": "merchant:report",
+  "text": "期末回馈金负债"
+ },
+ {
+  "key": "rpt.n3.redeemCard",
+  "domain": "merchant:report",
+  "text": "核销率"
+ },
+ {
+  "key": "rpt.n3.redeemSub",
+  "domain": "merchant:report",
+  "text": "基准 20-35% · 累计发行 ¥{g} · 核销 ¥{d}"
+ },
+ {
+  "key": "rpt.n3.rollNote",
+  "domain": "merchant:report",
+  "text": "滚动恒等式：期初 + 发行 − 核销 − 过期/破损 = 期末"
+ },
+ {
+  "key": "rpt.n3.rollTitle",
+  "domain": "merchant:report",
+  "text": "按期次滚动"
+ },
+ {
+  "key": "rpt.n4.avgCard",
+  "domain": "merchant:report",
+  "text": "平均评分"
+ },
+ {
+  "key": "rpt.n4.badRateCard",
+  "domain": "merchant:report",
+  "text": "差评率（纠错扣减后）"
+ },
+ {
+  "key": "rpt.n4.byServiceTitle",
+  "domain": "merchant:report",
+  "text": "按服务"
+ },
+ {
+  "key": "rpt.n4.byStaffTitle",
+  "domain": "merchant:report",
+  "text": "按员工"
+ },
+ {
+  "key": "rpt.n4.correctedRow",
+  "domain": "merchant:report",
+  "text": "含纠错 {n} 件——approved 申诉已从差评指标即时扣减（附录 B 兜底口径）"
+ },
+ {
+  "key": "rpt.n4.distTitle",
+  "domain": "merchant:report",
+  "text": "星级分布"
+ },
+ {
+  "key": "rpt.n4.minutesVal",
+  "domain": "merchant:report",
+  "text": "{n} 分钟"
+ },
+ {
+  "key": "rpt.n4.recentAside",
+  "domain": "merchant:report",
+  "text": "近十条 · 全时段口径（非同月过滤）"
+ },
+ {
+  "key": "rpt.n4.recentEmpty",
+  "domain": "merchant:report",
+  "text": "暂无差评"
+ },
+ {
+  "key": "rpt.n4.recentTitle",
+  "domain": "merchant:report",
+  "text": "差评明细与回复"
+ },
+ {
+  "key": "rpt.n4.repliedBadge",
+  "domain": "merchant:report",
+  "text": "已回复"
+ },
+ {
+  "key": "rpt.n4.replyCancel",
+  "domain": "merchant:report",
+  "text": "取消"
+ },
+ {
+  "key": "rpt.n4.replyCta",
+  "domain": "merchant:report",
+  "text": "回复 ›"
+ },
+ {
+  "key": "rpt.n4.replyDone",
+  "domain": "merchant:report",
+  "text": "已回复该差评"
+ },
+ {
+  "key": "rpt.n4.replyPlaceholder",
+  "domain": "merchant:report",
+  "text": "填写回复内容（500 字内）…"
+ },
+ {
+  "key": "rpt.n4.replyRateCard",
+  "domain": "merchant:report",
+  "text": "差评回复率"
+ },
+ {
+  "key": "rpt.n4.replySubmit",
+  "domain": "merchant:report",
+  "text": "提交回复"
+ },
+ {
+  "key": "rpt.n4.replyTagsLabel",
+  "domain": "merchant:report",
+  "text": "原因标签（可多选，最多 5 个）"
+ },
+ {
+  "key": "rpt.n4.replyTimeCard",
+  "domain": "merchant:report",
+  "text": "平均回复时效"
+ },
+ {
+  "key": "rpt.n4.tagTitle",
+  "domain": "merchant:report",
+  "text": "差评标签聚类"
+ },
+ {
+  "key": "rpt.n5.actualCard",
+  "domain": "merchant:report",
+  "text": "实际时长（均值）"
+ },
+ {
+  "key": "rpt.n5.bucket120",
+  "domain": "merchant:report",
+  "text": "30–120 分钟"
+ },
+ {
+  "key": "rpt.n5.bucket30",
+  "domain": "merchant:report",
+  "text": "5–30 分钟"
+ },
+ {
+  "key": "rpt.n5.bucket5",
+  "domain": "merchant:report",
+  "text": "≤5 分钟"
+ },
+ {
+  "key": "rpt.n5.bucketOver",
+  "domain": "merchant:report",
+  "text": ">120 分钟"
+ },
+ {
+  "key": "rpt.n5.bucketsTitle",
+  "domain": "merchant:report",
+  "text": "报告送达时效分布"
+ },
+ {
+  "key": "rpt.n5.bucketUnread",
+  "domain": "merchant:report",
+  "text": "未读"
+ },
+ {
+  "key": "rpt.n5.completedCard",
+  "domain": "merchant:report",
+  "text": "本月完成服务单"
+ },
+ {
+  "key": "rpt.n5.photoCard",
+  "domain": "merchant:report",
+  "text": "照片覆盖率"
+ },
+ {
+  "key": "rpt.n5.photoSub",
+  "domain": "merchant:report",
+  "text": "实传 {n} 张"
+ },
+ {
+  "key": "rpt.n5.sampleCard",
+  "domain": "merchant:report",
+  "text": "抽检率（打标重拍步占比）"
+ },
+ {
+  "key": "rpt.n5.stdCard",
+  "domain": "merchant:report",
+  "text": "标准时长（均值）"
+ },
+ {
+  "key": "rpt.n6.gateTitle",
+  "domain": "merchant:report",
+  "text": "海底捞铁规两件（附录 B）"
+ },
+ {
+  "key": "rpt.n6.queueEmpty",
+  "domain": "merchant:report",
+  "text": "暂无申诉记录"
+ },
+ {
+  "key": "rpt.n6.queueGo",
+  "domain": "merchant:report",
+  "text": "去审批中心 ›"
+ },
+ {
+  "key": "rpt.n6.queueTitle",
+  "domain": "merchant:report",
+  "text": "申诉队列（metric_appeals）"
+ },
+ {
+  "key": "rpt.n6.statusApproved",
+  "domain": "merchant:report",
+  "text": "已采纳"
+ },
+ {
+  "key": "rpt.n6.statusPending",
+  "domain": "merchant:report",
+  "text": "待复核"
+ },
+ {
+  "key": "rpt.n6.statusRejected",
+  "domain": "merchant:report",
+  "text": "已驳回"
+ },
+ {
+  "key": "rpt.n6.tableTitle",
+  "domain": "merchant:report",
+  "text": "员工 × 服务质量交叉"
+ },
+ {
+  "key": "rpt.page.actionFail",
+  "domain": "merchant:report",
+  "text": "操作失败，请重试"
+ },
+ {
+  "key": "rpt.page.backToDir",
+  "domain": "merchant:report",
+  "text": "‹ 返回报表目录"
+ },
+ {
+  "key": "rpt.page.empty",
+  "domain": "merchant:report",
+  "text": "该月暂无数据"
+ },
+ {
+  "key": "rpt.page.exportCta",
+  "domain": "merchant:report",
+  "text": "导出 CSV"
+ },
+ {
+  "key": "rpt.page.exportDone",
+  "domain": "merchant:report",
+  "text": "已导出 {name}（{n} 行）"
+ },
+ {
+  "key": "rpt.page.exportFail",
+  "domain": "merchant:report",
+  "text": "导出失败，请重试"
+ },
+ {
+  "key": "rpt.page.exporting",
+  "domain": "merchant:report",
+  "text": "导出中…"
+ },
+ {
+  "key": "rpt.page.exportOwnerOnly",
+  "domain": "merchant:report",
+  "text": "导出 CSV 仅店主（总规则③）"
+ },
+ {
+  "key": "rpt.page.loadError",
+  "domain": "merchant:report",
+  "text": "报表加载失败，请检查网络后重试"
+ },
+ {
+  "key": "rpt.page.monthLabel",
+  "domain": "merchant:report",
+  "text": "报表月份"
+ },
+ {
+  "key": "rpt.page.noteLead",
+  "domain": "merchant:report",
+  "text": "口径："
+ },
+ {
+  "key": "rpt.page.retry",
+  "domain": "merchant:report",
+  "text": "重新加载"
+ },
+ {
+  "key": "rpt.page.unknown",
+  "domain": "merchant:report",
+  "text": "未知报表键"
  },
  {
   "key": "rpt.quadRebate",
@@ -7200,9 +8980,9 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "回馈金负债"
  },
  {
-  "key": "rpt.quadRebateNote",
+  "key": "rpt.quadRebateSub",
   "domain": "merchant:report",
-  "text": "店级聚合读口待补（段 2 已核），置灰不造假"
+  "text": "{n} 户会员回馈金余额"
  },
  {
   "key": "rpt.quadRefund",
@@ -7225,9 +9005,39 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "储值负债"
  },
  {
-  "key": "rpt.quadStoredNote",
+  "key": "rpt.quadStoredSub",
   "domain": "merchant:report",
-  "text": "店级聚合读口待补（段 2 已核），置灰不造假"
+  "text": "{n} 户 · 本金+赠送合计"
+ },
+ {
+  "key": "rpt.quadYesterday",
+  "domain": "merchant:report",
+  "text": "昨日营收"
+ },
+ {
+  "key": "rpt.quadYesterdayClose",
+  "domain": "merchant:report",
+  "text": "日结对账：{n} 箱 · 账面现金 ¥{amt}"
+ },
+ {
+  "key": "rpt.quadYesterdayNoClose",
+  "domain": "merchant:report",
+  "text": "昨日未封箱（日结行缺）"
+ },
+ {
+  "key": "rpt.quadYesterdaySub",
+  "domain": "merchant:report",
+  "text": "{date} · {n} 笔已收"
+ },
+ {
+  "key": "rpt.sparkNote",
+  "domain": "merchant:report",
+  "text": "今日格=截至当前已收 · financeStats 同源口径"
+ },
+ {
+  "key": "rpt.sparkTitle",
+  "domain": "merchant:report",
+  "text": "近 14 日营收走势"
  },
  {
   "key": "rpt.threeBooksNote",
@@ -9070,6 +10880,26 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "新增宠物"
  },
  {
+  "key": "pets.chipNoLabel",
+  "domain": "pets",
+  "text": "芯片号"
+ },
+ {
+  "key": "pets.chipNoPlaceholder",
+  "domain": "pets",
+  "text": "如：900123456789012"
+ },
+ {
+  "key": "pets.coatColorLabel",
+  "domain": "pets",
+  "text": "花色"
+ },
+ {
+  "key": "pets.coatColorPlaceholder",
+  "domain": "pets",
+  "text": "如：橘白 / 三花"
+ },
+ {
   "key": "pets.emptyBody",
   "domain": "pets",
   "text": "建立档案后，预约洗护与寄养更省心"
@@ -9083,6 +10913,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "pets.emptyTitle",
   "domain": "pets",
   "text": "还没有宠物档案"
+ },
+ {
+  "key": "pets.healthEntry",
+  "domain": "pets",
+  "text": "健康档案 ›"
  },
  {
   "key": "pets.historyCount",
@@ -9105,6 +10940,26 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "同款再约 ›"
  },
  {
+  "key": "pets.switcherAll",
+  "domain": "pets",
+  "text": "全部宠物"
+ },
+ {
+  "key": "pets.switcherFail",
+  "domain": "pets",
+  "text": "切换失败，请稍后重试"
+ },
+ {
+  "key": "pets.switcherSingleNote",
+  "domain": "pets",
+  "text": "单宠档案已选定"
+ },
+ {
+  "key": "pets.switcherTitle",
+  "domain": "pets",
+  "text": "切换宠物"
+ },
+ {
   "key": "pets.title",
   "domain": "pets",
   "text": "宠物档案"
@@ -9125,9 +10980,124 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "疫苗有效至 {date}"
  },
  {
+  "key": "pets.vaccineProofAdd",
+  "domain": "pets",
+  "text": "上传证明"
+ },
+ {
+  "key": "pets.vaccineProofCount",
+  "domain": "pets",
+  "text": "疫苗证明 {count} 张"
+ },
+ {
+  "key": "pets.vaccineProofNote",
+  "domain": "pets",
+  "text": "仅留证，寄养校验仍以疫苗有效期为准"
+ },
+ {
+  "key": "pets.vaccineProofTitle",
+  "domain": "pets",
+  "text": "疫苗证明"
+ },
+ {
   "key": "pets.vaccineSoon",
   "domain": "pets",
   "text": "疫苗 {days} 天后到期 · 寄养需有效期内"
+ },
+ {
+  "key": "rev.anonymous",
+  "domain": "productReviews",
+  "text": "匿名评价"
+ },
+ {
+  "key": "rev.anonymousName",
+  "domain": "productReviews",
+  "text": "匿名用户"
+ },
+ {
+  "key": "rev.empty",
+  "domain": "productReviews",
+  "text": "还没有评价，收货后来写第一条"
+ },
+ {
+  "key": "rev.loadFail",
+  "domain": "productReviews",
+  "text": "评价加载失败，请稍后重试"
+ },
+ {
+  "key": "rev.more",
+  "domain": "productReviews",
+  "text": "加载更多"
+ },
+ {
+  "key": "rev.needReceived",
+  "domain": "productReviews",
+  "text": "确认收货后即可评价本商品"
+ },
+ {
+  "key": "rev.orderEntry",
+  "domain": "productReviews",
+  "text": "写评价"
+ },
+ {
+  "key": "rev.photoAdd",
+  "domain": "productReviews",
+  "text": "晒图"
+ },
+ {
+  "key": "rev.photoLimit",
+  "domain": "productReviews",
+  "text": "最多 3 张"
+ },
+ {
+  "key": "rev.ratingLabel",
+  "domain": "productReviews",
+  "text": "评分"
+ },
+ {
+  "key": "rev.sheetTitle",
+  "domain": "productReviews",
+  "text": "写评价"
+ },
+ {
+  "key": "rev.submit",
+  "domain": "productReviews",
+  "text": "提交评价"
+ },
+ {
+  "key": "rev.submitFail",
+  "domain": "productReviews",
+  "text": "评价提交失败，请稍后再试"
+ },
+ {
+  "key": "rev.submitting",
+  "domain": "productReviews",
+  "text": "提交中…"
+ },
+ {
+  "key": "rev.summary",
+  "domain": "productReviews",
+  "text": "{avg} 分 · {count} 条评价"
+ },
+ {
+  "key": "rev.textPlaceholder",
+  "domain": "productReviews",
+  "text": "说说商品怎么样…（可不填）"
+ },
+ {
+  "key": "rev.title",
+  "domain": "productReviews",
+  "text": "商品评价"
+ },
+ {
+  "key": "rev.toastOk",
+  "domain": "productReviews",
+  "text": "评价已提交"
+ },
+ {
+  "key": "rev.writeCta",
+  "domain": "productReviews",
+  "text": "写评价"
  },
  {
   "key": "profile.avatarChange",
@@ -10100,6 +12070,66 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "还没有工单"
  },
  {
+  "key": "ticket.escalateCancel",
+  "domain": "serviceloop",
+  "text": "再想想"
+ },
+ {
+  "key": "ticket.escalateCta",
+  "domain": "serviceloop",
+  "text": "申请店长介入"
+ },
+ {
+  "key": "ticket.escalatedAtLine",
+  "domain": "serviceloop",
+  "text": "升级于 {time}"
+ },
+ {
+  "key": "ticket.escalatedBadge",
+  "domain": "serviceloop",
+  "text": "已升级店长介入"
+ },
+ {
+  "key": "ticket.escalateDesc",
+  "domain": "serviceloop",
+  "text": "店长会亲自跟进处理你的工单"
+ },
+ {
+  "key": "ticket.escalateDone",
+  "domain": "serviceloop",
+  "text": "已升级，店长会亲自跟进"
+ },
+ {
+  "key": "ticket.escalateFail",
+  "domain": "serviceloop",
+  "text": "升级失败，请稍后重试"
+ },
+ {
+  "key": "ticket.escalateNoteLabel",
+  "domain": "serviceloop",
+  "text": "补充说明（选填）"
+ },
+ {
+  "key": "ticket.escalateNotePlaceholder",
+  "domain": "serviceloop",
+  "text": "告诉店长你还希望解决什么…"
+ },
+ {
+  "key": "ticket.escalateNoteTitle",
+  "domain": "serviceloop",
+  "text": "升级说明"
+ },
+ {
+  "key": "ticket.escalateSubmit",
+  "domain": "serviceloop",
+  "text": "确认升级"
+ },
+ {
+  "key": "ticket.escalateTitle",
+  "domain": "serviceloop",
+  "text": "申请店长介入"
+ },
+ {
   "key": "ticket.hoursLine",
   "domain": "serviceloop",
   "text": "人工服务时间 {hours}"
@@ -10160,6 +12190,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "已关闭"
  },
  {
+  "key": "ticket.statusEscalated",
+  "domain": "serviceloop",
+  "text": "已升级店长介入"
+ },
+ {
   "key": "ticket.statusReplied",
   "domain": "serviceloop",
   "text": "已回复"
@@ -10198,6 +12233,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "ticket.timelineClosed",
   "domain": "serviceloop",
   "text": "工单已关闭"
+ },
+ {
+  "key": "ticket.timelineEscalated",
+  "domain": "serviceloop",
+  "text": "申请店长介入"
  },
  {
   "key": "ticket.timelineReplied",
@@ -12353,6 +14393,51 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "reviews.anonymous",
   "domain": "staff:reviews",
   "text": "匿名客户"
+ },
+ {
+  "key": "reviews.appeal.cancel",
+  "domain": "staff:reviews",
+  "text": "取消"
+ },
+ {
+  "key": "reviews.appeal.cta",
+  "domain": "staff:reviews",
+  "text": "申诉"
+ },
+ {
+  "key": "reviews.appeal.duplicated",
+  "domain": "staff:reviews",
+  "text": "该评价已有申诉在途，请等待复核"
+ },
+ {
+  "key": "reviews.appeal.pending",
+  "domain": "staff:reviews",
+  "text": "已申诉待复核"
+ },
+ {
+  "key": "reviews.appeal.placeholder",
+  "domain": "staff:reviews",
+  "text": "请说明申诉理由（必填，500 字内，店长复核时可见）"
+ },
+ {
+  "key": "reviews.appeal.required",
+  "domain": "staff:reviews",
+  "text": "请填写申诉理由"
+ },
+ {
+  "key": "reviews.appeal.submit",
+  "domain": "staff:reviews",
+  "text": "提交申诉"
+ },
+ {
+  "key": "reviews.appeal.title",
+  "domain": "staff:reviews",
+  "text": "申诉该评价"
+ },
+ {
+  "key": "reviews.appeal.toast",
+  "domain": "staff:reviews",
+  "text": "申诉已提交，待店长复核"
  },
  {
   "key": "reviews.aside.lead",

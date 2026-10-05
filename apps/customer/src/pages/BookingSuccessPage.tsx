@@ -13,13 +13,16 @@
  * ⑤ 导航闭环：PageHeader 返回键（to="/home" 固定落点 + W1-D3 直访兜底）——封闭≠困死。
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Skeleton, usePhiliaClient } from '@philia/shared';
+import { friendlyError, Skeleton, usePhiliaClient, useToast } from '@philia/shared';
 import PageHeader from '@/components/PageHeader';
 import BookingCode from '@/components/booking/BookingCode';
+import BottomSheet from '@/components/booking/single/BottomSheet';
 import { ErrorState } from '@/components/home/common';
 import { APPT_TYPE_LABEL, fmtDateTime, fmtHM, fmtMD, fmtRange, weekCN } from '@/components/booking/format';
+import { agc, BOARDING_AGREEMENTS } from '@/copy/agreement';
 import { bkc } from '@/copy/booking';
 
 /** 生成 ICS 日历文件内容（本地时间浮点格式，免时区歧义） */
@@ -56,6 +59,24 @@ export default function BookingSuccessPage() {
   const [searchParams] = useSearchParams();
   const aid = searchParams.get('aid') ?? '';
   const { trpc } = usePhiliaClient();
+  const { toastEl, showToast } = useToast({ durationMs: 3200 });
+  // 体验大批片 2：寄养单协议签署入口的全文弹层 + 本页补签成功本地态
+  const [agreeSheetOpen, setAgreeSheetOpen] = useState(false);
+  const [signedLocal, setSignedLocal] = useState(false);
+
+  // 补签：boarding_consent + medical_auth 两键各留一行 agreements 快照（server 常量版本）
+  const signM = useMutation({
+    mutationFn: async () => {
+      await trpc.pay.signAgreement.mutate({ agreementKey: 'boarding_consent' });
+      await trpc.pay.signAgreement.mutate({ agreementKey: 'medical_auth' });
+    },
+    onSuccess: () => {
+      setSignedLocal(true);
+      setAgreeSheetOpen(false);
+      showToast('已签署留痕', 'info');
+    },
+    onError: (err) => showToast(friendlyError(err, '签署失败，请稍后再试'), 'error'),
+  });
 
   const detailQ = useQuery({
     queryKey: ['appointment', 'get', aid],
@@ -109,6 +130,7 @@ export default function BookingSuccessPage() {
 
   return (
     <div className="px-4 py-6">
+      {toastEl}
       {/* W1-D1 导航闭环：返回键（固定落点 /home；直访兜底同）——交易成功页不回已消耗的下单页 */}
       <PageHeader title={bkc('booking.successTitle')} to="/home" />
       <div className="flex flex-col items-center pt-2">
@@ -163,6 +185,68 @@ export default function BookingSuccessPage() {
       ) : (
         <Skeleton className="mt-5 h-32 rounded-card" />
       )}
+
+      {/* 体验大批片 2：寄养单协议签署入口（摘要卡与预约码之间）。
+          已签（medicalAuth 快照 agreed=true 随 create 留痕，或本页刚补签成功）=灰态已签徽；
+          未签（历史单）=可点行开全文半屏，「已阅读并同意」走 pay.signAgreement 真实留痕 */}
+      {d && d.appointment.type === 'boarding' ? (
+        d.appointment.medicalAuthJson?.agreed || signedLocal ? (
+          <div
+            data-testid="success-agreement-entry"
+            data-signed="true"
+            className="mt-5 flex items-center justify-between rounded-card bg-sunken px-4 py-3"
+          >
+            <span className="text-body text-ink-secondary">{bkc('booking.successSignEntry')}</span>
+            <span className="rounded-chip bg-line px-2 py-1 text-caption-xs text-ink-secondary">
+              {bkc('booking.signedBadge')}
+            </span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setAgreeSheetOpen(true)}
+            data-testid="success-agreement-entry"
+            data-signed="false"
+            className="mt-5 flex w-full items-center justify-between rounded-card bg-card px-4 py-3.5 shadow-card transition active:scale-[0.99]"
+          >
+            <span className="text-body font-medium text-ink">{bkc('booking.successSignEntry')}</span>
+            <span className="text-caption font-medium text-ink">{bkc('booking.successSignView')}</span>
+          </button>
+        )
+      ) : null}
+
+      {agreeSheetOpen ? (
+        <BottomSheet
+          title={bkc('booking.successSignEntry')}
+          onClose={() => setAgreeSheetOpen(false)}
+          testId="success-agreement-sheet"
+        >
+          <p className="rounded-tag bg-sunken px-3 py-2 text-caption text-ink-secondary">
+            {bkc('booking.signPendingNote')}
+          </p>
+          {BOARDING_AGREEMENTS.map((a) => (
+            <div key={a.agreementKey} className="mt-4">
+              <p className="text-body font-semibold">
+                {agc(a.titleKey)}
+                <span className="ml-2 text-caption-xs text-ink-placeholder">
+                  {agc('agreement.versionNote', { version: a.version })}
+                </span>
+              </p>
+              <p className="mt-1.5 whitespace-pre-wrap text-body-sm leading-6 text-ink">{a.content}</p>
+            </div>
+          ))}
+          {/* 补签=pay.signAgreement 两键各留一行快照（server 常量版本）；失败 toast 原文 */}
+          <button
+            type="button"
+            disabled={signM.isPending}
+            onClick={() => signM.mutate()}
+            data-testid="success-agreement-sign"
+            className="mt-4 h-11 w-full rounded-full bg-[#2E2318] text-body-sm font-semibold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
+          >
+            {signM.isPending ? '提交中…' : agc('agreement.agreeCta')}
+          </button>
+        </BottomSheet>
+      ) : null}
 
       {/* 预约码（滚动时间窗二维码 + 人工核销码） */}
       <section className="mt-5 rounded-card bg-card p-5 shadow-card">

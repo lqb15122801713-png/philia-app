@@ -13,8 +13,8 @@
  *   W1 R-Nav-3：中位补「philia」文字标签（底栏五槽全件带文字，字号字重同槽对齐）；
  * - 详情级页面不渲染本组件（App.tsx 按路径白名单渲染）。
  *
- * 服务端缺口（记 PR 描述，不动手）：stores 表暂无 phone 字段，「联系门店」
- * 沿用 ContactStore 契约——phone 缺失时该项隐藏，schema 补电话后自动生效。
+ * 「联系门店」沿用 ContactStore 契约——stores.phone 已在仓（0042 迁移），
+ * phone 缺失时该项隐藏，有值 tel: 直拨。
  */
 
 import { useQuery } from '@tanstack/react-query'
@@ -153,15 +153,14 @@ export default function AppDock() {
     return valid[0]!
   })()
 
-  // 门店电话：stores 表暂无 phone 字段（服务端缺口，见头注释）——有则 tel: 直拨，无则该项隐藏
+  // 门店电话：stores.phone 已在仓（0042 迁移，getWithServices 返回行带 phone）——有则 tel: 直拨，无则该项隐藏
   const storeQuery = useQuery({
     queryKey: ['store', 'getWithServices', lastAppt?.storeId, 'dock-contact'],
     queryFn: () => trpc.store.getWithServices.query({ storeId: lastAppt!.storeId }),
     enabled: sheetOpen && !!lastAppt?.storeId,
     staleTime: 300_000,
   })
-  const storePhone =
-    (storeQuery.data?.store as { phone?: string | null } | undefined)?.phone ?? null
+  const storePhone = storeQuery.data?.store.phone ?? null
 
   /* 长按 philia 中央钮（500ms，10px 移动取消）→ 快捷弹层 */
   const cancelPressTimer = () => {
