@@ -85,6 +85,7 @@ const ROUTES = [
   { app: 'customer', path: '/philia/member', expect: 'sub' },
   { app: 'customer', path: '/philia/moments', expect: 'sub' },
   { app: 'customer', path: '/philia/pets', expect: 'sub' },
+  { app: 'customer', path: `/philia/pets/${INVALID_ID}/health`, expect: 'sub', note: '体验批片 4 宠物健康档案（参数化照 INVALID 行写法，无效 id 异常态须出口）' },
   { app: 'customer', path: '/dev-login', expect: 'gate' },
   { app: 'customer', path: '/login', expect: 'gate', note: '门禁别名' },
   { app: 'customer', path: '/member', expect: 'sub', note: '批次 R11a' },

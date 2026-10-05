@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B）——生成件，勿手改（源=scripts/gen-copy-overrides-seed.mts）；
  * 重生成：仓库根 npx tsx scripts/gen-copy-overrides-seed.mts（copy 键表增删键后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-04T01:05:01.739Z；键数=2571
+ * 生成时间口径：2026-10-05T02:47:04.501Z；键数=2663
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }> = [
  {
@@ -715,6 +715,61 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "服务相册"
  },
  {
+  "key": "appointments.assuranceBelongings",
+  "domain": "appointments",
+  "text": "随身物品"
+ },
+ {
+  "key": "appointments.assuranceEmpty",
+  "domain": "appointments",
+  "text": "待入住登记"
+ },
+ {
+  "key": "appointments.assuranceEmptyBody",
+  "domain": "appointments",
+  "text": "店员办理入住后，房间、体重与物品清单会在这里更新"
+ },
+ {
+  "key": "appointments.assuranceLatestLog",
+  "domain": "appointments",
+  "text": "最新打卡"
+ },
+ {
+  "key": "appointments.assuranceLogDone",
+  "domain": "appointments",
+  "text": "当日照护已完成打卡"
+ },
+ {
+  "key": "appointments.assuranceNoLog",
+  "domain": "appointments",
+  "text": "暂无打卡记录"
+ },
+ {
+  "key": "appointments.assuranceRoom",
+  "domain": "appointments",
+  "text": "房间"
+ },
+ {
+  "key": "appointments.assuranceTitle",
+  "domain": "appointments",
+  "text": "寄养安心卡"
+ },
+ {
+  "key": "appointments.assuranceUnsealEmpty",
+  "domain": "appointments",
+  "text": "暂无拆封记录"
+ },
+ {
+  "key": "appointments.assuranceUnsealTitle",
+  "domain": "appointments",
+  "text": "拆封留痕"
+ },
+ {
+  "key": "appointments.assuranceWeight",
+  "domain": "appointments",
+  "text": "入住体重"
+ },
+ {
   "key": "appointments.backToList",
   "domain": "appointments",
   "text": "返回我的预约"
@@ -780,6 +835,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "预约详情加载失败，请检查网络后重试"
  },
  {
+  "key": "appointments.detailSheetTitle",
+  "domain": "appointments",
+  "text": "服务明细"
+ },
+ {
   "key": "appointments.detailTitle",
   "domain": "appointments",
   "text": "预约详情"
@@ -800,6 +860,51 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "还没有预约"
  },
  {
+  "key": "appointments.incidentHandledLine",
+  "domain": "appointments",
+  "text": "异常已处置：{note}"
+ },
+ {
+  "key": "appointments.incidentHandling",
+  "domain": "appointments",
+  "text": "门店处理中"
+ },
+ {
+  "key": "appointments.incidentOccurredAt",
+  "domain": "appointments",
+  "text": "发生于 {time}"
+ },
+ {
+  "key": "appointments.incidentTitle",
+  "domain": "appointments",
+  "text": "异常通报"
+ },
+ {
+  "key": "appointments.incidentToastHandled",
+  "domain": "appointments",
+  "text": "异常情况已处置，可下滑查看说明"
+ },
+ {
+  "key": "appointments.incidentToastReported",
+  "domain": "appointments",
+  "text": "{pet}有异常通报，门店正在处理"
+ },
+ {
+  "key": "appointments.incidentTypeInjury",
+  "domain": "appointments",
+  "text": "受伤"
+ },
+ {
+  "key": "appointments.incidentTypeStress",
+  "domain": "appointments",
+  "text": "应激"
+ },
+ {
+  "key": "appointments.incidentTypeVetVisit",
+  "domain": "appointments",
+  "text": "就医"
+ },
+ {
   "key": "appointments.liveBoarding",
   "domain": "appointments",
   "text": "寄养进行中"
@@ -818,6 +923,21 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "appointments.loadFail",
   "domain": "appointments",
   "text": "预约列表加载失败，请检查网络后重试"
+ },
+ {
+  "key": "appointments.materialQty",
+  "domain": "appointments",
+  "text": "× {n}"
+ },
+ {
+  "key": "appointments.materialsEmpty",
+  "domain": "appointments",
+  "text": "本单无耗材扣减记录"
+ },
+ {
+  "key": "appointments.materialsTitle",
+  "domain": "appointments",
+  "text": "耗材使用"
  },
  {
   "key": "appointments.notFound",
@@ -860,6 +980,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "选择新时间"
  },
  {
+  "key": "appointments.roomPending",
+  "domain": "appointments",
+  "text": "待分配"
+ },
+ {
   "key": "appointments.servingCall",
   "domain": "appointments",
   "text": "拨打门店电话"
@@ -885,6 +1010,26 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "正在加载可约时段…"
  },
  {
+  "key": "appointments.stepDoing",
+  "domain": "appointments",
+  "text": "进行中"
+ },
+ {
+  "key": "appointments.stepDone",
+  "domain": "appointments",
+  "text": "已完成"
+ },
+ {
+  "key": "appointments.stepDuration",
+  "domain": "appointments",
+  "text": "{min} 分钟"
+ },
+ {
+  "key": "appointments.stepPending",
+  "domain": "appointments",
+  "text": "待开始"
+ },
+ {
   "key": "appointments.tabEmpty",
   "domain": "appointments",
   "text": "暂无{status}的预约"
@@ -898,6 +1043,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "appointments.title",
   "domain": "appointments",
   "text": "我的预约"
+ },
+ {
+  "key": "appointments.unsealToast",
+  "domain": "appointments",
+  "text": "{pet}的用品「{item}」已拆封使用"
  },
  {
   "key": "booking.addCalendar",
@@ -1235,6 +1385,181 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "PHILIA · 洗护 / 美容 / 寄养"
  },
  {
+  "key": "health.dueExpired",
+  "domain": "health",
+  "text": "已过期 {date}"
+ },
+ {
+  "key": "health.dueOk",
+  "domain": "health",
+  "text": "下次到期 {date}"
+ },
+ {
+  "key": "health.dueSoon",
+  "domain": "health",
+  "text": "下次到期 {date} · {days} 天后"
+ },
+ {
+  "key": "health.loadFail",
+  "domain": "health",
+  "text": "健康档案加载失败"
+ },
+ {
+  "key": "health.recordAddTitle",
+  "domain": "health",
+  "text": "记一笔"
+ },
+ {
+  "key": "health.recordDateLabel",
+  "domain": "health",
+  "text": "发生日期"
+ },
+ {
+  "key": "health.recordDelete",
+  "domain": "health",
+  "text": "删除"
+ },
+ {
+  "key": "health.recordDeleteConfirm",
+  "domain": "health",
+  "text": "再点一次确认删除"
+ },
+ {
+  "key": "health.recordDeleted",
+  "domain": "health",
+  "text": "记录已删除"
+ },
+ {
+  "key": "health.recordNextDueLabel",
+  "domain": "health",
+  "text": "下次到期日（可选）"
+ },
+ {
+  "key": "health.recordNoteLabel",
+  "domain": "health",
+  "text": "备注（可选）"
+ },
+ {
+  "key": "health.recordNotePlaceholder",
+  "domain": "health",
+  "text": "如：宠物医院名称 / 剂量"
+ },
+ {
+  "key": "health.recordsTabEmpty",
+  "domain": "health",
+  "text": "暂无{type}记录"
+ },
+ {
+  "key": "health.recordsTitle",
+  "domain": "health",
+  "text": "健康记录"
+ },
+ {
+  "key": "health.recordSubmit",
+  "domain": "health",
+  "text": "保存记录"
+ },
+ {
+  "key": "health.recordTitleLabel",
+  "domain": "health",
+  "text": "标题"
+ },
+ {
+  "key": "health.recordTitlePlaceholder",
+  "domain": "health",
+  "text": "如：狂犬疫苗第三针"
+ },
+ {
+  "key": "health.recordTypeLabel",
+  "domain": "health",
+  "text": "类型"
+ },
+ {
+  "key": "health.saveFail",
+  "domain": "health",
+  "text": "保存失败，请稍后重试"
+ },
+ {
+  "key": "health.saving",
+  "domain": "health",
+  "text": "保存中…"
+ },
+ {
+  "key": "health.tabDeworm",
+  "domain": "health",
+  "text": "驱虫"
+ },
+ {
+  "key": "health.tabMedication",
+  "domain": "health",
+  "text": "用药"
+ },
+ {
+  "key": "health.tabVaccine",
+  "domain": "health",
+  "text": "疫苗"
+ },
+ {
+  "key": "health.tabVetVisit",
+  "domain": "health",
+  "text": "就医"
+ },
+ {
+  "key": "health.title",
+  "domain": "health",
+  "text": "健康档案"
+ },
+ {
+  "key": "health.weightAddTitle",
+  "domain": "health",
+  "text": "记体重"
+ },
+ {
+  "key": "health.weightDateLabel",
+  "domain": "health",
+  "text": "称重日期"
+ },
+ {
+  "key": "health.weightEmptyBody",
+  "domain": "health",
+  "text": "定期称重，掌握 TA 的健康变化"
+ },
+ {
+  "key": "health.weightEmptyTitle",
+  "domain": "health",
+  "text": "还没有体重记录"
+ },
+ {
+  "key": "health.weightKgLabel",
+  "domain": "health",
+  "text": "体重（kg）"
+ },
+ {
+  "key": "health.weightKgPlaceholder",
+  "domain": "health",
+  "text": "如：4.5"
+ },
+ {
+  "key": "health.weightNoteLabel",
+  "domain": "health",
+  "text": "备注（可选）"
+ },
+ {
+  "key": "health.weightSubmit",
+  "domain": "health",
+  "text": "保存体重"
+ },
+ {
+  "key": "health.weightTrend",
+  "domain": "health",
+  "text": "体重趋势"
+ },
+ {
+  "key": "health.weightUnit",
+  "domain": "health",
+  "text": "kg"
+ },
+ {
   "key": "home.casesMore",
   "domain": "home",
   "text": "每日更新 ›"
@@ -1353,6 +1678,26 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "home.preprowTitle",
   "domain": "home",
   "text": "消毒备台 · 一客一消"
+ },
+ {
+  "key": "home.pwaInstallAction",
+  "domain": "home",
+  "text": "安装"
+ },
+ {
+  "key": "home.pwaInstallDismiss",
+  "domain": "home",
+  "text": "暂不"
+ },
+ {
+  "key": "home.pwaInstallIosGuide",
+  "domain": "home",
+  "text": "用 Safari 分享 → 添加到主屏幕"
+ },
+ {
+  "key": "home.pwaInstallTitle",
+  "domain": "home",
+  "text": "把菲丽亚装到主屏"
  },
  {
   "key": "home.rebateBalanceLine",
@@ -8550,6 +8895,26 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "新增宠物"
  },
  {
+  "key": "pets.chipNoLabel",
+  "domain": "pets",
+  "text": "芯片号"
+ },
+ {
+  "key": "pets.chipNoPlaceholder",
+  "domain": "pets",
+  "text": "如：900123456789012"
+ },
+ {
+  "key": "pets.coatColorLabel",
+  "domain": "pets",
+  "text": "花色"
+ },
+ {
+  "key": "pets.coatColorPlaceholder",
+  "domain": "pets",
+  "text": "如：橘白 / 三花"
+ },
+ {
   "key": "pets.emptyBody",
   "domain": "pets",
   "text": "建立档案后，预约洗护与寄养更省心"
@@ -8563,6 +8928,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "pets.emptyTitle",
   "domain": "pets",
   "text": "还没有宠物档案"
+ },
+ {
+  "key": "pets.healthEntry",
+  "domain": "pets",
+  "text": "健康档案 ›"
  },
  {
   "key": "pets.historyCount",
@@ -8583,6 +8953,26 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "pets.rebook",
   "domain": "pets",
   "text": "同款再约 ›"
+ },
+ {
+  "key": "pets.switcherAll",
+  "domain": "pets",
+  "text": "全部宠物"
+ },
+ {
+  "key": "pets.switcherFail",
+  "domain": "pets",
+  "text": "切换失败，请稍后重试"
+ },
+ {
+  "key": "pets.switcherSingleNote",
+  "domain": "pets",
+  "text": "单宠档案已选定"
+ },
+ {
+  "key": "pets.switcherTitle",
+  "domain": "pets",
+  "text": "切换宠物"
  },
  {
   "key": "pets.title",
@@ -9375,6 +9765,66 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "还没有工单"
  },
  {
+  "key": "ticket.escalateCancel",
+  "domain": "serviceloop",
+  "text": "再想想"
+ },
+ {
+  "key": "ticket.escalateCta",
+  "domain": "serviceloop",
+  "text": "申请店长介入"
+ },
+ {
+  "key": "ticket.escalatedAtLine",
+  "domain": "serviceloop",
+  "text": "升级于 {time}"
+ },
+ {
+  "key": "ticket.escalatedBadge",
+  "domain": "serviceloop",
+  "text": "已升级店长介入"
+ },
+ {
+  "key": "ticket.escalateDesc",
+  "domain": "serviceloop",
+  "text": "店长会亲自跟进处理你的工单"
+ },
+ {
+  "key": "ticket.escalateDone",
+  "domain": "serviceloop",
+  "text": "已升级，店长会亲自跟进"
+ },
+ {
+  "key": "ticket.escalateFail",
+  "domain": "serviceloop",
+  "text": "升级失败，请稍后重试"
+ },
+ {
+  "key": "ticket.escalateNoteLabel",
+  "domain": "serviceloop",
+  "text": "补充说明（选填）"
+ },
+ {
+  "key": "ticket.escalateNotePlaceholder",
+  "domain": "serviceloop",
+  "text": "告诉店长你还希望解决什么…"
+ },
+ {
+  "key": "ticket.escalateNoteTitle",
+  "domain": "serviceloop",
+  "text": "升级说明"
+ },
+ {
+  "key": "ticket.escalateSubmit",
+  "domain": "serviceloop",
+  "text": "确认升级"
+ },
+ {
+  "key": "ticket.escalateTitle",
+  "domain": "serviceloop",
+  "text": "申请店长介入"
+ },
+ {
   "key": "ticket.hoursLine",
   "domain": "serviceloop",
   "text": "人工服务时间 {hours}"
@@ -9435,6 +9885,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "已关闭"
  },
  {
+  "key": "ticket.statusEscalated",
+  "domain": "serviceloop",
+  "text": "已升级店长介入"
+ },
+ {
   "key": "ticket.statusReplied",
   "domain": "serviceloop",
   "text": "已回复"
@@ -9473,6 +9928,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "ticket.timelineClosed",
   "domain": "serviceloop",
   "text": "工单已关闭"
+ },
+ {
+  "key": "ticket.timelineEscalated",
+  "domain": "serviceloop",
+  "text": "申请店长介入"
  },
  {
   "key": "ticket.timelineReplied",

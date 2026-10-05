@@ -74,6 +74,12 @@ export const EventType = {
   // 员工端骨架整建批 片 3（任务执行+通讯；同步自 server realtime/events.ts）
   TaskReminder:          'task.reminder',           // 循环任务截止前提醒 → staff:{staffId}
   AnnouncementPublished: 'announcement.published',  // 公告发布 → store 频道
+  // 客户端体验大批 片 4（异常通报域/寄养拆封；同步自 server realtime/events.ts）
+  IncidentReported:      'incident.reported',       // 异常通报落行 → appointment 频道
+  IncidentHandled:       'incident.handled',        // 异常处置登记 → appointment 频道
+  IncidentEscalated:     'incident.escalated',      // 超时未处置升级 → user + store
+  BoardingUnsealed:      'boarding.unsealed',       // 寄养用品拆封 → user + store
+  TicketEscalated:       'ticket.escalated',        // 工单升级店长介入 → store
 } as const;
 
 export type EventTypeValue = (typeof EventType)[keyof typeof EventType];

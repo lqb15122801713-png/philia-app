@@ -117,12 +117,28 @@ const SL_COPY_TABLE = {
   'ticket.statusSubmitted': '已提交',
   'ticket.statusReplied': '已回复',
   'ticket.statusClosed': '已关闭',
+  'ticket.statusEscalated': '已升级店长介入',
   /* 详情件 */
   'ticket.replyTitle': '门店回复',
   'ticket.timelineTitle': '处理进度',
   'ticket.timelineSubmitted': '工单已提交',
   'ticket.timelineReplied': '门店已回复',
   'ticket.timelineClosed': '工单已关闭',
+  'ticket.timelineEscalated': '申请店长介入',
+  /* 店长介入仲裁通道（体验批片 4 C5 · ticketEscalate） */
+  'ticket.escalateCta': '申请店长介入',
+  'ticket.escalateTitle': '申请店长介入',
+  'ticket.escalateDesc': '店长会亲自跟进处理你的工单',
+  'ticket.escalateNoteLabel': '补充说明（选填）',
+  'ticket.escalateNotePlaceholder': '告诉店长你还希望解决什么…',
+  'ticket.escalateSubmit': '确认升级',
+  'ticket.escalateCancel': '再想想',
+  'ticket.escalateDone': '已升级，店长会亲自跟进',
+  'ticket.escalateFail': '升级失败，请稍后重试',
+  /* escalated 态透出件 */
+  'ticket.escalatedBadge': '已升级店长介入',
+  'ticket.escalateNoteTitle': '升级说明',
+  'ticket.escalatedAtLine': '升级于 {time}',
   /* 入口（MePage 功能网格小棉花） */
   'ticket.meEntryTitle': '小棉花',
   'ticket.meEntrySub': '建议与吐槽',

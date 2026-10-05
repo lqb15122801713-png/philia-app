@@ -40,6 +40,12 @@ import { assertSecretsConfigured } from './config/secrets';
 import { assertDeployConfig, getCorsOrigins, getPublicBaseUrl, warnStagingConfig } from './config/deploy';
 import { startOutboxSweeper } from './realtime/outboxSweeper';
 import { expirePendingOrders } from './routers/mall';
+import {
+  sweepBoardingDayNight,
+  sweepCareLogReminders,
+  sweepIncidentEscalations,
+  sweepPetDueReminders,
+} from './services/careReminders';
 import { awardXp, settleXpMonth } from './services/xpAward';
 import { settleMonthly as settleRebateMonth } from './services/rebate';
 import { snapshotStoreMonth } from './routers/commission';
@@ -315,6 +321,31 @@ if (isMain) {
   }, 30 * 60_000);
   rebateSettleTimer.unref?.();
 
+  /* ---- 客户端体验大批片 4：照护/提醒扫描族（services/careReminders.ts，全幂等——
+     存在性锚/escalated_at 锚兜底，重扫零副作用；e2e 直调同函数钉时刻断言） ---- */
+  // 异常通报升级：60s 滴答（15 分钟时限口径，扫描粒度须远小于时限）
+  sweepIncidentEscalations(db, new Date()).catch((err) => console.error('[care] 异常升级扫描失败:', err));
+  const incidentTimer = setInterval(() => {
+    sweepIncidentEscalations(db, new Date()).catch((err) => console.error('[care] 异常升级扫描失败:', err));
+  }, 60_000);
+  incidentTimer.unref?.();
+
+  // 寄养早晚定时推送：5min 滴答（刻点窗 30 分钟，5min 粒度必扫到且当日当槽幂等）
+  sweepBoardingDayNight(db, new Date()).catch((err) => console.error('[care] 早晚推送扫描失败:', err));
+  const dayNightTimer = setInterval(() => {
+    sweepBoardingDayNight(db, new Date()).catch((err) => console.error('[care] 早晚推送扫描失败:', err));
+  }, 5 * 60_000);
+  dayNightTimer.unref?.();
+
+  // 照护 4h 打卡提醒 + 疫苗/驱虫到期提醒：30min 滴答（间隔/天粒度口径，幂等锚兜底）
+  const runSlowSweeps = () => {
+    sweepCareLogReminders(db, new Date()).catch((err) => console.error('[care] 照护提醒扫描失败:', err));
+    sweepPetDueReminders(db, new Date()).catch((err) => console.error('[care] 到期提醒扫描失败:', err));
+  };
+  runSlowSweeps();
+  const careSlowTimer = setInterval(runSlowSweeps, 30 * 60_000);
+  careSlowTimer.unref?.();
+
   const server: ServerType = serve({ fetch: app.fetch, port }, (info) => {
     const publicBase = getPublicBaseUrl();
     console.log(`[philia-server] 已启动: http://localhost:${info.port} （tRPC: /trpc/*, SSE: /api/events）`);
@@ -332,6 +363,9 @@ if (isMain) {
     clearInterval(xpCompletionTimer);
     clearInterval(commissionSnapshotTimer);
     clearInterval(rebateSettleTimer);
+    clearInterval(incidentTimer);
+    clearInterval(dayNightTimer);
+    clearInterval(careSlowTimer);
     server.close(() => {
       client.close();
       console.log('[philia-server] 已退出');

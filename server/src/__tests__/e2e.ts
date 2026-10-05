@@ -195,7 +195,7 @@
  */
 
 import { spawn, type ChildProcess } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -4855,17 +4855,18 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→
+     2663/58（客户端体验大批片 4，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（2571 键/57 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 2571 && domainSet.size === 57 &&
+  check('56.1 copy 域种子全量落库（2663 键/58 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 2663 && domainSet.size === 58 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（2571 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 2571 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（2663 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 2663 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -6293,6 +6294,477 @@ async function main(): Promise<void> {
       penAfter642?.points === -8 && offset642[0]!.points + penAfter642.points === 0 &&
       rev642again instanceof TrpcHttpError && rev642again.httpStatus === 400,
     { offset: offset642.map((e) => e.points), pen: penAfter642?.points, again: rev642again && rev642again.httpStatus });
+
+  /* ==================================================================
+   * 客户端体验大批 片 4（服务过程 7+软性体验 6+通知触达 2+品牌 1+触达配套 3）段：
+   *   70.x 宠物域（芯片/花色/全局切换/健康记录族/体重时序）；
+   *   71.x 服务过程+通知（异常通报双通知/15min 升级/拆封/安心卡/早晚推送/4h 提醒/到期提醒）；
+   *   72.x 明细透出/电话公示/工单升级/色板与空态骨架静态闸门。
+   * 时刻敏感全钉时刻：夹具单钉 16:30/17:30 半点（57.6 先例：槽位选取器只取整点，
+   * 半点永不撞刻）；扫描族直调 services/careReminders 同函数+钉 now（片 3 报备工艺）。
+   * ================================================================== */
+  console.log('\n[体验批片4] 70. 宠物域：档案扩字段 / 全局切换 / 健康记录族 / 体重时序');
+  {
+    const { sweepPetDueReminders, sweepBoardingDayNight, sweepCareLogReminders, sweepIncidentEscalations } =
+      await import('../services/careReminders');
+    const storeStaffRows = await db.select().from(schema.staff)
+      .where(and(eq(schema.staff.storeId, storeId), eq(schema.staff.status, 'active')));
+    const aStaff = storeStaffRows[0]!;
+
+    /* ---- 70.1 芯片号/花色：upsert 新建带值+回读+编辑改值 ---- */
+    const chipPet = await trpcMutate<{ pet: { id: string; chipNo: string | null; coatColor: string | null }; created: boolean }>('pet.upsert', {
+      cookie: customerCookie,
+      input: { name: '芯片测试犬', species: 'dog', breed: '边牧', chipNo: '900123000000001', coatColor: '黑白' },
+    });
+    check('70.1 pet.upsert 新建带芯片号/花色落库（created=true + 两列回读）',
+      chipPet.created === true && chipPet.pet.chipNo === '900123000000001' && chipPet.pet.coatColor === '黑白',
+      chipPet.pet);
+    const chipPetUpd = await trpcMutate<{ pet: { chipNo: string | null; coatColor: string | null } }>('pet.upsert', {
+      cookie: customerCookie,
+      input: { id: chipPet.pet.id, name: '芯片测试犬', species: 'dog', coatColor: '黑白陨石' },
+    });
+    check('70.1 编辑改花色+芯片号保留（部分字段更新不覆盖空缺列）',
+      chipPetUpd.pet.coatColor === '黑白陨石' && chipPetUpd.pet.chipNo === '900123000000001', chipPetUpd.pet);
+
+    /* 第二客户夹具（越权负例用） */
+    const exp4bUser = (await db.insert(schema.users).values({ kimiId: 'seed_e2e_exp4_b', nickname: 'e2e 片4 B 客', phone: '13811110011' }).returning())[0]!;
+    await db.insert(schema.userRoles).values({ userId: exp4bUser.id, role: 'customer' });
+    const exp4bCookie = await devLogin(exp4bUser.id);
+    const exp4bPet = await trpcMutate<{ pet: { id: string } }>('pet.upsert', {
+      cookie: exp4bCookie, input: { name: '别人家的猫', species: 'cat' },
+    });
+
+    /* ---- 70.2 多宠物全局切换：setActive 写口 + me 透出 + 越权 403 + 清除 ---- */
+    const setA = await trpcMutate<{ activePetId: string | null }>('pet.setActive', {
+      cookie: customerCookie, input: { petId: chipPet.pet.id },
+    });
+    const meAfterSet = await trpcQuery<{ user: { activePetId: string | null } }>('auth.me', { cookie: customerCookie });
+    check('70.2 setActive 落库 + auth.me 透出 activePetId（全局切换数据源）',
+      setA.activePetId === chipPet.pet.id && meAfterSet.user.activePetId === chipPet.pet.id,
+      { set: setA.activePetId, me: meAfterSet.user.activePetId });
+    const setOther = await asErr(trpcMutate('pet.setActive', { cookie: customerCookie, input: { petId: exp4bPet.pet.id } }));
+    const setByB = await asErr(trpcMutate('pet.setActive', { cookie: exp4bCookie, input: { petId: chipPet.pet.id } }));
+    check('70.2 越权切换他人宠物双向 403',
+      setOther instanceof TrpcHttpError && setOther.httpStatus === 403 &&
+      setByB instanceof TrpcHttpError && setByB.httpStatus === 403,
+      { a: setOther && setOther.httpStatus, b: setByB && setByB.httpStatus });
+    const setNull = await trpcMutate<{ activePetId: string | null }>('pet.setActive', {
+      cookie: customerCookie, input: { petId: null },
+    });
+    const meAfterClear = await trpcQuery<{ user: { activePetId: string | null } }>('auth.me', { cookie: customerCookie });
+    check('70.2 清除选定（null）幂等回落', setNull.activePetId === null && meAfterClear.user.activePetId === null,
+      meAfterClear.user.activePetId);
+    // 恢复选定=芯片测试犬（后续 72.x/截图口径无关，仅保持账号态干净）
+    await trpcMutate('pet.setActive', { cookie: customerCookie, input: { petId } });
+
+    /* ---- 70.3 健康记录族：四类 add/list/过滤/remove + 未来日期 400 + 他人 403 ---- */
+    const rec1 = await trpcMutate<{ record: { id: string; type: string; nextDueDate: string | null } }>('petHealth.healthAdd', {
+      cookie: customerCookie,
+      input: { petId: chipPet.pet.id, type: 'vaccine', title: '狂犬疫苗', recordDate: storeToday, nextDueDate: storeDayStr(new Date(Date.now() + 365 * 86400_000)) },
+    });
+    const rec2 = await trpcMutate<{ record: { id: string; type: string } }>('petHealth.healthAdd', {
+      cookie: customerCookie,
+      input: { petId: chipPet.pet.id, type: 'deworm', title: '体内驱虫（片剂）', recordDate: storeToday },
+    });
+    const recFuture = await asErr(trpcMutate('petHealth.healthAdd', {
+      cookie: customerCookie,
+      input: { petId: chipPet.pet.id, type: 'medication', title: '未来药', recordDate: storeDayStr(new Date(Date.now() + 86400_000)) },
+    }));
+    const recByB = await asErr(trpcMutate('petHealth.healthAdd', {
+      cookie: exp4bCookie,
+      input: { petId: chipPet.pet.id, type: 'vet_visit', title: '越权就诊', recordDate: storeToday },
+    }));
+    check('70.3 记录落库 + 发生日期晚于今天 400 + 他人宠物建档 403',
+      rec1.record.type === 'vaccine' && !!rec1.record.nextDueDate && rec2.record.type === 'deworm' &&
+      recFuture instanceof TrpcHttpError && recFuture.httpStatus === 400 &&
+      recByB instanceof TrpcHttpError && recByB.httpStatus === 403,
+      { future: recFuture && recFuture.httpStatus, byB: recByB && recByB.httpStatus });
+    const recListAll = await trpcQuery<{ records: Array<{ id: string; type: string }> }>('petHealth.healthList', {
+      cookie: customerCookie, input: { petId: chipPet.pet.id },
+    });
+    const recListVac = await trpcQuery<{ records: Array<{ id: string; type: string }> }>('petHealth.healthList', {
+      cookie: customerCookie, input: { petId: chipPet.pet.id, type: 'vaccine' },
+    });
+    check('70.3 列表全量 2 行 + 类型过滤 vaccine 仅 1 行',
+      recListAll.records.length === 2 && recListVac.records.length === 1 && recListVac.records[0]!.id === rec1.record.id,
+      { all: recListAll.records.length, vac: recListVac.records.length });
+    await trpcMutate('petHealth.healthRemove', { cookie: customerCookie, input: { id: rec2.record.id } });
+    const recListAfterRm = await trpcQuery<{ records: Array<{ id: string }> }>('petHealth.healthList', {
+      cookie: customerCookie, input: { petId: chipPet.pet.id },
+    });
+    const recRmByB = await asErr(trpcMutate('petHealth.healthRemove', { cookie: exp4bCookie, input: { id: rec1.record.id } }));
+    check('70.3 删除生效（剩 1 行）+ 他人删除 403',
+      recListAfterRm.records.length === 1 && recRmByB instanceof TrpcHttpError && recRmByB.httpStatus === 403,
+      { left: recListAfterRm.records.length, byB: recRmByB && recRmByB.httpStatus });
+
+    /* ---- 70.4 体重记录：时序落库 + 最新日回写快照 + 历史补录不覆盖 ---- */
+    const wToday = await trpcMutate<{ log: { id: string } }>('petHealth.weightAdd', {
+      cookie: customerCookie, input: { petId: chipPet.pet.id, weightKg: 10.5, measuredAt: storeToday },
+    });
+    const wYest = await trpcMutate<{ log: { id: string } }>('petHealth.weightAdd', {
+      cookie: customerCookie, input: { petId: chipPet.pet.id, weightKg: 10.1, measuredAt: storeYesterday },
+    });
+    const petAfterW = await db.select().from(schema.pets).where(eq(schema.pets.id, chipPet.pet.id)).get();
+    const wList = await trpcQuery<{ logs: Array<{ weightKg: number; measuredAt: string }> }>('petHealth.weightList', {
+      cookie: customerCookie, input: { petId: chipPet.pet.id },
+    });
+    check('70.4 体重两行升序 + pets.weight_kg 快照=最新称重日值（历史补录不覆盖）',
+      wList.logs.length === 2 && wList.logs[0]!.measuredAt === storeYesterday && wList.logs[1]!.measuredAt === storeToday &&
+      petAfterW?.weightKg === 10.5,
+      { logs: wList.logs.map((l) => [l.measuredAt, l.weightKg]), snapshot: petAfterW?.weightKg });
+    void wToday; void wYest;
+    const ov = await trpcQuery<{ pet: { id: string }; records: unknown[]; weights: unknown[] }>('petHealth.overview', {
+      cookie: customerCookie, input: { petId: chipPet.pet.id },
+    });
+    const ovByB = await asErr(trpcQuery('petHealth.overview', { cookie: exp4bCookie, input: { petId: chipPet.pet.id } }));
+    check('70.4 overview 聚合读口（档案+记录 1+体重 2）+ 他人 403',
+      ov.pet.id === chipPet.pet.id && ov.records.length === 1 && ov.weights.length === 2 &&
+      ovByB instanceof TrpcHttpError && ovByB.httpStatus === 403,
+      { recs: ov.records.length, w: ov.weights.length, byB: ovByB && ovByB.httpStatus });
+
+    /* ================================================================== */
+    console.log('\n[体验批片4] 71. 服务过程+通知：异常通报 / 升级 / 拆封 / 安心卡 / 定时推送族');
+
+    /* ---- 71.1 异常通报：in_service 洗护单夹具 → report → 双通知（主人+门店）落行 ---- */
+    const gSvc71 = (await db.select().from(schema.services)
+      .where(and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'grooming'))).get())!;
+    // 时刻钉法：16:30 半点（槽位选取器只取整点，半点永不撞刻——57.6 先例）
+    const i71Start = new Date(`${storeToday}T16:30:00+08:00`);
+    const i71Appt = (await db.insert(schema.appointments).values({
+      code: 'E2EANC', customerId: customerUser.id, storeId, petId, serviceId: gSvc71.id,
+      type: 'grooming', scheduledStart: i71Start, scheduledEnd: new Date(i71Start.getTime() + 2 * 3600_000),
+      status: 'confirmed', priceFen: 12800, note: '【测试】e2e 片4 异常通报洗护单',
+    }).returning())[0]!;
+    await trpcMutate('appointment.checkin', { cookie: staffCookie, input: { code: 'E2EANC' } });
+    const rep711 = await trpcMutate<{ incident: { id: string; type: string; handledAt: Date | null } }>('incident.report', {
+      cookie: staffCookie,
+      input: { appointmentId: i71Appt.id, type: 'stress', description: '洗护中出现应激反应，已暂停操作并安抚' },
+    });
+    check('71.1 incident.report 落行（type=stress + handledAt=null 待处置）',
+      rep711.incident.type === 'stress' && rep711.incident.handledAt === null, rep711.incident);
+    const n711c = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'incident.reported'))))
+      .filter((n) => n.link === `/appointments/${i71Appt.id}/live#incident`);
+    const n711o = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, ownerUser.id), eq(schema.notifications.type, 'incident.reported'))))
+      .filter((n) => n.link === `/appointments/${i71Appt.id}/live#incident`);
+    check('71.1 双通知同事务落行（主人+店主各一条 incident.reported，link 带 #incident 锚避同刻聚合）',
+      n711c.length === 1 && n711o.length === 1 && n711c[0]!.category === 'service',
+      { customer: n711c.length, owner: n711o.length });
+    const list711 = await trpcQuery<{ incidents: Array<{ id: string }> }>('incident.listForAppointment', {
+      cookie: customerCookie, input: { appointmentId: i71Appt.id },
+    });
+    const list711b = await asErr(trpcQuery('incident.listForAppointment', { cookie: exp4bCookie, input: { appointmentId: i71Appt.id } }));
+    check('71.1 listForAppointment 本人可见（live 页高亮条数据源）+ 非当事人 403',
+      list711.incidents.some((i) => i.id === rep711.incident.id) &&
+      list711b instanceof TrpcHttpError && list711b.httpStatus === 403,
+      { n: list711.incidents.length, byB: list711b && list711b.httpStatus });
+    /* 状态闸负例：pending 单不可填报 */
+    const i71bAppt = (await db.insert(schema.appointments).values({
+      code: 'E2EANB', customerId: customerUser.id, storeId, petId, serviceId: gSvc71.id,
+      type: 'grooming', scheduledStart: i71Start, scheduledEnd: new Date(i71Start.getTime() + 2 * 3600_000),
+      status: 'pending', priceFen: 12800, note: '【测试】e2e 片4 异常状态闸负例单',
+    }).returning())[0]!;
+    const repPending = await asErr(trpcMutate('incident.report', {
+      cookie: staffCookie, input: { appointmentId: i71bAppt.id, type: 'injury', description: '状态闸负例' },
+    }));
+    const repByCustomer = await asErr(trpcMutate('incident.report', {
+      cookie: customerCookie, input: { appointmentId: i71Appt.id, type: 'injury', description: '客户越权填报' },
+    }));
+    check('71.1 状态闸：pending 单填报 400；客户无 staff 身份填报 401/403',
+      repPending instanceof TrpcHttpError && repPending.httpStatus === 400 &&
+      repByCustomer instanceof TrpcHttpError && (repByCustomer.httpStatus === 403 || repByCustomer.httpStatus === 401),
+      { pending: repPending && repPending.httpStatus, byC: repByCustomer && repByCustomer.httpStatus });
+
+    /* ---- 71.2 处置：markHandled（店长）→ handled 落列+主人通知；幂等二次 ---- */
+    const han712 = await trpcMutate<{ incident: { handledAt: Date | null; handledNote: string | null }; alreadyHandled: boolean }>('incident.markHandled', {
+      cookie: managerCookie, input: { incidentId: rep711.incident.id, note: '已安抚观察，状态平稳，继续完成服务' },
+    });
+    const n712 = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'incident.handled'))))
+      .filter((n) => n.link === `/appointments/${i71Appt.id}/live#incident`);
+    const han712b = await trpcMutate<{ alreadyHandled: boolean }>('incident.markHandled', {
+      cookie: managerCookie, input: { incidentId: rep711.incident.id, note: '重复处置验证幂等' },
+    });
+    check('71.2 markHandled 落列+incident.handled 通知主人+重复处置幂等（alreadyHandled=true 零副作用）',
+      han712.incident.handledAt instanceof Date && han712.incident.handledNote!.includes('安抚') &&
+      n712.length === 1 && han712b.alreadyHandled === true,
+      { handled: !!han712.incident.handledAt, notify: n712.length, dup: han712b.alreadyHandled });
+
+    /* ---- 71.3 15 分钟升级扫描：钉 created_at=16 分钟前 → sweep 置 escalated_at + 双方升级通知；重扫零增量 ---- */
+    const sixteenAgo = new Date(Date.now() - 16 * 60_000);
+    const inc713 = (await db.insert(schema.serviceIncidents).values({
+      appointmentId: i71Appt.id, storeId, petId, customerId: customerUser.id,
+      type: 'injury', description: '【测试】超时未处置升级夹具', occurredAt: sixteenAgo, reportedBy: aStaff.userId,
+      createdAt: sixteenAgo, updatedAt: sixteenAgo,
+    }).returning())[0]!;
+    const esc1 = await sweepIncidentEscalations(db, new Date());
+    const inc713After = await db.select().from(schema.serviceIncidents).where(eq(schema.serviceIncidents.id, inc713.id)).get();
+    const n713c = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'incident.escalated'))))
+      .filter((n) => n.link === `/appointments/${i71Appt.id}/live#incident`);
+    const n713o = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, ownerUser.id), eq(schema.notifications.type, 'incident.escalated'))))
+      .filter((n) => n.link === `/appointments/${i71Appt.id}/live#incident`);
+    check('71.3 超 15 分钟未处置 → 升级扫描置 escalated_at + 主人/店主双通知（incident.escalated）',
+      esc1 >= 1 && inc713After?.escalatedAt instanceof Date && n713c.length === 1 && n713o.length === 1,
+      { swept: esc1, esc: !!inc713After?.escalatedAt, c: n713c.length, o: n713o.length });
+    const esc2 = await sweepIncidentEscalations(db, new Date());
+    const n713c2 = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'incident.escalated'))))
+      .filter((n) => n.link === `/appointments/${i71Appt.id}/live#incident`);
+    check('71.3 升级幂等：escalated_at 锚重扫零增量（主人仍 1 条）', esc2 === 0 && n713c2.length === 1,
+      { second: esc2, n: n713c2.length });
+
+    /* ---- 71.4 寄养夹具（in_boarding + stay）→ 用品拆封通知 + 安心卡读口 ---- */
+    const bSvc71 = (await db.select().from(schema.services)
+      .where(and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'boarding'))).get())!;
+    const b71Start = new Date(`${storeToday}T17:30:00+08:00`); // 钉 17:30 半点
+    const b71Appt = (await db.insert(schema.appointments).values({
+      code: 'E2EBRD', customerId: customerUser.id, storeId, petId, serviceId: bSvc71.id,
+      type: 'boarding', scheduledStart: b71Start, scheduledEnd: new Date(b71Start.getTime() + 2 * 86400_000),
+      status: 'confirmed', priceFen: 39800, note: '【测试】e2e 片4 拆封/安心卡/推送寄养单',
+    }).returning())[0]!;
+    await trpcMutate('appointment.checkin', { cookie: staffCookie, input: { code: 'E2EBRD' } });
+    const b71Stay = await trpcMutate<{ stay: { id: string }; created: boolean }>('boarding.checkinStay', {
+      cookie: staffCookie,
+      input: { appointmentId: b71Appt.id, checkinWeightKg: 28.6, belongings: [{ name: '自带粮一袋' }, { name: '玩具球' }], roomNo: 'A-03' },
+    });
+    const un714 = await trpcMutate<{ log: { id: string; itemName: string } }>('boarding.unsealBelonging', {
+      cookie: staffCookie, input: { stayId: b71Stay.stay.id, itemName: '自带粮一袋', note: '晚餐开封投喂' },
+    });
+    const n714 = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'boarding.unsealed'))))
+      .filter((n) => n.link === `/appointments/${b71Appt.id}/live#unseal`);
+    check('71.4 用品拆封落痕 + 主人即时通知（boarding.unsealed，link 带 #unseal 锚）',
+      un714.log.itemName === '自带粮一袋' && n714.length === 1, { log: un714.log.id, notify: n714.length });
+    const ac714 = await trpcQuery<{
+      stay: { roomNo: string | null; checkinWeightKg: number | null } | null;
+      latestLog: unknown; unsealLogs: Array<{ itemName: string }>; petName: string | null;
+    }>('boarding.assuranceCard', { cookie: customerCookie, input: { appointmentId: b71Appt.id } });
+    const ac714b = await asErr(trpcQuery('boarding.assuranceCard', { cookie: exp4bCookie, input: { appointmentId: b71Appt.id } }));
+    check('71.4 安心卡读口聚合（房间/入住体重/拆封留痕 1 条/宠物名）+ 他人 403',
+      ac714.stay?.roomNo === 'A-03' && ac714.stay.checkinWeightKg === 28.6 &&
+      ac714.unsealLogs.length === 1 && ac714.unsealLogs[0]!.itemName === '自带粮一袋' && !!ac714.petName &&
+      ac714b instanceof TrpcHttpError && ac714b.httpStatus === 403,
+      { room: ac714.stay?.roomNo, unseal: ac714.unsealLogs.length, byB: ac714b && ac714b.httpStatus });
+
+    /* ---- 71.6 早晚定时推送：钉 08:35/20:35 窗内扫 → 早安/晚安播报各一；同窗重扫零增量 ---- */
+    await trpcMutate('boarding.dailyLog', {
+      cookie: staffCookie,
+      input: { stayId: b71Stay.stay.id, logDate: storeToday, walks: 2, meals: [{ time: '08:00', food: '自带粮', amount: '一碗', finished: true }] },
+    });
+    const dnLink = `/appointments/${b71Appt.id}/live`;
+    const dnBefore = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'boarding.daynight'))))
+      .filter((n) => n.link === dnLink);
+    // 钉 08:35（早窗 08:30–09:00 内；扫描粒度 5min 必扫到，当日当槽幂等锚兜底）
+    const amPin = new Date(`${storeToday}T08:35:00+08:00`);
+    await sweepBoardingDayNight(db, amPin);
+    await sweepBoardingDayNight(db, amPin); // 同窗重扫
+    const dnAm = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'boarding.daynight'))))
+      .filter((n) => n.link === dnLink);
+    check('71.6 早安播报落行（含当日打卡摘要「遛放 2 次」）+ 同窗重扫零增量',
+      dnAm.length - dnBefore.length === 1 && dnAm.some((n) => n.title === '早安播报' && (n.body ?? '').includes('遛放 2 次')),
+      { before: dnBefore.length, after: dnAm.length, titles: dnAm.map((n) => n.title) });
+    const pmPin = new Date(`${storeToday}T20:35:00+08:00`); // 晚窗 20:30–21:00
+    await sweepBoardingDayNight(db, pmPin);
+    await sweepBoardingDayNight(db, pmPin);
+    const dnPm = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'boarding.daynight'))))
+      .filter((n) => n.link === dnLink);
+    check('71.6 晚安播报另起一条（同槽不同行=早/晚各一）+ 重扫零增量',
+      dnPm.length - dnBefore.length === 2 && dnPm.some((n) => n.title === '晚安播报'),
+      { after: dnPm.length, titles: dnPm.map((n) => n.title) });
+
+    /* ---- 71.7 照护 4h 提醒：lastLog 钉 5h 前 → 本店在职员工各落一条；间隔内重扫零增量 ---- */
+    const carePin = new Date(`${storeToday}T12:00:00+08:00`); // 钉正午（白天窗 08:00–22:00 内）
+    await db.update(schema.boardingDailyLogs)
+      .set({ updatedAt: new Date(carePin.getTime() - 5 * 3600_000) })
+      .where(eq(schema.boardingDailyLogs.stayId, b71Stay.stay.id));
+    const careLink = `/boarding/${b71Appt.id}/checkin`;
+    const careBefore = (await db.select().from(schema.notifications)
+      .where(eq(schema.notifications.type, 'boarding.careRemind'))).filter((n) => n.link === careLink);
+    await sweepCareLogReminders(db, carePin);
+    let careAfter = (await db.select().from(schema.notifications)
+      .where(eq(schema.notifications.type, 'boarding.careRemind'))).filter((n) => n.link === careLink);
+    /* 幂等钉法：落行 created_at=真实时刻，dedupe 窗口按钉时刻起算——若真实时刻早于钉时刻 4h+
+       （凌晨跑批场景）重扫会误增；统一把本次落行 created_at 归位到钉时刻，第二扫确定性命中锚 */
+    for (const n of careAfter.filter((n) => !careBefore.some((b) => b.id === n.id))) {
+      await db.update(schema.notifications).set({ createdAt: carePin }).where(eq(schema.notifications.id, n.id));
+    }
+    await sweepCareLogReminders(db, carePin); // 间隔内重扫
+    careAfter = (await db.select().from(schema.notifications)
+      .where(eq(schema.notifications.type, 'boarding.careRemind'))).filter((n) => n.link === careLink);
+    check('71.7 4h 照护提醒：超期间隔 → 本店在职员工全员各一条（boarding.careRemind）+ 间隔内重扫零增量',
+      careAfter.length - careBefore.length === storeStaffRows.length,
+      { before: careBefore.length, after: careAfter.length, staff: storeStaffRows.length });
+
+    /* ---- 71.8 疫苗/驱虫到期提醒：双源扫描（pets.vaccine_valid_until + health.next_due_date）当日当项幂等 ---- */
+    const dueSoon = storeDayStr(new Date(Date.now() + 5 * 86400_000)); // 到期=5 天后（缺省提前 7 天窗口内）
+    const duePet = (await db.insert(schema.pets).values({
+      ownerId: customerUser.id, name: '到期提醒测试兔', species: 'other', vaccineValidUntil: dueSoon,
+    }).returning())[0]!;
+    const dueRec = await trpcMutate<{ record: { id: string } }>('petHealth.healthAdd', {
+      cookie: customerCookie,
+      input: { petId: duePet.id, type: 'deworm', title: '体外驱虫（滴剂）', recordDate: storeToday, nextDueDate: storeDayStr(new Date(Date.now() + 3 * 86400_000)) },
+    });
+    await sweepPetDueReminders(db, new Date());
+    await sweepPetDueReminders(db, new Date()); // 当日重扫
+    const n718v = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'pet.vaccineDue'))))
+      .filter((n) => n.link === `/philia/pets/${duePet.id}`);
+    const n718h = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, customerUser.id), eq(schema.notifications.type, 'pet.healthDue'))))
+      .filter((n) => n.link === `/philia/pets/${duePet.id}/health?rec=${dueRec.record.id}`);
+    check('71.8 到期双源各落一条（疫苗字段源 pet.vaccineDue + 记录源 pet.healthDue）+ 当日当项幂等重扫零增量',
+      n718v.length === 1 && n718h.length === 1 && (n718v[0]!.body ?? '').includes(dueSoon),
+      { v: n718v.length, h: n718h.length });
+
+    /* ================================================================== */
+    console.log('\n[体验批片4] 72. 明细透出 / 电话公示 / 工单升级 / 静态闸门');
+
+    /* ---- 72.1 服务明细：分项时长（六步逐起讫）+ 用料透出（消毒耗材扣减流水） ---- */
+    const d72Start = new Date(`${storeToday}T18:30:00+08:00`); // 钉 18:30 半点
+    const d72Appt = (await db.insert(schema.appointments).values({
+      code: 'E2ED72', customerId: customerUser.id, storeId, petId, serviceId: gSvc71.id,
+      type: 'grooming', scheduledStart: d72Start, scheduledEnd: new Date(d72Start.getTime() + 2 * 3600_000),
+      status: 'in_service', priceFen: 12800, note: '【测试】e2e 片4 服务明细单',
+    }).returning())[0]!;
+    const d72Step1 = (await db.insert(schema.appointmentSteps).values({
+      appointmentId: d72Appt.id, stepKey: 'disinfection', stepOrder: 1, status: 'done', requiredPhotos: 1,
+      startedAt: new Date(d72Start.getTime()), doneAt: new Date(d72Start.getTime() + 600_000),
+    }).returning())[0]!;
+    await db.insert(schema.appointmentSteps).values({
+      appointmentId: d72Appt.id, stepKey: 'precheck', stepOrder: 2, status: 'active', requiredPhotos: 2,
+      startedAt: new Date(d72Start.getTime() + 600_000),
+    });
+    const d72Supply = (await db.select().from(schema.products)
+      .where(and(eq(schema.products.storeId, storeId), eq(schema.products.isDisinfectionSupply, true))).get())!;
+    await db.insert(schema.stockMovements).values({
+      storeId, productId: d72Supply.id, sourceType: 'disinfection', sourceId: d72Step1.id,
+      delta: -1, beforeStock: 10, afterStock: 9, operatorId: aStaff.userId, note: '【测试】片4 明细透出夹具',
+    });
+    const sheet721 = await trpcQuery<{
+      appointmentStatus: string;
+      steps: Array<{ stepKey: string; label: string; status: string; durationSec: number | null }>;
+      materials: Array<{ name: string; quantity: number }>;
+    }>('serviceStep.detailSheet', { cookie: customerCookie, input: { appointmentId: d72Appt.id } });
+    const sheet721b = await asErr(trpcQuery('serviceStep.detailSheet', { cookie: exp4bCookie, input: { appointmentId: d72Appt.id } }));
+    check('72.1 detailSheet：分项时长（消毒步 600s/中文名/进行中步 duration=null）+ 用料透出（耗材名×1）+ 非当事人 403',
+      sheet721.steps.length === 2 &&
+      sheet721.steps[0]!.stepKey === 'disinfection' && sheet721.steps[0]!.label === '消毒' && sheet721.steps[0]!.durationSec === 600 &&
+      sheet721.steps[1]!.status === 'active' && sheet721.steps[1]!.durationSec === null &&
+      sheet721.materials.length === 1 && sheet721.materials[0]!.name === d72Supply.name && sheet721.materials[0]!.quantity === 1 &&
+      sheet721b instanceof TrpcHttpError && sheet721b.httpStatus === 403,
+      { steps: sheet721.steps.map((s) => [s.stepKey, s.durationSec]), mats: sheet721.materials, byB: sheet721b && sheet721b.httpStatus });
+    /* 无耗材空单=空数组诚实空态（不画假用料） */
+    const sheet721c = await trpcQuery<{ materials: unknown[] }>('serviceStep.detailSheet', {
+      cookie: customerCookie, input: { appointmentId: i71Appt.id },
+    });
+    check('72.1 无耗材扣减单 materials=空数组（诚实空态口径）', sheet721c.materials.length === 0, sheet721c.materials.length);
+
+    /* ---- 72.2 电话客服公示：stores.phone 透出 + owner 维护口 + 非 owner 403 ---- */
+    const nearby722 = await trpcQuery<{ stores: Array<{ id: string; phone: string | null }> }>('store.listNearby', { cookie: customerCookie });
+    const store722 = nearby722.stores.find((s) => s.id === storeId);
+    check('72.2 listNearby 透出门店电话（种子值 0571-88886666；ContactStore/AppDock 数据源）',
+      store722?.phone === '0571-88886666', store722?.phone);
+    const upd722 = await trpcMutate<{ store: { phone: string | null } }>('auth.updateStoreProfile', {
+      cookie: ownerCookie, input: { phone: '0571-11112222' },
+    });
+    const upd722b = await asErr(trpcMutate('auth.updateStoreProfile', { cookie: customerCookie, input: { phone: '0571-99998888' } }));
+    check('72.2 门店电话维护口：owner 改值生效 + 非 owner 403（带端口出生）',
+      upd722.store.phone === '0571-11112222' && upd722b instanceof TrpcHttpError && upd722b.httpStatus === 403,
+      { phone: upd722.store.phone, byC: upd722b && upd722b.httpStatus });
+    await trpcMutate('auth.updateStoreProfile', { cookie: ownerCookie, input: { phone: '0571-88886666' } }); // 复原种子值
+
+    /* ---- 72.3 工单升级店长介入：escalated 状态机 + 时间线 + 门店通知 + 待办含升级件 ---- */
+    const tk723 = await trpcMutate<{ ticket: { id: string; ticketNo: string; status: string } }>('serviceLoop.ticketCreate', {
+      cookie: customerCookie, input: { storeId, type: 'complaint', description: '等待时间过长，要求店长跟进', photoUrls: [] },
+    });
+    const esc723 = await trpcMutate<{
+      ticket: { status: string; escalatedAt: Date | null; escalateNote: string | null; timelineJson: Array<{ action: string }> };
+      alreadyEscalated: boolean;
+    }>('serviceLoop.ticketEscalate', {
+      cookie: customerCookie, input: { ticketId: tk723.ticket.id, note: '已等 3 天无人回复' },
+    });
+    const n723 = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, ownerUser.id), eq(schema.notifications.type, 'ticket.escalated'))))
+      .filter((n) => (n.body ?? '').includes(tk723.ticket.ticketNo) || n.link === '/');
+    const pend723 = await trpcQuery<Array<{ id: string; status: string }>>('serviceLoop.ticketListPending', { cookie: managerCookie });
+    check('72.3 ticketEscalate：status=escalated + escalatedAt/Note 落列 + timeline 追加 escalated + 店主通知 + 店长待办含升级件',
+      esc723.ticket.status === 'escalated' && esc723.ticket.escalatedAt instanceof Date &&
+      esc723.ticket.escalateNote === '已等 3 天无人回复' &&
+      esc723.ticket.timelineJson.some((t) => t.action === 'escalated') &&
+      n723.length >= 1 && pend723.some((t) => t.id === tk723.ticket.id && t.status === 'escalated'),
+      { st: esc723.ticket.status, tl: esc723.ticket.timelineJson.map((t) => t.action), notify: n723.length });
+    const esc723dup = await trpcMutate<{ alreadyEscalated: boolean }>('serviceLoop.ticketEscalate', {
+      cookie: customerCookie, input: { ticketId: tk723.ticket.id },
+    });
+    const esc723byB = await asErr(trpcMutate('serviceLoop.ticketEscalate', { cookie: exp4bCookie, input: { ticketId: tk723.ticket.id } }));
+    const reply723 = await trpcMutate<{ ticket: { status: string } }>('serviceLoop.ticketReply', {
+      cookie: managerCookie, input: { ticketId: tk723.ticket.id, reply: '店长已介入：本单免等待优先处理，稍后电话回访' },
+    });
+    check('72.3 重复升级幂等 + 他人升级 403 + 升级后店长可回复（escalated→replied）',
+      esc723dup.alreadyEscalated === true &&
+      esc723byB instanceof TrpcHttpError && esc723byB.httpStatus === 403 &&
+      reply723.ticket.status === 'replied',
+      { dup: esc723dup.alreadyEscalated, byB: esc723byB && esc723byB.httpStatus, after: reply723.ticket.status });
+    await db.update(schema.supportTickets).set({ status: 'closed' }).where(eq(schema.supportTickets.id, tk723.ticket.id));
+    const esc723closed = await asErr(trpcMutate('serviceLoop.ticketEscalate', { cookie: customerCookie, input: { ticketId: tk723.ticket.id } }));
+    check('72.3 已关闭工单升级硬拒 400（仲裁=在途件语义）',
+      esc723closed instanceof TrpcHttpError && esc723closed.httpStatus === 400, esc723closed && esc723closed.httpStatus);
+
+    /* ---- 72.4 品牌色板级闸门：VI V3 深棕口径——已退役柠檬黄主色全仓零命中（customer-mini 换皮残留已清） ---- */
+    const REPO_ROOT = join(SERVER_ROOT, '..');
+    const miniCss = readFileSync(join(REPO_ROOT, 'apps', 'customer-mini', 'src', 'app.css'), 'utf8');
+    const walkSrc = (dir: string, out: string[] = []): string[] => {
+      for (const ent of readdirSync(dir, { withFileTypes: true })) {
+        if (ent.name === 'node_modules' || ent.name.startsWith('.')) continue;
+        const p = join(dir, ent.name);
+        if (ent.isDirectory()) walkSrc(p, out);
+        else if (/\.(ts|tsx|css|html)$/.test(ent.name)) out.push(p);
+      }
+      return out;
+    };
+    const lemonHits: string[] = [];
+    for (const dir of [join(REPO_ROOT, 'apps', 'customer', 'src'), join(REPO_ROOT, 'apps', 'customer-mini', 'src'), join(REPO_ROOT, 'packages', 'shared', 'src')]) {
+      for (const f of walkSrc(dir)) {
+        if (/#fdc830/i.test(readFileSync(f, 'utf8'))) lemonHits.push(f);
+      }
+    }
+    check('72.4 色板闸门：柠檬黄（已退役 v1.1 主色）在 customer/customer-mini/shared 源码全域零命中（VI V3 深棕主体）',
+      lemonHits.length === 0 && !/#fdc830/i.test(miniCss) && miniCss.includes('#3B2E24'),
+      { hits: lemonHits.slice(0, 5) });
+
+    /* ---- 72.5 空态/骨架源码级闸门（盘点表 D6 差额：页面级断言补位——纯 UI 件无 server 闸，
+         以源码覆盖断言钉回归：六页空态组件引用 + 骨架三件导出 + 全端骨架引用面 ≥10 页） ---- */
+    const emptyPages = ['PetsPage.tsx', 'PetHealthPage.tsx', 'AppointmentsPage.tsx', 'MallOrdersPage.tsx', 'NotifyCenterPage.tsx', 'TicketListPage.tsx'];
+    const emptyMiss = emptyPages.filter((f) =>
+      !readFileSync(join(REPO_ROOT, 'apps', 'customer', 'src', 'pages', f), 'utf8').includes('EmptyState'));
+    const skeletonSrc = readFileSync(join(REPO_ROOT, 'packages', 'shared', 'src', 'components', 'Skeleton.tsx'), 'utf8');
+    const skelPages = walkSrc(join(REPO_ROOT, 'apps', 'customer', 'src')).filter((f) =>
+      f.endsWith('.tsx') && /Skeleton|ListSkeleton|BoardSkeleton/.test(readFileSync(f, 'utf8')));
+    check('72.5 空态闸门：六页 EmptyState 引用全命中 + 骨架三件导出在仓',
+      emptyMiss.length === 0 &&
+      /export (function|const) Skeleton/.test(skeletonSrc) && skeletonSrc.includes('ListSkeleton') && skeletonSrc.includes('BoardSkeleton'),
+      { miss: emptyMiss });
+    check('72.5 骨架闸门：客户端骨架组件引用面 ≥10 个 tsx（广泛应用回归钉）', skelPages.length >= 10, skelPages.length);
+
+    /* ---- 72.6 PWA 静态闸门：离线兜底配置+离线页+安装引导组件+挂载 ----
+       （开口项 3 实证修正：navigateFallback=壳 /index.html——离线页直连+预缓存双轨，
+       SPA 深链不被离线页接管，review-e2e 实证锚） */
+    const viteCfg = readFileSync(join(REPO_ROOT, 'apps', 'customer', 'vite.config.ts'), 'utf8');
+    const offlineHtml = readFileSync(join(REPO_ROOT, 'apps', 'customer', 'public', 'offline.html'), 'utf8');
+    const bannerSrc = readFileSync(join(REPO_ROOT, 'apps', 'customer', 'src', 'components', 'pwa', 'InstallBanner.tsx'), 'utf8');
+    const appTsx = readFileSync(join(REPO_ROOT, 'apps', 'customer', 'src', 'App.tsx'), 'utf8');
+    check('72.6 PWA 闸门：navigateFallback→/index.html 壳（API 前缀豁免）+ offline.html 品牌离线页在仓 + 安装引导（beforeinstallprompt/appinstalled）+ App.tsx 已挂载',
+      /navigateFallback:\s*'\/index\.html'/.test(viteCfg) && /navigateFallbackDenylist/.test(viteCfg) &&
+      offlineHtml.includes('菲丽亚') && bannerSrc.includes('beforeinstallprompt') && bannerSrc.includes('appinstalled') &&
+      /<InstallBanner\s*\/>/.test(appTsx),
+      { cfg: /navigateFallback/.test(viteCfg), mounted: /<InstallBanner\s*\/>/.test(appTsx) });
+  }
 
   client.close();
 }

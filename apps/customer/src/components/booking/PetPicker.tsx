@@ -15,9 +15,10 @@
  * 实测 ≥44px、相邻行距 space-y-2=8px——满足补丁③4（HIG 44pt / WCAG 24px 取严）。
  */
 
+import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { PawPrint } from 'lucide-react';
-import { Skeleton } from '@philia/shared';
+import { Skeleton, useMe } from '@philia/shared';
 import { bkc } from '@/copy/booking';
 import type { PetItem } from './types';
 import { isoToDate, toISODate } from './format';
@@ -43,6 +44,29 @@ export default function PetPicker({
   requireVaccineUntil,
   loading,
 }: PetPickerProps) {
+  const { user } = useMe();
+  /* 体验批片 4 默认选中：主人有 activePetId 且该宠在可选列表且当前未选中任何宠物时，
+     经既有 onSelect 回调同步父级（不改受控协议）；只补选一次，之后尊重用户手选/父级控制 */
+  const defaultPickedRef = useRef(false);
+  useEffect(() => {
+    if (defaultPickedRef.current || loading) return;
+    if (selectedId !== null) {
+      defaultPickedRef.current = true;
+      return;
+    }
+    const activePetId = user?.activePetId;
+    if (!activePetId) return;
+    const target = pets.find((p) => p.id === activePetId);
+    if (!target) return;
+    // 疫苗硬校验模式下不越过阻断卡（红色阻断行不可选）
+    if (requireVaccineUntil) {
+      if (!target.vaccineValidUntil) return;
+      if (toISODate(isoToDate(target.vaccineValidUntil)) < toISODate(requireVaccineUntil)) return;
+    }
+    defaultPickedRef.current = true;
+    onSelect(activePetId);
+  }, [user, pets, selectedId, loading, requireVaccineUntil, onSelect]);
+
   if (loading) {
     return <Skeleton className="h-20 rounded-card" />;
   }

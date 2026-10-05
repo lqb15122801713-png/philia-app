@@ -43,6 +43,8 @@ export function useMe(): { user: SessionUser | null; loading: boolean; refetch()
           storeId: r.store?.id ?? r.staff?.storeId,
           // 批次 S1：双任务台分流依据；无 staff 记录为 undefined（员工端据此出友好空态）
           staffRole: r.staff ? (r.staff.role === 'frontdesk' ? 'frontdesk' : 'groomer') : undefined,
+          // 体验批片 4：全局当前宠物（pet.setActive 写口；多宠物切换器据此高亮）
+          activePetId: r.user.activePetId,
         };
       } catch (err) {
         // 未登录 / 会话过期（401）→ user=null，不作为查询错误

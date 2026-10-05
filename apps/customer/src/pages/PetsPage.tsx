@@ -15,6 +15,7 @@ import { Link } from 'react-router-dom'
 import { z } from 'zod'
 import { getApiBase, uploadImage, useMe, usePhiliaClient } from '@philia/shared'
 import PageHeader from '@/components/PageHeader'
+import ActivePetSwitcher from '@/components/pets/ActivePetSwitcher'
 import { pc } from '@/copy/pets'
 import { sl } from '@/copy/serviceloop'
 import {
@@ -38,6 +39,8 @@ const petFormSchema = z.object({
   name: z.string().trim().min(1, '宠物名不能为空').max(32, '名字最长 32 字'),
   species: z.enum(['dog', 'cat', 'other'], { message: '请选择物种' }),
   breed: z.string().trim().max(64, '品种最长 64 字').optional(),
+  chipNo: z.string().trim().max(64, '芯片号最长 64 字').optional(),
+  coatColor: z.string().trim().max(32, '花色最长 32 字').optional(),
   birthday: isoDate.optional(),
   weightKg: z
     .number({ message: '体重须为数字' })
@@ -59,6 +62,8 @@ interface FormState {
   name: string
   species: 'dog' | 'cat' | 'other'
   breed: string
+  chipNo: string
+  coatColor: string
   birthday: string
   weightKg: string
   vaccineValidUntil: string
@@ -71,6 +76,8 @@ const EMPTY_FORM: FormState = {
   name: '',
   species: 'dog',
   breed: '',
+  chipNo: '',
+  coatColor: '',
   birthday: '',
   weightKg: '',
   vaccineValidUntil: '',
@@ -193,6 +200,8 @@ function PetForm({
       name: form.name,
       species: form.species,
       breed: form.breed.trim() || undefined,
+      chipNo: form.chipNo.trim() || undefined,
+      coatColor: form.coatColor.trim() || undefined,
       birthday: form.birthday || undefined,
       weightKg: form.weightKg.trim() === '' ? undefined : Number(form.weightKg),
       vaccineValidUntil: form.vaccineValidUntil || undefined,
@@ -289,7 +298,7 @@ function PetForm({
         {errors.species ? <p className={errCls}>{errors.species}</p> : null}
       </div>
 
-      {/* 品种 / 生日 / 体重 / 疫苗 */}
+      {/* 品种 / 生日 / 体重 / 疫苗 / 芯片号 / 花色 */}
       <div className="mt-4 grid grid-cols-2 gap-3">
         <div>
           <label className={labelCls} htmlFor="pet-breed">品种</label>
@@ -339,6 +348,30 @@ function PetForm({
             onChange={(e) => set('vaccineValidUntil', e.target.value)}
           />
           {errors.vaccineValidUntil ? <p className={errCls}>{errors.vaccineValidUntil}</p> : null}
+        </div>
+        <div>
+          <label className={labelCls} htmlFor="pet-chip-no">{pc('pets.chipNoLabel')}</label>
+          <input
+            id="pet-chip-no"
+            className={inputCls}
+            value={form.chipNo}
+            maxLength={64}
+            placeholder={pc('pets.chipNoPlaceholder')}
+            onChange={(e) => set('chipNo', e.target.value)}
+          />
+          {errors.chipNo ? <p className={errCls}>{errors.chipNo}</p> : null}
+        </div>
+        <div>
+          <label className={labelCls} htmlFor="pet-coat-color">{pc('pets.coatColorLabel')}</label>
+          <input
+            id="pet-coat-color"
+            className={inputCls}
+            value={form.coatColor}
+            maxLength={32}
+            placeholder={pc('pets.coatColorPlaceholder')}
+            onChange={(e) => set('coatColor', e.target.value)}
+          />
+          {errors.coatColor ? <p className={errCls}>{errors.coatColor}</p> : null}
         </div>
       </div>
 
@@ -536,6 +569,8 @@ export default function PetsPage() {
         name: pet.name,
         species: (pet.species as FormState['species']) ?? 'dog',
         breed: pet.breed ?? '',
+        chipNo: pet.chipNo ?? '',
+        coatColor: pet.coatColor ?? '',
         birthday: pet.birthday ?? '',
         weightKg: pet.weightKg !== null ? String(pet.weightKg) : '',
         vaccineValidUntil: pet.vaccineValidUntil ?? '',
@@ -551,6 +586,9 @@ export default function PetsPage() {
     <div className="px-[22px] pb-6">
       {/* U1-A：统一返回条（←圆钮+标题），固定返回 philia 页 */}
       <PageHeader title={pc('pets.title')} fallback="/philia" className="pt-4" />
+
+      {/* 体验批片 4：多宠物全局切换器（零宠不渲染 / 单宠不展开 / 多宠底部 sheet 切换） */}
+      <ActivePetSwitcher />
 
       <div className="mt-4 flex flex-col gap-3">
         {petsQuery.isPending ? <LoadingBlock lines={3} /> : null}
@@ -631,6 +669,21 @@ export default function PetsPage() {
                     ) : null}
                     {pet.neutered ? <span>已绝育</span> : null}
                   </div>
+                  {/* 体验批片 4：芯片号 / 花色徽章（有值才渲染） */}
+                  {pet.chipNo || pet.coatColor ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {pet.chipNo ? (
+                        <span className="rounded-full bg-sunken px-2 py-0.5 text-caption-xs text-ink-secondary">
+                          {pc('pets.chipNoLabel')} <span className="u1-num">{pet.chipNo}</span>
+                        </span>
+                      ) : null}
+                      {pet.coatColor ? (
+                        <span className="rounded-full bg-sunken px-2 py-0.5 text-caption-xs text-ink-secondary">
+                          {pc('pets.coatColorLabel')} {pet.coatColor}
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
                 {pet.temperamentTags && pet.temperamentTags.length > 0 ? (
                   <div className="mt-2 flex flex-wrap gap-1.5">
@@ -646,6 +699,15 @@ export default function PetsPage() {
                 ) : null}
                 {/* U1-I 洗护史时间线：真实完成单 + 同款再约（现成预填链路） */}
                 <PetGroomingHistory petId={pet.id} />
+                {/* 体验批片 4：健康档案入口（/philia/pets/:id/health 体重+健康记录）；
+                    注：多宠时本 testid 逐卡重复，QA 取 .first() */}
+                <Link
+                  to={`/philia/pets/${pet.id}/health`}
+                  data-testid="pet-health-link"
+                  className="mt-2.5 flex items-center justify-between gap-2 text-caption font-bold text-ink underline-offset-2 hover:underline"
+                >
+                  {pc('pets.healthEntry')}
+                </Link>
                 {/* 补缺大批片 4：洗护史区相册入口（Link /philia/moments） */}
                 <Link
                   to="/philia/moments"

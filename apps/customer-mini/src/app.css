@@ -3,6 +3,9 @@
  * VI token 类（bg-canvas / text-ink / bg-brand-primary 等）来自
  * packages/config/tailwind-preset.js（色值零改动）。
  * NutUI 主题变量按 VI v1.1 token 覆写（品牌主色/按压/浅底/前景），不引入组件库默认色。
+ * 换皮口径：VI V3 深棕（柠檬黄主色时代已退役），值唯一来源
+ * packages/shared/src/tokens.ts（深棕墨 #3B2E24 / 深棕渐变止 #2E2318 /
+ * 纸白 #FAF8F2 / 浅底 #FBF5E4 / 淡黄点睛 #F2DFA6）。
  */
 @tailwind base;
 @tailwind components;
@@ -10,12 +13,12 @@
 
 page,
 :root {
-  --nutui-color-primary: #FDC830;
-  --nutui-color-primary-pressed: #E8AD02;
-  --nutui-color-primary-light: #FCF3D9;
-  --nutui-color-primary-light-pressed: #FCF3D9;
-  --nutui-color-primary-stop-1: #FDC830;
-  --nutui-color-primary-stop-2: #FDC012;
-  --nutui-color-primary-text: #4A3B2E;
+  --nutui-color-primary: #3B2E24;
+  --nutui-color-primary-pressed: #2E2318;
+  --nutui-color-primary-light: #FBF5E4;
+  --nutui-color-primary-light-pressed: #F2DFA6;
+  --nutui-color-primary-stop-1: #3B2E24;
+  --nutui-color-primary-stop-2: #2E2318;
+  --nutui-color-primary-text: #FAF8F2;
 }
 

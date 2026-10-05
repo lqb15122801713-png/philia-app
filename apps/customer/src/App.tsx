@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useLocation, useSearchParams } from 'react-rou
 import { PageErrorBoundary } from '@philia/shared'
 import RequireAuth from './components/RequireAuth'
 import AppDock from './components/AppDock'
+import InstallBanner from './components/pwa/InstallBanner'
 import AppointmentDetailPage from './pages/AppointmentDetailPage'
 import AppointmentLivePage from './pages/AppointmentLivePage'
 import AppointmentsPage from './pages/AppointmentsPage'
@@ -41,6 +42,7 @@ import MomentsPage from './pages/MomentsPage'
 import NotifyCenterPage from './pages/NotifyCenterPage'
 import NotifyPrefsPage from './pages/NotifyPrefsPage'
 import PetsPage from './pages/PetsPage'
+import PetHealthPage from './pages/PetHealthPage'
 import PhiliaPage from './pages/PhiliaPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import RefundApplyPage from './pages/RefundApplyPage'
@@ -80,6 +82,9 @@ function ProtectedRoutes() {
       <Route path="/refunds/:id" element={<RefundDetailPage />} />
       <Route path="/philia" element={<PhiliaPage />} />
       <Route path="/philia/pets" element={<PetsPage />} />
+      {/* 体验批片 4：宠物健康档案（健康记录族+体重趋势；详情级无 dock；
+          申报锚点=「健康档案」，双表已申报 check-nav-closure/smoke-routes） */}
+      <Route path="/philia/pets/:id/health" element={<PetHealthPage />} />
       {/* R11a 裁定：旧路由 /philia/member 退役——重定向往 /member 会员中心（路径保留，
           兼容旧深链与 check-nav-closure 既有申报行） */}
       <Route path="/philia/member" element={<Navigate to="/member" replace />} />
@@ -175,6 +180,9 @@ export default function App() {
         </Routes>
       </main>
       {!isDevLogin && isMainPath && <AppDock />}
+      {/* 体验批片 4：PWA 安装引导条（beforeinstallprompt 拦存+自定义条；
+          登录守卫内全页可出，自身持关闭/已装持久化，非主级页不吃 isMainPath 限制） */}
+      {!isDevLogin && <InstallBanner />}
     </div>
   )
 }

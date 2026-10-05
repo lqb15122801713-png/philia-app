@@ -47,6 +47,13 @@ const CANCEL_FREE_BEFORE_SEC = 4 * 3600;
 /** v1.1-b3 B3-5（W-14）：取消原因快捷选项（选填，可再补充自由文本） */
 const CANCEL_REASON_CHIPS = ['行程有变', '时间不合适', '价格因素', '其他'] as const;
 
+/** 服务明细分项状态徽（done=沉底 / active=淡金 / locked=占位灰） */
+const STEP_STATUS_META: Record<string, { key: 'appointments.stepDone' | 'appointments.stepDoing' | 'appointments.stepPending'; pill: string }> = {
+  done: { key: 'appointments.stepDone', pill: 'bg-sunken text-ink-secondary' },
+  active: { key: 'appointments.stepDoing', pill: 'bg-brand-primary-light text-brand-primary-pressed' },
+  locked: { key: 'appointments.stepPending', pill: 'bg-sunken text-ink-placeholder' },
+};
+
 const CLIENT_ID_KEY = 'philia.sseClientId';
 
 /** SSE clientId：localStorage 持久化（契约 · push.subscribe 与 /api/events 共用，同 live 页口径） */
@@ -100,6 +107,13 @@ export default function AppointmentDetailPage() {
   const albumQ = useQuery({
     queryKey: ['appointment', 'serviceAlbum', id],
     queryFn: () => trpc.appointment.serviceAlbum.query({ appointmentId: id }),
+    enabled: albumEnabled,
+  });
+
+  // 服务明细（体验批片 4 B15）：洗护单 in_service/completed 透出分项时长+耗材扣减
+  const detailSheetQ = useQuery({
+    queryKey: ['serviceStep', 'detailSheet', id],
+    queryFn: () => trpc.serviceStep.detailSheet.query({ appointmentId: id }),
     enabled: albumEnabled,
   });
 
@@ -382,8 +396,8 @@ export default function AppointmentDetailPage() {
         (r) => r.billId === d.cashierBillId && ['submitted', 'approved', 'refunded'].includes(r.status),
       )
     : undefined;
-  // stores 表暂无 phone 字段：有则渲染 tel:，无则提示到店/商家端联系
-  const storePhone = (d.store as { phone?: string | null } | null)?.phone ?? null;
+  // 门店电话：stores.phone 已在仓（0042 迁移），无值提示到店/商家端联系
+  const storePhone = d.store?.phone ?? null;
 
   // 服务相册分组：completed 展示全部六步；进行中订单只显示已确认（done）步骤的照片
   const albumRawSteps = albumQ.data?.steps ?? [];
@@ -528,6 +542,53 @@ export default function AppointmentDetailPage() {
           </p>
         ) : null}
       </section>
+
+      {/* 服务明细（体验批片 4 B15）：洗护单 in_service/completed——分项时长（durationSec→X 分钟，
+          进行中/待开始文签）+ 耗材扣减透出（空数组=诚实空态注记） */}
+      {albumEnabled && detailSheetQ.data ? (
+        <section className="mt-4 rounded-card bg-card p-4 shadow-card" data-testid="service-detail-sheet">
+          <h2 className="text-title">{apc('appointments.detailSheetTitle')}</h2>
+          <ul className="mt-3 space-y-2">
+            {detailSheetQ.data.steps.map((s) => {
+              const stepMeta = STEP_STATUS_META[s.status] ?? STEP_STATUS_META.locked!;
+              return (
+                <li key={s.stepKey} className="flex items-center justify-between gap-2 text-body">
+                  <span className="flex items-center gap-2">
+                    <span>{s.label}</span>
+                    <span className={`rounded-tag px-1.5 py-0.5 text-caption ${stepMeta.pill}`}>
+                      {apc(stepMeta.key)}
+                    </span>
+                  </span>
+                  <span className="font-number shrink-0 text-caption text-ink-secondary">
+                    {s.status === 'done' && s.durationSec != null
+                      ? apc('appointments.stepDuration', { min: Math.max(1, Math.round(s.durationSec / 60)) })
+                      : s.status === 'active'
+                        ? apc('appointments.stepDoing')
+                        : apc('appointments.stepPending')}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="mt-3 border-t border-line-divider pt-3" data-testid="service-materials">
+            <p className="text-caption text-ink-secondary">{apc('appointments.materialsTitle')}</p>
+            {detailSheetQ.data.materials.length === 0 ? (
+              <p className="mt-1 text-caption text-ink-secondary">{apc('appointments.materialsEmpty')}</p>
+            ) : (
+              <ul className="mt-1.5 space-y-1">
+                {detailSheetQ.data.materials.map((m, i) => (
+                  <li key={`${m.name}-${i}`} className="flex items-baseline justify-between gap-2 text-body-sm">
+                    <span className="text-ink">{m.name}</span>
+                    <span className="font-number shrink-0 text-ink-secondary">
+                      {apc('appointments.materialQty', { n: m.quantity })}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
+      ) : null}
 
       {/* 服务相册（v1.1-b2 B2-4）：按六步分组网格展示，before/after 打标；
           completed 展示全部六步分组，进行中订单只显示已确认步骤的照片 */}

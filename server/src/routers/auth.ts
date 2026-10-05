@@ -133,7 +133,7 @@ export const authRouter = router({
       return { staff: staffRow, storeId: staffRow.storeId };
     }),
 
-  /** 商家开店：创建门店 + owner=当前用户 + merchant_owner 角色（幂等） */
+  /** 商家开店：创建门店 + owner=当前用户 + merchant_owner 角色（幂等）；体验批片 4：phone 入参 */
   bindStore: publicProcedure
     .input(
       z.object({
@@ -141,6 +141,8 @@ export const authRouter = router({
         address: z.string().trim().max(255).optional(),
         lat: z.number().min(-90).max(90).optional(),
         lng: z.number().min(-180).max(180).optional(),
+        /** 门店联系电话（体验批片 4；可空=客户端隐藏电话行，诚实空态） */
+        phone: z.string().trim().max(32).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -164,6 +166,7 @@ export const authRouter = router({
             ownerId: userId,
             name: input.name,
             address: input.address ?? null,
+            phone: input.phone ?? null,
             lat: input.lat ?? null,
             lng: input.lng ?? null,
             status: 'active',
@@ -179,5 +182,39 @@ export const authRouter = router({
       });
 
       return { store, created: true as const };
+    }),
+
+  /**
+   * 门店资料维护（体验批片 4 · owner 本店）：phone/address 可改（带端口出生——
+   * 客户端「联系门店」电话透出值由此维护；名称不在本片口径，不动）。
+   */
+  updateStoreProfile: publicProcedure
+    .input(
+      z.object({
+        phone: z.string().trim().max(32).nullable().optional(),
+        address: z.string().trim().max(255).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user.roles.includes('merchant_owner')) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: '仅店主可维护门店资料' });
+      }
+      const store = await ctx.db
+        .select()
+        .from(schema.stores)
+        .where(and(eq(schema.stores.ownerId, ctx.user.id), eq(schema.stores.status, 'active')))
+        .limit(1)
+        .then((r) => r[0]);
+      if (!store) throw new TRPCError({ code: 'NOT_FOUND', message: '名下无营业中门店' });
+      const [updated] = await ctx.db
+        .update(schema.stores)
+        .set({
+          ...(input.phone !== undefined ? { phone: input.phone } : {}),
+          ...(input.address !== undefined ? { address: input.address } : {}),
+          updatedAt: new Date(),
+        })
+        .where(eq(schema.stores.id, store.id))
+        .returning();
+      return { store: updated };
     }),
 });

@@ -26,6 +26,7 @@ import {
   sqliteTable,
   text,
   uniqueIndex,
+  type AnySQLiteColumn,
 } from 'drizzle-orm/sqlite-core';
 import { monotonicFactory, ulid } from 'ulid';
 
@@ -113,6 +114,12 @@ export const users = sqliteTable('users', {
   deactivatedAt: integer('deactivated_at', { mode: 'timestamp' }),
   /** 注销原因（门店审批 note 快照） */
   deactivateReason: text('deactivate_reason'),
+  /**
+   * 全局当前宠物（客户端体验大批片 4 · 0042）：多宠物全局切换落点。
+   * NULL=未选定（客户端回落「全部/第一只」展示口径）；与 pets.ownerId 互为
+   * 环形外键——users 先建（本列可空）、pets 后建，写入侧 pet.setActive 校验本人归属。
+   */
+  activePetId: text('active_pet_id').references((): AnySQLiteColumn => pets.id),
   ...auditColumns,
 });
 
@@ -151,6 +158,11 @@ export const stores = sqliteTable('stores', {
   openHours: text('open_hours', { mode: 'json' }).$type<StoreOpenHours>(),
   /** 门店状态，取值：active | closed */
   status: text('status').notNull().default('active'),
+  /**
+   * 门店联系电话（客户端体验大批片 4 · 0042）：客户端「联系门店」透出 + tel: 直拨。
+   * NULL=未登记（客户端隐藏电话行，诚实空态）；维护口=商家端门店资料/店长配置。
+   */
+  phone: text('phone'),
   ...auditColumns,
 });
 
@@ -246,6 +258,10 @@ export const pets = sqliteTable('pets', {
   temperamentTags: text('temperament_tags', { mode: 'json' }).$type<string[]>(),
   /** 头像 URL */
   avatarUrl: text('avatar_url'),
+  /** 芯片号（客户端体验大批片 4 · 0042；15 位数字常见但不做硬校验，留文本） */
+  chipNo: text('chip_no'),
+  /** 花色（客户端体验大批片 4 · 0042；如「橘白」「三花」） */
+  coatColor: text('coat_color'),
   /**
    * 软删除标记（批次 R13a 账号注销联动 · 0017）：非 NULL=已随账号注销标记删除。
    * 读侧不过滤（注销账号全接口 401 不可达；历史预约/单据保留可见，留痕口径）。
@@ -255,6 +271,73 @@ export const pets = sqliteTable('pets', {
   deleteReason: text('delete_reason'),
   ...auditColumns,
 });
+
+/**
+ * 宠物健康记录表（客户端体验大批片 4 · 0042）：疫苗/驱虫/用药/就医四类记录型档案。
+ * - record_date=发生日（ISO 纯日期）；next_due_date=下次到期日（vaccine/deworm 可填，
+ *   到期扫描提醒的数据源，见 services/careReminders.ts）；
+ * - created_via：customer=主人自助建档 | staff=门店代录（reportedBy 留痕操作人）；
+ * - 删除=硬删（本人本人宠物数据自管，无账务留痕义务）。
+ */
+export const petHealthRecords = sqliteTable(
+  'pet_health_records',
+  {
+    id: id(),
+    /** 宠物 ID -> pets.id */
+    petId: text('pet_id')
+      .notNull()
+      .references(() => pets.id),
+    /** 记录类型，取值：vaccine | deworm | medication | vet_visit */
+    type: text('type').notNull(),
+    /** 标题（疫苗名/驱虫药/药品名/就诊事由） */
+    title: text('title').notNull(),
+    /** 发生日期，ISO 日期 'YYYY-MM-DD' */
+    recordDate: text('record_date').notNull(),
+    /** 下次到期日，ISO 日期（vaccine/deworm 到期提醒扫描锚；NULL=无到期概念） */
+    nextDueDate: text('next_due_date'),
+    /** 备注（剂量/诊所/医嘱等） */
+    note: text('note'),
+    /** 建档人用户 ID -> users.id */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    /** 建档通道：customer | staff */
+    createdVia: text('created_via').notNull().default('customer'),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_pet_health_records_pet_date').on(t.petId, t.recordDate),
+    index('ix_pet_health_records_due').on(t.nextDueDate),
+  ],
+);
+
+/**
+ * 宠物体重记录表（客户端体验大批片 4 · 0042，盘点表第 63 行备查件照收）：
+ * 逐次称重历史（趋势图数据源）；最新一次同事务回写 pets.weight_kg 快照
+ * （快照=当前值口径不变，本表=时序真值）。
+ */
+export const petWeightLogs = sqliteTable(
+  'pet_weight_logs',
+  {
+    id: id(),
+    /** 宠物 ID -> pets.id */
+    petId: text('pet_id')
+      .notNull()
+      .references(() => pets.id),
+    /** 体重（kg） */
+    weightKg: real('weight_kg').notNull(),
+    /** 称重日期，ISO 日期 'YYYY-MM-DD' */
+    measuredAt: text('measured_at').notNull(),
+    /** 备注 */
+    note: text('note'),
+    /** 记录人用户 ID -> users.id */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_pet_weight_logs_pet_date').on(t.petId, t.measuredAt)],
+);
 
 /** 服务项表（洗护 / 寄养） */
 export const services = sqliteTable('services', {
@@ -518,6 +601,32 @@ export const boardingDailyLogs = sqliteTable(
     ...auditColumns,
   },
   (t) => [uniqueIndex('uq_boarding_daily_logs_stay_date').on(t.stayId, t.logDate)],
+);
+
+/**
+ * 寄养用品拆封留痕表（客户端体验大批片 4 · 0042）：员工拆封主人随身物品
+ * （自带粮/零食/用品包）时落行 + 即时通知主人（boarding.unsealed）。
+ * 只增不改——拆封=事实留痕，无撤销语义。
+ */
+export const boardingUnsealLogs = sqliteTable(
+  'boarding_unseal_logs',
+  {
+    id: id(),
+    /** 住宿记录 ID -> boarding_stays.id */
+    stayId: text('stay_id')
+      .notNull()
+      .references(() => boardingStays.id),
+    /** 拆封物品名（对应 belongings 清单项 name 快照） */
+    itemName: text('item_name').notNull(),
+    /** 备注（拆封缘由/用量等） */
+    note: text('note'),
+    /** 拆封操作人员工 ID -> staff.id */
+    openedBy: text('opened_by')
+      .notNull()
+      .references(() => staff.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_boarding_unseal_stay').on(t.stayId, t.createdAt)],
 );
 
 /* ------------------------------------------------------------------ */
@@ -2285,7 +2394,7 @@ export type ReportVital = {
 
 /** 工单时间线条目（support_tickets.timeline_json 元素） */
 export type TicketTimelineItem = {
-  /** 动作，取值：submitted | replied | closed */
+  /** 动作，取值：submitted | replied | escalated（体验批片 4 店长介入升级） | closed */
   action: string;
   /** 动作时间（ISO 串） */
   at: string;
@@ -2360,6 +2469,63 @@ export const serviceReports = sqliteTable(
 );
 
 /**
+ * 服务异常通报表（客户端体验大批片 4 · 0042 新域）：服务/寄养过程中受伤、应激、
+ * 就医三类异常的即时通报通道。
+ * - 落行=员工端/商家端即时填报（reported_by 留痕），同事务双通知主人+门店
+ *   （incident.reported 事件，0 分钟达标）；customer_id 冗余列=本人列表免 join；
+ * - 15 分钟口径：created_at 起超 incident_escalate_minutes（service_rules 端口，
+ *   缺省 15）未处置（handled_at IS NULL）→ 定时器升级再通知一轮并置 escalated_at
+ *   （services/careReminders.ts，escalated_at 非空即幂等锚）；
+ * - 处置=handled_at + handled_note + handled_by（只增不改口径，处置后通报行保留）。
+ */
+export const serviceIncidents = sqliteTable(
+  'service_incidents',
+  {
+    id: id(),
+    /** 预约单 ID -> appointments.id */
+    appointmentId: text('appointment_id')
+      .notNull()
+      .references(() => appointments.id),
+    /** 门店 ID -> stores.id（冗余，门店待办免 join） */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 宠物 ID -> pets.id（冗余） */
+    petId: text('pet_id')
+      .notNull()
+      .references(() => pets.id),
+    /** 主人用户 ID -> users.id（冗余，通知/列表免 join） */
+    customerId: text('customer_id')
+      .notNull()
+      .references(() => users.id),
+    /** 异常类型，取值：injury（受伤） | stress（应激） | vet_visit（就医） */
+    type: text('type').notNull(),
+    /** 情况描述 */
+    description: text('description').notNull(),
+    /** 发生时间（缺省=填报时刻） */
+    occurredAt: integer('occurred_at', { mode: 'timestamp' }).notNull(),
+    /** 填报人用户 ID -> users.id */
+    reportedBy: text('reported_by')
+      .notNull()
+      .references(() => users.id),
+    /** 处置时间（NULL=未处置，升级扫描锚） */
+    handledAt: integer('handled_at', { mode: 'timestamp' }),
+    /** 处置说明 */
+    handledNote: text('handled_note'),
+    /** 处置人用户 ID -> users.id */
+    handledBy: text('handled_by').references(() => users.id),
+    /** 升级通知时间（NULL=未升级；升级扫描幂等锚） */
+    escalatedAt: integer('escalated_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_service_incidents_appt').on(t.appointmentId, t.createdAt),
+    index('ix_service_incidents_store').on(t.storeId, t.createdAt),
+    index('ix_service_incidents_customer').on(t.customerId, t.createdAt),
+  ],
+);
+
+/**
  * 客服工单表（补缺大批片 4）：客户提单（建议/投诉/表扬/其他）→ 本店店长/店主回复。
  * ticket_no=TK-yyyymmdd-NNN（日序，全局唯一，与 HD/RB 单号发生器同口径）；
  * 状态机：submitted → replied → closed；timeline_json 全留痕（只增不改）。
@@ -2389,7 +2555,7 @@ export const supportTickets = sqliteTable(
     createdVia: text('created_via').notNull().default('customer'),
     /** 联系方式（缺省回显=users.phone，客户端可改） */
     contactPhone: text('contact_phone'),
-    /** 状态，取值：submitted | replied | closed */
+    /** 状态，取值：submitted | replied | escalated（体验批片 4 店长介入仲裁升级） | closed */
     status: text('status').notNull().default('submitted'),
     /** 回复内容（NULL = 未回复） */
     replyText: text('reply_text'),
@@ -2397,6 +2563,12 @@ export const supportTickets = sqliteTable(
     repliedBy: text('replied_by').references(() => users.id),
     /** 回复时间 */
     repliedAt: integer('replied_at', { mode: 'timestamp' }),
+    /** 升级店长介入时间（客户端体验大批片 4 · 0042；NULL=未升级） */
+    escalatedAt: integer('escalated_at', { mode: 'timestamp' }),
+    /** 升级操作人用户 ID -> users.id（客户本人发起） */
+    escalatedBy: text('escalated_by').references(() => users.id),
+    /** 升级留言（客户升级时补充说明，可空） */
+    escalateNote: text('escalate_note'),
     /** 时间线 JSON 数组（只增不改），结构见 TicketTimelineItem */
     timelineJson: text('timeline_json', { mode: 'json' }).$type<TicketTimelineItem[]>().notNull(),
     ...auditColumns,

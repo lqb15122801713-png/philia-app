@@ -86,6 +86,7 @@ const ROUTES = [
   { app: 'customer', path: '/appointments', anchors: ['预约'] },
   { app: 'customer', path: `/appointments/${APPT_ID}`, anchors: ['预约', '核销'], serverDep: true, note: 'A1 白屏群' },
   { app: 'customer', path: '/philia/pets', anchors: ['宠物'], note: 'A4 白屏群' },
+  { app: 'customer', path: `/philia/pets/${INVALID_ID}/health`, anchors: ['健康档案'], serverDep: true, note: '体验批片 4 宠物健康档案（无效 id 异常态：页题+返回出口仍在）' },
   { app: 'customer', path: '/philia/moments', anchors: ['服务相册', '相册'], note: 'A4 白屏群' },
   // U1-H：会员卡页新路由（任务书许可补充锚点行，PR 注明）；R11b：Q-01 码屏重构，锚点改「会员码」
   { app: 'customer', path: '/me/card', anchors: ['会员码'], serverDep: true, note: 'U1-H 新路由；R11b Q-01 重构换锚' },

@@ -186,6 +186,10 @@ function notificationCopy(
       return { title: '美容报告已送达', body: `${pet}美容报告已送达，点击查看` };
     case 'ticket.replied':
       return { title: '小棉花回复', body: '您有一条新的客服回复，点击查看' };
+    case 'ticket.escalated': {
+      const no = typeof data.ticketNo === 'string' ? `工单 ${data.ticketNo} ` : '';
+      return { title: '工单升级店长介入', body: `${no}已升级，请店长尽快介入处理` };
+    }
     case 'invoice.issued':
       return { title: '发票已开具', body: '您的发票已开具，点击查看' };
     // 片 3：任务提醒 / 公告（staff/store 频道，payload.title=任务/公告标题）
@@ -196,6 +200,20 @@ function notificationCopy(
       };
     case 'announcement.published':
       return { title: '新公告', body: typeof data.title === 'string' ? data.title : '门店发布了新公告' };
+    // 客户端体验大批片 4：异常通报域 + 寄养拆封（类型名与 incident.ts IncidentTypeLabel 同帧，免循环依赖就地映射）
+    case 'incident.reported': {
+      const t = typeof data.incidentType === 'string' ? data.incidentType : '';
+      const label = t === 'injury' ? '受伤' : t === 'stress' ? '应激' : t === 'vet_visit' ? '就医' : '异常';
+      return { title: '服务异常通报', body: `${pet}服务中出现「${label}」情况，门店已记录并在处理中，详情请查看` };
+    }
+    case 'incident.handled':
+      return { title: '异常已处置', body: `${pet}异常通报已处置完毕，点击查看处置说明` };
+    case 'incident.escalated':
+      return { title: '异常通报升级', body: `${pet}异常通报超时未处置，已升级店长跟进` };
+    case 'boarding.unsealed': {
+      const item = typeof data.itemName === 'string' && data.itemName ? `「${data.itemName}」` : '随身用品';
+      return { title: '用品拆封通知', body: `${pet}${item}已拆封使用` };
+    }
     default:
       return { title: '消息提醒', body: '您有一条新消息' };
   }
@@ -221,7 +239,15 @@ function linkFor(eventType: string, data: Record<string, unknown>): string | und
     const ticketId = typeof data.ticketId === 'string' ? data.ticketId : undefined;
     return ticketId ? `/support/${ticketId}` : undefined;
   }
+  // 片 4：工单升级 → 商家端控制台首页（工单待办锚区在该页，无独立路由）
+  if (eventType === 'ticket.escalated') return '/';
   if (eventType === 'invoice.issued') return '/invoices';
+  // 片 4：异常通报/拆封通知 → live 页锚点（带 # 片段刻意避开 appointmentLinksOf 同刻聚合——
+  // 安全类通知不被进度卡合并覆盖，独立落行）
+  if (eventType === 'incident.reported' || eventType === 'incident.handled' || eventType === 'incident.escalated') {
+    return aid ? `/appointments/${aid}/live#incident` : undefined;
+  }
+  if (eventType === 'boarding.unsealed') return aid ? `/appointments/${aid}/live#unseal` : undefined;
   // 片 3：公告 → /notices；任务提醒 → /tasks（员工端任务页）
   if (eventType === 'announcement.published') return '/notices';
   if (eventType === 'task.reminder') return '/tasks';

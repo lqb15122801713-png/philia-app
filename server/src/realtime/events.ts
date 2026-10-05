@@ -80,6 +80,12 @@ export const EventType = {
   // 员工端骨架整建批 片 3（任务执行+通讯；与 packages/shared constants/events.ts 同步）
   TaskReminder:          'task.reminder',           // 循环任务截止前提醒 → staff:{staffId}（assignee 或该角色全员逐一）
   AnnouncementPublished: 'announcement.published',  // 公告发布 → store 频道（员工定向通知=announce.publish 逐人补写）
+  // 客户端体验大批 片 4（异常通报域/寄养拆封；与 packages/shared constants/events.ts 同步）
+  IncidentReported:      'incident.reported',       // 异常通报落行 → appointment 频道（主人+门店+被指员工=双通知 0 分钟达标）
+  IncidentHandled:       'incident.handled',        // 异常处置登记 → appointment 频道
+  IncidentEscalated:     'incident.escalated',      // 15 分钟未处置升级 → user + store（定时器直插通知，事件留痕备用）
+  BoardingUnsealed:      'boarding.unsealed',       // 寄养用品拆封 → user（主人）+ store
+  TicketEscalated:       'ticket.escalated',        // 工单升级店长介入 → store（店长/店主仲裁通道，体验批片 4 C5）
 } as const;
 
 export type EventTypeValue = (typeof EventType)[keyof typeof EventType];

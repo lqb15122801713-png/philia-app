@@ -69,6 +69,48 @@ const APPOINTMENTS_COPY_TABLE = {
   'appointments.servingTitle': '服务中，如需取消请联系门店',
   'appointments.servingCall': '拨打门店电话',
   'appointments.servingNote': '可到店或经商家端与门店协商处理',
+
+  /* ---- 异常通报条（live 页高亮 · 体验批片 4） ---- */
+  'appointments.incidentTitle': '异常通报',
+  /* 异常类型三枚举 */
+  'appointments.incidentTypeInjury': '受伤',
+  'appointments.incidentTypeStress': '应激',
+  'appointments.incidentTypeVetVisit': '就医',
+  'appointments.incidentHandling': '门店处理中',
+  'appointments.incidentOccurredAt': '发生于 {time}',
+  /* 全部已处置暖底细条（{note}=最近一条处置说明） */
+  'appointments.incidentHandledLine': '异常已处置：{note}',
+  /* SSE 即时提示 */
+  'appointments.incidentToastReported': '{pet}有异常通报，门店正在处理',
+  'appointments.incidentToastHandled': '异常情况已处置，可下滑查看说明',
+  'appointments.unsealToast': '{pet}的用品「{item}」已拆封使用',
+
+  /* ---- 服务明细（详情页 · serviceStep.detailSheet） ---- */
+  'appointments.detailSheetTitle': '服务明细',
+  /* 分项状态徽 */
+  'appointments.stepDone': '已完成',
+  'appointments.stepDoing': '进行中',
+  'appointments.stepPending': '待开始',
+  'appointments.stepDuration': '{min} 分钟',
+  /* 用料透出（诚实空态） */
+  'appointments.materialsTitle': '耗材使用',
+  'appointments.materialsEmpty': '本单无耗材扣减记录',
+  'appointments.materialQty': '× {n}',
+
+  /* ---- 寄养安心卡（boarding.assuranceCard） ---- */
+  'appointments.assuranceTitle': '寄养安心卡',
+  'appointments.assuranceRoom': '房间',
+  'appointments.roomPending': '待分配',
+  'appointments.assuranceWeight': '入住体重',
+  'appointments.assuranceBelongings': '随身物品',
+  'appointments.assuranceLatestLog': '最新打卡',
+  'appointments.assuranceLogDone': '当日照护已完成打卡',
+  'appointments.assuranceNoLog': '暂无打卡记录',
+  'appointments.assuranceUnsealTitle': '拆封留痕',
+  'appointments.assuranceUnsealEmpty': '暂无拆封记录',
+  /* stay=null 空态（待入住登记） */
+  'appointments.assuranceEmpty': '待入住登记',
+  'appointments.assuranceEmptyBody': '店员办理入住后，房间、体重与物品清单会在这里更新',
 } as const;
 
 export const APPOINTMENTS_COPY = withCopyOverrides(APPOINTMENTS_COPY_TABLE);

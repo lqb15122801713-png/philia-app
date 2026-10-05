@@ -30,6 +30,11 @@ import { SLOT_SEED_ROWS } from './slotSeedRows';
 /* ---------------- 清空（子表 -> 父表） ---------------- */
 
 const CLEAR_ORDER = [
+  /* ---- 客户端体验大批片 4 新表（迁移 0042）：子表先父表，先于 appointments/boardingStays/pets/users 清空 ---- */
+  schema.serviceIncidents, // FK → appointments/stores/pets/users
+  schema.boardingUnsealLogs, // FK → boarding_stays/staff
+  schema.petHealthRecords, // FK → pets/users
+  schema.petWeightLogs, // FK → pets/users
   /* ---- 片 4 薪资+XP 域新表（迁移 0033）：子表先父表，先于 users/stores/staff/appointments/xpEvents 清空 ---- */
   schema.payrollItems, // FK → payroll_runs/stores/staff
   schema.payrollRuns, // FK → stores/users
@@ -198,6 +203,7 @@ async function main() {
         ownerId: owner.id,
         name: '菲丽亚宠物·示例店',
         address: '杭州市西湖区文三路 100 号',
+        phone: '0571-88886666', // 体验批片 4：电话客服公示种子（联系门店 tel: 透出）
         lat: 30.2741,
         lng: 120.1551,
         openHours: OPEN_HOURS_ALL_WEEK,
@@ -254,30 +260,71 @@ async function main() {
       .returning();
     void staffRows;
 
-    /* ---- 宠物（1 狗 1 猫，含疫苗有效期） ---- */
-    await tx.insert(schema.pets).values([
+    /* ---- 宠物（1 狗 1 猫，含疫苗有效期；体验批片 4：芯片号/花色示范值） ---- */
+    const petRows = await tx
+      .insert(schema.pets)
+      .values([
+        {
+          ownerId: customer.id,
+          name: '旺财',
+          species: 'dog',
+          breed: '金毛寻回犬',
+          birthday: '2021-03-15',
+          weightKg: 28.5,
+          vaccineValidUntil: '2027-03-01',
+          neutered: true,
+          temperamentTags: ['亲人', '好动'],
+          chipNo: '900118000123456',
+          coatColor: '金色',
+        },
+        {
+          ownerId: customer.id,
+          name: '咪咪',
+          species: 'cat',
+          breed: '英国短毛猫',
+          birthday: '2022-07-01',
+          weightKg: 4.2,
+          vaccineValidUntil: '2026-12-01',
+          neutered: false,
+          temperamentTags: ['胆小', '安静'],
+          coatColor: '蓝白',
+        },
+      ])
+      .returning();
+
+    /* ---- 体验批片 4：健康记录/体重记录示范数据（宠物页趋势雏形有真值可看） ---- */
+    const wc = petRows.find((p) => p.name === '旺财')!;
+    await tx.insert(schema.petHealthRecords).values([
       {
-        ownerId: customer.id,
-        name: '旺财',
-        species: 'dog',
-        breed: '金毛寻回犬',
-        birthday: '2021-03-15',
-        weightKg: 28.5,
-        vaccineValidUntil: '2027-03-01',
-        neutered: true,
-        temperamentTags: ['亲人', '好动'],
+        petId: wc.id,
+        type: 'vaccine',
+        title: '犬四联疫苗（加强）',
+        recordDate: '2026-03-01',
+        nextDueDate: '2027-03-01',
+        note: '示例宠物医院接种',
+        createdBy: customer.id,
       },
       {
-        ownerId: customer.id,
-        name: '咪咪',
-        species: 'cat',
-        breed: '英国短毛猫',
-        birthday: '2022-07-01',
-        weightKg: 4.2,
-        vaccineValidUntil: '2026-12-01',
-        neutered: false,
-        temperamentTags: ['胆小', '安静'],
+        petId: wc.id,
+        type: 'deworm',
+        title: '体内外同驱（滴剂）',
+        recordDate: '2026-09-10',
+        nextDueDate: '2026-12-10',
+        createdBy: customer.id,
       },
+      {
+        petId: wc.id,
+        type: 'vet_visit',
+        title: '年度体检',
+        recordDate: '2026-06-18',
+        note: '指标正常，注意控制体重',
+        createdBy: customer.id,
+      },
+    ]);
+    await tx.insert(schema.petWeightLogs).values([
+      { petId: wc.id, weightKg: 27.2, measuredAt: '2026-07-01', createdBy: customer.id },
+      { petId: wc.id, weightKg: 27.9, measuredAt: '2026-08-01', createdBy: customer.id },
+      { petId: wc.id, weightKg: 28.5, measuredAt: '2026-09-01', createdBy: customer.id, note: '入住前称重同步' },
     ]);
 
     /* ---- 服务项：grooming 6 + boarding 4（boarding 含房型，按晚计费 duration 留空） ---- */
@@ -519,6 +566,43 @@ async function main() {
         ruleKey: 'payroll_appeal_sla_hours',
         label: '薪资异议申诉处理时限（小时）：店长/老板须在该时限内复核，页面注记数据源',
         valueJson: { hours: 24 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      /* 客户端体验大批片 4：定时器四参数（同 0042 迁移种子口径；重置后补种） */
+      {
+        version: 1,
+        ruleKey: 'boarding_daynight_push',
+        label: '寄养早晚定时推送刻点（门店时区 HH:MM；窗口 30 分钟内扫到即推，当日当槽幂等）',
+        valueJson: { morning: '08:30', evening: '20:30' },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'care_log_remind_hours',
+        label: '照护打卡提醒间隔（小时）：在住寄养单距上次打卡超 N 小时→提醒本店员工打卡',
+        valueJson: { hours: 4 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'incident_escalate_minutes',
+        label: '异常通报升级时限（分钟）：通报落行超 N 分钟未处置→升级再通知门店与主人一轮',
+        valueJson: { minutes: 15 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'pet_due_remind_days',
+        label: '宠物疫苗/驱虫到期提前提醒天数：到期日前 N 天内→通知主人（当日当项幂等）',
+        valueJson: { days: 7 },
         effectiveFrom: RULES_EFFECTIVE_FROM,
         active: true,
         createdBy: owner.id,

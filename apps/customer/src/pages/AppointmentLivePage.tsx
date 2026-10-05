@@ -24,8 +24,12 @@
  *   SSE 真值签（connected → 淡黄点「实时同步」/ 灰点「重连中」，禁常亮）；
  * - stepper 去卡壳直上画布，六步清单 stepx 工艺（步号 22 圆三态 / 右 mono 9
  *   状态 / 照片 3 列方格 + 空位虚线框，件级样式落 styles/live-v2.css）；
- * - 「联系门店」条：stores 无 phone 字段 → 不渲染（U1 疑点口径，ContactStore
- *   防御保持，schema 补字段后自动生效）。
+ * - 「联系门店」条：stores.phone 已在仓（0042 迁移）——有值渲染 tel: 直拨，
+ *   无值隐藏（ContactStore 防御保持）。
+ * - 异常通报条（体验批片 4）：incident.listForAppointment 拉取本单异常，
+ *   LiveHeader 后挂高亮条——未处置=赭红卡（类型+描述+发生时刻+「门店处理中」），
+ *   全部已处置=暖底细条（最近处置说明），零异常不渲染；
+ *   SSE incident.reported/incident.handled/boarding.unsealed → toast + 精确 invalidate。
  */
 
 import {
@@ -41,10 +45,11 @@ import {
 import LiveStepper, { type LiveStepperStep } from '../components/live/LiveStepper'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { CalendarClock, CircleX, QrCode } from 'lucide-react'
+import { CalendarClock, CircleX, QrCode, TriangleAlert } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import BoardingLive, { type BoardingLogItem, type BoardingStayInfo } from '../components/live/BoardingLive'
+import { apc, type AppointmentsCopyKey } from '../copy/appointments'
+import BoardingLive, { type BoardingAssuranceInfo, type BoardingLogItem, type BoardingStayInfo } from '../components/live/BoardingLive'
 import CelebrationOverlay from '../components/live/CelebrationOverlay'
 import ConnectionBar from '../components/live/ConnectionBar'
 import ContactStore from '../components/live/ContactStore'
@@ -88,6 +93,23 @@ const ACTIVE_HINT: Record<string, string> = {
 }
 
 const fmtTime = (d: Date) => format(d, 'HH:mm')
+
+/** 异常类型 → apc 文案键（未知类型兜底=应激，不画假类型名） */
+const INCIDENT_TYPE_KEY: Record<string, AppointmentsCopyKey> = {
+  injury: 'appointments.incidentTypeInjury',
+  stress: 'appointments.incidentTypeStress',
+  vet_visit: 'appointments.incidentTypeVetVisit',
+}
+
+/** 异常通报条行件（incident.listForAppointment 透出列） */
+interface IncidentRow {
+  id: string
+  type: string
+  description: string
+  occurredAt: Date
+  handledAt: Date | null
+  handledNote: string | null
+}
 
 /** 日历日差（同一天=0） */
 function calendarDayDiff(a: Date, b: Date): number {
@@ -224,6 +246,22 @@ export default function AppointmentLivePage() {
     refetchInterval: sseDown ? 30_000 : false,
   })
 
+  // 寄养安心卡（体验批片 4 B17）：stay+最新打卡+拆封留痕聚合读口
+  const assuranceQuery = useQuery({
+    queryKey: ['boarding', 'assurance', aid],
+    queryFn: () => trpc.boarding.assuranceCard.query({ appointmentId: aid! }),
+    enabled: !!aid && !!appt && isBoarding && inLiveFlow,
+    refetchInterval: sseDown ? 30_000 : false,
+  })
+
+  // 异常通报条数据源（体验批片 4）：当事人可读，洗护/寄养 live 态都挂
+  const incidentQuery = useQuery({
+    queryKey: ['incident', 'list', aid],
+    queryFn: () => trpc.incident.listForAppointment.query({ appointmentId: aid! }),
+    enabled: !!aid && !!appt && inLiveFlow,
+    refetchInterval: sseDown ? 30_000 : false,
+  })
+
   // 断线兜底轮询（§7.4）：轻量 progressSummary，数据变化时全量对齐（防事件序错乱）
   const summaryQuery = useQuery({
     queryKey: ['serviceStep', 'progressSummary', aid],
@@ -252,6 +290,8 @@ export default function AppointmentLivePage() {
     void queryClient.invalidateQueries({ queryKey: ['appointment', 'get', aid] })
     void queryClient.invalidateQueries({ queryKey: ['serviceStep', 'list', aid] })
     void queryClient.invalidateQueries({ queryKey: ['boarding', 'myStay', aid] })
+    void queryClient.invalidateQueries({ queryKey: ['boarding', 'assurance', aid] })
+    void queryClient.invalidateQueries({ queryKey: ['incident', 'list', aid] })
     void queryClient.invalidateQueries({ queryKey: ['serviceStep', 'progressSummary', aid] })
   }, [queryClient, aid])
 
@@ -356,6 +396,22 @@ export default function AppointmentLivePage() {
           const logDate = typeof data.logDate === 'string' ? data.logDate : ''
           showToast(`${logDate ? `${logDate} ` : ''}打卡已更新，快看看${pet?.name ?? '宝贝'}的今天`)
           void queryClient.invalidateQueries({ queryKey: ['boarding', 'myStay', aid] })
+          void queryClient.invalidateQueries({ queryKey: ['boarding', 'assurance', aid] })
+          break
+        }
+        case EventType.IncidentReported:
+          showToast(apc('appointments.incidentToastReported', { pet: pet?.name ?? '宝贝' }))
+          void queryClient.invalidateQueries({ queryKey: ['incident', 'list', aid] })
+          break
+        case EventType.IncidentHandled:
+          showToast(apc('appointments.incidentToastHandled'))
+          void queryClient.invalidateQueries({ queryKey: ['incident', 'list', aid] })
+          break
+        case EventType.BoardingUnsealed: {
+          const itemName = typeof data.itemName === 'string' ? data.itemName : ''
+          showToast(apc('appointments.unsealToast', { pet: pet?.name ?? '宝贝', item: itemName }))
+          void queryClient.invalidateQueries({ queryKey: ['boarding', 'myStay', aid] })
+          void queryClient.invalidateQueries({ queryKey: ['boarding', 'assurance', aid] })
           break
         }
         case EventType.BoardingCompleted:
@@ -480,6 +536,34 @@ export default function AppointmentLivePage() {
         photos: l.photos ?? null,
       })),
     [myStayQuery.data],
+  )
+
+  // 安心卡数据（assuranceCard 聚合读口 → BoardingLive 安心卡槽位；未取到=undefined 不渲染）
+  const assuranceInfo: BoardingAssuranceInfo | undefined = useMemo(() => {
+    const a = assuranceQuery.data
+    if (!a) return undefined
+    return {
+      stay: a.stay
+        ? {
+            roomNo: a.stay.roomNo,
+            checkinWeightKg: a.stay.checkinWeightKg,
+            belongings: a.stay.belongings ?? null,
+            checkoutAt: a.stay.checkoutAt,
+          }
+        : null,
+      latestLog: a.latestLog ? { logDate: a.latestLog.logDate, note: a.latestLog.note } : null,
+      unsealLogs: a.unsealLogs.map((u) => ({
+        id: u.id,
+        itemName: u.itemName,
+        note: u.note ?? null,
+        createdAt: u.createdAt,
+      })),
+    }
+  }, [assuranceQuery.data])
+
+  const incidents: IncidentRow[] = useMemo(
+    () => incidentQuery.data?.incidents ?? [],
+    [incidentQuery.data],
   )
 
   const openStepPhotos = useCallback(
@@ -623,8 +707,8 @@ export default function AppointmentLivePage() {
     )
   }
 
-  // 门店电话：schema 暂无 phone 字段，防御式读取，无则隐藏（契约口径）
-  const storePhone = (store as { phone?: string | null } | null)?.phone ?? null
+  // 门店电话：stores.phone 已在仓（0042 迁移），无值隐藏（契约口径）
+  const storePhone = store?.phone ?? null
 
   // 主流程：grooming 六步流 / boarding 寄养时间线
   return (
@@ -645,11 +729,15 @@ export default function AppointmentLivePage() {
       {nav}
       {header}
 
+      {/* 异常通报条：LiveHeader 之后、主体之前；零异常不渲染 */}
+      <IncidentBanner incidents={incidents} />
+
       <div className="mt-3.5">
         {isBoarding ? (
           <BoardingLive
             stay={stayInfo}
             logs={boardingLogs}
+            assurance={assuranceInfo}
             onPhotoClick={(photos, index) => setViewer({ photos, index })}
           />
         ) : stepsQuery.isPending ? (
@@ -689,6 +777,52 @@ function completedAtLine(completedAt: Date | null) {
   return (
     <p className="mt-3 text-center text-caption text-ink-secondary">
       服务已于 <span className="u1-num">{format(completedAt, 'M月d日 HH:mm')}</span> 完成
+    </p>
+  )
+}
+
+/**
+ * 异常通报条（体验批片 4）：未处置=赭红高亮卡（类型+描述+发生时刻+「门店处理中」签）；
+ * 全部已处置=暖底细条（最近一条处置说明，缺说明兜底描述原文）；零异常不渲染。
+ */
+function IncidentBanner({ incidents }: { incidents: IncidentRow[] }) {
+  if (incidents.length === 0) return null
+  const open = incidents.filter((i) => !i.handledAt)
+  if (open.length > 0) {
+    return (
+      <section data-testid="incident-banner" className="mt-3 rounded-card bg-danger-light p-4">
+        <h2 className="flex items-center gap-1.5 text-title text-danger-deep">
+          <TriangleAlert className="h-5 w-5" strokeWidth={1.5} />
+          {apc('appointments.incidentTitle')}
+        </h2>
+        <ul className="mt-2 space-y-2.5">
+          {open.map((i) => (
+            <li key={i.id}>
+              <p className="flex items-center gap-2 text-body font-medium text-ink">
+                {apc(INCIDENT_TYPE_KEY[i.type] ?? 'appointments.incidentTypeStress')}
+                <span className="rounded-chip bg-danger px-1.5 py-0.5 text-caption-xs font-semibold text-destructive-foreground">
+                  {apc('appointments.incidentHandling')}
+                </span>
+              </p>
+              <p className="mt-0.5 text-body-sm text-ink">{i.description}</p>
+              <p className="u1-num mt-0.5 text-caption-xs text-ink-secondary">
+                {apc('appointments.incidentOccurredAt', { time: format(i.occurredAt, 'M月d日 HH:mm') })}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+  // 全部已处置：listForAppointment 创建倒序，首个 handledAt 非空即最近处置
+  const latest = incidents.find((i) => i.handledAt)
+  const note = latest?.handledNote ?? latest?.description ?? ''
+  return (
+    <p
+      data-testid="incident-banner"
+      className="mt-3 rounded-tag bg-brand-secondary-light px-3 py-2 text-caption text-ink-secondary"
+    >
+      {apc('appointments.incidentHandledLine', { note })}
     </p>
   )
 }
