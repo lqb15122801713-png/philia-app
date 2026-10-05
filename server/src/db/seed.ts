@@ -30,6 +30,11 @@ import { SLOT_SEED_ROWS } from './slotSeedRows';
 /* ---------------- 清空（子表 -> 父表） ---------------- */
 
 const CLEAR_ORDER = [
+  /* ---- 客户端体验大批 片 1 新表（迁移 0036）：先于 users/stores/appointments 清空（子父序）；
+     users 扩列 birthday/gender 不种（空=诚实未填） ---- */
+  schema.depositRecords, // FK → stores/users/appointments（ref_appointment_id），先于三者清空
+  schema.addresses, // FK → users
+  schema.invoiceTitles, // FK → users
   /* ---- 片 4 薪资+XP 域新表（迁移 0033）：子表先父表，先于 users/stores/staff/appointments/xpEvents 清空 ---- */
   schema.payrollItems, // FK → payroll_runs/stores/staff
   schema.payrollRuns, // FK → stores/users
