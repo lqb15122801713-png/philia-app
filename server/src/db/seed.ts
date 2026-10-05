@@ -688,6 +688,8 @@ async function main() {
           ruleKey: r.key,
           label: r.domain,
           valueJson: { text: r.text },
+          screen: r.screen, // 端口 V2：屏名（0046 扩列；未归屏=NULL）
+          position: r.position, // 端口 V2：位置注（留口件）
           effectiveFrom: RULES_EFFECTIVE_FROM,
           active: true,
           createdBy: owner.id,
@@ -702,6 +704,8 @@ async function main() {
         ruleKey: 'booking.fullAlternativesNote',
         label: 'booking',
         valueJson: { text: '当前单店在线，满档推荐待连锁批开通' },
+        screen: '客户·预约洗护', // 端口 V2：读点=预约单屏满档位（生成器未含 server 侧键，手工归屏登记）
+        position: '预约单屏满档推荐位注记',
         effectiveFrom: RULES_EFFECTIVE_FROM,
         active: true,
         createdBy: owner.id,

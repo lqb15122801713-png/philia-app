@@ -19,9 +19,16 @@ import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import { customerProcedure, router } from '../trpc';
+import { storeWallclock } from './appointment';
 
 /** ISO 纯日期 'YYYY-MM-DD'（schema 约定 date 列为 text ISO） */
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '日期格式须为 YYYY-MM-DD');
+
+/** 门店规范时区「今天」（+8 墙钟日界——UTC 日界会在 +8 晚间窗把今天误判成明天，10-06 凌晨实证在案） */
+const storeTodayStr = (): string => {
+  const w = storeWallclock(new Date());
+  return `${w.y}-${String(w.m).padStart(2, '0')}-${String(w.day).padStart(2, '0')}`;
+};
 
 /** 记录类型枚举（与 schema 注记同帧） */
 const recordType = z.enum(['vaccine', 'deworm', 'medication', 'vet_visit'], {
@@ -80,7 +87,7 @@ export const petHealthRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       await assertOwnPet(ctx, input.petId);
-      const today = new Date().toISOString().slice(0, 10);
+      const today = storeTodayStr();
       if (input.recordDate > today) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: '发生日期不能晚于今天（未来日期请填到下次到期日）' });
       }
@@ -136,7 +143,7 @@ export const petHealthRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       await assertOwnPet(ctx, input.petId);
-      const today = new Date().toISOString().slice(0, 10);
+      const today = storeTodayStr();
       if (input.measuredAt > today) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: '称重日期不能晚于今天' });
       }

@@ -12,7 +12,7 @@ const COPYPORT_COPY_TABLE = {
   /* ---- 页头/分组 ---- */
   'copyport.pageTitle': '文案端口',
   'copyport.pageSub': '界面文案后台可改 · 保存即生效（新渲染）· 全程留痕',
-  'copyport.searchPlaceholder': '搜索键名或文案…',
+  'copyport.searchPlaceholder': '搜索键名/文案/位置注…',
   'copyport.filterHighRisk': '只看高危键',
   'copyport.filterChanged': '只看已改',
   'copyport.highRiskBadge': '高危',
@@ -21,6 +21,12 @@ const COPYPORT_COPY_TABLE = {
   'copyport.keysCount': '{n} 键',
   'copyport.emptyDomain': '该域无匹配键',
   'copyport.loadFail': '文案配置加载失败，请检查网络后重试',
+  /* ---- 端口 V2 修正批：屏分组+位置注 ---- */
+  'copyport.screenFilterAll': '全部屏',
+  'copyport.unscreenedGroup': '未归屏',
+  'copyport.unscreenedNote': '以下键的调用页未被屏名字典覆盖（诚实兜底组）——位置注可人工改，复核后挂屏',
+  'copyport.positionLabel': '位置注',
+  'copyport.positionPlaceholder': '一句人话：这文案在这屏的什么位置',
 
   /* ---- 编辑/保存 ---- */
   'copyport.editCta': '改文案',

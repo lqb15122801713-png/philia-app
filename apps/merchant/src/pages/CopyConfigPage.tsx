@@ -54,7 +54,9 @@ function textOf(valueJson: unknown): string {
 /* ------------------------------------------------------------------ */
 
 /* 片 5 段 3（W-16 共构不分叉）：页面内核导出（含三态与 ToasterMount，不含
-   MainScaffold 页头），供 ConsolePage 右栏直嵌；本页默认出口行为不变 */
+   MainScaffold 页头），供 ConsolePage 右栏直嵌；本页默认出口行为不变。
+   端口 V2 修正批：域分组→屏分组（屏卡+屏内键列表，每键=位置注+文案+高危/已改徽；
+   搜索/筛选/行内编辑/高危口令闸全保留；「未归屏」组排末+注记；位置注=留口件可人工改） */
 export function CopyConfigBody() {
   const { trpc, queryClient } = usePhiliaClient();
 
@@ -75,46 +77,61 @@ export function CopyConfigBody() {
     return m;
   }, [rows]);
 
+  /** 屏标签（screen=NULL → 未归屏诚实组）；跨屏共用键=screen 含 ' / ' 并列（各屏组同列） */
+  const UNSCREENED = cp('copyport.unscreenedGroup');
+  const screensOfRow = (r: RuleRow): string[] =>
+    typeof r.screen === 'string' && r.screen ? r.screen.split(' / ') : [UNSCREENED];
+
   /* ---------------- 筛选 ---------------- */
   const [search, setSearch] = useState('');
-  const [domainFilter, setDomainFilter] = useState('');
+  const [screenFilter, setScreenFilter] = useState('');
   const [onlyHighRisk, setOnlyHighRisk] = useState(false);
   const [onlyChanged, setOnlyChanged] = useState(false);
 
-  /* 域下拉：label 去重计数（按字典序稳定排列） */
-  const domainCounts = useMemo(() => {
+  /* 屏下拉：屏名去重计数（跨屏共用键各屏都计；未归屏排末） */
+  const screenCounts = useMemo(() => {
     const m = new Map<string, number>();
-    for (const r of rows) m.set(r.label, (m.get(r.label) ?? 0) + 1);
-    return [...m.entries()].sort(([a], [b]) => a.localeCompare(b));
-  }, [rows]);
+    for (const r of rows) {
+      for (const s of screensOfRow(r)) m.set(s, (m.get(s) ?? 0) + 1);
+    }
+    return [...m.entries()].sort(([a], [b]) => (a === UNSCREENED ? 1 : b === UNSCREENED ? -1 : a.localeCompare(b)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, UNSCREENED]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return rows.filter((r) => {
-      if (domainFilter !== '' && r.label !== domainFilter) return false;
+      if (screenFilter !== '' && !screensOfRow(r).includes(screenFilter)) return false;
       if (onlyHighRisk && !r.highRisk) return false;
       if (onlyChanged && r.version <= 1) return false;
       if (q !== '') {
         const text = textByKey.get(r.ruleKey) ?? '';
-        if (!r.ruleKey.toLowerCase().includes(q) && !text.toLowerCase().includes(q)) return false;
+        const pos = r.position ?? '';
+        if (!r.ruleKey.toLowerCase().includes(q) && !text.toLowerCase().includes(q) && !pos.toLowerCase().includes(q)) return false;
       }
       return true;
     });
-  }, [rows, domainFilter, onlyHighRisk, onlyChanged, search, textByKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, screenFilter, onlyHighRisk, onlyChanged, search, textByKey]);
 
-  /* 按 label 分组（组内保序=server 返回的键名升序） */
+  /* 按屏分组（屏内保序=server 返回的键名升序；跨屏共用键各屏组同列；筛选态只挂选中屏；未归屏组排末） */
   const groups = useMemo(() => {
     const m = new Map<string, RuleRow[]>();
     for (const r of filtered) {
-      const arr = m.get(r.label);
-      if (arr) arr.push(r);
-      else m.set(r.label, [r]);
+      const homes = screenFilter === '' ? screensOfRow(r) : screensOfRow(r).filter((s) => s === screenFilter);
+      for (const s of homes) {
+        const arr = m.get(s);
+        if (arr) arr.push(r);
+        else m.set(s, [r]);
+      }
     }
-    return [...m.entries()].sort(([a], [b]) => a.localeCompare(b));
-  }, [filtered]);
+    return [...m.entries()].sort(([a], [b]) => (a === UNSCREENED ? 1 : b === UNSCREENED ? -1 : a.localeCompare(b)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtered, screenFilter]);
 
-  /* ---------------- 编辑模型：pendingChanges Map<ruleKey, newText> ---------------- */
+  /* ---------------- 编辑模型：pendingChanges Map<ruleKey, newText> + pendingPos Map<ruleKey, newPos> ---------------- */
   const [pending, setPending] = useState<Map<string, string>>(new Map());
+  const [pendingPos, setPendingPos] = useState<Map<string, string>>(new Map());
   const [openKey, setOpenKey] = useState<string | null>(null);
 
   /** 草稿回填：与现值相同即撤出 pending（无净变更不入保存条） */
@@ -126,6 +143,14 @@ export function CopyConfigBody() {
       return next;
     });
   };
+  const setDraftPos = (ruleKey: string, pos: string, current: string) => {
+    setPendingPos((prev) => {
+      const next = new Map(prev);
+      if (pos.trim() === '' || pos === current) next.delete(ruleKey);
+      else next.set(ruleKey, pos);
+      return next;
+    });
+  };
 
   const pendingList = useMemo(() => {
     const rowByKey = new Map(rows.map((r) => [r.ruleKey, r]));
@@ -134,8 +159,15 @@ export function CopyConfigBody() {
       after,
       before: textByKey.get(ruleKey) ?? '',
       highRisk: rowByKey.get(ruleKey)?.highRisk ?? false,
+      posAfter: pendingPos.get(ruleKey) ?? null,
     }));
-  }, [pending, rows, textByKey]);
+  }, [pending, pendingPos, rows, textByKey]);
+  /* 纯位置注变更也入保存条（与文案变更合流，保存条计数=并集） */
+  const posOnlyList = useMemo(
+    () => [...pendingPos.keys()].filter((k) => !pending.has(k)),
+    [pending, pendingPos],
+  );
+  const totalPendingCount = pendingList.length + posOnlyList.length;
   const highRiskPending = useMemo(() => pendingList.filter((p) => p.highRisk), [pendingList]);
 
   /* ---------------- 保存（含高危键 → 口令重确认弹层） ---------------- */
@@ -147,7 +179,7 @@ export function CopyConfigBody() {
   const needPhrase = highRiskPending.length > 0;
 
   const openConfirm = () => {
-    if (pendingList.length === 0) return;
+    if (totalPendingCount === 0) return;
     setConfirmText('');
     setConfirmOpen(true);
   };
@@ -156,15 +188,23 @@ export function CopyConfigBody() {
     if (needPhrase && !phraseOk) return;
     setSaving(true);
     try {
+      /* 文案变更与位置注变更合并一次 save（同键合并为一条 change） */
+      const keySet = new Set<string>([...pending.keys(), ...pendingPos.keys()]);
+      const changes = [...keySet].map((ruleKey) => ({
+        ruleKey,
+        valueJson: { text: pending.get(ruleKey) ?? textByKey.get(ruleKey) ?? '' },
+        ...(pendingPos.has(ruleKey) ? { position: pendingPos.get(ruleKey)! } : {}),
+      }));
       await trpc.config.save.mutate({
         domain: DOMAIN,
-        changes: pendingList.map((p) => ({ ruleKey: p.ruleKey, valueJson: { text: p.after } })),
+        changes,
         confirmedHighRisk: highRiskPending.map((p) => p.ruleKey),
       });
       toast(cp('copyport.savedToast'));
       setConfirmOpen(false);
       setConfirmText('');
       setPending(new Map());
+      setPendingPos(new Map());
       setOpenKey(null);
       await queryClient.invalidateQueries({ queryKey: ['config', 'list'] });
       await queryClient.invalidateQueries({ queryKey: ['config', 'versions'] });
@@ -209,7 +249,7 @@ export function CopyConfigBody() {
     <>
       <ToasterMount />
 
-      {/* 工具行：搜索 + 域下拉 + 只看高危/只看已改 */}
+      {/* 工具行：搜索 + 屏下拉 + 只看高危/只看已改 */}
       <div className="mb-3.5 flex flex-wrap items-center gap-3">
         <SearchInput
           placeholder={cp('copyport.searchPlaceholder')}
@@ -218,17 +258,17 @@ export function CopyConfigBody() {
           testid="copyport-search"
         />
         <select
-          data-testid="copyport-domain-select"
+          data-testid="copyport-screen-select"
           className="u1-ring rounded-control bg-card px-3 py-3.5 text-caption text-ink focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
-          value={domainFilter}
-          onChange={(e) => setDomainFilter(e.target.value)}
+          value={screenFilter}
+          onChange={(e) => setScreenFilter(e.target.value)}
         >
           <option value="">
-            {cp('copyport.pageTitle')} · {cp('copyport.keysCount', { n: rows.length })}
+            {cp('copyport.screenFilterAll')} · {cp('copyport.keysCount', { n: rows.length })}
           </option>
-          {domainCounts.map(([label, n]) => (
-            <option key={label} value={label}>
-              {label} · {cp('copyport.keysCount', { n })}
+          {screenCounts.map(([screen, n]) => (
+            <option key={screen} value={screen}>
+              {screen} · {cp('copyport.keysCount', { n })}
             </option>
           ))}
         </select>
@@ -246,23 +286,30 @@ export function CopyConfigBody() {
         </span>
       </div>
 
-      {/* 键列表（按 label 分组） */}
+      {/* 键列表（按屏分组；未归屏组排末+注记） */}
       {groups.length === 0 ? (
         <div className="rounded-panel bg-[#FFFDF6] py-12 text-center shadow-hairline ring-1 ring-line-ring">
           <div className="text-body-sm text-[rgba(59,46,36,.62)]">{cp('copyport.emptyDomain')}</div>
         </div>
       ) : (
-        groups.map(([label, rs]) => (
-          <div key={label} className="u3-panel mb-3.5">
+        groups.map(([screen, rs]) => (
+          <div key={screen} className="u3-panel mb-3.5" data-testid={`copyport-screen-${screen}`}>
             <div className="u3-panel-head">
-              <h3>{label}</h3>
+              <h3>{screen}</h3>
               <span className="aside" style={numStyle}>
                 {cp('copyport.keysCount', { n: rs.length })}
               </span>
             </div>
+            {screen === UNSCREENED ? (
+              <div className="border-t border-[rgba(59,46,36,.06)] bg-[rgba(242,223,166,.18)] px-[17px] py-2 text-caption-xs text-[rgba(59,46,36,.62)]" data-testid="copyport-unscreened-note">
+                {cp('copyport.unscreenedNote')}
+              </div>
+            ) : null}
             {rs.map((r) => {
               const cur = textByKey.get(r.ruleKey) ?? '';
+              const curPos = r.position ?? '';
               const draft = pending.get(r.ruleKey);
+              const draftPos = pendingPos.get(r.ruleKey);
               const open = openKey === r.ruleKey;
               return (
                 <div
@@ -272,7 +319,10 @@ export function CopyConfigBody() {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-1.5">
+                      <div className="text-caption-xs font-semibold text-[rgba(59,46,36,.72)]" data-testid={`copyport-pos-${r.ruleKey}`}>
+                        📍 {draftPos ?? (curPos || '—')}
+                      </div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                         <span className="font-mono text-caption font-semibold text-ink">{r.ruleKey}</span>
                         {r.highRisk ? <Badge tone="danger">{cp('copyport.highRiskBadge')}</Badge> : null}
                         {r.version > 1 ? (
@@ -295,12 +345,24 @@ export function CopyConfigBody() {
                     </Btn>
                   </div>
                   {open ? (
-                    <textarea
-                      className="mt-2.5 min-h-[72px] w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
-                      rows={3}
-                      value={draft ?? cur}
-                      onChange={(e) => setDraft(r.ruleKey, e.target.value)}
-                    />
+                    <>
+                      <label className="mt-2.5 block text-caption-xs text-[rgba(59,46,36,.62)]">
+                        {cp('copyport.positionLabel')}
+                        <input
+                          className="mt-1 w-full rounded-control bg-card px-3 py-2 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+                          data-testid={`copyport-posedit-${r.ruleKey}`}
+                          placeholder={cp('copyport.positionPlaceholder')}
+                          value={draftPos ?? curPos}
+                          onChange={(e) => setDraftPos(r.ruleKey, e.target.value, curPos)}
+                        />
+                      </label>
+                      <textarea
+                        className="mt-2 min-h-[72px] w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+                        rows={3}
+                        value={draft ?? cur}
+                        onChange={(e) => setDraft(r.ruleKey, e.target.value)}
+                      />
+                    </>
                   ) : null}
                 </div>
               );
@@ -310,13 +372,13 @@ export function CopyConfigBody() {
       )}
 
       {/* 待保存条（有 pending 才浮出） */}
-      {pendingList.length > 0 ? (
+      {totalPendingCount > 0 ? (
         <div
           className="u1-ring sticky bottom-4 z-10 mt-3.5 flex items-center justify-between gap-3 rounded-panel bg-card px-4 py-3 shadow-elevated"
           data-testid="copyport-savebar"
         >
           <span className="text-caption text-ink" style={numStyle}>
-            {cp('copyport.pendingBar', { n: pendingList.length })}
+            {cp('copyport.pendingBar', { n: totalPendingCount })}
           </span>
           <Btn
             variant="primary"
