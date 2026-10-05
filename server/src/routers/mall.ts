@@ -19,10 +19,11 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, gte, like, lt, ne, or, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, like, lt, ne, or, sql, type SQL } from 'drizzle-orm';
 import { randomInt } from 'node:crypto';
 import { z } from 'zod';
 import { db, schema } from '../db';
+import { parseCsv } from '../lib/csvParse';
 import { customerProcedure, merchantManagerProcedure, merchantOwnerProcedure, merchantProcedure, publicProcedure, router } from '../trpc';
 import { broadcastNow, emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
@@ -108,7 +109,7 @@ async function getOrderOrThrow(d: DbHandle, orderId: string): Promise<OrderRow> 
 }
 
 /** 列表项：订单行 + 门店名（+ 商家端队列里的客户昵称） */
-type OrderListItem = OrderRow & { storeName: string | null; customerNickname?: string | null };
+type OrderListItem = OrderRow & { storeName: string | null; customerNickname?: string | null; /** 体验批片 5：回馈金抵扣额真值列（W-09 红字口径接真值） */ rebateFen?: number };
 
 const groupOrders = (statuses: readonly string[]) =>
   Object.fromEntries(statuses.map((s) => [s, [] as OrderListItem[]])) as Record<string, OrderListItem[]>;
@@ -639,6 +640,9 @@ export const mallRouter = router({
   /**
    * 9. listStoreOrders（merchant 本店）：待办队列——待发货 paid / 已发货 shipped /
    * 售后 refunding 三组（附客户昵称，按创建时间倒序）。
+   * 体验批片 5（B 区点亮）：行附 rebateFen=回馈金抵扣额真值（rebate_logs type='deduct'
+   * 联 source_id=order_no 聚合；商城结算当前无回馈金抵扣写入口——列真值恒 0 是诚实
+   * 现状，通道开通即自动有值；W-09 红字口径接真值，不画假数）。
    */
   listStoreOrders: merchantManagerProcedure.query(async ({ ctx }) => { // M1-补2 条件①：商城订单流水 clerk 403
     const rows = await ctx.db
@@ -656,14 +660,162 @@ export const mallRouter = router({
         ),
       )
       .orderBy(desc(schema.orders.createdAt));
+    /* 回馈金列透出：rebate_logs deduct 联 order_no（无行=0） */
+    const orderNos = rows.map((r) => r.order.orderNo);
+    const rebateRows = orderNos.length
+      ? await ctx.db
+          .select({ sourceId: schema.rebateLogs.sourceId, deltaFen: schema.rebateLogs.deltaFen })
+          .from(schema.rebateLogs)
+          .where(and(eq(schema.rebateLogs.type, 'deduct'), inArray(schema.rebateLogs.sourceId, orderNos)))
+      : [];
+    const rebateByOrderNo = new Map<string, number>();
+    for (const r of rebateRows) {
+      if (!r.sourceId) continue;
+      rebateByOrderNo.set(r.sourceId, (rebateByOrderNo.get(r.sourceId) ?? 0) + Math.abs(r.deltaFen));
+    }
     const groups = groupOrders(STORE_QUEUE_STATUSES);
     for (const r of rows) {
       groups[r.order.status]?.push({
         ...r.order,
         storeName: null,
         customerNickname: r.customerNickname,
+        rebateFen: rebateByOrderNo.get(r.order.orderNo) ?? 0,
       });
     }
     return { groups };
   }),
+
+  /* ------------------------------------------------------------------ */
+  /* 体验批片 5 · B 区点亮：商品 CSV 导入端口（W-10 商品屏；模板下载+预览     */
+  /* dry-run+落账+失败行回显零落账+留痕；闸=owner|manager，开工令 §一.B）      */
+  /* 模板列写死（任务书 §三.2 名单内字段写死）：分类/商品名/描述/价格(元)/库存/   */
+  /* 是否消毒耗材——六列顺序固定，表头行固定。                                  */
+  /* ------------------------------------------------------------------ */
+
+  /** 模板下载（登录即可读=公开形状；写闸在 preview/execute） */
+  productImportTemplate: merchantManagerProcedure.query(() => {
+    const csv =
+      '﻿分类,商品名,描述,价格(元),库存,是否消毒耗材\n' +
+      '主粮,全价成犬粮 2kg,鸡肉味全价犬粮,129.00,50,否\n' +
+      '清洁,宠物消毒液 500ml,环境消杀用,39.90,30,是\n';
+    return { filename: 'product-import-template.csv', csv, columns: ['分类', '商品名', '描述', '价格(元)', '库存', '是否消毒耗材'] };
+  }),
+
+  /** 预览 dry-run（零写入）：解析+逐行校验+对账报告（失败行原因分布全量回显） */
+  productImportPreview: merchantManagerProcedure
+    .input(z.object({ csvText: z.string().min(1, 'CSV 内容为空').max(1024 * 1024, 'CSV 超出 1MB 上限'), filename: z.string().max(255).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const plan = buildProductImportPlan(input.csvText);
+      void ctx;
+      return { report: plan.report, rows: plan.rows.map((r) => ({ line: r.line, ok: r.ok, error: r.error ?? null, name: r.name })) };
+    }),
+
+  /**
+   * 落账（全量或零：任一行校验失败 → 400+失败行回显，零落账零批次行）；
+   * 全量合法 → 事务内逐行插 products（status='on' 上架）+ product_import_batches 批次行
+   * 留痕（report_json=逐行报告全量）。储值导入同族工艺（storedValue.executeImport）。
+   */
+  productImportExecute: merchantManagerProcedure
+    .input(z.object({ csvText: z.string().min(1, 'CSV 内容为空').max(1024 * 1024, 'CSV 超出 1MB 上限'), filename: z.string().max(255).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const plan = buildProductImportPlan(input.csvText);
+      if (plan.rows.length === 0) throw new TRPCError({ code: 'BAD_REQUEST', message: '无可导入数据行' });
+      const failRows = plan.rows.filter((r) => !r.ok);
+      if (failRows.length > 0) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `存在 ${failRows.length} 行校验失败，已零落账：${failRows.map((r) => `行${r.line}（${r.error}）`).join('；')}`,
+        });
+      }
+      const batch = await ctx.db.transaction(async (tx) => {
+        for (const r of plan.rows) {
+          await tx.insert(schema.products).values({
+            storeId: ctx.user.storeId!,
+            category: r.category!,
+            name: r.name!,
+            description: r.description ?? null,
+            priceFen: r.priceFen!,
+            stock: r.stock!,
+            status: 'on',
+            isDisinfectionSupply: r.isSupply,
+          });
+        }
+        const [batch] = await tx
+          .insert(schema.productImportBatches)
+          .values({
+            storeId: ctx.user.storeId!,
+            filename: input.filename ?? '未命名.csv',
+            totalRows: plan.rows.length,
+            okRows: plan.rows.length,
+            failRows: 0,
+            reportJson: { lines: plan.rows.map((r) => ({ line: r.line, name: r.name, ok: true })) } as Record<string, unknown>,
+            createdBy: ctx.user.id,
+          })
+          .returning();
+        return batch;
+      });
+      return { batchId: batch.id, okRows: batch.okRows, failRows: 0 };
+    }),
 });
+
+/* ------------------------------------------------------------------ */
+/* 商品 CSV 导入：解析+校验计划（模板六列写死；失败行零落账判定在 execute）   */
+/* ------------------------------------------------------------------ */
+
+interface ProductImportRow {
+  line: number;
+  ok: boolean;
+  error?: string;
+  category?: string;
+  name?: string;
+  description?: string;
+  priceFen?: number;
+  stock?: number;
+  isSupply?: boolean;
+}
+
+/** 模板六列（写死）：分类/商品名/描述/价格(元)/库存/是否消毒耗材 */
+const PRODUCT_IMPORT_HEADER = ['分类', '商品名', '描述', '价格(元)', '库存', '是否消毒耗材'];
+
+function buildProductImportPlan(csvText: string): { rows: ProductImportRow[]; report: Record<string, unknown> } {
+  const table = parseCsv(csvText);
+  const rows: ProductImportRow[] = [];
+  const header = table[0] ?? [];
+  const headerOk = PRODUCT_IMPORT_HEADER.every((h, i) => (header[i] ?? '').trim() === h);
+  if (!headerOk) {
+    return {
+      rows: [],
+      report: { totalRows: 0, okRows: 0, failRows: Math.max(0, table.length - 1), headerError: `表头须为：${PRODUCT_IMPORT_HEADER.join('/')}`, templateHint: '先下载模板再填' },
+    };
+  }
+  for (let i = 1; i < table.length; i++) {
+    const cells = table[i]!.map((c) => c.trim());
+    const line = i + 1; // 含表头行的物理行号
+    const [category, name, description, priceRaw, stockRaw, supplyRaw] = cells;
+    const fail = (error: string): ProductImportRow => ({ line, ok: false, error, name: name || undefined });
+    if (cells.every((c) => c === '')) continue; // 空行跳过
+    if (!category || category.length > 32) { rows.push(fail('分类必填且 ≤32 字')); continue; }
+    if (!name || name.length > 64) { rows.push(fail('商品名必填且 ≤64 字')); continue; }
+    if (description && description.length > 255) { rows.push(fail('描述 ≤255 字')); continue; }
+    const priceMatch = /^(\d+)(\.\d{1,2})?$/.exec(priceRaw ?? '');
+    if (!priceMatch) { rows.push(fail('价格须为数字（最多两位小数）')); continue; }
+    const priceFen = Math.round(parseFloat(priceRaw!) * 100);
+    if (priceFen <= 0 || priceFen > 100_000_00) { rows.push(fail('价格须 >0 且 ≤100 万元')); continue; }
+    if (!/^\d+$/.test(stockRaw ?? '')) { rows.push(fail('库存须为非负整数')); continue; }
+    const stock = parseInt(stockRaw!, 10);
+    if (stock > 1_000_000) { rows.push(fail('库存超出合理上限')); continue; }
+    if (supplyRaw !== '是' && supplyRaw !== '否') { rows.push(fail('是否消毒耗材仅可填 是/否')); continue; }
+    rows.push({ line, ok: true, category, name, description: description || undefined, priceFen, stock, isSupply: supplyRaw === '是' });
+  }
+  const failRows = rows.filter((r) => !r.ok);
+  return {
+    rows,
+    report: {
+      totalRows: rows.length,
+      okRows: rows.length - failRows.length,
+      failRows: failRows.length,
+      failReasons: failRows.map((r) => ({ line: r.line, error: r.error })),
+      note: 'preview 零写入；execute=全量或零（失败行回显零落账）',
+    },
+  };
+}

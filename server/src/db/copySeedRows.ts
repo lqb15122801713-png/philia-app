@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B）——生成件，勿手改（源=scripts/gen-copy-overrides-seed.mts）；
  * 重生成：仓库根 npx tsx scripts/gen-copy-overrides-seed.mts（copy 键表增删键后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-04T09:41:57.898Z；键数=2615
+ * 生成时间口径：2026-10-05T09:54:37.038Z；键数=2811
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }> = [
  {
@@ -5835,6 +5835,141 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "员工上传过程照后会实时出现在这里。"
  },
  {
+  "key": "ops.appeal.afterLabel",
+  "domain": "merchant:ops",
+  "text": "纠错后取值"
+ },
+ {
+  "key": "ops.appeal.afterPh",
+  "domain": "merchant:ops",
+  "text": "如：差评归属更正 / 更正后 79"
+ },
+ {
+  "key": "ops.appeal.approveCta",
+  "domain": "merchant:ops",
+  "text": "通过（纠错）"
+ },
+ {
+  "key": "ops.appeal.approveDone",
+  "domain": "merchant:ops",
+  "text": "申诉已通过，纠错留痕已登记"
+ },
+ {
+  "key": "ops.appeal.approveNotePh",
+  "domain": "merchant:ops",
+  "text": "复核意见（可选）"
+ },
+ {
+  "key": "ops.appeal.approveTitle",
+  "domain": "merchant:ops",
+  "text": "通过申诉 · 纠错留痕"
+ },
+ {
+  "key": "ops.appeal.aside",
+  "domain": "merchant:ops",
+  "text": "差评归属/报表指标异议；通过必留纠错前后值"
+ },
+ {
+  "key": "ops.appeal.beforeLabel",
+  "domain": "merchant:ops",
+  "text": "纠错前取值"
+ },
+ {
+  "key": "ops.appeal.beforePh",
+  "domain": "merchant:ops",
+  "text": "如：差评误挂到该员工 / 指标原值 82"
+ },
+ {
+  "key": "ops.appeal.correctionLabel",
+  "domain": "merchant:ops",
+  "text": "纠错留痕"
+ },
+ {
+  "key": "ops.appeal.correctionNotePh",
+  "domain": "merchant:ops",
+  "text": "纠错说明（可选）"
+ },
+ {
+  "key": "ops.appeal.correctionRequired",
+  "domain": "merchant:ops",
+  "text": "通过必须填写纠错前后值——兜底留痕铁规"
+ },
+ {
+  "key": "ops.appeal.empty",
+  "domain": "merchant:ops",
+  "text": "暂无待复核申诉"
+ },
+ {
+  "key": "ops.appeal.reasonLabel",
+  "domain": "merchant:ops",
+  "text": "申诉理由"
+ },
+ {
+  "key": "ops.appeal.rejectCta",
+  "domain": "merchant:ops",
+  "text": "驳回"
+ },
+ {
+  "key": "ops.appeal.rejectDone",
+  "domain": "merchant:ops",
+  "text": "申诉已驳回"
+ },
+ {
+  "key": "ops.appeal.rejectNotePh",
+  "domain": "merchant:ops",
+  "text": "复核意见（必填，随单留痕）"
+ },
+ {
+  "key": "ops.appeal.rejectNoteRequired",
+  "domain": "merchant:ops",
+  "text": "驳回必须填写复核意见"
+ },
+ {
+  "key": "ops.appeal.rejectTitle",
+  "domain": "merchant:ops",
+  "text": "驳回申诉"
+ },
+ {
+  "key": "ops.appeal.reviewedAtLabel",
+  "domain": "merchant:ops",
+  "text": "复核时间"
+ },
+ {
+  "key": "ops.appeal.reviewedTitle",
+  "domain": "merchant:ops",
+  "text": "已复核（近 50 条）"
+ },
+ {
+  "key": "ops.appeal.reviewNoteLabel",
+  "domain": "merchant:ops",
+  "text": "复核意见"
+ },
+ {
+  "key": "ops.appeal.statusApproved",
+  "domain": "merchant:ops",
+  "text": "已通过"
+ },
+ {
+  "key": "ops.appeal.statusRejected",
+  "domain": "merchant:ops",
+  "text": "已驳回"
+ },
+ {
+  "key": "ops.appeal.targetMetric",
+  "domain": "merchant:ops",
+  "text": "报表指标"
+ },
+ {
+  "key": "ops.appeal.targetReview",
+  "domain": "merchant:ops",
+  "text": "差评归属"
+ },
+ {
+  "key": "ops.appeal.title",
+  "domain": "merchant:ops",
+  "text": "指标申诉复核"
+ },
+ {
   "key": "ops.common.cancel",
   "domain": "merchant:ops",
   "text": "取消"
@@ -6102,12 +6237,12 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
  {
   "key": "order.rebateCol",
   "domain": "merchant:orders",
-  "text": "回馈金"
+  "text": "回馈金抵扣"
  },
  {
   "key": "order.rebatePendingNote",
   "domain": "merchant:orders",
-  "text": "回馈金列读口待补——订单域未透出回馈金字段，待 server 开口；回馈金仅抵商品"
+  "text": "回馈金抵扣（真值；商城结算当前无抵扣通道=恒 0 是诚实现状）——回馈金仅抵商品"
  },
  {
   "key": "order.sub",
@@ -6750,14 +6885,59 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "＋ 新增商品"
  },
  {
+  "key": "prod.csvAllOk",
+  "domain": "merchant:products",
+  "text": "全部合法，可确认导入"
+ },
+ {
+  "key": "prod.csvClose",
+  "domain": "merchant:products",
+  "text": "收起"
+ },
+ {
   "key": "prod.csvCta",
   "domain": "merchant:products",
   "text": "CSV 导入"
  },
  {
-  "key": "prod.csvPendingNote",
+  "key": "prod.csvDone",
   "domain": "merchant:products",
-  "text": "待供给——CSV 导入端口未开口，留位不画假件"
+  "text": "导入成功 {n} 行"
+ },
+ {
+  "key": "prod.csvExecuteCta",
+  "domain": "merchant:products",
+  "text": "确认导入"
+ },
+ {
+  "key": "prod.csvFileCta",
+  "domain": "merchant:products",
+  "text": "选择 CSV 文件"
+ },
+ {
+  "key": "prod.csvImportTitle",
+  "domain": "merchant:products",
+  "text": "CSV 批量导入"
+ },
+ {
+  "key": "prod.csvNoFile",
+  "domain": "merchant:products",
+  "text": "请先选择 CSV 文件"
+ },
+ {
+  "key": "prod.csvPreviewCta",
+  "domain": "merchant:products",
+  "text": "预览校验"
+ },
+ {
+  "key": "prod.csvSummary",
+  "domain": "merchant:products",
+  "text": "共 {t} 行 · 可导入 {ok} · 失败 {f}"
+ },
+ {
+  "key": "prod.csvTemplateCta",
+  "domain": "merchant:products",
+  "text": "下载模板"
  },
  {
   "key": "prod.dailyCountCol",
@@ -6795,64 +6975,439 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "商品"
  },
  {
+  "key": "rpt.d1.amortCard",
+  "domain": "merchant:report",
+  "text": "分摊口径 ②"
+ },
+ {
+  "key": "rpt.d1.amortSub",
+  "domain": "merchant:report",
+  "text": "服务+商品+年费按 12 月分摊（防收钱当月虚胖）"
+ },
+ {
+  "key": "rpt.d1.byDayTitle",
+  "domain": "merchant:report",
+  "text": "逐日营收"
+ },
+ {
+  "key": "rpt.d1.cashCard",
+  "domain": "merchant:report",
+  "text": "收现口径 ①"
+ },
+ {
+  "key": "rpt.d1.cashSub",
+  "domain": "merchant:report",
+  "text": "服务+商品+年费收现"
+ },
+ {
+  "key": "rpt.d1.guestLabel",
+  "domain": "merchant:report",
+  "text": "散客"
+ },
+ {
+  "key": "rpt.d1.memberLabel",
+  "domain": "merchant:report",
+  "text": "会员"
+ },
+ {
+  "key": "rpt.d1.memberShareTitle",
+  "domain": "merchant:report",
+  "text": "会员 vs 散客消费占比"
+ },
+ {
+  "key": "rpt.d1.momLabel",
+  "domain": "merchant:report",
+  "text": "环比"
+ },
+ {
+  "key": "rpt.d1.noBase",
+  "domain": "merchant:report",
+  "text": "无基数"
+ },
+ {
+  "key": "rpt.d1.nonCashNote",
+  "domain": "merchant:report",
+  "text": "非现金单列（不计已收）：次卡 {pass} · 储值 {sv} · 回馈金 {rb}"
+ },
+ {
+  "key": "rpt.d1.yoyLabel",
+  "domain": "merchant:report",
+  "text": "同比"
+ },
+ {
+  "key": "rpt.d2.attachCard",
+  "domain": "merchant:report",
+  "text": "附加项目搭售率"
+ },
+ {
+  "key": "rpt.d2.attachSub",
+  "domain": "merchant:report",
+  "text": "搭售 {n}/{t} 单 · 附加金额 {amt}"
+ },
+ {
+  "key": "rpt.d2.tableTitle",
+  "domain": "merchant:report",
+  "text": "按服务项构成"
+ },
+ {
+  "key": "rpt.d3.active90Card",
+  "domain": "merchant:report",
+  "text": "90 天活跃率"
+ },
+ {
+  "key": "rpt.d3.active90Sub",
+  "domain": "merchant:report",
+  "text": "{n}/{t} 人 90 天内有交易"
+ },
+ {
+  "key": "rpt.d3.activeCard",
+  "domain": "merchant:report",
+  "text": "存量活跃会员"
+ },
+ {
+  "key": "rpt.d3.byPlanTitle",
+  "domain": "merchant:report",
+  "text": "本月新增按档分布"
+ },
+ {
+  "key": "rpt.d3.newCard",
+  "domain": "merchant:report",
+  "text": "本月新增会员"
+ },
+ {
+  "key": "rpt.d4.deductedCard",
+  "domain": "merchant:report",
+  "text": "本月扣次"
+ },
+ {
+  "key": "rpt.d4.grantedCard",
+  "domain": "merchant:report",
+  "text": "本月售卡充次"
+ },
+ {
+  "key": "rpt.d4.remainCard",
+  "domain": "merchant:report",
+  "text": "剩余次数负债"
+ },
+ {
+  "key": "rpt.d4.stockSub",
+  "domain": "merchant:report",
+  "text": "在册 {n} 张 · 总 {t} 次"
+ },
+ {
+  "key": "rpt.d4.trendTitle",
+  "domain": "merchant:report",
+  "text": "近 6 月扣次趋势"
+ },
+ {
+  "key": "rpt.d5.consumeCard",
+  "domain": "merchant:report",
+  "text": "本月消耗"
+ },
+ {
+  "key": "rpt.d5.liabilityCard",
+  "domain": "merchant:report",
+  "text": "期末储值负债"
+ },
+ {
+  "key": "rpt.d5.prepaidRow",
+  "domain": "merchant:report",
+  "text": "预收负债总额（储值 ¥{sv} + 回馈金 ¥{rb}）"
+ },
+ {
+  "key": "rpt.d5.rechargeCard",
+  "domain": "merchant:report",
+  "text": "本月充值"
+ },
+ {
+  "key": "rpt.d6.amountCard",
+  "domain": "merchant:report",
+  "text": "退款金额"
+ },
+ {
+  "key": "rpt.d6.byTypeTitle",
+  "domain": "merchant:report",
+  "text": "类型分布"
+ },
+ {
+  "key": "rpt.d6.countCard",
+  "domain": "merchant:report",
+  "text": "退款笔数（已执行+已实退）"
+ },
+ {
+  "key": "rpt.d6.linkedBad",
+  "domain": "merchant:report",
+  "text": "退款关联差评 {n} 件"
+ },
+ {
+  "key": "rpt.d6.reasonTitle",
+  "domain": "merchant:report",
+  "text": "申请原因聚类"
+ },
+ {
+  "key": "rpt.d6.rejectCard",
+  "domain": "merchant:report",
+  "text": "申请驳回率"
+ },
+ {
+  "key": "rpt.d6.rejectSub",
+  "domain": "merchant:report",
+  "text": "{r}/{t} 件被驳回"
+ },
+ {
+  "key": "rpt.d6.spikeNa",
+  "domain": "merchant:report",
+  "text": "上月无退款基数，环比不出数"
+ },
+ {
+  "key": "rpt.d6.spikeOk",
+  "domain": "merchant:report",
+  "text": "退款金额环比 {pct}（预警阈值 {th}）"
+ },
+ {
+  "key": "rpt.d6.spikeWarn",
+  "domain": "merchant:report",
+  "text": "退款金额环比 {pct}，超预警阈值（{th}）——请核查异常"
+ },
+ {
+  "key": "rpt.d7.tableTitle",
+  "domain": "merchant:report",
+  "text": "员工 × 绩效交叉"
+ },
+ {
+  "key": "rpt.d8.attachCard",
+  "domain": "merchant:report",
+  "text": "增值服务搭售率"
+ },
+ {
+  "key": "rpt.d8.nightsCard",
+  "domain": "merchant:report",
+  "text": "宠物夜数"
+ },
+ {
+  "key": "rpt.d8.occCard",
+  "domain": "merchant:report",
+  "text": "入住率"
+ },
+ {
+  "key": "rpt.d8.occSub",
+  "domain": "merchant:report",
+  "text": "{pets} 宠物夜 / 容量 {cap} 晚"
+ },
+ {
+  "key": "rpt.d8.overdueCard",
+  "domain": "merchant:report",
+  "text": "超期单数"
+ },
+ {
+  "key": "rpt.d8.perNightCard",
+  "domain": "merchant:report",
+  "text": "每宠物夜营收"
+ },
+ {
+  "key": "rpt.d9.byProductTitle",
+  "domain": "merchant:report",
+  "text": "按商品明细"
+ },
+ {
+  "key": "rpt.d9.ordersSub",
+  "domain": "merchant:report",
+  "text": "成交 {n} 单"
+ },
+ {
+  "key": "rpt.d9.salesCard",
+  "domain": "merchant:report",
+  "text": "销售额"
+ },
+ {
+  "key": "rpt.d9.sellThroughCard",
+  "domain": "merchant:report",
+  "text": "动销率"
+ },
+ {
+  "key": "rpt.d9.turnoverCard",
+  "domain": "merchant:report",
+  "text": "周转天数"
+ },
+ {
+  "key": "rpt.d9.unitsCard",
+  "domain": "merchant:report",
+  "text": "销量（件）"
+ },
+ {
+  "key": "rpt.dirAside",
+  "domain": "merchant:report",
+  "text": "17 张已点亮 · 导出 CSV 仅店主"
+ },
+ {
   "key": "rpt.dirD1",
   "domain": "merchant:report",
-  "text": "D1"
+  "text": "D1 营收双口径"
  },
  {
   "key": "rpt.dirD2",
   "domain": "merchant:report",
-  "text": "D2"
+  "text": "D2 服务营收构成"
  },
  {
   "key": "rpt.dirD3",
   "domain": "merchant:report",
-  "text": "D3"
+  "text": "D3 会员增长"
  },
  {
   "key": "rpt.dirD4",
   "domain": "merchant:report",
-  "text": "D4"
+  "text": "D4 次卡台账"
  },
  {
   "key": "rpt.dirD5",
   "domain": "merchant:report",
-  "text": "D5"
+  "text": "D5 储值台账"
  },
  {
   "key": "rpt.dirD6",
   "domain": "merchant:report",
-  "text": "D6"
+  "text": "D6 退款售后"
  },
  {
   "key": "rpt.dirD7",
   "domain": "merchant:report",
-  "text": "D7"
+  "text": "D7 员工绩效"
  },
  {
   "key": "rpt.dirD8",
   "domain": "merchant:report",
-  "text": "D8"
+  "text": "D8 寄养经营"
  },
  {
   "key": "rpt.dirD9",
   "domain": "merchant:report",
-  "text": "D9"
+  "text": "D9 商品销售周转"
+ },
+ {
+  "key": "rpt.dirEmbedBadge",
+  "domain": "merchant:report",
+  "text": "埋点预埋中"
+ },
+ {
+  "key": "rpt.dirN1",
+  "domain": "merchant:report",
+  "text": "N1 等级分布与升级"
+ },
+ {
+  "key": "rpt.dirN2",
+  "domain": "merchant:report",
+  "text": "N2 续费与回本"
+ },
+ {
+  "key": "rpt.dirN3",
+  "domain": "merchant:report",
+  "text": "N3 回馈金发行核销"
+ },
+ {
+  "key": "rpt.dirN4",
+  "domain": "merchant:report",
+  "text": "N4 评价分布与差评"
+ },
+ {
+  "key": "rpt.dirN5",
+  "domain": "merchant:report",
+  "text": "N5 交付合规与时效"
+ },
+ {
+  "key": "rpt.dirN6",
+  "domain": "merchant:report",
+  "text": "N6 员工×服务质量"
+ },
+ {
+  "key": "rpt.dirN7",
+  "domain": "merchant:report",
+  "text": "N7 内容曝光互动"
+ },
+ {
+  "key": "rpt.dirN8",
+  "domain": "merchant:report",
+  "text": "N8 种草预约归因"
  },
  {
   "key": "rpt.dirNote",
   "domain": "merchant:report",
-  "text": "D1–D9 报表口径/导出=开口项（18 号档 E4 🆕立项），全量置灰不画假件"
- },
- {
-  "key": "rpt.dirPending",
-  "domain": "merchant:report",
-  "text": "立项待供给"
+  "text": "D1–D9 / N1–N6 已点亮（月份口径；导出 CSV 仅店主）；N7/N8 埋点预埋中——瀑布流批出表"
  },
  {
   "key": "rpt.dirTitle",
   "domain": "merchant:report",
   "text": "报表目录"
+ },
+ {
+  "key": "rpt.embed.ev1",
+  "domain": "merchant:report",
+  "text": "case_impression 案例曝光"
+ },
+ {
+  "key": "rpt.embed.ev2",
+  "domain": "merchant:report",
+  "text": "case_detail_view 案例详情浏览"
+ },
+ {
+  "key": "rpt.embed.ev3",
+  "domain": "merchant:report",
+  "text": "case_dwell 案例停留时长"
+ },
+ {
+  "key": "rpt.embed.ev4",
+  "domain": "merchant:report",
+  "text": "case_read_finish 案例读完"
+ },
+ {
+  "key": "rpt.embed.ev5",
+  "domain": "merchant:report",
+  "text": "case_interact 案例互动"
+ },
+ {
+  "key": "rpt.embed.ev6",
+  "domain": "merchant:report",
+  "text": "book_same_impression 预约同款曝光"
+ },
+ {
+  "key": "rpt.embed.ev7",
+  "domain": "merchant:report",
+  "text": "book_same_click 预约同款点击"
+ },
+ {
+  "key": "rpt.embed.ev8",
+  "domain": "merchant:report",
+  "text": "booking_attributed 预约归因"
+ },
+ {
+  "key": "rpt.embed.ev9",
+  "domain": "merchant:report",
+  "text": "booking_verified 到店核销确认"
+ },
+ {
+  "key": "rpt.embed.eventsTitle",
+  "domain": "merchant:report",
+  "text": "九类预埋事件（名单写死）"
+ },
+ {
+  "key": "rpt.embed.intro",
+  "domain": "merchant:report",
+  "text": "本报表为埋点预埋项：埋点底座已落（content_events 九类事件写口+读数），出表排期=瀑布流批——本页先实证预埋有效性"
+ },
+ {
+  "key": "rpt.embed.outNote",
+  "domain": "merchant:report",
+  "text": "出表=瀑布流批（H 表 §方向三清单）；导出 CSV 不对预埋项开放（server 400 明文）"
+ },
+ {
+  "key": "rpt.embed.statsEmpty",
+  "domain": "merchant:report",
+  "text": "暂无事件落账——写口就绪，待客户端行为接入"
+ },
+ {
+  "key": "rpt.embed.statsTitle",
+  "domain": "merchant:report",
+  "text": "预埋有效性实证（本店事件计数）"
  },
  {
   "key": "rpt.ledgerAside",
@@ -6870,9 +7425,359 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "月结快照：每月封箱留存，历史封箱不回填"
  },
  {
-  "key": "rpt.quadPending",
+  "key": "rpt.n1.cohortTitle",
   "domain": "merchant:report",
-  "text": "读口待补"
+  "text": "入会月份 cohort（新增 → 至今仍活跃）"
+ },
+ {
+  "key": "rpt.n1.downgradeCard",
+  "domain": "merchant:report",
+  "text": "降级率"
+ },
+ {
+  "key": "rpt.n1.exitCard",
+  "domain": "merchant:report",
+  "text": "本月退出"
+ },
+ {
+  "key": "rpt.n1.newTitle",
+  "domain": "merchant:report",
+  "text": "本月新增按档"
+ },
+ {
+  "key": "rpt.n1.stockTitle",
+  "domain": "merchant:report",
+  "text": "四档存量（活跃会员）"
+ },
+ {
+  "key": "rpt.n1.upDownSub",
+  "domain": "merchant:report",
+  "text": "升级 {u} · 降级 {d}（分母=期初存量）"
+ },
+ {
+  "key": "rpt.n1.upgradeCard",
+  "domain": "merchant:report",
+  "text": "升级率"
+ },
+ {
+  "key": "rpt.n2.cohortTitle",
+  "domain": "merchant:report",
+  "text": "到期 cohort 续费率（近 6 月+本月）"
+ },
+ {
+  "key": "rpt.n2.paybackCard",
+  "domain": "merchant:report",
+  "text": "回本率（店级均值）"
+ },
+ {
+  "key": "rpt.n2.paybackDetailTitle",
+  "domain": "merchant:report",
+  "text": "逐员回本明细"
+ },
+ {
+  "key": "rpt.n2.paybackSub",
+  "domain": "merchant:report",
+  "text": "{n} 位活跃会员 · 年费 ¥{paid} · 实省 ¥{saved}"
+ },
+ {
+  "key": "rpt.n2.warnEmpty",
+  "domain": "merchant:report",
+  "text": "30 天内无到期会员"
+ },
+ {
+  "key": "rpt.n2.warnTitle",
+  "domain": "merchant:report",
+  "text": "到期预警名单（30 天内）"
+ },
+ {
+  "key": "rpt.n3.closingCard",
+  "domain": "merchant:report",
+  "text": "期末回馈金负债"
+ },
+ {
+  "key": "rpt.n3.redeemCard",
+  "domain": "merchant:report",
+  "text": "核销率"
+ },
+ {
+  "key": "rpt.n3.redeemSub",
+  "domain": "merchant:report",
+  "text": "基准 20-35% · 累计发行 ¥{g} · 核销 ¥{d}"
+ },
+ {
+  "key": "rpt.n3.rollNote",
+  "domain": "merchant:report",
+  "text": "滚动恒等式：期初 + 发行 − 核销 − 过期/破损 = 期末"
+ },
+ {
+  "key": "rpt.n3.rollTitle",
+  "domain": "merchant:report",
+  "text": "按期次滚动"
+ },
+ {
+  "key": "rpt.n4.avgCard",
+  "domain": "merchant:report",
+  "text": "平均评分"
+ },
+ {
+  "key": "rpt.n4.badRateCard",
+  "domain": "merchant:report",
+  "text": "差评率（纠错扣减后）"
+ },
+ {
+  "key": "rpt.n4.byServiceTitle",
+  "domain": "merchant:report",
+  "text": "按服务"
+ },
+ {
+  "key": "rpt.n4.byStaffTitle",
+  "domain": "merchant:report",
+  "text": "按员工"
+ },
+ {
+  "key": "rpt.n4.correctedRow",
+  "domain": "merchant:report",
+  "text": "含纠错 {n} 件——approved 申诉已从差评指标即时扣减（附录 B 兜底口径）"
+ },
+ {
+  "key": "rpt.n4.distTitle",
+  "domain": "merchant:report",
+  "text": "星级分布"
+ },
+ {
+  "key": "rpt.n4.minutesVal",
+  "domain": "merchant:report",
+  "text": "{n} 分钟"
+ },
+ {
+  "key": "rpt.n4.recentAside",
+  "domain": "merchant:report",
+  "text": "近十条 · 全时段口径（非同月过滤）"
+ },
+ {
+  "key": "rpt.n4.recentEmpty",
+  "domain": "merchant:report",
+  "text": "暂无差评"
+ },
+ {
+  "key": "rpt.n4.recentTitle",
+  "domain": "merchant:report",
+  "text": "差评明细与回复"
+ },
+ {
+  "key": "rpt.n4.repliedBadge",
+  "domain": "merchant:report",
+  "text": "已回复"
+ },
+ {
+  "key": "rpt.n4.replyCancel",
+  "domain": "merchant:report",
+  "text": "取消"
+ },
+ {
+  "key": "rpt.n4.replyCta",
+  "domain": "merchant:report",
+  "text": "回复 ›"
+ },
+ {
+  "key": "rpt.n4.replyDone",
+  "domain": "merchant:report",
+  "text": "已回复该差评"
+ },
+ {
+  "key": "rpt.n4.replyPlaceholder",
+  "domain": "merchant:report",
+  "text": "填写回复内容（500 字内）…"
+ },
+ {
+  "key": "rpt.n4.replyRateCard",
+  "domain": "merchant:report",
+  "text": "差评回复率"
+ },
+ {
+  "key": "rpt.n4.replySubmit",
+  "domain": "merchant:report",
+  "text": "提交回复"
+ },
+ {
+  "key": "rpt.n4.replyTagsLabel",
+  "domain": "merchant:report",
+  "text": "原因标签（可多选，最多 5 个）"
+ },
+ {
+  "key": "rpt.n4.replyTimeCard",
+  "domain": "merchant:report",
+  "text": "平均回复时效"
+ },
+ {
+  "key": "rpt.n4.tagTitle",
+  "domain": "merchant:report",
+  "text": "差评标签聚类"
+ },
+ {
+  "key": "rpt.n5.actualCard",
+  "domain": "merchant:report",
+  "text": "实际时长（均值）"
+ },
+ {
+  "key": "rpt.n5.bucket120",
+  "domain": "merchant:report",
+  "text": "30–120 分钟"
+ },
+ {
+  "key": "rpt.n5.bucket30",
+  "domain": "merchant:report",
+  "text": "5–30 分钟"
+ },
+ {
+  "key": "rpt.n5.bucket5",
+  "domain": "merchant:report",
+  "text": "≤5 分钟"
+ },
+ {
+  "key": "rpt.n5.bucketOver",
+  "domain": "merchant:report",
+  "text": ">120 分钟"
+ },
+ {
+  "key": "rpt.n5.bucketsTitle",
+  "domain": "merchant:report",
+  "text": "报告送达时效分布"
+ },
+ {
+  "key": "rpt.n5.bucketUnread",
+  "domain": "merchant:report",
+  "text": "未读"
+ },
+ {
+  "key": "rpt.n5.completedCard",
+  "domain": "merchant:report",
+  "text": "本月完成服务单"
+ },
+ {
+  "key": "rpt.n5.photoCard",
+  "domain": "merchant:report",
+  "text": "照片覆盖率"
+ },
+ {
+  "key": "rpt.n5.photoSub",
+  "domain": "merchant:report",
+  "text": "实传 {n} 张"
+ },
+ {
+  "key": "rpt.n5.sampleCard",
+  "domain": "merchant:report",
+  "text": "抽检率（打标重拍步占比）"
+ },
+ {
+  "key": "rpt.n5.stdCard",
+  "domain": "merchant:report",
+  "text": "标准时长（均值）"
+ },
+ {
+  "key": "rpt.n6.gateTitle",
+  "domain": "merchant:report",
+  "text": "海底捞铁规两件（附录 B）"
+ },
+ {
+  "key": "rpt.n6.queueEmpty",
+  "domain": "merchant:report",
+  "text": "暂无申诉记录"
+ },
+ {
+  "key": "rpt.n6.queueGo",
+  "domain": "merchant:report",
+  "text": "去审批中心 ›"
+ },
+ {
+  "key": "rpt.n6.queueTitle",
+  "domain": "merchant:report",
+  "text": "申诉队列（metric_appeals）"
+ },
+ {
+  "key": "rpt.n6.statusApproved",
+  "domain": "merchant:report",
+  "text": "已采纳"
+ },
+ {
+  "key": "rpt.n6.statusPending",
+  "domain": "merchant:report",
+  "text": "待复核"
+ },
+ {
+  "key": "rpt.n6.statusRejected",
+  "domain": "merchant:report",
+  "text": "已驳回"
+ },
+ {
+  "key": "rpt.n6.tableTitle",
+  "domain": "merchant:report",
+  "text": "员工 × 服务质量交叉"
+ },
+ {
+  "key": "rpt.page.actionFail",
+  "domain": "merchant:report",
+  "text": "操作失败，请重试"
+ },
+ {
+  "key": "rpt.page.backToDir",
+  "domain": "merchant:report",
+  "text": "‹ 返回报表目录"
+ },
+ {
+  "key": "rpt.page.empty",
+  "domain": "merchant:report",
+  "text": "该月暂无数据"
+ },
+ {
+  "key": "rpt.page.exportCta",
+  "domain": "merchant:report",
+  "text": "导出 CSV"
+ },
+ {
+  "key": "rpt.page.exportDone",
+  "domain": "merchant:report",
+  "text": "已导出 {name}（{n} 行）"
+ },
+ {
+  "key": "rpt.page.exportFail",
+  "domain": "merchant:report",
+  "text": "导出失败，请重试"
+ },
+ {
+  "key": "rpt.page.exporting",
+  "domain": "merchant:report",
+  "text": "导出中…"
+ },
+ {
+  "key": "rpt.page.exportOwnerOnly",
+  "domain": "merchant:report",
+  "text": "导出 CSV 仅店主（总规则③）"
+ },
+ {
+  "key": "rpt.page.loadError",
+  "domain": "merchant:report",
+  "text": "报表加载失败，请检查网络后重试"
+ },
+ {
+  "key": "rpt.page.monthLabel",
+  "domain": "merchant:report",
+  "text": "报表月份"
+ },
+ {
+  "key": "rpt.page.noteLead",
+  "domain": "merchant:report",
+  "text": "口径："
+ },
+ {
+  "key": "rpt.page.retry",
+  "domain": "merchant:report",
+  "text": "重新加载"
+ },
+ {
+  "key": "rpt.page.unknown",
+  "domain": "merchant:report",
+  "text": "未知报表键"
  },
  {
   "key": "rpt.quadRebate",
@@ -6880,9 +7785,9 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "回馈金负债"
  },
  {
-  "key": "rpt.quadRebateNote",
+  "key": "rpt.quadRebateSub",
   "domain": "merchant:report",
-  "text": "店级聚合读口待补（段 2 已核），置灰不造假"
+  "text": "{n} 户会员回馈金余额"
  },
  {
   "key": "rpt.quadRefund",
@@ -6905,9 +7810,39 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "text": "储值负债"
  },
  {
-  "key": "rpt.quadStoredNote",
+  "key": "rpt.quadStoredSub",
   "domain": "merchant:report",
-  "text": "店级聚合读口待补（段 2 已核），置灰不造假"
+  "text": "{n} 户 · 本金+赠送合计"
+ },
+ {
+  "key": "rpt.quadYesterday",
+  "domain": "merchant:report",
+  "text": "昨日营收"
+ },
+ {
+  "key": "rpt.quadYesterdayClose",
+  "domain": "merchant:report",
+  "text": "日结对账：{n} 箱 · 账面现金 ¥{amt}"
+ },
+ {
+  "key": "rpt.quadYesterdayNoClose",
+  "domain": "merchant:report",
+  "text": "昨日未封箱（日结行缺）"
+ },
+ {
+  "key": "rpt.quadYesterdaySub",
+  "domain": "merchant:report",
+  "text": "{date} · {n} 笔已收"
+ },
+ {
+  "key": "rpt.sparkNote",
+  "domain": "merchant:report",
+  "text": "今日格=截至当前已收 · financeStats 同源口径"
+ },
+ {
+  "key": "rpt.sparkTitle",
+  "domain": "merchant:report",
+  "text": "近 14 日营收走势"
  },
  {
   "key": "rpt.threeBooksNote",
@@ -11848,6 +12783,51 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string }
   "key": "reviews.anonymous",
   "domain": "staff:reviews",
   "text": "匿名客户"
+ },
+ {
+  "key": "reviews.appeal.cancel",
+  "domain": "staff:reviews",
+  "text": "取消"
+ },
+ {
+  "key": "reviews.appeal.cta",
+  "domain": "staff:reviews",
+  "text": "申诉"
+ },
+ {
+  "key": "reviews.appeal.duplicated",
+  "domain": "staff:reviews",
+  "text": "该评价已有申诉在途，请等待复核"
+ },
+ {
+  "key": "reviews.appeal.pending",
+  "domain": "staff:reviews",
+  "text": "已申诉待复核"
+ },
+ {
+  "key": "reviews.appeal.placeholder",
+  "domain": "staff:reviews",
+  "text": "请说明申诉理由（必填，500 字内，店长复核时可见）"
+ },
+ {
+  "key": "reviews.appeal.required",
+  "domain": "staff:reviews",
+  "text": "请填写申诉理由"
+ },
+ {
+  "key": "reviews.appeal.submit",
+  "domain": "staff:reviews",
+  "text": "提交申诉"
+ },
+ {
+  "key": "reviews.appeal.title",
+  "domain": "staff:reviews",
+  "text": "申诉该评价"
+ },
+ {
+  "key": "reviews.appeal.toast",
+  "domain": "staff:reviews",
+  "text": "申诉已提交，待店长复核"
  },
  {
   "key": "reviews.aside.lead",

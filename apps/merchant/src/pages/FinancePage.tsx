@@ -1,20 +1,24 @@
 /**
- * 报表 /finance（商家端控制台骨架批 · 片 5 段 3 · W-13 重建；底版=U3 批次任务 L）
+ * 报表 /finance（商家端控制台骨架批 · 片 5 段 3 · W-13 重建；段 4 点亮；底版=U3 批次任务 L）
  *
  * 区块序（UX-02 语言包 §四 W-13，路由 /finance 不动）：
  *   wtop（MainScaffold：title/sub 今日已收·待收 + 期间 chips 三档——chips 只驱动
  *   台账区间，四格恒取本月口径）
- *   → M3 四格：本月营收（financeStats 月档真值）/ 储值负债（无店级聚合读口，
- *     段 2 已核 → 置灰「读口待补」不造假）/ 回馈金负债（同置灰）/ 本月退款红
- *     （refund.list 月区间真值，已执行+已实退口径同日结单列）
+ *   → M3 四格：本月营收（financeStats 月档真值）/ 储值负债（段 4 撤灰接
+ *     report.storedValueLiability 店级聚合真值）/ 回馈金负债（report.rebateLiability
+ *     真值）/ 本月退款红（refund.list 月区间真值，已执行+已实退口径同日结单列）
+ *   → 昨日营收格（report.yesterdayRevenue + day_closes 对账行透出）+ 近 14 日
+ *     spark 格（report.revenueSpark14，迷你 SVG 折线手绘零图表库）
  *   → R12 当日退款汇总一行（refund.dayStats 真值，当日净额=已收−退款，原位保留）
  *   → 左 M5 月度台账（现状流水重排：日期/类型/金额/支付方式/单号 + 状态/操作，
  *     已收 live / 待收 amber +「收款 ›」markPaid 真链路，#pending-payments 深链不动）
- *   → 右报表目录 wlist D1–D9（开口项=18 号档 E4「D1-D9 报表口径/导出 🆕立项」
- *     → 全量置灰「立项待供给」R10 不画假件）+ 月结快照/三本账永不混列注。
+ *   → 右报表目录 wlist D1–D9 + N1–N8 全量点亮（段 4：Link 进 /finance/report/{key}；
+ *     N7/N8=埋点预埋中注记签 amber，同可进页看预埋实证）+ 月结快照/三本账永不混列注。
  *
  * 数据源（全部现成接口，零新增）：store.financeStats（期间档 + 月档）/
- * appointment.listForStore / refund.dayStats / refund.list（月区间）。
+ * appointment.listForStore / refund.dayStats / refund.list（月区间）/
+ * report.storedValueLiability / report.rebateLiability / report.yesterdayRevenue /
+ * report.revenueSpark14（片 5 尾牙读口，merchantManagerProcedure=owner|manager）。
  * U3 退役件口径不变（TrendChart 等已 git rm）；旧「已收/待收/扣次」三卡随四格
  * 冻结布局收起（待收进台账状态列+sub，扣次口径见日结页）。
  *
@@ -71,7 +75,8 @@ interface LedgerRow {
   code: string | null;
 }
 
-/** 报表目录 D1–D9（开口项：18 号档 E4 立项待供给，全量置灰不画假件） */
+/** 报表目录 D1–D9 + N1–N8（片 5 段 4 全量点亮：Link 进 /finance/report/{key}；
+    N7/N8=埋点预埋中注记签 amber，同可进页看预埋实证） */
 const REPORT_DIR_ITEMS = [
   { key: 'd1', title: rpt('rpt.dirD1') },
   { key: 'd2', title: rpt('rpt.dirD2') },
@@ -82,7 +87,49 @@ const REPORT_DIR_ITEMS = [
   { key: 'd7', title: rpt('rpt.dirD7') },
   { key: 'd8', title: rpt('rpt.dirD8') },
   { key: 'd9', title: rpt('rpt.dirD9') },
-].map((d) => ({ ...d, sub: rpt('rpt.dirPending') }));
+  { key: 'n1', title: rpt('rpt.dirN1') },
+  { key: 'n2', title: rpt('rpt.dirN2') },
+  { key: 'n3', title: rpt('rpt.dirN3') },
+  { key: 'n4', title: rpt('rpt.dirN4') },
+  { key: 'n5', title: rpt('rpt.dirN5') },
+  { key: 'n6', title: rpt('rpt.dirN6') },
+  { key: 'n7', title: rpt('rpt.dirN7'), badge: rpt('rpt.dirEmbedBadge') },
+  { key: 'n8', title: rpt('rpt.dirN8'), badge: rpt('rpt.dirEmbedBadge') },
+].map((d) => ({ ...d, to: `/finance/report/${d.key}` }));
+
+/** 迷你 SVG 折线（近 14 日营收 spark · 手绘零图表库；空序列不渲染） */
+function SparkLine({ days }: { days: Array<{ date: string; totalFen: number }> }) {
+  if (days.length === 0) return null;
+  const W = 560;
+  const H = 72;
+  const PAD = 6;
+  const max = Math.max(...days.map((d) => d.totalFen), 1);
+  const step = days.length > 1 ? (W - PAD * 2) / (days.length - 1) : 0;
+  const pt = days.map(
+    (d, i) => [PAD + i * step, H - PAD - (d.totalFen / max) * (H - PAD * 2)] as const,
+  );
+  const points = pt.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+  const last = pt[pt.length - 1]!;
+  return (
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      className="mt-2 h-16 w-full"
+      role="img"
+      aria-label={rpt('rpt.sparkTitle')}
+      data-testid="finance-spark-svg"
+    >
+      <polyline
+        points={points}
+        fill="none"
+        stroke="rgba(59,46,36,.85)"
+        strokeWidth={2.5}
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      <circle cx={last[0]} cy={last[1]} r={4} fill="rgba(59,46,36,.85)" />
+    </svg>
+  );
+}
 
 export default function FinancePage() {
   const { trpc, queryClient } = usePhiliaClient();
@@ -128,6 +175,32 @@ export default function FinancePage() {
     queryFn: () => trpc.refund.list.query({ from: `${monthStr}-01`, to: storeTodayStr() }),
     refetchInterval: 60_000,
   });
+  /* ---- 片 5 尾牙读口（段 4 撤灰接真值；merchantManagerProcedure=owner|manager） ---- */
+  // 储值负债店级聚合（本金+赠送=欠客户的钱）
+  const storedLiabQ = useQuery({
+    queryKey: ['report', 'storedValueLiability'],
+    queryFn: () => trpc.report.storedValueLiability.query(),
+    refetchInterval: 60_000,
+  });
+  // 回馈金负债店级聚合（本店会员 rebate 余额 Σ）
+  const rebateLiabQ = useQuery({
+    queryKey: ['report', 'rebateLiability'],
+    queryFn: () => trpc.report.rebateLiability.query(),
+    refetchInterval: 60_000,
+  });
+  // 昨日营收（financeStats 同源口径 + day_closes 昨日行对账字段）
+  const yesterdayQ = useQuery({
+    queryKey: ['report', 'yesterdayRevenue'],
+    queryFn: () => trpc.report.yesterdayRevenue.query(),
+    refetchInterval: 60_000,
+  });
+  // 近 14 日营收 spark（同源 byDay 序列；今日格=截至当前的当日已收）
+  const sparkQ = useQuery({
+    queryKey: ['report', 'revenueSpark14'],
+    queryFn: () => trpc.report.revenueSpark14.query(),
+    refetchInterval: 60_000,
+  });
+
   const monthRefund = useMemo(() => {
     const rows = (refundMonthQ.data ?? []).filter((r) => r.status === 'executed' || r.status === 'settled');
     return { count: rows.length, fen: rows.reduce((s, r) => s + r.amountFen, 0) };
@@ -341,7 +414,7 @@ export default function FinancePage() {
         </div>
       ) : data ? (
         <>
-          {/* M3 四格（W-13：本月营收真值 / 储值负债·回馈金负债置灰读口待补 / 本月退款红真值） */}
+          {/* M3 四格（W-13 段 4：本月营收/储值负债/回馈金负债/本月退款红 全真值） */}
           <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
             <div className="u3-stat">
               <div className="cap">{rpt('rpt.quadRevenue')}</div>
@@ -354,15 +427,23 @@ export default function FinancePage() {
                   : ''}
               </div>
             </div>
-            <div className="u3-stat opacity-60" data-testid="finance-quad-stored" aria-disabled="true">
+            <div className="u3-stat" data-testid="finance-quad-stored">
               <div className="cap">{rpt('rpt.quadStored')}</div>
-              <div className="v text-[rgba(59,46,36,.42)]">—</div>
-              <div className="d">{rpt('rpt.quadPending')} · {rpt('rpt.quadStoredNote')}</div>
+              <div className="v">
+                {storedLiabQ.data ? `¥${formatYuan(storedLiabQ.data.totalFen)}` : '…'}
+              </div>
+              <div className="d u1-num">
+                {storedLiabQ.data ? rpt('rpt.quadStoredSub', { n: storedLiabQ.data.accountCount }) : ''}
+              </div>
             </div>
-            <div className="u3-stat opacity-60" data-testid="finance-quad-rebate" aria-disabled="true">
+            <div className="u3-stat" data-testid="finance-quad-rebate">
               <div className="cap">{rpt('rpt.quadRebate')}</div>
-              <div className="v text-[rgba(59,46,36,.42)]">—</div>
-              <div className="d">{rpt('rpt.quadPending')} · {rpt('rpt.quadRebateNote')}</div>
+              <div className="v">
+                {rebateLiabQ.data ? `¥${formatYuan(rebateLiabQ.data.totalFen)}` : '…'}
+              </div>
+              <div className="d u1-num">
+                {rebateLiabQ.data ? rpt('rpt.quadRebateSub', { n: rebateLiabQ.data.accountCount }) : ''}
+              </div>
             </div>
             <div className="u3-stat" data-testid="finance-quad-refund">
               <div className="cap">{rpt('rpt.quadRefund')}</div>
@@ -370,6 +451,42 @@ export default function FinancePage() {
                 {refundMonthQ.data ? (monthRefund.fen > 0 ? `−¥${formatYuan(monthRefund.fen)}` : '¥0') : '…'}
               </div>
               <div className="d u1-num">{rpt('rpt.quadRefundCount', { n: monthRefund.count })}</div>
+            </div>
+          </div>
+
+          {/* 昨日营收格 + 近 14 日 spark 格（片 5 尾牙读口 A3/A4；与四格同全真值区） */}
+          <div className="mt-3.5 grid items-stretch gap-3.5 sm:grid-cols-2">
+            <div className="u3-stat" data-testid="finance-quad-yesterday">
+              <div className="cap">{rpt('rpt.quadYesterday')}</div>
+              <div className="v">
+                {yesterdayQ.data ? `¥${formatYuan(yesterdayQ.data.totalFen)}` : '…'}
+              </div>
+              <div className="d u1-num">
+                {yesterdayQ.data
+                  ? rpt('rpt.quadYesterdaySub', { date: yesterdayQ.data.date, n: yesterdayQ.data.paidCount })
+                  : ''}
+              </div>
+              <div className="d">
+                {yesterdayQ.data
+                  ? yesterdayQ.data.dayClose
+                    ? rpt('rpt.quadYesterdayClose', {
+                        n: yesterdayQ.data.dayClose.count,
+                        amt: formatYuan(yesterdayQ.data.dayClose.bookCashFen),
+                      })
+                    : rpt('rpt.quadYesterdayNoClose')
+                  : ''}
+              </div>
+            </div>
+            <div className="u3-panel px-[17px] py-3.5" data-testid="finance-spark">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+                <span className="text-caption font-semibold">{rpt('rpt.sparkTitle')}</span>
+                <span className="text-caption-xs text-[rgba(59,46,36,.42)]">{rpt('rpt.sparkNote')}</span>
+              </div>
+              {sparkQ.data ? (
+                <SparkLine days={sparkQ.data.days} />
+              ) : (
+                <Skeleton className="mt-2 h-16 w-full rounded-chip" />
+              )}
             </div>
           </div>
 
@@ -477,15 +594,13 @@ export default function FinancePage() {
               )}
             </div>
 
-            {/* 报表目录 wlist D1–D9（开口项全量置灰「立项待供给」）+ 口径注 */}
+            {/* 报表目录 wlist D1–D9 + N1–N8（段 4 全量点亮进页；N7/N8 预埋注记签 amber）+ 口径注 */}
             <div className="wsk">
               <div className="wsk-hd">
                 <span className="t">{rpt('rpt.dirTitle')}</span>
-                <span className="a">{rpt('rpt.dirPending')}</span>
+                <span className="a">{rpt('rpt.dirAside')}</span>
               </div>
-              <div className="pointer-events-none opacity-60" aria-disabled="true">
-                <WList items={REPORT_DIR_ITEMS} testId="report-dir" />
-              </div>
+              <WList items={REPORT_DIR_ITEMS} testId="report-dir" />
               <p className="wsk-note mt-2.5 px-1">{rpt('rpt.dirNote')}</p>
               <p className="wsk-note mt-1 px-1">
                 {rpt('rpt.monthCloseNote')} · {rpt('rpt.threeBooksNote')}

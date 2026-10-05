@@ -149,6 +149,7 @@ const ROUTES = [
   { app: 'merchant', path: '/live', anchors: ['在店监控'], expectPath: '/monitor', note: 'B2 重定向；U3 锚点' },
   { app: 'merchant', path: '/appointments', anchors: ['预约'], note: 'A3 白屏群' },
   { app: 'merchant', path: `/appointments/${APPT_ID}/monitor`, anchors: ['实时监控', '预约'], serverDep: true, note: 'P4 原深链；U3 锚点' },
+  { app: 'merchant', path: '/finance/report/d1', anchors: ['营收', '报表'], serverDep: true, note: '体验批片 5：W-13 报表目录点亮（:key 同模板 17 页同构，d1 代表行；返回目录出口锚）' },
   /* ---- 员工端 ---- */
   { app: 'staff', path: '/dev-login', anchors: ['登录'] },
   { app: 'staff', path: '/today', anchors: ['工位', '预约'], note: '骨架批片 1（S-01 工位台）：apphead「工位」+ dock 四槽（工位/预约/打卡/我的）' },

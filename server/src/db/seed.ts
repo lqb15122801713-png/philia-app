@@ -30,6 +30,10 @@ import { SLOT_SEED_ROWS } from './slotSeedRows';
 /* ---------------- 清空（子表 -> 父表） ---------------- */
 
 const CLEAR_ORDER = [
+  /* ---- 客户端体验大批片 5 新表（迁移 0044）：子表先父表，先于 stores/staff/users/appointments 清空 ---- */
+  schema.metricAppeals, // FK → stores/staff/users
+  schema.contentEvents, // FK → users/appointments/stores
+  schema.productImportBatches, // FK → stores/users
   /* ---- 片 4 薪资+XP 域新表（迁移 0033）：子表先父表，先于 users/stores/staff/appointments/xpEvents 清空 ---- */
   schema.payrollItems, // FK → payroll_runs/stores/staff
   schema.payrollRuns, // FK → stores/users
@@ -542,6 +546,16 @@ async function main() {
             { hoursBefore: 0, feeBp: 3000, label: '4 小时内/爽约 30%（公示口径，暂不扣款）' },
           ],
         },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      /* 客户端体验大批片 5（迁移 0044 同口径；重置后补种）：D6 退款率环比突增预警阈值 */
+      {
+        version: 1,
+        ruleKey: 'd6_refund_spike_warn_bp',
+        label: 'D6 退款率环比突增预警阈值（万分比）：本月退款金额环比增幅超该值→报表预警行（缺省 3000=30%）',
+        valueJson: { bp: 3000 },
         effectiveFrom: RULES_EFFECTIVE_FROM,
         active: true,
         createdBy: owner.id,

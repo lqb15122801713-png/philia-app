@@ -196,6 +196,12 @@ function notificationCopy(
       };
     case 'announcement.published':
       return { title: '新公告', body: typeof data.title === 'string' ? data.title : '门店发布了新公告' };
+    // 片 5：指标申诉复核结果（N6 申诉通道回执）
+    case 'metric.appealResolved':
+      return {
+        title: '申诉复核结果',
+        body: data.result === 'approved' ? '您的指标申诉已复核通过，数据已更正留痕' : '您的指标申诉已复核，详见复核意见',
+      };
     default:
       return { title: '消息提醒', body: '您有一条新消息' };
   }

@@ -189,8 +189,9 @@ export default function OrdersPage() {
                   <th>客户</th>
                   <th>商品</th>
                   <th className="text-right">金额</th>
-                  {/* W-09 回馈金红字列：订单域读口未透出（schema orders 无回馈金列位，
-                      listStoreOrders 仅透出行真值）——列置灰待口，不造假数 */}
+                  {/* W-09 回馈金红字列（片 5 段 4 撤灰接真值）：listStoreOrders 行透出
+                      rebateFen=回馈金抵扣额（rebate_logs deduct 联 order_no 聚合；商城结算
+                      当前无抵扣通道=恒 0 是诚实现状，通道开通即自动有值） */}
                   <th className="text-right">{od('order.rebateCol')}</th>
                   <th>支付</th>
                   <th>状态</th>
@@ -211,7 +212,7 @@ export default function OrdersPage() {
         )}
       </div>
 
-      {/* W-09 回馈金列口径注（读口待补 · 回馈金仅抵商品） */}
+      {/* W-09 回馈金列口径注（片 5 段 4 已接真值 · 回馈金仅抵商品） */}
       <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="orders-rebate-note">
         {od('order.rebatePendingNote')}
       </p>

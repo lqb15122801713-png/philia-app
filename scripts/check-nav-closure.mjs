@@ -132,6 +132,7 @@ const ROUTES = [
   { app: 'merchant', path: '/pass', expect: 'sub' },
   { app: 'merchant', path: '/staff', expect: 'sub' },
   { app: 'merchant', path: '/finance', expect: 'sub' },
+  { app: 'merchant', path: '/finance/report/d1', expect: 'sub', note: '体验批片 5：报表目录 17 张点亮（W-13；参数化 :key 同模板 17 页同构，d1 为代表行）' },
   { app: 'merchant', path: '/settings', expect: 'sub' },
   { app: 'merchant', path: '/settings/rules', expect: 'sub', note: '批次 staff-2 R9-F：owner 专属（clerk 守卫引导页 / manager 页内引导卡，rail 布局内）' },
   { app: 'merchant', path: '/settings/copy', expect: 'sub', note: '端口批片 B：文案端口（控制台第七域；owner 专属，同 /settings/rules 闸径）' },

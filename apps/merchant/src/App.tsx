@@ -39,6 +39,7 @@ import PassPage from './pages/PassPage'
 import PayrollPage from './pages/PayrollPage'
 import XpAdminPage from './pages/XpAdminPage'
 import ProductsPage from './pages/ProductsPage'
+import ReportPage from './pages/ReportPage'
 import SettingsPage from './pages/SettingsPage'
 import RulesConfigPage from './pages/RulesConfigPage'
 import ScheduleManagePage from './pages/ScheduleManagePage'
@@ -103,6 +104,10 @@ function ProtectedRoutes() {
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/finance" element={<FinancePage />} />
+        {/* 商家端控制台骨架批 片 5 段 4：报表详情页 /finance/report/:key（D1–D9+N1–N8；
+            owner|manager 读口，clerk 由 ClerkRouteGuard /finance 前缀拦——白名单不动；
+            路由+锚点文案由主窗统一申报 scripts 双表） */}
+        <Route path="/finance/report/:key" element={<ReportPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         {/* 批次 员工端2.0 R9-F：规则配置管理端口（owner-only；clerk 由 ClerkRouteGuard 拦，manager 页内引导页，server 硬 403） */}
         <Route path="/settings/rules" element={<RulesConfigPage />} />

@@ -6,7 +6,8 @@
  *
  * 列：单号（Montserrat）｜客户（昵称，副行下单时间——listStoreOrders 行无
  * 手机号/尾号字段，只显示真值不编造）｜商品（首件名×数量，副行「另 N 种 ·
- * 共 M 件」）｜金额（Montserrat tabular）｜支付（已支付 live）｜状态
+ * 共 M 件」）｜金额（Montserrat tabular）｜回馈金抵扣（片 5 段 4 接 rebateFen
+ * 真值：>0 红字强调，0=「—」）｜支付（已支付 live）｜状态
  * （待发货 amber / 已发货 wait / 售后中 amber）｜操作：
  * - 待发货：「发货 ›」主行动 → 开 ShipOrderDialog（mall.shipOrder 现成）；
  * - 已发货：直接展示物流单号真值（商家端无订单详情页可跳，不做假链接）；
@@ -80,12 +81,17 @@ export default function OrderRow({
         )}
       </td>
       <td className="whitespace-nowrap text-right font-number font-semibold tabular-nums">{fmtMoney(order.totalFen)}</td>
-      {/* W-09 回馈金列：读口待补置灰（订单行无回馈金字段，透出即接红字口径） */}
+      {/* W-09 回馈金列（片 5 段 4 撤灰接真值）：rebateFen>0 红字强调（红字口径），
+          0 显示「—」（商城结算当前无抵扣通道=恒 0 是诚实现状） */}
       <td
-        className="whitespace-nowrap text-right font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.3)]"
+        className={`whitespace-nowrap text-right font-number tabular-nums ${
+          (order.rebateFen ?? 0) > 0
+            ? 'font-bold text-danger-deep'
+            : 'text-caption-xs text-[rgba(59,46,36,.3)]'
+        }`}
         data-testid={`order-rebate-${order.id}`}
       >
-        —
+        {(order.rebateFen ?? 0) > 0 ? `−${fmtMoney(order.rebateFen)}` : '—'}
       </td>
       <td>
         <span className="u3-st live">已支付</span>

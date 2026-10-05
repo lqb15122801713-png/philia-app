@@ -80,6 +80,8 @@ export const EventType = {
   // 员工端骨架整建批 片 3（任务执行+通讯；与 packages/shared constants/events.ts 同步）
   TaskReminder:          'task.reminder',           // 循环任务截止前提醒 → staff:{staffId}（assignee 或该角色全员逐一）
   AnnouncementPublished: 'announcement.published',  // 公告发布 → store 频道（员工定向通知=announce.publish 逐人补写）
+  // 客户端体验大批 片 5（N6 海底捞铁规·申诉通道；与 packages/shared constants/events.ts 同步）
+  MetricAppealResolved:  'metric.appealResolved',   // 指标申诉复核结果 → staff
 } as const;
 
 export type EventTypeValue = (typeof EventType)[keyof typeof EventType];

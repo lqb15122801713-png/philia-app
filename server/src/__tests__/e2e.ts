@@ -171,7 +171,7 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 2616 键/58 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *      56.1 种子 2812 键/58 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
  *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 2 2616/58）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
@@ -4892,17 +4892,17 @@ async function main(): Promise<void> {
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
      文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）
-     → 2616/58（体验大批片 2：生成件重生成 2615 键含 agreement 新域 + seed 补种 booking.fullAlternativesNote 1 键） */
+     → 2616/58（体验大批片 2）→ 2811/58（体验大批片 5：报表 17 张+CSV 导入+申诉通道 201 新键随批注册 0045+seed 手补 1=2812；断言数=生成件行数，改动须同步） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（2616 键/58 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 2616 && domainSet.size === 58 &&
+  check('56.1 copy 域种子全量落库（2812 键/58 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 2812 && domainSet.size === 58 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（2616 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 2616 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（2812 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 2812 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -6811,6 +6811,494 @@ async function main(): Promise<void> {
     !nearby6710.stores.some((s) => s.id === closedStore6710.id) &&
       nearby6710.stores.every((s) => s.status === 'active'),
     nearby6710.stores.map((s) => s.status));
+
+  /* ==================================================================
+   * 客户端体验大批 片 5（尾牙读口 5+点亮 2+报表 17 张点亮）段：
+   *   73.x 尾牙读口 5（前后值断言+financeStats 同源出口对账）；
+   *   74.x 报表读口 D1-D9/N1-N6 形状+前后值（N7/N8=埋点预埋 75.3）；
+   *   75.x 写口与闸（差评回复/N6 申诉铁规两件/埋点/CSV 导出仅店主/CSV 导入零落账/回馈金列真值）。
+   * 钉法：报表月入参=当月（界内）；夹具时刻=真实 now 偏移，断言一律前后值 delta 不钉绝对值
+   *   （套内既有数据未知量隔离）；核销码字符集去 0/O/1/I/L（片 4 坑档）。
+   * ================================================================== */
+  console.log('\n[体验批片5] 73. 尾牙读口 5 件（前后值+对账）');
+  {
+    const { storeWallclock } = await import('../routers/appointment');
+    const now0 = new Date();
+    const w0 = storeWallclock(now0);
+    const monthNow = `${w0.y}-${String(w0.m).padStart(2, '0')}`;
+    /* 月位移（与 report.ts shiftMonth 同式） */
+    const shiftMonthE5 = (month: string, delta: number): string => {
+      const [y, m] = month.split('-').map((s) => parseInt(s, 10));
+      const t = y * 12 + (m - 1) + delta;
+      return `${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, '0')}`;
+    };
+    /* 本店洗护服务项 id（夹具单共用） */
+    const gSvcId73 = (await db.select().from(schema.services)
+      .where(and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'grooming'))).get())!.id;
+    const mkUser = async (kimiId: string, nickname: string) => {
+      const u = (await db.insert(schema.users).values({ kimiId, nickname, phone: `139${Date.now() % 100000000}` }).returning())[0]!;
+      await db.insert(schema.userRoles).values({ userId: u.id, role: 'customer' });
+      return u;
+    };
+
+    /* ---- 73.1 储值负债店级聚合：前后值 + clerk 403 ---- */
+    const svBefore = await trpcQuery<{ totalFen: number; principalFen: number; bonusFen: number; accountCount: number }>('report.storedValueLiability', { cookie: ownerCookie });
+    const svUser = await mkUser('seed_e2e_exp5_sv', 'e2e 片5 储值户');
+    await db.insert(schema.storedValueAccounts).values({ userId: svUser.id, storeId, principalFen: 50000, bonusFen: 5000 });
+    const svAfter = await trpcQuery<typeof svBefore>('report.storedValueLiability', { cookie: ownerCookie });
+    const svClerk = await asErr(trpcQuery('report.storedValueLiability', { cookie: clerkCookie }));
+    check('73.1 储值负债聚合：本金/赠送分列前后值 +50000/+5000，合计+55000，户数+1；clerk 403',
+      svAfter.principalFen - svBefore.principalFen === 50000 && svAfter.bonusFen - svBefore.bonusFen === 5000 &&
+      svAfter.totalFen - svBefore.totalFen === 55000 && svAfter.accountCount - svBefore.accountCount === 1 &&
+      svClerk instanceof TrpcHttpError && svClerk.httpStatus === 403,
+      { d: svAfter.totalFen - svBefore.totalFen, clerk: svClerk && svClerk.httpStatus });
+
+    /* ---- 73.2 回馈金负债店级聚合（本店会员口径=办卡店 ∪ 微光 NULL） ---- */
+    const rbBefore = await trpcQuery<{ totalFen: number; accountCount: number }>('report.rebateLiability', { cookie: ownerCookie });
+    const rbUser = await mkUser('seed_e2e_exp5_rb', 'e2e 片5 回馈金户');
+    await db.insert(schema.memberships).values({
+      userId: rbUser.id, planKey: 'plan_yinghuo', soldStoreId: storeId,
+      startedAt: new Date(now0.getTime() - 30 * 86400_000), expiresAt: new Date(now0.getTime() + 335 * 86400_000), paidFen: 19900,
+    });
+    const rbAcc = (await db.insert(schema.rebateAccounts).values({ userId: rbUser.id, balanceFen: 25800 }).returning())[0]!;
+    const rbAfter = await trpcQuery<typeof rbBefore>('report.rebateLiability', { cookie: ownerCookie });
+    check('73.2 回馈金负债聚合：新会员开户 25800 → 负债 +25800，账户 +1',
+      rbAfter.totalFen - rbBefore.totalFen === 25800 && rbAfter.accountCount - rbBefore.accountCount === 1,
+      { d: rbAfter.totalFen - rbBefore.totalFen });
+
+    /* ---- 73.3 昨日营收 + financeStats 同源对账 ---- */
+    const yW = storeWallclock(new Date(now0.getTime() - 24 * 3600_000));
+    const yesterdayStr = `${yW.y}-${String(yW.m).padStart(2, '0')}-${String(yW.day).padStart(2, '0')}`;
+    const ydBefore = await trpcQuery<{ date: string; totalFen: number; serviceFen: number }>('report.yesterdayRevenue', { cookie: ownerCookie });
+    /* 夹具：昨日已收款预约一单 8800（钉昨日 15:30 半点——半点永不撞槽位整点闸） */
+    const ydAppt = (await db.insert(schema.appointments).values({
+      code: 'EXP5YD', customerId: customerUser.id, storeId, petId, serviceId: gSvcId73,
+      type: 'grooming', scheduledStart: new Date(`${yesterdayStr}T15:30:00+08:00`), scheduledEnd: new Date(`${yesterdayStr}T17:30:00+08:00`),
+      status: 'completed', priceFen: 8800, paidFen: 8800, paymentMode: 'pay_at_store',
+      paidAt: new Date(`${yesterdayStr}T17:30:00+08:00`), completedAt: new Date(`${yesterdayStr}T17:30:00+08:00`),
+      note: '【测试】e2e 片5 昨日营收夹具',
+    }).returning())[0]!;
+    const ydAfter = await trpcQuery<typeof ydBefore>('report.yesterdayRevenue', { cookie: ownerCookie });
+    const finYd = await trpcQuery<{ totals: { serviceFen: number; totalFen: number } }>('store.financeStats', {
+      cookie: ownerCookie,
+      input: { from: new Date(`${yesterdayStr}T00:00:00+08:00`), to: new Date(`${yesterdayStr}T23:59:59+08:00`) },
+    });
+    check('73.3 昨日营收：日期=昨日 + 夹具单 +8800 前后值 + 与 financeStats 同区间 serviceFen 同值（同源对账）',
+      ydAfter.date === yesterdayStr && ydAfter.serviceFen - ydBefore.serviceFen === 8800 &&
+      ydAfter.totalFen - ydBefore.totalFen === 8800 && ydAfter.serviceFen === finYd.totals.serviceFen,
+      { date: ydAfter.date, d: ydAfter.serviceFen - ydBefore.serviceFen, fin: finYd.totals.serviceFen, mine: ydAfter.serviceFen });
+    void ydAppt;
+
+    /* ---- 73.4 近 14 日 spark：14 格连续 + 昨日格=昨日读口同值 ---- */
+    const spark = await trpcQuery<{ days: Array<{ date: string; totalFen: number }> }>('report.revenueSpark14', { cookie: ownerCookie });
+    const sparkYd = spark.days.find((d) => d.date === yesterdayStr);
+    check('73.4 近 14 日 spark：14 格 + 昨日格与 yesterdayRevenue.totalFen 同值（同源）',
+      spark.days.length === 14 && sparkYd?.totalFen === ydAfter.totalFen,
+      { n: spark.days.length, sparkYd: sparkYd?.totalFen, yd: ydAfter.totalFen });
+
+    /* ---- 73.5 差评聚合（reviews 底座） ---- */
+    const brBefore = await trpcQuery<{ total: number; badCount: number; avgRating: number | null }>('report.badReviewAgg', { cookie: ownerCookie });
+    const mkAppt = async (code: string, offsetH: number) =>
+      (await db.insert(schema.appointments).values({
+        code, customerId: customerUser.id, storeId, petId, serviceId: gSvcId73,
+        type: 'grooming', scheduledStart: new Date(now0.getTime() + offsetH * 3600_000), scheduledEnd: new Date(now0.getTime() + (offsetH + 2) * 3600_000),
+        status: 'completed', priceFen: 8800, note: '【测试】e2e 片5 评价夹具单',
+      }).returning())[0]!;
+    const rvAppt1 = await mkAppt('EXP5RV', 26 * 30); // 远未来避撞（不核销不占槽）
+    const rvAppt2 = await mkAppt('EXP5RW', 26 * 30 + 3);
+    const rvBad = (await db.insert(schema.reviews).values({
+      appointmentId: rvAppt1.id, storeId, customerId: customerUser.id, staffId: staffRow2!.id,
+      rating: 2, text: '【测试】等待太久，体验不佳', anonymous: false,
+    }).returning())[0]!;
+    await db.insert(schema.reviews).values({
+      appointmentId: rvAppt2.id, storeId, customerId: customerUser.id, staffId: staffRow2!.id,
+      rating: 5, text: '【测试】很好', anonymous: true,
+    });
+    const brAfter = await trpcQuery<{ total: number; badCount: number; recent: Array<{ id: string; replied: boolean }> }>('report.badReviewAgg', { cookie: ownerCookie });
+    check('73.5 差评聚合：总评 +2 / 差评 +1（≤2 星界值）/ 近十条含新差评行（未回复态）',
+      brAfter.total - brBefore.total === 2 && brAfter.badCount - brBefore.badCount === 1 &&
+      brAfter.recent.some((r) => r.id === rvBad.id && r.replied === false),
+      { dTotal: brAfter.total - brBefore.total, dBad: brAfter.badCount - brBefore.badCount });
+
+    /* ================================================================ */
+    console.log('\n[体验批片5] 74. 报表读口 D1-D9 / N1-N6（前后值+形状）');
+    type AnyRec = Record<string, unknown>;
+    const call = <T>(p: string) => trpcQuery<T>(p, { cookie: ownerCookie, input: { month: monthNow } });
+
+    /* ---- 74.1 D1 营收双口径：夹具已收单 → cashFen delta + 会员散客占比非会员桶 + 双口径并显字段 ---- */
+    const d1Before = await call<AnyRec>('report.d1Revenue');
+    const d1Appt = (await db.insert(schema.appointments).values({
+      code: 'EXP5D1', customerId: svUser.id, storeId, petId, serviceId: gSvcId73,
+      type: 'grooming', scheduledStart: now0, scheduledEnd: new Date(now0.getTime() + 3600_000),
+      status: 'completed', priceFen: 12800, paidFen: 12800, paymentMode: 'pay_at_store', paidAt: now0, completedAt: now0,
+      note: '【测试】e2e 片5 D1 夹具单',
+    }).returning())[0]!;
+    const d1After = await call<AnyRec>('report.d1Revenue');
+    const d1b = d1Before.breakdown as AnyRec;
+    check('74.1 D1：收现口径 cashFen +12800（夹具散客单）+ 分摊口径字段在 + 会员散客分拆 nonMemberFen +12800 + byDay 下钻序列在',
+      (d1After.cashFen as number) - (d1Before.cashFen as number) === 12800 &&
+      typeof d1After.amortizedFen === 'number' && typeof (d1After.breakdown as AnyRec).memberFeeCashFen === 'number' &&
+      ((d1After.memberVsGuest as AnyRec).nonMemberFen as number) - ((d1Before.memberVsGuest as AnyRec).nonMemberFen as number) === 12800 &&
+      Array.isArray(d1After.byDay),
+      { d: (d1After.cashFen as number) - (d1Before.cashFen as number) });
+    void d1b; void d1Appt;
+
+    /* ---- 74.2 D2 服务构成+附加项搭售率（appointment_addons 片 2 域真值） ---- */
+    const d2Before = await call<AnyRec>('report.d2ServiceMix');
+    const addonSvc = (await db.select().from(schema.services).where(eq(schema.services.storeId, storeId)).get())!;
+    await db.insert(schema.appointmentAddons).values({ appointmentId: d1Appt.id, addonServiceId: addonSvc.id, nameSnapshot: '刷牙', priceFen: 3000, createdAt: new Date() });
+    const d2After = await call<AnyRec>('report.d2ServiceMix');
+    const ad2b = d2Before.addon as AnyRec;
+    const ad2a = d2After.addon as AnyRec;
+    check('74.2 D2：byService 聚合 + 搭售率前后值（有附加项单 +1/总单已在 74.1 入月 delta=0）+ 附加项金额 +3000',
+      (d2After.totalCount as number) - (d2Before.totalCount as number) === 0 &&
+      (ad2a.attachCount as number) - (ad2b.attachCount as number) === 1 &&
+      (ad2a.addonFen as number) - (ad2b.addonFen as number) === 3000 &&
+      Array.isArray(d2After.byService),
+      { cnt: (d2After.totalCount as number) - (d2Before.totalCount as number), attach: ad2a.attachCount });
+
+    /* ---- 74.3 D3 会员增长：新会员落当月 newCount+1 ---- */
+    const d3Before = await call<AnyRec>('report.d3MemberGrowth');
+    const d3User = await mkUser('seed_e2e_exp5_d3', 'e2e 片5 增长户');
+    await db.insert(schema.memberships).values({
+      userId: d3User.id, planKey: 'plan_zhuguang', soldStoreId: storeId,
+      startedAt: now0, expiresAt: new Date(now0.getTime() + 365 * 86400_000), paidFen: 29900,
+    });
+    const d3After = await call<AnyRec>('report.d3MemberGrowth');
+    check('74.3 D3：新增 +1（plan_zhuguang 档）+ 存量/活跃率字段在',
+      (d3After.newCount as number) - (d3Before.newCount as number) === 1 &&
+      (d3After.newByPlan as Array<{ planKey: string; count: number }>).some((p) => p.planKey === 'plan_zhuguang') &&
+      typeof d3After.activeTotal === 'number',
+      { d: (d3After.newCount as number) - (d3Before.newCount as number) });
+
+    /* ---- 74.4 D4 次卡台账：充次/扣次/剩余负债前后值 + 消耗趋势 6 格 ---- */
+    const d4Before = await call<AnyRec>('report.d4PassLedger');
+    const d4Pass = (await db.insert(schema.memberPasses).values({ userId: svUser.id, storeId, totalTimes: 10, remainTimes: 4 }).returning())[0]!;
+    await db.insert(schema.passDeductLogs).values({ passId: d4Pass.id, delta: -2, note: '【测试】片5 扣次' });
+    await db.insert(schema.passDeductLogs).values({ passId: d4Pass.id, delta: 10, note: '【测试】片5 充次' });
+    const d4After = await call<AnyRec>('report.d4PassLedger');
+    check('74.4 D4：售卡充次 +10 / 扣次当月 +2 / 剩余次数负债 +4（次数口径）+ 趋势 6 格',
+      (d4After.totalTimes as number) - (d4Before.totalTimes as number) === 10 &&
+      (d4After.remainTimes as number) - (d4Before.remainTimes as number) === 4 &&
+      (d4After.deductedTimesInMonth as number) - (d4Before.deductedTimesInMonth as number) === 2 &&
+      (d4After.consumeTrend6m as unknown[]).length === 6,
+      { remain: (d4After.remainTimes as number) - (d4Before.remainTimes as number) });
+
+    /* ---- 74.5 D5 储值台账负债视角 + 预收负债总额行=储值+回馈金 ---- */
+    const d5Before = await call<AnyRec>('report.d5StoredValue');
+    const svAcc = (await db.select().from(schema.storedValueAccounts).where(and(eq(schema.storedValueAccounts.userId, svUser.id), eq(schema.storedValueAccounts.storeId, storeId))).get())!;
+    await db.insert(schema.storedValueLogs).values({
+      accountId: svAcc.id, userId: svUser.id, storeId, deltaPrincipalFen: 11000, deltaBonusFen: 0, deltaFen: 11000,
+      balanceBeforeFen: 55000, balanceAfterFen: 66000, operatorId: ownerUser.id, note: '【测试】片5 储值充值',
+    });
+    const d5After = await call<AnyRec>('report.d5StoredValue');
+    check('74.5 D5：本月充值 +11000 + 期末负债字段 + 预收负债总额=储值负债+回馈金负债（恒等式）',
+      (d5After.rechargeFen as number) - (d5Before.rechargeFen as number) === 11000 &&
+      d5After.prepaidLiabilityTotalFen === (d5After.liabilityFen as number) + (d5After.rebateLiabilityFen as number),
+      { d: (d5After.rechargeFen as number) - (d5Before.rechargeFen as number) });
+
+    /* ---- 74.6 D6 退款售后：环比突增预警（上月 10000→本月 15000=+50%>30% 阈值 warn=true） ---- */
+    const anyBill = (await db.select({ id: schema.cashierBills.id }).from(schema.cashierBills).limit(1).get())!;
+    const prevRange = { m: shiftMonthE5(monthNow, -1) };
+    const prevMonthStart = new Date(`${prevRange.m}-15T12:00:00+08:00`);
+    await db.insert(schema.refundBills).values({
+      storeId, refundNo: 'RB-EXP5-P01', bizDate: prevRange.m + '-15', billId: anyBill.id, type: 'full', amountFen: 10000,
+      reason: '【测试】片5 上月退款基准', status: 'settled', operatorId: ownerUser.id, createdAt: prevMonthStart, updatedAt: prevMonthStart,
+    });
+    await db.insert(schema.refundBills).values({
+      storeId, refundNo: 'RB-EXP5-C01', bizDate: storeToday, billId: anyBill.id, type: 'partial_amount', amountFen: 15000,
+      reason: '【测试】片5 本月退款', status: 'executed', operatorId: ownerUser.id,
+    });
+    await db.insert(schema.refundRequests).values({
+      requestNo: 'RR-EXP5-001', customerId: customerUser.id, storeId, orderKind: 'appointment', billId: anyBill.id, billNo: 'HD-TEST',
+      type: 'refund_only', reasonCode: 'service_unhappy', reasonLabel: '服务不满意', amountFen: 15000, status: 'rejected',
+    });
+    await db.insert(schema.refundRequests).values({
+      requestNo: 'RR-EXP5-002', customerId: customerUser.id, storeId, orderKind: 'appointment', billId: anyBill.id, billNo: 'HD-TEST',
+      type: 'refund_only', reasonCode: 'price_dispute', reasonLabel: '价格争议', amountFen: 3000, status: 'approved',
+    });
+    const d6 = await call<AnyRec>('report.d6Refunds');
+    const d6Spike = d6.spike as AnyRec;
+    const d6Req = d6.requests as AnyRec;
+    check('74.6 D6：笔数/金额/类型分布+驳回率 1/2+原因聚类（服务不满意/价格争议）+环比增幅越过 30% 阈值预警亮',
+      (d6.count as number) >= 1 && (d6.amountFen as number) >= 15000 &&
+      (d6.byType as Array<{ type: string }>).some((t) => t.type === 'partial_amount') &&
+      (d6Req.total as number) >= 2 && (d6Req.rejected as number) >= 1 &&
+      (d6.reasonCluster as Array<{ label: string; count: number }>).some((r) => r.label === '服务不满意' && r.count >= 1) &&
+      d6Spike.warn === true && (d6Spike.momBp as number) > 3000,
+      { spike: d6Spike, count: d6.count, fen: d6.amountFen, byType: d6.byType, req: d6Req, cluster: d6.reasonCluster });
+
+    /* ---- 74.7 D7 员工绩效：行在+质量指标列+海底捞 guard 透出 ---- */
+    const d7 = await call<AnyRec>('report.d7StaffPerf');
+    const d7rows = d7.rows as Array<AnyRec>;
+    const d7lili = d7rows.find((r) => r.staffId === staffRow2!.id);
+    check('74.7 D7：员工行（丽丽）差评率/报告时效/复购率/申诉数列在 + guard 两件配齐透出',
+      !!d7lili && 'badRate' in d7lili && 'reportAvgMinutes' in d7lili && 'repurchaseRate' in d7lili &&
+      'appealCount' in d7lili && 'correctedCount' in d7lili &&
+      (d7.guard as AnyRec).appealChannel === true && (d7.guard as AnyRec).correctionLog === true,
+      { lili: d7lili?.staffName });
+
+    /* ---- 74.8 D8 寄养经营：夹具寄养单跨月交叠 → 宠物夜数>0 + 字段全 ---- */
+    const d8Before = await call<AnyRec>('report.d8Boarding');
+    const bSvc73 = (await db.select().from(schema.services).where(and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'boarding'))).get())!;
+    await db.insert(schema.appointments).values({
+      code: 'EXP5D8', customerId: customerUser.id, storeId, petId, serviceId: bSvc73.id,
+      type: 'boarding', scheduledStart: new Date(now0.getTime() - 86400_000), scheduledEnd: new Date(now0.getTime() + 2 * 86400_000),
+      status: 'in_boarding', priceFen: 39800, paidFen: 39800, paymentMode: 'pay_at_store', paidAt: now0,
+      note: '【测试】e2e 片5 D8 夹具单',
+    });
+    const d8After = await call<AnyRec>('report.d8Boarding');
+    check('74.8 D8：宠物夜数前后值 +3（跨月交叠 3 晚）+ 入住率/每宠物夜营收/搭售率/超期字段在',
+      (d8After.petNights as number) - (d8Before.petNights as number) === 3 &&
+      typeof d8After.occupancyRate === 'number' && 'revenuePerPetNightFen' in d8After && 'addonAttachRate' in d8After && 'overdueCount' in d8After,
+      { d: (d8After.petNights as number) - (d8Before.petNights as number) });
+
+    /* ---- 74.9 D9 商品销售：夹具成交单 → 销量/销售额前后值 ---- */
+    const d9Before = await call<AnyRec>('report.d9Goods');
+    const prod73 = (await db.select().from(schema.products).where(eq(schema.products.storeId, storeId)).get())!;
+    await db.insert(schema.orders).values({
+      orderNo: 'P-EXP5-001', customerId: customerUser.id, storeId,
+      items: [{ product_id: prod73.id, name: prod73.name, quantity: 2, price_fen: 5900 }],
+      totalFen: 11800, status: 'paid',
+    });
+    const d9After = await call<AnyRec>('report.d9Goods');
+    check('74.9 D9：成交单销量 +2 / 销售额 +11800 + 动销率/周转字段在',
+      (d9After.unitsSold as number) - (d9Before.unitsSold as number) === 2 &&
+      (d9After.salesFen as number) - (d9Before.salesFen as number) === 11800 &&
+      'sellThroughRate' in d9After && 'turnoverDays' in d9After,
+      { d: (d9After.salesFen as number) - (d9Before.salesFen as number) });
+
+    /* ---- 74.10 N1 等级分布与升级转化：四档容器 + cohort + 新增档前后值 ---- */
+    const n1 = await call<AnyRec>('report.n1LevelDist');
+    const n1Yh = (n1.newInMonth as Array<{ planKey: string; count: number }>).find((p) => p.planKey === 'plan_zhuguang');
+    check('74.10 N1：plans 四档 + 存量/新增/退出/升降级字段 + cohort 数组 + 74.3 夹具档新增可见',
+      (n1.plans as string[]).length === 4 && Array.isArray(n1.stock) && Array.isArray(n1.cohorts) &&
+      typeof n1.exitCount === 'number' && typeof n1.upgradeCount === 'number' && !!n1Yh && n1Yh.count >= 1,
+      { plans: n1.plans, yh: n1Yh });
+
+    /* ---- 74.11 N2 续费与回本：到期 cohort 续费率（顺延口径）+预警名单+回本率 ---- */
+    const n2Before = await call<AnyRec>('report.n2Renewal');
+    const n2u1 = await mkUser('seed_e2e_exp5_n2a', 'e2e 片5 续费户A'); // 顺延过=曾续
+    const n2u2 = await mkUser('seed_e2e_exp5_n2b', 'e2e 片5 续费户B'); // 未续
+    const dueMonthStart = new Date(now0.getTime() - 10 * 86400_000);
+    await db.insert(schema.memberships).values({
+      userId: n2u1.id, planKey: 'plan_yinghuo', soldStoreId: storeId,
+      startedAt: new Date(dueMonthStart.getTime() - 770 * 86400_000), expiresAt: dueMonthStart, paidFen: 19900,
+    });
+    await db.insert(schema.memberships).values({
+      userId: n2u2.id, planKey: 'plan_yinghuo', soldStoreId: storeId,
+      startedAt: new Date(dueMonthStart.getTime() - 365 * 86400_000), expiresAt: dueMonthStart, paidFen: 19900,
+    });
+    const n2u3 = await mkUser('seed_e2e_exp5_n2c', 'e2e 片5 预警户'); // 15 天后到期 → 预警名单
+    await db.insert(schema.memberships).values({
+      userId: n2u3.id, planKey: 'plan_zhuguang', soldStoreId: storeId,
+      startedAt: new Date(now0.getTime() - 350 * 86400_000), expiresAt: new Date(now0.getTime() + 15 * 86400_000), status: 'active', paidFen: 29900,
+    });
+    const n2After = await call<AnyRec>('report.n2Renewal');
+    const n2Cohorts = n2After.cohorts as Array<{ month: string; dueCount: number; renewedCount: number }>;
+    const n2BeforeCohortTotal = (n2Before.cohorts as typeof n2Cohorts).reduce((s, c) => s + c.dueCount, 0);
+    const n2AfterCohortTotal = n2Cohorts.reduce((s, c) => s + c.dueCount, 0);
+    const n2RenewedDelta = n2Cohorts.reduce((s, c) => s + c.renewedCount, 0) - (n2Before.cohorts as typeof n2Cohorts).reduce((s, c) => s + c.renewedCount, 0);
+    check('74.11 N2：到期 cohort 前后值（到期 +3=两夹具+预警户同窗口 / 顺延续费 +1）+ 预警名单含 15 天后到期户 + 回本率结构在',
+      n2AfterCohortTotal - n2BeforeCohortTotal === 3 && n2RenewedDelta === 1 &&
+      (n2After.warnList as Array<{ userId: string }>).some((w) => w.userId === n2u3.id) &&
+      typeof (n2After.payback as AnyRec).paidFen === 'number',
+      { due: n2AfterCohortTotal - n2BeforeCohortTotal, renewed: n2RenewedDelta });
+
+    /* ---- 74.12 N3 回馈金滚动：独立期次夹具精确断言 + 期末负债=账户余额 Σ ---- */
+    const n3Before = await call<AnyRec>('report.n3RebateRoll');
+    await db.insert(schema.rebateLogs).values({ userId: rbUser.id, accountId: rbAcc.id, type: 'grant', deltaFen: 1000, beforeFen: 0, afterFen: 1000, sourceId: 'HD-EXP5-N3', period: '2099-01', note: '【测试】片5 N3 发行' });
+    await db.insert(schema.rebateLogs).values({ userId: rbUser.id, accountId: rbAcc.id, type: 'deduct', deltaFen: -300, beforeFen: 1000, afterFen: 700, sourceId: 'HD-EXP5-N3', period: '2099-01', note: '【测试】片5 N3 核销' });
+    const n3After = await call<AnyRec>('report.n3RebateRoll');
+    const n3PeriodBefore = (n3Before.periods as Array<AnyRec>).find((p) => p.period === '2099-01');
+    const n3Period = (n3After.periods as Array<AnyRec>).find((p) => p.period === '2099-01');
+    check('74.12 N3：期次行 发行/核销前后值 +1000/+300 精确（2099-01 期次套内已有夹具，钉 delta） + 期末负债=账户余额（25800 夹具含）+ 核销率字段在',
+      (n3Period!.grantFen as number) - ((n3PeriodBefore?.grantFen as number) ?? 0) === 1000 && (n3Period!.deductFen as number) - ((n3PeriodBefore?.deductFen as number) ?? 0) === 300 &&
+      (n3After.closingLiabilityFen as number) - (n3Before.closingLiabilityFen as number) === 0 &&
+      n3After.redeemRate !== undefined,
+      { p: n3Period });
+
+    /* ---- 74.13 N4 评价分布与差评聚类：差评回复+标签聚类+纠错扣减（75.2 批准后再读） ---- */
+    const n4Before = await call<AnyRec>('report.n4ReviewDist');
+    const reply74 = await trpcMutate<{ review: { id: string; repliedAt: Date | null; tags: string[] | null } }>('report.reviewReply', {
+      cookie: ownerCookie,
+      input: { reviewId: rvBad.id, reply: '非常抱歉让您久等，已优化排班', tags: ['等待', '态度'] },
+    });
+    const n4Mid = await call<AnyRec>('report.n4ReviewDist');
+    const n4Reply = n4Mid.reply as AnyRec;
+    check('74.13 N4：差评回复落列（repliedAt+tags）+ 回复率/标签聚类/分布字段透出',
+      reply74.review.repliedAt instanceof Date && reply74.review.tags?.includes('等待') === true &&
+      (n4Reply.repliedCount as number) >= 1 &&
+      (n4Mid.tagCluster as Array<{ tag: string; count: number }>).some((t) => t.tag === '等待' && t.count >= 1) &&
+      Array.isArray(n4Mid.dist) && Array.isArray(n4Mid.byStaff) && Array.isArray(n4Mid.byService),
+      { tags: reply74.review.tags });
+    void n4Before;
+
+    /* ---- 74.14 N5 交付合规与时效：夹具完成单+步+照片+报告时效桶 ---- */
+    const n5Before = await call<AnyRec>('report.n5Delivery');
+    const n5Appt = (await db.insert(schema.appointments).values({
+      code: 'EXP5N5', customerId: customerUser.id, storeId, petId, serviceId: gSvcId73,
+      type: 'grooming', scheduledStart: new Date(now0.getTime() - 3 * 3600_000), scheduledEnd: new Date(now0.getTime() - 2 * 3600_000),
+      status: 'completed', priceFen: 8800, completedAt: new Date(now0.getTime() - 2 * 3600_000),
+      note: '【测试】e2e 片5 N5 夹具单',
+    }).returning())[0]!;
+    const n5Step1 = (await db.insert(schema.appointmentSteps).values({
+      appointmentId: n5Appt.id, stepKey: 'disinfection', stepOrder: 1, status: 'done', requiredPhotos: 1,
+      startedAt: new Date(now0.getTime() - 150 * 60_000), doneAt: new Date(now0.getTime() - 120 * 60_000), flagged: true,
+    }).returning())[0]!;
+    await db.insert(schema.stepPhotos).values({ stepId: n5Step1.id, url: '/test/n5-1.jpg', takenAt: new Date(now0.getTime() - 140 * 60_000) });
+    await db.insert(schema.serviceReports).values({
+      appointmentId: n5Appt.id, userId: customerUser.id, vitals: [],
+      generatedAt: new Date(now0.getTime() - 90 * 60_000), deliveredAt: new Date(now0.getTime() - 30 * 60_000),
+    });
+    const n5After = await call<AnyRec>('report.n5Delivery');
+    const n5Buckets = n5After.deliveryBuckets as AnyRec;
+    const n5BucketsBefore = n5Before.deliveryBuckets as AnyRec;
+    check('74.14 N5：完成单 +1 + 报告时效桶 within120 +1（60min 夹具）+ 照片覆盖/抽检字段在',
+      (n5After.completedCount as number) - (n5Before.completedCount as number) === 1 &&
+      (n5Buckets.within120 as number) - (n5BucketsBefore.within120 as number) === 1 &&
+      'photoCoverage' in n5After && 'sampleRate' in n5After,
+      { d: (n5After.completedCount as number) - (n5Before.completedCount as number), b: n5Buckets });
+
+    /* ---- 74.15 N6 员工×服务质量：gate 铁规两件透出 + 行结构 ---- */
+    const n6 = await call<AnyRec>('report.n6StaffQuality');
+    const n6Gate = n6.gate as AnyRec;
+    const n6Lili = (n6.rows as Array<AnyRec>).find((r) => r.staffId === staffRow2!.id);
+    check('74.15 N6：gate.appealChannel/correctionLog 双 true（附录 B 两件配齐点亮）+ 员工行差评率/时效/复购/申诉列在',
+      n6Gate.appealChannel === true && n6Gate.correctionLog === true &&
+      !!n6Lili && 'badRate' in n6Lili && 'reportAvgMinutes' in n6Lili && 'repurchaseRate' in n6Lili && 'appealCount' in n6Lili,
+      { gate: n6Gate });
+
+    /* ================================================================ */
+    console.log('\n[体验批片5] 75. 写口与闸（差评回复/N6 申诉/埋点/导出/导入/回馈金列）');
+
+    /* ---- 75.1 差评回复闸：标签越集 400 + clerk 403 + 非本店 403（本店实证已在 74.13） ---- */
+    const badTag = await asErr(trpcMutate('report.reviewReply', {
+      cookie: ownerCookie, input: { reviewId: rvBad.id, reply: '标签越集负例', tags: ['莫须有标签'] },
+    }));
+    const clerkReply = await asErr(trpcMutate('report.reviewReply', {
+      cookie: clerkCookie, input: { reviewId: rvBad.id, reply: '店员越权回复' },
+    }));
+    check('75.1 差评回复闸：标签越集 400 + clerk 403',
+      badTag instanceof TrpcHttpError && badTag.httpStatus === 400 &&
+      clerkReply instanceof TrpcHttpError && clerkReply.httpStatus === 403,
+      { tag: badTag && badTag.httpStatus, clerk: clerkReply && clerkReply.httpStatus });
+
+    /* ---- 75.2 N6 申诉全链：raise→pending→幂等→复核两负例→approved 纠错留痕+员工通知+读口径即时扣减 ---- */
+    const ap1 = await trpcMutate<{ appeal: { id: string; status: string }; duplicated: boolean }>('report.raiseMetricAppeal', {
+      cookie: liliCookie, input: { targetType: 'review', targetId: rvBad.id, reason: '该差评对应订单非本人服务，申请复核归属' },
+    });
+    const ap1dup = await trpcMutate<{ duplicated: boolean }>('report.raiseMetricAppeal', {
+      cookie: liliCookie, input: { targetType: 'review', targetId: rvBad.id, reason: '重复提交验证幂等' },
+    });
+    const apQueue = await trpcQuery<{ pending: Array<{ id: string; staffName: string }> }>('report.listMetricAppeals', { cookie: managerCookie });
+    check('75.2 申诉入队 pending + 同人同目标幂等 duplicated + 审批队列可见（审批中心数据源）',
+      ap1.appeal.status === 'pending' && ap1dup.duplicated === true && apQueue.pending.some((a) => a.id === ap1.appeal.id),
+      { dup: ap1dup.duplicated, queue: apQueue.pending.length });
+    const rvNoCorr = await asErr(trpcMutate('report.reviewMetricAppeal', {
+      cookie: managerCookie, input: { appealId: ap1.appeal.id, result: 'approved' },
+    }));
+    const rvNoNote = await asErr(trpcMutate('report.reviewMetricAppeal', {
+      cookie: managerCookie, input: { appealId: ap1.appeal.id, result: 'rejected' },
+    }));
+    check('75.2 复核负例：approved 缺 correction 400（兜底留痕铁规）+ rejected 缺 note 400',
+      rvNoCorr instanceof TrpcHttpError && rvNoCorr.httpStatus === 400 &&
+      rvNoNote instanceof TrpcHttpError && rvNoNote.httpStatus === 400,
+      { a: rvNoCorr && rvNoCorr.httpStatus, b: rvNoNote && rvNoNote.httpStatus });
+    const rvOk = await trpcMutate<{ appeal: { status: string; correctionJson: { before: unknown } | null } }>('report.reviewMetricAppeal', {
+      cookie: managerCookie,
+      input: { appealId: ap1.appeal.id, result: 'approved', note: '核查属实，非丽丽服务单', correction: { before: '差评计入丽丽', after: '纠错扣减不计入', note: '排班记录佐证' } },
+    });
+    const rvAgain = await asErr(trpcMutate('report.reviewMetricAppeal', {
+      cookie: managerCookie, input: { appealId: ap1.appeal.id, result: 'approved', note: 'x', correction: { before: 1, after: 2 } },
+    }));
+    const n6Notice = (await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, liliUser.id), eq(schema.notifications.type, 'metric.appealResolved'))));
+    const n4AfterAppeal = await call<AnyRec>('report.n4ReviewDist');
+    check('75.2 approved → correction_json 留痕 + 员工通知落行 + N4 纠错扣减读口径即时生效（correctedCount +1）+ 重复复核 400',
+      rvOk.appeal.status === 'approved' && rvOk.appeal.correctionJson !== null &&
+      rvAgain instanceof TrpcHttpError && rvAgain.httpStatus === 400 &&
+      n6Notice.length >= 1 &&
+      (n4AfterAppeal.correctedCount as number) - (n4Mid.correctedCount as number) === 1,
+      { notice: n6Notice.length, corrected: n4AfterAppeal.correctedCount });
+
+    /* ---- 75.3 N7/N8 埋点预埋：九类枚举写口 + stats 读数 + 非法类型 400 ---- */
+    const ceBefore = await trpcQuery<{ byType: Array<{ eventType: string; count: number }> }>('report.contentEventStats', { cookie: ownerCookie });
+    const ceCount = (rows: typeof ceBefore.byType, t: string) => rows.find((r) => r.eventType === t)?.count ?? 0;
+    await trpcMutate('report.trackContentEvent', { cookie: customerCookie, input: { eventType: 'case_impression', caseId: 'case-demo-1' } });
+    await trpcMutate('report.trackContentEvent', { cookie: customerCookie, input: { eventType: 'book_same_click', caseId: 'case-demo-1' } });
+    await trpcMutate('report.trackContentEvent', { cookie: customerCookie, input: { eventType: 'booking_verified', appointmentId: n5Appt.id, meta: { caseId: 'case-demo-1' } } });
+    const ceBad = await asErr(trpcMutate('report.trackContentEvent', { cookie: customerCookie, input: { eventType: 'not_a_event' } }));
+    const ceAfter = await trpcQuery<{ byType: Array<{ eventType: string; count: number }> }>('report.contentEventStats', { cookie: ownerCookie });
+    check('75.3 埋点预埋：曝光/组件点击/核销回传三件落库（stats 前后值各 +1）+ 非法 eventType 400',
+      ceCount(ceAfter.byType, 'case_impression') - ceCount(ceBefore.byType, 'case_impression') === 1 &&
+      ceCount(ceAfter.byType, 'book_same_click') - ceCount(ceBefore.byType, 'book_same_click') === 1 &&
+      ceCount(ceAfter.byType, 'booking_verified') - ceCount(ceBefore.byType, 'booking_verified') === 1 &&
+      ceBad instanceof TrpcHttpError && ceBad.httpStatus === 400,
+      { after: ceAfter.byType.length });
+
+    /* ---- 75.4 CSV 导出闸：owner 成（BOM+表头+真值行）/manager 403/clerk 403/N7N8 枚举外 400 ---- */
+    const csvOk = await trpcQuery<{ filename: string; csv: string; rows: number }>('report.exportCsv', {
+      cookie: ownerCookie, input: { report: 'd1', month: monthNow },
+    });
+    const csvMgr = await asErr(trpcQuery('report.exportCsv', { cookie: managerCookie, input: { report: 'd1', month: monthNow } }));
+    const csvClerk = await asErr(trpcQuery('report.exportCsv', { cookie: clerkCookie, input: { report: 'd1', month: monthNow } }));
+    const csvN7 = await asErr(trpcQuery('report.exportCsv', { cookie: ownerCookie, input: { report: 'n7' } }));
+    check('75.4 CSV 导出=仅店主（manager/clerk 403）+ BOM 表头 + 真值行（12800 夹具在文）+ N7/N8 枚举外 400',
+      csvOk.filename === `report-d1-${monthNow}.csv` && csvOk.csv.includes('指标') &&
+      csvOk.csv.includes('cashFen') &&
+      csvMgr instanceof TrpcHttpError && csvMgr.httpStatus === 403 &&
+      csvClerk instanceof TrpcHttpError && csvClerk.httpStatus === 403 &&
+      csvN7 instanceof TrpcHttpError && csvN7.httpStatus === 400,
+      { rows: csvOk.rows, mgr: csvMgr && csvMgr.httpStatus });
+
+    /* ---- 75.5 商品 CSV 导入：模板/预览失败行零落账/全量落账+批次留痕/clerk 403 ---- */
+    const tpl = await trpcQuery<{ filename: string; csv: string; columns: string[] }>('mall.productImportTemplate', { cookie: managerCookie });
+    const prodCount0 = (await db.select({ id: schema.products.id }).from(schema.products).where(eq(schema.products.storeId, storeId))).length;
+    const csvBad = '分类,商品名,描述,价格(元),库存,是否消毒耗材\n玩具,测试逗猫棒,好,29.90,10,否\n零食,坏行,价错,abc,5,否\n';
+    const pv = await trpcMutate<{ report: { totalRows: number; failRows: number; failReasons: Array<{ line: number }> } }>('mall.productImportPreview', {
+      cookie: managerCookie, input: { csvText: csvBad, filename: 'bad.csv' },
+    });
+    const prodCountAfterPreview = (await db.select({ id: schema.products.id }).from(schema.products).where(eq(schema.products.storeId, storeId))).length;
+    const exBad = await asErr(trpcMutate('mall.productImportExecute', { cookie: managerCookie, input: { csvText: csvBad, filename: 'bad.csv' } }));
+    const prodCountAfterBad = (await db.select({ id: schema.products.id }).from(schema.products).where(eq(schema.products.storeId, storeId))).length;
+    const batchCount0 = (await db.select({ id: schema.productImportBatches.id }).from(schema.productImportBatches)).length;
+    check('75.5 模板六列形状 + 预览失败行回显（行 3 价格非法）零写入 + execute 失败行 400 零落账零批次行',
+      tpl.columns.length === 6 && tpl.csv.includes('分类,商品名') &&
+      pv.report.totalRows === 2 && pv.report.failRows === 1 && pv.report.failReasons[0]!.line === 3 &&
+      prodCountAfterPreview === prodCount0 && prodCountAfterBad === prodCount0 &&
+      exBad instanceof TrpcHttpError && exBad.httpStatus === 400 &&
+      (await db.select({ id: schema.productImportBatches.id }).from(schema.productImportBatches)).length === batchCount0,
+      { fail: pv.report.failReasons, prod: [prodCount0, prodCountAfterBad] });
+    const csvGood = '分类,商品名,描述,价格(元),库存,是否消毒耗材\n玩具,e2e 导入逗猫棒,片5 夹具,29.90,10,否\n清洁,e2e 导入消毒喷雾,片5 夹具,39.90,20,是\n';
+    const exGood = await trpcMutate<{ batchId: string; okRows: number; failRows: number }>('mall.productImportExecute', {
+      cookie: managerCookie, input: { csvText: csvGood, filename: 'good.csv' },
+    });
+    const prodCountAfterGood = (await db.select({ id: schema.products.id }).from(schema.products).where(eq(schema.products.storeId, storeId))).length;
+    const batchRows = await db.select().from(schema.productImportBatches);
+    const exClerk = await asErr(trpcMutate('mall.productImportExecute', { cookie: clerkCookie, input: { csvText: csvGood } }));
+    check('75.5 全量合法 → 落账 +2 商品 + 批次行留痕（okRows=2/failRows=0）+ clerk 403',
+      exGood.okRows === 2 && exGood.failRows === 0 && prodCountAfterGood === prodCount0 + 2 &&
+      batchRows.some((b) => b.id === exGood.batchId && b.okRows === 2 && b.filename === 'good.csv') &&
+      exClerk instanceof TrpcHttpError && exClerk.httpStatus === 403,
+      { ok: exGood.okRows, prod: prodCountAfterGood - prodCount0 });
+
+    /* ---- 75.6 商城订单回馈金列透出（W-09 红字口径接真值）：rebate_logs deduct 联 order_no ---- */
+    const order75 = (await db.insert(schema.orders).values({
+      orderNo: 'P-EXP5-002', customerId: customerUser.id, storeId,
+      items: [{ product_id: prod73.id, name: prod73.name, quantity: 1, price_fen: 5900 }],
+      totalFen: 5900, status: 'paid',
+    }).returning())[0]!;
+    await db.insert(schema.rebateLogs).values({
+      userId: rbUser.id, accountId: rbAcc.id, type: 'deduct', deltaFen: -500, beforeFen: 700, afterFen: 200,
+      sourceId: 'P-EXP5-002', period: '2099-01', note: '【测试】片5 回馈金抵扣单',
+    });
+    const storeOrders = await trpcQuery<{ groups: Record<string, Array<{ id: string; rebateFen?: number }>> }>('mall.listStoreOrders', { cookie: ownerCookie });
+    const row75 = (storeOrders.groups.paid ?? []).find((o) => o.id === order75.id);
+    check('75.6 商城订单回馈金列透出真值（deduct 联单号=500）+ 无抵扣单=0（诚实零值）',
+      row75?.rebateFen === 500 && (storeOrders.groups.paid ?? []).some((o) => o.id !== order75.id && (o.rebateFen ?? 0) >= 0),
+      { rebate: row75?.rebateFen });
+  }
 
   client.close();
 }

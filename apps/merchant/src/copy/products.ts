@@ -15,9 +15,19 @@ const PRODUCT_COPY_TABLE = {
   'prod.subFallback': '门店商品库存、价格与上下架',
   'prod.createCta': '＋ 新增商品',
   'prod.emptyTitle': '货架空空，去上架第一件商品',
-  /* ---- W-10 校形：CSV 入口置灰待供给 + M5 台账日盘档（≥¥100 日盘门槛） ---- */
+  /* ---- W-10 校形：CSV 导入点亮（片 5 段 4：模板下载+预览 dry-run+落账；
+     闸=owner|manager，server merchantManagerProcedure 硬闸）+ M5 台账日盘档（≥¥100 日盘门槛） ---- */
   'prod.csvCta': 'CSV 导入',
-  'prod.csvPendingNote': '待供给——CSV 导入端口未开口，留位不画假件',
+  'prod.csvImportTitle': 'CSV 批量导入',
+  'prod.csvTemplateCta': '下载模板',
+  'prod.csvFileCta': '选择 CSV 文件',
+  'prod.csvNoFile': '请先选择 CSV 文件',
+  'prod.csvPreviewCta': '预览校验',
+  'prod.csvExecuteCta': '确认导入',
+  'prod.csvSummary': '共 {t} 行 · 可导入 {ok} · 失败 {f}',
+  'prod.csvAllOk': '全部合法，可确认导入',
+  'prod.csvDone': '导入成功 {n} 行',
+  'prod.csvClose': '收起',
   'prod.dailyCountCol': '日盘档',
   'prod.dailyCountYes': '日盘',
   'prod.dailyCountNote': '日盘档=单价 ≥¥100 商品每日盘点门槛（S-08 同口径）',

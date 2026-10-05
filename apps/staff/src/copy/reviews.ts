@@ -38,6 +38,17 @@ const REVIEWS_COPY_TABLE = {
   'reviews.loading': '加载中…',
   'reviews.starUnit': '星',
   'reviews.callbackNote': '差评 24 小时内由店长回访 · 评价不可删改',
+
+  /* ---- 申诉入口（N6 申诉通道 · report.raiseMetricAppeal，targetType='review' + targetId=评价 id） ---- */
+  'reviews.appeal.cta': '申诉',
+  'reviews.appeal.pending': '已申诉待复核',
+  'reviews.appeal.title': '申诉该评价',
+  'reviews.appeal.placeholder': '请说明申诉理由（必填，500 字内，店长复核时可见）',
+  'reviews.appeal.cancel': '取消',
+  'reviews.appeal.submit': '提交申诉',
+  'reviews.appeal.required': '请填写申诉理由',
+  'reviews.appeal.toast': '申诉已提交，待店长复核',
+  'reviews.appeal.duplicated': '该评价已有申诉在途，请等待复核',
 } as const;
 
 export const REVIEWS_COPY = withCopyOverrides(REVIEWS_COPY_TABLE);

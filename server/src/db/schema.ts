@@ -1802,6 +1802,18 @@ export const reviews = sqliteTable(
     text: text('text'),
     /** 是否匿名（0/1，匿名同权计分） */
     anonymous: integer('anonymous', { mode: 'boolean' }).notNull().default(false),
+    /**
+     * 差评原因标签 JSON（体验批片 5 · 0044，N4 差评聚类）：商家回复差评时勾选，
+     * 取值集=REVIEW_TAG_SET（洗护质量/态度/等待/价格/宠物状态，应用层 zod 约束）。
+     * NULL=未打标（好评/未处理差评）。
+     */
+    tags: text('tags', { mode: 'json' }).$type<string[]>(),
+    /** 商家回复内容（NULL=未回复；N4 差评回复率口径分母含未回复） */
+    replyText: text('reply_text'),
+    /** 商家回复时间 */
+    repliedAt: integer('replied_at', { mode: 'timestamp' }),
+    /** 回复人用户 ID -> users.id（owner|manager） */
+    repliedBy: text('replied_by').references(() => users.id),
     ...auditColumns,
   },
   (t) => [
@@ -3420,4 +3432,117 @@ export const appointmentRescheduleLogs = sqliteTable(
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   },
   (t) => [index('ix_reschedule_logs_appt').on(t.appointmentId)],
+);
+
+/* ------------------------------------------------------------------ */
+/* 客户端体验大批 片 5（尾牙读口+报表 17 张点亮 · 迁移 0044）               */
+/* ------------------------------------------------------------------ */
+
+/** 差评原因标签集（N4 差评聚类口径，任务书附录 A 写死；应用层 zod 约束同集） */
+export const REVIEW_TAG_SET = ['洗护质量', '态度', '等待', '价格', '宠物状态'] as const;
+
+/**
+ * 指标申诉表（体验批片 5 · N6 海底捞铁规两件之一=申诉通道；D7 同配）：
+ * 员工对服务质量指标数据异议（差评归属/报告时效/复购统计）可申诉留痕，
+ * pending → reviewed（approved=纠错成立 correction_json 落前后值 / rejected 驳回须 note）。
+ * 报表读口径即时扣减 approved 申诉（算错即更正+明示纠错记录），只增不改。
+ * 幂等：同人同目标 pending 在途即 duplicated 返回原行（payrollAppeals 同族工艺）。
+ */
+export const metricAppeals = sqliteTable(
+  'metric_appeals',
+  {
+    id: id(),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 申诉人员工 ID -> staff.id */
+    staffId: text('staff_id')
+      .notNull()
+      .references(() => staff.id),
+    /** 申诉对象类型：review（差评归属） | report_metric（报表指标值） */
+    targetType: text('target_type').notNull(),
+    /** 申诉对象 ID（review.id 或报表指标键，如 n6:{month}:{staffId}） */
+    targetId: text('target_id').notNull(),
+    /** 申诉理由 */
+    reason: text('reason').notNull(),
+    /** 状态：pending | approved | rejected */
+    status: text('status').notNull().default('pending'),
+    /** 复核人用户 ID -> users.id */
+    reviewerId: text('reviewer_id').references(() => users.id),
+    /** 复核时间 */
+    reviewedAt: integer('reviewed_at', { mode: 'timestamp' }),
+    /** 复核意见（驳回必填） */
+    reviewNote: text('review_note'),
+    /** 纠错留痕 JSON：{ before: unknown, after: unknown, note }（approved 必填） */
+    correctionJson: text('correction_json', { mode: 'json' }).$type<Record<string, unknown>>(),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_metric_appeals_store_status').on(t.storeId, t.status),
+    index('ix_metric_appeals_staff').on(t.staffId, t.createdAt),
+  ],
+);
+
+/**
+ * 内容埋点事件表（体验批片 5 · N7/N8=埋点预埋不出表，任务书开口项+H 表 §方向三清单）：
+ * 瀑布流未建——本表=埋点数据底座，客户端瀑布流批上线即有数。
+ * event_type 清单（写死，H 表 §方向三）：case_impression（案例曝光）/
+ * case_detail_view（详情）/case_dwell（停留时长，meta.ms）/case_read_finish（完读）/
+ * case_interact（互动：赞/藏/评分层，meta.kind=like|favorite|rate）/
+ * book_same_impression（「预约同款」组件曝光）/book_same_click（组件点击）/
+ * booking_attributed（预约来源归因，meta.caseId）/booking_verified（核销回传）。
+ */
+export const contentEvents = sqliteTable(
+  'content_events',
+  {
+    id: id(),
+    /** 事件类型（取值见表头注清单，应用层 zod 约束） */
+    eventType: text('event_type').notNull(),
+    /** 案例 ID（瀑布流内容件；本批无案例域表=文本键预留） */
+    caseId: text('case_id'),
+    /** 用户 ID -> users.id（可空=匿名浏览预埋） */
+    userId: text('user_id').references(() => users.id),
+    /** 关联预约单 ID -> appointments.id（归因/核销回传用） */
+    appointmentId: text('appointment_id').references(() => appointments.id),
+    /** 门店 ID -> stores.id（单店口径写死，连锁预留注记） */
+    storeId: text('store_id').references(() => stores.id),
+    /** 事件载荷 JSON（停留 ms/互动 kind/来源等） */
+    meta: text('meta', { mode: 'json' }).$type<Record<string, unknown>>(),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_content_events_type_created').on(t.eventType, t.createdAt),
+    index('ix_content_events_case').on(t.caseId, t.createdAt),
+  ],
+);
+
+/**
+ * 商品 CSV 导入批次留痕表（体验批片 5 · B1 点亮件）：
+ * 硬口径=失败行回显零落账（任一行校验失败→整批不写一行商品，报告全量回显）；
+ * 落账批次行留痕（成功/失败行全量 report_json），储值导入同族工艺（storedValue.ts）。
+ */
+export const productImportBatches = sqliteTable(
+  'product_import_batches',
+  {
+    id: id(),
+    /** 门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 导入文件名 */
+    filename: text('filename').notNull(),
+    /** 总行数 / 成功行数 / 失败行数 */
+    totalRows: integer('total_rows').notNull(),
+    okRows: integer('ok_rows').notNull(),
+    failRows: integer('fail_rows').notNull(),
+    /** 逐行报告 JSON（成功/失败行+原因全量留痕） */
+    reportJson: text('report_json', { mode: 'json' }).$type<Record<string, unknown>>().notNull(),
+    /** 导入人用户 ID -> users.id */
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_product_import_batches_store').on(t.storeId, t.createdAt)],
 );
