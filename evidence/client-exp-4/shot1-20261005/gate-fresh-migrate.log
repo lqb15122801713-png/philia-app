@@ -1,0 +1,8 @@
+[migrate] 迁移目录: E:\KIMI code\philia-app\server\drizzle
+[migrate] 迁移完成，已应用 38 条迁移：
+  - hash=6719851aa4ff…  applied_at=2026-09-04T15:18:00.969Z
+  membership_events      0
+  pay_orders             0
+  agreements             0
+  pay_rules              2
+fresh 实证：copy 2663 键 / 58 域
