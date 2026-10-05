@@ -2932,6 +2932,10 @@ export const copyOverrides = sqliteTable(
     createdBy: text('created_by')
       .notNull()
       .references(() => users.id),
+    /** 屏名（端口 V2 修正批 · 0046）：路由级屏中文名（屏名字典写死进生成器；NULL=未归屏诚实组） */
+    screen: text('screen'),
+    /** 位置注（端口 V2）：调用点组件名+一句人话；端口可人工改（留口件，config.save 扩列） */
+    position: text('position'),
     ...auditColumns,
   },
   (t) => [index('ix_copy_overrides_key_active').on(t.ruleKey, t.active)],

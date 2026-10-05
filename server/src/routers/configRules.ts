@@ -193,6 +193,8 @@ const changeSchema = z.object({
   valueJson: valueJsonSchema,
   /** 可空：缺省沿用既有 label */
   label: z.string().min(1, '规则名不能为空').max(500, '规则名过长').optional(),
+  /** 端口 V2（copy 域）：位置注人工改=留口件（缺省沿用既有；屏名=字典写死不可经此改） */
+  position: z.string().max(500, '位置注过长').optional(),
 });
 
 /* ------------------------------------------------------------------ */
@@ -266,6 +268,16 @@ export const configRulesRouter = router({
       for (const r of rows) {
         if (r.active && r.version > currentVersion) currentVersion = r.version;
       }
+      /* 端口 V2（copy 域）：屏名+位置注透出（第二查按 id 并图；RULES_TABLE 并集类型无
+         screen/position 列，故 copy 域单列查询不塞进主 select）；其他域不透出（undefined） */
+      let metaByKey = new Map<string, { screen: string | null; position: string | null }>();
+      if (input.domain === 'copy') {
+        const ext = await ctx.db
+          .select({ ruleKey: schema.copyOverrides.ruleKey, screen: schema.copyOverrides.screen, position: schema.copyOverrides.position })
+          .from(schema.copyOverrides)
+          .where(eq(schema.copyOverrides.active, true));
+        metaByKey = new Map(ext.map((x) => [x.ruleKey, { screen: x.screen, position: x.position }]));
+      }
       /* 端口批片 B：copy 域行附高危标记（涉钱/涉协议/涉会员口径）——端口页改前重确认弹层用；
          其他域恒 false（加字段不改形状） */
       return {
@@ -274,6 +286,8 @@ export const configRulesRouter = router({
         rules: rows.map((r) => ({
           ...r,
           highRisk: input.domain === 'copy' && isCopyHighRiskKey(r.ruleKey),
+          screen: input.domain === 'copy' ? (metaByKey.get(r.ruleKey)?.screen ?? null) : undefined,
+          position: input.domain === 'copy' ? (metaByKey.get(r.ruleKey)?.position ?? null) : undefined,
         })),
       };
     }),
@@ -396,6 +410,16 @@ export const configRulesRouter = router({
             });
           }
         }
+        /* 端口 V2（copy 域）：screen/position 沿用源=该键最新行（save 改文案不丢屏归属；
+           position=留口件可随本次 change 显式改） */
+        const copyMetaByKey = new Map<string, { screen: string | null; position: string | null }>();
+        if (input.domain === 'copy') {
+          const ext = await txDb(tx)
+            .select({ ruleKey: schema.copyOverrides.ruleKey, screen: schema.copyOverrides.screen, position: schema.copyOverrides.position, version: schema.copyOverrides.version })
+            .from(schema.copyOverrides)
+            .where(eq(schema.copyOverrides.active, true));
+          for (const x of ext) copyMetaByKey.set(x.ruleKey, { screen: x.screen, position: x.position });
+        }
         /* 每 key 当前生效行（旧值来源）与最近 label（含置灰行：取版本最大者） */
         const activeByKey = new Map<string, Record<string, unknown>>();
         const latestLabelByKey = new Map<string, { version: number; label: string }>();
@@ -423,7 +447,9 @@ export const configRulesRouter = router({
             .update(table)
             .set({ active: false, updatedAt: now })
             .where(and(eq(table.ruleKey, c.ruleKey), eq(table.active, true)));
-          /* 新行：version+1 / effective_from=now / active=1 / createdBy=操作人 */
+          /* 新行：version+1 / effective_from=now / active=1 / createdBy=操作人；
+             端口 V2（copy 域）：screen 沿用最新行（字典写死不丢归属）；position=change 显式值优先、缺省沿用 */
+          const copyMeta = copyMetaByKey.get(c.ruleKey);
           await txDb(tx)
             .insert(table)
             .values({
@@ -434,6 +460,9 @@ export const configRulesRouter = router({
               effectiveFrom: now,
               active: true,
               createdBy: ctx.user.id,
+              ...(input.domain === 'copy'
+                ? { screen: copyMeta?.screen ?? null, position: c.position ?? copyMeta?.position ?? null }
+                : {}),
             });
           changesJson.push({ rule_key: c.ruleKey, before, after: c.valueJson });
           keys.push(c.ruleKey);

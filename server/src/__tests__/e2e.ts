@@ -171,8 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 3134 键/68 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote））；
+ *      56.1 种子 3139 键/68 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -4933,17 +4933,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（3134 键/68 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 3134 && domainSet.size === 68 &&
+  check('56.1 copy 域种子全量落库（3139 键/68 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 3139 && domainSet.size === 68 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（3134 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 3134 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（3139 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 3139 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -8572,6 +8572,82 @@ async function main(): Promise<void> {
     check('75.6 商城订单回馈金列透出真值（deduct 联单号=500）+ 无抵扣单=0（诚实零值）',
       row75?.rebateFen === 500 && (storeOrders.groups.paid ?? []).some((o) => o.id !== order75.id && (o.rebateFen ?? 0) >= 0),
       { rebate: row75?.rebateFen });
+  }
+
+  /* ==================================================================
+   * 端口 V2 修正批（单片：注册表扩列+端口页屏分组）段：
+   *   76.1 扩列落库+生成器回填（screen/position 透出+归屏率>90%+已知键抽查）；
+   *   76.2 位置注留口（config.save 扩列改注+沿用不丢+screen 不丢+高危闸不破）；
+   *   76.3 公共读口 activeCopyTexts 形状不变（不透元数据）；
+   *   76.4 未归屏诚实组存在性（screen IS NULL 键=字典未覆盖组，排末注记的数源）。
+   * ================================================================== */
+  console.log('\n[端口V2] 76. 注册表扩列 / 屏分组数据源 / 位置注留口');
+  {
+    interface CopyListV2 {
+      domain: string; currentVersion: number;
+      rules: Array<{ ruleKey: string; label: string; active: boolean; version: number; screen?: string | null; position?: string | null; valueJson: { text?: string } }>;
+    }
+    const list0 = await trpcQuery<CopyListV2>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
+    const actives = list0.rules.filter((r) => r.active);
+    const screened = actives.filter((r) => typeof r.screen === 'string' && r.screen.length > 0);
+    const rate = screened.length / actives.length;
+    const cpTitle = actives.find((r) => r.ruleKey === 'copyport.pageTitle');
+    const petTitle = actives.find((r) => r.ruleKey === 'pets.title');
+    check('76.1 copy_overrides 扩 screen/position 落库（list 透出）+ 归屏率 >90%（军规 <10%）+ 已知键屏值抽查',
+      rate > 0.9 &&
+      cpTitle?.screen === '商家·文案端口' && typeof cpTitle.position === 'string' && cpTitle.position.length > 0 &&
+      petTitle?.screen === '客户·宠物档案',
+      { rate, cp: cpTitle?.screen, pet: petTitle?.screen });
+
+    /* ---- 76.2 位置注留口：改注生效 / 改文案 position+screen 沿用不丢 / 高危闸不破 ---- */
+    const victim = actives.find((r) => r.ruleKey === 'copyport.filterChanged')!;
+    const origText = victim.valueJson.text!;
+    await trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'copy', changes: [{ ruleKey: 'copyport.filterChanged', valueJson: { text: origText }, position: '端口页顶部筛选条 · 第二个开关' }] },
+    });
+    const list1 = await trpcQuery<CopyListV2>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
+    const v1 = list1.rules.find((r) => r.ruleKey === 'copyport.filterChanged' && r.active)!;
+    check('76.2 位置注留口：config.save 带 position 改注即生效 + screen 沿用（字典写死不丢）',
+      v1.position === '端口页顶部筛选条 · 第二个开关' && v1.screen === '商家·文案端口',
+      { pos: v1.position, screen: v1.screen });
+    /* 改文案不带 position → position/screen 双沿用（save 新行不丢归属） */
+    await trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'copy', changes: [{ ruleKey: 'copyport.filterChanged', valueJson: { text: '只看已改（端口 V2 走查改字）' } }] },
+    });
+    const list2 = await trpcQuery<CopyListV2>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
+    const v2 = list2.rules.find((r) => r.ruleKey === 'copyport.filterChanged' && r.active)!;
+    check('76.2 改文案不带 position → 位置注与屏名双沿用（save 新行归属不丢）',
+      v2.position === '端口页顶部筛选条 · 第二个开关' && v2.screen === '商家·文案端口' &&
+      v2.valueJson.text === '只看已改（端口 V2 走查改字）',
+      { pos: v2.position, screen: v2.screen, text: v2.valueJson.text });
+    /* 还原（走查件改字=临时值，端口不留实验文） */
+    await trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'copy', changes: [{ ruleKey: 'copyport.filterChanged', valueJson: { text: origText } }] },
+    });
+    /* 高危闸不破：高危键无口令=400（56.3 同族红线照案） */
+    const hiNoConfirm = await asErr(trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'copy', changes: [{ ruleKey: 'refund.submitCta', valueJson: { text: '提交申请' } }] },
+    }));
+    check('76.2 高危口令闸零回退：高危键无 confirmedHighRisk=400',
+      hiNoConfirm instanceof TrpcHttpError && hiNoConfirm.httpStatus === 400, hiNoConfirm && hiNoConfirm.httpStatus);
+
+    /* ---- 76.3 公共读口形状不变（不透元数据：键→文两列） ---- */
+    const texts76 = await trpcQuery<{ rows: Array<{ key: string; text: string; screen?: unknown; position?: unknown }> }>('config.activeCopyTexts', { cookie: customerCookie });
+    check('76.3 activeCopyTexts 形状不变（3139 行 key→text，不透 screen/position 元数据）',
+      texts76.rows.length === 3139 &&
+      texts76.rows.every((r) => r.screen === undefined && r.position === undefined),
+      texts76.rows.length);
+
+    /* ---- 76.4 未归屏诚实组：screen IS NULL 键存在且占比 <10%（端口页排末组的数源） ---- */
+    const unscreened = actives.filter((r) => r.screen === null || r.screen === undefined);
+    check('76.4 未归屏诚实组存在且 <10%（生成器扫不到的字典未覆盖键，排末注记的数源）',
+      unscreened.length > 0 && unscreened.length / actives.length < 0.1 &&
+      unscreened.every((r) => typeof r.position === 'string' && r.position!.includes('未在页面调用点命中')),
+      { n: unscreened.length, sample: unscreened.slice(0, 3).map((r) => r.ruleKey) });
   }
 
   client.close();
