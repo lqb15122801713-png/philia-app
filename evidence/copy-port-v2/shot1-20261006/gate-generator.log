@@ -1,0 +1,25 @@
+同文去重 3 键：sched.week.this（merchant:schedule/staff:schedule）；sched.common.loadFail（merchant:schedule/staff:schedule）；sched.common.retry（merchant:schedule/staff:schedule）
+键总数=3141 去重后=3138 域数=68
+归屏=3033 未归屏=105（3.3%）✓ <10% 军规线内
+未归屏明细（前 20）：
+  - appeal.photoLimit（account）
+  - agr.boarding（agreements）
+  - agr.privacy（agreements）
+  - agr.user（agreements）
+  - home.pwaInstallAction（home）
+  - home.pwaInstallDismiss（home）
+  - home.pwaInstallIosGuide（home）
+  - home.pwaInstallTitle（home）
+  - mall.cancelConfirmBody（mall）
+  - mall.cancelConfirmTitle（mall）
+  - mall.confirmReceive（mall）
+  - mall.goPay（mall）
+  - mall.orderPreparing（mall）
+  - mall.orderReceived（mall）
+  - mall.orderSumLine（mall）
+  - mall.receiveConfirmBody（mall）
+  - mall.receiveConfirmTitle（mall）
+  - mall.reorder（mall）
+  - ann.reads.close（merchant:announcements）
+  - ann.reads.title（merchant:announcements）
+产物：server/src/db/copySeedRows.ts + server/drizzle/0047_copy_port_v2_backfill.sql

@@ -1,0 +1,114 @@
+[migrate] 迁移目录: E:\KIMI code\philia-app\server\drizzle
+[migrate] 迁移完成，已应用 46 条迁移：
+  - hash=6719851aa4ff…  applied_at=2026-09-04T15:18:00.969Z
+  - hash=59c3d4c8d006…  applied_at=2026-09-05T08:33:07.454Z
+  - hash=c9bf0424a486…  applied_at=2026-09-07T05:42:13.796Z
+  - hash=dc82ac221be3…  applied_at=2026-09-07T12:12:51.482Z
+  - hash=e28f77bb21fe…  applied_at=2026-09-07T13:05:47.657Z
+  - hash=b57a51cb7201…  applied_at=2026-09-10T10:47:02.075Z
+  - hash=d8108bd71355…  applied_at=2026-09-15T09:26:26.154Z
+  - hash=92304936f6a2…  applied_at=2026-09-16T04:36:18.626Z
+  - hash=a765880bca99…  applied_at=2026-09-18T13:36:16.072Z
+  - hash=a2d165a45eb4…  applied_at=2026-09-18T14:10:48.344Z
+  - hash=ee51b6d77c71…  applied_at=2026-09-19T04:49:23.220Z
+  - hash=44757bba75b5…  applied_at=2026-09-20T10:52:47.309Z
+  - hash=9a952884fcbe…  applied_at=2026-09-20T11:41:31.954Z
+  - hash=87af2c5febe5…  applied_at=2026-09-21T05:18:58.698Z
+  - hash=1fbced76316b…  applied_at=2026-09-21T16:47:49.606Z
+  - hash=965c143b11b2…  applied_at=2026-09-22T17:39:35.324Z
+  - hash=642eabc88420…  applied_at=2026-09-25T01:33:20.000Z
+  - hash=cef98d61ae58…  applied_at=2026-10-01T04:22:04.956Z
+  - hash=1c2c7b0105e7…  applied_at=2026-10-01T14:13:47.439Z
+  - hash=b34f9a65a8ca…  applied_at=2026-10-01T14:13:47.440Z
+  - hash=4caafb361731…  applied_at=2026-10-01T14:13:47.441Z
+  - hash=7475a7d506e8…  applied_at=2026-10-01T16:44:56.660Z
+  - hash=e973e0d877fe…  applied_at=2026-10-02T00:07:46.438Z
+  - hash=400fd1769ec3…  applied_at=2026-10-02T12:00:14.395Z
+  - hash=d4909b0b9aeb…  applied_at=2026-10-02T13:55:39.401Z
+  - hash=4b4831c5d04f…  applied_at=2026-10-02T15:20:00.000Z
+  - hash=3dad733be264…  applied_at=2026-10-02T17:10:00.000Z
+  - hash=01d86e50325b…  applied_at=2026-10-03T05:20:54.442Z
+  - hash=be3c836f12c9…  applied_at=2026-10-03T05:30:00.000Z
+  - hash=494670712baa…  applied_at=2026-10-03T05:31:00.000Z
+  - hash=ca2707a16677…  applied_at=2026-10-03T09:59:12.532Z
+  - hash=8b2bd2dfeeee…  applied_at=2026-10-03T11:14:52.804Z
+  - hash=da0c378e26fc…  applied_at=2026-10-03T14:07:39.428Z
+  - hash=e5883a03e8f2…  applied_at=2026-10-03T15:48:57.824Z
+  - hash=8034db0ea644…  applied_at=2026-10-03T16:41:24.607Z
+  - hash=afea761f69fc…  applied_at=2026-10-04T01:05:02.427Z
+  - hash=3c8061e66cee…  applied_at=2026-10-04T04:26:25.122Z
+  - hash=f838bb9b6bd9…  applied_at=2026-10-04T05:53:28.351Z
+  - hash=a8e415ec6b3f…  applied_at=2026-10-04T09:41:58.567Z
+  - hash=6e105f208428…  applied_at=2026-10-04T13:42:47.949Z
+  - hash=87531335b0f8…  applied_at=2026-10-05T02:40:00.000Z
+  - hash=d29082f319c2…  applied_at=2026-10-05T07:20:00.000Z
+  - hash=84d1c3ce5172…  applied_at=2026-10-05T08:20:00.000Z
+  - hash=f376eefa316c…  applied_at=2026-10-05T16:20:00.000Z
+  - hash=8dae73d35719…  applied_at=2026-10-05T17:20:00.000Z
+  - hash=8de17b075a72…  applied_at=2026-10-05T18:20:00.000Z
+[seed] 开始（先清空业务表，保证幂等）…
+[seed] 完成，各表行数：
+  users                  6
+  user_roles             6
+  stores                 1
+  staff                  4
+  staff_invites          0
+  pets                   2
+  services               7
+  appointments           0
+  store_slots            154
+  boarding_slots         0
+  appointment_steps      0
+  step_photos            0
+  boarding_stays         0
+  boarding_daily_logs    0
+  products               13
+  orders                 0
+  cashier_bills          0
+  cashier_bill_items     0
+  cashier_payments       0
+  push_subscriptions     0
+  event_outbox           0
+  notifications          0
+  attendance_records     0
+  attendance_approvals   0
+  stock_movements        0
+  inventory_counts       0
+  inventory_count_items  0
+  commission_rules       23
+  duration_rules         6
+  commission_snapshots   0
+  deduction_records      0
+  performance_grades     0
+  reception_logs         0
+  overwork_approvals     0
+  xp_events              0
+  xp_levels              0
+  xp_rules               23
+  reviews                0
+  rule_config_versions   0
+  refund_bills           0
+  refund_bill_items      0
+  refund_rules           7
+  refund_requests        0
+  member_plans           11
+  memberships            0
+  rebate_accounts        0
+  rebate_logs            0
+  rebate_settlements     0
+  service_certificates   0
+  service_reports        0
+  copy_overrides         3139
+  slot_contents          6
+  support_tickets        0
+  invoice_requests       0
+  service_rules          15
+  membership_events      0
+  pay_orders             0
+  agreements             0
+  pay_rules              2
+  member_perk_grants     0
+  coupons                0
+  coupon_grants          0
+  favorites              0
+  product_reviews        0
