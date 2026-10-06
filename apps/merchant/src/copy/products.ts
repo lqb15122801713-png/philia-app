@@ -31,6 +31,18 @@ const PRODUCT_COPY_TABLE = {
   'prod.dailyCountCol': '日盘档',
   'prod.dailyCountYes': '日盘',
   'prod.dailyCountNote': '日盘档=单价 ≥¥100 商品每日盘点门槛（S-08 同口径）',
+  /* ---- 大批片 4：成本列（毛利视界=owner|manager，server 双层闸 clerk 零透出）+
+     导入可选尾列说明 + 编辑弹层进价/上下限三字段 ---- */
+  'prod.costCol': '成本',
+  'prod.costClerkMask': '—',
+  'prod.csvOptColsNote': '可选尾列：进价(元)/库存下限/库存上限（缺省不设，与六列模板向后兼容）',
+  'prod.editor.costLabel': '进价（元）',
+  'prod.editor.costHint': '选填，最多两位小数；毛利视界字段，仅店主/店长可见',
+  'prod.editor.minStockLabel': '库存下限',
+  'prod.editor.maxStockLabel': '库存上限',
+  'prod.editor.limitHint': '选填整数；设后参与上下限预警',
+  'prod.editor.costInvalid': '进价需为非负数字，最多两位小数（元）',
+  'prod.editor.limitInvalid': '库存上下限需为 0 ~ 1000000 的整数',
 } as const;
 
 export const PRODUCT_COPY = withCopyOverrides(PRODUCT_COPY_TABLE);

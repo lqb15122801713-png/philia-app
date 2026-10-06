@@ -736,6 +736,15 @@ export const products = sqliteTable('products', {
   images: text('images', { mode: 'json' }).$type<string[]>(),
   /** 价格（分） */
   priceFen: integer('price_fen').notNull(),
+  /**
+   * 进价/成本价（分；商家端大批片 4 · 0055）：台账字段不写支付链（涉钱零新规）；
+   * 毛利视界=owner|manager（server 读口 clerk 零透出+页面级闸双层，开口项 1 裁）。
+   */
+  costFen: integer('cost_fen'),
+  /** 库存下限（分/件；商家端大批片 4 · 0055：上下限预警；NULL=不设） */
+  minStock: integer('min_stock'),
+  /** 库存上限（NULL=不设） */
+  maxStock: integer('max_stock'),
   /** 库存 */
   stock: integer('stock').notNull().default(0),
   /** 上架状态，取值：on | off */
@@ -3594,6 +3603,215 @@ export const cashMovements = sqliteTable(
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   },
   (t) => [index('ix_cash_movements_store_shift').on(t.storeId, t.shiftId)],
+);
+
+/**
+ * 商品批次表（商家端大批片 4 · 0055：批次管理=批号/生产日期/保质期；效期自动计算
+ * =production+shelfLifeDays；状态机 active→quarantined（过期隔离，不计可售）→
+ * destroyed（销毁登记扣减留痕）；FEFO=按 expiry_date 升序出库建议）。
+ */
+export const productBatches = sqliteTable(
+  'product_batches',
+  {
+    id: id(),
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    productId: text('product_id')
+      .notNull()
+      .references(() => products.id),
+    /** 批号（同店同品唯一，应用层约束） */
+    batchNo: text('batch_no').notNull(),
+    /** 生产日期 */
+    productionDate: integer('production_date', { mode: 'timestamp' }),
+    /** 保质期（天；与生产日期合成效期） */
+    shelfLifeDays: integer('shelf_life_days'),
+    /** 效期截止（=productionDate+shelfLifeDays 自动计算；NULL=无有效期概念） */
+    expiryDate: integer('expiry_date', { mode: 'timestamp' }),
+    /** 批次在库数量 */
+    qty: integer('qty').notNull().default(0),
+    /** 状态：active | quarantined（过期隔离，不计可售） | destroyed（已销毁） */
+    status: text('status').notNull().default('active'),
+    /** 备注 */
+    note: text('note'),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_product_batches_product').on(t.productId, t.status),
+    index('ix_product_batches_store_expiry').on(t.storeId, t.expiryDate),
+  ],
+);
+
+/** 供应商表（商家端大批片 4 · 0055：采购订单·供应商管理） */
+export const suppliers = sqliteTable(
+  'suppliers',
+  {
+    id: id(),
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    name: text('name').notNull(),
+    contact: text('contact'),
+    phone: text('phone'),
+    note: text('note'),
+    /** 状态：active | disabled */
+    status: text('status').notNull().default('active'),
+    ...auditColumns,
+  },
+  (t) => [index('ix_suppliers_store').on(t.storeId, t.status)],
+);
+
+/**
+ * 采购订单表（商家端大批片 4 · 0055）：draft→submitted（进审批）→approved|rejected
+ * →received（收货入批：逐行生成 product_batches+products.stock 累加+stock_movements 流水）。
+ */
+export const purchaseOrders = sqliteTable(
+  'purchase_orders',
+  {
+    id: id(),
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    supplierId: text('supplier_id').references(() => suppliers.id),
+    /** 单号（展示用，PO-yyyymmdd-序号） */
+    orderNo: text('order_no').notNull(),
+    /** 状态：draft | submitted | approved | rejected | received */
+    status: text('status').notNull().default('draft'),
+    /** 行项 JSON：[{productId, name, qty, costFen, batchNo?, productionDate?, shelfLifeDays?}] */
+    itemsJson: text('items_json', { mode: 'json' }).$type<Array<{ productId: string; name: string; qty: number; costFen: number | null; batchNo?: string; productionDate?: string; shelfLifeDays?: number }>>().notNull(),
+    /** 预计到货日 */
+    expectAt: integer('expect_at', { mode: 'timestamp' }),
+    /** 备注 */
+    note: text('note'),
+    /** 收货时间 */
+    receivedAt: integer('received_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [index('ix_purchase_orders_store_status').on(t.storeId, t.status)],
+);
+
+/** 报损表（商家端大批片 4 · 0055：当场录入+审批；approved 扣库存前后值） */
+export const stockWriteoffs = sqliteTable(
+  'stock_writeoffs',
+  {
+    id: id(),
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    productId: text('product_id')
+      .notNull()
+      .references(() => products.id),
+    /** 关联批次（可空=不限批次） */
+    batchId: text('batch_id').references(() => productBatches.id),
+    qty: integer('qty').notNull(),
+    /** 报损原因（必填） */
+    reason: text('reason').notNull(),
+    /** 状态：pending | approved | rejected */
+    status: text('status').notNull().default('pending'),
+    reviewNote: text('review_note'),
+    reviewedBy: text('reviewed_by').references(() => users.id),
+    reviewedAt: integer('reviewed_at', { mode: 'timestamp' }),
+    operatorId: text('operator_id')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_stock_writeoffs_store_status').on(t.storeId, t.status)],
+);
+
+/**
+ * 店间调拨表（商家端大批片 4 · 0055；连锁地基上）：成对确认=转出店发起（审批）
+ * →ship 在途（in_transit=既不在转出可售也不在转入可售）→转入店 receive 接收；
+ * 超时预警=in_transit 超 transfer_in_transit_warn_hours（端口留口，缺省 24）。
+ */
+export const transferOrders = sqliteTable(
+  'transfer_orders',
+  {
+    id: id(),
+    fromStoreId: text('from_store_id')
+      .notNull()
+      .references(() => stores.id),
+    toStoreId: text('to_store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 单号（展示用，TR-yyyymmdd-序号） */
+    orderNo: text('order_no').notNull(),
+    /** 状态：draft | pending（审批中） | approved（可发货） | rejected | in_transit | received | cancelled */
+    status: text('status').notNull().default('draft'),
+    /** 行项 JSON：[{productId, name, qty}] */
+    itemsJson: text('items_json', { mode: 'json' }).$type<Array<{ productId: string; name: string; qty: number }>>().notNull(),
+    /** 发货时间 */
+    sentAt: integer('sent_at', { mode: 'timestamp' }),
+    /** 接收时间 */
+    receivedAt: integer('received_at', { mode: 'timestamp' }),
+    /** 接收人 */
+    receivedBy: text('received_by').references(() => users.id),
+    note: text('note'),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_transfer_orders_from').on(t.fromStoreId, t.status),
+    index('ix_transfer_orders_to').on(t.toStoreId, t.status),
+  ],
+);
+
+/** 要货/补货申请表（商家端大批片 4 · 0055：建议量=上下限差额建议读口） */
+export const replenishRequests = sqliteTable(
+  'replenish_requests',
+  {
+    id: id(),
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    productId: text('product_id')
+      .notNull()
+      .references(() => products.id),
+    /** 申请数量（建议量读口=maxStock−stock 差额，可手改） */
+    qty: integer('qty').notNull(),
+    /** 状态：pending | approved | rejected | fulfilled */
+    status: text('status').notNull().default('pending'),
+    note: text('note'),
+    reviewNote: text('review_note'),
+    reviewedBy: text('reviewed_by').references(() => users.id),
+    reviewedAt: integer('reviewed_at', { mode: 'timestamp' }),
+    operatorId: text('operator_id')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_replenish_requests_store_status').on(t.storeId, t.status)],
+);
+
+/**
+ * 通用审批表（商家端大批片 4 · 0055：采购/要货/调拨/报损四类审批进审批中心）：
+ * owner|manager 批+note 留痕（timeline 只增不改）；rail 角标=审批类同族合并计数。
+ */
+export const approvalRequests = sqliteTable(
+  'approval_requests',
+  {
+    id: id(),
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 类型：purchase（采购） | replenish（要货） | transfer（调拨） | writeoff（报损） */
+    kind: text('kind').notNull(),
+    /** 关联单据 id（purchase_orders/replenish_requests/transfer_orders/stock_writeoffs） */
+    refId: text('ref_id').notNull(),
+    /** 摘要（队列展示快照） */
+    summary: text('summary').notNull(),
+    /** 状态：pending | approved | rejected */
+    status: text('status').notNull().default('pending'),
+    applicantId: text('applicant_id')
+      .notNull()
+      .references(() => users.id),
+    reviewerId: text('reviewer_id').references(() => users.id),
+    reviewNote: text('review_note'),
+    reviewedAt: integer('reviewed_at', { mode: 'timestamp' }),
+    /** 留痕 JSON：[{at, action, by, note?}]（只增不改） */
+    timelineJson: text('timeline_json', { mode: 'json' }).$type<Array<{ at: string; action: string; by: string; note?: string }>>().notNull(),
+    ...auditColumns,
+  },
+  (t) => [index('ix_approval_requests_store_status').on(t.storeId, t.status)],
 );
 
 /** 离职资源改挂留痕（片 3 B7-4；仿 reception_logs 前后值口径：prev_value→new_value 快照+操作人；kind=appointment|boarding|member） */

@@ -2,7 +2,8 @@
  * 新增 / 编辑商品弹层（T5.2 · ProductsPage）
  *
  * - 字段：名称 / 分类（主粮/零食/玩具/清洁/其他）/ 描述 / 价格（元输入→分提交）/
- *   库存 / 上下架状态 / 商品图（最多 5 张，首张为主图）。
+ *   库存 / 上下架状态 / 商品图（最多 5 张，首张为主图）；
+ *   大批片 4 扩：进价/库存下限/库存上限三字段（毛利视界 canManage 才显示，空=不设）。
  * - 图片上传：共享层 uploadImage → POST /api/upload，relDir=`products/<storeId>`；
  *   每张图带「设为封面 / 删除」，上传中禁用提交。
  * - 价格口径：yuanToFen 严格解析（最多两位小数），非法输入不提交；
@@ -13,6 +14,8 @@ import { getApiBase, uploadImage, useMe, usePhiliaClient } from '@philia/shared'
 import { ImagePlus, Loader2, Star, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
+import { pd } from '@/copy/products'
+import { useMerchantRole } from '@/lib/roles'
 import {
   errMsg,
   fenToYuanInput,
@@ -35,12 +38,16 @@ export default function ProductEditorDialog({ open, product, onClose }: ProductE
   const { trpc, queryClient } = usePhiliaClient()
   const { user } = useMe()
   const storeId = user?.storeId
+  const role = useMerchantRole()
 
   const [name, setName] = useState('')
   const [category, setCategory] = useState<string>(PRODUCT_CATEGORIES[0])
   const [description, setDescription] = useState('')
   const [priceYuan, setPriceYuan] = useState('')
   const [stock, setStock] = useState('')
+  const [costYuan, setCostYuan] = useState('')
+  const [minStock, setMinStock] = useState('')
+  const [maxStock, setMaxStock] = useState('')
   const [onShelf, setOnShelf] = useState(true)
   const [images, setImages] = useState<string[]>([])
   const [uploading, setUploading] = useState(0)
@@ -55,6 +62,9 @@ export default function ProductEditorDialog({ open, product, onClose }: ProductE
     setDescription(product?.description ?? '')
     setPriceYuan(product ? fenToYuanInput(product.priceFen) : '')
     setStock(product ? String(product.stock) : '')
+    setCostYuan(product?.costFen != null ? fenToYuanInput(product.costFen) : '')
+    setMinStock(product?.minStock != null ? String(product.minStock) : '')
+    setMaxStock(product?.maxStock != null ? String(product.maxStock) : '')
     setOnShelf(product ? product.status === 'on' : true)
     setImages(product?.images ?? [])
     setUploading(0)
@@ -105,6 +115,28 @@ export default function ProductEditorDialog({ open, product, onClose }: ProductE
       return toast.error('库存需为 0 ~ 1000000 的整数')
     }
     if (uploading > 0) return toast.error('图片上传中，请稍候')
+    /* 大批片 4 毛利视界三字段（canManage 才显示/提交；空=不设 nullish，非法不提交） */
+    let costFen: number | undefined
+    let minStockNum: number | undefined
+    let maxStockNum: number | undefined
+    if (role.canManage) {
+      if (costYuan.trim()) {
+        const v = yuanToFen(costYuan)
+        if (v === null) return toast.error(pd('prod.editor.costInvalid'))
+        costFen = v
+      }
+      const parseLimit = (s: string): number | null | undefined => {
+        const t = s.trim()
+        if (!t) return undefined
+        if (!/^\d+$/.test(t) || Number(t) > 1_000_000) return null
+        return Number(t)
+      }
+      const minV = parseLimit(minStock)
+      const maxV = parseLimit(maxStock)
+      if (minV === null || maxV === null) return toast.error(pd('prod.editor.limitInvalid'))
+      minStockNum = minV
+      maxStockNum = maxV
+    }
     setPending(true)
     try {
       await trpc.mall.upsertProduct.mutate({
@@ -116,6 +148,9 @@ export default function ProductEditorDialog({ open, product, onClose }: ProductE
         priceFen,
         stock: stockNum,
         status: onShelf ? 'on' : 'off',
+        costFen,
+        minStock: minStockNum,
+        maxStock: maxStockNum,
       })
       toast.success(product ? '商品已更新' : '商品已创建')
       await invalidate()
@@ -186,6 +221,43 @@ export default function ProductEditorDialog({ open, product, onClose }: ProductE
             onChange={(e) => setPriceYuan(e.target.value)}
           />
         </Field>
+
+        {/* 大批片 4 毛利视界三字段：进价/库存下限/库存上限，canManage 才显示
+            （server 双层闸：listProductsForStore 对 clerk 零透出成本三列） */}
+        {role.canManage ? (
+          <div className="grid grid-cols-3 gap-3">
+            <Field label={pd('prod.editor.costLabel')} hint={pd('prod.editor.costHint')}>
+              <input
+                className={inputCls}
+                value={costYuan}
+                inputMode="decimal"
+                placeholder="如 25.00"
+                style={numStyle}
+                onChange={(e) => setCostYuan(e.target.value)}
+              />
+            </Field>
+            <Field label={pd('prod.editor.minStockLabel')} hint={pd('prod.editor.limitHint')}>
+              <input
+                className={inputCls}
+                value={minStock}
+                inputMode="numeric"
+                placeholder="0"
+                style={numStyle}
+                onChange={(e) => setMinStock(e.target.value)}
+              />
+            </Field>
+            <Field label={pd('prod.editor.maxStockLabel')} hint={pd('prod.editor.limitHint')}>
+              <input
+                className={inputCls}
+                value={maxStock}
+                inputMode="numeric"
+                placeholder="0"
+                style={numStyle}
+                onChange={(e) => setMaxStock(e.target.value)}
+              />
+            </Field>
+          </div>
+        ) : null}
 
         <Field label="商品描述">
           <textarea
