@@ -47,7 +47,7 @@
 | check-nav-closure | **124 路由 · 死 0 · 弱 0 · 豁免 6**（新路由 2 申报） | nav-closure-124.json + gate-nav-closure.log |
 | smoke-routes | **108/108** | gate-smoke-routes.log |
 | review-e2e | 全绿 🎉 | gate-review-e2e.log |
-| smoke-deploy | 全部通过 🎉（held 零新增残留） | （tail 段全绿见交付回执） |
+| smoke-deploy | 全部通过 🎉（held 零新增残留） | gate-smoke-deploy.log |
 | 实尺截图 4 帧 | 会员营销五区（券矩阵六类+定向发放 1 份+生日档位+活动配置）/营销台账四区/周报环比徽/D9 排行滞销——逐屏目检已做 | 01-04-*.png |
 
 ## 四、红线自查
