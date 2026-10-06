@@ -165,6 +165,8 @@ const ROUTES = [
   { app: 'merchant', path: '/ledger', expect: 'sub', note: '商家端大批片 3：台账专页（挂账/押金/预付/授权四区；owner|manager，clerk 引导页）' },
   { app: 'merchant', path: '/inventory', expect: 'sub', note: '商家端大批片 4：库存域页（预警/效期/批次/报损/估清五区；owner|manager，clerk 引导页）' },
   { app: 'merchant', path: '/transfers', expect: 'sub', note: '商家端大批片 4：调拨要货页（调拨成对确认/在途视图/要货；owner|manager，clerk 引导页）' },
+  { app: 'merchant', path: '/marketing', expect: 'sub', note: '商家端大批片 5：会员营销页（标签/券矩阵/定向发放/生日/活动配置五区；owner|manager，clerk 引导页）' },
+  { app: 'merchant', path: '/marketing-ledger', expect: 'sub', note: '商家端大批片 5：营销台账页（支出/换货/待检/快照四区；owner|manager，clerk 引导页）' },
   { app: 'merchant', path: '/dev-login', expect: 'gate' },
   { app: 'merchant', path: '/login', expect: 'gate' },
   { app: 'merchant', path: '/passes', expect: 'sub', note: '重定向兼容' },

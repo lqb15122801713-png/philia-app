@@ -145,6 +145,8 @@ const ROUTES = [
   { app: 'merchant', path: '/ledger', anchors: ['台账', '挂账', '押金', '预付', '授权'], serverDep: true, note: '商家端大批片 3：台账专页（四区；owner|manager 渲染，clerk 引导页）' },
   { app: 'merchant', path: '/inventory', anchors: ['库存', '预警', '批次', '报损', '估清'], serverDep: true, note: '商家端大批片 4：库存域页（五区；owner|manager 渲染，clerk 引导页）' },
   { app: 'merchant', path: '/transfers', anchors: ['调拨', '要货', '在途'], serverDep: true, note: '商家端大批片 4：调拨要货页（三区；owner|manager 渲染，clerk 引导页）' },
+  { app: 'merchant', path: '/marketing', anchors: ['会员营销', '券矩阵', '定向发放', '生日营销', '活动配置'], serverDep: true, note: '商家端大批片 5：会员营销页（五区；owner|manager 渲染，clerk 引导页）' },
+  { app: 'merchant', path: '/marketing-ledger', anchors: ['营销台账', '支出', '换货', '退货待检', '快照'], serverDep: true, note: '商家端大批片 5：营销台账页（四区；owner|manager 渲染，clerk 引导页）' },
   { app: 'merchant', path: '/settings/rules', anchors: ['规则配置'], serverDep: true, note: '批次 staff-2 R9-F：owner 登录渲染「规则配置管理」；manager 页内引导卡标题同含锚点，clerk 由 ClerkRouteGuard 拦截' },
   { app: 'merchant', path: '/settings/copy', anchors: ['文案端口'], serverDep: true, note: '端口批片 B：文案端口（控制台第七域；owner 登录渲染「文案端口」页题）' },
   { app: 'merchant', path: '/settings/slots', anchors: ['槽位'], serverDep: true, note: '端口批片 C：槽位端口（控制台第八域「槽位」；owner 登录渲染「槽位端口」页题，非 owner 引导页标题同含锚点）' },

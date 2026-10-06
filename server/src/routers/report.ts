@@ -1417,6 +1417,66 @@ export const reportRouter = router({
   /** CSV 导出（**仅店主** · 总规则③，17 张同闸）：report=d1..d9/n1..n6 + month；
    *  N7/N8=预埋不出表 400 明文；返回 {filename, csv, rows}（BOM+手写转义同 refund.exportCsv 工艺）。
    *  数据源=createCaller 直调本路由读口（口径同源零复制，不另写聚合）。 */
+  /* ------------------------------------------------------------------
+   * 片 5 报表子域：周报环比 / 商品销量排行·滞销分析
+   * ------------------------------------------------------------------ */
+
+  /** 周报自动汇总（本周 vs 上周环比；周界=门店时区周一 0 点；同比无基数=诚实态照案） */
+  weeklySummary: merchantManagerProcedure.input(scopeOnlyInput.optional()).query(async ({ ctx, input }) => {
+    const storeIds = reportStoreIds(ctx, input);
+    const now = new Date();
+    const w = storeWallclock(now);
+    const dow = (new Date(now.getTime() + 8 * 3600 * 1000).getUTCDay() + 6) % 7; // 周一=0
+    const weekStart = new Date(storeDayStartMs(w.y, w.m, w.day) - dow * 24 * 3600 * 1000);
+    const lastWeekStart = new Date(weekStart.getTime() - 7 * 24 * 3600 * 1000);
+    const cur = await revenueInRange(ctx.db, storeIds, weekStart, now);
+    const prev = await revenueInRange(ctx.db, storeIds, lastWeekStart, weekStart);
+    const curTotal = cur.serviceFen + cur.shopFen;
+    const prevTotal = prev.serviceFen + prev.shopFen;
+    return {
+      weekStart: dayKeyOf(weekStart),
+      current: { serviceFen: cur.serviceFen, shopFen: cur.shopFen, totalFen: curTotal, paidCount: cur.paidCount, byDay: [...cur.byDay.values()] },
+      previous: { serviceFen: prev.serviceFen, shopFen: prev.shopFen, totalFen: prevTotal, paidCount: prev.paidCount },
+      wow: prevTotal > 0 ? (curTotal - prevTotal) / prevTotal : null,
+      note: '周报=本周（周一起算）vs 上周环比；上周无营收=环比 null（诚实无基数照案）',
+    };
+  }),
+
+  /** 商品销量排行（月口径：成交单商品行聚合 qty 降序 top N）+ 滞销（月零销+在库） */
+  d9TopGoods: merchantManagerProcedure.input(monthInput).query(async ({ ctx, input }) => {
+    const storeIds = reportStoreIds(ctx, input);
+    const { from, to } = monthRange(input.month);
+    const orderRows = await ctx.db
+      .select({ id: schema.orders.id, items: schema.orders.items })
+      .from(schema.orders)
+      .where(and(inArray(schema.orders.storeId, storeIds), gte(schema.orders.createdAt, from), lt(schema.orders.createdAt, to), sql`${schema.orders.status} != 'cancelled'`));
+    const qtyByProduct = new Map<string, number>();
+    const fenByProduct = new Map<string, number>();
+    /* 行项=orders.items JSON 列（无 order_items 表；取消单不计） */
+    for (const o of orderRows) {
+      for (const it of o.items ?? []) {
+        qtyByProduct.set(it.product_id, (qtyByProduct.get(it.product_id) ?? 0) + it.quantity);
+        fenByProduct.set(it.product_id, (fenByProduct.get(it.product_id) ?? 0) + it.quantity * it.price_fen);
+      }
+    }
+    const products = await ctx.db
+      .select()
+      .from(schema.products)
+      .where(inArray(schema.products.storeId, storeIds));
+    const nameOf = new Map(products.map((p) => [p.id, p.name]));
+    const ranking = [...qtyByProduct.entries()]
+      .map(([productId, qty]) => ({ productId, name: nameOf.get(productId) ?? productId, qty, salesFen: fenByProduct.get(productId) ?? 0 }))
+      .sort((a, b) => b.qty - a.qty)
+      .slice(0, 20);
+    /* 滞销=月零销且（在库 stock>0 或曾有动销）；附在库与月销 0 明示 */
+    const slowMoving = products
+      .filter((p) => p.status === 'on' && p.stock > 0 && !qtyByProduct.has(p.id))
+      .map((p) => ({ productId: p.id, name: p.name, stock: p.stock, monthQty: 0 }))
+      .sort((a, b) => b.stock - a.stock)
+      .slice(0, 20);
+    return { month: input.month, ranking, slowMoving, note: '排行=成交单商品行聚合（取消单不计）；滞销=月零销+在库（诚实零值口径）' };
+  }),
+
   exportCsv: merchantOwnerProcedure
     .input(z.object({ report: z.enum(['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6']), month: z.string().regex(MONTH_RE).optional(), scope: z.enum(['store', 'chain']).optional(), storeId: z.string().optional() }))
     .query(async ({ ctx, input }) => {

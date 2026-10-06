@@ -165,19 +165,24 @@ interface RuleHistoryRow {
 }
 type RuleHistory = Map<string, RuleHistoryRow[]>;
 
-/** 全表规则时序一次加载（computeMonth 逐行解析用，单查询无 N+1） */
-async function loadRuleHistory(d: DbHandle): Promise<{ history: RuleHistory; currentVersion: number }> {
+/** 全表规则时序一次加载（computeMonth 逐行解析用，单查询无 N+1）；
+ *  片 5 候裁件（片 2 意见书 §三裁定照执）：**读口按店域收窄**——历史行仅取
+ *  {总部行（store_id IS NULL) ∪ 该店覆盖行}，他店覆盖行不入算；**历史快照不溯**=
+ *  时序行按 effective_from 取当时值（未来创建的覆盖行天然不进入其生效前月份）。 */
+async function loadRuleHistory(d: DbHandle, storeId?: string): Promise<{ history: RuleHistory; currentVersion: number }> {
   const rows = await d
     .select({
       ruleKey: schema.commissionRules.ruleKey,
       valueJson: schema.commissionRules.valueJson,
       version: schema.commissionRules.version,
       effectiveFrom: schema.commissionRules.effectiveFrom,
+      storeId: schema.commissionRules.storeId,
     })
     .from(schema.commissionRules);
   const history: RuleHistory = new Map();
   let currentVersion = 0;
   for (const r of rows) {
+    if (storeId !== undefined && r.storeId !== null && r.storeId !== storeId) continue; // 店域收窄：他店覆盖行不入算
     let arr = history.get(r.ruleKey);
     if (!arr) {
       arr = [];
@@ -517,7 +522,7 @@ export async function computeMonth(
   const { start, end } = monthRange(month);
   const quarter = quarterOfMonth(month);
   const qRange = quarterRange(quarter);
-  const { history: ruleHistory, currentVersion } = await loadRuleHistory(d);
+  const { history: ruleHistory, currentVersion } = await loadRuleHistory(d, storeId); // 片 5 候裁件：店域收窄+历史不溯
   const ruleAt = (key: string, ts: Date) => resolveFromHistory(ruleHistory, key, ts);
 
   /* ---- 当月账单域（提成） ---- */

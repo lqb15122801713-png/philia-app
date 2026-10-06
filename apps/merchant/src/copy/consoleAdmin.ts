@@ -27,6 +27,8 @@ const CONSOLE_ADMIN_COPY_TABLE = {
   'cadm.portStored': '储值',
   'cadm.portCarePack': '安心包端口',
   'cadm.portCarePackNote': '独立库存域 · 只读 v1',
+  /* 大批片 5：C4 会员营销（直达 /marketing 真页，非置灰占位） */
+  'cadm.portMarketing': '会员营销',
   'cadm.portCommission': '提成',
   'cadm.portXp': 'XP',
   'cadm.portProfile': '门店档案',

@@ -33,6 +33,8 @@ import DevLoginPage from './pages/DevLoginPage'
 import FinancePage from './pages/FinancePage'
 import InventoryPage from './pages/InventoryPage'
 import LedgerPage from './pages/LedgerPage'
+import MarketingPage from './pages/MarketingPage'
+import MarketingLedgerPage from './pages/MarketingLedgerPage'
 import MatrixPage from './pages/MatrixPage'
 import MonitorHubPage from './pages/MonitorHubPage'
 import OpsPage from './pages/OpsPage'
@@ -134,6 +136,10 @@ function ProtectedRoutes() {
         <Route path="/inventory" element={<InventoryPage />} />
         {/* 商家端大批片 4：调拨要货页（调拨成对确认/在途/要货三区；owner|manager；nav 申报主窗统一） */}
         <Route path="/transfers" element={<TransfersPage />} />
+        {/* 商家端大批片 5：会员营销页（标签/券矩阵/定向发放/生日/活动五区；owner|manager，页内 canManage 闸门；nav 申报主窗统一） */}
+        <Route path="/marketing" element={<MarketingPage />} />
+        {/* 商家端大批片 5：营销台账页（支出/换货/待检/快照四区；owner|manager；快照生成仅 owner 页内+server 双闸；nav 申报主窗统一） */}
+        <Route path="/marketing-ledger" element={<MarketingLedgerPage />} />
         {/* 员工端骨架整建批 片 3：运营（PDCA 问题闭环+自检审核+巡检汇总；owner|manager；同排班页闸径） */}
         <Route path="/ops" element={<OpsPage />} />
         {/* 员工端骨架整建批 片 3：循环任务模板自管（owner|manager；同排班页闸径） */}

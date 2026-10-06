@@ -3814,6 +3814,175 @@ export const approvalRequests = sqliteTable(
   (t) => [index('ix_approval_requests_store_status').on(t.storeId, t.status)],
 );
 
+/** 会员标签表（商家端大批片 5 · 0057：猫狗/体型/偏好三类，本店客户打标/筛；同店同人同类唯一） */
+export const memberTags = sqliteTable(
+  'member_tags',
+  {
+    id: id(),
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 标签类：species（猫狗） | size（体型） | pref（偏好） */
+    kind: text('kind').notNull(),
+    /** 标签值（species=dog|cat；size=small|medium|large；pref=自由短文） */
+    value: text('value').notNull(),
+    ...auditColumns,
+  },
+  (t) => [uniqueIndex('uq_member_tags_store_user_kind').on(t.storeId, t.userId, t.kind), index('ix_member_tags_store_value').on(t.storeId, t.kind, t.value)],
+);
+
+/** 定向发放台账（商家端大批片 5 · 0057：券类型矩阵六类定向发放批次留痕；券核销=登记制照案不接真抵扣） */
+export const couponCampaigns = sqliteTable(
+  'coupon_campaigns',
+  {
+    id: id(),
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    couponId: text('coupon_id')
+      .notNull()
+      .references(() => coupons.id),
+    /** 发放标题（如「生日礼·10 月会员」） */
+    title: text('title').notNull(),
+    /** 定向条件：tag_kind=species|size|pref（NULL=本店全量会员） */
+    targetKind: text('target_kind'),
+    targetValue: text('target_value'),
+    /** 实发份数（=coupon_grants 本批落行数） */
+    grantedCount: integer('granted_count').notNull().default(0),
+    /** 状态：issued=已发放（一次性动作，留痕） */
+    status: text('status').notNull().default('issued'),
+    note: text('note'),
+    ...auditColumns,
+  },
+  (t) => [index('ix_coupon_campaigns_store').on(t.storeId)],
+);
+
+/** 活动配置台账（商家端大批片 5 · 0057：满减/折扣/第二件/换购/时段促销+排期上下线留痕；不接真结算） */
+export const promoCampaigns = sqliteTable(
+  'promo_campaigns',
+  {
+    id: id(),
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 类型：full_minus（满减） | discount（折扣） | second_piece（第二件） | exchange_gift（换购） | time_promo（时段促销） */
+    type: text('type').notNull(),
+    name: text('name').notNull(),
+    /** 规则 JSON（如 {minusFen, thresholdFen} / {discountBp} / {giftProductId, giftPriceFen} / {hours:'20:00-22:00', discountBp}） */
+    rulesJson: text('rules_json', { mode: 'json' }).$type<Record<string, unknown>>().notNull(),
+    /** 排期起止（NULL=不限；状态懒算=按当前时刻+起止+手动状态同帧透出） */
+    startsAt: integer('starts_at', { mode: 'timestamp' }),
+    endsAt: integer('ends_at', { mode: 'timestamp' }),
+    /** 手动状态：draft（编辑中，不上线） | scheduled（已排期待上线） */
+    status: text('status').notNull().default('draft'),
+    note: text('note'),
+    ...auditColumns,
+  },
+  (t) => [index('ix_promo_campaigns_store').on(t.storeId, t.status)],
+);
+
+/** 支出费用台账（商家端大批片 5 · 0057：房租/工资/水电/其他手工台账；不接发票流=开口项 3 裁） */
+export const expenseRecords = sqliteTable(
+  'expense_records',
+  {
+    id: id(),
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 类型：rent（房租） | salary（工资） | utility（水电） | other（其他） */
+    type: text('type').notNull(),
+    amountFen: integer('amount_fen').notNull(),
+    /** 归属月份（YYYY-MM） */
+    bizMonth: text('biz_month').notNull(),
+    note: text('note'),
+    operatorId: text('operator_id')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_expense_records_store_month').on(t.storeId, t.bizMonth)],
+);
+
+/** 换货差价补退台账（商家端大批片 5 · 0057：R3 找回件；差价补退方向+金额登记，留痕不碰真钱） */
+export const exchangeRecords = sqliteTable(
+  'exchange_records',
+  {
+    id: id(),
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 原收银单（换出来源；可空=无单换货登记） */
+    origBillId: text('orig_bill_id').references(() => cashierBills.id),
+    customerId: text('customer_id').references(() => users.id),
+    /** 原商品名快照 */
+    origItemName: text('orig_item_name').notNull(),
+    /** 换新商品 -> products.id（可空=手工名目） */
+    newProductId: text('new_product_id').references(() => products.id),
+    newItemName: text('new_item_name').notNull(),
+    /** 差价（分；正=客户补收，负=门店退差，0=等价换） */
+    diffFen: integer('diff_fen').notNull().default(0),
+    /** 状态机：applied（已登记） | confirmed（双方确认） | settled（差价已了结=留痕） */
+    status: text('status').notNull().default('applied'),
+    note: text('note'),
+    operatorId: text('operator_id')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_exchange_records_store').on(t.storeId, t.status)],
+);
+
+/** 退货待检质检表（商家端大批片 5 · 0057：R4 找回件；待检=台账标记层——不动既有直回可售链） */
+export const returnInspections = sqliteTable(
+  'return_inspections',
+  {
+    id: id(),
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 关联退款单/行（可空=手工登记） */
+    refundBillId: text('refund_bill_id'),
+    productId: text('product_id')
+      .notNull()
+      .references(() => products.id),
+    qty: integer('qty').notNull().default(1),
+    /** 状态：pending（待检） | passed（合格=标记清，库存口径不变） | failed（不合格=触发报损扣减同族） */
+    status: text('status').notNull().default('pending'),
+    qcNote: text('qc_note'),
+    operatorId: text('operator_id')
+      .notNull()
+      .references(() => users.id),
+    reviewedBy: text('reviewed_by').references(() => users.id),
+    reviewedAt: integer('reviewed_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [index('ix_return_inspections_store_status').on(t.storeId, t.status)],
+);
+
+/** 报表快照留档表（商家端大批片 5 · 0057：历史报表永久留存注记——月快照留档，无清理任务） */
+export const reportSnapshots = sqliteTable(
+  'report_snapshots',
+  {
+    id: id(),
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 归属月份（YYYY-MM） */
+    month: text('month').notNull(),
+    /** 快照类型：d1（营收双口径） | member（会员增长） */
+    kind: text('kind').notNull(),
+    payloadJson: text('payload_json', { mode: 'json' }).$type<Record<string, unknown>>().notNull(),
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  },
+  (t) => [index('ix_report_snapshots_store_month').on(t.storeId, t.month)],
+);
+
 /** 离职资源改挂留痕（片 3 B7-4；仿 reception_logs 前后值口径：prev_value→new_value 快照+操作人；kind=appointment|boarding|member） */
 export const staffExitHandoffs = sqliteTable(
   'staff_exit_handoffs',
@@ -4133,6 +4302,8 @@ export const coupons = sqliteTable(
     validDays: integer('valid_days').notNull(),
     /** 叠加规则：none（不与会员折扣叠加）| with_member_discount */
     stackRule: text('stack_rule').notNull().default('none'),
+    /** 券类型（商家端大批片 5 · 0057 类型矩阵六类）：register（注册） | recharge（充值） | consume（消费） | birthday（生日） | festival（节日） | wakeup（唤醒） */
+    couponType: text('coupon_type').notNull().default('consume'),
     totalQuota: integer('total_quota'),
     status: text('status').notNull().default('on'),
     createdBy: text('created_by').notNull().references(() => users.id),

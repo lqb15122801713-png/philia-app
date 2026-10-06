@@ -171,8 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 3345 键/69 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69）；
+ *      56.1 种子 3602 键/70 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -2840,8 +2840,8 @@ async function main(): Promise<void> {
   // 三本账无互转（端点扫描 + 余额变动只走自家流水表）
   const { appRouter } = await import('../routers');
   const procNames = Object.keys((appRouter as unknown as { _def: { procedures: Record<string, unknown> } })._def.procedures);
-  check('R11a① 端点扫描：全路由无回馈金/储值/XP 互转通道（无 convert/transfer/exchange/互转 过程名；片 4 店间调拨 stock2.transfer*=合法件登记，互转红线口径不变）',
-    !procNames.filter((n) => !n.startsWith('stock2.transfer')).some((n) => /convert|transfer|exchange|互转/i.test(n)), `procedures=${procNames.length}`);
+  check('R11a① 端点扫描：全路由无回馈金/储值/XP 互转通道（无 convert/transfer/exchange/互转 过程名；片 4 店间调拨 stock2.transfer*+片 5 换货台账 marketing.exchange*=合法件登记，互转红线口径不变）',
+    !procNames.filter((n) => !n.startsWith('stock2.transfer') && !n.startsWith('marketing.exchange')).some((n) => /convert|transfer|exchange|互转/i.test(n)), `procedures=${procNames.length}`);
   const svAccUntouched = await db.select().from(schema.storedValueAccounts).where(eq(schema.storedValueAccounts.id, svAcc.id)).get();
   const xpCross = await db.select().from(schema.xpEvents).where(eq(schema.xpEvents.userId, customerUser!.id));
   check('R11a① 余额变动只走自家流水表（grant×2 后：储值账仍 98240 未动 / 客户 XP 账零事件）',
@@ -4933,17 +4933,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（3345 键/69 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 3345 && domainSet.size === 69 &&
+  check('56.1 copy 域种子全量落库（3602 键/70 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 3602 && domainSet.size === 70 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（3345 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 3345 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（3602 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 3602 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -8637,8 +8637,8 @@ async function main(): Promise<void> {
 
     /* ---- 76.3 公共读口形状不变（不透元数据：键→文两列） ---- */
     const texts76 = await trpcQuery<{ rows: Array<{ key: string; text: string; screen?: unknown; position?: unknown }> }>('config.activeCopyTexts', { cookie: customerCookie });
-    check('76.3 activeCopyTexts 形状不变（3345 行 key→text，不透 screen/position 元数据）',
-      texts76.rows.length === 3345 &&
+    check('76.3 activeCopyTexts 形状不变（3602 行 key→text，不透 screen/position 元数据）',
+      texts76.rows.length === 3602 &&
       texts76.rows.every((r) => r.screen === undefined && r.position === undefined),
       texts76.rows.length);
 
@@ -9504,6 +9504,177 @@ async function main(): Promise<void> {
       batchB81.items.length === 0 && alertsB81.low.length === 0 && alertsB81.high.length === 0 &&
       transfersB81.length === 0 && reviewB81 instanceof TrpcHttpError && reviewB81.code === 'NOT_FOUND',
       { batch: batchB81.items.length, transfers: transfersB81.length, review: reviewB81 instanceof TrpcHttpError ? reviewB81.code : null });
+  }
+
+  /* ==================================================================
+   * 商家端大批 片 5（会员营销+报表+找回两件 · 批内末片）段：
+   *   82.1 会员标签（打标覆盖写+筛选）；82.2 券类型矩阵+定向发放台账（人群匹配
+   *       精确+幂等不发二遍）；82.3 生日营销（台账读口+提醒名单+档位配置面）；
+   *   82.4 活动配置台账（类型+排期状态机懒算）+互斥逐项公示；82.5 支出费用台账
+   *       （月汇总前后值+仅 owner 删）；82.6 周报环比/月报对账；
+   *   82.7 商品销量排行+滞销；82.8 报表快照留档；82.9 R3 换货差价补退台账；
+   *   82.10 R4 退货待检质检（不动直回链+不合格报损扣减前后值）；
+   *   82.11 commission 历史时序店域收窄（候裁件）；82.12 隔离族不回退。
+   * ================================================================== */
+  console.log('\n[商家端片5] 82. 会员营销+报表+找回两件（标签/券矩阵/活动/支出台账/换货待检）');
+  {
+    type AnyRec82 = Record<string, unknown>;
+    const { storeWallclock: wc82 } = await import('../routers/appointment');
+    const w82 = wc82(new Date());
+    const month82 = `${w82.y}-${String(w82.m).padStart(2, '0')}`;
+    const seedStore82 = await db.select().from(schema.stores).where(eq(schema.stores.name, '菲丽亚宠物·示例店')).limit(1).then((r) => r[0]!);
+    const ownerB82 = await db.select().from(schema.users).where(eq(schema.users.kimiId, 'seed_e2e_chain_ownerb')).limit(1).then((r) => r[0]!);
+    const ownerBCookie82 = await devLogin(ownerB82.id);
+    const cust82 = byKimi('seed_kimi_customer')!;
+    const prod82 = await db.select().from(schema.products).where(and(eq(schema.products.storeId, seedStore82.id), eq(schema.products.status, 'on'))).limit(1).then((r) => r[0]!);
+
+    /* ---- 82.1 会员标签 ---- */
+    await trpcMutate('marketing.tagSet', { cookie: ownerCookie, input: { userId: cust82.id, kind: 'species', value: 'dog' } });
+    await trpcMutate('marketing.tagSet', { cookie: ownerCookie, input: { userId: cust82.id, kind: 'size', value: 'large' } });
+    await trpcMutate('marketing.tagSet', { cookie: ownerCookie, input: { userId: cust82.id, kind: 'species', value: 'cat' } });
+    const tags82 = await trpcQuery<Array<{ kind: string; value: string }>>('marketing.tagList', { cookie: ownerCookie, input: { userId: cust82.id } });
+    const dogTagged = await trpcQuery<Array<{ userId: string }>>('marketing.tagList', { cookie: ownerCookie, input: { kind: 'species', value: 'dog' } });
+    check('82.1 会员标签：打标落行 + 同类覆盖写（species dog→cat 单行）+ 按类值筛选',
+      tags82.filter((t) => t.kind === 'species').length === 1 && tags82.find((t) => t.kind === 'species')?.value === 'cat' &&
+      tags82.find((t) => t.kind === 'size')?.value === 'large' &&
+      !dogTagged.some((t) => t.userId === cust82.id),
+      { tags: tags82.map((t) => `${t.kind}=${t.value}`), dogHit: dogTagged.length });
+
+    /* ---- 82.2 券类型矩阵+定向发放台账 ---- */
+    const coupon82 = await trpcMutate<{ coupon: { id: string } }>('marketing.couponCreate', {
+      cookie: ownerCookie,
+      input: { couponType: 'birthday', title: '生日礼·10 元券', amountFen: 1000, thresholdFen: 0, validDays: 30 },
+    });
+    const types82 = await trpcQuery<{ items: Array<{ id: string; couponType: string }> }>('marketing.couponList', { cookie: ownerCookie, input: { couponType: 'birthday' } });
+    await trpcMutate('marketing.tagSet', { cookie: ownerCookie, input: { userId: cust82.id, kind: 'pref', value: 'vip' } });
+    const camp82 = await trpcMutate<{ campaign: { grantedCount: number }; matched: number; granted: number }>('marketing.campaignGrant', {
+      cookie: ownerCookie,
+      input: { couponId: coupon82.coupon.id, title: '生日礼·vip 定向', targetKind: 'pref', targetValue: 'vip' },
+    });
+    const grants82 = await db.select().from(schema.couponGrants).where(and(eq(schema.couponGrants.couponId, coupon82.coupon.id), eq(schema.couponGrants.userId, cust82.id)));
+    const camp82b = await trpcMutate<{ granted: number }>('marketing.campaignGrant', {
+      cookie: ownerCookie,
+      input: { couponId: coupon82.coupon.id, title: '生日礼·vip 定向（二遍幂等）', targetKind: 'pref', targetValue: 'vip' },
+    });
+    const campList82 = await trpcQuery<Array<{ title: string; grantedCount: number; couponType: string }>>('marketing.campaignList', { cookie: ownerCookie });
+    check('82.2 券矩阵+定向发放：类型 birthday 建券落列 + 定向（pref=vip）人群匹配=1 + grants 落行 + 二遍幂等不发 + 台账留痕',
+      types82.items.some((c) => c.id === coupon82.coupon.id) &&
+      camp82.matched === 1 && camp82.granted === 1 && grants82.length === 1 && grants82[0]!.status === 'claimed' &&
+      camp82b.granted === 0 &&
+      campList82.some((c) => c.title === '生日礼·vip 定向' && c.couponType === 'birthday' && c.grantedCount === 1),
+      { matched: camp82.matched, granted: [camp82.granted, camp82b.granted], grants: grants82.length });
+
+    /* ---- 82.3 生日营销（台账读口+提醒名单+档位配置面） ---- */
+    const bboard82 = await trpcQuery<{ tier: { amountFen?: number }; upcoming: Array<{ kind: string; birthday: string }>; grants: unknown[]; note: string }>('marketing.birthdayBoard', { cookie: ownerCookie });
+    check('82.3 生日营销：配置面档位透出（birthday_perk_tier=500 分留口）+ 提醒名单/台账读口形状（不造假发注记）',
+      bboard82.tier.amountFen === 500 && Array.isArray(bboard82.upcoming) && Array.isArray(bboard82.grants) && bboard82.note.includes('不造假发'),
+      { tier: bboard82.tier.amountFen, upcoming: bboard82.upcoming.length, grants: bboard82.grants.length });
+
+    /* ---- 82.4 活动配置台账+互斥公示 ---- */
+    const today82 = new Date();
+    const ymd82 = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const promo82 = await trpcMutate<{ campaign: { id: string } }>('marketing.promoUpsert', {
+      cookie: ownerCookie,
+      input: { type: 'full_minus', name: '满 200 减 20（验证件）', rulesJson: { thresholdFen: 20000, minusFen: 2000 }, startsAt: ymd82(today82), status: 'scheduled' },
+    });
+    const promoFuture = await trpcMutate<{ campaign: { id: string } }>('marketing.promoUpsert', {
+      cookie: ownerCookie,
+      input: { type: 'time_promo', name: '午夜场 88 折（验证件）', rulesJson: { hours: '20:00-22:00', discountBp: 8800 }, startsAt: ymd82(new Date(today82.getTime() + 3 * 24 * 3600 * 1000)), status: 'scheduled' },
+    });
+    const promoList82 = await trpcQuery<{ items: Array<{ id: string; name: string; effectiveStatus: string }> }>('marketing.promoList', { cookie: ownerCookie });
+    const stNow = promoList82.items.find((p) => p.id === promo82.campaign.id)!.effectiveStatus;
+    const stFuture = promoList82.items.find((p) => p.id === promoFuture.campaign.id)!.effectiveStatus;
+    const stack82 = await trpcQuery<{ rules: Record<string, { rule?: string }> }>('marketing.promoStackRules', { cookie: ownerCookie });
+    check('82.4 活动配置：满减件排期当日=effectiveStatus active + 未来件=scheduled（排期状态机懒算留痕）+ 互斥逐项公示四键在（券×会员/活动×券/活动×会员/多活动，默认 none）',
+      stNow === 'active' && stFuture === 'scheduled' &&
+      stack82.rules.coupon_stack_rule !== undefined && stack82.rules.promo_stack_campaign_coupon?.rule === 'none' &&
+      stack82.rules.promo_stack_campaign_member?.rule === 'none' && stack82.rules.promo_stack_multi_campaign?.rule === 'none',
+      { now: stNow, future: stFuture, keys: Object.keys(stack82.rules) });
+
+    /* ---- 82.5 支出费用台账（月汇总前后值+仅 owner 删） ---- */
+    const exp82a = await trpcMutate('marketing.expenseCreate', { cookie: managerCookie, input: { type: 'rent', amountFen: 800000, bizMonth: month82, note: '10 月房租' } });
+    await trpcMutate('marketing.expenseCreate', { cookie: managerCookie, input: { type: 'salary', amountFen: 1200000, bizMonth: month82, note: '10 月工资包' } });
+    const expList82 = await trpcQuery<{ items: Array<{ id: string }>; summary: { totalFen: number; byType: Record<string, number> } }>('marketing.expenseList', { cookie: ownerCookie, input: { month: month82 } });
+    const mgrDelete = await asErr(trpcMutate('marketing.expenseDelete', { cookie: managerCookie, input: { id: (exp82a as { record: { id: string } }).record.id } }));
+    check('82.5 支出台账：房租+工资入账 + 月汇总 totalFen 前后值精确（含 byType 分列）+ 删除仅 owner（manager 403）',
+      expList82.summary.totalFen >= 2000000 && (expList82.summary.byType.rent ?? 0) >= 800000 && (expList82.summary.byType.salary ?? 0) >= 1200000 &&
+      mgrDelete instanceof TrpcHttpError && mgrDelete.httpStatus === 403,
+      { total: expList82.summary.totalFen, byType: expList82.summary.byType, del: mgrDelete instanceof TrpcHttpError ? mgrDelete.httpStatus : null });
+
+    /* ---- 82.6 周报环比/月报对账 ---- */
+    const weekly82 = await trpcQuery<{ current: { totalFen: number; byDay: Array<{ date: string }> }; previous: { totalFen: number }; wow: number | null; weekStart: string }>('report.weeklySummary', { cookie: ownerCookie });
+    const d1b82 = await trpcQuery<{ cashFen: number }>('report.d1Revenue', { cookie: ownerCookie, input: { month: month82 } });
+    const weeklyChain = await trpcQuery<{ current: { totalFen: number } }>('report.weeklySummary', { cookie: ownerCookie, input: { scope: 'chain' } });
+    check('82.6 周报：本周 vs 上周环比形状（byDay 自周一连续铺洞至今日）+ 月报对账 + 周报 chain 聚合≥单店（三店读口已在=片 2 地基点亮）',
+      weekly82.current.byDay.length >= 1 && weekly82.current.byDay[0]!.date === weekly82.weekStart &&
+      weeklyChain.current.totalFen >= weekly82.current.totalFen && d1b82.cashFen >= 0,
+      { days: weekly82.current.byDay.length, week: weekly82.weekStart, single: weekly82.current.totalFen, chain: weeklyChain.current.totalFen });
+
+    /* ---- 82.7 商品销量排行+滞销 ---- */
+    const top82 = await trpcQuery<{ ranking: Array<{ productId: string; qty: number; salesFen: number }>; slowMoving: Array<{ productId: string; stock: number }> }>('report.d9TopGoods', { cookie: ownerCookie, input: { month: month82 } });
+    const rankSorted = top82.ranking.every((r, i, arr) => i === 0 || arr[i - 1]!.qty >= r.qty);
+    const soldIds = new Set(top82.ranking.map((r) => r.productId));
+    check('82.7 排行+滞销：ranking qty 降序 top + 滞销=月零销+在库（排行外 on 品入列，诚实零值）',
+      (top82.ranking.length === 0 || rankSorted) &&
+      top82.slowMoving.every((s) => !soldIds.has(s.productId) && s.stock > 0),
+      { ranking: top82.ranking.length, slow: top82.slowMoving.length });
+
+    /* ---- 82.8 报表快照留档 ---- */
+    const snap82 = await trpcMutate<{ snapshot: { id: string } }>('marketing.snapshotCreate', {
+      cookie: ownerCookie, input: { month: month82, kind: 'd1', payloadJson: { cashFen: 12345, note: 'e2e 快照验证' } },
+    });
+    const snapList82 = await trpcQuery<{ items: Array<{ id: string; month: string; kind: string; payloadJson: { cashFen?: number } }> }>('marketing.snapshotList', { cookie: ownerCookie, input: { month: month82 } });
+    check('82.8 快照留档：owner 建月快照 + 列表读回 payload 原值（永久留存注记=无清理任务）',
+      snapList82.items.some((s) => s.id === snap82.snapshot.id && s.payloadJson.cashFen === 12345),
+      { n: snapList82.items.length });
+
+    /* ---- 82.9 R3 换货差价补退台账 ---- */
+    const ex82 = await trpcMutate<{ record: { id: string } }>('marketing.exchangeCreate', {
+      cookie: managerCookie,
+      input: { origItemName: '基础洗护（小型犬）', newProductId: prod82.id, newItemName: prod82.name, diffFen: 3000, note: '洗护换主粮补差' },
+    });
+    const exConfirm = await trpcMutate<{ record: { status: string } }>('marketing.exchangeAdvance', { cookie: ownerCookie, input: { id: ex82.record.id, action: 'confirm' } });
+    const exSettle = await trpcMutate<{ record: { status: string } }>('marketing.exchangeAdvance', { cookie: ownerCookie, input: { id: ex82.record.id, action: 'settle' } });
+    const exList82 = await trpcQuery<Array<{ id: string; diffFen: number; status: string }>>('marketing.exchangeList', { cookie: ownerCookie });
+    const exRow = exList82.find((r) => r.id === ex82.record.id)!;
+    check('82.9 R3 换货差价补退：台账登记（差价 +30.00=客户补收）+ 状态机 applied→confirmed→settled（留痕不碰真钱）',
+      exRow.diffFen === 3000 && exRow.status === 'settled' && exConfirm.record.status === 'confirmed' && exSettle.record.status === 'settled',
+      { diff: exRow.diffFen, st: exRow.status });
+
+    /* ---- 82.10 R4 退货待检质检（不动直回链+不合格报损扣减前后值） ---- */
+    const stockBefore82 = (await db.select().from(schema.products).where(eq(schema.products.id, prod82.id)).then((r) => r[0]!)).stock;
+    const insp82 = await trpcMutate<{ inspection: { id: string } }>('marketing.inspectionCreate', {
+      cookie: managerCookie, input: { productId: prod82.id, qty: 2, qcNote: '破包退货待检' },
+    });
+    await trpcMutate('marketing.inspectionReview', { cookie: ownerCookie, input: { id: insp82.inspection.id, pass: false, qcNote: '污损不可再售' } });
+    const stockAfter82 = (await db.select().from(schema.products).where(eq(schema.products.id, prod82.id)).then((r) => r[0]!)).stock;
+    const inspList82 = await trpcQuery<{ items: Array<{ id: string; status: string }>; note: string }>('marketing.inspectionList', { cookie: ownerCookie });
+    const inspRow = inspList82.items.find((r) => r.id === insp82.inspection.id)!;
+    const failMove = await db.select().from(schema.stockMovements).where(and(eq(schema.stockMovements.sourceId, insp82.inspection.id))).limit(1).then((r) => r[0]);
+    check('82.10 R4 退货待检：待检=pending 台账标记层（注记不动直回链）+ 不合格→failed+报损扣减（stock 前后值 −2+流水 source=inspection_fail）',
+      inspRow.status === 'failed' && stockAfter82 === stockBefore82 - 2 &&
+      inspList82.note.includes('不动') && failMove !== undefined && failMove.delta === -2,
+      { before: stockBefore82, after: stockAfter82, st: inspRow.status, move: failMove?.sourceType });
+
+    /* ---- 82.11 commission 历史时序店域收窄（候裁件） ---- */
+    const { computeMonth } = await import('../routers/commission');
+    const staff82 = await db.select().from(schema.staff).where(eq(schema.staff.storeId, seedStore82.id)).limit(1).then((r) => r[0]!);
+    const comm82 = await computeMonth(db, staff82, month82);
+    check('82.11 commission 历史时序：computeMonth 走店域收窄路径（本店行+总部行入算，他店覆盖行不入算）+ 月载形状不破（staffId/month 锚对）',
+      comm82 !== null && (comm82 as { staffId?: string; month?: string }).staffId === staff82.id &&
+      (comm82 as { month?: string }).month === month82,
+      { staff: (comm82 as { staffId?: string }).staffId, month: (comm82 as { month?: string }).month });
+
+    /* ---- 82.12 隔离族不回退 ---- */
+    const tagsB82 = await trpcQuery<unknown[]>('marketing.tagList', { cookie: ownerBCookie82 });
+    const couponsB82 = await trpcQuery<{ items: unknown[] }>('marketing.couponList', { cookie: ownerBCookie82 });
+    const promoB82 = await trpcQuery<{ items: unknown[] }>('marketing.promoList', { cookie: ownerBCookie82 });
+    const expB82 = await trpcQuery<{ items: unknown[] }>('marketing.expenseList', { cookie: ownerBCookie82 });
+    const inspB82 = await trpcQuery<{ items: unknown[] }>('marketing.inspectionList', { cookie: ownerBCookie82 });
+    check('82.12 隔离族不回退：B 标签/券/活动/支出/待检全 0（营销域新店域闸全绿）',
+      tagsB82.length === 0 && couponsB82.items.length === 0 && promoB82.items.length === 0 &&
+      expB82.items.length === 0 && inspB82.items.length === 0,
+      { tags: tagsB82.length, coupons: couponsB82.items.length, promo: promoB82.items.length });
   }
 
   client.close();
