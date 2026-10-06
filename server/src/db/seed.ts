@@ -734,6 +734,43 @@ async function main() {
         active: true,
         createdBy: owner.id,
       },
+      /* 商家端大批片 5（迁移 0057 同口径；重置后补种）：促销互斥三键+生日礼档位 */
+      {
+        version: 1,
+        ruleKey: 'promo_stack_campaign_coupon',
+        label: '促销互斥：活动×券叠加（none=不叠加[默认] | allow=同享）',
+        valueJson: { rule: 'none' },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'promo_stack_campaign_member',
+        label: '促销互斥：活动×会员折扣叠加（none=不叠加[默认] | allow=同享）',
+        valueJson: { rule: 'none' },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'promo_stack_multi_campaign',
+        label: '促销互斥：多活动叠加（none=互斥[默认] | allow=可叠加）',
+        valueJson: { rule: 'none' },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'birthday_perk_tier',
+        label: '生日礼档位（生日营销配置面：券类型 birthday + 面额分/门槛分；留口可改）',
+        valueJson: { amountFen: 500, thresholdFen: 0, validDays: 30 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
     ]);
 
     /* ---- 端口批片 B：文案端口 copy_overrides 种子（控制台第七域 domain='copy'） ----

@@ -123,6 +123,12 @@ const SCREEN_DICT: Record<string, string> = {
   'merchant:/xp-admin': '商家·XP 审核',
   'merchant:/matrix': '商家·权限矩阵',
   'merchant:/console': '商家·开发者管理端',
+  'merchant:/cashier/receipt/:billNo': '商家·收银小票',
+  'merchant:/ledger': '商家·台账',
+  'merchant:/inventory': '商家·库存',
+  'merchant:/transfers': '商家·调拨要货',
+  'merchant:/marketing': '商家·会员营销',
+  'merchant:/marketing-ledger': '商家·营销台账',
   'merchant:/dev-login': '商家·开发登录',
   /* ---- staff（App.tsx 路由表） ---- */
   'staff:/today': '员工·工位',

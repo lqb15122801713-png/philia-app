@@ -591,6 +591,191 @@ function D9Body({ d }: { d: ReportOutputs['d9Goods'] }) {
   );
 }
 
+/* ---------------- 大批片 5：D9 排行/滞销 + 周报 ---------------- */
+
+/** D9 旁「排行/滞销」块（d9TopGoods：ranking 榜 top20 + slowMoving 表；同 sheet 三视图入参透传） */
+function D9TopSection({ month, scope, storeId }: { month: string; scope?: 'store' | 'chain'; storeId?: string }) {
+  const { trpc } = usePhiliaClient();
+  const topQ = useQuery({
+    queryKey: ['report', 'd9TopGoods', month, scope ?? null, storeId ?? null],
+    queryFn: () => {
+      const m: SheetScopeInput = { month };
+      if (scope) m.scope = scope;
+      if (storeId) m.storeId = storeId;
+      return trpc.report.d9TopGoods.query(m);
+    },
+  });
+
+  if (topQ.isPending) {
+    return (
+      <div aria-label="加载中">
+        <Panel title={rpt('rpt.d9top.rankTitle')} testid="d9top-rank">
+          <div className="space-y-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-4">
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} className="h-9 rounded-chip" />
+            ))}
+          </div>
+        </Panel>
+      </div>
+    );
+  }
+  if (topQ.isError || !topQ.data) {
+    return (
+      <div className="u3-panel mt-3.5 px-[17px] py-12 text-center">
+        <p className="text-body-sm text-[rgba(59,46,36,.62)]">{rpt('rpt.page.loadError')}</p>
+        <div className="mt-4">
+          <QuietButton testid="d9top-retry" onClick={() => void topQ.refetch()}>
+            {rpt('rpt.page.retry')}
+          </QuietButton>
+        </div>
+      </div>
+    );
+  }
+  const d = topQ.data;
+  return (
+    <>
+      <Panel title={rpt('rpt.d9top.rankTitle')} testid="d9top-rank">
+        {d.ranking.length === 0 ? (
+          <EmptyLine text={rpt('rpt.d9top.rankEmpty')} />
+        ) : (
+          <table className="u3-tbl">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>商品</th>
+                <th className="text-right">销量</th>
+                <th className="text-right">销售额</th>
+              </tr>
+            </thead>
+            <tbody>
+              {d.ranking.map((r, i) => (
+                <tr key={r.productId} data-testid={`d9top-rank-${r.productId}`}>
+                  <td className="u1-num font-bold">{i + 1}</td>
+                  <td className="font-semibold">{r.name}</td>
+                  <td className="u1-num text-right">{r.qty}</td>
+                  <td className="u1-num text-right font-bold">{yuan(r.salesFen)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </Panel>
+      <Panel title={rpt('rpt.d9top.slowTitle')} testid="d9top-slow">
+        {d.slowMoving.length === 0 ? (
+          <EmptyLine text={rpt('rpt.d9top.slowEmpty')} />
+        ) : (
+          <table className="u3-tbl">
+            <thead>
+              <tr>
+                <th>商品</th>
+                <th className="text-right">在库</th>
+                <th className="text-right">月销</th>
+              </tr>
+            </thead>
+            <tbody>
+              {d.slowMoving.map((s) => (
+                <tr key={s.productId} data-testid={`d9top-slow-${s.productId}`}>
+                  <td className="font-semibold">{s.name}</td>
+                  <td className="u1-num text-right">{s.stock}</td>
+                  <td className="u1-num text-right">
+                    <span className="u3-st amber">{s.monthQty}</span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </Panel>
+      <NoteRow note={d.note} />
+    </>
+  );
+}
+
+/** 周报卡（weeklySummary：本周 vs 上周 + 环比徽 + byDay 序列；页头「周报」切换点亮） */
+function WeeklySection({ scope, storeId }: { scope?: 'store' | 'chain'; storeId?: string }) {
+  const { trpc } = usePhiliaClient();
+  const weekQ = useQuery({
+    queryKey: ['report', 'weeklySummary', scope ?? null, storeId ?? null],
+    queryFn: () =>
+      trpc.report.weeklySummary.query({
+        ...(scope ? { scope } : {}),
+        ...(storeId ? { storeId } : {}),
+      }),
+  });
+
+  if (weekQ.isPending) {
+    return (
+      <div aria-label="加载中">
+        <SheetSkeleton />
+      </div>
+    );
+  }
+  if (weekQ.isError || !weekQ.data) {
+    return (
+      <div className="u3-panel px-[17px] py-12 text-center">
+        <p className="text-body-sm text-[rgba(59,46,36,.62)]">{rpt('rpt.page.loadError')}</p>
+        <div className="mt-4">
+          <QuietButton testid="weekly-retry" onClick={() => void weekQ.refetch()}>
+            {rpt('rpt.page.retry')}
+          </QuietButton>
+        </div>
+      </div>
+    );
+  }
+  const d = weekQ.data;
+  return (
+    <div data-testid="weekly-section">
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+        <StatCard
+          cap={rpt('rpt.weekly.curCard')}
+          value={yuan(d.current.totalFen)}
+          sub={`${rpt('rpt.weekly.count', { n: d.current.paidCount })} · ${rpt('rpt.weekly.serviceShop', { sv: yuan(d.current.serviceFen), sp: yuan(d.current.shopFen) })}`}
+          testid="weekly-current"
+        />
+        <StatCard
+          cap={rpt('rpt.weekly.prevCard')}
+          value={yuan(d.previous.totalFen)}
+          sub={`${rpt('rpt.weekly.count', { n: d.previous.paidCount })} · ${rpt('rpt.weekly.serviceShop', { sv: yuan(d.previous.serviceFen), sp: yuan(d.previous.shopFen) })}`}
+          testid="weekly-previous"
+        />
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2" data-testid="weekly-wow">
+        <DeltaBadge
+          label={rpt('rpt.weekly.wowLabel')}
+          bp={d.wow === null ? null : Math.round(d.wow * 10000)}
+          testid="weekly-wow-badge"
+        />
+        <span className="text-caption-xs text-[rgba(59,46,36,.42)]">
+          {rpt('rpt.weekly.title')} · {d.weekStart}
+        </span>
+      </div>
+      <Panel title={rpt('rpt.weekly.byDayTitle')} testid="weekly-byday">
+        {d.current.byDay.length === 0 ? (
+          <EmptyLine />
+        ) : (
+          <table className="u3-tbl">
+            <thead>
+              <tr>
+                <th>日期</th>
+                <th className="text-right">营收</th>
+              </tr>
+            </thead>
+            <tbody>
+              {d.current.byDay.map((row) => (
+                <tr key={row.date}>
+                  <td className="u1-num font-bold">{row.date}</td>
+                  <td className="u1-num text-right font-bold">{yuan(row.serviceFen + row.shopFen)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </Panel>
+      <NoteRow note={d.note} />
+    </div>
+  );
+}
+
 /* ---------------- N1–N6 ---------------- */
 
 function N1Body({ d }: { d: ReportOutputs['n1LevelDist'] }) {
@@ -1398,7 +1583,13 @@ function SheetSection({ sheetKey, month, scope, storeId }: {
       </div>
     );
   }
-  return <SheetBody sheetKey={sheetKey} data={sheetQ.data} />;
+  return (
+    <>
+      <SheetBody sheetKey={sheetKey} data={sheetQ.data} />
+      {/* 大批片 5：D9 页旁「排行/滞销」块（d9TopGoods，同三视图入参透传） */}
+      {sheetKey === 'd9' ? <D9TopSection month={month} scope={scope} storeId={storeId} /> : null}
+    </>
+  );
 }
 
 export default function ReportPage() {
@@ -1412,6 +1603,8 @@ export default function ReportPage() {
 
   const [month, setMonth] = useState(() => storeTodayStr().slice(0, 7));
   const [exporting, setExporting] = useState(false);
+  /* 大批片 5：页头「周报」切换（weeklySummary 卡点亮/熄灭；照既有视图切换工艺 u3-chipf） */
+  const [weeklyOn, setWeeklyOn] = useState(false);
 
   /* 大批片 2 · 三视图（owner）：单店=门店下拉传 storeId / 分店=逐店并列 / 合计=scope:'chain'；
      manager 不出现切换（固定本店现状，sheet 查询零入参加回=零回归） */
@@ -1504,6 +1697,29 @@ export default function ReportPage() {
     );
   };
 
+  /* 大批片 5：周报块按当前三视图同口径渲染（store=选中店 / stores=逐店 / chain=合计；manager 缺省本店） */
+  const renderWeekly = () => {
+    if (role.isOwner && view === 'stores') {
+      if (mineQ.isPending) return <SheetSkeleton />;
+      return (
+        <div data-testid="weekly-stores-view">
+          {mineStores.map((s, i) => (
+            <div key={s.id} className={i > 0 ? 'mt-7' : ''}>
+              <div className="mb-2 flex items-baseline gap-2 px-1">
+                <h3 className="text-body-sm font-bold">{s.name}</h3>
+              </div>
+              <WeeklySection storeId={s.id} />
+            </div>
+          ))}
+        </div>
+      );
+    }
+    if (role.isOwner && view === 'chain') {
+      return <WeeklySection scope="chain" />;
+    }
+    return <WeeklySection storeId={role.isOwner ? effStoreId : undefined} />;
+  };
+
   return (
     <MainScaffold
       title={rpt(TITLE_COPY[key])}
@@ -1517,6 +1733,18 @@ export default function ReportPage() {
           >
             {rpt('rpt.page.backToDir')}
           </Link>
+          {/* 大批片 5：页头「周报」切换（u3-chipf 同视图切换工艺；weeklySummary 卡点亮/熄灭） */}
+          {isSheet ? (
+            <button
+              type="button"
+              className={`u3-chipf${weeklyOn ? ' on' : ''}`}
+              aria-pressed={weeklyOn}
+              data-testid="report-weekly-toggle"
+              onClick={() => setWeeklyOn((v) => !v)}
+            >
+              {rpt('rpt.weekly.toggle')}
+            </button>
+          ) : null}
           {isSheet ? (
             <label className="flex items-center gap-2 text-caption text-[rgba(59,46,36,.62)]">
               {rpt('rpt.page.monthLabel')}
@@ -1587,6 +1815,8 @@ export default function ReportPage() {
       }
       testid={`report-page-${key}`}
     >
+      {/* 大批片 5：周报卡（切换点亮时置于月报体上方） */}
+      {isSheet && weeklyOn ? <div className="mb-6">{renderWeekly()}</div> : null}
       {isSheet ? renderSheet() : <EmbedBody />}
       {toastEl}
     </MainScaffold>

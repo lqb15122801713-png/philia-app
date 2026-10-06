@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-06T12:22:34.174Z；键数=3344；归屏率=92.9%（未归屏 239）
+ * 生成时间口径：2026-10-06T14:42:53.724Z；键数=3601；归屏率=97.0%（未归屏 108）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -6714,15 +6714,15 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "cashier.agreementAside",
   "domain": "merchant:cashier",
   "text": "本店口径=签署人∈本店客户集（有本店预约单）",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+  "screen": "商家·台账",
+  "position": "LedgerPage 页面内文案"
  },
  {
   "key": "cashier.agreementExport",
   "domain": "merchant:cashier",
   "text": "周会导出",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+  "screen": "商家·台账",
+  "position": "LedgerPage 页面内文案"
  },
  {
   "key": "cashier.billNotePh",
@@ -6840,36 +6840,36 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "cashier.creditNote",
   "domain": "merchant:cashier",
   "text": "挂账=台账留痕不碰真钱（至多一段；结清/核销走「台账」专页，不计已收）",
-  "screen": "商家·收银台",
-  "position": "PaySheet 组件内文案"
+  "screen": "商家·台账 / 商家·收银台",
+  "position": "LedgerPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "cashier.creditSettleNote",
   "domain": "merchant:cashier",
   "text": "部分/全额结清均可，金额 ≤ 在挂余额；只登记不碰真钱支付表",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+  "screen": "商家·台账",
+  "position": "LedgerPage 页面内文案"
  },
  {
   "key": "cashier.creditSettleTitle",
   "domain": "merchant:cashier",
   "text": "挂账结清（线下收款留痕）",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+  "screen": "商家·台账",
+  "position": "LedgerPage 页面内文案"
  },
  {
   "key": "cashier.creditWriteoffNote",
   "domain": "merchant:cashier",
   "text": "核销=不再追缴，原因必填留痕；台账行永存不删",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+  "screen": "商家·台账",
+  "position": "LedgerPage 页面内文案"
  },
  {
   "key": "cashier.creditWriteoffTitle",
   "domain": "merchant:cashier",
   "text": "挂账核销（仅店主）",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+  "screen": "商家·台账",
+  "position": "LedgerPage 页面内文案"
  },
  {
   "key": "cashier.dayCloseEmpty",
@@ -6896,8 +6896,8 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "cashier.depositSummaryAside",
   "domain": "merchant:cashier",
   "text": "在押合计=held+refunding（refunded 已退还不计）",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+  "screen": "商家·台账",
+  "position": "LedgerPage 页面内文案"
  },
  {
   "key": "cashier.diffNotePh",
@@ -6917,7 +6917,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "cashier.discountOverNote",
   "domain": "merchant:cashier",
   "text": "优惠不能超过服务/商品行合计（预约行金额不参与优惠）",
-  "screen": "商家·收银台 / 商家·收银流水 / 商家·日结·交接班 / 商家·经营总览 / 商家·退款单",
+  "screen": "商家·台账 / 商家·收银台 / 商家·收银流水 / 商家·日结·交接班 / 商家·经营总览 / 商家·退款单",
   "position": "dialogs 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
@@ -7155,22 +7155,22 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "cashier.ledgerEmpty",
   "domain": "merchant:cashier",
   "text": "当前筛选无记录",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+  "screen": "商家·台账",
+  "position": "LedgerPage 页面内文案"
  },
  {
   "key": "cashier.ledgerSub",
   "domain": "merchant:cashier",
   "text": "挂账 / 押金 / 预付 / 授权 四台账留痕 · 记录不可删 · 全程不碰真钱",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+  "screen": "商家·台账",
+  "position": "LedgerPage 页面内文案"
  },
  {
   "key": "cashier.ledgerTitle",
   "domain": "merchant:cashier",
   "text": "台账",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+  "screen": "商家·台账",
+  "position": "LedgerPage 页面内文案"
  },
  {
   "key": "cashier.lineNoteCta",
@@ -7414,7 +7414,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "cashier.priceNewNote",
   "domain": "merchant:cashier",
   "text": "新价 ¥{amt}（改价留痕，随单可查）",
-  "screen": "商家·收银台 / 商家·收银流水 / 商家·日结·交接班 / 商家·经营总览 / 商家·退款单",
+  "screen": "商家·台账 / 商家·收银台 / 商家·收银流水 / 商家·日结·交接班 / 商家·经营总览 / 商家·退款单",
   "position": "dialogs 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
@@ -7463,15 +7463,15 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "cashier.receiptNightLine",
   "domain": "merchant:cashier",
   "text": "共{total}晚 · 已住{occ}晚 · 剩{rem}晚 · 晚单价 ¥{per}",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+  "screen": "商家·收银小票",
+  "position": "ReceiptPage 页面内文案"
  },
  {
   "key": "cashier.receiptPrint",
   "domain": "merchant:cashier",
   "text": "打印小票",
-  "screen": "商家·收银台",
-  "position": "PaySheet 组件内文案"
+  "screen": "商家·收银台 / 商家·收银小票",
+  "position": "PaySheet 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "cashier.receiptReprint",
@@ -7484,15 +7484,15 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "cashier.receiptThanks",
   "domain": "merchant:cashier",
   "text": "谢谢惠顾 · 单据留痕可查",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+  "screen": "商家·收银小票",
+  "position": "ReceiptPage 页面内文案"
  },
  {
   "key": "cashier.receiptTitle",
   "domain": "merchant:cashier",
   "text": "收银小票",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+  "screen": "商家·收银小票",
+  "position": "ReceiptPage 页面内文案"
  },
  {
   "key": "cashier.recordsEmpty",
@@ -7785,14 +7785,14 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "cashier.reverseNote",
   "domain": "merchant:cashier",
   "text": "冲正将自动生成关联冲正单（金额镜像负值，不计当日已收）：库存回补、预约回到待收款、 次卡/储值按原路回补；原单永存不涂改，仅挂「已冲正」灰签（双向可查）。",
-  "screen": "商家·收银台 / 商家·收银流水 / 商家·日结·交接班 / 商家·经营总览 / 商家·退款单",
+  "screen": "商家·台账 / 商家·收银台 / 商家·收银流水 / 商家·日结·交接班 / 商家·经营总览 / 商家·退款单",
   "position": "dialogs 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "cashier.roundingLabel",
   "domain": "merchant:cashier",
   "text": "抹零",
-  "screen": "商家·收银台 / 商家·收银流水",
+  "screen": "商家·收银台 / 商家·收银小票 / 商家·收银流水",
   "position": "CartPanel 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
@@ -7981,7 +7981,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "cashier.voidNote",
   "domain": "merchant:cashier",
   "text": "撤单后单据留痕为「已撤单」，不会物理删除；仅未支付单可撤（已结账请店主用反结账）",
-  "screen": "商家·收银台 / 商家·收银流水 / 商家·日结·交接班 / 商家·经营总览 / 商家·退款单",
+  "screen": "商家·台账 / 商家·收银台 / 商家·收银流水 / 商家·日结·交接班 / 商家·经营总览 / 商家·退款单",
   "position": "dialogs 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
@@ -8128,6 +8128,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "cadm.portCopy",
   "domain": "merchant:consoleAdmin",
   "text": "文案端口",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.portMarketing",
+  "domain": "merchant:consoleAdmin",
+  "text": "会员营销",
   "screen": "商家·开发者管理端",
   "position": "ConsolePage 页面内文案"
  },
@@ -9871,736 +9878,736 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "inv.alerts.aside",
   "domain": "merchant:inventory",
   "text": "低于下限=缺（含建议补货量）；高于上限=溢",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.alerts.empty",
   "domain": "merchant:inventory",
   "text": "暂无上下限预警（未设上下限的商品不参与）",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.alerts.highBadge",
   "domain": "merchant:inventory",
   "text": "溢",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.alerts.lowBadge",
   "domain": "merchant:inventory",
   "text": "缺",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.alerts.stockHigh",
   "domain": "merchant:inventory",
   "text": "现存 {stock} · 上限 {max}",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.alerts.stockNow",
   "domain": "merchant:inventory",
   "text": "现存 {stock} · 下限 {min}",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.alerts.suggestQty",
   "domain": "merchant:inventory",
   "text": "建议补 {n} 件",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.alerts.title",
   "domain": "merchant:inventory",
   "text": "上下限预警",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.batch.aside",
   "domain": "merchant:inventory",
   "text": "按品筛选；效期=生产日期+保质期自动算；FEFO 建议首行先出",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.batch.createCta",
   "domain": "merchant:inventory",
   "text": "手工入批",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.batch.createDone",
   "domain": "merchant:inventory",
   "text": "批次已入，库存已累加",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.batch.createTitle",
   "domain": "merchant:inventory",
   "text": "手工入批",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.batch.empty",
   "domain": "merchant:inventory",
   "text": "暂无批次记录",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.batch.fefoFirst",
   "domain": "merchant:inventory",
   "text": "先出",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.batch.filterAll",
   "domain": "merchant:inventory",
   "text": "全部商品",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.batch.noExpiry",
   "domain": "merchant:inventory",
   "text": "未设效期",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.batch.noLabel",
   "domain": "merchant:inventory",
   "text": "批号",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.batch.noPh",
   "domain": "merchant:inventory",
   "text": "如 20261006-A",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.batch.noRequired",
   "domain": "merchant:inventory",
   "text": "批号必填",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.batch.prodDateLabel",
   "domain": "merchant:inventory",
   "text": "生产日期",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.batch.productLabel",
   "domain": "merchant:inventory",
   "text": "商品",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.batch.qtyInvalid",
   "domain": "merchant:inventory",
   "text": "数量需为 1 ~ 1000000 的整数",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存 / 商家·调拨要货",
+  "position": "InventoryPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "inv.batch.qtyLabel",
   "domain": "merchant:inventory",
   "text": "数量",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.batch.qtyUnit",
   "domain": "merchant:inventory",
   "text": "×{n}",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存 / 商家·调拨要货",
+  "position": "InventoryPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "inv.batch.shelfLifeLabel",
   "domain": "merchant:inventory",
   "text": "保质期（天）",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.batch.statusActive",
   "domain": "merchant:inventory",
   "text": "在库",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.batch.statusDestroyed",
   "domain": "merchant:inventory",
   "text": "已销毁",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.batch.statusQuarantined",
   "domain": "merchant:inventory",
   "text": "已隔离",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.batch.title",
   "domain": "merchant:inventory",
   "text": "批次",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.common.cancel",
   "domain": "merchant:inventory",
   "text": "取消",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存 / 商家·调拨要货",
+  "position": "InventoryPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "inv.common.confirm",
   "domain": "merchant:inventory",
   "text": "确认提交",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存 / 商家·调拨要货",
+  "position": "InventoryPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "inv.common.loadFail",
   "domain": "merchant:inventory",
   "text": "数据加载失败，请检查网络后重试",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存 / 商家·调拨要货",
+  "position": "InventoryPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "inv.common.retry",
   "domain": "merchant:inventory",
   "text": "重新加载",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存 / 商家·调拨要货",
+  "position": "InventoryPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "inv.common.submitting",
   "domain": "merchant:inventory",
   "text": "提交中…",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存 / 商家·调拨要货",
+  "position": "InventoryPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "inv.expiry.aside",
   "domain": "merchant:inventory",
   "text": "临期分级（急 ≤{u} 天 / 临 ≤{w} 天）；仅透出非安全行",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.expiry.daysLeft",
   "domain": "merchant:inventory",
   "text": "余 {n} 天",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.expiry.destroyCta",
   "domain": "merchant:inventory",
   "text": "销毁",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.expiry.destroyDone",
   "domain": "merchant:inventory",
   "text": "销毁已登记",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.expiry.destroyReasonPh",
   "domain": "merchant:inventory",
   "text": "销毁事由（必填，留痕）",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.expiry.destroyReasonRequired",
   "domain": "merchant:inventory",
   "text": "销毁事由不能为空",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.expiry.destroyTitle",
   "domain": "merchant:inventory",
   "text": "销毁登记",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.expiry.empty",
   "domain": "merchant:inventory",
   "text": "暂无临期 / 过期批次",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.expiry.expiredDays",
   "domain": "merchant:inventory",
   "text": "已过期 {n} 天",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.expiry.gradeExpired",
   "domain": "merchant:inventory",
   "text": "已过期",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.expiry.gradeUrgent",
   "domain": "merchant:inventory",
   "text": "急",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.expiry.gradeWarn",
   "domain": "merchant:inventory",
   "text": "临期",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.expiry.quarantineCta",
   "domain": "merchant:inventory",
   "text": "隔离",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.expiry.quarantineDone",
   "domain": "merchant:inventory",
   "text": "批次已隔离，库存已同步扣出",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.expiry.title",
   "domain": "merchant:inventory",
   "text": "效期看板",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.guideHint",
   "domain": "merchant:inventory",
   "text": "批次、预警、报损与估清属管理层动作；店员账号的工作面是收银台。",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.guideTitle",
   "domain": "merchant:inventory",
   "text": "库存域由店长或店主处理",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.marginNote",
   "domain": "merchant:inventory",
   "text": "进价/成本与毛利=店主/店长视界（server 双层闸）",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.pageSub",
   "domain": "merchant:inventory",
   "text": "上下限预警 · 效期批次 · 报损 · 估清恢复",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.pageTitle",
   "domain": "merchant:inventory",
   "text": "库存",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·商品 / 商家·库存 / 商家·调拨要货",
+  "position": "ProductsPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "inv.soldout.aside",
   "domain": "merchant:inventory",
   "text": "估清=库存归零商城立即禁售；恢复=补货回库",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.soldout.costLabel",
   "domain": "merchant:inventory",
   "text": "成本",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.soldout.empty",
   "domain": "merchant:inventory",
   "text": "暂无商品",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.soldout.markCta",
   "domain": "merchant:inventory",
   "text": "估清",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.soldout.markDone",
   "domain": "merchant:inventory",
   "text": "已估清，商城立即不可售",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.soldout.restockCta",
   "domain": "merchant:inventory",
   "text": "恢复补货",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.soldout.restockDone",
   "domain": "merchant:inventory",
   "text": "已补货 {n} 件",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.soldout.restockQtyLabel",
   "domain": "merchant:inventory",
   "text": "补货数量",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.soldout.restockTitle",
   "domain": "merchant:inventory",
   "text": "恢复补货",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.soldout.stockLabel",
   "domain": "merchant:inventory",
   "text": "现存 {n}",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.soldout.title",
   "domain": "merchant:inventory",
   "text": "估清 / 恢复",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.writeoff.aside",
   "domain": "merchant:inventory",
   "text": "当场录入进审批，审批通过后扣库存",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.writeoff.createCta",
   "domain": "merchant:inventory",
   "text": "当场录入",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.writeoff.createDone",
   "domain": "merchant:inventory",
   "text": "报损已录入，待审批",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.writeoff.createTitle",
   "domain": "merchant:inventory",
   "text": "报损录入",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.writeoff.empty",
   "domain": "merchant:inventory",
   "text": "暂无报损记录",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.writeoff.qtyLabel",
   "domain": "merchant:inventory",
   "text": "数量",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.writeoff.reasonLabel",
   "domain": "merchant:inventory",
   "text": "原因",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.writeoff.reasonPh",
   "domain": "merchant:inventory",
   "text": "如：破损 / 过期 / 丢失（必填）",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.writeoff.reasonRequired",
   "domain": "merchant:inventory",
   "text": "报损原因不能为空",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.writeoff.statusApproved",
   "domain": "merchant:inventory",
   "text": "已通过",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.writeoff.statusPending",
   "domain": "merchant:inventory",
   "text": "待审批",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.writeoff.statusRejected",
   "domain": "merchant:inventory",
   "text": "已驳回",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "inv.writeoff.title",
   "domain": "merchant:inventory",
   "text": "报损",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存",
+  "position": "InventoryPage 页面内文案"
  },
  {
   "key": "trf.guideHint",
   "domain": "merchant:inventory",
   "text": "店间调拨与要货申请属管理层动作；店员账号的工作面是收银台。",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.guideTitle",
   "domain": "merchant:inventory",
   "text": "调拨要货由店长或店主处理",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.aside",
   "domain": "merchant:inventory",
   "text": "发起→审批→发货→接收，成对确认",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.createCta",
   "domain": "merchant:inventory",
   "text": "发起调拨",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.createDone",
   "domain": "merchant:inventory",
   "text": "调拨已发起，待审批",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.createTitle",
   "domain": "merchant:inventory",
   "text": "发起调拨",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.dirIn",
   "domain": "merchant:inventory",
   "text": "调入",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.dirOut",
   "domain": "merchant:inventory",
   "text": "调出",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.empty",
   "domain": "merchant:inventory",
   "text": "暂无调拨单",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.fromLabel",
   "domain": "merchant:inventory",
   "text": "← {name}",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.itemsSummary",
   "domain": "merchant:inventory",
   "text": "{n} 品 {q} 件",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.noStore",
   "domain": "merchant:inventory",
   "text": "暂无可调拨的他店（限老板全域集合内）",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.notePh",
   "domain": "merchant:inventory",
   "text": "备注（可选）",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.productLabel",
   "domain": "merchant:inventory",
   "text": "商品",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.qtyLabel",
   "domain": "merchant:inventory",
   "text": "数量",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.receiveCta",
   "domain": "merchant:inventory",
   "text": "接收",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.receiveDone",
   "domain": "merchant:inventory",
   "text": "已接收，库存已入账",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.shipCta",
   "domain": "merchant:inventory",
   "text": "发货",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.shipDone",
   "domain": "merchant:inventory",
   "text": "已发货，转入在途",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.statusApproved",
   "domain": "merchant:inventory",
   "text": "已审批",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.statusInTransit",
   "domain": "merchant:inventory",
   "text": "在途",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.statusPending",
   "domain": "merchant:inventory",
   "text": "待审批",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.statusReceived",
   "domain": "merchant:inventory",
   "text": "已接收",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.statusRejected",
   "domain": "merchant:inventory",
   "text": "已驳回",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.title",
   "domain": "merchant:inventory",
   "text": "调拨",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.toLabel",
   "domain": "merchant:inventory",
   "text": "→ {name}",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.toStoreLabel",
   "domain": "merchant:inventory",
   "text": "目标店",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.move.toStorePh",
@@ -10613,141 +10620,1849 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "trf.pageSub",
   "domain": "merchant:inventory",
   "text": "店间调拨成对确认 · 在途视图 · 要货申请",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.pageTitle",
   "domain": "merchant:inventory",
   "text": "调拨要货",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·库存 / 商家·调拨要货",
+  "position": "InventoryPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "trf.rep.aside",
   "domain": "merchant:inventory",
   "text": "建议量=上限−现存（无上限按下限）；申请进审批",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.rep.createCta",
   "domain": "merchant:inventory",
   "text": "发起要货",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.rep.createDone",
   "domain": "merchant:inventory",
   "text": "要货申请已提交，待审批",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.rep.empty",
   "domain": "merchant:inventory",
   "text": "暂无要货申请",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.rep.fulfillCta",
   "domain": "merchant:inventory",
   "text": "履约",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.rep.fulfillDone",
   "domain": "merchant:inventory",
   "text": "已履约，库存已入账",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.rep.statusApproved",
   "domain": "merchant:inventory",
   "text": "已审批",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.rep.statusFulfilled",
   "domain": "merchant:inventory",
   "text": "已履约",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.rep.statusPending",
   "domain": "merchant:inventory",
   "text": "待审批",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.rep.statusRejected",
   "domain": "merchant:inventory",
   "text": "已驳回",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.rep.suggest",
   "domain": "merchant:inventory",
   "text": "建议量 {n} 件",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.rep.title",
   "domain": "merchant:inventory",
   "text": "要货",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.transit.aside",
   "domain": "merchant:inventory",
   "text": "超 {h} 小时未接收=超时红签",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.transit.empty",
   "domain": "merchant:inventory",
   "text": "暂无在途调拨",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.transit.hours",
   "domain": "merchant:inventory",
   "text": "在途 {h} 小时",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.transit.hoursUnknown",
   "domain": "merchant:inventory",
   "text": "发货时间未知",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.transit.overdue",
   "domain": "merchant:inventory",
   "text": "超时",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
  },
  {
   "key": "trf.transit.title",
   "domain": "merchant:inventory",
   "text": "在途视图",
+  "screen": "商家·调拨要货",
+  "position": "TransfersPage 页面内文案"
+ },
+ {
+  "key": "mk.bday.aside",
+  "domain": "merchant:marketing",
+  "text": "台账+通知落行 · 不造假发",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.bday.grantOwner",
+  "domain": "merchant:marketing",
+  "text": "会员生日礼",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.bday.grantPet",
+  "domain": "merchant:marketing",
+  "text": "宠物生日礼",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.bday.grantsEmpty",
+  "domain": "merchant:marketing",
+  "text": "暂无生日权益发放记录",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.bday.grantsTitle",
+  "domain": "merchant:marketing",
+  "text": "生日权益发放台账",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.bday.kindMember",
+  "domain": "merchant:marketing",
+  "text": "会员",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.bday.kindPet",
+  "domain": "merchant:marketing",
+  "text": "宠物",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.bday.tierAmount",
+  "domain": "merchant:marketing",
+  "text": "面额",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.bday.tierDays",
+  "domain": "merchant:marketing",
+  "text": "有效天数",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.bday.tierEmpty",
+  "domain": "merchant:marketing",
+  "text": "端口未配置，走缺省档位",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.bday.tierThreshold",
+  "domain": "merchant:marketing",
+  "text": "门槛",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.bday.tierTitle",
+  "domain": "merchant:marketing",
+  "text": "生日权益档位（端口 birthday_perk_tier）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.bday.title",
+  "domain": "merchant:marketing",
+  "text": "生日营销",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.bday.upcomingEmpty",
+  "domain": "merchant:marketing",
+  "text": "近 30 天无会员/宠物生日",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.bday.upcomingTitle",
+  "domain": "merchant:marketing",
+  "text": "近 30 天生日提醒",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.campaign.aside",
+  "domain": "merchant:marketing",
+  "text": "台账留痕 · 同人同券不重复发",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.campaign.colCoupon",
+  "domain": "merchant:marketing",
+  "text": "券",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.campaign.colGranted",
+  "domain": "merchant:marketing",
+  "text": "已发",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.campaign.colNote",
+  "domain": "merchant:marketing",
+  "text": "备注",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.campaign.colTarget",
+  "domain": "merchant:marketing",
+  "text": "目标",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.campaign.colTime",
+  "domain": "merchant:marketing",
+  "text": "时间",
+  "screen": "商家·会员营销 / 商家·营销台账",
+  "position": "MarketingPage 页面内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "mk.campaign.colTitle",
+  "domain": "merchant:marketing",
+  "text": "标题",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.campaign.done",
+  "domain": "merchant:marketing",
+  "text": "已发放：匹配 {m} 人，实发 {g} 份",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.campaign.empty",
+  "domain": "merchant:marketing",
+  "text": "暂无发放记录",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.campaign.fCoupon",
+  "domain": "merchant:marketing",
+  "text": "选券",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.campaign.fNote",
+  "domain": "merchant:marketing",
+  "text": "备注（可选）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.campaign.fTargetKind",
+  "domain": "merchant:marketing",
+  "text": "目标标签类（留空=全量）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.campaign.fTargetValue",
+  "domain": "merchant:marketing",
+  "text": "目标标签值",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.campaign.fTitle",
+  "domain": "merchant:marketing",
+  "text": "发放标题",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.campaign.grantCta",
+  "domain": "merchant:marketing",
+  "text": "＋ 发放",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.campaign.grantedUnit",
+  "domain": "merchant:marketing",
+  "text": "{n} 份",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.campaign.invalid",
+  "domain": "merchant:marketing",
+  "text": "须选券并填标题；选目标类后须填目标值",
   "screen": null,
-  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+  "position": "未在页面调用点命中（merchant:marketing 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "mk.campaign.modalTitle",
+  "domain": "merchant:marketing",
+  "text": "定向发放",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.campaign.noCoupon",
+  "domain": "merchant:marketing",
+  "text": "暂无在架券——请先在券矩阵新建",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.campaign.targetAll",
+  "domain": "merchant:marketing",
+  "text": "本店全量会员",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.campaign.title",
+  "domain": "merchant:marketing",
+  "text": "定向发放",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.common.cancel",
+  "domain": "merchant:marketing",
+  "text": "取消",
+  "screen": "商家·会员营销 / 商家·营销台账",
+  "position": "MarketingPage 页面内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "mk.common.loadFail",
+  "domain": "merchant:marketing",
+  "text": "加载失败，请检查网络后重试",
+  "screen": "商家·会员营销 / 商家·营销台账",
+  "position": "MarketingPage 页面内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "mk.common.retry",
+  "domain": "merchant:marketing",
+  "text": "重新加载",
+  "screen": "商家·会员营销 / 商家·营销台账",
+  "position": "MarketingPage 页面内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "mk.common.submit",
+  "domain": "merchant:marketing",
+  "text": "确认提交",
+  "screen": "商家·会员营销 / 商家·营销台账",
+  "position": "MarketingPage 页面内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "mk.common.submitting",
+  "domain": "merchant:marketing",
+  "text": "提交中…",
+  "screen": "商家·会员营销 / 商家·营销台账",
+  "position": "MarketingPage 页面内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "mk.coupon.aside",
+  "domain": "merchant:marketing",
+  "text": "六类模板 · 登记制不接真抵扣",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.colAmount",
+  "domain": "merchant:marketing",
+  "text": "面额",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.colDays",
+  "domain": "merchant:marketing",
+  "text": "有效天数",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.colQuota",
+  "domain": "merchant:marketing",
+  "text": "配额",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.colStatus",
+  "domain": "merchant:marketing",
+  "text": "状态",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.colThreshold",
+  "domain": "merchant:marketing",
+  "text": "门槛",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.colTitle",
+  "domain": "merchant:marketing",
+  "text": "标题",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.colType",
+  "domain": "merchant:marketing",
+  "text": "类型",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.createCta",
+  "domain": "merchant:marketing",
+  "text": "＋ 新建券",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.done",
+  "domain": "merchant:marketing",
+  "text": "券模板已创建",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.empty",
+  "domain": "merchant:marketing",
+  "text": "暂无券模板——先建一张注册券或充值券",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.fAmount",
+  "domain": "merchant:marketing",
+  "text": "面额（元）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.fDays",
+  "domain": "merchant:marketing",
+  "text": "有效天数",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.fQuota",
+  "domain": "merchant:marketing",
+  "text": "总配额（留空=不限）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.fThreshold",
+  "domain": "merchant:marketing",
+  "text": "门槛（元，0=无门槛）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.fTitle",
+  "domain": "merchant:marketing",
+  "text": "标题",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.fType",
+  "domain": "merchant:marketing",
+  "text": "券类型",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.invalid",
+  "domain": "merchant:marketing",
+  "text": "标题必填，面额须为正数，有效天数 1-3650",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:marketing 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "mk.coupon.modalTitle",
+  "domain": "merchant:marketing",
+  "text": "新建券模板",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.quotaNone",
+  "domain": "merchant:marketing",
+  "text": "不限",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.statusOff",
+  "domain": "merchant:marketing",
+  "text": "停用",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.statusOn",
+  "domain": "merchant:marketing",
+  "text": "在架",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.thresholdNone",
+  "domain": "merchant:marketing",
+  "text": "无门槛",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.title",
+  "domain": "merchant:marketing",
+  "text": "券矩阵",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.typeBirthday",
+  "domain": "merchant:marketing",
+  "text": "生日券",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.typeConsume",
+  "domain": "merchant:marketing",
+  "text": "消费券",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.typeFestival",
+  "domain": "merchant:marketing",
+  "text": "节日券",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.typeRecharge",
+  "domain": "merchant:marketing",
+  "text": "充值券",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.typeRegister",
+  "domain": "merchant:marketing",
+  "text": "注册券",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.coupon.typeWakeup",
+  "domain": "merchant:marketing",
+  "text": "唤醒券",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.advanced",
+  "domain": "merchant:marketing",
+  "text": "状态已推进",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.aside",
+  "domain": "merchant:marketing",
+  "text": "申请→确认→了结 · 留痕不碰真钱",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.colDiff",
+  "domain": "merchant:marketing",
+  "text": "差价",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.colNew",
+  "domain": "merchant:marketing",
+  "text": "换新",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.colNote",
+  "domain": "merchant:marketing",
+  "text": "备注",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.colOperator",
+  "domain": "merchant:marketing",
+  "text": "经办",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.colOps",
+  "domain": "merchant:marketing",
+  "text": "操作",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.colOrig",
+  "domain": "merchant:marketing",
+  "text": "原商品",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.colStatus",
+  "domain": "merchant:marketing",
+  "text": "状态",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.confirmCta",
+  "domain": "merchant:marketing",
+  "text": "确认",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.createCta",
+  "domain": "merchant:marketing",
+  "text": "＋ 登记换货",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.diffMinus",
+  "domain": "merchant:marketing",
+  "text": "退差 {v}",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.diffPlus",
+  "domain": "merchant:marketing",
+  "text": "补收 {v}",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.diffZero",
+  "domain": "merchant:marketing",
+  "text": "无差价",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.done",
+  "domain": "merchant:marketing",
+  "text": "换货已登记",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.empty",
+  "domain": "merchant:marketing",
+  "text": "暂无换货记录",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.fDiff",
+  "domain": "merchant:marketing",
+  "text": "差价（元，正=补收 负=退差）",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.fNew",
+  "domain": "merchant:marketing",
+  "text": "换新商品名",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.fNote",
+  "domain": "merchant:marketing",
+  "text": "备注（可选）",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.fOrig",
+  "domain": "merchant:marketing",
+  "text": "原商品名",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.invalid",
+  "domain": "merchant:marketing",
+  "text": "原商品名/换新名必填，差价须为数字",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:marketing 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "mk.exch.modalTitle",
+  "domain": "merchant:marketing",
+  "text": "登记换货",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.settleCta",
+  "domain": "merchant:marketing",
+  "text": "了结",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.stApplied",
+  "domain": "merchant:marketing",
+  "text": "已申请",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.stConfirmed",
+  "domain": "merchant:marketing",
+  "text": "已确认",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.stSettled",
+  "domain": "merchant:marketing",
+  "text": "已了结",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exch.title",
+  "domain": "merchant:marketing",
+  "text": "换货差价补退",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.aside",
+  "domain": "merchant:marketing",
+  "text": "手工台账 · 不接发票流",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.colAmount",
+  "domain": "merchant:marketing",
+  "text": "金额",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.colMonth",
+  "domain": "merchant:marketing",
+  "text": "归属月份",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.colNote",
+  "domain": "merchant:marketing",
+  "text": "备注",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.colOperator",
+  "domain": "merchant:marketing",
+  "text": "记账人",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.colOps",
+  "domain": "merchant:marketing",
+  "text": "操作",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.colType",
+  "domain": "merchant:marketing",
+  "text": "类型",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.createCta",
+  "domain": "merchant:marketing",
+  "text": "＋ 记一笔",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.deleteCta",
+  "domain": "merchant:marketing",
+  "text": "删除",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.deleted",
+  "domain": "merchant:marketing",
+  "text": "台账行已删除",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.done",
+  "domain": "merchant:marketing",
+  "text": "支出已记账",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.empty",
+  "domain": "merchant:marketing",
+  "text": "暂无支出记录",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.fAmount",
+  "domain": "merchant:marketing",
+  "text": "金额（元）",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.fMonth",
+  "domain": "merchant:marketing",
+  "text": "归属月份",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.fNote",
+  "domain": "merchant:marketing",
+  "text": "备注（可选）",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.fType",
+  "domain": "merchant:marketing",
+  "text": "类型",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.invalid",
+  "domain": "merchant:marketing",
+  "text": "金额须为正数，月份必选",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:marketing 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "mk.exp.modalTitle",
+  "domain": "merchant:marketing",
+  "text": "记一笔支出",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.monthAll",
+  "domain": "merchant:marketing",
+  "text": "全部月份",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.monthLabel",
+  "domain": "merchant:marketing",
+  "text": "月份",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.summaryTotal",
+  "domain": "merchant:marketing",
+  "text": "合计",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.title",
+  "domain": "merchant:marketing",
+  "text": "支出台账",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.typeOther",
+  "domain": "merchant:marketing",
+  "text": "其他",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.typeRent",
+  "domain": "merchant:marketing",
+  "text": "房租",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.typeSalary",
+  "domain": "merchant:marketing",
+  "text": "工资",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.exp.typeUtility",
+  "domain": "merchant:marketing",
+  "text": "水电",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.guide.hint",
+  "domain": "merchant:marketing",
+  "text": "标签/券/活动配置属管理层视界（server 硬闸门兜底）；请切换店长或店主账号。",
+  "screen": "商家·会员营销 / 商家·营销台账",
+  "position": "MarketingPage 页面内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "mk.guide.title",
+  "domain": "merchant:marketing",
+  "text": "会员营销由店长或店主管理",
+  "screen": "商家·会员营销 / 商家·营销台账",
+  "position": "MarketingPage 页面内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "mk.insp.aside",
+  "domain": "merchant:marketing",
+  "text": "待检=台账标记层 · 不合格触发报损",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.colOperator",
+  "domain": "merchant:marketing",
+  "text": "经办",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.colOps",
+  "domain": "merchant:marketing",
+  "text": "操作",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.colProduct",
+  "domain": "merchant:marketing",
+  "text": "商品",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.colQcNote",
+  "domain": "merchant:marketing",
+  "text": "质检备注",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.colQty",
+  "domain": "merchant:marketing",
+  "text": "数量",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.colStatus",
+  "domain": "merchant:marketing",
+  "text": "状态",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.colTime",
+  "domain": "merchant:marketing",
+  "text": "时间",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.createCta",
+  "domain": "merchant:marketing",
+  "text": "＋ 登记待检",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.done",
+  "domain": "merchant:marketing",
+  "text": "待检已登记",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.empty",
+  "domain": "merchant:marketing",
+  "text": "暂无待检记录",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.failCta",
+  "domain": "merchant:marketing",
+  "text": "不合格",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.fNote",
+  "domain": "merchant:marketing",
+  "text": "备注（可选）",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.fProduct",
+  "domain": "merchant:marketing",
+  "text": "商品",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.fQcNote",
+  "domain": "merchant:marketing",
+  "text": "质检备注",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.fQty",
+  "domain": "merchant:marketing",
+  "text": "数量",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.invalid",
+  "domain": "merchant:marketing",
+  "text": "须选商品，数量须为正整数",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:marketing 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "mk.insp.modalTitle",
+  "domain": "merchant:marketing",
+  "text": "登记退货待检",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.passCta",
+  "domain": "merchant:marketing",
+  "text": "合格",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.reviewed",
+  "domain": "merchant:marketing",
+  "text": "质检已落痕",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.reviewTitle",
+  "domain": "merchant:marketing",
+  "text": "质检结论",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.stFailed",
+  "domain": "merchant:marketing",
+  "text": "不合格",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.stPassed",
+  "domain": "merchant:marketing",
+  "text": "合格",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.stPending",
+  "domain": "merchant:marketing",
+  "text": "待检",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.insp.title",
+  "domain": "merchant:marketing",
+  "text": "退货待检",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.ledger.backMarketing",
+  "domain": "merchant:marketing",
+  "text": "← 会员营销",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.ledger.pageSub",
+  "domain": "merchant:marketing",
+  "text": "支出 · 换货 · 退货待检 · 报表快照",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.ledger.pageTitle",
+  "domain": "merchant:marketing",
+  "text": "营销台账",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.page.sub",
+  "domain": "merchant:marketing",
+  "text": "会员标签 · 券矩阵 · 定向发放 · 生日营销 · 活动配置",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.page.title",
+  "domain": "merchant:marketing",
+  "text": "会员营销",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.page.toLedger",
+  "domain": "merchant:marketing",
+  "text": "营销台账 →",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.aside",
+  "domain": "merchant:marketing",
+  "text": "排期状态机留痕 · 不接真结算",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.colName",
+  "domain": "merchant:marketing",
+  "text": "名称",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.colOps",
+  "domain": "merchant:marketing",
+  "text": "操作",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.colRange",
+  "domain": "merchant:marketing",
+  "text": "排期",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.colRules",
+  "domain": "merchant:marketing",
+  "text": "规则",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.colStatus",
+  "domain": "merchant:marketing",
+  "text": "状态",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.colType",
+  "domain": "merchant:marketing",
+  "text": "类型",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.createCta",
+  "domain": "merchant:marketing",
+  "text": "＋ 新建活动",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.done",
+  "domain": "merchant:marketing",
+  "text": "活动已保存",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.editCta",
+  "domain": "merchant:marketing",
+  "text": "编辑",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.empty",
+  "domain": "merchant:marketing",
+  "text": "暂无活动配置",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.fEndsAt",
+  "domain": "merchant:marketing",
+  "text": "排期结束（可选）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.fName",
+  "domain": "merchant:marketing",
+  "text": "活动名称",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.fStartsAt",
+  "domain": "merchant:marketing",
+  "text": "排期开始（可选）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.fStatus",
+  "domain": "merchant:marketing",
+  "text": "状态",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.fStatusDraft",
+  "domain": "merchant:marketing",
+  "text": "草稿（不上线）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.fStatusScheduled",
+  "domain": "merchant:marketing",
+  "text": "排期（按起止上下线）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.fType",
+  "domain": "merchant:marketing",
+  "text": "活动类型",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.invalid",
+  "domain": "merchant:marketing",
+  "text": "名称必填；规则字段不合法，请检查",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:marketing 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "mk.promo.modalCreate",
+  "domain": "merchant:marketing",
+  "text": "新建活动",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.modalEdit",
+  "domain": "merchant:marketing",
+  "text": "编辑活动",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.rangeNone",
+  "domain": "merchant:marketing",
+  "text": "未排期",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.ruleDailyEnd",
+  "domain": "merchant:marketing",
+  "text": "每日结束（HH:mm）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.ruleDailyStart",
+  "domain": "merchant:marketing",
+  "text": "每日开始（HH:mm）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.ruleGift",
+  "domain": "merchant:marketing",
+  "text": "赠品说明",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.ruleMinus",
+  "domain": "merchant:marketing",
+  "text": "减（元）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.ruleRate",
+  "domain": "merchant:marketing",
+  "text": "折数（0-1，如 0.85）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.ruleThreshold",
+  "domain": "merchant:marketing",
+  "text": "门槛（元）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.stActive",
+  "domain": "merchant:marketing",
+  "text": "进行中",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.stDraft",
+  "domain": "merchant:marketing",
+  "text": "草稿",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.stEnded",
+  "domain": "merchant:marketing",
+  "text": "已结束",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.stScheduled",
+  "domain": "merchant:marketing",
+  "text": "待上线",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.title",
+  "domain": "merchant:marketing",
+  "text": "活动配置",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.typeDiscount",
+  "domain": "merchant:marketing",
+  "text": "折扣",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.typeExchangeGift",
+  "domain": "merchant:marketing",
+  "text": "换购",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.typeFullMinus",
+  "domain": "merchant:marketing",
+  "text": "满减",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.typeSecondPiece",
+  "domain": "merchant:marketing",
+  "text": "第二件",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.promo.typeTimePromo",
+  "domain": "merchant:marketing",
+  "text": "时段促销",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.snap.aside",
+  "domain": "merchant:marketing",
+  "text": "月快照永久留存 · 仅店主生成",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.snap.colCreator",
+  "domain": "merchant:marketing",
+  "text": "生成人",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.snap.colKind",
+  "domain": "merchant:marketing",
+  "text": "类型",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.snap.colMonth",
+  "domain": "merchant:marketing",
+  "text": "月份",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.snap.colTime",
+  "domain": "merchant:marketing",
+  "text": "时间",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.snap.createCta",
+  "domain": "merchant:marketing",
+  "text": "＋ 生成快照",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.snap.done",
+  "domain": "merchant:marketing",
+  "text": "快照已生成",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.snap.empty",
+  "domain": "merchant:marketing",
+  "text": "暂无快照——店主可生成月快照留档",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.snap.fKind",
+  "domain": "merchant:marketing",
+  "text": "快照类型",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.snap.fMonth",
+  "domain": "merchant:marketing",
+  "text": "月份",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.snap.hint",
+  "domain": "merchant:marketing",
+  "text": "payload 现取对应读口同帧数据（D1=营收月报 / member=会员月报）",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.snap.kindD1",
+  "domain": "merchant:marketing",
+  "text": "D1 营收月报",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.snap.kindMember",
+  "domain": "merchant:marketing",
+  "text": "会员月报（D3）",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.snap.modalTitle",
+  "domain": "merchant:marketing",
+  "text": "生成报表快照",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.snap.monthAll",
+  "domain": "merchant:marketing",
+  "text": "全部月份",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.snap.title",
+  "domain": "merchant:marketing",
+  "text": "报表快照",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.snap.working",
+  "domain": "merchant:marketing",
+  "text": "正在取数并生成…",
+  "screen": "商家·营销台账",
+  "position": "MarketingLedgerPage 页面内文案"
+ },
+ {
+  "key": "mk.stack.campaignCoupon",
+  "domain": "merchant:marketing",
+  "text": "活动 × 券",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.stack.campaignMember",
+  "domain": "merchant:marketing",
+  "text": "活动 × 会员折扣",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.stack.couponStack",
+  "domain": "merchant:marketing",
+  "text": "券叠加规则",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.stack.multiCampaign",
+  "domain": "merchant:marketing",
+  "text": "多活动叠加",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.stack.note",
+  "domain": "merchant:marketing",
+  "text": "当前值=端口公示（端口可改：config.save，门店覆盖优先于总部下发）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.stack.title",
+  "domain": "merchant:marketing",
+  "text": "促销互斥 · 叠加规则（逐项开关公示）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.aside",
+  "domain": "merchant:marketing",
+  "text": "近 500 条 · 更新倒序",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.colKind",
+  "domain": "merchant:marketing",
+  "text": "类",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.colMember",
+  "domain": "merchant:marketing",
+  "text": "会员",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.colTime",
+  "domain": "merchant:marketing",
+  "text": "更新",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.colValue",
+  "domain": "merchant:marketing",
+  "text": "值",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.done",
+  "domain": "merchant:marketing",
+  "text": "已打标",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.empty",
+  "domain": "merchant:marketing",
+  "text": "暂无标签——给会员打上猫狗/体型/偏好标，定向发放才能瞄得准",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.filterAll",
+  "domain": "merchant:marketing",
+  "text": "全部",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.invalid",
+  "domain": "merchant:marketing",
+  "text": "会员 userId 与标签值必填",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:marketing 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "mk.tag.kind",
+  "domain": "merchant:marketing",
+  "text": "标签类",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.kindPref",
+  "domain": "merchant:marketing",
+  "text": "偏好",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.kindSize",
+  "domain": "merchant:marketing",
+  "text": "体型",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.kindSpecies",
+  "domain": "merchant:marketing",
+  "text": "猫狗",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.modalTitle",
+  "domain": "merchant:marketing",
+  "text": "打标（同员同类覆盖写）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.prefHint",
+  "domain": "merchant:marketing",
+  "text": "偏好自由短文（≤16 字）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.setCta",
+  "domain": "merchant:marketing",
+  "text": "＋ 打标",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.sizeLarge",
+  "domain": "merchant:marketing",
+  "text": "大型（large）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.sizeMedium",
+  "domain": "merchant:marketing",
+  "text": "中型（medium）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.sizeSmall",
+  "domain": "merchant:marketing",
+  "text": "小型（small）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.speciesCat",
+  "domain": "merchant:marketing",
+  "text": "猫（cat）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.speciesDog",
+  "domain": "merchant:marketing",
+  "text": "狗（dog）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.title",
+  "domain": "merchant:marketing",
+  "text": "会员标签",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.userId",
+  "domain": "merchant:marketing",
+  "text": "会员 userId",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.userIdHint",
+  "domain": "merchant:marketing",
+  "text": "用户主键（次卡/会员页可见）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.value",
+  "domain": "merchant:marketing",
+  "text": "标签值",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
+ },
+ {
+  "key": "mk.tag.valueFilterPh",
+  "domain": "merchant:marketing",
+  "text": "按标签值滤（如 dog）",
+  "screen": "商家·会员营销",
+  "position": "MarketingPage 页面内文案"
  },
  {
   "key": "mtx.colCashier",
@@ -13242,6 +14957,34 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "ReportPage 页面内文案"
  },
  {
+  "key": "rpt.d9top.rankEmpty",
+  "domain": "merchant:report",
+  "text": "本月暂无成交商品",
+  "screen": "商家·经营报表",
+  "position": "ReportPage 页面内文案"
+ },
+ {
+  "key": "rpt.d9top.rankTitle",
+  "domain": "merchant:report",
+  "text": "销量排行 TOP20",
+  "screen": "商家·经营报表",
+  "position": "ReportPage 页面内文案"
+ },
+ {
+  "key": "rpt.d9top.slowEmpty",
+  "domain": "merchant:report",
+  "text": "无滞销商品（本月全动销或无在库）",
+  "screen": "商家·经营报表",
+  "position": "ReportPage 页面内文案"
+ },
+ {
+  "key": "rpt.d9top.slowTitle",
+  "domain": "merchant:report",
+  "text": "滞销（月零销 + 在库）",
+  "screen": "商家·经营报表",
+  "position": "ReportPage 页面内文案"
+ },
+ {
   "key": "rpt.dirAside",
   "domain": "merchant:report",
   "text": "17 张已点亮 · 导出 CSV 仅店主",
@@ -14134,6 +15877,62 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "rpt.view.stores",
   "domain": "merchant:report",
   "text": "分店",
+  "screen": "商家·经营报表",
+  "position": "ReportPage 页面内文案"
+ },
+ {
+  "key": "rpt.weekly.byDayTitle",
+  "domain": "merchant:report",
+  "text": "本周逐日",
+  "screen": "商家·经营报表",
+  "position": "ReportPage 页面内文案"
+ },
+ {
+  "key": "rpt.weekly.count",
+  "domain": "merchant:report",
+  "text": "成交 {n} 单",
+  "screen": "商家·经营报表",
+  "position": "ReportPage 页面内文案"
+ },
+ {
+  "key": "rpt.weekly.curCard",
+  "domain": "merchant:report",
+  "text": "本周营收",
+  "screen": "商家·经营报表",
+  "position": "ReportPage 页面内文案"
+ },
+ {
+  "key": "rpt.weekly.prevCard",
+  "domain": "merchant:report",
+  "text": "上周营收",
+  "screen": "商家·经营报表",
+  "position": "ReportPage 页面内文案"
+ },
+ {
+  "key": "rpt.weekly.serviceShop",
+  "domain": "merchant:report",
+  "text": "服务 {sv} · 商城 {sp}",
+  "screen": "商家·经营报表",
+  "position": "ReportPage 页面内文案"
+ },
+ {
+  "key": "rpt.weekly.title",
+  "domain": "merchant:report",
+  "text": "周报环比（周一起算）",
+  "screen": "商家·经营报表",
+  "position": "ReportPage 页面内文案"
+ },
+ {
+  "key": "rpt.weekly.toggle",
+  "domain": "merchant:report",
+  "text": "周报",
+  "screen": "商家·经营报表",
+  "position": "ReportPage 页面内文案"
+ },
+ {
+  "key": "rpt.weekly.wowLabel",
+  "domain": "merchant:report",
+  "text": "环比",
   "screen": "商家·经营报表",
   "position": "ReportPage 页面内文案"
  },

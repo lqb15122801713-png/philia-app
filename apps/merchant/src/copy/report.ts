@@ -152,6 +152,22 @@ const REPORT_COPY_TABLE = {
   'rpt.d9.ordersSub': '成交 {n} 单',
   'rpt.d9.byProductTitle': '按商品明细',
 
+  /* ---- 大批片 5：D9 销量排行 / 滞销分析（d9TopGoods） ---- */
+  'rpt.d9top.rankTitle': '销量排行 TOP20',
+  'rpt.d9top.rankEmpty': '本月暂无成交商品',
+  'rpt.d9top.slowTitle': '滞销（月零销 + 在库）',
+  'rpt.d9top.slowEmpty': '无滞销商品（本月全动销或无在库）',
+
+  /* ---- 大批片 5：页头周报切换（weeklySummary 本周 vs 上周环比） ---- */
+  'rpt.weekly.toggle': '周报',
+  'rpt.weekly.title': '周报环比（周一起算）',
+  'rpt.weekly.curCard': '本周营收',
+  'rpt.weekly.prevCard': '上周营收',
+  'rpt.weekly.count': '成交 {n} 单',
+  'rpt.weekly.serviceShop': '服务 {sv} · 商城 {sp}',
+  'rpt.weekly.wowLabel': '环比',
+  'rpt.weekly.byDayTitle': '本周逐日',
+
   /* ---- N1 等级分布与升级 ---- */
   'rpt.n1.stockTitle': '四档存量（活跃会员）',
   'rpt.n1.newTitle': '本月新增按档',

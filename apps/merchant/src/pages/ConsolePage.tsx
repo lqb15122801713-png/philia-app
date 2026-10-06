@@ -46,6 +46,7 @@ type PortKey =
   | 'member_plans'
   | 'stored'
   | 'carepack'
+  | 'marketing'
   | 'commission'
   | 'xp'
   | 'profile'
@@ -54,7 +55,7 @@ type PortKey =
 const PORT_GROUPS: Array<{
   key: string;
   label: string;
-  items: Array<{ key: PortKey; label: string; seal: string; note?: string }>;
+  items: Array<{ key: PortKey; label: string; seal: string; note?: string; to?: string }>;
 }> = [
   {
     key: 'A',
@@ -72,6 +73,8 @@ const PORT_GROUPS: Array<{
       { key: 'stored', label: cadm('cadm.portStored'), seal: 'C2', note: cadm('cadm.portPendingNote') },
       /* 大批片 2：安心包立项名 C2 与既有 C2 储值撞号，落 C3（已报备） */
       { key: 'carepack', label: cadm('cadm.portCarePack'), seal: 'C3', note: cadm('cadm.portCarePackNote') },
+      /* 大批片 5：会员营销 C4 点亮=直达卡（WcPorts to 链接工艺，不嵌内核——真页 /marketing） */
+      { key: 'marketing', label: cadm('cadm.portMarketing'), seal: 'C4', to: '/marketing' },
     ],
   },
   {
