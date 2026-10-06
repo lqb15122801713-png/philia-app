@@ -1,10 +1,10 @@
 /**
  * 收银域文案键表（copy key 一期硬约定 · 纪律照 apps/customer/src/components/member/copy.ts）
  *
- * 覆盖：CashierPage / CashierRecordsPage / CashierClosePage / CashierRefundsPage
- * + components/cashier/*（CartPanel/MemberSearch/MembershipPanel/PaySheet/HoldPanel/
- * OfflineBar/dialogs/BillDetailDialog/RefundDialog/RefundDetailDialog/DayClosePanels/
- * ImportLedgerPanel）。
+ * 覆盖：CashierPage / CashierRecordsPage / CashierClosePage / CashierRefundsPage /
+ * ReceiptPage（小票）/ LedgerPage（台账）+ components/cashier/*（CartPanel/MemberSearch/
+ * MembershipPanel/PaySheet/HoldPanel/OfflineBar/dialogs/BillDetailDialog/RefundDialog/
+ * RefundDetailDialog/DayClosePanels/ImportLedgerPanel/PickPanel）。
  * 纪律：经营性文案（屏题副题/空态/收银·退款·日结操作引导与口径明面）一律经本表取值，
  * 组件内零硬编码；文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  * 数值不进本表：金额/次数/单数到渲染层读数据经 {var} 插值。
@@ -187,6 +187,59 @@ const CASHIER_COPY_TABLE = {
     '真台账（907 人 / ¥671,264.42）执行等老板令；本次为演示台账试导，试导后可用「标记清除」回滚。 重复 execute 会重复入账（无文件级幂等），请勿重复提交。',
   'cashier.importClearNote': '将删除该批次写入的流水并按日志反向冲减账户；批次行永存（置「已清除」留痕）。',
   'cashier.importClearReject': '已产生消费的批次拒绝清除（保护真账）——差错请走对账调整留痕。',
+
+  /* ---- 片 3：挂单增强 / 快捷收款 / 单品备注 ---- */
+  'cashier.billNotePh': '整单备注（选填，随单留痕 · 小票透出）',
+  'cashier.lineNoteCta': '备注',
+  'cashier.lineNotePh': '单品备注（选填，≤200 字）',
+  'cashier.holdOver24': '挂出超 24h',
+  'cashier.quickCollect': '快捷收款',
+  'cashier.quickCollectAside': '无商品自定义金额（如：加急费/杂项）· 不触发改价闸门',
+  'cashier.quickNamePh': '收款名目（必填）',
+  'cashier.quickAmountPh': '金额 ¥',
+  'cashier.quickAdd': '加入',
+  'cashier.quickInvalid': '请填写收款名目与金额（≥0.01 元）',
+
+  /* ---- 片 3：抹零透出 / 挂账段 / 留口注记 ---- */
+  'cashier.roundingLabel': '抹零',
+  'cashier.creditNote': '挂账=台账留痕不碰真钱（至多一段；结清/核销走「台账」专页，不计已收）',
+  'cashier.scanPayNote': '聚合扫码=通道资质候（留口件）',
+  'cashier.peripheralNote': '扫码枪/钱箱/客显外设=PWA 上限明面注记，能到哪儿到哪儿',
+
+  /* ---- 片 3：小票打印 / 补打（ReceiptPage）---- */
+  'cashier.receiptTitle': '收银小票',
+  'cashier.receiptPrint': '打印小票',
+  'cashier.receiptReprint': '补打',
+  'cashier.receiptNightLine': '共{total}晚 · 已住{occ}晚 · 剩{rem}晚 · 晚单价 ¥{per}',
+  'cashier.receiptThanks': '谢谢惠顾 · 单据留痕可查',
+
+  /* ---- 片 3：台账专页 /ledger ---- */
+  'cashier.ledgerTitle': '台账',
+  'cashier.ledgerSub': '挂账 / 押金 / 预付 / 授权 四台账留痕 · 记录不可删 · 全程不碰真钱',
+  'cashier.ledgerEmpty': '当前筛选无记录',
+  'cashier.creditSettleTitle': '挂账结清（线下收款留痕）',
+  'cashier.creditSettleNote': '部分/全额结清均可，金额 ≤ 在挂余额；只登记不碰真钱支付表',
+  'cashier.creditWriteoffTitle': '挂账核销（仅店主）',
+  'cashier.creditWriteoffNote': '核销=不再追缴，原因必填留痕；台账行永存不删',
+  'cashier.depositSummaryAside': '在押合计=held+refunding（refunded 已退还不计）',
+  'cashier.agreementExport': '周会导出',
+  'cashier.agreementAside': '本店口径=签署人∈本店客户集（有本店预约单）',
+
+  /* ---- 片 3 交接班族：盲交 / 实点非现金 / 差异说明 / 现金收支 / 备用金 ---- */
+  'cashier.blindClose': '盲交',
+  'cashier.blindCloseNote': '盲交中——账面已遮罩（server blind 口径不透账面），实点先行，差异提交后揭晓',
+  'cashier.diffNotePh': '差异说明（长短款超阈值必填，留痕）',
+  'cashier.diffNoteRequired': '长短款差异超复核阈值——须填差异说明后再提交（输入已保留）',
+  'cashier.cashMoveTitle': '现金收支（钱箱存入/取出）',
+  'cashier.cashMoveAside': '台账留痕不碰真钱 · 日结账面现金=流水现金+存入−取出',
+  'cashier.cashMoveEmpty': '本班暂无现金收支记录',
+  'cashier.cashMoveNoShift': '当前无开班班次——登记将落「非当班补登」（shiftId 空留痕）',
+  'cashier.floatLabel': '备用金点交',
+  'cashier.floatNote': '开班备用金接力：交班点交 → 接班人确认透出（默认 ¥500，端口留口）',
+  'cashier.handoverConfirmCta': '确认接班',
+  'cashier.handoverConfirmedNote': '接班人已确认（双方签字口径）',
+  'cashier.discountStatsTitle': '折扣 / 抹零单列（当日已收单）',
+  'cashier.cashAdjustLabel': '现金收支调整额',
 } as const;
 
 export const CASHIER_COPY = withCopyOverrides(CASHIER_COPY_TABLE);

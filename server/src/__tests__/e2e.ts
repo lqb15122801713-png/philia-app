@@ -171,8 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 3150 键/68 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68）；
+ *      56.1 种子 3193 键/68 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -4933,17 +4933,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（3150 键/68 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 3150 && domainSet.size === 68 &&
+  check('56.1 copy 域种子全量落库（3193 键/68 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 3193 && domainSet.size === 68 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（3150 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 3150 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（3193 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 3193 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -8637,8 +8637,8 @@ async function main(): Promise<void> {
 
     /* ---- 76.3 公共读口形状不变（不透元数据：键→文两列） ---- */
     const texts76 = await trpcQuery<{ rows: Array<{ key: string; text: string; screen?: unknown; position?: unknown }> }>('config.activeCopyTexts', { cookie: customerCookie });
-    check('76.3 activeCopyTexts 形状不变（3150 行 key→text，不透 screen/position 元数据）',
-      texts76.rows.length === 3150 &&
+    check('76.3 activeCopyTexts 形状不变（3193 行 key→text，不透 screen/position 元数据）',
+      texts76.rows.length === 3193 &&
       texts76.rows.every((r) => r.screen === undefined && r.position === undefined),
       texts76.rows.length);
 
@@ -9007,6 +9007,285 @@ async function main(): Promise<void> {
     check('79.7 隔离族不回退：B 预约/收银仍 0 行 + B 花名册仍仅 B 店长（片 2 全量改造后互盲不破）',
       apptB797.length === 0 && billsB797.length === 0 && staffB797.staff.length === 1 && staffB797.staff[0]!.name === 'e2e B 店长',
       { appt: apptB797.length, bills: billsB797.length, staff: staffB797.staff.length });
+  }
+
+  /* ==================================================================
+   * 商家端大批 片 3（收银台 18 件 · 任务书冻结版 V1.0）段：
+   *   80.1 裁件④ clerk 读本店详情放行；80.2 整单折扣精度（percent/amount/封顶，
+   *       前后值精确到分）；80.3 挂单备注+单品备注透出；80.4 快捷收款（custom 行，
+   *       不进库存）；80.5 抹零（jiao/yuan 端口规则+退货不读取登记）；80.6 挂账台账
+   *       （状态机+结清+核销+不计已收前后值）；80.7 现金收支 paid in/out+日结账面
+   *       调整额；80.8 交接班族（备用金点交+接班确认+盲交+长短款分级+非现金实点+
+   *       折扣单列）；80.9 授权台账+周会导出；80.10 预付台账透出；80.11 S13 按晚
+   *       明细复走（billSnapshot 透出四数精确）；80.12 隔离族不回退抽查。
+   * ================================================================== */
+  console.log('\n[商家端片3] 80. 收银台 18 件（折扣精度/抹零/挂账/现金收支/交接班族/台账/按晚明细）');
+  {
+    type AnyRec80 = Record<string, unknown>;
+    const { storeWallclock: wc80 } = await import('../routers/appointment');
+    const { desc: desc80 } = await import('drizzle-orm');
+    const w80 = wc80(new Date());
+    const seedStore80 = await db.select().from(schema.stores).where(eq(schema.stores.name, '菲丽亚宠物·示例店')).limit(1).then((r) => r[0]!);
+    const ownerB80 = await db.select().from(schema.users).where(eq(schema.users.kimiId, 'seed_e2e_chain_ownerb')).limit(1).then((r) => r[0]!);
+    const storeB80 = await db.select().from(schema.stores).where(eq(schema.stores.ownerId, ownerB80.id)).limit(1).then((r) => r[0]!);
+    const ownerBCookie80 = await devLogin(ownerB80.id);
+    const cust80 = byKimi('seed_kimi_customer')!;
+    const svc80 = await db.select().from(schema.services).where(eq(schema.services.storeId, seedStore80.id)).limit(1).then((r) => r[0]!);
+
+    /* ---- 80.1 裁件④：clerk 读本店详情放行 + B 店 clerk 跨店 NOT_FOUND ---- */
+    const [clerkB80] = await db.insert(schema.users).values({
+      kimiId: 'seed_e2e_chain_clerkb', nickname: 'e2e B 店员', phone: '13900004001',
+    }).returning();
+    await db.insert(schema.userRoles).values({ userId: clerkB80!.id, role: 'merchant_clerk' });
+    await db.insert(schema.staff).values({ storeId: storeB80!.id, userId: clerkB80!.id, name: 'e2e B 店员', role: 'frontdesk', status: 'active' });
+    const clerkBCookie80 = await devLogin(clerkB80!.id);
+    /* 本店 clerk 夹具（套内 seed_e2e_clerk 无 staff 行=负例专用，裁件④须绑店正例） */
+    const [clerkA80] = await db.insert(schema.users).values({
+      kimiId: 'seed_e2e_chain_clerka', nickname: 'e2e A 店员甲', phone: '13900004002',
+    }).returning();
+    await db.insert(schema.userRoles).values({ userId: clerkA80!.id, role: 'merchant_clerk' });
+    await db.insert(schema.staff).values({ storeId: seedStore80.id, userId: clerkA80!.id, name: 'e2e A 店员甲', role: 'frontdesk', status: 'active' });
+    const clerkACookie80 = await devLogin(clerkA80!.id);
+    const clerkGetA = await trpcQuery<{ appointment: { id: string } }>('appointment.get', { cookie: clerkACookie80, input: { appointmentId: createdAid } });
+    const clerkGetCross = await asErr(trpcQuery('appointment.get', { cookie: clerkBCookie80, input: { appointmentId: createdAid } }));
+    check('80.1 裁件④：clerk 读本店预约详情=200 放行（权限补齐）+ B 店 clerk 跨店=NOT_FOUND（裁件①不回退）',
+      clerkGetA.appointment.id === createdAid &&
+      clerkGetCross instanceof TrpcHttpError && clerkGetCross.code === 'NOT_FOUND',
+      { own: clerkGetA.appointment.id === createdAid, cross: clerkGetCross instanceof TrpcHttpError ? clerkGetCross.code : null });
+
+    /* ---- 80.2 整单折扣精度（percent round-half-up / amount / 封顶 400，精确到分） ---- */
+    const hold80 = await trpcMutate<{ bill: { billNo: string; subtotalFen: number; discountFen: number; payableFen: number } }>('cashier.hold', {
+      cookie: ownerCookie,
+      input: {
+        items: [{ kind: 'custom', refId: 'custom', customName: '精度验证件', customAmountFen: 10005, qty: 1 }],
+        discountType: 'percent', discountValue: 90,
+      },
+    });
+    check('80.2 折扣精度①：percent 90 对 100.05 元单 → 折后 90.05（round-half-up：9004.5→9005）折扣 10.00 精确到分',
+      hold80.bill.subtotalFen === 10005 && hold80.bill.payableFen === 9005 && hold80.bill.discountFen === 1000,
+      { sub: hold80.bill.subtotalFen, disc: hold80.bill.discountFen, pay: hold80.bill.payableFen });
+    const hold80b = await trpcMutate<{ bill: { billNo: string; discountFen: number; payableFen: number } }>('cashier.hold', {
+      cookie: ownerCookie,
+      input: {
+        items: [{ kind: 'custom', refId: 'custom', customName: '立减验证件', customAmountFen: 10005, qty: 1 }],
+        discountType: 'amount', discountValue: 5,
+      },
+    });
+    await trpcMutate('cashier.settle', {
+      cookie: ownerCookie,
+      input: { billNo: hold80.bill.billNo, items: [{ kind: 'custom', refId: 'custom', customName: '精度验证件', customAmountFen: 10005, qty: 1 }], discountType: 'percent', discountValue: 90, payments: [{ method: 'cash', amountFen: 9005 }] },
+    });
+    await trpcMutate('cashier.settle', {
+      cookie: ownerCookie,
+      input: { billNo: hold80b.bill.billNo, items: [{ kind: 'custom', refId: 'custom', customName: '立减验证件', customAmountFen: 10005, qty: 1 }], discountType: 'amount', discountValue: 5, payments: [{ method: 'cash', amountFen: 10000 }] },
+    });
+    const capNo = await asErr(trpcMutate('cashier.hold', {
+      cookie: ownerCookie,
+      input: {
+        items: [{ kind: 'custom', refId: 'custom', customName: '封顶验证件', customAmountFen: 100, qty: 1 }],
+        discountType: 'amount', discountValue: 101,
+      },
+    }));
+    check('80.2 折扣精度②：amount 立减 0.05 精确 + 优惠超非预约行合计=400 明文（percent 闸门 manager 可放行照案）',
+      hold80b.bill.discountFen === 5 && hold80b.bill.payableFen === 10000 &&
+      capNo instanceof TrpcHttpError && capNo.httpStatus === 400 && capNo.message.includes('不能超过'),
+      { b: hold80b.bill.payableFen, cap: capNo instanceof TrpcHttpError ? capNo.httpStatus : null });
+
+    /* ---- 80.3 挂单备注+单品备注透出 ---- */
+    const holdNote = await trpcMutate<{ bill: { billNo: string } }>('cashier.hold', {
+      cookie: clerkACookie80,
+      input: {
+        note: '挂账对象：王女士 138****0000（片 3 挂单增强）',
+        items: [{ kind: 'service', refId: svc80.id, qty: 1, note: '半边蝴蝶结要对称' }],
+      },
+    });
+    const billNote = await trpcQuery<{ bill: { note: string | null }; items: Array<{ note: string | null }> }>('cashier.getBill', {
+      cookie: ownerCookie, input: { billNo: holdNote.bill.billNo },
+    });
+    check('80.3 挂单增强：单级备注落库透出（挂账对象登记=挂账注记合法位）+ 单品备注行透出（参与小票数据源）',
+      billNote.bill.note === '挂账对象：王女士 138****0000（片 3 挂单增强）' &&
+      billNote.items[0]?.note === '半边蝴蝶结要对称',
+      { bill: billNote.bill.note, item: billNote.items[0]?.note });
+
+    /* ---- 80.4 快捷收款（custom 行 settle：金额精确+不进库存+进 tender） ---- */
+    const prod80 = await db.select().from(schema.products).where(eq(schema.products.storeId, seedStore80.id)).limit(1).then((r) => r[0]);
+    const tenderBefore80 = await trpcQuery<{ receivedTotalFen: number }>('store.todayTenderStats', { cookie: ownerCookie });
+    const settle80 = await trpcMutate<{ bill: { billNo: string; payableFen: number } }>('cashier.settle', {
+      cookie: clerkACookie80,
+      input: {
+        items: [{ kind: 'custom', refId: 'custom', customName: '快捷收款·洗澡卡补差', customAmountFen: 6600, qty: 1, note: '电话预约补差' }],
+        payments: [{ method: 'cash', amountFen: 6600 }],
+      },
+    });
+    const prodAfter = prod80 ? await db.select().from(schema.products).where(eq(schema.products.id, prod80.id)).then((r) => r[0]!) : null;
+    const tenderAfter80 = await trpcQuery<{ receivedTotalFen: number }>('store.todayTenderStats', { cookie: ownerCookie });
+    check('80.4 快捷收款：custom 行 settle=66.00 精确落单 + 商品库存零扣减（不进库存域）+ 已收 tender +6600（前后值）',
+      settle80.bill.payableFen === 6600 &&
+      (prod80 && prodAfter ? prodAfter.stock === prod80.stock : true) &&
+      tenderAfter80.receivedTotalFen - tenderBefore80.receivedTotalFen === 6600,
+      { pay: settle80.bill.payableFen, stock: prodAfter?.stock, tenderDelta: tenderAfter80.receivedTotalFen - tenderBefore80.receivedTotalFen });
+
+    /* ---- 80.5 抹零（端口规则 jiao/yuan + 退货不读取登记） ---- */
+    await trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'service', scope: 'hq', changes: [{ ruleKey: 'cashier_rounding_rule', valueJson: { mode: 'jiao' } }] },
+    });
+    const settleJiao = await trpcMutate<{ bill: { payableFen: number; roundingFen: number } }>('cashier.settle', {
+      cookie: clerkACookie80,
+      input: { items: [{ kind: 'custom', refId: 'custom', customName: '抹零验证·角', customAmountFen: 10067, qty: 1 }], payments: [{ method: 'cash', amountFen: 10060 }] },
+    });
+    await trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'service', scope: 'hq', changes: [{ ruleKey: 'cashier_rounding_rule', valueJson: { mode: 'yuan' } }] },
+    });
+    const settleYuan = await trpcMutate<{ bill: { payableFen: number; roundingFen: number } }>('cashier.settle', {
+      cookie: clerkACookie80,
+      input: { items: [{ kind: 'custom', refId: 'custom', customName: '抹零验证·元', customAmountFen: 10067, qty: 1 }], payments: [{ method: 'cash', amountFen: 10000 }] },
+    });
+    await trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'service', scope: 'hq', changes: [{ ruleKey: 'cashier_rounding_rule', valueJson: { mode: 'none' } }] },
+    });
+    const settleNone = await trpcMutate<{ bill: { payableFen: number; roundingFen: number } }>('cashier.settle', {
+      cookie: clerkACookie80,
+      input: { items: [{ kind: 'custom', refId: 'custom', customName: '抹零验证·复原', customAmountFen: 10067, qty: 1 }], payments: [{ method: 'cash', amountFen: 10067 }] },
+    });
+    check('80.5 抹零：jiao 档 100.67→100.60（让利 0.07）/ yuan 档 →100.00（让利 0.67）/ none 复原不抹——rounding_fen 落库精确到分（退货不读取=refund 不调经 computeAmounts，码径写死登记）',
+      settleJiao.bill.payableFen === 10060 && settleJiao.bill.roundingFen === 7 &&
+      settleYuan.bill.payableFen === 10000 && settleYuan.bill.roundingFen === 67 &&
+      settleNone.bill.payableFen === 10067 && settleNone.bill.roundingFen === 0,
+      { jiao: [settleJiao.bill.payableFen, settleJiao.bill.roundingFen], yuan: [settleYuan.bill.payableFen, settleYuan.bill.roundingFen], none: settleNone.bill.roundingFen });
+
+    /* ---- 80.6 挂账台账（状态机+结清+核销+不计已收前后值；记录不可删） ---- */
+    const tenderBeforeCredit = await trpcQuery<{ receivedTotalFen: number }>('store.todayTenderStats', { cookie: ownerCookie });
+    const settleCredit = await trpcMutate<{ bill: { billNo: string; payableFen: number } }>('cashier.settle', {
+      cookie: clerkACookie80,
+      input: {
+        note: '挂账对象：周先生（散客登记）',
+        items: [{ kind: 'custom', refId: 'custom', customName: '挂账验证·洗护', customAmountFen: 10000, qty: 1 }],
+        payments: [{ method: 'cash', amountFen: 6000 }, { method: 'credit', amountFen: 4000 }],
+      },
+    });
+    const tenderAfterCredit = await trpcQuery<{ receivedTotalFen: number }>('store.todayTenderStats', { cookie: ownerCookie });
+    const creditList80 = await trpcQuery<Array<{ id: string; status: string; amountFen: number; settledFen: number }>>('cashier.creditList', { cookie: ownerCookie });
+    const ledger80 = creditList80.find((l) => l.amountFen === 4000 && l.status === 'open')!;
+    const overSettle = await asErr(trpcMutate('cashier.creditSettle', { cookie: ownerCookie, input: { ledgerId: ledger80.id, amountFen: 4001 } }));
+    const partSettle = await trpcMutate<{ ledger: { status: string; settledFen: number } }>('cashier.creditSettle', {
+      cookie: ownerCookie, input: { ledgerId: ledger80.id, amountFen: 2500, note: '线下收 25' },
+    });
+    const fullSettle = await trpcMutate<{ ledger: { status: string; settledFen: number } }>('cashier.creditSettle', {
+      cookie: ownerCookie, input: { ledgerId: ledger80.id, amountFen: 1500, note: '尾款结清' },
+    });
+    const mgrWriteoff = await asErr(trpcMutate('cashier.creditWriteoff', { cookie: managerCookie, input: { ledgerId: ledger80.id, reason: '店长越权核销' } }));
+    check('80.6 挂账：credit 段落台账 open 40.00（tender 仅 +6000 现金段=不计已收）+ 超余额结清 400 + 部分→结清状态机（2500→1500）+ 核销仅 owner（manager 403）+ 记录不可删（无删除端点）',
+      settleCredit.bill.payableFen === 10000 &&
+      tenderAfterCredit.receivedTotalFen - tenderBeforeCredit.receivedTotalFen === 6000 &&
+      !!ledger80 && overSettle instanceof TrpcHttpError && overSettle.httpStatus === 400 &&
+      partSettle.ledger.status === 'partial' && partSettle.ledger.settledFen === 2500 &&
+      fullSettle.ledger.status === 'settled' && fullSettle.ledger.settledFen === 4000 &&
+      mgrWriteoff instanceof TrpcHttpError && mgrWriteoff.httpStatus === 403,
+      { tenderDelta: tenderAfterCredit.receivedTotalFen - tenderBeforeCredit.receivedTotalFen, st: [partSettle.ledger.status, fullSettle.ledger.status], mgr: mgrWriteoff instanceof TrpcHttpError ? mgrWriteoff.httpStatus : null });
+
+    /* ---- 80.7 现金收支 paid in/out + 日结账面调整额（前后值精确） ---- */
+    const tenderPreMove = await trpcQuery<{ tender: { cashFen: number } }>('store.todayTenderStats', { cookie: ownerCookie });
+    await trpcMutate('cashier.cashMoveRecord', { cookie: ownerCookie, input: { kind: 'paid_in', amountFen: 2000, reason: '备用金存入（片 3 交接班族）' } });
+    await trpcMutate('cashier.cashMoveRecord', { cookie: ownerCookie, input: { kind: 'paid_out', amountFen: 500, reason: '找零备用取出' } });
+    const moves80 = await trpcQuery<Array<{ kind: string; amountFen: number; reason: string }>>('cashier.cashMoveList', { cookie: ownerCookie });
+    check('80.7 现金收支：paid_in 2000/paid_out 500 台账落行（事由必填留痕）+ 本班流水可读',
+      moves80.some((m) => m.kind === 'paid_in' && m.amountFen === 2000) && moves80.some((m) => m.kind === 'paid_out' && m.amountFen === 500),
+      { n: moves80.length });
+    /* 长短款分级：无 diffNote 超阈值 → 400 明文；盲交 preview stats=null */
+    const blindPreview = await trpcQuery<{ stats: unknown; blind?: boolean }>('cashier.dayClosePreview', { cookie: ownerCookie, input: { blind: true } });
+    const diffNoNote = await asErr(trpcMutate('cashier.dayClose', {
+      cookie: ownerCookie,
+      input: { actualCashFen: tenderPreMove.tender.cashFen + 1500 + 5000, actualWechatFen: 0, actualAlipayFen: 0 },
+    }));
+    const close80 = await trpcMutate<{ close: { bookCashFen: number; diffFen: number; actualWechatFen: number | null; reason: string | null; snapshotJson: string } }>('cashier.dayClose', {
+      cookie: ownerCookie,
+      input: { actualCashFen: tenderPreMove.tender.cashFen + 1500 + 5000, actualWechatFen: 0, actualAlipayFen: 0, diffNote: '银行未达账 50 元（长短款分级留痕）' },
+    });
+    const snap80 = JSON.parse(close80.close.snapshotJson) as { cashAdjustFen?: number; discountStats?: { discountedBills: number; discountFen: number; roundingFen: number } };
+    check('80.8 交接班族①：盲交 preview 不透账面（stats=null）+ 超阈值无说明=400 + 带说明冻结（账面=流水现金+调整额 1500 精确）+ 非现金实点落列 + 折扣/抹零单列进交班快照',
+      blindPreview.stats === null && blindPreview.blind === true &&
+      diffNoNote instanceof TrpcHttpError && diffNoNote.httpStatus === 400 && diffNoNote.message.includes('差异说明') &&
+      close80.close.bookCashFen === tenderPreMove.tender.cashFen + 1500 &&
+      close80.close.diffFen === 5000 &&
+      close80.close.actualWechatFen === 0 &&
+      (close80.close.reason ?? '').includes('差异说明') &&
+      snap80.cashAdjustFen === 1500 &&
+      typeof snap80.discountStats?.discountFen === 'number' && (snap80.discountStats?.discountedBills ?? 0) >= 2 &&
+      (snap80.discountStats?.roundingFen ?? -1) === 74,
+      { book: close80.close.bookCashFen, expect: tenderPreMove.tender.cashFen + 1500, stats: snap80.discountStats });
+
+    /* ---- 80.8 交接班族②：备用金点交+接班人确认+开班备用金默认额 ---- */
+    /* 日结已闭上班——先一笔快捷收款懒建新开班（ensureOpenShift+备用金默认额落列），再关班交接 */
+    await trpcMutate('cashier.settle', {
+      cookie: clerkACookie80,
+      input: { items: [{ kind: 'custom', refId: 'custom', customName: '新开班触发件', customAmountFen: 100, qty: 1 }], payments: [{ method: 'cash', amountFen: 100 }] },
+    });
+    const mgrUser80 = await db.select().from(schema.users).where(eq(schema.users.kimiId, 'seed_e2e_manager')).limit(1).then((r) => r[0]!);
+    const shiftClose80 = await trpcMutate<{ handoverId: string }>('cashier.closeShift', {
+      cookie: ownerCookie,
+      input: { handover: { floatFen: 50000, toUserId: mgrUser80.id, cashNote: '备用金 500 已点交' } },
+    });
+    const shiftRow80 = await db.select().from(schema.shifts).where(eq(schema.shifts.storeId, seedStore80.id)).orderBy(desc80(schema.shifts.openedAt)).limit(1).then((r) => r[0]!);
+    const handover80 = await trpcQuery<{ handover: { floatFen: number | null; confirmedAt: Date | null; toUserId: string | null } }>('cashier.handoverOf', {
+      cookie: ownerCookie, input: { shiftId: shiftRow80.id },
+    });
+    const wrongConfirm = await asErr(trpcMutate('cashier.confirmHandover', { cookie: ownerCookie, input: { shiftId: shiftRow80.id } }));
+    const okConfirm = await trpcMutate<{ handover: { confirmedAt: Date | null; confirmedBy: string | null }; idempotent: boolean }>('cashier.confirmHandover', {
+      cookie: managerCookie, input: { shiftId: shiftRow80.id },
+    });
+    check('80.8 交接班族②：备用金点交 float_fen=50000 透出 + 非接班人确认 403 + 接班人确认落列（双方签字口径）+ 开班备用金默认额 500 落列（端口留口）',
+      handover80.handover.floatFen === 50000 &&
+      wrongConfirm instanceof TrpcHttpError && wrongConfirm.httpStatus === 403 &&
+      okConfirm.handover.confirmedAt !== null && okConfirm.handover.confirmedBy === mgrUser80.id,
+      { float: handover80.handover.floatFen, wrong: wrongConfirm instanceof TrpcHttpError ? wrongConfirm.httpStatus : null, by: okConfirm.handover.confirmedBy, openFloat: shiftRow80?.openingFloatFen ?? 'n/a' });
+
+    /* ---- 80.9 授权台账+周会导出 ---- */
+    const ledgerRows80 = await trpcQuery<{ items: Array<{ agreementKey: string; version: string }>; note: string }>('agreement.listForStore', { cookie: ownerCookie });
+    const export80 = await trpcQuery<{ filename: string; csv: string; rows: number }>('agreement.exportCsv', { cookie: ownerCookie });
+    check('80.9 授权台账：本店签署记录可读（含 67.2 医疗授权行）+ 周会导出 CSV（BOM+固定列+行数一致，仅 owner 闸照案）',
+      ledgerRows80.items.some((r) => r.agreementKey === 'medical_auth') &&
+      export80.csv.startsWith('﻿') && export80.csv.includes('协议类型') &&
+      export80.rows === ledgerRows80.items.length && export80.filename.includes('授权台账'),
+      { items: ledgerRows80.items.length, rows: export80.rows });
+
+    /* ---- 80.10 预付台账透出 ---- */
+    const prepaid80 = await trpcQuery<Array<{ status: string; amountFen: number; customerName: string | null }>>('appointment.prepaidListForStore', { cookie: ownerCookie });
+    check('80.10 订金押金留痕透出：预付台账本店列表可读（67.4 联动行在：prepaid_pending/registered/refunded 任一态）+ 押金台账读口既有（66.1 已核）',
+      prepaid80.length >= 1 && prepaid80.every((r) => typeof r.amountFen === 'number'),
+      { n: prepaid80.length, st: prepaid80.slice(0, 3).map((r) => r.status) });
+
+    /* ---- 80.11 S13 按晚明细复走（billSnapshot 透出四数精确） ---- */
+    const pet80 = await db.select().from(schema.pets).limit(1).then((r) => r[0]!);
+    const bSvc80 = await db.select().from(schema.services).where(and(eq(schema.services.storeId, seedStore80.id), eq(schema.services.type, 'boarding'))).limit(1).then((r) => r[0]!);
+    const start80 = new Date(Date.now() - 24 * 3600 * 1000);
+    const end80 = new Date(Date.now() + 2 * 24 * 3600 * 1000);
+    const [bAppt80] = await db.insert(schema.appointments).values({
+      storeId: seedStore80.id, customerId: cust80.id, petId: pet80.id, serviceId: bSvc80.id,
+      type: 'boarding', status: 'completed', scheduledStart: start80, scheduledEnd: end80, priceFen: 59700,
+      code: 'T8BD3F6GHJ',
+    }).returning();
+    const settleB80 = await trpcMutate<{ bill: { billNo: string } }>('cashier.settle', {
+      cookie: clerkACookie80,
+      input: { items: [{ kind: 'appointment', refId: bAppt80!.id, qty: 1 }], payments: [{ method: 'cash', amountFen: 59700 }] },
+    });
+    const billB80 = await trpcQuery<{ items: Array<{ kind: string; nightBreakdown?: { totalNights: number; occurredNights: number; remainingNights: number; perNightFen: number } }> }>('cashier.getBill', {
+      cookie: ownerCookie, input: { billNo: settleB80.bill.billNo },
+    });
+    const nb80 = billB80.items.find((i) => i.kind === 'appointment')?.nightBreakdown;
+    check('80.11 S13 按晚明细复走：寄养行透出 总晚 3/已住 1/剩余 2/晚单价 19900（floor 59700÷3 残余归已住——与 refund 同源件 computeNightBreakdown）',
+      nb80?.totalNights === 3 && nb80?.occurredNights === 1 && nb80?.remainingNights === 2 && nb80?.perNightFen === 19900,
+      nb80 ?? 'missing');
+
+    /* ---- 80.12 隔离族不回退抽查 ---- */
+    const billsB80 = await trpcQuery<AnyRec80[]>('cashier.listBills', { cookie: ownerBCookie80 });
+    const creditB80 = await trpcQuery<AnyRec80[]>('cashier.creditList', { cookie: ownerBCookie80 });
+    const movesB80 = await trpcQuery<AnyRec80[]>('cashier.cashMoveList', { cookie: ownerBCookie80 });
+    check('80.12 隔离族不回退：B 流水/挂账台账/现金收支仍全 0（片 3 全量改造后互盲不破）',
+      billsB80.length === 0 && creditB80.length === 0 && movesB80.length === 0,
+      { bills: billsB80.length, credit: creditB80.length, moves: movesB80.length });
   }
 
   client.close();

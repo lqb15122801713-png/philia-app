@@ -15,6 +15,7 @@
  * - 吸底双钮 [挂单] 白底墨边 + [结账] 柠檬（grid 1 : 1.4）。
  */
 
+import { useState } from 'react'
 import { Check, Minus, Pause, Percent, Plus, Sparkles, X } from 'lucide-react'
 import { cc } from '@/copy/cashier'
 import {
@@ -73,6 +74,9 @@ export default function CartPanel({
   onOpenDiscount,
   onClearDiscount,
   onTogglePassLine,
+  onLineNote,
+  billNote,
+  onBillNote,
   onHold,
   onCheckout,
   onOpenSell,
@@ -104,6 +108,11 @@ export default function CartPanel({
   onOpenDiscount: () => void
   onClearDiscount: () => void
   onTogglePassLine: (refId: string) => void
+  /** 片 3：行内单品备注编辑（随 hold/settle 入参 note） */
+  onLineNote: (refId: string, note: string) => void
+  /** 片 3：整单备注（随 hold/settle 快照 note 落库） */
+  billNote: string
+  onBillNote: (note: string) => void
   onHold: () => void
   onCheckout: () => void
   /** 立省钩子「开通萤火」快捷入口（售卡面板萤火档预选） */
@@ -114,6 +123,8 @@ export default function CartPanel({
   const empty = lines.length === 0
   const markedPassCount = lines.filter((l) => l.paidByPass).length
   const adjustedCount = lines.filter((l) => l.adjustedPriceFen != null).length
+  /** 片 3：行内备注编辑中行的 refId（一次一行，失焦即收） */
+  const [noteEditId, setNoteEditId] = useState<string | null>(null)
   /** R11a：会员折扣合计（展示预估口径，服务/预约行未人工改价的部分） */
   const memberDiscFen =
     svcDiscount === null
@@ -251,6 +262,38 @@ export default function CartPanel({
                     {cc('cashier.stockShort', { n: l.stock ?? '' })}
                   </div>
                 ) : null}
+                {/* 片 3：行内单品备注（随 hold/settle 入参 note，小票透出） */}
+                <div className="mt-1.5 pl-[46px]">
+                  {noteEditId === l.refId ? (
+                    <input
+                      autoFocus
+                      data-testid={`cashier-line-note-input-${l.refId}`}
+                      maxLength={200}
+                      placeholder={cc('cashier.lineNotePh')}
+                      value={l.note ?? ''}
+                      onChange={(e) => onLineNote(l.refId, e.target.value)}
+                      onBlur={() => setNoteEditId(null)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') (e.target as HTMLInputElement).blur()
+                      }}
+                      className="w-full rounded-[8px] bg-[#FFFDF6] px-2.5 py-1.5 text-caption-xs text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      data-testid={`cashier-line-note-${l.refId}`}
+                      onClick={() => setNoteEditId(l.refId)}
+                      className={`max-w-full truncate rounded-full px-2.5 py-[3px] text-caption-xs transition-transform duration-120 ease-philia-spring active:scale-92 ${
+                        l.note
+                          ? 'bg-[#F1E8D4] font-semibold text-[rgba(59,46,36,.62)]'
+                          : 'bg-[#FFFDF6] text-[rgba(59,46,36,.42)] shadow-[0_0_0_1px_rgba(59,46,36,.09)]'
+                      }`}
+                      title={l.note ?? cc('cashier.lineNotePh')}
+                    >
+                      {l.note ? `备注：${l.note}` : cc('cashier.lineNoteCta')}
+                    </button>
+                  )}
+                </div>
               </div>
             )
           })}
@@ -295,6 +338,18 @@ export default function CartPanel({
         <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="cashier-owner-hint">
           改价 / 整单优惠仅店主/店长可操作
         </p>
+      ) : null}
+
+      {/* 片 3：整单备注（随 hold/settle 快照 note 落库，挂单卡/详情/小票透出） */}
+      {!empty ? (
+        <input
+          data-testid="cashier-bill-note"
+          maxLength={500}
+          placeholder={cc('cashier.billNotePh')}
+          value={billNote}
+          onChange={(e) => onBillNote(e.target.value)}
+          className="mt-2 w-full rounded-[10px] bg-[#FFFDF6] px-3 py-2 text-caption text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+        />
       ) : null}
 
       {/* R11a 立省钩子（APP-47）：非会员当单「开通萤火立省 ¥X」一屏一次不打扰；
@@ -356,6 +411,13 @@ export default function CartPanel({
           <span>整单优惠</span>
           <b className="font-number font-semibold tabular-nums text-ink">−¥{fenToYuan(amounts.discountFen)}</b>
         </div>
+        {/* 片 3：抹零透出（前端 0 占位——真值以 server 重算为准，单上 roundingFen>0 才显示） */}
+        {amounts.roundingFen > 0 ? (
+          <div className="flex justify-between py-1 text-caption text-[rgba(59,46,36,.6)]" data-testid="cashier-rounding-row">
+            <span>{cc('cashier.roundingLabel')}</span>
+            <b className="font-number font-semibold tabular-nums text-ink">−¥{fenToYuan(amounts.roundingFen)}</b>
+          </div>
+        ) : null}
         <div className="mt-2 flex items-baseline justify-between border-t border-dashed border-[rgba(59,46,36,.09)] pt-2.5">
           <span className="text-body-sm font-semibold">应收</span>
           <span className="whitespace-nowrap font-number text-detail font-bold tabular-nums" data-testid="cashier-due">

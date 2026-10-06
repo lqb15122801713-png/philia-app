@@ -209,7 +209,7 @@ export type AppointmentRow = typeof schema.appointments.$inferSelect;
  * 预约归属校验，返回预约行：
  * - customer：仅本人预约
  * - staff：本店且（未指派或指派给自己）
- * - merchant（owner/manager）：本店
+ * - merchant（owner/manager）：本店；片 2 裁件④（片 3 随带）：merchant_clerk 读本店放行
  * 预约不存在抛 NOT_FOUND；未登录抛 UNAUTHORIZED；
  * 归属不通过（含跨店）一律 NOT_FOUND（片 2 裁件①：跨店按 id 取数统一 NOT_FOUND
  * 防探测口径——不透出他店单存在性；片 1 意见书 §三裁定）。
@@ -244,6 +244,10 @@ export async function assertAppointmentAccess(
   const isMerchant =
     user.roles.includes('merchant_owner') || user.roles.includes('merchant_manager');
   if (isMerchant && user.storeId === appt.storeId) {
+    return appt;
+  }
+  /* 片 2 裁件④（片 3 随带）：clerk 读本店预约详情放行（权限补齐件，跨店仍 NOT_FOUND） */
+  if (user.roles.includes('merchant_clerk') && user.storeId === appt.storeId) {
     return appt;
   }
   throw new TRPCError({ code: 'NOT_FOUND', message: '预约不存在' });

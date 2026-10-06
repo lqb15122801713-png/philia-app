@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-06T07:16:30.057Z；键数=3149；归屏率=96.8%（未归屏 100）
+ * 生成时间口径：2026-10-06T10:26:08.067Z；键数=3192；归屏率=96.5%（未归屏 113）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -6711,6 +6711,27 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "DayClosePanels 组件内文案"
  },
  {
+  "key": "cashier.agreementAside",
+  "domain": "merchant:cashier",
+  "text": "本店口径=签署人∈本店客户集（有本店预约单）",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "cashier.agreementExport",
+  "domain": "merchant:cashier",
+  "text": "周会导出",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "cashier.billNotePh",
+  "domain": "merchant:cashier",
+  "text": "整单备注（选填，随单留痕 · 小票透出）",
+  "screen": "商家·收银台",
+  "position": "CartPanel 组件内文案"
+ },
+ {
   "key": "cashier.billRefundDetailLink",
   "domain": "merchant:cashier",
   "text": "（详情见「退款」列表页）",
@@ -6732,11 +6753,60 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "BillDetailDialog 组件内文案"
  },
  {
+  "key": "cashier.blindClose",
+  "domain": "merchant:cashier",
+  "text": "盲交",
+  "screen": "商家·日结·交接班",
+  "position": "DayClosePanels 组件内文案"
+ },
+ {
+  "key": "cashier.blindCloseNote",
+  "domain": "merchant:cashier",
+  "text": "盲交中——账面已遮罩（server blind 口径不透账面），实点先行，差异提交后揭晓",
+  "screen": "商家·日结·交接班",
+  "position": "DayClosePanels 组件内文案"
+ },
+ {
   "key": "cashier.cartEmpty",
   "domain": "merchant:cashier",
   "text": "点左侧商品或服务开单",
   "screen": "商家·收银台",
   "position": "CartPanel 组件内文案"
+ },
+ {
+  "key": "cashier.cashAdjustLabel",
+  "domain": "merchant:cashier",
+  "text": "现金收支调整额",
+  "screen": "商家·日结·交接班",
+  "position": "DayClosePanels 组件内文案"
+ },
+ {
+  "key": "cashier.cashMoveAside",
+  "domain": "merchant:cashier",
+  "text": "台账留痕不碰真钱 · 日结账面现金=流水现金+存入−取出",
+  "screen": "商家·日结·交接班",
+  "position": "DayClosePanels 组件内文案"
+ },
+ {
+  "key": "cashier.cashMoveEmpty",
+  "domain": "merchant:cashier",
+  "text": "本班暂无现金收支记录",
+  "screen": "商家·日结·交接班",
+  "position": "DayClosePanels 组件内文案"
+ },
+ {
+  "key": "cashier.cashMoveNoShift",
+  "domain": "merchant:cashier",
+  "text": "当前无开班班次——登记将落「非当班补登」（shiftId 空留痕）",
+  "screen": "商家·日结·交接班",
+  "position": "DayClosePanels 组件内文案"
+ },
+ {
+  "key": "cashier.cashMoveTitle",
+  "domain": "merchant:cashier",
+  "text": "现金收支（钱箱存入/取出）",
+  "screen": "商家·日结·交接班",
+  "position": "DayClosePanels 组件内文案"
  },
  {
   "key": "cashier.closeShiftConfirmBody",
@@ -6767,6 +6837,41 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "CashierClosePage 页面内文案"
  },
  {
+  "key": "cashier.creditNote",
+  "domain": "merchant:cashier",
+  "text": "挂账=台账留痕不碰真钱（至多一段；结清/核销走「台账」专页，不计已收）",
+  "screen": "商家·收银台",
+  "position": "PaySheet 组件内文案"
+ },
+ {
+  "key": "cashier.creditSettleNote",
+  "domain": "merchant:cashier",
+  "text": "部分/全额结清均可，金额 ≤ 在挂余额；只登记不碰真钱支付表",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "cashier.creditSettleTitle",
+  "domain": "merchant:cashier",
+  "text": "挂账结清（线下收款留痕）",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "cashier.creditWriteoffNote",
+  "domain": "merchant:cashier",
+  "text": "核销=不再追缴，原因必填留痕；台账行永存不删",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "cashier.creditWriteoffTitle",
+  "domain": "merchant:cashier",
+  "text": "挂账核销（仅店主）",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+ },
+ {
   "key": "cashier.dayCloseEmpty",
   "domain": "merchant:cashier",
   "text": "暂无日结单 —— 上方表单完成首次日结",
@@ -6788,11 +6893,53 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "DayClosePanels 组件内文案"
  },
  {
+  "key": "cashier.depositSummaryAside",
+  "domain": "merchant:cashier",
+  "text": "在押合计=held+refunding（refunded 已退还不计）",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "cashier.diffNotePh",
+  "domain": "merchant:cashier",
+  "text": "差异说明（长短款超阈值必填，留痕）",
+  "screen": "商家·日结·交接班",
+  "position": "DayClosePanels 组件内文案"
+ },
+ {
+  "key": "cashier.diffNoteRequired",
+  "domain": "merchant:cashier",
+  "text": "长短款差异超复核阈值——须填差异说明后再提交（输入已保留）",
+  "screen": "商家·日结·交接班",
+  "position": "DayClosePanels 组件内文案"
+ },
+ {
   "key": "cashier.discountOverNote",
   "domain": "merchant:cashier",
   "text": "优惠不能超过服务/商品行合计（预约行金额不参与优惠）",
   "screen": "商家·收银台 / 商家·收银流水 / 商家·日结·交接班 / 商家·经营总览 / 商家·退款单",
   "position": "dialogs 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "cashier.discountStatsTitle",
+  "domain": "merchant:cashier",
+  "text": "折扣 / 抹零单列（当日已收单）",
+  "screen": "商家·日结·交接班",
+  "position": "DayClosePanels 组件内文案"
+ },
+ {
+  "key": "cashier.floatLabel",
+  "domain": "merchant:cashier",
+  "text": "备用金点交",
+  "screen": "商家·日结·交接班",
+  "position": "DayClosePanels 组件内文案"
+ },
+ {
+  "key": "cashier.floatNote",
+  "domain": "merchant:cashier",
+  "text": "开班备用金接力：交班点交 → 接班人确认透出（默认 ¥500，端口留口）",
+  "screen": "商家·日结·交接班",
+  "position": "CashierClosePage 页面内文案"
  },
  {
   "key": "cashier.flowEmpty",
@@ -6828,6 +6975,20 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "text": "客诉注记（选填，如：无 / 1 起待跟进）",
   "screen": "商家·日结·交接班",
   "position": "CashierClosePage 页面内文案"
+ },
+ {
+  "key": "cashier.handoverConfirmCta",
+  "domain": "merchant:cashier",
+  "text": "确认接班",
+  "screen": "商家·日结·交接班",
+  "position": "DayClosePanels 组件内文案"
+ },
+ {
+  "key": "cashier.handoverConfirmedNote",
+  "domain": "merchant:cashier",
+  "text": "接班人已确认（双方签字口径）",
+  "screen": "商家·日结·交接班",
+  "position": "DayClosePanels 组件内文案"
  },
  {
   "key": "cashier.handoverKeysLabel",
@@ -6935,6 +7096,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "HoldPanel 组件内文案"
  },
  {
+  "key": "cashier.holdOver24",
+  "domain": "merchant:cashier",
+  "text": "挂出超 24h",
+  "screen": "商家·收银台",
+  "position": "HoldPanel 组件内文案"
+ },
+ {
   "key": "cashier.importAside",
   "domain": "merchant:cashier",
   "text": "只交付不执行——真台账导入等老板令；演示台账试导可标记清除",
@@ -6982,6 +7150,41 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "text": "门店映射（台账店名 → 系统门店；未映射行将失败留痕）",
   "screen": "商家·日结·交接班",
   "position": "ImportLedgerPanel 组件内文案"
+ },
+ {
+  "key": "cashier.ledgerEmpty",
+  "domain": "merchant:cashier",
+  "text": "当前筛选无记录",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "cashier.ledgerSub",
+  "domain": "merchant:cashier",
+  "text": "挂账 / 押金 / 预付 / 授权 四台账留痕 · 记录不可删 · 全程不碰真钱",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "cashier.ledgerTitle",
+  "domain": "merchant:cashier",
+  "text": "台账",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "cashier.lineNoteCta",
+  "domain": "merchant:cashier",
+  "text": "备注",
+  "screen": "商家·收银台",
+  "position": "CartPanel 组件内文案"
+ },
+ {
+  "key": "cashier.lineNotePh",
+  "domain": "merchant:cashier",
+  "text": "单品备注（选填，≤200 字）",
+  "screen": "商家·收银台",
+  "position": "CartPanel 组件内文案"
  },
  {
   "key": "cashier.memberAlreadyMember",
@@ -7201,11 +7404,95 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "PaySheet 组件内文案"
  },
  {
+  "key": "cashier.peripheralNote",
+  "domain": "merchant:cashier",
+  "text": "扫码枪/钱箱/客显外设=PWA 上限明面注记，能到哪儿到哪儿",
+  "screen": "商家·收银台",
+  "position": "PaySheet 组件内文案"
+ },
+ {
   "key": "cashier.priceNewNote",
   "domain": "merchant:cashier",
   "text": "新价 ¥{amt}（改价留痕，随单可查）",
   "screen": "商家·收银台 / 商家·收银流水 / 商家·日结·交接班 / 商家·经营总览 / 商家·退款单",
   "position": "dialogs 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "cashier.quickAdd",
+  "domain": "merchant:cashier",
+  "text": "加入",
+  "screen": "商家·收银台",
+  "position": "PickPanel 组件内文案"
+ },
+ {
+  "key": "cashier.quickAmountPh",
+  "domain": "merchant:cashier",
+  "text": "金额 ¥",
+  "screen": "商家·收银台",
+  "position": "PickPanel 组件内文案"
+ },
+ {
+  "key": "cashier.quickCollect",
+  "domain": "merchant:cashier",
+  "text": "快捷收款",
+  "screen": "商家·收银台",
+  "position": "PickPanel 组件内文案"
+ },
+ {
+  "key": "cashier.quickCollectAside",
+  "domain": "merchant:cashier",
+  "text": "无商品自定义金额（如：加急费/杂项）· 不触发改价闸门",
+  "screen": "商家·收银台",
+  "position": "PickPanel 组件内文案"
+ },
+ {
+  "key": "cashier.quickInvalid",
+  "domain": "merchant:cashier",
+  "text": "请填写收款名目与金额（≥0.01 元）",
+  "screen": "商家·收银台",
+  "position": "PickPanel 组件内文案"
+ },
+ {
+  "key": "cashier.quickNamePh",
+  "domain": "merchant:cashier",
+  "text": "收款名目（必填）",
+  "screen": "商家·收银台",
+  "position": "PickPanel 组件内文案"
+ },
+ {
+  "key": "cashier.receiptNightLine",
+  "domain": "merchant:cashier",
+  "text": "共{total}晚 · 已住{occ}晚 · 剩{rem}晚 · 晚单价 ¥{per}",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "cashier.receiptPrint",
+  "domain": "merchant:cashier",
+  "text": "打印小票",
+  "screen": "商家·收银台",
+  "position": "PaySheet 组件内文案"
+ },
+ {
+  "key": "cashier.receiptReprint",
+  "domain": "merchant:cashier",
+  "text": "补打",
+  "screen": "商家·收银流水",
+  "position": "BillDetailDialog 组件内文案"
+ },
+ {
+  "key": "cashier.receiptThanks",
+  "domain": "merchant:cashier",
+  "text": "谢谢惠顾 · 单据留痕可查",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "cashier.receiptTitle",
+  "domain": "merchant:cashier",
+  "text": "收银小票",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:cashier 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "cashier.recordsEmpty",
@@ -7502,11 +7789,25 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "dialogs 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
+  "key": "cashier.roundingLabel",
+  "domain": "merchant:cashier",
+  "text": "抹零",
+  "screen": "商家·收银台 / 商家·收银流水",
+  "position": "CartPanel 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
   "key": "cashier.savingsCta",
   "domain": "merchant:cashier",
   "text": "开通萤火 ›",
   "screen": "商家·收银台",
   "position": "CartPanel 组件内文案"
+ },
+ {
+  "key": "cashier.scanPayNote",
+  "domain": "merchant:cashier",
+  "text": "聚合扫码=通道资质候（留口件）",
+  "screen": "商家·收银台",
+  "position": "PaySheet 组件内文案"
  },
  {
   "key": "cashier.shiftEmpty",

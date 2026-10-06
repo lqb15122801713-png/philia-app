@@ -678,6 +678,34 @@ async function main() {
         active: true,
         createdBy: owner.id,
       },
+      /* 商家端大批片 3（迁移 0053 同口径；重置后补种——不补则抹零/长短款/备用金三键被种子抹掉） */
+      {
+        version: 1,
+        ruleKey: 'cashier_rounding_rule',
+        label: '收银抹零规则（none 不抹零 | jiao 抹到角 | yuan 抹到元；退货不读取）',
+        valueJson: { mode: 'none' },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'cashier_cash_diff_review_thresh_fen',
+        label: '长短款复核阈值（分）：日结 |实点−账面| 超阈值须填差异说明',
+        valueJson: { threshFen: 1000 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'shifts_opening_float_default_fen',
+        label: '开班备用金默认额（分；开班登记留口，可改）',
+        valueJson: { amountFen: 50000 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
     ]);
 
     /* ---- 端口批片 B：文案端口 copy_overrides 种子（控制台第七域 domain='copy'） ----

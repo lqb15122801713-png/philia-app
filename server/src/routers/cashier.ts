@@ -69,6 +69,8 @@ import {
 import { broadcastNow, emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
 import { storeDayStartMs, storeWallclock } from './appointment';
+import { resolveScopedRules } from './configRules';
+import { computeNightBreakdown } from '../services/nightBreakdown';
 // R11a 会员前置批：回馈金账本内核（抵扣/计提）+ 会员档位服务折扣读侧
 import {
   deductRebate,
@@ -85,10 +87,10 @@ import {
 const BILL_STATUSES = ['open', 'held', 'settled', 'voided'] as const;
 
 /** 行类型 / 支付方式 / 优惠类型枚举 */
-const ITEM_KINDS = ['service', 'product', 'appointment'] as const;
+const ITEM_KINDS = ['service', 'product', 'appointment', 'custom'] as const;
 /**
  * 支付方式五分列（M1-补2 R5）：cash 现金 | wechat 微信 | alipay 支付宝 |
- * pass 次卡扣次 | stored_value 存量储值消费。「记账 credit」已删除（挂账缓做，运营口径在案）。
+ * pass 次卡扣次 | stored_value 存量储值消费。
  * stored_value 本批正式启用（裁定①③：仅存量消费，余额不足可混搭，储值消费不计入
  * 已收、参考列单列）；**全域无充值/新售入口**（新售冻结不变，回归保护——本文件
  * 不出现任何储值充值端点，账户余额仅经 R5b CSV 导入批次建立）。
@@ -96,8 +98,12 @@ const ITEM_KINDS = ['service', 'product', 'appointment'] as const;
  * （服务/寄养行 server 硬校验 FORBIDDEN「回馈金仅可抵商品」），余额不足可混搭，
  * 不计已收（参考列同储值口径，computeDayTender rebateFen 单列），扣减留痕见
  * rebate_logs（前后余额+单号，services/rebate.ts deductRebate）。
+ * 片 3 增第七段 credit 挂账（开口项 1 裁=台账状态机留痕不碰真钱）：挂账段落
+ * cashier_payments(method='credit') 仅登记——computeDayTender 既有口径 credit 段跳过
+ * 不计已收；台账=credit_ledgers 同事务落行（记录不可删，结清/核销走 creditSettle/
+ * creditWriteoff，全程不碰真钱支付表）。
  */
-const PAYMENT_METHODS = ['cash', 'wechat', 'alipay', 'pass', 'stored_value', 'rebate'] as const;
+const PAYMENT_METHODS = ['cash', 'wechat', 'alipay', 'pass', 'stored_value', 'rebate', 'credit'] as const;
 
 /** 单号格式：HD-{YYYYMMDD}-{当日 3 位序号} */
 const BILL_NO_RE = /^HD-\d{8}-\d{3}$/;
@@ -188,6 +194,12 @@ const cartItemSchema = z.object({
   adjustedPriceFen: z.number().int().min(0).max(100_000_000).nullish(),
   /** 次卡扣次行标记（仅 grooming 服务行；须绑会员） */
   paidByPass: z.boolean().default(false),
+  /** 单品备注（片 3 · ≤200 字，参与小票打印透出） */
+  note: z.string().max(200).optional(),
+  /** 快捷收款行名（kind='custom' 必填；自定义金额≠行改价，clerk 放行=收银执行层） */
+  customName: z.string().trim().min(1).max(64).optional(),
+  /** 快捷收款金额（分，kind='custom' 必填 ≥1） */
+  customAmountFen: z.number().int().min(1).max(100_000_000).optional(),
 });
 
 /** 购物车快照（hold / settle 共用） */
@@ -226,6 +238,8 @@ interface ResolvedItem {
   unitPriceFen: number;
   adjustedPriceFen: number | null;
   paidByPass: boolean;
+  /** 单品备注（片 3；小票透出） */
+  note?: string | null;
   /** 服务行原类型（grooming 才允许次卡扣次，B2-7R 口径） */
   serviceType?: string;
   /** 预约行：翻转所需上下文 */
@@ -273,6 +287,7 @@ async function resolveItems(
         unitPriceFen: svc.priceFen,
         adjustedPriceFen: it.adjustedPriceFen ?? null,
         paidByPass: it.paidByPass,
+        note: it.note ?? null,
         serviceType: svc.type,
       });
     } else if (it.kind === 'product') {
@@ -292,7 +307,26 @@ async function resolveItems(
         unitPriceFen: p.priceFen,
         adjustedPriceFen: it.adjustedPriceFen ?? null,
         paidByPass: false,
+        note: it.note ?? null,
         product: p,
+      });
+    } else if (it.kind === 'custom') {
+      /* 快捷收款行（片 3 · S9）：无商品自定义金额——名称/金额前端给，服务端校验
+         存在性即放行（自定义金额≠行改价，不触发 owner 闸门；clerk 收银执行层可用） */
+      if (it.qty !== 1) badRequest('快捷收款行数量恒为 1');
+      if (!it.customName?.trim()) badRequest('快捷收款须填写收款名目');
+      if (!it.customAmountFen || it.customAmountFen < 1) badRequest('快捷收款金额须 ≥1 分');
+      if (it.paidByPass) badRequest('快捷收款行不支持次卡扣次');
+      out.push({
+        kind: 'custom',
+        refId: 'custom',
+        nameSnapshot: it.customName.trim(),
+        specSnapshot: '快捷收款',
+        qty: 1,
+        unitPriceFen: it.customAmountFen,
+        adjustedPriceFen: null,
+        paidByPass: false,
+        note: it.note ?? null,
       });
     } else {
       // appointment 行：待收款预约（completed 且未 paid）
@@ -325,6 +359,7 @@ async function resolveItems(
         unitPriceFen: appt.priceFen,
         adjustedPriceFen: it.adjustedPriceFen ?? null,
         paidByPass: false,
+        note: it.note ?? null,
         appointment: appt,
         appointmentPetName: pet?.name ?? null,
       });
@@ -347,7 +382,8 @@ function computeAmounts(
   items: ResolvedItem[],
   discountType: 'none' | 'percent' | 'amount',
   discountValue: number,
-): { subtotalFen: number; discountFen: number; payableFen: number } {
+  roundingMode: 'none' | 'jiao' | 'yuan' = 'none',
+): { subtotalFen: number; discountFen: number; roundingFen: number; payableFen: number } {
   const subtotalFen = items.reduce((s, it) => s + effPrice(it) * it.qty, 0);
   let discountFen = 0;
   if (discountType === 'percent') {
@@ -363,7 +399,33 @@ function computeAmounts(
   if (discountFen > nonApptSubtotal) {
     badRequest('单级优惠不能超过服务/商品行合计（预约行金额不参与优惠）');
   }
-  return { subtotalFen, discountFen, payableFen: subtotalFen - discountFen };
+  /* 抹零（片 3 · S4）：规则=cashier_rounding_rule（none|jiao|yuan，端口留口）——
+     折后额尾数抹除（让利 ≥0）；退货不读取本规则（refund 不调经本函数，口径写死） */
+  const afterDiscount = subtotalFen - discountFen;
+  const roundingFen = roundingMode === 'jiao' ? afterDiscount % 10 : roundingMode === 'yuan' ? afterDiscount % 100 : 0;
+  return { subtotalFen, discountFen, roundingFen, payableFen: afterDiscount - roundingFen };
+}
+
+/** 抹零规则读口（service_rules 分层解析：门店行优先；缺省 none=不抹零零回归） */
+async function loadRoundingMode(d: DbHandle, storeId: string): Promise<'none' | 'jiao' | 'yuan'> {
+  const rows = await d
+    .select({ ruleKey: schema.serviceRules.ruleKey, storeId: schema.serviceRules.storeId, valueJson: schema.serviceRules.valueJson })
+    .from(schema.serviceRules)
+    .where(and(eq(schema.serviceRules.ruleKey, 'cashier_rounding_rule'), eq(schema.serviceRules.active, true)));
+  const hit = resolveScopedRules(rows, storeId)[0];
+  const mode = (hit?.valueJson as { mode?: string } | undefined)?.mode;
+  return mode === 'jiao' || mode === 'yuan' ? mode : 'none';
+}
+
+/** 长短款复核阈值读口（分；service_rules 分层解析；缺省 1000） */
+async function loadCashDiffThresh(d: DbHandle, storeId: string): Promise<number> {
+  const rows = await d
+    .select({ ruleKey: schema.serviceRules.ruleKey, storeId: schema.serviceRules.storeId, valueJson: schema.serviceRules.valueJson })
+    .from(schema.serviceRules)
+    .where(and(eq(schema.serviceRules.ruleKey, 'cashier_cash_diff_review_thresh_fen'), eq(schema.serviceRules.active, true)));
+  const hit = resolveScopedRules(rows, storeId)[0];
+  const v = (hit?.valueJson as { threshFen?: number } | undefined)?.threshFen;
+  return typeof v === 'number' && v >= 0 ? v : 1000;
 }
 
 /**
@@ -508,9 +570,39 @@ async function billSnapshot(d: DbHandle, bill: BillRow) {
         .where(eq(schema.users.id, bill.customerId))
         .get()
     : undefined;
+  /* 片 3 · S13 复走：寄养（boarding）预约行附按晚分明细透出（computeNightBreakdown
+     与 refund 寄养剩余晚退同源——总晚/已住晚/剩余晚/晚单价四数；只读不透改算价） */
+  const itemsOut = await Promise.all(
+    items.map(async (it) => {
+      if (it.kind !== 'appointment') return it;
+      const appt = await d
+        .select({
+          type: schema.appointments.type,
+          scheduledStart: schema.appointments.scheduledStart,
+          scheduledEnd: schema.appointments.scheduledEnd,
+        })
+        .from(schema.appointments)
+        .where(eq(schema.appointments.id, it.refId))
+        .get();
+      if (appt?.type !== 'boarding') return it;
+      const stay = await d
+        .select({ checkoutAt: schema.boardingStays.checkoutAt })
+        .from(schema.boardingStays)
+        .where(eq(schema.boardingStays.appointmentId, it.refId))
+        .get();
+      const effAmountFen = (it.adjustedPriceFen ?? it.unitPriceFen) * it.qty;
+      const nightBreakdown = computeNightBreakdown({
+        scheduledStart: appt.scheduledStart,
+        scheduledEnd: appt.scheduledEnd,
+        checkoutAt: stay?.checkoutAt ?? null,
+        effAmountFen,
+      });
+      return { ...it, nightBreakdown };
+    }),
+  );
   return {
     bill,
-    items,
+    items: itemsOut,
     payments,
     createdByName: creator?.nickname ?? null,
     buyerName: customer?.nickname ?? '散客',
@@ -902,9 +994,17 @@ export async function ensureOpenShift(
     .limit(1)
     .then((r) => r[0]);
   if (open) return { shift: open, openedOutboxId: null };
+  /* 片 3 交接班族：开班备用金=规则端口默认额（shifts_opening_float_default_fen，
+     分层解析；留口可改）落列登记——接力口径：交班点交 float_fen（closeShift）→
+     接班人 confirmHandover 透出 */
+  const floatRows = await d
+    .select({ ruleKey: schema.serviceRules.ruleKey, storeId: schema.serviceRules.storeId, valueJson: schema.serviceRules.valueJson })
+    .from(schema.serviceRules)
+    .where(and(eq(schema.serviceRules.ruleKey, 'shifts_opening_float_default_fen'), eq(schema.serviceRules.active, true)));
+  const floatDefault = (resolveScopedRules(floatRows, storeId)[0]?.valueJson as { amountFen?: number } | undefined)?.amountFen ?? null;
   const shift = await d
     .insert(schema.shifts)
-    .values({ storeId, openedBy: operatorId, openedAt: now, status: 'open' })
+    .values({ storeId, openedBy: operatorId, openedAt: now, status: 'open', openingFloatFen: floatDefault ?? null })
     .returning()
     .then((r) => r[0]!);
   const outboxId = await emitEvent(d, `store:${storeId}`, EventType.CashierShiftOpened, {
@@ -1212,7 +1312,8 @@ export const cashierRouter = router({
           await assertPriceEditAllowed(ctx, txDb(tx), input, resolved, customerId);
           // R11a：会员服务/预约行按档折扣（adjusted=门市价×bp，unit 不动划线对照；人工改价不覆盖）
           await applyMemberServiceDiscount(txDb(tx), customerId, resolved);
-          const amounts = computeAmounts(resolved, input.discountType, input.discountValue);
+          const roundingMode = await loadRoundingMode(txDb(tx), storeId);
+          const amounts = computeAmounts(resolved, input.discountType, input.discountValue, roundingMode);
 
           let bill: BillRow;
           if (existing) {
@@ -1275,6 +1376,7 @@ export const cashierRouter = router({
               unitPriceFen: it.unitPriceFen,
               adjustedPriceFen: it.adjustedPriceFen,
               paidByPass: it.paidByPass,
+              note: it.note ?? null,
               stockShort: false, // 库存留痕在 settle 扣减时判定
             })),
           );
@@ -1377,7 +1479,8 @@ export const cashierRouter = router({
           await assertPriceEditAllowed(ctx, txDb(tx), input, resolved, customerId);
           // R11a：会员服务/预约行按档折扣（adjusted=门市价×bp，unit 不动划线对照；人工改价不覆盖）
           await applyMemberServiceDiscount(txDb(tx), customerId, resolved);
-          const amounts = computeAmounts(resolved, input.discountType, input.discountValue);
+          const roundingMode = await loadRoundingMode(txDb(tx), storeId);
+          const amounts = computeAmounts(resolved, input.discountType, input.discountValue, roundingMode);
           const passLines = resolved.filter((r) => r.paidByPass);
           if (passLines.length > 0 && !customerId) {
             badRequest('散客单不能使用次卡扣次，请先检索会员');
@@ -1407,8 +1510,7 @@ export const cashierRouter = router({
           }
           // R11a：回馈金段校验（红线 2 server 硬校验——仅商品行可用，服务/寄养行禁用；
           // 至多一段；须绑会员——散客无回馈金账户；余额扣减前校验见 deductRebate）
-          const rebateSegs = input.payments.filter((p) => p.method === 'rebate');
-          if (rebateSegs.length > 1) badRequest('回馈金支付段至多一段');
+          const rebateSegs = input.payments.filter((p) => p.method === 'rebate');          if (rebateSegs.length > 1) badRequest('回馈金支付段至多一段');
           if (rebateSegs.length === 1 && !customerId) {
             badRequest('散客单不能使用回馈金支付，请先检索会员');
           }
@@ -1421,6 +1523,12 @@ export const cashierRouter = router({
               forbidden('回馈金仅可抵商品（服务/寄养行禁用回馈金支付段）');
             }
           }
+
+          /* 片 3 挂账段校验（开口项 1 裁=台账状态机留痕不碰真钱）：至多一段；
+             台账=credit_ledgers 同事务落行（payments 段 method='credit' 仅登记，
+             computeDayTender 既有口径 credit 段跳过不计已收） */
+          const creditSegs = input.payments.filter((p) => p.method === 'credit');
+          if (creditSegs.length > 1) badRequest('挂账支付段至多一段');
 
           /* ---- 次卡扣次（先于后续写库；失败整体回滚） ---- */
           let passRow: PassRow | null = null;
@@ -1651,6 +1759,7 @@ export const cashierRouter = router({
               unitPriceFen: it.unitPriceFen,
               adjustedPriceFen: it.adjustedPriceFen,
               paidByPass: it.paidByPass,
+              note: it.note ?? null,
               stockShort: it.kind === 'product' ? (stockShortByRef.get(it.refId) ?? false) : false,
             })),
           );
@@ -1662,6 +1771,20 @@ export const cashierRouter = router({
               passId: p.method === 'pass' ? (passRow?.id ?? null) : null,
             })),
           );
+          /* 片 3 挂账台账：credit 段同事务落 credit_ledgers（记录不可删；
+             结清/核销走 creditSettle/creditWriteoff，全程不碰真钱支付表） */
+          if (creditSegs.length === 1) {
+            await tx.insert(schema.creditLedgers).values({
+              storeId,
+              billId: bill.id,
+              customerId: customerId ?? null,
+              amountFen: creditSegs[0]!.amountFen,
+              settledFen: 0,
+              status: 'open',
+              note: input.note ?? null,
+              operatorId: ctx.user.id,
+            });
+          }
 
           /* ---- R11a 商品行回馈金计提（结账成交时点，同事务；决策 #33 无月上限） ----
            * 基数=商品实收−rebate 抵扣段（用回馈金付的部分不再返）；商品实收口径同
@@ -2063,6 +2186,8 @@ export const cashierRouter = router({
               cashNote: z.string().trim().max(500).optional(),
               complaintsNote: z.string().trim().max(500).optional(),
               toUserId: z.string().min(1).optional(),
+              /** 备用金点交金额（分；片 3 交接班族：开班备用金接力——点交登记，接班人确认时透出） */
+              floatFen: z.number().int().min(0).max(100_000_000).optional(),
             })
             .optional(),
         })
@@ -2118,6 +2243,7 @@ export const cashierRouter = router({
               keysNote: input.handover.keysNote ?? null,
               cashNote: input.handover.cashNote ?? null,
               complaintsNote: input.handover.complaintsNote ?? null,
+              floatFen: input.handover.floatFen ?? null,
               fromUserId: ctx.user.id,
               toUserId: input.handover.toUserId ?? null,
               createdAt: now,
@@ -2159,16 +2285,211 @@ export const cashierRouter = router({
     }),
 
   /**
+   * 7d3. confirmHandover（merchant · 片 3 交接班族）：接班人确认（双方签字口径）——
+   * 接班人为本班 handover.toUserId 本人；未指定接棒人（NULL）时=下一班开岗人
+   * （当班 openedBy=本人）可确认。已确认幂等读回；越权 403。
+   */
+  confirmHandover: merchantProcedure
+    .input(z.object({ shiftId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
+      const log = await ctx.db
+        .select()
+        .from(schema.shiftHandoverLogs)
+        .where(and(eq(schema.shiftHandoverLogs.shiftId, input.shiftId), eq(schema.shiftHandoverLogs.storeId, storeId)))
+        .get();
+      if (!log) throw new TRPCError({ code: 'NOT_FOUND', message: '交接班日志不存在' });
+      if (log.confirmedAt) return { handover: log, idempotent: true as const };
+      const eligible = log.toUserId
+        ? log.toUserId === ctx.user.id
+        : (await ctx.db
+            .select({ openedBy: schema.shifts.openedBy })
+            .from(schema.shifts)
+            .where(and(eq(schema.shifts.storeId, storeId), eq(schema.shifts.status, 'open')))
+            .orderBy(desc(schema.shifts.openedAt))
+            .limit(1)
+            .then((r) => r[0]?.openedBy)) === ctx.user.id;
+      if (!eligible) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: '仅指定接班人（或当班开岗人）可确认接班' });
+      }
+      const [updated] = await ctx.db
+        .update(schema.shiftHandoverLogs)
+        .set({ confirmedAt: new Date(), confirmedBy: ctx.user.id })
+        .where(eq(schema.shiftHandoverLogs.id, log.id))
+        .returning();
+      return { handover: updated, idempotent: false as const };
+    }),
+
+  /**
+   * 7g. 挂账台账（片 3 · S5 开口项 1 裁=台账状态机留痕不碰真钱；记录不可删）：
+   * list=本店台账（状态滤签）；settle=部分/全额结清（线下收款留痕，金额≤在挂余额）；
+   * writeoff=核销（仅 owner+强制原因）。推进=credit_ledger_logs 只增不改。
+   */
+  creditList: merchantManagerProcedure
+    .input(z.object({ status: z.enum(['open', 'partial', 'settled', 'written_off']).optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      const conds = [eq(schema.creditLedgers.storeId, ctx.user.storeId!)];
+      if (input?.status) conds.push(eq(schema.creditLedgers.status, input.status));
+      const rows = await ctx.db
+        .select({
+          ledger: schema.creditLedgers,
+          billNo: schema.cashierBills.billNo,
+          customerName: schema.users.nickname,
+        })
+        .from(schema.creditLedgers)
+        .innerJoin(schema.cashierBills, eq(schema.cashierBills.id, schema.creditLedgers.billId))
+        .leftJoin(schema.users, eq(schema.users.id, schema.creditLedgers.customerId))
+        .where(and(...conds))
+        .orderBy(desc(schema.creditLedgers.createdAt))
+        .limit(200);
+      return rows.map((r) => ({ ...r.ledger, billNo: r.billNo, customerName: r.customerName ?? null }));
+    }),
+
+  creditSettle: merchantManagerProcedure
+    .input(
+      z.object({
+        ledgerId: z.string().min(1),
+        amountFen: z.number().int().min(1, '结清金额须 ≥1 分').max(100_000_000),
+        note: z.string().trim().max(200).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
+      return ctx.db.transaction(async (tx) => {
+        const ledger = await tx
+          .select()
+          .from(schema.creditLedgers)
+          .where(eq(schema.creditLedgers.id, input.ledgerId))
+          .get();
+        if (!ledger || ledger.storeId !== storeId) throw new TRPCError({ code: 'NOT_FOUND', message: '挂账台账行不存在' });
+        if (ledger.status === 'settled') return { ledger, idempotent: true as const };
+        if (ledger.status === 'written_off') badRequest('该挂账已核销，不可再结清');
+        const remaining = ledger.amountFen - ledger.settledFen;
+        if (input.amountFen > remaining) {
+          badRequest(`结清金额超在挂余额（在挂 ${(remaining / 100).toFixed(2)} 元）`);
+        }
+        const nextSettled = ledger.settledFen + input.amountFen;
+        const done = nextSettled >= ledger.amountFen;
+        await tx.insert(schema.creditLedgerLogs).values({
+          ledgerId: ledger.id,
+          action: done ? 'settle' : 'partial_settle',
+          amountFen: input.amountFen,
+          note: input.note ?? null,
+          operatorId: ctx.user.id,
+          createdAt: new Date(),
+        });
+        const [updated] = await tx
+          .update(schema.creditLedgers)
+          .set({ settledFen: nextSettled, status: done ? 'settled' : 'partial', updatedAt: new Date() })
+          .where(eq(schema.creditLedgers.id, ledger.id))
+          .returning();
+        return { ledger: updated, idempotent: false as const };
+      });
+    }),
+
+  creditWriteoff: merchantOwnerProcedure
+    .input(
+      z.object({
+        ledgerId: z.string().min(1),
+        reason: z.string().trim().min(1, '核销原因必填（留痕）').max(200),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
+      return ctx.db.transaction(async (tx) => {
+        const ledger = await tx
+          .select()
+          .from(schema.creditLedgers)
+          .where(eq(schema.creditLedgers.id, input.ledgerId))
+          .get();
+        if (!ledger || ledger.storeId !== storeId) throw new TRPCError({ code: 'NOT_FOUND', message: '挂账台账行不存在' });
+        if (ledger.status === 'written_off') return { ledger, idempotent: true as const };
+        const remaining = ledger.amountFen - ledger.settledFen;
+        await tx.insert(schema.creditLedgerLogs).values({
+          ledgerId: ledger.id,
+          action: 'writeoff',
+          amountFen: remaining,
+          note: input.reason,
+          operatorId: ctx.user.id,
+          createdAt: new Date(),
+        });
+        const [updated] = await tx
+          .update(schema.creditLedgers)
+          .set({ status: 'written_off', writeoffReason: input.reason, updatedAt: new Date() })
+          .where(eq(schema.creditLedgers.id, ledger.id))
+          .returning();
+        return { ledger: updated, idempotent: false as const };
+      });
+    }),
+
+  /**
+   * 7h. 现金收支 paid in/out（片 3 交接班族；台账留痕不碰真钱）：
+   * record=登记钱箱零钱存入/取出（事由必填，挂当班 open 班次）；
+   * list=本店流水（shiftId 滤签可选）；日结账面现金=流水现金+Σin−Σout（快照透出）。
+   */
+  cashMoveRecord: merchantManagerProcedure
+    .input(
+      z.object({
+        kind: z.enum(['paid_in', 'paid_out']),
+        amountFen: z.number().int().min(1, '金额须 ≥1 分').max(100_000_000),
+        reason: z.string().trim().min(1, '事由必填').max(200),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
+      const openShift = await ctx.db
+        .select({ id: schema.shifts.id })
+        .from(schema.shifts)
+        .where(and(eq(schema.shifts.storeId, storeId), eq(schema.shifts.status, 'open')))
+        .orderBy(desc(schema.shifts.openedAt))
+        .limit(1)
+        .then((r) => r[0]);
+      const [row] = await ctx.db
+        .insert(schema.cashMovements)
+        .values({
+          storeId,
+          shiftId: openShift?.id ?? null,
+          kind: input.kind,
+          amountFen: input.amountFen,
+          reason: input.reason,
+          operatorId: ctx.user.id,
+          createdAt: new Date(),
+        })
+        .returning();
+      return { movement: row };
+    }),
+
+  cashMoveList: merchantManagerProcedure
+    .input(z.object({ shiftId: z.string().min(1).optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      const conds = [eq(schema.cashMovements.storeId, ctx.user.storeId!)];
+      if (input?.shiftId) conds.push(eq(schema.cashMovements.shiftId, input.shiftId));
+      const rows = await ctx.db
+        .select({ movement: schema.cashMovements, operatorName: schema.users.nickname })
+        .from(schema.cashMovements)
+        .leftJoin(schema.users, eq(schema.users.id, schema.cashMovements.operatorId))
+        .where(and(...conds))
+        .orderBy(desc(schema.cashMovements.createdAt))
+        .limit(200);
+      return rows.map((r) => ({ ...r.movement, operatorName: r.operatorName ?? null }));
+    }),
+
+  /**
    * 7e0. dayClosePreview（owner|manager · M1-补2 条件②）：日结预览=冻结同源同值
    * （同一 computeDayClosePreview → computeDayTender 全日口径），UI 只展示不自算；
    * 附班次拆分展示与「本日是否已有冻结单」标记。
    */
   dayClosePreview: merchantManagerProcedure
-    .input(z.object({ date: z.date().optional() }).optional())
+    .input(z.object({ date: z.date().optional(), blind: z.boolean().optional() }).optional())
     .query(async ({ ctx, input }) => {
       const w = storeWallclock(input?.date ?? new Date());
       const dayStart = new Date(storeDayStartMs(w.y, w.m, w.day));
-      return computeDayClosePreview(ctx.db, ctx.user.storeId!, dayStart);
+      const preview = await computeDayClosePreview(ctx.db, ctx.user.storeId!, dayStart);
+      /* 片 3 交接班族 · 盲交：blind=true 不透账面预期（实点先行，差异后见） */
+      if (input?.blind) {
+        return { ...preview, stats: null, blind: true as const };
+      }
+      return preview;
     }),
 
   /**
@@ -2194,6 +2515,11 @@ export const cashierRouter = router({
         shiftId: z.string().min(1).optional(),
         /** 实点现金（分，手输） */
         actualCashFen: z.number().int().min(0).max(100_000_000),
+        /** 实点非现金（分，手输；片 3 交接班族：非现金对账——与账面微信/支付宝分列对账，NULL=未点） */
+        actualWechatFen: z.number().int().min(0).max(100_000_000).optional(),
+        actualAlipayFen: z.number().int().min(0).max(100_000_000).optional(),
+        /** 长短款差异说明（|实点−账面| 超复核阈值 cashier_cash_diff_review_thresh_fen 必填） */
+        diffNote: z.string().trim().max(200).optional(),
         note: z.string().max(200).optional(),
       }),
     )
@@ -2250,7 +2576,46 @@ export const cashierRouter = router({
             recordShift = shift;
           }
           const tender = preview.stats;
-          const diffFen = input.actualCashFen - tender.tender.cashFen;
+          /* 片 3 交接班族：现金收支 paid in/out 调整额（钱箱应有=流水现金+存入−取出，
+             快照透出调整额+明细；台账留痕不碰真钱） */
+          const moves = await tx
+            .select()
+            .from(schema.cashMovements)
+            .where(
+              and(
+                eq(schema.cashMovements.storeId, storeId),
+                gte(schema.cashMovements.createdAt, dayStart),
+                lt(schema.cashMovements.createdAt, new Date(dayStart.getTime() + 24 * 3600 * 1000)),
+              ),
+            );
+          const cashAdjustFen = moves.reduce((acc, m) => acc + (m.kind === 'paid_in' ? m.amountFen : -m.amountFen), 0);
+          const bookCashFen = tender.tender.cashFen + cashAdjustFen;
+          const diffFen = input.actualCashFen - bookCashFen;
+          /* 长短款分级处理流：|差异| 超复核阈值（端口留口）须填差异说明（留痕） */
+          const diffThresh = await loadCashDiffThresh(txDb(tx), storeId);
+          if (Math.abs(diffFen) > diffThresh && !input.diffNote?.trim()) {
+            badRequest(`长短款差异 ${(Math.abs(diffFen) / 100).toFixed(2)} 元超复核阈值（${(diffThresh / 100).toFixed(2)} 元），须填差异说明（diffNote）`);
+          }
+          /* 免单/折扣单列进交班报表：当日 settled 单折扣/抹零分列（免单本体=闸门骨架候
+             后续批次，本列先落折扣+抹零——注记口径） */
+          const todayBills = await tx
+            .select({ discountFen: schema.cashierBills.discountFen, roundingFen: schema.cashierBills.roundingFen })
+            .from(schema.cashierBills)
+            .where(
+              and(
+                eq(schema.cashierBills.storeId, storeId),
+                eq(schema.cashierBills.status, 'settled'),
+                isNull(schema.cashierBills.reversedAt),
+                gte(schema.cashierBills.settledAt, dayStart),
+                lt(schema.cashierBills.settledAt, new Date(dayStart.getTime() + 24 * 3600 * 1000)),
+              ),
+            );
+          const discountStats = {
+            discountedBills: todayBills.filter((b) => b.discountFen > 0).length,
+            discountFen: todayBills.reduce((acc, b) => acc + b.discountFen, 0),
+            roundingFen: todayBills.reduce((acc, b) => acc + b.roundingFen, 0),
+            freebieNote: '免单本体=闸门骨架候批（trpc 骨架注记），本列=折扣+抹零单列',
+          };
           const row = await tx
             .insert(schema.dayCloses)
             .values({
@@ -2258,16 +2623,18 @@ export const cashierRouter = router({
               shiftId: recordShift.id,
               kind: 'close',
               bizDate: preview.bizDate,
-              bookCashFen: tender.tender.cashFen,
+              bookCashFen,
               actualCashFen: input.actualCashFen,
               diffFen,
               wechatFen: tender.tender.wechatFen,
               alipayFen: tender.tender.alipayFen,
+              actualWechatFen: input.actualWechatFen ?? null,
+              actualAlipayFen: input.actualAlipayFen ?? null,
               passFen: tender.tender.passFen,
               storedValueFen: tender.tender.storedValueFen,
               cashierPaidCount: tender.counts.cashierPaidCount,
               paidCount: tender.counts.paidCount,
-              reason: input.note ?? null,
+              reason: [input.note, input.diffNote ? `差异说明：${input.diffNote}` : null].filter(Boolean).join('；') || null,
               // 条件②：全日口径标记 + 班次拆分展示明细（拆分不求和勾稽——无班次
               // 归属的存量单/预约直收以全日总额为准）
               snapshotJson: JSON.stringify({
@@ -2275,6 +2642,9 @@ export const cashierRouter = router({
                 note: '冻结=全日口径（computeDayTender 同源）；shiftBreakdown 为班次拆分展示',
                 shiftBreakdown: preview.shiftBreakdown,
                 legacyPayAtStoreFen: tender.legacyPayAtStoreFen,
+                cashAdjustFen,
+                cashMovements: moves.map((m) => ({ kind: m.kind, amountFen: m.amountFen, reason: m.reason })),
+                discountStats,
               }),
               status: 'frozen',
               createdBy: ctx.user.id,

@@ -863,6 +863,12 @@ export const cashierBills = sqliteTable(
     /** 应收（分）= subtotal − discount */
     payableFen: integer('payable_fen').notNull().default(0),
     /**
+     * 抹零让利额（分，商家端大批片 3 · 0053）：规则端口 cashier_rounding_rule
+     * （none|jiao|yuan，默认 none=不抹零零回归）命中时=折后额尾数抹除量（≥0 少收）；
+     * 应收 payable_fen=合计−优惠−抹零。退货不读取抹零规则（refund 不调经 computeAmounts，口径写死）。
+     */
+    roundingFen: integer('rounding_fen').notNull().default(0),
+    /**
      * 实收（分）：M1-补1 起 settled 即全额已收（无记账态），恒 = payable_fen；
      * 列保留骨架不动（收银单待收态随 credit 删除而废——「待收」是预约域口径）。
      */
@@ -951,7 +957,7 @@ export const cashierBillItems = sqliteTable(
     billId: text('bill_id')
       .notNull()
       .references(() => cashierBills.id),
-    /** 行类型，取值：service | product | appointment */
+    /** 行类型，取值：service | product | appointment | custom（商家端大批片 3 快捷收款：无商品自定义金额行，零迁移 text 扩域） */
     kind: text('kind').notNull(),
     /** 引用 ID：services.id / products.id / appointments.id（按 kind 解释） */
     refId: text('ref_id').notNull(),
@@ -969,6 +975,8 @@ export const cashierBillItems = sqliteTable(
     paidByPass: integer('paid_by_pass', { mode: 'boolean' }).notNull().default(false),
     /** 结账时库存不足留痕（不足不阻塞、库存兜底扣到 0） */
     stockShort: integer('stock_short', { mode: 'boolean' }).notNull().default(false),
+    /** 单品备注（商家端大批片 3 · 0053；参与小票打印透出；NULL=无） */
+    note: text('note'),
     ...auditColumns,
   },
   (t) => [index('ix_cashier_bill_items_bill').on(t.billId)],
@@ -1035,6 +1043,8 @@ export const shifts = sqliteTable(
     closedBy: text('closed_by').references(() => users.id),
     /** 状态，取值：open | closed */
     status: text('status').notNull().default('open'),
+    /** 开班备用金（分；商家端大批片 3 交接班族 · 0053：开班登记/接力口径；NULL=未登记） */
+    openingFloatFen: integer('opening_float_fen'),
     ...auditColumns,
   },
   (t) => [index('ix_shifts_store_status').on(t.storeId, t.status)],
@@ -1081,6 +1091,9 @@ export const dayCloses = sqliteTable(
     /** 分列快照：微信 / 支付宝 / 次卡等值（参考列） / 储值消费（参考列） */
     wechatFen: integer('wechat_fen').notNull().default(0),
     alipayFen: integer('alipay_fen').notNull().default(0),
+    /** 实点非现金（分，手输；商家端大批片 3 交接班族 · 0053：非现金对账——账面分列 vs 实点，NULL=未点） */
+    actualWechatFen: integer('actual_wechat_fen'),
+    actualAlipayFen: integer('actual_alipay_fen'),
     passFen: integer('pass_fen').notNull().default(0),
     storedValueFen: integer('stored_value_fen').notNull().default(0),
     /** 笔数快照：收银单数 / 合并流水笔数 */
@@ -3478,9 +3491,109 @@ export const shiftHandoverLogs = sqliteTable(
     fromUserId: text('from_user_id').notNull().references(() => users.id),
     /** 接棒人（NULL=未指定，下一班开岗人即接棒） */
     toUserId: text('to_user_id').references(() => users.id),
+    /** 备用金点交金额（分；商家端大批片 3 交接班族 · 0053：开班备用金接力——交班人点交登记，NULL=未点交） */
+    floatFen: integer('float_fen'),
+    /** 接班人确认时间（商家端大批片 3 · 0053：接班人确认双方签字口径；NULL=未确认） */
+    confirmedAt: integer('confirmed_at', { mode: 'timestamp' }),
+    /** 接班人确认人（-> users.id；=toUserId 本人或当班开岗人） */
+    confirmedBy: text('confirmed_by').references(() => users.id),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   },
   (t) => [uniqueIndex('uq_handover_shift').on(t.shiftId)],
+);
+
+/**
+ * 挂账/赊账台账（商家端大批片 3 · 0053；开口项 1 裁=台账状态机，留痕不碰真钱）：
+ * - 挂账=收银 settle 以 method='credit' 段登记（computeDayTender 既有口径：credit 段跳过
+ *   不计已收，台账行同事务落）；状态机 open → partial → settled | written_off；
+ * - **记录不可删**（无删除端点，军规口径）；结清/部分结清=线下收款留痕（不碰
+ *   payments/pay_orders 真钱表）；核销=仅 owner+强制原因（留痕）；
+ * - 推进留痕=credit_ledger_logs 只增不改（action/金额/操作人）。
+ */
+export const creditLedgers = sqliteTable(
+  'credit_ledgers',
+  {
+    id: id(),
+    /** 所属门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 关联收银单 -> cashier_bills.id（挂账来源单） */
+    billId: text('bill_id')
+      .notNull()
+      .references(() => cashierBills.id),
+    /** 挂账客户（NULL=散客，注记见 note） */
+    customerId: text('customer_id').references(() => users.id),
+    /** 挂账金额（分） */
+    amountFen: integer('amount_fen').notNull(),
+    /** 已结清累计（分；partial 推进累加） */
+    settledFen: integer('settled_fen').notNull().default(0),
+    /** 状态：open=在挂 | partial=部分结清 | settled=已结清 | written_off=已核销（留痕） */
+    status: text('status').notNull().default('open'),
+    /** 核销原因（written_off 必填） */
+    writeoffReason: text('writeoff_reason'),
+    /** 备注（散客挂账登记名/联系方式快照等） */
+    note: text('note'),
+    /** 操作人 -> users.id */
+    operatorId: text('operator_id')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_credit_ledgers_store_status').on(t.storeId, t.status)],
+);
+
+/** 挂账台账推进留痕（只增不改：action=partial_settle | settle | writeoff） */
+export const creditLedgerLogs = sqliteTable(
+  'credit_ledger_logs',
+  {
+    id: id(),
+    ledgerId: text('ledger_id')
+      .notNull()
+      .references(() => creditLedgers.id),
+    /** 动作：partial_settle=部分结清 | settle=结清 | writeoff=核销 */
+    action: text('action').notNull(),
+    /** 本次金额（分；writeoff=核销全额快照） */
+    amountFen: integer('amount_fen').notNull(),
+    /** 注记（收款方式/说明；留痕不碰真钱） */
+    note: text('note'),
+    /** 操作人 -> users.id */
+    operatorId: text('operator_id')
+      .notNull()
+      .references(() => users.id),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  },
+  (t) => [index('ix_credit_ledger_logs_ledger').on(t.ledgerId)],
+);
+
+/**
+ * 现金收支台账（商家端大批片 3 交接班族 · 0053：paid in/out 零钱出入留痕）：
+ * 钱箱零钱存入/取出一笔一留（不碰真钱支付表）；日结账面现金口径=
+ * computeDayTender.cashFen + Σpaid_in − Σpaid_out（快照透出调整额）。
+ */
+export const cashMovements = sqliteTable(
+  'cash_movements',
+  {
+    id: id(),
+    /** 所属门店 ID -> stores.id */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 当班班次 -> shifts.id（NULL=非当班补登） */
+    shiftId: text('shift_id').references(() => shifts.id),
+    /** 方向：paid_in=存入 | paid_out=取出 */
+    kind: text('kind').notNull(),
+    /** 金额（分） */
+    amountFen: integer('amount_fen').notNull(),
+    /** 事由（必填） */
+    reason: text('reason').notNull(),
+    /** 操作人 -> users.id */
+    operatorId: text('operator_id')
+      .notNull()
+      .references(() => users.id),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  },
+  (t) => [index('ix_cash_movements_store_shift').on(t.storeId, t.shiftId)],
 );
 
 /** 离职资源改挂留痕（片 3 B7-4；仿 reception_logs 前后值口径：prev_value→new_value 快照+操作人；kind=appointment|boarding|member） */

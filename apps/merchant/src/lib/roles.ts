@@ -65,8 +65,14 @@ export function roleLabelCn(roles: string[] | undefined): string {
  */
 export const CLERK_ALLOWED_PATHS: ReadonlyArray<string> = ['/', '/cashier']
 
+/** clerk 白名单动态前缀（片 3：小票版式页带单号参数，收银执行层打印/补打直达） */
+export const CLERK_ALLOWED_PREFIXES: ReadonlyArray<string> = ['/cashier/receipt/']
+
 /** clerk 直达受限页的引导文案（按路径定制，缺省通用） */
 export function clerkGuideText(pathname: string): { title: string; hint: string } {
+  if (pathname.startsWith('/ledger')) {
+    return { title: '台账由店长或店主查看', hint: '挂账/押金/预付/授权台账属管理层视界；店员账号的工作面是收银台。' }
+  }
   if (pathname.startsWith('/cashier/close')) {
     return { title: '日结 / 交接班由店长或店主处理', hint: '日结冻结与交接班确认属管理层动作；您的收银单会自动计入当班账目。' }
   }

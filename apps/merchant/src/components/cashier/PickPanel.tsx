@@ -11,9 +11,11 @@
  * - 商品仅列在架（status='on'）；三态齐全（骨架 / 错误重试 / 空态安静灰字）。
  */
 
+import { useState } from 'react'
 import { Skeleton } from '@philia/shared'
-import { Package, type LucideIcon } from 'lucide-react'
-import { fmtDateTime, type StoreProduct } from '@/components/mall-admin/format'
+import { Banknote, Package, type LucideIcon } from 'lucide-react'
+import { fmtDateTime, yuanToFen, type StoreProduct } from '@/components/mall-admin/format'
+import { cc } from '@/copy/cashier'
 import { fenToYuan, serviceIcon, type PendingAppt, type StoreService } from './model'
 
 type TabKey = 'service' | 'product' | 'pending'
@@ -63,6 +65,7 @@ export default function PickPanel({
   onAddService,
   onAddProduct,
   onPullAppt,
+  onAddCustom,
 }: {
   tab: TabKey
   onTab: (t: TabKey) => void
@@ -77,12 +80,26 @@ export default function PickPanel({
   onAddService: (s: StoreService) => void
   onAddProduct: (p: StoreProduct) => void
   onPullAppt: (a: PendingAppt) => void
+  /** 片 3 快捷收款：名目+自定义金额 → custom 行（无商品零迁移扩域，不触发改价闸门） */
+  onAddCustom: (name: string, amountFen: number) => void
 }) {
   const tabs: Array<{ key: TabKey; label: string; n: number | null }> = [
     { key: 'service', label: '服务', n: services?.length ?? null },
     { key: 'product', label: '商品', n: products?.length ?? null },
     { key: 'pending', label: '待收款', n: pending?.length ?? null },
   ]
+
+  /* 片 3 快捷收款：名目+金额 → 加 custom 行（qty 恒 1；server 校验存在性即放行） */
+  const [quickName, setQuickName] = useState('')
+  const [quickAmount, setQuickAmount] = useState('')
+  const quickFen = yuanToFen(quickAmount)
+  const quickValid = quickName.trim().length > 0 && quickFen !== null && quickFen >= 1
+  const submitQuick = () => {
+    if (!quickValid || quickFen === null) return
+    onAddCustom(quickName.trim(), quickFen)
+    setQuickName('')
+    setQuickAmount('')
+  }
 
   return (
     <div>
@@ -108,6 +125,46 @@ export default function PickPanel({
             ) : null}
           </button>
         ))}
+      </div>
+
+      {/* 片 3 快捷收款入口（名目+金额 → custom 行；零依赖真接线 server cartItemSchema） */}
+      <div className="mt-2.5 rounded-[14px] bg-[#FAF8F2] px-3 py-2.5" data-testid="cashier-quick-collect">
+        <div className="mb-1.5 flex items-center gap-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">
+          <Banknote size={13} strokeWidth={1.8} aria-hidden />
+          {cc('cashier.quickCollect')}
+          <span className="font-normal text-[rgba(59,46,36,.42)]">{cc('cashier.quickCollectAside')}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            data-testid="cashier-quick-name"
+            maxLength={64}
+            placeholder={cc('cashier.quickNamePh')}
+            value={quickName}
+            onChange={(e) => setQuickName(e.target.value)}
+            className="min-w-0 flex-1 rounded-[8px] bg-[#FFFDF6] px-2.5 py-[7px] text-caption text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+          />
+          <input
+            data-testid="cashier-quick-amount"
+            inputMode="decimal"
+            placeholder={cc('cashier.quickAmountPh')}
+            value={quickAmount}
+            onChange={(e) => setQuickAmount(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') submitQuick()
+            }}
+            className="w-[92px] rounded-[8px] bg-[#FFFDF6] px-2.5 py-[7px] text-right font-number text-caption font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+          />
+          <button
+            type="button"
+            data-testid="cashier-quick-add"
+            disabled={!quickValid}
+            title={quickValid ? undefined : cc('cashier.quickInvalid')}
+            onClick={submitQuick}
+            className="shrink-0 rounded-full bg-brand-primary px-3.5 py-[7px] text-caption-xs font-bold text-ink shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {cc('cashier.quickAdd')}
+          </button>
+        </div>
       </div>
 
       <div className="mt-3">

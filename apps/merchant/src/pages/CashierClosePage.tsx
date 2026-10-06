@@ -32,6 +32,7 @@ import {
 } from '@/components/cashier/model'
 import {
   CloseReasonDialog,
+  CashMovePanel,
   DayCloseDetailDialog,
   DayCloseForm,
   DayCloseList,
@@ -45,8 +46,7 @@ import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider
 import { STATS_QUERY_KEY } from '@/components/dashboard/utils'
 import MainScaffold from '@/components/MainScaffold'
 import { cc } from '@/copy/cashier'
-import { errMsg } from '@/components/mall-admin/format'
-import { cashierHandoverOf, type HandoverInput } from '@/lib/taskCollabPort'
+import { errMsg, yuanToFen } from '@/components/mall-admin/format'
 import type { StaffRow } from '@/components/staff-admin/types'
 import { useMerchantRole } from '@/lib/roles'
 
@@ -125,21 +125,31 @@ export default function CashierClosePage() {
   const [hvCash, setHvCash] = useState('')
   const [hvComplaints, setHvComplaints] = useState('')
   const [hvToUserId, setHvToUserId] = useState('')
+  /* 片 3：备用金点交（元输入→分提交，默认 ¥500 端口留口） */
+  const [hvFloat, setHvFloat] = useState('500')
+  /* 片 3：盲交开关 + 日结提交错误原文（400 差异说明聚焦保留输入）+ 成功清零信号 */
+  const [blind, setBlind] = useState(false)
+  const [dayCloseError, setDayCloseError] = useState<string | null>(null)
+  const [dayCloseClear, setDayCloseClear] = useState(0)
 
   const openCloseShift = () => {
     setHvKeys('')
     setHvCash('')
     setHvComplaints('')
     setHvToUserId('')
+    setHvFloat('500')
     setConfirmCloseShift(true)
   }
 
   const submitCloseShift = () => {
-    const handover: HandoverInput = {
+    const floatFen = yuanToFen(hvFloat)
+    const handover = {
       ...(hvKeys.trim() ? { keysNote: hvKeys.trim() } : {}),
       ...(hvCash.trim() ? { cashNote: hvCash.trim() } : {}),
       ...(hvComplaints.trim() ? { complaintsNote: hvComplaints.trim() } : {}),
       ...(hvToUserId ? { toUserId: hvToUserId } : {}),
+      /* 备用金点交：合法金额才带（非法输入静默不带=未点交，server 可空口径） */
+      ...(floatFen !== null && floatFen >= 0 ? { floatFen } : {}),
     }
     closeShiftM.mutate(Object.keys(handover).length > 0 ? handover : undefined)
   }
@@ -155,11 +165,16 @@ export default function CashierClosePage() {
   }, [searchParams, setSearchParams])
 
   /* ---------------- 动作 ---------------- */
-  /* 片 3 B6-3：closeShift 入参加可选 handover 四节（在洗清单=server 闭班自动快照，
-     前端只发 钥匙/现金/客诉 注记+接棒人；全部留空则按旧口径无参闭班） */
+  /* 片 3 B6-3+交接班族：closeShift 入参加可选 handover（钥匙/现金/客诉注记+接棒人+
+     备用金点交 floatFen；server 类型已落地，直连不再经 taskCollabPort 桥） */
   const closeShiftM = useMutation({
-    mutationFn: (handover?: HandoverInput) =>
-      cashierHandoverOf(trpc).closeShift.mutate(handover ? { handover } : undefined),
+    mutationFn: (handover?: {
+      keysNote?: string
+      cashNote?: string
+      complaintsNote?: string
+      toUserId?: string
+      floatFen?: number
+    }) => trpc.cashier.closeShift.mutate(handover ? { handover } : undefined),
     onSuccess: () => {
       setConfirmCloseShift(false)
       toast.success('已交接班（闭班）—— 下一笔收银将自动开新班；账目冻结请走日结')
@@ -168,14 +183,28 @@ export default function CashierClosePage() {
     onError: (e) => toast.error(errMsg(e)),
   })
 
+  /* 片 3：dayClose 入参扩 actualWechatFen/actualAlipayFen/diffNote（实点非现金对账+
+     长短款差异说明）；400 含「须填差异说明」→ 错误原文下传表单聚焦（输入保留），
+     成功才递增清零信号 */
   const dayCloseM = useMutation({
-    mutationFn: (input: { actualCashFen: number; note?: string }) =>
+    mutationFn: (input: {
+      actualCashFen: number
+      actualWechatFen?: number
+      actualAlipayFen?: number
+      diffNote?: string
+      note?: string
+    }) =>
       trpc.cashier.dayClose.mutate({
         ...(overrideShiftId ? { shiftId: overrideShiftId } : {}),
         actualCashFen: input.actualCashFen,
-        note: input.note,
+        ...(input.actualWechatFen !== undefined ? { actualWechatFen: input.actualWechatFen } : {}),
+        ...(input.actualAlipayFen !== undefined ? { actualAlipayFen: input.actualAlipayFen } : {}),
+        ...(input.diffNote ? { diffNote: input.diffNote } : {}),
+        ...(input.note ? { note: input.note } : {}),
       }),
     onSuccess: (r) => {
+      setDayCloseError(null)
+      setDayCloseClear((n) => n + 1)
       const c = r.close
       toast.success(
         `日结单已冻结（${c.bizDate}）：账面 ¥${((c.bookCashFen ?? 0) / 100).toFixed(2)} · 实点 ¥${((c.actualCashFen ?? 0) / 100).toFixed(2)} · 差异 ${(c.diffFen ?? 0) === 0 ? '¥0' : `${(c.diffFen ?? 0) > 0 ? '+' : '−'}¥${(Math.abs(c.diffFen ?? 0) / 100).toFixed(2)}`}`,
@@ -183,7 +212,11 @@ export default function CashierClosePage() {
       setOverrideShiftId(null)
       invalidateAll()
     },
-    onError: (e) => toast.error(errMsg(e)),
+    onError: (e) => {
+      const msg = errMsg(e)
+      setDayCloseError(msg)
+      toast.error(msg)
+    },
   })
 
   const reverseM = useMutation({
@@ -250,15 +283,22 @@ export default function CashierClosePage() {
         {/* W-07 序位①：M5 四分列（现金/微信/支付宝/储值 · R1 同源出口前置） */}
         <TenderSplitPanel tender={tender} />
 
-        {/* 日结表单（账面 vs 实点 · 差异红字 · 分列） */}
+        {/* 日结表单（账面 vs 实点 · 差异红字 · 分列；片 3：盲交/实点非现金/差异说明） */}
         <DayCloseForm
           tender={tender}
           shift={shiftQ.data?.shift}
           overrideShiftId={overrideShiftId}
           submitting={dayCloseM.isPending}
-          onSubmit={(actualCashFen, note) => dayCloseM.mutate({ actualCashFen, note })}
+          submitError={dayCloseError}
+          clearSignal={dayCloseClear}
+          blind={blind}
+          onBlindChange={setBlind}
+          onSubmit={(input) => dayCloseM.mutate(input)}
           onCancelOverride={() => setOverrideShiftId(null)}
         />
+
+        {/* 片 3 交接班族：现金收支录入（paid in/out）+ 本班流水 */}
+        <CashMovePanel shift={shiftQ.data?.shift} />
 
         {/* R12：当日退款单列 + 现金段净额（V2：现金已收−现金退款，前端做差；
             历史日结封箱不回填只读） */}
@@ -329,6 +369,21 @@ export default function CashierClosePage() {
                   />
                 </label>
               ))}
+
+              <label className="mt-2.5 block">
+                <span className="mb-1 block text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">
+                  {cc('cashier.floatLabel')}
+                  <span className="ml-1.5 font-normal text-[rgba(59,46,36,.42)]">{cc('cashier.floatNote')}</span>
+                </span>
+                <input
+                  value={hvFloat}
+                  onChange={(e) => setHvFloat(e.target.value)}
+                  inputMode="decimal"
+                  placeholder="500"
+                  data-testid="handover-float"
+                  className="w-full rounded-[10px] bg-[#FFFDF6] px-3 py-2 font-number text-caption font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+                />
+              </label>
 
               <label className="mt-2.5 block">
                 <span className="mb-1 block text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">{cc('cashier.handoverToLabel')}</span>

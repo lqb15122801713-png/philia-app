@@ -2,8 +2,11 @@
  * 屏二 · 支付面板（批次 M1 · 主屏内右下展开层，不跳路由；390 全屏化）
  *
  * - 应收 Montserrat 32 墨大数字 + 副行（含次卡扣次 N 项 −¥X 已抵 / 储值 −¥X）；
- * - 支付胶囊六分列（M1-补2 R5 + R11a）：现金 / 微信 / 支付宝 / 次卡扣次 / 储值 /
- *   回馈金——未选白底 ring、选中柠檬底墨字、禁用灰 + 原因行紧跟；
+ * - 支付胶囊七分列（M1-补2 R5 + R11a + 片 3）：现金 / 微信 / 支付宝 / 次卡扣次 /
+ *   储值 / 回馈金 / 挂账——未选白底 ring、选中柠檬底墨字、禁用灰 + 原因行紧跟；
+ *   片 3 挂账段（credit）=台账留痕不碰真钱（至多一段；server 落 credit_ledgers，
+ *   computeDayTender 跳过不计已收；结清/核销走 /ledger 台账专页）；聚合扫码/外设
+ *   留口注记行置灰明面（通道资质候/PWA 上限）；
  *   储值胶囊仅「会员有储值余额」时出现（余额小字；不足禁用+原因行；可混搭——
  *   储值金额手输，现金类自动承担剩余）；**全域无充值入口（新售冻结回归保护）**；
  *   R11a 回馈金胶囊仅会员出现：仅商品行可用（红线 2，无商品行置灰明示；server
@@ -28,7 +31,8 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Check, CheckCircle2, WifiOff } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Check, CheckCircle2, Printer, ScanLine, WifiOff } from 'lucide-react'
 import { usePhiliaClient } from '@philia/shared'
 import { useQuery } from '@tanstack/react-query'
 import { fenToYuan, yuanToFen } from '@/components/mall-admin/format'
@@ -89,14 +93,15 @@ export default function PaySheet({
   /** R4：离线态（确认=本地暂存待补传） */
   offline?: boolean
   settling: boolean
-  /** 结账成功快照（非空即成功态，3s 自动关） */
-  settledInfo: { billNo: string; paidFen: number } | null
+  /** 结账成功快照（非空即成功态，3s 自动关；roundingFen=单上抹零真值，>0 透出） */
+  settledInfo: { billNo: string; paidFen: number; roundingFen?: number } | null
   onTogglePassAll: (on: boolean) => void
   onConfirm: (payments: SettleInput['payments']) => void
   onClose: () => void
 }) {
   const { trpc } = usePhiliaClient()
-  /* ---- 现金类胶囊选中与金额输入 + 储值段 + 回馈金段（打开时重置） ---- */
+  const navigate = useNavigate()
+  /* ---- 现金类胶囊选中与金额输入 + 储值段 + 回馈金段 + 挂账段（打开时重置） ---- */
   const [selected, setSelected] = useState<MoneyMethod[]>([])
   const [inputs, setInputs] = useState<Record<MoneyMethod, string>>({ cash: '', wechat: '', alipay: '' })
   const [cashReceived, setCashReceived] = useState('')
@@ -104,6 +109,8 @@ export default function PaySheet({
   const [svInput, setSvInput] = useState('')
   const [rbOn, setRbOn] = useState(false)
   const [rbInput, setRbInput] = useState('')
+  const [crOn, setCrOn] = useState(false)
+  const [crInput, setCrInput] = useState('')
   const [wasOpen, setWasOpen] = useState(false)
 
   const svBalance = member?.storedValueBalanceFen ?? 0
@@ -123,6 +130,8 @@ export default function PaySheet({
       setSvInput('')
       setRbOn(false)
       setRbInput('')
+      setCrOn(false)
+      setCrInput('')
     }
   }
 
@@ -170,8 +179,15 @@ export default function PaySheet({
     return null
   }, [member, prodFen, dueFen, rbBalance])
 
-  /** 储值/回馈金开启后现金类须承担的剩余额 */
-  const moneyNeedFen = Math.max(0, dueFen - svApplied - rbApplied)
+  /* ---- 挂账段（片 3 第七段 credit）：台账留痕不碰真钱，至多一段；
+     金额手输 ≤ 应收−储值−回馈金（server 落 credit_ledgers，computeDayTender 跳过不计已收） ---- */
+  const crFen = crOn ? yuanToFen(crInput) : null
+  const crApplied = crOn ? (crFen ?? 0) : 0
+  const crCap = Math.max(0, dueFen - svApplied - rbApplied)
+  const crOver = crOn && (crFen === null || crFen < 1 || crFen > crCap)
+
+  /** 储值/回馈金/挂账开启后现金类须承担的剩余额 */
+  const moneyNeedFen = Math.max(0, dueFen - svApplied - rbApplied - crApplied)
 
   /** 储值胶囊不可用原因（null = 可用；仅在有余额时出现，故仅负担保口径） */
   const svBlockReason = useMemo((): string | null => {
@@ -222,13 +238,13 @@ export default function PaySheet({
     // 开启：默认全额 min(余额, 应收)，现金类自动退到剩余；关闭：现金类回补全额
     const nextSv = next ? Math.min(svBalance, dueFen) : 0
     setSvInput(next ? String(nextSv / 100) : '')
-    setInputs(rebalance(selected, inputs, dueFen - nextSv - rbApplied))
+    setInputs(rebalance(selected, inputs, dueFen - nextSv - rbApplied - crApplied))
   }
 
   const onSvAmount = (v: string) => {
     setSvInput(v)
     const fen = yuanToFen(v)
-    if (fen !== null) setInputs(rebalance(selected, inputs, dueFen - fen - rbApplied))
+    if (fen !== null) setInputs(rebalance(selected, inputs, dueFen - fen - rbApplied - crApplied))
   }
 
   /* R11a 回馈金段：默认全额 min(商品行合计, 应收)，现金类自动退到剩余（可混搭） */
@@ -238,13 +254,29 @@ export default function PaySheet({
     setRbOn(next)
     const nextRb = next ? rbCap : 0
     setRbInput(next ? String(nextRb / 100) : '')
-    setInputs(rebalance(selected, inputs, dueFen - svApplied - nextRb))
+    setInputs(rebalance(selected, inputs, dueFen - svApplied - nextRb - crApplied))
   }
 
   const onRbAmount = (v: string) => {
     setRbInput(v)
     const fen = yuanToFen(v)
-    if (fen !== null) setInputs(rebalance(selected, inputs, dueFen - svApplied - fen))
+    if (fen !== null) setInputs(rebalance(selected, inputs, dueFen - svApplied - fen - crApplied))
+  }
+
+  /* 片 3 挂账段：默认挂剩余全额（应收−储值−回馈金），现金类退到 0（可混搭——
+     手输部分挂账、现金类承担其余；至多一段=单输入行天然保证） */
+  const toggleCr = () => {
+    const next = !crOn
+    setCrOn(next)
+    const nextCr = next ? Math.max(0, dueFen - svApplied - rbApplied) : 0
+    setCrInput(next ? String(nextCr / 100) : '')
+    setInputs(rebalance(selected, inputs, dueFen - svApplied - rbApplied - nextCr))
+  }
+
+  const onCrAmount = (v: string) => {
+    setCrInput(v)
+    const fen = yuanToFen(v)
+    if (fen !== null) setInputs(rebalance(selected, inputs, dueFen - svApplied - rbApplied - fen))
   }
 
   /* 次卡开合：应收变化只能在面板打开期由本动作触发（遮罩下车不可改），
@@ -257,12 +289,14 @@ export default function PaySheet({
       .filter((l) => l.kind === 'service' && l.serviceType === 'grooming')
       .reduce((s, l) => s + (l.adjustedPriceFen ?? l.unitPriceFen) * l.qty, 0)
     const nextDue = next ? dueFen + passCoveredFen - groomEff : dueFen + passCoveredFen
-    // 次卡开合改变应收：储值/回馈金段封顶追随（已开则收回到新应收内），现金类再平衡
+    // 次卡开合改变应收：储值/回馈金/挂账段封顶追随（已开则收回到新应收内），现金类再平衡
     const nextSv = svOn ? Math.min(svBalance, Math.max(0, nextDue)) : 0
     const nextRb = rbOn ? Math.min(prodFen, Math.max(0, nextDue - nextSv)) : 0
+    const nextCr = crOn ? Math.max(0, nextDue - nextSv - nextRb) : 0
     if (svOn) setSvInput(String(nextSv / 100))
     if (rbOn) setRbInput(String(nextRb / 100))
-    setInputs(rebalance(selected, inputs, Math.max(0, nextDue - nextSv - nextRb)))
+    if (crOn) setCrInput(String(nextCr / 100))
+    setInputs(rebalance(selected, inputs, Math.max(0, nextDue - nextSv - nextRb - nextCr)))
     onTogglePassAll(next)
   }
 
@@ -277,14 +311,15 @@ export default function PaySheet({
   const cashReceivedFen = yuanToFen(cashReceived)
   const cashShort = selected.includes('cash') && cashApplied > 0 && (cashReceivedFen === null || cashReceivedFen < cashApplied)
   const zeroDuePassOnly = dueFen === 0 && passCoveredFen > 0 // 全额次卡
-  const moneyBalanced = sumMoney === moneyNeedFen && !invalidInput && !svOver && !rbOver
+  const moneyBalanced = sumMoney === moneyNeedFen && !invalidInput && !svOver && !rbOver && !crOver
   const canConfirm =
     !settling &&
     !cashShort &&
     (moneyBalanced || zeroDuePassOnly) &&
     (dueFen > 0 || passCoveredFen > 0) &&
     (!svOn || (svFen !== null && svFen >= 1 && !svOver)) &&
-    (!rbOn || (rbFen !== null && rbFen >= 1 && !rbOver))
+    (!rbOn || (rbFen !== null && rbFen >= 1 && !rbOver)) &&
+    (!crOn || (crFen !== null && crFen >= 1 && !crOver))
 
   /* ---- 成功态 3s 自动回主屏 ---- */
   useEffect(() => {
@@ -296,7 +331,7 @@ export default function PaySheet({
   if (!open) return null
 
   const submit = () => {
-    const payments = finalizePayments(amounts, zeroDuePassOnly ? [] : segs, svApplied, rbApplied)
+    const payments = finalizePayments(amounts, zeroDuePassOnly ? [] : segs, svApplied, rbApplied, crApplied)
     if (!payments) return
     onConfirm(payments)
   }
@@ -316,17 +351,35 @@ export default function PaySheet({
             <div className="mt-4 whitespace-nowrap font-number text-detail-lg font-bold tabular-nums">
               已收款 ¥{fenToYuan(settledInfo.paidFen)}
             </div>
+            {/* 片 3：单上抹零透出（真值以 server 单为准，>0 才显示） */}
+            {(settledInfo.roundingFen ?? 0) > 0 ? (
+              <div className="mt-1 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]" data-testid="cashier-pay-rounding">
+                {cc('cashier.roundingLabel')} −¥{fenToYuan(settledInfo.roundingFen!)}
+              </div>
+            ) : null}
             <div className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
               单号 <span className="font-number tabular-nums">{settledInfo.billNo}</span> · {cc('cashier.paySuccessBack')}
             </div>
-            <button
-              type="button"
-              data-testid="cashier-pay-next"
-              onClick={onClose}
-              className="mt-6 rounded-full bg-brand-primary px-6 py-2.5 text-caption font-bold text-ink shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
-            >
-              {cc('cashier.payNextCta')}
-            </button>
+            <div className="mt-6 flex items-center gap-2">
+              {/* 片 3：成交即打小票（ReceiptPage /cashier/receipt/:billNo） */}
+              <button
+                type="button"
+                data-testid="cashier-pay-print"
+                onClick={() => navigate(`/cashier/receipt/${settledInfo.billNo}`)}
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#FFFDF6] px-5 py-2.5 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+              >
+                <Printer size={14} strokeWidth={1.8} aria-hidden />
+                {cc('cashier.receiptPrint')}
+              </button>
+              <button
+                type="button"
+                data-testid="cashier-pay-next"
+                onClick={onClose}
+                className="rounded-full bg-brand-primary px-6 py-2.5 text-caption font-bold text-ink shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+              >
+                {cc('cashier.payNextCta')}
+              </button>
+            </div>
           </div>
         ) : (
           <>
@@ -372,15 +425,22 @@ export default function PaySheet({
                   ...(rbApplied > 0
                     ? [{ key: 'rb', label: '回馈金抵扣（仅商品·不计入已收）', value: `−¥${fenToYuan(rbApplied)}`, tone: 'mut' as const }]
                     : []),
+                  ...(amounts.roundingFen > 0
+                    ? [{ key: 'rounding', label: `${cc('cashier.roundingLabel')}（端口规则·server 实算）`, value: `−¥${fenToYuan(amounts.roundingFen)}`, tone: 'mut' as const }]
+                    : []),
+                  ...(crApplied > 0
+                    ? [{ key: 'credit', label: '挂账（台账留痕·不计入已收）', value: `−¥${fenToYuan(crApplied)}`, tone: 'mut' as const }]
+                    : []),
                   { key: 'money', label: '现金类合计承担', value: `¥${fenToYuan(moneyNeedFen)}`, tone: 'total' as const },
                 ]}
               />
             </div>
 
-            {/* 支付胶囊六分列（储值仅会员有储值余额时出现；回馈金仅会员出现——R11a） */}
+            {/* 支付胶囊七分列（储值仅会员有储值余额时出现；回馈金仅会员出现——R11a；
+                片 3 增挂账段：全员可用，台账留痕不碰真钱） */}
             <div
               className={`grid gap-2 ${
-                member && svBalance > 0 ? 'grid-cols-6' : member ? 'grid-cols-5' : 'grid-cols-4'
+                member && svBalance > 0 ? 'grid-cols-7' : member ? 'grid-cols-6' : 'grid-cols-5'
               }`}
             >
               {MONEY_METHODS.map((m) => (
@@ -461,6 +521,35 @@ export default function PaySheet({
                   </small>
                 </button>
               ) : null}
+              {/* 片 3 挂账胶囊（第七段 credit）：台账留痕不碰真钱；至多一段（单输入行天然保证） */}
+              <button
+                type="button"
+                data-testid="cashier-pay-m-credit"
+                disabled={dueFen <= 0}
+                title={cc('cashier.creditNote')}
+                onClick={toggleCr}
+                className={capsuleCls(crOn ? 'on' : dueFen <= 0 ? 'disabled' : 'off')}
+              >
+                挂账
+                <small
+                  className={`mt-0.5 block font-number tabular-nums text-caption-xs font-normal ${
+                    crOn ? 'text-[rgba(59,46,36,.55)]' : 'text-[rgba(59,46,36,.42)]'
+                  }`}
+                >
+                  {crOn ? `挂 ¥${fenToYuan(crApplied)}` : '台账留痕'}
+                </small>
+              </button>
+            </div>
+            {/* 片 3 留口注记行（置灰明面：聚合扫码=通道资质候；外设=PWA 上限） */}
+            <div className="mt-2 flex flex-col gap-1" data-testid="cashier-pay-placeholder-notes">
+              <p className="flex items-center gap-1.5 text-caption-xs text-[rgba(59,46,36,.3)]">
+                <ScanLine size={12} strokeWidth={1.8} aria-hidden />
+                {cc('cashier.scanPayNote')}
+              </p>
+              <p className="flex items-center gap-1.5 text-caption-xs text-[rgba(59,46,36,.3)]">
+                <Printer size={12} strokeWidth={1.8} aria-hidden />
+                {cc('cashier.peripheralNote')}
+              </p>
             </div>
             {passBlockReason ? (
               <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="cashier-pass-block">
@@ -478,8 +567,8 @@ export default function PaySheet({
               </p>
             ) : null}
 
-            {/* 选中胶囊金额输入（组合支付：现金类 + 储值段 + 回馈金段） */}
-            {selected.length > 0 || svOn || rbOn ? (
+            {/* 选中胶囊金额输入（组合支付：现金类 + 储值段 + 回馈金段 + 挂账段） */}
+            {selected.length > 0 || svOn || rbOn || crOn ? (
               <div className="mt-3.5 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3" data-testid="cashier-pay-detail">
                 {selected.map((m) => {
                   const label = MONEY_METHODS.find((x) => x.key === m)!.label
@@ -551,6 +640,35 @@ export default function PaySheet({
                 {rbOn ? (
                   <p className="py-1 text-caption-xs text-[rgba(59,46,36,.42)]">
                     {cc('cashier.payRebateNote')}
+                  </p>
+                ) : null}
+                {/* 片 3 挂账段输入行（台账留痕不碰真钱；金额 ≤ 应收−储值−回馈金，可混搭） */}
+                {crOn ? (
+                  <div className="flex items-center justify-between py-1 text-caption">
+                    <span>
+                      挂账
+                      <small className="ml-1 font-number tabular-nums text-caption-xs text-[rgba(59,46,36,.42)]">
+                        上限 ¥{fenToYuan(crCap)}
+                      </small>
+                    </span>
+                    <input
+                      className={payInputCls}
+                      data-testid="cashier-pay-amt-credit"
+                      inputMode="decimal"
+                      placeholder="0"
+                      value={crInput}
+                      onChange={(e) => onCrAmount(e.target.value)}
+                    />
+                  </div>
+                ) : null}
+                {crOn && crOver ? (
+                  <p className="py-1 text-caption-xs font-semibold text-danger-deep" data-testid="cashier-credit-over">
+                    挂账金额须 ≤ ¥{fenToYuan(crCap)}（应收−储值−回馈金），可混搭现金/扫码补足
+                  </p>
+                ) : null}
+                {crOn ? (
+                  <p className="py-1 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="cashier-credit-note">
+                    {cc('cashier.creditNote')}
                   </p>
                 ) : null}
                 {selected.includes('cash') && cashApplied > 0 ? (

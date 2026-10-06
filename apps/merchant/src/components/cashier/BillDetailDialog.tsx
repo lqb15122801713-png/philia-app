@@ -18,6 +18,7 @@
 import { Skeleton, usePhiliaClient } from '@philia/shared'
 import { cc } from '@/copy/cashier'
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { fmtDateTime } from '@/components/mall-admin/format'
 import { CashierModal, SheetBtn } from './dialogs'
 import {
@@ -57,6 +58,7 @@ export default function BillDetailDialog({
   onClose: () => void
 }) {
   const { trpc } = usePhiliaClient()
+  const navigate = useNavigate()
   const detailQ = useQuery({
     queryKey: ['cashier', BILL_DETAIL_KEY, billNo],
     queryFn: () => trpc.cashier.getBill.query({ billNo: billNo! }),
@@ -128,6 +130,16 @@ export default function BillDetailDialog({
               onClick={() => onRefund(bill!.billNo)}
             >
               退款
+            </SheetBtn>
+          ) : null}
+          {/* 片 3：补打小票（ReceiptPage /cashier/receipt/:billNo；已收单可补打） */}
+          {bill != null && bill.status === 'settled' ? (
+            <SheetBtn
+              data-testid="cashier-detail-reprint"
+              title="补打小票"
+              onClick={() => navigate(`/cashier/receipt/${bill!.billNo}`)}
+            >
+              {cc('cashier.receiptReprint')}
             </SheetBtn>
           ) : null}
           <SheetBtn onClick={onClose}>关闭</SheetBtn>
@@ -217,9 +229,13 @@ export default function BillDetailDialog({
                       ) : null}
                     </div>
                     <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
-                      {it.kind === 'appointment' ? '预约行' : it.kind === 'service' ? '服务' : '商品'}
+                      {it.kind === 'appointment' ? '预约行' : it.kind === 'service' ? '服务' : it.kind === 'custom' ? '快捷收款' : '商品'}
                       {it.specSnapshot ? ` · ${it.specSnapshot}` : ''} · × <span className="font-number tabular-nums">{it.qty}</span>
                     </div>
+                    {/* 片 3：单品备注透出（随小票打印同口径） */}
+                    {it.note ? (
+                      <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.55)]">备注：{it.note}</div>
+                    ) : null}
                   </div>
                   <span className="font-number text-caption font-semibold tabular-nums">
                     ¥{fenToYuan(eff * it.qty)}
@@ -244,6 +260,13 @@ export default function BillDetailDialog({
                 <b className="font-number font-semibold tabular-nums text-ink">−¥{fenToYuan(bill.discountFen)}</b>
               </div>
             ) : null}
+            {/* 片 3：抹零透出（单上 roundingFen>0 才显示；规则=端口键 server 口径） */}
+            {bill.roundingFen > 0 ? (
+              <div className="flex justify-between py-1 text-caption text-[rgba(59,46,36,.62)]" data-testid="cashier-detail-rounding">
+                <span>{cc('cashier.roundingLabel')}</span>
+                <b className="font-number font-semibold tabular-nums text-ink">−¥{fenToYuan(bill.roundingFen)}</b>
+              </div>
+            ) : null}
             <div className="flex items-baseline justify-between border-t border-dashed border-[rgba(59,46,36,.12)] py-2">
               <span className="text-body-sm font-semibold">应收</span>
               <b className="font-number text-title font-bold tabular-nums">¥{fenToYuan(bill.payableFen)}</b>
@@ -258,7 +281,7 @@ export default function BillDetailDialog({
                 <div key={p.id} className="flex items-center justify-between py-1 text-caption">
                   <span>
                     {PAY_METHOD_LABEL[p.method] ?? p.method}
-                    {p.method === 'pass' || p.method === 'stored_value' ? (
+                    {p.method === 'pass' || p.method === 'stored_value' || p.method === 'credit' ? (
                       <small className="ml-1 text-caption-xs text-[rgba(59,46,36,.42)]">（不计入已收）</small>
                     ) : null}
                   </span>
