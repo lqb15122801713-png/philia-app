@@ -36,6 +36,7 @@ import {
   staffProcedure,
 } from '../trpc';
 import { computeMonth, snapshotStoreMonth, type DbHandle } from './commission';
+import { resolveScopedRules } from './configRules';
 
 const txDb = (tx: unknown): DbHandle => tx as DbHandle;
 
@@ -45,25 +46,27 @@ function num(v: unknown, fallback: number): number {
   return typeof v === 'number' && Number.isFinite(v) ? v : fallback;
 }
 
-/** service_rules 读法（同 taskCollab.ts readServiceRule：active 行取最高版本） */
-async function readServiceRule(d: DbHandle, ruleKey: string): Promise<Record<string, unknown> | null> {
-  const row = await d
-    .select({ valueJson: schema.serviceRules.valueJson })
+/** service_rules 读法（同 taskCollab.ts readServiceRule：active 行取最高版本）。
+ * 大批片 2 分层：传 storeId 按本店作用域解析（本店覆盖行优先）；不传=既有全量口径 */
+async function readServiceRule(d: DbHandle, ruleKey: string, storeId?: string | null): Promise<Record<string, unknown> | null> {
+  const rows = await d
+    .select({ ruleKey: schema.serviceRules.ruleKey, valueJson: schema.serviceRules.valueJson, storeId: schema.serviceRules.storeId })
     .from(schema.serviceRules)
     .where(and(eq(schema.serviceRules.ruleKey, ruleKey), eq(schema.serviceRules.active, true)))
-    .orderBy(desc(schema.serviceRules.version))
-    .get();
+    .orderBy(desc(schema.serviceRules.version));
+  const row = (storeId === undefined ? rows : resolveScopedRules(rows, storeId))[0];
   return (row?.valueJson ?? null) as Record<string, unknown> | null;
 }
 
-/** 协作拆分缺省建议比（commission_rules.commission_collab_split_default.splitBp；缺行回退 5000=对半） */
-async function readDefaultSplitBp(d: DbHandle): Promise<number> {
-  const row = await d
-    .select({ valueJson: schema.commissionRules.valueJson })
+/** 协作拆分缺省建议比（commission_rules.commission_collab_split_default.splitBp；缺行回退 5000=对半）。
+ * 大批片 2 分层：同 readServiceRule 的 storeId 口径 */
+async function readDefaultSplitBp(d: DbHandle, storeId?: string | null): Promise<number> {
+  const rows = await d
+    .select({ ruleKey: schema.commissionRules.ruleKey, valueJson: schema.commissionRules.valueJson, storeId: schema.commissionRules.storeId })
     .from(schema.commissionRules)
     .where(and(eq(schema.commissionRules.ruleKey, 'commission_collab_split_default'), eq(schema.commissionRules.active, true)))
-    .orderBy(desc(schema.commissionRules.version))
-    .get();
+    .orderBy(desc(schema.commissionRules.version));
+  const row = (storeId === undefined ? rows : resolveScopedRules(rows, storeId))[0];
   return num((row?.valueJson as Record<string, unknown> | null)?.splitBp, 5000);
 }
 
@@ -105,7 +108,7 @@ export const payrollRouter = router({
           priceFen: appt.priceFen,
         },
         collaborators,
-        defaultSplitBp: await readDefaultSplitBp(ctx.db), // 端口缺省建议值（commission_collab_split_default）
+        defaultSplitBp: await readDefaultSplitBp(ctx.db, storeId), // 端口缺省建议值（commission_collab_split_default；大批片 2 分层按本店解析）
       };
     }),
 
@@ -683,7 +686,7 @@ export const payrollRouter = router({
    * .payroll_appeal_sla_hours（缺省 24；页面注记数据源，配置端口第七域可改）。
    */
   appealSlaHours: staffProcedure.query(async ({ ctx }) => {
-    const rule = await readServiceRule(ctx.db, 'payroll_appeal_sla_hours');
+    const rule = await readServiceRule(ctx.db, 'payroll_appeal_sla_hours', ctx.user.storeId); // 大批片 2 分层：按员工本店作用域解析
     return {
       hours: num(rule?.hours, 24),
       source: 'service_rules.payroll_appeal_sla_hours',

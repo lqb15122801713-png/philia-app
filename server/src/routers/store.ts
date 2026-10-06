@@ -198,7 +198,7 @@ export const storeRouter = router({
             .get()) ?? null)
         : null;
       /** 逐服务引擎时长（仅 petId 传入时输出；boarding 项 durationMin 恒 null） */
-      const durationRules = input.petId ? await loadDurationRules(ctx.db) : null; // 补充令①：规则取数改读 duration_rules 配置表
+      const durationRules = input.petId ? await loadDurationRules(ctx.db, store.id) : null; // 补充令①：规则取数改读 duration_rules 配置表；大批片 2 分层按本店作用域解析
       const serviceDurations: Record<string, ServiceDuration> | null = input.petId
         ? Object.fromEntries(services.map((s) => [s.id, resolveServiceDuration(s, pet, durationRules)]))
         : null;
@@ -479,6 +479,7 @@ export const storeRouter = router({
         storeType: schema.stores.storeType,
         hqId: schema.stores.hqId,
         status: schema.stores.status,
+        groupName: schema.stores.groupName,
       })
       .from(schema.stores)
       .where(inArray(schema.stores.id, scope))
@@ -994,6 +995,10 @@ export const storeRouter = router({
         lat: z.number().min(-90).max(90).nullable().optional(),
         lng: z.number().min(-180).max(180).nullable().optional(),
         openHours: openHoursInput.optional(),
+        /** 片 2 · E1 门店档案端口点亮：电话/分组/连锁归属维护（owner 全域内） */
+        phone: z.string().trim().max(32).nullable().optional(),
+        groupName: z.string().trim().max(32).nullable().optional(),
+        hqId: z.string().min(1).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -1008,6 +1013,10 @@ export const storeRouter = router({
           }
         }
       }
+      /* 连锁归属闸：hqId 须在店域集合内（老板全域；越界=400 明文） */
+      if (input.hqId !== undefined && !storeScopeIds(ctx.user).includes(input.hqId)) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '归属总部不在本人店域内' });
+      }
 
       const set: {
         name?: string;
@@ -1015,6 +1024,9 @@ export const storeRouter = router({
         lat?: number | null;
         lng?: number | null;
         openHours?: schema.StoreOpenHours;
+        phone?: string | null;
+        groupName?: string | null;
+        hqId?: string;
         updatedAt: Date;
       } = { updatedAt: new Date() };
       if (input.name !== undefined) set.name = input.name;
@@ -1022,6 +1034,9 @@ export const storeRouter = router({
       if (input.lat !== undefined) set.lat = input.lat;
       if (input.lng !== undefined) set.lng = input.lng;
       if (input.openHours !== undefined) set.openHours = input.openHours as schema.StoreOpenHours;
+      if (input.phone !== undefined) set.phone = input.phone;
+      if (input.groupName !== undefined) set.groupName = input.groupName;
+      if (input.hqId !== undefined) set.hqId = input.hqId;
 
       const [updated] = await ctx.db
         .update(schema.stores)
@@ -1029,6 +1044,162 @@ export const storeRouter = router({
         .where(eq(schema.stores.id, ctx.user.storeId!))
         .returning();
       return { store: updated };
+    }),
+
+  /**
+   * 连锁驾驶舱（片 2 · 老板端三店六项日报看板；owner 全域读口）：
+   * 六项=今日营收已收（computeDayTender 同源）/今日预约（dashboardStats 同口径七状态合计）/
+   * 在店寄养（in_boarding 当前数）/待办合计（todo 四项同 dashboardStats 口径）/
+   * 异常（超期寄养数）/退款红字（待审退款申请 submitted 数）；
+   * 返回=店域内逐店分栏+合计条（聚合不写账，涉钱零新规）。
+   */
+  chainDashboard: merchantOwnerProcedure
+    .input(z.object({ date: z.date().optional() }).optional())
+    .query(async ({ ctx }) => {
+      const scope = storeScopeIds(ctx.user);
+      if (!scope.length) return { stores: [], total: null };
+      const storeRows = await ctx.db
+        .select({ id: schema.stores.id, name: schema.stores.name, groupName: schema.stores.groupName })
+        .from(schema.stores)
+        .where(inArray(schema.stores.id, scope))
+        .orderBy(schema.stores.createdAt);
+      const now = new Date();
+      const dayStart = storeTodayStart(now);
+      const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000);
+      const rows: Array<{
+        storeId: string;
+        name: string;
+        groupName: string | null;
+        revenueFen: number;
+        todayCount: number;
+        inBoardingCount: number;
+        todoTotal: number;
+        abnormalCount: number;
+        refundPendingCount: number;
+      }> = [];
+      for (const s of storeRows) {
+        const tender = await computeDayTender(ctx.db, s.id, dayStart);
+        const appts = await ctx.db
+          .select({
+            status: schema.appointments.status,
+            staffId: schema.appointments.staffId,
+            type: schema.appointments.type,
+            paidAt: schema.appointments.paidAt,
+            scheduledStart: schema.appointments.scheduledStart,
+            scheduledEnd: schema.appointments.scheduledEnd,
+          })
+          .from(schema.appointments)
+          .where(eq(schema.appointments.storeId, s.id));
+        const todayAppts = appts.filter(
+          (a) => a.scheduledStart.getTime() >= dayStart.getTime() && a.scheduledStart.getTime() < dayEnd.getTime(),
+        );
+        const todayCount = todayAppts.filter((a) => (DASHBOARD_STATUSES as readonly string[]).includes(a.status)).length;
+        const inBoardingCount = appts.filter((a) => a.status === 'in_boarding').length;
+        const pending = todayAppts.filter((a) => a.status === 'pending').length;
+        const unassigned = todayAppts.filter((a) => a.status === 'confirmed' && !a.staffId && a.type === 'grooming').length;
+        const cancelRequested = todayAppts.filter((a) => a.status === 'cancel_requested').length;
+        const unpaid = todayAppts.filter((a) => a.status === 'completed' && !a.paidAt).length;
+        const overdue = appts.filter((a) => a.status === 'in_boarding' && a.scheduledEnd.getTime() < now.getTime()).length;
+        const refundPending = await ctx.db
+          .select({ id: schema.refundRequests.id })
+          .from(schema.refundRequests)
+          .where(and(eq(schema.refundRequests.storeId, s.id), eq(schema.refundRequests.status, 'submitted')));
+        rows.push({
+          storeId: s.id,
+          name: s.name,
+          groupName: s.groupName,
+          revenueFen: tender.receivedTotalFen,
+          todayCount,
+          inBoardingCount,
+          todoTotal: pending + unassigned + cancelRequested + unpaid,
+          abnormalCount: overdue,
+          refundPendingCount: refundPending.length,
+        });
+      }
+      const sum = (k: 'revenueFen' | 'todayCount' | 'inBoardingCount' | 'todoTotal' | 'abnormalCount' | 'refundPendingCount') =>
+        rows.reduce((acc, r) => acc + (r[k] as number), 0);
+      return {
+        stores: rows,
+        total: {
+          revenueFen: sum('revenueFen'),
+          todayCount: sum('todayCount'),
+          inBoardingCount: sum('inBoardingCount'),
+          todoTotal: sum('todoTotal'),
+          abnormalCount: sum('abnormalCount'),
+          refundPendingCount: sum('refundPendingCount'),
+        },
+      };
+    }),
+
+  /**
+   * 新店克隆（片 2 · 全局管控四件；owner）：结构克隆=档案（stores 行+服务项+商品[stock 归零]）
+   * +端口配置（六张规则表门店覆盖行复制），不带数据（订单/会员/员工/库存流水/账单一律不克隆）。
+   * 源店须在店域集合内（老板全域；越界=NOT_FOUND 统一防探测口径）。
+   */
+  cloneStore: merchantOwnerProcedure
+    .input(
+      z.object({
+        name: z.string().trim().min(1, '新店名称不能为空').max(64),
+        sourceStoreId: z.string().min(1).optional(),
+        groupName: z.string().trim().max(32).nullable().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const scope = storeScopeIds(ctx.user);
+      const sourceId = input.sourceStoreId ?? ctx.user.storeId!;
+      const source = await ctx.db
+        .select()
+        .from(schema.stores)
+        .where(eq(schema.stores.id, sourceId))
+        .limit(1)
+        .then((r) => r[0]);
+      if (!source || !scope.includes(source.id)) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: '源门店不存在' });
+      }
+      const cloned = await ctx.db.transaction(async (tx) => {
+        const [newStore] = await tx
+          .insert(schema.stores)
+          .values({
+            ownerId: ctx.user.id,
+            name: input.name,
+            address: source.address,
+            lat: source.lat,
+            lng: source.lng,
+            openHours: source.openHours,
+            phone: source.phone,
+            status: 'active',
+            storeType: 'store',
+            hqId: source.hqId ?? source.id,
+            groupName: input.groupName !== undefined ? input.groupName : source.groupName,
+          })
+          .returning();
+        /* 档案=服务项/商品（商品库存归零——库存=数据不克隆，明面口径） */
+        const svcs = await tx.select().from(schema.services).where(eq(schema.services.storeId, sourceId));
+        for (const { id: _id, createdAt: _c, updatedAt: _u, storeId: _s, ...rest } of svcs) {
+          await tx.insert(schema.services).values({ ...rest, storeId: newStore!.id });
+        }
+        const prods = await tx.select().from(schema.products).where(eq(schema.products.storeId, sourceId));
+        for (const { id: _id, createdAt: _c, updatedAt: _u, storeId: _s, stock: _st, ...rest } of prods) {
+          await tx.insert(schema.products).values({ ...rest, storeId: newStore!.id, stock: 0 });
+        }
+        /* 端口配置=六张规则表门店覆盖行（总部下发 NULL 行=全局共享不复制） */
+        const ruleTables = [
+          schema.commissionRules,
+          schema.durationRules,
+          schema.xpRules,
+          schema.refundRules,
+          schema.serviceRules,
+          schema.payRules,
+        ] as const;
+        for (const tbl of ruleTables) {
+          const rows = await tx.select().from(tbl).where(eq(tbl.storeId, sourceId));
+          for (const { id: _id, createdAt: _c, updatedAt: _u, ...rest } of rows as Array<Record<string, unknown>>) {
+            await tx.insert(tbl).values({ ...rest, storeId: newStore!.id, createdBy: ctx.user.id } as never);
+          }
+        }
+        return newStore!;
+      });
+      return { store: cloned };
     }),
 
   /**

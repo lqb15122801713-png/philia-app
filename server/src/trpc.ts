@@ -210,7 +210,9 @@ export type AppointmentRow = typeof schema.appointments.$inferSelect;
  * - customer：仅本人预约
  * - staff：本店且（未指派或指派给自己）
  * - merchant（owner/manager）：本店
- * 预约不存在抛 NOT_FOUND；未登录抛 UNAUTHORIZED；归属不通过抛 FORBIDDEN。
+ * 预约不存在抛 NOT_FOUND；未登录抛 UNAUTHORIZED；
+ * 归属不通过（含跨店）一律 NOT_FOUND（片 2 裁件①：跨店按 id 取数统一 NOT_FOUND
+ * 防探测口径——不透出他店单存在性；片 1 意见书 §三裁定）。
  */
 export async function assertAppointmentAccess(
   ctx: Context,
@@ -244,5 +246,5 @@ export async function assertAppointmentAccess(
   if (isMerchant && user.storeId === appt.storeId) {
     return appt;
   }
-  throw new TRPCError({ code: 'FORBIDDEN', message: '无权访问该预约' });
+  throw new TRPCError({ code: 'NOT_FOUND', message: '预约不存在' });
 }

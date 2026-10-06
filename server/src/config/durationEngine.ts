@@ -25,6 +25,7 @@
 
 import { eq } from 'drizzle-orm';
 import { db, schema } from '../db';
+import { resolveScopedRules } from '../routers/configRules';
 
 /** 槽位粒度（分钟）：与 store_slots 30min 栅格一致（非占位，属既有栅格契约） */
 export const DURATION_SLOT_MIN = 30;
@@ -114,13 +115,16 @@ function asStringArray(v: unknown): string[] | null {
  * 读取时长规则（每次实时读表：配置端口保存即生效）。
  * 六块任一缺行/形状非法 → 返回 null：调用方（resolveServiceDuration rules=null）
  * 回退服务默认 durationMin 路径（不阻断下单；参数不落代码常量，故不回退代码字面量）。
+ * 大批片 2 分层：传 storeId 按 resolveScopedRules 解析（本店覆盖行优先于总部行）；
+ * 不传=既有全量口径（单活跃行不变式下=最新端口值）。
  */
-export async function loadDurationRules(d: DurationDbHandle): Promise<DurationRules | null> {
+export async function loadDurationRules(d: DurationDbHandle, storeId?: string | null): Promise<DurationRules | null> {
   const rows = await d
-    .select({ ruleKey: schema.durationRules.ruleKey, valueJson: schema.durationRules.valueJson })
+    .select({ ruleKey: schema.durationRules.ruleKey, valueJson: schema.durationRules.valueJson, storeId: schema.durationRules.storeId })
     .from(schema.durationRules)
     .where(eq(schema.durationRules.active, true));
-  const byKey = new Map(rows.map((r) => [r.ruleKey, r.valueJson as Record<string, unknown>]));
+  const scoped = storeId === undefined ? rows : resolveScopedRules(rows, storeId);
+  const byKey = new Map(scoped.map((r) => [r.ruleKey, r.valueJson as Record<string, unknown>]));
 
   const baseMin = asSpeciesKindMap(byKey.get('duration_base_min'));
   const sizeCoef = asCoefMap(byKey.get('duration_size_coef'), ['small', 'medium', 'large'] as const);

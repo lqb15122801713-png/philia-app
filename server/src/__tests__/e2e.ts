@@ -171,8 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 3134 键/68 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68）；
+ *      56.1 种子 3150 键/68 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -4933,17 +4933,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（3134 键/68 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 3134 && domainSet.size === 68 &&
+  check('56.1 copy 域种子全量落库（3150 键/68 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 3150 && domainSet.size === 68 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（3134 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 3134 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（3150 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 3150 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -7775,10 +7775,10 @@ async function main(): Promise<void> {
       cookie: customerCookie, input: { appointmentId: i71Appt.id },
     });
     const list711b = await asErr(trpcQuery('incident.listForAppointment', { cookie: exp4bCookie, input: { appointmentId: i71Appt.id } }));
-    check('71.1 listForAppointment 本人可见（live 页高亮条数据源）+ 非当事人 403',
+    check('71.1 listForAppointment 本人可见（live 页高亮条数据源）+ 非当事人=NOT_FOUND（片 2 裁件①防探测口径，断言同步）',
       list711.incidents.some((i) => i.id === rep711.incident.id) &&
-      list711b instanceof TrpcHttpError && list711b.httpStatus === 403,
-      { n: list711.incidents.length, byB: list711b && list711b.httpStatus });
+      list711b instanceof TrpcHttpError && list711b.code === 'NOT_FOUND',
+      { n: list711.incidents.length, byB: list711b && list711b.code });
     /* 状态闸负例：pending 单不可填报 */
     const i71bAppt = (await db.insert(schema.appointments).values({
       code: 'E2EANB', customerId: customerUser.id, storeId, petId, serviceId: gSvc71.id,
@@ -7972,12 +7972,12 @@ async function main(): Promise<void> {
       materials: Array<{ name: string; quantity: number }>;
     }>('serviceStep.detailSheet', { cookie: customerCookie, input: { appointmentId: d72Appt.id } });
     const sheet721b = await asErr(trpcQuery('serviceStep.detailSheet', { cookie: exp4bCookie, input: { appointmentId: d72Appt.id } }));
-    check('72.1 detailSheet：分项时长（消毒步 600s/中文名/进行中步 duration=null）+ 用料透出（耗材名×1）+ 非当事人 403',
+    check('72.1 detailSheet：分项时长（消毒步 600s/中文名/进行中步 duration=null）+ 用料透出（耗材名×1）+ 非当事人=NOT_FOUND（片 2 裁件①防探测口径，断言同步）',
       sheet721.steps.length === 2 &&
       sheet721.steps[0]!.stepKey === 'disinfection' && sheet721.steps[0]!.label === '消毒' && sheet721.steps[0]!.durationSec === 600 &&
       sheet721.steps[1]!.status === 'active' && sheet721.steps[1]!.durationSec === null &&
       sheet721.materials.length === 1 && sheet721.materials[0]!.name === d72Supply.name && sheet721.materials[0]!.quantity === 1 &&
-      sheet721b instanceof TrpcHttpError && sheet721b.httpStatus === 403,
+      sheet721b instanceof TrpcHttpError && sheet721b.code === 'NOT_FOUND',
       { steps: sheet721.steps.map((s) => [s.stepKey, s.durationSec]), mats: sheet721.materials, byB: sheet721b && sheet721b.httpStatus });
     /* 无耗材空单=空数组诚实空态（不画假用料） */
     const sheet721c = await trpcQuery<{ materials: unknown[] }>('serviceStep.detailSheet', {
@@ -8637,8 +8637,8 @@ async function main(): Promise<void> {
 
     /* ---- 76.3 公共读口形状不变（不透元数据：键→文两列） ---- */
     const texts76 = await trpcQuery<{ rows: Array<{ key: string; text: string; screen?: unknown; position?: unknown }> }>('config.activeCopyTexts', { cookie: customerCookie });
-    check('76.3 activeCopyTexts 形状不变（3134 行 key→text，不透 screen/position 元数据）',
-      texts76.rows.length === 3134 &&
+    check('76.3 activeCopyTexts 形状不变（3150 行 key→text，不透 screen/position 元数据）',
+      texts76.rows.length === 3150 &&
       texts76.rows.every((r) => r.screen === undefined && r.position === undefined),
       texts76.rows.length);
 
@@ -8691,8 +8691,8 @@ async function main(): Promise<void> {
    *       多店归属留口列（staff.extra_store_ids/memberships.home_store_id/
    *       stored_value_import_batches.store_id PRAGMA 在列）+储值批次店域闸补漏
    *       （A 批次 B 不透出、A 本域可见）。
-   * 口径登记：跨店按 id 取数现状=FORBIDDEN（透出拒绝但不伪装 NOT_FOUND）——
-   *   NOT_FOUND 换口径=行为变更候产品侧裁定（本片不动，登记在卷）。
+   * 口径登记：跨店按 id 取数=统一 NOT_FOUND（片 2 裁件①防探测口径，片 1 意见书 §三
+   *   裁定已落码——assertAppointmentAccess 兜底分支+cashier.getBill 同步收紧）。
    * ================================================================== */
   console.log('\n[商家端片1] 78. 双店互盲六组 / 分级管理员 / 两层模型+留口（连锁地基）');
   {
@@ -8727,16 +8727,16 @@ async function main(): Promise<void> {
     /* ---- 78.1 预约域互盲 ---- */
     const apptListB = await trpcQuery<AnyRec78[]>('appointment.listForStore', { cookie: ownerBCookie78 });
     const apptGetB = await asErr(trpcQuery('appointment.get', { cookie: ownerBCookie78, input: { appointmentId: createdAid } }));
-    check('78.1 互盲①预约：B 列表=0 行（A 店单零透出）+ B 按 id 取 A 店单=拒绝（现状 FORBIDDEN，换 NOT_FOUND 口径候裁）',
-      apptListB.length === 0 && apptGetB instanceof TrpcHttpError && (apptGetB.httpStatus === 403 || apptGetB.code === 'NOT_FOUND'),
+    check('78.1 互盲①预约：B 列表=0 行（A 店单零透出）+ B 按 id 取 A 店单=NOT_FOUND（片 2 裁件①统一防探测口径，裁定已落）',
+      apptListB.length === 0 && apptGetB instanceof TrpcHttpError && apptGetB.code === 'NOT_FOUND',
       { list: apptListB.length, code: apptGetB instanceof TrpcHttpError ? apptGetB.code : null });
 
     /* ---- 78.2 收银域互盲 ---- */
     const aBill78 = await db.select().from(schema.cashierBills).where(eq(schema.cashierBills.storeId, seedStore78.id)).limit(1).then((r) => r[0]!);
     const billsB = await trpcQuery<AnyRec78[]>('cashier.listBills', { cookie: ownerBCookie78 });
     const getBillB = await asErr(trpcQuery('cashier.getBill', { cookie: ownerBCookie78, input: { billNo: aBill78.billNo } }));
-    check('78.2 互盲②收银：B 流水=0 行 + B 取 A 店单=拒绝（非本店单据）',
-      billsB.length === 0 && getBillB instanceof TrpcHttpError && getBillB.httpStatus === 403,
+    check('78.2 互盲②收银：B 流水=0 行 + B 取 A 店单=NOT_FOUND（片 2 裁件①统一防探测口径，裁定已落）',
+      billsB.length === 0 && getBillB instanceof TrpcHttpError && getBillB.code === 'NOT_FOUND',
       { list: billsB.length, code: getBillB instanceof TrpcHttpError ? getBillB.code : null });
 
     /* ---- 78.3 会员账务域互盲 + 储值批次店域闸补漏实证 ---- */
@@ -8825,6 +8825,188 @@ async function main(): Promise<void> {
       colNames(tiStaff).includes('extra_store_ids') && colNames(tiMbr).includes('home_store_id') &&
       colNames(tiBatch).includes('store_id') && colNames(tiStores).includes('store_type') && colNames(tiStores).includes('hq_id'),
       { staff: colNames(tiStaff).includes('extra_store_ids'), mbr: colNames(tiMbr).includes('home_store_id'), batch: colNames(tiBatch).includes('store_id') });
+  }
+
+  /* ==================================================================
+   * 商家端大批 片 2（老板端驾驶舱 · 任务书冻结版 V1.0）段：
+   *   79.1 裁件②换绑申诉店域（A 店申诉 B 不见/平台件=老板可见店长不见/跨店审批 NOT_FOUND）；
+   *   79.2 裁件③ membership.forUser 本店客户闸（B 查 A 店客户=NOT_FOUND，A 查=过）；
+   *   79.3 连锁驾驶舱六项（chainDashboard：A+A2 分栏+合计=逐项算术和+营收与
+   *       todayTenderStats 同源对账+manager 403）；
+   *   79.4 报表三视图（d1：合计=A+A2 单店算术和/选店 A2=零值/越界选店=NOT_FOUND）；
+   *   79.5 配置作用域分层（save scope=store 落门店行/scope=hq 落总部行/解析序=门店覆盖优先）；
+   *   79.6 新店克隆（结构克隆：档案=服务/商品[stock 归零]+门店覆盖规则行复制；不带数据）
+   *       + E1 维护（store.update 电话/分组/归属+hqId 越界 400）；
+   *   79.7 隔离族不回退（78 互盲六组关键项抽查保持绿）。
+   * ================================================================== */
+  console.log('\n[商家端片2] 79. 裁件三件随带 / 三店六项日报 / 报表三视图 / 配置分层 / 克隆+E1');
+  {
+    type AnyRec79 = Record<string, unknown>;
+    /* 78 夹具块外续用（块域隔离）：从库内回取 B 店主/B 店长/B 店/A2 辖店与月份 */
+    const { storeWallclock: wc79 } = await import('../routers/appointment');
+    const w79d = wc79(new Date());
+    const month78 = `${w79d.y}-${String(w79d.m).padStart(2, '0')}`;
+    const seedStore78 = await db.select().from(schema.stores).where(eq(schema.stores.name, '菲丽亚宠物·示例店')).limit(1).then((r) => r[0]!);
+    const ownerB78 = await db.select().from(schema.users).where(eq(schema.users.kimiId, 'seed_e2e_chain_ownerb')).limit(1).then((r) => r[0]!);
+    const mgrBUser79 = await db.select().from(schema.users).where(eq(schema.users.kimiId, 'seed_e2e_chain_mgrb')).limit(1).then((r) => r[0]!);
+    const storeB78 = await db.select().from(schema.stores).where(eq(schema.stores.ownerId, ownerB78.id)).limit(1).then((r) => r[0]!);
+    const storeA2x = await db.select().from(schema.stores).where(eq(schema.stores.name, 'e2e A 总部辖二店')).limit(1).then((r) => r[0]!);
+    const ownerBCookie78 = await devLogin(ownerB78.id);
+    const mgrBCookie78 = await devLogin(mgrBUser79.id);
+
+    /* ---- 79.1 裁件②：换绑申诉店域过滤 ---- */
+    const custUser = byKimi('seed_kimi_customer')!;
+    const [appealA79] = await db.insert(schema.phoneChangeRequests).values({
+      requestNo: 'PC-20261006-791', userId: custUser.id, storeId: seedStore78.id,
+      oldPhoneMasked: '138****0000', newPhoneMasked: '139****7911', newPhone: '13900007911',
+      status: 'submitted', timelineJson: [{ at: new Date().toISOString(), action: 'submitted', by: custUser.id }],
+    }).returning();
+    const [appealNull79] = await db.insert(schema.phoneChangeRequests).values({
+      requestNo: 'PC-20261006-792', userId: ownerB78!.id, storeId: null,
+      oldPhoneMasked: '139****3001', newPhoneMasked: '139****7912', newPhone: '13900007912',
+      status: 'submitted', timelineJson: [{ at: new Date().toISOString(), action: 'submitted', by: ownerB78!.id }],
+    }).returning();
+    type Appeal79 = { id: string; storeId: string | null };
+    const appealsB = await trpcQuery<{ items: Appeal79[] }>('authSecurity.listPhoneAppeals', { cookie: ownerBCookie78 });
+    const appealsA = await trpcQuery<{ items: Appeal79[] }>('authSecurity.listPhoneAppeals', { cookie: ownerCookie });
+    const appealsMgrB = await trpcQuery<{ items: Appeal79[] }>('authSecurity.listPhoneAppeals', { cookie: mgrBCookie78 });
+    const reviewB = await asErr(trpcMutate('authSecurity.reviewPhoneAppeal', {
+      cookie: ownerBCookie78, input: { requestId: appealA79!.id, approve: false, note: '跨店审批负例' },
+    }));
+    check('79.1 换绑店域：B 店主不见 A 店申诉（归属店过滤生效）+ 平台件（NULL=无归属店）=老板/店长全店可见可受理（就近受理口径）+ 跨店审批=NOT_FOUND（裁件①同口径）',
+      !appealsB.items.some((a) => a.id === appealA79!.id) &&
+      appealsA.items.some((a) => a.id === appealA79!.id) &&
+      appealsA.items.some((a) => a.id === appealNull79!.id) &&
+      appealsB.items.some((a) => a.id === appealNull79!.id) &&
+      appealsMgrB.items.some((a) => a.id === appealNull79!.id) &&
+      reviewB instanceof TrpcHttpError && reviewB.code === 'NOT_FOUND',
+      { b: appealsB.items.length, a: appealsA.items.length, mgrNull: appealsMgrB.items.some((a) => a.id === appealNull79!.id), review: reviewB instanceof TrpcHttpError ? reviewB.code : null });
+
+    /* ---- 79.2 裁件③：membership.forUser 本店客户闸 ---- */
+    const forUserB = await asErr(trpcQuery('membership.forUser', { cookie: ownerBCookie78, input: { userId: custUser.id } }));
+    const forUserA = await trpcQuery<AnyRec79>('membership.forUser', { cookie: ownerCookie, input: { userId: custUser.id } });
+    check('79.2 forUser 本店客户闸：B 查 A 店客户=NOT_FOUND（档位/余额不透出）+ A 查本店客户=过',
+      forUserB instanceof TrpcHttpError && forUserB.code === 'NOT_FOUND' && forUserA !== null && typeof forUserA === 'object' && 'rebate' in forUserA,
+      { b: forUserB instanceof TrpcHttpError ? forUserB.code : null });
+
+    /* ---- 79.3 连锁驾驶舱六项（chainDashboard 分栏+合计+同源对账） ---- */
+    interface ChainRow { storeId: string; revenueFen: number; todayCount: number; inBoardingCount: number; todoTotal: number; abnormalCount: number; refundPendingCount: number }
+    const chain = await trpcQuery<{ stores: ChainRow[]; total: ChainRow }>('store.chainDashboard', { cookie: ownerCookie });
+    const rowA = chain.stores.find((r) => r.storeId === seedStore78.id)!;
+    const rowA2 = chain.stores.find((r) => r.storeId === storeA2x!.id)!;
+    const tenderA = await trpcQuery<{ receivedTotalFen: number }>('store.todayTenderStats', { cookie: ownerCookie });
+    const sumOf = (k: keyof Omit<ChainRow, 'storeId'>) => chain.stores.reduce((acc, r) => acc + (r[k] as number), 0);
+    const chainMgr = await asErr(trpcQuery('store.chainDashboard', { cookie: mgrBCookie78 }));
+    check('79.3 三店六项日报：分栏含 A+A2 + 合计=逐项算术和 + A 行营收=todayTenderStats 同源（computeDayTender 出口对账）+ manager 403（owner 读口）',
+      !!rowA && !!rowA2 &&
+      chain.total.revenueFen === sumOf('revenueFen') && chain.total.todayCount === sumOf('todayCount') &&
+      chain.total.inBoardingCount === sumOf('inBoardingCount') && chain.total.todoTotal === sumOf('todoTotal') &&
+      chain.total.abnormalCount === sumOf('abnormalCount') && chain.total.refundPendingCount === sumOf('refundPendingCount') &&
+      rowA.revenueFen === tenderA.receivedTotalFen &&
+      chainMgr instanceof TrpcHttpError && chainMgr.httpStatus === 403,
+      { stores: chain.stores.length, aRev: rowA.revenueFen, tender: tenderA.receivedTotalFen, mgr: chainMgr instanceof TrpcHttpError ? chainMgr.httpStatus : null });
+
+    /* ---- 79.4 报表三视图（d1 合计=算术和对账 + 选店 + 越界 NOT_FOUND） ---- */
+    const d1Single79 = await trpcQuery<AnyRec79>('report.d1Revenue', { cookie: ownerCookie, input: { month: month78 } });
+    const d1Chain79 = await trpcQuery<AnyRec79>('report.d1Revenue', { cookie: ownerCookie, input: { month: month78, scope: 'chain' } });
+    const d1A2 = await trpcQuery<AnyRec79>('report.d1Revenue', { cookie: ownerCookie, input: { month: month78, storeId: storeA2x!.id } });
+    const d1Cross = await asErr(trpcQuery('report.d1Revenue', { cookie: ownerCookie, input: { month: month78, storeId: storeB78!.id } }));
+    check('79.4 报表三视图：合计（scope=chain）=A 单店+A2 单店算术和（A2 零值）+ 越界选店=NOT_FOUND（防探测）',
+      d1Chain79.cashFen === (d1Single79.cashFen as number) + ((d1A2.cashFen as number) ?? 0) &&
+      d1A2.cashFen === 0 &&
+      d1Cross instanceof TrpcHttpError && d1Cross.code === 'NOT_FOUND',
+      { single: d1Single79.cashFen, chain: d1Chain79.cashFen, a2: d1A2.cashFen, cross: d1Cross instanceof TrpcHttpError ? d1Cross.code : null });
+
+    /* ---- 79.5 配置作用域分层（门店覆盖优先解析序） ---- */
+    const durList0 = await trpcQuery<{ rules: Array<{ ruleKey: string; valueJson: unknown; active: boolean; version: number; storeId?: string | null }> }>(
+      'config.list', { cookie: ownerCookie, input: { domain: 'duration' } });
+    const durKey = durList0.rules.find((r) => r.ruleKey === 'duration_base_min' && r.active)!;
+    /* ① save scope='store' 同值改写 → active 行落 store_id=A（门店覆盖行） */
+    await trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'duration', scope: 'store', changes: [{ ruleKey: 'duration_base_min', valueJson: durKey.valueJson }] },
+    });
+    const durList1 = await trpcQuery<typeof durList0>('config.list', { cookie: ownerCookie, input: { domain: 'duration' } });
+    const durStore = durList1.rules.find((r) => r.ruleKey === 'duration_base_min' && r.active)!;
+    const { resolveScopedRules } = await import('../routers/configRules');
+    const scopeRows = [
+      { ruleKey: 'k', storeId: null, v: 'hq' },
+      { ruleKey: 'k', storeId: seedStore78.id, v: 'store' },
+    ];
+    const resolveA = resolveScopedRules(scopeRows, seedStore78.id);
+    const resolveB = resolveScopedRules(scopeRows, storeB78!.id);
+    const resolveNull = resolveScopedRules(scopeRows, null);
+    check('79.5 配置分层①：save scope=store 落门店覆盖行（store_id=A 透出）+ 解析序=门店行优先/他店仅总部行/NULL 入参仅总部行（resolveScopedRules 函数级实证）',
+      durStore.storeId === seedStore78.id &&
+      resolveA.length === 1 && resolveA[0]!.v === 'store' &&
+      resolveB.length === 1 && resolveB[0]!.v === 'hq' &&
+      resolveNull.length === 1 && resolveNull[0]!.v === 'hq',
+      { storeId: durStore.storeId, a: resolveA[0]?.v, b: resolveB[0]?.v });
+    /* ② 运行时读侧（全键组同值改写，口径对称）：save scope='store' 全键 → A 店=门店行在
+       （引擎非空）/B 店=无活跃行回引擎兜底（null）；save scope='hq' 全键同值复辟 →
+       B 店恢复可读 + copy 中央件传 scope=400 */
+    const { loadDurationRules } = await import('../config/durationEngine');
+    const allDurKeys = durList0.rules.filter((r) => r.active).map((r) => ({ ruleKey: r.ruleKey, valueJson: r.valueJson }));
+    await trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'duration', scope: 'store', changes: allDurKeys },
+    });
+    const engA = await loadDurationRules(db, seedStore78.id);
+    const engB = await loadDurationRules(db, storeB78!.id);
+    await trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'duration', scope: 'hq', changes: allDurKeys },
+    });
+    const durList2 = await trpcQuery<typeof durList0>('config.list', { cookie: ownerCookie, input: { domain: 'duration' } });
+    const durHqAll = durList2.rules.filter((r) => r.active);
+    const engB2 = await loadDurationRules(db, storeB78!.id);
+    const centralNo = await asErr(trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'copy', scope: 'hq', changes: [{ ruleKey: 'home.idFallback', valueJson: { text: '菲丽亚宠友' } }] },
+    }));
+    check('79.5 配置分层②：全键组门店覆盖生效期 A 店引擎在/B 店回兜底（null）→ hq 全键同值复辟 B 店恢复 + copy 中央件传 scope=400 明文',
+      engA !== null && engB === null && durHqAll.every((r) => r.storeId === null) && engB2 !== null &&
+      centralNo instanceof TrpcHttpError && centralNo.httpStatus === 400,
+      { engA: engA !== null, engB: engB === null, hqNull: durHqAll.every((r) => r.storeId === null), engB2: engB2 !== null, central: centralNo instanceof TrpcHttpError ? centralNo.httpStatus : null });
+
+    /* ---- 79.6 新店克隆 + E1 维护 ---- */
+    const srcSvcCount = (await db.select({ id: schema.services.id }).from(schema.services).where(eq(schema.services.storeId, seedStore78.id))).length;
+    const srcProdCount = (await db.select({ id: schema.products.id }).from(schema.products).where(eq(schema.products.storeId, seedStore78.id))).length;
+    const cloneRes = await trpcMutate<{ store: { id: string; hqId: string | null; groupName: string | null } }>('store.cloneStore', {
+      cookie: ownerCookie, input: { name: 'e2e 克隆店', groupName: 'e2e 分组甲' },
+    });
+    const cloneId = cloneRes.store.id;
+    const cloneSvcs = await db.select({ id: schema.services.id }).from(schema.services).where(eq(schema.services.storeId, cloneId));
+    const cloneProds = await db.select().from(schema.products).where(eq(schema.products.storeId, cloneId));
+    const cloneAppts = await db.select({ id: schema.appointments.id }).from(schema.appointments).where(eq(schema.appointments.storeId, cloneId));
+    const cloneMbrs = await db.select({ id: schema.memberships.id }).from(schema.memberships).where(eq(schema.memberships.soldStoreId, cloneId));
+    const cloneCross = await asErr(trpcMutate('store.cloneStore', {
+      cookie: ownerCookie, input: { name: 'e2e 越界克隆', sourceStoreId: storeB78!.id },
+    }));
+    check('79.6 克隆：结构克隆=服务全复制+商品全复制[stock 归零]+不带数据（预约 0/会员 0）+归属/分组落值 + 越界源店=NOT_FOUND',
+      cloneSvcs.length === srcSvcCount && srcSvcCount > 0 &&
+      cloneProds.length === srcProdCount && cloneProds.every((p) => p.stock === 0) &&
+      cloneAppts.length === 0 && cloneMbrs.length === 0 &&
+      cloneRes.store.hqId === seedStore78.id && cloneRes.store.groupName === 'e2e 分组甲' &&
+      cloneCross instanceof TrpcHttpError && cloneCross.code === 'NOT_FOUND',
+      { svc: cloneSvcs.length, prod: cloneProds.length, stockNonZero: cloneProds.filter((p) => p.stock !== 0).length, cross: cloneCross instanceof TrpcHttpError ? cloneCross.code : null });
+    /* E1 维护：store.update 电话/分组/归属三参 + hqId 越界 400（改后还原电话=原值） */
+    const upd79 = await trpcMutate<{ store: { phone: string | null; groupName: string | null; hqId: string | null } }>('store.update', {
+      cookie: ownerCookie, input: { phone: '0571-88886666', groupName: 'e2e 总部分组', hqId: seedStore78.id },
+    });
+    const updBad = await asErr(trpcMutate('store.update', { cookie: ownerCookie, input: { hqId: storeB78!.id } }));
+    check('79.6 E1 维护：store.update 电话/分组/归属三参落值 + hqId 越界=400 明文（老板全域闸）',
+      upd79.store.phone === '0571-88886666' && upd79.store.groupName === 'e2e 总部分组' && upd79.store.hqId === seedStore78.id &&
+      updBad instanceof TrpcHttpError && updBad.httpStatus === 400,
+      { phone: upd79.store.phone, group: upd79.store.groupName, bad: updBad instanceof TrpcHttpError ? updBad.httpStatus : null });
+
+    /* ---- 79.7 隔离族不回退抽查（78 关键项片 2 改造后保持绿） ---- */
+    const apptB797 = await trpcQuery<AnyRec79[]>('appointment.listForStore', { cookie: ownerBCookie78 });
+    const billsB797 = await trpcQuery<AnyRec79[]>('cashier.listBills', { cookie: ownerBCookie78 });
+    const staffB797 = await trpcQuery<{ staff: Array<{ name: string }> }>('store.staffList', { cookie: mgrBCookie78 });
+    check('79.7 隔离族不回退：B 预约/收银仍 0 行 + B 花名册仍仅 B 店长（片 2 全量改造后互盲不破）',
+      apptB797.length === 0 && billsB797.length === 0 && staffB797.staff.length === 1 && staffB797.staff[0]!.name === 'e2e B 店长',
+      { appt: apptB797.length, bills: billsB797.length, staff: staffB797.staff.length });
   }
 
   client.close();

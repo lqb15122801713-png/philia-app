@@ -34,6 +34,7 @@ import {
   type Context,
 } from '../trpc';
 import { storeDayStartMs, storeWallclock } from './appointment';
+import { resolveScopedRules } from './configRules';
 
 /* ------------------------------------------------------------------ */
 /* 公共小件                                                              */
@@ -72,15 +73,15 @@ function isManagerSide(ctx: Context): boolean {
   );
 }
 
-/** 读端口值（service_rules 最新 active 行；无行=null——端口未配置时调用方给明文） */
-async function readServiceRule(d: DbHandle, ruleKey: string): Promise<Record<string, unknown> | null> {
-  const row = await d
-    .select({ valueJson: schema.serviceRules.valueJson })
+/** 读端口值（service_rules 最新 active 行；无行=null——端口未配置时调用方给明文）。
+ * 大批片 2 分层：传 storeId 按本店作用域解析（本店覆盖行优先）；不传=既有全量口径 */
+async function readServiceRule(d: DbHandle, ruleKey: string, storeId?: string | null): Promise<Record<string, unknown> | null> {
+  const rows = await d
+    .select({ ruleKey: schema.serviceRules.ruleKey, valueJson: schema.serviceRules.valueJson, storeId: schema.serviceRules.storeId })
     .from(schema.serviceRules)
     .where(and(eq(schema.serviceRules.ruleKey, ruleKey), eq(schema.serviceRules.active, true)))
-    .orderBy(desc(schema.serviceRules.version))
-    .limit(1)
-    .get();
+    .orderBy(desc(schema.serviceRules.version));
+  const row = (storeId === undefined ? rows : resolveScopedRules(rows, storeId))[0];
   return row?.valueJson ?? null;
 }
 
@@ -406,7 +407,7 @@ export const pdcaRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const port = await readServiceRule(ctx.db, 'pdca_categories');
+      const port = await readServiceRule(ctx.db, 'pdca_categories', ctx.user.storeId); // 大批片 2 分层：按本店作用域解析
       const categories = Array.isArray(port?.categories) ? (port!.categories as string[]) : [];
       if (!categories.includes(input.category)) {
         badRequest(`问题类目「${input.category}」不在类目集内，请联系店长在配置端口维护类目`);
@@ -434,7 +435,7 @@ export const pdcaRouter = router({
 
   /** categories（员工）：读端口 pdca_categories 当前类目集（raise 表单下拉数据源；与 raise 校验同口） */
   categories: staffProcedure.query(async ({ ctx }) => {
-    const port = await readServiceRule(ctx.db, 'pdca_categories');
+    const port = await readServiceRule(ctx.db, 'pdca_categories', ctx.user.storeId); // 大批片 2 分层：按本店作用域解析
     const categories = Array.isArray(port?.categories) ? (port!.categories as string[]) : [];
     return { categories };
   }),
@@ -619,7 +620,7 @@ interface SelfCheckPortItem {
 export const selfCheckRouter = router({
   /** items（员工）：读端口 self_check_items 当前生效表项（提交按此快照） */
   items: staffProcedure.query(async ({ ctx }) => {
-    const port = await readServiceRule(ctx.db, 'self_check_items');
+    const port = await readServiceRule(ctx.db, 'self_check_items', ctx.user.storeId); // 大批片 2 分层：按本店作用域解析
     const items = (Array.isArray(port?.items) ? port!.items : []) as SelfCheckPortItem[];
     return { items };
   }),
@@ -641,7 +642,7 @@ export const selfCheckRouter = router({
         .get();
       if (existing) return { run: existing, idempotent: true as const };
 
-      const port = await readServiceRule(ctx.db, 'self_check_items');
+      const port = await readServiceRule(ctx.db, 'self_check_items', storeId); // 大批片 2 分层：按本店作用域解析
       const portItems = (Array.isArray(port?.items) ? port!.items : []) as SelfCheckPortItem[];
       if (portItems.length === 0) badRequest('自检表项未配置，请联系店长在配置端口维护 self_check_items');
       const answerByKey = new Map(input.items.map((i) => [i.key, i]));

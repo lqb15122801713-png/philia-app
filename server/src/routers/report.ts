@@ -2,7 +2,8 @@
  * report tRPC router —— 客户端体验大批片 5：尾牙读口 5 + 报表目录 17 张点亮（W-13）
  *
  * 铁规与口径（任务书冻结版 V1.0 + 开工令-1005-片 5）：
- * - 单店口径写死（ctx.user.storeId 过滤全表；连锁预留注记——多店合批另批）；
+ * - 三店视图口径（商家端大批片 2）：缺省=单店（ctx.user.storeId，零回归）；
+ *   scope='chain'=店域集合聚合（老板=全域，店长=自然落回本店）；storeId=店域内任选；
  * - 涉钱零新规：全部为读口径，不写账；营收口径与 financeStats 同源（appointments
  *   paid_at + 收银 recognized 现金类段，次卡/储值/回馈金三段非现金单列不计已收）；
  * - 导出 CSV 仅店主（总规则③）：exportCsv 一口径派发 17 张同闸，clerk/manager 403；
@@ -14,19 +15,22 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { and, asc, desc, eq, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import { broadcastNow, emitEvent, type Db as BusDb } from '../realtime/bus';
 import { EventType } from '../realtime/events';
 import { storeDayStartMs, storeWallclock } from './appointment';
 import { loadCashierFinance } from './cashier';
+import { resolveScopedRules } from './configRules';
 import {
   merchantManagerProcedure,
   merchantOwnerProcedure,
   publicProcedure,
   router,
   staffProcedure,
+  storeScopeIds,
+  type SessionUser,
 } from '../trpc';
 
 /* ------------------------------------------------------------------ */
@@ -34,7 +38,20 @@ import {
 /* ------------------------------------------------------------------ */
 
 const MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
-const monthInput = z.object({ month: z.string().regex(MONTH_RE, '月份格式须为 YYYY-MM') });
+/* 三视图口径：缺省=单店（现状）；scope='chain'=店域集合聚合（老板=全域，店长=本店）；
+   storeId=店域内任选单店，越界=NOT_FOUND（防探测统一口径） */
+const monthInput = z.object({
+  month: z.string().regex(MONTH_RE, '月份格式须为 YYYY-MM'),
+  scope: z.enum(['store', 'chain']).optional(),
+  storeId: z.string().optional(),
+});
+
+/** 无 month 语义读口的三视图入参（month 可传但忽略），与 monthInput 同形 */
+const scopeOnlyInput = z.object({
+  month: z.string().regex(MONTH_RE, '月份格式须为 YYYY-MM').optional(),
+  scope: z.enum(['store', 'chain']).optional(),
+  storeId: z.string().optional(),
+});
 
 /** 门店时区月界 [from, to)（ms epoch） */
 function monthRange(month: string): { from: Date; to: Date } {
@@ -42,6 +59,19 @@ function monthRange(month: string): { from: Date; to: Date } {
   const from = new Date(storeDayStartMs(y, m, 1));
   const to = m === 12 ? new Date(storeDayStartMs(y + 1, 1, 1)) : new Date(storeDayStartMs(y, m + 1, 1));
   return { from, to };
+}
+
+/** 三店视图店域解析：storeId=店域内任选（越界=NOT_FOUND 防探测）；scope='chain'=店域集合
+ *  （老板=全域，店长=自然落回本店）；缺省=本店单值（与旧逐字节一致） */
+function reportStoreIds(ctx: { user: SessionUser }, input?: { scope?: 'store' | 'chain'; storeId?: string }): string[] {
+  if (input?.storeId) {
+    if (!storeScopeIds(ctx.user).includes(input.storeId)) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: '门店不存在' });
+    }
+    return [input.storeId];
+  }
+  if (input?.scope === 'chain') return storeScopeIds(ctx.user);
+  return [ctx.user.storeId!];
 }
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
@@ -77,10 +107,10 @@ interface RevenueAgg {
   byDay: Map<string, { date: string; serviceFen: number; shopFen: number }>;
 }
 
-/** 区间营收聚合（[from,to)；byDay 铺洞连续） */
+/** 区间营收聚合（[from,to)；byDay 铺洞连续；storeIds=店域集合，单值=单店现状） */
 async function revenueInRange(
   db: Parameters<typeof loadCashierFinance>[0],
-  storeId: string,
+  storeIds: string[],
   from: Date,
   to: Date,
 ): Promise<RevenueAgg> {
@@ -94,7 +124,7 @@ async function revenueInRange(
     .from(schema.appointments)
     .where(
       and(
-        eq(schema.appointments.storeId, storeId),
+        inArray(schema.appointments.storeId, storeIds),
         gte(schema.appointments.paidAt, from),
         lt(schema.appointments.paidAt, to),
       ),
@@ -121,7 +151,7 @@ async function revenueInRange(
   let passFen = 0;
   let storedValueFen = 0;
   let rebateFen = 0;
-  const cashierFin = await loadCashierFinance(db, storeId);
+  const cashierFin = (await Promise.all(storeIds.map((id) => loadCashierFinance(db, id)))).flat();
   for (const cf of cashierFin) {
     for (const r of cf.recognized) {
       if (r.at.getTime() >= from.getTime() && r.at.getTime() < to.getTime()) {
@@ -152,7 +182,7 @@ async function revenueInRange(
 /** 年费收现（与 membership.amortizationStats 同源：收银单 membership 行 settled 未冲正按月） */
 async function memberFeeCashOf(
   db: Parameters<typeof loadCashierFinance>[0],
-  storeId: string,
+  storeIds: string[],
   from: Date,
   to: Date,
 ): Promise<number> {
@@ -168,7 +198,7 @@ async function memberFeeCashOf(
     )
     .where(
       and(
-        eq(schema.cashierBills.storeId, storeId),
+        inArray(schema.cashierBills.storeId, storeIds),
         eq(schema.cashierBills.status, 'settled'),
         isNull(schema.cashierBills.reversedAt),
         gte(schema.cashierBills.settledAt, from),
@@ -179,10 +209,10 @@ async function memberFeeCashOf(
   return Number(row?.s ?? 0);
 }
 
-/** 年费分摊（同源：active 会员 paidFen/12 按月计提；本店=sold_store_id ∪ 微光 NULL） */
+/** 年费分摊（同源：active 会员 paidFen/12 按月计提；店域=sold_store_id ∈ storeIds ∪ 微光 NULL） */
 async function memberFeeAmortizedOf(
   db: Parameters<typeof loadCashierFinance>[0],
-  storeId: string,
+  storeIds: string[],
 ): Promise<number> {
   const rows = await db
     .select({ paidFen: schema.memberships.paidFen })
@@ -190,36 +220,37 @@ async function memberFeeAmortizedOf(
     .where(
       and(
         eq(schema.memberships.status, 'active'),
-        sql`(${schema.memberships.soldStoreId} = ${storeId} OR ${schema.memberships.soldStoreId} IS NULL)`,
+        or(inArray(schema.memberships.soldStoreId, storeIds), isNull(schema.memberships.soldStoreId)),
       ),
     );
   return rows.reduce((s, r) => s + Math.round((r.paidFen ?? 0) / 12), 0);
 }
 
-/** 本店会员 userId 集（办卡店=本店 ∪ 微光 NULL，与 amortizationStats 同口径） */
+/** 店域会员 userId 集（办卡店 ∈ storeIds ∪ 微光 NULL，与 amortizationStats 同口径） */
 async function memberUserIdsOf(
   db: Parameters<typeof loadCashierFinance>[0],
-  storeId: string,
+  storeIds: string[],
 ): Promise<Set<string>> {
   const rows = await db
     .select({ userId: schema.memberships.userId })
     .from(schema.memberships)
-    .where(sql`(${schema.memberships.soldStoreId} = ${storeId} OR ${schema.memberships.soldStoreId} IS NULL)`);
+    .where(or(inArray(schema.memberships.soldStoreId, storeIds), isNull(schema.memberships.soldStoreId)));
   return new Set(rows.map((r) => r.userId));
 }
 
 /** 差评界值= rating ≤ 2（xp.storeFlaggedReviews rating<3 同口径） */
 const isBad = (rating: number) => rating <= 2;
 
-/** D6 预警阈值端口（service_rules.d6_refund_spike_warn_bp，缺省 3000=30%） */
-async function refundSpikeWarnBp(db: Parameters<typeof loadCashierFinance>[0]): Promise<number> {
-  const row = await db
-    .select({ valueJson: schema.serviceRules.valueJson })
+/** D6 预警阈值端口（service_rules.d6_refund_spike_warn_bp，缺省 3000=30%）。
+ * 大批片 2 分层：传 storeId 按本店作用域解析（本店覆盖行优先）；不传=既有全量口径
+ * （D6 报表为老板全域集合店口径，无单店上下文，调用点不传） */
+async function refundSpikeWarnBp(db: Parameters<typeof loadCashierFinance>[0], storeId?: string | null): Promise<number> {
+  const rows = await db
+    .select({ ruleKey: schema.serviceRules.ruleKey, valueJson: schema.serviceRules.valueJson, storeId: schema.serviceRules.storeId })
     .from(schema.serviceRules)
     .where(and(eq(schema.serviceRules.ruleKey, 'd6_refund_spike_warn_bp'), eq(schema.serviceRules.active, true)))
-    .orderBy(desc(schema.serviceRules.version))
-    .limit(1)
-    .then((r) => r[0]);
+    .orderBy(desc(schema.serviceRules.version));
+  const row = (storeId === undefined ? rows : resolveScopedRules(rows, storeId))[0];
   const bp = row?.valueJson?.bp;
   return typeof bp === 'number' && Number.isFinite(bp) ? bp : 3000;
 }
@@ -232,7 +263,7 @@ export const reportRouter = router({
   /* ---------------- A 区 · 尾牙读口 5（单店口径） ---------------- */
 
   /** A1 储值负债店级聚合：Σ(principal+bonus)（欠客户的钱=负债口径） */
-  storedValueLiability: merchantManagerProcedure.query(async ({ ctx }) => {
+  storedValueLiability: merchantManagerProcedure.input(scopeOnlyInput.optional()).query(async ({ ctx, input }) => {
     const row = await ctx.db
       .select({
         principal: sql<number>`coalesce(sum(${schema.storedValueAccounts.principalFen}),0)`,
@@ -240,16 +271,16 @@ export const reportRouter = router({
         n: sql<number>`count(*)`,
       })
       .from(schema.storedValueAccounts)
-      .where(eq(schema.storedValueAccounts.storeId, ctx.user.storeId!))
+      .where(inArray(schema.storedValueAccounts.storeId, reportStoreIds(ctx, input)))
       .get();
     const principalFen = Number(row?.principal ?? 0);
     const bonusFen = Number(row?.bonus ?? 0);
     return { principalFen, bonusFen, totalFen: principalFen + bonusFen, accountCount: Number(row?.n ?? 0) };
   }),
 
-  /** A2 回馈金负债店级聚合：本店会员（办卡店=本店 ∪ 微光 NULL）的 rebate 余额 Σ */
-  rebateLiability: merchantManagerProcedure.query(async ({ ctx }) => {
-    const memberIds = await memberUserIdsOf(ctx.db, ctx.user.storeId!);
+  /** A2 回馈金负债店级聚合：店域会员（办卡店∈店域 ∪ 微光 NULL）的 rebate 余额 Σ */
+  rebateLiability: merchantManagerProcedure.input(scopeOnlyInput.optional()).query(async ({ ctx, input }) => {
+    const memberIds = await memberUserIdsOf(ctx.db, reportStoreIds(ctx, input));
     if (memberIds.size === 0) return { totalFen: 0, accountCount: 0 };
     const row = await ctx.db
       .select({ s: sql<number>`coalesce(sum(${schema.rebateAccounts.balanceFen}),0)`, n: sql<number>`count(*)` })
@@ -260,14 +291,14 @@ export const reportRouter = router({
   }),
 
   /** A3 昨日营收（financeStats 同源口径）+ 日结同源出口对账字段（day_closes 昨日行） */
-  yesterdayRevenue: merchantManagerProcedure.query(async ({ ctx }) => {
-    const storeId = ctx.user.storeId!;
+  yesterdayRevenue: merchantManagerProcedure.input(scopeOnlyInput.optional()).query(async ({ ctx, input }) => {
+    const storeIds = reportStoreIds(ctx, input);
     const nowW = storeWallclock(new Date());
     const todayStart = storeDayStartMs(nowW.y, nowW.m, nowW.day);
     const y = new Date(todayStart - 24 * 3600 * 1000);
     const yW = storeWallclock(y);
     const from = new Date(storeDayStartMs(yW.y, yW.m, yW.day));
-    const agg = await revenueInRange(ctx.db, storeId, from, new Date(todayStart));
+    const agg = await revenueInRange(ctx.db, storeIds, from, new Date(todayStart));
     const dayKey = `${yW.y}-${pad2(yW.m)}-${pad2(yW.day)}`;
     // 日结同源出口对账：day_closes 昨日行（close 且未冲正）
     const closes = await ctx.db
@@ -275,7 +306,7 @@ export const reportRouter = router({
       .from(schema.dayCloses)
       .where(
         and(
-          eq(schema.dayCloses.storeId, storeId),
+          inArray(schema.dayCloses.storeId, storeIds),
           eq(schema.dayCloses.bizDate, dayKey),
           eq(schema.dayCloses.kind, 'close'),
           eq(schema.dayCloses.status, 'frozen'),
@@ -300,19 +331,19 @@ export const reportRouter = router({
   }),
 
   /** A4 近 14 日营收 spark（同源 byDay 序列；今日格=截至当前的当日已收） */
-  revenueSpark14: merchantManagerProcedure.query(async ({ ctx }) => {
-    const storeId = ctx.user.storeId!;
+  revenueSpark14: merchantManagerProcedure.input(scopeOnlyInput.optional()).query(async ({ ctx, input }) => {
+    const storeIds = reportStoreIds(ctx, input);
     const nowW = storeWallclock(new Date());
     const todayStart = storeDayStartMs(nowW.y, nowW.m, nowW.day);
     const from = new Date(todayStart - 13 * 24 * 3600 * 1000);
-    const agg = await revenueInRange(ctx.db, storeId, from, new Date(todayStart + 24 * 3600 * 1000));
+    const agg = await revenueInRange(ctx.db, storeIds, from, new Date(todayStart + 24 * 3600 * 1000));
     const days = [...agg.byDay.values()].map((d) => ({ date: d.date, totalFen: d.serviceFen + d.shopFen }));
     return { days };
   }),
 
   /** A5 差评聚合（reviews 底座：店级差评率/均分/员工分布/近十条差评明细含回复态） */
-  badReviewAgg: merchantManagerProcedure.query(async ({ ctx }) => {
-    const storeId = ctx.user.storeId!;
+  badReviewAgg: merchantManagerProcedure.input(scopeOnlyInput.optional()).query(async ({ ctx, input }) => {
+    const storeIds = reportStoreIds(ctx, input);
     const rows = await ctx.db
       .select({
         id: schema.reviews.id,
@@ -326,14 +357,14 @@ export const reportRouter = router({
         createdAt: schema.reviews.createdAt,
       })
       .from(schema.reviews)
-      .where(eq(schema.reviews.storeId, storeId))
+      .where(inArray(schema.reviews.storeId, storeIds))
       .orderBy(desc(schema.reviews.createdAt));
     const total = rows.length;
     const bad = rows.filter((r) => isBad(r.rating));
     const staffRows = await ctx.db
       .select({ id: schema.staff.id, name: schema.staff.name })
       .from(schema.staff)
-      .where(eq(schema.staff.storeId, storeId));
+      .where(inArray(schema.staff.storeId, storeIds));
     const nameOf = new Map(staffRows.map((s) => [s.id, s.name]));
     const byStaffMap = new Map<string, { total: number; bad: number }>();
     for (const r of rows) {
@@ -372,17 +403,17 @@ export const reportRouter = router({
   /** D1 营收日报/月报（改口径）：年费收现 vs 12 个月分摊双口径并显（amortizationStats
    *  同源）+ 会员 vs 散客消费占比 + 同比环比 + byDay/byKind 下钻（≤3 层：月→日/类） */
   d1Revenue: merchantManagerProcedure.input(monthInput).query(async ({ ctx, input }) => {
-    const storeId = ctx.user.storeId!;
+    const storeIds = reportStoreIds(ctx, input);
     const { from, to } = monthRange(input.month);
-    const agg = await revenueInRange(ctx.db, storeId, from, to);
-    const feeCash = await memberFeeCashOf(ctx.db, storeId, from, to);
-    const feeAmortized = await memberFeeAmortizedOf(ctx.db, storeId);
+    const agg = await revenueInRange(ctx.db, storeIds, from, to);
+    const feeCash = await memberFeeCashOf(ctx.db, storeIds, from, to);
+    const feeAmortized = await memberFeeAmortizedOf(ctx.db, storeIds);
 
     /* 会员 vs 散客（消费时点会员口径：paidAt ∈ [startedAt, expiresAt) 且 status=active） */
     const memberRows = await ctx.db
       .select({ userId: schema.memberships.userId, startedAt: schema.memberships.startedAt, expiresAt: schema.memberships.expiresAt })
       .from(schema.memberships)
-      .where(sql`(${schema.memberships.soldStoreId} = ${storeId} OR ${schema.memberships.soldStoreId} IS NULL)`);
+      .where(or(inArray(schema.memberships.soldStoreId, storeIds), isNull(schema.memberships.soldStoreId)));
     const memberAt = (userId: string | null, at: Date | null): boolean => {
       if (!userId || !at) return false;
       return memberRows.some(
@@ -392,7 +423,7 @@ export const reportRouter = router({
     const paidAppts = await ctx.db
       .select({ customerId: schema.appointments.customerId, paidAt: schema.appointments.paidAt, paidFen: schema.appointments.paidFen, priceFen: schema.appointments.priceFen })
       .from(schema.appointments)
-      .where(and(eq(schema.appointments.storeId, storeId), gte(schema.appointments.paidAt, from), lt(schema.appointments.paidAt, to)));
+      .where(and(inArray(schema.appointments.storeId, storeIds), gte(schema.appointments.paidAt, from), lt(schema.appointments.paidAt, to)));
     let memberFen = 0;
     let nonMemberFen = 0;
     for (const r of paidAppts) {
@@ -403,18 +434,18 @@ export const reportRouter = router({
     const bills = await ctx.db
       .select({ customerId: schema.cashierBills.customerId, settledAt: schema.cashierBills.settledAt, payableFen: schema.cashierBills.payableFen })
       .from(schema.cashierBills)
-      .where(and(eq(schema.cashierBills.storeId, storeId), eq(schema.cashierBills.status, 'settled'), isNull(schema.cashierBills.reversedAt), gte(schema.cashierBills.settledAt, from), lt(schema.cashierBills.settledAt, to)));
+      .where(and(inArray(schema.cashierBills.storeId, storeIds), eq(schema.cashierBills.status, 'settled'), isNull(schema.cashierBills.reversedAt), gte(schema.cashierBills.settledAt, from), lt(schema.cashierBills.settledAt, to)));
     for (const b of bills) {
       if (memberAt(b.customerId, b.settledAt)) memberFen += b.payableFen;
       else nonMemberFen += b.payableFen;
     }
 
     /* 环比/同比（同源聚合，零数据=null 诚实空） */
-    const prev = await revenueInRange(ctx.db, storeId, ...Object.values(monthRange(shiftMonth(input.month, -1))) as [Date, Date]);
-    const lastYear = await revenueInRange(ctx.db, storeId, ...Object.values(monthRange(shiftMonth(input.month, -12))) as [Date, Date]);
+    const prev = await revenueInRange(ctx.db, storeIds, ...Object.values(monthRange(shiftMonth(input.month, -1))) as [Date, Date]);
+    const lastYear = await revenueInRange(ctx.db, storeIds, ...Object.values(monthRange(shiftMonth(input.month, -12))) as [Date, Date]);
     const total = agg.serviceFen + agg.shopFen + feeCash;
-    const prevTotal = prev.serviceFen + prev.shopFen + (await memberFeeCashOf(ctx.db, storeId, ...Object.values(monthRange(shiftMonth(input.month, -1))) as [Date, Date]));
-    const yearTotal = lastYear.serviceFen + lastYear.shopFen + (await memberFeeCashOf(ctx.db, storeId, ...Object.values(monthRange(shiftMonth(input.month, -12))) as [Date, Date]));
+    const prevTotal = prev.serviceFen + prev.shopFen + (await memberFeeCashOf(ctx.db, storeIds, ...Object.values(monthRange(shiftMonth(input.month, -1))) as [Date, Date]));
+    const yearTotal = lastYear.serviceFen + lastYear.shopFen + (await memberFeeCashOf(ctx.db, storeIds, ...Object.values(monthRange(shiftMonth(input.month, -12))) as [Date, Date]));
     return {
       month: input.month,
       /** 收现口径（口径①）：服务+商品+年费收现 */
@@ -444,7 +475,7 @@ export const reportRouter = router({
 
   /** D2 服务营收构成：按服务项聚合笔数+金额+附加项目搭售率（行业基准 30-45% 注记） */
   d2ServiceMix: merchantManagerProcedure.input(monthInput).query(async ({ ctx, input }) => {
-    const storeId = ctx.user.storeId!;
+    const storeIds = reportStoreIds(ctx, input);
     const { from, to } = monthRange(input.month);
     const rows = await ctx.db
       .select({
@@ -457,7 +488,7 @@ export const reportRouter = router({
       })
       .from(schema.appointments)
       .innerJoin(schema.services, eq(schema.appointments.serviceId, schema.services.id))
-      .where(and(eq(schema.appointments.storeId, storeId), gte(schema.appointments.paidAt, from), lt(schema.appointments.paidAt, to)));
+      .where(and(inArray(schema.appointments.storeId, storeIds), gte(schema.appointments.paidAt, from), lt(schema.appointments.paidAt, to)));
     const byService = new Map<string, { name: string; type: string; count: number; fen: number }>();
     for (const r of rows) {
       const cell = byService.get(r.serviceId) ?? { name: r.serviceName, type: r.type, count: 0, fen: 0 };
@@ -490,12 +521,12 @@ export const reportRouter = router({
 
   /** D3 会员增长（改口径=会员经营族首行）：增长数保留+等级分布+活跃率+升级转化（N1 同源联动） */
   d3MemberGrowth: merchantManagerProcedure.input(monthInput).query(async ({ ctx, input }) => {
-    const storeId = ctx.user.storeId!;
+    const storeIds = reportStoreIds(ctx, input);
     const { from, to } = monthRange(input.month);
     const all = await ctx.db
       .select()
       .from(schema.memberships)
-      .where(sql`(${schema.memberships.soldStoreId} = ${storeId} OR ${schema.memberships.soldStoreId} IS NULL)`);
+      .where(or(inArray(schema.memberships.soldStoreId, storeIds), isNull(schema.memberships.soldStoreId)));
     const now = new Date();
     const newInMonth = all.filter((m) => m.createdAt.getTime() >= from.getTime() && m.createdAt.getTime() < to.getTime());
     const active = all.filter((m) => m.status === 'active' && m.expiresAt.getTime() > now.getTime());
@@ -505,11 +536,11 @@ export const reportRouter = router({
     const tradeRows = await ctx.db
       .select({ customerId: schema.appointments.customerId })
       .from(schema.appointments)
-      .where(and(eq(schema.appointments.storeId, storeId), gte(schema.appointments.paidAt, d90)));
+      .where(and(inArray(schema.appointments.storeId, storeIds), gte(schema.appointments.paidAt, d90)));
     const billRows = await ctx.db
       .select({ customerId: schema.cashierBills.customerId })
       .from(schema.cashierBills)
-      .where(and(eq(schema.cashierBills.storeId, storeId), eq(schema.cashierBills.status, 'settled'), isNull(schema.cashierBills.reversedAt), gte(schema.cashierBills.settledAt, d90)));
+      .where(and(inArray(schema.cashierBills.storeId, storeIds), eq(schema.cashierBills.status, 'settled'), isNull(schema.cashierBills.reversedAt), gte(schema.cashierBills.settledAt, d90)));
     const traded = new Set([...tradeRows.map((r) => r.customerId), ...billRows.map((r) => r.customerId)].filter((x): x is string => !!x));
     const activeTraded = [...activeIds].filter((id) => traded.has(id)).length;
     const byPlan = new Map<string, number>();
@@ -532,11 +563,11 @@ export const reportRouter = router({
 
   /** D4 次卡台账：售卡充次/扣次/剩余次数负债（次数口径永不混金额）+消耗率趋势（近 6 月扣次序列） */
   d4PassLedger: merchantManagerProcedure.input(monthInput).query(async ({ ctx, input }) => {
-    const storeId = ctx.user.storeId!;
+    const storeIds = reportStoreIds(ctx, input);
     const passes = await ctx.db
       .select()
       .from(schema.memberPasses)
-      .where(eq(schema.memberPasses.storeId, storeId));
+      .where(inArray(schema.memberPasses.storeId, storeIds));
     const passIds = passes.map((p) => p.id);
     const logs = passIds.length
       ? await ctx.db
@@ -571,12 +602,12 @@ export const reportRouter = router({
 
   /** D5 储值台账（改口径=负债视角）：本月收支 + 期末未耗余额 + 预收负债总额行（储值+回馈金合并） */
   d5StoredValue: merchantManagerProcedure.input(monthInput).query(async ({ ctx, input }) => {
-    const storeId = ctx.user.storeId!;
+    const storeIds = reportStoreIds(ctx, input);
     const { from, to } = monthRange(input.month);
     const logs = await ctx.db
       .select({ deltaPrincipal: schema.storedValueLogs.deltaPrincipalFen, deltaBonus: schema.storedValueLogs.deltaBonusFen })
       .from(schema.storedValueLogs)
-      .where(and(eq(schema.storedValueLogs.storeId, storeId), gte(schema.storedValueLogs.createdAt, from), lt(schema.storedValueLogs.createdAt, to)));
+      .where(and(inArray(schema.storedValueLogs.storeId, storeIds), gte(schema.storedValueLogs.createdAt, from), lt(schema.storedValueLogs.createdAt, to)));
     let rechargeFen = 0;
     let consumeFen = 0;
     for (const l of logs) {
@@ -587,10 +618,10 @@ export const reportRouter = router({
     const liability = await ctx.db
       .select({ s: sql<number>`coalesce(sum(${schema.storedValueAccounts.principalFen} + ${schema.storedValueAccounts.bonusFen}),0)` })
       .from(schema.storedValueAccounts)
-      .where(eq(schema.storedValueAccounts.storeId, storeId))
+      .where(inArray(schema.storedValueAccounts.storeId, storeIds))
       .get();
     const storedLiabilityFen = Number(liability?.s ?? 0);
-    const memberIds = await memberUserIdsOf(ctx.db, storeId);
+    const memberIds = await memberUserIdsOf(ctx.db, storeIds);
     const rebate = memberIds.size
       ? await ctx.db
           .select({ s: sql<number>`coalesce(sum(${schema.rebateAccounts.balanceFen}),0)` })
@@ -615,7 +646,7 @@ export const reportRouter = router({
    *  （refund_requests.reasonCode）+ 退款关联差评（退款单→预约→差评）+
    *  退款率环比突增预警（d6_refund_spike_warn_bp 端口，缺省 30%） */
   d6Refunds: merchantManagerProcedure.input(monthInput).query(async ({ ctx, input }) => {
-    const storeId = ctx.user.storeId!;
+    const storeIds = reportStoreIds(ctx, input);
     const { from, to } = monthRange(input.month);
     const prev = monthRange(shiftMonth(input.month, -1));
     const billsIn = async (f: Date, t: Date) =>
@@ -624,7 +655,7 @@ export const reportRouter = router({
         .from(schema.refundBills)
         .where(
           and(
-            eq(schema.refundBills.storeId, storeId),
+            inArray(schema.refundBills.storeId, storeIds),
             gte(schema.refundBills.createdAt, f),
             lt(schema.refundBills.createdAt, t),
             inArray(schema.refundBills.status, ['executed', 'settled']),
@@ -645,7 +676,7 @@ export const reportRouter = router({
     const reqs = await ctx.db
       .select({ status: schema.refundRequests.status, reasonLabel: schema.refundRequests.reasonLabel, orderKind: schema.refundRequests.orderKind, billId: schema.refundRequests.billId })
       .from(schema.refundRequests)
-      .where(and(eq(schema.refundRequests.storeId, storeId), gte(schema.refundRequests.createdAt, from), lt(schema.refundRequests.createdAt, to)));
+      .where(and(inArray(schema.refundRequests.storeId, storeIds), gte(schema.refundRequests.createdAt, from), lt(schema.refundRequests.createdAt, to)));
     const rejected = reqs.filter((r) => r.status === 'rejected').length;
     const reasonCluster = new Map<string, number>();
     for (const r of reqs) reasonCluster.set(r.reasonLabel, (reasonCluster.get(r.reasonLabel) ?? 0) + 1);
@@ -662,7 +693,7 @@ export const reportRouter = router({
         const revs = await ctx.db
           .select({ rating: schema.reviews.rating })
           .from(schema.reviews)
-          .where(and(eq(schema.reviews.storeId, storeId), inArray(schema.reviews.appointmentId, apptIds)));
+          .where(and(inArray(schema.reviews.storeId, storeIds), inArray(schema.reviews.appointmentId, apptIds)));
         linkedBadReviews = revs.filter((r) => isBad(r.rating)).length;
       }
     }
@@ -683,21 +714,21 @@ export const reportRouter = router({
   /** D7 员工绩效（改口径=海底捞模式：服务质量指标进绩效——差评率/报告时效/复购率
    *  与营收同屏；申诉通道+纠错兜底两件=N6 同配在 metric_appeals，本表透出逐员申诉/纠错数） */
   d7StaffPerf: merchantManagerProcedure.input(monthInput).query(async ({ ctx, input }) => {
-    const storeId = ctx.user.storeId!;
+    const storeIds = reportStoreIds(ctx, input);
     const { from, to } = monthRange(input.month);
     const staffRows = await ctx.db
       .select({ id: schema.staff.id, name: schema.staff.name, userId: schema.staff.userId })
       .from(schema.staff)
-      .where(eq(schema.staff.storeId, storeId));
+      .where(inArray(schema.staff.storeId, storeIds));
     /* 营收（financeStats byStaff 同源：paid_at 区间 paidFen 按 staffId 聚合） */
     const paidRows = await ctx.db
       .select({ staffId: schema.appointments.staffId, paidFen: schema.appointments.paidFen, priceFen: schema.appointments.priceFen, customerId: schema.appointments.customerId, paidAt: schema.appointments.paidAt })
       .from(schema.appointments)
-      .where(and(eq(schema.appointments.storeId, storeId), gte(schema.appointments.paidAt, from), lt(schema.appointments.paidAt, new Date(from.getTime() + 90 * 24 * 3600 * 1000))));
+      .where(and(inArray(schema.appointments.storeId, storeIds), gte(schema.appointments.paidAt, from), lt(schema.appointments.paidAt, new Date(from.getTime() + 90 * 24 * 3600 * 1000))));
     const reviews = await ctx.db
       .select({ staffId: schema.reviews.staffId, rating: schema.reviews.rating })
       .from(schema.reviews)
-      .where(and(eq(schema.reviews.storeId, storeId), gte(schema.reviews.createdAt, from), lt(schema.reviews.createdAt, to)));
+      .where(and(inArray(schema.reviews.storeId, storeIds), gte(schema.reviews.createdAt, from), lt(schema.reviews.createdAt, to)));
     const reports = await ctx.db
       .select({
         staffId: schema.appointments.staffId,
@@ -706,11 +737,11 @@ export const reportRouter = router({
       })
       .from(schema.serviceReports)
       .innerJoin(schema.appointments, eq(schema.serviceReports.appointmentId, schema.appointments.id))
-      .where(and(eq(schema.serviceReports.userId, schema.appointments.customerId), eq(schema.appointments.storeId, storeId), gte(schema.serviceReports.generatedAt, from), lt(schema.serviceReports.generatedAt, to)));
+      .where(and(eq(schema.serviceReports.userId, schema.appointments.customerId), inArray(schema.appointments.storeId, storeIds), gte(schema.serviceReports.generatedAt, from), lt(schema.serviceReports.generatedAt, to)));
     const appeals = await ctx.db
       .select({ staffId: schema.metricAppeals.staffId, status: schema.metricAppeals.status })
       .from(schema.metricAppeals)
-      .where(eq(schema.metricAppeals.storeId, storeId));
+      .where(inArray(schema.metricAppeals.storeId, storeIds));
     const rows = staffRows.map((s) => {
       /* 本月行=窗口内且 paidAt 落本月（窗口=月起 90 天，复购判定用全窗口） */
       const mine = paidRows.filter((r) => r.staffId === s.id && r.paidAt && r.paidAt.getTime() < to.getTime());
@@ -749,12 +780,12 @@ export const reportRouter = router({
 
   /** D8 寄养经营：入住率（基准 70-80%）/宠物夜数/每宠物夜营收/增值服务搭售率（目标 20%）/超期单数 */
   d8Boarding: merchantManagerProcedure.input(monthInput).query(async ({ ctx, input }) => {
-    const storeId = ctx.user.storeId!;
+    const storeIds = reportStoreIds(ctx, input);
     const { from, to } = monthRange(input.month);
     const appts = await ctx.db
       .select({ id: schema.appointments.id, scheduledStart: schema.appointments.scheduledStart, scheduledEnd: schema.appointments.scheduledEnd, paidFen: schema.appointments.paidFen, priceFen: schema.appointments.priceFen, status: schema.appointments.status })
       .from(schema.appointments)
-      .where(and(eq(schema.appointments.storeId, storeId), eq(schema.appointments.type, 'boarding'), lt(schema.appointments.scheduledStart, to), gte(schema.appointments.scheduledEnd, from)));
+      .where(and(inArray(schema.appointments.storeId, storeIds), eq(schema.appointments.type, 'boarding'), lt(schema.appointments.scheduledStart, to), gte(schema.appointments.scheduledEnd, from)));
     /* 宠物夜数=预约区间与月交叠晚数（逐晚口径，与 boarding_slots 占容同族） */
     let petNights = 0;
     for (const a of appts) {
@@ -766,7 +797,7 @@ export const reportRouter = router({
     const roomRows = await ctx.db
       .select({ roomCount: schema.services.roomCount })
       .from(schema.services)
-      .where(and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'boarding')));
+      .where(and(inArray(schema.services.storeId, storeIds), eq(schema.services.type, 'boarding')));
     const capacity = roomRows.reduce((s, r) => s + (r.roomCount ?? 0), 0);
     const daysInMonth = Math.round((to.getTime() - from.getTime()) / (24 * 3600 * 1000));
     const paidBoarding = appts.filter((a) => a.paidFen !== null);
@@ -783,7 +814,7 @@ export const reportRouter = router({
       .select({ id: schema.boardingStays.id })
       .from(schema.boardingStays)
       .innerJoin(schema.appointments, eq(schema.boardingStays.appointmentId, schema.appointments.id))
-      .where(and(eq(schema.appointments.storeId, storeId), isNull(schema.boardingStays.checkoutAt), lt(schema.appointments.scheduledEnd, now)));
+      .where(and(inArray(schema.appointments.storeId, storeIds), isNull(schema.boardingStays.checkoutAt), lt(schema.appointments.scheduledEnd, now)));
     return {
       month: input.month,
       petNights,
@@ -799,7 +830,7 @@ export const reportRouter = router({
 
   /** D9 商品销售与库存周转：销量/销售额/动销率/周转天数（非核心业务不加码） */
   d9Goods: merchantManagerProcedure.input(monthInput).query(async ({ ctx, input }) => {
-    const storeId = ctx.user.storeId!;
+    const storeIds = reportStoreIds(ctx, input);
     const { from, to } = monthRange(input.month);
     /* orders 无 paid_at 口径（financeStats 注记在案）——商城按月口径=createdAt 落月且
        status ∈ paid/shipped/received（已成交口径写死） */
@@ -808,7 +839,7 @@ export const reportRouter = router({
       .from(schema.orders)
       .where(
         and(
-          eq(schema.orders.storeId, storeId),
+          inArray(schema.orders.storeId, storeIds),
           gte(schema.orders.createdAt, from),
           lt(schema.orders.createdAt, to),
           inArray(schema.orders.status, ['paid', 'shipped', 'received']),
@@ -828,7 +859,7 @@ export const reportRouter = router({
     const onSale = await ctx.db
       .select({ id: schema.products.id, stock: schema.products.stock })
       .from(schema.products)
-      .where(and(eq(schema.products.storeId, storeId), eq(schema.products.status, 'on')));
+      .where(and(inArray(schema.products.storeId, storeIds), eq(schema.products.status, 'on')));
     const daysInMonth = Math.round((to.getTime() - from.getTime()) / (24 * 3600 * 1000));
     const stockTotal = onSale.reduce((s, p) => s + p.stock, 0);
     return {
@@ -846,7 +877,7 @@ export const reportRouter = router({
   /** N1 等级分布与升级转化：四档存量/新增/退出+逐级升级降级率+按入会月份 cohort 拆
    *  （Costco 口径：高档占比×贡献=第一结构指标；档变流水=membership_events 同源） */
   n1LevelDist: merchantManagerProcedure.input(monthInput).query(async ({ ctx, input }) => {
-    const storeId = ctx.user.storeId!;
+    const storeIds = reportStoreIds(ctx, input);
     const { from, to } = monthRange(input.month);
     const plansAll = await ctx.db.select().from(schema.memberPlans).where(eq(schema.memberPlans.active, true));
     /* member_plans 表混存会员域配置键（rebate_* 等）——四档口径=plan_ 前缀过滤（写死） */
@@ -856,7 +887,7 @@ export const reportRouter = router({
     const all = await ctx.db
       .select()
       .from(schema.memberships)
-      .where(sql`(${schema.memberships.soldStoreId} = ${storeId} OR ${schema.memberships.soldStoreId} IS NULL)`);
+      .where(or(inArray(schema.memberships.soldStoreId, storeIds), isNull(schema.memberships.soldStoreId)));
     const now = new Date();
     const active = all.filter((m) => m.status === 'active' && m.expiresAt.getTime() > now.getTime());
     const stockByPlan = new Map<string, number>();
@@ -909,13 +940,12 @@ export const reportRouter = router({
 
   /** N2 续费与回本：到期 cohort 续费率（顺延口径注记）+到期前 30 天预警名单+回本率
    *  （年费 vs 年内会员价实省=服务折扣差额+回馈金核销，三本账不混） */
-  n2Renewal: merchantManagerProcedure.input(monthInput).query(async ({ ctx, input }) => {
-    const storeId = ctx.user.storeId!;
-    void input;
+  n2Renewal: merchantManagerProcedure.input(scopeOnlyInput.optional()).query(async ({ ctx, input }) => {
+    const storeIds = reportStoreIds(ctx, input);
     const all = await ctx.db
       .select()
       .from(schema.memberships)
-      .where(sql`(${schema.memberships.soldStoreId} = ${storeId} OR ${schema.memberships.soldStoreId} IS NULL)`);
+      .where(or(inArray(schema.memberships.soldStoreId, storeIds), isNull(schema.memberships.soldStoreId)));
     const plansAll = await ctx.db.select().from(schema.memberPlans).where(eq(schema.memberPlans.active, true));
     /* member_plans 表混存会员域配置键（rebate_* 等）——四档口径=plan_ 前缀过滤（写死） */
     const plans = plansAll.filter((p) => p.ruleKey.startsWith('plan_'));
@@ -944,7 +974,7 @@ export const reportRouter = router({
       const appts = await ctx.db
         .select({ priceFen: schema.appointments.priceFen, paidFen: schema.appointments.paidFen, paymentMode: schema.appointments.paymentMode })
         .from(schema.appointments)
-        .where(and(eq(schema.appointments.storeId, storeId), eq(schema.appointments.customerId, m.userId), sql`${schema.appointments.paidAt} IS NOT NULL`));
+        .where(and(inArray(schema.appointments.storeId, storeIds), eq(schema.appointments.customerId, m.userId), sql`${schema.appointments.paidAt} IS NOT NULL`));
       const discountFen = appts
         .filter((a) => a.paymentMode !== 'pass_deduct')
         .reduce((s, a) => s + Math.max(0, a.priceFen - (a.paidFen ?? a.priceFen)), 0);
@@ -980,9 +1010,8 @@ export const reportRouter = router({
   }),
 
   /** N3 回馈金发行核销：滚动表（期初+发行−核销−过期/破损=期末）+核销率（基准 20-35%）+负债估值 */
-  n3RebateRoll: merchantManagerProcedure.input(monthInput).query(async ({ ctx, input }) => {
-    void input;
-    const memberIds = await memberUserIdsOf(ctx.db, ctx.user.storeId!);
+  n3RebateRoll: merchantManagerProcedure.input(scopeOnlyInput.optional()).query(async ({ ctx, input }) => {
+    const memberIds = await memberUserIdsOf(ctx.db, reportStoreIds(ctx, input));
     const logs = memberIds.size
       ? await ctx.db
           .select({ type: schema.rebateLogs.type, deltaFen: schema.rebateLogs.deltaFen, period: schema.rebateLogs.period })
@@ -1021,13 +1050,13 @@ export const reportRouter = router({
   /** N4 评价分布与差评聚类：星级分布（店/服务/员工）+差评率+差评原因标签聚类+
    *  差评回复率与时效（reviews 同源，0044 扩列）+approved 申诉纠错扣减明示 */
   n4ReviewDist: merchantManagerProcedure.input(monthInput).query(async ({ ctx, input }) => {
-    const storeId = ctx.user.storeId!;
+    const storeIds = reportStoreIds(ctx, input);
     const { from, to } = monthRange(input.month);
     const rows = await ctx.db
       .select()
       .from(schema.reviews)
-      .where(and(eq(schema.reviews.storeId, storeId), gte(schema.reviews.createdAt, from), lt(schema.reviews.createdAt, to)));
-    const staffRows = await ctx.db.select({ id: schema.staff.id, name: schema.staff.name }).from(schema.staff).where(eq(schema.staff.storeId, storeId));
+      .where(and(inArray(schema.reviews.storeId, storeIds), gte(schema.reviews.createdAt, from), lt(schema.reviews.createdAt, to)));
+    const staffRows = await ctx.db.select({ id: schema.staff.id, name: schema.staff.name }).from(schema.staff).where(inArray(schema.staff.storeId, storeIds));
     const nameOf = new Map(staffRows.map((s) => [s.id, s.name]));
     const dist = [1, 2, 3, 4, 5].map((star) => ({ star, count: rows.filter((r) => r.rating === star).length }));
     const bad = rows.filter((r) => isBad(r.rating));
@@ -1035,7 +1064,7 @@ export const reportRouter = router({
     const approvedAppeals = await ctx.db
       .select({ targetId: schema.metricAppeals.targetId })
       .from(schema.metricAppeals)
-      .where(and(eq(schema.metricAppeals.storeId, storeId), eq(schema.metricAppeals.targetType, 'review'), eq(schema.metricAppeals.status, 'approved')));
+      .where(and(inArray(schema.metricAppeals.storeId, storeIds), eq(schema.metricAppeals.targetType, 'review'), eq(schema.metricAppeals.status, 'approved')));
     const correctedIds = new Set(approvedAppeals.map((a) => a.targetId));
     const badEffective = bad.filter((r) => !correctedIds.has(r.id));
     const byStaffMap = new Map<string, { total: number; bad: number }>();
@@ -1050,7 +1079,7 @@ export const reportRouter = router({
       .select({ id: schema.appointments.id, serviceName: schema.services.name })
       .from(schema.appointments)
       .innerJoin(schema.services, eq(schema.appointments.serviceId, schema.services.id))
-      .where(eq(schema.appointments.storeId, storeId));
+      .where(inArray(schema.appointments.storeId, storeIds));
     const svcOf = new Map(apptSvc.map((a) => [a.id, a.serviceName]));
     for (const r of rows) {
       const name = svcOf.get(r.appointmentId) ?? '未知服务';
@@ -1086,12 +1115,12 @@ export const reportRouter = router({
   /** N5 服务交付合规与时效：照片张数/覆盖率+报告送达时效分布+实际 vs 标准时长+抽检率
    *  （serviceStep/serviceReports 同源；抽检率=被打标重拍步占比=质检 proxy，注记明面） */
   n5Delivery: merchantManagerProcedure.input(monthInput).query(async ({ ctx, input }) => {
-    const storeId = ctx.user.storeId!;
+    const storeIds = reportStoreIds(ctx, input);
     const { from, to } = monthRange(input.month);
     const completed = await ctx.db
       .select({ id: schema.appointments.id, serviceId: schema.appointments.serviceId, completedAt: schema.appointments.completedAt })
       .from(schema.appointments)
-      .where(and(eq(schema.appointments.storeId, storeId), eq(schema.appointments.type, 'grooming'), gte(schema.appointments.completedAt, from), lt(schema.appointments.completedAt, to)));
+      .where(and(inArray(schema.appointments.storeId, storeIds), eq(schema.appointments.type, 'grooming'), gte(schema.appointments.completedAt, from), lt(schema.appointments.completedAt, to)));
     const apptIds = completed.map((a) => a.id);
     const steps = apptIds.length
       ? await ctx.db.select().from(schema.appointmentSteps).where(inArray(schema.appointmentSteps.appointmentId, apptIds))
@@ -1115,7 +1144,7 @@ export const reportRouter = router({
       if (s.startedAt && s.doneAt) actualMinutes += (s.doneAt.getTime() - s.startedAt.getTime()) / 60000;
       if (s.flagged) flaggedSteps += 1;
     }
-    const svcRows = await ctx.db.select().from(schema.services).where(eq(schema.services.storeId, storeId));
+    const svcRows = await ctx.db.select().from(schema.services).where(inArray(schema.services.storeId, storeIds));
     const durOf = new Map(svcRows.map((s) => [s.id, s.durationMin]));
     const stdMinutes = completed.reduce((s, a) => s + (durOf.get(a.serviceId) ?? 0), 0);
     const reports = apptIds.length
@@ -1154,26 +1183,26 @@ export const reportRouter = router({
    *  铁规两件配齐故点亮：①申诉通道=metric_appeals（进审批队列）②数据错误兜底=approved
    *  申诉读口径即时扣减+correction_json 留痕；gate 字段透出配齐证据（不配齐只置灰） */
   n6StaffQuality: merchantManagerProcedure.input(monthInput).query(async ({ ctx, input }) => {
-    const storeId = ctx.user.storeId!;
+    const storeIds = reportStoreIds(ctx, input);
     const { from, to } = monthRange(input.month);
-    const staffRows = await ctx.db.select().from(schema.staff).where(eq(schema.staff.storeId, storeId));
+    const staffRows = await ctx.db.select().from(schema.staff).where(inArray(schema.staff.storeId, storeIds));
     const reviews = await ctx.db
       .select({ id: schema.reviews.id, staffId: schema.reviews.staffId, rating: schema.reviews.rating })
       .from(schema.reviews)
-      .where(and(eq(schema.reviews.storeId, storeId), gte(schema.reviews.createdAt, from), lt(schema.reviews.createdAt, to)));
+      .where(and(inArray(schema.reviews.storeId, storeIds), gte(schema.reviews.createdAt, from), lt(schema.reviews.createdAt, to)));
     const reports = await ctx.db
       .select({ staffId: schema.appointments.staffId, generatedAt: schema.serviceReports.generatedAt, deliveredAt: schema.serviceReports.deliveredAt })
       .from(schema.serviceReports)
       .innerJoin(schema.appointments, eq(schema.serviceReports.appointmentId, schema.appointments.id))
-      .where(and(eq(schema.appointments.storeId, storeId), gte(schema.serviceReports.generatedAt, from), lt(schema.serviceReports.generatedAt, to)));
+      .where(and(inArray(schema.appointments.storeId, storeIds), gte(schema.serviceReports.generatedAt, from), lt(schema.serviceReports.generatedAt, to)));
     const paidRows = await ctx.db
       .select({ staffId: schema.appointments.staffId, customerId: schema.appointments.customerId, paidAt: schema.appointments.paidAt })
       .from(schema.appointments)
-      .where(and(eq(schema.appointments.storeId, storeId), gte(schema.appointments.paidAt, from), lt(schema.appointments.paidAt, new Date(from.getTime() + 90 * 24 * 3600 * 1000))));
+      .where(and(inArray(schema.appointments.storeId, storeIds), gte(schema.appointments.paidAt, from), lt(schema.appointments.paidAt, new Date(from.getTime() + 90 * 24 * 3600 * 1000))));
     const appeals = await ctx.db
       .select()
       .from(schema.metricAppeals)
-      .where(eq(schema.metricAppeals.storeId, storeId));
+      .where(inArray(schema.metricAppeals.storeId, storeIds));
     const approvedReviewIds = new Set(appeals.filter((a) => a.status === 'approved' && a.targetType === 'review').map((a) => a.targetId));
     const rows = staffRows.map((s) => {
       const myReviews = reviews.filter((r) => r.staffId === s.id);
@@ -1389,28 +1418,29 @@ export const reportRouter = router({
    *  N7/N8=预埋不出表 400 明文；返回 {filename, csv, rows}（BOM+手写转义同 refund.exportCsv 工艺）。
    *  数据源=createCaller 直调本路由读口（口径同源零复制，不另写聚合）。 */
   exportCsv: merchantOwnerProcedure
-    .input(z.object({ report: z.enum(['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6']), month: z.string().regex(MONTH_RE).optional() }))
+    .input(z.object({ report: z.enum(['d1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6']), month: z.string().regex(MONTH_RE).optional(), scope: z.enum(['store', 'chain']).optional(), storeId: z.string().optional() }))
     .query(async ({ ctx, input }) => {
       const month = input.month ?? `${storeWallclock(new Date()).y}-${pad2(storeWallclock(new Date()).m)}`;
+      const view = { scope: input.scope, storeId: input.storeId };
       const caller = reportRouter.createCaller(ctx);
-      /* 类型安全 dispatch（报表键→读口名固定映射；名单外无口） */
+      /* 类型安全 dispatch（报表键→读口名固定映射；名单外无口）；scope/storeId 三视图透传读口 */
       const data = await (async (): Promise<Record<string, unknown>> => {
         switch (input.report) {
-          case 'd1': return caller.d1Revenue({ month });
-          case 'd2': return caller.d2ServiceMix({ month });
-          case 'd3': return caller.d3MemberGrowth({ month });
-          case 'd4': return caller.d4PassLedger({ month });
-          case 'd5': return caller.d5StoredValue({ month });
-          case 'd6': return caller.d6Refunds({ month });
-          case 'd7': return caller.d7StaffPerf({ month });
-          case 'd8': return caller.d8Boarding({ month });
-          case 'd9': return caller.d9Goods({ month });
-          case 'n1': return caller.n1LevelDist({ month });
-          case 'n2': return caller.n2Renewal({ month });
-          case 'n3': return caller.n3RebateRoll({ month });
-          case 'n4': return caller.n4ReviewDist({ month });
-          case 'n5': return caller.n5Delivery({ month });
-          case 'n6': return caller.n6StaffQuality({ month });
+          case 'd1': return caller.d1Revenue({ month, ...view });
+          case 'd2': return caller.d2ServiceMix({ month, ...view });
+          case 'd3': return caller.d3MemberGrowth({ month, ...view });
+          case 'd4': return caller.d4PassLedger({ month, ...view });
+          case 'd5': return caller.d5StoredValue({ month, ...view });
+          case 'd6': return caller.d6Refunds({ month, ...view });
+          case 'd7': return caller.d7StaffPerf({ month, ...view });
+          case 'd8': return caller.d8Boarding({ month, ...view });
+          case 'd9': return caller.d9Goods({ month, ...view });
+          case 'n1': return caller.n1LevelDist({ month, ...view });
+          case 'n2': return caller.n2Renewal({ month, ...view });
+          case 'n3': return caller.n3RebateRoll({ month, ...view });
+          case 'n4': return caller.n4ReviewDist({ month, ...view });
+          case 'n5': return caller.n5Delivery({ month, ...view });
+          case 'n6': return caller.n6StaffQuality({ month, ...view });
         }
       })();
       /* 统一骨架：[区, 指标, 值]（明细表逐行展开，section=表明）；列写死=名单内字段 */

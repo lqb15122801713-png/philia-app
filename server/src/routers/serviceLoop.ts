@@ -37,6 +37,7 @@ import {
   type Context,
 } from '../trpc';
 import { storeDayStartMs, storeWallclock } from './appointment';
+import { resolveScopedRules } from './configRules';
 import { StepLabel, type StepKey } from './serviceStep';
 
 /* ------------------------------------------------------------------ */
@@ -359,12 +360,13 @@ export const serviceLoopRouter = router({
 
   /** voiceSlaHours（staff · 片 3 B6-4）：心声响应时限端口值（service_rules.voice_sla_hours；缺省 24h，页面注记数据源） */
   voiceSlaHours: staffProcedure.query(async ({ ctx }) => {
-    const row = await ctx.db
-      .select({ valueJson: schema.serviceRules.valueJson })
+    /* 大批片 2 分层：按员工本店作用域解析（本店覆盖行优先于总部行，orderBy 保同作用域多版本取最新） */
+    const rows = await ctx.db
+      .select({ ruleKey: schema.serviceRules.ruleKey, valueJson: schema.serviceRules.valueJson, storeId: schema.serviceRules.storeId })
       .from(schema.serviceRules)
       .where(and(eq(schema.serviceRules.ruleKey, 'voice_sla_hours'), eq(schema.serviceRules.active, true)))
-      .orderBy(desc(schema.serviceRules.version))
-      .get();
+      .orderBy(desc(schema.serviceRules.version));
+    const row = resolveScopedRules(rows, ctx.user.storeId)[0];
     const hours = Number((row?.valueJson as { hours?: unknown } | undefined)?.hours);
     return { hours: Number.isFinite(hours) && hours > 0 ? hours : 24 };
   }),

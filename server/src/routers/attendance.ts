@@ -47,6 +47,7 @@ import {
   router,
   staffProcedure,
 } from '../trpc';
+import { resolveScopedRules } from './configRules';
 
 /** emitEvent/awardXp 首参类型（全局 db；事务 handle 运行时接口一致，类型上显式断言，同 appointment.ts 惯例） */
 const txDb = (tx: unknown): DbHandle => tx as DbHandle;
@@ -170,10 +171,11 @@ async function resolveShiftForPunch(
   return t ? { ...t, from: 'template' } : null;
 }
 
-/** 断网暂存兜底时限（小时）读口：service_rules.attendance_offline_stale_hours 生效最新版；缺行/坏值回落 24（种子值） */
-async function offlineStaleHours(db: DbHandle): Promise<number> {
-  const row = await db
-    .select({ valueJson: schema.serviceRules.valueJson })
+/** 断网暂存兜底时限（小时）读口：service_rules.attendance_offline_stale_hours 生效最新版；缺行/坏值回落 24（种子值）。
+ * 大批片 2 分层：传 storeId 按本店作用域解析（本店覆盖行优先）；不传=既有全量口径 */
+async function offlineStaleHours(db: DbHandle, storeId?: string | null): Promise<number> {
+  const rows = await db
+    .select({ ruleKey: schema.serviceRules.ruleKey, valueJson: schema.serviceRules.valueJson, storeId: schema.serviceRules.storeId })
     .from(schema.serviceRules)
     .where(
       and(
@@ -181,9 +183,8 @@ async function offlineStaleHours(db: DbHandle): Promise<number> {
         eq(schema.serviceRules.active, true),
       ),
     )
-    .orderBy(desc(schema.serviceRules.version))
-    .limit(1)
-    .then((r) => r[0]);
+    .orderBy(desc(schema.serviceRules.version));
+  const row = (storeId === undefined ? rows : resolveScopedRules(rows, storeId))[0];
   const h = row?.valueJson?.hours;
   return typeof h === 'number' && Number.isFinite(h) && h > 0 ? h : 24;
 }
@@ -296,7 +297,7 @@ export const attendanceRouter = router({
         if (punchAt.getTime() > wallNow.getTime()) {
           throw new TRPCError({ code: 'BAD_REQUEST', message: '打点时刻晚于当前时刻，拒绝补传未来卡' });
         }
-        staleHours = await offlineStaleHours(ctx.db);
+        staleHours = await offlineStaleHours(ctx.db, storeId); // 大批片 2 分层：按本店作用域解析
         staleRelay = wallNow.getTime() - punchAt.getTime() > staleHours * 3600 * 1000;
       } else if (input.clientTs !== undefined) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'clientTs 仅断网补传（source=offline_relay）可携带' });

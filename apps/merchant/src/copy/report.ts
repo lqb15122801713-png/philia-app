@@ -75,6 +75,13 @@ const REPORT_COPY_TABLE = {
   'rpt.page.noteLead': '口径：',
   'rpt.page.actionFail': '操作失败，请重试',
 
+  /* ---- 大批片 2 · 三视图切换（owner 页头；manager 不出现，固定本店） ---- */
+  'rpt.view.store': '单店',
+  'rpt.view.stores': '分店',
+  'rpt.view.chain': '合计',
+  'rpt.view.storePick': '门店',
+  'rpt.view.chainAside': '店域合计（scope=chain）',
+
   /* ---- D1 营收双口径 ---- */
   'rpt.d1.cashCard': '收现口径 ①',
   'rpt.d1.cashSub': '服务+商品+年费收现',

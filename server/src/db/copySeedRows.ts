@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-06T03:05:21.917Z；键数=3133；归屏率=96.8%（未归屏 100）
+ * 生成时间口径：2026-10-06T07:16:30.057Z；键数=3149；归屏率=96.8%（未归屏 100）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -7684,6 +7684,27 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "dialogs 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
+  "key": "cadm.carePackExpired",
+  "domain": "merchant:consoleAdmin",
+  "text": "已过期",
+  "screen": "商家·开发者管理端",
+  "position": "CarePackPortBody 组件内文案"
+ },
+ {
+  "key": "cadm.carePackExpiryTh",
+  "domain": "merchant:consoleAdmin",
+  "text": "临期 ≤30 天",
+  "screen": "商家·开发者管理端",
+  "position": "CarePackPortBody 组件内文案"
+ },
+ {
+  "key": "cadm.carePackRecallNote",
+  "domain": "merchant:consoleAdmin",
+  "text": "回收登记流程=候补件（04a 对账/体验批 T3 联动），本口 v1 只读",
+  "screen": "商家·开发者管理端",
+  "position": "CarePackPortBody 组件内文案"
+ },
+ {
   "key": "cadm.coexistNote",
   "domain": "merchant:consoleAdmin",
   "text": "共构不分叉：右栏直接复用规则配置/文案端口/槽位端口三页内核；旧路由 /settings/rules · /settings/copy · /settings/slots 保留可直达。",
@@ -7782,6 +7803,20 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "ConsolePage 页面内文案"
  },
  {
+  "key": "cadm.portCarePack",
+  "domain": "merchant:consoleAdmin",
+  "text": "安心包端口",
+  "screen": "商家·开发者管理端",
+  "position": "CarePackPortBody 组件内文案"
+ },
+ {
+  "key": "cadm.portCarePackNote",
+  "domain": "merchant:consoleAdmin",
+  "text": "独立库存域 · 只读 v1",
+  "screen": "商家·开发者管理端",
+  "position": "CarePackPortBody 组件内文案"
+ },
+ {
   "key": "cadm.portCommission",
   "domain": "merchant:consoleAdmin",
   "text": "提成",
@@ -7817,6 +7852,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "ConsolePage 页面内文案"
  },
  {
+  "key": "cadm.portProfileSave",
+  "domain": "merchant:consoleAdmin",
+  "text": "保存档案",
+  "screen": "商家·开发者管理端",
+  "position": "ProfilePortBody 组件内文案"
+ },
+ {
   "key": "cadm.portReportSpec",
   "domain": "merchant:consoleAdmin",
   "text": "报表口径",
@@ -7845,18 +7887,39 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "ConsolePage 页面内文案"
  },
  {
+  "key": "cadm.profileChainTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "连锁归属",
+  "screen": "商家·开发者管理端",
+  "position": "ProfilePortBody 组件内文案"
+ },
+ {
   "key": "cadm.profileEmptyBody",
   "domain": "merchant:consoleAdmin",
-  "text": "门店档案维护在「门店档案·设置」页（W-15）；本口立项后收编，当前只读占位。",
+  "text": "连锁字段+档案维护口（E1 点亮·片 2）",
   "screen": "商家·开发者管理端",
-  "position": "ConsolePage 页面内文案"
+  "position": "ProfilePortBody 组件内文案"
  },
  {
   "key": "cadm.profileEmptyTitle",
   "domain": "merchant:consoleAdmin",
-  "text": "档案端口未收编",
+  "text": "门店档案端口",
   "screen": "商家·开发者管理端",
-  "position": "ConsolePage 页面内文案"
+  "position": "ProfilePortBody 组件内文案"
+ },
+ {
+  "key": "cadm.profileHqSelf",
+  "domain": "merchant:consoleAdmin",
+  "text": "店即己部（单层特例）",
+  "screen": "商家·开发者管理端",
+  "position": "ProfilePortBody 组件内文案"
+ },
+ {
+  "key": "cadm.profileSaved",
+  "domain": "merchant:consoleAdmin",
+  "text": "已保存",
+  "screen": "商家·开发者管理端",
+  "position": "ProfilePortBody 组件内文案"
  },
  {
   "key": "cadm.pubNote",
@@ -8980,6 +9043,20 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  },
  {
   "key": "dash.m3ChainNote",
+  "domain": "merchant:dashboard",
+  "text": "合计+分栏并列（读口=store.chainDashboard 三店真值）",
+  "screen": "商家·经营总览",
+  "position": "DashboardPage 页面内文案"
+ },
+ {
+  "key": "dash.m3ChainTitle",
+  "domain": "merchant:dashboard",
+  "text": "连锁视图",
+  "screen": "商家·经营总览",
+  "position": "DashboardPage 页面内文案"
+ },
+ {
+  "key": "dash.m3SingleNote",
   "domain": "merchant:dashboard",
   "text": "多店三栏=连锁预留开口项，当前按单店口径呈现",
   "screen": "商家·经营总览",
@@ -12659,6 +12736,41 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "text": "三本账永不混列：营收 / 储值 / 回馈金各自单列",
   "screen": "商家·财务",
   "position": "FinancePage 页面内文案"
+ },
+ {
+  "key": "rpt.view.chain",
+  "domain": "merchant:report",
+  "text": "合计",
+  "screen": "商家·经营报表",
+  "position": "ReportPage 页面内文案"
+ },
+ {
+  "key": "rpt.view.chainAside",
+  "domain": "merchant:report",
+  "text": "店域合计（scope=chain）",
+  "screen": "商家·经营报表",
+  "position": "ReportPage 页面内文案"
+ },
+ {
+  "key": "rpt.view.store",
+  "domain": "merchant:report",
+  "text": "单店",
+  "screen": "商家·经营报表",
+  "position": "ReportPage 页面内文案"
+ },
+ {
+  "key": "rpt.view.storePick",
+  "domain": "merchant:report",
+  "text": "门店",
+  "screen": "商家·经营报表",
+  "position": "ReportPage 页面内文案"
+ },
+ {
+  "key": "rpt.view.stores",
+  "domain": "merchant:report",
+  "text": "分店",
+  "screen": "商家·经营报表",
+  "position": "ReportPage 页面内文案"
  },
  {
   "key": "rules.caliberNote",

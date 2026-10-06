@@ -25,6 +25,8 @@ const CONSOLE_ADMIN_COPY_TABLE = {
   'cadm.portSlots': '槽位端口',
   'cadm.portMember': '会员档',
   'cadm.portStored': '储值',
+  'cadm.portCarePack': '安心包端口',
+  'cadm.portCarePackNote': '独立库存域 · 只读 v1',
   'cadm.portCommission': '提成',
   'cadm.portXp': 'XP',
   'cadm.portProfile': '门店档案',
@@ -34,10 +36,22 @@ const CONSOLE_ADMIN_COPY_TABLE = {
   /* ---- 置灰域空态（R10 不画假件：开口项只读占位+明面注） ---- */
   'cadm.storedEmptyTitle': '储值端口待立',
   'cadm.storedEmptyBody': '储值参数暂无独立配置域（储值提成规则已作废置灰，归提成域只读行）；立项前本口只读占位。',
-  'cadm.profileEmptyTitle': '档案端口未收编',
-  'cadm.profileEmptyBody': '门店档案维护在「门店档案·设置」页（W-15）；本口立项后收编，当前只读占位。',
+  /* 大批片 2 · E1 点亮：profile 两键退役改值=ProfilePortBody 卡题/卡注（删键不做） */
+  'cadm.profileEmptyTitle': '门店档案端口',
+  'cadm.profileEmptyBody': '连锁字段+档案维护口（E1 点亮·片 2）',
   'cadm.reportSpecEmptyTitle': '报表口径端口待立',
   'cadm.reportSpecEmptyBody': 'D1–D9 报表口径/导出=开口项（18 号档 E4 🆕立项待供给）；本口只读占位。',
+
+  /* ---- E1 门店档案端口（大批片 2 点亮） ---- */
+  'cadm.portProfileSave': '保存档案',
+  'cadm.profileSaved': '已保存',
+  'cadm.profileChainTitle': '连锁归属',
+  'cadm.profileHqSelf': '店即己部（单层特例）',
+
+  /* ---- C3 安心包端口（大批片 2；立项名 C2 与控制台既有 C2 储值撞号，落 C3 已报备） ---- */
+  'cadm.carePackExpiryTh': '临期 ≤30 天',
+  'cadm.carePackExpired': '已过期',
+  'cadm.carePackRecallNote': '回收登记流程=候补件（04a 对账/体验批 T3 联动），本口 v1 只读',
 
   /* ---- 发布流 / 留痕透出注 ---- */
   'cadm.pubNote': '发布流透出：草稿→预览→发布推三端；回滚=槽位卡「回退上一版」真链路（publish/revert 同管道，虚线注非新件）。',

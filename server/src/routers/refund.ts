@@ -92,6 +92,7 @@ import {
 } from '../trpc';
 import { storeDayStartMs, storeWallclock } from './appointment';
 import { withCashierWriteLock } from './cashier';
+import { resolveScopedRules } from './configRules';
 
 /* ------------------------------------------------------------------ */
 /* 常量与类型                                                            */
@@ -258,13 +259,14 @@ function num(v: unknown, fallback: number): number {
   return typeof v === 'number' && Number.isFinite(v) ? v : fallback;
 }
 
-/** 店长累计阈值（分）：refund_rules active 行 refund_threshold_fen.threshold_fen，缺行兜底 50000（种子口径） */
-async function loadRefundThresholdFen(d: DbHandle): Promise<number> {
-  const row = await d
-    .select({ valueJson: schema.refundRules.valueJson })
+/** 店长累计阈值（分）：refund_rules active 行 refund_threshold_fen.threshold_fen，缺行兜底 50000（种子口径）。
+ * 大批片 2 分层：传 storeId 按 resolveScopedRules 解析（本店覆盖行优先）；不传=既有全量口径 */
+async function loadRefundThresholdFen(d: DbHandle, storeId?: string | null): Promise<number> {
+  const rows = await d
+    .select({ ruleKey: schema.refundRules.ruleKey, valueJson: schema.refundRules.valueJson, storeId: schema.refundRules.storeId })
     .from(schema.refundRules)
-    .where(and(eq(schema.refundRules.ruleKey, 'refund_threshold_fen'), eq(schema.refundRules.active, true)))
-    .get();
+    .where(and(eq(schema.refundRules.ruleKey, 'refund_threshold_fen'), eq(schema.refundRules.active, true)));
+  const row = (storeId === undefined ? rows : resolveScopedRules(rows, storeId))[0];
   return num(row?.valueJson?.threshold_fen, 50000);
 }
 
@@ -272,12 +274,12 @@ async function loadRefundThresholdFen(d: DbHandle): Promise<number> {
  * refund_over_threshold_to_draft.enabled——默认 false=维持硬拒（现状不变）；
  * true=超阈值（不含涉储值）落 draft 申请行（零联动纯留痕，批准=店主重新走 execute）。
  * 种子行随 0016 幂等迁移（Y6 豁免件）；端口可改（config.save refund 域）。 */
-async function loadOverThresholdToDraft(d: DbHandle): Promise<boolean> {
-  const row = await d
-    .select({ valueJson: schema.refundRules.valueJson })
+async function loadOverThresholdToDraft(d: DbHandle, storeId?: string | null): Promise<boolean> {
+  const rows = await d
+    .select({ ruleKey: schema.refundRules.ruleKey, valueJson: schema.refundRules.valueJson, storeId: schema.refundRules.storeId })
     .from(schema.refundRules)
-    .where(and(eq(schema.refundRules.ruleKey, 'refund_over_threshold_to_draft'), eq(schema.refundRules.active, true)))
-    .get();
+    .where(and(eq(schema.refundRules.ruleKey, 'refund_over_threshold_to_draft'), eq(schema.refundRules.active, true)));
+  const row = (storeId === undefined ? rows : resolveScopedRules(rows, storeId))[0];
   return row?.valueJson?.enabled === true;
 }
 
@@ -701,8 +703,8 @@ async function computePlan(
   /* ---- 提成冲减预估（preview 明示；实际以 computeMonth V6 读侧为准） ---- */
   let estimatedCommissionClawbackFen = 0;
   if (itemRows.length > 0) {
-    const rules = await d
-      .select({ ruleKey: schema.commissionRules.ruleKey, valueJson: schema.commissionRules.valueJson })
+    const ruleRows = await d
+      .select({ ruleKey: schema.commissionRules.ruleKey, valueJson: schema.commissionRules.valueJson, storeId: schema.commissionRules.storeId })
       .from(schema.commissionRules)
       .where(
         and(
@@ -710,6 +712,7 @@ async function computePlan(
           eq(schema.commissionRules.active, true),
         ),
       );
+    const rules = resolveScopedRules(ruleRows, storeId); // 大批片 2 分层：按原单店作用域解析
     const rateOf = (key: string) => num(rules.find((r) => r.ruleKey === key)?.valueJson?.rate_bp, 0);
     for (const r of itemRows) {
       const src = items.find((it) => it.id === r.billItemId)!;
@@ -771,7 +774,7 @@ async function computePlan(
   }
 
   /* ---- 权限闸（V1 累计校验 + 运营加固涉储值；preview 与 execute 同口径） ---- */
-  const thresholdFen = await loadRefundThresholdFen(d);
+  const thresholdFen = await loadRefundThresholdFen(d, storeId); // 大批片 2 分层：按原单店作用域解析
   let draftRequired = false;
   if (!callerIsOwner) {
     if (hasStoredValueInvolvement(bill, payments, input.type)) {
@@ -919,7 +922,7 @@ export async function executeRefundCore(ctx: Context, input: RefundExecuteInput)
           }
 
           /* 超阈值留口开关（PD-02 件 6 · CJ-0923-20①）：默认 false=维持硬拒 */
-          const overThresholdToDraft = await loadOverThresholdToDraft(d);
+          const overThresholdToDraft = await loadOverThresholdToDraft(d, storeId); // 大批片 2 分层：按本店作用域解析
           const plan = await computePlan(d, storeId, input, callerIsOwner, now, overThresholdToDraft);
 
           /* ---- 批次 6 补缺大批：线上原路联动骨架（R12 最小侵入，两路单据同源留痕） ----

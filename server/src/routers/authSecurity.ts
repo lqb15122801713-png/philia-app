@@ -53,7 +53,7 @@
 
 import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, gte, inArray, isNull, lt, ne, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, isNull, lt, ne, or, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { client, schema } from '../db';
 import { broadcastNow } from '../realtime/bus';
@@ -62,7 +62,7 @@ import { clearRebateAccount } from '../services/rebate';
 import { maskPhone } from '../services/phoneMask';
 import { smsProvider } from '../services/sms';
 import type { DbHandle } from '../services/xpAward';
-import { customerProcedure, merchantManagerProcedure, router } from '../trpc';
+import { customerProcedure, merchantManagerProcedure, router, storeScopeIds } from '../trpc';
 import { storeDayStartMs, storeWallclock } from './appointment';
 
 /** 事务 handle 类型断言（同 membership.ts/attendance.ts 惯例） */
@@ -665,11 +665,33 @@ export const authSecurityRouter = router({
 
       const now = new Date();
       const requestNo = await genPhoneChangeRequestNo(ctx.db, now);
+      /* 片 2 裁件②：申诉归属店=客户最近消费店（appointments/cashier_bills 新者；无消费=NULL=平台件） */
+      const lastAppt = await ctx.db
+        .select({ storeId: schema.appointments.storeId, createdAt: schema.appointments.createdAt })
+        .from(schema.appointments)
+        .where(eq(schema.appointments.customerId, ctx.user.id))
+        .orderBy(desc(schema.appointments.createdAt))
+        .limit(1)
+        .then((r) => r[0]);
+      const lastBill = await ctx.db
+        .select({ storeId: schema.cashierBills.storeId, createdAt: schema.cashierBills.createdAt })
+        .from(schema.cashierBills)
+        .where(eq(schema.cashierBills.customerId, ctx.user.id))
+        .orderBy(desc(schema.cashierBills.createdAt))
+        .limit(1)
+        .then((r) => r[0]);
+      const appealStoreId =
+        (lastAppt && lastBill
+          ? (lastAppt.createdAt?.getTime() ?? 0) >= (lastBill.createdAt?.getTime() ?? 0)
+            ? lastAppt.storeId
+            : lastBill.storeId
+          : lastAppt?.storeId ?? lastBill?.storeId) ?? null;
       const inserted = await ctx.db
         .insert(schema.phoneChangeRequests)
         .values({
           requestNo,
           userId: ctx.user.id,
+          storeId: appealStoreId,
           oldPhoneMasked: maskPhone(input.oldPhone),
           newPhoneMasked: maskPhone(input.newPhone),
           newPhone: input.newPhone, // 审批执行载荷（报备②；透出侧 masked）
@@ -695,12 +717,19 @@ export const authSecurityRouter = router({
   /**
    * 待审申诉队列（manager|owner）：submitted 升序（先提先审）+ SLA 超期标记
    * （createdAt 距今 >24h → slaBreached=true；照 refund.pendingActual 工艺）。
+   * 店域过滤（片 2 裁件②·片 1 意见书 §三裁定）：归属店∈店域集合（老板=全域，
+   * 店长=本店）；NULL=平台件（无消费申诉人，无归属店）=全店可见可受理
+   * （就近门店受理口径，R13a 既有店长审批流不回退）。
    */
   listPhoneAppeals: merchantManagerProcedure.query(async ({ ctx }) => {
+    const scope = storeScopeIds(ctx.user);
+    const scopeCond = scope.length
+      ? or(inArray(schema.phoneChangeRequests.storeId, scope), isNull(schema.phoneChangeRequests.storeId))!
+      : isNull(schema.phoneChangeRequests.storeId);
     const rows = await ctx.db
       .select()
       .from(schema.phoneChangeRequests)
-      .where(eq(schema.phoneChangeRequests.status, 'submitted'))
+      .where(and(eq(schema.phoneChangeRequests.status, 'submitted'), scopeCond))
       .orderBy(schema.phoneChangeRequests.createdAt);
     const now = Date.now();
     return {
@@ -737,6 +766,13 @@ export const authSecurityRouter = router({
         .limit(1)
         .then((r) => r[0]);
       if (!req) throw new TRPCError({ code: 'NOT_FOUND', message: '申诉单不存在' });
+      /* 片 2 裁件②店域闸：归属店∉店域集合=NOT_FOUND（统一防探测口径）；
+         NULL=平台件（无归属店）=全店可受理（就近门店受理口径，与 listPhoneAppeals 同口径） */
+      {
+        const scope = storeScopeIds(ctx.user);
+        const visible = req.storeId ? scope.includes(req.storeId) : true;
+        if (!visible) throw new TRPCError({ code: 'NOT_FOUND', message: '申诉单不存在' });
+      }
       if (req.status !== 'submitted') badRequest('该申诉已处理，不可重复审批');
       const now = new Date();
       const note = input.note!.trim();

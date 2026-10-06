@@ -987,7 +987,8 @@ export const appointmentRouter = router({
       const groomingDuration: ServiceDuration | null =
         input.type === 'grooming'
           ? // 补充令①：规则取数改读 duration_rules 配置表（保存即生效，新值只管新单）
-            resolveServiceDuration(service, pet, await loadDurationRules(ctx.db))
+            // 大批片 2 分层：按预约店作用域解析（本店覆盖行优先于总部行）
+            resolveServiceDuration(service, pet, await loadDurationRules(ctx.db, input.storeId))
           : null;
       const end =
         input.type === 'boarding'
@@ -1745,7 +1746,8 @@ export const appointmentRouter = router({
         appt.type === 'grooming'
           ? // 服务行缺失（防御）时以空名占位 → 引擎回退默认 60min
             // 补充令①：规则取数改读 duration_rules 配置表（保存即生效，新值只管新改期单）
-            resolveServiceDuration(service ?? { type: 'grooming', name: '', durationMin: null }, pet, await loadDurationRules(ctx.db))
+            // 大批片 2 分层：按预约店作用域解析（本店覆盖行优先于总部行）
+            resolveServiceDuration(service ?? { type: 'grooming', name: '', durationMin: null }, pet, await loadDurationRules(ctx.db, appt.storeId))
           : null;
       const end =
         appt.type === 'boarding'
@@ -2224,7 +2226,7 @@ export const appointmentRouter = router({
                       ? 'xp_penalty_low_star'
                       : null;
               if (ruleKey) {
-                const rules = await loadXpRules(txDb(tx));
+                const rules = await loadXpRules(txDb(tx), appt.storeId); // 大批片 2 分层：按预约店作用域解析
                 const points = numOr(rules.byKey.get(ruleKey)?.points, input.rating <= 2 ? -8 : 0);
                 await awardXp(txDb(tx), {
                   storeId: appt.storeId,

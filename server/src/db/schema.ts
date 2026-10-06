@@ -162,6 +162,8 @@ export const stores = sqliteTable('stores', {
   openHours: text('open_hours', { mode: 'json' }).$type<StoreOpenHours>(),
   /** 门店状态，取值：active | closed */
   status: text('status').notNull().default('active'),
+  /** 门店分组名（商家端大批片 2 · 0051：门店分组/驾驶舱分栏分组锚；NULL=未分组） */
+  groupName: text('group_name'),
   /**
    * 门店联系电话（客户端体验大批片 4 · 0042）：客户端「联系门店」透出 + tel: 直拨。
    * NULL=未登记（客户端隐藏电话行，诚实空态）；维护口=商家端门店资料/店长配置。
@@ -1559,6 +1561,13 @@ export const commissionRules = sqliteTable(
   'commission_rules',
   {
     id: id(),
+    /**
+     * 归属门店 ID -> stores.id（商家端大批片 2 配置作用域分层 · 0051）：
+     * NULL=总部下发（全局默认行）；store_id=门店覆盖行。解析序=同 rule_key 门店行优先于总部行
+     * （configRules.resolveScopedRules 单源；member_plans/copy_overrides 两表=中央件全局单份，
+     * 本批不加分层——登记在卷）。
+     */
+    storeId: text('store_id').references(() => stores.id),
     /** 规则版本（初始全表种子 =1） */
     version: integer('version').notNull(),
     /** 规则键（如 commission_grooming_rate / perf_coeff_s） */
@@ -1592,6 +1601,13 @@ export const durationRules = sqliteTable(
   'duration_rules',
   {
     id: id(),
+    /**
+     * 归属门店 ID -> stores.id（商家端大批片 2 配置作用域分层 · 0051）：
+     * NULL=总部下发（全局默认行）；store_id=门店覆盖行。解析序=同 rule_key 门店行优先于总部行
+     * （configRules.resolveScopedRules 单源；member_plans/copy_overrides 两表=中央件全局单份，
+     * 本批不加分层——登记在卷）。
+     */
+    storeId: text('store_id').references(() => stores.id),
     /** 规则版本（初始全表种子 =1） */
     version: integer('version').notNull(),
     /** 规则键（如 duration_base_min / duration_size_coef / duration_service_kind_keywords） */
@@ -1888,6 +1904,13 @@ export const xpRules = sqliteTable(
   'xp_rules',
   {
     id: id(),
+    /**
+     * 归属门店 ID -> stores.id（商家端大批片 2 配置作用域分层 · 0051）：
+     * NULL=总部下发（全局默认行）；store_id=门店覆盖行。解析序=同 rule_key 门店行优先于总部行
+     * （configRules.resolveScopedRules 单源；member_plans/copy_overrides 两表=中央件全局单份，
+     * 本批不加分层——登记在卷）。
+     */
+    storeId: text('store_id').references(() => stores.id),
     /** 规则版本（初始种子 =1） */
     version: integer('version').notNull(),
     /** 规则键（如 xp_attendance_daily / xp_level_threshold_1） */
@@ -2093,6 +2116,13 @@ export const refundRules = sqliteTable(
   'refund_rules',
   {
     id: id(),
+    /**
+     * 归属门店 ID -> stores.id（商家端大批片 2 配置作用域分层 · 0051）：
+     * NULL=总部下发（全局默认行）；store_id=门店覆盖行。解析序=同 rule_key 门店行优先于总部行
+     * （configRules.resolveScopedRules 单源；member_plans/copy_overrides 两表=中央件全局单份，
+     * 本批不加分层——登记在卷）。
+     */
+    storeId: text('store_id').references(() => stores.id),
     /** 规则版本（初始种子 =1） */
     version: integer('version').notNull(),
     /** 规则键（如 refund_threshold_fen） */
@@ -2750,6 +2780,12 @@ export const phoneChangeRequests = sqliteTable(
     userId: text('user_id')
       .notNull()
       .references(() => users.id),
+    /**
+     * 归属门店 ID -> stores.id（商家端大批片 2 裁件② · 0051：换绑申诉队列店域过滤）：
+     * 提交时落「客户最近消费店」（无消费=NULL=平台件——无归属店，全店可见可受理
+     * [就近门店受理口径]）；存量=最近消费单推导回填（appointments/cashier_bills 新者，无单=NULL）。
+     */
+    storeId: text('store_id').references(() => stores.id),
     /** 原手机号（脱敏 138****0000） */
     oldPhoneMasked: text('old_phone_masked').notNull(),
     /** 新手机号（脱敏） */
@@ -2909,6 +2945,13 @@ export const serviceRules = sqliteTable(
   'service_rules',
   {
     id: id(),
+    /**
+     * 归属门店 ID -> stores.id（商家端大批片 2 配置作用域分层 · 0051）：
+     * NULL=总部下发（全局默认行）；store_id=门店覆盖行。解析序=同 rule_key 门店行优先于总部行
+     * （configRules.resolveScopedRules 单源；member_plans/copy_overrides 两表=中央件全局单份，
+     * 本批不加分层——登记在卷）。
+     */
+    storeId: text('store_id').references(() => stores.id),
     /** 规则版本（初始种子 =1） */
     version: integer('version').notNull(),
     /** 规则键（如 service_hours） */
@@ -3246,6 +3289,13 @@ export const payRules = sqliteTable(
   'pay_rules',
   {
     id: id(),
+    /**
+     * 归属门店 ID -> stores.id（商家端大批片 2 配置作用域分层 · 0051）：
+     * NULL=总部下发（全局默认行）；store_id=门店覆盖行。解析序=同 rule_key 门店行优先于总部行
+     * （configRules.resolveScopedRules 单源；member_plans/copy_overrides 两表=中央件全局单份，
+     * 本批不加分层——登记在卷）。
+     */
+    storeId: text('store_id').references(() => stores.id),
     /** 规则版本（初始种子 =1） */
     version: integer('version').notNull(),
     /** 规则键（pay_timeout_minutes / pay_channel_enabled） */

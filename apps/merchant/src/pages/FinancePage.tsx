@@ -176,28 +176,29 @@ export default function FinancePage() {
     refetchInterval: 60_000,
   });
   /* ---- 片 5 尾牙读口（段 4 撤灰接真值；merchantManagerProcedure=owner|manager） ---- */
+  /* 大批片 2：A 区读口入参改必填对象（scope 契约）；{}=缺省本店零回归 */
   // 储值负债店级聚合（本金+赠送=欠客户的钱）
   const storedLiabQ = useQuery({
     queryKey: ['report', 'storedValueLiability'],
-    queryFn: () => trpc.report.storedValueLiability.query(),
+    queryFn: () => trpc.report.storedValueLiability.query({}),
     refetchInterval: 60_000,
   });
   // 回馈金负债店级聚合（本店会员 rebate 余额 Σ）
   const rebateLiabQ = useQuery({
     queryKey: ['report', 'rebateLiability'],
-    queryFn: () => trpc.report.rebateLiability.query(),
+    queryFn: () => trpc.report.rebateLiability.query({}),
     refetchInterval: 60_000,
   });
   // 昨日营收（financeStats 同源口径 + day_closes 昨日行对账字段）
   const yesterdayQ = useQuery({
     queryKey: ['report', 'yesterdayRevenue'],
-    queryFn: () => trpc.report.yesterdayRevenue.query(),
+    queryFn: () => trpc.report.yesterdayRevenue.query({}),
     refetchInterval: 60_000,
   });
   // 近 14 日营收 spark（同源 byDay 序列；今日格=截至当前的当日已收）
   const sparkQ = useQuery({
     queryKey: ['report', 'revenueSpark14'],
-    queryFn: () => trpc.report.revenueSpark14.query(),
+    queryFn: () => trpc.report.revenueSpark14.query({}),
     refetchInterval: 60_000,
   });
 

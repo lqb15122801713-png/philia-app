@@ -61,6 +61,7 @@ import { TRPCError } from '@trpc/server';
 import { and, desc, eq, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { db, schema } from '../db';
+import { resolveScopedRules } from './configRules';
 import {
   merchantManagerProcedure,
   merchantOwnerProcedure,
@@ -125,8 +126,10 @@ export interface CommissionRuleSet {
  * - 传 atTs：effective_from 口径——全表行中逐 key 取 effective_from <= atTs 的最新行
  *   （含已失效历史行：配置端口保存时旧行 active=0 但 effective_from 保留，
  *   故历史源单可按其发生时点取到当时生效的版本，新规不回溯）。
+ * 大批片 2 分层：传 storeId 先按 resolveScopedRules 作用域拣选（本店行优先于总部行，
+ * 版本历史同作用域多行保留）；不传=既有全量口径（单活跃行不变式下=最新端口值）。
  */
-export async function loadCommissionRules(d: DbHandle, atTs?: Date): Promise<CommissionRuleSet> {
+export async function loadCommissionRules(d: DbHandle, atTs?: Date, storeId?: string | null): Promise<CommissionRuleSet> {
   const rows = await d
     .select({
       ruleKey: schema.commissionRules.ruleKey,
@@ -134,13 +137,15 @@ export async function loadCommissionRules(d: DbHandle, atTs?: Date): Promise<Com
       version: schema.commissionRules.version,
       effectiveFrom: schema.commissionRules.effectiveFrom,
       active: schema.commissionRules.active,
+      storeId: schema.commissionRules.storeId,
     })
     .from(schema.commissionRules)
     .where(atTs ? undefined : eq(schema.commissionRules.active, true));
+  const scoped = storeId === undefined ? rows : resolveScopedRules(rows, storeId);
   const byKey = new Map<string, Record<string, unknown>>();
   const effByKey = new Map<string, number>();
   let version = 0;
-  for (const r of rows) {
+  for (const r of scoped) {
     if (atTs) {
       const effMs = r.effectiveFrom.getTime();
       if (effMs > atTs.getTime()) continue; // 新规只管生效后的单
@@ -1243,7 +1248,7 @@ export const commissionRouter = router({
         .get();
       if (!staffRow) throw new TRPCError({ code: 'NOT_FOUND', message: '员工记录不存在' });
 
-      const rules = await loadCommissionRules(ctx.db);
+      const rules = await loadCommissionRules(ctx.db, undefined, staffRow.storeId); // 大批片 2 分层：按员工本店作用域解析
       const snapshots = await ctx.db
         .select({
           period: schema.commissionSnapshots.period,
@@ -1388,7 +1393,7 @@ export const commissionRouter = router({
       const monthlyPerfEstimateFen = Math.round((poolAmountFen * coeffBp) / 10000 / 3);
       // cap 取当前生效值：扣减是当下动作（不是历史源单重算），不走回溯语义——
       // 与提成/绩效逐行时序解析的口径刻意不同，注释写死防误改
-      const rules = await loadCommissionRules(ctx.db);
+      const rules = await loadCommissionRules(ctx.db, undefined, storeId); // 大批片 2 分层：扣减上限按本店作用域解析
       const capBp = num(rules.byKey.get('perf_deduction_cap_bp')?.cap_bp, 5000);
       const capFen = Math.floor((monthlyPerfEstimateFen * capBp) / 10000);
 
@@ -1614,12 +1619,14 @@ export const commissionRouter = router({
         label: schema.commissionRules.label,
         valueJson: schema.commissionRules.valueJson,
         effectiveFrom: schema.commissionRules.effectiveFrom,
+        storeId: schema.commissionRules.storeId,
       })
       .from(schema.commissionRules)
       .where(eq(schema.commissionRules.active, true))
       .orderBy(schema.commissionRules.ruleKey);
-    const rules = await loadCommissionRules(ctx.db);
-    return { version: rules.version, rules: rows };
+    const rules = await loadCommissionRules(ctx.db, undefined, ctx.user.storeId);
+    /* 大批片 2 分层：透出与版本同按本店作用域解析（本店覆盖行优先于总部行） */
+    return { version: rules.version, rules: resolveScopedRules(rows, ctx.user.storeId) };
   }),
 });
 

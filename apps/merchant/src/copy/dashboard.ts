@@ -112,7 +112,10 @@ const DASH_COPY_TABLE = {
 
   /* ---- 片 5 段 1 · W-01 校形（M2 异常卡/M3 单店一栏/M4 合计条/wlist 双列/M6 晨报卡） ---- */
   'dash.m3Title': '单店口径',
-  'dash.m3ChainNote': '多店三栏=连锁预留开口项，当前按单店口径呈现',
+  'dash.m3SingleNote': '多店三栏=连锁预留开口项，当前按单店口径呈现',
+  /* 商家端大批片 2 · 老板端驾驶舱：owner M3 卡=连锁视图（store.chainDashboard 真值；m3ChainNote 改值） */
+  'dash.m3ChainTitle': '连锁视图',
+  'dash.m3ChainNote': '合计+分栏并列（读口=store.chainDashboard 三店真值）',
   'dash.totalCap': '今日营业额',
   'dash.totalPaidCell': '已收笔数',
   'dash.totalUnpaidCell': '待收笔数',

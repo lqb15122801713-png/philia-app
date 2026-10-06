@@ -2618,7 +2618,8 @@ export const cashierRouter = router({
         .where(eq(schema.cashierBills.billNo, input.billNo))
         .get();
       if (!bill) throw new TRPCError({ code: 'NOT_FOUND', message: '单据不存在' });
-      if (bill.storeId !== ctx.user.storeId) forbidden('非本店单据，无权查看');
+      /* 片 2 裁件①：跨店按 id 取数统一 NOT_FOUND（防探测口径，不透出他店单存在性） */
+      if (bill.storeId !== ctx.user.storeId) throw new TRPCError({ code: 'NOT_FOUND', message: '单据不存在' });
       return billSnapshot(ctx.db, bill);
     }),
 });
