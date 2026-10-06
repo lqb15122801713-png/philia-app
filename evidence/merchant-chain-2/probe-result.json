@@ -1,0 +1,46 @@
+{
+  "checks": [
+    {
+      "name": "owner dev-login",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "驾驶舱连锁视图渲染（卡题=连锁视图）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "连锁视图=合计+分栏并列（两店名在屏）+「单店口径」注记已撤",
+      "ok": true,
+      "detail": "{\"chainTitle\":true,\"storeA\":true,\"storeA2\":true,\"noSingleNote\":true}"
+    },
+    {
+      "name": "报表页三视图切换渲染（单店/分店/合计 三签在屏）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "合计视图命中（店域合计注记在屏=scope=chain 真值）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "E1 点亮：档案表单+连锁归属在屏（店即己部注记）",
+      "ok": true,
+      "detail": "{\"form\":true,\"chain\":true,\"name\":true}"
+    },
+    {
+      "name": "C3 安心包端口：独立库存域只读 v1+回收登记候补注记在屏",
+      "ok": true,
+      "detail": "{\"port\":true,\"note\":true,\"recall\":true}"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\chain2-evidence\\01-dashboard-chain-view.png",
+    "E:\\KIMI code\\tmp\\chain2-evidence\\02-report-three-views.png",
+    "E:\\KIMI code\\tmp\\chain2-evidence\\03-report-chain-view.png",
+    "E:\\KIMI code\\tmp\\chain2-evidence\\04-console-e1-profile.png",
+    "E:\\KIMI code\\tmp\\chain2-evidence\\05-console-c3-carepack.png"
+  ]
+}

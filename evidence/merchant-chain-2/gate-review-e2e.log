@@ -1,0 +1,4 @@
+# review-e2e（e2e-nav-check）闸门日志（命令：CUSTOMER_URL=http://localhost:7130 API_BASE=http://localhost:7201 CDP_PORT=9417 node scripts/e2e-nav-check.mjs）——全绿 🎉
+✅ R-Nav-2 返回列表保筛选 tab —— tab=已取消 返回后=/appointments?tab=cancelled
+✅ R-Nav-3 底栏中位爪印带文字标签 —— label=philia
+e2e-nav-check 全绿 🎉
