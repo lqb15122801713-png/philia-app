@@ -1,0 +1,8 @@
+✅ PR-3 C2 收尾段：本次新增 held 单逐个 voidBill（现库测试件不动） —— 新增=2 已撤=2
+✅ PR-3 C2 收尾段：跑后 held 数=跑前（零新增残留） —— 基线 held=6 原样
+
+目标：http://localhost:7201（口令门未设置，开发期开放口径）
+全部通过 🎉
+SMOKE_DEPLOY_EXIT=0
+
+（跑法：PUBLIC_BASE_URL=http://localhost:7201 CUSTOMER_URL=http://localhost:7130 MERCHANT_URL=http://localhost:7131 STAFF_URL=http://localhost:7132 node scripts/smoke-deploy.mjs | tail -5）
