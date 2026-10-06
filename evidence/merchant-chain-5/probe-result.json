@@ -1,0 +1,35 @@
+{
+  "checks": [
+    {
+      "name": "owner dev-login",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "会员营销页：券矩阵两券+定向发放台账+活动排期状态徽+互斥公示+生日区在屏",
+      "ok": true,
+      "detail": "{\"coupon\":true,\"campaign\":true,\"promo\":true,\"stack\":true,\"bday\":true}"
+    },
+    {
+      "name": "营销台账页：支出/换货/待检/快照四区在屏",
+      "ok": true,
+      "detail": "{\"exp\":true,\"exch\":true,\"insp\":true,\"snap\":true}"
+    },
+    {
+      "name": "周报视图：本周 vs 上周+环比徽在屏",
+      "ok": true,
+      "detail": "{\"weekly\":true,\"wow\":true}"
+    },
+    {
+      "name": "D9 排行/滞销块在屏",
+      "ok": true,
+      "detail": "{\"top\":true,\"slow\":true}"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\chain5-evidence\\01-marketing-five-zones.png",
+    "E:\\KIMI code\\tmp\\chain5-evidence\\02-marketing-ledger.png",
+    "E:\\KIMI code\\tmp\\chain5-evidence\\03-report-weekly.png",
+    "E:\\KIMI code\\tmp\\chain5-evidence\\04-report-d9-top.png"
+  ]
+}
