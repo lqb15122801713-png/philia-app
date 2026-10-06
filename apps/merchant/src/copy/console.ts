@@ -2,21 +2,19 @@
  * 商家端骨架批文案键表（商家端控制台骨架批 · 片 5 段 0 · 地基段）
  * 依据=UX-02 两端定稿语言包 V1.1 §一.4（rail 十五口冻结+dock 五槽）+§二 M1–M8 构件册。
  * 纪律：键名小写点分、as const 冻结、文案端口已落（withCopyOverrides 代理——端口值优先、码内默认 fallback）。
- * 键族：wnav.*=rail 十五口+批次扩口+foot+dock 五槽；wsk.*=M 件族骨架通用件。
+ * 键族：wnav.*=rail 十九口（UX-08 归并稿 V1.0 转正冻结：批次扩口组撤销归位）+foot+dock 五槽；wsk.*=M 件族骨架通用件。
  * 新键随批注册进 copy_overrides（生成器重跑+迁移申报）。
  */
 
 import { withCopyOverrides } from '@philia/shared';
 
 const CONSOLE_COPY_TABLE = {
-  /* ---- wnav rail 分组签（十五口冻结：经营 6 / 商城 3 / 管理 6 + foot） ---- */
+  /* ---- wnav rail 分组签（十九口冻结：经营 6 / 商城 3 / 管理 9 + foot） ---- */
   'wnav.groupOps': '经营',
   'wnav.groupMall': '商城',
   'wnav.groupAdmin': '管理',
-  'wnav.groupBatch': '批次扩口',
-  'wnav.batchNote': '批次扩口 · 明面保留不删，转正后归并',
 
-  /* ---- wnav rail 十五口（§一.4 逐字冻结） ---- */
+  /* ---- wnav rail 十九口（UX-08 归并稿 V1.0 §一 逐字冻结） ---- */
   'wnav.overview': '总览·驾驶舱',
   'wnav.appts': '门店端·预约',
   'wnav.boarding': '寄养',
@@ -27,16 +25,14 @@ const CONSOLE_COPY_TABLE = {
   'wnav.products': '商品',
   'wnav.pass': '会员·次卡',
   'wnav.staff': '员工',
-  'wnav.ops': '审批中心',
+  'wnav.ops': '运营 · 审批中心',
   'wnav.monitor': '监控 Hub',
   'wnav.finance': '报表',
   'wnav.matrix': '权限矩阵',
   'wnav.settings': '门店档案·设置',
 
-  /* ---- wnav 批次扩口四口（保留明面列示；运营与审批中心同屏注记合一） ---- */
+  /* ---- wnav 管理组扩位三口（UX-08：批次扩口组撤销，排班/薪资/XP 审核归位管理组） ---- */
   'wnav.schedules': '排班',
-  'wnav.opsBatch': '运营',
-  'wnav.opsBatchNote': '与审批中心同屏',
   'wnav.payroll': '薪资',
   'wnav.xpAdmin': 'XP 审核',
 
@@ -44,13 +40,12 @@ const CONSOLE_COPY_TABLE = {
   'wnav.footConsole': '开发者管理端',
   'wnav.footRules': '规则配置',
 
-  /* ---- wnav dock 五槽（手机形态冻结：总览/门店/收银/报表/我的） ---- */
+  /* ---- wnav dock 五槽（UX-08 转正：总览/门店/收银/报表/设置） ---- */
   'wnav.dockOverview': '总览',
   'wnav.dockStore': '门店',
   'wnav.dockCashier': '收银',
   'wnav.dockReport': '报表',
-  'wnav.dockMe': '我的',
-  'wnav.dockMeNote': '「我的」槽映射门店档案·设置',
+  'wnav.dockMe': '设置',
 
   /* ---- wnav 段 0 占位空态（/matrix /console 锚点稳定文案，段 3 替换） ---- */
   'wnav.placeholderPending': '待段 3 落位',

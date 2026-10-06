@@ -1,9 +1,10 @@
 /**
- * 商家端控制台骨架批 · 片 5 段 0：ConsoleDock 手机 dock 五槽
- * （UX-02 两端定稿语言包 V1.1 §一.4：商家端手机 dock 五槽「总览/门店/收银/报表/我的」冻结）。
+ * 商家端控制台 ConsoleDock 手机 dock 五槽（UX-08 归并稿正式版 V1.0 · 老板 10-06 两拍转正：
+ * 五槽「总览/门店/收银/报表/设置」冻结，改=新裁定）。
  *
  * 槽位映射：总览=/dashboard、门店=/appointments（含寄养履约域）、收银=/cashier、
- * 报表=/finance、我的=/settings（「我的」槽映射门店档案·设置，见 wnav.dockMeNote 注记键）。
+ * 报表=/finance、设置=/settings（原「我的」槽转正改名「设置」，指向不变；
+ * 候补「我的」页=方案 B 归补缺专项不施工）。
  * 激活=顶部 22×3 淡黄短划+深棕字（员工端 S1 flatdock 同工艺）；样式全在
  * styles/console.css（.wdock）。断点：<xl 显形固定底栏，≥xl 藏形走 MerchantRail
  * （桌面 rail/手机 dock 双形态互斥，App 壳同挂、CSS 互斥显隐）。
@@ -14,7 +15,7 @@ import { CalendarDays, Calculator, House, ReceiptText, Settings } from 'lucide-r
 import { cc } from '@/copy/console';
 
 type DockSlot = {
-  key: 'overview' | 'store' | 'cashier' | 'report' | 'me';
+  key: 'overview' | 'store' | 'cashier' | 'report' | 'settings';
   to: string;
   label: string;
   testid: string;
@@ -40,8 +41,8 @@ const SLOTS: DockSlot[] = [
     isActive: (p) => p.startsWith('/finance'),
   },
   {
-    // 「我的」槽映射门店档案·设置（wnav.dockMeNote 注记）
-    key: 'me', to: '/settings', label: cc('wnav.dockMe'), testid: 'dock-me', icon: Settings,
+    // 「设置」槽（UX-08 转正：原「我的」槽改名，指向 /settings 不变；copy 键名沿用 wnav.dockMe 改键值）
+    key: 'settings', to: '/settings', label: cc('wnav.dockMe'), testid: 'dock-settings', icon: Settings,
     isActive: (p) => p.startsWith('/settings'),
   },
 ];

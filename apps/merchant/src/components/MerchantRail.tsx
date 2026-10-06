@@ -1,22 +1,24 @@
 /**
- * 商家端控制台骨架批 · 片 5 段 0：MerchantRail M1 深棕导航轨重建
- * （UX-02 两端定稿语言包 V1.1 §一.4 十五口冻结结构，9-27 老板拍板转正）。
+ * 商家端控制台 MerchantRail M1 深棕导航轨（UX-08 归并稿正式版 V1.0 · 老板 10-06 两拍转正：
+ * rail 十九口冻结结构，改=新裁定）。
  *
- * 结构（冻结，改=新裁定）：
+ * 结构（冻结）：
  * - 经营：总览·驾驶舱 / 门店端·预约 / 寄养 / 收银台 / 日结 / 退款；
  * - 商城：商城订单 / 商品 / 会员·次卡；
- * - 管理：员工 / 审批中心 / 监控 Hub / 报表 / 权限矩阵 / 门店档案·设置；
- * - 批次扩口（第四组明面列示不删）：排班 / 运营（与审批中心同屏注记合一）/ 薪资 / XP 审核；
+ * - 管理（9 口）：员工 / 排班 / 薪资 / XP 审核 / 运营 · 审批中心 / 监控 Hub / 报表 / 权限矩阵 / 门店档案·设置；
+ *   （批次扩口组整组撤销：四口归位——排班/薪资/XP 审核入管理组，「运营」与「审批中心」
+ *   双入口消歧合为一口「运营 · 审批中心」→ /ops，同名同图同屏、落屏单高亮，
+ *   bd 角标=审批（自检审核 pending）+申诉（指标申诉 pending）合并计数不拆口）；
  * - foot=开发者管理端 /console（owner-only 规则配置/文案端口/槽位端口三口收编为其子行）。
  *
  * 规格（§二 M1）：宽 236px 深棕渐变 160°（tokens.gradients.philiaRail）；
- * 激活=淡金 3px 左条+浅金底；bd 角标=赭红胶囊（异常计数槽，数据源先留 props 空态）；
- * 分组签 mono 8.5 宽距。样式全在 styles/console.css（.wrail）。
- * 断点：<xl 藏形走 ConsoleDock（桌面 rail/手机 dock 双形态互斥）。
+ * 激活=淡金 3px 左条+浅金底；bd 角标=赭红胶囊；分组签 mono 8.5 宽距。样式全在
+ * styles/console.css（.wrail）。断点：<xl 藏形走 ConsoleDock（桌面 rail/手机 dock 双形态互斥）。
  * clerk 分流保留（矩阵总规则②）：仅「收银台」单口。
  */
 
 import { NavLink } from 'react-router-dom';
+import { useMemo } from 'react';
 import {
   BookCheck,
   CalendarDays,
@@ -44,6 +46,7 @@ import {
 import { usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { roleLabelCn, useMerchantRole, type MerchantRole } from '@/lib/roles';
+import { collabOf } from '@/lib/taskCollabPort';
 import { cp } from '@/copy/copyPort';
 import { cc } from '@/copy/console';
 
@@ -55,14 +58,12 @@ type RailItem = {
   testid: string;
   /** 激活口径=精确匹配（子路径不联动高亮，如 /cashier vs /cashier/close） */
   end?: boolean;
-  /** 行下 mono 注记（如批次扩口「运营」与审批中心同屏注记合一） */
-  sub?: string;
 };
 
 type RailGroup = { key: string; label: string | null; note?: string; items: RailItem[] };
 
 /**
- * 角色分流：clerk=仅收银台工作面（总规则②）；owner/manager=十五口+批次扩口+foot。
+ * 角色分流：clerk=仅收银台工作面（总规则②）；owner/manager=十九口+foot。
  */
 function groupsFor(role: MerchantRole): RailGroup[] {
   if (role.isClerk) {
@@ -101,23 +102,14 @@ function groupsFor(role: MerchantRole): RailGroup[] {
       label: cc('wnav.groupAdmin'),
       items: [
         { to: '/staff', key: 'staff', label: cc('wnav.staff'), icon: Users, testid: 'rail-staff' },
+        { to: '/settings/schedules', key: 'schedules', label: cc('wnav.schedules'), icon: CalendarRange, testid: 'rail-schedules', end: true },
+        { to: '/payroll', key: 'payroll', label: cc('wnav.payroll'), icon: Wallet, testid: 'rail-payroll' },
+        { to: '/xp-admin', key: 'xpAdmin', label: cc('wnav.xpAdmin'), icon: Sparkles, testid: 'rail-xp-admin' },
         { to: '/ops', key: 'opsCenter', label: cc('wnav.ops'), icon: ClipboardCheck, testid: 'rail-ops' },
         { to: '/monitor', key: 'monitor', label: cc('wnav.monitor'), icon: MonitorDot, testid: 'rail-monitor' },
         { to: '/finance', key: 'finance', label: cc('wnav.finance'), icon: ReceiptText, testid: 'rail-finance' },
         { to: '/matrix', key: 'matrix', label: cc('wnav.matrix'), icon: ShieldCheck, testid: 'rail-matrix', end: true },
         { to: '/settings', key: 'settings', label: cc('wnav.settings'), icon: Settings, testid: 'rail-settings', end: true },
-      ],
-    },
-    {
-      // 批次扩口：现状多 4 口保留明面列示不删（转正后归并；运营与审批中心同屏注记合一）
-      key: 'batch',
-      label: cc('wnav.groupBatch'),
-      note: cc('wnav.batchNote'),
-      items: [
-        { to: '/settings/schedules', key: 'schedules', label: cc('wnav.schedules'), icon: CalendarRange, testid: 'rail-schedules', end: true },
-        { to: '/ops', key: 'opsBatch', label: cc('wnav.opsBatch'), icon: ClipboardCheck, testid: 'rail-ops-batch', sub: cc('wnav.opsBatchNote') },
-        { to: '/payroll', key: 'payroll', label: cc('wnav.payroll'), icon: Wallet, testid: 'rail-payroll' },
-        { to: '/xp-admin', key: 'xpAdmin', label: cc('wnav.xpAdmin'), icon: Sparkles, testid: 'rail-xp-admin' },
       ],
     },
   ];
@@ -131,6 +123,27 @@ export default function MerchantRail({ badges }: { badges?: Record<string, numbe
     queryFn: () => trpc.auth.me.query(),
     staleTime: 300_000,
   });
+  /* UX-08：「运营 · 审批中心」bd 角标=审批（自检审核 pending）+申诉（指标申诉 pending）
+     合并计数不拆口；仅管理层取数（端点=merchantManagerProcedure 同 /ops 屏数据源） */
+  const collab = useMemo(() => collabOf(trpc), [trpc]);
+  const badgeEnabled = role.canManage;
+  const approvalQ = useQuery({
+    queryKey: ['rail', 'badge', 'approvals'],
+    queryFn: () => collab.selfCheck.listPending.query(),
+    enabled: badgeEnabled,
+    staleTime: 60_000,
+    retry: false,
+  });
+  const appealQ = useQuery({
+    queryKey: ['rail', 'badge', 'appeals'],
+    queryFn: () => trpc.report.listMetricAppeals.query(),
+    enabled: badgeEnabled,
+    staleTime: 60_000,
+    retry: false,
+  });
+  const opsCombined =
+    (approvalQ.data?.runs?.length ?? 0) + (appealQ.data?.pending?.length ?? 0);
+  const effBadges: Record<string, number> = { opsCenter: opsCombined, ...(badges ?? {}) };
   const storeName = meQ.data?.store?.name ?? '门店';
   const ownerName = meQ.data?.user?.nickname ?? '店主';
   const roleLabel = roleLabelCn(meQ.data?.roles);
@@ -147,7 +160,7 @@ export default function MerchantRail({ badges }: { badges?: Record<string, numbe
               {g.note ? <span className="nt">{g.note}</span> : null}
             </div>
           ) : null}
-          {g.items.map(({ to, key, label, icon: Icon, testid, end, sub }) => (
+          {g.items.map(({ to, key, label, icon: Icon, testid, end }) => (
             <NavLink
               key={`${to}-${key}`}
               to={to}
@@ -157,13 +170,10 @@ export default function MerchantRail({ badges }: { badges?: Record<string, numbe
               className={({ isActive }) => `it${isActive ? ' on' : ''}`}
             >
               <Icon strokeWidth={1.6} aria-hidden />
-              <span>
-                {label}
-                {sub ? <span className="sub">{sub}</span> : null}
-              </span>
-              {(badges?.[key] ?? 0) > 0 ? (
-                <span className="bd" data-testid={`${testid}-badge`} aria-label={`${badges![key]} 条待处理`}>
-                  {badges![key]! > 99 ? '99+' : badges![key]}
+              <span>{label}</span>
+              {(effBadges[key] ?? 0) > 0 ? (
+                <span className="bd" data-testid={`${testid}-badge`} aria-label={`${effBadges[key]} 条待处理`}>
+                  {effBadges[key]! > 99 ? '99+' : effBadges[key]}
                 </span>
               ) : null}
             </NavLink>
