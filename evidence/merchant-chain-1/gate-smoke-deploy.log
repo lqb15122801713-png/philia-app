@@ -1,0 +1,11 @@
+# smoke-deploy 闸门日志（tail 段全绿；命令：PUBLIC_BASE_URL=http://localhost:7201 CUSTOMER_URL=http://localhost:7130 MERCHANT_URL=http://localhost:7131 STAFF_URL=http://localhost:7132 node scripts/smoke-deploy.mjs）
+
+✅ 储值导入 preview（零写入+校验位：2 行/本金 ¥150）
+✅ clerk 储值导入 403（仅老板）
+✅ PR-3 C2c 日结/已收合计不含 held 单（held 前后 todayTenderStats 逐值相等） —— received 562400→562400
+✅ PR-3 C2 收尾段：本次新增 held 单逐个 voidBill —— 新增=2 已撤=2
+✅ PR-3 C2 收尾段：跑后 held 数=跑前（零新增残留） —— 基线 held=4 原样
+（前段 R12/R11a/收银修复包/clerk 闸/日结/反结账全绿，与前批同口径；本片改动面=storedValue/report/store/中间件，smoke 全链无回归）
+
+目标：http://localhost:7201（口令门未设置，开发期开放口径）
+全部通过 🎉

@@ -1,0 +1,24 @@
+TSC=0
+  ✓ 78.2 互盲②收银：B 流水=0 行 + B 取 A 店单=拒绝（非本店单据）
+  ✓ 78.3 互盲③会员账务：B 储值批次=0（A 批次不透出=0050 补漏生效）+ A 本域批次≥1（写口落 storeId+同域可见）+ B 次卡=0 + B 售卡实收=0（cash 侧零混入）
+  ✓ 78.4 互盲④报表：B 收现/散客分拆全零（A 夹具单零混入）+ B 档变事件 0/0 而 A≥1（membership_events 店域收窄补漏实证）
+  ✓ 78.5 互盲⑤员工排班：B 花名册=仅 B 店长 1 行（小美/阿强/丽丽零透出）+ B 班次模板=0（A 店模板零透出）
+  ✓ 78.6 互盲⑥商品库存：B 商品 total=0 + B 库存流水=0 行（A 店零透出）
+  ✓ 78.7 分级管理员：老板 A 全域=[A 店+A2 辖店]（两层 hqId 透出）/ 独立店主 B=[B] / 店长 B=[B 本店]（staff.store_id 绑定闸）+ 店长读 A 店报表 cash 侧零混入
+  ✓ 78.8 两层模型：hq_id 回填=自身（种子主店+B 店）+ A2 归属 A 店 + 二次回填幂等 0 行 + 全量 hq_id 非空 + store_type 全=store（缺省）
+  ✓ 78.8 留口字段在列：staff.extra_store_ids / memberships.home_store_id / stored_value_import_batches.store_id / stores.store_type+hq_id（PRAGMA 实证）
+  ✓ 验收结束：7220 端口无残留监听
+[e2e] 临时库目录清理失败（Windows libsql 句柄滞后，可手工删）: C:\Users\lqb15\AppData\Local\Temp\philia-e2e-k2Ul1Q Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-k2Ul1Q '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-k2Ul1Q'
+    at rmSync (node:fs:1282:18)
+    at cleanup (E:\KIMI code\philia-app\server\src\__tests__\e2e.ts:8856:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async <anonymous> (E:\KIMI code\philia-app\server\src\__tests__\e2e.ts:8901:3) {
+  errno: 1,
+  code: 'EPERM',
+  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-e2e-k2Ul1Q',
+  syscall: 'rm'
+}
+  ✓ 种子库 data/philia.db 原样（size/mtime 未变）
+
+全链路验收全部通过 ✅
+E2E_EXIT=0

@@ -1,0 +1,38 @@
+{
+  "checks": [
+    {
+      "name": "探针 B 店主夹具在库",
+      "ok": true,
+      "detail": "01K47QULM23PDKV9RPCEHX1"
+    },
+    {
+      "name": "listMine：A 店主=本店 1 行（两层 hqId=自身透出）/ B 店主=探针 B 店 1 行",
+      "ok": true,
+      "detail": "{\"a\":[[\"菲丽亚宠物·示例店\",\"store\",\"hq=自身\"]],\"b\":[[\"探针隔离 B 店\",true]]}"
+    },
+    {
+      "name": "B 读 A 零透出：预约 0 / 收银 0 / 储值批次 0（A 本域批次≥1）",
+      "ok": true,
+      "detail": "appts=0 bills=0 bBatches=0 aBatches=36"
+    },
+    {
+      "name": "B 店主浏览器 dev-login",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "B 店主 dashboard 渲染（rail 在+营业额全零）",
+      "ok": true,
+      "detail": "PHILIA 经营 总览·驾驶舱 门店端·预约 寄养 收银台 日结 退款 商城 商城订单 商品 会员·次卡 管理 员工 排班 薪资 XP 审核 运营 · 审批中心 监控 Hub 报表 权限矩阵 门店档案·设置 开发者管理端 开发者管理端 规"
+    },
+    {
+      "name": "B 店主预约页=空态（A 店单零透出）",
+      "ok": true,
+      "detail": "PHILIA 经营 总览·驾驶舱 门店端·预约 寄养 收银台 日结 退款 商城 商城订单 商品 会员·次卡 管理 员工 排班 薪资 XP 审核 运营 · 审批中心 监控 Hub 报表 权限矩阵 门店档"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\chain1-evidence\\01-b-owner-dashboard-zero.png",
+    "E:\\KIMI code\\tmp\\chain1-evidence\\02-b-owner-appointments-empty.png"
+  ]
+}
