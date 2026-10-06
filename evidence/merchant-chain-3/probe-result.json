@@ -1,0 +1,47 @@
+{
+  "checks": [
+    {
+      "name": "owner dev-login",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "收银台主屏：快捷收款入口在屏",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "挂单面板：整单备注透出（挂账对象登记）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "结账屏：挂账段+聚合扫码留口注记+外设 PWA 注记在屏",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "小票版式：抹零行+单品备注透出（行含快捷收款名目）",
+      "ok": true,
+      "detail": "{\"night\":false,\"note\":true,\"rounding\":true,\"quick\":true}"
+    },
+    {
+      "name": "台账专页：四区在屏+挂账台账行在（周先生 40.00 在挂）",
+      "ok": true,
+      "detail": "ledger=true credit=true"
+    },
+    {
+      "name": "交接班族：盲交开关+现金收支面板（备用金存入流水）+备用金点交在屏",
+      "ok": true,
+      "detail": "{\"blind\":true,\"move\":true,\"float\":true,\"move2\":true,\"discount\":false}"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\chain3-evidence\\01-cashier-quick-collect.png",
+    "E:\\KIMI code\\tmp\\chain3-evidence\\02-cashier-hold-note.png",
+    "E:\\KIMI code\\tmp\\chain3-evidence\\03-paysheet-credit-notes.png",
+    "E:\\KIMI code\\tmp\\chain3-evidence\\04-receipt-rounding.png",
+    "E:\\KIMI code\\tmp\\chain3-evidence\\05-ledger-four-zones.png",
+    "E:\\KIMI code\\tmp\\chain3-evidence\\06-close-shift-family.png"
+  ]
+}
