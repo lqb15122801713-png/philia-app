@@ -377,6 +377,20 @@
       "when": 1791282499109,
       "tag": "0054_cashier_18_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "6",
+      "when": 1791286090335,
+      "tag": "0055_stock_domain",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "6",
+      "when": 1791289428357,
+      "tag": "0056_stock_domain_keys",
+      "breakpoints": true
     }
   ]
 }

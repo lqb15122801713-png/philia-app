@@ -706,6 +706,34 @@ async function main() {
         active: true,
         createdBy: owner.id,
       },
+      /* 商家端大批片 4（迁移 0055 同口径；重置后补种）：调拨超时/临期分级三参数 */
+      {
+        version: 1,
+        ruleKey: 'transfer_in_transit_warn_hours',
+        label: '调拨在途超时预警（小时）：in_transit 超 N 小时未接收→预警行',
+        valueJson: { hours: 24 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'expiry_warn_days',
+        label: '临期预警阈值（天）：效期 ≤N 天=临期分级「临」',
+        valueJson: { days: 30 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'expiry_urgent_days',
+        label: '急临期阈值（天）：效期 ≤N 天=临期分级「急」',
+        valueJson: { days: 7 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
     ]);
 
     /* ---- 端口批片 B：文案端口 copy_overrides 种子（控制台第七域 domain='copy'） ----

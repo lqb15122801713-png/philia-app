@@ -1,7 +1,8 @@
 /**
  * 运营域文案键表（员工端骨架整建批 片 3 · 商家端 /ops）
  *
- * 覆盖：OpsPage（PDCA 问题闭环 + 自检审核 + 巡检汇总 + 指标申诉复核，
+ * 覆盖：OpsPage（PDCA 问题闭环 + 自检审核 + 巡检汇总 + 指标申诉复核 +
+ * 库存审批中心（大批片 4 区 5：采购/要货/调拨/报损四类），
  * 分区工艺照 ScheduleManagePage u3-panel 竖排）。
  * 纪律：键名小写点分、as const 冻结；数值不进表（{var} 插值）；
  * 文案端口已落（withCopyOverrides 代理——端口值优先、码内默认 fallback）。
@@ -89,6 +90,24 @@ const OPS_COPY_TABLE = {
   'ops.appeal.reviewNoteLabel': '复核意见',
   'ops.appeal.correctionLabel': '纠错留痕',
   'ops.appeal.reviewedAtLabel': '复核时间',
+
+  /* ---- 区 5 库存审批中心（大批片 4 · stock2.approvalListPending / approvalReview 四类通用） ---- */
+  'ops.stock.title': '库存审批',
+  'ops.stock.aside': '采购/要货/调拨/报损四类统一队列；审批意见必填留痕',
+  'ops.stock.empty': '暂无待审批单',
+  'ops.stock.kindPurchase': '采购',
+  'ops.stock.kindReplenish': '要货',
+  'ops.stock.kindTransfer': '调拨',
+  'ops.stock.kindWriteoff': '报损',
+  'ops.stock.applicantLabel': '申请人',
+  'ops.stock.approveCta': '通过',
+  'ops.stock.rejectCta': '驳回',
+  'ops.stock.approveTitle': '通过审批',
+  'ops.stock.rejectTitle': '驳回审批',
+  'ops.stock.notePh': '审批意见（必填，随单留痕）',
+  'ops.stock.noteRequired': '审批意见不能为空',
+  'ops.stock.approveDone': '已通过，单据状态已联动',
+  'ops.stock.rejectDone': '已驳回',
 
   /* ---- 通用 ---- */
   'ops.common.loadFail': '数据加载失败，请检查网络后重试',

@@ -31,6 +31,7 @@ import ConsolePage from './pages/ConsolePage'
 import DashboardPage from './pages/DashboardPage'
 import DevLoginPage from './pages/DevLoginPage'
 import FinancePage from './pages/FinancePage'
+import InventoryPage from './pages/InventoryPage'
 import LedgerPage from './pages/LedgerPage'
 import MatrixPage from './pages/MatrixPage'
 import MonitorHubPage from './pages/MonitorHubPage'
@@ -48,6 +49,7 @@ import ScheduleManagePage from './pages/ScheduleManagePage'
 import SlotPortPage from './pages/SlotPortPage'
 import StaffPage from './pages/StaffPage'
 import TaskTemplatesPage from './pages/TaskTemplatesPage'
+import TransfersPage from './pages/TransfersPage'
 
 // 受商家身份保护的主内容路由（P0 路由表原样保留；U3 追加 /login 与 /pass 规范名）
 /** B8-B2：/live/:id → /monitor/:id 重定向（保留参数） */
@@ -128,6 +130,10 @@ function ProtectedRoutes() {
         <Route path="/settings/schedules" element={<ScheduleManagePage />} />
         {/* 员工端骨架整建批 片 3：公告（owner|manager；同排班页闸径） */}
         <Route path="/settings/announcements" element={<AnnouncementsPage />} />
+        {/* 商家端大批片 4：库存域页（预警/效期/批次/报损/估清五区；owner|manager，页内 canManage 闸门；nav 申报主窗统一） */}
+        <Route path="/inventory" element={<InventoryPage />} />
+        {/* 商家端大批片 4：调拨要货页（调拨成对确认/在途/要货三区；owner|manager；nav 申报主窗统一） */}
+        <Route path="/transfers" element={<TransfersPage />} />
         {/* 员工端骨架整建批 片 3：运营（PDCA 问题闭环+自检审核+巡检汇总；owner|manager；同排班页闸径） */}
         <Route path="/ops" element={<OpsPage />} />
         {/* 员工端骨架整建批 片 3：循环任务模板自管（owner|manager；同排班页闸径） */}

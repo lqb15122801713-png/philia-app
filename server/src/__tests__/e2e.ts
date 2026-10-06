@@ -171,8 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 3193 键/68 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68）；
+ *      56.1 种子 3345 键/69 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -2840,8 +2840,8 @@ async function main(): Promise<void> {
   // 三本账无互转（端点扫描 + 余额变动只走自家流水表）
   const { appRouter } = await import('../routers');
   const procNames = Object.keys((appRouter as unknown as { _def: { procedures: Record<string, unknown> } })._def.procedures);
-  check('R11a① 端点扫描：全路由无回馈金/储值/XP 互转通道（无 convert/transfer/exchange/互转 过程名）',
-    !procNames.some((n) => /convert|transfer|exchange|互转/i.test(n)), `procedures=${procNames.length}`);
+  check('R11a① 端点扫描：全路由无回馈金/储值/XP 互转通道（无 convert/transfer/exchange/互转 过程名；片 4 店间调拨 stock2.transfer*=合法件登记，互转红线口径不变）',
+    !procNames.filter((n) => !n.startsWith('stock2.transfer')).some((n) => /convert|transfer|exchange|互转/i.test(n)), `procedures=${procNames.length}`);
   const svAccUntouched = await db.select().from(schema.storedValueAccounts).where(eq(schema.storedValueAccounts.id, svAcc.id)).get();
   const xpCross = await db.select().from(schema.xpEvents).where(eq(schema.xpEvents.userId, customerUser!.id));
   check('R11a① 余额变动只走自家流水表（grant×2 后：储值账仍 98240 未动 / 客户 XP 账零事件）',
@@ -4933,17 +4933,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（3193 键/68 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 3193 && domainSet.size === 68 &&
+  check('56.1 copy 域种子全量落库（3345 键/69 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 3345 && domainSet.size === 69 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（3193 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 3193 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（3345 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 3345 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -8637,8 +8637,8 @@ async function main(): Promise<void> {
 
     /* ---- 76.3 公共读口形状不变（不透元数据：键→文两列） ---- */
     const texts76 = await trpcQuery<{ rows: Array<{ key: string; text: string; screen?: unknown; position?: unknown }> }>('config.activeCopyTexts', { cookie: customerCookie });
-    check('76.3 activeCopyTexts 形状不变（3193 行 key→text，不透 screen/position 元数据）',
-      texts76.rows.length === 3193 &&
+    check('76.3 activeCopyTexts 形状不变（3345 行 key→text，不透 screen/position 元数据）',
+      texts76.rows.length === 3345 &&
       texts76.rows.every((r) => r.screen === undefined && r.position === undefined),
       texts76.rows.length);
 
@@ -9286,6 +9286,224 @@ async function main(): Promise<void> {
     check('80.12 隔离族不回退：B 流水/挂账台账/现金收支仍全 0（片 3 全量改造后互盲不破）',
       billsB80.length === 0 && creditB80.length === 0 && movesB80.length === 0,
       { bills: billsB80.length, credit: creditB80.length, moves: movesB80.length });
+  }
+
+  /* ==================================================================
+   * 商家端大批 片 4（库存域+调拨要货 · 任务书冻结版 V1.0）段：
+   *   81.1 毛利权限隔离（clerk 零透出三列/owner 有值）；81.2 上下限预警+建议量；
+   *   81.3 缺货禁售+估清/恢复；81.4 批次+效期自动+临期分级；81.5 FEFO 建议序；
+   *   81.6 过期隔离/销毁（前后值）；81.7 报损录入+审批+扣库存前后值；
+   *   81.8 采购全链（建单→审批→收货入批+累加前后值）；81.9 期初导入扩列；
+   *   81.10 要货建议量+审批+履约；81.11 调拨成对确认（在途归属+接收双侧前后值）；
+   *   81.12 审批中心四类+角标同族计数；81.13 隔离族不回退。
+   * ================================================================== */
+  console.log('\n[商家端片4] 81. 库存域+调拨要货（毛利闸/批次效期/FEFO/采购报损/调拨成对）');
+  {
+    type AnyRec81 = Record<string, unknown>;
+    const seedStore81 = await db.select().from(schema.stores).where(eq(schema.stores.name, '菲丽亚宠物·示例店')).limit(1).then((r) => r[0]!);
+    const storeA2x81 = await db.select().from(schema.stores).where(eq(schema.stores.name, 'e2e A 总部辖二店')).limit(1).then((r) => r[0]!);
+    const ownerB81 = await db.select().from(schema.users).where(eq(schema.users.kimiId, 'seed_e2e_chain_ownerb')).limit(1).then((r) => r[0]!);
+    const storeB81 = await db.select().from(schema.stores).where(eq(schema.stores.ownerId, ownerB81.id)).limit(1).then((r) => r[0]!);
+    const ownerBCookie81 = await devLogin(ownerB81.id);
+    const clerkA81 = await db.select().from(schema.users).where(eq(schema.users.kimiId, 'seed_e2e_chain_clerka')).limit(1).then((r) => r[0]!);
+    const clerkACookie81 = await devLogin(clerkA81.id);
+
+    /* ---- 81.1 毛利权限隔离（server 闸：clerk 零透出/owner 有值） ---- */
+    const prod81 = await trpcMutate<{ id: string }>('mall.upsertProduct', {
+      cookie: ownerCookie,
+      input: { category: '主粮', name: 'e2e 毛利验证粮 2kg', priceFen: 21700, stock: 20, status: 'on', costFen: 12000, minStock: 5, maxStock: 30 },
+    });
+    const listOwner = await trpcQuery<{ items: Array<{ id: string; costFen: number | null; minStock: number | null; maxStock: number | null }> }>('mall.listProductsForStore', { cookie: ownerCookie, input: { keyword: '毛利验证' } });
+    const listClerk = await trpcQuery<{ items: Array<{ id: string; costFen: number | null; minStock: number | null; maxStock: number | null }> }>('mall.listProductsForStore', { cookie: clerkACookie81, input: { keyword: '毛利验证' } });
+    const rowOwner = listOwner.items.find((p) => p.id === prod81.id)!;
+    const rowClerk = listClerk.items.find((p) => p.id === prod81.id)!;
+    check('81.1 毛利权限隔离：owner 读成本/上下限三列有值 + clerk 读同品三列全 null（server 闸零透出，双层口径）',
+      rowOwner.costFen === 12000 && rowOwner.minStock === 5 && rowOwner.maxStock === 30 &&
+      rowClerk.costFen === null && rowClerk.minStock === null && rowClerk.maxStock === null,
+      { owner: [rowOwner.costFen, rowOwner.minStock], clerk: [rowClerk.costFen, rowClerk.minStock] });
+
+    /* ---- 81.2 上下限预警+建议量 ---- */
+    await trpcMutate('mall.upsertProduct', {
+      cookie: ownerCookie,
+      input: { productId: prod81.id, category: '主粮', name: 'e2e 毛利验证粮 2kg', priceFen: 21700, stock: 2, status: 'on', costFen: 12000, minStock: 5, maxStock: 30 },
+    });
+    const alerts81 = await trpcQuery<{ low: Array<{ productId: string; stock: number; suggestQty: number }>; high: Array<{ productId: string }> }>('stock2.stockAlerts', { cookie: ownerCookie });
+    const lowRow = alerts81.low.find((r) => r.productId === prod81.id)!;
+    check('81.2 上下限预警：stock 2<min 5 出缺行 + 建议量=max 30−2=28 精确',
+      lowRow.stock === 2 && lowRow.suggestQty === 28,
+      { stock: lowRow.stock, suggest: lowRow.suggestQty });
+
+    /* ---- 81.3 缺货禁售+估清/恢复 ---- */
+    await trpcMutate('stock2.markSoldOut', { cookie: ownerCookie, input: { productId: prod81.id, note: 'e2e 估清验证' } });
+    const soldoutRow = await db.select().from(schema.products).where(eq(schema.products.id, prod81.id)).then((r) => r[0]!);
+    const orderNo81 = await asErr(trpcMutate('mall.createOrder', {
+      cookie: customerCookie,
+      input: { items: [{ productId: prod81.id, qty: 1 }], deliveryMethod: 'pickup' },
+    }));
+    const restock81 = await trpcMutate<{ product: { stock: number } }>('stock2.restockProduct', { cookie: ownerCookie, input: { productId: prod81.id, qty: 10, note: '估清恢复' } });
+    check('81.3 缺货禁售·估清：估清 stock 归零（流水留痕）+ 商城下单拒（stock>=qty 既有闸）+ 恢复补货回 10（前后值）',
+      soldoutRow.stock === 0 && orderNo81 instanceof TrpcHttpError &&
+      (orderNo81.httpStatus === 400 || orderNo81.httpStatus === 409) && restock81.product.stock === 10,
+      { stock: soldoutRow.stock, err: orderNo81 instanceof TrpcHttpError ? orderNo81.httpStatus : null, restock: restock81.product.stock });
+
+    /* ---- 81.4 批次+效期自动+临期分级 ---- */
+    const batch81 = await trpcMutate<{ batch: { id: string; expiryDate: string | null } }>('stock2.batchCreate', {
+      cookie: ownerCookie,
+      input: { productId: prod81.id, batchNo: 'B20260101', qty: 6, productionDate: '2026-01-01', shelfLifeDays: 300 },
+    });
+    const expiryExpect = new Date('2026-01-01T00:00:00Z').getTime() + 300 * 24 * 3600 * 1000;
+    const batchList81 = await trpcQuery<{ urgentDays: number; warnDays: number; items: Array<{ id: string; batchNo: string; daysLeft: number | null; grade: string }> }>('stock2.batchList', { cookie: ownerCookie, input: { productId: prod81.id } });
+    const bRow = batchList81.items.find((b) => b.batchNo === 'B20260101')!;
+    const daysLeftExpect = Math.floor((expiryExpect - Date.now()) / (24 * 3600 * 1000));
+    const board81 = await trpcQuery<{ items: Array<{ batchNo: string; grade: string }> }>('stock2.expiryBoard', { cookie: ownerCookie });
+    check('81.4 批次：效期自动=生产+保质 300 天（expiry 精确）+ 临期分级（≤30 天=warn 徽）+ 效期看板含行',
+      new Date(batch81.batch.expiryDate!).getTime() === expiryExpect &&
+      bRow.grade === 'warn' && Math.abs((bRow.daysLeft ?? -999) - daysLeftExpect) <= 1 &&
+      board81.items.some((r) => r.batchNo === 'B20260101' && r.grade === 'warn'),
+      { expiry: batch81.batch.expiryDate, grade: bRow.grade, daysLeft: bRow.daysLeft });
+
+    /* ---- 81.5 FEFO 建议序 ---- */
+    await trpcMutate('stock2.batchCreate', {
+      cookie: ownerCookie,
+      input: { productId: prod81.id, batchNo: 'B20260601', qty: 4, productionDate: '2026-06-01', shelfLifeDays: 300 },
+    });
+    const fefo81 = await trpcQuery<{ suggestion: { batchNo: string } | null; sequence: Array<{ batchNo: string }> }>('stock2.fefoSuggestion', { cookie: ownerCookie, input: { productId: prod81.id } });
+    check('81.5 FEFO：先到期先出建议=旧批 B20260101（效期升序首行）+ 建议序两批按效期排',
+      fefo81.suggestion?.batchNo === 'B20260101' &&
+      fefo81.sequence[0]?.batchNo === 'B20260101' && fefo81.sequence[1]?.batchNo === 'B20260601',
+      { first: fefo81.suggestion?.batchNo, seq: fefo81.sequence.map((x) => x.batchNo) });
+
+    /* ---- 81.6 过期隔离/销毁（前后值） ---- */
+    const expired81 = await trpcMutate<{ batch: { id: string } }>('stock2.batchCreate', {
+      cookie: ownerCookie,
+      input: { productId: prod81.id, batchNo: 'B20250101', qty: 3, productionDate: '2025-01-01', shelfLifeDays: 30 },
+    });
+    const stockBeforeQ = (await db.select().from(schema.products).where(eq(schema.products.id, prod81.id)).then((r) => r[0]!)).stock;
+    await trpcMutate('stock2.batchQuarantine', { cookie: ownerCookie, input: { batchId: expired81.batch.id, note: '过期隔离验证' } });
+    const stockAfterQ = (await db.select().from(schema.products).where(eq(schema.products.id, prod81.id)).then((r) => r[0]!)).stock;
+    const destroy81 = await trpcMutate<{ batch: { status: string; qty: number } }>('stock2.batchDestroy', { cookie: ownerCookie, input: { batchId: expired81.batch.id, note: '销毁登记验证' } });
+    check('81.6 过期隔离/销毁：隔离批次 qty 同步扣出商品库存（20+10−3=前后值精确）+ 销毁登记（状态+qty 清零留痕）',
+      stockAfterQ === stockBeforeQ - 3 && destroy81.batch.status === 'destroyed' && destroy81.batch.qty === 0,
+      { before: stockBeforeQ, after: stockAfterQ, st: destroy81.batch.status });
+
+    /* ---- 81.7 报损录入+审批+扣库存前后值 ---- */
+    const stockBeforeW = (await db.select().from(schema.products).where(eq(schema.products.id, prod81.id)).then((r) => r[0]!)).stock;
+    const wo81 = await trpcMutate<{ writeoff: { id: string } }>('stock2.writeoffCreate', {
+      cookie: managerCookie,
+      input: { productId: prod81.id, qty: 2, reason: '破包报废（e2e 报损）' },
+    });
+    const pend81 = await trpcQuery<{ items: Array<{ id: string; kind: string; summary: string }> }>('stock2.approvalListPending', { cookie: ownerCookie });
+    const apWo = pend81.items.find((a) => a.kind === 'writeoff' && a.summary.includes('破包报废'))!;
+    await trpcMutate('stock2.approvalReview', { cookie: ownerCookie, input: { requestId: apWo.id, approve: true, note: '属实，准予报损' } });
+    const stockAfterW = (await db.select().from(schema.products).where(eq(schema.products.id, prod81.id)).then((r) => r[0]!)).stock;
+    const woRow = (await trpcQuery<Array<{ id: string; status: string }>>('stock2.writeoffList', { cookie: ownerCookie })).find((w) => w.id === wo81.writeoff.id)!;
+    check('81.7 报损：当场录入进审批队列 + 批准扣库存（前后值 −2 精确）+ 报损单 approved+留痕',
+      !!apWo && stockAfterW === stockBeforeW - 2 && woRow.status === 'approved',
+      { before: stockBeforeW, after: stockAfterW, st: woRow.status });
+
+    /* ---- 81.8 采购全链（建单→审批→收货入批+累加前后值） ---- */
+    const sup81 = await trpcMutate<{ supplier: { id: string } }>('stock2.supplierUpsert', {
+      cookie: ownerCookie, input: { name: 'e2e 宠物用品总仓', contact: '王经理', phone: '0571-99990000' },
+    });
+    const po81 = await trpcMutate<{ order: { id: string; orderNo: string } }>('stock2.purchaseCreate', {
+      cookie: ownerCookie,
+      input: { supplierId: sup81.supplier.id, items: [{ productId: prod81.id, qty: 12, costFen: 11500, batchNo: 'PO202610', productionDate: '2026-10-01', shelfLifeDays: 540 }], expectAt: '2026-10-10' },
+    });
+    await trpcMutate('stock2.purchaseSubmit', { cookie: ownerCookie, input: { orderId: po81.order.id } });
+    const pendPo = (await trpcQuery<{ items: Array<{ id: string; kind: string; summary: string }> }>('stock2.approvalListPending', { cookie: ownerCookie }))
+      .items.find((a) => a.kind === 'purchase' && a.summary.includes(po81.order.orderNo))!;
+    await trpcMutate('stock2.approvalReview', { cookie: ownerCookie, input: { requestId: pendPo.id, approve: true, note: '价可，准予采购' } });
+    const stockBeforeR = (await db.select().from(schema.products).where(eq(schema.products.id, prod81.id)).then((r) => r[0]!)).stock;
+    const recv81 = await trpcMutate<{ order: { status: string }; idempotent: boolean }>('stock2.purchaseReceive', { cookie: ownerCookie, input: { orderId: po81.order.id } });
+    const stockAfterR = (await db.select().from(schema.products).where(eq(schema.products.id, prod81.id)).then((r) => r[0]!)).stock;
+    const poBatch = (await trpcQuery<{ items: Array<{ batchNo: string; qty: number }> }>('stock2.batchList', { cookie: ownerCookie, input: { productId: prod81.id } }))
+      .items.find((b) => b.batchNo === 'PO202610')!;
+    const prodCost = (await db.select().from(schema.products).where(eq(schema.products.id, prod81.id)).then((r) => r[0]!)).costFen;
+    check('81.8 采购全链：建单 draft→提交审批→批准→收货入批（批次 PO202610 ×12 生成+库存前后值 +12+成本回写 11500+流水）',
+      !!pendPo && recv81.order.status === 'received' && stockAfterR === stockBeforeR + 12 &&
+      poBatch.qty === 12 && prodCost === 11500,
+      { before: stockBeforeR, after: stockAfterR, batch: poBatch.qty, cost: prodCost });
+
+    /* ---- 81.9 期初库存导入（CSV 扩列：进价/下限/上限） ---- */
+    const csv81 = [
+      '分类,商品名,描述,价格(元),库存,是否消毒耗材,进价(元),库存下限,库存上限',
+      '零食,期初验证肉干 500g,期初导入,59.90,40,否,32.50,10,80',
+    ].join('\n');
+    const exec81 = await trpcMutate<{ batchId: string; okRows: number; failRows: number }>('mall.productImportExecute', {
+      cookie: ownerCookie, input: { csvText: csv81, filename: 'e2e-opening.csv' },
+    });
+    const imported = await db.select().from(schema.products).where(and(eq(schema.products.storeId, seedStore81.id), eq(schema.products.name, '期初验证肉干 500g'))).limit(1).then((r) => r[0]!);
+    const execBad = await asErr(trpcMutate('mall.productImportExecute', {
+      cookie: ownerCookie,
+      input: { csvText: '分类,商品名,描述,价格(元),库存,是否消毒耗材,进价(元)\n零食,坏行,描,xx,4,否,3.00', filename: 'e2e-bad.csv' },
+    }));
+    const badLeft = await db.select().from(schema.products).where(and(eq(schema.products.storeId, seedStore81.id), eq(schema.products.name, '坏行'))).limit(1).then((r) => r[0]);
+    check('81.9 期初导入：CSV 带尾列落三值（进价 3250/下限 10/上限 80+stock 40）+ 失败行零落账（全量或零口径）',
+      exec81.okRows === 1 && imported.stock === 40 && imported.costFen === 3250 &&
+      imported.minStock === 10 && imported.maxStock === 80 &&
+      execBad instanceof TrpcHttpError && execBad.httpStatus === 400 && !badLeft,
+      { ok: exec81.okRows, cost: imported.costFen, badLeft: !!badLeft });
+
+    /* ---- 81.10 要货建议量+审批+履约（用期初导入品：stock 40/max 80） ---- */
+    const sug81 = await trpcQuery<{ suggestQty: number }>('stock2.replenishSuggest', { cookie: ownerCookie, input: { productId: imported.id } });
+    const req81 = await trpcMutate<{ request: { id: string } }>('stock2.replenishCreate', {
+      cookie: managerCookie, input: { productId: imported.id, qty: sug81.suggestQty, note: '按上限补货' },
+    });
+    const pendRp = (await trpcQuery<{ items: Array<{ id: string; kind: string }> }>('stock2.approvalListPending', { cookie: ownerCookie }))
+      .items.find((a) => a.kind === 'replenish')!;
+    await trpcMutate('stock2.approvalReview', { cookie: ownerCookie, input: { requestId: pendRp.id, approve: true, note: '准补' } });
+    const ful81 = await trpcMutate<{ request: { status: string } }>('stock2.replenishFulfill', { cookie: ownerCookie, input: { requestId: req81.request.id } });
+    const stockAfterF = (await db.select().from(schema.products).where(eq(schema.products.id, imported.id)).then((r) => r[0]!)).stock;
+    check('81.10 要货：建议量=max 80−40=40 精确 + 申请→审批→履约入库（前后值 40+40=80）',
+      sug81.suggestQty === 40 && ful81.request.status === 'fulfilled' && stockAfterF === 80,
+      { suggest: sug81.suggestQty, after: stockAfterF, st: ful81.request.status });
+
+    /* ---- 81.11 调拨成对确认（在途归属+接收双侧前后值） ---- */
+    const crossNo = await asErr(trpcMutate('stock2.transferCreate', {
+      cookie: ownerCookie,
+      input: { toStoreId: storeB81!.id, items: [{ productId: prod81.id, qty: 1 }] },
+    }));
+    const tr81 = await trpcMutate<{ order: { id: string; orderNo: string } }>('stock2.transferCreate', {
+      cookie: ownerCookie,
+      input: { toStoreId: storeA2x81.id, items: [{ productId: prod81.id, qty: 3 }], note: 'e2e 调拨验证' },
+    });
+    const pendTr = (await trpcQuery<{ items: Array<{ id: string; kind: string }> }>('stock2.approvalListPending', { cookie: ownerCookie }))
+      .items.find((a) => a.kind === 'transfer')!;
+    await trpcMutate('stock2.approvalReview', { cookie: ownerCookie, input: { requestId: pendTr.id, approve: true, note: '准调' } });
+    const stockBeforeT = (await db.select().from(schema.products).where(eq(schema.products.id, prod81.id)).then((r) => r[0]!)).stock;
+    await trpcMutate('stock2.transferShip', { cookie: ownerCookie, input: { orderId: tr81.order.id } });
+    const stockAfterShip = (await db.select().from(schema.products).where(eq(schema.products.id, prod81.id)).then((r) => r[0]!)).stock;
+    const a2Before = (await db.select().from(schema.products).where(and(eq(schema.products.storeId, storeA2x81.id), eq(schema.products.name, 'e2e 毛利验证粮 2kg'))).limit(1).then((r) => r[0]))?.stock ?? null;
+    const inTransit81 = await trpcQuery<{ items: Array<{ orderNo: string; overdue: boolean }> }>('stock2.transferInTransit', { cookie: ownerCookie });
+    await trpcMutate('stock2.transferReceive', { cookie: ownerCookie, input: { orderId: tr81.order.id } });
+    const a2After = (await db.select().from(schema.products).where(and(eq(schema.products.storeId, storeA2x81.id), eq(schema.products.name, 'e2e 毛利验证粮 2kg'))).limit(1).then((r) => r[0]!));
+    check('81.11 调拨成对确认：越界目标店（B 独立店）=NOT_FOUND + 发起→审批→发货（A 前后值 −3 在途归属）+ 在途视图含行 + A2 接收（名匹配建/补行 +3，双侧流水）',
+      crossNo instanceof TrpcHttpError && crossNo.code === 'NOT_FOUND' &&
+      stockAfterShip === stockBeforeT - 3 &&
+      inTransit81.items.some((r) => r.orderNo === tr81.order.orderNo) &&
+      (a2Before ?? 0) + 3 === a2After.stock,
+      { cross: crossNo instanceof TrpcHttpError ? crossNo.code : null, ship: [stockBeforeT, stockAfterShip], a2: [a2Before, a2After.stock] });
+
+    /* ---- 81.12 审批中心四类+角标同族计数 ---- */
+    await trpcMutate('stock2.writeoffCreate', { cookie: managerCookie, input: { productId: prod81.id, qty: 1, reason: '角标验证报损' } });
+    const countBefore = await trpcQuery<{ count: number }>('stock2.approvalPendingCount', { cookie: ownerCookie });
+    const pendLast = (await trpcQuery<{ items: Array<{ id: string; summary: string }> }>('stock2.approvalListPending', { cookie: ownerCookie }))
+      .items.find((a) => a.summary.includes('角标验证报损'))!;
+    await trpcMutate('stock2.approvalReview', { cookie: ownerCookie, input: { requestId: pendLast.id, approve: false, note: '驳回：凭证不足' } });
+    const countAfter = await trpcQuery<{ count: number }>('stock2.approvalPendingCount', { cookie: ownerCookie });
+    check('81.12 审批中心：四类 pending 计数同族（rail 角标合并口径随扩数据源）+ 审批后递减 + 驳回留痕（timeline 只增）',
+      countAfter.count === countBefore.count - 1 && countBefore.count >= 1,
+      { before: countBefore.count, after: countAfter.count });
+
+    /* ---- 81.13 隔离族不回退 ---- */
+    const batchB81 = await trpcQuery<{ items: unknown[] }>('stock2.batchList', { cookie: ownerBCookie81 });
+    const alertsB81 = await trpcQuery<{ low: unknown[]; high: unknown[] }>('stock2.stockAlerts', { cookie: ownerBCookie81 });
+    const transfersB81 = await trpcQuery<unknown[]>('stock2.transferList', { cookie: ownerBCookie81 });
+    const reviewB81 = await asErr(trpcMutate('stock2.approvalReview', { cookie: ownerBCookie81, input: { requestId: apWo.id, approve: true, note: '跨店审批' } }));
+    check('81.13 隔离族不回退：B 批次/预警/调拨全 0 + B 审批 A 店单=NOT_FOUND（统一防探测）',
+      batchB81.items.length === 0 && alertsB81.low.length === 0 && alertsB81.high.length === 0 &&
+      transfersB81.length === 0 && reviewB81 instanceof TrpcHttpError && reviewB81.code === 'NOT_FOUND',
+      { batch: batchB81.items.length, transfers: transfersB81.length, review: reviewB81 instanceof TrpcHttpError ? reviewB81.code : null });
   }
 
   client.close();

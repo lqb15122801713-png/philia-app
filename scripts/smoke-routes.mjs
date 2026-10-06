@@ -143,6 +143,8 @@ const ROUTES = [
   { app: 'merchant', path: '/cashier/refunds', anchors: ['退款'], serverDep: true, note: '批次 R12' },
   { app: 'merchant', path: '/cashier/receipt/01000000000000000000000000', anchors: ['收银小票', '预约不存在', '加载失败', '登录'], serverDep: true, note: '商家端大批片 3：小票版式页（无效单号=异常态/守卫口径，片 2 裁件① NOT_FOUND 后=「预约不存在」系文案或登录跳）' },
   { app: 'merchant', path: '/ledger', anchors: ['台账', '挂账', '押金', '预付', '授权'], serverDep: true, note: '商家端大批片 3：台账专页（四区；owner|manager 渲染，clerk 引导页）' },
+  { app: 'merchant', path: '/inventory', anchors: ['库存', '预警', '批次', '报损', '估清'], serverDep: true, note: '商家端大批片 4：库存域页（五区；owner|manager 渲染，clerk 引导页）' },
+  { app: 'merchant', path: '/transfers', anchors: ['调拨', '要货', '在途'], serverDep: true, note: '商家端大批片 4：调拨要货页（三区；owner|manager 渲染，clerk 引导页）' },
   { app: 'merchant', path: '/settings/rules', anchors: ['规则配置'], serverDep: true, note: '批次 staff-2 R9-F：owner 登录渲染「规则配置管理」；manager 页内引导卡标题同含锚点，clerk 由 ClerkRouteGuard 拦截' },
   { app: 'merchant', path: '/settings/copy', anchors: ['文案端口'], serverDep: true, note: '端口批片 B：文案端口（控制台第七域；owner 登录渲染「文案端口」页题）' },
   { app: 'merchant', path: '/settings/slots', anchors: ['槽位'], serverDep: true, note: '端口批片 C：槽位端口（控制台第八域「槽位」；owner 登录渲染「槽位端口」页题，非 owner 引导页标题同含锚点）' },

@@ -4,8 +4,8 @@
  * - 数据：mall.listProductsForStore（merchantProcedure，本店全部商品含下架；
  *   分类筛选 + 关键词搜索在服务端过滤，搜索 300ms 防抖沿用）。
  * - 结构（W-10 序位）：wtop（CSV 导入钮 + G2 新增 + 搜索）→ G1 类目 chips
- *   → M5 台账（商品/类目/价/库存（低库存红字）/状态/日盘档；日盘档=单价 ≥¥100
- *   每日盘点门槛，S-08 同口径）。
+ *   → M5 台账（商品/类目/价/成本（canManage 视界）/库存（低库存红字）/状态/日盘档；
+ *   日盘档=单价 ≥¥100 每日盘点门槛，S-08 同口径）。
  * - CSV 导入（片 5 段 4 点亮）：owner|manager 可用（clerk 隐藏，server
  *   merchantManagerProcedure 硬闸）——导入区块四步：①模板下载（productImportTemplate
  *   →Blob）②文件选择读文本 ③预览校验（productImportPreview dry-run，失败行逐行
@@ -18,14 +18,17 @@ import { Skeleton, usePhiliaClient } from '@philia/shared'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { PackageOpen } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import MainScaffold, { LemonButton, QuietButton, SearchInput } from '@/components/MainScaffold'
 import ProductEditorDialog from '@/components/mall-admin/ProductEditorDialog'
 import { pd } from '@/copy/products'
+import { iv } from '@/copy/inventory'
 import { useMerchantRole } from '@/lib/roles'
 import {
   errMsg,
   fenToYuan,
+  fmtMoney,
   PRODUCT_CATEGORIES,
   PRODUCTS_KEY,
   type StoreProduct,
@@ -44,6 +47,7 @@ function prodStatus(p: StoreProduct): { cls: string; label: string } {
 export default function ProductsPage() {
   const { trpc, queryClient } = usePhiliaClient()
   const role = useMerchantRole()
+  const navigate = useNavigate()
 
   const [category, setCategory] = useState('')
   const [kw, setKw] = useState('')
@@ -149,6 +153,12 @@ export default function ProductsPage() {
       actions={
         <>
           <SearchInput placeholder="搜索商品…" value={kw} onChange={setKw} testid="products-search" />
+          {/* 片 4：库存域入口链（rail 冻结不改=页面互链口径） */}
+          {role.canManage ? (
+            <QuietButton testid="products-to-inventory" onClick={() => navigate('/inventory')}>
+              {iv('inv.pageTitle')} →
+            </QuietButton>
+          ) : null}
           {/* W-10 wtop CSV 入口（片 5 段 4 点亮）：owner|manager 可用（clerk 隐藏，
               server merchantManagerProcedure 硬闸）→ 展开导入区块 */}
           {role.canManage ? (
@@ -241,6 +251,10 @@ export default function ProductsPage() {
                 </LemonButton>
               ) : null}
             </div>
+            {/* 大批片 4 导入说明：可选尾列 进价(元)/库存下限/库存上限（server 已扩列兼容） */}
+            <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="csv-opt-cols-note">
+              {pd('prod.csvOptColsNote')}
+            </p>
             {previewM.data ? (
               <div className="mt-3" data-testid="csv-preview-result">
                 {previewReport?.headerError ? (
@@ -312,6 +326,7 @@ export default function ProductsPage() {
                   <th>商品</th>
                   <th>类目</th>
                   <th className="!text-right">价</th>
+                  <th className="!text-right">{pd('prod.costCol')}</th>
                   <th className="!text-right">库存</th>
                   <th>状态</th>
                   <th>{pd('prod.dailyCountCol')}</th>
@@ -337,6 +352,13 @@ export default function ProductsPage() {
                       <td className="whitespace-nowrap text-right">
                         <span className="font-number font-bold tabular-nums text-ink">¥{fenToYuan(p.priceFen)}</span>
                         <span className="ml-1 text-caption-xs text-[rgba(59,46,36,.42)]">/ 件</span>
+                      </td>
+                      {/* 大批片 4 成本列：毛利视界=canManage 才有值（server 双层闸 clerk 零透出），clerk=「—」 */}
+                      <td
+                        className="whitespace-nowrap text-right font-number tabular-nums text-[rgba(59,46,36,.62)]"
+                        data-testid={`product-cost-${p.id}`}
+                      >
+                        {role.canManage ? fmtMoney(p.costFen) : pd('prod.costClerkMask')}
                       </td>
                       <td
                         className={`whitespace-nowrap text-right font-number tabular-nums ${

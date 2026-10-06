@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-06T10:26:08.067Z；键数=3192；归屏率=96.5%（未归屏 113）
+ * 生成时间口径：2026-10-06T12:22:34.174Z；键数=3344；归屏率=92.9%（未归屏 239）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -9868,6 +9868,888 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "FinancePage 页面内文案"
  },
  {
+  "key": "inv.alerts.aside",
+  "domain": "merchant:inventory",
+  "text": "低于下限=缺（含建议补货量）；高于上限=溢",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.alerts.empty",
+  "domain": "merchant:inventory",
+  "text": "暂无上下限预警（未设上下限的商品不参与）",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.alerts.highBadge",
+  "domain": "merchant:inventory",
+  "text": "溢",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.alerts.lowBadge",
+  "domain": "merchant:inventory",
+  "text": "缺",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.alerts.stockHigh",
+  "domain": "merchant:inventory",
+  "text": "现存 {stock} · 上限 {max}",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.alerts.stockNow",
+  "domain": "merchant:inventory",
+  "text": "现存 {stock} · 下限 {min}",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.alerts.suggestQty",
+  "domain": "merchant:inventory",
+  "text": "建议补 {n} 件",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.alerts.title",
+  "domain": "merchant:inventory",
+  "text": "上下限预警",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.aside",
+  "domain": "merchant:inventory",
+  "text": "按品筛选；效期=生产日期+保质期自动算；FEFO 建议首行先出",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.createCta",
+  "domain": "merchant:inventory",
+  "text": "手工入批",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.createDone",
+  "domain": "merchant:inventory",
+  "text": "批次已入，库存已累加",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.createTitle",
+  "domain": "merchant:inventory",
+  "text": "手工入批",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.empty",
+  "domain": "merchant:inventory",
+  "text": "暂无批次记录",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.fefoFirst",
+  "domain": "merchant:inventory",
+  "text": "先出",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.filterAll",
+  "domain": "merchant:inventory",
+  "text": "全部商品",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.noExpiry",
+  "domain": "merchant:inventory",
+  "text": "未设效期",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.noLabel",
+  "domain": "merchant:inventory",
+  "text": "批号",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.noPh",
+  "domain": "merchant:inventory",
+  "text": "如 20261006-A",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.noRequired",
+  "domain": "merchant:inventory",
+  "text": "批号必填",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.prodDateLabel",
+  "domain": "merchant:inventory",
+  "text": "生产日期",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.productLabel",
+  "domain": "merchant:inventory",
+  "text": "商品",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.qtyInvalid",
+  "domain": "merchant:inventory",
+  "text": "数量需为 1 ~ 1000000 的整数",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.qtyLabel",
+  "domain": "merchant:inventory",
+  "text": "数量",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.qtyUnit",
+  "domain": "merchant:inventory",
+  "text": "×{n}",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.shelfLifeLabel",
+  "domain": "merchant:inventory",
+  "text": "保质期（天）",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.statusActive",
+  "domain": "merchant:inventory",
+  "text": "在库",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.statusDestroyed",
+  "domain": "merchant:inventory",
+  "text": "已销毁",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.statusQuarantined",
+  "domain": "merchant:inventory",
+  "text": "已隔离",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.batch.title",
+  "domain": "merchant:inventory",
+  "text": "批次",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.common.cancel",
+  "domain": "merchant:inventory",
+  "text": "取消",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.common.confirm",
+  "domain": "merchant:inventory",
+  "text": "确认提交",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.common.loadFail",
+  "domain": "merchant:inventory",
+  "text": "数据加载失败，请检查网络后重试",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.common.retry",
+  "domain": "merchant:inventory",
+  "text": "重新加载",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.common.submitting",
+  "domain": "merchant:inventory",
+  "text": "提交中…",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.expiry.aside",
+  "domain": "merchant:inventory",
+  "text": "临期分级（急 ≤{u} 天 / 临 ≤{w} 天）；仅透出非安全行",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.expiry.daysLeft",
+  "domain": "merchant:inventory",
+  "text": "余 {n} 天",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.expiry.destroyCta",
+  "domain": "merchant:inventory",
+  "text": "销毁",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.expiry.destroyDone",
+  "domain": "merchant:inventory",
+  "text": "销毁已登记",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.expiry.destroyReasonPh",
+  "domain": "merchant:inventory",
+  "text": "销毁事由（必填，留痕）",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.expiry.destroyReasonRequired",
+  "domain": "merchant:inventory",
+  "text": "销毁事由不能为空",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.expiry.destroyTitle",
+  "domain": "merchant:inventory",
+  "text": "销毁登记",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.expiry.empty",
+  "domain": "merchant:inventory",
+  "text": "暂无临期 / 过期批次",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.expiry.expiredDays",
+  "domain": "merchant:inventory",
+  "text": "已过期 {n} 天",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.expiry.gradeExpired",
+  "domain": "merchant:inventory",
+  "text": "已过期",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.expiry.gradeUrgent",
+  "domain": "merchant:inventory",
+  "text": "急",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.expiry.gradeWarn",
+  "domain": "merchant:inventory",
+  "text": "临期",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.expiry.quarantineCta",
+  "domain": "merchant:inventory",
+  "text": "隔离",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.expiry.quarantineDone",
+  "domain": "merchant:inventory",
+  "text": "批次已隔离，库存已同步扣出",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.expiry.title",
+  "domain": "merchant:inventory",
+  "text": "效期看板",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.guideHint",
+  "domain": "merchant:inventory",
+  "text": "批次、预警、报损与估清属管理层动作；店员账号的工作面是收银台。",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.guideTitle",
+  "domain": "merchant:inventory",
+  "text": "库存域由店长或店主处理",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.marginNote",
+  "domain": "merchant:inventory",
+  "text": "进价/成本与毛利=店主/店长视界（server 双层闸）",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.pageSub",
+  "domain": "merchant:inventory",
+  "text": "上下限预警 · 效期批次 · 报损 · 估清恢复",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.pageTitle",
+  "domain": "merchant:inventory",
+  "text": "库存",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.soldout.aside",
+  "domain": "merchant:inventory",
+  "text": "估清=库存归零商城立即禁售；恢复=补货回库",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.soldout.costLabel",
+  "domain": "merchant:inventory",
+  "text": "成本",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.soldout.empty",
+  "domain": "merchant:inventory",
+  "text": "暂无商品",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.soldout.markCta",
+  "domain": "merchant:inventory",
+  "text": "估清",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.soldout.markDone",
+  "domain": "merchant:inventory",
+  "text": "已估清，商城立即不可售",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.soldout.restockCta",
+  "domain": "merchant:inventory",
+  "text": "恢复补货",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.soldout.restockDone",
+  "domain": "merchant:inventory",
+  "text": "已补货 {n} 件",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.soldout.restockQtyLabel",
+  "domain": "merchant:inventory",
+  "text": "补货数量",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.soldout.restockTitle",
+  "domain": "merchant:inventory",
+  "text": "恢复补货",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.soldout.stockLabel",
+  "domain": "merchant:inventory",
+  "text": "现存 {n}",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.soldout.title",
+  "domain": "merchant:inventory",
+  "text": "估清 / 恢复",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.writeoff.aside",
+  "domain": "merchant:inventory",
+  "text": "当场录入进审批，审批通过后扣库存",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.writeoff.createCta",
+  "domain": "merchant:inventory",
+  "text": "当场录入",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.writeoff.createDone",
+  "domain": "merchant:inventory",
+  "text": "报损已录入，待审批",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.writeoff.createTitle",
+  "domain": "merchant:inventory",
+  "text": "报损录入",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.writeoff.empty",
+  "domain": "merchant:inventory",
+  "text": "暂无报损记录",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.writeoff.qtyLabel",
+  "domain": "merchant:inventory",
+  "text": "数量",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.writeoff.reasonLabel",
+  "domain": "merchant:inventory",
+  "text": "原因",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.writeoff.reasonPh",
+  "domain": "merchant:inventory",
+  "text": "如：破损 / 过期 / 丢失（必填）",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.writeoff.reasonRequired",
+  "domain": "merchant:inventory",
+  "text": "报损原因不能为空",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.writeoff.statusApproved",
+  "domain": "merchant:inventory",
+  "text": "已通过",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.writeoff.statusPending",
+  "domain": "merchant:inventory",
+  "text": "待审批",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.writeoff.statusRejected",
+  "domain": "merchant:inventory",
+  "text": "已驳回",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "inv.writeoff.title",
+  "domain": "merchant:inventory",
+  "text": "报损",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.guideHint",
+  "domain": "merchant:inventory",
+  "text": "店间调拨与要货申请属管理层动作；店员账号的工作面是收银台。",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.guideTitle",
+  "domain": "merchant:inventory",
+  "text": "调拨要货由店长或店主处理",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.aside",
+  "domain": "merchant:inventory",
+  "text": "发起→审批→发货→接收，成对确认",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.createCta",
+  "domain": "merchant:inventory",
+  "text": "发起调拨",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.createDone",
+  "domain": "merchant:inventory",
+  "text": "调拨已发起，待审批",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.createTitle",
+  "domain": "merchant:inventory",
+  "text": "发起调拨",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.dirIn",
+  "domain": "merchant:inventory",
+  "text": "调入",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.dirOut",
+  "domain": "merchant:inventory",
+  "text": "调出",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.empty",
+  "domain": "merchant:inventory",
+  "text": "暂无调拨单",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.fromLabel",
+  "domain": "merchant:inventory",
+  "text": "← {name}",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.itemsSummary",
+  "domain": "merchant:inventory",
+  "text": "{n} 品 {q} 件",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.noStore",
+  "domain": "merchant:inventory",
+  "text": "暂无可调拨的他店（限老板全域集合内）",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.notePh",
+  "domain": "merchant:inventory",
+  "text": "备注（可选）",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.productLabel",
+  "domain": "merchant:inventory",
+  "text": "商品",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.qtyLabel",
+  "domain": "merchant:inventory",
+  "text": "数量",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.receiveCta",
+  "domain": "merchant:inventory",
+  "text": "接收",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.receiveDone",
+  "domain": "merchant:inventory",
+  "text": "已接收，库存已入账",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.shipCta",
+  "domain": "merchant:inventory",
+  "text": "发货",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.shipDone",
+  "domain": "merchant:inventory",
+  "text": "已发货，转入在途",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.statusApproved",
+  "domain": "merchant:inventory",
+  "text": "已审批",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.statusInTransit",
+  "domain": "merchant:inventory",
+  "text": "在途",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.statusPending",
+  "domain": "merchant:inventory",
+  "text": "待审批",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.statusReceived",
+  "domain": "merchant:inventory",
+  "text": "已接收",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.statusRejected",
+  "domain": "merchant:inventory",
+  "text": "已驳回",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.title",
+  "domain": "merchant:inventory",
+  "text": "调拨",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.toLabel",
+  "domain": "merchant:inventory",
+  "text": "→ {name}",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.toStoreLabel",
+  "domain": "merchant:inventory",
+  "text": "目标店",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.move.toStorePh",
+  "domain": "merchant:inventory",
+  "text": "选择目标门店",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.pageSub",
+  "domain": "merchant:inventory",
+  "text": "店间调拨成对确认 · 在途视图 · 要货申请",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.pageTitle",
+  "domain": "merchant:inventory",
+  "text": "调拨要货",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.rep.aside",
+  "domain": "merchant:inventory",
+  "text": "建议量=上限−现存（无上限按下限）；申请进审批",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.rep.createCta",
+  "domain": "merchant:inventory",
+  "text": "发起要货",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.rep.createDone",
+  "domain": "merchant:inventory",
+  "text": "要货申请已提交，待审批",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.rep.empty",
+  "domain": "merchant:inventory",
+  "text": "暂无要货申请",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.rep.fulfillCta",
+  "domain": "merchant:inventory",
+  "text": "履约",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.rep.fulfillDone",
+  "domain": "merchant:inventory",
+  "text": "已履约，库存已入账",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.rep.statusApproved",
+  "domain": "merchant:inventory",
+  "text": "已审批",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.rep.statusFulfilled",
+  "domain": "merchant:inventory",
+  "text": "已履约",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.rep.statusPending",
+  "domain": "merchant:inventory",
+  "text": "待审批",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.rep.statusRejected",
+  "domain": "merchant:inventory",
+  "text": "已驳回",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.rep.suggest",
+  "domain": "merchant:inventory",
+  "text": "建议量 {n} 件",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.rep.title",
+  "domain": "merchant:inventory",
+  "text": "要货",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.transit.aside",
+  "domain": "merchant:inventory",
+  "text": "超 {h} 小时未接收=超时红签",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.transit.empty",
+  "domain": "merchant:inventory",
+  "text": "暂无在途调拨",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.transit.hours",
+  "domain": "merchant:inventory",
+  "text": "在途 {h} 小时",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.transit.hoursUnknown",
+  "domain": "merchant:inventory",
+  "text": "发货时间未知",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.transit.overdue",
+  "domain": "merchant:inventory",
+  "text": "超时",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "trf.transit.title",
+  "domain": "merchant:inventory",
+  "text": "在途视图",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:inventory 域键表，端口运营复核挂载屏）"
+ },
+ {
   "key": "mtx.colCashier",
   "domain": "merchant:matrix",
   "text": "收银",
@@ -10683,6 +11565,118 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "ops.self.title",
   "domain": "merchant:ops",
   "text": "自检审核",
+  "screen": "商家·运营",
+  "position": "OpsPage 页面内文案"
+ },
+ {
+  "key": "ops.stock.applicantLabel",
+  "domain": "merchant:ops",
+  "text": "申请人",
+  "screen": "商家·运营",
+  "position": "OpsPage 页面内文案"
+ },
+ {
+  "key": "ops.stock.approveCta",
+  "domain": "merchant:ops",
+  "text": "通过",
+  "screen": "商家·运营",
+  "position": "OpsPage 页面内文案"
+ },
+ {
+  "key": "ops.stock.approveDone",
+  "domain": "merchant:ops",
+  "text": "已通过，单据状态已联动",
+  "screen": "商家·运营",
+  "position": "OpsPage 页面内文案"
+ },
+ {
+  "key": "ops.stock.approveTitle",
+  "domain": "merchant:ops",
+  "text": "通过审批",
+  "screen": "商家·运营",
+  "position": "OpsPage 页面内文案"
+ },
+ {
+  "key": "ops.stock.aside",
+  "domain": "merchant:ops",
+  "text": "采购/要货/调拨/报损四类统一队列；审批意见必填留痕",
+  "screen": "商家·运营",
+  "position": "OpsPage 页面内文案"
+ },
+ {
+  "key": "ops.stock.empty",
+  "domain": "merchant:ops",
+  "text": "暂无待审批单",
+  "screen": "商家·运营",
+  "position": "OpsPage 页面内文案"
+ },
+ {
+  "key": "ops.stock.kindPurchase",
+  "domain": "merchant:ops",
+  "text": "采购",
+  "screen": "商家·运营",
+  "position": "OpsPage 页面内文案"
+ },
+ {
+  "key": "ops.stock.kindReplenish",
+  "domain": "merchant:ops",
+  "text": "要货",
+  "screen": "商家·运营",
+  "position": "OpsPage 页面内文案"
+ },
+ {
+  "key": "ops.stock.kindTransfer",
+  "domain": "merchant:ops",
+  "text": "调拨",
+  "screen": "商家·运营",
+  "position": "OpsPage 页面内文案"
+ },
+ {
+  "key": "ops.stock.kindWriteoff",
+  "domain": "merchant:ops",
+  "text": "报损",
+  "screen": "商家·运营",
+  "position": "OpsPage 页面内文案"
+ },
+ {
+  "key": "ops.stock.notePh",
+  "domain": "merchant:ops",
+  "text": "审批意见（必填，随单留痕）",
+  "screen": "商家·运营",
+  "position": "OpsPage 页面内文案"
+ },
+ {
+  "key": "ops.stock.noteRequired",
+  "domain": "merchant:ops",
+  "text": "审批意见不能为空",
+  "screen": "商家·运营",
+  "position": "OpsPage 页面内文案"
+ },
+ {
+  "key": "ops.stock.rejectCta",
+  "domain": "merchant:ops",
+  "text": "驳回",
+  "screen": "商家·运营",
+  "position": "OpsPage 页面内文案"
+ },
+ {
+  "key": "ops.stock.rejectDone",
+  "domain": "merchant:ops",
+  "text": "已驳回",
+  "screen": "商家·运营",
+  "position": "OpsPage 页面内文案"
+ },
+ {
+  "key": "ops.stock.rejectTitle",
+  "domain": "merchant:ops",
+  "text": "驳回审批",
+  "screen": "商家·运营",
+  "position": "OpsPage 页面内文案"
+ },
+ {
+  "key": "ops.stock.title",
+  "domain": "merchant:ops",
+  "text": "库存审批",
   "screen": "商家·运营",
   "position": "OpsPage 页面内文案"
  },
@@ -11681,6 +12675,20 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "PayrollPage 页面内文案"
  },
  {
+  "key": "prod.costClerkMask",
+  "domain": "merchant:products",
+  "text": "—",
+  "screen": "商家·商品",
+  "position": "ProductsPage 页面内文案"
+ },
+ {
+  "key": "prod.costCol",
+  "domain": "merchant:products",
+  "text": "成本",
+  "screen": "商家·商品",
+  "position": "ProductsPage 页面内文案"
+ },
+ {
   "key": "prod.createCta",
   "domain": "merchant:products",
   "text": "＋ 新增商品",
@@ -11744,6 +12752,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "ProductsPage 页面内文案"
  },
  {
+  "key": "prod.csvOptColsNote",
+  "domain": "merchant:products",
+  "text": "可选尾列：进价(元)/库存下限/库存上限（缺省不设，与六列模板向后兼容）",
+  "screen": "商家·商品",
+  "position": "ProductsPage 页面内文案"
+ },
+ {
   "key": "prod.csvPreviewCta",
   "domain": "merchant:products",
   "text": "预览校验",
@@ -11784,6 +12799,55 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "text": "日盘",
   "screen": "商家·商品",
   "position": "ProductsPage 页面内文案"
+ },
+ {
+  "key": "prod.editor.costHint",
+  "domain": "merchant:products",
+  "text": "选填，最多两位小数；毛利视界字段，仅店主/店长可见",
+  "screen": "商家·商品",
+  "position": "ProductEditorDialog 组件内文案"
+ },
+ {
+  "key": "prod.editor.costInvalid",
+  "domain": "merchant:products",
+  "text": "进价需为非负数字，最多两位小数（元）",
+  "screen": "商家·商品",
+  "position": "ProductEditorDialog 组件内文案"
+ },
+ {
+  "key": "prod.editor.costLabel",
+  "domain": "merchant:products",
+  "text": "进价（元）",
+  "screen": "商家·商品",
+  "position": "ProductEditorDialog 组件内文案"
+ },
+ {
+  "key": "prod.editor.limitHint",
+  "domain": "merchant:products",
+  "text": "选填整数；设后参与上下限预警",
+  "screen": "商家·商品",
+  "position": "ProductEditorDialog 组件内文案"
+ },
+ {
+  "key": "prod.editor.limitInvalid",
+  "domain": "merchant:products",
+  "text": "库存上下限需为 0 ~ 1000000 的整数",
+  "screen": "商家·商品",
+  "position": "ProductEditorDialog 组件内文案"
+ },
+ {
+  "key": "prod.editor.maxStockLabel",
+  "domain": "merchant:products",
+  "text": "库存上限",
+  "screen": "商家·商品",
+  "position": "ProductEditorDialog 组件内文案"
+ },
+ {
+  "key": "prod.editor.minStockLabel",
+  "domain": "merchant:products",
+  "text": "库存下限",
+  "screen": "商家·商品",
+  "position": "ProductEditorDialog 组件内文案"
  },
  {
   "key": "prod.emptyTitle",

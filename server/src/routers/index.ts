@@ -48,6 +48,7 @@ import { storeRouter } from './store';
 import { storedValueRouter } from './storedValue';
 import { announceRouter } from './announce';
 import { agreementRouter } from './agreements';
+import { stock2Router } from './stock2';
 import { pdcaRouter, selfCheckRouter, taskExecRouter } from './taskCollab';
 import { xpRouter } from './xp';
 
@@ -89,6 +90,7 @@ export const appRouter = router({
   perk: perkRouter, // 客户端体验大批片 3：会员权益台账（未用权益并显/核销写口台账先行/生日礼/新人礼包/升级礼遇）
   petHealth: petHealthRouter, // 客户端体验大批片 4：宠物健康记录族+体重时序（主人自管档案）
   incident: incidentRouter, // 客户端体验大批片 4：服务异常即时通报域（双通知+15min 升级）
+  stock2: stock2Router, // 商家端大批片 4：库存域（批次/预警/估清/报损/采购/要货/调拨/审批中心）
   agreement: agreementRouter, // 商家端大批片 3：授权台账专页+周会导出（S14）
   report: reportRouter, // 客户端体验大批片 5：尾牙读口 5+报表 17 张点亮（W-13）+N6 申诉铁规两件+CSV 导出仅店主
 });

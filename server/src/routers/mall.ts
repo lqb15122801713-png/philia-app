@@ -392,6 +392,11 @@ export const mallRouter = router({
         priceFen: z.number().int().min(0).max(100_000_000),
         stock: z.number().int().min(0).max(1_000_000),
         status: z.enum(['on', 'off']),
+        /** 片 4：进价/成本价（分，台账字段不写支付链；毛利视界=owner|manager） */
+        costFen: z.number().int().min(0).max(100_000_000).nullish(),
+        /** 库存下限/上限（上下限预警；null=不设） */
+        minStock: z.number().int().min(0).max(1_000_000).nullish(),
+        maxStock: z.number().int().min(0).max(1_000_000).nullish(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -404,6 +409,9 @@ export const mallRouter = router({
         priceFen: input.priceFen,
         stock: input.stock,
         status: input.status,
+        costFen: input.costFen ?? null,
+        minStock: input.minStock ?? null,
+        maxStock: input.maxStock ?? null,
       };
       if (!input.productId) {
         return ctx.db
@@ -471,7 +479,14 @@ export const mallRouter = router({
         .orderBy(desc(schema.products.createdAt))
         .limit(input.pageSize)
         .offset((input.page - 1) * input.pageSize);
-      return { items, total: Number(totalRow?.n ?? 0), page: input.page, pageSize: input.pageSize };
+      /* 片 4 毛利权限隔离（开口项 1 裁，server 闸）：clerk 零透出成本/上下限字段
+         （毛利视界=owner|manager；canManage=页面级闸同口径双层） */
+      const canManage =
+        ctx.user.roles.includes('merchant_owner') || ctx.user.roles.includes('merchant_manager');
+      const itemsOut = canManage
+        ? items
+        : items.map((p) => ({ ...p, costFen: null, minStock: null, maxStock: null }));
+      return { items: itemsOut, total: Number(totalRow?.n ?? 0), page: input.page, pageSize: input.pageSize };
     }),
 
   /**
@@ -1202,6 +1217,9 @@ export const mallRouter = router({
             description: r.description ?? null,
             priceFen: r.priceFen!,
             stock: r.stock!,
+            costFen: r.costFen ?? null,
+            minStock: r.minStock ?? null,
+            maxStock: r.maxStock ?? null,
             status: 'on',
             isDisinfectionSupply: r.isSupply,
           });
@@ -1238,16 +1256,23 @@ interface ProductImportRow {
   priceFen?: number;
   stock?: number;
   isSupply?: boolean;
+  /** 片 4 期初库存导入扩列（可选尾列）：进价（分）/库存下限/库存上限 */
+  costFen?: number | null;
+  minStock?: number | null;
+  maxStock?: number | null;
 }
 
-/** 模板六列（写死）：分类/商品名/描述/价格(元)/库存/是否消毒耗材 */
+/** 模板六列（写死）：分类/商品名/描述/价格(元)/库存/是否消毒耗材；片 4 期初导入扩列=可选尾列 进价(元)/库存下限/库存上限（缺省 NULL，与六列模板向后兼容） */
 const PRODUCT_IMPORT_HEADER = ['分类', '商品名', '描述', '价格(元)', '库存', '是否消毒耗材'];
+/** 可选尾列（片 4 期初导入扩列；表头可全列可缺省） */
+const PRODUCT_IMPORT_OPT_HEADER = ['进价(元)', '库存下限', '库存上限'];
 
 function buildProductImportPlan(csvText: string): { rows: ProductImportRow[]; report: Record<string, unknown> } {
   const table = parseCsv(csvText);
   const rows: ProductImportRow[] = [];
   const header = table[0] ?? [];
-  const headerOk = PRODUCT_IMPORT_HEADER.every((h, i) => (header[i] ?? '').trim() === h);
+  const headerOk = PRODUCT_IMPORT_HEADER.every((h, i) => (header[i] ?? '').trim() === h) &&
+    PRODUCT_IMPORT_OPT_HEADER.every((h, i) => { const v = (header[PRODUCT_IMPORT_HEADER.length + i] ?? '').trim(); return v === '' || v === h; });
   if (!headerOk) {
     return {
       rows: [],
@@ -1257,7 +1282,7 @@ function buildProductImportPlan(csvText: string): { rows: ProductImportRow[]; re
   for (let i = 1; i < table.length; i++) {
     const cells = table[i]!.map((c) => c.trim());
     const line = i + 1; // 含表头行的物理行号
-    const [category, name, description, priceRaw, stockRaw, supplyRaw] = cells;
+    const [category, name, description, priceRaw, stockRaw, supplyRaw, costRaw, minRaw, maxRaw] = cells;
     const fail = (error: string): ProductImportRow => ({ line, ok: false, error, name: name || undefined });
     if (cells.every((c) => c === '')) continue; // 空行跳过
     if (!category || category.length > 32) { rows.push(fail('分类必填且 ≤32 字')); continue; }
@@ -1271,7 +1296,30 @@ function buildProductImportPlan(csvText: string): { rows: ProductImportRow[]; re
     const stock = parseInt(stockRaw!, 10);
     if (stock > 1_000_000) { rows.push(fail('库存超出合理上限')); continue; }
     if (supplyRaw !== '是' && supplyRaw !== '否') { rows.push(fail('是否消毒耗材仅可填 是/否')); continue; }
-    rows.push({ line, ok: true, category, name, description: description || undefined, priceFen, stock, isSupply: supplyRaw === '是' });
+    /* 可选尾列（片 4 期初导入扩列）：进价(元)/库存下限/库存上限——空=NULL 不设 */
+    const numOpt = (raw: string | undefined, label: string, max: number): { v: number | null } | { err: string } => {
+      if (raw === undefined || raw === '') return { v: null };
+      const m = /^(\d+)(\.\d{1,2})?$/.exec(raw);
+      if (!m) return { err: `${label}须为数字（最多两位小数）` };
+      const fen = Math.round(parseFloat(raw) * 100);
+      if (fen < 0 || fen > max) return { err: `${label}超上限` };
+      return { v: fen };
+    };
+    const costOpt = numOpt(costRaw, '进价', 100_000_00);
+    if ('err' in costOpt) { rows.push(fail(costOpt.err!)); continue; }
+    const intOpt = (raw: string | undefined, label: string): { v: number | null } | { err: string } => {
+      if (raw === undefined || raw === '') return { v: null };
+      if (!/^\d+$/.test(raw)) return { err: `${label}须为非负整数` };
+      const n = parseInt(raw, 10);
+      if (n > 1_000_000) return { err: `${label}超出合理上限` };
+      return { v: n };
+    };
+    const minOpt = intOpt(minRaw, '库存下限');
+    if ('err' in minOpt) { rows.push(fail(minOpt.err!)); continue; }
+    const maxOpt = intOpt(maxRaw, '库存上限');
+    if ('err' in maxOpt) { rows.push(fail(maxOpt.err!)); continue; }
+    if (minOpt.v !== null && maxOpt.v !== null && minOpt.v > maxOpt.v) { rows.push(fail('库存下限不可大于上限')); continue; }
+    rows.push({ line, ok: true, category, name, description: description || undefined, priceFen, stock, isSupply: supplyRaw === '是', costFen: costOpt.v, minStock: minOpt.v, maxStock: maxOpt.v });
   }
   const failRows = rows.filter((r) => !r.ok);
   return {

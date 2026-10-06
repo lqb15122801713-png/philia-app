@@ -12,6 +12,8 @@
  * - 区 4 指标申诉复核（N6 申诉通道）：report.listMetricAppeals pending 队列
  *   → 通过（弹层必填纠错前后值留痕）/ 驳回（弹层必填复核意见）→ reviewMetricAppeal；
  *   已审近 50 条只读（状态徽 + 复核意见 + correctionJson 前后值透出）。
+ * - 区 5 库存审批中心（大批片 4）：stock2.approvalListPending 四类队列
+ *   （kind 签 采购/要货/调拨/报损）→ 通过/驳回（弹层意见必填）→ approvalReview。
  *
  * server 命名空间由 coder G 并行施工，契约经 lib/taskCollabPort.ts 收窄桥接。
  * 权限三层照排班页：MerchantRail groupsFor 分流 + ClerkRouteGuard + 页内
@@ -84,6 +86,25 @@ function appealTargetLabel(t: string): string {
 /** 申诉复核弹层诉求（approve=必填纠错前后值 / reject=必填复核意见） */
 type AppealAsk = { kind: 'approve' | 'reject'; id: string; staffName: string };
 
+/** 库存审批 kind 键 → 中文口径（未知键原样透出） */
+function stockKindLabel(kind: string): string {
+  switch (kind) {
+    case 'purchase':
+      return op('ops.stock.kindPurchase');
+    case 'replenish':
+      return op('ops.stock.kindReplenish');
+    case 'transfer':
+      return op('ops.stock.kindTransfer');
+    case 'writeoff':
+      return op('ops.stock.kindWriteoff');
+    default:
+      return kind;
+  }
+}
+
+/** 库存审批弹层诉求（approve/reject 共用，意见必填） */
+type StockAsk = { kind: 'approve' | 'reject'; id: string; summary: string };
+
 /* ------------------------------------------------------------------ */
 /* 页面                                                                */
 /* ------------------------------------------------------------------ */
@@ -118,6 +139,12 @@ export default function OpsPage() {
   const appealQ = useQuery({
     queryKey: ['ops', 'metricAppeals'],
     queryFn: () => trpc.report.listMetricAppeals.query(),
+  });
+
+  /* ---- 区 5 库存审批中心（大批片 4 · stock2 命名空间 server 已就绪，直连） ---- */
+  const stockApprovalQ = useQuery({
+    queryKey: ['ops', 'stockApprovals'],
+    queryFn: () => trpc.stock2.approvalListPending.query(),
   });
 
   const invalidateAll = () => void queryClient.invalidateQueries({ queryKey: ['ops'] });
@@ -209,6 +236,37 @@ export default function OpsPage() {
     }
   };
 
+  /* ---- 库存审批弹层（通过/驳回共用，意见必填照区 1/2 弹层工艺） ---- */
+  const [stockAsk, setStockAsk] = useState<StockAsk | null>(null);
+  const [stockNote, setStockNote] = useState('');
+  const [stockBusy, setStockBusy] = useState(false);
+  const openStockAsk = (a: StockAsk) => {
+    setStockNote('');
+    setStockAsk(a);
+  };
+  const submitStockReview = async () => {
+    if (!stockAsk) return;
+    if (!stockNote.trim()) {
+      toast(op('ops.stock.noteRequired'), 'error');
+      return;
+    }
+    setStockBusy(true);
+    try {
+      await trpc.stock2.approvalReview.mutate({
+        requestId: stockAsk.id,
+        approve: stockAsk.kind === 'approve',
+        note: stockNote.trim(),
+      });
+      toast(stockAsk.kind === 'approve' ? op('ops.stock.approveDone') : op('ops.stock.rejectDone'));
+      setStockAsk(null);
+      invalidateAll();
+    } catch (err) {
+      toast(errMsg(err), 'error');
+    } finally {
+      setStockBusy(false);
+    }
+  };
+
   if (!role.canManage) {
     return <RoleGuidePage title={op('ops.guideTitle')} hint={op('ops.guideHint')} />;
   }
@@ -218,6 +276,7 @@ export default function OpsPage() {
   const summary = summaryQ.data;
   const pendingAppeals = appealQ.data?.pending ?? [];
   const reviewedAppeals = appealQ.data?.reviewed ?? [];
+  const stockApprovals = stockApprovalQ.data?.items ?? [];
   const topCategories = useMemo(
     () => [...(summary?.byCategory ?? [])].sort((a, b) => b.count - a.count).slice(0, 5),
     [summary],
@@ -586,6 +645,66 @@ export default function OpsPage() {
         )}
       </div>
 
+      {/* 区 5 库存审批中心（大批片 4：采购/要货/调拨/报损四类通用队列；意见必填弹层照区 1/2） */}
+      <div className="u3-panel mb-4" data-testid="stock-approval-queue">
+        <div className="u3-panel-head">
+          <h3>{op('ops.stock.title')}</h3>
+          <span className="aside">{op('ops.stock.aside')}</span>
+        </div>
+        {stockApprovalQ.isPending ? (
+          <div className="px-[17px] py-3" aria-label="加载中">
+            {[0, 1].map((i) => (
+              <Skeleton key={i} className="mb-2.5 h-12 !rounded-[16px]" />
+            ))}
+          </div>
+        ) : stockApprovalQ.isError ? (
+          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
+            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{op('ops.common.loadFail')}</p>
+            <div className="mt-4">
+              <Btn variant="subtle" size="sm" onClick={() => void stockApprovalQ.refetch()}>
+                {op('ops.common.retry')}
+              </Btn>
+            </div>
+          </div>
+        ) : stockApprovals.length === 0 ? (
+          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+            {op('ops.stock.empty')}
+          </p>
+        ) : (
+          stockApprovals.map((a) => (
+            <div key={a.id} className="border-t border-[rgba(59,46,36,.06)]" data-testid={`stock-approval-row-${a.id}`}>
+              <div className="flex flex-wrap items-center gap-2 px-[17px] py-2.5">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <Badge tone="brand">{stockKindLabel(a.kind)}</Badge>
+                    <span className="min-w-0 flex-1 truncate text-body-sm font-bold text-ink">{a.summary}</span>
+                  </div>
+                  <div className="u1-num mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                    {op('ops.stock.applicantLabel')} {a.applicantName ?? '—'} · {fmtAt(a.createdAt)}
+                  </div>
+                </div>
+                <Btn
+                  variant="primary"
+                  size="sm"
+                  onClick={() => openStockAsk({ kind: 'approve', id: a.id, summary: a.summary })}
+                  data-testid={`stock-approval-approve-${a.id}`}
+                >
+                  {op('ops.stock.approveCta')}
+                </Btn>
+                <Btn
+                  variant="subtle"
+                  size="sm"
+                  onClick={() => openStockAsk({ kind: 'reject', id: a.id, summary: a.summary })}
+                  data-testid={`stock-approval-reject-${a.id}`}
+                >
+                  {op('ops.stock.rejectCta')}
+                </Btn>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
       {/* note 必填弹层（复检 pass/fail / 自检审核共用） */}
       <Modal
         open={ask !== null}
@@ -673,6 +792,32 @@ export default function OpsPage() {
             className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
           />
         </div>
+      </Modal>
+      {/* 库存审批弹层（通过/驳回共用，意见必填随单留痕） */}
+      <Modal
+        open={stockAsk !== null}
+        onClose={() => setStockAsk(null)}
+        title={`${stockAsk?.kind === 'approve' ? op('ops.stock.approveTitle') : op('ops.stock.rejectTitle')}${stockAsk ? ` · ${stockAsk.summary}` : ''}`}
+        footer={
+          <>
+            <Btn variant="ghost" onClick={() => setStockAsk(null)} disabled={stockBusy}>
+              {op('ops.common.cancel')}
+            </Btn>
+            <Btn variant="primary" onClick={() => void submitStockReview()} disabled={stockBusy} data-testid="stock-approval-submit">
+              {stockBusy ? op('ops.common.submitting') : op('ops.common.confirm')}
+            </Btn>
+          </>
+        }
+      >
+        <textarea
+          value={stockNote}
+          onChange={(e) => setStockNote(e.target.value)}
+          rows={3}
+          maxLength={200}
+          placeholder={op('ops.stock.notePh')}
+          data-testid="stock-approval-note"
+          className="w-full resize-none rounded-input bg-card px-3 py-2.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+        />
       </Modal>
     </MainScaffold>
   );

@@ -123,8 +123,8 @@ export default function MerchantRail({ badges }: { badges?: Record<string, numbe
     queryFn: () => trpc.auth.me.query(),
     staleTime: 300_000,
   });
-  /* UX-08：「运营 · 审批中心」bd 角标=审批（自检审核 pending）+申诉（指标申诉 pending）
-     合并计数不拆口；仅管理层取数（端点=merchantManagerProcedure 同 /ops 屏数据源） */
+  /* UX-08：「运营 · 审批中心」bd 角标=审批（自检审核 pending+四类通用审批 pending）
+     +申诉（指标申诉 pending）合并计数不拆口；仅管理层取数（端点同 /ops 屏数据源） */
   const collab = useMemo(() => collabOf(trpc), [trpc]);
   const badgeEnabled = role.canManage;
   const approvalQ = useQuery({
@@ -141,8 +141,15 @@ export default function MerchantRail({ badges }: { badges?: Record<string, numbe
     staleTime: 60_000,
     retry: false,
   });
+  const stockApprovalQ = useQuery({
+    queryKey: ['rail', 'badge', 'stockApprovals'],
+    queryFn: () => trpc.stock2.approvalPendingCount.query(),
+    enabled: badgeEnabled,
+    staleTime: 60_000,
+    retry: false,
+  });
   const opsCombined =
-    (approvalQ.data?.runs?.length ?? 0) + (appealQ.data?.pending?.length ?? 0);
+    (approvalQ.data?.runs?.length ?? 0) + (appealQ.data?.pending?.length ?? 0) + (stockApprovalQ.data?.count ?? 0);
   const effBadges: Record<string, number> = { opsCenter: opsCombined, ...(badges ?? {}) };
   const storeName = meQ.data?.store?.name ?? '门店';
   const ownerName = meQ.data?.user?.nickname ?? '店主';
