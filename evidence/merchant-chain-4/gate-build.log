@@ -1,0 +1,5 @@
+MTSC=0
+files generated
+  dist/sw.js
+  dist/workbox-9c191d2f.js
+BUILD_EXIT=0

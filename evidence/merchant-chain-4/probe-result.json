@@ -1,0 +1,40 @@
+{
+  "checks": [
+    {
+      "name": "owner dev-login",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "库存域页：上下限预警（缺行+建议量）+效期分级徽+批次 FEFO 先出签+毛利视界注记",
+      "ok": true,
+      "detail": "{\"alert\":true,\"low\":true,\"grade\":true,\"batch\":true,\"fefo\":true,\"margin\":true}"
+    },
+    {
+      "name": "调拨要货页：在途视图（在途行）+调拨/要货区在屏（建议量读口）",
+      "ok": true,
+      "detail": "{\"transit\":true,\"list\":true,\"rep\":true,\"suggest\":true}"
+    },
+    {
+      "name": "/ops 区 5：库存审批队列在屏（报损 pending 行+通过/驳回口）",
+      "ok": true,
+      "detail": "{\"title\":true,\"writeoff\":true,\"kind\":true}"
+    },
+    {
+      "name": "clerk dev-login",
+      "ok": true,
+      "detail": "小周"
+    },
+    {
+      "name": "毛利闸 clerk 视角：页面级=引导页「该功能由店长或店主处理」（商品页整页闸）+ 成本真值零现形（server 闸=81.1 e2e 三列全 null 已实证）",
+      "ok": true,
+      "detail": "{\"guide\":true,\"cost\":true}"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\chain4-evidence\\01-inventory-five-zones.png",
+    "E:\\KIMI code\\tmp\\chain4-evidence\\02-transfers-intransit.png",
+    "E:\\KIMI code\\tmp\\chain4-evidence\\03-ops-stock-approvals.png",
+    "E:\\KIMI code\\tmp\\chain4-evidence\\04-clerk-products-cost-masked.png"
+  ]
+}
