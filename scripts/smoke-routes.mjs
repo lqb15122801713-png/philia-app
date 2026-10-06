@@ -162,8 +162,8 @@ const ROUTES = [
   /* ---- 员工端 ---- */
   { app: 'staff', path: '/dev-login', anchors: ['登录'] },
   { app: 'staff', path: '/today', anchors: ['工位', '预约'], note: '骨架批片 1（S-01 工位台）：apphead「工位」+ dock 四槽（工位/预约/打卡/我的）' },
-  { app: 'staff', path: `/execute/${APPT_ID}`, anchors: ['第', '步', '核销', '无法执行该预约'], serverDep: true, note: 'B1 修复路由；U4：smoke 以首个 staff 种子（前台）登录，进他人 groomer 单命中设计内守卫态「无法执行该预约」' },
-  { app: 'staff', path: `/execute/${APPT_ID}/`, anchors: ['第', '步', '核销', '无法执行该预约'], serverDep: true, note: '尾斜杠变体（同上守卫态口径）' },
+  { app: 'staff', path: `/execute/${APPT_ID}`, anchors: ['第', '步', '核销', '无法执行该预约', '预约不存在'], serverDep: true, note: 'B1 修复路由；U4：smoke 以首个 staff 种子（前台）登录，进他人 groomer 单命中设计内守卫态「无法执行该预约」；片 2 裁件①（统一 NOT_FOUND 防探测）后该场景=404 守卫态「预约不存在」——锚点随裁件同步（申报）' },
+  { app: 'staff', path: `/execute/${APPT_ID}/`, anchors: ['第', '步', '核销', '无法执行该预约', '预约不存在'], serverDep: true, note: '尾斜杠变体（同上守卫态口径+裁件①锚点同步）' },
   { app: 'staff', path: `/boarding/${process.env.SMOKE_STAY_ID ?? APPT_ID}/checkin`, anchors: ['无法查看该寄养单', '返回任务台', '寄养打卡', '打卡'], serverDep: true, note: 'W1：checkin 异常态弱出口已按钮化' },
   { app: 'staff', path: '/schedule', anchors: ['预约', 'SCHEDULE'], note: '骨架批片 1（S-02 预约·当天+S-12 切日态）：/history 重定向并入（历史单=切日唯一入口）' },
   { app: 'staff', path: '/me', anchors: ['我的', '员工'] },

@@ -32,6 +32,13 @@ export type TicketPendingItem = RouterOutputs['serviceLoop']['ticketListPending'
 export type InvoicePendingItem = RouterOutputs['serviceLoop']['invoiceListPending'][number]
 /** 换绑申诉待审队列（manager|owner；DashboardPage 待办块 + TodoSection 计数行共用） */
 export const PHONE_APPEALS_QUERY_KEY = ['authSecurity', 'listPhoneAppeals'] as const
+/* 商家端大批片 2 · 老板端驾驶舱：owner 连锁视图两查询键（listMine 店集合 / chainDashboard 六项） */
+export const STORE_LIST_MINE_KEY = ['store', 'listMine'] as const
+export const CHAIN_DASH_QUERY_KEY = ['store', 'chainDashboard'] as const
+/** store.chainDashboard 返回体（owner；total 在店域为空时为 null） */
+export type ChainDashboardData = RouterOutputs['store']['chainDashboard']
+/** chainDashboard 六项合计行（total 非空形） */
+export type ChainSix = NonNullable<ChainDashboardData['total']>
 
 /** 待办合计（四项待办 + 异常超期寄养；TabBar 红点与「待办合计」卡同口径） */
 export const todoGrandTotal = (s: DashboardStats): number => s.todo.total + s.overdueBoardingCount

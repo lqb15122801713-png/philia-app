@@ -502,7 +502,7 @@ export const boardingRouter = router({
             1,
             Math.ceil((appt.scheduledEnd.getTime() - appt.scheduledStart.getTime()) / (24 * 3600 * 1000)),
           );
-          const rules = await loadXpRules(tx as unknown as BusDb);
+          const rules = await loadXpRules(tx as unknown as BusDb, appt.storeId); // 大批片 2 分层：按预约店作用域解析
           const perNight = numOr(rules.byKey.get('xp_service_boarding_night')?.points, 2);
           await awardXp(tx as unknown as BusDb, {
             storeId: appt.storeId,

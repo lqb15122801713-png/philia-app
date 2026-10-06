@@ -35,6 +35,7 @@ import { broadcastNow, emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
 import { getPaymentProvider } from '../payments/provider';
 import { storeWallclock } from './appointment';
+import { resolveScopedRules } from './configRules';
 
 /* ------------------------------------------------------------------ */
 /* 常量与工具                                                            */
@@ -220,26 +221,29 @@ export async function expirePendingOrders(
 /**
  * 超时自动收货天数：service_rules active 行 order_auto_receive_days.days，
  * 缺行/缺键回落 7（迁移 0040 种子口径；fresh 库=seed 补种先于迁移，读口一律回落缺省）。
+ * 大批片 2 分层：传 storeId 按本店作用域解析（本店覆盖行优先）；不传=既有全量口径
+ * （超时自动收货=全域滴答无单店上下文，单活跃行不变式下=最新端口值）。
  */
-async function loadAutoReceiveDays(d: DbHandle): Promise<number> {
-  const row = await d
-    .select({ valueJson: schema.serviceRules.valueJson })
+async function loadAutoReceiveDays(d: DbHandle, storeId?: string | null): Promise<number> {
+  const rows = await d
+    .select({ ruleKey: schema.serviceRules.ruleKey, valueJson: schema.serviceRules.valueJson, storeId: schema.serviceRules.storeId })
     .from(schema.serviceRules)
     .where(and(eq(schema.serviceRules.ruleKey, 'order_auto_receive_days'), eq(schema.serviceRules.active, true)))
-    .orderBy(desc(schema.serviceRules.version))
-    .get();
+    .orderBy(desc(schema.serviceRules.version));
+  const row = (storeId === undefined ? rows : resolveScopedRules(rows, storeId))[0];
   const v = (row?.valueJson as Record<string, unknown> | undefined)?.days;
   return typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : 7;
 }
 
-/** 券叠加规则公示：service_rules active 行 coupon_stack_rule.value_json，缺行回落默认公示口径 */
-async function loadCouponStackRule(d: DbHandle): Promise<{ rule: string; note: string }> {
-  const row = await d
-    .select({ valueJson: schema.serviceRules.valueJson })
+/** 券叠加规则公示：service_rules active 行 coupon_stack_rule.value_json，缺行回落默认公示口径。
+ * 大批片 2 分层：传 storeId 按本店作用域解析；不传=既有全量口径（公示读口无店上下文沿用） */
+async function loadCouponStackRule(d: DbHandle, storeId?: string | null): Promise<{ rule: string; note: string }> {
+  const rows = await d
+    .select({ ruleKey: schema.serviceRules.ruleKey, valueJson: schema.serviceRules.valueJson, storeId: schema.serviceRules.storeId })
     .from(schema.serviceRules)
     .where(and(eq(schema.serviceRules.ruleKey, 'coupon_stack_rule'), eq(schema.serviceRules.active, true)))
-    .orderBy(desc(schema.serviceRules.version))
-    .get();
+    .orderBy(desc(schema.serviceRules.version));
+  const row = (storeId === undefined ? rows : resolveScopedRules(rows, storeId))[0];
   const v = row?.valueJson as Record<string, unknown> | undefined;
   return {
     rule: typeof v?.rule === 'string' ? v.rule : 'none',

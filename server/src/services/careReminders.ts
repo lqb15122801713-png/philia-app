@@ -23,6 +23,7 @@
 import { and, desc, eq, gte, isNull, lte } from 'drizzle-orm';
 import { schema, type db as DbT } from '../db';
 import { storeDayStartMs, storeWallclock } from '../routers/appointment';
+import { resolveScopedRules } from '../routers/configRules';
 
 type Db = typeof DbT;
 
@@ -30,14 +31,15 @@ type Db = typeof DbT;
 /* 配置端口读数（service_rules active 行最高版本；缺行/缺字段回落缺省值）      */
 /* ------------------------------------------------------------------ */
 
-async function ruleValue(d: Db, ruleKey: string): Promise<Record<string, unknown> | null> {
-  const row = await d
-    .select({ valueJson: schema.serviceRules.valueJson })
+async function ruleValue(d: Db, ruleKey: string, storeId?: string | null): Promise<Record<string, unknown> | null> {
+  const rows = await d
+    .select({ ruleKey: schema.serviceRules.ruleKey, valueJson: schema.serviceRules.valueJson, storeId: schema.serviceRules.storeId })
     .from(schema.serviceRules)
     .where(and(eq(schema.serviceRules.ruleKey, ruleKey), eq(schema.serviceRules.active, true)))
-    .orderBy(desc(schema.serviceRules.version))
-    .limit(1)
-    .then((r) => r[0]);
+    .orderBy(desc(schema.serviceRules.version));
+  /* 大批片 2 分层：传 storeId 按本店作用域解析（本店覆盖行优先）；不传=既有全量口径
+     （四个滴答均为全域扫描无单店上下文，调用点不传——单活跃行不变式下=最新端口值） */
+  const row = (storeId === undefined ? rows : resolveScopedRules(rows, storeId))[0];
   return row?.valueJson ?? null;
 }
 

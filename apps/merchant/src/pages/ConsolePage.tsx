@@ -3,7 +3,8 @@
  *
  * 区块序（UX-02 语言包 §四 W-16，M8 三件）：
  *   wtop（MainScaffold）→ 左 WcPorts 端口目录（A 内容运营：文案 A4/槽位 A5；
- *   C 会员机制：会员档/储值；D 员工规则：提成/XP；E 门店·数据：档案/报表口径——
+ *   C 会员机制：会员档/储值/安心包 C3（大批片 2 点亮，只读 v1）；D 员工规则：提成/XP；
+ *   E 门店·数据：档案 E1（大批片 2 点亮=ProfilePortBody）/报表口径——
  *   未收编口置灰只读占位 R10 不画假件；激活=金左条，点击切右栏域）
  *   → 右栏端口编辑：按域直嵌既有三页内核（共构不分叉，组件复用不复制码）——
  *     A4 文案 → CopyConfigBody（CopyConfigPage 内核）；
@@ -11,7 +12,7 @@
  *       流透出：草稿→预览→发布推三端 + 回滚虚线注）+ WcLog 留痕行（槽位版本计数透出）；
  *     C/D → DomainPanel（RulesConfigPage 内核）对应域（会员档/提成/XP），域内
  *       「修改留痕」面板=config.versions 现状透出（不再另挂 WcLog，防双份）；
- *     置灰口 → 只读占位卡（档案维护在 W-15 设置页 / 储值与报表口径待立项）。
+ *     置灰口 → 只读占位卡（储值与报表口径待立项）。
  *   → WDanger 危险区（暖底赭红题带：L2-④ 二次 PIN=既有 highRisk 口令闸透出 /
  *     冻结项只读 / 动规则不动账）→ 共构不分叉注（旧三路由保留可直达）。
  *
@@ -30,6 +31,8 @@ import { ToasterMount } from '../components/staff-admin/ui';
 import { cadm } from '../copy/consoleAdmin';
 import { useMerchantRole } from '../lib/roles';
 import { CopyConfigBody } from './CopyConfigPage';
+import { CarePackPortBody } from './CarePackPortBody';
+import { ProfilePortBody } from './ProfilePortBody';
 import { DomainPanel as RulesDomainPanel, type RulesDomain } from './RulesConfigPage';
 import { SlotPortBody } from './SlotPortPage';
 
@@ -42,6 +45,7 @@ type PortKey =
   | 'slots'
   | 'member_plans'
   | 'stored'
+  | 'carepack'
   | 'commission'
   | 'xp'
   | 'profile'
@@ -66,6 +70,8 @@ const PORT_GROUPS: Array<{
     items: [
       { key: 'member_plans', label: cadm('cadm.portMember'), seal: 'C1' },
       { key: 'stored', label: cadm('cadm.portStored'), seal: 'C2', note: cadm('cadm.portPendingNote') },
+      /* 大批片 2：安心包立项名 C2 与既有 C2 储值撞号，落 C3（已报备） */
+      { key: 'carepack', label: cadm('cadm.portCarePack'), seal: 'C3', note: cadm('cadm.portCarePackNote') },
     ],
   },
   {
@@ -80,7 +86,8 @@ const PORT_GROUPS: Array<{
     key: 'E',
     label: cadm('cadm.groupE'),
     items: [
-      { key: 'profile', label: cadm('cadm.portProfile'), seal: 'E1', note: cadm('cadm.portPendingNote') },
+      /* 大批片 2：E1 点亮（ProfilePortBody 档案表单+连锁归属），撤置灰注 */
+      { key: 'profile', label: cadm('cadm.portProfile'), seal: 'E1' },
       { key: 'reportSpec', label: cadm('cadm.portReportSpec'), seal: 'E2', note: cadm('cadm.portPendingNote') },
     ],
   },
@@ -91,10 +98,9 @@ type ConsoleRulesDomain = Extract<RulesDomain, 'member_plans' | 'commission' | '
 const RULES_PORTS: ReadonlyArray<PortKey> = ['member_plans', 'commission', 'xp'];
 const isRulesPort = (p: PortKey): p is ConsoleRulesDomain => RULES_PORTS.includes(p);
 
-/** 置灰口空态卡文案（key=PortKey） */
+/** 置灰口空态卡文案（key=PortKey；大批片 2：profile=E1 点亮移除，carepack=C3 点亮不占位） */
 const EMPTY_STATE: Partial<Record<PortKey, { title: string; body: string }>> = {
   stored: { title: cadm('cadm.storedEmptyTitle'), body: cadm('cadm.storedEmptyBody') },
-  profile: { title: cadm('cadm.profileEmptyTitle'), body: cadm('cadm.profileEmptyBody') },
   reportSpec: { title: cadm('cadm.reportSpecEmptyTitle'), body: cadm('cadm.reportSpecEmptyBody') },
 };
 
@@ -189,6 +195,9 @@ function OwnerConsole() {
                 <RulesDomainPanel key={active} domain={active} />
               </>
             ) : null}
+            {/* 大批片 2：E1 门店档案端口（ProfilePortBody 内核）/ C3 安心包端口（CarePackPortBody 只读 v1） */}
+            {active === 'profile' ? <ProfilePortBody /> : null}
+            {active === 'carepack' ? <CarePackPortBody /> : null}
             {empty ? (
               <section className="wsk-card" data-testid={`console-empty-${active}`} aria-disabled="true">
                 <div className="wsk-hd">

@@ -17,6 +17,7 @@ import { and, eq, gte, lt, sql } from 'drizzle-orm';
 import { db, schema } from '../db';
 import { emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
+import { resolveScopedRules } from '../routers/configRules';
 
 export type DbHandle = typeof db;
 
@@ -37,19 +38,23 @@ export interface XpRuleSet {
   byKey: Map<string, Record<string, unknown>>;
 }
 
-/** 读取当前生效 XP 规则（每次实时读表：配置端口保存即生效） */
-export async function loadXpRules(d: DbHandle): Promise<XpRuleSet> {
+/** 读取当前生效 XP 规则（每次实时读表：配置端口保存即生效）。
+ * 大批片 2 分层：传 storeId 按 resolveScopedRules 解析（本店覆盖行优先于总部行）；
+ * 不传=既有全量口径（单活跃行不变式下=最新端口值，调用点无店上下文时沿用） */
+export async function loadXpRules(d: DbHandle, storeId?: string | null): Promise<XpRuleSet> {
   const rows = await d
     .select({
       ruleKey: schema.xpRules.ruleKey,
       valueJson: schema.xpRules.valueJson,
       version: schema.xpRules.version,
+      storeId: schema.xpRules.storeId,
     })
     .from(schema.xpRules)
     .where(eq(schema.xpRules.active, true));
+  const scoped = storeId === undefined ? rows : resolveScopedRules(rows, storeId);
   const byKey = new Map<string, Record<string, unknown>>();
   let version = 0;
-  for (const r of rows) {
+  for (const r of scoped) {
     byKey.set(r.ruleKey, (r.valueJson ?? {}) as Record<string, unknown>);
     if (r.version > version) version = r.version;
   }
@@ -121,7 +126,7 @@ export async function awardXp(d: DbHandle, input: AwardInput): Promise<AwardResu
   if (input.source === 'referral') {
     throw new TRPCError({ code: 'BAD_REQUEST', message: '拉新拓客随会员游戏化批开通' });
   }
-  const rules = await loadXpRules(d);
+  const rules = await loadXpRules(d, input.storeId); // 大批片 2 分层：按本店作用域解析（门店覆盖优先）
 
   let points = input.points;
   if (points === undefined) {
@@ -224,8 +229,8 @@ export async function awardXp(d: DbHandle, input: AwardInput): Promise<AwardResu
 }
 
 /** 当日已计分（daily 通道、未丢弃）与上限：页面"今日经验已满"明示用 */
-export async function todayXp(d: DbHandle, staffId: string, now = new Date()): Promise<{ earned: number; cap: number }> {
-  const rules = await loadXpRules(d);
+export async function todayXp(d: DbHandle, staffId: string, now = new Date(), storeId?: string | null): Promise<{ earned: number; cap: number }> {
+  const rules = await loadXpRules(d, storeId);
   const cap = num(rules.byKey.get('xp_daily_cap')?.cap, 60);
   const { start, end } = dayRange(now);
   const got = await d
@@ -284,7 +289,7 @@ export async function settleXpMonth(d: DbHandle, storeId: string, month: string)
   const [y, m] = month.split('-').map((s) => parseInt(s, 10));
   const start = new Date(y, m - 1, 1);
   const end = new Date(y, m, 1);
-  const rules = await loadXpRules(d);
+  const rules = await loadXpRules(d, storeId); // 大批片 2 分层：月度结算按结算店作用域解析
   const table = levelTable(rules);
 
   const staffRows = await d

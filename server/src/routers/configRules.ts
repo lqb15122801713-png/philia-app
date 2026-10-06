@@ -10,6 +10,10 @@
  * - 新规只管生效后的单不回溯历史：本文件不触碰 commission_snapshots / xp_events 等历史数据；
  * - 配置页只改既有参数：未知 rule_key 一律 BAD_REQUEST（不建 schema 新键）；
  * - 无删除端点（规则行只增不改历史）。
+ *
+ * 大批片 2 配置作用域分层（0051）：六规则表 store_id NULL=总部下发全局默认 / store_id=门店覆盖行；
+ * 解析序=同 rule_key 门店行（storeId=入参店）优先于总部行，入参店 NULL/undefined=只回总部行（resolveScopedRules 单源）；
+ * member_plans/copy 两域=中央件全局单份不分层（save 传 scope 一律 400；登记在卷）。
  */
 import { TRPCError } from '@trpc/server';
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
@@ -22,6 +26,34 @@ import { merchantOwnerProcedure, publicProcedure, router } from '../trpc';
 /** emitEvent 首参类型（全局 db；事务 handle 运行时接口一致，类型上做显式断言，同 cashier.ts 惯例） */
 type DbHandle = Parameters<typeof emitEvent>[0];
 const txDb = (tx: unknown): DbHandle => tx as DbHandle;
+
+/* ------------------------------------------------------------------ */
+/* 作用域解析（大批片 2 配置作用域分层 · 0051）：六规则表读侧统一解析序单源   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 分层解析序：同 rule_key 门店行（storeId=入参店）优先于总部行（storeId IS NULL）——
+ * - 入参店有值：该 key 存在本店行 → 只回本店行（总部同 key 行让位）；无本店行 → 回总部行；
+ * - 入参店 NULL/undefined：只回总部行（storeId IS NULL）；
+ * - 他店行一律不透出。行集内同 key 同作用域可多行（版本历史），本函数只按作用域拣选不改序。
+ * 存量库全行 store_id=NULL → 解析结果与原行集等价（零回归）。
+ */
+export function resolveScopedRules<T extends { ruleKey: string; storeId: string | null }>(
+  rows: T[],
+  storeId: string | null | undefined,
+): T[] {
+  const storeKeys = new Set<string>();
+  if (storeId) {
+    for (const r of rows) {
+      if (r.storeId === storeId) storeKeys.add(r.ruleKey);
+    }
+  }
+  return rows.filter((r) => {
+    if (storeId && r.storeId === storeId) return true; // 本店覆盖行优先
+    if (r.storeId === null) return !storeKeys.has(r.ruleKey); // 总部行：同 key 有本店行则让位
+    return false; // 他店行不透出
+  });
+}
 
 /* ------------------------------------------------------------------ */
 /* 域 → 表映射（commission_rules / xp_rules / duration_rules 结构相同，      */
@@ -268,6 +300,14 @@ export const configRulesRouter = router({
       for (const r of rows) {
         if (r.active && r.version > currentVersion) currentVersion = r.version;
       }
+      /* 大批片 2 分层（六规则域 · 0051）：行原样透出 storeId（NULL=总部下发 / 店 id=门店覆盖）。
+         RULES_TABLE 并集含 member_plans/copy（中央件无此列），同 screen/position 工艺单列查询并图 */
+      let storeIdById = new Map<string, string | null>();
+      if (input.domain !== 'member_plans' && input.domain !== 'copy') {
+        const lt = table as unknown as typeof schema.commissionRules; // 六规则表同型（store_id 列同名）
+        const ext = await ctx.db.select({ id: lt.id, storeId: lt.storeId }).from(lt);
+        storeIdById = new Map(ext.map((x) => [x.id, x.storeId]));
+      }
       /* 端口 V2（copy 域）：屏名+位置注透出（第二查按 id 并图；RULES_TABLE 并集类型无
          screen/position 列，故 copy 域单列查询不塞进主 select）；其他域不透出（undefined） */
       let metaByKey = new Map<string, { screen: string | null; position: string | null }>();
@@ -286,6 +326,7 @@ export const configRulesRouter = router({
         rules: rows.map((r) => ({
           ...r,
           highRisk: input.domain === 'copy' && isCopyHighRiskKey(r.ruleKey),
+          storeId: input.domain !== 'member_plans' && input.domain !== 'copy' ? (storeIdById.get(r.id) ?? null) : undefined,
           screen: input.domain === 'copy' ? (metaByKey.get(r.ruleKey)?.screen ?? null) : undefined,
           position: input.domain === 'copy' ? (metaByKey.get(r.ruleKey)?.position ?? null) : undefined,
         })),
@@ -327,6 +368,10 @@ export const configRulesRouter = router({
         changes: z.array(changeSchema).min(1, '变更不能为空'),
         /* 文案域高危键重确认（端口页弹层确认后回传命中键名单；非 copy 域忽略） */
         confirmedHighRisk: z.array(z.string()).optional(),
+        /* 大批片 2 配置作用域分层（0051）：store=门店覆盖（缺省，新行 store_id=本店）/
+           hq=总部下发（新行 store_id=NULL，仅 merchant_owner）；member_plans/copy 两域
+           =中央件全局单份不分层，传本参一律 400 */
+        scope: z.enum(['store', 'hq']).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -344,6 +389,16 @@ export const configRulesRouter = router({
       /* 形状校验（纯 CPU，进事务前先拒，不产生半事务） */
       for (const c of input.changes) {
         validateValueJson(c.ruleKey, c.valueJson);
+      }
+      /* 大批片 2 分层闸（进事务前硬拒）：member_plans/copy=中央件全局单份不分层（传 scope 即 400）；
+         scope='hq' 改总部下发=仅 merchant_owner（非 owner 403 明文） */
+      const isCentralDomain = input.domain === 'member_plans' || input.domain === 'copy';
+      if (isCentralDomain && input.scope !== undefined) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '该域=中央件全局单份不分层' });
+      }
+      const scope = input.scope ?? 'store';
+      if (scope === 'hq' && !ctx.user.roles.includes('merchant_owner')) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: '总部下发仅店主' });
       }
       /* 文案域双闸（端口批片 B，进事务前硬拒）：
          1. 值形状={text:非空文案}；2. 禁令词校验（命中即拒明文）；3. 高危键须重确认。
@@ -460,6 +515,9 @@ export const configRulesRouter = router({
               effectiveFrom: now,
               active: true,
               createdBy: ctx.user.id,
+              /* 大批片 2 分层：六规则域新行落 store_id（hq=NULL=总部下发 / store=本店覆盖）；
+                 中央件两域无此列不铺；旧 active 行失效/版本/留痕逻辑随既有口径不动 */
+              ...(isCentralDomain ? {} : { storeId: scope === 'hq' ? null : storeId }),
               ...(input.domain === 'copy'
                 ? { screen: copyMeta?.screen ?? null, position: c.position ?? copyMeta?.position ?? null }
                 : {}),

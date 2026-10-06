@@ -3,7 +3,9 @@
  *
  * 区块序（UX-02 语言包 §四 W-01）：
  *   M2 异常卡（WAlert，待办/超期寄养/退款/申诉/工单/发票聚合，空态「当前没有异常」）
- *   → M3 单店口径一栏卡（原四 stat 重排；多店三栏=连锁预留开口项，注记明面）
+ *   → M3 单店口径一栏卡（原四 stat 重排；多店三栏=连锁预留开口项，注记明面；
+ *     大批片 2：owner 且 listMine.stores>=1 时换连锁视图卡=合计条六项+逐店分栏，
+ *     读口 store.chainDashboard 真值；manager/clerk 单店卡零回归）
  *   → M4 合计条（WTotal：今日营业额大数+已收/待收分列+近 14 日 spark 槽——
  *     逐日营收序列无读口，槽位空态置灰不造假）
  *   → 双列 [今日预约 wlist + 审批 wlist ｜ M6 晨报卡（WPostcard：今日营收大数+
@@ -31,14 +33,16 @@ import { WAlert, WList, WPostcard, WTotal, type WAlertItem } from '@/components/
 import { useStepProgress } from '@/components/appointments/useStepProgress'
 import { REFUND_REQUEST_PENDING_KEY } from '@/components/cashier/refund'
 import { AmortizationDashNote } from '@/components/member/amortization'
-import { dc } from '@/copy/dashboard'
+import { dc, type DashCopyKey } from '@/copy/dashboard'
 import { useMerchantRole } from '@/lib/roles'
 import {
+  CHAIN_DASH_QUERY_KEY,
   INVOICE_SECTION_ID,
   IN_BOARDING_QUERY_KEY,
   INVOICE_PENDING_QUERY_KEY,
   PHONE_APPEALS_QUERY_KEY,
   STATS_QUERY_KEY,
+  STORE_LIST_MINE_KEY,
   TICKET_PENDING_QUERY_KEY,
   TICKET_SECTION_ID,
   TODAY_QUERY_KEY,
@@ -48,10 +52,23 @@ import {
   openHoursLabel,
   todoGrandTotal,
   todayRange,
+  type ChainSix,
 } from '@/components/dashboard/utils'
 
 /** SSE 断线时的兜底轮询间隔 */
 const POLL_FALLBACK_MS = 30_000
+
+/* ---------------- 大批片 2 · 连锁视图（store.chainDashboard 真值直连） ---------------- */
+
+/** 连锁六项签（cap=既有 copy 键复用，零新增标签键；red>0=红字口径） */
+const CHAIN_CAPS: Array<{ key: keyof ChainSix; cap: DashCopyKey; red?: boolean; yuan?: boolean }> = [
+  { key: 'revenueFen', cap: 'dash.statCapRevenue', yuan: true },
+  { key: 'todayCount', cap: 'dash.statCapAppt' },
+  { key: 'inBoardingCount', cap: 'dash.statCapBoarding' },
+  { key: 'todoTotal', cap: 'dash.postcardRowTodo' },
+  { key: 'abnormalCount', cap: 'dash.postcardRowOverdue', red: true },
+  { key: 'refundPendingCount', cap: 'dash.todoRefundRequestLabel', red: true },
+]
 
 /** 今日预约 wlist 状态签（原 TodayTimeline 胶囊口径的文字化） */
 const STATUS_LABEL: Record<string, string> = {
@@ -134,6 +151,21 @@ export default function DashboardPage() {
     refetchInterval: events.connected ? false : POLL_FALLBACK_MS,
   })
 
+  // 大批片 2 · 老板端驾驶舱：owner 连锁视图两查询（listMine 店集合 + chainDashboard 六项真值；
+  // manager/clerk 关闸不发查询，M3 卡仍单店口径零回归）
+  const listMineQuery = useQuery({
+    queryKey: STORE_LIST_MINE_KEY,
+    queryFn: () => trpc.store.listMine.query(),
+    enabled: role.isOwner,
+    staleTime: 300_000,
+  })
+  const chainQuery = useQuery({
+    queryKey: CHAIN_DASH_QUERY_KEY,
+    queryFn: () => trpc.store.chainDashboard.query(),
+    enabled: role.isOwner,
+    refetchInterval: events.connected ? false : POLL_FALLBACK_MS,
+  })
+
   const invalidateAll = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: STATS_QUERY_KEY })
     void queryClient.invalidateQueries({ queryKey: TODAY_QUERY_KEY })
@@ -143,6 +175,8 @@ export default function DashboardPage() {
     void queryClient.invalidateQueries({ queryKey: TICKET_PENDING_QUERY_KEY })
     void queryClient.invalidateQueries({ queryKey: INVOICE_PENDING_QUERY_KEY })
     void queryClient.invalidateQueries({ queryKey: PHONE_APPEALS_QUERY_KEY })
+    // 大批片 2：连锁视图随全域事件对齐（owner 才挂查询，无效化空键无害）
+    void queryClient.invalidateQueries({ queryKey: CHAIN_DASH_QUERY_KEY })
   }, [queryClient])
 
   // SSE：预约生命周期事件 → 联动刷新；新预约到达 toast
@@ -188,11 +222,16 @@ export default function DashboardPage() {
   // 断线重连全量对齐（续传补发之外的变更也能追上）
   useEffect(() => events.onReconnect(invalidateAll), [events, invalidateAll])
 
-  const hasError = statsQuery.isError || todayQuery.isError || boardingQuery.isError
+  const hasError =
+    statsQuery.isError ||
+    todayQuery.isError ||
+    boardingQuery.isError ||
+    (role.isOwner && chainQuery.isError)
   const refetchAll = () => {
     void statsQuery.refetch()
     void todayQuery.refetch()
     void boardingQuery.refetch()
+    if (role.isOwner) void chainQuery.refetch()
   }
 
   /* 今日表服务中行六步进度（胶囊「服务中 N/6」，试样 §2；现成接口共享缓存） */
@@ -346,6 +385,10 @@ export default function DashboardPage() {
       : []),
   ]
 
+  /* ---------------- M3 连锁视图闸（owner 且 listMine.stores>=1 → 连锁卡；manager/clerk 单店卡零回归） ---------------- */
+  const chainView = role.isOwner && (listMineQuery.data?.stores.length ?? 1) >= 1
+  const chain = chainView ? chainQuery.data : undefined
+
   return (
     <MainScaffold
       title={dc('dash.title')}
@@ -402,11 +445,89 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* M3 单店口径一栏卡（四 stat 重排；多店三栏=连锁预留开口项注记） */}
+        {/* M3：owner=连锁视图卡（合计条六项+逐店分栏，chainDashboard 真值）；manager/clerk=单店口径一栏卡（零回归） */}
+        {chainView ? (
+          <section className="wsk-card mt-3.5" data-testid="dash-m3-chain">
+            <div className="wsk-hd">
+              <span className="t">{dc('dash.m3ChainTitle')}</span>
+              <span className="a">{dc('dash.m3ChainNote')}</span>
+            </div>
+            {chainQuery.isPending && !chain ? (
+              <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-6">
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <div key={i}>
+                    <Skeleton className="h-3 w-14" />
+                    <Skeleton className="mt-2.5 h-6 w-16" />
+                  </div>
+                ))}
+              </div>
+            ) : !chain?.total ? null : (
+              <>
+                {/* 合计条：六项合计（营收 ¥ 格式化照既有 fenToYuanGrouped） */}
+                <div
+                  className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-6"
+                  data-testid="dash-m3-chain-total"
+                >
+                  {CHAIN_CAPS.map((c) => (
+                    <div key={c.key}>
+                      <div className="text-[11px] font-semibold text-[rgba(59,46,36,.42)]">
+                        {dc(c.cap)}
+                      </div>
+                      <div
+                        className={`mt-1 whitespace-nowrap font-number text-[20px] font-bold tabular-nums${
+                          c.red && chain.total[c.key] > 0 ? ' text-danger-deep' : ''
+                        }`}
+                      >
+                        {c.yuan ? `¥${fenToYuanGrouped(chain.total[c.key])}` : chain.total[c.key]}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {/* 分栏：每店一栏（店名+六项数） */}
+                <div
+                  className="mt-3.5 grid items-start gap-3.5 sm:grid-cols-2 lg:grid-cols-3"
+                  data-testid="dash-m3-chain-stores"
+                >
+                  {chain.stores.map((s) => (
+                    <div
+                      key={s.storeId}
+                      className="rounded-control bg-[rgba(59,46,36,.04)] p-3.5"
+                      data-testid={`dash-m3-chain-store-${s.storeId}`}
+                    >
+                      <div className="text-caption font-bold text-ink">
+                        {s.name}
+                        {s.groupName ? (
+                          <span className="ml-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+                            {s.groupName}
+                          </span>
+                        ) : null}
+                      </div>
+                      <div className="mt-2 space-y-1">
+                        {CHAIN_CAPS.map((c) => (
+                          <div key={c.key} className="flex items-center justify-between text-caption-xs">
+                            <span className="text-[rgba(59,46,36,.62)]">{dc(c.cap)}</span>
+                            <span
+                              className={`font-number font-bold tabular-nums${
+                                c.red && s[c.key] > 0 ? ' text-danger-deep' : ''
+                              }`}
+                            >
+                              {c.yuan ? `¥${fenToYuanGrouped(s[c.key])}` : s[c.key]}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </section>
+        ) : (
+        /* M3 单店口径一栏卡（四 stat 重排；多店三栏=连锁预留开口项注记） */
         <section className="wsk-card mt-3.5" data-testid="dash-m3">
           <div className="wsk-hd">
             <span className="t">{dc('dash.m3Title')}</span>
-            <span className="a">{dc('dash.m3ChainNote')}</span>
+            <span className="a">{dc('dash.m3SingleNote')}</span>
           </div>
           {statsQuery.isPending && !stats ? (
             <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
@@ -473,6 +594,7 @@ export default function DashboardPage() {
             </div>
           )}
         </section>
+        )}
 
         {/* M4 合计条（今日营业额大数+已收/待收分列+近 14 日 spark 槽：无逐日读口，置灰不造假） */}
         <div className="mt-3.5">

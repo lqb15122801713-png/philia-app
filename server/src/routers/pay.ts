@@ -54,6 +54,7 @@ import {
 import type { DbHandle } from '../services/xpAward';
 import { customerProcedure, router } from '../trpc';
 import { storeDayStartMs, storeWallclock } from './appointment';
+import { resolveScopedRules } from './configRules';
 import { withOrderWriteLock } from './mall';
 import { membershipChargeFen } from './membership';
 
@@ -105,24 +106,27 @@ async function genPayNo(d: DbHandle, now: Date): Promise<string> {
   return `PO-${w.y}${pad2(w.m)}${pad2(w.day)}-${String(seq).padStart(3, '0')}`;
 }
 
-/** 支付超时关单时长（分钟）：pay_rules active 行 pay_timeout_minutes.minutes，缺行兜底 30（种子口径） */
-async function loadPayTimeoutMinutes(d: DbHandle): Promise<number> {
-  const row = await d
-    .select({ valueJson: schema.payRules.valueJson })
+/** 支付超时关单时长（分钟）：pay_rules active 行 pay_timeout_minutes.minutes，缺行兜底 30（种子口径）。
+ * 大批片 2 分层：传 storeId 按 resolveScopedRules 解析（本店覆盖行优先）；不传=既有全量口径
+ * （membership_open 域无店上下文：quote/create/超时滴答均不传，单活跃行不变式下=最新端口值） */
+async function loadPayTimeoutMinutes(d: DbHandle, storeId?: string | null): Promise<number> {
+  const rows = await d
+    .select({ ruleKey: schema.payRules.ruleKey, valueJson: schema.payRules.valueJson, storeId: schema.payRules.storeId })
     .from(schema.payRules)
-    .where(and(eq(schema.payRules.ruleKey, 'pay_timeout_minutes'), eq(schema.payRules.active, true)))
-    .get();
+    .where(and(eq(schema.payRules.ruleKey, 'pay_timeout_minutes'), eq(schema.payRules.active, true)));
+  const row = (storeId === undefined ? rows : resolveScopedRules(rows, storeId))[0];
   const v = (row?.valueJson as Record<string, unknown> | undefined)?.minutes;
   return typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : 30;
 }
 
-/** 线上支付通道开关：pay_rules active 行 pay_channel_enabled.enabled，缺行兜底 true（种子口径） */
-async function loadPayChannelEnabled(d: DbHandle): Promise<boolean> {
-  const row = await d
-    .select({ valueJson: schema.payRules.valueJson })
+/** 线上支付通道开关：pay_rules active 行 pay_channel_enabled.enabled，缺行兜底 true（种子口径）。
+ * 大批片 2 分层：同 loadPayTimeoutMinutes 的 storeId 口径 */
+async function loadPayChannelEnabled(d: DbHandle, storeId?: string | null): Promise<boolean> {
+  const rows = await d
+    .select({ ruleKey: schema.payRules.ruleKey, valueJson: schema.payRules.valueJson, storeId: schema.payRules.storeId })
     .from(schema.payRules)
-    .where(and(eq(schema.payRules.ruleKey, 'pay_channel_enabled'), eq(schema.payRules.active, true)))
-    .get();
+    .where(and(eq(schema.payRules.ruleKey, 'pay_channel_enabled'), eq(schema.payRules.active, true)));
+  const row = (storeId === undefined ? rows : resolveScopedRules(rows, storeId))[0];
   return (row?.valueJson as Record<string, unknown> | undefined)?.enabled !== false;
 }
 

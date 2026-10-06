@@ -30,6 +30,7 @@ import {
   staffProcedure,
   type Db,
 } from '../trpc';
+import { resolveScopedRules } from './configRules';
 import { storeWallclock } from './appointment';
 
 /** emitEvent 首参类型（全局 db；事务 handle 运行时接口一致，类型上显式断言，同 appointment.ts 惯例） */
@@ -123,15 +124,15 @@ async function approvedLeaves(d: Db, storeId: string, from: string, to: string):
     );
 }
 
-/** 当前生效的技能标签集（service_rules.staff_skill_tags，读法同 serviceLoop.serviceHours） */
-async function loadSkillTags(d: Db): Promise<string[]> {
-  const row = await d
-    .select({ valueJson: schema.serviceRules.valueJson })
+/** 当前生效的技能标签集（service_rules.staff_skill_tags，读法同 serviceLoop.serviceHours）。
+ * 大批片 2 分层：传 storeId 按本店作用域解析（本店覆盖行优先）；不传=既有全量口径 */
+async function loadSkillTags(d: Db, storeId?: string | null): Promise<string[]> {
+  const rows = await d
+    .select({ ruleKey: schema.serviceRules.ruleKey, valueJson: schema.serviceRules.valueJson, storeId: schema.serviceRules.storeId })
     .from(schema.serviceRules)
     .where(and(eq(schema.serviceRules.ruleKey, 'staff_skill_tags'), eq(schema.serviceRules.active, true)))
-    .orderBy(desc(schema.serviceRules.version))
-    .limit(1)
-    .then((r) => r[0]);
+    .orderBy(desc(schema.serviceRules.version));
+  const row = (storeId === undefined ? rows : resolveScopedRules(rows, storeId))[0];
   const tags = row?.valueJson?.tags;
   return Array.isArray(tags) ? tags.filter((t): t is string => typeof t === 'string') : [];
 }
@@ -973,7 +974,7 @@ export const scheduleRouter = router({
     .mutation(async ({ ctx, input }) => {
       const storeId = ctx.user.storeId!;
       await staffInStore(ctx.db, storeId, input.staffId);
-      const allowed = new Set(await loadSkillTags(ctx.db));
+      const allowed = new Set(await loadSkillTags(ctx.db, storeId)); // 大批片 2 分层：按本店作用域解析
       const tags = [...new Set(input.tags)];
       for (const tag of tags) {
         if (!allowed.has(tag)) badRequest(`标签「${tag}」不在标签集（可在配置端口 staff_skill_tags 维护）`);

@@ -59,6 +59,7 @@ import { EventType } from '../realtime/events';
 import { customerProcedure, merchantManagerProcedure, router } from '../trpc';
 import { storeDayStartMs, storeWallclock } from './appointment';
 import { withCashierWriteLock } from './cashier';
+import { resolveScopedRules } from './configRules';
 import { executeRefundCore } from './refund';
 
 /* ------------------------------------------------------------------ */
@@ -145,9 +146,9 @@ function num(v: unknown, fallback: number): number {
   return typeof v === 'number' && Number.isFinite(v) ? v : fallback;
 }
 
-async function loadConfig(d: DbHandle): Promise<RefundRequestConfig> {
+async function loadConfig(d: DbHandle, storeId?: string | null): Promise<RefundRequestConfig> {
   const rows = await d
-    .select({ ruleKey: schema.refundRules.ruleKey, valueJson: schema.refundRules.valueJson })
+    .select({ ruleKey: schema.refundRules.ruleKey, valueJson: schema.refundRules.valueJson, storeId: schema.refundRules.storeId })
     .from(schema.refundRules)
     .where(
       and(
@@ -161,7 +162,9 @@ async function loadConfig(d: DbHandle): Promise<RefundRequestConfig> {
         eq(schema.refundRules.active, true),
       ),
     );
-  const byKey = new Map(rows.map((r) => [r.ruleKey, r.valueJson]));
+  /* 大批片 2 分层：传 storeId 按本店作用域解析（本店覆盖行优先）；不传=既有全量口径 */
+  const scoped = storeId === undefined ? rows : resolveScopedRules(rows, storeId);
+  const byKey = new Map(scoped.map((r) => [r.ruleKey, r.valueJson]));
   const kw = byKey.get('refund_reason_options')?.keywords;
   return {
     enabled: byKey.get('refund_request_enabled')?.enabled !== false, // 缺行兜底 true（种子口径）
@@ -375,9 +378,11 @@ export const refundRequestRouter = router({
 
           /* ---- 原单归属闸（本人+已结账/可退状态）+ 时限闸 ---- */
           const origin = await resolveOrigin(d, input.orderKind, input.billId, customerId);
-          const windowMs = cfg.applyWindowDays * 24 * 3600 * 1000;
+          /* 大批片 2 分层：时限/原因枚举按原单店作用域解析（本店覆盖行优先于总部行） */
+          const cfgS = await loadConfig(d, origin.storeId);
+          const windowMs = cfgS.applyWindowDays * 24 * 3600 * 1000;
           if (now.getTime() - origin.completedAt.getTime() > windowMs) {
-            badRequest(`已超退款申请时限（${cfg.applyWindowDays} 天），请到店协商办理`);
+            badRequest(`已超退款申请时限（${cfgS.applyWindowDays} 天），请到店协商办理`);
           }
 
           /* ---- 类型闸：到店单强制 refund_only ---- */
@@ -388,7 +393,7 @@ export const refundRequestRouter = router({
           /* ---- 原因闸（码族禁手打；other=description 必填） ---- */
           const reasonIdx = (REASON_CODES as readonly string[]).indexOf(input.reasonCode);
           if (reasonIdx === -1) badRequest('退款原因不在可选范围内，请重新选择');
-          const reasonLabel = cfg.reasonOptions[reasonIdx] ?? DEFAULT_REASON_OPTIONS[reasonIdx]!;
+          const reasonLabel = cfgS.reasonOptions[reasonIdx] ?? DEFAULT_REASON_OPTIONS[reasonIdx]!;
           if (input.reasonCode === 'other' && !input.description) {
             badRequest('选择「其他」请补充说明');
           }
@@ -746,7 +751,7 @@ export const refundRequestRouter = router({
    */
   listPending: merchantManagerProcedure.query(async ({ ctx }) => {
     const storeId = ctx.user.storeId!;
-    const cfg = await loadConfig(ctx.db);
+    const cfg = await loadConfig(ctx.db, storeId); // 大批片 2 分层：SLA 按本店作用域解析
     const slaMs = cfg.slaHours * 3600 * 1000;
     const nowMs = Date.now();
     const rows = await ctx.db

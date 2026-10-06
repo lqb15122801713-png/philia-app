@@ -89,7 +89,7 @@ async function buildStoreRanking(d: Db, storeId: string): Promise<RankRow[]> {
     .where(and(eq(schema.xpEvents.storeId, storeId), eq(schema.xpEvents.dropped, false)))
     .groupBy(schema.xpEvents.staffId);
   const byStaff = new Map(sums.map((s) => [s.staffId, s.total]));
-  const rules = await loadXpRules(d);
+  const rules = await loadXpRules(d, storeId); // 大批片 2 分层：按本店作用域解析
   const table = levelTable(rules);
   return staffRows
     .map((s) => {
@@ -138,7 +138,7 @@ export const xpRouter = router({
    */
   mySummary: staffProcedure.query(async ({ ctx }) => {
     const staffId = ctx.user.staffId!;
-    const rules = await loadXpRules(ctx.db);
+    const rules = await loadXpRules(ctx.db, ctx.user.storeId); // 大批片 2 分层：按员工本店作用域解析
     const table = levelTable(rules);
 
     const totalRows = await ctx.db
@@ -164,7 +164,7 @@ export const xpRouter = router({
         ),
       );
 
-    const today = await todayXp(ctx.db, staffId);
+    const today = await todayXp(ctx.db, staffId, new Date(), ctx.user.storeId); // 大批片 2 分层：按员工本店作用域解析
 
     return {
       totalXp,
@@ -336,7 +336,7 @@ export const xpRouter = router({
    * 任务书 §五.6：置灰标依赖，不是悬空；server 侧 awardXp 对 referral 拒写）。
    */
   rulesView: staffProcedure.query(async ({ ctx }) => {
-    const rules = await loadXpRules(ctx.db);
+    const rules = await loadXpRules(ctx.db, ctx.user.storeId); // 大批片 2 分层：按员工本店作用域解析
     // 拉新行 active=0 不在 loadXpRules 内，单独取回用于置灰展示（多版本历史行取任一）
     const referralRow = await ctx.db
       .select({ label: schema.xpRules.label })

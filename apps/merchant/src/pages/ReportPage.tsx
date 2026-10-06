@@ -10,6 +10,9 @@
  * 预埋页不渲染）+「导出 CSV」钮（**仅店主可见**——useMerchantRole().isOwner；
  * report.exportCsv+Blob 下载工艺照 CashierRefundsPage 先例；非店主不渲染）+
  * 数据区（u3-tbl 表/u3-stat 卡照 FinancePage 惯例）+ 口径注记行（server note 透出）。
+ * 大批片 2 · 三视图（owner 页头切换）：单店=门店下拉（listMine，选中店传 storeId）/
+ * 分店=逐店并列（逐店传 storeId 调同一端点）/ 合计=scope:'chain'；manager 不出现切换
+ * （固定本店现状，缺省入参零回归）。scope 入参=server 片 2 契约（monthInput）直连。
  *
  * 三态惯例：Loading=shared Skeleton（aria-label="加载中"，animate-pulse 禁转圈）/
  * Error=面板内文案+QuietButton 重试/空态=面板内居中明面文案。
@@ -53,6 +56,12 @@ const SHEET_KEYS: readonly SheetKey[] = [
 ];
 const EMBED_KEYS: readonly EmbedKey[] = ['n7', 'n8'];
 const ALL_KEYS: readonly ReportKey[] = [...SHEET_KEYS, ...EMBED_KEYS];
+
+/** 报表读口 scope 入参（大批片 2 server 契约：缺省=本店零回归；chain=店域合计；storeId=店域内任选） */
+type SheetScopeInput = { month: string; scope?: 'store' | 'chain'; storeId?: string };
+
+/** 三视图（owner 页头切换；manager 不出现=固定本店现状） */
+type ReportView = 'store' | 'stores' | 'chain';
 
 const TITLE_COPY: Record<ReportKey, ReportCopyKey> = {
   d1: 'rpt.dirD1', d2: 'rpt.dirD2', d3: 'rpt.dirD3', d4: 'rpt.dirD4', d5: 'rpt.dirD5',
@@ -826,10 +835,11 @@ function N4Body({ d }: { d: ReportOutputs['n4ReviewDist'] }) {
   const [replyText, setReplyText] = useState('');
   const [replyTags, setReplyTags] = useState<Set<string>>(new Set());
 
-  /* 差评明细=badReviewAgg.recent（近十条全时段口径，非同月过滤——面板 aside 明面注） */
+  /* 差评明细=badReviewAgg.recent（近十条全时段口径，非同月过滤——面板 aside 明面注；
+     大批片 2 起入参必填对象（scope 契约），{}=缺省本店零回归） */
   const badQ = useQuery({
     queryKey: ['report', 'badReviewAgg'],
-    queryFn: () => trpc.report.badReviewAgg.query(),
+    queryFn: () => trpc.report.badReviewAgg.query({}),
   });
 
   const replyM = useMutation({
@@ -1296,24 +1306,66 @@ function EmbedBody() {
 
 /* ---------------- 页体 ---------------- */
 
-export default function ReportPage() {
+/** 加载中骨架块（animate-pulse，禁转圈）：卡组 + 面板 = shared Skeleton 组合 */
+function SheetSkeleton() {
+  return (
+    <div aria-label="加载中">
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="u3-stat">
+            <Skeleton className="h-3 w-16 rounded-chip" />
+            <Skeleton className="mt-3 h-7 w-24 rounded-chip" />
+          </div>
+        ))}
+      </div>
+      <div className="u3-panel mt-3.5">
+        <div className="u3-panel-head">
+          <Skeleton className="h-4 w-24 rounded-chip" />
+        </div>
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3.5">
+            <Skeleton className="h-3 w-full rounded-chip" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** 数据体表体 dispatch（SheetData 联合 ↔ DxBody/NxBody 一一对应） */
+function SheetBody({ sheetKey, data }: { sheetKey: SheetKey; data: SheetData }) {
+  switch (sheetKey) {
+    case 'd1': return <D1Body d={data as ReportOutputs['d1Revenue']} />;
+    case 'd2': return <D2Body d={data as ReportOutputs['d2ServiceMix']} />;
+    case 'd3': return <D3Body d={data as ReportOutputs['d3MemberGrowth']} />;
+    case 'd4': return <D4Body d={data as ReportOutputs['d4PassLedger']} />;
+    case 'd5': return <D5Body d={data as ReportOutputs['d5StoredValue']} />;
+    case 'd6': return <D6Body d={data as ReportOutputs['d6Refunds']} />;
+    case 'd7': return <D7Body d={data as ReportOutputs['d7StaffPerf']} />;
+    case 'd8': return <D8Body d={data as ReportOutputs['d8Boarding']} />;
+    case 'd9': return <D9Body d={data as ReportOutputs['d9Goods']} />;
+    case 'n1': return <N1Body d={data as ReportOutputs['n1LevelDist']} />;
+    case 'n2': return <N2Body d={data as ReportOutputs['n2Renewal']} />;
+    case 'n3': return <N3Body d={data as ReportOutputs['n3RebateRoll']} />;
+    case 'n4': return <N4Body d={data as ReportOutputs['n4ReviewDist']} />;
+    case 'n5': return <N5Body d={data as ReportOutputs['n5Delivery']} />;
+    case 'n6': return <N6Body d={data as ReportOutputs['n6StaffQuality']} />;
+  }
+}
+
+/** 单块报表（查询+三态+表体）：单店=storeId / 合计=scope:'chain' / 缺省=本店零回归。
+    15 张读口同一 monthInput 契约（{month, scope?, storeId?}），dispatch 与 SheetData 联合同步 */
+function SheetSection({ sheetKey, month, scope, storeId }: {
+  sheetKey: SheetKey; month: string; scope?: 'store' | 'chain'; storeId?: string;
+}) {
   const { trpc } = usePhiliaClient();
-  const { showToast, toastEl } = useToast({ durationMs: 2500 });
-  const role = useMerchantRole();
-  const { key: rawKey } = useParams<{ key: string }>();
-  const key = (rawKey ?? '').toLowerCase() as ReportKey;
-  const valid = (ALL_KEYS as readonly string[]).includes(key);
-  const isSheet = (SHEET_KEYS as readonly string[]).includes(key);
-
-  const [month, setMonth] = useState(() => storeTodayStr().slice(0, 7));
-  const [exporting, setExporting] = useState(false);
-
   const sheetQ = useQuery({
-    enabled: valid && isSheet,
-    queryKey: ['report', 'sheet', key, month],
+    queryKey: ['report', 'sheet', sheetKey, month, scope ?? null, storeId ?? null],
     queryFn: (): Promise<SheetData> => {
-      const m = { month };
-      switch (key as SheetKey) {
+      const m: SheetScopeInput = { month };
+      if (scope) m.scope = scope;
+      if (storeId) m.storeId = storeId;
+      switch (sheetKey) {
         case 'd1': return trpc.report.d1Revenue.query(m);
         case 'd2': return trpc.report.d2ServiceMix.query(m);
         case 'd3': return trpc.report.d3MemberGrowth.query(m);
@@ -1332,6 +1384,51 @@ export default function ReportPage() {
       }
     },
   });
+
+  if (sheetQ.isPending) return <SheetSkeleton />;
+  if (sheetQ.isError || !sheetQ.data) {
+    return (
+      <div className="u3-panel px-[17px] py-12 text-center">
+        <p className="text-body-sm text-[rgba(59,46,36,.62)]">{rpt('rpt.page.loadError')}</p>
+        <div className="mt-4">
+          <QuietButton testid="report-retry" onClick={() => void sheetQ.refetch()}>
+            {rpt('rpt.page.retry')}
+          </QuietButton>
+        </div>
+      </div>
+    );
+  }
+  return <SheetBody sheetKey={sheetKey} data={sheetQ.data} />;
+}
+
+export default function ReportPage() {
+  const { trpc } = usePhiliaClient();
+  const { showToast, toastEl } = useToast({ durationMs: 2500 });
+  const role = useMerchantRole();
+  const { key: rawKey } = useParams<{ key: string }>();
+  const key = (rawKey ?? '').toLowerCase() as ReportKey;
+  const valid = (ALL_KEYS as readonly string[]).includes(key);
+  const isSheet = (SHEET_KEYS as readonly string[]).includes(key);
+
+  const [month, setMonth] = useState(() => storeTodayStr().slice(0, 7));
+  const [exporting, setExporting] = useState(false);
+
+  /* 大批片 2 · 三视图（owner）：单店=门店下拉传 storeId / 分店=逐店并列 / 合计=scope:'chain'；
+     manager 不出现切换（固定本店现状，sheet 查询零入参加回=零回归） */
+  const [view, setView] = useState<ReportView>('store');
+  const [pickedStoreId, setPickedStoreId] = useState<string | null>(null);
+  const mineQ = useQuery({
+    enabled: role.isOwner && valid && isSheet,
+    queryKey: ['store', 'listMine'],
+    queryFn: () => trpc.store.listMine.query(),
+  });
+  const mineStores = mineQ.data?.stores ?? [];
+  const effStoreId =
+    pickedStoreId && mineStores.some((s) => s.id === pickedStoreId)
+      ? pickedStoreId
+      : mineStores.some((s) => s.id === role.storeId)
+        ? role.storeId
+        : mineStores[0]?.id;
 
   /** 导出 CSV（仅店主 · 总规则③）：query 端点直调 + Blob 浏览器下载（照 CashierRefundsPage 工艺） */
   const doExport = async () => {
@@ -1369,61 +1466,42 @@ export default function ReportPage() {
   }
 
   const renderSheet = () => {
-    if (sheetQ.isPending) {
-      // 加载中骨架块（animate-pulse，禁转圈）：卡组 + 面板 = shared Skeleton 组合
+    if (role.isOwner && view === 'stores') {
+      /* 分店视图：逐店并列（每店一块题 + 对应 sheet 数据，逐店传 storeId 调同一端点） */
+      if (mineQ.isPending) return <SheetSkeleton />;
       return (
-        <div aria-label="加载中">
-          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="u3-stat">
-                <Skeleton className="h-3 w-16 rounded-chip" />
-                <Skeleton className="mt-3 h-7 w-24 rounded-chip" />
+        <div data-testid="report-stores-view">
+          {mineStores.map((s, i) => (
+            <div key={s.id} className={i > 0 ? 'mt-7' : ''} data-testid={`report-store-${s.id}`}>
+              <div className="mb-2 flex items-baseline gap-2 px-1">
+                <h3 className="text-body-sm font-bold">{s.name}</h3>
               </div>
-            ))}
-          </div>
-          <div className="u3-panel mt-3.5">
-            <div className="u3-panel-head">
-              <Skeleton className="h-4 w-24 rounded-chip" />
+              <SheetSection sheetKey={key as SheetKey} month={month} storeId={s.id} />
             </div>
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3.5">
-                <Skeleton className="h-3 w-full rounded-chip" />
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
       );
     }
-    if (sheetQ.isError || !sheetQ.data) {
+    if (role.isOwner && view === 'chain') {
+      /* 合计视图：店域合计（scope:'chain'） */
       return (
-        <div className="u3-panel px-[17px] py-12 text-center">
-          <p className="text-body-sm text-[rgba(59,46,36,.62)]">{rpt('rpt.page.loadError')}</p>
-          <div className="mt-4">
-            <QuietButton testid="report-retry" onClick={() => void sheetQ.refetch()}>
-              {rpt('rpt.page.retry')}
-            </QuietButton>
+        <div data-testid="report-chain-view">
+          <div className="mb-2 flex items-baseline gap-2 px-1">
+            <h3 className="text-body-sm font-bold">{rpt('rpt.view.chain')}</h3>
+            <span className="text-caption-xs text-[rgba(59,46,36,.42)]">{rpt('rpt.view.chainAside')}</span>
           </div>
+          <SheetSection sheetKey={key as SheetKey} month={month} scope="chain" />
         </div>
       );
     }
-    const data = sheetQ.data;
-    switch (key as SheetKey) {
-      case 'd1': return <D1Body d={data as ReportOutputs['d1Revenue']} />;
-      case 'd2': return <D2Body d={data as ReportOutputs['d2ServiceMix']} />;
-      case 'd3': return <D3Body d={data as ReportOutputs['d3MemberGrowth']} />;
-      case 'd4': return <D4Body d={data as ReportOutputs['d4PassLedger']} />;
-      case 'd5': return <D5Body d={data as ReportOutputs['d5StoredValue']} />;
-      case 'd6': return <D6Body d={data as ReportOutputs['d6Refunds']} />;
-      case 'd7': return <D7Body d={data as ReportOutputs['d7StaffPerf']} />;
-      case 'd8': return <D8Body d={data as ReportOutputs['d8Boarding']} />;
-      case 'd9': return <D9Body d={data as ReportOutputs['d9Goods']} />;
-      case 'n1': return <N1Body d={data as ReportOutputs['n1LevelDist']} />;
-      case 'n2': return <N2Body d={data as ReportOutputs['n2Renewal']} />;
-      case 'n3': return <N3Body d={data as ReportOutputs['n3RebateRoll']} />;
-      case 'n4': return <N4Body d={data as ReportOutputs['n4ReviewDist']} />;
-      case 'n5': return <N5Body d={data as ReportOutputs['n5Delivery']} />;
-      case 'n6': return <N6Body d={data as ReportOutputs['n6StaffQuality']} />;
-    }
+    /* 单店视图（owner 下拉选店传 storeId；manager 无切换=effStoreId 不参与，缺省本店零回归） */
+    return (
+      <SheetSection
+        sheetKey={key as SheetKey}
+        month={month}
+        storeId={role.isOwner ? effStoreId : undefined}
+      />
+    );
   };
 
   return (
@@ -1451,6 +1529,48 @@ export default function ReportPage() {
                 data-testid="report-month"
                 className="u1-ring rounded-control bg-card px-3 py-2 font-number text-caption tabular-nums text-ink focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
               />
+            </label>
+          ) : null}
+          {/* 大批片 2 · 三视图切换（仅 owner；滤签工艺照 StatusChips u3-chipf；manager 不出现） */}
+          {role.isOwner && isSheet ? (
+            <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="报表视图">
+              {(
+                [
+                  ['store', 'rpt.view.store'],
+                  ['stores', 'rpt.view.stores'],
+                  ['chain', 'rpt.view.chain'],
+                ] as const
+              ).map(([v, ck]) => (
+                <button
+                  key={v}
+                  type="button"
+                  role="tab"
+                  aria-selected={view === v}
+                  className={`u3-chipf${view === v ? ' on' : ''}`}
+                  data-testid={`report-view-${v}`}
+                  onClick={() => setView(v)}
+                >
+                  {rpt(ck)}
+                </button>
+              ))}
+            </div>
+          ) : null}
+          {/* 单店视图门店下拉（listMine 店集合，选中店传 storeId；缺省=当前店） */}
+          {role.isOwner && isSheet && view === 'store' ? (
+            <label className="flex items-center gap-2 text-caption text-[rgba(59,46,36,.62)]">
+              {rpt('rpt.view.storePick')}
+              <select
+                value={effStoreId ?? ''}
+                onChange={(e) => setPickedStoreId(e.target.value || null)}
+                data-testid="report-store-pick"
+                className="u1-ring rounded-control bg-card px-3 py-2 text-caption text-ink focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+              >
+                {mineStores.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
             </label>
           ) : null}
           {/* 导出 CSV 仅店主可见可点（总规则③；非店主不渲染，server exportCsv 同闸 403） */}
