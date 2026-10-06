@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-05T17:04:55.337Z；键数=3138；归屏率=96.7%（未归屏 105）
+ * 生成时间口径：2026-10-06T03:05:21.917Z；键数=3133；归屏率=96.8%（未归屏 100）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -7901,13 +7901,6 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "未在页面调用点命中（merchant:console 域键表，端口运营复核挂载屏）"
  },
  {
-  "key": "wnav.batchNote",
-  "domain": "merchant:console",
-  "text": "批次扩口 · 明面保留不删，转正后归并",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:console 域键表，端口运营复核挂载屏）"
- },
- {
   "key": "wnav.boarding",
   "domain": "merchant:console",
   "text": "寄养",
@@ -7938,14 +7931,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "wnav.dockMe",
   "domain": "merchant:console",
-  "text": "我的",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:console 域键表，端口运营复核挂载屏）"
- },
- {
-  "key": "wnav.dockMeNote",
-  "domain": "merchant:console",
-  "text": "「我的」槽映射门店档案·设置",
+  "text": "设置",
   "screen": null,
   "position": "未在页面调用点命中（merchant:console 域键表，端口运营复核挂载屏）"
  },
@@ -7999,13 +7985,6 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "未在页面调用点命中（merchant:console 域键表，端口运营复核挂载屏）"
  },
  {
-  "key": "wnav.groupBatch",
-  "domain": "merchant:console",
-  "text": "批次扩口",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:console 域键表，端口运营复核挂载屏）"
- },
- {
   "key": "wnav.groupMall",
   "domain": "merchant:console",
   "text": "商城",
@@ -8036,21 +8015,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "wnav.ops",
   "domain": "merchant:console",
-  "text": "审批中心",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:console 域键表，端口运营复核挂载屏）"
- },
- {
-  "key": "wnav.opsBatch",
-  "domain": "merchant:console",
-  "text": "运营",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:console 域键表，端口运营复核挂载屏）"
- },
- {
-  "key": "wnav.opsBatchNote",
-  "domain": "merchant:console",
-  "text": "与审批中心同屏",
+  "text": "运营 · 审批中心",
   "screen": null,
   "position": "未在页面调用点命中（merchant:console 域键表，端口运营复核挂载屏）"
  },

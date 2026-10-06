@@ -171,8 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 3139 键/68 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68）；
+ *      56.1 种子 3134 键/68 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -4933,17 +4933,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（3139 键/68 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 3139 && domainSet.size === 68 &&
+  check('56.1 copy 域种子全量落库（3134 键/68 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 3134 && domainSet.size === 68 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（3139 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 3139 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（3134 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 3134 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -8637,8 +8637,8 @@ async function main(): Promise<void> {
 
     /* ---- 76.3 公共读口形状不变（不透元数据：键→文两列） ---- */
     const texts76 = await trpcQuery<{ rows: Array<{ key: string; text: string; screen?: unknown; position?: unknown }> }>('config.activeCopyTexts', { cookie: customerCookie });
-    check('76.3 activeCopyTexts 形状不变（3139 行 key→text，不透 screen/position 元数据）',
-      texts76.rows.length === 3139 &&
+    check('76.3 activeCopyTexts 形状不变（3134 行 key→text，不透 screen/position 元数据）',
+      texts76.rows.length === 3134 &&
       texts76.rows.every((r) => r.screen === undefined && r.position === undefined),
       texts76.rows.length);
 
@@ -8648,6 +8648,37 @@ async function main(): Promise<void> {
       unscreened.length > 0 && unscreened.length / actives.length < 0.1 &&
       unscreened.every((r) => typeof r.position === 'string' && r.position!.includes('未在页面调用点命中')),
       { n: unscreened.length, sample: unscreened.slice(0, 3).map((r) => r.ruleKey) });
+  }
+
+  /* ==================================================================
+   * 客户端体验大批 片 6（批内末片 · 转正归并 2 件，UX-08 归并稿 V1.0）段：
+   *   77.1 rail 十九口转正：wnav.ops 键值=「运营 · 审批中心」（/ops 双入口消歧一口，
+   *       改键值不改键名）+批次扩口组签/注记 4 键撤除（groupBatch/batchNote/opsBatch/
+   *       opsBatchNote 全库零残留）；
+   *   77.2 dock「设置」转正：wnav.dockMe 键值=「设置」（指向 /settings 不变）+
+   *       映射注记键 wnav.dockMeNote 撤除（「我的」零残留）。
+   *   （结构转正件申报：迁移 0049 落库口径=UPDATE 2 键值+DELETE 5 键；种子生成件同帧
+   *    重生成 3133 行+seed 手补 1=3134；56.1/76.3 计数断言同步 3139→3134。）
+   * ================================================================== */
+  console.log('\n[体验批片6] 77. rail 十九口转正 / dock「设置」转正（wnav 归并注册）');
+  {
+    interface CopyListV3 {
+      rules: Array<{ ruleKey: string; label: string; active: boolean; valueJson: { text?: string } }>;
+    }
+    const list77 = await trpcQuery<CopyListV3>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
+    const opsLabel = list77.rules.find((r) => r.ruleKey === 'wnav.ops' && r.active);
+    const RETIRED_WNAV = ['wnav.groupBatch', 'wnav.batchNote', 'wnav.opsBatch', 'wnav.opsBatchNote'];
+    check('77.1 「运营 · 审批中心」一口转正（wnav.ops 键值逐字）+ 批次扩口组签/注记 4 键全库零残留',
+      opsLabel?.valueJson.text === '运营 · 审批中心' &&
+      RETIRED_WNAV.every((k) => !list77.rules.some((r) => r.ruleKey === k)),
+      { ops: opsLabel?.valueJson.text, residue: RETIRED_WNAV.filter((k) => list77.rules.some((r) => r.ruleKey === k)) });
+
+    const dockMeLabel = list77.rules.find((r) => r.ruleKey === 'wnav.dockMe' && r.active);
+    check('77.2 dock 第五槽「设置」转正（wnav.dockMe 键值逐字）+ 注记键 wnav.dockMeNote 撤除 + 商家端 wnav 域「我的」零残留（员工端 sk.* 不动）',
+      dockMeLabel?.valueJson.text === '设置' &&
+      !list77.rules.some((r) => r.ruleKey === 'wnav.dockMeNote') &&
+      !list77.rules.some((r) => r.ruleKey.startsWith('wnav.') && r.active && r.valueJson.text === '我的'),
+      { dockMe: dockMeLabel?.valueJson.text });
   }
 
   client.close();
