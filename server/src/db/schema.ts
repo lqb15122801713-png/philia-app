@@ -167,6 +167,16 @@ export const stores = sqliteTable('stores', {
    * NULL=未登记（客户端隐藏电话行，诚实空态）；维护口=商家端门店资料/店长配置。
    */
   phone: text('phone'),
+  /**
+   * 两层架构类型（商家端大批片 1 连锁地基 · 0050）：store=门店（缺省） | hq=总部。
+   * 既有单店=「店即己部」单层特例（hqId=自身），真连锁=hq 行+辖 N 个 store 行。
+   */
+  storeType: text('store_type').notNull().default('store'),
+  /**
+   * 归属总部 ID -> stores.id（自引用；0050 存量回填=自身 id[总部=自身]，幂等 UPDATE）。
+   * 老板跨店全域集合=名下门店 ∪ 名下总部辖店（会话中间件 storeIds 装配）。
+   */
+  hqId: text('hq_id').references((): AnySQLiteColumn => stores.id),
   ...auditColumns,
 });
 
@@ -205,6 +215,12 @@ export const staff = sqliteTable('staff', {
    * （commission_probation_multiplier）；试用期不设绩效与全勤。
    */
   probation: integer('probation', { mode: 'boolean' }).notNull().default(false),
+  /**
+   * 多店归属留口（商家端大批片 1 连锁地基 · 0050）：员工本店=storeId（绑定闸写死），
+   * 本列=额外归属门店 id 集 JSON（跨店支援/借调口径）。片 1 仅留口不消费——
+   * 跨店支援工时归集=连锁回归批接，任何读口不得依本列放闸（闸仍走 storeId 单值）。
+   */
+  extraStoreIds: text('extra_store_ids', { mode: 'json' }).$type<string[]>(),
   ...auditColumns,
 });
 
@@ -1186,6 +1202,13 @@ export const storedValueImportBatches = sqliteTable(
     filename: text('filename'),
     /** 门店映射快照（台账店名 → storeId） */
     mappingJson: text('mapping_json'),
+    /**
+     * 归属门店 ID -> stores.id（商家端大批片 1 连锁地基 · 0050 店域闸补漏）：
+     * executeImport 写入=操作人本店；listImportBatches 按店域集合过滤（老板=全域，
+     * 店长/店员=本店）。存量批次=mapping_json 单店推导回填（混合/无映射=NULL 不透出，
+     * 归属裁定候连锁回归批——登记在卷）。
+     */
+    storeId: text('store_id').references(() => stores.id),
     /** 数据行数 / 成功行数 / 失败行数 */
     totalRows: integer('total_rows').notNull().default(0),
     okRows: integer('ok_rows').notNull().default(0),
@@ -2241,6 +2264,12 @@ export const memberships = sqliteTable(
     planKey: text('plan_key').notNull(),
     /** 办卡门店 ID -> stores.id（微光自助开档=NULL 或注册店；付费档=售卡单消费店） */
     soldStoreId: text('sold_store_id').references(() => stores.id),
+    /**
+     * 会员多店归属留口（商家端大批片 1 连锁地基 · 0050）：归属门店 ID -> stores.id。
+     * NULL=全店通用（决策 #41 中央建卡三店通用口径不变）；本列仅留口不消费——
+     * 会员归属细化/归属结算=连锁回归批接，任何读口不得依本列改会员可见性。
+     */
+    homeStoreId: text('home_store_id').references(() => stores.id),
     /** 开通时间 */
     startedAt: integer('started_at', { mode: 'timestamp' }).notNull(),
     /** 到期时间（=开通日+365 天，开通时算定不重算） */

@@ -23,6 +23,7 @@
  * 未来切 MySQL 该事务结构语义不变。
  */
 
+import { sql } from 'drizzle-orm';
 import { client, db, schema } from './index';
 import { COPY_SEED_ROWS } from './copySeedRows';
 import { SLOT_SEED_ROWS } from './slotSeedRows';
@@ -229,6 +230,8 @@ async function main() {
         status: 'active',
       })
       .returning();
+    /* 连锁地基（片 1 · 0050）：主店 hq_id 回填=自身（「店即己部」单层特例，与迁移存量回填同口径；幂等） */
+    await tx.run(sql`UPDATE stores SET hq_id = id WHERE hq_id IS NULL`);
 
     /* ---- 员工（批次 S1 双角色：小美=前台 frontdesk；阿强/丽丽=美容师 groomer；
        批次 staff-2 R9 附带列 grade：丽丽=G2、阿强=G1、小美=P1） ---- */

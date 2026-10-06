@@ -8681,6 +8681,152 @@ async function main(): Promise<void> {
       { dockMe: dockMeLabel?.valueJson.text });
   }
 
+  /* ==================================================================
+   * 商家端大批 片 1（连锁地基 · 任务书冻结版 V1.0）段：
+   *   78.1-78.6 双店互盲六组（B 店店主/店长读 A 店=零透出：预约/收银/会员账务/
+   *       报表/员工排班/商品库存）；
+   *   78.7 分级管理员（store.listMine：老板全域[A+A2]/店长本店[B]/独立店主[B]；
+   *       店长读 A 店报表=零混入）；
+   *   78.8 两层模型（hq_id 回填=自身+幂等重跑零变化+store_type 缺省）+
+   *       多店归属留口列（staff.extra_store_ids/memberships.home_store_id/
+   *       stored_value_import_batches.store_id PRAGMA 在列）+储值批次店域闸补漏
+   *       （A 批次 B 不透出、A 本域可见）。
+   * 口径登记：跨店按 id 取数现状=FORBIDDEN（透出拒绝但不伪装 NOT_FOUND）——
+   *   NOT_FOUND 换口径=行为变更候产品侧裁定（本片不动，登记在卷）。
+   * ================================================================== */
+  console.log('\n[商家端片1] 78. 双店互盲六组 / 分级管理员 / 两层模型+留口（连锁地基）');
+  {
+    const { storeWallclock: wc78 } = await import('../routers/appointment');
+    const w78 = wc78(new Date());
+    const month78 = `${w78.y}-${String(w78.m).padStart(2, '0')}`;
+    type AnyRec78 = Record<string, unknown>;
+
+    /* ---- 夹具：B 独立店主+B 店长（staff 绑 B 店）+A2（归属 A 店总部=owner 全域演示） ---- */
+    const seedStore78 = await db.select().from(schema.stores).limit(1).then((r) => r[0]!);
+    const [ownerB78] = await db.insert(schema.users).values({
+      kimiId: 'seed_e2e_chain_ownerb', nickname: 'e2e 连锁 B 店主', phone: '13900003001',
+    }).returning();
+    await db.insert(schema.userRoles).values({ userId: ownerB78!.id, role: 'merchant_owner' });
+    const [storeB78] = await db.insert(schema.stores).values({
+      ownerId: ownerB78!.id, name: 'e2e 连锁 B 店', status: 'active',
+    }).returning();
+    await client.execute({ sql: 'UPDATE stores SET hq_id = id WHERE id = ?', args: [storeB78!.id] });
+    const [mgrBUser78] = await db.insert(schema.users).values({
+      kimiId: 'seed_e2e_chain_mgrb', nickname: 'e2e 连锁 B 店长', phone: '13900003002',
+    }).returning();
+    await db.insert(schema.userRoles).values({ userId: mgrBUser78!.id, role: 'merchant_manager' });
+    await db.insert(schema.staff).values({
+      storeId: storeB78!.id, userId: mgrBUser78!.id, name: 'e2e B 店长', role: 'frontdesk', status: 'active',
+    });
+    const [storeA2x] = await db.insert(schema.stores).values({
+      ownerId: ownerUser.id, name: 'e2e A 总部辖二店', status: 'active', hqId: seedStore78.id,
+    }).returning();
+    const ownerBCookie78 = await devLogin(ownerB78!.id);
+    const mgrBCookie78 = await devLogin(mgrBUser78!.id);
+
+    /* ---- 78.1 预约域互盲 ---- */
+    const apptListB = await trpcQuery<AnyRec78[]>('appointment.listForStore', { cookie: ownerBCookie78 });
+    const apptGetB = await asErr(trpcQuery('appointment.get', { cookie: ownerBCookie78, input: { appointmentId: createdAid } }));
+    check('78.1 互盲①预约：B 列表=0 行（A 店单零透出）+ B 按 id 取 A 店单=拒绝（现状 FORBIDDEN，换 NOT_FOUND 口径候裁）',
+      apptListB.length === 0 && apptGetB instanceof TrpcHttpError && (apptGetB.httpStatus === 403 || apptGetB.code === 'NOT_FOUND'),
+      { list: apptListB.length, code: apptGetB instanceof TrpcHttpError ? apptGetB.code : null });
+
+    /* ---- 78.2 收银域互盲 ---- */
+    const aBill78 = await db.select().from(schema.cashierBills).where(eq(schema.cashierBills.storeId, seedStore78.id)).limit(1).then((r) => r[0]!);
+    const billsB = await trpcQuery<AnyRec78[]>('cashier.listBills', { cookie: ownerBCookie78 });
+    const getBillB = await asErr(trpcQuery('cashier.getBill', { cookie: ownerBCookie78, input: { billNo: aBill78.billNo } }));
+    check('78.2 互盲②收银：B 流水=0 行 + B 取 A 店单=拒绝（非本店单据）',
+      billsB.length === 0 && getBillB instanceof TrpcHttpError && getBillB.httpStatus === 403,
+      { list: billsB.length, code: getBillB instanceof TrpcHttpError ? getBillB.code : null });
+
+    /* ---- 78.3 会员账务域互盲 + 储值批次店域闸补漏实证 ---- */
+    /* A 店主先行 execute 一笔储值导入（夹具：CSV 2 行 ¥150，mapping→A 店）→ 批次行 storeId=A */
+    const csv78 = [
+      '门店,会员编号,会员姓名,手机号码,会员卡名称,储值本金余额(¥),储值赠送金额(¥),次卡名称,次卡剩余次数,累计消费金额(¥),累计消费次数,会员加入时间,上次消费时间',
+      '贝肯山店,9001,演示甲,13800000000,银卡,100.00,0,,0,0,0,2026-09-01,2026-09-01',
+      '贝肯山店,9002,演示乙,13911112222,银卡,50.00,0,,0,0,0,2026-09-01,2026-09-01',
+    ].join('\n');
+    await trpcMutate('storedValue.executeImport', {
+      cookie: ownerCookie,
+      input: { csvText: csv78, filename: 'e2e-78.csv', mapping: { 贝肯山店: seedStore78.id } },
+    });
+    const batchesB = await trpcQuery<AnyRec78[]>('storedValue.listImportBatches', { cookie: ownerBCookie78 });
+    const batchesA = await trpcQuery<AnyRec78[]>('storedValue.listImportBatches', { cookie: ownerCookie });
+    const passB = await trpcQuery<AnyRec78>('pass.listForStore', { cookie: ownerBCookie78 });
+    const amortB = await trpcQuery<AnyRec78>('membership.amortizationStats', { cookie: ownerBCookie78, input: { month: month78 } });
+    /* 口径注记：amortizedFen=微光线上开档 sold_store_id=NULL 分摊（Y7 本店∪NULL 既定口径，
+       各店同见 NULL 部分——非泄漏；泄漏判定=cash 侧[售卡实收按店]他店混入） */
+    const amortCashNonZero = Object.entries(amortB).filter(([k, v]) => /cash/i.test(k) && /fen/i.test(k) && typeof v === 'number' && v !== 0);
+    check('78.3 互盲③会员账务：B 储值批次=0（A 批次不透出=0050 补漏生效）+ A 本域批次≥1（写口落 storeId+同域可见）+ B 次卡=0 + B 售卡实收=0（cash 侧零混入）',
+      batchesB.length === 0 && batchesA.length >= 1 &&
+      (Array.isArray(passB) ? passB.length === 0 : true) && amortCashNonZero.length === 0,
+      { bBatches: batchesB.length, aBatches: batchesA.length, cashLeak: amortCashNonZero.map(([k]) => k) });
+
+    /* ---- 78.4 报表域互盲（含 n1 档变事件补漏实证） ---- */
+    const d1B = await trpcQuery<AnyRec78>('report.d1Revenue', { cookie: ownerBCookie78, input: { month: month78 } });
+    const n1B = await trpcQuery<AnyRec78>('report.n1LevelDist', { cookie: ownerBCookie78, input: { month: month78 } });
+    const n1A = await trpcQuery<AnyRec78>('report.n1LevelDist', { cookie: ownerCookie, input: { month: month78 } });
+    /* 口径注记：d1.amortizedFen=微光 NULL 开档分摊（Y7 本店∪NULL 既定口径）不判零；
+       泄漏判定=cashFen/nonMemberFen（A 店夹具现金单）B 侧零值 */
+    check('78.4 互盲④报表：B 收现/散客分拆全零（A 夹具单零混入）+ B 档变事件 0/0 而 A≥1（membership_events 店域收窄补漏实证）',
+      d1B.cashFen === 0 && (d1B.nonMemberFen ?? 0) === 0 &&
+      n1B.upgradeCount === 0 && n1B.downgradeCount === 0 &&
+      (n1A.upgradeCount as number) >= 1,
+      { bCash: d1B.cashFen, bNonMember: d1B.nonMemberFen ?? null, bUp: n1B.upgradeCount, aUp: n1A.upgradeCount });
+
+    /* ---- 78.5 员工/排班域互盲 ---- */
+    const staffBRes = await trpcQuery<{ staff: Array<{ name: string }> }>('store.staffList', { cookie: mgrBCookie78 });
+    const tplB = await trpcQuery<{ templates: AnyRec78[] }>('schedule.templates', { cookie: mgrBCookie78 });
+    const staffNamesB = staffBRes.staff.map((s) => s.name);
+    check('78.5 互盲⑤员工排班：B 花名册=仅 B 店长 1 行（小美/阿强/丽丽零透出）+ B 班次模板=0（A 店模板零透出）',
+      staffBRes.staff.length === 1 && staffNamesB[0] === 'e2e B 店长' &&
+      !['小美', '阿强', '丽丽'].some((n) => staffNamesB.includes(n)) && tplB.templates.length === 0,
+      { names: staffNamesB, tpl: tplB.templates.length });
+
+    /* ---- 78.6 商品/库存域互盲 ---- */
+    const prodB = await trpcQuery<{ items: AnyRec78[]; total: number }>('mall.listProductsForStore', { cookie: ownerBCookie78, input: {} });
+    const movesB = await trpcQuery<AnyRec78[]>('inventory.listMovements', { cookie: ownerBCookie78, input: {} });
+    check('78.6 互盲⑥商品库存：B 商品 total=0 + B 库存流水=0 行（A 店零透出）',
+      prodB.total === 0 && prodB.items.length === 0 && movesB.length === 0,
+      { total: prodB.total, moves: movesB.length });
+
+    /* ---- 78.7 分级管理员（store.listMine 结构读口） ---- */
+    interface MineRow { id: string; name: string; storeType: string; hqId: string | null }
+    const mineOwnerA = await trpcQuery<{ stores: MineRow[] }>('store.listMine', { cookie: ownerCookie });
+    const mineOwnerB = await trpcQuery<{ stores: MineRow[] }>('store.listMine', { cookie: ownerBCookie78 });
+    const mineMgrB = await trpcQuery<{ stores: MineRow[] }>('store.listMine', { cookie: mgrBCookie78 });
+    const idsA = mineOwnerA.stores.map((s) => s.id);
+    const a2Row = mineOwnerA.stores.find((s) => s.id === storeA2x!.id);
+    const d1MgrB = await trpcQuery<AnyRec78>('report.d1Revenue', { cookie: mgrBCookie78, input: { month: month78 } });
+    check('78.7 分级管理员：老板 A 全域=[A 店+A2 辖店]（两层 hqId 透出）/ 独立店主 B=[B] / 店长 B=[B 本店]（staff.store_id 绑定闸）+ 店长读 A 店报表 cash 侧零混入',
+      idsA.includes(seedStore78.id) && idsA.includes(storeA2x!.id) && a2Row?.hqId === seedStore78.id &&
+      mineOwnerB.stores.length === 1 && mineOwnerB.stores[0]!.id === storeB78!.id &&
+      mineMgrB.stores.length === 1 && mineMgrB.stores[0]!.id === storeB78!.id &&
+      d1MgrB.cashFen === 0 && (d1MgrB.nonMemberFen ?? 0) === 0,
+      { a: idsA.length, a2hq: a2Row?.hqId, b: mineOwnerB.stores.length, mgr: mineMgrB.stores.length });
+
+    /* ---- 78.8 两层模型 + 留口字段 + 回填幂等 ---- */
+    const storeBAfter = await db.select().from(schema.stores).where(eq(schema.stores.id, storeB78!.id)).then((r) => r[0]!);
+    /* 幂等实证=连跑两次回填：首跑补齐（本片前序夹具店 NULL 行=回填对象，>0 属预期），
+       二跑=0 行（重放零副作用=幂等钉） */
+    await client.execute('UPDATE stores SET hq_id = id WHERE hq_id IS NULL');
+    const refill2 = await client.execute('UPDATE stores SET hq_id = id WHERE hq_id IS NULL');
+    const allStores78 = await db.select().from(schema.stores);
+    const tiStaff = await client.execute('PRAGMA table_info(staff)');
+    const tiMbr = await client.execute('PRAGMA table_info(memberships)');
+    const tiBatch = await client.execute('PRAGMA table_info(stored_value_import_batches)');
+    const tiStores = await client.execute('PRAGMA table_info(stores)');
+    const colNames = (r: typeof tiStaff) => r.rows.map((x) => String(x.name));
+    check('78.8 两层模型：hq_id 回填=自身（种子主店+B 店）+ A2 归属 A 店 + 二次回填幂等 0 行 + 全量 hq_id 非空 + store_type 全=store（缺省）',
+      seedStore78.hqId === seedStore78.id && storeBAfter.hqId === storeB78!.id &&
+      refill2.rowsAffected === 0 && allStores78.every((s) => s.hqId !== null && s.storeType === 'store'),
+      { refill2: refill2.rowsAffected, hqNull: allStores78.filter((s) => s.hqId === null).length, types: [...new Set(allStores78.map((s) => s.storeType))] });
+    check('78.8 留口字段在列：staff.extra_store_ids / memberships.home_store_id / stored_value_import_batches.store_id / stores.store_type+hq_id（PRAGMA 实证）',
+      colNames(tiStaff).includes('extra_store_ids') && colNames(tiMbr).includes('home_store_id') &&
+      colNames(tiBatch).includes('store_id') && colNames(tiStores).includes('store_type') && colNames(tiStores).includes('hq_id'),
+      { staff: colNames(tiStaff).includes('extra_store_ids'), mbr: colNames(tiMbr).includes('home_store_id'), batch: colNames(tiBatch).includes('store_id') });
+  }
+
   client.close();
 }
 

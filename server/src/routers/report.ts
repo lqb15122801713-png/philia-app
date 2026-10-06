@@ -869,10 +869,15 @@ export const reportRouter = router({
     }
     /* 退出=status cancelled 且 updatedAt 落月（cancel 写 updatedAt 口径注记） */
     const exitInMonth = all.filter((m) => m.status === 'cancelled' && m.cancelledAt !== null && m.cancelledAt.getTime() >= from.getTime() && m.cancelledAt.getTime() < to.getTime());
-    const events = await ctx.db
-      .select()
-      .from(schema.membershipEvents)
-      .where(and(gte(schema.membershipEvents.createdAt, from), lt(schema.membershipEvents.createdAt, to)));
+    /* 档变事件（片 1 店域闸补漏）：membership_events 无 storeId 列——收窄到本店∪NULL
+       会员（=上方 all 同口径），否则升降级计数混入他店会员事件（聚合级透出） */
+    const memberIds = new Set(all.map((m) => m.userId));
+    const events = (
+      await ctx.db
+        .select()
+        .from(schema.membershipEvents)
+        .where(and(gte(schema.membershipEvents.createdAt, from), lt(schema.membershipEvents.createdAt, to)))
+    ).filter((e) => memberIds.has(e.userId));
     const upgrades = events.filter((e) => e.type === 'upgrade');
     const downgrades = events.filter(
       (e) => e.type === 'change_schedule' && (planPrice.get(e.toPlan ?? '') ?? 0) < (planPrice.get(e.fromPlan ?? '') ?? 0),
