@@ -30,6 +30,12 @@ export interface SessionUser {
   roles: Array<'customer' | 'merchant_owner' | 'merchant_manager' | 'merchant_clerk' | 'staff'>;
   staffId?: string; // 若为 staff，其 staff 记录 id
   storeId?: string; // staff 所属门店 / merchant 管理门店
+  /**
+   * 老板跨店全域集合（商家端大批片 1 连锁地基）：名下门店 ∪ 名下总部辖店
+   * （stores.owner_id=本人 ∪ stores.hq_id∈名下店）。仅 merchant_owner 装配；
+   * manager/clerk 无本字段——店长只管本店（staff.store_id 绑定闸写死，走 storeId 单值）。
+   */
+  storeIds?: string[];
 }
 
 export interface Context {
@@ -142,6 +148,16 @@ export const merchantOwnerProcedure = publicProcedure.use(({ ctx, next }) => {
   }
   return next();
 });
+
+/**
+ * 店域集合（商家端大批片 1 连锁地基）：老板=跨店全域（storeIds：名下∪名下总部辖店），
+ * 店长/店员=本店单值（staff.store_id 绑定闸写死）。读口需「店域集合」语义时统一走本助手
+ * （storedValue.listImportBatches 补漏/store.listMine 同源）；空集=无可见店（返回空不透出）。
+ */
+export function storeScopeIds(user: SessionUser): string[] {
+  if (user.storeIds?.length) return user.storeIds;
+  return user.storeId ? [user.storeId] : [];
+}
 
 /**
  * 路由内店主硬校验：非 merchant_owner 抛 FORBIDDEN。

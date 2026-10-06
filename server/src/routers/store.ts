@@ -38,7 +38,7 @@ import { TRPCError } from '@trpc/server';
 import { and, desc, eq, gt, gte, inArray, isNull, lt } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
-import { merchantManagerProcedure, merchantOwnerProcedure, merchantProcedure, publicProcedure, router, type Context } from '../trpc';
+import { merchantManagerProcedure, merchantOwnerProcedure, merchantProcedure, publicProcedure, router, storeScopeIds, type Context } from '../trpc';
 import { loadDurationRules, resolveServiceDuration, type ServiceDuration } from '../config/durationEngine';
 import { boardingNightDates, BOOKING_LEAD_BUFFER_MS, DEFAULT_BOARDING_ROOM_COUNT, freeGroomersInInterval, loadGroomerOccupancy, maxAdvanceMsOf, storeDayStartMs, storeWallclock } from './appointment';
 import { computeDayTender, loadCashierFinance, type DayTenderStats } from './cashier';
@@ -463,6 +463,28 @@ export const storeRouter = router({
         .returning();
       return { service: created, created: true as const };
     }),
+
+  /**
+   * 我的门店列表（片 1 连锁地基 · 分级结构读口，申报件：新读口零新路由）：
+   * 老板=跨店全域集合（名下∪名下总部辖店，含 storeType/hqId 两层结构透出）；
+   * 店长/店员=本店单行（staff.store_id 绑定闸同源 storeScopeIds）。
+   */
+  listMine: merchantProcedure.query(async ({ ctx }) => {
+    const scope = storeScopeIds(ctx.user);
+    if (!scope.length) return { stores: [] };
+    const rows = await ctx.db
+      .select({
+        id: schema.stores.id,
+        name: schema.stores.name,
+        storeType: schema.stores.storeType,
+        hqId: schema.stores.hqId,
+        status: schema.stores.status,
+      })
+      .from(schema.stores)
+      .where(inArray(schema.stores.id, scope))
+      .orderBy(schema.stores.createdAt);
+    return { stores: rows };
+  }),
 
   /** 员工列表 + 技能/排班 + 绩效占位（owner|manager · M1-补2 条件①：员工花名册 clerk 403） */
   staffList: merchantManagerProcedure.query(async ({ ctx }) => {

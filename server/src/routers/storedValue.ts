@@ -36,7 +36,7 @@ import { and, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import { parseCsv } from '../lib/csvParse';
-import { merchantOwnerProcedure, router } from '../trpc';
+import { merchantOwnerProcedure, router, storeScopeIds } from '../trpc';
 
 /* ------------------------------------------------------------------ */
 /* CSV 解析：共用 lib/csvParse.parseCsv（零依赖 RFC4180；BOM/CRLF/引号转义） */
@@ -284,6 +284,7 @@ export const storedValueRouter = router({
           .insert(schema.storedValueImportBatches)
           .values({
             operatorId: ctx.user.id,
+            storeId: ctx.user.storeId ?? null, // 片 1 店域闸：批次归属=操作人本店（list 按店域集合过滤）
             filename: input.filename ?? null,
             mappingJson: JSON.stringify(input.mapping),
             totalRows: report.sourceStats.totalRows,
@@ -358,8 +359,12 @@ export const storedValueRouter = router({
 
   /**
    * 3. listImportBatches（仅 owner）：导入批次可查（含报告摘要与清除状态）。
+   * 店域闸（片 1 连锁地基补漏 · 0050）：按店域集合过滤（老板=全域集合，
+   * 修复全平台透出漏闸）；存量 mapping_json 混合/无映射批次=NULL 不透出（登记在卷）。
    */
   listImportBatches: merchantOwnerProcedure.query(async ({ ctx }) => {
+    const scope = storeScopeIds(ctx.user);
+    if (!scope.length) return [];
     const rows = await ctx.db
       .select({
         batch: schema.storedValueImportBatches,
@@ -367,6 +372,7 @@ export const storedValueRouter = router({
       })
       .from(schema.storedValueImportBatches)
       .leftJoin(schema.users, eq(schema.users.id, schema.storedValueImportBatches.operatorId))
+      .where(inArray(schema.storedValueImportBatches.storeId, scope))
       .orderBy(sql`${schema.storedValueImportBatches.createdAt} DESC`);
     return rows.map((r) => ({
       ...r.batch,

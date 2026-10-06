@@ -342,6 +342,13 @@
       "when": 1791255957560,
       "tag": "0049_client_exp6_wnav_merge",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "6",
+      "when": 1791263459535,
+      "tag": "0050_chain_foundation",
+      "breakpoints": true
     }
   ]
 }

@@ -12,11 +12,15 @@
  *   仅 owner/manager 兜底——clerk 不是门店 owner，无 staff 行即无 storeId，
  *   merchantProcedure 会拒绝，符合「店员须绑定门店」口径）；
  * - 都没有 → 不含 storeId（merchantProcedure 会因此拒绝，符合契约）。
+ *
+ * storeIds 组装规则（片 1 连锁地基 · 老板跨店全域）：仅 merchant_owner——
+ * 名下门店（owner_id=本人）∪ 名下总部辖店（hq_id∈名下店 id 集）；manager/clerk
+ * 不装配（店长/店员=本店单值闸，staff.store_id 绑定写死）。
  */
 
 import { createMiddleware } from 'hono/factory';
 import { getCookie } from 'hono/cookie';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { db, schema } from '../db';
 import type { SessionUser } from '../trpc';
 import { SESSION_COOKIE, verifySession, type SessionPayload } from './session';
@@ -70,12 +74,26 @@ export async function loadSessionUser(userId: string): Promise<SessionUser | nul
     storeId = store?.id;
   }
 
+  /* 连锁地基（片 1 · 0050）：老板跨店全域集合=名下门店 ∪ 名下总部辖店
+     （hq_id∈名下店——「店即己部」单层特例下即名下店自身+未来辖店）；
+     manager/clerk 不装配——店长只管本店（staff.store_id 绑定闸写死）。 */
+  let storeIds: string[] | undefined;
+  if (roles.includes('merchant_owner')) {
+    const owned = await db.select({ id: schema.stores.id }).from(schema.stores).where(eq(schema.stores.ownerId, userId));
+    const ownedIds = owned.map((s) => s.id);
+    const children = ownedIds.length
+      ? await db.select({ id: schema.stores.id }).from(schema.stores).where(inArray(schema.stores.hqId, ownedIds))
+      : [];
+    storeIds = [...new Set([...ownedIds, ...children.map((c) => c.id)])];
+  }
+
   return {
     id: user.id,
     nickname: user.nickname,
     roles,
     ...(staffRow ? { staffId: staffRow.id } : {}),
     ...(storeId ? { storeId } : {}),
+    ...(storeIds?.length ? { storeIds } : {}),
   };
 }
 
