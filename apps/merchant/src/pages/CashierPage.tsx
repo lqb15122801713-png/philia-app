@@ -166,6 +166,8 @@ export default function CashierPage() {
   const [discountValue, setDiscountValue] = useState(0)
   /** 取单回来的单号（再挂=同号更新轨迹；结账幂等键） */
   const [billNo, setBillNo] = useState<string | null>(null)
+  /** 片 3：整单备注（随 hold/settle 快照 note 落库；取单还原） */
+  const [billNote, setBillNote] = useState('')
   const [creatorLabel, setCreatorLabel] = useState('')
   const [freshHeldNo, setFreshHeldNo] = useState<string | null>(null)
   const [pickTab, setPickTab] = useState<PickTab>('service')
@@ -207,6 +209,7 @@ export default function CashierPage() {
     setDiscountType('none')
     setDiscountValue(0)
     setBillNo(null)
+    setBillNote('')
     setCreatorLabel('')
   }, [])
 
@@ -250,6 +253,25 @@ export default function CashierPage() {
       paidByPass: false,
       stock: p.stock,
     })
+
+  /** 片 3 快捷收款：custom 行（refId 本地唯一——同单可多笔快捷行互不吞并；
+      server 对 custom 行只认 customName/customAmountFen，refId 落库恒 'custom'） */
+  const onAddCustom = (name: string, amountFen: number) => {
+    setLines((prev) => [
+      ...prev,
+      {
+        kind: 'custom',
+        refId: `custom-${Date.now()}-${prev.filter((l) => l.kind === 'custom').length}`,
+        name,
+        spec: '快捷收款',
+        qty: 1,
+        unitPriceFen: amountFen,
+        adjustedPriceFen: null,
+        paidByPass: false,
+      },
+    ])
+    setMobileTab((t) => (t === 'pick' ? 'cart' : t))
+  }
 
   const pullAppt = useCallback(
     (a: PendingAppt) => {
@@ -306,7 +328,7 @@ export default function CashierPage() {
   }, [queryClient])
 
   const holdM = useMutation({
-    mutationFn: () => trpc.cashier.hold.mutate(toCartSnapshot(lines, member, discountType, discountValue, billNo ?? undefined)),
+    mutationFn: () => trpc.cashier.hold.mutate(toCartSnapshot(lines, member, discountType, discountValue, billNo ?? undefined, billNote)),
     onSuccess: (r) => {
       setFreshHeldNo(r.bill.billNo)
       /**
@@ -344,13 +366,15 @@ export default function CashierPage() {
       setLines(
         r.items.map((it) => ({
           kind: it.kind as CartLine['kind'],
-          refId: it.refId,
+          // custom 行快照 refId 恒 'custom'——同单多笔快捷行取单后须本地唯一化（防行操作串行）
+          refId: it.kind === 'custom' ? `custom-${it.id}` : it.refId,
           name: it.nameSnapshot,
           spec: it.specSnapshot,
           qty: it.qty,
           unitPriceFen: it.unitPriceFen,
           adjustedPriceFen: it.adjustedPriceFen,
           paidByPass: it.paidByPass,
+          note: it.note ?? null,
           serviceType: it.kind === 'service' ? svcTypeById.get(it.refId) : undefined,
           stock: null,
         })),
@@ -373,6 +397,7 @@ export default function CashierPage() {
       setDiscountType((r.bill.discountType as DiscountType) ?? 'none')
       setDiscountValue(r.bill.discountValue)
       setBillNo(r.bill.billNo)
+      setBillNote(r.bill.note ?? '')
       setCreatorLabel(r.createdByName ?? '—')
       setMobileTab('cart')
       toast(`已取单 ${r.bill.billNo}`)
@@ -390,7 +415,7 @@ export default function CashierPage() {
   }
 
   const [payOpen, setPayOpen] = useState(false)
-  const [settledInfo, setSettledInfo] = useState<{ billNo: string; paidFen: number } | null>(null)
+  const [settledInfo, setSettledInfo] = useState<{ billNo: string; paidFen: number; roundingFen?: number } | null>(null)
 
   /* ---------------- R11a：售卡/续费面板 + 立省钩子 ---------------- */
   const [sellOpen, setSellOpen] = useState(false)
@@ -431,9 +456,12 @@ export default function CashierPage() {
     queryKey: [...MEMBER_SAVINGS_KEY, savingsSig],
     queryFn: () =>
       trpc.membership.savingsPreview.query({
-        lines: lines.map((l) => ({ kind: l.kind, amountFen: lineTotal(l) })),
+        // custom 快捷行不入立省试算（server kind 枚举无 custom——快捷行不打折不返）
+        lines: lines
+          .filter((l) => l.kind !== 'custom')
+          .map((l) => ({ kind: l.kind as 'service' | 'product' | 'appointment', amountFen: lineTotal(l) })),
       }),
-    enabled: member === null && lines.length > 0 && !savingsDismissed.includes(savingsSig),
+    enabled: member === null && lines.some((l) => l.kind !== 'custom') && !savingsDismissed.includes(savingsSig),
   })
   const savings =
     member === null && lines.length > 0 && savingsQ.data && savingsQ.data.fen > 0 ? savingsQ.data : null
@@ -472,7 +500,7 @@ export default function CashierPage() {
     (payments: SettleInput['payments']) => {
       const okFlag = enqueueOffline({
         billNo,
-        snapshot: toCartSnapshot(lines, member, discountType, discountValue),
+        snapshot: toCartSnapshot(lines, member, discountType, discountValue, undefined, billNote),
         payments,
       })
       if (okFlag) {
@@ -484,17 +512,17 @@ export default function CashierPage() {
         toast.error('暂存队列已满（50 单），请恢复网络后再结账')
       }
     },
-    [billNo, lines, member, discountType, discountValue, clearCart],
+    [billNo, billNote, lines, member, discountType, discountValue, clearCart],
   )
 
   const settleM = useMutation({
     mutationFn: (payments: SettleInput['payments']) =>
       trpc.cashier.settle.mutate({
-        ...toCartSnapshot(lines, member, discountType, discountValue, billNo ?? undefined),
+        ...toCartSnapshot(lines, member, discountType, discountValue, billNo ?? undefined, billNote),
         payments,
       }),
     onSuccess: (r) => {
-      setSettledInfo({ billNo: r.bill.billNo, paidFen: r.bill.paidFen })
+      setSettledInfo({ billNo: r.bill.billNo, paidFen: r.bill.paidFen, roundingFen: r.bill.roundingFen })
       clearCart()
       invalidateCashier()
     },
@@ -727,6 +755,7 @@ export default function CashierPage() {
               onAddService={onAddService}
               onAddProduct={onAddProduct}
               onPullAppt={pullAppt}
+              onAddCustom={onAddCustom}
             />
           </div>
         </section>
@@ -772,6 +801,11 @@ export default function CashierPage() {
                   prev.map((l) => (l.refId === refId ? { ...l, paidByPass: !l.paidByPass } : l)),
                 )
               }
+              onLineNote={(refId, note) =>
+                setLines((prev) => prev.map((l) => (l.refId === refId ? { ...l, note: note || null } : l)))
+              }
+              billNote={billNote}
+              onBillNote={setBillNote}
               onHold={() => holdM.mutate()}
               onCheckout={() => {
                 if (discountOverLimit(amounts)) {

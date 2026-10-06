@@ -111,7 +111,18 @@ export default function HoldPanel({
                 {b.billNo === freshHeldNo ? (
                   <span className="absolute right-3 top-2.5 h-[7px] w-[7px] rounded-full bg-brand-primary" />
                 ) : null}
-                <div className="font-number text-caption font-semibold tabular-nums">{b.billNo}</div>
+                <div className="font-number text-caption font-semibold tabular-nums">
+                  {b.billNo}
+                  {/* 片 3：挂出超 24h 徽标（按 heldAt 计算，防压单） */}
+                  {b.heldAt && Date.now() - new Date(b.heldAt).getTime() > 24 * 3600 * 1000 ? (
+                    <span
+                      className="ml-1.5 inline-flex items-center rounded-[6px] bg-danger-light px-1.5 py-[2px] align-middle text-caption-xs font-sans font-semibold leading-none text-danger-deep"
+                      data-testid={`cashier-held-over24-${b.billNo}`}
+                    >
+                      {cc('cashier.holdOver24')}
+                    </span>
+                  ) : null}
+                </div>
                 <div className="mt-1 text-caption-xs">
                   {b.buyerName} · <span className="font-number tabular-nums">{b.itemCount}</span> 项
                 </div>

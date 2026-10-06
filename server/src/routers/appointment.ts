@@ -56,6 +56,7 @@ import { TRPCError } from '@trpc/server';
 import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, lte, ne, or } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
+import { maskPhone } from '../services/phoneMask';
 import { CLIENT_AGREEMENT_CONTENT } from '../config/agreements';
 import { currentMembership, loadMemberPlans, planNum } from '../services/rebate';
 import {
@@ -2563,6 +2564,37 @@ export const appointmentRouter = router({
           .where(eq(schema.prepaidRecords.appointmentId, appt.id))
           .get()) ?? null;
       return { record };
+    }),
+
+  /**
+   * 预付台账本店列表（商家端大批片 3 · 订金押金留痕透出；merchantManager）：
+   * 本店 prepaid_records 全量（状态滤签可选）+客户昵称/手机号掩码+关联预约时刻。
+   */
+  prepaidListForStore: merchantManagerProcedure
+    .input(z.object({ status: z.enum(['prepaid_pending', 'prepaid_registered', 'checked_deducted', 'refunded']).optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      const conds = [eq(schema.prepaidRecords.storeId, ctx.user.storeId!)];
+      if (input?.status) conds.push(eq(schema.prepaidRecords.status, input.status));
+      const rows = await ctx.db
+        .select({
+          record: schema.prepaidRecords,
+          customerName: schema.users.nickname,
+          customerPhone: schema.users.phone,
+          apptStart: schema.appointments.scheduledStart,
+          apptType: schema.appointments.type,
+        })
+        .from(schema.prepaidRecords)
+        .innerJoin(schema.users, eq(schema.users.id, schema.prepaidRecords.customerId))
+        .innerJoin(schema.appointments, eq(schema.appointments.id, schema.prepaidRecords.appointmentId))
+        .where(and(...conds))
+        .orderBy(desc(schema.prepaidRecords.createdAt))
+        .limit(200);
+      return rows.map((r) => ({
+        ...r.record,
+        customerName: r.customerName ?? null,
+        customerPhoneMasked: maskPhone(r.customerPhone ?? null),
+        appointment: { scheduledStart: r.apptStart, type: r.apptType },
+      }));
     }),
 });
 

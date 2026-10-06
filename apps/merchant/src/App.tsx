@@ -16,7 +16,7 @@ import MerchantRail from './components/MerchantRail'
 import ConsoleDock from './components/ConsoleDock'
 import RoleGuidePage from './components/RoleGuidePage'
 import MerchantEventsProvider from './components/dashboard/MerchantEventsProvider'
-import { CLERK_ALLOWED_PATHS, clerkGuideText, useMerchantRole } from '@/lib/roles'
+import { CLERK_ALLOWED_PATHS, CLERK_ALLOWED_PREFIXES, clerkGuideText, useMerchantRole } from '@/lib/roles'
 import AppointmentDetailPage from './pages/AppointmentDetailPage'
 import AppointmentMonitorPage from './pages/AppointmentMonitorPage'
 import AppointmentsPage from './pages/AppointmentsPage'
@@ -31,12 +31,14 @@ import ConsolePage from './pages/ConsolePage'
 import DashboardPage from './pages/DashboardPage'
 import DevLoginPage from './pages/DevLoginPage'
 import FinancePage from './pages/FinancePage'
+import LedgerPage from './pages/LedgerPage'
 import MatrixPage from './pages/MatrixPage'
 import MonitorHubPage from './pages/MonitorHubPage'
 import OpsPage from './pages/OpsPage'
 import OrdersPage from './pages/OrdersPage'
 import PassPage from './pages/PassPage'
 import PayrollPage from './pages/PayrollPage'
+import ReceiptPage from './pages/ReceiptPage'
 import XpAdminPage from './pages/XpAdminPage'
 import ProductsPage from './pages/ProductsPage'
 import ReportPage from './pages/ReportPage'
@@ -67,7 +69,10 @@ function RoleLanding() {
 function ClerkRouteGuard({ children }: { children: React.ReactNode }) {
   const { isClerk } = useMerchantRole()
   const { pathname } = useLocation()
-  if (isClerk && !CLERK_ALLOWED_PATHS.some((p) => pathname === p)) {
+  const allowed =
+    CLERK_ALLOWED_PATHS.some((p) => pathname === p) ||
+    CLERK_ALLOWED_PREFIXES.some((p) => pathname.startsWith(p))
+  if (isClerk && !allowed) {
     const g = clerkGuideText(pathname)
     return <RoleGuidePage title={g.title} hint={g.hint} />
   }
@@ -95,6 +100,10 @@ function ProtectedRoutes() {
         <Route path="/cashier" element={<CashierPage />} />
         <Route path="/cashier/records" element={<CashierRecordsPage />} />
         <Route path="/cashier/close" element={<CashierClosePage />} />
+        {/* 片 3：小票版式页（打印+补打同路由；clerk 白名单前缀放行——收银执行层可打小票） */}
+        <Route path="/cashier/receipt/:billNo" element={<ReceiptPage />} />
+        {/* 片 3：台账专页（挂账/押金/预付/授权四区；owner|manager，clerk 由 ClerkRouteGuard 拦） */}
+        <Route path="/ledger" element={<LedgerPage />} />
         {/* 批次 R12 退款专项：退款单列表页（owner|manager；clerk 由 ClerkRouteGuard 拦 + 页内 canManage 闸门） */}
         <Route path="/cashier/refunds" element={<CashierRefundsPage />} />
         {/* U3：墨轨规范名 /pass（/passes 保留兼容深链） */}

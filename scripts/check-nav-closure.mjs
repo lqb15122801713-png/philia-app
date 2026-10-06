@@ -161,6 +161,8 @@ const ROUTES = [
   { app: 'merchant', path: '/cashier/records', expect: 'sub' },
   { app: 'merchant', path: '/cashier/close', expect: 'sub' },
   { app: 'merchant', path: '/cashier/refunds', expect: 'sub', note: '批次 R12 退款单列表（墨轨常驻；clerk 引导页）' },
+  { app: 'merchant', path: '/cashier/receipt/01000000000000000000000000', expect: 'sub', note: '商家端大批片 3：小票版式页（无效单号=异常态引导，须出口；clerk 白名单前缀放行打印/补打）' },
+  { app: 'merchant', path: '/ledger', expect: 'sub', note: '商家端大批片 3：台账专页（挂账/押金/预付/授权四区；owner|manager，clerk 引导页）' },
   { app: 'merchant', path: '/dev-login', expect: 'gate' },
   { app: 'merchant', path: '/login', expect: 'gate' },
   { app: 'merchant', path: '/passes', expect: 'sub', note: '重定向兼容' },

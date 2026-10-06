@@ -14,7 +14,7 @@
 
 import type { AppRouter } from '@philia/shared'
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
-import { BedDouble, CalendarCheck, Package, Scissors, ShowerHead, type LucideIcon } from 'lucide-react'
+import { Banknote, BedDouble, CalendarCheck, Package, Scissors, ShowerHead, type LucideIcon } from 'lucide-react'
 import { fenToYuan, hhmm } from '@/components/mall-admin/format'
 
 type RouterOutputs = inferRouterOutputs<AppRouter>
@@ -81,6 +81,33 @@ export const DAY_CLOSES_KEY = ['cashier', 'listDayCloses'] as const
 export const IMPORT_BATCHES_KEY = ['storedValue', 'listImportBatches'] as const
 
 /* ------------------------------------------------------------------ */
+/* 片 3：挂账台账 / 现金收支 / 日结预览（真接线类型出口）                      */
+/* ------------------------------------------------------------------ */
+
+/** cashier.creditList 行（ledger + billNo + customerName） */
+export type CreditListRow = RouterOutputs['cashier']['creditList'][number]
+/** cashier.cashMoveList 行（movement + operatorName） */
+export type CashMoveRow = RouterOutputs['cashier']['cashMoveList'][number]
+/** cashier.dayClosePreview（blind=true 时 stats=null=盲交不透账面） */
+export type DayClosePreview = RouterOutputs['cashier']['dayClosePreview']
+/** cashier.handoverOf 行（含 floatFen/confirmedAt/confirmedBy/toUserId） */
+export type HandoverRow = NonNullable<RouterOutputs['cashier']['handoverOf']['handover']>
+/** appointment.prepaidListForStore 行（预付台账） */
+export type PrepaidListRow = RouterOutputs['appointment']['prepaidListForStore'][number]
+/** deposit.listStore 行（押金台账） */
+export type DepositListRow = RouterOutputs['deposit']['listStore']['items'][number]
+/** agreement.listForStore 行（授权台账） */
+export type AgreementListRow = RouterOutputs['agreement']['listForStore']['items'][number]
+
+export const CREDIT_LIST_KEY = ['cashier', 'creditList'] as const
+export const CASH_MOVE_LIST_KEY = ['cashier', 'cashMoveList'] as const
+export const DAY_CLOSE_PREVIEW_KEY = ['cashier', 'dayClosePreview'] as const
+export const HANDOVER_OF_KEY = 'handoverOf' as const
+export const PREPAID_LIST_KEY = ['appointment', 'prepaidListForStore'] as const
+export const DEPOSIT_LEDGER_KEY = ['deposit', 'ledger'] as const
+export const AGREEMENT_LIST_KEY = ['agreement', 'listForStore'] as const
+
+/* ------------------------------------------------------------------ */
 /* 会员 / 购物车行                                                      */
 /* ------------------------------------------------------------------ */
 
@@ -103,17 +130,20 @@ export interface CashierMember {
 
 /** 购物车行（前端工作模型；提交时映射为 cartItemSchema 快照） */
 export interface CartLine {
-  kind: 'service' | 'product' | 'appointment'
+  /** custom=快捷收款行（名目+自定义金额；无商品零迁移扩域） */
+  kind: 'service' | 'product' | 'appointment' | 'custom'
   refId: string
   name: string
   spec: string | null
-  /** 服务/预约行恒 1（服务端强校验），仅商品行 1-99 */
+  /** 服务/预约/快捷行恒 1（服务端强校验），仅商品行 1-99 */
   qty: number
   unitPriceFen: number
   /** 行改价留痕（分）；null = 未改价。非空触发服务端 owner 闸门 */
   adjustedPriceFen: number | null
   /** 次卡扣次行（仅 grooming 服务行；须绑会员） */
   paidByPass: boolean
+  /** 单品备注（≤200 字；随 hold/settle 入参，小票透出） */
+  note?: string | null
   /** 服务行原类型（grooming 才可扣次）；取单还原后经服务目录回填 */
   serviceType?: string
   /** 商品行加入时的库存快照（库存不足警示条用；结账以服务端重读为准） */
@@ -131,6 +161,11 @@ export interface CartAmounts {
   subtotalFen: number
   /** 单级优惠额（分） */
   discountFen: number
+  /**
+   * 抹零让利（分；片 3 · S4）：规则=cashier_rounding_rule 端口键，前端恒 0 占位
+   * （真值以 server 重算为准）；单上 roundingFen>0 时展示层透出「抹零 −¥x.xx」
+   */
+  roundingFen: number
   /** 应收（分，提交口径）= subtotal − discount */
   payableFen: number
   /** 次卡抵扣（分）：Σ扣次行有效价 */
@@ -167,6 +202,7 @@ export function computeCart(
   return {
     subtotalFen,
     discountFen,
+    roundingFen: 0, // 占位：抹零规则为 server 端口键口径，前端不自算（真值以单为准）
     payableFen,
     passCoveredFen,
     dueFen: payableFen - passCoveredFen,
@@ -177,13 +213,14 @@ export function computeCart(
 /** 优惠是否超上限（服务端 badRequest 边界：优惠 ≤ 非预约行合计） */
 export const discountOverLimit = (a: CartAmounts): boolean => a.discountFen > a.nonApptSubtotalFen
 
-/** 组装 hold/settle 的购物车快照（行 → cartItemSchema） */
+/** 组装 hold/settle 的购物车快照（行 → cartItemSchema；行 note 与整单 note 随快照落库） */
 export function toCartSnapshot(
   lines: CartLine[],
   member: CashierMember | null,
   discountType: DiscountType,
   discountValue: number,
   billNo?: string,
+  note?: string,
 ): HoldInput {
   return {
     ...(billNo ? { billNo } : {}),
@@ -194,28 +231,35 @@ export function toCartSnapshot(
       qty: l.qty,
       adjustedPriceFen: l.adjustedPriceFen ?? null,
       paidByPass: l.paidByPass,
+      ...(l.note?.trim() ? { note: l.note.trim() } : {}),
+      // 快捷收款行：名目/金额前端给，server 校验存在性即放行（不触发改价闸门）
+      ...(l.kind === 'custom' ? { customName: l.name, customAmountFen: l.unitPriceFen } : {}),
     })),
     discountType,
     discountValue,
+    ...(note?.trim() ? { note: note.trim() } : {}),
   }
 }
 
 /**
  * 组装结账支付段：现金/微信/支付宝按选中输入 + 次卡段自动派生 + 储值段手输 +
- * 回馈金段手输（R11a 第六段）：
+ * 回馈金段手输（R11a 第六段）+ 挂账段手输（片 3 第七段 credit）：
  * （次卡金额 = Σ扣次行有效价，服务端口径「次卡支付段金额须等于扣次行有效价合计」；
  *   储值段 = 存量储值消费，M1-补2 R5 启用，须绑会员，余额服务端事务内核验；
  *   回馈金段 = 已到账余额抵扣，仅商品行可用——红线 2，server settle 硬校验兜底，
- *   余额不足 deductRebate FORBIDDEN 原文透出；不计已收，computeDayTender rebateFen 单列）。
- * 返回 null = 校验未过（Σ现金类 + 储值 + 回馈金 ≠ 展示应收）。
+ *   余额不足 deductRebate FORBIDDEN 原文透出；不计已收，computeDayTender rebateFen 单列）；
+ *   挂账段 = 台账留痕不碰真钱（至多一段，server 落 credit_ledgers；computeDayTender
+ *   跳过不计已收；结清/核销走台账专页 creditSettle/creditWriteoff）。
+ * 返回 null = 校验未过（Σ现金类 + 储值 + 回馈金 + 挂账 ≠ 展示应收）。
  */
 export function finalizePayments(
   amounts: CartAmounts,
-  moneySegs: Array<{ method: Exclude<PayMethod, 'pass' | 'stored_value' | 'rebate'>; amountFen: number }>,
+  moneySegs: Array<{ method: Exclude<PayMethod, 'pass' | 'stored_value' | 'rebate' | 'credit'>; amountFen: number }>,
   storedValueFen = 0,
   rebateFen = 0,
+  creditFen = 0,
 ): SettleInput['payments'] | null {
-  const sum = moneySegs.reduce((s, p) => s + p.amountFen, 0) + storedValueFen + rebateFen
+  const sum = moneySegs.reduce((s, p) => s + p.amountFen, 0) + storedValueFen + rebateFen + creditFen
   if (sum !== amounts.dueFen) return null
   const payments: SettleInput['payments'] = moneySegs.map((p) => ({
     method: p.method,
@@ -226,6 +270,9 @@ export function finalizePayments(
   }
   if (rebateFen > 0) {
     payments.push({ method: 'rebate', amountFen: rebateFen })
+  }
+  if (creditFen > 0) {
+    payments.push({ method: 'credit', amountFen: creditFen })
   }
   if (amounts.passCoveredFen > 0) {
     payments.push({ method: 'pass', amountFen: amounts.passCoveredFen })
@@ -273,7 +320,7 @@ export function memberDiscountLineTotal(l: CartLine, bp: number | null): number 
 /* 展示标签 / 图标                                                      */
 /* ------------------------------------------------------------------ */
 
-/** 支付方式六分列标签（M1-补2 R5 + R11a：cash|wechat|alipay|pass|stored_value|rebate；credit 已废不出现） */
+/** 支付方式七分列标签（M1-补2 R5 + R11a + 片 3 credit 挂账：台账留痕不计已收） */
 export const PAY_METHOD_LABEL: Record<string, string> = {
   cash: '现金',
   wechat: '微信',
@@ -281,6 +328,7 @@ export const PAY_METHOD_LABEL: Record<string, string> = {
   pass: '次卡扣次',
   stored_value: '储值',
   rebate: '回馈金',
+  credit: '挂账',
 }
 
 /** 流水状态签：已收薄荷 / 已撤单灰 / 挂单·开单中浅木（收银单无待收——修订单口径）；
@@ -303,6 +351,7 @@ export function serviceIcon(name: string, type?: string): LucideIcon {
 export function lineIcon(l: CartLine): LucideIcon {
   if (l.kind === 'appointment') return CalendarCheck
   if (l.kind === 'product') return Package
+  if (l.kind === 'custom') return Banknote
   return serviceIcon(l.name, l.serviceType)
 }
 

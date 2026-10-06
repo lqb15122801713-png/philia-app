@@ -389,7 +389,9 @@ function DayCloseSection({ showToast }: { showToast: (m: string) => void }) {
   });
 
   const p = previewQ.data;
-  const bookCashFen = p?.stats.tender.cashFen ?? 0;
+  /* 本页恒走非盲交路径（不传 blind）→ stats 恒非空（server 类型=可空 union，收窄见片 3 申报） */
+  const st = p?.stats ?? null;
+  const bookCashFen = st?.tender.cashFen ?? 0;
   const actualFen = parseYuanToFen(cashText);
   const diffFen = actualFen !== null ? actualFen - bookCashFen : null;
 
@@ -422,23 +424,23 @@ function DayCloseSection({ showToast }: { showToast: (m: string) => void }) {
             <dl style={{ marginTop: 10, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px' }}>
               <div style={dlRow}>
                 <dt>已收合计</dt>
-                <dd className="sk-mono" style={{ fontWeight: 700, color: 'var(--ink)' }}>{yuan(p.stats.receivedTotalFen)}</dd>
+                <dd className="sk-mono" style={{ fontWeight: 700, color: 'var(--ink)' }}>{yuan(st!.receivedTotalFen)}</dd>
               </div>
               <div style={dlRow}>
                 <dt>笔数</dt>
-                <dd className="sk-mono" style={{ fontWeight: 700, color: 'var(--ink)' }}>{p.stats.counts.paidCount}</dd>
+                <dd className="sk-mono" style={{ fontWeight: 700, color: 'var(--ink)' }}>{st!.counts.paidCount}</dd>
               </div>
               <div style={dlRow}>
                 <dt>现金</dt>
-                <dd className="sk-mono">{yuan(p.stats.tender.cashFen)}</dd>
+                <dd className="sk-mono">{yuan(st!.tender.cashFen)}</dd>
               </div>
               <div style={dlRow}>
                 <dt>微信</dt>
-                <dd className="sk-mono">{yuan(p.stats.tender.wechatFen)}</dd>
+                <dd className="sk-mono">{yuan(st!.tender.wechatFen)}</dd>
               </div>
               <div style={dlRow}>
                 <dt>支付宝</dt>
-                <dd className="sk-mono">{yuan(p.stats.tender.alipayFen)}</dd>
+                <dd className="sk-mono">{yuan(st!.tender.alipayFen)}</dd>
               </div>
             </dl>
             {p.existingFrozenCloseId ? null : (
