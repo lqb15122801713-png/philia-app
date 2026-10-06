@@ -1,0 +1,9 @@
+✅ [staff] /notifications —— OK（骨架批片 3：通知中心） back=true dock=false 出口钮=false
+✅ [staff] /notices —— OK（骨架批片 3：门店公告） back=true dock=false 出口钮=false
+✅ [staff] /voice —— OK（骨架批片 3：员工心声） back=true dock=false 出口钮=false
+✅ [staff] /self-check —— OK（骨架批片 3：每日自检） back=true dock=false 出口钮=false
+✅ [staff] /pdca —— OK（骨架批片 3：问题上报） back=true dock=false 出口钮=false
+
+===== 体检汇总：118 路由 · 死胡同 0 · 弱 0 · 豁免 6 =====
+结果 JSON：E:/KIMI code/tmp/nav-closure-client-exp-6.json
+NAV_EXIT=0

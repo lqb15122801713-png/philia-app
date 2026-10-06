@@ -1,0 +1,30 @@
+{
+  "slots": [
+    {
+      "testid": "dock-overview",
+      "text": "总览",
+      "href": "/dashboard"
+    },
+    {
+      "testid": "dock-store",
+      "text": "门店",
+      "href": "/appointments"
+    },
+    {
+      "testid": "dock-cashier",
+      "text": "收银",
+      "href": "/cashier"
+    },
+    {
+      "testid": "dock-report",
+      "text": "报表",
+      "href": "/finance"
+    },
+    {
+      "testid": "dock-settings",
+      "text": "设置",
+      "href": "/settings"
+    }
+  ],
+  "railVisible": false
+}

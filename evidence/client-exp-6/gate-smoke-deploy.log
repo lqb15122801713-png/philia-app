@@ -1,0 +1,36 @@
+# smoke-deploy 闸门日志（tail -30 段；全绿 SMOKE_DEPLOY_EXIT=0）
+# 命令：PUBLIC_BASE_URL=http://localhost:7201 CUSTOMER_URL=http://localhost:7130 MERCHANT_URL=http://localhost:7131 STAFF_URL=http://localhost:7132 node scripts/smoke-deploy.mjs
+# 2026-10-06 · dev 库 · 无门态（BETA_GATE_CODE 未设，开发期开放口径）
+
+✅ R12 寄养剩余晚部分退（退 2/3 晚，金额=floor(总价÷3)×2；分段明细透出总晚/退晚/晚单价） —— amount=39800 期望=39800
+✅ R11a 微光开档（新手机号建档 + 0 元单直接成交）
+✅ R11a openFree 幂等（重复调用 idempotent=true 不重建）
+✅ R11a 萤火售卖到店付（4 只宠 25800 现金段，成交即开通 active）
+✅ R11a 双归属：memberships.sold_store_id=办卡店（本店）
+✅ R11a 回馈金返 2%（商品单 grant 挂期次：本期预计 +2% 精确到分）
+✅ R11a 抵扣段仅商品（服务行 + rebate 段 → 403「回馈金仅可抵商品」）
+✅ R11a 抵扣段仅商品（商品行 + rebate 段过闸门）
+✅ R11a 日结分摊双口径并列（cashFen 收现 vs amortizedFen 分摊）
+✅ dev-login（小周 / clerk） —— status=200
+✅ 收银修复包 todayTenderStats（已收=现金+微信+支付宝可加总）
+✅ 收银修复包 三处同源同数（总览/收银台头部/财务头部）
+✅ clerk 营业额遮罩（restricted=true 且金额 null）
+✅ clerk 开单 cashier.hold 放行
+✅ clerk 改价 403（服务端硬闸门）
+✅ clerk financeStats 403
+✅ clerk 撤单（未支付单，补丁①放宽）放行
+✅ clerk 日结 403（无交接班/日结权）
+✅ 日结 当前班次可查（懒建开班）
+✅ 日结 cashier.dayClose 冻结当班（当日已结则幂等通过）
+✅ 日结单留痕可查（listDayCloses）
+✅ 反结账单 cashier.reverseBill（owner，强制原因+关联原单）
+✅ 储值导入 preview（零写入+校验位）
+✅ clerk 储值导入 403（仅老板）
+✅ PR-3 C2c 日结/已收合计不含 held 单
+✅ PR-3 C2 收尾段：本次新增 held 单逐个 voidBill —— 新增=2 已撤=2
+✅ PR-3 C2 收尾段：跑后 held 数=跑前（零新增残留）
+
+目标：http://localhost:7201（口令门未设置，开发期开放口径）
+全部通过 🎉
+SMOKE_DEPLOY_EXIT=0
+（本片取用：smoke-deploy 造单 aid=01M47M6PKYK2EVRRW03E6Y34W5（in_service）→ 传入 SMOKE_APPT_ID 复跑 smoke-routes 消 F1 环境件两条红）

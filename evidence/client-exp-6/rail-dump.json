@@ -1,0 +1,128 @@
+{
+  "groups": [
+    {
+      "label": "经营",
+      "items": [
+        {
+          "testid": "rail-dashboard",
+          "text": "总览·驾驶舱",
+          "href": "/dashboard",
+          "badge": null
+        },
+        {
+          "testid": "rail-appointments",
+          "text": "门店端·预约",
+          "href": "/appointments",
+          "badge": null
+        },
+        {
+          "testid": "rail-boarding",
+          "text": "寄养",
+          "href": "/boarding",
+          "badge": null
+        },
+        {
+          "testid": "rail-cashier",
+          "text": "收银台",
+          "href": "/cashier",
+          "badge": null
+        },
+        {
+          "testid": "rail-cashier-close",
+          "text": "日结",
+          "href": "/cashier/close",
+          "badge": null
+        },
+        {
+          "testid": "rail-refunds",
+          "text": "退款",
+          "href": "/cashier/refunds",
+          "badge": null
+        }
+      ]
+    },
+    {
+      "label": "商城",
+      "items": [
+        {
+          "testid": "rail-orders",
+          "text": "商城订单",
+          "href": "/orders",
+          "badge": null
+        },
+        {
+          "testid": "rail-products",
+          "text": "商品",
+          "href": "/products",
+          "badge": null
+        },
+        {
+          "testid": "rail-pass",
+          "text": "会员·次卡",
+          "href": "/pass",
+          "badge": null
+        }
+      ]
+    },
+    {
+      "label": "管理",
+      "items": [
+        {
+          "testid": "rail-staff",
+          "text": "员工",
+          "href": "/staff",
+          "badge": null
+        },
+        {
+          "testid": "rail-schedules",
+          "text": "排班",
+          "href": "/settings/schedules",
+          "badge": null
+        },
+        {
+          "testid": "rail-payroll",
+          "text": "薪资",
+          "href": "/payroll",
+          "badge": null
+        },
+        {
+          "testid": "rail-xp-admin",
+          "text": "XP 审核",
+          "href": "/xp-admin",
+          "badge": null
+        },
+        {
+          "testid": "rail-ops",
+          "text": "运营 · 审批中心",
+          "href": "/ops",
+          "badge": "2"
+        },
+        {
+          "testid": "rail-monitor",
+          "text": "监控 Hub",
+          "href": "/monitor",
+          "badge": null
+        },
+        {
+          "testid": "rail-finance",
+          "text": "报表",
+          "href": "/finance",
+          "badge": null
+        },
+        {
+          "testid": "rail-matrix",
+          "text": "权限矩阵",
+          "href": "/matrix",
+          "badge": null
+        },
+        {
+          "testid": "rail-settings",
+          "text": "门店档案·设置",
+          "href": "/settings",
+          "badge": null
+        }
+      ]
+    }
+  ],
+  "foot": "开发者管理端\n开发者管理端\n规则配置\n文案端口\n槽位端口\n菲丽亚宠物·示例店\n店主 · 菲丽亚店主"
+}

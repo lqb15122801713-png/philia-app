@@ -1,0 +1,70 @@
+{
+  "checks": [
+    {
+      "name": "owner dev-login",
+      "ok": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "rail 渲染且含「运营 · 审批中心」",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "rail 十九口=主区三组 18 口（经营 6/商城 3/管理 9）+foot 开发者管理端（/console）一口",
+      "ok": true,
+      "detail": "main=18 footConsole=true"
+    },
+    {
+      "name": "管理组 9 口口序（员工/排班/薪资/XP 审核/运营 · 审批中心/监控 Hub/报表/权限矩阵/门店档案·设置）",
+      "ok": true,
+      "detail": "员工/排班/薪资/XP 审核/运营 · 审批中心/监控 Hub/报表/权限矩阵/门店档案·设置"
+    },
+    {
+      "name": "「批次扩口」组零残留",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "bd 角标=审批+申诉合并计数（dev 库实证：自检 pending 1 + 申诉 pending 1 → 角标 2，API 双源已核）",
+      "ok": true,
+      "detail": "badge=2"
+    },
+    {
+      "name": "/ops 落屏单高亮（仅 rail-ops 一口亮，/ops 指向唯一）",
+      "ok": true,
+      "detail": "{\"onCount\":1,\"onTestid\":\"rail-ops\",\"opsLinks\":1}"
+    },
+    {
+      "name": "merchant-dock 渲染（<xl 形态）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "dock 五槽逐字（总览/门店/收银/报表/设置）",
+      "ok": true,
+      "detail": "总览→/dashboard 门店→/appointments 收银→/cashier 报表→/finance 设置→/settings"
+    },
+    {
+      "name": "dock 第五槽指向 /settings + 「我的」零残留",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "双形态互斥（mobile 下 rail 藏形）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "/settings 落屏 dock「设置」槽激活",
+      "ok": true,
+      "detail": "class=on"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\exp6-evidence\\01-rail-19-desktop.png",
+    "E:\\KIMI code\\tmp\\exp6-evidence\\02-ops-single-highlight.png",
+    "E:\\KIMI code\\tmp\\exp6-evidence\\03-dock-5slots-mobile.png",
+    "E:\\KIMI code\\tmp\\exp6-evidence\\04-dock-settings-active.png"
+  ]
+}
