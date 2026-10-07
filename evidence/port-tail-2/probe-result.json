@@ -1,0 +1,40 @@
+{
+  "checks": [
+    {
+      "name": "owner dev-login",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "/products 渲染+批量编辑 toggle 在",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "批量编辑网格：网格可编辑+改值脏行+浮动条（待保存）",
+      "ok": true,
+      "detail": "grid=true edit=true bar=true"
+    },
+    {
+      "name": "订正审批流：D4 队列 pending 单（余额修正示范）+通过/驳回钮+红线条",
+      "ok": true,
+      "detail": "queue=true pending=true btns=true"
+    },
+    {
+      "name": "回收站：商品+活动行在列（删除人/时刻）+恢复钮",
+      "ok": true,
+      "detail": "rows=2 product=true promo=true btns=2"
+    },
+    {
+      "name": "公告两步流：草稿区在列+发布弹层（起止可空+预览卡）",
+      "ok": true,
+      "detail": "draft=true modal=true preview=true"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\port-tail-2-evidence\\01-products-bulk-grid.png",
+    "E:\\KIMI code\\tmp\\port-tail-2-evidence\\02-correction-queue.png",
+    "E:\\KIMI code\\tmp\\port-tail-2-evidence\\03-recycle-bin.png",
+    "E:\\KIMI code\\tmp\\port-tail-2-evidence\\04-announce-two-step.png"
+  ]
+}
