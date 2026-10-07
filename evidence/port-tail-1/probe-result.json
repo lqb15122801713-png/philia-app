@@ -1,0 +1,67 @@
+{
+  "checks": [
+    {
+      "name": "owner dev-login",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "/settings/rules 渲染（nav 空白疑云实证）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "涉钱徽+帮助注透出（member_plans 域）",
+      "ok": true,
+      "detail": "money=true help=true"
+    },
+    {
+      "name": "规则页搜索：q=萤火 过滤生效（行数收窄）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "待生效徽+定时行撤销钮透出（refund 域）",
+      "ok": true,
+      "detail": "badge=true cancel=true"
+    },
+    {
+      "name": "回滚时间轴：历史展开三版在列+回到此版钮 ≥2",
+      "ok": true,
+      "detail": "rollbackBtns=2"
+    },
+    {
+      "name": "二级审批流：审批区 pending 单（rebate_validity_days）+通过/驳回钮",
+      "ok": true,
+      "detail": "pending=true btns=true"
+    },
+    {
+      "name": "kill arm(api)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "kill switch 态：控制台大红横幅+恢复钮",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "kill restore(api)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "参数字典：全量行在列+q=kill 收窄命中 kill switch",
+      "ok": true,
+      "detail": "all=100 filtered=2"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\port-tail-1-evidence\\01-rules-search-money-help.png",
+    "E:\\KIMI code\\tmp\\port-tail-1-evidence\\02-rules-scheduled-badge.png",
+    "E:\\KIMI code\\tmp\\port-tail-1-evidence\\03-rules-rollback-timeline.png",
+    "E:\\KIMI code\\tmp\\port-tail-1-evidence\\04-rules-approval-flow.png",
+    "E:\\KIMI code\\tmp\\port-tail-1-evidence\\05-console-kill-on.png",
+    "E:\\KIMI code\\tmp\\port-tail-1-evidence\\06-console-dict.png"
+  ]
+}
