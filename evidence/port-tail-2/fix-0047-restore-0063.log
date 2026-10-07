@@ -1,0 +1,8 @@
+修一件实证（2026-10-07）：
+
+1. 0047 复原：cp 自 main@5cf674c0 codeload 基线 → sha256=8dae73d357192817e88ec86b837045cc1219a3000090eae25442f50ab1766230 == main 版逐字节 ✓
+2. 0063 增量：diff(main 版, 被重写版) 抽 `> UPDATE` 行=636（ann.draft.*/ann.list.*/prod.*/corr.*/cadm.* 新键+ann.reads.close 归屏修正），NULL 守卫逐句，grep -c "^UPDATE"=636 ✓
+3. 幂等重放实证（刮库 repro63.db）：migrate 全序列后手工重放 0063 第二遍 → replay-identical=true；ann.draft.badge.screen=商家·公告；ann.reads.close.screen=商家·公告（归屏修正生效）✓
+4. dev 库追平：0063 手工应用+sha256=3d8afc3ff875b650 补登 __drizzle_migrations（migrows=64）；dev 库 ann.reads.close.screen=商家·公告 ✓
+5. 生成器防再犯：gen-copy-overrides-seed.mts 产物 2 永久改道 _backfill_staging.sql（staging 勿入卷）+头注军规；本修复后 staging 文件已删 ✓
+6. journal idx 63 登记 ✓

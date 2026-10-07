@@ -13,7 +13,8 @@
 
 ## 二、申报件
 
-1. 迁移 **0061**（products/promo_campaigns/announcements 各+deleted_at/deleted_by+announcements+starts_at/ends_at+data_corrections 新表）+**0062**（copy 键 92 枚=脚本生成+INSERT 计数断言==92 ✓：corr 42+prod 14+ann 24+cadm 12）；journal idx 61/62；dev 库均手工追平（sha256=2d9b7d25…/b2198671… 补登，migrows=63）；
+1. 迁移 **0061**（products/promo_campaigns/announcements 各+deleted_at/deleted_by+announcements+starts_at/ends_at+data_corrections 新表）+**0062**（copy 键 92 枚=脚本生成+INSERT 计数断言==92 ✓：corr 42+prod 14+ann 24+cadm 12）+**0063**（归屏/位置注增量回填 636 行=NULL 守卫幂等，重放实证 replay-identical）；journal idx 61/62/63；dev 库均手工追平（sha256=2d9b7d25…/b2198671…/3d8afc3f… 补登，migrows=64）；
+   **军规（本片打回修一件后立，全批照行）：已部署迁移永不重写，增量回填走新迁移**——0047 曾随生成器重跑被整件重写（含既有行 position 文案漂移），已逐字节复原 main 版（sha256=8dae73d3…==main 版），增量 636 行挪 0063；生成器产物永久改道 `server/drizzle/_backfill_staging.sql`（staging 勿入卷，用后删，diff 增量挪下一号新迁移）；
 2. e2e 族 84 新增（8 组 19 断言；既有断言零删改；61 族公告兼容实证在列）；56.1/76.3 计数 **3671→3763**（域 **70→71**=corr 新域）同步；
 3. **nav 双表零申报**（本片零新路由：新增面=ConsolePage D4/D5 端口直嵌+既有页内模式；归屏率 96.9%>90% 军规线，未归屏 115/3763=3.1%<10%）；
 4. **R11a① 扫描器零触及**（本片无互转类新口）；`taskCollabPort` 公告桥就近扩契约（桥退役=超范围留口，代理报备在卷）；
