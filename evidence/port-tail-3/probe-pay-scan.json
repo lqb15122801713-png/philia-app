@@ -1,0 +1,39 @@
+{
+  "checks": [
+    {
+      "name": "owner dev-login",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "01 薪资页渲染（试算器/手工调整区在）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "02 试算器：跑试算出逐人两帧表",
+      "ok": true,
+      "detail": "run=RAN result=true"
+    },
+    {
+      "name": "03 手工调整区：发起表单+队列+阈值注记",
+      "ok": true,
+      "detail": "shown=true"
+    },
+    {
+      "name": "04 收银台录码卡：cashier-scan-card/input 在（聚合扫码=并列通道）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "05 录码核验：签发会员码→录码提交→会员档位带出",
+      "ok": true,
+      "detail": "flow=SUBMITTED shown=true"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\port-tail-3-evidence\\07-payroll-sim-adjust.png",
+    "E:\\KIMI code\\tmp\\port-tail-3-evidence\\08-cashier-scan-card.png",
+    "E:\\KIMI code\\tmp\\port-tail-3-evidence\\09-cashier-scan-verified.png"
+  ]
+}

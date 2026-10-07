@@ -1,0 +1,19 @@
+✅ 真实造单（成功页数据源） —— aid=01M4BFHVDCA9DFKHKSEK62JTT5
+✅ 浏览器 dev-login —— status=200
+✅ 成功页可达（?aid= 真实单据）
+✅ 成功页返回键存在
+✅ 成功页双出口（查看我的预约 / 返回首页）
+✅ 成功页核销码区（工作文档）
+✅ 成功页改期快捷入口
+✅ 成功页一击回首页（落 /home） —— path=/home
+✅ 选宠物弹层打开
+✅ 选宠物弹层点整行可选中（文字区命中） —— pet=旺财狗狗 ·
+✅ R-Nav-2 状态闭环：自造单客户取消（>4h 直消） —— status=cancelled
+✅ R-Nav-2 前置：切到「已取消」tab
+✅ R-Nav-2 前置：自造取消单在列表可取（取不到=显式失败）
+✅ R-Nav-2 前置：已进入自造单据详情（进详情成功才断言） —— path=/appointments/01M4BFHVDCA9DFKHKSEK62JTT5
+✅ R-Nav-2 返回列表保筛选 tab —— tab=已取消 返回后=/appointments?tab=cancelled
+✅ R-Nav-3 底栏中位爪印带文字标签 —— label=philia
+
+e2e-nav-check 全绿 🎉
+EXIT=0

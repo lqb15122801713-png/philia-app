@@ -1,0 +1,13 @@
+{
+  "note": "画布验收尺实录（port-tail-3-canvas-shots.mjs 十跑终绿 PROBE_ALL_GREEN；原始 console 见任务日志，本文件按打印行重构）",
+  "checks": [
+    { "name": "owner dev-login", "ok": true },
+    { "name": "01 画布端口打开：左栏块单+iframe 真页预览加载（canvasPreview=1）", "ok": true, "detail": "canvas=true iframe=true ready=true" },
+    { "name": "02 点句反查：预览点 home.entryGrooming → 左栏 megacard 高亮定位", "ok": true, "detail": "click=CLICKED picked=true" },
+    { "name": "03 改字预览即变：config.save 落库+postMessage patch → iframe 同帧显「画布改字实证」", "ok": true, "detail": "edit=EDITED preview=true" },
+    { "name": "04 拖拽换位：megacard 升至首位（左栏）+iframe 预览同序（patch 不刷新）", "ok": true, "detail": "drag=true reorder=true iframe=[home.megacard,home.banner] start=not-first" },
+    { "name": "05 发布：publishLayout 落 published（liveLayout 版本在库）", "ok": true, "detail": "live=6" },
+    { "name": "06 客户端生效：首页首块=发布序（megacard 在前）+「画布改字实证」在客户端可见", "ok": true, "detail": "order=[home.megacard,home.banner,home.live] text=画布改字实证" }
+  ],
+  "verdict": "PROBE_ALL_GREEN（非工程师验收尺全链通过：点句→改字→预览即变→拖拽换位→发布→客户端生效）"
+}
