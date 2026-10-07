@@ -16,6 +16,14 @@
  *   → WDanger 危险区（暖底赭红题带：L2-④ 二次 PIN=既有 highRisk 口令闸透出 /
  *     冻结项只读 / 动规则不动账）→ 共构不分叉注（旧三路由保留可直达）。
  *
+ * 端口批收尾片 1（前端两件）：
+ * - 件 4a kill switch 显著态：MainScaffold 之下、端口目录之上 KillSwitchStrip——
+ *   config.killStatus enabled=true → WAlert 大红横幅（{by}·{updatedAt}）+「恢复」钮；
+ *   enabled=false → 小字注+「一键关停」危险小钮；两钮 window.confirm 二次确认 →
+ *   config.setKillSwitch → invalidate killStatus；
+ * - 件 5 D3 参数字典端口：PORT_GROUPS D 章新增 dict 项（seal D3 无撞号），直嵌
+ *   ConfigDictBody（config.dictionary 全量+服务端 q 搜索+按域分组表格）。
+ *
  * owner-only：manager 见引导卡（同三端口页闸径），clerk 由 ClerkRouteGuard 拦，
  * server merchantOwnerProcedure 硬闸门兜底。
  */
@@ -25,13 +33,14 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import MainScaffold from '../components/MainScaffold';
 import RoleGuidePage from '../components/RoleGuidePage';
-import { WDanger, WcLog, WcPorts, WcPub, type WcPubStage } from '../components/skeleton';
-import { fmtDateTime } from '../components/staff-admin/format';
-import { ToasterMount } from '../components/staff-admin/ui';
+import { WAlert, WDanger, WcLog, WcPorts, WcPub, type WcPubStage } from '../components/skeleton';
+import { errMsg, fmtDateTime } from '../components/staff-admin/format';
+import { Btn, toast, ToasterMount } from '../components/staff-admin/ui';
 import { cadm } from '../copy/consoleAdmin';
 import { useMerchantRole } from '../lib/roles';
 import { CopyConfigBody } from './CopyConfigPage';
 import { CarePackPortBody } from './CarePackPortBody';
+import { ConfigDictBody } from './ConfigDictBody';
 import { ProfilePortBody } from './ProfilePortBody';
 import { DomainPanel as RulesDomainPanel, type RulesDomain } from './RulesConfigPage';
 import { SlotPortBody } from './SlotPortPage';
@@ -49,6 +58,7 @@ type PortKey =
   | 'marketing'
   | 'commission'
   | 'xp'
+  | 'dict'
   | 'profile'
   | 'reportSpec';
 
@@ -83,6 +93,8 @@ const PORT_GROUPS: Array<{
     items: [
       { key: 'commission', label: cadm('cadm.portCommission'), seal: 'D1' },
       { key: 'xp', label: cadm('cadm.portXp'), seal: 'D2' },
+      /* 端口批收尾片 1 · 件 5：D3 参数字典点亮（ConfigDictBody 直嵌；seal D3 无撞号：D1/D2 既有） */
+      { key: 'dict', label: cadm('cadm.portDict'), seal: 'D3' },
     ],
   },
   {
@@ -164,6 +176,81 @@ function SlotPublishStrip() {
 }
 
 /* ------------------------------------------------------------------ */
+/* kill switch 显著态（端口批收尾片 1 · 件 4a：页顶横幅/小字行+双确认切换）   */
+/* ------------------------------------------------------------------ */
+
+function KillSwitchStrip() {
+  const { trpc, queryClient } = usePhiliaClient();
+  const killQuery = useQuery({
+    queryKey: ['config', 'killStatus'],
+    queryFn: () => trpc.config.killStatus.query(),
+  });
+  const [busy, setBusy] = useState(false);
+
+  const toggle = async (next: boolean) => {
+    /* 二次确认（window.confirm 口径件；口令 Modal 保留给规则保存 D 套） */
+    if (!window.confirm(next ? cadm('cadm.killArmConfirm') : cadm('cadm.killRestoreConfirm'))) return;
+    setBusy(true);
+    try {
+      await trpc.config.setKillSwitch.mutate({ enabled: next });
+      toast(cadm('cadm.killDone'));
+      await queryClient.invalidateQueries({ queryKey: ['config', 'killStatus'] });
+    } catch (e) {
+      toast(errMsg(e), 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (killQuery.isPending || killQuery.isError) return null;
+
+  if (killQuery.data.enabled) {
+    return (
+      <div className="mb-3.5 flex items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <WAlert
+            testId="console-kill-alert"
+            items={[
+              {
+                key: 'kill',
+                text: cadm('cadm.killBannerOn', {
+                  by: killQuery.data.by ?? '—',
+                  updatedAt: fmtDateTime(killQuery.data.updatedAt),
+                }),
+              },
+            ]}
+          />
+        </div>
+        <Btn
+          variant="danger"
+          size="sm"
+          data-testid="console-kill-restore"
+          disabled={busy}
+          onClick={() => void toggle(false)}
+        >
+          {cadm('cadm.killRestore')}
+        </Btn>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-3.5 flex items-center gap-3 px-1">
+      <span className="min-w-0 flex-1 text-caption-xs text-[rgba(59,46,36,.42)]">{cadm('cadm.killArmNote')}</span>
+      <Btn
+        variant="danger"
+        size="sm"
+        data-testid="console-kill-arm"
+        disabled={busy}
+        onClick={() => void toggle(true)}
+      >
+        {cadm('cadm.killArm')}
+      </Btn>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* 页面                                                                */
 /* ------------------------------------------------------------------ */
 
@@ -174,6 +261,8 @@ function OwnerConsole() {
   return (
     <MainScaffold title={cadm('cadm.pageTitle')} sub={cadm('cadm.pageSub')} testid="console-page">
       <div className="wsk">
+        {/* kill switch 显著态（件 4a：开=WAlert 大红横幅+恢复钮；关=小字行+一键关停危险小钮） */}
+        <KillSwitchStrip />
         <div className="flex flex-col items-start gap-3.5 lg:flex-row">
           <WcPorts
             groups={PORT_GROUPS}
@@ -201,6 +290,8 @@ function OwnerConsole() {
             {/* 大批片 2：E1 门店档案端口（ProfilePortBody 内核）/ C3 安心包端口（CarePackPortBody 只读 v1） */}
             {active === 'profile' ? <ProfilePortBody /> : null}
             {active === 'carepack' ? <CarePackPortBody /> : null}
+            {/* 端口批收尾片 1：D3 参数字典端口（ConfigDictBody 内核；空态卡不用） */}
+            {active === 'dict' ? <ConfigDictBody /> : null}
             {empty ? (
               <section className="wsk-card" data-testid={`console-empty-${active}`} aria-disabled="true">
                 <div className="wsk-hd">

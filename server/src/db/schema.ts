@@ -1355,8 +1355,8 @@ export type RuleConfigValue = Record<string, unknown>;
 /** 提成/绩效快照分列载荷（美容师绩效池/前台绩效池两行不合并等，结构按 kind 约定） */
 export type CommissionSnapshotPayload = Record<string, unknown>;
 
-/** 规则配置变更留痕：每 key 前后值数组 */
-export type RuleConfigChanges = Array<{ rule_key: string; before: unknown; after: unknown }>;
+/** 规则配置变更留痕：每 key 前后值数组；note=可空注记（端口批收尾片 1：rollback/scheduled/auto-rollback 工序标） */
+export type RuleConfigChanges = Array<{ rule_key: string; before: unknown; after: unknown; note?: string }>;
 
 /* ---- R7 考勤 ---- */
 
@@ -2034,6 +2034,90 @@ export const ruleConfigVersions = sqliteTable(
     ...auditColumns,
   },
   (t) => [index('ix_rule_config_versions_domain').on(t.domain, t.version)],
+);
+
+/* ---- 端口批收尾片 1：定时生效切换 + 涉钱配置二级审批 + 异常自动回滚指标 ---- */
+
+/**
+ * 定时生效切换登记（片 1 · 到点懒切换）：save 带未来 effectiveAt 时，新规则行落 active=0
+ * （读方 active=1 单行口径不变=零回归）+ 本表 pending 一行；sweepScheduledConfig 到点在事务内
+ * 旧 active 行失效→登记行 active=1+本表 status=applied+rule_config_versions 落 applied 留痕
+ * （changedBy=原保存人，note=scheduled-applied）；cancelScheduled/新直存同 key=superseded。
+ */
+export const configScheduled = sqliteTable(
+  'config_scheduled',
+  {
+    id: id(),
+    /** 配置域（同 rule_config_versions.domain 取值） */
+    domain: text('domain').notNull(),
+    ruleKey: text('rule_key').notNull(),
+    /** 目标规则行 id（domain 对应表内 active=0 待生效行） */
+    rowId: text('row_id').notNull(),
+    /** 生效时点（到点懒切换：sweep 扫到即切，不精确到秒） */
+    effectiveAt: integer('effective_at', { mode: 'timestamp' }).notNull(),
+    /** 状态：pending | applied | superseded（只增不改=状态推进留痕） */
+    status: text('status').notNull().default('pending'),
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_config_scheduled_due').on(t.status, t.effectiveAt)],
+);
+
+/**
+ * 涉钱配置二级审批·变更载荷单（片 1：approval_requests 加 kind='config' 不新建审批表，
+ * 本表=config 类审批的载荷单据表，同 purchase_orders 之于 kind='purchase' 的 refId 工艺）：
+ * proposer 发起落 pending → configApprovalReview 通过→同事务应用变更（版本化+留痕）；
+ * 驳回→rejected 不落库。涉钱键名单=应用层 MONEY_HIGH_RISK_RULES（configRules.ts，登记留口）。
+ */
+export const configChangeProposals = sqliteTable(
+  'config_change_proposals',
+  {
+    id: id(),
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    domain: text('domain').notNull(),
+    /** 分层作用域（六规则域：store=门店覆盖 / hq=总部下发；中央件两域=NULL） */
+    scope: text('scope'),
+    /** 变更载荷 JSON：[{ruleKey, valueJson, label?}]（同 config.save changes 形状） */
+    changesJson: text('changes_json', { mode: 'json' })
+      .$type<Array<{ ruleKey: string; valueJson: Record<string, unknown>; label?: string }>>()
+      .notNull(),
+    /** 发起附言 */
+    note: text('note'),
+    /** 状态：pending | applied | rejected（应用后=applied，与 approval_requests.status 同步） */
+    status: text('status').notNull().default('pending'),
+    proposerId: text('proposer_id')
+      .notNull()
+      .references(() => users.id),
+    appliedAt: integer('applied_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [index('ix_config_change_proposals_store_status').on(t.storeId, t.status)],
+);
+
+/**
+ * 客户端错误事件表（片 1 · 异常自动回滚指标源）：POST /api/client-error 在既有 JSONL 落盘
+ * 之外同事落本表（try/catch 不阻断收错=JSONL 选型口径不变）；sweepConfigAutoRollback 按
+ * service_rules 键 client_error_alert_threshold{threshold,minutes} 窗口计数越线→回滚窗口内
+ * 人工配置变更+告警留痕（notifications type=config.autoRollback）。
+ */
+export const clientErrorEvents = sqliteTable(
+  'client_error_events',
+  {
+    id: id(),
+    /** 端：customer | merchant | staff */
+    app: text('app').notNull(),
+    message: text('message').notNull(),
+    stack: text('stack'),
+    url: text('url'),
+    userAgent: text('user_agent'),
+    ip: text('ip'),
+    ...auditColumns,
+  },
+  (t) => [index('ix_client_error_events_created').on(t.createdAt)],
 );
 
 /* ------------------------------------------------------------------ */
@@ -3793,9 +3877,9 @@ export const approvalRequests = sqliteTable(
     storeId: text('store_id')
       .notNull()
       .references(() => stores.id),
-    /** 类型：purchase（采购） | replenish（要货） | transfer（调拨） | writeoff（报损） */
+    /** 类型：purchase（采购） | replenish（要货） | transfer（调拨） | writeoff（报损） | config（涉钱配置二级审批，端口批收尾片 1，refId -> config_change_proposals.id） */
     kind: text('kind').notNull(),
-    /** 关联单据 id（purchase_orders/replenish_requests/transfer_orders/stock_writeoffs） */
+    /** 关联单据 id（purchase_orders/replenish_requests/transfer_orders/stock_writeoffs/config_change_proposals） */
     refId: text('ref_id').notNull(),
     /** 摘要（队列展示快照） */
     summary: text('summary').notNull(),

@@ -771,6 +771,34 @@ async function main() {
         active: true,
         createdBy: owner.id,
       },
+      /* ---- 端口批收尾片 1：kill switch/异常自动回滚/告警闸门三键（0059 迁移同名幂等先行，本处=重置后补种） ---- */
+      {
+        version: 1,
+        ruleKey: 'config_kill_switch',
+        label: '全局一键开关（kill switch）：开=全部可关参数瞬时回落安全值（线上支付通道关；页面显著红态）',
+        valueJson: { enabled: false },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'config_auto_rollback',
+        label: '异常自动回滚开关：开=客户端错误越线自动回滚窗口内人工配置变更到上一版（告警留痕）',
+        valueJson: { enabled: true },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      {
+        version: 1,
+        ruleKey: 'client_error_alert_threshold',
+        label: '客户端错误告警闸门：窗口 N 分钟内错误上报超 threshold 条=越线（异常自动回滚指标源）',
+        valueJson: { threshold: 20, minutes: 10 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
     ]);
 
     /* ---- 端口批片 B：文案端口 copy_overrides 种子（控制台第七域 domain='copy'） ----

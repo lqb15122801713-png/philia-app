@@ -16,12 +16,12 @@
  * member_plans/copy 两域=中央件全局单份不分层（save 传 scope 一律 400；登记在卷）。
  */
 import { TRPCError } from '@trpc/server';
-import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import { emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
-import { merchantOwnerProcedure, publicProcedure, router } from '../trpc';
+import { merchantManagerProcedure, merchantOwnerProcedure, publicProcedure, router } from '../trpc';
 
 /** emitEvent 首参类型（全局 db；事务 handle 运行时接口一致，类型上做显式断言，同 cashier.ts 惯例） */
 type DbHandle = Parameters<typeof emitEvent>[0];
@@ -266,7 +266,176 @@ function copyTextOf(valueJson: Record<string, unknown>): string | null {
 }
 
 /* ------------------------------------------------------------------ */
-/* router：全部 merchantOwnerProcedure（clerk/manager → FORBIDDEN 硬拒）    */
+/* 端口批收尾片 1：涉钱键名单 / 参数字典（通用字段字典）/ kill switch / 共享应用机  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 涉钱配置键名单（件 3 高危参数二级审批；宁可宽列=保守口径，登记留口候产品侧裁）：
+ * member_plans（会员价费/回馈/折扣）+pay（支付通道）全域；commission 费率/定额/拆分组；
+ * refund 金额阈值两键；service 现金类两键。xp/duration/copy=非涉钱直存。
+ * 口径注记：直存口 config.save 不挂硬闸（护既有断言+e2e 十个 owner 直存调用点），
+ * 名单内键 UI 只给「提交审批」口；审批应用口=名单内键唯一新落库通道（服务端强校验）。
+ */
+const MONEY_HIGH_RISK_COMMISSION_PATTERN = /^(commission_.*(rate|fixed|split|multiplier)|perf_(base_rate|coeff_).*|settlement_day|snapshot_day)$/;
+export function isMoneyHighRiskKey(domain: string, ruleKey: string): boolean {
+  if (domain === 'member_plans' || domain === 'pay') return true;
+  if (domain === 'commission') return MONEY_HIGH_RISK_COMMISSION_PATTERN.test(ruleKey);
+  if (domain === 'refund') return ruleKey === 'refund_threshold_fen' || ruleKey === 'refund_over_threshold_to_draft';
+  if (domain === 'service') return ruleKey === 'cashier_cash_diff_review_thresh_fen' || ruleKey === 'shifts_opening_float_default_fen';
+  return false;
+}
+
+/** 参数字典·通用字段字典（件 5 写死件：字段名→人话注；帮助注=字典合成+cfghelp copy 键覆盖留口） */
+const FIELD_NOTE: Record<string, string> = {
+  price_fen: '年费金额（分）', extra_pet_fen: '多宠附加费（分/年/只）', rebate_bp: '回馈金比例（万分比）',
+  service_discount_bp: '服务折扣（万分比，10000=无折扣）', included_pets: '档内含宠物数（只）', max_pets: '宠物数封顶（只）',
+  days: '天数', minutes: '分钟数', hours: '小时数', day: '日（每月第几日）', hour: '小时（每日第几时）',
+  threshold: '阈值', threshold_fen: '金额阈值（分）', threshold_per_day: '日频次阈值', monthly_xp: '月度 XP 上限',
+  rate_bp: '比率（万分比）', rate_bp_min: '比率下限（万分比）', rate_bp_max: '比率上限（万分比）',
+  coeff_bp: '绩效系数（万分比）', multiplier_bp: '倍率（万分比）', cap_bp: '封顶比例（万分比）',
+  points: 'XP 分值（可负=扣分）', cap: '上限', limit: '次数上限', level: '等级门槛',
+  enabled: '开关（true=开/false=关）', free: '免费档标记', text: '公示文案', name: '名称',
+  same_as: '同口径引用（复用他键值）', rule: '规则枚举（none=不叠加/allow=叠加）', note: '注记',
+  fixed_fen_by_plan: '按档定额（分，{档键:金额}）', split_bp: '拆分比例（万分比，{角色:份额}，合计须 100%）',
+  keywords: '关键词表（字符串数组）', bath: '洗护类关键词表', groom: '美容类关键词表',
+  dog: '犬种映射（{体型:系数}）', cat: '猫种映射（{体型:系数}）',
+  tiers: '阶梯表（按 hoursBefore 分档）', items: '清单行', categories: '类目表', tags: '标签表',
+  morning: '早推送时刻（HH:MM）', evening: '晚推送时刻（HH:MM）', bp: '比例（万分比）',
+  amountFen: '金额（分）', threshFen: '阈值金额（分）', validDays: '有效天数', mode: '模式枚举',
+};
+
+/** 帮助注合成（件 7：label 下一句人话注）：cfghelp.<ruleKey> copy 键覆盖优先，缺省=字段字典逐字段合成 */
+function composeHelpText(
+  ruleKey: string,
+  valueJson: Record<string, unknown>,
+  overrides: Map<string, string>,
+): string {
+  const ov = overrides.get(`cfghelp.${ruleKey}`);
+  if (ov) return ov;
+  const fields = Object.keys(valueJson ?? {});
+  if (fields.length === 0) return '（空值/置灰行）';
+  return fields.map((f) => `${f}=${FIELD_NOTE[f] ?? '自定义字段'}`).join('；');
+}
+
+/** cfghelp.* 覆盖注读取（copy_overrides active 行；帮助注覆盖留口数据源） */
+async function loadCfgHelpOverrides(d: DbHandle): Promise<Map<string, string>> {
+  const rows = await d
+    .select({ ruleKey: schema.copyOverrides.ruleKey, valueJson: schema.copyOverrides.valueJson })
+    .from(schema.copyOverrides)
+    .where(eq(schema.copyOverrides.active, true));
+  const map = new Map<string, string>();
+  for (const r of rows) {
+    if (!r.ruleKey.startsWith('cfghelp.')) continue;
+    const t = copyTextOf(r.valueJson as Record<string, unknown>);
+    if (t) map.set(r.ruleKey, t);
+  }
+  return map;
+}
+
+/** kill switch（件 4a）：service_rules 全局行 config_kill_switch.enabled===true=开（可关参数瞬时回落安全值） */
+export async function isKillSwitchOn(d: DbHandle): Promise<boolean> {
+  const rows = await d
+    .select({ valueJson: schema.serviceRules.valueJson })
+    .from(schema.serviceRules)
+    .where(and(eq(schema.serviceRules.ruleKey, 'config_kill_switch'), eq(schema.serviceRules.active, true)));
+  return (rows[0]?.valueJson as Record<string, unknown> | undefined)?.enabled === true;
+}
+
+/** 字符串域→规则表（sweep/审批应用共用；copy 表多 screen/position 两列，按 commission 同型断言用） */
+function rulesTableOf(domain: string): (typeof RULES_TABLE)['commission'] {
+  const t = (RULES_TABLE as unknown as Record<string, (typeof RULES_TABLE)['commission']>)[domain];
+  if (!t) throw new TRPCError({ code: 'BAD_REQUEST', message: `未知配置域：${domain}` });
+  return t;
+}
+
+/** 键序无关的 JSON 深比较（自动回滚「当前值==回滚目标」幂等判定用） */
+function stableStringify(v: unknown): string {
+  if (v === null || typeof v !== 'object') return JSON.stringify(v) ?? 'null';
+  if (Array.isArray(v)) return `[${v.map(stableStringify).join(',')}]`;
+  const o = v as Record<string, unknown>;
+  return `{${Object.keys(o)
+    .sort()
+    .map((k) => `${JSON.stringify(k)}:${stableStringify(o[k])}`)
+    .join(',')}}`;
+}
+function stableJsonEq(a: unknown, b: unknown): boolean {
+  return stableStringify(a) === stableStringify(b);
+}
+
+/**
+ * 应用机（rollback/审批应用共用；定时切换/自动回滚同工艺变体在文件尾部 sweep 内）：
+ * 同事务内 旧 active 行失效→新行 active=1（version=域内当前生效最大版本+1，effective_from=now，
+ * createdBy=操作人）+rule_config_versions 留痕（note=工序标）。与 save 同工艺但不走 input 校验
+ * （值来自库内行/已校验载荷）；不回溯快照/历史事件口径同 save。
+ */
+async function applyRuleValueTx(
+  tx: unknown,
+  input: {
+    domain: string;
+    ruleKey: string;
+    valueJson: Record<string, unknown>;
+    label?: string;
+    storeId: string | null;
+    changedBy: string;
+    note: string;
+  },
+): Promise<{ version: number; before: Record<string, unknown> | null }> {
+  const table = rulesTableOf(input.domain);
+  const now = new Date();
+  const isCentral = input.domain === 'member_plans' || input.domain === 'copy';
+  const cur = await txDb(tx)
+    .select({ valueJson: table.valueJson, label: table.label })
+    .from(table)
+    .where(and(eq(table.ruleKey, input.ruleKey), eq(table.active, true)));
+  const before = (cur[0]?.valueJson as Record<string, unknown> | undefined) ?? null;
+  const maxRows = await txDb(tx)
+    .select({ v: sql<number>`coalesce(max(${table.version}), 0)` })
+    .from(table)
+    .where(eq(table.active, true));
+  const nextVersion = (maxRows[0]?.v ?? 0) + 1;
+  await txDb(tx)
+    .update(table)
+    .set({ active: false, updatedAt: now })
+    .where(and(eq(table.ruleKey, input.ruleKey), eq(table.active, true)));
+  /* copy 域：screen/position 沿用该键最新行（字典写死不丢归属，同 save 工艺） */
+  const copyExt =
+    input.domain === 'copy'
+      ? (
+          await txDb(tx)
+            .select({ screen: schema.copyOverrides.screen, position: schema.copyOverrides.position })
+            .from(schema.copyOverrides)
+            .where(eq(schema.copyOverrides.ruleKey, input.ruleKey))
+            .orderBy(desc(schema.copyOverrides.version))
+            .limit(1)
+        )[0]
+      : undefined;
+  await txDb(tx)
+    .insert(table)
+    .values({
+      version: nextVersion,
+      ruleKey: input.ruleKey,
+      label: input.label ?? cur[0]?.label ?? input.ruleKey,
+      valueJson: input.valueJson,
+      effectiveFrom: now,
+      active: true,
+      createdBy: input.changedBy,
+      ...(isCentral ? {} : { storeId: input.storeId }),
+      ...(input.domain === 'copy' ? { screen: copyExt?.screen ?? null, position: copyExt?.position ?? null } : {}),
+    });
+  await txDb(tx)
+    .insert(schema.ruleConfigVersions)
+    .values({
+      domain: input.domain,
+      version: nextVersion,
+      changedBy: input.changedBy,
+      changesJson: [{ rule_key: input.ruleKey, before, after: input.valueJson, note: input.note }],
+    });
+  return { version: nextVersion, before };
+}
+
+/* ------------------------------------------------------------------ */
+/* router：merchantOwnerProcedure 为主（clerk/manager → FORBIDDEN 硬拒）；     */
+/* 例外=configApprovalReview=merchantManagerProcedure（件 3：owner/manager 皆可复核） */
 /* ------------------------------------------------------------------ */
 
 export const configRulesRouter = router({
@@ -318,6 +487,14 @@ export const configRulesRouter = router({
           .where(eq(schema.copyOverrides.active, true));
         metaByKey = new Map(ext.map((x) => [x.ruleKey, { screen: x.screen, position: x.position }]));
       }
+      /* 端口批收尾片 1：待生效徽（config_scheduled pending 目标行）+涉钱键名单标+帮助注
+         （参数字典合成，cfghelp.* copy 键覆盖留口；copy 域本页自管不附） */
+      const pendSched = await ctx.db
+        .select({ id: schema.configScheduled.id, rowId: schema.configScheduled.rowId, effectiveAt: schema.configScheduled.effectiveAt })
+        .from(schema.configScheduled)
+        .where(and(eq(schema.configScheduled.domain, input.domain), eq(schema.configScheduled.status, 'pending')));
+      const schedByRowId = new Map(pendSched.map((x) => [x.rowId, { id: x.id, effectiveAt: x.effectiveAt }]));
+      const helpOverrides = input.domain === 'copy' ? new Map<string, string>() : await loadCfgHelpOverrides(ctx.db);
       /* 端口批片 B：copy 域行附高危标记（涉钱/涉协议/涉会员口径）——端口页改前重确认弹层用；
          其他域恒 false（加字段不改形状） */
       return {
@@ -329,6 +506,11 @@ export const configRulesRouter = router({
           storeId: input.domain !== 'member_plans' && input.domain !== 'copy' ? (storeIdById.get(r.id) ?? null) : undefined,
           screen: input.domain === 'copy' ? (metaByKey.get(r.ruleKey)?.screen ?? null) : undefined,
           position: input.domain === 'copy' ? (metaByKey.get(r.ruleKey)?.position ?? null) : undefined,
+          scheduledPending: schedByRowId.has(r.id),
+          scheduledId: schedByRowId.get(r.id)?.id ?? null,
+          scheduledEffectiveAt: schedByRowId.get(r.id)?.effectiveAt ?? null,
+          moneyHighRisk: isMoneyHighRiskKey(input.domain, r.ruleKey),
+          helpText: input.domain === 'copy' ? undefined : composeHelpText(r.ruleKey, r.valueJson as Record<string, unknown>, helpOverrides),
         })),
       };
     }),
@@ -372,9 +554,17 @@ export const configRulesRouter = router({
            hq=总部下发（新行 store_id=NULL，仅 merchant_owner）；member_plans/copy 两域
            =中央件全局单份不分层，传本参一律 400 */
         scope: z.enum(['store', 'hq']).optional(),
+        /* 端口批收尾片 1（定时生效/定时切换）：ISO 时刻串；晚于当前=定时件（新行 active=0 待生效
+           + config_scheduled 登记，到点懒切换），缺省/不晚于当前=保存即生效冻结口径不变 */
+        effectiveAt: z.string().max(64, '生效时点串过长').optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      /* 定时件预检（进事务前）：串可解析才放行；晚不晚于当前在事务内按 now 判（钉时刻口径） */
+      const effAtParsed = input.effectiveAt === undefined ? null : new Date(input.effectiveAt);
+      if (input.effectiveAt !== undefined && (effAtParsed === null || !Number.isFinite(effAtParsed.getTime()))) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '定时生效时点格式非法（须 ISO 时刻串）' });
+      }
       /* 去重：同一 key 一次保存只允许一条 */
       const seen = new Set<string>();
       for (const c of input.changes) {
@@ -445,6 +635,11 @@ export const configRulesRouter = router({
 
       return ctx.db.transaction(async (tx) => {
         const now = new Date();
+        /* 定时生效闸（事务内钉 now）：effectiveAt 必须晚于当前，否则按 BAD_REQUEST 拒（不静默降级为直存） */
+        const scheduled = effAtParsed !== null && effAtParsed.getTime() > now.getTime();
+        if (effAtParsed !== null && !scheduled) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: '定时生效时点须晚于当前时刻（保存即生效请不传 effectiveAt）' });
+        }
 
         /* 该域全量行：种子宇宙校验 + 既有 label / 旧值（前后值留痕）一并取齐 */
         const existing = await txDb(tx)
@@ -497,6 +692,47 @@ export const configRulesRouter = router({
         const keys: string[] = [];
         for (const c of input.changes) {
           const before = activeByKey.get(c.ruleKey) ?? null;
+          /* 端口批收尾片 1 · 定时生效（effectiveAt 晚于当前）：旧 active 行不动（读方单行口径
+             零回归），新行 active=0+effectiveFrom=生效时点+config_scheduled 登记 pending；
+             同 key 既有 pending 件=superseded 顶替（只增不改状态机） */
+          if (scheduled && effAtParsed !== null) {
+            await txDb(tx)
+              .update(schema.configScheduled)
+              .set({ status: 'superseded', updatedAt: now })
+              .where(and(
+                eq(schema.configScheduled.domain, input.domain),
+                eq(schema.configScheduled.ruleKey, c.ruleKey),
+                eq(schema.configScheduled.status, 'pending'),
+              ));
+            const copyMeta = copyMetaByKey.get(c.ruleKey);
+            const [ins] = await txDb(tx)
+              .insert(table)
+              .values({
+                version: nextVersion,
+                ruleKey: c.ruleKey,
+                label: c.label ?? latestLabelByKey.get(c.ruleKey)?.label ?? c.ruleKey,
+                valueJson: c.valueJson,
+                effectiveFrom: effAtParsed,
+                active: false,
+                createdBy: ctx.user.id,
+                ...(isCentralDomain ? {} : { storeId: scope === 'hq' ? null : storeId }),
+                ...(input.domain === 'copy'
+                  ? { screen: copyMeta?.screen ?? null, position: c.position ?? copyMeta?.position ?? null }
+                  : {}),
+              })
+              .returning({ id: table.id });
+            await txDb(tx).insert(schema.configScheduled).values({
+              domain: input.domain,
+              ruleKey: c.ruleKey,
+              rowId: ins!.id,
+              effectiveAt: effAtParsed,
+              status: 'pending',
+              createdBy: ctx.user.id,
+            });
+            changesJson.push({ rule_key: c.ruleKey, before, after: c.valueJson, note: `scheduled:${effAtParsed.toISOString()}` });
+            keys.push(c.ruleKey);
+            continue;
+          }
           /* 旧 active 行失效（仅当前生效行；历史 inactive 行不动） */
           await txDb(tx)
             .update(table)
@@ -542,8 +778,420 @@ export const configRulesRouter = router({
           keys,
         });
 
-        return { domain: input.domain, version: nextVersion, keys, savedAt: now, outboxId };
+        return { domain: input.domain, version: nextVersion, keys, savedAt: now, outboxId, scheduled, effectiveAt: scheduled ? effAtParsed : null };
       });
+    }),
+
+  /**
+   * rollback（片 1 · 件 1 配置回滚）：回滚到任一旧版本——目标版本整行恢复 active
+   * （新行 version=域 max+1、effective_from=now、createdBy=操作人；旧 active 行失效）+
+   * rule_config_versions 留痕（note=rollback:vA→vB）。回滚≠改历史：历史行一律不动（只增不改）。
+   */
+  rollback: merchantOwnerProcedure
+    .input(
+      z.object({
+        domain: domainSchema,
+        ruleKey: z.string().min(1, '规则键不能为空'),
+        toVersion: z.number().int('版本号必须是整数').min(1, '版本号必须 ≥1'),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const table = RULES_TABLE[input.domain];
+      const target = (
+        await ctx.db
+          .select({ version: table.version, label: table.label, valueJson: table.valueJson, active: table.active })
+          .from(table)
+          .where(and(eq(table.ruleKey, input.ruleKey), eq(table.version, input.toVersion)))
+          .limit(1)
+      )[0];
+      if (!target) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: `目标版本不存在：${input.ruleKey} v${input.toVersion}` });
+      }
+      const isCentral = input.domain === 'member_plans' || input.domain === 'copy';
+      const lt = table as unknown as typeof schema.commissionRules;
+      const curActive = isCentral
+        ? (
+            await ctx.db
+              .select({ version: table.version, valueJson: table.valueJson })
+              .from(table)
+              .where(and(eq(table.ruleKey, input.ruleKey), eq(table.active, true)))
+              .limit(1)
+          )[0]
+        : (
+            await ctx.db
+              .select({ version: lt.version, valueJson: lt.valueJson, storeId: lt.storeId })
+              .from(lt)
+              .where(and(eq(lt.ruleKey, input.ruleKey), eq(lt.active, true)))
+              .limit(1)
+          )[0];
+      if (curActive && curActive.version === input.toVersion) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '目标版本即当前生效版，无需回滚' });
+      }
+      if (curActive && stableJsonEq(curActive.valueJson, target.valueJson)) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '目标版本值与当前生效值一致，无需回滚' });
+      }
+      const storeId = ctx.user.storeId!;
+      return ctx.db.transaction(async (tx) => {
+        const r = await applyRuleValueTx(tx, {
+          domain: input.domain,
+          ruleKey: input.ruleKey,
+          valueJson: target.valueJson as Record<string, unknown>,
+          label: target.label,
+          storeId: isCentral ? null : ((curActive as { storeId?: string | null } | undefined)?.storeId ?? storeId),
+          changedBy: ctx.user.id,
+          note: `rollback:v${curActive?.version ?? 0}→v${input.toVersion}`,
+        });
+        const outboxId = await emitEvent(txDb(tx), `store:${storeId}`, EventType.ConfigVersionSaved, {
+          domain: input.domain,
+          version: r.version,
+          keys: [input.ruleKey],
+        });
+        return { domain: input.domain, ruleKey: input.ruleKey, version: r.version, rolledBackTo: input.toVersion, outboxId };
+      });
+    }),
+
+  /**
+   * cancelScheduled（片 1 · 件 2 定时生效配套）：撤销待生效件（pending→superseded，
+   * 只增不改状态机；目标规则行留 active=0 作历史行不动）。
+   */
+  cancelScheduled: merchantOwnerProcedure
+    .input(z.object({ id: z.string().min(1, '登记 id 不能为空') }))
+    .mutation(async ({ ctx, input }) => {
+      const row = (
+        await ctx.db.select().from(schema.configScheduled).where(eq(schema.configScheduled.id, input.id)).limit(1)
+      )[0];
+      if (!row || row.status !== 'pending') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '待生效件不存在或已处理' });
+      }
+      await ctx.db
+        .update(schema.configScheduled)
+        .set({ status: 'superseded', updatedAt: new Date() })
+        .where(eq(schema.configScheduled.id, row.id));
+      return { id: row.id, cancelled: true };
+    }),
+
+  /**
+   * proposeChange（片 1 · 件 3 涉钱配置二级审批·发起）：仅受理涉钱键名单内变更
+   * （名单外键 400 明文引去直存口）；落 config_change_proposals（载荷单据表）+
+   * approval_requests kind='config'（不新建审批表），值不落库待复核。
+   */
+  proposeChange: merchantOwnerProcedure
+    .input(
+      z.object({
+        domain: domainSchema,
+        changes: z.array(changeSchema.omit({ position: true })).min(1, '变更不能为空'),
+        scope: z.enum(['store', 'hq']).optional(),
+        note: z.string().max(500, '附言过长').optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const seen = new Set<string>();
+      for (const c of input.changes) {
+        if (seen.has(c.ruleKey)) throw new TRPCError({ code: 'BAD_REQUEST', message: `同一规则键重复提交：${c.ruleKey}` });
+        seen.add(c.ruleKey);
+        if (!isMoneyHighRiskKey(input.domain, c.ruleKey)) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: `「${c.ruleKey}」非涉钱键名单内键，请走保存即生效直存（二级审批=涉钱配置专用通道）`,
+          });
+        }
+        validateValueJson(c.ruleKey, c.valueJson);
+      }
+      const isCentralDomain = input.domain === 'member_plans' || input.domain === 'copy';
+      if (isCentralDomain && input.scope !== undefined) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '该域=中央件全局单份不分层' });
+      }
+      if (input.scope === 'hq' && !ctx.user.roles.includes('merchant_owner')) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: '总部下发仅店主' });
+      }
+      const table = RULES_TABLE[input.domain];
+      const existing = await ctx.db.select({ ruleKey: table.ruleKey }).from(table);
+      const universe = new Set(existing.map((r) => r.ruleKey));
+      for (const c of input.changes) {
+        if (!universe.has(c.ruleKey)) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: `未知规则键：${c.ruleKey}（仅支持修改既有参数）` });
+        }
+      }
+      const storeId = ctx.user.storeId!;
+      return ctx.db.transaction(async (tx) => {
+        const [proposal] = await txDb(tx)
+          .insert(schema.configChangeProposals)
+          .values({
+            storeId,
+            domain: input.domain,
+            scope: isCentralDomain ? null : (input.scope ?? 'store'),
+            changesJson: input.changes.map((c) => ({
+              ruleKey: c.ruleKey,
+              valueJson: c.valueJson,
+              ...(c.label ? { label: c.label } : {}),
+            })),
+            note: input.note ?? null,
+            status: 'pending',
+            proposerId: ctx.user.id,
+          })
+          .returning({ id: schema.configChangeProposals.id });
+        const summary = `配置变更审批：${input.domain} · ${input.changes.map((c) => c.ruleKey).join('、')}`;
+        const [req] = await txDb(tx)
+          .insert(schema.approvalRequests)
+          .values({
+            storeId,
+            kind: 'config',
+            refId: proposal!.id,
+            summary,
+            status: 'pending',
+            applicantId: ctx.user.id,
+            timelineJson: [{ at: new Date().toISOString(), action: 'submitted', by: ctx.user.id }],
+          })
+          .returning({ id: schema.approvalRequests.id });
+        return { proposalId: proposal!.id, requestId: req!.id, summary };
+      });
+    }),
+
+  /**
+   * configApprovals（片 1 · 件 3 队列查询）：本店 kind='config' 审批单+载荷（proposer/reviewer 昵称），
+   * 按创建新→旧，limit ≤50。
+   */
+  configApprovals: merchantOwnerProcedure
+    .input(z.object({ status: z.enum(['pending', 'approved', 'rejected']).optional() }))
+    .query(async ({ ctx, input }) => {
+      const conds = [
+        eq(schema.approvalRequests.storeId, ctx.user.storeId!),
+        eq(schema.approvalRequests.kind, 'config'),
+      ];
+      if (input.status) conds.push(eq(schema.approvalRequests.status, input.status));
+      const rows = await ctx.db
+        .select({
+          id: schema.approvalRequests.id,
+          status: schema.approvalRequests.status,
+          summary: schema.approvalRequests.summary,
+          reviewNote: schema.approvalRequests.reviewNote,
+          reviewedAt: schema.approvalRequests.reviewedAt,
+          timelineJson: schema.approvalRequests.timelineJson,
+          createdAt: schema.approvalRequests.createdAt,
+          proposerNickname: schema.users.nickname,
+          domain: schema.configChangeProposals.domain,
+          scope: schema.configChangeProposals.scope,
+          changesJson: schema.configChangeProposals.changesJson,
+          note: schema.configChangeProposals.note,
+        })
+        .from(schema.approvalRequests)
+        .innerJoin(schema.configChangeProposals, eq(schema.configChangeProposals.id, schema.approvalRequests.refId))
+        .leftJoin(schema.users, eq(schema.users.id, schema.approvalRequests.applicantId))
+        .where(and(...conds))
+        .orderBy(desc(schema.approvalRequests.createdAt))
+        .limit(50);
+      return { items: rows };
+    }),
+
+  /**
+   * configApprovalReview（片 1 · 件 3 复核口；merchantManagerProcedure=owner/manager 皆可复核）：
+   * 通过=同事务应用载荷（再校验防漂移+版本化+rule_config_versions note=approved-apply，
+   * changedBy=原发起人；复核人落 approval_requests.reviewerId）+载荷单 applied；
+   * 驳回=审批单+载荷单双 rejected，值不落库。timeline 只增不改。
+   */
+  configApprovalReview: merchantManagerProcedure
+    .input(
+      z.object({
+        requestId: z.string().min(1, '审批单 id 不能为空'),
+        approve: z.boolean(),
+        note: z.string().max(500, '复核附言过长').optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
+      return ctx.db.transaction(async (tx) => {
+        const req = (
+          await txDb(tx).select().from(schema.approvalRequests).where(eq(schema.approvalRequests.id, input.requestId)).limit(1)
+        )[0];
+        if (!req || req.storeId !== storeId || req.kind !== 'config') {
+          throw new TRPCError({ code: 'NOT_FOUND', message: '审批单不存在' });
+        }
+        if (req.status !== 'pending') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: '该审批已处理，不可重复审批' });
+        }
+        const now = new Date();
+        const timeline = [
+          ...req.timelineJson,
+          {
+            at: now.toISOString(),
+            action: input.approve ? 'approved' : 'rejected',
+            by: ctx.user.id,
+            ...(input.note ? { note: input.note } : {}),
+          },
+        ];
+        await txDb(tx)
+          .update(schema.approvalRequests)
+          .set({
+            status: input.approve ? 'approved' : 'rejected',
+            reviewerId: ctx.user.id,
+            reviewNote: input.note ?? null,
+            reviewedAt: now,
+            timelineJson: timeline,
+            updatedAt: now,
+          })
+          .where(eq(schema.approvalRequests.id, req.id));
+        const proposal = (
+          await txDb(tx)
+            .select()
+            .from(schema.configChangeProposals)
+            .where(eq(schema.configChangeProposals.id, req.refId))
+            .limit(1)
+        )[0];
+        if (!proposal) throw new TRPCError({ code: 'NOT_FOUND', message: '审批载荷单不存在' });
+        if (!input.approve) {
+          await txDb(tx)
+            .update(schema.configChangeProposals)
+            .set({ status: 'rejected', updatedAt: now })
+            .where(eq(schema.configChangeProposals.id, proposal.id));
+          return { requestId: req.id, approved: false };
+        }
+        /* 通过=同事务应用（值再校验防存货漂移；涉钱名单复核——载荷必须全在名单内） */
+        const table = rulesTableOf(proposal.domain);
+        const existing = await txDb(tx).select({ ruleKey: table.ruleKey }).from(table);
+        const universe = new Set(existing.map((r) => r.ruleKey));
+        const appliedKeys: string[] = [];
+        let lastVersion = 0;
+        for (const c of proposal.changesJson) {
+          if (!universe.has(c.ruleKey)) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: `载荷键已不在规则宇宙：${c.ruleKey}` });
+          }
+          if (!isMoneyHighRiskKey(proposal.domain, c.ruleKey)) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: `载荷键非涉钱名单内键：${c.ruleKey}` });
+          }
+          validateValueJson(c.ruleKey, c.valueJson);
+          const r = await applyRuleValueTx(tx, {
+            domain: proposal.domain,
+            ruleKey: c.ruleKey,
+            valueJson: c.valueJson,
+            label: c.label,
+            storeId:
+              proposal.domain === 'member_plans' || proposal.domain === 'copy'
+                ? null
+                : proposal.scope === 'hq'
+                  ? null
+                  : proposal.storeId,
+            changedBy: proposal.proposerId,
+            note: 'approved-apply',
+          });
+          lastVersion = r.version;
+          appliedKeys.push(c.ruleKey);
+        }
+        await txDb(tx)
+          .update(schema.configChangeProposals)
+          .set({ status: 'applied', appliedAt: now, updatedAt: now })
+          .where(eq(schema.configChangeProposals.id, proposal.id));
+        const outboxId = await emitEvent(txDb(tx), `store:${storeId}`, EventType.ConfigVersionSaved, {
+          domain: proposal.domain,
+          version: lastVersion,
+          keys: appliedKeys,
+        });
+        return { requestId: req.id, approved: true, version: lastVersion, keys: appliedKeys, outboxId };
+      });
+    }),
+
+  /**
+   * setKillSwitch（片 1 · 件 4a 全局一键开关）：service_rules 全局行 config_kill_switch
+   * 版本化切换（留痕 note=kill-switch；store_id=NULL=全局单份）；开=全部可关参数瞬时回落
+   * 安全值（v1=pay_channel_enabled 线上通道关，页面显著红态=ConsolePage kill 横幅）。
+   */
+  setKillSwitch: merchantOwnerProcedure
+    .input(z.object({ enabled: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
+      return ctx.db.transaction(async (tx) => {
+        const r = await applyRuleValueTx(tx, {
+          domain: 'service',
+          ruleKey: 'config_kill_switch',
+          valueJson: { enabled: input.enabled },
+          storeId: null,
+          changedBy: ctx.user.id,
+          note: 'kill-switch',
+        });
+        const outboxId = await emitEvent(txDb(tx), `store:${storeId}`, EventType.ConfigVersionSaved, {
+          domain: 'service',
+          version: r.version,
+          keys: ['config_kill_switch'],
+        });
+        return { enabled: input.enabled, version: r.version, outboxId };
+      });
+    }),
+
+  /** killStatus（片 1 · 件 4a 页面显著态数据源）：开关态+最后切换时刻/操作人昵称 */
+  killStatus: merchantOwnerProcedure.query(async ({ ctx }) => {
+    const rows = await ctx.db
+      .select({
+        valueJson: schema.serviceRules.valueJson,
+        updatedAt: schema.serviceRules.updatedAt,
+        nickname: schema.users.nickname,
+      })
+      .from(schema.serviceRules)
+      .leftJoin(schema.users, eq(schema.users.id, schema.serviceRules.createdBy))
+      .where(and(eq(schema.serviceRules.ruleKey, 'config_kill_switch'), eq(schema.serviceRules.active, true)))
+      .limit(1);
+    const row = rows[0];
+    return {
+      enabled: (row?.valueJson as Record<string, unknown> | undefined)?.enabled === true,
+      updatedAt: row?.updatedAt ?? null,
+      by: row?.nickname ?? null,
+    };
+  }),
+
+  /**
+   * dictionary（片 1 · 件 5+7 参数字典/逐参数帮助）：参数域（copy 域除外）逐键透出
+   * 最新行 label+字段字典注+帮助注（cfghelp.* 覆盖优先）+涉钱名单标+当前生效版本；q=键/名/注 contains 过滤。
+   */
+  dictionary: merchantOwnerProcedure
+    .input(z.object({ domain: domainSchema.optional(), q: z.string().max(100, '搜索串过长').optional() }))
+    .query(async ({ ctx, input }) => {
+      const domains = input.domain ? [input.domain] : (Object.keys(RULES_TABLE) as Array<z.infer<typeof domainSchema>>);
+      const overrides = await loadCfgHelpOverrides(ctx.db);
+      const q = input.q?.trim().toLowerCase() || null;
+      const items: Array<{
+        domain: string;
+        ruleKey: string;
+        label: string;
+        fields: Array<{ field: string; note: string }>;
+        helpText: string;
+        moneyHighRisk: boolean;
+        currentVersion: number | null;
+      }> = [];
+      for (const d of domains) {
+        if (d === 'copy') continue; // 文案域=文案端口页自管，字典只收参数域
+        const table = RULES_TABLE[d];
+        const rows = await ctx.db
+          .select({ ruleKey: table.ruleKey, label: table.label, valueJson: table.valueJson, version: table.version, active: table.active })
+          .from(table);
+        const latest = new Map<string, { label: string; valueJson: Record<string, unknown>; version: number }>();
+        const activeVersion = new Map<string, number>();
+        for (const r of rows) {
+          const cur = latest.get(r.ruleKey);
+          if (!cur || r.version > cur.version) {
+            latest.set(r.ruleKey, { label: r.label, valueJson: r.valueJson as Record<string, unknown>, version: r.version });
+          }
+          if (r.active) activeVersion.set(r.ruleKey, r.version);
+        }
+        for (const [ruleKey, meta] of latest) {
+          const fields = Object.keys(meta.valueJson ?? {}).map((f) => ({ field: f, note: FIELD_NOTE[f] ?? '自定义字段' }));
+          items.push({
+            domain: d,
+            ruleKey,
+            label: meta.label,
+            fields,
+            helpText: composeHelpText(ruleKey, meta.valueJson, overrides),
+            moneyHighRisk: isMoneyHighRiskKey(d, ruleKey),
+            currentVersion: activeVersion.get(ruleKey) ?? null,
+          });
+        }
+      }
+      const filtered = q
+        ? items.filter(
+            (it) =>
+              it.ruleKey.toLowerCase().includes(q) ||
+              it.label.toLowerCase().includes(q) ||
+              it.helpText.toLowerCase().includes(q),
+          )
+        : items;
+      return { items: filtered };
     }),
 
   /**
@@ -576,3 +1224,197 @@ export const configRulesRouter = router({
       return { domain: input.domain, versions: rows };
     }),
 });
+
+/* ------------------------------------------------------------------ */
+/* sweep（index.ts 60s 同滴答注册；e2e 直调推进同 sweepIncidentEscalations 工艺）   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * sweepScheduledConfig（片 1 · 件 2 到点懒切换）：config_scheduled pending 且 effective_at<=now
+ * 的登记行逐行事务推进——旧 active 行失效→目标行激活（version=域内当前生效最大版本+1，行值不动
+ * =只增不改）+登记行 applied+rule_config_versions 留痕（note=scheduled-applied，changedBy=原保存人）。
+ * 目标行已被后续工序顶替（active=1 或行不在）→登记行 superseded 废弃。幂等：重扫零增量。
+ */
+export async function sweepScheduledConfig(d: DbHandle, now: Date): Promise<number> {
+  const due = await d
+    .select()
+    .from(schema.configScheduled)
+    .where(and(eq(schema.configScheduled.status, 'pending'), lte(schema.configScheduled.effectiveAt, now)))
+    .orderBy(asc(schema.configScheduled.effectiveAt));
+  let applied = 0;
+  for (const s of due) {
+    await d.transaction(async (tx) => {
+      const table = rulesTableOf(s.domain);
+      const target = (
+        await txDb(tx)
+          .select({ id: table.id, valueJson: table.valueJson, active: table.active })
+          .from(table)
+          .where(eq(table.id, s.rowId))
+          .limit(1)
+      )[0];
+      if (!target || target.active) {
+        await txDb(tx)
+          .update(schema.configScheduled)
+          .set({ status: 'superseded', updatedAt: now })
+          .where(eq(schema.configScheduled.id, s.id));
+        return;
+      }
+      const cur = await txDb(tx)
+        .select({ valueJson: table.valueJson })
+        .from(table)
+        .where(and(eq(table.ruleKey, s.ruleKey), eq(table.active, true)));
+      const before = (cur[0]?.valueJson as Record<string, unknown> | undefined) ?? null;
+      const maxRows = await txDb(tx)
+        .select({ v: sql<number>`coalesce(max(${table.version}), 0)` })
+        .from(table)
+        .where(eq(table.active, true));
+      const nextVersion = (maxRows[0]?.v ?? 0) + 1;
+      await txDb(tx)
+        .update(table)
+        .set({ active: false, updatedAt: now })
+        .where(and(eq(table.ruleKey, s.ruleKey), eq(table.active, true)));
+      await txDb(tx).update(table).set({ active: true, version: nextVersion, updatedAt: now }).where(eq(table.id, s.rowId));
+      await txDb(tx)
+        .update(schema.configScheduled)
+        .set({ status: 'applied', updatedAt: now })
+        .where(eq(schema.configScheduled.id, s.id));
+      await txDb(tx)
+        .insert(schema.ruleConfigVersions)
+        .values({
+          domain: s.domain,
+          version: nextVersion,
+          changedBy: s.createdBy,
+          changesJson: [{ rule_key: s.ruleKey, before, after: target.valueJson as Record<string, unknown>, note: 'scheduled-applied' }],
+        });
+      applied += 1;
+    });
+  }
+  return applied;
+}
+
+/**
+ * sweepConfigAutoRollback（片 1 · 件 4b 异常自动回滚）：service_rules config_auto_rollback 开
+ * 且 client_error_events 窗口计数越 client_error_alert_threshold{threshold,minutes} 线时——
+ * 窗口内人工版本行（rule_config_versions note 空=直存 / approved-apply=审批应用；机器工序
+ * note[rollback:* / scheduled* / auto-rollback* / kill-switch] 排除防互滚）逐键回滚到 before 值
+ * （版本化+留痕 note=auto-rollback:client-error-spike）+告警通知（notifications type=
+ * config.autoRollback，收=该键当前生效行所属店 merchant_owner ∪ 原变更人）。幂等：
+ * 当前值==回滚目标即跳过；机器行不作嫌疑行→重扫零增量。
+ */
+export async function sweepConfigAutoRollback(d: DbHandle, now: Date): Promise<number> {
+  const armed = await d
+    .select({ valueJson: schema.serviceRules.valueJson })
+    .from(schema.serviceRules)
+    .where(and(eq(schema.serviceRules.ruleKey, 'config_auto_rollback'), eq(schema.serviceRules.active, true)));
+  if ((armed[0]?.valueJson as Record<string, unknown> | undefined)?.enabled !== true) return 0;
+  const thRows = await d
+    .select({ valueJson: schema.serviceRules.valueJson })
+    .from(schema.serviceRules)
+    .where(and(eq(schema.serviceRules.ruleKey, 'client_error_alert_threshold'), eq(schema.serviceRules.active, true)));
+  const thVal = thRows[0]?.valueJson as Record<string, unknown> | undefined;
+  const threshold = typeof thVal?.threshold === 'number' && thVal.threshold > 0 ? thVal.threshold : 20;
+  const minutes = typeof thVal?.minutes === 'number' && thVal.minutes > 0 ? thVal.minutes : 10;
+  const windowStart = new Date(now.getTime() - minutes * 60_000);
+  const errs = await d
+    .select({ id: schema.clientErrorEvents.id })
+    .from(schema.clientErrorEvents)
+    .where(gte(schema.clientErrorEvents.createdAt, windowStart));
+  if (errs.length <= threshold) return 0;
+  const vers = await d
+    .select()
+    .from(schema.ruleConfigVersions)
+    .where(gte(schema.ruleConfigVersions.createdAt, windowStart))
+    .orderBy(asc(schema.ruleConfigVersions.createdAt));
+  let rolled = 0;
+  const doneKeys = new Set<string>();
+  /* 幂等锚=「键最新窗口工序」：每键只取窗口内最新一条变更（后写覆盖先写）——最新=机器工序
+     note（rollback:* / scheduled* / auto-rollback* / kill-switch）=已处理跳过；最新=人工
+     （note 空 / approved-apply）才作嫌疑，回滚目标=该最新条 before（只撤最新一手，不考古）。
+     回滚后该键最新行=机器行→重扫天然零增量（修初版「逐条嫌疑+调用内 doneKeys」跨扫乒乓缺陷） */
+  const lastByKey = new Map<string, { domain: string; ruleKey: string; before: unknown; note?: string; changedBy: string }>();
+  for (const v of vers) {
+    for (const ch of v.changesJson) {
+      lastByKey.set(`${v.domain}:${ch.rule_key}`, {
+        domain: v.domain,
+        ruleKey: ch.rule_key,
+        before: ch.before,
+        note: ch.note,
+        changedBy: v.changedBy,
+      });
+    }
+  }
+  for (const [dedupKey, s] of lastByKey) {
+    {
+      const ch = { rule_key: s.ruleKey, before: s.before, note: s.note };
+      const v = { domain: s.domain, changedBy: s.changedBy };
+      if (ch.note !== undefined && ch.note !== 'approved-apply') continue;
+      if (doneKeys.has(dedupKey)) continue;
+      if (ch.before === null || ch.before === undefined) continue;
+      const isCentral = v.domain === 'member_plans' || v.domain === 'copy';
+      const table = rulesTableOf(v.domain);
+      const curRow = isCentral
+        ? (
+            await d
+              .select({ valueJson: table.valueJson })
+              .from(table)
+              .where(and(eq(table.ruleKey, ch.rule_key), eq(table.active, true)))
+              .limit(1)
+          )[0]
+        : (
+            await d
+              .select({ valueJson: table.valueJson, storeId: (table as unknown as typeof schema.commissionRules).storeId })
+              .from(table as unknown as typeof schema.commissionRules)
+              .where(and(eq(table.ruleKey, ch.rule_key), eq(table.active, true)))
+              .limit(1)
+          )[0];
+      const curVal = curRow?.valueJson as Record<string, unknown> | undefined;
+      if (curVal === undefined) continue;
+      if (stableJsonEq(curVal, ch.before)) continue;
+      const rowStoreId = isCentral ? null : ((curRow as { storeId?: string | null }).storeId ?? null);
+      await d.transaction(async (tx) => {
+        await applyRuleValueTx(tx, {
+          domain: v.domain,
+          ruleKey: ch.rule_key,
+          valueJson: ch.before as Record<string, unknown>,
+          storeId: rowStoreId,
+          changedBy: v.changedBy,
+          note: 'auto-rollback:client-error-spike',
+        });
+        /* 告警留痕：收=原变更人 ∪ 生效行所属店店主+店长（总部行=全店店主；同 incident 升级双通知工艺） */
+        let storeOwnerIds: string[] = [];
+        if (rowStoreId) {
+          const st = await txDb(tx)
+            .select({ ownerId: schema.stores.ownerId })
+            .from(schema.stores)
+            .where(eq(schema.stores.id, rowStoreId))
+            .get();
+          const managers = await txDb(tx)
+            .select({ userId: schema.staff.userId })
+            .from(schema.staff)
+            .innerJoin(
+              schema.userRoles,
+              and(eq(schema.userRoles.userId, schema.staff.userId), eq(schema.userRoles.role, 'merchant_manager')),
+            )
+            .where(eq(schema.staff.storeId, rowStoreId));
+          storeOwnerIds = [st?.ownerId, ...managers.map((m) => m.userId)].filter((x): x is string => !!x);
+        } else {
+          const allStores = await txDb(tx).select({ ownerId: schema.stores.ownerId }).from(schema.stores);
+          storeOwnerIds = allStores.map((s) => s.ownerId).filter((x): x is string => !!x);
+        }
+        const recipients = new Set<string>([v.changedBy, ...storeOwnerIds]);
+        for (const uid of recipients) {
+          await txDb(tx).insert(schema.notifications).values({
+            userId: uid,
+            type: 'config.autoRollback',
+            title: '配置已自动回滚（客户端错误告警越线）',
+            body: `${v.domain}.${ch.rule_key} 已回滚至上一版（窗口 ${minutes} 分钟错误上报 ${errs.length} 条 > 阈值 ${threshold} 条）`,
+            link: '/console',
+          });
+        }
+      });
+      doneKeys.add(dedupKey);
+      rolled += 1;
+    }
+  }
+  return rolled;
+}

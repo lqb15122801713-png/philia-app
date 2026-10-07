@@ -39,6 +39,7 @@ import { assertPaymentConfig } from './payments/provider';
 import { assertSecretsConfigured } from './config/secrets';
 import { assertDeployConfig, getCorsOrigins, getPublicBaseUrl, warnStagingConfig } from './config/deploy';
 import { startOutboxSweeper } from './realtime/outboxSweeper';
+import { sweepConfigAutoRollback, sweepScheduledConfig } from './routers/configRules';
 import { expirePendingOrders, sweepAutoReceive } from './routers/mall';
 import { sweepBirthdayPerks } from './routers/perks';
 import {
@@ -362,6 +363,17 @@ if (isMain) {
   runSlowSweeps();
   const careSlowTimer = setInterval(runSlowSweeps, 30 * 60_000);
   careSlowTimer.unref?.();
+
+  /* ---- 端口批收尾片 1：配置定时生效切换（到点懒切换）+客户端错误异常自动回滚（60s 同滴答，
+     双双幂等——applied/superseded 状态机锚与「当前值==回滚目标」跳过兜底，重扫零增量；
+     e2e 直调同函数钉时刻断言） ---- */
+  const runConfigSweeps = () => {
+    sweepScheduledConfig(db, new Date()).catch((err) => console.error('[config] 定时切换扫描失败:', err));
+    sweepConfigAutoRollback(db, new Date()).catch((err) => console.error('[config] 自动回滚扫描失败:', err));
+  };
+  runConfigSweeps();
+  const configSweepTimer = setInterval(runConfigSweeps, 60_000);
+  configSweepTimer.unref?.();
 
   const server: ServerType = serve({ fetch: app.fetch, port }, (info) => {
     const publicBase = getPublicBaseUrl();

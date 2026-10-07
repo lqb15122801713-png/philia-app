@@ -104,12 +104,14 @@ export function Switch({
 /* 徽章 / 标签 chips                                                    */
 /* ------------------------------------------------------------------ */
 
-type BadgeTone = 'brand' | 'success' | 'danger' | 'muted';
+type BadgeTone = 'brand' | 'success' | 'danger' | 'muted' | 'warn';
 const badgeTone: Record<BadgeTone, string> = {
   brand: 'bg-brand-primary-light text-brand-primary-pressed',
   success: 'bg-success-light text-success-deep',
   danger: 'bg-danger-light text-danger-deep',
   muted: 'bg-sunken text-ink-secondary',
+  /* 警示色（暖琥珀族，守暖色纪律不设纯黄）：待生效/审批中 等中间态徽 */
+  warn: 'bg-[#F5E6C4] text-[#7A5310]',
 };
 
 export function Badge({ tone = 'muted', children }: { tone?: BadgeTone; children: ReactNode }) {
