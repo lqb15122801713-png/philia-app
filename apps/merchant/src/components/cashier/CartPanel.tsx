@@ -15,8 +15,10 @@
  * - 吸底双钮 [挂单] 白底墨边 + [结账] 柠檬（grid 1 : 1.4）。
  */
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { Check, Minus, Pause, Percent, Plus, Sparkles, X } from 'lucide-react'
+import { CK, useCanvasLayout, usePhiliaClient } from '@philia/shared'
 import { cc } from '@/copy/cashier'
 import {
   fenToYuan,
@@ -120,11 +122,31 @@ export default function CartPanel({
   /** 立省钩子关闭（本单不再弹——localStorage 行签名标记） */
   onDismissSavings: () => void
 }) {
+  const { trpc } = usePhiliaClient()
   const empty = lines.length === 0
   const markedPassCount = lines.filter((l) => l.paidByPass).length
   const adjustedCount = lines.filter((l) => l.adjustedPriceFen != null).length
   /** 片 3：行内备注编辑中行的 refId（一次一行，失焦即收） */
   const [noteEditId, setNoteEditId] = useState<string | null>(null)
+
+  /* 端口批收尾片 3 · 画布端口：cs.savingsHook 显隐=published 布局覆盖（缺省 true） */
+  const meQ = useQuery({ queryKey: ['auth', 'me', 'full'], queryFn: () => trpc.auth.me.query() })
+  const storeId = meQ.data?.store?.id ?? null
+  const blocksQ = useQuery({
+    queryKey: ['canvas', 'blocks'],
+    queryFn: () => trpc.canvas.blocks.query(),
+    staleTime: 300_000,
+    retry: 1,
+  })
+  const registryBlocks = useMemo(() => {
+    const items = (blocksQ.data?.items ?? [])
+      .filter((b) => b.pageKey === 'cashierMarketing')
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+    return items.length > 0 ? items : [{ blockKey: 'cs.savingsHook' }]
+  }, [blocksQ.data])
+  const hookLayout = useCanvasLayout('cashierMarketing', storeId, registryBlocks)
+  const hookVisible = hookLayout.find((b) => b.blockKey === 'cs.savingsHook')?.visible ?? true
+
   /** R11a：会员折扣合计（展示预估口径，服务/预约行未人工改价的部分） */
   const memberDiscFen =
     svcDiscount === null
@@ -353,33 +375,36 @@ export default function CartPanel({
       ) : null}
 
       {/* R11a 立省钩子（APP-47）：非会员当单「开通萤火立省 ¥X」一屏一次不打扰；
-          关闭后本单不再弹（localStorage 行签名标记） */}
-      {savings && !empty ? (
-        <div
-          className="mt-2 flex items-center gap-2 rounded-[14px] bg-brand-primary-light px-3 py-2.5"
-          data-testid="cashier-savings-hook"
-        >
-          <Sparkles size={14} strokeWidth={1.8} className="shrink-0 text-ink" aria-hidden />
-          <span className="min-w-0 flex-1 text-caption-xs font-semibold text-ink">{savings.text}</span>
-          <button
-            type="button"
-            data-testid="cashier-savings-open"
-            onClick={onOpenSell}
-            className="inline-flex min-h-[44px] shrink-0 items-center rounded-full bg-brand-primary px-3 py-1.5 text-caption-xs font-bold text-ink shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+          关闭后本单不再弹（localStorage 行签名标记）；
+          端口批收尾片 3：cs.savingsHook 画布块——显隐=既有 dismiss 且 布局 visible */}
+      <section data-block-key="cs.savingsHook">
+        {savings && !empty && hookVisible ? (
+          <div
+            className="mt-2 flex items-center gap-2 rounded-[14px] bg-brand-primary-light px-3 py-2.5"
+            data-testid="cashier-savings-hook"
           >
-            {cc('cashier.savingsCta')}
-          </button>
-          <button
-            type="button"
-            aria-label="关闭本单立省提示"
-            data-testid="cashier-savings-dismiss"
-            onClick={onDismissSavings}
-            className="shrink-0 p-1.5 text-[rgba(59,46,36,.42)] transition-colors hover:text-[rgba(59,46,36,.7)]"
-          >
-            <X size={13} strokeWidth={1.8} aria-hidden />
-          </button>
-        </div>
-      ) : null}
+            <Sparkles size={14} strokeWidth={1.8} className="shrink-0 text-ink" aria-hidden />
+            <span className="min-w-0 flex-1 text-caption-xs font-semibold text-ink">{savings.text}</span>
+            <button
+              type="button"
+              data-testid="cashier-savings-open"
+              onClick={onOpenSell}
+              className="inline-flex min-h-[44px] shrink-0 items-center rounded-full bg-brand-primary px-3 py-1.5 text-caption-xs font-bold text-ink shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            >
+              <CK k="cashier.savingsCta">{cc('cashier.savingsCta')}</CK>
+            </button>
+            <button
+              type="button"
+              aria-label="关闭本单立省提示"
+              data-testid="cashier-savings-dismiss"
+              onClick={onDismissSavings}
+              className="shrink-0 p-1.5 text-[rgba(59,46,36,.42)] transition-colors hover:text-[rgba(59,46,36,.7)]"
+            >
+              <X size={13} strokeWidth={1.8} aria-hidden />
+            </button>
+          </div>
+        ) : null}
+      </section>
 
       {/* P6 金额面板（吸底） */}
       <div className="mt-auto pt-2.5">

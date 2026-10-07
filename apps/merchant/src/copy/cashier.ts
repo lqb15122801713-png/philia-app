@@ -204,6 +204,16 @@ const CASHIER_COPY_TABLE = {
   'cashier.roundingLabel': '抹零',
   'cashier.creditNote': '挂账=台账留痕不碰真钱（至多一段；结清/核销走「台账」专页，不计已收）',
   'cashier.scanPayNote': '聚合扫码=通道资质候（留口件）',
+
+  /* ---- 端口批收尾片 3：会员码核验卡（verifyCardToken；与手机号检索并列通道） ---- */
+  'cashier.scanTitle': '会员码核验',
+  'cashier.scanHint': '扫码/录码核验（与手机号检索并列通道）',
+  'cashier.scanInputPh': '粘贴/录入会员码',
+  'cashier.scanVerifyCta': '核验',
+  'cashier.scanVerifying': '核验中…',
+  'cashier.scanDone': '已识别会员（码通道带出=档位/状态为主）',
+  'cashier.scanNote': '码通道带出=档位/状态为主（次卡/储值/预约数请走手机号检索）',
+  'cashier.scanFail': '会员码核验失败',
   'cashier.peripheralNote': '扫码枪/钱箱/客显外设=PWA 上限明面注记，能到哪儿到哪儿',
 
   /* ---- 片 3：小票打印 / 补打（ReceiptPage）---- */

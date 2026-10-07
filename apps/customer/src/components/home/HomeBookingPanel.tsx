@@ -36,6 +36,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
+  CK,
   EventType,
   getApiBase,
   getStepDef,
@@ -403,8 +404,9 @@ export default function HomeBookingPanel({
         <path d="M9 9.5c.8-.8 1.9-1.3 3-1.3" />
       </svg>
       <span className="min-w-0 flex-1">
-        <span className="block text-body font-semibold">{hc('home.panelEntryTitle')}</span>
-        <span className="block text-caption text-ink-secondary">{hc('home.panelEntrySub')}</span>
+        {/* 画布端口（端口批收尾片 3）：copyKeys 键位挂 CK 锚（home.panelEntryTitle/Sub） */}
+        <span className="block text-body font-semibold"><CK k="home.panelEntryTitle">{hc('home.panelEntryTitle')}</CK></span>
+        <span className="block text-caption text-ink-secondary"><CK k="home.panelEntrySub">{hc('home.panelEntrySub')}</CK></span>
       </span>
       <span className="shrink-0 text-body text-ink-secondary" aria-hidden="true">
         ›

@@ -30,6 +30,14 @@ export function copyOverrideOf(key: string): string | undefined {
 }
 
 /**
+ * 画布实时 patch（端口批收尾片 3 · 画布端口预览管道）：单键写入覆盖图，不落库；
+ * 配合 window 'philia-canvas-patch' 事件触发重渲染（保存成功后真值经 Loader 整表对齐）。
+ */
+export function patchCopyOverride(key: string, text: string): void {
+  overrideMap.set(key, text);
+}
+
+/**
  * copy 表代理包装：键命中覆盖图 → 端口值，否则落码内默认。
  * 用法（copy 文件一行接入）：
  *   const REFUND_COPY_TABLE = { ... } as const;

@@ -7,7 +7,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { resolveSlotUrl, slotContentOf } from '@philia/shared'
+import { CK, resolveSlotUrl, slotContentOf } from '@philia/shared'
 import { mc } from './copy'
 
 /* ------------------------------------------------------------------ */
@@ -108,8 +108,8 @@ export function AppHead({ title, no }: { title: string; no?: string }) {
   )
 }
 
-/** 截面标题 sec-h */
-export function SecH({ title, more }: { title: string; more?: string }) {
+/** 截面标题 sec-h（端口批收尾片 3：title/more widening=ReactNode，CK 挂键锚后向兼容） */
+export function SecH({ title, more }: { title: ReactNode; more?: ReactNode }) {
   return (
     <div className="m2-sec-h">
       <h3>{title}</h3>
@@ -192,14 +192,15 @@ export function CardFace({
 /* ------------------------------------------------------------------ */
 
 export function Ledger({ cells, onCellClick }: {
-  cells: { v: string; k: string }[]
+  /* 端口批收尾片 3：v/k widening=ReactNode（CK 挂键锚）；key 显式键（k 为 JSX 时兜底序号） */
+  cells: { v: ReactNode; k: ReactNode; key?: string }[]
   onCellClick?: (idx: number) => void
 }) {
   return (
     <div className="m2-ledger">
       {cells.map((c, i) => (
         <div
-          key={c.k}
+          key={c.key ?? i}
           onClick={onCellClick ? () => onCellClick(i) : undefined}
           role={onCellClick ? 'button' : undefined}
           style={onCellClick ? { cursor: 'pointer' } : undefined}
@@ -256,7 +257,8 @@ export function PerksWall({ plan }: { plan: V2Plan }) {
     { t: mc('perk.groomer'), s: mc('perk.groomerSub') },
     { t: mc('perk.birthday'), s: mc('perk.birthdaySub') },
     { t: mc('perk.skin'), s: mc('perk.skinSub') },
-    { t: mc('perk.boarding'), s: zhe ? mc('perk.boardingSub', { zhe }) : mc('perk.discountNone') },
+    /* 端口批收尾片 3：perk.boarding=注册表 copyKeys 键位（CK 挂锚） */
+    { t: mc('perk.boarding'), s: zhe ? mc('perk.boardingSub', { zhe }) : mc('perk.discountNone'), ck: 'perk.boarding' },
     { t: mc('perk.archive'), s: mc('perk.archiveSub') },
   ]
   return (
@@ -266,7 +268,7 @@ export function PerksWall({ plan }: { plan: V2Plan }) {
           <div className="ic">
             <svg viewBox="0 0 24 24">{PERK_ICONS[i]}</svg>
           </div>
-          <div className="t">{it.t}</div>
+          <div className="t">{'ck' in it && it.ck ? <CK k={it.ck}>{it.t}</CK> : it.t}</div>
           <div className="s">{it.s}</div>
         </div>
       ))}
@@ -307,7 +309,7 @@ export function RulesBlock({
   ]
   return (
     <div className="m2-rules">
-      <div className="h">{mc('rules.title')}</div>
+      <div className="h"><CK k="rules.title">{mc('rules.title')}</CK></div>
       <ul>
         {lines.map((l) => (
           <li key={l}>{l}</li>

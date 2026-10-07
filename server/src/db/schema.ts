@@ -2159,6 +2159,138 @@ export const dataCorrections = sqliteTable(
   (t) => [index('ix_data_corrections_store_status').on(t.storeId, t.status)],
 );
 
+/* ---- 端口批收尾片 3：画布端口（B 股 v1.1）+ 薪资调整端口 ---- */
+
+/**
+ * 区块注册表（画布端口 · 写死件+白名单制）：区块定义+props 端口化登记——
+ * 种子随迁移落（NOT EXISTS 守卫），端口只读不开放新增（新区块=新迁移登记，同屏名字典工艺）；
+ * propsJson 登记每块端口化面：copyKeys[]（点选反查直接改的文案键）/ slotKey（换素材槽位）/ toggleable（可否显隐）。
+ * 自由排版不做（装修编辑器=P2 后期件）：注册表只声明「顺序+显隐+props」三轴，无坐标/断点/自定义块。
+ */
+export const blockRegistry = sqliteTable(
+  'block_registry',
+  {
+    id: id(),
+    /** 区块键（唯一）：<page>.<name> 如 home.megacard / mc.perksWall / cs.savingsHook */
+    blockKey: text('block_key').notNull(),
+    /** 所属页面：home（客户端首页） | memberCenter（会员中心） | cashierMarketing（收银台营销位） */
+    pageKey: text('page_key').notNull(),
+    /** 区块中文名（画布页展示） */
+    label: text('label').notNull(),
+    /** props 端口化登记 JSON：{ copyKeys?: string[], slotKey?: string, toggleable?: boolean } */
+    propsJson: text('props_json', { mode: 'json' })
+      .$type<{ copyKeys?: string[]; slotKey?: string; toggleable?: boolean }>()
+      .notNull(),
+    /** 默认排序（页面内默认顺序=现状 JSX 序；布局行缺省回退用） */
+    sortOrder: integer('sort_order').notNull().default(0),
+    ...auditColumns,
+  },
+  (t) => [uniqueIndex('uq_block_registry_key').on(t.blockKey)],
+);
+
+/**
+ * 页面布局表（画布端口 · 布局/内容=留口件）：page→区块序列 JSON+版本化+草稿/发布两步流
+ * （第六域同族入列：draft→published[+archived]，单店单页单一 published[事务内互斥同 slot_contents 工艺]）；
+ * blocksJson=[{blockKey, visible}]（顺序=渲染序；visible=false=显隐关）；blocksJson 不存的键=注册表默认序尾补。
+ */
+export const pageLayouts = sqliteTable(
+  'page_layouts',
+  {
+    id: id(),
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 页面键（同 block_registry.page_key） */
+    pageKey: text('page_key').notNull(),
+    version: integer('version').notNull(),
+    /** 区块序列 JSON：[{blockKey, visible}] */
+    blocksJson: text('blocks_json', { mode: 'json' })
+      .$type<Array<{ blockKey: string; visible: boolean }>>()
+      .notNull(),
+    /** 状态：draft（编辑中） | published（线上生效） | archived（历史留痕） */
+    status: text('status').notNull().default('draft'),
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    actedBy: text('acted_by').references(() => users.id),
+    actedAt: integer('acted_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [index('ix_page_layouts_store_page').on(t.storeId, t.pageKey, t.status)],
+);
+
+/**
+ * 薪资手工调整载荷单（薪资调整端口 · 审批链）：approval_requests 加 kind='pay_adjust'
+ * （不新建审批表，同 config_change_proposals/data_corrections 工艺）——单笔提成/工时手工调整
+ * 的发起载荷；**金额阈值分级**（service_rules 键 pay_adjust_threshold_fen：|amountFen|≤阈值 manager 可复核，
+ * 超阈值仅 owner 复核）；通过=同事务落 pay_adjustments active 行（**只进当月未发单不回溯已发**：
+ * 目标 (staff,month) 工资单行已带发放标记 marked_at 时硬拒应用）。
+ */
+export const payAdjustProposals = sqliteTable(
+  'pay_adjust_proposals',
+  {
+    id: id(),
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 调整类：commission（单笔提成金额调整） | work_hours（工时折算金额调整，meta.hours 留痕） */
+    kind: text('kind').notNull(),
+    staffId: text('staff_id')
+      .notNull()
+      .references(() => staff.id),
+    /** 目标月份（'YYYY-MM'，只进当月未发单） */
+    month: text('month').notNull(),
+    /** 调整金额（分，带符号：正=补/负=扣） */
+    amountFen: integer('amount_fen').notNull(),
+    /** 附加信息 JSON（work_hours={hours} / commission={billNo?}） */
+    metaJson: text('meta_json', { mode: 'json' }).$type<Record<string, unknown>>(),
+    /** 调整事由（必填留痕） */
+    reason: text('reason').notNull(),
+    /** 状态：pending | applied | rejected（与 approval_requests.status 同步） */
+    status: text('status').notNull().default('pending'),
+    proposerId: text('proposer_id')
+      .notNull()
+      .references(() => users.id),
+    appliedAt: integer('applied_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [index('ix_pay_adjust_proposals_store_status').on(t.storeId, t.status)],
+);
+
+/**
+ * 薪资手工调整台账（薪资调整端口 · 同步下游承载行）：审批通过落 active 行——
+ * payroll.generateMonth 重算当月工资单时按 (staffId,month)&active 汇总进 adjustmentFen
+ * （与退款回冲同通道合算；已发[marked_at 非空]月份不再进=应用帧硬拒+生成帧只读 active）；
+ * 驳回/撤销=status='reverted' 留痕不删行（前后值可溯）。
+ */
+export const payAdjustments = sqliteTable(
+  'pay_adjustments',
+  {
+    id: id(),
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    staffId: text('staff_id')
+      .notNull()
+      .references(() => staff.id),
+    month: text('month').notNull(),
+    kind: text('kind').notNull(),
+    /** 调整金额（分，带符号） */
+    amountFen: integer('amount_fen').notNull(),
+    reason: text('reason').notNull(),
+    metaJson: text('meta_json', { mode: 'json' }).$type<Record<string, unknown>>(),
+    /** 来源审批载荷单 -> pay_adjust_proposals.id */
+    sourceId: text('source_id'),
+    /** 状态：active | reverted（撤销留痕不删行） */
+    status: text('status').notNull().default('active'),
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => users.id),
+    ...auditColumns,
+  },
+  (t) => [index('ix_pay_adjustments_staff_month').on(t.staffId, t.month, t.status)],
+);
+
 /* ------------------------------------------------------------------ */
 /* 5.4d 退款（批次 R12 退款专项 · 冻结版 V1.0，老板会签 CJ-0921-23）        */
 /* ------------------------------------------------------------------ */
@@ -3922,9 +4054,9 @@ export const approvalRequests = sqliteTable(
     storeId: text('store_id')
       .notNull()
       .references(() => stores.id),
-    /** 类型：purchase（采购） | replenish（要货） | transfer（调拨） | writeoff（报损） | config（涉钱配置二级审批，端口批收尾片 1，refId -> config_change_proposals.id） */
+    /** 类型：purchase（采购） | replenish（要货） | transfer（调拨） | writeoff（报损） | config（涉钱配置二级审批，端口批收尾片 1，refId -> config_change_proposals.id） | correction（数据订正，片 2，refId -> data_corrections.id） | pay_adjust（薪资手工调整，片 3，refId -> pay_adjust_proposals.id） */
     kind: text('kind').notNull(),
-    /** 关联单据 id（purchase_orders/replenish_requests/transfer_orders/stock_writeoffs/config_change_proposals） */
+    /** 关联单据 id（purchase_orders/replenish_requests/transfer_orders/stock_writeoffs/config_change_proposals/data_corrections/pay_adjust_proposals） */
     refId: text('ref_id').notNull(),
     /** 摘要（队列展示快照） */
     summary: text('summary').notNull(),
@@ -4175,7 +4307,7 @@ export const payrollItems = sqliteTable(
     commissionFen: integer('commission_fen').notNull().default(0),
     performanceFen: integer('performance_fen').notNull().default(0),
     deductionFen: integer('deduction_fen').notNull().default(0),
-    /** 调整项（带符号：负=跨月回冲，正=补调） */
+    /** 调整项（带符号：负=跨月回冲，正=补调；含手工调整台账 pay_adjustments 合算=端口批收尾片 3 同步下游） */
     adjustmentFen: integer('adjustment_fen').notNull().default(0),
     netFen: integer('net_fen').notNull().default(0),
     ruleVersion: integer('rule_version'),

@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-07T10:08:13.001Z；键数=3762；归屏率=96.9%（未归屏 115）
+ * 生成时间口径：2026-10-07T13:27:35.862Z；键数=3868；归屏率=97.0%（未归屏 115）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -6858,6 +6858,272 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "BoardingPage 页面内文案"
  },
  {
+  "key": "canvas.aside",
+  "domain": "merchant:canvas",
+  "text": "真页区块排序/显隐/文案 · 草稿→发布两步流 · 发布即三端生效",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.blockListAside",
+  "domain": "merchant:canvas",
+  "text": "拖拽排序 · 开关显隐 · 文案点保存（预览即变，发布才上线）",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.blockListTitle",
+  "domain": "merchant:canvas",
+  "text": "区块排列",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.cancelCta",
+  "domain": "merchant:canvas",
+  "text": "取消",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.confirmCta",
+  "domain": "merchant:canvas",
+  "text": "确认",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.confirmHint",
+  "domain": "merchant:canvas",
+  "text": "防误触：口令与按钮双重确认",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.confirmPhrase",
+  "domain": "merchant:canvas",
+  "text": "确认保存",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.copyHighRiskWarn",
+  "domain": "merchant:canvas",
+  "text": "高危键：保存即生效三端，须口令复核",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.copySave",
+  "domain": "merchant:canvas",
+  "text": "保存",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.copySaved",
+  "domain": "merchant:canvas",
+  "text": "文案已保存（预览已同步）",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.dirtyBar",
+  "domain": "merchant:canvas",
+  "text": "{n} 项未存草稿改动",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.draftSaved",
+  "domain": "merchant:canvas",
+  "text": "草稿已保存（v{version}）",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.loadFail",
+  "domain": "merchant:canvas",
+  "text": "画布数据加载失败",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.noStore",
+  "domain": "merchant:canvas",
+  "text": "门店未解析（预览店锚缺失，布局读取已跳过）",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.publishBody",
+  "domain": "merchant:canvas",
+  "text": "发布后客户端/收银台真页即生效（v{version}）；旧线上版转归档留痕。",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.publishCta",
+  "domain": "merchant:canvas",
+  "text": "发布",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.publishDone",
+  "domain": "merchant:canvas",
+  "text": "已发布 v{version}",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.publishNoDraft",
+  "domain": "merchant:canvas",
+  "text": "当前无草稿版（先「保存草稿」）",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.publishTitle",
+  "domain": "merchant:canvas",
+  "text": "确认发布布局",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.redline",
+  "domain": "merchant:canvas",
+  "text": "区块注册表写死白名单；自由排版不做（装修编辑器=P2 后期件）",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.resetCta",
+  "domain": "merchant:canvas",
+  "text": "重置",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.revertConfirm",
+  "domain": "merchant:canvas",
+  "text": "确认回退到上一版？当前线上版转归档留痕。",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.revertCta",
+  "domain": "merchant:canvas",
+  "text": "回退上一版",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.revertDone",
+  "domain": "merchant:canvas",
+  "text": "已回退到 v{version}",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.saveDraft",
+  "domain": "merchant:canvas",
+  "text": "保存草稿",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.slotCurrent",
+  "domain": "merchant:canvas",
+  "text": "当前素材",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.slotEmpty",
+  "domain": "merchant:canvas",
+  "text": "槽位暂无 live 素材（码内默认图兜底）",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.slotGoto",
+  "domain": "merchant:canvas",
+  "text": "去槽位端口更换 ›",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.statusArchived",
+  "domain": "merchant:canvas",
+  "text": "归档",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.statusDraft",
+  "domain": "merchant:canvas",
+  "text": "草稿",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.statusPublished",
+  "domain": "merchant:canvas",
+  "text": "线上",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.tabCashierMarketing",
+  "domain": "merchant:canvas",
+  "text": "收银营销位",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.tabHome",
+  "domain": "merchant:canvas",
+  "text": "客户端首页",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.tabMemberCenter",
+  "domain": "merchant:canvas",
+  "text": "会员中心",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.title",
+  "domain": "merchant:canvas",
+  "text": "画布端口",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.versionsEmpty",
+  "domain": "merchant:canvas",
+  "text": "暂无布局版本（保存草稿即落首版）",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.versionsTitle",
+  "domain": "merchant:canvas",
+  "text": "版本时间轴",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.visibleLabel",
+  "domain": "merchant:canvas",
+  "text": "显示",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
   "key": "cashier.adjustNote",
   "domain": "merchant:cashier",
   "text": "备注追加进调整记录留痕，原冻结数字不涂改。",
@@ -7957,11 +8223,67 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "CartPanel 组件内文案"
  },
  {
+  "key": "cashier.scanDone",
+  "domain": "merchant:cashier",
+  "text": "已识别会员（码通道带出=档位/状态为主）",
+  "screen": "商家·收银台",
+  "position": "ScanVerifyCard 组件内文案"
+ },
+ {
+  "key": "cashier.scanFail",
+  "domain": "merchant:cashier",
+  "text": "会员码核验失败",
+  "screen": "商家·收银台",
+  "position": "ScanVerifyCard 组件内文案"
+ },
+ {
+  "key": "cashier.scanHint",
+  "domain": "merchant:cashier",
+  "text": "扫码/录码核验（与手机号检索并列通道）",
+  "screen": "商家·收银台",
+  "position": "ScanVerifyCard 组件内文案"
+ },
+ {
+  "key": "cashier.scanInputPh",
+  "domain": "merchant:cashier",
+  "text": "粘贴/录入会员码",
+  "screen": "商家·收银台",
+  "position": "ScanVerifyCard 组件内文案"
+ },
+ {
+  "key": "cashier.scanNote",
+  "domain": "merchant:cashier",
+  "text": "码通道带出=档位/状态为主（次卡/储值/预约数请走手机号检索）",
+  "screen": "商家·收银台",
+  "position": "ScanVerifyCard 组件内文案"
+ },
+ {
   "key": "cashier.scanPayNote",
   "domain": "merchant:cashier",
   "text": "聚合扫码=通道资质候（留口件）",
   "screen": "商家·收银台",
   "position": "PaySheet 组件内文案"
+ },
+ {
+  "key": "cashier.scanTitle",
+  "domain": "merchant:cashier",
+  "text": "会员码核验",
+  "screen": "商家·收银台",
+  "position": "ScanVerifyCard 组件内文案"
+ },
+ {
+  "key": "cashier.scanVerifyCta",
+  "domain": "merchant:cashier",
+  "text": "核验",
+  "screen": "商家·收银台",
+  "position": "ScanVerifyCard 组件内文案"
+ },
+ {
+  "key": "cashier.scanVerifying",
+  "domain": "merchant:cashier",
+  "text": "核验中…",
+  "screen": "商家·收银台",
+  "position": "ScanVerifyCard 组件内文案"
  },
  {
   "key": "cashier.shiftEmpty",
@@ -8160,6 +8482,62 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "CarePackPortBody 组件内文案"
  },
  {
+  "key": "cadm.cloneCancel",
+  "domain": "merchant:consoleAdmin",
+  "text": "取消",
+  "screen": "商家·开发者管理端",
+  "position": "ProfilePortBody 组件内文案"
+ },
+ {
+  "key": "cadm.cloneConfirmCta",
+  "domain": "merchant:consoleAdmin",
+  "text": "确认克隆",
+  "screen": "商家·开发者管理端",
+  "position": "ProfilePortBody 组件内文案"
+ },
+ {
+  "key": "cadm.cloneCta",
+  "domain": "merchant:consoleAdmin",
+  "text": "新店克隆",
+  "screen": "商家·开发者管理端",
+  "position": "ProfilePortBody 组件内文案"
+ },
+ {
+  "key": "cadm.cloneDone",
+  "domain": "merchant:consoleAdmin",
+  "text": "新店已克隆",
+  "screen": "商家·开发者管理端",
+  "position": "ProfilePortBody 组件内文案"
+ },
+ {
+  "key": "cadm.cloneModalTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "确认克隆新店",
+  "screen": "商家·开发者管理端",
+  "position": "ProfilePortBody 组件内文案"
+ },
+ {
+  "key": "cadm.cloneNameLabel",
+  "domain": "merchant:consoleAdmin",
+  "text": "新店名称",
+  "screen": "商家·开发者管理端",
+  "position": "ProfilePortBody 组件内文案"
+ },
+ {
+  "key": "cadm.cloneSectionTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "门店操作",
+  "screen": "商家·开发者管理端",
+  "position": "ProfilePortBody 组件内文案"
+ },
+ {
+  "key": "cadm.cloneWarn",
+  "domain": "merchant:consoleAdmin",
+  "text": "克隆=档案+服务+商品 stock 归零+六表门店覆盖行复制，不带数据（订单/会员/员工/库存流水/账单一律不克隆）",
+  "screen": "商家·开发者管理端",
+  "position": "ProfilePortBody 组件内文案"
+ },
+ {
   "key": "cadm.coexistNote",
   "domain": "merchant:consoleAdmin",
   "text": "共构不分叉：右栏直接复用规则配置/文案端口/槽位端口三页内核；旧路由 /settings/rules · /settings/copy · /settings/slots 保留可直达。",
@@ -8307,6 +8685,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "ConsolePage 页面内文案"
  },
  {
+  "key": "cadm.groupF",
+  "domain": "merchant:consoleAdmin",
+  "text": "F · 页面画布",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
   "key": "cadm.killArm",
   "domain": "merchant:consoleAdmin",
   "text": "一键关停",
@@ -8394,6 +8779,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "cadm.pageTitle",
   "domain": "merchant:consoleAdmin",
   "text": "开发者管理端",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.portCanvas",
+  "domain": "merchant:consoleAdmin",
+  "text": "画布端口",
   "screen": "商家·开发者管理端",
   "position": "ConsolePage 页面内文案"
  },
@@ -14348,6 +14740,202 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "PassPage 页面内文案"
  },
  {
+  "key": "payroll.adjust.amountLabel",
+  "domain": "merchant:payroll",
+  "text": "金额（元，带符号）",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.approveConfirm",
+  "domain": "merchant:payroll",
+  "text": "确认通过并应用该调整？",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.approveCta",
+  "domain": "merchant:payroll",
+  "text": "通过",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.approved",
+  "domain": "merchant:payroll",
+  "text": "已通过并生效",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.aside",
+  "domain": "merchant:payroll",
+  "text": "单笔提成/工时折算 · 审批通过才生效",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.hoursLabel",
+  "domain": "merchant:payroll",
+  "text": "小时数",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.invalid",
+  "domain": "merchant:payroll",
+  "text": "请填齐员工/金额（非零）/事由",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.kindCommission",
+  "domain": "merchant:payroll",
+  "text": "单笔提成",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.kindLabel",
+  "domain": "merchant:payroll",
+  "text": "类型",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.kindWorkHours",
+  "domain": "merchant:payroll",
+  "text": "工时折算",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.loadFail",
+  "domain": "merchant:payroll",
+  "text": "调整单加载失败",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.monthLabel",
+  "domain": "merchant:payroll",
+  "text": "月份",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.proposed",
+  "domain": "merchant:payroll",
+  "text": "已提交审批",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.queueEmpty",
+  "domain": "merchant:payroll",
+  "text": "暂无调整单",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.queueTitle",
+  "domain": "merchant:payroll",
+  "text": "调整单队列",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.reasonLabel",
+  "domain": "merchant:payroll",
+  "text": "事由",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.reasonPh",
+  "domain": "merchant:payroll",
+  "text": "事由必填（留痕用）",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.rejectCta",
+  "domain": "merchant:payroll",
+  "text": "驳回",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.rejected",
+  "domain": "merchant:payroll",
+  "text": "已驳回",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.rejectNotePrompt",
+  "domain": "merchant:payroll",
+  "text": "请输入驳回原因（必填）",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.rejectNoteRequired",
+  "domain": "merchant:payroll",
+  "text": "驳回原因不能为空",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.staffLabel",
+  "domain": "merchant:payroll",
+  "text": "员工",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.statusApproved",
+  "domain": "merchant:payroll",
+  "text": "已通过",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.statusPending",
+  "domain": "merchant:payroll",
+  "text": "待复核",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.statusRejected",
+  "domain": "merchant:payroll",
+  "text": "已驳回",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.submitCta",
+  "domain": "merchant:payroll",
+  "text": "提交审批",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.thresholdNote",
+  "domain": "merchant:payroll",
+  "text": "|金额|>阈值仅店主复核（金额阈值分级）；只进当月未发单不回溯已发",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.adjust.title",
+  "domain": "merchant:payroll",
+  "text": "手工调整",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
   "key": "payroll.appeal.approveCta",
   "domain": "merchant:payroll",
   "text": "批准",
@@ -14883,6 +15471,125 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "payroll.pageTitle",
   "domain": "merchant:payroll",
   "text": "薪资",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.sim.addRow",
+  "domain": "merchant:payroll",
+  "text": "＋ 加一键",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.sim.aside",
+  "domain": "merchant:payroll",
+  "text": "试算只读不落库（不产生任何留痕行/快照行）",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.sim.colBaseline",
+  "domain": "merchant:payroll",
+  "text": "现行提成",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.sim.colDelta",
+  "domain": "merchant:payroll",
+  "text": "提成差值",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.sim.colDeltaNet",
+  "domain": "merchant:payroll",
+  "text": "净额差值",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.sim.colSimulated",
+  "domain": "merchant:payroll",
+  "text": "试算提成",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.sim.colStaff",
+  "domain": "merchant:payroll",
+  "text": "员工",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.sim.invalid",
+  "domain": "merchant:payroll",
+  "text": "覆盖值须为非负数字",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.sim.monthLabel",
+  "domain": "merchant:payroll",
+  "text": "试算月份",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.sim.noNumeric",
+  "domain": "merchant:payroll",
+  "text": "该键无数值字段可覆盖",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.sim.readonlyNote",
+  "domain": "merchant:payroll",
+  "text": "试算只读不落库",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.sim.removeRow",
+  "domain": "merchant:payroll",
+  "text": "移除",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.sim.rulePick",
+  "domain": "merchant:payroll",
+  "text": "规则键",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.sim.runCta",
+  "domain": "merchant:payroll",
+  "text": "跑试算",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.sim.running",
+  "domain": "merchant:payroll",
+  "text": "试算中…",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.sim.title",
+  "domain": "merchant:payroll",
+  "text": "提成试算器",
+  "screen": "商家·薪资",
+  "position": "PayrollPage 页面内文案"
+ },
+ {
+  "key": "payroll.sim.valueLabel",
+  "domain": "merchant:payroll",
+  "text": "覆盖值",
   "screen": "商家·薪资",
   "position": "PayrollPage 页面内文案"
  },
@@ -25614,6 +26321,41 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "ttd.title",
   "domain": "staff:taskToday",
   "text": "今日任务",
+  "screen": "员工·工位",
+  "position": "TodayPage 页面内文案"
+ },
+ {
+  "key": "today.bind.binding",
+  "domain": "staff:today",
+  "text": "绑定中…",
+  "screen": "员工·工位",
+  "position": "TodayPage 页面内文案"
+ },
+ {
+  "key": "today.bind.done",
+  "domain": "staff:today",
+  "text": "绑定成功，正在进入工位…",
+  "screen": "员工·工位",
+  "position": "TodayPage 页面内文案"
+ },
+ {
+  "key": "today.bind.inputPh",
+  "domain": "staff:today",
+  "text": "输入 8 位邀请码",
+  "screen": "员工·工位",
+  "position": "TodayPage 页面内文案"
+ },
+ {
+  "key": "today.bind.submitCta",
+  "domain": "staff:today",
+  "text": "绑定入职",
+  "screen": "员工·工位",
+  "position": "TodayPage 页面内文案"
+ },
+ {
+  "key": "today.bind.title",
+  "domain": "staff:today",
+  "text": "有邀请码？直接绑定入职",
   "screen": "员工·工位",
   "position": "TodayPage 页面内文案"
  },

@@ -799,6 +799,16 @@ async function main() {
         active: true,
         createdBy: owner.id,
       },
+      /* ---- 端口批收尾片 3：薪资调整复核阈值键（0064 迁移同名幂等先行，本处=重置后补种） ---- */
+      {
+        version: 1,
+        ruleKey: 'pay_adjust_threshold_fen',
+        label: '薪资手工调整复核阈值（分）：|调整金额|≤阈值 manager 可复核，超阈值仅 owner 复核（金额阈值分级）',
+        valueJson: { amountFen: 10000 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
     ]);
 
     /* ---- 端口批片 B：文案端口 copy_overrides 种子（控制台第七域 domain='copy'） ----

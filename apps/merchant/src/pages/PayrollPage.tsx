@@ -270,6 +270,173 @@ export default function PayrollPage() {
     }
   };
 
+  /* ---- 端口批收尾片 3 · 区 4 提成试算器（owner；simulateCommission 只读不落库） ---- */
+  const [simMonth, setSimMonth] = useState(nowMonth());
+  const [simRows, setSimRows] = useState<Array<{ ruleKey: string; values: Record<string, string> }>>([]);
+  const [simBusy, setSimBusy] = useState(false);
+  type SimOut = Awaited<ReturnType<typeof trpc.payroll.simulateCommission.query>>;
+  /* server items 为 Record<string,unknown> 透出（契约字段逐字，见 routers/payroll.ts） */
+  type SimItem = {
+    staffId: string;
+    name: string;
+    baseline: { commissionTotalFen: number; netFen: number };
+    simulated: { commissionTotalFen: number; netFen: number };
+    deltaCommissionFen: number;
+    deltaNetFen: number;
+  };
+  const [simResult, setSimResult] = useState<SimOut | null>(null);
+
+  /* 覆盖键下拉宇宙=commission 域 active 行（label 显名；数值字段取 valueJson 数字项） */
+  const commissionQ = useQuery({
+    queryKey: ['config', 'list', 'commission'],
+    queryFn: () => trpc.config.list.query({ domain: 'commission' }),
+    enabled: role.isOwner,
+    staleTime: 60_000,
+  });
+  const commissionRules = useMemo(
+    () => (commissionQ.data?.rules ?? []).filter((r) => r.active),
+    [commissionQ.data],
+  );
+  const numericFieldsOf = (ruleKey: string): Array<{ field: string; current: number }> => {
+    const r = commissionRules.find((x) => x.ruleKey === ruleKey);
+    if (!r) return [];
+    return Object.entries(r.valueJson as Record<string, unknown>)
+      .filter(([, v]) => typeof v === 'number')
+      .map(([field, v]) => ({ field, current: v as number }));
+  };
+
+  const addSimRow = () => {
+    const first = commissionRules.find((r) => !simRows.some((x) => x.ruleKey === r.ruleKey));
+    if (!first) return;
+    const values: Record<string, string> = {};
+    for (const f of numericFieldsOf(first.ruleKey)) values[f.field] = String(f.current);
+    setSimRows((prev) => [...prev, { ruleKey: first.ruleKey, values }]);
+  };
+
+  const runSim = async () => {
+    const overrides: Array<{ ruleKey: string; valueJson: Record<string, unknown> }> = [];
+    for (const row of simRows) {
+      const valueJson: Record<string, unknown> = {};
+      for (const [field, text] of Object.entries(row.values)) {
+        const v = Number(text.trim());
+        if (text.trim() === '' || !Number.isFinite(v) || v < 0) {
+          toast(py('payroll.sim.invalid'), 'error');
+          return;
+        }
+        valueJson[field] = v;
+      }
+      if (Object.keys(valueJson).length > 0) overrides.push({ ruleKey: row.ruleKey, valueJson });
+    }
+    if (overrides.length === 0) {
+      toast(py('payroll.sim.invalid'), 'error');
+      return;
+    }
+    setSimBusy(true);
+    try {
+      const r = await trpc.payroll.simulateCommission.query({ month: simMonth, overrides });
+      setSimResult(r);
+    } catch (err) {
+      toast(errMsg(err), 'error');
+    } finally {
+      setSimBusy(false);
+    }
+  };
+
+  /* ---- 端口批收尾片 3 · 区 5 手工调整（owner 发起；owner/manager 复核） ---- */
+  const adjustQ = useQuery({
+    queryKey: ['payroll', 'adjustments'],
+    queryFn: () => trpc.payroll.adjustmentList.query({}),
+  });
+  const [aStaffId, setAStaffId] = useState('');
+  const [aKind, setAKind] = useState<'commission' | 'work_hours'>('commission');
+  const [aMonth, setAMonth] = useState(nowMonth());
+  const [aAmount, setAAmount] = useState('');
+  const [aHours, setAHours] = useState('');
+  const [aReason, setAReason] = useState('');
+  const [aBusy, setABusy] = useState(false);
+
+  /** 带符号元串 → 非零分（两位小数硬校验；非法/零返回 null） */
+  const signedYuanToFen = (raw: string): number | null => {
+    const s = raw.trim();
+    if (!/^-?\d+(\.\d{1,2})?$/.test(s)) return null;
+    const fen = Math.round(Number(s) * 100);
+    if (!Number.isFinite(fen) || fen === 0) return null;
+    return fen;
+  };
+
+  const proposeAdjustment = async () => {
+    const amountFen = signedYuanToFen(aAmount);
+    if (!aStaffId || amountFen === null || aReason.trim() === '') {
+      toast(py('payroll.adjust.invalid'), 'error');
+      return;
+    }
+    let meta: Record<string, unknown> | undefined;
+    if (aKind === 'work_hours') {
+      const hours = Number(aHours.trim());
+      if (aHours.trim() === '' || !Number.isFinite(hours) || hours <= 0) {
+        toast(py('payroll.adjust.invalid'), 'error');
+        return;
+      }
+      meta = { hours };
+    }
+    setABusy(true);
+    try {
+      await trpc.payroll.proposeAdjustment.mutate({
+        kind: aKind,
+        staffId: aStaffId,
+        month: aMonth,
+        amountFen,
+        reason: aReason.trim(),
+        ...(meta ? { meta } : {}),
+      });
+      toast(py('payroll.adjust.proposed'));
+      setAStaffId('');
+      setAAmount('');
+      setAHours('');
+      setAReason('');
+      invalidateAll();
+    } catch (err) {
+      toast(errMsg(err), 'error');
+    } finally {
+      setABusy(false);
+    }
+  };
+
+  const reviewAdjustment = async (approvalId: string, approve: boolean) => {
+    let reviewNote: string | undefined;
+    if (approve) {
+      if (!window.confirm(py('payroll.adjust.approveConfirm'))) return;
+    } else {
+      const input = window.prompt(py('payroll.adjust.rejectNotePrompt'));
+      if (input === null) return;
+      if (input.trim() === '') {
+        toast(py('payroll.adjust.rejectNoteRequired'), 'error');
+        return;
+      }
+      reviewNote = input.trim();
+    }
+    try {
+      await trpc.payroll.reviewAdjustment.mutate({
+        requestId: approvalId,
+        approve,
+        ...(reviewNote ? { note: reviewNote } : {}),
+      });
+      toast(approve ? py('payroll.adjust.approved') : py('payroll.adjust.rejected'));
+      invalidateAll();
+    } catch (err) {
+      toast(errMsg(err), 'error');
+    }
+  };
+
+  const adjustItems = useMemo(() => {
+    const all = [...(adjustQ.data?.items ?? [])];
+    return all.sort((a, b) => {
+      if ((a.proposal.status === 'pending') !== (b.proposal.status === 'pending'))
+        return a.proposal.status === 'pending' ? -1 : 1;
+      return new Date(b.proposal.createdAt).getTime() - new Date(a.proposal.createdAt).getTime();
+    });
+  }, [adjustQ.data]);
+
   if (!role.canManage) {
     return <RoleGuidePage title={py('payroll.guideTitle')} hint={py('payroll.guideHint')} />;
   }
@@ -637,6 +804,285 @@ export default function PayrollPage() {
               );
             })
           )}
+        </div>
+      </div>
+
+      {/* 区 4 提成试算器（端口批收尾片 3 · owner；只读不落库） */}
+      {role.isOwner ? (
+        <div className="u3-panel mt-4" data-testid="pay-sim">
+          <div className="u3-panel-head">
+            <h3>{py('payroll.sim.title')}</h3>
+            <span className="aside">{py('payroll.sim.aside')}</span>
+          </div>
+          <div className="space-y-3 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3">
+            <div className="flex flex-wrap items-end gap-3">
+              <Field label={py('payroll.sim.monthLabel')}>
+                <input
+                  type="month"
+                  value={simMonth}
+                  onChange={(e) => e.target.value && setSimMonth(e.target.value)}
+                  data-testid="pay-sim-month"
+                  className="u1-ring rounded-control bg-card px-3 py-2 text-caption text-ink focus:outline-none"
+                />
+              </Field>
+              <Btn variant="subtle" size="sm" data-testid="pay-sim-add" onClick={addSimRow} disabled={simRows.length >= commissionRules.length}>
+                {py('payroll.sim.addRow')}
+              </Btn>
+              <Btn variant="primary" size="sm" data-testid="pay-sim-run" disabled={simBusy || simRows.length === 0} onClick={() => void runSim()}>
+                {simBusy ? py('payroll.sim.running') : py('payroll.sim.runCta')}
+              </Btn>
+            </div>
+            {simRows.map((row, idx) => {
+              const fields = numericFieldsOf(row.ruleKey);
+              const rule = commissionRules.find((r) => r.ruleKey === row.ruleKey);
+              return (
+                <div key={row.ruleKey} className="rounded-control bg-canvas px-3 py-2" data-testid={`pay-sim-row-${idx}`}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <select
+                      value={row.ruleKey}
+                      aria-label={py('payroll.sim.rulePick')}
+                      data-testid={`pay-sim-rule-${idx}`}
+                      onChange={(e) => {
+                        const rk = e.target.value;
+                        const values: Record<string, string> = {};
+                        for (const f of numericFieldsOf(rk)) values[f.field] = String(f.current);
+                        setSimRows((prev) => prev.map((x, i) => (i === idx ? { ruleKey: rk, values } : x)));
+                      }}
+                      className="u1-ring rounded-control bg-card px-3 py-2 text-caption text-ink focus:outline-none"
+                    >
+                      {commissionRules.map((r) => (
+                        <option key={r.ruleKey} value={r.ruleKey} disabled={simRows.some((x, i) => i !== idx && x.ruleKey === r.ruleKey)}>
+                          {r.label}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      className="text-caption-xs font-bold text-[rgba(59,46,36,.62)] underline underline-offset-2"
+                      onClick={() => setSimRows((prev) => prev.filter((_, i) => i !== idx))}
+                    >
+                      {py('payroll.sim.removeRow')}
+                    </button>
+                  </div>
+                  {fields.length === 0 ? (
+                    <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]">{py('payroll.sim.noNumeric')}</p>
+                  ) : (
+                    <div className="mt-2 flex flex-wrap items-end gap-3">
+                      {fields.map((f) => (
+                        <Field key={f.field} label={`${py('payroll.sim.valueLabel')} · ${f.field}（${rule ? rule.label : row.ruleKey}）`}>
+                          <input
+                            type="number"
+                            min={0}
+                            value={row.values[f.field] ?? ''}
+                            data-testid={`pay-sim-value-${idx}-${f.field}`}
+                            onChange={(e) =>
+                              setSimRows((prev) =>
+                                prev.map((x, i) => (i === idx ? { ...x, values: { ...x.values, [f.field]: e.target.value } } : x)),
+                              )
+                            }
+                            className="u1-ring w-28 rounded-control bg-card px-3 py-2 text-caption tabular-nums text-ink focus:outline-none"
+                          />
+                        </Field>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {simResult ? (
+              <div data-testid="pay-sim-result">
+                <div className="u3-noscrollx overflow-x-auto">
+                  <table className="u3-tbl min-w-[640px]">
+                    <thead>
+                      <tr>
+                        <th>{py('payroll.sim.colStaff')}</th>
+                        <th className="!text-right">{py('payroll.sim.colBaseline')}</th>
+                        <th className="!text-right">{py('payroll.sim.colSimulated')}</th>
+                        <th className="!text-right">{py('payroll.sim.colDelta')}</th>
+                        <th className="!text-right">{py('payroll.sim.colDeltaNet')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(simResult.items as unknown as SimItem[]).map((it) => (
+                        <tr key={it.staffId} data-testid={`pay-sim-staff-${it.staffId}`}>
+                          <td className="font-semibold text-ink">{it.name}</td>
+                          <td className="text-right font-number tabular-nums">{fmtMoney(it.baseline.commissionTotalFen)}</td>
+                          <td className="text-right font-number tabular-nums">{fmtMoney(it.simulated.commissionTotalFen)}</td>
+                          <td className={`text-right font-number tabular-nums ${it.deltaCommissionFen !== 0 ? 'font-bold text-ink' : 'text-[rgba(59,46,36,.42)]'}`}>
+                            {it.deltaCommissionFen > 0 ? '+' : ''}
+                            {fmtMoney(it.deltaCommissionFen)}
+                          </td>
+                          <td className={`text-right font-number tabular-nums ${it.deltaNetFen !== 0 ? 'font-bold text-ink' : 'text-[rgba(59,46,36,.42)]'}`}>
+                            {it.deltaNetFen > 0 ? '+' : ''}
+                            {fmtMoney(it.deltaNetFen)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]">
+                  {py('payroll.sim.readonlyNote')} · {simResult.note}
+                </p>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      {/* 区 5 手工调整（端口批收尾片 3 · owner 发起/审批通过才生效） */}
+      <div className="u3-panel mt-4" data-testid="pay-adjust">
+        <div className="u3-panel-head">
+          <h3>{py('payroll.adjust.title')}</h3>
+          <span className="aside">{py('payroll.adjust.aside')}</span>
+        </div>
+        <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3">
+          <p className="mb-3 rounded-input bg-brand-primary-light px-3 py-2 text-caption text-ink" data-testid="pay-adjust-threshold-note">
+            {py('payroll.adjust.thresholdNote')}
+          </p>
+          {role.isOwner ? (
+            <div className="mb-3 space-y-3" data-testid="pay-adjust-form">
+              <div className="flex flex-wrap items-end gap-3">
+                <Field label={py('payroll.adjust.staffLabel')}>
+                  <select
+                    value={aStaffId}
+                    onChange={(e) => setAStaffId(e.target.value)}
+                    aria-label={py('payroll.adjust.staffLabel')}
+                    data-testid="pay-adjust-staff"
+                    className="u1-ring rounded-control bg-card px-3 py-2 text-caption text-ink focus:outline-none"
+                  >
+                    <option value="">—</option>
+                    {staffRows.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label={py('payroll.adjust.kindLabel')}>
+                  <select
+                    value={aKind}
+                    onChange={(e) => setAKind(e.target.value as 'commission' | 'work_hours')}
+                    aria-label={py('payroll.adjust.kindLabel')}
+                    data-testid="pay-adjust-kind"
+                    className="u1-ring rounded-control bg-card px-3 py-2 text-caption text-ink focus:outline-none"
+                  >
+                    <option value="commission">{py('payroll.adjust.kindCommission')}</option>
+                    <option value="work_hours">{py('payroll.adjust.kindWorkHours')}</option>
+                  </select>
+                </Field>
+                <Field label={py('payroll.adjust.monthLabel')}>
+                  <input
+                    type="month"
+                    value={aMonth}
+                    onChange={(e) => e.target.value && setAMonth(e.target.value)}
+                    data-testid="pay-adjust-month"
+                    className="u1-ring rounded-control bg-card px-3 py-2 text-caption text-ink focus:outline-none"
+                  />
+                </Field>
+                <Field label={py('payroll.adjust.amountLabel')}>
+                  <input
+                    value={aAmount}
+                    onChange={(e) => setAAmount(e.target.value)}
+                    inputMode="decimal"
+                    data-testid="pay-adjust-amount"
+                    className="u1-ring w-32 rounded-control bg-card px-3 py-2 text-caption tabular-nums text-ink focus:outline-none"
+                  />
+                </Field>
+                {aKind === 'work_hours' ? (
+                  <Field label={py('payroll.adjust.hoursLabel')}>
+                    <input
+                      value={aHours}
+                      onChange={(e) => setAHours(e.target.value)}
+                      inputMode="decimal"
+                      data-testid="pay-adjust-hours"
+                      className="u1-ring w-24 rounded-control bg-card px-3 py-2 text-caption tabular-nums text-ink focus:outline-none"
+                    />
+                  </Field>
+                ) : null}
+              </div>
+              <div className="flex flex-wrap items-end gap-3">
+                <div className="min-w-0 flex-1">
+                  <Field label={py('payroll.adjust.reasonLabel')}>
+                    <input
+                      value={aReason}
+                      onChange={(e) => setAReason(e.target.value)}
+                      placeholder={py('payroll.adjust.reasonPh')}
+                      maxLength={500}
+                      data-testid="pay-adjust-reason"
+                      className={inputCls}
+                    />
+                  </Field>
+                </div>
+                <Btn variant="primary" size="sm" disabled={aBusy} onClick={() => void proposeAdjustment()} data-testid="pay-adjust-submit">
+                  {py('payroll.adjust.submitCta')}
+                </Btn>
+              </div>
+            </div>
+          ) : null}
+
+          {/* 调整单队列（pending 在前） */}
+          <p className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{py('payroll.adjust.queueTitle')}</p>
+          <div data-testid="pay-adjust-queue">
+            {adjustQ.isPending ? (
+              <div className="py-3" aria-label="加载中">
+                {[0, 1].map((i) => (
+                  <Skeleton key={i} className="mb-2.5 h-10 !rounded-[16px]" />
+                ))}
+              </div>
+            ) : adjustQ.isError ? (
+              <p className="py-3 text-caption-xs text-danger-deep">
+                {py('payroll.adjust.loadFail')}：{errMsg(adjustQ.error)}
+              </p>
+            ) : adjustItems.length === 0 ? (
+              <p className="py-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">{py('payroll.adjust.queueEmpty')}</p>
+            ) : (
+              adjustItems.map((it) => (
+                <div key={it.proposal.id} className="border-t border-[rgba(59,46,36,.06)] py-2.5 first:border-t-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <Badge tone="brand">
+                          {it.proposal.kind === 'commission' ? py('payroll.adjust.kindCommission') : py('payroll.adjust.kindWorkHours')}
+                        </Badge>
+                        <span className="text-caption font-semibold text-ink">{it.staffName ?? it.proposal.staffId}</span>
+                        <span className="u1-num text-caption-xs text-[rgba(59,46,36,.42)]">{it.proposal.month}</span>
+                      </div>
+                      <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.62)]">
+                        <span className="font-number font-bold tabular-nums text-ink">
+                          {it.proposal.amountFen > 0 ? '+' : ''}
+                          {fmtMoney(it.proposal.amountFen)}
+                        </span>
+                        {' · '}
+                        {it.proposal.reason}
+                      </div>
+                      <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]">
+                        {it.proposerNickname ?? '—'} · {fmtAt(it.proposal.createdAt)}
+                        {it.reviewNote ? ` · ${it.reviewNote}` : ''}
+                      </div>
+                    </div>
+                    <Badge tone={it.approvalStatus === 'approved' ? 'success' : it.approvalStatus === 'rejected' ? 'danger' : 'warn'}>
+                      {it.approvalStatus === 'approved'
+                        ? py('payroll.adjust.statusApproved')
+                        : it.approvalStatus === 'rejected'
+                          ? py('payroll.adjust.statusRejected')
+                          : py('payroll.adjust.statusPending')}
+                    </Badge>
+                  </div>
+                  {it.approvalStatus === 'pending' && it.approvalId ? (
+                    <div className="mt-2 flex gap-2">
+                      <Btn variant="primary" size="sm" data-testid={`pay-adjust-approve-${it.approvalId}`} onClick={() => void reviewAdjustment(it.approvalId!, true)}>
+                        {py('payroll.adjust.approveCta')}
+                      </Btn>
+                      <Btn variant="danger" size="sm" data-testid={`pay-adjust-reject-${it.approvalId}`} onClick={() => void reviewAdjustment(it.approvalId!, false)}>
+                        {py('payroll.adjust.rejectCta')}
+                      </Btn>
+                    </div>
+                  ) : null}
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
 

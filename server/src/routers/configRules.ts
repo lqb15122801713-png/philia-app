@@ -161,7 +161,7 @@ const NESTED_NUMBER_MAP_KEYS = new Set(['dog', 'cat']);
  * - dog / cat 嵌套映射的内层数值必须非负有限数字（时长域物种分块）。
  * 未知字段宽松放行（结构按 key 约定演进），但不存在的 rule_key 在调用前已被拒。
  */
-function validateValueJson(ruleKey: string, value: Record<string, unknown>): void {
+export function validateValueJson(ruleKey: string, value: Record<string, unknown>): void {
   const bad = (msg: string): never => {
     throw new TRPCError({ code: 'BAD_REQUEST', message: `规则 ${ruleKey}：${msg}` });
   };

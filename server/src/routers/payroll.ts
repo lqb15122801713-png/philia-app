@@ -14,7 +14,8 @@
  *   （uq run+staff，payload=computeMonth 载荷快照）；
  *   四费列+net 服务端算：net = commission + performance − deduction + adjustment，
  *   其中 commissionFen=毛口径（payload.commissionTotalFen+adjustmentsTotalFen，
- *   调整项未减除）、adjustmentFen=−adjustmentsTotalFen（带符号，负=跨月回冲）、
+ *   调整项未减除）、adjustmentFen=−adjustmentsTotalFen+手工调整台账合算（带符号，负=跨月
+ *   回冲，正=补调；手工调整=端口批收尾片 3 pay_adjustments 同步下游）、
  *   deductionFen=仅 status='active' 扣减合计（reverted 申诉返还不计）；
  *   发放=标记留痕（marked_by/at/method_note）不碰真钱——全链路零支付通道（开口项 3 裁）；
  * - B3-5/6 异议申诉：同人同目标 pending 在途幂等拒（返回现状）；approved 且
@@ -26,7 +27,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNotNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import {
@@ -36,7 +37,7 @@ import {
   staffProcedure,
 } from '../trpc';
 import { computeMonth, snapshotStoreMonth, type DbHandle } from './commission';
-import { resolveScopedRules } from './configRules';
+import { resolveScopedRules, validateValueJson } from './configRules';
 
 const txDb = (tx: unknown): DbHandle => tx as DbHandle;
 
@@ -233,9 +234,22 @@ export const payrollRouter = router({
       let itemsInserted = 0;
       for (const st of staffRows) {
         const payload = await computeMonth(ctx.db, st, input.month);
+        /* 片 3 薪资调整端口 · 同步下游：手工调整台账 pay_adjustments（staff+month+active）
+           合算进 adjustmentFen（与退款回冲同通道带符号；已发[marked_at]月份不进=应用帧硬拒在案） */
+        const manualRows = await ctx.db
+          .select({ amountFen: schema.payAdjustments.amountFen })
+          .from(schema.payAdjustments)
+          .where(
+            and(
+              eq(schema.payAdjustments.staffId, st.id),
+              eq(schema.payAdjustments.month, input.month),
+              eq(schema.payAdjustments.status, 'active'),
+            ),
+          );
+        const manualAdjustFen = manualRows.reduce((s, r) => s + r.amountFen, 0);
         // 毛口径提成（调整项单列带符号，净额不双扣）+ 仅 active 扣减
         const commissionFen = payload.commissionTotalFen + payload.adjustmentsTotalFen;
-        const adjustmentFen = -payload.adjustmentsTotalFen;
+        const adjustmentFen = -payload.adjustmentsTotalFen + manualAdjustFen;
         const deductionFen = payload.deductions
           .filter((dd) => dd.status === 'active')
           .reduce((s, dd) => s + dd.amountFen, 0);
@@ -692,6 +706,247 @@ export const payrollRouter = router({
       source: 'service_rules.payroll_appeal_sla_hours',
     };
   }),
+
+  /* ------------------------------------------------------------------ */
+  /* 端口批收尾片 3 · 薪资调整端口 4 件：试算/手工调整/阈值分级审批链/同步下游      */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * simulateCommission（试算/模拟器，owner 只读不落库）：按指定月份既有数据跑「新规则」——
+   * overrides 键必须∈commission_rules 宇宙（validateValueJson 同 config.save 校验）；
+   * 每人两帧（baseline=现行规则 / simulated=覆盖规则全域生效模拟，computeMonth rulesOverride 参），
+   * 差值精确到分透出；只读零落库（试算不产生任何留痕行/快照行）。
+   */
+  simulateCommission: merchantOwnerProcedure
+    .input(
+      z.object({
+        month: z.string().regex(/^\d{4}-\d{2}$/, '月份格式 YYYY-MM'),
+        overrides: z
+          .array(z.object({ ruleKey: z.string().min(1), valueJson: z.record(z.unknown()) }))
+          .min(1, '试算覆盖不能为空')
+          .max(10, '单次最多 10 键'),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
+      const seen = new Set<string>();
+      for (const o of input.overrides) {
+        if (seen.has(o.ruleKey)) throw new TRPCError({ code: 'BAD_REQUEST', message: `同一规则键重复提交：${o.ruleKey}` });
+        seen.add(o.ruleKey);
+        validateValueJson(o.ruleKey, o.valueJson);
+      }
+      const universeRows = await ctx.db.select({ ruleKey: schema.commissionRules.ruleKey }).from(schema.commissionRules);
+      const universe = new Set(universeRows.map((r) => r.ruleKey));
+      for (const o of input.overrides) {
+        if (!universe.has(o.ruleKey)) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: `未知规则键：${o.ruleKey}（试算仅覆盖既有提成参数）` });
+        }
+      }
+      const overrideMap = new Map(input.overrides.map((o) => [o.ruleKey, o.valueJson]));
+      const staffRows = await ctx.db
+        .select()
+        .from(schema.staff)
+        .where(and(eq(schema.staff.storeId, storeId), eq(schema.staff.status, 'active')));
+      const netOf = (p: Awaited<ReturnType<typeof computeMonth>>) =>
+        p.commissionTotalFen +
+        p.performance.payableFen -
+        p.deductions.filter((dd) => dd.status === 'active').reduce((s, dd) => s + dd.amountFen, 0);
+      const items = [] as Array<Record<string, unknown>>;
+      for (const st of staffRows) {
+        const baseline = await computeMonth(ctx.db, st, input.month);
+        const simulated = await computeMonth(ctx.db, st, input.month, overrideMap);
+        items.push({
+          staffId: st.id,
+          name: st.name,
+          baseline: { commissionTotalFen: baseline.commissionTotalFen, netFen: netOf(baseline) },
+          simulated: { commissionTotalFen: simulated.commissionTotalFen, netFen: netOf(simulated) },
+          deltaCommissionFen: simulated.commissionTotalFen - baseline.commissionTotalFen,
+          deltaNetFen: netOf(simulated) - netOf(baseline),
+        });
+      }
+      return {
+        month: input.month,
+        overrides: input.overrides,
+        items,
+        note: '试算=只读模拟（按现行库内数据跑覆盖规则，不落库不回溯；规则值全域生效模拟非时序帧）',
+      };
+    }),
+
+  /**
+   * proposeAdjustment（单笔提成/工时手工调整·发起，owner）：pay_adjust_proposals 载荷单+
+   * approval_requests kind='pay_adjust' pending（不新建审批表；金额阈值分级在 review 帧）。
+   */
+  proposeAdjustment: merchantOwnerProcedure
+    .input(
+      z.object({
+        kind: z.enum(['commission', 'work_hours']),
+        staffId: z.string().min(1, '员工不能为空'),
+        month: z.string().regex(/^\d{4}-\d{2}$/, '月份格式 YYYY-MM'),
+        amountFen: z.number().int('必须是整数分').refine((v) => v !== 0, '调整金额不能为零'),
+        reason: z.string().trim().min(1, '调整事由必填（留痕用）').max(500, '调整事由过长'),
+        meta: z.record(z.unknown()).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
+      const st = await ctx.db.select().from(schema.staff).where(eq(schema.staff.id, input.staffId)).get();
+      if (!st || st.storeId !== storeId) throw new TRPCError({ code: 'NOT_FOUND', message: '员工不存在' });
+      return ctx.db.transaction(async (tx) => {
+        const txh = tx as unknown as typeof ctx.db;
+        const [proposal] = await txh
+          .insert(schema.payAdjustProposals)
+          .values({
+            storeId,
+            kind: input.kind,
+            staffId: input.staffId,
+            month: input.month,
+            amountFen: input.amountFen,
+            metaJson: input.meta ?? null,
+            reason: input.reason,
+            status: 'pending',
+            proposerId: ctx.user.id,
+          })
+          .returning({ id: schema.payAdjustProposals.id });
+        const summary = `薪资手工调整：${st.name} · ${input.month} · ${input.amountFen > 0 ? '+' : ''}${input.amountFen} 分（${input.kind === 'commission' ? '单笔提成' : '工时折算'}）`;
+        const [req] = await txh
+          .insert(schema.approvalRequests)
+          .values({
+            storeId,
+            kind: 'pay_adjust',
+            refId: proposal!.id,
+            summary,
+            status: 'pending',
+            applicantId: ctx.user.id,
+            timelineJson: [{ at: new Date().toISOString(), action: 'submitted', by: ctx.user.id }],
+          })
+          .returning({ id: schema.approvalRequests.id });
+        return { proposalId: proposal!.id, requestId: req!.id, summary };
+      });
+    }),
+
+  /** adjustmentList（owner）：调整单+审批单联查（pending 在前），按月过滤 */
+  adjustmentList: merchantOwnerProcedure
+    .input(z.object({ month: z.string().regex(/^\d{4}-\d{2}$/).optional() }))
+    .query(async ({ ctx, input }) => {
+      const conds = [eq(schema.payAdjustProposals.storeId, ctx.user.storeId!)];
+      if (input.month) conds.push(eq(schema.payAdjustProposals.month, input.month));
+      const rows = await ctx.db
+        .select({
+          proposal: schema.payAdjustProposals,
+          proposerNickname: schema.users.nickname,
+          staffName: schema.staff.name,
+          approvalId: schema.approvalRequests.id,
+          approvalStatus: schema.approvalRequests.status,
+          reviewerId: schema.approvalRequests.reviewerId,
+          reviewNote: schema.approvalRequests.reviewNote,
+          timelineJson: schema.approvalRequests.timelineJson,
+        })
+        .from(schema.payAdjustProposals)
+        .leftJoin(schema.users, eq(schema.users.id, schema.payAdjustProposals.proposerId))
+        .leftJoin(schema.staff, eq(schema.staff.id, schema.payAdjustProposals.staffId))
+        .leftJoin(
+          schema.approvalRequests,
+          and(eq(schema.approvalRequests.refId, schema.payAdjustProposals.id), eq(schema.approvalRequests.kind, 'pay_adjust')),
+        )
+        .where(and(...conds))
+        .orderBy(desc(schema.payAdjustProposals.createdAt))
+        .limit(100);
+      return { items: rows };
+    }),
+
+  /**
+   * reviewAdjustment（复核，owner/manager）：金额阈值分级——|amountFen|>阈值（service_rules
+   * pay_adjust_threshold_fen.amountFen，缺省 10000 分）仅 owner 可复核（manager 403 明文）；
+   * 通过=同事务落 pay_adjustments active 行（**只进当月未发单不回溯已发**：目标 (staff,month)
+   * 工资单行已带 marked_at=已发 → 400 硬拒应用）；驳回=双 rejected 不落库。timeline 只增。
+   */
+  reviewAdjustment: merchantManagerProcedure
+    .input(z.object({ requestId: z.string().min(1), approve: z.boolean(), note: z.string().max(500).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
+      return ctx.db.transaction(async (tx) => {
+        const txh = tx as unknown as typeof ctx.db;
+        const req = (await txh.select().from(schema.approvalRequests).where(eq(schema.approvalRequests.id, input.requestId)).limit(1))[0];
+        if (!req || req.storeId !== storeId || req.kind !== 'pay_adjust') {
+          throw new TRPCError({ code: 'NOT_FOUND', message: '审批单不存在' });
+        }
+        if (req.status !== 'pending') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: '该审批已处理，不可重复审批' });
+        }
+        const proposal = (await txh.select().from(schema.payAdjustProposals).where(eq(schema.payAdjustProposals.id, req.refId)).limit(1))[0];
+        if (!proposal) throw new TRPCError({ code: 'NOT_FOUND', message: '调整载荷单不存在' });
+        /* 金额阈值分级（端口键 pay_adjust_threshold_fen，缺省 10000 分） */
+        const th = (await readServiceRule(txh, 'pay_adjust_threshold_fen', storeId)) ?? {};
+        const thresholdFen = typeof th.amountFen === 'number' && th.amountFen > 0 ? th.amountFen : 10000;
+        if (Math.abs(proposal.amountFen) > thresholdFen && !ctx.user.roles.includes('merchant_owner')) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: `调整金额超阈值 ${thresholdFen} 分，仅店主可复核（金额阈值分级）`,
+          });
+        }
+        const now = new Date();
+        const timeline = [
+          ...req.timelineJson,
+          { at: now.toISOString(), action: input.approve ? 'approved' : 'rejected', by: ctx.user.id, ...(input.note ? { note: input.note } : {}) },
+        ];
+        await txh
+          .update(schema.approvalRequests)
+          .set({
+            status: input.approve ? 'approved' : 'rejected',
+            reviewerId: ctx.user.id,
+            reviewNote: input.note ?? null,
+            reviewedAt: now,
+            timelineJson: timeline,
+            updatedAt: now,
+          })
+          .where(eq(schema.approvalRequests.id, req.id));
+        if (!input.approve) {
+          await txh
+            .update(schema.payAdjustProposals)
+            .set({ status: 'rejected', updatedAt: now })
+            .where(eq(schema.payAdjustProposals.id, proposal.id));
+          return { requestId: req.id, approved: false };
+        }
+        /* 只进当月未发单不回溯已发：该 (staff,month) 工资单行已带发放标记 marked_at → 硬拒 */
+        const paidItem = await txh
+          .select({ id: schema.payrollItems.id })
+          .from(schema.payrollItems)
+          .where(
+            and(
+              eq(schema.payrollItems.staffId, proposal.staffId),
+              eq(schema.payrollItems.month, proposal.month),
+              isNotNull(schema.payrollItems.markedAt),
+            ),
+          )
+          .get();
+        if (paidItem) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: `该员工 ${proposal.month} 工资单已发放（marked_at 在案）——调整只进当月未发单，不回溯已发`,
+          });
+        }
+        const [adj] = await txh
+          .insert(schema.payAdjustments)
+          .values({
+            storeId,
+            staffId: proposal.staffId,
+            month: proposal.month,
+            kind: proposal.kind,
+            amountFen: proposal.amountFen,
+            reason: proposal.reason,
+            metaJson: proposal.metaJson,
+            sourceId: proposal.id,
+            status: 'active',
+            createdBy: proposal.proposerId,
+          })
+          .returning({ id: schema.payAdjustments.id });
+        await txh
+          .update(schema.payAdjustProposals)
+          .set({ status: 'applied', appliedAt: now, updatedAt: now })
+          .where(eq(schema.payAdjustProposals.id, proposal.id));
+        return { requestId: req.id, approved: true, adjustmentId: adj!.id };
+      });
+    }),
 });
 
 export type PayrollRouter = typeof payrollRouter;

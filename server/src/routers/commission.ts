@@ -517,13 +517,16 @@ export async function computeMonth(
   d: DbHandle,
   staffRow: StaffRow,
   month: string,
+  /** 端口批收尾片 3 · 提成试算：规则值覆盖（key→valueJson 全域生效模拟，不影响库行；
+   * 缺省=正常时序解析。规则读取链仍是 loadRuleHistory+resolveFromHistory，覆盖只是查表前先查 map） */
+  rulesOverride?: Map<string, Record<string, unknown>>,
 ): Promise<CommissionMonthPayload> {
   const storeId = staffRow.storeId;
   const { start, end } = monthRange(month);
   const quarter = quarterOfMonth(month);
   const qRange = quarterRange(quarter);
   const { history: ruleHistory, currentVersion } = await loadRuleHistory(d, storeId); // 片 5 候裁件：店域收窄+历史不溯
-  const ruleAt = (key: string, ts: Date) => resolveFromHistory(ruleHistory, key, ts);
+  const ruleAt = (key: string, ts: Date) => rulesOverride?.get(key) ?? resolveFromHistory(ruleHistory, key, ts);
 
   /* ---- 当月账单域（提成） ---- */
   const monthData = await loadSettledBills(d, storeId, start, end);

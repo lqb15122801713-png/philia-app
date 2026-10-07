@@ -26,6 +26,19 @@ export { setCopyOverrides, copyOverrideOf, withCopyOverrides, CopyOverridesLoade
 // 展示槽位覆盖层（端口批片 C · CJ-1002-01）：槽位 live 值→码内默认 fallback
 export { setSlotContents, slotContentOf, resolveSlotUrl, SlotContentLoader } from './slotContents';
 export type { SlotContent } from './slotContents';
+// 画布布局覆盖层（端口批收尾片 3）：published 布局→注册表默认序 fallback；预览探针+实时 patch
+export {
+  setCanvasLayout,
+  canvasLayoutOf,
+  CanvasLayoutLoader,
+  useCanvasLayout,
+  CanvasProbeMount,
+  CANVAS_PATCH_EVENT,
+} from './canvasLayout';
+export type { CanvasPageKey, CanvasBlockSpec } from './canvasLayout';
+export { CK } from './canvasLayout';
+// 画布预览文案 patch（端口批收尾片 3：单键写覆盖图不落库）
+export { patchCopyOverride } from './copyOverrides';
 // hooks 显式导出：EventEnvelope 以契约形（data: any）覆盖 constants/events 的同名导出
 export { useMe, useEventSource, SSE_BACKOFF_DELAYS, backoffDelay } from './api/hooks';
 export type { EventEnvelope } from './api/hooks';

@@ -45,6 +45,7 @@ import { Btn, toast, ToasterMount } from '../components/staff-admin/ui';
 import { cadm } from '../copy/consoleAdmin';
 import { useMerchantRole } from '../lib/roles';
 import { CopyConfigBody } from './CopyConfigPage';
+import { CanvasPortBody } from './CanvasPortBody';
 import { CarePackPortBody } from './CarePackPortBody';
 import { ConfigDictBody } from './ConfigDictBody';
 import { CorrectionBody } from './CorrectionBody';
@@ -69,6 +70,7 @@ type PortKey =
   | 'dict'
   | 'correction'
   | 'recycle'
+  | 'canvas'
   | 'profile'
   | 'reportSpec';
 
@@ -117,6 +119,14 @@ const PORT_GROUPS: Array<{
       /* 大批片 2：E1 点亮（ProfilePortBody 档案表单+连锁归属），撤置灰注 */
       { key: 'profile', label: cadm('cadm.portProfile'), seal: 'E1' },
       { key: 'reportSpec', label: cadm('cadm.portReportSpec'), seal: 'E2', note: cadm('cadm.portPendingNote') },
+    ],
+  },
+  {
+    key: 'F',
+    label: cadm('cadm.groupF'),
+    items: [
+      /* 端口批收尾片 3 · B 股：F1 画布端口点亮（CanvasPortBody 直嵌；seal F1 新章无撞号） */
+      { key: 'canvas', label: cadm('cadm.portCanvas'), seal: 'F1' },
     ],
   },
 ];
@@ -308,6 +318,8 @@ function OwnerConsole() {
             {/* 端口批收尾片 2：D4 数据订正 / D5 回收站（CorrectionBody / RecycleBinBody 内核） */}
             {active === 'correction' ? <CorrectionBody /> : null}
             {active === 'recycle' ? <RecycleBinBody /> : null}
+            {/* 端口批收尾片 3：F1 画布端口（CanvasPortBody 内核；owner-only server 硬闸） */}
+            {active === 'canvas' ? <CanvasPortBody /> : null}
             {empty ? (
               <section className="wsk-card" data-testid={`console-empty-${active}`} aria-disabled="true">
                 <div className="wsk-hd">
