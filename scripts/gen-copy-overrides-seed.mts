@@ -12,7 +12,8 @@
  *
  * 产物：
  * 1. server/src/db/copySeedRows.ts —— 种子行（含 screen/position；seed.ts 幂等补种单源）；
- * 2. server/drizzle/0047_copy_port_v2_backfill.sql —— 存量库回填（UPDATE WHERE screen IS NULL 守卫，幂等）。
+ * 2. server/drizzle/_backfill_staging.sql —— 存量库回填 staging（UPDATE WHERE screen IS NULL 守卫，幂等；
+ *    军规=已部署迁移永不重写：增量行 diff 后挪进下一号新迁移入卷，staging 用后删，0063 为先例）。
  *
  * 用法（仓库根）：npx tsx scripts/gen-copy-overrides-seed.mts
  */
@@ -396,7 +397,10 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
 writeFileSync(join(ROOT, 'server/src/db/copySeedRows.ts'), tsOut);
 
 /* ------------------------------------------------------------------ */
-/* 6. 产物 2：0047 存量回填迁移（UPDATE WHERE screen IS NULL 守卫，幂等）      */
+/* 6. 产物 2：存量回填 SQL（UPDATE WHERE screen IS NULL 守卫，幂等）          */
+/* 军规（端口批收尾片 2 打回修一件后立）：已部署迁移永不重写——本产物只写          */
+/* staging 文件 _backfill_staging.sql（不入卷）；施工时与仓内既有版 diff 出增量，  */
+/* 增量行挪进「下一号新迁移」登记 journal（同 0063 先例），staging 文件用后删。  */
 /* ------------------------------------------------------------------ */
 
 const esc = (s: string) => s.replaceAll("'", "''");
@@ -411,12 +415,12 @@ for (let i = 0; i < rows.length; i += 300) {
     .join('\n--> statement-breakpoint\n');
   chunks.push(stmts);
 }
-const migOut = `-- 端口 V2 修正批：copy_overrides screen/position 存量回填（生成器扫三端调用点产物）
--- 幂等：WHERE screen IS NULL 守卫（重放零副作用；人工端口改过的 position 不被回填覆盖——
--- position 列=留口件，人工值 screen 非空语义下不再回填；screen IS NULL 时 position 一并刷新）。
+const migOut = `-- 【staging 勿入卷】copy_overrides screen/position 存量回填（生成器扫三端调用点产物）
+-- 军规：已部署迁移永不重写——本文件=暂存件；增量行须 diff 后挪进下一号新迁移（0063 先例），用后删除。
+-- 幂等：WHERE screen IS NULL 守卫（重放零副作用；人工端口改过的 position 不被回填覆盖）。
 -- 归屏率=${((mapped / rows.length) * 100).toFixed(1)}%（未归屏 ${unmapped} 键 screen 保持 NULL=「未归屏」诚实组）。
 -- 生成件=scripts/gen-copy-overrides-seed.mts 重跑产物（server/src/db/copySeedRows.ts 同帧）。
 ${chunks.join('\n--> statement-breakpoint\n')}
 `;
-writeFileSync(join(ROOT, 'server/drizzle/0047_copy_port_v2_backfill.sql'), migOut);
-console.log('产物：server/src/db/copySeedRows.ts + server/drizzle/0047_copy_port_v2_backfill.sql');
+writeFileSync(join(ROOT, 'server/drizzle/_backfill_staging.sql'), migOut);
+console.log('产物：server/src/db/copySeedRows.ts + server/drizzle/_backfill_staging.sql（staging 勿入卷；增量回填走新迁移=军规）');
