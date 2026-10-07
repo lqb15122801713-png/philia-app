@@ -96,6 +96,22 @@ const CONSOLE_ADMIN_COPY_TABLE = {
   'cadm.dictDomainMemberPlans': '会员档',
   'cadm.dictDomainService': '服务',
   'cadm.dictDomainPay': '支付',
+
+  /* ---- D4 数据订正端口（端口批收尾片 2 · 数据 3 之②；CorrectionBody 直嵌） ---- */
+  'cadm.portCorrection': '数据订正',
+
+  /* ---- D5 回收站端口（端口批收尾片 2 · 数据 3 之③；RecycleBinBody 直嵌） ---- */
+  'cadm.portRecycle': '回收站',
+  'cadm.recycleTitle': '回收站',
+  'cadm.recycleAside': '软删恢复统一口 · 商品/活动/公告三域运营件',
+  'cadm.recycleNote': '回收站=软删+恢复；账务/支付/账单类永不进回收站（无硬删口）',
+  'cadm.recycleEmpty': '回收站为空',
+  'cadm.recycleLoadFail': '回收站加载失败',
+  'cadm.recycleRestore': '恢复',
+  'cadm.recycleRestored': '已恢复',
+  'cadm.recycleDomainProduct': '商品',
+  'cadm.recycleDomainPromo': '活动',
+  'cadm.recycleDomainAnnounce': '公告',
 } as const;
 
 export const CONSOLE_ADMIN_COPY = withCopyOverrides(CONSOLE_ADMIN_COPY_TABLE);

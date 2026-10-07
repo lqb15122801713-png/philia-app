@@ -1,7 +1,7 @@
 -- 端口 V2 修正批：copy_overrides screen/position 存量回填（生成器扫三端调用点产物）
 -- 幂等：WHERE screen IS NULL 守卫（重放零副作用；人工端口改过的 position 不被回填覆盖——
 -- position 列=留口件，人工值 screen 非空语义下不再回填；screen IS NULL 时 position 一并刷新）。
--- 归屏率=96.8%（未归屏 116 键 screen 保持 NULL=「未归屏」诚实组）。
+-- 归屏率=96.9%（未归屏 115 键 screen 保持 NULL=「未归屏」诚实组）。
 -- 生成件=scripts/gen-copy-overrides-seed.mts 重跑产物（server/src/db/copySeedRows.ts 同帧）。
 UPDATE `copy_overrides` SET `screen` = '客户·关于', `position` = 'AboutPage 页面内文案' WHERE `rule_key` = 'about.agreements' AND `screen` IS NULL;
 --> statement-breakpoint
@@ -1665,6 +1665,28 @@ UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'Announcem
 --> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.common.retry' AND `screen` IS NULL;
 --> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.draft.badge' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.draft.editCta' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.draft.editingHint' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.draft.newCta' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.draft.publishCta' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.draft.removeConfirm' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.draft.removeCta' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.draft.removed' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.draft.saveCta' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.draft.saved' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.draft.sectionTitle' AND `screen` IS NULL;
+--> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.guideHint' AND `screen` IS NULL;
 --> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.guideTitle' AND `screen` IS NULL;
@@ -1675,11 +1697,19 @@ UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'Announcem
 --> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.list.archivedBadge' AND `screen` IS NULL;
 --> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.list.archivedSection' AND `screen` IS NULL;
+--> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.list.aside' AND `screen` IS NULL;
 --> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.list.empty' AND `screen` IS NULL;
 --> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.list.expiredBadge' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.list.pendingBadge' AND `screen` IS NULL;
+--> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.list.pinnedBadge' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.list.publishedSection' AND `screen` IS NULL;
 --> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.list.readCount' AND `screen` IS NULL;
 --> statement-breakpoint
@@ -1723,7 +1753,21 @@ UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'Announcem
 --> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.pub.titlePh' AND `screen` IS NULL;
 --> statement-breakpoint
-UPDATE `copy_overrides` SET `screen` = NULL, `position` = '未在页面调用点命中（merchant:announcements 域键表，端口运营复核挂载屏）' WHERE `rule_key` = 'ann.reads.close' AND `screen` IS NULL;
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.pubd.confirmCta' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.pubd.endsAtLabel' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.pubd.modalTitle' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.pubd.previewTitle' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.pubd.startsAtLabel' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.pubd.windowHint' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.pubd.windowUnlimited' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.reads.close' AND `screen` IS NULL;
 --> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·公告', `position` = 'AnnouncementsPage 页面内文案' WHERE `rule_key` = 'ann.reads.empty' AND `screen` IS NULL;
 --> statement-breakpoint
@@ -2365,6 +2409,8 @@ UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` 
 --> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'ConsolePage 页面内文案' WHERE `rule_key` = 'cadm.portCopy' AND `screen` IS NULL;
 --> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'ConsolePage 页面内文案' WHERE `rule_key` = 'cadm.portCorrection' AND `screen` IS NULL;
+--> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'ConsolePage 页面内文案' WHERE `rule_key` = 'cadm.portDict' AND `screen` IS NULL;
 --> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'ConsolePage 页面内文案' WHERE `rule_key` = 'cadm.portMarketing' AND `screen` IS NULL;
@@ -2376,6 +2422,8 @@ UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` 
 UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'ConsolePage 页面内文案' WHERE `rule_key` = 'cadm.portProfile' AND `screen` IS NULL;
 --> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'ProfilePortBody 组件内文案' WHERE `rule_key` = 'cadm.portProfileSave' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'ConsolePage 页面内文案' WHERE `rule_key` = 'cadm.portRecycle' AND `screen` IS NULL;
 --> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'ConsolePage 页面内文案' WHERE `rule_key` = 'cadm.portReportSpec' AND `screen` IS NULL;
 --> statement-breakpoint
@@ -2396,6 +2444,26 @@ UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` 
 UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'ProfilePortBody 组件内文案' WHERE `rule_key` = 'cadm.profileSaved' AND `screen` IS NULL;
 --> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'ConsolePage 页面内文案' WHERE `rule_key` = 'cadm.pubNote' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'RecycleBinBody 组件内文案' WHERE `rule_key` = 'cadm.recycleAside' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'RecycleBinBody 组件内文案' WHERE `rule_key` = 'cadm.recycleDomainAnnounce' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'RecycleBinBody 组件内文案' WHERE `rule_key` = 'cadm.recycleDomainProduct' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'RecycleBinBody 组件内文案' WHERE `rule_key` = 'cadm.recycleDomainPromo' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'RecycleBinBody 组件内文案' WHERE `rule_key` = 'cadm.recycleEmpty' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'RecycleBinBody 组件内文案' WHERE `rule_key` = 'cadm.recycleLoadFail' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'RecycleBinBody 组件内文案' WHERE `rule_key` = 'cadm.recycleNote' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'RecycleBinBody 组件内文案' WHERE `rule_key` = 'cadm.recycleRestore' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'RecycleBinBody 组件内文案' WHERE `rule_key` = 'cadm.recycleRestored' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'RecycleBinBody 组件内文案' WHERE `rule_key` = 'cadm.recycleTitle' AND `screen` IS NULL;
 --> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'ConsolePage 页面内文案' WHERE `rule_key` = 'cadm.reportSpecEmptyBody' AND `screen` IS NULL;
 --> statement-breakpoint
@@ -2634,6 +2702,94 @@ UPDATE `copy_overrides` SET `screen` = '商家·槽位端口', `position` = 'Slo
 UPDATE `copy_overrides` SET `screen` = '商家·槽位端口', `position` = 'SlotPortPage 页面内文案' WHERE `rule_key` = 'slotport.uploading' AND `screen` IS NULL;
 --> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·槽位端口', `position` = 'SlotPortPage 页面内文案' WHERE `rule_key` = 'slotport.versionInfo' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.approveConfirm' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.approveCta' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.approved' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.aside' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.balanceLabel' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.bonusLabel' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.dateLabel' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.fmtBonus' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.fmtPrincipal' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.formAside' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.formTitle' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.invalid' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.kindRebate' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.kindStored' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.kindWorkHours' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.loadFail' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.memberEmpty' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.memberPickLabel' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.memberSearchPh' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.noteLabel' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.notePh' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.principalLabel' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.proposed' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.queueAside' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.queueEmpty' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.queueTitle' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.recordEmpty' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.recordManualLabel' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.recordPickLabel' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.redlineNote' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.rejectCta' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.rejected' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.rejectNotePrompt' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.rejectNoteRequired' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.staffPickLabel' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.statusApplied' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.statusPending' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.statusRejected' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.submitCta' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.tabRebate' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.tabStored' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.tabWorkHours' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.title' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·开发者管理端', `position` = 'CorrectionBody 组件内文案' WHERE `rule_key` = 'corr.tsLabel' AND `screen` IS NULL;
 --> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·经营总览', `position` = 'PhoneAppealSection 组件内文案' WHERE `rule_key` = 'dash.appealAssistConfirmTitle' AND `screen` IS NULL;
 --> statement-breakpoint
@@ -4155,6 +4311,28 @@ UPDATE `copy_overrides` SET `screen` = '商家·薪资', `position` = 'PayrollPa
 --> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·薪资', `position` = 'PayrollPage 页面内文案' WHERE `rule_key` = 'payroll.slip.title' AND `screen` IS NULL;
 --> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductsPage 页面内文案' WHERE `rule_key` = 'prod.bulkCancel' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductsPage 页面内文案' WHERE `rule_key` = 'prod.bulkCarePackageRo' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductsPage 页面内文案' WHERE `rule_key` = 'prod.bulkDescCol' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductsPage 页面内文案' WHERE `rule_key` = 'prod.bulkDone' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductsPage 页面内文案' WHERE `rule_key` = 'prod.bulkInvalid' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductsPage 页面内文案' WHERE `rule_key` = 'prod.bulkMaxCol' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductsPage 页面内文案' WHERE `rule_key` = 'prod.bulkMinCol' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductsPage 页面内文案' WHERE `rule_key` = 'prod.bulkPendingBar' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductsPage 页面内文案' WHERE `rule_key` = 'prod.bulkPriceOwnerOnly' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductsPage 页面内文案' WHERE `rule_key` = 'prod.bulkSave' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductsPage 页面内文案' WHERE `rule_key` = 'prod.bulkToggle' AND `screen` IS NULL;
+--> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductsPage 页面内文案' WHERE `rule_key` = 'prod.costClerkMask' AND `screen` IS NULL;
 --> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductsPage 页面内文案' WHERE `rule_key` = 'prod.costCol' AND `screen` IS NULL;
@@ -4190,6 +4368,12 @@ UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductsP
 UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductsPage 页面内文案' WHERE `rule_key` = 'prod.dailyCountNote' AND `screen` IS NULL;
 --> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductsPage 页面内文案' WHERE `rule_key` = 'prod.dailyCountYes' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductsPage 页面内文案' WHERE `rule_key` = 'prod.deleteConfirm' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductsPage 页面内文案' WHERE `rule_key` = 'prod.deleteCta' AND `screen` IS NULL;
+--> statement-breakpoint
+UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductsPage 页面内文案' WHERE `rule_key` = 'prod.deleteDone' AND `screen` IS NULL;
 --> statement-breakpoint
 UPDATE `copy_overrides` SET `screen` = '商家·商品', `position` = 'ProductEditorDialog 组件内文案' WHERE `rule_key` = 'prod.editor.costHint' AND `screen` IS NULL;
 --> statement-breakpoint

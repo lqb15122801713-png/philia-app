@@ -22,6 +22,7 @@ import { boardingRouter } from './boarding';
 import { cashierRouter } from './cashier';
 import { commissionRouter } from './commission';
 import { configRulesRouter } from './configRules';
+import { correctionRouter } from './correction';
 import { depositRouter } from './deposits';
 import { incidentRouter } from './incident';
 import { inventoryRouter } from './inventory';
@@ -35,6 +36,7 @@ import { perkRouter } from './perks';
 import { petRouter } from './pet';
 import { petHealthRouter } from './petHealth';
 import { pushRouter } from './push';
+import { recycleBinRouter } from './recycleBin';
 import { reportRouter } from './report';
 import { refundRouter } from './refund';
 import { refundRequestRouter } from './refundRequest';
@@ -93,6 +95,8 @@ export const appRouter = router({
   incident: incidentRouter, // 客户端体验大批片 4：服务异常即时通报域（双通知+15min 升级）
   stock2: stock2Router, // 商家端大批片 4：库存域（批次/预警/估清/报损/采购/要货/调拨/审批中心）
   marketing: marketingRouter, // 商家端大批片 5：会员营销域（标签/券矩阵/生日台账/活动排期/支出/换货/待检/快照）
+  correction: correctionRouter, // 端口批收尾片 2：数据订正（余额/回馈金/工时单条修正+审批流，不回溯已封箱）
+  recycleBin: recycleBinRouter, // 端口批收尾片 2：回收站软删除（白名单=商品/活动/公告运营件，无 purge 硬删口）
   agreement: agreementRouter, // 商家端大批片 3：授权台账专页+周会导出（S14）
   report: reportRouter, // 客户端体验大批片 5：尾牙读口 5+报表 17 张点亮（W-13）+N6 申诉铁规两件+CSV 导出仅店主
 });

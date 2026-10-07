@@ -18,7 +18,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import { resolveScopedRules } from './configRules';
@@ -346,6 +346,7 @@ export const marketingRouter = router({
       if (input.id) {
         const exist = mustGet(await ctx.db.select().from(schema.promoCampaigns).where(eq(schema.promoCampaigns.id, input.id)).get(), '活动不存在');
         if (exist.storeId !== storeId) notFound('活动不存在');
+        if (exist.deletedAt) badRequest('活动在回收站，请先恢复再编辑');
         const [row] = await ctx.db
           .update(schema.promoCampaigns)
           .set({ ...fields, updatedAt: new Date() })
@@ -361,7 +362,7 @@ export const marketingRouter = router({
     const rows = await ctx.db
       .select()
       .from(schema.promoCampaigns)
-      .where(eq(schema.promoCampaigns.storeId, ctx.user.storeId!))
+      .where(and(eq(schema.promoCampaigns.storeId, ctx.user.storeId!), isNull(schema.promoCampaigns.deletedAt)))
       .orderBy(desc(schema.promoCampaigns.createdAt))
       .limit(200);
     const now = new Date();
@@ -371,6 +372,21 @@ export const marketingRouter = router({
       note: '活动引擎=配置台账+排期状态机留痕（不接真结算真折扣计算=开口项 1 裁；真接=线上收单批/资质后）',
     };
   }),
+
+  /** promoDelete（端口批收尾片 2 · 回收站软删，merchantManager）：运营件白名单=活动——
+   * 软删置 deleted_at/deleted_by（list 默认过滤；恢复走 recycleBin.restore 统一口）；重复删除=400 */
+  promoDelete: merchantManagerProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const row = await ctx.db.select().from(schema.promoCampaigns).where(eq(schema.promoCampaigns.id, input.id)).get();
+      if (!row || row.storeId !== ctx.user.storeId!) throw new TRPCError({ code: 'NOT_FOUND', message: '活动不存在' });
+      if (row.deletedAt) throw new TRPCError({ code: 'BAD_REQUEST', message: '活动已在回收站' });
+      await ctx.db
+        .update(schema.promoCampaigns)
+        .set({ deletedAt: new Date(), deletedBy: ctx.user.id, updatedAt: new Date() })
+        .where(eq(schema.promoCampaigns.id, row.id));
+      return { id: row.id, deleted: true };
+    }),
 
   /** 促销互斥·叠加规则逐项开关（端口值公示读口） */
   promoStackRules: merchantManagerProcedure.query(async ({ ctx }) => {

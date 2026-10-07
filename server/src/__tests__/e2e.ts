@@ -171,8 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 3671 键/70 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70）；
+ *      56.1 种子 3763 键/71 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70→端口批收尾片 2（网格/订正/回收站/公告两步流 UI 92 键，生成件重生成 3762+seed 手补 1=3763，corr 域新入=71 域）3763/71）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -4933,17 +4933,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602）→ 3671/70（端口批收尾片 1：规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602）→ 3671/70（端口批收尾片 1：规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）→ 3763/71（端口批收尾片 2：0062 网格/订正/回收站/公告 92 键，生成件重生成 3762+seed 手补 1=3763，域 70→71=corr 新域） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（3671 键/70 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 3671 && domainSet.size === 70 &&
+  check('56.1 copy 域种子全量落库（3763 键/71 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 3763 && domainSet.size === 71 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（3671 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 3671 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（3763 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 3763 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -8637,8 +8637,8 @@ async function main(): Promise<void> {
 
     /* ---- 76.3 公共读口形状不变（不透元数据：键→文两列） ---- */
     const texts76 = await trpcQuery<{ rows: Array<{ key: string; text: string; screen?: unknown; position?: unknown }> }>('config.activeCopyTexts', { cookie: customerCookie });
-    check('76.3 activeCopyTexts 形状不变（3671 行 key→text，不透 screen/position 元数据）',
-      texts76.rows.length === 3671 &&
+    check('76.3 activeCopyTexts 形状不变（3763 行 key→text，不透 screen/position 元数据）',
+      texts76.rows.length === 3763 &&
       texts76.rows.every((r) => r.screen === undefined && r.position === undefined),
       texts76.rows.length);
 
@@ -9894,6 +9894,233 @@ async function main(): Promise<void> {
       !!dbmPend && dbmDbRow?.storeId === null &&
       JSON.stringify(Object.entries(dbmActive.valueJson).sort()) === JSON.stringify(Object.entries(dbmRow.valueJson).sort()));
     await trpcMutate('config.cancelScheduled', { cookie: ownerCookie, input: { id: dbmPend.scheduledId! } });
+  }
+
+  /* ==================================================================
+   * 端口批收尾 片 2（数据 3+运营内容 2 · 任务书冻结版 V1.0）段：
+   *   84.1 批量编辑网格（白名单字段/价签仅店主/留痕）；84.2 订正·储值余额；
+   *   84.3 订正·回馈金；84.4 订正·考勤工时；84.5 回收站三域软删+恢复；
+   *   84.6 公告两步流+起止窗口懒算；84.7 新端点权限闸；84.8 隔离族不回退
+   * ================================================================== */
+  console.log('\n[端口批片2] 84. 数据 3+运营内容 2（批量编辑/订正审批/回收站/公告两步流）');
+  {
+    type AnyRec84 = Record<string, unknown>;
+
+    /* ---- 84.1 批量编辑网格（商品白名单字段） ---- */
+    const gp1 = await trpcMutate<{ id: string }>('mall.upsertProduct', {
+      cookie: ownerCookie,
+      input: { category: '零食', name: 'e2e 网格件一', description: '原文', priceFen: 1200, stock: 10, status: 'on' },
+    });
+    const gp2 = await trpcMutate<{ id: string }>('mall.upsertProduct', {
+      cookie: ownerCookie,
+      input: { category: '玩具', name: 'e2e 网格件二', priceFen: 900, stock: 5, status: 'on' },
+    });
+    const bulkOk = await trpcMutate<{ updated: number }>('mall.bulkUpdateProducts', {
+      cookie: ownerCookie,
+      input: { items: [
+        { productId: gp1.id, fields: { stock: 42, priceFen: 1500, description: '网格改', minStock: 5, maxStock: 50 } },
+        { productId: gp2.id, fields: { stock: 0 } },
+      ] },
+    });
+    const gp1After = (await db.select().from(schema.products).where(eq(schema.products.id, gp1.id)).then((r) => r[0]!));
+    const gp2After = (await db.select().from(schema.products).where(eq(schema.products.id, gp2.id)).then((r) => r[0]!));
+    const bulkMoves = (await db.select().from(schema.stockMovements).where(eq(schema.stockMovements.sourceType, 'bulk_edit')))
+      .filter((m) => [gp1.id, gp2.id].includes(m.productId));
+    check('84.1 批量编辑：白名单五字段落库（stock/价/描述/上下限）+bulk_edit 流水前后值留痕',
+      bulkOk.updated === 2 && gp1After.stock === 42 && gp1After.priceFen === 1500 && gp1After.description === '网格改' &&
+      gp1After.minStock === 5 && gp1After.maxStock === 50 && gp2After.stock === 0 &&
+      bulkMoves.length === 2 && bulkMoves.every((m) => (m.note ?? '').includes('批量编辑')),
+      { updated: bulkOk.updated, moves: bulkMoves.length });
+    const bulkMgrPrice = await asErr(trpcMutate('mall.bulkUpdateProducts', {
+      cookie: managerCookie, input: { items: [{ productId: gp2.id, fields: { priceFen: 800 } }] },
+    }));
+    const bulkMgrStock = await trpcMutate<{ updated: number }>('mall.bulkUpdateProducts', {
+      cookie: managerCookie, input: { items: [{ productId: gp2.id, fields: { stock: 7 } }] },
+    });
+    const bulkStrict = await asErr(trpcMutate('mall.bulkUpdateProducts', {
+      cookie: ownerCookie, input: { items: [{ productId: gp1.id, fields: { costFen: 100 } }] },
+    }));
+    check('84.1 网格闸：价签仅店主（manager 403）/manager 改库存放行/白名单外字段（costFen 涉账）strict 400',
+      bulkMgrPrice instanceof TrpcHttpError && bulkMgrPrice.httpStatus === 403 && bulkMgrStock.updated === 1 &&
+      bulkStrict instanceof TrpcHttpError && bulkStrict.httpStatus === 400);
+    const careRow84 = (await db.select().from(schema.products).where(eq(schema.products.category, 'care_package')).limit(1))[0];
+    if (careRow84) {
+      const bulkCare = await asErr(trpcMutate('mall.bulkUpdateProducts', {
+        cookie: ownerCookie, input: { items: [{ productId: careRow84.id, fields: { stock: 1 } }] },
+      }));
+      check('84.1 安心包=独立域只读件不进网格（400）', bulkCare instanceof TrpcHttpError && bulkCare.httpStatus === 400);
+    }
+
+    /* ---- 84.2 数据订正·储值余额（发起不落→复核应用前后值） ---- */
+    const svAccBefore = (await db.select().from(schema.storedValueAccounts)
+      .where(and(eq(schema.storedValueAccounts.userId, customerUser.id), eq(schema.storedValueAccounts.storeId, storeId))))[0];
+    const svBeforeTotal = (svAccBefore?.principalFen ?? 0) + (svAccBefore?.bonusFen ?? 0);
+    const propSv = await trpcMutate<{ correctionId: string; requestId: string }>('correction.propose', {
+      cookie: ownerCookie,
+      input: { kind: 'stored_value', targetKey: customerUser.id, note: 'e2e 订正储值', principalFen: svBeforeTotal + 500, bonusFen: 0 },
+    });
+    const svAccMid = (await db.select().from(schema.storedValueAccounts)
+      .where(and(eq(schema.storedValueAccounts.userId, customerUser.id), eq(schema.storedValueAccounts.storeId, storeId))))[0];
+    const svMidTotal = (svAccMid?.principalFen ?? 0) + (svAccMid?.bonusFen ?? 0);
+    await trpcMutate('correction.review', { cookie: managerCookie, input: { requestId: propSv.requestId, approve: true, note: '复核通过' } });
+    const svAccAfter = (await db.select().from(schema.storedValueAccounts)
+      .where(and(eq(schema.storedValueAccounts.userId, customerUser.id), eq(schema.storedValueAccounts.storeId, storeId))))[0]!;
+    const svLogs = (await db.select().from(schema.storedValueLogs))
+      .filter((l) => (l.note ?? '').includes(propSv.correctionId));
+    check('84.2 订正·储值：发起不落库（pending 帧余额不动）+复核通过才生效（本金+500）+流水前后值留痕',
+      svMidTotal === svBeforeTotal && svAccAfter.principalFen === svBeforeTotal + 500 && svAccAfter.bonusFen === 0 &&
+      svLogs.length === 1 && svLogs[0]!.balanceBeforeFen === svBeforeTotal && svLogs[0]!.balanceAfterFen === svBeforeTotal + 500,
+      { before: svBeforeTotal, after: svAccAfter.principalFen, logs: svLogs.length });
+    const propSvNo = await trpcMutate<{ requestId: string }>('correction.propose', {
+      cookie: ownerCookie,
+      input: { kind: 'stored_value', targetKey: customerUser.id, note: 'e2e 订正驳回件', principalFen: 1, bonusFen: 0 },
+    });
+    await trpcMutate('correction.review', { cookie: ownerCookie, input: { requestId: propSvNo.requestId, approve: false, note: '驳回示范' } });
+    const svAccRej = (await db.select().from(schema.storedValueAccounts)
+      .where(and(eq(schema.storedValueAccounts.userId, customerUser.id), eq(schema.storedValueAccounts.storeId, storeId))))[0]!;
+    check('84.2 驳回不落库（余额仍 +500 帧）', svAccRej.principalFen === svBeforeTotal + 500);
+
+    /* ---- 84.3 数据订正·回馈金 ---- */
+    const rbAccBefore = (await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, customerUser.id)))[0];
+    const rbBefore = rbAccBefore?.balanceFen ?? 0;
+    const propRb = await trpcMutate<{ correctionId: string; requestId: string }>('correction.propose', {
+      cookie: ownerCookie,
+      input: { kind: 'rebate', targetKey: customerUser.id, note: 'e2e 订正回馈金', balanceFen: rbBefore + 260 },
+    });
+    await trpcMutate('correction.review', { cookie: ownerCookie, input: { requestId: propRb.requestId, approve: true } });
+    const rbAccAfter = (await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, customerUser.id)))[0]!;
+    const rbLogs = (await db.select().from(schema.rebateLogs))
+      .filter((l) => l.type === 'correction' && l.sourceId === propRb.correctionId);
+    check('84.3 订正·回馈金：balanceFen 绝对值修正（+260）+rebate_logs type=correction 前后值留痕（sourceId=订正单）',
+      rbAccAfter.balanceFen === rbBefore + 260 && rbLogs.length === 1 &&
+      rbLogs[0]!.beforeFen === rbBefore && rbLogs[0]!.afterFen === rbBefore + 260,
+      { before: rbBefore, after: rbAccAfter.balanceFen });
+
+    /* ---- 84.4 数据订正·考勤工时 ---- */
+    const tsOld84 = new Date(Date.now() - 3 * 3600 * 1000);
+    const tsNew84 = new Date(Date.now() - 2 * 3600 * 1000);
+    const [rec84] = await db.insert(schema.attendanceRecords).values({
+      storeId, staffId: staffRow.id, userId: groomerUser.id, date: todayStr, kind: 'in', ts: tsOld84,
+      lat: 30.2741, lng: 120.1551, distanceM: 10, deviceId: 'e2e-dev-84',
+    }).returning();
+    const propWh = await trpcMutate<{ requestId: string }>('correction.propose', {
+      cookie: ownerCookie,
+      input: { kind: 'work_hours', targetKey: rec84!.id, note: 'e2e 订正打卡时刻', ts: tsNew84.toISOString() },
+    });
+    await trpcMutate('correction.review', { cookie: managerCookie, input: { requestId: propWh.requestId, approve: true, note: '属实' } });
+    const recAfter = (await db.select().from(schema.attendanceRecords).where(eq(schema.attendanceRecords.id, rec84!.id)))[0]!;
+    const whAppr = (await db.select().from(schema.attendanceApprovals))
+      .filter((a) => a.type === 'adjust' && a.recordId === rec84!.id && (a.reason ?? '').includes('数据订正单'));
+    check('84.4 订正·工时：打卡时刻改值生效+attendance_approvals type=adjust 留痕行（同 managerAdjust 工艺）',
+      Math.abs(recAfter.ts.getTime() - tsNew84.getTime()) < 1000 && whAppr.length === 1 && whAppr[0]!.reviewerId === managerFix.id,
+      { ts: recAfter.ts, appr: whAppr.length });
+
+    /* ---- 84.5 回收站三域软删+恢复 ---- */
+    await trpcMutate('mall.deleteProduct', { cookie: ownerCookie, input: { productId: gp1.id } });
+    const listAfterDel = await trpcQuery<{ items: AnyRec84[] }>('mall.listProductsForStore', { cookie: managerCookie, input: { pageSize: 200 } });
+    const pubAfterDel = await trpcQuery<{ items: AnyRec84[] }>('mall.listProducts', { cookie: customerCookie, input: { keyword: 'e2e 网格件一' } });
+    const recycle1 = await trpcQuery<{ items: Array<{ domain: string; id: string; title: string }> }>('recycleBin.list', { cookie: ownerCookie });
+    check('84.5 商品软删：管理/公开 list 双不见+回收站在列',
+      !listAfterDel.items.some((p) => p.id === gp1.id) && !pubAfterDel.items.some((p) => p.id === gp1.id) &&
+      recycle1.items.some((i) => i.domain === 'product' && i.id === gp1.id));
+    await trpcMutate('recycleBin.restore', { cookie: ownerCookie, input: { domain: 'product', id: gp1.id } });
+    const listAfterRestore = await trpcQuery<{ items: AnyRec84[] }>('mall.listProductsForStore', { cookie: managerCookie, input: { pageSize: 200 } });
+    check('84.5 商品恢复：管理 list 回架+回收站出列',
+      listAfterRestore.items.some((p) => p.id === gp1.id) &&
+      !(await trpcQuery<{ items: Array<{ id: string }> }>('recycleBin.list', { cookie: ownerCookie })).items.some((i) => i.id === gp1.id));
+    const promo84 = await trpcMutate<{ campaign: { id: string } }>('marketing.promoUpsert', {
+      cookie: managerCookie,
+      input: { type: 'full_minus', name: 'e2e 回收件活动', rulesJson: { minusFen: 1000, thresholdFen: 5000 } },
+    });
+    await trpcMutate('marketing.promoDelete', { cookie: managerCookie, input: { id: promo84.campaign.id } });
+    const promoListAfterDel = await trpcQuery<{ items: AnyRec84[] }>('marketing.promoList', { cookie: ownerCookie });
+    const recycle2 = await trpcQuery<{ items: Array<{ domain: string; id: string }> }>('recycleBin.list', { cookie: ownerCookie });
+    check('84.5 活动软删：promoList 不见+回收站在列（restore 统一口下件验）',
+      !promoListAfterDel.items.some((p) => p.id === promo84.campaign.id) &&
+      recycle2.items.some((i) => i.domain === 'promo' && i.id === promo84.campaign.id));
+    await trpcMutate('recycleBin.restore', { cookie: ownerCookie, input: { domain: 'promo', id: promo84.campaign.id } });
+    const promoListAfterRestore = await trpcQuery<{ items: AnyRec84[] }>('marketing.promoList', { cookie: ownerCookie });
+    check('84.5 活动恢复：promoList 回列', promoListAfterRestore.items.some((p) => p.id === promo84.campaign.id));
+    const delAgain = await asErr(trpcMutate('mall.deleteProduct', { cookie: ownerCookie, input: { productId: gp1.id } }).then(() => trpcMutate('mall.deleteProduct', { cookie: ownerCookie, input: { productId: gp1.id } })));
+    check('84.5 重复删除=400 明文（幂等口径）', delAgain instanceof TrpcHttpError && delAgain.httpStatus === 400);
+    await trpcMutate('recycleBin.restore', { cookie: ownerCookie, input: { domain: 'product', id: gp1.id } });
+
+    /* ---- 84.6 公告两步流+起止窗口懒算 ---- */
+    interface Ann84 { id: string; title: string; status: string; startsAt: Date | null; endsAt: Date | null }
+    const draft84 = await trpcMutate<{ announcement: Ann84; created: boolean }>('announce.saveDraft', {
+      cookie: managerCookie,
+      input: { title: '【片2】两步流草稿公告', body: '草稿正文（e2e）', targetRole: 'all', pinned: false },
+    });
+    const staffListDraft = await trpcQuery<{ announcements: Ann84[] }>('announce.list', { cookie: liliCookie });
+    const mgrListDraft = await trpcQuery<{ announcements: Ann84[] }>('announce.list', { cookie: managerCookie });
+    check('84.6 两步流新建=草稿：staff 不可见+manager 列表 draft 章在列',
+      draft84.created === true && !staffListDraft.announcements.some((a) => a.id === draft84.announcement.id) &&
+      mgrListDraft.announcements.some((a) => a.id === draft84.announcement.id && a.status === 'draft'));
+    await trpcMutate('announce.publishDraft', { cookie: managerCookie, input: { id: draft84.announcement.id } });
+    const staffListPub = await trpcQuery<{ announcements: Ann84[] }>('announce.list', { cookie: liliCookie });
+    const annNotif84 = (await db.select().from(schema.notifications))
+      .filter((n) => n.type === 'announcement.published' && n.body === '【片2】两步流草稿公告');
+    const pubDup = await asErr(trpcMutate('announce.publishDraft', { cookie: managerCookie, input: { id: draft84.announcement.id } }));
+    check('84.6 发布步：staff 可见+定向通知落行+重复发布=400（两步流状态机）',
+      staffListPub.announcements.some((a) => a.id === draft84.announcement.id && a.status === 'published') &&
+      annNotif84.length >= 1 && pubDup instanceof TrpcHttpError && pubDup.httpStatus === 400);
+    const draftPast = await trpcMutate<{ announcement: Ann84 }>('announce.saveDraft', {
+      cookie: managerCookie, input: { title: '【片2】已截止公告', body: 'x', targetRole: 'all', pinned: false },
+    });
+    await trpcMutate('announce.publishDraft', {
+      cookie: managerCookie,
+      input: { id: draftPast.announcement.id, startsAt: new Date(Date.now() - 2 * 3600_000).toISOString(), endsAt: new Date(Date.now() - 3600_000).toISOString() },
+    });
+    const draftFuture = await trpcMutate<{ announcement: Ann84 }>('announce.saveDraft', {
+      cookie: managerCookie, input: { title: '【片2】未到点公告', body: 'x', targetRole: 'all', pinned: false },
+    });
+    await trpcMutate('announce.publishDraft', {
+      cookie: managerCookie,
+      input: { id: draftFuture.announcement.id, startsAt: new Date(Date.now() + 3600_000).toISOString() },
+    });
+    const staffListWin = await trpcQuery<{ announcements: Ann84[] }>('announce.list', { cookie: liliCookie });
+    check('84.6 起止窗口懒算：已截止/未到点双不可见（员工读口 startsAt≤now≤endsAt）',
+      !staffListWin.announcements.some((a) => a.id === draftPast.announcement.id) &&
+      !staffListWin.announcements.some((a) => a.id === draftFuture.announcement.id));
+    const inverted = await asErr(trpcMutate('announce.publish', {
+      cookie: managerCookie,
+      input: { title: '【片2】倒置', body: 'x', targetRole: 'all', pinned: false, startsAt: new Date().toISOString(), endsAt: new Date(Date.now() - 3600_000).toISOString() },
+    }));
+    check('84.6 起止倒置=400（publish 兼容直发起止可空照跑 61 族口径）', inverted instanceof TrpcHttpError && inverted.httpStatus === 400);
+    await trpcMutate('announce.remove', { cookie: managerCookie, input: { announcementId: draftPast.announcement.id } });
+    const mgrListRemoved = await trpcQuery<{ announcements: Ann84[] }>('announce.list', { cookie: managerCookie });
+    const recycle3 = await trpcQuery<{ items: Array<{ domain: string; id: string }> }>('recycleBin.list', { cookie: ownerCookie });
+    check('84.6 公告软删：manager list 不见+回收站在列',
+      !mgrListRemoved.announcements.some((a) => a.id === draftPast.announcement.id) &&
+      recycle3.items.some((i) => i.domain === 'announce' && i.id === draftPast.announcement.id));
+    await trpcMutate('recycleBin.restore', { cookie: ownerCookie, input: { domain: 'announce', id: draftPast.announcement.id } });
+
+    /* ---- 84.7 新端点权限闸 ---- */
+    const clerkBulk = await asErr(trpcMutate('mall.bulkUpdateProducts', { cookie: clerkCookie, input: { items: [{ productId: gp2.id, fields: { stock: 1 } }] } }));
+    const mgrDel = await asErr(trpcMutate('mall.deleteProduct', { cookie: managerCookie, input: { productId: gp2.id } }));
+    const mgrPropCorr = await asErr(trpcMutate('correction.propose', { cookie: managerCookie, input: { kind: 'rebate', targetKey: customerUser.id, note: 'x', balanceFen: 1 } }));
+    const mgrRecycle = await asErr(trpcQuery('recycleBin.list', { cookie: managerCookie }));
+    const mgrRestore = await asErr(trpcMutate('recycleBin.restore', { cookie: managerCookie, input: { domain: 'promo', id: promo84.campaign.id } }));
+    const clerkDraft = await asErr(trpcMutate('announce.saveDraft', { cookie: clerkCookie, input: { title: 'x', body: 'x', targetRole: 'all', pinned: false } }));
+    check('84.7 权限闸：bulk clerk 403/deleteProduct manager 403/correction.propose manager 403/recycleBin list+restore manager 403/saveDraft clerk 403',
+      clerkBulk instanceof TrpcHttpError && clerkBulk.httpStatus === 403 &&
+      mgrDel instanceof TrpcHttpError && mgrDel.httpStatus === 403 &&
+      mgrPropCorr instanceof TrpcHttpError && mgrPropCorr.httpStatus === 403 &&
+      mgrRecycle instanceof TrpcHttpError && mgrRecycle.httpStatus === 403 &&
+      mgrRestore instanceof TrpcHttpError && mgrRestore.httpStatus === 403 &&
+      clerkDraft instanceof TrpcHttpError && clerkDraft.httpStatus === 403);
+
+    /* ---- 84.8 隔离族不回退（B 店互盲） ---- */
+    const ownerB84 = await db.select().from(schema.users).where(eq(schema.users.kimiId, 'seed_e2e_chain_ownerb')).limit(1).then((r) => r[0]!);
+    const ownerBCookie84 = await devLogin(ownerB84.id);
+    const recycleB = await trpcQuery<{ items: AnyRec84[] }>('recycleBin.list', { cookie: ownerBCookie84 });
+    const corrB = await trpcQuery<{ items: AnyRec84[] }>('correction.list', { cookie: ownerBCookie84, input: {} });
+    const restoreCross = await asErr(trpcMutate('recycleBin.restore', { cookie: ownerBCookie84, input: { domain: 'product', id: gp1.id } }));
+    const bulkCross = await asErr(trpcMutate('mall.bulkUpdateProducts', { cookie: ownerBCookie84, input: { items: [{ productId: gp1.id, fields: { stock: 1 } }] } }));
+    check('84.8 隔离族不回退：B 回收站/订正队列全 0+B 恢复 A 行=NOT_FOUND+B 网格 A 行=NOT_FOUND',
+      recycleB.items.length === 0 && corrB.items.length === 0 &&
+      restoreCross instanceof TrpcHttpError && restoreCross.httpStatus === 404 &&
+      bulkCross instanceof TrpcHttpError && bulkCross.httpStatus === 404);
   }
 
   client.close();

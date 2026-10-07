@@ -43,6 +43,22 @@ const PRODUCT_COPY_TABLE = {
   'prod.editor.limitHint': '选填整数；设后参与上下限预警',
   'prod.editor.costInvalid': '进价需为非负数字，最多两位小数（元）',
   'prod.editor.limitInvalid': '库存上下限需为 0 ~ 1000000 的整数',
+  /* ---- 端口批收尾片 2：批量编辑模式（网格白名单=库存/价（分）/描述/下限/上限；
+     成本列保持只读=涉账不进网格；价签仅店主 manager 禁编）+ 行内删除（回收站软删） ---- */
+  'prod.bulkToggle': '批量编辑',
+  'prod.bulkSave': '保存变更',
+  'prod.bulkCancel': '取消',
+  'prod.bulkPendingBar': '{n} 行待保存',
+  'prod.bulkDone': '已保存 {n} 行',
+  'prod.bulkInvalid': '有行数值不合法（非负整数；描述可空），请修正标红项',
+  'prod.bulkPriceOwnerOnly': '价签仅店主',
+  'prod.bulkDescCol': '描述',
+  'prod.bulkMinCol': '下限',
+  'prod.bulkMaxCol': '上限',
+  'prod.bulkCarePackageRo': '安心包独立库存域只读',
+  'prod.deleteCta': '删除',
+  'prod.deleteConfirm': '确认删除商品「{name}」？删除后进回收站（控制台 D5 可恢复）',
+  'prod.deleteDone': '已入回收站（控制台 D5 可恢复）',
 } as const;
 
 export const PRODUCT_COPY = withCopyOverrides(PRODUCT_COPY_TABLE);

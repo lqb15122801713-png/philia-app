@@ -24,6 +24,12 @@
  * - 件 5 D3 参数字典端口：PORT_GROUPS D 章新增 dict 项（seal D3 无撞号），直嵌
  *   ConfigDictBody（config.dictionary 全量+服务端 q 搜索+按域分组表格）。
  *
+ * 端口批收尾片 2（D 章顺编两件，seal 无撞号）：
+ * - D4 数据订正端口（数据 3 之②）：直嵌 CorrectionBody（三类页签+发起表单+
+ *   订正单队列复核；server correction.* owner 发起/manager 复核硬闸）；
+ * - D5 回收站端口（数据 3 之③）：直嵌 RecycleBinBody（recycleBin.list 三域行+
+ *   恢复统一口；账务/支付/账单类永不进=无硬删口）。
+ *
  * owner-only：manager 见引导卡（同三端口页闸径），clerk 由 ClerkRouteGuard 拦，
  * server merchantOwnerProcedure 硬闸门兜底。
  */
@@ -41,7 +47,9 @@ import { useMerchantRole } from '../lib/roles';
 import { CopyConfigBody } from './CopyConfigPage';
 import { CarePackPortBody } from './CarePackPortBody';
 import { ConfigDictBody } from './ConfigDictBody';
+import { CorrectionBody } from './CorrectionBody';
 import { ProfilePortBody } from './ProfilePortBody';
+import { RecycleBinBody } from './RecycleBinBody';
 import { DomainPanel as RulesDomainPanel, type RulesDomain } from './RulesConfigPage';
 import { SlotPortBody } from './SlotPortPage';
 
@@ -59,6 +67,8 @@ type PortKey =
   | 'commission'
   | 'xp'
   | 'dict'
+  | 'correction'
+  | 'recycle'
   | 'profile'
   | 'reportSpec';
 
@@ -95,6 +105,9 @@ const PORT_GROUPS: Array<{
       { key: 'xp', label: cadm('cadm.portXp'), seal: 'D2' },
       /* 端口批收尾片 1 · 件 5：D3 参数字典点亮（ConfigDictBody 直嵌；seal D3 无撞号：D1/D2 既有） */
       { key: 'dict', label: cadm('cadm.portDict'), seal: 'D3' },
+      /* 端口批收尾片 2：D4 数据订正（CorrectionBody）/ D5 回收站（RecycleBinBody；seal 顺编无撞号） */
+      { key: 'correction', label: cadm('cadm.portCorrection'), seal: 'D4' },
+      { key: 'recycle', label: cadm('cadm.portRecycle'), seal: 'D5' },
     ],
   },
   {
@@ -292,6 +305,9 @@ function OwnerConsole() {
             {active === 'carepack' ? <CarePackPortBody /> : null}
             {/* 端口批收尾片 1：D3 参数字典端口（ConfigDictBody 内核；空态卡不用） */}
             {active === 'dict' ? <ConfigDictBody /> : null}
+            {/* 端口批收尾片 2：D4 数据订正 / D5 回收站（CorrectionBody / RecycleBinBody 内核） */}
+            {active === 'correction' ? <CorrectionBody /> : null}
+            {active === 'recycle' ? <RecycleBinBody /> : null}
             {empty ? (
               <section className="wsk-card" data-testid={`console-empty-${active}`} aria-disabled="true">
                 <div className="wsk-hd">
