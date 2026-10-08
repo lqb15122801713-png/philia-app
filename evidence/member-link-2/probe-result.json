@@ -1,0 +1,77 @@
+{
+  "allOk": true,
+  "checks": [
+    {
+      "name": "A 微光注册登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "帧 1 微光卡面入口=「开通 ›」指 /member/open",
+      "ok": true,
+      "detail": "{\"text\":\"开通 ›\",\"href\":\"/member/open\"}"
+    },
+    {
+      "name": "帧 2 开通页直达选档（开通 CTA 在+回会员中心 CTA 不画+提示条新购口径句）",
+      "ok": true,
+      "detail": "{\"pickCta\":\"开通暖阳 · 每天 ¥1.6到期不自动续费 · 随时退卡\",\"alreadyGone\":true,\"tipHasNewPurchase\":true}"
+    },
+    {
+      "name": "帧 3 升级页：去支付钮（¥199.00 新购全价）+Mock 水印+新购口径标+到店指引卡回落不画（通道开）",
+      "ok": true,
+      "detail": "{\"payBtn\":\"去支付 ¥199.00\",\"watermark\":true,\"newPurchaseTag\":true,\"storeGuideGone\":true}"
+    },
+    {
+      "name": "帧 4 确认订单升级域：升级至档位+新购口径句+水印双位+多宠±不画+应付 ¥199.00",
+      "ok": true,
+      "detail": "{\"url\":\"/member/checkout?plan=plan_yinghuo\",\"labelUpgrade\":true,\"noteNewPurchase\":true,\"watermarkTop\":true,\"watermarkCta\":true,\"petStepperGone\":true,\"amount\":\"¥199\"}"
+    },
+    {
+      "name": "帧 5 paying 态：mock 演示控制区在+应付 ¥199.00",
+      "ok": true,
+      "detail": "{\"url\":\"/pay/PO-20261008-001\",\"paying\":true,\"mockCtl\":true,\"amount\":\"¥199\"}"
+    },
+    {
+      "name": "帧 6 paid 态：会员已升级+补差成交句（升级域成功卡）",
+      "ok": true,
+      "detail": "{\"paid\":true,\"title\":true,\"body\":true}"
+    },
+    {
+      "name": "B 微光注册登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B 失败单已建（萤火 paying）",
+      "ok": true,
+      "detail": "PO-20261008-002"
+    },
+    {
+      "name": "帧 7 failed 态卡（赭红失败卡+重试钮）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "帧 8 closed 态卡（超时关单+重新下单链）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "帧 9 掉单补开：reconcile 对账补开成功（已补开成功+单态已支付）",
+      "ok": true,
+      "detail": "{\"ok\":true,\"paid\":true}"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\memberlink2\\member-link-2-evidence\\01-me-open-cta.png",
+    "E:\\KIMI code\\tmp\\memberlink2\\member-link-2-evidence\\02-open-direct-select.png",
+    "E:\\KIMI code\\tmp\\memberlink2\\member-link-2-evidence\\03-upgrade-pay-btn.png",
+    "E:\\KIMI code\\tmp\\memberlink2\\member-link-2-evidence\\04-checkout-upgrade-newpurchase.png",
+    "E:\\KIMI code\\tmp\\memberlink2\\member-link-2-evidence\\05-paystate-paying.png",
+    "E:\\KIMI code\\tmp\\memberlink2\\member-link-2-evidence\\06-paystate-paid-upgrade.png",
+    "E:\\KIMI code\\tmp\\memberlink2\\member-link-2-evidence\\07-paystate-failed.png",
+    "E:\\KIMI code\\tmp\\memberlink2\\member-link-2-evidence\\08-paystate-closed.png",
+    "E:\\KIMI code\\tmp\\memberlink2\\member-link-2-evidence\\09a-reconcile-before.png",
+    "E:\\KIMI code\\tmp\\memberlink2\\member-link-2-evidence\\09b-reconcile-done.png"
+  ]
+}
