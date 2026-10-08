@@ -1,0 +1,59 @@
+{
+  "checks": [
+    {
+      "name": "P1-1 注册即会员：新号开户直达会员中心=有档（不再落开通页手动开档）",
+      "ok": true,
+      "detail": "member=true plan=true"
+    },
+    {
+      "name": "P1-2 撤文案：权益墙无「寄养折扣」行（27 号档本无此项）",
+      "ok": true,
+      "detail": "noBoarding=true"
+    },
+    {
+      "name": "owner dev-login",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "P2-1 双位同值：chainDashboard.todoTotal === dashboardStats.todo.total（API 双位同源实证）",
+      "ok": true,
+      "detail": "chain=3 stats=3 dash=true"
+    },
+    {
+      "name": "P2-2 要货口排除：下拉选项无安心包（与收银台选购同闸）",
+      "ok": true,
+      "detail": "hasCare=false opts=10"
+    },
+    {
+      "name": "P2-3 公示只留人话：ruleLabel 中文在显+键名不进公示文案（收 Tooltip）",
+      "ok": true,
+      "detail": "label=true keyBare=false"
+    },
+    {
+      "name": "P2-4 假保存拦截：改字未确认=按钮态「未确认」+行内未确认章（离开拦截挂/撤随 pending）",
+      "ok": true,
+      "detail": "unsaved=true badge=false"
+    },
+    {
+      "name": "P3-2 双列：码内默认标签+生效值对照透出（defaultText 数据源）",
+      "ok": true,
+      "detail": "def=true cur=true testid=true"
+    },
+    {
+      "name": "P3-1 挂单折叠：队列截断+「全部 N ›」折叠钮在（保留标测试件不删）",
+      "ok": true,
+      "detail": "queue=true expand=true"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\port-tail-4-evidence\\01-p11-signup-member.png",
+    "E:\\KIMI code\\tmp\\port-tail-4-evidence\\02-p12-perks-no-boarding.png",
+    "E:\\KIMI code\\tmp\\port-tail-4-evidence\\03-p21-todo-same.png",
+    "E:\\KIMI code\\tmp\\port-tail-4-evidence\\04-p22-transfer-no-care.png",
+    "E:\\KIMI code\\tmp\\port-tail-4-evidence\\05-p23-stack-human.png",
+    "E:\\KIMI code\\tmp\\port-tail-4-evidence\\06-p24-unsaved-state.png",
+    "E:\\KIMI code\\tmp\\port-tail-4-evidence\\07-p32-dual-columns.png",
+    "E:\\KIMI code\\tmp\\port-tail-4-evidence\\08-p31-hold-fold.png"
+  ]
+}
