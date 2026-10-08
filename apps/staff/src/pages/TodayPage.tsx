@@ -71,6 +71,28 @@ export default function TodayPage() {
   const { trpc, queryClient } = usePhiliaClient();
   const { showToast, toastEl } = useToast();
   const [scanOpen, setScanOpen] = useState(false);
+
+  /* 端口批收尾片 3 · A31：输码绑定入职（auth.bindStaff；错误明文展示） */
+  const [bindCode, setBindCode] = useState('');
+  const [bindBusy, setBindBusy] = useState(false);
+  const [bindError, setBindError] = useState<string | null>(null);
+  const doBind = async () => {
+    const code = bindCode.trim();
+    if (!code || bindBusy) return;
+    setBindBusy(true);
+    setBindError(null);
+    try {
+      await trpc.auth.bindStaff.mutate({ code });
+      showToast(TODAY_COPY['today.bind.done']);
+      setBindCode('');
+      /* 身份查询失效（useMe=['auth','me'] / meRawQ 同前缀）→ 空态自动翻工位 */
+      await queryClient.invalidateQueries({ queryKey: ['auth'] });
+    } catch (e) {
+      setBindError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBindBusy(false);
+    }
+  };
   const now = new Date();
   const staffId = user?.staffId ?? null;
   const isFrontdesk = user?.staffRole === 'frontdesk';
@@ -300,6 +322,36 @@ export default function TodayPage() {
           <br />
           {TODAY_COPY['today.noRole.bodyGuide']}
         </p>
+
+        {/* 端口批收尾片 3 · A31：输码绑定入职（auth.bindStaff 公开口；错误明文展示） */}
+        <div className="u1-card mt-6 w-full max-w-sm p-4 text-left" data-testid="bind-code-card">
+          <p className="text-body-sm font-bold">{TODAY_COPY['today.bind.title']}</p>
+          <div className="mt-2.5 flex gap-2">
+            <input
+              data-testid="bind-code-input"
+              value={bindCode}
+              onChange={(e) => {
+                setBindCode(e.target.value);
+                setBindError(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void doBind();
+              }}
+              placeholder={TODAY_COPY['today.bind.inputPh']}
+              maxLength={16}
+              className="u1-ring min-w-0 flex-1 rounded-control bg-card px-3.5 py-2.5 text-body-sm text-ink placeholder:text-ink-placeholder focus:outline-none"
+            />
+            <SkBtnAction testId="bind-code-submit" disabled={bindBusy || bindCode.trim() === ''} onClick={() => void doBind()}>
+              {bindBusy ? TODAY_COPY['today.bind.binding'] : TODAY_COPY['today.bind.submitCta']}
+            </SkBtnAction>
+          </div>
+          {bindError ? (
+            <p className="mt-2 text-caption-xs font-semibold text-danger-deep" data-testid="bind-code-error">
+              {bindError}
+            </p>
+          ) : null}
+        </div>
+        {toastEl}
       </div>
     );
   }

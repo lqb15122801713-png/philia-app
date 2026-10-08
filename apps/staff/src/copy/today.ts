@@ -17,6 +17,13 @@ const TODAY_COPY_TABLE = {
   'today.noRole.bodyLead': '当前账号「{name}」还没有绑定门店员工身份。',
   'today.noRole.bodyGuide': '请联系店主在商家端「员工管理」邀请入职并分配角色（前台 / 美容师）后再使用。',
 
+  /* ---- 端口批收尾片 3 · A31：输码绑定入职（auth.bindStaff 公开口） ---- */
+  'today.bind.title': '有邀请码？直接绑定入职',
+  'today.bind.inputPh': '输入 8 位邀请码',
+  'today.bind.submitCta': '绑定入职',
+  'today.bind.binding': '绑定中…',
+  'today.bind.done': '绑定成功，正在进入工位…',
+
   /* ---- GroomerDesk 日轴空态（规格书原文） ---- */
   'today.groomer.empty': '今天没有派给你的单——休息，或去前台看看有没有要帮忙的',
 

@@ -44,6 +44,7 @@ import CartPanel from '@/components/cashier/CartPanel'
 import { DiscountDialog, PriceDialog, VoidDialog } from '@/components/cashier/dialogs'
 import HoldPanel from '@/components/cashier/HoldPanel'
 import MemberSearch from '@/components/cashier/MemberSearch'
+import ScanVerifyCard from '@/components/cashier/ScanVerifyCard'
 import MembershipPanel from '@/components/cashier/MembershipPanel'
 import {
   dismissSavings,
@@ -740,6 +741,16 @@ export default function CashierPage() {
               }}
               onOpenSell={openSell}
             />
+            {/* 端口批收尾片 3 · 股 3：会员码核验卡（与手机号检索并列通道；verifyCardToken=merchantManager 硬闸，clerk 不挂） */}
+            {role.canManage ? (
+              <ScanVerifyCard
+                onIdentified={(m) => {
+                  setMember(m)
+                  // 换绑会员时清掉扣次标记（次卡跟人走）
+                  setLines((prev) => prev.map((l) => (l.paidByPass ? { ...l, paidByPass: false } : l)))
+                }}
+              />
+            ) : null}
           </div>
           <div className="rounded-[20px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(59,46,36,.09)]">
             <PickPanel

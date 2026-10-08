@@ -19,6 +19,7 @@ import { attendanceRouter } from './attendance';
 import { authRouter } from './auth';
 import { authSecurityRouter } from './authSecurity';
 import { boardingRouter } from './boarding';
+import { canvasRouter } from './canvas';
 import { cashierRouter } from './cashier';
 import { commissionRouter } from './commission';
 import { configRulesRouter } from './configRules';
@@ -86,7 +87,8 @@ export const appRouter = router({
   selfCheck: selfCheckRouter, // 片 3：门店每日自检+上级审核（服务端算分，一店一日一表幂等锚）
   announce: announceRouter, // 片 3：公告+已读回执（定向发布+逐人通知+对账名单）
   staffExit: staffExitRouter, // 片 3：离职交接（未完结单改挂+前后值留痕；锁定本体=staffProcedure 既有闸）
-  payroll: payrollRouter, // 片 4：薪资域（协作拆分/工资条两态/发放标记留痕/异议申诉返还，涉钱批）
+  payroll: payrollRouter, // 片 4：薪资域（协作拆分/工资条两态/发放标记留痕/异议申诉返还，涉钱批）+片 3 薪资调整端口（试算/手工调整/阈值分级审批/同步下游）
+  canvas: canvasRouter, // 端口批收尾片 3：画布端口（block_registry 白名单+page_layouts 版本化两步流，B 股 v1.1）
   address: addressRouter, // 客户端体验大批片 1：收货地址 CRUD+默认（本人闸，默认唯一应用层保）
   invoiceTitle: invoiceTitleRouter, // 客户端体验大批片 1：发票抬头 CRUD+默认（business 须税号；发票申请可选引用=前端活）
   deposit: depositRouter, // 客户端体验大批片 1：押金台账（留痕不碰真钱·开口项 2 裁：held→refunding→refunded 登记制，零支付通道写）

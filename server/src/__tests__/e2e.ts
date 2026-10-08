@@ -171,8 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 3763 键/71 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70→端口批收尾片 2（网格/订正/回收站/公告两步流 UI 92 键，生成件重生成 3762+seed 手补 1=3763，corr 域新入=71 域）3763/71）；
+ *      56.1 种子 3869 键/72 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70→端口批收尾片 2（网格/订正/回收站/公告两步流 UI 92 键，生成件重生成 3762+seed 手补 1=3763，corr 域新入=71 域）3763/71→端口批收尾片 3（画布/试算/调整/录码/克隆/绑码 UI 106 键，生成件重生成 3868+seed 手补 1=3869，canvas 域新入=72 域）3869/72）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -4933,17 +4933,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602）→ 3671/70（端口批收尾片 1：规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）→ 3763/71（端口批收尾片 2：0062 网格/订正/回收站/公告 92 键，生成件重生成 3762+seed 手补 1=3763，域 70→71=corr 新域） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602）→ 3671/70（端口批收尾片 1：规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）→ 3763/71（端口批收尾片 2：0062 网格/订正/回收站/公告 92 键，生成件重生成 3762+seed 手补 1=3763，域 70→71=corr 新域）→ 3869/72（端口批收尾片 3：0065 画布/薪资/扫码 106 键，生成件重生成 3868+seed 手补 1=3869，域 71→72=canvas 新域） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（3763 键/71 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 3763 && domainSet.size === 71 &&
+  check('56.1 copy 域种子全量落库（3869 键/72 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 3869 && domainSet.size === 72 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（3763 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 3763 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（3869 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 3869 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -8637,8 +8637,8 @@ async function main(): Promise<void> {
 
     /* ---- 76.3 公共读口形状不变（不透元数据：键→文两列） ---- */
     const texts76 = await trpcQuery<{ rows: Array<{ key: string; text: string; screen?: unknown; position?: unknown }> }>('config.activeCopyTexts', { cookie: customerCookie });
-    check('76.3 activeCopyTexts 形状不变（3763 行 key→text，不透 screen/position 元数据）',
-      texts76.rows.length === 3763 &&
+    check('76.3 activeCopyTexts 形状不变（3869 行 key→text，不透 screen/position 元数据）',
+      texts76.rows.length === 3869 &&
       texts76.rows.every((r) => r.screen === undefined && r.position === undefined),
       texts76.rows.length);
 
@@ -10121,6 +10121,164 @@ async function main(): Promise<void> {
       recycleB.items.length === 0 && corrB.items.length === 0 &&
       restoreCross instanceof TrpcHttpError && restoreCross.httpStatus === 404 &&
       bulkCross instanceof TrpcHttpError && bulkCross.httpStatus === 404);
+  }
+
+  /* ==================================================================
+   * 端口批收尾 片 3（画布端口+薪资调整端口 4+聚合扫码闭环 · 任务书冻结版 V1.0）段：
+   *   85.1 画布注册表白名单+布局两步流（draft→publish→live/revert）；85.2 提成试算；
+   *   85.3 手工调整审批链+金额阈值分级；85.4 同步下游+只进当月未发单；
+   *   85.5 聚合扫码核验→带出会员入单；85.6 新端点权限闸；85.7 隔离族不回退
+   * ================================================================== */
+  console.log('\n[端口批片3] 85. 画布端口+薪资调整+聚合扫码闭环');
+  {
+    type AnyRec85 = Record<string, unknown>;
+
+    /* ---- 85.1 画布注册表白名单+布局两步流 ---- */
+    const regAll = await trpcQuery<{ items: Array<{ blockKey: string; pageKey: string; label: string; sortOrder: number }> }>('canvas.blocks', { cookie: customerCookie });
+    const homeBlocks = regAll.items.filter((b) => b.pageKey === 'home').sort((a, b) => a.sortOrder - b.sortOrder);
+    const mcBlocks = regAll.items.filter((b) => b.pageKey === 'memberCenter');
+    const csBlocks = regAll.items.filter((b) => b.pageKey === 'cashierMarketing');
+    check('85.1 注册表种子 18 块（home 9/memberCenter 8/cashierMarketing 1，白名单三屏）',
+      regAll.items.length === 18 && homeBlocks.length === 9 && mcBlocks.length === 8 && csBlocks.length === 1 &&
+      homeBlocks[0]!.blockKey === 'home.banner' && csBlocks[0]!.blockKey === 'cs.savingsHook',
+      { total: regAll.items.length });
+    const perm = (swap: boolean) => homeBlocks.map((b, i) => ({
+      blockKey: swap && i === 0 ? homeBlocks[1]!.blockKey : swap && i === 1 ? homeBlocks[0]!.blockKey : b.blockKey,
+      visible: b.blockKey !== 'home.stats',
+    }));
+    const unknownBlock = await asErr(trpcMutate('canvas.saveLayout', {
+      cookie: ownerCookie, input: { pageKey: 'home', blocks: [...perm(false).slice(0, -1), { blockKey: 'home.freeform', visible: true }] },
+    }));
+    const missingBlock = await asErr(trpcMutate('canvas.saveLayout', {
+      cookie: ownerCookie, input: { pageKey: 'home', blocks: perm(false).slice(0, -1) },
+    }));
+    check('85.1 白名单闸：未知块 400（自由排版不做）/缺块不完整排列 400',
+      unknownBlock instanceof TrpcHttpError && unknownBlock.httpStatus === 400 &&
+      missingBlock instanceof TrpcHttpError && missingBlock.httpStatus === 400);
+    const live0 = await trpcQuery<{ blocks: null | unknown[] }>('canvas.liveLayout', { cookie: customerCookie, input: { pageKey: 'home', storeId } });
+    await trpcMutate('canvas.saveLayout', { cookie: ownerCookie, input: { pageKey: 'home', blocks: perm(false) } });
+    const gl1 = await trpcQuery<{ draft: AnyRec85 | null; live: AnyRec85 | null }>('canvas.getLayout', { cookie: ownerCookie, input: { pageKey: 'home' } });
+    await trpcMutate('canvas.publishLayout', { cookie: ownerCookie, input: { versionId: (gl1.draft as { id: string }).id } });
+    const live1 = await trpcQuery<{ blocks: Array<{ blockKey: string; visible: boolean }> | null; version: number | null }>('canvas.liveLayout', { cookie: customerCookie, input: { pageKey: 'home', storeId } });
+    check('85.1 两步流：draft 不透出（发布前 liveLayout=null）→ publish 后 live=v1（默认序+home.stats 隐）',
+      live0.blocks === null && live1.blocks !== null && live1.version === 1 &&
+      live1.blocks![0]!.blockKey === 'home.banner' && live1.blocks!.find((b) => b.blockKey === 'home.stats')!.visible === false,
+      { live0: live0.blocks, v1: live1.version });
+    await trpcMutate('canvas.saveLayout', { cookie: ownerCookie, input: { pageKey: 'home', blocks: perm(true) } });
+    const gl2 = await trpcQuery<{ draft: { id: string } | null }>('canvas.getLayout', { cookie: ownerCookie, input: { pageKey: 'home' } });
+    const liveStillV1 = await trpcQuery<{ version: number | null }>('canvas.liveLayout', { cookie: customerCookie, input: { pageKey: 'home', storeId } });
+    await trpcMutate('canvas.publishLayout', { cookie: ownerCookie, input: { versionId: gl2.draft!.id } });
+    const live2 = await trpcQuery<{ blocks: Array<{ blockKey: string; visible: boolean }>; version: number }>('canvas.liveLayout', { cookie: customerCookie, input: { pageKey: 'home', storeId } });
+    check('85.1 重排发布：v2 草稿期 live 仍 v1（draft 不透出）→发布后新序生效（live 首两位对调）',
+      liveStillV1.version === 1 && live2.version === 2 &&
+      live2.blocks[0]!.blockKey === homeBlocks[1]!.blockKey && live2.blocks[1]!.blockKey === homeBlocks[0]!.blockKey);
+    await trpcMutate('canvas.revertLayout', { cookie: ownerCookie, input: { pageKey: 'home' } });
+    const live3 = await trpcQuery<{ blocks: Array<{ blockKey: string }>; version: number }>('canvas.liveLayout', { cookie: customerCookie, input: { pageKey: 'home', storeId } });
+    check('85.1 回退：revert 回上一版（live=v1 默认序）',
+      live3.version === 1 && live3.blocks[0]!.blockKey === 'home.banner');
+
+    /* ---- 85.2 提成试算（只读模拟） ---- */
+    type SimItem = { staffId: string; name: string; baseline: { commissionTotalFen: number; netFen: number }; simulated: { commissionTotalFen: number; netFen: number }; deltaCommissionFen: number; deltaNetFen: number };
+    const sim85 = await trpcQuery<{ items: SimItem[] }>('payroll.simulateCommission', {
+      cookie: ownerCookie,
+      input: { month: currentMonth, overrides: [{ ruleKey: 'commission_grooming_rate', valueJson: { rate_bp: 0 } }] },
+    });
+    const simUnknown = await asErr(trpcQuery('payroll.simulateCommission', {
+      cookie: ownerCookie, input: { month: currentMonth, overrides: [{ ruleKey: 'no_such_rule', valueJson: { rate_bp: 1 } }] },
+    }));
+    const simDup = await asErr(trpcQuery('payroll.simulateCommission', {
+      cookie: ownerCookie, input: { month: currentMonth, overrides: [{ ruleKey: 'commission_grooming_rate', valueJson: { rate_bp: 0 } }, { ruleKey: 'commission_grooming_rate', valueJson: { rate_bp: 1 } }] },
+    }));
+    const simDeltaSum = sim85.items.reduce((s, i) => s + i.deltaCommissionFen, 0);
+    check('85.2 试算：全员两帧（baseline/simulated）+降率至 0 全员 delta≤0 且总差值<0（美容服务本月在册）+未知键/重键 400',
+      sim85.items.length >= 2 && sim85.items.every((i) => i.deltaCommissionFen <= 0) && simDeltaSum < 0 &&
+      simUnknown instanceof TrpcHttpError && simUnknown.httpStatus === 400 &&
+      simDup instanceof TrpcHttpError && simDup.httpStatus === 400,
+      { items: sim85.items.length, deltaSum: simDeltaSum });
+
+    /* ---- 85.3+85.4 手工调整审批链（阈值分级）+同步下游+只进当月未发 ---- */
+    const nextMonth85 = (() => { const d = new Date(); const m = d.getMonth() + 2; return `${m > 12 ? d.getFullYear() + 1 : d.getFullYear()}-${String(m > 12 ? 1 : m).padStart(2, '0')}`; })();
+    const propSmall = await trpcMutate<{ proposalId: string; requestId: string }>('payroll.proposeAdjustment', {
+      cookie: ownerCookie,
+      input: { kind: 'commission', staffId: staffRow2.id, month: nextMonth85, amountFen: 500, reason: 'e2e 小额补调（≤阈值）' },
+    });
+    await trpcMutate('payroll.reviewAdjustment', { cookie: managerCookie, input: { requestId: propSmall.requestId, approve: true, note: '小额 manager 复核' } });
+    const adjSmall = (await db.select().from(schema.payAdjustments).where(eq(schema.payAdjustments.sourceId, propSmall.proposalId)))[0];
+    check('85.3 阈值分级：≤阈值（500 分）manager 可复核通过→pay_adjustments active 落行（留痕不碰真钱）',
+      adjSmall?.status === 'active' && adjSmall.amountFen === 500 && adjSmall.staffId === staffRow2.id);
+    const propBig = await trpcMutate<{ proposalId: string; requestId: string }>('payroll.proposeAdjustment', {
+      cookie: ownerCookie,
+      input: { kind: 'commission', staffId: staffRow2.id, month: nextMonth85, amountFen: 20000, reason: 'e2e 大额补调（>阈值 10000）' },
+    });
+    const bigMgr = await asErr(trpcMutate('payroll.reviewAdjustment', { cookie: managerCookie, input: { requestId: propBig.requestId, approve: true } }));
+    check('85.3 阈值分级：>阈值 manager 复核=403 明文（仅店主）',
+      bigMgr instanceof TrpcHttpError && bigMgr.httpStatus === 403);
+    await trpcMutate('payroll.reviewAdjustment', { cookie: ownerCookie, input: { requestId: propBig.requestId, approve: true, note: '大额店主复核' } });
+    const adjBig = (await db.select().from(schema.payAdjustments).where(eq(schema.payAdjustments.sourceId, propBig.proposalId)))[0];
+    const propRej = await trpcMutate<{ proposalId: string; requestId: string }>('payroll.proposeAdjustment', {
+      cookie: ownerCookie,
+      input: { kind: 'work_hours', staffId: staffRow.id, month: nextMonth85, amountFen: -300, reason: 'e2e 驳回示范', meta: { hours: 0.5 } },
+    });
+    await trpcMutate('payroll.reviewAdjustment', { cookie: ownerCookie, input: { requestId: propRej.requestId, approve: false, note: '不批' } });
+    const adjRej = (await db.select().from(schema.payAdjustments).where(eq(schema.payAdjustments.sourceId, propRej.proposalId)))[0];
+    check('85.3 大额 owner 复核过+驳回不落台账（active 行零落）',
+      adjBig?.status === 'active' && adjBig.amountFen === 20000 && adjRej === undefined);
+    /* 同步下游：未来空月生成工资单 → adjustmentFen=500+20000 合算精确 */
+    await trpcMutate('payroll.generateMonth', { cookie: ownerCookie, input: { month: nextMonth85 } });
+    const itemLili = (await db.select().from(schema.payrollItems).where(and(eq(schema.payrollItems.staffId, staffRow2.id), eq(schema.payrollItems.month, nextMonth85))))[0];
+    check('85.4 同步下游：generateMonth 当月单 adjustmentFen=20500 合算（500+20000 精确到分）+net 同值（空月基线 0）',
+      itemLili?.adjustmentFen === 20500 && itemLili.netFen === 20500,
+      { adj: itemLili?.adjustmentFen, net: itemLili?.netFen });
+    /* 只进当月未发：发放标记后再调整 → 应用帧 400 */
+    await trpcMutate('payroll.markDisbursed', { cookie: ownerCookie, input: { itemId: itemLili!.id, methodNote: '现金发放（e2e 已发闸件）' } });
+    const propPaid = await trpcMutate<{ requestId: string }>('payroll.proposeAdjustment', {
+      cookie: ownerCookie,
+      input: { kind: 'commission', staffId: staffRow2.id, month: nextMonth85, amountFen: 100, reason: 'e2e 已发月调整（应拒）' },
+    });
+    const paidErr = await asErr(trpcMutate('payroll.reviewAdjustment', { cookie: ownerCookie, input: { requestId: propPaid.requestId, approve: true } }));
+    check('85.4 只进当月未发单：已发（marked_at）月份应用=400 明文不回溯',
+      paidErr instanceof TrpcHttpError && paidErr.httpStatus === 400 && paidErr.message.includes('已发放'));
+
+    /* ---- 85.5 聚合扫码核验→带出会员入单（server 68.5 已绿勿重做=核验口消费面） ---- */
+    const scan85User = (await db.insert(schema.users).values({ kimiId: 'seed_e2e_scan85', nickname: '扫码会员85', phone: '19900000085' }).returning({ id: schema.users.id }))[0]!;
+    await db.insert(schema.userRoles).values({ userId: scan85User.id, role: 'customer' });
+    const cookie85 = await devLogin(scan85User.id);
+    await trpcMutate('membership.openFree', { cookie: cookie85 });
+    const card85 = await trpcMutate<{ token: string }>('membership.myCardToken', { cookie: cookie85 });
+    const my85 = await trpcQuery<{ plan: { planKey: string } | null }>('membership.my', { cookie: cookie85 });
+    const verify85 = await trpcMutate<{ userId: string; planKey: string; membershipStatus: string | null }>('membership.verifyCardToken', { cookie: ownerCookie, input: { token: card85.token } });
+    const held85 = await trpcMutate<{ bill: { id: string; billNo: string } }>('cashier.hold', {
+      cookie: ownerCookie,
+      input: { customerId: verify85.userId, items: [{ kind: 'custom', refId: 'custom', customName: '扫码核验入单件', customAmountFen: 6600, qty: 1 }], discountType: 'none', discountValue: 0 },
+    });
+    const bill85 = (await db.select().from(schema.cashierBills).where(eq(schema.cashierBills.billNo, held85.bill.billNo)))[0]!;
+    check('85.5 扫码闭环：verifyCardToken 核验（档=开档实档+active）→带出 userId 入单（bill.customerId=扫码会员）',
+      verify85.planKey === my85.plan?.planKey && verify85.membershipStatus === 'active' && bill85.customerId === verify85.userId,
+      { uid: verify85.userId, billCustomer: bill85.customerId, planKey: verify85.planKey, myPlan: my85.plan?.planKey, mstatus: verify85.membershipStatus });
+
+    /* ---- 85.6 新端点权限闸 ---- */
+    const mgrCanvas = await asErr(trpcMutate('canvas.saveLayout', { cookie: managerCookie, input: { pageKey: 'home', blocks: perm(false) } }));
+    const mgrGetLayout = await asErr(trpcQuery('canvas.getLayout', { cookie: managerCookie, input: { pageKey: 'home' } }));
+    const mgrSim = await asErr(trpcQuery('payroll.simulateCommission', { cookie: managerCookie, input: { month: currentMonth, overrides: [{ ruleKey: 'commission_grooming_rate', valueJson: { rate_bp: 1 } }] } }));
+    const mgrPropAdj = await asErr(trpcMutate('payroll.proposeAdjustment', { cookie: managerCookie, input: { kind: 'commission', staffId: staffRow2.id, month: currentMonth, amountFen: 100, reason: 'x' } }));
+    check('85.6 权限闸：saveLayout/getLayout/simulateCommission/proposeAdjustment manager 403（画布+试算+调整=owner 域）',
+      mgrCanvas instanceof TrpcHttpError && mgrCanvas.httpStatus === 403 &&
+      mgrGetLayout instanceof TrpcHttpError && mgrGetLayout.httpStatus === 403 &&
+      mgrSim instanceof TrpcHttpError && mgrSim.httpStatus === 403 &&
+      mgrPropAdj instanceof TrpcHttpError && mgrPropAdj.httpStatus === 403);
+
+    /* ---- 85.7 隔离族不回退（B 店互盲） ---- */
+    const ownerB85 = await db.select().from(schema.users).where(eq(schema.users.kimiId, 'seed_e2e_chain_ownerb')).limit(1).then((r) => r[0]!);
+    const storeB85 = await db.select().from(schema.stores).where(eq(schema.stores.ownerId, ownerB85.id)).limit(1).then((r) => r[0]!);
+    const ownerBCookie85 = await devLogin(ownerB85.id);
+    const adjB = await trpcQuery<{ items: AnyRec85[] }>('payroll.adjustmentList', { cookie: ownerBCookie85, input: {} });
+    const reviewCross = await asErr(trpcMutate('payroll.reviewAdjustment', { cookie: ownerBCookie85, input: { requestId: propBig.requestId, approve: true } }));
+    const liveB = await trpcQuery<{ blocks: null | unknown[] }>('canvas.liveLayout', { cookie: ownerBCookie85, input: { pageKey: 'home', storeId: storeB85.id } });
+    const glB = await trpcQuery<{ live: AnyRec85 | null }>('canvas.getLayout', { cookie: ownerBCookie85, input: { pageKey: 'home' } });
+    check('85.7 隔离族不回退：B 调整队列全 0+B 复核 A 单=404+B 店布局独立（A 店发布不透 B）',
+      adjB.items.length === 0 && reviewCross instanceof TrpcHttpError && reviewCross.httpStatus === 404 &&
+      liveB.blocks === null && glB.live === null,
+      { adjB: adjB.items.length, liveB: liveB.blocks, glB: glB.live });
   }
 
   client.close();

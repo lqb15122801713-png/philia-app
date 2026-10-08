@@ -9,7 +9,7 @@
  * main.tsx 中装配：<BrowserRouter><AppProviders><App /></AppProviders></BrowserRouter>
  */
 
-import { CopyOverridesLoader, createPhiliaClient, getApiBase, PhiliaClientContext, SlotContentLoader } from '@philia/shared';
+import { CanvasProbeMount, CopyOverridesLoader, createPhiliaClient, getApiBase, PhiliaClientContext, SlotContentLoader } from '@philia/shared';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 
@@ -24,6 +24,8 @@ export default function AppProviders({ children }: { children: ReactNode }) {
         <CopyOverridesLoader />
         {/* 端口批片 C：槽位 live 图启动拉取（待审不透出） */}
         <SlotContentLoader />
+        {/* 端口批收尾片 3：画布模式探针（仅 ?canvasPreview=1 激活=点选反查+实时 patch） */}
+        <CanvasProbeMount />
         {children}
       </QueryClientProvider>
     </PhiliaClientContext.Provider>
