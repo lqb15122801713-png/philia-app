@@ -1,0 +1,67 @@
+{
+  "allOk": true,
+  "total": 10,
+  "fail": 0,
+  "rows": [
+    {
+      "name": "路径分端 home",
+      "ok": true,
+      "got": "/home?canvasPreview=1",
+      "want": "/home?canvasPreview=1"
+    },
+    {
+      "name": "路径分端 memberCenter",
+      "ok": true,
+      "got": "/member?canvasPreview=1",
+      "want": "/member?canvasPreview=1"
+    },
+    {
+      "name": "路径分端 cashierMarketing",
+      "ok": true,
+      "got": "/admin/cashier?canvasPreview=1",
+      "want": "/admin/cashier?canvasPreview=1"
+    },
+    {
+      "name": "路径分端带店锚",
+      "ok": true,
+      "got": "/home?canvasPreview=1&canvasStore=st1",
+      "want": "/home?canvasPreview=1&canvasStore=st1"
+    },
+    {
+      "name": "dev 7101→7100",
+      "ok": true,
+      "got": "http://localhost:7100/home?canvasPreview=1",
+      "want": "http://localhost:7100/home?canvasPreview=1"
+    },
+    {
+      "name": "截图轨 7131→7130",
+      "ok": true,
+      "got": "http://localhost:7130/member?canvasPreview=1",
+      "want": "http://localhost:7130/member?canvasPreview=1"
+    },
+    {
+      "name": "dev cashierMarketing 同端",
+      "ok": true,
+      "got": "http://localhost:7101/cashier?canvasPreview=1",
+      "want": "http://localhost:7101/cashier?canvasPreview=1"
+    },
+    {
+      "name": "Host 前缀 m.*→app.*",
+      "ok": true,
+      "got": "https://app.example.com/home?canvasPreview=1",
+      "want": "https://app.example.com/home?canvasPreview=1"
+    },
+    {
+      "name": "Host 前缀 cashier 同源",
+      "ok": true,
+      "got": "/cashier?canvasPreview=1",
+      "want": "/cashier?canvasPreview=1"
+    },
+    {
+      "name": "裸域兜底（无 m. 无 /admin）同源相对",
+      "ok": true,
+      "got": "https://example.com/member?canvasPreview=1",
+      "want": "https://example.com/member?canvasPreview=1"
+    }
+  ]
+}

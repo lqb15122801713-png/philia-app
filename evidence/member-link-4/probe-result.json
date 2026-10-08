@@ -1,0 +1,41 @@
+{
+  "allOk": true,
+  "checks": [
+    {
+      "name": "owner dev-login",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "商家端 /admin/console 深链可达（basename 接线）+画布端口项在列",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "页签 home：iframe src=/home?canvasPreview=1（路径分端）+真页渲染（非死链/非空）",
+      "ok": true,
+      "detail": "{\"iframe\":true,\"src\":\"/home?canvasPreview=1&canvasStore=01M4DJ2RR1QX39RE98XWVRSHFD\",\"innerLen\":172,\"innerHead\":\"PHILIA\\n\\n菲丽亚宠友\\n免费领个身份 ›\\n预约洗澡美容\\n约 45 分钟起 · ¥68 起\\n预约寄养\\n¥199 起/晚\"}"
+    },
+    {
+      "name": "页签 memberCenter：iframe src=/member?canvasPreview=1（路径分端）+真页渲染（非死链/非空）",
+      "ok": true,
+      "detail": "{\"iframe\":true,\"src\":\"/member?canvasPreview=1&canvasStore=01M4DJ2RR1QX39RE98XWVRSHFD\",\"innerLen\":651,\"innerHead\":\"开通会员 · JOIN\\n\\n点卡或滑卡选档——卡本身就是选择器：\\n\\nPHILIA · LOVE BOND LIFE\\n注册用\"}"
+    },
+    {
+      "name": "页签 cashierMarketing：iframe src=/admin/cashier?canvasPreview=1（路径分端）+真页渲染（非死链/非空）",
+      "ok": true,
+      "detail": "{\"iframe\":true,\"src\":\"/admin/cashier?canvasPreview=1&canvasStore=01M4DJ2RR1QX39RE98XWVRSHFD\",\"innerLen\":378,\"innerHead\":\"收银台\\n2026年10月8日 周四 · 今日已收 ¥0 · 挂单 0\\n现金 ¥0 · 微信 ¥0 · 支付宝 ¥0｜参考\"}"
+    },
+    {
+      "name": "修复前对照：旧推导指向 7100（双轨未起=连接拒绝/空页=死链形态实证）",
+      "ok": true,
+      "detail": "\"嗯… 无法访问此页面\\n\\nlocalhost 拒绝连接。\\n\\n请尝试：\\n\\n在 Web 上搜索 localhost\\n检查连接\\n检查代理和防火墙\\nERR_CONNECT\""
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\memberlink4\\member-link-4-evidence\\01-preview-home.png",
+    "E:\\KIMI code\\tmp\\memberlink4\\member-link-4-evidence\\02-preview-member.png",
+    "E:\\KIMI code\\tmp\\memberlink4\\member-link-4-evidence\\03-preview-cashier.png",
+    "E:\\KIMI code\\tmp\\memberlink4\\member-link-4-evidence\\00-before-deadlink-7100.png"
+  ]
+}
