@@ -1,0 +1,1263 @@
+
+> @philia/server@0.1.0 test:e2e
+> tsx src/__tests__/e2e.ts
+
+[e2e] 临时库迁移 + 种子…
+  ✓ 临时库迁移 + 种子完成
+  ✓ 种子用户齐全（customer/owner/staff1/staff2）
+  ✓ server 启动且 GET /api/health 返回 {ok:true, ts}
+  ✓ 三角色 dev-login 均签发会话 cookie
+  ✓ auth.me（商家）角色与门店绑定正确
+  ✓ push.subscribe 登记成功（create 前完成）
+  ✓ pet.list 返回客户宠物
+  ✓ store.listNearby 返回种子门店
+  ✓ getWithServices 返回 grooming 服务项
+  ✓ getWithServices 返回可约槽位（10:00-16:00 整点）
+  ✓ appointment.create 成功（S4：落库即 confirmed）
+  ✓ GET /api/events 建立 SSE（200 + text/event-stream）
+  ✓ store.staffList 找到承接美容师（阿强/丽丽=groomer）
+  ✓ S4：create 自动派单（staff_id=阿强，assignSource=auto）
+  ✓ appointment.confirm 幂等：confirmed 单连调两次均成功且 updatedAt 不变（零副作用）
+  ✓ appointment.assign 改派成功（阿强 → 丽丽），assignSource 覆盖为 merchant
+  ✓ appointment.getCode 返回二维码原文与人工码
+  ✓ 批次 S1：groomer 扫码核销 → 403 FORBIDDEN「核销需前台账号操作」
+  ✓ 批次 S1：groomer 人工码核销 → 403 FORBIDDEN「核销需前台账号操作」
+  ✓ 批次 S1：groomer 入住登记（checkinStay）→ 403 FORBIDDEN「核销需前台账号操作」
+  ✓ 批次 S1：frontdesk 入住登记越过角色校验（dummy id 报非 FORBIDDEN 业务错）
+  ✓ appointment.checkin（frontdesk 二维码原文）→ in_service + 六步初始化
+  ✓ S1-R1 断言①：已改派给丽丽的单被小美（frontdesk）核销成功 → staff_id 仍为丽丽（原指派保留，claimed=false）
+  ✓ serviceStep.addPhotos(disinfection ×1)
+  ✓ serviceStep.confirmStep(disinfection)
+  ✓ serviceStep.addPhotos(precheck ×2)
+  ✓ serviceStep.confirmStep(precheck)
+  ✓ serviceStep.addPhotos(grooming ×3)
+  ✓ serviceStep.confirmStep(grooming)
+  ✓ serviceStep.addPhotos(detail ×2)
+  ✓ serviceStep.confirmStep(detail)
+  ✓ serviceStep.addPhotos(before_after ×2)
+  ✓ serviceStep.confirmStep(before_after)
+  ✓ serviceStep.confirmStep(confirm)
+  ✓ GET /api/img/* 签名 URL 可访问（200 image/jpeg）
+  ✓ 预约已 completed（含 completed_at）
+  ✓ appointment.markPaid 收款登记
+  ✓ appointment.review 评价成功
+  ✓ 找到第二个可约槽（未指派单用）
+  ✓ S1-R1 断言②：未指派单前台核销成功 → staff_id 仍为 NULL（不认领，claimed=false）
+  ✓ S1-R1 断言②：未指派单核销后 outbox 无新增 appointment.assigned 事件（核销前后计数一致）
+  [SSE] 实际收到事件序列: ["appointment.confirmed","appointment.assigned","appointment.assigned","appointment.checkedin","step_updated","step_updated","step_updated","step_updated","step_updated","step_updated","appointment.completed"]
+  [SSE] 期望事件序列:     ["appointment.confirmed","appointment.assigned","appointment.assigned","appointment.checkedin","step_updated","step_updated","step_updated","step_updated","step_updated","step_updated","appointment.completed"]
+  ✓ SSE 流依次收到 confirmed/assigned/checkedin/step_updated×6/completed（按 id 去重）
+  ✓ step_updated 载荷均指向本预约
+  ✓ event_outbox 事件齐全（共 21 条 / 期望 21 条）
+  ✓ assigned 双频道（staff + user）
+  ✓ 客户调 merchantProcedure（store.upsertService）→ 403 FORBIDDEN
+  ✓ 未登录调 appointment.create → 401 UNAUTHORIZED
+  ✓ store.staffList 行带 role/status 字段（阿强=groomer/active）
+  ✓ 批次 S1：越店 updateStaff（他店 owner 改本店员工）→ 403 FORBIDDEN
+  ✓ 批次 S1：非商家（customer）updateStaff → 403 FORBIDDEN
+  ✓ 批次 S1：role/status 均缺省 → 400 BAD_REQUEST（至少传一项）
+  ✓ 批次 S1：本店 owner 改阿强 role→frontdesk 成功
+  ✓ 批次 S1：员工端下次拉取（auth.me）即见新角色 frontdesk（联动生效）
+  ✓ 批次 S1：改回 groomer + 停用（role/status 同传）成功
+  ✓ 批次 S1：staffList 刷新一致（阿强=groomer/suspended）
+  ✓ client-error 合法上报 → 200 {ok:true}（免登录）
+  ✓ client-error 非法 app → 400
+  ✓ client-error 缺 route/message → 400
+  ✓ client-error 非 JSON body → 400
+  ✓ client-error 限流：同 IP 第 21 次起 → 429
+  ✓ client-error JSONL 落盘：合法条目在日志（app/route/message/UA/首帧齐全）
+  ✓ client-error 落盘：非法 app 条目不入日志
+  ✓ staff-2 前置：阿强复职（role 留 groomer / status active）
+  ✓ staff-2 前置：clerk/manager/附加员工夹具就绪（dev-login 均签发）
+
+[staff-2] 15. R7 考勤：打卡两击 / 围栏拦截
+  ✓ R7① 上班打卡成功（围栏内 distanceM=0）
+  ✓ R7① 上班重复打卡幂等（返回同一条记录，不重复落行）
+  ✓ R7① 下班打卡 + 重打幂等
+  ✓ R7① 当日 attendance_records 恰 2 行（in+out，两击封顶）
+  ✓ R7② 围栏外打卡 → 400 BAD_REQUEST「不在门店范围，无法打卡」
+  ✓ R7② 围栏外拦截零写入（阿强当日 0 行，不写异常记录）
+
+[staff-2] 16. R7 补卡双流
+  ✓ R7③ 补卡申请建档（pending，限当月日期）
+  ✓ R7③ 店长审批通过（approved + 回链 record_id）
+  ✓ R7③ 补卡通过落 makeup=1 记录（status=normal，补卡视同正常）
+  ✓ R7③ 员工端 myApprovals 可见审批结果（approved）
+  ✓ R7④ 补卡限当月（上月日期 → BAD_REQUEST「补卡限当月」）
+  ✓ R7⑤ 当月第 4 次补卡 → BAD_REQUEST（每人 ≤3 次/月）
+
+[staff-2] 17. R8 盘点状态机（confirm 前零库存写入 / 驳回重盘）
+  ✓ R8① 周盘建单（draft + 全量账面快照行）
+  ✓ R8① 员工端待办可见盘点单（行项齐全）
+  ✓ R8② 实盘录入 → counted；confirm 前零库存写入（products.stock 不变）
+  ✓ R8③ 店长确认才入账（posted，diffs=1）
+  ✓ R8③ 入账落流水 sourceType=count（盘亏 delta=-3，before/after 正确）+ products.stock 更新
+  ✓ R8④ 驳回 → rejected（退回重盘，note 回显）
+  ✓ R8④ 退回单重录 → counted → 确认 posted；无差异零流水
+
+[staff-2] 18. R9-C 接待人域（核销改挂 / 默认开单人 / 无接待人硬排除 / 两池分列）
+  ✓ staff-2 前置：第三/第四可约槽（接待人域用单）
+  ✓ R9-C① 核销改挂接待人（响应透出 receptionistId=小美）
+  ✓ R9-C① reception_logs 挂预约留痕前后值（NULL → 小美，操作人=小美）
+  ✓ staff-2 前置：appt4 指派阿强（扣减闸门基数来源单）
+  ✓ R9-C② 三单结账 settled（接待人域夹具）
+  ✓ R9-C② 账单接待人默认=开单人（billC → owner）
+  ✓ R9-C② 含预约行账单接待人=预约接待人（billA → 小美，核销改挂落点）
+  ✓ R9-C③ 构造 billB 无接待人单（receptionist_id=NULL）
+  ✓ R9-C③ 前台绩效池仅计本人接待归属（=billA 门市价，billB 无接待人硬排除）
+  ✓ R9-C④ storePools 同源双计两池分列（美容师绩效池/前台绩效池两行不合并）
+  ✓ R9-C④ 池基数正确（groomer=两预约行操作归属 / frontdesk=改挂单+散客服务单接待归属）
+  ✓ R9-C⑤ 无接待人洗美营收硬排除透出（unattributedFen=billB）
+
+[staff-2] 19. R9 绩效扣减：50% 上限 FORBIDDEN
+  ✓ R9⑥ 季度评级录入（阿强 当季 A 档，系数 1.0）
+  ✓ R9⑦ 提成 mySummary 仅本人（阿强 200，staffId=本人）
+  ✓ R9⑦ 阿强美容师绩效池基数>0（预约行操作归属=settled 账单口径）且 A 档系数 1.0
+  ✓ R9⑧ 扣减超当月绩效 50% → 403 FORBIDDEN「已达当月扣减上限」
+  ✓ R9⑧ 限额内扣减成功（monthUsed/monthCap 透出，cap 与口径一致）
+  ✓ R9⑧ 扣减列示于 mySummary.deductions（含原因/录单人）
+  ✓ R9⑧ 扣减只扣绩效不扣提成（commissionTotalFen 不变）
+
+[staff-2] 20. 仅本人：越权传参 4xx / myEvents 仅本人 / storePools 403
+  ✓ R9⑨ mySummary 越权传 staffId → 4xx（strict BAD_REQUEST）
+  ✓ R10⑩ 主单好评已落 reviews 行（rating=5 非匿名，R10 最小评价域）
+  ✓ R10⑪ myEvents 仅本人（丽丽流内含本人 +6 好评事件）
+  ✓ R10⑪ myEvents 仅本人（阿强流内无丽丽事件，无入参可越权）
+  ✓ R9⑩ storePools 仅店主（staff → 403 FORBIDDEN）
+  ✓ R9⑩ storePools 仅店主（clerk → 403 FORBIDDEN，附证）
+
+[staff-2] 21. R10 评价：差评扣分 + 匿名 + 店长频道提示 + 幂等
+  ✓ R10⑫ aid2 六步推进（disinfection）
+  ✓ R10⑫ aid2 六步推进（precheck）
+  ✓ R10⑫ aid2 六步推进（grooming）
+  ✓ R10⑫ aid2 六步推进（detail）
+  ✓ R10⑫ aid2 六步推进（before_after）
+  ✓ R10⑫ aid2 六步推进（confirm）
+  ✓ R10⑬ 差评提交成功（rating=2 anonymous=true，≤30s 链路内完成）
+  ✓ R10⑬ reviews 行落库（anonymous=1，归属阿强）
+  ✓ R10⑬ 差评 XP −8（扣分不扣款，penalty 不占日上限）
+  ✓ R10⑬ 差评提示 review.flagged 到达 store 频道（店长视图数据源，event_outbox 实证）
+  ✓ R10⑬ 员工端 myReviews 仅本人且匿名标记透出（阿强见 aid2 差评 anonymous=1）
+  ✓ R10⑬ myReviews 仅本人（丽丽不见阿强差评，见本人 aid 好评）
+  ✓ R10⑭ 5 星好评 +6（主单 aid，匿名同权口径的对照组）
+  ✓ R10⑮ 一单一评（重复评价幂等拒绝 BAD_REQUEST「该预约已评价」×2）
+
+[staff-2] 22. R10 学习通道：日上限填满后考试 XP 仍计分
+  ✓ R10⑯ 补位 ×4 填满日上限（+15×4=60，均未丢弃）
+  ✓ R10⑯ 第 5 次补位超限丢弃留痕（dropped=1 / awarded=0，不报错）
+  ✓ R10⑯ 今日进度封顶明示（earned=60 cap=60）
+  ✓ R10⑰ 考试 XP 不受日上限（P0 +30 learning 通道照常计入）
+  ✓ R10⑰ 考试计入累计但不占日额（totalXp=900+60+30=990，today 仍 60/60）
+  ✓ R10⑰ 同级当月重复考试 → BAD_REQUEST（每级每月限 1 次）
+
+[staff-2] 23. R9-F 配置端口：版本化留痕 / 新参只管新单 / clerk+manager 403 / 未知键 / 拉新置灰
+  ✓ R9-F① 配置读取（当前 version=1，xp_daily_cap=60 生效中）
+  ✓ R9-F② owner 保存即生效（version=2）
+  ✓ R9-F② 版本留痕（每 key 前后值 + 变更人）
+  ✓ R9-F② 旧行失效新行生效（v1 active=0 / v2 active=1 cap=50）
+  ✓ R9-F③ 新参只管新单：cap=50 后第 4 次补位丢弃（today 45/50）
+  ✓ R9-F③ 新事件按新规则版本落库（dropped 行 rule_version=2）
+  ✓ R9-F③ 旧事件保持 rule_version=1 且仍计入（新参不回溯：totalXp 仍 990）
+  ✓ R9-F④ 配置端口 clerk 403（list/save/versions 全拒，仅 owner）
+  ✓ R9-F④ 配置端口 manager 403（list/save/versions 全拒，仅 owner）
+  ✓ R9-F⑤ 未知规则键 → 400 BAD_REQUEST「未知规则键」（配置页只改既有参数）
+  ✓ R10⑱ 拉新置灰拒写（rulesView 标注 disabled +「随会员游戏化批开通」；xp 路由无 referral 写入口，awardXp 对 referral 源码级硬拒）
+
+[staff-2] 24. R9 提成回溯（Bug②）：旧单旧率/新单新率 + G0 仅洗护计 5%（裁定③）
+  ✓ R9回溯① 前置：商品率 5%→6% 保存即生效（commission version=2）
+  ✓ R9回溯① 商品改率前单仍按旧率 5%（rateBp=500，金额=门市实收×5% 逐行精确）
+  ✓ R9回溯① 商品改率后单按新率 6%（rateBp=600，金额=×6% 逐行精确）
+  ✓ R9回溯② 前置：服务率 20%→25% 保存即生效（version=3）
+  ✓ R9回溯② 前置：appt5 结账 settled
+  ✓ R9回溯② 服务改率前单仍按旧率 20%（appt4/billB，rateBp=2000 金额精确）
+  ✓ R9回溯② 服务改率后单按新率 25%（appt5，rateBp=2500 金额精确）
+  ✓ R9回溯③ 前置：perf_base_rate 5%→10% 保存即生效（version=4）
+  ✓ R9回溯③ 绩效 perf_base_rate 改值不回溯（旧单仍 5%，appt6 按 10% 逐行精确累加）
+  ✓ G0③ 洗护单计 5%（命中 洗/浴 不命中造型类；金额=10000×5%=500）
+  ✓ G0③ 造型单不计提成（serviceLines 无 apptS 行，commissionTotalFen=500 仅洗护行）
+
+[staff-2] 25. 时长规则配置端口（改系数→新预约新值/旧单不变/留痕）+ G0 scope bath→all 双向
+  ✓ 时长前置：D1/D2 可约槽（duration 用单，间隔≥4h 防区间重叠）
+  ✓ 时长① 改系数前：中型犬洗护新预约 scheduledEnd=引擎 90min（60×1.5×1.0）
+  ✓ 时长① owner 改体型系数 medium 1.5→2.0（duration domain version=2）
+  ✓ 时长① 改系数后：同宠物同服务新预约 scheduledEnd=新系数 120min（60×2.0×1.0）
+  ✓ 时长① 改前已建预约 scheduledEnd 原值不变（不回溯：库内仍 90min）
+  ✓ 时长① config.versions 留痕前后值（medium 1.5→2.0，变更人=owner）
+  ✓ G0scope② scope=bath（默认）：G0 造型单不计提（serviceLines 无 apptS2 行）
+  ✓ G0scope② owner 改 scope=all（commission version=5）
+  ✓ G0scope② scope=all：新造型单计提 5%（rateBp=500，金额=10000×5%=500 精确）
+  ✓ G0scope② scope=all 不回溯：scope=bath 期造型单（apptS2）仍不计提
+
+[staff-2] 26. R10 榜单查询层裁剪（前三+自己+前一名）
+  ✓ R10⑲ 榜尾视角 ≤5 行（前三+自己+前一名）
+  ✓ R10⑲ 榜尾视角含自己与前一名（丽丽 rank5），第 4 名（阿强）不可达
+  ✓ R10⑲ 前排视角仅前三（丽丽/阿强/附加丙均不出参，全榜永不外泄）
+
+[R12] 27. 权限闸：店员 clerk 403（清单①）
+  ✓ R12① 店员 clerk 退款无入口（preview / execute / list 全 403 FORBIDDEN）
+
+[R12] 28. 店长≤阈值全额退：六联动 + rebate 列位（清单②+⑭）
+  ✓ R12② 店长≤阈值发起即执行（executed + 自批 approver=本人 + 幂等标记 false）
+  ✓ R12② 全额退金额=可退余额全退（=原单已收）
+  ✓ R12⑭ 六联动快照含回馈金扣回列位（rebateClawbackFen 键存在且=0，R11 冻结回归）
+  ✓ R12② 快照六联动列位齐全（segments 支付段回补 / stockRestock 库存回补 / 提成冲减预估 / 阈值口径）
+  ✓ R12② 原单挂 refund_status=refunded + refund_bill_no 双向回指（已收 paidFen 一字未改）
+  ✓ R12② 库存回补：stock_movements 来源 refund 前后值真实（delta=+1）+ products.stock 回补
+  ✓ R12② RefundExecuted 事件到店频道（店长视图/财务联动，event_outbox 实证）
+  ✓ R12② 预约行清零口径不适用对照：服务行非预约行，无 appointmentReverts（本单纯服务+商品）
+
+[R12] 29. V1 拆分累计阈值（清单③）
+  ✓ R12③ 前置：大单 64500 分 settled（店长阈值 50000 分）
+  ✓ R12③ 店长第一笔 30000 成（原单累计 30000 ≤ 50000）
+  ✓ R12③ 第二笔累计 60000>50000 → FORBIDDEN「该单累计退款已达店长上限，须店主」（V1 按原单累计校验堵拆分绕过）
+  ✓ R12③ 店主执行成功（累计 60000/64500，可退余额余 4500）
+
+[R12] 30. V2 日结退款单列 + 现金段净额（清单④）
+  ✓ R12④ dayStats 当日退款单列（总额 +4400；现金段退款 +2500 / 微信段 +1900，按段占比分摊精确到分）
+  ✓ R12④ 已收不涂改 + 当日净额=已收−退款算术成立（净额恰 −4400；现金段净额=现金已收−现金退款恰 −2500）
+
+[R12] 31. V3 6:4 分摊回补 + 涉储值拦截（清单⑤+⑪）
+  ✓ R12⑤ 前置：储值段结账扣减（余额 100000 → 96480，先本金后赠送）
+  ✓ R12⑪ 涉储值单店长明文拦截（FORBIDDEN「储值退款须店主」，运营加固不设阈值）
+  ✓ R12⑤ 组合支付 6:4 分摊回补精确到分（cash 2640 线下原路待登记 / 储值 1760 余额回补）
+  ✓ R12⑤ 储值余额回补前后值留痕（96480 → 98240；stored_value_logs 正向行 note 关联退款单号）
+
+[R12] 32. V4 寄养剩余晚退（清单⑥）
+  ✓ R12⑥ 已发生晚一分不退（退 3 晚 > 剩余 2 晚 → BAD_REQUEST「剩余可退晚数不足」明文）
+  ✓ R12⑥ 寄养退剩余 2 晚：金额=剩余晚×晚单价（floor(59700÷3)×2=39800）
+  ✓ R12⑥ 分段明细透出（总 3 晚 / 已住 1 晚不退 / 退 2 晚（qty 列）/ 晚单价 19900）
+  ✓ R12⑥ 按支付段占比回补（全现金单 → cash 段 39800 线下原路）
+  ✓ R12⑥ 只退钱不动预约单（status/paidAt 原样；退住核销由寄养域既有流程承担）
+
+[R12] 33. V5 终态禁退（清单⑦）
+  ✓ R12⑦ 已冲正单无退款入口（reverseBill 后 execute → BAD_REQUEST「原单已冲正/已撤，不可退款」）
+  ✓ R12⑦ 已撤单无退款入口（voided → 同明文拒）
+
+[R12] 34. V6 提成冲减（清单⑧）
+  ✓ R12⑧ 部分退 50% → 该行提成减半精确到分（毛 2500 → 净 1250，refundRatioBp=5000，refunded=false）
+  ✓ R12⑧ 退完全额 → 该行提成归零 + refunded 标记（冲减合计 2500=毛提成全额）
+  ✓ R12⑧ 前置：上月快照落库（阿强毛提成=20000×20%=4000 冻结于快照）
+  ✓ R12⑧ 跨月退款差额进当月「调整项」（mySummary.adjustments 透出 refundNo + 冲减 2000=4000×50%）
+  ✓ R12⑧ 调整项从当月提成总额减除（commissionTotalFen 恰 −2000）
+  ✓ R12⑧ 已快照月份不动（snapshot totalFen/payload 前后一致）
+
+[R12] 35. V7 跨日退款（清单⑨）
+  ✓ R12⑨ 跨日退款入发生日（refund_bills.biz_date=今日，不回填昨日）
+  ✓ R12⑨ dayStats 今日含该退款（+1000）、昨日不含（昨日 count/total 原样）
+  ✓ R12⑨ 昨日已封箱日结行不变（bookCash/status/frozen 原样，封箱历史不涂改）
+
+[R12] 36. V8 次卡退卡（清单⑩+⑪ 附证）
+  ✓ R12⑩ 前置：次卡建卡（total=12 remain=12）
+  ✓ R12⑩ 前置：扣次 6 次（remain 12→6；付费先消耗 → 剩付费 4 + 赠 2）
+  ✓ R12⑪ 次卡退卡涉储值 → 店长 FORBIDDEN「储值退款须店主」（type=pass_cancel 天然涉储值）
+  ✓ R12⑩ 折算=剩余付费 4 次 ×（实付 10000 ÷ 付费 10 次）=4000（赠次不计价）
+  ✓ R12⑩ 快照明示：剩余付费 4 / 赠次 2 随退作废不计价（giftVoided=2）
+  ✓ R12⑩ 退卡后卡作废留痕（status=disabled + remain=0 + 负向流水 note 含「赠次作废 2」）
+  ✓ R12⑩ 锚点单不挂退款标记（anchor_only：原单 refund_status 仍 NULL）
+  ✓ R12⑩ 重复退卡幂等拒（卡已作废 → BAD_REQUEST「不可重复退卡」）
+
+[R12] 37. 部分退款余额内可再退（清单⑫）
+  ✓ R12⑫ 余额内可再退（30%→2640 成，再 20%→1760 成；累计 4400 ≤ 8800）
+  ✓ R12⑫ 累计超可退余额硬拒（4400+4401 > 8800 → BAD_REQUEST「超过原单可退余额」）
+
+[R12] 38. 实退待办（清单⑬）
+  ✓ R12⑬ 实退待办：executed 超 24h 未登记 → pendingActual 含（店长本店可办）
+  ✓ R12⑬ 实退登记 → settled（+RefundSettled 事件到店频道）
+  ✓ R12⑬ 重复登记幂等（idempotent=true，事件不重复增发）
+  ✓ R12⑬ 实退登记后待办消失（pendingActual 不再含该单）
+
+[修复包PR-1] D10 账本双倍计数 + 驳回权店长 + 留口开关
+  ✓ PR-1 留口开关默认关=维持硬拒（超阈值 FORBIDDEN「须店主」）
+  ✓ PR-1 开关 on：超阈值落 draft 申请行（draft:true + status=draft）
+  ✓ PR-1 draft 零联动（原单金额/状态不动，钱链路零副作用）
+  ✓ PR-1 店长驳回本店 draft → rejected（驳回权放开店长落地）
+  ✓ PR-1 店员驳回 403 分口径（「请联系店长」，OP-01③）
+  ✓ PR-1 开关关回=恢复硬拒（FORBIDDEN）
+  ✓ PR-1 D10：月结后 yearGrantFen 不翻倍（500→500，计提行回标+入账行只计一类）
+  ✓ PR-1 D10：settleMonthly 幂等（重复跑 already-settled 不再入账）
+
+[修复包PR-2] A5 寄养负责人 + 差评 −8
+  ✓ PR-2 A5① 寄养核销入住→负责人=当班寄养岗（staff_id 永不为 NULL，PD-05 默认口径）
+  ✓ PR-2 A5① 指派留痕（appointment.assigned by=checkin 事件在卷）
+  ✓ PR-2 A5② in_boarding 改派负责人（assign 店长权限，staff_id 变更留痕）
+  ✓ PR-2 A5③ 退房放行=本店任意店员（核销人 A→退房人 B 放行，PR-2 修正版）
+  ✓ PR-2 A5③ 操作人留痕（寄养晚数 XP 发退房操作人 B，责任归属不动）
+  ✓ PR-2 A5③ 寄养单差评 2 星 → 负责人 XP −8 落账（xp_penalty_low_star，source=penalty，挂本评价 reviewId）
+
+[修复包PR-3] C2 根治 + dailyLog 增补 + 日结不含 held
+  ✓ PR-3 C2 前置：造单占槽（3 晚 booked≥1）
+  ✓ PR-3 增补 dailyLog 本店任意店员放行（打卡=班次共享动作，daily_logs.staff_id=操作人留痕）
+  ✓ PR-3 C2①B 提前退房→剩余晚槽释放（3 晚 booked 全归零；与 R12 退款解耦）
+  ✓ PR-3 C2①B 释放后同区间可再订（无 CONFLICT 已订满）
+  ✓ PR-3 C2 夹具清扫：再订单 >4h 客户直消（槽全释放，环境零残留）
+  ✓ PR-3 C2c 日结/已收合计不含 held 单（held 前后 todayTenderStats 逐值相等）
+  ✓ PR-3 C2c 收尾：held 单 voidBill 撤单（零残留）
+
+[修复包PR-4] PD-05 件 1/2 + OP-01②
+  ✓ PR-4 件 2 openFree 默认档=配置键现值（plan_weiguang，读 default_plan_key 非硬编码）
+  ✓ P1-3 openFree 免费档 expiresAt=2099-12-31 远端（数据层永久有效，与「永久有效」文案同帧）
+  ✓ PR-4 件 2 配置键改值即生效（openFree 开 plan_yinghuo 档，端口化落地）
+  ✓ PR-4 件 1 注册用户永久豁免：expires 过日仍 active（会员+回馈金账户双不冻结）
+  ✓ PR-4 OP-01② 注册用户线上开档 NULL 进全店合计（amortizedFen +100=round(1200÷12)，数值口径统一）
+
+[R11a] 39. 售卡三档 + 售卡提成定额 + 双归属 + 注册用户开档幂等
+  ✓ R11a⑧ 萤火售卖到店付（现金段 19900，成交即开通 active）
+  ✓ R11a⑧ 有效期=开通+365 天（读表 membership_validity_days）
+  ✓ R11a⑩ 双归属两字段：memberships.sold_store_id=办卡店 且 售卡单 cashier_bills.store_id=消费店（同店场景两值同帧）
+  ✓ R11a⑩ 售卡单落 kind=membership 行（refId=plan_key，提成读侧数据源）
+  ✓ R11a⑧ 烛光 29900（微信段）+ 注册用户 0 元单直接成交（无支付段）
+  ✓ P1-3 sell 注册用户档 expiresAt=2099-12-31 远端（烛光付费档照 +365 天读表不动）
+  ✓ R11a⑧ 售卡提成定额：萤火 500（5 元）/ 烛光 1000（10 元）/ 注册用户 0 三档入 cardLines（暖阳 2000 同映射表抽单免验）
+  ✓ R11a回归 注册用户一键开档幂等（首次开档 → 第二次 idempotent=true 同档不重建）
+
+[急修三件] D-16 自助开户（手机号登录/注册）
+  ✓ D-16 新手机号自助开户：注册即建档（customer 角色）并签发会话
+  ✓ D-16 注册→登录→注册用户一键开档链路通（plan_weiguang active）
+  ✓ D-16 同号再登录=同一用户（幂等建档，不重复建行）
+  ✓ D-16 非 11 位手机号 → 400 格式拦截（不建行）
+
+[R11a] 40. 多宠附加费（清单⑨）
+  ✓ R11a⑨ 萤火 4 只 = 19900+5900=25800（第 4 只起 +¥59/年/只）
+  ✓ R11a⑨ 10 只封顶内放行（19900+7×5900=61200）
+  ✓ R11a⑨ 11 只超封顶 → BAD_REQUEST「多宠封顶 10 只」
+
+[R11a] 41. 会员服务折扣（清单⑦）
+  ✓ R11a⑦ 萤火服务单自动 88 折（adjusted=8800×0.88=7744 精确到分，应收=7744）
+  ✓ R11a⑦ 门市价划线对照（unit_price_fen=8800 门市价原值不动）
+  ✓ R11a⑦ 对照：注册用户（10000bp）无折扣=门市价 8800（adjusted 留空）
+
+[R11a] 42. grant 无月上限 + 三本账（清单③+①）
+  ✓ R11a③ 无月上限：同月两笔 grant 累计 258+258=516 全挂期次（无 cap 截断），未到账口径 balance=0
+  ✓ R11a③ grant 行挂期次且余额不动（before=after=0，统一次月到账）
+  ✓ R11a① 端点扫描：全路由无回馈金/储值/XP 互转通道（无 convert/transfer/exchange/互转 过程名；片 4 店间调拨 stock2.transfer*+片 5 换货台账 marketing.exchange*=合法件登记，互转红线口径不变）
+  ✓ R11a① 余额变动只走自家流水表（grant×2 后：储值账仍 98240 未动 / 客户 XP 账零事件）
+
+[R11a] 43. settleMonthly 次月到账（回归）
+  ✓ R11a回归 settleMonthly 未到期空转（not-due 零写入）
+  ✓ R11a回归 期次结算入账（批次单 grantedCount=2/grantedFen=516；余额 0→516 前后值留痕）
+  ✓ R11a回归 批次单幂等（period unique：重入 already-settled，全表仍 1 行）
+
+[R11a] 44. rebate 抵扣段（清单② + 不计已收回归）
+  ✓ R11a② 服务行单 + rebate 段 → 403 FORBIDDEN「回馈金仅可抵商品」（红线 2 硬校验）
+  ✓ R11a② 商品行单 + rebate 段成（余额 516→216 前后值留痕，1:1 扣已到账）
+  ✓ R11a回归 rebate 段不计已收（已收仅 +现金段 12600；rebateFen 参考列 +300）
+
+[R11a] 45. 退货扣回接 R12（清单⑥）
+  ✓ R11a⑥ 部分退 50% → rebateClawbackFen 实算=已发 258×(6450÷12900)=129（linkage 填实值，冻结接口激活）
+  ✓ R11a⑥ clawback 流水前后值（216→129 扣后余额 87；source_id=退款单号，note 关联原单号）
+  ✓ R11a⑥ 余额不足扣 0 不负账（应扣 129 > 余额 87 → 实扣 87，差额 42 记 rebateClawbackMissedFen 未扣回）
+
+[R11a] 46. 到期冻结 / 续费解冻（清单④）
+  ✓ R11a④ 到期过日 → 读路径懒冻结（membership frozen + 回馈金账户 frozen + freeze 留痕行）
+  ✓ R11a④ 冻结期抵扣不可用（FORBIDDEN「回馈金账户冻结中」，余额在不可用）
+  ✓ R11a④ 冻结期服务折扣同步失效（门市价 8800 不打折）
+  ✓ R11a④ 续费解冻：active + expires 自今日顺延 365 天 + 回馈金账户恢复 active
+
+[R11a] 47. plans 权益表述 + 立省钩子 + 年费分摊双口径（清单⑫+回归）
+  ✓ R11a⑫ 权益表述：plans 透出含「安心包全员免费」（注册用户档权益行）
+  ✓ R11a⑫ 无「非会员 ¥15」残留（全档权益文案 grep 级实证）
+  ✓ R11a⑫ 四档价格明面（0 / 19900 / 29900 / 59900 升序）
+  ✓ R11a回归 savingsPreview 立省钩子数值（服务 8800×12% + 商品 12900×2% = 1056+258=1314）
+  ✓ R11a回归 年费分摊双口径并列（收现 cashFen=156700 / 分摊确认 amortizedFen=11400 精确到分）
+
+[R11a] 48. 退会（清单⑤+⑪，R11a 段收尾动作）
+  ✓ R11a⑪ 退会折算=剩余整月 7×月均价（19900×7/12=11608 分精确到分）
+  ✓ R11a⑤ 退会清零（余额 0 + clear 留痕行前后值 + memberships cancelled）
+  ✓ R11a⑤ 客户频道通知（membership.cancelled → user 频道，payload 含折算额与「按原路退回」文案）
+  ✓ R11a⑤ 退会后会员页回非会员引导态（membership=null + guide 透出）
+  ✓ R11a⑤ 回馈金流水前后值链完整（grant/deduct/clawback/freeze/clear 全周期）
+
+[R11a-复核] 49. 退会退款单挂号 + 退会后结算日不到账
+  ✓ 复核① cancel 返回退款单号（refundNo/refundId 透出，折算额=19900）
+  ✓ 复核① refund_bills 行在库（type=membership_cancel / amount=折算额 / status=executed / refund_method=offline_original / bill_id=售卡原单）
+  ✓ 复核① linkage 快照全字段（membershipCancel 含 planKey/paidFen/refundFen/clearedRebateFen/monthsRemaining/voidedPendingFen/期次）+ rebateClawbackFen=0 列位
+  ✓ 复核① refund.list 可见该退款单（type=membership_cancel，金额=折算额）
+  ✓ 复核② 退会作废未到账合计透出（voidedPendingFen=258=C 的未结算 grant）
+  ✓ 复核② 作废留痕 clear 行在库（note 含「退会作废未到账回馈金 258 分（期次 …）」，delta=0 前后值不动）
+  ✓ 复核② 退会者结算日不到账（C 余额不变 0→0、grant 行未回标 settlement_id、无入账行）
+  ✓ 复核② 正常会员对照到账（D 余额 0→258 + grant 行回标批次）
+  ✓ 复核② 批次单只计实际入账（granted_count=1 不含退会者，note 记跳过 1 行）
+
+[C5] 50. 客户退款申请：实体+端口+审批缝+R12 联动
+
+[C5] 50.1 商城单申请创建 + 幂等 + configView
+  ✓ C5 50.1 configView 透出端口五键（enabled=true/时限 30 天/反悔 24h/原因枚举 6 码/SLA 24h）
+  ✓ C5 50.1 商城单（received）申请创建成（RR 日序单号/submitted/全额 12900/原因 label 端口快照）
+  ✓ C5 50.1 幂等：同 (客户,原单) 在途单重复提交 → idempotent=true 返回现状不新建（库内仅 1 行）
+
+[C5] 50.2 越权负例
+  ✓ C5 50.2 客户 A 对客户 B 的到店单 create → 403 FORBIDDEN「非本人单据」
+  ✓ C5 50.2 getById 他人申请单 → 403 FORBIDDEN（驳回理由/时间线不外泄）
+  ✓ C5 50.2 listMine 仅本人（D 的列表不含客户 A 的申请单）
+
+[C5] 50.3 时限/原因/开关三闸
+  ✓ C5 50.3 时限闸：完成超 30 天 → BAD_REQUEST「已超退款申请时限」
+  ✓ C5 50.3 原因闸：非法 reasonCode（禁手打）→ BAD_REQUEST「不在可选范围」
+  ✓ C5 50.3 原因闸：other 缺 description → BAD_REQUEST「请补充说明」
+  ✓ C5 50.3 开关闸：enabled=false → 403 FORBIDDEN「退款申请通道维护中，请到店办理」
+
+[C5] 50.4 撤回闸
+  ✓ C5 50.4 前置：到店商品单申请创建成（全额 12900/itemsJson 空=全额档）
+  ✓ C5 50.4 submitted 可撤 → cancelled + timeline 追加
+  ✓ C5 50.4 撤回后可再申请（cancelled 不占在途）
+  ✓ C5 50.4 店主批准直通 R12（refunded + refundBillNo 挂接）
+  ✓ C5 50.4 批准（refunded）后撤回 → BAD_REQUEST「不可撤回」
+
+[C5] 50.5 驳回
+  ✓ C5 50.5 listPending 含本店 submitted 申请（SLA 未超期 + 客户昵称透出）
+  ✓ C5 50.5 驳回强制理由（空 reason → BAD_REQUEST）
+  ✓ C5 50.5 驳回 → rejected + 客户端 getById 可见驳回理由 + timeline 留痕 + 待办消失
+
+[C5] 50.6 批准联动 R12 + C5-01（回馈金扣回坐实）
+  ✓ C5 50.6 D 对本人商品单申请创建成（全额 12900/reappliedAfterDays=null 首次）
+  ✓ C5 50.6 店长 approve 直通 R12（申请单 refunded + refundBillNo 挂接 + approver=店长本人 + approvedAt 落时）
+  ✓ C5 50.6 R12 退款单落账（executed / type=full / bill_id=原单 / 金额 12900 / reason 含申请单号）
+  ✓ C5-01 坐实：rebateClawbackFen=258>0（已发 258 全量扣回，linkage 填实值）+ clawback 负向行落账（−258，258→0）+ 余额 258→0 不负账
+  ✓ C5 50.6 refundRequest.approved 事件到店频道（SSE，客户端轮询兜底）
+
+[C5] 50.7 settleActual 联动
+  ✓ C5 50.7 settleActual → 退款单 settled + 申请单联动 settled + timeline 追加（全状态链 submitted→approved→refunded→settled 留痕）
+
+[C5] 50.7b applyContext 算式明面（P1-1）
+  ✓ C5 50.7b 无实退历史 → 原单 12900 / 已退 0 / 本次可退 12900（照现值，算式不上屏条件）
+  ✓ C5 50.7b 有历史退款行 → 原单 12900 − 已退 12900 = 本次可退 0（与 create 闸可退余额同源）
+  ✓ C5 50.7b 商城单 → 原单 12900 / 已退 0（在途 submitted 不计）/ refundableFen=null
+  ✓ C5 50.7b applyContext 他人单 → 403 FORBIDDEN「非本人单据」（金额三件套不外泄）
+
+[C5] 50.8 appointment.get cashierBillId + submitted SSE + 重购留痕
+  ✓ C5 50.8 appointment.get 返回体含 cashierBillId 字段且对到店已结账单非空（appt3→billA，本人单闸既有）
+  ✓ C5 50.8 refundRequest.submitted 事件到店频道（50.6 新申请提交已发，幂等返回不发）
+  ✓ C5 50.8 重购留痕：同客户同原单有 settled 历史 → reappliedAfterDays=10（只留痕不拦截，申请照常 submitted）
+
+[补缺-3] 52.x 会员升级 / 到期换档 / 防滥用 / 已省
+
+[补缺-3] 52.1 升档差价（46 号档例题）+ 注册用户新购口径
+  ✓ 补缺3-52.1 例题坐实：萤火剩 3 整月升暖阳 totalDiffFen=10000（¥100.00 精确到分；多宠附加行恒 0）
+  ✓ 补缺3-52.1 期内降级档不出现（萤火视角 targetPlans 仅 烛光/暖阳 两更高档）+ 窗口天数透出=30
+  ✓ 补缺3-52.1 收银台代客试算同帧（upgradeQuoteForUser 暖阳差价同=10000）
+  ✓ 补缺3-52.1 升档成交：diffFen=10000 + paid_fen=原实付+补差=29900 + 到期日不动 + pet_count 不变
+  ✓ 补缺3-52.1 升级单=会员费类目（kind=membership / refId=plan_nuanyang / discountType=none / note「升级补差 萤火→暖阳」）
+  ✓ 补缺3-52.1 membership_events 升级留痕（from=萤火 to=暖阳 diffFen=10000 billNo 回链）
+  ✓ 补缺3-52.1 注册用户升档=新购口径（remainingMonths=0 / newPurchase=true / 全价+附加重算 19900+2×5900=31700）
+  ✓ 补缺3-52.1 注册用户新购口径落库（paid_fen=31700 全价含附加 / expires 重起算 +365 天 / sold_store 补=办理店）
+
+[补缺-3] 52.2 升档原子性（缺额整单回滚）
+  ✓ 补缺3-52.2 支付段缺额硬拒（server 兜底重算 10000 ≠ 入参 9999 → BAD_REQUEST「须等于升档补差」）
+  ✓ 补缺3-52.2 整单回滚零半态（memberships 原档原值 / 收银单零新增 / membership_events 零行 / outbox 零新增）
+
+[补缺-3] 52.3 期内不降级 + 同档重放幂等
+  ✓ 补缺3-52.3 期内降级明文拒（暖阳→萤火 BAD_REQUEST「会员期内不降级，可在到期前 30 天预约下期档位」逐字）
+  ✓ 补缺3-52.3 同档重放幂等（idempotent=true / billNo=null / 会员行原值 / 升级事件仍恰 1 行）
+
+[补缺-3] 52.4 到期换档（预约→覆盖→取消→再约→renew 执行）
+  ✓ 补缺3-52.4 窗口外预约明文拒（剩 ~365 天 > 30 → BAD_REQUEST「到期前 30 天开放预约下期档位」）
+  ✓ 补缺3-52.4 窗口内预约落位（next_plan_key=plan_zhuguang + next_plan_set_at 非空）
+  ✓ 补缺3-52.4 预约留痕（change_schedule from=萤火 to=烛光）
+  ✓ 补缺3-52.4 my 透出 nextPlanKey + upgradeAvailable + changeWindowDays=30（客户端入口判定数据源）
+  ✓ 补缺3-52.4 重复预约覆盖更新幂等（覆盖→plan_nuanyang idempotent=false；同档重放 idempotent=true）
+  ✓ 补缺3-52.4 取消预约置空+留痕（next_plan_key=null + meta.cancelled=true 记被撤档 plan_nuanyang）
+  ✓ 补缺3-52.4 到期 renew 按预约档收款（29900 烛光全价 / plan_key 切换 / next_plan_key 置空 / 解冻 active）
+  ✓ 补缺3-52.4 换档执行留痕（change_schedule meta.executed=true from=萤火 to=烛光 + billNo 回链）
+  ✓ 补缺3-52.4 执行幂等（预约已置空：再续费按新档常价 29900 顺延，executed 留痕不重复增发）
+
+[补缺-3] 52.5 防滥用留痕（cancel_rebuy_note）
+  ✓ 补缺3-52.5 退会后 90 天内重购留痕（trigger=cooldown daysSinceLastCancel=0 + billNo=重购单号；不拦截放行）
+  ✓ 补缺3-52.5 累计退会≥2 再购留痕（trigger=count cancelCount=2 threshold=2；双触发共 3 行；不拦截放行）
+
+[补缺-3] 52.6 mySavings 今年已省（回馈金+服务折扣两源分明）
+  ✓ 补缺3-52.6 mySavings 双源分明（rebateSettledFen=258 已入账 + serviceDiscountFen=1056=8800−7744 → totalFen=1314 精确到分）
+
+[补缺-3] 52.7 升档不动在途回馈金
+  ✓ 补缺3-52.7 升档成交（剩 12 整月补差 40000=59900−19900，精确到分；paid_fen=19900+40000=59900）
+  ✓ 补缺3-52.7 在途回馈金不重算 + 旧档余额零动作（grant 行原样 1 行 258 挂萤火口径 / 账户余额 0 不动 / rebate_logs 零新增）
+  ✓ 复核① 退会退款单超 24h 未登记 → refund.pendingActual 含该行
+  ✓ 复核① settleActual 登记 → settled；重复登记幂等；待办消失
+
+[补缺4] 53.1 安心证书生成链
+  ✓ 53.1 有 before/after 图单完成 → service_certificates 落行（confirmStep 末步同事务）
+  ✓ 53.1 证书 payload 齐（petName/serviceName/storeName/completedAt/六步汇总张数 1/2/3/2/2/0/before/after）
+  ✓ 53.1 certificate.ready 落 outbox（user 频道，payload 用 aid 键避开 §11 计数口径）
+  ✓ 53.1 certificateFor 首读 → deliveredAt 置位（幂等写 now）
+  ✓ 53.1 复读 deliveredAt 不变（幂等置位只写一次）
+  ✓ 53.1 R10 无数据不生成：寄养单无证书行 + certificateFor → 404 明文「该服务未生成证书（无前后对比照）」
+
+[补缺4] 53.2 美容报告生成链
+  ✓ 53.2 无 vitals 报告=体重 normal 快照 + 其余四项 unrecorded「本次未记录」（未记录中性签不挂「正常」；留痕口径不阻塞完成），abnormalText=NULL（unrecorded 不进异常拼句）
+  ✓ 53.2 体重项= pets.weight_kg 服务端快照（28.5 kg，不信客户端）
+  ✓ 53.2 reportFor 首读置 deliveredAt + 复读不变（幂等）
+  ✓ 53.2 report.ready 落 outbox（user 频道）
+  ✓ 53.2 带 vitals 末步完成（appointmentCompleted + certificateId/reportId 双透出）
+  ✓ 53.2 vitals 快照（skin=abnormal+note；ear/coat/nail 缺项=unrecorded 本次未记录——补缺修复小批 UX 销项口径）
+  ✓ 53.2 体重不被客户端输入污染（入参 99.9 kg 被拒，快照=档案 28.5 kg）
+  ✓ 53.2 abnormalText 拼句（皮肤：异常（建议就医复查））+ nextAdvice 落库
+  ✓ 53.2 apptVit 证书同生成（有 before/after 图）
+
+[补缺4] 53.3 albumFeed 服务相册聚合
+  ✓ 53.3 多单一次聚合返回（aid/aid2/apptVit 同帧，六步+照片全嵌套=N+1 消除结构实证）
+  ✓ 53.3 完成单照片分组正确（aid 张数 1/2/3/2/2/0，before_after 步带 before/after 标签）
+  ✓ 53.3 进行中单透出（in_service 在列）且仅 done 步照片可见（grooming=active 与 locked 步 photos 空）
+  ✓ 53.3 默认 limit=12 截顶（默认调用恰 12 条 < limit=50 全量）
+
+[补缺4] 53.4 客服工单流
+  ✓ 53.4 ticketCreate 落单（ticketNo=TK-yyyymmdd-NNN 日序 + submitted + timeline 初始 submitted）
+  ✓ 53.4 联系方式回显默认=users.phone（缺省未传 → 13800000000）
+  ✓ 53.4 店长待办可见本店 submitted 工单
+  ✓ 53.4 店长回复 → replied + repliedBy/At + timeline 追加
+  ✓ 53.4 ticket.replied 落 outbox（user 频道，SSE 留痕可取证）
+  ✓ 53.4 客户端 ticketGet 可见 replyText + status=replied
+  ✓ 53.4 ticketListMine 仅本人含该单
+  ✓ 53.4 回复必填（空白 reply → 400）
+
+[补缺4] 53.5 发票申请流
+  ✓ 53.5 invoiceCreate 金额=实付重算（传入假 1 分被忽略 → paidFen 实额）+ personal 税号置空
+  ✓ 53.5 invoiceNo=IN-yyyymmdd-NNN 日序 + 来源单号快照（billNo=预约码）
+  ✓ 53.5 同单在途幂等（重复申请返回原单 idempotent=true，不产生新行）
+  ✓ 53.5 企业抬头缺税号 → 400「企业抬头必须填写税号」（形状校验先于单据闸）
+  ✓ 53.5 已付闸：未收款预约（aid2 未 markPaid）→ 400「尚未完成收款」
+  ✓ 53.5 email 交付格式校验（非法邮箱 → 400「邮箱格式不正确」，形状校验先于在途幂等）
+  ✓ 53.5 cashier 来源单：金额=paid_fen 实收（7744）+ 企业抬头税号留存
+  ✓ 53.5 商家待办可见本店 submitted 申请（两单在列）
+  ✓ 53.5 invoiceRegister 登记发票号 → issued + issuedAt/By 留痕
+  ✓ 53.5 invoice.issued 落 outbox（user 频道，SSE 留痕可取证）
+  ✓ 53.5 客户端 invoiceGet 可见 issued + 实际发票号
+  ✓ 53.5 invoiceListMine 仅本人含两单
+  ✓ 53.5 已开票单重复申请 → 400「已开票」明文拒
+
+[补缺4] 53.6 权限闸（他人 403×4）
+  ✓ 53.6 他人证书/报告/工单/发票 全 403 FORBIDDEN（客户只见本人数据）
+
+[补缺4] 53.7 serviceHours 客服时间公示
+  ✓ 53.7 serviceHours 读出种子值「09:00–21:00」（0017 幂等种子+seed 补种）
+  ✓ 53.7 配置端口第六域 domain=service 保存即生效（version=2）
+  ✓ 53.7 改值复读出「10:00–22:00」（端口可调实证）
+  ✓ 53.7 还原种子值（不留端口副作用）
+
+[R13a] 51. 账号安全（注销/换绑/申诉/设备登记）
+
+[R13a] 51.1 sendCode（限流/原号闸/devCode 回显）
+  ✓ 51.1 换绑主线用户 A 自助开户（customer + 会话签发）
+  ✓ 51.1 sendCode 原号验证码发送成功 + beta devCode 回显（6 位数字，ttl=600s）
+  ✓ 51.1 原号不一致 → BAD_REQUEST「与当前账号绑定手机号不一致」（原号闸）
+  ✓ 51.1 限流：同 phone+purpose 60s 一码（立即重发 → TOO_MANY_REQUESTS）
+
+[R13a] 51.2 changePhone 双码换绑
+  ✓ 51.2 新号撞号闸（新号=他人在册号 → BAD_REQUEST「已被其他账号使用」）
+  ✓ 51.2 sendCode 新号验证码发送成功（devCode 回显）
+  ✓ 51.2 错新码 → BAD_REQUEST「验证码错误」且事务回滚换绑未生效（users.phone 仍原号）
+  ✓ 51.2 双码换绑成功（返回 auth.me 同构：user.phone=新号 + roles 透传）
+  ✓ 51.2 换绑后原会话零丢失（auth.me 仍 200；会话载荷无 phone 字段，透出已为新号）
+  ✓ 51.2 phone_change_logs 'self' 落行（全脱敏 139****0001→139****0002，operatorId 空）
+  ✓ 51.2 验证码一次性（已消费码重用 → BAD_REQUEST）
+
+[R13a] 51.3 换绑申诉全链
+  ✓ 51.3 申诉提交成功（PC-yyyymmdd-NNN 日序单号 + 脱敏落表 + submitted）
+  ✓ 51.3 在途幂等（重复提交返回同一单 idempotent=true）
+  ✓ 51.3 原号不一致 → BAD_REQUEST（原号一致闸）
+  ✓ 51.3 listPhoneAppeals 待审队列含该单（SLA 24h 内未超期标记）
+  ✓ 51.3 reject 强制 note（缺 note → BAD_REQUEST）
+  ✓ 51.3 reject 成功（rejected + decideNote 落库）
+  ✓ 51.3 本人 appealStatus 可见驳回原因（客户端可见）
+  ✓ 51.3 approve 强制 note（缺 note → BAD_REQUEST）
+  ✓ 51.3 approve 成功（approved）
+  ✓ 51.3 approve 后 users.phone 落新号（申诉通道：原号失效无需验证码）
+  ✓ 51.3 phone_change_logs 'assisted' 落行（operatorId=审批人 manager，全脱敏）
+  ✓ 51.3 旧会话照旧有效（session 无 phone 载荷，auth.me 200 透出新号）
+  ✓ 51.3 新号登录成功（同一用户 id，幂等建档不建行）
+
+[R13a] 51.4 账号注销流
+  ✓ 51.4 未完成预约=阻断列明（appointment×1，deactivatable=false）
+  ✓ 51.4 有阻断项提交 → BAD_REQUEST（服务端 precheck 闸）
+  ✓ 51.4 清空阻断后放行（blockers 空，deactivatable=true）
+  ✓ 51.4 影响勾选缺项 → BAD_REQUEST（三项缺一不可，服务端强校验）
+  ✓ 51.4 三勾选提交成功（submitted + impacts 快照三项）
+  ✓ 51.4 在途幂等（重复提交返回同一单）
+  ✓ 51.4 本人撤销（submitted→cancelled）
+  ✓ 51.4 驳回强制 note（缺 note → BAD_REQUEST）
+  ✓ 51.4 门店驳回（rejected + decideNote 落库）
+  ✓ 51.4 本人可见驳回原因（deactivationStatus latest=reject 单带 decideNote）
+  ✓ 51.4 夹具：注册用户会员 active（注销联动取消对象）
+  ✓ 51.4 门店 approve（approved + 回馈金清零额 500 透出）
+  ✓ 51.4 deactivated 落库（deactivated_at 非空 + reason=审批 note + phone/kimiId 释放 `_deact_<uid>_<原值>`）
+  ✓ 51.4 注销后原会话 401（middleware 软删闸即时生效）
+  ✓ 51.4 已注销用户登录明文拒「该账号已注销，如有疑问请联系门店」
+  ✓ 51.4 phone suffix 释放：同号重新注册建档成功（新档 ≠ 原账号）
+  ✓ 51.4 新旧账号互不可见（新档 pet.list 空，原档数据不透出）
+  ✓ 51.4 回馈金清零留痕（余额 500→0，clear 行前后值 + note 含「注销」——clearRebateAccount 工艺）
+  ✓ 51.4 会员 active→cancelled（注销≠退会：无折算退款 refund_fen=NULL，cancelReason 注明）
+  ✓ 51.4 pets 软删标记（deleted_at 置位 + 原因「账号注销」）
+  ✓ 51.4 客户越权审批 → 403 FORBIDDEN（merchantManagerProcedure 闸）
+
+[R13a] 51.5 设备登记
+  ✓ 51.5 registerDevice upsert（首登创建 → 重登幂等同行刷新，不增行）
+  ✓ 51.5 (user_id,device_id) 唯一防重（重登后仍 2 行）
+  ✓ 51.5 listDevices 设备倒序 2 行 + 换绑留痕透出（self 139****0001→139****0002，设备页数据源）
+
+[R13a] 51.6 软删闸（SSE/接口 401）
+  ✓ 51.6 已注销用户业务接口 401（push.subscribe UNAUTHORIZED）
+  ✓ 51.6 已注销用户 SSE 401（软删闸实证：loadSessionUser 视同不存在）
+  ✓ 51.6 对照：正常用户过会话闸（403=client_id 未登记，非 401——401 确为注销闸语义）
+
+[片5] 54. 站内信分类 / 订阅退订 / 端点补齐 / 挂接槽位
+  ✓ 54.1 emitEvent（appointment.completed）落行含 category=service + 文案/link 正确
+  ✓ 54.1 listNotifications 可见该行且返回行带 category 字段
+  ✓ 54.1 unreadCount=1（byCategory.service=1）
+  ✓ 54.2 markRead 幂等：首次 marked=1 / 重复调 marked=0（零副作用）
+  ✓ 54.2 markAllRead 幂等：2 条未读全已读（marked=2）/ 重复调 marked=0 / unreadCount 归零
+  ✓ 54.2 deleteNotification 他人通知 → 403 FORBIDDEN
+  ✓ 54.2 deleteNotification 本人删除成功且行消失
+  ✓ 54.3 落库分类正确（order.paid→trade / membership.opened→account / marketing.promo→marketing）
+  ✓ 54.3 list 按 category=trade 过滤（全部 trade 且含 order.paid）
+  ✓ 54.3 list 按 category=marketing 过滤（恰含 marketing.promo）
+  ✓ 54.4 setNotifyPref marketing=0 成功；notifyPrefs 透出（marketing enabled=false mutable=true，其余缺省全 1）
+  ✓ 54.4 退订后营销事件不落该用户通知（notifications 0 行；outbox 仍写=事件本身不丢）
+  ✓ 54.4 退订仅拦营销：trade（order.paid）/ service（appointment.completed）恒落
+  ✓ 54.4 非营销类（trade）置 0 硬拒明文「交易/服务/账户通知为保障服务履约不可关闭」
+  ✓ 54.4 非营销类（service）置 0 硬拒明文「交易/服务/账户通知为保障服务履约不可关闭」
+  ✓ 54.4 非营销类（account）置 0 硬拒明文「交易/服务/账户通知为保障服务履约不可关闭」
+  ✓ 54.4 恢复订阅幂等（marketing=1 成功）→ 后续营销事件照常落库
+  ✓ 54.5 certificate.ready 落库（安心证书已生成 / link=/philia/certs/:aid / service）
+  ✓ 54.5 report.ready 落库（美容报告已送达 / link=/philia/reports/:aid / service）
+  ✓ 54.5 ticket.replied 落库（小棉花回复 / link=/support/:ticketId / service 兜底）
+  ✓ 54.5 refundRequest.approved 落库（退款申请已批准 / link=/refunds / trade）
+  ✓ 54.5 refundRequest.rejected 落库（退款申请已驳回 / body 带 reason / trade）
+  ✓ 54.5 invoice.issued 落库（发票已开具 / link=/invoices / trade）
+
+[片5] 54.6 同单同刻聚合 + 主语完整（补缺修复小批 P2-2）
+  ✓ 54.6 同单同刻三连事件聚合=1 行进度卡（内容=最新「已到店签到」，readAt 置回未读提示新进度）
+  ✓ 54.6 分钟桶滚动后同单新事件另起行（2 行=桶外不聚合；进度卡语义不吞跨分钟历史）
+  ✓ 54.6 主语完整式文案（「【球球】的预约已确认，请按时到店」）
+  ✓ 54.6 无预约键事件不聚合（link=/refunds 无 aid → 两连发两行）
+
+[批次6] 55. server 侧支付骨架（收单/回调/状态机/四态/退款联动/端口/权限）
+
+[批次6] 55.1 createOrder 幂等 + 协议三行快照 + 金额 server 重算
+  ✓ 55.1 quote server 重算透出（萤火 4 只=19900+5900=25800；通道开/超时 30min 端口值）
+  ✓ 55.1 createOrder 金额 server 重算（入参假金额 1 分被覆盖 → 25800）+ paying + mock 单号
+  ✓ 55.1 timeoutAt=now+端口 30min 快照（通道开关/时长读 pay_rules）
+  ✓ 55.1 agreements 三行快照（三键齐/content/version/checkedAt 全落）
+  ✓ 55.1 userSnapshot 取证四要素（userId/phoneMasked/planKey/petCount）
+  ✓ 55.1 幂等：同人同档当日在途重复创建=返回现状（idempotent=true/同 payNo/零新行/协议不重复留痕）
+  ✓ 55.1 listMine 本人单+业务摘要（planKey/petCount 透出）
+
+[批次6] 55.2 回调全链（mock 签名回调/兑付/重放幂等/金额不符拒）
+  ✓ 55.2 mock-callback success → 200 SUCCESS
+  ✓ 55.2 回调后 status=paid + callbackJson 存档（含 paymentId）
+  ✓ 55.2 同事务兑付：memberships 落行（萤火/4 只/25800/active/soldStore=null 线上域）
+  ✓ 55.2 SSE user 频道 membership.opened 事件已落 outbox
+  ✓ 55.2 重放回调零副作用（idempotent=true/memberships 不重建）
+  ✓ 55.2 金额不符 400（AMOUNT_MISMATCH，单不动仍 paid）
+  ✓ 55.2 验签失败 400（INVALID_SIGNATURE，Mock 也走验签流程）
+
+[批次6] 55.3 状态机非法迁移硬拒
+  ✓ 55.3 懒超时：paying 过 timeoutAt → status 查询事务置 closed
+  ✓ 55.3 closed 单再回调 → 400 STATE_CONFLICT（状态机硬拒，不置 paid）
+  ✓ 55.3 closed 单再支付（mock-callback）→ 400 硬拒
+  ✓ 55.3 硬拒后零副作用（closed 单未兑付会员）
+
+[批次6] 55.4 Mock 四态（fail 留痕 / timeout sweeper 关单 / drop reconcile 补开）
+  ✓ 55.4 fail：通道支付失败 → status=failed 留痕 + 零兑付
+  ✓ 55.4 timeout：用户不付留 paying（不动通道不发回调）
+  ✓ 55.4 timeout：sweeper 到点置 closed + SSE user 频道 pay.orderClosed
+  ✓ 55.4 drop：通道已扣款但回调丢弃 → 单留 paying（掉单场景）
+  ✓ 55.4 drop：reconcile 自助补开成功=掉单补偿坐实（paid + memberships 落行）
+  ✓ 55.4 reconcile 幂等（已 paid 返回现状，会员不重建）
+
+[批次6] 55.5 退款联动（线上原路骨架）
+  ✓ 55.5 前置：已是会员线上重复支付 → paid 但 memberships 不重建（幂等兑付）
+  ✓ 55.5 线上支付单退款 → refundMethod=online_original（server 强制）
+  ✓ 55.5 linkage.payOrderNo 快照 + provider.refund 留痕（mock=ok，两路单据同源）
+
+[批次6] 55.6 超时关单端口可调
+  ✓ 55.6 pay 域种子两行在库（pay_timeout_minutes/pay_channel_enabled，0017 幂等迁移落）
+  ✓ 55.6 端口改值即生效：minutes=1 → 新单 timeoutAt≈now+60s（不再 30min）
+  ✓ 55.6 sweeper 按新 timeoutAt 到点关单（closed）
+  ✓ 55.6 复还原：minutes 回 30（quote 透出还原值）
+
+[批次6] 55.7 权限（他人单 403）
+  ✓ 55.7 他人 pay_orders status/reconcile → 403 FORBIDDEN
+
+[片B] 56. 文案端口（copy_overrides 种子/读口/保存双闸/权限/留痕）
+  ✓ 56.1 copy 域种子全量落库（3888 键/72 域；refund.submitCta=提交申请 与码内默认同值）
+  ✓ 56.1 公共读口透出 active 行全量（3888 行 key→text，客户端覆盖层数据源）
+  ✓ 56.2 端口值优先：save 改键 → 公共读口即新值（version 2；保存即生效）
+  ✓ 56.2 还原：读口回码内默认同值（不留副作用给后续段）
+  ✓ 56.3 高危键重确认闸：涉钱键无确认 → 400 明文；带 confirmedHighRisk → 放行（同值重写幂等无害）
+  ✓ 56.4 禁令词闸：「充值」命中即拒明文点名；否定明面句（≠储值/不自动续费）豁免放行
+  ✓ 56.4b 禁令词闸分端：merchant 域含「储值」内部文案放行；customer 域「储值」照拒（对外红线不变）
+  ✓ 56.5 权限闸：clerk list / manager save → 403 FORBIDDEN（端口仅 owner）
+  ✓ 56.6 未知键 400 + 空文案 400 + 留痕前后值在库（home.idFallback 菲丽亚宠友→菲丽亚宠友·内测，操作人昵称透出）
+
+[片C] 57. 展示槽位（注册表/上传待审/上线/回退/权限）
+  ✓ 57.1 种子六槽 live 注册（home.banner 等）+ liveMap 透出（url/alt 齐）
+  ✓ 57.2 上传=新版本 pending 待审（v2 在列表 pending 区）+ liveMap 仍旧值（待审不上线）
+  ✓ 57.3 点上线：v2 → live + liveMap 即新值 + pending 清空 + 旧版转 archived（版本历史留）+ 操作人留痕补列（actedBy=owner，顺带件②）
+  ✓ 57.4 回退上一版：live 回 v1（/brand 默认）+ liveMap 同帧（revertedFrom=2）
+  ✓ 57.5 clerk list/upload 403（仅 owner）+ 未知槽位键 400「未知槽位键」（注册表纪律）
+
+[骨架批片1] 57.6 任务总线（listMy 聚合在途件）
+  ✓ 57.6 美容师视界：名下今日预约入列（appointment 类 link=/schedule）+盘点草稿入列+寄养今日未打卡入列+审批不入列（非管理层）
+  ✓ 57.6 店长视界：补卡审批 pending 入列（approval 类 alert=true link=/manager）
+
+[片2 排班] 58 排班域（模板/生成/发布/换班/请假/调休/技能/CSV 导入/权限）
+  ✓ 58.1 模板建立 + 同 name 同参数重放幂等（同 id 返回现状，模板数不增）
+  ✓ 58.2 请假申请同人同期幂等 + 批准后 assign 准假日硬拒明文「排到请假人=系统责任」+ myLeaves 可见 / leaveQueue 出队
+  ✓ 58.3 generate 全员铺班（丽丽周五准假跳过并列 skipReport「已准假」）+ 连跑第二次零新增（幂等，同键全跳过）
+  ✓ 58.4 cancelAssignment：缺 note 400 + status=cancelled 留痕不删行（行仍在，note 落注记）
+  ✓ 58.5a 换班申请幂等（同单一 pending 返回现状）+ pending 期间 assignment 原人不动 + 驳回 note 强制（缺 note 400）
+  ✓ 58.5b 批准=换挂（assignment.staffId→阿强）+ shift.swapResolved 双方 staff 频道落 outbox
+  ✓ 58.5c 开放认领单批准未指定接手 → 400 明文「请指定接手员工」
+  ✓ 58.6 可用时间按 (staff,weekday,startMin) upsert 幂等（重放同行不增；改 endMin 同键更新）
+  ✓ 58.7 调休 adjust 两笔留痕 + 余额=sum(delta)/60（120−30=90 分钟=1.5 小时，流水近 20 条透出）
+  ✓ 58.8 技能标签端口集公开读（含「洗护」）+ 集外标签 400 明文「不在标签集」+ 全量覆盖写后 staffSkills 透出
+  ✓ 58.9a 导入 preview 零写入 + execute 落 2 行（员工列姓名/id 双匹配）+ 重放幂等全跳过
+  ✓ 58.9b 列名漂移换列序照导（按表头名定位）+ 请假覆盖行逐行拒（「已准假」明文）+ 查无此人拒
+  ✓ 58.10 publishWeek 幂等（再发零新增零重复事件）+ schedule.published 逐受影响员工落 outbox（payload.weekStart/count）+ weekView published 透出
+  ✓ 58.11 权限闸：clerk templates/assign 403 + 普通 staff assign 403 + clerk/customer weekView 403
+  ✓ 58.12 templateDeactivate：模板置 active=false（不删行）
+
+[片2] 59. 考勤域 B1（读序切换 / WiFi / 外勤 / 断网补传 / 多对打卡 / 确认+改考勤 / 申诉）
+  ✓ 59.1 读序①：有当日 assignment → 按排班表判定（-60min 班 in 击=late；误读周模板则为 normal）
+  ✓ 59.1 读序②：无 assignment → staff.schedule 周模板兜底（模板 -60min 班 in 击=late）
+  ✓ 59.2 WiFi 命中白名单=到岗直接过（免围栏：上海坐标放行 + bssid 落库）
+  ✓ 59.2 WiFi 未命中+围栏内 → 回落围栏判定放行（bssid 不落库）
+  ✓ 59.2 WiFi 未命中+围栏外无照 → 照旧拒（400「不在门店范围，无法打卡」零写入）
+  ✓ 59.3 外勤：围栏外+photoUrl 放行落行（source=field，photo_url 落列，状态照算）+ 自动挂 exception（「外勤打卡待店长确认」）
+  ✓ 59.3 B1-4：AttendanceException 双频道落 outbox（store 主管 + staff 本人）
+  ✓ 59.4 断网补传：ts=clientTs 实际打点时刻落库（source=offline_relay + client_ts 落列）
+  ✓ 59.4 超时兜底：clientTs 超 24h → 放行落行 + 自动挂 exception（「断网补传超时（超 24 小时）」，不无声丢卡）
+  ✓ 59.4 未来时刻拒：clientTs 晚于当前 → 400「拒绝补传未来卡」
+  ✓ 59.5 多对打卡：in→out→in(外勤)→out→in 多对落行（当日恰 5 行：3 in + 2 out）
+  ✓ 59.5 同 kind 60 秒内重击=幂等返回末行（防双击，零新增落行）
+  ✓ 59.6 员工确认：confirmDay 置位当日全部行 confirmed_by/at（5 行）
+  ✓ 59.6 确认幂等：重复 confirmDay 零写入返回现状（alreadyConfirmed=true，confirmedAt 不变）
+  ✓ 59.6 确认后改考勤：managerAdjust 放行（ts 已改）+ adjust 留痕行（approved / reason=note / reviewer=店长本人）
+  ✓ 59.6 员工无改权：staff 调 managerAdjust → 403（manager-only 闸门）
+  ✓ 59.7 申诉入队：type=exception pending 挂原卡 recordId（本人）
+  ✓ 59.7 申诉幂等：同卡同人 pending 在途 → 返回现状（duplicated=true，同一条，零新增）
+
+[片3 任务协作] 60/61/62 任务执行+PDCA+自检 / 公告+交接班+心声 / 离职+跨店
+  ✓ 60.1 daily 模板建档 + listToday 触读生成 run（groomer 角色池行 staffId=NULL 落库，bizDate=门店今日）
+  ✓ 60.1 重跑 listToday 幂等不双行（(template_id,biz_date) 锚，返回同一 run）
+  ✓ 60.2 提醒：到点（now ≥ due−remindMin）→ notifications 落 task.reminder 行 + outbox 落事件 + remindedAt 置位
+  ✓ 60.2 提醒幂等一发：再调 listToday 零新增（通知/事件计数不变）
+  ✓ 60.3 他人（小美=frontdesk 非角色池非 manager）done → 403
+  ✓ 60.3 本人（角色匹配）done 落 doneBy/doneAt
+  ✓ 60.3 重复 done 幂等返回现状（doneBy/doneAt 不变）
+  ✓ 60.4 PDCA：raise(open)→startFix(fixing+认领)→submitFix(recheck)→recheck fail 回炉 fixing→再 submitFix→recheck pass→closed
+  ✓ 60.4 类目集闸：集外 category → 400「不在类目集」；timeline 只增逐条在（6 条动作链）
+  ✓ 60.5 自检：读端口 4 表项 → submit 服务端算分=75（3×25，device 未过）→ 快照含 label/score
+  ✓ 60.5 today 透出 items 数组（页面已交态回显形状；与 itemsJson 同帧——片 3 复核打回件防再漏）
+  ✓ 60.5 同日重交幂等返回现状（不双写不覆盖：全 pass 重交仍 75 分同一行）
+  ✓ 60.5 店长审：listPending 含本行 → review → reviewed + reviewBy=店长
+  ✓ 60.6 巡检聚合：byStatus.closed≥1 + byCategory 排行含「卫生」+ 近 30 天 closed≥1
+  ✓ 61.1 定向发布：丽丽（groomer）list 可见且未读 + 通知落行（type/link=/notices）+ outbox 落 store 频道事件
+  ✓ 61.1 定向闸：小美（frontdesk）list 不可见 + 零通知落行
+  ✓ 61.2 已读回执：markRead 落行 + 重标幂等零双行（(announcement_id,user_id) 锚）；reads 对账=丽丽 read / 阿强 unread
+  ✓ 61.3 闭班带 handover 四节：shift_handover_logs 落行（返回 handoverId）+ washing_json 服务端快照含在洗单
+  ✓ 61.3 handoverOf 读回同一份（keysNote/washing 一致）
+  ✓ 61.3 重关幂等不双写（uq_handover_shift 锚：同班恒 1 行）
+  ✓ 61.4 心声提单：TK 日序单号 + type=staff_voice + created_via=staff + 挂我本店 + 店长待办可见
+  ✓ 61.4 回复链通：replied + timeline 追加 + 本人 ticketListMineStaff 读回 replyText + ticket.replied 通知落行
+  ✓ 61.5 publishWeek → 丽丽 notifications 落 schedule.published 未读行 + unreadCount +1
+  ✓ 61.5 markRead 后 unreadCount 回落（=发布前水位）
+  ✓ 62.1 停职即时生效：丽丽 taskExec.listToday → 403 FORBIDDEN（每请求校 staff.status，不等会话过期）
+  ✓ 62.1 恢复 active 后即恢复可用（listToday 200）
+  ✓ 62.2 改挂：丽丽未完结 2 单全换挂阿强（moved≥2，含 57.6 残留的今日在途单）+ appointments.staffId 实改
+  ✓ 62.2 留痕：staff_exit_handoffs 两行 kind 分别 appointment/boarding + 前后值快照对（丽丽→阿强）
+  ✓ 62.2 零单再调幂等 moved=0（丽丽名下已无未完结单）
+  ✓ 62.3 跨店隔离：B 店店主 recheck/reassign/archive A 店资源 → 全部查无此物（NOT_FOUND）
+  ✓ 62.3 A 店数据零变化（PDCA 仍 closed / 公告仍 published）
+
+[片4] 63. 薪资：双轨透出 / 协作拆分 / 回冲 / 工资条 / 发放留痕 / 申诉返还
+  ✓ 63.1 双轨透出：mySummary 含 laborTotalFen/salesTotalFen 且与 serviceLines/productLines 求和一致（阿强+小美双视角，分明面）
+  ✓ 63.2 collabOf 透出单信息+端口缺省建议比（commission_collab_split_default=5000bp）
+  ✓ 63.2 setCollaborators 负例：Σ≥10000 → 400 / 主操作人重复 → 400 / 越店单 → 403
+  ✓ 63.2 协作拆分：丽丽 4000bp 得 40 元（splitFrom=阿强/splitBp=4000 注记），主操作人阿强得 60 元（余数落主），合计=毛额 100 元，精确到分
+  ✓ 63.3 同月退 50%：两人 refundClawback 各按分得比精确到分（阿强 6000×50%=3000 / 丽丽 4000×50%=2000，行净额同步减半）
+  ✓ 63.3 跨月回冲：差额按分得比进本月 adjustments（主操作人=余数×50% / 协作人=分得×50%，源单时序率现算）且源月快照 total_fen 不动
+  ✓ 63.4 generateMonth 落 run+逐人 items（generated 态）+ net 逐分对账=commission+performance−deduction+adjustment
+  ✓ 63.4 重复生成幂等返回现状（同 run id，itemsInserted=0）
+  ✓ 63.4 confirmRun 两态（generated→confirmed）+ 重复确认幂等
+  ✓ 63.4 listRun（manager）透出 run+items 含员工名
+  ✓ 63.5 mySlip 本人 200（丽丽本人工资条透出）
+  ✓ 63.5 mySlip 丽丽传他人 staffId → FORBIDDEN（仅本人硬过滤）
+  ✓ 63.5 markDisbursed 落标记+重复幂等+零 pay_orders 新行（发放留痕不碰真钱实证）
+  ✓ 63.6 raiseAppeal 建行 + 同人同目标 pending 在途幂等拒（返回现状，零新增）
+  ✓ 63.6 approved → deduction.status=reverted+refund_fen=20000（返还留痕不删行）+ reviewer 落列 + 重复复核幂等拒 400
+  ✓ 63.6 rejected 案例=原扣减 active 不变（零返还零置位）
+  ✓ 63.6 listDeductions 罚单表读口：含员工名+reverted/active 两态透出（UI 区 3 数据源）
+  ✓ 63.6 appealSlaHours 读端口 service_rules.payroll_appeal_sla_hours=24（页面注记数据源）
+
+[片4] 64. XP：申报审核 / 扣分异议对冲
+  ✓ 64.1 raiseApplication 建行 + pending 不污染 xp_events（零新增）+ 同人同分值 pending 幂等拒
+  ✓ 64.1 approved → awardXp 落行（source=application/+5）+resolved_event_id 回链+月增量含 5 分
+  ✓ 64.1 rejected 案例=零事件（xp_events 仍仅 1 行 application）
+  ✓ 64.2 revoke_appeal 挂本人 penalty 事件建行 + 同事件重复申请幂等拒
+  ✓ 64.2 approved → 对冲行 +8 落（source=revoke_offset 回链）+ 原负分 −8 保留 + 合计=对冲净值 0 + 重复复核幂等拒 400
+
+[片1] 65. 账户族（资料编辑/地址/抬头/异常登录提醒）
+
+[片1] 65.1 updateProfile 资料编辑
+  ✓ 65.1 updateProfile 改昵称/生日/性别落库（返回 user 三字段一致）
+  ✓ 65.1 auth.me 读回一致（昵称/生日/性别）
+  ✓ 65.1 非法 birthday 400 明文（不存在历日 + 非法格式双闸）
+  ✓ 65.1 性别枚举外 400 明文（male/female/secret）
+  ✓ 65.1 空昵称 400（非空 1-20 字闸）
+  ✓ 65.1 传啥改啥：仅改昵称，生日/性别原值不动
+
+[片1] 65.2 收货地址 CRUD+默认
+  ✓ 65.2 create 两条（第二条 isDefault=true）→ list 默认在前 + 第一条默认被同事务清掉
+  ✓ 65.2 手机号 11 位校验（非法 → 400 明文）
+  ✓ 65.2 update 改 detail 落库
+  ✓ 65.2 remove 默认行 → 剩余第一条自动升默认（promotedId=剩余行 + list 读回 isDefault=true）
+  ✓ 65.2 他人 id 操作一律 NOT_FOUND 不透出（update/remove/setDefault 三连）
+  ✓ 65.2 setDefault 同事务清其他默认（a3 升默认 + a1 被清，list 默认在前）
+
+[片1] 65.3 发票抬头 CRUD+默认
+  ✓ 65.3 business 缺 taxNo → 400 明文「企业抬头必须填写税号」
+  ✓ 65.3 titleType 枚举外 → 400 明文（personal/business）
+  ✓ 65.3 personal 建（taxNo 恒 NULL）+ business 建默认 → list 默认在前 + personal 默认被清
+  ✓ 65.3 setDefault 换默认 + remove 默认行 → 剩余自动升默认（personal 建+setDefault+remove 链）
+  ✓ 65.3 他人 id 操作 NOT_FOUND 不透出
+
+[片1] 65.4 异常登录提醒
+  ✓ 65.4 首见设备登记 → notifications 落 security.new_device 行（新设备登录提醒，link=/settings/devices，category=account）+ security.newDevice 事件落 outbox（user 频道）
+  ✓ 65.4 同设备重登记=零新增零通知（设备行/通知行/outbox 事件三计数全不变）
+
+[片1] 66. 支付售后族（押金台账/消费记录统一入口）
+
+[片1] 66.1 押金台账全链
+  ✓ 66.1 非本店客户（无预约/会员/储值任一在店痕迹）登记押金 → 400 明文拒
+  ✓ 66.1 create 落 held + held_at 置位（在押，金额 50000 分）
+  ✓ 66.1 listMine 时点①：客户读见 held 在押 + 门店名透出
+  ✓ 66.1 markRefunding：held→refunding + refund_requested_at 置位
+  ✓ 66.1 listMine 时点②：客户读见 refunding 退还登记在途
+  ✓ 66.1 markRefunded：refunding→refunded + refunded_at 置位（idempotent=false）
+  ✓ 66.1 markRefunded 幂等重调零副作用（已 refunded 返回现状，refundedAt 不变）
+  ✓ 66.1 非 held 调 markRefunding → 400 明文（状态机硬拒）
+  ✓ 66.1 listMine 时点③：客户读见 refunded 已退还
+  ✓ 66.1 storeSummary 在押合计=Σheld+refunding 精确到分（held 30000 + refunding 12000 = 42000；refunded 50000 不计入）
+  ✓ 66.1 listStore 本店全量含三行 + 状态过滤可选（refunded 过滤仅 dep1）
+  ✓ 66.1 留痕不碰真钱实证：押金全链（create×3 + 状态推进×3）零 pay_orders 新行
+  ✓ 66.1 跨店闸：B 店店主操作 A 店押金行 → NOT_FOUND 不透出 + listStore 零透出
+
+[片1] 66.2 pay.recordsMine 三源聚合
+  ✓ 66.2 聚合三类齐（pay/order/invoice 各一）+ createdAt 倒序（发票最新在前，支付单最旧在尾）
+  ✓ 66.2 行字段齐（title/amountFen/status/link 透出，金额=各源实额）
+  ✓ 66.2 他人零透出（66d 无数据账号读不到 66c 三行任一 id）
+
+[体验片2] 67. 预约链路族（附加项/合规三件套/阶梯公示/预付/提前期/留口/疫苗/遛弯/改约史/三店标注）
+
+[体验片2] 67.1 附加项加购（价=主价+Σ附加 / 快照行 / 他店+非 addon 400）
+  ✓ 67.1 upsertService 接受 type=addon（枚举扩位，本店在架两行）
+  ✓ 67.1 前置：可约槽 ×4（>6h 可直消口径，两两间隔 ≥170min）
+  ✓ 67.1 create 带附加项：预约价=主价+Σ附加快照价精确到分（priceFen=主价+1500+3000）
+  ✓ 67.1 appointment_addons 快照行落库（2 行，name/priceFen 快照正确）
+  ✓ 67.1 详情读口透出 addons 列表（2 行）
+  ✓ 67.1 负例：他店附加项 / 非 addon 类型服务 → 400 明文「附加项无效或不属于本店」×2
+
+[体验片2] 67.2 合规三件套（协议签署快照 / 医疗授权硬闸 / 紧急联系人）
+  ✓ 67.2 两键签署落行（agreements content/version 快照工艺，user_snapshot 取证要素齐全）
+  ✓ 67.2 寄养单缺医疗授权 → 400 明文「寄养单须先签署医疗授权」（硬闸）
+  ✓ 67.2 带医疗授权+紧急联系人 → 寄养单建成（confirmed）
+  ✓ 67.2 两快照列落库+get 透出一致（emergencyContactJson 全字段 / medicalAuthJson.agreed=true+版本快照）
+  ✓ 67.2 紧急联系人手机号 11 位硬校验（非法 → 400）
+
+[体验片2] 67.3 取消/爽约阶梯收费公示（读口=端口值 / 改值即新+留痕）
+  ✓ 67.3 cancelFeeTiers 读口=端口种子值（3 档，4 小时内/爽约 30%）
+  ✓ 67.3 端口改值→读口即新（公示=只读展示不扣真费，1 档 1000bp）
+  ✓ 67.3 rule_config_versions 留痕行（domain=service 最新版含 cancel_fee_tiers 前后值）
+  ✓ 67.3 改后还原（读口回种子值，不留副作用给后续段）
+
+[体验片2] 67.4 预约即预付台账（留痕不碰真钱）
+  ✓ 67.4 prepaidRegister 落 prepaid_pending（金额快照 8800 分）
+  ✓ 67.4 uq 锚重登幂等拒（一单一笔，400 明文）
+  ✓ 67.4 prepaidConfirm → prepaid_registered + 重复确认幂等（idempotent=true 零副作用）
+  ✓ 67.4 prepaidOf 本人/本店透出 + 他店商家/他人客户 403（本人闸+店域闸卡死）
+  ✓ 67.4 客户取消联动翻 refunded（cancel 事务内联动）+ 重复取消拒且台账保持 refunded（幂等）
+  ✓ 67.4 核销联动翻 checked_deducted（checkin 事务内联动）
+  ✓ 67.4 不碰真钱实证：payments/pay_orders/stored_value_logs 三表全程零写入
+
+[体验片2] 67.5 提前预约期上限（档位口径 + 栅格/晚数按档截断）
+  ✓ 67.5 非会员（注册用户 7 天口径·片 3 裁②）约第 8 天 → 400 明文「最多可提前 7 天」
+  ✓ 67.5 暖阳档（14 天口径）约第 14 天可约（confirmed）
+  ✓ 67.5 栅格按档截断（能看=能约同帧）：注册用户全部槽 ≤ now+7d（第 8 天槽不出现）
+  ✓ 67.5 栅格等宽注记：注册用户/暖阳同窗（全部槽 ≤ now+7d 合成上限）
+  ✓ 67.5 boardingAvailability 晚数按档截断（注册用户 8 晚 / 暖阳 10 晚全量）
+
+[体验片2] 67.6 跨店满档推荐留口（单店·防假推荐）
+  ✓ 67.6 fullAlternatives 形状定死（enabled=false + candidates 空 + note=端口注记）——防假推荐
+  ✓ 67.6 note 读端口（改值即新）
+  ✓ 67.6 还原（note 回种子值，不留副作用）
+
+[体验片2] 67.7 疫苗证明（留证不改寄养硬闸）
+  ✓ 67.7 /api/upload relDir=vaccine/<petId> 白名单放行（200 + 签名 URL）
+  ✓ 67.7 pet.upsert 写 vaccineProofUrls（响应透出 1 张）
+  ✓ 67.7 pet.list 回读 vaccineProofUrls 一致
+  ✓ 67.7 前置：咪咪无疫苗证明（留证对照组）
+  ✓ 67.7 寄养下单校验口径不变（无疫苗证明不拦，仅留证；行为变更报备在案）
+
+[体验片2] 67.8 遛弯次数/合笼房型（寄养特殊选项）
+  ✓ 67.8 合笼房型行新增后 boardingAvailability 各房型逐晚余量独立（标准间=已订 2 间余 0 / 合笼=满额 1）
+  ✓ 67.8 boarding create 带 walkTimesPerDay=2 落列+详情透出一致
+  ✓ 67.8 grooming 传 walkTimesPerDay → 400 明文（仅寄养单可填）
+
+[体验片2] 67.9 预约状态时间线（改约历史留痕）
+  ✓ 67.9 reschedule 两次 → reschedule_logs 两行 before/after 正确 + byRole 正确（customer→merchant）
+  ✓ 67.9 get 透出 rescheduleLogs 按 createdAt 升序（两行，首=客户改期）
+  ✓ 67.9 取消后改期仍拒（400 不可改期）且零新增留痕行
+
+[体验片2] 67.10 选门店三店通用标注（copy 注记 + listNearby 回归）
+  ✓ 67.10 copy 键存在（booking.storeCountNote 三店通用注记 / booking.fullAlternativesNote 满档留口注记）
+  ✓ 67.10 端口可覆盖（save 改键→activeCopyTexts 即新值）
+  ✓ 67.10 还原（读口回种子值，不留副作用）
+  ✓ 67.10 listNearby 仅 active 店（closed 店不出现；三店通用=通用范围以 active 门店列表为准）
+
+[片3] 68. 会员族（未用权益/续费优惠/生日礼/新人礼包/会员码）
+
+[片3] 68.1 未用权益
+  ✓ 68.1 myUnused：次卡余额并显（passTimes=5）+ 不并账注记 + grants 含次数型行与注册 welcome_pack 行
+  ✓ 68.1 consume 台账核销：2→1→0 翻 exhausted，归零后再核销 400 明文（不碰钱域）
+
+[片3] 68.2 续费优惠试算
+  ✓ 68.2 端口改 renew_discount_bp=8000 → version+1 留痕 + quote renewal=全价×bp/10000 精确到分（19900×0.8=15920）
+  ✓ 68.2 端口改值留痕行在案（rule_config_versions 含 plan_yinghuo 前后值）
+  ✓ 68.2 缺键回落 10000=无优惠（renewal.amountFen=全价 19900）
+  ✓ 68.2 复原后 quote 回种子口径（bp=10000，试算=全价）
+
+[片3] 68.3 生日礼
+[perk] 生日礼扫描 2026-10-08：主人 1 行 / 宠物 1 行
+  ✓ 68.3 birthday=今日（MMDD 匹配）→ grants 双行（birthday_owner year 入锚 + birthday_pet pet_id 入锚）+ notifications marketing 双行
+  ✓ 68.3 同年重扫零新增（幂等锚：grants/通知计数全不变）
+
+[片3] 68.4 新人礼包 + 升级礼遇
+  ✓ 68.4 新注册（devLogin 建档）→ welcome_pack 资格行 + notifications marketing 行（资格留痕不真发）
+  ✓ 68.4 重复注册零重复（welcome_pack 仍 1 行）
+  ✓ 68.4 夹具：在售商品可取（供 68/69 族共用）
+  ✓ 68.4 首单 pending→paid 翻转（mock-callback 真回调链）→ upgrade_gift 资格行（source_id=首单 id）
+  ✓ 68.4 重复回调 + 次单 paid 零重复（upgrade_gift 仍 1 行）
+
+[片3] 68.5 会员码
+  ✓ 68.5 非会员签发 → 400 明文「非会员无会员码」（直插库未经 HTTP 注册=无连带落档）
+  ✓ 68.5 myCardToken 签发（5min 时效）→ verifyCardToken 收银台核验通过 + planKey/档名透出（注册用户）
+  ✓ 68.5 篡改签名 → 400 明文「签名不符」
+  ✓ 68.5 过期 token（合法签名）→ 400 明文「已过期」
+
+[片3] 69. 商城族（券/收藏/晒单/配送/超时收货/叠加公示/涉钱零通道）
+
+[片3] 69.1 优惠券
+  ✓ 69.1 couponTemplates 在售券模板透出（三券在列）
+  ✓ 69.1 领取 → claimed 落行 + uq 锚幂等（重复领=返回现状 idempotent 零新增）
+  ✓ 69.1 availableCoupons 按门槛过滤（5000 分单：满10减5 在列 / 满100减20 不在列）
+  ✓ 69.1 myCoupons 本人台账透出（claimed 行+券模板联表）
+  ✓ 69.1 couponUse 核销=仅 grant 翻 used 登记 order_id（orders.total_fen/payments 前后零变动——不接真抵扣实证）
+  ✓ 69.1 couponUse 幂等重调=返回现状（idempotent=true）
+  ✓ 69.1 配额满 400 明文（quota=1：首领成 / 次领拒「已领完」且事务回滚零落行）
+
+[片3] 69.2 收藏
+  ✓ 69.2 toggle 收藏 → fav=true + favCheck 同帧 true + favList 含该商品（联表快照透出）
+  ✓ 69.2 再 toggle → fav=false（uq 锚幂等删）+ favCheck/favList 同帧
+  ✓ 69.2 复加 → fav=true（删后重插幂等锚不残留）
+
+[片3] 69.3 商品评价晒单
+  ✓ 69.3 pending 单评价 → 400 明文（未收货不可评）
+  ✓ 69.3 received 单可评落行（rating=5）
+  ✓ 69.3 复评 → 409 明文（一单一件一评 uq 锚）
+  ✓ 69.3 他人订单评价 → 403（本人闸）
+  ✓ 69.3 均分聚合正确（5+3→avg 4.0，total=2）+ 匿名匿名录名（anonymous 行昵称不透出=「匿名用户」）
+
+[片3] 69.4 配送方式
+  ✓ 69.4 pickup 落列 + 地址可缺省（address=null）
+  ✓ 69.4 缺省 express（传地址不带 deliveryMethod）
+  ✓ 69.4 express 缺地址 → 400 明文「须填写收货地址」
+  ✓ 69.4 读口透出（listMyOrders 行带 deliveryMethod：pickup 单=pickup / 缺省单=express）
+
+[片3] 69.5 超时自动收货
+[mall] 超时自动收货：本轮翻转 1 单（阈值 7 天）
+  ✓ 69.5 shipped_at=8 天前单 → 扫描翻 received + OrderReceived 事件落 outbox；7 天内（6 天）单不动
+  ✓ 69.5 幂等：重扫零新增（sweep=0）+ 已翻单 receiveOrder 并发硬拒 400（条件更新互撞零副作用）
+  ✓ 69.5 物流半程注记透出（shipped 单 trackingNote=「物流轨迹以快递公司为准」）
+
+[片3] 69.6 券叠加规则公示
+  ✓ 69.6 缺省公示口径（rule=none + note + source 明面）
+  ✓ 69.6 端口改值 → 读口即新（rule=with_member_discount）+ 留痕行在案
+  ✓ 69.6 复原公示口径（rule=none）
+
+[片3] 69.7 涉钱零真通道
+  ✓ 69.7 69 族全链 cashier_bills/payments/rebate_accounts/pay_orders 计数前后相等（券/收藏/晒单/配送/超时收货零真通道）
+
+[体验批片4] 70. 宠物域：档案扩字段 / 全局切换 / 健康记录族 / 体重时序
+  ✓ 70.1 pet.upsert 新建带芯片号/花色落库（created=true + 两列回读）
+  ✓ 70.1 编辑改花色+芯片号保留（部分字段更新不覆盖空缺列）
+  ✓ 70.2 setActive 落库 + auth.me 透出 activePetId（全局切换数据源）
+  ✓ 70.2 越权切换他人宠物双向 403
+  ✓ 70.2 清除选定（null）幂等回落
+  ✓ 70.3 记录落库 + 发生日期晚于今天 400 + 他人宠物建档 403
+  ✓ 70.3 列表全量 2 行 + 类型过滤 vaccine 仅 1 行
+  ✓ 70.3 删除生效（剩 1 行）+ 他人删除 403
+  ✓ 70.4 体重两行升序 + pets.weight_kg 快照=最新称重日值（历史补录不覆盖）
+  ✓ 70.4 overview 聚合读口（档案+记录 1+体重 2）+ 他人 403
+
+[体验批片4] 71. 服务过程+通知：异常通报 / 升级 / 拆封 / 安心卡 / 定时推送族
+  ✓ 71.1 incident.report 落行（type=stress + handledAt=null 待处置）
+  ✓ 71.1 双通知同事务落行（主人+店主各一条 incident.reported，link 带 #incident 锚避同刻聚合）
+  ✓ 71.1 listForAppointment 本人可见（live 页高亮条数据源）+ 非当事人=NOT_FOUND（片 2 裁件①防探测口径，断言同步）
+  ✓ 71.1 状态闸：pending 单填报 400；客户无 staff 身份填报 401/403
+  ✓ 71.2 markHandled 落列+incident.handled 通知主人+重复处置幂等（alreadyHandled=true 零副作用）
+[care] 异常通报升级 incident=01M4E1YPRTPQ742W2T0FNTDTHQ（超 15 分钟未处置）
+  ✓ 71.3 超 15 分钟未处置 → 升级扫描置 escalated_at + 主人/店主双通知（incident.escalated）
+  ✓ 71.3 升级幂等：escalated_at 锚重扫零增量（主人仍 1 条）
+  ✓ 71.4 用品拆封落痕 + 主人即时通知（boarding.unsealed，link 带 #unseal 锚）
+  ✓ 71.4 安心卡读口聚合（房间/入住体重/拆封留痕 1 条/宠物名）+ 他人 403
+  ✓ 71.6 早安播报落行（含当日打卡摘要「遛放 2 次」）+ 同窗重扫零增量
+  ✓ 71.6 晚安播报另起一条（同槽不同行=早/晚各一）+ 重扫零增量
+  ✓ 71.7 4h 照护提醒：超期间隔 → 本店在职员工全员各一条（boarding.careRemind）+ 间隔内重扫零增量
+  ✓ 71.8 到期双源各落一条（疫苗字段源 pet.vaccineDue + 记录源 pet.healthDue）+ 当日当项幂等重扫零增量
+
+[体验批片4] 72. 明细透出 / 电话公示 / 工单升级 / 静态闸门
+  ✓ 72.1 detailSheet：分项时长（消毒步 600s/中文名/进行中步 duration=null）+ 用料透出（耗材名×1）+ 非当事人=NOT_FOUND（片 2 裁件①防探测口径，断言同步）
+  ✓ 72.1 无耗材扣减单 materials=空数组（诚实空态口径）
+  ✓ 72.2 listNearby 透出门店电话（种子值 0571-88886666；ContactStore/AppDock 数据源）
+  ✓ 72.2 门店电话维护口：owner 改值生效 + 非 owner 403（带端口出生）
+  ✓ 72.3 ticketEscalate：status=escalated + escalatedAt/Note 落列 + timeline 追加 escalated + 店主通知 + 店长待办含升级件
+  ✓ 72.3 重复升级幂等 + 他人升级 403 + 升级后店长可回复（escalated→replied）
+  ✓ 72.3 已关闭工单升级硬拒 400（仲裁=在途件语义）
+  ✓ 72.4 色板闸门：柠檬黄（已退役 v1.1 主色）在 customer/customer-mini/shared 源码全域零命中（VI V3 深棕主体）
+  ✓ 72.5 空态闸门：六页 EmptyState 引用全命中 + 骨架三件导出在仓
+  ✓ 72.5 骨架闸门：客户端骨架组件引用面 ≥10 个 tsx（广泛应用回归钉）
+  ✓ 72.6 PWA 闸门：navigateFallback→/index.html 壳（API 前缀豁免）+ offline.html 品牌离线页在仓 + 安装引导（beforeinstallprompt/appinstalled）+ App.tsx 已挂载
+
+[体验批片5] 73. 尾牙读口 5 件（前后值+对账）
+  ✓ 73.1 储值负债聚合：本金/赠送分列前后值 +50000/+5000，合计+55000，户数+1；clerk 403
+  ✓ 73.2 回馈金负债聚合：新会员开户 25800 → 负债 +25800，账户 +1
+  ✓ 73.3 昨日营收：日期=昨日 + 夹具单 +8800 前后值 + 与 financeStats 同区间 serviceFen 同值（同源对账）
+  ✓ 73.4 近 14 日 spark：14 格 + 昨日格与 yesterdayRevenue.totalFen 同值（同源）
+  ✓ 73.5 差评聚合：总评 +2 / 差评 +1（≤2 星界值）/ 近十条含新差评行（未回复态）
+
+[体验批片5] 74. 报表读口 D1-D9 / N1-N6（前后值+形状）
+  ✓ 74.1 D1：收现口径 cashFen +12800（夹具散客单）+ 分摊口径字段在 + 会员散客分拆 nonMemberFen +12800 + byDay 下钻序列在
+  ✓ 74.2 D2：byService 聚合 + 搭售率前后值（有附加项单 +1/总单已在 74.1 入月 delta=0）+ 附加项金额 +3000
+  ✓ 74.3 D3：新增 +1（plan_zhuguang 档）+ 存量/活跃率字段在
+  ✓ 74.4 D4：售卡充次 +10 / 扣次当月 +2 / 剩余次数负债 +4（次数口径）+ 趋势 6 格
+  ✓ 74.5 D5：本月充值 +11000 + 期末负债字段 + 预收负债总额=储值负债+回馈金负债（恒等式）
+  ✓ 74.6 D6：笔数/金额/类型分布+驳回率 1/2+原因聚类（服务不满意/价格争议）+环比增幅越过 30% 阈值预警亮
+  ✓ 74.7 D7：员工行（丽丽）差评率/报告时效/复购率/申诉数列在 + guard 两件配齐透出
+  ✓ 74.8 D8：宠物夜数前后值 +3（跨月交叠 3 晚）+ 入住率/每宠物夜营收/搭售率/超期字段在
+  ✓ 74.9 D9：成交单销量 +2 / 销售额 +11800 + 动销率/周转字段在
+  ✓ 74.10 N1：plans 四档 + 存量/新增/退出/升降级字段 + cohort 数组 + 74.3 夹具档新增可见
+  ✓ 74.11 N2：到期 cohort 前后值（到期 +3=两夹具+预警户同窗口 / 顺延续费 +1）+ 预警名单含 15 天后到期户 + 回本率结构在
+  ✓ 74.12 N3：期次行 发行/核销前后值 +1000/+300 精确（2099-01 期次套内已有夹具，钉 delta） + 期末负债=账户余额（25800 夹具含）+ 核销率字段在
+  ✓ 74.13 N4：差评回复落列（repliedAt+tags）+ 回复率/标签聚类/分布字段透出
+  ✓ 74.14 N5：完成单 +1 + 报告时效桶 within120 +1（60min 夹具）+ 照片覆盖/抽检字段在
+  ✓ 74.15 N6：gate.appealChannel/correctionLog 双 true（附录 B 两件配齐点亮）+ 员工行差评率/时效/复购/申诉列在
+
+[体验批片5] 75. 写口与闸（差评回复/N6 申诉/埋点/导出/导入/回馈金列）
+  ✓ 75.1 差评回复闸：标签越集 400 + clerk 403
+  ✓ 75.2 申诉入队 pending + 同人同目标幂等 duplicated + 审批队列可见（审批中心数据源）
+  ✓ 75.2 复核负例：approved 缺 correction 400（兜底留痕铁规）+ rejected 缺 note 400
+  ✓ 75.2 approved → correction_json 留痕 + 员工通知落行 + N4 纠错扣减读口径即时生效（correctedCount +1）+ 重复复核 400
+  ✓ 75.3 埋点预埋：曝光/组件点击/核销回传三件落库（stats 前后值各 +1）+ 非法 eventType 400
+  ✓ 75.4 CSV 导出=仅店主（manager/clerk 403）+ BOM 表头 + 真值行（12800 夹具在文）+ N7/N8 枚举外 400
+  ✓ 75.5 模板六列形状 + 预览失败行回显（行 3 价格非法）零写入 + execute 失败行 400 零落账零批次行
+  ✓ 75.5 全量合法 → 落账 +2 商品 + 批次行留痕（okRows=2/failRows=0）+ clerk 403
+  ✓ 75.6 商城订单回馈金列透出真值（deduct 联单号=500）+ 无抵扣单=0（诚实零值）
+
+[端口V2] 76. 注册表扩列 / 屏分组数据源 / 位置注留口
+  ✓ 76.1 copy_overrides 扩 screen/position 落库（list 透出）+ 归屏率 >90%（军规 <10%）+ 已知键屏值抽查
+  ✓ 76.2 位置注留口：config.save 带 position 改注即生效 + screen 沿用（字典写死不丢）
+  ✓ 76.2 改文案不带 position → 位置注与屏名双沿用（save 新行归属不丢）
+  ✓ 76.2 高危口令闸零回退：高危键无 confirmedHighRisk=400
+  ✓ 76.3 activeCopyTexts 形状不变（3888 行 key→text，不透 screen/position 元数据）
+  ✓ 76.4 未归屏诚实组存在且 <10%（生成器扫不到的字典未覆盖键，排末注记的数源）
+
+[体验批片6] 77. rail 十九口转正 / dock「设置」转正（wnav 归并注册）
+  ✓ 77.1 「运营 · 审批中心」一口转正（wnav.ops 键值逐字）+ 批次扩口组签/注记 4 键全库零残留
+  ✓ 77.2 dock 第五槽「设置」转正（wnav.dockMe 键值逐字）+ 注记键 wnav.dockMeNote 撤除 + 商家端 wnav 域「我的」零残留（员工端 sk.* 不动）
+
+[商家端片1] 78. 双店互盲六组 / 分级管理员 / 两层模型+留口（连锁地基）
+  ✓ 78.1 互盲①预约：B 列表=0 行（A 店单零透出）+ B 按 id 取 A 店单=NOT_FOUND（片 2 裁件①统一防探测口径，裁定已落）
+  ✓ 78.2 互盲②收银：B 流水=0 行 + B 取 A 店单=NOT_FOUND（片 2 裁件①统一防探测口径，裁定已落）
+  ✓ 78.3 互盲③会员账务：B 储值批次=0（A 批次不透出=0050 补漏生效）+ A 本域批次≥1（写口落 storeId+同域可见）+ B 次卡=0 + B 售卡实收=0（cash 侧零混入）
+  ✓ 78.4 互盲④报表：B 收现/散客分拆全零（A 夹具单零混入）+ B 档变事件 0/0 而 A≥1（membership_events 店域收窄补漏实证）
+  ✓ 78.5 互盲⑤员工排班：B 花名册=仅 B 店长 1 行（小美/阿强/丽丽零透出）+ B 班次模板=0（A 店模板零透出）
+  ✓ 78.6 互盲⑥商品库存：B 商品 total=0 + B 库存流水=0 行（A 店零透出）
+  ✓ 78.7 分级管理员：老板 A 全域=[A 店+A2 辖店]（两层 hqId 透出）/ 独立店主 B=[B] / 店长 B=[B 本店]（staff.store_id 绑定闸）+ 店长读 A 店报表 cash 侧零混入
+  ✓ 78.8 两层模型：hq_id 回填=自身（种子主店+B 店）+ A2 归属 A 店 + 二次回填幂等 0 行 + 全量 hq_id 非空 + store_type 全=store（缺省）
+  ✓ 78.8 留口字段在列：staff.extra_store_ids / memberships.home_store_id / stored_value_import_batches.store_id / stores.store_type+hq_id（PRAGMA 实证）
+
+[商家端片2] 79. 裁件三件随带 / 三店六项日报 / 报表三视图 / 配置分层 / 克隆+E1
+  ✓ 79.1 换绑店域：B 店主不见 A 店申诉（归属店过滤生效）+ 平台件（NULL=无归属店）=老板/店长全店可见可受理（就近受理口径）+ 跨店审批=NOT_FOUND（裁件①同口径）
+  ✓ 79.2 forUser 本店客户闸：B 查 A 店客户=NOT_FOUND（档位/余额不透出）+ A 查本店客户=过
+  ✓ 79.3 三店六项日报：分栏含 A+A2 + 合计=逐项算术和 + A 行营收=todayTenderStats 同源（computeDayTender 出口对账）+ manager 403（owner 读口）
+  ✓ 79.4 报表三视图：合计（scope=chain）=A 单店+A2 单店算术和（A2 零值）+ 越界选店=NOT_FOUND（防探测）
+  ✓ 79.5 配置分层①：save scope=store 落门店覆盖行（store_id=A 透出）+ 解析序=门店行优先/他店仅总部行/NULL 入参仅总部行（resolveScopedRules 函数级实证）
+  ✓ 79.5 配置分层②：全键组门店覆盖生效期 A 店引擎在/B 店回兜底（null）→ hq 全键同值复辟 B 店恢复 + copy 中央件传 scope=400 明文
+  ✓ 79.6 克隆：结构克隆=服务全复制+商品全复制[stock 归零]+不带数据（预约 0/会员 0）+归属/分组落值 + 越界源店=NOT_FOUND
+  ✓ 79.6 E1 维护：store.update 电话/分组/归属三参落值 + hqId 越界=400 明文（老板全域闸）
+  ✓ 79.7 隔离族不回退：B 预约/收银仍 0 行 + B 花名册仍仅 B 店长（片 2 全量改造后互盲不破）
+
+[商家端片3] 80. 收银台 18 件（折扣精度/抹零/挂账/现金收支/交接班族/台账/按晚明细）
+  ✓ 80.1 裁件④：clerk 读本店预约详情=200 放行（权限补齐）+ B 店 clerk 跨店=NOT_FOUND（裁件①不回退）
+  ✓ 80.2 折扣精度①：percent 90 对 100.05 元单 → 折后 90.05（round-half-up：9004.5→9005）折扣 10.00 精确到分
+  ✓ 80.2 折扣精度②：amount 立减 0.05 精确 + 优惠超非预约行合计=400 明文（percent 闸门 manager 可放行照案）
+  ✓ 80.3 挂单增强：单级备注落库透出（挂账对象登记=挂账注记合法位）+ 单品备注行透出（参与小票数据源）
+  ✓ 80.4 快捷收款：custom 行 settle=66.00 精确落单 + 商品库存零扣减（不进库存域）+ 已收 tender +6600（前后值）
+  ✓ 80.5 抹零：jiao 档 100.67→100.60（让利 0.07）/ yuan 档 →100.00（让利 0.67）/ none 复原不抹——rounding_fen 落库精确到分（退货不读取=refund 不调经 computeAmounts，码径写死登记）
+  ✓ 80.6 挂账：credit 段落台账 open 40.00（tender 仅 +6000 现金段=不计已收）+ 超余额结清 400 + 部分→结清状态机（2500→1500）+ 核销仅 owner（manager 403）+ 记录不可删（无删除端点）
+  ✓ 80.7 现金收支：paid_in 2000/paid_out 500 台账落行（事由必填留痕）+ 本班流水可读
+  ✓ 80.8 交接班族①：盲交 preview 不透账面（stats=null）+ 超阈值无说明=400 + 带说明冻结（账面=流水现金+调整额 1500 精确）+ 非现金实点落列 + 折扣/抹零单列进交班快照
+  ✓ 80.8 交接班族②：备用金点交 float_fen=50000 透出 + 非接班人确认 403 + 接班人确认落列（双方签字口径）+ 开班备用金默认额 500 落列（端口留口）
+  ✓ 80.9 授权台账：本店签署记录可读（含 67.2 医疗授权行）+ 周会导出 CSV（BOM+固定列+行数一致，仅 owner 闸照案）
+  ✓ 80.10 订金押金留痕透出：预付台账本店列表可读（67.4 联动行在：prepaid_pending/registered/refunded 任一态）+ 押金台账读口既有（66.1 已核）
+  ✓ 80.11 S13 按晚明细复走：寄养行透出 总晚 3/已住 1/剩余 2/晚单价 19900（floor 59700÷3 残余归已住——与 refund 同源件 computeNightBreakdown）
+  ✓ 80.12 隔离族不回退：B 流水/挂账台账/现金收支仍全 0（片 3 全量改造后互盲不破）
+
+[商家端片4] 81. 库存域+调拨要货（毛利闸/批次效期/FEFO/采购报损/调拨成对）
+  ✓ 81.1 毛利权限隔离：owner 读成本/上下限三列有值 + clerk 读同品三列全 null（server 闸零透出，双层口径）
+  ✓ 81.2 上下限预警：stock 2<min 5 出缺行 + 建议量=max 30−2=28 精确
+  ✓ 81.3 缺货禁售·估清：估清 stock 归零（流水留痕）+ 商城下单拒（stock>=qty 既有闸）+ 恢复补货回 10（前后值）
+  ✓ 81.4 批次：效期自动=生产+保质 300 天（expiry 精确）+ 临期分级（≤30 天=warn 徽）+ 效期看板含行
+  ✓ 81.5 FEFO：先到期先出建议=旧批 B20260101（效期升序首行）+ 建议序两批按效期排
+  ✓ 81.6 过期隔离/销毁：隔离批次 qty 同步扣出商品库存（20+10−3=前后值精确）+ 销毁登记（状态+qty 清零留痕）
+  ✓ 81.7 报损：当场录入进审批队列 + 批准扣库存（前后值 −2 精确）+ 报损单 approved+留痕
+  ✓ 81.8 采购全链：建单 draft→提交审批→批准→收货入批（批次 PO202610 ×12 生成+库存前后值 +12+成本回写 11500+流水）
+  ✓ 81.9 期初导入：CSV 带尾列落三值（进价 3250/下限 10/上限 80+stock 40）+ 失败行零落账（全量或零口径）
+  ✓ 81.10 要货：建议量=max 80−40=40 精确 + 申请→审批→履约入库（前后值 40+40=80）
+  ✓ 81.11 调拨成对确认：越界目标店（B 独立店）=NOT_FOUND + 发起→审批→发货（A 前后值 −3 在途归属）+ 在途视图含行 + A2 接收（名匹配建/补行 +3，双侧流水）
+  ✓ 81.12 审批中心：四类 pending 计数同族（rail 角标合并口径随扩数据源）+ 审批后递减 + 驳回留痕（timeline 只增）
+  ✓ 81.13 隔离族不回退：B 批次/预警/调拨全 0 + B 审批 A 店单=NOT_FOUND（统一防探测）
+
+[商家端片5] 82. 会员营销+报表+找回两件（标签/券矩阵/活动/支出台账/换货待检）
+  ✓ 82.1 会员标签：打标落行 + 同类覆盖写（species dog→cat 单行）+ 按类值筛选
+  ✓ 82.2 券矩阵+定向发放：类型 birthday 建券落列 + 定向（pref=vip）人群匹配=1 + grants 落行 + 二遍幂等不发 + 台账留痕
+  ✓ 82.3 生日营销：配置面档位透出（birthday_perk_tier=500 分留口）+ 提醒名单/台账读口形状（不造假发注记）
+  ✓ 82.4 活动配置：满减件排期当日=effectiveStatus active + 未来件=scheduled（排期状态机懒算留痕）+ 互斥逐项公示四键在（券×会员/活动×券/活动×会员/多活动，默认 none）
+  ✓ 82.5 支出台账：房租+工资入账 + 月汇总 totalFen 前后值精确（含 byType 分列）+ 删除仅 owner（manager 403）
+  ✓ 82.6 周报：本周 vs 上周环比形状（byDay 自周一连续铺洞至今日）+ 月报对账 + 周报 chain 聚合≥单店（三店读口已在=片 2 地基点亮）
+  ✓ 82.7 排行+滞销：ranking qty 降序 top + 滞销=月零销+在库（排行外 on 品入列，诚实零值）
+  ✓ 82.8 快照留档：owner 建月快照 + 列表读回 payload 原值（永久留存注记=无清理任务）
+  ✓ 82.9 R3 换货差价补退：台账登记（差价 +30.00=客户补收）+ 状态机 applied→confirmed→settled（留痕不碰真钱）
+  ✓ 82.10 R4 退货待检：待检=pending 台账标记层（注记不动直回链）+ 不合格→failed+报损扣减（stock 前后值 −2+流水 source=inspection_fail）
+  ✓ 82.11 commission 历史时序：computeMonth 走店域收窄路径（本店行+总部行入算，他店覆盖行不入算）+ 月载形状不破（staffId/month 锚对）
+  ✓ 82.12 隔离族不回退：B 标签/券/活动/支出/待检全 0（营销域新店域闸全绿）
+
+[端口批片1] 83. 配置端口增补（回滚/定时/二级审批/kill/自动回滚/字典帮助）
+  ✓ 83.1 配置回滚：目标版本整行恢复 active（值=v1 原值）+新版本行版本号递增
+  ✓ 83.1 回滚≠改历史：原 v1/v2 行全部在库未改写（只增不改）
+  ✓ 83.1 幂等拒：值与当前一致=400 / 目标版本不存在=400
+  ✓ 83.1 回滚留痕：rule_config_versions note=rollback:（谁/何时/前后值）
+  ✓ 83.2 定时生效登记：当前值不变（days=7）+待生效行 scheduledPending+scheduledId 透出
+  ✓ 83.2 到点懒切换：sweep 推进新值生效（days=9）+登记行 applied+重扫零增量
+  ✓ 83.2 切换留痕：note=scheduled-applied（before=旧值/after=定时值）
+  ✓ 83.2 撤销待生效件=superseded 且当前值不动（days=9）/时点不晚于当前=400
+  ✓ 83.3 涉钱键发起=值未落库（仍 365）+approval_requests kind=config pending 在队列
+  ✓ 83.3 非涉钱键走审批口=400（明文引去直存）
+  ✓ 83.3 复核通过才生效：days=180 落库+留痕 note=approved-apply（changedBy=发起人）+审批单 approved（manager 复核 timeline）
+  ✓ 83.3 驳回不落库（days 仍 180）+已处理审批重复处理=400
+  ✓ 83.4 kill switch 开：页面显著态数据源 on+可关参数瞬时回落安全值（线上通道=关）
+  ✓ 83.4 恢复：通道回读 true+killStatus off+切换留痕 note=kill-switch
+  ✓ 83.5 异常自动回滚：窗口错误越线→回滚至上一版（值回原）+告警通知+留痕 note=auto-rollback
+  ✓ 83.5 幂等：机器工序行不作嫌疑+当前值==回滚目标→重扫零增量
+  ✓ 83.6 参数字典：service 域键注册（0059 三键在内）+字段字典注合成（minutes=分钟数）
+  ✓ 83.6 帮助注覆盖留口：cfghelp.pay_timeout_minutes 端口值优先（字典+规则行两处透出）+涉钱标
+  ✓ 83.6 字典搜索：q=kill 命中 kill switch+copy 域不入字典
+  ✓ 83.7 权限闸：rollback/setKillSwitch/proposeChange/dictionary manager 403+复核口 clerk 403（83.3 manager 可复核=对照）
+  ✓ 83.8 中央件定时件传 scope=400（中央件不分层口径不回退）
+  ✓ 83.8 总部定时件：新行 store_id=NULL（总部下发）+当前值不动
+
+[端口批片2] 84. 数据 3+运营内容 2（批量编辑/订正审批/回收站/公告两步流）
+  ✓ 84.1 批量编辑：白名单五字段落库（stock/价/描述/上下限）+bulk_edit 流水前后值留痕
+  ✓ 84.1 网格闸：价签仅店主（manager 403）/manager 改库存放行/白名单外字段（costFen 涉账）strict 400
+  ✓ 84.1 安心包=独立域只读件不进网格（400）
+  ✓ 84.2 订正·储值：发起不落库（pending 帧余额不动）+复核通过才生效（本金+500）+流水前后值留痕
+  ✓ 84.2 驳回不落库（余额仍 +500 帧）
+  ✓ 84.3 订正·回馈金：balanceFen 绝对值修正（+260）+rebate_logs type=correction 前后值留痕（sourceId=订正单）
+  ✓ 84.4 订正·工时：打卡时刻改值生效+attendance_approvals type=adjust 留痕行（同 managerAdjust 工艺）
+  ✓ 84.5 商品软删：管理/公开 list 双不见+回收站在列
+  ✓ 84.5 商品恢复：管理 list 回架+回收站出列
+  ✓ 84.5 活动软删：promoList 不见+回收站在列（restore 统一口下件验）
+  ✓ 84.5 活动恢复：promoList 回列
+  ✓ 84.5 重复删除=400 明文（幂等口径）
+  ✓ 84.6 两步流新建=草稿：staff 不可见+manager 列表 draft 章在列
+  ✓ 84.6 发布步：staff 可见+定向通知落行+重复发布=400（两步流状态机）
+  ✓ 84.6 起止窗口懒算：已截止/未到点双不可见（员工读口 startsAt≤now≤endsAt）
+  ✓ 84.6 起止倒置=400（publish 兼容直发起止可空照跑 61 族口径）
+  ✓ 84.6 公告软删：manager list 不见+回收站在列
+  ✓ 84.7 权限闸：bulk clerk 403/deleteProduct manager 403/correction.propose manager 403/recycleBin list+restore manager 403/saveDraft clerk 403
+  ✓ 84.8 隔离族不回退：B 回收站/订正队列全 0+B 恢复 A 行=NOT_FOUND+B 网格 A 行=NOT_FOUND
+
+[端口批片3] 85. 画布端口+薪资调整+聚合扫码闭环
+  ✓ 85.1 注册表种子 18 块（home 9/memberCenter 8/cashierMarketing 1，白名单三屏）
+  ✓ 85.1 白名单闸：未知块 400（自由排版不做）/缺块不完整排列 400
+  ✓ 85.1 两步流：draft 不透出（发布前 liveLayout=null）→ publish 后 live=v1（默认序+home.stats 隐）
+  ✓ 85.1 重排发布：v2 草稿期 live 仍 v1（draft 不透出）→发布后新序生效（live 首两位对调）
+  ✓ 85.1 回退：revert 回上一版（live=v1 默认序）
+  ✓ 85.2 试算：全员两帧（baseline/simulated）+降率至 0 全员 delta≤0 且总差值<0（美容服务本月在册）+未知键/重键 400
+  ✓ 85.3 阈值分级：≤阈值（500 分）manager 可复核通过→pay_adjustments active 落行（留痕不碰真钱）
+  ✓ 85.3 阈值分级：>阈值 manager 复核=403 明文（仅店主）
+  ✓ 85.3 大额 owner 复核过+驳回不落台账（active 行零落）
+  ✓ 85.4 同步下游：generateMonth 当月单 adjustmentFen=20500 合算（500+20000 精确到分）+net 同值（空月基线 0）
+  ✓ 85.4 只进当月未发单：已发（marked_at）月份应用=400 明文不回溯
+  ✓ 85.5 扫码闭环：verifyCardToken 核验（档=开档实档+active）→带出 userId 入单（bill.customerId=扫码会员）
+  ✓ 85.6 权限闸：saveLayout/getLayout/simulateCommission/proposeAdjustment manager 403（画布+试算+调整=owner 域）
+  ✓ 85.7 隔离族不回退：B 调整队列全 0+B 复核 A 单=404+B 店布局独立（A 店发布不透 B）
+
+[端口批片4] 86. OP-03 八件收口
+  ✓ 86.1 P1-1 注册即会员：新号自助开户=登录即成会员（membership.my 有档 active，零手动开档动作）+单档不重复
+  ✓ 86.2 P1-2 撤文案：perk.boarding/perk.boardingSub 两键全域零渲染（读口无键）+注册用户档 service_discount_bp=10000（门市价单源，无 9 折残留）
+  ✓ 86.3 P2-1 双位同值：chainDashboard todoTotal === dashboardStats todo.total（本店行+合计双位）+未来 pending 入待办（全量语义）
+  ✓ 86.4 P2-2 要货/调拨源（不传 flag=页面口径）：care_package 全排除（off 件亦不见）；raw 口传 flag=文档行为在案
+  ✓ 86.5 P2-3 公示只留人话：四条键全带 ruleLabel 中文映射（不叠加/可叠加）+映射值不含英文键名
+  ✓ 86.6 P3-2 双列数据源：defaultText=种子原文透出（已改键 默认≠生效 双值对照/未改键 默认=生效）
+  ✓ 86.7 权限闸：promoStackRules clerk 403 / manager 200（公示读口 manager 复核面）
+  ✓ 86.8 隔离族不回退（D-26 修复实证）：B 店 cookie 真查=B 店行 todoTotal=0（A 待办不透 B）+前提 A 店行 todoTotal≥1（断言有牙）+B 跨店读 A 域细目 404
+
+[会员链路片1] 87. 收银台三件（死路修通+读路径+人话化）
+  ✓ 87.1 升级死路修通：注册用户档 quote 三付费档皆可升（新购口径标）+upgrade 萤火全价 19900 成交（重起算有效期+办理店补登+补差单+upgrade 事件）+同档重放幂等零单据
+  ✓ 87.2 读路径补掉：forUser 正式通道读真值（萤火 active）+售卡对已有会员=400 人话拦截（不再撞墙）
+  ✓ 87.3 人话化：sell 拦截文案不含代码标识（membership.renew 类永不上屏）+撤牌两键出读口+新键 memberNonMember 在列
+  ✓ 87.4 补差硬校验：Σ支付段（100）≠差价（19900）=400 明文+会员档零动作（仍注册用户）
+  ✓ 87.5 frozen 档升档=400 明文（先续费解冻）
+  ✓ 87.6 权限闸：upgradeQuoteForUser clerk 403 / manager 200（读口同 sell 档）
+  ✓ 87.7 新客旁路不回退：手机号建档+售卡一气呵成（烛光 29900=档价）+档落 zhuguang
+  ✓ 87.8 隔离族不回退：B 店收银单不见 87.1 升级单（单在本店）+B 店 forUser 读 A 店客户=NOT_FOUND（店域闸不回退）
+
+[会员链路片2] 88. 线上升级 mock 域（重算/兑付/幂等/四态/拒单/权限/双域透出）
+  ✓ 88.1 升级域 quote：注册用户→萤火=新购口径全价 19900（computeUpgradeDiff 同源透出）+通道开
+  ✓ 88.1 createOrder 升级域：金额 server 重算覆盖假金额（1→19900）+paying+mock 单号
+  ✓ 88.1 幂等：同人同档当日在途重复创建=返回现状（idempotent=true/同 payNo）
+  ✓ 88.1 bizJson 留痕：fromPlanKey=plan_weiguang/newPurchase=true/petCount=0（档案值）
+  ✓ 88.1 回调全链：mock 验签兑付 → paid + memberships 新购口径换档（萤火/paidFen=19900/有效期重起算≈365 天/sold_store=NULL 线上域）
+  ✓ 88.1 留痕：membership_events upgrade 行（bill_no=NULL/meta.payNo=支付单号/online）+SSE membership.upgraded 落 outbox
+  ✓ 88.2 重放回调零副作用：idempotent=true+memberships 行数不变（=1）+upgrade 事件不增（=1）+paidFen 不变（=19900）
+  ✓ 88.2 已是目标档重复收单 → 400 人话（不重复开单）
+  ✓ 88.3 付费档升档：quote=非新购口径（newPurchase=false）+createOrder 金额=试算差价精确到分（0<差价<烛光全价 29900）
+  ✓ 88.3 兑付：萤火→烛光即时换档（paidFen=19900+差价 精确到分/到期日不动/startedAt 不动/meta.newPurchase=false）
+  ✓ 88.4 fail：升级单通道失败 → failed 留痕 + 零兑付（档仍注册用户）
+  ✓ 88.4 timeout：升级单超时 sweeper 关单 closed + 零兑付（档仍注册用户）
+  ✓ 88.4 drop+reconcile：掉单自助补开=升级兑付坐实（萤火/paidFen=19900）+再 reconcile 幂等零动作（事件不增）
+  ✓ 88.5 拒单口径：非会员收单/试算=400（请走开通页）+降级=400（期内不降级）+冻结=400（续费解冻）——全人话零代码标识
+  ✓ 88.6 权限：他人升级单 status/reconcile → 403；listMine/recordsMine 双域透出（摘要含 fromPlanKey/newPurchase）
+
+[会员链路片3] 89. 更名与限制解除（零残留/建档不限/券全员/预约提前/特权零回退）
+  ✓ 89.1 更名零残留：档位表 label=「会员档·注册用户」（rule_key=plan_weiguang 不动）+全量端口文案值零旧名
+  ✓ 89.1 货架首行口径（注册用户 · 免费 · 在册即享基础功能=端口值）+有效期永久正名（账号在即在册·永不冻结）
+  ✓ 89.2 宠物建档全员不限：注册用户连建 4 只全落（超旧档 included_pets=3 也零拦截）+有效期 2099 远端不动
+  ✓ 89.3 券全员可领可用：注册用户模板可见+领取 claimed+下单+核销 used 留痕 orderId（现闸本不限档=核闸实证，券引擎零改动）
+  ✓ 89.4 预约提前裁②：注册用户=7 天（3→7）/萤火=14/烛光=14（7→14）/暖阳=14 不动（maxAdvanceMsOf 直读端口值）
+  ✓ 89.4 注册用户第 6 天可约（confirmed；7 天口径内）
+  ✓ 89.5 特权零回退：注册用户 rebate_bp=0/service_discount_bp=10000 不动+付费三档 bp 原值+售卡提成映射键名同步（注册用户免费档=0）
+  ✓ 验收结束：7200 端口无残留监听
+[e2e] 临时库目录清理失败（Windows libsql 句柄滞后，可手工删）: C:\Users\lqb15\AppData\Local\Temp\philia-e2e-Pt3i9z Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-Pt3i9z '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-Pt3i9z'
+    at rmSync (node:fs:1282:18)
+    at cleanup (E:\KIMI code\prodhotfix\server\src\__tests__\e2e.ts:10887:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async <anonymous> (E:\KIMI code\prodhotfix\server\src\__tests__\e2e.ts:10932:3) {
+  errno: 1,
+  code: 'EPERM',
+  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-e2e-Pt3i9z',
+  syscall: 'rm'
+}
+  ✓ 种子库 data/philia.db 原样（size/mtime 未变）
+
+全链路验收全部通过 ✅
