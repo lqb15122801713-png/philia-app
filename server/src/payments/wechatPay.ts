@@ -36,7 +36,7 @@
  *   H5 无调起签名环节。
  */
 
-import type { PaymentProvider } from './provider';
+import type { PaymentProvider } from './types'; // 契约件（循环依赖开环：原指 provider 工厂件）
 
 /** 必需的微信支付环境变量（缺一即拒启动） */
 const REQUIRED_ENVS = ['WECHAT_MCHID', 'WECHAT_APPID', 'WECHAT_KEY', 'WECHAT_SERIAL'] as const;

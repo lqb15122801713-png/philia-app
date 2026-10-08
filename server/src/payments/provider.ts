@@ -12,41 +12,14 @@
 
 import { MockPayProvider } from './mockPay';
 import { WechatPayProvider } from './wechatPay';
-
-/* ------------------------------------------------------------------ */
-/* §4.7 契约接口（逐字）                                                  */
-/* ------------------------------------------------------------------ */
-
-export interface PaymentProvider {
-  /** 创建支付单，返回前端调起支付所需参数 */
-  createPayment(order: {
-    orderId: string;
-    totalFen: number;
-    subject: string;
-  }): Promise<{ paymentId: string; payParams: Record<string, string> }>;
-  /** 验签 + 解析回调（验签失败必须抛错，不允许返回半成品） */
-  verifyCallback(
-    headers: Record<string, string>,
-    rawBody: string,
-  ): Promise<{ paymentId: string; orderId: string; paidFen: number }>;
-  /**
-   * 查单（批次 6 补缺大批 · reconcile 自助补开用）：
-   * 按通道侧支付单号查询支付结果；mock=回本地通道状态，wechat/alipay=TODO 规格骨架。
-   * status='paid' 时必须带 paidFen（业务侧据此做金额核对红线，不符拒兑付）。
-   */
-  queryOrder(paymentId: string): Promise<{ paymentId: string; status: 'paid' | 'unpaid'; paidFen?: number }>;
-  /** 退款（v1 仅接口占位） */
-  refund(paymentId: string, amountFen: number): Promise<void>;
-}
+/* 契约类型自 types.ts 迁入（循环依赖开环：实现件→types←工厂，闸=no-circular）；
+   本文件 re-export 保持既有引用路径零改动 */
+import type { PaymentProvider, PaymentProviderName, ResolvedPaymentProvider } from './types';
+export type { PaymentProvider, PaymentProviderName, ResolvedPaymentProvider } from './types';
 
 /* ------------------------------------------------------------------ */
 /* 环境注入                                                              */
 /* ------------------------------------------------------------------ */
-
-export type PaymentProviderName = 'mock' | 'wechat';
-
-/** 带 name 的 provider，便于路由/流水落库时识别渠道 */
-export type ResolvedPaymentProvider = PaymentProvider & { readonly name: PaymentProviderName };
 
 /** 读取 PAYMENT_PROVIDER；未设置时缺省 'mock'（开发值） */
 export function paymentProviderName(): PaymentProviderName {
