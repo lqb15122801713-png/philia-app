@@ -7,8 +7,9 @@
  *   重排，零 dnd 库）+块 label+显隐 Switch+注册表 copyKeys 行内文案编辑（config.save copy 域；
  *   高危键走口令复核弹层=CopyConfigPage 工艺简化版；成功后 postMessage 预览 patch）+
  *   槽位块「当前素材」缩图（slotContentOf live 值）+「去槽位端口更换」link；
- * - 右栏 canvas-preview：iframe 真页预览（?canvasPreview=1 激活探针；dev=三端 vite 端口
- *   7100/7101，生产=spa.ts Host 前缀分端推导，选型见文件尾注）+key={reloadKey} 控制刷新；
+ * - 右栏 canvas-preview：iframe 真页预览（?canvasPreview=1 激活探针；URL 推导=纯函数件
+ *   canvasPreviewUrl.ts[会员链路片 4 D 股死链修复：生产单域路径分端分支]，三轨=路径分端
+ *   /dev 双轨/Host 前缀）+key={reloadKey} 控制刷新；
  * - philia-canvas-pick 点选反查 → 块行高亮滚动（canvas-picked-${blockKey} 类）+copy input 聚焦；
  * - 拖拽/显隐本地变更即 postMessage philia-canvas-layout（预览即变不刷新）；
  * - 「保存草稿」canvas.saveLayout /「发布」canvas.publishLayout（确认弹层，发布即 reloadKey
@@ -23,6 +24,7 @@ import { Link } from 'react-router-dom';
 import { errMsg, fmtDateTime } from '../components/staff-admin/format';
 import { Badge, Btn, Field, inputCls, Modal, numStyle, Switch, toast, ToasterMount } from '../components/staff-admin/ui';
 import { cv } from '../copy/canvas';
+import { canvasPreviewUrl } from './canvasPreviewUrl';
 import type { CanvasBlockSpec, CanvasPageKey } from '@philia/shared';
 
 type Trpc = PhiliaClient['trpc'];
@@ -39,30 +41,12 @@ const PAGE_TABS: Array<{ key: CanvasPageKey; label: string }> = [
 ];
 
 /**
- * 预览 iframe URL（选型报备）：
- * - dev（import.meta.env.DEV）：三端三 vite 端口（vite.config：customer=7100 /
- *   merchant=7101 / staff=7102）——home/memberCenter→7100，cashierMarketing→7101 /cashier；
- * - 生产：server spa.ts 按 Host 前缀分端（app.*=customer / m.*=merchant / s.*=staff）——
- *   从当前 m.* 推导 app.* 宿主；cashierMarketing 同源相对路径；推导不出落相对路径兜底。
- * canvasStore=店锚参（真页 canvasStore 查询参优先于记忆门店/首店解析，见 HomePage/
- * MemberCenterPage 接线）；canvasPreview=1=探针激活参。
+ * 预览 iframe URL（选型报备）：推导内核=纯函数 ./canvasPreviewUrl.ts（片 4 D 股抽出可测件；
+ * 三轨=单域路径分端[生产实测]/dev 截图双轨[既有]/Host 前缀[保留]），本壳只注入
+ * window.location + import.meta.env.DEV。
  */
 function previewUrl(pageKey: CanvasPageKey, storeId: string | null): string {
-  const params = `canvasPreview=1${storeId ? `&canvasStore=${storeId}` : ''}`;
-  const path = pageKey === 'home' ? '/home' : pageKey === 'memberCenter' ? '/member' : '/cashier';
-  /* dev 判定补：vite preview=生产构建（import.meta.env.DEV=false）但跑在 localhost——
-     localhost/127.0.0.1 一律走三 vite 端口口径（preview/截图双轨通用；生产真域名走 spa Host 前缀工艺） */
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  if (import.meta.env.DEV || isLocal) {
-    /* 双轨映射：nav 轨 7101→7100 / 截图轨 7131→7130（cashierMarketing=同端） */
-    const customerPort = ({ '7101': '7100', '7131': '7130' } as Record<string, string>)[window.location.port] ?? '7100';
-    const port = pageKey === 'cashierMarketing' ? window.location.port || '7101' : customerPort;
-    return `http://localhost:${port}${path}?${params}`;
-  }
-  if (pageKey === 'cashierMarketing') return `${path}?${params}`;
-  const host = window.location.hostname;
-  const customerHost = host.startsWith('m.') ? `app.${host.slice(2)}` : host;
-  return `${window.location.protocol}//${customerHost}${path}?${params}`;
+  return canvasPreviewUrl(pageKey, storeId, window.location, import.meta.env.DEV);
 }
 
 const STATUS_LABEL: Record<string, string> = {
