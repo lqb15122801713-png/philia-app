@@ -140,6 +140,9 @@ export default function MembershipPanel({
     enabled: open && member !== null,
   })
   const effStatus = (forUserQ.data ? forUserQ.data.membership : membership)?.status ?? null
+  /** 客户块身份注记=forUser 正式通道单源（会员链路小批片 1 复核暂扣件修法：与页签/徽标同帧，
+     不再读旧管道会话缓存——同屏两口径=读路径缺口修一半的违例） */
+  const effMembership = (forUserQ.data ? forUserQ.data.membership : membership) ?? null
   /** 升级页签判定：active 且存在更高档（targetPlans 非空）；微光档（free）=新购口径同亮
      「升级补差」（差价=新档全价/有效期重起算，server computeUpgradeDiff 同帧——会员链路小批
      片 1 死路修通：微光→付费=首次购卡，不再堵回售卡 mode）；frozen 档不显（先续费解冻）；
@@ -456,10 +459,10 @@ export default function MembershipPanel({
             <span className="ml-2 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
               {member.phoneMasked ?? ''}
             </span>
-            {membership ? (
+            {effMembership ? (
               <div className="mt-1 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]" data-testid="membership-current">
-                当前档「{planShortLabel(membership.planKey)}」· {MEMBERSHIP_STATUS_LABEL[membership.status] ?? membership.status} · 含宠物{' '}
-                {membership.petCount} 只 · 到期 {membership.expiresAt.getFullYear()}年{membership.expiresAt.getMonth() + 1}月{membership.expiresAt.getDate()}日
+                当前档「{planShortLabel(effMembership.planKey)}」· {MEMBERSHIP_STATUS_LABEL[effMembership.status] ?? effMembership.status} · 含宠物{' '}
+                {effMembership.petCount} 只 · 到期 {effMembership.expiresAt.getFullYear()}年{effMembership.expiresAt.getMonth() + 1}月{effMembership.expiresAt.getDate()}日
               </div>
             ) : (
               <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="membership-nonmember-note">
