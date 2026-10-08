@@ -1,0 +1,40 @@
+{
+  "checks": [
+    {
+      "name": "owner dev-login",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "帧 1 微光档：升级补差页签亮+新购口径标+售卡页签不亮（死路修通）",
+      "ok": true,
+      "detail": "{\"upgradeTab\":true,\"sellTab\":false,\"newPurchase\":true,\"sellHidden\":true}"
+    },
+    {
+      "name": "帧 2a 萤火 active：自动落「升级」页签（upgradeAvailable）+售卡不亮",
+      "ok": true,
+      "detail": "{\"active\":\"cashier-mtab-pick\",\"upgradeTab\":true,\"renewTab\":true,\"sellHidden\":true,\"upgradeSelected\":true,\"renewSelected\":false}"
+    },
+    {
+      "name": "帧 2b frozen 态注记：frozen 档升档不显（先续费解冻），UI 落续费页签",
+      "ok": true,
+      "detail": "frozen=db 置位走 e2e 87.5 已实证，本帧留注记"
+    },
+    {
+      "name": "帧 3a 纯非会员：售卡页签亮+自动落售卡（新客旁路）",
+      "ok": true,
+      "detail": "{\"sellTab\":true,\"sellSelected\":true}"
+    },
+    {
+      "name": "帧 3b 人话错误对照：已是会员售卡 400「已是会员」人话+零代码标识（membership. 永不上屏）",
+      "ok": true,
+      "detail": "{\"status\":400,\"msg\":\"该客户已是会员（续费/升档请走对应页签办理，不要重复购卡；退会后可重新购卡）\"}"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\member-link-1-evidence\\01-weiguang-upgrade-tab.png",
+    "E:\\KIMI code\\tmp\\member-link-1-evidence\\02a-yinghuo-auto-tab.png",
+    "E:\\KIMI code\\tmp\\member-link-1-evidence\\02b-renew-frozen-note.png",
+    "E:\\KIMI code\\tmp\\member-link-1-evidence\\03-sell-blocked-human.png"
+  ]
+}
