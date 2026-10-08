@@ -24,7 +24,7 @@ import { Link } from 'react-router-dom';
 import { errMsg, fmtDateTime } from '../components/staff-admin/format';
 import { Badge, Btn, Field, inputCls, Modal, numStyle, Switch, toast, ToasterMount } from '../components/staff-admin/ui';
 import { cv } from '../copy/canvas';
-import { canvasPreviewUrl } from './canvasPreviewUrl';
+import { canvasPreviewUrl, parsePreviewPortMap } from './canvasPreviewUrl';
 import type { CanvasBlockSpec, CanvasPageKey } from '@philia/shared';
 
 type Trpc = PhiliaClient['trpc'];
@@ -42,11 +42,12 @@ const PAGE_TABS: Array<{ key: CanvasPageKey; label: string }> = [
 
 /**
  * 预览 iframe URL（选型报备）：推导内核=纯函数 ./canvasPreviewUrl.ts（片 4 D 股抽出可测件；
- * 三轨=单域路径分端[生产实测]/dev 截图双轨[既有]/Host 前缀[保留]），本壳只注入
- * window.location + import.meta.env.DEV。
+ * 四轨=单域路径分端[片 4]/端口分端[急修 1008=生产真拓扑]/dev 截图双轨[既有]/Host 前缀[保留]），
+ * 本壳只注入 window.location + import.meta.env.DEV + 端口映射表（copy 端口键
+ * canvas.previewPortMap，改拓扑零代码）。
  */
-function previewUrl(pageKey: CanvasPageKey, storeId: string | null): string {
-  return canvasPreviewUrl(pageKey, storeId, window.location, import.meta.env.DEV);
+function previewUrl(pageKey: CanvasPageKey, storeId: string | null, portMap?: Record<string, string>): string {
+  return canvasPreviewUrl(pageKey, storeId, window.location, import.meta.env.DEV, portMap);
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -530,14 +531,15 @@ export function CanvasPortBody() {
               </div>
             </div>
 
-            {/* 右栏：真页预览 iframe（canvasPreview=1 激活探针；reloadKey 控刷新） */}
+            {/* 右栏：真页预览 iframe（canvasPreview=1 激活探针；reloadKey 控刷新；
+                端口分端映射=copy 端口键 canvas.previewPortMap 读值[改拓扑零代码]，缺省=生产实测 7202/7201→7200） */}
             <div className="w-full shrink-0 xl:w-[420px]" data-testid="canvas-preview">
               <iframe
                 key={reloadKey}
                 ref={iframeRef}
                 data-testid="canvas-iframe"
                 title={cv('canvas.title')}
-                src={previewUrl(pageKey, storeId)}
+                src={previewUrl(pageKey, storeId, parsePreviewPortMap(copyByKey.get('canvas.previewPortMap')?.text))}
                 className="u1-ring h-[720px] w-full rounded-panel bg-card"
               />
             </div>

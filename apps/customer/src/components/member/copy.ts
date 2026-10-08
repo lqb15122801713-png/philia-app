@@ -180,7 +180,7 @@ const MEMBER_COPY_TABLE = {
   'card.claimWeiguang': '在册即享基础功能',
   'card.claimYinghuo': '一年，省下一顿火锅',
   'card.claimZhuguang': '每月一次眼耳甲，不用记',
-  'card.claimNuanyang': '含 3 只毛孩子 · 都被叫得出名字',
+  'card.claimNuanyang': '多只毛孩子 · 都被叫得出名字',
 
   /* ---- 商城域（换皮批片 2 商城组新增：M-02/M-03 回馈金返显，口径 APP-18 按档返；
      数值（金额/到账日）全部经 {amt}/{day} 插值自端口，本表零数值硬编码） ---- */
