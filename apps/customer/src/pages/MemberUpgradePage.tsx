@@ -11,8 +11,10 @@
  * + 多宠附加差价行（恒 0 也透出）+ 合计补差，逐项 mono；newPurchase（微光档新购口径）
  * =标「新购口径」+ 全价句，不走折算公式。
  *
- * 成交口径（内测期 R10）：客户端无线上收款通道，本页只有到店办理指引卡
- * （「到店出示会员码，收银台代办即时生效」），不画假支付钮。
+ * 成交口径（会员链路片 2 · 线上升级 mock 域已通）：每目标档卡「去支付 ¥{差价}」钮
+ * → /member/checkout 确认订单（协议三勾选+Mock 水印双位照 R10，server 重算差价落单）；
+ * pay_channel_enabled=false → 回落维护态=到店办理指引卡（照 MemberCheckoutPage 工艺）；
+ * 微光档=新购口径全价句明面（不退卡不折算）。
  * 无升级路径（已是最高档 targetPlans 空）/ 非会员 = 说明卡不报错。
  */
 
@@ -31,6 +33,7 @@ import {
   tierNameOf,
   yuanOf,
 } from '../components/member/v2'
+import { pc } from '../copy/pay'
 
 interface QuoteTarget {
   planKey: string
@@ -61,12 +64,27 @@ export default function MemberUpgradePage() {
     queryFn: () => trpc.membership.upgradeQuote.query(),
     enabled: !!myQ.data?.membership,
   })
+  const targets = (quoteQ.data?.targetPlans ?? []) as QuoteTarget[]
+  /* 通道开关读 pay.quote 透出（升级域试算兼带 channelEnabled；仅取开关判定维护态回落，
+     金额展示仍全读 membership.upgradeQuote 试算值） */
+  const chanQ = useQuery({
+    queryKey: ['pay', 'quote', 'membership_upgrade', targets[0]?.planKey ?? ''],
+    queryFn: () =>
+      trpc.pay.quote.query({ bizDomain: 'membership_upgrade', planKey: targets[0]!.planKey, petCount: 0 }),
+    enabled: targets.length > 0,
+  })
+  const channelEnabled = chanQ.data?.channelEnabled ?? true
 
   return (
     <div className="m2" data-testid="member-upgrade-page" style={{ minHeight: '100vh' }}>
       {/* 返回=时间序回退 navigate(-1)，直访兜底=/member（PushBar 既有纪律） */}
       <PushBar label={mc('up.pushLabel')} fallback="/member" />
       <AppHead title={mc('up.headTitle')} no={mc('up.headNo')} />
+
+      {/* Mock 水印条（R10：内测通道全程明示；收单双位水印在确认订单页） */}
+      <div className="m2-pad" style={{ marginTop: 12 }}>
+        <TipCard testId="mock-watermark-top">{pc('mock.watermark')}</TipCard>
+      </div>
 
       {myQ.isPending || (myQ.data?.membership && quoteQ.isPending) ? (
         <div className="m2-pad" style={{ marginTop: 24 }}>
@@ -98,9 +116,10 @@ export default function MemberUpgradePage() {
       ) : (
         <UpgradeBody
           my={myQ.data}
-          targets={quoteQ.data.targetPlans as QuoteTarget[]}
+          targets={targets}
           windowDays={quoteQ.data.windowDays}
           currentFree={!!quoteQ.data.currentPlan.free}
+          channelEnabled={channelEnabled}
         />
       )}
     </div>
@@ -114,6 +133,7 @@ function UpgradeBody({
   targets,
   windowDays,
   currentFree,
+  channelEnabled,
 }: {
   my: {
     membership: { planKey: string; expiresAt: Date | string; paidFen: number } | null
@@ -121,7 +141,9 @@ function UpgradeBody({
   targets: QuoteTarget[]
   windowDays: number
   currentFree: boolean
+  channelEnabled: boolean
 }) {
+  const navigate = useNavigate()
   const m = my.membership!
   const expireDate = new Date(m.expiresAt).toLocaleDateString('zh-CN')
 
@@ -194,13 +216,27 @@ function UpgradeBody({
                   </div>
                 </div>
               )}
+              {/* 去支付 ¥{差价}（会员链路片 2：→确认订单页收单，金额=server 试算值透出零自算；
+                  通道关=维护态回落到店指引卡，本钮不画） */}
+              {channelEnabled ? (
+                <button
+                  type="button"
+                  className="m2-btn-primary m2-press"
+                  data-testid={`upgrade-pay-${t.planKey}`}
+                  onClick={() => navigate(`/member/checkout?plan=${t.planKey}`)}
+                  style={{ width: '100%', marginTop: 12, padding: '13px 0', fontSize: 14.5 }}
+                >
+                  <span>{mc('up.payCta', { amount: yuanOf(t.totalDiffFen) })}</span>
+                </button>
+              ) : null}
             </div>
           ))}
         </>
       )}
 
-      {/* 3. 到店办理指引卡（内测期无线上收款，不画假支付钮 R10） */}
-      {targets.length > 0 ? (
+      {/* 3. 维护态回落（channelEnabled=false 照 MemberCheckoutPage 工艺=到店办理指引卡；
+             通道开时本卡不画，成交入口=各目标档卡「去支付」钮） */}
+      {targets.length > 0 && !channelEnabled ? (
         <div className="m2-card" data-testid="upgrade-store-guide" style={{ marginTop: 4, padding: '16px 18px' }}>
           <div style={{ fontSize: 15, fontWeight: 800 }}>{mc('up.storeGuideTitle')}</div>
           <p className="m2-note" style={{ marginTop: 8 }}>{mc('up.storeGuideBody')}</p>

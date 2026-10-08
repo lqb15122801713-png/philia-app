@@ -138,9 +138,11 @@ export default function MePage() {
               <span className="tier">{tierLabel}</span>
             </div>
             {membership ? (
-              /* 端口批片 C 顺带件②（片 A 观察 3）：免费档「续费 ›」同源分态——改指升级页
-                 （同会员页主 CTA「免费在册 · 随时升级」口径）；付费档照指 /member 不动 */
-              <Link to={isFreePlan ? '/member/upgrade' : '/member'} className="renew" data-testid="me-renew-link">续费 ›</Link>
+              /* 会员链路片 2 入口断链修通①：卡面入口按档分化——微光=「开通 ›」指开通页
+                 （注册即微光后全端购卡入口在此接通）；付费档=「续费 ›」指会员中心不变 */
+              <Link to={isFreePlan ? '/member/open' : '/member'} className="renew" data-testid="me-renew-link">
+                {isFreePlan ? mc('me.cardOpenCta') : mc('me.cardRenewCta')}
+              </Link>
             ) : null}
           </div>
           <div className="nums">

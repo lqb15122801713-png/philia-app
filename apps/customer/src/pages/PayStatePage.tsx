@@ -82,14 +82,14 @@ export default function PayStatePage() {
     }
   }
 
-  /* 重试/重新下单：同档同宠重新 createOrder（幂等口径见 server；三协议沿用本次快照） */
+  /* 重试/重新下单：同档同域重新 createOrder（幂等口径见 server；三协议沿用本次快照） */
   const retryM = useMutation({
     mutationFn: () => {
       if (!biz?.planKey || typeof biz.petCount !== 'number') {
         return Promise.reject(new Error('biz missing'))
       }
       return trpc.pay.createOrder.mutate({
-        bizDomain: 'membership_open',
+        bizDomain: biz.bizDomain === 'membership_upgrade' ? 'membership_upgrade' : 'membership_open',
         planKey: biz.planKey,
         petCount: biz.petCount,
         agreements: PAY_AGREEMENTS.map((a) => ({
@@ -224,10 +224,12 @@ export default function PayStatePage() {
                   ✓
                 </div>
                 <div style={{ fontFamily: 'var(--v2serif)', fontWeight: 900, fontSize: 21, marginTop: 12, color: 'var(--gold)' }}>
-                  {pc('state.paidTitle')}
+                  {biz?.bizDomain === 'membership_upgrade' ? pc('state.paidTitleUpgrade') : pc('state.paidTitle')}
                 </div>
                 <p style={{ fontSize: 12, lineHeight: 1.8, margin: '8px 0 0', color: 'var(--gold-deep)', opacity: 0.85 }}>
-                  {pc('state.paidBody', { planLabel: biz?.planLabel ?? '', days: validityDays })}
+                  {biz?.bizDomain === 'membership_upgrade'
+                    ? pc('state.paidBodyUpgrade', { planLabel: biz?.planLabel ?? '' })
+                    : pc('state.paidBody', { planLabel: biz?.planLabel ?? '', days: validityDays })}
                 </p>
                 <button
                   type="button"

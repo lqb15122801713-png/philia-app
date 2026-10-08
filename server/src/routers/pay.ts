@@ -2,7 +2,8 @@
  * 线上支付 router（批次 6 补缺大批 · server 侧收单骨架，namespace pay）
  *
  * 端点：
- * - quote        （customer·query）金额试算透出：server 重算（membership_open=membershipChargeFen 同源）；
+ * - quote        （customer·query）金额试算透出：server 重算（membership_open=membershipChargeFen 同源；
+ *                membership_upgrade=computeUpgradeDiff 同源，与 membership.upgrade 端点同算式）；
  * - createOrder  （customer·mutation）创建支付单：三协议留痕+pay_orders 落库（金额 server 重算，
  *                前端入参金额一律不信）+ 通道下单（mock 内测）→ paying；
  *                幂等=同人同档当日在途（created/paying）重复创建返回现状 idempotent=true；
@@ -29,12 +30,16 @@
  * - 移位铁律：pay_no 日序按 created_at 计号，e2e 不得对 pay_orders.created_at 移位。
  *
  * 边界/报备：
- * - biz_domain 本批仅实现 membership_open；membership_upgrade（片 3 未合）/mall（既有
- *   orders/payments 链路）为枚举预留，createOrder 拒单（BAD_REQUEST）；
+ * - biz_domain 已实现 membership_open + membership_upgrade（会员链路片 2）；mall（既有
+ *   orders/payments 链路）仍为枚举预留，createOrder 拒单（BAD_REQUEST）；
  * - 线上开通兑付=照 sell 的 memberships 写行工艺但 sold_store_id=NULL（线上域，报备）；
- * - EventType.MembershipOpened 复用 R11a 既有事件类型（'membership.opened'），非新增；
- * - createOrder 不拒「已是会员」：兑付幂等（已是会员同档不重建只置 paid），重复支付
- *   退款走 R12 refund.execute 线上原路联动（refund.ts 骨架）。
+ * - 线上升级兑付=照 merchant upgrade 端点写行工艺（微光=新购口径全价+有效期重起算；
+ *   付费档=即时换档到期日不变+paid_fen=原实付+补差）但**无收银补差单**（线上域无店上下文：
+ *   bill_no=NULL，补差留痕=membership_events.meta.payNo=支付单号）+sold_store_id=NULL；
+ *   幂等=已是目标档零写入零单据（只置 paid）；
+ * - EventType.MembershipOpened / MembershipUpgraded 复用 R11a 既有事件类型，非新增；
+ * - createOrder 不拒「已是会员」（membership_open）：兑付幂等（已是会员同档不重建只置 paid），
+ *   重复支付退款走 R12 refund.execute 线上原路联动（refund.ts 骨架，双域反查）；
  */
 
 import { TRPCError } from '@trpc/server';
@@ -56,7 +61,7 @@ import { customerProcedure, router } from '../trpc';
 import { storeDayStartMs, storeWallclock } from './appointment';
 import { isKillSwitchOn, resolveScopedRules } from './configRules';
 import { withOrderWriteLock } from './mall';
-import { membershipChargeFen } from './membership';
+import { computeUpgradeDiff, defaultPlanKeyOf, membershipChargeFen } from './membership';
 
 /** 事务 handle 类型断言（同 attendance.ts 惯例） */
 const txDb = (tx: unknown): DbHandle => tx as DbHandle;
@@ -74,8 +79,8 @@ const pad2 = (n: number) => String(n).padStart(2, '0');
 
 type PayOrderRow = typeof schema.payOrders.$inferSelect;
 
-/** 已实现收单的业务域（membership_upgrade 片 3 未合 / mall 既有链路，均为预留） */
-const IMPLEMENTED_BIZ_DOMAINS = ['membership_open'] as const;
+/** 已实现收单的业务域（会员链路片 2 增 membership_upgrade；mall 既有链路仍为预留） */
+const IMPLEMENTED_BIZ_DOMAINS = ['membership_open', 'membership_upgrade'] as const;
 
 /** 协议三键（线上开通必传，缺一拒单） */
 const AGREEMENT_KEYS = ['member_service', 'not_prepaid', 'no_auto_renew'] as const;
@@ -146,23 +151,28 @@ function maskPhone(phone: string | null | undefined): string | null {
 
 /**
  * 归属校验：本人单才可操作（status/reconcile/mock-callback 共用）。
- * biz_id 语义按域：membership_open=users.id（本批唯一实现域）；
+ * biz_id 语义按域：membership_open / membership_upgrade 均=users.id（会员域同人同键）；
  * 其余域（预留）一律拒——接入时按域补归属解析（mall=orders.customer_id）。
  */
 function assertPayOrderOwnership(order: PayOrderRow, userId: string): void {
-  if (order.bizDomain === 'membership_open' && order.bizId === userId) return;
+  if (
+    (order.bizDomain === 'membership_open' || order.bizDomain === 'membership_upgrade') &&
+    order.bizId === userId
+  ) return;
   forbidden('只能操作本人支付单');
 }
 
-/** 业务摘要（listMine/status 透出；membership_open → 档位/宠物数） */
+/** 业务摘要（listMine/status 透出；membership_open → 档位/宠物数；membership_upgrade → 加原档/新购口径） */
 function bizSummaryOf(order: PayOrderRow) {
   const biz = (order.bizJson ?? {}) as Record<string, unknown>;
-  if (order.bizDomain === 'membership_open') {
+  if (order.bizDomain === 'membership_open' || order.bizDomain === 'membership_upgrade') {
     return {
       bizDomain: order.bizDomain,
       planKey: typeof biz.planKey === 'string' ? biz.planKey : null,
       planLabel: typeof biz.planLabel === 'string' ? biz.planLabel : null,
       petCount: typeof biz.petCount === 'number' ? biz.petCount : null,
+      fromPlanKey: typeof biz.fromPlanKey === 'string' ? biz.fromPlanKey : null,
+      newPurchase: biz.newPurchase === true,
     };
   }
   return { bizDomain: order.bizDomain };
@@ -221,12 +231,93 @@ async function fulfillMembershipOpen(
 }
 
 /**
+ * membership_upgrade 兑付（事务内调用；会员链路片 2）：照 merchant upgrade 端点写行工艺，
+ * 线上域差异两点——无收银补差单（bill_no=NULL，补差留痕=membership_events.meta.payNo=
+ * 支付单号）、sold_store_id=NULL（报备同 membership_open）。
+ * - 微光档=新购口径：started_at/expires_at 重起算、paid_fen=新档全价（含附加按现 petCount 重算）；
+ * - 付费档升档：即时生效新档（plan_key 换、paid_fen=原实付+补差；expires_at/pet_count 不动）；
+ * - 幂等：已是目标档（同档重放/重复回调）→ 零写入零单据，membershipCreated=false（只置 paid）；
+ * - 金额口径：diffFen=order.amountFen（创建时 computeUpgradeDiff server 重算快照；
+ *   settle 内核已硬核 paidFen=amountFen，此处不再复算金额，只复算公式标签留痕）。
+ */
+async function fulfillMembershipUpgrade(
+  t: DbHandle,
+  order: PayOrderRow,
+  now: Date,
+): Promise<FulfillResult> {
+  const biz = (order.bizJson ?? {}) as Record<string, unknown>;
+  const planKey = typeof biz.planKey === 'string' ? biz.planKey : '';
+  if (!planKey) badRequest('支付单业务上下文缺失（biz_json.planKey），拒绝兑付');
+
+  const m = await currentMembership(t, order.bizId, now);
+  if (!m) badRequest('会员档案不存在，拒绝兑付');
+  // 幂等：已是目标档（同档重放/重复回调）→ 零写入零单据（钱域命门：重放必须零副作用）
+  if (m.planKey === planKey) return { membershipId: m.id, membershipCreated: false };
+  if (m.status !== 'active') badRequest('会员已到期冻结，拒绝兑付（请续费解冻后再升档）');
+  const plans = await loadMemberPlans(t);
+  const target = plans.get(planKey);
+  if (!target || !target.ruleKey.startsWith('plan_')) badRequest('档位配置缺失，拒绝兑付');
+  const cur = plans.get(m.planKey);
+  if (m.planKey !== defaultPlanKeyOf(plans) && cur) {
+    /* 配置漂移防御：兑付时再核只升不降（创建单后档位价被端口改低的情形） */
+    if (planNum(target, 'price_fen', 0) <= planNum(cur, 'price_fen', 0)) {
+      badRequest('目标档位价格不高于当前档（期内只升不降），拒绝兑付');
+    }
+  }
+  const diff = computeUpgradeDiff(plans, m, target, now); // 复算取公式标签留痕（金额以单为准）
+  const diffFen = order.amountFen;
+  const days = planNum(plans.get('membership_validity_days'), 'days', 365);
+  const row = await t
+    .update(schema.memberships)
+    .set(
+      diff.formula.newPurchase
+        ? {
+            /* 微光档=新购口径：开通时点重起算有效期，paid_fen=新档全价，线上域 sold_store_id=NULL */
+            planKey: target.ruleKey,
+            startedAt: now,
+            expiresAt: new Date(now.getTime() + days * 24 * 3600 * 1000),
+            soldStoreId: null,
+            paidFen: diffFen,
+            updatedAt: now,
+          }
+        : {
+            /* 付费档升档即时生效：到期日不变、pet_count 不变、paid_fen=原实付+补差 */
+            planKey: target.ruleKey,
+            paidFen: m.paidFen + diffFen,
+            updatedAt: now,
+          },
+    )
+    .where(eq(schema.memberships.id, m.id))
+    .returning()
+    .then((r) => r[0]!);
+  await t.insert(schema.membershipEvents).values({
+    userId: order.bizId,
+    type: 'upgrade',
+    fromPlan: m.planKey,
+    toPlan: target.ruleKey,
+    diffFen,
+    billNo: null, // 线上域无收银补差单；补差留痕=meta.payNo（支付单号）
+    meta: {
+      payNo: order.payNo,
+      online: true, // 线上域（sold_store_id=NULL，报备）
+      remainingMonths: diff.remainingMonths,
+      baseDiffFen: diff.baseDiffFen,
+      petDiffFen: diff.petDiffFen,
+      petCount: m.petCount,
+      newPurchase: diff.formula.newPurchase,
+    },
+  });
+  return { membershipId: row.id, membershipCreated: true };
+}
+
+/**
  * 置 paid + 同事务兑付（回调 / reconcile 共用内核）：
  * - 金额核对红线：paidFen ≠ order.amountFen → 拒 + 告警（不进事务不动单）；
  * - 状态机：条件更新 WHERE status IN ('created','paying') → paid；
  *   影响行数=0：已 paid=重复投递幂等零副作用；closed/failed=非法迁移 400 硬拒；
- * - 同事务兑付（membership_open → memberships 写行，幂等不重建）+
- *   SSE user 频道 membership.opened（提交后 broadcastNow）。
+ * - 同事务兑付（membership_open → memberships 写行幂等不重建；membership_upgrade →
+ *   memberships 换档/新购口径重起算+membership_events('upgrade') 留痕，已是目标档零写入）+
+ *   SSE user 频道 membership.opened / membership.upgraded（提交后 broadcastNow）。
  */
 export async function settlePayOrderPaid(
   d: typeof db,
@@ -295,24 +386,43 @@ export async function settlePayOrderPaid(
         });
       }
       const order = updated[0]!;
-      if (order.bizDomain !== 'membership_open') {
-        // 预留域未实现兑付：拒绝（事务回滚，半态零容忍）
-        badRequest(`业务域 ${order.bizDomain} 兑付未实现（预留）`);
+      const biz = (order.bizJson ?? {}) as Record<string, unknown>;
+      if (order.bizDomain === 'membership_open') {
+        const fulfill = await fulfillMembershipOpen(t, order, now);
+        outboxId = await emitEvent(t, `user:${order.bizId}`, EventType.MembershipOpened, {
+          userId: order.bizId,
+          payNo: order.payNo,
+          paymentId: opts.paymentId,
+          channel: order.channel,
+          planKey: biz.planKey ?? null,
+          paidFen: order.amountFen,
+          membershipId: fulfill.membershipId,
+          membershipCreated: fulfill.membershipCreated,
+          via: opts.via, // callback=回调兑付 / reconcile=掉单自助补开
+          online: true, // 线上域（sold_store_id=NULL，报备）
+        });
+        return { order, idempotent: false as const, fulfill };
       }
-      const fulfill = await fulfillMembershipOpen(t, order, now);
-      outboxId = await emitEvent(t, `user:${order.bizId}`, EventType.MembershipOpened, {
-        userId: order.bizId,
-        payNo: order.payNo,
-        paymentId: opts.paymentId,
-        channel: order.channel,
-        planKey: (order.bizJson as Record<string, unknown> | null)?.planKey ?? null,
-        paidFen: order.amountFen,
-        membershipId: fulfill.membershipId,
-        membershipCreated: fulfill.membershipCreated,
-        via: opts.via, // callback=回调兑付 / reconcile=掉单自助补开
-        online: true, // 线上域（sold_store_id=NULL，报备）
-      });
-      return { order, idempotent: false as const, fulfill };
+      if (order.bizDomain === 'membership_upgrade') {
+        const fulfill = await fulfillMembershipUpgrade(t, order, now);
+        outboxId = await emitEvent(t, `user:${order.bizId}`, EventType.MembershipUpgraded, {
+          userId: order.bizId,
+          fromPlan: biz.fromPlanKey ?? null,
+          toPlan: biz.planKey ?? null,
+          diffFen: order.amountFen,
+          billNo: null, // 线上域无收银补差单（补差留痕=payNo）
+          payNo: order.payNo,
+          paymentId: opts.paymentId,
+          channel: order.channel,
+          membershipId: fulfill.membershipId,
+          membershipCreated: fulfill.membershipCreated,
+          via: opts.via, // callback=回调兑付 / reconcile=掉单自助补开
+          online: true, // 线上域（sold_store_id=NULL，报备）
+        });
+        return { order, idempotent: false as const, fulfill };
+      }
+      // 预留域未实现兑付：拒绝（事务回滚，半态零容忍）
+      badRequest(`业务域 ${order.bizDomain} 兑付未实现（预留）`);
     }),
   );
   if (outboxId) broadcastNow(outboxId);
@@ -413,7 +523,9 @@ const agreementItemSchema = z.object({
 export const payRouter = router({
   /**
    * quote（customer）：金额试算透出——server 重算（membership_open=membershipChargeFen
-   * 读 member_plans 同源，含多宠附加费+封顶）；附通道开关与超时时长（开通页明示）。
+   * 读 member_plans 同源，含多宠附加费+封顶；membership_upgrade=computeUpgradeDiff 同源，
+   * 微光档=新购口径全价、付费档=剩余整月折算补差）；附通道开关与超时时长（开通页明示）。
+   * 升级域 petCount 入参不适用（升档不改动宠物数，按现会员档案值重算附加）。
    */
   quote: customerProcedure
     .input(
@@ -430,6 +542,34 @@ export const payRouter = router({
       const plans = await loadMemberPlans(ctx.db);
       const plan = plans.get(input.planKey);
       if (!plan || !plan.ruleKey.startsWith('plan_')) badRequest('档位不存在或已停用');
+      if (input.bizDomain === 'membership_upgrade') {
+        /* 升级域试算：computeUpgradeDiff 与 membership.upgrade 端点/兑付内核同算式（单源） */
+        const now = new Date();
+        const m = await currentMembership(ctx.db, ctx.user.id, now);
+        if (!m) badRequest('当前还没有会员档案，开通会员请走开通页');
+        if (m.planKey === plan.ruleKey) badRequest('当前已是该档会员，无需升级');
+        if (m.status !== 'active') badRequest('会员已到期冻结，请续费解冻后再办理升档');
+        const diff = computeUpgradeDiff(plans, m, plan, now);
+        return {
+          bizDomain: input.bizDomain,
+          planKey: input.planKey,
+          planLabel: plan.label,
+          petCount: m.petCount, // 升档不改宠物数：透出档案现值（多宠附加已含在差价算式）
+          priceFen: planNum(plan, 'price_fen', 0),
+          extraCount: 0,
+          amountFen: diff.totalDiffFen, // server 重算值（升级补差/新购全价，唯一可信源）
+          renewal: null,
+          upgrade: {
+            fromPlanKey: m.planKey,
+            newPurchase: diff.formula.newPurchase, // true=微光档新购口径（全价+有效期重起算）
+            remainingMonths: diff.remainingMonths,
+            baseDiffFen: diff.baseDiffFen,
+            petDiffFen: diff.petDiffFen,
+          },
+          channelEnabled: await loadPayChannelEnabled(ctx.db),
+          timeoutMinutes: await loadPayTimeoutMinutes(ctx.db),
+        };
+      }
       const { amountFen, extraCount, priceFen } = membershipChargeFen(plan, input.petCount);
       /* 续费优惠：读档 renew_discount_bp（缺键回落 10000=无优惠——fresh 库/未配档
          安全口径）；折后价=全价（档价+多宠附加合计）×bp/10000 精确到分 */
@@ -487,13 +627,16 @@ export const payRouter = router({
     }),
 
   /**
-   * createOrder（customer）：创建支付单（本批仅 bizDomain='membership_open'）。
+   * createOrder（customer）：创建支付单（bizDomain=membership_open / membership_upgrade）。
    * - 三协议必传（member_service/not_prepaid/no_auto_renew 各一，缺一/重复/未知键拒单）；
    * - 幂等：idem(userId+bizDomain+planKey+当日窗口)→同人同档当日在途（created/paying）
    *   重复创建=返回现状 idempotent=true（协议不重复留痕）；
    * - 事务①：agreements 三行快照（content/version/checkedAt/userSnapshot 取证四要素）
-   *   + pay_orders 落（amountFen=server 重算，入参 amountFen 直接忽略不信；
+   *   + pay_orders 落（amountFen=server 重算——membership_open=membershipChargeFen /
+   *   membership_upgrade=computeUpgradeDiff 差价（微光=新购口径全价），入参 amountFen
+   *   一律不信直接忽略；升级域宠物数=现会员档案值（入参 petCount 不适用）；
    *   timeoutAt=now+端口时长；channel=provider 映射；idemKey=base 或 base+#a{N}）；
+   * - 升级域收单闸：无会员档案 400（走开通域）/已是目标档 400/冻结档 400/期内不降级 400；
    * - 事务外：provider.createPayment（外部调用不进事务；wechat 骨架 notImplemented 原文
    *   透出拒，单留 created 待超时关闭）→ 条件更新 status='paying'+paymentId。
    */
@@ -509,9 +652,6 @@ export const payRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      if (input.bizDomain !== 'membership_open') {
-        badRequest(`业务域 ${input.bizDomain} 收单未实现（预留）`);
-      }
       /* 协议三键齐校验（缺一/重复/未知键一律拒；zod enum 已拦未知键） */
       const keySet = new Set(input.agreements.map((a) => a.agreementKey));
       if (keySet.size !== 3 || !AGREEMENT_KEYS.every((k) => keySet.has(k))) {
@@ -570,10 +710,45 @@ export const payRouter = router({
           const plans = await loadMemberPlans(t);
           const plan = plans.get(input.planKey);
           if (!plan || !plan.ruleKey.startsWith('plan_')) badRequest('档位不存在或已停用');
-          const { amountFen } = membershipChargeFen(plan, input.petCount);
+          let amountFen: number;
+          let bizJson: Record<string, unknown>;
+          if (input.bizDomain === 'membership_upgrade') {
+            /* 升级域：差价=computeUpgradeDiff 重算（与 membership.upgrade 端点/兑付内核同算式）；
+               宠物数=现会员档案值（升档不改 petCount，入参不适用） */
+            const m = await currentMembership(t, ctx.user.id, now);
+            if (!m) badRequest('当前还没有会员档案，开通会员请走开通页');
+            if (m.planKey === plan.ruleKey) badRequest('当前已是该档会员，无需重复支付');
+            if (m.status !== 'active') badRequest('会员已到期冻结，请续费解冻后再办理升档');
+            const cur = plans.get(m.planKey);
+            if (m.planKey !== defaultPlanKeyOf(plans)) {
+              if (!cur) badRequest('当前档位配置缺失，请检查会员档配置');
+              /* 期内只升不降（冻结明文逐字，同 merchant upgrade 端点口径） */
+              if (planNum(plan, 'price_fen', 0) <= planNum(cur, 'price_fen', 0)) {
+                badRequest('会员期内不降级，可在到期前 30 天预约下期档位');
+              }
+            }
+            const diff = computeUpgradeDiff(plans, m, plan, now);
+            if (diff.totalDiffFen <= 0) badRequest('零差价升档无需线上支付，请联系门店办理');
+            amountFen = diff.totalDiffFen;
+            bizJson = {
+              planKey: plan.ruleKey,
+              planLabel: plan.label,
+              petCount: m.petCount,
+              phoneMasked,
+              fromPlanKey: m.planKey,
+              fromPlanLabel: cur?.label ?? m.planKey,
+              newPurchase: diff.formula.newPurchase,
+              remainingMonths: diff.remainingMonths,
+              baseDiffFen: diff.baseDiffFen,
+              petDiffFen: diff.petDiffFen,
+            };
+          } else {
+            amountFen = membershipChargeFen(plan, input.petCount).amountFen;
+            bizJson = { planKey: input.planKey, planLabel: plan.label, petCount: input.petCount, phoneMasked };
+          }
           const timeoutMinutes = await loadPayTimeoutMinutes(t);
 
-          const userSnapshot = { userId: ctx.user.id, phoneMasked, planKey: input.planKey, petCount: input.petCount };
+          const userSnapshot = { userId: ctx.user.id, phoneMasked, planKey: input.planKey, petCount: bizJson.petCount as number };
           await t.insert(schema.agreements).values(
             input.agreements.map((a) => ({
               userId: ctx.user.id,
@@ -591,8 +766,8 @@ export const payRouter = router({
             .values({
               payNo,
               bizDomain: input.bizDomain,
-              bizId: ctx.user.id, // membership_open：biz_id=开通用户（归属/幂等/反查同键）
-              bizJson: { planKey: input.planKey, planLabel: plan.label, petCount: input.petCount, phoneMasked },
+              bizId: ctx.user.id, // 会员域（open/upgrade）：biz_id=开通用户（归属/幂等/反查同键）
+              bizJson,
               amountFen,
               channel: channelOfProvider(provider.name),
               status: 'created',
@@ -664,13 +839,13 @@ export const payRouter = router({
 
   /** listMine（customer）：本人支付单倒序（最新 50 条）+ 业务摘要。 */
   listMine: customerProcedure.query(async ({ ctx }) => {
-    // 本批唯一实现域 membership_open：biz_id=users.id（预留域接入时按域并集）
+    // 会员域双域并集（open/upgrade）：biz_id=users.id（预留域接入时按域并集）
     const rows = await ctx.db
       .select()
       .from(schema.payOrders)
       .where(
         and(
-          eq(schema.payOrders.bizDomain, 'membership_open'),
+          inArray(schema.payOrders.bizDomain, ['membership_open', 'membership_upgrade']),
           eq(schema.payOrders.bizId, ctx.user.id),
         ),
       )
@@ -690,11 +865,11 @@ export const payRouter = router({
   recordsMine: customerProcedure.query(async ({ ctx }) => {
     const uid = ctx.user.id;
     const [payRows, orderRows, invoiceRows] = await Promise.all([
-      // 源① 支付单（同 pay.listMine 口径：本批唯一实现域 membership_open，biz_id=users.id）
+      // 源① 支付单（同 pay.listMine 口径：会员域双域并集 open/upgrade，biz_id=users.id）
       ctx.db
         .select()
         .from(schema.payOrders)
-        .where(and(eq(schema.payOrders.bizDomain, 'membership_open'), eq(schema.payOrders.bizId, uid)))
+        .where(and(inArray(schema.payOrders.bizDomain, ['membership_open', 'membership_upgrade']), eq(schema.payOrders.bizId, uid)))
         .orderBy(desc(schema.payOrders.createdAt), desc(schema.payOrders.id))
         .limit(50),
       // 源② 商城订单（同 mall.listMyOrders 口径：customer_id=本人）

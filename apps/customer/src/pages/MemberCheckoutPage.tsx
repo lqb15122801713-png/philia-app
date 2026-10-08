@@ -16,7 +16,10 @@
  *   → 跳 /pay/:payNo；钮下 Mock 水印第二位 + 超时关单注。
  *
  * 分流说明卡（不弹球，全给明示出口）：无档/缺参 → 去选档；免费档 → 去一键开通；
- * 已是会员 → 去会员中心；channelEnabled=false → 维护态「线上支付通道维护中，请到店办理」。
+ * channelEnabled=false → 维护态「线上支付通道维护中，请到店办理」。
+ * 会员链路片 2：已是会员不再分流去会员中心——微光档=新购口径直通（bizDomain=
+ * membership_upgrade 全价重算）；付费档=期内升档补差同域（只升不降由 server 硬闸）；
+ * 纯非会员照旧 membership_open。升级域不画多宠 ±（升档不改动宠物数，按档案现值计）。
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -48,20 +51,32 @@ export default function MemberCheckoutPage() {
   const plan = plans.find((p) => p.planKey === planKey) ?? null
   const validityDays = plansQ.data?.membershipValidityDays ?? 365
 
-  /* 多宠附加只数（0 ~ max_pets−included）；petCount=included+extraN（quote 联动重算） */
+  /* 多宠附加只数（0 ~ max_pets−included）；petCount=included+extraN（quote 联动重算）。
+     升级域不画多宠 ±：升档不改动宠物数，server 按现会员档案 petCount 重算附加 */
   const maxExtra = plan ? Math.max(plan.maxPets - plan.includedPets, 0) : 0
   const [extraN, setExtraN] = useState(0)
-  const petCount = plan ? plan.includedPets + Math.min(extraN, maxExtra) : 0
+
+  /* 会员链路片 2：已是会员=升级域收单（微光=新购口径全价；付费档=期内补差），
+     纯非会员=开通域；不再分流「已是会员→去会员中心」（入口断链修通②） */
+  const alreadyMember = !!myQ.data?.membership
+  const bizDomain = alreadyMember ? ('membership_upgrade' as const) : ('membership_open' as const)
+  const petCount = alreadyMember
+    ? (myQ.data?.membership?.petCount ?? 0)
+    : plan
+      ? plan.includedPets + Math.min(extraN, maxExtra)
+      : 0
 
   /* 金额唯一可信源：pay.quote server 试算值（涉钱戒律：前端零自算） */
   const quoteQ = useQuery({
-    queryKey: ['pay', 'quote', planKey, petCount],
+    queryKey: ['pay', 'quote', bizDomain, planKey, petCount],
     queryFn: () =>
-      trpc.pay.quote.query({ bizDomain: 'membership_open', planKey, petCount }),
+      trpc.pay.quote.query({ bizDomain, planKey, petCount }),
     enabled: !!plan && !plan.free,
     placeholderData: (prev) => prev,
   })
   const quote = quoteQ.data ?? null
+  /* 升级域试算明细（newPurchase=微光新购口径全价句明面；否则=期内补差句） */
+  const upgradeQuote = quote && 'upgrade' in quote ? quote.upgrade : null
 
   /* 协议三勾选（缺一不可提交） */
   const [agreed, setAgreed] = useState<Record<PayAgreementKey, boolean>>({
@@ -76,7 +91,7 @@ export default function MemberCheckoutPage() {
   const createM = useMutation({
     mutationFn: () =>
       trpc.pay.createOrder.mutate({
-        bizDomain: 'membership_open',
+        bizDomain,
         planKey,
         petCount,
         /* 三协议全文快照（version/content）随单留痕 */
@@ -89,9 +104,6 @@ export default function MemberCheckoutPage() {
     onSuccess: (r) => navigate(`/pay/${r.order.payNo}`),
     onError: (err) => showToast(friendlyError(err, pc('checkout.createFail')), 'error'),
   })
-
-  const alreadyMember = !!myQ.data?.membership
-  const memberFree = !!(myQ.data?.plan as V2Plan | null)?.free
 
   return (
     <div className="m2" data-testid="member-checkout-page" style={{ minHeight: '100vh' }}>
@@ -131,23 +143,6 @@ export default function MemberCheckoutPage() {
             onCta={() => navigate('/member/open')}
           />
         </div>
-      ) : alreadyMember ? (
-        <div className="m2-pad" style={{ marginTop: 24 }}>
-          <EmptyC
-            title={pc('checkout.alreadyTitle')}
-            desc={
-              memberFree
-                ? pc('checkout.alreadyBodyFree')
-                : pc('checkout.alreadyBody', {
-                    date: myQ.data?.membership
-                      ? new Date(myQ.data.membership.expiresAt).toLocaleDateString('zh-CN')
-                      : '',
-                  })
-            }
-            ctaText={pc('checkout.alreadyCta')}
-            onCta={() => navigate('/member')}
-          />
-        </div>
       ) : quote && !quote.channelEnabled ? (
         <div className="m2-pad" style={{ marginTop: 24 }}>
           <EmptyC
@@ -162,7 +157,9 @@ export default function MemberCheckoutPage() {
           {/* 档位卡（planLabel + 档价 mono + 有效期天数，全读端口） */}
           <div className="m2-pad" style={{ marginTop: 14 }}>
             <div className="m2-card" style={{ padding: '16px 18px' }}>
-              <div style={{ fontSize: 11, color: 'var(--v2muted)' }}>{pc('checkout.planLabel')}</div>
+              <div style={{ fontSize: 11, color: 'var(--v2muted)' }}>
+                {alreadyMember ? pc('checkout.planLabelUpgrade') : pc('checkout.planLabel')}
+              </div>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 6 }}>
                 <span style={{ fontFamily: 'var(--v2serif)', fontWeight: 900, fontSize: 20 }}>
                   {quote?.planLabel ?? plan.label}
@@ -172,13 +169,18 @@ export default function MemberCheckoutPage() {
                 </span>
               </div>
               <p className="m2-note" style={{ margin: '8px 0 0' }}>
-                {pc('checkout.validity', { days: validityDays })}
+                {/* 升级域口径句明面：微光=新购口径（全价+有效期重起算）；付费档=期内补差（到期日不变） */}
+                {alreadyMember
+                  ? upgradeQuote?.newPurchase
+                    ? pc('checkout.upgradeNoteNewPurchase')
+                    : pc('checkout.upgradeNoteDiff')
+                  : pc('checkout.validity', { days: validityDays })}
               </p>
             </div>
           </div>
 
-          {/* 多宠 ±（0 ~ max_pets−included；quote 重算联动） */}
-          {maxExtra > 0 ? (
+          {/* 多宠 ±（0 ~ max_pets−included；quote 重算联动）。升级域不画（升档不改动宠物数） */}
+          {!alreadyMember && maxExtra > 0 ? (
             <div className="m2-pad" style={{ marginTop: 12 }}>
               <div className="m2-card" style={{ padding: '14px 18px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
