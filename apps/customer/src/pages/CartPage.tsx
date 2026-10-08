@@ -123,7 +123,7 @@ function CartInner() {
   });
   const rebateBp = (myQ.data?.plan as { rebateBp?: number } | null | undefined)?.rebateBp ?? 0;
   const rebateFen = rebateBp > 0 ? Math.round((cart.checkedTotalFen * rebateBp) / 10000) : 0;
-  /* 返显钩子（体验急修批 B）：微光/非会员 CTA sub=规则钩子，点击→/member/open（J-01）；
+  /* 返显钩子（体验急修批 B）：注册用户/非会员 CTA sub=规则钩子，点击→/member/open（J-01）；
      付费档比例读表拼「2/5/10」，缺省不渲染（不上假数） */
   const hookPctsQ = useQuery({
     queryKey: ['membership', 'plans'],

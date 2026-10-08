@@ -17,7 +17,7 @@
  *
  * 分流说明卡（不弹球，全给明示出口）：无档/缺参 → 去选档；免费档 → 去一键开通；
  * channelEnabled=false → 维护态「线上支付通道维护中，请到店办理」。
- * 会员链路片 2：已是会员不再分流去会员中心——微光档=新购口径直通（bizDomain=
+ * 会员链路片 2：已是会员不再分流去会员中心——注册用户档=新购口径直通（bizDomain=
  * membership_upgrade 全价重算）；付费档=期内升档补差同域（只升不降由 server 硬闸）；
  * 纯非会员照旧 membership_open。升级域不画多宠 ±（升档不改动宠物数，按档案现值计）。
  */
@@ -56,7 +56,7 @@ export default function MemberCheckoutPage() {
   const maxExtra = plan ? Math.max(plan.maxPets - plan.includedPets, 0) : 0
   const [extraN, setExtraN] = useState(0)
 
-  /* 会员链路片 2：已是会员=升级域收单（微光=新购口径全价；付费档=期内补差），
+  /* 会员链路片 2：已是会员=升级域收单（注册用户=新购口径全价；付费档=期内补差），
      纯非会员=开通域；不再分流「已是会员→去会员中心」（入口断链修通②） */
   const alreadyMember = !!myQ.data?.membership
   const bizDomain = alreadyMember ? ('membership_upgrade' as const) : ('membership_open' as const)
@@ -75,7 +75,7 @@ export default function MemberCheckoutPage() {
     placeholderData: (prev) => prev,
   })
   const quote = quoteQ.data ?? null
-  /* 升级域试算明细（newPurchase=微光新购口径全价句明面；否则=期内补差句） */
+  /* 升级域试算明细（newPurchase=注册用户新购口径全价句明面；否则=期内补差句） */
   const upgradeQuote = quote && 'upgrade' in quote ? quote.upgrade : null
 
   /* 协议三勾选（缺一不可提交） */
@@ -169,7 +169,7 @@ export default function MemberCheckoutPage() {
                 </span>
               </div>
               <p className="m2-note" style={{ margin: '8px 0 0' }}>
-                {/* 升级域口径句明面：微光=新购口径（全价+有效期重起算）；付费档=期内补差（到期日不变） */}
+                {/* 升级域口径句明面：注册用户=新购口径（全价+有效期重起算）；付费档=期内补差（到期日不变） */}
                 {alreadyMember
                   ? upgradeQuote?.newPurchase
                     ? pc('checkout.upgradeNoteNewPurchase')

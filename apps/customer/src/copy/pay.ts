@@ -59,7 +59,7 @@ const PAY_COPY_TABLE = {
   'checkout.missingPlanBody': '请先到开通页选择档位，再进入确认订单。',
   'checkout.missingPlanCta': '去选档 ›',
   'checkout.freePlanTitle': '免费档无需支付',
-  'checkout.freePlanBody': '微光档一键开通即可，无需进入支付流程。',
+  'checkout.freePlanBody': '注册用户免费档一键开通即可，无需进入支付流程。',
   'checkout.freePlanCta': '去一键开通 ›',
 
   /* ---- 协议名（勾选行链接 + 弹层标题共用） ----

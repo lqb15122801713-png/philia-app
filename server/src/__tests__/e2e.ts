@@ -67,9 +67,9 @@
  *      重复登记幂等；待办消失）
  *
  * 批次 R11a（会员前置批·骨架批）段（28 号施工令全清单 + 回归）：
- *   39. 售卡三档到店付 + 售卡提成定额（萤火 500/烛光 1000/微光 0）+ 双归属两字段 + 微光开档幂等
+ *   39. 售卡三档到店付 + 售卡提成定额（萤火 500/烛光 1000/注册用户 0）+ 双归属两字段 + 注册用户开档幂等
  *   40. 多宠第 4 只+59（4 只 25800 / 10 只 61200 / 11 只拒）
- *   41. 服务 88 折自动（adjusted=unit×0.88，unit 门市价划线不动）+ 微光无折扣对照
+ *   41. 服务 88 折自动（adjusted=unit×0.88，unit 门市价划线不动）+ 注册用户无折扣对照
  *   42. grant 无月上限（同月多笔累计无 cap）+ 三本账无互转（端点扫描+储值/XP 零交叉）
  *   43. settleMonthly 次月到账批次单幂等（服务级直调：not-due / settled / already-settled）
  *   44. 抵扣段仅商品（服务行 rebate 段 403 / 商品行成）+ rebate 段不计已收
@@ -119,7 +119,7 @@
  *
  * 补缺大批片 3（会员升级/到期换档/防滥用/已省 · 46 号档+PD-07 冻结口径）段：
  *   52.1 升档差价精确到分（萤火 199 剩 3 整月升暖阳 599 → 3×(59900−19900)÷12=10000 分=¥100.00）+
- *        多宠附加行恒 0 透出 + 微光升档=新购全价口径（附加按现 petCount 重算）
+ *        多宠附加行恒 0 透出 + 注册用户升档=新购全价口径（附加按现 petCount 重算）
  *   52.2 升档原子事务：paySegments 缺额 → 整单回滚（memberships/收银单/membership_events/outbox 零写入）
  *   52.3 期内降级明文拒「会员期内不降级，可在到期前 30 天预约下期档位」+ 同档重放幂等
  *   52.4 到期换档：窗口外拒 / 窗口内预约落痕+my 透出 / 重复预约覆盖幂等 / 取消置空 /
@@ -171,8 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 3881 键/72 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70→端口批收尾片 2（网格/订正/回收站/公告两步流 UI 92 键，生成件重生成 3762+seed 手补 1=3763，corr 域新入=71 域）3763/71→端口批收尾片 3（画布/试算/调整/录码/克隆/绑码 UI 106 键，生成件重生成 3868+seed 手补 1=3869，canvas 域新入=72 域）3869/72→端口批收尾片 4（OP-03 收口：+7 键 −撤 perk.boarding 两键[宇宙只增不改口径=仓行留档]，生成件重生成 3873+seed 手补 1=3874）3874/72→会员链路小批片 1（撤牌 2+新增 2=生成件 3873+seed 手补 1=3874）3874/72→会员链路小批片 2（0068 升级域+入口 11 键增/4 键改值+撤牌 4 键出宇宙，生成件 3880+seed 手补 1=3881）3881/72）；
+ *      56.1 种子 3887 键/72 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70→端口批收尾片 2（网格/订正/回收站/公告两步流 UI 92 键，生成件重生成 3762+seed 手补 1=3763，corr 域新入=71 域）3763/71→端口批收尾片 3（画布/试算/调整/录码/克隆/绑码 UI 106 键，生成件重生成 3868+seed 手补 1=3869，canvas 域新入=72 域）3869/72→端口批收尾片 4（OP-03 收口：+7 键 −撤 perk.boarding 两键[宇宙只增不改口径=仓行留档]，生成件重生成 3873+seed 手补 1=3874）3874/72→会员链路小批片 1（撤牌 2+新增 2=生成件 3873+seed 手补 1=3874）3874/72→会员链路小批片 2（0068 升级域+入口 11 键增/4 键改值+撤牌 4 键出宇宙，生成件 3880+seed 手补 1=3881）3881/72→会员链路小批片 3（0069 更名+限制解除 6 键增/10 键改值，生成件 3886+seed 手补 1=3887）3887/72）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -223,8 +223,8 @@
  *   67.4 预付台账：register→pending+零 payments/pay_orders/stored_value_logs 写入（不碰真钱
  *        实证）→confirm→registered（重复确认幂等）→取消→refunded（重复退幂等）；uq 锚重登拒；
  *        核销→checked_deducted；prepaidOf 本人/本店透出+越权 403
- *   67.5 提前期上限：非会员（微光口径 3 天）约第 4 天→400 明文；暖阳档第 14 天可约；
- *        getWithServices 栅格按档截断（微光第 4 天槽不出现/暖阳出现）+boardingAvailability
+ *   67.5 提前期上限：非会员（注册用户口径 7 天·片 3 裁②随改）约第 8 天→400 明文；暖阳档第 14 天可约；
+ *        getWithServices 栅格按档截断（注册用户第 8 天槽不出现/暖阳出现）+boardingAvailability
  *        晚数按档截断（能看=能约同帧）
  *   67.6 满档推荐留口：fullAlternatives 形状齐全+enabled=false+candidates 空+note 注记
  *        读端口（防假推荐；端口改值即新+还原）
@@ -2649,8 +2649,8 @@ async function main(): Promise<void> {
 
   /* ==================================================================
    * 修复包 PR-4（PD-02 第 4 层 + PD-05 件 1/2 + OP-01②）：
-   * 件 2 注册默认档读 default_plan_key / 件 1 微光永久豁免（免费档永不冻结）/
-   * OP-01② 微光线上开档 sold_store_id=NULL 进全店合计
+   * 件 2 注册默认档读 default_plan_key / 件 1 注册用户永久豁免（免费档永不冻结）/
+   * OP-01② 注册用户线上开档 sold_store_id=NULL 进全店合计
    * ================================================================== */
   console.log('\n[修复包PR-4] PD-05 件 1/2 + OP-01②');
   {
@@ -2689,7 +2689,7 @@ async function main(): Promise<void> {
       .where(eq(schema.memberships.userId, p4u1.id));
     const myP4 = await trpcQuery<{ membership: { status: string; planKey: string } }>('membership.my', { cookie: await devLogin(p4u1.id) });
     const accP4 = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, p4u1.id)).get();
-    check('PR-4 件 1 微光永久豁免：expires 过日仍 active（会员+回馈金账户双不冻结）',
+    check('PR-4 件 1 注册用户永久豁免：expires 过日仍 active（会员+回馈金账户双不冻结）',
       myP4.membership.status === 'active' && myP4.membership.planKey === 'plan_weiguang' && accP4?.status === 'active',
       { status: myP4.membership.status, acc: accP4?.status });
 
@@ -2697,10 +2697,10 @@ async function main(): Promise<void> {
     const amo0 = await trpcQuery<{ amortizedFen: number }>('membership.amortizationStats', { cookie: ownerCookie, input: { month: currentMonth } });
     await db.update(schema.memberships).set({ paidFen: 1200, updatedAt: new Date() }).where(eq(schema.memberships.userId, p4u2.id));
     const amo1 = await trpcQuery<{ amortizedFen: number }>('membership.amortizationStats', { cookie: ownerCookie, input: { month: currentMonth } });
-    check('PR-4 OP-01② 微光线上开档 NULL 进全店合计（amortizedFen +100=round(1200÷12)，数值口径统一）',
+    check('PR-4 OP-01② 注册用户线上开档 NULL 进全店合计（amortizedFen +100=round(1200÷12)，数值口径统一）',
       amo1.amortizedFen - amo0.amortizedFen === 100,
       { before: amo0.amortizedFen, after: amo1.amortizedFen });
-    /* 夹具归零：paidFen 回 0（微光本意），防污染下游 R11a 分摊回归断言期望值 */
+    /* 夹具归零：paidFen 回 0（注册用户本意），防污染下游 R11a 分摊回归断言期望值 */
     await db.update(schema.memberships).set({ paidFen: 0, updatedAt: new Date() }).where(eq(schema.memberships.userId, p4u2.id));
   }
 
@@ -2708,7 +2708,7 @@ async function main(): Promise<void> {
    * 批次 R11a（会员前置批·骨架批）验收段 —— 28 号施工令全清单 + 回归
    * 主线夹具：示例客户（萤火会员）；manager（店长，staff 绑定）售卡/续费/退会。
    * ================================================================== */
-  console.log('\n[R11a] 39. 售卡三档 + 售卡提成定额 + 双归属 + 微光开档幂等');
+  console.log('\n[R11a] 39. 售卡三档 + 售卡提成定额 + 双归属 + 注册用户开档幂等');
   interface MembershipRowT {
     id: string; userId: string; planKey: string; soldStoreId: string | null;
     status: string; petCount: number; paidFen: number; expiresAt: Date; refundFen: number | null;
@@ -2737,14 +2737,14 @@ async function main(): Promise<void> {
   check('R11a⑩ 售卡单落 kind=membership 行（refId=plan_key，提成读侧数据源）',
     sellBillItem?.kind === 'membership' && sellBillItem.refId === 'plan_yinghuo', sellBillItem && { kind: sellBillItem.kind, refId: sellBillItem.refId });
 
-  // ② 烛光/微光售卡（微光 0 元单直接成交，paySegments 空）
+  // ② 烛光/注册用户售卡（注册用户 0 元单直接成交，paySegments 空）
   const sellZhuguang = await sellPlan(managerCookie, { phone: '13811110001', planKey: 'plan_zhuguang', petCount: 0, paySegments: [{ method: 'wechat', amountFen: 29900 }] });
   const sellWeiguang = await sellPlan(managerCookie, { phone: '13811110002', planKey: 'plan_weiguang', petCount: 0, paySegments: [] });
-  check('R11a⑧ 烛光 29900（微信段）+ 微光 0 元单直接成交（无支付段）',
+  check('R11a⑧ 烛光 29900（微信段）+ 注册用户 0 元单直接成交（无支付段）',
     sellZhuguang.amountFen === 29900 && sellWeiguang.amountFen === 0 && sellWeiguang.membership.status === 'active',
     { zg: sellZhuguang.amountFen, wg: sellWeiguang.amountFen });
-  /* 补缺修复小批 P1-3：收银台售微光（0 元单）expiresAt 同置远端 2099（sell 写侧口径） */
-  check('P1-3 sell 微光档 expiresAt=2099-12-31 远端（烛光付费档照 +365 天读表不动）',
+  /* 补缺修复小批 P1-3：收银台售注册用户（0 元单）expiresAt 同置远端 2099（sell 写侧口径） */
+  check('P1-3 sell 注册用户档 expiresAt=2099-12-31 远端（烛光付费档照 +365 天读表不动）',
     sellWeiguang.membership.expiresAt.getTime() === 4102444799 * 1000 &&
       Math.abs(sellZhuguang.membership.expiresAt.getTime() - (Date.now() + 365 * 86400_000)) < 2 * 86400_000,
     { wg: sellWeiguang.membership.expiresAt, zg: sellZhuguang.membership.expiresAt });
@@ -2753,23 +2753,23 @@ async function main(): Promise<void> {
   interface CardLineT { billId: string; plan: string; amountFen: number }
   const mgrSummary1 = await trpcQuery<{ payload: { cardLines: CardLineT[] } }>('commission.mySummary', { cookie: managerCookie, input: {} });
   const cardAmts = mgrSummary1.payload.cardLines.map((l) => `${l.plan}:${l.amountFen}`).sort();
-  check('R11a⑧ 售卡提成定额：萤火 500（5 元）/ 烛光 1000（10 元）/ 微光 0 三档入 cardLines（暖阳 2000 同映射表抽单免验）',
+  check('R11a⑧ 售卡提成定额：萤火 500（5 元）/ 烛光 1000（10 元）/ 注册用户 0 三档入 cardLines（暖阳 2000 同映射表抽单免验）',
     mgrSummary1.payload.cardLines.length === 3 &&
       cardAmts.includes('plan_yinghuo:500') && cardAmts.includes('plan_zhuguang:1000') && cardAmts.includes('plan_weiguang:0'),
     cardAmts);
 
-  // ④ 微光开档幂等（回归）：新客 openFree 两次，第二次 idempotent=true 零副作用
-  const freeUser = (await db.insert(schema.users).values({ kimiId: 'seed_e2e_free1', nickname: 'e2e 微光客', phone: '13811110009' }).returning())[0]!;
+  // ④ 注册用户开档幂等（回归）：新客 openFree 两次，第二次 idempotent=true 零副作用
+  const freeUser = (await db.insert(schema.users).values({ kimiId: 'seed_e2e_free1', nickname: 'e2e 注册用户客', phone: '13811110009' }).returning())[0]!;
   await db.insert(schema.userRoles).values({ userId: freeUser.id, role: 'customer' });
   const freeCookie = await devLogin(freeUser.id);
   const of1 = await trpcMutate<{ membership: MembershipRowT; idempotent: boolean }>('membership.openFree', { cookie: freeCookie });
   const of2 = await trpcMutate<{ membership: MembershipRowT; idempotent: boolean }>('membership.openFree', { cookie: freeCookie });
-  check('R11a回归 微光一键开档幂等（首次开档 → 第二次 idempotent=true 同档不重建）',
+  check('R11a回归 注册用户一键开档幂等（首次开档 → 第二次 idempotent=true 同档不重建）',
     of1.idempotent === false && of1.membership.planKey === 'plan_weiguang' && of1.membership.paidFen === 0 &&
       of2.idempotent === true && of2.membership.id === of1.membership.id,
     { first: of1.idempotent, second: of2.idempotent });
 
-  // ⑤ D-16 自助开户（急修三件 PD-03 件 3）：口令门内手机号分支——新号建档+登录+微光开档链路
+  // ⑤ D-16 自助开户（急修三件 PD-03 件 3）：口令门内手机号分支——新号建档+登录+注册用户开档链路
   console.log('\n[急修三件] D-16 自助开户（手机号登录/注册）');
   const newPhone = '13977776666'; // 避开种子/e2e 既有号段（13800000000/1381111xxxx/1390000xxxx）
   const devLoginPhone = async (phone: string) => {
@@ -2787,7 +2787,7 @@ async function main(): Promise<void> {
   const reg1Of = reg1.cookie
     ? await trpcMutate<{ membership: MembershipRowT; idempotent: boolean }>('membership.openFree', { cookie: reg1.cookie })
     : null;
-  check('D-16 注册→登录→微光一键开档链路通（plan_weiguang active）',
+  check('D-16 注册→登录→注册用户一键开档链路通（plan_weiguang active）',
     reg1Of?.membership.planKey === 'plan_weiguang' && reg1Of?.membership.status === 'active', reg1Of);
   const reg2 = await devLoginPhone(newPhone);
   check('D-16 同号再登录=同一用户（幂等建档，不重复建行）',
@@ -2817,9 +2817,9 @@ async function main(): Promise<void> {
     { adjusted: svcItemMember?.adjustedPriceFen, payable: svcBillMember.payableFen });
   check('R11a⑦ 门市价划线对照（unit_price_fen=8800 门市价原值不动）', svcItemMember?.unitPriceFen === 8800, svcItemMember?.unitPriceFen);
   const wgUserId = sellWeiguang.membership.userId;
-  const svcBillWeiguang = await settleBill2([{ kind: 'service', refId: service.id }], { customerId: wgUserId, note: '【测试】e2e R11a 微光服务单' });
+  const svcBillWeiguang = await settleBill2([{ kind: 'service', refId: service.id }], { customerId: wgUserId, note: '【测试】e2e R11a 注册用户服务单' });
   const svcItemWeiguang = await db.select().from(schema.cashierBillItems).where(eq(schema.cashierBillItems.billId, svcBillWeiguang.billId)).get();
-  check('R11a⑦ 对照：微光（10000bp）无折扣=门市价 8800（adjusted 留空）',
+  check('R11a⑦ 对照：注册用户（10000bp）无折扣=门市价 8800（adjusted 留空）',
     svcItemWeiguang?.adjustedPriceFen === null && svcBillWeiguang.payableFen === 8800, svcItemWeiguang?.adjustedPriceFen);
 
   /* ---------- 42. 清单③+①：回馈金 grant 无月上限 + 三本账无互转 ---------- */
@@ -2966,7 +2966,7 @@ async function main(): Promise<void> {
   console.log('\n[R11a] 47. plans 权益表述 + 立省钩子 + 年费分摊双口径（清单⑫+回归）');
   const plansRes = await trpcQuery<{ plans: Array<{ planKey: string; label: string; priceFen: number; free: boolean }> }>('membership.plans', { cookie: customerCookie });
   const plansJson = JSON.stringify(plansRes.plans.map((p) => p.label));
-  check('R11a⑫ 权益表述：plans 透出含「安心包全员免费」（微光档权益行）', plansJson.includes('安心包全员免费'), plansRes.plans.map((p) => p.planKey));
+  check('R11a⑫ 权益表述：plans 透出含「安心包全员免费」（注册用户档权益行）', plansJson.includes('安心包全员免费'), plansRes.plans.map((p) => p.planKey));
   check('R11a⑫ 无「非会员 ¥15」残留（全档权益文案 grep 级实证）', !/¥15|15\s*元/.test(plansJson), plansJson.slice(0, 120));
   check('R11a⑫ 四档价格明面（0 / 19900 / 29900 / 59900 升序）',
     plansRes.plans.map((p) => p.priceFen).join(',') === '0,19900,29900,59900', plansRes.plans.map((p) => p.priceFen));
@@ -2979,7 +2979,7 @@ async function main(): Promise<void> {
   const amo = await trpcQuery<{ month: string; cashFen: number; amortizedFen: number }>('membership.amortizationStats', {
     cookie: ownerCookie, input: { month: currentMonth },
   });
-  // 售卡实收：萤火 19900 + 烛光 29900 + 微光 0 + 4 宠 25800 + 10 宠 61200 + 续费 19900 = 156700
+  // 售卡实收：萤火 19900 + 烛光 29900 + 注册用户 0 + 4 宠 25800 + 10 宠 61200 + 续费 19900 = 156700
   // 分摊确认（退会前 active 快照）：round(19900/12)+round(29900/12)+0+2150+5100 = 1658+2492+0+2150+5100 = 11400
   check('R11a回归 年费分摊双口径并列（收现 cashFen=156700 / 分摊确认 amortizedFen=11400 精确到分）',
     amo.cashFen === 156700 && amo.amortizedFen === 11400, amo);
@@ -3470,8 +3470,8 @@ async function main(): Promise<void> {
     idempotent: boolean;
   }
 
-  /* ---------- 52.1 升档差价精确到分（46 号档例题逐字坐实）+ 微光新购口径 ---------- */
-  console.log('\n[补缺-3] 52.1 升档差价（46 号档例题）+ 微光新购口径');
+  /* ---------- 52.1 升档差价精确到分（46 号档例题逐字坐实）+ 注册用户新购口径 ---------- */
+  console.log('\n[补缺-3] 52.1 升档差价（46 号档例题）+ 注册用户新购口径');
   const m52u1 = await mkM52User('u1', '13822220001');
   const m52u1Cookie = await devLogin(m52u1.id);
   const sellU1 = await sellPlan(managerCookie, {
@@ -3518,14 +3518,14 @@ async function main(): Promise<void> {
   check('补缺3-52.1 membership_events 升级留痕（from=萤火 to=暖阳 diffFen=10000 billNo 回链）',
     upEvent?.fromPlan === 'plan_yinghuo' && upEvent.toPlan === 'plan_nuanyang' && upEvent.diffFen === 10000 && upEvent.billNo === upU1.billNo,
     upEvent && { from: upEvent.fromPlan, to: upEvent.toPlan, diff: upEvent.diffFen });
-  /* 微光档升档=新购口径：差价=新档全价+多宠附加按现 petCount 重算（petCount 直置 5 → 萤火 19900+2×5900=31700） */
+  /* 注册用户档升档=新购口径：差价=新档全价+多宠附加按现 petCount 重算（petCount 直置 5 → 萤火 19900+2×5900=31700） */
   const m52u2 = await mkM52User('u2', '13822220002');
   const m52u2Cookie = await devLogin(m52u2.id);
   await trpcMutate('membership.openFree', { cookie: m52u2Cookie });
   await db.update(schema.memberships).set({ petCount: 5, updatedAt: new Date() }).where(eq(schema.memberships.userId, m52u2.id));
   const quoteU2 = await trpcQuery<UpgradeQuoteRes>('membership.upgradeQuote', { cookie: m52u2Cookie });
   const quoteU2yh = quoteU2.targetPlans.find((p) => p.planKey === 'plan_yinghuo');
-  check('补缺3-52.1 微光升档=新购口径（remainingMonths=0 / newPurchase=true / 全价+附加重算 19900+2×5900=31700）',
+  check('补缺3-52.1 注册用户升档=新购口径（remainingMonths=0 / newPurchase=true / 全价+附加重算 19900+2×5900=31700）',
     !!quoteU2yh && quoteU2yh.remainingMonths === 0 && quoteU2yh.formula.newPurchase === true && quoteU2yh.totalDiffFen === 31700,
     quoteU2yh && { total: quoteU2yh.totalDiffFen, formula: quoteU2yh.formula });
   const upU2 = await trpcMutate<UpgradeRes>('membership.upgrade', {
@@ -3533,7 +3533,7 @@ async function main(): Promise<void> {
     input: { userId: m52u2.id, targetPlanKey: 'plan_yinghuo', paySegments: [{ method: 'cash', amountFen: 31700 }] },
   });
   const upU2Days = (new Date(upU2.membership.expiresAt).getTime() - Date.now()) / 86400_000;
-  check('补缺3-52.1 微光新购口径落库（paid_fen=31700 全价含附加 / expires 重起算 +365 天 / sold_store 补=办理店）',
+  check('补缺3-52.1 注册用户新购口径落库（paid_fen=31700 全价含附加 / expires 重起算 +365 天 / sold_store 补=办理店）',
     upU2.diffFen === 31700 && upU2.membership.paidFen === 31700 && upU2.membership.soldStoreId === storeId &&
       upU2Days > 364 && upU2Days < 366,
     { diff: upU2.diffFen, paid: upU2.membership.paidFen, days: upU2Days });
@@ -3887,7 +3887,7 @@ async function main(): Promise<void> {
   /* ---------- 53.3 albumFeed 相册聚合（一次批拉 N+1 消除 + 进行中口径 + limit 截顶） ---------- */
   console.log('\n[补缺4] 53.3 albumFeed 服务相册聚合');
   // 进行中夹具：apptProg 走完 disinfection+precheck 后停在 grooming（active）
-  // （片 2 适配：栅格按档收窄（微光 3 天）后夹具槽位拥挤——阿强被 PR-3 寄养负责人区间
+  // （片 2 适配：栅格按档收窄（注册用户 3 天）后夹具槽位拥挤——阿强被 PR-3 寄养负责人区间
   //   整段覆盖（跨 3 天，completed 也计占用），钉阿强已无槽可落；改钉丽丽并从末位起探测
   //   其实际可接槽（跳过 slotVit 同槽；CONFLICT=区间重叠，事务回滚零副作用，顺延探测），
   //   执行 cookie 同步换 liliCookie；断言口径零改动）
@@ -4325,7 +4325,7 @@ async function main(): Promise<void> {
     cookie: cookie51d, input: { impacts: ['rebate', 'member', 'pets'] },
   });
   const of51d = await trpcMutate<{ membership: { status: string; planKey: string } }>('membership.openFree', { cookie: cookie51d });
-  check('51.4 夹具：微光会员 active（注销联动取消对象）', of51d.membership.status === 'active', of51d.membership);
+  check('51.4 夹具：注册用户会员 active（注销联动取消对象）', of51d.membership.status === 'active', of51d.membership);
   await db.insert(schema.rebateAccounts).values({ userId: userDId, balanceFen: 500 })
     .onConflictDoUpdate({ target: schema.rebateAccounts.userId, set: { balanceFen: 500 } }); // 夹具：余额 500（清零留痕对象）
   const rvDApprove = await trpcMutate<{ request: DeactReqT; clearedRebateFen: number }>('authSecurity.reviewDeactivation', {
@@ -4933,17 +4933,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602）→ 3671/70（端口批收尾片 1：规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）→ 3763/71（端口批收尾片 2：0062 网格/订正/回收站/公告 92 键，生成件重生成 3762+seed 手补 1=3763，域 70→71=corr 新域）→ 3869/72（端口批收尾片 3：0065 画布/薪资/扫码 106 键，生成件重生成 3868+seed 手补 1=3869，域 71→72=canvas 新域）→ 3874/72（端口批收尾片 4：0066 OP-03 收口 7 键增+perk.boarding 两键撤渲染[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3873/72（会员链路小批片 1：0067 会员链路 2 键增+撤牌 2 键出宇宙[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3881/72（会员链路小批片 2：0068 升级域+入口 11 键增/4 键改值[升档线上化口径]+撤牌 4 键出宇宙[仓行留档]，生成件重生成 3880+seed 手补 1=3881） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602）→ 3671/70（端口批收尾片 1：规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）→ 3763/71（端口批收尾片 2：0062 网格/订正/回收站/公告 92 键，生成件重生成 3762+seed 手补 1=3763，域 70→71=corr 新域）→ 3869/72（端口批收尾片 3：0065 画布/薪资/扫码 106 键，生成件重生成 3868+seed 手补 1=3869，域 71→72=canvas 新域）→ 3874/72（端口批收尾片 4：0066 OP-03 收口 7 键增+perk.boarding 两键撤渲染[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3873/72（会员链路小批片 1：0067 会员链路 2 键增+撤牌 2 键出宇宙[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3881/72（会员链路小批片 2：0068 升级域+入口 11 键增/4 键改值[升档线上化口径]+撤牌 4 键出宇宙[仓行留档]，生成件重生成 3880+seed 手补 1=3881）→ 3887/72（会员链路小批片 3：0069 更名+限制解除 6 键增/10 键改值，生成件重生成 3886+seed 手补 1=3887） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（3881 键/72 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 3881 && domainSet.size === 72 &&
+  check('56.1 copy 域种子全量落库（3887 键/72 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 3887 && domainSet.size === 72 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（3881 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 3881 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（3887 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 3887 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -6997,14 +6997,14 @@ async function main(): Promise<void> {
     after674.payments === before674.payments && after674.payOrders === before674.payOrders && after674.svLogs === before674.svLogs,
     { before: before674, after: after674 });
 
-  /* ---- 67.5 提前预约期上限：档位 3/14 天 + 读侧收窄（能看=能约同帧） ---- */
+  /* ---- 67.5 提前预约期上限：档位 7/14 天（片 3 裁②随改） + 读侧收窄（能看=能约同帧） ---- */
   console.log('\n[体验片2] 67.5 提前预约期上限（档位口径 + 栅格/晚数按档截断）');
   const tooFar675 = await asErr(trpcMutate('appointment.create', {
     cookie: customerCookie,
-    input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: storeFuture(4, 12, 0), paymentMode: 'pay_at_store', note: '【测试】e2e 67.5 微光第 4 天' },
+    input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: storeFuture(8, 12, 0), paymentMode: 'pay_at_store', note: '【测试】e2e 67.5 注册用户第 8 天' },
   }));
-  check('67.5 非会员（微光 3 天口径）约第 4 天 → 400 明文「最多可提前 3 天」',
-    tooFar675 instanceof TrpcHttpError && tooFar675.code === 'BAD_REQUEST' && tooFar675.message.includes('最多可提前 3 天'),
+  check('67.5 非会员（注册用户 7 天口径·片 3 裁②）约第 8 天 → 400 明文「最多可提前 7 天」',
+    tooFar675 instanceof TrpcHttpError && tooFar675.code === 'BAD_REQUEST' && tooFar675.message.includes('最多可提前 7 天'),
     tooFar675 && tooFar675.message);
   // 暖阳档夹具：新会员客户（plan_nuanyang active）→ 第 14 天可约
   const nyUser675 = (await db.insert(schema.users).values({ kimiId: 'seed_e2e_nuanyang', nickname: 'e2e 暖阳客户', phone: '13900003002' }).returning())[0]!;
@@ -7020,26 +7020,30 @@ async function main(): Promise<void> {
     input: { storeId, petId: nyPet675.id, serviceId: service.id, type: 'grooming', scheduledStart: storeFuture(13, 12, 0), paymentMode: 'pay_at_store', note: '【测试】e2e 67.5 暖阳第 14 天' },
   });
   check('67.5 暖阳档（14 天口径）约第 14 天可约（confirmed）', appt675.status === 'confirmed', appt675.status);
-  // 读侧收窄：微光栅格超上限槽不返回；暖阳栅格第 4 天后的槽出现（档差实证）
+  // 读侧收窄：注册用户栅格超上限槽不返回；暖阳栅格第 8 天后的槽出现（档差实证）
   const grid675wg = await trpcQuery<{ slots: Array<{ slotStart: Date }> }>('store.getWithServices', {
     cookie: customerCookie, input: { storeId } });
   const grid675ny = await trpcQuery<{ slots: Array<{ slotStart: Date }> }>('store.getWithServices', {
     cookie: nyCookie675, input: { storeId } });
   const maxWg675 = Math.max(...grid675wg.slots.map((s) => s.slotStart.getTime()));
   const maxNy675 = Math.max(...grid675ny.slots.map((s) => s.slotStart.getTime()));
-  check('67.5 栅格按档截断（能看=能约同帧）：微光全部槽 ≤ now+3d（第 4 天槽不出现）',
-    grid675wg.slots.length > 0 && maxWg675 <= Date.now() + 3 * DAY_MS + 60_000,
+  check('67.5 栅格按档截断（能看=能约同帧）：注册用户全部槽 ≤ now+7d（第 8 天槽不出现）',
+    grid675wg.slots.length > 0 && maxWg675 <= Date.now() + 7 * DAY_MS + 60_000,
     { slots: grid675wg.slots.length, maxWg: new Date(maxWg675).toISOString() });
-  check('67.5 暖阳栅格放宽：存在 > now+3d 的槽（与微光同店同刻对照）',
-    maxNy675 > Date.now() + 3 * DAY_MS && maxNy675 > maxWg675,
+  /* 片 3 裁②注记：洗护栅格=固定 7 天合成上限（for i<7 既有件），注册用户 7 天口径后
+     客户视角栅格全员等宽——档差改由 boardingAvailability 晚数（注册用户 8/暖阳 10）与
+     写闸 400 文案/maxAdvanceMsOf 承担（暖阳 14 天口径 > 栅格窗口=体验片 2 既有读侧上限，
+     非本片引入，登记候裁=栅格窗口随档放宽另批评估） */
+  check('67.5 栅格等宽注记：注册用户/暖阳同窗（全部槽 ≤ now+7d 合成上限）',
+    grid675ny.slots.length > 0 && maxNy675 <= Date.now() + 7 * DAY_MS + 60_000 && maxNy675 >= maxWg675,
     { maxNy: new Date(maxNy675).toISOString(), maxWg: new Date(maxWg675).toISOString() });
-  // boardingAvailability 晚数按档截断：10 晚窗口，微光=4 晚（今日~d+3）/暖阳=全量 10 晚
+  // boardingAvailability 晚数按档截断：10 晚窗口，注册用户=8 晚（今日~d+7）/暖阳=全量 10 晚
   const ba675wg = await trpcQuery<{ nights: string[] }>('store.boardingAvailability', {
     cookie: customerCookie, input: { storeId, from: new Date(), to: new Date(Date.now() + 10 * DAY_MS) } });
   const ba675ny = await trpcQuery<{ nights: string[] }>('store.boardingAvailability', {
     cookie: nyCookie675, input: { storeId, from: new Date(), to: new Date(Date.now() + 10 * DAY_MS) } });
-  check('67.5 boardingAvailability 晚数按档截断（微光 4 晚 / 暖阳 10 晚全量）',
-    ba675wg.nights.length === 4 && ba675ny.nights.length === 10,
+  check('67.5 boardingAvailability 晚数按档截断（注册用户 8 晚 / 暖阳 10 晚全量）',
+    ba675wg.nights.length === 8 && ba675ny.nights.length === 10,
     { wg: ba675wg.nights.length, ny: ba675ny.nights.length });
 
   /* ---- 67.6 满档推荐留口：形状定死（enabled=false/candidates 空/note 读端口） ---- */
@@ -7363,7 +7367,7 @@ async function main(): Promise<void> {
   /* ---------- 68.5 会员码（签发/核验/篡改/过期） ---------- */
   console.log('\n[片3] 68.5 会员码');
   /* 端口批收尾片 4（OP-03 P1-1 注册即会员裁定）注记：devLoginPhone 注册路径新用户今起
-     开户连带落微光档——原「非会员」前提改为「直插库用户（未经 HTTP 注册）」守错误路径，
+     开户连带落注册用户档——原「非会员」前提改为「直插库用户（未经 HTTP 注册）」守错误路径，
      注册即会员新口径由族 86.1 正面断言（同裁定两面，不双标） */
   const rawUser685 = (await db.insert(schema.users).values({ kimiId: 'seed_e2e_card685raw', nickname: '会员码负例685', phone: '19966680005' }).returning({ id: schema.users.id }))[0]!;
   await db.insert(schema.userRoles).values({ userId: rawUser685.id, role: 'customer' });
@@ -7376,10 +7380,10 @@ async function main(): Promise<void> {
     'membership.myCardToken', { cookie: cookie684 });
   const verify685 = await trpcMutate<{ userId: string; planKey: string; planLabel: string; membershipStatus: string | null }>(
     'membership.verifyCardToken', { cookie: ownerCookie, input: { token: card685.token } });
-  check('68.5 myCardToken 签发（5min 时效）→ verifyCardToken 收银台核验通过 + planKey/档名透出（微光）',
+  check('68.5 myCardToken 签发（5min 时效）→ verifyCardToken 收银台核验通过 + planKey/档名透出（注册用户）',
     card685.planKey === 'plan_weiguang' && card685.ttlSec === 300 &&
       verify685.userId === user684Id && verify685.planKey === 'plan_weiguang' &&
-      verify685.planLabel.includes('微光') && verify685.membershipStatus === 'active',
+      verify685.planLabel.includes('注册用户') && verify685.membershipStatus === 'active',
     verify685);
   const tampered685 = card685.token.slice(0, -1) + (card685.token.endsWith('0') ? '1' : '0');
   const verTamper685 = await asErr(trpcMutate('membership.verifyCardToken', { cookie: ownerCookie, input: { token: tampered685 } }));
@@ -8132,7 +8136,7 @@ async function main(): Promise<void> {
       svClerk instanceof TrpcHttpError && svClerk.httpStatus === 403,
       { d: svAfter.totalFen - svBefore.totalFen, clerk: svClerk && svClerk.httpStatus });
 
-    /* ---- 73.2 回馈金负债店级聚合（本店会员口径=办卡店 ∪ 微光 NULL） ---- */
+    /* ---- 73.2 回馈金负债店级聚合（本店会员口径=办卡店 ∪ 注册用户 NULL） ---- */
     const rbBefore = await trpcQuery<{ totalFen: number; accountCount: number }>('report.rebateLiability', { cookie: ownerCookie });
     const rbUser = await mkUser('seed_e2e_exp5_rb', 'e2e 片5 回馈金户');
     await db.insert(schema.memberships).values({
@@ -8642,8 +8646,8 @@ async function main(): Promise<void> {
 
     /* ---- 76.3 公共读口形状不变（不透元数据：键→文两列） ---- */
     const texts76 = await trpcQuery<{ rows: Array<{ key: string; text: string; screen?: unknown; position?: unknown }> }>('config.activeCopyTexts', { cookie: customerCookie });
-    check('76.3 activeCopyTexts 形状不变（3881 行 key→text，不透 screen/position 元数据）',
-      texts76.rows.length === 3881 &&
+    check('76.3 activeCopyTexts 形状不变（3887 行 key→text，不透 screen/position 元数据）',
+      texts76.rows.length === 3887 &&
       texts76.rows.every((r) => r.screen === undefined && r.position === undefined),
       texts76.rows.length);
 
@@ -8759,7 +8763,7 @@ async function main(): Promise<void> {
     const batchesA = await trpcQuery<AnyRec78[]>('storedValue.listImportBatches', { cookie: ownerCookie });
     const passB = await trpcQuery<AnyRec78>('pass.listForStore', { cookie: ownerBCookie78 });
     const amortB = await trpcQuery<AnyRec78>('membership.amortizationStats', { cookie: ownerBCookie78, input: { month: month78 } });
-    /* 口径注记：amortizedFen=微光线上开档 sold_store_id=NULL 分摊（Y7 本店∪NULL 既定口径，
+    /* 口径注记：amortizedFen=注册用户线上开档 sold_store_id=NULL 分摊（Y7 本店∪NULL 既定口径，
        各店同见 NULL 部分——非泄漏；泄漏判定=cash 侧[售卡实收按店]他店混入） */
     const amortCashNonZero = Object.entries(amortB).filter(([k, v]) => /cash/i.test(k) && /fen/i.test(k) && typeof v === 'number' && v !== 0);
     check('78.3 互盲③会员账务：B 储值批次=0（A 批次不透出=0050 补漏生效）+ A 本域批次≥1（写口落 storeId+同域可见）+ B 次卡=0 + B 售卡实收=0（cash 侧零混入）',
@@ -8771,7 +8775,7 @@ async function main(): Promise<void> {
     const d1B = await trpcQuery<AnyRec78>('report.d1Revenue', { cookie: ownerBCookie78, input: { month: month78 } });
     const n1B = await trpcQuery<AnyRec78>('report.n1LevelDist', { cookie: ownerBCookie78, input: { month: month78 } });
     const n1A = await trpcQuery<AnyRec78>('report.n1LevelDist', { cookie: ownerCookie, input: { month: month78 } });
-    /* 口径注记：d1.amortizedFen=微光 NULL 开档分摊（Y7 本店∪NULL 既定口径）不判零；
+    /* 口径注记：d1.amortizedFen=注册用户 NULL 开档分摊（Y7 本店∪NULL 既定口径）不判零；
        泄漏判定=cashFen/nonMemberFen（A 店夹具现金单）B 侧零值 */
     check('78.4 互盲④报表：B 收现/散客分拆全零（A 夹具单零混入）+ B 档变事件 0/0 而 A≥1（membership_events 店域收窄补漏实证）',
       d1B.cashFen === 0 && (d1B.nonMemberFen ?? 0) === 0 &&
@@ -10297,7 +10301,7 @@ async function main(): Promise<void> {
   {
     type AnyRec86 = Record<string, unknown>;
 
-    /* ---- 86.1 P1-1 注册即会员（自助开户连带落微光档，两段并一段） ---- */
+    /* ---- 86.1 P1-1 注册即会员（自助开户连带落注册用户档，两段并一段） ---- */
     const res861 = await fetch(`${BASE}/api/auth/dev-login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -10316,7 +10320,7 @@ async function main(): Promise<void> {
     const texts862 = await trpcQuery<{ rows: Array<{ key: string; text: string }> }>('config.activeCopyTexts', { cookie: customerCookie });
     const mp862 = await trpcQuery<{ rules: Array<{ ruleKey: string; valueJson: Record<string, unknown>; active: boolean }> }>('config.list', { cookie: ownerCookie, input: { domain: 'member_plans' } });
     const wg862 = mp862.rules.find((i) => i.ruleKey === 'plan_weiguang' && i.active);
-    check('86.2 P1-2 撤文案：perk.boarding/perk.boardingSub 两键全域零渲染（读口无键）+微光档 service_discount_bp=10000（门市价单源，无 9 折残留）',
+    check('86.2 P1-2 撤文案：perk.boarding/perk.boardingSub 两键全域零渲染（读口无键）+注册用户档 service_discount_bp=10000（门市价单源，无 9 折残留）',
       !texts862.rows.some((r) => r.key === 'perk.boarding' || r.key === 'perk.boardingSub') &&
       (wg862?.valueJson.service_discount_bp as number | undefined) === 10000,
       { hasBoarding: texts862.rows.some((r) => r.key.startsWith('perk.boarding')), wg: wg862?.valueJson.service_discount_bp });
@@ -10393,12 +10397,12 @@ async function main(): Promise<void> {
 
   /* ==================================================================
    * 会员链路修正小批 片 1（收银台三件 · 任务书冻结版 V1.0，档位=K3·Max 涉钱面）段：
-   *   87.1 升级死路修通（微光→萤火新购口径全链+幂等）；87.2 读路径缺口补掉（forUser 真值+售卡拦截人话）；
+   *   87.1 升级死路修通（注册用户→萤火新购口径全链+幂等）；87.2 读路径缺口补掉（forUser 真值+售卡拦截人话）；
    *   87.3 错误人话化（代码标识永不上屏）+撤牌两键；87.4 升级补差 diff 硬校验（Σ段≠差价 400）；
    *   87.5 frozen=续费解冻路径（升档 400 明文）；87.6 权限闸；87.7 新客旁路不回退；87.8 隔离族不回退
    * ==================================================================
    * 会员链路修正小批 片 2（线上升级 mock 域+入口断链 · 任务书冻结版 V1.0 §一 B 股）段：
-   *   88.1 微光新购口径线上升级全链（quote=全价 19900/createOrder server 重算覆盖假金额/
+   *   88.1 注册用户新购口径线上升级全链（quote=全价 19900/createOrder server 重算覆盖假金额/
    *       mock-callback success→paid+memberships 新购口径换档（有效期重起算/sold_store=NULL）/
    *       membership_events 留痕 bill_no=NULL+meta.payNo/SSE membership.upgraded）；
    *   88.2 兑付幂等（重放回调零写入零单据+memberships 行数不变）+同档重复收单 400；
@@ -10407,13 +10411,20 @@ async function main(): Promise<void> {
    *   88.4 mock 四态升级域（fail 留痕零兑付/timeout sweeper 关单/drop+reconcile 补开幂等）；
    *   88.5 收单闸拒单口径（非会员/降级/同档/冻结=400 人话；非会员 quote 升级域=400）；
    *   88.6 权限（他人升级单 status/reconcile 403）+listMine/recordsMine 双域透出摘要
+   * ==================================================================
+   * 会员链路修正小批 片 3（E 股·更名与限制解除 · 任务-1008-2 两裁终审）段：
+   *   89.1 更名零残留（档位表 label=注册用户+端口文案值全量零旧名+货架首行/永久正名键）；
+   *   89.2 功能闸解除（注册用户宠物建档 4 只全落+有效期 2099 远端不动）；
+   *   89.3 券全员可领可用（注册用户领券→下单→核销留痕全链，现闸核毕零改动）；
+   *   89.4 预约提前裁②（注册 7/萤火 14/烛光 14/暖阳 14，maxAdvanceMsOf 直读+第 6 天可约正向）；
+   *   89.5 付费档特权零回退（bp 原值+提成映射键名同步）
    * ================================================================== */
   console.log('\n[会员链路片1] 87. 收银台三件（死路修通+读路径+人话化）');
   {
     type AnyRec87 = Record<string, unknown>;
 
-    /* ---- 87.1 升级死路修通（微光→萤火=新购口径全链，前后值精确到分） ---- */
-    /* 钉时刻+钉默认档：83.5 自动回滚（幂等锚）可能把 default_plan_key 停在非微光档——
+    /* ---- 87.1 升级死路修通（注册用户→萤火=新购口径全链，前后值精确到分） ---- */
+    /* 钉时刻+钉默认档：83.5 自动回滚（幂等锚）可能把 default_plan_key 停在非注册用户档——
        87.1 开局先复原端口值（钉死夹具，防 sweep 态漂移） */
     await trpcMutate('config.save', {
       cookie: ownerCookie,
@@ -10440,7 +10451,7 @@ async function main(): Promise<void> {
       cookie: ownerCookie,
       input: { userId: user87.id, targetPlanKey: 'plan_yinghuo', paySegments: [] },
     });
-    check('87.1 升级死路修通：微光档 quote 三付费档皆可升（新购口径标）+upgrade 萤火全价 19900 成交（重起算有效期+办理店补登+补差单+upgrade 事件）+同档重放幂等零单据',
+    check('87.1 升级死路修通：注册用户档 quote 三付费档皆可升（新购口径标）+upgrade 萤火全价 19900 成交（重起算有效期+办理店补登+补差单+upgrade 事件）+同档重放幂等零单据',
       res87.status === 200 && quote87.currentPlan?.free === true && quote87.targetPlans.length === 3 && wgQuote.totalDiffFen === 19900 && wgQuote.formula.newPurchase === true &&
       up87.diffFen === 19900 && up87.billNo !== null && mAfter87.planKey === 'plan_yinghuo' && mAfter87.paidFen === 19900 && mAfter87.soldStoreId === storeId &&
       !!ev87 && up87dup.idempotent === true && up87dup.billNo === null,
@@ -10478,7 +10489,7 @@ async function main(): Promise<void> {
       input: { userId: user874.id, targetPlanKey: 'plan_yinghuo', paySegments: [{ method: 'cash', amountFen: 100 }] },
     }));
     const m874 = (await db.select().from(schema.memberships).where(eq(schema.memberships.userId, user874.id)))[0]!;
-    check('87.4 补差硬校验：Σ支付段（100）≠差价（19900）=400 明文+会员档零动作（仍微光）',
+    check('87.4 补差硬校验：Σ支付段（100）≠差价（19900）=400 明文+会员档零动作（仍注册用户）',
       up874bad instanceof TrpcHttpError && up874bad.httpStatus === 400 && up874bad.message.includes('须等于升档补差') && m874.planKey === 'plan_weiguang',
       { err: up874bad && up874bad.message, plan: m874.planKey });
 
@@ -10531,7 +10542,7 @@ async function main(): Promise<void> {
       amountFen: number; channelEnabled: boolean; timeoutMinutes: number;
       upgrade: { fromPlanKey: string; newPurchase: boolean; remainingMonths: number; baseDiffFen: number; petDiffFen: number } | null;
     }
-    /* 微光档开户夹具：手机号 dev-login（OP-03 注册即落微光档） */
+    /* 注册用户档开户夹具：手机号 dev-login（OP-03 注册即落注册用户档） */
     async function mkWeiguang(phone: string): Promise<{ id: string; cookie: string }> {
       const res = await fetch(`${BASE}/api/auth/dev-login`, {
         method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ phone }),
@@ -10541,13 +10552,13 @@ async function main(): Promise<void> {
       return { id: user.id, cookie };
     }
 
-    /* ---- 88.1 微光新购口径线上升级全链（前后值精确到分） ---- */
+    /* ---- 88.1 注册用户新购口径线上升级全链（前后值精确到分） ---- */
     const u881 = await mkWeiguang('19900000088');
     const m881pre = (await db.select().from(schema.memberships).where(eq(schema.memberships.userId, u881.id)))[0]!;
     const q881 = await trpcQuery<UpgradeQuoteRes>('pay.quote', {
       cookie: u881.cookie, input: { bizDomain: 'membership_upgrade', planKey: 'plan_yinghuo', petCount: 0 },
     });
-    check('88.1 升级域 quote：微光→萤火=新购口径全价 19900（computeUpgradeDiff 同源透出）+通道开',
+    check('88.1 升级域 quote：注册用户→萤火=新购口径全价 19900（computeUpgradeDiff 同源透出）+通道开',
       q881.amountFen === 19900 && q881.upgrade?.fromPlanKey === 'plan_weiguang' && q881.upgrade.newPurchase === true &&
       q881.channelEnabled === true, q881);
     const co881 = await createPayOrder(u881.cookie, {
@@ -10643,7 +10654,7 @@ async function main(): Promise<void> {
     await postRaw('/api/pay/orders/mock-callback', { orderId: co884a.order.id, scenario: 'fail' }, {}, u884a.cookie);
     const st884a = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: u884a.cookie, input: { payNo: co884a.order.payNo } });
     const m884a = (await db.select().from(schema.memberships).where(eq(schema.memberships.userId, u884a.id)))[0]!;
-    check('88.4 fail：升级单通道失败 → failed 留痕 + 零兑付（档仍微光）',
+    check('88.4 fail：升级单通道失败 → failed 留痕 + 零兑付（档仍注册用户）',
       st884a.order.status === 'failed' && m884a.planKey === 'plan_weiguang',
       { status: st884a.order.status, plan: m884a.planKey });
 
@@ -10658,7 +10669,7 @@ async function main(): Promise<void> {
     await closeTimeoutPayOrders(db, new Date());
     const st884b = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: u884b.cookie, input: { payNo: co884b.order.payNo } });
     const m884b = (await db.select().from(schema.memberships).where(eq(schema.memberships.userId, u884b.id)))[0]!;
-    check('88.4 timeout：升级单超时 sweeper 关单 closed + 零兑付（档仍微光）',
+    check('88.4 timeout：升级单超时 sweeper 关单 closed + 零兑付（档仍注册用户）',
       st884b.order.status === 'closed' && m884b.planKey === 'plan_weiguang',
       { status: st884b.order.status, plan: m884b.planKey });
 
@@ -10720,6 +10731,120 @@ async function main(): Promise<void> {
         i.biz.fromPlanKey === 'plan_weiguang' && i.biz.newPurchase === true) &&
       rec881.items.some((i) => i.kind === 'pay' && i.id === co881.order.id),
       { lm: lm881.items.length, rec: rec881.items.length });
+  }
+
+  console.log('\n[会员链路片3] 89. 更名与限制解除（零残留/建档不限/券全员/预约提前/特权零回退）');
+  {
+    /* 钉默认档（83.5 sweep 态漂移防，同 87.1/88 先例） */
+    await trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'member_plans', changes: [{ ruleKey: 'default_plan_key', valueJson: { value: 'plan_weiguang' } }] },
+    });
+    const { maxAdvanceMsOf } = await import('../routers/appointment');
+    /* 注册用户夹具：手机号 dev-login（OP-03 注册即落档） */
+    const reg89 = await fetch(`${BASE}/api/auth/dev-login`, {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ phone: '19900000389' }),
+    });
+    const cookie89 = reg89.headers.getSetCookie().map((c) => c.split(';')[0]).join('; ');
+    const user89 = (await db.select().from(schema.users).where(eq(schema.users.phone, '19900000389')))[0]!;
+
+    /* ---- 89.1 更名零残留（档位表+端口值双通道；码内+种子通道=卷宗 shell grep 件） ---- */
+    const planWg89 = await db.select().from(schema.memberPlans)
+      .where(and(eq(schema.memberPlans.ruleKey, 'plan_weiguang'), eq(schema.memberPlans.active, true))).get();
+    const wgVal89 = planWg89!.valueJson as Record<string, unknown>;
+    const texts89 = await trpcQuery<{ rows: Array<{ key: string; text: string }> }>('config.activeCopyTexts', { cookie: customerCookie });
+    /* 旧名探针拼串防自命中（验收口径=grep 旧名零残留，探针字面量不直入） */
+    const OLD89 = '微' + '光';
+    check('89.1 更名零残留：档位表 label=「会员档·注册用户」（rule_key=plan_weiguang 不动）+全量端口文案值零旧名',
+      planWg89!.label.includes('注册用户') && !planWg89!.label.includes(OLD89) &&
+      texts89.rows.every((r) => !r.text.includes(OLD89)),
+      { label: planWg89!.label, hitRows: texts89.rows.filter((r) => r.text.includes(OLD89)).length });
+    check('89.1 货架首行口径（注册用户 · 免费 · 在册即享基础功能=端口值）+有效期永久正名（账号在即在册·永不冻结）',
+      texts89.rows.some((r) => r.key === 'card.freePrice' && r.text === '免费') &&
+      texts89.rows.some((r) => r.key === 'card.claimWeiguang' && r.text === '在册即享基础功能') &&
+      texts89.rows.some((r) => r.key === 'rules.r3Free' && r.text.includes('账号在即在册')) &&
+      texts89.rows.some((r) => r.key === 'me.freeValidityNote' && r.text.includes('永不冻结')),
+      { freePrice: texts89.rows.find((r) => r.key === 'card.freePrice')?.text });
+
+    /* ---- 89.2 功能闸解除：宠物建档全员不限（注册用户 4 只全落）+有效期永久（2099 不动） ---- */
+    const m892 = (await db.select().from(schema.memberships).where(eq(schema.memberships.userId, user89.id)))[0]!;
+    const petIds89: string[] = [];
+    for (let i = 1; i <= 4; i++) {
+      const up = await trpcMutate<{ pet: { id: string }; created: boolean }>('pet.upsert', {
+        cookie: cookie89,
+        input: { name: `建档不限实证 ${i} 号`, species: 'dog', breed: '田园', weightKg: 5 },
+      });
+      if (up.created) petIds89.push(up.pet.id);
+    }
+    check('89.2 宠物建档全员不限：注册用户连建 4 只全落（超旧档 included_pets=3 也零拦截）+有效期 2099 远端不动',
+      petIds89.length === 4 && m892.planKey === 'plan_weiguang' && m892.expiresAt.getTime() === 4102444799 * 1000,
+      { pets: petIds89.length, plan: m892.planKey, expires: m892.expiresAt });
+
+    /* ---- 89.3 裁①：活动折扣券全员可领可用（注册用户领券→下单用券→核销留痕全链） ---- */
+    const coupon893 = (await db.insert(schema.coupons).values({
+      title: '全员可领实证券', amountFen: 500, thresholdFen: 0, validDays: 30, createdBy: ownerUser!.id,
+    }).returning())[0]!;
+    const tpl893 = await trpcQuery<{ items: Array<{ id: string }> }>('mall.couponTemplates', { cookie: cookie89 });
+    const claim893 = await trpcMutate<{ grant: { id: string; status: string }; idempotent: boolean }>(
+      'mall.couponClaim', { cookie: cookie89, input: { couponId: coupon893.id } });
+    const prods893 = await trpcQuery<{ items: Array<{ id: string; priceFen: number; stock: number }> }>(
+      'mall.listProducts', { cookie: cookie89, input: { storeId } });
+    const prod893 = prods893.items.find((p) => p.priceFen > 0 && p.stock > 0)!;
+    const order893 = await trpcMutate<{ id: string }>('mall.createOrder', {
+      cookie: cookie89, input: { items: [{ productId: prod893.id, qty: 1 }], address: { name: '八九三', phone: '19900000389', detail: '测试路 893 号' } },
+    });
+    const use893 = await trpcMutate<{ grant: { status: string; orderId: string | null }; idempotent: boolean }>(
+      'mall.couponUse', { cookie: cookie89, input: { grantId: claim893.grant.id, orderId: order893.id } });
+    const myCoupons893 = await trpcQuery<{ items: Array<{ id: string; status: string; orderId: string | null }> }>(
+      'mall.myCoupons', { cookie: cookie89 });
+    check('89.3 券全员可领可用：注册用户模板可见+领取 claimed+下单+核销 used 留痕 orderId（现闸本不限档=核闸实证，券引擎零改动）',
+      tpl893.items.some((t) => t.id === coupon893.id) &&
+      claim893.grant.status === 'claimed' && claim893.idempotent === false &&
+      use893.grant.status === 'used' && use893.grant.orderId === order893.id &&
+      myCoupons893.items.some((i) => i.id === claim893.grant.id && i.status === 'used'),
+      { claim: claim893.grant.status, use: use893.grant.status });
+
+    /* ---- 89.4 裁②：预约提前三档断言（注册 7/付费全 14，端口值同源） ---- */
+    const mkPlanUser89 = async (phone: string, planKey: string) => {
+      const u = (await db.insert(schema.users).values({ kimiId: `seed_e2e_89_${planKey}`, nickname: `e2e ${planKey}`, phone }).returning())[0]!;
+      await db.insert(schema.userRoles).values({ userId: u.id, role: 'customer' });
+      await db.insert(schema.memberships).values({
+        userId: u.id, planKey, startedAt: new Date(), expiresAt: new Date(Date.now() + 365 * DAY_MS), status: 'active',
+      });
+      return u;
+    };
+    const yh89 = await mkPlanUser89('13900089301', 'plan_yinghuo');
+    const zg89 = await mkPlanUser89('13900089302', 'plan_zhuguang');
+    const ny89 = await mkPlanUser89('13900089303', 'plan_nuanyang');
+    const dayMs89 = 24 * 3600 * 1000;
+    const [advWg, advYh, advZg, advNy] = await Promise.all([
+      maxAdvanceMsOf(db, user89.id), maxAdvanceMsOf(db, yh89.id), maxAdvanceMsOf(db, zg89.id), maxAdvanceMsOf(db, ny89.id),
+    ]);
+    check('89.4 预约提前裁②：注册用户=7 天（3→7）/萤火=14/烛光=14（7→14）/暖阳=14 不动（maxAdvanceMsOf 直读端口值）',
+      advWg === 7 * dayMs89 && advYh === 14 * dayMs89 && advZg === 14 * dayMs89 && advNy === 14 * dayMs89,
+      { wg: advWg / dayMs89, yh: advYh / dayMs89, zg: advZg / dayMs89, ny: advNy / dayMs89 });
+    /* 越限 400 人话照案（67.5 已随改第 8 天拒）；本帧补正向可约：注册用户第 6 天创建成功 */
+    const pet893ok = petIds89[0]!;
+    const appt894 = await trpcMutate<{ id: string; status: string }>('appointment.create', {
+      cookie: cookie89,
+      input: { storeId, petId: pet893ok, serviceId: service.id, type: 'grooming', scheduledStart: storeFuture(6, 15, 0), paymentMode: 'pay_at_store', note: '【测试】e2e 89.4 注册用户第 6 天' },
+    });
+    check('89.4 注册用户第 6 天可约（confirmed；7 天口径内）', appt894.status === 'confirmed', appt894.status);
+
+    /* ---- 89.5 付费档特权零回退（裁①另一半：回馈金/服务折扣不放） ---- */
+    const plans89 = await trpcQuery<{ plans: Array<{ planKey: string; rebateBp: number; serviceDiscountBp: number; free: boolean; includedPets: number }> }>(
+      'membership.plans', { cookie: cookie89 });
+    const wg89p = plans89.plans.find((p) => p.planKey === 'plan_weiguang')!;
+    const paid89 = ['plan_yinghuo', 'plan_zhuguang', 'plan_nuanyang'].map((k) => plans89.plans.find((p) => p.planKey === k)!);
+    const comm89 = await db.select().from(schema.commissionRules)
+      .where(and(eq(schema.commissionRules.ruleKey, 'commission_card_fixed'), eq(schema.commissionRules.active, true))).get();
+    const commMap89 = (comm89!.valueJson as Record<string, unknown>).fixed_fen_by_plan as Record<string, number>;
+    check('89.5 特权零回退：注册用户 rebate_bp=0/service_discount_bp=10000 不动+付费三档 bp 原值+售卡提成映射键名同步（注册用户免费档=0）',
+      wg89p.rebateBp === 0 && wg89p.serviceDiscountBp === 10000 && wg89p.free === true && wg89p.includedPets === 100 &&
+      paid89[0]!.rebateBp === 200 && paid89[1]!.rebateBp === 500 && paid89[2]!.rebateBp === 1000 &&
+      paid89[0]!.serviceDiscountBp === 8800 && paid89[1]!.serviceDiscountBp === 8500 && paid89[2]!.serviceDiscountBp === 8000 &&
+      commMap89['注册用户免费档'] === 0 && !(`${OLD89}免费档` in commMap89),
+      { wg: [wg89p.rebateBp, wg89p.serviceDiscountBp], paid: paid89.map((p) => p.rebateBp), commKeys: Object.keys(commMap89) });
   }
 
   client.close();

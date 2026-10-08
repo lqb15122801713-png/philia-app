@@ -21,7 +21,7 @@ export const TIER_IDX: Record<string, 0 | 1 | 2 | 3> = {
   plan_zhuguang: 2,
   plan_nuanyang: 3,
 }
-const TIER_NAME = ['微光', '萤火', '烛光', '暖阳'] as const
+const TIER_NAME = ['注册用户', '萤火', '烛光', '暖阳'] as const
 const TIER_CLAIM_KEY = [
   'card.claimWeiguang',
   'card.claimYinghuo',
@@ -169,7 +169,8 @@ export function CardFace({
       <div className="cf-logo">{mc('card.logo')}</div>
       {stamp ? <div className="cf-stamp">{stamp}</div> : null}
       <div className="cf-name" style={{ fontSize: nameSize, marginTop: height >= 200 ? 16 : 3 }}>
-        {tierNameOf(planKey)}会员
+        {/* 会员链路片 3 更名：注册用户=身份不是卡（档名不带「会员」后缀）；付费三档照带 */}
+        {tierNameOf(planKey)}{t === 0 ? '' : '会员'}
       </div>
       {/* PR-5 UX P3-1：92 高码屏横卡行距收紧（价格行不再贴卡面下缘，下内边距=14px） */}
       <div className="cf-price" style={{ fontSize: height >= 200 ? 13 : 12, marginTop: height >= 200 ? 6 : 2 }}>
@@ -253,7 +254,7 @@ export function PerksWall({ plan }: { plan: V2Plan }) {
      注册表 mc.perksWall.copyKeys 声明 perk.boarding 为写死件不动（同 home.entryNote
      留口先例：键不在码内=零渲染零副作用） */
   const items = [
-    { t: mc('perk.pets'), s: mc('perk.petsSub', { n: plan.includedPets }) },
+    { t: mc('perk.pets'), s: plan.free ? mc('perk.petsSubFree') : mc('perk.petsSub', { n: plan.includedPets }) },
     { t: mc('perk.discount'), s: zhe ? mc('perk.discountSub', { zhe }) : mc('perk.discountNone') },
     { t: mc('perk.rebate'), s: plan.rebateBp > 0 ? mc('perk.rebateSub', { pct: pctOf(plan.rebateBp) }) : mc('perk.rebateNone') },
     { t: mc('perk.groomer'), s: mc('perk.groomerSub') },

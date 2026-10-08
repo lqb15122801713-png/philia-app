@@ -285,7 +285,7 @@ export function finalizePayments(
  * 同公式 round(unit×bp/10000)、同「人工改价行不覆盖」、同作用域（service/appointment 行，
  * 商品全员同价）。**提交快照保持 adjustedPriceFen=null**（server 结账实算且避免撞
  * 改价闸门 assertPriceEditAllowed——adjusted≠null 须 owner|manager，clerk 会 403）。
- * bp=null 或 ≥10000（微光无折扣，红线 7）→ 门市价口径原样。
+ * bp=null 或 ≥10000（注册用户无折扣，红线 7）→ 门市价口径原样。
  */
 export function computeCartMember(
   lines: CartLine[],

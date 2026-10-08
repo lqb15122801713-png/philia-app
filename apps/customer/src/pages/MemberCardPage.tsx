@@ -110,7 +110,7 @@ export default function MemberCardPage() {
         </div>
       ) : (
         <div className="m2-pad" style={{ marginTop: 8, paddingBottom: 60 }}>
-          {/* 卡面横卡（92 高码屏规格；非会员→微光卡面引导态） */}
+          {/* 卡面横卡（92 高码屏规格；非会员→注册用户卡面引导态） */}
           <CardFace
             planKey={m?.planKey ?? 'plan_weiguang'}
             priceText={
@@ -176,7 +176,7 @@ export default function MemberCardPage() {
             )}
           </div>
 
-          {/* 非会员引导（微光免费一键开 → /member/open） */}
+          {/* 非会员引导（注册用户免费一键开 → /member/open） */}
           {!m ? (
             <TipCard>
               {mc('q1.nonMemberGuide')}

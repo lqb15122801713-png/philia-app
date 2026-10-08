@@ -183,7 +183,7 @@ export default function CashierPage() {
   const svcDiscountBp = useMemo(() => {
     if (!cachedMembership || cachedMembership.status !== 'active') return null
     const plan = plansQ.data?.plans.find((p) => p.planKey === cachedMembership.planKey)
-    if (!plan || plan.serviceDiscountBp >= 10000) return null // 微光无折扣（红线 7）
+    if (!plan || plan.serviceDiscountBp >= 10000) return null // 注册用户无折扣（红线 7）
     return plan.serviceDiscountBp
   }, [cachedMembership, plansQ.data])
 

@@ -39,7 +39,7 @@ export const DAY_MS = 86_400_000
 
 /** 四档短名（共创会落槌档名，冻结版任务书 §二）；未知档回落 label 中「·名：」段 */
 const PLAN_SHORT_NAME: Record<string, string> = {
-  plan_weiguang: '微光',
+  plan_weiguang: '注册用户',
   plan_yinghuo: '萤火',
   plan_zhuguang: '烛光',
   plan_nuanyang: '暖阳',
@@ -69,8 +69,10 @@ export function planDiscountText(p: MemberPlanPublic): string {
   return `服务 ${Number.isInteger(z) ? z : z.toFixed(1)} 折`
 }
 
-/** 多宠规则展示（CJ-0921-12①：含 N 只，第 N+1 只起 +¥x/年/只，M 只封顶） */
+/** 多宠规则展示（CJ-0921-12①：含 N 只，第 N+1 只起 +¥x/年/只，M 只封顶；
+ *  会员链路片 3：注册用户档=宠物建档全员不限（档案功能非会员权益，语义正名）） */
 export function planPetRuleText(p: MemberPlanPublic): string {
+  if (p.free) return '宠物建档不限'
   return `含 ${p.includedPets} 只，第 ${p.includedPets + 1} 只起 +¥${formatFen(p.extraPetFen)}/年/只，${p.maxPets} 只封顶`
 }
 
@@ -148,7 +150,7 @@ export function RebateRulesList({
       ? paidPlans.map((p) => `${planShortName(p)} ${p.rebateBp / 100}%`).join(' / ')
       : '以门店公布为准'
   const rules: string[] = [
-    `回馈比例：商品消费按档返（${rebateSummary}），按商品实收金额计提，无月上限；微光档无回馈金。用回馈金支付的部分不再返。`,
+    `回馈比例：商品消费按档返（${rebateSummary}），按商品实收金额计提，无月上限；注册用户档无回馈金。用回馈金支付的部分不再返。`,
     `结算周期：上月 26 日至本月 25 日为一期，统一次月到账（次月 ${globals.rebateSettlementDay} 日为执行基准，系统故障顺延不超过 3 天）。`,
     `有效期：回馈金自到账起 ${globals.rebateValidityDays} 天有效；会员有效期 ${globals.membershipValidityDays} 天（自开通日起算，到期日不重算）。`,
     '使用范围：回馈金 1:1 抵扣商品金额，仅限商品（服务/寄养不可用）；余额不足可与现金/微信/支付宝混搭支付。',

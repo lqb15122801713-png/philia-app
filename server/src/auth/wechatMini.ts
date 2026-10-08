@@ -130,7 +130,7 @@ wechatMiniAuthRoutes.post('/api/auth/wechat-mini', async (c) => {
     }
     // 新用户自动写 customer 角色
     await db.insert(schema.userRoles).values({ userId: user.id, role: 'customer' });
-    /* OP-03 P1-1（端口批收尾片 4 · 老板 10-07「注册即微光会员」口径）：开户事务连带落微光档
+    /* OP-03 P1-1（端口批收尾片 4 · 老板 10-07「注册即注册用户会员」口径）：开户事务连带落注册用户档
        ——openFreeMembershipCore 幂等落档（自助/微信/openFree 三处同函数，两段并一段） */
     await openFreeMembershipCore(db, user.id, new Date());
     created = true;

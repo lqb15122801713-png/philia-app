@@ -7,7 +7,7 @@
  *   代码零常量；live 月份按源单时间（账单 settled_at）取 effective_from 生效的规则版本
  *   逐行计提；已快照月份读 commission_snapshots，不动历史快照；
  * - 售卡定额（R11a 接通）：当月 settled 未冲正账单中 kind='membership' 行按
- *   commission_card_fixed.fixed_fen_by_plan 定额计提（萤火 500/烛光 1000/暖阳 2000/微光 0，
+ *   commission_card_fixed.fixed_fen_by_plan 定额计提（萤火 500/烛光 1000/暖阳 2000/注册用户 0，
  *   规则版本时序口径 resolveFromHistory 保持）；归属=该单 operator 开单人（无岗位闸，
  *   P3 本人开单同口径）；试用期 ×50%（commission_probation_multiplier，与商品行同口径）；
  *   cardNote 退役为历史注释（有行时为空串，前端不渲染）；无售卡单时 cardLines 仍为空数组
@@ -339,12 +339,12 @@ interface CardLine {
 
 /**
  * 售卡定额判档映射（R11a）：commission_card_fixed 种子键为档位标签
- * （萤火199/烛光299/暖阳599/微光免费档）；配置端口若改用 plan_key 作键也兼容——
+ * （萤火199/烛光299/暖阳599/注册用户免费档）；配置端口若改用 plan_key 作键也兼容——
  * 依次按 行 refId（plan_key）→ 行快照名 → plan_key→种子标签映射 命中；
  * 未命中=0（宁漏计不多计，行仍落 cardLines 透出 0 元供核对）。
  */
 const PLAN_KEY_TO_CARD_LABEL: Record<string, string> = {
-  plan_weiguang: '微光免费档',
+  plan_weiguang: '注册用户免费档',
   plan_yinghuo: '萤火199',
   plan_zhuguang: '烛光299',
   plan_nuanyang: '暖阳599',

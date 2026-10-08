@@ -3,7 +3,7 @@
  *
  * 数据源=membership.amortizationStats（本月）：cashFen=售卡实收（本店 settled 未冲正
  * membership 单合计）/ amortizedFen=分摊确认（Y7 本店口径=按办卡店 sold_store_id 过滤，
- * 微光线上开档无办卡店暂不计入）。
+ * 注册用户线上开档无办卡店暂不计入）。
  * 纪律：参考口径行——不计入任何「已收/营业额」合计（年费售卡实收已在现金/微信/支付宝
  * 分列里，重复计入=双计，三本账红线）。
  */

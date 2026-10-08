@@ -139,15 +139,16 @@ export const DEFAULT_SLOT_CAPACITY = 2;
 
 /**
  * 片 2（体验大批）：提前预约期上限（毫秒）。读会员当前档 member_plans.value_json
- * .advance_book_days（端口可调，保存即生效只管新单）；非会员=微光档 3 天口径；
- * 档无该键=3 天兜底。create/reschedule 写闸与 getWithServices/boardingAvailability
+ * .advance_book_days（端口可调，保存即生效只管新单）；非会员=注册用户档 7 天口径（片 3 裁②）；
+ * 档无该键=7 天兜底（注册用户口径）。create/reschedule 写闸与 getWithServices/boardingAvailability
  * 读侧收窄共用本函数（能看=能约同帧）。
  */
 export async function maxAdvanceMsOf(d: DbHandle, userId: string): Promise<number> {
   const m = await currentMembership(d, userId, new Date());
   const plans = await loadMemberPlans(d);
   const plan = plans.get(m?.planKey ?? 'plan_weiguang');
-  const days = planNum(plan, 'advance_book_days', 3);
+  /* 会员链路片 3 裁②：注册用户 7 天/付费三档 14 天（端口值为准；缺行兜底 7=注册用户口径） */
+  const days = planNum(plan, 'advance_book_days', 7);
   return days * 24 * 3600 * 1000;
 }
 
@@ -611,7 +612,7 @@ function assertBookableTime(
   if (start.getTime() < Date.now() + BOOKING_LEAD_BUFFER_MS) {
     badRequest('仅可预约 1 小时之后的时段，请改约稍晚时间');
   }
-  // 片 2：提前预约期上限（档位 3/7/14 天口径；紧随 +1h 缓冲下限检查，上下限同点卡死）
+  // 片 2：提前预约期上限（档位 7/14 天口径·片 3 裁②；紧随 +1h 缓冲下限检查，上下限同点卡死）
   if (opts?.maxAdvanceMs !== undefined && start.getTime() > Date.now() + opts.maxAdvanceMs) {
     badRequest(`当前会员档最多可提前 ${Math.round(opts.maxAdvanceMs / (24 * 3600 * 1000))} 天预约，请改选更近的日期`);
   }
@@ -996,7 +997,7 @@ export const appointmentRouter = router({
           ? input.scheduledEnd! // boarding 上面已强制非空且晚于开始
           : new Date(start.getTime() + (groomingDuration?.durationMin ?? 60) * 60_000);
       // 片 2：提前预约期上限（会员档位口径，create/reschedule 两调用点统一过）——
-      // create 按下单人（customer 本人）档位；微光 3 天 / 萤火·烛光 7 天 / 暖阳 14 天
+      // create 按下单人（customer 本人）档位；注册用户 7 天 / 付费三档 14 天（片 3 裁②）
       const maxAdvanceMs = await maxAdvanceMsOf(ctx.db, ctx.user.id);
       assertBookableTime(store, input.type, start, end, { maxAdvanceMs });
 

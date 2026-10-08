@@ -121,7 +121,7 @@ authHttpRoutes.post('/api/auth/dev-login', async (c) => {
         return c.json({ ok: false, error: 'INTERNAL', message: '用户创建失败' }, 500);
       }
       await db.insert(schema.userRoles).values({ userId: user.id, role: 'customer' });
-      /* OP-03 P1-1（端口批收尾片 4 · 老板 10-07「注册即微光会员」口径）：开户事务连带落微光档
+      /* OP-03 P1-1（端口批收尾片 4 · 老板 10-07「注册即注册用户会员」口径）：开户事务连带落注册用户档
          ——openFreeMembershipCore 幂等落档（自助/微信/openFree 三处同函数，两段并一段） */
       await openFreeMembershipCore(db, user.id, new Date());
       /* 片 3 新人礼包：注册建档触发（资格留痕不真发，候资质批——注释明面）；

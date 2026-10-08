@@ -455,7 +455,7 @@ async function assertPriceEditAllowed(
 ): Promise<void> {
   const hasAdjusted = input.items.some((it) => it.adjustedPriceFen != null);
   if (!hasAdjusted && input.discountType === 'none') return; // 快路径：无改价无优惠
-  /* 当前识别会员档折扣 bp（无会员/微光=10000，公式恒等于门市价故天然不匹配改价） */
+  /* 当前识别会员档折扣 bp（无会员/注册用户=10000，公式恒等于门市价故天然不匹配改价） */
   let memberBp = 10000;
   if (customerId) {
     const mp = await memberPlanFor(d, customerId);
@@ -522,7 +522,7 @@ function resolveReceptionistId(operatorUserId: string, resolved: ResolvedItem[])
  * 识别会员（active 付费档）后服务/预约行自动按档折扣——adjusted=门市价×
  * service_discount_bp/10000 精确到分（unit_price_fen 不动=门市价划线对照）；
  * 行已被人工改价（adjustedPriceFen 非空，owner|manager 闸门动作）时不覆盖；
- * 未识别/散客/微光（bp=10000）=门市价原价。hold/settle 在 computeAmounts 前调用。
+ * 未识别/散客/注册用户（bp=10000）=门市价原价。hold/settle 在 computeAmounts 前调用。
  */
 async function applyMemberServiceDiscount(
   d: DbHandle,
@@ -533,7 +533,7 @@ async function applyMemberServiceDiscount(
   const mp = await memberPlanFor(d, customerId);
   if (!mp) return;
   const bp = memberPlanNum(mp.plan, 'service_discount_bp', 10000);
-  if (bp >= 10000) return; // 微光无折扣（红线 7）
+  if (bp >= 10000) return; // 注册用户无折扣（红线 7）
   for (const it of resolved) {
     if (it.kind !== 'service' && it.kind !== 'appointment') continue; // 商品行全员同价，不打折
     if (it.adjustedPriceFen != null) continue; // 人工改价优先（改价留痕语义不覆盖）
@@ -1789,7 +1789,7 @@ export const cashierRouter = router({
           /* ---- R11a 商品行回馈金计提（结账成交时点，同事务；决策 #33 无月上限） ----
            * 基数=商品实收−rebate 抵扣段（用回馈金付的部分不再返）；商品实收口径同
            * loadCashierFinance：优惠先抵服务行，productNet=ownPayable−serviceNet。
-           * 仅 active 付费档返（微光/散客/到期冻结=0 不写行）；grant 挂期次余额不动，
+           * 仅 active 付费档返（注册用户/散客/到期冻结=0 不写行）；grant 挂期次余额不动，
            * 统一次月到账（settleMonthly 入账）。 */
           let rebateGrantedFen = 0;
           if (customerId) {

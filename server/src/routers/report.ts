@@ -209,7 +209,7 @@ async function memberFeeCashOf(
   return Number(row?.s ?? 0);
 }
 
-/** 年费分摊（同源：active 会员 paidFen/12 按月计提；店域=sold_store_id ∈ storeIds ∪ 微光 NULL） */
+/** 年费分摊（同源：active 会员 paidFen/12 按月计提；店域=sold_store_id ∈ storeIds ∪ 注册用户 NULL） */
 async function memberFeeAmortizedOf(
   db: Parameters<typeof loadCashierFinance>[0],
   storeIds: string[],
@@ -226,7 +226,7 @@ async function memberFeeAmortizedOf(
   return rows.reduce((s, r) => s + Math.round((r.paidFen ?? 0) / 12), 0);
 }
 
-/** 店域会员 userId 集（办卡店 ∈ storeIds ∪ 微光 NULL，与 amortizationStats 同口径） */
+/** 店域会员 userId 集（办卡店 ∈ storeIds ∪ 注册用户 NULL，与 amortizationStats 同口径） */
 async function memberUserIdsOf(
   db: Parameters<typeof loadCashierFinance>[0],
   storeIds: string[],
@@ -278,7 +278,7 @@ export const reportRouter = router({
     return { principalFen, bonusFen, totalFen: principalFen + bonusFen, accountCount: Number(row?.n ?? 0) };
   }),
 
-  /** A2 回馈金负债店级聚合：店域会员（办卡店∈店域 ∪ 微光 NULL）的 rebate 余额 Σ */
+  /** A2 回馈金负债店级聚合：店域会员（办卡店∈店域 ∪ 注册用户 NULL）的 rebate 余额 Σ */
   rebateLiability: merchantManagerProcedure.input(scopeOnlyInput.optional()).query(async ({ ctx, input }) => {
     const memberIds = await memberUserIdsOf(ctx.db, reportStoreIds(ctx, input));
     if (memberIds.size === 0) return { totalFen: 0, accountCount: 0 };

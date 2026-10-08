@@ -410,7 +410,7 @@ async function main() {
       commissionSeed('commission_overwork_multiplier', '美容师产能红线加计：日超 8 只须店长批准，超出部分按 1.5 倍计', { threshold_per_day: 8, multiplier_bp: 15000 }),
       commissionSeed('commission_g4_store_rate', '美容师 G4 全店管理提成：本店月度洗美营收（门市价）0.5%，对全店技术质量负责', { rate_bp: 50 }),
       commissionSeed('commission_product_rate', '前台商品销售提成（P0-P2）：个人月度商品销售额（实收）一刀切 5%', { rate_bp: 500 }),
-      commissionSeed('commission_card_fixed', '年费会员售卡定额：萤火199→5元/单、烛光299→10元/单、暖阳599→20元/单、微光免费档无提成', { fixed_fen_by_plan: { '萤火199': 500, '烛光299': 1000, '暖阳599': 2000, '微光免费档': 0 } }),
+      commissionSeed('commission_card_fixed', '年费会员售卡定额：萤火199→5元/单、烛光299→10元/单、暖阳599→20元/单、注册用户免费档无提成', { fixed_fen_by_plan: { '萤火199': 500, '烛光299': 1000, '暖阳599': 2000, '注册用户免费档': 0 } }),
       commissionSeed('commission_stored_value_topup', '储值充值提成（已作废：储值新售冻结·决策15，旧充值提成口径作废）', {}, false),
       commissionSeed('commission_live_animal_rate', '活体销售提成（备用）：个人月度活体销售额 5%-10%，活体收缩中保留口径备用', { rate_bp_min: 500, rate_bp_max: 1000 }, false),
       commissionSeed('commission_probation_multiplier', '试用期前台提成：同 P0 基数按 P0 标准×50%（试用期不设绩效与全勤）', { multiplier_bp: 5000 }),
@@ -480,11 +480,14 @@ async function main() {
     ]);
 
     /* ---- R11a 会员前置批：会员档位配置种子（冻结版 V1.0 §二 + CJ-0922-13，version=1） ----
-     * 四档数值照 27 号档照转：微光免费（无回馈金无折扣）/萤火 ¥199·2%·88折/烛光 ¥299·5%·85折/
-     * 暖阳 ¥599·10%·8折；多宠全档统一：含 3 只、第 4 只起 +¥59/年/只、10 只封顶；
+     * 四档数值照 27 号档照转：注册用户免费（无回馈金无折扣）/萤火 ¥199·2%·88折/烛光 ¥299·5%·85折/
+     * 暖阳 ¥599·10%·8折；多宠付费三档统一：含 3 只、第 4 只起 +¥59/年/只、10 只封顶；
      * 回馈金次月 5 日到账（故障顺延≤3 天页面明示）；回馈金/会员有效期均 365 天。
      * 片 3：四档 value_json 补种 renew_discount_bp=10000（续费优惠端口键，10000=无优惠
      * 缺省口径；存量库同值回挂见迁移 0040 json_set 幂等段）。
+     * 会员链路片 3（任务-1008-2 两裁）：plan_weiguang 更名「注册用户」（label 正名）+
+     * 宠物建档全员不限（included/max=100 语义=不限，extra=0）+预约提前 advance_book_days
+     * 注册用户 3→7、萤火/烛光 7→14（暖阳 14 不动）；存量库同值回挂见迁移 0069。
      * 配置端口域 domain='member_plans'，保存即生效+版本化留痕，新值只管新单。
      * 既有种子客户「示例客户」不开会员（留 e2e 自造）。
      */
@@ -498,9 +501,9 @@ async function main() {
       createdBy: owner.id,
     });
     await tx.insert(schema.memberPlans).values([
-      planSeed('plan_weiguang', '会员档·微光：免费档（手机号即会员）；无回馈金、无服务折扣；安心包全员免费（钩子仅权益表述，微光不设钩子）', { free: true, price_fen: 0, rebate_bp: 0, service_discount_bp: 10000, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, renew_discount_bp: 10000, advance_book_days: 3 }),
-      planSeed('plan_yinghuo', '会员档·萤火：¥199/年；商品消费回馈金 2%；服务 88 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 19900, rebate_bp: 200, service_discount_bp: 8800, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, renew_discount_bp: 10000, advance_book_days: 7 }),
-      planSeed('plan_zhuguang', '会员档·烛光：¥299/年；商品消费回馈金 5%；服务 85 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 29900, rebate_bp: 500, service_discount_bp: 8500, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, renew_discount_bp: 10000, advance_book_days: 7 }),
+      planSeed('plan_weiguang', '会员档·注册用户：免费档（手机号即在册）；宠物建档不限；无回馈金、无服务折扣；安心包全员免费（钩子仅权益表述，注册用户不设钩子）', { free: true, price_fen: 0, rebate_bp: 0, service_discount_bp: 10000, included_pets: 100, extra_pet_fen: 0, max_pets: 100, renew_discount_bp: 10000, advance_book_days: 7 }),
+      planSeed('plan_yinghuo', '会员档·萤火：¥199/年；商品消费回馈金 2%；服务 88 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 19900, rebate_bp: 200, service_discount_bp: 8800, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, renew_discount_bp: 10000, advance_book_days: 14 }),
+      planSeed('plan_zhuguang', '会员档·烛光：¥299/年；商品消费回馈金 5%；服务 85 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 29900, rebate_bp: 500, service_discount_bp: 8500, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, renew_discount_bp: 10000, advance_book_days: 14 }),
       planSeed('plan_nuanyang', '会员档·暖阳：¥599/年；商品消费回馈金 10%；服务 8 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 59900, rebate_bp: 1000, service_discount_bp: 8000, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, renew_discount_bp: 10000, advance_book_days: 14 }),
       planSeed('rebate_settlement_day', '回馈金到账日：次月 5 日统一到账（故障顺延≤3 天，会员页明示口径）', { day: 5 }),
       planSeed('rebate_validity_days', '回馈金有效期：365 天', { days: 365 }),

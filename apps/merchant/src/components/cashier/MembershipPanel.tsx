@@ -1,25 +1,25 @@
 /**
  * R11a 会员前置批 · 收银台售卡/续费面板（Phase 3A · 27 号任务书 §四.1/§四.5/§四.6）
  *
- * - 售卡四档对照卡（微光免费开档 / 萤火 ¥199 / 烛光 ¥299 / 暖阳 ¥599；价格/回馈金/
+ * - 售卡四档对照卡（注册用户免费开档 / 萤火 ¥199 / 烛光 ¥299 / 暖阳 ¥599；价格/回馈金/
  *   服务折扣/多宠规则全部读 membership.plans 透出，配置端口改值即生效）；
  * - 多宠数输入：>included_pets 预览附加费 +¥59/只（读档参数），max_pets 封顶提示；
  * - 内测期到店付收款段（现金/微信/支付宝，Σ段=档价+附加费，server 硬校验同口径）；
- *   微光档 0 元单直接成交（paySegments 为空）；
+ *   注册用户档 0 元单直接成交（paySegments 为空）；
  * - 新客旁路：手机号建档+售卡一气呵成（sell 的 phone 建档参数：仅建档不开档，
  *   购卡成交才开档——任务书 §四.6）；
  * - 续费模式：会员已识别且 frozen/临期（≤30 天，本端会话缓存判定）时默认续费；
  *   续费金额由 server 按既有档位+宠物数实算——**读路径缺口报备**：无商家侧查询
  *   端点，先经 renew 空段探测解析错误原文「须等于续费金额（X 元）」取得应收，
- *   再收段提交（微光档探测即成交=免费续期）；
+ *   再收段提交（注册用户档探测即成交=免费续期）；
  * - 升级补差模式（补缺-3 商家端代办升档 + 会员链路小批片 1 死路修通）：active 且存在更高档
- *   （upgradeQuoteForUser.targetPlans 非空）时亮「升级补差」页签——**微光档（free）同亮=新购口径**
+ *   （upgradeQuoteForUser.targetPlans 非空）时亮「升级补差」页签——**注册用户档（free）同亮=新购口径**
  *   （差价=新档全价/有效期重起算/不退卡不折算），frozen 档不显（先续费解冻）。试算区=server
  *   quote 值逐行明面（剩余整月×（新档月均价−旧档月均价）+ baseDiff/petDiff 分行，newPurchase 档标
  *   「新购口径」），**前端零自算**；应收锁定=server totalDiffFen，到店付三段 Σ=差价
  *   提交 upgrade（server 兜底重算硬校验）；成功后留痕可视补差单号 billNo（mono），
  *   onSold 回写+forUser/quote 缓存失效刷新；
- * - 售卡 mode 只对纯非会员开放（会员链路小批片 1：已识别会员含微光一律不走进售卡）；
+ * - 售卡 mode 只对纯非会员开放（会员链路小批片 1：已识别会员含注册用户一律不走进售卡）；
  * - 读路径缺口补掉（片 1）：选中客户即读会员状态（forUser 正式通道+缓存同帧），识别后
  *   按状态自动落页签（非会员=售卡／active=升级或续费／frozen=续费解冻）；「读路径缺口」
  *   两句登记文案随修撤牌（库内行留档，码内不再消费）；
@@ -143,9 +143,9 @@ export default function MembershipPanel({
   /** 客户块身份注记=forUser 正式通道单源（会员链路小批片 1 复核暂扣件修法：与页签/徽标同帧，
      不再读旧管道会话缓存——同屏两口径=读路径缺口修一半的违例） */
   const effMembership = (forUserQ.data ? forUserQ.data.membership : membership) ?? null
-  /** 升级页签判定：active 且存在更高档（targetPlans 非空）；微光档（free）=新购口径同亮
+  /** 升级页签判定：active 且存在更高档（targetPlans 非空）；注册用户档（free）=新购口径同亮
      「升级补差」（差价=新档全价/有效期重起算，server computeUpgradeDiff 同帧——会员链路小批
-     片 1 死路修通：微光→付费=首次购卡，不再堵回售卡 mode）；frozen 档不显（先续费解冻）；
+     片 1 死路修通：注册用户→付费=首次购卡，不再堵回售卡 mode）；frozen 档不显（先续费解冻）；
      降级档 server 已过滤不出现 */
   const upgradeAvailable =
     member !== null &&
@@ -259,7 +259,7 @@ export default function MembershipPanel({
     },
   })
 
-  /** 续费探测（读路径缺口报备：空段提交取 server 实算金额；微光档探测即免费续期成交） */
+  /** 续费探测（读路径缺口报备：空段提交取 server 实算金额；注册用户档探测即免费续期成交） */
   const quoteM = useMutation({
     mutationFn: () => trpc.membership.renew.mutate({ userId: member!.id, paySegments: [] }),
     onSuccess: (r) => {
@@ -408,8 +408,8 @@ export default function MembershipPanel({
         </>
       }
     >
-      {/* 模式页签（会员链路小批片 1：售卡只对纯非会员开放[已识别会员含微光一律不走进售卡]；
-          续费须先识别会员；升级补差=微光档=新购口径同亮；成交留痕态下隐去） */}
+      {/* 模式页签（会员链路小批片 1：售卡只对纯非会员开放[已识别会员含注册用户一律不走进售卡]；
+          续费须先识别会员；升级补差=注册用户档=新购口径同亮；成交留痕态下隐去） */}
       {!upgradeDone ? (
       <div className="flex gap-1.5" role="tablist">
         {member === null ? (
@@ -714,7 +714,7 @@ export default function MembershipPanel({
         </>
       )}
 
-      {/* 到店付收款段（微光/未探测不渲染；升级=应收锁定 server totalDiffFen） */}
+      {/* 到店付收款段（注册用户/未探测不渲染；升级=应收锁定 server totalDiffFen） */}
       {((mode === 'sell' && !isFree && plan != null) ||
         (mode === 'renew' && quoteFen !== null) ||
         (mode === 'upgrade' && !upgradeDone && selTarget !== null && selTarget.totalDiffFen > 0)) ? (

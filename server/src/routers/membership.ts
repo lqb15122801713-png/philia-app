@@ -8,18 +8,18 @@
  * - my               本人会员+回馈金账本（customer；非会员 null+引导；补缺-3 增透
  *                    nextPlanKey/nextPlanSetAt/upgradeAvailable/changeWindowDays 入口判定字段）
  * - ledger           W-01 回馈金账本独立页数据源（customer · R11b；全量流水+溯源联表商品名/门店名+本年累计）
- * - openFree         微光一键注册（customer；免费 0 元，手机号即会员=用户本身，幂等）
+ * - openFree         注册用户一键注册（customer；免费 0 元，手机号即会员=用户本身，幂等）
  * - sell             收银台售卡（merchant；到店付现金/微信/支付宝段，多宠附加费入单；
  *                    补缺-3 防滥用两件：退会窗口内重购/累计退会≥阈值再购 → cancel_rebuy_note 留痕不拦截）
  * - renew            收银台续费（merchant；解冻 frozen→active+expires 顺延+回馈金解冻；
  *                    补缺-3 扩展：预约 next_plan_key 非空 → 按预约档全价收款+切档+置空+executed 留痕）
  * - cancel           退会（manager|owner；折算=剩余整月×月均价精确到分，回馈金清零留痕）
  * - upgradeQuote     升档试算（customer 本人 / upgradeQuoteForUser 收银台代客；双薄端点共用
- *                    quoteUpgrade 内部函数；期内降级档不出现；微光=新购口径）
+ *                    quoteUpgrade 内部函数；期内降级档不出现；注册用户=新购口径）
  * - upgrade          期内升档（merchant · withCashierWriteLock；server 兜底重算差价不信入参；
  *                    Σ支付段=差价硬校验；补差单 discountType='none'+paid_fen=原实付+补差；
  *                    即时生效新档到期日不变；在途回馈金不重算、旧档余额零动作；同档重放幂等；
- *                    微光档=新购口径全价+重起算有效期+sold_store 补办理店）
+ *                    注册用户档=新购口径全价+重起算有效期+sold_store 补办理店）
  * - scheduleChange   到期换档预约（customer；到期前 member_change_window_days 天窗口内任意档，
  *                    重复预约覆盖幂等）/ cancelScheduleChange（置空+留痕）
  * - mySavings        今年已省双源（customer；rebateSettledFen=QA40-D10 yearGrantFen 同源 +
@@ -82,7 +82,7 @@ function badRequest(message: string): never {
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
 /* ------------------------------------------------------------------ */
-/* 补缺修复小批 P1-3：免费档数据层永久有效（CJ-0925-10④ 微光=永久普通会员）      */
+/* 补缺修复小批 P1-3：免费档数据层永久有效（CJ-0925-10④ 注册用户=永久普通会员）      */
 /* ------------------------------------------------------------------ */
 
 /** 免费档到期日=远端 2099-12-31T23:59:59Z（unix 秒 4102444799；与迁移 0023 存量修正同值）。
@@ -280,7 +280,7 @@ const paySegmentSchema = z.object({
 /* ------------------------------------------------------------------ */
 
 /** 注册默认档键（读 default_plan_key 全局键；键值指向不存在档行回退 plan_weiguang，同 openFree 口径）
- *  会员链路片 2 导出：pay 域 membership_upgrade 微光判定同源复用 */
+ *  会员链路片 2 导出：pay 域 membership_upgrade 注册用户判定同源复用 */
 export function defaultPlanKeyOf(plans: Map<string, MemberPlanRow>): string {
   const configured = planStr(plans.get('default_plan_key'), 'value', 'plan_weiguang');
   return plans.has(configured) ? configured : 'plan_weiguang';
@@ -332,7 +332,7 @@ export interface UpgradeDiffQuote {
     newMonthlyFen: number;
     oldMonthlyFen: number;
     perMonthDiffFen: number;
-    /** true=微光档新购口径（差价=新档全价+附加按现 petCount 重算，无剩余整月折算） */
+    /** true=注册用户档新购口径（差价=新档全价+附加按现 petCount 重算，无剩余整月折算） */
     newPurchase: boolean;
   };
 }
@@ -343,7 +343,7 @@ export interface UpgradeDiffQuote {
  *   月均价=档价÷12 不先取整、末位 round 到分（remainingWholeMonths 用既有同族函数：
  *   到期日「日」< 升级日「日」抹当月零头）；多宠附加费随同公式
  *   （(新附加年额−旧附加年额)×m÷12 末位 round；现码四档附加同价 5900 → 该项恒 0，照公式实现）；
- * - 微光档（=default_plan_key 读档判断）=新购口径：差价=新档全价+多宠附加按现 petCount 重算，
+ * - 注册用户档（=default_plan_key 读档判断）=新购口径：差价=新档全价+多宠附加按现 petCount 重算，
  *   remainingMonths=0、formula.newPurchase=true。
  */
 export function computeUpgradeDiff(
@@ -400,7 +400,7 @@ async function quoteUpgrade(
   const isFreeCurrent = m.planKey === defaultPlanKeyOf(plans);
   const targetPlans = [...plans.values()]
     .filter((p) => p.ruleKey.startsWith('plan_') && p.ruleKey !== m.planKey)
-    /* 期内只升不降：降级档不出现（微光=新购口径不受限，任意付费档皆可升） */
+    /* 期内只升不降：降级档不出现（注册用户=新购口径不受限，任意付费档皆可升） */
     .filter((p) => isFreeCurrent || planNum(p, 'price_fen', 0) > curPrice)
     .map((p) => computeUpgradeDiff(plans, m, p, now))
     .sort((a, b) => a.totalDiffFen - b.totalDiffFen);
@@ -452,9 +452,9 @@ function parseMemberCardToken(token: string): { uid: string; planKey: string; ex
 }
 
 /**
- * 落微光档共用函数（OP-03 P1-1 修复 · 端口批收尾片 4）：openFree 落档内核——
+ * 落注册用户档共用函数（OP-03 P1-1 修复 · 端口批收尾片 4）：openFree 落档内核——
  * 自助开户（auth/devLogin）/微信静默开户（auth/wechatMini）/openFree 三处同调，两段并一段
- * （老板 10-07「注册即微光会员」口径；勿新写落档口=调用点一律走本函数）。
+ * （老板 10-07「注册即注册用户会员」口径；勿新写落档口=调用点一律走本函数）。
  * 幂等：已有 active/frozen 会员=返回现状不重建；默认档读全局键 default_plan_key
  * （端口可改，键值指向不存在档行回退 plan_weiguang 防断链）；回馈金账户一人一本预建。
  * 返回 { membership, created }（created=false=幂等命中）。
@@ -476,7 +476,7 @@ export async function openFreeMembershipCore(
     .values({
       userId,
       planKey: defaultPlanKey,
-      soldStoreId: null, // 微光自助开档无办卡店（决策 #41 双归属：NULL 或注册店，骨架批=NULL）
+      soldStoreId: null, // 注册用户自助开档无办卡店（决策 #41 双归属：NULL 或注册店，骨架批=NULL）
       startedAt: now,
       expiresAt: isFreePlanRow(openingPlan) ? FREE_PLAN_EXPIRES_AT : new Date(now.getTime() + days * 24 * 3600 * 1000),
       status: 'active',
@@ -531,7 +531,7 @@ export const membershipRouter = router({
         rebate: null,
         period: rebatePeriodOf(now),
         periodLogs: [],
-        guide: '开通会员享商品回馈金与服务折扣；微光档免费，一键开通（手机号即会员）',
+        guide: '开通会员享商品回馈金与服务折扣；注册用户免费在册（手机号即在册），升档线上即时生效',
         /* 补缺-3 入口判定字段（非会员态同构透出） */
         nextPlanKey: null,
         nextPlanSetAt: null,
@@ -713,7 +713,7 @@ export const membershipRouter = router({
     }),
 
   /**
-   * openFree（customer）：微光一键注册——免费档 0 元开档（paid_fen=0，
+   * openFree（customer）：注册用户一键注册——免费档 0 元开档（paid_fen=0，
    * expires=免费档置远端 2099（补缺修复小批 P1-3 数据层永久有效）/付费档 +membership_validity_days
    * 读表默认 365 天，status=active）。
    * 手机号即会员=用户本身（users 行即会员身份，无需另建档案）。
@@ -733,7 +733,7 @@ export const membershipRouter = router({
    * - 用户：userId 直传 或 手机号旁路建档（手机号无账号→仅建 users+user_roles
    *   customer 档案，不开任何档位；购卡成交才开档——任务书 §四.6 新客快速开卡口径）；
    * - 金额=档价+多宠附加费（petCount>included_pets 起每只 +extra_pet_fen，max_pets
-   *   封顶硬校验）；微光档 price=0 → 0 元单直接成交（paySegments 须为空）；
+   *   封顶硬校验）；注册用户档 price=0 → 0 元单直接成交（paySegments 须为空）；
    * - 事务：cashier 单落 kind='membership' 行+支付段（settled，不计服务折扣）+
    *   memberships 落库（sold_store=本店，免费档 expires=远端 2099（P1-3）/付费档 +365 天读表，
    *   status=active）+回馈金账户预建；
@@ -829,7 +829,7 @@ export const membershipRouter = router({
               planKey: input.planKey,
               soldStoreId: storeId, // 决策 #41 双归属：售卡单 sold_store=本店
               startedAt: now,
-              /* 补缺修复小批 P1-3：免费档（收银台 0 元售微光同口径）expiresAt 置远端 2099 */
+              /* 补缺修复小批 P1-3：免费档（收银台 0 元售注册用户同口径）expiresAt 置远端 2099 */
               expiresAt: isFreePlanRow(plan)
                 ? FREE_PLAN_EXPIRES_AT
                 : new Date(now.getTime() + days * 24 * 3600 * 1000),
@@ -980,7 +980,7 @@ export const membershipRouter = router({
    * upgradeQuote（customer 本人）：升档试算——当前档+可升目标档列表+窗口天数透出。
    * 公式明面（46 号档+PD-07 冻结）：remainingMonths/baseDiffFen/petDiffFen/totalDiffFen +
    * formula{m, newMonthlyFen, oldMonthlyFen, perMonthDiffFen, newPurchase}；期内降级档不出现
-   * （targetPlans 过滤）；微光档=新购口径（remainingMonths=0，totalDiffFen=档全价+附加重算）。
+   * （targetPlans 过滤）；注册用户档=新购口径（remainingMonths=0，totalDiffFen=档全价+附加重算）。
    * 与 upgradeQuoteForUser（收银台代客试算）共用内部函数 quoteUpgrade，双端同帧。
    */
   upgradeQuote: customerProcedure.query(async ({ ctx }) => {
@@ -1001,7 +1001,7 @@ export const membershipRouter = router({
    *   discountType='none'）+ memberships 更新 + membership_events('upgrade') + emit SSE；
    * - 付费档升档：即时生效新档（plan_key 换、paid_fen=原实付+补差；expires_at 不动、
    *   pet_count 不变）；在途回馈金不重算、旧档回馈金余额零动作（本端点不触碰 rebate 域）；
-   * - 微光档（default_plan_key 读档判断）=新购口径：差价=新档全价（多宠附加按现 petCount
+   * - 注册用户档（default_plan_key 读档判断）=新购口径：差价=新档全价（多宠附加按现 petCount
    *   重算），started_at=now、expires_at=now+有效期天数、sold_store_id 补=办理店；
    * - 幂等：已是目标档（同档重放）→ 返回现状 idempotent=true 零写入；
    * - 期内只升不降：新档总价 ≤ 旧档总价 → BAD_REQUEST「会员期内不降级，可在到期前 30 天
@@ -1072,7 +1072,7 @@ export const membershipRouter = router({
             .set(
               quote.formula.newPurchase
                 ? {
-                    /* 微光档=新购口径：开通时点重起算有效期，paid_fen=新档全价（含附加），sold_store 补=办理店 */
+                    /* 注册用户档=新购口径：开通时点重起算有效期，paid_fen=新档全价（含附加），sold_store 补=办理店 */
                     planKey: target.ruleKey,
                     startedAt: now,
                     expiresAt: new Date(now.getTime() + days * 24 * 3600 * 1000),
@@ -1449,8 +1449,8 @@ export const membershipRouter = router({
    *   Y7 本店口径（急修三件 PD-03 件 2，老板已圈）：Σ 按办卡店过滤
    *   （memberships.sold_store_id=本店）。
    *   PR-4 OP-01② 口径收口（意见书 issuecomment-5853808886 §三.3，产品侧已批）：
-   *   微光线上开档 sold_store_id=NULL **进全店合计**（本店合计一并计入）——
-   *   数值零影响（微光 paid_fen=0），口径统一；连锁期归属口径留痕待连锁合批。
+   *   注册用户线上开档 sold_store_id=NULL **进全店合计**（本店合计一并计入）——
+   *   数值零影响（注册用户 paid_fen=0），口径统一；连锁期归属口径留痕待连锁合批。
    */
   amortizationStats: merchantProcedure
     .input(z.object({ month: z.string().regex(MONTH_RE, '月份格式须为 YYYY-MM') }))
@@ -1483,7 +1483,7 @@ export const membershipRouter = router({
         .where(
           and(
             eq(schema.memberships.status, 'active'),
-            /* Y7 本店口径（PD-03 件 2）+ PR-4 OP-01②：办卡店=本店 ∪ 微光线上开档
+            /* Y7 本店口径（PD-03 件 2）+ PR-4 OP-01②：办卡店=本店 ∪ 注册用户线上开档
                sold_store_id=NULL 进全店合计（数值零影响，口径统一；连锁期留痕） */
             or(eq(schema.memberships.soldStoreId, storeId), isNull(schema.memberships.soldStoreId)),
           ),
