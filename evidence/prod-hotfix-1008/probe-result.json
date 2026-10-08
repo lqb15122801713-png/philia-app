@@ -1,0 +1,46 @@
+{
+  "allOk": true,
+  "checks": [
+    {
+      "name": "备数：copy 端口覆写 canvas.previewPortMap=7132→7130（config.save 200）",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "商家端 7132 console 可达+画布端口项在列（vite preview 生产构建）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "页签 home：iframe src=http://localhost:7100/home?canvasPreview=1（端口轨+映射表覆写生效）+目标 URL 200 真页（非死链）",
+      "ok": true,
+      "detail": "{\"iframe\":true,\"src\":\"http://localhost:7100/home?canvasPreview=1&canvasStore=01M4DSCNGJAXW8RAT313CPP3PN\",\"fetchOk\":true,\"fetchLen\":720}"
+    },
+    {
+      "name": "页签 memberCenter：iframe src=http://localhost:7100/member?canvasPreview=1（端口轨+映射表覆写生效）+目标 URL 200 真页（非死链）",
+      "ok": true,
+      "detail": "{\"iframe\":true,\"src\":\"http://localhost:7100/member?canvasPreview=1&canvasStore=01M4DSCNGJAXW8RAT313CPP3PN\",\"fetchOk\":true,\"fetchLen\":720}"
+    },
+    {
+      "name": "页签 cashierMarketing：iframe src=/cashier?canvasPreview=1（端口轨+映射表覆写生效）+目标 URL 200 真页（非死链）",
+      "ok": true,
+      "detail": "{\"iframe\":true,\"src\":\"/cashier?canvasPreview=1&canvasStore=01M4DSCNGJAXW8RAT313CPP3PN\",\"fetchOk\":true,\"fetchLen\":724}"
+    },
+    {
+      "name": "修复前对照：旧推导丢端口落 80=连接拒绝（死链形态实证）",
+      "ok": true,
+      "detail": "\"嗯… 无法访问此页面\\n\\nlocalhost 拒绝连接。\\n\\n请尝试：\\n\\n检查连接\\n检查代理和防火墙\\nERR_CONNECT\""
+    },
+    {
+      "name": "收摊：映射表复原缺省值（config.save 200）",
+      "ok": true,
+      "detail": "200"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\prodhotfix\\prod-hotfix-evidence\\01-porttrack-home.png",
+    "E:\\KIMI code\\tmp\\prodhotfix\\prod-hotfix-evidence\\02-porttrack-member.png",
+    "E:\\KIMI code\\tmp\\prodhotfix\\prod-hotfix-evidence\\03-porttrack-cashier.png",
+    "E:\\KIMI code\\tmp\\prodhotfix\\prod-hotfix-evidence\\00-before-deadlink-port80.png"
+  ]
+}

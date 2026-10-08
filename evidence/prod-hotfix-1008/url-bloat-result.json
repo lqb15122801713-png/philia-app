@@ -1,0 +1,33 @@
+{
+  "total": 23,
+  "series": [
+    {
+      "len": 416,
+      "path": "http://localhost:7200/trpc/config.activeCopyTexts,slotPort.liveMap,auth.me"
+    },
+    {
+      "len": 160,
+      "path": "http://localhost:7200/trpc/auth.me"
+    },
+    {
+      "len": 300,
+      "path": "http://localhost:7200/trpc/config.activeCopyTexts,slotPort.liveMap"
+    },
+    {
+      "len": 416,
+      "path": "http://localhost:7200/trpc/config.activeCopyTexts,slotPort.liveMap,auth.me"
+    },
+    {
+      "len": 160,
+      "path": "http://localhost:7200/trpc/auth.me"
+    },
+    {
+      "len": 300,
+      "path": "http://localhost:7200/trpc/config.activeCopyTexts,slotPort.liveMap"
+    },
+    {
+      "len": 34,
+      "path": "http://localhost:7200/trpc/auth.me"
+    }
+  ]
+}

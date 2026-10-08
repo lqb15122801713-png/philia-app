@@ -1,0 +1,103 @@
+{
+  "allOk": true,
+  "total": 16,
+  "fail": 0,
+  "rows": [
+    {
+      "name": "端口轨 商家 7202→7200 home",
+      "ok": true,
+      "got": "http://120.53.102.45:7200/home?canvasPreview=1",
+      "want": "http://120.53.102.45:7200/home?canvasPreview=1"
+    },
+    {
+      "name": "端口轨 商家 7202→7200 memberCenter",
+      "ok": true,
+      "got": "http://120.53.102.45:7200/member?canvasPreview=1",
+      "want": "http://120.53.102.45:7200/member?canvasPreview=1"
+    },
+    {
+      "name": "端口轨 cashierMarketing=同源 /cashier（7202 自口）",
+      "ok": true,
+      "got": "/cashier?canvasPreview=1",
+      "want": "/cashier?canvasPreview=1"
+    },
+    {
+      "name": "端口轨 员工 7201→7200",
+      "ok": true,
+      "got": "http://120.53.102.45:7200/home?canvasPreview=1",
+      "want": "http://120.53.102.45:7200/home?canvasPreview=1"
+    },
+    {
+      "name": "端口轨 映射表端口覆盖（copy 端口值：7202→7900 改拓扑零代码）",
+      "ok": true,
+      "got": "http://120.53.102.45:7900/home?canvasPreview=1",
+      "want": "http://120.53.102.45:7900/home?canvasPreview=1"
+    },
+    {
+      "name": "路径轨 /admin home",
+      "ok": true,
+      "got": "/home?canvasPreview=1",
+      "want": "/home?canvasPreview=1"
+    },
+    {
+      "name": "路径轨 /admin cashier",
+      "ok": true,
+      "got": "/admin/cashier?canvasPreview=1",
+      "want": "/admin/cashier?canvasPreview=1"
+    },
+    {
+      "name": "dev 7101→7100",
+      "ok": true,
+      "got": "http://localhost:7100/home?canvasPreview=1",
+      "want": "http://localhost:7100/home?canvasPreview=1"
+    },
+    {
+      "name": "截图轨 7131→7130",
+      "ok": true,
+      "got": "http://localhost:7130/member?canvasPreview=1",
+      "want": "http://localhost:7130/member?canvasPreview=1"
+    },
+    {
+      "name": "dev cashier 同端",
+      "ok": true,
+      "got": "http://localhost:7101/cashier?canvasPreview=1",
+      "want": "http://localhost:7101/cashier?canvasPreview=1"
+    },
+    {
+      "name": "Host 轨 m.*→app.*",
+      "ok": true,
+      "got": "https://app.example.com/home?canvasPreview=1",
+      "want": "https://app.example.com/home?canvasPreview=1"
+    },
+    {
+      "name": "Host 轨 cashier 同源",
+      "ok": true,
+      "got": "/cashier?canvasPreview=1",
+      "want": "/cashier?canvasPreview=1"
+    },
+    {
+      "name": "裸域兜底同源相对",
+      "ok": true,
+      "got": "https://example.com/member?canvasPreview=1",
+      "want": "https://example.com/member?canvasPreview=1"
+    },
+    {
+      "name": "parsePreviewPortMap 缺省回落（undefined）",
+      "ok": true,
+      "got": "{\"7201\":\"7200\",\"7202\":\"7200\"}",
+      "want": "{\"7201\":\"7200\",\"7202\":\"7200\"}"
+    },
+    {
+      "name": "parsePreviewPortMap 坏 JSON 回落缺省",
+      "ok": true,
+      "got": "{\"7201\":\"7200\",\"7202\":\"7200\"}",
+      "want": "{\"7201\":\"7200\",\"7202\":\"7200\"}"
+    },
+    {
+      "name": "parsePreviewPortMap 端口值读入",
+      "ok": true,
+      "got": "{\"7202\":\"7900\"}",
+      "want": "{\"7202\":\"7900\"}"
+    }
+  ]
+}
