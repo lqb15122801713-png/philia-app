@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-08T04:18:11.103Z；键数=3873；归屏率=97.0%（未归屏 115）
+ * 生成时间口径：2026-10-08T07:13:42.534Z；键数=3880；归屏率=97.0%（未归屏 115）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -4669,14 +4669,14 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "j1.alreadyMember",
   "domain": "member",
-  "text": "你已是会员（有效期至 {date}）。续费或升级请到店收银台办理。",
+  "text": "你已是会员（有效期至 {date}）。升档可线上自助办理，续费请到店收银台。",
   "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.alreadyMemberFree",
   "domain": "member",
-  "text": "你已是会员（免费档永久有效）。升级付费档享回馈金与服务折扣，到店收银台即可办理。",
+  "text": "你当前是微光免费档（永久有效）。选付费档开通即享回馈金与服务折扣——新购口径：全档价，有效期自开通重起算。",
   "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
@@ -4705,6 +4705,27 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "j1.compareNote",
   "domain": "member",
   "text": "档色即身份",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "j1.compareRowCta",
+  "domain": "member",
+  "text": "开通 ›",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "j1.compareRowCurrent",
+  "domain": "member",
+  "text": "当前档",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "j1.compareRowFreeCta",
+  "domain": "member",
+  "text": "免费开通",
   "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
@@ -4760,7 +4781,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "j1.freeOpenedBody",
   "domain": "member",
-  "text": "免费档即时生效{date}。升级萤火/烛光/暖阳可享商品回馈金与服务折扣，到店收银台即可办理。",
+  "text": "免费档即时生效{date}。升级萤火/烛光/暖阳可享商品回馈金与服务折扣，本页选档线上即可办理。",
   "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
@@ -4971,6 +4992,20 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "mall.rebateHook",
   "domain": "member",
   "text": "付费档返 {pcts}% · 仅抵商品 ›",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "me.cardOpenCta",
+  "domain": "member",
+  "text": "开通 ›",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "me.cardRenewCta",
+  "domain": "member",
+  "text": "续费 ›",
   "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
@@ -5551,7 +5586,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "up.freeTierGuide",
   "domain": "member",
-  "text": "当前为免费档，升档按新购口径办理：全档价、到店收银台开通即时生效。",
+  "text": "当前为免费档，升档按新购口径办理：全档价、线上开通即时生效，有效期自开通重起算。",
   "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
@@ -5650,6 +5685,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "up.paidLine",
   "domain": "member",
   "text": "已付 ¥{price}",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "up.payCta",
+  "domain": "member",
+  "text": "去支付 ¥{amount}",
   "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
@@ -19801,34 +19843,6 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "MemberCheckoutPage 页面内文案"
  },
  {
-  "key": "checkout.alreadyBody",
-  "domain": "pay",
-  "text": "有效期至 {date}。续费或升级请到店收银台办理，线上换档将于后续批次开放。",
-  "screen": "客户·会员收银台",
-  "position": "MemberCheckoutPage 页面内文案"
- },
- {
-  "key": "checkout.alreadyBodyFree",
-  "domain": "pay",
-  "text": "免费档永久有效。升级付费档享回馈金与服务折扣，请到店收银台办理。",
-  "screen": "客户·会员收银台",
-  "position": "MemberCheckoutPage 页面内文案"
- },
- {
-  "key": "checkout.alreadyCta",
-  "domain": "pay",
-  "text": "去会员中心 ›",
-  "screen": "客户·会员收银台",
-  "position": "MemberCheckoutPage 页面内文案"
- },
- {
-  "key": "checkout.alreadyTitle",
-  "domain": "pay",
-  "text": "你已是会员",
-  "screen": "客户·会员收银台",
-  "position": "MemberCheckoutPage 页面内文案"
- },
- {
   "key": "checkout.amountExtra",
   "domain": "pay",
   "text": "多宠附加",
@@ -19990,6 +20004,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "MemberCheckoutPage 页面内文案"
  },
  {
+  "key": "checkout.planLabelUpgrade",
+  "domain": "pay",
+  "text": "升级至档位",
+  "screen": "客户·会员收银台",
+  "position": "MemberCheckoutPage 页面内文案"
+ },
+ {
   "key": "checkout.planPriceYear",
   "domain": "pay",
   "text": "¥{price}/年",
@@ -20032,6 +20053,20 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "MemberCheckoutPage 页面内文案"
  },
  {
+  "key": "checkout.upgradeNoteDiff",
+  "domain": "pay",
+  "text": "期内升档：应付=补差价（剩余整月折算），到期日不变、新档即时生效",
+  "screen": "客户·会员收银台",
+  "position": "MemberCheckoutPage 页面内文案"
+ },
+ {
+  "key": "checkout.upgradeNoteNewPurchase",
+  "domain": "pay",
+  "text": "新购口径：应付=全档价，有效期自开通之日重起算",
+  "screen": "客户·会员收银台",
+  "position": "MemberCheckoutPage 页面内文案"
+ },
+ {
   "key": "checkout.validity",
   "domain": "pay",
   "text": "有效期 {days} 天 · 到期不自动续费",
@@ -20042,7 +20077,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "mock.watermark",
   "domain": "pay",
   "text": "内测通道 · 演示支付，不会真实扣款",
-  "screen": "客户·会员收银台 / 客户·支付状态",
+  "screen": "客户·会员收银台 / 客户·升级会员 / 客户·支付状态",
   "position": "MemberCheckoutPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
@@ -20298,6 +20333,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "PayStatePage 页面内文案"
  },
  {
+  "key": "state.paidBodyUpgrade",
+  "domain": "pay",
+  "text": "{planLabel} · 补差成交，新档权益即时生效。",
+  "screen": "客户·支付状态",
+  "position": "PayStatePage 页面内文案"
+ },
+ {
   "key": "state.paidCta",
   "domain": "pay",
   "text": "看看会员页 ›",
@@ -20308,6 +20350,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "state.paidTitle",
   "domain": "pay",
   "text": "会员已开通",
+  "screen": "客户·支付状态",
+  "position": "PayStatePage 页面内文案"
+ },
+ {
+  "key": "state.paidTitleUpgrade",
+  "domain": "pay",
+  "text": "会员已升级",
   "screen": "客户·支付状态",
   "position": "PayStatePage 页面内文案"
  },

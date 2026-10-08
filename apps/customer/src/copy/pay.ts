@@ -49,6 +49,11 @@ const PAY_COPY_TABLE = {
   'checkout.channelOffTitle': '线上支付通道维护中',
   'checkout.channelOffBody': '请到店收银台办理开通（现金/微信/支付宝）；线上通道恢复后本页自动开放。',
   'checkout.channelOffCta': '回开通页 ›',
+  /* 会员链路片 2：升级域口径句（已是会员不再分流——撤牌 alreadyTitle/alreadyBody/
+     alreadyBodyFree/alreadyCta 四键出码内宇宙，端口仓行留档不写 DELETE） */
+  'checkout.planLabelUpgrade': '升级至档位',
+  'checkout.upgradeNoteNewPurchase': '新购口径：应付=全档价，有效期自开通之日重起算',
+  'checkout.upgradeNoteDiff': '期内升档：应付=补差价（剩余整月折算），到期日不变、新档即时生效',
   /* 异常/分流说明卡（不弹球，全给明示出口） */
   'checkout.missingPlanTitle': '缺少档位信息',
   'checkout.missingPlanBody': '请先到开通页选择档位，再进入确认订单。',
@@ -56,10 +61,6 @@ const PAY_COPY_TABLE = {
   'checkout.freePlanTitle': '免费档无需支付',
   'checkout.freePlanBody': '微光档一键开通即可，无需进入支付流程。',
   'checkout.freePlanCta': '去一键开通 ›',
-  'checkout.alreadyTitle': '你已是会员',
-  'checkout.alreadyBody': '有效期至 {date}。续费或升级请到店收银台办理，线上换档将于后续批次开放。',
-  'checkout.alreadyBodyFree': '免费档永久有效。升级付费档享回馈金与服务折扣，请到店收银台办理。',
-  'checkout.alreadyCta': '去会员中心 ›',
 
   /* ---- 协议名（勾选行链接 + 弹层标题共用） ----
      「储值」红线例外标注：agreement.not_prepaid=《年费≠储值明示》为冻结口径协议标题，
@@ -86,6 +87,9 @@ const PAY_COPY_TABLE = {
   'state.mockFailToast': '演示指令发送失败，请重试',
   'state.paidTitle': '会员已开通',
   'state.paidBody': '{planLabel} · 有效期 {days} 天，权益即时生效。',
+  /* 会员链路片 2：升级域成交卡（补差成交，到期日不变/新购口径重起算在确认订单页已明面） */
+  'state.paidTitleUpgrade': '会员已升级',
+  'state.paidBodyUpgrade': '{planLabel} · 补差成交，新档权益即时生效。',
   'state.paidCta': '看看会员页 ›',
   'state.failedTitle': '支付未完成',
   'state.failHint': '本次支付未成功，未产生扣款；可重新发起支付。',

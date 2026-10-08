@@ -7,7 +7,9 @@
  *
  * 功能逻辑（四铁律）：微光→openFree 一键开档（幂等）；付费档 CTA→/member/checkout 线上
  * 确认订单（补缺批片 6 线上收单骨架；到店办理降级为旁路链接，guide 到店指引步保留）；
- * 已是会员→提示条不挡流程。数值全读 member_plans 端口（冻结值 88/85/8），文案全走文案键（copy.ts）。
+ * 已是会员按档分化（会员链路片 2②）：微光档不分流——直达选档开通流程（默认选中推荐
+ * 付费档），付费档=提示条+回会员中心 CTA。数值全读 member_plans 端口（冻结值 88/85/8），
+ * 文案全走文案键（copy.ts）。
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query'
@@ -88,7 +90,11 @@ export default function MemberOpenPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plans.length])
   const selected = plans[deck.active] ?? null
+  /* 会员链路片 2 入口断链修通②：微光档不再分流「已是会员→去会员中心」——直达选档开通
+     流程（deck 默认选中末位=推荐付费档）；付费档会员才提示「已是会员」并回会员中心 */
+  const memberFree = !!(myQ.data?.plan as V2Plan | null)?.free
   const alreadyMember = !!myQ.data?.membership
+  const paidMember = alreadyMember && !memberFree
 
   return (
     <div className="m2" data-testid="member-open-page" style={{ minHeight: '100vh' }}>
@@ -108,18 +114,21 @@ export default function MemberOpenPage() {
         </div>
       ) : step === 'select' && selected ? (
         <>
-          {/* 已是会员提示条（不挡流程；PR-4 PD-05 件 1：免费档不显示有效期） */}
+          {/* 已是会员提示条（不挡流程；PR-4 PD-05 件 1：免费档不显示有效期）。
+              片 2②：微光=信息条照常（文案=新购口径引导句），CTA 不分流——直达选档开通；
+              付费档=提示条+回会员中心 CTA（升级路径句保留指升级页） */}
           {alreadyMember && myQ.data?.membership ? (
             <div className="m2-pad" style={{ marginTop: 10 }}>
               <TipCard>
-                {(myQ.data.plan as V2Plan | null)?.free
+                {memberFree
                   ? mc('j1.alreadyMemberFree')
                   : mc('j1.alreadyMember', {
                       date: new Date(myQ.data.membership.expiresAt).toLocaleDateString('zh-CN'),
                     })}
               </TipCard>
-              {/* 补缺批片 3：升级路径句（upgradeAvailable=true 才显，→/member/upgrade） */}
-              {myQ.data.upgradeAvailable ? (
+              {/* 补缺批片 3：升级路径句（upgradeAvailable=true 才显，→/member/upgrade）；
+                  片 2②：微光档本页即开通流程，不再给升级页跳转（直达） */}
+              {paidMember && myQ.data.upgradeAvailable ? (
                 <div style={{ textAlign: 'center', marginTop: 8 }}>
                   <button type="button" className="m2-link" data-testid="open-upgrade-entry" onClick={() => navigate('/member/upgrade')}>
                     {mc('j1.upgradeEntry')}
@@ -192,10 +201,10 @@ export default function MemberOpenPage() {
             />
           </div>
 
-          {/* 吸底 CTA（页内形态非弹窗） */}
+          {/* 吸底 CTA（页内形态非弹窗）：付费档会员=回会员中心；微光/非会员=选档开通直达 */}
           <div className="m2-ctabar">
             <div className="m2-ctabar-in">
-              {alreadyMember ? (
+              {paidMember ? (
                 /* PR-4 UX P2-3：已是会员态 CTA=回会员中心（不再显示「开通 · 每天 ¥x」与提示条打架） */
                 <button
                   type="button"
@@ -264,7 +273,7 @@ export default function MemberOpenPage() {
                     border: p.planKey === 'plan_weiguang' ? '1px solid rgba(59,46,36,.14)' : p.planKey === 'plan_nuanyang' ? '1px solid rgba(217,192,138,.4)' : undefined,
                   }}
                 />
-                <div>
+                <div style={{ flex: 1 }}>
                   <div className="anm">
                     {tierNameOf(p.planKey)} {p.free ? '· 免费注册' : `¥${(p.priceFen / 100).toFixed(0)}/年`}
                   </div>
@@ -278,6 +287,44 @@ export default function MemberOpenPage() {
                         })}
                   </div>
                 </div>
+                {/* 会员链路片 2③：四档对比 CTA 同口径接通——付费档→确认订单（微光/非会员同路径），
+                    免费档=一键开通（微光已是=「当前档」注记）；付费档会员不画（走升级页） */}
+                {!paidMember ? (
+                  p.free ? (
+                    alreadyMember ? (
+                      <span className="m2-note" data-testid={`compare-current-${p.planKey}`} style={{ flex: 'none', fontSize: 11 }}>
+                        {mc('j1.compareRowCurrent')}
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="m2-link"
+                        data-testid={`compare-cta-${p.planKey}`}
+                        style={{ flex: 'none' }}
+                        disabled={openFreeM.isPending}
+                        onClick={() => {
+                          setCompareOpen(false)
+                          openFreeM.mutate()
+                        }}
+                      >
+                        {mc('j1.compareRowFreeCta')}
+                      </button>
+                    )
+                  ) : (
+                    <button
+                      type="button"
+                      className="m2-link"
+                      data-testid={`compare-cta-${p.planKey}`}
+                      style={{ flex: 'none' }}
+                      onClick={() => {
+                        setCompareOpen(false)
+                        navigate(`/member/checkout?plan=${p.planKey}`)
+                      }}
+                    >
+                      {mc('j1.compareRowCta')}
+                    </button>
+                  )
+                ) : null}
               </div>
             )
           })}

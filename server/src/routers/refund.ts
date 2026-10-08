@@ -927,11 +927,11 @@ export async function executeRefundCore(ctx: Context, input: RefundExecuteInput)
 
           /* ---- 批次 6 补缺大批：线上原路联动骨架（R12 最小侵入，两路单据同源留痕） ----
              原单为售卡单（含 kind='membership' 行）且该客户存在 paid 线上支付单
-             （pay_orders biz_domain='membership_open' AND biz_id=原单客户，按 bizId 反查
-             最新一单）→ refundMethod 默认/强制='online_original' + linkage 快照放
-             payOrderNo + 调 provider.refund（Mock=成功留痕；真通道 notImplemented 原文
-             透出拒——事务内抛出整体回滚，半态零容忍）。draft 申请行（超阈值留口）
-             零联动纯留痕，不触发本联动。 */
+             （pay_orders biz_domain ∈ membership_open/membership_upgrade（会员链路片 2 双域）
+             AND biz_id=原单客户，按 bizId 反查最新一单）→ refundMethod 默认/强制='online_original'
+             + linkage 快照放 payOrderNo + 调 provider.refund（Mock=成功留痕；真通道
+             notImplemented 原文透出拒——事务内抛出整体回滚，半态零容忍）。draft 申请行
+             （超阈值留口）零联动纯留痕，不触发本联动。 */
           let onlineRefund: Record<string, unknown> | null = null;
           if (!plan.draftRequired) {
             const hasMembershipItem = await d
@@ -950,7 +950,7 @@ export async function executeRefundCore(ctx: Context, input: RefundExecuteInput)
                 .from(schema.payOrders)
                 .where(
                   and(
-                    eq(schema.payOrders.bizDomain, 'membership_open'),
+                    inArray(schema.payOrders.bizDomain, ['membership_open', 'membership_upgrade']),
                     eq(schema.payOrders.bizId, plan.bill.customerId),
                     eq(schema.payOrders.status, 'paid'),
                   ),

@@ -5,7 +5,8 @@
  * - POST /api/pay/orders/callback      支付平台回调入口（生产微信 / 内测 mock 同一路径，
  *   无登录态依赖，验签即鉴权）：provider.verifyCallback 验签（Mock 也走 HMAC 验签流程）
  *   → 支付单存在性 → 金额核对 → 事务（条件推进 created/paying→paid + callbackJson 存档
- *   + 同事务兑付 membership_open → memberships 写行 + SSE user 频道 membership.opened）。
+ *   + 同事务兑付 membership_open/membership_upgrade → memberships 写行/换档 +
+ *   SSE user 频道 membership.opened/membership.upgraded）。
  * - POST /api/pay/orders/mock-callback mock 客户端驱动端点（仅 PAYMENT_PROVIDER=mock 时暴露，
  *   生产 404）：需登录且仅本人支付单；scenario 四态可选——
  *   success=服务端按平台口径构造并签名回调，走与真实回调完全相同的验签/业务处理路径；
@@ -192,8 +193,10 @@ export const payOrdersCallbackRoute = new Hono<PayEnv>()
       .where(eq(schema.payOrders.id, body.orderId))
       .get();
     if (!order) return c.json({ code: 'NOT_FOUND', message: '支付单不存在' }, 404);
-    // 归属：membership_open biz_id=users.id（与 routers/pay.ts assertPayOrderOwnership 同口径）
-    if (!(order.bizDomain === 'membership_open' && order.bizId === user.id)) {
+    // 归属：会员域（membership_open/membership_upgrade）biz_id=users.id（与 routers/pay.ts assertPayOrderOwnership 同口径）
+    if (
+      !((order.bizDomain === 'membership_open' || order.bizDomain === 'membership_upgrade') && order.bizId === user.id)
+    ) {
       return c.json({ code: 'FORBIDDEN', message: '只能支付本人支付单' }, 403);
     }
     if (order.status === 'paid') {

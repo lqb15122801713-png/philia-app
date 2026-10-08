@@ -171,8 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 3874 键/72 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70→端口批收尾片 2（网格/订正/回收站/公告两步流 UI 92 键，生成件重生成 3762+seed 手补 1=3763，corr 域新入=71 域）3763/71→端口批收尾片 3（画布/试算/调整/录码/克隆/绑码 UI 106 键，生成件重生成 3868+seed 手补 1=3869，canvas 域新入=72 域）3869/72→端口批收尾片 4（OP-03 收口：+7 键 −撤 perk.boarding 两键[宇宙只增不改口径=仓行留档]，生成件重生成 3873+seed 手补 1=3874）3874/72→会员链路小批片 1（撤牌 2+新增 2=生成件 3873+seed 手补 1=3874）3874/72）；
+ *      56.1 种子 3881 键/72 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70→端口批收尾片 2（网格/订正/回收站/公告两步流 UI 92 键，生成件重生成 3762+seed 手补 1=3763，corr 域新入=71 域）3763/71→端口批收尾片 3（画布/试算/调整/录码/克隆/绑码 UI 106 键，生成件重生成 3868+seed 手补 1=3869，canvas 域新入=72 域）3869/72→端口批收尾片 4（OP-03 收口：+7 键 −撤 perk.boarding 两键[宇宙只增不改口径=仓行留档]，生成件重生成 3873+seed 手补 1=3874）3874/72→会员链路小批片 1（撤牌 2+新增 2=生成件 3873+seed 手补 1=3874）3874/72→会员链路小批片 2（0068 升级域+入口 11 键增/4 键改值+撤牌 4 键出宇宙，生成件 3880+seed 手补 1=3881）3881/72）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -4933,17 +4933,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602）→ 3671/70（端口批收尾片 1：规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）→ 3763/71（端口批收尾片 2：0062 网格/订正/回收站/公告 92 键，生成件重生成 3762+seed 手补 1=3763，域 70→71=corr 新域）→ 3869/72（端口批收尾片 3：0065 画布/薪资/扫码 106 键，生成件重生成 3868+seed 手补 1=3869，域 71→72=canvas 新域）→ 3874/72（端口批收尾片 4：0066 OP-03 收口 7 键增+perk.boarding 两键撤渲染[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3873/72（会员链路小批片 1：0067 会员链路 2 键增+撤牌 2 键出宇宙[仓行留档]，生成件重生成 3873+seed 手补 1=3874） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602）→ 3671/70（端口批收尾片 1：规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）→ 3763/71（端口批收尾片 2：0062 网格/订正/回收站/公告 92 键，生成件重生成 3762+seed 手补 1=3763，域 70→71=corr 新域）→ 3869/72（端口批收尾片 3：0065 画布/薪资/扫码 106 键，生成件重生成 3868+seed 手补 1=3869，域 71→72=canvas 新域）→ 3874/72（端口批收尾片 4：0066 OP-03 收口 7 键增+perk.boarding 两键撤渲染[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3873/72（会员链路小批片 1：0067 会员链路 2 键增+撤牌 2 键出宇宙[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3881/72（会员链路小批片 2：0068 升级域+入口 11 键增/4 键改值[升档线上化口径]+撤牌 4 键出宇宙[仓行留档]，生成件重生成 3880+seed 手补 1=3881） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（3874 键/72 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 3874 && domainSet.size === 72 &&
+  check('56.1 copy 域种子全量落库（3881 键/72 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 3881 && domainSet.size === 72 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（3874 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 3874 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（3881 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 3881 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -8642,8 +8642,8 @@ async function main(): Promise<void> {
 
     /* ---- 76.3 公共读口形状不变（不透元数据：键→文两列） ---- */
     const texts76 = await trpcQuery<{ rows: Array<{ key: string; text: string; screen?: unknown; position?: unknown }> }>('config.activeCopyTexts', { cookie: customerCookie });
-    check('76.3 activeCopyTexts 形状不变（3874 行 key→text，不透 screen/position 元数据）',
-      texts76.rows.length === 3874 &&
+    check('76.3 activeCopyTexts 形状不变（3881 行 key→text，不透 screen/position 元数据）',
+      texts76.rows.length === 3881 &&
       texts76.rows.every((r) => r.screen === undefined && r.position === undefined),
       texts76.rows.length);
 
@@ -10396,6 +10396,17 @@ async function main(): Promise<void> {
    *   87.1 升级死路修通（微光→萤火新购口径全链+幂等）；87.2 读路径缺口补掉（forUser 真值+售卡拦截人话）；
    *   87.3 错误人话化（代码标识永不上屏）+撤牌两键；87.4 升级补差 diff 硬校验（Σ段≠差价 400）；
    *   87.5 frozen=续费解冻路径（升档 400 明文）；87.6 权限闸；87.7 新客旁路不回退；87.8 隔离族不回退
+   * ==================================================================
+   * 会员链路修正小批 片 2（线上升级 mock 域+入口断链 · 任务书冻结版 V1.0 §一 B 股）段：
+   *   88.1 微光新购口径线上升级全链（quote=全价 19900/createOrder server 重算覆盖假金额/
+   *       mock-callback success→paid+memberships 新购口径换档（有效期重起算/sold_store=NULL）/
+   *       membership_events 留痕 bill_no=NULL+meta.payNo/SSE membership.upgraded）；
+   *   88.2 兑付幂等（重放回调零写入零单据+memberships 行数不变）+同档重复收单 400；
+   *   88.3 付费档升档补差（萤火→烛光：quote=computeUpgradeDiff 同源/createOrder 金额=试算值
+   *       精确到分/兑付后到期日不动+paid_fen=原实付+补差）；
+   *   88.4 mock 四态升级域（fail 留痕零兑付/timeout sweeper 关单/drop+reconcile 补开幂等）；
+   *   88.5 收单闸拒单口径（非会员/降级/同档/冻结=400 人话；非会员 quote 升级域=400）；
+   *   88.6 权限（他人升级单 status/reconcile 403）+listMine/recordsMine 双域透出摘要
    * ================================================================== */
   console.log('\n[会员链路片1] 87. 收银台三件（死路修通+读路径+人话化）');
   {
@@ -10507,6 +10518,208 @@ async function main(): Promise<void> {
       !listB87.some((b) => b.billNo === up87.billNo) &&
       fuB87 instanceof TrpcHttpError && fuB87.httpStatus === 404,
       { bBills: listB87.length, fuB: fuB87 && fuB87.httpStatus });
+  }
+
+  console.log('\n[会员链路片2] 88. 线上升级 mock 域（重算/兑付/幂等/四态/拒单/权限/双域透出）');
+  {
+    /* 钉默认档（83.5 sweep 态漂移防，同 87.1 先例） */
+    await trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'member_plans', changes: [{ ruleKey: 'default_plan_key', valueJson: { value: 'plan_weiguang' } }] },
+    });
+    interface UpgradeQuoteRes {
+      amountFen: number; channelEnabled: boolean; timeoutMinutes: number;
+      upgrade: { fromPlanKey: string; newPurchase: boolean; remainingMonths: number; baseDiffFen: number; petDiffFen: number } | null;
+    }
+    /* 微光档开户夹具：手机号 dev-login（OP-03 注册即落微光档） */
+    async function mkWeiguang(phone: string): Promise<{ id: string; cookie: string }> {
+      const res = await fetch(`${BASE}/api/auth/dev-login`, {
+        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ phone }),
+      });
+      const cookie = res.headers.getSetCookie().map((c) => c.split(';')[0]).join('; ');
+      const user = await db.select().from(schema.users).where(eq(schema.users.phone, phone)).then((r) => r[0]!);
+      return { id: user.id, cookie };
+    }
+
+    /* ---- 88.1 微光新购口径线上升级全链（前后值精确到分） ---- */
+    const u881 = await mkWeiguang('19900000088');
+    const m881pre = (await db.select().from(schema.memberships).where(eq(schema.memberships.userId, u881.id)))[0]!;
+    const q881 = await trpcQuery<UpgradeQuoteRes>('pay.quote', {
+      cookie: u881.cookie, input: { bizDomain: 'membership_upgrade', planKey: 'plan_yinghuo', petCount: 0 },
+    });
+    check('88.1 升级域 quote：微光→萤火=新购口径全价 19900（computeUpgradeDiff 同源透出）+通道开',
+      q881.amountFen === 19900 && q881.upgrade?.fromPlanKey === 'plan_weiguang' && q881.upgrade.newPurchase === true &&
+      q881.channelEnabled === true, q881);
+    const co881 = await createPayOrder(u881.cookie, {
+      bizDomain: 'membership_upgrade', planKey: 'plan_yinghuo', petCount: 9, // 宠物数入参故意错值：升级域须取档案值 0
+      amountFen: 1, agreements: AGREEMENTS_FIXTURE,
+    });
+    check('88.1 createOrder 升级域：金额 server 重算覆盖假金额（1→19900）+paying+mock 单号',
+      co881.order.bizDomain === 'membership_upgrade' && co881.order.amountFen === 19900 && co881.order.status === 'paying' &&
+      !!co881.paymentId && co881.paymentId.startsWith('mock_') && co881.idempotent === false,
+      { amountFen: co881.order.amountFen, status: co881.order.status });
+    const co881dup = await createPayOrder(u881.cookie, {
+      bizDomain: 'membership_upgrade', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+    });
+    check('88.1 幂等：同人同档当日在途重复创建=返回现状（idempotent=true/同 payNo）',
+      co881dup.idempotent === true && co881dup.order.payNo === co881.order.payNo,
+      { idem: co881dup.idempotent, payNo: co881dup.order.payNo });
+    const biz881 = (await db.select().from(schema.payOrders).where(eq(schema.payOrders.id, co881.order.id)).get())!
+      .bizJson as Record<string, unknown>;
+    check('88.1 bizJson 留痕：fromPlanKey=plan_weiguang/newPurchase=true/petCount=0（档案值）',
+      biz881.fromPlanKey === 'plan_weiguang' && biz881.newPurchase === true && biz881.petCount === 0, biz881);
+
+    const mc881 = await postRaw('/api/pay/orders/mock-callback', { orderId: co881.order.id }, {}, u881.cookie);
+    const m881 = (await db.select().from(schema.memberships).where(eq(schema.memberships.userId, u881.id)))[0]!;
+    const ev881 = await db.select().from(schema.membershipEvents)
+      .where(and(eq(schema.membershipEvents.userId, u881.id), eq(schema.membershipEvents.type, 'upgrade')));
+    const ob881 = await db.select().from(schema.eventOutbox)
+      .where(and(eq(schema.eventOutbox.channel, `user:${u881.id}`), eq(schema.eventOutbox.eventType, 'membership.upgraded')));
+    const dayMs = 24 * 3600 * 1000;
+    check('88.1 回调全链：mock 验签兑付 → paid + memberships 新购口径换档（萤火/paidFen=19900/有效期重起算≈365 天/sold_store=NULL 线上域）',
+      mc881.status === 200 && mc881.json?.code === 'SUCCESS' &&
+      m881.planKey === 'plan_yinghuo' && m881.paidFen === 19900 && m881.soldStoreId === null && m881.status === 'active' &&
+      m881.startedAt.getTime() >= m881pre.startedAt.getTime() &&
+      Math.abs(m881.expiresAt.getTime() - m881.startedAt.getTime() - 365 * dayMs) < dayMs &&
+      m881.expiresAt.getTime() < 4102444799 * 1000, // 不再是免费档永久远端
+      { plan: m881.planKey, paidFen: m881.paidFen, soldStore: m881.soldStoreId });
+    check('88.1 留痕：membership_events upgrade 行（bill_no=NULL/meta.payNo=支付单号/online）+SSE membership.upgraded 落 outbox',
+      ev881.length === 1 && ev881[0]!.billNo === null && ev881[0]!.diffFen === 19900 &&
+      (ev881[0]!.meta as Record<string, unknown>).payNo === co881.order.payNo &&
+      (ev881[0]!.meta as Record<string, unknown>).online === true &&
+      ob881.length === 1 && (ob881[0]!.payload as Record<string, unknown>).payNo === co881.order.payNo,
+      { events: ev881.length, billNo: ev881[0]?.billNo, outbox: ob881.length });
+
+    /* ---- 88.2 兑付幂等（钱域命门：重放零写入零单据）+同档重复收单 400 ---- */
+    const rawReplay881 = JSON.stringify({ paymentId: co881.paymentId, orderId: co881.order.id, paidFen: 19900 });
+    const replay881 = await postRaw('/api/pay/orders/callback', rawReplay881, { [MOCK_SIGNATURE_HEADER]: signMockCallback(rawReplay881) });
+    const m881cnt = await db.select({ id: schema.memberships.id }).from(schema.memberships).where(eq(schema.memberships.userId, u881.id));
+    const ev881cnt = await db.select({ id: schema.membershipEvents.id }).from(schema.membershipEvents)
+      .where(and(eq(schema.membershipEvents.userId, u881.id), eq(schema.membershipEvents.type, 'upgrade')));
+    const m881after = (await db.select().from(schema.memberships).where(eq(schema.memberships.userId, u881.id)))[0]!;
+    check('88.2 重放回调零副作用：idempotent=true+memberships 行数不变（=1）+upgrade 事件不增（=1）+paidFen 不变（=19900）',
+      replay881.status === 200 && replay881.json?.idempotent === true &&
+      m881cnt.length === 1 && ev881cnt.length === 1 && m881after.paidFen === 19900,
+      { idem: replay881.json?.idempotent, memberships: m881cnt.length, events: ev881cnt.length, paidFen: m881after.paidFen });
+    const coSameTier = await asErr(createPayOrder(u881.cookie, {
+      bizDomain: 'membership_upgrade', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+    }));
+    check('88.2 已是目标档重复收单 → 400 人话（不重复开单）',
+      coSameTier instanceof TrpcHttpError && coSameTier.httpStatus === 400 && coSameTier.message.includes('已是该档'),
+      coSameTier && coSameTier.message);
+
+    /* ---- 88.3 付费档升档补差（萤火→烛光：差价=试算值精确到分，到期日不动） ---- */
+    const u883 = await mkPayCustomer('13922220088', '升级客');
+    const co883open = await createPayOrder(u883.cookie, {
+      bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+    });
+    await postRaw('/api/pay/orders/mock-callback', { orderId: co883open.order.id }, {}, u883.cookie);
+    const m883pre = (await db.select().from(schema.memberships).where(eq(schema.memberships.userId, u883.id)))[0]!;
+    const q883 = await trpcQuery<UpgradeQuoteRes>('pay.quote', {
+      cookie: u883.cookie, input: { bizDomain: 'membership_upgrade', planKey: 'plan_zhuguang', petCount: 0 },
+    });
+    const co883 = await createPayOrder(u883.cookie, {
+      bizDomain: 'membership_upgrade', planKey: 'plan_zhuguang', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+    });
+    check('88.3 付费档升档：quote=非新购口径（newPurchase=false）+createOrder 金额=试算差价精确到分（0<差价<烛光全价 29900）',
+      q883.upgrade?.newPurchase === false && q883.upgrade.fromPlanKey === 'plan_yinghuo' &&
+      co883.order.amountFen === q883.amountFen && q883.amountFen > 0 && q883.amountFen < 29900,
+      { quote: q883.amountFen, order: co883.order.amountFen, newPurchase: q883.upgrade?.newPurchase });
+    await postRaw('/api/pay/orders/mock-callback', { orderId: co883.order.id }, {}, u883.cookie);
+    const m883 = (await db.select().from(schema.memberships).where(eq(schema.memberships.userId, u883.id)))[0]!;
+    const ev883 = (await db.select().from(schema.membershipEvents)
+      .where(and(eq(schema.membershipEvents.userId, u883.id), eq(schema.membershipEvents.type, 'upgrade'))))[0];
+    check('88.3 兑付：萤火→烛光即时换档（paidFen=19900+差价 精确到分/到期日不动/startedAt 不动/meta.newPurchase=false）',
+      m883.planKey === 'plan_zhuguang' && m883.paidFen === 19900 + q883.amountFen &&
+      m883.expiresAt.getTime() === m883pre.expiresAt.getTime() && m883.startedAt.getTime() === m883pre.startedAt.getTime() &&
+      !!ev883 && (ev883.meta as Record<string, unknown>).newPurchase === false,
+      { plan: m883.planKey, paidFen: m883.paidFen, diff: q883.amountFen, expSame: m883.expiresAt.getTime() === m883pre.expiresAt.getTime() });
+
+    /* ---- 88.4 mock 四态升级域（fail/timeout/drop+reconcile） ---- */
+    const u884a = await mkWeiguang('19900000884');
+    const co884a = await createPayOrder(u884a.cookie, {
+      bizDomain: 'membership_upgrade', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+    });
+    await postRaw('/api/pay/orders/mock-callback', { orderId: co884a.order.id, scenario: 'fail' }, {}, u884a.cookie);
+    const st884a = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: u884a.cookie, input: { payNo: co884a.order.payNo } });
+    const m884a = (await db.select().from(schema.memberships).where(eq(schema.memberships.userId, u884a.id)))[0]!;
+    check('88.4 fail：升级单通道失败 → failed 留痕 + 零兑付（档仍微光）',
+      st884a.order.status === 'failed' && m884a.planKey === 'plan_weiguang',
+      { status: st884a.order.status, plan: m884a.planKey });
+
+    const u884b = await mkWeiguang('19900000885');
+    const co884b = await createPayOrder(u884b.cookie, {
+      bizDomain: 'membership_upgrade', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+    });
+    await postRaw('/api/pay/orders/mock-callback', { orderId: co884b.order.id, scenario: 'timeout' }, {}, u884b.cookie);
+    // 超时夹具：只动 timeout_at（移位铁律：created_at 不动）
+    await db.update(schema.payOrders).set({ timeoutAt: new Date(Date.now() - 1000) })
+      .where(eq(schema.payOrders.id, co884b.order.id));
+    await closeTimeoutPayOrders(db, new Date());
+    const st884b = await trpcQuery<{ order: PayOrderRowT }>('pay.status', { cookie: u884b.cookie, input: { payNo: co884b.order.payNo } });
+    const m884b = (await db.select().from(schema.memberships).where(eq(schema.memberships.userId, u884b.id)))[0]!;
+    check('88.4 timeout：升级单超时 sweeper 关单 closed + 零兑付（档仍微光）',
+      st884b.order.status === 'closed' && m884b.planKey === 'plan_weiguang',
+      { status: st884b.order.status, plan: m884b.planKey });
+
+    const u884c = await mkWeiguang('19900000886');
+    const co884c = await createPayOrder(u884c.cookie, {
+      bizDomain: 'membership_upgrade', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+    });
+    await postRaw('/api/pay/orders/mock-callback', { orderId: co884c.order.id, scenario: 'drop' }, {}, u884c.cookie);
+    const rc884c = await trpcMutate<{ order: PayOrderRowT; reconciled: boolean }>('pay.reconcile', {
+      cookie: u884c.cookie, input: { payNo: co884c.order.payNo },
+    });
+    const m884c = (await db.select().from(schema.memberships).where(eq(schema.memberships.userId, u884c.id)))[0]!;
+    const rc884c2 = await trpcMutate<{ order: PayOrderRowT; reconciled: boolean }>('pay.reconcile', {
+      cookie: u884c.cookie, input: { payNo: co884c.order.payNo },
+    });
+    const ev884c = await db.select({ id: schema.membershipEvents.id }).from(schema.membershipEvents)
+      .where(and(eq(schema.membershipEvents.userId, u884c.id), eq(schema.membershipEvents.type, 'upgrade')));
+    check('88.4 drop+reconcile：掉单自助补开=升级兑付坐实（萤火/paidFen=19900）+再 reconcile 幂等零动作（事件不增）',
+      rc884c.reconciled === true && rc884c.order.status === 'paid' &&
+      m884c.planKey === 'plan_yinghuo' && m884c.paidFen === 19900 && m884c.soldStoreId === null &&
+      rc884c2.reconciled === false && ev884c.length === 1,
+      { reconciled: rc884c.reconciled, plan: m884c.planKey, again: rc884c2.reconciled, events: ev884c.length });
+
+    /* ---- 88.5 收单闸拒单口径（人话；代码标识永不上屏） ---- */
+    const u885 = await mkPayCustomer('13922220089', '无档客');
+    const co885none = await asErr(createPayOrder(u885.cookie, {
+      bizDomain: 'membership_upgrade', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+    }));
+    const q885none = await asErr(trpcQuery('pay.quote', {
+      cookie: u885.cookie, input: { bizDomain: 'membership_upgrade', planKey: 'plan_yinghuo', petCount: 0 },
+    }));
+    const co885down = await asErr(createPayOrder(u883.cookie, {
+      bizDomain: 'membership_upgrade', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE, // 烛光→萤火=降级
+    }));
+    await db.update(schema.memberships).set({ status: 'frozen' }).where(eq(schema.memberships.id, m881.id));
+    const co885frozen = await asErr(createPayOrder(u881.cookie, {
+      bizDomain: 'membership_upgrade', planKey: 'plan_zhuguang', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+    }));
+    await db.update(schema.memberships).set({ status: 'active' }).where(eq(schema.memberships.id, m881.id)); // 复原不留副作用
+    check('88.5 拒单口径：非会员收单/试算=400（请走开通页）+降级=400（期内不降级）+冻结=400（续费解冻）——全人话零代码标识',
+      co885none instanceof TrpcHttpError && co885none.httpStatus === 400 && co885none.message.includes('开通') &&
+      q885none instanceof TrpcHttpError && q885none.httpStatus === 400 &&
+      co885down instanceof TrpcHttpError && co885down.httpStatus === 400 && co885down.message.includes('不降级') &&
+      co885frozen instanceof TrpcHttpError && co885frozen.httpStatus === 400 && co885frozen.message.includes('续费解冻') &&
+      ![co885none, co885down, co885frozen].some((e) => e instanceof TrpcHttpError && e.message.includes('membership.')),
+      { none: co885none && co885none.message, down: co885down && co885down.message, frozen: co885frozen && co885frozen.message });
+
+    /* ---- 88.6 权限 + 双域透出（listMine/recordsMine 摘要） ---- */
+    const [stOther88, rcOther88] = await Promise.all([
+      trpcQuery('pay.status', { cookie: u885.cookie, input: { payNo: co881.order.payNo } }).catch((e) => e),
+      trpcMutate('pay.reconcile', { cookie: u885.cookie, input: { payNo: co881.order.payNo } }).catch((e) => e),
+    ]);
+    interface ListMineRes88 { items: Array<{ order: PayOrderRowT; biz: { bizDomain: string; planKey: string | null; fromPlanKey: string | null; newPurchase: boolean } }> }
+    const lm881 = await trpcQuery<ListMineRes88>('pay.listMine', { cookie: u881.cookie });
+    const rec881 = await trpcQuery<{ items: Array<{ kind: string; id: string }> }>('pay.recordsMine', { cookie: u881.cookie });
+    check('88.6 权限：他人升级单 status/reconcile → 403；listMine/recordsMine 双域透出（摘要含 fromPlanKey/newPurchase）',
+      stOther88 instanceof TrpcHttpError && stOther88.httpStatus === 403 && rcOther88 instanceof TrpcHttpError && rcOther88.httpStatus === 403 &&
+      lm881.items.some((i) => i.order.payNo === co881.order.payNo && i.biz.bizDomain === 'membership_upgrade' &&
+        i.biz.fromPlanKey === 'plan_weiguang' && i.biz.newPurchase === true) &&
+      rec881.items.some((i) => i.kind === 'pay' && i.id === co881.order.id),
+      { lm: lm881.items.length, rec: rec881.items.length });
   }
 
   client.close();

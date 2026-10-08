@@ -48,22 +48,29 @@ const MEMBER_COPY_TABLE = {
   'j1.compareLink': '对比四档权益 ›',
   'j1.compareTitle': '四档权益对比',
   'j1.compareNote': '档色即身份',
+  /* 会员链路片 2③：对比弹层行内 CTA（同主流程口径接通） */
+  'j1.compareRowCta': '开通 ›',
+  'j1.compareRowFreeCta': '免费开通',
+  'j1.compareRowCurrent': '当前档',
   'j1.compareFooter': '四档共通：七节点全程可视 · 美容报告 30 分钟 · 安心包全员免费\n年费 ≠ 储值 · 到期不自动续费 · 权益只加不减',
   'j1.ctaOpen': '开通{tier} · 每天 ¥{daily}',
   'j1.ctaOpenFree': '免费注册 · 领个身份',
   'j1.ctaSub': '到期不自动续费 · 随时退卡',
   /* PR-4 UX P2-3：已是会员态 CTA 不再显示「开通 · 每天 ¥x」（与提示条信息打架），改回会员中心 */
   'j1.ctaAlreadyMember': '已是会员 · 去会员中心 ›',
-  'j1.alreadyMember': '你已是会员（有效期至 {date}）。续费或升级请到店收银台办理。',
-  /* PR-4 PD-05 件 1：微光态提示条不显示有效期（永久豁免，无到期语义） */
-  'j1.alreadyMemberFree': '你已是会员（免费档永久有效）。升级付费档享回馈金与服务折扣，到店收银台即可办理。',
+  /* 会员链路片 2：升档线上化（mock 域）——文案同步（续费仍到店既有链） */
+  'j1.alreadyMember': '你已是会员（有效期至 {date}）。升档可线上自助办理，续费请到店收银台。',
+  /* PR-4 PD-05 件 1：微光态提示条不显示有效期（永久豁免，无到期语义）；
+     片 2②：微光不再分流——本页直达选档开通，文案改新购口径引导句 */
+  'j1.alreadyMemberFree': '你当前是微光免费档（永久有效）。选付费档开通即享回馈金与服务折扣——新购口径：全档价，有效期自开通重起算。',
   /* 补缺批片 3：已是会员提示条下升级路径句（upgradeAvailable 时显，→/member/upgrade） */
   'j1.upgradeEntry': '升级更高档 ›',
   'j1.backMember': '回会员中心 ›',
   /* PR-5 UX P3-2：完成页下半屏配重——宠物档案引导（45 号档改进方向取实现净者） */
   'j1.doneGotoPets': '看看它的档案 ›',
   'j1.freeOpenedTitle': '微光会员已开通',
-  'j1.freeOpenedBody': '免费档即时生效{date}。升级萤火/烛光/暖阳可享商品回馈金与服务折扣，到店收银台即可办理。',
+  /* 片 2：升档线上化——到店句改线上 */
+  'j1.freeOpenedBody': '免费档即时生效{date}。升级萤火/烛光/暖阳可享商品回馈金与服务折扣，本页选档线上即可办理。',
   'j1.storePayTitle': '请到店完成开通',
   'j1.storePayBody': '你已选定「{tier}会员（{price}）」。内测期请到店收银台付款开通（现金/微信/支付宝），成交即开通、有效期 {days} 天。',
   'j1.storePayStep1': '到店后告知收银员开通「{tier}会员」，报手机号即可。',
@@ -250,7 +257,9 @@ const MEMBER_COPY_TABLE = {
   'up.formulaTotal': '合计补差 ¥{total}',
   'up.newPurchaseTag': '新购口径',
   'up.newPurchaseLine': '新购口径 = 全档价（多宠附加按现有宠物数计），开通时点重起算有效期',
-  'up.freeTierGuide': '当前为免费档，升档按新购口径办理：全档价、到店收银台开通即时生效。',
+  /* 会员链路片 2：升档线上化——免费档引导句改线上口径；目标档卡「去支付」钮 → 确认订单 */
+  'up.freeTierGuide': '当前为免费档，升档按新购口径办理：全档价、线上开通即时生效，有效期自开通重起算。',
+  'up.payCta': '去支付 ¥{amount}',
   'up.storeGuideTitle': '到店办理',
   'up.storeGuideBody': '内测期升级请到店收银台办理：出示会员码，店员代办补差，成交即时生效。',
   'up.notesTitle': '办理说明',
@@ -295,6 +304,9 @@ const MEMBER_COPY_TABLE = {
 
   /* saved.* 今年已省（A-3 账区行 + A-4 me-saved-slot 点亮 + 构成明面弹层，两源分明） */
   'saved.slotTitle': '今年已省',
+  /* 会员链路片 2①：「我的」卡面入口按档分化（微光=开通 › 指开通页；付费档=续费 › 不变） */
+  'me.cardOpenCta': '开通 ›',
+  'me.cardRenewCta': '续费 ›',
   'saved.rowLine': '今年已省 ¥{total} ›',
   'saved.meSlotNote': '构成明面',
   'saved.sheetTitle': '今年已省 · 构成明面',

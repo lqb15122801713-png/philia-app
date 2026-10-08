@@ -279,8 +279,9 @@ const paySegmentSchema = z.object({
 /* 补缺-3（46 号档+PD-07）：升档试算 / 到期换档 / 防滥用 共用件              */
 /* ------------------------------------------------------------------ */
 
-/** 注册默认档键（读 default_plan_key 全局键；键值指向不存在档行回退 plan_weiguang，同 openFree 口径） */
-function defaultPlanKeyOf(plans: Map<string, MemberPlanRow>): string {
+/** 注册默认档键（读 default_plan_key 全局键；键值指向不存在档行回退 plan_weiguang，同 openFree 口径）
+ *  会员链路片 2 导出：pay 域 membership_upgrade 微光判定同源复用 */
+export function defaultPlanKeyOf(plans: Map<string, MemberPlanRow>): string {
   const configured = planStr(plans.get('default_plan_key'), 'value', 'plan_weiguang');
   return plans.has(configured) ? configured : 'plan_weiguang';
 }
@@ -317,8 +318,9 @@ async function yearGrantFenOf(d: DbHandle, userId: string, now: Date): Promise<n
   return Number(rows[0]?.total ?? 0);
 }
 
-/** 升档差价试算明面（46 号档+PD-07 冻结公式，精确到分） */
-interface UpgradeDiffQuote {
+/** 升档差价试算明面（46 号档+PD-07 冻结公式，精确到分）
+ *  会员链路片 2 导出：pay 域 membership_upgrade 收单/兑付同源性=直接复用本函数（不重写算式） */
+export interface UpgradeDiffQuote {
   planKey: string;
   label: string;
   remainingMonths: number;
@@ -344,7 +346,7 @@ interface UpgradeDiffQuote {
  * - 微光档（=default_plan_key 读档判断）=新购口径：差价=新档全价+多宠附加按现 petCount 重算，
  *   remainingMonths=0、formula.newPurchase=true。
  */
-function computeUpgradeDiff(
+export function computeUpgradeDiff(
   plans: Map<string, MemberPlanRow>,
   m: MembershipRow,
   target: MemberPlanRow,
