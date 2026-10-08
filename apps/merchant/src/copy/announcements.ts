@@ -55,6 +55,30 @@ const ANNOUNCEMENTS_COPY_TABLE = {
   /* ---- 通用 ---- */
   'ann.common.loadFail': '数据加载失败，请检查网络后重试',
   'ann.common.retry': '重新加载',
+
+  /* ---- 端口批收尾片 2：两步流（新建草稿→发布）+ 起止 + 预览 + 回收站软删 ---- */
+  'ann.draft.newCta': '新建草稿',
+  'ann.draft.saveCta': '保存草稿',
+  'ann.draft.saved': '草稿已保存',
+  'ann.draft.editingHint': '正在编辑既有草稿——保存后仍为草稿（发布走列表「发布」钮）',
+  'ann.draft.sectionTitle': '草稿',
+  'ann.draft.badge': '草稿',
+  'ann.draft.editCta': '编辑',
+  'ann.draft.publishCta': '发布',
+  'ann.draft.removeCta': '删除',
+  'ann.draft.removeConfirm': '确认删除公告「{title}」？删除后进回收站',
+  'ann.draft.removed': '已入回收站',
+  'ann.pubd.modalTitle': '发布草稿',
+  'ann.pubd.startsAtLabel': '生效起点',
+  'ann.pubd.endsAtLabel': '生效终点',
+  'ann.pubd.windowHint': '留空=不限；起止倒置将被拒',
+  'ann.pubd.previewTitle': '预览',
+  'ann.pubd.windowUnlimited': '不限',
+  'ann.pubd.confirmCta': '确认发布',
+  'ann.list.publishedSection': '已发布',
+  'ann.list.archivedSection': '已撤下',
+  'ann.list.pendingBadge': '待生效',
+  'ann.list.expiredBadge': '已截止',
 } as const;
 
 export const ANNOUNCEMENTS_COPY = withCopyOverrides(ANNOUNCEMENTS_COPY_TABLE);

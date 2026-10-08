@@ -145,6 +145,143 @@ export default function ProductsPage() {
     setEditorOpen(true)
   }
 
+  /* ---- 端口批收尾片 2 · 批量编辑模式（网格白名单=库存/价（分）/描述/下限/上限；
+     成本列保持只读=涉账不进网格；价签仅店主 manager 禁编+title 提示） ---- */
+  type BulkField = 'stock' | 'priceFen' | 'description' | 'minStock' | 'maxStock'
+  const [bulkMode, setBulkMode] = useState(false)
+  const [bulkDrafts, setBulkDrafts] = useState<Record<string, Partial<Record<BulkField, string>>>>({})
+  const [bulkSaving, setBulkSaving] = useState(false)
+
+  /** 行原值 → 文本（null 上下限/描述=空串） */
+  const bulkOriginal = (p: StoreProduct, f: BulkField): string => {
+    const v = p[f]
+    return v === null || v === undefined ? '' : String(v)
+  }
+  const setBulk = (id: string, f: BulkField, text: string) =>
+    setBulkDrafts((prev) => ({ ...prev, [id]: { ...prev[id], [f]: text } }))
+  const bulkText = (p: StoreProduct, f: BulkField): string => bulkDrafts[p.id]?.[f] ?? bulkOriginal(p, f)
+  const isDirtyRow = (p: StoreProduct): boolean =>
+    (['stock', 'priceFen', 'description', 'minStock', 'maxStock'] as BulkField[]).some(
+      (f) => bulkText(p, f) !== bulkOriginal(p, f),
+    )
+  const dirtyRows = useMemo(() => items.filter(isDirtyRow), [items, bulkDrafts]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const exitBulk = () => {
+    setBulkMode(false)
+    setBulkDrafts({})
+  }
+
+  /** 数值字段文本 → 非负整数（空串=不合法，调用方先判 dirty 才收集） */
+  const parseIntField = (t: string): number | null => {
+    const v = Number(t.trim())
+    if (t.trim() === '' || !Number.isInteger(v) || v < 0) return null
+    return v
+  }
+
+  const bulkSave = async () => {
+    const payload: Array<{ productId: string; fields: Record<string, unknown> }> = []
+    for (const p of dirtyRows) {
+      if (p.category === 'care_package') continue // 安心包独立库存域只读（server 同硬拒）
+      const fields: Record<string, unknown> = {}
+      let bad = false
+      const putNum = (f: 'stock' | 'priceFen', key: string) => {
+        if (bulkText(p, f) === bulkOriginal(p, f)) return
+        const v = parseIntField(bulkText(p, f))
+        if (v === null) bad = true
+        else fields[key] = v
+      }
+      const putNullableNum = (f: 'minStock' | 'maxStock', key: string) => {
+        if (bulkText(p, f) === bulkOriginal(p, f)) return
+        if (bulkText(p, f).trim() === '') {
+          fields[key] = null
+          return
+        }
+        const v = parseIntField(bulkText(p, f))
+        if (v === null) bad = true
+        else fields[key] = v
+      }
+      putNum('stock', 'stock')
+      putNum('priceFen', 'priceFen')
+      putNullableNum('minStock', 'minStock')
+      putNullableNum('maxStock', 'maxStock')
+      if (bulkText(p, 'description') !== bulkOriginal(p, 'description')) {
+        const t = bulkText(p, 'description').trim()
+        fields.description = t === '' ? null : t
+      }
+      if (bad) {
+        toast.error(pd('prod.bulkInvalid'))
+        return
+      }
+      if (Object.keys(fields).length > 0) payload.push({ productId: p.id, fields })
+    }
+    if (payload.length === 0) {
+      exitBulk()
+      return
+    }
+    setBulkSaving(true)
+    try {
+      const r = await trpc.mall.bulkUpdateProducts.mutate({ items: payload.slice(0, 50) })
+      toast.success(pd('prod.bulkDone', { n: r.updated }))
+      exitBulk()
+      void queryClient.invalidateQueries({ queryKey: PRODUCTS_KEY })
+    } catch (e) {
+      toast.error(errMsg(e))
+    } finally {
+      setBulkSaving(false)
+    }
+  }
+
+  /* ---- 行内删除（owner；回收站软删 → 控制台 D5 可恢复） ---- */
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const deleteProduct = async (p: StoreProduct) => {
+    if (!window.confirm(pd('prod.deleteConfirm', { name: p.name }))) return
+    setDeletingId(p.id)
+    try {
+      await trpc.mall.deleteProduct.mutate({ productId: p.id })
+      toast.success(pd('prod.deleteDone'))
+      void queryClient.invalidateQueries({ queryKey: PRODUCTS_KEY })
+    } catch (e) {
+      toast.error(errMsg(e))
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  /** 删除小钮（owner 才显；安心包行硬拒不显——独立库存域只读 v1） */
+  const deleteBtn = (p: StoreProduct) =>
+    role.isOwner && p.category !== 'care_package' ? (
+      <button
+        type="button"
+        data-testid={`products-delete-${p.id}`}
+        disabled={deletingId === p.id}
+        onClick={(e) => {
+          e.stopPropagation()
+          void deleteProduct(p)
+        }}
+        className="u1-ring rounded-chip bg-card px-2 py-1 text-caption-xs font-semibold text-danger-deep transition-transform duration-120 ease-philia-spring active:scale-[0.96]"
+      >
+        {pd('prod.deleteCta')}
+      </button>
+    ) : null
+
+  /** 批量网格数值输入（等宽数字；manager 价签禁编+title 提示） */
+  const bulkNumInput = (p: StoreProduct, f: BulkField, testid: string, ownerOnly = false) => {
+    const disabled = ownerOnly && !role.isOwner
+    return (
+      <input
+        type="number"
+        min={0}
+        step={1}
+        data-testid={`${testid}-${p.id}`}
+        disabled={disabled}
+        title={disabled ? pd('prod.bulkPriceOwnerOnly') : undefined}
+        value={bulkText(p, f)}
+        onChange={(e) => setBulk(p.id, f, e.target.value)}
+        className={`w-20 rounded-control bg-card px-2 py-1.5 text-caption tabular-nums text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(59,46,36,.25)] ${disabled ? 'opacity-50' : ''}`}
+      />
+    )
+  }
+
   return (
     <MainScaffold
       testid="products-page"
@@ -164,6 +301,15 @@ export default function ProductsPage() {
           {role.canManage ? (
             <QuietButton testid="products-csv" onClick={() => setImportOpen((v) => !v)}>
               {pd('prod.csvCta')}
+            </QuietButton>
+          ) : null}
+          {/* 端口批收尾片 2：批量编辑模式 toggle（owner|manager；网格内再分流价签 owner-only） */}
+          {role.canManage ? (
+            <QuietButton
+              testid="products-bulk-toggle"
+              onClick={() => (bulkMode ? exitBulk() : setBulkMode(true))}
+            >
+              {bulkMode ? pd('prod.bulkCancel') : pd('prod.bulkToggle')}
             </QuietButton>
           ) : null}
           <LemonButton testid="products-create" onClick={() => openEditor(null)}>
@@ -316,6 +462,97 @@ export default function ProductsPage() {
             </QuietButton>
           </div>
         </div>
+      ) : bulkMode ? (
+        /* 端口批收尾片 2 · 批量编辑网格（五列可编辑：库存/价（分）/描述/下限/上限；
+           成本列保持只读=涉账不进网格；脏行高亮+浮动条计数；安心包行只读跳编） */
+        <div className="u3-panel" data-testid="products-bulk-grid">
+          <div className="u3-noscrollx overflow-x-auto">
+            <table className="u3-tbl min-w-[980px]">
+              <thead>
+                <tr>
+                  <th>商品</th>
+                  <th>类目</th>
+                  <th className="!text-right">库存</th>
+                  <th className="!text-right">价（分）</th>
+                  <th>{pd('prod.bulkDescCol')}</th>
+                  <th className="!text-right">{pd('prod.bulkMinCol')}</th>
+                  <th className="!text-right">{pd('prod.bulkMaxCol')}</th>
+                  <th className="!text-right">{pd('prod.costCol')}</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((p) => {
+                  const careRo = p.category === 'care_package'
+                  const dirty = isDirtyRow(p)
+                  return (
+                    <tr
+                      key={p.id}
+                      className={dirty ? 'bg-brand-primary-light' : ''}
+                      data-testid={`product-card-${p.id}`}
+                    >
+                      <td>
+                        <span className="font-bold text-ink">{p.name}</span>
+                        {careRo ? (
+                          <span className="ml-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                            {pd('prod.bulkCarePackageRo')}
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className="text-[rgba(59,46,36,.62)]">{p.category}</td>
+                      {careRo ? (
+                        <td colSpan={5} className="text-caption-xs text-[rgba(59,46,36,.42)]">
+                          {pd('prod.bulkCarePackageRo')}
+                        </td>
+                      ) : (
+                        <>
+                          <td className="text-right">{bulkNumInput(p, 'stock', 'bulk-stock')}</td>
+                          <td className="text-right">{bulkNumInput(p, 'priceFen', 'bulk-price', true)}</td>
+                          <td>
+                            <input
+                              type="text"
+                              data-testid={`bulk-desc-${p.id}`}
+                              value={bulkText(p, 'description')}
+                              maxLength={2000}
+                              onChange={(e) => setBulk(p.id, 'description', e.target.value)}
+                              className="w-56 rounded-control bg-card px-2 py-1.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+                            />
+                          </td>
+                          <td className="text-right">{bulkNumInput(p, 'minStock', 'bulk-min')}</td>
+                          <td className="text-right">{bulkNumInput(p, 'maxStock', 'bulk-max')}</td>
+                        </>
+                      )}
+                      {/* 成本列保持只读（涉账不进网格；clerk 视界 server 已置 null） */}
+                      <td className="whitespace-nowrap text-right font-number tabular-nums text-[rgba(59,46,36,.62)]">
+                        {role.canManage ? fmtMoney(p.costFen) : pd('prod.costClerkMask')}
+                      </td>
+                      <td className="text-right">{deleteBtn(p)}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          {/* 脏行浮动条（计数+保存/取消） */}
+          {dirtyRows.length > 0 ? (
+            <div
+              className="u1-ring sticky bottom-4 z-10 mt-3.5 flex items-center justify-between gap-3 rounded-panel bg-card px-4 py-3 shadow-elevated"
+              data-testid="products-bulk-bar"
+            >
+              <span className="text-caption text-ink">
+                <b className="tabular-nums">{pd('prod.bulkPendingBar', { n: dirtyRows.length })}</b>
+              </span>
+              <div className="flex shrink-0 gap-2">
+                <QuietButton testid="products-bulk-cancel" onClick={exitBulk} disabled={bulkSaving}>
+                  {pd('prod.bulkCancel')}
+                </QuietButton>
+                <LemonButton testid="products-bulk-save" disabled={bulkSaving} onClick={() => void bulkSave()}>
+                  {pd('prod.bulkSave')}
+                </LemonButton>
+              </div>
+            </div>
+          ) : null}
+        </div>
       ) : (
         /* W-10 M5 台账（商品/类目/价/库存低库存红字/状态/日盘档）；行点→编辑弹层（真实链路保留） */
         <div className="u3-panel">
@@ -330,6 +567,7 @@ export default function ProductsPage() {
                   <th className="!text-right">库存</th>
                   <th>状态</th>
                   <th>{pd('prod.dailyCountCol')}</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -378,6 +616,8 @@ export default function ProductsPage() {
                           <span className="text-caption-xs text-[rgba(59,46,36,.3)]">—</span>
                         )}
                       </td>
+                      {/* 行内删除（owner；回收站软删；stopPropagation 不触发行点编辑弹层） */}
+                      <td className="text-right">{deleteBtn(p)}</td>
                     </tr>
                   )
                 })}

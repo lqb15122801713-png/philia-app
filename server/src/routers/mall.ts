@@ -25,7 +25,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, gte, inArray, isNotNull, like, lt, ne, or, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, isNotNull, isNull, like, lt, ne, or, sql, type SQL } from 'drizzle-orm';
 import { randomInt } from 'node:crypto';
 import { z } from 'zod';
 import { db, schema } from '../db';
@@ -335,7 +335,7 @@ export const mallRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const conds: SQL[] = [eq(schema.products.status, 'on')];
+      const conds: SQL[] = [eq(schema.products.status, 'on'), isNull(schema.products.deletedAt)];
       if (input.storeId) conds.push(eq(schema.products.storeId, input.storeId));
       if (input.category) conds.push(eq(schema.products.category, input.category));
       if (!input.includeCarePackage) conds.push(ne(schema.products.category, 'care_package'));
@@ -427,12 +427,114 @@ export const mallRouter = router({
         .get();
       if (!existing) throw new TRPCError({ code: 'NOT_FOUND', message: '商品不存在' });
       if (existing.storeId !== storeId) forbidden('非本店商品，无权编辑');
+      if (existing.deletedAt) throw new TRPCError({ code: 'BAD_REQUEST', message: '商品在回收站，请先恢复再编辑' });
       return ctx.db
         .update(schema.products)
         .set({ ...fields, updatedAt: new Date() })
         .where(eq(schema.products.id, existing.id))
         .returning()
         .then((r) => r[0]!);
+    }),
+
+  /**
+   * 3a-b. bulkUpdateProducts（端口批收尾片 2 · 批量编辑器网格口，merchantManager）：
+   * 白名单字段=stock/priceFen/description/minStock/maxStock（zod strict 硬拒白名单外字段——
+   * 涉钱涉账[costFen 等]永不进网格=开口项 1 裁）；价签 priceFen 变更仅店主（manager 400 明文）；
+   * 安心包 care_package 行硬拒（独立库存域只读 v1 口径）；回收站行拒改。
+   * 留痕=每商品一行 stock_movements（sourceType='bulk_edit'，note=字段前后值 JSON）。
+   */
+  bulkUpdateProducts: merchantManagerProcedure
+    .input(
+      z.object({
+        items: z
+          .array(
+            z.object({
+              productId: z.string().min(1),
+              fields: z
+                .object({
+                  stock: z.number().int('库存必须是整数').min(0, '库存不允许为负').optional(),
+                  priceFen: z.number().int('价格必须是整数分').min(0, '价格不允许为负').optional(),
+                  description: z.string().max(2000, '描述过长').nullable().optional(),
+                  minStock: z.number().int('下限必须是整数').min(0, '下限不允许为负').nullable().optional(),
+                  maxStock: z.number().int('上限必须是整数').min(0, '上限不允许为负').nullable().optional(),
+                })
+                .strict(),
+            }),
+          )
+          .min(1, '变更不能为空')
+          .max(50, '单次最多 50 行'),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
+      const isOwner = ctx.user.roles.includes('merchant_owner');
+      for (const it of input.items) {
+        if (it.fields.priceFen !== undefined && !isOwner) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: '价签（priceFen）仅店主可改（网格白名单内亦同闸）' });
+        }
+      }
+      return ctx.db.transaction(async (tx) => {
+        const now = new Date();
+        const txAny = tx as unknown as typeof ctx.db;
+        const updated: string[] = [];
+        for (const it of input.items) {
+          const row = await txAny.select().from(schema.products).where(eq(schema.products.id, it.productId)).get();
+          if (!row || row.storeId !== storeId) throw new TRPCError({ code: 'NOT_FOUND', message: `商品不存在：${it.productId}` });
+          if (row.category === 'care_package') {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: `安心包「${row.name}」=独立库存域只读件，不进网格` });
+          }
+          if (row.deletedAt) throw new TRPCError({ code: 'BAD_REQUEST', message: `商品「${row.name}」在回收站，请先恢复` });
+          const changes: Record<string, [unknown, unknown]> = {};
+          const set: Record<string, unknown> = {};
+          for (const [k, v] of Object.entries(it.fields)) {
+            if (v === undefined) continue;
+            const before = (row as unknown as Record<string, unknown>)[k];
+            if (before === v) continue;
+            changes[k] = [before, v];
+            set[k] = v;
+          }
+          if (Object.keys(set).length === 0) continue;
+          const newStock = (set.stock as number | undefined) ?? row.stock;
+          await txAny
+            .update(schema.products)
+            .set({ ...set, updatedAt: now })
+            .where(eq(schema.products.id, row.id));
+          await txAny.insert(schema.stockMovements).values({
+            storeId,
+            productId: row.id,
+            sourceType: 'bulk_edit',
+            delta: newStock - row.stock,
+            beforeStock: row.stock,
+            afterStock: newStock,
+            operatorId: ctx.user.id,
+            note: `批量编辑：${JSON.stringify(changes)}`,
+          });
+          updated.push(row.id);
+        }
+        return { updated: updated.length, ids: updated };
+      });
+    }),
+
+  /**
+   * 3a-c. deleteProduct（端口批收尾片 2 · 回收站软删，merchantOwner）：白名单=运营件——
+   * 商品软删置 deleted_at/deleted_by（读侧 list 默认过滤；恢复走 recycleBin.restore 统一口）；
+   * 安心包 care_package 硬拒（独立库存域口径）；重复删除=400 明文。
+   */
+  deleteProduct: merchantOwnerProcedure
+    .input(z.object({ productId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
+      const row = await ctx.db.select().from(schema.products).where(eq(schema.products.id, input.productId)).get();
+      if (!row || row.storeId !== storeId) throw new TRPCError({ code: 'NOT_FOUND', message: '商品不存在' });
+      if (row.category === 'care_package') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '安心包=独立库存域只读件，不进回收站' });
+      }
+      if (row.deletedAt) throw new TRPCError({ code: 'BAD_REQUEST', message: '商品已在回收站' });
+      await ctx.db
+        .update(schema.products)
+        .set({ deletedAt: new Date(), deletedBy: ctx.user.id, updatedAt: new Date() })
+        .where(eq(schema.products.id, row.id));
+      return { productId: row.id, deleted: true };
     }),
 
   /**
@@ -455,7 +557,7 @@ export const mallRouter = router({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const conds: SQL[] = [eq(schema.products.storeId, ctx.user.storeId!)];
+      const conds: SQL[] = [eq(schema.products.storeId, ctx.user.storeId!), isNull(schema.products.deletedAt)];
       if (input.category) conds.push(eq(schema.products.category, input.category));
       if (!input.includeCarePackage) conds.push(ne(schema.products.category, 'care_package'));
       if (input.keyword) {

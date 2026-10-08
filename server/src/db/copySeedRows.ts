@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-07T06:59:41.858Z；键数=3670；归屏率=96.8%（未归屏 116）
+ * 生成时间口径：2026-10-07T10:08:13.001Z；键数=3762；归屏率=96.9%（未归屏 115）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -5822,6 +5822,83 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "AnnouncementsPage 页面内文案"
  },
  {
+  "key": "ann.draft.badge",
+  "domain": "merchant:announcements",
+  "text": "草稿",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
+  "key": "ann.draft.editCta",
+  "domain": "merchant:announcements",
+  "text": "编辑",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
+  "key": "ann.draft.editingHint",
+  "domain": "merchant:announcements",
+  "text": "正在编辑既有草稿——保存后仍为草稿（发布走列表「发布」钮）",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
+  "key": "ann.draft.newCta",
+  "domain": "merchant:announcements",
+  "text": "新建草稿",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
+  "key": "ann.draft.publishCta",
+  "domain": "merchant:announcements",
+  "text": "发布",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
+  "key": "ann.draft.removeConfirm",
+  "domain": "merchant:announcements",
+  "text": "确认删除公告「{title}」？删除后进回收站",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
+  "key": "ann.draft.removeCta",
+  "domain": "merchant:announcements",
+  "text": "删除",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
+  "key": "ann.draft.removed",
+  "domain": "merchant:announcements",
+  "text": "已入回收站",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
+  "key": "ann.draft.saveCta",
+  "domain": "merchant:announcements",
+  "text": "保存草稿",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
+  "key": "ann.draft.saved",
+  "domain": "merchant:announcements",
+  "text": "草稿已保存",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
+  "key": "ann.draft.sectionTitle",
+  "domain": "merchant:announcements",
+  "text": "草稿",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
   "key": "ann.guideHint",
   "domain": "merchant:announcements",
   "text": "发布与回执对账属管理层动作；店员账号的工作面是收银台。",
@@ -5857,6 +5934,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "AnnouncementsPage 页面内文案"
  },
  {
+  "key": "ann.list.archivedSection",
+  "domain": "merchant:announcements",
+  "text": "已撤下",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
   "key": "ann.list.aside",
   "domain": "merchant:announcements",
   "text": "新→旧 · 置顶在前 · 撤下为灰态留痕",
@@ -5871,9 +5955,30 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "AnnouncementsPage 页面内文案"
  },
  {
+  "key": "ann.list.expiredBadge",
+  "domain": "merchant:announcements",
+  "text": "已截止",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
+  "key": "ann.list.pendingBadge",
+  "domain": "merchant:announcements",
+  "text": "待生效",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
   "key": "ann.list.pinnedBadge",
   "domain": "merchant:announcements",
   "text": "置顶",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
+  "key": "ann.list.publishedSection",
+  "domain": "merchant:announcements",
+  "text": "已发布",
   "screen": "商家·公告",
   "position": "AnnouncementsPage 页面内文案"
  },
@@ -6025,11 +6130,60 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "AnnouncementsPage 页面内文案"
  },
  {
+  "key": "ann.pubd.confirmCta",
+  "domain": "merchant:announcements",
+  "text": "确认发布",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
+  "key": "ann.pubd.endsAtLabel",
+  "domain": "merchant:announcements",
+  "text": "生效终点",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
+  "key": "ann.pubd.modalTitle",
+  "domain": "merchant:announcements",
+  "text": "发布草稿",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
+  "key": "ann.pubd.previewTitle",
+  "domain": "merchant:announcements",
+  "text": "预览",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
+  "key": "ann.pubd.startsAtLabel",
+  "domain": "merchant:announcements",
+  "text": "生效起点",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
+  "key": "ann.pubd.windowHint",
+  "domain": "merchant:announcements",
+  "text": "留空=不限；起止倒置将被拒",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
+  "key": "ann.pubd.windowUnlimited",
+  "domain": "merchant:announcements",
+  "text": "不限",
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
+ },
+ {
   "key": "ann.reads.close",
   "domain": "merchant:announcements",
   "text": "关闭",
-  "screen": null,
-  "position": "未在页面调用点命中（merchant:announcements 域键表，端口运营复核挂载屏）"
+  "screen": "商家·公告",
+  "position": "AnnouncementsPage 页面内文案"
  },
  {
   "key": "ann.reads.empty",
@@ -8272,6 +8426,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "ConsolePage 页面内文案"
  },
  {
+  "key": "cadm.portCorrection",
+  "domain": "merchant:consoleAdmin",
+  "text": "数据订正",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
   "key": "cadm.portDict",
   "domain": "merchant:consoleAdmin",
   "text": "参数字典",
@@ -8312,6 +8473,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "text": "保存档案",
   "screen": "商家·开发者管理端",
   "position": "ProfilePortBody 组件内文案"
+ },
+ {
+  "key": "cadm.portRecycle",
+  "domain": "merchant:consoleAdmin",
+  "text": "回收站",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
  },
  {
   "key": "cadm.portReportSpec",
@@ -8382,6 +8550,76 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "text": "发布流透出：草稿→预览→发布推三端；回滚=槽位卡「回退上一版」真链路（publish/revert 同管道，虚线注非新件）。",
   "screen": "商家·开发者管理端",
   "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.recycleAside",
+  "domain": "merchant:consoleAdmin",
+  "text": "软删恢复统一口 · 商品/活动/公告三域运营件",
+  "screen": "商家·开发者管理端",
+  "position": "RecycleBinBody 组件内文案"
+ },
+ {
+  "key": "cadm.recycleDomainAnnounce",
+  "domain": "merchant:consoleAdmin",
+  "text": "公告",
+  "screen": "商家·开发者管理端",
+  "position": "RecycleBinBody 组件内文案"
+ },
+ {
+  "key": "cadm.recycleDomainProduct",
+  "domain": "merchant:consoleAdmin",
+  "text": "商品",
+  "screen": "商家·开发者管理端",
+  "position": "RecycleBinBody 组件内文案"
+ },
+ {
+  "key": "cadm.recycleDomainPromo",
+  "domain": "merchant:consoleAdmin",
+  "text": "活动",
+  "screen": "商家·开发者管理端",
+  "position": "RecycleBinBody 组件内文案"
+ },
+ {
+  "key": "cadm.recycleEmpty",
+  "domain": "merchant:consoleAdmin",
+  "text": "回收站为空",
+  "screen": "商家·开发者管理端",
+  "position": "RecycleBinBody 组件内文案"
+ },
+ {
+  "key": "cadm.recycleLoadFail",
+  "domain": "merchant:consoleAdmin",
+  "text": "回收站加载失败",
+  "screen": "商家·开发者管理端",
+  "position": "RecycleBinBody 组件内文案"
+ },
+ {
+  "key": "cadm.recycleNote",
+  "domain": "merchant:consoleAdmin",
+  "text": "回收站=软删+恢复；账务/支付/账单类永不进回收站（无硬删口）",
+  "screen": "商家·开发者管理端",
+  "position": "RecycleBinBody 组件内文案"
+ },
+ {
+  "key": "cadm.recycleRestore",
+  "domain": "merchant:consoleAdmin",
+  "text": "恢复",
+  "screen": "商家·开发者管理端",
+  "position": "RecycleBinBody 组件内文案"
+ },
+ {
+  "key": "cadm.recycleRestored",
+  "domain": "merchant:consoleAdmin",
+  "text": "已恢复",
+  "screen": "商家·开发者管理端",
+  "position": "RecycleBinBody 组件内文案"
+ },
+ {
+  "key": "cadm.recycleTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "回收站",
+  "screen": "商家·开发者管理端",
+  "position": "RecycleBinBody 组件内文案"
  },
  {
   "key": "cadm.reportSpecEmptyBody",
@@ -9215,6 +9453,314 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "text": "v{version} · 共 {total} 版",
   "screen": "商家·槽位端口",
   "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "corr.approveConfirm",
+  "domain": "merchant:correction",
+  "text": "确认通过并立即应用该订正？",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.approveCta",
+  "domain": "merchant:correction",
+  "text": "通过",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.approved",
+  "domain": "merchant:correction",
+  "text": "已通过并生效",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.aside",
+  "domain": "merchant:correction",
+  "text": "余额/回馈金/工时单条修正 · 前后值留痕 · 审批通过才生效",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.balanceLabel",
+  "domain": "merchant:correction",
+  "text": "余额新值（分）",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.bonusLabel",
+  "domain": "merchant:correction",
+  "text": "赠送新值（分）",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.dateLabel",
+  "domain": "merchant:correction",
+  "text": "打卡日期",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.fmtBonus",
+  "domain": "merchant:correction",
+  "text": "赠送",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.fmtPrincipal",
+  "domain": "merchant:correction",
+  "text": "本金",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.formAside",
+  "domain": "merchant:correction",
+  "text": "提交后进审批队列，复核通过才生效",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.formTitle",
+  "domain": "merchant:correction",
+  "text": "发起订正",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.invalid",
+  "domain": "merchant:correction",
+  "text": "请填齐目标、数值与事由",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.kindRebate",
+  "domain": "merchant:correction",
+  "text": "回馈金",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.kindStored",
+  "domain": "merchant:correction",
+  "text": "储值余额",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.kindWorkHours",
+  "domain": "merchant:correction",
+  "text": "考勤工时",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.loadFail",
+  "domain": "merchant:correction",
+  "text": "订正单加载失败",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.memberEmpty",
+  "domain": "merchant:correction",
+  "text": "无匹配会员（本店有预约或持次卡的客户名册内搜索）",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.memberPickLabel",
+  "domain": "merchant:correction",
+  "text": "目标会员",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.memberSearchPh",
+  "domain": "merchant:correction",
+  "text": "手机号 / 昵称搜索会员",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.noteLabel",
+  "domain": "merchant:correction",
+  "text": "订正事由",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.notePh",
+  "domain": "merchant:correction",
+  "text": "事由必填（留痕用）",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.principalLabel",
+  "domain": "merchant:correction",
+  "text": "本金新值（分）",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.proposed",
+  "domain": "merchant:correction",
+  "text": "已提交审批",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.queueAside",
+  "domain": "merchant:correction",
+  "text": "pending 在前 · 复核通过才生效",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.queueEmpty",
+  "domain": "merchant:correction",
+  "text": "暂无订正单",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.queueTitle",
+  "domain": "merchant:correction",
+  "text": "订正单队列",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.recordEmpty",
+  "domain": "merchant:correction",
+  "text": "该员工该日经既有口无可定位记录（仅当月防代打标记记录透出，可手输记录 ID）",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.recordManualLabel",
+  "domain": "merchant:correction",
+  "text": "或手输记录 ID",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.recordPickLabel",
+  "domain": "merchant:correction",
+  "text": "选择打卡记录",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.redlineNote",
+  "domain": "merchant:correction",
+  "text": "订正=前后值留痕+审批通过才生效；不回溯已封箱（日结/月结快照不重算）",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.rejectCta",
+  "domain": "merchant:correction",
+  "text": "驳回",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.rejected",
+  "domain": "merchant:correction",
+  "text": "已驳回",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.rejectNotePrompt",
+  "domain": "merchant:correction",
+  "text": "请输入驳回原因（必填）",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.rejectNoteRequired",
+  "domain": "merchant:correction",
+  "text": "驳回原因不能为空",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.staffPickLabel",
+  "domain": "merchant:correction",
+  "text": "选择员工",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.statusApplied",
+  "domain": "merchant:correction",
+  "text": "已生效",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.statusPending",
+  "domain": "merchant:correction",
+  "text": "待复核",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.statusRejected",
+  "domain": "merchant:correction",
+  "text": "已驳回",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.submitCta",
+  "domain": "merchant:correction",
+  "text": "提交审批",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.tabRebate",
+  "domain": "merchant:correction",
+  "text": "回馈金",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.tabStored",
+  "domain": "merchant:correction",
+  "text": "储值余额",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.tabWorkHours",
+  "domain": "merchant:correction",
+  "text": "考勤工时",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.title",
+  "domain": "merchant:correction",
+  "text": "数据订正",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
+ },
+ {
+  "key": "corr.tsLabel",
+  "domain": "merchant:correction",
+  "text": "新打卡时刻",
+  "screen": "商家·开发者管理端",
+  "position": "CorrectionBody 组件内文案"
  },
  {
   "key": "dash.appealAssistConfirmTitle",
@@ -14537,6 +15083,83 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "PayrollPage 页面内文案"
  },
  {
+  "key": "prod.bulkCancel",
+  "domain": "merchant:products",
+  "text": "取消",
+  "screen": "商家·商品",
+  "position": "ProductsPage 页面内文案"
+ },
+ {
+  "key": "prod.bulkCarePackageRo",
+  "domain": "merchant:products",
+  "text": "安心包独立库存域只读",
+  "screen": "商家·商品",
+  "position": "ProductsPage 页面内文案"
+ },
+ {
+  "key": "prod.bulkDescCol",
+  "domain": "merchant:products",
+  "text": "描述",
+  "screen": "商家·商品",
+  "position": "ProductsPage 页面内文案"
+ },
+ {
+  "key": "prod.bulkDone",
+  "domain": "merchant:products",
+  "text": "已保存 {n} 行",
+  "screen": "商家·商品",
+  "position": "ProductsPage 页面内文案"
+ },
+ {
+  "key": "prod.bulkInvalid",
+  "domain": "merchant:products",
+  "text": "有行数值不合法（非负整数；描述可空），请修正标红项",
+  "screen": "商家·商品",
+  "position": "ProductsPage 页面内文案"
+ },
+ {
+  "key": "prod.bulkMaxCol",
+  "domain": "merchant:products",
+  "text": "上限",
+  "screen": "商家·商品",
+  "position": "ProductsPage 页面内文案"
+ },
+ {
+  "key": "prod.bulkMinCol",
+  "domain": "merchant:products",
+  "text": "下限",
+  "screen": "商家·商品",
+  "position": "ProductsPage 页面内文案"
+ },
+ {
+  "key": "prod.bulkPendingBar",
+  "domain": "merchant:products",
+  "text": "{n} 行待保存",
+  "screen": "商家·商品",
+  "position": "ProductsPage 页面内文案"
+ },
+ {
+  "key": "prod.bulkPriceOwnerOnly",
+  "domain": "merchant:products",
+  "text": "价签仅店主",
+  "screen": "商家·商品",
+  "position": "ProductsPage 页面内文案"
+ },
+ {
+  "key": "prod.bulkSave",
+  "domain": "merchant:products",
+  "text": "保存变更",
+  "screen": "商家·商品",
+  "position": "ProductsPage 页面内文案"
+ },
+ {
+  "key": "prod.bulkToggle",
+  "domain": "merchant:products",
+  "text": "批量编辑",
+  "screen": "商家·商品",
+  "position": "ProductsPage 页面内文案"
+ },
+ {
   "key": "prod.costClerkMask",
   "domain": "merchant:products",
   "text": "—",
@@ -14659,6 +15282,27 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "prod.dailyCountYes",
   "domain": "merchant:products",
   "text": "日盘",
+  "screen": "商家·商品",
+  "position": "ProductsPage 页面内文案"
+ },
+ {
+  "key": "prod.deleteConfirm",
+  "domain": "merchant:products",
+  "text": "确认删除商品「{name}」？删除后进回收站（控制台 D5 可恢复）",
+  "screen": "商家·商品",
+  "position": "ProductsPage 页面内文案"
+ },
+ {
+  "key": "prod.deleteCta",
+  "domain": "merchant:products",
+  "text": "删除",
+  "screen": "商家·商品",
+  "position": "ProductsPage 页面内文案"
+ },
+ {
+  "key": "prod.deleteDone",
+  "domain": "merchant:products",
+  "text": "已入回收站（控制台 D5 可恢复）",
   "screen": "商家·商品",
   "position": "ProductsPage 页面内文案"
  },

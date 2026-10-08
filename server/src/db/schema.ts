@@ -761,6 +761,10 @@ export const products = sqliteTable('products', {
   isDisinfectionSupply: integer('is_disinfection_supply', { mode: 'boolean' })
     .notNull()
     .default(false),
+  /** 软删除（端口批收尾片 2 · 回收站白名单=运营件）：非 NULL=在回收站（读侧 list 默认过滤；
+     账务/支付/账单类永不进回收站=硬删禁令照旧，无 purge 口） */
+  deletedAt: integer('deleted_at', { mode: 'timestamp' }),
+  deletedBy: text('deleted_by').references(() => users.id),
   ...auditColumns,
 });
 
@@ -2118,6 +2122,41 @@ export const clientErrorEvents = sqliteTable(
     ...auditColumns,
   },
   (t) => [index('ix_client_error_events_created').on(t.createdAt)],
+);
+
+/**
+ * 数据订正载荷单（端口批收尾片 2 · 数据 3 之订正界面+审批流）：approval_requests 加
+ * kind='correction'（不新建审批表，同 config_change_proposals 工艺），本表=订正载荷单据表。
+ * 三类 kind：stored_value（储值余额 principal/bonus 绝对值修正）/ rebate（回馈金 balance_fen
+ * 绝对值修正）/ work_hours（考勤打卡时刻修正，应用=attendanceRecords.ts+approvals 留痕行）。
+ * 红线：前后值留痕+审批通过才生效+不回溯已封箱（日结/月结快照/已结算期次一律不重算）。
+ */
+export const dataCorrections = sqliteTable(
+  'data_corrections',
+  {
+    id: id(),
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 订正类：stored_value | rebate | work_hours */
+    kind: text('kind').notNull(),
+    /** 目标键（stored_value/rebate=目标用户 users.id；work_hours=attendance_records.id） */
+    targetKey: text('target_key').notNull(),
+    /** 载荷 JSON：{before: …, after: …}（三类各自形状：余额={principalFen,bonusFen} / 回馈金={balanceFen} / 工时={ts ISO}） */
+    payloadJson: text('payload_json', { mode: 'json' })
+      .$type<{ before: unknown; after: unknown }>()
+      .notNull(),
+    /** 订正事由（必填留痕） */
+    note: text('note').notNull(),
+    /** 状态：pending | applied | rejected（与 approval_requests.status 同步） */
+    status: text('status').notNull().default('pending'),
+    proposerId: text('proposer_id')
+      .notNull()
+      .references(() => users.id),
+    appliedAt: integer('applied_at', { mode: 'timestamp' }),
+    ...auditColumns,
+  },
+  (t) => [index('ix_data_corrections_store_status').on(t.storeId, t.status)],
 );
 
 /* ------------------------------------------------------------------ */
@@ -3544,10 +3583,16 @@ export const announcements = sqliteTable(
     /** 定向：all | frontdesk | groomer */
     targetRole: text('target_role').notNull().default('all'),
     pinned: integer('pinned', { mode: 'boolean' }).notNull().default(false),
-    /** 状态：published | archived */
+    /** 状态：draft（草稿·两步流新建件，端口批收尾片 2） | published | archived */
     status: text('status').notNull().default('published'),
     publishedBy: text('published_by').notNull().references(() => users.id),
     publishedAt: integer('published_at', { mode: 'timestamp' }).notNull(),
+    /** 起止时间（端口批收尾片 2：NULL=不限；员工读口懒算过滤：startsAt≤now≤endsAt 才可见） */
+    startsAt: integer('starts_at', { mode: 'timestamp' }),
+    endsAt: integer('ends_at', { mode: 'timestamp' }),
+    /** 软删除（端口批收尾片 2 · 回收站白名单=运营件；读侧 list 默认过滤） */
+    deletedAt: integer('deleted_at', { mode: 'timestamp' }),
+    deletedBy: text('deleted_by').references(() => users.id),
     ...auditColumns,
   },
   (t) => [index('ix_announcements_store').on(t.storeId, t.status, t.publishedAt)],
@@ -3963,6 +4008,9 @@ export const promoCampaigns = sqliteTable(
     /** 手动状态：draft（编辑中，不上线） | scheduled（已排期待上线） */
     status: text('status').notNull().default('draft'),
     note: text('note'),
+    /** 软删除（端口批收尾片 2 · 回收站白名单=运营件；读侧 list 默认过滤） */
+    deletedAt: integer('deleted_at', { mode: 'timestamp' }),
+    deletedBy: text('deleted_by').references(() => users.id),
     ...auditColumns,
   },
   (t) => [index('ix_promo_campaigns_store').on(t.storeId, t.status)],

@@ -125,11 +125,14 @@ export interface AnnouncementRow {
   body: string;
   targetRole: AnnounceTargetRole;
   pinned: boolean;
-  status: string; // published | archived
+  status: string; // draft | published | archived（片 2 两步流新增 draft）
   publishedAt: Date | string;
   readCount: number;
   /** x/y 分母（定向应读人数）；server 未透出时缺省，页面降级只显分子 */
   targetTotal?: number | null;
+  /** 片 2 起止窗口（NULL=不限；staff 读口懒算过滤，管理端透出展示） */
+  startsAt?: Date | string | null;
+  endsAt?: Date | string | null;
 }
 
 export interface AnnounceReads {
@@ -198,6 +201,18 @@ export interface TaskCollabClient {
     list: { query(): Promise<{ announcements: AnnouncementRow[] }> };
     reads: { query(input: { announcementId: string }): Promise<AnnounceReads> };
     archive: { mutate(input: { id: string }): Promise<unknown> };
+    /* 端口批收尾片 2：两步流（saveDraft→publishDraft）+ 回收站软删（remove） */
+    saveDraft: {
+      mutate(input: {
+        id?: string;
+        title: string;
+        body: string;
+        targetRole: AnnounceTargetRole;
+        pinned: boolean;
+      }): Promise<{ created: boolean }>;
+    };
+    publishDraft: { mutate(input: { id: string; startsAt?: string; endsAt?: string }): Promise<unknown> };
+    remove: { mutate(input: { announcementId: string }): Promise<unknown> };
   };
   staffExit: {
     reassignAppointments: {
