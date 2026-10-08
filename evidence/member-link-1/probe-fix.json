@@ -1,0 +1,23 @@
+{
+  "checks": [
+    {
+      "name": "owner dev-login",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "帧 1 修一件（会员态）：弹层客户块=当前档「微光」行（forUser 单源）+非会员注记不出（同屏零打架）",
+      "ok": true,
+      "detail": "{\"curText\":\"当前档「微光」· 生效中 · 含宠物 0 只 · 到期 2100年1月1日\",\"nonmemberShown\":false,\"wgBadge\":true}"
+    },
+    {
+      "name": "帧 2 修一件（纯非会员态）：弹层客户块=「非会员 · 售卡即开通」注记行+当前档行不出",
+      "ok": true,
+      "detail": "{\"curShown\":false,\"nonmemberText\":\"非会员 · 售卡即开通\"}"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\member-link-1-evidence\\fix1-member-current-row.png",
+    "E:\\KIMI code\\tmp\\member-link-1-evidence\\fix2-nonmember-note.png"
+  ]
+}

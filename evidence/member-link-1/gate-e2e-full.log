@@ -1000,7 +1000,7 @@
   ✓ 71.1 listForAppointment 本人可见（live 页高亮条数据源）+ 非当事人=NOT_FOUND（片 2 裁件①防探测口径，断言同步）
   ✓ 71.1 状态闸：pending 单填报 400；客户无 staff 身份填报 401/403
   ✓ 71.2 markHandled 落列+incident.handled 通知主人+重复处置幂等（alreadyHandled=true 零副作用）
-[care] 异常通报升级 incident=01M4CWA2V6EGJMFWE8A90RQ6EC（超 15 分钟未处置）
+[care] 异常通报升级 incident=01M4D2S4WBW4R3D5MV2PC1VKJ6（超 15 分钟未处置）
   ✓ 71.3 超 15 分钟未处置 → 升级扫描置 escalated_at + 主人/店主双通知（incident.escalated）
   ✓ 71.3 升级幂等：escalated_at 锚重扫零增量（主人仍 1 条）
   ✓ 71.4 用品拆封落痕 + 主人即时通知（boarding.unsealed，link 带 #unseal 锚）
@@ -1221,13 +1221,13 @@
   ✓ 种子库 data/philia.db 原样（size/mtime 未变）
 
 全链路验收全部通过 ✅
-[e2e] 临时库目录清理失败（Windows libsql 句柄滞后，可手工删）: C:\Users\lqb15\AppData\Local\Temp\philia-e2e-CrtBXR Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-CrtBXR '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-CrtBXR'
+[e2e] 临时库目录清理失败（Windows libsql 句柄滞后，可手工删）: C:\Users\lqb15\AppData\Local\Temp\philia-e2e-QJ077T Error: EPERM, Permission denied: \\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-QJ077T '\\?\C:\Users\lqb15\AppData\Local\Temp\philia-e2e-QJ077T'
     at rmSync (node:fs:1282:18)
     at cleanup (E:\KIMI code\philia-app\server\src\__tests__\e2e.ts:10538:5)
     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
     at async <anonymous> (E:\KIMI code\philia-app\server\src\__tests__\e2e.ts:10583:3) {
   errno: 1,
   code: 'EPERM',
-  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-e2e-CrtBXR',
+  path: '\\\\?\\C:\\Users\\lqb15\\AppData\\Local\\Temp\\philia-e2e-QJ077T',
   syscall: 'rm'
 }
