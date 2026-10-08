@@ -986,16 +986,22 @@ export default function MarketingPage() {
               ] as const
             ).map(([k, label]) => {
               const v = stackRules[k];
-              const ruleText = v && typeof v.rule === 'string' ? (v.rule as string) : JSON.stringify(v ?? {});
+              /* OP-03 P2-3（端口批收尾片 4）：公示只留人话——ruleLabel 中文映射主显
+                 （server 透出；缺省回落 rule 原文），键名收 title Tooltip 不再裸露 */
+              const ruleText =
+                v && typeof v.ruleLabel === 'string'
+                  ? (v.ruleLabel as string)
+                  : v && typeof v.rule === 'string'
+                    ? (v.rule as string)
+                    : JSON.stringify(v ?? {});
               return (
-                <div className="u3-field" key={k} data-testid={`marketing-stack-${k}`}>
+                <div className="u3-field" key={k} data-testid={`marketing-stack-${k}`} title={k}>
                   <span className="lb">{label}</span>
                   <span className="vl">
                     <span className="u1-num">{ruleText}</span>
                     {v && typeof v.note === 'string' ? (
                       <span className="ml-2 text-caption-xs font-normal text-[rgba(59,46,36,.42)]">{v.note as string}</span>
                     ) : null}
-                    <span className="ml-2 text-caption-xs font-normal text-[rgba(59,46,36,.42)]">{k}</span>
                   </span>
                 </div>
               );

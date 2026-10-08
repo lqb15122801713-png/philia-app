@@ -81,6 +81,13 @@ const COPYPORT_COPY_TABLE = {
   'slotport.loadFail': '槽位数据加载失败，请检查网络后重试',
   'slotport.ownerOnly': '槽位端口仅店主可改',
   'slotport.ownerOnlyBody': '展示素材涉门店门面口径，仅店主账号可上传与上线。如需调整请联系店主。',
+
+  /* ---- OP-03（端口批收尾片 4）：P2-4 假保存拦截/按钮态/未确认章 + P3-2 双列 ---- */
+  'copyport.leaveConfirm': '有未确认变更，离开将丢失',
+  'copyport.unsavedCta': '未确认变更 {n} · 复核并保存',
+  'copyport.pendingBadge': '未确认',
+  'copyport.defaultLabel': '码内默认',
+  'copyport.currentLabel': '当前生效',
 } as const;
 
 export const COPYPORT_COPY = withCopyOverrides(COPYPORT_COPY_TABLE);

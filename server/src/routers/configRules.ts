@@ -478,14 +478,26 @@ export const configRulesRouter = router({
         storeIdById = new Map(ext.map((x) => [x.id, x.storeId]));
       }
       /* 端口 V2（copy 域）：屏名+位置注透出（第二查按 id 并图；RULES_TABLE 并集类型无
-         screen/position 列，故 copy 域单列查询不塞进主 select）；其他域不透出（undefined） */
+         screen/position 列，故 copy 域单列查询不塞进主 select）；其他域不透出（undefined）
+         OP-03 P3-2：defaultText=v1 种子原文透出（端口列表「码内默认 vs 当前生效」双列数据源） */
       let metaByKey = new Map<string, { screen: string | null; position: string | null }>();
+      let defaultTextByKey = new Map<string, string>();
       if (input.domain === 'copy') {
         const ext = await ctx.db
           .select({ ruleKey: schema.copyOverrides.ruleKey, screen: schema.copyOverrides.screen, position: schema.copyOverrides.position })
           .from(schema.copyOverrides)
           .where(eq(schema.copyOverrides.active, true));
         metaByKey = new Map(ext.map((x) => [x.ruleKey, { screen: x.screen, position: x.position }]));
+        const v1Rows = await ctx.db
+          .select({ ruleKey: schema.copyOverrides.ruleKey, valueJson: schema.copyOverrides.valueJson })
+          .from(schema.copyOverrides)
+          .where(eq(schema.copyOverrides.version, 1));
+        defaultTextByKey = new Map(
+          v1Rows
+            .map((x) => ({ key: x.ruleKey, text: copyTextOf(x.valueJson as Record<string, unknown>) }))
+            .filter((x): x is { key: string; text: string } => x.text !== null)
+            .map((x) => [x.key, x.text]),
+        );
       }
       /* 端口批收尾片 1：待生效徽（config_scheduled pending 目标行）+涉钱键名单标+帮助注
          （参数字典合成，cfghelp.* copy 键覆盖留口；copy 域本页自管不附） */
@@ -511,6 +523,7 @@ export const configRulesRouter = router({
           scheduledEffectiveAt: schedByRowId.get(r.id)?.effectiveAt ?? null,
           moneyHighRisk: isMoneyHighRiskKey(input.domain, r.ruleKey),
           helpText: input.domain === 'copy' ? undefined : composeHelpText(r.ruleKey, r.valueJson as Record<string, unknown>, helpOverrides),
+          defaultText: input.domain === 'copy' ? (defaultTextByKey.get(r.ruleKey) ?? null) : undefined,
         })),
       };
     }),

@@ -152,10 +152,8 @@ const MEMBER_COPY_TABLE = {
   'perk.birthdaySub': '年度特辑',
   'perk.skin': '皮毛检测',
   'perk.skinSub': '每季一次',
-  'perk.boarding': '寄养折扣',
-  /* 补缺修复小批 P1-2（PM 裁定：联动服务折扣参数不撤不新建）：副签读 member_plans
-     service_discount_bp 插值（同 perk.discountSub 口径），无折扣档回退 perk.discountNone */
-  'perk.boardingSub': '{zhe} 折',
+  /* OP-03 P1-2（端口批收尾片 4 · 27 号档本无寄养折扣项=撤文案裁）：perk.boarding /
+     perk.boardingSub 两键撤出码内宇宙（仓内键行保留留档=端口宇宙只增不改） */
   'perk.archive': '年度档案',
   'perk.archiveSub': '全年在册',
 

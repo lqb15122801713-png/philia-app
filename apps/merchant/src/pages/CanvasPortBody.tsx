@@ -468,6 +468,8 @@ export function CanvasPortBody() {
                             }}
                             value={draft}
                             maxLength={2000}
+                            /* 注册表声明但码内无此键（home.entryNote / perk.boarding 留口先例）→「—」兜底 */
+                            placeholder={cur ? undefined : '—'}
                             onChange={(e) => setCopyDrafts((prev) => ({ ...prev, [k]: e.target.value }))}
                           />
                           <Btn

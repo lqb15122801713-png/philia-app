@@ -20,7 +20,7 @@
 
 import { Skeleton, usePhiliaClient, type PhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import MainScaffold, { SearchInput } from '../components/MainScaffold';
 import RoleGuidePage from '../components/RoleGuidePage';
 import { errMsg, fmtDateTime } from '../components/staff-admin/format';
@@ -178,6 +178,31 @@ export function CopyConfigBody() {
   const phraseOk = confirmText.trim() === phrase;
   const needPhrase = highRiskPending.length > 0;
 
+  /* OP-03 P2-4（端口批收尾片 4）：假保存拦截——pending>0 时 beforeunload（刷新/关闭）
+     + 捕获阶段内导航点击双拦截（window.confirm 口径），pending=0 双监听撤除 */
+  useEffect(() => {
+    if (totalPendingCount === 0) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    const onClick = (e: MouseEvent) => {
+      const a = (e.target as HTMLElement | null)?.closest?.('a[href^="/"]');
+      if (!a) return;
+      if (!window.confirm(cp('copyport.leaveConfirm'))) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    document.addEventListener('click', onClick, true);
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      document.removeEventListener('click', onClick, true);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalPendingCount]);
+
   const openConfirm = () => {
     if (totalPendingCount === 0) return;
     setConfirmText('');
@@ -330,9 +355,33 @@ export function CopyConfigBody() {
                         ) : (
                           <Badge tone="muted">{cp('copyport.defaultNote')}</Badge>
                         )}
+                        {/* OP-03 P2-4：draft≠cur 行「未确认」小章（假保存明示） */}
+                        {draft !== undefined && draft !== cur ? (
+                          <span data-testid={`copyport-pending-badge-${r.ruleKey}`}>
+                            <Badge tone="warn">{cp('copyport.pendingBadge')}</Badge>
+                          </span>
+                        ) : null}
                       </div>
                       <div className="mt-1 truncate text-caption-xs text-[rgba(59,46,36,.62)]">
                         {draft ?? cur}
+                      </div>
+                      {/* OP-03 P3-2：生效值双列——已改（version>1）=码内默认 vs 当前生效对照；
+                          未改=码内默认单值（defaultText=server v1 种子原文，null 显「—」） */}
+                      <div
+                        className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]"
+                        data-testid={`copyport-default-${r.ruleKey}`}
+                      >
+                        {r.version > 1 ? (
+                          <>
+                            {cp('copyport.defaultLabel')}：{r.defaultText ?? '—'}
+                            {' · '}
+                            {cp('copyport.currentLabel')}：{cur}
+                          </>
+                        ) : (
+                          <>
+                            {cp('copyport.defaultLabel')}：{r.defaultText ?? '—'}
+                          </>
+                        )}
                       </div>
                     </div>
                     <Btn
@@ -380,14 +429,15 @@ export function CopyConfigBody() {
           <span className="text-caption text-ink" style={numStyle}>
             {cp('copyport.pendingBar', { n: totalPendingCount })}
           </span>
+          {/* OP-03 P2-4：按钮态明示——pending>0（本条浮出即>0）=「未确认变更 N · 复核并保存」+danger */}
           <Btn
-            variant="primary"
+            variant="danger"
             size="sm"
             data-testid="copyport-save-open"
             onClick={openConfirm}
             disabled={saving}
           >
-            {cp('copyport.saveCta')}
+            {cp('copyport.unsavedCta', { n: totalPendingCount })}
           </Btn>
         </div>
       ) : null}

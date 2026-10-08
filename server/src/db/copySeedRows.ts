@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-07T13:27:35.862Z；键数=3868；归屏率=97.0%（未归屏 115）
+ * 生成时间口径：2026-10-07T16:35:29.028Z；键数=3873；归屏率=97.0%（未归屏 115）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -5017,20 +5017,6 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
-  "key": "perk.boarding",
-  "domain": "member",
-  "text": "寄养折扣",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
-  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
- },
- {
-  "key": "perk.boardingSub",
-  "domain": "member",
-  "text": "{zhe} 折",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
-  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
- },
- {
   "key": "perk.discount",
   "domain": "member",
   "text": "服务折扣",
@@ -7502,9 +7488,23 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "CashierPage 页面内文案"
  },
  {
+  "key": "cashier.holdCollapse",
+  "domain": "merchant:cashier",
+  "text": "收起 ›",
+  "screen": "商家·收银台",
+  "position": "HoldPanel 组件内文案"
+ },
+ {
   "key": "cashier.holdEmpty",
   "domain": "merchant:cashier",
   "text": "无挂单",
+  "screen": "商家·收银台",
+  "position": "HoldPanel 组件内文案"
+ },
+ {
+  "key": "cashier.holdExpand",
+  "domain": "merchant:cashier",
+  "text": "全部 {n} ›",
   "screen": "商家·收银台",
   "position": "HoldPanel 组件内文案"
  },
@@ -9490,6 +9490,20 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "CopyConfigPage 页面内文案"
  },
  {
+  "key": "copyport.currentLabel",
+  "domain": "merchant:copyPort",
+  "text": "当前生效",
+  "screen": "商家·文案端口",
+  "position": "CopyConfigPage 页面内文案"
+ },
+ {
+  "key": "copyport.defaultLabel",
+  "domain": "merchant:copyPort",
+  "text": "码内默认",
+  "screen": "商家·文案端口",
+  "position": "CopyConfigPage 页面内文案"
+ },
+ {
   "key": "copyport.defaultNote",
   "domain": "merchant:copyPort",
   "text": "码内默认",
@@ -9574,6 +9588,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "CopyConfigPage 页面内文案"
  },
  {
+  "key": "copyport.leaveConfirm",
+  "domain": "merchant:copyPort",
+  "text": "有未确认变更，离开将丢失",
+  "screen": "商家·文案端口",
+  "position": "CopyConfigPage 页面内文案"
+ },
+ {
   "key": "copyport.loadFail",
   "domain": "merchant:copyPort",
   "text": "文案配置加载失败，请检查网络后重试",
@@ -9605,6 +9626,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "copyport.pageTitle",
   "domain": "merchant:copyPort",
   "text": "文案端口",
+  "screen": "商家·文案端口",
+  "position": "CopyConfigPage 页面内文案"
+ },
+ {
+  "key": "copyport.pendingBadge",
+  "domain": "merchant:copyPort",
+  "text": "未确认",
   "screen": "商家·文案端口",
   "position": "CopyConfigPage 页面内文案"
  },
@@ -9661,6 +9689,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "copyport.searchPlaceholder",
   "domain": "merchant:copyPort",
   "text": "搜索键名/文案/位置注…",
+  "screen": "商家·文案端口",
+  "position": "CopyConfigPage 页面内文案"
+ },
+ {
+  "key": "copyport.unsavedCta",
+  "domain": "merchant:copyPort",
+  "text": "未确认变更 {n} · 复核并保存",
   "screen": "商家·文案端口",
   "position": "CopyConfigPage 页面内文案"
  },

@@ -64,6 +64,25 @@ const DASHBOARD_STATUSES = [
   'cancelled',
 ] as const;
 
+/**
+ * 待办四件同源自算（OP-03 P2-1 修复 · 端口批收尾片 4）：连锁卡 chainDashboard.todoTotal
+ * 与晨报卡 dashboardStats.todo 的唯一取数函数——**全量预约**（不按今日过滤：
+ * 未来 pending/confirmed/cancel_requested 与历史未收款 completed 同为待办）。
+ * 行形状=两调用点共有的最小列集。超期寄养=异常列不并入（自有透出区，不双计）。
+ */
+function todoCountsOf(
+  appts: Array<{ status: string; staffId: string | null; type: string; paidAt: Date | null }>,
+): { pending: number; unassigned: number; cancelRequested: number; unpaid: number; total: number } {
+  const todo = { pending: 0, unassigned: 0, cancelRequested: 0, unpaid: 0 };
+  for (const r of appts) {
+    if (r.status === 'pending') todo.pending += 1;
+    else if (r.status === 'confirmed' && r.staffId === null && r.type === 'grooming') todo.unassigned += 1;
+    else if (r.status === 'cancel_requested') todo.cancelRequested += 1;
+    else if (r.status === 'completed' && r.paidAt === null) todo.unpaid += 1;
+  }
+  return { ...todo, total: todo.pending + todo.unassigned + todo.cancelRequested + todo.unpaid };
+}
+
 function genInviteCode(): string {
   let code = '';
   for (let i = 0; i < INVITE_LEN; i++) {
@@ -1095,10 +1114,8 @@ export const storeRouter = router({
         );
         const todayCount = todayAppts.filter((a) => (DASHBOARD_STATUSES as readonly string[]).includes(a.status)).length;
         const inBoardingCount = appts.filter((a) => a.status === 'in_boarding').length;
-        const pending = todayAppts.filter((a) => a.status === 'pending').length;
-        const unassigned = todayAppts.filter((a) => a.status === 'confirmed' && !a.staffId && a.type === 'grooming').length;
-        const cancelRequested = todayAppts.filter((a) => a.status === 'cancel_requested').length;
-        const unpaid = todayAppts.filter((a) => a.status === 'completed' && !a.paidAt).length;
+        /* OP-03 P2-1：待办合计=同源全量四件（todoCountsOf 唯一取数函数；原今日过滤误帧已撤） */
+        const todo = todoCountsOf(appts);
         const overdue = appts.filter((a) => a.status === 'in_boarding' && a.scheduledEnd.getTime() < now.getTime()).length;
         const refundPending = await ctx.db
           .select({ id: schema.refundRequests.id })
@@ -1111,7 +1128,7 @@ export const storeRouter = router({
           revenueFen: tender.receivedTotalFen,
           todayCount,
           inBoardingCount,
-          todoTotal: pending + unassigned + cancelRequested + unpaid,
+          todoTotal: todo.total,
           abnormalCount: overdue,
           refundPendingCount: refundPending.length,
         });
@@ -1258,7 +1275,9 @@ export const storeRouter = router({
       ) as Record<(typeof DASHBOARD_STATUSES)[number], number>;
       let inServiceCount = 0;
       let todayRevenueFen = 0;
-      const todo = { pending: 0, unassigned: 0, cancelRequested: 0, unpaid: 0 };
+      /* OP-03 P2-1：待办四件=todoCountsOf 唯一取数函数（与 chainDashboard 同源；
+         原内联逐行累计已撤——超期寄养仍单列异常不并入待办合计） */
+      const todo = todoCountsOf(rows);
       let overdueBoardingCount = 0;
 
       for (const r of rows) {
@@ -1270,11 +1289,6 @@ export const storeRouter = router({
         if (r.paidAt && r.paidAt >= dayStart && r.paidAt < dayEnd) {
           todayRevenueFen += r.paidFen ?? 0;
         }
-        if (s === 'pending') todo.pending += 1;
-        // S4：待派单仅计 grooming（自动派单后恒 0）；boarding 按晚占房无需美容师，不作待办
-        else if (s === 'confirmed' && r.staffId === null && r.type === 'grooming') todo.unassigned += 1;
-        else if (s === 'cancel_requested') todo.cancelRequested += 1;
-        else if (s === 'completed' && r.paidAt === null) todo.unpaid += 1;
         if (s === 'in_boarding' && r.scheduledEnd < now) overdueBoardingCount += 1;
       }
 
