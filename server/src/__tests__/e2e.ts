@@ -171,8 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 3602 键/70 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70）；
+ *      56.1 种子 3671 键/70 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -4933,17 +4933,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602）→ 3671/70（端口批收尾片 1：规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（3602 键/70 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 3602 && domainSet.size === 70 &&
+  check('56.1 copy 域种子全量落库（3671 键/70 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 3671 && domainSet.size === 70 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（3602 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 3602 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（3671 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 3671 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -8637,8 +8637,8 @@ async function main(): Promise<void> {
 
     /* ---- 76.3 公共读口形状不变（不透元数据：键→文两列） ---- */
     const texts76 = await trpcQuery<{ rows: Array<{ key: string; text: string; screen?: unknown; position?: unknown }> }>('config.activeCopyTexts', { cookie: customerCookie });
-    check('76.3 activeCopyTexts 形状不变（3602 行 key→text，不透 screen/position 元数据）',
-      texts76.rows.length === 3602 &&
+    check('76.3 activeCopyTexts 形状不变（3671 行 key→text，不透 screen/position 元数据）',
+      texts76.rows.length === 3671 &&
       texts76.rows.every((r) => r.screen === undefined && r.position === undefined),
       texts76.rows.length);
 
@@ -9675,6 +9675,225 @@ async function main(): Promise<void> {
       tagsB82.length === 0 && couponsB82.items.length === 0 && promoB82.items.length === 0 &&
       expB82.items.length === 0 && inspB82.items.length === 0,
       { tags: tagsB82.length, coupons: couponsB82.items.length, promo: promoB82.items.length });
+  }
+
+  /* ==================================================================
+   * 端口批收尾 片 1（配置端口增补 7+搜索帮助 · 任务书冻结版 V1.0）段：
+   *   83.1 配置回滚（目标版本整行恢复+只增不改）；83.2 定时生效（懒切换+撤销+400）；
+   *   83.3 涉钱二级审批（发起不落地→复核通过才生效/驳回不落库）；83.4 kill switch（通道回落+恢复）；
+   *   83.5 异常自动回滚（越线回上一版+告警留痕+幂等）；83.6 参数字典+帮助注覆盖留口；
+   *   83.7 新端点权限闸；83.8 中央件/总部定时件口径不回退
+   * ================================================================== */
+  console.log('\n[端口批片1] 83. 配置端口增补（回滚/定时/二级审批/kill/自动回滚/字典帮助）');
+  {
+    type RuleRow83 = {
+      id: string; version: number; ruleKey: string; label: string;
+      valueJson: Record<string, unknown>; active: boolean;
+      scheduledPending?: boolean; scheduledId?: string | null; scheduledEffectiveAt?: Date | null;
+      moneyHighRisk?: boolean; helpText?: string;
+    };
+    type ListRes83 = { currentVersion: number; rules: RuleRow83[] };
+    type VersRow83 = { version: number; changedBy: string; changesJson: Array<{ rule_key: string; before: unknown; after: unknown; note?: string }> };
+    const { sweepScheduledConfig, sweepConfigAutoRollback } = await import('../routers/configRules');
+    const { loadPayChannelEnabled } = await import('../routers/pay');
+
+    /* ---- 83.1 配置回滚（service_hours：目标版本整行恢复 active+只增不改） ---- */
+    const svcList0 = await trpcQuery<ListRes83>('config.list', { cookie: ownerCookie, input: { domain: 'service' } });
+    const shV1Row = svcList0.rules.find((r) => r.ruleKey === 'service_hours' && r.active)!;
+    const shBeforeText = shV1Row.valueJson.text;
+    await trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'service', changes: [{ ruleKey: 'service_hours', valueJson: { text: '08:00–20:00（e2e 回滚件）' } }] },
+    });
+    const svcList1 = await trpcQuery<ListRes83>('config.list', { cookie: ownerCookie, input: { domain: 'service' } });
+    const shV2Row = svcList1.rules.find((r) => r.ruleKey === 'service_hours' && r.active)!;
+    const rb831 = await trpcMutate<{ version: number; rolledBackTo: number }>('config.rollback', {
+      cookie: ownerCookie,
+      input: { domain: 'service', ruleKey: 'service_hours', toVersion: shV1Row.version },
+    });
+    const svcList2 = await trpcQuery<ListRes83>('config.list', { cookie: ownerCookie, input: { domain: 'service' } });
+    const shCur = svcList2.rules.find((r) => r.ruleKey === 'service_hours' && r.active)!;
+    check('83.1 配置回滚：目标版本整行恢复 active（值=v1 原值）+新版本行版本号递增',
+      shCur.valueJson.text === shBeforeText && shCur.version === shV2Row.version + 1 && rb831.rolledBackTo === shV1Row.version,
+      { cur: shCur.valueJson, v: shCur.version, v2: shV2Row.version });
+    check('83.1 回滚≠改历史：原 v1/v2 行全部在库未改写（只增不改）',
+      svcList2.rules.some((r) => r.ruleKey === 'service_hours' && r.version === shV1Row.version && r.valueJson.text === shBeforeText) &&
+      svcList2.rules.some((r) => r.ruleKey === 'service_hours' && r.version === shV2Row.version && r.valueJson.text === '08:00–20:00（e2e 回滚件）'));
+    const rbSame = await asErr(trpcMutate('config.rollback', { cookie: ownerCookie, input: { domain: 'service', ruleKey: 'service_hours', toVersion: shV1Row.version } }));
+    const rbMissing = await asErr(trpcMutate('config.rollback', { cookie: ownerCookie, input: { domain: 'service', ruleKey: 'service_hours', toVersion: 999 } }));
+    check('83.1 幂等拒：值与当前一致=400 / 目标版本不存在=400',
+      rbSame instanceof TrpcHttpError && rbSame.httpStatus === 400 && rbMissing instanceof TrpcHttpError && rbMissing.httpStatus === 400);
+    const vers831 = await trpcQuery<{ versions: VersRow83[] }>('config.versions', { cookie: ownerCookie, input: { domain: 'service', limit: 10 } });
+    check('83.1 回滚留痕：rule_config_versions note=rollback:（谁/何时/前后值）',
+      vers831.versions.some((v) => v.changesJson.some((c) => c.rule_key === 'service_hours' && typeof c.note === 'string' && c.note.startsWith('rollback:'))));
+
+    /* ---- 83.2 定时生效（pet_due_remind_days：懒切换+撤销+时点 400） ---- */
+    const eff832 = new Date(Date.now() + 90_000);
+    const saveSched = await trpcMutate<{ scheduled: boolean }>('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'service', changes: [{ ruleKey: 'pet_due_remind_days', valueJson: { days: 9 } }], effectiveAt: eff832.toISOString() },
+    });
+    const svcSched1 = await trpcQuery<ListRes83>('config.list', { cookie: ownerCookie, input: { domain: 'service' } });
+    const pdActive0 = svcSched1.rules.find((r) => r.ruleKey === 'pet_due_remind_days' && r.active)!;
+    const pdPend = svcSched1.rules.find((r) => r.ruleKey === 'pet_due_remind_days' && r.scheduledPending)!;
+    check('83.2 定时生效登记：当前值不变（days=7）+待生效行 scheduledPending+scheduledId 透出',
+      saveSched.scheduled === true && pdActive0.valueJson.days === 7 && !!pdPend && typeof pdPend.scheduledId === 'string');
+    const applied832 = await sweepScheduledConfig(db, new Date(Date.now() + 120_000));
+    const svcSched2 = await trpcQuery<ListRes83>('config.list', { cookie: ownerCookie, input: { domain: 'service' } });
+    const pdActive1 = svcSched2.rules.find((r) => r.ruleKey === 'pet_due_remind_days' && r.active)!;
+    const schedRow832 = await db.select().from(schema.configScheduled).where(eq(schema.configScheduled.id, pdPend.scheduledId!)).then((r) => r[0]);
+    const applied832b = await sweepScheduledConfig(db, new Date(Date.now() + 130_000));
+    check('83.2 到点懒切换：sweep 推进新值生效（days=9）+登记行 applied+重扫零增量',
+      applied832 >= 1 && pdActive1.valueJson.days === 9 && schedRow832?.status === 'applied' && applied832b === 0,
+      { applied: applied832, days: pdActive1.valueJson, status: schedRow832?.status });
+    const vers832 = await trpcQuery<{ versions: VersRow83[] }>('config.versions', { cookie: ownerCookie, input: { domain: 'service', limit: 10 } });
+    check('83.2 切换留痕：note=scheduled-applied（before=旧值/after=定时值）',
+      vers832.versions.some((v) => v.changesJson.some((c) => c.note === 'scheduled-applied' && c.rule_key === 'pet_due_remind_days')));
+    await trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'service', changes: [{ ruleKey: 'pet_due_remind_days', valueJson: { days: 11 } }], effectiveAt: new Date(Date.now() + 90_000).toISOString() },
+    });
+    const svcSched3 = await trpcQuery<ListRes83>('config.list', { cookie: ownerCookie, input: { domain: 'service' } });
+    const pdPend2 = svcSched3.rules.find((r) => r.ruleKey === 'pet_due_remind_days' && r.scheduledPending)!;
+    await trpcMutate('config.cancelScheduled', { cookie: ownerCookie, input: { id: pdPend2.scheduledId! } });
+    const schedRow832c = await db.select().from(schema.configScheduled).where(eq(schema.configScheduled.id, pdPend2.scheduledId!)).then((r) => r[0]);
+    const pdActive2 = (await trpcQuery<ListRes83>('config.list', { cookie: ownerCookie, input: { domain: 'service' } })).rules.find((r) => r.ruleKey === 'pet_due_remind_days' && r.active)!;
+    const pastErr = await asErr(trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'service', changes: [{ ruleKey: 'pet_due_remind_days', valueJson: { days: 13 } }], effectiveAt: new Date(Date.now() - 1000).toISOString() },
+    }));
+    check('83.2 撤销待生效件=superseded 且当前值不动（days=9）/时点不晚于当前=400',
+      schedRow832c?.status === 'superseded' && pdActive2.valueJson.days === 9 && pastErr instanceof TrpcHttpError && pastErr.httpStatus === 400);
+    await trpcMutate('config.save', { cookie: ownerCookie, input: { domain: 'service', changes: [{ ruleKey: 'pet_due_remind_days', valueJson: { days: 7 } }] } });
+
+    /* ---- 83.3 涉钱二级审批（member_plans rebate_validity_days：发起→复核→生效） ---- */
+    const mpList0 = await trpcQuery<ListRes83>('config.list', { cookie: ownerCookie, input: { domain: 'member_plans' } });
+    const rbv0 = mpList0.rules.find((r) => r.ruleKey === 'rebate_validity_days' && r.active)!;
+    const prop833 = await trpcMutate<{ proposalId: string; requestId: string }>('config.proposeChange', {
+      cookie: ownerCookie,
+      input: { domain: 'member_plans', changes: [{ ruleKey: 'rebate_validity_days', valueJson: { days: 180 } }], note: 'e2e 二级审批件' },
+    });
+    const mpList1 = await trpcQuery<ListRes83>('config.list', { cookie: ownerCookie, input: { domain: 'member_plans' } });
+    const rbv1 = mpList1.rules.find((r) => r.ruleKey === 'rebate_validity_days' && r.active)!;
+    type ApprovalItem83 = { id: string; status: string; summary: string; timelineJson: Array<{ action: string; by: string }>; changesJson: Array<{ ruleKey: string }> };
+    const pend833 = await trpcQuery<{ items: ApprovalItem83[] }>('config.configApprovals', { cookie: ownerCookie, input: { status: 'pending' } });
+    const apPend = pend833.items.find((i) => i.id === prop833.requestId);
+    check('83.3 涉钱键发起=值未落库（仍 365）+approval_requests kind=config pending 在队列',
+      rbv1.valueJson.days === 365 && rbv1.version === rbv0.version && !!apPend && apPend.summary.includes('rebate_validity_days'));
+    const nonMoney = await asErr(trpcMutate('config.proposeChange', { cookie: ownerCookie, input: { domain: 'xp', changes: [{ ruleKey: 'xp_daily_cap', valueJson: { cap: 70 } }] } }));
+    check('83.3 非涉钱键走审批口=400（明文引去直存）', nonMoney instanceof TrpcHttpError && nonMoney.httpStatus === 400);
+    const rev833 = await trpcMutate<{ approved: boolean; version: number }>('config.configApprovalReview', {
+      cookie: managerCookie, input: { requestId: prop833.requestId, approve: true, note: '复核无误' },
+    });
+    const mpList2 = await trpcQuery<ListRes83>('config.list', { cookie: ownerCookie, input: { domain: 'member_plans' } });
+    const rbv2 = mpList2.rules.find((r) => r.ruleKey === 'rebate_validity_days' && r.active)!;
+    const vers833 = await trpcQuery<{ versions: VersRow83[] }>('config.versions', { cookie: ownerCookie, input: { domain: 'member_plans', limit: 10 } });
+    const vApply = vers833.versions.find((v) => v.changesJson.some((c) => c.note === 'approved-apply' && c.rule_key === 'rebate_validity_days'));
+    const appr833 = await trpcQuery<{ items: ApprovalItem83[] }>('config.configApprovals', { cookie: ownerCookie, input: { status: 'approved' } });
+    const apDone = appr833.items.find((i) => i.id === prop833.requestId);
+    check('83.3 复核通过才生效：days=180 落库+留痕 note=approved-apply（changedBy=发起人）+审批单 approved（manager 复核 timeline）',
+      rev833.approved === true && rbv2.valueJson.days === 180 && !!vApply && vApply.changedBy === ownerUser.id &&
+      !!apDone && apDone.timelineJson.some((t) => t.action === 'approved'),
+      { days: rbv2.valueJson, by: vApply?.changedBy });
+    const prop833b = await trpcMutate<{ requestId: string }>('config.proposeChange', {
+      cookie: ownerCookie, input: { domain: 'member_plans', changes: [{ ruleKey: 'rebate_validity_days', valueJson: { days: 90 } }] },
+    });
+    await trpcMutate('config.configApprovalReview', { cookie: ownerCookie, input: { requestId: prop833b.requestId, approve: false, note: '暂不调整' } });
+    const rbv3 = (await trpcQuery<ListRes83>('config.list', { cookie: ownerCookie, input: { domain: 'member_plans' } })).rules.find((r) => r.ruleKey === 'rebate_validity_days' && r.active)!;
+    const dupReview = await asErr(trpcMutate('config.configApprovalReview', { cookie: ownerCookie, input: { requestId: prop833b.requestId, approve: true } }));
+    check('83.3 驳回不落库（days 仍 180）+已处理审批重复处理=400',
+      rbv3.valueJson.days === 180 && dupReview instanceof TrpcHttpError && dupReview.httpStatus === 400);
+    await trpcMutate('config.save', { cookie: ownerCookie, input: { domain: 'member_plans', changes: [{ ruleKey: 'rebate_validity_days', valueJson: { days: 365 } }] } });
+
+    /* ---- 83.4 kill switch（全局一键开关：通道回落安全值+恢复） ---- */
+    const ks0 = await trpcQuery<{ enabled: boolean }>('config.killStatus', { cookie: ownerCookie });
+    const chBefore = await loadPayChannelEnabled(db);
+    await trpcMutate('config.setKillSwitch', { cookie: ownerCookie, input: { enabled: true } });
+    const ks1 = await trpcQuery<{ enabled: boolean; by: string | null }>('config.killStatus', { cookie: ownerCookie });
+    const chKilled = await loadPayChannelEnabled(db);
+    check('83.4 kill switch 开：页面显著态数据源 on+可关参数瞬时回落安全值（线上通道=关）',
+      ks0.enabled === false && chBefore === true && ks1.enabled === true && chKilled === false,
+      { ks0, chBefore, ks1, chKilled });
+    await trpcMutate('config.setKillSwitch', { cookie: ownerCookie, input: { enabled: false } });
+    const ks2 = await trpcQuery<{ enabled: boolean }>('config.killStatus', { cookie: ownerCookie });
+    const chBack = await loadPayChannelEnabled(db);
+    const vers834 = await trpcQuery<{ versions: VersRow83[] }>('config.versions', { cookie: ownerCookie, input: { domain: 'service', limit: 10 } });
+    check('83.4 恢复：通道回读 true+killStatus off+切换留痕 note=kill-switch',
+      ks2.enabled === false && chBack === true && vers834.versions.some((v) => v.changesJson.some((c) => c.note === 'kill-switch' && c.rule_key === 'config_kill_switch')));
+
+    /* ---- 83.5 异常自动回滚（xp_cover_shift：越线回上一版+告警+幂等；选键=全族无他处 save 调用防窗口串件） ---- */
+    const xpList0 = await trpcQuery<ListRes83>('config.list', { cookie: ownerCookie, input: { domain: 'xp' } });
+    const coverRow0 = xpList0.rules.find((r) => r.ruleKey === 'xp_cover_shift' && r.active)!;
+    const coverBefore = coverRow0.valueJson;
+    const coverNew = { ...coverBefore, points: (typeof coverBefore.points === 'number' ? coverBefore.points : 5) + 1 };
+    await trpcMutate('config.save', { cookie: ownerCookie, input: { domain: 'xp', changes: [{ ruleKey: 'xp_cover_shift', valueJson: coverNew }] } });
+    for (let i = 0; i < 25; i++) {
+      await db.insert(schema.clientErrorEvents).values({ app: 'merchant', message: `e2e 灌错 ${i}（83.5 闸门指标源）`, url: '/console' });
+    }
+    const rolled835 = await sweepConfigAutoRollback(db, new Date());
+    const xpList1 = await trpcQuery<ListRes83>('config.list', { cookie: ownerCookie, input: { domain: 'xp' } });
+    const coverAfter = xpList1.rules.find((r) => r.ruleKey === 'xp_cover_shift' && r.active)!.valueJson;
+    const notif835 = await db.select().from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, ownerUser.id), eq(schema.notifications.type, 'config.autoRollback')));
+    const vers835 = await trpcQuery<{ versions: VersRow83[] }>('config.versions', { cookie: ownerCookie, input: { domain: 'xp', limit: 10 } });
+    check('83.5 异常自动回滚：窗口错误越线→回滚至上一版（值回原）+告警通知+留痕 note=auto-rollback',
+      rolled835 >= 1 && JSON.stringify(coverAfter) === JSON.stringify(coverBefore) && notif835.length >= 1 &&
+      vers835.versions.some((v) => v.changesJson.some((c) => c.note === 'auto-rollback:client-error-spike' && c.rule_key === 'xp_cover_shift')),
+      { rolled: rolled835, after: coverAfter, notif: notif835.length });
+    const rolled835b = await sweepConfigAutoRollback(db, new Date());
+    check('83.5 幂等：机器工序行不作嫌疑+当前值==回滚目标→重扫零增量', rolled835b === 0);
+
+    /* ---- 83.6 参数字典+帮助注覆盖留口 ---- */
+    type DictItem83 = { domain: string; ruleKey: string; label: string; fields: Array<{ field: string; note: string }>; helpText: string; moneyHighRisk: boolean; currentVersion: number | null };
+    const dictSvc = await trpcQuery<{ items: DictItem83[] }>('config.dictionary', { cookie: ownerCookie, input: { domain: 'service' } });
+    const killItem = dictSvc.items.find((i) => i.ruleKey === 'config_kill_switch');
+    const incItem = dictSvc.items.find((i) => i.ruleKey === 'incident_escalate_minutes');
+    check('83.6 参数字典：service 域键注册（0059 三键在内）+字段字典注合成（minutes=分钟数）',
+      !!killItem && killItem.fields.some((f) => f.field === 'enabled' && f.note.includes('开关')) &&
+      !!incItem && incItem.helpText.includes('minutes=分钟数') && dictSvc.items.every((i) => i.domain === 'service'));
+    const dictPay = await trpcQuery<{ items: DictItem83[] }>('config.dictionary', { cookie: ownerCookie, input: { domain: 'pay' } });
+    const ptoItem = dictPay.items.find((i) => i.ruleKey === 'pay_timeout_minutes');
+    const payList836 = await trpcQuery<ListRes83>('config.list', { cookie: ownerCookie, input: { domain: 'pay' } });
+    const ptoRow = payList836.rules.find((r) => r.ruleKey === 'pay_timeout_minutes' && r.active)!;
+    check('83.6 帮助注覆盖留口：cfghelp.pay_timeout_minutes 端口值优先（字典+规则行两处透出）+涉钱标',
+      !!ptoItem && ptoItem.helpText.includes('支付超时关单时长') && ptoItem.moneyHighRisk === true &&
+      typeof ptoRow.helpText === 'string' && ptoRow.helpText.includes('支付超时关单时长') && ptoRow.moneyHighRisk === true);
+    const dictQ = await trpcQuery<{ items: DictItem83[] }>('config.dictionary', { cookie: ownerCookie, input: { q: 'kill' } });
+    check('83.6 字典搜索：q=kill 命中 kill switch+copy 域不入字典',
+      dictQ.items.some((i) => i.ruleKey === 'config_kill_switch') && dictQ.items.every((i) => i.domain !== 'copy'));
+
+    /* ---- 83.7 新端点权限闸（owner-only 四件 manager 403；复核口 clerk 403） ---- */
+    const mgrRb = await asErr(trpcMutate('config.rollback', { cookie: managerCookie, input: { domain: 'service', ruleKey: 'service_hours', toVersion: 1 } }));
+    const mgrKill = await asErr(trpcMutate('config.setKillSwitch', { cookie: managerCookie, input: { enabled: true } }));
+    const mgrProp = await asErr(trpcMutate('config.proposeChange', { cookie: managerCookie, input: { domain: 'member_plans', changes: [{ ruleKey: 'rebate_validity_days', valueJson: { days: 60 } }] } }));
+    const mgrDict = await asErr(trpcQuery('config.dictionary', { cookie: managerCookie, input: {} }));
+    const clkReview = await asErr(trpcMutate('config.configApprovalReview', { cookie: clerkCookie, input: { requestId: 'no-such', approve: true } }));
+    check('83.7 权限闸：rollback/setKillSwitch/proposeChange/dictionary manager 403+复核口 clerk 403（83.3 manager 可复核=对照）',
+      mgrRb instanceof TrpcHttpError && mgrRb.httpStatus === 403 && mgrKill instanceof TrpcHttpError && mgrKill.httpStatus === 403 &&
+      mgrProp instanceof TrpcHttpError && mgrProp.httpStatus === 403 && mgrDict instanceof TrpcHttpError && mgrDict.httpStatus === 403 &&
+      clkReview instanceof TrpcHttpError && clkReview.httpStatus === 403);
+
+    /* ---- 83.8 中央件/总部定时件口径不回退 ---- */
+    const centralScopeErr = await asErr(trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'member_plans', changes: [{ ruleKey: 'membership_validity_days', valueJson: { days: 365 } }], effectiveAt: new Date(Date.now() + 60_000).toISOString(), scope: 'hq' },
+    }));
+    check('83.8 中央件定时件传 scope=400（中央件不分层口径不回退）',
+      centralScopeErr instanceof TrpcHttpError && centralScopeErr.httpStatus === 400);
+    const durList0 = await trpcQuery<ListRes83>('config.list', { cookie: ownerCookie, input: { domain: 'duration' } });
+    const dbmRow = durList0.rules.find((r) => r.ruleKey === 'duration_base_min' && r.active)!;
+    await trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'duration', changes: [{ ruleKey: 'duration_base_min', valueJson: dbmRow.valueJson }], effectiveAt: new Date(Date.now() + 90_000).toISOString(), scope: 'hq' },
+    });
+    const durList1 = await trpcQuery<ListRes83>('config.list', { cookie: ownerCookie, input: { domain: 'duration' } });
+    const dbmPend = durList1.rules.find((r) => r.ruleKey === 'duration_base_min' && r.scheduledPending)!;
+    const dbmDbRow = await db.select().from(schema.durationRules).where(eq(schema.durationRules.id, dbmPend.id)).then((r) => r[0]);
+    const dbmActive = durList1.rules.find((r) => r.ruleKey === 'duration_base_min' && r.active)!;
+    check('83.8 总部定时件：新行 store_id=NULL（总部下发）+当前值不动',
+      !!dbmPend && dbmDbRow?.storeId === null &&
+      JSON.stringify(Object.entries(dbmActive.valueJson).sort()) === JSON.stringify(Object.entries(dbmRow.valueJson).sort()));
+    await trpcMutate('config.cancelScheduled', { cookie: ownerCookie, input: { id: dbmPend.scheduledId! } });
   }
 
   client.close();

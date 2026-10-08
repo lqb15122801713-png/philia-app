@@ -20,14 +20,28 @@
  *   → config.save；保存即生效，toast 明示 + 列表/留痕双失效刷新；
  * - 修改留痕：config.versions（谁/何时/每 key 前后值，可展开）；
  * - 新规只约束生效后的单，不回溯历史月份与已快照数据（页面小字明示）。
+ *
+ * 端口批收尾片 1（任务书 V1.0 增补七件之前端四件）：
+ * - 件 6 规则搜索：DomainPanel 工具行 SearchInput（ruleKey/label/helpText contains，
+ *   active 区与置灰区同滤，空结果 Empty）；
+ * - 件 7 逐参数帮助：每规则行 label 下一行小字显 server 合成 helpText（cfghelp.* 覆盖优先）；
+ * - 件 2 定时生效：待生效徽（同 key 有 pending 定时件时现行行旁 warn 徽）+ 定时行注
+ *   「定时 v{n} · 时刻」+ 撤销小钮（config.cancelScheduled）；重确认弹层加「定时生效」
+ *   可选区（datetime-local → save.effectiveAt ISO 串；留空=原直存流）；
+ * - 件 1 配置回滚时间轴：每规则行「历史」展开（list 全行按 version 新→旧；非现行非
+ *   待生效行给「回到此版」→ window.confirm 二次确认 → config.rollback 立即生效）；
+ * - 件 3 涉钱二级审批：moneyHighRisk 行头「涉钱」danger 徽；保存流分流（含涉钱键 →
+ *   主钮「提交审批」走 config.proposeChange，混合时非涉钱键仍走原 D 套直存两发先后做）；
+ *   底部「配置审批」区（config.configApprovals 本域列表 pending 在前，通过/驳回 →
+ *   config.configApprovalReview，驳回 note 必填）；审批中键行头「审批中」warn 徽。
  */
 
 import { Skeleton, usePhiliaClient, type PhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import MainScaffold from '../components/MainScaffold';
+import MainScaffold, { SearchInput } from '../components/MainScaffold';
 import RoleGuidePage from '../components/RoleGuidePage';
-import { errMsg, fmtDateTime } from '../components/staff-admin/format';
+import { errMsg, fmtDateTime, fmtTime } from '../components/staff-admin/format';
 import { Badge, Btn, Empty, Field, Modal, numStyle, toast, ToasterMount } from '../components/staff-admin/ui';
 import { rc } from '../copy/rules';
 import { useMerchantRole } from '../lib/roles';
@@ -955,6 +969,65 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
     return m;
   }, [rows]);
 
+  /* ---------------- 件 6 规则搜索（active 区与置灰区同滤；仅过滤渲染，不动草稿/脏跟踪） ---------------- */
+  const [search, setSearch] = useState('');
+  const matchRule = (r: RuleRow, q: string) =>
+    r.ruleKey.toLowerCase().includes(q) ||
+    r.label.toLowerCase().includes(q) ||
+    (r.helpText ?? '').toLowerCase().includes(q);
+  const visibleActive = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return q === '' ? activeRules : activeRules.filter((r) => matchRule(r, q));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeRules, search]);
+  const visibleInactive = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return q === '' ? inactiveRules : inactiveRules.filter((r) => matchRule(r, q));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inactiveRules, search]);
+
+  /* ---------------- 件 2 定时生效：ruleKey → 待生效登记行（config_scheduled pending 目标行） ---------------- */
+  const scheduledByKey = useMemo(() => {
+    const m = new Map<string, RuleRow>();
+    for (const r of rows) if (r.scheduledPending) m.set(r.ruleKey, r);
+    return m;
+  }, [rows]);
+
+  /* ---------------- 件 1 配置回滚时间轴：ruleKey → 全版本行（新→旧） ---------------- */
+  const historyByKey = useMemo(() => {
+    const m = new Map<string, RuleRow[]>();
+    for (const r of rows) {
+      const list = m.get(r.ruleKey);
+      if (list) list.push(r);
+      else m.set(r.ruleKey, [r]);
+    }
+    for (const list of m.values()) list.sort((a, b) => b.version - a.version);
+    return m;
+  }, [rows]);
+  const [openHistoryKey, setOpenHistoryKey] = useState<string | null>(null);
+
+  /* ---------------- 件 3 涉钱二级审批：审批队列（本域，pending 在前） ---------------- */
+  const approvalsQuery = useQuery({
+    queryKey: ['config', 'configApprovals'],
+    queryFn: () => trpc.config.configApprovals.query({}),
+  });
+  const approvals = useMemo(() => {
+    const items = (approvalsQuery.data?.items ?? []).filter((it) => it.domain === domain);
+    return [...items].sort((a, b) => {
+      if ((a.status === 'pending') !== (b.status === 'pending')) return a.status === 'pending' ? -1 : 1;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [approvalsQuery.data, domain]);
+  /* 审批中键集合（本域 pending 单 changesJson 覆盖的 ruleKey）→ 规则行「审批中」徽 */
+  const inApprovalKeys = useMemo(() => {
+    const s = new Set<string>();
+    for (const it of approvalsQuery.data?.items ?? []) {
+      if (it.domain !== domain || it.status !== 'pending') continue;
+      for (const ch of it.changesJson) s.add(ch.ruleKey);
+    }
+    return s;
+  }, [approvalsQuery.data, domain]);
+
   /* 草稿：数据源身份变化（首载/保存后刷新）时整体重置（渲染期回填，同 SettingsPage 口径） */
   const [drafts, setDrafts] = useState<Record<string, Record<string, string>>>({});
   const [draftsSource, setDraftsSource] = useState<unknown>(null);
@@ -968,23 +1041,41 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
     [activeRules, drafts, domain],
   );
 
+  /* 件 3 保存流分流：涉钱键走审批，非涉钱键走原直存 */
+  const moneyByKey = useMemo(() => new Map(activeRules.map((r) => [r.ruleKey, r.moneyHighRisk])), [activeRules]);
+  const moneyPending = useMemo(() => pending.filter((p) => moneyByKey.get(p.ruleKey) === true), [pending, moneyByKey]);
+  const directPending = useMemo(() => pending.filter((p) => moneyByKey.get(p.ruleKey) !== true), [pending, moneyByKey]);
+  const hasMoney = moneyPending.length > 0;
+
   const setDraft = (ruleKey: string, path: string, text: string) =>
     setDrafts((prev) => ({ ...prev, [ruleKey]: { ...prev[ruleKey], [path]: text } }));
 
   const resetDrafts = () => setDrafts(initDrafts(activeRules, domain));
 
+  const invalidateListVersions = async () => {
+    await queryClient.invalidateQueries({ queryKey: ['config', 'list', domain] });
+    await queryClient.invalidateQueries({ queryKey: ['config', 'versions', domain] });
+  };
+
   /* ---------------- 保存（危险操作 D 套：重确认弹层） ---------------- */
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [saving, setSaving] = useState(false);
+  /* 混合提交（涉钱+非涉钱）：审批发出后弹层只直存非涉钱键 */
+  const [directOnly, setDirectOnly] = useState(false);
+  /* 件 2 定时生效：datetime-local 输入串（空=直存原流） */
+  const [effectiveAtInput, setEffectiveAtInput] = useState('');
+  const modalPending = directOnly ? directPending : pending;
 
-  const openConfirm = () => {
+  const openConfirm = (onlyDirect = false) => {
     if (pending.length === 0) return;
     if (errorCount > 0) {
-      toast('有参数格式不正确，请先修正标红项', 'error');
+      toast(rc('rules.errorFixFirst'), 'error');
       return;
     }
+    setDirectOnly(onlyDirect);
     setConfirmText('');
+    setEffectiveAtInput('');
     setConfirmOpen(true);
   };
 
@@ -992,21 +1083,106 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
     if (confirmText.trim() !== CONFIRM_PHRASE) return;
     setSaving(true);
     try {
+      const effIso = effectiveAtInput.trim() !== '' ? new Date(effectiveAtInput).toISOString() : undefined;
       const r = await trpc.config.save.mutate({
         domain,
-        changes: pending.map((p) => ({ ruleKey: p.ruleKey, valueJson: p.after })),
+        changes: modalPending.map((p) => ({ ruleKey: p.ruleKey, valueJson: p.after })),
+        ...(effIso ? { effectiveAt: effIso } : {}),
       });
-      toast(`已保存并立即生效（${DOMAIN_TITLE[domain]} 版本 v${r.version}）`);
+      toast(
+        r.scheduled && r.effectiveAt
+          ? rc('rules.scheduledSaveDone', { time: fmtDateTime(r.effectiveAt) })
+          : `已保存并立即生效（${DOMAIN_TITLE[domain]} 版本 v${r.version}）`,
+      );
       setConfirmOpen(false);
       setConfirmText('');
-      await queryClient.invalidateQueries({ queryKey: ['config', 'list', domain] });
-      await queryClient.invalidateQueries({ queryKey: ['config', 'versions', domain] });
+      setEffectiveAtInput('');
+      setDirectOnly(false);
+      await invalidateListVersions();
     } catch (e) {
       toast(errMsg(e), 'error');
     } finally {
       setSaving(false);
     }
   };
+
+  /* 件 3 涉钱分流：含涉钱键 → 提交审批（纯涉钱直接发；混合先发审批再弹 D 套直存非涉钱键） */
+  const doProposeFlow = async () => {
+    if (pending.length === 0) return;
+    if (errorCount > 0) {
+      toast(rc('rules.errorFixFirst'), 'error');
+      return;
+    }
+    setSaving(true);
+    try {
+      await trpc.config.proposeChange.mutate({
+        domain,
+        changes: moneyPending.map((p) => ({ ruleKey: p.ruleKey, valueJson: p.after, label: p.short })),
+      });
+      await queryClient.invalidateQueries({ queryKey: ['config', 'configApprovals'] });
+      if (directPending.length > 0) {
+        toast(rc('rules.proposeMixedNote'));
+        openConfirm(true);
+      } else {
+        toast(rc('rules.proposeDone'));
+        await invalidateListVersions();
+      }
+    } catch (e) {
+      toast(errMsg(e), 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /* 件 2 撤销待生效定时件 */
+  const cancelScheduled = async (id: string) => {
+    try {
+      await trpc.config.cancelScheduled.mutate({ id });
+      toast(rc('rules.scheduledCancelDone'));
+      await queryClient.invalidateQueries({ queryKey: ['config', 'list', domain] });
+    } catch (e) {
+      toast(errMsg(e), 'error');
+    }
+  };
+
+  /* 件 1 回到此版（回滚立即生效，二次确认口径见 copy） */
+  const doRollback = async (ruleKey: string, toVersion: number) => {
+    if (!window.confirm(rc('rules.rollbackConfirm', { label: shortLabel(labelByKey.get(ruleKey) ?? ruleKey), version: toVersion }))) return;
+    try {
+      const r = await trpc.config.rollback.mutate({ domain, ruleKey, toVersion });
+      toast(rc('rules.rollbackDone', { version: r.version }));
+      await invalidateListVersions();
+    } catch (e) {
+      toast(errMsg(e), 'error');
+    }
+  };
+
+  /* 件 3 复核（通过=立即应用；驳回 note 必填，空拦截） */
+  const doReview = async (requestId: string, approve: boolean) => {
+    let note: string | undefined;
+    if (approve) {
+      if (!window.confirm(rc('rules.approveConfirm'))) return;
+    } else {
+      const input = window.prompt(rc('rules.rejectNotePrompt'));
+      if (input === null) return;
+      if (input.trim() === '') {
+        toast(rc('rules.rejectNoteRequired'), 'error');
+        return;
+      }
+      note = input.trim();
+    }
+    try {
+      const r = await trpc.config.configApprovalReview.mutate({ requestId, approve, ...(note ? { note } : {}) });
+      toast(approve ? rc('rules.approveDone', { version: 'version' in r ? (r.version ?? 0) : 0 }) : rc('rules.rejectDone'));
+      await invalidateListVersions();
+      await queryClient.invalidateQueries({ queryKey: ['config', 'configApprovals'] });
+    } catch (e) {
+      toast(errMsg(e), 'error');
+    }
+  };
+
+  const approvalStatusLabel = (s: string) =>
+    s === 'pending' ? rc('rules.approvalStatusPending') : s === 'approved' ? rc('rules.approvalStatusApproved') : rc('rules.approvalStatusRejected');
 
   /* ---------------- 留痕展开 ---------------- */
   const [openVersionId, setOpenVersionId] = useState<string | null>(null);
@@ -1050,7 +1226,20 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
         </p>
       ) : null}
 
-      {/* 规则面板 */}
+      {/* 件 6 规则搜索（工具行：ruleKey / label / helpText contains，active 区与置灰区同滤） */}
+      <div className="mb-3 flex justify-end">
+        <SearchInput
+          testid="rules-search"
+          placeholder={rc('rules.searchPlaceholder')}
+          value={search}
+          onChange={setSearch}
+        />
+      </div>
+
+      {/* 规则面板（搜索空结果=Empty，不占面板） */}
+      {visibleActive.length === 0 && visibleInactive.length === 0 ? (
+        <Empty title={rc('rules.searchEmpty')} hint={rc('rules.searchEmptyHint')} />
+      ) : (
       <div className="u3-panel" data-testid={`rules-panel-${domain}`}>
         <div className="u3-panel-head">
           <h3>{DOMAIN_TITLE[domain]}</h3>
@@ -1059,23 +1248,113 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
           </span>
         </div>
 
-        {activeRules.map((r) => {
+        {visibleActive.map((r) => {
           const model = buildModel(r.valueJson, domain);
           const rowErrors = errors[r.ruleKey] ?? {};
+          const schedRow = scheduledByKey.get(r.ruleKey) ?? null;
+          const historyRows = historyByKey.get(r.ruleKey) ?? [];
+          const historyOpen = openHistoryKey === r.ruleKey;
           return (
             <div key={r.id} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-[13px]">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="text-caption font-semibold text-ink">{shortLabel(r.label)}</div>
                   <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]">{r.label}</div>
+                  {/* 件 7 逐参数帮助（server 合成 helpText，cfghelp.* 覆盖优先） */}
+                  {r.helpText ? (
+                    <div
+                      className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]"
+                      data-testid={`rules-help-${r.ruleKey}`}
+                    >
+                      {r.helpText}
+                    </div>
+                  ) : null}
                   <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
                     自 {fmtDateTime(r.effectiveFrom)} 起生效
                     {r.creatorNickname ? ` · 由 ${r.creatorNickname} 设置` : ''}
                     {model.notes.length > 0 ? ` · ${model.notes.join(' · ')}` : ''}
                   </div>
                 </div>
-                <Badge tone="muted"><span style={numStyle}>v{r.version}</span></Badge>
+                <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                  {r.moneyHighRisk ? (
+                    <span data-testid="rules-money-badge">
+                      <Badge tone="danger">{rc('rules.moneyBadge')}</Badge>
+                    </span>
+                  ) : null}
+                  {inApprovalKeys.has(r.ruleKey) ? (
+                    <span data-testid="rules-inapproval-badge">
+                      <Badge tone="warn">{rc('rules.inApprovalBadge')}</Badge>
+                    </span>
+                  ) : null}
+                  {schedRow ? (
+                    <span data-testid="rules-scheduled-badge">
+                      <Badge tone="warn">
+                        <span style={numStyle}>
+                          {rc('rules.scheduledBadge', { time: fmtTime(schedRow.scheduledEffectiveAt) })}
+                        </span>
+                      </Badge>
+                    </span>
+                  ) : null}
+                  <Badge tone="muted"><span style={numStyle}>v{r.version}</span></Badge>
+                  <Btn
+                    variant="ghost"
+                    size="sm"
+                    data-testid={`rules-history-${r.ruleKey}`}
+                    aria-expanded={historyOpen}
+                    onClick={() => setOpenHistoryKey(historyOpen ? null : r.ruleKey)}
+                  >
+                    {rc('rules.historyToggle')}
+                  </Btn>
+                </div>
               </div>
+
+              {/* 件 2 定时行注 + 撤销（待生效登记行=同 key 新行 active=0 待生效） */}
+              {schedRow ? (
+                <div className="mt-2 flex items-center gap-2 text-caption-xs text-[rgba(59,46,36,.62)]" style={numStyle}>
+                  <span>
+                    {rc('rules.scheduledRowNote', {
+                      version: schedRow.version,
+                      time: fmtDateTime(schedRow.scheduledEffectiveAt),
+                    })}
+                  </span>
+                  <Btn
+                    variant="ghost"
+                    size="sm"
+                    data-testid={`rules-scheduled-cancel-${schedRow.scheduledId}`}
+                    onClick={() => void cancelScheduled(schedRow.scheduledId!)}
+                  >
+                    {rc('rules.scheduledCancel')}
+                  </Btn>
+                </div>
+              ) : null}
+
+              {/* 件 1 历史展开（该 key 全版本行 新→旧；非现行且非待生效行给「回到此版」） */}
+              {historyOpen ? (
+                <div className="mt-2 space-y-1.5 rounded-control bg-canvas px-3 py-2">
+                  {historyRows.map((h) => (
+                    <div key={h.id} className="flex items-center gap-2 text-caption-xs text-[rgba(59,46,36,.62)]">
+                      <Badge tone={h.active ? 'success' : 'muted'}>
+                        <span style={numStyle}>v{h.version}</span>
+                      </Badge>
+                      <span className="shrink-0" style={numStyle}>{fmtDateTime(h.effectiveFrom)}</span>
+                      {h.active ? <Badge tone="brand">{rc('rules.historyActiveBadge')}</Badge> : null}
+                      <span className="min-w-0 flex-1 truncate" style={numStyle}>
+                        {fmtValueSummary(h.valueJson)}
+                      </span>
+                      {!h.active && !h.scheduledPending ? (
+                        <Btn
+                          variant="ghost"
+                          size="sm"
+                          data-testid={`rules-rollback-${r.ruleKey}-${h.version}`}
+                          onClick={() => void doRollback(r.ruleKey, h.version)}
+                        >
+                          {rc('rules.rollbackBtn')}
+                        </Btn>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
 
               {model.editors.length > 0 ? (
                 <div className="mt-2.5 flex flex-wrap items-start gap-x-4 gap-y-2.5">
@@ -1227,32 +1506,109 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
           );
         })}
 
-        {/* 置灰行（只读 + 状态 chip） */}
-        {inactiveRules.length > 0 ? (
+        {/* 置灰行（只读 + 状态 chip；件 6 搜索同滤） */}
+        {visibleInactive.length > 0 ? (
           <>
             <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] pb-1 pt-3 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
               已停用 / 备用 / 预留（只读，不参与计提与计分）
             </div>
-            {inactiveRules.map((r) => (
+            {visibleInactive.map((r) => {
+              const historyRows = historyByKey.get(r.ruleKey) ?? [];
+              const historyOpen = openHistoryKey === r.ruleKey;
+              return (
               <div
                 key={r.id}
-                className="flex items-start gap-3 border-t border-[rgba(59,46,36,.06)] px-[17px] py-[13px] opacity-70"
+                className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-[13px] opacity-70"
               >
-                <div className="min-w-0 flex-1">
-                  <div className="text-caption text-[rgba(59,46,36,.62)]">{shortLabel(r.label)}</div>
-                  <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]">{r.label}</div>
-                  <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
-                    {fmtValueSummary(r.valueJson)}
+                <div className="flex items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-caption text-[rgba(59,46,36,.62)]">{shortLabel(r.label)}</div>
+                    <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]">{r.label}</div>
+                    {r.helpText ? (
+                      <div
+                        className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]"
+                        data-testid={`rules-help-${r.ruleKey}`}
+                      >
+                        {r.helpText}
+                      </div>
+                    ) : null}
+                    <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
+                      {fmtValueSummary(r.valueJson)}
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                    {r.moneyHighRisk ? (
+                      <span data-testid="rules-money-badge">
+                        <Badge tone="danger">{rc('rules.moneyBadge')}</Badge>
+                      </span>
+                    ) : null}
+                    <Badge tone="muted">{INACTIVE_STATUS[r.ruleKey] ?? '已停用'}</Badge>
+                    <Btn
+                      variant="ghost"
+                      size="sm"
+                      data-testid={`rules-history-${r.ruleKey}`}
+                      aria-expanded={historyOpen}
+                      onClick={() => setOpenHistoryKey(historyOpen ? null : r.ruleKey)}
+                    >
+                      {rc('rules.historyToggle')}
+                    </Btn>
                   </div>
                 </div>
-                <Badge tone="muted">{INACTIVE_STATUS[r.ruleKey] ?? '已停用'}</Badge>
+                {/* 件 2：置灰行本身即待生效登记件时给行注+撤销 */}
+                {r.scheduledPending && r.scheduledId ? (
+                  <div className="mt-2 flex items-center gap-2 text-caption-xs text-[rgba(59,46,36,.62)]" style={numStyle}>
+                    <span>
+                      {rc('rules.scheduledRowNote', {
+                        version: r.version,
+                        time: fmtDateTime(r.scheduledEffectiveAt),
+                      })}
+                    </span>
+                    <Btn
+                      variant="ghost"
+                      size="sm"
+                      data-testid={`rules-scheduled-cancel-${r.scheduledId}`}
+                      onClick={() => void cancelScheduled(r.scheduledId!)}
+                    >
+                      {rc('rules.scheduledCancel')}
+                    </Btn>
+                  </div>
+                ) : null}
+                {/* 件 1 历史展开（同 active 行工艺） */}
+                {historyOpen ? (
+                  <div className="mt-2 space-y-1.5 rounded-control bg-canvas px-3 py-2">
+                    {historyRows.map((h) => (
+                      <div key={h.id} className="flex items-center gap-2 text-caption-xs text-[rgba(59,46,36,.62)]">
+                        <Badge tone={h.active ? 'success' : 'muted'}>
+                          <span style={numStyle}>v{h.version}</span>
+                        </Badge>
+                        <span className="shrink-0" style={numStyle}>{fmtDateTime(h.effectiveFrom)}</span>
+                        {h.active ? <Badge tone="brand">{rc('rules.historyActiveBadge')}</Badge> : null}
+                        <span className="min-w-0 flex-1 truncate" style={numStyle}>
+                          {fmtValueSummary(h.valueJson)}
+                        </span>
+                        {!h.active && !h.scheduledPending ? (
+                          <Btn
+                            variant="ghost"
+                            size="sm"
+                            data-testid={`rules-rollback-${r.ruleKey}-${h.version}`}
+                            onClick={() => void doRollback(r.ruleKey, h.version)}
+                          >
+                            {rc('rules.rollbackBtn')}
+                          </Btn>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
-            ))}
+              );
+            })}
           </>
         ) : null}
       </div>
+      )}
 
-      {/* 待保存条（有变更才浮出） */}
+      {/* 待保存条（有变更才浮出；件 3 含涉钱键 → 主钮「提交审批」走 proposeChange） */}
       {pending.length > 0 ? (
         <div
           className="u1-ring sticky bottom-4 z-10 mt-3.5 flex items-center justify-between gap-3 rounded-panel bg-card px-4 py-3 shadow-elevated"
@@ -1260,6 +1616,9 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
         >
           <span className="text-caption text-ink">
             待保存修改 <b style={numStyle}>{pending.length}</b> 项
+            {hasMoney ? (
+              <span className="ml-2 text-danger-deep">{rc('rules.saveBarMoneyNote', { n: moneyPending.length })}</span>
+            ) : null}
             {errorCount > 0 ? <span className="ml-2 text-danger-deep">（{errorCount} 项格式有误）</span> : null}
           </span>
           <div className="flex shrink-0 gap-2">
@@ -1269,11 +1628,11 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
             <Btn
               variant="primary"
               size="sm"
-              data-testid="rules-open-confirm"
-              onClick={openConfirm}
+              data-testid={hasMoney ? 'rules-propose-open' : 'rules-open-confirm'}
+              onClick={hasMoney ? () => void doProposeFlow() : () => openConfirm()}
               disabled={saving}
             >
-              复核并保存
+              {hasMoney ? rc('rules.proposeOpen') : rc('rules.reviewSave')}
             </Btn>
           </div>
         </div>
@@ -1354,6 +1713,80 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
         )}
       </div>
 
+      {/* 件 3 配置审批区（本域审批单，pending 在前；通过/驳回 → configApprovalReview） */}
+      <div className="u3-panel mt-3.5" data-testid="rules-approvals">
+        <div className="u3-panel-head">
+          <h3>{rc('rules.approvalsTitle')}</h3>
+          <span className="aside">{rc('rules.approvalsAside')}</span>
+        </div>
+        {approvalsQuery.isPending ? (
+          <div className="space-y-2 px-[17px] py-4" aria-label="加载中">
+            {[0, 1].map((i) => (
+              <Skeleton key={i} className="h-9 rounded-control" />
+            ))}
+          </div>
+        ) : approvalsQuery.isError ? (
+          <div className="px-[17px] py-4 text-caption-xs text-danger-deep">
+            {rc('rules.approvalsError')}：{errMsg(approvalsQuery.error)}
+          </div>
+        ) : approvals.length === 0 ? (
+          <div className="px-[17px] py-6 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
+            {rc('rules.approvalsEmpty')}
+          </div>
+        ) : (
+          approvals.map((it) => (
+            <div key={it.id} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-[13px]">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-caption font-semibold text-ink">{it.summary}</div>
+                  <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
+                    {it.proposerNickname ?? '—'} · {fmtDateTime(it.createdAt)}
+                  </div>
+                </div>
+                <Badge tone={it.status === 'pending' ? 'warn' : it.status === 'approved' ? 'success' : 'danger'}>
+                  {approvalStatusLabel(it.status)}
+                </Badge>
+              </div>
+              <ul className="mt-2 space-y-1 text-caption-xs text-[rgba(59,46,36,.62)]" style={numStyle}>
+                {it.changesJson.map((ch) => {
+                  const cur = activeRules.find((r) => r.ruleKey === ch.ruleKey);
+                  return (
+                    <li key={ch.ruleKey}>
+                      {ch.label ?? shortLabel(labelByKey.get(ch.ruleKey) ?? ch.ruleKey)}：{rc('rules.changeBefore')}{' '}
+                      {cur ? fmtValueSummary(cur.valueJson) : '—'} → {rc('rules.changeAfter')}{' '}
+                      <span className="font-semibold text-ink">{fmtValueSummary(ch.valueJson)}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+              {it.reviewNote ? (
+                <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">{it.reviewNote}</div>
+              ) : null}
+              {it.status === 'pending' ? (
+                <div className="mt-2 flex gap-2">
+                  <Btn
+                    variant="primary"
+                    size="sm"
+                    data-testid={`rules-approval-approve-${it.id}`}
+                    onClick={() => void doReview(it.id, true)}
+                  >
+                    {rc('rules.approveBtn')}
+                  </Btn>
+                  <Btn
+                    variant="danger"
+                    size="sm"
+                    data-testid={`rules-approval-reject-${it.id}`}
+                    onClick={() => void doReview(it.id, false)}
+                  >
+                    {rc('rules.rejectBtn')}
+                  </Btn>
+                </div>
+              ) : null}
+            </div>
+          ))
+        )}
+      </div>
+
       {/* 口径小字（V1.3 冻结：不回溯） */}
       <p className="mt-3 px-1 text-caption-xs text-[rgba(59,46,36,.42)]">
         {rc('rules.caliberNote')}
@@ -1388,7 +1821,7 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
             {rc('rules.confirmDanger', { warn: CONFIRM_WARN[domain] })}
           </p>
           <div className="space-y-2">
-            {pending.map((p) => (
+            {modalPending.map((p) => (
               <div key={p.ruleKey} className="rounded-control bg-canvas px-3 py-2">
                 <div className="text-caption font-semibold text-ink">{p.short}</div>
                 <ul className="mt-1 space-y-0.5 text-caption-xs text-[rgba(59,46,36,.62)]" style={numStyle}>
@@ -1400,6 +1833,22 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
                 </ul>
               </div>
             ))}
+          </div>
+          {/* 件 2 定时生效可选区（留空=保存即生效；填未来时刻=定时件登记） */}
+          <div className="rounded-control bg-canvas px-3 py-2">
+            <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">
+              {rc('rules.effectiveSectionTitle')}
+            </div>
+            <Field label={rc('rules.effectiveAtLabel')} hint={rc('rules.effectiveAtHint')}>
+              <input
+                type="datetime-local"
+                className="w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+                data-testid="rules-effective-at"
+                value={effectiveAtInput}
+                onChange={(e) => setEffectiveAtInput(e.target.value)}
+                disabled={saving}
+              />
+            </Field>
           </div>
           <Field label={`请输入「${CONFIRM_PHRASE}」以继续`} hint={rc('rules.confirmHint')}>
             <input

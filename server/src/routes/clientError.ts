@@ -22,6 +22,7 @@ import { Hono } from 'hono';
 import { appendFile, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { db, schema } from '../db';
 
 const APP_KINDS = new Set(['customer', 'merchant', 'staff']);
 
@@ -115,6 +116,21 @@ export const clientErrorRoute = new Hono().post('/api/client-error', async (c) =
     await appendFile(file, `${line}\n`, 'utf8');
   } catch (err) {
     console.error('[client-error] 日志落盘失败（console 已留底）:', err);
+  }
+
+  /* 端口批收尾片 1（件 4b 异常自动回滚指标源）：JSONL 之外同事落 client_error_events 表——
+     落库 try/catch 不阻断收错（选型口径 1 不变：DB 异常时刻也要能收错，JSONL/console 双底在） */
+  try {
+    await db.insert(schema.clientErrorEvents).values({
+      app,
+      message,
+      stack: entry.stackFirstFrame,
+      url: route,
+      userAgent: entry.ua,
+      ip,
+    });
+  } catch (err) {
+    console.error('[client-error] 事件落库失败（JSONL/console 已留底，不阻断）:', err);
   }
 
   return c.json({ ok: true }, 200);

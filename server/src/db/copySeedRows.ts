@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-06T14:42:53.724Z；键数=3601；归屏率=97.0%（未归屏 108）
+ * 生成时间口径：2026-10-07T06:59:41.858Z；键数=3670；归屏率=96.8%（未归屏 116）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -8034,6 +8034,97 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "ConsolePage 页面内文案"
  },
  {
+  "key": "cadm.dictAside",
+  "domain": "merchant:consoleAdmin",
+  "text": "全参数域逐键透出 · 服务端搜索 · copy 域不收",
+  "screen": "商家·开发者管理端",
+  "position": "ConfigDictBody 组件内文案"
+ },
+ {
+  "key": "cadm.dictDomainCommission",
+  "domain": "merchant:consoleAdmin",
+  "text": "提成",
+  "screen": "商家·开发者管理端",
+  "position": "ConfigDictBody 组件内文案"
+ },
+ {
+  "key": "cadm.dictDomainDuration",
+  "domain": "merchant:consoleAdmin",
+  "text": "时长",
+  "screen": "商家·开发者管理端",
+  "position": "ConfigDictBody 组件内文案"
+ },
+ {
+  "key": "cadm.dictDomainMemberPlans",
+  "domain": "merchant:consoleAdmin",
+  "text": "会员档",
+  "screen": "商家·开发者管理端",
+  "position": "ConfigDictBody 组件内文案"
+ },
+ {
+  "key": "cadm.dictDomainPay",
+  "domain": "merchant:consoleAdmin",
+  "text": "支付",
+  "screen": "商家·开发者管理端",
+  "position": "ConfigDictBody 组件内文案"
+ },
+ {
+  "key": "cadm.dictDomainRefund",
+  "domain": "merchant:consoleAdmin",
+  "text": "退款",
+  "screen": "商家·开发者管理端",
+  "position": "ConfigDictBody 组件内文案"
+ },
+ {
+  "key": "cadm.dictDomainService",
+  "domain": "merchant:consoleAdmin",
+  "text": "服务",
+  "screen": "商家·开发者管理端",
+  "position": "ConfigDictBody 组件内文案"
+ },
+ {
+  "key": "cadm.dictDomainXp",
+  "domain": "merchant:consoleAdmin",
+  "text": "XP",
+  "screen": "商家·开发者管理端",
+  "position": "ConfigDictBody 组件内文案"
+ },
+ {
+  "key": "cadm.dictEmpty",
+  "domain": "merchant:consoleAdmin",
+  "text": "无匹配参数",
+  "screen": "商家·开发者管理端",
+  "position": "ConfigDictBody 组件内文案"
+ },
+ {
+  "key": "cadm.dictError",
+  "domain": "merchant:consoleAdmin",
+  "text": "参数字典加载失败",
+  "screen": "商家·开发者管理端",
+  "position": "ConfigDictBody 组件内文案"
+ },
+ {
+  "key": "cadm.dictMoneyBadge",
+  "domain": "merchant:consoleAdmin",
+  "text": "涉钱",
+  "screen": "商家·开发者管理端",
+  "position": "ConfigDictBody 组件内文案"
+ },
+ {
+  "key": "cadm.dictSearchPlaceholder",
+  "domain": "merchant:consoleAdmin",
+  "text": "搜索参数（键名 / 名称 / 帮助注）",
+  "screen": "商家·开发者管理端",
+  "position": "ConfigDictBody 组件内文案"
+ },
+ {
+  "key": "cadm.dictTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "参数字典",
+  "screen": "商家·开发者管理端",
+  "position": "ConfigDictBody 组件内文案"
+ },
+ {
   "key": "cadm.groupA",
   "domain": "merchant:consoleAdmin",
   "text": "A · 内容运营",
@@ -8058,6 +8149,55 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "cadm.groupE",
   "domain": "merchant:consoleAdmin",
   "text": "E · 门店·数据",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.killArm",
+  "domain": "merchant:consoleAdmin",
+  "text": "一键关停",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.killArmConfirm",
+  "domain": "merchant:consoleAdmin",
+  "text": "确认一键关停？线上支付通道等可关参数将瞬时回落安全值。",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.killArmNote",
+  "domain": "merchant:consoleAdmin",
+  "text": "一键关停：线上支付通道等可关参数瞬时回落安全值（全局）。",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.killBannerOn",
+  "domain": "merchant:consoleAdmin",
+  "text": "KILL SWITCH 生效中：线上支付通道等可关参数已回落安全值（{by} · {updatedAt}）",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.killDone",
+  "domain": "merchant:consoleAdmin",
+  "text": "全局开关已切换",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.killRestore",
+  "domain": "merchant:consoleAdmin",
+  "text": "恢复",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.killRestoreConfirm",
+  "domain": "merchant:consoleAdmin",
+  "text": "确认恢复？可关参数将解除安全值回落。",
   "screen": "商家·开发者管理端",
   "position": "ConsolePage 页面内文案"
  },
@@ -8128,6 +8268,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "cadm.portCopy",
   "domain": "merchant:consoleAdmin",
   "text": "文案端口",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.portDict",
+  "domain": "merchant:consoleAdmin",
+  "text": "参数字典",
   "screen": "商家·开发者管理端",
   "position": "ConsolePage 页面内文案"
  },
@@ -15937,9 +16084,149 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "ReportPage 页面内文案"
  },
  {
+  "key": "cfghelp.commission_grooming_rate",
+  "domain": "merchant:rules",
+  "text": "美容服务提成率（万分比）：新单按生效时版本计提（涉钱参数）",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:rules 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "cfghelp.config_kill_switch",
+  "domain": "merchant:rules",
+  "text": "全局一键开关：开=可关参数瞬时回落安全值（当前=线上支付通道关）；页面显著红态",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:rules 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "cfghelp.duration_base_min",
+  "domain": "merchant:rules",
+  "text": "时长基础分钟：服务时长基准值（时长系数域单源）",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:rules 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "cfghelp.pay_channel_enabled",
+  "domain": "merchant:rules",
+  "text": "线上支付通道开关：关=客户端 createOrder 拒单（内测 mock 通道；kill switch 开时本键被强制回落为关）",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:rules 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "cfghelp.pay_timeout_minutes",
+  "domain": "merchant:rules",
+  "text": "支付超时关单时长：paying 单超 N 分钟未支付自动关单（在途单按创建时快照不回溯）",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:rules 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "cfghelp.plan_yinghuo",
+  "domain": "merchant:rules",
+  "text": "萤火档会员价费配置：年费/回馈金比例/服务折扣/含宠数（涉钱参数，二级审批生效）",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:rules 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "cfghelp.refund_threshold_fen",
+  "domain": "merchant:rules",
+  "text": "退款店长阈值（分）：超阈值退款单须店主审批（涉钱参数）",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:rules 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "cfghelp.xp_daily_cap",
+  "domain": "merchant:rules",
+  "text": "XP 日上限：单员工单日 XP 封顶（防刷口径）",
+  "screen": null,
+  "position": "未在页面调用点命中（merchant:rules 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "rules.approvalsAside",
+  "domain": "merchant:rules",
+  "text": "涉钱参数二级审批 · 复核通过才生效",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.approvalsEmpty",
+  "domain": "merchant:rules",
+  "text": "暂无配置审批单",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.approvalsError",
+  "domain": "merchant:rules",
+  "text": "审批单加载失败",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.approvalStatusApproved",
+  "domain": "merchant:rules",
+  "text": "已通过",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.approvalStatusPending",
+  "domain": "merchant:rules",
+  "text": "待复核",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.approvalStatusRejected",
+  "domain": "merchant:rules",
+  "text": "已驳回",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.approvalsTitle",
+  "domain": "merchant:rules",
+  "text": "配置审批",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.approveBtn",
+  "domain": "merchant:rules",
+  "text": "通过",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.approveConfirm",
+  "domain": "merchant:rules",
+  "text": "确认通过并立即应用该变更？",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.approveDone",
+  "domain": "merchant:rules",
+  "text": "已通过并生效（版本 v{version}）",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
   "key": "rules.caliberNote",
   "domain": "merchant:rules",
   "text": "小字口径：规则保存即生效；新规只约束生效后的单，不回溯历史月份与已快照数据。本页仅店主可见可改，每次修改全留痕。",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.changeAfter",
+  "domain": "merchant:rules",
+  "text": "改为",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.changeBefore",
+  "domain": "merchant:rules",
+  "text": "现值",
   "screen": "商家·规则配置管理",
   "position": "RulesConfigPage 页面内文案"
  },
@@ -15979,6 +16266,34 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "RulesConfigPage 页面内文案"
  },
  {
+  "key": "rules.effectiveAtHint",
+  "domain": "merchant:rules",
+  "text": "留空=保存即生效；填写未来时刻=到点自动生效（登记后可撤销）",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.effectiveAtLabel",
+  "domain": "merchant:rules",
+  "text": "生效时刻",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.effectiveSectionTitle",
+  "domain": "merchant:rules",
+  "text": "定时生效（可选）",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.errorFixFirst",
+  "domain": "merchant:rules",
+  "text": "有参数格式不正确，请先修正标红项",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
   "key": "rules.errorHint",
   "domain": "merchant:rules",
   "text": "仅店主可读取规则配置；请确认登录态后重试",
@@ -15996,6 +16311,34 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "rules.guideTitle",
   "domain": "merchant:rules",
   "text": "规则配置仅店主可用",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.historyActiveBadge",
+  "domain": "merchant:rules",
+  "text": "生效中",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.historyToggle",
+  "domain": "merchant:rules",
+  "text": "历史",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.inApprovalBadge",
+  "domain": "merchant:rules",
+  "text": "审批中",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.moneyBadge",
+  "domain": "merchant:rules",
+  "text": "涉钱",
   "screen": "商家·规则配置管理",
   "position": "RulesConfigPage 页面内文案"
  },
@@ -16031,6 +16374,146 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "rules.pageTitle",
   "domain": "merchant:rules",
   "text": "规则配置管理",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.proposeDone",
+  "domain": "merchant:rules",
+  "text": "已提交审批，复核通过才生效",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.proposeMixedNote",
+  "domain": "merchant:rules",
+  "text": "涉钱键已提交审批（复核通过才生效）；其余键请继续确认后直接保存生效",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.proposeOpen",
+  "domain": "merchant:rules",
+  "text": "提交审批",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.rejectBtn",
+  "domain": "merchant:rules",
+  "text": "驳回",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.rejectDone",
+  "domain": "merchant:rules",
+  "text": "已驳回",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.rejectNotePrompt",
+  "domain": "merchant:rules",
+  "text": "请输入驳回原因（必填）",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.rejectNoteRequired",
+  "domain": "merchant:rules",
+  "text": "驳回原因不能为空",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.reviewSave",
+  "domain": "merchant:rules",
+  "text": "复核并保存",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.rollbackBtn",
+  "domain": "merchant:rules",
+  "text": "回到此版",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.rollbackConfirm",
+  "domain": "merchant:rules",
+  "text": "回滚立即生效：{label} 回到 v{version}？（历史版本不动，新增回滚版本留痕）",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.rollbackDone",
+  "domain": "merchant:rules",
+  "text": "已回滚到 v{version} 并立即生效",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.saveBarMoneyNote",
+  "domain": "merchant:rules",
+  "text": "（含涉钱键 {n} 项须二级审批）",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.scheduledBadge",
+  "domain": "merchant:rules",
+  "text": "待生效 {time}",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.scheduledCancel",
+  "domain": "merchant:rules",
+  "text": "撤销",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.scheduledCancelDone",
+  "domain": "merchant:rules",
+  "text": "已撤销定时生效登记",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.scheduledRowNote",
+  "domain": "merchant:rules",
+  "text": "定时 v{version} · {time}",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.scheduledSaveDone",
+  "domain": "merchant:rules",
+  "text": "已登记定时生效 {time}",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.searchEmpty",
+  "domain": "merchant:rules",
+  "text": "无匹配规则",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.searchEmptyHint",
+  "domain": "merchant:rules",
+  "text": "换个关键词试试（按规则键名、名称、帮助注过滤）",
+  "screen": "商家·规则配置管理",
+  "position": "RulesConfigPage 页面内文案"
+ },
+ {
+  "key": "rules.searchPlaceholder",
+  "domain": "merchant:rules",
+  "text": "搜索规则（键名 / 名称 / 帮助注）",
   "screen": "商家·规则配置管理",
   "position": "RulesConfigPage 页面内文案"
  },

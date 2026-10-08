@@ -71,6 +71,31 @@ const CONSOLE_ADMIN_COPY_TABLE = {
   /* ---- 非 owner 引导（manager；clerk 由 ClerkRouteGuard 拦） ---- */
   'cadm.ownerOnlyTitle': '开发者管理端仅店主可用',
   'cadm.ownerOnlyBody': '端口配置与发布属店主专属（页内闸门 + server 硬闸门兜底）；请切换店主账号。',
+
+  /* ---- kill switch 显著态（端口批收尾片 1 · 件 4a：页顶横幅/小字行+双确认切换） ---- */
+  'cadm.killBannerOn': 'KILL SWITCH 生效中：线上支付通道等可关参数已回落安全值（{by} · {updatedAt}）',
+  'cadm.killRestore': '恢复',
+  'cadm.killRestoreConfirm': '确认恢复？可关参数将解除安全值回落。',
+  'cadm.killArmNote': '一键关停：线上支付通道等可关参数瞬时回落安全值（全局）。',
+  'cadm.killArm': '一键关停',
+  'cadm.killArmConfirm': '确认一键关停？线上支付通道等可关参数将瞬时回落安全值。',
+  'cadm.killDone': '全局开关已切换',
+
+  /* ---- D3 参数字典端口（端口批收尾片 1 · 件 5：config.dictionary 全量透出+服务端搜索） ---- */
+  'cadm.portDict': '参数字典',
+  'cadm.dictTitle': '参数字典',
+  'cadm.dictAside': '全参数域逐键透出 · 服务端搜索 · copy 域不收',
+  'cadm.dictSearchPlaceholder': '搜索参数（键名 / 名称 / 帮助注）',
+  'cadm.dictEmpty': '无匹配参数',
+  'cadm.dictError': '参数字典加载失败',
+  'cadm.dictMoneyBadge': '涉钱',
+  'cadm.dictDomainCommission': '提成',
+  'cadm.dictDomainXp': 'XP',
+  'cadm.dictDomainDuration': '时长',
+  'cadm.dictDomainRefund': '退款',
+  'cadm.dictDomainMemberPlans': '会员档',
+  'cadm.dictDomainService': '服务',
+  'cadm.dictDomainPay': '支付',
 } as const;
 
 export const CONSOLE_ADMIN_COPY = withCopyOverrides(CONSOLE_ADMIN_COPY_TABLE);

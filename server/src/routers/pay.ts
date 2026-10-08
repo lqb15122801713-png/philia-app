@@ -54,7 +54,7 @@ import {
 import type { DbHandle } from '../services/xpAward';
 import { customerProcedure, router } from '../trpc';
 import { storeDayStartMs, storeWallclock } from './appointment';
-import { resolveScopedRules } from './configRules';
+import { isKillSwitchOn, resolveScopedRules } from './configRules';
 import { withOrderWriteLock } from './mall';
 import { membershipChargeFen } from './membership';
 
@@ -120,8 +120,10 @@ async function loadPayTimeoutMinutes(d: DbHandle, storeId?: string | null): Prom
 }
 
 /** 线上支付通道开关：pay_rules active 行 pay_channel_enabled.enabled，缺行兜底 true（种子口径）。
- * 大批片 2 分层：同 loadPayTimeoutMinutes 的 storeId 口径 */
-async function loadPayChannelEnabled(d: DbHandle, storeId?: string | null): Promise<boolean> {
+ * 大批片 2 分层：同 loadPayTimeoutMinutes 的 storeId 口径；
+ * 端口批收尾片 1：kill switch 开=可关参数瞬时回落安全值（本函数恒 false=通道关） */
+export async function loadPayChannelEnabled(d: DbHandle, storeId?: string | null): Promise<boolean> {
+  if (await isKillSwitchOn(d)) return false;
   const rows = await d
     .select({ ruleKey: schema.payRules.ruleKey, valueJson: schema.payRules.valueJson, storeId: schema.payRules.storeId })
     .from(schema.payRules)
