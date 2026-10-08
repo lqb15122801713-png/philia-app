@@ -212,6 +212,18 @@ export default function MemberSearch({
               续费
             </button>
           ) : null}
+          {/* 会员链路小批片 1：已识别会员常驻「会员服务」入口（死路修通——面板按状态自动落页签：
+              非会员=售卡／active=升级或续费／frozen=续费解冻）；不加=forUser 真值口径 */}
+          {member ? (
+            <button
+              type="button"
+              data-testid="cashier-member-service-entry"
+              onClick={() => onOpenSell()}
+              className="inline-flex min-h-[44px] shrink-0 items-center gap-1 rounded-full bg-[#FFFDF6] px-3 py-1.5 text-caption-xs font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            >
+              {cc('cashier.memberServiceEntry')}
+            </button>
+          ) : null}
           <button
             type="button"
             data-testid="cashier-member-remove"

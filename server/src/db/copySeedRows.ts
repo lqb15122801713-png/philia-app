@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-07T16:35:29.028Z；键数=3873；归屏率=97.0%（未归屏 115）
+ * 生成时间口径：2026-10-08T04:18:11.103Z；键数=3873；归屏率=97.0%（未归屏 115）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -7614,18 +7614,18 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "MembershipPanel 组件内文案"
  },
  {
-  "key": "cashier.memberDiscountUnknown",
-  "domain": "merchant:cashier",
-  "text": "会员折扣由服务端结账时按档自动计算，折后价以成交为准（内测期档位读路径缺口）",
-  "screen": "商家·收银台",
-  "position": "CartPanel 组件内文案"
- },
- {
   "key": "cashier.memberNextPlanBadge",
   "domain": "merchant:cashier",
   "text": "已预约下期：{plan}",
   "screen": "商家·收银台",
   "position": "MemberSearch 组件内文案"
+ },
+ {
+  "key": "cashier.memberNonMember",
+  "domain": "merchant:cashier",
+  "text": "非会员 · 售卡即开通",
+  "screen": "商家·收银台",
+  "position": "MembershipPanel 组件内文案"
  },
  {
   "key": "cashier.memberPaySectionNote",
@@ -7670,11 +7670,11 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "MemberSearch 组件内文案"
  },
  {
-  "key": "cashier.memberStatusNote",
+  "key": "cashier.memberServiceEntry",
   "domain": "merchant:cashier",
-  "text": "会员状态以提交时 server 实算为准（内测期读路径缺口，错误原文透出）",
+  "text": "会员服务 ›",
   "screen": "商家·收银台",
-  "position": "MembershipPanel 组件内文案"
+  "position": "MemberSearch 组件内文案"
  },
  {
   "key": "cashier.offlineBar",

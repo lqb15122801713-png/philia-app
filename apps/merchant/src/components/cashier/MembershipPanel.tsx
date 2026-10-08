@@ -12,13 +12,17 @@
  *   续费金额由 server 按既有档位+宠物数实算——**读路径缺口报备**：无商家侧查询
  *   端点，先经 renew 空段探测解析错误原文「须等于续费金额（X 元）」取得应收，
  *   再收段提交（微光档探测即成交=免费续期）；
- * - 升级补差模式（补缺-3 商家端代办升档）：active 且存在更高档
- *   （upgradeQuoteForUser.targetPlans 非空）时亮「升级补差」页签；微光档（free）
- *   仍走售卡 mode 不动，frozen 档不显（先续费解冻）。试算区=server quote 值逐行
- *   明面（剩余整月×（新档月均价−旧档月均价）+ baseDiff/petDiff 分行，newPurchase 档标
+ * - 升级补差模式（补缺-3 商家端代办升档 + 会员链路小批片 1 死路修通）：active 且存在更高档
+ *   （upgradeQuoteForUser.targetPlans 非空）时亮「升级补差」页签——**微光档（free）同亮=新购口径**
+ *   （差价=新档全价/有效期重起算/不退卡不折算），frozen 档不显（先续费解冻）。试算区=server
+ *   quote 值逐行明面（剩余整月×（新档月均价−旧档月均价）+ baseDiff/petDiff 分行，newPurchase 档标
  *   「新购口径」），**前端零自算**；应收锁定=server totalDiffFen，到店付三段 Σ=差价
  *   提交 upgrade（server 兜底重算硬校验）；成功后留痕可视补差单号 billNo（mono），
  *   onSold 回写+forUser/quote 缓存失效刷新；
+ * - 售卡 mode 只对纯非会员开放（会员链路小批片 1：已识别会员含微光一律不走进售卡）；
+ * - 读路径缺口补掉（片 1）：选中客户即读会员状态（forUser 正式通道+缓存同帧），识别后
+ *   按状态自动落页签（非会员=售卡／active=升级或续费／frozen=续费解冻）；「读路径缺口」
+ *   两句登记文案随修撤牌（库内行留档，码内不再消费）；
  * - 成交=开通确认 toast + onSold 回写（父层缓存会员状态 + 流水/已收失效刷新）；
  *   server 错误一律原文透出（已是会员/多宠封顶/支付合计不符等）。
  *
@@ -28,7 +32,7 @@
 import { usePhiliaClient } from '@philia/shared'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { CreditCard, Minus, Plus, RefreshCcw } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { errMsg, fenToYuan, yuanToFen } from '@/components/mall-admin/format'
 import { cc } from '@/copy/cashier'
@@ -136,21 +140,44 @@ export default function MembershipPanel({
     enabled: open && member !== null,
   })
   const effStatus = (forUserQ.data ? forUserQ.data.membership : membership)?.status ?? null
-  /** 升级页签判定：active 且存在更高档（targetPlans 非空）；微光档（free）仍走售卡 mode 不动；
-      frozen 档不显（先续费解冻）；降级档 server 已过滤不出现 */
+  /** 升级页签判定：active 且存在更高档（targetPlans 非空）；微光档（free）=新购口径同亮
+     「升级补差」（差价=新档全价/有效期重起算，server computeUpgradeDiff 同帧——会员链路小批
+     片 1 死路修通：微光→付费=首次购卡，不再堵回售卡 mode）；frozen 档不显（先续费解冻）；
+     降级档 server 已过滤不出现 */
   const upgradeAvailable =
     member !== null &&
     effStatus === 'active' &&
     upgradeQuote !== null &&
     upgradeQuote.currentPlan !== null &&
-    upgradeQuote.currentPlan.free !== true &&
     upgradeQuote.targetPlans.length > 0
   /** 选中目标档（quote 重取后键失效时回退首档） */
   const selTarget =
     upgradeQuote?.targetPlans.find((t) => t.planKey === targetPlanKey) ??
     (mode === 'upgrade' ? (upgradeQuote?.targetPlans[0] ?? null) : null)
 
-  /* ---------------- 售卡金额（镜像 server membershipChargeFen：档价+多宠附加） ---------------- */
+  /** 识别后自动落页签（会员链路小批片 1 · 读路径缺口补掉：非会员=售卡／active=升级或续费／
+      frozen=续费解冻；手动切页签不回拽=deps 不含 mode） */
+  const effStatusForLand = effStatus
+  const upgradeAvailableForLand = upgradeAvailable
+  const memberIdForLand = member?.id ?? null
+  useEffect(() => {
+    if (!open) return
+    if (memberIdForLand === null) {
+      if (mode !== 'sell') setMode('sell')
+      return
+    }
+    if (effStatusForLand === 'frozen') {
+      if (mode !== 'renew') setMode('renew')
+      return
+    }
+    if (effStatusForLand === 'active') {
+      const next = upgradeAvailableForLand ? 'upgrade' : 'renew'
+      if (mode !== next) setMode(next)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, memberIdForLand, effStatusForLand, upgradeAvailableForLand])
+
+  /** 售卡金额（镜像 server membershipChargeFen：档价+多宠附加） */
   const extraCount = plan ? Math.max(0, petCount - plan.includedPets) : 0
   const extraFen = plan ? extraCount * plan.extraPetFen : 0
   const sellAmountFen = plan ? plan.priceFen + extraFen : 0
@@ -312,7 +339,7 @@ export default function MembershipPanel({
     <CashierModal
       open={open}
       onClose={onClose}
-      title="会员卡 · 售卡 / 续费"
+      title="会员卡 · 售卡 / 续费 / 升级补差"
       testid="membership-panel"
       footer={
         <>
@@ -378,9 +405,11 @@ export default function MembershipPanel({
         </>
       }
     >
-      {/* 模式页签（续费须先识别会员；升级补差=补缺-3 代办升档，成交留痕态下隐去） */}
+      {/* 模式页签（会员链路小批片 1：售卡只对纯非会员开放[已识别会员含微光一律不走进售卡]；
+          续费须先识别会员；升级补差=微光档=新购口径同亮；成交留痕态下隐去） */}
       {!upgradeDone ? (
       <div className="flex gap-1.5" role="tablist">
+        {member === null ? (
         <button
           type="button"
           role="tab"
@@ -391,6 +420,7 @@ export default function MembershipPanel({
         >
           售卡
         </button>
+        ) : null}
         <button
           type="button"
           role="tab"
@@ -432,8 +462,8 @@ export default function MembershipPanel({
                 {membership.petCount} 只 · 到期 {membership.expiresAt.getFullYear()}年{membership.expiresAt.getMonth() + 1}月{membership.expiresAt.getDate()}日
               </div>
             ) : (
-              <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
-                {cc('cashier.memberStatusNote')}
+              <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="membership-nonmember-note">
+                {cc('cashier.memberNonMember')}
               </div>
             )}
           </div>
