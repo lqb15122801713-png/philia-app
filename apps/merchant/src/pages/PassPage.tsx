@@ -56,7 +56,7 @@ type LogRow = {
 const DOT_INK = '#2E2318';
 const DOT_WOOD = '#B9A482';
 
-/** W-11 档色点（档色即身份 · 客户端 1.0 定稿 §1.3 档色谱：微光纸白/萤火淡金/烛光卡其铜/暖阳深棕） */
+/** W-11 档色点（档色即身份 · 客户端 1.0 定稿 §1.3 档色谱：注册用户纸白/萤火淡金/烛光卡其铜/暖阳深棕） */
 const PLAN_TIER_COLOR: Record<string, string> = {
   plan_weiguang: '#FBF6EA',
   plan_yinghuo: '#F2DFA6',

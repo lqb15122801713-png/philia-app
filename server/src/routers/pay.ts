@@ -33,7 +33,7 @@
  * - biz_domain 已实现 membership_open + membership_upgrade（会员链路片 2）；mall（既有
  *   orders/payments 链路）仍为枚举预留，createOrder 拒单（BAD_REQUEST）；
  * - 线上开通兑付=照 sell 的 memberships 写行工艺但 sold_store_id=NULL（线上域，报备）；
- * - 线上升级兑付=照 merchant upgrade 端点写行工艺（微光=新购口径全价+有效期重起算；
+ * - 线上升级兑付=照 merchant upgrade 端点写行工艺（注册用户=新购口径全价+有效期重起算；
  *   付费档=即时换档到期日不变+paid_fen=原实付+补差）但**无收银补差单**（线上域无店上下文：
  *   bill_no=NULL，补差留痕=membership_events.meta.payNo=支付单号）+sold_store_id=NULL；
  *   幂等=已是目标档零写入零单据（只置 paid）；
@@ -234,7 +234,7 @@ async function fulfillMembershipOpen(
  * membership_upgrade 兑付（事务内调用；会员链路片 2）：照 merchant upgrade 端点写行工艺，
  * 线上域差异两点——无收银补差单（bill_no=NULL，补差留痕=membership_events.meta.payNo=
  * 支付单号）、sold_store_id=NULL（报备同 membership_open）。
- * - 微光档=新购口径：started_at/expires_at 重起算、paid_fen=新档全价（含附加按现 petCount 重算）；
+ * - 注册用户档=新购口径：started_at/expires_at 重起算、paid_fen=新档全价（含附加按现 petCount 重算）；
  * - 付费档升档：即时生效新档（plan_key 换、paid_fen=原实付+补差；expires_at/pet_count 不动）；
  * - 幂等：已是目标档（同档重放/重复回调）→ 零写入零单据，membershipCreated=false（只置 paid）；
  * - 金额口径：diffFen=order.amountFen（创建时 computeUpgradeDiff server 重算快照；
@@ -272,7 +272,7 @@ async function fulfillMembershipUpgrade(
     .set(
       diff.formula.newPurchase
         ? {
-            /* 微光档=新购口径：开通时点重起算有效期，paid_fen=新档全价，线上域 sold_store_id=NULL */
+            /* 注册用户档=新购口径：开通时点重起算有效期，paid_fen=新档全价，线上域 sold_store_id=NULL */
             planKey: target.ruleKey,
             startedAt: now,
             expiresAt: new Date(now.getTime() + days * 24 * 3600 * 1000),
@@ -524,7 +524,7 @@ export const payRouter = router({
   /**
    * quote（customer）：金额试算透出——server 重算（membership_open=membershipChargeFen
    * 读 member_plans 同源，含多宠附加费+封顶；membership_upgrade=computeUpgradeDiff 同源，
-   * 微光档=新购口径全价、付费档=剩余整月折算补差）；附通道开关与超时时长（开通页明示）。
+   * 注册用户档=新购口径全价、付费档=剩余整月折算补差）；附通道开关与超时时长（开通页明示）。
    * 升级域 petCount 入参不适用（升档不改动宠物数，按现会员档案值重算附加）。
    */
   quote: customerProcedure
@@ -561,7 +561,7 @@ export const payRouter = router({
           renewal: null,
           upgrade: {
             fromPlanKey: m.planKey,
-            newPurchase: diff.formula.newPurchase, // true=微光档新购口径（全价+有效期重起算）
+            newPurchase: diff.formula.newPurchase, // true=注册用户档新购口径（全价+有效期重起算）
             remainingMonths: diff.remainingMonths,
             baseDiffFen: diff.baseDiffFen,
             petDiffFen: diff.petDiffFen,
@@ -633,7 +633,7 @@ export const payRouter = router({
    *   重复创建=返回现状 idempotent=true（协议不重复留痕）；
    * - 事务①：agreements 三行快照（content/version/checkedAt/userSnapshot 取证四要素）
    *   + pay_orders 落（amountFen=server 重算——membership_open=membershipChargeFen /
-   *   membership_upgrade=computeUpgradeDiff 差价（微光=新购口径全价），入参 amountFen
+   *   membership_upgrade=computeUpgradeDiff 差价（注册用户=新购口径全价），入参 amountFen
    *   一律不信直接忽略；升级域宠物数=现会员档案值（入参 petCount 不适用）；
    *   timeoutAt=now+端口时长；channel=provider 映射；idemKey=base 或 base+#a{N}）；
    * - 升级域收单闸：无会员档案 400（走开通域）/已是目标档 400/冻结档 400/期内不降级 400；

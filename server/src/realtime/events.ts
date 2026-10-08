@@ -63,7 +63,7 @@ export const EventType = {
   RefundRequestSubmitted: 'refundRequest.submitted', // 客户退款申请提交（补缺大批片 1 补发） → store
   RefundRequestApproved: 'refundRequest.approved',  // 客户退款申请批准（已生成 R12 退款单/商城售后） → store + user
   // 批次 R11a 会员前置批（双端同步）
-  MembershipOpened:      'membership.opened',       // 售卡/微光开档/线上开通兑付 → user + store
+  MembershipOpened:      'membership.opened',       // 售卡/注册用户开档/线上开通兑付 → user + store
   MembershipRenewed:     'membership.renewed',      // 续费解冻 → user
   MembershipCancelled:   'membership.cancelled',    // 退会（折算+清零留痕） → user + store
   // 补缺-3（46 号档+PD-07）：期内升档成交 → user（换档预约/取消走 membership_events 留痕，不发 SSE）

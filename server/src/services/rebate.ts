@@ -14,7 +14,7 @@
  *   故障顺延≤3 天页面明示）——grant 落 logs 时 balance 不动（before=after），
  *   可用余额只反映已到账（rebate_accounts.balance_fen）；
  * - grant 基数=商品实收−rebate 抵扣段（用回馈金付的部分不再返），×档位 rebate_bp/10000
- *   精确到分；无月上限；无会员/微光（rebate_bp=0）不写行；
+ *   精确到分；无月上限；无会员/注册用户（rebate_bp=0）不写行；
  * - deduct 仅已到账余额 1:1 扣，余额不足由调用方先判（本函数兜底 FORBIDDEN 如实）；
  * - clawback 扣回由 refund.ts 写（R12 冻结接口，不在本文件）；
  * - 月度结算 settleMonthly：Σ 上一期次未结算 grant 行 → rebate_settlements 批次单
@@ -301,7 +301,7 @@ async function writeLog(
 
 export interface GrantResult {
   grantedFen: number;
-  /** 命中档位（无会员=null；微光/零额返还在 grantedFen=0 时透出档位便于排查） */
+  /** 命中档位（无会员=null；注册用户/零额返还在 grantedFen=0 时透出档位便于排查） */
   planKey: string | null;
   /** true=同单已发过（幂等快路径，零副作用） */
   duplicated: boolean;
@@ -309,7 +309,7 @@ export interface GrantResult {
 
 /**
  * 商品行回馈金计提（收银台结账成交时点调用，同事务）：
- * - 仅 active 会员付费档返（rebate_bp>0）；无会员/微光/到期冻结 = 0 不写行；
+ * - 仅 active 会员付费档返（rebate_bp>0）；无会员/注册用户/到期冻结 = 0 不写行；
  * - grant = productFen（调用方已扣减 rebate 抵扣段口径：用回馈金付的部分不再返）
  *   × rebate_bp/10000，Math.round 精确到分；无月上限；
  * - 落 rebate_logs type='grant' 挂当期 period，**balance 不动**（before=after）
@@ -326,7 +326,7 @@ export async function grantOnProductSettled(
   const plans = await loadMemberPlans(d);
   const plan = plans.get(m.planKey);
   const bp = planNum(plan, 'rebate_bp', 0);
-  if (bp <= 0) return { grantedFen: 0, planKey: m.planKey, duplicated: false }; // 微光=0 不写行
+  if (bp <= 0) return { grantedFen: 0, planKey: m.planKey, duplicated: false }; // 注册用户=0 不写行
   const grantFen = Math.round((opts.productFen * bp) / 10000);
   if (grantFen <= 0) return { grantedFen: 0, planKey: m.planKey, duplicated: false };
 
@@ -595,7 +595,7 @@ export async function balanceOf(
 
 /**
  * 会员档位实时解析（收银台服务折扣 / 发放判定共用）：
- * active 且未到期 → { membership, plan }；否则 null（未识别/微光以外冻结/散客）。
+ * active 且未到期 → { membership, plan }；否则 null（未识别/注册用户以外冻结/散客）。
  */
 export async function memberPlanFor(
   d: DbHandle,

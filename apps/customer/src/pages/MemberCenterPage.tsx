@@ -280,7 +280,7 @@ function A3Body({
   const plan = (plans.find((p) => p.planKey === m.planKey) ?? my.plan ?? null) as V2Plan | null
   const tier = tierNameOf(m.planKey)
   const frozen = m.status === 'frozen'
-  /* PR-4 PD-05 件 1：免费档永久豁免——到期提醒条（30/7 天）对微光不渲染 */
+  /* PR-4 PD-05 件 1：免费档永久豁免——到期提醒条（30/7 天）对注册用户不渲染 */
   const isFreePlan = !!plan?.free
   const expiresAt = new Date(m.expiresAt)
   const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / DAY_MS)

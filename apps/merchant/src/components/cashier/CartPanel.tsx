@@ -97,7 +97,7 @@ export default function CartPanel({
   /** M1-补2 R2：改价/整单优惠闸门放宽至 owner|manager（server assertPriceEditAllowed 同档） */
   canEditPrice: boolean
   holding: boolean
-  /** R11a：会员服务折扣镜像（已知档位：bp + 档位短名；null=无折扣或微光） */
+  /** R11a：会员服务折扣镜像（已知档位：bp + 档位短名；null=无折扣或注册用户） */
   svcDiscount: { bp: number; planLabel: string } | null
   /** R11a 立省钩子（非会员当单 savingsPreview 实时算；null=不展示） */
   savings: { fen: number; text: string } | null

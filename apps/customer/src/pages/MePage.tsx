@@ -138,8 +138,8 @@ export default function MePage() {
               <span className="tier">{tierLabel}</span>
             </div>
             {membership ? (
-              /* 会员链路片 2 入口断链修通①：卡面入口按档分化——微光=「开通 ›」指开通页
-                 （注册即微光后全端购卡入口在此接通）；付费档=「续费 ›」指会员中心不变 */
+              /* 会员链路片 2 入口断链修通①：卡面入口按档分化——注册用户=「开通 ›」指开通页
+                 （注册即注册用户后全端购卡入口在此接通）；付费档=「续费 ›」指会员中心不变 */
               <Link to={isFreePlan ? '/member/open' : '/member'} className="renew" data-testid="me-renew-link">
                 {isFreePlan ? mc('me.cardOpenCta') : mc('me.cardRenewCta')}
               </Link>
@@ -165,9 +165,9 @@ export default function MePage() {
             <div data-testid="me-renew-countdown">
               {membership && isFreePlan ? (
                 <>
-                  {/* P1-3：免费档「永久有效」（mono 小字不上数字；付费档照显倒计时真值） */}
-                  <div className="v" style={{ fontSize: 15 }}>永久有效</div>
-                  <div className="k">会员有效期</div>
+                  {/* P1-3 免费档永久豁免 + 片 3 正名：「永久在册 / 账号在即在册 · 永不冻结」（端口键） */}
+                  <div className="v" style={{ fontSize: 15 }}>{mc('me.freeValidityValue')}</div>
+                  <div className="k">{mc('me.freeValidityNote')}</div>
                 </>
               ) : renewDaysLeft !== null ? (
                 <>

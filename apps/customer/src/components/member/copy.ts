@@ -44,6 +44,8 @@ const MEMBER_COPY_TABLE = {
   'j1.ledgerYearly': '一年',
   'j1.ledgerPets': '多宠覆盖',
   'j1.petsIncluded': '含 {n} 只',
+  /* 片 3 功能闸解除：注册用户档宠物建档全员不限（档案功能非会员权益） */
+  'j1.petsUnlimited': '建档不限',
   'j1.estimateNote': '按门店年均消费测算，轻松省回年费',
   'j1.compareLink': '对比四档权益 ›',
   'j1.compareTitle': '四档权益对比',
@@ -60,15 +62,19 @@ const MEMBER_COPY_TABLE = {
   'j1.ctaAlreadyMember': '已是会员 · 去会员中心 ›',
   /* 会员链路片 2：升档线上化（mock 域）——文案同步（续费仍到店既有链） */
   'j1.alreadyMember': '你已是会员（有效期至 {date}）。升档可线上自助办理，续费请到店收银台。',
-  /* PR-4 PD-05 件 1：微光态提示条不显示有效期（永久豁免，无到期语义）；
-     片 2②：微光不再分流——本页直达选档开通，文案改新购口径引导句 */
-  'j1.alreadyMemberFree': '你当前是微光免费档（永久有效）。选付费档开通即享回馈金与服务折扣——新购口径：全档价，有效期自开通重起算。',
+  /* PR-4 PD-05 件 1：注册用户态提示条不显示有效期（永久豁免，无到期语义）；
+     片 2②：注册用户不再分流——本页直达选档开通，文案改新购口径引导句；
+     片 3 更名：旧档名→注册用户 */
+  'j1.alreadyMemberFree': '你当前是注册用户（账号在即在册，永不冻结）。选付费档开通即享回馈金与服务折扣——新购口径：全档价，有效期自开通重起算。',
   /* 补缺批片 3：已是会员提示条下升级路径句（upgradeAvailable 时显，→/member/upgrade） */
   'j1.upgradeEntry': '升级更高档 ›',
   'j1.backMember': '回会员中心 ›',
   /* PR-5 UX P3-2：完成页下半屏配重——宠物档案引导（45 号档改进方向取实现净者） */
   'j1.doneGotoPets': '看看它的档案 ›',
-  'j1.freeOpenedTitle': '微光会员已开通',
+  'j1.freeOpenedTitle': '注册用户已开通',
+  /* 片 3 更名：开通页 toast 两键（原硬编码「旧档名会员已开通，欢迎加入」入端口） */
+  'j1.toastOpenedFree': '注册用户已开通，欢迎加入',
+  'j1.toastAlready': '你已是会员',
   /* 片 2：升档线上化——到店句改线上 */
   'j1.freeOpenedBody': '免费档即时生效{date}。升级萤火/烛光/暖阳可享商品回馈金与服务折扣，本页选档线上即可办理。',
   'j1.storePayTitle': '请到店完成开通',
@@ -110,7 +116,7 @@ const MEMBER_COPY_TABLE = {
   'q1.pendingBody': '到店报手机号即可享受会员权益；扫码核销通道开通后本页自动升级。',
   'q1.nonMemberPrice': '未开通',
   'q1.nonMemberClaim': '先领个身份，慢慢认识我们',
-  'q1.nonMemberGuide': '还不是会员：微光档免费，一键开通即会员；付费档到店收银台办理。',
+  'q1.nonMemberGuide': '还不是会员：注册用户免费在册，一键开通即享基础功能；付费档线上即可开通。',
   'q1.nonMemberCta': '开通会员 ›',
   'q1.passTitle': '次卡余额',
   'q1.passUnit': '次',
@@ -147,6 +153,8 @@ const MEMBER_COPY_TABLE = {
   /* ---- 权益墙 8 枚（档跟随） ---- */
   'perk.pets': '多宠覆盖',
   'perk.petsSub': '含 {n} 只',
+  /* 片 3 功能闸解除：注册用户档权益墙多宠格=建档不限（正名） */
+  'perk.petsSubFree': '建档不限',
   'perk.discount': '服务折扣',
   'perk.discountSub': '{zhe} 折',
   'perk.discountNone': '门市价',
@@ -166,9 +174,10 @@ const MEMBER_COPY_TABLE = {
 
   /* ---- 卡面 ---- */
   'card.logo': 'PHILIA · LOVE BOND LIFE',
-  'card.freePrice': '免费注册',
+  /* 会员链路片 3 更名货架首行口径：注册用户 · 免费 · 在册即享基础功能 */
+  'card.freePrice': '免费',
   'card.priceYear': '¥{price} / 年',
-  'card.claimWeiguang': '先领个身份，慢慢认识我们',
+  'card.claimWeiguang': '在册即享基础功能',
   'card.claimYinghuo': '一年，省下一顿火锅',
   'card.claimZhuguang': '每月一次眼耳甲，不用记',
   'card.claimNuanyang': '含 3 只毛孩子 · 都被叫得出名字',
@@ -176,7 +185,7 @@ const MEMBER_COPY_TABLE = {
   /* ---- 商城域（换皮批片 2 商城组新增：M-02/M-03 回馈金返显，口径 APP-18 按档返；
      数值（金额/到账日）全部经 {amt}/{day} 插值自端口，本表零数值硬编码） ---- */
   'mall.rebateEarnCard': '购买返 {amt} 回馈金 · 次月 {day} 日到账',
-  /* 体验急修批 B（任务卡 9-29）：微光/非会员返显钩子（不上假数——rebateBp=0 时替换「返 ¥x」），
+  /* 体验急修批 B（任务卡 9-29）：注册用户/非会员返显钩子（不上假数——rebateBp=0 时替换「返 ¥x」），
      点击→/member/open（J-01）；pcts=付费档比例读表（member_plans），缺省不渲染 */
   'mall.rebateHook': '付费档返 {pcts}% · 仅抵商品 ›',
   'mall.rebateEarnCardNoDay': '购买返 {amt} 回馈金',
@@ -215,11 +224,12 @@ const MEMBER_COPY_TABLE = {
   /* ---- 规则明面（红线 5：全量八条，数值读端口） ---- */
   'rules.title': '年费 ≠ 储值 · 到期不自动续费',
   'rules.r1': '回馈金比例 {pct}%（{tier}档）· 仅抵商品 · 单笔不设上限',
-  'rules.r1Free': '微光免费档无回馈金 · 付费档 {pcts}% · 仅抵商品',
+  'rules.r1Free': '注册用户免费档无回馈金 · 付费档 {pcts}% · 仅抵商品',
   'rules.r2': '上月 26 日 – 本月 25 日结算 · 次月 {day} 日前到账（故障顺延 ≤3 天并明示）',
   'rules.r3': '{days} 天有效 · 到期未续冻结 · 续费即解冻 · 退卡清零',
-  /* PR-4 PD-05 件 1：规则明面 r3 微光态换口径——免费档永久普通会员，无到期无冻结 */
-  'rules.r3Free': '免费档永久有效 · 无到期无冻结 · 随时可升级付费档',
+  /* PR-4 PD-05 件 1：规则明面 r3 注册用户态换口径——免费档永久在册，无到期无冻结；
+     片 3 正名：账号在即在册·永不冻结 */
+  'rules.r3Free': '账号在即在册 · 永不冻结 · 随时可开通付费档',
   'rules.r4': '回馈金不提现 · 不转让 · 不产息',
   'rules.r5': '用回馈金支付的部分不再返还',
   'rules.r6': '退货按退款比例扣回已返回馈金，余额不足扣至 0 不负账',
@@ -270,7 +280,7 @@ const MEMBER_COPY_TABLE = {
   'up.emptyTitle': '当前没有可升档位',
   'up.emptyTopTier': '已是最高档，权益已全部点亮。',
   'up.nonMemberTitle': '开通会员后可升档',
-  'up.nonMemberBody': '先开通会员（微光档免费一键开通），再按需要升档。',
+  'up.nonMemberBody': '先开通会员（注册用户免费在册，一键开通），再按需要升档。',
   'up.nonMemberCta': '去开通会员 ›',
   'up.loadFail': '升级试算加载失败',
 
@@ -294,7 +304,7 @@ const MEMBER_COPY_TABLE = {
   'chg.cancelCta': '取消预约',
   'chg.cancelling': '取消中…',
   'chg.execNote': '到期日到店续费时按预约档全价收款；取消或改约不影响当前权益。',
-  'chg.freeNote': '免费档永久有效，无到期换档；升档即时生效请走升级页。',
+  'chg.freeNote': '注册用户永久在册 · 账号在即在册永不冻结 · 无到期换档；升档即时生效请走升级页。',
   'chg.freeCta': '去升级页 ›',
   'chg.nonMemberTitle': '开通会员后可预约下期档位',
   'chg.nonMemberCta': '去开通会员 ›',
@@ -304,9 +314,12 @@ const MEMBER_COPY_TABLE = {
 
   /* saved.* 今年已省（A-3 账区行 + A-4 me-saved-slot 点亮 + 构成明面弹层，两源分明） */
   'saved.slotTitle': '今年已省',
-  /* 会员链路片 2①：「我的」卡面入口按档分化（微光=开通 › 指开通页；付费档=续费 › 不变） */
+  /* 会员链路片 2①：「我的」卡面入口按档分化（注册用户=开通 › 指开通页；付费档=续费 › 不变） */
   'me.cardOpenCta': '开通 ›',
   'me.cardRenewCta': '续费 ›',
+  /* 片 3 有效期永久正名（修订页 V1.0 #5）：免费档倒计时格=「永久在册 / 账号在即在册 · 永不冻结」 */
+  'me.freeValidityValue': '永久在册',
+  'me.freeValidityNote': '账号在即在册 · 永不冻结',
   'saved.rowLine': '今年已省 ¥{total} ›',
   'saved.meSlotNote': '构成明面',
   'saved.sheetTitle': '今年已省 · 构成明面',

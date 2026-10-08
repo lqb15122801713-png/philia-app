@@ -74,7 +74,7 @@ function ProductCard({
                 {mlc('mall.rebateLine', { amt: fenToYuan(rebateFen) })}
               </span>
             ) : hookText ? (
-              /* 体验急修批 B：微光/非会员=规则钩子（不上假数），点击→/member/open（J-01） */
+              /* 体验急修批 B：注册用户/非会员=规则钩子（不上假数），点击→/member/open（J-01） */
               <span
                 role="link"
                 tabIndex={0}

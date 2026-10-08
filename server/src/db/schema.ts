@@ -2522,7 +2522,7 @@ export const refundRequests = sqliteTable(
 
 /**
  * 会员档位配置表（R11a §一，同构 commission_rules，配置端口第四+域 domain='member_plans'）：
- * 种子 version=1——四档（微光 free / 萤火 199·2%·88折 / 烛光 299·5%·85折 / 暖阳 599·10%·8折，
+ * 种子 version=1——四档（注册用户 free / 萤火 199·2%·88折 / 烛光 299·5%·85折 / 暖阳 599·10%·8折，
  * 多宠全档统一：含 3 只、第 4 只起 +¥59/年/只、10 只封顶）+ 回馈金次月 5 日到账 /
  * 回馈金有效期 365 天 / 会员有效期 365 天。保存即生效+版本化留痕，新值只管新单不回溯。
  */
@@ -2553,7 +2553,7 @@ export const memberPlans = sqliteTable(
 
 /**
  * 会员实例表（R11a §一）：一行=一个用户的一张有效年卡。
- * - 微光自助开档 sold_store_id=NULL（或注册店）；付费三档售卡单 sold_store=bill.store_id
+ * - 注册用户自助开档 sold_store_id=NULL（或注册店）；付费三档售卡单 sold_store=bill.store_id
  *   （决策 #41 双归属：售卡店=sold_store，消费店=cashier_bills.store_id，注释写死口径）；
  * - expires_at=开通日+membership_validity_days（默认 365 天），开通时算定不重算；
  * - 到期冻结 status='frozen'（回馈金余额在不可用）/续费解冻/退会 cancelled+清零留痕
@@ -2569,7 +2569,7 @@ export const memberships = sqliteTable(
       .references(() => users.id),
     /** 档位键（plan_weiguang/plan_yinghuo/plan_zhuguang/plan_nuanyang -> member_plans.rule_key） */
     planKey: text('plan_key').notNull(),
-    /** 办卡门店 ID -> stores.id（微光自助开档=NULL 或注册店；付费档=售卡单消费店） */
+    /** 办卡门店 ID -> stores.id（注册用户自助开档=NULL 或注册店；付费档=售卡单消费店） */
     soldStoreId: text('sold_store_id').references(() => stores.id),
     /**
      * 会员多店归属留口（商家端大批片 1 连锁地基 · 0050）：归属门店 ID -> stores.id。
@@ -2608,7 +2608,7 @@ export const memberships = sqliteTable(
 
 /**
  * 会员事件留痕表（补缺-3 · 46 号档+PD-07，只增不改审计账）：
- * - type='upgrade'：期内升档/微光新购口径升档（fromPlan/toPlan/diffFen=补差分/billNo=升级补差单号）；
+ * - type='upgrade'：期内升档/注册用户新购口径升档（fromPlan/toPlan/diffFen=补差分/billNo=升级补差单号）；
  * - type='change_schedule'：到期换档预约/覆盖/取消/到期执行（meta.cancelled=true 取消；
  *   meta.executed=true 到期 renew 执行落档）；
  * - type='cancel_rebuy_note'：防滥用留痕（退会后 member_cancel_cooldown_days 天内重购 /
@@ -2628,7 +2628,7 @@ export const membershipEvents = sqliteTable(
     fromPlan: text('from_plan'),
     /** 目标档位键（取消预约事件为 NULL） */
     toPlan: text('to_plan'),
-    /** 补差价（分；仅 upgrade 有值，微光新购口径=新档全价含附加） */
+    /** 补差价（分；仅 upgrade 有值，注册用户新购口径=新档全价含附加） */
     diffFen: integer('diff_fen'),
     /** 关联收银单号（升级补差单 / 换档执行续费单 / 重购售卡单；可空） */
     billNo: text('bill_no'),

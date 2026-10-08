@@ -5,9 +5,9 @@
  * 卡即选择器（§4.8）：deck 横滑 scroll-snap 居中 + 点卡选档，三格账/权益墙/CTA 档跟随
  * （data 驱动）；对比四档权益=底部弹层（§4.5 三件套）；吸底 CTA（§4.1 页内吸底非弹窗）。
  *
- * 功能逻辑（四铁律）：微光→openFree 一键开档（幂等）；付费档 CTA→/member/checkout 线上
+ * 功能逻辑（四铁律）：注册用户→openFree 一键开档（幂等）；付费档 CTA→/member/checkout 线上
  * 确认订单（补缺批片 6 线上收单骨架；到店办理降级为旁路链接，guide 到店指引步保留）；
- * 已是会员按档分化（会员链路片 2②）：微光档不分流——直达选档开通流程（默认选中推荐
+ * 已是会员按档分化（会员链路片 2②）：注册用户档不分流——直达选档开通流程（默认选中推荐
  * 付费档），付费档=提示条+回会员中心 CTA。数值全读 member_plans 端口（冻结值 88/85/8），
  * 文案全走文案键（copy.ts）。
  */
@@ -40,7 +40,7 @@ import {
 
 type Step = 'select' | 'guide' | 'done'
 
-/** 档色条（对比弹层用；与 cf-t0~t3 色谱同源 §1.3；微光=白卡色仅作卡面） */
+/** 档色条（对比弹层用；与 cf-t0~t3 色谱同源 §1.3；注册用户=白卡色仅作卡面） */
 const TIER_SWATCH: Record<string, string> = {
   plan_nuanyang: 'linear-gradient(135deg,#433225,#2A1F15)',
   plan_zhuguang: 'linear-gradient(135deg,#B39A6E,#8F7850)',
@@ -71,7 +71,7 @@ export default function MemberOpenPage() {
     onSuccess: (r) => {
       setDoneOpened(true)
       setStep('done')
-      showToast(r.idempotent ? '你已是会员' : '微光会员已开通，欢迎加入', 'info')
+      showToast(r.idempotent ? mc('j1.toastAlready') : mc('j1.toastOpenedFree'), 'info')
       void queryClient.invalidateQueries({ queryKey: ['membership'] })
     },
     onError: (err) => showToast(friendlyError(err, '开通失败，请稍后再试'), 'error'),
@@ -90,7 +90,7 @@ export default function MemberOpenPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plans.length])
   const selected = plans[deck.active] ?? null
-  /* 会员链路片 2 入口断链修通②：微光档不再分流「已是会员→去会员中心」——直达选档开通
+  /* 会员链路片 2 入口断链修通②：注册用户档不再分流「已是会员→去会员中心」——直达选档开通
      流程（deck 默认选中末位=推荐付费档）；付费档会员才提示「已是会员」并回会员中心 */
   const memberFree = !!(myQ.data?.plan as V2Plan | null)?.free
   const alreadyMember = !!myQ.data?.membership
@@ -115,7 +115,7 @@ export default function MemberOpenPage() {
       ) : step === 'select' && selected ? (
         <>
           {/* 已是会员提示条（不挡流程；PR-4 PD-05 件 1：免费档不显示有效期）。
-              片 2②：微光=信息条照常（文案=新购口径引导句），CTA 不分流——直达选档开通；
+              片 2②：注册用户=信息条照常（文案=新购口径引导句），CTA 不分流——直达选档开通；
               付费档=提示条+回会员中心 CTA（升级路径句保留指升级页） */}
           {alreadyMember && myQ.data?.membership ? (
             <div className="m2-pad" style={{ marginTop: 10 }}>
@@ -127,7 +127,7 @@ export default function MemberOpenPage() {
                     })}
               </TipCard>
               {/* 补缺批片 3：升级路径句（upgradeAvailable=true 才显，→/member/upgrade）；
-                  片 2②：微光档本页即开通流程，不再给升级页跳转（直达） */}
+                  片 2②：注册用户档本页即开通流程，不再给升级页跳转（直达） */}
               {paidMember && myQ.data.upgradeAvailable ? (
                 <div style={{ textAlign: 'center', marginTop: 8 }}>
                   <button type="button" className="m2-link" data-testid="open-upgrade-entry" onClick={() => navigate('/member/upgrade')}>
@@ -171,7 +171,8 @@ export default function MemberOpenPage() {
               cells={[
                 { v: selected.free ? '—' : `¥${dailyOf(selected.priceFen)}`, k: mc('j1.ledgerDaily') },
                 { v: selected.free ? '¥0' : `¥${(selected.priceFen / 100).toFixed(0)}`, k: mc('j1.ledgerYearly') },
-                { v: mc('j1.petsIncluded', { n: selected.includedPets }), k: mc('j1.ledgerPets') },
+                /* 片 3 功能闸解除：注册用户档=建档不限（不读 includedPets 数） */
+                { v: selected.free ? mc('j1.petsUnlimited') : mc('j1.petsIncluded', { n: selected.includedPets }), k: mc('j1.ledgerPets') },
               ]}
             />
             {/* 测算注（CJ-0923-16③：文案键占位默认软文案） */}
@@ -201,7 +202,7 @@ export default function MemberOpenPage() {
             />
           </div>
 
-          {/* 吸底 CTA（页内形态非弹窗）：付费档会员=回会员中心；微光/非会员=选档开通直达 */}
+          {/* 吸底 CTA（页内形态非弹窗）：付费档会员=回会员中心；注册用户/非会员=选档开通直达 */}
           <div className="m2-ctabar">
             <div className="m2-ctabar-in">
               {paidMember ? (
@@ -223,7 +224,7 @@ export default function MemberOpenPage() {
                     disabled={openFreeM.isPending}
                     data-testid={selected.free ? 'open-free-btn' : 'open-pick-cta'}
                     onClick={() => {
-                      /* 补缺批片 6：付费档 CTA=跳线上确认订单（Mock 通道收单）；微光=一键开档 */
+                      /* 补缺批片 6：付费档 CTA=跳线上确认订单（Mock 通道收单）；注册用户=一键开档 */
                       if (selected.free) openFreeM.mutate()
                       else navigate(`/member/checkout?plan=${selected.planKey}`)
                     }}
@@ -275,7 +276,7 @@ export default function MemberOpenPage() {
                 />
                 <div style={{ flex: 1 }}>
                   <div className="anm">
-                    {tierNameOf(p.planKey)} {p.free ? '· 免费注册' : `¥${(p.priceFen / 100).toFixed(0)}/年`}
+                    {tierNameOf(p.planKey)} {p.free ? `· ${mc('card.freePrice')}` : `¥${(p.priceFen / 100).toFixed(0)}/年`}
                   </div>
                   <div className="ad">
                     {p.free
@@ -287,8 +288,8 @@ export default function MemberOpenPage() {
                         })}
                   </div>
                 </div>
-                {/* 会员链路片 2③：四档对比 CTA 同口径接通——付费档→确认订单（微光/非会员同路径），
-                    免费档=一键开通（微光已是=「当前档」注记）；付费档会员不画（走升级页） */}
+                {/* 会员链路片 2③：四档对比 CTA 同口径接通——付费档→确认订单（注册用户/非会员同路径），
+                    免费档=一键开通（注册用户已是=「当前档」注记）；付费档会员不画（走升级页） */}
                 {!paidMember ? (
                   p.free ? (
                     alreadyMember ? (
@@ -401,7 +402,7 @@ function StorePayGuide({
 }
 
 /* ------------------------------------------------------------------ */
-/* 完成页（骨架版第 3 步件化：微光=已开通 / 付费档=到店办理确认）               */
+/* 完成页（骨架版第 3 步件化：注册用户=已开通 / 付费档=到店办理确认）               */
 /* ------------------------------------------------------------------ */
 
 function DonePanel({

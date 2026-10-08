@@ -52,7 +52,7 @@ export type MemberUpgradeQuote = RouterOutputs['membership']['upgradeQuoteForUse
 
 /** 档位短名（plan.label 为权益长文案，签/卡题用短名） */
 export const PLAN_SHORT_LABEL: Record<string, string> = {
-  plan_weiguang: '微光',
+  plan_weiguang: '注册用户',
   plan_yinghuo: '萤火',
   plan_zhuguang: '烛光',
   plan_nuanyang: '暖阳',

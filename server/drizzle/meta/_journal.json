@@ -463,6 +463,13 @@
       "when": 1791443652536,
       "tag": "0068_member_link2_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "6",
+      "when": 1791451200000,
+      "tag": "0069_member_link3_rename",
+      "breakpoints": true
     }
   ]
 }
