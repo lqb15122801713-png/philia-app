@@ -392,11 +392,16 @@ export const marketingRouter = router({
   promoStackRules: merchantManagerProcedure.query(async ({ ctx }) => {
     const storeId = ctx.user.storeId!;
     const keys = ['coupon_stack_rule', 'promo_stack_campaign_coupon', 'promo_stack_campaign_member', 'promo_stack_multi_campaign'] as const;
+    /* OP-03 P2-3（端口批收尾片 4）：公示只留人话——枚举值→中文映射 server 透出（加性字段）；
+       键名收 Tooltip/注释（页面侧），key 不再进公示文案 */
+    const RULE_LABEL: Record<string, string> = { none: '不叠加', allow: '可叠加' };
     const out: Record<string, unknown> = {};
     for (const k of keys) {
-      out[k] = await ruleVal(ctx.db, k, storeId, k === 'coupon_stack_rule' ? { rule: 'none', note: '优惠券不与会员折扣叠加；每单限用 1 张（公示口径）' } : { rule: 'none' });
+      const v = await ruleVal(ctx.db, k, storeId, k === 'coupon_stack_rule' ? { rule: 'none', note: '优惠券不与会员折扣叠加；每单限用 1 张（公示口径）' } : { rule: 'none' });
+      const rule = typeof (v as Record<string, unknown>).rule === 'string' ? ((v as Record<string, unknown>).rule as string) : 'none';
+      out[k] = { ...(v as Record<string, unknown>), ruleLabel: RULE_LABEL[rule] ?? rule };
     }
-    return { rules: out, note: '逐项开关=端口值公示（config.save 可改，门店覆盖优先于总部下发）' };
+    return { rules: out, note: '逐项开关=端口值公示（config.save 可改，门店覆盖优先于总部下发；ruleLabel=公示人话映射，键名见页面注释）' };
   }),
 
   /* ------------------------------------------------------------------ */

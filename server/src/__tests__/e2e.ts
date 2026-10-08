@@ -171,8 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 3869 键/72 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70→端口批收尾片 2（网格/订正/回收站/公告两步流 UI 92 键，生成件重生成 3762+seed 手补 1=3763，corr 域新入=71 域）3763/71→端口批收尾片 3（画布/试算/调整/录码/克隆/绑码 UI 106 键，生成件重生成 3868+seed 手补 1=3869，canvas 域新入=72 域）3869/72）；
+ *      56.1 种子 3874 键/72 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70→端口批收尾片 2（网格/订正/回收站/公告两步流 UI 92 键，生成件重生成 3762+seed 手补 1=3763，corr 域新入=71 域）3763/71→端口批收尾片 3（画布/试算/调整/录码/克隆/绑码 UI 106 键，生成件重生成 3868+seed 手补 1=3869，canvas 域新入=72 域）3869/72→端口批收尾片 4（OP-03 收口：+7 键 −撤 perk.boarding 两键[宇宙只增不改口径=仓行留档]，生成件重生成 3873+seed 手补 1=3874）3874/72）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -4933,17 +4933,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602）→ 3671/70（端口批收尾片 1：规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）→ 3763/71（端口批收尾片 2：0062 网格/订正/回收站/公告 92 键，生成件重生成 3762+seed 手补 1=3763，域 70→71=corr 新域）→ 3869/72（端口批收尾片 3：0065 画布/薪资/扫码 106 键，生成件重生成 3868+seed 手补 1=3869，域 71→72=canvas 新域） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602）→ 3671/70（端口批收尾片 1：规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）→ 3763/71（端口批收尾片 2：0062 网格/订正/回收站/公告 92 键，生成件重生成 3762+seed 手补 1=3763，域 70→71=corr 新域）→ 3869/72（端口批收尾片 3：0065 画布/薪资/扫码 106 键，生成件重生成 3868+seed 手补 1=3869，域 71→72=canvas 新域）→ 3874/72（端口批收尾片 4：0066 OP-03 收口 7 键增+perk.boarding 两键撤渲染[仓行留档]，生成件重生成 3873+seed 手补 1=3874） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（3869 键/72 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 3869 && domainSet.size === 72 &&
+  check('56.1 copy 域种子全量落库（3874 键/72 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 3874 && domainSet.size === 72 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（3869 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 3869 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（3874 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 3874 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -7362,8 +7362,13 @@ async function main(): Promise<void> {
 
   /* ---------- 68.5 会员码（签发/核验/篡改/过期） ---------- */
   console.log('\n[片3] 68.5 会员码');
-  const card685nonMember = await asErr(trpcMutate('membership.myCardToken', { cookie: cookie683 }));
-  check('68.5 非会员签发 → 400 明文「非会员无会员码」',
+  /* 端口批收尾片 4（OP-03 P1-1 注册即会员裁定）注记：devLoginPhone 注册路径新用户今起
+     开户连带落微光档——原「非会员」前提改为「直插库用户（未经 HTTP 注册）」守错误路径，
+     注册即会员新口径由族 86.1 正面断言（同裁定两面，不双标） */
+  const rawUser685 = (await db.insert(schema.users).values({ kimiId: 'seed_e2e_card685raw', nickname: '会员码负例685', phone: '19966680005' }).returning({ id: schema.users.id }))[0]!;
+  await db.insert(schema.userRoles).values({ userId: rawUser685.id, role: 'customer' });
+  const card685nonMember = await asErr(trpcMutate('membership.myCardToken', { cookie: await devLogin(rawUser685.id) }));
+  check('68.5 非会员签发 → 400 明文「非会员无会员码」（直插库未经 HTTP 注册=无连带落档）',
     card685nonMember instanceof TrpcHttpError && card685nonMember.httpStatus === 400 && card685nonMember.message.includes('非会员'),
     card685nonMember && card685nonMember.message);
   await trpcMutate('membership.openFree', { cookie: cookie684 });
@@ -8637,8 +8642,8 @@ async function main(): Promise<void> {
 
     /* ---- 76.3 公共读口形状不变（不透元数据：键→文两列） ---- */
     const texts76 = await trpcQuery<{ rows: Array<{ key: string; text: string; screen?: unknown; position?: unknown }> }>('config.activeCopyTexts', { cookie: customerCookie });
-    check('76.3 activeCopyTexts 形状不变（3869 行 key→text，不透 screen/position 元数据）',
-      texts76.rows.length === 3869 &&
+    check('76.3 activeCopyTexts 形状不变（3874 行 key→text，不透 screen/position 元数据）',
+      texts76.rows.length === 3874 &&
       texts76.rows.every((r) => r.screen === undefined && r.position === undefined),
       texts76.rows.length);
 
@@ -10279,6 +10284,111 @@ async function main(): Promise<void> {
       adjB.items.length === 0 && reviewCross instanceof TrpcHttpError && reviewCross.httpStatus === 404 &&
       liveB.blocks === null && glB.live === null,
       { adjB: adjB.items.length, liveB: liveB.blocks, glB: glB.live });
+  }
+
+  /* ==================================================================
+   * 端口批收尾 片 4（OP-03 修复 8 件收口 · 批内末片）段：
+   *   86.1 P1-1 注册即会员（开户连带落档）；86.2 P1-2 撤寄养折扣文案；
+   *   86.3 P2-1 待办合计双位同值（全量语义实证）；86.4 P2-2 安心包要货口排除；
+   *   86.5 P2-3 公示口 ruleLabel 人话映射；86.6 P3-2 生效值双列 defaultText；
+   *   86.7 权限闸；86.8 隔离族不回退
+   * ================================================================== */
+  console.log('\n[端口批片4] 86. OP-03 八件收口');
+  {
+    type AnyRec86 = Record<string, unknown>;
+
+    /* ---- 86.1 P1-1 注册即会员（自助开户连带落微光档，两段并一段） ---- */
+    const res861 = await fetch(`${BASE}/api/auth/dev-login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ phone: '19900000086' }),
+    });
+    const setCookie861 = res861.headers.getSetCookie().map((c) => c.split(';')[0]).join('; ');
+    const my861 = await trpcQuery<{ membership: { status: string } | null; plan: { planKey: string } | null }>('membership.my', { cookie: setCookie861 });
+    const memberRows861 = await db.select().from(schema.memberships)
+      .where(eq(schema.memberships.userId, (await db.select().from(schema.users).where(eq(schema.users.phone, '19900000086')).then((r) => r[0]!)).id));
+    check('86.1 P1-1 注册即会员：新号自助开户=登录即成会员（membership.my 有档 active，零手动开档动作）+单档不重复',
+      res861.status === 200 && my861.membership?.status === 'active' && my861.plan !== null && memberRows861.length === 1 &&
+      memberRows861[0]!.soldStoreId === null,
+      { status: res861.status, mstatus: my861.membership?.status, plan: my861.plan?.planKey, rows: memberRows861.length });
+
+    /* ---- 86.2 P1-2 撤寄养折扣文案（27 号档本无此项） ---- */
+    const texts862 = await trpcQuery<{ rows: Array<{ key: string; text: string }> }>('config.activeCopyTexts', { cookie: customerCookie });
+    const mp862 = await trpcQuery<{ rules: Array<{ ruleKey: string; valueJson: Record<string, unknown>; active: boolean }> }>('config.list', { cookie: ownerCookie, input: { domain: 'member_plans' } });
+    const wg862 = mp862.rules.find((i) => i.ruleKey === 'plan_weiguang' && i.active);
+    check('86.2 P1-2 撤文案：perk.boarding/perk.boardingSub 两键全域零渲染（读口无键）+微光档 service_discount_bp=10000（门市价单源，无 9 折残留）',
+      !texts862.rows.some((r) => r.key === 'perk.boarding' || r.key === 'perk.boardingSub') &&
+      (wg862?.valueJson.service_discount_bp as number | undefined) === 10000,
+      { hasBoarding: texts862.rows.some((r) => r.key.startsWith('perk.boarding')), wg: wg862?.valueJson.service_discount_bp });
+
+    /* ---- 86.3 P2-1 待办合计双位同值（全量语义实证：未来 pending 也计入） ---- */
+    const svc863 = (await db.select().from(schema.services).limit(1))[0]!;
+    const pet863 = (await db.select().from(schema.pets).limit(1))[0]!;
+    const tomorrow863 = new Date(Date.now() + 26 * 3600 * 1000);
+    await db.insert(schema.appointments).values({
+      code: 'E2E86P1', storeId, customerId: customerUser.id, petId: pet863.id, serviceId: svc863.id, type: 'grooming',
+      status: 'pending', priceFen: 10000, scheduledStart: tomorrow863, scheduledEnd: new Date(tomorrow863.getTime() + 3600_000),
+    });
+    const stats863 = await trpcQuery<{ todo: { pending: number; unassigned: number; cancelRequested: number; unpaid: number; total: number } }>('store.dashboardStats', { cookie: ownerCookie });
+    const chain863 = await trpcQuery<{ stores: Array<{ storeId: string; todoTotal: number }>; total: { todoTotal: number } }>('store.chainDashboard', { cookie: ownerCookie });
+    const rowA863 = chain863.stores.find((r) => r.storeId === storeId)!;
+    check('86.3 P2-1 双位同值：chainDashboard todoTotal === dashboardStats todo.total（本店行+合计双位）+未来 pending 入待办（全量语义）',
+      rowA863.todoTotal === stats863.todo.total && chain863.total.todoTotal === stats863.todo.total && stats863.todo.pending >= 1,
+      { chain: rowA863.todoTotal, stats: stats863.todo.total, pending: stats863.todo.pending });
+
+    /* ---- 86.4 P2-2 安心包要货口排除（与收银台选购同闸） ---- */
+    const care864 = await trpcMutate<{ id: string }>('mall.upsertProduct', {
+      cookie: ownerCookie,
+      input: { category: 'care_package', name: 'e2e 安心包下架件', priceFen: 3000, stock: 3, status: 'off' },
+    });
+    const srcNoFlag = await trpcQuery<{ items: Array<{ id: string; category: string }> }>('mall.listProductsForStore', { cookie: managerCookie, input: { pageSize: 200 } });
+    const srcWithFlag = await trpcQuery<{ items: Array<{ id: string; category: string }> }>('mall.listProductsForStore', { cookie: managerCookie, input: { includeCarePackage: true, pageSize: 200 } });
+    check('86.4 P2-2 要货/调拨源（不传 flag=页面口径）：care_package 全排除（off 件亦不见）；raw 口传 flag=文档行为在案',
+      !srcNoFlag.items.some((p) => p.category === 'care_package') && !srcNoFlag.items.some((p) => p.id === care864.id) &&
+      srcWithFlag.items.some((p) => p.id === care864.id),
+      { noFlag: srcNoFlag.items.filter((p) => p.category === 'care_package').length, withFlag: srcWithFlag.items.some((p) => p.id === care864.id) });
+    await db.delete(schema.products).where(eq(schema.products.id, care864.id));
+
+    /* ---- 86.5 P2-3 公示口 ruleLabel 人话映射 ---- */
+    /* 注记：83.5 自动回滚（幂等锚=只撤最新一手）会把窗口内「改+复原」对的复原一并撤掉——
+       coupon_stack_rule 可能停在非枚举测试值（观察项入卷候裁，不改 83.5 语义）；先复原再断言 */
+    await trpcMutate('config.save', { cookie: ownerCookie, input: { domain: 'service', changes: [{ ruleKey: 'coupon_stack_rule', valueJson: { rule: 'none', note: '优惠券不与会员折扣叠加；每单限用 1 张（公示口径）' } }] } });
+    const stack865 = await trpcQuery<{ rules: Record<string, { rule: string; ruleLabel?: string }> }>('marketing.promoStackRules', { cookie: managerCookie });
+    const entries865 = Object.entries(stack865.rules);
+    check('86.5 P2-3 公示只留人话：四条键全带 ruleLabel 中文映射（不叠加/可叠加）+映射值不含英文键名',
+      entries865.length === 4 && entries865.every(([, v]) => typeof v.ruleLabel === 'string' && /^(不叠加|可叠加)$/.test(v.ruleLabel!) &&
+        !v.ruleLabel!.includes('coupon_stack_rule') && !v.ruleLabel!.includes('promo_stack')),
+      { labels: entries865.map(([k, v]) => `${k.split('_')[0]}=${v.ruleLabel}`) });
+
+    /* ---- 86.6 P3-2 生效值双列 defaultText ---- */
+    interface CopyRow86 { ruleKey: string; version: number; valueJson: Record<string, unknown>; defaultText: string | null; active: boolean }
+    const copyList861 = await trpcQuery<{ rules: CopyRow86[] }>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
+    const casesRowBefore = copyList861.rules.find((r) => r.ruleKey === 'home.casesTitle' && r.active)!;
+    await trpcMutate('config.save', { cookie: ownerCookie, input: { domain: 'copy', changes: [{ ruleKey: 'home.casesTitle', valueJson: { text: '双列实证件（e2e）' } }] } });
+    const copyList862 = await trpcQuery<{ rules: CopyRow86[] }>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
+    const casesRowAfter = copyList862.rules.find((r) => r.ruleKey === 'home.casesTitle' && r.active)!;
+    if (casesRowBefore.defaultText) {
+      await trpcMutate('config.save', { cookie: ownerCookie, input: { domain: 'copy', changes: [{ ruleKey: 'home.casesTitle', valueJson: { text: casesRowBefore.defaultText } }] } });
+    }
+    check('86.6 P3-2 双列数据源：defaultText=种子原文透出（已改键 默认≠生效 双值对照/未改键 默认=生效）',
+      typeof casesRowBefore.defaultText === 'string' && casesRowBefore.defaultText.length > 0 &&
+      casesRowAfter.defaultText === casesRowBefore.defaultText &&
+      (casesRowAfter.valueJson.text as string) === '双列实证件（e2e）' && casesRowAfter.valueJson.text !== casesRowAfter.defaultText,
+      { def: casesRowBefore.defaultText, cur: casesRowAfter.valueJson.text });
+
+    /* ---- 86.7 权限闸 ---- */
+    const clerkStack = await asErr(trpcQuery('marketing.promoStackRules', { cookie: clerkCookie }));
+    const mgrStack = await trpcQuery<{ rules: Record<string, unknown> }>('marketing.promoStackRules', { cookie: managerCookie });
+    check('86.7 权限闸：promoStackRules clerk 403 / manager 200（公示读口 manager 复核面）',
+      clerkStack instanceof TrpcHttpError && clerkStack.httpStatus === 403 && Object.keys(mgrStack.rules).length === 4);
+
+    /* ---- 86.8 隔离族不回退（B 店互盲+新户会员自域） ---- */
+    const ownerB86 = await db.select().from(schema.users).where(eq(schema.users.kimiId, 'seed_e2e_chain_ownerb')).limit(1).then((r) => r[0]!);
+    const ownerBCookie86 = await devLogin(ownerB86.id);
+    const chainB86 = await trpcQuery<{ stores: Array<{ storeId: string; todoTotal: number }> }>('store.chainDashboard', { cookie: ownerCookie });
+    const rowB86 = chainB86.stores.find((r) => r.storeId !== storeId);
+    check('86.8 隔离族不回退：B 店行 todoTotal=0（A 待办不透 B；86.1 新档 soldStoreId=NULL 骨架批双归属口径在 86.1 已断）',
+      (rowB86?.todoTotal ?? 0) === 0, { bTodo: rowB86?.todoTotal });
   }
 
   client.close();

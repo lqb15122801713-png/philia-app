@@ -13,6 +13,7 @@
 
 import { Skeleton } from '@philia/shared'
 import { MoreHorizontal } from 'lucide-react'
+import { useState } from 'react'
 import { cc } from '@/copy/cashier'
 import { Link } from 'react-router-dom'
 import {
@@ -64,6 +65,8 @@ export default function HoldPanel({
   onVoid: (bill: BillListRow) => void
 }) {
   const recent = (todayBills ?? []).slice(0, 5)
+  /* OP-03 P3-1（端口批收尾片 4）：挂单队列折叠态（默认前 5 张） */
+  const [holdExpanded, setHoldExpanded] = useState(false)
 
   return (
     <>
@@ -96,7 +99,9 @@ export default function HoldPanel({
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            {(held ?? []).map((b) => (
+            {/* OP-03 P3-1（端口批收尾片 4）：挂单队列折叠——默认前 5 张，「全部 {N} ›」
+                点开显全量+「收起 ›」（照今日流水区 slice+全部 模式） */}
+            {(holdExpanded ? (held ?? []) : (held ?? []).slice(0, 5)).map((b) => (
               <div
                 key={b.id}
                 role="button"
@@ -154,6 +159,26 @@ export default function HoldPanel({
                 </button>
               </div>
             ))}
+            {!holdExpanded && (held ?? []).length > 5 ? (
+              <button
+                type="button"
+                data-testid="cashier-hold-expand"
+                onClick={() => setHoldExpanded(true)}
+                className="rounded-[16px] bg-[#F1E8D4] px-3.5 py-2.5 text-center text-caption-xs font-semibold text-[rgba(59,46,36,.62)] transition-colors hover:text-ink"
+              >
+                {cc('cashier.holdExpand', { n: (held ?? []).length })}
+              </button>
+            ) : null}
+            {holdExpanded ? (
+              <button
+                type="button"
+                data-testid="cashier-hold-collapse"
+                onClick={() => setHoldExpanded(false)}
+                className="rounded-[16px] bg-[#F1E8D4] px-3.5 py-2.5 text-center text-caption-xs font-semibold text-[rgba(59,46,36,.62)] transition-colors hover:text-ink"
+              >
+                {cc('cashier.holdCollapse')}
+              </button>
+            ) : null}
           </div>
         )}
         <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]">{cc('cashier.holdFooter')}</p>

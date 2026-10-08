@@ -239,9 +239,7 @@ const PERK_ICONS = [
     <circle cx="12" cy="12" r="8" />
     <circle cx="12" cy="12" r="3" />
   </g>,
-  /* 寄养折扣（屋） */
-  <path key="h" d="M4 11l8-6 8 6v8a1 1 0 01-1 1h-5v-6h-4v6H5a1 1 0 01-1-1z" />,
-  /* 年度档案 */
+  /* 年度档案（OP-03 P1-2：寄养折扣行整撤，屋形图标随行撤保持索引对齐） */
   <g key="a">
     <rect x="5" y="4" width="14" height="16" rx="2" />
     <path d="M9 9h6M9 13h6M9 17h4" />
@@ -250,6 +248,10 @@ const PERK_ICONS = [
 
 export function PerksWall({ plan }: { plan: V2Plan }) {
   const zhe = zheOf(plan.serviceDiscountBp)
+  /* 端口批收尾片 4 · OP-03 P1-2：寄养折扣行整撤（27 号档本无此项=撤文案裁）——
+     权益墙 8 枚收 7 枚；PERK_ICONS[6]（屋形寄养图标）随行撤保持索引对齐；
+     注册表 mc.perksWall.copyKeys 声明 perk.boarding 为写死件不动（同 home.entryNote
+     留口先例：键不在码内=零渲染零副作用） */
   const items = [
     { t: mc('perk.pets'), s: mc('perk.petsSub', { n: plan.includedPets }) },
     { t: mc('perk.discount'), s: zhe ? mc('perk.discountSub', { zhe }) : mc('perk.discountNone') },
@@ -257,8 +259,6 @@ export function PerksWall({ plan }: { plan: V2Plan }) {
     { t: mc('perk.groomer'), s: mc('perk.groomerSub') },
     { t: mc('perk.birthday'), s: mc('perk.birthdaySub') },
     { t: mc('perk.skin'), s: mc('perk.skinSub') },
-    /* 端口批收尾片 3：perk.boarding=注册表 copyKeys 键位（CK 挂锚） */
-    { t: mc('perk.boarding'), s: zhe ? mc('perk.boardingSub', { zhe }) : mc('perk.discountNone'), ck: 'perk.boarding' },
     { t: mc('perk.archive'), s: mc('perk.archiveSub') },
   ]
   return (
@@ -268,7 +268,7 @@ export function PerksWall({ plan }: { plan: V2Plan }) {
           <div className="ic">
             <svg viewBox="0 0 24 24">{PERK_ICONS[i]}</svg>
           </div>
-          <div className="t">{'ck' in it && it.ck ? <CK k={it.ck}>{it.t}</CK> : it.t}</div>
+          <div className="t">{it.t}</div>
           <div className="s">{it.s}</div>
         </div>
       ))}

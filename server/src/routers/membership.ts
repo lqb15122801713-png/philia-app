@@ -449,6 +449,44 @@ function parseMemberCardToken(token: string): { uid: string; planKey: string; ex
   return { uid: parts[0]!, planKey: parts[1]!, expSec };
 }
 
+/**
+ * 落微光档共用函数（OP-03 P1-1 修复 · 端口批收尾片 4）：openFree 落档内核——
+ * 自助开户（auth/devLogin）/微信静默开户（auth/wechatMini）/openFree 三处同调，两段并一段
+ * （老板 10-07「注册即微光会员」口径；勿新写落档口=调用点一律走本函数）。
+ * 幂等：已有 active/frozen 会员=返回现状不重建；默认档读全局键 default_plan_key
+ * （端口可改，键值指向不存在档行回退 plan_weiguang 防断链）；回馈金账户一人一本预建。
+ * 返回 { membership, created }（created=false=幂等命中）。
+ */
+export async function openFreeMembershipCore(
+  d: DbHandle,
+  userId: string,
+  now: Date,
+): Promise<{ membership: unknown; created: boolean }> {
+  const existing = await currentMembership(d, userId, now);
+  if (existing) return { membership: existing, created: false };
+  const plans = await loadMemberPlans(d);
+  const days = planNum(plans.get('membership_validity_days'), 'days', 365);
+  const configuredDefault = planStr(plans.get('default_plan_key'), 'value', 'plan_weiguang');
+  const defaultPlanKey = plans.has(configuredDefault) ? configuredDefault : 'plan_weiguang';
+  const openingPlan = plans.get(defaultPlanKey);
+  const row = await d
+    .insert(schema.memberships)
+    .values({
+      userId,
+      planKey: defaultPlanKey,
+      soldStoreId: null, // 微光自助开档无办卡店（决策 #41 双归属：NULL 或注册店，骨架批=NULL）
+      startedAt: now,
+      expiresAt: isFreePlanRow(openingPlan) ? FREE_PLAN_EXPIRES_AT : new Date(now.getTime() + days * 24 * 3600 * 1000),
+      status: 'active',
+      petCount: 0,
+      paidFen: 0,
+    })
+    .returning()
+    .then((r) => r[0]!);
+  await ensureRebateAccount(d, userId, now); // 回馈金账户一人一本预建（余额 0）
+  return { membership: row, created: true };
+}
+
 export const membershipRouter = router({
   /**
    * plans（public）：member_plans active 行透出——客户端开通页/收银台售卡区共用。
@@ -678,40 +716,13 @@ export const membershipRouter = router({
    * 读表默认 365 天，status=active）。
    * 手机号即会员=用户本身（users 行即会员身份，无需另建档案）。
    * 幂等：已有 active/frozen 会员直接返回现状；退会（cancelled）后可重新开通。
+   * OP-03 P1-1：落档内核=openFreeMembershipCore（自助/微信开户同调，两段并一段）。
    */
   openFree: customerProcedure.mutation(async ({ ctx }) => {
     const now = new Date();
     return ctx.db.transaction(async (tx) => {
-      const t = txDb(tx);
-      const existing = await currentMembership(t, ctx.user.id, now);
-      if (existing) return { membership: existing, idempotent: true as const };
-      const plans = await loadMemberPlans(t);
-      const days = planNum(plans.get('membership_validity_days'), 'days', 365);
-      /* PR-4 PD-05 件 2：注册默认档端口化——硬编码 plan_weiguang 改读全局键
-       * default_plan_key（0016 种子行已在库；配置端口/API 可改，版本化留痕同族）。
-       * 键值指向不存在的档行时回退 plan_weiguang（防端口误配致开档断链）。 */
-      const configuredDefault = planStr(plans.get('default_plan_key'), 'value', 'plan_weiguang');
-      const defaultPlanKey = plans.has(configuredDefault) ? configuredDefault : 'plan_weiguang';
-      /* 补缺修复小批 P1-3：免费档 expiresAt 置远端 2099（数据层永久有效，与「永久有效」文案同帧） */
-      const openingPlan = plans.get(defaultPlanKey);
-      const row = await t
-        .insert(schema.memberships)
-        .values({
-          userId: ctx.user.id,
-          planKey: defaultPlanKey,
-          soldStoreId: null, // 微光自助开档无办卡店（决策 #41 双归属：NULL 或注册店，骨架批=NULL）
-          startedAt: now,
-          expiresAt: isFreePlanRow(openingPlan)
-            ? FREE_PLAN_EXPIRES_AT
-            : new Date(now.getTime() + days * 24 * 3600 * 1000),
-          status: 'active',
-          petCount: 0,
-          paidFen: 0,
-        })
-        .returning()
-        .then((r) => r[0]!);
-      await ensureRebateAccount(t, ctx.user.id, now); // 回馈金账户一人一本预建（余额 0）
-      return { membership: row, idempotent: false as const };
+      const r = await openFreeMembershipCore(txDb(tx), ctx.user.id, now);
+      return { membership: r.membership, idempotent: !r.created };
     });
   }),
 

@@ -101,10 +101,11 @@ export default function TransfersPage() {
     return (id: string) => m.get(id) ?? id;
   }, [storesQ.data]);
 
-  /* ---- 商品集合（调拨行/要货品选择共用） ---- */
+  /* ---- 商品集合（调拨行/要货品选择共用；OP-03 P2-2：安心包独立库存域只读件——
+     与收银台选购同闸 care_package 全排除，普通要货调拨不出现） ---- */
   const productsQ = useQuery({
     queryKey: ['transfers', 'products'],
-    queryFn: () => trpc.mall.listProductsForStore.query({ includeCarePackage: true, page: 1, pageSize: 200 }),
+    queryFn: () => trpc.mall.listProductsForStore.query({ page: 1, pageSize: 200 }),
     enabled: role.canManage,
   });
   const products = useMemo(() => productsQ.data?.items ?? [], [productsQ.data]);

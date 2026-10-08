@@ -214,6 +214,10 @@ const CASHIER_COPY_TABLE = {
   'cashier.scanDone': '已识别会员（码通道带出=档位/状态为主）',
   'cashier.scanNote': '码通道带出=档位/状态为主（次卡/储值/预约数请走手机号检索）',
   'cashier.scanFail': '会员码核验失败',
+
+  /* ---- OP-03 P3-1（端口批收尾片 4）：挂单队列折叠钮 ---- */
+  'cashier.holdExpand': '全部 {n} ›',
+  'cashier.holdCollapse': '收起 ›',
   'cashier.peripheralNote': '扫码枪/钱箱/客显外设=PWA 上限明面注记，能到哪儿到哪儿',
 
   /* ---- 片 3：小票打印 / 补打（ReceiptPage）---- */
