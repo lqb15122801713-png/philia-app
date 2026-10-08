@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-08T09:09:47.856Z；键数=3886；归屏率=97.0%（未归屏 115）
+ * 生成时间口径：2026-10-08T13:50:53.903Z；键数=3887；归屏率=97.0%（未归屏 115）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -4354,7 +4354,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "card.claimNuanyang",
   "domain": "member",
-  "text": "含 3 只毛孩子 · 都被叫得出名字",
+  "text": "多只毛孩子 · 都被叫得出名字",
   "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
@@ -7022,6 +7022,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "canvas.noStore",
   "domain": "merchant:canvas",
   "text": "门店未解析（预览店锚缺失，布局读取已跳过）",
+  "screen": "商家·开发者管理端",
+  "position": "CanvasPortBody 组件内文案"
+ },
+ {
+  "key": "canvas.previewPortMap",
+  "domain": "merchant:canvas",
+  "text": "{\"7202\":\"7200\",\"7201\":\"7200\"}",
   "screen": "商家·开发者管理端",
   "position": "CanvasPortBody 组件内文案"
  },

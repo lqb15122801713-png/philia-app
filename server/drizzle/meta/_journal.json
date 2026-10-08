@@ -470,6 +470,13 @@
       "when": 1791451200000,
       "tag": "0069_member_link3_rename",
       "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "6",
+      "when": 1791465600000,
+      "tag": "0070_prod_hotfix_keys",
+      "breakpoints": true
     }
   ]
 }

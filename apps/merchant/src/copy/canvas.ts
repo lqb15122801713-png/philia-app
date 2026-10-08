@@ -59,6 +59,10 @@ const CANVAS_COPY_TABLE = {
   /* ---- 通用 ---- */
   'canvas.noStore': '门店未解析（预览店锚缺失，布局读取已跳过）',
   'canvas.loadFail': '画布数据加载失败',
+  /* 急修 1008（两问闸①留口）：画布预览端口分端映射表（JSON 串：当前端端口→客户端端口；
+     生产实测拓扑=7202 商家/7201 员工→7200 客户；改拓扑零代码——端口值即改即生效）。
+     注：本键是结构化配置值（非展示文案），勿加文案修饰词。 */
+  'canvas.previewPortMap': '{"7202":"7200","7201":"7200"}',
 } as const;
 
 export const CANVAS_COPY = withCopyOverrides(CANVAS_COPY_TABLE);
