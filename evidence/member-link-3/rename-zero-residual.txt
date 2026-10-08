@@ -1,0 +1,19 @@
+# 片 3 更名零残留三通道实证（2026-10-08 施工后终态）
+
+## 通道 1：码内（server/apps/packages，ts/tsx，排除 node_modules）
+命中数=0（探针字面量亦拼串防自命中）
+
+## 通道 2：种子（copySeedRows.ts 生成件 + seed.ts）
+copySeedRows 命中=0；seed.ts 命中=0
+
+## 通道 3：端口值（e2e 89.1 断言=config.activeCopyTexts 全量零旧名+member_plans label=会员档·注册用户，绿证=gate-e2e-green1/2.log；生产端口值通道部署后产品侧抽核）
+
+## 协议文本（PAY_AGREEMENTS 三份全文）零命中=0 → 无需升版（口径=涉字样才升版）
+
+## 判「留」件（军规=已部署迁移永不重写，仓行留档）：
+server/drizzle/0023_free_plan_expires_2099.sql
+server/drizzle/0024_copy_overrides.sql
+server/drizzle/0027_copy_skeleton_keys.sql
+server/drizzle/0068_member_link2_keys.sql
+
+（0069 本片新迁移亦零旧名命中=0）

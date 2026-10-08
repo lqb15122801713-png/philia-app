@@ -1,0 +1,48 @@
+{
+  "allOk": true,
+  "checks": [
+    {
+      "name": "注册用户登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "帧 1 我的卡面：徽标=注册用户+「开通 ›」+永久在册格（账号在即在册 · 永不冻结）+零旧名",
+      "ok": true,
+      "detail": "{\"tier\":\"注册用户\",\"openCta\":\"开通 ›\",\"validityValue\":\"永久在册\",\"validityNote\":\"账号在即在册 · 永不冻结\",\"noOldName\":true}"
+    },
+    {
+      "name": "帧 2 开通页首卡=注册用户 · 免费 · 在册即享基础功能（三格账多宠格=建档不限）",
+      "ok": true,
+      "detail": "{\"cardName\":\"PHILIA · LOVE BOND LIFE\\n注册用户\\n免费\\n在册即享基础功能\",\"ledgerPets\":true,\"noOldName\":true}"
+    },
+    {
+      "name": "帧 3 对比弹层：注册用户行=「注册用户 · 免费」+当前档注记+付费档开通 CTA 同口径接通",
+      "ok": true,
+      "detail": "{\"rowRegistered\":true,\"currentTag\":true,\"paidCta\":true,\"noOldName\":true}"
+    },
+    {
+      "name": "帧 4 券全员可领：注册用户领券钮可点（未限付费档）→ 点击后转已领",
+      "ok": true,
+      "detail": "{\"a\":{\"btn\":\"领取\",\"disabled\":false},\"b\":{\"btn\":\"已领取\",\"my\":true}}"
+    },
+    {
+      "name": "帧 5 会员中心：注册用户态主 CTA=免费在册 · 随时升级+权益墙多宠格=建档不限+零旧名",
+      "ok": true,
+      "detail": "{\"freeCta\":true,\"petsUnlimited\":true,\"noOldName\":true}"
+    },
+    {
+      "name": "帧 6 协议中心：会员服务协议在列+涉旧名字样零命中（PAY_AGREEMENTS 无需升版注记）",
+      "ok": true,
+      "detail": "{\"hasAgreement\":true,\"noOldName\":true}"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\memberlink3\\member-link-3-evidence\\01-me-registered-card.png",
+    "E:\\KIMI code\\tmp\\memberlink3\\member-link-3-evidence\\02-open-first-card-registered.png",
+    "E:\\KIMI code\\tmp\\memberlink3\\member-link-3-evidence\\03-compare-sheet-registered.png",
+    "E:\\KIMI code\\tmp\\memberlink3\\member-link-3-evidence\\04-coupons-registered-claim.png",
+    "E:\\KIMI code\\tmp\\memberlink3\\member-link-3-evidence\\05-member-center-registered.png",
+    "E:\\KIMI code\\tmp\\memberlink3\\member-link-3-evidence\\06-agreements-no-rename-impact.png"
+  ]
+}

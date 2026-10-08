@@ -1,0 +1,189 @@
+server/drizzle/0023_free_plan_expires_2099.sql:2:-- （CJ-0925-10④ 微光=永久普通会员；读侧「永久有效」文案与数据层同帧；PR-4 件 1 懒冻结豁免兼容）。
+server/drizzle/0024_copy_overrides.sql:452:  ('j1.freeOpenedTitle', 'member', '微光会员已开通'),
+server/drizzle/0024_copy_overrides.sql:506:  ('q1.nonMemberGuide', 'member', '还不是会员：微光档免费，一键开通即会员；付费档到店收银台办理。'),
+server/drizzle/0024_copy_overrides.sql:518:  ('rules.r1Free', 'member', '微光免费档无回馈金 · 付费档 {pcts}% · 仅抵商品'),
+server/drizzle/0024_copy_overrides.sql:553:  ('up.nonMemberBody', 'member', '先开通会员（微光档免费一键开通），再按需要升档。'),
+server/drizzle/0024_copy_overrides.sql:1048:  ('checkout.freePlanBody', 'pay', '微光档一键开通即可，无需进入支付流程。'),
+server/drizzle/0027_copy_skeleton_keys.sql:436:  ('j1.freeOpenedTitle', 'member', '微光会员已开通'),
+server/drizzle/0027_copy_skeleton_keys.sql:490:  ('q1.nonMemberGuide', 'member', '还不是会员：微光档免费，一键开通即会员；付费档到店收银台办理。'),
+server/drizzle/0027_copy_skeleton_keys.sql:502:  ('rules.r1Free', 'member', '微光免费档无回馈金 · 付费档 {pcts}% · 仅抵商品'),
+server/drizzle/0027_copy_skeleton_keys.sql:537:  ('up.nonMemberBody', 'member', '先开通会员（微光档免费一键开通），再按需要升档。'),
+server/drizzle/0027_copy_skeleton_keys.sql:1032:  ('checkout.freePlanBody', 'pay', '微光档一键开通即可，无需进入支付流程。'),
+server/drizzle/0068_member_link2_keys.sql:39:UPDATE `copy_overrides` SET `value_json` = json_object('text', '你当前是微光免费档（永久有效）。选付费档开通即享回馈金与服务折扣——新购口径：全档价，有效期自开通重起算。'), `updated_at` = unixepoch() WHERE `rule_key` = 'j1.alreadyMemberFree' AND `active` = 1;
+server/src/auth/devLogin.ts:124:      /* OP-03 P1-1（端口批收尾片 4 · 老板 10-07「注册即微光会员」口径）：开户事务连带落微光档
+server/src/auth/wechatMini.ts:133:    /* OP-03 P1-1（端口批收尾片 4 · 老板 10-07「注册即微光会员」口径）：开户事务连带落微光档
+server/src/db/copySeedRows.ts:4679:  "text": "你当前是微光免费档（永久有效）。选付费档开通即享回馈金与服务折扣——新购口径：全档价，有效期自开通重起算。",
+server/src/db/copySeedRows.ts:4791:  "text": "微光会员已开通",
+server/src/db/copySeedRows.ts:5274:  "text": "还不是会员：微光档免费，一键开通即会员；付费档到店收银台办理。",
+server/src/db/copySeedRows.ts:5386:  "text": "微光免费档无回馈金 · 付费档 {pcts}% · 仅抵商品",
+server/src/db/copySeedRows.ts:5631:  "text": "先开通会员（微光档免费一键开通），再按需要升档。",
+server/src/db/copySeedRows.ts:19904:  "text": "微光档一键开通即可，无需进入支付流程。",
+server/src/db/schema.ts:2525: * 种子 version=1——四档（微光 free / 萤火 199·2%·88折 / 烛光 299·5%·85折 / 暖阳 599·10%·8折，
+server/src/db/schema.ts:2556: * - 微光自助开档 sold_store_id=NULL（或注册店）；付费三档售卡单 sold_store=bill.store_id
+server/src/db/schema.ts:2572:    /** 办卡门店 ID -> stores.id（微光自助开档=NULL 或注册店；付费档=售卡单消费店） */
+server/src/db/schema.ts:2611: * - type='upgrade'：期内升档/微光新购口径升档（fromPlan/toPlan/diffFen=补差分/billNo=升级补差单号）；
+server/src/db/schema.ts:2631:    /** 补差价（分；仅 upgrade 有值，微光新购口径=新档全价含附加） */
+server/src/db/seed.ts:413:      commissionSeed('commission_card_fixed', '年费会员售卡定额：萤火199→5元/单、烛光299→10元/单、暖阳599→20元/单、微光免费档无提成', { fixed_fen_by_plan: { '萤火199': 500, '烛光299': 1000, '暖阳599': 2000, '微光免费档': 0 } }),
+server/src/db/seed.ts:483:     * 四档数值照 27 号档照转：微光免费（无回馈金无折扣）/萤火 ¥199·2%·88折/烛光 ¥299·5%·85折/
+server/src/db/seed.ts:501:      planSeed('plan_weiguang', '会员档·微光：免费档（手机号即会员）；无回馈金、无服务折扣；安心包全员免费（钩子仅权益表述，微光不设钩子）', { free: true, price_fen: 0, rebate_bp: 0, service_discount_bp: 10000, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, renew_discount_bp: 10000, advance_book_days: 3 }),
+server/src/realtime/events.ts:66:  MembershipOpened:      'membership.opened',       // 售卡/微光开档/线上开通兑付 → user + store
+server/src/routers/appointment.ts:142: * .advance_book_days（端口可调，保存即生效只管新单）；非会员=微光档 3 天口径；
+server/src/routers/appointment.ts:999:      // create 按下单人（customer 本人）档位；微光 3 天 / 萤火·烛光 7 天 / 暖阳 14 天
+server/src/routers/cashier.ts:458:  /* 当前识别会员档折扣 bp（无会员/微光=10000，公式恒等于门市价故天然不匹配改价） */
+server/src/routers/cashier.ts:525: * 未识别/散客/微光（bp=10000）=门市价原价。hold/settle 在 computeAmounts 前调用。
+server/src/routers/cashier.ts:536:  if (bp >= 10000) return; // 微光无折扣（红线 7）
+server/src/routers/cashier.ts:1792:           * 仅 active 付费档返（微光/散客/到期冻结=0 不写行）；grant 挂期次余额不动，
+server/src/routers/commission.ts:10: *   commission_card_fixed.fixed_fen_by_plan 定额计提（萤火 500/烛光 1000/暖阳 2000/微光 0，
+server/src/routers/commission.ts:342: * （萤火199/烛光299/暖阳599/微光免费档）；配置端口若改用 plan_key 作键也兼容——
+server/src/routers/commission.ts:347:  plan_weiguang: '微光免费档',
+server/src/routers/index.ts:78:  membership: membershipRouter, // 批次 R11a 会员前置批（档位透出/微光开档/售卡/续费/退会/立省钩子/年费分摊双口径）
+server/src/routers/membership.ts:11: * - openFree         微光一键注册（customer；免费 0 元，手机号即会员=用户本身，幂等）
+server/src/routers/membership.ts:18: *                    quoteUpgrade 内部函数；期内降级档不出现；微光=新购口径）
+server/src/routers/membership.ts:22: *                    微光档=新购口径全价+重起算有效期+sold_store 补办理店）
+server/src/routers/membership.ts:85:/* 补缺修复小批 P1-3：免费档数据层永久有效（CJ-0925-10④ 微光=永久普通会员）      */
+server/src/routers/membership.ts:283: *  会员链路片 2 导出：pay 域 membership_upgrade 微光判定同源复用 */
+server/src/routers/membership.ts:335:    /** true=微光档新购口径（差价=新档全价+附加按现 petCount 重算，无剩余整月折算） */
+server/src/routers/membership.ts:346: * - 微光档（=default_plan_key 读档判断）=新购口径：差价=新档全价+多宠附加按现 petCount 重算，
+server/src/routers/membership.ts:403:    /* 期内只升不降：降级档不出现（微光=新购口径不受限，任意付费档皆可升） */
+server/src/routers/membership.ts:455: * 落微光档共用函数（OP-03 P1-1 修复 · 端口批收尾片 4）：openFree 落档内核——
+server/src/routers/membership.ts:457: * （老板 10-07「注册即微光会员」口径；勿新写落档口=调用点一律走本函数）。
+server/src/routers/membership.ts:479:      soldStoreId: null, // 微光自助开档无办卡店（决策 #41 双归属：NULL 或注册店，骨架批=NULL）
+server/src/routers/membership.ts:534:        guide: '开通会员享商品回馈金与服务折扣；微光档免费，一键开通（手机号即会员）',
+server/src/routers/membership.ts:716:   * openFree（customer）：微光一键注册——免费档 0 元开档（paid_fen=0，
+server/src/routers/membership.ts:736:   *   封顶硬校验）；微光档 price=0 → 0 元单直接成交（paySegments 须为空）；
+server/src/routers/membership.ts:832:              /* 补缺修复小批 P1-3：免费档（收银台 0 元售微光同口径）expiresAt 置远端 2099 */
+server/src/routers/membership.ts:983:   * （targetPlans 过滤）；微光档=新购口径（remainingMonths=0，totalDiffFen=档全价+附加重算）。
+server/src/routers/membership.ts:1004:   * - 微光档（default_plan_key 读档判断）=新购口径：差价=新档全价（多宠附加按现 petCount
+server/src/routers/membership.ts:1075:                    /* 微光档=新购口径：开通时点重起算有效期，paid_fen=新档全价（含附加），sold_store 补=办理店 */
+server/src/routers/membership.ts:1452:   *   微光线上开档 sold_store_id=NULL **进全店合计**（本店合计一并计入）——
+server/src/routers/membership.ts:1453:   *   数值零影响（微光 paid_fen=0），口径统一；连锁期归属口径留痕待连锁合批。
+server/src/routers/membership.ts:1486:            /* Y7 本店口径（PD-03 件 2）+ PR-4 OP-01②：办卡店=本店 ∪ 微光线上开档
+server/src/routers/pay.ts:36: * - 线上升级兑付=照 merchant upgrade 端点写行工艺（微光=新购口径全价+有效期重起算；
+server/src/routers/pay.ts:237: * - 微光档=新购口径：started_at/expires_at 重起算、paid_fen=新档全价（含附加按现 petCount 重算）；
+server/src/routers/pay.ts:275:            /* 微光档=新购口径：开通时点重起算有效期，paid_fen=新档全价，线上域 sold_store_id=NULL */
+server/src/routers/pay.ts:527:   * 微光档=新购口径全价、付费档=剩余整月折算补差）；附通道开关与超时时长（开通页明示）。
+server/src/routers/pay.ts:564:            newPurchase: diff.formula.newPurchase, // true=微光档新购口径（全价+有效期重起算）
+server/src/routers/pay.ts:636:   *   membership_upgrade=computeUpgradeDiff 差价（微光=新购口径全价），入参 amountFen
+server/src/routers/report.ts:212:/** 年费分摊（同源：active 会员 paidFen/12 按月计提；店域=sold_store_id ∈ storeIds ∪ 微光 NULL） */
+server/src/routers/report.ts:229:/** 店域会员 userId 集（办卡店 ∈ storeIds ∪ 微光 NULL，与 amortizationStats 同口径） */
+server/src/routers/report.ts:281:  /** A2 回馈金负债店级聚合：店域会员（办卡店∈店域 ∪ 微光 NULL）的 rebate 余额 Σ */
+server/src/services/rebate.ts:17: *   精确到分；无月上限；无会员/微光（rebate_bp=0）不写行；
+server/src/services/rebate.ts:304:  /** 命中档位（无会员=null；微光/零额返还在 grantedFen=0 时透出档位便于排查） */
+server/src/services/rebate.ts:312: * - 仅 active 会员付费档返（rebate_bp>0）；无会员/微光/到期冻结 = 0 不写行；
+server/src/services/rebate.ts:329:  if (bp <= 0) return { grantedFen: 0, planKey: m.planKey, duplicated: false }; // 微光=0 不写行
+server/src/services/rebate.ts:598: * active 且未到期 → { membership, plan }；否则 null（未识别/微光以外冻结/散客）。
+server/src/__tests__/e2e.ts:70: *   39. 售卡三档到店付 + 售卡提成定额（萤火 500/烛光 1000/微光 0）+ 双归属两字段 + 微光开档幂等
+server/src/__tests__/e2e.ts:72: *   41. 服务 88 折自动（adjusted=unit×0.88，unit 门市价划线不动）+ 微光无折扣对照
+server/src/__tests__/e2e.ts:122: *        多宠附加行恒 0 透出 + 微光升档=新购全价口径（附加按现 petCount 重算）
+server/src/__tests__/e2e.ts:226: *   67.5 提前期上限：非会员（微光口径 3 天）约第 4 天→400 明文；暖阳档第 14 天可约；
+server/src/__tests__/e2e.ts:227: *        getWithServices 栅格按档截断（微光第 4 天槽不出现/暖阳出现）+boardingAvailability
+server/src/__tests__/e2e.ts:2652:   * 件 2 注册默认档读 default_plan_key / 件 1 微光永久豁免（免费档永不冻结）/
+server/src/__tests__/e2e.ts:2653:   * OP-01② 微光线上开档 sold_store_id=NULL 进全店合计
+server/src/__tests__/e2e.ts:2692:    check('PR-4 件 1 微光永久豁免：expires 过日仍 active（会员+回馈金账户双不冻结）',
+server/src/__tests__/e2e.ts:2700:    check('PR-4 OP-01② 微光线上开档 NULL 进全店合计（amortizedFen +100=round(1200÷12)，数值口径统一）',
+server/src/__tests__/e2e.ts:2703:    /* 夹具归零：paidFen 回 0（微光本意），防污染下游 R11a 分摊回归断言期望值 */
+server/src/__tests__/e2e.ts:2711:  console.log('\n[R11a] 39. 售卡三档 + 售卡提成定额 + 双归属 + 微光开档幂等');
+server/src/__tests__/e2e.ts:2740:  // ② 烛光/微光售卡（微光 0 元单直接成交，paySegments 空）
+server/src/__tests__/e2e.ts:2743:  check('R11a⑧ 烛光 29900（微信段）+ 微光 0 元单直接成交（无支付段）',
+server/src/__tests__/e2e.ts:2746:  /* 补缺修复小批 P1-3：收银台售微光（0 元单）expiresAt 同置远端 2099（sell 写侧口径） */
+server/src/__tests__/e2e.ts:2747:  check('P1-3 sell 微光档 expiresAt=2099-12-31 远端（烛光付费档照 +365 天读表不动）',
+server/src/__tests__/e2e.ts:2756:  check('R11a⑧ 售卡提成定额：萤火 500（5 元）/ 烛光 1000（10 元）/ 微光 0 三档入 cardLines（暖阳 2000 同映射表抽单免验）',
+server/src/__tests__/e2e.ts:2761:  // ④ 微光开档幂等（回归）：新客 openFree 两次，第二次 idempotent=true 零副作用
+server/src/__tests__/e2e.ts:2762:  const freeUser = (await db.insert(schema.users).values({ kimiId: 'seed_e2e_free1', nickname: 'e2e 微光客', phone: '13811110009' }).returning())[0]!;
+server/src/__tests__/e2e.ts:2767:  check('R11a回归 微光一键开档幂等（首次开档 → 第二次 idempotent=true 同档不重建）',
+server/src/__tests__/e2e.ts:2772:  // ⑤ D-16 自助开户（急修三件 PD-03 件 3）：口令门内手机号分支——新号建档+登录+微光开档链路
+server/src/__tests__/e2e.ts:2790:  check('D-16 注册→登录→微光一键开档链路通（plan_weiguang active）',
+server/src/__tests__/e2e.ts:2820:  const svcBillWeiguang = await settleBill2([{ kind: 'service', refId: service.id }], { customerId: wgUserId, note: '【测试】e2e R11a 微光服务单' });
+server/src/__tests__/e2e.ts:2822:  check('R11a⑦ 对照：微光（10000bp）无折扣=门市价 8800（adjusted 留空）',
+server/src/__tests__/e2e.ts:2969:  check('R11a⑫ 权益表述：plans 透出含「安心包全员免费」（微光档权益行）', plansJson.includes('安心包全员免费'), plansRes.plans.map((p) => p.planKey));
+server/src/__tests__/e2e.ts:2982:  // 售卡实收：萤火 19900 + 烛光 29900 + 微光 0 + 4 宠 25800 + 10 宠 61200 + 续费 19900 = 156700
+server/src/__tests__/e2e.ts:3473:  /* ---------- 52.1 升档差价精确到分（46 号档例题逐字坐实）+ 微光新购口径 ---------- */
+server/src/__tests__/e2e.ts:3474:  console.log('\n[补缺-3] 52.1 升档差价（46 号档例题）+ 微光新购口径');
+server/src/__tests__/e2e.ts:3521:  /* 微光档升档=新购口径：差价=新档全价+多宠附加按现 petCount 重算（petCount 直置 5 → 萤火 19900+2×5900=31700） */
+server/src/__tests__/e2e.ts:3528:  check('补缺3-52.1 微光升档=新购口径（remainingMonths=0 / newPurchase=true / 全价+附加重算 19900+2×5900=31700）',
+server/src/__tests__/e2e.ts:3536:  check('补缺3-52.1 微光新购口径落库（paid_fen=31700 全价含附加 / expires 重起算 +365 天 / sold_store 补=办理店）',
+server/src/__tests__/e2e.ts:3890:  // （片 2 适配：栅格按档收窄（微光 3 天）后夹具槽位拥挤——阿强被 PR-3 寄养负责人区间
+server/src/__tests__/e2e.ts:4328:  check('51.4 夹具：微光会员 active（注销联动取消对象）', of51d.membership.status === 'active', of51d.membership);
+server/src/__tests__/e2e.ts:7004:    input: { storeId, petId, serviceId: service.id, type: 'grooming', scheduledStart: storeFuture(4, 12, 0), paymentMode: 'pay_at_store', note: '【测试】e2e 67.5 微光第 4 天' },
+server/src/__tests__/e2e.ts:7006:  check('67.5 非会员（微光 3 天口径）约第 4 天 → 400 明文「最多可提前 3 天」',
+server/src/__tests__/e2e.ts:7023:  // 读侧收窄：微光栅格超上限槽不返回；暖阳栅格第 4 天后的槽出现（档差实证）
+server/src/__tests__/e2e.ts:7030:  check('67.5 栅格按档截断（能看=能约同帧）：微光全部槽 ≤ now+3d（第 4 天槽不出现）',
+server/src/__tests__/e2e.ts:7033:  check('67.5 暖阳栅格放宽：存在 > now+3d 的槽（与微光同店同刻对照）',
+server/src/__tests__/e2e.ts:7036:  // boardingAvailability 晚数按档截断：10 晚窗口，微光=4 晚（今日~d+3）/暖阳=全量 10 晚
+server/src/__tests__/e2e.ts:7041:  check('67.5 boardingAvailability 晚数按档截断（微光 4 晚 / 暖阳 10 晚全量）',
+server/src/__tests__/e2e.ts:7366:     开户连带落微光档——原「非会员」前提改为「直插库用户（未经 HTTP 注册）」守错误路径，
+server/src/__tests__/e2e.ts:7379:  check('68.5 myCardToken 签发（5min 时效）→ verifyCardToken 收银台核验通过 + planKey/档名透出（微光）',
+server/src/__tests__/e2e.ts:7382:      verify685.planLabel.includes('微光') && verify685.membershipStatus === 'active',
+server/src/__tests__/e2e.ts:8135:    /* ---- 73.2 回馈金负债店级聚合（本店会员口径=办卡店 ∪ 微光 NULL） ---- */
+server/src/__tests__/e2e.ts:8762:    /* 口径注记：amortizedFen=微光线上开档 sold_store_id=NULL 分摊（Y7 本店∪NULL 既定口径，
+server/src/__tests__/e2e.ts:8774:    /* 口径注记：d1.amortizedFen=微光 NULL 开档分摊（Y7 本店∪NULL 既定口径）不判零；
+server/src/__tests__/e2e.ts:10300:    /* ---- 86.1 P1-1 注册即会员（自助开户连带落微光档，两段并一段） ---- */
+server/src/__tests__/e2e.ts:10319:    check('86.2 P1-2 撤文案：perk.boarding/perk.boardingSub 两键全域零渲染（读口无键）+微光档 service_discount_bp=10000（门市价单源，无 9 折残留）',
+server/src/__tests__/e2e.ts:10396:   *   87.1 升级死路修通（微光→萤火新购口径全链+幂等）；87.2 读路径缺口补掉（forUser 真值+售卡拦截人话）；
+server/src/__tests__/e2e.ts:10401:   *   88.1 微光新购口径线上升级全链（quote=全价 19900/createOrder server 重算覆盖假金额/
+server/src/__tests__/e2e.ts:10415:    /* ---- 87.1 升级死路修通（微光→萤火=新购口径全链，前后值精确到分） ---- */
+server/src/__tests__/e2e.ts:10416:    /* 钉时刻+钉默认档：83.5 自动回滚（幂等锚）可能把 default_plan_key 停在非微光档——
+server/src/__tests__/e2e.ts:10443:    check('87.1 升级死路修通：微光档 quote 三付费档皆可升（新购口径标）+upgrade 萤火全价 19900 成交（重起算有效期+办理店补登+补差单+upgrade 事件）+同档重放幂等零单据',
+server/src/__tests__/e2e.ts:10481:    check('87.4 补差硬校验：Σ支付段（100）≠差价（19900）=400 明文+会员档零动作（仍微光）',
+server/src/__tests__/e2e.ts:10534:    /* 微光档开户夹具：手机号 dev-login（OP-03 注册即落微光档） */
+server/src/__tests__/e2e.ts:10544:    /* ---- 88.1 微光新购口径线上升级全链（前后值精确到分） ---- */
+server/src/__tests__/e2e.ts:10550:    check('88.1 升级域 quote：微光→萤火=新购口径全价 19900（computeUpgradeDiff 同源透出）+通道开',
+server/src/__tests__/e2e.ts:10646:    check('88.4 fail：升级单通道失败 → failed 留痕 + 零兑付（档仍微光）',
+server/src/__tests__/e2e.ts:10661:    check('88.4 timeout：升级单超时 sweeper 关单 closed + 零兑付（档仍微光）',
+apps/customer/src/components/member/copy.ts:63:  /* PR-4 PD-05 件 1：微光态提示条不显示有效期（永久豁免，无到期语义）；
+apps/customer/src/components/member/copy.ts:64:     片 2②：微光不再分流——本页直达选档开通，文案改新购口径引导句 */
+apps/customer/src/components/member/copy.ts:65:  'j1.alreadyMemberFree': '你当前是微光免费档（永久有效）。选付费档开通即享回馈金与服务折扣——新购口径：全档价，有效期自开通重起算。',
+apps/customer/src/components/member/copy.ts:71:  'j1.freeOpenedTitle': '微光会员已开通',
+apps/customer/src/components/member/copy.ts:113:  'q1.nonMemberGuide': '还不是会员：微光档免费，一键开通即会员；付费档到店收银台办理。',
+apps/customer/src/components/member/copy.ts:179:  /* 体验急修批 B（任务卡 9-29）：微光/非会员返显钩子（不上假数——rebateBp=0 时替换「返 ¥x」），
+apps/customer/src/components/member/copy.ts:218:  'rules.r1Free': '微光免费档无回馈金 · 付费档 {pcts}% · 仅抵商品',
+apps/customer/src/components/member/copy.ts:221:  /* PR-4 PD-05 件 1：规则明面 r3 微光态换口径——免费档永久普通会员，无到期无冻结 */
+apps/customer/src/components/member/copy.ts:273:  'up.nonMemberBody': '先开通会员（微光档免费一键开通），再按需要升档。',
+apps/customer/src/components/member/copy.ts:307:  /* 会员链路片 2①：「我的」卡面入口按档分化（微光=开通 › 指开通页；付费档=续费 › 不变） */
+apps/customer/src/components/member/plans.tsx:42:  plan_weiguang: '微光',
+apps/customer/src/components/member/plans.tsx:151:    `回馈比例：商品消费按档返（${rebateSummary}），按商品实收金额计提，无月上限；微光档无回馈金。用回馈金支付的部分不再返。`,
+apps/customer/src/components/member/v2.tsx:24:const TIER_NAME = ['微光', '萤火', '烛光', '暖阳'] as const
+apps/customer/src/copy/pay.ts:62:  'checkout.freePlanBody': '微光档一键开通即可，无需进入支付流程。',
+apps/customer/src/pages/CartPage.tsx:126:  /* 返显钩子（体验急修批 B）：微光/非会员 CTA sub=规则钩子，点击→/member/open（J-01）；
+apps/customer/src/pages/MallPage.tsx:77:              /* 体验急修批 B：微光/非会员=规则钩子（不上假数），点击→/member/open（J-01） */
+apps/customer/src/pages/MemberCardPage.tsx:113:          {/* 卡面横卡（92 高码屏规格；非会员→微光卡面引导态） */}
+apps/customer/src/pages/MemberCardPage.tsx:179:          {/* 非会员引导（微光免费一键开 → /member/open） */}
+apps/customer/src/pages/MemberCenterPage.tsx:283:  /* PR-4 PD-05 件 1：免费档永久豁免——到期提醒条（30/7 天）对微光不渲染 */
+apps/customer/src/pages/MemberCheckoutPage.tsx:20: * 会员链路片 2：已是会员不再分流去会员中心——微光档=新购口径直通（bizDomain=
+apps/customer/src/pages/MemberCheckoutPage.tsx:59:  /* 会员链路片 2：已是会员=升级域收单（微光=新购口径全价；付费档=期内补差），
+apps/customer/src/pages/MemberCheckoutPage.tsx:78:  /* 升级域试算明细（newPurchase=微光新购口径全价句明面；否则=期内补差句） */
+apps/customer/src/pages/MemberCheckoutPage.tsx:172:                {/* 升级域口径句明面：微光=新购口径（全价+有效期重起算）；付费档=期内补差（到期日不变） */}
+apps/customer/src/pages/MemberOpenPage.tsx:8: * 功能逻辑（四铁律）：微光→openFree 一键开档（幂等）；付费档 CTA→/member/checkout 线上
+apps/customer/src/pages/MemberOpenPage.tsx:10: * 已是会员按档分化（会员链路片 2②）：微光档不分流——直达选档开通流程（默认选中推荐
+apps/customer/src/pages/MemberOpenPage.tsx:43:/** 档色条（对比弹层用；与 cf-t0~t3 色谱同源 §1.3；微光=白卡色仅作卡面） */
+apps/customer/src/pages/MemberOpenPage.tsx:74:      showToast(r.idempotent ? '你已是会员' : '微光会员已开通，欢迎加入', 'info')
+apps/customer/src/pages/MemberOpenPage.tsx:93:  /* 会员链路片 2 入口断链修通②：微光档不再分流「已是会员→去会员中心」——直达选档开通
+apps/customer/src/pages/MemberOpenPage.tsx:118:              片 2②：微光=信息条照常（文案=新购口径引导句），CTA 不分流——直达选档开通；
+apps/customer/src/pages/MemberOpenPage.tsx:130:                  片 2②：微光档本页即开通流程，不再给升级页跳转（直达） */}
+apps/customer/src/pages/MemberOpenPage.tsx:204:          {/* 吸底 CTA（页内形态非弹窗）：付费档会员=回会员中心；微光/非会员=选档开通直达 */}
+apps/customer/src/pages/MemberOpenPage.tsx:226:                      /* 补缺批片 6：付费档 CTA=跳线上确认订单（Mock 通道收单）；微光=一键开档 */
+apps/customer/src/pages/MemberOpenPage.tsx:290:                {/* 会员链路片 2③：四档对比 CTA 同口径接通——付费档→确认订单（微光/非会员同路径），
+apps/customer/src/pages/MemberOpenPage.tsx:291:                    免费档=一键开通（微光已是=「当前档」注记）；付费档会员不画（走升级页） */}
+apps/customer/src/pages/MemberOpenPage.tsx:404:/* 完成页（骨架版第 3 步件化：微光=已开通 / 付费档=到店办理确认）               */
+apps/customer/src/pages/MemberUpgradePage.tsx:11: * + 多宠附加差价行（恒 0 也透出）+ 合计补差，逐项 mono；newPurchase（微光档新购口径）
+apps/customer/src/pages/MemberUpgradePage.tsx:17: * 微光档=新购口径全价句明面（不退卡不折算）。
+apps/customer/src/pages/MePage.tsx:141:              /* 会员链路片 2 入口断链修通①：卡面入口按档分化——微光=「开通 ›」指开通页
+apps/customer/src/pages/MePage.tsx:142:                 （注册即微光后全端购卡入口在此接通）；付费档=「续费 ›」指会员中心不变 */
+apps/merchant/src/components/cashier/CartPanel.tsx:100:  /** R11a：会员服务折扣镜像（已知档位：bp + 档位短名；null=无折扣或微光） */
+apps/merchant/src/components/cashier/membership.ts:55:  plan_weiguang: '微光',
+apps/merchant/src/components/cashier/MembershipPanel.tsx:4: * - 售卡四档对照卡（微光免费开档 / 萤火 ¥199 / 烛光 ¥299 / 暖阳 ¥599；价格/回馈金/
+apps/merchant/src/components/cashier/MembershipPanel.tsx:8: *   微光档 0 元单直接成交（paySegments 为空）；
+apps/merchant/src/components/cashier/MembershipPanel.tsx:14: *   再收段提交（微光档探测即成交=免费续期）；
+apps/merchant/src/components/cashier/MembershipPanel.tsx:16: *   （upgradeQuoteForUser.targetPlans 非空）时亮「升级补差」页签——**微光档（free）同亮=新购口径**
+apps/merchant/src/components/cashier/MembershipPanel.tsx:22: * - 售卡 mode 只对纯非会员开放（会员链路小批片 1：已识别会员含微光一律不走进售卡）；
+apps/merchant/src/components/cashier/MembershipPanel.tsx:146:  /** 升级页签判定：active 且存在更高档（targetPlans 非空）；微光档（free）=新购口径同亮
+apps/merchant/src/components/cashier/MembershipPanel.tsx:148:     片 1 死路修通：微光→付费=首次购卡，不再堵回售卡 mode）；frozen 档不显（先续费解冻）；
+apps/merchant/src/components/cashier/MembershipPanel.tsx:262:  /** 续费探测（读路径缺口报备：空段提交取 server 实算金额；微光档探测即免费续期成交） */
+apps/merchant/src/components/cashier/MembershipPanel.tsx:411:      {/* 模式页签（会员链路小批片 1：售卡只对纯非会员开放[已识别会员含微光一律不走进售卡]；
+apps/merchant/src/components/cashier/MembershipPanel.tsx:412:          续费须先识别会员；升级补差=微光档=新购口径同亮；成交留痕态下隐去） */}
+apps/merchant/src/components/cashier/MembershipPanel.tsx:717:      {/* 到店付收款段（微光/未探测不渲染；升级=应收锁定 server totalDiffFen） */}
+apps/merchant/src/components/cashier/model.ts:288: * bp=null 或 ≥10000（微光无折扣，红线 7）→ 门市价口径原样。
+apps/merchant/src/components/member/amortization.tsx:6: * 微光线上开档无办卡店暂不计入）。
+apps/merchant/src/pages/CashierPage.tsx:186:    if (!plan || plan.serviceDiscountBp >= 10000) return null // 微光无折扣（红线 7）
+apps/merchant/src/pages/PassPage.tsx:59:/** W-11 档色点（档色即身份 · 客户端 1.0 定稿 §1.3 档色谱：微光纸白/萤火淡金/烛光卡其铜/暖阳深棕） */
+packages/shared/src/constants/events.ts:67:  MembershipOpened:      'membership.opened',       // 售卡/微光开档 → user + store
