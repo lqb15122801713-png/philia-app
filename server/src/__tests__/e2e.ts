@@ -10387,12 +10387,23 @@ async function main(): Promise<void> {
       clerkStack instanceof TrpcHttpError && clerkStack.httpStatus === 403 && Object.keys(mgrStack.rules).length === 4);
 
     /* ---- 86.8 隔离族不回退（B 店互盲+新户会员自域） ---- */
+    /* D-26 修复（B 窗实测移交 P1 · PM 钉死修法）：ownerBCookie86 真用上发请求——
+       ① B 店主查自家 chainDashboard：B 店行 todoTotal=0（A 待办不透 B）；
+       ② 前提断言：A 店行 todoTotal ≥ 1（86.3 E2E86P1 pending 在途，否则本断言无牙）；
+       ③ B cookie 跨店读 A 域细目（membership.forUser 86.1 新户）=404 NOT_FOUND（店域闸）。
+       负向验证（探针工艺）：故意放行一次应红——B 店造 pending 单后本段必红，证据入卷后收回。 */
     const ownerB86 = await db.select().from(schema.users).where(eq(schema.users.kimiId, 'seed_e2e_chain_ownerb')).limit(1).then((r) => r[0]!);
     const ownerBCookie86 = await devLogin(ownerB86.id);
-    const chainB86 = await trpcQuery<{ stores: Array<{ storeId: string; todoTotal: number }> }>('store.chainDashboard', { cookie: ownerCookie });
+    const user861 = await db.select().from(schema.users).where(eq(schema.users.phone, '19900000086')).then((r) => r[0]!);
+    const chainA868 = await trpcQuery<{ stores: Array<{ storeId: string; todoTotal: number }> }>('store.chainDashboard', { cookie: ownerCookie });
+    const rowA868 = chainA868.stores.find((r) => r.storeId === storeId)!;
+    const chainB86 = await trpcQuery<{ stores: Array<{ storeId: string; todoTotal: number }> }>('store.chainDashboard', { cookie: ownerBCookie86 });
     const rowB86 = chainB86.stores.find((r) => r.storeId !== storeId);
-    check('86.8 隔离族不回退：B 店行 todoTotal=0（A 待办不透 B；86.1 新档 soldStoreId=NULL 骨架批双归属口径在 86.1 已断）',
-      (rowB86?.todoTotal ?? 0) === 0, { bTodo: rowB86?.todoTotal });
+    const fuB868 = await asErr(trpcQuery('membership.forUser', { cookie: ownerBCookie86, input: { userId: user861.id } }));
+    check('86.8 隔离族不回退（D-26 修复实证）：B 店 cookie 真查=B 店行 todoTotal=0（A 待办不透 B）+前提 A 店行 todoTotal≥1（断言有牙）+B 跨店读 A 域细目 404',
+      (rowB86?.todoTotal ?? 0) === 0 && rowA868.todoTotal >= 1 &&
+      fuB868 instanceof TrpcHttpError && fuB868.httpStatus === 404,
+      { aTodo: rowA868.todoTotal, bTodo: rowB86?.todoTotal, fuB: fuB868 && fuB868.httpStatus });
   }
 
   /* ==================================================================
