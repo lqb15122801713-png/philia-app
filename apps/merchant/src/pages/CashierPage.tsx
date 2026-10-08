@@ -176,8 +176,8 @@ export default function CashierPage() {
 
   /**
    * R11a：会员服务折扣镜像（展示口径）——当前绑定会员的档位 bp（会话缓存 → plans 目录）。
-   * 提交快照保持 adjustedPriceFen=null（避免撞改价闸门，server 结账实算同公式）；
-   * 缓存未知档位时 memberDiscountUnknown 提示，金额以 server 成交为准（读路径缺口报备）。
+   * 提交快照保持 adjustedPriceFen=null（避免撞改价闸门，server 结账实算同公式）。
+   * 会员链路小批片 1：读路径缺口补掉（forUser 正式通道同帧缓存），缺口提示件已撤牌。
    */
   const cachedMembership = member ? (memberStatusMap[member.id] ?? null) : null
   const svcDiscountBp = useMemo(() => {
@@ -791,7 +791,6 @@ export default function CashierPage() {
                   ? { bp: svcDiscountBp, planLabel: planShortLabel(cachedMembership.planKey) }
                   : null
               }
-              memberDiscountUnknown={member !== null && cachedMembership === null}
               savings={savings}
               onQty={(refId, d) =>
                 setLines((prev) =>

@@ -68,7 +68,6 @@ export default function CartPanel({
   canEditPrice,
   holding,
   svcDiscount,
-  memberDiscountUnknown,
   savings,
   onQty,
   onRemove,
@@ -100,8 +99,6 @@ export default function CartPanel({
   holding: boolean
   /** R11a：会员服务折扣镜像（已知档位：bp + 档位短名；null=无折扣或微光） */
   svcDiscount: { bp: number; planLabel: string } | null
-  /** R11a：会员已绑但档位未在本端读出（读路径缺口——折扣由 server 结账实算，折后价以成交为准） */
-  memberDiscountUnknown: boolean
   /** R11a 立省钩子（非会员当单 savingsPreview 实时算；null=不展示） */
   savings: { fen: number; text: string } | null
   onQty: (refId: string, d: 1 | -1) => void
@@ -420,11 +417,6 @@ export default function CartPanel({
             </span>
             <b className="font-number font-semibold tabular-nums text-ink">−¥{fenToYuan(memberDiscFen)}</b>
           </div>
-        ) : null}
-        {memberDiscountUnknown ? (
-          <p className="py-1 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="cashier-member-discount-unknown">
-            {cc('cashier.memberDiscountUnknown')}
-          </p>
         ) : null}
         {amounts.passCoveredFen > 0 ? (
           <div className="flex justify-between py-1 text-caption text-[rgba(59,46,36,.6)]">

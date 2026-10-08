@@ -803,7 +803,7 @@ export const membershipRouter = router({
           if (!userRow) badRequest('客户不存在');
 
           const existing = await currentMembership(t, userId, now);
-          if (existing) badRequest('该客户已是会员（续费请走 membership.renew；退会后可重新购卡）');
+          if (existing) badRequest('该客户已是会员（续费/升档请走对应页签办理，不要重复购卡；退会后可重新购卡）');
 
           const { billNo, billId } = await writeMembershipBill(t, {
             storeId,

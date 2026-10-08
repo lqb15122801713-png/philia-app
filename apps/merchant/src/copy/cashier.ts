@@ -19,7 +19,10 @@ const CASHIER_COPY_TABLE = {
   'cashier.headTenderRef': '参考（不计入已收）',
   'cashier.cartEmpty': '点左侧商品或服务开单',
   'cashier.stockShort': '库存不足：余 {n} 件，结账将按实际库存扣减',
-  'cashier.memberDiscountUnknown': '会员折扣由服务端结账时按档自动计算，折后价以成交为准（内测期档位读路径缺口）',
+  /* 会员链路小批片 1 撤牌（读路径缺口补掉）：cashier.memberDiscountUnknown/cashier.memberStatusNote
+     两句登记文案随修撤除（端口宇宙只增不改=库内行留档不删，码内不再消费） */
+  'cashier.memberNonMember': '非会员 · 售卡即开通',
+  'cashier.memberServiceEntry': '会员服务 ›',
   'cashier.savingsCta': '开通萤火 ›',
   'cashier.offlineBar': '离线中 —— 结账将先本地暂存，恢复网络后自动补传',
   'cashier.offlineFlushing': '网络已恢复，正在补传暂存单…',
@@ -147,7 +150,6 @@ const CASHIER_COPY_TABLE = {
   'cashier.refundRequestTypeReturnRefund': '退货退款',
 
   /* ---- 售卡/续费/升级补差面板（MembershipPanel）---- */
-  'cashier.memberStatusNote': '会员状态以提交时 server 实算为准（内测期读路径缺口，错误原文透出）',
   'cashier.memberPlansMissing': '档位配置缺失——请在规则配置端口检查会员档（member_plans 域）',
   'cashier.memberAlreadyMember': '该客户已是会员 —— 点这里切换到「续费」',
   'cashier.memberNextPlanBadge': '已预约下期：{plan}',
