@@ -67,7 +67,6 @@ import {
   merchantProcedure,
   publicProcedure,
   router,
-  storeScopeIds,
 } from '../trpc';
 import { ensureOpenShift, genBillNo, withCashierWriteLock } from './cashier';
 import { storeDayStartMs, storeWallclock } from './appointment';
@@ -665,42 +664,24 @@ export const membershipRouter = router({
    * 返回该用户当前 membership（档位/status/expiresAt/petCount/paidFen/soldStore）+
    * 档位配置 + rebate balanceOf（余额/本期预计/status）；非会员 membership=null。
    * 读路径顺带到期懒冻结（红线 4，同 my）。
-   * 本店客户闸（片 2 裁件③·片 1 意见书 §三裁定）：目标客户须为店域内客户——
-   * 口径=店域内有预约单 ∪ 持店域次卡 ∪ 店域收银消费 ∪ 卡办在店域（sold_store_id∈店域；
-   * 与 pass.topUp 归属闸同族）。越界一律 NOT_FOUND（裁件①统一防探测口径）。
+   *
+   * 微光正名批片 1（CJ-1009-06 定盘星：客户=总公司流量池，不属任何店）：
+   * 店域客户闸撤除——客户全池可识别可服务（识别/检索/会员服务通断=放行读面）；
+   * **订单/账目级门店隔离面零改动**（单据/账目读口仍按店域闸原样，本端点只读会员档+回馈金余额）。
+   * 防探测口径保留=用户不存在（users 无行）→ NOT_FOUND「会员不存在」；
+   * 存在即读（在册客户=全池件，店员检索即见档=定盘星原生需求）。
    */
   forUser: merchantProcedure
     .input(z.object({ userId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
-      const scope = storeScopeIds(ctx.user);
       const uid = input.userId;
-      const inScope = scope.length
-        ? ((await ctx.db
-            .select({ id: schema.appointments.id })
-            .from(schema.appointments)
-            .where(and(inArray(schema.appointments.storeId, scope), eq(schema.appointments.customerId, uid)))
-            .limit(1)
-            .then((r) => r[0])) ??
-          (await ctx.db
-            .select({ id: schema.memberPasses.id })
-            .from(schema.memberPasses)
-            .where(and(inArray(schema.memberPasses.storeId, scope), eq(schema.memberPasses.userId, uid)))
-            .limit(1)
-            .then((r) => r[0])) ??
-          (await ctx.db
-            .select({ id: schema.cashierBills.id })
-            .from(schema.cashierBills)
-            .where(and(inArray(schema.cashierBills.storeId, scope), eq(schema.cashierBills.customerId, uid)))
-            .limit(1)
-            .then((r) => r[0])) ??
-          (await ctx.db
-            .select({ id: schema.memberships.id })
-            .from(schema.memberships)
-            .where(and(inArray(schema.memberships.soldStoreId, scope), eq(schema.memberships.userId, uid)))
-            .limit(1)
-            .then((r) => r[0])))
-        : undefined;
-      if (!inScope) throw new TRPCError({ code: 'NOT_FOUND', message: '会员不存在' });
+      /* 流量池化：存在性校验（users 有行=可读；无行=NOT_FOUND 防探测口径不动） */
+      const userRow = await ctx.db
+        .select({ id: schema.users.id })
+        .from(schema.users)
+        .where(eq(schema.users.id, uid))
+        .get();
+      if (!userRow) throw new TRPCError({ code: 'NOT_FOUND', message: '会员不存在' });
       const now = new Date();
       const m = await currentMembership(ctx.db, input.userId, now);
       const plans = await loadMemberPlans(ctx.db);

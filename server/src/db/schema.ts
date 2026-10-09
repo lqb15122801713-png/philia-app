@@ -400,7 +400,7 @@ export const appointments = sqliteTable('appointments', {
   customerId: text('customer_id')
     .notNull()
     .references(() => users.id),
-  /** 门店 ID -> stores.id */
+  /** 门店 ID -> stores.id（=接待店记账标签：预约店域行为留痕，业绩核算到接待店；CJ-1009-06） */
   storeId: text('store_id')
     .notNull()
     .references(() => stores.id),
@@ -857,7 +857,7 @@ export const cashierBills = sqliteTable(
     id: id(),
     /** 挂单/收银单号（全局唯一，幂等键）：HD-{YYYYMMDD}-{当日 3 位序号} */
     billNo: text('bill_no').notNull().unique(),
-    /** 门店 ID -> stores.id */
+    /** 门店 ID -> stores.id（=接待店记账标签：收银单店域行为留痕，业绩核算到接待店；CJ-1009-06） */
     storeId: text('store_id')
       .notNull()
       .references(() => stores.id),
@@ -2569,12 +2569,14 @@ export const memberships = sqliteTable(
       .references(() => users.id),
     /** 档位键（plan_weiguang/plan_yinghuo/plan_zhuguang/plan_nuanyang -> member_plans.rule_key） */
     planKey: text('plan_key').notNull(),
-    /** 办卡门店 ID -> stores.id（注册用户自助开档=NULL 或注册店；付费档=售卡单消费店） */
+    /** 办卡门店 ID -> stores.id（=卡办记账标签：卡办在店留痕，业绩核算到办卡店；
+        注册用户自助开档/线上开档=NULL=平台件[无记账标签]；付费档=售卡单消费店；CJ-1009-06 正名） */
     soldStoreId: text('sold_store_id').references(() => stores.id),
     /**
-     * 会员多店归属留口（商家端大批片 1 连锁地基 · 0050）：归属门店 ID -> stores.id。
+     * 会员多店记账标签留口（商家端大批片 1 连锁地基 · 0050；CJ-1009-06 定盘星：「归属」作废
+     * 改「记账标签」——话术正名，逻辑面零改动）。
      * NULL=全店通用（决策 #41 中央建卡三店通用口径不变）；本列仅留口不消费——
-     * 会员归属细化/归属结算=连锁回归批接，任何读口不得依本列改会员可见性。
+     * 会员记账标签细化/标签结算=连锁回归批接，任何读口不得依本列改会员可见性。
      */
     homeStoreId: text('home_store_id').references(() => stores.id),
     /** 开通时间 */
@@ -3058,8 +3060,9 @@ export const phoneChangeRequests = sqliteTable(
       .notNull()
       .references(() => users.id),
     /**
-     * 归属门店 ID -> stores.id（商家端大批片 2 裁件② · 0051：换绑申诉队列店域过滤）：
-     * 提交时落「客户最近消费店」（无消费=NULL=平台件——无归属店，全店可见可受理
+     * 记账标签门店 ID -> stores.id（商家端大批片 2 裁件② · 0051：换绑申诉队列店域过滤；
+     * CJ-1009-06 定盘星：「归属店」正名「记账标签」——话术改，逻辑面零改动）：
+     * 提交时落「客户最近消费店」（无消费=NULL=平台件——无记账标签，全店可见可受理
      * [就近门店受理口径]）；存量=最近消费单推导回填（appointments/cashier_bills 新者，无单=NULL）。
      */
     storeId: text('store_id').references(() => stores.id),

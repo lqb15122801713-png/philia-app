@@ -218,24 +218,32 @@ export default function MemberOpenPage() {
                 </button>
               ) : (
                 <>
-                  <button
-                    type="button"
-                    className="m2-btn-primary m2-press"
-                    disabled={openFreeM.isPending}
-                    data-testid={selected.free ? 'open-free-btn' : 'open-pick-cta'}
-                    onClick={() => {
-                      /* 补缺批片 6：付费档 CTA=跳线上确认订单（Mock 通道收单）；注册用户=一键开档 */
-                      if (selected.free) openFreeM.mutate()
-                      else navigate(`/member/checkout?plan=${selected.planKey}`)
-                    }}
-                  >
-                    <span>
-                      {selected.free
-                        ? mc('j1.ctaOpenFree')
-                        : mc('j1.ctaOpen', { tier: tierNameOf(selected.planKey), daily: dailyOf(selected.priceFen) })}
-                    </span>
-                    <span className="sub">{mc('j1.ctaSub')}</span>
-                  </button>
+                  {/* 片 1 C 股裁①（openFree 退位）：注册用户选免费档=「当前档」注记不动作
+                      （注册即在册=零办理动作；openFree 端点留作异常面兜底）；非会员罕见路径
+                      （注销重申）保留一键开档；付费档 CTA=跳线上确认订单 */}
+                  {selected.free && alreadyMember ? (
+                    <div className="m2-note" data-testid="open-current-free-note" style={{ textAlign: 'center', padding: '13px 0' }}>
+                      {mc('j1.ctaCurrentFree')}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="m2-btn-primary m2-press"
+                      disabled={openFreeM.isPending}
+                      data-testid={selected.free ? 'open-free-btn' : 'open-pick-cta'}
+                      onClick={() => {
+                        if (selected.free) openFreeM.mutate()
+                        else navigate(`/member/checkout?plan=${selected.planKey}`)
+                      }}
+                    >
+                      <span>
+                        {selected.free
+                          ? mc('j1.ctaOpenFree')
+                          : mc('j1.ctaOpen', { tier: tierNameOf(selected.planKey), daily: dailyOf(selected.priceFen) })}
+                      </span>
+                      <span className="sub">{mc('j1.ctaSub')}</span>
+                    </button>
+                  )}
                   {/* 到店办理旁路链接（guide 到店指引步保留给本入口；线上收单为主路径） */}
                   {!selected.free ? (
                     <div style={{ textAlign: 'center', marginTop: 8 }}>

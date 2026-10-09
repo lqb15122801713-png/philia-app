@@ -171,8 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 3888 键/72 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70→端口批收尾片 2（网格/订正/回收站/公告两步流 UI 92 键，生成件重生成 3762+seed 手补 1=3763，corr 域新入=71 域）3763/71→端口批收尾片 3（画布/试算/调整/录码/克隆/绑码 UI 106 键，生成件重生成 3868+seed 手补 1=3869，canvas 域新入=72 域）3869/72→端口批收尾片 4（OP-03 收口：+7 键 −撤 perk.boarding 两键[宇宙只增不改口径=仓行留档]，生成件重生成 3873+seed 手补 1=3874）3874/72→会员链路小批片 1（撤牌 2+新增 2=生成件 3873+seed 手补 1=3874）3874/72→会员链路小批片 2（0068 升级域+入口 11 键增/4 键改值+撤牌 4 键出宇宙，生成件 3880+seed 手补 1=3881）3881/72→会员链路小批片 3（0069 更名+限制解除 6 键增/10 键改值，生成件 3886+seed 手补 1=3887）3887/72→生产可用性急修（0070 端口映射表 1 键增+暖阳 claim 去只数 1 键改，生成件 3887+seed 手补 1=3888）3888/72）；
+ *      56.1 种子 3890 键/72 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70→端口批收尾片 2（网格/订正/回收站/公告两步流 UI 92 键，生成件重生成 3762+seed 手补 1=3763，corr 域新入=71 域）3763/71→端口批收尾片 3（画布/试算/调整/录码/克隆/绑码 UI 106 键，生成件重生成 3868+seed 手补 1=3869，canvas 域新入=72 域）3869/72→端口批收尾片 4（OP-03 收口：+7 键 −撤 perk.boarding 两键[宇宙只增不改口径=仓行留档]，生成件重生成 3873+seed 手补 1=3874）3874/72→会员链路小批片 1（撤牌 2+新增 2=生成件 3873+seed 手补 1=3874）3874/72→会员链路小批片 2（0068 升级域+入口 11 键增/4 键改值+撤牌 4 键出宇宙，生成件 3880+seed 手补 1=3881）3881/72→会员链路小批片 3（0069 更名+限制解除 6 键增/10 键改值，生成件 3886+seed 手补 1=3887）3887/72→生产可用性急修（0070 端口映射表 1 键增+暖阳 claim 去只数 1 键改，生成件 3887+seed 手补 1=3888）3888/72→微光正名片 1（0071 流量池化+C 股扫尾 2 键增 2 键改，生成件 3889+seed 手补 1=3890）3890/72）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -4933,17 +4933,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602）→ 3671/70（端口批收尾片 1：规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）→ 3763/71（端口批收尾片 2：0062 网格/订正/回收站/公告 92 键，生成件重生成 3762+seed 手补 1=3763，域 70→71=corr 新域）→ 3869/72（端口批收尾片 3：0065 画布/薪资/扫码 106 键，生成件重生成 3868+seed 手补 1=3869，域 71→72=canvas 新域）→ 3874/72（端口批收尾片 4：0066 OP-03 收口 7 键增+perk.boarding 两键撤渲染[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3873/72（会员链路小批片 1：0067 会员链路 2 键增+撤牌 2 键出宇宙[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3881/72（会员链路小批片 2：0068 升级域+入口 11 键增/4 键改值[升档线上化口径]+撤牌 4 键出宇宙[仓行留档]，生成件重生成 3880+seed 手补 1=3881）→ 3887/72（会员链路小批片 3：0069 更名+限制解除 6 键增/10 键改值，生成件重生成 3886+seed 手补 1=3887）→ 3888/72（生产可用性急修：0070 增 1 改 1，生成件重生成 3887+seed 手补 1=3888） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602）→ 3671/70（端口批收尾片 1：规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）→ 3763/71（端口批收尾片 2：0062 网格/订正/回收站/公告 92 键，生成件重生成 3762+seed 手补 1=3763，域 70→71=corr 新域）→ 3869/72（端口批收尾片 3：0065 画布/薪资/扫码 106 键，生成件重生成 3868+seed 手补 1=3869，域 71→72=canvas 新域）→ 3874/72（端口批收尾片 4：0066 OP-03 收口 7 键增+perk.boarding 两键撤渲染[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3873/72（会员链路小批片 1：0067 会员链路 2 键增+撤牌 2 键出宇宙[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3881/72（会员链路小批片 2：0068 升级域+入口 11 键增/4 键改值[升档线上化口径]+撤牌 4 键出宇宙[仓行留档]，生成件重生成 3880+seed 手补 1=3881）→ 3887/72（会员链路小批片 3：0069 更名+限制解除 6 键增/10 键改值，生成件重生成 3886+seed 手补 1=3887）→ 3888/72（生产可用性急修：0070 增 1 改 1，生成件重生成 3887+seed 手补 1=3888）→ 3890/72（微光正名片 1：0071 增 2 改 2，生成件重生成 3889+seed 手补 1=3890） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（3888 键/72 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 3888 && domainSet.size === 72 &&
+  check('56.1 copy 域种子全量落库（3890 键/72 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 3890 && domainSet.size === 72 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（3888 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 3888 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（3890 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 3890 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -8646,8 +8646,8 @@ async function main(): Promise<void> {
 
     /* ---- 76.3 公共读口形状不变（不透元数据：键→文两列） ---- */
     const texts76 = await trpcQuery<{ rows: Array<{ key: string; text: string; screen?: unknown; position?: unknown }> }>('config.activeCopyTexts', { cookie: customerCookie });
-    check('76.3 activeCopyTexts 形状不变（3888 行 key→text，不透 screen/position 元数据）',
-      texts76.rows.length === 3888 &&
+    check('76.3 activeCopyTexts 形状不变（3890 行 key→text，不透 screen/position 元数据）',
+      texts76.rows.length === 3890 &&
       texts76.rows.every((r) => r.screen === undefined && r.position === undefined),
       texts76.rows.length);
 
@@ -8839,7 +8839,8 @@ async function main(): Promise<void> {
   /* ==================================================================
    * 商家端大批 片 2（老板端驾驶舱 · 任务书冻结版 V1.0）段：
    *   79.1 裁件②换绑申诉店域（A 店申诉 B 不见/平台件=老板可见店长不见/跨店审批 NOT_FOUND）；
-   *   79.2 裁件③ membership.forUser 本店客户闸（B 查 A 店客户=NOT_FOUND，A 查=过）；
+   *   79.2 裁件③ membership.forUser 客户闸（微光正名批片 1 流量池化：店域客户闸撤除——
+   *        B 查 A 店客户=200 放行识别全池通，A 查=过；订单/账目隔离面不动）；
    *   79.3 连锁驾驶舱六项（chainDashboard：A+A2 分栏+合计=逐项算术和+营收与
    *       todayTenderStats 同源对账+manager 403）；
    *   79.4 报表三视图（d1：合计=A+A2 单店算术和/选店 A2=零值/越界选店=NOT_FOUND）；
@@ -8882,7 +8883,7 @@ async function main(): Promise<void> {
     const reviewB = await asErr(trpcMutate('authSecurity.reviewPhoneAppeal', {
       cookie: ownerBCookie78, input: { requestId: appealA79!.id, approve: false, note: '跨店审批负例' },
     }));
-    check('79.1 换绑店域：B 店主不见 A 店申诉（归属店过滤生效）+ 平台件（NULL=无归属店）=老板/店长全店可见可受理（就近受理口径）+ 跨店审批=NOT_FOUND（裁件①同口径）',
+    check('79.1 换绑店域：B 店主不见 A 店申诉（记账标签过滤生效）+ 平台件（NULL=无记账标签）=老板/店长全店可见可受理（就近受理口径）+ 跨店审批=NOT_FOUND（裁件①同口径）',
       !appealsB.items.some((a) => a.id === appealA79!.id) &&
       appealsA.items.some((a) => a.id === appealA79!.id) &&
       appealsA.items.some((a) => a.id === appealNull79!.id) &&
@@ -8891,12 +8892,14 @@ async function main(): Promise<void> {
       reviewB instanceof TrpcHttpError && reviewB.code === 'NOT_FOUND',
       { b: appealsB.items.length, a: appealsA.items.length, mgrNull: appealsMgrB.items.some((a) => a.id === appealNull79!.id), review: reviewB instanceof TrpcHttpError ? reviewB.code : null });
 
-    /* ---- 79.2 裁件③：membership.forUser 本店客户闸 ---- */
-    const forUserB = await asErr(trpcQuery('membership.forUser', { cookie: ownerBCookie78, input: { userId: custUser.id } }));
-    const forUserA = await trpcQuery<AnyRec79>('membership.forUser', { cookie: ownerCookie, input: { userId: custUser.id } });
-    check('79.2 forUser 本店客户闸：B 查 A 店客户=NOT_FOUND（档位/余额不透出）+ A 查本店客户=过',
-      forUserB instanceof TrpcHttpError && forUserB.code === 'NOT_FOUND' && forUserA !== null && typeof forUserA === 'object' && 'rebate' in forUserA,
-      { b: forUserB instanceof TrpcHttpError ? forUserB.code : null });
+    /* ---- 79.2 裁件③：membership.forUser 本店客户闸 ----
+       微光正名批片 1（CJ-1009-06 流量池化）：店域客户闸撤除=识别全池通（B 查 A 店客户=200
+       读出档位/余额=识别+服务通断面放行；订单/账目隔离面不动=79.1/90.2 在案）。 */
+    const forUserB = await trpcQuery<{ membership: { planKey: string } | null; rebate: unknown }>('membership.forUser', { cookie: ownerBCookie78, input: { userId: custUser.id } });
+    const forUserA = await trpcQuery<{ membership: { planKey: string } | null; rebate: unknown }>('membership.forUser', { cookie: ownerCookie, input: { userId: custUser.id } });
+    check('79.2 forUser 流量池放行：B 查 A 店客户=200 放行（识别全池通，档位/余额透出=识别服务面）+ A 查本店客户=过',
+      forUserB !== null && typeof forUserB === 'object' && 'rebate' in forUserB && forUserA !== null && typeof forUserA === 'object' && 'rebate' in forUserA,
+      { b: forUserB?.membership?.planKey ?? null, a: forUserA?.membership?.planKey ?? null });
 
     /* ---- 79.3 连锁驾驶舱六项（chainDashboard 分栏+合计+同源对账） ---- */
     interface ChainRow { storeId: string; revenueFen: number; todayCount: number; inBoardingCount: number; todoTotal: number; abnormalCount: number; refundPendingCount: number }
@@ -10390,7 +10393,8 @@ async function main(): Promise<void> {
     /* D-26 修复（B 窗实测移交 P1 · PM 钉死修法）：ownerBCookie86 真用上发请求——
        ① B 店主查自家 chainDashboard：B 店行 todoTotal=0（A 待办不透 B）；
        ② 前提断言：A 店行 todoTotal ≥ 1（86.3 E2E86P1 pending 在途，否则本断言无牙）；
-       ③ B cookie 跨店读 A 域细目（membership.forUser 86.1 新户）=404 NOT_FOUND（店域闸）。
+       ③ B cookie 跨店读 A 域细目（membership.forUser 86.1 新户）：微光正名批片 1 流量池化
+       后=200 放行（识别全池通，店域客户闸撤除）；①②隔离面原口径不动。
        负向验证（探针工艺）：故意放行一次应红——B 店造 pending 单后本段必红，证据入卷后收回。 */
     const ownerB86 = await db.select().from(schema.users).where(eq(schema.users.kimiId, 'seed_e2e_chain_ownerb')).limit(1).then((r) => r[0]!);
     const ownerBCookie86 = await devLogin(ownerB86.id);
@@ -10399,11 +10403,13 @@ async function main(): Promise<void> {
     const rowA868 = chainA868.stores.find((r) => r.storeId === storeId)!;
     const chainB86 = await trpcQuery<{ stores: Array<{ storeId: string; todoTotal: number }> }>('store.chainDashboard', { cookie: ownerBCookie86 });
     const rowB86 = chainB86.stores.find((r) => r.storeId !== storeId);
-    const fuB868 = await asErr(trpcQuery('membership.forUser', { cookie: ownerBCookie86, input: { userId: user861.id } }));
-    check('86.8 隔离族不回退（D-26 修复实证）：B 店 cookie 真查=B 店行 todoTotal=0（A 待办不透 B）+前提 A 店行 todoTotal≥1（断言有牙）+B 跨店读 A 域细目 404',
+    /* 微光正名批片 1（CJ-1009-06 流量池化）：forUser 店域客户闸撤除——B 跨店读 A 域细目=200 放行
+       （识别全池通）；隔离族零回退=待办/单据店域面不动（todoTotal 断言原口径）。 */
+    const fuB868 = await trpcQuery<{ membership: { planKey: string } | null }>('membership.forUser', { cookie: ownerBCookie86, input: { userId: user861.id } });
+    check('86.8 隔离族不回退（D-26 修复实证+流量池化放行）：B 店 cookie 真查=B 店行 todoTotal=0（A 待办不透 B）+前提 A 店行 todoTotal≥1（断言有牙）+B 跨店读 A 域细目=200 放行（识别全池通）',
       (rowB86?.todoTotal ?? 0) === 0 && rowA868.todoTotal >= 1 &&
-      fuB868 instanceof TrpcHttpError && fuB868.httpStatus === 404,
-      { aTodo: rowA868.todoTotal, bTodo: rowB86?.todoTotal, fuB: fuB868 && fuB868.httpStatus });
+      fuB868.membership !== undefined,
+      { aTodo: rowA868.todoTotal, bTodo: rowB86?.todoTotal, fuB: fuB868.membership?.planKey ?? null });
   }
 
   /* ==================================================================
@@ -10429,6 +10435,11 @@ async function main(): Promise<void> {
    *   89.3 券全员可领可用（注册用户领券→下单→核销留痕全链，现闸核毕零改动）；
    *   89.4 预约提前裁②（注册 7/萤火 14/烛光 14/暖阳 14，maxAdvanceMsOf 直读+第 6 天可约正向）；
    *   89.5 付费档特权零回退（bp 原值+提成映射键名同步）
+   * ==================================================================
+   * 微光正名批 片 1（CJ-1009-06 流量池化+记账标签+C 股扫尾）段：
+   *   90.1 线上域客户（sold_store=NULL）三店 forUser 通（A 店主/B 店主/店长全 200）+
+   *       不存在 id=404 防探测口径不动；90.2 隔离零回退（订单级 B 店不见 A 店单+
+   *       次卡店域闸不放行 400/403）；90.3 话术扫面（端口值零「归属店/客户归属」命中）
    * ================================================================== */
   console.log('\n[会员链路片1] 87. 收银台三件（死路修通+读路径+人话化）');
   {
@@ -10531,15 +10542,17 @@ async function main(): Promise<void> {
       sellNewbie.membership.planKey === 'plan_zhuguang' && !!sellNewbie.billNo && newbieM.planKey === 'plan_zhuguang',
       { plan: sellNewbie.membership.planKey });
 
-    /* ---- 87.8 隔离族不回退（87.1 升级单=B 店不见） ---- */
+    /* ---- 87.8 隔离族不回退（87.1 升级单=B 店不见） ----
+       微光正名批片 1（CJ-1009-06 流量池化）：forUser 店域客户闸撤除=识别全池通（200）；
+       订单/账目隔离面不动——B 店收银单仍不见 87.1 升级单（单据级隔离不回退）。 */
     const ownerB87 = await db.select().from(schema.users).where(eq(schema.users.kimiId, 'seed_e2e_chain_ownerb')).limit(1).then((r) => r[0]!);
     const ownerBCookie87 = await devLogin(ownerB87.id);
     const listB87 = await trpcQuery<Array<{ billNo: string }>>('cashier.listBills', { cookie: ownerBCookie87, input: { status: 'settled' } });
-    const fuB87 = await asErr(trpcQuery('membership.forUser', { cookie: ownerBCookie87, input: { userId: user87.id } }));
-    check('87.8 隔离族不回退：B 店收银单不见 87.1 升级单（单在本店）+B 店 forUser 读 A 店客户=NOT_FOUND（店域闸不回退）',
+    const fuB87 = await trpcQuery<{ membership: { planKey: string } | null }>('membership.forUser', { cookie: ownerBCookie87, input: { userId: user87.id } });
+    check('87.8 隔离族不回退：B 店收银单不见 87.1 升级单（单在本店）+B 店 forUser 读 A 店客户=200 放行（流量池识别通；单据隔离面不动）',
       !listB87.some((b) => b.billNo === up87.billNo) &&
-      fuB87 instanceof TrpcHttpError && fuB87.httpStatus === 404,
-      { bBills: listB87.length, fuB: fuB87 && fuB87.httpStatus });
+      fuB87.membership?.planKey === 'plan_yinghuo',
+      { bBills: listB87.length, fuB: fuB87.membership?.planKey });
   }
 
   console.log('\n[会员链路片2] 88. 线上升级 mock 域（重算/兑付/幂等/四态/拒单/权限/双域透出）');
@@ -10856,6 +10869,52 @@ async function main(): Promise<void> {
       paid89[0]!.serviceDiscountBp === 8800 && paid89[1]!.serviceDiscountBp === 8500 && paid89[2]!.serviceDiscountBp === 8000 &&
       commMap89['注册用户免费档'] === 0 && !(`${OLD89}免费档` in commMap89),
       { wg: [wg89p.rebateBp, wg89p.serviceDiscountBp], paid: paid89.map((p) => p.rebateBp), commKeys: Object.keys(commMap89) });
+  }
+
+  console.log('\n[微光正名片1] 90. 流量池化+记账标签（forUser 全池通/隔离零回退/话术扫面）');
+  {
+    /* 钉默认档（83.5 sweep 态漂移防，同 87/88/89 先例） */
+    await trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'member_plans', changes: [{ ruleKey: 'default_plan_key', valueJson: { value: 'plan_weiguang' } }] },
+    });
+
+    /* ---- 90.1 线上域客户三店 forUser 通（流量池化放行实证）+不存在 id 防探测口径不动 ---- */
+    const res90 = await fetch(`${BASE}/api/auth/dev-login`, {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ phone: '19900000990' }),
+    });
+    const cookie90 = res90.headers.getSetCookie().map((c) => c.split(';')[0]).join('; ');
+    void cookie90;
+    const user90 = await db.select().from(schema.users).where(eq(schema.users.phone, '19900000990')).then((r) => r[0]!);
+    const m90 = await db.select().from(schema.memberships).where(eq(schema.memberships.userId, user90.id)).get();
+    const ownerB90 = await db.select().from(schema.users).where(eq(schema.users.kimiId, 'seed_e2e_chain_ownerb')).limit(1).then((r) => r[0]!);
+    const ownerBCookie90 = await devLogin(ownerB90.id);
+    const [fuA90, fuB90, fuM90] = await Promise.all([
+      trpcQuery<{ membership: { planKey: string; soldStoreId: string | null } | null }>('membership.forUser', { cookie: ownerCookie, input: { userId: user90.id } }),
+      trpcQuery<{ membership: { planKey: string } | null }>('membership.forUser', { cookie: ownerBCookie90, input: { userId: user90.id } }),
+      trpcQuery<{ membership: { planKey: string } | null }>('membership.forUser', { cookie: managerCookie, input: { userId: user90.id } }),
+    ]);
+    const fuNone90 = await asErr(trpcQuery('membership.forUser', { cookie: ownerCookie, input: { userId: '01HNNOEXIST0000000000000000' } }));
+    check('90.1 流量池化：线上域客户（sold_store=NULL 注册即在册）三店 forUser 通（A 店主/B 店主/店长全 200 读出档位）+不存在 id=404 防探测口径不动',
+      m90?.planKey === 'plan_weiguang' && m90.soldStoreId === null &&
+      fuA90.membership?.planKey === 'plan_weiguang' && fuB90.membership?.planKey === 'plan_weiguang' && fuM90.membership?.planKey === 'plan_weiguang' &&
+      fuNone90 instanceof TrpcHttpError && fuNone90.httpStatus === 404,
+      { a: fuA90.membership?.planKey, b: fuB90.membership?.planKey, m: fuM90.membership?.planKey, none: fuNone90 && fuNone90.httpStatus });
+
+    /* ---- 90.2 隔离面零回退：订单级隔离（B 店不见 A 店单）+次卡店域闸（不放行）不动 ---- */
+    const listB90 = await trpcQuery<Array<{ billNo: string }>>('cashier.listBills', { cookie: ownerBCookie90, input: { status: 'settled' } });
+    const billsA90 = await db.select({ billNo: schema.cashierBills.billNo }).from(schema.cashierBills).where(eq(schema.cashierBills.storeId, storeId));
+    const leak90 = billsA90.filter((b) => listB90.some((x) => x.billNo === b.billNo));
+    const topUp90 = await asErr(trpcMutate('pass.topUp', { cookie: ownerBCookie90, input: { userId: user90.id, times: 1 } }));
+    check('90.2 隔离零回退：B 店收银单列表零 A 店单（订单级隔离不动）+次卡店域闸不放行（B 店给流量池客户充次=400/403 明文）',
+      leak90.length === 0 && topUp90 instanceof TrpcHttpError && (topUp90.httpStatus === 400 || topUp90.httpStatus === 403),
+      { leak: leak90.length, topUp: topUp90 && `${topUp90.httpStatus}:${topUp90.message}` });
+
+    /* ---- 90.3 话术扫面：「归属店/客户归属」改面清零（读口/断言随改），留面=双归属/归属月份/校验闸类登记 ---- */
+    const texts90 = await trpcQuery<{ rows: Array<{ key: string; text: string }> }>('config.activeCopyTexts', { cookie: customerCookie });
+    check('90.3 话术扫面：端口文案值零「客户归属/归属店」命中（端口通道零命中照案）+码内窄面定稿随码（e2e 79.1 文案已改）',
+      texts90.rows.every((r) => !r.text.includes('客户归属') && !r.text.includes('归属店')),
+      { hits: texts90.rows.filter((r) => r.text.includes('归属店') || r.text.includes('客户归属')).length });
   }
 
   client.close();

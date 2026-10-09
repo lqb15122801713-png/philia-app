@@ -477,6 +477,13 @@
       "when": 1791465600000,
       "tag": "0070_prod_hotfix_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "6",
+      "when": 1791475200000,
+      "tag": "0071_rename_pool_keys",
+      "breakpoints": true
     }
   ]
 }
