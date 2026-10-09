@@ -23,7 +23,7 @@ const HOME_COPY_TABLE = {
   /* ---- 身份带 idband / 窄行 idline ---- */
   'home.idFallback': '菲丽亚宠友',
   'home.rebateLabel': '回馈金',
-  'home.idJoin': '免费领个身份 ›',
+  'home.idJoin': '开通会员 ›',
   'home.memberCode': '会员码 ›',
 
   /* ---- 浮动大卡 megacard（双入口） ---- */

@@ -54,9 +54,14 @@ const MEMBER_COPY_TABLE = {
   'j1.compareRowCta': '开通 ›',
   'j1.compareRowFreeCta': '免费开通',
   'j1.compareRowCurrent': '当前档',
-  'j1.compareFooter': '四档共通：七节点全程可视 · 美容报告 30 分钟 · 安心包全员免费\n年费 ≠ 储值 · 到期不自动续费 · 权益只加不减',
+  /* 片 1 C 股裁②（安心包延续·老板 10-09 批）：明示行=注册用户在册即享 */
+  'j1.compareFooter': '四档共通：七节点全程可视 · 美容报告 30 分钟 · 安心包全员免费（注册用户在册即享）\n年费 ≠ 储值 · 到期不自动续费 · 权益只加不减',
   'j1.ctaOpen': '开通{tier} · 每天 ¥{daily}',
   'j1.ctaOpenFree': '免费注册 · 领个身份',
+  /* 片 1 C 股裁①：注册用户态免费档卡 CTA 退位=「当前档」注记不动作（注册即在册=零办理动作） */
+  'j1.ctaCurrentFree': '当前档 · 在册即享基础功能',
+  /* 片 1 C 股裁②（安心包延续·老板 10-09 批）：四档对照表尾明示行（端口件） */
+  'j1.carePackAllFree': '安心包：全员免费 · 注册用户在册即享（来 Philia 即享）',
   'j1.ctaSub': '到期不自动续费 · 随时退卡',
   /* PR-4 UX P2-3：已是会员态 CTA 不再显示「开通 · 每天 ¥x」（与提示条信息打架），改回会员中心 */
   'j1.ctaAlreadyMember': '已是会员 · 去会员中心 ›',

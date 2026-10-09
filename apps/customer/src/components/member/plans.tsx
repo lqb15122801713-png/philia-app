@@ -13,6 +13,7 @@
  */
 
 import { formatFen } from '../home/common'
+import { mc } from './copy'
 
 /** membership.plans 档位公开形状（对齐 server/src/routers/membership.ts planPublicShape） */
 export interface MemberPlanPublic {
@@ -125,9 +126,10 @@ export function PlanCompareTable({
           </li>
         ))}
       </ul>
-      {/* 安心包=全员免费（CJ-0922-13 落槌：来 Philia 即享，非会员 ¥15 作废） */}
+      {/* 安心包=全员免费（CJ-0922-13 落槌：来 Philia 即享，非会员 ¥15 作废；
+          片 1 C 股裁②：明示行进端口件 j1.carePackAllFree，非工程师可改） */}
       <p className="border-t border-[rgba(59,46,36,.06)] px-4 py-3 text-caption text-ink-secondary">
-        安心包：全员免费（来店即享，会员与非会员同享）
+        {mc('j1.carePackAllFree')}
       </p>
     </div>
   )

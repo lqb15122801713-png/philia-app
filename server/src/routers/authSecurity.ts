@@ -665,7 +665,8 @@ export const authSecurityRouter = router({
 
       const now = new Date();
       const requestNo = await genPhoneChangeRequestNo(ctx.db, now);
-      /* 片 2 裁件②：申诉归属店=客户最近消费店（appointments/cashier_bills 新者；无消费=NULL=平台件） */
+      /* 片 2 裁件②：申诉记账标签=客户最近消费店（appointments/cashier_bills 新者；无消费=NULL=平台件）
+         （CJ-1009-06 定盘星：「归属」作废改「记账标签」——话术正名，逻辑面零改动） */
       const lastAppt = await ctx.db
         .select({ storeId: schema.appointments.storeId, createdAt: schema.appointments.createdAt })
         .from(schema.appointments)
@@ -717,9 +718,10 @@ export const authSecurityRouter = router({
   /**
    * 待审申诉队列（manager|owner）：submitted 升序（先提先审）+ SLA 超期标记
    * （createdAt 距今 >24h → slaBreached=true；照 refund.pendingActual 工艺）。
-   * 店域过滤（片 2 裁件②·片 1 意见书 §三裁定）：归属店∈店域集合（老板=全域，
-   * 店长=本店）；NULL=平台件（无消费申诉人，无归属店）=全店可见可受理
+   * 店域过滤（片 2 裁件②·片 1 意见书 §三裁定）：记账标签∈店域集合（老板=全域，
+   * 店长=本店）；NULL=平台件（无消费申诉人，无记账标签）=全店可见可受理
    * （就近门店受理口径，R13a 既有店长审批流不回退）。
+   * （CJ-1009-06 定盘星：「归属店」正名「记账标签」——话术改，逻辑面零改动）
    */
   listPhoneAppeals: merchantManagerProcedure.query(async ({ ctx }) => {
     const scope = storeScopeIds(ctx.user);
@@ -766,8 +768,9 @@ export const authSecurityRouter = router({
         .limit(1)
         .then((r) => r[0]);
       if (!req) throw new TRPCError({ code: 'NOT_FOUND', message: '申诉单不存在' });
-      /* 片 2 裁件②店域闸：归属店∉店域集合=NOT_FOUND（统一防探测口径）；
-         NULL=平台件（无归属店）=全店可受理（就近门店受理口径，与 listPhoneAppeals 同口径） */
+      /* 片 2 裁件②店域闸：记账标签∉店域集合=NOT_FOUND（统一防探测口径）；
+         NULL=平台件（无记账标签）=全店可受理（就近门店受理口径，与 listPhoneAppeals 同口径）
+         （CJ-1009-06：「归属店」正名「记账标签」——话术改，逻辑面零改动） */
       {
         const scope = storeScopeIds(ctx.user);
         const visible = req.storeId ? scope.includes(req.storeId) : true;
