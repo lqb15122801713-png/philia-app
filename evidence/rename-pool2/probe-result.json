@@ -1,0 +1,53 @@
+{
+  "allOk": true,
+  "checks": [
+    {
+      "name": "备数：暖阳档客户落档（plan_nuanyang active）",
+      "ok": true,
+      "detail": "19900000993"
+    },
+    {
+      "name": "店主登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "画布页签 home：iframe src=http://localhost:7100/home?canvasPreview=1+目标 200 真页（非死链）",
+      "ok": true,
+      "detail": "{\"iframe\":true,\"src\":\"http://localhost:7100/home?canvasPreview=1&canvasStore=01M4G8N789533VADBE3G7PEBEN\",\"fetchOk\":true,\"fetchLen\":754}"
+    },
+    {
+      "name": "画布页签 memberCenter：iframe src=http://localhost:7100/member?canvasPreview=1+目标 200 真页（非死链）",
+      "ok": true,
+      "detail": "{\"iframe\":true,\"src\":\"http://localhost:7100/member?canvasPreview=1&canvasStore=01M4G8N789533VADBE3G7PEBEN\",\"fetchOk\":true,\"fetchLen\":754}"
+    },
+    {
+      "name": "画布页签 cashierMarketing：iframe src=http://localhost:7101/cashier?canvasPreview=1+目标 200 真页（非死链）",
+      "ok": true,
+      "detail": "{\"iframe\":true,\"src\":\"http://localhost:7101/cashier?canvasPreview=1&canvasStore=01M4G8N789533VADBE3G7PEBEN\",\"fetchOk\":true,\"fetchLen\":758}"
+    },
+    {
+      "name": "示例客户视图：「预览示例」水印+示例档（萤火）身份大卡全渲染+零「加载失败」",
+      "ok": true,
+      "detail": "{\"watermark\":true,\"watermarkText\":\"预览示例 · 示例客户视图（非真实数据）\",\"identity\":true,\"exampleTier\":true,\"noLoadFail\":true}"
+    },
+    {
+      "name": "C 股 3 栅格随档（API 层）：注册用户槽 ≤ now+7d + 暖阳槽 > now+7d（8-14 天段出现=读侧缺口修复实证）",
+      "ok": true,
+      "detail": "{\"poolMax\":\"2026-10-15T09:30:00.000Z\",\"nyMax\":\"2026-10-22T09:30:00.000Z\"}"
+    },
+    {
+      "name": "C 股 3 日格对照：暖阳可约日格 > 注册用户（14 天 vs 7 天口径，整月日历 in-window 同帧）",
+      "ok": true,
+      "detail": "{\"nuanyang\":{\"total\":31,\"inWindow\":14},\"registered\":{\"total\":31,\"inWindow\":7}}"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\renamepool2\\rename-pool2-evidence\\01-canvas-home.png",
+    "E:\\KIMI code\\tmp\\renamepool2\\rename-pool2-evidence\\02-canvas-member-example.png",
+    "E:\\KIMI code\\tmp\\renamepool2\\rename-pool2-evidence\\03-canvas-cashier.png",
+    "E:\\KIMI code\\tmp\\renamepool2\\rename-pool2-evidence\\04-member-example-view.png",
+    "E:\\KIMI code\\tmp\\renamepool2\\rename-pool2-evidence\\05-grid-nuanyang-14d.png",
+    "E:\\KIMI code\\tmp\\renamepool2\\rename-pool2-evidence\\06-grid-registered-7d.png"
+  ]
+}

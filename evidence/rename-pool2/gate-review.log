@@ -1,0 +1,15 @@
+✅ 夹具前置：dev-login 客户+员工
+✅ 夹具前置：门店/寄养服务/宠物 —— store=01M4G8N789533VADBE3G7PEBEN svc=01M4G8N78CXHNS0GZYK1Y76C2F pet=01M4G8N78BMXRT0DHYNP774MCM
+✅ 夹具：寄养预约创建（2 晚） —— id=01M4G8Y6PNMEJ5ZPC7WC7JP8S4
+✅ 夹具：员工核销（confirmed → in_boarding） —— status=in_boarding
+✅ 夹具：退房 checkout（负责人本人）
+✅ 夹具：退房 completed 且未评价 —— status=completed rating=null
+✅ UI① 评价区渲染（复用 ReviewPanel 合规件） —— {"found":true,"starCount":5,"activeCount":0,"submitDisabled":true,"w":44,"h":44}
+✅ UI② 默认 0 星（五钮均未选中，历史默认 5 星已铲除） —— stars=5 active=0
+✅ UI③ 未选星时提交钮 disabled（未选禁提交）
+✅ UI④ 星钮触控面 ≥44px —— 44×44
+✅ UI⑤ 选 2 星后提交钮放开（active=2） —— {"active":2,"disabled":false}
+✅ UI⑥ 提交成功 → 转「我的评价」展示
+截图：E:/KIMI code/tmp/renamepool2/review-shots/review-e2e-detail.png
+
+review-e2e 全绿 ✅
