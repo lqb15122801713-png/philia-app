@@ -63,6 +63,15 @@ export function getApiBase(): string {
   return '';
 }
 
+/** createPhiliaClient 返回体（契约签名） */
+export interface PhiliaClient {
+  trpc: CreateTRPCClient<AppRouter>;
+  queryClient: QueryClient;
+}
+
+/** 批量轮询 URL 膨胀哨兵阈值（4KB；微光正名批片 2 C 股 4 补采件） */
+export const BATCH_URL_WARN_LEN = 4096;
+
 /** 创建 trpc client + QueryClient 单例（契约签名；由各端 providers.tsx 调用一次） */
 export function createPhiliaClient(baseUrl: string): PhiliaClient {
   const trpc = createTRPCClient<AppRouter>({
@@ -71,7 +80,15 @@ export function createPhiliaClient(baseUrl: string): PhiliaClient {
         url: `${baseUrl}/trpc`,
         transformer: superjson,
         // 会话为 httpOnly cookie，跨域（7100 → 7200）必须携带凭证
-        fetch: (url, options) => fetch(url, { ...options, credentials: 'include' }),
+        fetch: (url, options) => {
+          /* 膨胀哨兵（微光正名批片 2 C 股 4：生产亲见一次 528 段未复现——哨兵捕现场，
+             捕不到=挂账不遮）：批量合拼 URL 超 4KB=记 warn 带路径指纹，零行为改动 */
+          const u = String(url);
+          if (u.length > BATCH_URL_WARN_LEN) {
+            console.warn(`[philia] 批量轮询 URL 超 ${BATCH_URL_WARN_LEN}（len=${u.length}，head=${u.slice(0, 200)}）——膨胀哨兵命中，请捕现场`);
+          }
+          return fetch(url, { ...options, credentials: 'include' });
+        },
       }),
     ],
   });

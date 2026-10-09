@@ -6,6 +6,8 @@
  *   仅 status=active，取前 20。
  * - store.getWithServices：public。门店详情 + active 服务项 + 可约时间槽（今天起 7 天
  *   按营业时间合成 30min 栅格；统一剔除「当前时间 +1h 缓冲」内时段——B3-5 W-2，
+ *   微光正名批片 2 起：客户访客栅格窗口=其档 advance_book_days 天（注册用户 7/付费档 14），
+ *   管理视角仍 7 天不动）
  *   与 assertBookableTime 同口径；传 serviceId 则按服务时长过滤——需 duration 覆盖的
  *   连续区间全程可约；B9a 任务 C：可选 petId——逐服务输出时长引擎结果
  *   serviceDurations 并以引擎时长做连续性过滤，不传 petId 行为不变）。
@@ -238,7 +240,8 @@ export const storeRouter = router({
       const now = new Date();
       /**
        * B3-5（W-2 今天可约口径统一）：可约槽不再依赖 store_slots 预建行——
-       * 按门店营业时间合成「今天起 7 天」30min 栅格；统一剔除「当前时间 +1h 缓冲」
+       * 按门店营业时间合成「今天起 N 天」30min 栅格（N=客户档 advance_book_days 读端口；
+       * 管理视角=7 天不动）；统一剔除「当前时间 +1h 缓冲」
        * 内的时段（与 assertBookableTime 同一条线，前后端同拦）。休息日不产生槽位。
        * B8-B4：栅格墙钟改用门店规范时区（storeWallclock/storeDayStartMs，固定 +8）。
        * 批次 S4（任务 B · 可用性引擎）：可约判定从 store_slots 固定容量改为
@@ -253,21 +256,25 @@ export const storeRouter = router({
        */
       const nowWc = storeWallclock(now);
       const day0ms = storeDayStartMs(nowWc.y, nowWc.m, nowWc.day);
-      const gridEnd = day0ms + 7 * 24 * 3600 * 1000;
-      // S4：一次性取 7 天窗口的 groomer 占用快照，逐槽内存计算空闲数（不做缓存表）
-      const occupancy = await loadGroomerOccupancy(ctx.db, store.id, day0ms, gridEnd);
 
       /* 片 2：提前预约期上限读侧收窄（能看=能约同帧，超上限槽不返回）——
          客户访客按其会员档 advance_book_days（maxAdvanceMsOf，与 create 闸同函数同口径）；
-         商家/员工管理视角不截断（Infinity=不拦，7 天栅格合成上限不动） */
+         商家/员工管理视角不截断（Infinity=不拦，7 天栅格合成上限不动）。
+         微光正名批片 2（C 股 3 栅格随档放宽·观察台账销项）：栅格合成窗口=读档口径——
+         客户访客=其档 advance_book_days 天（注册用户 7/付费档 14；原来是固定 7 天合成上限
+         挡住付费档 8-14 天=读侧缺口），管理视角仍 7 天不动；能看=能约同帧不变（窗口=上限） */
       const viewerMaxAdvanceMs = ctx.user.roles.includes('customer')
         ? await maxAdvanceMsOf(ctx.db, ctx.user.id)
         : Number.POSITIVE_INFINITY;
       const latestBookableMs = now.getTime() + viewerMaxAdvanceMs;
+      const gridDays = viewerMaxAdvanceMs === Number.POSITIVE_INFINITY ? 7 : Math.min(Math.ceil(viewerMaxAdvanceMs / (24 * 3600 * 1000)), 31);
+      const gridEnd = day0ms + gridDays * 24 * 3600 * 1000;
+      // S4：一次性取窗口的 groomer 占用快照，逐槽内存计算空闲数（不做缓存表）
+      const occupancy = await loadGroomerOccupancy(ctx.db, store.id, day0ms, gridEnd);
 
       const earliest = now.getTime() + BOOKING_LEAD_BUFFER_MS;
       const openSlots: (typeof schema.storeSlots.$inferSelect)[] = [];
-      for (let i = 0; i < 7; i++) {
+      for (let i = 0; i < gridDays; i++) {
         const dateMs = day0ms + i * 24 * 3600 * 1000;
         const dow = storeWallclock(new Date(dateMs)).dow;
         const hours = store.openHours?.[DAY_KEYS[dow]!];
@@ -299,7 +306,9 @@ export const storeRouter = router({
         }
       }
 
-      return { store, services, slots: openSlots, serviceDurations };
+      /* 微光正名批片 2（C 股 3）：栅格窗口天数透出（客户端横条同源读——客户=其档
+         advance_book_days 天，管理视角=7 天不动） */
+      return { store, services, slots: openSlots, serviceDurations, advanceDays: gridDays };
     }),
 
   /**
