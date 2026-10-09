@@ -26,12 +26,13 @@ export interface DayGrid {
   hasAvailable: boolean;
 }
 
-/** 未来 7 天栅格（与批次 3 SlotPicker 同生成口径） */
-export function buildWeekGrid(store: StoreWithHours, slots: SlotItem[], now = Date.now()): DayGrid[] {
+/** 未来 N 天栅格（与批次 3 SlotPicker 同生成口径；微光正名批片 2：N=服务端透出
+ *  advanceDays=档口径[注册用户 7/付费档 14]，缺省 7=管理/旧调用方不动） */
+export function buildWeekGrid(store: StoreWithHours, slots: SlotItem[], dayCount = 7, now = Date.now()): DayGrid[] {
   const available = new Set(slots.map((s) => s.slotStart.getTime()));
   const out: DayGrid[] = [];
   const today = new Date();
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < dayCount; i++) {
     const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
     const hours = store.openHours?.[DAY_KEYS[date.getDay()]!];
     if (!hours) {

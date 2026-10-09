@@ -2,12 +2,13 @@
  * B4-1 单屏 · 日期横条区块：
  * - 横条未来 7 天（今天/明天/M月D日 周x + 日期数），约满日/休息日置灰（仍可点入查看栅格，
  *   与批次 3 SlotPicker 日分组条同交互）；
- * - 「展开整月日历 ▸」二级渐进披露：手写整月日历（无新增依赖），覆盖 7 天窗口涉及的
- *   1~2 个月；窗口外日期灰置「未开放」（可约槽数据源 getWithServices 仅供未来 7 天，
- *   接口不动），窗口内与横条同选中态联动。
+ * - 「展开整月日历 ▸」二级渐进披露：手写整月日历（无新增依赖），覆盖窗口涉及的
+ *   1~2 个月；窗口外日期灰置「未开放」（可约槽数据源 getWithServices 窗口=档口径
+ *   advanceDays[片 2 随档放宽：注册用户 7/付费档 14]），窗口内与横条同选中态联动。
  */
 
 import { useMemo, useState } from 'react';
+import { bkc } from '@/copy/booking';
 import { weekCN } from '../format';
 import { isSameDay, type DayGrid } from './slotGrid';
 
@@ -156,7 +157,7 @@ export default function DateStripBlock({
               </div>
             );
           })}
-          <p className="text-caption text-ink-placeholder">可约期为未来 7 天，更多日期敬请期待</p>
+          <p className="text-caption text-ink-placeholder">{bkc('booking.advanceNote', { days: days.length })}</p>
         </div>
       ) : null}
     </div>

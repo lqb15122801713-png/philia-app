@@ -166,7 +166,8 @@ export default function GroomingSinglePage() {
   /* ---- 日期/时段栅格（getWithServices 合成，批次 3 口径） ---- */
   const store = servicesQ.data?.store ?? nearbyQ.data?.stores.find((s) => s.id === effStoreId) ?? null;
   const slots = useMemo(() => servicesQ.data?.slots ?? [], [servicesQ.data]);
-  const days = useMemo(() => (store ? buildWeekGrid(store, slots) : []), [store, slots]);
+  /* 微光正名批片 2（C 股 3）：栅格天数=服务端透出 advanceDays（档口径读） */
+  const days = useMemo(() => (store ? buildWeekGrid(store, slots, servicesQ.data?.advanceDays ?? 7) : []), [store, slots, servicesQ.data?.advanceDays]);
 
   // 默认选中日：首个有可约槽的日子；用户未显式选过且当前日无可约槽时，数据到位后自动改选
   useEffect(() => {

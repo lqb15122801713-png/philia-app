@@ -111,6 +111,8 @@ const BOOKING_COPY_TABLE = {
   'booking.successSignView': '查看全文 ›',
   'booking.signedBadge': '已签署',
   'booking.signPendingNote': '本单尚未完成签署，请到店补签',
+  /* 微光正名批片 2（C 股 3 栅格随档放宽）：整月日历注记=档口径读（days=服务端透出 advanceDays） */
+  'booking.advanceNote': '可约期为未来 {days} 天（按档），更多日期敬请期待',
 } as const;
 
 export const BOOKING_COPY = withCopyOverrides(BOOKING_COPY_TABLE);

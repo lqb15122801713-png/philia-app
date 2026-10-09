@@ -12,6 +12,8 @@ import { withCopyOverrides } from '@philia/shared';
 const MEMBER_COPY_TABLE = {
   /* ---- A-3 会员页 · 持有态 ---- */
   'a3.headTitle': '会员',
+  /* 微光正名片 2 A 股（CJ-1009-02 裁①）：画布预览示例客户视图水印（军规一②防误导店主） */
+  'mc.canvasExampleNote': '预览示例 · 示例客户视图（非真实数据）',
   'a3.pushLabel': 'MEMBER',
   'a3.headNo': 'PHILIA CLUB',
   'a3.stampFrozen': '已冻结 · 续费即解冻',

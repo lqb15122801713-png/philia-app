@@ -22,6 +22,10 @@
  * unusedPerks/perksWall/famCard/rules/cta）——块内逻辑零改动，块序/显隐=useCanvasLayout
  * 有效布局（published 覆盖∪注册表默认序尾补）；data-block-key 锚 + CK(data-copy-key)
  * 挂注册表 copyKeys 键位（Ledger cells/SecH title  widening=ReactNode 后向兼容）。
+ *
+ * 微光正名批片 2（A 股 · CJ-1009-02 裁①）：画布预览探针模式（?canvasPreview=1）下
+ * 会员态 401/403=示例客户视图（骨架+示例数据[示例档=萤火读 member_plans 端口]+
+ * 「预览示例」水印角标，零真会话零写库）；真用户页零改动（非探针模式照旧 ErrorState）。
  */
 
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
@@ -77,6 +81,12 @@ export default function MemberCenterPage() {
   const navigate = useNavigate()
   const { user } = useMe()
   const [sheet, setSheet] = useState<'renew' | 'quit' | 'saved' | null>(null)
+
+  /* 微光正名批片 2 A 股（CJ-1009-02 裁①）：画布预览探针参（?canvasPreview=1）识别 */
+  const isCanvasPreview = useMemo(
+    () => new URLSearchParams(window.location.search).get('canvasPreview') === '1',
+    [],
+  )
 
   /* 画布布局店锚（同 HomePage 口径：?canvasStore= 预览店锚 > B4-3 记忆门店 > listNearby 首店） */
   const previewStoreId = useMemo(
@@ -146,15 +156,38 @@ export default function MemberCenterPage() {
           <LoadingBlock lines={4} />
         </div>
       ) : myQ.isError || plansQ.isError ? (
-        <div className="m2-pad" style={{ marginTop: 24 }}>
-          <ErrorState
-            message={mc('common.memberLoadFail')}
-            onRetry={() => {
-              void myQ.refetch()
-              void plansQ.refetch()
-            }}
-          />
-        </div>
+        /* 片 2 A 股：画布预览探针模式下会员态 401/403=示例客户视图（骨架+示例数据，
+           零真会话零写库；真用户页零改动——非探针模式照旧 ErrorState） */
+        myQ.isError && isCanvasPreview && !plansQ.isPending && !plansQ.isError ? (
+          <CanvasLayoutLoader pageKey="memberCenter" storeId={mcStoreId}>
+            <A3Body
+              storeId={mcStoreId}
+              my={exampleMyOf(plansQ.data.plans as V2Plan[])}
+              plans={plansQ.data.plans as V2Plan[]}
+              settlementDay={plansQ.data.rebateSettlementDay}
+              validityDays={plansQ.data.membershipValidityDays}
+              savings={null}
+              unusedQ={null}
+              renewLine={null}
+              exampleMode
+              onSheet={setSheet}
+              onGotoRebate={() => navigate('/member/rebate')}
+              onGotoOpen={() => navigate('/member/open')}
+              onGotoUpgrade={() => navigate('/member/upgrade')}
+              onGotoChange={() => navigate('/member/change')}
+            />
+          </CanvasLayoutLoader>
+        ) : (
+          <div className="m2-pad" style={{ marginTop: 24 }}>
+            <ErrorState
+              message={mc('common.memberLoadFail')}
+              onRetry={() => {
+                void myQ.refetch()
+                void plansQ.refetch()
+              }}
+            />
+          </div>
+        )
       ) : (
         <CanvasLayoutLoader pageKey="memberCenter" storeId={mcStoreId}>
           <A3Body
@@ -211,6 +244,27 @@ export default function MemberCenterPage() {
 
 /* ------------------------------------------------------------------ */
 
+/** 片 2 A 股：示例客户视图数据（裁②示例档=萤火读 member_plans 端口取档名/权益；
+    回馈金挂零同既有口径；零真会话零写库——纯前端合成件） */
+function exampleMyOf(plans: V2Plan[]): MyData {
+  const examplePlan = plans.find((p) => p.planKey === 'plan_yinghuo') ?? plans.find((p) => !p.free) ?? null
+  return {
+    membership: {
+      planKey: examplePlan?.planKey ?? 'plan_yinghuo',
+      status: 'active',
+      expiresAt: new Date(Date.now() + 365 * DAY_MS),
+      petCount: 0,
+      paidFen: examplePlan?.priceFen ?? 0,
+    },
+    plan: examplePlan as MyData['plan'],
+    rebate: { balanceFen: 0, pendingFen: 0, status: 'active' },
+    nextPlanKey: null,
+    nextPlanSetAt: null,
+    upgradeAvailable: true, // 示例档=萤火：存在更高档=升级入口透出（示例真布局）
+    changeWindowDays: 30,
+  }
+}
+
 interface MyData {
   membership: {
     planKey: string
@@ -237,6 +291,7 @@ function A3Body({
   savings,
   unusedQ,
   renewLine,
+  exampleMode = false,
   onSheet,
   onGotoRebate,
   onGotoOpen,
@@ -249,8 +304,10 @@ function A3Body({
   settlementDay: number
   validityDays: number
   savings: SavingsData | null
-  unusedQ: UseQueryResult<MyUnused>
+  /** 片 2 A 股：null=示例客户视图（画布预览探针模式，不发起真台账查询） */
+  unusedQ: UseQueryResult<MyUnused> | null
   renewLine: string | null
+  exampleMode?: boolean
   onSheet: (s: 'renew' | 'quit' | 'saved') => void
   onGotoRebate: () => void
   onGotoOpen: () => void
@@ -304,9 +361,15 @@ function A3Body({
       />
     ),
 
-    /* 2. 到期提醒条（补位件 §二-8：卡面与 ledger 之间；30/7 天逻辑沿用骨架版）+ 下期档位入口条 */
+    /* 2. 到期提醒条（补位件 §二-8：卡面与 ledger 之间；30/7 天逻辑沿用骨架版）+ 下期档位入口条；
+       片 2 A 股：示例模式=「预览示例」水印角标置顶（军规一②防误导店主以为真数据） */
     'mc.tips': () => (
       <>
+        {exampleMode ? (
+          <TipCard testId="canvas-example-watermark">
+            <CK k="mc.canvasExampleNote">{mc('mc.canvasExampleNote')}</CK>
+          </TipCard>
+        ) : null}
         {frozen ? (
           <TipCard testId="member-renew-reminder">
             {mc('a3.stampFrozen')}：{mc('a3.frozenTip')}
@@ -355,11 +418,14 @@ function A3Body({
       </>
     ),
 
-    /* 4. 未用权益区（权益墙上方；perk.myUnused 台账——次卡剩余并显行 + grants 资格行 + 台账注记） */
+    /* 4. 未用权益区（权益墙上方；perk.myUnused 台账——次卡剩余并显行 + grants 资格行 + 台账注记；
+       片 2 A 股：示例模式=不发起真台账查询，落既有空态行） */
     'mc.unusedPerks': () => (
       <>
         <SecH title={<CK k="perk.unusedTitle">{mc('perk.unusedTitle')}</CK>} />
-        {unusedQ.isPending ? (
+        {unusedQ === null ? (
+          <UnusedPerks data={undefined} />
+        ) : unusedQ.isPending ? (
           <LoadingBlock lines={1} />
         ) : unusedQ.isError ? (
           <ErrorState message={mc('common.memberLoadFail')} onRetry={() => void unusedQ.refetch()} />

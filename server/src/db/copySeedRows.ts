@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-09T10:34:27.558Z；键数=3889；归屏率=97.0%（未归屏 115）
+ * 生成时间口径：2026-10-09T12:25:27.237Z；键数=3891；归屏率=97.0%（未归屏 115）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -2124,6 +2124,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "text": "附加项（选加）",
   "screen": "客户·预约洗护",
   "position": "ExtrasBlock 组件内文案"
+ },
+ {
+  "key": "booking.advanceNote",
+  "domain": "booking",
+  "text": "可约期为未来 {days} 天（按档），更多日期敬请期待",
+  "screen": "客户·预约洗护",
+  "position": "DateStripBlock 组件内文案"
  },
  {
   "key": "booking.backHome",
@@ -5027,6 +5034,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "mall.rebateHook",
   "domain": "member",
   "text": "付费档返 {pcts}% · 仅抵商品 ›",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "mc.canvasExampleNote",
+  "domain": "member",
+  "text": "预览示例 · 示例客户视图（非真实数据）",
   "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
