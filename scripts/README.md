@@ -13,6 +13,8 @@
 | 路由级渲染冒烟 | `node scripts/smoke-routes.mjs` | 需三端 dev/preview（7100/7101/7102）+ server（7200）+ Edge/Chrome CDP；F1 口径见 §二.1 |
 | 部署后自检冒烟 | `node scripts/smoke-deploy.mjs` | 需 server（7200，默认）；三端 URL 默认同 BASE，本地须显式传 `CUSTOMER_URL/MERCHANT_URL/STAFF_URL`；尾部自带收尾段（§二.2） |
 | 导航闭环 | `node scripts/check-nav-closure.mjs` | 0 死胡同；Node ≥22（20/21 加 `--experimental-websocket`）；新路由须双表申报（本脚本路由表 + smoke-routes 锚点表） |
+| knip 死代码闸 | `npm run gate:knip` | 死代码/未用文件/未用导出/未用依赖（闸门两件批 CJ-1008-06）：零基线=`scripts/baselines/knip-baseline.json`，**增量零新增才绿**；核销旧件=`node scripts/gate-knip.mjs --write`（PR 须明说） |
+| 依赖结构闸 | `npm run gate:depcruise` | dependency-cruiser：循环依赖/跨域越界=红（apps→server、端与端直引、packages 上引、server→apps 全禁）；规则=`.dependency-cruiser.js`（入仓版本化） |
 | 客户端评价 e2e | `node apps/customer/scripts/review-e2e.mjs` | 需 server(7200)+customer dev(7100)；夹具自足（寄养造单→核销→退房）；`SHOT_DIR` 必须预先存在 |
 | 导航 e2e | `node scripts/e2e-nav-check.mjs` | 交互链路导航抽查（含「造单后取消」写法样例） |
 | 商品占位图生成 | `node scripts/gen-product-placeholders.mjs` | 生成三端 `public/products/staple-*.svg` 占位素材 |

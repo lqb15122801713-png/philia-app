@@ -18,7 +18,7 @@
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { ulid } from 'ulid';
-import type { PaymentProvider } from './provider';
+import type { PaymentProvider } from './types'; // 契约件（循环依赖开环：原指 provider 工厂件）
 
 /**
  * mock 回调签名密钥：生产环境必须经 MOCK_PAY_SECRET 注入；

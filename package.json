@@ -16,9 +16,15 @@
     "build": "npm run build -w @philia/customer && npm run build -w @philia/merchant && npm run build -w @philia/staff",
     "build:customer": "npm run build -w @philia/customer",
     "build:merchant": "npm run build -w @philia/merchant",
-    "build:staff": "npm run build -w @philia/staff"
+    "build:staff": "npm run build -w @philia/staff",
+    "gate:knip": "node scripts/gate-knip.mjs",
+    "gate:depcruise": "depcruise --validate .dependency-cruiser.js apps packages server/src"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "dependency-cruiser": "^18.5.0",
+    "knip": "^6.40.0"
   }
 }

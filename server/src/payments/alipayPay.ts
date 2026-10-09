@@ -35,7 +35,7 @@
  * 4. refund → alipay.trade.refund（biz_content: out_trade_no / refund_amount）。
  */
 
-import type { PaymentProvider } from './provider';
+import type { PaymentProvider } from './types'; // 契约件（循环依赖开环：原指 provider 工厂件）
 
 /** 必需的支付宝环境变量（缺一即拒启动） */
 const REQUIRED_ENVS = ['ALIPAY_APPID', 'ALIPAY_PRIVATE_KEY', 'ALIPAY_PUBLIC_KEY'] as const;
