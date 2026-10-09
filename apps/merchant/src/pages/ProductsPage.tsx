@@ -220,11 +220,21 @@ export default function ProductsPage() {
     }
     setBulkSaving(true)
     try {
-      const r = await trpc.mall.bulkUpdateProducts.mutate({ items: payload.slice(0, 50) })
-      toast.success(pd('prod.bulkDone', { n: r.updated }))
+      /* D-27 修复（B 窗实测移交 P2）：server 单批上限 50 行——分批提交替代静默截断；
+         任一批失败=已成功批从草稿剔除、未提交批保留在批量态（不静默丢弃一行） */
+      let doneCount = 0
+      for (let i = 0; i < payload.length; i += 50) {
+        const batch = payload.slice(i, i + 50)
+        const r = await trpc.mall.bulkUpdateProducts.mutate({ items: batch })
+        doneCount += r.updated
+        const doneIds = new Set(batch.map((b) => b.productId))
+        setBulkDrafts((prev) => Object.fromEntries(Object.entries(prev).filter(([id]) => !doneIds.has(id))))
+      }
+      toast.success(pd('prod.bulkDone', { n: doneCount }))
       exitBulk()
       void queryClient.invalidateQueries({ queryKey: PRODUCTS_KEY })
     } catch (e) {
+      /* 失败批及之后批次草稿全保留（已成功行已剔除）——留在批量态可改可重交（不静默丢弃） */
       toast.error(errMsg(e))
     } finally {
       setBulkSaving(false)
