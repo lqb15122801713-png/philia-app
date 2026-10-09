@@ -1,0 +1,35 @@
+{
+  "allOk": true,
+  "checks": [
+    {
+      "name": "备数：流量池客户注册即在册（dev-login 200）",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "店主登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "帧 1 流量池客户收银台识别=带出档（当前档「注册用户」+升级补差页签亮+零「会员不存在」——forUser 店域闸放行实证）",
+      "ok": true,
+      "detail": "{\"panel\":true,\"currentTier\":true,\"registered\":true,\"notFoundFree\":true}"
+    },
+    {
+      "name": "帧 2 openFree 退位：注册用户选免费档=「当前档 · 在册即享基础功能」注记+开通钮不画",
+      "ok": true,
+      "detail": "{\"currentNote\":true,\"noteText\":\"当前档 · 在册即享基础功能\",\"freeBtnGone\":true}"
+    },
+    {
+      "name": "帧 3 安心包明示行：对比弹层=「安心包全员免费（注册用户在册即享）」（裁②延续+话术同帧）",
+      "ok": true,
+      "detail": "{\"carePack\":true,\"compare\":true}"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\renamepool\\rename-pool-evidence\\01-cashier-pool-user-recognized.png",
+    "E:\\KIMI code\\tmp\\renamepool\\rename-pool-evidence\\02-open-free-current-note.png",
+    "E:\\KIMI code\\tmp\\renamepool\\rename-pool-evidence\\03-compare-carepack-note.png"
+  ]
+}
