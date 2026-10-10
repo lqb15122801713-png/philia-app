@@ -488,6 +488,97 @@ export async function openFreeMembershipCore(
   return { membership: row, created: true };
 }
 
+/* ------------------------------------------------------------------ */
+/* 续费兑付内核（产品-1010 片 2 抽件：renew 端点/线上续费共用单源）          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 续费计费档推导（membership.renew 端点与线上续费兑付共用单源——产品-1010 片 2 抽件）：
+ * currentMembership 校验（无档案拒）→ chargePlan=预约换档档（next_plan_key 非空；目标档配置缺失拒）
+ * ?? 现档。到期换档执行口径=按预约档全价续（方向不限，到期换档不收差价）。
+ */
+export async function deriveRenewChargePlan(
+  t: DbHandle,
+  userId: string,
+  now: Date,
+): Promise<{ m: MembershipRow; chargePlan: MemberPlanRow; executesSchedule: boolean }> {
+  const m = await currentMembership(t, userId, now);
+  if (!m) badRequest('该客户无会员档案（新开通请走售卡）');
+  const plans = await loadMemberPlans(t);
+  const plan = plans.get(m.planKey);
+  if (!plan) badRequest('档位配置缺失，请检查会员档配置');
+  const scheduledPlan = m.nextPlanKey ? plans.get(m.nextPlanKey) : undefined;
+  if (m.nextPlanKey && !scheduledPlan) {
+    badRequest('预约换档目标档位配置缺失，请取消预约后再续费');
+  }
+  return { m, chargePlan: scheduledPlan ?? plan!, executesSchedule: !!scheduledPlan };
+}
+
+export interface MembershipRenewCoreResult {
+  membership: MembershipRow;
+  /** 预约换档本次被执行=true（change_schedule executed 留痕已写） */
+  scheduledExecuted: boolean;
+  fromPlanKey: string;
+  /** 兑付前到期时刻（留痕用） */
+  previousExpiresAt: Date;
+}
+
+/**
+ * 续费兑付内核（事务内调用；membership.renew 端点与线上续费（产品-1010 片 2 pay.ts
+ * fulfillMembershipRenew）共用单源——同算式同事务口径）：
+ * 顺延=max(now, expiresAt)+membership_validity_days（冻结后续费自今日顺延；免费档置远端 2099）→
+ * 解冻 frozen→active + 回馈金解冻（unfreezeRebateAccount 留痕）→ 预约换档执行=plan_key 切换+
+ * 预约置空+change_schedule(executed) 留痕。paidFen=当期实付（报备口径：分摊/退会折算按当期卡价）。
+ * 金额重算/收银单/线上支付单=调用方职责（本内核不碰钱单据；chargePlan 由 deriveRenewChargePlan 推导）。
+ */
+export async function applyMembershipRenewTx(
+  t: DbHandle,
+  opts: {
+    m: MembershipRow;
+    chargePlan: MemberPlanRow;
+    /** 预约换档本次执行=true（=deriveRenewChargePlan 读到 next_plan_key 非空；与原 renew 端点 scheduledPlan 口径同） */
+    executesSchedule: boolean;
+    now: Date;
+    /** 当期实付（paid_fen 落值） */
+    paidFen: number;
+    /** 回馈金解冻留痕 sourceId（线下=收银单号；线上=支付单号） */
+    rebateSourceId: string;
+    /** change_schedule 留痕 bill_no（线下=收银单号；线上域=NULL） */
+    billNo: string | null;
+  },
+): Promise<MembershipRenewCoreResult> {
+  const { m, chargePlan, now } = opts;
+  const plans = await loadMemberPlans(t);
+  const days = planNum(plans.get('membership_validity_days'), 'days', 365);
+  const base = m.expiresAt.getTime() > now.getTime() ? m.expiresAt : now; // 到期冻结后续费自今日顺延
+  const membership = await t
+    .update(schema.memberships)
+    .set({
+      status: 'active', // 解冻 frozen→active（红线 4：续费解冻）
+      /* 补缺修复小批 P1-3：续费目标档为免费档（含预约换档落免费档）→ expiresAt 置远端 2099 */
+      expiresAt: isFreePlanRow(chargePlan) ? FREE_PLAN_EXPIRES_AT : new Date(base.getTime() + days * 24 * 3600 * 1000),
+      paidFen: opts.paidFen, // 报备：当期实付口径（分摊/退会折算按当期卡价）
+      /* 补缺-3：预约换档执行=切档+预约置空（幂等：置空后重复续费按新档常价顺延） */
+      ...(opts.executesSchedule ? { planKey: chargePlan.ruleKey, nextPlanKey: null, nextPlanSetAt: null } : {}),
+      updatedAt: now,
+    })
+    .where(eq(schema.memberships.id, m.id))
+    .returning()
+    .then((r) => r[0]!);
+  if (opts.executesSchedule) {
+    await t.insert(schema.membershipEvents).values({
+      userId: m.userId,
+      type: 'change_schedule',
+      fromPlan: m.planKey,
+      toPlan: chargePlan.ruleKey,
+      billNo: opts.billNo,
+      meta: { executed: true, petCount: m.petCount, amountFen: opts.paidFen },
+    });
+  }
+  await unfreezeRebateAccount(t, { userId: m.userId, sourceId: opts.rebateSourceId, now });
+  return { membership, scheduledExecuted: opts.executesSchedule, fromPlanKey: m.planKey, previousExpiresAt: m.expiresAt };
+}
+
 export const membershipRouter = router({
   /**
    * plans（public）：member_plans active 行透出——客户端开通页/收银台售卡区共用。
@@ -885,20 +976,9 @@ export const membershipRouter = router({
         const result = await ctx.db.transaction(async (tx) => {
           const t = txDb(tx);
           const now = new Date();
-          const m = await currentMembership(t, input.userId, now);
-          if (!m) badRequest('该客户无会员档案（新开通请走售卡）');
-          const plans = await loadMemberPlans(t);
-          const plan = plans.get(m.planKey);
-          if (!plan) badRequest('档位配置缺失，请检查会员档配置');
-          /* 补缺-3 到期换档执行（46 号档+PD-07 内测落法）：事务起读 next_plan_key 非空 →
-           * 到期后转「待续费目标档」——按预约档全价计应收（换档方向不限，到期换档不收差价
-           * 口径=按新档全价续）+plan_key 切换+next_plan_key 置空+change_schedule(executed) 留痕；
-           * 未预约续费既有口径一字不动（零破既有断言）。 */
-          const scheduledPlan = m.nextPlanKey ? plans.get(m.nextPlanKey) : undefined;
-          if (m.nextPlanKey && !scheduledPlan) {
-            badRequest('预约换档目标档位配置缺失，请取消预约后再续费');
-          }
-          const chargePlan = scheduledPlan ?? plan;
+          /* 产品-1010 片 2 抽件：计费档推导/兑付内核走共用单源（deriveRenewChargePlan/applyMembershipRenewTx），
+             校验口径一字不动（无档/缺档/预约档缺失拒单同前；补缺-3 到期换档执行=预约档全价计应收） */
+          const { m, chargePlan, executesSchedule } = await deriveRenewChargePlan(t, input.userId, now);
           const { amountFen } = membershipChargeFen(chargePlan, m.petCount);
           const sumPay = input.paySegments.reduce((s, p) => s + p.amountFen, 0);
           if (amountFen === 0) {
@@ -921,35 +1001,16 @@ export const membershipRouter = router({
             outboxIds,
           });
 
-          const days = planNum(plans.get('membership_validity_days'), 'days', 365);
-          const base = m.expiresAt.getTime() > now.getTime() ? m.expiresAt : now; // 到期冻结后续费自今日顺延
-          const membership = await t
-            .update(schema.memberships)
-            .set({
-              status: 'active', // 解冻 frozen→active（红线 4：续费解冻）
-              /* 补缺修复小批 P1-3：续费目标档为免费档（含预约换档落免费档）→ expiresAt 置远端 2099 */
-              expiresAt: isFreePlanRow(chargePlan)
-                ? FREE_PLAN_EXPIRES_AT
-                : new Date(base.getTime() + days * 24 * 3600 * 1000),
-              paidFen: amountFen, // 报备：当期实付口径（分摊/退会折算按当期卡价）
-              /* 补缺-3：预约换档执行=切档+预约置空（幂等：置空后重复续费按新档常价顺延） */
-              ...(scheduledPlan ? { planKey: chargePlan.ruleKey, nextPlanKey: null, nextPlanSetAt: null } : {}),
-              updatedAt: now,
-            })
-            .where(eq(schema.memberships.id, m.id))
-            .returning()
-            .then((r) => r[0]!);
-          if (scheduledPlan) {
-            await t.insert(schema.membershipEvents).values({
-              userId: input.userId,
-              type: 'change_schedule',
-              fromPlan: m.planKey,
-              toPlan: chargePlan.ruleKey,
-              billNo,
-              meta: { executed: true, petCount: m.petCount, amountFen },
-            });
-          }
-          await unfreezeRebateAccount(t, { userId: input.userId, sourceId: billNo, now });
+          /* 顺延+解冻+预约换档留痕+回馈金解冻=内核单源（线上续费同内核；留痕单号=线下收银单） */
+          const { membership } = await applyMembershipRenewTx(t, {
+            m,
+            chargePlan,
+            executesSchedule,
+            now,
+            paidFen: amountFen,
+            rebateSourceId: billNo,
+            billNo,
+          });
           return { billNo, billId, membership, amountFen };
         });
         outboxIds.forEach(broadcastNow);

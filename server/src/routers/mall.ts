@@ -36,6 +36,7 @@ import { EventType } from '../realtime/events';
 import { resolvePaymentProvider } from '../payments/provider';
 import { storeWallclock } from './appointment';
 import { resolveScopedRules } from './configRules';
+import { grantFirstOrderGift } from './perks';
 
 /* ------------------------------------------------------------------ */
 /* 常量与工具                                                            */
@@ -80,6 +81,65 @@ export function withOrderWriteLock<T>(fn: () => Promise<T>): Promise<T> {
     () => undefined,
   );
   return run;
+}
+
+/**
+ * 商城订单兑付内核（paid 翻转点 · 事务内调用；两条支付链共用单源——产品-1010 片 2 抽件）：
+ * - 条件更新 orders pending→paid（影响行数=0=已非 pending → 幂等零写入零流水零事件）；
+ * - payments 流水（provider/paymentId/金额/回调原文留档）；
+ * - OrderPaid 双频道事件（user + store 商家端待发货红点/新单 toast）；
+ * - grantFirstOrderGift 首单升级礼遇（首单 paid 翻转点触发，资格留痕不真发）。
+ * 调用方：routes/payCallback.ts（/api/pay/callback 旧链）/ routers/pay.ts settlePayOrderPaid（片 2 新链）。
+ * 边界：只在事务内跑；串行锁（withOrderWriteLock）由调用方持有；orders.storeId 兑付全程零触碰
+ * （订单店归属=下单事实，兑付只翻状态+落流水）。
+ */
+export async function fulfillMallOrderPaidTx(
+  tx: unknown,
+  args: {
+    orderId: string;
+    providerName: string;
+    paymentId: string;
+    paidFen: number;
+    /** 回调原文（回调路径必传存档；reconcile 路径无原文传 null） */
+    rawCallback: Record<string, unknown> | null;
+  },
+): Promise<{ idempotent: boolean; outboxIds: string[]; orderNo: string }> {
+  const t = txDb(tx);
+  const now = new Date();
+  const outboxIds: string[] = [];
+  /* 条件更新 pending→paid：影响行数=0 ⇒ 已非 pending（含重复投递）→ 幂等返回 */
+  const updated = await t
+    .update(schema.orders)
+    .set({ status: 'paid', updatedAt: now })
+    .where(and(eq(schema.orders.id, args.orderId), eq(schema.orders.status, 'pending')))
+    .returning();
+  if (updated.length === 0) {
+    const current = await t.select().from(schema.orders).where(eq(schema.orders.id, args.orderId)).get();
+    return { idempotent: true, outboxIds, orderNo: current?.orderNo ?? '' };
+  }
+  const order = updated[0]!;
+  await t.insert(schema.payments).values({
+    orderId: order.id,
+    provider: args.providerName,
+    paymentId: args.paymentId,
+    amountFen: args.paidFen,
+    status: 'paid',
+    rawCallback: args.rawCallback,
+  });
+  const eventPayload = {
+    orderId: order.id,
+    orderNo: order.orderNo,
+    totalFen: order.totalFen,
+    paymentId: args.paymentId,
+    provider: args.providerName,
+  };
+  outboxIds.push(await emitEvent(t, `user:${order.customerId}`, EventType.OrderPaid, eventPayload));
+  /* 同投商家频道：商家端待发货红点/新单 toast 实时可达（T5.4 集成补） */
+  outboxIds.push(await emitEvent(t, `store:${order.storeId}`, EventType.OrderPaid, eventPayload));
+  /* 片 3 升级礼遇：首单 paid 翻转点触发（同事务同生共死；资格留痕不真发，幂等=本人已有
+     upgrade_gift 行即跳过——上方条件更新幂等闸已拦重复投递，双保险） */
+  await grantFirstOrderGift(t, order);
+  return { idempotent: false, outboxIds, orderNo: order.orderNo };
 }
 
 type OrderRow = typeof schema.orders.$inferSelect;

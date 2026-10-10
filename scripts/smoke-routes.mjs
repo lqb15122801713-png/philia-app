@@ -127,6 +127,7 @@ const ROUTES = [
   { app: 'customer', path: '/notifications', anchors: ['消息'], serverDep: true, note: '补缺批片 5 站内信（消息中心）' },
   { app: 'customer', path: '/notifications/prefs', anchors: ['订阅管理'], serverDep: true, note: '补缺批片 5 站内信（订阅管理）' },
   { app: 'customer', path: '/member/checkout', anchors: ['确认订单'], serverDep: true, note: '补缺批片 6 线上收单骨架（Mock 通道）' },
+  { app: 'customer', path: '/member/renew', anchors: ['续费'], serverDep: true, note: '产品-1010 片 2 线上续费确认页（Mock 通道）' },
   { app: 'customer', path: `/pay/${INVALID_ID}`, anchors: ['付了没开'], serverDep: true, note: '补缺批片 6 线上收单骨架（Mock 通道）：参数化 INVALID_ID 异常态' },
   { app: 'customer', path: '/pay/reconcile', anchors: ['付了没开', '对账补开'], serverDep: true, note: '补缺批片 6 线上收单骨架（Mock 通道）' },
   /* ---- 商家端 ---- */

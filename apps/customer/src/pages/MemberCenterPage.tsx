@@ -80,7 +80,7 @@ export default function MemberCenterPage() {
   const { trpc } = usePhiliaClient()
   const navigate = useNavigate()
   const { user } = useMe()
-  const [sheet, setSheet] = useState<'renew' | 'quit' | 'saved' | null>(null)
+  const [sheet, setSheet] = useState<'quit' | 'saved' | null>(null)
 
   /* 微光正名批片 2 A 股（CJ-1009-02 裁①）：画布预览探针参（?canvasPreview=1）识别 */
   const isCanvasPreview = useMemo(
@@ -175,6 +175,7 @@ export default function MemberCenterPage() {
               onGotoOpen={() => navigate('/member/open')}
               onGotoUpgrade={() => navigate('/member/upgrade')}
               onGotoChange={() => navigate('/member/change')}
+              onGotoRenew={() => navigate('/member/renew')}
             />
           </CanvasLayoutLoader>
         ) : (
@@ -204,30 +205,12 @@ export default function MemberCenterPage() {
             onGotoOpen={() => navigate('/member/open')}
             onGotoUpgrade={() => navigate('/member/upgrade')}
             onGotoChange={() => navigate('/member/change')}
+            onGotoRenew={() => navigate('/member/renew')}
           />
         </CanvasLayoutLoader>
       )}
 
-      {/* 续费/退会说明弹层（§4.5 三件套；内测期到店付口径，骨架版文案平移） */}
-      <Sheet
-        open={sheet === 'renew'}
-        onClose={() => setSheet(null)}
-        title={mc('a3.renewSheetTitle')}
-      >
-        <p className="m2-note">
-          {mc('a3.renewSheetBody', { days: plansQ.data?.membershipValidityDays ?? 365 })}
-        </p>
-        {/* PR-5 UX P3-3：纯信息弹层「知道了」次级钮（定稿同类弹层惯例） */}
-        <button
-          type="button"
-          data-testid="renew-sheet-got-it"
-          className="m2-press"
-          style={{ marginTop: 14, width: '100%', padding: '13px 22px', borderRadius: 18, border: '1px solid var(--v2line)', background: 'var(--v2card)', color: 'var(--v2ink)', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}
-          onClick={() => setSheet(null)}
-        >
-          {mc('a3.sheetGotIt')}
-        </button>
-      </Sheet>
+      {/* 退会说明弹层（§4.5 三件套；续费弹层已随线上续费确认页退役——产品-1010 片 2） */}
       <Sheet open={sheet === 'quit'} onClose={() => setSheet(null)} title={mc('a3.quitSheetTitle')}>
         <p className="m2-note">{mc('a3.quitSheetBody')}</p>
       </Sheet>
@@ -297,6 +280,7 @@ function A3Body({
   onGotoOpen,
   onGotoUpgrade,
   onGotoChange,
+  onGotoRenew,
 }: {
   storeId: string | null
   my: MyData
@@ -308,11 +292,12 @@ function A3Body({
   unusedQ: UseQueryResult<MyUnused> | null
   renewLine: string | null
   exampleMode?: boolean
-  onSheet: (s: 'renew' | 'quit' | 'saved') => void
+  onSheet: (s: 'quit' | 'saved') => void
   onGotoRebate: () => void
   onGotoOpen: () => void
   onGotoUpgrade: () => void
   onGotoChange: () => void
+  onGotoRenew: () => void
 }) {
   const { trpc } = usePhiliaClient()
   /* ---- 画布端口（端口批收尾片 3）：注册表块序 + 有效布局（hooks 须在分流早退前） ---- */
@@ -452,7 +437,7 @@ function A3Body({
     /* 7. 规则明面（红线 5：全量八条） */
     'mc.rules': () => <RulesBlock plan={plan} settlementDay={settlementDay} validityDays={validityDays} allPcts={allPcts} />,
 
-    /* 8. CTA 区（续费=到店付弹层；升级会员 →/member/upgrade（upgradeAvailable 才显）；看看别的档 → J-01） */
+    /* 8. CTA 区（续费=线上续费确认页 /member/renew（产品-1010 片 2 线上收单）；升级会员 →/member/upgrade（upgradeAvailable 才显）；看看别的档 → J-01） */
     'mc.cta': () => (
       <div style={{ marginTop: 16 }}>
         {/* 客户端体验大批 片 3：续费优惠透出（quote renewal 折后价行，无优惠不显） */}
@@ -469,7 +454,7 @@ function A3Body({
           type="button"
           className="m2-btn-primary m2-press"
           data-testid="member-renew-cta"
-          onClick={() => (isFreePlan ? onGotoUpgrade() : onSheet('renew'))}
+          onClick={() => (isFreePlan ? onGotoUpgrade() : onGotoRenew())}
         >
           <CK k="a3.ctaRenew">
             {isFreePlan

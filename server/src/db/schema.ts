@@ -2624,7 +2624,7 @@ export const membershipEvents = sqliteTable(
     userId: text('user_id')
       .notNull()
       .references(() => users.id),
-    /** 事件类型，取值：upgrade | change_schedule | cancel_rebuy_note */
+    /** 事件类型，取值：upgrade | change_schedule | cancel_rebuy_note | renew（产品-1010 片 2 线上续费兑付留痕） */
     type: text('type').notNull(),
     /** 原档位键（cancel_rebuy_note 重购留痕为 NULL） */
     fromPlan: text('from_plan'),

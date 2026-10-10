@@ -11046,6 +11046,148 @@ async function main(): Promise<void> {
     check('91.7 族尾复原：端口行回 mock（resolve=mock；后续族零漂移）', restored91.name === 'mock', { name: restored91.name });
   }
 
+  /* ==================================================================
+   * 产品-1010 线上支付批 片 2（商城 mock 域+线上续费）段：
+   *   92.1 商城 mock 全链（createOrder 金额=订单实算/幂等同单复用/回调兑付=订单 paid+
+   *       流水+OrderPaid 双频道+首单礼）；92.2 商城四态（fail 留痕/timeout 到点关单/
+   *       drop+reconcile 补开）；92.3 续费成交（顺延 365 天+renew 留痕+幂等重放零写入）；
+   *   92.4 冻结续费解冻（frozen→active+回馈金解冻）；92.5 隔离零回退（他人单 403+
+   *       兑付不动 orders.storeId）。
+   *   移位铁律遵守：pay_orders.createdAt 不移位；超时夹具只改 timeout_at（既有口径）。
+   * ================================================================== */
+  console.log('\n[产品-1010 片2] 92. 商城 mock 域+线上续费');
+  {
+    const { closeTimeoutPayOrders } = await import('../routers/pay');
+
+    /* ---- 92.1 商城 mock 全链（金额 server 重算+幂等+回调兑付同事务） ---- */
+    const p92 = await mkPayCustomer('19900000992', '商城线上客92');
+    const prods92 = await trpcQuery<{ items: Array<{ id: string; priceFen: number; stock: number }> }>(
+      'mall.listProducts', { cookie: p92.cookie, input: { storeId } });
+    const prod92 = prods92.items.find((p) => p.priceFen > 0 && p.stock > 0)!;
+    const addr92 = { name: '九二', phone: '19900000992', detail: '测试路 92 号' };
+    const mo92 = await trpcMutate<{ id: string; orderNo: string; totalFen: number; storeId: string }>(
+      'mall.createOrder', { cookie: p92.cookie, input: { items: [{ productId: prod92.id, qty: 1 }], address: addr92 } });
+    const co92 = await createPayOrder(p92.cookie, { bizDomain: 'mall', orderId: mo92.id, amountFen: 1 }); // 假金额=不信入参实证位
+    const co92b = await createPayOrder(p92.cookie, { bizDomain: 'mall', orderId: mo92.id }); // 同人同单重创建=现状
+    const mallPayOrders92 = await db.select({ id: schema.payOrders.id }).from(schema.payOrders)
+      .where(and(eq(schema.payOrders.bizDomain, 'mall'), eq(schema.payOrders.bizId, mo92.id)));
+    check('92.1 商城收单：金额=订单实算（假金额不信）+paying+mock 单号；同人同单重创建=幂等返回现状（零新单）',
+      co92.order.amountFen === mo92.totalFen && co92.order.bizDomain === 'mall' && co92.order.status === 'paying' &&
+      co92.payParams?.mock === '1' && co92b.idempotent === true && co92b.order.payNo === co92.order.payNo && mallPayOrders92.length === 1,
+      { amount: [co92.order.amountFen, mo92.totalFen], idem: co92b.idempotent, n: mallPayOrders92.length });
+    const cb92 = await postRaw('/api/pay/orders/mock-callback', { orderId: co92.order.id, scenario: 'success' }, {}, p92.cookie);
+    const mo92Paid = await db.select().from(schema.orders).where(eq(schema.orders.id, mo92.id)).get();
+    const flow92 = await db.select().from(schema.payments).where(eq(schema.payments.orderId, mo92.id));
+    const ev92 = (await db.select().from(schema.eventOutbox))
+      .filter((e) => e.eventType === 'order.paid' && JSON.stringify(e.payload).includes(mo92.id));
+    const gift92 = await db.select().from(schema.memberPerkGrants)
+      .where(and(eq(schema.memberPerkGrants.userId, p92.id), eq(schema.memberPerkGrants.kind, 'upgrade_gift')));
+    check('92.1 回调兑付同事务：订单 pending→paid + payments 流水（mock/等额）+ OrderPaid 双频道事件 + 首单礼资格行',
+      cb92.status === 200 && mo92Paid?.status === 'paid' && mo92Paid.storeId === storeId &&
+      flow92.length === 1 && flow92[0]!.amountFen === mo92.totalFen && ev92.length === 2 && gift92.length === 1,
+      { order: mo92Paid?.status, flow: flow92.length, ev: ev92.length, gift: gift92.length });
+    /* 重放回调零副作用（幂等命门）：再 success 一次 → 流水/事件/礼不增 */
+    await postRaw('/api/pay/orders/mock-callback', { orderId: co92.order.id, scenario: 'success' }, {}, p92.cookie);
+    const flow92b = await db.select().from(schema.payments).where(eq(schema.payments.orderId, mo92.id));
+    const ev92b = (await db.select().from(schema.eventOutbox))
+      .filter((e) => e.eventType === 'order.paid' && JSON.stringify(e.payload).includes(mo92.id));
+    const gift92b = await db.select().from(schema.memberPerkGrants)
+      .where(and(eq(schema.memberPerkGrants.userId, p92.id), eq(schema.memberPerkGrants.kind, 'upgrade_gift')));
+    check('92.1 重放回调零副作用：流水仍 1 + OrderPaid 仍 2 + 首单礼仍 1（幂等零写入）',
+      flow92b.length === 1 && ev92b.length === 2 && gift92b.length === 1,
+      { flow: flow92b.length, ev: ev92b.length, gift: gift92b.length });
+
+    /* ---- 92.2 商城四态（fail/timeout/drop+reconcile 照 88 族工艺） ---- */
+    const mo92f = await trpcMutate<{ id: string }>(
+      'mall.createOrder', { cookie: p92.cookie, input: { items: [{ productId: prod92.id, qty: 1 }], address: addr92 } });
+    const co92f = await createPayOrder(p92.cookie, { bizDomain: 'mall', orderId: mo92f.id });
+    await postRaw('/api/pay/orders/mock-callback', { orderId: co92f.order.id, scenario: 'fail' }, {}, p92.cookie);
+    const co92fAfter = await db.select().from(schema.payOrders).where(eq(schema.payOrders.id, co92f.order.id)).get();
+    const mo92fAfter = await db.select().from(schema.orders).where(eq(schema.orders.id, mo92f.id)).get();
+    const mo92t = await trpcMutate<{ id: string }>(
+      'mall.createOrder', { cookie: p92.cookie, input: { items: [{ productId: prod92.id, qty: 1 }], address: addr92 } });
+    const co92t = await createPayOrder(p92.cookie, { bizDomain: 'mall', orderId: mo92t.id });
+    await postRaw('/api/pay/orders/mock-callback', { orderId: co92t.order.id, scenario: 'timeout' }, {}, p92.cookie);
+    await db.update(schema.payOrders).set({ timeoutAt: new Date(Date.now() - 60_000) }).where(eq(schema.payOrders.id, co92t.order.id)); // 超时夹具只改 timeout_at
+    await closeTimeoutPayOrders(db, new Date());
+    const co92tAfter = await db.select().from(schema.payOrders).where(eq(schema.payOrders.id, co92t.order.id)).get();
+    const mo92tAfter = await db.select().from(schema.orders).where(eq(schema.orders.id, mo92t.id)).get();
+    check('92.2 fail=支付单 failed 留痕+订单仍 pending 零兑付；timeout=留 paying，到点 sweeper 关单 closed+订单仍 pending',
+      co92fAfter?.status === 'failed' && mo92fAfter?.status === 'pending' &&
+      co92tAfter?.status === 'closed' && mo92tAfter?.status === 'pending',
+      { fail: [co92fAfter?.status, mo92fAfter?.status], timeout: [co92tAfter?.status, mo92tAfter?.status] });
+    const mo92d = await trpcMutate<{ id: string }>(
+      'mall.createOrder', { cookie: p92.cookie, input: { items: [{ productId: prod92.id, qty: 1 }], address: addr92 } });
+    const co92d = await createPayOrder(p92.cookie, { bizDomain: 'mall', orderId: mo92d.id });
+    await postRaw('/api/pay/orders/mock-callback', { orderId: co92d.order.id, scenario: 'drop' }, {}, p92.cookie);
+    const rec92 = await trpcMutate<{ reconciled: boolean }>('pay.reconcile', { cookie: p92.cookie, input: { payNo: co92d.order.payNo } });
+    const mo92dAfter = await db.select().from(schema.orders).where(eq(schema.orders.id, mo92d.id)).get();
+    const flow92d = await db.select().from(schema.payments).where(eq(schema.payments.orderId, mo92d.id));
+    const rec92dup = await trpcMutate<{ reconciled: boolean }>('pay.reconcile', { cookie: p92.cookie, input: { payNo: co92d.order.payNo } });
+    check('92.2 drop+reconcile：掉单自助补开=订单 paid 坐实+流水落 1；再 reconcile=幂等零动作',
+      rec92.reconciled === true && mo92dAfter?.status === 'paid' && flow92d.length === 1 && rec92dup.reconciled === false,
+      { rec: rec92.reconciled, order: mo92dAfter?.status, flow: flow92d.length, dup: rec92dup.reconciled });
+
+    /* ---- 92.3 线上续费成交（server 实算+顺延+留痕+幂等） ---- */
+    const p92r = await mkPayCustomer('19900000993', '续费客92');
+    const coOpen92 = await createPayOrder(p92r.cookie, {
+      bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+    });
+    await postRaw('/api/pay/orders/mock-callback', { orderId: coOpen92.order.id, scenario: 'success' }, {}, p92r.cookie);
+    const m92Before = await db.select().from(schema.memberships).where(eq(schema.memberships.userId, p92r.id)).get();
+    const q92 = await trpcQuery<{ amountFen: number; planKey: string; renewInfo: { nextExpiresAt: string; scheduledChange: boolean } | null }>(
+      'pay.quote', { cookie: p92r.cookie, input: { bizDomain: 'membership_renew' } });
+    const co92r = await createPayOrder(p92r.cookie, { bizDomain: 'membership_renew', amountFen: 1 }); // 假金额不信入参
+    const co92rDup = await createPayOrder(p92r.cookie, { bizDomain: 'membership_renew' });
+    check('92.3 续费收单：quote/收单金额=server 实算（萤火 19900+0 宠）+当日同档重创建=幂等现状（零新单）',
+      q92.amountFen === 19900 && co92r.order.amountFen === 19900 && co92r.order.bizDomain === 'membership_renew' &&
+      co92rDup.idempotent === true && co92rDup.order.payNo === co92r.order.payNo,
+      { quote: q92.amountFen, order: co92r.order.amountFen, dup: co92rDup.idempotent });
+    await postRaw('/api/pay/orders/mock-callback', { orderId: co92r.order.id, scenario: 'success' }, {}, p92r.cookie);
+    const m92After = await db.select().from(schema.memberships).where(eq(schema.memberships.userId, p92r.id)).get();
+    const renewEv92 = await db.select().from(schema.membershipEvents)
+      .where(and(eq(schema.membershipEvents.userId, p92r.id), eq(schema.membershipEvents.type, 'renew')));
+    const expectExp92 = new Date(Math.max(m92Before!.expiresAt.getTime(), Date.now()) + 365 * 24 * 3600 * 1000);
+    const expDiffOk = Math.abs(m92After!.expiresAt.getTime() - expectExp92.getTime()) < 5000;
+    check('92.3 续费兑付：到期顺延 365 天（提前续=原到期日起顺）+paidFen=当期实付+renew 留痕行（meta.payNo/online/billNo=NULL）',
+      m92After?.status === 'active' && expDiffOk && m92After.paidFen === 19900 &&
+      renewEv92.length === 1 && (renewEv92[0]!.meta as Record<string, unknown>).payNo === co92r.order.payNo && renewEv92[0]!.billNo === null,
+      { before: m92Before?.expiresAt, after: m92After?.expiresAt, ev: renewEv92.length });
+    /* 重放回调零写入（幂等命门）：renew 事件仍 1 行 */
+    await postRaw('/api/pay/orders/mock-callback', { orderId: co92r.order.id, scenario: 'success' }, {}, p92r.cookie);
+    const renewEv92b = await db.select().from(schema.membershipEvents)
+      .where(and(eq(schema.membershipEvents.userId, p92r.id), eq(schema.membershipEvents.type, 'renew')));
+    check('92.3 重放回调零写入：renew 留痕仍 1 行（幂等）', renewEv92b.length === 1, renewEv92b.length);
+
+    /* ---- 92.4 冻结续费解冻（frozen→active+回馈金解冻） ---- */
+    const p92f = await mkPayCustomer('19900000994', '冻结续费客92');
+    const coOpen92f = await createPayOrder(p92f.cookie, {
+      bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+    });
+    await postRaw('/api/pay/orders/mock-callback', { orderId: coOpen92f.order.id, scenario: 'success' }, {}, p92f.cookie);
+    /* 夹具：会员冻结 + 回馈金账户冻结（直插库守错误路径前提，同既有族工艺） */
+    await db.update(schema.memberships).set({ status: 'frozen' }).where(eq(schema.memberships.userId, p92f.id));
+    await db.update(schema.rebateAccounts).set({ status: 'frozen' }).where(eq(schema.rebateAccounts.userId, p92f.id));
+    const co92fr = await createPayOrder(p92f.cookie, { bizDomain: 'membership_renew' });
+    await postRaw('/api/pay/orders/mock-callback', { orderId: co92fr.order.id, scenario: 'success' }, {}, p92f.cookie);
+    const m92fAfter = await db.select().from(schema.memberships).where(eq(schema.memberships.userId, p92f.id)).get();
+    const acc92f = await db.select().from(schema.rebateAccounts).where(eq(schema.rebateAccounts.userId, p92f.id)).get();
+    check('92.4 冻结续费：成交=会员 frozen→active 解冻 + 回馈金账户 frozen→active 解冻（同事务）',
+      m92fAfter?.status === 'active' && acc92f?.status === 'active',
+      { m: m92fAfter?.status, acc: acc92f?.status });
+
+    /* ---- 92.5 隔离零回退（他人单闸+兑付不动店归属） ---- */
+    const other92 = await mkPayCustomer('19900000995', '旁人92');
+    const stealCreate = await asErr(createPayOrder(other92.cookie, { bizDomain: 'mall', orderId: mo92.id }));
+    const stealStatus = await asErr(trpcQuery('pay.status', { cookie: other92.cookie, input: { payNo: co92.order.payNo } }));
+    const storeIdAfter = (await db.select().from(schema.orders).where(eq(schema.orders.id, mo92.id)).get())?.storeId;
+    check('92.5 隔离零回退：他人商城单收单 403 + 他人支付单 status 403 + 兑付不动 orders.storeId（订单店归属=下单事实）',
+      stealCreate instanceof TrpcHttpError && (stealCreate.httpStatus === 403 || stealCreate.httpStatus === 400) &&
+      stealStatus instanceof TrpcHttpError && stealStatus.httpStatus === 403 &&
+      storeIdAfter === storeId,
+      { create: stealCreate && stealCreate.httpStatus, status: stealStatus && stealStatus.httpStatus, storeId: storeIdAfter });
+  }
+
   client.close();
 }
 

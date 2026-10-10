@@ -35,6 +35,7 @@ import MemberCenterPage from './pages/MemberCenterPage'
 import MemberChangePage from './pages/MemberChangePage'
 import MemberOpenPage from './pages/MemberOpenPage'
 import MemberCheckoutPage from './pages/MemberCheckoutPage'
+import MemberRenewPage from './pages/MemberRenewPage'
 import PayReconcilePage from './pages/PayReconcilePage'
 import PayStatePage from './pages/PayStatePage'
 import MemberRebatePage from './pages/MemberRebatePage'
@@ -158,6 +159,8 @@ function ProtectedRoutes() {
       {/* 补缺批片 6 线上收单骨架（Mock 通道）：确认订单/支付态/掉单自助查询
           （申报锚点=「确认订单」「付了没开」；/pay/reconcile 静态段优先于 /pay/:payNo 动态段） */}
       <Route path="/member/checkout" element={<MemberCheckoutPage />} />
+      {/* 产品-1010 片 2：线上续费确认页（详情级无 dock；入口=会员中心「续费 ›」） */}
+      <Route path="/member/renew" element={<MemberRenewPage />} />
       <Route path="/pay/reconcile" element={<PayReconcilePage />} />
       <Route path="/pay/:payNo" element={<PayStatePage />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
