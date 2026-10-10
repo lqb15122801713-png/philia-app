@@ -52,6 +52,10 @@ function DepositCard({ d }: { d: DepositItem }) {
 function RecordRow({ r }: { r: RecordItem }) {
   const kindLabel =
     r.kind === 'pay' ? rcc('rec.kindPay') : r.kind === 'order' ? rcc('rec.kindOrder') : rcc('rec.kindInvoice')
+  /* 片 3 透出：pay 行带支付单号 mono+mock 演示徽；order 行挂线上支付信息（有才显） */
+  const payNo = r.kind === 'pay' && 'payNo' in r ? r.payNo : null
+  const isMockPay = r.kind === 'pay' && 'mock' in r && r.mock === true
+  const onlinePaid = r.kind === 'order' && 'onlinePaid' in r ? r.onlinePaid : null
   return (
     <Link
       to={r.link}
@@ -63,6 +67,25 @@ function RecordRow({ r }: { r: RecordItem }) {
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-body-sm font-semibold text-ink">{r.title}</p>
+        {payNo ? (
+          <p className="m2-mono mt-0.5 text-[9px] text-ink-secondary">
+            {rcc('rec.payNoLine', { payNo })}
+            {isMockPay ? (
+              <span className="ml-1 rounded-chip bg-brand-secondary-light px-1 py-px text-[8px] font-semibold text-ink">
+                {rcc('rec.payChannelMock')}
+              </span>
+            ) : null}
+          </p>
+        ) : null}
+        {onlinePaid ? (
+          <p className="m2-mono mt-0.5 text-[9px] text-ink-secondary">
+            {rcc('rec.onlinePaidLine', {
+              payNo: onlinePaid.payNo,
+              demo: onlinePaid.mock ? `${rcc('rec.payChannelMock')} · ` : '',
+              status: onlinePaid.status,
+            })}
+          </p>
+        ) : null}
         <p className="m2-mono mt-0.5 text-[9px] text-ink-secondary">{fmtDateTime(r.createdAt)}</p>
       </div>
       <div className="flex flex-none flex-col items-end gap-0.5">

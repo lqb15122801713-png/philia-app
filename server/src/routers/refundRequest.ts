@@ -60,6 +60,7 @@ import { customerProcedure, merchantManagerProcedure, router } from '../trpc';
 import { storeDayStartMs, storeWallclock } from './appointment';
 import { withCashierWriteLock } from './cashier';
 import { resolveScopedRules } from './configRules';
+import { providerForChannel } from '../payments/provider';
 import { executeRefundCore } from './refund';
 
 /* ------------------------------------------------------------------ */
@@ -575,7 +576,9 @@ export const refundRequestRouter = router({
    *   店长超阈值照常 FORBIDDEN/留口开关落 draft）；直通 executed → 申请单 'refunded'
    *   （已批准且已生成退款单=退款中）+ refundBillNo 回挂 + approverId/approvedAt +
    *   timeline + SSE refundRequest.approved（store+user 双频道，客户端轮询兜底）。
-   * 商城单：approved + orders.status='refunding'（线下原路，报备偏差 1）。
+   * 商城单：approved + orders.status='refunding'；线上付单（pay_orders mall 域 paid）=
+   *   通道退款原路联动（产品-1010 片 3：provider.refund 幂等键=requestNo；真通道留口
+   *   「通道未开通」透出拒=整体不批可重批）；线下到店付单=照旧线下原路办理（报备偏差 1 不动）。
    * 幂等：已 approved/refunded/settled → 返回现状 idempotent=true。
    */
   approve: merchantManagerProcedure
@@ -599,12 +602,42 @@ export const refundRequestRouter = router({
       const now = new Date();
 
       if (req.orderKind === 'order') {
-        /* ---- 商城单：线下售后（无 R12 挂接，报备偏差 1） ---- */
+        /* ---- 商城单：线上付=通道退款原路联动（产品-1010 片 3；0929 口径：线上付线上退/线下付到店退两路不串） ---- */
         const order = await ctx.db
           .select()
           .from(schema.orders)
           .where(eq(schema.orders.id, req.billId))
           .get();
+        /* 线上付判定：pay_orders mall 域 paid 单（bizId=orders.id）存在=线上付单 */
+        const paidPayOrder = order
+          ? await ctx.db
+              .select()
+              .from(schema.payOrders)
+              .where(
+                and(
+                  eq(schema.payOrders.bizDomain, 'mall'),
+                  eq(schema.payOrders.bizId, order.id),
+                  eq(schema.payOrders.status, 'paid'),
+                ),
+              )
+              .orderBy(desc(schema.payOrders.createdAt), desc(schema.payOrders.id))
+              .limit(1)
+              .then((r) => r[0])
+          : undefined;
+        let onlineRefundNote: string | null = null;
+        if (order && paidPayOrder?.paymentId) {
+          /* 通道退款（幂等键=申请单号 requestNo，同号重试只退一笔；失败=整体拒半态零容忍，
+             申请单留 submitted 可重批） */
+          const provider = await providerForChannel(ctx.db, paidPayOrder.channel); // 在途单按快照通道解析
+          const rf = await provider.refund({
+            paymentId: paidPayOrder.paymentId,
+            refundNo: req.requestNo,
+            amountFen: req.amountFen,
+            totalFen: paidPayOrder.amountFen,
+            reason: `商城售后 ${req.requestNo}：${req.reasonLabel}`,
+          });
+          onlineRefundNote = `线上原路退回已发起（通道退款单 ${rf.refundId}，支付单 ${paidPayOrder.payNo}）`;
+        }
         if (order && order.status !== 'refunding') {
           await ctx.db
             .update(schema.orders)
@@ -620,7 +653,7 @@ export const refundRequestRouter = router({
             timelineJson: appendTimeline(req, {
               status: 'approved',
               at: now.toISOString(),
-              note: input.note ?? '商城售后：已批准，退款由线下原路办理',
+              note: input.note ?? onlineRefundNote ?? '商城售后：已批准，退款由线下原路办理',
             }),
             updatedAt: now,
           })

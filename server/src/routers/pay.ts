@@ -1067,21 +1067,31 @@ export const payRouter = router({
   }),
 
   /**
-   * recordsMine（customer · 客户端体验大批 片 1 · 开口项 3 裁）：消费记录统一入口——
-   * 聚合本人 支付单（pay_orders，pay.listMine 同源口径）+ 商城订单（orders，mall
-   * 域本人订单读口同源口径）+ 发票申请（invoice_requests，serviceLoop 发票列表同源
+   * recordsMine（customer · 客户端体验大批 片 1 · 开口项 3 裁；产品-1010 片 3 透出扩）：消费记录统一入口——
+   * 聚合本人 支付单（pay_orders 会员域三域 open/upgrade/renew + 商城域 mall 联表本人）+ 商城订单
+   * （orders，mall 域本人订单读口同源口径）+ 发票申请（invoice_requests，serviceLoop 发票列表同源
    * 口径）三源，按 createdAt 倒序合并返回。
-   * **纯聚合只读视图：零新表零新账，不互相调路由（三源各直接查表）**；他人数据零透出
-   * （三源均按本人 userId/customerId 过滤）。
+   * 片 3 透出扩：支付单行带 payNo/channel/paymentId/bizDomain/mock 徽标（mock 标「演示」）；
+   * 商城域支付单不另立行——挂回商城单行 onlinePaid 字段（防同单双出）。
+   * **纯聚合只读视图：零新表零新账，不互相调路由（各源各直接查表）**；他人数据零透出
+   * （各源均按本人 userId/customerId 过滤）。
    */
   recordsMine: customerProcedure.query(async ({ ctx }) => {
     const uid = ctx.user.id;
-    const [payRows, orderRows, invoiceRows] = await Promise.all([
-      // 源① 支付单（同 pay.listMine 口径：会员域双域并集 open/upgrade，biz_id=users.id）
+    const [payRows, mallPayRows, orderRows, invoiceRows] = await Promise.all([
+      // 源① 支付单（会员域三域并集 open/upgrade/renew，biz_id=users.id；片 3 透出扩 renew）
       ctx.db
         .select()
         .from(schema.payOrders)
-        .where(and(inArray(schema.payOrders.bizDomain, ['membership_open', 'membership_upgrade']), eq(schema.payOrders.bizId, uid)))
+        .where(and(inArray(schema.payOrders.bizDomain, ['membership_open', 'membership_upgrade', 'membership_renew']), eq(schema.payOrders.bizId, uid)))
+        .orderBy(desc(schema.payOrders.createdAt), desc(schema.payOrders.id))
+        .limit(50),
+      // 源①b 商城域支付单（bizId=orders.id，联表回查本人；片 3 透出扩 mall）
+      ctx.db
+        .select({ po: schema.payOrders })
+        .from(schema.payOrders)
+        .innerJoin(schema.orders, eq(schema.payOrders.bizId, schema.orders.id))
+        .where(and(eq(schema.payOrders.bizDomain, 'mall'), eq(schema.orders.customerId, uid)))
         .orderBy(desc(schema.payOrders.createdAt), desc(schema.payOrders.id))
         .limit(50),
       // 源② 商城订单（同 mall.listMyOrders 口径：customer_id=本人）
@@ -1099,25 +1109,44 @@ export const payRouter = router({
         .orderBy(desc(schema.invoiceRequests.createdAt), desc(schema.invoiceRequests.id))
         .limit(50),
     ]);
+    /* 商城域支付单按订单挂回（透出=商城单行挂线上支付信息，不另立支付单行——防同单双出） */
+    const mallPayByOrderId = new Map(mallPayRows.map((r) => [r.po.bizId, r.po]));
+    /* 支付单透出字段（片 3）：payNo/channel/paymentId/bizDomain/mock 徽标（channel='mock'） */
+    const payExpose = (o: typeof payRows[number]) => ({
+      payNo: o.payNo,
+      channel: o.channel,
+      paymentId: o.paymentId,
+      bizDomain: o.bizDomain,
+      mock: o.channel === 'mock',
+    });
     const items = [
       ...payRows.map((o) => ({
         kind: 'pay' as const,
         id: o.id,
-        title: `线上支付·${String((o.bizJson as Record<string, unknown> | null)?.planLabel ?? o.payNo)}`,
+        title:
+          o.bizDomain === 'membership_renew'
+            ? `线上续费·${String((o.bizJson as Record<string, unknown> | null)?.planLabel ?? o.payNo)}`
+            : `线上支付·${String((o.bizJson as Record<string, unknown> | null)?.planLabel ?? o.payNo)}`,
         amountFen: o.amountFen,
         status: o.status,
         createdAt: o.createdAt,
         link: `/pay/${o.payNo}`,
+        ...payExpose(o),
       })),
-      ...orderRows.map((o) => ({
-        kind: 'order' as const,
-        id: o.id,
-        title: `商城订单 ${o.orderNo}`,
-        amountFen: o.totalFen,
-        status: o.status,
-        createdAt: o.createdAt,
-        link: '/mall/orders', // 客户侧无 /orders/:id 详情页——订单行跳商城订单列表（coder N 报备，主窗对齐）
-      })),
+      ...orderRows.map((o) => {
+        const po = mallPayByOrderId.get(o.id);
+        return {
+          kind: 'order' as const,
+          id: o.id,
+          title: `商城订单 ${o.orderNo}`,
+          amountFen: o.totalFen,
+          status: o.status,
+          createdAt: o.createdAt,
+          link: '/mall/orders', // 客户侧无 /orders/:id 详情页——订单行跳商城订单列表（coder N 报备，主窗对齐）
+          /* 片 3：商城单行挂线上支付信息（有线上支付单才挂；无=纯线下/未付单） */
+          onlinePaid: po ? { payNo: po.payNo, channel: po.channel, status: po.status, paymentId: po.paymentId, mock: po.channel === 'mock' } : null,
+        };
+      }),
       ...invoiceRows.map((r) => ({
         kind: 'invoice' as const,
         id: r.id,
