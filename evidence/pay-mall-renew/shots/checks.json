@@ -1,0 +1,73 @@
+{
+  "checks": [
+    {
+      "name": "夹具：客户注册登录（dev-login phone）",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "夹具：线上升级萤火收单（注册用户档=新购口径；已是萤火=幂等直用）",
+      "ok": true,
+      "detail": "{\"__err\":\"当前已是该档会员，无需重复支付\"}"
+    },
+    {
+      "name": "夹具：萤火档 active（开通兑付坐实）",
+      "ok": true,
+      "detail": "{\"id\":\"01M4J9NGMKM196SZRX2WWT8V28\",\"userId\":\"01M4J9NGMAKTW4MVSD5YV3MBA0\",\"planKey\":\"plan_yinghuo\",\"soldStoreId\":null,\"ho"
+    },
+    {
+      "name": "帧B 续费确认页（金额 ¥199+顺延至+Mock 水印双位+当前档萤火）",
+      "ok": true,
+      "detail": "会员中心 续费 RENEW  内测通道 · 演示支付，不会真实扣款  当前档 会员档·萤火：¥199/年；商品消费回馈金 2%；服务 88 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶 含宠物 0 只 顺延至 2029年10月9日 续费金额 ¥199  成交后到期日顺延 365 天；如已冻结，回馈金"
+    },
+    {
+      "name": "帧C 支付态页（mock 演示控制区在）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "帧D 续费成功卡（「续费成功」+有效期已顺延+回馈金解冻）",
+      "ok": true,
+      "detail": "✓ 续费成功  会员档·萤火：¥199/年；商品消费回馈金 2%；服务 88 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶 · 有效期已顺延，冻结的回馈金已解冻可用。  看看会员页 ›"
+    },
+    {
+      "name": "帧E 顺延坐实（expiresAt 后移 ≈365 天）",
+      "ok": true,
+      "detail": "2028-10-09T07:00:39.000Z → 2029-10-09T07:00:39.000Z"
+    },
+    {
+      "name": "夹具：门店+在售商品可取",
+      "ok": true,
+      "detail": "store=01M4J9BCX4FAZWK57382Y75RE1 prod=01M4J9BCX73HDM41V9BAEJE3CR"
+    },
+    {
+      "name": "夹具：商城待支付单落库",
+      "ok": true,
+      "detail": "{\"id\":\"01M4JA3V02NN6RXZ2G7SB7F1A5\",\"orderNo\":\"P261010CJ52D4\",\"customerId\":\"01M4J9NGMAKTW4MVSD5YV3MBA0\",\"storeId\":\"01M4J9"
+    },
+    {
+      "name": "帧F 商城订单页「去支付」在",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "帧F 收银台弹层=统一轨四态（成功/失败/超时/掉单四链+演示徽）",
+      "ok": true,
+      "detail": "演示收银台 · 不会产生真实扣款  订单 P261010CJ52D4  ¥129  模拟支付成功 模拟失败 模拟超时 模拟掉单 放弃支付  放弃后订单将保留在「待支付」，可随时继续支付"
+    },
+    {
+      "name": "帧G 模拟成功 → 订单已支付（商城列表透出）",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\pay-channel\\evidence2\\shots\\A-member-center.png",
+    "E:\\KIMI code\\tmp\\pay-channel\\evidence2\\shots\\B-renew-confirm.png",
+    "E:\\KIMI code\\tmp\\pay-channel\\evidence2\\shots\\C-pay-state.png",
+    "E:\\KIMI code\\tmp\\pay-channel\\evidence2\\shots\\D-renew-paid.png",
+    "E:\\KIMI code\\tmp\\pay-channel\\evidence2\\shots\\E-member-after-renew.png",
+    "E:\\KIMI code\\tmp\\pay-channel\\evidence2\\shots\\F-mall-cashier-4states.png",
+    "E:\\KIMI code\\tmp\\pay-channel\\evidence2\\shots\\G-mall-paid.png"
+  ]
+}
