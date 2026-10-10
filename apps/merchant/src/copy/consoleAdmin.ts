@@ -33,6 +33,9 @@ const CONSOLE_ADMIN_COPY_TABLE = {
   'cadm.portXp': 'XP',
   'cadm.portProfile': '门店档案',
   'cadm.portReportSpec': '报表口径',
+  /* 产品-1010 片 1：E3 支付通道端口（高危件；口令复核闸句硬编码在 PayChannelPortBody，不走 copy 键防不一致） */
+  'cadm.portPayChannel': '支付通道',
+  'cadm.portPayChannelNote': '高危件 · 口令复核',
   'cadm.portPendingNote': '置灰 · 端口待立',
 
   /* ---- 置灰域空态（R10 不画假件：开口项只读占位+明面注） ---- */

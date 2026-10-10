@@ -80,7 +80,7 @@ import { TRPCError } from '@trpc/server';
 import { and, desc, eq, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
-import { getPaymentProvider } from '../payments/provider';
+import { providerForChannel } from '../payments/provider';
 import { broadcastNow, emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
 import {
@@ -925,13 +925,17 @@ export async function executeRefundCore(ctx: Context, input: RefundExecuteInput)
           const overThresholdToDraft = await loadOverThresholdToDraft(d, storeId); // 大批片 2 分层：按本店作用域解析
           const plan = await computePlan(d, storeId, input, callerIsOwner, now, overThresholdToDraft);
 
+          /* 退款单号前移生成（产品-1010 片 1 接口族④：refundNo=通道退款幂等键 refundNo，
+             线上联动调 provider.refund 须先持号；同事务生成，抛错整体回滚无残留） */
+          const refundNo = await genRefundNo(d, storeId, now);
+
           /* ---- 批次 6 补缺大批：线上原路联动骨架（R12 最小侵入，两路单据同源留痕） ----
              原单为售卡单（含 kind='membership' 行）且该客户存在 paid 线上支付单
              （pay_orders biz_domain ∈ membership_open/membership_upgrade（会员链路片 2 双域）
              AND biz_id=原单客户，按 bizId 反查最新一单）→ refundMethod 默认/强制='online_original'
-             + linkage 快照放 payOrderNo + 调 provider.refund（Mock=成功留痕；真通道
-             notImplemented 原文透出拒——事务内抛出整体回滚，半态零容忍）。draft 申请行
-             （超阈值留口）零联动纯留痕，不触发本联动。 */
+             + linkage 快照放 payOrderNo + 调 provider.refund（片 1 接口族④签名：refundNo=
+             退款单号幂等键；Mock=成功留痕；真通道留口「通道未开通」明文透出拒——事务内抛出
+             整体回滚，半态零容忍）。draft 申请行（超阈值留口）零联动纯留痕，不触发本联动。 */
           let onlineRefund: Record<string, unknown> | null = null;
           if (!plan.draftRequired) {
             const hasMembershipItem = await d
@@ -959,11 +963,20 @@ export async function executeRefundCore(ctx: Context, input: RefundExecuteInput)
                 .limit(1)
                 .then((r) => r[0]);
               if (payOrder?.paymentId) {
-                const provider = getPaymentProvider();
+                /* 在途口径：按支付单快照通道解析（切通道后旧单仍走原通道，任务书旅程 3） */
+                const provider = await providerForChannel(d, payOrder.channel);
+                let channelRefundId: string | null = null;
                 try {
-                  await provider.refund(payOrder.paymentId, plan.refundFen);
+                  const r = await provider.refund({
+                    paymentId: payOrder.paymentId,
+                    refundNo, // 幂等键=退款单号（微信 out_refund_no/支付宝 out_request_no 同口径，重试同号）
+                    amountFen: plan.refundFen,
+                    totalFen: payOrder.amountFen,
+                    reason: input.reason,
+                  });
+                  channelRefundId = r.refundId;
                 } catch (err) {
-                  // 真通道骨架 notImplemented 原文透出拒：事务内抛出 → 整体回滚（半态零容忍）
+                  // 真通道留口「通道未开通」明文透出拒：事务内抛出 → 整体回滚（半态零容忍）
                   badRequest(
                     `线上原路退回失败（${payOrder.payNo}）：${err instanceof Error ? err.message : String(err)}`,
                   );
@@ -974,7 +987,8 @@ export async function executeRefundCore(ctx: Context, input: RefundExecuteInput)
                   channel: payOrder.channel,
                   provider: provider.name,
                   refundFen: plan.refundFen,
-                  result: 'ok', // Mock=成功留痕；真通道接入后改落通道退款单号
+                  result: 'ok', // Mock=成功留痕；真通道接入后按 RefundResult.status 落终态
+                  channelRefundId, // 通道退款单号（mock=mock_rf_*；真通道=refund_id/支付宝 trade 退款号）
                 };
               }
             }
@@ -982,8 +996,7 @@ export async function executeRefundCore(ctx: Context, input: RefundExecuteInput)
           /** 实退方式终值：线上联动命中=强制 online_original；否则=入参（可空） */
           const refundMethodFinal = onlineRefund ? ('online_original' as const) : (input.refundMethod ?? null);
 
-          /* ---- ① 退款单落库（RB 日序单号；biz_date=执行日 V7；快照含 rebate 列位） ---- */
-          const refundNo = await genRefundNo(d, storeId, now);
+          /* ---- ① 退款单落库（refundNo 已于联动段前生成=通道退款幂等键同号；biz_date=执行日 V7；快照含 rebate 列位） ---- */
           const bizDate = storeLocalDateStr(now);
           const linkage = {
             ...planView(plan),

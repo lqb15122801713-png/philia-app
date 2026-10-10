@@ -22,7 +22,7 @@ import { ulid } from 'ulid';
 import { db, schema } from '../db';
 import { broadcastNow, emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
-import { getPaymentProvider, type PaymentProvider } from '../payments/provider';
+import { resolvePaymentProvider, type PaymentProvider } from '../payments/provider';
 import { MOCK_SIGNATURE_HEADER, signMockCallback } from '../payments/mockPay';
 import { withOrderWriteLock } from '../routers/mall';
 import { grantFirstOrderGift } from '../routers/perks';
@@ -197,7 +197,7 @@ export const payCallbackRoute = new Hono<PayEnv>()
       headers[key] = value;
     });
     try {
-      const provider = getPaymentProvider();
+      const provider = await resolvePaymentProvider(db); // 平台回调=当前切换通道验签（片 1 切换闸）
       const result = await processPayCallback(db, provider, headers, rawBody);
       return c.json({ code: 'SUCCESS', ...result }, 200);
     } catch (err) {
@@ -206,13 +206,13 @@ export const payCallbackRoute = new Hono<PayEnv>()
   })
   /**
    * mock 演示端点：前端 createPayment 拿到 { paymentId, payParams:{mock:'1'} } 后调用，
-   * 模拟「平台回调」完成支付闭环。仅 mock 模式暴露；需登录且仅本人 pending 订单。
+   * 模拟「平台回调」完成支付闭环。仅当前切换=mock 时暴露（片 1 切换闸口径）；需登录且仅本人 pending 订单。
    * 入参 JSON：{ orderId: string, paymentId?: string }（缺省自动生成 mock_ 单号）。
    */
   .post('/api/pay/mock-callback', async (c) => {
-    const provider = getPaymentProvider();
+    const provider = await resolvePaymentProvider(db);
     if (provider.name !== 'mock') {
-      // 生产（微信）模式绝不暴露演示入口
+      // 真通道模式绝不暴露演示入口
       return c.json({ code: 'NOT_FOUND', message: 'Not Found' }, 404);
     }
     const user = c.get('sessionUser');
