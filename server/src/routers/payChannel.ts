@@ -16,9 +16,10 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
+import { getMockChannelEntry } from '../payments/mockPay';
 import { emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
 import { merchantOwnerProcedure, router } from '../trpc';
@@ -252,4 +253,103 @@ export const payChannelRouter = router({
         };
       });
     }),
+
+  /**
+   * reconcile（owner · 产品-1010 片 3 · C 股对账读口）：通道账单 vs 业务账逐笔对。
+   * mock 期=通道账本=本地账本同表（getMockChannelEntry 回读）；真通道期=换源不换表
+   * （通道侧换 queryOrder/账单下载，本行形状不动）。
+   * 业务账两路并读：新轨 pay_orders（paymentId 锚）+ 旧链 payments 流水（paymentId 锚；
+   *   新轨兑付流水与支付单同源=按 paymentId 去重不双列，旧链独有流水才单列）；
+   * 业务侧退款额双路聚合：会员域=refund_bills linkageJson.payOrderNo 回查；商城域=
+   * refund_requests 已批准+按 billId=orders.id 聚合（片 3 线上退款联动挂点）。
+   * 逐笔 issue：missing_channel（通道无此单）/amount_mismatch（金额差）/refund_unbalanced
+   * （两路退款不等）/null=平。
+   */
+  reconcile: merchantOwnerProcedure.query(async ({ ctx }) => {
+    const [payRows, flowRows, refundRows, refundReqRows] = await Promise.all([
+      ctx.db.select().from(schema.payOrders).orderBy(desc(schema.payOrders.createdAt), desc(schema.payOrders.id)).limit(200),
+      ctx.db.select().from(schema.payments).orderBy(desc(schema.payments.createdAt), desc(schema.payments.id)).limit(200),
+      ctx.db.select().from(schema.refundBills).orderBy(desc(schema.refundBills.createdAt), desc(schema.refundBills.id)).limit(200),
+      ctx.db.select().from(schema.refundRequests).orderBy(desc(schema.refundRequests.createdAt), desc(schema.refundRequests.id)).limit(200),
+    ]);
+    /* 业务侧退款额双路聚合：会员域=refund_bills linkageJson.payOrderNo 回查；商城域=
+       refund_requests 已批准+（approved/refunded/settled）按 billId=orders.id 聚合（片 3 挂点） */
+    const bizRefundedByPayNo = new Map<string, number>();
+    for (const r of refundRows) {
+      const linkage = (r.linkageJson ?? {}) as Record<string, unknown>;
+      const online = (linkage.onlineRefund ?? null) as Record<string, unknown> | null;
+      const payNo =
+        typeof linkage.payOrderNo === 'string'
+          ? linkage.payOrderNo
+          : typeof online?.payOrderNo === 'string'
+            ? online.payOrderNo
+            : null;
+      if (payNo && (r.status === 'executed' || r.status === 'settled')) {
+        bizRefundedByPayNo.set(payNo, (bizRefundedByPayNo.get(payNo) ?? 0) + r.amountFen);
+      }
+    }
+    const bizRefundedByOrderId = new Map<string, number>();
+    for (const r of refundReqRows) {
+      if (r.orderKind === 'order' && (r.status === 'approved' || r.status === 'refunded' || r.status === 'settled')) {
+        bizRefundedByOrderId.set(r.billId, (bizRefundedByOrderId.get(r.billId) ?? 0) + r.amountFen);
+      }
+    }
+    const issueOf = (row: { bizAmountFen: number; channelTotalFen: number | null; channelRefundedFen: number; bizRefundedFen: number }): string | null => {
+      if (row.channelTotalFen === null) return 'missing_channel';
+      if (row.channelTotalFen !== row.bizAmountFen) return 'amount_mismatch';
+      if (row.channelRefundedFen !== row.bizRefundedFen) return 'refund_unbalanced';
+      return null;
+    };
+    /* 新轨支付单的 paymentId 集合（旧链流水去重锚：兑付流水与支付单同源不双列） */
+    const payOrderPaymentIds = new Set(payRows.map((p) => p.paymentId).filter((x): x is string => !!x));
+    const items = [
+      ...payRows.map((po) => {
+        const entry = po.paymentId ? getMockChannelEntry(po.paymentId) : undefined;
+        const channelRefundedFen = (entry?.refunds ?? []).reduce((s, r) => s + r.amountFen, 0);
+        /* 业务退款额按域取源：mall=refund_requests（billId=orders.id）；会员域=refund_bills（payOrderNo） */
+        const bizRefundedFen =
+          po.bizDomain === 'mall' ? (bizRefundedByOrderId.get(po.bizId) ?? 0) : (bizRefundedByPayNo.get(po.payNo) ?? 0);
+        return {
+          source: 'pay_order' as const,
+          refNo: po.payNo,
+          bizDomain: po.bizDomain,
+          paymentId: po.paymentId,
+          bizAmountFen: po.amountFen,
+          bizStatus: po.status,
+          channelStatus: entry?.channelStatus ?? null,
+          channelTotalFen: entry ? entry.totalFen : null,
+          channelRefundedFen,
+          channelRefundNos: (entry?.refunds ?? []).map((r) => r.refundNo),
+          bizRefundedFen,
+          issue: po.paymentId
+            ? issueOf({ bizAmountFen: po.amountFen, channelTotalFen: entry ? entry.totalFen : null, channelRefundedFen, bizRefundedFen })
+            : ('missing_channel' as const),
+        };
+      }),
+      ...flowRows
+        .filter((f) => !payOrderPaymentIds.has(f.paymentId)) // 新轨兑付流水=pay_order 行同源（不双列）；旧链独有流水才单列
+        .map((f) => {
+        const entry = getMockChannelEntry(f.paymentId);
+        const channelRefundedFen = (entry?.refunds ?? []).reduce((s, r) => s + r.amountFen, 0);
+        return {
+          source: 'payment_flow' as const,
+          refNo: f.orderId, // 旧链流水锚=订单 id（透出层可联 orders 读单号；v1 直出 id）
+          bizDomain: 'mall' as const,
+          paymentId: f.paymentId,
+          bizAmountFen: f.amountFen,
+          bizStatus: f.status,
+          channelStatus: entry?.channelStatus ?? null,
+          channelTotalFen: entry ? entry.totalFen : null,
+          channelRefundedFen,
+          channelRefundNos: (entry?.refunds ?? []).map((r) => r.refundNo),
+          bizRefundedFen: 0, // 旧链流水退款额=商城申请单侧无 payOrderNo 挂点（报备：退款对账以新轨为准）
+          issue: issueOf({ bizAmountFen: f.amountFen, channelTotalFen: entry ? entry.totalFen : null, channelRefundedFen, bizRefundedFen: 0 }),
+        };
+      }),
+    ];
+    return {
+      items,
+      totals: { checked: items.length, mismatched: items.filter((i) => i.issue !== null).length },
+    };
+  }),
 });

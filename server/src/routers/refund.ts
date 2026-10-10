@@ -931,8 +931,8 @@ export async function executeRefundCore(ctx: Context, input: RefundExecuteInput)
 
           /* ---- 批次 6 补缺大批：线上原路联动骨架（R12 最小侵入，两路单据同源留痕） ----
              原单为售卡单（含 kind='membership' 行）且该客户存在 paid 线上支付单
-             （pay_orders biz_domain ∈ membership_open/membership_upgrade（会员链路片 2 双域）
-             AND biz_id=原单客户，按 bizId 反查最新一单）→ refundMethod 默认/强制='online_original'
+             （pay_orders biz_domain ∈ membership_open/membership_upgrade/membership_renew（片 3 续费域入列，
+             退最近一笔线上费=倒序最新单口径不变）AND biz_id=原单客户）→ refundMethod 默认/强制='online_original'
              + linkage 快照放 payOrderNo + 调 provider.refund（片 1 接口族④签名：refundNo=
              退款单号幂等键；Mock=成功留痕；真通道留口「通道未开通」明文透出拒——事务内抛出
              整体回滚，半态零容忍）。draft 申请行（超阈值留口）零联动纯留痕，不触发本联动。 */
@@ -954,7 +954,7 @@ export async function executeRefundCore(ctx: Context, input: RefundExecuteInput)
                 .from(schema.payOrders)
                 .where(
                   and(
-                    inArray(schema.payOrders.bizDomain, ['membership_open', 'membership_upgrade']),
+                    inArray(schema.payOrders.bizDomain, ['membership_open', 'membership_upgrade', 'membership_renew']),
                     eq(schema.payOrders.bizId, plan.bill.customerId),
                     eq(schema.payOrders.status, 'paid'),
                   ),

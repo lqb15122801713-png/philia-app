@@ -609,6 +609,108 @@ function AgreementLedgerPanel({ isOwner }: { isOwner: boolean }) {
 }
 
 /* ------------------------------------------------------------------ */
+/* ⑤ 通道对账（产品-1010 片 3 · C 股；owner-only server 硬闸 payChannel.reconcile） */
+/* ------------------------------------------------------------------ */
+
+type Trpc = ReturnType<typeof usePhiliaClient>['trpc']
+
+type ReconItem = Awaited<ReturnType<Trpc['payChannel']['reconcile']['query']>>['items'][number]
+
+/** issue → 中文（对账差异类，码内写死=系统语非端口文案） */
+const RECON_ISSUE_LABEL: Record<string, string> = {
+  missing_channel: '通道无此单',
+  amount_mismatch: '金额不等',
+  refund_unbalanced: '退款不等',
+}
+
+function PayChannelReconPanel() {
+  const { trpc } = usePhiliaClient()
+  const reconQ = useQuery({
+    queryKey: ['payChannel', 'reconcile'],
+    queryFn: () => trpc.payChannel.reconcile.query(),
+    retry: 1,
+  })
+  const data = reconQ.data
+
+  return (
+    <div className="u3-panel" data-testid="ledger-paychannel-recon-panel">
+      <div className="u3-panel-head">
+        <h3>通道对账</h3>
+        <span className="aside">通道账单 vs 业务账逐笔对（mock 期=通道账本=本地账本同表，真通道换源不换表）</span>
+      </div>
+      <div className="u3-kv sm:grid-cols-3">
+        <div className="cell">
+          <div className="cap">对账笔数</div>
+          <div className="v font-number tabular-nums" data-testid="recon-total">{data ? `${data.totals.checked} 笔` : '…'}</div>
+        </div>
+        <div className="cell">
+          <div className="cap">差异笔数</div>
+          <div className="v font-number tabular-nums" data-testid="recon-mismatch">{data ? `${data.totals.mismatched} 笔` : '…'}</div>
+        </div>
+        <div className="cell">
+          <div className="cap">口径</div>
+          <div className="v text-body-sm">平=issue 空；差=逐笔列下表</div>
+        </div>
+      </div>
+      {reconQ.isPending ? (
+        <div className="space-y-2 px-[17px] pb-4">
+          {[0, 1].map((i) => (
+            <Skeleton key={i} className="h-9" />
+          ))}
+        </div>
+      ) : reconQ.isError ? (
+        <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-body-sm text-[rgba(59,46,36,.62)]">
+          读取失败（仅店主可看对账）：{errMsg(reconQ.error)}
+        </p>
+      ) : (data?.items ?? []).length === 0 ? (
+        <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-body-sm text-[rgba(59,46,36,.62)]">
+          暂无线上支付单
+        </p>
+      ) : (
+        <div className="u3-noscrollx overflow-x-auto">
+          <table className="u3-tbl min-w-[860px]">
+            <thead>
+              <tr>
+                <th>单据</th>
+                <th>域</th>
+                <th className="!text-right">业务额</th>
+                <th>业务态</th>
+                <th>通道态</th>
+                <th className="!text-right">通道额</th>
+                <th className="!text-right">通道退</th>
+                <th className="!text-right">业务退</th>
+                <th>对账</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(data?.items ?? []).map((r: ReconItem) => (
+                <tr key={`${r.source}-${r.refNo}`} data-testid={`recon-row-${r.refNo}`}>
+                  <td className="u1-num">{r.refNo}</td>
+                  <td>{r.bizDomain}</td>
+                  <td className="u1-num text-right font-semibold">¥{fenToYuan(r.bizAmountFen)}</td>
+                  <td>{r.bizStatus}</td>
+                  <td>{r.channelStatus ?? '—'}</td>
+                  <td className="u1-num text-right">{r.channelTotalFen === null ? '—' : `¥${fenToYuan(r.channelTotalFen)}`}</td>
+                  <td className="u1-num text-right">¥{fenToYuan(r.channelRefundedFen)}</td>
+                  <td className="u1-num text-right">¥{fenToYuan(r.bizRefundedFen)}</td>
+                  <td>
+                    {r.issue === null ? (
+                      <span className="u3-st done">平</span>
+                    ) : (
+                      <span className="u3-st wait">{RECON_ISSUE_LABEL[r.issue] ?? r.issue}</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
 
 export default function LedgerPage() {
   const role = useMerchantRole()
@@ -619,6 +721,8 @@ export default function LedgerPage() {
         <DepositLedgerPanel />
         <PrepaidLedgerPanel />
         <AgreementLedgerPanel isOwner={role.isOwner} />
+        {/* 产品-1010 片 3：通道对账区（owner-only server 硬闸；非店主不挂口） */}
+        {role.isOwner ? <PayChannelReconPanel /> : null}
       </div>
     </MainScaffold>
   )

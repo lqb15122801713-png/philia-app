@@ -11188,6 +11188,131 @@ async function main(): Promise<void> {
       { create: stealCreate && stealCreate.httpStatus, status: stealStatus && stealStatus.httpStatus, storeId: storeIdAfter });
   }
 
+  /* ==================================================================
+   * 产品-1010 线上支付批 片 3（末片：退款联动+记录透出+联调预备）段：
+   *   93.1 renew 域退款联动（反查三域命中续费单+onlineRefund+mock 账本 refundNo 幂等行）+
+   *       账平四账（支付单/退款单/会员档/通道账对得上，SC-003）；93.2 mall 域退款联动
+   *      （refundRequest 批准=通道退款原路+申请单 approved+重批幂等零重复退）；93.3 消费
+   *       记录透出（payNo/channel/mock 徽+renew 域入列+商城单挂 onlinePaid）；93.4 对账读口
+   *      （payChannel.reconcile 全平+非 owner 403）。
+   *   移位铁律遵守：pay_orders.createdAt 不移位；genRefundNo 日序不撞（§49 夹具 55.5 已复原）。
+   * ================================================================== */
+  console.log('\n[产品-1010 片3] 93. 退款联动+记录透出+联调预备');
+  {
+    /* 钉退款申请开关=开（防前族 sweep 态漂移，83.5 先例工艺：家族自足不赌前族复原） */
+    await trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'refund', changes: [{ ruleKey: 'refund_request_enabled', valueJson: { enabled: true } }] },
+    });
+
+    /* ---- 93.1 renew 域退款联动+账平四账（SC-003） ---- */
+    const p93 = await mkPayCustomer('19900000996', '退联客93');
+    /* 到店售卡原单（现金；会员行）+线上续费（统一轨）→ 组合=退售卡单命中最新线上单（续费） */
+    const sell93 = await sellPlan(managerCookie, {
+      userId: p93.id, planKey: 'plan_yinghuo', petCount: 0,
+      paySegments: [{ method: 'cash', amountFen: 19900 }],
+    });
+    const coOpen93 = await createPayOrder(p93.cookie, {
+      bizDomain: 'membership_upgrade', planKey: 'plan_nuanyang', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+    });
+    await postRaw('/api/pay/orders/mock-callback', { orderId: coOpen93.order.id, scenario: 'success' }, {}, p93.cookie);
+    /* 线上续费（萤火→暖阳后档=暖阳）：续费单=最新 paid 线上单 */
+    const coRenew93 = await createPayOrder(p93.cookie, { bizDomain: 'membership_renew' });
+    await postRaw('/api/pay/orders/mock-callback', { orderId: coRenew93.order.id, scenario: 'success' }, {}, p93.cookie);
+    const renewPayOrder93 = await db.select().from(schema.payOrders).where(eq(schema.payOrders.id, coRenew93.order.id)).get();
+    /* refund.execute 退到店售卡原单（全额）→ 线上联动命中续费单（最新 paid） */
+    const rf93 = await trpcMutate<{
+      refund: { id: string; refundNo: string; refundMethod: string | null; linkageJson: Record<string, unknown> | null; amountFen: number; status: string };
+      idempotent: boolean;
+    }>('refund.execute', {
+      cookie: managerCookie,
+      input: { billNo: sell93.billNo, type: 'full', reason: '片3 续费域退款联动验证' },
+    });
+    const linkage93 = (rf93.refund.linkageJson ?? {}) as Record<string, unknown>;
+    const online93 = (linkage93.onlineRefund ?? {}) as Record<string, unknown>;
+    /* 通道账本=server 进程内内存账本（runner 直读=空——片 2 起 e2e 跨进程口径）——通道侧断言走对账读口（server 内聚读径） */
+    type ReconRow93 = { refNo: string; channelTotalFen: number | null; channelRefundedFen: number; channelRefundNos: string[]; bizRefundedFen: number; issue: string | null };
+    const recon93a = await trpcQuery<{ items: ReconRow93[] }>('payChannel.reconcile', { cookie: ownerCookie });
+    const reconRow93 = recon93a.items.find((i) => i.refNo === coRenew93.order.payNo);
+    check('93.1 renew 域退款联动：反查三域命中续费单（最新 paid）+refundMethod=online_original+onlineRefund 快照+对账读口通道退款行（refundNo=退款单号幂等行+等额）',
+      rf93.refund.refundMethod === 'online_original' && linkage93.payOrderNo === coRenew93.order.payNo &&
+      online93.channel === 'mock' && online93.result === 'ok' && String(online93.channelRefundId ?? '').startsWith('mock_rf_') &&
+      !!reconRow93 && reconRow93.channelRefundNos.includes(rf93.refund.refundNo) && reconRow93.channelRefundedFen === rf93.refund.amountFen,
+      { method: rf93.refund.refundMethod, payOrderNo: linkage93.payOrderNo, online: online93, recon: reconRow93 });
+    /* 账平四账（SC-003）：支付单不动 paid/29900+退款单 executed+会员档 active 不退+通道账 Σrefunds=退款额 ≤ 原单额 */
+    const po93 = await db.select().from(schema.payOrders).where(eq(schema.payOrders.id, coRenew93.order.id)).get();
+    const m93 = await db.select().from(schema.memberships).where(eq(schema.memberships.userId, p93.id)).get();
+    check('93.1 账平四账（SC-003）：支付单 paid/金额不动 + 退款单 executed+等额 + 会员档 active 不动 + 对账读口 channelRefundedFen=退款额 ≤ 通道原单额',
+      po93?.status === 'paid' && po93.amountFen === renewPayOrder93?.amountFen &&
+      rf93.refund.status === 'executed' && rf93.refund.amountFen === 19900 && // 退额=到店售卡原单实付（全额）
+      m93?.status === 'active' && m93.planKey === 'plan_nuanyang' &&
+      !!reconRow93 && reconRow93.channelRefundedFen === 19900 && reconRow93.bizRefundedFen === 19900 && reconRow93.issue === null &&
+      (reconRow93.channelTotalFen ?? 0) >= 19900,
+      { po: [po93?.status, po93?.amountFen], rf: [rf93.refund.status, rf93.refund.amountFen], m: [m93?.status, m93?.planKey], recon: reconRow93 });
+
+    /* ---- 93.2 mall 域退款联动（refundRequest 批准=通道退款原路+重批幂等） ---- */
+    const prods93 = await trpcQuery<{ items: Array<{ id: string; priceFen: number; stock: number }> }>(
+      'mall.listProducts', { cookie: p93.cookie, input: { storeId } });
+    const prod93 = prods93.items.find((p) => p.priceFen > 0 && p.stock > 0)!;
+    const addr93 = { name: '九三', phone: '19900000996', detail: '测试路 93 号' };
+    const mo93 = await trpcMutate<{ id: string; orderNo: string; totalFen: number }>(
+      'mall.createOrder', { cookie: p93.cookie, input: { items: [{ productId: prod93.id, qty: 1 }], address: addr93 } });
+    const coMall93 = await createPayOrder(p93.cookie, { bizDomain: 'mall', orderId: mo93.id });
+    await postRaw('/api/pay/orders/mock-callback', { orderId: coMall93.order.id, scenario: 'success' }, {}, p93.cookie);
+    /* 推进到 received（申请闸=shipped/received）：商家发货+客户收货 */
+    await trpcMutate('mall.shipOrder', { cookie: ownerCookie, input: { orderId: mo93.id, trackingNo: 'SF-93-TEST' } });
+    await trpcMutate('mall.receiveOrder', { cookie: p93.cookie, input: { orderId: mo93.id } });
+    const reqCreate93 = await trpcMutate<{ request: { id: string; requestNo: string }; idempotent: boolean }>('refundRequest.create', {
+      cookie: p93.cookie,
+      input: { orderKind: 'order', billId: mo93.id, type: 'return_refund', reasonCode: 'not_as_described', description: '片3 商城线上退款联动验证' },
+    });
+    const appr93 = await trpcMutate<{ idempotent: boolean }>('refundRequest.approve', {
+      cookie: managerCookie, input: { requestId: reqCreate93.request.id },
+    });
+    /* 通道侧断言=对账读口（server 内聚读径；runner 直读 mock 账本=空，跨进程口径） */
+    const recon93b = await trpcQuery<{ items: ReconRow93[] }>('payChannel.reconcile', { cookie: ownerCookie });
+    const reconMall93 = recon93b.items.find((i) => i.refNo === coMall93.order.payNo);
+    const reqAfter93 = await trpcQuery<{ request: { status: string; timelineJson: unknown } }>('refundRequest.getById', {
+      cookie: p93.cookie, input: { requestId: reqCreate93.request.id },
+    });
+    check('93.2 mall 域退款联动：批准=通道退款原路（对账读口退款行 refundNo=申请单号/金额=申请额/业务侧等额平）+申请单 approved',
+      appr93.idempotent === false && reqAfter93.request.status === 'approved' &&
+      !!reconMall93 && reconMall93.channelRefundNos.includes(reqCreate93.request.requestNo) &&
+      reconMall93.channelRefundedFen === mo93.totalFen && reconMall93.bizRefundedFen === mo93.totalFen && reconMall93.issue === null,
+      { appr: appr93.idempotent, status: reqAfter93.request.status, recon: reconMall93 });
+    /* 重批幂等=零重复退（通道账退款行不增） */
+    const appr93dup = await trpcMutate<{ idempotent: boolean }>('refundRequest.approve', {
+      cookie: managerCookie, input: { requestId: reqCreate93.request.id },
+    });
+    const recon93c = await trpcQuery<{ items: ReconRow93[] }>('payChannel.reconcile', { cookie: ownerCookie });
+    const reconMall93b = recon93c.items.find((i) => i.refNo === coMall93.order.payNo);
+    check('93.2 重批幂等：idempotent=true + 通道账退款行不增（零重复退，refundNo 锚）',
+      appr93dup.idempotent === true &&
+      (reconMall93b?.channelRefundNos.length ?? -1) === (reconMall93?.channelRefundNos.length ?? -2),
+      { dup: appr93dup.idempotent, n: reconMall93b?.channelRefundNos.length });
+
+    /* ---- 93.3 消费记录透出（payNo/channel/mock 徽+renew 域入列+商城单挂 onlinePaid） ---- */
+    const rec93 = await trpcQuery<{ items: Array<Record<string, unknown>> }>('pay.recordsMine', { cookie: p93.cookie });
+    const renewRow93 = rec93.items.find((i) => i.kind === 'pay' && i.bizDomain === 'membership_renew');
+    const mallOrderRow93 = rec93.items.find((i) => i.kind === 'order' && i.id === mo93.id) as Record<string, unknown> | undefined;
+    const mallOnline93 = (mallOrderRow93?.onlinePaid ?? null) as Record<string, unknown> | null;
+    check('93.3 消费记录透出：renew 域入列（payNo/channel=mock/mock 徽=true）+商城单行挂 onlinePaid（同单不双出）',
+      !!renewRow93 && renewRow93.payNo === coRenew93.order.payNo && renewRow93.channel === 'mock' && renewRow93.mock === true &&
+      String(renewRow93.title ?? '').includes('线上续费') &&
+      !!mallOrderRow93 && mallOnline93?.payNo === coMall93.order.payNo && mallOnline93.mock === true,
+      { renew: renewRow93 && { payNo: renewRow93.payNo, channel: renewRow93.channel, mock: renewRow93.mock }, mall: mallOnline93 });
+
+    /* ---- 93.4 对账读口（全平+非 owner 403） ---- */
+    const recon93 = await trpcQuery<{ items: Array<Record<string, unknown>>; totals: { checked: number; mismatched: number } }>('payChannel.reconcile', { cookie: ownerCookie });
+    const recon93po = recon93.items.find((i) => i.refNo === coRenew93.order.payNo);
+    const recon93mall = recon93.items.find((i) => i.refNo === coMall93.order.payNo);
+    const recon403 = await asErr(trpcQuery('payChannel.reconcile', { cookie: managerCookie }));
+    check('93.4 对账读口：逐笔对（续费单/商城单均在列）+issue=平（mock 期通道账=本地账同表）+非 owner 403',
+      !!recon93po && recon93po.issue === null && !!recon93mall && recon93mall.issue === null &&
+      recon403 instanceof TrpcHttpError && recon403.httpStatus === 403,
+      { checked: recon93.totals, renew: recon93po && recon93po.issue, mall: recon93mall && recon93mall.issue, m403: recon403 && recon403.httpStatus });
+  }
+
   client.close();
 }
 

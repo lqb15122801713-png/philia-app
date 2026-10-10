@@ -37,6 +37,10 @@ const RECORDS_COPY_TABLE = {
   'rec.depHeldAt': '收取 {time}',
   'rec.depRefundReqAt': '申请退还 {time}',
   'rec.depRefundedAt': '退还完成 {time}',
+  /* 产品-1010 片 3：线上支付单透出（支付单号 mono+通道+mock 演示徽） */
+  'rec.payNoLine': '支付单 {payNo}',
+  'rec.payChannelMock': '演示',
+  'rec.onlinePaidLine': '线上支付 {payNo} · {demo}{status}',
 } as const;
 
 export const RECORDS_COPY = withCopyOverrides(RECORDS_COPY_TABLE);
