@@ -10915,6 +10915,137 @@ async function main(): Promise<void> {
       { hits: texts90.rows.filter((r) => r.text.includes('归属店') || r.text.includes('客户归属')).length });
   }
 
+  /* ==================================================================
+   * 产品-1010 线上支付批 片 1（通道抽象层+配置端口+切换闸）段：
+   *   91.1 mock 五接口同形可调用（createOrder/queryOrder/close/refund/verifyCallback 全链+
+   *       refundNo 幂等同号重试）；91.2 真通道留口（wechat/alipay 五方法全抛「通道未开通」
+   *       明文）；91.3 高危件口令复核（错口令 400/正口令保存）+切换闸翻转（端口行
+   *       wechat_jsapi→resolve 真通道→客户下单透出「通道未开通」拒单）+凭据掩码读出；
+   *   91.4 kill switch 开=瞬时回落 mock（在途口径）；91.5 密钥永不明文（get/config.list/
+   *       versions 留痕三路零明文）+generic 三口拒收（save/proposeChange/rollback）；
+   *   91.6 在途单按快照通道解析（port=真通道时 mock 在途单 providerForChannel 仍走 mock）。
+   *   族尾复原：provider=mock+kill off（防 sweep 态漂移，83.5 先例工艺）。
+   * ================================================================== */
+  console.log('\n[产品-1010 片1] 91. 通道抽象层（五接口族/通道配置端口高危件/切换闸）');
+  {
+    /* 钉 kill switch=关（防前族 sweep 态漂移，83.5 先例工艺；91.4 自开自收） */
+    await trpcMutate('config.setKillSwitch', { cookie: ownerCookie, input: { enabled: false } });
+    const { MockPayProvider, signMockCallback: signCb91, setMockChannelStatus: setCh91 } = await import('../payments/mockPay');
+    const { WechatPayProvider } = await import('../payments/wechatPay');
+    const { AlipayPayProvider } = await import('../payments/alipayPay');
+    const { resolvePaymentProvider, providerForChannel } = await import('../payments/provider');
+
+    /* ---- 91.1 mock 五接口同形可调用 ---- */
+    const mp91 = new MockPayProvider();
+    const co91 = await mp91.createOrder({ orderId: 'ord91test000000000000000001', totalFen: 9900, subject: '91族自测单' });
+    const q91a = await mp91.queryOrder(co91.paymentId);
+    await mp91.close({ orderId: 'ord91test000000000000000001' });
+    const q91b = await mp91.queryOrder(co91.paymentId);
+    const co91b = await mp91.createOrder({ orderId: 'ord91test000000000000000002', totalFen: 5000, subject: '91族退款单' });
+    const cbBody91 = JSON.stringify({ paymentId: co91b.paymentId, orderId: 'ord91test000000000000000002', paidFen: 5000 });
+    const vf91 = await mp91.verifyCallback({ 'x-mock-signature': signCb91(cbBody91) }, cbBody91);
+    /* 通道置 paid（演示端点职责，与 mock-callback 同工艺——verifyCallback 只验签不推账本） */
+    setCh91(co91b.paymentId, 'paid');
+    const rf91 = await mp91.refund({ paymentId: co91b.paymentId, refundNo: 'RF-91-1', amountFen: 2000, totalFen: 5000, reason: '91族自测' });
+    const rf91dup = await mp91.refund({ paymentId: co91b.paymentId, refundNo: 'RF-91-1', amountFen: 2000, totalFen: 5000 });
+    const rf91over = await mp91.refund({ paymentId: co91b.paymentId, refundNo: 'RF-91-2', amountFen: 99999, totalFen: 5000 }).then(() => 'NO_THROW').catch((e: unknown) => (e instanceof Error ? e.message : String(e)));
+    check('91.1 mock 五接口同形可调用：createOrder(mock=1)→queryOrder(unpaid)→close→queryOrder(closed)+验签闭环 paidFen+refund(refundId/success)+refundNo 幂等同号重试同 refundId+超额拒',
+      co91.payParams.mock === '1' && q91a.status === 'unpaid' && q91b.status === 'closed' &&
+      vf91.paidFen === 5000 && rf91.status === 'success' && rf91.refundId.startsWith('mock_rf_') &&
+      rf91dup.refundId === rf91.refundId && rf91over.includes('超原单总额'),
+      { q91a: q91a.status, q91b: q91b.status, rf91, rf91dup: rf91dup.refundId, rf91over });
+
+    /* ---- 91.2 真通道留口：三实现五方法全抛「通道未开通」明文 ---- */
+    const w91 = new WechatPayProvider({ appid: 'wx91', mchid: 'mchid91', serial: 'serial91', key: 'key91' }, 'wechat_jsapi');
+    const a91 = new AlipayPayProvider({ appid: 'ali91', privateKey: 'pk91', publicKey: 'pub91' });
+    const grab91 = async (fn: () => Promise<unknown>): Promise<string> => {
+      try { await fn(); return 'NO_THROW'; } catch (e) { return e instanceof Error ? e.message : String(e); }
+    };
+    const wMsgs91 = [
+      await grab91(() => w91.createOrder({ orderId: 'x', totalFen: 1, subject: 'x' })),
+      await grab91(() => w91.verifyCallback({}, '{}')),
+      await grab91(() => w91.queryOrder('x')),
+      await grab91(() => w91.refund({ paymentId: 'x', refundNo: 'r', amountFen: 1, totalFen: 1 })),
+      await grab91(() => w91.close({ orderId: 'x' })),
+    ];
+    const aMsgs91 = [
+      await grab91(() => a91.createOrder({ orderId: 'x', totalFen: 1, subject: 'x' })),
+      await grab91(() => a91.verifyCallback({}, '{}')),
+      await grab91(() => a91.queryOrder('x')),
+      await grab91(() => a91.refund({ paymentId: 'x', refundNo: 'r', amountFen: 1, totalFen: 1 })),
+      await grab91(() => a91.close({ orderId: 'x' })),
+    ];
+    check('91.2 真通道留口：wechat_jsapi/alipay_wap 两实现五方法全抛「通道未开通」明文（本批不接真钱，调用方零感知）',
+      wMsgs91.every((m) => m.includes('通道未开通')) && aMsgs91.every((m) => m.includes('通道未开通')),
+      { w: wMsgs91.map((m) => m.slice(0, 40)), a: aMsgs91.map((m) => m.slice(0, 40)) });
+
+    /* ---- 91.3 高危件口令复核+切换闸翻转+凭据掩码 ---- */
+    const badSave91 = await asErr(trpcMutate('payChannel.save', {
+      cookie: ownerCookie, input: { provider: 'wechat_jsapi', confirmPhrase: '随便一句' },
+    }));
+    const okSave91 = await trpcMutate<{ saved: boolean; version: number; credentials: { wechat: { mchid: string | null } | null } }>('payChannel.save', {
+      cookie: ownerCookie,
+      input: {
+        provider: 'wechat_jsapi',
+        confirmPhrase: '确认变更支付通道',
+        wechat: { appid: 'wx-appid-91', mchid: 'mchid-secret-8842', serial: 'serial-91', apiV3Key: 'apiv3key-secret-6755' },
+      },
+    });
+    const resolved91 = await resolvePaymentProvider(db);
+    const getAfterSave91 = await trpcQuery<{ portProvider: string | null; credentials: { wechat: { mchid: string | null; apiV3Key: string | null } | null } }>('payChannel.get', { cookie: ownerCookie });
+    const p91c = await mkPayCustomer('19900000991', '通道闸验证客');
+    const co91c = await asErr(createPayOrder(p91c.cookie, {
+      bizDomain: 'membership_open', planKey: 'plan_yinghuo', petCount: 0, agreements: AGREEMENTS_FIXTURE,
+    }));
+    check('91.3 口令复核硬闸（错口令 400）+切换闸翻转（端口行 wechat_jsapi→resolve 真通道）+客户下单透出「通道未开通」拒单+凭据掩码读出（****尾4位无明文）',
+      badSave91 instanceof TrpcHttpError && badSave91.httpStatus === 400 && badSave91.message.includes('口令复核未通过') &&
+      okSave91.saved === true && resolved91.name === 'wechat_jsapi' &&
+      co91c instanceof TrpcHttpError && co91c.httpStatus === 400 && co91c.message.includes('通道未开通') &&
+      getAfterSave91.portProvider === 'wechat_jsapi' &&
+      getAfterSave91.credentials.wechat?.mchid === '****8842' && getAfterSave91.credentials.wechat?.apiV3Key === '****6755',
+      { bad: badSave91 && `${badSave91.httpStatus}:${badSave91.message}`, resolved: resolved91.name, co: co91c && co91c.message.slice(0, 60), cred: getAfterSave91.credentials.wechat });
+
+    /* ---- 91.4 kill switch 开=瞬时回落 mock（在途口径；复原 off） ---- */
+    await trpcMutate('config.setKillSwitch', { cookie: ownerCookie, input: { enabled: true } });
+    const resolvedKill91 = await resolvePaymentProvider(db);
+    await trpcMutate('config.setKillSwitch', { cookie: ownerCookie, input: { enabled: false } });
+    const resolvedBack91 = await resolvePaymentProvider(db);
+    check('91.4 kill switch 开=瞬时回落 mock 安全值（端口行 wechat_jsapi 不动）+关=回端口选定',
+      resolvedKill91.name === 'mock' && resolvedBack91.name === 'wechat_jsapi',
+      { kill: resolvedKill91.name, back: resolvedBack91.name });
+
+    /* ---- 91.5 密钥三路零明文（get/list/versions）+generic 三口拒收 ---- */
+    const list91 = await trpcQuery<{ rules: Array<{ ruleKey: string; valueJson: unknown }> }>('config.list', { cookie: ownerCookie, input: { domain: 'pay' } });
+    const credRow91 = list91.rules.find((r) => r.ruleKey === 'pay_channel_credentials');
+    const vers91 = await trpcQuery<{ versions: Array<{ changesJson: unknown }> }>('config.versions', { cookie: ownerCookie, input: { domain: 'pay', limit: 5 } });
+    const versText91 = JSON.stringify(vers91);
+    const credRowText91 = JSON.stringify(credRow91?.valueJson ?? null);
+    const getText91 = JSON.stringify(getAfterSave91);
+    const saveBlocked91 = await asErr(trpcMutate('config.save', { cookie: ownerCookie, input: { domain: 'pay', changes: [{ ruleKey: 'pay_channel_provider', valueJson: { provider: 'mock' } }] } }));
+    const proposeBlocked91 = await asErr(trpcMutate('config.proposeChange', { cookie: ownerCookie, input: { domain: 'pay', changes: [{ ruleKey: 'pay_channel_provider', valueJson: { provider: 'mock' } }] } }));
+    const rollbackBlocked91 = await asErr(trpcMutate('config.rollback', { cookie: ownerCookie, input: { domain: 'pay', ruleKey: 'pay_channel_credentials', toVersion: 1 } }));
+    check('91.5 密钥永不明文（payChannel.get/config.list/config.versions 三路零真值）+generic 三口拒收（save/proposeChange/rollback 全 400 明文）',
+      !credRowText91.includes('mchid-secret-8842') && !versText91.includes('mchid-secret-8842') && !versText91.includes('apiv3key-secret-6755') && !getText91.includes('apiv3key-secret-6755') &&
+      saveBlocked91 instanceof TrpcHttpError && saveBlocked91.httpStatus === 400 &&
+      proposeBlocked91 instanceof TrpcHttpError && proposeBlocked91.httpStatus === 400 &&
+      rollbackBlocked91 instanceof TrpcHttpError && rollbackBlocked91.httpStatus === 400,
+      { credRow: credRowText91.slice(0, 80), save: saveBlocked91 && saveBlocked91.message.slice(0, 50), propose: proposeBlocked91 && proposeBlocked91.message.slice(0, 50), rollback: rollbackBlocked91 && rollbackBlocked91.message.slice(0, 50) });
+
+    /* ---- 91.6 在途单按快照通道解析（port=wechat_jsapi 时 mock 在途单仍走 mock） ---- */
+    const snapshot91 = await providerForChannel(db, 'mock');
+    const snapEntry91 = await snapshot91.queryOrder(co91b.paymentId); // 91.1 里已 paid 的 mock 单
+    check('91.6 在途单按快照通道解析：port=wechat_jsapi 时 channel=mock 单 providerForChannel=mock 且 queryOrder 回读 paid（旅程 3 前半句坐实）',
+      snapshot91.name === 'mock' && snapEntry91.status === 'paid' && snapEntry91.paidFen === 5000,
+      { name: snapshot91.name, q: snapEntry91 });
+
+    /* ---- 族尾复原：provider=mock（kill 已于 91.4 复原 off） ---- */
+    await trpcMutate('payChannel.save', {
+      cookie: ownerCookie, input: { provider: 'mock', confirmPhrase: '确认变更支付通道' },
+    });
+    const restored91 = await resolvePaymentProvider(db);
+    check('91.7 族尾复原：端口行回 mock（resolve=mock；后续族零漂移）', restored91.name === 'mock', { name: restored91.name });
+  }
+
   client.close();
 }
 

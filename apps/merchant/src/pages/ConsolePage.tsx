@@ -46,6 +46,7 @@ import { cadm } from '../copy/consoleAdmin';
 import { useMerchantRole } from '../lib/roles';
 import { CopyConfigBody } from './CopyConfigPage';
 import { CanvasPortBody } from './CanvasPortBody';
+import { PayChannelPortBody } from './PayChannelPortBody';
 import { CarePackPortBody } from './CarePackPortBody';
 import { ConfigDictBody } from './ConfigDictBody';
 import { CorrectionBody } from './CorrectionBody';
@@ -72,7 +73,8 @@ type PortKey =
   | 'recycle'
   | 'canvas'
   | 'profile'
-  | 'reportSpec';
+  | 'reportSpec'
+  | 'payChannel';
 
 const PORT_GROUPS: Array<{
   key: string;
@@ -119,6 +121,8 @@ const PORT_GROUPS: Array<{
       /* 大批片 2：E1 点亮（ProfilePortBody 档案表单+连锁归属），撤置灰注 */
       { key: 'profile', label: cadm('cadm.portProfile'), seal: 'E1' },
       { key: 'reportSpec', label: cadm('cadm.portReportSpec'), seal: 'E2', note: cadm('cadm.portPendingNote') },
+      /* 产品-1010 片 1：E3 支付通道端口点亮（PayChannelPortBody 直嵌；高危件=口令复核+掩码留痕；seal 顺编无撞号） */
+      { key: 'payChannel', label: cadm('cadm.portPayChannel'), seal: 'E3', note: cadm('cadm.portPayChannelNote') },
     ],
   },
   {
@@ -320,6 +324,8 @@ function OwnerConsole() {
             {active === 'recycle' ? <RecycleBinBody /> : null}
             {/* 端口批收尾片 3：F1 画布端口（CanvasPortBody 内核；owner-only server 硬闸） */}
             {active === 'canvas' ? <CanvasPortBody /> : null}
+            {/* 产品-1010 片 1：E3 支付通道端口（PayChannelPortBody 内核；高危件=口令复核+掩码留痕） */}
+            {active === 'payChannel' ? <PayChannelPortBody /> : null}
             {empty ? (
               <section className="wsk-card" data-testid={`console-empty-${active}`} aria-disabled="true">
                 <div className="wsk-hd">

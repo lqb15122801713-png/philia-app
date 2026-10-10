@@ -32,6 +32,7 @@ import { mallRouter } from './mall';
 import { membershipRouter } from './membership';
 import { passRouter } from './pass';
 import { payRouter } from './pay';
+import { payChannelRouter } from './payChannel';
 import { payrollRouter } from './payroll';
 import { perkRouter } from './perks';
 import { petRouter } from './pet';
@@ -79,6 +80,7 @@ export const appRouter = router({
   serviceLoop: serviceLoopRouter, // 补缺大批片 4（服务闭环：相册聚合/安心证书/美容报告/客服工单/发票申请/客服时间公示）
   authSecurity: authSecurityRouter, // 批次 R13a 账号安全（注销/换绑双码/换绑申诉/设备登记）
   pay: payRouter, // 批次 6 补缺大批 server 侧收单骨架（quote/createOrder/status/listMine/reconcile + 超时关单）
+  payChannel: payChannelRouter, // 产品-1010 线上支付批片 1：支付通道配置端口（高危件：口令复核+掩码留痕+切换闸读口）
   slotPort: slotPortRouter, // 端口批片 C（CJ-1002-01）：展示槽位端口（控制台第八域；liveMap 公开读/管理仅 owner）
   staffTask: staffTaskRouter, // 员工端骨架批片 1：任务总线骨架（staff_tasks 只读投影——聚合既有域在途件，不建第二口径不写业务表）
   schedule: scheduleRouter, // 员工端骨架批片 2：排班域（模板/生成/发布/换班/请假/调休/技能/CSV 导入，冻结版 V1.0 §二.B2）

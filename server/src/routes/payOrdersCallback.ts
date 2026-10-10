@@ -31,7 +31,7 @@ import {
   signMockCallback,
   type MockScenario,
 } from '../payments/mockPay';
-import { getPaymentProvider, type PaymentProvider } from '../payments/provider';
+import { resolvePaymentProvider, type PaymentProvider } from '../payments/provider';
 import { settlePayOrderPaid } from '../routers/pay';
 import { withOrderWriteLock } from '../routers/mall';
 
@@ -150,7 +150,7 @@ export const payOrdersCallbackRoute = new Hono<PayEnv>()
       headers[key] = value;
     });
     try {
-      const provider = getPaymentProvider();
+      const provider = await resolvePaymentProvider(db); // 平台回调=当前切换通道验签（片 1 切换闸）
       const result = await processPayOrderCallback(db, provider, headers, rawBody);
       return c.json({ code: 'SUCCESS', ...result }, 200);
     } catch (err) {
@@ -164,9 +164,9 @@ export const payOrdersCallbackRoute = new Hono<PayEnv>()
    * （scenario 缺省=createPayment 时 payParams 快照的场景，再缺省 'success'）。
    */
   .post('/api/pay/orders/mock-callback', async (c) => {
-    const provider = getPaymentProvider();
+    const provider = await resolvePaymentProvider(db);
     if (provider.name !== 'mock') {
-      // 生产（微信）模式绝不暴露演示入口
+      // 真通道模式绝不暴露演示入口（片 1 切换闸口径）
       return c.json({ code: 'NOT_FOUND', message: 'Not Found' }, 404);
     }
     const user = c.get('sessionUser');

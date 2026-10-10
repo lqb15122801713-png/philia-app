@@ -47,7 +47,7 @@ import { and, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { db, schema } from '../db';
 import { CLIENT_AGREEMENT_CONTENT } from '../config/agreements';
-import { getPaymentProvider } from '../payments/provider';
+import { providerForChannel, resolvePaymentProvider } from '../payments/provider';
 import { broadcastNow, emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
 import {
@@ -137,10 +137,7 @@ export async function loadPayChannelEnabled(d: DbHandle, storeId?: string | null
   return (row?.valueJson as Record<string, unknown> | undefined)?.enabled !== false;
 }
 
-/** provider 名 → 通道枚举（内测=mock；wechat→JSAPI 默认） */
-function channelOfProvider(name: string): string {
-  return name === 'wechat' ? 'wechat_jsapi' : 'mock';
-}
+/** provider 名 → 通道枚举：产品-1010 片 1 起 ResolvedPaymentProvider.name=PayChannel 直用（映射函数随闸退役） */
 
 /** 手机号掩码（138****5678 口径；无号/非法 → null） */
 function maskPhone(phone: string | null | undefined): string | null {
@@ -478,6 +475,16 @@ async function closePayOrderWithLock(
     }),
   );
   if (outboxId) broadcastNow(outboxId);
+  /* 产品-1010 片 1 接口族⑤接线：业务关单落库后 best-effort 通道侧关单（仅通道已下单的单；
+     外部调用不进事务——失败 ALERT 留日志不阻断业务关单，通道侧差额由对账读口兜底（片 3 留口）） */
+  if (!result.idempotent && result.order.paymentId) {
+    try {
+      const p = await providerForChannel(d, result.order.channel);
+      await p.close({ orderId: result.order.id });
+    } catch (err) {
+      console.error(`[pay] ALERT 通道侧关单失败 orderId=${result.order.id}（业务关单已落库，不阻断）:`, err);
+    }
+  }
   return result;
 }
 
@@ -637,7 +644,7 @@ export const payRouter = router({
    *   一律不信直接忽略；升级域宠物数=现会员档案值（入参 petCount 不适用）；
    *   timeoutAt=now+端口时长；channel=provider 映射；idemKey=base 或 base+#a{N}）；
    * - 升级域收单闸：无会员档案 400（走开通域）/已是目标档 400/冻结档 400/期内不降级 400；
-   * - 事务外：provider.createPayment（外部调用不进事务；wechat 骨架 notImplemented 原文
+   * - 事务外：provider.createOrder（外部调用不进事务；真通道留口「通道未开通」明文
    *   透出拒，单留 created 待超时关闭）→ 条件更新 status='paying'+paymentId。
    */
   createOrder: customerProcedure
@@ -661,7 +668,7 @@ export const payRouter = router({
         badRequest('线上支付通道已关闭（pay_channel_enabled=off，内测期请到店办理）');
       }
 
-      const provider = getPaymentProvider();
+      const provider = await resolvePaymentProvider(ctx.db); // 切换闸解析（kill 回落 mock→端口行→env 兜底）
       const user = await ctx.db
         .select({ id: schema.users.id, phone: schema.users.phone })
         .from(schema.users)
@@ -769,7 +776,7 @@ export const payRouter = router({
               bizId: ctx.user.id, // 会员域（open/upgrade）：biz_id=开通用户（归属/幂等/反查同键）
               bizJson,
               amountFen,
-              channel: channelOfProvider(provider.name),
+              channel: provider.name, // 通道快照=下单时解析结果（PayChannel；在途单按快照解析，切换闸不回溯）
               status: 'created',
               idemKey,
               timeoutAt: new Date(now.getTime() + timeoutMinutes * 60_000),
@@ -784,13 +791,13 @@ export const payRouter = router({
       /* ---- 事务外：通道下单（外部调用不进事务；失败单留 created 待超时关闭） ---- */
       let payment: { paymentId: string; payParams: Record<string, string> };
       try {
-        payment = await provider.createPayment({
+        payment = await provider.createOrder({
           orderId: created.order.id,
           totalFen: created.order.amountFen,
           subject: `菲丽亚会员·${String((created.order.bizJson as Record<string, unknown>).planLabel ?? input.planKey)}`,
         });
       } catch (err) {
-        // 真通道骨架 notImplemented 原文透出拒；单留 created（status 可查/sweeper 到点关）
+        // 真通道留口「通道未开通」明文透出拒；单留 created（status 可查/sweeper 到点关）
         console.error(`[pay] ALERT 通道下单失败 payNo=${created.order.payNo}:`, err);
         throw new TRPCError({
           code: 'BAD_REQUEST',
@@ -955,12 +962,12 @@ export const payRouter = router({
       if (!order.paymentId) {
         return { order, reconciled: false as const, message: '通道未下单（created），请稍后或重新创建支付单' };
       }
-      const provider = getPaymentProvider();
-      let q: { paymentId: string; status: 'paid' | 'unpaid'; paidFen?: number };
+      const provider = await providerForChannel(ctx.db, order.channel); // 在途单按快照通道解析（切换闸不回溯）
+      let q: { paymentId: string; status: 'paid' | 'unpaid' | 'closed'; paidFen?: number };
       try {
         q = await provider.queryOrder(order.paymentId);
       } catch (err) {
-        // 真通道骨架 notImplemented 原文透出拒（零写入）
+        // 真通道留口「通道未开通」明文透出拒（零写入）
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: `通道查单失败：${err instanceof Error ? err.message : String(err)}`,

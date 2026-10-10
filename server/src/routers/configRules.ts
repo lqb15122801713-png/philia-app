@@ -22,6 +22,11 @@ import { schema } from '../db';
 import { emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
 import { merchantManagerProcedure, merchantOwnerProcedure, publicProcedure, router } from '../trpc';
+import {
+  PAY_CHANNEL_CREDENTIALS_RULE_KEY,
+  PAY_CHANNEL_PROVIDER_RULE_KEY,
+  maskPayChannelCredentials,
+} from '../payments/channelKeys';
 
 /** emitEvent 首参类型（全局 db；事务 handle 运行时接口一致，类型上做显式断言，同 cashier.ts 惯例） */
 type DbHandle = Parameters<typeof emitEvent>[0];
@@ -341,6 +346,19 @@ export async function isKillSwitchOn(d: DbHandle): Promise<boolean> {
   return (rows[0]?.valueJson as Record<string, unknown> | undefined)?.enabled === true;
 }
 
+/**
+ * 支付通道两键挡口（产品-1010 片 1 高危件）：口令复核+掩码留痕走专用端口（routers/payChannel.ts），
+ * generic 三口（save/proposeChange/rollback）一律拒——防密钥真值进 versions 留痕/审批载荷/回滚应用。
+ */
+export function assertNotPayChannelKey(ruleKey: string): void {
+  if (ruleKey === PAY_CHANNEL_PROVIDER_RULE_KEY || ruleKey === PAY_CHANNEL_CREDENTIALS_RULE_KEY) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: `「${ruleKey}」属支付通道高危件，请走「支付通道」端口（口令复核+掩码留痕），此口不受理`,
+    });
+  }
+}
+
 /** 字符串域→规则表（sweep/审批应用共用；copy 表多 screen/position 两列，按 commission 同型断言用） */
 function rulesTableOf(domain: string): (typeof RULES_TABLE)['commission'] {
   const t = (RULES_TABLE as unknown as Record<string, (typeof RULES_TABLE)['commission']>)[domain];
@@ -514,6 +532,12 @@ export const configRulesRouter = router({
         currentVersion,
         rules: rows.map((r) => ({
           ...r,
+          /* 产品-1010 片 1：支付通道凭据高危件=掩码读出（真值永不明文回显；改值走支付通道端口）。
+             掩码镜像形状与 RuleConfigValue 不同系刻意（防误读真值），对外类型维持原样零破面 */
+          valueJson:
+            r.ruleKey === PAY_CHANNEL_CREDENTIALS_RULE_KEY
+              ? (maskPayChannelCredentials(r.valueJson as Parameters<typeof maskPayChannelCredentials>[0]) as unknown as typeof r.valueJson)
+              : r.valueJson,
           highRisk: input.domain === 'copy' && isCopyHighRiskKey(r.ruleKey),
           storeId: input.domain !== 'member_plans' && input.domain !== 'copy' ? (storeIdById.get(r.id) ?? null) : undefined,
           screen: input.domain === 'copy' ? (metaByKey.get(r.ruleKey)?.screen ?? null) : undefined,
@@ -672,6 +696,8 @@ export const configRulesRouter = router({
               message: `未知规则键：${c.ruleKey}（配置页仅支持修改既有参数，不能新增键）`,
             });
           }
+          /* 产品-1010 片 1：支付通道两键=高危专用端口件，本口不受理（防密钥真值进留痕） */
+          assertNotPayChannelKey(c.ruleKey);
         }
         /* 端口 V2（copy 域）：screen/position 沿用源=该键最新行（save 改文案不丢屏归属；
            position=留口件可随本次 change 显式改） */
@@ -809,6 +835,8 @@ export const configRulesRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      /* 产品-1010 片 1：支付通道两键不支持回滚（防密钥真值经应用机进留痕；改值请走支付通道端口重存） */
+      assertNotPayChannelKey(input.ruleKey);
       const table = RULES_TABLE[input.domain];
       const target = (
         await ctx.db
@@ -902,6 +930,8 @@ export const configRulesRouter = router({
       for (const c of input.changes) {
         if (seen.has(c.ruleKey)) throw new TRPCError({ code: 'BAD_REQUEST', message: `同一规则键重复提交：${c.ruleKey}` });
         seen.add(c.ruleKey);
+        /* 产品-1010 片 1：支付通道两键=高危专用端口件，审批通道不受理（防密钥真值进审批载荷） */
+        assertNotPayChannelKey(c.ruleKey);
         if (!isMoneyHighRiskKey(input.domain, c.ruleKey)) {
           throw new TRPCError({
             code: 'BAD_REQUEST',

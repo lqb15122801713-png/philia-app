@@ -33,7 +33,7 @@ import { parseCsv } from '../lib/csvParse';
 import { customerProcedure, merchantManagerProcedure, merchantOwnerProcedure, merchantProcedure, publicProcedure, router } from '../trpc';
 import { broadcastNow, emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
-import { getPaymentProvider } from '../payments/provider';
+import { resolvePaymentProvider } from '../payments/provider';
 import { storeWallclock } from './appointment';
 import { resolveScopedRules } from './configRules';
 
@@ -741,7 +741,7 @@ export const mallRouter = router({
 
   /**
    * 5. createPayment（customer）：对本人 pending 订单发起支付。
-   * 经 PaymentProvider 适配层（§4.7）创建支付单，返回前端调起参数；
+   * 经 PaymentProvider 适配层（§4.7，片 1 五接口族 createOrder）创建支付单，返回前端调起参数；
    * mock 模式下前端随后调 POST /api/pay/mock-callback 完成演示闭环。
    */
   createPayment: customerProcedure
@@ -752,9 +752,9 @@ export const mallRouter = router({
       if (order.status !== 'pending') {
         badRequest(`当前状态（${order.status}）不可发起支付，仅 pending 可支付`);
       }
-      const provider = getPaymentProvider();
+      const provider = await resolvePaymentProvider(ctx.db); // 切换闸解析（kill 回落 mock→端口行→env 兜底）
       const subject = `菲丽亚商城订单${order.orderNo}`;
-      const { paymentId, payParams } = await provider.createPayment({
+      const { paymentId, payParams } = await provider.createOrder({
         orderId: order.id,
         totalFen: order.totalFen,
         subject,
