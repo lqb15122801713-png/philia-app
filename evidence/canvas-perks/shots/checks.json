@@ -1,0 +1,48 @@
+{
+  "checks": [
+    {
+      "name": "店主登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S1 格级子区渲染（七格+图标白名单下拉+格名/副签输入+跳档口）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S2 格名高危口令复核（弹层+键入「确认保存」解锁+保存生效）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S3 换序+图标选换进编辑帧（birthday 置顶+groomer 图标=star）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S4 两步流发布（草稿→发布即生效）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S5/S6 双屏同帧：会员中心+开通页权益墙同序（生日礼遇置顶）+改名句双屏同生效",
+      "ok": true,
+      "detail": "mc=birthday,pets,discount,rebate,groomer,skin,archive open=birthday,pets,discount,rebate,groomer,skin,archive"
+    },
+    {
+      "name": "S7 预览 iframe 渲染（示例客户视图+水印在预览面）",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence\\shots\\S1-perkwall-cells.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence\\shots\\S2-risk-modal-empty.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence\\shots\\S2-renamed.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence\\shots\\S3-reordered.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence\\shots\\S5-member-center-wall.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence\\shots\\S6-member-open-wall.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence\\shots\\S7-canvas-preview-watermark.png"
+  ]
+}
