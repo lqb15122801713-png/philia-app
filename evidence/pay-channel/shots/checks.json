@@ -1,0 +1,41 @@
+{
+  "checks": [
+    {
+      "name": "owner dev-login",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "会话回读（auth.me=菲丽亚店主）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "帧1 端口页渲染（pay-channel-port+当前通道 Mock+四通道项）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "帧2 凭据区+口令弹层（未键入口令=确认钮禁用）",
+      "ok": true,
+      "detail": "btnDisabled=true"
+    },
+    {
+      "name": "帧3 口令复核保存生效（当前通道=微信 JSAPI；确认钮键入后解锁）",
+      "ok": true,
+      "detail": "btnEnabled=true saved=true"
+    },
+    {
+      "name": "帧4 切换闸回落 mock（当前通道=Mock 演示通道）",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\pay-channel\\evidence\\shots\\01-port-page.png",
+    "E:\\KIMI code\\tmp\\pay-channel\\evidence\\shots\\02-confirm-modal-empty.png",
+    "E:\\KIMI code\\tmp\\pay-channel\\evidence\\shots\\03-confirm-modal-filled.png",
+    "E:\\KIMI code\\tmp\\pay-channel\\evidence\\shots\\04-saved-wechat.png",
+    "E:\\KIMI code\\tmp\\pay-channel\\evidence\\shots\\05-back-to-mock.png"
+  ]
+}
