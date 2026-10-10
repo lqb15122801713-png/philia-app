@@ -1,0 +1,112 @@
+✅ [customer] /dev-login —— 200 + 非空白 + 锚点/守卫命中
+✅ [customer] / —— 200 + 非空白 + 锚点/守卫命中（F3（片 4）：换皮批片 2 新首页锚点——退役文案「守护每一次洗护」→实证值「预约洗澡美容」（浮动大卡双入口）/「菲丽亚宠友」（身份带非会员态）/服务中态 LIVE 卡「洗护进行中」）
+✅ [customer] /home —— 200 + 非空白 + 锚点/守卫命中（F3（片 4）：片 2 新首页实证值（双入口/身份带/LIVE 卡））
+✅ [customer] /mall —— 200 + 非空白 + 锚点/守卫命中
+✅ [customer] /mall/cart —— 200 + 非空白 + 锚点/守卫命中（U4-D3：购物袋口径（试样同词））
+✅ [customer] /mall/checkout —— 200 + 非空白 + 锚点/守卫命中（B3 修复路由）
+✅ [customer] /mall/orders —— 200 + 非空白 + 锚点/守卫命中（A2 白屏群）
+✅ [customer] /mall/orders/ —— 200 + 非空白 + 锚点/守卫命中（尾斜杠变体）
+✅ [customer] /booking —— 200 + 非空白 + 锚点/守卫命中（B9.3 中间层 hub 退役直达单屏）
+✅ [customer] /booking/success?aid=01M256D240E19GWNG2QMFV3Q8V —— 200 + 非空白 + 锚点/守卫命中（W1-D1：交易成功页双出口+返回键闭环）
+✅ [customer] /booking/success/?aid=01M256D240E19GWNG2QMFV3Q8V —— 200 + 非空白 + 锚点/守卫命中（尾斜杠变体）
+✅ [customer] /booking/grooming —— 200 + 非空白 + 锚点/守卫命中（B4 修复路由）
+✅ [customer] /booking/grooming/ —— 200 + 非空白 + 锚点/守卫命中（尾斜杠变体）
+✅ [customer] /booking/success —— 200 + 非空白 + 锚点/守卫命中（B9a 任务B 一键再约落点）
+✅ [customer] /appointments —— 200 + 非空白 + 锚点/守卫命中
+✅ [customer] /appointments/01M256D240E19GWNG2QMFV3Q8V —— 200 + 非空白 + 锚点/守卫命中（A1 白屏群）
+✅ [customer] /philia/pets —— 200 + 非空白 + 锚点/守卫命中（A4 白屏群）
+✅ [customer] /philia/pets/01000000000000000000000000/health —— 200 + 非空白 + 锚点/守卫命中（体验批片 4 宠物健康档案（无效 id 异常态：页题+返回出口仍在））
+✅ [customer] /philia/moments —— 200 + 非空白 + 锚点/守卫命中（A4 白屏群）
+✅ [customer] /me/card —— 200 + 非空白 + 锚点/守卫命中（U1-H 新路由；R11b Q-01 重构换锚）
+✅ [customer] /me/coupons —— 200 + 非空白 + 锚点/守卫命中（客户端体验大批 片 3（优惠券+心愿单双 tab 新屏；锚点=页题））
+✅ [customer] /member —— 200 + 非空白 + 锚点/守卫命中（批次 R11a）
+✅ [customer] /member/open —— 200 + 非空白 + 锚点/守卫命中（批次 R11a）
+✅ [customer] /member/rebate —— 200 + 非空白 + 锚点/守卫命中（批次 R11b 新路由申报（W-01））
+✅ [customer] /refunds —— 200 + 非空白 + 锚点/守卫命中（补缺批片 1 退款售后）
+✅ [customer] /refunds/01000000000000000000000000 —— 200 + 非空白 + 锚点/守卫命中（补缺批片 1 退款售后：无效 id 异常态仍渲染页题+返回出口）
+✅ [customer] /mall/orders/01000000000000000000000000/refund —— 200 + 非空白 + 锚点/守卫命中（补缺批片 1 退款售后）
+✅ [customer] /appointments/01M256D240E19GWNG2QMFV3Q8V/refund —— 200 + 非空白 + 锚点/守卫命中（补缺批片 1 退款售后：服务单诚实维护态（billId 无客户端口径，已报备））
+✅ [customer] /philia/certs —— 200 + 非空白 + 锚点/守卫命中（补缺批片 4 服务闭环）
+✅ [customer] /philia/certs/01000000000000000000000000 —— 200 + 非空白 + 锚点/守卫命中（补缺批片 4 服务闭环（无效 id 异常态：标题+返回出口仍在））
+✅ [customer] /philia/reports/01000000000000000000000000 —— 200 + 非空白 + 锚点/守卫命中（补缺批片 4 服务闭环（无效 id 异常态））
+✅ [customer] /support —— 200 + 非空白 + 锚点/守卫命中（补缺批片 4 服务闭环）
+✅ [customer] /support/new —— 200 + 非空白 + 锚点/守卫命中（补缺批片 4 服务闭环）
+✅ [customer] /support/01000000000000000000000000 —— 200 + 非空白 + 锚点/守卫命中（补缺批片 4 服务闭环（无效 id 异常态））
+✅ [customer] /invoices —— 200 + 非空白 + 锚点/守卫命中（补缺批片 4 服务闭环）
+✅ [customer] /invoice/apply/appointment/01000000000000000000000000 —— 200 + 非空白 + 锚点/守卫命中（补缺批片 4 服务闭环（无效 id 异常态））
+✅ [customer] /invoices/01000000000000000000000000 —— 200 + 非空白 + 锚点/守卫命中（补缺批片 4 服务闭环（无效 id 异常态））
+✅ [customer] /me/settings —— 200 + 非空白 + 锚点/守卫命中（补缺批片 2 账户安全）
+✅ [customer] /me/settings/deactivate —— 200 + 非空白 + 锚点/守卫命中（补缺批片 2 账户安全）
+✅ [customer] /me/settings/phone —— 200 + 非空白 + 锚点/守卫命中（补缺批片 2 账户安全）
+✅ [customer] /me/settings/phone/appeal —— 200 + 非空白 + 锚点/守卫命中（补缺批片 2 账户安全）
+✅ [customer] /me/settings/devices —— 200 + 非空白 + 锚点/守卫命中（补缺批片 2 账户安全）
+✅ [customer] /me/settings/privacy —— 200 + 非空白 + 锚点/守卫命中（补缺批片 2 账户安全）
+✅ [customer] /settings/profile —— 200 + 非空白 + 锚点/守卫命中（客户端体验大批 片 1（编辑资料））
+✅ [customer] /settings/addresses —— 200 + 非空白 + 锚点/守卫命中（客户端体验大批 片 1（收货地址））
+✅ [customer] /settings/about —— 200 + 非空白 + 锚点/守卫命中（客户端体验大批 片 1（关于））
+✅ [customer] /settings/agreements —— 200 + 非空白 + 锚点/守卫命中（客户端体验大批 片 1（协议中心））
+✅ [customer] /settings/invoice-titles —— 200 + 非空白 + 锚点/守卫命中（客户端体验大批 片 1（发票抬头））
+✅ [customer] /records —— 200 + 非空白 + 锚点/守卫命中（客户端体验大批 片 1（消费记录+押金进度））
+✅ [customer] /member/upgrade —— 200 + 非空白 + 锚点/守卫命中（补缺批片 3 会员域）
+✅ [customer] /member/change —— 200 + 非空白 + 锚点/守卫命中（补缺批片 3 会员域）
+✅ [customer] /notifications —— 200 + 非空白 + 锚点/守卫命中（补缺批片 5 站内信（消息中心））
+✅ [customer] /notifications/prefs —— 200 + 非空白 + 锚点/守卫命中（补缺批片 5 站内信（订阅管理））
+✅ [customer] /member/checkout —— 200 + 非空白 + 锚点/守卫命中（补缺批片 6 线上收单骨架（Mock 通道））
+✅ [customer] /member/renew —— 200 + 非空白 + 锚点/守卫命中（产品-1010 片 2 线上续费确认页（Mock 通道））
+✅ [customer] /pay/01000000000000000000000000 —— 200 + 非空白 + 锚点/守卫命中（补缺批片 6 线上收单骨架（Mock 通道）：参数化 INVALID_ID 异常态）
+✅ [customer] /pay/reconcile —— 200 + 非空白 + 锚点/守卫命中（补缺批片 6 线上收单骨架（Mock 通道））
+✅ [merchant] /dev-login —— 200 + 非空白 + 锚点/守卫命中
+✅ [merchant] /dashboard —— 200 + 非空白 + 锚点/守卫命中
+✅ [merchant] /monitor —— 200 + 非空白 + 锚点/守卫命中（B2 修复路由；U3 墨轨改版锚点）
+✅ [merchant] /monitor/ —— 200 + 非空白 + 锚点/守卫命中（尾斜杠变体）
+✅ [merchant] /monitor/01M256D240E19GWNG2QMFV3Q8V —— 200 + 非空白 + 锚点/守卫命中（B2 别名深链；U3 锚点）
+✅ [merchant] /login —— 200 + 非空白 + 锚点/守卫命中（U3 规范名登录页）
+✅ [merchant] /pass —— 200 + 非空白 + 锚点/守卫命中（U3 规范名（/passes 重定向兼容））
+✅ [merchant] /cashier —— 200 + 非空白 + 锚点/守卫命中（M1 新屏：收银台主屏）
+✅ [merchant] /cashier/records —— 200 + 非空白 + 锚点/守卫命中（M1 新屏：收银流水）
+✅ [merchant] /cashier/close —— 200 + 非空白 + 锚点/守卫命中（M1-补2 新屏：日结/交接班（clerk 引导页口径））
+✅ [merchant] /cashier/refunds —— 200 + 非空白 + 锚点/守卫命中（批次 R12）
+✅ [merchant] /cashier/receipt/01000000000000000000000000 —— 200 + 非空白 + 锚点/守卫命中（商家端大批片 3：小票版式页（无效单号=异常态/守卫口径，片 2 裁件① NOT_FOUND 后=「预约不存在」系文案或登录跳））
+✅ [merchant] /ledger —— 200 + 非空白 + 锚点/守卫命中（商家端大批片 3：台账专页（四区；owner|manager 渲染，clerk 引导页））
+✅ [merchant] /inventory —— 200 + 非空白 + 锚点/守卫命中（商家端大批片 4：库存域页（五区；owner|manager 渲染，clerk 引导页））
+✅ [merchant] /transfers —— 200 + 非空白 + 锚点/守卫命中（商家端大批片 4：调拨要货页（三区；owner|manager 渲染，clerk 引导页））
+✅ [merchant] /marketing —— 200 + 非空白 + 锚点/守卫命中（商家端大批片 5：会员营销页（五区；owner|manager 渲染，clerk 引导页））
+✅ [merchant] /marketing-ledger —— 200 + 非空白 + 锚点/守卫命中（商家端大批片 5：营销台账页（四区；owner|manager 渲染，clerk 引导页））
+✅ [merchant] /settings/rules —— 200 + 非空白 + 锚点/守卫命中（批次 staff-2 R9-F：owner 登录渲染「规则配置管理」；manager 页内引导卡标题同含锚点，clerk 由 ClerkRouteGuard 拦截）
+✅ [merchant] /settings/copy —— 200 + 非空白 + 锚点/守卫命中（端口批片 B：文案端口（控制台第七域；owner 登录渲染「文案端口」页题））
+✅ [merchant] /settings/slots —— 200 + 非空白 + 锚点/守卫命中（端口批片 C：槽位端口（控制台第八域「槽位」；owner 登录渲染「槽位端口」页题，非 owner 引导页标题同含锚点））
+✅ [merchant] /settings/schedules —— 200 + 非空白 + 锚点/守卫命中（员工端骨架整建批 片 2：排班管理（owner|manager 渲染「排班管理」页题；clerk 引导页标题同含锚点））
+✅ [merchant] /settings/announcements —— 200 + 非空白 + 锚点/守卫命中（片 3：公告（owner|manager 渲染「公告」页题；锚点=页题/引导页稳定文案））
+✅ [merchant] /ops —— 200 + 非空白 + 锚点/守卫命中（片 3：运营（owner|manager 渲染「运营」页题；墨轨「门店」组入口 rail-ops））
+✅ [merchant] /settings/tasks —— 200 + 非空白 + 锚点/守卫命中（片 3：循环任务模板自管（owner|manager 渲染「任务模板」页题））
+✅ [merchant] /payroll —— 200 + 非空白 + 锚点/守卫命中（片 4：薪资（owner|manager 渲染「薪资」页题；墨轨「门店」组入口 rail-payroll））
+✅ [merchant] /xp-admin —— 200 + 非空白 + 锚点/守卫命中（片 4：XP 审核（owner|manager 渲染「XP 审核」页题；墨轨「门店」组入口 rail-xp-admin））
+✅ [merchant] /matrix —— 200 + 非空白 + 锚点/守卫命中（片 5 段 3：W-14 真页（静态四态矩阵+锁死区红胶囊；rail 管理组 rail-matrix））
+✅ [merchant] /console —— 200 + 非空白 + 锚点/守卫命中（片 5 段 3：W-16 聚合真页（端口目录+三页内核直嵌；manager 引导卡标题同含锚点；旧三路由 /settings/rules|copy|slots 保留直达））
+✅ [merchant] /live —— 200 + 非空白 + 锚点/守卫命中（B2 重定向；U3 锚点）
+✅ [merchant] /appointments —— 200 + 非空白 + 锚点/守卫命中（A3 白屏群）
+✅ [merchant] /appointments/01M256D240E19GWNG2QMFV3Q8V/monitor —— 200 + 非空白 + 锚点/守卫命中（P4 原深链；U3 锚点）
+✅ [merchant] /finance/report/d1 —— 200 + 非空白 + 锚点/守卫命中（体验批片 5：W-13 报表目录点亮（:key 同模板 17 页同构，d1 代表行；返回目录出口锚））
+✅ [staff] /dev-login —— 200 + 非空白 + 锚点/守卫命中
+✅ [staff] /today —— 200 + 非空白 + 锚点/守卫命中（骨架批片 1（S-01 工位台）：apphead「工位」+ dock 四槽（工位/预约/打卡/我的））
+✅ [staff] /execute/01M256D240E19GWNG2QMFV3Q8V —— 200 + 非空白 + 锚点/守卫命中（B1 修复路由；U4：smoke 以首个 staff 种子（前台）登录，进他人 groomer 单命中设计内守卫态「无法执行该预约」；片 2 裁件①（统一 NOT_FOUND 防探测）后该场景=404 守卫态「预约不存在」——锚点随裁件同步（申报））
+✅ [staff] /execute/01M256D240E19GWNG2QMFV3Q8V/ —— 200 + 非空白 + 锚点/守卫命中（尾斜杠变体（同上守卫态口径+裁件①锚点同步））
+✅ [staff] /boarding/01M256D240E19GWNG2QMFV3Q8V/checkin —— 200 + 非空白 + 锚点/守卫命中（W1：checkin 异常态弱出口已按钮化）
+✅ [staff] /schedule —— 200 + 非空白 + 锚点/守卫命中（骨架批片 1（S-02 预约·当天+S-12 切日态）：/history 重定向并入（历史单=切日唯一入口））
+✅ [staff] /me —— 200 + 非空白 + 锚点/守卫命中
+✅ [staff] /attendance —— 200 + 非空白 + 锚点/守卫命中（批次 staff-2 R7）
+✅ [staff] /inventory —— 200 + 非空白 + 锚点/守卫命中（批次 staff-2 R8）
+✅ [staff] /inventory/01000000000000000000000000 —— 200 + 非空白 + 锚点/守卫命中（批次 staff-2 R8：无效 id 空态页仍渲染「盘点执行」标题+返回出口）
+✅ [staff] /pay —— 200 + 非空白 + 锚点/守卫命中（批次 staff-2 R9）
+✅ [staff] /xp —— 200 + 非空白 + 锚点/守卫命中（批次 staff-2 R10）
+✅ [staff] /reviews —— 200 + 非空白 + 锚点/守卫命中（批次 staff-2 R10）
+✅ [staff] /manager —— 200 + 非空白 + 锚点/守卫命中（批次 staff-2：smoke 以首个 staff 种子（非店长）登录渲染引导卡；锚点命中 PageHeader 标题与引导卡 h1）
+✅ [staff] /my-schedule —— 200 + 非空白 + 锚点/守卫命中（员工端骨架整建批 片 2：我的排班（SkBackBar 标题「我的排班」））
+✅ [staff] /notifications —— 200 + 非空白 + 锚点/守卫命中（骨架批片 3：通知中心（push.listNotifications，未读高亮+全部已读））
+✅ [staff] /notices —— 200 + 非空白 + 锚点/守卫命中（骨架批片 3：公告列表（announce.list，pinned 在前，点开即 markRead））
+✅ [staff] /voice —— 200 + 非空白 + 锚点/守卫命中（骨架批片 3：员工心声（提交单+我的心声列表+SLA 注记））
+✅ [staff] /self-check —— 200 + 非空白 + 锚点/守卫命中（骨架批片 3：每日自检（表项端口读+逐项打点））
+✅ [staff] /pdca —— 200 + 非空白 + 锚点/守卫命中（骨架批片 3：问题上报（状态滤签+责任人整改））
+
+===== 路由冒烟汇总：109/109 通过 =====
+结果 JSON：E:/KIMI code/tmp/pay-channel/evidence3/smoke-routes.json

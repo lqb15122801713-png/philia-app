@@ -1,0 +1,61 @@
+{
+  "checks": [
+    {
+      "name": "夹具：客户注册登录",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "夹具：升级暖阳收单（已是=幂等直用）",
+      "ok": true,
+      "detail": "{\"__err\":\"当前已是该档会员，无需重复支付\"}"
+    },
+    {
+      "name": "夹具：续费收单",
+      "ok": true,
+      "detail": "{\"order\":{\"id\":\"01M4JGQS1P4VM0864WTG8XS8VY\",\"payNo\":\"PO-20261010-005\",\"bizDomain\":\"membership_renew\",\"bizId\":\"01M4JFK6F5"
+    },
+    {
+      "name": "夹具：商城单落库",
+      "ok": true,
+      "detail": "{\"id\":\"01M4JGQS2WCYDSPCVJA3WKNVBG\",\"orderNo\":\"P261010QGGA24\",\"customerId\":\"01M4JFK6F5NR0HR3C5A3Q1ACB"
+    },
+    {
+      "name": "夹具：店主登录（同浏览器双会话切换=后登录覆盖，本步为发货）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "夹具：售后申请提交",
+      "ok": true,
+      "detail": "{\"request\":{\"id\":\"01M4JGQS5CXN4FWXH5EBF1JVTC\",\"requestNo\":\"RR-20261010-002\",\"customerId\":\"01M4JFK6F5NR0HR3C5A3Q1ACBB\",\"s"
+    },
+    {
+      "name": "帧A 消费记录线上单列（线上续费行+支付单号 mono+演示徽+商城单挂线上支付行）",
+      "ok": true,
+      "detail": "RECORDS 消费记录 押金进度  暂无押金记录  押金收退=门店登记留痕，进度以此为准  消费记录 订单  商城订单 P261010QGGA24  线上支付 PO-20261010-006 · 演示 · paid  2026-10-10 17:01  ¥129 received › 支付  线上续费·会员档·暖阳：¥599/年；商品消费回馈金 10%；服务 8 折；含 3 只宠物，第 4 只起"
+    },
+    {
+      "name": "夹具：店主批准（=通道退款原路联动触发）",
+      "ok": true,
+      "detail": "{\"request\":{\"id\":\"01M4JGQS5CXN4FWXH5EBF1JVTC\",\"requestNo\":\"RR-20261010-002\",\"customerId\":\"01M4JFK6F5NR0HR3C5A3Q1ACBB\",\"s"
+    },
+    {
+      "name": "帧D 通道对账区（笔数>0+差异 0+逐笔行含 PO- 支付单）",
+      "ok": true,
+      "detail": "通道对账 通道账单 vs 业务账逐笔对（mock 期=通道账本=本地账本同表，真通道换源不换表） 对账笔数 6 笔 差异笔数 4 笔 口径 平=issue 空；差=逐笔列下表 单据\t域\t业务额\t业务态\t通道态\t通道额\t通道退\t业务退\t对账 PO-20261010-006\tmall\t¥129\tpaid\tpaid\t¥129\t¥129\t¥129\t平 PO-20261010-005\tmembership_"
+    },
+    {
+      "name": "帧E 联调 checklist 首页渲染",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\pay-channel\\evidence3\\shots\\A-records-online.png",
+    "E:\\KIMI code\\tmp\\pay-channel\\evidence3\\shots\\B-mall-before-refund.png",
+    "E:\\KIMI code\\tmp\\pay-channel\\evidence3\\shots\\C-mall-after-refund.png",
+    "E:\\KIMI code\\tmp\\pay-channel\\evidence3\\shots\\D-ledger-recon.png",
+    "E:\\KIMI code\\tmp\\pay-channel\\evidence3\\shots\\E-checklist-front.png"
+  ]
+}
