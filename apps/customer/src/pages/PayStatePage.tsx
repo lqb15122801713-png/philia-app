@@ -82,9 +82,18 @@ export default function PayStatePage() {
     }
   }
 
-  /* 重试/重新下单：同档同域重新 createOrder（幂等口径见 server；三协议沿用本次快照） */
+  /* 重试/重新下单：分域重发起（幂等口径见 server；会员域三协议沿用本次快照） */
   const retryM = useMutation({
     mutationFn: () => {
+      if (biz?.bizDomain === 'mall') {
+        /* 商城域（片 2）：同单重发起（同人同单幂等锚=订单本身，终结单 server 分配新尝试序号） */
+        if (!biz.orderId) return Promise.reject(new Error('biz missing'))
+        return trpc.pay.createOrder.mutate({ bizDomain: 'mall', orderId: biz.orderId })
+      }
+      if (biz?.bizDomain === 'membership_renew') {
+        /* 续费域（片 2）：零入参重发起（当日同档幂等基不变，终结单 server 分配新尝试序号） */
+        return trpc.pay.createOrder.mutate({ bizDomain: 'membership_renew' })
+      }
       if (!biz?.planKey || typeof biz.petCount !== 'number') {
         return Promise.reject(new Error('biz missing'))
       }
@@ -224,12 +233,18 @@ export default function PayStatePage() {
                   ✓
                 </div>
                 <div style={{ fontFamily: 'var(--v2serif)', fontWeight: 900, fontSize: 21, marginTop: 12, color: 'var(--gold)' }}>
-                  {biz?.bizDomain === 'membership_upgrade' ? pc('state.paidTitleUpgrade') : pc('state.paidTitle')}
+                  {biz?.bizDomain === 'membership_upgrade'
+                    ? pc('state.paidTitleUpgrade')
+                    : biz?.bizDomain === 'membership_renew'
+                      ? pc('state.paidTitleRenew')
+                      : pc('state.paidTitle')}
                 </div>
                 <p style={{ fontSize: 12, lineHeight: 1.8, margin: '8px 0 0', color: 'var(--gold-deep)', opacity: 0.85 }}>
                   {biz?.bizDomain === 'membership_upgrade'
                     ? pc('state.paidBodyUpgrade', { planLabel: biz?.planLabel ?? '' })
-                    : pc('state.paidBody', { planLabel: biz?.planLabel ?? '', days: validityDays })}
+                    : biz?.bizDomain === 'membership_renew'
+                      ? pc('state.paidBodyRenew', { planLabel: biz?.planLabel ?? '' })
+                      : pc('state.paidBody', { planLabel: biz?.planLabel ?? '', days: validityDays })}
                 </p>
                 <button
                   type="button"

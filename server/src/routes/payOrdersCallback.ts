@@ -32,7 +32,7 @@ import {
   type MockScenario,
 } from '../payments/mockPay';
 import { resolvePaymentProvider, type PaymentProvider } from '../payments/provider';
-import { settlePayOrderPaid } from '../routers/pay';
+import { assertPayOrderOwnership, settlePayOrderPaid } from '../routers/pay';
 import { withOrderWriteLock } from '../routers/mall';
 
 /** 会话用户（结构对齐契约 1 SessionUser；仅 mock 演示端点做归属校验用） */
@@ -193,10 +193,11 @@ export const payOrdersCallbackRoute = new Hono<PayEnv>()
       .where(eq(schema.payOrders.id, body.orderId))
       .get();
     if (!order) return c.json({ code: 'NOT_FOUND', message: '支付单不存在' }, 404);
-    // 归属：会员域（membership_open/membership_upgrade）biz_id=users.id（与 routers/pay.ts assertPayOrderOwnership 同口径）
-    if (
-      !((order.bizDomain === 'membership_open' || order.bizDomain === 'membership_upgrade') && order.bizId === user.id)
-    ) {
+    /* 归属：本人单才放行（membership 域=users.id / mall 域=orders.customer_id 联表回查）——
+       单源=routers/pay.ts assertPayOrderOwnership（片 2 共用；原内联双域判定退役） */
+    try {
+      await assertPayOrderOwnership(db, order as Parameters<typeof assertPayOrderOwnership>[1], user.id);
+    } catch {
       return c.json({ code: 'FORBIDDEN', message: '只能支付本人支付单' }, 403);
     }
     if (order.status === 'paid') {

@@ -17,15 +17,13 @@
 
 import { Hono, type Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { ulid } from 'ulid';
 import { db, schema } from '../db';
-import { broadcastNow, emitEvent } from '../realtime/bus';
-import { EventType } from '../realtime/events';
+import { broadcastNow } from '../realtime/bus';
 import { resolvePaymentProvider, type PaymentProvider } from '../payments/provider';
 import { MOCK_SIGNATURE_HEADER, signMockCallback } from '../payments/mockPay';
-import { withOrderWriteLock } from '../routers/mall';
-import { grantFirstOrderGift } from '../routers/perks';
+import { fulfillMallOrderPaidTx, withOrderWriteLock } from '../routers/mall';
 
 /** 会话用户（结构对齐契约 1 SessionUser；仅 mock 演示端点做归属校验用） */
 export interface SessionUserLike {
@@ -111,69 +109,21 @@ export async function processPayCallback(
       ? (rawJson as Record<string, unknown>)
       : { raw: rawBody };
 
-  const now = new Date();
-  let outboxId = '';
-  let outboxId2 = '';
-  // 与 createOrder 同锁串行进入写事务（libsql 单连接并发事务会中毒连接，见 mall.ts 注释）
+  /* 与 createOrder 同锁串行进入写事务；兑付内核=fulfillMallOrderPaidTx（产品-1010 片 2 抽件单源，
+     片 2 新链 settlePayOrderPaid mall 域共用：条件更新幂等+流水+双频道事件+首单礼） */
   const txResult = await withOrderWriteLock(() =>
-    d.transaction(async (tx) => {
-    // SQLite 单写者（叠加应用层串行锁）：事务即行锁。条件更新影响行数=0 ⇒ 已非 pending（含重复投递）
-    const updated = await tx
-      .update(schema.orders)
-      .set({ status: 'paid', updatedAt: now })
-      .where(and(eq(schema.orders.id, order.id), eq(schema.orders.status, 'pending')))
-      .returning();
-    if (updated.length === 0) {
-      // 幂等：订单已 paid（重复回调）→ 直接成功，不写流水、不发事件
-      const current = await tx
-        .select()
-        .from(schema.orders)
-        .where(eq(schema.orders.id, order.id))
-        .get();
-      return { order: current!, idempotent: true };
-    }
-    await tx.insert(schema.payments).values({
-      orderId: order.id,
-      provider: provider.name,
-      paymentId: verified.paymentId,
-      amountFen: verified.paidFen,
-      status: 'paid',
-      rawCallback,
-    });
-    outboxId = await emitEvent(
-      tx as unknown as Parameters<typeof emitEvent>[0],
-      `user:${order.customerId}`,
-      EventType.OrderPaid,
-      {
+    d.transaction(async (tx) =>
+      fulfillMallOrderPaidTx(tx, {
         orderId: order.id,
-        orderNo: order.orderNo,
-        totalFen: order.totalFen,
+        providerName: provider.name,
         paymentId: verified.paymentId,
-        provider: provider.name,
-      },
-    );
-    // 同投商家频道：商家端待发货红点/新单 toast 实时可达（T5.4 集成补）
-    outboxId2 = await emitEvent(
-      tx as unknown as Parameters<typeof emitEvent>[0],
-      `store:${order.storeId}`,
-      EventType.OrderPaid,
-      {
-        orderId: order.id,
-        orderNo: order.orderNo,
-        totalFen: order.totalFen,
-        paymentId: verified.paymentId,
-        provider: provider.name,
-      },
-    );
-    /* 片 3 升级礼遇：首单 paid 翻转点触发（同事务同生共死；资格留痕不真发，
-       幂等=本人已有 upgrade_gift 行即跳过——重复回调上方幂等闸已拦，双保险） */
-    await grantFirstOrderGift(tx as unknown as Parameters<typeof emitEvent>[0], order);
-    return { order: updated[0]!, idempotent: false };
-    }),
+        paidFen: verified.paidFen,
+        rawCallback,
+      }),
+    ),
   );
-  if (outboxId) broadcastNow(outboxId);
-  if (outboxId2) broadcastNow(outboxId2);
-  return { orderId: txResult.order.id, orderNo: txResult.order.orderNo, idempotent: txResult.idempotent };
+  txResult.outboxIds.forEach(broadcastNow);
+  return { orderId: order.id, orderNo: txResult.orderNo || order.orderNo, idempotent: txResult.idempotent };
 }
 
 /** 统一错误映射（PayCallbackError → 对应 4xx；未知异常 → 500 + 日志） */

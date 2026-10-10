@@ -89,6 +89,7 @@ const SCREEN_DICT: Record<string, string> = {
   'customer:/member/upgrade': '客户·升级会员',
   'customer:/member/change': '客户·到期换档',
   'customer:/member/checkout': '客户·会员收银台',
+  'customer:/member/renew': '客户·线上续费确认页',
   'customer:/pay/reconcile': '客户·付了没开',
   'customer:/pay/:payNo': '客户·支付状态',
   'customer:/notifications': '客户·消息',
