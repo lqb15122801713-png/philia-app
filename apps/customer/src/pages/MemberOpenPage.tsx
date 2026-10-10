@@ -13,11 +13,12 @@
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { usePhiliaClient } from '@philia/shared'
+import { usePerkWallCells, usePhiliaClient } from '@philia/shared'
 import { friendlyError, useToast } from '@philia/shared'
 import { ErrorState, LoadingBlock } from '../components/home/common'
+import { readLastBooking } from '@/lib/bookingPrefill'
 import { mc } from '../components/member/copy'
 import {
   CardFace,
@@ -65,6 +66,19 @@ export default function MemberOpenPage() {
     queryFn: () => trpc.membership.plans.query(),
     staleTime: 60_000,
   })
+
+  /* 产品-1010 片 1：权益墙双屏同帧——格序/图标读会员中心 published 布局（同一行=同帧单源；
+     本页无画布注册，store 解析照 MemberCenterPage 同口径：画布预览店锚 > 记忆门店 > 就近首店） */
+  const previewStoreId = useMemo(() => new URLSearchParams(window.location.search).get('canvasStore'), [])
+  const memoryStoreId = useMemo(() => readLastBooking()?.storeId ?? null, [])
+  const nearbyQ = useQuery({
+    queryKey: ['store', 'listNearby'],
+    queryFn: () => trpc.store.listNearby.query(),
+    enabled: previewStoreId === null && memoryStoreId === null,
+    staleTime: 300_000,
+  })
+  const wallStoreId = previewStoreId ?? memoryStoreId ?? nearbyQ.data?.stores?.[0]?.id ?? null
+  const wallCells = usePerkWallCells(wallStoreId)
 
   const openFreeM = useMutation({
     mutationFn: () => trpc.membership.openFree.mutate(),
@@ -186,12 +200,12 @@ export default function MemberOpenPage() {
               </button>
             </div>
 
-            {/* 权益墙（档跟随切换） */}
+            {/* 权益墙（档跟随切换；片 1：格序/图标=画布布局数据，双屏同帧单源） */}
             <SecH
               title={mc('a3.perksTitle', { tier: tierNameOf(selected.planKey) })}
               more={mc('j1.perksFollow')}
             />
-            <PerksWall plan={selected} />
+            <PerksWall plan={selected} cells={wallCells} />
 
             {/* 规则明面（红线 5 全量八条） */}
             <RulesBlock

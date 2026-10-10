@@ -282,7 +282,12 @@ function KillSwitchStrip() {
 /* ------------------------------------------------------------------ */
 
 function OwnerConsole() {
-  const [active, setActive] = useState<PortKey>('copy');
+  /* 产品-1010 片 1：?port= 预选口（画布权益墙「去会员档改数 ›」跳口落 C1；非法值=回默认 copy） */
+  const [active, setActive] = useState<PortKey>(() => {
+    const p = new URLSearchParams(window.location.search).get('port');
+    const all: string[] = PORT_GROUPS.flatMap((g) => g.items.map((i) => i.key));
+    return p && all.includes(p) ? (p as PortKey) : 'copy';
+  });
   const empty = EMPTY_STATE[active];
 
   return (

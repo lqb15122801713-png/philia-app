@@ -7,7 +7,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CK, resolveSlotUrl, slotContentOf } from '@philia/shared'
+import { CK, PerkIcon, PERK_WALL_ITEMS, perkWallDefaultCells, resolveSlotUrl, slotContentOf, type PerkWallCellSpec } from '@philia/shared'
 import { mc } from './copy'
 
 /* ------------------------------------------------------------------ */
@@ -218,56 +218,30 @@ export function Ledger({ cells, onCellClick }: {
 /* 权益墙 perks（§4.8：8 枚扫得完；副签按档取值，数值读端口）                    */
 /* ------------------------------------------------------------------ */
 
-const PERK_ICONS = [
-  /* 多宠覆盖（爪印线性） */
-  <path key="p" d="M12 13.5c-2.8 0-5 2-5 4.2 0 1.4 1 2.3 2.4 2.3 1 0 1.7-.5 2.6-.5s1.6.5 2.6.5c1.4 0 2.4-.9 2.4-2.3 0-2.2-2.2-4.2-5-4.2z M6.5 10m-1.6 0a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0-3.2 0 M10 7.5m-1.7 0a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0-3.4 0 M14 7.5m-1.7 0a1.7 1.7 0 1 0 3.4 0a1.7 1.7 0 1 0-3.4 0 M17.5 10m-1.6 0a1.6 1.6 0 1 0 3.2 0a1.6 1.6 0 1 0-3.2 0" />,
-  /* 服务折扣（山形+基线） */
-  <path key="d" d="M4 16l5-9 4 6 3-4 4 7z M4 20h16" />,
-  /* 回馈金（圆+指针） */
-  <g key="r">
-    <circle cx="12" cy="12" r="8" />
-    <path d="M12 7v5l3.5 2" />
-  </g>,
-  /* 专属洗护师 */
-  <g key="g">
-    <circle cx="12" cy="8" r="3.4" />
-    <path d="M5.5 20c1-3.4 3.5-5 6.5-5s5.5 1.6 6.5 5" />
-  </g>,
-  /* 生日礼遇（星） */
-  <path key="b" d="M12 4l2.2 4.6 5 .6-3.7 3.4 1 4.9-4.5-2.5-4.5 2.5 1-4.9L4.8 9.2l5-.6z" />,
-  /* 皮毛检测（靶） */
-  <g key="s">
-    <circle cx="12" cy="12" r="8" />
-    <circle cx="12" cy="12" r="3" />
-  </g>,
-  /* 年度档案（OP-03 P1-2：寄养折扣行整撤，屋形图标随行撤保持索引对齐） */
-  <g key="a">
-    <rect x="5" y="4" width="14" height="16" rx="2" />
-    <path d="M9 9h6M9 13h6M9 17h4" />
-  </g>,
-]
-
-export function PerksWall({ plan }: { plan: V2Plan }) {
+export function PerksWall({ plan, cells }: { plan: V2Plan; cells?: PerkWallCellSpec[] }) {
   const zhe = zheOf(plan.serviceDiscountBp)
-  /* 端口批收尾片 4 · OP-03 P1-2：寄养折扣行整撤（27 号档本无此项=撤文案裁）——
-     权益墙 8 枚收 7 枚；PERK_ICONS[6]（屋形寄养图标）随行撤保持索引对齐；
-     注册表 mc.perksWall.copyKeys 声明 perk.boarding 为写死件不动（同 home.entryNote
-     留口先例：键不在码内=零渲染零副作用） */
-  const items = [
-    { t: mc('perk.pets'), s: plan.free ? mc('perk.petsSubFree') : mc('perk.petsSub', { n: plan.includedPets }) },
-    { t: mc('perk.discount'), s: zhe ? mc('perk.discountSub', { zhe }) : mc('perk.discountNone') },
-    { t: mc('perk.rebate'), s: plan.rebateBp > 0 ? mc('perk.rebateSub', { pct: pctOf(plan.rebateBp) }) : mc('perk.rebateNone') },
-    { t: mc('perk.groomer'), s: mc('perk.groomerSub') },
-    { t: mc('perk.birthday'), s: mc('perk.birthdaySub') },
-    { t: mc('perk.skin'), s: mc('perk.skinSub') },
-    { t: mc('perk.archive'), s: mc('perk.archiveSub') },
-  ]
+  /* 端口批收尾片 4 · OP-03 P1-2：寄养折扣行整撤（27 号档本无此项=撤文案裁）——权益墙 8 枚收 7 枚；
+     产品-1010 片 1：格序/图标=cells（画布布局数据；缺省=写死件默认序 perkWallDefaultCells）——
+     注册表 mc.perksWall.copyKeys 声明 perk.boarding 为写死件不动（留口先例：键不在码内=零渲染零副作用） */
+  const cellsResolved = cells ?? perkWallDefaultCells()
+  /* copy 键收窄：PERK_WALL_ITEMS 键名=写死件白名单，构造即合法（mc 键表强类型同族） */
+  const mcKey = (k: string) => k as Parameters<typeof mc>[0]
+  const items = cellsResolved.map((c) => {
+    const def = PERK_WALL_ITEMS.find((i) => i.key === c.key)!
+    const t = mc(mcKey(def.titleCopyKey))
+    let s: string
+    if (c.key === 'pets') s = plan.free ? mc(mcKey('perk.petsSubFree')) : mc(mcKey('perk.petsSub'), { n: plan.includedPets })
+    else if (c.key === 'discount') s = zhe ? mc(mcKey('perk.discountSub'), { zhe }) : mc(mcKey('perk.discountNone'))
+    else if (c.key === 'rebate') s = plan.rebateBp > 0 ? mc(mcKey('perk.rebateSub'), { pct: pctOf(plan.rebateBp) }) : mc(mcKey('perk.rebateNone'))
+    else s = mc(mcKey(def.subCopyKey))
+    return { key: c.key, icon: c.icon, t, s }
+  })
   return (
     <div className="m2-perks">
-      {items.map((it, i) => (
-        <div className="m2-perk" key={it.t}>
+      {items.map((it) => (
+        <div className="m2-perk" key={it.key} data-perk-key={it.key}>
           <div className="ic">
-            <svg viewBox="0 0 24 24">{PERK_ICONS[i]}</svg>
+            <PerkIcon icon={it.icon} />
           </div>
           <div className="t">{it.t}</div>
           <div className="s">{it.s}</div>
