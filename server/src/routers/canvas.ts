@@ -18,6 +18,12 @@ import { merchantOwnerProcedure, publicProcedure, router } from '../trpc';
 const PAGE_KEYS = ['home', 'memberCenter', 'cashierMarketing'] as const;
 const pageKeySchema = z.enum(PAGE_KEYS);
 
+/* 产品-1010 片 1：权益墙格级白名单（契约镜像=packages/shared/src/perkWall.tsx 单源；
+   server 不链 shared 包（非 workspace），两侧同值=契约件，任一侧改=同步改+注释互指） */
+const PERK_WALL_BLOCK_KEY = 'mc.perksWall';
+const PERK_WALL_PERK_KEYS = ['pets', 'discount', 'rebate', 'groomer', 'birthday', 'skin', 'archive'] as const;
+const PERK_WALL_ICON_KEYS = [...PERK_WALL_PERK_KEYS, 'heart', 'gift', 'star'] as const;
+
 /** 本页注册表块集（saveLayout 校验用） */
 async function pageBlocks(d: typeof db, pageKey: string) {
   return d
@@ -96,7 +102,17 @@ export const canvasRouter = router({
       z.object({
         pageKey: pageKeySchema,
         blocks: z
-          .array(z.object({ blockKey: z.string().min(1), visible: z.boolean() }))
+          .array(
+            z.object({
+              blockKey: z.string().min(1),
+              visible: z.boolean(),
+              /* 片 1：权益墙格级（格序+图标选换；仅 mc.perksWall 块可携带） */
+              perks: z
+                .array(z.object({ key: z.string().min(1), icon: z.string().min(1) }))
+                .max(20, '权益墙格数越界')
+                .optional(),
+            }),
+          )
           .min(1, '布局不能为空')
           .max(30, '单页区块数越界'),
       }),
@@ -117,6 +133,25 @@ export const canvasRouter = router({
           throw new TRPCError({ code: 'BAD_REQUEST', message: `区块重复：${b.blockKey}` });
         }
         seen.add(b.blockKey);
+        /* 片 1：perks 格级白名单校验（仅 mc.perksWall 可携带；格键/图标键/重格=400 明文） */
+        if (b.perks !== undefined) {
+          if (b.blockKey !== PERK_WALL_BLOCK_KEY) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: `perks 格级仅权益墙块（${PERK_WALL_BLOCK_KEY}）可携带` });
+          }
+          const seenPerk = new Set<string>();
+          for (const p of b.perks) {
+            if (!(PERK_WALL_PERK_KEYS as readonly string[]).includes(p.key)) {
+              throw new TRPCError({ code: 'BAD_REQUEST', message: `权益格「${p.key}」不在白名单（七格写死件）` });
+            }
+            if (!(PERK_WALL_ICON_KEYS as readonly string[]).includes(p.icon)) {
+              throw new TRPCError({ code: 'BAD_REQUEST', message: `图标「${p.icon}」不在白名单（注册表选换，不自由上传）` });
+            }
+            if (seenPerk.has(p.key)) {
+              throw new TRPCError({ code: 'BAD_REQUEST', message: `权益格重复：${p.key}` });
+            }
+            seenPerk.add(p.key);
+          }
+        }
       }
       if (seen.size !== registryKeys.size) {
         const missing = [...registryKeys].filter((k) => !seen.has(k));
