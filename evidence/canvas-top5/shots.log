@@ -1,0 +1,71 @@
+✅ 店主登录
+✅ 五屏页签入册（画布端口八页签：原三屏+新五屏）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\M0-tabs-eight.png
+✅ 客户登录（种子客户，预览顶签会话）
+✅ 我的 ①预览出图（左块表 me 块列齐+右 iframe 真页预览） —— 块数=6
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\M1-me-preview.png
+✅ 我的 ②a 探针侧点选回挂（顶签自收=消息契约实证：copyKey+blockKey 齐） —— ckReady=true picks=[{"type":"philia-canvas-pick","copyKey":"me.gridPets","blockKey":"me.grid"}]
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C2-me-probe-pick.png
+✅ 我的 ②b 画布侧反查（块行高亮 ring-2 + copy 输入聚焦）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\M2-me-picked.png
+✅ 我的 ③a 画布侧改文案保存（非高危即存即效+预览 patch 已发）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\M3-me-copysaved.png
+✅ 我的 ③b 探针侧读口透出（重载即读新值「我的 · 试改」）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C3-me-copy-live.png
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C4-me-before-publish.png
+✅ 我的 ④发布生效对照（藏 me.notify：发布前在=true → 发布后消失=true）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C4-me-after-publish.png
+✅ 商城首页 ①预览出图（左块表 mall 块列齐+右 iframe 真页预览） —— 块数=7
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\M1-mall-preview.png
+✅ 商城首页 ②a 探针侧点选回挂（顶签自收=消息契约实证：copyKey+blockKey 齐） —— ckReady=true picks=[{"type":"philia-canvas-pick","copyKey":"mall.headTitle","blockKey":"mall.head"}]
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C2-mall-probe-pick.png
+✅ 商城首页 ②b 画布侧反查（块行高亮 ring-2 + copy 输入聚焦）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\M2-mall-picked.png
+✅ 商城首页 ③a 画布侧改文案保存（非高危即存即效+预览 patch 已发）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\M3-mall-copysaved.png
+✅ 商城首页 ③b 探针侧读口透出（重载即读新值「MALL · 试改副题」）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C3-mall-copy-live.png
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C4-mall-before-publish.png
+✅ 商城首页 ④发布生效对照（藏 mall.deliverySlot：发布前在=true → 发布后消失=true）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C4-mall-after-publish.png
+✅ 预约洗护 ①预览出图（左块表 bookingGrooming 块列齐+右 iframe 真页预览） —— 块数=8
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\M1-bookingGrooming-preview.png
+✅ 预约洗护 ②a 探针侧点选回挂（顶签自收=消息契约实证：copyKey+blockKey 齐） —— ckReady=true picks=[{"type":"philia-canvas-pick","copyKey":"booking.groomingServiceTitle","blockKey":"bookingGrooming.serviceChips"}]
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C2-bookingGrooming-probe-pick.png
+✅ 预约洗护 ②b 画布侧反查（块行高亮 ring-2 + copy 输入聚焦）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\M2-bookingGrooming-picked.png
+✅ 预约洗护 ③a 画布侧改文案保存（非高危即存即效+预览 patch 已发）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\M3-bookingGrooming-copysaved.png
+✅ 预约洗护 ③b 探针侧读口透出（重载即读新值「门店 · 试改」）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C3-bookingGrooming-copy-live.png
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C4-bookingGrooming-before-publish.png
+✅ 预约洗护 ④发布生效对照（藏 bookingGrooming.staffRail：发布前在=true → 发布后消失=true）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C4-bookingGrooming-after-publish.png
+✅ 预约寄养 ①预览出图（左块表 bookingBoarding 块列齐+右 iframe 真页预览） —— 块数=7
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\M1-bookingBoarding-preview.png
+✅ 预约寄养 ②a 探针侧点选回挂（顶签自收=消息契约实证：copyKey+blockKey 齐） —— ckReady=true picks=[{"type":"philia-canvas-pick","copyKey":"booking.boardingRoomTitle","blockKey":"bookingBoarding.roomType"}]
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C2-bookingBoarding-probe-pick.png
+✅ 预约寄养 ②b 画布侧反查（块行高亮 ring-2 + copy 输入聚焦）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\M2-bookingBoarding-picked.png
+✅ 预约寄养 ③a 画布侧改文案保存（非高危即存即效+预览 patch 已发）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\M3-bookingBoarding-copysaved.png
+✅ 预约寄养 ③b 探针侧读口透出（重载即读新值「门店 · 试改寄养」）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C3-bookingBoarding-copy-live.png
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C4-bookingBoarding-before-publish.png
+✅ 预约寄养 ④发布生效对照（藏 bookingBoarding.extras：发布前在=true → 发布后消失=true）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C4-bookingBoarding-after-publish.png
+✅ 开通会员 ①预览出图（左块表 memberOpen 块列齐+右 iframe 真页预览） —— 块数=6
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\M1-memberOpen-preview.png
+✅ 开通会员 ②a 探针侧点选回挂（顶签自收=消息契约实证：copyKey+blockKey 齐） —— ckReady=true picks=[{"type":"philia-canvas-pick","copyKey":"j1.guideNote","blockKey":"mo.deck"}]
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C2-memberOpen-probe-pick.png
+✅ 开通会员 ②b 画布侧反查（块行高亮 ring-2 + copy 输入聚焦）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\M2-memberOpen-picked.png
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\M3-memberOpen-risk-modal.png
+✅ 开通会员 ③a 画布侧改文案保存（非高危即存即效+预览 patch 已发）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\M3-memberOpen-copysaved.png
+✅ 开通会员 ③b 探针侧读口透出（重载即读新值「到期不续费 · 试改」）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C3-memberOpen-copy-live.png
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C4-memberOpen-before-publish.png
+✅ 开通会员 ④发布生效对照（藏 mo.rules：发布前在=true → 发布后消失=true）
+shot: E:\KIMI code\tmp\canvas-scan\evidence2\shots\C4-memberOpen-after-publish.png
+SHOTS_ALL_GREEN
