@@ -17,12 +17,19 @@
  * 提交即现有 appointment.create（scheduledStart=入住日开店时刻、scheduledEnd=退房日同时刻，
  * 入参不动）；成功进现有成功页 /booking/success?aid=。
  * 旧 4 屏向导保留于隐藏路由 /booking/boarding/wizard（回滚保障）。
+ *
+ * 产品-1010 片 2 画布化入册（工艺同 MePage/HomePage/MemberCenterPage）：七块入册
+ * （bookingBoarding.header|petCard|dates|roomType|storeLine|extras|confirmBar），
+ * 块序/显隐=useCanvasLayout('bookingBoarding')（published→注册表默认序尾补，空=默认序兜底）；
+ * 文案键行内可改=CK(data-copy-key) 点选反查锚；预览=CanvasLayoutLoader+?canvasPreview=1
+ * 水印注记。块内逻辑（查询/状态机/换店清服务级联/提交链路）零改动——画布只碰排序/显隐/文案；
+ * data-testid 原值全保留（smoke 锚）。
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { usePhiliaClient } from '@philia/shared';
+import { CanvasLayoutLoader, CK, useCanvasLayout, usePhiliaClient } from '@philia/shared';
 import { checkinAt } from '@/components/booking/BoardingDateRangePicker';
 import { friendlyError, useToast } from '@philia/shared';
 import PageHeader from '@/components/PageHeader';
@@ -43,6 +50,17 @@ import { readLastBooking, resolvePetId, resolveServiceId, resolveStoreId, writeL
 
 const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 
+/** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
+const BOARDING_DEFAULT_ORDER = [
+  'bookingBoarding.header',
+  'bookingBoarding.petCard',
+  'bookingBoarding.dates',
+  'bookingBoarding.roomType',
+  'bookingBoarding.storeLine',
+  'bookingBoarding.extras',
+  'bookingBoarding.confirmBar',
+] as const;
+
 /** 门店某日是否休息 */
 const isClosed = (store: { openHours?: Record<string, unknown> | null } | null, d: Date) =>
   !store?.openHours?.[DAY_KEYS[d.getDay()]!];
@@ -52,6 +70,17 @@ export default function BoardingSinglePage() {
   const [searchParams] = useSearchParams();
   const { trpc, queryClient } = usePhiliaClient();
   const { toastEl, showToast } = useToast({ durationMs: 3200 });
+
+  /* 产品-1010 片 2：画布预览探针参识别（?canvasPreview=1；微光正名批工艺三件套之一） */
+  const isCanvasPreview = useMemo(
+    () => new URLSearchParams(window.location.search).get('canvasPreview') === '1',
+    [],
+  );
+  /* 画布预览店锚（?canvasStore=；照 MemberCenterPage 口径优先于记忆门店/就近首店） */
+  const previewStoreId = useMemo(
+    () => new URLSearchParams(window.location.search).get('canvasStore'),
+    [],
+  );
 
   /* ---- 选择状态（URL 预填参数初始化，优先级最高） ---- */
   const [storeId, setStoreId] = useState<string | null>(searchParams.get('storeId'));
@@ -101,6 +130,24 @@ export default function BoardingSinglePage() {
     queryFn: () => trpc.store.listNearby.query({}),
   });
   const effStoreId = storeId;
+  /* 画布布局店锚：?canvasStore= 预览店锚 > 记忆门店 > listNearby 首店（后两级=effStoreId
+     既有预填解析同口径，零新增查询） */
+  const canvasStoreId = previewStoreId ?? effStoreId;
+
+  /* ---- 画布端口：注册表块序 + 有效布局（published→默认序尾补） ---- */
+  const blocksQ = useQuery({
+    queryKey: ['canvas', 'blocks'],
+    queryFn: () => trpc.canvas.blocks.query(),
+    staleTime: 300_000,
+    retry: 1,
+  });
+  const registryBlocks = useMemo(() => {
+    const items = (blocksQ.data?.items ?? [])
+      .filter((b) => b.pageKey === 'bookingBoarding')
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    return items.length > 0 ? items : BOARDING_DEFAULT_ORDER.map((blockKey) => ({ blockKey }));
+  }, [blocksQ.data]);
+  const layout = useCanvasLayout('bookingBoarding', canvasStoreId, registryBlocks);
 
   const servicesQ = useQuery({
     queryKey: ['store', 'getWithServices', effStoreId, 'boarding-single'],
@@ -277,21 +324,24 @@ export default function BoardingSinglePage() {
   // 截面题=sec-h 工艺（§4.1：16/800）
   const SECTION = 'mt-6 border-t border-line-ring pt-5';
   const SEC_H = 'text-v2-section';
-  return (
-    <div className="px-4 pb-36 pt-6" data-testid="boarding-single">
-      {toastEl}
 
-      {/* U1-A：统一返回条（←圆钮+标题）；B9.3 任务 B：与洗护单屏对称的回链 */}
+  /* 七块渲染器（块内逻辑与改造前逐字一致；文案走 copy 键 + CK 点选反查锚） */
+  const renderers: Record<string, () => ReactNode> = {
+    /* 1. 页头返回条（U1-A：←圆钮+标题；B9.3 任务 B：与洗护单屏对称的回链） */
+    'bookingBoarding.header': () => (
       <PageHeader
-        title={bkc('booking.boardingTitle')}
+        title={<CK k="booking.boardingTitle">{bkc('booking.boardingTitle')}</CK>}
         right={
           <Link to="/booking/grooming" data-testid="boarding-to-grooming" className="text-caption text-ink">
-            {bkc('booking.toGrooming')}
+            <CK k="booking.toGrooming">{bkc('booking.toGrooming')}</CK>
           </Link>
         }
       />
+    ),
 
-      {/* 宠物卡（选宠半屏带疫苗硬校验） */}
+    /* 2. 宠物卡（选宠半屏带疫苗硬校验）+ 多宠同订置灰槽位（PD-15 V1.1 槽位 6：
+          不上数不上假件 + 注记 + data-testid；单宠选择器保留不动，零选择逻辑改动） */
+    'bookingBoarding.petCard': () => (
       <section className="mt-4">
         <PetCardBlock
           pets={petsQ.data ?? []}
@@ -301,20 +351,22 @@ export default function BoardingSinglePage() {
           pickerHint={bkc('booking.petPickHintBoarding')}
           loading={petsQ.isPending}
         />
-        {/* PD-15 V1.1 槽位 6：多宠同订置灰槽位（不上数不上假件 + 注记 + data-testid；
-            单宠选择器保留不动，零选择逻辑改动） */}
         <div
           data-testid="slot-multi-pet"
           aria-disabled="true"
           className="mt-2 flex items-center rounded-control border border-dashed border-line px-4 py-2.5 opacity-50"
         >
-          <span className="font-number text-v2-trace text-ink-placeholder">{mc('bk.multiPetSlot')}</span>
+          <span className="font-number text-v2-trace text-ink-placeholder">
+            <CK k="bk.multiPetSlot">{mc('bk.multiPetSlot')}</CK>
+          </span>
         </div>
       </section>
+    ),
 
-      {/* 入住/退房日期（底部月历 range picker） */}
+    /* 3. 入住/退房日期（底部月历 range picker） */
+    'bookingBoarding.dates': () => (
       <section className={SECTION}>
-        <h2 className={SEC_H}>入住 / 退房日期</h2>
+        <h2 className={SEC_H}><CK k="booking.boardingDatesTitle">{bkc('booking.boardingDatesTitle')}</CK></h2>
         <div className="mt-2">
           <BoardingDatesBlock
             checkin={checkin}
@@ -325,10 +377,12 @@ export default function BoardingSinglePage() {
           />
         </div>
       </section>
+    ),
 
-      {/* 房型区（单房型只读信息卡 / 多房型选择器，数据驱动） */}
+    /* 4. 房型区（单房型只读信息卡 / 多房型选择器，数据驱动；体验大批片 2 满档注记行保留） */
+    'bookingBoarding.roomType': () => (
       <section className={SECTION}>
-        <h2 className={SEC_H}>寄养房型</h2>
+        <h2 className={SEC_H}><CK k="booking.boardingRoomTitle">{bkc('booking.boardingRoomTitle')}</CK></h2>
         <div className="mt-2">
           <RoomTypeBlock
             services={boardingServices}
@@ -352,10 +406,12 @@ export default function BoardingSinglePage() {
           ) : null}
         </div>
       </section>
+    ),
 
-      {/* 门店单行 */}
+    /* 5. 门店单行 */
+    'bookingBoarding.storeLine': () => (
       <section className={SECTION}>
-        <h2 className={SEC_H}>门店</h2>
+        <h2 className={SEC_H}><CK k="booking.boardingStoreTitle">{bkc('booking.boardingStoreTitle')}</CK></h2>
         <div className="mt-2">
           <StoreLineBlock
             stores={nearbyQ.data?.stores ?? []}
@@ -366,8 +422,10 @@ export default function BoardingSinglePage() {
           />
         </div>
       </section>
+    ),
 
-      {/* 折叠区：备注 + 紧急联系人 + 遛弯次数 + 协议勾选（寄养固定到店付，无收款选择器） */}
+    /* 6. 折叠区：备注 + 紧急联系人 + 遛弯次数 + 协议勾选（寄养固定到店付，无收款选择器） */
+    'bookingBoarding.extras': () => (
       <section className={SECTION}>
         <NoteFoldBlock
           note={note}
@@ -390,56 +448,11 @@ export default function BoardingSinglePage() {
           }}
         />
       </section>
+    ),
 
-      {/* 协议全文底部半屏（copy 键长文 + 「已阅读并同意」落勾收起） */}
-      {agreeSheetDoc ? (
-        <BottomSheet
-          title={agc(agreeSheetDoc.titleKey)}
-          onClose={() => setAgreeSheetKey(null)}
-          testId="bs-agreement-sheet"
-        >
-          <p className="text-caption-xs text-ink-placeholder">
-            {agc('agreement.versionNote', { version: agreeSheetDoc.version })}
-          </p>
-          <p
-            data-testid="bs-agreement-body"
-            className="mt-2 whitespace-pre-wrap text-body-sm leading-6 text-ink"
-          >
-            {agreeSheetDoc.content}
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              if (agreeSheetDoc.agreementKey === 'medical_auth') setMedicalAgreed(true);
-              else setConsentAgreed(true);
-              signAgreement(agreeSheetDoc.agreementKey);
-              setAgreeSheetKey(null);
-            }}
-            data-testid="bs-agreement-agree"
-            className="mt-4 h-11 w-full rounded-full bg-[#2E2318] text-body-sm font-semibold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92"
-          >
-            {agc('agreement.agreeCta')}
-          </button>
-        </BottomSheet>
-      ) : null}
-
-      {/* 底部半屏单列月历 range picker（点入住 → 点退房自动应用并关闭） */}
-      {sheet.open ? (
-        <BoardingRangeSheet
-          store={store}
-          checkin={checkin}
-          checkout={checkout}
-          initialPhase={sheet.phase}
-          onApply={(ni, no) => {
-            setCheckin(ni);
-            setCheckout(no);
-            setSheet((s) => ({ ...s, open: false }));
-          }}
-          onClose={() => setSheet((s) => ({ ...s, open: false }))}
-        />
-      ) : null}
-
-      {/* 吸底确认条（fixed 于 TabBar 上方；疫苗阻断红条内置） */}
+    /* 7. 吸底确认条（fixed 于 TabBar 上方；疫苗阻断红条内置；fixed 定位不入文档流，
+          块序只影响 DOM 序不影响视觉） */
+    'bookingBoarding.confirmBar': () => (
       <BoardingConfirmBar
         nights={nights}
         totalFen={service ? service.priceFen * Math.max(nights, 0) : 0}
@@ -448,6 +461,79 @@ export default function BoardingSinglePage() {
         submitting={createM.isPending}
         onConfirm={() => createM.mutate()}
       />
-    </div>
+    ),
+  };
+
+  return (
+    <CanvasLayoutLoader pageKey="bookingBoarding" storeId={canvasStoreId}>
+      <div className="px-4 pb-36 pt-6" data-testid="boarding-single">
+        {toastEl}
+
+        {/* 画布预览水印（?canvasPreview=1 探针模式；零真会话零写库口径注记） */}
+        {isCanvasPreview ? (
+          <p
+            className="mb-3 text-center text-caption-xs text-ink-secondary"
+            data-testid="bs-canvas-preview-note"
+          >
+            <CK k="mc.canvasExampleNote">{mc('mc.canvasExampleNote')}</CK>
+          </p>
+        ) : null}
+
+        {/* 块流：layout.map 按 visible 渲染（默认序下与改造前 JSX 序逐字一致） */}
+        {layout.map((b) => (
+          <section data-block-key={b.blockKey} key={b.blockKey}>
+            {b.visible ? (renderers[b.blockKey]?.() ?? null) : null}
+          </section>
+        ))}
+
+        {/* 协议全文底部半屏（copy 键长文 + 「已阅读并同意」落勾收起；弹层件不入块流） */}
+        {agreeSheetDoc ? (
+          <BottomSheet
+            title={agc(agreeSheetDoc.titleKey)}
+            onClose={() => setAgreeSheetKey(null)}
+            testId="bs-agreement-sheet"
+          >
+            <p className="text-caption-xs text-ink-placeholder">
+              {agc('agreement.versionNote', { version: agreeSheetDoc.version })}
+            </p>
+            <p
+              data-testid="bs-agreement-body"
+              className="mt-2 whitespace-pre-wrap text-body-sm leading-6 text-ink"
+            >
+              {agreeSheetDoc.content}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                if (agreeSheetDoc.agreementKey === 'medical_auth') setMedicalAgreed(true);
+                else setConsentAgreed(true);
+                signAgreement(agreeSheetDoc.agreementKey);
+                setAgreeSheetKey(null);
+              }}
+              data-testid="bs-agreement-agree"
+              className="mt-4 h-11 w-full rounded-full bg-[#2E2318] text-body-sm font-semibold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92"
+            >
+              {agc('agreement.agreeCta')}
+            </button>
+          </BottomSheet>
+        ) : null}
+
+        {/* 底部半屏单列月历 range picker（点入住 → 点退房自动应用并关闭；弹层件不入块流） */}
+        {sheet.open ? (
+          <BoardingRangeSheet
+            store={store}
+            checkin={checkin}
+            checkout={checkout}
+            initialPhase={sheet.phase}
+            onApply={(ni, no) => {
+              setCheckin(ni);
+              setCheckout(no);
+              setSheet((s) => ({ ...s, open: false }));
+            }}
+            onClose={() => setSheet((s) => ({ ...s, open: false }))}
+          />
+        ) : null}
+      </div>
+    </CanvasLayoutLoader>
   );
 }

@@ -29,6 +29,13 @@ const MALL_COPY_TABLE = {
   'mall.emptyBodyCategory': '这个分类暂时没有商品，看看别的吧',
   'mall.emptyClearSearch': '清空搜索',
   'mall.loadFail': '商品加载失败，请稍后重试',
+  /* 产品-1010 片 2 画布化抽键：原码内写死文案（重试钮/加载中/加购 toast/店名兜底） */
+  'mall.reload': '重新加载',
+  'mall.loadingMore': '正在加载更多…',
+  'mall.quickAddToast': '已加入购物车',
+  'mall.replacedToast': '已清空原购物车并加入本商品',
+  'mall.storeFallback': '菲丽亚门店',
+  'mall.otherStore': '其他门店',
   'mall.pullMore': '上拉加载更多',
   'mall.endLine': '共 {total} 件商品 · 到底啦',
   /* 商品卡（M-01：回馈金返显 mono 8.5 + 售罄签） */

@@ -171,8 +171,8 @@
  *   P1-3（补缺修复小批）：免费档 expiresAt=2099 远端——openFree/sell 写侧断言
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
- *      56.1 种子 3892 键/72 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70→端口批收尾片 2（网格/订正/回收站/公告两步流 UI 92 键，生成件重生成 3762+seed 手补 1=3763，corr 域新入=71 域）3763/71→端口批收尾片 3（画布/试算/调整/录码/克隆/绑码 UI 106 键，生成件重生成 3868+seed 手补 1=3869，canvas 域新入=72 域）3869/72→端口批收尾片 4（OP-03 收口：+7 键 −撤 perk.boarding 两键[宇宙只增不改口径=仓行留档]，生成件重生成 3873+seed 手补 1=3874）3874/72→会员链路小批片 1（撤牌 2+新增 2=生成件 3873+seed 手补 1=3874）3874/72→会员链路小批片 2（0068 升级域+入口 11 键增/4 键改值+撤牌 4 键出宇宙，生成件 3880+seed 手补 1=3881）3881/72→会员链路小批片 3（0069 更名+限制解除 6 键增/10 键改值，生成件 3886+seed 手补 1=3887）3887/72→生产可用性急修（0070 端口映射表 1 键增+暖阳 claim 去只数 1 键改，生成件 3887+seed 手补 1=3888）3888/72→微光正名片 1（0071 流量池化+C 股扫尾 2 键增 2 键改，生成件 3889+seed 手补 1=3890）3890/72→微光正名片 2（0072 画布示例水印+预约档口径注记 2 键增，生成件 3891+seed 手补 1=3892）3892/72）；
+ *      56.1 种子 3955 键/72 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70→端口批收尾片 2（网格/订正/回收站/公告两步流 UI 92 键，生成件重生成 3762+seed 手补 1=3763，corr 域新入=71 域）3763/71→端口批收尾片 3（画布/试算/调整/录码/克隆/绑码 UI 106 键，生成件重生成 3868+seed 手补 1=3869，canvas 域新入=72 域）3869/72→端口批收尾片 4（OP-03 收口：+7 键 −撤 perk.boarding 两键[宇宙只增不改口径=仓行留档]，生成件重生成 3873+seed 手补 1=3874）3874/72→会员链路小批片 1（撤牌 2+新增 2=生成件 3873+seed 手补 1=3874）3874/72→会员链路小批片 2（0068 升级域+入口 11 键增/4 键改值+撤牌 4 键出宇宙，生成件 3880+seed 手补 1=3881）3881/72→会员链路小批片 3（0069 更名+限制解除 6 键增/10 键改值，生成件 3886+seed 手补 1=3887）3887/72→生产可用性急修（0070 端口映射表 1 键增+暖阳 claim 去只数 1 键改，生成件 3887+seed 手补 1=3888）3888/72→微光正名片 1（0071 流量池化+C 股扫尾 2 键增 2 键改，生成件 3889+seed 手补 1=3890）3890/72→微光正名片 2（0072 画布示例水印+预约档口径注记 2 键增，生成件 3891+seed 手补 1=3892）3892/72）→产品-1010 画布全屏批片 2（0073 五屏抽键 40 键+支付批漏件补种 23 键=63 键增，生成件重生成 3954+seed 手补 1=3955，域 72 不变）3955/72）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -4933,17 +4933,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602）→ 3671/70（端口批收尾片 1：规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）→ 3763/71（端口批收尾片 2：0062 网格/订正/回收站/公告 92 键，生成件重生成 3762+seed 手补 1=3763，域 70→71=corr 新域）→ 3869/72（端口批收尾片 3：0065 画布/薪资/扫码 106 键，生成件重生成 3868+seed 手补 1=3869，域 71→72=canvas 新域）→ 3874/72（端口批收尾片 4：0066 OP-03 收口 7 键增+perk.boarding 两键撤渲染[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3873/72（会员链路小批片 1：0067 会员链路 2 键增+撤牌 2 键出宇宙[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3881/72（会员链路小批片 2：0068 升级域+入口 11 键增/4 键改值[升档线上化口径]+撤牌 4 键出宇宙[仓行留档]，生成件重生成 3880+seed 手补 1=3881）→ 3887/72（会员链路小批片 3：0069 更名+限制解除 6 键增/10 键改值，生成件重生成 3886+seed 手补 1=3887）→ 3888/72（生产可用性急修：0070 增 1 改 1，生成件重生成 3887+seed 手补 1=3888）→ 3890/72（微光正名片 1：0071 增 2 改 2，生成件重生成 3889+seed 手补 1=3890）→ 3891/72（微光正名片 2：0072 增 1，生成件重生成 3890+seed 手补 1=3891） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602）→ 3671/70（端口批收尾片 1：规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）→ 3763/71（端口批收尾片 2：0062 网格/订正/回收站/公告 92 键，生成件重生成 3762+seed 手补 1=3763，域 70→71=corr 新域）→ 3869/72（端口批收尾片 3：0065 画布/薪资/扫码 106 键，生成件重生成 3868+seed 手补 1=3869，域 71→72=canvas 新域）→ 3874/72（端口批收尾片 4：0066 OP-03 收口 7 键增+perk.boarding 两键撤渲染[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3873/72（会员链路小批片 1：0067 会员链路 2 键增+撤牌 2 键出宇宙[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3881/72（会员链路小批片 2：0068 升级域+入口 11 键增/4 键改值[升档线上化口径]+撤牌 4 键出宇宙[仓行留档]，生成件重生成 3880+seed 手补 1=3881）→ 3887/72（会员链路小批片 3：0069 更名+限制解除 6 键增/10 键改值，生成件重生成 3886+seed 手补 1=3887）→ 3888/72（生产可用性急修：0070 增 1 改 1，生成件重生成 3887+seed 手补 1=3888）→ 3890/72（微光正名片 1：0071 增 2 改 2，生成件重生成 3889+seed 手补 1=3890）→ 3891/72（微光正名片 2：0072 增 1，生成件重生成 3890+seed 手补 1=3891）→ 3955/72（产品-1010 画布全屏批片 2：0073 五屏抽键 40 键增+支付批漏件补种 23 键=63 增[生成件单源重跑 diff 全量入迁移]，生成件重生成 3954+seed 手补 1=3955，域 72 不变） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（3892 键/72 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 3892 && domainSet.size === 72 &&
+  check('56.1 copy 域种子全量落库（3955 键/72 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 3955 && domainSet.size === 72 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（3892 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 3892 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（3955 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 3955 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -8644,8 +8644,8 @@ async function main(): Promise<void> {
 
     /* ---- 76.3 公共读口形状不变（不透元数据：键→文两列） ---- */
     const texts76 = await trpcQuery<{ rows: Array<{ key: string; text: string; screen?: unknown; position?: unknown }> }>('config.activeCopyTexts', { cookie: customerCookie });
-    check('76.3 activeCopyTexts 形状不变（3892 行 key→text，不透 screen/position 元数据）',
-      texts76.rows.length === 3892 &&
+    check('76.3 activeCopyTexts 形状不变（3955 行 key→text，不透 screen/position 元数据）',
+      texts76.rows.length === 3955 &&
       texts76.rows.every((r) => r.screen === undefined && r.position === undefined),
       texts76.rows.length);
 
@@ -10148,8 +10148,8 @@ async function main(): Promise<void> {
     const homeBlocks = regAll.items.filter((b) => b.pageKey === 'home').sort((a, b) => a.sortOrder - b.sortOrder);
     const mcBlocks = regAll.items.filter((b) => b.pageKey === 'memberCenter');
     const csBlocks = regAll.items.filter((b) => b.pageKey === 'cashierMarketing');
-    check('85.1 注册表种子 18 块（home 9/memberCenter 8/cashierMarketing 1，白名单三屏）',
-      regAll.items.length === 18 && homeBlocks.length === 9 && mcBlocks.length === 8 && csBlocks.length === 1 &&
+    check('85.1 注册表种子 52 块（home 9/memberCenter 8/cashierMarketing 1 + 片 2 五屏 me 6/mall 7/grooming 8/boarding 7/memberOpen 6，白名单八屏）',
+      regAll.items.length === 52 && homeBlocks.length === 9 && mcBlocks.length === 8 && csBlocks.length === 1 &&
       homeBlocks[0]!.blockKey === 'home.banner' && csBlocks[0]!.blockKey === 'cs.savingsHook',
       { total: regAll.items.length });
     const perm = (swap: boolean) => homeBlocks.map((b, i) => ({
@@ -11398,6 +11398,97 @@ async function main(): Promise<void> {
       input: { domain: 'copy', changes: [{ ruleKey: 'perk.birthday', valueJson: { text: '生日礼遇' } }], confirmedHighRisk: ['perk.birthday'] },
     });
     await trpcMutate('canvas.revertLayout', { cookie: ownerCookie, input: { pageKey: 'memberCenter' } }).catch(() => null);
+  }
+
+  /* ==================================================================
+   * 产品-1010 画布全屏批 片 2（高频五屏入册+抽键小批）段：
+   *   95.1 五屏注册表种子在库（me 6/mall 7/bookingGrooming 8/bookingBoarding 7/memberOpen 6，
+   *       块序=sortOrder 升序+copyKeys 登记抽查）+PAGE_KEYS 扩枚举生效（五屏 getLayout 200/未知页 400）；
+   *   95.2 me 屏完整排列两步流（重排+显隐 → draft → publish → liveLayout 透出=编辑序）+
+   *       硬闸（未知块 400/缺块 400，照 85.1 工艺）；族尾复原=默认序重发一版防漂移；
+   *   95.3 抽键读口（40 枚新键 config.list 全在=种子落库）+非高危新键即改即读
+   *       （me.appTitle 改→activeCopyTexts 读回→复原默认）。
+   * ================================================================== */
+  console.log('\n[产品-1010 片2] 95. 高频五屏入册（注册表+两步流+抽键读口）');
+  {
+    /* ---- 95.1 五屏注册表种子在库 + PAGE_KEYS 扩枚举 ---- */
+    const regAll95 = await trpcQuery<{ items: Array<{ blockKey: string; pageKey: string; sortOrder: number; propsJson: { copyKeys?: string[] } }> }>('canvas.blocks', { cookie: customerCookie });
+    const countOf95 = (pk: string) => regAll95.items.filter((b) => b.pageKey === pk).length;
+    const meBlocks95 = regAll95.items.filter((b) => b.pageKey === 'me').sort((a, b) => a.sortOrder - b.sortOrder);
+    const heroKeys95 = meBlocks95.find((b) => b.blockKey === 'me.hero')?.propsJson?.copyKeys ?? [];
+    const moRulesKeys95 = regAll95.items.find((b) => b.blockKey === 'mo.rules')?.propsJson?.copyKeys ?? [];
+    const gConfKeys95 = regAll95.items.find((b) => b.blockKey === 'bookingGrooming.confirmBar')?.propsJson?.copyKeys ?? [];
+    const pageGets95 = await Promise.all(['me', 'mall', 'bookingGrooming', 'bookingBoarding', 'memberOpen'].map((pk) =>
+      trpcQuery<{ live: unknown }>('canvas.getLayout', { cookie: ownerCookie, input: { pageKey: pk } })));
+    const badPage95 = await asErr(trpcQuery('canvas.getLayout', { cookie: ownerCookie, input: { pageKey: 'foodCourt' } }));
+    check('95.1 五屏注册表种子在库（6/7/8/7/6 块数齐+sortOrder 升序+copyKeys 抽查）+PAGE_KEYS 扩枚举（五屏 200/未知页 400）',
+      countOf95('me') === 6 && countOf95('mall') === 7 && countOf95('bookingGrooming') === 8 && countOf95('bookingBoarding') === 7 && countOf95('memberOpen') === 6 &&
+      meBlocks95[0]!.blockKey === 'me.apphead' && meBlocks95[5]!.blockKey === 'me.grid' &&
+      heroKeys95.includes('me.qrTitle') && moRulesKeys95.includes('rules.r1') && gConfKeys95.includes('booking.chooseTime') &&
+      pageGets95.every((r) => r !== null && typeof r === 'object') &&
+      badPage95 instanceof TrpcHttpError && badPage95.httpStatus === 400,
+      { counts: ['me', 'mall', 'bookingGrooming', 'bookingBoarding', 'memberOpen'].map(countOf95).join('/'), badPage: badPage95 && badPage95.httpStatus });
+
+    /* ---- 95.2 me 屏完整排列两步流（重排+显隐透出）+硬闸 ---- */
+    const basePerm95 = () => meBlocks95.map((b) => ({ blockKey: b.blockKey, visible: true }));
+    const edited95 = [
+      { blockKey: 'me.grid', visible: true },
+      ...basePerm95().filter((b) => b.blockKey !== 'me.grid' && b.blockKey !== 'me.notify'),
+      { blockKey: 'me.notify', visible: false },
+    ];
+    await trpcMutate('canvas.saveLayout', { cookie: ownerCookie, input: { pageKey: 'me', blocks: edited95 } });
+    const gl95 = await trpcQuery<{ draft: { id: string } | null }>('canvas.getLayout', { cookie: ownerCookie, input: { pageKey: 'me' } });
+    await trpcMutate('canvas.publishLayout', { cookie: ownerCookie, input: { versionId: gl95.draft!.id } });
+    const live95 = await trpcQuery<{ blocks: Array<{ blockKey: string; visible: boolean }> | null; version: number | null }>(
+      'canvas.liveLayout', { cookie: customerCookie, input: { pageKey: 'me', storeId } });
+    const unknown95 = await asErr(trpcMutate('canvas.saveLayout', {
+      cookie: ownerCookie, input: { pageKey: 'me', blocks: [...basePerm95(), { blockKey: 'me.nope', visible: true }] },
+    }));
+    const missing95 = await asErr(trpcMutate('canvas.saveLayout', {
+      cookie: ownerCookie, input: { pageKey: 'me', blocks: basePerm95().filter((b) => b.blockKey !== 'me.grid') },
+    }));
+    check('95.2 me 屏两步流：重排（grid 置顶）+显隐（notify 藏）→ publish → liveLayout 透出=编辑序；未知块 400/缺块 400 明文',
+      !!live95.blocks && live95.blocks.length === 6 && live95.blocks[0]!.blockKey === 'me.grid' &&
+      live95.blocks.find((b) => b.blockKey === 'me.notify')?.visible === false && typeof live95.version === 'number' &&
+      unknown95 instanceof TrpcHttpError && unknown95.httpStatus === 400 &&
+      missing95 instanceof TrpcHttpError && missing95.httpStatus === 400,
+      { first: live95.blocks?.[0]?.blockKey, version: live95.version, unknown: unknown95 && unknown95.httpStatus, missing: missing95 && missing95.httpStatus });
+
+    /* 族尾复原：默认序重存重发一版（live 回默认序，防漂移） */
+    await trpcMutate('canvas.saveLayout', { cookie: ownerCookie, input: { pageKey: 'me', blocks: basePerm95() } });
+    const gl95b = await trpcQuery<{ draft: { id: string } | null }>('canvas.getLayout', { cookie: ownerCookie, input: { pageKey: 'me' } });
+    await trpcMutate('canvas.publishLayout', { cookie: ownerCookie, input: { versionId: gl95b.draft!.id } });
+    const live95b = await trpcQuery<{ blocks: Array<{ blockKey: string; visible: boolean }> | null }>(
+      'canvas.liveLayout', { cookie: customerCookie, input: { pageKey: 'me', storeId } });
+    check('95.2 族尾复原：默认序重发一版，live 回注册表序（apphead 首/grid 尾，六块全显）',
+      !!live95b.blocks && live95b.blocks[0]!.blockKey === 'me.apphead' && live95b.blocks[5]!.blockKey === 'me.grid' &&
+      live95b.blocks.every((b) => b.visible === true),
+      { first: live95b.blocks?.[0]?.blockKey, last: live95b.blocks?.[5]?.blockKey });
+
+    /* ---- 95.3 抽键读口：40 枚新键 config.list 全在（0073 种子落库）+即改即读 ---- */
+    const NEW_KEYS_95 = [
+      'me.appTitle', 'me.appNo', 'me.rebateLabel', 'me.renewCountdown', 'me.openUnlock', 'me.qrTitle', 'me.qrSub',
+      'me.orderConfirmed', 'me.orderServing', 'me.orderHistory', 'me.orderRefund', 'me.orderAll', 'me.slotSoon',
+      'me.gridPets', 'me.gridPetsGo', 'me.gridPetsCount', 'me.gridRebate', 'me.gridBoarding', 'me.gridBoardingSub',
+      'me.gridCoupons', 'me.gridCouponsSub', 'me.gridSettings', 'me.gridSettingsSub',
+      'mall.reload', 'mall.loadingMore', 'mall.quickAddToast', 'mall.replacedToast', 'mall.storeFallback', 'mall.otherStore',
+      'booking.groomingServiceTitle', 'booking.groomingStoreTitle', 'booking.groomingStaffTitle', 'booking.groomingDateTitle',
+      'booking.groomingSlotSummaryTitle', 'booking.groomingSlotSummaryDuration', 'booking.groomingLastLine',
+      'booking.boardingDatesTitle', 'booking.boardingRoomTitle', 'booking.boardingStoreTitle',
+      'j1.openFail',
+    ];
+    const list95 = await trpcQuery<{ rules: Array<{ ruleKey: string; active: boolean }> }>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
+    const activeKeys95 = new Set(list95.rules.filter((r) => r.active).map((r) => r.ruleKey));
+    const missingKeys95 = NEW_KEYS_95.filter((k) => !activeKeys95.has(k));
+    await trpcMutate('config.save', { cookie: ownerCookie, input: { domain: 'copy', changes: [{ ruleKey: 'me.appTitle', valueJson: { text: '我的 · 试改' } }] } });
+    const readBack95 = await trpcQuery<{ rows: Array<{ key: string; text: string }> }>('config.activeCopyTexts', { cookie: customerCookie });
+    const okRead95 = readBack95.rows.find((r) => r.key === 'me.appTitle')?.text === '我的 · 试改';
+    await trpcMutate('config.save', { cookie: ownerCookie, input: { domain: 'copy', changes: [{ ruleKey: 'me.appTitle', valueJson: { text: '我的' } }] } });
+    const readBack95b = await trpcQuery<{ rows: Array<{ key: string; text: string }> }>('config.activeCopyTexts', { cookie: customerCookie });
+    check('95.3 抽键读口：40 枚新键 config.list 全落库（0073 种子）+非高危新键即改即读（改→读回→复原默认）',
+      missingKeys95.length === 0 && NEW_KEYS_95.length === 40 && okRead95 &&
+      readBack95b.rows.find((r) => r.key === 'me.appTitle')?.text === '我的',
+      { missing: missingKeys95.join(','), n: NEW_KEYS_95.length, readBack: okRead95 });
   }
 
   client.close();

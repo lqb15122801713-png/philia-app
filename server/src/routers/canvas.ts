@@ -15,7 +15,8 @@ import { z } from 'zod';
 import { db, schema } from '../db';
 import { merchantOwnerProcedure, publicProcedure, router } from '../trpc';
 
-const PAGE_KEYS = ['home', 'memberCenter', 'cashierMarketing'] as const;
+/* 产品-1010 片 2：高频五屏入册——PAGE_KEYS 扩枚举（+me/mall/bookingGrooming/bookingBoarding/memberOpen） */
+const PAGE_KEYS = ['home', 'memberCenter', 'cashierMarketing', 'me', 'mall', 'bookingGrooming', 'bookingBoarding', 'memberOpen'] as const;
 const pageKeySchema = z.enum(PAGE_KEYS);
 
 /* 产品-1010 片 1：权益墙格级白名单（契约镜像=packages/shared/src/perkWall.tsx 单源；

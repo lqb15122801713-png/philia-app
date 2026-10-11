@@ -56,7 +56,18 @@ export function canvasPreviewUrl(
   portMap: Record<string, string> = DEFAULT_PORT_MAP,
 ): string {
   const params = `canvasPreview=1${storeId ? `&canvasStore=${storeId}` : ''}`;
-  const path = pageKey === 'home' ? '/home' : pageKey === 'memberCenter' ? '/member' : '/cashier';
+  /* 产品-1010 片 2：高频五屏入册——页键→客户页路径映射（五屏+既有三屏） */
+  const PATH_MAP: Record<CanvasPageKey, string> = {
+    home: '/home',
+    memberCenter: '/member',
+    cashierMarketing: '/cashier',
+    me: '/me',
+    mall: '/mall',
+    bookingGrooming: '/booking/grooming',
+    bookingBoarding: '/booking/boarding',
+    memberOpen: '/member/open',
+  };
+  const path = PATH_MAP[pageKey];
 
   /* 轨 1：单域路径分端（片 4 保留；判定=/admin/ 路径前缀） */
   if (loc.pathname.startsWith('/admin/')) {

@@ -18,7 +18,7 @@ import { usePhiliaClient } from './api/client';
 import { patchCopyOverride } from './copyOverrides';
 import { PERK_ICON_SET, resolvePerkWallCells, type PerkIconKey, type PerkIconShape, type PerkWallCellSpec } from './perkWall';
 
-export type CanvasPageKey = 'home' | 'memberCenter' | 'cashierMarketing';
+export type CanvasPageKey = 'home' | 'memberCenter' | 'cashierMarketing' | 'me' | 'mall' | 'bookingGrooming' | 'bookingBoarding' | 'memberOpen';
 
 export interface CanvasBlockSpec {
   blockKey: string;

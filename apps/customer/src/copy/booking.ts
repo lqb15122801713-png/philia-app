@@ -113,6 +113,20 @@ const BOOKING_COPY_TABLE = {
   'booking.signPendingNote': '本单尚未完成签署，请到店补签',
   /* 微光正名批片 2（C 股 3 栅格随档放宽）：整月日历注记=档口径读（days=服务端透出 advanceDays） */
   'booking.advanceNote': '可约期为未来 {days} 天（按档），更多日期敬请期待',
+
+  /* ---- 产品-1010 片 2：寄养单屏画布化入册（区块截面题三枚，原写死件抽键） ---- */
+  'booking.boardingDatesTitle': '入住 / 退房日期',
+  'booking.boardingRoomTitle': '寄养房型',
+  'booking.boardingStoreTitle': '门店',
+
+  /* ---- 产品-1010 片 2：洗护单屏画布化入册（区块截面题四枚 + 时间摘要两行 + 宠物卡上次洗护行抽键） ---- */
+  'booking.groomingServiceTitle': '选择服务',
+  'booking.groomingStoreTitle': '门店',
+  'booking.groomingStaffTitle': '洗护师',
+  'booking.groomingDateTitle': '选择日期',
+  'booking.groomingSlotSummaryTitle': '已选时间',
+  'booking.groomingSlotSummaryDuration': '约 {min} 分钟',
+  'booking.groomingLastLine': '上次洗护 {date} · {service}',
 } as const;
 
 export const BOOKING_COPY = withCopyOverrides(BOOKING_COPY_TABLE);

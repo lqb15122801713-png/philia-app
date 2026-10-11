@@ -38,7 +38,16 @@ const PAGE_TABS: Array<{ key: CanvasPageKey; label: string }> = [
   { key: 'home', label: cv('canvas.tabHome') },
   { key: 'memberCenter', label: cv('canvas.tabMemberCenter') },
   { key: 'cashierMarketing', label: cv('canvas.tabCashierMarketing') },
+  /* 产品-1010 片 2：高频五屏入册（页签顺编） */
+  { key: 'me', label: '我的' },
+  { key: 'mall', label: '商城首页' },
+  { key: 'bookingGrooming', label: '预约洗护' },
+  { key: 'bookingBoarding', label: '预约寄养' },
+  { key: 'memberOpen', label: '开通会员' },
 ];
+
+/** 共享键前缀（裁死件④：rules. / card. / perk. 三前缀改一键动多屏；画布提示行=前缀推导单源） */
+const SHARED_COPY_PREFIX = ['rules.', 'card.', 'perk.'];
 
 /**
  * 预览 iframe URL（选型报备）：推导内核=纯函数 ./canvasPreviewUrl.ts（片 4 D 股抽出可测件；
@@ -459,6 +468,10 @@ export function CanvasPortBody() {
                             {cur?.highRisk ? (
                               <Badge tone="danger">{cv('canvas.copyHighRiskWarn')}</Badge>
                             ) : null}
+                            {/* 裁死件④：共享键（rules. / card. / perk. 三前缀）改一键动多屏=提示行 */}
+                            {SHARED_COPY_PREFIX.some((p) => k.startsWith(p)) ? (
+                              <Badge tone="warn">共享键·改一键动多屏</Badge>
+                            ) : null}
                           </span>
                           <input
                             className={inputCls}
@@ -531,6 +544,9 @@ export function CanvasPortBody() {
                                     <span className="w-40 shrink-0 truncate text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
                                       {k}
                                       {cur?.highRisk ? <Badge tone="danger">{cv('canvas.copyHighRiskWarn')}</Badge> : null}
+                                      {SHARED_COPY_PREFIX.some((p) => k.startsWith(p)) ? (
+                                        <Badge tone="warn">共享键·改一键动多屏</Badge>
+                                      ) : null}
                                     </span>
                                     <input
                                       className={inputCls}
