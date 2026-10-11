@@ -12,12 +12,19 @@
  *
  * 提交即现有 appointment.create（入参不动）；指定洗护师仍以备注前缀传达；
  * 成功进现有成功页 /booking/success?aid=。旧 4 屏向导保留于 /booking/grooming/wizard。
+ *
+ * 产品-1010 片 2 画布化入册（工艺同 MePage/HomePage/MemberCenterPage）：八块入册
+ * （bookingGrooming.header|petCard|serviceChips|storeLine|staffRail|dateTime|extras|confirmBar），
+ * 块序/显隐=useCanvasLayout('bookingGrooming')（published→注册表默认序尾补，空=默认序兜底）；
+ * 文案键行内可改=CK(data-copy-key) 点选反查锚；预览=CanvasLayoutLoader+?canvasPreview=1
+ * 水印注记。块内逻辑（查询/状态机/换店清服务级联/提交链路）零改动——画布只碰排序/显隐/文案；
+ * data-testid 原值全保留（smoke 锚）。
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { usePhiliaClient } from '@philia/shared';
+import { CanvasLayoutLoader, CK, useCanvasLayout, usePhiliaClient } from '@philia/shared';
 import { friendlyError, useToast } from '@philia/shared';
 import PageHeader from '@/components/PageHeader';
 import PetCardBlock from '@/components/booking/single/PetCardBlock';
@@ -32,13 +39,38 @@ import { buildWeekGrid, isSameDay } from '@/components/booking/single/slotGrid';
 import { dayLabel, fmtHM } from '@/components/booking/format';
 import { readLastBooking, resolvePetId, resolveServiceId, resolveStoreId, writeLastBooking } from '@/lib/bookingPrefill';
 import { createAppointmentExp2, queryFullAlternatives } from '@/lib/exp2Api';
+import { mc } from '@/components/member/copy';
 import { bkc } from '@/copy/booking';
+
+/** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
+const GROOMING_DEFAULT_ORDER = [
+  'bookingGrooming.header',
+  'bookingGrooming.petCard',
+  'bookingGrooming.serviceChips',
+  'bookingGrooming.storeLine',
+  'bookingGrooming.staffRail',
+  'bookingGrooming.dateTime',
+  'bookingGrooming.extras',
+  'bookingGrooming.confirmBar',
+] as const;
 
 export default function GroomingSinglePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { trpc, queryClient } = usePhiliaClient();
   const { toastEl, showToast } = useToast({ durationMs: 3200 });
+
+  /* 产品-1010 片 2：画布预览探针参识别（?canvasPreview=1；微光正名批工艺三件套之一） */
+  const isCanvasPreview = useMemo(
+    () => new URLSearchParams(window.location.search).get('canvasPreview') === '1',
+    [],
+  );
+  /* 画布预览店锚（?canvasStore=；照 MemberCenterPage 口径优先于记忆门店/就近首店） */
+  const previewStoreId = useMemo(
+    () => new URLSearchParams(window.location.search).get('canvasStore'),
+    [],
+  );
+  const memoryStoreId = useMemo(() => readLastBooking()?.storeId ?? null, []);
 
   /* ---- 选择状态（URL 预填参数初始化，优先级最高） ---- */
   const [storeId, setStoreId] = useState<string | null>(searchParams.get('storeId'));
@@ -60,6 +92,24 @@ export default function GroomingSinglePage() {
     queryFn: () => trpc.store.listNearby.query({}),
   });
   const effStoreId = storeId;
+  /* 画布布局店锚（照 MemberCenterPage 口径）：?canvasStore= 预览店锚 > readLastBooking
+     记忆门店 > listNearby 首店（nearbyQ 为既有查询，零增发） */
+  const canvasStoreId = previewStoreId ?? memoryStoreId ?? nearbyQ.data?.stores?.[0]?.id ?? null;
+
+  /* ---- 画布端口：注册表块序 + 有效布局（published→默认序尾补） ---- */
+  const blocksQ = useQuery({
+    queryKey: ['canvas', 'blocks'],
+    queryFn: () => trpc.canvas.blocks.query(),
+    staleTime: 300_000,
+    retry: 1,
+  });
+  const registryBlocks = useMemo(() => {
+    const items = (blocksQ.data?.items ?? [])
+      .filter((b) => b.pageKey === 'bookingGrooming')
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    return items.length > 0 ? items : GROOMING_DEFAULT_ORDER.map((blockKey) => ({ blockKey }));
+  }, [blocksQ.data]);
+  const layout = useCanvasLayout('bookingGrooming', canvasStoreId, registryBlocks);
 
   const servicesQ = useQuery({
     // B9a 任务 C：petId 入参驱动时长引擎（serviceDurations + 时长连续过滤按引擎时长）；
@@ -238,7 +288,10 @@ export default function GroomingSinglePage() {
       null;
     if (!last) return null;
     const d = new Date(last.scheduledStart);
-    return `上次洗护 ${d.getMonth() + 1}.${d.getDate()} · ${last.serviceName ?? '洗护'}`;
+    return bkc('booking.groomingLastLine', {
+      date: `${d.getMonth() + 1}.${d.getDate()}`,
+      service: last.serviceName ?? '洗护',
+    });
   }, [mineQ.data, petId]);
 
   /* ---- 提交（现有 appointment.create，入参不动） ---- */
@@ -319,21 +372,23 @@ export default function GroomingSinglePage() {
   // 截面题=sec-h 工艺（§4.1：16/800）
   const SECTION = 'mt-6 border-t border-line-ring pt-5';
   const SEC_H = 'text-v2-section';
-  return (
-    <div className="px-4 pb-36 pt-6" data-testid="grooming-single">
-      {toastEl}
 
-      {/* U1-A：统一返回条（←圆钮+标题）；B9.3 任务 B：hub 退役后寄养入口安置——右侧安静文字链 */}
+  /* ---- 八块渲染器（块内逻辑/条件与改造前逐字一致；文案键挂 CK 点选反查锚） ---- */
+  const renderers: Record<string, () => ReactNode> = {
+    /* 1. 页头（U1-A 统一返回条←圆钮+标题；B9.3 任务 B：hub 退役后寄养入口安置——右侧安静文字链） */
+    'bookingGrooming.header': () => (
       <PageHeader
-        title={bkc('booking.groomingTitle')}
+        title={<CK k="booking.groomingTitle">{bkc('booking.groomingTitle')}</CK>}
         right={
           <Link to="/booking/boarding" data-testid="grooming-to-boarding" className="text-caption text-ink">
-            {bkc('booking.toBoarding')}
+            <CK k="booking.toBoarding">{bkc('booking.toBoarding')}</CK>
           </Link>
         }
       />
+    ),
 
-      {/* 宠物卡（B9a 任务 C：换宠物 → 时长引擎口径变化，已选时段清空重选） */}
+    /* 2. 宠物卡（B9a 任务 C：换宠物 → 时长引擎口径变化，已选时段清空重选） */
+    'bookingGrooming.petCard': () => (
       <section className="mt-4">
         <PetCardBlock
           pets={petsQ.data ?? []}
@@ -346,10 +401,12 @@ export default function GroomingSinglePage() {
           loading={petsQ.isPending}
         />
       </section>
+    ),
 
-      {/* 服务 chips */}
+    /* 3. 服务 chips */
+    'bookingGrooming.serviceChips': () => (
       <section className={SECTION}>
-        <h2 className={SEC_H}>选择服务</h2>
+        <h2 className={SEC_H}><CK k="booking.groomingServiceTitle">{bkc('booking.groomingServiceTitle')}</CK></h2>
         <div className="mt-2">
           <ServiceChipsBlock
             services={groomingServices}
@@ -360,10 +417,12 @@ export default function GroomingSinglePage() {
           />
         </div>
       </section>
+    ),
 
-      {/* 门店单行 */}
+    /* 4. 门店单行 */
+    'bookingGrooming.storeLine': () => (
       <section className={SECTION}>
-        <h2 className={SEC_H}>门店</h2>
+        <h2 className={SEC_H}><CK k="booking.groomingStoreTitle">{bkc('booking.groomingStoreTitle')}</CK></h2>
         <div className="mt-2">
           <StoreLineBlock
             stores={nearbyQ.data?.stores ?? []}
@@ -374,11 +433,12 @@ export default function GroomingSinglePage() {
           />
         </div>
       </section>
+    ),
 
-      {/* U1-D：洗护师横卡（v9.1 美容师横卡——置顶「随缘派单」默认卡 + 横滑员工卡；
-          由 ExtrasBlock 折叠区迁出为独立节，选择逻辑/备注前缀传达口径不变） */}
+    /* 5. 洗护师横卡（U1-D：置顶「随缘派单」默认卡 + 横滑员工卡；选择逻辑/备注前缀传达口径不变） */
+    'bookingGrooming.staffRail': () => (
       <section className={SECTION}>
-        <h2 className={SEC_H}>洗护师</h2>
+        <h2 className={SEC_H}><CK k="booking.groomingStaffTitle">{bkc('booking.groomingStaffTitle')}</CK></h2>
         <div className="mt-2">
           <StaffPickerFlat
             staff={staffQ.data?.staff ?? []}
@@ -387,13 +447,15 @@ export default function GroomingSinglePage() {
             loading={staffQ.isPending}
             earliestLabel={earliestSlotLabel}
           />
-          <p className="mt-1 text-caption-xs text-ink-placeholder">{bkc('booking.staffNote')}</p>
+          <p className="mt-1 text-caption-xs text-ink-placeholder"><CK k="booking.staffNote">{bkc('booking.staffNote')}</CK></p>
         </div>
       </section>
+    ),
 
-      {/* 日期横条 + 时段栅格（v4.1：栅格上移紧贴日期区，同一节内） */}
+    /* 6. 日期横条 + 时段栅格（v4.1：栅格上移紧贴日期区，同一节内）+ 满档注记 + 时间摘要 */
+    'bookingGrooming.dateTime': () => (
       <section className={SECTION}>
-        <h2 className={SEC_H}>选择日期</h2>
+        <h2 className={SEC_H}><CK k="booking.groomingDateTitle">{bkc('booking.groomingDateTitle')}</CK></h2>
         <div className="mt-2">
           <DateStripBlock days={days} selectedDay={day} onPickDay={pickDay} remainByDay={remainByDay} />
         </div>
@@ -412,7 +474,7 @@ export default function GroomingSinglePage() {
               data-testid="gs-full-note"
               className="mt-3 rounded-tag bg-sunken px-3 py-2 text-caption text-ink-placeholder"
             >
-              {fullAltQ.data.note ?? bkc('booking.fullSlotFallback')}
+              {fullAltQ.data.note ?? <CK k="booking.fullSlotFallback">{bkc('booking.fullSlotFallback')}</CK>}
             </p>
           ) : null}
         </div>
@@ -425,16 +487,18 @@ export default function GroomingSinglePage() {
             className="mt-4 rounded-[18px] border border-line bg-card px-4 py-3.5"
           >
             <p className="text-[14.5px] font-extrabold leading-5">
-              已选时间 <span className="u1-num">{dayLabel(slot)} {fmtHM(slot)}</span>
+              <CK k="booking.groomingSlotSummaryTitle">{bkc('booking.groomingSlotSummaryTitle')}</CK> <span className="u1-num">{dayLabel(slot)} {fmtHM(slot)}</span>
             </p>
             <p className="mt-[3px] font-number text-v2-trace text-ink-secondary">
-              约 {engineDurationMin ?? service?.durationMin ?? 60} 分钟
+              <CK k="booking.groomingSlotSummaryDuration">{bkc('booking.groomingSlotSummaryDuration', { min: engineDurationMin ?? service?.durationMin ?? 60 })}</CK>
             </p>
           </div>
         ) : null}
       </section>
+    ),
 
-      {/* 折叠区：收款方式 + 附加项 + 备注（U1-D：洗护师迁出为独立横卡区） */}
+    /* 7. 折叠区：收款方式 + 附加项 + 备注（U1-D：洗护师迁出为独立横卡区） */
+    'bookingGrooming.extras': () => (
       <section className={SECTION}>
         <ExtrasBlock
           paymentMode={paymentMode}
@@ -452,12 +516,14 @@ export default function GroomingSinglePage() {
         />
         {/* 附加项计价口径明面（前端估=server 算同口径，以 server 结算为准） */}
         {addonIds.length > 0 ? (
-          <p className="mt-1 text-caption-xs text-ink-placeholder">{bkc('booking.addonPriceNote')}</p>
+          <p className="mt-1 text-caption-xs text-ink-placeholder"><CK k="booking.addonPriceNote">{bkc('booking.addonPriceNote')}</CK></p>
         ) : null}
       </section>
+    ),
 
-      {/* 吸底确认条（fixed 于 TabBar 上方；B9a 任务 C：约 N 分钟 = 时长引擎输出，
-          引擎未输出时回退服务默认 durationMin；体验大批片 2：价=主价+Σ附加） */}
+    /* 8. 吸底确认条（fixed 于 TabBar 上方；B9a 任务 C：约 N 分钟 = 时长引擎输出，
+          引擎未输出时回退服务默认 durationMin；体验大批片 2：价=主价+Σ附加） */
+    'bookingGrooming.confirmBar': () => (
       <ConfirmBar
         priceFen={totalFen}
         durationMin={engineDurationMin ?? service?.durationMin ?? null}
@@ -470,6 +536,27 @@ export default function GroomingSinglePage() {
         slot={slot}
         paymentMode={paymentMode}
       />
-    </div>
+    ),
+  };
+
+  return (
+    <CanvasLayoutLoader pageKey="bookingGrooming" storeId={canvasStoreId}>
+      <div className="px-4 pb-36 pt-6" data-testid="grooming-single">
+        {toastEl}
+        {/* 画布预览水印（?canvasPreview=1 探针模式；零真会话零写库口径注记） */}
+        {isCanvasPreview ? (
+          <p className="text-center text-caption-xs text-ink-secondary" data-testid="gs-canvas-preview-note">
+            {mc('mc.canvasExampleNote')}
+          </p>
+        ) : null}
+        {/* 块流：注册表块序 + 有效布局按 visible 渲染；默认序下块内 JSX 与改造前逐字一致
+            （ConfirmBar 为 fixed 吸底件，包层 section 不影响落位） */}
+        {layout.map((b) => (
+          <section data-block-key={b.blockKey} key={b.blockKey}>
+            {b.visible ? (renderers[b.blockKey]?.() ?? null) : null}
+          </section>
+        ))}
+      </div>
+    </CanvasLayoutLoader>
   );
 }

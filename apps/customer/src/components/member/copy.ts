@@ -94,6 +94,8 @@ const MEMBER_COPY_TABLE = {
   'j1.storePayOk': '我知道了',
   /* 补缺批片 6：付费档 CTA 改跳线上确认订单（/member/checkout）；到店办理降级为旁路链接 */
   'j1.storeBypass': '想到店办理？收银台指引 ›',
+  /* 产品-1010 画布批片 2 抽键：openFree 开通失败 toast 兜底句（原硬编码入端口） */
+  'j1.openFail': '开通失败，请稍后再试',
 
   /* ---- W-01 回馈金账本 ---- */
   'w1.pushLabel': '回馈金 · REBATE LEDGER',
@@ -335,6 +337,31 @@ const MEMBER_COPY_TABLE = {
   'saved.discountLine': '服务折扣节省',
   'saved.totalLine': '合计',
   'saved.noHypeNote': '只算已发生的回馈金与折扣，不含预计。',
+
+  /* 产品-1010 片 2 抽键小批（/me 我的页画布化入册；写死文案登记成 copy 键；数值永不抽键=读端口） */
+  'me.appTitle': '我的',
+  'me.appNo': 'MY PHILIA',
+  'me.rebateLabel': '回馈金',
+  'me.renewCountdown': '续费倒计时',
+  'me.openUnlock': '开通会员解锁',
+  'me.qrTitle': '出示会员码',
+  'me.qrSub': '到店即扫',
+  'me.orderConfirmed': '待到店',
+  'me.orderServing': '服务中',
+  'me.orderHistory': '待评价',
+  'me.orderRefund': '退款售后',
+  'me.orderAll': '全部订单',
+  'me.slotSoon': '即将点亮',
+  'me.gridPets': '宠物档案',
+  'me.gridPetsGo': '去建档',
+  'me.gridPetsCount': '{n} 只',
+  'me.gridRebate': '回馈金账本',
+  'me.gridBoarding': '寄养预约',
+  'me.gridBoardingSub': '按晚',
+  'me.gridCoupons': '优惠券',
+  'me.gridCouponsSub': '领券 · 心愿单',
+  'me.gridSettings': '设置',
+  'me.gridSettingsSub': '账号 · 安全',
 } as const;
 
 export const MEMBER_COPY = withCopyOverrides(MEMBER_COPY_TABLE);

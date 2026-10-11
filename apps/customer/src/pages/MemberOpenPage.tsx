@@ -10,12 +10,18 @@
  * 已是会员按档分化（会员链路片 2②）：注册用户档不分流——直达选档开通流程（默认选中推荐
  * 付费档），付费档=提示条+回会员中心 CTA。数值全读 member_plans 端口（冻结值 88/85/8），
  * 文案全走文案键（copy.ts）。
+ *
+ * 产品-1010 画布批片 2（本屏画布化入册，工艺照 MePage/HomePage/MemberCenterPage）：
+ * 六块入册（mo.tip/mo.deck/mo.ledger/mo.perksWall/mo.rules/mo.cta），块序/显隐=
+ * useCanvasLayout('memberOpen')（published 覆盖∪注册表默认序尾补，MO_DEFAULT_ORDER=改造前
+ * JSX 序兜底）；文案键挂 CK(data-copy-key) 点选反查锚；?canvasPreview=1 探针=页首水印
+ * 注记行（mc.canvasExampleNote）。块内逻辑/查询/状态机/提交链路零改动，data-testid 原值全保留。
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { usePerkWallCells, usePhiliaClient } from '@philia/shared'
+import { CanvasLayoutLoader, CK, useCanvasLayout, usePerkWallCells, usePhiliaClient } from '@philia/shared'
 import { friendlyError, useToast } from '@philia/shared'
 import { ErrorState, LoadingBlock } from '../components/home/common'
 import { readLastBooking } from '@/lib/bookingPrefill'
@@ -49,6 +55,9 @@ const TIER_SWATCH: Record<string, string> = {
   plan_weiguang: 'var(--v2card)',
 }
 
+/** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
+const MO_DEFAULT_ORDER = ['mo.tip', 'mo.deck', 'mo.ledger', 'mo.perksWall', 'mo.rules', 'mo.cta'] as const
+
 export default function MemberOpenPage() {
   const { trpc, queryClient } = usePhiliaClient()
   const { toastEl, showToast } = useToast({ durationMs: 3200 })
@@ -67,8 +76,12 @@ export default function MemberOpenPage() {
     staleTime: 60_000,
   })
 
+  /* 画布预览探针参识别（?canvasPreview=1；微光正名批工艺三件套之一） */
+  const isCanvasPreview = useMemo(() => new URLSearchParams(window.location.search).get('canvasPreview') === '1', [])
+
   /* 产品-1010 片 1：权益墙双屏同帧——格序/图标读会员中心 published 布局（同一行=同帧单源；
-     本页无画布注册，store 解析照 MemberCenterPage 同口径：画布预览店锚 > 记忆门店 > 就近首店） */
+     画布批片 2：本屏入册 memberOpen，store 解析照 MemberCenterPage 同口径：
+     画布预览店锚（?canvasStore=）> 记忆门店 > 就近首店） */
   const previewStoreId = useMemo(() => new URLSearchParams(window.location.search).get('canvasStore'), [])
   const memoryStoreId = useMemo(() => readLastBooking()?.storeId ?? null, [])
   const nearbyQ = useQuery({
@@ -80,6 +93,21 @@ export default function MemberOpenPage() {
   const wallStoreId = previewStoreId ?? memoryStoreId ?? nearbyQ.data?.stores?.[0]?.id ?? null
   const wallCells = usePerkWallCells(wallStoreId)
 
+  /* ---- 画布端口（画布批片 2）：注册表块序 + 有效布局（published 覆盖∪注册表默认序尾补） ---- */
+  const blocksQ = useQuery({
+    queryKey: ['canvas', 'blocks'],
+    queryFn: () => trpc.canvas.blocks.query(),
+    staleTime: 300_000,
+    retry: 1,
+  })
+  const registryBlocks = useMemo(() => {
+    const items = (blocksQ.data?.items ?? [])
+      .filter((b) => b.pageKey === 'memberOpen')
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+    return items.length > 0 ? items : MO_DEFAULT_ORDER.map((blockKey) => ({ blockKey }))
+  }, [blocksQ.data])
+  const layout = useCanvasLayout('memberOpen', wallStoreId, registryBlocks)
+
   const openFreeM = useMutation({
     mutationFn: () => trpc.membership.openFree.mutate(),
     onSuccess: (r) => {
@@ -88,7 +116,7 @@ export default function MemberOpenPage() {
       showToast(r.idempotent ? mc('j1.toastAlready') : mc('j1.toastOpenedFree'), 'info')
       void queryClient.invalidateQueries({ queryKey: ['membership'] })
     },
-    onError: (err) => showToast(friendlyError(err, '开通失败，请稍后再试'), 'error'),
+    onError: (err) => showToast(friendlyError(err, mc('j1.openFail')), 'error'),
   })
 
   const plans = (plansQ.data?.plans ?? []) as V2Plan[]
@@ -110,13 +138,208 @@ export default function MemberOpenPage() {
   const alreadyMember = !!myQ.data?.membership
   const paidMember = alreadyMember && !memberFree
 
+  /* ---- 六块渲染器（块内逻辑/条件与改造前逐字一致；文案键挂 CK 点选反查锚） ---- */
+  const renderers: Record<string, () => ReactNode> = {
+    /* 1. mo.tip：已是会员提示条（不挡流程；PR-4 PD-05 件 1：免费档不显示有效期）+ 付费档升级路径句。
+          片 2②：注册用户=信息条照常（文案=新购口径引导句），CTA 不分流——直达选档开通 */
+    'mo.tip': () => {
+      const my = myQ.data
+      if (!alreadyMember || !my?.membership) return null
+      return (
+        <div className="m2-pad" style={{ marginTop: 10 }}>
+          <TipCard>
+            {memberFree ? (
+              <CK k="j1.alreadyMemberFree">{mc('j1.alreadyMemberFree')}</CK>
+            ) : (
+              <CK k="j1.alreadyMember">
+                {mc('j1.alreadyMember', { date: new Date(my.membership.expiresAt).toLocaleDateString('zh-CN') })}
+              </CK>
+            )}
+          </TipCard>
+          {/* 补缺批片 3：升级路径句（upgradeAvailable=true 才显，→/member/upgrade）；
+              片 2②：注册用户档本页即开通流程，不再给升级页跳转（直达） */}
+          {paidMember && my.upgradeAvailable ? (
+            <div style={{ textAlign: 'center', marginTop: 8 }}>
+              <button type="button" className="m2-link" data-testid="open-upgrade-entry" onClick={() => navigate('/member/upgrade')}>
+                <CK k="j1.upgradeEntry">{mc('j1.upgradeEntry')}</CK>
+              </button>
+            </div>
+          ) : null}
+        </div>
+      )
+    },
+
+    /* 2. mo.deck：引导行 + 卡池 deck（卡即选择器 §4.8：scroll-snap 居中 + 点卡选档） */
+    'mo.deck': () => (
+      <>
+        <div className="m2-pad" style={{ marginTop: 14 }}>
+          <p className="m2-note" style={{ margin: 0 }}>
+            <CK k="j1.guideNote">{mc('j1.guideNote')}</CK>
+          </p>
+        </div>
+        <div className="m2-pad">
+          <div className="m2-deck" ref={deck.deckRef} onScroll={deck.onScroll}>
+            {plans.map((p, i) => (
+              <CardFace
+                key={p.planKey}
+                planKey={p.planKey}
+                priceText={p.free ? mc('card.freePrice') : mc('card.priceYear', { price: (p.priceFen / 100).toFixed(0) })}
+                claimText={tierClaimOf(p.planKey)}
+                height={204}
+                padding="18px 20px"
+                nameSize={25}
+                selectable
+                selected={i === deck.active}
+                onClick={() => deck.pick(i)}
+                testId={`open-pick-${p.planKey}`}
+              />
+            ))}
+          </div>
+          <DeckDots count={plans.length} active={deck.active} />
+        </div>
+      </>
+    ),
+
+    /* 3. mo.ledger：三格账（档跟随）+ 测算注（CJ-0923-16③）+ 对比四档权益弹层入口 */
+    'mo.ledger': () => {
+      if (!selected) return null
+      return (
+        <div className="m2-pad">
+          <Ledger
+            cells={[
+              { v: selected.free ? '—' : `¥${dailyOf(selected.priceFen)}`, k: <CK k="j1.ledgerDaily">{mc('j1.ledgerDaily')}</CK>, key: 'daily' },
+              { v: selected.free ? '¥0' : `¥${(selected.priceFen / 100).toFixed(0)}`, k: <CK k="j1.ledgerYearly">{mc('j1.ledgerYearly')}</CK>, key: 'yearly' },
+              /* 片 3 功能闸解除：注册用户档=建档不限（不读 includedPets 数） */
+              { v: selected.free ? mc('j1.petsUnlimited') : mc('j1.petsIncluded', { n: selected.includedPets }), k: <CK k="j1.ledgerPets">{mc('j1.ledgerPets')}</CK>, key: 'pets' },
+            ]}
+          />
+          <p className="m2-note" style={{ marginTop: 10 }}>
+            <CK k="j1.estimateNote">{mc('j1.estimateNote')}</CK>
+          </p>
+          <div style={{ textAlign: 'center', marginTop: 14 }}>
+            <button type="button" className="m2-link" onClick={() => setCompareOpen(true)}>
+              <CK k="j1.compareLink">{mc('j1.compareLink')}</CK>
+            </button>
+          </div>
+        </div>
+      )
+    },
+
+    /* 4. mo.perksWall：权益墙（档跟随切换；片 1：格序/图标=画布布局数据，双屏同帧单源） */
+    'mo.perksWall': () => {
+      if (!selected) return null
+      return (
+        <div className="m2-pad">
+          <SecH
+            title={<CK k="a3.perksTitle">{mc('a3.perksTitle', { tier: tierNameOf(selected.planKey) })}</CK>}
+            more={<CK k="j1.perksFollow">{mc('j1.perksFollow')}</CK>}
+          />
+          <PerksWall plan={selected} cells={wallCells} />
+        </div>
+      )
+    },
+
+    /* 5. mo.rules：规则明面（红线 5 全量八条） */
+    'mo.rules': () => {
+      const pq = plansQ.data
+      if (!selected || !pq) return null
+      return (
+        <div className="m2-pad">
+          <RulesBlock
+            plan={selected}
+            settlementDay={pq.rebateSettlementDay}
+            validityDays={pq.membershipValidityDays}
+            allPcts={plans.filter((p) => p.rebateBp > 0).map((p) => pctOf(p.rebateBp)).join('/')}
+          />
+        </div>
+      )
+    },
+
+    /* 6. mo.cta：吸底 CTA（页内形态非弹窗）：付费档会员=回会员中心；注册用户/非会员=选档开通直达 */
+    'mo.cta': () => {
+      if (!selected) return null
+      return (
+        <div className="m2-ctabar">
+          <div className="m2-ctabar-in">
+            {paidMember ? (
+              /* PR-4 UX P2-3：已是会员态 CTA=回会员中心（不再显示「开通 · 每天 ¥x」与提示条打架） */
+              <button
+                type="button"
+                className="m2-btn-primary m2-press"
+                data-testid="open-already-member-cta"
+                onClick={() => navigate('/member')}
+              >
+                <span><CK k="j1.ctaAlreadyMember">{mc('j1.ctaAlreadyMember')}</CK></span>
+                <span className="sub"><CK k="j1.ctaSub">{mc('j1.ctaSub')}</CK></span>
+              </button>
+            ) : (
+              <>
+                {/* 片 1 C 股裁①（openFree 退位）：注册用户选免费档=「当前档」注记不动作
+                    （注册即在册=零办理动作；openFree 端点留作异常面兜底）；非会员罕见路径
+                    （注销重申）保留一键开档；付费档 CTA=跳线上确认订单 */}
+                {selected.free && alreadyMember ? (
+                  <div className="m2-note" data-testid="open-current-free-note" style={{ textAlign: 'center', padding: '13px 0' }}>
+                    <CK k="j1.ctaCurrentFree">{mc('j1.ctaCurrentFree')}</CK>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="m2-btn-primary m2-press"
+                    disabled={openFreeM.isPending}
+                    data-testid={selected.free ? 'open-free-btn' : 'open-pick-cta'}
+                    onClick={() => {
+                      if (selected.free) openFreeM.mutate()
+                      else navigate(`/member/checkout?plan=${selected.planKey}`)
+                    }}
+                  >
+                    <span>
+                      {selected.free ? (
+                        <CK k="j1.ctaOpenFree">{mc('j1.ctaOpenFree')}</CK>
+                      ) : (
+                        <CK k="j1.ctaOpen">{mc('j1.ctaOpen', { tier: tierNameOf(selected.planKey), daily: dailyOf(selected.priceFen) })}</CK>
+                      )}
+                    </span>
+                    <span className="sub"><CK k="j1.ctaSub">{mc('j1.ctaSub')}</CK></span>
+                  </button>
+                )}
+                {/* 到店办理旁路链接（guide 到店指引步保留给本入口；线上收单为主路径） */}
+                {!selected.free ? (
+                  <div style={{ textAlign: 'center', marginTop: 8 }}>
+                    <button
+                      type="button"
+                      className="m2-link"
+                      data-testid="open-store-bypass"
+                      onClick={() => setStep('guide')}
+                    >
+                      <CK k="j1.storeBypass">{mc('j1.storeBypass')}</CK>
+                    </button>
+                  </div>
+                ) : null}
+              </>
+            )}
+          </div>
+        </div>
+      )
+    },
+  }
+
   return (
+    <CanvasLayoutLoader pageKey="memberOpen" storeId={wallStoreId}>
     <div className="m2" data-testid="member-open-page" style={{ minHeight: '100vh' }}>
       {toastEl}
       {/* 急修补一件（任务卡 9-29 P0 弹球陷阱）：PushBar 去写死 /member——非会员按返回
           →/member→无档分流弹回 /member/open=被关在 J-01。返回=时间序回退（任何来处回得来）；
-          直访兜底=/home（红线：兜底不许 /member，否则再造弹球） */}
+          直访兜底=/home（红线：兜底不许 /member，否则再造弹球）。页头返回条不入六块册
+          （区块清单=mo.* 六块），照 MemberCenterPage 惯例置块流外 */}
       <PushBar label={mc('j1.pushLabel')} fallback="/home" />
+      {/* 画布预览水印（?canvasPreview=1 探针模式；零真会话零写库口径注记） */}
+      {isCanvasPreview ? (
+        <div className="m2-pad" style={{ marginTop: 10 }}>
+          <p className="m2-note" style={{ margin: 0, textAlign: 'center' }} data-testid="open-canvas-preview-note">
+            {mc('mc.canvasExampleNote')}
+          </p>
+        </div>
+      ) : null}
 
       {plansQ.isPending || myQ.isPending ? (
         <div className="m2-pad" style={{ marginTop: 24 }}>
@@ -127,155 +350,15 @@ export default function MemberOpenPage() {
           <ErrorState message={mc('common.plansLoadFail')} onRetry={() => void plansQ.refetch()} />
         </div>
       ) : step === 'select' && selected ? (
-        <>
-          {/* 已是会员提示条（不挡流程；PR-4 PD-05 件 1：免费档不显示有效期）。
-              片 2②：注册用户=信息条照常（文案=新购口径引导句），CTA 不分流——直达选档开通；
-              付费档=提示条+回会员中心 CTA（升级路径句保留指升级页） */}
-          {alreadyMember && myQ.data?.membership ? (
-            <div className="m2-pad" style={{ marginTop: 10 }}>
-              <TipCard>
-                {memberFree
-                  ? mc('j1.alreadyMemberFree')
-                  : mc('j1.alreadyMember', {
-                      date: new Date(myQ.data.membership.expiresAt).toLocaleDateString('zh-CN'),
-                    })}
-              </TipCard>
-              {/* 补缺批片 3：升级路径句（upgradeAvailable=true 才显，→/member/upgrade）；
-                  片 2②：注册用户档本页即开通流程，不再给升级页跳转（直达） */}
-              {paidMember && myQ.data.upgradeAvailable ? (
-                <div style={{ textAlign: 'center', marginTop: 8 }}>
-                  <button type="button" className="m2-link" data-testid="open-upgrade-entry" onClick={() => navigate('/member/upgrade')}>
-                    {mc('j1.upgradeEntry')}
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
-          {/* 引导行 + 卡池 deck（卡即选择器） */}
-          <div className="m2-pad" style={{ marginTop: 14 }}>
-            <p className="m2-note" style={{ margin: 0 }}>
-              {mc('j1.guideNote')}
-            </p>
-          </div>
-          <div className="m2-pad">
-            <div className="m2-deck" ref={deck.deckRef} onScroll={deck.onScroll}>
-              {plans.map((p, i) => (
-                <CardFace
-                  key={p.planKey}
-                  planKey={p.planKey}
-                  priceText={p.free ? mc('card.freePrice') : mc('card.priceYear', { price: (p.priceFen / 100).toFixed(0) })}
-                  claimText={tierClaimOf(p.planKey)}
-                  height={204}
-                  padding="18px 20px"
-                  nameSize={25}
-                  selectable
-                  selected={i === deck.active}
-                  onClick={() => deck.pick(i)}
-                  testId={`open-pick-${p.planKey}`}
-                />
-              ))}
-            </div>
-            <DeckDots count={plans.length} active={deck.active} />
-          </div>
-
-          <div className="m2-pad" style={{ paddingBottom: 130 }}>
-            {/* 三格账（档跟随） */}
-            <Ledger
-              cells={[
-                { v: selected.free ? '—' : `¥${dailyOf(selected.priceFen)}`, k: mc('j1.ledgerDaily') },
-                { v: selected.free ? '¥0' : `¥${(selected.priceFen / 100).toFixed(0)}`, k: mc('j1.ledgerYearly') },
-                /* 片 3 功能闸解除：注册用户档=建档不限（不读 includedPets 数） */
-                { v: selected.free ? mc('j1.petsUnlimited') : mc('j1.petsIncluded', { n: selected.includedPets }), k: mc('j1.ledgerPets') },
-              ]}
-            />
-            {/* 测算注（CJ-0923-16③：文案键占位默认软文案） */}
-            <p className="m2-note" style={{ marginTop: 10 }}>
-              {mc('j1.estimateNote')}
-            </p>
-            {/* 对比四档权益 → 底部弹层 */}
-            <div style={{ textAlign: 'center', marginTop: 14 }}>
-              <button type="button" className="m2-link" onClick={() => setCompareOpen(true)}>
-                {mc('j1.compareLink')}
-              </button>
-            </div>
-
-            {/* 权益墙（档跟随切换；片 1：格序/图标=画布布局数据，双屏同帧单源） */}
-            <SecH
-              title={mc('a3.perksTitle', { tier: tierNameOf(selected.planKey) })}
-              more={mc('j1.perksFollow')}
-            />
-            <PerksWall plan={selected} cells={wallCells} />
-
-            {/* 规则明面（红线 5 全量八条） */}
-            <RulesBlock
-              plan={selected}
-              settlementDay={plansQ.data.rebateSettlementDay}
-              validityDays={plansQ.data.membershipValidityDays}
-              allPcts={plans.filter((p) => p.rebateBp > 0).map((p) => pctOf(p.rebateBp)).join('/')}
-            />
-          </div>
-
-          {/* 吸底 CTA（页内形态非弹窗）：付费档会员=回会员中心；注册用户/非会员=选档开通直达 */}
-          <div className="m2-ctabar">
-            <div className="m2-ctabar-in">
-              {paidMember ? (
-                /* PR-4 UX P2-3：已是会员态 CTA=回会员中心（不再显示「开通 · 每天 ¥x」与提示条打架） */
-                <button
-                  type="button"
-                  className="m2-btn-primary m2-press"
-                  data-testid="open-already-member-cta"
-                  onClick={() => navigate('/member')}
-                >
-                  <span>{mc('j1.ctaAlreadyMember')}</span>
-                  <span className="sub">{mc('j1.ctaSub')}</span>
-                </button>
-              ) : (
-                <>
-                  {/* 片 1 C 股裁①（openFree 退位）：注册用户选免费档=「当前档」注记不动作
-                      （注册即在册=零办理动作；openFree 端点留作异常面兜底）；非会员罕见路径
-                      （注销重申）保留一键开档；付费档 CTA=跳线上确认订单 */}
-                  {selected.free && alreadyMember ? (
-                    <div className="m2-note" data-testid="open-current-free-note" style={{ textAlign: 'center', padding: '13px 0' }}>
-                      {mc('j1.ctaCurrentFree')}
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      className="m2-btn-primary m2-press"
-                      disabled={openFreeM.isPending}
-                      data-testid={selected.free ? 'open-free-btn' : 'open-pick-cta'}
-                      onClick={() => {
-                        if (selected.free) openFreeM.mutate()
-                        else navigate(`/member/checkout?plan=${selected.planKey}`)
-                      }}
-                    >
-                      <span>
-                        {selected.free
-                          ? mc('j1.ctaOpenFree')
-                          : mc('j1.ctaOpen', { tier: tierNameOf(selected.planKey), daily: dailyOf(selected.priceFen) })}
-                      </span>
-                      <span className="sub">{mc('j1.ctaSub')}</span>
-                    </button>
-                  )}
-                  {/* 到店办理旁路链接（guide 到店指引步保留给本入口；线上收单为主路径） */}
-                  {!selected.free ? (
-                    <div style={{ textAlign: 'center', marginTop: 8 }}>
-                      <button
-                        type="button"
-                        className="m2-link"
-                        data-testid="open-store-bypass"
-                        onClick={() => setStep('guide')}
-                      >
-                        {mc('j1.storeBypass')}
-                      </button>
-                    </div>
-                  ) : null}
-                </>
-              )}
-            </div>
-          </div>
-        </>
+        /* 块流：六块按有效布局渲染（published 覆盖∪默认序尾补）；pb130=吸底 CTA 让位垫高
+           （原聚合在 ledger→rules 容器 paddingBottom 上，默认序下节奏零差异） */
+        <div style={{ paddingBottom: 130 }}>
+          {layout.map((b) => (
+            <section data-block-key={b.blockKey} key={b.blockKey}>
+              {b.visible ? (renderers[b.blockKey]?.() ?? null) : null}
+            </section>
+          ))}
+        </div>
       ) : step === 'guide' && selected ? (
         <StorePayGuide plan={selected} validityDays={plansQ.data.membershipValidityDays} onBack={() => setStep('select')} onNext={() => setStep('done')} />
       ) : (
@@ -357,6 +440,7 @@ export default function MemberOpenPage() {
         </div>
       </Sheet>
     </div>
+    </CanvasLayoutLoader>
   )
 }
 
