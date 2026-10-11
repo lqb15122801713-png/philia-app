@@ -1,0 +1,279 @@
+{
+  "checks": [
+    {
+      "name": "店主登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "客户登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "记录页夹具落库（宠物 shotpet01+服务中洗护单 shotappt01；幂等重放）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "A 段 46 屏机读探针过（画布侧块行+预览 URL+探针侧块流渲染，逐屏全绿）",
+      "ok": true,
+      "detail": "46/46"
+    },
+    {
+      "name": "裁死件③ 版本号键只读（about.versionValue 出只读徽+提示行，无输入框无保存钮）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "裁死件③ 协议正文长文位（agr.docUser>120 字自动 textarea 长文框）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "商品详情 ①预览出图（块列+iframe 真页预览同帧）",
+      "ok": true,
+      "detail": "块数=6"
+    },
+    {
+      "name": "商品详情 ②a 探针侧点选回挂（消息契约：copyKey+blockKey）",
+      "ok": true,
+      "detail": "[{\"type\":\"philia-canvas-pick\",\"copyKey\":\"mall.pdpDetailTitle\",\"blockKey\":\"pdp.detail\"}]"
+    },
+    {
+      "name": "商品详情 ②b 画布侧反查（块行高亮+copy 输入聚焦）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "商品详情 ③a 画布侧改文案保存（含高危口令复核照走）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "商品详情 ③b 探针侧读口透出（重载即读新值）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "我的预约 ①预览出图（块列+iframe 真页预览同帧）",
+      "ok": true,
+      "detail": "块数=5"
+    },
+    {
+      "name": "我的预约 ②a 探针侧点选回挂（消息契约：copyKey+blockKey）",
+      "ok": true,
+      "detail": "[{\"type\":\"philia-canvas-pick\",\"copyKey\":\"appointments.title\",\"blockKey\":\"appointments.header\"}]"
+    },
+    {
+      "name": "我的预约 ②b 画布侧反查（块行高亮+copy 输入聚焦）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "我的预约 ③a 画布侧改文案保存（含高危口令复核照走）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "我的预约 ③b 探针侧读口透出（重载即读新值）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "洗护全程 ①预览出图（块列+iframe 真页预览同帧）",
+      "ok": true,
+      "detail": "块数=6"
+    },
+    {
+      "name": "洗护全程 ②a 探针侧点选回挂（消息契约：copyKey+blockKey）",
+      "ok": true,
+      "detail": "[{\"type\":\"philia-canvas-pick\",\"copyKey\":\"appointments.liveTitleGrooming\",\"blockKey\":\"apptLive.header\"}]"
+    },
+    {
+      "name": "洗护全程 ②b 画布侧反查（块行高亮+copy 输入聚焦）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "洗护全程 ③a 画布侧改文案保存（含高危口令复核照走）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "洗护全程 ③b 探针侧读口透出（重载即读新值）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "升级会员 ①预览出图（块列+iframe 真页预览同帧）",
+      "ok": true,
+      "detail": "块数=5"
+    },
+    {
+      "name": "升级会员 ②a 探针侧点选回挂（消息契约：copyKey+blockKey）",
+      "ok": true,
+      "detail": "[{\"type\":\"philia-canvas-pick\",\"copyKey\":\"up.currentTitle\",\"blockKey\":\"mu.current\"}]"
+    },
+    {
+      "name": "升级会员 ②b 画布侧反查（块行高亮+copy 输入聚焦）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "升级会员 ③a 画布侧改文案保存（含高危口令复核照走）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "升级会员 ③b 探针侧读口透出（重载即读新值）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "回馈金账本 ①预览出图（块列+iframe 真页预览同帧）",
+      "ok": true,
+      "detail": "块数=3"
+    },
+    {
+      "name": "回馈金账本 ②a 探针侧点选回挂（消息契约：copyKey+blockKey）",
+      "ok": true,
+      "detail": "[{\"type\":\"philia-canvas-pick\",\"copyKey\":\"w1.logsTitle\",\"blockKey\":\"w1.logs\"}]"
+    },
+    {
+      "name": "回馈金账本 ②b 画布侧反查（块行高亮+copy 输入聚焦）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "回馈金账本 ③a 画布侧改文案保存（含高危口令复核照走）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "回馈金账本 ③b 探针侧读口透出（重载即读新值）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Philia 爪 ①预览出图（块列+iframe 真页预览同帧）",
+      "ok": true,
+      "detail": "块数=9"
+    },
+    {
+      "name": "Philia 爪 ②a 探针侧点选回挂（消息契约：copyKey+blockKey）",
+      "ok": true,
+      "detail": "[{\"type\":\"philia-canvas-pick\",\"copyKey\":\"f1.diaryTitle\",\"blockKey\":\"philia.diary\"}]"
+    },
+    {
+      "name": "Philia 爪 ②b 画布侧反查（块行高亮+copy 输入聚焦）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Philia 爪 ③a 画布侧改文案保存（含高危口令复核照走）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Philia 爪 ③b 探针侧读口透出（重载即读新值）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "设置 ①预览出图（块列+iframe 真页预览同帧）",
+      "ok": true,
+      "detail": "块数=6"
+    },
+    {
+      "name": "设置 ②a 探针侧点选回挂（消息契约：copyKey+blockKey）",
+      "ok": true,
+      "detail": "[{\"type\":\"philia-canvas-pick\",\"copyKey\":\"settings.groupAccount\",\"blockKey\":\"settings.groupaccount\"}]"
+    },
+    {
+      "name": "设置 ②b 画布侧反查（块行高亮+copy 输入聚焦）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "设置 ③a 画布侧改文案保存（含高危口令复核照走）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "设置 ③b 探针侧读口透出（重载即读新值）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "协议中心 ①预览出图（块列+iframe 真页预览同帧）",
+      "ok": true,
+      "detail": "块数=4"
+    },
+    {
+      "name": "协议中心 ②a 探针侧点选回挂（消息契约：copyKey+blockKey）",
+      "ok": true,
+      "detail": "[{\"type\":\"philia-canvas-pick\",\"copyKey\":\"agr.title\",\"blockKey\":\"agr.head\"}]"
+    },
+    {
+      "name": "协议中心 ②b 画布侧反查（块行高亮+copy 输入聚焦）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "协议中心 ③a 画布侧改文案保存（含高危口令复核照走）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "协议中心 ③b 探针侧读口透出（重载即读新值）",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M0-tabs-46.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M4-about-readonly-version.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M4-agreements-longtext.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M1-pdp-preview.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\C2-pdp-probe-pick.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M2-pdp-picked.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M3-pdp-copysaved.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\C3-pdp-copy-live.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M1-appointments-preview.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\C2-appointments-probe-pick.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M2-appointments-picked.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M3-appointments-copysaved.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\C3-appointments-copy-live.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M1-apptLive-preview.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\C2-apptLive-probe-pick.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M2-apptLive-picked.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M3-apptLive-copysaved.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\C3-apptLive-copy-live.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M1-memberUpgrade-preview.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\C2-memberUpgrade-probe-pick.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M2-memberUpgrade-picked.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M3-memberUpgrade-copysaved.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\C3-memberUpgrade-copy-live.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M1-rebate-preview.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\C2-rebate-probe-pick.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M2-rebate-picked.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M3-rebate-copysaved.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\C3-rebate-copy-live.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M1-philia-preview.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\C2-philia-probe-pick.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M2-philia-picked.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M3-philia-copysaved.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\C3-philia-copy-live.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M1-settings-preview.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\C2-settings-probe-pick.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M2-settings-picked.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M3-settings-copysaved.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\C3-settings-copy-live.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M1-agreements-preview.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\C2-agreements-probe-pick.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M2-agreements-picked.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\M3-agreements-copysaved.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence3\\shots\\C3-agreements-copy-live.png"
+  ]
+}

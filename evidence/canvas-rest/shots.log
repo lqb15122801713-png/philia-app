@@ -1,0 +1,90 @@
+✅ 店主登录
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M0-tabs-46.png
+✅ 客户登录
+✅ 记录页夹具落库（宠物 shotpet01+服务中洗护单 shotappt01；幂等重放）
+✅ A 段 46 屏机读探针过（画布侧块行+预览 URL+探针侧块流渲染，逐屏全绿） —— 46/46
+✅ 裁死件③ 版本号键只读（about.versionValue 出只读徽+提示行，无输入框无保存钮）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M4-about-readonly-version.png
+✅ 裁死件③ 协议正文长文位（agr.docUser>120 字自动 textarea 长文框）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M4-agreements-longtext.png
+✅ 商品详情 ①预览出图（块列+iframe 真页预览同帧） —— 块数=6
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M1-pdp-preview.png
+✅ 商品详情 ②a 探针侧点选回挂（消息契约：copyKey+blockKey） —— [{"type":"philia-canvas-pick","copyKey":"mall.pdpDetailTitle","blockKey":"pdp.detail"}]
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\C2-pdp-probe-pick.png
+✅ 商品详情 ②b 画布侧反查（块行高亮+copy 输入聚焦）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M2-pdp-picked.png
+✅ 商品详情 ③a 画布侧改文案保存（含高危口令复核照走）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M3-pdp-copysaved.png
+✅ 商品详情 ③b 探针侧读口透出（重载即读新值）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\C3-pdp-copy-live.png
+✅ 我的预约 ①预览出图（块列+iframe 真页预览同帧） —— 块数=5
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M1-appointments-preview.png
+✅ 我的预约 ②a 探针侧点选回挂（消息契约：copyKey+blockKey） —— [{"type":"philia-canvas-pick","copyKey":"appointments.title","blockKey":"appointments.header"}]
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\C2-appointments-probe-pick.png
+✅ 我的预约 ②b 画布侧反查（块行高亮+copy 输入聚焦）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M2-appointments-picked.png
+✅ 我的预约 ③a 画布侧改文案保存（含高危口令复核照走）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M3-appointments-copysaved.png
+✅ 我的预约 ③b 探针侧读口透出（重载即读新值）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\C3-appointments-copy-live.png
+✅ 洗护全程 ①预览出图（块列+iframe 真页预览同帧） —— 块数=6
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M1-apptLive-preview.png
+✅ 洗护全程 ②a 探针侧点选回挂（消息契约：copyKey+blockKey） —— [{"type":"philia-canvas-pick","copyKey":"appointments.liveTitleGrooming","blockKey":"apptLive.header"}]
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\C2-apptLive-probe-pick.png
+✅ 洗护全程 ②b 画布侧反查（块行高亮+copy 输入聚焦）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M2-apptLive-picked.png
+✅ 洗护全程 ③a 画布侧改文案保存（含高危口令复核照走）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M3-apptLive-copysaved.png
+✅ 洗护全程 ③b 探针侧读口透出（重载即读新值）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\C3-apptLive-copy-live.png
+✅ 升级会员 ①预览出图（块列+iframe 真页预览同帧） —— 块数=5
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M1-memberUpgrade-preview.png
+✅ 升级会员 ②a 探针侧点选回挂（消息契约：copyKey+blockKey） —— [{"type":"philia-canvas-pick","copyKey":"up.currentTitle","blockKey":"mu.current"}]
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\C2-memberUpgrade-probe-pick.png
+✅ 升级会员 ②b 画布侧反查（块行高亮+copy 输入聚焦）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M2-memberUpgrade-picked.png
+✅ 升级会员 ③a 画布侧改文案保存（含高危口令复核照走）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M3-memberUpgrade-copysaved.png
+✅ 升级会员 ③b 探针侧读口透出（重载即读新值）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\C3-memberUpgrade-copy-live.png
+✅ 回馈金账本 ①预览出图（块列+iframe 真页预览同帧） —— 块数=3
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M1-rebate-preview.png
+✅ 回馈金账本 ②a 探针侧点选回挂（消息契约：copyKey+blockKey） —— [{"type":"philia-canvas-pick","copyKey":"w1.logsTitle","blockKey":"w1.logs"}]
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\C2-rebate-probe-pick.png
+✅ 回馈金账本 ②b 画布侧反查（块行高亮+copy 输入聚焦）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M2-rebate-picked.png
+✅ 回馈金账本 ③a 画布侧改文案保存（含高危口令复核照走）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M3-rebate-copysaved.png
+✅ 回馈金账本 ③b 探针侧读口透出（重载即读新值）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\C3-rebate-copy-live.png
+✅ Philia 爪 ①预览出图（块列+iframe 真页预览同帧） —— 块数=9
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M1-philia-preview.png
+✅ Philia 爪 ②a 探针侧点选回挂（消息契约：copyKey+blockKey） —— [{"type":"philia-canvas-pick","copyKey":"f1.diaryTitle","blockKey":"philia.diary"}]
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\C2-philia-probe-pick.png
+✅ Philia 爪 ②b 画布侧反查（块行高亮+copy 输入聚焦）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M2-philia-picked.png
+✅ Philia 爪 ③a 画布侧改文案保存（含高危口令复核照走）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M3-philia-copysaved.png
+✅ Philia 爪 ③b 探针侧读口透出（重载即读新值）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\C3-philia-copy-live.png
+✅ 设置 ①预览出图（块列+iframe 真页预览同帧） —— 块数=6
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M1-settings-preview.png
+✅ 设置 ②a 探针侧点选回挂（消息契约：copyKey+blockKey） —— [{"type":"philia-canvas-pick","copyKey":"settings.groupAccount","blockKey":"settings.groupaccount"}]
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\C2-settings-probe-pick.png
+✅ 设置 ②b 画布侧反查（块行高亮+copy 输入聚焦）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M2-settings-picked.png
+✅ 设置 ③a 画布侧改文案保存（含高危口令复核照走）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M3-settings-copysaved.png
+✅ 设置 ③b 探针侧读口透出（重载即读新值）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\C3-settings-copy-live.png
+✅ 协议中心 ①预览出图（块列+iframe 真页预览同帧） —— 块数=4
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M1-agreements-preview.png
+✅ 协议中心 ②a 探针侧点选回挂（消息契约：copyKey+blockKey） —— [{"type":"philia-canvas-pick","copyKey":"agr.title","blockKey":"agr.head"}]
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\C2-agreements-probe-pick.png
+✅ 协议中心 ②b 画布侧反查（块行高亮+copy 输入聚焦）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M2-agreements-picked.png
+✅ 协议中心 ③a 画布侧改文案保存（含高危口令复核照走）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\M3-agreements-copysaved.png
+✅ 协议中心 ③b 探针侧读口透出（重载即读新值）
+shot: E:\KIMI code\tmp\canvas-scan\evidence3\shots\C3-agreements-copy-live.png
+SHOTS_ALL_GREEN
