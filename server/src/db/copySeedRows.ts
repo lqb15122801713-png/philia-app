@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-11T04:25:12.476Z；键数=3954；归屏率=97.1%（未归屏 115）
+ * 生成时间口径：2026-10-11T10:36:20.147Z；键数=4133；归屏率=97.4%（未归屏 108）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -99,8 +99,8 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "about.versionValue",
   "domain": "about",
   "text": "0.9.0 内测版",
-  "screen": "客户·关于",
-  "position": "AboutPage 页面内文案"
+  "screen": "商家·开发者管理端 / 客户·关于",
+  "position": "CanvasPortBody 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "appeal.addPhoto",
@@ -1461,6 +1461,27 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "未在页面调用点命中（agreements 域键表，端口运营复核挂载屏）"
  },
  {
+  "key": "agr.docBoarding",
+  "domain": "agreements",
+  "text": "一、服务内容：寄养按晚计费，房型与价格以预约页与门店公示为准；寄养期间门店按约定频次照护并记录过程。\n二、入住条件：宠物须完成门店要求的疫苗与驱虫核验，健康异常或具攻击性的宠物门店有权拒收或中止寄养。\n三、押金：寄养可能收取押金，押金收取与退还由门店登记留痕，进度以「消费记录 · 押金进度」页为准。\n四、风险告知：寄养期间如宠物突发疾病，门店将第一时间联系您并按您的指示处理；紧急情况下门店可先送医再通知，费用按门店公示口径结算。\n五、其他：本协议为内测期简版文本，具体照护细则以门店现场签署的寄养单与公示为准。",
+  "screen": null,
+  "position": "未在页面调用点命中（agreements 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "agr.docPrivacy",
+  "domain": "agreements",
+  "text": "一、我们收集什么：手机号（登录与找回账号）、昵称/头像/生日/性别（个人资料，可选填）、收货地址与发票抬头（履约所需）、预约与订单记录（服务留痕）。\n二、用于什么：仅用于登录鉴权、预约履约、订单履约与服务通知；不出售、不共享给无关第三方。\n三、权限：消息通知与定位为可选权限，可在「设置 · 权限与隐私」随时关闭；营销类通知可单独关闭，交易/服务/账户通知为保障服务履约不可关闭。拒绝授权不影响基本功能使用（《个人信息保护法》最小必要口径）。\n四、留存：订单与服务留痕依法保留；注销账号后个人资料删除，留痕记录按法规期限保留。\n五、其他：本政策为内测期简版文本，正式政策以上线版本为准。",
+  "screen": null,
+  "position": "未在页面调用点命中（agreements 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "agr.docUser",
+  "domain": "agreements",
+  "text": "一、服务范围：内测期间，本应用提供宠物洗护、寄养预约与商城下单的线上入口，实际服务由线下门店履约，服务内容、价格与门店公示一致。\n二、账号：内测期使用手机号或门店发放的种子账号登录；请妥善保管登录状态，账号仅限本人使用。\n三、交易：线上支付通道为内测演示通道，不产生真实扣款；真实消费以门店收银与订单记录为准。\n四、变更与终止：内测期功能与规则可能调整，调整以应用内公告与门店公示为准；您可随时停止使用并申请注销账号。\n五、其他：本协议为内测期简版文本，未尽事宜以门店公示规则为准；正式上线版本协议发布后，以新版本为准。",
+  "screen": null,
+  "position": "未在页面调用点命中（agreements 域键表，端口运营复核挂载屏）"
+ },
+ {
   "key": "agr.memberService",
   "domain": "agreements",
   "text": "《会员服务协议》",
@@ -1506,6 +1527,34 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "appointments.addonsTitle",
   "domain": "appointments",
   "text": "附加项",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.albumAfterTag",
+  "domain": "appointments",
+  "text": "服务后",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.albumBeforeTag",
+  "domain": "appointments",
+  "text": "服务前",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.albumNoPhoto",
+  "domain": "appointments",
+  "text": "无需照片",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.albumPhotoCount",
+  "domain": "appointments",
+  "text": "{n} 张",
   "screen": "客户·预约详情",
   "position": "AppointmentDetailPage 页面内文案"
  },
@@ -1608,6 +1657,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "AppointmentDetailPage 页面内文案"
  },
  {
+  "key": "appointments.callStore",
+  "domain": "appointments",
+  "text": "联系门店",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
   "key": "appointments.cancelAskFree",
   "domain": "appointments",
   "text": "确认取消这次预约吗？",
@@ -1618,6 +1674,34 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "appointments.cancelAskLate",
   "domain": "appointments",
   "text": "距开始不足 4 小时，取消需商家审核",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.cancelChipOther",
+  "domain": "appointments",
+  "text": "其他",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.cancelChipPrice",
+  "domain": "appointments",
+  "text": "价格因素",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.cancelChipSchedule",
+  "domain": "appointments",
+  "text": "行程有变",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.cancelChipTime",
+  "domain": "appointments",
+  "text": "时间不合适",
   "screen": "客户·预约详情",
   "position": "AppointmentDetailPage 页面内文案"
  },
@@ -1636,6 +1720,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "AppointmentDetailPage 页面内文案"
  },
  {
+  "key": "appointments.cancelFailFallback",
+  "domain": "appointments",
+  "text": "取消失败，请稍后再试",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
   "key": "appointments.cancelFeeNote",
   "domain": "appointments",
   "text": "以上为公示口径，暂不实际扣款",
@@ -1646,6 +1737,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "appointments.cancelFeeTitle",
   "domain": "appointments",
   "text": "取消阶梯收费公示",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.cancelNotePh",
+  "domain": "appointments",
+  "text": "补充说明（选填，100 字以内）",
   "screen": "客户·预约详情",
   "position": "AppointmentDetailPage 页面内文案"
  },
@@ -1692,9 +1790,44 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "AppointmentDetailPage 页面内文案"
  },
  {
+  "key": "appointments.cardPetFallback",
+  "domain": "appointments",
+  "text": "毛孩子",
+  "screen": "客户·我的预约",
+  "position": "AppointmentsPage 页面内文案"
+ },
+ {
+  "key": "appointments.cardServingBadge",
+  "domain": "appointments",
+  "text": "● 进行中",
+  "screen": "客户·我的预约",
+  "position": "AppointmentsPage 页面内文案"
+ },
+ {
+  "key": "appointments.cardStoreFallback",
+  "domain": "appointments",
+  "text": "门店",
+  "screen": "客户·我的预约",
+  "position": "AppointmentsPage 页面内文案"
+ },
+ {
+  "key": "appointments.checkedInRoom",
+  "domain": "appointments",
+  "text": "已入住房间：{room}",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
   "key": "appointments.codeTitle",
   "domain": "appointments",
   "text": "到店核销码",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.createdLine",
+  "domain": "appointments",
+  "text": "预约于 {date} {week} 创建",
   "screen": "客户·预约详情",
   "position": "AppointmentDetailPage 页面内文案"
  },
@@ -1716,6 +1849,97 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "appointments.detailTitle",
   "domain": "appointments",
   "text": "预约详情",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.dtAmount",
+  "domain": "appointments",
+  "text": "金额",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.dtCheckedIn",
+  "domain": "appointments",
+  "text": "到店核销",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.dtCompletedAt",
+  "domain": "appointments",
+  "text": "完成时间",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.dtId",
+  "domain": "appointments",
+  "text": "预约编号",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.dtNote",
+  "domain": "appointments",
+  "text": "备注",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.dtPaid",
+  "domain": "appointments",
+  "text": "实付",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.dtPaymentMode",
+  "domain": "appointments",
+  "text": "收款方式",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.dtPet",
+  "domain": "appointments",
+  "text": "宠物",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.dtRoomType",
+  "domain": "appointments",
+  "text": "房型",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.dtService",
+  "domain": "appointments",
+  "text": "服务",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.dtTime",
+  "domain": "appointments",
+  "text": "时间",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.dtType",
+  "domain": "appointments",
+  "text": "类型",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.dtWalkTimes",
+  "domain": "appointments",
+  "text": "遛弯次数",
   "screen": "客户·预约详情",
   "position": "AppointmentDetailPage 页面内文案"
  },
@@ -1746,6 +1970,62 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "text": "还没有预约",
   "screen": "客户·我的预约",
   "position": "AppointmentsPage 页面内文案"
+ },
+ {
+  "key": "appointments.fallbackPet",
+  "domain": "appointments",
+  "text": "宠物",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.fallbackService",
+  "domain": "appointments",
+  "text": "服务",
+  "screen": "客户·洗护全程 / 客户·预约详情",
+  "position": "AppointmentLivePage 页面内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "appointments.hintBeforeAfter",
+  "domain": "appointments",
+  "text": "正在做交付检查",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.hintConfirm",
+  "domain": "appointments",
+  "text": "洗护师正在为您完成最后确认",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.hintDetail",
+  "domain": "appointments",
+  "text": "细节精修中，快要变美啦",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.hintDisinfection",
+  "domain": "appointments",
+  "text": "工具消毒确认中，安心第一步",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.hintGrooming",
+  "domain": "appointments",
+  "text": "正在洗护美容，新照片会实时出现在这里",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.hintPrecheck",
+  "domain": "appointments",
+  "text": "正在做预检，确认皮肤与毛发状态",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
  },
  {
   "key": "appointments.incidentHandledLine",
@@ -1811,11 +2091,74 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "AppointmentLivePage 页面内文案"
  },
  {
+  "key": "appointments.infoTitle",
+  "domain": "appointments",
+  "text": "预约信息",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
   "key": "appointments.liveBoarding",
   "domain": "appointments",
   "text": "寄养进行中",
   "screen": "客户·预约详情",
   "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.liveCancelledBody",
+  "domain": "appointments",
+  "text": "这次没能相见，期待下次再约。",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveCancelledTitle",
+  "domain": "appointments",
+  "text": "预约已取消",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveCancelReviewBody",
+  "domain": "appointments",
+  "text": "门店正在处理你的取消申请，结果会第一时间通知你。",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveCancelReviewTitle",
+  "domain": "appointments",
+  "text": "取消申请审核中",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveErrBackCta",
+  "domain": "appointments",
+  "text": "回到我的预约",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveErrForbidden",
+  "domain": "appointments",
+  "text": "这不是你的预约哦，请确认登录的账号是否正确。",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveErrNotFound",
+  "domain": "appointments",
+  "text": "找不到这个预约，可能链接有误或已被删除。",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveErrTitle",
+  "domain": "appointments",
+  "text": "打不开这个进度页",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
  },
  {
   "key": "appointments.liveGrooming",
@@ -1825,11 +2168,165 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "AppointmentDetailPage 页面内文案"
  },
  {
+  "key": "appointments.liveKindBoarding",
+  "domain": "appointments",
+  "text": "寄养",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveKindGrooming",
+  "domain": "appointments",
+  "text": "洗护",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveLoading",
+  "domain": "appointments",
+  "text": "加载中…",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveMetaBoarding",
+  "domain": "appointments",
+  "text": "寄养中 · 第 {n} 天",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveMetaEta",
+  "domain": "appointments",
+  "text": "预计 {time} 完成",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveMetaStaff",
+  "domain": "appointments",
+  "text": "{staff}服务中",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.livePendingBody",
+  "domain": "appointments",
+  "text": "预约时间 {time}，到店后出示预约码，店员核销后即可在这里看到{kind}全程。",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.livePendingTitle",
+  "domain": "appointments",
+  "text": "服务尚未开始",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.livePetFallback",
+  "domain": "appointments",
+  "text": "宝贝",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveRebook",
+  "domain": "appointments",
+  "text": "重新预约",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveReviewFail",
+  "domain": "appointments",
+  "text": "评价提交失败，请稍后再试",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveReviewThanks",
+  "domain": "appointments",
+  "text": "感谢评价，已转告门店与洗护师",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveServiceBoarding",
+  "domain": "appointments",
+  "text": "寄养服务",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveServiceGrooming",
+  "domain": "appointments",
+  "text": "洗护服务",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveShareStoreFallback",
+  "domain": "appointments",
+  "text": "菲丽亚",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveShareText",
+  "domain": "appointments",
+  "text": "{pet}在{store}完成了{service}，全程照片可见～",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveShowCode",
+  "domain": "appointments",
+  "text": "出示预约码",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveStepsLoading",
+  "domain": "appointments",
+  "text": "正在接入服务进度…",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
   "key": "appointments.liveSub",
   "domain": "appointments",
   "text": "点击查看实时进度与照片",
   "screen": "客户·预约详情",
   "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.liveTitleBoarding",
+  "domain": "appointments",
+  "text": "寄养全程",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveTitleGrooming",
+  "domain": "appointments",
+  "text": "洗护全程",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveToastCheckin",
+  "domain": "appointments",
+  "text": "{date}打卡已更新，快看看{pet}的今天",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
+ },
+ {
+  "key": "appointments.liveToastReopen",
+  "domain": "appointments",
+  "text": "商家重新开启了本次服务，可继续查看进度",
+  "screen": "客户·洗护全程",
+  "position": "AppointmentLivePage 页面内文案"
  },
  {
   "key": "appointments.loadFail",
@@ -1874,9 +2371,30 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "AppointmentDetailPage 页面内文案"
  },
  {
+  "key": "appointments.navAmap",
+  "domain": "appointments",
+  "text": "高德导航",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.navTencent",
+  "domain": "appointments",
+  "text": "腾讯地图",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
   "key": "appointments.notFound",
   "domain": "appointments",
   "text": "预约不存在或无权查看",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.paidSuffix",
+  "domain": "appointments",
+  "text": "（已付）",
   "screen": "客户·预约详情",
   "position": "AppointmentDetailPage 页面内文案"
  },
@@ -1937,9 +2455,23 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "AppointmentDetailPage 页面内文案"
  },
  {
+  "key": "appointments.rescheduleFail",
+  "domain": "appointments",
+  "text": "改期失败，请稍后再试",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
   "key": "appointments.rescheduleHistory",
   "domain": "appointments",
   "text": "改约历史",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.rescheduleNeedDates",
+  "domain": "appointments",
+  "text": "请选择新的入住/退房日期",
   "screen": "客户·预约详情",
   "position": "AppointmentDetailPage 页面内文案"
  },
@@ -1986,6 +2518,27 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "AppointmentDetailPage 页面内文案"
  },
  {
+  "key": "appointments.rescheduleToast",
+  "domain": "appointments",
+  "text": "改期已提交，等待商家重新确认",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.reviewFail",
+  "domain": "appointments",
+  "text": "评价提交失败",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.reviewThanks",
+  "domain": "appointments",
+  "text": "感谢评价！",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
   "key": "appointments.roomPending",
   "domain": "appointments",
   "text": "待分配",
@@ -2012,6 +2565,34 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "text": "服务中，如需取消请联系门店",
   "screen": "客户·预约详情",
   "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.shareCopied",
+  "domain": "appointments",
+  "text": "链接已复制，快发给家人朋友吧",
+  "screen": "客户·洗护全程 / 客户·预约详情",
+  "position": "AppointmentLivePage 页面内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "appointments.shareCopyFail",
+  "domain": "appointments",
+  "text": "复制失败，请手动复制地址栏链接",
+  "screen": "客户·洗护全程 / 客户·预约详情",
+  "position": "AppointmentLivePage 页面内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "appointments.shareText",
+  "domain": "appointments",
+  "text": "宝贝在菲丽亚完成了服务，全程照片可见～",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.shareTitle",
+  "domain": "appointments",
+  "text": "菲丽亚服务相册",
+  "screen": "客户·洗护全程 / 客户·预约详情",
+  "position": "AppointmentLivePage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "appointments.slotsLoadFail",
@@ -2056,9 +2637,58 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "AppointmentDetailPage 页面内文案"
  },
  {
+  "key": "appointments.storeTitle",
+  "domain": "appointments",
+  "text": "门店",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.submitting",
+  "domain": "appointments",
+  "text": "提交中…",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.tabCancelled",
+  "domain": "appointments",
+  "text": "已取消",
+  "screen": "客户·我的预约",
+  "position": "AppointmentsPage 页面内文案"
+ },
+ {
+  "key": "appointments.tabConfirmed",
+  "domain": "appointments",
+  "text": "已确认",
+  "screen": "客户·我的预约",
+  "position": "AppointmentsPage 页面内文案"
+ },
+ {
   "key": "appointments.tabEmpty",
   "domain": "appointments",
   "text": "暂无{status}的预约",
+  "screen": "客户·我的预约",
+  "position": "AppointmentsPage 页面内文案"
+ },
+ {
+  "key": "appointments.tabHistory",
+  "domain": "appointments",
+  "text": "已完成",
+  "screen": "客户·我的预约",
+  "position": "AppointmentsPage 页面内文案"
+ },
+ {
+  "key": "appointments.tabPending",
+  "domain": "appointments",
+  "text": "待确认",
+  "screen": "客户·我的预约",
+  "position": "AppointmentsPage 页面内文案"
+ },
+ {
+  "key": "appointments.tabServing",
+  "domain": "appointments",
+  "text": "服务中",
   "screen": "客户·我的预约",
   "position": "AppointmentsPage 页面内文案"
  },
@@ -2075,6 +2705,20 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "text": "我的预约",
   "screen": "客户·我的预约",
   "position": "AppointmentsPage 页面内文案"
+ },
+ {
+  "key": "appointments.toastCancelled",
+  "domain": "appointments",
+  "text": "预约已取消",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appointments.toastCancelRequested",
+  "domain": "appointments",
+  "text": "已提交取消申请，待门店审核",
+  "screen": "客户·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
  },
  {
   "key": "appointments.unsealToast",
@@ -3788,15 +4432,50 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "mall.cancelConfirmBody",
   "domain": "mall",
   "text": "取消后库存将释放，订单不可恢复。",
-  "screen": null,
-  "position": "未在页面调用点命中（mall 域键表，端口运营复核挂载屏）"
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
+ },
+ {
+  "key": "mall.cancelConfirmCta",
+  "domain": "mall",
+  "text": "确认取消",
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
  },
  {
   "key": "mall.cancelConfirmTitle",
   "domain": "mall",
   "text": "取消该订单？",
-  "screen": null,
-  "position": "未在页面调用点命中（mall 域键表，端口运营复核挂载屏）"
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
+ },
+ {
+  "key": "mall.cancelCta",
+  "domain": "mall",
+  "text": "取消",
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
+ },
+ {
+  "key": "mall.cancelFail",
+  "domain": "mall",
+  "text": "取消失败，请稍后再试",
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
+ },
+ {
+  "key": "mall.cancelOk",
+  "domain": "mall",
+  "text": "订单已取消，库存已释放",
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
+ },
+ {
+  "key": "mall.cartCheckAll",
+  "domain": "mall",
+  "text": "全选",
+  "screen": "客户·购物车",
+  "position": "CartPage 页面内文案"
  },
  {
   "key": "mall.cartCheckout",
@@ -3827,6 +4506,20 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "CartPage 页面内文案"
  },
  {
+  "key": "mall.cartNeedCheck",
+  "domain": "mall",
+  "text": "请先勾选要结算的商品",
+  "screen": "客户·购物车",
+  "position": "CartPage 页面内文案"
+ },
+ {
+  "key": "mall.cartStockNote",
+  "domain": "mall",
+  "text": "库存 {n} 件",
+  "screen": "客户·购物车",
+  "position": "CartPage 页面内文案"
+ },
+ {
   "key": "mall.cartStoreNote",
   "domain": "mall",
   "text": "当前为「{store}」的商品 · 一次下单仅支持同一门店",
@@ -3837,6 +4530,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "mall.cartTitle",
   "domain": "mall",
   "text": "购物袋",
+  "screen": "客户·购物车",
+  "position": "CartPage 页面内文案"
+ },
+ {
+  "key": "mall.cartTotalLabel",
+  "domain": "mall",
+  "text": "合计",
   "screen": "客户·购物车",
   "position": "CartPage 页面内文案"
  },
@@ -3879,8 +4579,8 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "mall.confirmReceive",
   "domain": "mall",
   "text": "确认收货",
-  "screen": null,
-  "position": "未在页面调用点命中（mall 域键表，端口运营复核挂载屏）"
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
  },
  {
   "key": "mall.conflictBody",
@@ -4026,8 +4726,8 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "mall.goPay",
   "domain": "mall",
   "text": "去支付",
-  "screen": null,
-  "position": "未在页面调用点命中（mall 域键表，端口运营复核挂载屏）"
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
  },
  {
   "key": "mall.headSub",
@@ -4075,15 +4775,15 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "mall.orderPreparing",
   "domain": "mall",
   "text": "门店正在备货，请耐心等待",
-  "screen": null,
-  "position": "未在页面调用点命中（mall 域键表，端口运营复核挂载屏）"
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
  },
  {
   "key": "mall.orderReceived",
   "domain": "mall",
   "text": "已于 {time} 确认收货",
-  "screen": null,
-  "position": "未在页面调用点命中（mall 域键表，端口运营复核挂载屏）"
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
  },
  {
   "key": "mall.orders.emptyBody",
@@ -4131,15 +4831,15 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "mall.orderSumLine",
   "domain": "mall",
   "text": "共 {qty} 件，合计",
-  "screen": null,
-  "position": "未在页面调用点命中（mall 域键表，端口运营复核挂载屏）"
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
  },
  {
   "key": "mall.otherStore",
   "domain": "mall",
   "text": "其他门店",
-  "screen": "客户·商城",
-  "position": "MallPage 页面内文案"
+  "screen": "客户·商品详情 / 客户·商城",
+  "position": "ProductDetailPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "mall.paySuccessSub",
@@ -4184,6 +4884,20 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "ProductDetailPage 页面内文案"
  },
  {
+  "key": "mall.pdpNotFound",
+  "domain": "mall",
+  "text": "商品不存在或已下架",
+  "screen": "客户·商品详情",
+  "position": "ProductDetailPage 页面内文案"
+ },
+ {
+  "key": "mall.pdpNotFoundAlt",
+  "domain": "mall",
+  "text": "商品不存在",
+  "screen": "客户·商品详情",
+  "position": "ProductDetailPage 页面内文案"
+ },
+ {
   "key": "mall.pdpStockLeft",
   "domain": "mall",
   "text": "仅剩 {n} 件",
@@ -4215,8 +4929,8 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "mall.quickAddToast",
   "domain": "mall",
   "text": "已加入购物车",
-  "screen": "客户·商城",
-  "position": "MallPage 页面内文案"
+  "screen": "客户·商品详情 / 客户·商城",
+  "position": "ProductDetailPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "mall.rebateLine",
@@ -4229,36 +4943,57 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "mall.receiveConfirmBody",
   "domain": "mall",
   "text": "确认后订单将转为已完成，请确保商品已完好送达。",
-  "screen": null,
-  "position": "未在页面调用点命中（mall 域键表，端口运营复核挂载屏）"
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
  },
  {
   "key": "mall.receiveConfirmTitle",
   "domain": "mall",
   "text": "确认已收到商品？",
-  "screen": null,
-  "position": "未在页面调用点命中（mall 域键表，端口运营复核挂载屏）"
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
+ },
+ {
+  "key": "mall.receiveFail",
+  "domain": "mall",
+  "text": "确认收货失败",
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
+ },
+ {
+  "key": "mall.receiveOk",
+  "domain": "mall",
+  "text": "已确认收货，感谢购买",
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
  },
  {
   "key": "mall.reload",
   "domain": "mall",
   "text": "重新加载",
-  "screen": "客户·商城",
-  "position": "MallPage 页面内文案"
+  "screen": "客户·商品订单 / 客户·商城",
+  "position": "MallOrdersPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "mall.reorder",
   "domain": "mall",
   "text": "再来一单",
-  "screen": null,
-  "position": "未在页面调用点命中（mall 域键表，端口运营复核挂载屏）"
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
+ },
+ {
+  "key": "mall.reorderToast",
+  "domain": "mall",
+  "text": "已按原单加入购物车",
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
  },
  {
   "key": "mall.replacedToast",
   "domain": "mall",
   "text": "已清空原购物车并加入本商品",
-  "screen": "客户·商城",
-  "position": "MallPage 页面内文案"
+  "screen": "客户·商品详情 / 客户·商城",
+  "position": "ProductDetailPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "mall.searchPlaceholder",
@@ -4275,11 +5010,25 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "ProductDetailPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
+  "key": "mall.statusCancelled",
+  "domain": "mall",
+  "text": "已取消",
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
+ },
+ {
+  "key": "mall.statusRefunding",
+  "domain": "mall",
+  "text": "售后中",
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
+ },
+ {
   "key": "mall.storeFallback",
   "domain": "mall",
   "text": "菲丽亚门店",
-  "screen": "客户·商城",
-  "position": "MallPage 页面内文案"
+  "screen": "客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·退款/售后",
+  "position": "MallOrdersPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "mall.submitOrder",
@@ -4287,6 +5036,69 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "text": "提交订单",
   "screen": "客户·确认订单",
   "position": "CheckoutPage 页面内文案"
+ },
+ {
+  "key": "mall.tabAftersale",
+  "domain": "mall",
+  "text": "售后",
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
+ },
+ {
+  "key": "mall.tabAll",
+  "domain": "mall",
+  "text": "全部",
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
+ },
+ {
+  "key": "mall.tabPaid",
+  "domain": "mall",
+  "text": "待发货",
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
+ },
+ {
+  "key": "mall.tabPending",
+  "domain": "mall",
+  "text": "待支付",
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
+ },
+ {
+  "key": "mall.tabReceived",
+  "domain": "mall",
+  "text": "已完成",
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
+ },
+ {
+  "key": "mall.tabShipped",
+  "domain": "mall",
+  "text": "待收货",
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
+ },
+ {
+  "key": "mall.toastPaid",
+  "domain": "mall",
+  "text": "支付成功，门店会尽快发货",
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
+ },
+ {
+  "key": "mall.toastShipped",
+  "domain": "mall",
+  "text": "订单已发货{no}",
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
+ },
+ {
+  "key": "mall.trackingLabel",
+  "domain": "mall",
+  "text": "快递单号",
+  "screen": "客户·商品订单",
+  "position": "MallOrdersPage 页面内文案"
  },
  {
   "key": "mall.trackingNote",
@@ -4306,1883 +5118,2114 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "a3.ctaOtherTier",
   "domain": "member",
   "text": "看看别的档 →",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.ctaRenew",
   "domain": "member",
   "text": "续费{tier} · 每天 ¥{daily}",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.ctaRenewFree",
   "domain": "member",
   "text": "免费在册 · 随时升级",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.frozenTip",
   "domain": "member",
   "text": "回馈金余额保留但暂不可用，续费请到店收银台办理。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.headNo",
   "domain": "member",
   "text": "PHILIA CLUB",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.headTitle",
   "domain": "member",
   "text": "会员",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.ledgerBalance",
   "domain": "member",
   "text": "回馈金余额",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.ledgerPending",
   "domain": "member",
   "text": "本期预计",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.ledgerSettleDay",
   "domain": "member",
   "text": "到账日",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.ledgerSettleDayValue",
   "domain": "member",
   "text": "每月 {day} 日",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.perksAllOn",
   "domain": "member",
   "text": "8 项全部生效",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.perksTitle",
   "domain": "member",
   "text": "{tier}权益",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.pushLabel",
   "domain": "member",
   "text": "MEMBER",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.quitLink",
   "domain": "member",
   "text": "退会说明 ›",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.quitSheetBody",
   "domain": "member",
   "text": "退会请联系门店办理。年费按剩余整月 × 月均价折算退回（内测期线下原路退回），回馈金余额清零、档位终止，全程留痕。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.quitSheetTitle",
   "domain": "member",
   "text": "退会说明",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.remindExpire",
   "domain": "member",
   "text": "{days} 天后到期 · 续费即解冻",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.renewSheetBody",
   "domain": "member",
   "text": "内测期续费请到店收银台办理（现金/微信/支付宝）。到期不自动续费；续费后有效期顺延 {days} 天，冻结的回馈金同步解冻。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.renewSheetTitle",
   "domain": "member",
   "text": "续费 · 到店办理",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.sheetGotIt",
   "domain": "member",
   "text": "知道了",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "a3.stampFrozen",
   "domain": "member",
   "text": "已冻结 · 续费即解冻",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "bk.multiPetSlot",
   "domain": "member",
   "text": "多宠同订 · 即将点亮",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "bk.slotFull",
   "domain": "member",
   "text": "已满",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "bk.slotOpen",
   "domain": "member",
   "text": "可约",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "card.claimNuanyang",
   "domain": "member",
   "text": "多只毛孩子 · 都被叫得出名字",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "card.claimWeiguang",
   "domain": "member",
   "text": "在册即享基础功能",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "card.claimYinghuo",
   "domain": "member",
   "text": "一年，省下一顿火锅",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "card.claimZhuguang",
   "domain": "member",
   "text": "每月一次眼耳甲，不用记",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "card.freePrice",
   "domain": "member",
   "text": "免费",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "card.logo",
   "domain": "member",
   "text": "PHILIA · LOVE BOND LIFE",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "card.priceYear",
   "domain": "member",
   "text": "¥{price} / 年",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.actionFail",
   "domain": "member",
   "text": "预约操作失败，请稍后再试",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.cancelCta",
   "domain": "member",
   "text": "取消预约",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.cancelling",
   "domain": "member",
   "text": "取消中…",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.entryCta",
   "domain": "member",
   "text": "预约下期档位 ›",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.execNote",
   "domain": "member",
   "text": "到期日到店续费时按预约档全价收款；取消或改约不影响当前权益。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.expireLabel",
   "domain": "member",
   "text": "到期日",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.freeCta",
   "domain": "member",
   "text": "去升级页 ›",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.freeNote",
   "domain": "member",
   "text": "注册用户永久在册 · 账号在即在册永不冻结 · 无到期换档；升档即时生效请走升级页。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.headNo",
   "domain": "member",
   "text": "PLAN CHANGE",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.headTitle",
   "domain": "member",
   "text": "到期换档",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.nonMemberCta",
   "domain": "member",
   "text": "去开通会员 ›",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.nonMemberTitle",
   "domain": "member",
   "text": "开通会员后可预约下期档位",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.priceFree",
   "domain": "member",
   "text": "免费",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.priceYear",
   "domain": "member",
   "text": "¥{price} / 年",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.pushLabel",
   "domain": "member",
   "text": "预约下期档位 · SCHEDULE",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.scheduledAtLabel",
   "domain": "member",
   "text": "预约时刻",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.scheduledEntry",
   "domain": "member",
   "text": "已预约下期：{plan} ›",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.scheduledLine",
   "domain": "member",
   "text": "已预约 {plan} · 到期按新档续费（到店办理）",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.scheduledTitle",
   "domain": "member",
   "text": "预约单",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.submitCta",
   "domain": "member",
   "text": "预约{tier}",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.submitting",
   "domain": "member",
   "text": "提交中…",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.targetTitle",
   "domain": "member",
   "text": "选择下期档位",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.toastCancel",
   "domain": "member",
   "text": "已取消预约",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.toastOk",
   "domain": "member",
   "text": "已预约下期档位",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.windowClosed",
   "domain": "member",
   "text": "到期前 {days} 天开放预约，请到期日临近时再来。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "chg.windowOpen",
   "domain": "member",
   "text": "到期前 {days} 天开放预约，窗口内可改约下期档位（含低档，期内不降级不变）。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "common.memberLoadFail",
   "domain": "member",
   "text": "会员信息加载失败",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "common.plansLoadFail",
   "domain": "member",
   "text": "档位信息加载失败",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "common.rebateLoadFail",
   "domain": "member",
   "text": "回馈金账本加载失败",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "f1.birthdayDesc",
   "domain": "member",
   "text": "它的生日周，自动为你生成一本年度特辑",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "f1.birthdayTitle",
   "domain": "member",
   "text": "生日特辑",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.closeAria",
+  "domain": "member",
+  "text": "关闭",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.diaryEmptyDesc",
+  "domain": "member",
+  "text": "完成第一次洗护后，这里会留下 TA 的变美瞬间",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.diaryEmptyTitle",
+  "domain": "member",
+  "text": "日记还没有篇章",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.diaryLoadFail",
+  "domain": "member",
+  "text": "日记加载失败",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.diaryTitle",
+  "domain": "member",
+  "text": "菲丽亚日记",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "f1.eyebrow",
   "domain": "member",
   "text": "PHILIA · 小棉花在替你陪着它",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.greetFallback",
+  "domain": "member",
+  "text": "铲屎官",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.greetMorning",
+  "domain": "member",
+  "text": "早安",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.greetNight",
+  "domain": "member",
+  "text": "晚安",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.greetNoon",
+  "domain": "member",
+  "text": "午安",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "f1.growthSlotDesc",
   "domain": "member",
   "text": "陪伴段位（初识 → 家人）与它的徽章墙，随养成体系一同点亮",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "f1.growthTitle",
   "domain": "member",
   "text": "陪伴段位与徽章",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.linkCard",
+  "domain": "member",
+  "text": "会员卡",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.linkCardDesc",
+  "domain": "member",
+  "text": "专属身份",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.linkMoments",
+  "domain": "member",
+  "text": "服务相册",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.linkMomentsDesc",
+  "domain": "member",
+  "text": "变美记录",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.linkPets",
+  "domain": "member",
+  "text": "宠物档案",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.linkPetsDesc",
+  "domain": "member",
+  "text": "TA 的小档案",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "f1.manifesto",
   "domain": "member",
   "text": "它不在你身边的时候，\n我们看着它。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.passportBadge",
+  "domain": "member",
+  "text": "9c 解锁",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.passportDesc",
+  "domain": "member",
+  "text": "护照盖章预告",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.passportTitle",
+  "domain": "member",
+  "text": "成长护照",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.petEmptyDesc",
+  "domain": "member",
+  "text": "记录 TA 的品种、生日与疫苗，开启菲丽亚之旅",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.petEmptyTitle",
+  "domain": "member",
+  "text": "建立第一份宠物档案",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.petLoadFail",
+  "domain": "member",
+  "text": "宠物档案加载失败",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.spaceAria",
+  "domain": "member",
+  "text": "Philia 品牌空间",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.speciesCat",
+  "domain": "member",
+  "text": "猫咪",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.speciesDog",
+  "domain": "member",
+  "text": "狗狗",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.speciesOther",
+  "domain": "member",
+  "text": "小可爱",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "f1.statDays",
   "domain": "member",
   "text": "陪伴天数",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "f1.statPhotos",
   "domain": "member",
   "text": "照片数",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "f1.statServices",
   "domain": "member",
   "text": "服务次数",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.tip1Desc",
+  "domain": "member",
+  "text": "体外驱虫建议每月一次，体内驱虫每三个月一次，守护毛孩子健康。",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.tip1Title",
+  "domain": "member",
+  "text": "定期驱虫",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.tip2Desc",
+  "domain": "member",
+  "text": "每天梳毛 5 分钟，减少浮毛打结，还能增进和毛孩子的感情。",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.tip2Title",
+  "domain": "member",
+  "text": "梳毛的好处",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.tip3Desc",
+  "domain": "member",
+  "text": "疫苗有效期临近时记得及时续种，寄养前需提供有效疫苗证明。",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.tip3Title",
+  "domain": "member",
+  "text": "疫苗提醒",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.tipTag",
+  "domain": "member",
+  "text": "养宠小贴士",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
+  "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "f1.welcome",
+  "domain": "member",
+  "text": "欢迎来到 Philia 品牌空间 · 今天也要好好爱 TA",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.alreadyMember",
   "domain": "member",
   "text": "你已是会员（有效期至 {date}）。升档可线上自助办理，续费请到店收银台。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.alreadyMemberFree",
   "domain": "member",
   "text": "你当前是注册用户（账号在即在册，永不冻结）。选付费档开通即享回馈金与服务折扣——新购口径：全档价，有效期自开通重起算。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.backMember",
   "domain": "member",
   "text": "回会员中心 ›",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.carePackAllFree",
   "domain": "member",
   "text": "安心包：全员免费 · 注册用户在册即享（来 Philia 即享）",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.compareFooter",
   "domain": "member",
   "text": "四档共通：七节点全程可视 · 美容报告 30 分钟 · 安心包全员免费（注册用户在册即享）\n年费 ≠ 储值 · 到期不自动续费 · 权益只加不减",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.compareLink",
   "domain": "member",
   "text": "对比四档权益 ›",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.compareNote",
   "domain": "member",
   "text": "档色即身份",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.compareRowCta",
   "domain": "member",
   "text": "开通 ›",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.compareRowCurrent",
   "domain": "member",
   "text": "当前档",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.compareRowFreeCta",
   "domain": "member",
   "text": "免费开通",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.compareTitle",
   "domain": "member",
   "text": "四档权益对比",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.ctaAlreadyMember",
   "domain": "member",
   "text": "已是会员 · 去会员中心 ›",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.ctaCurrentFree",
   "domain": "member",
   "text": "当前档 · 在册即享基础功能",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.ctaOpen",
   "domain": "member",
   "text": "开通{tier} · 每天 ¥{daily}",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.ctaOpenFree",
   "domain": "member",
   "text": "免费注册 · 领个身份",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.ctaSub",
   "domain": "member",
   "text": "到期不自动续费 · 随时退卡",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.doneGotoPets",
   "domain": "member",
   "text": "看看它的档案 ›",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.estimateNote",
   "domain": "member",
   "text": "按门店年均消费测算，轻松省回年费",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.freeOpenedBody",
   "domain": "member",
   "text": "免费档即时生效{date}。升级萤火/烛光/暖阳可享商品回馈金与服务折扣，本页选档线上即可办理。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.freeOpenedTitle",
   "domain": "member",
   "text": "注册用户已开通",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.guideNote",
   "domain": "member",
   "text": "点卡或滑卡选档——卡本身就是选择器：",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.ledgerDaily",
   "domain": "member",
   "text": "每天",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.ledgerPets",
   "domain": "member",
   "text": "多宠覆盖",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.ledgerYearly",
   "domain": "member",
   "text": "一年",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.openFail",
   "domain": "member",
   "text": "开通失败，请稍后再试",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.perksFollow",
   "domain": "member",
   "text": "8 项 · 跟随选中档",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.petsIncluded",
   "domain": "member",
   "text": "含 {n} 只",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.petsUnlimited",
   "domain": "member",
   "text": "建档不限",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.pushLabel",
   "domain": "member",
   "text": "开通会员 · JOIN",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.storeBypass",
   "domain": "member",
   "text": "想到店办理？收银台指引 ›",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.storePayBack",
   "domain": "member",
   "text": "重新选档",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.storePayBody",
   "domain": "member",
   "text": "你已选定「{tier}会员（{price}）」。内测期请到店收银台付款开通（现金/微信/支付宝），成交即开通、有效期 {days} 天。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.storePayNote",
   "domain": "member",
   "text": "内测期仅支持到店收银台开通；线上支付通道开通后将在本页直接开放。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.storePayOk",
   "domain": "member",
   "text": "我知道了",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.storePayStep1",
   "domain": "member",
   "text": "到店后告知收银员开通「{tier}会员」，报手机号即可。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.storePayStep2",
   "domain": "member",
   "text": "收银台付款（支持现金/微信/支付宝），多宠家庭第 {n} 只起按 +¥{fen}/年/只 计入。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.storePayStep3",
   "domain": "member",
   "text": "付款成交即开通，有效期 {days} 天；会员中心即时显示你的档位。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.storePayTitle",
   "domain": "member",
   "text": "请到店完成开通",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.tierRowPaid",
   "domain": "member",
   "text": "回馈金 {pct}% · 服务 {zhe} 折 · {pets}",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.toastAlready",
   "domain": "member",
   "text": "你已是会员",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.toastOpenedFree",
   "domain": "member",
   "text": "注册用户已开通，欢迎加入",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "j1.upgradeEntry",
   "domain": "member",
   "text": "升级更高档 ›",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "l1.manifestoA",
   "domain": "member",
   "text": "守护每一次",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "l1.manifestoB",
   "domain": "member",
   "text": "被",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "l1.manifestoC",
   "domain": "member",
   "text": "的时刻。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "l1.manifestoEm",
   "domain": "member",
   "text": "照顾",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "l1.wechatSlot",
   "domain": "member",
   "text": "微信一键登录",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "live.stepActive",
   "domain": "member",
   "text": "进行中",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "live.stepPending",
   "domain": "member",
   "text": "未开始",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "mall.rebateEarnCard",
   "domain": "member",
   "text": "购买返 {amt} 回馈金 · 次月 {day} 日到账",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "mall.rebateEarnCardNoDay",
   "domain": "member",
   "text": "购买返 {amt} 回馈金",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "mall.rebateEarnCta",
   "domain": "member",
   "text": "本单返 {amt} 回馈金",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "mall.rebateHook",
   "domain": "member",
   "text": "付费档返 {pcts}% · 仅抵商品 ›",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "mc.canvasExampleNote",
   "domain": "member",
   "text": "预览示例 · 示例客户视图（非真实数据）",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.appNo",
   "domain": "member",
   "text": "MY PHILIA",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.appTitle",
   "domain": "member",
   "text": "我的",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.cardOpenCta",
   "domain": "member",
   "text": "开通 ›",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.cardRenewCta",
   "domain": "member",
   "text": "续费 ›",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.freeValidityNote",
   "domain": "member",
   "text": "账号在即在册 · 永不冻结",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.freeValidityValue",
   "domain": "member",
   "text": "永久在册",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.gridBoarding",
   "domain": "member",
   "text": "寄养预约",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.gridBoardingSub",
   "domain": "member",
   "text": "按晚",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.gridCoupons",
   "domain": "member",
   "text": "优惠券",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.gridCouponsSub",
   "domain": "member",
   "text": "领券 · 心愿单",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.gridPets",
   "domain": "member",
   "text": "宠物档案",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.gridPetsCount",
   "domain": "member",
   "text": "{n} 只",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.gridPetsGo",
   "domain": "member",
   "text": "去建档",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.gridRebate",
   "domain": "member",
   "text": "回馈金账本",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.gridSettings",
   "domain": "member",
   "text": "设置",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.gridSettingsSub",
   "domain": "member",
   "text": "账号 · 安全",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.openUnlock",
   "domain": "member",
   "text": "开通会员解锁",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.orderAll",
   "domain": "member",
   "text": "全部订单",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.orderConfirmed",
   "domain": "member",
   "text": "待到店",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.orderHistory",
   "domain": "member",
   "text": "待评价",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.orderRefund",
   "domain": "member",
   "text": "退款售后",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.orderServing",
   "domain": "member",
   "text": "服务中",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.qrSub",
   "domain": "member",
   "text": "到店即扫",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.qrTitle",
   "domain": "member",
   "text": "出示会员码",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.rebateLabel",
   "domain": "member",
   "text": "回馈金",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.renewCountdown",
   "domain": "member",
   "text": "续费倒计时",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "me.slotSoon",
   "domain": "member",
   "text": "即将点亮",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "o1.refundTab",
   "domain": "member",
   "text": "退款售后",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "p1.certSlotTitle",
   "domain": "member",
   "text": "安心证书",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.archive",
   "domain": "member",
   "text": "年度档案",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.archiveSub",
   "domain": "member",
   "text": "全年在册",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.birthday",
   "domain": "member",
   "text": "生日礼遇",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.birthdaySub",
   "domain": "member",
   "text": "年度特辑",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.discount",
   "domain": "member",
   "text": "服务折扣",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.discountNone",
   "domain": "member",
   "text": "门市价",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.discountSub",
   "domain": "member",
   "text": "{zhe} 折",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.grantedAt",
   "domain": "member",
   "text": "发放 {time}",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.groomer",
   "domain": "member",
   "text": "专属洗护师",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.groomerSub",
   "domain": "member",
   "text": "点名安排",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.kindBirthdayOwner",
   "domain": "member",
   "text": "生日礼 · 主人",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.kindBirthdayPet",
   "domain": "member",
   "text": "生日礼 · 宠物",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.kindCarePack",
   "domain": "member",
   "text": "安心包",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.kindFallback",
   "domain": "member",
   "text": "权益",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.kindNewbie",
   "domain": "member",
   "text": "新人礼包",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.kindServiceDiscount",
   "domain": "member",
   "text": "服务折扣次数",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.kindUpgrade",
   "domain": "member",
   "text": "升级礼遇",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.ledgerNote",
   "domain": "member",
   "text": "权益台账=资格留痕，发放候资质批",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.passTimesLine",
   "domain": "member",
   "text": "次卡剩余 {n} 次",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.pets",
   "domain": "member",
   "text": "多宠覆盖",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.petsSub",
   "domain": "member",
   "text": "含 {n} 只",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.petsSubFree",
   "domain": "member",
   "text": "建档不限",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.rebate",
   "domain": "member",
   "text": "回馈金",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.rebateNone",
   "domain": "member",
   "text": "—",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.rebateSub",
   "domain": "member",
   "text": "{pct}%",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.remainLine",
   "domain": "member",
   "text": "剩余 {remain} / 共 {total} 次",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.renewOff",
   "domain": "member",
   "text": "续费 {zhe} 折 · 折后 ¥{amount}",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.skin",
   "domain": "member",
   "text": "皮毛检测",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.skinSub",
   "domain": "member",
   "text": "每季一次",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.unusedEmpty",
   "domain": "member",
   "text": "暂无未用权益",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.unusedTitle",
   "domain": "member",
   "text": "未用权益",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "perk.usedUp",
   "domain": "member",
   "text": "已用完",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "q1.codeFooter",
   "domain": "member",
   "text": "码面白底墨码，识别率优先 · 码每 5 分钟自动刷新",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "q1.hint",
   "domain": "member",
   "text": "到店出示 · 店员扫码",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "q1.nonMemberClaim",
   "domain": "member",
   "text": "先领个身份，慢慢认识我们",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "q1.nonMemberCta",
   "domain": "member",
   "text": "开通会员 ›",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "q1.nonMemberGuide",
   "domain": "member",
   "text": "还不是会员：注册用户免费在册，一键开通即享基础功能；付费档线上即可开通。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "q1.nonMemberPrice",
   "domain": "member",
   "text": "未开通",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "q1.passEmpty",
   "domain": "member",
   "text": "暂无次卡。次卡余额为实时数据。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "q1.passRemain",
   "domain": "member",
   "text": "剩余 {remain} 次 / 共 {total} 次",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "q1.passStoreFallback",
   "domain": "member",
   "text": "菲丽亚门店",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "q1.passTitle",
   "domain": "member",
   "text": "次卡余额",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "q1.passUnit",
   "domain": "member",
   "text": "次",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "q1.pendingBody",
   "domain": "member",
   "text": "到店报手机号即可享受会员权益；扫码核销通道开通后本页自动升级。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "q1.pendingTitle",
   "domain": "member",
   "text": "会员码扫码核销升级中",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "q1.pushLabel",
   "domain": "member",
   "text": "会员码 · MEMBER CODE",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "q1.refreshNote",
   "domain": "member",
   "text": "{mm}:{ss} 后自动刷新",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "q1.tokenFail",
   "domain": "member",
   "text": "会员码加载失败",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "q1.tokenRetry",
   "domain": "member",
   "text": "重试",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "q1.tokenTitle",
   "domain": "member",
   "text": "会员码",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "q1.verifyNote",
   "domain": "member",
   "text": "核验走收银台 · 店员扫录或核对码文本",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "rules.r1",
   "domain": "member",
   "text": "回馈金比例 {pct}%（{tier}档）· 仅抵商品 · 单笔不设上限",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "rules.r1Free",
   "domain": "member",
   "text": "注册用户免费档无回馈金 · 付费档 {pcts}% · 仅抵商品",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "rules.r2",
   "domain": "member",
   "text": "上月 26 日 – 本月 25 日结算 · 次月 {day} 日前到账（故障顺延 ≤3 天并明示）",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "rules.r3",
   "domain": "member",
   "text": "{days} 天有效 · 到期未续冻结 · 续费即解冻 · 退卡清零",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "rules.r3Free",
   "domain": "member",
   "text": "账号在即在册 · 永不冻结 · 随时可开通付费档",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "rules.r4",
   "domain": "member",
   "text": "回馈金不提现 · 不转让 · 不产息",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "rules.r5",
   "domain": "member",
   "text": "用回馈金支付的部分不再返还",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "rules.r6",
   "domain": "member",
   "text": "退货按退款比例扣回已返回馈金，余额不足扣至 0 不负账",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "rules.r7",
   "domain": "member",
   "text": "回馈金 / 储值 / XP 三本账物理分离，均不计营业额",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "rules.r8",
   "domain": "member",
   "text": "商品全员同价无会员价；服务折扣仅付费档生效",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "rules.title",
   "domain": "member",
   "text": "年费 ≠ 储值 · 到期不自动续费",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "saved.discountLine",
   "domain": "member",
   "text": "服务折扣节省",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "saved.meSlotNote",
   "domain": "member",
   "text": "构成明面",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "saved.noHypeNote",
   "domain": "member",
   "text": "只算已发生的回馈金与折扣，不含预计。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "saved.rebateLine",
   "domain": "member",
   "text": "回馈金累计到账",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "saved.rowLine",
   "domain": "member",
   "text": "今年已省 ¥{total} ›",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "saved.sheetTitle",
   "domain": "member",
   "text": "今年已省 · 构成明面",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "saved.slotTitle",
   "domain": "member",
   "text": "今年已省",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "saved.totalLine",
   "domain": "member",
   "text": "合计",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "saved.yearNote",
   "domain": "member",
   "text": "{year} 年已发生口径",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "slot.certSoon",
   "domain": "member",
   "text": "随体验批开通",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "slot.soon",
   "domain": "member",
   "text": "即将点亮",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.currentTitle",
   "domain": "member",
   "text": "当前档位",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.emptyTitle",
   "domain": "member",
   "text": "当前没有可升档位",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.emptyTopTier",
   "domain": "member",
   "text": "已是最高档，权益已全部点亮。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.entryCta",
   "domain": "member",
   "text": "升级会员 ›",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.expireLine",
   "domain": "member",
   "text": "有效期至 {date}",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.formulaLine",
   "domain": "member",
   "text": "剩余 {m} 整月 ×（新档月均价 ¥{newMonthly} − 旧档月均价 ¥{oldMonthly}）= ¥{diff}",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.formulaPet",
   "domain": "member",
   "text": "多宠附加差价 ¥{pet}",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.formulaTotal",
   "domain": "member",
   "text": "合计补差 ¥{total}",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.freeTierGuide",
   "domain": "member",
   "text": "当前为免费档，升档按新购口径办理：全档价、线上开通即时生效，有效期自开通重起算。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.headNo",
   "domain": "member",
   "text": "UPGRADE QUOTE",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.headTitle",
   "domain": "member",
   "text": "升级会员",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.loadFail",
   "domain": "member",
   "text": "升级试算加载失败",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.newPurchaseLine",
   "domain": "member",
   "text": "新购口径 = 全档价（多宠附加按现有宠物数计），开通时点重起算有效期",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.newPurchaseTag",
   "domain": "member",
   "text": "新购口径",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.nonMemberBody",
   "domain": "member",
   "text": "先开通会员（注册用户免费在册，一键开通），再按需要升档。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.nonMemberCta",
   "domain": "member",
   "text": "去开通会员 ›",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.nonMemberTitle",
   "domain": "member",
   "text": "开通会员后可升档",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.noteBalance",
   "domain": "member",
   "text": "旧档回馈金余额原样保留，零动作。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.noteEffective",
   "domain": "member",
   "text": "升档即时生效：新档权益只管新单，到期日不变。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.noteInflight",
   "domain": "member",
   "text": "在途回馈金不重算，按下单时档位口径到账。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.noteNoDowngrade",
   "domain": "member",
   "text": "期内不降级，可在到期前 {days} 天预约下期档位。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.notesTitle",
   "domain": "member",
   "text": "办理说明",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.paidLine",
   "domain": "member",
   "text": "已付 ¥{price}",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.payCta",
   "domain": "member",
   "text": "去支付 ¥{amount}",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.pushLabel",
   "domain": "member",
   "text": "升级会员 · UPGRADE",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.storeGuideBody",
   "domain": "member",
   "text": "内测期升级请到店收银台办理：出示会员码，店员代办补差，成交即时生效。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.storeGuideTitle",
   "domain": "member",
   "text": "到店办理",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "up.targetTitle",
   "domain": "member",
   "text": "可升档位 · 试算明面",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "w1.balanceFrozen",
   "domain": "member",
   "text": "已冻结 · 续费即解冻",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "w1.balanceLabel",
   "domain": "member",
   "text": "可用余额",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "w1.emptyCta",
   "domain": "member",
   "text": "去商城逛逛",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "w1.emptyDesc",
   "domain": "member",
   "text": "每笔商品消费按档位比例返还，次月统一到账；仅抵商品、365 天有效。",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "w1.emptyTitle",
   "domain": "member",
   "text": "回馈金是什么",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "w1.fallbackTitle",
   "domain": "member",
   "text": "{type} · 单号 {no}",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "w1.logsTitle",
   "domain": "member",
   "text": "明细",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "w1.periodLine",
   "domain": "member",
   "text": "周期 {start} – {end} · {month}.{day} 前到账",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "w1.pushLabel",
   "domain": "member",
   "text": "回馈金 · REBATE LEDGER",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "w1.ringCenter",
   "domain": "member",
   "text": "本周期",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "w1.typeClawback",
   "domain": "member",
   "text": "退货扣回",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "w1.typeClear",
   "domain": "member",
   "text": "清零",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "w1.typeDeduct",
   "domain": "member",
   "text": "回馈金抵扣",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "w1.typeFreeze",
   "domain": "member",
   "text": "冻结",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "w1.typeGrant",
   "domain": "member",
   "text": "消费回馈",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "w1.yearTotal",
   "domain": "member",
   "text": "本年累计 ¥{amount}",
-  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·设置 / 客户·购物车 / 客户·预约寄养 / 客户·预约洗护",
+  "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
@@ -20921,6 +21964,55 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "PetsPage 页面内文案"
  },
  {
+  "key": "pets.avatarChange",
+  "domain": "pets",
+  "text": "更换头像",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.avatarNote",
+  "domain": "pets",
+  "text": "上传前自动压缩，最长边 2000px",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.avatarPreviewAlt",
+  "domain": "pets",
+  "text": "头像预览",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.avatarUpload",
+  "domain": "pets",
+  "text": "上传头像",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.birthdayLabel",
+  "domain": "pets",
+  "text": "生日",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.breedLabel",
+  "domain": "pets",
+  "text": "品种",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.breedPlaceholder",
+  "domain": "pets",
+  "text": "如：金毛",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
   "key": "pets.chipNoLabel",
   "domain": "pets",
   "text": "芯片号",
@@ -20949,6 +22041,20 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "PetsPage 页面内文案"
  },
  {
+  "key": "pets.editEntry",
+  "domain": "pets",
+  "text": "编辑 ›",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.editTitle",
+  "domain": "pets",
+  "text": "编辑档案",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
   "key": "pets.emptyBody",
   "domain": "pets",
   "text": "建立档案后，预约洗护与寄养更省心",
@@ -20970,6 +22076,34 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "PetsPage 页面内文案"
  },
  {
+  "key": "pets.formCancel",
+  "domain": "pets",
+  "text": "取消",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.formSaveFail",
+  "domain": "pets",
+  "text": "保存失败，请稍后重试",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.formSaving",
+  "domain": "pets",
+  "text": "保存中…",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.formSubmit",
+  "domain": "pets",
+  "text": "保存档案",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
   "key": "pets.healthEntry",
   "domain": "pets",
   "text": "健康档案 ›",
@@ -20980,6 +22114,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "pets.historyCount",
   "domain": "pets",
   "text": "共 {count} 次",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.historyServiceFallback",
+  "domain": "pets",
+  "text": "洗护",
   "screen": "客户·宠物档案",
   "position": "PetsPage 页面内文案"
  },
@@ -20998,9 +22139,65 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "PetsPage 页面内文案"
  },
  {
+  "key": "pets.nameLabel",
+  "domain": "pets",
+  "text": "名字 *",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.namePlaceholder",
+  "domain": "pets",
+  "text": "TA 的名字",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.neuteredLabel",
+  "domain": "pets",
+  "text": "已绝育",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.proofRemove",
+  "domain": "pets",
+  "text": "删除",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
   "key": "pets.rebook",
   "domain": "pets",
   "text": "同款再约 ›",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.speciesCat",
+  "domain": "pets",
+  "text": "猫咪",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.speciesDog",
+  "domain": "pets",
+  "text": "狗狗",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.speciesLabel",
+  "domain": "pets",
+  "text": "物种 *",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.speciesOther",
+  "domain": "pets",
+  "text": "其他",
   "screen": "客户·宠物档案",
   "position": "PetsPage 页面内文案"
  },
@@ -21033,6 +22230,34 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "ActivePetSwitcher 组件内文案"
  },
  {
+  "key": "pets.tagAdd",
+  "domain": "pets",
+  "text": "添加",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.tagCustomPlaceholder",
+  "domain": "pets",
+  "text": "自定义标签，回车添加",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.tagLimitPlaceholder",
+  "domain": "pets",
+  "text": "标签已达上限",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.tagsLabel",
+  "domain": "pets",
+  "text": "性格标签（最多 12 个）",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
   "key": "pets.title",
   "domain": "pets",
   "text": "宠物档案",
@@ -21043,6 +22268,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "pets.vaccineExpired",
   "domain": "pets",
   "text": "疫苗已过期 · 寄养前需补种",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.vaccineLabel",
+  "domain": "pets",
+  "text": "疫苗有效期至",
   "screen": "客户·宠物档案",
   "position": "PetsPage 页面内文案"
  },
@@ -21092,6 +22324,20 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "pets.vaccineSoon",
   "domain": "pets",
   "text": "疫苗 {days} 天后到期 · 寄养需有效期内",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.weightLabel",
+  "domain": "pets",
+  "text": "体重（kg）",
+  "screen": "客户·宠物档案",
+  "position": "PetsPage 页面内文案"
+ },
+ {
+  "key": "pets.weightPlaceholder",
+  "domain": "pets",
+  "text": "如：4.5",
   "screen": "客户·宠物档案",
   "position": "PetsPage 页面内文案"
  },
@@ -21155,6 +22401,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "rev.photoLimit",
   "domain": "productReviews",
   "text": "最多 3 张",
+  "screen": "客户·商品详情",
+  "position": "ProductDetailPage 页面内文案"
+ },
+ {
+  "key": "rev.photoUploadFail",
+  "domain": "productReviews",
+  "text": "上传失败，请稍后再试",
   "screen": "客户·商品详情",
   "position": "ProductDetailPage 页面内文案"
  },

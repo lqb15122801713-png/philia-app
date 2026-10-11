@@ -18,7 +18,13 @@ import { usePhiliaClient } from './api/client';
 import { patchCopyOverride } from './copyOverrides';
 import { PERK_ICON_SET, resolvePerkWallCells, type PerkIconKey, type PerkIconShape, type PerkWallCellSpec } from './perkWall';
 
-export type CanvasPageKey = 'home' | 'memberCenter' | 'cashierMarketing' | 'me' | 'mall' | 'bookingGrooming' | 'bookingBoarding' | 'memberOpen';
+/** 画布页键（契约=server/src/routers/canvas.ts PAGE_KEYS 同值镜像；片 3 末片=46 键全量） */
+export type CanvasPageKey =
+  | 'home' | 'memberCenter' | 'cashierMarketing' | 'me' | 'mall' | 'bookingGrooming' | 'bookingBoarding' | 'memberOpen'
+  | 'pdp' | 'cart' | 'mallOrders' | 'refunds'
+  | 'appointments' | 'apptDetail' | 'apptLive' | 'certList' | 'certDetail' | 'report' | 'ticketList' | 'ticketNew' | 'ticketDetail' | 'moments'
+  | 'memberUpgrade' | 'memberChange' | 'rebate' | 'memberCard' | 'coupons' | 'records' | 'notifications' | 'notifyPrefs'
+  | 'philia' | 'pets' | 'petHealth' | 'settings' | 'deactivate' | 'changePhone' | 'phoneAppeal' | 'devices' | 'privacy' | 'profile' | 'addresses' | 'about' | 'agreements' | 'invoiceTitles' | 'invoices' | 'invoiceDetail';
 
 export interface CanvasBlockSpec {
   blockKey: string;

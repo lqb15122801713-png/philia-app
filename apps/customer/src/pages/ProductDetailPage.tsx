@@ -13,12 +13,22 @@
  * 「商品评价」区（productReviews 列表+均分+晒单图墙+写评价弹层——仅 received 订单
  * 可评，订单列表「写评价」入口带 reviewOrderId 直入；晒图走既有 /api/upload 链
  * relDir='review/product' ≤3 张）。
+ *
+ * 画布化（产品-1010 画布全屏批 片 3 末片 · 商城域，工艺照 MePage/MallPage/MemberOpenPage）：
+ * 六块入册（pdp.gallery/info/rebateCard/detail/reviews/ctaBar），块序/显隐=
+ * useCanvasLayout('pdp')（published→注册表默认序尾补，空=PDP_DEFAULT_ORDER 兜底）；
+ * 店锚=?canvasStore= 预览店锚 > 商品所在店（product.storeId 既有透出，零新增查询）；
+ * ?canvasPreview=1=页首水印注记（pdp-canvas-preview-note）；带参路由预览：预览 URL=
+ * /mall/product/preview，canvasPreview=1 且 params.id==='preview' 时取商品列表既有查询
+ * 缓存（mall.listProducts 同 queryKey 共享，零新增查询）首条商品顶替，查不到=空态照原样；
+ * 文案键挂 CK(data-copy-key) 点选反查锚；写评价弹层/跨店确认弹层不入块流（照改造前位置
+ * 挂载）；块内逻辑/查询/状态机/提交链路零改动，data-testid 原值全保留。
  */
 
-import { Skeleton, slotContentOf, resolveSlotUrl, usePhiliaClient } from '@philia/shared';
+import { CanvasLayoutLoader, CK, Skeleton, slotContentOf, resolveSlotUrl, useCanvasLayout, usePhiliaClient } from '@philia/shared';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Heart, Minus, Plus, Star, Store } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { BackButton } from '../components/PageHeader';
 import { CartProvider, MAX_QTY, useCart, type AddInput } from '../components/mall/cartStore';
@@ -35,6 +45,16 @@ import { rvc } from '../copy/productReviews';
 
 type Trpc = ReturnType<typeof usePhiliaClient>['trpc'];
 type ReviewRow = Awaited<ReturnType<Trpc['mall']['productReviews']['query']>>['items'][number];
+
+/** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
+const PDP_DEFAULT_ORDER = [
+  'pdp.gallery',
+  'pdp.info',
+  'pdp.rebateCard',
+  'pdp.detail',
+  'pdp.reviews',
+  'pdp.ctaBar',
+] as const;
 
 /* 片 3：评价星级行（只读展示件；晒单评分 1-5） */
 function Stars({ n, className = '' }: { n: number; className?: string }) {
@@ -99,7 +119,7 @@ function ReviewSheet({
       const up = await uploadImage(getApiBase(), file, 'review/product');
       setPhotos((p) => [...p, up.url].slice(0, 3));
     } catch (e) {
-      showToast(friendlyError(e, '上传失败，请稍后再试', 80), 'error');
+      showToast(friendlyError(e, rvc('rev.photoUploadFail'), 80), 'error');
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
@@ -109,7 +129,7 @@ function ReviewSheet({
   return (
     <Sheet open={open} onClose={onClose} title={rvc('rev.sheetTitle')}>
       <div className="mt-3">
-        <p className="mb-1.5 font-number text-v2-trace text-ink-secondary">{rvc('rev.ratingLabel')}</p>
+        <p className="mb-1.5 font-number text-v2-trace text-ink-secondary"><CK k="rev.ratingLabel">{rvc('rev.ratingLabel')}</CK></p>
         <div className="flex gap-1.5" data-testid="review-rating">
           {[1, 2, 3, 4, 5].map((i) => (
             <button key={i} type="button" aria-label={`${i} 分`} onClick={() => setRating(i)} className="p-1">
@@ -150,10 +170,10 @@ function ReviewSheet({
               className="u1-ring flex h-14 w-14 flex-col items-center justify-center rounded-control bg-card text-caption-xs text-ink-secondary"
             >
               <Plus className="h-4 w-4" strokeWidth={1.8} />
-              {rvc('rev.photoAdd')}
+              <CK k="rev.photoAdd">{rvc('rev.photoAdd')}</CK>
             </button>
           ) : null}
-          <span className="ml-auto font-number text-[9.5px] text-ink-placeholder">{rvc('rev.photoLimit')}</span>
+          <span className="ml-auto font-number text-[9.5px] text-ink-placeholder"><CK k="rev.photoLimit">{rvc('rev.photoLimit')}</CK></span>
           <input
             ref={fileRef}
             type="file"
@@ -167,7 +187,7 @@ function ReviewSheet({
         </div>
         <label className="mt-3 flex items-center gap-2 text-caption text-ink-secondary">
           <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
-          {rvc('rev.anonymous')}
+          <CK k="rev.anonymous">{rvc('rev.anonymous')}</CK>
         </label>
         <button
           type="button"
@@ -176,7 +196,7 @@ function ReviewSheet({
           data-testid="review-submit"
           className="mt-4 flex w-full items-center justify-center rounded-[18px] bg-[#2E2318] py-3 text-body font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
         >
-          {submitM.isPending ? rvc('rev.submitting') : rvc('rev.submit')}
+          {submitM.isPending ? <CK k="rev.submitting">{rvc('rev.submitting')}</CK> : <CK k="rev.submit">{rvc('rev.submit')}</CK>}
         </button>
       </div>
     </Sheet>
@@ -200,26 +220,48 @@ function DetailInner() {
   const [reviewOpen, setReviewOpen] = useState(() => reviewEntryOrderId !== null);
   const trackRef = useRef<HTMLDivElement | null>(null);
 
+  /* ---- 画布全屏批 片 3 画布化入册：探针参 + 预览顶替 + 店锚 + 注册表块序/有效布局 ---- */
+  /* 画布预览探针参识别（?canvasPreview=1；微光正名批工艺三件套之一） */
+  const isCanvasPreview = useMemo(
+    () => new URLSearchParams(window.location.search).get('canvasPreview') === '1',
+    [],
+  );
+  /* 画布布局店锚（?canvasStore= 预览店锚 > 商品所在店 product.storeId 既有透出，零新增查询） */
+  const previewStoreId = useMemo(() => new URLSearchParams(window.location.search).get('canvasStore'), []);
+  /* 带参路由预览顶替：canvasPreview=1 且 params.id==='preview'（预览 URL=/mall/product/preview）
+     时，取商品列表首条顶替——片 3 复走补修：原缓存读取（getQueriesData）冷启动顶签/iframe
+     直开时缓存为空恒落空，换真查询（listProducts 公开读同端点，店锚随参，preview 态才启用，
+     页外零影响）；查不到=pid 落回 'preview'，getProduct 报错 → 空态照原样 */
+  const previewFirstQ = useQuery({
+    queryKey: ['mall', 'listProducts', 'canvasPreviewFirst', previewStoreId ?? ''],
+    queryFn: () => trpc.mall.listProducts.query({ storeId: previewStoreId ?? undefined, page: 1, pageSize: 1 }),
+    enabled: isCanvasPreview && id === 'preview',
+    staleTime: 60_000,
+    retry: false,
+  });
+  const previewProductId = isCanvasPreview && id === 'preview' ? (previewFirstQ.data?.items?.[0]?.id ?? null) : null;
+  const pid = previewProductId ?? id;
+
   const productQ = useQuery({
-    queryKey: ['mall', 'getProduct', id],
-    queryFn: () => trpc.mall.getProduct.query({ productId: id! }),
-    enabled: !!id,
+    queryKey: ['mall', 'getProduct', pid],
+    queryFn: () => trpc.mall.getProduct.query({ productId: pid! }),
+    enabled: !!pid,
     retry: false,
   });
 
   /* 片 3：收藏钮（favCheck 初态 + favToggle 幂等；已收藏实色） */
   const favQ = useQuery({
-    queryKey: ['mall', 'favCheck', id],
-    queryFn: () => trpc.mall.favCheck.query({ productId: id! }),
-    enabled: !!id,
+    queryKey: ['mall', 'favCheck', pid],
+    queryFn: () => trpc.mall.favCheck.query({ productId: pid! }),
+    enabled: !!pid,
     retry: false,
   });
   const faved = favQ.data?.fav ?? false;
   const favM = useMutation({
-    mutationFn: () => trpc.mall.favToggle.mutate({ productId: id! }),
+    mutationFn: () => trpc.mall.favToggle.mutate({ productId: pid! }),
     onSuccess: (r) => {
       showToast(r.fav ? fvc('fav.addToast') : fvc('fav.removeToast'), 'info');
-      void queryClient.invalidateQueries({ queryKey: ['mall', 'favCheck', id] });
+      void queryClient.invalidateQueries({ queryKey: ['mall', 'favCheck', pid] });
       void queryClient.invalidateQueries({ queryKey: ['mall', 'favList'] });
     },
     onError: (err) => showToast(friendlyError(err, fvc('fav.toggleFail'), 80), 'error'),
@@ -227,11 +269,11 @@ function DetailInner() {
 
   /* 片 3：商品评价区（productReviews 列表+均分+晒单图墙；page 分页加载更多） */
   const reviewsQ = useInfiniteQuery({
-    queryKey: ['mall', 'productReviews', id],
-    queryFn: ({ pageParam }) => trpc.mall.productReviews.query({ productId: id!, page: pageParam }),
+    queryKey: ['mall', 'productReviews', pid],
+    queryFn: ({ pageParam }) => trpc.mall.productReviews.query({ productId: pid!, page: pageParam }),
     initialPageParam: 1,
     getNextPageParam: (last) => (last.page * last.pageSize < last.total ? last.page + 1 : undefined),
-    enabled: !!id,
+    enabled: !!pid,
     retry: false,
   });
   const reviewRows: ReviewRow[] = reviewsQ.data?.pages.flatMap((p) => p.items) ?? [];
@@ -247,14 +289,15 @@ function DetailInner() {
   const eligibleOrder = (
     (ordersQ.data?.groups as Record<string, Array<{ id: string; items: Array<{ product_id: string }> }>> | undefined)
       ?.received ?? []
-  ).find((o) => o.items.some((it) => it.product_id === id));
+  ).find((o) => o.items.some((it) => it.product_id === pid));
   const reviewOrderId = reviewEntryOrderId ?? eligibleOrder?.id ?? null;
 
   const product = productQ.data?.product;
-  const storeName = productQ.data?.storeName ?? '菲丽亚门店';
+  const storeName = productQ.data?.storeName ?? mlc('mall.storeFallback');
   const images = (product?.images ?? []).filter((u): u is string => !!u);
   const stock = product?.stock ?? 0;
   const soldOut = stock <= 0;
+  const pdpStoreId = previewStoreId ?? product?.storeId ?? null;
 
   /* 回馈金返显（M-02 定稿；口径 APP-18：membership.my 的 plan.rebateBp 万分比，
      返 Fen=round(priceFen*qty*rebateBp/10000)；非会员/免费档=0 不渲染假数。
@@ -279,6 +322,21 @@ function DetailInner() {
     .join('/');
   const rebateFen = product && rebateBp > 0 ? Math.round((product.priceFen * qty * rebateBp) / 10000) : 0;
 
+  /* ---- 画布端口：注册表块序 + 有效布局（published→默认序尾补；空=默认序兜底常量） ---- */
+  const blocksQ = useQuery({
+    queryKey: ['canvas', 'blocks'],
+    queryFn: () => trpc.canvas.blocks.query(),
+    staleTime: 300_000,
+    retry: 1,
+  });
+  const registryBlocks = useMemo(() => {
+    const items = (blocksQ.data?.items ?? [])
+      .filter((b) => b.pageKey === 'pdp')
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    return items.length > 0 ? items : PDP_DEFAULT_ORDER.map((blockKey) => ({ blockKey }));
+  }, [blocksQ.data]);
+  const layout = useCanvasLayout('pdp', pdpStoreId, registryBlocks);
+
   const buildAddInput = (): AddInput | null =>
     product
       ? {
@@ -301,7 +359,7 @@ function DetailInner() {
       setPendingAdd(input);
       return;
     }
-    showToast('已加入购物车', 'info');
+    showToast(mlc('mall.quickAddToast'), 'info');
   };
 
   const handleBuyNow = () => {
@@ -310,39 +368,42 @@ function DetailInner() {
     navigate('/mall/checkout', { state: { buyNow: input } });
   };
 
-  /* ---------------- 异常态 ---------------- */
+  /* ---------------- 异常态（块流外；Loader 照常挂载保布局拉取） ---------------- */
   if (productQ.isPending) {
     return (
-      <div className="px-[22px] py-6">
-        <Skeleton className="h-[270px] rounded-panel" />
-        <Skeleton className="mt-4 h-5 w-2/3 rounded-tag" />
-        <Skeleton className="mt-2 h-5 w-1/3 rounded-tag" />
-      </div>
+      <CanvasLayoutLoader pageKey="pdp" storeId={pdpStoreId}>
+        <div className="px-[22px] py-6">
+          <Skeleton className="h-[270px] rounded-panel" />
+          <Skeleton className="mt-4 h-5 w-2/3 rounded-tag" />
+          <Skeleton className="mt-2 h-5 w-1/3 rounded-tag" />
+        </div>
+      </CanvasLayoutLoader>
     );
   }
   if (productQ.isError || !product) {
     return (
-      <div className="flex flex-col items-center px-[22px] py-16">
-        <img src={resolveSlotUrl(slotContentOf('pets.emptyIllustration')?.url) ?? '/brand/empty-appointments-800.png'} alt={slotContentOf('pets.emptyIllustration')?.alt ?? '商品不存在'} className="w-48 max-w-full rounded-panel" />
-        <p className="mt-4 text-title">
-          {productQ.isError ? friendlyError(productQ.error, '商品不存在或已下架', 80) : '商品不存在或已下架'}
-        </p>
-        <Link
-          to="/mall"
-          className="mt-6 flex items-center rounded-control bg-ink px-[30px] py-[13px] text-body-sm font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
-        >
-          {mlc('mall.pdpBackMall')}
-        </Link>
-      </div>
+      <CanvasLayoutLoader pageKey="pdp" storeId={pdpStoreId}>
+        <div className="flex flex-col items-center px-[22px] py-16">
+          <img src={resolveSlotUrl(slotContentOf('pets.emptyIllustration')?.url) ?? '/brand/empty-appointments-800.png'} alt={slotContentOf('pets.emptyIllustration')?.alt ?? mlc('mall.pdpNotFoundAlt')} className="w-48 max-w-full rounded-panel" />
+          <p className="mt-4 text-title">
+            {productQ.isError ? friendlyError(productQ.error, mlc('mall.pdpNotFound'), 80) : mlc('mall.pdpNotFound')}
+          </p>
+          <Link
+            to="/mall"
+            className="mt-6 flex items-center rounded-control bg-ink px-[30px] py-[13px] text-body-sm font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
+          >
+            {mlc('mall.pdpBackMall')}
+          </Link>
+        </div>
+      </CanvasLayoutLoader>
     );
   }
 
-  return (
-    <div className="pb-32">
-      {toastEl}
-
-      {/* 大图轮（片 2 M-02 定稿：图 270 高、圆角 20 卡内横滑 scroll-snap + 圆点指示，
-          多图能力保留；返回钮浮于图上左上角） */}
+  /* 块渲染器（块内逻辑零改动——六块照改造前 JSX 逐字搬，文案走 copy 键 + CK 反查锚） */
+  const renderers: Record<string, () => ReactNode> = {
+    /* 1. pdp.gallery：大图轮（片 2 M-02 定稿：图 270 高、圆角 20 卡内横滑 scroll-snap +
+          圆点指示，多图能力保留；返回钮浮于图上左上角；片 3 收藏钮图区右上角） */
+    'pdp.gallery': () => (
       <div className="px-[22px] pt-3">
         <div className="relative overflow-hidden rounded-panel">
           <div
@@ -362,7 +423,8 @@ function DetailInner() {
           </div>
           {/* 返回按钮（U1-A：统一圆钮 36px，主图场景保持浮动形态） */}
           <BackButton className="absolute left-3 top-3" />
-          {/* 片 3：收藏钮（图区右上角 36 圆白卡；favToggle 幂等，已收藏实色） */}
+          {/* 片 3：收藏钮（图区右上角 36 圆白卡；favToggle 幂等，已收藏实色；
+              aria-label 属性位挂不上 CK，键 fav.pdpAdd/fav.pdpAdded 如实列入 copyKeys） */}
           <button
             type="button"
             aria-label={faved ? fvc('fav.pdpAdded') : fvc('fav.pdpAdd')}
@@ -392,9 +454,12 @@ function DetailInner() {
           ) : null}
         </div>
       </div>
+    ),
 
-      {/* 信息区（片 2 M-02 定稿：名 18/800 + 价 mono 19/700 基线两端；mono 10 灰注记行） */}
-      <div className="px-[22px]">
+    /* 2. pdp.info：信息区（片 2 M-02 定稿：名 18/800 + 价 mono 19/700 基线两端；
+          售罄/仅剩签 + mono 10 灰溯源行） */
+    'pdp.info': () => (
+      <>
         <div className="mt-3.5 flex items-baseline justify-between gap-3">
           <h1 className="text-[18px] font-extrabold leading-6">{product.name}</h1>
           <p className="u1-num shrink-0 text-[19px] font-bold text-ink">{fenToYuan(product.priceFen)}</p>
@@ -403,66 +468,75 @@ function DetailInner() {
           {/* 「会员价」小签已摘除（任务卡 9-29 附①：全员同价无会员价=冻结红线 rules.r8，
               错误口径不是未建功能，摘除即净——不留置灰） */}
           {soldOut ? (
-            <span className="rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">{mlc('mall.soldOut')}</span>
+            <span className="rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder"><CK k="mall.soldOut">{mlc('mall.soldOut')}</CK></span>
           ) : stock < 10 ? (
             <span className="rounded-chip bg-danger-light px-2 py-0.5 font-number text-caption-xs text-danger-deep">
-              {mlc('mall.pdpStockLeft', { n: stock })}
+              <CK k="mall.pdpStockLeft">{mlc('mall.pdpStockLeft', { n: stock })}</CK>
             </span>
           ) : null}
         </div>
         {/* 溯源行（mono 10 muted；M-02 定稿「全员同价」注记位，文案口径保留既有） */}
         <p className="mt-2 flex items-center gap-1 font-number text-[10px] text-ink-secondary">
           <Store className="h-3.5 w-3.5" strokeWidth={1.5} />
-          {mlc('mall.pdpStoreLine', { store: storeName })}
+          <CK k="mall.pdpStoreLine">{mlc('mall.pdpStoreLine', { store: storeName })}</CK>
         </p>
+      </>
+    ),
 
-        {/* 回馈金返显卡（M-02 定稿：白卡 + 淡黄点睛圆点 8 + 12/600；rebateBp=0 不渲染假数——
-            体验急修批 B：改显示规则钩子，点击→/member/open（J-01）） */}
-        {rebateFen > 0 ? (
-          <div className="u1-card mt-3 flex items-center gap-2.5 px-3.5 py-3">
-            <span className="h-2 w-2 shrink-0 rounded-full bg-brand-primary" aria-hidden="true" />
-            <p className="text-caption font-semibold">
-              {settleDay
-                ? mc('mall.rebateEarnCard', { amt: fenToYuan(rebateFen), day: settleDay })
-                : mc('mall.rebateEarnCardNoDay', { amt: fenToYuan(rebateFen) })}
+    /* 3. pdp.rebateCard：回馈金返显卡（M-02 定稿：白卡 + 淡黄点睛圆点 8 + 12/600；
+          rebateBp=0 不渲染假数——体验急修批 B：改显示规则钩子，点击→/member/open（J-01）） */
+    'pdp.rebateCard': () =>
+      rebateFen > 0 ? (
+        <div className="u1-card mt-3 flex items-center gap-2.5 px-3.5 py-3">
+          <span className="h-2 w-2 shrink-0 rounded-full bg-brand-primary" aria-hidden="true" />
+          <p className="text-caption font-semibold">
+            {settleDay ? (
+              <CK k="mall.rebateEarnCard">{mc('mall.rebateEarnCard', { amt: fenToYuan(rebateFen), day: settleDay })}</CK>
+            ) : (
+              <CK k="mall.rebateEarnCardNoDay">{mc('mall.rebateEarnCardNoDay', { amt: fenToYuan(rebateFen) })}</CK>
+            )}
+          </p>
+        </div>
+      ) : hookPcts ? (
+        <Link
+          to="/member/open"
+          data-testid="pdp-rebate-hook"
+          className="u1-card mt-3 flex items-center gap-2.5 px-3.5 py-3 transition-transform duration-120 ease-philia-spring active:scale-[0.99]"
+        >
+          <span className="h-2 w-2 shrink-0 rounded-full bg-brand-primary" aria-hidden="true" />
+          <p className="text-caption font-semibold text-ink-secondary">
+            <CK k="mall.rebateHook">{mc('mall.rebateHook', { pcts: hookPcts })}</CK>
+          </p>
+        </Link>
+      ) : null,
+
+    /* 4. pdp.detail：详情描述（真实字段；试样规格表无真实字段来源，不出——U4-D3 登记；
+          片 2 M-02：截面题 16/800；正文=商品数据不抽键） */
+    'pdp.detail': () =>
+      product.description ? (
+        <>
+          <div className="mb-3 mt-6 flex items-baseline justify-between">
+            <h2 className="text-v2-section"><CK k="mall.pdpDetailTitle">{mlc('mall.pdpDetailTitle')}</CK></h2>
+          </div>
+          <div className="u1-card p-4">
+            <p className="whitespace-pre-line text-body-sm leading-relaxed text-ink-secondary">
+              {product.description}
             </p>
           </div>
-        ) : hookPcts ? (
-          <Link
-            to="/member/open"
-            data-testid="pdp-rebate-hook"
-            className="u1-card mt-3 flex items-center gap-2.5 px-3.5 py-3 transition-transform duration-120 ease-philia-spring active:scale-[0.99]"
-          >
-            <span className="h-2 w-2 shrink-0 rounded-full bg-brand-primary" aria-hidden="true" />
-            <p className="text-caption font-semibold text-ink-secondary">
-              {mc('mall.rebateHook', { pcts: hookPcts })}
-            </p>
-          </Link>
-        ) : null}
+        </>
+      ) : null,
 
-        {/* 详情描述（真实字段；试样规格表无真实字段来源，不出——U4-D3 登记；
-            片 2 M-02：截面题 16/800） */}
-        {product.description ? (
-          <>
-            <div className="mb-3 mt-6 flex items-baseline justify-between">
-              <h2 className="text-v2-section">{mlc('mall.pdpDetailTitle')}</h2>
-            </div>
-            <div className="u1-card p-4">
-              <p className="whitespace-pre-line text-body-sm leading-relaxed text-ink-secondary">
-                {product.description}
-              </p>
-            </div>
-          </>
-        ) : null}
-
-        {/* 片 3：商品评价区（描述卡后；productReviews 列表+均分+晒单图墙+写评价入口——
-            写评价闸=仅 received 订单可评，无可评单=诚实注记不画假入口） */}
+    /* 5. pdp.reviews：商品评价区（片 3：描述卡后；productReviews 列表+均分+晒单图墙+
+          写评价入口——写评价闸=仅 received 订单可评，无可评单=诚实注记不画假入口；
+          写评价弹层 ReviewSheet 不入块流，照改造前位置挂载于块流外） */
+    'pdp.reviews': () => (
+      <>
         <div className="mb-3 mt-6 flex items-baseline justify-between">
-          <h2 className="text-v2-section">{rvc('rev.title')}</h2>
+          <h2 className="text-v2-section"><CK k="rev.title">{rvc('rev.title')}</CK></h2>
           {reviewCount > 0 && reviewAvg !== null ? (
             <span className="flex items-center gap-1.5 font-number text-[10px] text-ink-secondary">
               <Stars n={Math.round(reviewAvg)} />
-              {rvc('rev.summary', { avg: reviewAvg.toFixed(1), count: reviewCount })}
+              <CK k="rev.summary">{rvc('rev.summary', { avg: reviewAvg.toFixed(1), count: reviewCount })}</CK>
             </span>
           ) : null}
         </div>
@@ -471,10 +545,10 @@ function DetailInner() {
             <Skeleton className="h-16 rounded-control" />
           ) : reviewsQ.isError ? (
             <button type="button" className="text-caption text-ink-secondary" onClick={() => void reviewsQ.refetch()}>
-              {rvc('rev.loadFail')}
+              <CK k="rev.loadFail">{rvc('rev.loadFail')}</CK>
             </button>
           ) : reviewRows.length === 0 ? (
-            <p className="text-caption text-ink-placeholder">{rvc('rev.empty')}</p>
+            <p className="text-caption text-ink-placeholder"><CK k="rev.empty">{rvc('rev.empty')}</CK></p>
           ) : (
             <div className="space-y-3.5">
               {reviewRows.map((r) => (
@@ -509,7 +583,7 @@ function DetailInner() {
                   onClick={() => void reviewsQ.fetchNextPage()}
                   className="w-full text-center text-caption font-medium text-ink-secondary"
                 >
-                  {rvc('rev.more')}
+                  <CK k="rev.more">{rvc('rev.more')}</CK>
                 </button>
               ) : null}
             </div>
@@ -523,21 +597,23 @@ function DetailInner() {
                 data-testid="pdp-review-entry"
                 className="rounded-full bg-brand-primary px-4 py-2 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
               >
-                {rvc('rev.writeCta')}
+                <CK k="rev.writeCta">{rvc('rev.writeCta')}</CK>
               </button>
             ) : (
               <p className="text-caption text-ink-placeholder" data-testid="pdp-review-need">
-                {rvc('rev.needReceived')}
+                <CK k="rev.needReceived">{rvc('rev.needReceived')}</CK>
               </p>
             )}
           </div>
         </div>
-      </div>
+      </>
+    ),
 
-      {/* 吸底 CTA（片 2 M-02 定稿 ctabar：渐出底 linear-gradient(transparent→纸白 40%)、
+    /* 6. pdp.ctaBar：吸底 CTA（片 2 M-02 定稿 ctabar：渐出底 linear-gradient(transparent→纸白 40%)、
           去顶描边；左=数量步进 pill（bg 卡其浅底 #F1E9D6 全圆）+「加入购物袋」白卡细线次钮
           +「立即购买」深棕底 16/700 主钮（sub mono 10.5 总价）；控件档圆角 18；
-          详情级无 dock，落底 safe-area） */}
+          详情级无 dock，落底 safe-area；fixed 条包无样式 section 不影响落位） */
+    'pdp.ctaBar': () => (
       <div
         className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-sticky"
         style={{ background: 'linear-gradient(transparent, #FAF8F2 40%)' }}
@@ -573,7 +649,7 @@ function DetailInner() {
             data-testid="pdp-add-cart"
             className="u1-ring flex-1 rounded-[18px] bg-card py-[13px] text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
           >
-            {mlc('mall.pdpAddCart')}
+            <CK k="mall.pdpAddCart">{mlc('mall.pdpAddCart')}</CK>
           </button>
           <button
             type="button"
@@ -582,7 +658,7 @@ function DetailInner() {
             data-testid="pdp-buy-now"
             className="flex flex-[1.4] flex-col items-center justify-center rounded-[18px] bg-[#2E2318] py-3 text-body-lg font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
           >
-            <span>{soldOut ? mlc('mall.soldOut') : mlc('mall.pdpBuyNow')}</span>
+            <span>{soldOut ? <CK k="mall.soldOut">{mlc('mall.soldOut')}</CK> : <CK k="mall.pdpBuyNow">{mlc('mall.pdpBuyNow')}</CK>}</span>
             {!soldOut ? (
               <span className="mt-0.5 font-number text-[10.5px] font-normal text-[#C9BBA0]">
                 共 {fenToYuan(product.priceFen * qty)}
@@ -591,33 +667,73 @@ function DetailInner() {
           </button>
         </div>
       </div>
+    ),
+  };
 
-      {/* 跨店加车确认 */}
-      <ConfirmSheet
-        open={!!pendingAdd}
-        title={mlc('mall.conflictTitle')}
-        desc={mlc('mall.conflictBody', { store: cart.items[0]?.storeName ?? '其他门店' })}
-        confirmText={mlc('mall.conflictOk')}
-        onCancel={() => setPendingAdd(null)}
-        onConfirm={() => {
-          if (pendingAdd) {
-            cart.replaceWith(pendingAdd);
-            showToast('已清空原购物车并加入本商品', 'info');
-          }
-          setPendingAdd(null);
-        }}
-      />
+  return (
+    <CanvasLayoutLoader pageKey="pdp" storeId={pdpStoreId}>
+      <div className="pb-32">
+        {toastEl}
+        {/* 画布预览水印（?canvasPreview=1 探针模式；零真会话零写库口径注记） */}
+        {isCanvasPreview ? (
+          <div className="px-[22px]" style={{ marginTop: 10 }}>
+            <p className="text-center text-caption-xs text-ink-secondary" data-testid="pdp-canvas-preview-note">{mc('mc.canvasExampleNote')}</p>
+          </div>
+        ) : null}
+        {/* 块流：pdp.gallery=自带 px 容器裸段（原结构在共享 padding 容器外）；
+            info/rebateCard/detail/reviews 共享 px-[22px] 容器（mt 节奏照改造前逐字搬）；
+            pdp.ctaBar=fixed 吸底条（包无样式 section 不影响落位）——默认序下 DOM 结构零差异 */}
+        {layout.map((b) =>
+          b.visible && b.blockKey === 'pdp.gallery' ? (
+            <section data-block-key={b.blockKey} key={b.blockKey}>
+              {renderers[b.blockKey]?.() ?? null}
+            </section>
+          ) : null,
+        )}
+        <div className="px-[22px]">
+          {layout.map((b) =>
+            b.visible && b.blockKey !== 'pdp.gallery' && b.blockKey !== 'pdp.ctaBar' ? (
+              <section data-block-key={b.blockKey} key={b.blockKey}>
+                {renderers[b.blockKey]?.() ?? null}
+              </section>
+            ) : null,
+          )}
+        </div>
+        {layout.map((b) =>
+          b.visible && b.blockKey === 'pdp.ctaBar' ? (
+            <section data-block-key={b.blockKey} key={b.blockKey}>
+              {renderers[b.blockKey]?.() ?? null}
+            </section>
+          ) : null,
+        )}
 
-      {/* 片 3：写评价弹层（仅 received 订单可评，一单一件一评） */}
-      <ReviewSheet
-        open={reviewOpen}
-        orderId={reviewOrderId}
-        productId={product.id}
-        showToast={showToast}
-        onClose={() => setReviewOpen(false)}
-        onDone={() => void reviewsQ.refetch()}
-      />
-    </div>
+        {/* 跨店加车确认（弹层不入块流，照改造前位置挂载） */}
+        <ConfirmSheet
+          open={!!pendingAdd}
+          title={mlc('mall.conflictTitle')}
+          desc={mlc('mall.conflictBody', { store: cart.items[0]?.storeName ?? mlc('mall.otherStore') })}
+          confirmText={mlc('mall.conflictOk')}
+          onCancel={() => setPendingAdd(null)}
+          onConfirm={() => {
+            if (pendingAdd) {
+              cart.replaceWith(pendingAdd);
+              showToast(mlc('mall.replacedToast'), 'info');
+            }
+            setPendingAdd(null);
+          }}
+        />
+
+        {/* 片 3：写评价弹层（仅 received 订单可评，一单一件一评；弹层不入块流） */}
+        <ReviewSheet
+          open={reviewOpen}
+          orderId={reviewOrderId}
+          productId={product.id}
+          showToast={showToast}
+          onClose={() => setReviewOpen(false)}
+          onDone={() => void reviewsQ.refetch()}
+        />
+      </div>
+    </CanvasLayoutLoader>
   );
 }
 

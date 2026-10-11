@@ -44,10 +44,55 @@ const PAGE_TABS: Array<{ key: CanvasPageKey; label: string }> = [
   { key: 'bookingGrooming', label: '预约洗护' },
   { key: 'bookingBoarding', label: '预约寄养' },
   { key: 'memberOpen', label: '开通会员' },
+  /* 产品-1011 片 3（末片）：剩余 38 屏扫尾入册（片 0 清单 §四 顺编） */
+  { key: 'pdp', label: '商品详情' },
+  { key: 'cart', label: '购物袋' },
+  { key: 'mallOrders', label: '商品订单' },
+  { key: 'refunds', label: '退款售后' },
+  { key: 'appointments', label: '我的预约' },
+  { key: 'apptDetail', label: '预约详情' },
+  { key: 'apptLive', label: '洗护全程' },
+  { key: 'certList', label: '安心证书' },
+  { key: 'certDetail', label: '证书详情' },
+  { key: 'report', label: '美容报告' },
+  { key: 'ticketList', label: '工单列表' },
+  { key: 'ticketNew', label: '联系小棉花' },
+  { key: 'ticketDetail', label: '工单详情' },
+  { key: 'moments', label: '服务相册' },
+  { key: 'memberUpgrade', label: '升级会员' },
+  { key: 'memberChange', label: '到期换档' },
+  { key: 'rebate', label: '回馈金账本' },
+  { key: 'memberCard', label: '会员码' },
+  { key: 'coupons', label: '我的券' },
+  { key: 'records', label: '消费记录' },
+  { key: 'notifications', label: '消息中心' },
+  { key: 'notifyPrefs', label: '订阅管理' },
+  { key: 'philia', label: 'Philia 爪' },
+  { key: 'pets', label: '宠物档案' },
+  { key: 'petHealth', label: '健康档案' },
+  { key: 'settings', label: '设置' },
+  { key: 'deactivate', label: '注销账号' },
+  { key: 'changePhone', label: '换绑手机号' },
+  { key: 'phoneAppeal', label: '换绑申诉' },
+  { key: 'devices', label: '登录设备' },
+  { key: 'privacy', label: '权限与隐私' },
+  { key: 'profile', label: '编辑资料' },
+  { key: 'addresses', label: '收货地址' },
+  { key: 'about', label: '关于' },
+  { key: 'agreements', label: '协议中心' },
+  { key: 'invoiceTitles', label: '发票抬头' },
+  { key: 'invoices', label: '我的发票' },
+  { key: 'invoiceDetail', label: '发票详情' },
 ];
 
 /** 共享键前缀（裁死件④：rules. / card. / perk. 三前缀改一键动多屏；画布提示行=前缀推导单源） */
 const SHARED_COPY_PREFIX = ['rules.', 'card.', 'perk.'];
+
+/** 只读键名单（裁死件③：版本号=发版语义，画布只读+提示行，防改出假版本号） */
+const READONLY_COPY_KEYS: ReadonlySet<string> = new Set(['about.versionValue']);
+
+/** 长文位阈值（裁死件③：协议正文等文档型键>120 字=textarea 长文编辑框，非单行 input） */
+const LONG_TEXT_LEN = 120;
 
 /**
  * 预览 iframe URL（选型报备）：推导内核=纯函数 ./canvasPreviewUrl.ts（片 4 D 股抽出可测件；
@@ -342,8 +387,8 @@ export function CanvasPortBody() {
           {cv('canvas.redline')}
         </p>
 
-        {/* 三屏页签 */}
-        <div className="mb-3 flex gap-1.5" role="tablist">
+        {/* 屏页签（片 3 末片=46 屏全量；flex-wrap 多行收排） */}
+        <div className="mb-3 flex flex-wrap gap-1.5" role="tablist">
           {PAGE_TABS.map((t) => (
             <button
               key={t.key}
@@ -456,13 +501,16 @@ export function CanvasPortBody() {
                       </div>
                     ) : null}
 
-                    {/* 端口化 copy 键行内编辑（现值=config.list copy 域；高危键口令复核） */}
+                    {/* 端口化 copy 键行内编辑（现值=config.list copy 域；高危键口令复核；
+                        片 3 裁死件③：只读键（版本号=发版语义）出只读徽+提示行；长文位（>120 字=协议正文类）出 textarea） */}
                     {copyKeys.map((k) => {
                       const cur = copyByKey.get(k);
                       const draft = copyDrafts[k] ?? cur?.text ?? '';
                       const changed = copyDrafts[k] !== undefined && copyDrafts[k] !== (cur?.text ?? '');
+                      const readOnly = READONLY_COPY_KEYS.has(k);
+                      const longText = (cur?.text ?? '').length > LONG_TEXT_LEN || draft.length > LONG_TEXT_LEN;
                       return (
-                        <div key={k} className="mt-2 flex items-center gap-2 border-t border-[rgba(59,46,36,.06)] pt-2">
+                        <div key={k} className={`mt-2 flex gap-2 border-t border-[rgba(59,46,36,.06)] pt-2 ${longText ? 'flex-col items-stretch' : 'items-center'}`}>
                           <span className="w-40 shrink-0 truncate text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
                             {k}
                             {cur?.highRisk ? (
@@ -472,29 +520,49 @@ export function CanvasPortBody() {
                             {SHARED_COPY_PREFIX.some((p) => k.startsWith(p)) ? (
                               <Badge tone="warn">共享键·改一键动多屏</Badge>
                             ) : null}
+                            {readOnly ? (
+                              <Badge tone="muted">发版语义·只读</Badge>
+                            ) : null}
                           </span>
-                          <input
-                            className={inputCls}
-                            data-testid={`canvas-copy-${k}`}
-                            ref={(el) => {
-                              if (el) copyInputRefs.current.set(k, el);
-                              else copyInputRefs.current.delete(k);
-                            }}
-                            value={draft}
-                            maxLength={2000}
-                            /* 注册表声明但码内无此键（home.entryNote / perk.boarding 留口先例）→「—」兜底 */
-                            placeholder={cur ? undefined : '—'}
-                            onChange={(e) => setCopyDrafts((prev) => ({ ...prev, [k]: e.target.value }))}
-                          />
-                          <Btn
-                            variant="subtle"
-                            size="sm"
-                            data-testid={`canvas-copy-save-${k}`}
-                            disabled={!changed || copyBusy === k}
-                            onClick={() => copySave(k)}
-                          >
-                            {cv('canvas.copySave')}
-                          </Btn>
+                          {readOnly ? (
+                            <span className="flex-1 text-caption-xs text-[rgba(59,46,36,.62)]" data-testid={`canvas-copy-readonly-${k}`}>
+                              {cur?.text ?? '—'}（版本号随发版走，这里只看不能改）
+                            </span>
+                          ) : longText ? (
+                            <textarea
+                              className={`${inputCls} min-h-28 font-mono`}
+                              data-testid={`canvas-copy-${k}`}
+                              value={draft}
+                              maxLength={20000}
+                              placeholder={cur ? undefined : '—'}
+                              onChange={(e) => setCopyDrafts((prev) => ({ ...prev, [k]: e.target.value }))}
+                            />
+                          ) : (
+                            <input
+                              className={inputCls}
+                              data-testid={`canvas-copy-${k}`}
+                              ref={(el) => {
+                                if (el) copyInputRefs.current.set(k, el);
+                                else copyInputRefs.current.delete(k);
+                              }}
+                              value={draft}
+                              maxLength={2000}
+                              /* 注册表声明但码内无此键（home.entryNote / perk.boarding 留口先例）→「—」兜底 */
+                              placeholder={cur ? undefined : '—'}
+                              onChange={(e) => setCopyDrafts((prev) => ({ ...prev, [k]: e.target.value }))}
+                            />
+                          )}
+                          {readOnly ? null : (
+                            <Btn
+                              variant="subtle"
+                              size="sm"
+                              data-testid={`canvas-copy-save-${k}`}
+                              disabled={!changed || copyBusy === k}
+                              onClick={() => copySave(k)}
+                            >
+                              {cv('canvas.copySave')}
+                            </Btn>
+                          )}
                         </div>
                       );
                     })}

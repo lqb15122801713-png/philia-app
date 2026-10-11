@@ -133,6 +133,114 @@ const APPOINTMENTS_COPY_TABLE = {
   /* stay=null 空态（待入住登记） */
   'appointments.assuranceEmpty': '待入住登记',
   'appointments.assuranceEmptyBody': '店员办理入住后，房间、体重与物品清单会在这里更新',
+
+  /* ---- 画布全屏批片 3（预约域三重屏入册抽键；默认值=改造前写死文案逐字） ---- */
+  /* 我的预约：五 Tab 名 + 卡内角标/数据兜底 */
+  'appointments.tabPending': '待确认',
+  'appointments.tabConfirmed': '已确认',
+  'appointments.tabServing': '服务中',
+  'appointments.tabHistory': '已完成',
+  'appointments.tabCancelled': '已取消',
+  'appointments.cardServingBadge': '● 进行中',
+  'appointments.cardStoreFallback': '门店',
+  'appointments.cardPetFallback': '毛孩子',
+
+  /* 预约详情：预约信息卡题 + dt 标签群 */
+  'appointments.infoTitle': '预约信息',
+  'appointments.dtType': '类型',
+  'appointments.dtService': '服务',
+  'appointments.dtRoomType': '房型',
+  'appointments.dtPet': '宠物',
+  'appointments.dtTime': '时间',
+  'appointments.dtAmount': '金额',
+  'appointments.dtPaymentMode': '收款方式',
+  'appointments.dtPaid': '实付',
+  'appointments.paidSuffix': '（已付）',
+  'appointments.dtCheckedIn': '到店核销',
+  'appointments.dtCompletedAt': '完成时间',
+  'appointments.dtNote': '备注',
+  'appointments.dtWalkTimes': '遛弯次数',
+  'appointments.dtId': '预约编号',
+  'appointments.checkedInRoom': '已入住房间：{room}',
+
+  /* 预约详情：服务相册卡内打标 */
+  'appointments.albumPhotoCount': '{n} 张',
+  'appointments.albumNoPhoto': '无需照片',
+  'appointments.albumBeforeTag': '服务前',
+  'appointments.albumAfterTag': '服务后',
+
+  /* 预约详情：门店与导航卡 */
+  'appointments.storeTitle': '门店',
+  'appointments.navAmap': '高德导航',
+  'appointments.navTencent': '腾讯地图',
+  'appointments.callStore': '联系门店',
+
+  /* 预约详情：操作区（改期/取消/退款/评价 + toast 群） */
+  'appointments.cancelChipSchedule': '行程有变',
+  'appointments.cancelChipTime': '时间不合适',
+  'appointments.cancelChipPrice': '价格因素',
+  'appointments.cancelChipOther': '其他',
+  'appointments.cancelNotePh': '补充说明（选填，100 字以内）',
+  'appointments.submitting': '提交中…',
+  'appointments.rescheduleNeedDates': '请选择新的入住/退房日期',
+  'appointments.toastCancelled': '预约已取消',
+  'appointments.toastCancelRequested': '已提交取消申请，待门店审核',
+  'appointments.cancelFailFallback': '取消失败，请稍后再试',
+  'appointments.reviewThanks': '感谢评价！',
+  'appointments.reviewFail': '评价提交失败',
+  'appointments.rescheduleToast': '改期已提交，等待商家重新确认',
+  'appointments.rescheduleFail': '改期失败，请稍后再试',
+  'appointments.shareTitle': '菲丽亚服务相册',
+  'appointments.shareText': '宝贝在菲丽亚完成了服务，全程照片可见～',
+  'appointments.shareCopied': '链接已复制，快发给家人朋友吧',
+  'appointments.shareCopyFail': '复制失败，请手动复制地址栏链接',
+  'appointments.createdLine': '预约于 {date} {week} 创建',
+  'appointments.fallbackService': '服务',
+  'appointments.fallbackPet': '宠物',
+
+  /* 洗护全程实时页：返回条题 + 摘要卡组装件（LiveHeader props 透传段） */
+  'appointments.liveTitleGrooming': '洗护全程',
+  'appointments.liveTitleBoarding': '寄养全程',
+  'appointments.livePetFallback': '宝贝',
+  'appointments.liveServiceGrooming': '洗护服务',
+  'appointments.liveServiceBoarding': '寄养服务',
+  'appointments.liveMetaStaff': '{staff}服务中',
+  'appointments.liveMetaEta': '预计 {time} 完成',
+  'appointments.liveMetaBoarding': '寄养中 · 第 {n} 天',
+
+  /* 洗护全程实时页：六步流 active 步操作说明（LiveStepper description 槽位） */
+  'appointments.liveStepsLoading': '正在接入服务进度…',
+  'appointments.hintDisinfection': '工具消毒确认中，安心第一步',
+  'appointments.hintPrecheck': '正在做预检，确认皮肤与毛发状态',
+  'appointments.hintGrooming': '正在洗护美容，新照片会实时出现在这里',
+  'appointments.hintDetail': '细节精修中，快要变美啦',
+  'appointments.hintBeforeAfter': '正在做交付检查',
+  'appointments.hintConfirm': '洗护师正在为您完成最后确认',
+
+  /* 洗护全程实时页：SSE/评价/分享 toast 群 */
+  'appointments.liveToastCheckin': '{date}打卡已更新，快看看{pet}的今天',
+  'appointments.liveToastReopen': '商家重新开启了本次服务，可继续查看进度',
+  'appointments.liveReviewThanks': '感谢评价，已转告门店与洗护师',
+  'appointments.liveReviewFail': '评价提交失败，请稍后再试',
+  'appointments.liveShareText': '{pet}在{store}完成了{service}，全程照片可见～',
+  'appointments.liveShareStoreFallback': '菲丽亚',
+
+  /* 洗护全程实时页：五态分支文案（状态机分支，不入块流） */
+  'appointments.liveLoading': '加载中…',
+  'appointments.liveErrTitle': '打不开这个进度页',
+  'appointments.liveErrForbidden': '这不是你的预约哦，请确认登录的账号是否正确。',
+  'appointments.liveErrNotFound': '找不到这个预约，可能链接有误或已被删除。',
+  'appointments.liveErrBackCta': '回到我的预约',
+  'appointments.livePendingTitle': '服务尚未开始',
+  'appointments.liveCancelReviewTitle': '取消申请审核中',
+  'appointments.liveCancelReviewBody': '门店正在处理你的取消申请，结果会第一时间通知你。',
+  'appointments.livePendingBody': '预约时间 {time}，到店后出示预约码，店员核销后即可在这里看到{kind}全程。',
+  'appointments.liveKindGrooming': '洗护',
+  'appointments.liveKindBoarding': '寄养',
+  'appointments.liveShowCode': '出示预约码',
+  'appointments.liveCancelledTitle': '预约已取消',
+  'appointments.liveCancelledBody': '这次没能相见，期待下次再约。',
+  'appointments.liveRebook': '重新预约',
 } as const;
 
 export const APPOINTMENTS_COPY = withCopyOverrides(APPOINTMENTS_COPY_TABLE);

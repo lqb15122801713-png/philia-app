@@ -43,6 +43,39 @@ const PETS_COPY_TABLE = {
   'pets.switcherTitle': '切换宠物',
   'pets.switcherSingleNote': '单宠档案已选定',
   'pets.switcherFail': '切换失败，请稍后重试',
+  /* 画布批片 3：表单/卡片写死中文抽键（默认值=改造前写死逐字）。
+     不抽键口径：PRESET_TAGS 预设性格标签=写库数据值（照 MallPage 分类枚举不抽键先例）；
+     zod 校验消息=镜像 server pet.upsert 规则，保持写死防双端口径分叉；
+     数值类（天数/次数/日期/体重）读数据插值不入表。 */
+  'pets.editTitle': '编辑档案',
+  'pets.editEntry': '编辑 ›',
+  'pets.avatarUpload': '上传头像',
+  'pets.avatarChange': '更换头像',
+  'pets.avatarNote': '上传前自动压缩，最长边 2000px',
+  'pets.avatarPreviewAlt': '头像预览',
+  'pets.nameLabel': '名字 *',
+  'pets.namePlaceholder': 'TA 的名字',
+  'pets.speciesLabel': '物种 *',
+  'pets.speciesDog': '狗狗',
+  'pets.speciesCat': '猫咪',
+  'pets.speciesOther': '其他',
+  'pets.breedLabel': '品种',
+  'pets.breedPlaceholder': '如：金毛',
+  'pets.birthdayLabel': '生日',
+  'pets.weightLabel': '体重（kg）',
+  'pets.weightPlaceholder': '如：4.5',
+  'pets.vaccineLabel': '疫苗有效期至',
+  'pets.neuteredLabel': '已绝育',
+  'pets.tagsLabel': '性格标签（最多 12 个）',
+  'pets.tagCustomPlaceholder': '自定义标签，回车添加',
+  'pets.tagLimitPlaceholder': '标签已达上限',
+  'pets.tagAdd': '添加',
+  'pets.proofRemove': '删除',
+  'pets.formCancel': '取消',
+  'pets.formSaving': '保存中…',
+  'pets.formSubmit': '保存档案',
+  'pets.formSaveFail': '保存失败，请稍后重试',
+  'pets.historyServiceFallback': '洗护',
 } as const;
 
 export const PETS_COPY = withCopyOverrides(PETS_COPY_TABLE);

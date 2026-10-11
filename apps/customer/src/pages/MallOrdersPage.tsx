@@ -10,12 +10,21 @@
  * - 已完成：已收货时间（updatedAt）；
  * - SSE：order.paid / order.shipped → toast + invalidate（useOrderEvents，
  *   断线重连后 onSync 全量对齐）。
+ *
+ * 画布化（产品-1010 画布全屏批 片 3 末片 · 商城域，工艺照 MePage/MallPage）：
+ * 五块入册（mallOrders.head/tabs/cardList/empty/sheets），块序/显隐=
+ * useCanvasLayout('mallOrders')（published→注册表默认序尾补，空=MALL_ORDERS_DEFAULT_ORDER
+ * 兜底）；店锚=?canvasStore= 预览店锚 > 记忆门店 > listNearby 首店（MemberCenterPage 口径，
+ * 同 queryKey 缓存共享零增发）；?canvasPreview=1=页首水印注记（mallorders-canvas-preview-note）；
+ * 文案键挂 CK 点选反查锚（状态胶囊/按钮字=键已建本片接通，六签+已取消/售后中新抽键）；
+ * 继续支付 CashierModal 不入块流（照改造前位置挂载）；骨架/异常页级状态不入块流；
+ * 块内逻辑/查询/SSE/滚动记忆/提交链路零改动，data-testid 原值全保留。
  */
 
-import { Skeleton, usePhiliaClient } from '@philia/shared';
+import { CanvasLayoutLoader, CK, Skeleton, useCanvasLayout, usePhiliaClient } from '@philia/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { BadgeCheck, Package, Truck } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import CashierModal, { type CashierOrder } from '../components/mall/CashierModal';
 import PageHeader from '../components/PageHeader';
@@ -26,10 +35,12 @@ import { fenToYuan, fmtOrderTime } from '../components/mall/format';
 import { friendlyError, useToast } from '@philia/shared';
 import ProductImage from '../components/mall/ProductImage';
 import { useOrderEvents } from '../components/mall/useOrderEvents';
-import { MALL_COPY, mlc } from '../copy/mall';
-import { rc } from '../copy/refund';
+import { MALL_COPY, mlc, type MallCopyKey } from '../copy/mall';
+import { mc } from '../components/member/copy';
+import { rc, type RefundCopyKey } from '../copy/refund';
 import { rvc } from '../copy/productReviews';
 import { sl } from '@/copy/serviceloop';
+import { readLastBooking } from '@/lib/bookingPrefill';
 
 /* ---------------- 类型（与 T5.1 listMyOrders 返回对齐） ---------------- */
 
@@ -62,14 +73,24 @@ type OrderGroups = Record<string, OrderRow[]>;
 
 /* ---------------- 展示常量 ---------------- */
 
+/** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
+const MALL_ORDERS_DEFAULT_ORDER = [
+  'mallOrders.head',
+  'mallOrders.tabs',
+  'mallOrders.cardList',
+  'mallOrders.empty',
+  'mallOrders.sheets',
+] as const;
+
 const TABS = [
-  /* U4-D3：补「全部」签（试样 09/12 首签=全部且默认选中；真实分组全量并集，按下单时间倒序） */
-  { key: 'all', label: '全部', statuses: ['pending', 'paid', 'shipped', 'received', 'cancelled', 'refunding'] },
-  { key: 'pending', label: '待支付', statuses: ['pending'] },
-  { key: 'paid', label: '待发货', statuses: ['paid'] },
-  { key: 'shipped', label: '待收货', statuses: ['shipped'] },
-  { key: 'received', label: '已完成', statuses: ['received'] },
-  { key: 'aftersale', label: '售后', statuses: ['cancelled', 'refunding'] },
+  /* U4-D3：补「全部」签（试样 09/12 首签=全部且默认选中；真实分组全量并集，按下单时间倒序）
+     画布批片 3：六签写死文案抽键（labelKey 取 mall.tab* 键） */
+  { key: 'all', labelKey: 'mall.tabAll', statuses: ['pending', 'paid', 'shipped', 'received', 'cancelled', 'refunding'] },
+  { key: 'pending', labelKey: 'mall.tabPending', statuses: ['pending'] },
+  { key: 'paid', labelKey: 'mall.tabPaid', statuses: ['paid'] },
+  { key: 'shipped', labelKey: 'mall.tabShipped', statuses: ['shipped'] },
+  { key: 'received', labelKey: 'mall.tabReceived', statuses: ['received'] },
+  { key: 'aftersale', labelKey: 'mall.tabAftersale', statuses: ['cancelled', 'refunding'] },
 ] as const;
 
 const TAB_KEYS = new Set<string>(TABS.map((t) => t.key));
@@ -85,14 +106,16 @@ const DELIVERY_LABEL: Record<string, string> = {
 
 /* U4-D3 状态胶囊对齐试样 .opill：小签档 6 圆角 + 11px/600；
    待支付=柠檬底（试样 opill.pay）、进行中（待发货/待收货）=薄荷洗（opill.doing）、
-   已完成/已取消=墨 6% 沉底（opill.done）、售后中=功能红洗（真实态保留） */
-const STATUS_META: Record<string, { label: string; pill: string }> = {
-  pending: { label: '待支付', pill: 'bg-brand-primary text-ink' },
-  paid: { label: '待发货', pill: 'bg-brand-secondary-light text-ink' },
-  shipped: { label: '待收货', pill: 'bg-brand-secondary-light text-ink' },
-  received: { label: '已完成', pill: 'bg-[rgba(59,46,36,.06)] text-ink-secondary' },
-  cancelled: { label: '已取消', pill: 'bg-[rgba(59,46,36,.06)] text-ink-placeholder' },
-  refunding: { label: '售后中', pill: 'bg-danger-light text-danger-deep' },
+   已完成/已取消=墨 6% 沉底（opill.done）、售后中=功能红洗（真实态保留）；
+   画布批片 3：胶囊字抽键（pending/paid/shipped/received 与同文签键复用，
+   cancelled/refunding 新键 mall.statusCancelled/mall.statusRefunding） */
+const STATUS_META: Record<string, { labelKey: MallCopyKey; pill: string }> = {
+  pending: { labelKey: 'mall.tabPending', pill: 'bg-brand-primary text-ink' },
+  paid: { labelKey: 'mall.tabPaid', pill: 'bg-brand-secondary-light text-ink' },
+  shipped: { labelKey: 'mall.tabShipped', pill: 'bg-brand-secondary-light text-ink' },
+  received: { labelKey: 'mall.tabReceived', pill: 'bg-[rgba(59,46,36,.06)] text-ink-secondary' },
+  cancelled: { labelKey: 'mall.statusCancelled', pill: 'bg-[rgba(59,46,36,.06)] text-ink-placeholder' },
+  refunding: { labelKey: 'mall.statusRefunding', pill: 'bg-danger-light text-danger-deep' },
 };
 
 /* ---------------- 订单卡 ---------------- */
@@ -119,7 +142,7 @@ function OrderCard({
   /** 补缺大批片 4：本单发票申请（在途/已开具）→「发票进度 ›」；null=未申请 →「申请发票 ›」 */
   invoice: { id: string } | null;
 }) {
-  const meta = STATUS_META[order.status] ?? { label: order.status, pill: 'bg-sunken text-ink-secondary' };
+  const meta = STATUS_META[order.status];
   const qty = order.items.reduce((n, it) => n + it.quantity, 0);
   /* 补缺大批片 4：发票入口显态=paid/shipped/received（server invoiceCreate 同口径已付闸） */
   const invoiceEntry = ['paid', 'shipped', 'received'].includes(order.status) ? (
@@ -128,7 +151,7 @@ function OrderCard({
       data-testid={`order-invoice-${order.id}`}
       className="rounded-full bg-card px-4 py-2 text-body-sm font-semibold text-ink ring-1 ring-line-ring transition-transform duration-120 ease-philia-spring active:scale-92"
     >
-      {invoice ? sl('inv.progressEntry') : sl('inv.applyEntry')}
+      {invoice ? <CK k="inv.progressEntry">{sl('inv.progressEntry')}</CK> : <CK k="inv.applyEntry">{sl('inv.applyEntry')}</CK>}
     </Link>
   ) : null;
 
@@ -140,14 +163,16 @@ function OrderCard({
       <div className="flex items-center justify-between">
         <p className="flex items-center gap-1.5 text-body-sm font-semibold">
           <Package className="h-4 w-4 text-ink-secondary" strokeWidth={1.5} />
-          {order.storeName ?? '菲丽亚门店'}
+          {order.storeName ?? mlc('mall.storeFallback')}
           {order.deliveryMethod ? (
             <span className="rounded-chip bg-sunken px-[7px] py-0.5 font-number text-[9px] text-ink-secondary" data-testid={`order-delivery-${order.id}`}>
               {DELIVERY_LABEL[order.deliveryMethod] ?? order.deliveryMethod}
             </span>
           ) : null}
         </p>
-        <span className={`rounded-chip px-[7px] py-0.5 text-caption-xs font-semibold ${meta.pill}`}>{meta.label}</span>
+        <span className={`rounded-chip px-[7px] py-0.5 text-caption-xs font-semibold ${meta?.pill ?? 'bg-sunken text-ink-secondary'}`}>
+          {meta ? <CK k={meta.labelKey}>{mlc(meta.labelKey)}</CK> : order.status}
+        </span>
       </div>
       <p className="mt-1 font-number text-caption-xs text-ink-placeholder">
         {order.orderNo} · {fmtOrderTime(order.createdAt)}
@@ -171,7 +196,7 @@ function OrderCard({
 
       {/* 合计（试样价格位=墨色 Montserrat，非柠檬字） */}
       <div className="mt-3 flex items-center justify-end gap-1.5 border-t border-line-divider pt-3 text-body-sm">
-        <span className="text-ink-secondary">共 {qty} 件，合计</span>
+        <span className="text-ink-secondary"><CK k="mall.orderSumLine">{mlc('mall.orderSumLine', { qty })}</CK></span>
         <span className="u1-num font-bold text-ink">{fenToYuan(order.totalFen)}</span>
       </div>
 
@@ -182,7 +207,7 @@ function OrderCard({
             {order.address.receiver} · <span className="font-number">{order.address.phone}</span>
           </p>
           <p className="mt-0.5">{order.address.detail}</p>
-          <p className="mt-1.5 text-ink-placeholder">门店正在备货，请耐心等待</p>
+          <p className="mt-1.5 text-ink-placeholder"><CK k="mall.orderPreparing">{mlc('mall.orderPreparing')}</CK></p>
         </div>
       ) : null}
 
@@ -190,17 +215,17 @@ function OrderCard({
         <div className="mt-3 rounded-control bg-sunken px-3.5 py-2.5 text-caption text-ink-secondary">
           <p className="flex items-center gap-2">
             <Truck className="h-4 w-4 shrink-0 text-brand-primary" strokeWidth={1.5} />
-            快递单号 <span className="font-number text-ink">{order.trackingNo ?? '—'}</span>
+            <CK k="mall.trackingLabel">{mlc('mall.trackingLabel')}</CK> <span className="font-number text-ink">{order.trackingNo ?? '—'}</span>
           </p>
           {/* 片 3：物流注记（不接真轨迹接口，口径明面） */}
-          <p className="mt-1 pl-6 text-ink-placeholder">{mlc('mall.trackingNote')}</p>
+          <p className="mt-1 pl-6 text-ink-placeholder"><CK k="mall.trackingNote">{mlc('mall.trackingNote')}</CK></p>
         </div>
       ) : null}
 
       {order.status === 'received' ? (
         <p className="mt-3 flex items-center gap-1.5 text-caption text-success-deep">
           <BadgeCheck className="h-4 w-4" strokeWidth={1.5} />
-          已于 {fmtOrderTime(order.updatedAt)} 确认收货
+          <CK k="mall.orderReceived">{mlc('mall.orderReceived', { time: fmtOrderTime(order.updatedAt) })}</CK>
         </p>
       ) : null}
 
@@ -213,14 +238,14 @@ function OrderCard({
             onClick={() => onCancel(order)}
             className="rounded-full bg-card px-4 py-2 text-body-sm font-semibold text-ink ring-1 ring-line-ring transition-transform duration-120 ease-philia-spring active:scale-92"
           >
-            取消
+            <CK k="mall.cancelCta">{mlc('mall.cancelCta')}</CK>
           </button>
           <button
             type="button"
             onClick={() => onContinuePay(order)}
             className="rounded-full bg-brand-primary px-4 py-2 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
           >
-            去支付
+            <CK k="mall.goPay">{mlc('mall.goPay')}</CK>
           </button>
         </div>
       ) : null}
@@ -238,7 +263,7 @@ function OrderCard({
             onClick={() => onReceive(order)}
             className="rounded-full bg-brand-primary px-4 py-2 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
           >
-            确认收货
+            <CK k="mall.confirmReceive">{mlc('mall.confirmReceive')}</CK>
           </button>
         </div>
       ) : null}
@@ -256,7 +281,7 @@ function OrderCard({
               data-testid={`order-review-${order.id}`}
               className="rounded-full bg-card px-4 py-2 text-body-sm font-semibold text-ink ring-1 ring-line-ring transition-transform duration-120 ease-philia-spring active:scale-92"
             >
-              {rvc('rev.orderEntry')}
+              <CK k="rev.orderEntry">{rvc('rev.orderEntry')}</CK>
             </Link>
           ) : null}
           <button
@@ -265,7 +290,7 @@ function OrderCard({
             data-testid={`order-reorder-${order.id}`}
             className="rounded-full bg-brand-primary px-4 py-2 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
           >
-            再来一单
+            <CK k="mall.reorder">{mlc('mall.reorder')}</CK>
           </button>
         </div>
       ) : null}
@@ -326,7 +351,7 @@ function MallOrdersInner() {
           data-testid={`refund-maintain-${order.id}`}
           className="mt-3 border-t border-[rgba(59,46,36,.06)] pt-[11px] text-caption text-ink-secondary"
         >
-          {rc('refund.maintainNotice')}
+          <CK k="refund.maintainNotice">{rc('refund.maintainNotice')}</CK>
         </p>
       );
     }
@@ -335,13 +360,13 @@ function MallOrdersInner() {
       (r) => r.billId === order.id && ['submitted', 'approved', 'refunded'].includes(r.status),
     );
     const latest = refundRows.find((r) => r.billId === order.id);
-    const cta = open
-      ? { text: rc('refund.progressCta'), to: `/refunds/${open.id}` }
+    const cta: { key: RefundCopyKey; to: string } = open
+      ? { key: 'refund.progressCta', to: `/refunds/${open.id}` }
       : isRefunding
         ? latest
-          ? { text: rc('refund.viewProgressCta'), to: `/refunds/${latest.id}` }
-          : { text: rc('refund.viewProgressCta'), to: '/refunds' }
-        : { text: rc('refund.entryCta'), to: `/mall/orders/${order.id}/refund` };
+          ? { key: 'refund.viewProgressCta', to: `/refunds/${latest.id}` }
+          : { key: 'refund.viewProgressCta', to: '/refunds' }
+        : { key: 'refund.entryCta', to: `/mall/orders/${order.id}/refund` };
     return (
       <div className="mt-3 flex justify-end border-t border-[rgba(59,46,36,.06)] pt-[11px]">
         <Link
@@ -349,7 +374,7 @@ function MallOrdersInner() {
           data-testid={`refund-entry-${order.id}`}
           className="text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
         >
-          {cta.text}
+          <CK k={cta.key}>{rc(cta.key)}</CK>
         </Link>
       </div>
     );
@@ -364,6 +389,39 @@ function MallOrdersInner() {
       .filter((r) => r.orderKind === 'order')
       .map((r) => [r.billId, { id: r.id }]),
   );
+
+  /* ---- 画布全屏批 片 3 画布化入册：探针参 + 店锚 + 注册表块序/有效布局（同 MePage 工艺） ---- */
+  /* 画布预览探针参识别（?canvasPreview=1；微光正名批工艺三件套之一） */
+  const isCanvasPreview = useMemo(
+    () => new URLSearchParams(window.location.search).get('canvasPreview') === '1',
+    [],
+  );
+  /* 画布布局店锚（MemberCenterPage 口径：?canvasStore= 预览店锚 > 记忆门店 > 就近首店；
+     listNearby 与 MePage/MallPage 同 queryKey 缓存共享，零增发新种查询） */
+  const previewStoreId = useMemo(() => new URLSearchParams(window.location.search).get('canvasStore'), []);
+  const memoryStoreId = useMemo(() => readLastBooking()?.storeId ?? null, []);
+  const nearbyQ = useQuery({
+    queryKey: ['store', 'listNearby'],
+    queryFn: () => trpc.store.listNearby.query(),
+    enabled: previewStoreId === null && memoryStoreId === null,
+    staleTime: 300_000,
+  });
+  const mallOrdersStoreId = previewStoreId ?? memoryStoreId ?? nearbyQ.data?.stores?.[0]?.id ?? null;
+
+  /* 画布端口：注册表块序 + 有效布局（published→默认序尾补；空=默认序兜底常量） */
+  const blocksQ = useQuery({
+    queryKey: ['canvas', 'blocks'],
+    queryFn: () => trpc.canvas.blocks.query(),
+    staleTime: 300_000,
+    retry: 1,
+  });
+  const registryBlocks = useMemo(() => {
+    const items = (blocksQ.data?.items ?? [])
+      .filter((b) => b.pageKey === 'mallOrders')
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    return items.length > 0 ? items : MALL_ORDERS_DEFAULT_ORDER.map((blockKey) => ({ blockKey }));
+  }, [blocksQ.data]);
+  const layout = useCanvasLayout('mallOrders', mallOrdersStoreId, registryBlocks);
 
   // 滚动位置：持续记忆（rAF 节流）
   useEffect(() => {
@@ -414,7 +472,7 @@ function MallOrdersInner() {
         cart.addItem({
           productId: it.product_id,
           storeId: order.storeId,
-          storeName: order.storeName ?? '菲丽亚门店',
+          storeName: order.storeName ?? mlc('mall.storeFallback'),
           name: it.name,
           priceFen: it.price_fen,
           image: it.image ?? null,
@@ -422,7 +480,7 @@ function MallOrdersInner() {
           qty: it.quantity,
         });
       }
-      showToast('已按原单加入购物车', 'info');
+      showToast(mlc('mall.reorderToast'), 'info');
       navigate('/mall/cart');
     },
     [cart, navigate, showToast],
@@ -434,10 +492,10 @@ function MallOrdersInner() {
     onOrderEvent: useCallback(
       (ev: { type: string; data: Record<string, unknown> }) => {
         if (ev.type === 'order.paid') {
-          showToast('支付成功，门店会尽快发货', 'info');
+          showToast(mlc('mall.toastPaid'), 'info');
         } else if (ev.type === 'order.shipped') {
           const no = typeof ev.data.trackingNo === 'string' ? `（单号 ${ev.data.trackingNo}）` : '';
-          showToast(`订单已发货${no}`, 'info');
+          showToast(mlc('mall.toastShipped', { no }), 'info');
         }
         invalidateOrders();
       },
@@ -449,10 +507,10 @@ function MallOrdersInner() {
   const receiveM = useMutation({
     mutationFn: (orderId: string) => trpc.mall.receiveOrder.mutate({ orderId }),
     onSuccess: () => {
-      showToast('已确认收货，感谢购买', 'info');
+      showToast(mlc('mall.receiveOk'), 'info');
       invalidateOrders();
     },
-    onError: (err) => showToast(friendlyError(err, '确认收货失败', 80), 'error'),
+    onError: (err) => showToast(friendlyError(err, mlc('mall.receiveFail'), 80), 'error'),
     onSettled: () => setReceiveTarget(null),
   });
 
@@ -460,10 +518,10 @@ function MallOrdersInner() {
   const cancelM = useMutation({
     mutationFn: (orderId: string) => trpc.mall.cancelOrder.mutate({ orderId }),
     onSuccess: () => {
-      showToast('订单已取消，库存已释放', 'info');
+      showToast(mlc('mall.cancelOk'), 'info');
       invalidateOrders();
     },
-    onError: (err) => showToast(friendlyError(err, '取消失败，请稍后再试', 80), 'error'),
+    onError: (err) => showToast(friendlyError(err, mlc('mall.cancelFail'), 80), 'error'),
     onSettled: () => setCancelTarget(null),
   });
 
@@ -475,53 +533,22 @@ function MallOrdersInner() {
   const countOf = (t: (typeof TABS)[number]) =>
     t.statuses.reduce((n, s) => n + (groups[s]?.length ?? 0), 0);
   const totalCount = TABS.reduce((n, t) => n + countOf(t), 0);
+  const ordersReady = !ordersQ.isPending && !ordersQ.isError;
 
-  return (
-    /* U4-D3：页边距 22px（试样 .topbar/.order margin 口径） */
-    <div className="px-[22px] pb-6 pt-4">
-      {toastEl}
-      {/* U1-A：统一返回条（←圆钮+标题）；试样 09 顶栏「订单」+dock 为主级形态，
-          实现侧 /mall/orders 为商城子页（详情级无 dock，§0.4）——结构差异登记 */}
-      <PageHeader title={mlc('mall.ordersTitle')} />
+  /* 块渲染器（块内逻辑零改动——五块照改造前 JSX 逐字搬，文案走 copy 键 + CK 反查锚） */
+  const renderers: Record<string, () => ReactNode> = {
+    /* 1. mallOrders.head：页头（U1-A 统一返回条 ←圆钮+标题；试样 09 顶栏「订单」+dock 为主级
+          形态，实现侧 /mall/orders 为商城子页（详情级无 dock，§0.4）——结构差异登记） */
+    'mallOrders.head': () => (
+      <PageHeader title={<CK k="mall.ordersTitle">{mlc('mall.ordersTitle')}</CK>} />
+    ),
 
-      {ordersQ.isPending ? (
-        <div className="mt-5 space-y-3.5">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-36 rounded-panel" />
-          ))}
-        </div>
-      ) : ordersQ.isError ? (
-        <div className="mt-10 text-center">
-          <p className="text-body-sm text-ink-secondary">{mlc('mall.ordersLoadFail')}</p>
-          <button
-            type="button"
-            onClick={() => void ordersQ.refetch()}
-            className="mt-4 rounded-control bg-ink px-[30px] py-[13px] text-body-sm font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
-          >
-            重新加载
-          </button>
-        </div>
-      ) : totalCount === 0 ? (
-        /* U1-I：全域统一空态组件（余白区垂直居中）；批片 5 P2：订单系三句话经 MALL_COPY 取值，
-           出口钮=深棕墨底淡字（§4.11 空态件），落点=服务预约入口 /booking */
-        <div className="flex min-h-[56vh] flex-col justify-center">
-          <EmptyState
-            title={MALL_COPY['mall.orders.emptyTitle']}
-            desc={MALL_COPY['mall.orders.emptyBody']}
-            action={
-              <Link
-                to="/booking"
-                className="inline-flex items-center rounded-control bg-ink px-[30px] py-[13px] text-body-sm font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
-              >
-                {MALL_COPY['mall.orders.emptyCta']}
-              </Link>
-            }
-          />
-        </div>
-      ) : (
+    /* 2. mallOrders.tabs：状态分组签（U4-D3 对齐试样 .tabs：文字签+底部 hairline，
+          选中=墨 700+柠檬 2px 下划线；计数为真值保留；横滑条隐藏 D-补2）+
+          签内空态行（D-补3：不坍缩不裸框，居中一句话；仅当前签无单时出件） */
+    'mallOrders.tabs': () =>
+      ordersReady && totalCount > 0 ? (
         <>
-          {/* 状态分组签（U4-D3 对齐试样 .tabs：文字签+底部 hairline，
-              选中=墨 700+柠檬 2px 下划线；计数为真值保留；横滑条隐藏 D-补2） */}
           <div className="mt-3 flex gap-[18px] overflow-x-auto border-b border-[rgba(59,46,36,.06)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {TABS.map((t) => {
               const n = countOf(t);
@@ -536,79 +563,155 @@ function MallOrdersInner() {
                       : 'border-transparent font-medium text-ink-placeholder'
                   }`}
                 >
-                  {t.label}
+                  <CK k={t.labelKey}>{mlc(t.labelKey)}</CK>
                   {n > 0 ? <span className="u1-num ml-1 text-caption-xs font-normal">{n}</span> : null}
                 </button>
               );
             })}
           </div>
-
-          <div className="mt-3.5 space-y-3.5">
-            {items.length === 0 ? (
-              /* D-补3：签内空态不坍缩、不裸框——居中一句话 */
+          {items.length === 0 ? (
+            <div className="mt-3.5 space-y-3.5">
               <p className="py-12 text-center text-caption text-ink-placeholder">
-                {mlc('mall.ordersTabEmpty', { tab: active.label })}
+                <CK k="mall.ordersTabEmpty">{mlc('mall.ordersTabEmpty', { tab: mlc(active.labelKey) })}</CK>
               </p>
-            ) : (
-              items.map((o) => (
-                <OrderCard
-                  key={o.id}
-                  order={o}
-                  receiving={receiveM.isPending}
-                  refundSlot={refundSlotOf(o)}
-                  invoice={invoiceByBill.get(o.id) ?? null}
-                  onContinuePay={(order) =>
-                    setPayOrder({ id: order.id, orderNo: order.orderNo, totalFen: order.totalFen })
-                  }
-                  onReceive={(order) => setReceiveTarget(order)}
-                  onCancel={(order) => setCancelTarget(order)}
-                  onReorder={onReorder}
-                />
-              ))
-            )}
-          </div>
+            </div>
+          ) : null}
         </>
-      )}
+      ) : null,
 
-      {/* 继续支付：重走 mock 收银台 */}
-      {payOrder ? (
-        <CashierModal
-          order={payOrder}
-          showToast={showToast}
-          onPaid={() => {
-            setPayOrder(null);
-            showToast('支付成功，门店会尽快发货', 'info');
-            invalidateOrders();
+    /* 3. mallOrders.cardList：订单卡流（当前签分组并集按下单时间倒序；卡=U1-B 细线卡，
+          状态专属区/操作区/退款入口位/发票入口照改造前逐字） */
+    'mallOrders.cardList': () =>
+      ordersReady && totalCount > 0 && items.length > 0 ? (
+        <div className="mt-3.5 space-y-3.5">
+          {items.map((o) => (
+            <OrderCard
+              key={o.id}
+              order={o}
+              receiving={receiveM.isPending}
+              refundSlot={refundSlotOf(o)}
+              invoice={invoiceByBill.get(o.id) ?? null}
+              onContinuePay={(order) =>
+                setPayOrder({ id: order.id, orderNo: order.orderNo, totalFen: order.totalFen })
+              }
+              onReceive={(order) => setReceiveTarget(order)}
+              onCancel={(order) => setCancelTarget(order)}
+              onReorder={onReorder}
+            />
+          ))}
+        </div>
+      ) : null,
+
+    /* 4. mallOrders.empty：空态（U1-I 全域统一空态组件（余白区垂直居中）；批片 5 P2：
+          订单系三句话经 MALL_COPY 取值，出口钮=深棕墨底淡字（§4.11 空态件），
+          落点=服务预约入口 /booking；EmptyState title 为 string 位挂不上 CK，desc/action 挂 CK） */
+    'mallOrders.empty': () =>
+      ordersReady && totalCount === 0 ? (
+        <div className="flex min-h-[56vh] flex-col justify-center">
+          <EmptyState
+            title={MALL_COPY['mall.orders.emptyTitle']}
+            desc={<CK k="mall.orders.emptyBody">{MALL_COPY['mall.orders.emptyBody']}</CK>}
+            action={
+              <Link
+                to="/booking"
+                className="inline-flex items-center rounded-control bg-ink px-[30px] py-[13px] text-body-sm font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
+              >
+                <CK k="mall.orders.emptyCta">{MALL_COPY['mall.orders.emptyCta']}</CK>
+              </Link>
+            }
+          />
+        </div>
+      ) : null,
+
+    /* 5. mallOrders.sheets：二次确认弹层×2（确认收货 / 取消订单；ConfirmSheet=共享件，
+          props 为 string 位挂不上 CK——键如实列入 copyKeys，组件内无 CK 锚） */
+    'mallOrders.sheets': () => (
+      <>
+        {/* 确认收货二次确认 */}
+        <ConfirmSheet
+          open={!!receiveTarget}
+          title={mlc('mall.receiveConfirmTitle')}
+          desc={mlc('mall.receiveConfirmBody')}
+          confirmText={mlc('mall.confirmReceive')}
+          onCancel={() => setReceiveTarget(null)}
+          onConfirm={() => {
+            if (receiveTarget) receiveM.mutate(receiveTarget.id);
           }}
-          onGiveUp={() => setPayOrder(null)}
         />
-      ) : null}
 
-      {/* 确认收货二次确认 */}
-      <ConfirmSheet
-        open={!!receiveTarget}
-        title="确认已收到商品？"
-        desc="确认后订单将转为已完成，请确保商品已完好送达。"
-        confirmText="确认收货"
-        onCancel={() => setReceiveTarget(null)}
-        onConfirm={() => {
-          if (receiveTarget) receiveM.mutate(receiveTarget.id);
-        }}
-      />
+        {/* v1.1-b1：取消订单二次确认 */}
+        <ConfirmSheet
+          open={!!cancelTarget}
+          title={mlc('mall.cancelConfirmTitle')}
+          desc={mlc('mall.cancelConfirmBody')}
+          confirmText={mlc('mall.cancelConfirmCta')}
+          danger
+          onCancel={() => setCancelTarget(null)}
+          onConfirm={() => {
+            if (cancelTarget) cancelM.mutate(cancelTarget.id);
+          }}
+        />
+      </>
+    ),
+  };
 
-      {/* v1.1-b1：取消订单二次确认 */}
-      <ConfirmSheet
-        open={!!cancelTarget}
-        title="取消该订单？"
-        desc="取消后库存将释放，订单不可恢复。"
-        confirmText="确认取消"
-        danger
-        onCancel={() => setCancelTarget(null)}
-        onConfirm={() => {
-          if (cancelTarget) cancelM.mutate(cancelTarget.id);
-        }}
-      />
-    </div>
+  return (
+    /* U4-D3：页边距 22px（试样 .topbar/.order margin 口径） */
+    <CanvasLayoutLoader pageKey="mallOrders" storeId={mallOrdersStoreId}>
+      <div className="px-[22px] pb-6 pt-4">
+        {toastEl}
+        {/* 画布预览水印（?canvasPreview=1 探针模式；零真会话零写库口径注记） */}
+        {isCanvasPreview ? (
+          <div style={{ marginTop: 10 }}>
+            <p className="text-center text-caption-xs text-ink-secondary" data-testid="mallorders-canvas-preview-note">{mc('mc.canvasExampleNote')}</p>
+          </div>
+        ) : null}
+        {/* 块流：五块按有效布局渲染（隐藏块整段不渲染）；tabs/cardList/empty 块内互斥门控
+            照改造前（pending/error 页级状态不入块流，挂载于块流后=改造前头下位置，
+            此时余块自空不抢位）——默认序下 DOM 结构零差异 */}
+        {layout.map((b) =>
+          b.visible ? (
+            <section data-block-key={b.blockKey} key={b.blockKey}>
+              {renderers[b.blockKey]?.() ?? null}
+            </section>
+          ) : null,
+        )}
+
+        {/* 骨架/异常页级状态（不入块流；此时 tabs/cardList/empty 块自空） */}
+        {ordersQ.isPending ? (
+          <div className="mt-5 space-y-3.5">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-36 rounded-panel" />
+            ))}
+          </div>
+        ) : ordersQ.isError ? (
+          <div className="mt-10 text-center">
+            <p className="text-body-sm text-ink-secondary"><CK k="mall.ordersLoadFail">{mlc('mall.ordersLoadFail')}</CK></p>
+            <button
+              type="button"
+              onClick={() => void ordersQ.refetch()}
+              className="mt-4 rounded-control bg-ink px-[30px] py-[13px] text-body-sm font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
+            >
+              <CK k="mall.reload">{mlc('mall.reload')}</CK>
+            </button>
+          </div>
+        ) : null}
+
+        {/* 继续支付：重走 mock 收银台（弹层不入块流，照改造前位置挂载） */}
+        {payOrder ? (
+          <CashierModal
+            order={payOrder}
+            showToast={showToast}
+            onPaid={() => {
+              setPayOrder(null);
+              showToast(mlc('mall.toastPaid'), 'info');
+              invalidateOrders();
+            }}
+            onGiveUp={() => setPayOrder(null)}
+          />
+        ) : null}
+      </div>
+    </CanvasLayoutLoader>
   );
 }
 

@@ -10,14 +10,25 @@
  *   消费点诚实注记=「当前定位消费点=附近门店距离展示」（客户端现无距离行消费点，
  *   门店展示走门店地址不取定位——开关先行落偏好，点亮即生效，不造假）。
  * - 个保法口径注脚：拒绝不影响基本功能。
+ *
+ * 画布化（产品-1010 片 3 末片 · 账户域重屏批）：三块入册
+ * （privacy.head/switches/footnote），块序/显隐=useCanvasLayout('privacy')
+ * （published→注册表默认序尾补，空=默认序兜底常量）；文案键行内可改=CK 点选反查锚；
+ * 预览=CanvasLayoutLoader+?canvasPreview=1 水印注记。开关写路（setNotifyPref 真调端点
+ * 成功才翻转 / 定位 localStorage 偏好）零改动，data-testid 原值全保留。
  */
 
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
-import { useMe, usePhiliaClient } from '@philia/shared'
+import { useMemo, useState, type ReactNode } from 'react'
+import { CanvasLayoutLoader, CK, useCanvasLayout, useMe, usePhiliaClient } from '@philia/shared'
 import { Switch, useAccountToast } from '../components/account/common'
 import { PushBar } from '../components/member/v2'
+import { mc } from '../components/member/copy'
 import { acc } from '../copy/account'
+import { readLastBooking } from '@/lib/bookingPrefill'
+
+/** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
+const PRIVACY_DEFAULT_ORDER = ['privacy.head', 'privacy.switches', 'privacy.footnote'] as const
 
 const PREF_LOCATION_KEY = 'philia_pref_location'
 
@@ -37,9 +48,11 @@ function writePref(key: string, on: boolean) {
   }
 }
 
-/** 权限行（题+说明+开关+关闭 hint/注记） */
+/** 权限行（题+说明+开关+关闭 hint/注记）。画布批片 3：title/desc/hint/note 放宽
+    ReactNode 供 CK 锚；ariaLabel 单列 string（Switch 无障碍标签仍要纯文本） */
 function PermissionRow({
   title,
+  ariaLabel,
   desc,
   hint,
   note,
@@ -49,10 +62,12 @@ function PermissionRow({
   onToggle,
   testId,
 }: {
-  title: string
-  desc: string
-  hint?: string
-  note?: string
+  title: ReactNode
+  /** Switch aria-label 纯文本（=题面 copy 键原值，调用方随行传入） */
+  ariaLabel: string
+  desc: ReactNode
+  hint?: ReactNode
+  note?: ReactNode
   on: boolean
   busy: boolean
   /** 置灰锁定行（不可关闭类）：开关恒开 + 锁态注记，不给假开关写路 */
@@ -68,7 +83,7 @@ function PermissionRow({
             <span className="text-body font-semibold text-ink">{title}</span>
             {locked ? (
               <span className="shrink-0 rounded-chip bg-sunken px-[7px] py-0.5 text-caption-xs font-semibold text-ink-secondary">
-                {acc('privacy.lockedNote')}
+                <CK k="privacy.lockedNote">{acc('privacy.lockedNote')}</CK>
               </span>
             ) : null}
           </div>
@@ -79,11 +94,11 @@ function PermissionRow({
           onToggle={onToggle ?? (() => {})}
           disabled={busy || locked}
           testId={testId}
-          ariaLabel={title}
+          ariaLabel={ariaLabel}
         />
       </div>
       {!locked && !on && hint ? <p className="m2-note mt-2">{hint}</p> : null}
-      {locked ? <p className="m2-note mt-2">{acc('privacy.lockedWhy')}</p> : null}
+      {locked ? <p className="m2-note mt-2"><CK k="privacy.lockedWhy">{acc('privacy.lockedWhy')}</CK></p> : null}
       {note ? <p className="m2-note mt-1.5">{note}</p> : null}
     </div>
   )
@@ -134,67 +149,144 @@ export default function PrivacyPage() {
     writePref(PREF_LOCATION_KEY, next)
   }
 
-  return (
-    <div className="m2" data-testid="privacy-page" style={{ minHeight: '100vh' }}>
-      <PushBar label={acc('privacy.pushLabel')} fallback="/me/settings" />
-      <div className="m2-apphead">
-        <span className="tt">{acc('privacy.title')}</span>
-      </div>
+  /* 画布批片 3：预览探针参识别（?canvasPreview=1；微光正名批工艺三件套之一） */
+  const isCanvasPreview = useMemo(
+    () => new URLSearchParams(window.location.search).get('canvasPreview') === '1',
+    [],
+  )
+  /* 画布布局店锚（MePage/MemberCenterPage 口径：?canvasStore= 预览店锚 > 记忆门店 > 就近首店；
+     本屏无门店概念，nearbyQ 带 enabled 闸仅作布局锚解析，零增发常态查询） */
+  const previewStoreId = useMemo(() => new URLSearchParams(window.location.search).get('canvasStore'), [])
+  const memoryStoreId = useMemo(() => readLastBooking()?.storeId ?? null, [])
+  const nearbyQ = useQuery({
+    queryKey: ['store', 'listNearby'],
+    queryFn: () => trpc.store.listNearby.query(),
+    enabled: previewStoreId === null && memoryStoreId === null,
+    staleTime: 300_000,
+  })
+  const canvasStoreId = previewStoreId ?? memoryStoreId ?? nearbyQ.data?.stores?.[0]?.id ?? null
 
-      <div className="m2-pad" style={{ marginTop: 14, paddingBottom: 60 }}>
-        <div className="m2-card overflow-hidden">
-          <PermissionRow
-            title={acc('privacy.marketingLabel')}
-            desc={acc('privacy.marketingDesc')}
-            hint={acc('privacy.marketingOffHint')}
-            note={marketingOn && unreadCount > 0 ? acc('privacy.notifyUnread') : undefined}
-            on={marketingOn}
-            busy={notifyBusy || prefsQ.isPending}
-            onToggle={() => void toggleMarketing()}
-            testId="privacy-notify-switch"
-          />
-          {/* 交易/服务/账户=不可关组（置灰 + 锁态注记，不给假开关） */}
-          <PermissionRow
-            title={acc('privacy.tradeLabel')}
-            desc={acc('privacy.tradeDesc')}
-            on
-            busy={false}
-            locked
-            testId="privacy-trade-switch"
-          />
-          <PermissionRow
-            title={acc('privacy.serviceLabel')}
-            desc={acc('privacy.serviceDesc')}
-            on
-            busy={false}
-            locked
-            testId="privacy-service-switch"
-          />
-          <PermissionRow
-            title={acc('privacy.accountLabel')}
-            desc={acc('privacy.accountDesc')}
-            on
-            busy={false}
-            locked
-            testId="privacy-account-switch"
-          />
-          <PermissionRow
-            title={acc('privacy.locationTitle')}
-            desc={acc('privacy.locationDesc')}
-            hint={acc('privacy.locationOffHint')}
-            note={acc('privacy.locationNote')}
-            on={locationOn}
-            busy={false}
-            onToggle={toggleLocation}
-            testId="privacy-location-switch"
-          />
+  /* ---- 画布端口：注册表块序 + 有效布局（published→默认序尾补；空=默认序兜底常量） ---- */
+  const blocksQ = useQuery({
+    queryKey: ['canvas', 'blocks'],
+    queryFn: () => trpc.canvas.blocks.query(),
+    staleTime: 300_000,
+    retry: 1,
+  })
+  const registryBlocks = useMemo(() => {
+    const items = (blocksQ.data?.items ?? [])
+      .filter((b) => b.pageKey === 'privacy')
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+    return items.length > 0 ? items : PRIVACY_DEFAULT_ORDER.map((blockKey) => ({ blockKey }))
+  }, [blocksQ.data])
+  const layout = useCanvasLayout('privacy', canvasStoreId, registryBlocks)
+
+  /* 块渲染器（块内逻辑零改动——三块照改造前 JSX 逐字搬，文案走 copy 键 + CK 反查锚） */
+  const renderers: Record<string, () => ReactNode> = {
+    /* 1. privacy.head：PushBar 返回条 + m2 大题页头（PushBar label 为 string prop 无 CK 锚） */
+    'privacy.head': () => (
+      <>
+        <PushBar label={acc('privacy.pushLabel')} fallback="/me/settings" />
+        <div className="m2-apphead">
+          <span className="tt"><CK k="privacy.title">{acc('privacy.title')}</CK></span>
         </div>
+      </>
+    ),
 
-        <p className="m2-note mt-4 text-center" data-testid="privacy-footnote">
-          {acc('privacy.footnote')}
-        </p>
+    /* 2. privacy.switches：权限开关组整块（营销可关真写路 + 交易/服务/账户置灰锁态
+          + 定位偏好先行；五行原序逐字搬） */
+    'privacy.switches': () => (
+      <div className="m2-card overflow-hidden">
+        <PermissionRow
+          title={<CK k="privacy.marketingLabel">{acc('privacy.marketingLabel')}</CK>}
+          ariaLabel={acc('privacy.marketingLabel')}
+          desc={<CK k="privacy.marketingDesc">{acc('privacy.marketingDesc')}</CK>}
+          hint={<CK k="privacy.marketingOffHint">{acc('privacy.marketingOffHint')}</CK>}
+          note={marketingOn && unreadCount > 0 ? <CK k="privacy.notifyUnread">{acc('privacy.notifyUnread')}</CK> : undefined}
+          on={marketingOn}
+          busy={notifyBusy || prefsQ.isPending}
+          onToggle={() => void toggleMarketing()}
+          testId="privacy-notify-switch"
+        />
+        {/* 交易/服务/账户=不可关组（置灰 + 锁态注记，不给假开关） */}
+        <PermissionRow
+          title={<CK k="privacy.tradeLabel">{acc('privacy.tradeLabel')}</CK>}
+          ariaLabel={acc('privacy.tradeLabel')}
+          desc={<CK k="privacy.tradeDesc">{acc('privacy.tradeDesc')}</CK>}
+          on
+          busy={false}
+          locked
+          testId="privacy-trade-switch"
+        />
+        <PermissionRow
+          title={<CK k="privacy.serviceLabel">{acc('privacy.serviceLabel')}</CK>}
+          ariaLabel={acc('privacy.serviceLabel')}
+          desc={<CK k="privacy.serviceDesc">{acc('privacy.serviceDesc')}</CK>}
+          on
+          busy={false}
+          locked
+          testId="privacy-service-switch"
+        />
+        <PermissionRow
+          title={<CK k="privacy.accountLabel">{acc('privacy.accountLabel')}</CK>}
+          ariaLabel={acc('privacy.accountLabel')}
+          desc={<CK k="privacy.accountDesc">{acc('privacy.accountDesc')}</CK>}
+          on
+          busy={false}
+          locked
+          testId="privacy-account-switch"
+        />
+        <PermissionRow
+          title={<CK k="privacy.locationTitle">{acc('privacy.locationTitle')}</CK>}
+          ariaLabel={acc('privacy.locationTitle')}
+          desc={<CK k="privacy.locationDesc">{acc('privacy.locationDesc')}</CK>}
+          hint={<CK k="privacy.locationOffHint">{acc('privacy.locationOffHint')}</CK>}
+          note={<CK k="privacy.locationNote">{acc('privacy.locationNote')}</CK>}
+          on={locationOn}
+          busy={false}
+          onToggle={toggleLocation}
+          testId="privacy-location-switch"
+        />
       </div>
-      {toastEl}
-    </div>
+    ),
+
+    /* 3. privacy.footnote：页脚合规注记（个保法最小必要口径） */
+    'privacy.footnote': () => (
+      <p className="m2-note mt-4 text-center" data-testid="privacy-footnote">
+        <CK k="privacy.footnote">{acc('privacy.footnote')}</CK>
+      </p>
+    ),
+  }
+
+  return (
+    <CanvasLayoutLoader pageKey="privacy" storeId={canvasStoreId}>
+      <div className="m2" data-testid="privacy-page" style={{ minHeight: '100vh' }}>
+        {/* 画布预览水印（?canvasPreview=1 探针模式；零真会话零写库口径注记） */}
+        {isCanvasPreview ? (
+          <div className="m2-pad" style={{ marginTop: 10 }}>
+            <p className="m2-note" style={{ margin: 0, textAlign: 'center' }} data-testid="privacy-canvas-preview-note">{mc('mc.canvasExampleNote')}</p>
+          </div>
+        ) : null}
+        {/* 块流：privacy.head=页头裸段置顶（PushBar+大题原在 m2-pad 外，照 MePage 惯例）；
+            余块共享 m2-pad 容器——默认序下视觉零差异 */}
+        {layout.map((b) =>
+          b.visible && b.blockKey === 'privacy.head' ? (
+            <section data-block-key={b.blockKey} key={b.blockKey}>
+              {renderers[b.blockKey]?.() ?? null}
+            </section>
+          ) : null,
+        )}
+        <div className="m2-pad" style={{ marginTop: 14, paddingBottom: 60 }}>
+          {layout.map((b) =>
+            b.visible && b.blockKey !== 'privacy.head' ? (
+              <section data-block-key={b.blockKey} key={b.blockKey}>
+                {renderers[b.blockKey]?.() ?? null}
+              </section>
+            ) : null,
+          )}
+        </div>
+        {toastEl}
+      </div>
+    </CanvasLayoutLoader>
   )
 }
