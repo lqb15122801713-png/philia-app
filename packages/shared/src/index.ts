@@ -34,9 +34,19 @@ export {
   useCanvasLayout,
   CanvasProbeMount,
   CANVAS_PATCH_EVENT,
+  PerkIcon,
+  usePerkWallCells,
 } from './canvasLayout';
 export type { CanvasPageKey, CanvasBlockSpec } from './canvasLayout';
 export { CK } from './canvasLayout';
+// 权益墙格清单写死件（产品-1010 片 1）：七格定义+图标白名单（形状数据）+格序解析（双端同源；渲染件 PerkIcon 在 canvasLayout）
+export {
+  PERK_WALL_ITEMS,
+  PERK_ICON_SET,
+  perkWallDefaultCells,
+  resolvePerkWallCells,
+} from './perkWall';
+export type { PerkKey, PerkIconKey, PerkWallItemDef, PerkWallCellSpec, PerkIconShape } from './perkWall';
 // 画布预览文案 patch（端口批收尾片 3：单键写覆盖图不落库）
 export { patchCopyOverride } from './copyOverrides';
 // hooks 显式导出：EventEnvelope 以契约形（data: any）覆盖 constants/events 的同名导出

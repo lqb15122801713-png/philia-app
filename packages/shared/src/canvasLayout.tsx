@@ -16,22 +16,25 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { usePhiliaClient } from './api/client';
 import { patchCopyOverride } from './copyOverrides';
+import { PERK_ICON_SET, resolvePerkWallCells, type PerkIconKey, type PerkIconShape, type PerkWallCellSpec } from './perkWall';
 
 export type CanvasPageKey = 'home' | 'memberCenter' | 'cashierMarketing';
 
 export interface CanvasBlockSpec {
   blockKey: string;
   visible: boolean;
+  /** 权益墙格级布局（产品-1010 片 1：仅 mc.perksWall 块携带；格序+图标选换，白名单解析在 perkWall.ts） */
+  perks?: Array<{ key: string; icon: string }>; // 契约宽松位（server $type 同形）；渲染前经 resolvePerkWallCells 收窄
 }
 
 /** 布局图（pageKey→published/预览块序；仅含已透出行） */
 const layoutMap = new Map<string, CanvasBlockSpec[]>();
 
-/** 写入布局图（Loader 拉取/探针 patch 后调用；整页替换） */
+/** 写入布局图（Loader 拉取/探针 patch 后调用；整页替换；perks 位随行保留） */
 export function setCanvasLayout(pageKey: string, blocks: CanvasBlockSpec[]): void {
   layoutMap.set(
     pageKey,
-    blocks.map((b) => ({ blockKey: b.blockKey, visible: b.visible !== false })),
+    blocks.map((b) => ({ blockKey: b.blockKey, visible: b.visible !== false, ...(b.perks ? { perks: b.perks } : {}) })),
   );
 }
 
@@ -113,7 +116,7 @@ export function useCanvasLayout(
       for (const b of live) {
         if (seen.has(b.blockKey)) continue;
         seen.add(b.blockKey);
-        out.push({ blockKey: b.blockKey, visible: b.visible !== false });
+        out.push({ blockKey: b.blockKey, visible: b.visible !== false, ...(b.perks ? { perks: b.perks } : {}) });
       }
     }
     for (const r of registryBlocks) {
@@ -168,4 +171,60 @@ export function CanvasProbeMount() {
     };
   }, [active]);
   return null;
+}
+
+
+/* ------------------------------------------------------------------ */
+/* 权益墙格级读口+图标渲染件（产品-1010 片 1；数据=./perkWall 纯数据件）      */
+/* ------------------------------------------------------------------ */
+
+/** SVG 形状递归渲染（PerkIconShape 数据→SVG 子元素） */
+function renderShapes(shapes: readonly PerkIconShape[]): ReactNode {
+  return shapes.map((s, i) => {
+    if (s.tag === 'g') return <g key={i}>{renderShapes(s.children ?? [])}</g>;
+    if (s.tag === 'circle') return <circle key={i} {...(s.attrs as Record<string, string | number> | undefined)} />;
+    if (s.tag === 'rect') return <rect key={i} {...(s.attrs as Record<string, string | number> | undefined)} />;
+    return <path key={i} {...(s.attrs as Record<string, string | number> | undefined)} />;
+  });
+}
+
+/** 权益墙图标渲染件（白名单选换；线性统一 stroke；调用方给尺寸/色） */
+export function PerkIcon({ icon, className }: { icon: PerkIconKey; className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {renderShapes(PERK_ICON_SET[icon])}
+    </svg>
+  );
+}
+
+/**
+ * 权益墙格序读口 hook（产品-1010 片 1 · 双屏同帧单源）：读会员中心 published 布局的
+ * mc.perksWall 块 perks 位（会员中心页=权益墙格序的归属页/编辑面）——开通页等无画布注册的
+ * 页读本行=双屏同序。预览 patch 优先（CANVAS_PATCH_EVENT bump 重算=画布实时预览管道）。
+ */
+export function usePerkWallCells(storeId: string | null): PerkWallCellSpec[] {
+  const { trpc } = usePhiliaClient();
+  const [bump, setBump] = useState(0);
+  useEffect(() => {
+    const h = () => setBump((x) => x + 1);
+    window.addEventListener(CANVAS_PATCH_EVENT, h);
+    return () => window.removeEventListener(CANVAS_PATCH_EVENT, h);
+  }, []);
+  const q = useQuery({
+    queryKey: ['canvas', 'liveLayout', 'memberCenter', storeId],
+    queryFn: () => trpc.canvas.liveLayout.query({ pageKey: 'memberCenter', storeId: storeId! }),
+    enabled: storeId !== null,
+    staleTime: 60_000,
+    refetchInterval: 120_000,
+    retry: 1,
+  });
+  useEffect(() => {
+    if (q.data?.blocks) setCanvasLayout('memberCenter', q.data.blocks);
+  }, [q.data]);
+  return useMemo(() => {
+    const live = canvasLayoutOf('memberCenter') ?? q.data?.blocks ?? null;
+    const wall = live?.find((b) => b.blockKey === 'mc.perksWall');
+    return resolvePerkWallCells(wall?.perks ?? null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q.data, bump]);
 }

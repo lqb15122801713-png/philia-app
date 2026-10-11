@@ -25,7 +25,7 @@ import { errMsg, fmtDateTime } from '../components/staff-admin/format';
 import { Badge, Btn, Field, inputCls, Modal, numStyle, Switch, toast, ToasterMount } from '../components/staff-admin/ui';
 import { cv } from '../copy/canvas';
 import { canvasPreviewUrl, parsePreviewPortMap } from './canvasPreviewUrl';
-import type { CanvasBlockSpec, CanvasPageKey } from '@philia/shared';
+import { PERK_WALL_ITEMS, PerkIcon, PERK_ICON_SET, resolvePerkWallCells, type CanvasBlockSpec, type CanvasPageKey, type PerkWallCellSpec } from '@philia/shared';
 
 type Trpc = PhiliaClient['trpc'];
 type BlocksOut = Awaited<ReturnType<Trpc['canvas']['blocks']['query']>>;
@@ -244,6 +244,22 @@ export function CanvasPortBody() {
     }
     void doCopySave(copyKey, text);
   };
+
+  /* ---------------- 权益墙格级（产品-1010 片 1：mc.perksWall 块专属；格序=布局数据 perks 位） ---------------- */
+  const wallSpec = editBlocks.find((b) => b.blockKey === 'mc.perksWall');
+  const wallCells = resolvePerkWallCells(wallSpec?.perks ?? null);
+  const setWallCells = (cells: PerkWallCellSpec[]) =>
+    markDirty(editBlocks.map((b) => (b.blockKey === 'mc.perksWall' ? { ...b, perks: cells } : b)));
+  const moveWallCell = (idx: number, dir: -1 | 1) => {
+    const j = idx + dir;
+    if (j < 0 || j >= wallCells.length) return;
+    const next = [...wallCells];
+    const [moved] = next.splice(idx, 1);
+    next.splice(j, 0, moved!);
+    setWallCells(next);
+  };
+  const setWallCellIcon = (key: string, icon: string) =>
+    setWallCells(wallCells.map((c) => (c.key === key ? { ...c, icon: icon as PerkWallCellSpec['icon'] } : c)));
 
   /* ---------------- 保存草稿 / 发布 / 回退 ---------------- */
   const [busy, setBusy] = useState(false);
@@ -469,6 +485,76 @@ export function CanvasPortBody() {
                         </div>
                       );
                     })}
+
+                    {/* 产品-1010 片 1：权益墙格级子区（mc.perksWall 专属）——格序 ↑↓ 移入布局数据+
+                        图标白名单选换+格名/副签=copy 键行内编辑（perk.* 高危族口令复核照既有闸）+
+                        数值面=档端口透出（跳口不改数） */}
+                    {b.blockKey === 'mc.perksWall' && pageKey === 'memberCenter' ? (
+                      <div className="mt-2 border-t border-[rgba(59,46,36,.06)] pt-2" data-testid="canvas-perkwall-cells">
+                        <div className="mb-1.5 flex items-center gap-2">
+                          <span className="text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">权益墙格子（七格）</span>
+                          <span className="text-caption-xs text-[rgba(59,46,36,.42)]">格序/图标进布局；几折/几%/含几只=数值走会员档端口</span>
+                          <Link to="/console?port=member_plans" className="ml-auto text-caption-xs font-bold text-ink underline underline-offset-2" data-testid="canvas-perkwall-goto-plans">
+                            去会员档改数 ›
+                          </Link>
+                        </div>
+                        {wallCells.map((cell, ci) => {
+                          const def = PERK_WALL_ITEMS.find((i) => i.key === cell.key)!;
+                          return (
+                            <div key={cell.key} className="mb-2 rounded-control bg-card px-2 py-2 ring-1 ring-line-ring" data-testid={`canvas-perkcell-${cell.key}`}>
+                              <div className="flex items-center gap-2">
+                                <span className="flex shrink-0 flex-col">
+                                  <button type="button" aria-label={`up ${cell.key}`} data-testid={`canvas-perkcell-up-${cell.key}`} disabled={ci === 0} onClick={() => moveWallCell(ci, -1)} className="text-caption-xs text-[rgba(59,46,36,.62)] disabled:opacity-30">▲</button>
+                                  <button type="button" aria-label={`down ${cell.key}`} data-testid={`canvas-perkcell-down-${cell.key}`} disabled={ci === wallCells.length - 1} onClick={() => moveWallCell(ci, 1)} className="text-caption-xs text-[rgba(59,46,36,.62)] disabled:opacity-30">▼</button>
+                                </span>
+                                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-chip bg-canvas">
+                                  <PerkIcon icon={cell.icon} className="h-4 w-4 text-[rgba(59,46,36,.75)]" />
+                                </span>
+                                <span className="text-caption-xs font-semibold text-ink">{def.label}</span>
+                                <select
+                                  className="ml-auto rounded-control bg-card px-2 py-1 text-caption-xs text-ink ring-1 ring-line-ring"
+                                  value={cell.icon}
+                                  onChange={(e) => setWallCellIcon(cell.key, e.target.value)}
+                                  data-testid={`canvas-perkcell-icon-${cell.key}`}
+                                >
+                                  {Object.keys(PERK_ICON_SET).map((ik) => (
+                                    <option key={ik} value={ik}>{ik}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              {[def.titleCopyKey, def.subCopyKey, def.subFreeCopyKey, def.subNoneCopyKey].filter((k): k is string => !!k).map((k) => {
+                                const cur = copyByKey.get(k);
+                                const draft = copyDrafts[k] ?? cur?.text ?? '';
+                                const changed = copyDrafts[k] !== undefined && copyDrafts[k] !== (cur?.text ?? '');
+                                return (
+                                  <div key={k} className="mt-1.5 flex items-center gap-2">
+                                    <span className="w-40 shrink-0 truncate text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
+                                      {k}
+                                      {cur?.highRisk ? <Badge tone="danger">{cv('canvas.copyHighRiskWarn')}</Badge> : null}
+                                    </span>
+                                    <input
+                                      className={inputCls}
+                                      data-testid={`canvas-copy-${k}`}
+                                      ref={(el) => {
+                                        if (el) copyInputRefs.current.set(k, el);
+                                        else copyInputRefs.current.delete(k);
+                                      }}
+                                      value={draft}
+                                      maxLength={2000}
+                                      placeholder={cur ? undefined : '—'}
+                                      onChange={(e) => setCopyDrafts((prev) => ({ ...prev, [k]: e.target.value }))}
+                                    />
+                                    <Btn variant="subtle" size="sm" data-testid={`canvas-copy-save-${k}`} disabled={!changed || copyBusy === k} onClick={() => copySave(k)}>
+                                      {cv('canvas.copySave')}
+                                    </Btn>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : null}
                   </div>
                 );
               })}

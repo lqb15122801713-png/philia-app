@@ -11313,6 +11313,93 @@ async function main(): Promise<void> {
       { checked: recon93.totals, renew: recon93po && recon93po.issue, mall: recon93mall && recon93mall.issue, m403: recon403 && recon403.httpStatus });
   }
 
+  /* ==================================================================
+   * 产品-1010 画布全屏批 片 1（权益墙数据区块）段：
+   *   94.1 格级布局（saveLayout 带 perks：换序+图标选换→draft→publish→liveLayout 透出）+
+   *       白名单校验（未知格/未知图标/非墙块携带 perks=400）；
+   *   94.2 格文案高危闸（perk.* 无确认 400/带确认 200——涉承诺话术闸既有内建实证）；
+   *   94.3 双屏同读（liveLayout 单源=开通页/会员中心同读一行）+缺省回退（无 perks 位=
+   *       resolvePerkWallCells 默认序=七格写死件序）；
+   *   族尾复原：memberCenter 回退上一版（照 85.1 工艺）防漂移。
+   * ================================================================== */
+  console.log('\n[产品-1010 片1] 94. 权益墙数据区块（格级编辑+高危闸+双屏同帧）');
+  {
+    const { PERK_WALL_ITEMS, resolvePerkWallCells } = await import('../../../packages/shared/src/perkWall');
+
+    /* 注册表 memberCenter 块集（完整排列=saveLayout 硬闸） */
+    const regAll94 = await trpcQuery<{ items: Array<{ blockKey: string; pageKey: string; sortOrder: number }> }>('canvas.blocks', { cookie: customerCookie });
+    const mcBlocks94 = regAll94.items.filter((b) => b.pageKey === 'memberCenter').sort((a, b) => a.sortOrder - b.sortOrder);
+    const basePerm94 = () => mcBlocks94.map((b) => ({ blockKey: b.blockKey, visible: true }));
+
+    /* ---- 94.1 格级布局：换序+图标选换 → 两步流透出 ---- */
+    const perksEdited = [
+      { key: 'birthday', icon: 'star' }, // 生日礼遇置顶+换星图标
+      ...PERK_WALL_ITEMS.filter((i) => i.key !== 'birthday').map((i) => ({ key: i.key, icon: i.defaultIcon })),
+    ];
+    const blocks94 = basePerm94().map((b) => (b.blockKey === 'mc.perksWall' ? { ...b, perks: perksEdited } : b));
+    await trpcMutate('canvas.saveLayout', { cookie: ownerCookie, input: { pageKey: 'memberCenter', blocks: blocks94 } });
+    const gl94 = await trpcQuery<{ draft: { id: string; blocksJson: Array<Record<string, unknown>> } | null }>('canvas.getLayout', { cookie: ownerCookie, input: { pageKey: 'memberCenter' } });
+    await trpcMutate('canvas.publishLayout', { cookie: ownerCookie, input: { versionId: gl94.draft!.id } });
+    const live94 = await trpcQuery<{ blocks: Array<{ blockKey: string; visible: boolean; perks?: Array<{ key: string; icon: string }> }> | null; version: number | null }>(
+      'canvas.liveLayout', { cookie: customerCookie, input: { pageKey: 'memberCenter', storeId } });
+    const wallLive94 = live94.blocks?.find((b) => b.blockKey === 'mc.perksWall');
+    const resolved94 = resolvePerkWallCells(wallLive94?.perks ?? null);
+    check('94.1 格级布局：换序+图标选换随布局透出（liveLayout perks 位=生日礼遇置顶+star 图标；解析序=编辑序）',
+      !!wallLive94?.perks && wallLive94.perks[0]!.key === 'birthday' && wallLive94.perks[0]!.icon === 'star' &&
+      resolved94[0]!.key === 'birthday' && resolved94[0]!.icon === 'star' && resolved94.length === 7,
+      { first: wallLive94?.perks?.[0], n: resolved94.length });
+
+    /* ---- 94.1b 白名单校验：未知格/未知图标/非墙块携带 perks=400 明文 ---- */
+    const badKey = await asErr(trpcMutate('canvas.saveLayout', {
+      cookie: ownerCookie,
+      input: { pageKey: 'memberCenter', blocks: basePerm94().map((b) => (b.blockKey === 'mc.perksWall' ? { ...b, perks: [{ key: 'vip', icon: 'star' }] } : b)) },
+    }));
+    const badIcon = await asErr(trpcMutate('canvas.saveLayout', {
+      cookie: ownerCookie,
+      input: { pageKey: 'memberCenter', blocks: basePerm94().map((b) => (b.blockKey === 'mc.perksWall' ? { ...b, perks: [{ key: 'pets', icon: 'crown' }] } : b)) },
+    }));
+    const wrongBlock = await asErr(trpcMutate('canvas.saveLayout', {
+      cookie: ownerCookie,
+      input: { pageKey: 'memberCenter', blocks: basePerm94().map((b) => (b.blockKey === 'mc.rules' ? { ...b, perks: [{ key: 'pets', icon: 'pets' }] } : b)) },
+    }));
+    check('94.1 白名单校验：未知格 400/未知图标 400/非墙块携带 perks 400（全明文）',
+      badKey instanceof TrpcHttpError && badKey.httpStatus === 400 && badKey.message.includes('不在白名单') &&
+      badIcon instanceof TrpcHttpError && badIcon.httpStatus === 400 && badIcon.message.includes('不在白名单') &&
+      wrongBlock instanceof TrpcHttpError && wrongBlock.httpStatus === 400 && wrongBlock.message.includes('权益墙'),
+      { badKey: badKey && badKey.message.slice(0, 40), badIcon: badIcon && badIcon.message.slice(0, 40), wrongBlock: wrongBlock && wrongBlock.message.slice(0, 40) });
+
+    /* ---- 94.2 格文案高危闸（perk.* 涉承诺话术=高危族口令复核，内建实证） ---- */
+    const perkNoConfirm = await asErr(trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'copy', changes: [{ ruleKey: 'perk.birthday', valueJson: { text: '生日当月送洗护 9 折券' } }] },
+    }));
+    const perkConfirmed = await trpcMutate<{ version: number }>('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'copy', changes: [{ ruleKey: 'perk.birthday', valueJson: { text: '生日当月送洗护 9 折券' } }], confirmedHighRisk: ['perk.birthday'] },
+    });
+    const perkReadBack = await trpcQuery<{ rows: Array<{ key: string; text: string }> }>('config.activeCopyTexts', { cookie: customerCookie });
+    check('94.2 格文案高危闸：perk.birthday 无确认 400（口令复核）/带确认保存生效+读口即新值',
+      perkNoConfirm instanceof TrpcHttpError && perkNoConfirm.httpStatus === 400 && perkNoConfirm.message.includes('高危') &&
+      typeof perkConfirmed.version === 'number' &&
+      (perkReadBack.rows.find((r) => r.key === 'perk.birthday')?.text === '生日当月送洗护 9 折券'),
+      { noConfirm: perkNoConfirm && perkNoConfirm.httpStatus, version: perkConfirmed.version });
+
+    /* ---- 94.3 双屏同读+缺省回退 ---- */
+    /* 缺省回退实证：perks 位空=解析=写死件默认序（七格定义序），零破面 */
+    const resolvedDefault94 = resolvePerkWallCells(null);
+    check('94.3 双屏同读=liveLayout 单一数据源（会员中心行=权益墙格序归属行，开通页读本行=同帧）+缺省回退=写死件默认序',
+      resolvedDefault94.map((c) => c.key).join(',') === PERK_WALL_ITEMS.map((i) => i.key).join(',') &&
+      resolvedDefault94.length === 7 && PERK_WALL_ITEMS.length === 7,
+      { order: resolvedDefault94.map((c) => c.key).join(',') });
+
+    /* 族尾复原：perk.birthday 文案复原码内默认（copy 端口值回写默认）+memberCenter 回退上一版 */
+    await trpcMutate('config.save', {
+      cookie: ownerCookie,
+      input: { domain: 'copy', changes: [{ ruleKey: 'perk.birthday', valueJson: { text: '生日礼遇' } }], confirmedHighRisk: ['perk.birthday'] },
+    });
+    await trpcMutate('canvas.revertLayout', { cookie: ownerCookie, input: { pageKey: 'memberCenter' } }).catch(() => null);
+  }
+
   client.close();
 }
 

@@ -2191,7 +2191,9 @@ export const blockRegistry = sqliteTable(
 /**
  * 页面布局表（画布端口 · 布局/内容=留口件）：page→区块序列 JSON+版本化+草稿/发布两步流
  * （第六域同族入列：draft→published[+archived]，单店单页单一 published[事务内互斥同 slot_contents 工艺]）；
- * blocksJson=[{blockKey, visible}]（顺序=渲染序；visible=false=显隐关）；blocksJson 不存的键=注册表默认序尾补。
+ * blocksJson=[{blockKey, visible, perks?}]（顺序=渲染序；visible=false=显隐关；perks=权益墙格级
+ * 格序+图标选换（产品-1010 片 1，仅 mc.perksWall 块携带，白名单=shared/perkWall 契约镜像））；
+ * blocksJson 不存的键=注册表默认序尾补。
  */
 export const pageLayouts = sqliteTable(
   'page_layouts',
@@ -2203,9 +2205,9 @@ export const pageLayouts = sqliteTable(
     /** 页面键（同 block_registry.page_key） */
     pageKey: text('page_key').notNull(),
     version: integer('version').notNull(),
-    /** 区块序列 JSON：[{blockKey, visible}] */
+    /** 区块序列 JSON：[{blockKey, visible, perks?}]（perks=权益墙格级格序+图标选换，片 1） */
     blocksJson: text('blocks_json', { mode: 'json' })
-      .$type<Array<{ blockKey: string; visible: boolean }>>()
+      .$type<Array<{ blockKey: string; visible: boolean; perks?: Array<{ key: string; icon: string }> }>>()
       .notNull(),
     /** 状态：draft（编辑中） | published（线上生效） | archived（历史留痕） */
     status: text('status').notNull().default('draft'),

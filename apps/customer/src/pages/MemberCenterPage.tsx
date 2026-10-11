@@ -31,7 +31,7 @@
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 import { useMemo, useState, type ReactNode } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { CanvasLayoutLoader, CK, useCanvasLayout, useMe, usePhiliaClient } from '@philia/shared'
+import { CanvasLayoutLoader, CK, resolvePerkWallCells, useCanvasLayout, useMe, usePhiliaClient } from '@philia/shared'
 import { mc } from '../components/member/copy'
 import { fmtDateTime } from '../components/account/common'
 import { readLastBooking } from '@/lib/bookingPrefill'
@@ -314,6 +314,8 @@ function A3Body({
     return items.length > 0 ? items : MC_DEFAULT_ORDER.map((blockKey) => ({ blockKey }))
   }, [blocksQ.data])
   const layout = useCanvasLayout('memberCenter', storeId, registryBlocks)
+  /* 产品-1010 片 1：权益墙格序/图标=布局数据（mc.perksWall 块 perks 位；缺省=写死件默认序） */
+  const perkWallCells = resolvePerkWallCells(layout.find((b) => b.blockKey === 'mc.perksWall')?.perks ?? null)
 
   const m = my.membership
   /* 分流（36 号档 §〇）：无档/已退会 → J-01 办理页 */
@@ -423,11 +425,11 @@ function A3Body({
       </>
     ),
 
-    /* 5. 权益墙（档跟随） */
+    /* 5. 权益墙（档跟随；片 1：格序/图标=画布布局数据） */
     'mc.perksWall': () => (
       <>
         <SecH title={<CK k="a3.perksTitle">{mc('a3.perksTitle', { tier })}</CK>} more={mc('a3.perksAllOn')} />
-        {plan ? <PerksWall plan={plan} /> : null}
+        {plan ? <PerksWall plan={plan} cells={perkWallCells} /> : null}
       </>
     ),
 
