@@ -34,31 +34,43 @@
  *   → panel 20 + 细线 ring；text-body(15) 越字阶处取 14；
  * - 维持不动（登记）：顶部问候语+关闭钮（试样为 serif wordmark+守护值，守护值无真值）；
  *   LV/进度条/喂食玩耍打扮拍照四钮无真实字段/接口（U1-F 禁做假互动在案）。
+ *
+ * 画布化（产品-1010 画布全屏批 片 3 · 特别裁 §五.2：本屏=只做文案+整块显隐，不做拖排
+ * ——全屏手势冲突；页面侧 layout.map 照模板渲染）：九块入册（philia.header/manifesto/
+ * petrail/tristats/booking/links/growthslot/birthdayslot/diary），块序/显隐=
+ * useCanvasLayout('philia')（published→注册表默认序尾补，空=F1_DEFAULT_ORDER 兜底）；
+ * 写死文案全抽 f1. 前缀新键（默认值=现写死文案逐字）并挂 CK(data-copy-key) 点选反查锚
+ * （aria 属性/ErrorState/EmptyState 的 string props 挂不上锚，如实入册注记）；
+ * philia.booking=复用 home 域共享件 HomeBookingPanel，键归 home 域引用不重复注册；
+ * ?canvasPreview=1 探针=水印注记行（mc.canvasExampleNote）；店锚=?canvasStore= 预览店锚 >
+ * 记忆门店 > 就近首店（MePage 同口径）。转场/下滑关闭手势/三数聚合/日记聚合零改动，
+ * data-testid 原值全保留。
  */
 
 import { useQuery } from '@tanstack/react-query'
 import { BookOpen, Camera, ChevronRight, IdCard, PawPrint, Plus, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { PhotoWall, useMe, usePhiliaClient } from '@philia/shared'
+import { CanvasLayoutLoader, CK, PhotoWall, useCanvasLayout, useMe, usePhiliaClient } from '@philia/shared'
 import type { PhotoWallPhoto } from '@philia/shared'
 import HomeBookingPanel from '../components/home/HomeBookingPanel'
-import { mc } from '../components/member/copy'
+import { mc, type MemberCopyKey } from '../components/member/copy'
 import {
   EmptyState,
   ErrorState,
   LoadingBlock,
   formatDateCn,
 } from '../components/home/common'
+import { readLastBooking } from '@/lib/bookingPrefill'
 
 const HAIRLINE = 'border-t border-line-ring'
 
-/** 按时段的问候语 */
-function greeting(): string {
+/** 按时段的问候语键位（早安/午安/晚安，文案=copy 键 f1.greet 三枚） */
+function greetingKey(): MemberCopyKey {
   const h = new Date().getHours()
-  if (h >= 5 && h < 11) return '早安'
-  if (h >= 11 && h < 18) return '午安'
-  return '晚安'
+  if (h >= 5 && h < 11) return 'f1.greetMorning'
+  if (h >= 11 && h < 18) return 'f1.greetNoon'
+  return 'f1.greetNight'
 }
 
 /** 日记条目：一次完成服务 + 一组前后对比照 */
@@ -71,14 +83,32 @@ interface DiaryEntry {
   after: PhotoWallPhoto
 }
 
-/** 养宠小贴士静态卡（日记不足 3 条时补齐） */
-const CARE_TIPS = [
-  { title: '定期驱虫', desc: '体外驱虫建议每月一次，体内驱虫每三个月一次，守护毛孩子健康。' },
-  { title: '梳毛的好处', desc: '每天梳毛 5 分钟，减少浮毛打结，还能增进和毛孩子的感情。' },
-  { title: '疫苗提醒', desc: '疫苗有效期临近时记得及时续种，寄养前需提供有效疫苗证明。' },
+/** 养宠小贴士静态卡键位（日记不足 3 条时补齐；文案=copy 键 f1.tip 三对） */
+const CARE_TIPS: ReadonlyArray<{ titleKey: MemberCopyKey; descKey: MemberCopyKey }> = [
+  { titleKey: 'f1.tip1Title', descKey: 'f1.tip1Desc' },
+  { titleKey: 'f1.tip2Title', descKey: 'f1.tip2Desc' },
+  { titleKey: 'f1.tip3Title', descKey: 'f1.tip3Desc' },
 ]
 
-const SPECIES_LABEL: Record<string, string> = { dog: '狗狗', cat: '猫咪', other: '小可爱' }
+/** 物种展示键位（狗狗/猫咪/小可爱，文案=copy 键 f1.species 三枚） */
+const SPECIES_LABEL_KEY: Record<string, MemberCopyKey> = {
+  dog: 'f1.speciesDog',
+  cat: 'f1.speciesCat',
+  other: 'f1.speciesOther',
+}
+
+/** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
+const F1_DEFAULT_ORDER = [
+  'philia.header',
+  'philia.manifesto',
+  'philia.petrail',
+  'philia.tristats',
+  'philia.booking',
+  'philia.links',
+  'philia.growthslot',
+  'philia.birthdayslot',
+  'philia.diary',
+] as const
 
 /** 当前宠物大头像横滑切换 */
 function PetAvatarRail() {
@@ -92,7 +122,7 @@ function PetAvatarRail() {
 
   if (petsQuery.isPending) return <LoadingBlock lines={1} className="h-40" />
   if (petsQuery.isError) {
-    return <ErrorState message="宠物档案加载失败" onRetry={() => void petsQuery.refetch()} />
+    return <ErrorState message={mc('f1.petLoadFail')} onRetry={() => void petsQuery.refetch()} />
   }
   const pets = petsQuery.data
 
@@ -107,9 +137,9 @@ function PetAvatarRail() {
           <Plus className="h-7 w-7 text-brand-primary" strokeWidth={1.5} />
         </span>
         <span className="flex-1">
-          <span className="block text-body-sm font-semibold">建立第一份宠物档案</span>
+          <span className="block text-body-sm font-semibold"><CK k="f1.petEmptyTitle">{mc('f1.petEmptyTitle')}</CK></span>
           <span className="mt-0.5 block text-caption text-ink-secondary">
-            记录 TA 的品种、生日与疫苗，开启菲丽亚之旅
+            <CK k="f1.petEmptyDesc">{mc('f1.petEmptyDesc')}</CK>
           </span>
         </span>
         <ChevronRight className="h-5 w-5 text-ink-placeholder" strokeWidth={1.5} />
@@ -151,7 +181,9 @@ function PetAvatarRail() {
             {/* U4-D2：宠物名衬线展示位（试样 .q-name）；物种·品种行取 11（试样 10px 越阶） */}
             <p className="u1-serif mt-3 text-title">{pet.name}</p>
             <p className="mt-0.5 text-caption-xs text-ink-secondary">
-              {SPECIES_LABEL[pet.species] ?? '小可爱'}
+              <CK k={SPECIES_LABEL_KEY[pet.species] ?? 'f1.speciesOther'}>
+                {mc(SPECIES_LABEL_KEY[pet.species] ?? 'f1.speciesOther')}
+              </CK>
               {pet.breed ? ` · ${pet.breed}` : ''}
             </p>
           </div>
@@ -208,7 +240,7 @@ function DiaryFeed() {
 
   if (diaryQuery.isPending) return <LoadingBlock lines={3} />
   if (diaryQuery.isError) {
-    return <ErrorState message="日记加载失败" onRetry={() => void diaryQuery.refetch()} />
+    return <ErrorState message={mc('f1.diaryLoadFail')} onRetry={() => void diaryQuery.refetch()} />
   }
 
   const entries = diaryQuery.data
@@ -218,8 +250,8 @@ function DiaryFeed() {
     <div className="flex flex-col gap-3">
       {entries.length === 0 ? (
         <EmptyState
-          title="日记还没有篇章"
-          desc="完成第一次洗护后，这里会留下 TA 的变美瞬间"
+          title={mc('f1.diaryEmptyTitle')}
+          desc={mc('f1.diaryEmptyDesc')}
         />
       ) : (
         entries.map((e) => (
@@ -238,9 +270,9 @@ function DiaryFeed() {
         const tip = CARE_TIPS[i % CARE_TIPS.length]!
         return (
           <article key={`tip-${i}`} className="rounded-panel bg-brand-primary-light p-4">
-            <p className="text-caption text-brand-primary-pressed">养宠小贴士</p>
-            <p className="mt-1 text-body-sm font-semibold">{tip.title}</p>
-            <p className="mt-1 text-caption text-ink-secondary">{tip.desc}</p>
+            <p className="text-caption text-brand-primary-pressed"><CK k="f1.tipTag">{mc('f1.tipTag')}</CK></p>
+            <p className="mt-1 text-body-sm font-semibold"><CK k={tip.titleKey}>{mc(tip.titleKey)}</CK></p>
+            <p className="mt-1 text-caption text-ink-secondary"><CK k={tip.descKey}>{mc(tip.descKey)}</CK></p>
           </article>
         )
       })}
@@ -248,10 +280,11 @@ function DiaryFeed() {
   )
 }
 
-const CAPSULES = [
-  { to: '/philia/pets', label: '宠物档案', desc: 'TA 的小档案', icon: PawPrint },
-  { to: '/member', label: '会员卡', desc: '专属身份', icon: IdCard },
-  { to: '/philia/moments', label: '服务相册', desc: '变美记录', icon: Camera },
+/** 入口行组键位（宠物档案/会员卡/服务相册，真实链路保留；文案=copy 键 f1.link 三对） */
+const CAPSULES: ReadonlyArray<{ to: string; labelKey: MemberCopyKey; descKey: MemberCopyKey; icon: typeof PawPrint }> = [
+  { to: '/philia/pets', labelKey: 'f1.linkPets', descKey: 'f1.linkPetsDesc', icon: PawPrint },
+  { to: '/member', labelKey: 'f1.linkCard', descKey: 'f1.linkCardDesc', icon: IdCard },
+  { to: '/philia/moments', labelKey: 'f1.linkMoments', descKey: 'f1.linkMomentsDesc', icon: Camera },
 ]
 
 const DAY_MS = 86_400_000
@@ -302,11 +335,12 @@ function TriStats() {
     : null
   const completedList = mineQ.data?.groups.completed ?? []
   const photoCount = photoCountQ.data ?? null
-  const items = [
-    { label: mc('f1.statDays'), value: joinDays !== null ? `${joinDays} 天` : null },
-    { label: mc('f1.statServices'), value: completedList.length > 0 ? `${completedList.length} 次` : null },
-    { label: mc('f1.statPhotos'), value: photoCount !== null && photoCount > 0 ? `${photoCount} 张` : null },
-  ].filter((i) => i.value !== null)
+  const itemsAll: Array<{ k: MemberCopyKey; label: string; value: string | null }> = [
+    { k: 'f1.statDays', label: mc('f1.statDays'), value: joinDays !== null ? `${joinDays} 天` : null },
+    { k: 'f1.statServices', label: mc('f1.statServices'), value: completedList.length > 0 ? `${completedList.length} 次` : null },
+    { k: 'f1.statPhotos', label: mc('f1.statPhotos'), value: photoCount !== null && photoCount > 0 ? `${photoCount} 张` : null },
+  ]
+  const items = itemsAll.filter((i) => i.value !== null)
   if (items.length === 0) return null
   return (
     <section
@@ -315,9 +349,9 @@ function TriStats() {
       className="mt-5 grid grid-cols-3 gap-2 border-y border-line-ring py-3"
     >
       {items.map((i) => (
-        <p key={i.label} className="text-center">
+        <p key={i.k} className="text-center">
           <span className="u1-num block text-title-lg font-bold leading-7">{i.value}</span>
-          <span className="mt-0.5 block text-caption-xs leading-4 text-ink-secondary">{i.label}</span>
+          <span className="mt-0.5 block text-caption-xs leading-4 text-ink-secondary"><CK k={i.k}>{i.label}</CK></span>
         </p>
       ))}
     </section>
@@ -326,6 +360,7 @@ function TriStats() {
 
 export default function PhiliaPage() {
   const navigate = useNavigate()
+  const { trpc } = usePhiliaClient()
   const { user } = useMe()
 
   // 进入转场：首帧 translateY(100%)，rAF 后归零（300ms ease-out 锁定）
@@ -363,145 +398,220 @@ export default function PhiliaPage() {
   const translateY = !entered ? '100%' : `${dragY}px`
   const withTransition = dragY === 0
 
-  return (
-    <div
-      ref={rootRef}
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-      className="fixed inset-0 z-sticky overflow-y-auto bg-canvas"
-      style={{
-        transform: `translateY(${translateY})`,
-        transition: withTransition ? 'transform 300ms cubic-bezier(0.33, 1, 0.68, 1)' : 'none',
-      }}
-      role="dialog"
-      aria-label="Philia 品牌空间"
-    >
-      <div className="mx-auto min-h-full max-w-lg px-4 pb-28">
-        {/* 顶部：问候语 + 关闭按钮 */}
-        <header className="flex items-start justify-between pt-8">
-          <div>
-            <h1 className="text-title-lg">
-              {greeting()}，{user?.nickname ?? '铲屎官'}
-            </h1>
-            <p className="mt-1 text-caption text-ink-secondary">
-              欢迎来到 Philia 品牌空间 · 今天也要好好爱 TA
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={close}
-            aria-label="关闭"
-            className="u1-ring flex h-11 w-11 items-center justify-center rounded-full bg-card transition-transform duration-120 ease-philia-spring active:scale-92"
-          >
-            <X className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
-          </button>
-        </header>
+  /* 画布预览探针参识别（?canvasPreview=1；微光正名批工艺三件套之一） */
+  const isCanvasPreview = useMemo(
+    () => new URLSearchParams(window.location.search).get('canvasPreview') === '1',
+    [],
+  )
+  /* 画布布局店锚（MePage 口径：?canvasStore= 预览店锚 > 记忆门店 > 就近首店） */
+  const previewStoreId = useMemo(() => new URLSearchParams(window.location.search).get('canvasStore'), [])
+  const memoryStoreId = useMemo(() => readLastBooking()?.storeId ?? null, [])
+  const nearbyQ = useQuery({
+    queryKey: ['store', 'listNearby'],
+    queryFn: () => trpc.store.listNearby.query(),
+    enabled: previewStoreId === null && memoryStoreId === null,
+    staleTime: 300_000,
+  })
+  const f1StoreId = previewStoreId ?? memoryStoreId ?? nearbyQ.data?.stores?.[0]?.id ?? null
 
-        {/* F-01 情感文案层（定稿 F-01 页首工艺）：mono eyebrow 9.5/.24em +
-            serif 宣言 24/900 lh1.55（片 2 落地；文案入 copy 键） */}
-        <div className="mt-6">
-          <p className="u1-num text-v2-trace uppercase tracking-[.24em] text-ink-secondary">
-            {mc('f1.eyebrow')}
+  /* ---- 画布端口：注册表块序 + 有效布局（published→默认序尾补；空=兜底常量） ---- */
+  const blocksQ = useQuery({
+    queryKey: ['canvas', 'blocks'],
+    queryFn: () => trpc.canvas.blocks.query(),
+    staleTime: 300_000,
+    retry: 1,
+  })
+  const registryBlocks = useMemo(() => {
+    const items = (blocksQ.data?.items ?? [])
+      .filter((b) => b.pageKey === 'philia')
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+    return items.length > 0 ? items : F1_DEFAULT_ORDER.map((blockKey) => ({ blockKey }))
+  }, [blocksQ.data])
+  const layout = useCanvasLayout('philia', f1StoreId, registryBlocks)
+
+  const greetKey = greetingKey()
+
+  /* ---- 九块渲染器（块内逻辑与改造前逐字一致；文案键挂 CK 点选反查锚） ---- */
+  const renderers: Record<string, () => ReactNode> = {
+    /* 1. philia.header：问候页头（按时段问候语 + 昵称 + 欢迎行 + 关闭钮） */
+    'philia.header': () => (
+      <header className="flex items-start justify-between pt-8">
+        <div>
+          <h1 className="text-title-lg">
+            <CK k={greetKey}>{mc(greetKey)}</CK>，{user?.nickname ?? mc('f1.greetFallback')}
+          </h1>
+          <p className="mt-1 text-caption text-ink-secondary">
+            <CK k="f1.welcome">{mc('f1.welcome')}</CK>
           </p>
-          <p className="u1-serif mt-2.5 whitespace-pre-line text-[24px] font-black leading-[1.55]">
-            {mc('f1.manifesto')}
-          </p>
         </div>
+        <button
+          type="button"
+          onClick={close}
+          aria-label={mc('f1.closeAria')}
+          className="u1-ring flex h-11 w-11 items-center justify-center rounded-full bg-card transition-transform duration-120 ease-philia-spring active:scale-92"
+        >
+          <X className="h-5 w-5 text-ink-secondary" strokeWidth={1.5} />
+        </button>
+      </header>
+    ),
 
-        {/* 当前宠物大头像横滑（U1-F 形象位：圆形双细线环） */}
-        <div className="mt-6">
-          <PetAvatarRail />
-        </div>
+    /* 2. philia.manifesto：F-01 情感文案层（定稿 F-01 页首工艺）：mono eyebrow 9.5/.24em +
+          serif 宣言 24/900 lh1.55（片 2 落地；文案入 copy 键） */
+    'philia.manifesto': () => (
+      <div className="mt-6">
+        <p className="u1-num text-v2-trace uppercase tracking-[.24em] text-ink-secondary">
+          <CK k="f1.eyebrow">{mc('f1.eyebrow')}</CK>
+        </p>
+        <p className="u1-serif mt-2.5 whitespace-pre-line text-[24px] font-black leading-[1.55]">
+          <CK k="f1.manifesto">{mc('f1.manifesto')}</CK>
+        </p>
+      </div>
+    ),
 
-        {/* F-01 落地三数：陪伴天数 · 服务次数 · 照片数（守护值无真实来源不出；失败隐去） */}
-        <TriStats />
+    /* 3. philia.petrail：当前宠物大头像横滑（U1-F 形象位：圆形双细线环） */
+    'philia.petrail': () => (
+      <div className="mt-6">
+        <PetAvatarRail />
+      </div>
+    ),
 
-        {/* U1-F 一键预约卡：内嵌现成一键再约链路（9a HomeBookingPanel 逻辑原样） */}
-        <div className="mt-5" data-testid="philia-booking-card">
-          <HomeBookingPanel />
-        </div>
+    /* 4. philia.tristats：F-01 落地三数：陪伴天数 · 服务次数 · 照片数
+          （守护值无真实来源不出；失败隐去） */
+    'philia.tristats': () => <TriStats />,
 
-        {/* U4-D2：三胶囊卡阵 → 试样 q-row 细线列表行工艺（U4-A 首页次级行同工艺：
-            oak-light 圆角 14 图标芯片 + 名 14/600 + 述 11 + › 墨 30%）；真实链路保留。
-            成长护照预告行并入同组（置灰静态「9c 解锁」，非按钮不挂链）；
-            守护市集行无路由隐藏（任务书口径）。 */}
-        <div className="mt-6">
-          {CAPSULES.map(({ to, label, desc, icon: Icon }, i) => (
-            <Link
-              key={to}
-              to={to}
-              className={`flex items-center gap-3 py-4 transition-transform duration-120 ease-philia-spring active:scale-[0.98] ${i > 0 ? HAIRLINE : ''}`}
-            >
-              <span
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-oak-light"
-                aria-hidden="true"
-              >
-                <Icon className="h-5 w-5 text-ink/60" strokeWidth={1.5} />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-body-sm font-semibold leading-5">{label}</span>
-                <span className="mt-0.5 block text-caption-xs text-ink-secondary">{desc}</span>
-              </span>
-              <span className="shrink-0 text-ink/30" aria-hidden="true">
-                ›
-              </span>
-            </Link>
-          ))}
-          <div
-            data-testid="philia-passport-teaser"
-            aria-disabled="true"
-            className={`flex items-center gap-3 py-4 opacity-60 ${HAIRLINE}`}
+    /* 5. philia.booking：U1-F 一键预约卡：内嵌现成一键再约链路（9a HomeBookingPanel
+          逻辑原样；键归 home 域共享件，本屏引用不重复注册） */
+    'philia.booking': () => (
+      <div className="mt-5" data-testid="philia-booking-card">
+        <HomeBookingPanel />
+      </div>
+    ),
+
+    /* 6. philia.links：U4-D2 试样 q-row 细线列表行工艺（U4-A 首页次级行同工艺：
+          oak-light 圆角 14 图标芯片 + 名 14/600 + 述 11 + › 墨 30%）；真实链路保留。
+          成长护照预告行并入同组（置灰静态「9c 解锁」，非按钮不挂链）；
+          守护市集行无路由隐藏（任务书口径）。 */
+    'philia.links': () => (
+      <div className="mt-6">
+        {CAPSULES.map(({ to, labelKey, descKey, icon: Icon }, i) => (
+          <Link
+            key={to}
+            to={to}
+            className={`flex items-center gap-3 py-4 transition-transform duration-120 ease-philia-spring active:scale-[0.98] ${i > 0 ? HAIRLINE : ''}`}
           >
             <span
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-oak-light"
               aria-hidden="true"
             >
-              <BookOpen className="h-5 w-5 text-ink/60" strokeWidth={1.5} />
+              <Icon className="h-5 w-5 text-ink/60" strokeWidth={1.5} />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-body-sm font-semibold leading-5">成长护照</span>
-              <span className="mt-0.5 block text-caption-xs text-ink-secondary">护照盖章预告</span>
+              <span className="block text-body-sm font-semibold leading-5"><CK k={labelKey}>{mc(labelKey)}</CK></span>
+              <span className="mt-0.5 block text-caption-xs text-ink-secondary"><CK k={descKey}>{mc(descKey)}</CK></span>
             </span>
-            <span className="shrink-0 rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">
-              9c 解锁
+            <span className="shrink-0 text-ink/30" aria-hidden="true">
+              ›
             </span>
-          </div>
+          </Link>
+        ))}
+        <div
+          data-testid="philia-passport-teaser"
+          aria-disabled="true"
+          className={`flex items-center gap-3 py-4 opacity-60 ${HAIRLINE}`}
+        >
+          <span
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-oak-light"
+            aria-hidden="true"
+          >
+            <BookOpen className="h-5 w-5 text-ink/60" strokeWidth={1.5} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-body-sm font-semibold leading-5"><CK k="f1.passportTitle">{mc('f1.passportTitle')}</CK></span>
+            <span className="mt-0.5 block text-caption-xs text-ink-secondary"><CK k="f1.passportDesc">{mc('f1.passportDesc')}</CK></span>
+          </span>
+          <span className="shrink-0 rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">
+            <CK k="f1.passportBadge">{mc('f1.passportBadge')}</CK>
+          </span>
         </div>
+      </div>
+    ),
 
-        {/* F-01 槽位（PD-15 V1.1 三规：置灰不上数不上假件 + 注记 + data-testid）：
-            陪伴段位/徽章区无真实数据源（schema 无段位/徽章表）——置灰留口不上假徽章；
-            生日特辑=预留位（定稿 F-01 生日周自动生成功能未开工），同规置灰。 */}
-        <section className="mt-6" data-testid="slot-badges" aria-disabled="true">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-v2-section">{mc('f1.growthTitle')}</h2>
-            <span className="rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">
-              {mc('slot.soon')}
+    /* 7. philia.growthslot：F-01 槽位（PD-15 V1.1 三规：置灰不上数不上假件 + 注记 +
+          data-testid）：陪伴段位/徽章区无真实数据源（schema 无段位/徽章表）——置灰留口 */
+    'philia.growthslot': () => (
+      <section className="mt-6" data-testid="slot-badges" aria-disabled="true">
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-v2-section"><CK k="f1.growthTitle">{mc('f1.growthTitle')}</CK></h2>
+          <span className="rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">
+            <CK k="slot.soon">{mc('slot.soon')}</CK>
+          </span>
+        </div>
+        <div className="mt-3 rounded-card border border-dashed border-line bg-card px-4 py-8 text-center opacity-60">
+          <p className="text-caption text-ink-secondary"><CK k="f1.growthSlotDesc">{mc('f1.growthSlotDesc')}</CK></p>
+        </div>
+      </section>
+    ),
+
+    /* 8. philia.birthdayslot：生日特辑=预留位（定稿 F-01 生日周自动生成功能未开工），同规置灰 */
+    'philia.birthdayslot': () => (
+      <section className="mt-3" data-testid="slot-birthday" aria-disabled="true">
+        <div className="rounded-card border border-dashed border-line bg-card p-4 opacity-60">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-body-sm font-semibold"><CK k="f1.birthdayTitle">{mc('f1.birthdayTitle')}</CK></p>
+            <span className="shrink-0 rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">
+              <CK k="slot.soon">{mc('slot.soon')}</CK>
             </span>
           </div>
-          <div className="mt-3 rounded-card border border-dashed border-line bg-card px-4 py-8 text-center opacity-60">
-            <p className="text-caption text-ink-secondary">{mc('f1.growthSlotDesc')}</p>
-          </div>
-        </section>
+          <p className="mt-1 text-caption text-ink-secondary"><CK k="f1.birthdayDesc">{mc('f1.birthdayDesc')}</CK></p>
+        </div>
+      </section>
+    ),
 
-        <section className="mt-3" data-testid="slot-birthday" aria-disabled="true">
-          <div className="rounded-card border border-dashed border-line bg-card p-4 opacity-60">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-body-sm font-semibold">{mc('f1.birthdayTitle')}</p>
-              <span className="shrink-0 rounded-chip bg-sunken px-2 py-0.5 text-caption-xs text-ink-placeholder">
-                {mc('slot.soon')}
-              </span>
-            </div>
-            <p className="mt-1 text-caption text-ink-secondary">{mc('f1.birthdayDesc')}</p>
-          </div>
-        </section>
+    /* 9. philia.diary：菲丽亚日记（已完成服务前后对比照回顾；不足 3 条养宠小贴士补齐） */
+    'philia.diary': () => (
+      <section className="mt-8">
+        <h2 className="mb-3 text-title"><CK k="f1.diaryTitle">{mc('f1.diaryTitle')}</CK></h2>
+        <DiaryFeed />
+      </section>
+    ),
+  }
 
-        {/* 菲丽亚日记 */}
-        <section className="mt-8">
-          <h2 className="mb-3 text-title">菲丽亚日记</h2>
-          <DiaryFeed />
-        </section>
+  return (
+    <CanvasLayoutLoader pageKey="philia" storeId={f1StoreId}>
+      <div
+        ref={rootRef}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        className="fixed inset-0 z-sticky overflow-y-auto bg-canvas"
+        style={{
+          transform: `translateY(${translateY})`,
+          transition: withTransition ? 'transform 300ms cubic-bezier(0.33, 1, 0.68, 1)' : 'none',
+        }}
+        role="dialog"
+        aria-label={mc('f1.spaceAria')}
+      >
+        <div className="mx-auto min-h-full max-w-lg px-4 pb-28">
+          {/* 画布预览水印（?canvasPreview=1 探针模式；零真会话零写库口径注记） */}
+          {isCanvasPreview ? (
+            <p
+              className="pt-2 text-center text-caption-xs text-ink-secondary"
+              data-testid="philia-canvas-preview-note"
+            >
+              {mc('mc.canvasExampleNote')}
+            </p>
+          ) : null}
+          {/* 块流：九块按有效布局渲染（published 覆盖∪默认序尾补；特别裁 §五.2=只做文案+
+              整块显隐，不做拖排）；默认序下 DOM 结构零差异 */}
+          {layout.map((b) =>
+            b.visible ? (
+              <section data-block-key={b.blockKey} key={b.blockKey}>
+                {renderers[b.blockKey]?.() ?? null}
+              </section>
+            ) : null,
+          )}
+        </div>
       </div>
-    </div>
+    </CanvasLayoutLoader>
   )
 }

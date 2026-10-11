@@ -56,7 +56,9 @@ export function canvasPreviewUrl(
   portMap: Record<string, string> = DEFAULT_PORT_MAP,
 ): string {
   const params = `canvasPreview=1${storeId ? `&canvasStore=${storeId}` : ''}`;
-  /* 产品-1010 片 2：高频五屏入册——页键→客户页路径映射（五屏+既有三屏） */
+  /* 产品-1010 片 2：高频五屏入册——页键→客户页路径映射（五屏+既有三屏）；
+     产品-1011 片 3（末片）：38 屏扫尾——带参路由统一用 'preview' 字面值占位，
+     页面侧探针模式（canvasPreview=1）遇 'preview' 即取本屏列表首条做实例（各屏施工件） */
   const PATH_MAP: Record<CanvasPageKey, string> = {
     home: '/home',
     memberCenter: '/member',
@@ -66,6 +68,48 @@ export function canvasPreviewUrl(
     bookingGrooming: '/booking/grooming',
     bookingBoarding: '/booking/boarding',
     memberOpen: '/member/open',
+    /* 商城域余 4 */
+    pdp: '/mall/product/preview',
+    cart: '/mall/cart',
+    mallOrders: '/mall/orders',
+    refunds: '/refunds',
+    /* 预约与服务域 10 */
+    appointments: '/appointments',
+    apptDetail: '/appointments/preview',
+    apptLive: '/appointments/preview/live',
+    certList: '/philia/certs',
+    certDetail: '/philia/certs/preview',
+    report: '/philia/reports/preview',
+    ticketList: '/support',
+    ticketNew: '/support/new',
+    ticketDetail: '/support/preview',
+    moments: '/philia/moments',
+    /* 会员域余 8 */
+    memberUpgrade: '/member/upgrade',
+    memberChange: '/member/change',
+    rebate: '/member/rebate',
+    memberCard: '/me/card',
+    coupons: '/me/coupons',
+    records: '/records',
+    notifications: '/notifications',
+    notifyPrefs: '/notifications/prefs',
+    /* 我的与账户域 16 */
+    philia: '/philia',
+    pets: '/philia/pets',
+    petHealth: '/philia/pets/preview/health',
+    settings: '/me/settings',
+    deactivate: '/me/settings/deactivate',
+    changePhone: '/me/settings/phone',
+    phoneAppeal: '/me/settings/phone/appeal',
+    devices: '/me/settings/devices',
+    privacy: '/me/settings/privacy',
+    profile: '/settings/profile',
+    addresses: '/settings/addresses',
+    about: '/settings/about',
+    agreements: '/settings/agreements',
+    invoiceTitles: '/settings/invoice-titles',
+    invoices: '/invoices',
+    invoiceDetail: '/invoices/preview',
   };
   const path = PATH_MAP[pageKey];
 

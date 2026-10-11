@@ -7,10 +7,17 @@
  * - 全选 / 单选；底部吸底结算栏（详情级无 dock，落底 safe-area）：合计（勾选口径）+「去结算」；
  * - 单店限制：车内商品必为同一门店（加车时已拦），页头展示当前门店提示；
  * - 去结算 → /mall/checkout（结算页从 localStorage 还原勾选商品，跨页一致）。
+ *
+ * 画布化（产品-1010 画布全屏批 片 3 末片 · 商城域，工艺照 MePage/MallPage）：
+ * 五块入册（cart.head/empty/storeNote/rows/ctaBar），块序/显隐=useCanvasLayout('cart')
+ * （published→注册表默认序尾补，空=CART_DEFAULT_ORDER 兜底）；店锚=?canvasStore= 预览店锚
+ * > 车内门店（cart.items[0].storeId 既有状态）> 记忆门店（readLastBooking，零新增查询）；
+ * ?canvasPreview=1=页首水印注记（cart-canvas-preview-note）；文案键挂 CK 点选反查锚；
+ * 空态/非空态块互斥门控照改造前条件逐字；块内逻辑零改动，data-testid 原值全保留。
  */
 
-import { Fragment } from 'react';
-import { usePhiliaClient } from '@philia/shared';
+import { Fragment, useMemo, type ReactNode } from 'react';
+import { CanvasLayoutLoader, CK, useCanvasLayout, usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Check, Minus, Plus, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -22,6 +29,10 @@ import { useToast } from '@philia/shared';
 import PageHeader from '../components/PageHeader';
 import ProductImage from '../components/mall/ProductImage';
 import { mc } from '../components/member/copy';
+import { readLastBooking } from '@/lib/bookingPrefill';
+
+/** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
+const CART_DEFAULT_ORDER = ['cart.head', 'cart.empty', 'cart.storeNote', 'cart.rows', 'cart.ctaBar'] as const;
 
 /** 圆形勾选钮：品牌色实心圆 + 深棕墨 ✓（v1.1 冻结 on-primary 语义）
  *  W1-D2 触控量化：视觉圆点 24px 不变，命中区扩至 44×44px（负边距补偿布局零视觉变化） */
@@ -99,7 +110,9 @@ function CartRow({ item }: { item: CartItem }) {
           </div>
         </div>
         {item.qty >= cap && item.stock < MAX_QTY ? (
-          <p className="mt-0.5 text-right text-caption-xs text-ink-placeholder">库存 {item.stock} 件</p>
+          <p className="mt-0.5 text-right text-caption-xs text-ink-placeholder">
+            <CK k="mall.cartStockNote">{mlc('mall.cartStockNote', { n: item.stock })}</CK>
+          </p>
         ) : null}
       </div>
     </div>
@@ -135,37 +148,66 @@ function CartInner() {
     .map((p) => p.rebateBp / 100)
     .join('/');
 
+  /* ---- 画布全屏批 片 3 画布化入册：探针参 + 店锚 + 注册表块序/有效布局（同 MePage 工艺） ---- */
+  /* 画布预览探针参识别（?canvasPreview=1；微光正名批工艺三件套之一） */
+  const isCanvasPreview = useMemo(
+    () => new URLSearchParams(window.location.search).get('canvasPreview') === '1',
+    [],
+  );
+  /* 画布布局店锚（?canvasStore= 预览店锚 > 车内门店既有状态 > 记忆门店，零新增查询） */
+  const previewStoreId = useMemo(() => new URLSearchParams(window.location.search).get('canvasStore'), []);
+  const memoryStoreId = useMemo(() => readLastBooking()?.storeId ?? null, []);
+  const cartStoreId = previewStoreId ?? cart.items[0]?.storeId ?? memoryStoreId ?? null;
+
+  /* 画布端口：注册表块序 + 有效布局（published→默认序尾补；空=默认序兜底常量） */
+  const blocksQ = useQuery({
+    queryKey: ['canvas', 'blocks'],
+    queryFn: () => trpc.canvas.blocks.query(),
+    staleTime: 300_000,
+    retry: 1,
+  });
+  const registryBlocks = useMemo(() => {
+    const items = (blocksQ.data?.items ?? [])
+      .filter((b) => b.pageKey === 'cart')
+      .sort((a, b) => a.sortOrder - b.sortOrder);
+    return items.length > 0 ? items : CART_DEFAULT_ORDER.map((blockKey) => ({ blockKey }));
+  }, [blocksQ.data]);
+  const layout = useCanvasLayout('cart', cartStoreId, registryBlocks);
+
   const handleCheckout = () => {
     if (cart.checkedItems.length === 0) {
-      showToast('请先勾选要结算的商品', 'error');
+      showToast(mlc('mall.cartNeedCheck'), 'error');
       return;
     }
     navigate('/mall/checkout');
   };
 
-  return (
-    /* U4-D3：页边距 22px */
-    <div className="px-[22px] pb-32 pt-4">
-      {toastEl}
-      {/* U1-A：统一返回条（←圆钮+标题），件数紧随标题保持原位 */}
+  /* 块渲染器（块内逻辑零改动——五块照改造前 JSX 逐字搬，空态/非空态互斥门控保留，
+     文案走 copy 键 + CK 反查锚） */
+  const renderers: Record<string, () => ReactNode> = {
+    /* 1. cart.head：页头（U1-A 统一返回条 ←圆钮+标题，件数紧随标题保持原位） */
+    'cart.head': () => (
       <PageHeader
         title={
           <>
-            {mlc('mall.cartTitle')}
+            <CK k="mall.cartTitle">{mlc('mall.cartTitle')}</CK>
             {cart.items.length > 0 ? (
               <span className="u1-num ml-1 text-caption font-normal text-ink-secondary">{cart.count} 件</span>
             ) : null}
           </>
         }
       />
+    ),
 
-      {cart.items.length === 0 ? (
-        /* U1-I：全域统一空态组件；U4-D3 文案对齐试样 12（购物袋空态），余白区垂直居中 */
+    /* 2. cart.empty：空态（U1-I 全域统一空态组件；U4-D3 文案对齐试样 12，余白区垂直居中；
+          EmptyState title 为 string 位挂不上 CK，desc/action 挂 CK） */
+    'cart.empty': () =>
+      cart.items.length === 0 ? (
         <div className="flex min-h-[56vh] flex-col justify-center">
           <EmptyState
             title={mlc('mall.cartEmptyTitle')}
             desc={
-              <>
+              <CK k="mall.cartEmptyBody">
                 {mlc('mall.cartEmptyBody')
                   .split('\n')
                   .map((line, i, arr) => (
@@ -174,92 +216,123 @@ function CartInner() {
                       {i < arr.length - 1 ? <br /> : null}
                     </Fragment>
                   ))}
-              </>
+              </CK>
             }
             action={
               <Link
                 to="/mall"
                 className="inline-flex items-center rounded-control bg-ink px-[30px] py-[13px] text-body-sm font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
               >
-                {mlc('mall.cartEmptyCta')}
+                <CK k="mall.cartEmptyCta">{mlc('mall.cartEmptyCta')}</CK>
               </Link>
             }
           />
         </div>
-      ) : (
-        <>
-          {/* 单店限制提示 */}
-          <p className="mt-3 rounded-control bg-brand-primary-light px-3.5 py-2.5 text-caption text-ink">
-            {mlc('mall.cartStoreNote', { store: cart.items[0]?.storeName ?? '' })}
-          </p>
+      ) : null,
 
-          {/* 行件组（M-03 定稿：单张白卡内发丝线分隔多行） */}
-          <div className="u1-card mt-3 divide-y divide-line-divider px-4">
-            {cart.items.map((it) => (
-              <CartRow key={it.productId} item={it} />
-            ))}
-          </div>
+    /* 3. cart.storeNote：单店限制提示（规则明面） */
+    'cart.storeNote': () =>
+      cart.items.length > 0 ? (
+        <p className="mt-3 rounded-control bg-brand-primary-light px-3.5 py-2.5 text-caption text-ink">
+          <CK k="mall.cartStoreNote">{mlc('mall.cartStoreNote', { store: cart.items[0]?.storeName ?? '' })}</CK>
+        </p>
+      ) : null,
 
-          {/* 吸底结算栏（片 2 M-03 定稿 ctabar：渐出底 + 合计 mono 19/700 +
-              深棕主钮 16/700（sub mono 返显）；详情级无 dock，落底 safe-area） */}
-          <div
-            className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-sticky"
-            style={{ background: 'linear-gradient(transparent, #FAF8F2 40%)' }}
-          >
-            <div className="mx-auto max-w-lg px-4 pb-4 pt-3">
-              <div className="mb-2.5 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <CheckDot
-                    checked={cart.allChecked}
-                    onToggle={() => cart.toggleAll(!cart.allChecked)}
-                    label="全选"
-                  />
-                  <span className="text-body-sm text-ink-secondary">全选</span>
-                </div>
-                <p className="flex items-baseline gap-1.5">
-                  <span className="text-caption-xs text-ink-secondary">合计</span>
-                  <span className="u1-num text-[19px] font-bold text-ink">{fenToYuan(cart.checkedTotalFen)}</span>
-                </p>
+    /* 4. cart.rows：行件组（M-03 定稿：单张白卡内发丝线分隔多行） */
+    'cart.rows': () =>
+      cart.items.length > 0 ? (
+        <div className="u1-card mt-3 divide-y divide-line-divider px-4">
+          {cart.items.map((it) => (
+            <CartRow key={it.productId} item={it} />
+          ))}
+        </div>
+      ) : null,
+
+    /* 5. cart.ctaBar：吸底结算栏（片 2 M-03 定稿 ctabar：渐出底 + 合计 mono 19/700 +
+          深棕主钮 16/700（sub mono 返显）；详情级无 dock，落底 safe-area；
+          fixed 条包无样式 section 不影响落位） */
+    'cart.ctaBar': () =>
+      cart.items.length > 0 ? (
+        <div
+          className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-sticky"
+          style={{ background: 'linear-gradient(transparent, #FAF8F2 40%)' }}
+        >
+          <div className="mx-auto max-w-lg px-4 pb-4 pt-3">
+            <div className="mb-2.5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CheckDot
+                  checked={cart.allChecked}
+                  onToggle={() => cart.toggleAll(!cart.allChecked)}
+                  label={mlc('mall.cartCheckAll')}
+                />
+                <span className="text-body-sm text-ink-secondary"><CK k="mall.cartCheckAll">{mlc('mall.cartCheckAll')}</CK></span>
               </div>
-              <button
-                type="button"
-                disabled={cart.checkedItems.length === 0}
-                onClick={handleCheckout}
-                className="flex w-full flex-col items-center justify-center rounded-[18px] bg-[#2E2318] py-3 text-body-lg font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
-              >
-                <span>
-                  {mlc('mall.cartCheckout')}{cart.checkedItems.length > 0 ? `（${cart.checkedItems.reduce((n, it) => n + it.qty, 0)}）` : ''}
+              <p className="flex items-baseline gap-1.5">
+                <span className="text-caption-xs text-ink-secondary"><CK k="mall.cartTotalLabel">{mlc('mall.cartTotalLabel')}</CK></span>
+                <span className="u1-num text-[19px] font-bold text-ink">{fenToYuan(cart.checkedTotalFen)}</span>
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={cart.checkedItems.length === 0}
+              onClick={handleCheckout}
+              className="flex w-full flex-col items-center justify-center rounded-[18px] bg-[#2E2318] py-3 text-body-lg font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
+            >
+              <span>
+                <CK k="mall.cartCheckout">{mlc('mall.cartCheckout')}</CK>{cart.checkedItems.length > 0 ? `（${cart.checkedItems.reduce((n, it) => n + it.qty, 0)}）` : ''}
+              </span>
+              {rebateFen > 0 ? (
+                <span className="mt-0.5 font-number text-[10.5px] font-normal text-[#C9BBA0]">
+                  <CK k="mall.rebateEarnCta">{mc('mall.rebateEarnCta', { amt: fenToYuan(rebateFen) })}</CK>
                 </span>
-                {rebateFen > 0 ? (
-                  <span className="mt-0.5 font-number text-[10.5px] font-normal text-[#C9BBA0]">
-                    {mc('mall.rebateEarnCta', { amt: fenToYuan(rebateFen) })}
-                  </span>
-                ) : hookPcts ? (
-                  <span
-                    role="link"
-                    tabIndex={0}
-                    data-testid="cart-rebate-hook"
-                    className="mt-0.5 font-number text-[10.5px] font-normal text-[#C9BBA0] underline underline-offset-2"
-                    onClick={(e) => {
+              ) : hookPcts ? (
+                <span
+                  role="link"
+                  tabIndex={0}
+                  data-testid="cart-rebate-hook"
+                  className="mt-0.5 font-number text-[10.5px] font-normal text-[#C9BBA0] underline underline-offset-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/member/open');
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
                       e.stopPropagation();
                       navigate('/member/open');
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.stopPropagation();
-                        navigate('/member/open');
-                      }
-                    }}
-                  >
-                    {mc('mall.rebateHook', { pcts: hookPcts })}
-                  </span>
-                ) : null}
-              </button>
-            </div>
+                    }
+                  }}
+                >
+                  <CK k="mall.rebateHook">{mc('mall.rebateHook', { pcts: hookPcts })}</CK>
+                </span>
+              ) : null}
+            </button>
           </div>
-        </>
-      )}
-    </div>
+        </div>
+      ) : null,
+  };
+
+  return (
+    /* U4-D3：页边距 22px */
+    <CanvasLayoutLoader pageKey="cart" storeId={cartStoreId}>
+      <div className="px-[22px] pb-32 pt-4">
+        {toastEl}
+        {/* 画布预览水印（?canvasPreview=1 探针模式；零真会话零写库口径注记） */}
+        {isCanvasPreview ? (
+          <div style={{ marginTop: 10 }}>
+            <p className="text-center text-caption-xs text-ink-secondary" data-testid="cart-canvas-preview-note">{mc('mc.canvasExampleNote')}</p>
+          </div>
+        ) : null}
+        {/* 块流：五块按有效布局渲染（隐藏块整段不渲染）；空态/非空态块内互斥门控照改造前，
+            默认序下 DOM 结构零差异；ctaBar=fixed 吸底条包无样式 section 不影响落位 */}
+        {layout.map((b) =>
+          b.visible ? (
+            <section data-block-key={b.blockKey} key={b.blockKey}>
+              {renderers[b.blockKey]?.() ?? null}
+            </section>
+          ) : null,
+        )}
+      </div>
+    </CanvasLayoutLoader>
   );
 }
 

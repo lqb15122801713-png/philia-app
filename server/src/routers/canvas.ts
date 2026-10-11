@@ -15,8 +15,19 @@ import { z } from 'zod';
 import { db, schema } from '../db';
 import { merchantOwnerProcedure, publicProcedure, router } from '../trpc';
 
-/* 产品-1010 片 2：高频五屏入册——PAGE_KEYS 扩枚举（+me/mall/bookingGrooming/bookingBoarding/memberOpen） */
-const PAGE_KEYS = ['home', 'memberCenter', 'cashierMarketing', 'me', 'mall', 'bookingGrooming', 'bookingBoarding', 'memberOpen'] as const;
+/* 产品-1010 片 2：高频五屏入册——PAGE_KEYS 扩枚举（+me/mall/bookingGrooming/bookingBoarding/memberOpen）；
+   产品-1011 片 3：剩余 38 屏扫尾入册（末片）——再扩 38 键（片 0 清单 §四 38 屏逐屏对应） */
+const PAGE_KEYS = [
+  'home', 'memberCenter', 'cashierMarketing', 'me', 'mall', 'bookingGrooming', 'bookingBoarding', 'memberOpen',
+  /* 商城域余 4 */
+  'pdp', 'cart', 'mallOrders', 'refunds',
+  /* 预约与服务域 10 */
+  'appointments', 'apptDetail', 'apptLive', 'certList', 'certDetail', 'report', 'ticketList', 'ticketNew', 'ticketDetail', 'moments',
+  /* 会员域余 8 */
+  'memberUpgrade', 'memberChange', 'rebate', 'memberCard', 'coupons', 'records', 'notifications', 'notifyPrefs',
+  /* 我的与账户域 16 */
+  'philia', 'pets', 'petHealth', 'settings', 'deactivate', 'changePhone', 'phoneAppeal', 'devices', 'privacy', 'profile', 'addresses', 'about', 'agreements', 'invoiceTitles', 'invoices', 'invoiceDetail',
+] as const;
 const pageKeySchema = z.enum(PAGE_KEYS);
 
 /* 产品-1010 片 1：权益墙格级白名单（契约镜像=packages/shared/src/perkWall.tsx 单源；

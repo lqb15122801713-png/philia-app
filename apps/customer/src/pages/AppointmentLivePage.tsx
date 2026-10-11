@@ -30,12 +30,25 @@
  *   LiveHeader 后挂高亮条——未处置=赭红卡（类型+描述+发生时刻+「门店处理中」），
  *   全部已处置=暖底细条（最近处置说明），零异常不渲染；
  *   SSE incident.reported/incident.handled/boarding.unsealed → toast + 精确 invalidate。
+ *
+ * 画布化（产品-1010 画布全屏批片 3 · 预约域三重屏之三 · 特别裁 §五.2 实时页）：
+ * 六块入册（apptLive.header/incident/stepper/boardingStay/review/contact），
+ * 块序/显隐=useCanvasLayout('apptLive')（published→注册表默认序尾补，空=APPT_LIVE_DEFAULT_ORDER
+ * 兜底）；画布只控区块壳（排序/显隐/文案）——实时数据与五态分支状态机不接区块 props，
+ * SSE/断线轮询逻辑一行不动；加载/错误/未开始/已取消四分支不入块流，照改造前位置早退。
+ * 带参路由预览特例：canvasPreview=1 且 id='preview' 时用预约列表既有查询
+ * （appointment.listMine，与我的预约列表同 queryKey 缓存共享，零新增查询）首条顶替；
+ * 查不到=空 id → 落原「打不开这个进度页」空态照原样。
+ * 店锚=?canvasStore= 预览店锚 > 本单门店（appointment.get 透出 store.id，零新增查询）。
  */
 
 import {
+  CanvasLayoutLoader,
+  CK,
   EventType,
   getApiBase,
   safeUuid,
+  useCanvasLayout,
   useEventSource,
   useMe,
   usePhiliaClient,
@@ -46,9 +59,10 @@ import LiveStepper, { type LiveStepperStep } from '../components/live/LiveSteppe
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { CalendarClock, CircleX, QrCode, TriangleAlert } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { apc, type AppointmentsCopyKey } from '../copy/appointments'
+import { mc } from '../components/member/copy'
 import BoardingLive, { type BoardingAssuranceInfo, type BoardingLogItem, type BoardingStayInfo } from '../components/live/BoardingLive'
 import CelebrationOverlay from '../components/live/CelebrationOverlay'
 import ConnectionBar from '../components/live/ConnectionBar'
@@ -66,6 +80,16 @@ import '../styles/live-v2.css'
 
 const CLIENT_ID_KEY = 'philia.sseClientId'
 
+/** 画布注册表默认序兜底（=改造前 JSX 块序；canvas.blocks 失败/空时用） */
+const APPT_LIVE_DEFAULT_ORDER = [
+  'apptLive.header',
+  'apptLive.incident',
+  'apptLive.stepper',
+  'apptLive.boardingStay',
+  'apptLive.review',
+  'apptLive.contact',
+] as const
+
 /** SSE clientId：localStorage 持久化（契约 · push.subscribe 与 /api/events 共用） */
 function getClientId(): string {
   try {
@@ -81,15 +105,15 @@ function getClientId(): string {
   }
 }
 
-/** active 步操作说明（LiveStepper description 槽位） */
-const ACTIVE_HINT: Record<string, string> = {
-  disinfection: '工具消毒确认中，安心第一步',
-  precheck: '正在做预检，确认皮肤与毛发状态',
-  grooming: '正在洗护美容，新照片会实时出现在这里',
-  detail: '细节精修中，快要变美啦',
-  before_after: '正在做交付检查',
+/** active 步操作说明键表（LiveStepper description 槽位；画布批片 3 抽键，原写死文案逐字落默认值） */
+const ACTIVE_HINT_KEYS: Record<string, AppointmentsCopyKey> = {
+  disinfection: 'appointments.hintDisinfection',
+  precheck: 'appointments.hintPrecheck',
+  grooming: 'appointments.hintGrooming',
+  detail: 'appointments.hintDetail',
+  before_after: 'appointments.hintBeforeAfter',
   // v1.1-b3 B3-5（A-P2-13）：确认步由洗护师完成核销确认，删除「等待家长确认接回」歧义表述
-  confirm: '洗护师正在为您完成最后确认',
+  confirm: 'appointments.hintConfirm',
 }
 
 const fmtTime = (d: Date) => format(d, 'HH:mm')
@@ -206,10 +230,30 @@ function toWallPhotos(step: StepCache): PhotoWallPhoto[] {
 /* ------------------------------------------------------------------ */
 
 export default function AppointmentLivePage() {
-  const { id: aid } = useParams<{ id: string }>()
+  const { id: routeAid } = useParams<{ id: string }>()
   const { trpc, queryClient } = usePhiliaClient()
   const { user } = useMe()
   const [clientId] = useState(getClientId)
+
+  /* 画布预览探针参识别（?canvasPreview=1）+ 预览店锚（?canvasStore=） */
+  const isCanvasPreview = useMemo(() => new URLSearchParams(window.location.search).get('canvasPreview') === '1', [])
+  const previewStoreId = useMemo(() => new URLSearchParams(window.location.search).get('canvasStore'), [])
+
+  /* 带参路由预览特例（片 0 §五.2）：canvasPreview=1 且 id='preview' 时用预约列表既有查询
+     （appointment.listMine，与我的预约列表同 queryKey 缓存共享，零新增查询）首条顶替；
+     查不到=空 id → 各查询不拉取 → 落原「打不开这个进度页」空态照原样 */
+  const previewListQ = useQuery({
+    queryKey: ['appointment', 'listMine'],
+    queryFn: () => trpc.appointment.listMine.query(),
+    enabled: isCanvasPreview && routeAid === 'preview',
+  })
+  const previewFirstId = useMemo(() => {
+    const g = previewListQ.data?.groups
+    return g ? (Object.values(g).flat()[0]?.id ?? null) : null
+  }, [previewListQ.data])
+  const aid = isCanvasPreview && routeAid === 'preview' ? (previewFirstId ?? '') : (routeAid ?? '')
+  /** 预览顶替未命中（列表查询已完成但首条为空）：跳过加载态直落友好错误页 */
+  const previewMiss = isCanvasPreview && routeAid === 'preview' && !previewListQ.isPending && aid === ''
 
   /* ---------------- 查询 ---------------- */
 
@@ -282,6 +326,23 @@ export default function AppointmentLivePage() {
     if (!appt?.staffId) return null
     return staffQ.data?.staff.find((s) => s.id === appt.staffId)?.name ?? null
   }, [appt, staffQ.data])
+
+  /* ---- 画布端口：注册表块序 + 有效布局（published→默认序尾补；空=默认序兜底常量） ---- */
+  /* 店锚=?canvasStore= 预览店锚 > 本单门店（appointment.get 透出 store.id，零新增查询） */
+  const liveStoreId = previewStoreId ?? store?.id ?? null
+  const blocksQ = useQuery({
+    queryKey: ['canvas', 'blocks'],
+    queryFn: () => trpc.canvas.blocks.query(),
+    staleTime: 300_000,
+    retry: 1,
+  })
+  const registryBlocks = useMemo(() => {
+    const items = (blocksQ.data?.items ?? [])
+      .filter((b) => b.pageKey === 'apptLive')
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+    return items.length > 0 ? items : APPT_LIVE_DEFAULT_ORDER.map((blockKey) => ({ blockKey }))
+  }, [blocksQ.data])
+  const layout = useCanvasLayout('apptLive', liveStoreId, registryBlocks)
 
   /* ---------------- 全量对齐 ---------------- */
 
@@ -394,13 +455,13 @@ export default function AppointmentLivePage() {
           break
         case EventType.BoardingDailyUpdate: {
           const logDate = typeof data.logDate === 'string' ? data.logDate : ''
-          showToast(`${logDate ? `${logDate} ` : ''}打卡已更新，快看看${pet?.name ?? '宝贝'}的今天`)
+          showToast(apc('appointments.liveToastCheckin', { date: logDate ? `${logDate} ` : '', pet: pet?.name ?? apc('appointments.livePetFallback') }))
           void queryClient.invalidateQueries({ queryKey: ['boarding', 'myStay', aid] })
           void queryClient.invalidateQueries({ queryKey: ['boarding', 'assurance', aid] })
           break
         }
         case EventType.IncidentReported:
-          showToast(apc('appointments.incidentToastReported', { pet: pet?.name ?? '宝贝' }))
+          showToast(apc('appointments.incidentToastReported', { pet: pet?.name ?? apc('appointments.livePetFallback') }))
           void queryClient.invalidateQueries({ queryKey: ['incident', 'list', aid] })
           break
         case EventType.IncidentHandled:
@@ -409,7 +470,7 @@ export default function AppointmentLivePage() {
           break
         case EventType.BoardingUnsealed: {
           const itemName = typeof data.itemName === 'string' ? data.itemName : ''
-          showToast(apc('appointments.unsealToast', { pet: pet?.name ?? '宝贝', item: itemName }))
+          showToast(apc('appointments.unsealToast', { pet: pet?.name ?? apc('appointments.livePetFallback'), item: itemName }))
           void queryClient.invalidateQueries({ queryKey: ['boarding', 'myStay', aid] })
           void queryClient.invalidateQueries({ queryKey: ['boarding', 'assurance', aid] })
           break
@@ -428,7 +489,7 @@ export default function AppointmentLivePage() {
         case EventType.AppointmentReopened:
           // v1.1-b3 B3-1：completed 单打标重开 → 从完成态回退到服务中，全量对齐
           setCelebrating(false)
-          showToast('商家重新开启了本次服务，可继续查看进度')
+          showToast(apc('appointments.liveToastReopen'))
           alignAll()
           break
         default:
@@ -465,18 +526,22 @@ export default function AppointmentLivePage() {
     mutationFn: (input: { rating: number; review?: string; anonymous?: boolean }) =>
       trpc.appointment.review.mutate({ appointmentId: aid!, ...input }),
     onSuccess: () => {
-      showToast('感谢评价，已转告门店与洗护师')
+      showToast(apc('appointments.liveReviewThanks'))
       void queryClient.invalidateQueries({ queryKey: ['appointment', 'get', aid] })
     },
-    onError: (err) => showToast(err instanceof Error ? err.message : '评价提交失败，请稍后再试'),
+    onError: (err) => showToast(err instanceof Error ? err.message : apc('appointments.liveReviewFail')),
   })
 
   const share = useCallback(async () => {
     const url = window.location.href
-    const text = `${pet?.name ?? '宝贝'}在${store?.name ?? '菲丽亚'}完成了${service?.name ?? '服务'}，全程照片可见～`
+    const text = apc('appointments.liveShareText', {
+      pet: pet?.name ?? apc('appointments.livePetFallback'),
+      store: store?.name ?? apc('appointments.liveShareStoreFallback'),
+      service: service?.name ?? apc('appointments.fallbackService'),
+    })
     if (typeof navigator.share === 'function') {
       try {
-        await navigator.share({ title: '菲丽亚服务相册', text, url })
+        await navigator.share({ title: apc('appointments.shareTitle'), text, url })
       } catch {
         // 用户取消分享，无需提示
       }
@@ -484,9 +549,9 @@ export default function AppointmentLivePage() {
     }
     try {
       await navigator.clipboard.writeText(url)
-      showToast('链接已复制，快发给家人朋友吧')
+      showToast(apc('appointments.shareCopied'))
     } catch {
-      showToast('复制失败，请手动复制地址栏链接')
+      showToast(apc('appointments.shareCopyFail'))
     }
   }, [pet?.name, store?.name, service?.name, showToast])
 
@@ -497,14 +562,17 @@ export default function AppointmentLivePage() {
   // requiredPhotos=serviceStep.list 既有字段透传（空位虚线框补位依据，不新取数）
   const timelineSteps: LiveStepperStep[] = useMemo(
     () =>
-      (steps ?? []).map((s) => ({
-        stepKey: s.stepKey,
-        status: s.status,
-        time: s.status === 'done' && s.doneAt ? fmtTime(s.doneAt) : undefined,
-        description: s.status === 'active' ? ACTIVE_HINT[s.stepKey] : undefined,
-        photos: toWallPhotos(s),
-        requiredPhotos: s.requiredPhotos,
-      })),
+      (steps ?? []).map((s) => {
+        const hintKey = ACTIVE_HINT_KEYS[s.stepKey] as AppointmentsCopyKey | undefined
+        return {
+          stepKey: s.stepKey,
+          status: s.status,
+          time: s.status === 'done' && s.doneAt ? fmtTime(s.doneAt) : undefined,
+          description: s.status === 'active' && hintKey ? apc(hintKey) : undefined,
+          photos: toWallPhotos(s),
+          requiredPhotos: s.requiredPhotos,
+        }
+      }),
     [steps],
   )
 
@@ -584,16 +652,16 @@ export default function AppointmentLivePage() {
     <BackButton fallback={aid ? `/appointments/${aid}` : '/appointments'} className="mb-3" ariaLabel="返回预约详情" />
   )
 
-  // 加载中
-  if (detailQuery.isPending) {
+  // 加载中（previewMiss=预览顶替未命中：跳过加载态直落友好错误页）
+  if (detailQuery.isPending && !previewMiss) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-caption text-ink-secondary">加载中…</p>
+        <p className="text-caption text-ink-secondary"><CK k="appointments.liveLoading">{apc('appointments.liveLoading')}</CK></p>
       </div>
     )
   }
 
-  // 异常态：非本人 / 不存在预约 → 友好错误页
+  // 异常态：非本人 / 不存在预约 → 友好错误页（状态机分支不入块流，照改造前位置早退）
   if (detailQuery.isError || !appt) {
     const code = (detailQuery.error as { data?: { code?: string } } | null)?.data?.code
     return (
@@ -601,17 +669,19 @@ export default function AppointmentLivePage() {
         {backLink}
         <div className="u1-card flex flex-col items-center px-6 py-12 text-center">
           <CircleX className="h-10 w-10 text-ink-placeholder" strokeWidth={1.5} />
-          <h1 className="mt-3 text-title">打不开这个进度页</h1>
+          <h1 className="mt-3 text-title"><CK k="appointments.liveErrTitle">{apc('appointments.liveErrTitle')}</CK></h1>
           <p className="mt-2 text-body text-ink-secondary">
-            {code === 'FORBIDDEN'
-              ? '这不是你的预约哦，请确认登录的账号是否正确。'
-              : '找不到这个预约，可能链接有误或已被删除。'}
+            {code === 'FORBIDDEN' ? (
+              <CK k="appointments.liveErrForbidden">{apc('appointments.liveErrForbidden')}</CK>
+            ) : (
+              <CK k="appointments.liveErrNotFound">{apc('appointments.liveErrNotFound')}</CK>
+            )}
           </p>
           <Link
             to="/appointments"
             className="mt-5 inline-flex h-11 items-center rounded-full bg-philia-gradient px-6 text-body font-semibold text-[#F6EFDD] shadow-philia"
           >
-            回到我的预约
+            <CK k="appointments.liveErrBackCta">{apc('appointments.liveErrBackCta')}</CK>
           </Link>
         </div>
       </div>
@@ -625,19 +695,19 @@ export default function AppointmentLivePage() {
   const headerMeta = (() => {
     if (appt.status === 'in_service') {
       const parts: string[] = []
-      if (staffName) parts.push(`${staffName}服务中`)
-      if (appt.scheduledEnd) parts.push(`预计 ${fmtTime(appt.scheduledEnd)} 完成`)
+      if (staffName) parts.push(apc('appointments.liveMetaStaff', { staff: staffName }))
+      if (appt.scheduledEnd) parts.push(apc('appointments.liveMetaEta', { time: fmtTime(appt.scheduledEnd) }))
       return parts.length > 0 ? parts.join(' · ') : null
     }
-    if (appt.status === 'in_boarding') return `寄养中 · 第 ${boardingDayCount} 天`
+    if (appt.status === 'in_boarding') return apc('appointments.liveMetaBoarding', { n: boardingDayCount })
     return null
   })()
 
   const header = (
     <LiveHeader
-      petName={pet?.name ?? '宝贝'}
+      petName={pet?.name ?? apc('appointments.livePetFallback')}
       petAvatarUrl={pet?.avatarUrl}
-      serviceName={service?.name ?? (isBoarding ? '寄养服务' : '洗护服务')}
+      serviceName={service?.name ?? apc(isBoarding ? 'appointments.liveServiceBoarding' : 'appointments.liveServiceGrooming')}
       meta={headerMeta}
       state={completed ? 'done' : inLiveFlow ? 'live' : 'plain'}
       sseConnected={connected}
@@ -647,13 +717,17 @@ export default function AppointmentLivePage() {
   // U4-D2：统一返回条补题（试样 05 nav：←圆钮 +「洗护全程」）
   const nav = (
     <PageHeader
-      title={isBoarding ? '寄养全程' : '洗护全程'}
+      title={
+        <CK k={isBoarding ? 'appointments.liveTitleBoarding' : 'appointments.liveTitleGrooming'}>
+          {isBoarding ? apc('appointments.liveTitleBoarding') : apc('appointments.liveTitleGrooming')}
+        </CK>
+      }
       fallback={aid ? `/appointments/${aid}` : '/appointments'}
       className="mb-3"
     />
   )
 
-  // 预约 pending / confirmed / cancel_requested：服务尚未开始 → 预约码引导
+  // 预约 pending / confirmed / cancel_requested：服务尚未开始 → 预约码引导（状态机分支不入块流）
   if (appt.status === 'pending' || appt.status === 'confirmed' || appt.status === 'cancel_requested') {
     const cancelRequested = appt.status === 'cancel_requested'
     return (
@@ -666,11 +740,22 @@ export default function AppointmentLivePage() {
           ) : (
             <CalendarClock className="h-10 w-10 text-brand-primary" strokeWidth={1.5} />
           )}
-          <h2 className="mt-3 text-title">{cancelRequested ? '取消申请审核中' : '服务尚未开始'}</h2>
+          <h2 className="mt-3 text-title">
+            <CK k={cancelRequested ? 'appointments.liveCancelReviewTitle' : 'appointments.livePendingTitle'}>
+              {cancelRequested ? apc('appointments.liveCancelReviewTitle') : apc('appointments.livePendingTitle')}
+            </CK>
+          </h2>
           <p className="mt-2 text-body text-ink-secondary">
-            {cancelRequested
-              ? '门店正在处理你的取消申请，结果会第一时间通知你。'
-              : `预约时间 ${format(appt.scheduledStart, 'M月d日 HH:mm')}，到店后出示预约码，店员核销后即可在这里看到${isBoarding ? '寄养' : '洗护'}全程。`}
+            {cancelRequested ? (
+              <CK k="appointments.liveCancelReviewBody">{apc('appointments.liveCancelReviewBody')}</CK>
+            ) : (
+              <CK k="appointments.livePendingBody">
+                {apc('appointments.livePendingBody', {
+                  time: format(appt.scheduledStart, 'M月d日 HH:mm'),
+                  kind: apc(isBoarding ? 'appointments.liveKindBoarding' : 'appointments.liveKindGrooming'),
+                })}
+              </CK>
+            )}
           </p>
           {!cancelRequested ? (
             <Link
@@ -678,7 +763,7 @@ export default function AppointmentLivePage() {
               className="mt-5 inline-flex h-11 items-center gap-1.5 rounded-full bg-philia-gradient px-6 text-body font-semibold text-[#F6EFDD] shadow-philia"
             >
               <QrCode className="h-5 w-5" strokeWidth={1.5} />
-              出示预约码
+              <CK k="appointments.liveShowCode">{apc('appointments.liveShowCode')}</CK>
             </Link>
           ) : null}
         </div>
@@ -686,7 +771,7 @@ export default function AppointmentLivePage() {
     )
   }
 
-  // cancelled：已取消提示
+  // cancelled：已取消提示（状态机分支不入块流）
   if (appt.status === 'cancelled') {
     return (
       <div className="px-4 pb-10 pt-4">
@@ -694,13 +779,13 @@ export default function AppointmentLivePage() {
         {header}
         <div className="u1-card mt-3 flex flex-col items-center px-6 py-10 text-center">
           <CircleX className="h-10 w-10 text-ink-placeholder" strokeWidth={1.5} />
-          <h2 className="mt-3 text-title">预约已取消</h2>
-          <p className="mt-2 text-body text-ink-secondary">这次没能相见，期待下次再约。</p>
+          <h2 className="mt-3 text-title"><CK k="appointments.liveCancelledTitle">{apc('appointments.liveCancelledTitle')}</CK></h2>
+          <p className="mt-2 text-body text-ink-secondary"><CK k="appointments.liveCancelledBody">{apc('appointments.liveCancelledBody')}</CK></p>
           <Link
             to="/booking"
             className="mt-5 inline-flex h-11 items-center rounded-full bg-philia-gradient px-6 text-body font-semibold text-[#F6EFDD] shadow-philia"
           >
-            重新预约
+            <CK k="appointments.liveRebook">{apc('appointments.liveRebook')}</CK>
           </Link>
         </div>
       </div>
@@ -710,64 +795,113 @@ export default function AppointmentLivePage() {
   // 门店电话：stores.phone 已在仓（0042 迁移），无值隐藏（契约口径）
   const storePhone = store?.phone ?? null
 
-  // 主流程：grooming 六步流 / boarding 寄养时间线
-  return (
-    <div className="px-4 pb-10 pt-4">
-      <ConnectionBar visible={sseDown} />
-      <LiveToast message={toast} />
-      <CelebrationOverlay visible={celebrating} petName={pet?.name} />
-      {viewer ? (
-        <PhotoViewer
-          photos={viewer.photos}
-          index={viewer.index}
-          onClose={() => setViewer(null)}
-          onNavigate={(i) => setViewer((v) => (v ? { ...v, index: i } : v))}
-          keyboard={false}
-        />
-      ) : null}
+  /* 块渲染器（特别裁 §五.2：画布只控区块壳——块内实时数据/状态机/查询逐字搬，不接区块 props） */
+  const renderers: Record<string, () => ReactNode> = {
+    /* 1. apptLive.header：统一返回条（洗护全程/寄养全程）+ 宠物摘要卡（LiveHeader props
+          组装段；组件内状态签「已完成/实时同步/重连中」无 CK 锚——见 NOTES） */
+    'apptLive.header': () => (
+      <>
+        {nav}
+        {header}
+      </>
+    ),
 
-      {nav}
-      {header}
+    /* 2. apptLive.incident：异常通报条（LiveHeader 之后、主体之前；零异常不渲染） */
+    'apptLive.incident': () => <IncidentBanner incidents={incidents} />,
 
-      {/* 异常通报条：LiveHeader 之后、主体之前；零异常不渲染 */}
-      <IncidentBanner incidents={incidents} />
+    /* 3. apptLive.stepper：洗护六步进度流（去卡壳直上画布；boarding 态本块不渲染，
+          与 boardingStay 块互斥——原三分支 ternary 拆块逐字搬） */
+    'apptLive.stepper': () =>
+      !isBoarding ? (
+        <div className="mt-3.5">
+          {stepsQuery.isPending ? (
+            <div className="u1-card p-6 text-center">
+              <p className="text-caption text-ink-secondary"><CK k="appointments.liveStepsLoading">{apc('appointments.liveStepsLoading')}</CK></p>
+            </div>
+          ) : (
+            /* U4-D2：stepper 去卡壳直上画布（试样 05 .steps 无卡），工艺取齐见 LiveStepper 头注 */
+            <LiveStepper steps={timelineSteps} onPhotoClick={openStepPhotos} />
+          )}
+        </div>
+      ) : null,
 
-      <div className="mt-3.5">
-        {isBoarding ? (
+    /* 4. apptLive.boardingStay：寄养安心卡+每日打卡（BoardingLive 整件；组件内文案
+          assurance 系键已走 apc 端口但无 CK 锚；入住信息卡等写死段见 NOTES） */
+    'apptLive.boardingStay': () =>
+      isBoarding ? (
+        <div className="mt-3.5">
           <BoardingLive
             stay={stayInfo}
             logs={boardingLogs}
             assurance={assuranceInfo}
             onPhotoClick={(photos, index) => setViewer({ photos, index })}
           />
-        ) : stepsQuery.isPending ? (
-          <div className="u1-card p-6 text-center">
-            <p className="text-caption text-ink-secondary">正在接入服务进度…</p>
+        </div>
+      ) : null,
+
+    /* 5. apptLive.review：完成态评价区（完成时刻行 + ReviewPanel 合规件；ReviewPanel
+          组件内文案无 CK 锚；完成时刻行含 mono 样式插值不抽键——见 NOTES） */
+    'apptLive.review': () =>
+      completed ? (
+        <>
+          {completedAtLine(appt.completedAt)}
+          <div className="mt-3">
+            <ReviewPanel
+              existingRating={appt.rating}
+              existingReview={appt.review}
+              submitting={reviewMutation.isPending}
+              onSubmit={(rating, text, anonymous) =>
+                reviewMutation.mutate({ rating, review: text.length > 0 ? text : undefined, anonymous })
+              }
+              onShare={() => void share()}
+            />
           </div>
-        ) : (
-          /* U4-D2：stepper 去卡壳直上画布（试样 05 .steps 无卡），工艺取齐见 LiveStepper 头注 */
-          <LiveStepper steps={timelineSteps} onPhotoClick={openStepPhotos} />
-        )}
-      </div>
+        </>
+      ) : null,
 
-      {completed && completedAtLine(appt.completedAt)}
-
-      <div className="mt-3">
-        {completed ? (
-          <ReviewPanel
-            existingRating={appt.rating}
-            existingReview={appt.review}
-            submitting={reviewMutation.isPending}
-            onSubmit={(rating, text, anonymous) =>
-              reviewMutation.mutate({ rating, review: text.length > 0 ? text : undefined, anonymous })
-            }
-            onShare={() => void share()}
-          />
-        ) : (
+    /* 6. apptLive.contact：联系门店条（完成前；ContactStore 共享件内写死文案无 CK 锚——见 NOTES） */
+    'apptLive.contact': () =>
+      !completed ? (
+        <div className="mt-3">
           <ContactStore phone={storePhone} />
+        </div>
+      ) : null,
+  }
+
+  // 主流程：grooming 六步流 / boarding 寄养时间线
+  return (
+    <CanvasLayoutLoader pageKey="apptLive" storeId={liveStoreId}>
+      <div className="px-4 pb-10 pt-4">
+        {/* 弹层/浮件不入块流（照改造前位置挂载）：断线细条/即时 toast/庆祝微动效/照片查看器 */}
+        <ConnectionBar visible={sseDown} />
+        <LiveToast message={toast} />
+        <CelebrationOverlay visible={celebrating} petName={pet?.name} />
+        {viewer ? (
+          <PhotoViewer
+            photos={viewer.photos}
+            index={viewer.index}
+            onClose={() => setViewer(null)}
+            onNavigate={(i) => setViewer((v) => (v ? { ...v, index: i } : v))}
+            keyboard={false}
+          />
+        ) : null}
+
+        {/* 画布预览水印（?canvasPreview=1 探针模式；零真会话零写库口径注记） */}
+        {isCanvasPreview ? (
+          <p className="mb-3 text-center text-caption-xs text-ink-secondary" data-testid="appt-live-canvas-preview-note">{mc('mc.canvasExampleNote')}</p>
+        ) : null}
+
+        {/* 块流：六块按有效布局渲染（published 覆盖∪默认序尾补）；stepper/boardingStay
+            与 review/contact 两组互斥块自带渲染闸，默认序下 DOM 结构零差异 */}
+        {layout.map((b) =>
+          b.visible ? (
+            <section data-block-key={b.blockKey} key={b.blockKey}>
+              {renderers[b.blockKey]?.() ?? null}
+            </section>
+          ) : null,
         )}
       </div>
-    </div>
+    </CanvasLayoutLoader>
   )
 }
 
@@ -793,20 +927,22 @@ function IncidentBanner({ incidents }: { incidents: IncidentRow[] }) {
       <section data-testid="incident-banner" className="mt-3 rounded-card bg-danger-light p-4">
         <h2 className="flex items-center gap-1.5 text-title text-danger-deep">
           <TriangleAlert className="h-5 w-5" strokeWidth={1.5} />
-          {apc('appointments.incidentTitle')}
+          <CK k="appointments.incidentTitle">{apc('appointments.incidentTitle')}</CK>
         </h2>
         <ul className="mt-2 space-y-2.5">
           {open.map((i) => (
             <li key={i.id}>
               <p className="flex items-center gap-2 text-body font-medium text-ink">
-                {apc(INCIDENT_TYPE_KEY[i.type] ?? 'appointments.incidentTypeStress')}
+                <CK k={INCIDENT_TYPE_KEY[i.type] ?? 'appointments.incidentTypeStress'}>
+                  {apc(INCIDENT_TYPE_KEY[i.type] ?? 'appointments.incidentTypeStress')}
+                </CK>
                 <span className="rounded-chip bg-danger px-1.5 py-0.5 text-caption-xs font-semibold text-destructive-foreground">
-                  {apc('appointments.incidentHandling')}
+                  <CK k="appointments.incidentHandling">{apc('appointments.incidentHandling')}</CK>
                 </span>
               </p>
               <p className="mt-0.5 text-body-sm text-ink">{i.description}</p>
               <p className="u1-num mt-0.5 text-caption-xs text-ink-secondary">
-                {apc('appointments.incidentOccurredAt', { time: format(i.occurredAt, 'M月d日 HH:mm') })}
+                <CK k="appointments.incidentOccurredAt">{apc('appointments.incidentOccurredAt', { time: format(i.occurredAt, 'M月d日 HH:mm') })}</CK>
               </p>
             </li>
           ))}
@@ -822,7 +958,7 @@ function IncidentBanner({ incidents }: { incidents: IncidentRow[] }) {
       data-testid="incident-banner"
       className="mt-3 rounded-tag bg-brand-secondary-light px-3 py-2 text-caption text-ink-secondary"
     >
-      {apc('appointments.incidentHandledLine', { note })}
+      <CK k="appointments.incidentHandledLine">{apc('appointments.incidentHandledLine', { note })}</CK>
     </p>
   )
 }

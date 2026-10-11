@@ -35,6 +35,8 @@ const PRODUCT_REVIEWS_COPY_TABLE = {
   'rev.submitFail': '评价提交失败，请稍后再试',
   /* 无 received 可评单时的诚实注记（不画假入口） */
   'rev.needReceived': '确认收货后即可评价本商品',
+  /* 画布全屏批 片 3：晒图上传失败提示条（原码内写死抽键） */
+  'rev.photoUploadFail': '上传失败，请稍后再试',
 } as const;
 
 export const PRODUCT_REVIEWS_COPY = withCopyOverrides(PRODUCT_REVIEWS_COPY_TABLE);

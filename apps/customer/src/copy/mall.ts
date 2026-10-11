@@ -113,6 +113,38 @@ const MALL_COPY_TABLE = {
   'mall.receiveConfirmBody': '确认后订单将转为已完成，请确保商品已完好送达。',
   'mall.cancelConfirmTitle': '取消该订单？',
   'mall.cancelConfirmBody': '取消后库存将释放，订单不可恢复。',
+
+  /* ---- 画布全屏批 片 3 末片（商城域四屏画布化抽键；值=原码内写死文案逐字） ---- */
+  /* 商品详情异常态（pdp 块流外页级态） */
+  'mall.pdpNotFound': '商品不存在或已下架',
+  'mall.pdpNotFoundAlt': '商品不存在',
+  /* 购物袋（cart.rows 库存注记 / cart.ctaBar 全选合计 / 结算闸提示） */
+  'mall.cartStockNote': '库存 {n} 件',
+  'mall.cartCheckAll': '全选',
+  'mall.cartTotalLabel': '合计',
+  'mall.cartNeedCheck': '请先勾选要结算的商品',
+  /* 商品订单状态签六签（mallOrders.tabs；pending/paid/shipped/received 与状态胶囊同文复用） */
+  'mall.tabAll': '全部',
+  'mall.tabPending': '待支付',
+  'mall.tabPaid': '待发货',
+  'mall.tabShipped': '待收货',
+  'mall.tabReceived': '已完成',
+  'mall.tabAftersale': '售后',
+  /* 状态胶囊独有态（售后签组内 cancelled/refunding） */
+  'mall.statusCancelled': '已取消',
+  'mall.statusRefunding': '售后中',
+  /* 订单卡物流行前缀 + 待支付取消钮 + 取消二次确认钮 */
+  'mall.trackingLabel': '快递单号',
+  'mall.cancelCta': '取消',
+  'mall.cancelConfirmCta': '确认取消',
+  /* SSE/变更提示条（本片接通） */
+  'mall.toastPaid': '支付成功，门店会尽快发货',
+  'mall.toastShipped': '订单已发货{no}',
+  'mall.receiveOk': '已确认收货，感谢购买',
+  'mall.receiveFail': '确认收货失败',
+  'mall.cancelOk': '订单已取消，库存已释放',
+  'mall.cancelFail': '取消失败，请稍后再试',
+  'mall.reorderToast': '已按原单加入购物车',
 } as const;
 
 export const MALL_COPY = withCopyOverrides(MALL_COPY_TABLE);

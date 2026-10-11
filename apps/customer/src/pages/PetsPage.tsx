@@ -6,19 +6,27 @@
  *   名字 1-32 字、标签 ≤12 个每个 ≤16 字）；头像 uploadImage 上传，
  *   relDir=pets/<petId>（新建时先建档拿 id 再上传回写）；
  * - 疫苗有效期：临期（<30 天）暖底提醒、过期赭红警示（寄养硬校验提示）。
+ *
+ * 画布化（产品-1010 片 3 末片 · 账户域重屏批）：四块入册
+ * （pets.header/empty/card/form），块序/显隐=useCanvasLayout('pets')
+ * （published→注册表默认序尾补，空=默认序兜底常量）；文案键行内可改=CK 点选反查锚；
+ * 预览=CanvasLayoutLoader+?canvasPreview=1 水印注记。块内逻辑（pet.upsert 两步提交/
+ * 疫苗证明上传回写/洗护史查询/多宠切换器）零改动，data-testid 原值全保留。
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Cake, PawPrint, Plus, Scale, Syringe, X } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { z } from 'zod'
-import { getApiBase, uploadImage, useMe, usePhiliaClient } from '@philia/shared'
+import { CanvasLayoutLoader, CK, getApiBase, uploadImage, useCanvasLayout, useMe, usePhiliaClient } from '@philia/shared'
 import PageHeader from '@/components/PageHeader'
 import ActivePetSwitcher from '@/components/pets/ActivePetSwitcher'
 import { pc } from '@/copy/pets'
 import { sl } from '@/copy/serviceloop'
+import { readLastBooking } from '@/lib/bookingPrefill'
 import { upsertPetExp2 } from '@/lib/exp2Api'
+import { mc } from '../components/member/copy'
 import {
   EmptyState,
   ErrorState,
@@ -26,6 +34,9 @@ import {
   daysUntil,
   formatDateCn,
 } from '../components/home/common'
+
+/** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
+const PETS_DEFAULT_ORDER = ['pets.header', 'pets.empty', 'pets.card', 'pets.form'] as const
 
 /* ------------------------------------------------------------------ */
 /* 表单 zod 校验（镜像 server pet.upsert 规则）                           */
@@ -92,11 +103,18 @@ const EMPTY_FORM: FormState = {
 
 const PRESET_TAGS = ['亲人', '胆小', '活泼', '安静', '好动', '粘人', '怕生', '友好']
 
-const SPECIES_OPTIONS: Array<{ value: FormState['species']; label: string }> = [
-  { value: 'dog', label: '狗狗' },
-  { value: 'cat', label: '猫咪' },
-  { value: 'other', label: '其他' },
+const SPECIES_OPTIONS: Array<{
+  value: FormState['species']
+  labelKey: 'pets.speciesDog' | 'pets.speciesCat' | 'pets.speciesOther'
+}> = [
+  { value: 'dog', labelKey: 'pets.speciesDog' },
+  { value: 'cat', labelKey: 'pets.speciesCat' },
+  { value: 'other', labelKey: 'pets.speciesOther' },
 ]
+
+/** 物种展示文案键（枚举值写库不入 copy 表，展示标签走键；未知物种落「其他」） */
+const speciesLabelKeyOf = (species: string) =>
+  SPECIES_OPTIONS.find((o) => o.value === species)?.labelKey ?? 'pets.speciesOther'
 
 /* ------------------------------------------------------------------ */
 /* 疫苗状态徽章                                                         */
@@ -106,7 +124,7 @@ function VaccineBadge({ until }: { until: string | null }) {
   if (!until) {
     return (
       <span className="rounded-chip bg-sunken px-2 py-1 text-caption-xs text-ink-placeholder">
-        {pc('pets.vaccineNone')}
+        <CK k="pets.vaccineNone">{pc('pets.vaccineNone')}</CK>
       </span>
     )
   }
@@ -114,7 +132,7 @@ function VaccineBadge({ until }: { until: string | null }) {
   if (days < 0) {
     return (
       <span className="rounded-chip bg-danger-light px-2 py-1 text-caption-xs text-danger-deep">
-        {pc('pets.vaccineExpired')}
+        <CK k="pets.vaccineExpired">{pc('pets.vaccineExpired')}</CK>
       </span>
     )
   }
@@ -122,14 +140,14 @@ function VaccineBadge({ until }: { until: string | null }) {
     /* U1-I：到期提醒=提示卡暖底（v2.0 §1.4 暖底辅助件；真实 vaccineValidUntil 驱动） */
     return (
       <span className="rounded-chip bg-brand-primary-light px-2 py-1 text-caption-xs text-ink">
-        {pc('pets.vaccineSoon', { days })}
+        <CK k="pets.vaccineSoon">{pc('pets.vaccineSoon', { days })}</CK>
       </span>
     )
   }
   /* U1-I：正常=卡其族浅底（反馈件不设绿，45 号档 P1-1② 口径） */
   return (
     <span className="rounded-chip bg-brand-secondary-light px-2 py-1 text-caption-xs text-ink">
-      {pc('pets.vaccineOk', { date: until })}
+      <CK k="pets.vaccineOk">{pc('pets.vaccineOk', { date: until })}</CK>
     </span>
   )
 }
@@ -215,7 +233,7 @@ function PetForm({
       onDone()
     },
     onError: (err) => {
-      setSubmitError(err instanceof Error ? err.message : '保存失败，请稍后重试')
+      setSubmitError(err instanceof Error ? err.message : pc('pets.formSaveFail'))
     },
   })
 
@@ -253,7 +271,13 @@ function PetForm({
 
   return (
     <div className="u1-card p-4">
-      <p className="text-title">{editingId ? '编辑档案' : pc('pets.addCta')}</p>
+      <p className="text-title">
+        {editingId ? (
+          <CK k="pets.editTitle">{pc('pets.editTitle')}</CK>
+        ) : (
+          <CK k="pets.addCta">{pc('pets.addCta')}</CK>
+        )}
+      </p>
 
       {/* 头像 */}
       <div className="mt-4 flex items-center gap-4">
@@ -261,10 +285,10 @@ function PetForm({
           type="button"
           onClick={() => fileRef.current?.click()}
           className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-sunken"
-          aria-label="上传头像"
+          aria-label={pc('pets.avatarUpload')}
         >
           {avatarPreview ? (
-            <img src={avatarPreview} alt="头像预览" className="h-full w-full object-cover" />
+            <img src={avatarPreview} alt={pc('pets.avatarPreviewAlt')} className="h-full w-full object-cover" />
           ) : (
             <PawPrint className="h-8 w-8 text-ink-placeholder" strokeWidth={1.5} />
           )}
@@ -275,9 +299,13 @@ function PetForm({
             onClick={() => fileRef.current?.click()}
             className="rounded-full bg-brand-primary-light px-4 py-2 text-caption text-brand-primary-pressed"
           >
-            {avatarPreview ? '更换头像' : '上传头像'}
+            {avatarPreview ? (
+              <CK k="pets.avatarChange">{pc('pets.avatarChange')}</CK>
+            ) : (
+              <CK k="pets.avatarUpload">{pc('pets.avatarUpload')}</CK>
+            )}
           </button>
-          <p className="mt-1 text-caption text-ink-placeholder">上传前自动压缩，最长边 2000px</p>
+          <p className="mt-1 text-caption text-ink-placeholder"><CK k="pets.avatarNote">{pc('pets.avatarNote')}</CK></p>
         </div>
         <input
           ref={fileRef}
@@ -290,19 +318,19 @@ function PetForm({
 
       {/* 名字 / 物种 */}
       <div className="mt-4">
-        <label className={labelCls} htmlFor="pet-name">名字 *</label>
+        <label className={labelCls} htmlFor="pet-name"><CK k="pets.nameLabel">{pc('pets.nameLabel')}</CK></label>
         <input
           id="pet-name"
           className={inputCls}
           value={form.name}
           maxLength={32}
-          placeholder="TA 的名字"
+          placeholder={pc('pets.namePlaceholder')}
           onChange={(e) => set('name', e.target.value)}
         />
         {errors.name ? <p className={errCls}>{errors.name}</p> : null}
       </div>
       <div className="mt-4">
-        <span className={labelCls}>物种 *</span>
+        <span className={labelCls}><CK k="pets.speciesLabel">{pc('pets.speciesLabel')}</CK></span>
         {/* W1-D2 触控量化：整钮可点 + 目标高 ≥44px，相邻间距 8px（gap-2） */}
         <div className="flex gap-2">
           {SPECIES_OPTIONS.map((opt) => (
@@ -316,7 +344,7 @@ function PetForm({
                   : 'border-line bg-card text-ink-secondary'
               }`}
             >
-              {opt.label}
+              <CK k={opt.labelKey}>{pc(opt.labelKey)}</CK>
             </button>
           ))}
         </div>
@@ -326,19 +354,19 @@ function PetForm({
       {/* 品种 / 生日 / 体重 / 疫苗 / 芯片号 / 花色 */}
       <div className="mt-4 grid grid-cols-2 gap-3">
         <div>
-          <label className={labelCls} htmlFor="pet-breed">品种</label>
+          <label className={labelCls} htmlFor="pet-breed"><CK k="pets.breedLabel">{pc('pets.breedLabel')}</CK></label>
           <input
             id="pet-breed"
             className={inputCls}
             value={form.breed}
             maxLength={64}
-            placeholder="如：金毛"
+            placeholder={pc('pets.breedPlaceholder')}
             onChange={(e) => set('breed', e.target.value)}
           />
           {errors.breed ? <p className={errCls}>{errors.breed}</p> : null}
         </div>
         <div>
-          <label className={labelCls} htmlFor="pet-birthday">生日</label>
+          <label className={labelCls} htmlFor="pet-birthday"><CK k="pets.birthdayLabel">{pc('pets.birthdayLabel')}</CK></label>
           <input
             id="pet-birthday"
             type="date"
@@ -349,7 +377,7 @@ function PetForm({
           {errors.birthday ? <p className={errCls}>{errors.birthday}</p> : null}
         </div>
         <div>
-          <label className={labelCls} htmlFor="pet-weight">体重（kg）</label>
+          <label className={labelCls} htmlFor="pet-weight"><CK k="pets.weightLabel">{pc('pets.weightLabel')}</CK></label>
           <input
             id="pet-weight"
             type="number"
@@ -358,13 +386,13 @@ function PetForm({
             step="0.1"
             className={inputCls}
             value={form.weightKg}
-            placeholder="如：4.5"
+            placeholder={pc('pets.weightPlaceholder')}
             onChange={(e) => set('weightKg', e.target.value)}
           />
           {errors.weightKg ? <p className={errCls}>{errors.weightKg}</p> : null}
         </div>
         <div>
-          <label className={labelCls} htmlFor="pet-vaccine">疫苗有效期至</label>
+          <label className={labelCls} htmlFor="pet-vaccine"><CK k="pets.vaccineLabel">{pc('pets.vaccineLabel')}</CK></label>
           <input
             id="pet-vaccine"
             type="date"
@@ -375,7 +403,7 @@ function PetForm({
           {errors.vaccineValidUntil ? <p className={errCls}>{errors.vaccineValidUntil}</p> : null}
         </div>
         <div>
-          <label className={labelCls} htmlFor="pet-chip-no">{pc('pets.chipNoLabel')}</label>
+          <label className={labelCls} htmlFor="pet-chip-no"><CK k="pets.chipNoLabel">{pc('pets.chipNoLabel')}</CK></label>
           <input
             id="pet-chip-no"
             className={inputCls}
@@ -387,7 +415,7 @@ function PetForm({
           {errors.chipNo ? <p className={errCls}>{errors.chipNo}</p> : null}
         </div>
         <div>
-          <label className={labelCls} htmlFor="pet-coat-color">{pc('pets.coatColorLabel')}</label>
+          <label className={labelCls} htmlFor="pet-coat-color"><CK k="pets.coatColorLabel">{pc('pets.coatColorLabel')}</CK></label>
           <input
             id="pet-coat-color"
             className={inputCls}
@@ -408,20 +436,20 @@ function PetForm({
           onChange={(e) => set('neutered', e.target.checked)}
           className="h-4 w-4 accent-brand-primary"
         />
-        已绝育
+        <CK k="pets.neuteredLabel">{pc('pets.neuteredLabel')}</CK>
       </label>
 
       {/* 体验大批片 2：疫苗证明多图留证（/api/upload relDir=vaccine/<petId>；
           缩略图回显 + 删除；行为不变口径注记明面——寄养校验仍以疫苗有效期为准） */}
       <div className="mt-4" data-testid="pet-vaccine-proofs">
-        <span className={labelCls}>{pc('pets.vaccineProofTitle')}</span>
+        <span className={labelCls}><CK k="pets.vaccineProofTitle">{pc('pets.vaccineProofTitle')}</CK></span>
         <div className="flex flex-wrap gap-2">
           {proofs.map((url) => (
             <span key={url} className="relative h-16 w-16 overflow-hidden rounded-control bg-sunken">
               <img src={url} alt={pc('pets.vaccineProofTitle')} className="h-full w-full object-cover" />
               <button
                 type="button"
-                aria-label="删除"
+                aria-label={pc('pets.proofRemove')}
                 data-testid="pet-vaccine-proof-remove"
                 onClick={() => setProofs((cur) => cur.filter((u) => u !== url))}
                 className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink/60 text-canvas"
@@ -435,7 +463,7 @@ function PetForm({
               <img src={URL.createObjectURL(f)} alt={f.name} className="h-full w-full object-cover" />
               <button
                 type="button"
-                aria-label="删除"
+                aria-label={pc('pets.proofRemove')}
                 onClick={() => setProofFiles((cur) => cur.filter((_, j) => j !== i))}
                 className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink/60 text-canvas"
               >
@@ -449,7 +477,7 @@ function PetForm({
             data-testid="pet-vaccine-proof-add"
             className="flex h-16 w-16 items-center justify-center rounded-control border border-dashed border-line-strong text-caption-xs text-ink-secondary"
           >
-            {pc('pets.vaccineProofAdd')}
+            <CK k="pets.vaccineProofAdd">{pc('pets.vaccineProofAdd')}</CK>
           </button>
           <input
             ref={proofFileRef}
@@ -464,12 +492,12 @@ function PetForm({
             }}
           />
         </div>
-        <p className="mt-1 text-caption-xs text-ink-placeholder">{pc('pets.vaccineProofNote')}</p>
+        <p className="mt-1 text-caption-xs text-ink-placeholder"><CK k="pets.vaccineProofNote">{pc('pets.vaccineProofNote')}</CK></p>
       </div>
 
       {/* 性格标签 */}
       <div className="mt-4">
-        <span className={labelCls}>性格标签（最多 12 个）</span>
+        <span className={labelCls}><CK k="pets.tagsLabel">{pc('pets.tagsLabel')}</CK></span>
         <div className="flex flex-wrap gap-2">
           {PRESET_TAGS.map((tag) => {
             const on = form.temperamentTags.includes(tag)
@@ -526,7 +554,7 @@ function PetForm({
           onClick={onCancel}
           className="flex-1 rounded-full border border-line py-2.5 text-body-sm text-ink-secondary"
         >
-          取消
+          <CK k="pets.formCancel">{pc('pets.formCancel')}</CK>
         </button>
         <button
           type="button"
@@ -534,7 +562,11 @@ function PetForm({
           onClick={onSubmit}
           className="flex-1 rounded-full bg-brand-primary py-2.5 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
         >
-          {saveMutation.isPending ? '保存中…' : '保存档案'}
+          {saveMutation.isPending ? (
+            <CK k="pets.formSaving">{pc('pets.formSaving')}</CK>
+          ) : (
+            <CK k="pets.formSubmit">{pc('pets.formSubmit')}</CK>
+          )}
         </button>
       </div>
     </div>
@@ -553,7 +585,7 @@ function CustomTagInput({ onAdd, disabled }: { onAdd: (tag: string) => void; dis
     <div className="mt-2 flex gap-2">
       <input
         className="flex-1 rounded-input border border-line bg-card px-3 py-2 text-caption outline-none focus:border-brand-primary"
-        placeholder={disabled ? '标签已达上限' : '自定义标签，回车添加'}
+        placeholder={disabled ? pc('pets.tagLimitPlaceholder') : pc('pets.tagCustomPlaceholder')}
         value={value}
         maxLength={16}
         disabled={disabled}
@@ -571,7 +603,7 @@ function CustomTagInput({ onAdd, disabled }: { onAdd: (tag: string) => void; dis
         disabled={disabled || !value.trim()}
         className="rounded-full bg-brand-primary-light px-4 text-caption text-brand-primary-pressed disabled:opacity-50"
       >
-        添加
+        <CK k="pets.tagAdd">{pc('pets.tagAdd')}</CK>
       </button>
     </div>
   )
@@ -603,8 +635,8 @@ function PetGroomingHistory({ petId }: { petId: string }) {
   return (
     <div className="mt-3 border-t border-line-ring pt-2.5" data-testid={`pet-history-${petId}`}>
       <div className="flex items-baseline justify-between">
-        <p className="text-body-sm font-semibold">{pc('pets.historyTitle')}</p>
-        <p className="u1-num text-caption-xs text-ink-placeholder">{pc('pets.historyCount', { count: rowsAll.length })}</p>
+        <p className="text-body-sm font-semibold"><CK k="pets.historyTitle">{pc('pets.historyTitle')}</CK></p>
+        <p className="u1-num text-caption-xs text-ink-placeholder"><CK k="pets.historyCount">{pc('pets.historyCount', { count: rowsAll.length })}</CK></p>
       </div>
       <ul className="mt-1.5 flex flex-col gap-1.5">
         {rows.map((a) => {
@@ -614,13 +646,13 @@ function PetGroomingHistory({ petId }: { petId: string }) {
               <span className="u1-num shrink-0 text-ink-placeholder">
                 {d.getMonth() + 1}.{d.getDate()}
               </span>
-              <span className="min-w-0 flex-1 truncate text-ink">{a.serviceName ?? '洗护'}</span>
+              <span className="min-w-0 flex-1 truncate text-ink">{a.serviceName ?? pc('pets.historyServiceFallback')}</span>
               <Link
                 to={`/booking/grooming?storeId=${encodeURIComponent(a.storeId)}&serviceId=${encodeURIComponent(a.serviceId)}&petId=${encodeURIComponent(petId)}`}
                 data-testid={`pet-rebook-${a.id}`}
                 className="shrink-0 text-caption-xs font-bold text-ink underline-offset-2 hover:underline"
               >
-                {pc('pets.rebook')}
+                <CK k="pets.rebook">{pc('pets.rebook')}</CK>
               </Link>
             </li>
           )
@@ -642,6 +674,38 @@ export default function PetsPage() {
   })
   const [editing, setEditing] = useState<{ id: string | null; initial: FormState } | null>(null)
 
+  /* 画布批片 3：预览探针参识别（?canvasPreview=1；微光正名批工艺三件套之一） */
+  const isCanvasPreview = useMemo(
+    () => new URLSearchParams(window.location.search).get('canvasPreview') === '1',
+    [],
+  )
+  /* 画布布局店锚（MePage/MemberCenterPage 口径：?canvasStore= 预览店锚 > 记忆门店 > 就近首店；
+     本屏无门店概念，nearbyQ 带 enabled 闸仅作布局锚解析，零增发常态查询） */
+  const previewStoreId = useMemo(() => new URLSearchParams(window.location.search).get('canvasStore'), [])
+  const memoryStoreId = useMemo(() => readLastBooking()?.storeId ?? null, [])
+  const nearbyQ = useQuery({
+    queryKey: ['store', 'listNearby'],
+    queryFn: () => trpc.store.listNearby.query(),
+    enabled: previewStoreId === null && memoryStoreId === null,
+    staleTime: 300_000,
+  })
+  const canvasStoreId = previewStoreId ?? memoryStoreId ?? nearbyQ.data?.stores?.[0]?.id ?? null
+
+  /* ---- 画布端口：注册表块序 + 有效布局（published→默认序尾补；空=默认序兜底常量） ---- */
+  const blocksQ = useQuery({
+    queryKey: ['canvas', 'blocks'],
+    queryFn: () => trpc.canvas.blocks.query(),
+    staleTime: 300_000,
+    retry: 1,
+  })
+  const registryBlocks = useMemo(() => {
+    const items = (blocksQ.data?.items ?? [])
+      .filter((b) => b.pageKey === 'pets')
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+    return items.length > 0 ? items : PETS_DEFAULT_ORDER.map((blockKey) => ({ blockKey }))
+  }, [blocksQ.data])
+  const layout = useCanvasLayout('pets', canvasStoreId, registryBlocks)
+
   const openCreate = () => setEditing({ id: null, initial: EMPTY_FORM })
   const openEdit = (pet: NonNullable<typeof petsQuery.data>[number]) =>
     setEditing({
@@ -662,36 +726,46 @@ export default function PetsPage() {
       },
     })
 
-  return (
-    /* U4-D3：页边距 22px。结构说明（登记）：试样 11=单宠详情页（/pets/:id 大头照+指标格），
-       实现=多宠列表页（/philia/pets）——信息架构维持现行不重构，逐格对齐卡工艺 */
-    <div className="px-[22px] pb-6">
-      {/* U1-A：统一返回条（←圆钮+标题），固定返回 philia 页 */}
-      <PageHeader title={pc('pets.title')} fallback="/philia" className="pt-4" />
+  /* 块渲染器（块内逻辑零改动——四块照改造前 JSX 逐字搬，文案走 copy 键 + CK 反查锚） */
+  const renderers: Record<string, () => ReactNode> = {
+    /* 1. pets.header：统一返回条（←圆钮+标题，固定返回 philia 页）+ 多宠物全局切换器
+          （ActivePetSwitcher=共享件，switcher 四键组件内渲染无 CK 锚，NOTES 报备） */
+    'pets.header': () => (
+      <>
+        {/* U1-A：统一返回条（←圆钮+标题），固定返回 philia 页 */}
+        <PageHeader title={<CK k="pets.title">{pc('pets.title')}</CK>} fallback="/philia" className="pt-4" />
 
-      {/* 体验批片 4：多宠物全局切换器（零宠不渲染 / 单宠不展开 / 多宠底部 sheet 切换） */}
-      <ActivePetSwitcher />
+        {/* 体验批片 4：多宠物全局切换器（零宠不渲染 / 单宠不展开 / 多宠底部 sheet 切换） */}
+        <ActivePetSwitcher />
+      </>
+    ),
 
-      <div className="mt-4 flex flex-col gap-3">
+    /* 2. pets.empty：空态引导三句话（题/说明/出口；EmptyState 题/说明为 string prop 无 CK 锚） */
+    'pets.empty': () =>
+      petsQuery.data && petsQuery.data.length === 0 && !editing ? (
+        <EmptyState
+          title={pc('pets.emptyTitle')}
+          desc={pc('pets.emptyBody')}
+          action={
+            /* E 系空态深棕钮（.emptyc .go：深棕墨底 #2E2318 + 深底主文字 #F6EFDD，§4.11） */
+            <button
+              type="button"
+              onClick={openCreate}
+              className="rounded-control bg-[#2E2318] px-[22px] py-3 text-[13px] font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92"
+            >
+              <CK k="pets.emptyCta">{pc('pets.emptyCta')}</CK>
+            </button>
+          }
+        />
+      ) : null,
+
+    /* 3. pets.card：列表读态（骨架/失败重试）+ 宠物卡列表（内层 flex gap-3 容器=改造前
+          共享容器节奏，多卡间距零差异） */
+    'pets.card': () => (
+      <div className="flex flex-col gap-3">
         {petsQuery.isPending ? <LoadingBlock lines={3} /> : null}
         {petsQuery.isError ? (
           <ErrorState message={pc('pets.loadFail')} onRetry={() => void petsQuery.refetch()} />
-        ) : null}
-        {petsQuery.data && petsQuery.data.length === 0 && !editing ? (
-          <EmptyState
-            title={pc('pets.emptyTitle')}
-            desc={pc('pets.emptyBody')}
-            action={
-              /* E 系空态深棕钮（.emptyc .go：深棕墨底 #2E2318 + 深底主文字 #F6EFDD，§4.11） */
-              <button
-                type="button"
-                onClick={openCreate}
-                className="rounded-control bg-[#2E2318] px-[22px] py-3 text-[13px] font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92"
-              >
-                {pc('pets.emptyCta')}
-              </button>
-            }
-          />
         ) : null}
 
         {petsQuery.data?.map((pet) => (
@@ -720,14 +794,14 @@ export default function PetsPage() {
                   <button
                     type="button"
                     onClick={() => openEdit(pet)}
-                    aria-label={`编辑 ${pet.name}`}
+                    aria-label={`${pc('pets.editTitle')} ${pet.name}`}
                     className="shrink-0 text-caption-xs text-ink-secondary"
                   >
-                    编辑 ›
+                    <CK k="pets.editEntry">{pc('pets.editEntry')}</CK>
                   </button>
                 </div>
                 <p className="mt-0.5 text-caption text-ink-secondary">
-                  {{ dog: '狗狗', cat: '猫咪', other: '其他' }[pet.species] ?? '其他'}
+                  <CK k={speciesLabelKeyOf(pet.species)}>{pc(speciesLabelKeyOf(pet.species))}</CK>
                   {pet.breed ? ` · ${pet.breed}` : ''}
                 </p>
                 {/* U1-I 指标格：疫苗（暖底临期/赭红过期，真实 vaccineValidUntil）/ 生日 / 体重 */}
@@ -741,7 +815,7 @@ export default function PetsPage() {
                         data-testid={`pet-vaccine-proof-count-${pet.id}`}
                         className="rounded-chip bg-sunken px-2 py-1 text-caption-xs text-ink-secondary"
                       >
-                        {pc('pets.vaccineProofCount', { count: pet.vaccineProofUrls.length })}
+                        <CK k="pets.vaccineProofCount">{pc('pets.vaccineProofCount', { count: pet.vaccineProofUrls.length })}</CK>
                       </span>
                     ) : null}
                   </div>
@@ -758,19 +832,19 @@ export default function PetsPage() {
                         <span className="u1-num">{pet.weightKg} kg</span>
                       </span>
                     ) : null}
-                    {pet.neutered ? <span>已绝育</span> : null}
+                    {pet.neutered ? <span><CK k="pets.neuteredLabel">{pc('pets.neuteredLabel')}</CK></span> : null}
                   </div>
                   {/* 体验批片 4：芯片号 / 花色徽章（有值才渲染） */}
                   {pet.chipNo || pet.coatColor ? (
                     <div className="flex flex-wrap gap-1.5">
                       {pet.chipNo ? (
                         <span className="rounded-full bg-sunken px-2 py-0.5 text-caption-xs text-ink-secondary">
-                          {pc('pets.chipNoLabel')} <span className="u1-num">{pet.chipNo}</span>
+                          <CK k="pets.chipNoLabel">{pc('pets.chipNoLabel')}</CK> <span className="u1-num">{pet.chipNo}</span>
                         </span>
                       ) : null}
                       {pet.coatColor ? (
                         <span className="rounded-full bg-sunken px-2 py-0.5 text-caption-xs text-ink-secondary">
-                          {pc('pets.coatColorLabel')} {pet.coatColor}
+                          <CK k="pets.coatColorLabel">{pc('pets.coatColorLabel')}</CK> {pet.coatColor}
                         </span>
                       ) : null}
                     </div>
@@ -797,7 +871,7 @@ export default function PetsPage() {
                   data-testid="pet-health-link"
                   className="mt-2.5 flex items-center justify-between gap-2 text-caption font-bold text-ink underline-offset-2 hover:underline"
                 >
-                  {pc('pets.healthEntry')}
+                  <CK k="pets.healthEntry">{pc('pets.healthEntry')}</CK>
                 </Link>
                 {/* 补缺大批片 4：洗护史区相册入口（Link /philia/moments） */}
                 <Link
@@ -805,7 +879,7 @@ export default function PetsPage() {
                   data-testid={`pets-album-entry-${pet.id}`}
                   className="mt-2.5 flex items-center justify-between gap-2 text-caption font-bold text-ink underline-offset-2 hover:underline"
                 >
-                  {sl('album.petsEntry')}
+                  <CK k="album.petsEntry">{sl('album.petsEntry')}</CK>
                 </Link>
                 {/* 补缺大批片 4：服务履历「安心证书」点亮——Link /philia/certs
                     （testid 原值保留 slot-cert，置灰样式+注记摘除）。
@@ -815,32 +889,65 @@ export default function PetsPage() {
                   data-testid="slot-cert"
                   className="mt-1 flex items-center justify-between gap-2 border-t border-line-divider pt-2.5"
                 >
-                  <span className="text-caption text-ink-secondary">{sl('cert.entryTitle')}</span>
+                  <span className="text-caption text-ink-secondary"><CK k="cert.entryTitle">{sl('cert.entryTitle')}</CK></span>
                   <span className="shrink-0 text-caption-xs font-bold text-ink">›</span>
                 </Link>
               </div>
             </div>
           </article>
         ))}
-
-        {editing ? (
-          <PetForm
-            initial={editing.initial}
-            editingId={editing.id}
-            onDone={() => setEditing(null)}
-            onCancel={() => setEditing(null)}
-          />
-        ) : petsQuery.data && petsQuery.data.length > 0 ? (
-          <button
-            type="button"
-            onClick={openCreate}
-            className="flex items-center justify-center gap-1.5 rounded-panel border border-dashed border-line-strong bg-card py-3.5 text-body-sm text-ink-secondary transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
-          >
-            <Plus className="h-4 w-4" strokeWidth={1.5} />
-            {pc('pets.addCta')}
-          </button>
-        ) : null}
       </div>
-    </div>
+    ),
+
+    /* 4. pets.form：档案表单整块（新增/编辑 PetForm；非编辑态+有宠=虚线新增钮） */
+    'pets.form': () =>
+      editing ? (
+        <PetForm
+          initial={editing.initial}
+          editingId={editing.id}
+          onDone={() => setEditing(null)}
+          onCancel={() => setEditing(null)}
+        />
+      ) : petsQuery.data && petsQuery.data.length > 0 ? (
+        <button
+          type="button"
+          onClick={openCreate}
+          className="flex items-center justify-center gap-1.5 rounded-panel border border-dashed border-line-strong bg-card py-3.5 text-body-sm text-ink-secondary transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+        >
+          <Plus className="h-4 w-4" strokeWidth={1.5} />
+          <CK k="pets.addCta">{pc('pets.addCta')}</CK>
+        </button>
+      ) : null,
+  }
+
+  return (
+    /* U4-D3：页边距 22px。结构说明（登记）：试样 11=单宠详情页（/pets/:id 大头照+指标格），
+       实现=多宠列表页（/philia/pets）——信息架构维持现行不重构，逐格对齐卡工艺 */
+    <CanvasLayoutLoader pageKey="pets" storeId={canvasStoreId}>
+      <div className="px-[22px] pb-6">
+        {/* 画布预览水印（?canvasPreview=1 探针模式；零真会话零写库口径注记） */}
+        {isCanvasPreview ? (
+          <p className="pt-4 text-center text-caption-xs text-ink-secondary" data-testid="pets-canvas-preview-note">{mc('mc.canvasExampleNote')}</p>
+        ) : null}
+        {/* 块流：pets.header=页头裸段置顶（PageHeader+切换器原在列表容器外）；
+            余块共享 mt-4 flex gap-3 容器（改造前列表节奏）——默认序下视觉零差异 */}
+        {layout.map((b) =>
+          b.visible && b.blockKey === 'pets.header' ? (
+            <section data-block-key={b.blockKey} key={b.blockKey}>
+              {renderers[b.blockKey]?.() ?? null}
+            </section>
+          ) : null,
+        )}
+        <div className="mt-4 flex flex-col gap-3">
+          {layout.map((b) =>
+            b.visible && b.blockKey !== 'pets.header' ? (
+              <section data-block-key={b.blockKey} key={b.blockKey}>
+                {renderers[b.blockKey]?.() ?? null}
+              </section>
+            ) : null,
+          )}
+        </div>
+      </div>
+    </CanvasLayoutLoader>
   )
 }

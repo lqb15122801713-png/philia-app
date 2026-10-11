@@ -15,16 +15,26 @@
  *   仅完成单卡片开放（进行中单无完成时刻，不上分享假语境）；
  * - 点击照片进全屏查看器（暖深棕 90% 底，保持色温，DESIGN §6.3）；
  * - 空态三句话结构保留（是什么/为什么/去哪 + 深棕主钮出口件）；文案全走 SL_COPY album.*。
+ *
+ * 画布化（产品-1010 画布全屏批片 3 末片 · 工艺照 MePage/MallPage）：四块入册
+ * （moments.header/feed/empty/error），块序/显隐=useCanvasLayout('moments')
+ * （published→注册表默认序尾补，空=MOMENTS_DEFAULT_ORDER 兜底）；文案键挂 CK 锚
+ * （photoAlt=img alt 属性位、shareTitle/shareText=系统分享面板载荷，无 DOM 锚，
+ * 键如实入块 copyKeys）；预览=CanvasLayoutLoader+?canvasPreview=1 水印注记。
+ * 块内逻辑/查询/分享链路零改动，data-testid 原值全保留；EmptyState title/ErrorState
+ * message 为 string 入参挂不上 CK（组件内无 CK 锚）。
  */
 
 import { useQuery } from '@tanstack/react-query'
 import { Check, ChevronDown, Share2 } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { PhotoViewer, PhotoWall, usePhiliaClient } from '@philia/shared'
+import { CanvasLayoutLoader, CK, PhotoViewer, PhotoWall, useCanvasLayout, usePhiliaClient } from '@philia/shared'
 import PageHeader from '@/components/PageHeader'
 import type { PhotoWallPhoto } from '@philia/shared'
 import { EmptyState, ErrorState, LoadingBlock, formatDateCn } from '../components/home/common'
+import { readLastBooking } from '@/lib/bookingPrefill'
+import { mc } from '../components/member/copy'
 import { sl } from '@/copy/serviceloop'
 
 /** 一册相册：一次服务（完成/进行中）+ 可见照片（进行中仅已确认步） */
@@ -112,11 +122,13 @@ function AlbumCard({ album }: { album: Album }) {
           {album.petName ?? sl('album.petFallback')} · {album.serviceName ?? sl('album.serviceFallback')}
         </span>
         <span className="src">
-          {inService
-            ? sl('album.inProgressNote', { n: album.doneStepCount })
-            : album.doneAt
-              ? formatDateCn(album.doneAt)
-              : ''}
+          {inService ? (
+            <CK k="album.inProgressNote">{sl('album.inProgressNote', { n: album.doneStepCount })}</CK>
+          ) : album.doneAt ? (
+            formatDateCn(album.doneAt)
+          ) : (
+            ''
+          )}
           {album.storeName ? ` · ${album.storeName}` : ''}
         </span>
       </button>
@@ -143,12 +155,12 @@ function AlbumCard({ album }: { album: Album }) {
               {copied ? (
                 <>
                   <Check className="h-4 w-4" strokeWidth={1.5} />
-                  {sl('album.shareCopied')}
+                  <CK k="album.shareCopied">{sl('album.shareCopied')}</CK>
                 </>
               ) : (
                 <>
                   <Share2 className="h-4 w-4" strokeWidth={1.5} />
-                  {sl('album.shareCta')}
+                  <CK k="album.shareCta">{sl('album.shareCta')}</CK>
                 </>
               )}
             </button>
@@ -168,6 +180,9 @@ function AlbumCard({ album }: { album: Album }) {
     </article>
   )
 }
+
+/** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
+const MOMENTS_DEFAULT_ORDER = ['moments.header', 'moments.feed', 'moments.empty', 'moments.error'] as const
 
 export default function MomentsPage() {
   const { trpc } = usePhiliaClient()
@@ -217,40 +232,110 @@ export default function MomentsPage() {
     },
   })
 
-  return (
-    <div className="px-4 pb-6">
-      {/* U1-A：统一返回条（←圆钮+标题），固定返回 philia 页 */}
-      <PageHeader title={sl('album.title')} fallback="/philia" className="pt-6" />
+  /* 画布预览探针参识别（?canvasPreview=1；微光正名批工艺三件套之一） */
+  const isCanvasPreview = useMemo(
+    () => new URLSearchParams(window.location.search).get('canvasPreview') === '1',
+    [],
+  )
+  /* 画布布局店锚（同 MePage 口径：?canvasStore= 预览店锚 > 记忆门店 > 就近首店；
+     本屏无门店概念，照解析供 useCanvasLayout/Loader） */
+  const previewStoreId = useMemo(() => new URLSearchParams(window.location.search).get('canvasStore'), [])
+  const memoryStoreId = useMemo(() => readLastBooking()?.storeId ?? null, [])
+  const nearbyQ = useQuery({
+    queryKey: ['store', 'listNearby'],
+    queryFn: () => trpc.store.listNearby.query(),
+    enabled: previewStoreId === null && memoryStoreId === null,
+    staleTime: 300_000,
+  })
+  const momentsStoreId = previewStoreId ?? memoryStoreId ?? nearbyQ.data?.stores?.[0]?.id ?? null
 
-      <div className="mt-4">
-        {albumsQuery.isPending ? <LoadingBlock lines={3} /> : null}
-        {albumsQuery.isError ? (
-          <ErrorState message={sl('album.loadFail')} onRetry={() => void albumsQuery.refetch()} />
+  /* ---- 画布端口：注册表块序 + 有效布局（published→默认序尾补） ---- */
+  const blocksQ = useQuery({
+    queryKey: ['canvas', 'blocks'],
+    queryFn: () => trpc.canvas.blocks.query(),
+    staleTime: 300_000,
+    retry: 1,
+  })
+  const registryBlocks = useMemo(() => {
+    const items = (blocksQ.data?.items ?? [])
+      .filter((b) => b.pageKey === 'moments')
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+    return items.length > 0 ? items : MOMENTS_DEFAULT_ORDER.map((blockKey) => ({ blockKey }))
+  }, [blocksQ.data])
+  const layout = useCanvasLayout('moments', momentsStoreId, registryBlocks)
+
+  /* 块渲染器（块内逻辑零改动——四块照改造前 JSX 逐字搬，文案走 copy 键 + CK 反查锚） */
+  const renderers: Record<string, () => ReactNode> = {
+    /* 1. moments.header：U1-A 统一返回条（←圆钮+标题），固定返回 philia 页 */
+    'moments.header': () => (
+      <PageHeader title={<CK k="album.title">{sl('album.title')}</CK>} fallback="/philia" className="pt-6" />
+    ),
+
+    /* 2. moments.feed：加载占位 + 案例流双列不等高网格（hv2-cases 同型同件，align-items:start 错落） */
+    'moments.feed': () => (
+      <>
+        {albumsQuery.isPending ? (
+          <div className="mt-4">
+            <LoadingBlock lines={3} />
+          </div>
         ) : null}
-        {albumsQuery.data && albumsQuery.data.length === 0 ? (
+        {albumsQuery.data && albumsQuery.data.length > 0 ? (
+          <div className="hv2-cases mt-4" data-testid="album-feed">
+            {albumsQuery.data.map((album) => (
+              <AlbumCard key={album.appointmentId} album={album} />
+            ))}
+          </div>
+        ) : null}
+      </>
+    ),
+
+    /* 3. moments.empty：空态三句话（出口=预约洗护；EmptyState title 为 string 入参无 CK 锚） */
+    'moments.empty': () =>
+      albumsQuery.data && albumsQuery.data.length === 0 ? (
+        <div className="mt-4">
           <EmptyState
             title={sl('album.emptyTitle')}
-            desc={sl('album.emptyBody')}
+            desc={<CK k="album.emptyBody">{sl('album.emptyBody')}</CK>}
             action={
               <Link
                 to="/booking/grooming"
                 className="inline-flex items-center rounded-control bg-philia-gradient px-[30px] py-[13px] text-body-sm font-semibold text-[#F6EFDD] shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92"
               >
-                {sl('album.emptyCta')}
+                <CK k="album.emptyCta">{sl('album.emptyCta')}</CK>
               </Link>
             }
           />
-        ) : null}
-      </div>
-
-      {/* 案例流：双列不等高网格（hv2-cases 同型同件，align-items:start 错落） */}
-      {albumsQuery.data && albumsQuery.data.length > 0 ? (
-        <div className="hv2-cases mt-4" data-testid="album-feed">
-          {albumsQuery.data.map((album) => (
-            <AlbumCard key={album.appointmentId} album={album} />
-          ))}
         </div>
-      ) : null}
-    </div>
+      ) : null,
+
+    /* 4. moments.error：失败态（ErrorState message 为 string 入参无 CK 锚） */
+    'moments.error': () =>
+      albumsQuery.isError ? (
+        <div className="mt-4">
+          <ErrorState message={sl('album.loadFail')} onRetry={() => void albumsQuery.refetch()} />
+        </div>
+      ) : null,
+  }
+
+  return (
+    <CanvasLayoutLoader pageKey="moments" storeId={momentsStoreId}>
+      <div className="px-4 pb-6">
+        {/* 画布预览水印（?canvasPreview=1 探针模式；零真会话零写库口径注记） */}
+        {isCanvasPreview ? (
+          <p className="pt-3 text-center text-caption-xs text-ink-secondary" data-testid="moments-canvas-preview-note">
+            <CK k="mc.canvasExampleNote">{mc('mc.canvasExampleNote')}</CK>
+          </p>
+        ) : null}
+        {/* 块流：四块按有效布局渲染（隐藏块整段不渲染）；默认序下块内 JSX 与改造前逐字一致
+            （pending/空态/失败态互斥，分块后落位不变） */}
+        {layout.map((b) =>
+          b.visible ? (
+            <section data-block-key={b.blockKey} key={b.blockKey}>
+              {renderers[b.blockKey]?.() ?? null}
+            </section>
+          ) : null,
+        )}
+      </div>
+    </CanvasLayoutLoader>
   )
 }

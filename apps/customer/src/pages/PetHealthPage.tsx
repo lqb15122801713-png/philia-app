@@ -11,16 +11,26 @@
  *   过期赭红——照 PetsPage 疫苗徽章视觉惯例）+「记一笔」表单（healthAdd）+
  *   每条删除钮（healthRemove，同钮两击二次确认，3s 未二击自动复位）。
  * - 全部文案走 copy 域 health.ts（hc 访问器）。
+ *
+ * 画布化（产品-1010 片 3 末片 · 账户域重屏批）：五块入册
+ * （health.header/weight/weightform/records/recordform），块序/显隐=
+ * useCanvasLayout('petHealth')（published→注册表默认序尾补，空=默认序兜底常量）；
+ * 文案键行内可改=CK 点选反查锚；预览=CanvasLayoutLoader+?canvasPreview=1 水印注记。
+ * 预览特例：?canvasPreview=1 且路由 id='preview' 时，用宠物列表既有查询首只顶替
+ * （零新增查询；无宠时 overview 闸关，块内渲染空）。块内逻辑（overview 一次拉取/
+ * weightAdd/healthAdd/healthRemove 二次确认）零改动，data-testid 原值全保留。
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useParams } from 'react-router-dom'
 import { z } from 'zod'
-import { usePhiliaClient, useToast, type PhiliaClient } from '@philia/shared'
+import { CanvasLayoutLoader, CK, useCanvasLayout, usePhiliaClient, useToast, type PhiliaClient } from '@philia/shared'
 import PageHeader from '@/components/PageHeader'
 import { hc } from '@/copy/health'
+import { readLastBooking } from '@/lib/bookingPrefill'
+import { mc } from '../components/member/copy'
 import {
   EmptyState,
   ErrorState,
@@ -30,6 +40,15 @@ import {
   formatDateCn,
   todayIso,
 } from '../components/home/common'
+
+/** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
+const HEALTH_DEFAULT_ORDER = [
+  'health.header',
+  'health.weight',
+  'health.weightform',
+  'health.records',
+  'health.recordform',
+] as const
 
 /* ------------------------------------------------------------------ */
 /* 类型（从 tRPC 客户端推导，端到端类型不手写——同 booking/types.ts 口径）      */
@@ -41,11 +60,15 @@ type WeightLog = OverviewResult['weights'][number]
 
 type RecordType = 'vaccine' | 'deworm' | 'medication' | 'vet_visit'
 
-const RECORD_TABS: Array<{ value: RecordType; label: string }> = [
-  { value: 'vaccine', label: hc('health.tabVaccine') },
-  { value: 'deworm', label: hc('health.tabDeworm') },
-  { value: 'medication', label: hc('health.tabMedication') },
-  { value: 'vet_visit', label: hc('health.tabVetVisit') },
+/* 四类签（值+文案键；键渲染期取值——画布文案 patch 实时生效，不做模块级冻结） */
+const RECORD_TABS: Array<{
+  value: RecordType
+  copyKey: 'health.tabVaccine' | 'health.tabDeworm' | 'health.tabMedication' | 'health.tabVetVisit'
+}> = [
+  { value: 'vaccine', copyKey: 'health.tabVaccine' },
+  { value: 'deworm', copyKey: 'health.tabDeworm' },
+  { value: 'medication', copyKey: 'health.tabMedication' },
+  { value: 'vet_visit', copyKey: 'health.tabVetVisit' },
 ]
 
 /** 删除钮二次确认态的自动复位毫秒数（同 NotifyCenterPage 口径） */
@@ -201,10 +224,10 @@ function WeightAddForm({ petId }: { petId: string }) {
 
   return (
     <div className="u1-card p-4" data-testid="weight-add-form">
-      <p className="text-body-sm font-semibold">{hc('health.weightAddTitle')}</p>
+      <p className="text-body-sm font-semibold"><CK k="health.weightAddTitle">{hc('health.weightAddTitle')}</CK></p>
       <div className="mt-3 grid grid-cols-2 gap-3">
         <div>
-          <label className={labelCls} htmlFor="weight-date">{hc('health.weightDateLabel')}</label>
+          <label className={labelCls} htmlFor="weight-date"><CK k="health.weightDateLabel">{hc('health.weightDateLabel')}</CK></label>
           <input
             id="weight-date"
             type="date"
@@ -215,7 +238,7 @@ function WeightAddForm({ petId }: { petId: string }) {
           />
         </div>
         <div>
-          <label className={labelCls} htmlFor="weight-kg">{hc('health.weightKgLabel')}</label>
+          <label className={labelCls} htmlFor="weight-kg"><CK k="health.weightKgLabel">{hc('health.weightKgLabel')}</CK></label>
           <input
             id="weight-kg"
             type="number"
@@ -230,7 +253,7 @@ function WeightAddForm({ petId }: { petId: string }) {
         </div>
       </div>
       <div className="mt-3">
-        <label className={labelCls} htmlFor="weight-note">{hc('health.weightNoteLabel')}</label>
+        <label className={labelCls} htmlFor="weight-note"><CK k="health.weightNoteLabel">{hc('health.weightNoteLabel')}</CK></label>
         <input
           id="weight-note"
           className={inputCls}
@@ -246,7 +269,11 @@ function WeightAddForm({ petId }: { petId: string }) {
         onClick={onSubmit}
         className="mt-3 w-full rounded-full bg-brand-primary py-2.5 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
       >
-        {addM.isPending ? hc('health.saving') : hc('health.weightSubmit')}
+        {addM.isPending ? (
+          <CK k="health.saving">{hc('health.saving')}</CK>
+        ) : (
+          <CK k="health.weightSubmit">{hc('health.weightSubmit')}</CK>
+        )}
       </button>
     </div>
   )
@@ -261,20 +288,20 @@ function NextDueBadge({ date }: { date: string }) {
   if (days < 0) {
     return (
       <span className="rounded-chip bg-danger-light px-2 py-1 text-caption-xs text-danger-deep">
-        {hc('health.dueExpired', { date })}
+        <CK k="health.dueExpired">{hc('health.dueExpired', { date })}</CK>
       </span>
     )
   }
   if (days < 30) {
     return (
       <span className="rounded-chip bg-brand-primary-light px-2 py-1 text-caption-xs text-ink">
-        {hc('health.dueSoon', { date, days })}
+        <CK k="health.dueSoon">{hc('health.dueSoon', { date, days })}</CK>
       </span>
     )
   }
   return (
     <span className="rounded-chip bg-brand-secondary-light px-2 py-1 text-caption-xs text-ink">
-      {hc('health.dueOk', { date })}
+      <CK k="health.dueOk">{hc('health.dueOk', { date })}</CK>
     </span>
   )
 }
@@ -328,9 +355,9 @@ function RecordAddForm({ petId, defaultType }: { petId: string; defaultType: Rec
 
   return (
     <div className="u1-card p-4" data-testid="record-add-form">
-      <p className="text-body-sm font-semibold">{hc('health.recordAddTitle')}</p>
+      <p className="text-body-sm font-semibold"><CK k="health.recordAddTitle">{hc('health.recordAddTitle')}</CK></p>
       <div className="mt-3">
-        <span className={labelCls}>{hc('health.recordTypeLabel')}</span>
+        <span className={labelCls}><CK k="health.recordTypeLabel">{hc('health.recordTypeLabel')}</CK></span>
         {/* W1-D2 触控量化：整钮可点 + 目标高 ≥44px，相邻间距 8px（gap-2） */}
         <div className="flex gap-2">
           {RECORD_TABS.map((opt) => (
@@ -344,13 +371,13 @@ function RecordAddForm({ petId, defaultType }: { petId: string; defaultType: Rec
                   : 'border-line bg-card text-ink-secondary'
               }`}
             >
-              {opt.label}
+              <CK k={opt.copyKey}>{hc(opt.copyKey)}</CK>
             </button>
           ))}
         </div>
       </div>
       <div className="mt-3">
-        <label className={labelCls} htmlFor="record-title">{hc('health.recordTitleLabel')}</label>
+        <label className={labelCls} htmlFor="record-title"><CK k="health.recordTitleLabel">{hc('health.recordTitleLabel')}</CK></label>
         <input
           id="record-title"
           className={inputCls}
@@ -362,7 +389,7 @@ function RecordAddForm({ petId, defaultType }: { petId: string; defaultType: Rec
       </div>
       <div className="mt-3 grid grid-cols-2 gap-3">
         <div>
-          <label className={labelCls} htmlFor="record-date">{hc('health.recordDateLabel')}</label>
+          <label className={labelCls} htmlFor="record-date"><CK k="health.recordDateLabel">{hc('health.recordDateLabel')}</CK></label>
           <input
             id="record-date"
             type="date"
@@ -373,7 +400,7 @@ function RecordAddForm({ petId, defaultType }: { petId: string; defaultType: Rec
           />
         </div>
         <div>
-          <label className={labelCls} htmlFor="record-next-due">{hc('health.recordNextDueLabel')}</label>
+          <label className={labelCls} htmlFor="record-next-due"><CK k="health.recordNextDueLabel">{hc('health.recordNextDueLabel')}</CK></label>
           <input
             id="record-next-due"
             type="date"
@@ -384,7 +411,7 @@ function RecordAddForm({ petId, defaultType }: { petId: string; defaultType: Rec
         </div>
       </div>
       <div className="mt-3">
-        <label className={labelCls} htmlFor="record-note">{hc('health.recordNoteLabel')}</label>
+        <label className={labelCls} htmlFor="record-note"><CK k="health.recordNoteLabel">{hc('health.recordNoteLabel')}</CK></label>
         <input
           id="record-note"
           className={inputCls}
@@ -401,7 +428,11 @@ function RecordAddForm({ petId, defaultType }: { petId: string; defaultType: Rec
         onClick={onSubmit}
         className="mt-3 w-full rounded-full bg-brand-primary py-2.5 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
       >
-        {addM.isPending ? hc('health.saving') : hc('health.recordSubmit')}
+        {addM.isPending ? (
+          <CK k="health.saving">{hc('health.saving')}</CK>
+        ) : (
+          <CK k="health.recordSubmit">{hc('health.recordSubmit')}</CK>
+        )}
       </button>
     </div>
   )
@@ -412,12 +443,55 @@ function RecordAddForm({ petId, defaultType }: { petId: string; defaultType: Rec
 /* ------------------------------------------------------------------ */
 
 export default function PetHealthPage() {
-  const { id: petId = '' } = useParams<{ id: string }>()
+  const { id: routeId = '' } = useParams<{ id: string }>()
   const { trpc, queryClient } = usePhiliaClient()
   const { toastEl, showToast } = useToast({ durationMs: 2500 })
   const [tab, setTab] = useState<RecordType>('vaccine')
   /* 删除二次确认：首击进入待确认态（记录 id + 复位计时），二击执行 */
   const [confirmId, setConfirmId] = useState<string | null>(null)
+
+  /* 画布批片 3：预览探针参识别（?canvasPreview=1；微光正名批工艺三件套之一） */
+  const isCanvasPreview = useMemo(
+    () => new URLSearchParams(window.location.search).get('canvasPreview') === '1',
+    [],
+  )
+  /* 画布预览特例：预览 URL='/philia/pets/preview/health'——canvasPreview=1 且路由
+     id='preview' 时，用宠物列表既有查询首只顶替（pet.list 既有查询共享缓存，零新增查询；
+     无宠时 petId='' → overview 闸关，块内渲染空） */
+  const isPreviewPet = isCanvasPreview && routeId === 'preview'
+  const previewPetsQ = useQuery({
+    queryKey: ['pet', 'list'],
+    queryFn: () => trpc.pet.list.query(),
+    enabled: isPreviewPet,
+  })
+  const petId = isPreviewPet ? (previewPetsQ.data?.[0]?.id ?? '') : routeId
+
+  /* 画布布局店锚（MePage/MemberCenterPage 口径：?canvasStore= 预览店锚 > 记忆门店 > 就近首店；
+     本屏无门店概念，nearbyQ 带 enabled 闸仅作布局锚解析，零增发常态查询） */
+  const previewStoreId = useMemo(() => new URLSearchParams(window.location.search).get('canvasStore'), [])
+  const memoryStoreId = useMemo(() => readLastBooking()?.storeId ?? null, [])
+  const nearbyQ = useQuery({
+    queryKey: ['store', 'listNearby'],
+    queryFn: () => trpc.store.listNearby.query(),
+    enabled: previewStoreId === null && memoryStoreId === null,
+    staleTime: 300_000,
+  })
+  const canvasStoreId = previewStoreId ?? memoryStoreId ?? nearbyQ.data?.stores?.[0]?.id ?? null
+
+  /* ---- 画布端口：注册表块序 + 有效布局（published→默认序尾补；空=默认序兜底常量） ---- */
+  const blocksQ = useQuery({
+    queryKey: ['canvas', 'blocks'],
+    queryFn: () => trpc.canvas.blocks.query(),
+    staleTime: 300_000,
+    retry: 1,
+  })
+  const registryBlocks = useMemo(() => {
+    const items = (blocksQ.data?.items ?? [])
+      .filter((b) => b.pageKey === 'petHealth')
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+    return items.length > 0 ? items : HEALTH_DEFAULT_ORDER.map((blockKey) => ({ blockKey }))
+  }, [blocksQ.data])
+  const layout = useCanvasLayout('petHealth', canvasStoreId, registryBlocks)
 
   const overviewQ = useQuery({
     queryKey: ['petHealth', 'overview', petId],
@@ -447,119 +521,169 @@ export default function PetHealthPage() {
   const records = overviewQ.data?.records ?? []
   const weights = overviewQ.data?.weights ?? []
   const tabRecords = records.filter((r) => r.type === tab)
-  const activeTabLabel = RECORD_TABS.find((t) => t.value === tab)?.label ?? ''
+  const activeTabKey = RECORD_TABS.find((t) => t.value === tab)?.copyKey
+  const activeTabLabel = activeTabKey ? hc(activeTabKey) : ''
+
+  /* 块渲染器（块内逻辑零改动——五块照改造前 JSX 逐字搬，文案走 copy 键 + CK 反查锚） */
+  const renderers: Record<string, () => ReactNode> = {
+    /* 1. health.header：统一返回条（标题=宠名 · 健康档案）+ 页级读态（骨架/失败重试） */
+    'health.header': () => (
+      <>
+        <PageHeader
+          title={
+            pet ? (
+              <>
+                {pet.name} · <CK k="health.title">{hc('health.title')}</CK>
+              </>
+            ) : (
+              <CK k="health.title">{hc('health.title')}</CK>
+            )
+          }
+          fallback="/philia/pets"
+          className="pt-4"
+        />
+        {overviewQ.isPending ? <LoadingBlock lines={3} className="mt-4" /> : null}
+        {overviewQ.isError ? (
+          <div className="mt-4">
+            <ErrorState message={hc('health.loadFail')} onRetry={() => void overviewQ.refetch()} />
+          </div>
+        ) : null}
+      </>
+    ),
+
+    /* 2. health.weight：体重趋势区（SVG 手绘折线零图表库；空数据=EmptyState 三句话。
+          SectionShell 题为 string prop 无 CK 锚；weightUnit 在 SVG text 内挂不了 CK，NOTES 报备） */
+    'health.weight': () =>
+      overviewQ.data ? (
+        <SectionShell title={hc('health.weightTrend')}>
+          {weights.length === 0 ? (
+            <EmptyState
+              title={hc('health.weightEmptyTitle')}
+              desc={hc('health.weightEmptyBody')}
+            />
+          ) : (
+            <div className="u1-ring rounded-card bg-card p-4">
+              <WeightTrendChart weights={weights} />
+            </div>
+          )}
+        </SectionShell>
+      ) : null,
+
+    /* 3. health.weightform：记体重小表单整块（改造前嵌在体重 SectionShell 内，拆块后
+          mt-3 节奏随行——块间间距零差异） */
+    'health.weightform': () =>
+      overviewQ.data ? (
+        <div className="mt-3">
+          <WeightAddForm petId={petId} />
+        </div>
+      ) : null,
+
+    /* 4. health.records：健康记录区四类签+时间线（删除钮两击二次确认零改动） */
+    'health.records': () =>
+      overviewQ.data ? (
+        <SectionShell title={hc('health.recordsTitle')}>
+          {/* 四类签（文字签+底部 hairline，选中=墨 700+主色 2px 下划线，同 MallOrdersPage） */}
+          <div className="flex gap-[18px] overflow-x-auto border-b border-[rgba(59,46,36,.06)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {RECORD_TABS.map((t) => {
+              const n = records.filter((r) => r.type === t.value).length
+              return (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => setTab(t.value)}
+                  data-testid={`health-tab-${t.value}`}
+                  className={`-mb-px shrink-0 border-b-2 py-2.5 text-body-sm transition ${
+                    tab === t.value
+                      ? 'border-brand-primary font-bold text-ink'
+                      : 'border-transparent font-medium text-ink-placeholder'
+                  }`}
+                >
+                  <CK k={t.copyKey}>{hc(t.copyKey)}</CK>
+                  {n > 0 ? <span className="u1-num ml-1 text-caption-xs font-normal">{n}</span> : null}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* 记录时间线（recordDate 标题 备注 + 到期徽章 + 删除钮） */}
+          {tabRecords.length === 0 ? (
+            <p className="py-12 text-center text-caption text-ink-placeholder">
+              <CK k="health.recordsTabEmpty">{hc('health.recordsTabEmpty', { type: activeTabLabel })}</CK>
+            </p>
+          ) : (
+            <ul className="mt-3.5 flex flex-col gap-2.5">
+              {tabRecords.map((r) => (
+                <li key={r.id} className="u1-ring rounded-card bg-card p-3.5" data-testid={`health-record-${r.id}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="u1-num text-caption-xs text-ink-placeholder">
+                        {formatDateCn(`${r.recordDate}T00:00:00`)}
+                      </p>
+                      <p className="mt-0.5 text-body-sm font-semibold">{r.title}</p>
+                      {r.note ? (
+                        <p className="mt-0.5 text-caption text-ink-secondary">{r.note}</p>
+                      ) : null}
+                      {r.nextDueDate ? (
+                        <div className="mt-1.5">
+                          <NextDueBadge date={r.nextDueDate} />
+                        </div>
+                      ) : null}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onDelete(r.id)}
+                      disabled={removeM.isPending}
+                      aria-label={hc('health.recordDelete')}
+                      data-testid={`health-record-delete-${r.id}`}
+                      className={`flex min-h-[44px] shrink-0 items-center gap-1 rounded-full px-2 text-caption-xs transition-colors disabled:opacity-60 ${
+                        confirmId === r.id
+                          ? 'bg-danger-light font-semibold text-danger-deep'
+                          : 'text-ink-placeholder'
+                      }`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+                      {confirmId === r.id ? (
+                        <CK k="health.recordDeleteConfirm">{hc('health.recordDeleteConfirm')}</CK>
+                      ) : (
+                        <CK k="health.recordDelete">{hc('health.recordDelete')}</CK>
+                      )}
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </SectionShell>
+      ) : null,
+
+    /* 5. health.recordform：记一笔表单整块（改造前嵌在记录 SectionShell 内，拆块后
+          mt-3 节奏随行；key=tab 随签重置表单态零改动） */
+    'health.recordform': () =>
+      overviewQ.data ? (
+        <div className="mt-3">
+          <RecordAddForm key={tab} petId={petId} defaultType={tab} />
+        </div>
+      ) : null,
+  }
 
   return (
-    <div className="px-[22px] pb-6" data-testid="pet-health-page">
-      <PageHeader
-        title={pet ? `${pet.name} · ${hc('health.title')}` : hc('health.title')}
-        fallback="/philia/pets"
-        className="pt-4"
-      />
-
-      {overviewQ.isPending ? <LoadingBlock lines={3} className="mt-4" /> : null}
-      {overviewQ.isError ? (
-        <div className="mt-4">
-          <ErrorState message={hc('health.loadFail')} onRetry={() => void overviewQ.refetch()} />
-        </div>
-      ) : null}
-
-      {overviewQ.data ? (
-        <>
-          {/* 区块一：体重趋势 */}
-          <SectionShell title={hc('health.weightTrend')}>
-            {weights.length === 0 ? (
-              <EmptyState
-                title={hc('health.weightEmptyTitle')}
-                desc={hc('health.weightEmptyBody')}
-              />
-            ) : (
-              <div className="u1-ring rounded-card bg-card p-4">
-                <WeightTrendChart weights={weights} />
-              </div>
-            )}
-            <div className="mt-3">
-              <WeightAddForm petId={petId} />
-            </div>
-          </SectionShell>
-
-          {/* 区块二：健康记录 */}
-          <SectionShell title={hc('health.recordsTitle')}>
-            {/* 四类签（文字签+底部 hairline，选中=墨 700+主色 2px 下划线，同 MallOrdersPage） */}
-            <div className="flex gap-[18px] overflow-x-auto border-b border-[rgba(59,46,36,.06)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {RECORD_TABS.map((t) => {
-                const n = records.filter((r) => r.type === t.value).length
-                return (
-                  <button
-                    key={t.value}
-                    type="button"
-                    onClick={() => setTab(t.value)}
-                    data-testid={`health-tab-${t.value}`}
-                    className={`-mb-px shrink-0 border-b-2 py-2.5 text-body-sm transition ${
-                      tab === t.value
-                        ? 'border-brand-primary font-bold text-ink'
-                        : 'border-transparent font-medium text-ink-placeholder'
-                    }`}
-                  >
-                    {t.label}
-                    {n > 0 ? <span className="u1-num ml-1 text-caption-xs font-normal">{n}</span> : null}
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* 记录时间线（recordDate 标题 备注 + 到期徽章 + 删除钮） */}
-            {tabRecords.length === 0 ? (
-              <p className="py-12 text-center text-caption text-ink-placeholder">
-                {hc('health.recordsTabEmpty', { type: activeTabLabel })}
-              </p>
-            ) : (
-              <ul className="mt-3.5 flex flex-col gap-2.5">
-                {tabRecords.map((r) => (
-                  <li key={r.id} className="u1-ring rounded-card bg-card p-3.5" data-testid={`health-record-${r.id}`}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="u1-num text-caption-xs text-ink-placeholder">
-                          {formatDateCn(`${r.recordDate}T00:00:00`)}
-                        </p>
-                        <p className="mt-0.5 text-body-sm font-semibold">{r.title}</p>
-                        {r.note ? (
-                          <p className="mt-0.5 text-caption text-ink-secondary">{r.note}</p>
-                        ) : null}
-                        {r.nextDueDate ? (
-                          <div className="mt-1.5">
-                            <NextDueBadge date={r.nextDueDate} />
-                          </div>
-                        ) : null}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => onDelete(r.id)}
-                        disabled={removeM.isPending}
-                        aria-label={hc('health.recordDelete')}
-                        data-testid={`health-record-delete-${r.id}`}
-                        className={`flex min-h-[44px] shrink-0 items-center gap-1 rounded-full px-2 text-caption-xs transition-colors disabled:opacity-60 ${
-                          confirmId === r.id
-                            ? 'bg-danger-light font-semibold text-danger-deep'
-                            : 'text-ink-placeholder'
-                        }`}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" strokeWidth={1.5} />
-                        {confirmId === r.id ? hc('health.recordDeleteConfirm') : hc('health.recordDelete')}
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            <div className="mt-3">
-              <RecordAddForm key={tab} petId={petId} defaultType={tab} />
-            </div>
-          </SectionShell>
-        </>
-      ) : null}
-      {toastEl}
-    </div>
+    <CanvasLayoutLoader pageKey="petHealth" storeId={canvasStoreId}>
+      <div className="px-[22px] pb-6" data-testid="pet-health-page">
+        {/* 画布预览水印（?canvasPreview=1 探针模式；零真会话零写库口径注记） */}
+        {isCanvasPreview ? (
+          <p className="pt-4 text-center text-caption-xs text-ink-secondary" data-testid="pethealth-canvas-preview-note">{mc('mc.canvasExampleNote')}</p>
+        ) : null}
+        {/* 块流：五块按有效布局渲染（published 覆盖∪默认序尾补）；默认序下块内 JSX
+            与改造前逐字一致（两表单自 SectionShell 拆出为独立块，mt-3 节奏随行） */}
+        {layout.map((b) =>
+          b.visible ? (
+            <section data-block-key={b.blockKey} key={b.blockKey}>
+              {renderers[b.blockKey]?.() ?? null}
+            </section>
+          ) : null,
+        )}
+        {toastEl}
+      </div>
+    </CanvasLayoutLoader>
   )
 }

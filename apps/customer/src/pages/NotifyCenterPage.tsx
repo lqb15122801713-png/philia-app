@@ -11,17 +11,27 @@
  * （二次确认=同钮两击，3s 未二击自动复位）；点行→markRead+link 非空跳 link；
  * 分页=nextCursor「加载更多」（useInfiniteQuery）；骨架 LoadingBlock（ListSkeleton 成件）；
  * 错误 ErrorState+重试；空态三句话+emptyCta→/home；返回=navigate(-1)+fallback=/me。
+ *
+ * 画布化（产品-1010 画布全屏批 片 3 · 会员域扫尾）：三块入册（ntf.head/ntf.chips/ntf.list），
+ * 块序/显隐=useCanvasLayout('notifications')（published→注册表默认序尾补，空=
+ * NTF_DEFAULT_ORDER 兜底）；文案键挂 CK(data-copy-key) 点选反查锚（PageHeader 页题/
+ * aria-label/EmptyState 与 toast 为 string props 挂不上锚，如实入册注记）；
+ * ?canvasPreview=1 探针=水印注记行（mc.canvasExampleNote）；店锚=?canvasStore= 预览店锚 >
+ * 记忆门店 > 就近首店（MePage 同口径）。块内逻辑/查询/删除二次确认状态机零改动，
+ * data-testid 原值全保留。
  */
 
 import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Bell, Settings2, Trash2 } from 'lucide-react'
-import { useMe, usePhiliaClient, useToast } from '@philia/shared'
+import { CanvasLayoutLoader, CK, useCanvasLayout, useMe, usePhiliaClient, useToast } from '@philia/shared'
 import PageHeader from '@/components/PageHeader'
 import { EmptyState, ErrorState, LoadingBlock } from '@/components/home/common'
 import { fmtHM, fmtMD } from '@/components/booking/format'
+import { mc } from '../components/member/copy'
 import { ntf, type NtfCopyKey } from '@/copy/notify'
+import { readLastBooking } from '@/lib/bookingPrefill'
 
 type ChipKey = 'all' | 'unread' | 'trade' | 'service' | 'account' | 'marketing'
 
@@ -64,6 +74,9 @@ function fmtAt(input: Date | string): string {
 
 /** 删除钮二次确认态的自动复位毫秒数 */
 const CONFIRM_RESET_MS = 3000
+
+/** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
+const NTF_DEFAULT_ORDER = ['ntf.head', 'ntf.chips', 'ntf.list'] as const
 
 export default function NotifyCenterPage() {
   const { trpc, queryClient } = usePhiliaClient()
@@ -132,8 +145,41 @@ export default function NotifyCenterPage() {
     window.setTimeout(() => setConfirmId((cur) => (cur === id ? null : cur)), CONFIRM_RESET_MS)
   }
 
-  return (
-    <div className="px-4 py-6" data-testid="notify-center-page">
+  /* 画布预览探针参识别（?canvasPreview=1；微光正名批工艺三件套之一） */
+  const isCanvasPreview = useMemo(
+    () => new URLSearchParams(window.location.search).get('canvasPreview') === '1',
+    [],
+  )
+  /* 画布布局店锚（MePage 口径：?canvasStore= 预览店锚 > 记忆门店 > 就近首店） */
+  const previewStoreId = useMemo(() => new URLSearchParams(window.location.search).get('canvasStore'), [])
+  const memoryStoreId = useMemo(() => readLastBooking()?.storeId ?? null, [])
+  const nearbyQ = useQuery({
+    queryKey: ['store', 'listNearby'],
+    queryFn: () => trpc.store.listNearby.query(),
+    enabled: previewStoreId === null && memoryStoreId === null,
+    staleTime: 300_000,
+  })
+  const ntfStoreId = previewStoreId ?? memoryStoreId ?? nearbyQ.data?.stores?.[0]?.id ?? null
+
+  /* ---- 画布端口：注册表块序 + 有效布局（published→默认序尾补；空=兜底常量） ---- */
+  const blocksQ = useQuery({
+    queryKey: ['canvas', 'blocks'],
+    queryFn: () => trpc.canvas.blocks.query(),
+    staleTime: 300_000,
+    retry: 1,
+  })
+  const registryBlocks = useMemo(() => {
+    const items = (blocksQ.data?.items ?? [])
+      .filter((b) => b.pageKey === 'notifications')
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+    return items.length > 0 ? items : NTF_DEFAULT_ORDER.map((blockKey) => ({ blockKey }))
+  }, [blocksQ.data])
+  const layout = useCanvasLayout('notifications', ntfStoreId, registryBlocks)
+
+  /* ---- 三块渲染器（块内逻辑与改造前逐字一致；文案键挂 CK 点选反查锚） ---- */
+  const renderers: Record<string, () => ReactNode> = {
+    /* 1. ntf.head：页头+操作区（订阅管理入口钮 + 全部已读；返回=时间序回退 fallback=/me） */
+    'ntf.head': () => (
       <PageHeader
         title={ntf('ntf.title')}
         fallback="/me"
@@ -154,13 +200,15 @@ export default function NotifyCenterPage() {
               onClick={() => markAllReadM.mutate()}
               className="rounded-full bg-brand-primary px-3.5 py-2 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
             >
-              {ntf('ntf.markAllRead')}
+              <CK k="ntf.markAllRead">{ntf('ntf.markAllRead')}</CK>
             </button>
           </div>
         }
       />
+    ),
 
-      {/* 分类 chips（横滑条隐藏，同 AppointmentsPage 口径） */}
+    /* 2. ntf.chips：分类 chips（横滑条隐藏，同 AppointmentsPage 口径） */
+    'ntf.chips': () => (
       <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {CHIPS.map((c) => (
           <button
@@ -174,11 +222,15 @@ export default function NotifyCenterPage() {
                 : 'bg-card text-ink-secondary shadow-card'
             }`}
           >
-            {ntf(c.labelKey)}
+            <CK k={c.labelKey}>{ntf(c.labelKey)}</CK>
           </button>
         ))}
       </div>
+    ),
 
+    /* 3. ntf.list：消息列表（分类签+标题+正文截断+时刻 mono+未读点+删除二次确认）
+          + 空态三句话 + 加载更多 */
+    'ntf.list': () => (
       <div className="mt-3">
         {listQ.isPending ? (
           <LoadingBlock lines={4} />
@@ -226,7 +278,7 @@ export default function NotifyCenterPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="shrink-0 rounded-full bg-sunken px-2 py-0.5 text-caption-xs text-ink-secondary">
-                          {ntf(CAT_LABEL[item.category] ?? 'ntf.title')}
+                          <CK k={CAT_LABEL[item.category] ?? 'ntf.title'}>{ntf(CAT_LABEL[item.category] ?? 'ntf.title')}</CK>
                         </span>
                         <p
                           className={`min-w-0 flex-1 truncate text-body ${
@@ -257,7 +309,7 @@ export default function NotifyCenterPage() {
                       }`}
                     >
                       {confirmId === item.id ? (
-                        ntf('ntf.deleteConfirm')
+                        <CK k="ntf.deleteConfirm">{ntf('ntf.deleteConfirm')}</CK>
                       ) : (
                         <Trash2 className="h-4 w-4" strokeWidth={1.5} />
                       )}
@@ -274,13 +326,37 @@ export default function NotifyCenterPage() {
                 onClick={() => void listQ.fetchNextPage()}
                 className="mt-3 w-full rounded-card bg-card py-3 text-body-sm text-ink-secondary shadow-card transition-transform duration-120 ease-philia-spring active:scale-[0.99] disabled:opacity-60"
               >
-                {ntf('ntf.loadMore')}
+                <CK k="ntf.loadMore">{ntf('ntf.loadMore')}</CK>
               </button>
             ) : null}
           </>
         )}
       </div>
-      {toastEl}
-    </div>
+    ),
+  }
+
+  return (
+    <CanvasLayoutLoader pageKey="notifications" storeId={ntfStoreId}>
+      <div className="px-4 py-6" data-testid="notify-center-page">
+        {/* 画布预览水印（?canvasPreview=1 探针模式；零真会话零写库口径注记） */}
+        {isCanvasPreview ? (
+          <p
+            className="mb-2 text-center text-caption-xs text-ink-secondary"
+            data-testid="notify-canvas-preview-note"
+          >
+            {mc('mc.canvasExampleNote')}
+          </p>
+        ) : null}
+        {/* 块流：三块按有效布局渲染（published 覆盖∪默认序尾补）；默认序下 DOM 结构零差异 */}
+        {layout.map((b) =>
+          b.visible ? (
+            <section data-block-key={b.blockKey} key={b.blockKey}>
+              {renderers[b.blockKey]?.() ?? null}
+            </section>
+          ) : null,
+        )}
+        {toastEl}
+      </div>
+    </CanvasLayoutLoader>
   )
 }

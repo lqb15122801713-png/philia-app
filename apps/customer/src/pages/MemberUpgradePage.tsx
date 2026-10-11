@@ -16,11 +16,20 @@
  * pay_channel_enabled=false → 回落维护态=到店办理指引卡（照 MemberCheckoutPage 工艺）；
  * 注册用户档=新购口径全价句明面（不退卡不折算）。
  * 无升级路径（已是最高档 targetPlans 空）/ 非会员 = 说明卡不报错。
+ *
+ * 画布化（产品-1010 画布全屏批 片 3 · 会员域扫尾）：五块入册（mu.current/mu.targets/
+ * mu.storeGuide/mu.notes/mu.empty），块序/显隐=useCanvasLayout('memberUpgrade')
+ * （published→注册表默认序尾补，空=MU_DEFAULT_ORDER 兜底）；文案键挂 CK(data-copy-key)
+ * 点选反查锚（CardFace 的 priceText/noText 为 string props 挂不上锚，键如实入册）；
+ * ?canvasPreview=1 探针=水印注记行（mc.canvasExampleNote）；店锚=?canvasStore= 预览店锚 >
+ * 记忆门店 > 就近首店（MePage 同口径）。PushBar/AppHead 页头与 Mock 水印条不入块册置块流外；
+ * 块内逻辑/查询/状态机零改动，data-testid 原值全保留。
  */
 
+import { useMemo, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { usePhiliaClient } from '@philia/shared'
+import { CanvasLayoutLoader, CK, useCanvasLayout, usePhiliaClient } from '@philia/shared'
 import { ErrorState, LoadingBlock } from '../components/home/common'
 import { mc } from '../components/member/copy'
 import {
@@ -34,6 +43,7 @@ import {
   yuanOf,
 } from '../components/member/v2'
 import { pc } from '../copy/pay'
+import { readLastBooking } from '@/lib/bookingPrefill'
 
 interface QuoteTarget {
   planKey: string
@@ -50,6 +60,9 @@ interface QuoteTarget {
     newPurchase: boolean
   }
 }
+
+/** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
+const MU_DEFAULT_ORDER = ['mu.current', 'mu.targets', 'mu.storeGuide', 'mu.notes', 'mu.empty'] as const
 
 export default function MemberUpgradePage() {
   const { trpc } = usePhiliaClient()
@@ -75,103 +88,72 @@ export default function MemberUpgradePage() {
   })
   const channelEnabled = chanQ.data?.channelEnabled ?? true
 
-  return (
-    <div className="m2" data-testid="member-upgrade-page" style={{ minHeight: '100vh' }}>
-      {/* 返回=时间序回退 navigate(-1)，直访兜底=/member（PushBar 既有纪律） */}
-      <PushBar label={mc('up.pushLabel')} fallback="/member" />
-      <AppHead title={mc('up.headTitle')} no={mc('up.headNo')} />
-
-      {/* Mock 水印条（R10：内测通道全程明示；收单双位水印在确认订单页） */}
-      <div className="m2-pad" style={{ marginTop: 12 }}>
-        <TipCard testId="mock-watermark-top">{pc('mock.watermark')}</TipCard>
-      </div>
-
-      {myQ.isPending || (myQ.data?.membership && quoteQ.isPending) ? (
-        <div className="m2-pad" style={{ marginTop: 24 }}>
-          <LoadingBlock lines={4} />
-        </div>
-      ) : myQ.isError || quoteQ.isError ? (
-        <div className="m2-pad" style={{ marginTop: 24 }}>
-          <ErrorState
-            message={mc('up.loadFail')}
-            onRetry={() => {
-              void myQ.refetch()
-              void quoteQ.refetch()
-            }}
-          />
-        </div>
-      ) : !myQ.data.membership || !quoteQ.data?.currentPlan ? (
-        /* 非会员直访：说明卡不报错（不跳走防弹球，给真实出口） */
-        <div className="m2-pad" style={{ marginTop: 14 }}>
-          <div className="m2-card" data-testid="upgrade-nonmember" style={{ padding: '20px 18px' }}>
-            <div style={{ fontSize: 16, fontWeight: 800 }}>{mc('up.nonMemberTitle')}</div>
-            <p className="m2-note" style={{ marginTop: 8 }}>{mc('up.nonMemberBody')}</p>
-            <div style={{ textAlign: 'center', marginTop: 12 }}>
-              <button type="button" className="m2-link" onClick={() => navigate('/member/open')}>
-                {mc('up.nonMemberCta')}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <UpgradeBody
-          my={myQ.data}
-          targets={targets}
-          windowDays={quoteQ.data.windowDays}
-          currentFree={!!quoteQ.data.currentPlan.free}
-          channelEnabled={channelEnabled}
-        />
-      )}
-    </div>
+  /* 画布预览探针参识别（?canvasPreview=1；微光正名批工艺三件套之一） */
+  const isCanvasPreview = useMemo(
+    () => new URLSearchParams(window.location.search).get('canvasPreview') === '1',
+    [],
   )
-}
+  /* 画布布局店锚（MePage 口径：?canvasStore= 预览店锚 > 记忆门店 > 就近首店） */
+  const previewStoreId = useMemo(() => new URLSearchParams(window.location.search).get('canvasStore'), [])
+  const memoryStoreId = useMemo(() => readLastBooking()?.storeId ?? null, [])
+  const nearbyQ = useQuery({
+    queryKey: ['store', 'listNearby'],
+    queryFn: () => trpc.store.listNearby.query(),
+    enabled: previewStoreId === null && memoryStoreId === null,
+    staleTime: 300_000,
+  })
+  const upStoreId = previewStoreId ?? memoryStoreId ?? nearbyQ.data?.stores?.[0]?.id ?? null
 
-/* ------------------------------------------------------------------ */
+  /* ---- 画布端口：注册表块序 + 有效布局（published→默认序尾补；空=兜底常量） ---- */
+  const blocksQ = useQuery({
+    queryKey: ['canvas', 'blocks'],
+    queryFn: () => trpc.canvas.blocks.query(),
+    staleTime: 300_000,
+    retry: 1,
+  })
+  const registryBlocks = useMemo(() => {
+    const items = (blocksQ.data?.items ?? [])
+      .filter((b) => b.pageKey === 'memberUpgrade')
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+    return items.length > 0 ? items : MU_DEFAULT_ORDER.map((blockKey) => ({ blockKey }))
+  }, [blocksQ.data])
+  const layout = useCanvasLayout('memberUpgrade', upStoreId, registryBlocks)
 
-function UpgradeBody({
-  my,
-  targets,
-  windowDays,
-  currentFree,
-  channelEnabled,
-}: {
-  my: {
-    membership: { planKey: string; expiresAt: Date | string; paidFen: number } | null
-  }
-  targets: QuoteTarget[]
-  windowDays: number
-  currentFree: boolean
-  channelEnabled: boolean
-}) {
-  const navigate = useNavigate()
-  const m = my.membership!
-  const expireDate = new Date(m.expiresAt).toLocaleDateString('zh-CN')
+  const membership = myQ.data?.membership ?? null
+  const currentPlan = quoteQ.data?.currentPlan ?? null
+  const currentFree = !!currentPlan?.free
+  const windowDays = quoteQ.data?.windowDays ?? 30
+  const expireDate = membership ? new Date(membership.expiresAt).toLocaleDateString('zh-CN') : ''
 
-  return (
-    <div className="m2-pad" style={{ marginTop: 14, paddingBottom: 60 }}>
-      {/* 1. 当前档卡（档名/已付 ¥/到期日 mono=cf-no 槽位） */}
-      <SecH title={mc('up.currentTitle')} />
-      <CardFace
-        planKey={m.planKey}
-        priceText={currentFree ? mc('chg.priceFree') : mc('up.paidLine', { price: yuanOf(m.paidFen) })}
-        claimText={tierClaimOf(m.planKey)}
-        noText={mc('up.expireLine', { date: expireDate })}
-        height={212}
-        testId="upgrade-current-card"
-      />
-      {currentFree ? (
-        <TipCard>{mc('up.freeTierGuide')}</TipCard>
-      ) : null}
-
-      {/* 2. 目标档卡列（算式明面 R15，逐项 mono；金额全读 server 试算值） */}
-      {targets.length === 0 ? (
-        <div className="m2-card" data-testid="upgrade-empty" style={{ marginTop: 16, padding: '20px 18px' }}>
-          <div style={{ fontSize: 16, fontWeight: 800 }}>{mc('up.emptyTitle')}</div>
-          <p className="m2-note" style={{ marginTop: 8 }}>{mc('up.emptyTopTier')}</p>
-        </div>
-      ) : (
+  /* ---- 五块渲染器（块内逻辑/条件与改造前逐字一致；文案键挂 CK 点选反查锚） ---- */
+  const renderers: Record<string, () => ReactNode> = {
+    /* 1. mu.current：当前档卡（档名/已付 ¥/到期日 mono=cf-no 槽位）+ 免费档新购口径引导条 */
+    'mu.current': () => {
+      if (!membership || !currentPlan) return null
+      return (
         <>
-          <SecH title={mc('up.targetTitle')} />
+          <SecH title={<CK k="up.currentTitle">{mc('up.currentTitle')}</CK>} />
+          <CardFace
+            planKey={membership.planKey}
+            priceText={currentFree ? mc('chg.priceFree') : mc('up.paidLine', { price: yuanOf(membership.paidFen) })}
+            claimText={tierClaimOf(membership.planKey)}
+            noText={mc('up.expireLine', { date: expireDate })}
+            height={212}
+            testId="upgrade-current-card"
+          />
+          {currentFree ? (
+            <TipCard><CK k="up.freeTierGuide">{mc('up.freeTierGuide')}</CK></TipCard>
+          ) : null}
+        </>
+      )
+    },
+
+    /* 2. mu.targets：目标档卡列（算式明面 R15，逐项 mono；金额全读 server 试算值） */
+    'mu.targets': () => {
+      if (!membership || !currentPlan || targets.length === 0) return null
+      return (
+        <>
+          <SecH title={<CK k="up.targetTitle">{mc('up.targetTitle')}</CK>} />
           {targets.map((t) => (
             <div
               className="m2-card"
@@ -188,31 +170,33 @@ function UpgradeBody({
                     className="m2-mono"
                     style={{ fontSize: 9, color: 'var(--v2muted)', border: '1px solid var(--v2line)', borderRadius: 99, padding: '2px 8px' }}
                   >
-                    {mc('up.newPurchaseTag')}
+                    <CK k="up.newPurchaseTag">{mc('up.newPurchaseTag')}</CK>
                   </span>
                 ) : null}
               </div>
               {t.formula.newPurchase ? (
                 <>
-                  <p className="m2-note" style={{ marginTop: 8 }}>{mc('up.newPurchaseLine')}</p>
+                  <p className="m2-note" style={{ marginTop: 8 }}><CK k="up.newPurchaseLine">{mc('up.newPurchaseLine')}</CK></p>
                   <div className="m2-mono" style={{ marginTop: 8, fontSize: 12, fontWeight: 700 }}>
-                    {mc('up.formulaTotal', { total: yuanOf(t.totalDiffFen) })}
+                    <CK k="up.formulaTotal">{mc('up.formulaTotal', { total: yuanOf(t.totalDiffFen) })}</CK>
                   </div>
                 </>
               ) : (
                 <div className="m2-mono" style={{ marginTop: 10, fontSize: 10.5, lineHeight: 2, color: 'var(--v2ink)' }}>
                   <div>
-                    {mc('up.formulaLine', {
-                      m: t.formula.m,
-                      newMonthly: yuanOf(t.formula.newMonthlyFen),
-                      oldMonthly: yuanOf(t.formula.oldMonthlyFen),
-                      diff: yuanOf(t.baseDiffFen),
-                    })}
+                    <CK k="up.formulaLine">
+                      {mc('up.formulaLine', {
+                        m: t.formula.m,
+                        newMonthly: yuanOf(t.formula.newMonthlyFen),
+                        oldMonthly: yuanOf(t.formula.oldMonthlyFen),
+                        diff: yuanOf(t.baseDiffFen),
+                      })}
+                    </CK>
                   </div>
                   {/* 多宠附加行恒 0 也透出（算式明面逐项） */}
-                  <div>{mc('up.formulaPet', { pet: yuanOf(t.petDiffFen) })}</div>
+                  <div><CK k="up.formulaPet">{mc('up.formulaPet', { pet: yuanOf(t.petDiffFen) })}</CK></div>
                   <div style={{ fontWeight: 700, fontSize: 12 }}>
-                    {mc('up.formulaTotal', { total: yuanOf(t.totalDiffFen) })}
+                    <CK k="up.formulaTotal">{mc('up.formulaTotal', { total: yuanOf(t.totalDiffFen) })}</CK>
                   </div>
                 </div>
               )}
@@ -226,40 +210,126 @@ function UpgradeBody({
                   onClick={() => navigate(`/member/checkout?plan=${t.planKey}`)}
                   style={{ width: '100%', marginTop: 12, padding: '13px 0', fontSize: 14.5 }}
                 >
-                  <span>{mc('up.payCta', { amount: yuanOf(t.totalDiffFen) })}</span>
+                  <span><CK k="up.payCta">{mc('up.payCta', { amount: yuanOf(t.totalDiffFen) })}</CK></span>
                 </button>
               ) : null}
             </div>
           ))}
         </>
-      )}
+      )
+    },
 
-      {/* 3. 维护态回落（channelEnabled=false 照 MemberCheckoutPage 工艺=到店办理指引卡；
-             通道开时本卡不画，成交入口=各目标档卡「去支付」钮） */}
-      {targets.length > 0 && !channelEnabled ? (
+    /* 3. mu.storeGuide：维护态回落（channelEnabled=false 照 MemberCheckoutPage 工艺=到店办理
+          指引卡；通道开时本卡不画，成交入口=各目标档卡「去支付」钮） */
+    'mu.storeGuide': () => {
+      if (!membership || !currentPlan || targets.length === 0 || channelEnabled) return null
+      return (
         <div className="m2-card" data-testid="upgrade-store-guide" style={{ marginTop: 4, padding: '16px 18px' }}>
-          <div style={{ fontSize: 15, fontWeight: 800 }}>{mc('up.storeGuideTitle')}</div>
-          <p className="m2-note" style={{ marginTop: 8 }}>{mc('up.storeGuideBody')}</p>
+          <div style={{ fontSize: 15, fontWeight: 800 }}><CK k="up.storeGuideTitle">{mc('up.storeGuideTitle')}</CK></div>
+          <p className="m2-note" style={{ marginTop: 8 }}><CK k="up.storeGuideBody">{mc('up.storeGuideBody')}</CK></p>
         </div>
-      ) : null}
+      )
+    },
 
-      {/* 4. 办理说明（即时生效/在途不重算/旧档余额零动作/期内不降级） */}
-      <div className="m2-rules" style={{ marginTop: 14 }}>
-        <div className="h">{mc('up.notesTitle')}</div>
-        <ul>
-          {(currentFree
-            ? [mc('up.freeTierGuide')]
-            : [
-                mc('up.noteEffective'),
-                mc('up.noteInflight'),
-                mc('up.noteBalance'),
-                mc('up.noteNoDowngrade', { days: windowDays }),
-              ]
-          ).map((l) => (
-            <li key={l}>{l}</li>
-          ))}
-        </ul>
+    /* 4. mu.notes：办理说明（即时生效/在途不重算/旧档余额零动作/期内不降级） */
+    'mu.notes': () => {
+      if (!membership || !currentPlan) return null
+      const lines: Array<[string, string]> = currentFree
+        ? [['up.freeTierGuide', mc('up.freeTierGuide')]]
+        : [
+            ['up.noteEffective', mc('up.noteEffective')],
+            ['up.noteInflight', mc('up.noteInflight')],
+            ['up.noteBalance', mc('up.noteBalance')],
+            ['up.noteNoDowngrade', mc('up.noteNoDowngrade', { days: windowDays })],
+          ]
+      return (
+        <div className="m2-rules" style={{ marginTop: 14 }}>
+          <div className="h"><CK k="up.notesTitle">{mc('up.notesTitle')}</CK></div>
+          <ul>
+            {lines.map(([k, l]) => (
+              <li key={l}><CK k={k}>{l}</CK></li>
+            ))}
+          </ul>
+        </div>
+      )
+    },
+
+    /* 5. mu.empty：非会员说明卡（直访不报错，给真实出口）/ 已是最高档空态卡 */
+    'mu.empty': () => {
+      if (!membership || !currentPlan) {
+        /* 非会员直访：说明卡不报错（不跳走防弹球，给真实出口） */
+        return (
+          <div className="m2-card" data-testid="upgrade-nonmember" style={{ padding: '20px 18px' }}>
+            <div style={{ fontSize: 16, fontWeight: 800 }}><CK k="up.nonMemberTitle">{mc('up.nonMemberTitle')}</CK></div>
+            <p className="m2-note" style={{ marginTop: 8 }}><CK k="up.nonMemberBody">{mc('up.nonMemberBody')}</CK></p>
+            <div style={{ textAlign: 'center', marginTop: 12 }}>
+              <button type="button" className="m2-link" onClick={() => navigate('/member/open')}>
+                <CK k="up.nonMemberCta">{mc('up.nonMemberCta')}</CK>
+              </button>
+            </div>
+          </div>
+        )
+      }
+      if (targets.length === 0) {
+        return (
+          <div className="m2-card" data-testid="upgrade-empty" style={{ marginTop: 16, padding: '20px 18px' }}>
+            <div style={{ fontSize: 16, fontWeight: 800 }}><CK k="up.emptyTitle">{mc('up.emptyTitle')}</CK></div>
+            <p className="m2-note" style={{ marginTop: 8 }}><CK k="up.emptyTopTier">{mc('up.emptyTopTier')}</CK></p>
+          </div>
+        )
+      }
+      return null
+    },
+  }
+
+  return (
+    <CanvasLayoutLoader pageKey="memberUpgrade" storeId={upStoreId}>
+      <div className="m2" data-testid="member-upgrade-page" style={{ minHeight: '100vh' }}>
+        {/* 返回=时间序回退 navigate(-1)，直访兜底=/member（PushBar 既有纪律）；页头不入块册 */}
+        <PushBar label={mc('up.pushLabel')} fallback="/member" />
+        <AppHead title={mc('up.headTitle')} no={mc('up.headNo')} />
+
+        {/* 画布预览水印（?canvasPreview=1 探针模式；零真会话零写库口径注记） */}
+        {isCanvasPreview ? (
+          <div className="m2-pad" style={{ marginTop: 10 }}>
+            <p className="m2-note" style={{ margin: 0, textAlign: 'center' }} data-testid="upgrade-canvas-preview-note">
+              {mc('mc.canvasExampleNote')}
+            </p>
+          </div>
+        ) : null}
+
+        {/* Mock 水印条（R10：内测通道全程明示；收单双位水印在确认订单页）；不入块册置块流外 */}
+        <div className="m2-pad" style={{ marginTop: 12 }}>
+          <TipCard testId="mock-watermark-top">{pc('mock.watermark')}</TipCard>
+        </div>
+
+        {myQ.isPending || (myQ.data?.membership && quoteQ.isPending) ? (
+          <div className="m2-pad" style={{ marginTop: 24 }}>
+            <LoadingBlock lines={4} />
+          </div>
+        ) : myQ.isError || quoteQ.isError ? (
+          <div className="m2-pad" style={{ marginTop: 24 }}>
+            <ErrorState
+              message={mc('up.loadFail')}
+              onRetry={() => {
+                void myQ.refetch()
+                void quoteQ.refetch()
+              }}
+            />
+          </div>
+        ) : (
+          /* 块流：五块按有效布局渲染（published 覆盖∪默认序尾补）；默认序下 DOM 结构零差异 */
+          <div className="m2-pad" style={{ marginTop: 14, paddingBottom: 60 }}>
+            {layout.map((b) =>
+              b.visible ? (
+                <section data-block-key={b.blockKey} key={b.blockKey}>
+                  {renderers[b.blockKey]?.() ?? null}
+                </section>
+              ) : null,
+            )}
+          </div>
+        )}
       </div>
-    </div>
+    </CanvasLayoutLoader>
   )
 }
