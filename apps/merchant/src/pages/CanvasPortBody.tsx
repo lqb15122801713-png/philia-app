@@ -24,6 +24,7 @@ import { Link } from 'react-router-dom';
 import { errMsg, fmtDateTime } from '../components/staff-admin/format';
 import { Badge, Btn, Field, inputCls, Modal, numStyle, Switch, toast, ToasterMount } from '../components/staff-admin/ui';
 import { cv } from '../copy/canvas';
+import { cadm } from '../copy/consoleAdmin';
 import { canvasPreviewUrl, parsePreviewPortMap } from './canvasPreviewUrl';
 import { PERK_WALL_ITEMS, PerkIcon, PERK_ICON_SET, resolvePerkWallCells, type CanvasBlockSpec, type CanvasPageKey, type PerkWallCellSpec } from '@philia/shared';
 
@@ -469,6 +470,12 @@ export function CanvasPortBody({ initialPageKey }: { initialPageKey?: CanvasPage
                         <div className="mt-[1px] text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
                           {b.blockKey}
                         </div>
+                        {/* 候裁清零批 件 5：二次确认弹层块「慎隐」警示徽（藏了=改单直接提交无确认弹层） */}
+                        {b.blockKey === 'mallOrders.sheets' ? (
+                          <div className="mt-1" data-testid="canvas-sheets-hide-note">
+                            <Badge tone="warn">{cadm('cadm.canvasSheetsHideNote')}</Badge>
+                          </div>
+                        ) : null}
                       </div>
                       <span className="flex shrink-0 items-center gap-1.5 text-caption-xs text-[rgba(59,46,36,.62)]">
                         {cv('canvas.visibleLabel')}

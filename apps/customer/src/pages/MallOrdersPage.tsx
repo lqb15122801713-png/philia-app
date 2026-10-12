@@ -3,8 +3,8 @@
  *
  * - 状态分组 Tab：待支付(pending) / 待发货(paid) / 待收货(shipped) / 已完成(received)
  *   / 售后(cancelled + refunding)，数据 trpc.mall.listMyOrders（带 storeName）；
- * - 待支付卡：「继续支付」重开 mock 收银台（CashierModal 内重走 createPayment →
- *   mock-callback 三步演示流）；
+ * - 待支付卡：「继续支付」重开 mock 收银台（CashierModal 内重走新链 pay.createOrder →
+ *   /api/pay/orders/mock-callback 三步演示流）；
  * - 待发货卡：商品明细 + 收货地址快照；
  * - 待收货卡：物流单号展示 +「确认收货」（ConfirmSheet 二次确认 → receiveOrder）；
  * - 已完成：已收货时间（updatedAt）；
@@ -15,7 +15,9 @@
  * 五块入册（mallOrders.head/tabs/cardList/empty/sheets），块序/显隐=
  * useCanvasLayout('mallOrders')（published→注册表默认序尾补，空=MALL_ORDERS_DEFAULT_ORDER
  * 兜底）；店锚=?canvasStore= 预览店锚 > 记忆门店 > listNearby 首店（MemberCenterPage 口径，
- * 同 queryKey 缓存共享零增发）；?canvasPreview=1=页首水印注记（mallorders-canvas-preview-note）；
+ * 同 queryKey 缓存共享零增发）；?canvasPreview=1=页首水印注记（mallorders-canvas-preview-note）
+ * + 候裁清零批件 6 预览兜底：订单列空/拉取失败时喂一条屏内合成示例单（假名「示例单·
+ * 画布预览」，零真数据零写库，真用户页零改动）；
  * 文案键挂 CK 点选反查锚（状态胶囊/按钮字=键已建本片接通，六签+已取消/售后中新抽键）；
  * 继续支付 CashierModal 不入块流（照改造前位置挂载）；骨架/异常页级状态不入块流；
  * 块内逻辑/查询/SSE/滚动记忆/提交链路零改动，data-testid 原值全保留。
@@ -81,6 +83,37 @@ const MALL_ORDERS_DEFAULT_ORDER = [
   'mallOrders.empty',
   'mallOrders.sheets',
 ] as const;
+
+/* 候裁清零批 件 6（预览兜底示例·客户端合成件）：canvasPreview=1 且订单列表为空时
+   喂一条合成示例单——假名「示例单·画布预览」，金额/时刻/单号=固定示例值，零真数据
+   零写库（水印注记页首已有；卡上「确认收货」等动作钮对合成 id 提交会被服务端拒，
+   仅预览框内可点，不落库）。真用户页零改动（非探针模式永不触发） */
+const EXAMPLE_ORDER_GROUPS: OrderGroups = {
+  shipped: [
+    {
+      id: 'canvas-example-order',
+      orderNo: 'SO-EXAMPLE-001',
+      totalFen: 19900,
+      status: 'shipped',
+      trackingNo: 'EXAMPLE000001',
+      items: [
+        {
+          product_id: 'canvas-example-product',
+          name: '示例商品·画布预览',
+          quantity: 1,
+          price_fen: 19900,
+          image: null,
+        },
+      ],
+      address: { receiver: '示例客户·画布预览', phone: '13800000000', detail: '示例地址·画布预览' },
+      createdAt: '2026-10-01T14:30:00',
+      updatedAt: '2026-10-02T10:00:00',
+      storeName: '示例门店·画布预览',
+      storeId: 'canvas-example-store',
+      deliveryMethod: 'express',
+    },
+  ],
+};
 
 const TABS = [
   /* U4-D3：补「全部」签（试样 09/12 首签=全部且默认选中；真实分组全量并集，按下单时间倒序）
@@ -457,6 +490,13 @@ function MallOrdersInner() {
     if (y > 0) window.scrollTo(0, y);
   }, [ordersQ.isPending, ordersQ.isError]);
   const groups = (ordersQ.data?.groups ?? {}) as unknown as OrderGroups;
+  /* 件 6：预览态订单列空（或预览拉取失败=店主无客户端会话）→ 合成示例单一条顶替
+     空态/失败态（「全部」签可见；空态块与页级失败态随之让位；真用户页零改动） */
+  const exampleActive =
+    isCanvasPreview &&
+    !ordersQ.isPending &&
+    (ordersQ.isError || Object.values(groups).every((g) => (g ?? []).length === 0));
+  const effGroups = exampleActive ? EXAMPLE_ORDER_GROUPS : groups;
 
   const invalidateOrders = useCallback(
     () => void queryClient.invalidateQueries({ queryKey: ['mall', 'listMyOrders'] }),
@@ -527,13 +567,13 @@ function MallOrdersInner() {
 
   const active = TABS.find((t) => t.key === tab)!;
   const items = active.statuses
-    .flatMap((s) => groups[s] ?? [])
+    .flatMap((s) => effGroups[s] ?? [])
     .slice()
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const countOf = (t: (typeof TABS)[number]) =>
-    t.statuses.reduce((n, s) => n + (groups[s]?.length ?? 0), 0);
+    t.statuses.reduce((n, s) => n + (effGroups[s]?.length ?? 0), 0);
   const totalCount = TABS.reduce((n, t) => n + countOf(t), 0);
-  const ordersReady = !ordersQ.isPending && !ordersQ.isError;
+  const ordersReady = (!ordersQ.isPending && !ordersQ.isError) || exampleActive;
 
   /* 块渲染器（块内逻辑零改动——五块照改造前 JSX 逐字搬，文案走 copy 键 + CK 反查锚） */
   const renderers: Record<string, () => ReactNode> = {
@@ -677,14 +717,15 @@ function MallOrdersInner() {
           ) : null,
         )}
 
-        {/* 骨架/异常页级状态（不入块流；此时 tabs/cardList/empty 块自空） */}
+        {/* 骨架/异常页级状态（不入块流；此时 tabs/cardList/empty 块自空）。
+            件 6：exampleActive 合成示例态让位（失败页不压示例卡流） */}
         {ordersQ.isPending ? (
           <div className="mt-5 space-y-3.5">
             {[1, 2, 3].map((i) => (
               <Skeleton key={i} className="h-36 rounded-panel" />
             ))}
           </div>
-        ) : ordersQ.isError ? (
+        ) : ordersQ.isError && !exampleActive ? (
           <div className="mt-10 text-center">
             <p className="text-body-sm text-ink-secondary"><CK k="mall.ordersLoadFail">{mlc('mall.ordersLoadFail')}</CK></p>
             <button

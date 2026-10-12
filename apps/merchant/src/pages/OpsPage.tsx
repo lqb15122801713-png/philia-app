@@ -147,6 +147,34 @@ export default function OpsPage() {
     queryFn: () => trpc.stock2.approvalListPending.query(),
   });
 
+  /* ---- 区 6 会员退会审批（候裁清零批 件 1 · CJ-1012-01：线上退会+审批闸） ---- */
+  const quitQ = useQuery({
+    queryKey: ['ops', 'quitCancelPending'],
+    queryFn: () => trpc.membership.cancelRequestPending.query(),
+  });
+  const quitItems = quitQ.data?.items ?? [];
+  const [quitRejectId, setQuitRejectId] = useState<string | null>(null);
+  const [quitNote, setQuitNote] = useState('');
+  const [quitBusy, setQuitBusy] = useState(false);
+  const quitReview = async (requestId: string, approve: boolean, note?: string) => {
+    setQuitBusy(true);
+    try {
+      await trpc.membership.reviewCancelRequest.mutate({ requestId, approve, ...(note ? { note } : {}) });
+      toast(op('ops.quitDone'));
+      setQuitRejectId(null);
+      setQuitNote('');
+      await queryClient.invalidateQueries({ queryKey: ['ops'] });
+    } catch (e) {
+      toast(e instanceof Error ? e.message : op('ops.quitFail'), 'error');
+    } finally {
+      setQuitBusy(false);
+    }
+  };
+  const quitApprove = (requestId: string) => {
+    if (!window.confirm(op('ops.quitApproveConfirm'))) return;
+    void quitReview(requestId, true);
+  };
+
   const invalidateAll = () => void queryClient.invalidateQueries({ queryKey: ['ops'] });
 
   /* ---- note 必填弹层（复检/自检审核共用） ---- */
@@ -705,7 +733,86 @@ export default function OpsPage() {
         )}
       </div>
 
-      {/* note 必填弹层（复检 pass/fail / 自检审核共用） */}
+      {/* 区 6 会员退会审批（候裁清零批 件 1 · CJ-1012-01：线上退会申请队列；批准=兑付联动执行） */}
+      <div className="u3-panel mb-4" data-testid="quit-approval-queue">
+        <div className="u3-panel-head">
+          <h3>{op('ops.quitTitle')}</h3>
+          <span className="aside">{op('ops.quitAside')}</span>
+        </div>
+        {quitQ.isPending ? (
+          <div className="px-[17px] py-3" aria-label="加载中">
+            <Skeleton className="h-12 !rounded-[16px]" />
+          </div>
+        ) : quitQ.isError ? (
+          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center">
+            <p className="text-body-sm text-[rgba(59,46,36,.62)]">{op('ops.quitLoadFail')}</p>
+            <div className="mt-4">
+              <Btn variant="subtle" size="sm" onClick={() => void quitQ.refetch()}>
+                {op('ops.common.retry')}
+              </Btn>
+            </div>
+          </div>
+        ) : quitItems.length === 0 ? (
+          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-caption text-[rgba(59,46,36,.62)]">
+            {op('ops.quitEmpty')}
+          </p>
+        ) : (
+          quitItems.map((row) => {
+            const r = row.request;
+            return (
+              <div key={r.id} className="border-t border-[rgba(59,46,36,.06)]" data-testid={`quit-approval-row-${r.id}`}>
+                <div className="flex flex-wrap items-center gap-2 px-[17px] py-2.5">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <Badge tone="brand">{op('ops.quitTitle')}</Badge>
+                      <span className="min-w-0 flex-1 truncate text-body-sm font-bold text-ink">
+                        {op('ops.quitLine', { nick: row.nickname ?? '—', planKey: r.planKey, amount: (r.refundFen / 100).toFixed(2), months: r.monthsRemaining })}
+                      </span>
+                    </div>
+                    <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                      {op('ops.quitReasonLabel')}：{r.reason} · {fmtAt(r.createdAt)}
+                    </div>
+                  </div>
+                  <Btn variant="primary" size="sm" onClick={() => quitApprove(r.id)} disabled={quitBusy} data-testid={`quit-approve-${r.id}`}>
+                    {op('ops.quitApproveCta')}
+                  </Btn>
+                  <Btn variant="subtle" size="sm" onClick={() => { setQuitNote(''); setQuitRejectId(r.id); }} disabled={quitBusy} data-testid={`quit-reject-${r.id}`}>
+                    {op('ops.quitRejectCta')}
+                  </Btn>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* 退会驳回弹层（理由必填=审批链同族工艺） */}
+      <Modal
+        open={quitRejectId !== null}
+        onClose={() => setQuitRejectId(null)}
+        title={op('ops.quitRejectCta')}
+        footer={
+          <>
+            <Btn variant="ghost" onClick={() => setQuitRejectId(null)} disabled={quitBusy}>
+              {op('ops.common.cancel')}
+            </Btn>
+            <Btn variant="danger" onClick={() => void quitReview(quitRejectId!, false, quitNote.trim())} disabled={quitBusy || quitNote.trim() === ''} data-testid="quit-reject-submit">
+              {quitBusy ? op('ops.common.submitting') : op('ops.common.confirm')}
+            </Btn>
+          </>
+        }
+      >
+        <textarea
+          className={inputCls}
+          rows={3}
+          maxLength={200}
+          placeholder={op('ops.quitRejectNotePh')}
+          value={quitNote}
+          onChange={(e) => setQuitNote(e.target.value)}
+          data-testid="quit-reject-note"
+        />
+      </Modal>
+
       <Modal
         open={ask !== null}
         onClose={() => setAsk(null)}

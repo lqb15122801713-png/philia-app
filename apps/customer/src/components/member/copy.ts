@@ -36,6 +36,20 @@ const MEMBER_COPY_TABLE = {
   'a3.sheetGotIt': '知道了',
   'a3.quitSheetTitle': '退会说明',
   'a3.quitSheetBody': '退会请联系门店办理。年费按剩余整月 × 月均价折算退回（内测期线下原路退回），回馈金余额清零、档位终止，全程留痕。',
+  /* ---- 候裁清零批 件 1（CJ-1012-01）：线上退会申请（线上付=可线上退，审批闸） ---- */
+  'a3.quitOnlineTitle': '线上退会申请',
+  'a3.quitOnlineBody': '你是线上支付开通的会员，可以直接线上退：提交申请 → 门店审批 → 批准后按原路退回。',
+  'a3.quitOnlineCalc': '按剩余整月折算退回 ¥{amount}（剩余 {months} 整月 × 月均价）',
+  'a3.quitOnlineReasonPh': '退会原因（必填，门店审批时可见）',
+  'a3.quitOnlineSubmit': '提交退会申请',
+  'a3.quitOnlineSubmitting': '提交中…',
+  'a3.quitOnlineConfirm': '确认提交退会申请？提交后门店审批，批准后按原路退回。',
+  'a3.quitOnlineDoneSubmit': '退会申请已提交，门店审批中',
+  'a3.quitOnlinePendingBody': '批准后退款按原路退回；驳回会写明理由。审批结果会通知你。',
+  'a3.quitOnlineApproved': '退会已批准，退款按原路退回',
+  'a3.quitOnlineRejected': '退会申请被驳回',
+  'a3.quitOnlineRebateNote': '退会后回馈金余额清零、档位终止，全程留痕。',
+  'a3.quitOnlineFail': '提交失败，请稍后再试',
 
   /* ---- J-01 会员办理页 ---- */
   'j1.pushLabel': '开通会员 · JOIN',

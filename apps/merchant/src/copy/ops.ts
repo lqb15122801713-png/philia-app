@@ -115,6 +115,21 @@ const OPS_COPY_TABLE = {
   'ops.common.confirm': '确认提交',
   'ops.common.cancel': '取消',
   'ops.common.submitting': '提交中…',
+
+  /* ---- 区 6 会员退会审批（候裁清零批 件 1 · CJ-1012-01：线上退会+审批闸） ---- */
+  'ops.quitTitle': '会员退会审批',
+  'ops.quitAside': '线上退会申请 · 批准=会员终止+回馈金清零+通道退款原路联动',
+  'ops.quitEmpty': '当前没有待审批的退会申请',
+  'ops.quitLoadFail': '退会审批队列加载失败',
+  'ops.quitApproveCta': '批准退会',
+  'ops.quitRejectCta': '驳回',
+  'ops.quitApproveConfirm': '确认批准退会？批准后=会员终止+回馈金清零+退款按原路退回（通道联动执行）。',
+  'ops.quitRejectNotePh': '驳回理由（必填，客户可见）',
+  'ops.quitDone': '退会申请已处理',
+  'ops.quitFail': '处理失败，请稍后再试',
+  'ops.quitLine': '{nick} · {planKey} · 拟退 ¥{amount}（剩余 {months} 整月）',
+  'ops.quitReasonLabel': '退会原因',
+  'ops.quitRefundNo': '退款单号',
 } as const;
 
 export const OPS_COPY = withCopyOverrides(OPS_COPY_TABLE);

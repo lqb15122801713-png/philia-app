@@ -13,7 +13,8 @@
  * （published→注册表默认序尾补，空=REPORT_DEFAULT_ORDER 兜底）；文案键挂 CK 锚；
  * 预览=CanvasLayoutLoader+?canvasPreview=1 水印注记；带参屏预览特例：
  * canvasPreview=1 且路由参数==='preview' 时用报告列表既有查询 myReports 首条
- * appointmentId 顶替（零新增查询）。草案无 error 块——加载/失败态
+ * appointmentId 顶替（零新增查询）；查不到=候裁清零批件 6 屏内合成示例报告顶替
+ * （预览专属，零真数据零写库）。草案无 error 块——加载/失败态
  * 并入 report.header 块（页头裸段置顶惯例照 MePage：header 恒置顶，余块裹在报告卡内）。
  * 块内逻辑/查询零改动，data-testid 原值全保留。
  */
@@ -48,6 +49,35 @@ const VITAL_STATUS: Record<string, { key: ServiceLoopCopyKey; pill: string }> = 
 /** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
 const REPORT_DEFAULT_ORDER = ['report.header', 'report.vitals', 'report.advice', 'report.promise'] as const
 
+type ReportData = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof usePhiliaClient>['trpc']['serviceLoop']['reportFor']['query']>>['report']
+>
+
+/* 候裁清零批 件 6（预览兜底示例·客户端合成件）：canvasPreview=1 且 'preview' 顶替查不到
+   真报告时，用屏内合成示例报告渲染块流（体征五项=固定示例值；零真数据零写库，
+   水印注记页首已有）。真用户页零改动 */
+function exampleReportOf(): ReportData {
+  const generatedAt = new Date('2026-10-01T15:30:00')
+  return {
+    id: 'canvas-example-report',
+    appointmentId: 'canvas-example-appt',
+    userId: 'canvas-example-customer',
+    vitals: [
+      { key: 'weight', label: '体重', value: '4.2kg', status: 'normal' },
+      { key: 'skin', label: '皮肤', value: '未见异常', status: 'normal' },
+      { key: 'ear', label: '耳道', value: '清洁', status: 'normal' },
+      { key: 'coat', label: '被毛', value: '顺滑', status: 'normal' },
+      { key: 'nail', label: '指甲', value: '已修剪', status: 'normal' },
+    ],
+    abnormalText: null,
+    nextAdvice: '建议 4-6 周后再次洗护（示例文案·画布预览）',
+    generatedAt,
+    deliveredAt: generatedAt,
+    createdAt: generatedAt,
+    updatedAt: generatedAt,
+  } as ReportData
+}
+
 export default function ReportPage() {
   const { appointmentId = '' } = useParams()
   const { trpc } = usePhiliaClient()
@@ -58,7 +88,8 @@ export default function ReportPage() {
     [],
   )
   /* 带参屏预览特例：?canvasPreview=1 且 :appointmentId==='preview'（预览 URL=/philia/reports/preview）
-     时用报告列表既有查询 myReports 首条 appointmentId 顶替路由参数（零新增查询） */
+     时用报告列表既有查询 myReports 首条 appointmentId 顶替路由参数（零新增查询）；
+     查不到=件 6 合成示例报告顶替（reportQ 不拉取），不再落空态 */
   const previewFallback = isCanvasPreview && appointmentId === 'preview'
   const myReportsQ = useQuery({
     queryKey: ['serviceLoop', 'myReports'],
@@ -66,6 +97,8 @@ export default function ReportPage() {
     enabled: previewFallback,
   })
   const effAppointmentId = previewFallback ? (myReportsQ.data?.[0]?.appointmentId ?? '') : appointmentId
+  /* 件 6：预览顶替未命中（列表查询已完成但首条为空）→ 合成示例报告（零真数据零写库） */
+  const previewMiss = previewFallback && !myReportsQ.isPending && effAppointmentId === ''
 
   const reportQ = useQuery({
     queryKey: ['serviceLoop', 'reportFor', effAppointmentId],
@@ -100,17 +133,18 @@ export default function ReportPage() {
   }, [blocksQ.data])
   const layout = useCanvasLayout('report', reportStoreId, registryBlocks)
 
-  const report = reportQ.data?.report ?? null
+  const report = (previewMiss ? exampleReportOf() : reportQ.data?.report) ?? null
 
   /* 块渲染器（块内逻辑零改动——四块照改造前 JSX 逐字搬，文案走 copy 键 + CK 反查锚） */
   const renderers: Record<string, () => ReactNode> = {
     /* 1. report.header：U1-A 统一返回条（←圆钮+标题），直访兜底回预约详情；
-          草案无 error 块——加载/失败态并入本块（ErrorState message 为 string 入参无 CK 锚） */
+          草案无 error 块——加载/失败态并入本块（ErrorState message 为 string 入参无 CK 锚）；
+          件 6：previewMiss 合成示例态不挂加载占位（reportQ 未启用恒 pending） */
     'report.header': () => (
       <>
         <PageHeader title={<CK k="report.title">{sl('report.title')}</CK>} fallback={`/appointments/${appointmentId}`} className="pt-6" />
         <div className="mt-4">
-          {reportQ.isPending ? <LoadingBlock lines={3} /> : null}
+          {reportQ.isPending && !previewMiss ? <LoadingBlock lines={3} /> : null}
           {reportQ.isError ? (
             <ErrorState
               message={friendlyError(reportQ.error, sl('report.loadFail'))}

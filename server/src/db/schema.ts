@@ -2519,6 +2519,66 @@ export const refundRequests = sqliteTable(
 );
 
 /* ------------------------------------------------------------------ */
+/* 会员退会线上申请单（候裁清零批 · CJ-1012-01 裁死：退会开+审批闸）            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 会员退会线上申请单：客户申请（折算明示=剩余整月×月均价 CJ-0922-13 冻结算式，申请时快照锁定）
+ * → 商家审批中心审批闸（approvalRequests kind='membership_cancel'，不批不动钱）
+ * → 批准=同事务兑付：会员 cancelled + 回馈金清零/未到账作废留痕 + refund_bills 退款行
+ * （refundMethod='online_original'）+ 通道退款联动（mock=本地账本翻退，refundNo=退款单号幂等键）。
+ * 0929 口径：无线上售卡原单（pay_orders membership_open/upgrade/renew paid）→ 申请硬拒。
+ */
+export const membershipCancelRequests = sqliteTable(
+  'membership_cancel_requests',
+  {
+    id: id(),
+    /** 审批落店=会员售卡店（sold_store_id；空=home_store_id 兜底） */
+    storeId: text('store_id')
+      .notNull()
+      .references(() => stores.id),
+    /** 申请客户 -> users.id */
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id),
+    /** 退会对象会员行 -> memberships.id */
+    membershipId: text('membership_id')
+      .notNull()
+      .references(() => memberships.id),
+    /** 线上售卡原单 -> pay_orders.id（0929 口径挂号，不悬空） */
+    payOrderId: text('pay_order_id')
+      .notNull()
+      .references(() => payOrders.id),
+    /** 原单支付单号（透出/对账快照） */
+    payNo: text('pay_no').notNull(),
+    /** 档位快照 */
+    planKey: text('plan_key').notNull(),
+    /** 当期实付快照（分；兑付依据=memberships.paid_fen 申请时值） */
+    paidFen: integer('paid_fen').notNull(),
+    /** 折算退款额快照（分；CJ-0922-13 冻结算式申请时锁定=审批与兑付同额） */
+    refundFen: integer('refund_fen').notNull(),
+    /** 剩余整月数快照（折算明示行） */
+    monthsRemaining: integer('months_remaining').notNull(),
+    /** 退会原因（客户填，审批可见） */
+    reason: text('reason').notNull(),
+    /** 状态：pending（在审批） | executed（批准=已兑付） | rejected（驳回） | cancelled（客户撤回=暂不开口） */
+    status: text('status').notNull().default('pending'),
+    /** 审批人 -> users.id */
+    reviewerId: text('reviewer_id').references(() => users.id),
+    /** 审批注记（驳回必填口径照审批链同族） */
+    reviewNote: text('review_note'),
+    reviewedAt: integer('reviewed_at', { mode: 'timestamp' }),
+    /** 批准后回挂 refund_bills.id（退款留痕双向可查） */
+    refundId: text('refund_id'),
+    ...auditColumns,
+  },
+  (t) => [
+    index('ix_membership_cancel_requests_store_status').on(t.storeId, t.status),
+    index('ix_membership_cancel_requests_user').on(t.userId),
+  ],
+);
+
+/* ------------------------------------------------------------------ */
 /* 5.7 会员（批次 R11a 会员前置批·骨架批 · 冻结版 V1.0，CJ-0922-12/-13）     */
 /* ------------------------------------------------------------------ */
 

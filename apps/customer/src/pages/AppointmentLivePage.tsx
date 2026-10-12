@@ -38,7 +38,8 @@
  * SSE/断线轮询逻辑一行不动；加载/错误/未开始/已取消四分支不入块流，照改造前位置早退。
  * 带参路由预览特例：canvasPreview=1 且 id='preview' 时用预约列表既有查询
  * （appointment.listMine，与我的预约列表同 queryKey 缓存共享，零新增查询）首条顶替；
- * 查不到=空 id → 落原「打不开这个进度页」空态照原样。
+ * 查不到=候裁清零批件 6 屏内合成示例单（in_service 洗护中六步流）顶替渲染块流
+ * （预览专属，零真数据零写库，水印注记已有），不再落「打不开这个进度页」空态。
  * 店锚=?canvasStore= 预览店锚 > 本单门店（appointment.get 透出 store.id，零新增查询）。
  */
 
@@ -56,6 +57,7 @@ import {
   type PhotoWallPhoto,
 } from '@philia/shared'
 import LiveStepper, { type LiveStepperStep } from '../components/live/LiveStepper'
+import type { AppointmentDetail } from '@/components/booking/types'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { CalendarClock, CircleX, QrCode, TriangleAlert } from 'lucide-react'
@@ -89,6 +91,99 @@ const APPT_LIVE_DEFAULT_ORDER = [
   'apptLive.review',
   'apptLive.contact',
 ] as const
+
+/* 候裁清零批 件 6（预览兜底示例·客户端合成件）：canvasPreview=1 且 'preview' 顶替查不到
+   真预约时，用屏内合成示例单渲染块流（假名「示例单·画布预览」系，时刻=固定示例值；
+   状态定 in_service 洗护中——SSE/寄养/异常通报查询带 id 闸天然不拉取，零真数据零写库，
+   水印注记页首已有）。真用户页零改动（previewMiss 以外路径一行不动） */
+function exampleApptLiveOf(): AppointmentDetail {
+  const start = new Date('2026-10-12T14:00:00')
+  const end = new Date('2026-10-12T15:30:00')
+  return {
+    appointment: {
+      id: 'canvas-example-appt',
+      code: 'EXAMPL',
+      customerId: 'canvas-example-customer',
+      storeId: 'canvas-example-store',
+      staffId: null,
+      assignSource: null,
+      petId: 'canvas-example-pet',
+      serviceId: 'canvas-example-service',
+      type: 'grooming',
+      scheduledStart: start,
+      scheduledEnd: end,
+      status: 'in_service',
+      priceFen: 12800,
+      paymentMode: 'pay_at_store',
+      paidAt: null,
+      paidFen: null,
+      note: null,
+      cancelReason: null,
+      cancelSource: null,
+      emergencyContactJson: null,
+      medicalAuthJson: null,
+      walkTimesPerDay: null,
+      checkedInAt: start,
+      completedAt: null,
+      rating: null,
+      review: null,
+      receptionistId: null,
+      createdAt: new Date('2026-10-10T10:00:00'),
+      updatedAt: start,
+    },
+    pet: { id: 'canvas-example-pet', name: '示例宠物·画布预览', avatarUrl: null },
+    service: { id: 'canvas-example-service', name: '示例洗护·画布预览' },
+    store: {
+      id: 'canvas-example-store',
+      name: '示例门店·画布预览',
+      address: '示例路 1 号·画布预览',
+      lat: null,
+      lng: null,
+      phone: null,
+    },
+    steps: [],
+    boardingStay: null,
+    customer: { nickname: '示例客户·画布预览', phoneTail: null },
+    cashierBillId: null,
+    addons: [],
+    rescheduleLogs: [],
+  } as unknown as AppointmentDetail
+}
+
+/* 件 6：合成示例六步流（消毒/预检已完成 → 洗护进行中 → 余步锁定；空照片位=虚线补位框） */
+const EXAMPLE_LIVE_STEPS: StepCache[] = (() => {
+  const t1 = new Date('2026-10-12T14:05:00')
+  const t2 = new Date('2026-10-12T14:20:00')
+  const mk = (
+    stepKey: string,
+    stepOrder: number,
+    status: StepCache['status'],
+    requiredPhotos: number,
+    startedAt: Date | null,
+    doneAt: Date | null,
+  ): StepCache => ({
+    id: `canvas-example-step-${stepKey}`,
+    appointmentId: 'canvas-example-appt',
+    stepKey,
+    stepOrder,
+    status,
+    requiredPhotos,
+    flagged: false,
+    startedAt,
+    doneAt,
+    createdAt: t1,
+    updatedAt: doneAt ?? startedAt ?? t1,
+    photos: [],
+  })
+  return [
+    mk('disinfection', 1, 'done', 0, t1, t1),
+    mk('precheck', 2, 'done', 1, t1, t2),
+    mk('grooming', 3, 'active', 2, t2, null),
+    mk('detail', 4, 'locked', 0, null, null),
+    mk('before_after', 5, 'locked', 2, null, null),
+    mk('confirm', 6, 'locked', 0, null, null),
+  ]
+})()
 
 /** SSE clientId：localStorage 持久化（契约 · push.subscribe 与 /api/events 共用） */
 function getClientId(): string {
@@ -241,7 +336,7 @@ export default function AppointmentLivePage() {
 
   /* 带参路由预览特例（片 0 §五.2）：canvasPreview=1 且 id='preview' 时用预约列表既有查询
      （appointment.listMine，与我的预约列表同 queryKey 缓存共享，零新增查询）首条顶替；
-     查不到=空 id → 各查询不拉取 → 落原「打不开这个进度页」空态照原样 */
+     查不到=件 6 合成示例单顶替（exampleD），各带 id 查询不拉取 */
   const previewListQ = useQuery({
     queryKey: ['appointment', 'listMine'],
     queryFn: () => trpc.appointment.listMine.query(),
@@ -252,8 +347,10 @@ export default function AppointmentLivePage() {
     return g ? (Object.values(g).flat()[0]?.id ?? null) : null
   }, [previewListQ.data])
   const aid = isCanvasPreview && routeAid === 'preview' ? (previewFirstId ?? '') : (routeAid ?? '')
-  /** 预览顶替未命中（列表查询已完成但首条为空）：跳过加载态直落友好错误页 */
+  /** 预览顶替未命中（列表查询已完成但首条为空）：跳过加载态，直走件 6 合成示例单 */
   const previewMiss = isCanvasPreview && routeAid === 'preview' && !previewListQ.isPending && aid === ''
+  /* 件 6：previewMiss 不再落空态——屏内合成示例单渲染块流（零真数据零写库） */
+  const exampleD = useMemo(() => (previewMiss ? exampleApptLiveOf() : null), [previewMiss])
 
   /* ---------------- 查询 ---------------- */
 
@@ -266,10 +363,11 @@ export default function AppointmentLivePage() {
     enabled: !!aid,
     refetchInterval: sseDown ? 30_000 : false,
   })
-  const appt = detailQuery.data?.appointment
-  const pet = detailQuery.data?.pet
-  const service = detailQuery.data?.service
-  const store = detailQuery.data?.store
+  const detailData = exampleD ?? detailQuery.data
+  const appt = detailData?.appointment
+  const pet = detailData?.pet
+  const service = detailData?.service
+  const store = detailData?.store
 
   const isBoarding = appt?.type === 'boarding'
   const inLiveFlow =
@@ -281,7 +379,7 @@ export default function AppointmentLivePage() {
     enabled: !!aid && !!appt && !isBoarding && inLiveFlow,
     refetchInterval: sseDown ? 30_000 : false,
   })
-  const steps = stepsQuery.data as StepCache[] | undefined
+  const steps = (exampleD ? EXAMPLE_LIVE_STEPS : stepsQuery.data) as StepCache[] | undefined
 
   const myStayQuery = useQuery({
     queryKey: ['boarding', 'myStay', aid],
@@ -316,10 +414,11 @@ export default function AppointmentLivePage() {
 
   // U4-D2 美容师行：指派员工名=store.listStaffPublic 现成接口按 staffId 解析
   // （U4-B 同口径，零新接口）；未指派/查询失败 → staffName=null，摘要卡该段隐去不造假
+  // 件 6：合成示例单（previewMiss）不拉员工真查询（零增发）
   const staffQ = useQuery({
     queryKey: ['store', 'listStaffPublic', appt?.storeId],
     queryFn: () => trpc.store.listStaffPublic.query({ storeId: appt!.storeId }),
-    enabled: !!user && !!appt?.storeId,
+    enabled: !!user && !!appt?.storeId && !previewMiss,
     staleTime: 300_000,
   })
   const staffName = useMemo(() => {
@@ -328,8 +427,9 @@ export default function AppointmentLivePage() {
   }, [appt, staffQ.data])
 
   /* ---- 画布端口：注册表块序 + 有效布局（published→默认序尾补；空=默认序兜底常量） ---- */
-  /* 店锚=?canvasStore= 预览店锚 > 本单门店（appointment.get 透出 store.id，零新增查询） */
-  const liveStoreId = previewStoreId ?? store?.id ?? null
+  /* 店锚=?canvasStore= 预览店锚 > 本单门店（appointment.get 透出 store.id，零新增查询）；
+     件 6：合成示例单的假店 id 不进布局锚（预览店锚缺省=null 走全局布局） */
+  const liveStoreId = previewStoreId ?? (previewMiss ? null : store?.id) ?? null
   const blocksQ = useQuery({
     queryKey: ['canvas', 'blocks'],
     queryFn: () => trpc.canvas.blocks.query(),
@@ -652,7 +752,7 @@ export default function AppointmentLivePage() {
     <BackButton fallback={aid ? `/appointments/${aid}` : '/appointments'} className="mb-3" ariaLabel="返回预约详情" />
   )
 
-  // 加载中（previewMiss=预览顶替未命中：跳过加载态直落友好错误页）
+  // 加载中（previewMiss=预览顶替未命中：跳过加载态，直走件 6 合成示例单）
   if (detailQuery.isPending && !previewMiss) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -814,7 +914,7 @@ export default function AppointmentLivePage() {
     'apptLive.stepper': () =>
       !isBoarding ? (
         <div className="mt-3.5">
-          {stepsQuery.isPending ? (
+          {stepsQuery.isPending && !previewMiss ? (
             <div className="u1-card p-6 text-center">
               <p className="text-caption text-ink-secondary"><CK k="appointments.liveStepsLoading">{apc('appointments.liveStepsLoading')}</CK></p>
             </div>

@@ -11,7 +11,7 @@
  * 流程：地址表单（姓名/手机号正则/详细地址，localStorage 'philia.address' 记忆）
  * → 清单确认 + 合计 →「提交订单」trpc.mall.createOrder
  *   （CONFLICT 库存不足 / BAD_REQUEST 下架·跨店 → 服务端 message toast）
- * → 自动打开 CashierModal（内部 createPayment → mock-callback 三步演示流）
+ * → 自动打开 CashierModal（新链：内部 pay.createOrder → /api/pay/orders/mock-callback 三步演示流）
  * → 成功：清空已结算勾选项 + 支付成功页（订单号 + 查看订单）；
  * → 放弃：订单留 pending，跳 /mall/orders「待支付」可继续支付。
  *
