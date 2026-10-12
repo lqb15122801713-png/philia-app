@@ -57,7 +57,7 @@ function textOf(valueJson: unknown): string {
    MainScaffold 页头），供 ConsolePage 右栏直嵌；本页默认出口行为不变。
    端口 V2 修正批：域分组→屏分组（屏卡+屏内键列表，每键=位置注+文案+高危/已改徽；
    搜索/筛选/行内编辑/高危口令闸全保留；「未归屏」组排末+注记；位置注=留口件可人工改） */
-export function CopyConfigBody() {
+export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {}) {
   const { trpc, queryClient } = usePhiliaClient();
 
   const listQuery = useQuery({
@@ -83,7 +83,8 @@ export function CopyConfigBody() {
     typeof r.screen === 'string' && r.screen ? r.screen.split(' / ') : [UNSCREENED];
 
   /* ---------------- 筛选 ---------------- */
-  const [search, setSearch] = useState('');
+  /* 控制台改版批 片 2：全局搜索深链——initialSearch 预选搜索词（键行直达=筛选到该键行） */
+  const [search, setSearch] = useState(initialSearch ?? '');
   const [screenFilter, setScreenFilter] = useState('');
   const [onlyHighRisk, setOnlyHighRisk] = useState(false);
   const [onlyChanged, setOnlyChanged] = useState(false);
@@ -128,6 +129,18 @@ export function CopyConfigBody() {
     return [...m.entries()].sort(([a], [b]) => (a === UNSCREENED ? 1 : b === UNSCREENED ? -1 : a.localeCompare(b)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtered, screenFilter]);
+
+  /* 控制台改版批 片 2：全局搜索深链——initialSearch=整键名时，命中行滚到视口中央+高亮环（一次性） */
+  const [deepLinked, setDeepLinked] = useState(false);
+  useEffect(() => {
+    if (!initialSearch || deepLinked) return;
+    const el = document.querySelector(`[data-testid="copyport-row-${initialSearch}"]`);
+    if (el) {
+      el.scrollIntoView({ block: 'center' });
+      el.classList.add('ring-2', 'ring-brand-primary');
+      setDeepLinked(true);
+    }
+  }, [initialSearch, deepLinked, groups]);
 
   /* ---------------- 编辑模型：pendingChanges Map<ruleKey, newText> + pendingPos Map<ruleKey, newPos> ---------------- */
   const [pending, setPending] = useState<Map<string, string>>(new Map());
