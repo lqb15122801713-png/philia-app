@@ -110,13 +110,14 @@ const STATUS_LABEL: Record<string, string> = {
   archived: cv('canvas.statusArchived'),
 };
 
-export function CanvasPortBody() {
+export function CanvasPortBody({ initialPageKey }: { initialPageKey?: CanvasPageKey } = {}) {
   const { trpc, queryClient } = usePhiliaClient();
 
   /* ---------------- 数据源 ---------------- */
   const meQ = useQuery({ queryKey: ['auth', 'me', 'full'], queryFn: () => trpc.auth.me.query() });
   const storeId = meQ.data?.store?.id ?? null;
-  const [pageKey, setPageKey] = useState<CanvasPageKey>('home');
+  /* 控制台改版批 片 2：全局搜索深链——initialPageKey 预选页签（命中屏直达该页签） */
+  const [pageKey, setPageKey] = useState<CanvasPageKey>(initialPageKey ?? 'home');
 
   const blocksQ = useQuery({
     queryKey: ['canvas', 'blocks'],

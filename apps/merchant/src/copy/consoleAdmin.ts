@@ -168,6 +168,21 @@ const CONSOLE_ADMIN_COPY_TABLE = {
   'cadm.cardStoredHint': '端口待立（只读占位）',
   'cadm.cardReportSpecTitle': '报表口径',
   'cadm.cardReportSpecHint': '端口待立（只读占位）',
+
+  /* ---- 控制台改版批 片 2（产品-1012 · 刀 2 全局搜索 Cmd+K）：搜索件键族 ---- */
+  'cadm.searchCta': '搜索：提成 / 回馈金 / 文案 / 屏…',
+  'cadm.searchTitle': '全局搜索',
+  'cadm.searchPlaceholder': '搜词直达：端口 / 键 / 画布屏 / 素材位',
+  'cadm.searchHint': 'Cmd+K（Mac）/ Ctrl+K（Win）唤起 · 命中即跳 · Esc 关闭',
+  'cadm.searchEmpty': '没有找到「{q}」相关的开关或页面',
+  'cadm.searchEmptyTry': '试试这些词（点一下就搜）：',
+  'cadm.searchGroupPort': '端口',
+  'cadm.searchGroupKey': '文案键',
+  'cadm.searchGroupParam': '参数键',
+  'cadm.searchGroupScreen': '画布屏',
+  'cadm.searchGroupSlot': '素材位',
+  'cadm.searchPerf': '索引 {total} 项 · 构建 {buildMs} ms · 本次首筛 {ms} ms',
+  'cadm.searchIndexing': '索引构建中…',
 } as const;
 
 export const CONSOLE_ADMIN_COPY = withCopyOverrides(CONSOLE_ADMIN_COPY_TABLE);

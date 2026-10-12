@@ -34,16 +34,18 @@
  * server merchantOwnerProcedure 硬闸门兜底。
  */
 
-import { usePhiliaClient, type PhiliaClient } from '@philia/shared';
+import { usePhiliaClient, type PhiliaClient, type CanvasPageKey } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import MainScaffold from '../components/MainScaffold';
 import RoleGuidePage from '../components/RoleGuidePage';
 import { WAlert, WDanger, WcLog, WcPorts, WcPub, type WcPubStage } from '../components/skeleton';
 import { errMsg, fmtDateTime } from '../components/staff-admin/format';
 import { Btn, numStyle, toast, ToasterMount } from '../components/staff-admin/ui';
-import { cadm, type ConsoleAdminCopyKey } from '../copy/consoleAdmin';
+import { cadm } from '../copy/consoleAdmin';
+import { CONSOLE_PORT_META, type ConsolePortKey } from './consolePortsMeta';
+import { ConsoleSearch } from './ConsoleSearch';
 import { useMerchantRole } from '../lib/roles';
 import { CopyConfigBody } from './CopyConfigPage';
 import { CanvasPortBody } from './CanvasPortBody';
@@ -60,22 +62,8 @@ import { SlotPortBody } from './SlotPortPage';
 /* 端口目录结构（A–E 域章；置灰口=开口项只读占位）                          */
 /* ------------------------------------------------------------------ */
 
-type PortKey =
-  | 'copy'
-  | 'slots'
-  | 'member_plans'
-  | 'stored'
-  | 'carepack'
-  | 'marketing'
-  | 'commission'
-  | 'xp'
-  | 'dict'
-  | 'correction'
-  | 'recycle'
-  | 'canvas'
-  | 'profile'
-  | 'reportSpec'
-  | 'payChannel';
+/* 片 2：PortKey=consolePortsMeta 单源件别名（15 口映射表双件共用） */
+type PortKey = ConsolePortKey;
 
 const PORT_GROUPS: Array<{
   key: string;
@@ -150,34 +138,8 @@ const EMPTY_STATE: Partial<Record<PortKey, { title: string; body: string }>> = {
 /* ------------------------------------------------------------------ */
 /* 控制台改版批 片 1（产品-1012 · 刀 1）：办事导向首页——卡面+留痕行数据件     */
 /* 视觉零改动纪律：全用既有 wsk-card/wsk-hd/Btn 件与既有色板字号，只动 IA    */
+/* 卡面元数据=./consolePortsMeta 单源件（片 2 全局搜索复用同表，防双表漂移）   */
 /* ------------------------------------------------------------------ */
-
-/** 办事卡（15 口=PORT_GROUPS 全量一个不删；lastKey=留痕行数据源；pending=置灰待立口；to=直达真页卡） */
-interface HomeCard {
-  port: PortKey;
-  titleKey: ConsoleAdminCopyKey;
-  hintKey: ConsoleAdminCopyKey;
-  lastKey?: 'copy' | 'member_plans' | 'commission' | 'xp' | 'pay' | 'slots' | 'canvas' | 'correction';
-  pending?: boolean;
-  to?: string;
-}
-const HOME_CARDS: HomeCard[] = [
-  { port: 'copy', titleKey: 'cadm.cardCopyTitle', hintKey: 'cadm.cardCopyHint', lastKey: 'copy' },
-  { port: 'slots', titleKey: 'cadm.cardSlotsTitle', hintKey: 'cadm.cardSlotsHint', lastKey: 'slots' },
-  { port: 'canvas', titleKey: 'cadm.cardCanvasTitle', hintKey: 'cadm.cardCanvasHint', lastKey: 'canvas' },
-  { port: 'member_plans', titleKey: 'cadm.cardMemberTitle', hintKey: 'cadm.cardMemberHint', lastKey: 'member_plans' },
-  { port: 'commission', titleKey: 'cadm.cardCommissionTitle', hintKey: 'cadm.cardCommissionHint', lastKey: 'commission' },
-  { port: 'xp', titleKey: 'cadm.cardXpTitle', hintKey: 'cadm.cardXpHint', lastKey: 'xp' },
-  { port: 'payChannel', titleKey: 'cadm.cardPayTitle', hintKey: 'cadm.cardPayHint', lastKey: 'pay' },
-  { port: 'correction', titleKey: 'cadm.cardCorrectionTitle', hintKey: 'cadm.cardCorrectionHint', lastKey: 'correction' },
-  { port: 'dict', titleKey: 'cadm.cardDictTitle', hintKey: 'cadm.cardDictHint' },
-  { port: 'recycle', titleKey: 'cadm.cardRecycleTitle', hintKey: 'cadm.cardRecycleHint' },
-  { port: 'profile', titleKey: 'cadm.cardProfileTitle', hintKey: 'cadm.cardProfileHint' },
-  { port: 'carepack', titleKey: 'cadm.cardCarepackTitle', hintKey: 'cadm.cardCarepackHint' },
-  { port: 'marketing', titleKey: 'cadm.cardMarketingTitle', hintKey: 'cadm.cardMarketingHint', to: '/marketing' },
-  { port: 'stored', titleKey: 'cadm.cardStoredTitle', hintKey: 'cadm.cardStoredHint', pending: true },
-  { port: 'reportSpec', titleKey: 'cadm.cardReportSpecTitle', hintKey: 'cadm.cardReportSpecHint', pending: true },
-];
 
 /** 留痕行数据源（全部既有读口，零新建）：config.versions 五域+slotPort.list+canvas.getLayout(home)+correction.list */
 function useHomeLastChanges(enabled: boolean) {
@@ -391,9 +353,32 @@ function OwnerConsole() {
   const [advOpen, setAdvOpen] = useState(false);
   const lastChanges = useHomeLastChanges(view === 'home');
   const empty = view !== 'home' ? EMPTY_STATE[view] : undefined;
+  const navigate = useNavigate();
+  /* 片 2 刀 2：全局搜索命中深链焦点（键名/页签；key 重挂载=焦点件重读） */
+  const [copyFocus, setCopyFocus] = useState<string | null>(null);
+  const [canvasFocus, setCanvasFocus] = useState<CanvasPageKey | null>(null);
 
   return (
-    <MainScaffold title={cadm('cadm.pageTitle')} sub={cadm('cadm.pageSub')} testid="console-page">
+    <MainScaffold
+      title={cadm('cadm.pageTitle')}
+      sub={cadm('cadm.pageSub')}
+      testid="console-page"
+      actions={
+        <ConsoleSearch
+          onPickPort={(p) => setView(p)}
+          onPickCopyKey={(k) => {
+            setCopyFocus(k);
+            setView('copy');
+          }}
+          onPickScreen={(pk) => {
+            setCanvasFocus(pk as CanvasPageKey);
+            setView('canvas');
+          }}
+          onPickSlots={() => setView('slots')}
+          onNavigate={(to) => navigate(to)}
+        />
+      }
+    >
       <div className="wsk">
         {/* kill switch 显著态（件 4a：开=WAlert 大红横幅+恢复钮；关=小字行+一键关停危险小钮） */}
         <KillSwitchStrip />
@@ -407,7 +392,7 @@ function OwnerConsole() {
                 <span className="a">{cadm('cadm.homeSub')}</span>
               </div>
               <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
-                {HOME_CARDS.map((card) => {
+                {CONSOLE_PORT_META.map((card) => {
                   const last = card.lastKey ? (lastChanges[card.lastKey] ?? null) : null;
                   const inner = (
                     <>
@@ -467,7 +452,7 @@ function OwnerConsole() {
 
               <div className="min-w-0 flex-1 space-y-3.5">
                 {/* 右栏端口编辑：共构不分叉——直嵌三页内核件，不复制码 */}
-                {view === 'copy' ? <CopyConfigBody /> : null}
+                {view === 'copy' ? <CopyConfigBody key={copyFocus ?? 'default'} initialSearch={copyFocus ?? undefined} /> : null}
                 {view === 'slots' ? (
                   <>
                     <SlotPublishStrip />
@@ -490,7 +475,7 @@ function OwnerConsole() {
                 {view === 'correction' ? <CorrectionBody /> : null}
                 {view === 'recycle' ? <RecycleBinBody /> : null}
                 {/* 端口批收尾片 3：F1 画布端口（CanvasPortBody 内核；owner-only server 硬闸） */}
-                {view === 'canvas' ? <CanvasPortBody /> : null}
+                {view === 'canvas' ? <CanvasPortBody key={canvasFocus ?? 'default'} initialPageKey={canvasFocus ?? undefined} /> : null}
                 {/* 产品-1010 片 1：E3 支付通道端口（PayChannelPortBody 内核；高危件=口令复核+掩码留痕） */}
                 {view === 'payChannel' ? <PayChannelPortBody /> : null}
                 {empty ? (
