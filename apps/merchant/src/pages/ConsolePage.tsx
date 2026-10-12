@@ -36,13 +36,14 @@
 
 import { usePhiliaClient, type PhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import MainScaffold from '../components/MainScaffold';
 import RoleGuidePage from '../components/RoleGuidePage';
 import { WAlert, WDanger, WcLog, WcPorts, WcPub, type WcPubStage } from '../components/skeleton';
 import { errMsg, fmtDateTime } from '../components/staff-admin/format';
-import { Btn, toast, ToasterMount } from '../components/staff-admin/ui';
-import { cadm } from '../copy/consoleAdmin';
+import { Btn, numStyle, toast, ToasterMount } from '../components/staff-admin/ui';
+import { cadm, type ConsoleAdminCopyKey } from '../copy/consoleAdmin';
 import { useMerchantRole } from '../lib/roles';
 import { CopyConfigBody } from './CopyConfigPage';
 import { CanvasPortBody } from './CanvasPortBody';
@@ -145,6 +146,104 @@ const EMPTY_STATE: Partial<Record<PortKey, { title: string; body: string }>> = {
   stored: { title: cadm('cadm.storedEmptyTitle'), body: cadm('cadm.storedEmptyBody') },
   reportSpec: { title: cadm('cadm.reportSpecEmptyTitle'), body: cadm('cadm.reportSpecEmptyBody') },
 };
+
+/* ------------------------------------------------------------------ */
+/* 控制台改版批 片 1（产品-1012 · 刀 1）：办事导向首页——卡面+留痕行数据件     */
+/* 视觉零改动纪律：全用既有 wsk-card/wsk-hd/Btn 件与既有色板字号，只动 IA    */
+/* ------------------------------------------------------------------ */
+
+/** 办事卡（15 口=PORT_GROUPS 全量一个不删；lastKey=留痕行数据源；pending=置灰待立口；to=直达真页卡） */
+interface HomeCard {
+  port: PortKey;
+  titleKey: ConsoleAdminCopyKey;
+  hintKey: ConsoleAdminCopyKey;
+  lastKey?: 'copy' | 'member_plans' | 'commission' | 'xp' | 'pay' | 'slots' | 'canvas' | 'correction';
+  pending?: boolean;
+  to?: string;
+}
+const HOME_CARDS: HomeCard[] = [
+  { port: 'copy', titleKey: 'cadm.cardCopyTitle', hintKey: 'cadm.cardCopyHint', lastKey: 'copy' },
+  { port: 'slots', titleKey: 'cadm.cardSlotsTitle', hintKey: 'cadm.cardSlotsHint', lastKey: 'slots' },
+  { port: 'canvas', titleKey: 'cadm.cardCanvasTitle', hintKey: 'cadm.cardCanvasHint', lastKey: 'canvas' },
+  { port: 'member_plans', titleKey: 'cadm.cardMemberTitle', hintKey: 'cadm.cardMemberHint', lastKey: 'member_plans' },
+  { port: 'commission', titleKey: 'cadm.cardCommissionTitle', hintKey: 'cadm.cardCommissionHint', lastKey: 'commission' },
+  { port: 'xp', titleKey: 'cadm.cardXpTitle', hintKey: 'cadm.cardXpHint', lastKey: 'xp' },
+  { port: 'payChannel', titleKey: 'cadm.cardPayTitle', hintKey: 'cadm.cardPayHint', lastKey: 'pay' },
+  { port: 'correction', titleKey: 'cadm.cardCorrectionTitle', hintKey: 'cadm.cardCorrectionHint', lastKey: 'correction' },
+  { port: 'dict', titleKey: 'cadm.cardDictTitle', hintKey: 'cadm.cardDictHint' },
+  { port: 'recycle', titleKey: 'cadm.cardRecycleTitle', hintKey: 'cadm.cardRecycleHint' },
+  { port: 'profile', titleKey: 'cadm.cardProfileTitle', hintKey: 'cadm.cardProfileHint' },
+  { port: 'carepack', titleKey: 'cadm.cardCarepackTitle', hintKey: 'cadm.cardCarepackHint' },
+  { port: 'marketing', titleKey: 'cadm.cardMarketingTitle', hintKey: 'cadm.cardMarketingHint', to: '/marketing' },
+  { port: 'stored', titleKey: 'cadm.cardStoredTitle', hintKey: 'cadm.cardStoredHint', pending: true },
+  { port: 'reportSpec', titleKey: 'cadm.cardReportSpecTitle', hintKey: 'cadm.cardReportSpecHint', pending: true },
+];
+
+/** 留痕行数据源（全部既有读口，零新建）：config.versions 五域+slotPort.list+canvas.getLayout(home)+correction.list */
+function useHomeLastChanges(enabled: boolean) {
+  const { trpc } = usePhiliaClient();
+  const verQ = useQuery({
+    queryKey: ['consoleHome', 'versions'],
+    enabled,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const out: Record<string, { version: number; changerNickname: string | null; createdAt: unknown } | null> = {};
+      await Promise.all((['copy', 'member_plans', 'commission', 'xp', 'pay'] as const).map(async (d) => {
+        try {
+          const r = await trpc.config.versions.query({ domain: d, limit: 1 });
+          out[d] = (r.versions[0] as { version: number; changerNickname: string | null; createdAt: unknown } | undefined) ?? null;
+        } catch {
+          out[d] = null;
+        }
+      }));
+      return out;
+    },
+  });
+  const slotsQ = useQuery({
+    queryKey: ['slotPort', 'list'],
+    queryFn: () => trpc.slotPort.list.query(),
+    enabled,
+    staleTime: 60_000,
+  });
+  const canvasQ = useQuery({
+    queryKey: ['canvas', 'getLayout', 'home'],
+    queryFn: () => trpc.canvas.getLayout.query({ pageKey: 'home' }),
+    enabled,
+    staleTime: 60_000,
+  });
+  const corrQ = useQuery({
+    queryKey: ['correction', 'list', 'home'],
+    queryFn: () => trpc.correction.list.query({}),
+    enabled,
+    staleTime: 60_000,
+  });
+
+  return useMemo(() => {
+    const out: Record<string, string | null> = {};
+    const verOf = (d: string) => {
+      const v = verQ.data?.[d];
+      return v ? `v${v.version} · ${v.changerNickname ?? '—'} · ${fmtDateTime(v.createdAt as Date)}` : null;
+    };
+    for (const d of ['copy', 'member_plans', 'commission', 'xp', 'pay'] as const) out[d] = verOf(d);
+    /* 槽位：最新动作=待审首行时刻或最近上线版本计数透出 */
+    const slots = slotsQ.data?.slots ?? [];
+    let slotLatest: Date | null = null;
+    let slotVersions = 0;
+    for (const s of slots) {
+      slotVersions += s.totalVersions;
+      const t = s.pending[0]?.createdAt;
+      if (t && (!slotLatest || (t as Date).getTime() > slotLatest.getTime())) slotLatest = t as Date;
+    }
+    out.slots = slotLatest ? `${fmtDateTime(slotLatest)}` : slots.length > 0 ? `共 ${slotVersions} 版` : null;
+    /* 画布：home 屏版本时间轴首行 */
+    const cv0 = canvasQ.data?.versions?.[0] as { version: number; creatorNickname?: string | null; actedAt?: Date; createdAt?: Date } | undefined;
+    out.canvas = cv0 ? `v${cv0.version} · ${cv0.creatorNickname ?? '—'} · ${fmtDateTime(cv0.actedAt ?? cv0.createdAt)}` : null;
+    /* 数据订正：订正单首行（list 返回 { items }） */
+    const c0 = (corrQ.data as { items?: Array<{ correction: { createdAt: Date }; proposerNickname: string | null }> } | undefined)?.items?.[0];
+    out.correction = c0 ? `${c0.proposerNickname ?? '—'} · ${fmtDateTime(c0.correction.createdAt)}` : null;
+    return out;
+  }, [verQ.data, slotsQ.data, canvasQ.data, corrQ.data]);
+}
 
 /* ------------------------------------------------------------------ */
 /* A5 槽位域：WcPub 发布流 + WcLog 版本留痕（slotPort.list 同源键透出）      */
@@ -282,75 +381,140 @@ function KillSwitchStrip() {
 /* ------------------------------------------------------------------ */
 
 function OwnerConsole() {
-  /* 产品-1010 片 1：?port= 预选口（画布权益墙「去会员档改数 ›」跳口落 C1；非法值=回默认 copy） */
-  const [active, setActive] = useState<PortKey>(() => {
+  /* 产品-1010 片 1：?port= 预选口（画布权益墙「去会员档改数 ›」跳口落 C1；非法值=回默认）；
+     产品-1012 片 1 刀 1：默认视图=办事导向首页（view='home'），?port= 直达口保留 */
+  const [view, setView] = useState<PortKey | 'home'>(() => {
     const p = new URLSearchParams(window.location.search).get('port');
     const all: string[] = PORT_GROUPS.flatMap((g) => g.items.map((i) => i.key));
-    return p && all.includes(p) ? (p as PortKey) : 'copy';
+    return p && all.includes(p) ? (p as PortKey) : 'home';
   });
-  const empty = EMPTY_STATE[active];
+  const [advOpen, setAdvOpen] = useState(false);
+  const lastChanges = useHomeLastChanges(view === 'home');
+  const empty = view !== 'home' ? EMPTY_STATE[view] : undefined;
 
   return (
     <MainScaffold title={cadm('cadm.pageTitle')} sub={cadm('cadm.pageSub')} testid="console-page">
       <div className="wsk">
         {/* kill switch 显著态（件 4a：开=WAlert 大红横幅+恢复钮；关=小字行+一键关停危险小钮） */}
         <KillSwitchStrip />
-        <div className="flex flex-col items-start gap-3.5 lg:flex-row">
-          <WcPorts
-            groups={PORT_GROUPS}
-            active={active}
-            onSelect={(k) => setActive(k as PortKey)}
-            testId="console-ports"
-          />
 
-          <div className="min-w-0 flex-1 space-y-3.5">
-            {/* 右栏端口编辑：共构不分叉——直嵌三页内核件，不复制码 */}
-            {active === 'copy' ? <CopyConfigBody /> : null}
-            {active === 'slots' ? (
-              <>
-                <SlotPublishStrip />
-                <SlotPortBody />
-              </>
-            ) : null}
-            {isRulesPort(active) ? (
-              <>
-                {/* DomainPanel 内核不带 ToasterMount（宿主页挂；文案/槽位体内核自带） */}
-                <ToasterMount />
-                <RulesDomainPanel key={active} domain={active} />
-              </>
-            ) : null}
-            {/* 大批片 2：E1 门店档案端口（ProfilePortBody 内核）/ C3 安心包端口（CarePackPortBody 只读 v1） */}
-            {active === 'profile' ? <ProfilePortBody /> : null}
-            {active === 'carepack' ? <CarePackPortBody /> : null}
-            {/* 端口批收尾片 1：D3 参数字典端口（ConfigDictBody 内核；空态卡不用） */}
-            {active === 'dict' ? <ConfigDictBody /> : null}
-            {/* 端口批收尾片 2：D4 数据订正 / D5 回收站（CorrectionBody / RecycleBinBody 内核） */}
-            {active === 'correction' ? <CorrectionBody /> : null}
-            {active === 'recycle' ? <RecycleBinBody /> : null}
-            {/* 端口批收尾片 3：F1 画布端口（CanvasPortBody 内核；owner-only server 硬闸） */}
-            {active === 'canvas' ? <CanvasPortBody /> : null}
-            {/* 产品-1010 片 1：E3 支付通道端口（PayChannelPortBody 内核；高危件=口令复核+掩码留痕） */}
-            {active === 'payChannel' ? <PayChannelPortBody /> : null}
-            {empty ? (
-              <section className="wsk-card" data-testid={`console-empty-${active}`} aria-disabled="true">
-                <div className="wsk-hd">
-                  <span className="t">{empty.title}</span>
-                  <span className="a">{cadm('cadm.portPendingNote')}</span>
+        {view === 'home' ? (
+          <>
+            {/* 刀 1：办事导向首页——办事卡面（每卡=一句人话「你能干什么」+最近改动留痕行） */}
+            <section className="wsk-card" data-testid="console-home">
+              <div className="wsk-hd">
+                <span className="t">{cadm('cadm.homeTitle')}</span>
+                <span className="a">{cadm('cadm.homeSub')}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
+                {HOME_CARDS.map((card) => {
+                  const last = card.lastKey ? (lastChanges[card.lastKey] ?? null) : null;
+                  const inner = (
+                    <>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-body font-semibold text-ink">{cadm(card.titleKey)}</span>
+                        <span className="text-caption-xs text-[rgba(59,46,36,.42)]">
+                          {cadm('cadm.homePortBadge')} · {card.port}
+                        </span>
+                      </div>
+                      <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.62)]">{cadm(card.hintKey)}</p>
+                      <p className="mt-2 border-t border-[rgba(59,46,36,.06)] pt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
+                        {last ?? cadm('cadm.homeLastNone')}
+                      </p>
+                    </>
+                  );
+                  const cls = `rounded-panel bg-card px-4 py-3.5 text-left shadow-card transition-transform duration-120 ease-philia-spring active:scale-[0.98]${card.pending ? ' opacity-60' : ''}`;
+                  return card.to ? (
+                    <Link key={card.port} to={card.to} className={cls} data-testid={`console-card-${card.port}`}>{inner}</Link>
+                  ) : (
+                    <button key={card.port} type="button" className={cls} data-testid={`console-card-${card.port}`} onClick={() => setView(card.port)}>{inner}</button>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* 参数表形态降级=高级层（折叠收排；全量端口目录点即达，不再是门面） */}
+            <section className="wsk-card mt-3.5" data-testid="console-advanced">
+              <div className="wsk-hd">
+                <span className="t">{cadm('cadm.homeAdvanced')}</span>
+                <span className="a">{cadm('cadm.homeAdvancedNote')}</span>
+              </div>
+              <Btn variant="subtle" size="sm" data-testid="console-advanced-toggle" onClick={() => setAdvOpen((v) => !v)}>
+                {cadm('cadm.homeAdvanced')}
+              </Btn>
+              {advOpen ? (
+                <div className="mt-3">
+                  <WcPorts groups={PORT_GROUPS} active={undefined} onSelect={(k) => setView(k as PortKey)} testId="console-ports-advanced" />
                 </div>
-                <p className="text-caption text-[rgba(59,46,36,.62)]">{empty.body}</p>
-              </section>
-            ) : null}
+              ) : null}
+            </section>
+          </>
+        ) : (
+          <>
+            {/* 返回行（回办事首页；侧栏单入口+页内回行双路径） */}
+            <div className="mb-1 px-1">
+              <Btn variant="ghost" size="sm" data-testid="console-back-home" onClick={() => setView('home')}>
+                {cadm('cadm.homeBackHome')}
+              </Btn>
+            </div>
+            <div className="flex flex-col items-start gap-3.5 lg:flex-row">
+              <WcPorts
+                groups={PORT_GROUPS}
+                active={view}
+                onSelect={(k) => setView(k as PortKey)}
+                testId="console-ports"
+              />
 
-            {/* 危险区（透出既有闸，不新建件） */}
-            <WDanger testId="console-danger">
-              <ul className="space-y-1.5 text-caption text-[rgba(59,46,36,.78)]">
-                <li>{cadm('cadm.dangerPin')}</li>
-                <li>{cadm('cadm.dangerFrozen')}</li>
-                <li>{cadm('cadm.dangerNoBackdate')}</li>
-              </ul>
-            </WDanger>
-          </div>
-        </div>
+              <div className="min-w-0 flex-1 space-y-3.5">
+                {/* 右栏端口编辑：共构不分叉——直嵌三页内核件，不复制码 */}
+                {view === 'copy' ? <CopyConfigBody /> : null}
+                {view === 'slots' ? (
+                  <>
+                    <SlotPublishStrip />
+                    <SlotPortBody />
+                  </>
+                ) : null}
+                {isRulesPort(view) ? (
+                  <>
+                    {/* DomainPanel 内核不带 ToasterMount（宿主页挂；文案/槽位体内核自带） */}
+                    <ToasterMount />
+                    <RulesDomainPanel key={view} domain={view} />
+                  </>
+                ) : null}
+                {/* 大批片 2：E1 门店档案端口（ProfilePortBody 内核）/ C3 安心包端口（CarePackPortBody 只读 v1） */}
+                {view === 'profile' ? <ProfilePortBody /> : null}
+                {view === 'carepack' ? <CarePackPortBody /> : null}
+                {/* 端口批收尾片 1：D3 参数字典端口（ConfigDictBody 内核；空态卡不用） */}
+                {view === 'dict' ? <ConfigDictBody /> : null}
+                {/* 端口批收尾片 2：D4 数据订正 / D5 回收站（CorrectionBody / RecycleBinBody 内核） */}
+                {view === 'correction' ? <CorrectionBody /> : null}
+                {view === 'recycle' ? <RecycleBinBody /> : null}
+                {/* 端口批收尾片 3：F1 画布端口（CanvasPortBody 内核；owner-only server 硬闸） */}
+                {view === 'canvas' ? <CanvasPortBody /> : null}
+                {/* 产品-1010 片 1：E3 支付通道端口（PayChannelPortBody 内核；高危件=口令复核+掩码留痕） */}
+                {view === 'payChannel' ? <PayChannelPortBody /> : null}
+                {empty ? (
+                  <section className="wsk-card" data-testid={`console-empty-${view}`} aria-disabled="true">
+                    <div className="wsk-hd">
+                      <span className="t">{empty.title}</span>
+                      <span className="a">{cadm('cadm.portPendingNote')}</span>
+                    </div>
+                    <p className="text-caption text-[rgba(59,46,36,.62)]">{empty.body}</p>
+                  </section>
+                ) : null}
+
+                {/* 危险区（透出既有闸，不新建件） */}
+                <WDanger testId="console-danger">
+                  <ul className="space-y-1.5 text-caption text-[rgba(59,46,36,.78)]">
+                    <li>{cadm('cadm.dangerPin')}</li>
+                    <li>{cadm('cadm.dangerFrozen')}</li>
+                    <li>{cadm('cadm.dangerNoBackdate')}</li>
+                  </ul>
+                </WDanger>
+              </div>
+            </div>
+          </>
+        )}
 
         <p className="wsk-note mt-3 px-1">{cadm('cadm.coexistNote')}</p>
       </div>

@@ -172,7 +172,7 @@
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
  *      56.1 种子 3955 键/72 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70→端口批收尾片 2（网格/订正/回收站/公告两步流 UI 92 键，生成件重生成 3762+seed 手补 1=3763，corr 域新入=71 域）3763/71→端口批收尾片 3（画布/试算/调整/录码/克隆/绑码 UI 106 键，生成件重生成 3868+seed 手补 1=3869，canvas 域新入=72 域）3869/72→端口批收尾片 4（OP-03 收口：+7 键 −撤 perk.boarding 两键[宇宙只增不改口径=仓行留档]，生成件重生成 3873+seed 手补 1=3874）3874/72→会员链路小批片 1（撤牌 2+新增 2=生成件 3873+seed 手补 1=3874）3874/72→会员链路小批片 2（0068 升级域+入口 11 键增/4 键改值+撤牌 4 键出宇宙，生成件 3880+seed 手补 1=3881）3881/72→会员链路小批片 3（0069 更名+限制解除 6 键增/10 键改值，生成件 3886+seed 手补 1=3887）3887/72→生产可用性急修（0070 端口映射表 1 键增+暖阳 claim 去只数 1 键改，生成件 3887+seed 手补 1=3888）3888/72→微光正名片 1（0071 流量池化+C 股扫尾 2 键增 2 键改，生成件 3889+seed 手补 1=3890）3890/72→微光正名片 2（0072 画布示例水印+预约档口径注记 2 键增，生成件 3891+seed 手补 1=3892）3892/72）→产品-1010 画布全屏批片 2（0073 五屏抽键 40 键+支付批漏件补种 23 键=63 键增，生成件重生成 3954+seed 手补 1=3955，域 72 不变）3955/72）→产品-1011 画布全屏批片 3 末片（0074 三十八屏随屏抽键 179 键增，台账新规=键入码必随迁移，生成件重生成 4133+seed 手补 1=4134，域 72 不变）4134/72）；
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70→端口批收尾片 2（网格/订正/回收站/公告两步流 UI 92 键，生成件重生成 3762+seed 手补 1=3763，corr 域新入=71 域）3763/71→端口批收尾片 3（画布/试算/调整/录码/克隆/绑码 UI 106 键，生成件重生成 3868+seed 手补 1=3869，canvas 域新入=72 域）3869/72→端口批收尾片 4（OP-03 收口：+7 键 −撤 perk.boarding 两键[宇宙只增不改口径=仓行留档]，生成件重生成 3873+seed 手补 1=3874）3874/72→会员链路小批片 1（撤牌 2+新增 2=生成件 3873+seed 手补 1=3874）3874/72→会员链路小批片 2（0068 升级域+入口 11 键增/4 键改值+撤牌 4 键出宇宙，生成件 3880+seed 手补 1=3881）3881/72→会员链路小批片 3（0069 更名+限制解除 6 键增/10 键改值，生成件 3886+seed 手补 1=3887）3887/72→生产可用性急修（0070 端口映射表 1 键增+暖阳 claim 去只数 1 键改，生成件 3887+seed 手补 1=3888）3888/72→微光正名片 1（0071 流量池化+C 股扫尾 2 键增 2 键改，生成件 3889+seed 手补 1=3890）3890/72→微光正名片 2（0072 画布示例水印+预约档口径注记 2 键增，生成件 3891+seed 手补 1=3892）3892/72）→产品-1010 画布全屏批片 2（0073 五屏抽键 40 键+支付批漏件补种 23 键=63 键增，生成件重生成 3954+seed 手补 1=3955，域 72 不变）3955/72）→产品-1011 画布全屏批片 3 末片（0074 三十八屏随屏抽键 179 键增，台账新规=键入码必随迁移，生成件重生成 4133+seed 手补 1=4134，域 72 不变）4134/72）→产品-1012 控制台改版批片 1（0075 办事卡面人话键族 37 键增，键入码必随迁移，生成件重生成 4170+seed 手补 1=4171，域 72 不变）4171/72）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -4933,17 +4933,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602）→ 3671/70（端口批收尾片 1：规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）→ 3763/71（端口批收尾片 2：0062 网格/订正/回收站/公告 92 键，生成件重生成 3762+seed 手补 1=3763，域 70→71=corr 新域）→ 3869/72（端口批收尾片 3：0065 画布/薪资/扫码 106 键，生成件重生成 3868+seed 手补 1=3869，域 71→72=canvas 新域）→ 3874/72（端口批收尾片 4：0066 OP-03 收口 7 键增+perk.boarding 两键撤渲染[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3873/72（会员链路小批片 1：0067 会员链路 2 键增+撤牌 2 键出宇宙[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3881/72（会员链路小批片 2：0068 升级域+入口 11 键增/4 键改值[升档线上化口径]+撤牌 4 键出宇宙[仓行留档]，生成件重生成 3880+seed 手补 1=3881）→ 3887/72（会员链路小批片 3：0069 更名+限制解除 6 键增/10 键改值，生成件重生成 3886+seed 手补 1=3887）→ 3888/72（生产可用性急修：0070 增 1 改 1，生成件重生成 3887+seed 手补 1=3888）→ 3890/72（微光正名片 1：0071 增 2 改 2，生成件重生成 3889+seed 手补 1=3890）→ 3891/72（微光正名片 2：0072 增 1，生成件重生成 3890+seed 手补 1=3891）→ 3955/72（产品-1010 画布全屏批片 2：0073 五屏抽键 40 键增+支付批漏件补种 23 键=63 增[生成件单源重跑 diff 全量入迁移]，生成件重生成 3954+seed 手补 1=3955，域 72 不变）→ 4134/72（产品-1011 画布全屏批片 3 末片：0074 三十八屏随屏抽键 179 键增[台账新规=键入码必随迁移]，生成件重生成 4133+seed 手补 1=4134，域 72 不变） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602）→ 3671/70（端口批收尾片 1：规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）→ 3763/71（端口批收尾片 2：0062 网格/订正/回收站/公告 92 键，生成件重生成 3762+seed 手补 1=3763，域 70→71=corr 新域）→ 3869/72（端口批收尾片 3：0065 画布/薪资/扫码 106 键，生成件重生成 3868+seed 手补 1=3869，域 71→72=canvas 新域）→ 3874/72（端口批收尾片 4：0066 OP-03 收口 7 键增+perk.boarding 两键撤渲染[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3873/72（会员链路小批片 1：0067 会员链路 2 键增+撤牌 2 键出宇宙[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3881/72（会员链路小批片 2：0068 升级域+入口 11 键增/4 键改值[升档线上化口径]+撤牌 4 键出宇宙[仓行留档]，生成件重生成 3880+seed 手补 1=3881）→ 3887/72（会员链路小批片 3：0069 更名+限制解除 6 键增/10 键改值，生成件重生成 3886+seed 手补 1=3887）→ 3888/72（生产可用性急修：0070 增 1 改 1，生成件重生成 3887+seed 手补 1=3888）→ 3890/72（微光正名片 1：0071 增 2 改 2，生成件重生成 3889+seed 手补 1=3890）→ 3891/72（微光正名片 2：0072 增 1，生成件重生成 3890+seed 手补 1=3891）→ 3955/72（产品-1010 画布全屏批片 2：0073 五屏抽键 40 键增+支付批漏件补种 23 键=63 增[生成件单源重跑 diff 全量入迁移]，生成件重生成 3954+seed 手补 1=3955，域 72 不变）→ 4134/72（产品-1011 画布全屏批片 3 末片：0074 三十八屏随屏抽键 179 键增[台账新规=键入码必随迁移]，生成件重生成 4133+seed 手补 1=4134，域 72 不变）→ 4171/72（产品-1012 控制台改版批片 1：0075 办事卡面人话键族 37 键增，生成件重生成 4170+seed 手补 1=4171，域 72 不变） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（4134 键/72 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 4134 && domainSet.size === 72 &&
+  check('56.1 copy 域种子全量落库（4171 键/72 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 4171 && domainSet.size === 72 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（4134 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 4134 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（4171 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 4171 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -8644,8 +8644,8 @@ async function main(): Promise<void> {
 
     /* ---- 76.3 公共读口形状不变（不透元数据：键→文两列） ---- */
     const texts76 = await trpcQuery<{ rows: Array<{ key: string; text: string; screen?: unknown; position?: unknown }> }>('config.activeCopyTexts', { cookie: customerCookie });
-    check('76.3 activeCopyTexts 形状不变（4134 行 key→text，不透 screen/position 元数据）',
-      texts76.rows.length === 4134 &&
+    check('76.3 activeCopyTexts 形状不变（4171 行 key→text，不透 screen/position 元数据）',
+      texts76.rows.length === 4171 &&
       texts76.rows.every((r) => r.screen === undefined && r.position === undefined),
       texts76.rows.length);
 
@@ -11734,6 +11734,43 @@ async function main(): Promise<void> {
       missing96.length === 0 && NEW_KEYS_96.length === 179 &&
       docUser96.length > 120 && docUser96.includes('内测期') && tabAll96 === '全部',
       { missing: missing96.join(','), n: NEW_KEYS_96.length, docLen: docUser96.length, tabAll: tabAll96 });
+  }
+
+  /* ==================================================================
+   * 产品-1012 控制台改版批 片 1（刀 1 办事导向首页+刀 3 入口归并）段：
+   *   97.1 办事卡面人话键族 37 枚 config.list 全落库（0075 种子·台账新规对账）+默认值抽查；
+   *   97.2 首页留痕行数据源读口实证（config.versions copy 域+canvas.getLayout home 版本轴+
+   *       slotPort.list+correction.list 全 200 形状齐）；
+   *   （刀 3 侧边栏归并=商家端 UI 件，旧路由零死链断言归 smoke-routes 既有覆盖 /settings/rules|copy|slots。）
+   * ================================================================== */
+  console.log('\n[产品-1012 片1] 97. 办事导向首页（人话键族落库+留痕读口）');
+  {
+    /* ---- 97.1 37 枚新键落库对账 ---- */
+    const list97 = await trpcQuery<{ rules: Array<{ ruleKey: string; active: boolean; valueJson: { text?: string } }> }>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
+    const active97 = new Map(list97.rules.filter((r) => r.active).map((r) => [r.ruleKey, r.valueJson?.text ?? '']));
+    const NEW_KEYS_97 = [
+      'cadm.homeTitle', 'cadm.homeSub', 'cadm.homeLastNone', 'cadm.homeAdvanced', 'cadm.homeAdvancedNote', 'cadm.homeBackHome', 'cadm.homePortBadge',
+      'cadm.cardCopyTitle', 'cadm.cardCopyHint', 'cadm.cardSlotsTitle', 'cadm.cardSlotsHint', 'cadm.cardCanvasTitle', 'cadm.cardCanvasHint',
+      'cadm.cardMemberTitle', 'cadm.cardMemberHint', 'cadm.cardCommissionTitle', 'cadm.cardCommissionHint', 'cadm.cardXpTitle', 'cadm.cardXpHint',
+      'cadm.cardPayTitle', 'cadm.cardPayHint', 'cadm.cardCorrectionTitle', 'cadm.cardCorrectionHint', 'cadm.cardDictTitle', 'cadm.cardDictHint',
+      'cadm.cardRecycleTitle', 'cadm.cardRecycleHint', 'cadm.cardProfileTitle', 'cadm.cardProfileHint', 'cadm.cardCarepackTitle', 'cadm.cardCarepackHint',
+      'cadm.cardMarketingTitle', 'cadm.cardMarketingHint', 'cadm.cardStoredTitle', 'cadm.cardStoredHint', 'cadm.cardReportSpecTitle', 'cadm.cardReportSpecHint',
+    ];
+    const missing97 = NEW_KEYS_97.filter((k) => !active97.has(k));
+    check('97.1 办事卡面人话键族 37 枚全落库（0075 种子·台账新规对账）+默认值抽查（cadm.homeTitle=办事首页）',
+      missing97.length === 0 && NEW_KEYS_97.length === 37 && active97.get('cadm.homeTitle') === '办事首页' && active97.get('cadm.cardCanvasTitle') === '画布装修',
+      { missing: missing97.join(','), n: NEW_KEYS_97.length });
+
+    /* ---- 97.2 首页留痕行数据源读口（全部既有口，形状实证） ---- */
+    const ver97 = await trpcQuery<{ domain: string; versions: Array<{ version: number; changerNickname: string | null; createdAt: unknown }> }>(
+      'config.versions', { cookie: ownerCookie, input: { domain: 'copy', limit: 1 } });
+    const canvas97 = await trpcQuery<{ versions: Array<{ version: number }> }>('canvas.getLayout', { cookie: ownerCookie, input: { pageKey: 'home' } });
+    const slots97 = await trpcQuery<{ slots: Array<{ slotKey: string; totalVersions: number }> }>('slotPort.list', { cookie: ownerCookie });
+    const corr97 = await trpcQuery<{ items: Array<{ correction: { id: string } }> }>('correction.list', { cookie: ownerCookie, input: {} });
+    check('97.2 留痕行数据源读口全通（config.versions[copy]+canvas.getLayout[home]+slotPort.list+correction.list 全 200 形状齐）',
+      ver97.domain === 'copy' && Array.isArray(ver97.versions) &&
+      Array.isArray(canvas97.versions) && Array.isArray(slots97.slots) && Array.isArray(corr97.items),
+      { ver: ver97.versions.length, canvas: canvas97.versions.length, slots: slots97.slots.length, corr: corr97.items.length });
   }
 
   client.close();

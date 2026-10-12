@@ -9,7 +9,8 @@
  *   （批次扩口组整组撤销：四口归位——排班/薪资/XP 审核入管理组，「运营」与「审批中心」
  *   双入口消歧合为一口「运营 · 审批中心」→ /ops，同名同图同屏、落屏单高亮，
  *   bd 角标=审批（自检审核 pending）+申诉（指标申诉 pending）合并计数不拆口）；
- * - foot=开发者管理端 /console（owner-only 规则配置/文案端口/槽位端口三口收编为其子行）。
+ * - foot=开发者管理端 /console 单入口（产品-1012 控制台改版批片 1 刀 3 裁②：规则配置/
+ *   文案端口/槽位端口三重复子行收进控制台——办事卡面+高级层；旧路由保留可直达不删）。
  *
  * 规格（§二 M1）：宽 236px 深棕渐变 160°（tokens.gradients.philiaRail）；
  * 激活=淡金 3px 左条+浅金底；bd 角标=赭红胶囊；分组签 mono 8.5 宽距。样式全在
@@ -27,7 +28,6 @@ import {
   Calculator,
   ClipboardCheck,
   House,
-  Image,
   MonitorDot,
   Package,
   ReceiptText,
@@ -35,10 +35,8 @@ import {
   Settings,
   ShieldCheck,
   ShoppingBag,
-  SlidersHorizontal,
   Sparkles,
   SquareTerminal,
-  Type,
   CreditCard,
   Users,
   Wallet,
@@ -47,7 +45,6 @@ import { usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { roleLabelCn, useMerchantRole, type MerchantRole } from '@/lib/roles';
 import { collabOf } from '@/lib/taskCollabPort';
-import { cp } from '@/copy/copyPort';
 import { cc } from '@/copy/console';
 
 type RailItem = {
@@ -195,22 +192,9 @@ export default function MerchantRail({ badges }: { badges?: Record<string, numbe
             <SquareTerminal strokeWidth={1.6} aria-hidden />
             <span>{cc('wnav.footConsole')}</span>
           </NavLink>
-          {role.isOwner ? (
-            <>
-              <NavLink to="/settings/rules" end data-testid="rail-rules-config" title={cc('wnav.footRules')} className={({ isActive }) => `it${isActive ? ' on' : ''}`}>
-                <SlidersHorizontal strokeWidth={1.6} aria-hidden />
-                <span>{cc('wnav.footRules')}</span>
-              </NavLink>
-              <NavLink to="/settings/copy" end data-testid="rail-copy-config" title={cp('copyport.pageTitle')} className={({ isActive }) => `it${isActive ? ' on' : ''}`}>
-                <Type strokeWidth={1.6} aria-hidden />
-                <span>{cp('copyport.pageTitle')}</span>
-              </NavLink>
-              <NavLink to="/settings/slots" end data-testid="rail-slot-port" title={cp('slotport.pageTitle')} className={({ isActive }) => `it${isActive ? ' on' : ''}`}>
-                <Image strokeWidth={1.6} aria-hidden />
-                <span>{cp('slotport.pageTitle')}</span>
-              </NavLink>
-            </>
-          ) : null}
+          {/* 控制台改版批 片 1 刀 3（产品-1012 裁②）：规则配置/文案端口/槽位端口三重复
+              收进控制台（办事卡面+高级层），侧边栏留「开发者管理端」单入口；
+              旧路由 /settings/rules|copy|slots 保留可直达不删（既有书签不断） */}
           <div className="card">
             {storeName}
             <br />

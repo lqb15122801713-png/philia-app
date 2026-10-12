@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-11T10:36:20.147Z；键数=4133；归屏率=97.4%（未归屏 108）
+ * 生成时间口径：2026-10-12T02:24:39.430Z；键数=4170；归屏率=97.4%（未归屏 108）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -9903,6 +9903,216 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "dialogs 组件内文案（跨屏共用件，各屏组同列）"
  },
  {
+  "key": "cadm.cardCanvasHint",
+  "domain": "merchant:consoleAdmin",
+  "text": "46 屏页面区块拖一拖、改字、预览即变",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardCanvasTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "画布装修",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardCarepackHint",
+  "domain": "merchant:consoleAdmin",
+  "text": "安心包库存与临期（只读 v1）",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardCarepackTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "安心包",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardCommissionHint",
+  "domain": "merchant:consoleAdmin",
+  "text": "员工提成规则参数",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardCommissionTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "改提成",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardCopyHint",
+  "domain": "merchant:consoleAdmin",
+  "text": "三端任何一句界面文字，在这里改",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardCopyTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "改文案",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardCorrectionHint",
+  "domain": "merchant:consoleAdmin",
+  "text": "错单错账发起订正，复核后生效",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardCorrectionTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "数据订正",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardDictHint",
+  "domain": "merchant:consoleAdmin",
+  "text": "全部参数逐键透出，可搜",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardDictTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "参数字典",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardMarketingHint",
+  "domain": "merchant:consoleAdmin",
+  "text": "营销活动与台账（直达营销页）",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardMarketingTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "会员营销",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardMemberHint",
+  "domain": "merchant:consoleAdmin",
+  "text": "四档价格与权益参数调整",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardMemberTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "改会员档",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardPayHint",
+  "domain": "merchant:consoleAdmin",
+  "text": "线上支付通道开关与参数（高危件·口令复核）",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardPayTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "改支付通道",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardProfileHint",
+  "domain": "merchant:consoleAdmin",
+  "text": "门店档案维护+连锁归属+新店克隆",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardProfileTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "门店档案",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardRecycleHint",
+  "domain": "merchant:consoleAdmin",
+  "text": "软删的商品/活动/公告在这里恢复",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardRecycleTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "回收站",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardReportSpecHint",
+  "domain": "merchant:consoleAdmin",
+  "text": "端口待立（只读占位）",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardReportSpecTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "报表口径",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardSlotsHint",
+  "domain": "merchant:consoleAdmin",
+  "text": "首页顶图等图片位，换图→预览→发布推三端",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardSlotsTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "换素材",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardStoredHint",
+  "domain": "merchant:consoleAdmin",
+  "text": "端口待立（只读占位）",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardStoredTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "储值",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardXpHint",
+  "domain": "merchant:consoleAdmin",
+  "text": "XP 规则参数与月度结算口径",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.cardXpTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "改 XP",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
   "key": "cadm.carePackExpired",
   "domain": "merchant:consoleAdmin",
   "text": "已过期",
@@ -10130,6 +10340,55 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "cadm.groupF",
   "domain": "merchant:consoleAdmin",
   "text": "F · 页面画布",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.homeAdvanced",
+  "domain": "merchant:consoleAdmin",
+  "text": "高级层 · 全部端口（参数表）",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.homeAdvancedNote",
+  "domain": "merchant:consoleAdmin",
+  "text": "15 个端口全在这层，点即达；门面卡面不收参数表",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.homeBackHome",
+  "domain": "merchant:consoleAdmin",
+  "text": "‹ 回办事首页",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.homeLastNone",
+  "domain": "merchant:consoleAdmin",
+  "text": "近期无改动留痕",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.homePortBadge",
+  "domain": "merchant:consoleAdmin",
+  "text": "端口",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.homeSub",
+  "domain": "merchant:consoleAdmin",
+  "text": "按你要办的事选卡——改文案、换图片、装修页面、改规则，都在这里",
+  "screen": "商家·开发者管理端",
+  "position": "ConsolePage 页面内文案"
+ },
+ {
+  "key": "cadm.homeTitle",
+  "domain": "merchant:consoleAdmin",
+  "text": "办事首页",
   "screen": "商家·开发者管理端",
   "position": "ConsolePage 页面内文案"
  },
