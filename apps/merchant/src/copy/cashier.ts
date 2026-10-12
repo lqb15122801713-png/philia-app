@@ -72,6 +72,9 @@ const CASHIER_COPY_TABLE = {
   /* ---- 日结 / 交接班 /cashier/close ---- */
   'cashier.closeTitle': '日结 / 交接班',
   'cashier.closeSub': '交接班=闭班不冻结 · 日结=冻结当班账目 · 反结账（拆箱）仅店主',
+  /* ---- 走查修复批 D-29（老板 10-12 裁死：冻结后新开单=进次日班次） ---- */
+  'cashier.dayFrozenBannerTitle': '今日已日结冻结',
+  'cashier.dayFrozenBannerBody': '账面=冻结快照停涨（账面 ¥{book} · 实点 ¥{actual}）；现在起新开的单自动计入次日班次',
   'cashier.closeShiftConfirmTitle': '交接班确认',
   'cashier.closeShiftConfirmBody':
     '交接班=关闭当前班次（不冻结账目）；下一笔收银将自动开新班。 如需冻结当班账目，请用「日结」。',
