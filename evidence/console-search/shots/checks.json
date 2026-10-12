@@ -1,0 +1,56 @@
+{
+  "checks": [
+    {
+      "name": "店主登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S1a 顶栏搜索钮在（MainScaffold actions 槽）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S1b Ctrl+K 唤起搜索弹层（全局监听命中）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S2a 搜「提成」命中面（端口卡 改提成 + 参数键 commission 域在列）",
+      "ok": true,
+      "detail": "Cmd+K（Mac）/ Ctrl+K（Win）唤起 · 命中即跳 · Esc 关闭  端口 改提成 员工提成规则参数 · 端口 commission 端口 文案键 提成 cadm.dictDomainCommission · 商家·开发者管"
+    },
+    {
+      "name": "S2b 命中即跳：点「改提成」→ 提成端口配置位渲染",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S3 搜「回馈金」命中（文案键族在列：rec./rebate 系键+回馈金账本屏）",
+      "ok": true,
+      "detail": "Cmd+K（Mac）/ Ctrl+K（Win）唤起 · 命中即跳 · Esc 关闭  画布屏 回馈金账本 画布屏 · rebate · 3 块 画布屏 文案键 回馈金 corr.kindRebate · 商家·开发者管理端 文案键 回馈金 "
+    },
+    {
+      "name": "S4 无命中空态（人话句+「试试」近义词 chips 在）",
+      "ok": true,
+      "detail": "没有找到「并不存在这个词」相关的开关或页面  试试这些词（点一下就搜）：  提成 回馈金 押金 文案 画布"
+    },
+    {
+      "name": "S5 性能读数（前端内存索引实测：构建+首筛）",
+      "ok": true,
+      "detail": "索引 4352 项 · 构建 0.7 ms · 本次首筛 3.4 ms"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence5\\shots\\S1-cmdk-open.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence5\\shots\\S2-search-commission.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence5\\shots\\S2b-jump-commission-port.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence5\\shots\\S3-search-rebate.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence5\\shots\\S4-search-empty.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence5\\shots\\S5-search-perf.png"
+  ],
+  "perf": {
+    "buildMs": 0.7,
+    "queryMs": 3.4
+  }
+}
