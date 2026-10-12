@@ -1,0 +1,67 @@
+{
+  "checks": [
+    {
+      "name": "夹具：今日 frozen 日结单在库（banner 数据源）",
+      "ok": true,
+      "detail": "id=01M4R8H1Q31564FM1A7FMMMEDP book=1253.80"
+    },
+    {
+      "name": "店主登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S1 日结页冻结明示 banner（已结明示卡透出冻结快照额）",
+      "ok": true,
+      "detail": "今日已日结冻结  账面=冻结快照停涨（账面 ¥1253.80 · 实点 ¥1253.80）；现在起新开的单自动计入次日班次"
+    },
+    {
+      "name": "S2a 冻结后新开单=活口径增量（todayTenderStats 增量=新单应付额 精确到分）",
+      "ok": true,
+      "detail": "delta=8800 bill=8800"
+    },
+    {
+      "name": "S2b 冻结行重读不变（bookCashFen 快照停涨）",
+      "ok": true,
+      "detail": "{\"book_cash_fen\":125380,\"snapshot_json\":\"{\\\"scope\\\":\\\"full-day\\\",\\\"note\\\":\\\"冻结=全日口径（computeDayTender 同源）；shiftBreakdown 为班次拆分展示\\\",\\\"shiftBreakdown\\\":[{\\\"shiftId\\\":\\\"01M4R8H17MMJR26M19RESME2VG\\\",\\\"openedAt\\\":\\\"2026-10-12T14:33:35.000Z\\\",\\\"closedAt\\\":null,\\\"status\\\":\\\"open\\\",\\\"cashFen\\\":125380,\\\"wechatFen\\\":0,\\\"alipayFen\\\":0,\\\"passFen\\\":8800,\\\"storedValueFen\\\":3520,\\\"rebateFen\\\":0,\\\"receivedTotalFen\\\":125380,\\\"cashierPaidCount\\\":7}],\\\"legacyPayAtStoreFen\\\":0,\\\"cashAdjustFen\\\":0,\\\"cashMovements\\\":[],\\\"discountStats\\\":{\\\"discountedBills\\\":0,\\\"discountFen\\\":0,\\\"roundingFen\\\":0,\\\"freebieNote\\\":\\\"免单本体=闸门骨架候批（trpc 骨架注记），本列=折扣+抹零单列\\\"}}\"}"
+    },
+    {
+      "name": "S2c 新班懒建（currentShift.openedAt >= 冻结时刻=进次日班次链窗）",
+      "ok": true,
+      "detail": "openedAt=2026-10-12T14:33:36.000Z"
+    },
+    {
+      "name": "S5 门店档案坐标同源（档案表单=库行=文三路 100 号 lat 30.275/lng 120.1315；导航外链同源于此行）",
+      "ok": true,
+      "detail": "表单=杭州市西湖区文三路 100 号/30.275/120.1315 库=杭州市西湖区文三路 100 号/30.275/120.1315"
+    },
+    {
+      "name": "员工登录（小美）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S3 无坐标打卡=放行+明示注记+今日明细留痕签「未取到定位」（库行 source=no_geo / distance_m=-2）",
+      "ok": true,
+      "detail": "source=no_geo distance_m=-2"
+    },
+    {
+      "name": "S4a 员工种子→员工端明示卡（不盲跳；链接=同主机员工端口）",
+      "ok": true,
+      "detail": "该账号是员工账号  客户端（宠友壳）没有员工工作台，请前往员工端登录使用；当前会话已登录，点下方链接直达。  前往员工端 › | http://localhost:7203/"
+    },
+    {
+      "name": "S4b 店主种子→商家端明示卡（链接=同主机商家端口）",
+      "ok": true,
+      "detail": "该账号是商家账号  客户端（宠友壳）没有商家后台，请前往商家端登录使用；当前会话已登录，点下方链接直达。  前往商家端 › | http://localhost:7202/"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence7\\shots\\S1-dayclose-frozen-banner.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence7\\shots\\S2-after-settle-still-frozen.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence7\\shots\\S5-profile-geo-same-source.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence7\\shots\\S3-attendance-nogeo-note.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence7\\shots\\S4a-devlogin-staff-redirect-card.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence7\\shots\\S4b-devlogin-merchant-redirect-card.png"
+  ]
+}
