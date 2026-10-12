@@ -68,6 +68,10 @@ const ATTENDANCE_COPY_TABLE = {
   'attendance.confirmed.chip': '已确认',
   'attendance.source.field': '外勤',
   'attendance.source.offline': '补传',
+
+  /* ---- 走查修复批 D-31：定位不可用放行（端口 attendance_allow_insecure_http，迁移由主代理统一写） ---- */
+  'attendance.geo.noGeoNote': '当前环境无法获取定位，本次打卡将以「未取到定位」留痕提交',
+  'attendance.source.nogeo': '未取到定位',
 } as const;
 
 export const ATTENDANCE_COPY = withCopyOverrides(ATTENDANCE_COPY_TABLE);

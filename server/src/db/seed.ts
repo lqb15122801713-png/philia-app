@@ -224,8 +224,8 @@ async function main() {
         name: '菲丽亚宠物·示例店',
         address: '杭州市西湖区文三路 100 号',
         phone: '0571-88886666', // 体验批片 4：电话客服公示种子（联系门店 tel: 透出）
-        lat: 30.2741,
-        lng: 120.1551,
+        lat: 30.275,
+        lng: 120.1315,
         openHours: OPEN_HOURS_ALL_WEEK,
         status: 'active',
       })
@@ -705,6 +705,16 @@ async function main() {
         ruleKey: 'shifts_opening_float_default_fen',
         label: '开班备用金默认额（分；开班登记留口，可改）',
         valueJson: { amountFen: 50000 },
+        effectiveFrom: RULES_EFFECTIVE_FROM,
+        active: true,
+        createdBy: owner.id,
+      },
+      /* 走查修复批 D-31（迁移 0078 同口径；service_rules 重置后补种——不补则种子抹掉） */
+      {
+        version: 1,
+        ruleKey: 'attendance_allow_insecure_http',
+        label: '打卡定位不可用放行（内测期限定；true=无坐标也允许打卡并标「未取到定位」留痕；真机收紧=改 false）',
+        valueJson: { enabled: true },
         effectiveFrom: RULES_EFFECTIVE_FROM,
         active: true,
         createdBy: owner.id,

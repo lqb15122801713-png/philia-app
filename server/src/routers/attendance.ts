@@ -30,7 +30,19 @@
  * 5. 片 2：attendance_approvals.type 增 'adjust' 取值（店长改打卡时刻留痕行；schema 注释枚举
  *    仅 exception|makeup，列无 CHECK 约束故零迁移；applicantUserId 落操作人=店长本人）；
  * 6. 片 2：bssid 列仅 WiFi 命中时落库（未命中=回落围栏判定，不落尝试值，与列注释「命中 BSSID」一致）；
- * 7. 片 2：WiFi 命中免围栏时 distance_m 仍如实落实测距离（不伪造 0，留审计真值）。
+ * 7. 片 2：WiFi 命中免围栏时 distance_m 仍如实落实测距离（不伪造 0，留审计真值）；
+ * 8. 走查修复批 D-31：attendance_records.source 增 'no_geo' 取值（定位不可用放行留痕；
+ *    schema.ts 注释枚举不在授权范围未改，列无 CHECK 约束故零迁移，同偏差 5 工艺）；
+ * 9. 走查修复批 D-31：lat/lng NOT NULL——未取到定位行落 lat=0/lng=0 占位（同偏差 1 补卡行工艺），
+ *    distance_m 落 -2=「未取到定位」标记（-1=门店未配置坐标未校验，两标记语义分列）。
+ *
+ * 走查修复批 D-31（P0 · HTTP 非安全源打卡失败）：
+ * - 页面（AttendancePage）非安全源/无 geolocation 不再拦截，直接不带坐标调 mark；
+ * - 本端点 lat/lng 改可缺：缺席时读 service_rules 端口键 attendance_allow_insecure_http
+ *   （domain='service'，valueJson={enabled}）——enabled=true 放行落行+留痕（source='no_geo'、
+ *   distance_m=-2、事件载荷 note「未取到定位」）；enabled=false/缺行=维持现状拦（BAD_REQUEST 零写入）；
+ * - 定位可用但用户拒/超时/失败=维持现状拦（页面分支不动，坐标照常必填）；
+ * - WiFi 白名单命中判定不依赖坐标（bssid 匹配即可），no_geo 行 WiFi 命中仍如实落 bssid（同偏差 6）。
  */
 
 import { TRPCError } from '@trpc/server';
@@ -189,6 +201,24 @@ async function offlineStaleHours(db: DbHandle, storeId?: string | null): Promise
   return typeof h === 'number' && Number.isFinite(h) && h > 0 ? h : 24;
 }
 
+/** D-31 定位不可用放行端口读口：service_rules.attendance_allow_insecure_http{enabled} 生效最新版
+ * （读法照 offlineStaleHours 先例，按本店作用域解析）。缺行/坏值=false（维持拦截现状）；
+ * 真机收紧=端口改参不改码（enabled=false 即恢复拦截）。 */
+async function allowNoGeoPunch(db: DbHandle, storeId?: string | null): Promise<boolean> {
+  const rows = await db
+    .select({ ruleKey: schema.serviceRules.ruleKey, valueJson: schema.serviceRules.valueJson, storeId: schema.serviceRules.storeId })
+    .from(schema.serviceRules)
+    .where(
+      and(
+        eq(schema.serviceRules.ruleKey, 'attendance_allow_insecure_http'),
+        eq(schema.serviceRules.active, true),
+      ),
+    )
+    .orderBy(desc(schema.serviceRules.version));
+  const row = (storeId === undefined ? rows : resolveScopedRules(rows, storeId))[0];
+  return row?.valueJson?.enabled === true;
+}
+
 /**
  * 打卡×班次自动比对（容差 10min）：
  * in 晚于班次开始+10 → late；out 早于班次结束-10 → early；否则 normal。
@@ -260,14 +290,19 @@ export const attendanceRouter = router({
    * - 防代打：同 device_id 同日 >2 个不同 user_id → 该批记录 flagged=1（只标记不阻断）；
    * - kind='out' 且当日完整正常 → awardXp(source='attendance')（分值/日上限由 xp_rules 决定）；
    * - emitEvent AttendanceMarked → staff + store 双频道（载荷含 status），事务提交后 broadcastNow；
-   * - B1-4：late/early/field 落行 → AttendanceException → store + staff 双频道。
+   * - B1-4：late/early/field 落行 → AttendanceException → store + staff 双频道；
+   * - D-31 定位不可用放行：lat/lng 缺席（须成对缺席/成对携带，单边=BAD_REQUEST）→ 读端口键
+   *   attendance_allow_insecure_http（本店作用域解析）——enabled=true 放行落行+留痕
+   *   （source='no_geo'、lat/lng=0 占位、distance_m=-2「未取到定位」标记、事件载荷 note 透出）；
+   *   enabled=false/缺行=BAD_REQUEST 零写入（维持现状拦）。
    */
   mark: staffProcedure
     .input(
       z.object({
         kind: z.enum(['in', 'out']),
-        lat: z.number().min(-90).max(90),
-        lng: z.number().min(-180).max(180),
+        /** D-31：可缺（成对缺席=定位不可用放行情景，端口键把关；成对携带=现状围栏口径） */
+        lat: z.number().min(-90).max(90).optional(),
+        lng: z.number().min(-180).max(180).optional(),
         deviceId: z.string().min(1, '缺少设备标识'),
         /** B1-1：当前连接的门店 WiFi BSSID（Web 端=手动选择映射，见 AttendancePage 注记） */
         bssid: z.string().min(1).optional(),
@@ -304,6 +339,20 @@ export const attendanceRouter = router({
       }
       const date = localDateStr(punchAt);
 
+      /* D-31 定位不可用放行：lat/lng 成对判定——单边携带=BAD_REQUEST（形状不诚实）；
+         成对缺席=无坐标打卡（noGeo），端口键 attendance_allow_insecure_http 把关：
+         enabled=true 放行（留痕见下）；enabled=false/缺行=维持现状拦（零写入） */
+      const noGeo = input.lat === undefined && input.lng === undefined;
+      if (!noGeo && (input.lat === undefined || input.lng === undefined)) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '定位坐标须成对携带（lat/lng）' });
+      }
+      if (noGeo && !(await allowNoGeoPunch(ctx.db, storeId))) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: '未取到定位，无法打卡（本店未开启定位不可用放行，请到店用 HTTPS 或 App 内打开重试）',
+        });
+      }
+
       const store = await ctx.db
         .select({ id: schema.stores.id, lat: schema.stores.lat, lng: schema.stores.lng })
         .from(schema.stores)
@@ -324,18 +373,21 @@ export const attendanceRouter = router({
       const wifiHit =
         wifiRows.length > 0 && !!input.bssid && wifiRows.some((w) => w.bssid === input.bssid);
 
-      /* 围栏：圆心=门店经纬度，半径 300m。WiFi 命中免围栏；未命中回落围栏；围栏外+照片=外勤放行 */
+      /* 围栏：圆心=门店经纬度，半径 300m。WiFi 命中免围栏；未命中回落围栏；围栏外+照片=外勤放行。
+         D-31：noGeo（定位不可用放行）跳过围栏判定，distance_m=-2「未取到定位」标记（报备偏差 9） */
       let distanceM: number;
       let field = false;
-      if (wifiHit) {
+      if (noGeo) {
+        distanceM = -2; // 未取到定位：不伪造距离也不按门店缺坐标口径（-1）混记
+      } else if (wifiHit) {
         distanceM =
           store.lat === null || store.lng === null
             ? -1
-            : Math.round(haversineM(store.lat, store.lng, input.lat, input.lng)); // 免围栏但如实记距（报备偏差 7）
+            : Math.round(haversineM(store.lat, store.lng, input.lat!, input.lng!)); // 免围栏但如实记距（报备偏差 7）；noGeo=false 保证坐标成对在场
       } else if (store.lat === null || store.lng === null) {
         distanceM = -1; // 门店未配置坐标：跳过围栏校验，-1 = 未校验标记（报备偏差 3）
       } else {
-        distanceM = Math.round(haversineM(store.lat, store.lng, input.lat, input.lng));
+        distanceM = Math.round(haversineM(store.lat, store.lng, input.lat!, input.lng!));
         if (distanceM > GEOFENCE_RADIUS_M) {
           if (input.photoUrl) {
             field = true; // B1-2 外勤：围栏外+照片 → 放行落行+自动挂 exception（下方统一处理）
@@ -344,7 +396,8 @@ export const attendanceRouter = router({
           }
         }
       }
-      const source = input.source === 'offline_relay' ? 'offline_relay' : field ? 'field' : null;
+      const source =
+        input.source === 'offline_relay' ? 'offline_relay' : noGeo ? 'no_geo' : field ? 'field' : null;
 
       /* B1-5 多对打卡：kind 由当日末行推导；同 kind 60 秒内重击=幂等返回末行 */
       const dayRowsPre = await ctx.db
@@ -398,8 +451,8 @@ export const attendanceRouter = router({
             date,
             kind,
             ts: punchAt, // B1-3：补传落实际打点时刻；现场=服务器当前时刻
-            lat: input.lat,
-            lng: input.lng,
+            lat: input.lat ?? 0, // D-31：未取到定位落 0 占位（报备偏差 9，同偏差 1 补卡行工艺）
+            lng: input.lng ?? 0,
             distanceM,
             status,
             makeup: false,
@@ -492,7 +545,10 @@ export const attendanceRouter = router({
           flagged: record.flagged,
         };
         if (source) payload.source = source;
-        if (!shiftFound) payload.note = '今日无排班，按正常计';
+        const notes: string[] = [];
+        if (!shiftFound) notes.push('今日无排班，按正常计');
+        if (noGeo) notes.push('未取到定位（内测期放行，端口 attendance_allow_insecure_http）');
+        if (notes.length > 0) payload.note = notes.join('；');
         const outboxIds = [
           await emitEvent(t, `staff:${staffId}`, EventType.AttendanceMarked, payload),
           await emitEvent(t, `store:${storeId}`, EventType.AttendanceMarked, payload),

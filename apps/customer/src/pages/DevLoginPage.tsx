@@ -11,6 +11,11 @@
  * - 内测口令门（批次 6 任务 B2）：服务端设置 BETA_GATE_CODE 后，dev-seed-users
  *   无口令返回 401 → 页面显示口令输入框；登录请求 body 携带 code。
  * - 点击调 devLogin(baseUrl, userId, code?) → 失效全部查询缓存 → 跳回 from 或 /home。
+ * - D-33（走查修复批 · 老板裁口径）：种子登录按角色落端——登录成功后读该用户角色
+ *   （dev-seed-users 返回的 roles 优先，手动输入兜底查 auth.me），员工→员工端、
+ *   商家→商家端（cookie 同 localhost 跨口共享）；纯 customer 照旧 /home。
+ *   已知端口拓扑（本端口 7100→员工 7102/商家 7101；7201→7203/7202）直接跳；
+ *   未知拓扑不盲跳，页面出明示卡 + 同主机换端口链接（不白屏不迷航）。
  *
  * U4-D2（试样 01 逐格收口 · 拍板 2 内测口径）：视觉骨架向试样靠拢——
  * 左对齐 hero（54px 细线爪印圆标 + 衬线宣言 +
@@ -45,16 +50,42 @@ const ROLE_LABEL: Record<string, string> = {
 }
 const roleLabel = (roles: string[]) => roles.map((r) => ROLE_LABEL[r] ?? r).join(' / ')
 
+/* ---- D-33（走查修复批）：种子登录按角色落端 ---- */
+type EndTarget = 'staff' | 'merchant'
+/* 员工端守卫口径=roles 含 staff（见 apps/staff RequireStaff）；groomer/frontdesk 为 staff 表
+   岗位名（种子「小美」挂 staff 行 role=frontdesk），一并计入防御未来 user_roles 扩展 */
+const STAFF_END_ROLES = new Set(['staff', 'groomer', 'frontdesk'])
+/* 商家端守卫口径=roles 含 merchant_owner / merchant_manager / merchant_clerk
+   （见 apps/merchant RequireMerchant） */
+const MERCHANT_END_ROLES = new Set(['merchant_owner', 'merchant_manager', 'merchant_clerk'])
+/** 本端（客户端）端口 → 各端端口映射：dev=7100，生产分端=7201（任务书 D-32 实证口径） */
+const END_PORT_MAP: Record<string, Record<EndTarget, string>> = {
+  '7100': { staff: '7102', merchant: '7101' },
+  '7201': { staff: '7203', merchant: '7202' },
+}
+/** 未知拓扑明示卡链接的兜底端口（生产拓扑 7203/7202）——仅出可点链接，不盲跳 */
+const END_PORT_FALLBACK: Record<EndTarget, string> = { staff: '7203', merchant: '7202' }
+const resolveEndTarget = (roles: string[]): EndTarget | null =>
+  roles.some((r) => STAFF_END_ROLES.has(r))
+    ? 'staff'
+    : roles.some((r) => MERCHANT_END_ROLES.has(r))
+      ? 'merchant'
+      : null
+const endTargetUrl = (port: string) =>
+  `${window.location.protocol}//${window.location.hostname}:${port}/`
+
 export default function DevLoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const from = (location.state as { from?: string } | null)?.from
-  const { queryClient } = usePhiliaClient()
+  const { queryClient, trpc } = usePhiliaClient()
   const { user, refetch } = useMe()
 
   const [pendingId, setPendingId] = useState<string | null>(null)
   const [manualId, setManualId] = useState('')
   const [error, setError] = useState<string | null>(null)
+  /* D-33：未知端口拓扑时的明示出口卡（已登录但本端无对应工作台） */
+  const [endHint, setEndHint] = useState<{ target: EndTarget; url: string } | null>(null)
   /* D-16 自助开户（CJ-0925-07）：手机号输入卡（口令通过=seeds 拉到后展示） */
   const [phone, setPhone] = useState('')
   const [phonePending, setPhonePending] = useState(false)
@@ -117,9 +148,35 @@ export default function DevLoginPage() {
   const doLogin = async (userId: string) => {
     setPendingId(userId)
     setError(null)
+    setEndHint(null)
     try {
       await devLogin(getApiBase(), userId, gateCode.trim() || undefined)
       await queryClient.invalidateQueries()
+      /* D-33 按角色落端：登录已完成（cookie 同 localhost 跨口共享），读角色定落点——
+         种子列表点击直接用 dev-seed-users 返回的 roles；手动输入无 roles 兜底查 auth.me */
+      let roles = seeds?.find((u) => u.id === userId)?.roles ?? []
+      if (roles.length === 0) {
+        try {
+          roles = ((await trpc.auth.me.query()).roles ?? []) as string[]
+        } catch {
+          roles = []
+        }
+      }
+      const target = resolveEndTarget(roles)
+      if (target) {
+        const mapped = END_PORT_MAP[window.location.port]
+        const port = mapped?.[target] ?? END_PORT_FALLBACK[target]
+        const url = endTargetUrl(port)
+        if (mapped) {
+          console.info(`[dev-login] D-33 按角色落端：roles=[${roles.join(',')}] → ${target}端 ${url}`)
+          window.location.assign(url)
+          return
+        }
+        /* 未知端口拓扑：不盲跳，出明示卡 + 同主机换端口链接（不白屏不迷航） */
+        console.info(`[dev-login] D-33 未知端口拓扑（当前口 ${window.location.port}），出明示出口卡 → ${url}`)
+        setEndHint({ target, url })
+        return
+      }
       navigate(from && from !== '/dev-login' ? from : '/home', { replace: true })
     } catch (err) {
       const msg = err instanceof Error ? err.message : '登录失败'
@@ -252,6 +309,25 @@ export default function DevLoginPage() {
               </Button>
             </div>
           </div>
+        ) : null}
+
+        {/* D-33 明示出口卡：未知端口拓扑时员工/商家账号登录后给明示出口（不白屏不迷航） */}
+        {endHint ? (
+          <section className="u1-card mt-4 p-4" aria-label="按角色落端提示" data-testid="end-redirect-card">
+            <p className="text-body-sm font-semibold">
+              {endHint.target === 'staff' ? dc('devlogin.endStaffTitle') : dc('devlogin.endMerchantTitle')}
+            </p>
+            <p className="mt-1 text-caption text-ink-secondary">
+              {endHint.target === 'staff' ? dc('devlogin.endStaffBody') : dc('devlogin.endMerchantBody')}
+            </p>
+            <a
+              href={endHint.url}
+              data-testid="end-redirect-link"
+              className="mt-2 inline-block text-caption font-semibold text-ink-secondary underline underline-offset-2"
+            >
+              {endHint.target === 'staff' ? dc('devlogin.endLinkStaff') : dc('devlogin.endLinkMerchant')}
+            </a>
+          </section>
         ) : null}
 
         {/* 口令门卡：服务端 401/403 强制显示，或「口令入内测 ›」手动展开 */}

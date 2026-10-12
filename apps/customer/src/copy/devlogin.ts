@@ -33,6 +33,13 @@ const DEVLOGIN_COPY_TABLE = {
   /* 底部协议小字 */
   'devlogin.footerA': '登录即同意《用户协议》与《隐私政策》',
   'devlogin.footerB': '内测期间口令由门店发放',
+  /* D-33 按角色落端：员工/商家种子账号登录后不迷航——已知拓扑直接跳，未知拓扑出明示卡 */
+  'devlogin.endStaffTitle': '该账号是员工账号',
+  'devlogin.endStaffBody': '客户端（宠友壳）没有员工工作台，请前往员工端登录使用；当前会话已登录，点下方链接直达。',
+  'devlogin.endMerchantTitle': '该账号是商家账号',
+  'devlogin.endMerchantBody': '客户端（宠友壳）没有商家后台，请前往商家端登录使用；当前会话已登录，点下方链接直达。',
+  'devlogin.endLinkStaff': '前往员工端 ›',
+  'devlogin.endLinkMerchant': '前往商家端 ›',
   /* 微信槽写准注记（客户端体验大批 片 1 · 开口项 1 裁：不吹不删槽） */
   'devlogin.wechatNote': '微信授权登录属小程序/资质批，PWA 端暂以手机号+种子账号入内测',
 } as const;

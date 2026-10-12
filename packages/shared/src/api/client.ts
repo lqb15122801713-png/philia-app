@@ -72,6 +72,17 @@ export interface PhiliaClient {
 /** 批量轮询 URL 膨胀哨兵阈值（4KB；微光正名批片 2 C 股 4 补采件） */
 export const BATCH_URL_WARN_LEN = 4096;
 
+/**
+ * 批量 GET URL 硬收口阈值（走查修复批 D-30：员工端 /today 六查询并发 + 60s 轮询，
+ * 同刻被 httpBatchLink 合拼进一个 GET，安装版 @trpc/client v11 的 maxURLLength
+ * 缺省=Infinity 不拆批，URL 膨胀到代理 431）。取 2048（常见代理/网关 4-8KB 头限
+ * 留足余量），超限由 trpc 自动拆成多批发送，行为对页面透明。
+ * 共享件三端（customer/merchant/staff）同经 createPhiliaClient，此处收口即三端同生效。
+ * 哨兵联动：硬拆后单批 URL 不再超 2048，4096 哨兵理应零命中；若仍命中=存在绕批
+ * 路径（如自建 link/直发 fetch），哨兵继续捕现场。
+ */
+export const BATCH_URL_MAX_LEN = 2048;
+
 /** 创建 trpc client + QueryClient 单例（契约签名；由各端 providers.tsx 调用一次） */
 export function createPhiliaClient(baseUrl: string): PhiliaClient {
   const trpc = createTRPCClient<AppRouter>({
@@ -79,6 +90,9 @@ export function createPhiliaClient(baseUrl: string): PhiliaClient {
       httpBatchLink({
         url: `${baseUrl}/trpc`,
         transformer: superjson,
+        /* 硬收口（走查修复批 D-30）：超限 trpc 自动拆成多批 GET，与 4096 哨兵联动
+           ——拆后单批 URL 不超 2048，哨兵理应零命中，命中即=有绕批路径 */
+        maxURLLength: BATCH_URL_MAX_LEN,
         // 会话为 httpOnly cookie，跨域（7100 → 7200）必须携带凭证
         fetch: (url, options) => {
           /* 膨胀哨兵（微光正名批片 2 C 股 4：生产亲见一次 528 段未复现——哨兵捕现场，

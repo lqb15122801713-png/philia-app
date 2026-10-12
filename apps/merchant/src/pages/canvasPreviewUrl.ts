@@ -4,7 +4,8 @@
  *
  * 推导顺序（四轨并存，判定信号互斥写明）：
  * 1. 单域路径分端（/admin 前缀判定；片 4 轨，保留不拆）；
- * 2. 端口分端（生产真拓扑=同 IP 端口分端：7200 客户端/7201 员工端/7202 商家端，Caddy 映射）——
+ * 2. 端口分端（生产真拓扑=同 IP 端口分端：7200 客户端（7201 同端备用）/7202 商家端/7203 员工端，
+ *    Caddy 映射——登记-产品-1012《三端入口地址》=唯一事实源）——
  *    判定=当前口在映射表键内；客户页推导=同 host:映射客户口，cashierMarketing=同源 /cashier；
  *    映射表=配置端口留口（copy 键 canvas.previewPortMap，JSON 串，改拓扑零代码；
  *    端口值缺席/解析失败=回落 DEFAULT_PORT_MAP）；
@@ -26,7 +27,7 @@ export interface PreviewLoc {
   protocol: string;
 }
 
-/** 端口分端映射缺省值（生产实测拓扑：商家端 7202/员工端 7201 → 客户端 7200）；
+/** 端口分端映射缺省值（生产实测拓扑：商家端 7202 → 客户端 7200；7201=客户端同端备用口）；
  *  端口配置件（copy key canvas.previewPortMap）可覆盖——改拓扑零代码 */
 export const DEFAULT_PORT_MAP: Record<string, string> = { '7202': '7200', '7201': '7200' };
 

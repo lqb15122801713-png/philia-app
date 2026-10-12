@@ -46,7 +46,7 @@ import { useMerchantEvents } from '@/components/dashboard/MerchantEventsProvider
 import { STATS_QUERY_KEY } from '@/components/dashboard/utils'
 import MainScaffold from '@/components/MainScaffold'
 import { cc } from '@/copy/cashier'
-import { errMsg, yuanToFen } from '@/components/mall-admin/format'
+import { errMsg, fenToYuan, yuanToFen } from '@/components/mall-admin/format'
 import type { StaffRow } from '@/components/staff-admin/types'
 import { useMerchantRole } from '@/lib/roles'
 
@@ -264,6 +264,8 @@ export default function CashierClosePage() {
   }
 
   const tender = tenderQ.data && !tenderQ.data.restricted ? tenderQ.data : undefined
+  /* 走查修复批 D-29：今日已冻结=已结明示卡（冻结快照停涨；新开单入次日=链窗零改动快照面） */
+  const todayFrozen = (closesQ.data ?? []).find((r) => r.kind === 'close' && r.status === 'frozen' && r.bizDate === storeTodayStr()) ?? null
 
   return (
     <MainScaffold
@@ -272,6 +274,18 @@ export default function CashierClosePage() {
       sub={cc('cashier.closeSub')}
     >
       <div className="flex flex-col gap-3.5">
+        {/* D-29：今日已日结冻结=已结明示卡（账面=冻结快照停涨；冻结后再开单自动计入次日班次） */}
+        {todayFrozen ? (
+          <div className="rounded-[16px] bg-[#F4EDDC] px-4 py-3" data-testid="day-frozen-banner">
+            <p className="text-body-sm font-semibold text-ink">{cc('cashier.dayFrozenBannerTitle')}</p>
+            <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+              {cc('cashier.dayFrozenBannerBody', {
+                book: fenToYuan(todayFrozen.bookCashFen ?? 0),
+                actual: fenToYuan(todayFrozen.actualCashFen ?? 0),
+              })}
+            </p>
+          </div>
+        ) : null}
         {/* 当前班次卡 + 交接班 */}
         <ShiftCard
           shift={shiftQ.data?.shift}

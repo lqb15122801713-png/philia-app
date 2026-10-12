@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-12T08:13:17.913Z；键数=4210；归屏率=97.4%（未归屏 109）
+ * 生成时间口径：2026-10-12T13:30:05.938Z；键数=4220；归屏率=97.4%（未归屏 109）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -3473,6 +3473,48 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "devlogin.devOnly",
   "domain": "devlogin",
   "text": "仅开发环境 · 生产环境请移除",
+  "screen": "客户·开发登录",
+  "position": "DevLoginPage 页面内文案"
+ },
+ {
+  "key": "devlogin.endLinkMerchant",
+  "domain": "devlogin",
+  "text": "前往商家端 ›",
+  "screen": "客户·开发登录",
+  "position": "DevLoginPage 页面内文案"
+ },
+ {
+  "key": "devlogin.endLinkStaff",
+  "domain": "devlogin",
+  "text": "前往员工端 ›",
+  "screen": "客户·开发登录",
+  "position": "DevLoginPage 页面内文案"
+ },
+ {
+  "key": "devlogin.endMerchantBody",
+  "domain": "devlogin",
+  "text": "客户端（宠友壳）没有商家后台，请前往商家端登录使用；当前会话已登录，点下方链接直达。",
+  "screen": "客户·开发登录",
+  "position": "DevLoginPage 页面内文案"
+ },
+ {
+  "key": "devlogin.endMerchantTitle",
+  "domain": "devlogin",
+  "text": "该账号是商家账号",
+  "screen": "客户·开发登录",
+  "position": "DevLoginPage 页面内文案"
+ },
+ {
+  "key": "devlogin.endStaffBody",
+  "domain": "devlogin",
+  "text": "客户端（宠友壳）没有员工工作台，请前往员工端登录使用；当前会话已登录，点下方链接直达。",
+  "screen": "客户·开发登录",
+  "position": "DevLoginPage 页面内文案"
+ },
+ {
+  "key": "devlogin.endStaffTitle",
+  "domain": "devlogin",
+  "text": "该账号是员工账号",
   "screen": "客户·开发登录",
   "position": "DevLoginPage 页面内文案"
  },
@@ -8830,6 +8872,20 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "text": "冲正单与原单双向可查 · 原单永存不涂改",
   "screen": "商家·日结·交接班",
   "position": "DayClosePanels 组件内文案"
+ },
+ {
+  "key": "cashier.dayFrozenBannerBody",
+  "domain": "merchant:cashier",
+  "text": "账面=冻结快照停涨（账面 ¥{book} · 实点 ¥{actual}）；现在起新开的单自动计入次日班次",
+  "screen": "商家·日结·交接班",
+  "position": "CashierClosePage 页面内文案"
+ },
+ {
+  "key": "cashier.dayFrozenBannerTitle",
+  "domain": "merchant:cashier",
+  "text": "今日已日结冻结",
+  "screen": "商家·日结·交接班",
+  "position": "CashierClosePage 页面内文案"
  },
  {
   "key": "cashier.depositSummaryAside",
@@ -24820,6 +24876,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "AttendancePage 页面内文案"
  },
  {
+  "key": "attendance.geo.noGeoNote",
+  "domain": "staff:attendance",
+  "text": "当前环境无法获取定位，本次打卡将以「未取到定位」留痕提交",
+  "screen": "员工·打卡",
+  "position": "AttendancePage 页面内文案"
+ },
+ {
   "key": "attendance.geo.timeout",
   "domain": "staff:attendance",
   "text": "定位超时，请到开阔处重试",
@@ -24942,6 +25005,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "attendance.source.field",
   "domain": "staff:attendance",
   "text": "外勤",
+  "screen": "员工·打卡",
+  "position": "AttendancePage 页面内文案"
+ },
+ {
+  "key": "attendance.source.nogeo",
+  "domain": "staff:attendance",
+  "text": "未取到定位",
   "screen": "员工·打卡",
   "position": "AttendancePage 页面内文案"
  },

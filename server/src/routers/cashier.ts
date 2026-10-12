@@ -854,6 +854,25 @@ export async function computeDayTender(
 ): Promise<DayTenderStats> {
   const dayEnd = new Date(dayStart.getTime() + 24 * 3600 * 1000);
 
+  /* ---- 走查修复批 D-29（老板 10-12 裁死：日结冻结后新开单=进次日班次）：
+     冻结窗口链式化——活口径/下一张日结单聚合窗起点=最近一张 frozen 日结单落单时刻
+     （冻结面零改动：快照行不删不改；冻结后新开单的支付段落在链窗内=归次日日结，
+     冻结日账面停涨）。无冻结单=当日 0 点起点（既有口径零变化） ---- */
+  const lastFrozen = await d
+    .select({ createdAt: schema.dayCloses.createdAt })
+    .from(schema.dayCloses)
+    .where(
+      and(
+        eq(schema.dayCloses.storeId, storeId),
+        eq(schema.dayCloses.kind, 'close'),
+        eq(schema.dayCloses.status, 'frozen'),
+      ),
+    )
+    .orderBy(desc(schema.dayCloses.createdAt))
+    .limit(1)
+    .get();
+  const chainStart = lastFrozen && lastFrozen.createdAt > dayStart ? lastFrozen.createdAt : dayStart;
+
   /* ---- 收银支付段分列（仅 settled 且未被反结账冲正的单——M1-补2 R3b：
      被冲正原单（reversed_at 非空）与冲正单（status='reversal' 天然非 settled）
      一律不进收入聚合；voided 双保险排除；credit 历史段跳过不认领） ---- */
@@ -866,7 +885,7 @@ export async function computeDayTender(
         eq(schema.cashierBills.storeId, storeId),
         eq(schema.cashierBills.status, 'settled'),
         isNull(schema.cashierBills.reversedAt),
-        gte(schema.cashierPayments.createdAt, dayStart),
+        gte(schema.cashierPayments.createdAt, chainStart),
         lt(schema.cashierPayments.createdAt, dayEnd),
       ),
     );
@@ -910,7 +929,7 @@ export async function computeDayTender(
     .where(
       and(
         eq(schema.appointments.storeId, storeId),
-        gte(schema.appointments.paidAt, dayStart),
+        gte(schema.appointments.paidAt, chainStart),
         lt(schema.appointments.paidAt, dayEnd),
       ),
     );
@@ -938,7 +957,7 @@ export async function computeDayTender(
         eq(schema.cashierBills.storeId, storeId),
         eq(schema.cashierBills.status, 'settled'),
         isNull(schema.cashierBills.reversedAt), // R3b：被冲正原单不计笔数
-        gte(schema.cashierBills.settledAt, dayStart),
+        gte(schema.cashierBills.settledAt, chainStart),
         lt(schema.cashierBills.settledAt, dayEnd),
       ),
     )

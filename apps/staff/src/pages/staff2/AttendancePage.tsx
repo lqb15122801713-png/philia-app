@@ -16,6 +16,16 @@
  *   提示条（暂存 N 条）+ online/聚焦/30s 定时自动补传（source='offline_relay'）；
  * - B1-6 确认：「确认今日考勤」（当日有未确认行才可用）→ confirmDay；
  * - B1-7 申诉：每条今日记录行「申诉」→ reason 弹层 → appeal。
+ *
+ * 走查修复批 D-31（P0 · HTTP 非安全源打卡失败）：
+ * - punch() 前置分支改放行：isSecureContextOk()=false 或 geolocation 不存在 → 不再拦截，
+ *   直接 markMut.mutate（不带 lat/lng）+ 明示注记卡（attendance.geo.noGeoNote，
+ *   testid=att-nogeo-note）；server 端端口键 attendance_allow_insecure_http 把关
+ *   （enabled=false=维持拦截，server 拒写文案原样透出）；
+ * - 定位可用但用户拒/超时/失败=维持现状拦（denied/timeout/failed 三分支不动）；
+ * - 留痕透出：今日明细行 source='no_geo' 出「未取到定位」签（attendance.source.nogeo）；
+ * - 无坐标打卡的网络层失败不入 offlinePunch 暂存队列（队列件未授权改动、lat/lng 必填），
+ *   直接错误透出+重试钮（geoError 既有面）。
  */
 
 import { Skeleton, getApiBase, uploadImage, usePhiliaClient, useToast } from '@philia/shared';
@@ -25,7 +35,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { SkAppHead, SkNote, SkPunchCard, SkRow, SkRows } from '@/components/skeleton';
 import { dayKeyOf, hhmm, pad2, weekdayLabel } from '@/components/today/utils';
-import { INSECURE_CONTEXT_GEO_MESSAGE, isSecureContextOk } from '@/lib/secureContext';
+import { isSecureContextOk } from '@/lib/secureContext';
 import {
   enqueuePunch,
   isNetworkFailure,
@@ -184,6 +194,8 @@ export default function AttendancePage() {
   /* ---------------- 打卡（片 2 多对：主钮永可用，in/out 服务端推导） ---------------- */
   const [busy, setBusy] = useState<'in' | 'out' | null>(null);
   const [geoError, setGeoError] = useState<string | null>(null);
+  /** D-31：无坐标打卡明示注记（定位不可用直接放行提交后常显，直到下一次走定位通道的打卡） */
+  const [noGeoNote, setNoGeoNote] = useState(false);
   const [pendingKind, setPendingKind] = useState<'in' | 'out'>('in');
   /** B1-2 外勤：server 拒「不在门店范围」→ 出拍照位；上传后 photoUrl 随 mark 重发 */
   const [fieldNeeded, setFieldNeeded] = useState(false);
@@ -194,8 +206,9 @@ export default function AttendancePage() {
 
   type MarkInput = {
     kind: 'in' | 'out';
-    lat: number;
-    lng: number;
+    /** D-31：可缺——定位不可用放行情景不带坐标（server 端口键把关+留痕） */
+    lat?: number;
+    lng?: number;
     deviceId: string;
     bssid?: string;
     photoUrl?: string;
@@ -213,8 +226,14 @@ export default function AttendancePage() {
       void queryClient.invalidateQueries({ queryKey: ['attendance'] });
     },
     onError: (err, vars) => {
-      if (vars.source !== 'offline_relay' && isNetworkFailure(err)) {
-        /* B1-3 断网暂存：网络层失败入队（业务拒绝不入队），恢复后自动补传 */
+      /* B1-3 断网暂存：网络层失败入队（业务拒绝不入队），恢复后自动补传；
+         D-31 无坐标打卡不入队（offlinePunch 队列件未授权改动、lat/lng 必填），落回错误透出+重试 */
+      if (
+        vars.source !== 'offline_relay' &&
+        isNetworkFailure(err) &&
+        typeof vars.lat === 'number' &&
+        typeof vars.lng === 'number'
+      ) {
         enqueuePunch({
           kind: vars.kind,
           lat: vars.lat,
@@ -261,15 +280,21 @@ export default function AttendancePage() {
   const punch = (kind: 'in' | 'out') => {
     setGeoError(null);
     setPendingKind(kind);
-    // 非安全源前置分支：HTTP 下 geolocation 调用恒回 PERMISSION_DENIED，真因是环境而非权限
-    if (!isSecureContextOk()) {
-      setGeoError(INSECURE_CONTEXT_GEO_MESSAGE);
+    /* D-31 定位不可用放行：HTTP 非安全源下 geolocation 调用恒回 PERMISSION_DENIED（真因是环境），
+       无 geolocation 对象同理——不再拦截，直接不带坐标提交（server 端口键把关+留痕）+明示注记 */
+    if (!isSecureContextOk() || !('geolocation' in navigator)) {
+      setBusy(kind);
+      setNoGeoNote(true);
+      punchStampRef.current = Math.floor(Date.now() / 1000);
+      markMut.mutate({
+        kind,
+        deviceId: deviceId(),
+        ...(selectedBssid ? { bssid: selectedBssid } : {}),
+        ...(fieldPhotoUrl ? { photoUrl: fieldPhotoUrl } : {}),
+      });
       return;
     }
-    if (!('geolocation' in navigator)) {
-      setGeoError(ATTENDANCE_COPY['attendance.geo.unsupported']);
-      return;
-    }
+    setNoGeoNote(false);
     setBusy(kind);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -413,6 +438,15 @@ export default function AttendancePage() {
           />
         </div>
       </div>
+
+      {/* D-31 定位不可用放行注记（非拦截：无坐标打卡已提交，记录标「未取到定位」留痕） */}
+      {noGeoNote ? (
+        <div className="px-[22px]">
+          <div className="u1-card mt-3 px-4 py-3 text-body-sm font-semibold text-ink" role="status" data-testid="att-nogeo-note">
+            {ATTENDANCE_COPY['attendance.geo.noGeoNote']}
+          </div>
+        </div>
+      ) : null}
 
       {/* B1-3 断网暂存提示条（有积压才显示） */}
       {queueCount > 0 ? (
@@ -597,6 +631,11 @@ export default function AttendancePage() {
                     {r.source === 'offline_relay' ? (
                       <b className="ml-1.5 rounded-chip bg-brand-primary-light px-1.5 py-0.5 text-caption-xs font-bold text-ink">
                         {ATTENDANCE_COPY['attendance.source.offline']}
+                      </b>
+                    ) : null}
+                    {r.source === 'no_geo' ? (
+                      <b className="ml-1.5 rounded-chip bg-brand-primary-light px-1.5 py-0.5 text-caption-xs font-bold text-ink">
+                        {ATTENDANCE_COPY['attendance.source.nogeo']}
                       </b>
                     ) : null}
                     {r.confirmedAt ? (
