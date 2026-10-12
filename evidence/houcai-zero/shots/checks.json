@@ -1,0 +1,72 @@
+{
+  "checks": [
+    {
+      "name": "客户登录（退会截图客户）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "线上付开通萤火（线上售卡原单 paid 落库）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S1 退会申请页（线上退会申请段+折算明示行渲染）",
+      "ok": true,
+      "detail": "按剩余整月折算退回 ¥199.00（剩余 12 整月 × 月均价）\n\n退会后回馈金余额清零、档位终止，全程留痕。"
+    },
+    {
+      "name": "S2 申请提交=审批中状态卡（幂等面=重复提交不新建）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "店主登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S3 审批中心闸（退会审批区 pending 行透出）",
+      "ok": true,
+      "detail": "req=01M4QNP1MJGYSX2VJNCSKKRW7C"
+    },
+    {
+      "name": "S4a 批准=兑付执行（申请 executed+退款额快照同额）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S4b 兑付后客户会员态终止（/member 分流开通页=会员已不在册）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S4c 退款留痕（membership_events cancel_online 行：refundNo+通道退款号+折算快照齐）",
+      "ok": true,
+      "detail": "{\"requestId\":\"01M4QNP1MJGYSX2VJNCSKKRW7C\",\"payNo\":\"PO-20261012-003\",\"paymentId\":\"mock_01M4QNP0GS867CXDBNZ1N3HN13\",\"chann"
+    },
+    {
+      "name": "S5 旧链退役拒单明文（mall.createPayment → 400「请走新收银台」）",
+      "ok": true,
+      "detail": "400|该支付入口已停用，请走新收银台"
+    },
+    {
+      "name": "S6 慎隐注记（mallOrders.sheets 块 warn 徽「藏了=改单直接提交无确认弹层」）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S7 预览示例单（消费记录屏预览出图=示例单帧）",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence6\\shots\\S1-quit-online-sheet.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence6\\shots\\S2-quit-pending.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence6\\shots\\S3-ops-quit-queue.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence6\\shots\\S4-after-approve-customer.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence6\\shots\\S6-canvas-sheets-note.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence6\\shots\\S7-canvas-records-preview.png"
+  ]
+}
