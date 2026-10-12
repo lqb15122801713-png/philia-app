@@ -1,0 +1,63 @@
+{
+  "checks": [
+    {
+      "name": "店主登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S1 办事卡面=控制台默认第一屏（15 卡全量+留痕行渲染）",
+      "ok": true,
+      "detail": "卡数=15"
+    },
+    {
+      "name": "S2a 高级层默认折叠（端口目录参数表不在门面）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S2b 高级层展开=15 端口全量目录点即达",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S3a 点卡进端口（画布装修卡 → 画布端口内核直嵌渲染）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S3b 回办事首页（页内返回行）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S4 侧边栏归并（rail foot=开发者管理端单入口；规则配置/文案端口/槽位端口三重复子行消失）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S5 旧路由直达 /settings/rules（规则配置 照常渲染，零死链）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S5 旧路由直达 /settings/copy（文案端口 照常渲染，零死链）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "S5 旧路由直达 /settings/slots（槽位 照常渲染，零死链）",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence4\\shots\\S1-console-home-cards.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence4\\shots\\S2-advanced-expanded.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence4\\shots\\S3-card-to-canvas-port.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence4\\shots\\S4-rail-single-entry.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence4\\shots\\S5-legacy-rules.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence4\\shots\\S5-legacy-copy.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence4\\shots\\S5-legacy-slots.png"
+  ]
+}
