@@ -12,7 +12,8 @@
  * （published→注册表默认序尾补，空=CERT_DETAIL_DEFAULT_ORDER 兜底）；文案键挂 CK 锚；
  * 预览=CanvasLayoutLoader+?canvasPreview=1 水印注记；带参屏预览特例：
  * canvasPreview=1 且路由参数==='preview' 时用列表既有查询 myCertificates 首条
- * appointmentId 顶替（零新增查询）。全屏 PhotoViewer=弹层件不入块流，照改造前位置挂载。
+ * appointmentId 顶替（零新增查询）；查不到=候裁清零批件 6 屏内合成示例证书顶替
+ * （预览专属，零真数据零写库）。全屏 PhotoViewer=弹层件不入块流，照改造前位置挂载。
  * 块内逻辑/查询零改动，data-testid 原值全保留。
  */
 
@@ -30,6 +31,42 @@ import { sl } from '@/copy/serviceloop'
 /** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
 const CERT_DETAIL_DEFAULT_ORDER = ['certDetail.header', 'certDetail.card', 'certDetail.error'] as const
 
+type CertData = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof usePhiliaClient>['trpc']['serviceLoop']['certificateFor']['query']>>['certificate']
+>
+
+/* 候裁清零批 件 6（预览兜底示例·客户端合成件）：canvasPreview=1 且 'preview' 顶替查不到
+   真证书时，用屏内合成示例证书渲染块流（假名「示例单·画布预览」系，时刻=固定示例值；
+   对比图=本地品牌占位图，零真数据零写库，水印注记页首已有）。真用户页零改动 */
+function exampleCertOf(): CertData {
+  const generatedAt = new Date('2026-10-01T15:30:00')
+  return {
+    id: 'canvas-example-cert',
+    appointmentId: 'canvas-example-appt',
+    userId: 'canvas-example-customer',
+    payload: {
+      petName: '示例宠物·画布预览',
+      serviceName: '示例洗护·画布预览',
+      storeName: '示例门店·画布预览',
+      completedAt: '2026-10-01T15:30:00',
+      stepsSummary: [
+        { stepKey: 'disinfection', label: '消毒', photoCount: 1 },
+        { stepKey: 'precheck', label: '预检', photoCount: 1 },
+        { stepKey: 'grooming', label: '洗护', photoCount: 2 },
+        { stepKey: 'detail', label: '精修', photoCount: 1 },
+        { stepKey: 'before_after', label: '前后对比', photoCount: 2 },
+        { stepKey: 'confirm', label: '确认', photoCount: 0 },
+      ],
+      beforeUrl: '/brand/empty-appointments-800.png',
+      afterUrl: '/brand/empty-appointments-800.png',
+    },
+    generatedAt,
+    deliveredAt: generatedAt,
+    createdAt: generatedAt,
+    updatedAt: generatedAt,
+  } as CertData
+}
+
 export default function CertDetailPage() {
   const { appointmentId = '' } = useParams()
   const { trpc } = usePhiliaClient()
@@ -41,7 +78,8 @@ export default function CertDetailPage() {
     [],
   )
   /* 带参屏预览特例：?canvasPreview=1 且 :appointmentId==='preview'（预览 URL=/philia/certs/preview）
-     时用本屏列表既有查询 myCertificates 首条顶替路由参数（零新增查询） */
+     时用本屏列表既有查询 myCertificates 首条顶替路由参数（零新增查询）；
+     查不到=件 6 合成示例证书顶替（certQ 不拉取），不再落空态 */
   const previewFallback = isCanvasPreview && appointmentId === 'preview'
   const certsQ = useQuery({
     queryKey: ['serviceLoop', 'myCertificates'],
@@ -49,6 +87,8 @@ export default function CertDetailPage() {
     enabled: previewFallback,
   })
   const effAppointmentId = previewFallback ? (certsQ.data?.[0]?.appointmentId ?? '') : appointmentId
+  /* 件 6：预览顶替未命中（列表查询已完成但首条为空）→ 合成示例证书（零真数据零写库） */
+  const previewMiss = previewFallback && !certsQ.isPending && effAppointmentId === ''
 
   const certQ = useQuery({
     queryKey: ['serviceLoop', 'certificateFor', effAppointmentId],
@@ -83,7 +123,7 @@ export default function CertDetailPage() {
   }, [blocksQ.data])
   const layout = useCanvasLayout('certDetail', certDetailStoreId, registryBlocks)
 
-  const cert = certQ.data?.certificate ?? null
+  const cert = (previewMiss ? exampleCertOf() : certQ.data?.certificate) ?? null
   const compare: PhotoWallPhoto[] = cert
     ? [
         { id: `${cert.appointmentId}-before`, url: cert.payload.beforeUrl },
@@ -98,10 +138,11 @@ export default function CertDetailPage() {
       <PageHeader title={<CK k="cert.cardTitle">{sl('cert.cardTitle')}</CK>} fallback="/philia/certs" className="pt-6" />
     ),
 
-    /* 2. certDetail.card：加载占位 + PHILIA 证书卡（卡面头/对比图/六步摘要/留痕行逐字搬） */
+    /* 2. certDetail.card：加载占位 + PHILIA 证书卡（卡面头/对比图/六步摘要/留痕行逐字搬；
+          件 6：previewMiss 合成示例态不挂加载占位——certQ 未启用恒 pending，直接渲染示例卡） */
     'certDetail.card': () => (
       <>
-        {certQ.isPending ? (
+        {certQ.isPending && !previewMiss ? (
           <div className="mt-4">
             <LoadingBlock lines={3} />
           </div>

@@ -7,7 +7,9 @@
  * 画布化（产品-1010 画布全屏批片 3 · 预约域三重屏之一）：五块入册
  * （appointments.header/tabs/list/empty/error），块序/显隐=useCanvasLayout('appointments')
  * （published→注册表默认序尾补，空=APPOINTMENTS_DEFAULT_ORDER 兜底）；文案键挂 CK 点选反查锚；
- * ?canvasPreview=1 探针=页首水印注记（mc.canvasExampleNote，testid appointments-canvas-preview-note）。
+ * ?canvasPreview=1 探针=页首水印注记（mc.canvasExampleNote，testid appointments-canvas-preview-note）
+ * + 候裁清零批件 6 预览兜底：预约列空/拉取失败时喂一条屏内合成示例单（假名「示例单·
+ * 画布预览」系，零真数据零写库，真用户页零改动）。
  * 店锚=MePage 口径（?canvasStore= 预览店锚 > readLastBooking 记忆门店 > listNearby 首店）。
  * 块内逻辑/查询/滚动记忆链路零改动，data-testid 原值全保留；
  * 加载骨架/失败/空态与原三分支互斥口径逐字保留（各块自带渲染闸，默认序下 DOM 零差异）。
@@ -61,6 +63,26 @@ const APPOINTMENTS_DEFAULT_ORDER = [
   'appointments.empty',
   'appointments.error',
 ] as const;
+
+/* 候裁清零批 件 6（预览兜底示例·客户端合成件）：canvasPreview=1 且预约列表为空时
+   喂一条合成示例单——假名「示例单·画布预览」系（门店/服务/宠物全假名），时刻/金额=
+   固定示例值，零真数据零写库（水印注记页首已有；卡链向合成 id 详情页，服务端查无
+   落该页原「不存在」空态，不落库）。真用户页零改动（非探针模式永不触发） */
+const EXAMPLE_APPT_GROUPS = {
+  confirmed: [
+    {
+      id: 'canvas-example-appt',
+      type: 'grooming',
+      status: 'confirmed',
+      serviceName: '示例洗护·画布预览',
+      storeName: '示例门店·画布预览',
+      petName: '示例宠物·画布预览',
+      scheduledStart: new Date('2026-10-20T14:00:00'),
+      scheduledEnd: new Date('2026-10-20T15:00:00'),
+      priceFen: 12800,
+    } as AppointmentListItem,
+  ],
+} as AppointmentGroups;
 
 function AppointmentCard({ item }: { item: AppointmentListItem }) {
   const meta = APPT_STATUS_META[item.status] ?? { label: item.status, pill: 'bg-sunken text-ink-secondary' };
@@ -181,13 +203,21 @@ export default function AppointmentsPage() {
     if (y > 0) window.scrollTo(0, y);
   }, [listQ.isPending, listQ.isError]);
   const groups: AppointmentGroups | undefined = listQ.data?.groups;
+  /* 件 6：预览态预约列空（或预览拉取失败=店主无客户端会话）→ 合成示例单一条顶替
+     空态/失败态（落默认「已确认」签；空态/失败块让位；真用户页零改动） */
+  const exampleActive =
+    isCanvasPreview &&
+    !listQ.isPending &&
+    (listQ.isError || (groups ? Object.values(groups).every((g) => g.length === 0) : false));
+  const effGroups: AppointmentGroups | undefined = exampleActive ? EXAMPLE_APPT_GROUPS : groups;
 
   const active = TABS.find((t) => t.key === tab)!;
-  const items = active.statuses.flatMap((s) => groups?.[s] ?? []);
-  const totalCount = groups ? Object.values(groups).reduce((n, g) => n + g.length, 0) : 0;
-  const countOf = (t: TabDef) => t.statuses.reduce((n, s) => n + (groups?.[s].length ?? 0), 0);
-  /* 原三分支互斥口径：正常态=非加载非失败且总数>0（tabs/list 块渲染闸） */
-  const showMain = !listQ.isPending && !listQ.isError && totalCount > 0;
+  const items = active.statuses.flatMap((s) => effGroups?.[s] ?? []);
+  const totalCount = effGroups ? Object.values(effGroups).reduce((n, g) => n + g.length, 0) : 0;
+  const countOf = (t: TabDef) => t.statuses.reduce((n, s) => n + (effGroups?.[s].length ?? 0), 0);
+  /* 原三分支互斥口径：正常态=非加载非失败且总数>0（tabs/list 块渲染闸）；
+     件 6：exampleActive 合成示例态视同正常态（预览专属） */
+  const showMain = ((!listQ.isPending && !listQ.isError) || exampleActive) && totalCount > 0;
 
   /* 块渲染器（块内逻辑零改动——五块照改造前 JSX 逐字搬，文案走 copy 键 + CK 反查锚） */
   const renderers: Record<string, () => ReactNode> = {
@@ -271,9 +301,10 @@ export default function AppointmentsPage() {
       ) : null,
 
     /* 5. appointments.error：加载失败态（W1 退回修：裸错误文本升 ErrorState，重试=点睛主钮；
-          ErrorState message=string prop 组件内渲，重试钮文案组件内写死——组件内无 CK 锚） */
+          ErrorState message=string prop 组件内渲，重试钮文案组件内写死——组件内无 CK 锚）；
+          件 6：exampleActive 合成示例态让位（失败块不压示例卡流） */
     'appointments.error': () =>
-      listQ.isError ? (
+      listQ.isError && !exampleActive ? (
         <div className="mt-5">
           <ErrorState message={apc('appointments.loadFail')} onRetry={() => void listQ.refetch()} />
         </div>

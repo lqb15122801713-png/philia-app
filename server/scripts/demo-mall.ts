@@ -1,6 +1,7 @@
 /**
  * 商城全链路演示（T5.4 联调用，真实种子库，server 需在 7200 运行）：
- * 下单 → mock 支付（含回调幂等/拒签复检）→ 商家发货 → 客户收货
+ * 下单 → mock 支付（新统一轨 pay.createOrder + /api/pay/orders/mock-callback，
+ * 含回调幂等/拒签复检；旧 mall.createPayment 已退役拒单，候裁清零批件 2）→ 商家发货 → 客户收货
  * 输出：{ orderId, productId }
  */
 import superjson from 'superjson';
@@ -58,31 +59,31 @@ const order = await trpcMutate<any>('mall.createOrder', customerCookie, {
 });
 console.log('下单:', order.orderNo, order.totalFen, 'fen');
 
-// 2. 支付（mock 演示链路）
-const pay = await trpcMutate<any>('mall.createPayment', customerCookie, { orderId: order.id });
-const cb = await fetch(`${BASE}/api/pay/mock-callback`, {
+// 2. 支付（新统一轨：pay.createOrder 建支付单 → orders/mock-callback 演示闭环）
+const pay = await trpcMutate<any>('pay.createOrder', customerCookie, { bizDomain: 'mall', orderId: order.id });
+const cb = await fetch(`${BASE}/api/pay/orders/mock-callback`, {
   method: 'POST',
   headers: { 'content-type': 'application/json', cookie: customerCookie },
-  body: JSON.stringify({ orderId: order.id, paymentId: pay.paymentId }),
+  body: JSON.stringify({ orderId: pay.order.id }),
 });
-console.log('mock-callback:', cb.status, JSON.stringify(await cb.json()));
+console.log('orders/mock-callback:', cb.status, JSON.stringify(await cb.json()));
 
 // 2a. 回调幂等复检：重复投递 → 成功且无重复流水
-const cb2 = await fetch(`${BASE}/api/pay/mock-callback`, {
+const cb2 = await fetch(`${BASE}/api/pay/orders/mock-callback`, {
   method: 'POST',
   headers: { 'content-type': 'application/json', cookie: customerCookie },
-  body: JSON.stringify({ orderId: order.id, paymentId: pay.paymentId }),
+  body: JSON.stringify({ orderId: pay.order.id }),
 });
 const cb2Body: any = await cb2.json();
 console.log('回调幂等(二次投递):', cb2.status, 'idempotent =', cb2Body.idempotent);
 const payments = await db.select().from(schema.payments).all();
 console.log('支付流水条数(应=1):', payments.filter((p) => p.orderId === order.id).length);
 
-// 2b. 篡改签名复检：伪造原始终端点回调 → 应 400
-const forged = await fetch(`${BASE}/api/pay/callback`, {
+// 2b. 篡改签名复检：伪造新链平台回调 → 应 400
+const forged = await fetch(`${BASE}/api/pay/orders/callback`, {
   method: 'POST',
   headers: { 'content-type': 'application/json', 'x-mock-signature': 'forged' },
-  body: JSON.stringify({ orderId: order.id, paymentId: pay.paymentId, paidFen: order.totalFen }),
+  body: JSON.stringify({ orderId: pay.order.id, paymentId: pay.paymentId, paidFen: order.totalFen }),
 });
 console.log('篡改签名被拒(应 400):', forged.status);
 

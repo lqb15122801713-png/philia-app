@@ -12,12 +12,13 @@
  * 2. createOrder：合并同商品行、库存正确扣减、服务端金额口径、订单号格式、快照含
  *    name/priceFen/image；下架商品/超量/跨店拒绝；order.created 事件
  * 3. 防超卖：库存 1 件两人并发 createOrder → 仅一单成功（另一单 CONFLICT），stock=0
- * 4. 支付闭环（mock）：createPayment → 篡改签名被拒 / 金额不符被拒（订单仍 pending、
- *    无流水）→ mock-callback → 订单 paid + payments 流水 + order.paid 事件/通知齐
- * 5. 幂等：回调重复投递（演示端点 + 原始回调端点各一次）→ 成功且无重复流水/事件
+ * 4. 支付闭环（mock · 新链，候裁清零批件 2 迁链：旧端点 mall.createPayment 已退役拒单）：
+ *    pay.createOrder（bizDomain:'mall'）→ 篡改签名被拒 / 金额不符被拒（订单仍 pending、
+ *    无流水）→ orders/mock-callback → 订单 paid + payments 流水 + order.paid 事件/通知齐
+ * 5. 幂等：回调重复投递（orders/mock-callback + orders/callback 各一次）→ 成功且无重复流水/事件
  * 6. 状态机：shipOrder（paid→shipped + tracking_no + order.shipped）→
  *    receiveOrder（shipped→received + order.received）；错态拒绝
- * 7. 越权：他人订单 createPayment / mock-callback、越店 shipOrder → FORBIDDEN
+ * 7. 越权：他人订单 pay.createOrder / orders/mock-callback、越店 shipOrder → FORBIDDEN
  * 8. 支付配置启动校验：生产 + mock 报错；wechat 缺 env 报错
  */
 
@@ -65,9 +66,10 @@ try {
   const { and, eq } = await import('drizzle-orm');
   type Context = import('../../trpc').Context;
   type OrderItemSnapshot = import('../mall').OrderItemSnapshot;
-  type SessionUserLike = import('../../routes/payCallback').SessionUserLike;
+  type SessionUserLike = import('../../routes/payOrdersCallback').SessionUserLike;
   const { mallRouter } = await import('../mall');
-  const { payCallbackRoute } = await import('../../routes/payCallback');
+  const { payRouter } = await import('../pay');
+  const { payOrdersCallbackRoute } = await import('../../routes/payOrdersCallback');
   const { signMockCallback, MOCK_SIGNATURE_HEADER } = await import('../../payments/mockPay');
   const { assertPaymentConfig, resetPaymentProviderForTest } = await import('../../payments/provider');
   const { EventType } = await import('../../realtime/events');
@@ -110,15 +112,18 @@ try {
   const c2 = mallRouter.createCaller(ctxCustomer('u-c2'));
   const m1 = mallRouter.createCaller(ctxMerchant('u-m', 's-1'));
   const m2 = mallRouter.createCaller(ctxMerchant('u-m2', 's-2'));
+  /* 新统一支付轨调用端（候裁清零批件 2 迁链：支付断言全走 pay.createOrder + orders/* 回调） */
+  const p1 = payRouter.createCaller(ctxCustomer('u-c1'));
+  const p2 = payRouter.createCaller(ctxCustomer('u-c2'));
 
-  /* ---------- 原生回调端点测试应用（注入 x-test-user 模拟会话） ---------- */
+  /* ---------- 新链回调端点测试应用（注入 x-test-user 模拟会话） ---------- */
   const app = new Hono<{ Variables: { sessionUser?: SessionUserLike | null } }>();
   app.use('*', async (c, next) => {
     const uid = c.req.header('x-test-user');
     if (uid) c.set('sessionUser', { id: uid, nickname: null, roles: ['customer'] });
     await next();
   });
-  app.route('/', payCallbackRoute);
+  app.route('/', payOrdersCallbackRoute);
 
   const ADDR = { name: '张三', phone: '13800000000', detail: '幸福小区 1 栋 101' };
 
@@ -256,45 +261,50 @@ try {
   const orderB = (fulfilled[0] as PromiseFulfilledResult<{ id: string; customerId: string }>).value;
   const loser = orderB.customerId === 'u-c1' ? c2 : c1;
 
-  /* ==================== 4. 支付闭环（mock）与拒签/拒额 ==================== */
-  console.log('\n[4] createPayment → 篡改签名/金额不符被拒 → mock-callback → paid + 流水 + 事件');
+  /* ==================== 4. 支付闭环（mock · 新链）与拒签/拒额 ==================== */
+  console.log('\n[4] pay.createOrder(mall) → 篡改签名/金额不符被拒 → orders/mock-callback → paid + 流水 + 事件');
   check(
-    '他人订单 createPayment → FORBIDDEN',
-    await rejects(c2.createPayment({ orderId: order1.id }), 'FORBIDDEN', /本人/),
+    '他人订单 pay.createOrder → FORBIDDEN',
+    await rejects(p2.createOrder({ bizDomain: 'mall', orderId: order1.id }), 'FORBIDDEN', /本人/),
   );
+
+  const pay1 = await p1.createOrder({ bizDomain: 'mall', orderId: order1.id });
   check(
-    '越权 mock-callback（他人订单）→ 403',
+    'pay.createOrder（mock）：mock_ 通道单号 + payParams 标记 + 金额=订单实算',
+    pay1.order.channel === 'mock' &&
+      pay1.paymentId!.startsWith('mock_') &&
+      pay1.payParams?.mock === '1' &&
+      pay1.order.amountFen === 30000 &&
+      pay1.idempotent === false,
+    pay1,
+  );
+
+  check(
+    '越权 orders/mock-callback（他人支付单）→ 403',
     await (async () => {
-      const res = await app.request('/api/pay/mock-callback', {
+      const res = await app.request('/api/pay/orders/mock-callback', {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-test-user': 'u-c2' },
-        body: JSON.stringify({ orderId: order1.id }),
+        body: JSON.stringify({ orderId: pay1.order.id }),
       });
       return res.status === 403;
     })(),
   );
   check(
-    '未登录 mock-callback → 401',
+    '未登录 orders/mock-callback → 401',
     await (async () => {
-      const res = await app.request('/api/pay/mock-callback', {
+      const res = await app.request('/api/pay/orders/mock-callback', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ orderId: order1.id }),
+        body: JSON.stringify({ orderId: pay1.order.id }),
       });
       return res.status === 401;
     })(),
   );
 
-  const pay1 = await c1.createPayment({ orderId: order1.id });
-  check(
-    'createPayment（mock）：mock_ 支付单号 + payParams 标记',
-    pay1.provider === 'mock' && pay1.paymentId.startsWith('mock_') && pay1.payParams.mock === '1' && pay1.totalFen === 30000,
-    pay1,
-  );
-
   // 篡改签名：伪造 hex 签名 → 400，订单仍 pending，无流水
-  const tamperedBody = JSON.stringify({ paymentId: pay1.paymentId, orderId: order1.id, paidFen: 30000 });
-  const tamperRes = await app.request('/api/pay/callback', {
+  const tamperedBody = JSON.stringify({ paymentId: pay1.paymentId, orderId: pay1.order.id, paidFen: 30000 });
+  const tamperRes = await app.request('/api/pay/orders/callback', {
     method: 'POST',
     headers: { 'content-type': 'application/json', [MOCK_SIGNATURE_HEADER]: '0'.repeat(64) },
     body: tamperedBody,
@@ -303,8 +313,8 @@ try {
   check('拒签后订单仍 pending 且无流水', (await orderOf(order1.id)).status === 'pending' && (await paymentsOf(order1.id)).length === 0);
 
   // 金额不符：签名合法但 paidFen 篡改 → 400，订单仍 pending，无流水
-  const wrongAmtBody = JSON.stringify({ paymentId: pay1.paymentId, orderId: order1.id, paidFen: 999 });
-  const wrongAmtRes = await app.request('/api/pay/callback', {
+  const wrongAmtBody = JSON.stringify({ paymentId: pay1.paymentId, orderId: pay1.order.id, paidFen: 999 });
+  const wrongAmtRes = await app.request('/api/pay/orders/callback', {
     method: 'POST',
     headers: { 'content-type': 'application/json', [MOCK_SIGNATURE_HEADER]: signMockCallback(wrongAmtBody) },
     body: wrongAmtBody,
@@ -312,14 +322,14 @@ try {
   check('金额不符回调被拒（400 AMOUNT_MISMATCH）', wrongAmtRes.status === 400 && ((await wrongAmtRes.json()) as { code?: string }).code === 'AMOUNT_MISMATCH');
   check('拒额后订单仍 pending 且无流水', (await orderOf(order1.id)).status === 'pending' && (await paymentsOf(order1.id)).length === 0);
 
-  // 正常演示闭环：mock-callback → paid + 流水 + order.paid 事件/通知
-  const cbRes = await app.request('/api/pay/mock-callback', {
+  // 正常演示闭环：orders/mock-callback → paid + 流水 + order.paid 事件/通知
+  const cbRes = await app.request('/api/pay/orders/mock-callback', {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-test-user': 'u-c1' },
-    body: JSON.stringify({ orderId: order1.id, paymentId: pay1.paymentId }),
+    body: JSON.stringify({ orderId: pay1.order.id }),
   });
   const cbJson = (await cbRes.json()) as { code?: string; idempotent?: boolean };
-  check('mock-callback 成功（code=SUCCESS）', cbRes.status === 200 && cbJson.code === 'SUCCESS' && cbJson.idempotent === false, cbJson);
+  check('orders/mock-callback 成功（code=SUCCESS）', cbRes.status === 200 && cbJson.code === 'SUCCESS' && cbJson.idempotent === false, cbJson);
   const paid1 = await orderOf(order1.id);
   check('订单 pending → paid', paid1.status === 'paid');
   const flows1 = await paymentsOf(order1.id);
@@ -330,7 +340,7 @@ try {
       flows1[0]!.amountFen === 30000 &&
       flows1[0]!.status === 'paid' &&
       flows1[0]!.paymentId === pay1.paymentId &&
-      (flows1[0]!.rawCallback as { orderId?: string })?.orderId === order1.id,
+      (flows1[0]!.rawCallback as { orderId?: string })?.orderId === pay1.order.id,
     flows1,
   );
   check('order.paid 事件落 user:u-c1', (await countOutbox('user:u-c1', EventType.OrderPaid)) === 1);
@@ -342,23 +352,23 @@ try {
 
   /* ==================== 5. 回调重复投递幂等 ==================== */
   console.log('\n[5] 幂等：回调重复投递 → 成功且无重复流水/事件');
-  const dup1 = await app.request('/api/pay/mock-callback', {
+  const dup1 = await app.request('/api/pay/orders/mock-callback', {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-test-user': 'u-c1' },
-    body: JSON.stringify({ orderId: order1.id, paymentId: pay1.paymentId }),
+    body: JSON.stringify({ orderId: pay1.order.id }),
   });
   check('演示端点重复投递 → 200 且 idempotent=true', dup1.status === 200 && ((await dup1.json()) as { idempotent?: boolean }).idempotent === true);
-  // 原始回调端点再投一次（模拟平台重试，paymentId 相同）
-  const dupRaw = JSON.stringify({ paymentId: pay1.paymentId, orderId: order1.id, paidFen: 30000 });
-  const dup2 = await app.request('/api/pay/callback', {
+  // 平台回调端点再投一次（模拟平台重试，paymentId 相同）
+  const dupRaw = JSON.stringify({ paymentId: pay1.paymentId, orderId: pay1.order.id, paidFen: 30000 });
+  const dup2 = await app.request('/api/pay/orders/callback', {
     method: 'POST',
     headers: { 'content-type': 'application/json', [MOCK_SIGNATURE_HEADER]: signMockCallback(dupRaw) },
     body: dupRaw,
   });
-  check('原始回调端点重复投递 → 200 且 idempotent=true', dup2.status === 200 && ((await dup2.json()) as { idempotent?: boolean }).idempotent === true);
+  check('平台回调端点重复投递 → 200 且 idempotent=true', dup2.status === 200 && ((await dup2.json()) as { idempotent?: boolean }).idempotent === true);
   check('无重复流水（仍 1 条）', (await paymentsOf(order1.id)).length === 1);
   check('无重复 order.paid 事件（仍 1 条）', (await countOutbox('user:u-c1', EventType.OrderPaid)) === 1);
-  check('已支付订单 createPayment → BAD_REQUEST', await rejects(c1.createPayment({ orderId: order1.id }), 'BAD_REQUEST', /pending/));
+  check('已支付订单 pay.createOrder → BAD_REQUEST', await rejects(p1.createOrder({ bizDomain: 'mall', orderId: order1.id }), 'BAD_REQUEST', /待支付/));
 
   /* ==================== 6. 发货 → 收货 状态机 ==================== */
   console.log('\n[6] shipOrder → receiveOrder 状态机与事件');
@@ -393,11 +403,11 @@ try {
 
   // 再造一单并完成支付，验证商家端队列数据源（paid 待发货队列）
   const orderQ = await c2.createOrder({ items: [{ productId: 'pd-a', qty: 1 }], address: ADDR });
-  const payQ = await c2.createPayment({ orderId: orderQ.id });
-  const cbQ = await app.request('/api/pay/mock-callback', {
+  const payQ = await p2.createOrder({ bizDomain: 'mall', orderId: orderQ.id });
+  const cbQ = await app.request('/api/pay/orders/mock-callback', {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-test-user': 'u-c2' },
-    body: JSON.stringify({ orderId: orderQ.id, paymentId: payQ.paymentId }),
+    body: JSON.stringify({ orderId: payQ.order.id }),
   });
   check('队列夹具：c2 下单并 mock 支付成功', cbQ.status === 200);
   const queues = await m1.listStoreOrders();

@@ -17,7 +17,8 @@
  * useCanvasLayout('petHealth')（published→注册表默认序尾补，空=默认序兜底常量）；
  * 文案键行内可改=CK 点选反查锚；预览=CanvasLayoutLoader+?canvasPreview=1 水印注记。
  * 预览特例：?canvasPreview=1 且路由 id='preview' 时，用宠物列表既有查询首只顶替
- * （零新增查询；无宠时 overview 闸关，块内渲染空）。块内逻辑（overview 一次拉取/
+ * （零新增查询；无宠时=候裁清零批件 6 屏内合成示例档案顶替渲染，零真数据零写库）。
+ * 块内逻辑（overview 一次拉取/
  * weightAdd/healthAdd/healthRemove 二次确认）零改动，data-testid 原值全保留。
  */
 
@@ -57,6 +58,32 @@ const HEALTH_DEFAULT_ORDER = [
 type Trpc = PhiliaClient['trpc']
 type OverviewResult = Awaited<ReturnType<Trpc['petHealth']['overview']['query']>>
 type WeightLog = OverviewResult['weights'][number]
+
+/* 候裁清零批 件 6（预览兜底示例·客户端合成件）：canvasPreview=1 且路由 id='preview'
+   顶替查不到真宠物时，用屏内合成示例档案渲染块流（假名「示例宠物·画布预览」，体重/
+   记录=固定示例值；零真数据零写库——两表单对合成 petId（空串）提交会被服务端拒，
+   仅预览框内可点，不落库；水印注记页首已有）。真用户页零改动 */
+function exampleOverviewOf(): OverviewResult {
+  return {
+    pet: { id: 'canvas-example-pet', name: '示例宠物·画布预览' },
+    records: [
+      {
+        id: 'canvas-example-health-1',
+        petId: 'canvas-example-pet',
+        type: 'vaccine',
+        title: '示例疫苗·画布预览（猫三联）',
+        recordDate: '2026-09-01',
+        nextDueDate: '2027-09-01',
+        note: null,
+      },
+    ],
+    weights: [
+      { id: 'canvas-example-weight-1', petId: 'canvas-example-pet', weightKg: 4.0, measuredAt: '2026-08-01', note: null },
+      { id: 'canvas-example-weight-2', petId: 'canvas-example-pet', weightKg: 4.2, measuredAt: '2026-09-01', note: null },
+      { id: 'canvas-example-weight-3', petId: 'canvas-example-pet', weightKg: 4.3, measuredAt: '2026-10-01', note: null },
+    ],
+  } as OverviewResult
+}
 
 type RecordType = 'vaccine' | 'deworm' | 'medication' | 'vet_visit'
 
@@ -457,7 +484,7 @@ export default function PetHealthPage() {
   )
   /* 画布预览特例：预览 URL='/philia/pets/preview/health'——canvasPreview=1 且路由
      id='preview' 时，用宠物列表既有查询首只顶替（pet.list 既有查询共享缓存，零新增查询；
-     无宠时 petId='' → overview 闸关，块内渲染空） */
+     无宠时=件 6 合成示例档案顶替，overview 闸关不拉取） */
   const isPreviewPet = isCanvasPreview && routeId === 'preview'
   const previewPetsQ = useQuery({
     queryKey: ['pet', 'list'],
@@ -465,6 +492,9 @@ export default function PetHealthPage() {
     enabled: isPreviewPet,
   })
   const petId = isPreviewPet ? (previewPetsQ.data?.[0]?.id ?? '') : routeId
+  /* 件 6：预览顶替未命中（宠物列表查询已完成但无宠）→ 合成示例档案（零真数据零写库） */
+  const previewMiss = isPreviewPet && !previewPetsQ.isPending && petId === ''
+  const exampleOverview = useMemo(() => (previewMiss ? exampleOverviewOf() : null), [previewMiss])
 
   /* 画布布局店锚（MePage/MemberCenterPage 口径：?canvasStore= 预览店锚 > 记忆门店 > 就近首店；
      本屏无门店概念，nearbyQ 带 enabled 闸仅作布局锚解析，零增发常态查询） */
@@ -517,9 +547,10 @@ export default function PetHealthPage() {
     window.setTimeout(() => setConfirmId((cur) => (cur === recordId ? null : cur)), CONFIRM_RESET_MS)
   }
 
-  const pet = overviewQ.data?.pet
-  const records = overviewQ.data?.records ?? []
-  const weights = overviewQ.data?.weights ?? []
+  const overviewData = exampleOverview ?? overviewQ.data
+  const pet = overviewData?.pet
+  const records = overviewData?.records ?? []
+  const weights = overviewData?.weights ?? []
   const tabRecords = records.filter((r) => r.type === tab)
   const activeTabKey = RECORD_TABS.find((t) => t.value === tab)?.copyKey
   const activeTabLabel = activeTabKey ? hc(activeTabKey) : ''
@@ -542,7 +573,7 @@ export default function PetHealthPage() {
           fallback="/philia/pets"
           className="pt-4"
         />
-        {overviewQ.isPending ? <LoadingBlock lines={3} className="mt-4" /> : null}
+        {overviewQ.isPending && !previewMiss ? <LoadingBlock lines={3} className="mt-4" /> : null}
         {overviewQ.isError ? (
           <div className="mt-4">
             <ErrorState message={hc('health.loadFail')} onRetry={() => void overviewQ.refetch()} />
@@ -554,7 +585,7 @@ export default function PetHealthPage() {
     /* 2. health.weight：体重趋势区（SVG 手绘折线零图表库；空数据=EmptyState 三句话。
           SectionShell 题为 string prop 无 CK 锚；weightUnit 在 SVG text 内挂不了 CK，NOTES 报备） */
     'health.weight': () =>
-      overviewQ.data ? (
+      overviewData ? (
         <SectionShell title={hc('health.weightTrend')}>
           {weights.length === 0 ? (
             <EmptyState
@@ -572,7 +603,7 @@ export default function PetHealthPage() {
     /* 3. health.weightform：记体重小表单整块（改造前嵌在体重 SectionShell 内，拆块后
           mt-3 节奏随行——块间间距零差异） */
     'health.weightform': () =>
-      overviewQ.data ? (
+      overviewData ? (
         <div className="mt-3">
           <WeightAddForm petId={petId} />
         </div>
@@ -580,7 +611,7 @@ export default function PetHealthPage() {
 
     /* 4. health.records：健康记录区四类签+时间线（删除钮两击二次确认零改动） */
     'health.records': () =>
-      overviewQ.data ? (
+      overviewData ? (
         <SectionShell title={hc('health.recordsTitle')}>
           {/* 四类签（文字签+底部 hairline，选中=墨 700+主色 2px 下划线，同 MallOrdersPage） */}
           <div className="flex gap-[18px] overflow-x-auto border-b border-[rgba(59,46,36,.06)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -659,7 +690,7 @@ export default function PetHealthPage() {
     /* 5. health.recordform：记一笔表单整块（改造前嵌在记录 SectionShell 内，拆块后
           mt-3 节奏随行；key=tab 随签重置表单态零改动） */
     'health.recordform': () =>
-      overviewQ.data ? (
+      overviewData ? (
         <div className="mt-3">
           <RecordAddForm key={tab} petId={petId} defaultType={tab} />
         </div>

@@ -63,6 +63,8 @@ export const EventType = {
   // 批次 C5 客户退款申请（补缺大批片 1 顺手收编同步自 server realtime/events.ts）
   RefundRequestSubmitted: 'refundRequest.submitted', // 客户退款申请提交 → store
   RefundRequestApproved: 'refundRequest.approved',  // 客户退款申请批准 → store + user
+  // 候裁清零批（CJ-1012-01）：线上退会申请提交 → store（同步自 server realtime/events.ts）
+  MembershipCancelRequested: 'membershipCancel.requested', // 客户线上退会申请提交 → store
   // 批次 R11a 会员前置批（双端同步）
   MembershipOpened:      'membership.opened',       // 售卡/注册用户开档 → user + store
   MembershipRenewed:     'membership.renewed',      // 续费解冻 → user

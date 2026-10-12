@@ -273,7 +273,10 @@ export const payChannelRouter = router({
       ctx.db.select().from(schema.refundRequests).orderBy(desc(schema.refundRequests.createdAt), desc(schema.refundRequests.id)).limit(200),
     ]);
     /* 业务侧退款额双路聚合：会员域=refund_bills linkageJson.payOrderNo 回查；商城域=
-       refund_requests 已批准+（approved/refunded/settled）按 billId=orders.id 聚合（片 3 挂点） */
+       refund_requests 已批准+（approved/refunded/settled）按 billId=orders.id 聚合（片 3 挂点）；
+       候裁清零批（CJ-1012-01）：线上退会兑付行=membership_events cancel_online 同额入聚
+       （refund_bills.billId 绑收银原单 notNull，线上售卡无收银单——业务侧退款额同源读本行
+       meta.payNo/refundFen，对账口径不变：通道=业务等额才平） */
     const bizRefundedByPayNo = new Map<string, number>();
     for (const r of refundRows) {
       const linkage = (r.linkageJson ?? {}) as Record<string, unknown>;
@@ -286,6 +289,19 @@ export const payChannelRouter = router({
             : null;
       if (payNo && (r.status === 'executed' || r.status === 'settled')) {
         bizRefundedByPayNo.set(payNo, (bizRefundedByPayNo.get(payNo) ?? 0) + r.amountFen);
+      }
+    }
+    /* 线上退会兑付行入聚（同额平账口径；只读本行零写动） */
+    const cancelOnlineRows = await ctx.db
+      .select()
+      .from(schema.membershipEvents)
+      .where(eq(schema.membershipEvents.type, 'cancel_online'));
+    for (const ev of cancelOnlineRows) {
+      const meta = (ev.meta ?? {}) as Record<string, unknown>;
+      const payNo = typeof meta.payNo === 'string' ? meta.payNo : null;
+      const refundFen = typeof meta.refundFen === 'number' ? meta.refundFen : null;
+      if (payNo && refundFen !== null) {
+        bizRefundedByPayNo.set(payNo, (bizRefundedByPayNo.get(payNo) ?? 0) + refundFen);
       }
     }
     const bizRefundedByOrderId = new Map<string, number>();

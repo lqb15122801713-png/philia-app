@@ -20,7 +20,8 @@
  * 兜底）；文案键挂 CK 点选反查锚；?canvasPreview=1 探针=页首水印注记。
  * 店锚=?canvasStore= 预览店锚 > 本单门店（appointment.get 既有查询透出，零新增查询）。
  * 带参路由预览特例（片 0 §五.2）：canvasPreview=1 且 id='preview' 时用本屏预约列表既有查询
- * （appointment.listMine）首条顶替（零新增查询）；查不到=空 id → 落原「不存在」空态照原样。
+ * （appointment.listMine）首条顶替（零新增查询）；查不到=候裁清零批件 6 屏内合成示例单
+ * 顶替渲染块流（预览专属，零真数据零写库，水印注记已有），不再落空态。
  * 块内逻辑/查询/状态机/级联/提交链路逐字搬进渲染器，一行不改；data-testid 原值全保留。
  * 弹层/半屏件（改期面板/取消面板=页内展开件）随 actions 块入册；SSE 订阅逻辑一行不动。
  */
@@ -41,6 +42,7 @@ import { apc, type AppointmentsCopyKey } from '@/copy/appointments';
 import { rc } from '@/copy/refund';
 import { sl } from '@/copy/serviceloop';
 import { queryCancelFeeTiers, queryPrepaidOf, readDetailExtras } from '@/lib/exp2Api';
+import type { AppointmentDetail } from '@/components/booking/types';
 import {
   APPT_STATUS_META,
   APPT_TYPE_LABEL,
@@ -86,6 +88,64 @@ const APPT_DETAIL_DEFAULT_ORDER = [
   'apptDetail.store',
   'apptDetail.actions',
 ] as const;
+
+/* 候裁清零批 件 6（预览兜底示例·客户端合成件）：canvasPreview=1 且 'preview' 顶替查不到
+   真预约时，用屏内合成示例单渲染块流（假名「示例单·画布预览」系，金额/时刻=固定示例值；
+   零真数据零写库——状态定 completed，预约码/改期/取消/相册/退款等支路天然不激活，
+   水印注记页首已有）。真用户页零改动（previewMiss 以外路径一行不动） */
+function exampleApptDetailOf(): AppointmentDetail {
+  const start = new Date('2026-10-01T14:00:00');
+  const end = new Date('2026-10-01T15:30:00');
+  return {
+    appointment: {
+      id: 'canvas-example-appt',
+      code: 'EXAMPL',
+      customerId: 'canvas-example-customer',
+      storeId: 'canvas-example-store',
+      staffId: null,
+      assignSource: null,
+      petId: 'canvas-example-pet',
+      serviceId: 'canvas-example-service',
+      type: 'grooming',
+      scheduledStart: start,
+      scheduledEnd: end,
+      status: 'completed',
+      priceFen: 12800,
+      paymentMode: 'pay_at_store',
+      paidAt: null,
+      paidFen: null,
+      note: '示例备注·画布预览',
+      cancelReason: null,
+      cancelSource: null,
+      emergencyContactJson: null,
+      medicalAuthJson: null,
+      walkTimesPerDay: null,
+      checkedInAt: start,
+      completedAt: end,
+      rating: 5,
+      review: '示例评价·画布预览',
+      receptionistId: null,
+      createdAt: new Date('2026-09-28T10:00:00'),
+      updatedAt: end,
+    },
+    pet: { id: 'canvas-example-pet', name: '示例宠物·画布预览', avatarUrl: null },
+    service: { id: 'canvas-example-service', name: '示例洗护·画布预览' },
+    store: {
+      id: 'canvas-example-store',
+      name: '示例门店·画布预览',
+      address: '示例路 1 号·画布预览',
+      lat: null,
+      lng: null,
+      phone: null,
+    },
+    steps: [],
+    boardingStay: null,
+    customer: { nickname: '示例客户·画布预览', phoneTail: null },
+    cashierBillId: null,
+    addons: [],
+    rescheduleLogs: [],
+  } as unknown as AppointmentDetail;
+}
 
 /** 体验大批片 2：预付台账四态徽文案（prepaidOf.status → copy 键；未知态回退登记中） */
 function prepaidStatusLabel(status: string): string {
@@ -147,7 +207,7 @@ export default function AppointmentDetailPage() {
 
   /* 带参路由预览特例（片 0 §五.2）：canvasPreview=1 且 id='preview' 时用本屏预约列表既有查询
      （appointment.listMine，与我的预约列表同 queryKey 缓存共享，零新增查询）首条顶替；
-     查不到=空 id → detailQ 不拉取 → 落原「预约不存在或无权查看」空态照原样 */
+     查不到=件 6 合成示例单顶替（exampleD），detailQ 不拉取 */
   const previewListQ = useQuery({
     queryKey: ['appointment', 'listMine'],
     queryFn: () => trpc.appointment.listMine.query(),
@@ -158,31 +218,34 @@ export default function AppointmentDetailPage() {
     return g ? (Object.values(g).flat()[0]?.id ?? null) : null;
   }, [previewListQ.data]);
   const id = isCanvasPreview && routeId === 'preview' ? (previewFirstId ?? '') : routeId;
-  /** 预览顶替未命中（列表查询已完成但首条为空）：跳过加载骨架直落 notFound 空态 */
+  /** 预览顶替未命中（列表查询已完成但首条为空）：跳过加载骨架，直走件 6 合成示例单 */
   const previewMiss = isCanvasPreview && routeId === 'preview' && !previewListQ.isPending && id === '';
+  /* 件 6：previewMiss 不再落空态——改用屏内合成示例单渲染块流（零真数据零写库） */
+  const exampleD = useMemo(() => (previewMiss ? exampleApptDetailOf() : null), [previewMiss]);
 
   const detailQ = useQuery({
     queryKey: ['appointment', 'get', id],
     queryFn: () => trpc.appointment.get.query({ appointmentId: id }),
     enabled: id.length > 0,
   });
-  const d = detailQ.data;
+  const d = exampleD ?? detailQ.data;
   const appt = d?.appointment;
 
   // 服务相册（v1.1-b2 B2-4）：洗护单 completed / in_service 时加载，按步骤分组展示
   const albumEnabled =
     !!appt && appt.type === 'grooming' && (appt.status === 'completed' || appt.status === 'in_service');
+  /* 件 6：id.length>0 闸——合成示例单（id=''）不拉相册/明细真查询（零增发） */
   const albumQ = useQuery({
     queryKey: ['appointment', 'serviceAlbum', id],
     queryFn: () => trpc.appointment.serviceAlbum.query({ appointmentId: id }),
-    enabled: albumEnabled,
+    enabled: albumEnabled && id.length > 0,
   });
 
   // 服务明细（体验批片 4 B15）：洗护单 in_service/completed 透出分项时长+耗材扣减
   const detailSheetQ = useQuery({
     queryKey: ['serviceStep', 'detailSheet', id],
     queryFn: () => trpc.serviceStep.detailSheet.query({ appointmentId: id }),
-    enabled: albumEnabled,
+    enabled: albumEnabled && id.length > 0,
   });
 
   /* 补缺大批片 1：服务单退款/售后入口数据源——appointment.get 附 cashierBillId
@@ -205,17 +268,18 @@ export default function AppointmentDetailPage() {
   });
   /* 补缺大批片 4：已完成单的安心证书/美容报告入口（myCertificates/myReports 匹配，
      有才显——R10 无数据不渲染入口）；实付单的发票入口（invoiceListMine 匹配 billId，
-     在途/已开具=「发票进度 ›」，无申请=「申请发票 ›」） */
+     在途/已开具=「发票进度 ›」，无申请=「申请发票 ›」）。
+     件 6：合成示例单（previewMiss）不拉证书/报告真查询（零增发，入口恒隐） */
   const completedAppt = !!appt && appt.status === 'completed';
   const certsQ = useQuery({
     queryKey: ['serviceLoop', 'myCertificates'],
     queryFn: () => trpc.serviceLoop.myCertificates.query(),
-    enabled: completedAppt,
+    enabled: completedAppt && !previewMiss,
   });
   const reportsQ = useQuery({
     queryKey: ['serviceLoop', 'myReports'],
     queryFn: () => trpc.serviceLoop.myReports.query(),
-    enabled: completedAppt,
+    enabled: completedAppt && !previewMiss,
   });
   const invoicesQ = useQuery({
     queryKey: ['serviceLoop', 'invoiceListMine'],
@@ -421,8 +485,9 @@ export default function AppointmentDetailPage() {
   });
 
   /* ---- 画布端口：注册表块序 + 有效布局（published→默认序尾补；空=默认序兜底常量） ---- */
-  /* 店锚=?canvasStore= 预览店锚 > 本单门店（appointment.get 透出 store.id，零新增查询） */
-  const detailStoreId = previewStoreId ?? d?.store?.id ?? null;
+  /* 店锚=?canvasStore= 预览店锚 > 本单门店（appointment.get 透出 store.id，零新增查询）；
+     件 6：合成示例单的假店 id 不进布局锚（预览店锚缺省= null 走全局布局） */
+  const detailStoreId = previewStoreId ?? (previewMiss ? null : d?.store?.id) ?? null;
   const blocksQ = useQuery({
     queryKey: ['canvas', 'blocks'],
     queryFn: () => trpc.canvas.blocks.query(),

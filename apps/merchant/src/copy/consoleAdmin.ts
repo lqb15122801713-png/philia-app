@@ -183,6 +183,9 @@ const CONSOLE_ADMIN_COPY_TABLE = {
   'cadm.searchGroupSlot': '素材位',
   'cadm.searchPerf': '索引 {total} 项 · 构建 {buildMs} ms · 本次首筛 {ms} ms',
   'cadm.searchIndexing': '索引构建中…',
+
+  /* ---- 候裁清零批 件 5：画布块行「慎隐」注记（mallOrders.sheets 二次确认弹层块） ---- */
+  'cadm.canvasSheetsHideNote': '慎隐：藏了=改单直接提交无确认弹层',
 } as const;
 
 export const CONSOLE_ADMIN_COPY = withCopyOverrides(CONSOLE_ADMIN_COPY_TABLE);

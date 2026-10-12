@@ -12,7 +12,9 @@
  * 块序/显隐=useCanvasLayout('records')（published→注册表默认序尾补，空=
  * REC_DEFAULT_ORDER 兜底）；文案键挂 CK(data-copy-key) 点选反查锚（EmptyState/
  * ErrorState 的 string props 挂不上锚，如实入册注记）；?canvasPreview=1 探针=水印
- * 注记行（mc.canvasExampleNote）；店锚=?canvasStore= 预览店锚 > 记忆门店 > 就近首店
+ * 注记行（mc.canvasExampleNote）+ 候裁清零批件 6 预览兜底：记录列空/拉取失败时
+ * 喂一条屏内合成示例行（假名「示例单·画布预览」，零真数据零写库，真用户页零改动）；
+ * 店锚=?canvasStore= 预览店锚 > 记忆门店 > 就近首店
  * （MePage 同口径）。PushBar/m2-apphead 页头不入块册置块流外（页题 rec.title 与
  * rec.list 区块题同键，锚挂在区块题上）；块内逻辑/查询零改动，data-testid 原值全保留。
  */
@@ -121,6 +123,20 @@ function RecordRow({ r }: { r: RecordItem }) {
 /** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
 const REC_DEFAULT_ORDER = ['rec.deposit', 'rec.list'] as const
 
+/* 候裁清零批 件 6（预览兜底示例·客户端合成件）：canvasPreview=1 且记录列表为空时
+   喂一条合成行——假名「示例单·画布预览」，金额/时刻=固定示例值，零真数据零写库
+   （水印注记页首已有）；真用户页零改动（非探针模式永不触发） */
+const EXAMPLE_RECORD: RecordItem = {
+  kind: 'order',
+  id: 'canvas-example-record',
+  title: '示例单·画布预览',
+  amountFen: 19900,
+  status: 'received',
+  createdAt: new Date('2026-10-01T14:30:00'),
+  link: '/mall/orders',
+  onlinePaid: null,
+}
+
 export default function RecordsPage() {
   const { trpc } = usePhiliaClient()
   const { user } = useMe()
@@ -144,6 +160,11 @@ export default function RecordsPage() {
     () => new URLSearchParams(window.location.search).get('canvasPreview') === '1',
     [],
   )
+  /* 件 6：预览态记录列空（或预览拉取失败=店主无客户端会话）→ 合成示例行一条顶替
+     空态/失败态（押金区不喂，保持真口径空注记；真用户页零改动） */
+  const exampleActive =
+    isCanvasPreview && !recordsQ.isPending && (recordsQ.isError || records.length === 0)
+  const effRecords = exampleActive ? [EXAMPLE_RECORD] : records
   /* 画布布局店锚（MePage 口径：?canvasStore= 预览店锚 > 记忆门店 > 就近首店） */
   const previewStoreId = useMemo(() => new URLSearchParams(window.location.search).get('canvasStore'), [])
   const memoryStoreId = useMemo(() => readLastBooking()?.storeId ?? null, [])
@@ -201,9 +222,9 @@ export default function RecordsPage() {
         </div>
         {recordsQ.isPending ? (
           <LoadingBlock lines={3} />
-        ) : recordsQ.isError ? (
+        ) : recordsQ.isError && !exampleActive ? (
           <ErrorState message={rcc('rec.loadFail')} onRetry={() => void recordsQ.refetch()} />
-        ) : records.length === 0 ? (
+        ) : effRecords.length === 0 ? (
           /* 空态三句话（是什么 / 为什么 / 去哪），出口=商城 */
           <EmptyState
             title={rcc('rec.emptyTitle')}
@@ -219,7 +240,7 @@ export default function RecordsPage() {
           />
         ) : (
           <div className="flex flex-col gap-2.5">
-            {records.map((r) => (
+            {effRecords.map((r) => (
               <RecordRow key={`${r.kind}-${r.id}`} r={r} />
             ))}
           </div>

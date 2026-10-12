@@ -28,7 +28,7 @@
  * 「预览示例」水印角标，零真会话零写库）；真用户页零改动（非探针模式照旧 ErrorState）。
  */
 
-import { useQuery, type UseQueryResult } from '@tanstack/react-query'
+import { useQuery, useMutation, type UseQueryResult } from '@tanstack/react-query'
 import { useMemo, useState, type ReactNode } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { CanvasLayoutLoader, CK, resolvePerkWallCells, useCanvasLayout, useMe, usePhiliaClient } from '@philia/shared'
@@ -210,9 +210,11 @@ export default function MemberCenterPage() {
         </CanvasLayoutLoader>
       )}
 
-      {/* 退会说明弹层（§4.5 三件套；续费弹层已随线上续费确认页退役——产品-1010 片 2） */}
+      {/* 退会说明弹层（§4.5 三件套；续费弹层已随线上续费确认页退役——产品-1010 片 2）；
+          候裁清零批件 1：线上退会申请段内嵌（线上付=可线上退+审批闸；线下付=到店退文案不动） */}
       <Sheet open={sheet === 'quit'} onClose={() => setSheet(null)} title={mc('a3.quitSheetTitle')}>
         <p className="m2-note">{mc('a3.quitSheetBody')}</p>
+        <QuitOnlineSection />
       </Sheet>
 
       {/* 补缺批片 3：今年已省构成明面弹层（两源逐项 mono + 防夸大注，金额读 mySavings） */}
@@ -221,6 +223,98 @@ export default function MemberCenterPage() {
         onClose={() => setSheet(null)}
         savings={(savingsQ.data ?? null) as SavingsData | null}
       />
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+
+/* 候裁清零批 件 1（CJ-1012-01）：线上退会申请段（quit 弹层内嵌）——
+   线上付（有线上售卡原单）=可线上退：折算明示+原因+提交→商家审批中心审批闸；
+   线下付/无档=原「到店退」文案面（本段不渲染）；Sheet 关态不挂载=查询门控天然。 */
+function QuitOnlineSection() {
+  const { trpc, queryClient } = usePhiliaClient()
+  const ctxQ = useQuery({
+    queryKey: ['membership', 'cancelContext'],
+    queryFn: () => trpc.membership.cancelContext.query(),
+  })
+  const mineQ = useQuery({
+    queryKey: ['membership', 'cancelRequestMine'],
+    queryFn: () => trpc.membership.cancelRequestMine.query(),
+  })
+  const [reason, setReason] = useState('')
+  const [errText, setErrText] = useState<string | null>(null)
+  const reqM = useMutation({
+    mutationFn: () => trpc.membership.requestCancel.mutate({ reason: reason.trim() }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['membership'] })
+    },
+    onError: (e) => setErrText(e instanceof Error ? e.message : mc('a3.quitOnlineFail')),
+  })
+  if (ctxQ.isPending || mineQ.isPending) return null
+  const ctx = ctxQ.data
+  if (!ctx?.eligible) return null
+  const mine = mineQ.data
+  const pending = ctx.pendingRequest ?? (mine?.status === 'pending' ? mine : null)
+
+  const submit = () => {
+    if (!window.confirm(mc('a3.quitOnlineConfirm'))) return
+    setErrText(null)
+    reqM.mutate()
+  }
+
+  return (
+    <div className="mt-4 rounded-card bg-canvas px-4 py-3.5" data-testid="quit-online-section">
+      <p className="text-body-sm font-semibold text-ink">{mc('a3.quitOnlineTitle')}</p>
+      <p className="mt-1 text-caption-xs text-ink-secondary">{mc('a3.quitOnlineBody')}</p>
+
+      {pending ? (
+        /* 在途=审批中状态卡（幂等面：重复提交=返回现状不新建） */
+        <div className="mt-2.5 rounded-input bg-card px-3 py-2.5" data-testid="quit-online-pending">
+          <p className="text-caption font-semibold text-ink">
+            {mc('a3.quitOnlineDoneSubmit')} · ¥{yuanOf(pending.refundFen)}
+          </p>
+          <p className="mt-1 text-caption-xs text-ink-secondary">{mc('a3.quitOnlinePendingBody')}</p>
+        </div>
+      ) : mine?.status === 'executed' ? (
+        <p className="mt-2.5 rounded-input bg-card px-3 py-2.5 text-caption text-ink" data-testid="quit-online-approved">
+          {mc('a3.quitOnlineApproved')} · ¥{yuanOf(mine.refundFen)}
+        </p>
+      ) : (
+        <>
+          {mine?.status === 'rejected' ? (
+            <p className="mt-2.5 rounded-input bg-card px-3 py-2.5 text-caption-xs text-danger-deep" data-testid="quit-online-rejected">
+              {mc('a3.quitOnlineRejected')}{mine.reviewNote ? `：${mine.reviewNote}` : ''}
+            </p>
+          ) : null}
+          {/* 折算明示（CJ-0922-13 冻结算式=server 预览值，前端不算） */}
+          <div className="mt-2.5 rounded-input bg-card px-3 py-2.5" data-testid="quit-online-calc">
+            <p className="text-caption font-semibold text-ink">
+              {mc('a3.quitOnlineCalc', { amount: yuanOf(ctx.refundFen ?? 0), months: ctx.monthsRemaining ?? 0 })}
+            </p>
+            <p className="mt-1 text-caption-xs text-ink-secondary">{mc('a3.quitOnlineRebateNote')}</p>
+          </div>
+          <textarea
+            className="mt-2.5 w-full rounded-input bg-card px-3 py-2 text-body-sm text-ink"
+            rows={2}
+            maxLength={200}
+            placeholder={mc('a3.quitOnlineReasonPh')}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            data-testid="quit-online-reason"
+          />
+          {errText ? <p className="mt-1 text-caption-xs text-danger-deep">{errText}</p> : null}
+          <button
+            type="button"
+            className="m2-btn mt-2.5 w-full"
+            data-testid="quit-online-submit"
+            disabled={reason.trim() === '' || reqM.isPending}
+            onClick={submit}
+          >
+            {reqM.isPending ? mc('a3.quitOnlineSubmitting') : mc('a3.quitOnlineSubmit')}
+          </button>
+        </>
+      )}
     </div>
   )
 }

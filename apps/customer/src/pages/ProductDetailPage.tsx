@@ -20,7 +20,8 @@
  * 店锚=?canvasStore= 预览店锚 > 商品所在店（product.storeId 既有透出，零新增查询）；
  * ?canvasPreview=1=页首水印注记（pdp-canvas-preview-note）；带参路由预览：预览 URL=
  * /mall/product/preview，canvasPreview=1 且 params.id==='preview' 时取商品列表既有查询
- * 缓存（mall.listProducts 同 queryKey 共享，零新增查询）首条商品顶替，查不到=空态照原样；
+ * 缓存（mall.listProducts 同 queryKey 共享，零新增查询）首条商品顶替，查不到=候裁清零
+ * 批件 6 屏内合成示例商品顶替渲染（预览专属，零真数据零写库，不再落空态）；
  * 文案键挂 CK(data-copy-key) 点选反查锚；写评价弹层/跨店确认弹层不入块流（照改造前位置
  * 挂载）；块内逻辑/查询/状态机/提交链路零改动，data-testid 原值全保留。
  */
@@ -55,6 +56,24 @@ const PDP_DEFAULT_ORDER = [
   'pdp.reviews',
   'pdp.ctaBar',
 ] as const;
+
+type ProductData = Awaited<ReturnType<Trpc['mall']['getProduct']['query']>>['product'];
+
+/* 候裁清零批 件 6（预览兜底示例·客户端合成件）：canvasPreview=1 且 'preview' 顶替
+   （listProducts 首条）查不到真商品时，用屏内合成示例商品渲染块流——假名「示例商品·
+   画布预览」，价格/库存=固定示例值，图=空数组走占位图，零真数据零写库（水印注记页首
+   已有；加购/立即购买两钮在示例态被拦为水印提示，不进购物车不跳结算）。真用户页零改动 */
+function exampleProductOf(): ProductData {
+  return {
+    id: 'canvas-example-product',
+    storeId: 'canvas-example-store',
+    name: '示例商品·画布预览（猫咪冻干零食）',
+    description: '示例描述·画布预览：冻干零食 50g，全猫龄适用。',
+    images: [],
+    priceFen: 19900,
+    stock: 20,
+  } as unknown as ProductData;
+}
 
 /* 片 3：评价星级行（只读展示件；晒单评分 1-5） */
 function Stars({ n, className = '' }: { n: number; className?: string }) {
@@ -231,7 +250,7 @@ function DetailInner() {
   /* 带参路由预览顶替：canvasPreview=1 且 params.id==='preview'（预览 URL=/mall/product/preview）
      时，取商品列表首条顶替——片 3 复走补修：原缓存读取（getQueriesData）冷启动顶签/iframe
      直开时缓存为空恒落空，换真查询（listProducts 公开读同端点，店锚随参，preview 态才启用，
-     页外零影响）；查不到=pid 落回 'preview'，getProduct 报错 → 空态照原样 */
+     页外零影响）；查不到=件 6 合成示例商品顶替（零真数据零写库），不再落空态 */
   const previewFirstQ = useQuery({
     queryKey: ['mall', 'listProducts', 'canvasPreviewFirst', previewStoreId ?? ''],
     queryFn: () => trpc.mall.listProducts.query({ storeId: previewStoreId ?? undefined, page: 1, pageSize: 1 }),
@@ -240,6 +259,8 @@ function DetailInner() {
     retry: false,
   });
   const previewProductId = isCanvasPreview && id === 'preview' ? (previewFirstQ.data?.items?.[0]?.id ?? null) : null;
+  /* 件 6：预览顶替未命中（首条查询已完成/失败但无商品）→ 合成示例商品 */
+  const previewMiss = isCanvasPreview && id === 'preview' && !previewFirstQ.isPending && previewProductId === null;
   const pid = previewProductId ?? id;
 
   const productQ = useQuery({
@@ -249,11 +270,12 @@ function DetailInner() {
     retry: false,
   });
 
-  /* 片 3：收藏钮（favCheck 初态 + favToggle 幂等；已收藏实色） */
+  /* 片 3：收藏钮（favCheck 初态 + favToggle 幂等；已收藏实色）。
+     件 6：合成示例态（previewMiss）不拉收藏/评价真查询（pid='preview' 假 id，零增发） */
   const favQ = useQuery({
     queryKey: ['mall', 'favCheck', pid],
     queryFn: () => trpc.mall.favCheck.query({ productId: pid! }),
-    enabled: !!pid,
+    enabled: !!pid && !previewMiss,
     retry: false,
   });
   const faved = favQ.data?.fav ?? false;
@@ -273,7 +295,7 @@ function DetailInner() {
     queryFn: ({ pageParam }) => trpc.mall.productReviews.query({ productId: pid!, page: pageParam }),
     initialPageParam: 1,
     getNextPageParam: (last) => (last.page * last.pageSize < last.total ? last.page + 1 : undefined),
-    enabled: !!pid,
+    enabled: !!pid && !previewMiss,
     retry: false,
   });
   const reviewRows: ReviewRow[] = reviewsQ.data?.pages.flatMap((p) => p.items) ?? [];
@@ -292,12 +314,13 @@ function DetailInner() {
   ).find((o) => o.items.some((it) => it.product_id === pid));
   const reviewOrderId = reviewEntryOrderId ?? eligibleOrder?.id ?? null;
 
-  const product = productQ.data?.product;
-  const storeName = productQ.data?.storeName ?? mlc('mall.storeFallback');
+  const product = previewMiss ? exampleProductOf() : productQ.data?.product;
+  const storeName = previewMiss ? '示例门店·画布预览' : (productQ.data?.storeName ?? mlc('mall.storeFallback'));
   const images = (product?.images ?? []).filter((u): u is string => !!u);
   const stock = product?.stock ?? 0;
   const soldOut = stock <= 0;
-  const pdpStoreId = previewStoreId ?? product?.storeId ?? null;
+  /* 件 6：合成示例商品的假店 id 不进布局锚（预览店锚缺省=null 走全局布局） */
+  const pdpStoreId = previewStoreId ?? (previewMiss ? null : product?.storeId) ?? null;
 
   /* 回馈金返显（M-02 定稿；口径 APP-18：membership.my 的 plan.rebateBp 万分比，
      返 Fen=round(priceFen*qty*rebateBp/10000)；非会员/免费档=0 不渲染假数。
@@ -352,6 +375,11 @@ function DetailInner() {
       : null;
 
   const handleAddCart = () => {
+    /* 件 6：合成示例商品不进购物袋（本地购物车也不落假行） */
+    if (previewMiss) {
+      showToast(mc('mc.canvasExampleNote'), 'info');
+      return;
+    }
     const input = buildAddInput();
     if (!input) return;
     const result = cart.addItem(input);
@@ -363,13 +391,19 @@ function DetailInner() {
   };
 
   const handleBuyNow = () => {
+    if (previewMiss) {
+      showToast(mc('mc.canvasExampleNote'), 'info');
+      return;
+    }
     const input = buildAddInput();
     if (!input) return;
     navigate('/mall/checkout', { state: { buyNow: input } });
   };
 
   /* ---------------- 异常态（块流外；Loader 照常挂载保布局拉取） ---------------- */
-  if (productQ.isPending) {
+  /* 件 6：previewMiss 合成示例态跳过骨架/空态早退——productQ 对假 id 'preview'
+     恒 pending→error，示例商品直接接管渲染 */
+  if (productQ.isPending && !previewMiss) {
     return (
       <CanvasLayoutLoader pageKey="pdp" storeId={pdpStoreId}>
         <div className="px-[22px] py-6">
@@ -380,7 +414,7 @@ function DetailInner() {
       </CanvasLayoutLoader>
     );
   }
-  if (productQ.isError || !product) {
+  if (!previewMiss && (productQ.isError || !product)) {
     return (
       <CanvasLayoutLoader pageKey="pdp" storeId={pdpStoreId}>
         <div className="flex flex-col items-center px-[22px] py-16">
@@ -398,6 +432,9 @@ function DetailInner() {
       </CanvasLayoutLoader>
     );
   }
+  /* 件 6 类型闸：previewMiss 时 product 恒为合成示例（非空）；真用户页 product 为空已在
+     上方空态早退——本行仅收窄类型，运行期不触发 */
+  if (!product) return null;
 
   /* 块渲染器（块内逻辑零改动——六块照改造前 JSX 逐字搬，文案走 copy 键 + CK 反查锚） */
   const renderers: Record<string, () => ReactNode> = {
@@ -430,7 +467,7 @@ function DetailInner() {
             aria-label={faved ? fvc('fav.pdpAdded') : fvc('fav.pdpAdd')}
             aria-pressed={faved}
             disabled={favM.isPending}
-            onClick={() => favM.mutate()}
+            onClick={() => (previewMiss ? showToast(mc('mc.canvasExampleNote'), 'info') : favM.mutate())}
             data-testid="pdp-fav"
             className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-card/95 ring-1 ring-line-ring transition-transform duration-120 ease-philia-spring active:scale-90"
           >
@@ -541,7 +578,7 @@ function DetailInner() {
           ) : null}
         </div>
         <div className="u1-card p-4" data-testid="pdp-reviews">
-          {reviewsQ.isPending ? (
+          {reviewsQ.isPending && !previewMiss ? (
             <Skeleton className="h-16 rounded-control" />
           ) : reviewsQ.isError ? (
             <button type="button" className="text-caption text-ink-secondary" onClick={() => void reviewsQ.refetch()}>

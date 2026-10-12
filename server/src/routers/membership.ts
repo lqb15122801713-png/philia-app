@@ -70,6 +70,7 @@ import {
 } from '../trpc';
 import { ensureOpenShift, genBillNo, withCashierWriteLock } from './cashier';
 import { storeDayStartMs, storeWallclock } from './appointment';
+import { providerForChannel } from '../payments/provider';
 
 /** 事务 handle 类型断言（同 attendance.ts 惯例） */
 const txDb = (tx: unknown): DbHandle => tx as DbHandle;
@@ -127,6 +128,31 @@ async function genRefundNoLocal(d: DbHandle, storeId: string, now: Date): Promis
 function storeLocalDateStrLocal(d: Date): string {
   const w = storeWallclock(d);
   return `${w.y}-${pad2(w.m)}-${pad2(w.day)}`;
+}
+
+/* ------------------------------------------------------------------ */
+/* 候裁清零批 片件 1：线上退会原单挂号（0929 口径）                        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * 线上退会原单=该客户最近一笔 paid 线上会员支付单（pay_orders biz_domain∈membership_open/
+ * membership_upgrade/membership_renew 且 biz_id=userId 且 status=paid，倒序最新）——
+ * 与 refund.ts 线上联动同口径同序；查不到=线上退会硬拒（0929：无线上售卡原单不受理）。
+ */
+async function findOnlineMembershipOrder(d: DbHandle, userId: string) {
+  return d
+    .select()
+    .from(schema.payOrders)
+    .where(
+      and(
+        inArray(schema.payOrders.bizDomain, ['membership_open', 'membership_upgrade', 'membership_renew']),
+        eq(schema.payOrders.bizId, userId),
+        eq(schema.payOrders.status, 'paid'),
+      ),
+    )
+    .orderBy(desc(schema.payOrders.createdAt), desc(schema.payOrders.id))
+    .limit(1)
+    .then((r) => r[0] ?? null);
 }
 /** 'YYYY-MM' → 当月起止（本地时区 Date） */
 function monthWindow(month: string): { start: Date; end: Date } {
@@ -1535,6 +1561,297 @@ export const membershipRouter = router({
         cashFen: Number(cashRows?.s ?? 0),
         amortizedFen: activeRows.reduce((s, r) => s + Math.round(r.paidFen / 12), 0),
       };
+    }),
+
+  /* ------------------------------------------------------------------
+   * 候裁清零批 片件 1（CJ-1012-01 裁死：退会开+审批闸 · 涉钱面）：
+   * 线上退会=客户申请（折算明示快照）→商家审批中心审批闸（不批不动钱）→
+   * 批准=同事务兑付（cancel 语义+通道退款联动 mock 本地账本翻退+refundNo 幂等）。
+   * 0929 口径：无线上售卡原单（pay_orders membership_* paid）→ 申请硬拒。
+   * ------------------------------------------------------------------ */
+
+  /**
+   * cancelContext（customer）：退会入口上下文——是否可线上退（active 会员+线上售卡原单在）
+   * +折算明示（refundFen=CJ-0922-13 冻结算式预览+剩余整月）+在途申请（幂等面）。
+   * 线下付（无线上原单）=eligible=false → 客户端照「到店退」现状文案不动。
+   */
+  cancelContext: customerProcedure.query(async ({ ctx }) => {
+    const now = new Date();
+    const m = await currentMembership(ctx.db, ctx.user.id, now);
+    const onlineOrder = await findOnlineMembershipOrder(ctx.db, ctx.user.id);
+    const pending = await ctx.db
+      .select()
+      .from(schema.membershipCancelRequests)
+      .where(and(eq(schema.membershipCancelRequests.userId, ctx.user.id), eq(schema.membershipCancelRequests.status, 'pending')))
+      .orderBy(desc(schema.membershipCancelRequests.createdAt))
+      .limit(1)
+      .then((r) => r[0] ?? null);
+    const eligible = !!m && !!onlineOrder;
+    return {
+      hasMembership: !!m,
+      eligible,
+      refundFen: eligible ? cancelRefundFen(m!.paidFen, now, m!.expiresAt) : null,
+      monthsRemaining: eligible ? remainingWholeMonths(now, m!.expiresAt) : null,
+      paidFen: m?.paidFen ?? null,
+      expiresAt: m?.expiresAt ?? null,
+      planKey: m?.planKey ?? null,
+      pendingRequest: pending ? { id: pending.id, status: pending.status, refundFen: pending.refundFen, createdAt: pending.createdAt } : null,
+    };
+  }),
+
+  /**
+   * requestCancel（customer）：线上退会申请。闸序：会员 active → 线上原单在（0929 硬拒）
+   * → 在途申请幂等（返回现状不新建）→ 同事务落申请单+审批单（approvalRequests
+   * kind='membership_cancel'）+SSE 店频道。零钱动。
+   */
+  requestCancel: customerProcedure
+    .input(z.object({ reason: z.string().min(1, '退会原因必填').max(200) }))
+    .mutation(async ({ ctx, input }) => {
+      const now = new Date();
+      /* 在途幂等先行（同客户 pending 单=返回现状） */
+      const existing = await ctx.db
+        .select()
+        .from(schema.membershipCancelRequests)
+        .where(and(eq(schema.membershipCancelRequests.userId, ctx.user.id), eq(schema.membershipCancelRequests.status, 'pending')))
+        .orderBy(desc(schema.membershipCancelRequests.createdAt))
+        .limit(1)
+        .then((r) => r[0] ?? null);
+      if (existing) return { request: existing, idempotent: true as const };
+
+      const m = await currentMembership(ctx.db, ctx.user.id, now);
+      if (!m) badRequest('当前无在册会员（或已退会）——无可退内容');
+      const onlineOrder = await findOnlineMembershipOrder(ctx.db, ctx.user.id);
+      if (!onlineOrder) badRequest('本账号会员非线上支付开通，线上退会不受理——请到店办理（原路退回口径）');
+      if (!onlineOrder.paymentId) badRequest('线上售卡原单未完成通道下单，暂不能线上退——请到店办理');
+      if (m.paidFen <= 0) badRequest('免费档/零实付会员无线上退款内容——如需注销会员请联系门店');
+
+      const refundFen = cancelRefundFen(m.paidFen, now, m.expiresAt);
+      const monthsRemaining = remainingWholeMonths(now, m.expiresAt);
+      /* 审批落店：售卡店 > 归属店 > 线上开档无店（PR-4 OP-01②：注册用户线上开档 sold_store_id=NULL）
+         =当前唯一 active 店（mock 期单店口径；连锁期=待连锁合批再分） */
+      let storeId = m.soldStoreId ?? m.homeStoreId ?? null;
+      if (!storeId) {
+        storeId = (await ctx.db
+          .select({ id: schema.stores.id })
+          .from(schema.stores)
+          .where(eq(schema.stores.status, 'active'))
+          .limit(1)
+          .then((r) => r[0]?.id)) ?? null;
+      }
+      if (!storeId) badRequest('售卡门店缺失，请到店办理');
+
+      const result = await ctx.db.transaction(async (tx) => {
+        const t = txDb(tx);
+        const req = await t
+          .insert(schema.membershipCancelRequests)
+          .values({
+            storeId,
+            userId: ctx.user.id,
+            membershipId: m.id,
+            payOrderId: onlineOrder.id,
+            payNo: onlineOrder.payNo,
+            planKey: m.planKey,
+            paidFen: m.paidFen,
+            refundFen,
+            monthsRemaining,
+            reason: input.reason,
+          })
+          .returning()
+          .then((r) => r[0]!);
+        await t.insert(schema.approvalRequests).values({
+          storeId,
+          kind: 'membership_cancel',
+          refId: req.id,
+          summary: `会员退会申请 · ${ctx.user.nickname ?? '客户'} · ${m.planKey} · 拟退 ¥${(refundFen / 100).toFixed(2)}（剩余 ${monthsRemaining} 整月）`,
+          applicantId: ctx.user.id,
+          timelineJson: [{ at: now.toISOString(), action: 'submitted', by: ctx.user.id }],
+        });
+        const outboxId = await emitEvent(t, `store:${storeId}`, EventType.MembershipCancelRequested, {
+          requestId: req.id,
+          userId: ctx.user.id,
+          planKey: m.planKey,
+          refundFen,
+          reason: input.reason,
+        });
+        return { request: req, outboxId };
+      });
+      broadcastNow(result.outboxId);
+      return { request: result.request, idempotent: false as const };
+    }),
+
+  /** cancelRequestMine（customer）：我的退会申请最新状态（申请页/会员中心透出） */
+  cancelRequestMine: customerProcedure.query(async ({ ctx }) => {
+    return (
+      (await ctx.db
+        .select()
+        .from(schema.membershipCancelRequests)
+        .where(eq(schema.membershipCancelRequests.userId, ctx.user.id))
+        .orderBy(desc(schema.membershipCancelRequests.createdAt))
+        .limit(1)
+        .then((r) => r[0])) ?? null
+    );
+  }),
+
+  /** cancelRequestPending（manager|owner）：本店待审批退会申请队列（审批中心透出） */
+  cancelRequestPending: merchantManagerProcedure.query(async ({ ctx }) => {
+    const storeId = ctx.user.storeId!;
+    const rows = await ctx.db
+      .select({
+        request: schema.membershipCancelRequests,
+        nickname: schema.users.nickname,
+      })
+      .from(schema.membershipCancelRequests)
+      .leftJoin(schema.users, eq(schema.users.id, schema.membershipCancelRequests.userId))
+      .where(and(eq(schema.membershipCancelRequests.storeId, storeId), eq(schema.membershipCancelRequests.status, 'pending')))
+      .orderBy(schema.membershipCancelRequests.createdAt);
+    return { items: rows };
+  }),
+
+  /**
+   * reviewCancelRequest（manager|owner）：退会审批闸。
+   * 驳回=rejected 双写（申请单+审批单），零钱动；
+   * 批准=同事务兑付：会员 cancelled（cancel 语义：未到账作废+回馈金清零留痕）+
+   * 通道退款联动（provider.refund，refundNo=退款单号幂等键；通道拒=整体回滚半态零容忍）+
+   * refund_bills 退款行（online_original）+request=executed 回挂+审批单 approved。
+   * 幂等=非 pending 重复审=返回现状；refundNo 同号重试=通道侧只退一笔。
+   */
+  reviewCancelRequest: merchantManagerProcedure
+    .input(
+      z.object({
+        requestId: z.string().min(1),
+        approve: z.boolean(),
+        note: z.string().max(200).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const now = new Date();
+      if (!input.approve && !(input.note ?? '').trim()) badRequest('驳回须填审批注记（客户可见）');
+      const result = await ctx.db.transaction(async (tx) => {
+        const t = txDb(tx);
+        const req = await t
+          .select()
+          .from(schema.membershipCancelRequests)
+          .where(eq(schema.membershipCancelRequests.id, input.requestId))
+          .get();
+        if (!req) badRequest('申请单不存在');
+        if (req.storeId !== ctx.user.storeId) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: '只能审批本店申请' });
+        }
+        /* 幂等：非 pending=返回现状（重复审零副作用） */
+        if (req.status !== 'pending') return { request: req, idempotent: true as const };
+        const appr = await t
+          .select()
+          .from(schema.approvalRequests)
+          .where(and(eq(schema.approvalRequests.kind, 'membership_cancel'), eq(schema.approvalRequests.refId, req.id)))
+          .get();
+        const timeline = [...((appr?.timelineJson as Array<{ at: string; action: string; by: string; note?: string }> | null) ?? [])];
+
+        if (!input.approve) {
+          await t
+            .update(schema.membershipCancelRequests)
+            .set({ status: 'rejected', reviewerId: ctx.user.id, reviewNote: input.note ?? '', reviewedAt: now, updatedAt: now })
+            .where(eq(schema.membershipCancelRequests.id, req.id));
+          if (appr) {
+            timeline.push({ at: now.toISOString(), action: 'rejected', by: ctx.user.id, note: input.note });
+            await t
+              .update(schema.approvalRequests)
+              .set({ status: 'rejected', reviewerId: ctx.user.id, reviewNote: input.note ?? '', reviewedAt: now, timelineJson: timeline, updatedAt: now })
+              .where(eq(schema.approvalRequests.id, appr.id));
+          }
+          return { request: { ...req, status: 'rejected' as const }, idempotent: false as const };
+        }
+
+        /* ---- 批准=兑付（同事务；半态零容忍：任一失败整体回滚） ---- */
+        const m = await currentMembership(t, req.userId, now);
+        if (!m || m.id !== req.membershipId) badRequest('会员状态已变化（已退会/换档），本申请作废——请客户重新发起');
+        const payOrder = await t.select().from(schema.payOrders).where(eq(schema.payOrders.id, req.payOrderId)).get();
+        if (!payOrder || payOrder.status !== 'paid' || !payOrder.paymentId) badRequest('线上售卡原单状态已变化（非 paid），不能线上退——转线下人工办理');
+
+        const refundFen = req.refundFen; // 折算快照=申请时锁定额（兑付同额）
+        const { voidedFen, periods } = await voidPendingGrants(t, { userId: req.userId, sourceId: m.id, now });
+        const { clearedFen } = await clearRebateAccount(t, {
+          userId: req.userId,
+          sourceId: m.id,
+          now,
+          note: `退会清零（${m.planKey}，线上退会审批通过，原因：${req.reason}）`,
+        });
+        await t
+          .update(schema.memberships)
+          .set({ status: 'cancelled', cancelledAt: now, cancelReason: req.reason, refundFen, updatedAt: now })
+          .where(eq(schema.memberships.id, m.id));
+
+        /* 通道退款联动（mock=本地账本翻退+refundNo 幂等键；真通道留口同 refund.ts 工艺） */
+        const refundNo = await genRefundNoLocal(t, req.storeId, now);
+        const provider = await providerForChannel(t, payOrder.channel);
+        let channelRefundId: string | null = null;
+        try {
+          const r = await provider.refund({
+            paymentId: payOrder.paymentId,
+            refundNo,
+            amountFen: refundFen,
+            totalFen: payOrder.amountFen,
+            reason: req.reason,
+          });
+          channelRefundId = r.refundId;
+        } catch (err) {
+          badRequest(`线上原路退回失败（${payOrder.payNo}）：${err instanceof Error ? err.message : String(err)}`);
+        }
+
+        /* 留痕四面（refund_bills.billId 绑收银原单 notNull，线上售卡无收银单不进该表——
+           退款留痕=通道账本 refundNo 幂等行+本行 membership_events+审批单+申请单） */
+        await t.insert(schema.membershipEvents).values({
+          userId: req.userId,
+          type: 'cancel_online',
+          fromPlan: req.planKey,
+          toPlan: null,
+          billNo: null,
+          meta: {
+            requestId: req.id,
+            payNo: payOrder.payNo,
+            paymentId: payOrder.paymentId,
+            channel: payOrder.channel,
+            provider: provider.name,
+            refundNo,
+            channelRefundId,
+            paidFen: req.paidFen,
+            refundFen,
+            clearedRebateFen: clearedFen,
+            monthsRemaining: req.monthsRemaining,
+            voidedPendingFen: voidedFen,
+            voidedPendingPeriods: periods,
+            refundMethod: 'online_original',
+            reason: req.reason,
+            executedAt: now.toISOString(),
+            operatorId: ctx.user.id,
+          },
+        });
+
+        await t
+          .update(schema.membershipCancelRequests)
+          .set({ status: 'executed', reviewerId: ctx.user.id, reviewNote: input.note ?? '', reviewedAt: now, updatedAt: now })
+          .where(eq(schema.membershipCancelRequests.id, req.id));
+        if (appr) {
+          timeline.push({ at: now.toISOString(), action: 'approved', by: ctx.user.id, note: input.note });
+          await t
+            .update(schema.approvalRequests)
+            .set({ status: 'approved', reviewerId: ctx.user.id, reviewNote: input.note ?? '', reviewedAt: now, timelineJson: timeline, updatedAt: now })
+            .where(eq(schema.approvalRequests.id, appr.id));
+        }
+        const outboxId = await emitEvent(t, `user:${req.userId}`, EventType.MembershipCancelled, {
+          userId: req.userId,
+          planKey: req.planKey,
+          refundFen,
+          refundNo,
+          clearedRebateFen: clearedFen,
+          reason: req.reason,
+          message: '退会已批准，退款按原路退回（线上原路）',
+          by: ctx.user.id,
+        });
+        return { request: { ...req, status: 'executed' as const }, refundNo, outboxId, idempotent: false as const };
+      });
+      if ('outboxId' in result && result.outboxId) broadcastNow(result.outboxId);
+      const { outboxId: _drop, ...rest } = result;
+      return rest;
     }),
 });
 

@@ -15,7 +15,8 @@
  * TICKET_DETAIL_DEFAULT_ORDER 兜底）；文案键挂 CK 锚（textarea placeholder 等
  * 属性位挂不上，键如实入块 copyKeys）；预览=CanvasLayoutLoader+?canvasPreview=1
  * 水印注记；带参屏预览特例：canvasPreview=1 且路由参数==='preview'（预览
- * URL=/support/preview）时用列表既有查询 ticketListMine 首条 id 顶替（零新增查询）。
+ * URL=/support/preview）时用列表既有查询 ticketListMine 首条 id 顶替（零新增查询）；
+ * 查不到=候裁清零批件 6 屏内合成示例工单顶替（预览专属，零真数据零写库）。
  * 草案无 error 块——加载/失败态并入 header 块（页头裸段置顶惯例照 MePage）。
  * 全屏 PhotoViewer=弹层件不入块流，照改造前位置挂载。块内逻辑/查询/状态机零改动，
  * data-testid 原值全保留。
@@ -56,6 +57,43 @@ const TIMELINE_LABEL: Record<string, ServiceLoopCopyKey> = {
 /** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
 const TICKET_DETAIL_DEFAULT_ORDER = ['ticketDetail.header', 'ticketDetail.main', 'ticketDetail.reply', 'ticketDetail.escalate', 'ticketDetail.timeline'] as const
 
+type TicketData = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof usePhiliaClient>['trpc']['serviceLoop']['ticketGet']['query']>>['ticket']
+>
+
+/* 候裁清零批 件 6（预览兜底示例·客户端合成件）：canvasPreview=1 且 'preview' 顶替查不到
+   真工单时，用屏内合成示例工单渲染块流（假名「示例·画布预览」系，单号/时刻=固定示例值；
+   零真数据零写库——「申请店长介入」对合成 id 提交会被服务端拒，仅预览框内可点，不落库；
+   水印注记页首已有）。真用户页零改动 */
+function exampleTicketOf(): TicketData {
+  const t1 = new Date('2026-10-01T10:00:00')
+  const t2 = new Date('2026-10-01T15:00:00')
+  return {
+    id: 'canvas-example-ticket',
+    ticketNo: 'TK-EXAMPLE-001',
+    userId: 'canvas-example-customer',
+    storeId: 'canvas-example-store',
+    type: 'suggest',
+    description: '示例描述·画布预览：希望店里增加猫主子等候区。',
+    photoUrls: [],
+    createdVia: 'customer',
+    contactPhone: null,
+    status: 'replied',
+    replyText: '示例回复·画布预览：收到建议，店长已登记评估。',
+    repliedBy: 'canvas-example-staff',
+    repliedAt: t2,
+    escalatedAt: null,
+    escalatedBy: null,
+    escalateNote: null,
+    timelineJson: [
+      { action: 'submitted', at: t1.toISOString(), by: 'canvas-example-customer' },
+      { action: 'replied', at: t2.toISOString(), by: 'canvas-example-staff' },
+    ],
+    createdAt: t1,
+    updatedAt: t2,
+  } as TicketData
+}
+
 export default function TicketDetailPage() {
   const { id = '' } = useParams()
   const { trpc, queryClient } = usePhiliaClient()
@@ -71,7 +109,8 @@ export default function TicketDetailPage() {
     [],
   )
   /* 带参屏预览特例：?canvasPreview=1 且 :id==='preview'（预览 URL=/support/preview）
-     时用本屏列表既有查询 ticketListMine 首条 id 顶替路由参数（零新增查询） */
+     时用本屏列表既有查询 ticketListMine 首条 id 顶替路由参数（零新增查询）；
+     查不到=件 6 合成示例工单顶替（ticketQ 不拉取），不再落空态 */
   const previewFallback = isCanvasPreview && id === 'preview'
   const ticketsQ = useQuery({
     queryKey: ['serviceLoop', 'ticketListMine'],
@@ -79,6 +118,8 @@ export default function TicketDetailPage() {
     enabled: previewFallback,
   })
   const effId = previewFallback ? (ticketsQ.data?.[0]?.id ?? '') : id
+  /* 件 6：预览顶替未命中（列表查询已完成但首条为空）→ 合成示例工单（零真数据零写库） */
+  const previewMiss = previewFallback && !ticketsQ.isPending && effId === ''
 
   const ticketQ = useQuery({
     queryKey: ['serviceLoop', 'ticketGet', effId],
@@ -129,7 +170,7 @@ export default function TicketDetailPage() {
     onError: (err) => showToast(friendlyError(err, sl('ticket.escalateFail')), 'error'),
   })
 
-  const ticket = ticketQ.data?.ticket ?? null
+  const ticket = (previewMiss ? exampleTicketOf() : ticketQ.data?.ticket) ?? null
   const meta = ticket ? (STATUS_META[ticket.status] ?? STATUS_META.submitted!) : null
   const wallPhotos: PhotoWallPhoto[] = (ticket?.photoUrls ?? []).map((url) => ({ id: url, url }))
 
@@ -137,12 +178,13 @@ export default function TicketDetailPage() {
   const renderers: Record<string, () => ReactNode> = {
     /* 1. ticketDetail.header：U1-A 统一返回条（←圆钮+标题），固定返回工单列表；
           草案无 error 块——加载/失败态并入本块（ErrorState message 为 string 入参无 CK 锚，
-          backList 出口钮挂 CK） */
+          backList 出口钮挂 CK）；件 6：previewMiss 合成示例态不挂加载占位
+          （ticketQ 未启用恒 pending） */
     'ticketDetail.header': () => (
       <>
         <PageHeader title={<CK k="ticket.detailTitle">{sl('ticket.detailTitle')}</CK>} fallback="/support" className="pt-6" />
         <div className="mt-4">
-          {ticketQ.isPending ? <LoadingBlock lines={3} /> : null}
+          {ticketQ.isPending && !previewMiss ? <LoadingBlock lines={3} /> : null}
           {ticketQ.isError ? (
             <ErrorState
               message={friendlyError(ticketQ.error, sl('ticket.loadFail'))}

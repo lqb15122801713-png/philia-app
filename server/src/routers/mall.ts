@@ -1,8 +1,11 @@
 /**
  * mall router（P5 T5.1 · coder-mall-server 名下文件）
  *
- * 商城全链路：商品目录 → 下单（事务防超卖）→ 支付（PaymentProvider 适配层，§4.7）
- * → 支付回调（原生 Hono 端点，见 routes/payCallback.ts）→ 发货 → 收货。
+ * 商城全链路：商品目录 → 下单（事务防超卖）→ 支付 → 发货 → 收货。
+ * 支付链（候裁清零批件 2 · CJ-1012-01 裁死）：旧端点 createPayment 已退役拒单；
+ * 新链=统一支付轨 pay.createOrder（bizDomain:'mall'）→ 演示回调 POST /api/pay/orders/mock-callback
+ * （routes/payOrdersCallback.ts），生产回调走 /api/pay/orders/callback；兑付内核
+ * fulfillMallOrderPaidTx 新旧链共用单源。
  *
  * 关键规则落点：
  * - 金额口径：total_fen 一律服务端按商品现价重算，绝不信任前端金额（§4.7 全链路分）。
@@ -33,7 +36,6 @@ import { parseCsv } from '../lib/csvParse';
 import { customerProcedure, merchantManagerProcedure, merchantOwnerProcedure, merchantProcedure, publicProcedure, router } from '../trpc';
 import { broadcastNow, emitEvent } from '../realtime/bus';
 import { EventType } from '../realtime/events';
-import { resolvePaymentProvider } from '../payments/provider';
 import { storeWallclock } from './appointment';
 import { resolveScopedRules } from './configRules';
 import { grantFirstOrderGift } from './perks';
@@ -800,33 +802,15 @@ export const mallRouter = router({
     }),
 
   /**
-   * 5. createPayment（customer）：对本人 pending 订单发起支付。
-   * 经 PaymentProvider 适配层（§4.7，片 1 五接口族 createOrder）创建支付单，返回前端调起参数；
-   * mock 模式下前端随后调 POST /api/pay/mock-callback 完成演示闭环。
+   * 5. createPayment（customer）：旧收款链端点，已退役（候裁清零批件 2 · CJ-1012-01 裁死）。
+   * 一律拒单 BAD_REQUEST；入参 schema 保留仅作类型兼容（不读库、不建支付单）。
+   * 新链=统一支付轨：pay.createOrder（bizDomain:'mall'，存在+本人+pending 同等闸）
+   * → 演示回调 POST /api/pay/orders/mock-callback；客户端收银台 CashierModal 已全走新链。
    */
   createPayment: customerProcedure
     .input(z.object({ orderId: z.string().min(1) }))
-    .mutation(async ({ ctx, input }) => {
-      const order = await getOrderOrThrow(ctx.db, input.orderId);
-      if (order.customerId !== ctx.user.id) forbidden('只能支付本人订单');
-      if (order.status !== 'pending') {
-        badRequest(`当前状态（${order.status}）不可发起支付，仅 pending 可支付`);
-      }
-      const provider = await resolvePaymentProvider(ctx.db); // 切换闸解析（kill 回落 mock→端口行→env 兜底）
-      const subject = `菲丽亚商城订单${order.orderNo}`;
-      const { paymentId, payParams } = await provider.createOrder({
-        orderId: order.id,
-        totalFen: order.totalFen,
-        subject,
-      });
-      return {
-        orderId: order.id,
-        orderNo: order.orderNo,
-        totalFen: order.totalFen,
-        provider: provider.name,
-        paymentId,
-        payParams,
-      };
+    .mutation(async () => {
+      badRequest('该支付入口已停用，请走新收银台');
     }),
 
   /** 6. listMyOrders（customer）：我的订单按状态分组（六态齐全，附门店名）；
