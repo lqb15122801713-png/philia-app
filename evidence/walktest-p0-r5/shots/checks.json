@@ -1,0 +1,100 @@
+{
+  "checks": [
+    {
+      "name": "D-44 夹具：真在服单+26h 僵尸单落库",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "客户登录（示例客户）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "W1a D-45 首单可下（无重叠基线）",
+      "ok": true,
+      "detail": "{\"id\":\"01M4T954JXT8335YDKKHKQVX68\",\"code\":\"4VUUNX\",\"customerId\":\"01M4T66P1ZPDAYQ"
+    },
+    {
+      "name": "W1b D-45 重叠=400 人话（宠物名+档期重叠+出路明文）",
+      "ok": true,
+      "detail": "「旺财」10月18日–10月20日已有寄养单，档期重叠不可重复下单，请先取消原单或改期"
+    },
+    {
+      "name": "W2 前置：商城订单创建（mock 链不碰真支付）",
+      "ok": true,
+      "detail": "P261013879FTY"
+    },
+    {
+      "name": "W2a 列表卡=详情链接（可点进详情）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "W2b 点卡进真详情（订单号/状态/合计透出）",
+      "ok": true,
+      "detail": "订单详情  菲丽亚宠物·示例店  待发货  P261013879FTY · 2026-10-13 17:23  快递  商品明细  全价成犬粮 2kg  ¥12"
+    },
+    {
+      "name": "W2c 深链 /mall/orders/{id} 直刷=详情页（不落 /home）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "W2d 无效 id=人话异常卡+返回列表出口（不裸跳首页）",
+      "ok": true,
+      "detail": "订单不存在或已删除  返回订单列表"
+    },
+    {
+      "name": "店主登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "W3a D-44 主列表=真在服单（僵尸已出列：服务中计数不含 26h 单+异常待清滤签+预警行在）",
+      "ok": true,
+      "detail": "chip=服务中 2"
+    },
+    {
+      "name": "W3b D-44 异常待清桶=僵尸卡可见（徽+注记）+真在服单不入桶",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "W4d 正向闭环：新 executed 单 UI 实退登记=settleActual 走完（settled+留痕）",
+      "ok": true,
+      "detail": "RB-20261013-005 → settled"
+    },
+    {
+      "name": "D-43 前置：smoke 标老化夹具 3 笔进黄条口径",
+      "ok": true,
+      "detail": "aged=3"
+    },
+    {
+      "name": "W4a 黄条在（超 24h 待实退=3 笔）",
+      "ok": true,
+      "detail": "3 笔退款超 24 小时未登记实退RB-WT81997-001 ¥10 · RB-WT81997-002 ¥20 · RB-WT81997-"
+    },
+    {
+      "name": "W4b 清理脚本：dry-run 命中在册+apply 后 pendingActual 归零（留痕报告入卷）",
+      "ok": true,
+      "detail": "pendAfter=0"
+    },
+    {
+      "name": "W4c 清理后黄条消（页面重进零黄条）",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence11\\shots\\W1-boarding-no-dup.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence11\\shots\\W2a-order-detail-from-list.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence11\\shots\\W2b-order-detail-deeplink.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence11\\shots\\W2c-order-detail-notfound.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence11\\shots\\W3a-monitor-main-zombie-out.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence11\\shots\\W3b-monitor-zombie-bucket.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence11\\shots\\W4c-settle-actual-closed.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence11\\shots\\W4a-refunds-yellow-bar.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence11\\shots\\W4b-refunds-bar-gone.png"
+  ]
+}

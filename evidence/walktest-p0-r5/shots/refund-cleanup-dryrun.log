@@ -1,0 +1,5 @@
+[d43] 白名单 reason LIKE 'smoke %' + executed 超 24h 未 settled：命中 3 笔
+  RB-WT81997-001 ¥10.00 2026-10-12T08:23:01.000Z smoke 残留夹具 WT81997
+  RB-WT81997-002 ¥20.00 2026-10-12T08:23:01.000Z smoke 残留夹具 WT81997
+  RB-WT81997-003 ¥30.00 2026-10-12T08:23:01.000Z smoke 残留夹具 WT81997
+[d43] DONE(dry-run，未写库)

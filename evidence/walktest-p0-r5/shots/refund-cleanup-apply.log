@@ -1,0 +1,7 @@
+[d43] 白名单 reason LIKE 'smoke %' + executed 超 24h 未 settled：命中 3 笔
+  RB-WT81997-001 ¥10.00 2026-10-12T08:23:01.000Z smoke 残留夹具 WT81997
+  RB-WT81997-002 ¥20.00 2026-10-12T08:23:01.000Z smoke 残留夹具 WT81997
+  RB-WT81997-003 ¥30.00 2026-10-12T08:23:01.000Z smoke 残留夹具 WT81997
+[d43] --apply 落账 3 笔（settle_note 留痕署名 script:pd21-d43 口径=演示收口）
+[d43] 报告=E:\KIMI code\tmp\canvas-scan\evidence11\shots\refund-cleanup-report.json
+[d43] DONE(applied)

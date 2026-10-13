@@ -1,0 +1,47 @@
+{
+  "at": "2026-10-13T09:23:14.563Z",
+  "dryRun": false,
+  "reasonLike": "smoke %",
+  "hitCount": 3,
+  "rows": [
+    {
+      "refundNo": "RB-WT81997-001",
+      "amountFen": 1000,
+      "reason": "smoke 残留夹具 WT81997",
+      "before": {
+        "status": "executed",
+        "settledAt": null
+      },
+      "after": {
+        "status": "settled",
+        "settleNote": "运维一次性收口（PD-21 D-43 历史演示/走测残留清理；dry-run 先审后落）"
+      }
+    },
+    {
+      "refundNo": "RB-WT81997-002",
+      "amountFen": 2000,
+      "reason": "smoke 残留夹具 WT81997",
+      "before": {
+        "status": "executed",
+        "settledAt": null
+      },
+      "after": {
+        "status": "settled",
+        "settleNote": "运维一次性收口（PD-21 D-43 历史演示/走测残留清理；dry-run 先审后落）"
+      }
+    },
+    {
+      "refundNo": "RB-WT81997-003",
+      "amountFen": 3000,
+      "reason": "smoke 残留夹具 WT81997",
+      "before": {
+        "status": "executed",
+        "settledAt": null
+      },
+      "after": {
+        "status": "settled",
+        "settleNote": "运维一次性收口（PD-21 D-43 历史演示/走测残留清理；dry-run 先审后落）"
+      }
+    }
+  ]
+}
