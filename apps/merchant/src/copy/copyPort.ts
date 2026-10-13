@@ -82,6 +82,33 @@ const COPYPORT_COPY_TABLE = {
   'slotport.ownerOnly': '槽位端口仅店主可改',
   'slotport.ownerOnlyBody': '展示素材涉门店门面口径，仅店主账号可上传与上线。如需调整请联系店主。',
 
+  /* ---- PD-20 A5 运营三刀（D-40 紧急下线 / D-41 真预览 / 留痕透出） ---- */
+  'slotport.unpublishCta': '紧急下线',
+  'slotport.unpublishConfirm1': '确认紧急下线 {slot}？下线后客户端立即回落品牌默认图。',
+  'slotport.unpublishConfirm2': '再次确认：紧急下线 {slot}。历史版本留痕不删，之后可上传新版再上线恢复。',
+  'slotport.unpublishedToast': '已紧急下线，客户端回落品牌默认图',
+  'slotport.unpublishFail': '紧急下线失败，请稍后再试',
+  'slotport.previewCta': '预览此版',
+  'slotport.previewPanelTitle': '预览此版（仅本人可见 · 真用户仍见当前上线版）',
+  'slotport.previewClose': '关闭预览',
+  'slotport.previewNoStore': '预览店锚未解析：先在「门店档案」补全门店信息后再预览',
+  'slotport.historyTitle': '历史留痕（归档版本只增不删）',
+  'slotport.historyLine': 'v{version} · {time} · {actor}',
+  'slotport.historyActorFallback': '系统',
+
+  /* ---- PD-20 D-42：三行文案+人群字段编辑（随上传一并入待审） ---- */
+  'slotport.copyFieldsTitle': '文案与人群（选填 · 随下次上传一并入待审）',
+  'slotport.fieldTitleMain': '主标题（≤12 字）',
+  'slotport.fieldTitleSub': '副标题（≤20 字）',
+  'slotport.fieldCta': 'CTA 按钮字（2–4 字）',
+  'slotport.fieldAudience': '可见人群',
+  'slotport.fieldPriority': '优先级（0–999，多物料留口）',
+  /* 注：人群名从现行档位表注册名「注册用户」（更名零残留纪律 89.1；「微光」旧名禁入端口文案） */
+  'slotport.audienceAll': '全量可见',
+  'slotport.audienceAnon': '仅未登录',
+  'slotport.audienceFree': '仅注册用户档',
+  'slotport.audienceAnonFree': '未登录 + 注册用户档',
+
   /* ---- OP-03（端口批收尾片 4）：P2-4 假保存拦截/按钮态/未确认章 + P3-2 双列 ---- */
   'copyport.leaveConfirm': '有未确认变更，离开将丢失',
   'copyport.unsavedCta': '未确认变更 {n} · 复核并保存',

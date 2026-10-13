@@ -44,6 +44,7 @@ import { WAlert, WDanger, WcLog, WcPorts, WcPub, type WcPubStage } from '../comp
 import { errMsg, fmtDateTime } from '../components/staff-admin/format';
 import { Btn, numStyle, toast, ToasterMount } from '../components/staff-admin/ui';
 import { cadm } from '../copy/consoleAdmin';
+import { cp } from '../copy/copyPort';
 import { CONSOLE_PORT_META, type ConsolePortKey } from './consolePortsMeta';
 import { ConsoleSearch } from './ConsoleSearch';
 import { useMerchantRole } from '../lib/roles';
@@ -215,7 +216,7 @@ type Trpc = PhiliaClient['trpc'];
 type SlotListOut = Awaited<ReturnType<Trpc['slotPort']['list']['query']>>;
 
 function SlotPublishStrip() {
-  const { trpc } = usePhiliaClient();
+  const { trpc, queryClient } = usePhiliaClient();
   // 同 SlotPortBody 同键（['slotPort','list']）→ 共享缓存零加倍请求
   const listQuery = useQuery({
     queryKey: ['slotPort', 'list'],
@@ -233,12 +234,35 @@ function SlotPublishStrip() {
         ? 'published'
         : 'draft';
 
+  /* D-41（PD-20 修假回滚）：回滚钮接真 slotPort.revert——目标=最近一次上线且可回退的槽
+     （live.actedAt 最新；可回退=有 live 且非 pending 版本数 ≥2，与 SlotCard canRevert 同口径）；
+     三段式胶囊观感保留不拆；无可回退槽=置灰；失败 toast 明文 */
+  const [rollingBack, setRollingBack] = useState(false);
+  const rollbackTarget = slots
+    .filter((s) => s.live !== null && s.totalVersions - s.pending.length >= 2)
+    .sort((a, b) => new Date(b.live!.actedAt ?? b.live!.createdAt).getTime() - new Date(a.live!.actedAt ?? a.live!.createdAt).getTime())[0] ?? null;
+  const onRollback = () => {
+    if (!rollbackTarget) return;
+    void (async () => {
+      setRollingBack(true);
+      try {
+        await trpc.slotPort.revert.mutate({ slotKey: rollbackTarget.slotKey });
+        toast(cp('slotport.revertedToast'));
+        await queryClient.invalidateQueries({ queryKey: ['slotPort'] });
+      } catch (e) {
+        toast(`${cp('slotport.revertFail')}：${errMsg(e)}`, 'error');
+      } finally {
+        setRollingBack(false);
+      }
+    })();
+  };
+
   return (
     <section className="wsk-card" data-testid="console-pub-strip">
       <WcPub
         stage={stage}
-        onRollback={() => undefined}
-        rollbackDisabled
+        onRollback={onRollback}
+        rollbackDisabled={rollingBack || !rollbackTarget}
         testId="console-pub"
       />
       <p className="wsk-note mt-2.5">{cadm('cadm.pubNote')}</p>

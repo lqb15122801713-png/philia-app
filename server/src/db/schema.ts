@@ -3372,8 +3372,19 @@ export const slotContents = sqliteTable(
     slotKey: text('slot_key').notNull(),
     /** 槽内版本（每槽自增，种子=1） */
     version: integer('version').notNull(),
-    /** 内容 JSON：{ url: string|null, alt: string } */
-    contentJson: text('content_json', { mode: 'json' }).$type<{ url: string | null; alt: string }>().notNull(),
+    /** 内容 JSON：{ url: string|null, alt: string } + PD-20 D-42 扩（可选）：
+        title_main/title_sub/cta_text（三行文案）/ audience（all|anon|free|anon_free）/ priority */
+    contentJson: text('content_json', { mode: 'json' })
+      .$type<{
+        url: string | null;
+        alt: string;
+        title_main?: string;
+        title_sub?: string;
+        cta_text?: string;
+        audience?: 'all' | 'anon' | 'free' | 'anon_free';
+        priority?: number;
+      }>()
+      .notNull(),
     /** 状态：pending（待审） | live（上线） | archived（历史版） */
     status: text('status').notNull().default('pending'),
     /** 创建/操作人用户 ID -> users.id（上传人） */

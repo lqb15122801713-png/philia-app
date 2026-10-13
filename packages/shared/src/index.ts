@@ -24,7 +24,7 @@ export { safeUuid } from './lib/safeUuid';
 // 文案端口覆盖层（端口批片 B · CJ-1002-01）：端口值→码内默认 fallback；代理包装+拉取器
 export { setCopyOverrides, copyOverrideOf, withCopyOverrides, CopyOverridesLoader } from './copyOverrides';
 // 展示槽位覆盖层（端口批片 C · CJ-1002-01）：槽位 live 值→码内默认 fallback
-export { setSlotContents, slotContentOf, resolveSlotUrl, SlotContentLoader } from './slotContents';
+export { setSlotContents, slotContentOf, resolveSlotUrl, slotPreviewState, SlotContentLoader } from './slotContents';
 export type { SlotContent } from './slotContents';
 // 画布布局覆盖层（端口批收尾片 3）：published 布局→注册表默认序 fallback；预览探针+实时 patch
 export {

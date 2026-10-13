@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-13T02:47:40.665Z；键数=4221；归屏率=97.4%（未归屏 109）
+ * 生成时间口径：2026-10-13T05:46:07.851Z；键数=4244；归屏率=96.7%（未归屏 141）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -3963,169 +3963,169 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "home.casesMore",
   "domain": "home",
   "text": "每日更新 ›",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.casesTitle",
   "domain": "home",
   "text": "店里今天的故事",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.caseTitle",
   "domain": "home",
   "text": "{pet}的{service}日记",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.entryBoarding",
   "domain": "home",
   "text": "预约寄养",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.entryBoardingNote",
   "domain": "home",
   "text": "按晚 · 疫苗核验",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.entryGrooming",
   "domain": "home",
   "text": "预约洗澡美容",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.idFallback",
   "domain": "home",
   "text": "菲丽亚宠友",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.idJoin",
   "domain": "home",
   "text": "开通会员 ›",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.liveEta",
   "domain": "home",
   "text": "预计 {time} 完成",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.liveTag",
   "domain": "home",
   "text": "LIVE · 洗护进行中",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.liveViewAll",
   "domain": "home",
   "text": "查看全程 ›",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.memberCode",
   "domain": "home",
   "text": "会员码 ›",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.openMemberClaim",
   "domain": "home",
   "text": "开通会员，买商品返回馈金",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.openMemberSub",
   "domain": "home",
   "text": "付费档返 {pcts}%，次月到账",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.panelEntrySub",
   "domain": "home",
   "text": "选择门店、服务和时间",
-  "screen": "客户·Philia 爪 / 客户·首页",
-  "position": "HomeBookingPanel 组件内文案（跨屏共用件，各屏组同列）"
+  "screen": "客户·Philia 爪",
+  "position": "HomeBookingPanel 组件内文案"
  },
  {
   "key": "home.panelEntryTitle",
   "domain": "home",
   "text": "预约洗护",
-  "screen": "客户·Philia 爪 / 客户·首页",
-  "position": "HomeBookingPanel 组件内文案（跨屏共用件，各屏组同列）"
+  "screen": "客户·Philia 爪",
+  "position": "HomeBookingPanel 组件内文案"
  },
  {
   "key": "home.passStripPost",
   "domain": "home",
   "text": " 次 · 到店出示会员码",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.passStripPre",
   "domain": "home",
   "text": "次卡共剩 ",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.petsEmpty",
   "domain": "home",
   "text": "还没有毛孩子档案，去添加 TA 吧",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.petsLoadFail",
   "domain": "home",
   "text": "毛孩子加载失败",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.petsTitle",
   "domain": "home",
   "text": "我的毛孩子",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.preprowDone",
   "domain": "home",
   "text": "已完成",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.preprowDoneAt",
   "domain": "home",
   "text": "{time} 已完成",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.preprowTitle",
   "domain": "home",
   "text": "消毒备台 · 一客一消",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.pwaInstallAction",
@@ -4159,64 +4159,71 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "home.rebateBalanceLine",
   "domain": "home",
   "text": "余额 {amt} · 每月 {day} 日到账",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.rebateLabel",
   "domain": "home",
   "text": "回馈金",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.rebateLedger",
   "domain": "home",
   "text": "回馈金账本",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.ringArrive",
   "domain": "home",
   "text": "{month} 月 {day} 日到账",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.ringPeriod",
   "domain": "home",
   "text": "本期已攒回馈金 · 周期 {start} – {end}",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.ringRule",
   "domain": "home",
   "text": "买商品的 {pct}%，次月回到这里。",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "home.slotPreviewBadge",
+  "domain": "home",
+  "text": "预览中",
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.statsDays",
   "domain": "home",
   "text": "陪伴天数",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.statsServices",
   "domain": "home",
   "text": "服务次数",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "home.statsSpend",
   "domain": "home",
   "text": "累计消费",
-  "screen": "客户·首页",
-  "position": "HomePage 页面内文案"
+  "screen": null,
+  "position": "未在页面调用点命中（home 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "invt.add",
@@ -11681,9 +11688,100 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "CopyConfigPage 页面内文案"
  },
  {
+  "key": "slotport.audienceAll",
+  "domain": "merchant:copyPort",
+  "text": "全量可见",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "slotport.audienceAnon",
+  "domain": "merchant:copyPort",
+  "text": "仅未登录",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "slotport.audienceAnonFree",
+  "domain": "merchant:copyPort",
+  "text": "未登录 + 注册用户档",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "slotport.audienceFree",
+  "domain": "merchant:copyPort",
+  "text": "仅注册用户档",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "slotport.copyFieldsTitle",
+  "domain": "merchant:copyPort",
+  "text": "文案与人群（选填 · 随下次上传一并入待审）",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
   "key": "slotport.empty",
   "domain": "merchant:copyPort",
   "text": "槽位注册表为空（种子未落库）",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "slotport.fieldAudience",
+  "domain": "merchant:copyPort",
+  "text": "可见人群",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "slotport.fieldCta",
+  "domain": "merchant:copyPort",
+  "text": "CTA 按钮字（2–4 字）",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "slotport.fieldPriority",
+  "domain": "merchant:copyPort",
+  "text": "优先级（0–999，多物料留口）",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "slotport.fieldTitleMain",
+  "domain": "merchant:copyPort",
+  "text": "主标题（≤12 字）",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "slotport.fieldTitleSub",
+  "domain": "merchant:copyPort",
+  "text": "副标题（≤20 字）",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "slotport.historyActorFallback",
+  "domain": "merchant:copyPort",
+  "text": "系统",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "slotport.historyLine",
+  "domain": "merchant:copyPort",
+  "text": "v{version} · {time} · {actor}",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "slotport.historyTitle",
+  "domain": "merchant:copyPort",
+  "text": "历史留痕（归档版本只增不删）",
   "screen": "商家·槽位端口",
   "position": "SlotPortPage 页面内文案"
  },
@@ -11772,6 +11870,34 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "SlotPortPage 页面内文案"
  },
  {
+  "key": "slotport.previewClose",
+  "domain": "merchant:copyPort",
+  "text": "关闭预览",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "slotport.previewCta",
+  "domain": "merchant:copyPort",
+  "text": "预览此版",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "slotport.previewNoStore",
+  "domain": "merchant:copyPort",
+  "text": "预览店锚未解析：先在「门店档案」补全门店信息后再预览",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "slotport.previewPanelTitle",
+  "domain": "merchant:copyPort",
+  "text": "预览此版（仅本人可见 · 真用户仍见当前上线版）",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
   "key": "slotport.publishCta",
   "domain": "merchant:copyPort",
   "text": "点上线",
@@ -11803,13 +11929,48 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "slotport.revertedToast",
   "domain": "merchant:copyPort",
   "text": "已回退上一版，客户端新渲染即生效",
-  "screen": "商家·槽位端口",
-  "position": "SlotPortPage 页面内文案"
+  "screen": "商家·开发者管理端 / 商家·槽位端口",
+  "position": "ConsolePage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "slotport.revertFail",
   "domain": "merchant:copyPort",
   "text": "回退失败，请稍后再试",
+  "screen": "商家·开发者管理端 / 商家·槽位端口",
+  "position": "ConsolePage 页面内文案（跨屏共用件，各屏组同列）"
+ },
+ {
+  "key": "slotport.unpublishConfirm1",
+  "domain": "merchant:copyPort",
+  "text": "确认紧急下线 {slot}？下线后客户端立即回落品牌默认图。",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "slotport.unpublishConfirm2",
+  "domain": "merchant:copyPort",
+  "text": "再次确认：紧急下线 {slot}。历史版本留痕不删，之后可上传新版再上线恢复。",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "slotport.unpublishCta",
+  "domain": "merchant:copyPort",
+  "text": "紧急下线",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "slotport.unpublishedToast",
+  "domain": "merchant:copyPort",
+  "text": "已紧急下线，客户端回落品牌默认图",
+  "screen": "商家·槽位端口",
+  "position": "SlotPortPage 页面内文案"
+ },
+ {
+  "key": "slotport.unpublishFail",
+  "domain": "merchant:copyPort",
+  "text": "紧急下线失败，请稍后再试",
   "screen": "商家·槽位端口",
   "position": "SlotPortPage 页面内文案"
  },
@@ -21792,7 +21953,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "ntf.title",
   "domain": "notify",
   "text": "消息",
-  "screen": "客户·我的 / 客户·消息 / 客户·首页",
+  "screen": "客户·我的 / 客户·消息",
   "position": "MePage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
