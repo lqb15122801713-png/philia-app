@@ -1,0 +1,26 @@
+D-35 夹具复用：今日真 frozen 日结单 01M4SKVSD2RW600HCBZ9BY9873（book=125380 分）
+✅ 夹具就绪（寄养单+两改约历史+纯 pending 客户）
+✅ 店主登录
+✅ T2 班次区冻结明示徽（与「开班中」并存）+D-29 明示卡同帧（口径零改动） —— 今日已日结 · 账目已冻结 | 今日已日结冻结  账面=冻结快照停涨（账面 ¥1253.80 · 实点 ¥1253.80）；现在起新开的单自动计入次日班
+shot: E:\KIMI code\tmp\canvas-scan\evidence8\shots\T2-shift-frozen-badge.png
+✅ 员工登录（阿强·groomer）
+✅ T3a /today 寄养待办透出（旺财·今日寄养照护「去打卡 ›」）
+✅ T3a 去打卡=可达正确旅程（寄养打卡页渲染，核销前置/入住登记段在场，非不可用卡） —— ‹ 寄养打卡 第 1 晚 · 共 2 晚 在店寄养 · 标准间寄养（犬）  旺财  金毛寻回犬 · 28.5kg · 1
+shot: E:\KIMI code\tmp\canvas-scan\evidence8\shots\T3a-boarding-checkin-reachable.png
+✅ T3b 无实体=人话「当前不可打卡」+可回退（页面零 404/403 裸字样） —— 当前不可打卡  该寄养单不存在、已完结或不归你照护——回任务台可继续其它工作。  返回任务台
+shot: E:\KIMI code\tmp\canvas-scan\evidence8\shots\T3b-boarding-unavailable.png
+✅ 客户登录（示例客户）
+✅ T4a 同日改约=时刻点单箭（恰好 1 枚 →，无改至无箭链） —— 10月13日 周二 14:00→10月13日 周二 16:00
+shot: E:\KIMI code\tmp\canvas-scan\evidence8\shots\T4a-reschedule-single-arrow.png
+✅ T4b 跨日寄养改约=「改至」分隔（区间箭 2 枚=两侧住宿区间；零拼接箭链） —— 10月13日 周二 → 10月15日 周四改至10月14日 周三 → 10月16日 周五
+shot: E:\KIMI code\tmp\canvas-scan\evidence8\shots\T4b-reschedule-range-gai-zhi.png
+✅ T6 配送槽位=写准注记（结算页可选/免运费/后期端口；原「——」「即将点亮」退役） —— 配送方式 · 结算页可选  快递 / 同城 / 自提 · 内测期免运费 · 时效属后期端口  ›
+shot: E:\KIMI code\tmp\canvas-scan\evidence8\shots\T6-mall-delivery-slot.png
+✅ T1c 客户角色回归：会话卡「进入首页」照存（软口只摘错端角色）
+✅ T5 无参默认签=第一个有内容的签（pending 单 → 待确认激活+单卡在屏） —— activeTab=待确认1
+shot: E:\KIMI code\tmp\canvas-scan\evidence8\shots\T5-appointments-default-pending.png
+✅ T1a 员工种子：无「进入首页」软口 + 员工端明示卡（链接 :7203） —— http://localhost:7203/
+shot: E:\KIMI code\tmp\canvas-scan\evidence8\shots\T1a-staff-no-soft-bypass.png
+✅ T1b 店主种子：无「进入首页」软口 + 商家端明示卡（链接 :7202） —— http://localhost:7202/
+shot: E:\KIMI code\tmp\canvas-scan\evidence8\shots\T1b-merchant-no-soft-bypass.png
+SHOTS_ALL_GREEN
