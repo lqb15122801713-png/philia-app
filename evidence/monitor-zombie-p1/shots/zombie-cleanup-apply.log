@@ -1,0 +1,5 @@
+[d47] 白名单（演示/走测标记）+超 24h 未翻步：命中 1 单（白名单在册 in_service 共 3 单）
+  MZA12067 mzshotA12067 checkedInAt=2026-10-12T10:56:52.000Z note=【测试】wtshot 僵尸夹具A
+  ✓ MZA12067 → completed（留痕事件已发）
+[d47] 报告=E:\KIMI code\tmp\canvas-scan\evidence12\shots\zombie-cleanup-report.json
+[d47] DONE(applied)

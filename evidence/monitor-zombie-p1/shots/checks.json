@@ -1,0 +1,50 @@
+{
+  "checks": [
+    {
+      "name": "夹具：僵尸 A/B（白名单标）+真在服单落库",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "店主登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "J1a 异常待清桶=2 僵尸（真在服不入桶）",
+      "ok": true,
+      "detail": "异常待清 2"
+    },
+    {
+      "name": "J2 D-48 去处理=真跳该单可排障页（/monitor/<id> 监视墙在屏；离开 /monitor 目录）",
+      "ok": true,
+      "detail": "/monitor → /monitor/mzshotA12067"
+    },
+    {
+      "name": "J2 可回（返回 monitor 目录+异常待清桶仍在）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "J1b D-47 强制完成：completed 落库+留痕事件（by/forced/note/前后状态齐）",
+      "ok": true,
+      "detail": "status=completed ev=true"
+    },
+    {
+      "name": "J1c D-47 清淤脚本：dry-run 零写（A 仍 in_service）+apply 白名单收口（A completed）+真在服单不误伤（F 仍 in_service）",
+      "ok": true,
+      "detail": "A=in_service→completed F=in_service"
+    },
+    {
+      "name": "J1c 清后异常待清主占用归零（演示店=0，可解释）+真在服单留在主列表",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence12\\shots\\J1a-bucket-two-zombies.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence12\\shots\\J2-after-goto-monitor-detail.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence12\\shots\\J1b-force-complete-one.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence12\\shots\\J1c-bucket-clean-zero.png"
+  ]
+}

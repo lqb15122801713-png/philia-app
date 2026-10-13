@@ -1,0 +1,4 @@
+[rebate] 月度结算 period=2026-09 入账 0 行 / 0.00 元（批次 01M4TMRFDW3GCQ8H706CQNS218）
+[philia-server] 已启动: http://localhost:7200 （tRPC: /trpc/*, SSE: /api/events）
+/e/KIMI code/tools/node/npx: line 65:  1535 Segmentation fault         "$NODE_EXE" "$NPX_CLI_JS" "$@"
+[philia-server] 已启动: http://localhost:7200 （tRPC: /trpc/*, SSE: /api/events）
