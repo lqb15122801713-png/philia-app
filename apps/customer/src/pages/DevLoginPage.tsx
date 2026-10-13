@@ -50,29 +50,8 @@ const ROLE_LABEL: Record<string, string> = {
 }
 const roleLabel = (roles: string[]) => roles.map((r) => ROLE_LABEL[r] ?? r).join(' / ')
 
-/* ---- D-33（走查修复批）：种子登录按角色落端 ---- */
-type EndTarget = 'staff' | 'merchant'
-/* 员工端守卫口径=roles 含 staff（见 apps/staff RequireStaff）；groomer/frontdesk 为 staff 表
-   岗位名（种子「小美」挂 staff 行 role=frontdesk），一并计入防御未来 user_roles 扩展 */
-const STAFF_END_ROLES = new Set(['staff', 'groomer', 'frontdesk'])
-/* 商家端守卫口径=roles 含 merchant_owner / merchant_manager / merchant_clerk
-   （见 apps/merchant RequireMerchant） */
-const MERCHANT_END_ROLES = new Set(['merchant_owner', 'merchant_manager', 'merchant_clerk'])
-/** 本端（客户端）端口 → 各端端口映射：dev=7100，生产分端=7201（任务书 D-32 实证口径） */
-const END_PORT_MAP: Record<string, Record<EndTarget, string>> = {
-  '7100': { staff: '7102', merchant: '7101' },
-  '7201': { staff: '7203', merchant: '7202' },
-}
-/** 未知拓扑明示卡链接的兜底端口（生产拓扑 7203/7202）——仅出可点链接，不盲跳 */
-const END_PORT_FALLBACK: Record<EndTarget, string> = { staff: '7203', merchant: '7202' }
-const resolveEndTarget = (roles: string[]): EndTarget | null =>
-  roles.some((r) => STAFF_END_ROLES.has(r))
-    ? 'staff'
-    : roles.some((r) => MERCHANT_END_ROLES.has(r))
-      ? 'merchant'
-      : null
-const endTargetUrl = (port: string) =>
-  `${window.location.protocol}//${window.location.hostname}:${port}/`
+/* ---- D-33（走查修复批）：种子登录按角色落端；D-39 起判定/映射收口 lib/endGate 单源 ---- */
+import { END_PORT_FALLBACK, END_PORT_MAP, endTargetUrl, resolveEndTarget, type EndTarget } from '@/lib/endGate'
 
 export default function DevLoginPage() {
   const navigate = useNavigate()
