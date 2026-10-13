@@ -9598,9 +9598,13 @@ async function main(): Promise<void> {
     /* ---- 82.4 活动配置台账+互斥公示 ---- */
     const today82 = new Date();
     const ymd82 = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    /* PD-23 走测修批顺手件（基建时间雷报备）：startsAt 存的是 UTC 日界（T00:00:00Z），
+       夹具若钉「本地今日」则本地 00:00–08:00 窗口内 effectiveStatus=scheduled（未达 UTC 日界）误红；
+       钉昨日=任何时刻恒 active，断言目标（排期状态机懒算）不变。
+       生产侧「今日起租=UTC 日界非本地日界」语义=P2 候裁报备（本批不动 marketing.ts）。 */
     const promo82 = await trpcMutate<{ campaign: { id: string } }>('marketing.promoUpsert', {
       cookie: ownerCookie,
-      input: { type: 'full_minus', name: '满 200 减 20（验证件）', rulesJson: { thresholdFen: 20000, minusFen: 2000 }, startsAt: ymd82(today82), status: 'scheduled' },
+      input: { type: 'full_minus', name: '满 200 减 20（验证件）', rulesJson: { thresholdFen: 20000, minusFen: 2000 }, startsAt: ymd82(new Date(today82.getTime() - 24 * 3600 * 1000)), status: 'scheduled' },
     });
     const promoFuture = await trpcMutate<{ campaign: { id: string } }>('marketing.promoUpsert', {
       cookie: ownerCookie,
@@ -12126,28 +12130,30 @@ async function main(): Promise<void> {
     const boardingSvc103 = (await db.select().from(schema.services).where(
       and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'boarding'), eq(schema.services.active, true)),
     ).limit(1))[0]!;
-    /* 钉 15:00 整点档（30min 对齐闸；storeFuture=+8 日界工具） */
-    const d5 = storeFuture(5, 15, 0);
-    const d7 = storeFuture(7, 15, 0);
+    /* 钉 15:00 整点档（30min 对齐闸；storeFuture=+8 日界工具）；
+       钉程全部 ≤+6d（注册用户档提前预约上限=7 天，+7/+8 日钉会撞「最多可提前 7 天」400） */
+    const dA = storeFuture(4, 15, 0);
+    const dB = storeFuture(5, 15, 0);
+    const dC = storeFuture(6, 15, 0);
     const mkBoard = (s: Date, e: Date) => trpcMutate<{ id?: string; appointment?: { id: string } }>('appointment.create', {
       cookie: customerCookie,
       input: { storeId, petId: pet103.id, serviceId: boardingSvc103.id, type: 'boarding', scheduledStart: s, scheduledEnd: e, paymentMode: 'pay_at_store', medicalAuth: { agreed: true }, note: '【测试】PD-21 D-45 重叠夹具' },
     });
-    const firstB = await mkBoard(d5, d7);
+    const firstB = await mkBoard(dA, dB);
     const firstId = firstB.id ?? firstB.appointment?.id ?? null;
     check('103.1 D-45 首单可下（无重叠基线）', !!firstId, firstId);
-    /* 重叠（+6d→+8d 与 +5d→+7d 相交）：拒单+人话明文 */
-    const dupB = await asErr(mkBoard(storeFuture(6, 15, 0), storeFuture(8, 15, 0)));
+    /* 重叠 dup=[+4d18:00,+6d15:00) 与首单相交：拒单+人话明文 */
+    const dupB = await asErr(mkBoard(storeFuture(4, 18, 0), dC));
     check('103.1 D-45 重叠档期=拒单+人话（宠物名+原档期在明文）',
       dupB instanceof TrpcHttpError && dupB.httpStatus === 400 && dupB.message.includes('档期重叠') && dupB.message.includes('撞撞'),
       dupB && dupB.message);
-    /* 首尾相接（+7d→+8d，start=首单 end）不算重叠：[start,end) 右开区间口径 */
-    const adjB = await mkBoard(d7, storeFuture(8, 15, 0));
+    /* 首尾相接 adj=[+5d,+6d) 起点=首单终点不咬（[start,end) 右开区间口径） */
+    const adjB = await mkBoard(dB, dC);
     check('103.1 D-45 首尾相接不重叠=放行（[start,end) 右开区间）', !!(adjB.id ?? adjB.appointment?.id), adjB.id ?? adjB.appointment?.id);
     /* 取消首单后原重叠档期可下（历史/取消单不挡） */
     await trpcMutate('appointment.cancel', { cookie: customerCookie, input: { appointmentId: firstId!, reason: '【测试】D-45 取消放行验证' } });
     /* 取消首单后原档期（+5d→+7d）可再下（cancelled 不占闸；不与 adjB +7d→+8d 相咬） */
-    const afterCancelB = await mkBoard(d5, d7);
+    const afterCancelB = await mkBoard(dA, dB);
     check('103.1 D-45 取消后同档期可下（cancelled 不占闸）', !!(afterCancelB.id ?? afterCancelB.appointment?.id), afterCancelB.id ?? afterCancelB.appointment?.id);
 
     /* ---- 103.2 D-46：商城订单详情读口 ---- */

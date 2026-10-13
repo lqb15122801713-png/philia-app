@@ -7,7 +7,9 @@
  * - 白名单=note 命中演示/走测标记（缺省 '%【测试】%' / '%演示单%' / 'wtshot%' 闸具前缀），
  *   真实经营单永不命中——军规①真慢单不误伤的码内落地；
  * - **dry-run 缺省**（只列不调）；`--apply` 才逐单调端点；可重复跑（已 completed 幂等安全）；
- * - 报告 `--report <path>` 写 JSON（命中单号/时刻/前后状态/结果）。
+ * - 报告 `--report <path>` 写 JSON（命中单号/时刻/前后状态/结果）；
+ * - PD-23 D-49：口令门开启时 `BETA_GATE_CODE` 环境变量随 dev-login 递码（缺码 401/错码 403
+ *   明文诊断退出，不再运维临补）。
  *
  * 禁区（写死）：不物理删行；不碰钱域；不翻六步逐行；不越白名单。
  *
@@ -58,7 +60,9 @@ async function main() {
   };
 
   if (APPLY && zombies.length > 0) {
-    /* 运维落账=走真端点（单源留痕）：dev-login 取店主会话 → forceCompleteStale 逐单 */
+    /* 运维落账=走真端点（单源留痕）：dev-login 取店主会话 → forceCompleteStale 逐单；
+       PD-23 D-49：BETA_GATE_CODE 硬化入仓（合部候裁⑥）——内测口令门开启时口令随 dev-login
+       一并递，缺码 401/错码 403 明文可诊断退出（不再运维临补） */
     const ownerRow = await db
       .select({ id: schema.users.id })
       .from(schema.users)
@@ -67,12 +71,18 @@ async function main() {
       .limit(1)
       .then((r) => r[0]);
     if (!ownerRow) throw new Error('缺 merchant_owner 种子用户');
+    const gateCode = process.env.BETA_GATE_CODE;
     const login = await fetch(`${API}/api/auth/dev-login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ userId: ownerRow.id }),
+      body: JSON.stringify({ userId: ownerRow.id, ...(gateCode ? { code: gateCode } : {}) }),
     });
-    if (!login.ok) throw new Error(`dev-login 失败：HTTP ${login.status}`);
+    if (!login.ok) {
+      const j = await login.json().catch(() => null);
+      throw new Error(
+        `dev-login 失败：HTTP ${login.status}（${j?.error ?? 'unknown'}）——内测口令门在跑时请带 BETA_GATE_CODE 环境变量再跑`,
+      );
+    }
     const cookie = (login.headers.get('set-cookie') ?? '').split(';')[0]!;
     for (const r of zombies) {
       const res = await fetch(`${API}/trpc/appointment.forceCompleteStale`, {

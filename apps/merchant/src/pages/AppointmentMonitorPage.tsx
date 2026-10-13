@@ -224,6 +224,30 @@ export default function AppointmentMonitorPage() {
     onError: (err) => toast.error(err instanceof Error ? err.message : '打标失败，请稍后再试'),
   });
 
+  /* ---- PD-23 D-49：强制完成入口（异常待清详情语境稳定可见可点；端点复用 appointment.forceCompleteStale
+     单源留痕——禁双轨另造；闸=in_service+≥24h 未翻步，与监控页读时分桶同口径） ---- */
+  const ZOMBIE_MS_49 = 24 * 3600 * 1000;
+  const isStaleZombie =
+    appt?.status === 'in_service' &&
+    Date.now() - new Date(appt.checkedInAt ?? appt.scheduledStart).getTime() >= ZOMBIE_MS_49;
+  const [forcing49, setForcing49] = useState(false);
+  const forceComplete49 = () => {
+    if (!aid || !window.confirm(oc('mon.forceCompleteConfirm'))) return;
+    void (async () => {
+      setForcing49(true);
+      try {
+        await trpc.appointment.forceCompleteStale.mutate({ appointmentId: aid, note: oc('mon.forceCompleteNote') });
+        toast.success(oc('mon.forceCompleteToast'));
+        await queryClient.invalidateQueries({ queryKey: ['appointment', 'get', aid] });
+        await queryClient.invalidateQueries({ queryKey: ['serviceStep', 'list', aid] });
+      } catch (e) {
+        toast.error(`${oc('mon.forceCompleteFail')}：${e instanceof Error ? e.message : ''}`);
+      } finally {
+        setForcing49(false);
+      }
+    })();
+  };
+
   /* ---------------- 渲染 ---------------- */
 
   const title = `${pet?.name ?? '宠物'} · ${service?.name ?? (isBoarding ? '寄养服务' : '洗护服务')} · 实时监控`;
@@ -397,6 +421,16 @@ export default function AppointmentMonitorPage() {
                 </QuietButton>
               </div>
             </div>
+
+            {/* PD-23 D-49：异常待清僵尸单（in_service+≥24h 未翻步）快捷区出「强制完成」——
+                稳定可见可点（第7轮「详情未见」销项）；端点复用 forceCompleteStale 单源留痕 */}
+            {isStaleZombie ? (
+              <div className="px-[17px] pb-4">
+                <QuietButton testid="monitor-force-complete" disabled={forcing49} onClick={forceComplete49}>
+                  {forcing49 ? '处理中…' : oc('mon.forceCompleteCta')}
+                </QuietButton>
+              </div>
+            ) : null}
 
             {/* 联系员工：就地展开员工信息小卡（staffList 真值，无电话字段不编造） */}
             {staffOpen ? (
