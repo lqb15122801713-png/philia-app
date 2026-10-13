@@ -1,0 +1,13 @@
+✅ G0 员工登录（小美）
+✅ G1a staff 直输 /home → 拦（宠友业务壳零渲染）+明示员工端+链接 :7203 —— 该账号是员工账号  客户端（宠友壳）没有员工工作台，请前往员工端登录使用；当前会话已登录，点下方链接直达。  前往员工端 | http://localhost:7203/
+shot: E:\KIMI code\tmp\canvas-scan\evidence9\shots\G1-staff-home-blocked.png
+✅ G1b 汇入点同闸（/ 与乱路径 → /home 闸同拦，零滑入）
+✅ G2 店主登录
+✅ G2 merchant 直输 /home → 拦+明示商家端+链接 :7202 —— 该账号是商家账号  客户端（宠友壳）没有商家后台，请前往商家端登录使用；当前会话已登录，点下方链接直达。  前往商家端  | http://localhost:7202/
+shot: E:\KIMI code\tmp\canvas-scan\evidence9\shots\G2-merchant-home-blocked.png
+✅ G3 客户登录（示例客户）
+✅ G3 customer /home 正常可达（业务壳在屏+闸卡零误拦）
+shot: E:\KIMI code\tmp\canvas-scan\evidence9\shots\G3-customer-home-pass.png
+✅ G4 D-36 守卫：员工种子仍无「进入首页」软口+明示出口卡（不回退）
+shot: E:\KIMI code\tmp\canvas-scan\evidence9\shots\G4-d36-guard-holds.png
+SHOTS_ALL_GREEN
