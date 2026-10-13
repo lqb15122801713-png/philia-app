@@ -21,6 +21,11 @@ const MONITOR_COPY_TABLE = {
   'mon.alertOverdueLine': '{pet} · 寄养超期 {n} 天未退',
   'mon.eta': '预计完成 {t}',
   'mon.stuck': '本步耗时已超 45 分钟',
+  /* ---- PD-21 D-44：≥24h 僵尸出列（异常待清桶；45min 亮红保留） ---- */
+  'mon.zombieChip': '异常待清 {n}',
+  'mon.zombieAlertLine': '异常待清 {n} 单：服务中超 24 小时未翻步，点我定位排障',
+  'mon.zombieSectionNote': '异常待清：以下服务单超 24 小时未翻步，已从默认「服务中」分离——请到店核实后翻步、完成或联系店长处理',
+  'mon.zombieBadge': '异常待清',
 
   /* ---- 单约监控 /monitor/:id ---- */
   'mon.parentViewTitle': '家长端视角',

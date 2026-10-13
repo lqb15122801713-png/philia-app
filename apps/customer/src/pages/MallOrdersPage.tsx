@@ -192,6 +192,12 @@ function OrderCard({
     /* U1-G 换肤：订单卡=U1-B 细线卡（ring + 近零影，去 shadow-card）
        U4-D3 对齐试样 09 .order：卡 padding 14/16、缩略图 52×52、价格墨色等宽 */
     <div className="u1-card px-4 py-3.5">
+      {/* PD-21 D-46：卡主体=详情链接（头部/单号/商品/合计/状态区入 Link；操作钮留 Link 外不套嵌） */}
+      <Link
+        to={`/mall/orders/${order.id}`}
+        data-testid={`order-detail-link-${order.id}`}
+        className="block transition-transform duration-120 ease-philia-spring active:scale-[0.99]"
+      >
       {/* 头部：门店 + 状态（片 3：配送方式徽并显） */}
       <div className="flex items-center justify-between">
         <p className="flex items-center gap-1.5 text-body-sm font-semibold">
@@ -261,9 +267,10 @@ function OrderCard({
           <CK k="mall.orderReceived">{mlc('mall.orderReceived', { time: fmtOrderTime(order.updatedAt) })}</CK>
         </p>
       ) : null}
+      </Link>
 
       {/* 操作区（试样 .o-act：顶部 hairline 分隔 + 右对齐胶囊钮 12px/600；
-          pri=柠檬底墨字 / sec=纸面细线 ring） */}
+          pri=柠檬底墨字 / sec=纸面细线 ring；D-46：操作钮留详情 Link 外，点击不进详情） */}
       {order.status === 'pending' ? (
         <div className="mt-3 flex justify-end gap-2 border-t border-[rgba(59,46,36,.06)] pt-[11px]">
           <button

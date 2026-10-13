@@ -55,7 +55,7 @@ const STEP_POLL_MS = 15_000;
 /** 单步超 45 分钟亮红口径（UX-02 §四 W-04） */
 const STUCK_MS = 45 * 60_000;
 
-type FilterKey = 'all' | 'service' | 'boarding';
+type FilterKey = 'all' | 'service' | 'boarding' | 'zombie';
 
 /* ---- 晚数口径（与 BoardingPage / 服务端 boardingNightDates 同：本地日历日差） ---- */
 const DAY_MS = 24 * 3600 * 1000;
@@ -246,21 +246,44 @@ export default function MonitorHubPage() {
   const failed = inServiceQ.isError || inBoardingQ.isError || boardQ.isError;
 
   const today = localDayKey(new Date());
-  const visibleService = filter === 'boarding' ? [] : serviceItems;
-  const visibleBoarding = filter === 'service' ? [] : board;
-  const totalVisible = visibleService.length + visibleBoarding.length;
-
-  /* ---------------- M2 预警卡聚合（超 45 分钟未翻步 + 超期寄养；点击定位单卡深链） ---------------- */
 
   // 当前时刻（react-hooks/purity：组件内不调 Date.now，照 DashboardPage `new Date()` 先例；
   // 洗护卡 15s 轮询驱动重渲染，分钟级口径足够）
   const nowTs = new Date().getTime();
+
+  /* ---------------- PD-21 D-44：≥24h 未翻步僵尸出列（开口②写死 24h） ----------------
+     判定=checkedInAt（in_service 必非空）兜底 scheduledStart；出列=从默认「服务中」计数/主列表
+     分离进「异常待清」桶（不自动 completed 不误伤真慢单——军规③选型=标异常待清，回执报备）；
+     45min 亮红口径保留不动。禁只改文案：列表/计数/预警卡三处同步分离。 */
+  const ZOMBIE_MS = 24 * 3600 * 1000;
+  const isZombie24h = (it: ListForStoreItem) => {
+    const base = it.checkedInAt ?? it.scheduledStart;
+    return nowTs - new Date(base).getTime() > ZOMBIE_MS;
+  };
+  const serviceFresh = serviceItems.filter((it) => !isZombie24h(it));
+  const serviceZombie = serviceItems.filter(isZombie24h);
+
+  const visibleService = filter === 'boarding' ? [] : filter === 'zombie' ? serviceZombie : serviceFresh;
+  const visibleBoarding = filter === 'service' || filter === 'zombie' ? [] : board;
+  const totalVisible = visibleService.length + visibleBoarding.length;
+
+  /* ---------------- M2 预警卡聚合（超 45 分钟未翻步 + 超期寄养；点击定位单卡深链） ---------------- */
+
   const stuckMinByAid = new Map<string, number>();
   for (const it of serviceItems) {
     const elapsed = activeStepElapsedMin(stepsByAid.get(it.id), nowTs);
     if (elapsed !== null && elapsed * 60_000 > STUCK_MS) stuckMinByAid.set(it.id, elapsed);
   }
   const alertItems: WAlertItem[] = [
+    /* D-44：僵尸聚合预警置顶（点击=切「异常待清」滤签排障） */
+    ...(serviceZombie.length > 0
+      ? [{
+          key: 'zombie-24h',
+          text: oc('mon.zombieAlertLine', { n: serviceZombie.length }),
+          count: serviceZombie.length,
+          onClick: () => setFilter('zombie'),
+        }]
+      : []),
     ...serviceItems
       .filter((it) => stuckMinByAid.has(it.id))
       .map((it) => ({
@@ -300,11 +323,13 @@ export default function MonitorHubPage() {
   return (
     <MainScaffold
       title={oc('mon.hubTitle')}
-      sub={oc('mon.hubSub', { a: serviceItems.length, b: board.length })}
+      sub={oc('mon.hubSub', { a: filter === 'zombie' ? serviceZombie.length : serviceFresh.length, b: board.length })}
       actions={
         <>
-          {chip('service', `服务中 ${serviceItems.length}`)}
+          {chip('service', `服务中 ${serviceFresh.length}`)}
           {chip('boarding', `寄养 ${board.length}`)}
+          {/* D-44：异常待清滤签（有僵尸才出；计数=出列后的僵尸数） */}
+          {serviceZombie.length > 0 ? chip('zombie', oc('mon.zombieChip', { n: serviceZombie.length })) : null}
         </>
       }
       testid="monitor-hub-page"
@@ -347,6 +372,13 @@ export default function MonitorHubPage() {
           </div>
         </div>
       ) : (
+        <>
+          {/* D-44：异常待清桶注记（滤签=zombie 时在列头明说口径） */}
+          {filter === 'zombie' ? (
+            <p className="mb-3 rounded-control bg-[#F4EDDC] px-4 py-2.5 text-caption-xs font-semibold text-ink" data-testid="mon-zombie-note">
+              {oc('mon.zombieSectionNote')}
+            </p>
+          ) : null}
         <div className="wsk grid grid-cols-1 gap-3.5 md:grid-cols-2 xl:grid-cols-3">
           {/* 洗护卡（listForStore 已按预约开始时间升序）；45 分钟亮红=当前步耗时超阈 */}
           {visibleService.map((it) => {
@@ -365,7 +397,7 @@ export default function MonitorHubPage() {
               >
                 <CardPhotoHead
                   thumbUrl={photo?.thumbUrl ?? photo?.url ?? null}
-                  badge="服务中 · 实时"
+                  badge={isZombie24h(it) ? oc('mon.zombieBadge') : '服务中 · 实时'}
                   tone="service"
                 />
                 <div className="p-[12px_14px]">
@@ -442,6 +474,7 @@ export default function MonitorHubPage() {
               );
             })}
         </div>
+        </>
       )}
     </MainScaffold>
   );

@@ -77,6 +77,7 @@ const ROUTES = [
   { app: 'customer', path: '/mall/checkout', anchors: ['确认订单', '没有待结算'], note: 'B3 修复路由' },
   { app: 'customer', path: '/mall/orders', anchors: ['订单'], note: 'A2 白屏群' },
   { app: 'customer', path: '/mall/orders/', anchors: ['订单'], note: '尾斜杠变体' },
+  { app: 'customer', path: `/mall/orders/${INVALID_ID}`, anchors: ['订单'], serverDep: true, note: 'PD-21 D-46 订单详情（无效 id=人话异常态出口）' },
   { app: 'customer', path: '/booking', anchors: ['预约洗护'], expectPath: '/booking/grooming', note: 'B9.3 中间层 hub 退役直达单屏' },
   { app: 'customer', path: `/booking/success?aid=${APPT_ID}`, anchors: ['返回首页', '查看我的预约', '缺少预约参数'], serverDep: true, note: 'W1-D1：交易成功页双出口+返回键闭环' },
   { app: 'customer', path: `/booking/success/?aid=${APPT_ID}`, anchors: ['返回首页', '查看我的预约', '缺少预约参数'], serverDep: true, note: '尾斜杠变体' },

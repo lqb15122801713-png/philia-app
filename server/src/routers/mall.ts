@@ -838,6 +838,24 @@ export const mallRouter = router({
   }),
 
   /**
+   * 6c. orderDetail（customer 本人 · PD-21 D-46）：订单详情读口（列表卡进详情/深链共用）。
+   * 仅本人（不存在/跨人同 NOT_FOUND「订单不存在」不透存在性，assertAppointmentAccess 同口径）；
+   * 返回 orders 全列+storeName（与 listMyOrders 同形）。
+   */
+  orderDetail: customerProcedure
+    .input(z.object({ orderId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const order = await getOrderOrThrow(ctx.db, input.orderId);
+      if (order.customerId !== ctx.user.id) throw new TRPCError({ code: 'NOT_FOUND', message: '订单不存在' });
+      const store = await ctx.db
+        .select({ name: schema.stores.name })
+        .from(schema.stores)
+        .where(eq(schema.stores.id, order.storeId))
+        .get();
+      return { order, storeName: store?.name ?? null };
+    }),
+
+  /**
    * 6b. cancelOrder（customer 本人 · v1.1 P0-8）：待支付订单取消。
    * 仅本人 + 仅 status=pending；事务内（withOrderWriteLock 串行）逐商品回补
    * stock → status=cancelled → emitEvent(store:{storeId}, order.cancelled)。
