@@ -12,9 +12,11 @@
 import { withCopyOverrides } from '@philia/shared';
 
 const BOARDING_COPY_TABLE = {
-  /* ---- 异常态（无法查看 / 非寄养单） ---- */
-  'boarding.error.title': '无法查看该寄养单',
-  'boarding.error.fallbackDesc': '预约不存在或无权查看',
+  /* ---- 异常态（无法查看 / 非寄养单） ----
+     走查P2修复批 D-37（老板裁：内测明示够收口·禁裸 404/403）：明说「当前不可打卡」+人话原因；
+     原透出技术错误文（error.message）退役 */
+  'boarding.error.title': '当前不可打卡',
+  'boarding.error.fallbackDesc': '该寄养单不存在、已完结或不归你照护——回任务台可继续其它工作。',
   'boarding.error.notBoarding': '该预约不是寄养单',
 
   /* ---- 核销前置引导（未核销不可入住登记） ---- */

@@ -86,6 +86,15 @@ export default function DevLoginPage() {
   const [error, setError] = useState<string | null>(null)
   /* D-33：未知端口拓扑时的明示出口卡（已登录但本端无对应工作台） */
   const [endHint, setEndHint] = useState<{ target: EndTarget; url: string } | null>(null)
+  /* D-36（走查P2修复批）：员工/商家角色在客户端零软绕——会话卡「进入首页」对该类角色摘除；
+     明示出口卡不赖 endHint 瞬态（已知拓扑跳端后重访/直访本页也补卡），只留正确出路 */
+  const wrongEnd = user ? resolveEndTarget(user.roles ?? []) : null
+  const curPort = window.location.port
+  const activeEndHint =
+    endHint ??
+    (wrongEnd
+      ? { target: wrongEnd, url: endTargetUrl(END_PORT_MAP[curPort]?.[wrongEnd] ?? END_PORT_FALLBACK[wrongEnd]) }
+      : null)
   /* D-16 自助开户（CJ-0925-07）：手机号输入卡（口令通过=seeds 拉到后展示） */
   const [phone, setPhone] = useState('')
   const [phonePending, setPhonePending] = useState(false)
@@ -301,9 +310,12 @@ export default function DevLoginPage() {
             </p>
             <p className="mt-1 text-caption text-ink-secondary">角色：{user.roles.join(' / ')}</p>
             <div className="mt-3 flex gap-2">
-              <Button variant="outline" size="sm" className="rounded-control" onClick={() => navigate('/home')}>
-                进入首页
-              </Button>
+              {/* D-36：员工/商家角色在客户端零软绕——不出「进入首页」（进 /home 宠友壳的软口摘除） */}
+              {!wrongEnd ? (
+                <Button variant="outline" size="sm" className="rounded-control" onClick={() => navigate('/home')}>
+                  进入首页
+                </Button>
+              ) : null}
               <Button variant="outline" size="sm" className="rounded-control" onClick={doLogout}>
                 退出登录
               </Button>
@@ -311,21 +323,22 @@ export default function DevLoginPage() {
           </div>
         ) : null}
 
-        {/* D-33 明示出口卡：未知端口拓扑时员工/商家账号登录后给明示出口（不白屏不迷航） */}
-        {endHint ? (
+        {/* D-33 明示出口卡：未知端口拓扑时员工/商家账号登录后给明示出口（不白屏不迷航）；
+            D-36：错端角色常显补卡（activeEndHint=endHint 瞬态 ∪ wrongEnd 推导），只留正确出路 */}
+        {activeEndHint ? (
           <section className="u1-card mt-4 p-4" aria-label="按角色落端提示" data-testid="end-redirect-card">
             <p className="text-body-sm font-semibold">
-              {endHint.target === 'staff' ? dc('devlogin.endStaffTitle') : dc('devlogin.endMerchantTitle')}
+              {activeEndHint.target === 'staff' ? dc('devlogin.endStaffTitle') : dc('devlogin.endMerchantTitle')}
             </p>
             <p className="mt-1 text-caption text-ink-secondary">
-              {endHint.target === 'staff' ? dc('devlogin.endStaffBody') : dc('devlogin.endMerchantBody')}
+              {activeEndHint.target === 'staff' ? dc('devlogin.endStaffBody') : dc('devlogin.endMerchantBody')}
             </p>
             <a
-              href={endHint.url}
+              href={activeEndHint.url}
               data-testid="end-redirect-link"
               className="mt-2 inline-block text-caption font-semibold text-ink-secondary underline underline-offset-2"
             >
-              {endHint.target === 'staff' ? dc('devlogin.endLinkStaff') : dc('devlogin.endLinkMerchant')}
+              {activeEndHint.target === 'staff' ? dc('devlogin.endLinkStaff') : dc('devlogin.endLinkMerchant')}
             </a>
           </section>
         ) : null}

@@ -286,12 +286,13 @@ export default function CashierClosePage() {
             </p>
           </div>
         ) : null}
-        {/* 当前班次卡 + 交接班 */}
+        {/* 当前班次卡 + 交接班（D-35：冻结日班次区明示徽=真冻结态 todayFrozen 驱动） */}
         <ShiftCard
           shift={shiftQ.data?.shift}
           todayCashierCount={tender?.counts.cashierPaidCount ?? null}
           closing={closeShiftM.isPending}
           onCloseShift={openCloseShift}
+          dayFrozen={!!todayFrozen}
         />
 
         {/* W-07 序位①：M5 四分列（现金/微信/支付宝/储值 · R1 同源出口前置） */}

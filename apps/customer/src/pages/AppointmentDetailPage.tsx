@@ -55,6 +55,12 @@ import {
   weekCN,
 } from '@/components/booking/format';
 
+/* D-38（走查P2修复批）：改约历史去重复拼接箭头——同日单侧=时刻点（fmtDateTime），
+   跨日寄养侧=区间（fmtRange 内含区间箭）；两侧之间：同日点单用单箭「→」，涉区间用「改至」，不再箭链套箭链 */
+const sameDaySide = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+const fmtRescheduleSide = (s: Date, e: Date) => (sameDaySide(s, e) ? fmtDateTime(s) : fmtRange(s, e));
+
 /** 客户免费取消阈值（秒）：开始前 4 小时（与 server CANCEL_FREE_BEFORE_SEC 同步） */
 const CANCEL_FREE_BEFORE_SEC = 4 * 3600;
 
@@ -782,24 +788,31 @@ export default function AppointmentDetailPage() {
         <section className="mt-4 rounded-card bg-card p-4 shadow-card" data-testid="appt-reschedule-history">
           <h2 className="text-title"><CK k="appointments.rescheduleHistory">{apc('appointments.rescheduleHistory')}</CK></h2>
           <ul className="mt-2 space-y-2.5">
-            {detailExtras.rescheduleLogs.map((log, i) => (
-              <li key={i} className="border-l-2 border-line pl-3">
-                <p className="font-number text-body-sm">
-                  {fmtRange(new Date(log.beforeStart), new Date(log.beforeEnd))}
-                  <span className="mx-1 text-ink-placeholder">→</span>
-                  {fmtRange(new Date(log.afterStart), new Date(log.afterEnd))}
-                </p>
-                <p className="mt-0.5 text-caption-xs text-ink-placeholder">
-                  <CK k={log.byRole === 'customer' ? 'appointments.rescheduleRoleCustomer' : 'appointments.rescheduleRoleMerchant'}>
-                    {log.byRole === 'customer'
-                      ? apc('appointments.rescheduleRoleCustomer')
-                      : apc('appointments.rescheduleRoleMerchant')}
-                  </CK>
-                  {' · '}
-                  {fmtDateTime(new Date(log.createdAt))}
-                </p>
-              </li>
-            ))}
+            {detailExtras.rescheduleLogs.map((log, i) => {
+              const beforeS = new Date(log.beforeStart);
+              const beforeE = new Date(log.beforeEnd);
+              const afterS = new Date(log.afterStart);
+              const afterE = new Date(log.afterEnd);
+              const hasRangeSide = !sameDaySide(beforeS, beforeE) || !sameDaySide(afterS, afterE);
+              return (
+                <li key={i} className="border-l-2 border-line pl-3">
+                  <p className="font-number text-body-sm" data-testid={`reschedule-log-${i}`}>
+                    {fmtRescheduleSide(beforeS, beforeE)}
+                    <span className="mx-1 text-ink-placeholder">{hasRangeSide ? '改至' : '→'}</span>
+                    {fmtRescheduleSide(afterS, afterE)}
+                  </p>
+                  <p className="mt-0.5 text-caption-xs text-ink-placeholder">
+                    <CK k={log.byRole === 'customer' ? 'appointments.rescheduleRoleCustomer' : 'appointments.rescheduleRoleMerchant'}>
+                      {log.byRole === 'customer'
+                        ? apc('appointments.rescheduleRoleCustomer')
+                        : apc('appointments.rescheduleRoleMerchant')}
+                    </CK>
+                    {' · '}
+                    {fmtDateTime(new Date(log.createdAt))}
+                  </p>
+                </li>
+              );
+            })}
           </ul>
         </section>
       ) : null,

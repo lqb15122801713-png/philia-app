@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-12T13:30:05.938Z；键数=4220；归屏率=97.4%（未归屏 109）
+ * 生成时间口径：2026-10-13T02:47:40.665Z；键数=4221；归屏率=97.4%（未归屏 109）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -4718,14 +4718,14 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "mall.deliverySub",
   "domain": "mall",
-  "text": "配送时效 · 即将点亮",
+  "text": "快递 / 同城 / 自提 · 内测期免运费 · 时效属后期端口",
   "screen": "客户·商城",
   "position": "MallPage 页面内文案"
  },
  {
   "key": "mall.deliveryTitle",
   "domain": "mall",
-  "text": "配送至 · ——",
+  "text": "配送方式 · 结算页可选",
   "screen": "客户·商城",
   "position": "MallPage 页面内文案"
  },
@@ -9878,6 +9878,13 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "cashier.shiftEmpty",
   "domain": "merchant:cashier",
   "text": "当前无开班班次 —— 首笔收银将自动开班（懒建）",
+  "screen": "商家·日结·交接班",
+  "position": "DayClosePanels 组件内文案"
+ },
+ {
+  "key": "cashier.shiftFrozenBadge",
+  "domain": "merchant:cashier",
+  "text": "今日已日结 · 账目已冻结",
   "screen": "商家·日结·交接班",
   "position": "DayClosePanels 组件内文案"
  },
@@ -25165,7 +25172,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "boarding.error.fallbackDesc",
   "domain": "staff:boarding",
-  "text": "预约不存在或无权查看",
+  "text": "该寄养单不存在、已完结或不归你照护——回任务台可继续其它工作。",
   "screen": "员工·寄养打卡",
   "position": "BoardingCheckinPage 页面内文案"
  },
@@ -25179,7 +25186,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "boarding.error.title",
   "domain": "staff:boarding",
-  "text": "无法查看该寄养单",
+  "text": "当前不可打卡",
   "screen": "员工·寄养打卡",
   "position": "BoardingCheckinPage 页面内文案"
  },

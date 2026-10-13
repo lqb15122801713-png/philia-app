@@ -201,8 +201,9 @@ export default function BoardingCheckinPage() {
     };
   }, [trpc, clientId, user]);
 
+  /* D-37（走查P2修复批）：预约详情未成功加载不挂 SSE——归属闸 403 噪声归零（不可用卡已人话收口） */
   const sseUrl =
-    subscribed && aid
+    subscribed && aid && detailQuery.isSuccess
       ? `${getApiBase()}/api/events?client_id=${encodeURIComponent(clientId)}&watch=${encodeURIComponent(aid)}`
       : null;
 
@@ -346,10 +347,11 @@ export default function BoardingCheckinPage() {
     return (
       <div className="sk px-4 py-6">
         <SkBackBar title={BOARDING_COPY['boarding.title']} fallback="/today" />
-        <section className="u1-card p-4">
+        {/* D-37（走查P2修复批）：人话不可用收口——明说「当前不可打卡」+可回退；不透出技术错误文（禁裸 404/403 口径） */}
+        <section className="u1-card p-4" data-testid="boarding-unavailable">
           <p className="text-body-sm text-ink">{BOARDING_COPY['boarding.error.title']}</p>
           <p className="mt-1 text-caption text-ink-secondary">
-            {detailQuery.error instanceof Error ? detailQuery.error.message : BOARDING_COPY['boarding.error.fallbackDesc']}
+            {BOARDING_COPY['boarding.error.fallbackDesc']}
           </p>
           {/* W1-D2 弱出口按钮化：异常页主出口=按钮化（导航闭环规范②）；
               换皮批片 5 P3-3：异常态出口钮淡金→深棕墨底淡金字（34 号档 §4.11 空态件=深棕钮） */}
