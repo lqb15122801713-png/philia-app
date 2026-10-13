@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation, useSearchParams } from 'react-router-dom'
 import { PageErrorBoundary } from '@philia/shared'
 import RequireAuth from './components/RequireAuth'
+import RequireCustomerEnd from './components/RequireCustomerEnd'
 import AppDock from './components/AppDock'
 import InstallBanner from './components/pwa/InstallBanner'
 import AppointmentDetailPage from './pages/AppointmentDetailPage'
@@ -76,7 +77,9 @@ function ProtectedRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/home" replace />} />
-      <Route path="/home" element={<HomePage />} />
+      {/* D-39（PD-19）：/home 路由层错端闸——staff/merchant 会话进不了宠友业务壳（明示+正确出路），
+          customer 零误拦；/ 与兜底 * 均汇入 /home，闸此一处即最小充分（不升格全站 RBAC） */}
+      <Route path="/home" element={<RequireCustomerEnd><HomePage /></RequireCustomerEnd>} />
       <Route path="/mall" element={<MallPage />} />
       {/* T5.3 商城子路由（契约允许新增子路由，已向主代理汇报） */}
       <Route path="/mall/product/:id" element={<ProductDetailPage />} />
