@@ -1,0 +1,60 @@
+{
+  "checks": [
+    {
+      "name": "夹具：僵尸 A/B/D（D=非白名单）+真在服 F 落库",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "店主登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "F1a 桶内列表单卡「强制完成」稳定可见可点（3 僵尸=3 钮）",
+      "ok": true,
+      "detail": "cta=3"
+    },
+    {
+      "name": "F3a D-48 不回退：去处理仍真跳 /monitor/:id",
+      "ok": true,
+      "detail": "/monitor/fcshotD9695"
+    },
+    {
+      "name": "F1b 详情快捷区「强制完成」可见可点→留痕退桶（completed+forced 事件）",
+      "ok": true,
+      "detail": "detail=fcshotB9695 status=completed"
+    },
+    {
+      "name": "F1b 退桶=计数减（异常待清 3→2）",
+      "ok": true,
+      "detail": "异常待清 2"
+    },
+    {
+      "name": "F2 口令门 server 7201 起（BETA_GATE_CODE=pd23test）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "F2 无码 apply=401 明文诊断退出（零写库）+带码 apply=白名单收口",
+      "ok": true,
+      "detail": "noCodeExit=1 A=in_service→completed"
+    },
+    {
+      "name": "F2 非白名单不误伤（D 无标僵尸仍 in_service）+真在服 F 不动",
+      "ok": true,
+      "detail": "D=in_service F=in_service"
+    },
+    {
+      "name": "F2 桶计数再减（脚本收口后仅剩非白名单 D=1，可解释）",
+      "ok": true,
+      "detail": "异常待清 1"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence13\\shots\\F1a-bucket-card-cta.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence13\\shots\\F1b-detail-quickaction-cta.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence13\\shots\\F1c-after-force-count-down.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence13\\shots\\F2-after-script-bucket-one.png"
+  ]
+}

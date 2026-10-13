@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-13T17:52:00.597Z",
+  "dryRun": false,
+  "whitelist": [
+    "%【测试】%",
+    "%演示单%",
+    "wtshot%"
+  ],
+  "hitCount": 1,
+  "rows": [
+    {
+      "code": "FCA9695",
+      "id": "fcshotA9695",
+      "before": "in_service",
+      "after": "completed"
+    }
+  ]
+}
