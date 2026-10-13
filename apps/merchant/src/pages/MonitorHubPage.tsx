@@ -29,6 +29,8 @@
  */
 
 import { BoardSkeleton, EventType, usePhiliaClient } from '@philia/shared';
+import { toast } from '../components/staff-admin/ui';
+import { errMsg } from '../components/staff-admin/format';
 import { useQueries, useQuery, type QueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -184,6 +186,25 @@ export default function MonitorHubPage() {
   const events = useMerchantEvents();
   const navigate = useNavigate();
   const [filter, setFilter] = useState<FilterKey>('all');
+  /* PD-22 D-47：强制完成进行中互斥（按单） */
+  const [forcing, setForcing] = useState<string | null>(null);
+
+  /* D-47 强制完成（异常待清桶内单条；确认+留痕；server 24h 闸兜底） */
+  const onForceComplete = (it: ListForStoreItem) => {
+    if (!window.confirm(oc('mon.forceCompleteConfirm'))) return;
+    void (async () => {
+      setForcing(it.id);
+      try {
+        await trpc.appointment.forceCompleteStale.mutate({ appointmentId: it.id, note: oc('mon.forceCompleteNote') });
+        toast(oc('mon.forceCompleteToast'));
+        await queryClient.invalidateQueries({ queryKey: ['appointment', 'listForStore', 'monitor'] });
+      } catch (e) {
+        toast(`${oc('mon.forceCompleteFail')}：${errMsg(e)}`, 'error');
+      } finally {
+        setForcing(null);
+      }
+    })();
+  };
 
   /* ---------------- 数据 ---------------- */
 
@@ -275,13 +296,14 @@ export default function MonitorHubPage() {
     if (elapsed !== null && elapsed * 60_000 > STUCK_MS) stuckMinByAid.set(it.id, elapsed);
   }
   const alertItems: WAlertItem[] = [
-    /* D-44：僵尸聚合预警置顶（点击=切「异常待清」滤签排障） */
+    /* D-44：僵尸聚合预警置顶；PD-22 D-48：「去处理」=真跳到首只僵尸的可排障监视页（/monitor/:id），
+       不再原地切滤签（禁仍停 monitor）；滤签 chip 仍留（看全桶用） */
     ...(serviceZombie.length > 0
       ? [{
           key: 'zombie-24h',
           text: oc('mon.zombieAlertLine', { n: serviceZombie.length }),
           count: serviceZombie.length,
-          onClick: () => setFilter('zombie'),
+          to: `/monitor/${serviceZombie[0]!.id}`,
         }]
       : []),
     ...serviceItems
@@ -387,14 +409,14 @@ export default function MonitorHubPage() {
             const doneCount = steps?.filter((s) => s.status === 'done').length ?? 0;
             const stuck = stuckMinByAid.has(it.id);
             return (
-              <button
-                key={it.id}
-                type="button"
-                className={cardCls}
-                style={stuck ? { boxShadow: '0 0 0 1.5px #B4502E' } : undefined}
-                onClick={() => navigate(`/monitor/${it.id}`)}
-                data-testid={`monitor-card-${it.id}`}
-              >
+              <div key={it.id}>
+                <button
+                  type="button"
+                  className={cardCls}
+                  style={stuck ? { boxShadow: '0 0 0 1.5px #B4502E' } : undefined}
+                  onClick={() => navigate(`/monitor/${it.id}`)}
+                  data-testid={`monitor-card-${it.id}`}
+                >
                 <CardPhotoHead
                   thumbUrl={photo?.thumbUrl ?? photo?.url ?? null}
                   badge={isZombie24h(it) ? oc('mon.zombieBadge') : '服务中 · 实时'}
@@ -426,6 +448,21 @@ export default function MonitorHubPage() {
                   </div>
                 </div>
               </button>
+              {/* PD-22 D-47：异常待清桶内单卡出「强制完成」动作行（确认+留痕；双钮不嵌套） */}
+              {filter === 'zombie' ? (
+                <div className="mt-1.5 flex justify-end" data-testid={`zombie-actions-${it.id}`}>
+                  <button
+                    type="button"
+                    data-testid={`zombie-force-${it.id}`}
+                    disabled={forcing === it.id}
+                    onClick={() => onForceComplete(it)}
+                    className="rounded-full bg-[#FFFDF6] px-4 py-2 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+                  >
+                    {forcing === it.id ? '处理中…' : oc('mon.forceCompleteCta')}
+                  </button>
+                </div>
+              ) : null}
+              </div>
             );
           })}
 
