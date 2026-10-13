@@ -129,8 +129,10 @@ export default function AppointmentsPage() {
      详情页返回列表后 tab 与滚动位置一并保住；与浏览器/系统后退手势不冲突
      （只读 URL/会话存储，不拦截 popstate）。 */
   const [searchParams, setSearchParams] = useSearchParams();
-  const rawTab = searchParams.get('tab') ?? 'confirmed';
-  const tab = TAB_KEYS.has(rawTab) ? rawTab : 'confirmed';
+  const rawTab = searchParams.get('tab');
+  /* D-38（走查P2修复批）：显式 ?tab= 照用；无参=默认签在数据就绪后落到「第一个有内容的签」
+     （S4 口径「已确认」降为兜底，不再死停空态误导——改约回退单在 pending 签的场景）。
+     具体取值在 effGroups 就绪后计算（见下 tab 常量） */
   const setTab = (key: string) => setSearchParams({ tab: key }, { replace: true });
 
   const listQ = useQuery({
@@ -210,6 +212,11 @@ export default function AppointmentsPage() {
     !listQ.isPending &&
     (listQ.isError || (groups ? Object.values(groups).every((g) => g.length === 0) : false));
   const effGroups: AppointmentGroups | undefined = exampleActive ? EXAMPLE_APPT_GROUPS : groups;
+
+  /* D-38：tab 解析——显式 ?tab= 优先；无参时数据就绪后落第一个有内容的签（TABS 序），全空/加载中/失败=「已确认」兜底 */
+  const firstNonEmptyTab =
+    effGroups && TABS.find((t) => t.statuses.some((s) => (effGroups[s]?.length ?? 0) > 0))?.key;
+  const tab = rawTab && TAB_KEYS.has(rawTab) ? rawTab : (firstNonEmptyTab ?? 'confirmed');
 
   const active = TABS.find((t) => t.key === tab)!;
   const items = active.statuses.flatMap((s) => effGroups?.[s] ?? []);

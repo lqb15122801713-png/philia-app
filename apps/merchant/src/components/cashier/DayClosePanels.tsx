@@ -49,12 +49,16 @@ export function ShiftCard({
   todayCashierCount,
   closing,
   onCloseShift,
+  dayFrozen,
 }: {
   shift: ShiftInfo | null | undefined
   /** 今日收银单数（todayTenderStats.counts.cashierPaidCount，全日口径标注） */
   todayCashierCount: number | null
   closing: boolean
   onCloseShift: () => void
+  /** D-35（走查P2修复批）：今日已日结冻结=班次区明示徽（真冻结态=listDayCloses 当日 frozen 行驱动；
+      与开班中并存=冻结后新开单进次日班次的 D-29 已裁口径，本件只补明示不动状态机） */
+  dayFrozen: boolean
 }) {
   return (
     <div className="u3-panel" data-testid="close-shift-card">
@@ -72,6 +76,12 @@ export function ShiftCard({
         ) : (
           <>
             <span className="u3-st live">开班中</span>
+            {/* D-35：已日结冻结=班次区明示徽（与「开班中」并存不互斥——班次开着、当日账已冻） */}
+            {dayFrozen ? (
+              <span className="u3-st" data-testid="close-shift-day-frozen">
+                {cc('cashier.shiftFrozenBadge')}
+              </span>
+            ) : null}
             <span className="text-caption text-[rgba(59,46,36,.62)]">
               开班 <b className="font-number tabular-nums text-ink">{fmtDateTime(shift.openedAt)}</b>
             </span>

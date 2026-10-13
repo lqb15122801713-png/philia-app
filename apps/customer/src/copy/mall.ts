@@ -20,8 +20,10 @@ const MALL_COPY_TABLE = {
   'mall.headTitle': '商城',
   'mall.headSub': 'MALL · 给它买点好的',
   /* 配送条槽位（PD-15 V1.1 槽位 13：置灰不上假时效，留口注记） */
-  'mall.deliveryTitle': '配送至 · ——',
-  'mall.deliverySub': '配送时效 · 即将点亮',
+  /* ---- 走查P2修复批 D-38.3：配送槽位占位对齐 PD-15 写准注记口径（原「——」「即将点亮」退役；
+       写真：方式=结算页可选、免运费=内测期实情、时效=属后期端口不吹不删槽） ---- */
+  'mall.deliveryTitle': '配送方式 · 结算页可选',
+  'mall.deliverySub': '快递 / 同城 / 自提 · 内测期免运费 · 时效属后期端口',
   'mall.searchPlaceholder': '搜索主粮、零食、玩具…',
   /* 空态三句话（搜索/分类两口径） */
   'mall.emptyTitle': '没有找到相关商品',
