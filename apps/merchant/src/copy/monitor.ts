@@ -26,6 +26,12 @@ const MONITOR_COPY_TABLE = {
   'mon.zombieAlertLine': '异常待清 {n} 单：服务中超 24 小时未翻步，点我定位排障',
   'mon.zombieSectionNote': '异常待清：以下服务单超 24 小时未翻步，已从默认「服务中」分离——请到店核实后翻步、完成或联系店长处理',
   'mon.zombieBadge': '异常待清',
+  /* ---- PD-22 D-47：异常待清单强制完成（留痕收口） ---- */
+  'mon.forceCompleteCta': '强制完成',
+  'mon.forceCompleteConfirm': '确认强制完成该单？留痕=操作人/时刻/前后状态在册可查',
+  'mon.forceCompleteNote': '强制完成（异常待清清淤 · PD-22）',
+  'mon.forceCompleteToast': '已强制完成（留痕在册）',
+  'mon.forceCompleteFail': '强制完成失败，请稍后再试',
 
   /* ---- 单约监控 /monitor/:id ---- */
   'mon.parentViewTitle': '家长端视角',

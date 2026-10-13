@@ -1502,6 +1502,60 @@ export const appointmentRouter = router({
     }),
 
   /**
+   * PD-22 D-47（老板 10-13 签）：异常待清强制完成——≥24h 未翻步僵尸单（服务中）店长可点收口。
+   * - 闸：in_service + (now − (checkedInAt ?? scheduledStart)) ≥ 24h（与 MonitorHubPage 读时分桶同口径）；
+   * - 留痕：appointments 翻 completed+completedAt + outbox appointment.completed 事件
+   *   （payload 带 by/forced/note/beforeStatus/checkedInAt=谁/何时/单号/前后状态全可查）；
+   * - 幂等：已 completed → idempotent=true 原样返回；非僵尸（<24h）→ 400 明文（真慢单不误伤）；
+   * - 禁区：不翻六步逐行（零伪造步骤证据）；不物理删；不动钱域（无金额联动）；
+   * - 寄养 in_boarding 不适用（超期寄养=另一口径，另案）。
+   */
+  forceCompleteStale: merchantManagerProcedure
+    .input(
+      z.object({
+        appointmentId: z.string().min(1),
+        note: z.string().trim().min(1, '强制完成备注必填（留痕口径）').max(200, '备注不能超过 200 字'),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const appt = await getAppointmentOrThrow(ctx.db, input.appointmentId);
+      if (appt.storeId !== ctx.user.storeId) forbidden('非本店预约，无权操作');
+      if (appt.status === 'completed') return { appointment: appt, idempotent: true as const };
+      if (appt.status !== 'in_service') {
+        badRequest(`当前状态（${appt.status}）不可强制完成——仅服务中（in_service）的异常待清单可用`);
+      }
+      const ZOMBIE_MS = 24 * 3600 * 1000;
+      const base = appt.checkedInAt ?? appt.scheduledStart;
+      if (Date.now() - new Date(base).getTime() < ZOMBIE_MS) {
+        badRequest('该单未达 24h 未翻步阈值，不属异常待清——真慢单请走正常翻步/完成');
+      }
+      const now = new Date();
+      const outboxIds: string[] = [];
+      const updated = await ctx.db.transaction(async (tx) => {
+        const row = await tx
+          .update(schema.appointments)
+          .set({ status: 'completed', completedAt: now, updatedAt: now })
+          .where(and(eq(schema.appointments.id, appt.id), eq(schema.appointments.status, 'in_service')))
+          .returning()
+          .then((r) => r[0]!);
+        const payload = {
+          appointmentId: appt.id,
+          code: appt.code,
+          by: ctx.user.id,
+          forced: true,
+          note: input.note,
+          beforeStatus: 'in_service',
+          checkedInAt: appt.checkedInAt,
+        };
+        outboxIds.push(await emitEvent(txDb(tx), `appointment:${appt.id}`, EventType.AppointmentCompleted, payload));
+        outboxIds.push(await emitEvent(txDb(tx), `store:${appt.storeId}`, EventType.AppointmentCompleted, payload));
+        return row;
+      });
+      outboxIds.forEach(broadcastNow);
+      return { appointment: updated, idempotent: false as const };
+    }),
+
+  /**
    * 6. assign（merchant 本店）：派单/改派。校验员工属本店、在职、技能匹配服务 type、
    * 排班覆盖预约时间、同 staff 同 scheduled_start 无 confirmed/in_service 冲突单。
    * 批次 S4（任务 D）：商家保留改派不回归——覆盖写 assignSource='merchant'（列表/详情
