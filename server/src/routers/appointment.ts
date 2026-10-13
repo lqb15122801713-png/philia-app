@@ -1086,6 +1086,34 @@ export const appointmentRouter = router({
             }
             // SQLite 单写者：事务即行锁（等价 SELECT ... FOR UPDATE），杜绝同槽并发超卖
             if (input.type === 'boarding') {
+              /* PD-21 D-45（老板 10-13 裁：本批只拦新建，历史双开不强消）：同宠重叠档期拒单闸——
+                 同宠既有「占床中」寄养单（pending/confirmed/in_boarding；已取消/已完成不占闸——
+                 提前接回 completed 后同区间可再订，PR-3 C2 释放口径不动）与新单 [start,end) 相交
+                 → BAD_REQUEST 人话明文；事务内判定（createLock 串行下以已提交占用为准） */
+              const overlapRow = await tx
+                .select({
+                  id: schema.appointments.id,
+                  scheduledStart: schema.appointments.scheduledStart,
+                  scheduledEnd: schema.appointments.scheduledEnd,
+                })
+                .from(schema.appointments)
+                .where(
+                  and(
+                    eq(schema.appointments.petId, input.petId),
+                    eq(schema.appointments.type, 'boarding'),
+                    inArray(schema.appointments.status, ['pending', 'confirmed', 'in_boarding']),
+                    lt(schema.appointments.scheduledStart, end),
+                    gt(schema.appointments.scheduledEnd, start),
+                  ),
+                )
+                .limit(1)
+                .then((r) => r[0]);
+              if (overlapRow) {
+                const fmtDay = (d: Date) => `${d.getMonth() + 1}月${d.getDate()}日`;
+                badRequest(
+                  `「${pet.name}」${fmtDay(overlapRow.scheduledStart)}–${fmtDay(overlapRow.scheduledEnd)}已有寄养单，档期重叠不可重复下单，请先取消原单或改期`,
+                );
+              }
               // B3-2（A-P1-11 红标）：寄养按「晚」占容量——住宿区间每一晚各占 1 格
               // （boarding_slots：房型 × 本地日界）；任一晚满员抛 CONFLICT，事务整体回滚，
               // 不产生部分占用。寄养不再占用洗护 30min 时段槽（store_slots）。

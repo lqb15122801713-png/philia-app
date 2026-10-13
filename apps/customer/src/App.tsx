@@ -23,6 +23,7 @@ import InvoiceApplyPage from './pages/InvoiceApplyPage'
 import InvoiceDetailPage from './pages/InvoiceDetailPage'
 import InvoiceListPage from './pages/InvoiceListPage'
 import MallOrdersPage from './pages/MallOrdersPage'
+import MallOrderDetailPage from './pages/MallOrderDetailPage'
 import MallPage from './pages/MallPage'
 import MePage from './pages/MePage'
 import SettingsPage from './pages/SettingsPage'
@@ -86,6 +87,8 @@ function ProtectedRoutes() {
       <Route path="/mall/cart" element={<CartPage />} />
       <Route path="/mall/checkout" element={<CheckoutPage />} />
       <Route path="/mall/orders" element={<MallOrdersPage />} />
+      {/* PD-21 D-46：订单详情真页（列表卡/深链共用；静态 refund 段优先不互踩） */}
+      <Route path="/mall/orders/:id" element={<MallOrderDetailPage />} />
       {/* 补缺批片 1 退款售后：表单双路由同组件双 orderKind 参数化 + 列表/进度详情 */}
       <Route path="/mall/orders/:id/refund" element={<RefundApplyPage orderKind="order" />} />
       <Route path="/appointments/:id/refund" element={<RefundApplyPage orderKind="appointment" />} />

@@ -77,6 +77,7 @@ const ROUTES = [
   { app: 'customer', path: `/appointments/${INVALID_ID}`, expect: 'sub', note: '无效 id 异常态须出口（W1 补改）' },
   { app: 'customer', path: `/appointments/${APPT_ID}/live`, expect: 'sub' },
   { app: 'customer', path: '/mall/orders', expect: 'sub' },
+  { app: 'customer', path: `/mall/orders/${INVALID_ID}`, expect: 'sub', note: 'PD-21 D-46：订单详情真页（无效 id=人话异常态+返回列表出口）' },
   { app: 'customer', path: '/mall/cart', expect: 'sub' },
   { app: 'customer', path: '/mall/checkout', expect: 'sub' },
   { app: 'customer', path: `/mall/product/${PRODUCT_ID}`, expect: 'sub', note: '商品 id 缺失时守卫口径' },

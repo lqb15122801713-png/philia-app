@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-13T05:46:07.851Z；键数=4244；归屏率=96.7%（未归屏 141）
+ * 生成时间口径：2026-10-13T07:52:56.214Z；键数=4254；归屏率=96.5%（未归屏 147）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -4819,6 +4819,48 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "text": "正在加载更多…",
   "screen": "客户·商城",
   "position": "MallPage 页面内文案"
+ },
+ {
+  "key": "mall.orderDetailBack",
+  "domain": "mall",
+  "text": "返回订单列表",
+  "screen": null,
+  "position": "未在页面调用点命中（mall 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "mall.orderDetailInfo",
+  "domain": "mall",
+  "text": "订单信息",
+  "screen": null,
+  "position": "未在页面调用点命中（mall 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "mall.orderDetailItems",
+  "domain": "mall",
+  "text": "商品明细",
+  "screen": null,
+  "position": "未在页面调用点命中（mall 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "mall.orderDetailNotFound",
+  "domain": "mall",
+  "text": "订单不存在或已删除",
+  "screen": null,
+  "position": "未在页面调用点命中（mall 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "mall.orderDetailRefund",
+  "domain": "mall",
+  "text": "退款/售后 ›",
+  "screen": null,
+  "position": "未在页面调用点命中（mall 域键表，端口运营复核挂载屏）"
+ },
+ {
+  "key": "mall.orderDetailTitle",
+  "domain": "mall",
+  "text": "订单详情",
+  "screen": null,
+  "position": "未在页面调用点命中（mall 域键表，端口运营复核挂载屏）"
  },
  {
   "key": "mall.orderPreparing",
@@ -16061,6 +16103,34 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "text": "员工上传过程照后会实时出现在这里。",
   "screen": "商家·服务监控",
   "position": "AppointmentMonitorPage 页面内文案"
+ },
+ {
+  "key": "mon.zombieAlertLine",
+  "domain": "merchant:monitor",
+  "text": "异常待清 {n} 单：服务中超 24 小时未翻步，点我定位排障",
+  "screen": "商家·在店监控",
+  "position": "MonitorHubPage 页面内文案"
+ },
+ {
+  "key": "mon.zombieBadge",
+  "domain": "merchant:monitor",
+  "text": "异常待清",
+  "screen": "商家·在店监控",
+  "position": "MonitorHubPage 页面内文案"
+ },
+ {
+  "key": "mon.zombieChip",
+  "domain": "merchant:monitor",
+  "text": "异常待清 {n}",
+  "screen": "商家·在店监控",
+  "position": "MonitorHubPage 页面内文案"
+ },
+ {
+  "key": "mon.zombieSectionNote",
+  "domain": "merchant:monitor",
+  "text": "异常待清：以下服务单超 24 小时未翻步，已从默认「服务中」分离——请到店核实后翻步、完成或联系店长处理",
+  "screen": "商家·在店监控",
+  "position": "MonitorHubPage 页面内文案"
  },
  {
   "key": "ops.appeal.afterLabel",

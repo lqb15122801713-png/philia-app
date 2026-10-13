@@ -107,6 +107,13 @@ const MALL_COPY_TABLE = {
   'mall.orderPreparing': '门店正在备货，请耐心等待',
   'mall.orderReceived': '已于 {time} 确认收货',
   'mall.orderSumLine': '共 {qty} 件，合计',
+  /* ---- PD-21 D-46：商城订单详情页（/mall/orders/:id） ---- */
+  'mall.orderDetailTitle': '订单详情',
+  'mall.orderDetailNotFound': '订单不存在或已删除',
+  'mall.orderDetailBack': '返回订单列表',
+  'mall.orderDetailItems': '商品明细',
+  'mall.orderDetailInfo': '订单信息',
+  'mall.orderDetailRefund': '退款/售后 ›',
   'mall.goPay': '去支付',
   'mall.confirmReceive': '确认收货',
   'mall.reorder': '再来一单',
