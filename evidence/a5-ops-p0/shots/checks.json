@@ -1,0 +1,118 @@
+{
+  "checks": [
+    {
+      "name": "店主登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "前置 v2 真图上传登记（pending）",
+      "ok": true,
+      "detail": "/api/img/slots/home_banner/0351adf0-5c14-4890-9af3-31cb0075fc66.jpg?sig=39cdcebab520de80ff0a09da00ad4fe061394f39074eb63f64da65375e2e3267&exp=1792477252"
+    },
+    {
+      "name": "前置 v2 上线（live=真上传图，非品牌默认图）",
+      "ok": true,
+      "detail": "/api/img/slots/home_banner/0351adf0-5c14-4890-9af3-31cb0075fc66.jpg?sig=39cdcebab520de80ff0a09da00ad4fe061394f39074eb63f64da65375e2e3267&exp=1792477252"
+    },
+    {
+      "name": "D-42 表单上传：三行+audience+priority 随 pending 落库（v3 在待审区）",
+      "ok": true,
+      "detail": "{\"url\":\"/api/img/slots/home_banner/4e66e5a3-4aa2-4fd0-887d-5b6270d410e8.jpg?sig=f842cc5b6a0e557215f3a99c91a3a556c549d9c26cc0783ae73bfcd7a7d9"
+    },
+    {
+      "name": "客户登录（示例客户）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "D-41 pending 隔离：真用户仍见 v2 live（v3 pending 零透出+零文案层）",
+      "ok": true,
+      "detail": "a09da00ad4fe061394f39074eb63f64da65375e2e3267&exp=1792477252"
+    },
+    {
+      "name": "D-41 预览此版=iframe 面板（slotPreview 参+店锚 canvasStore 已解析在链）",
+      "ok": true,
+      "detail": "http://localhost:7130/home?canvasPreview=1&canvasStore=01M4SX38G480SJT67ZJ5GP573B&slotPreview=01M4SYQJ8W9J09CVXZA16AV1G0"
+    },
+    {
+      "name": "D-41 owner 预览：pending 新稿上屏（title_main 透出）+「预览中」角标",
+      "ok": true,
+      "detail": "开通会员享洗护折扣 | 预览中"
+    },
+    {
+      "name": "D-41 路人链打不开 pending（客户会话 403→保持 live v2，零文案零角标）",
+      "ok": true,
+      "detail": "a09da00ad4fe061394f39074eb63f64da65375e2e3267&exp=1792477252"
+    },
+    {
+      "name": "D-41 publish 后真用户见新稿（liveMap 扩字段透出）",
+      "ok": true,
+      "detail": "{\"key\":\"home.banner\",\"url\":\"/api/img/slots/home_banner/4e66e5a3-4aa2-4fd0-887d-5b6270d410e8.jpg?sig=f842cc5b6a0e557215f3"
+    },
+    {
+      "name": "D-42 在册免费档（示例客户）命中 anon_free：开卡文案上屏（v3 live）",
+      "ok": true,
+      "detail": "开通会员享洗护折扣"
+    },
+    {
+      "name": "夹具客登录（无会员册）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "D-42 未开卡（无会员册）命中 anon_free：开卡稿上屏",
+      "ok": true,
+      "detail": "开通会员享洗护折扣"
+    },
+    {
+      "name": "D-42 付费身份不见开卡稿（audience 未命中→仅品牌默认图；展示规则不碰券账）",
+      "ok": true,
+      "detail": "order=01M4SYR0V3F5YTHMX261MQ848F img=http://localhost:7130/brand/banner-home-1200.png"
+    },
+    {
+      "name": "D-42 红线词闸（UI 链：「充值返现」保存失败明文+pending 零新增）",
+      "ok": true,
+      "detail": "pending 0→0"
+    },
+    {
+      "name": "D-41 WcPub 回滚钮接真 revert（可点+回滚后 live 回 v2 真图）",
+      "ok": true,
+      "detail": "rollback→fe061394f39074eb63f64da65375e2e3267&exp=1792477252"
+    },
+    {
+      "name": "D-40 紧急下线：live→archived 槽无 live + 历史留痕行在（版本/操作人/时刻）",
+      "ok": true,
+      "detail": "archived=3"
+    },
+    {
+      "name": "D-40 页顶支付 kill 隔离（下线前后 killStatus 不变）",
+      "ok": true,
+      "detail": "kill=false"
+    },
+    {
+      "name": "D-40 客户端回落码内默认品牌图（非空白非旧 live）",
+      "ok": true,
+      "detail": "http://localhost:7130/brand/banner-home-1200.png"
+    },
+    {
+      "name": "D-40 反向隔离：页顶 kill 开=首页图不变（默认图仍旧）+族尾 kill 复原关",
+      "ok": true,
+      "detail": "img=ocalhost:7130/brand/banner-home-1200.png kill=false"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence10\\shots\\M1-slotcard-copyfields-pending.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence10\\shots\\C1-pending-isolated-live-v2.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence10\\shots\\M2-preview-panel-iframe.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence10\\shots\\M3-preview-pending-with-badge.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence10\\shots\\C2-preview-link-denied.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence10\\shots\\C3-live-copy-guest-sees.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence10\\shots\\C4a-guest-nomember-sees-copy.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence10\\shots\\C4b-paid-sees-default-img.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence10\\shots\\M4-redline-rejected-toast.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence10\\shots\\M5-wcpub-real-rollback.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence10\\shots\\M6-unpublished-history.png",
+    "E:\\KIMI code\\tmp\\canvas-scan\\evidence10\\shots\\C5-after-unpublish-default-brand.png"
+  ]
+}
