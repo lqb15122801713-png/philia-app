@@ -68,6 +68,8 @@ const HOME_COPY_TABLE = {
   'home.pwaInstallAction': '安装',
   'home.pwaInstallDismiss': '暂不',
   'home.pwaInstallIosGuide': '用 Safari 分享 → 添加到主屏幕',
+  /* ---- PD-20 D-41：槽位预览旁路角标（预览角标=零营销弹窗口径特许件） ---- */
+  'home.slotPreviewBadge': '预览中',
 } as const;
 
 export const HOME_COPY = withCopyOverrides(HOME_COPY_TABLE);

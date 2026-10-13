@@ -26,7 +26,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Bell, Plus } from 'lucide-react'
-import { CanvasLayoutLoader, CK, Skeleton, useCanvasLayout, useMe, usePhiliaClient, getStepDef, resolveSlotUrl, slotContentOf } from '@philia/shared'
+import { CanvasLayoutLoader, CK, Skeleton, useCanvasLayout, useMe, usePhiliaClient, getStepDef, resolveSlotUrl, slotContentOf, slotPreviewState } from '@philia/shared'
 import HomeBookingPanel from '../components/home/HomeBookingPanel'
 import { ErrorState } from '../components/home/common'
 import { fenToYuan, fmtHM } from '@/components/booking/format'
@@ -198,6 +198,26 @@ export default function HomePage() {
   const rebateBalance = myQ.data?.rebate?.balanceFen ?? 0
   const periodLogs = (myQ.data?.periodLogs ?? []) as Array<{ type: string; deltaFen: number }>
   const grantedThisPeriod = periodLogs.filter((l) => l.type === 'grant').reduce((s, l) => s + l.deltaFen, 0)
+
+  /* ---- PD-20 D-42：home.banner live 扩字段 + 人群展示规则（未命中=undefined→仅品牌默认图，开口③裁死不附文案）；
+     audience：all/缺省=全量；anon=未登录；free=已登录微光（plan.free）；anon_free=未登录∪微光；
+     付费身份不见开卡类定向稿=展示规则层，不碰券账/余额/真支付。
+     D-41：slotPreview 预览旁路生效时挂「预览中」角标（读口=slotPreviewState 模块态，随渲染读取） ---- */
+  const bannerSlotRaw = slotContentOf('home.banner')
+  const bannerAudience = bannerSlotRaw?.audience ?? 'all'
+  /* anon=未登录∪无会员册（/home 有登录闸，未登录实落=未开卡）；free=在册免费档（plan.free） */
+  const bannerIsGuest = !user || !membership
+  const bannerAudienceHit =
+    bannerAudience === 'all'
+      ? true
+      : bannerAudience === 'anon'
+        ? bannerIsGuest
+        : bannerAudience === 'free'
+          ? !!user && plan?.free === true
+          : bannerIsGuest || plan?.free === true
+  const bannerSlot = bannerAudienceHit ? bannerSlotRaw : undefined
+  const bannerCopy =
+    bannerSlot && (bannerSlot.title_main ?? bannerSlot.title_sub ?? bannerSlot.cta_text) ? bannerSlot : null
   const settlementDay = plansQ.data?.rebateSettlementDay ?? 5
   const rebatePct = plan && plan.rebateBp > 0 ? plan.rebateBp / 100 : 0
   const pw = periodWindow(new Date())
@@ -271,17 +291,48 @@ export default function HomePage() {
   /* ---- 九块渲染器（块内逻辑/条件与改造前逐字一致；条件内收进渲染器） ---- */
   const renderers: Record<string, () => ReactNode> = {
     /* 1. BANNER 槽（§4.2：高 190+底垫 96；内容=A5 端口槽位；既有照片资产优先，加载失败回退占位渐变；
-           端口批片 C：读槽位 home.banner live 值，无=码内默认 /brand/banner-home-1200.png） */
+           端口批片 C：读槽位 home.banner live 值，无=码内默认 /brand/banner-home-1200.png；
+           PD-20：D-42 三行文案接线（audience 命中才渲染；未命中=仅默认图）+ D-41 预览中角标） */
     'home.banner': () => (
       <section className="hv2-banner" data-testid="home-banner" aria-label="品牌横幅">
         {bannerImgOk ? (
           <img
-            src={resolveSlotUrl(slotContentOf('home.banner')?.url) ?? '/brand/banner-home-1200.png'}
-            alt={slotContentOf('home.banner')?.alt ?? '菲丽亚宠物门店'}
+            src={resolveSlotUrl(bannerSlot?.url) ?? '/brand/banner-home-1200.png'}
+            alt={bannerSlot?.alt ?? '菲丽亚宠物门店'}
             data-testid="home-banner-img"
             onError={() => setBannerImgOk(false)}
             className="hv2-banner-img"
           />
+        ) : null}
+        {bannerCopy ? (
+          <div className="absolute inset-x-0 bottom-[100px] z-[3] px-6" data-testid="home-banner-copy">
+            {bannerCopy.title_main ? (
+              <p className="text-title-lg font-bold text-ink" data-testid="home-banner-title">
+                {bannerCopy.title_main}
+              </p>
+            ) : null}
+            {bannerCopy.title_sub ? (
+              <p className="mt-1 text-caption text-ink-secondary" data-testid="home-banner-sub">
+                {bannerCopy.title_sub}
+              </p>
+            ) : null}
+            {bannerCopy.cta_text ? (
+              <span
+                className="mt-2 inline-block rounded-full bg-brand-primary px-3 py-1 text-caption-xs font-bold text-ink"
+                data-testid="home-banner-cta"
+              >
+                {bannerCopy.cta_text}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+        {slotPreviewState().active ? (
+          <span
+            className="absolute right-[22px] top-[50px] z-[3] rounded-full bg-ink/70 px-2.5 py-1 text-caption-xs font-semibold text-brand-primary"
+            data-testid="home-banner-preview-badge"
+          >
+            {hc('home.slotPreviewBadge')}
+          </span>
         ) : null}
         <header className="hv2-banner-top" data-testid="home-topbar">
           <p className="hv2-wordmark">PHILIA</p>

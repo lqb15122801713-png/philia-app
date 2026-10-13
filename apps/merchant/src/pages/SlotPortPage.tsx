@@ -29,6 +29,7 @@ import { errMsg, fmtDateTime } from '../components/staff-admin/format';
 import { Badge, Btn, numStyle, toast, ToasterMount } from '../components/staff-admin/ui';
 import { cp } from '../copy/copyPort';
 import { useMerchantRole } from '../lib/roles';
+import { canvasPreviewUrl } from './canvasPreviewUrl';
 
 /* ------------------------------------------------------------------ */
 /* 类型锚点（server AppRouter 推导，构建期擦除）                          */
@@ -41,6 +42,9 @@ type SlotVersion = NonNullable<SlotRow['live']>;
 
 /** 占位块渐变=shared tokens 唯一来源（端口批片 C 顺带件①：收编字面量，不另写） */
 const PLACEHOLDER_GRADIENT = gradients.philiaBanner;
+
+/** D-42 文案与人群编辑字段形（空串=不带该字段；audience 缺省 all；priority 空=不带） */
+type SlotCopyFields = { title_main: string; title_sub: string; cta_text: string; audience: 'all' | 'anon' | 'free' | 'anon_free'; priority: string };
 
 /** 槽内容预览（url 有值→img；null→渐变占位块+「占位中」签） */
 function SlotPreview({ url, alt, className }: { url: string | null; alt: string; className: string }) {
@@ -70,19 +74,28 @@ function SlotCard({
   onFile,
   onPublish,
   onRevert,
+  onUnpublish,
+  onPreview,
 }: {
   slot: SlotRow;
   uploading: boolean;
   acting: boolean;
   fileRefs: { current: Map<string, HTMLInputElement> };
-  onFile: (slotKey: string, alt: string, files: FileList | null) => void;
+  onFile: (slotKey: string, alt: string, files: FileList | null, copy: SlotCopyFields) => void;
   onPublish: (versionId: string) => void;
   onRevert: (slotKey: string) => void;
+  /* PD-20 D-40：紧急下线（live→archived，槽可无 live；双确认在调用侧） */
+  onUnpublish: (slotKey: string) => void;
+  /* PD-20 D-41：预览此版（pending 版 iframe 真预览；仅 owner 页内可点） */
+  onPreview: (slotKey: string, versionId: string) => void;
 }) {
   const alt = slot.live?.contentJson.alt ?? slot.pending[0]?.contentJson.alt ?? slot.slotKey;
   /* 可回退=有上线版 且 非 pending 版本数 ≥2（当前 live + 至少一版 archived） */
   const canRevert = slot.live !== null && slot.totalVersions - slot.pending.length >= 2;
   const disabled = uploading || acting;
+  /* D-42 三行文案+人群编辑（选填；随下次上传一并写入 pending 版 contentJson；
+     三行制/红线词=server 硬闸，失败明文走 toast） */
+  const [copyFields, setCopyFields] = useState<SlotCopyFields>({ title_main: '', title_sub: '', cta_text: '', audience: 'all', priority: '' });
 
   return (
     <div className="u3-panel mb-3.5" data-testid={`slotport-card-${slot.slotKey}`}>
@@ -140,6 +153,81 @@ function SlotCard({
               >
                 {cp('slotport.revertCta')}
               </Btn>
+              {/* D-40 紧急下线（有 live 才出；页级 owner 闸+server merchantOwnerProcedure 硬闸双保险；
+                  与页顶「一键关停」支付语义零耦合——本钮只管本槽展示物料） */}
+              {slot.live ? (
+                <Btn
+                  variant="ghost"
+                  size="sm"
+                  data-testid={`slotport-unpublish-${slot.slotKey}`}
+                  disabled={disabled}
+                  onClick={() => onUnpublish(slot.slotKey)}
+                >
+                  {cp('slotport.unpublishCta')}
+                </Btn>
+              ) : null}
+            </div>
+            {/* D-42 文案与人群编辑区（选填；值随下次「上传替换」一并写入新 pending 版） */}
+            <div className="mt-3 rounded-input bg-[rgba(59,46,36,.03)] p-3" data-testid={`slotport-copyfields-${slot.slotKey}`}>
+              <p className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{cp('slotport.copyFieldsTitle')}</p>
+              <div className="mt-2 grid grid-cols-1 gap-2 xl:grid-cols-3">
+                <label className="block">
+                  <span className="text-caption-xs text-[rgba(59,46,36,.62)]">{cp('slotport.fieldTitleMain')}</span>
+                  <input
+                    type="text"
+                    value={copyFields.title_main}
+                    data-testid={`slotport-field-title-main-${slot.slotKey}`}
+                    onChange={(e) => setCopyFields((s) => ({ ...s, title_main: e.target.value }))}
+                    className="mt-1 w-full rounded-input border border-line bg-card px-2.5 py-1.5 text-caption"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-caption-xs text-[rgba(59,46,36,.62)]">{cp('slotport.fieldTitleSub')}</span>
+                  <input
+                    type="text"
+                    value={copyFields.title_sub}
+                    data-testid={`slotport-field-title-sub-${slot.slotKey}`}
+                    onChange={(e) => setCopyFields((s) => ({ ...s, title_sub: e.target.value }))}
+                    className="mt-1 w-full rounded-input border border-line bg-card px-2.5 py-1.5 text-caption"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-caption-xs text-[rgba(59,46,36,.62)]">{cp('slotport.fieldCta')}</span>
+                  <input
+                    type="text"
+                    value={copyFields.cta_text}
+                    data-testid={`slotport-field-cta-${slot.slotKey}`}
+                    onChange={(e) => setCopyFields((s) => ({ ...s, cta_text: e.target.value }))}
+                    className="mt-1 w-full rounded-input border border-line bg-card px-2.5 py-1.5 text-caption"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-caption-xs text-[rgba(59,46,36,.62)]">{cp('slotport.fieldAudience')}</span>
+                  <select
+                    value={copyFields.audience}
+                    data-testid={`slotport-field-audience-${slot.slotKey}`}
+                    onChange={(e) => setCopyFields((s) => ({ ...s, audience: e.target.value as SlotCopyFields['audience'] }))}
+                    className="mt-1 w-full rounded-input border border-line bg-card px-2.5 py-1.5 text-caption"
+                  >
+                    <option value="all">{cp('slotport.audienceAll')}</option>
+                    <option value="anon">{cp('slotport.audienceAnon')}</option>
+                    <option value="free">{cp('slotport.audienceFree')}</option>
+                    <option value="anon_free">{cp('slotport.audienceAnonFree')}</option>
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="text-caption-xs text-[rgba(59,46,36,.62)]">{cp('slotport.fieldPriority')}</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={999}
+                    value={copyFields.priority}
+                    data-testid={`slotport-field-priority-${slot.slotKey}`}
+                    onChange={(e) => setCopyFields((s) => ({ ...s, priority: e.target.value }))}
+                    className="mt-1 w-full rounded-input border border-line bg-card px-2.5 py-1.5 text-caption"
+                  />
+                </label>
+              </div>
             </div>
           </div>
         </div>
@@ -153,7 +241,7 @@ function SlotCard({
           hidden
           data-testid={`slotport-file-${slot.slotKey}`}
           onChange={(e) => {
-            onFile(slot.slotKey, alt, e.target.files);
+            onFile(slot.slotKey, alt, e.target.files, copyFields);
             e.target.value = '';
           }}
         />
@@ -182,6 +270,16 @@ function SlotCard({
                 </div>
               </div>
               <Badge tone="brand">{cp('slotport.pendingBadge')}</Badge>
+              {/* D-41 真预览：pending 版 iframe（仅本页 owner 可见可点；真用户/liveMap 不透 pending） */}
+              <Btn
+                variant="ghost"
+                size="sm"
+                data-testid={`slotport-preview-${v.id}`}
+                disabled={disabled}
+                onClick={() => onPreview(slot.slotKey, v.id)}
+              >
+                {cp('slotport.previewCta')}
+              </Btn>
               <Btn
                 variant="primary"
                 size="sm"
@@ -194,6 +292,24 @@ function SlotCard({
             </div>
           ))}
         </>
+      ) : null}
+
+      {/* D-40 历史留痕区（archived 行透出：版本/操作人/时刻可查；物理删历史=禁令零触） */}
+      {slot.archived.length > 0 ? (
+        <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3" data-testid={`slotport-history-${slot.slotKey}`}>
+          <div className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{cp('slotport.historyTitle')}</div>
+          <ul className="mt-1.5 space-y-1">
+            {slot.archived.map((v) => (
+              <li key={v.id} className="text-caption-xs text-[rgba(59,46,36,.62)]" style={numStyle} data-testid={`slotport-history-row-${v.id}`}>
+                {cp('slotport.historyLine', {
+                  version: v.version,
+                  time: fmtDateTime(v.actedAt ?? v.createdAt),
+                  actor: v.actedByNickname ?? v.creatorNickname ?? cp('slotport.historyActorFallback'),
+                })}
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
     </div>
   );
@@ -221,8 +337,9 @@ export function SlotPortBody() {
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['slotPort'] });
 
-  /* 上传替换：/api/upload 落盘签名 URL → slotPort.upload 登记 pending（D-6 默认待审） */
-  const onFile = (slotKey: string, alt: string, files: FileList | null) => {
+  /* 上传替换：/api/upload 落盘签名 URL → slotPort.upload 登记 pending（D-6 默认待审）；
+     D-42：文案与人群字段（空串=不带）随上传一并入 contentJson；三行制/红线词=server 硬闸，失败明文 toast */
+  const onFile = (slotKey: string, alt: string, files: FileList | null, copy: SlotCopyFields) => {
     const file = files?.[0];
     if (!file) return;
     void (async () => {
@@ -230,7 +347,19 @@ export function SlotPortBody() {
       try {
         /* relDir 白名单仅 [A-Za-z0-9_-]：slotKey 点号转下划线（home.banner → slots/home_banner） */
         const { url } = await uploadImage(getApiBase(), file, `slots/${slotKey.replaceAll('.', '_')}`);
-        await trpc.slotPort.upload.mutate({ slotKey, content: { url, alt } });
+        const priorityNum = copy.priority.trim() === '' ? null : Number(copy.priority);
+        await trpc.slotPort.upload.mutate({
+          slotKey,
+          content: {
+            url,
+            alt,
+            ...(copy.title_main.trim() ? { title_main: copy.title_main.trim() } : {}),
+            ...(copy.title_sub.trim() ? { title_sub: copy.title_sub.trim() } : {}),
+            ...(copy.cta_text.trim() ? { cta_text: copy.cta_text.trim() } : {}),
+            ...(copy.audience !== 'all' ? { audience: copy.audience } : {}),
+            ...(priorityNum !== null && !Number.isNaN(priorityNum) ? { priority: priorityNum } : {}),
+          },
+        });
         toast(cp('slotport.uploadedToast'));
         await invalidate();
       } catch (e) {
@@ -272,6 +401,36 @@ export function SlotPortBody() {
       }
     })();
   };
+
+  /* D-40 紧急下线：双确认（KillSwitchStrip 工艺同族）→ slotPort.unpublish（live→archived）；
+     与页顶「一键关停」支付通道零耦合——本动作只管本槽展示物料 */
+  const onUnpublish = (slotKey: string) => {
+    if (!window.confirm(cp('slotport.unpublishConfirm1', { slot: slotKey }))) return;
+    if (!window.confirm(cp('slotport.unpublishConfirm2', { slot: slotKey }))) return;
+    void (async () => {
+      setActing(true);
+      try {
+        await trpc.slotPort.unpublish.mutate({ slotKey });
+        toast(cp('slotport.unpublishedToast'));
+        await invalidate();
+      } catch (e) {
+        toast(`${cp('slotport.unpublishFail')}：${errMsg(e)}`, 'error');
+      } finally {
+        setActing(false);
+      }
+    })();
+  };
+
+  /* D-41 真预览：pending 版 iframe（canvasPreviewUrl 工艺复用 + slotPreview=<versionId> 探针参；
+     店锚=auth.me.store（前置写死：无锚不硬开，出补锚注记）；仅本页 owner 可入；
+     queryKey 走商家端原生约定 ['auth','me','full']（['auth','me']=shared useMe 的 SessionUser 映射缓存，形状不同勿撞） */
+  const meQ = useQuery({ queryKey: ['auth', 'me', 'full'], queryFn: () => trpc.auth.me.query(), staleTime: 300_000 });
+  const previewStoreId = meQ.data?.store?.id ?? null;
+  const [previewTarget, setPreviewTarget] = useState<{ slotKey: string; versionId: string } | null>(null);
+  const onPreview = (slotKey: string, versionId: string) => setPreviewTarget({ slotKey, versionId });
+  const previewSrc = previewTarget
+    ? `${canvasPreviewUrl('home', previewStoreId, window.location, import.meta.env.DEV)}&slotPreview=${encodeURIComponent(previewTarget.versionId)}`
+    : null;
 
   /* ---------------- 加载 / 错误 / 空三态 ---------------- */
   if (listQuery.isPending) {
@@ -319,9 +478,42 @@ export function SlotPortBody() {
             onFile={onFile}
             onPublish={onPublish}
             onRevert={onRevert}
+            onUnpublish={onUnpublish}
+            onPreview={onPreview}
           />
         ))
       )}
+
+      {/* D-41 预览面板：iframe 真页（canvasPreview=1 探针 + slotPreview=<versionId> 旁路 + 店锚 canvasStore）；
+          店锚未解析=补锚注记不硬开（SC-011 前置口径） */}
+      {previewTarget ? (
+        <div className="u3-panel mt-4" data-testid="slotport-preview-panel">
+          <div className="u3-panel-head">
+            <h3 className="font-mono">{previewTarget.slotKey}</h3>
+            <span className="aside">{cp('slotport.previewPanelTitle')}</span>
+          </div>
+          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-[13px]">
+            {previewSrc && previewStoreId ? (
+              <iframe
+                key={previewTarget.versionId}
+                src={previewSrc}
+                title={cp('slotport.previewCta')}
+                data-testid="slotport-preview-iframe"
+                className="u1-ring h-[720px] w-full max-w-[420px] rounded-panel bg-card"
+              />
+            ) : (
+              <p className="text-caption text-[rgba(59,46,36,.62)]" data-testid="slotport-preview-no-store">
+                {cp('slotport.previewNoStore')}
+              </p>
+            )}
+            <div className="mt-3">
+              <Btn variant="ghost" size="sm" data-testid="slotport-preview-close" onClick={() => setPreviewTarget(null)}>
+                {cp('slotport.previewClose')}
+              </Btn>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }
