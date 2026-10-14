@@ -88,6 +88,8 @@ const fmtPrice = (fen: number): string => {
 /* ------------------------------------------------------------------ */
 
 const CATEGORY_MATCH: Record<CategoryKey, (i: ListForStoreItem) => boolean> = {
+  /** 待确认 = pending（PD-24 D-53 独立档：与仪表盘 todo.pending 全量口径一致） */
+  pending: (i) => i.status === 'pending',
   /** 待到店 = confirmed + pending 且未核销 */
   arriving: (i) => (i.status === 'confirmed' || i.status === 'pending') && !i.checkedInAt,
   /** 服务中 = in_service */
@@ -100,10 +102,12 @@ const CATEGORY_MATCH: Record<CategoryKey, (i: ListForStoreItem) => boolean> = {
   boarding: (i) => i.type === 'boarding',
 };
 
-/** ?status= 深链 → 状态档（总览待办行：cancel_requested / pending；非法值忽略） */
+/** ?status= 深链 → 状态档（总览待办行：cancel_requested / pending；非法值忽略）
+ *  PD-24 D-53：pending → 独立「待确认」档（原落 arriving 待到店档=撕裂源） */
 function initCategory(raw: string | null): CategoryKey | null {
   switch (raw) {
     case 'pending':
+      return 'pending';
     case 'confirmed':
       return 'arriving';
     case 'in_service':
@@ -188,13 +192,16 @@ export default function AppointmentsPage() {
   const counts: ChipCounts = useMemo(
     () => ({
       today: todayItems.length,
+      /* PD-24 D-53：待确认计数随当前列表口径——全量档（from=todo）=主列表全量 pending
+         （与仪表盘 todo.pending 同源同数）；今日/择日档=当日 pending（chips 既有今日口径） */
+      pending: (day === null ? items : todayItems).filter(CATEGORY_MATCH.pending).length,
       arriving: todayItems.filter(CATEGORY_MATCH.arriving).length,
       serving: todayItems.filter(CATEGORY_MATCH.serving).length,
       done: todayItems.filter(CATEGORY_MATCH.done).length,
       cancel: todayItems.filter(CATEGORY_MATCH.cancel).length,
       boarding: todayItems.filter(CATEGORY_MATCH.boarding).length,
     }),
-    [todayItems],
+    [todayItems, items, day],
   );
 
   /* ---------------- 前端过滤：状态档 + 搜索（petName/customerName/code） ---------------- */

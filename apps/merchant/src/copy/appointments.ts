@@ -66,6 +66,9 @@ const APPT_COPY_TABLE = {
   'appt.hintTitle': '提示',
   'appt.hintPending': '确认预约后等待客户到店，核销码见左侧服务信息',
   'appt.hintReview': '客户申请取消本单，请在操作区审批',
+  /* PD-24 D-54：改期审批最小闭环透出——pending 且改约历史含客户件时出横幅（before→after 明面） */
+  'appt.reschedulePendingTitle': '客户改期申请待确认',
+  'appt.reschedulePendingDesc': '客户把本单从 {from} 改到 {to}；点「确认预约」按新时间成行，或用「改期」代客调整',
   'appt.hintPay': '服务已完成，登记收款后本单闭环',
   'appt.hintReassign': '商家改派会覆盖自动派单结果并留痕，员工行来源签同步变更',
   'appt.folioTitle': '金额',

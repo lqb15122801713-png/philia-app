@@ -213,10 +213,18 @@ export type AppointmentRow = typeof schema.appointments.$inferSelect;
  * 预约不存在抛 NOT_FOUND；未登录抛 UNAUTHORIZED；
  * 归属不通过（含跨店）一律 NOT_FOUND（片 2 裁件①：跨店按 id 取数统一 NOT_FOUND
  * 防探测口径——不透出他店单存在性；片 1 意见书 §三裁定）。
+ *
+ * PD-24 D-52（寄养去打卡 404）：opts.staffBoardingStorewide=true 时，staff 分支对
+ * **寄养单**放宽为「本店任意员工」——与 boarding.ts getBoardingAppointment 的
+ * staffStorewide 口径同源（PR-2 修正版 #33 5864881857：寄养照护=班次共享动作，
+ * 非责任动作；dailyLog/stayForStaff/checkout 早已同口径放行）。
+ * 仅限读口 appointment.get 使用（员工端 /boarding/:id/checkin 页数据源）；
+ * 写口与其他类型预约的「未指派或指派给本人」闸不变。
  */
 export async function assertAppointmentAccess(
   ctx: Context,
   appointmentId: string,
+  opts?: { staffBoardingStorewide?: boolean },
 ): Promise<AppointmentRow> {
   const appt = await ctx.db
     .select()
@@ -237,7 +245,9 @@ export async function assertAppointmentAccess(
   if (
     user.staffId &&
     user.storeId === appt.storeId &&
-    (appt.staffId === null || appt.staffId === user.staffId)
+    (appt.staffId === null ||
+      appt.staffId === user.staffId ||
+      (opts?.staffBoardingStorewide === true && appt.type === 'boarding'))
   ) {
     return appt;
   }

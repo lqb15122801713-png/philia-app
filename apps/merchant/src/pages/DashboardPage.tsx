@@ -368,7 +368,14 @@ export default function DashboardPage() {
     ...(refundRequests ?? []).map((r) => ({
       key: `refund-${r.requestNo}`,
       title: `${dc('dash.todoRefundRequestLabel')} ${r.requestNo}`,
-      sub: `¥${fenToYuanGrouped(r.amountFen)}`,
+      /* PD-24 D-50：超期行追加人话注「超期 N 天/小时待批」（服务端单源 overdueHours） */
+      sub: r.slaOverdue
+        ? `¥${fenToYuanGrouped(r.amountFen)} · ${
+            r.overdueHours >= 24
+              ? dc('dash.todoRefundRequestOverdueDays', { n: Math.floor(r.overdueHours / 24) })
+              : dc('dash.todoRefundRequestOverdueHours', { n: r.overdueHours })
+          }`
+        : `¥${fenToYuanGrouped(r.amountFen)}`,
       to: '/cashier/refunds',
       dot: true,
     })),

@@ -298,7 +298,14 @@ export default function CashierRefundsPage() {
                       : cc('cashier.refundRequestTypeRefundOnly')}
                   </span>
                   {r.slaOverdue ? (
-                    <span className="u3-st red">{cc('cashier.refundRequestSlaOverdue')}</span>
+                    /* PD-24 D-50：超期态明确人话——「超期待批 · 已超 N 天/小时」（SLA 本店口径服务端单源算好） */
+                    <span className="u3-st red" title={`SLA ${r.slaHours} 小时`}>
+                      {cc('cashier.refundRequestSlaOverdue')}
+                      {' · '}
+                      {r.overdueHours >= 24
+                        ? cc('cashier.refundRequestSlaOverdueDays', { n: Math.floor(r.overdueHours / 24) })
+                        : cc('cashier.refundRequestSlaOverdueHours', { n: r.overdueHours })}
+                    </span>
                   ) : null}
                 </div>
                 <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">

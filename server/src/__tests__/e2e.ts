@@ -172,7 +172,7 @@
  *      （见 PR-4 段与 R11a⑧ 段内嵌 check）
  *   56（端口批片 B · CJ-1002-01 文案端口 domain='copy'，控制台第七域）：
  *      56.1 种子 3955 键/72 域落库+与码内默认同值+公共读口 activeCopyTexts 全量透出
- *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70→端口批收尾片 2（网格/订正/回收站/公告两步流 UI 92 键，生成件重生成 3762+seed 手补 1=3763，corr 域新入=71 域）3763/71→端口批收尾片 3（画布/试算/调整/录码/克隆/绑码 UI 106 键，生成件重生成 3868+seed 手补 1=3869，canvas 域新入=72 域）3869/72→端口批收尾片 4（OP-03 收口：+7 键 −撤 perk.boarding 两键[宇宙只增不改口径=仓行留档]，生成件重生成 3873+seed 手补 1=3874）3874/72→会员链路小批片 1（撤牌 2+新增 2=生成件 3873+seed 手补 1=3874）3874/72→会员链路小批片 2（0068 升级域+入口 11 键增/4 键改值+撤牌 4 键出宇宙，生成件 3880+seed 手补 1=3881）3881/72→会员链路小批片 3（0069 更名+限制解除 6 键增/10 键改值，生成件 3886+seed 手补 1=3887）3887/72→生产可用性急修（0070 端口映射表 1 键增+暖阳 claim 去只数 1 键改，生成件 3887+seed 手补 1=3888）3888/72→微光正名片 1（0071 流量池化+C 股扫尾 2 键增 2 键改，生成件 3889+seed 手补 1=3890）3890/72→微光正名片 2（0072 画布示例水印+预约档口径注记 2 键增，生成件 3891+seed 手补 1=3892）3892/72）→产品-1010 画布全屏批片 2（0073 五屏抽键 40 键+支付批漏件补种 23 键=63 键增，生成件重生成 3954+seed 手补 1=3955，域 72 不变）3955/72）→产品-1011 画布全屏批片 3 末片（0074 三十八屏随屏抽键 179 键增，台账新规=键入码必随迁移，生成件重生成 4133+seed 手补 1=4134，域 72 不变）4134/72）→产品-1012 控制台改版批片 1（0075 办事卡面人话键族 37 键增，键入码必随迁移，生成件重生成 4170+seed 手补 1=4171，域 72 不变）4171/72）→产品-1012 控制台改版批片 2 末片（0076 全局搜索键族 13 键增，生成件重生成 4183+seed 手补 1=4184，域 72 不变）4184/72）→候裁清零批（0077 退会审批闸新表+申请/审批/慎隐三族键 27 键增，生成件重生成 4210+seed 手补 1=4211，域 72 不变）4211/72）→产品-1012 走查修复批（0078 打卡放宽注记+日结已结明示+落端明示卡 10 键增+service_rules 留口键 1 增，生成件重生成 4220+seed 手补 1=4221，域 72 不变）4221/72）→产品-1013 走查P2修复批（0079 班次冻结明示徽 1 键增+寄养不可打卡人话/商城配送注记 4 键改值，生成件重生成 4221+seed 手补 1=4222，域 72 不变）4222/72）→产品-1013 A5 运营三刀（0080 槽位紧急下线/预览/留痕+预览角标 23 键增，生成件重生成 4244+seed 手补 1=4245，域 72 不变）4245/72）→产品-1013 走测修批 P0×4（0081 订单详情页 6 键+监控僵尸出列 4 键增，生成件重生成 4254+seed 手补 1=4255，域 72 不变）4255/72）→产品-1013 监控僵尸 P1（0082 强制完成动作 5 键增，生成件重生成 4259+seed 手补 1=4260，域 72 不变）4260/72）；
+ *          （计数随 copy 键表生长更新：1827/41→片 3 任务协作 UI 文案批 2118/50→片 4 薪资 XP 批 2330/53→片 5 控制台 17 屏批 2571/57→体验大批片 1 批 2716/63→体验大批片 3 客户端文案批 2801/66→体验大批合部（片 1-5 五片并集）3134/68（含迁移并集补种键 booking.fullAlternativesNote）→端口 V2 修正批（copyport 屏分组 UI 5 键）3139/68→体验大批片 6（wnav 归并：2 键改值+5 键撤除）3134/68→商家端大批片 2（三视图/E1/C3 端口 16 键新增，merchant:report=既有域）3150/68→商家端大批片 3（收银台 18 件 43 键）3193/68→商家端大批片 4（库存调拨 152 键+merchant:inventory 新域）3345/69→商家端大批片 5（营销 257 键+merchant:marketing 新域）3602/70→端口批收尾片 1（规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）3671/70→端口批收尾片 2（网格/订正/回收站/公告两步流 UI 92 键，生成件重生成 3762+seed 手补 1=3763，corr 域新入=71 域）3763/71→端口批收尾片 3（画布/试算/调整/录码/克隆/绑码 UI 106 键，生成件重生成 3868+seed 手补 1=3869，canvas 域新入=72 域）3869/72→端口批收尾片 4（OP-03 收口：+7 键 −撤 perk.boarding 两键[宇宙只增不改口径=仓行留档]，生成件重生成 3873+seed 手补 1=3874）3874/72→会员链路小批片 1（撤牌 2+新增 2=生成件 3873+seed 手补 1=3874）3874/72→会员链路小批片 2（0068 升级域+入口 11 键增/4 键改值+撤牌 4 键出宇宙，生成件 3880+seed 手补 1=3881）3881/72→会员链路小批片 3（0069 更名+限制解除 6 键增/10 键改值，生成件 3886+seed 手补 1=3887）3887/72→生产可用性急修（0070 端口映射表 1 键增+暖阳 claim 去只数 1 键改，生成件 3887+seed 手补 1=3888）3888/72→微光正名片 1（0071 流量池化+C 股扫尾 2 键增 2 键改，生成件 3889+seed 手补 1=3890）3890/72→微光正名片 2（0072 画布示例水印+预约档口径注记 2 键增，生成件 3891+seed 手补 1=3892）3892/72）→产品-1010 画布全屏批片 2（0073 五屏抽键 40 键+支付批漏件补种 23 键=63 键增，生成件重生成 3954+seed 手补 1=3955，域 72 不变）3955/72）→产品-1011 画布全屏批片 3 末片（0074 三十八屏随屏抽键 179 键增，台账新规=键入码必随迁移，生成件重生成 4133+seed 手补 1=4134，域 72 不变）4134/72）→产品-1012 控制台改版批片 1（0075 办事卡面人话键族 37 键增，键入码必随迁移，生成件重生成 4170+seed 手补 1=4171，域 72 不变）4171/72）→产品-1012 控制台改版批片 2 末片（0076 全局搜索键族 13 键增，生成件重生成 4183+seed 手补 1=4184，域 72 不变）4184/72）→候裁清零批（0077 退会审批闸新表+申请/审批/慎隐三族键 27 键增，生成件重生成 4210+seed 手补 1=4211，域 72 不变）4211/72）→产品-1012 走查修复批（0078 打卡放宽注记+日结已结明示+落端明示卡 10 键增+service_rules 留口键 1 增，生成件重生成 4220+seed 手补 1=4221，域 72 不变）4221/72）→产品-1013 走查P2修复批（0079 班次冻结明示徽 1 键增+寄养不可打卡人话/商城配送注记 4 键改值，生成件重生成 4221+seed 手补 1=4222，域 72 不变）4222/72）→产品-1013 A5 运营三刀（0080 槽位紧急下线/预览/留痕+预览角标 23 键增，生成件重生成 4244+seed 手补 1=4245，域 72 不变）4245/72）→产品-1013 走测修批 P0×4（0081 订单详情页 6 键+监控僵尸出列 4 键增，生成件重生成 4254+seed 手补 1=4255，域 72 不变）4255/72）→产品-1013 监控僵尸 P1（0082 强制完成动作 5 键增，生成件重生成 4259+seed 手补 1=4260，域 72 不变）→ 4266/72（产品-1014 钱域寄养 P1：0083 增 6 改 1[D-50 超期待批人话两件+仪表盘超期注两件+D-54 改期待确认横幅两件，slaOverdue 签改值]，生成件重生成 4265+seed 手补 1=4266，域 72 不变）4266/72）；
  *      56.2 端口值优先（save 改键→读口即新值→还原）；56.3 高危键重确认闸
  *      （refund.* 无确认 400/带确认放行）；56.4 禁令词闸（「充值」拒/否定明面句豁免）；
  *      56.5 clerk/manager 403（仅 owner）；56.6 未知键 400+空文案 400+留痕前后值
@@ -4944,17 +4944,17 @@ async function main(): Promise<void> {
 
   /* 56.1 种子全量落库 + 域分组 + 与码内默认同值（读口=端口值→码内默认同源实证）
      计数口径随 copy 键表生长更新：1827/41（端口批片 B）→ 2118/50（片 3 任务协作 UI
-     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602）→ 3671/70（端口批收尾片 1：规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）→ 3763/71（端口批收尾片 2：0062 网格/订正/回收站/公告 92 键，生成件重生成 3762+seed 手补 1=3763，域 70→71=corr 新域）→ 3869/72（端口批收尾片 3：0065 画布/薪资/扫码 106 键，生成件重生成 3868+seed 手补 1=3869，域 71→72=canvas 新域）→ 3874/72（端口批收尾片 4：0066 OP-03 收口 7 键增+perk.boarding 两键撤渲染[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3873/72（会员链路小批片 1：0067 会员链路 2 键增+撤牌 2 键出宇宙[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3881/72（会员链路小批片 2：0068 升级域+入口 11 键增/4 键改值[升档线上化口径]+撤牌 4 键出宇宙[仓行留档]，生成件重生成 3880+seed 手补 1=3881）→ 3887/72（会员链路小批片 3：0069 更名+限制解除 6 键增/10 键改值，生成件重生成 3886+seed 手补 1=3887）→ 3888/72（生产可用性急修：0070 增 1 改 1，生成件重生成 3887+seed 手补 1=3888）→ 3890/72（微光正名片 1：0071 增 2 改 2，生成件重生成 3889+seed 手补 1=3890）→ 3891/72（微光正名片 2：0072 增 1，生成件重生成 3890+seed 手补 1=3891）→ 3955/72（产品-1010 画布全屏批片 2：0073 五屏抽键 40 键增+支付批漏件补种 23 键=63 增[生成件单源重跑 diff 全量入迁移]，生成件重生成 3954+seed 手补 1=3955，域 72 不变）→ 4134/72（产品-1011 画布全屏批片 3 末片：0074 三十八屏随屏抽键 179 键增[台账新规=键入码必随迁移]，生成件重生成 4133+seed 手补 1=4134，域 72 不变）→ 4171/72（产品-1012 控制台改版批片 1：0075 办事卡面人话键族 37 键增，生成件重生成 4170+seed 手补 1=4171，域 72 不变）→ 4184/72（产品-1012 控制台改版批片 2 末片：0076 全局搜索键族 13 键增，生成件重生成 4183+seed 手补 1=4184，域 72 不变）→ 4211/72（候裁清零批：0077 退会审批闸新表+申请/审批/慎隐三族键 27 键增，生成件重生成 4210+seed 手补 1=4211，域 72 不变）→ 4221/72（产品-1012 走查修复批：0078 打卡放宽注记+日结已结明示+落端明示卡 10 键增+service_rules 留口键 1 增，生成件重生成 4220+seed 手补 1=4221，域 72 不变）→ 4222/72（产品-1013 走查P2修复批：0079 增 1 改 4，生成件重生成 4221+seed 手补 1=4222，域 72 不变）→ 4235/72（产品-1013 A5 运营三刀：0080 增 23，生成件重生成 4244+seed 手补 1=4245，域 72 不变）→ 4255/72（产品-1013 走测修批 P0×4：0081 增 10，生成件重生成 4254+seed 手补 1=4255，域 72 不变）→ 4260/72（产品-1013 监控僵尸 P1：0082 增 5，生成件重生成 4259+seed 手补 1=4260，域 72 不变） */
+     文案批）→ 2330/53（片 4 薪资 XP 文案批）→ 2571/57（片 5 控制台 17 屏批）→ 2716/63（体验大批片 1 批，copySeedRows 官方生成件重生成；断言数=生成件行数，改动须同步）→ 3134/68（体验大批片 1-5 合部并集+迁移补种键）→ 3139/68（端口 V2 修正批：0048 copyport 5 键，生成件重生成+seed 手补 1=3139；断言数=落库实数，改动须同步）→ 3134/68（体验大批片 6：0049 wnav 归并 2 改 5 删，生成件重生成 3133+seed 手补 1=3134）→ 3150/69（商家端大批片 2：0052 三视图/E1/C3 键 16 增 3 改，生成件重生成 3149+seed 手补 1=3150，域数 68 不变）→ 3193/68（商家端大批片 3：0054 收银台 43 键，生成件重生成 3192+seed 手补 1=3193）→ 3345/69（商家端大批片 4：0056 库存调拨 152 键，生成件重生成 3344+seed 手补 1=3345）→ 3602/70（商家端大批片 5：0058 营销 257 键，生成件重生成 3601+seed 手补 1=3602）→ 3671/70（端口批收尾片 1：规则页/控制台/kill UI 60 键+0060 字典帮助 cfghelp 8 键，生成件重生成 3670+seed 手补 1=3671）→ 3763/71（端口批收尾片 2：0062 网格/订正/回收站/公告 92 键，生成件重生成 3762+seed 手补 1=3763，域 70→71=corr 新域）→ 3869/72（端口批收尾片 3：0065 画布/薪资/扫码 106 键，生成件重生成 3868+seed 手补 1=3869，域 71→72=canvas 新域）→ 3874/72（端口批收尾片 4：0066 OP-03 收口 7 键增+perk.boarding 两键撤渲染[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3873/72（会员链路小批片 1：0067 会员链路 2 键增+撤牌 2 键出宇宙[仓行留档]，生成件重生成 3873+seed 手补 1=3874）→ 3881/72（会员链路小批片 2：0068 升级域+入口 11 键增/4 键改值[升档线上化口径]+撤牌 4 键出宇宙[仓行留档]，生成件重生成 3880+seed 手补 1=3881）→ 3887/72（会员链路小批片 3：0069 更名+限制解除 6 键增/10 键改值，生成件重生成 3886+seed 手补 1=3887）→ 3888/72（生产可用性急修：0070 增 1 改 1，生成件重生成 3887+seed 手补 1=3888）→ 3890/72（微光正名片 1：0071 增 2 改 2，生成件重生成 3889+seed 手补 1=3890）→ 3891/72（微光正名片 2：0072 增 1，生成件重生成 3890+seed 手补 1=3891）→ 3955/72（产品-1010 画布全屏批片 2：0073 五屏抽键 40 键增+支付批漏件补种 23 键=63 增[生成件单源重跑 diff 全量入迁移]，生成件重生成 3954+seed 手补 1=3955，域 72 不变）→ 4134/72（产品-1011 画布全屏批片 3 末片：0074 三十八屏随屏抽键 179 键增[台账新规=键入码必随迁移]，生成件重生成 4133+seed 手补 1=4134，域 72 不变）→ 4171/72（产品-1012 控制台改版批片 1：0075 办事卡面人话键族 37 键增，生成件重生成 4170+seed 手补 1=4171，域 72 不变）→ 4184/72（产品-1012 控制台改版批片 2 末片：0076 全局搜索键族 13 键增，生成件重生成 4183+seed 手补 1=4184，域 72 不变）→ 4211/72（候裁清零批：0077 退会审批闸新表+申请/审批/慎隐三族键 27 键增，生成件重生成 4210+seed 手补 1=4211，域 72 不变）→ 4221/72（产品-1012 走查修复批：0078 打卡放宽注记+日结已结明示+落端明示卡 10 键增+service_rules 留口键 1 增，生成件重生成 4220+seed 手补 1=4221，域 72 不变）→ 4222/72（产品-1013 走查P2修复批：0079 增 1 改 4，生成件重生成 4221+seed 手补 1=4222，域 72 不变）→ 4235/72（产品-1013 A5 运营三刀：0080 增 23，生成件重生成 4244+seed 手补 1=4245，域 72 不变）→ 4255/72（产品-1013 走测修批 P0×4：0081 增 10，生成件重生成 4254+seed 手补 1=4255，域 72 不变）→ 4260/72（产品-1013 监控僵尸 P1：0082 增 5，生成件重生成 4259+seed 手补 1=4260，域 72 不变）→ 4266/72（产品-1014 钱域寄养 P1：0083 增 6 改 1[D-50 超期待批人话两件+仪表盘超期注两件+D-54 改期待确认横幅两件，slaOverdue 签改值]，生成件重生成 4265+seed 手补 1=4266，域 72 不变） */
   const copyList0 = await trpcQuery<CopyListRes>('config.list', { cookie: ownerCookie, input: { domain: 'copy' } });
   const refundSubmit = copyList0.rules.find((r) => r.ruleKey === 'refund.submitCta' && r.active);
   const domainSet = new Set(copyList0.rules.map((r) => r.label));
-  check('56.1 copy 域种子全量落库（4260 键/72 域；refund.submitCta=提交申请 与码内默认同值）',
-    copyList0.rules.length === 4260 && domainSet.size === 72 &&
+  check('56.1 copy 域种子全量落库（4266 键/72 域；refund.submitCta=提交申请 与码内默认同值）',
+    copyList0.rules.length === 4266 && domainSet.size === 72 &&
       refundSubmit?.valueJson.text === '提交申请' && refundSubmit.version === 1,
     { rows: copyList0.rules.length, domains: domainSet.size, sample: refundSubmit?.valueJson.text });
   const texts0 = await trpcQuery<CopyTextsRes>('config.activeCopyTexts', { cookie: customerCookie });
-  check('56.1 公共读口透出 active 行全量（4260 行 key→text，客户端覆盖层数据源）',
-    texts0.rows.length === 4260 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
+  check('56.1 公共读口透出 active 行全量（4266 行 key→text，客户端覆盖层数据源）',
+    texts0.rows.length === 4266 && texts0.rows.some((r) => r.key === 'refund.submitCta' && r.text === '提交申请'),
     texts0.rows.length);
 
   /* 56.2 端口值优先：owner 改非高危键 home.idFallback → 公共读口新值（保存即生效只管新读）→ 还原 */
@@ -8659,8 +8659,8 @@ async function main(): Promise<void> {
 
     /* ---- 76.3 公共读口形状不变（不透元数据：键→文两列） ---- */
     const texts76 = await trpcQuery<{ rows: Array<{ key: string; text: string; screen?: unknown; position?: unknown }> }>('config.activeCopyTexts', { cookie: customerCookie });
-    check('76.3 activeCopyTexts 形状不变（4260 行 key→text，不透 screen/position 元数据）',
-      texts76.rows.length === 4260 &&
+    check('76.3 activeCopyTexts 形状不变（4266 行 key→text，不透 screen/position 元数据）',
+      texts76.rows.length === 4266 &&
       texts76.rows.every((r) => r.screen === undefined && r.position === undefined),
       texts76.rows.length);
 
@@ -11818,8 +11818,8 @@ async function main(): Promise<void> {
     const slotKeys98 = new Set(blocks98.items.map((b) => b.pageKey));
     /* 口径注：config.list 返回全版本行（族间 config.save 会增生行）——计数=active 键去重面（稳定口径） */
     const activeKeyCount98 = new Set(list98.rules.filter((r) => r.active).map((r) => r.ruleKey)).size;
-    check('98.2 索引数据源读口全通（copy 4260 键（active 去重面）+dictionary 参数域+canvas.blocks 46 屏+slotPort.list）',
-      activeKeyCount98 === 4260 && dict98.items.length > 0 && slotKeys98.size === 46,
+    check('98.2 索引数据源读口全通（copy 4266 键（active 去重面）+dictionary 参数域+canvas.blocks 46 屏+slotPort.list）',
+      activeKeyCount98 === 4266 && dict98.items.length > 0 && slotKeys98.size === 46,
       { copyActive: activeKeyCount98, dict: dict98.items.length, pages: slotKeys98.size });
   }
 
@@ -12194,8 +12194,11 @@ async function main(): Promise<void> {
     const todo103a = await trpcQuery<Array<{ id: string }>>('refund.pendingActual', { cookie: ownerCookie });
     const dryOut = await runProc([TSX_CLI, 'scripts/refund-settle-cleanup.mts'], { PHILIA_DB_URL: DB_URL });
     const dryRow = await db.select().from(schema.refundBills).where(eq(schema.refundBills.id, aged103.id)).get();
-    check('103.3 D-43 dry-run：命中 1 笔（白名单）+零写库（行仍 executed）',
-      dryOut.includes('RB-PD2101-001') && !dryOut.includes('RB-PD2101-002') && dryRow?.status === 'executed' && dryRow.settledAt === null,
+    /* PD-24 D-51 兼容：dry-run 新增「构成核实」段——输出会列出非白名单 002（只列不写）；
+       白名单命中数断言改钉汇总行（命中恰 1 笔=001），语义比「002 零出现」更准 */
+    check('103.3 D-43 dry-run：命中 1 笔（白名单）+零写库（行仍 executed）+D-51 构成核实段列出非白名单残留',
+      dryOut.includes(`白名单 reason LIKE 'smoke %'：命中 1 笔`) && dryOut.includes('非白名单残留 1 笔') &&
+      dryOut.includes('RB-PD2101-001') && dryRow?.status === 'executed' && dryRow.settledAt === null,
       dryOut.split('\n').slice(0, 3).join(' | '));
     const applyOut = await runProc([TSX_CLI, 'scripts/refund-settle-cleanup.mts', '--apply'], { PHILIA_DB_URL: DB_URL });
     const appliedRow = await db.select().from(schema.refundBills).where(eq(schema.refundBills.id, aged103.id)).get();
@@ -12264,6 +12267,135 @@ async function main(): Promise<void> {
     check('104.1 D-47 寄养 in_boarding 不适用=400（in_service 专用口径）',
       boardForce instanceof TrpcHttpError && boardForce.httpStatus === 400 && boardForce.message.includes('in_service'),
       boardForce && boardForce.message);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* 产品-1014 钱域寄养 P1（D-50→D-51→D-52 · PD-24 · 任务书冻结版 V1.0）段：
+     105.1 D-50 超期 RR：钉 created_at=3 天前（SLA 24h）→ listPending slaOverdue=true+
+       overdueHours≈48+slaHours 透出；零自动批（滞留 submitted 至手动）+手动驳回留痕；
+     105.2 D-52 寄养 get 404 修复：寄养单指派负责人 A，同店非负责人员工 appointment.get
+       可达（staffBoardingStorewide，与 boarding.ts PR-2 班次共享口径同源）；
+       闸不回退=非寄养指派单他人仍 NOT_FOUND + 跨店员工 NOT_FOUND（防探测）；
+     105.3 D-51 黄条构成核实：脚本报告 nonWhitelist 段（白/非白二分）+apply 白名单
+       收口留痕、非白名单零触；
+     105.4 D-55 INJECT 测试店隔离（listMine/chainDashboard 双口零透出）。
+     D-53 待确认独立档+D-54 改期横幅=客户端件（证据=实尺帧入卷宗）。 */
+  console.log('\n[产品-1014 钱域寄养P1] 105. D-50 超期 RR 人话 + D-52 寄养 get 可达 + D-51 构成核实');
+  {
+    /* ---- 105.1 D-50：超期 RR 读口透出（手动批/驳留痕本体=50.4~50.7 钉程既有不动） ---- */
+    const req105 = (await db.insert(schema.refundRequests).values({
+      requestNo: 'RR-20261011-901', customerId: customerUser!.id, storeId,
+      orderKind: 'appointment', billId: 'bill-d50-fixture', billNo: 'BILL-D50-901',
+      type: 'refund_only', reasonCode: 'service_unsatisfied', reasonLabel: '服务不满意',
+      description: '【测试】PD-24 D-50 超期待批夹具', amountFen: 100, status: 'submitted',
+      timelineJson: [{ status: 'submitted', at: new Date(Date.now() - 72 * 3600 * 1000).toISOString() }],
+      createdAt: new Date(Date.now() - 72 * 3600 * 1000),
+    }).returning())[0]!;
+    const pending105 = await trpcQuery<Array<{ id: string; slaOverdue: boolean; slaHours: number; overdueHours: number }>>(
+      'refundRequest.listPending', { cookie: managerCookie });
+    const row105 = pending105.find((r) => r.id === req105.id);
+    check('105.1 D-50 超期 RR 待办可见：slaOverdue=true + overdueHours≈48（72h−SLA24h）+ slaHours 透出（超期人话数据源服务端单源）',
+      !!row105 && row105.slaOverdue === true && row105.overdueHours >= 47 && row105.overdueHours <= 48 && row105.slaHours === 24,
+      row105 && { slaOverdue: row105.slaOverdue, overdueHours: row105.overdueHours, slaHours: row105.slaHours });
+    /* 零自动批实证：超期 48h 申请无人点按滞留 submitted（码内无定时/触发器改状态路径） */
+    const stillSubmitted105 = await db.select().from(schema.refundRequests).where(eq(schema.refundRequests.id, req105.id)).get();
+    check('105.1 D-50 零自动批：超期 48h 申请滞留 submitted（红线=手动批/驳唯一路径）',
+      stillSubmitted105?.status === 'submitted', { status: stillSubmitted105?.status });
+    const reject105 = await trpcMutate<{ request: { status: string; rejectReason: string | null; approverId: string | null } }>('refundRequest.reject', {
+      cookie: managerCookie, input: { requestId: req105.id, reason: '超期申请已与客户线下协商（PD-24 手动驳回留痕验证）' },
+    });
+    check('105.1 D-50 超期申请手动驳回留痕（rejected+原因+审批人=店长本人）',
+      reject105.request.status === 'rejected' && (reject105.request.rejectReason ?? '').includes('线下协商') &&
+      reject105.request.approverId === managerFix.id,
+      { status: reject105.request.status, approver: reject105.request.approverId });
+
+    /* ---- 105.2 D-52：寄养单 appointment.get 本店任意员工可达 ---- */
+    const lili105 = byKimi('seed_kimi_staff3')!; // 丽丽（在册员工·本夹具寄养负责人）
+    const liliStaff105 = (await db.select().from(schema.staff)
+      .where(and(eq(schema.staff.userId, lili105.id), eq(schema.staff.storeId, storeId))).limit(1))[0]!;
+    const bSvc105 = (await db.select().from(schema.services)
+      .where(and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'boarding'), eq(schema.services.active, true))).limit(1))[0]!;
+    const pet105 = (await db.insert(schema.pets).values({ ownerId: customerUser!.id, name: '寄寄', species: 'dog' }).returning())[0]!;
+    const bAppt105 = (await db.insert(schema.appointments).values({
+      code: 'E2ED52A', customerId: customerUser!.id, storeId, petId: pet105.id, serviceId: bSvc105.id,
+      type: 'boarding', scheduledStart: new Date(Date.now() - 20 * 3600 * 1000), scheduledEnd: new Date(Date.now() + 28 * 3600 * 1000),
+      status: 'in_boarding', priceFen: 39800, staffId: liliStaff105.id, checkedInAt: new Date(Date.now() - 20 * 3600 * 1000),
+      note: '【测试】PD-24 D-52 寄养打卡夹具',
+    }).returning())[0]!;
+    /* 走测实证位：美容师（同店·非负责人）打开 /boarding/:id/checkin 数据源——修复前 NOT_FOUND 404 */
+    const groomerGet105 = await trpcQuery<{ appointment: { id: string; type: string; staffId: string | null } }>('appointment.get', {
+      cookie: groomerCookie, input: { appointmentId: bAppt105.id } });
+    check('105.2 D-52 寄养单同店非负责人员工 get 可达（0 次 404；班次共享口径与 boarding.ts 同源）+负责人指派保留',
+      groomerGet105.appointment.id === bAppt105.id && groomerGet105.appointment.type === 'boarding' &&
+      groomerGet105.appointment.staffId === liliStaff105.id,
+      { id: groomerGet105.appointment.id, staffId: groomerGet105.appointment.staffId });
+    /* 闸不回退①：非寄养指派单，同店非指派员工仍 NOT_FOUND */
+    const gSvc105 = (await db.select().from(schema.services)
+      .where(and(eq(schema.services.storeId, storeId), eq(schema.services.type, 'grooming'), eq(schema.services.active, true))).limit(1))[0]!;
+    const gAppt105 = (await db.insert(schema.appointments).values({
+      code: 'E2ED52B', customerId: customerUser!.id, storeId, petId: pet105.id, serviceId: gSvc105.id,
+      type: 'grooming', scheduledStart: new Date(Date.now() + 26 * 3600 * 1000), scheduledEnd: new Date(Date.now() + 27 * 3600 * 1000),
+      status: 'confirmed', priceFen: 8800, staffId: liliStaff105.id,
+      note: '【测试】PD-24 D-52 非寄养闸夹具',
+    }).returning())[0]!;
+    const groomerGetG105 = await asErr(trpcQuery('appointment.get', { cookie: groomerCookie, input: { appointmentId: gAppt105.id } }));
+    check('105.2 D-52 闸不回退①：非寄养指派单同店他人 get=NOT_FOUND（staff 分支原口径不动）',
+      groomerGetG105 instanceof TrpcHttpError && groomerGetG105.code === 'NOT_FOUND',
+      groomerGetG105 && { code: groomerGetG105.code });
+    /* 闸不回退②：跨店员工读寄养单仍 NOT_FOUND（片 2 裁件①防探测口径） */
+    const userB105 = (await db.insert(schema.users).values({ kimiId: 'seed_e2e_d52_staffb', nickname: 'e2e B 店员工', phone: '13900003101' }).returning())[0]!;
+    const storeB105 = (await db.insert(schema.stores).values({ ownerId: ownerUser!.id, name: 'e2e PD-24 B 店', status: 'active' }).returning())[0]!;
+    await db.insert(schema.staff).values({ storeId: storeB105.id, userId: userB105.id, name: 'e2e B 店员工', role: 'frontdesk', status: 'active' });
+    const staffBCookie105 = await devLogin(userB105.id);
+    const crossGet105 = await asErr(trpcQuery('appointment.get', { cookie: staffBCookie105, input: { appointmentId: bAppt105.id } }));
+    check('105.2 D-52 闸不回退②：跨店员工读寄养单=NOT_FOUND（不透他店单存在性）',
+      crossGet105 instanceof TrpcHttpError && crossGet105.code === 'NOT_FOUND',
+      crossGet105 && { code: crossGet105.code });
+
+    /* ---- 105.3 D-51：黄条构成核实（白/非白二分）+ 白名单收口留痕 ---- */
+    const anyBill105 = (await db.select({ id: schema.cashierBills.id }).from(schema.cashierBills).limit(1))[0]!;
+    const aged105 = (await db.insert(schema.refundBills).values({
+      storeId, refundNo: 'RB-PD2401-001', bizDate: storeYesterday, billId: anyBill105.id,
+      type: 'partial_amount', amountFen: 100, reason: 'smoke R12 构成核实夹具（PD-24 D-51）',
+      status: 'executed', operatorId: ownerUser!.id, approverId: ownerUser!.id,
+      createdAt: new Date(Date.now() - 25 * 3600 * 1000),
+    }).returning())[0]!;
+    const realish105 = (await db.insert(schema.refundBills).values({
+      storeId, refundNo: 'RB-PD2401-002', bizDate: storeYesterday, billId: anyBill105.id,
+      type: 'partial_amount', amountFen: 200, reason: '客户线下协商退款（真实经营样例·PD-24）',
+      status: 'executed', operatorId: ownerUser!.id, approverId: ownerUser!.id,
+      createdAt: new Date(Date.now() - 25 * 3600 * 1000),
+    }).returning())[0]!;
+    const reportPath105 = join(tmpDir, 'd51-report.json');
+    const dry105 = await runProc([TSX_CLI, 'scripts/refund-settle-cleanup.mts', '--report', reportPath105], { PHILIA_DB_URL: DB_URL });
+    const rep105 = JSON.parse(readFileSync(reportPath105, 'utf8')) as {
+      hitCount: number; rows: Array<{ refundNo: string }>; nonWhitelist: Array<{ refundNo: string }>;
+    };
+    const dryRow105 = await db.select().from(schema.refundBills).where(eq(schema.refundBills.id, aged105.id)).get();
+    check('105.3 D-51 dry-run 构成核实：报告 nonWhitelist 段列出真实样例（含 103.3 存留 RB-PD2101-002）+白名单命中本批夹具+零写库',
+      rep105.rows.some((r) => r.refundNo === 'RB-PD2401-001') &&
+      rep105.nonWhitelist.some((r) => r.refundNo === 'RB-PD2401-002') &&
+      rep105.nonWhitelist.some((r) => r.refundNo === 'RB-PD2101-002') &&
+      dry105.includes('黄条构成核实') && dryRow105?.status === 'executed' && dryRow105.settledAt === null,
+      { hits: rep105.hitCount, nonWhitelist: rep105.nonWhitelist.map((r) => r.refundNo) });
+    const apply105 = await runProc([TSX_CLI, 'scripts/refund-settle-cleanup.mts', '--apply'], { PHILIA_DB_URL: DB_URL });
+    const applied105 = await db.select().from(schema.refundBills).where(eq(schema.refundBills.id, aged105.id)).get();
+    const realish105After = await db.select().from(schema.refundBills).where(eq(schema.refundBills.id, realish105.id)).get();
+    check('105.3 D-51 apply：白名单行 settled+留痕署名（运维一次性收口口径沿承）+非白名单零触',
+      applied105?.status === 'settled' && (applied105.settleNote ?? '').includes('运维一次性收口') &&
+      realish105After?.status === 'executed' && realish105After.settledAt === null,
+      { applyTail: apply105.split('\n').slice(-2).join(' | ') });
+
+    /* ---- 105.4 D-55：INJECT 测试店不进现网连锁视图（listMine/chainDashboard 双口同闸） ---- */
+    await db.insert(schema.stores).values({
+      id: 'INJECT-STORE-9001', ownerId: ownerUser!.id, name: 'INJECT-测试总部', status: 'active',
+    });
+    const mine105 = await trpcQuery<{ stores: Array<{ id: string; name: string }> }>('store.listMine', { cookie: ownerCookie });
+    const chain105 = await trpcQuery<{ stores: Array<{ storeId: string }> }>('store.chainDashboard', { cookie: ownerCookie });
+    check('105.4 D-55 INJECT 店隔离：listMine/chainDashboard 双口零透出（注入造数纪律件不进现网连锁视图）+真实店不受影响',
+      !mine105.stores.some((s) => s.id === 'INJECT-STORE-9001') && mine105.stores.length >= 1 &&
+      !chain105.stores.some((s) => s.storeId === 'INJECT-STORE-9001') && chain105.stores.length >= 1,
+      { mine: mine105.stores.length, chain: chain105.stores.length });
   }
 
   client.close();

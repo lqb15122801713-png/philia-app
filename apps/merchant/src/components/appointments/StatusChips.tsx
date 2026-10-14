@@ -8,11 +8,15 @@
 
 import { useState } from 'react';
 
-/** 状态/类型聚合档（口径见 AppointmentsPage 的 CATEGORY_MATCH） */
-export type CategoryKey = 'arriving' | 'serving' | 'done' | 'cancel' | 'boarding';
+/** 状态/类型聚合档（口径见 AppointmentsPage 的 CATEGORY_MATCH）；
+ *  PD-24 D-53：增 pending=「待确认」独立档——仪表盘「历史待确认」行计数=todo.pending
+ *  （全量 pending），深链 ?status=pending 落档后列表行数与之一致（原并入 arriving
+ *  「待到店」档致计数撕裂：总览有数、落点行列不出对应量） */
+export type CategoryKey = 'pending' | 'arriving' | 'serving' | 'done' | 'cancel' | 'boarding';
 
 export interface ChipCounts {
   today: number;
+  pending: number;
   arriving: number;
   serving: number;
   done: number;
@@ -21,6 +25,7 @@ export interface ChipCounts {
 }
 
 const CATEGORIES: { key: CategoryKey; label: string }[] = [
+  { key: 'pending', label: '待确认' },
   { key: 'arriving', label: '待到店' },
   { key: 'serving', label: '服务中' },
   { key: 'done', label: '已完成' },

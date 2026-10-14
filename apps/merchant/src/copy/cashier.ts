@@ -150,7 +150,10 @@ const CASHIER_COPY_TABLE = {
     '批准后按 R12 既有链路原路退回并生成退款单（商城单走线下原路售后）；执行后不可撤销，纠错=再开正单。',
   'cashier.refundRequestRejectTitle': '驳回退款申请',
   'cashier.refundRequestRejectNote': '驳回留痕 rejected+原因，客户侧申请单可见驳回原因。',
-  'cashier.refundRequestSlaOverdue': '超期',
+  /* PD-24 D-50：超期态明确人话——签文「超期待批」+ 时长注「已超 N 天/小时」（数据源=listPending.slaHours/overdueHours） */
+  'cashier.refundRequestSlaOverdue': '超期待批',
+  'cashier.refundRequestSlaOverdueDays': '已超 {n} 天',
+  'cashier.refundRequestSlaOverdueHours': '已超 {n} 小时',
   'cashier.refundRequestTypeRefundOnly': '仅退款',
   'cashier.refundRequestTypeReturnRefund': '退货退款',
 

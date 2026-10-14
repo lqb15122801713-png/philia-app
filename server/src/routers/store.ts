@@ -37,7 +37,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import { and, desc, eq, gt, gte, inArray, isNull, lt } from 'drizzle-orm';
+import { and, desc, eq, gt, gte, inArray, isNull, lt, notLike } from 'drizzle-orm';
 import { z } from 'zod';
 import { schema } from '../db';
 import { merchantManagerProcedure, merchantOwnerProcedure, merchantProcedure, publicProcedure, router, storeScopeIds, type Context } from '../trpc';
@@ -83,6 +83,14 @@ function todoCountsOf(
     else if (r.status === 'completed' && r.paidAt === null) todo.unpaid += 1;
   }
   return { ...todo, total: todo.pending + todo.unassigned + todo.cancelRequested + todo.unpaid };
+}
+
+/**
+ * PD-24 D-55 INJECT 测试店闸（单源）：注入造数纪律件（INJECT- 前缀 id/name）不进
+ * 现网连锁视图——listMine 门店列表与 chainDashboard 连锁卡同闸；真实经营店零影响。
+ */
+function injectStoreExclude() {
+  return and(notLike(schema.stores.id, 'INJECT-%'), notLike(schema.stores.name, 'INJECT-%'));
 }
 
 function genInviteCode(): string {
@@ -496,6 +504,8 @@ export const storeRouter = router({
    * 我的门店列表（片 1 连锁地基 · 分级结构读口，申报件：新读口零新路由）：
    * 老板=跨店全域集合（名下∪名下总部辖店，含 storeType/hqId 两层结构透出）；
    * 店长/店员=本店单行（staff.store_id 绑定闸同源 storeScopeIds）。
+   * PD-24 D-55：INJECT- 标记族测试店不进现网视图（注入造数纪律件，id/name 前缀同闸；
+   * 闸口径抽 hidesInjectStore 单源——chainDashboard 连锁卡同闸）。
    */
   listMine: merchantProcedure.query(async ({ ctx }) => {
     const scope = storeScopeIds(ctx.user);
@@ -510,7 +520,7 @@ export const storeRouter = router({
         groupName: schema.stores.groupName,
       })
       .from(schema.stores)
-      .where(inArray(schema.stores.id, scope))
+      .where(and(inArray(schema.stores.id, scope), injectStoreExclude()))
       .orderBy(schema.stores.createdAt);
     return { stores: rows };
   }),
@@ -1089,7 +1099,7 @@ export const storeRouter = router({
       const storeRows = await ctx.db
         .select({ id: schema.stores.id, name: schema.stores.name, groupName: schema.stores.groupName })
         .from(schema.stores)
-        .where(inArray(schema.stores.id, scope))
+        .where(and(inArray(schema.stores.id, scope), injectStoreExclude()))
         .orderBy(schema.stores.createdAt);
       const now = new Date();
       const dayStart = storeTodayStart(now);
