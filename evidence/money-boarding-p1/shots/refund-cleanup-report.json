@@ -1,0 +1,36 @@
+{
+  "at": "2026-10-14T11:53:22.706Z",
+  "dryRun": true,
+  "reasonLike": "smoke %",
+  "hitCount": 2,
+  "rows": [
+    {
+      "refundNo": "RB-MB24-S186948",
+      "amountFen": 100,
+      "reason": "smoke R12 现金单全额退",
+      "before": {
+        "status": "executed",
+        "settledAt": null
+      },
+      "after": "(dry-run 不写)"
+    },
+    {
+      "refundNo": "RB-MB24-S286948",
+      "amountFen": 100,
+      "reason": "smoke R12 储值组合单退 50%",
+      "before": {
+        "status": "executed",
+        "settledAt": null
+      },
+      "after": "(dry-run 不写)"
+    }
+  ],
+  "nonWhitelist": [
+    {
+      "refundNo": "RB-MB24-R186948",
+      "amountFen": 100,
+      "reason": "客户投诉退款（真实经营样例）",
+      "createdAt": "2026-10-13T07:53:06.000Z"
+    }
+  ]
+}

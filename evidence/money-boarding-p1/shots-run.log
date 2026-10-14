@@ -1,0 +1,25 @@
+✅ 夹具全落：RR×2(96h/30h)+待确认×2(跨日)+改期留痕+寄养指派单+黄条×3(2 smoke+1 真实)+INJECT 店
+✅ 店主登录
+✅ F1 D-50 仪表盘审批区：退款申请行带「超期 3 天待批」人话注
+✅ F1 D-55 连锁视图不见 INJECT-测试总部（真实店在列） —— 菲丽亚宠物·示例店
+✅ F1 D-53 仪表盘「历史待确认单」计数=2
+shot: E:\KIMI code\tmp\mb-evidence\shots\F1-dashboard-alerts.png
+✅ F2 D-50 申请待办块：「超期待批 · 已超 3 天」+「已超 6 小时」双签 + 批准/驳回 CTA 在
+✅ F2 D-50 批准/驳回双 CTA 渲染
+✅ F2 D-51 黄条前态：「3 笔退款超 24 小时未登记实退」
+shot: E:\KIMI code\tmp\mb-evidence\shots\F2-cashier-refunds-overdue.png
+shot: E:\KIMI code\tmp\mb-evidence\shots\F3-reject-dialog.png
+✅ F4 D-50 驳回留痕退件（rejected+原因落库；待办块退 1 剩 1） —— status=rejected block=客户退款申请1 笔RR-20261010-901仅退款超期待批 · 已超 3 天
+shot: E:\KIMI code\tmp\mb-evidence\shots\F4-after-reject.png
+✅ F5 D-53 「待确认」独立档 on + 计数=行数=2（总览↔列表一致） —— chip=待确认 2 rows=2
+shot: E:\KIMI code\tmp\mb-evidence\shots\F5-appointments-pending.png
+✅ F6 D-54 改期横幅透出（客户改期申请待确认+前后时刻明面）+确认 CTA 同屏 —— 客户改期申请待确认客户把本单从 10月13日 13:53 改到 10月15日 21:53；点「确认预约」按新时间成行，或
+shot: E:\KIMI code\tmp\mb-evidence\shots\F6-detail-reschedule-banner.png
+✅ 阿强（美容师·非负责人）登录员工端
+✅ F7 D-52 寄养打卡页可达：宠物卡+入住登记段渲染（零 404 空崩、零「当前不可打卡」） —— ‹ 寄养打卡 第 1 晚 · 共 2 晚 在店寄养 · 标准间寄养（犬）  旺财  金毛寻回犬 · 28.5kg · 10/13 入住 → 10/15 退房  
+shot: E:\KIMI code\tmp\mb-evidence\shots\F7-staff-boarding-checkin.png
+✅ F8 D-51 dry-run 零写（3 行仍 executed）→ apply：smoke×2 settled 留痕 + 真实样例零触 —— dry=3 s1=settled s2=settled r1=executed
+✅ F8 D-51 后态：黄条回落=1 笔（真实样例可解释残留）+申请待办块不受触（RR-20261010-901 仍在） —— bar=1 笔退款超 24 小时未登记实退RB-MB24-R186948 ¥1——线下原
+shot: E:\KIMI code\tmp\mb-evidence\shots\F8-cashier-after-cleanup.png
+
+全帧全绿 ✅
