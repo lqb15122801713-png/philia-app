@@ -1313,9 +1313,12 @@ export const appointmentRouter = router({
    *  补缺大批片 1（additive）：附 cashierBillId——经 cashier_bill_items 预约行
    *  （kind='appointment' 且 ref_id=appointment.id，关联口径同 refund.ts 按行退取数）
    *  反查 cashier_bills，取最新一笔已结账（status='settled'；部分退亦可——已结账即可退）
-   *  单的 billId，无则 null（客户端服务单退款入口的数据源，本人单闸既有） */
+   *  单的 billId，无则 null（客户端服务单退款入口的数据源，本人单闸既有）
+   *  PD-24 D-52：寄养单 staff 读放宽=本店任意员工（staffBoardingStorewide）——
+   *  员工端 /boarding/:id/checkin 页数据源；照护=班次共享动作（boarding.ts PR-2 同口径），
+   *  负责人仍记 appointments.staff_id 不变；非寄养单/写口闸不变，跨店仍 NOT_FOUND。 */
   get: publicProcedure.input(z.object({ appointmentId: z.string().min(1) })).query(async ({ ctx, input }) => {
-    const appt = await assertAppointmentAccess(ctx, input.appointmentId);
+    const appt = await assertAppointmentAccess(ctx, input.appointmentId, { staffBoardingStorewide: true });
     const pet = await ctx.db.select().from(schema.pets).where(eq(schema.pets.id, appt.petId)).get();
     const service = await ctx.db
       .select()

@@ -492,6 +492,13 @@ export default function AppointmentDetailPage() {
             ? ac('appt.hintPay')
             : null;
 
+  /* PD-24 D-54：改期审批透出——pending 且最近一条改约留痕来自客户时出横幅
+     （before→after 明面；批=「确认预约」既有 CTA，调=「改期」代客路径既有，闭环零新端点） */
+  const lastCustomerReschedule =
+    appt.status === 'pending'
+      ? ([...(detailQuery.data?.rescheduleLogs ?? [])].reverse().find((l) => l.byRole === 'customer') ?? null)
+      : null;
+
   /* ---------------- 渲染 ---------------- */
 
   return (
@@ -517,6 +524,22 @@ export default function AppointmentDetailPage() {
       ) : null}
 
       <div className="wsk">
+        {/* PD-24 D-54：客户改期申请待确认横幅（改期审批最小闭环透出） */}
+        {lastCustomerReschedule ? (
+          <div
+            className="mb-3.5 rounded-[14px] bg-brand-primary-light px-[17px] py-3 text-caption text-ink"
+            data-testid="reschedule-pending-banner"
+          >
+            <b>{ac('appt.reschedulePendingTitle')}</b>
+            <span className="ml-2 text-[rgba(59,46,36,.62)]">
+              {ac('appt.reschedulePendingDesc', {
+                from: `${fmtDate(lastCustomerReschedule.beforeStart)} ${fmtTime(lastCustomerReschedule.beforeStart)}`,
+                to: `${fmtDate(lastCustomerReschedule.afterStart)} ${fmtTime(lastCustomerReschedule.afterStart)}`,
+              })}
+            </span>
+          </div>
+        ) : null}
+
         <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.6fr_1fr]">
           {/* 左栏：M5 服务信息 + M7 folio + 服务进度（洗护）/寄养信息 + 事件轨迹 */}
           <div className="flex min-w-0 flex-col gap-3.5">

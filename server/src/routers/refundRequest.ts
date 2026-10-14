@@ -781,6 +781,9 @@ export const refundRequestRouter = router({
   /**
    * listPending（owner|manager 本店）：商家端退款申请待办——本店 submitted 申请
    * 按提交时间升序（先到先审），附客户昵称 + SLA 超期标记（createdAt+slaHours<now，端口值）。
+   * PD-24 D-50：增 slaHours/overdueHours 透出——超期态人话（「超期待批 · 已超 N 天/小时」）
+   * 的数据源，单源在服务端算好（本店 SLA 作用域口径），端侧不各算各的。
+   * 手动批/驳留痕不变：本读口只读，批准/驳回走 approve/reject；无自动批路径（红线写死）。
    */
   listPending: merchantManagerProcedure.query(async ({ ctx }) => {
     const storeId = ctx.user.storeId!;
@@ -794,12 +797,19 @@ export const refundRequestRouter = router({
       .where(and(eq(schema.refundRequests.storeId, storeId), eq(schema.refundRequests.status, 'submitted')))
       .orderBy(schema.refundRequests.createdAt, schema.refundRequests.id)
       .limit(200);
-    return rows.map((r) => ({
-      ...r.request,
-      customerNickname: r.customerNickname ?? null,
-      /** SLA 超期标记（refund_sla_hours 端口值；超期=true 商家端置顶提醒用） */
-      slaOverdue: r.request.createdAt.getTime() + slaMs < nowMs,
-    }));
+    return rows.map((r) => {
+      const overMs = nowMs - (r.request.createdAt.getTime() + slaMs);
+      return {
+        ...r.request,
+        customerNickname: r.customerNickname ?? null,
+        /** SLA 超期标记（refund_sla_hours 端口值；超期=true 商家端置顶提醒用） */
+        slaOverdue: overMs > 0,
+        /** 本店 SLA 口径（小时；透出=人话标注「超期」基准可查） */
+        slaHours: cfg.slaHours,
+        /** 已超期小时数（未超期=0；超期不足 1 小时=1，端侧按 ≥24 折天渲染） */
+        overdueHours: overMs > 0 ? Math.max(1, Math.floor(overMs / (3600 * 1000))) : 0,
+      };
+    });
   }),
 });
 

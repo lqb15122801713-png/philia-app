@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-13T12:30:53.513Z；键数=4259；归屏率=96.5%（未归屏 147）
+ * 生成时间口径：2026-10-14T11:19:17.866Z；键数=4265；归屏率=96.6%（未归屏 147）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -8153,6 +8153,20 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "RescheduleSheet 组件内文案"
  },
  {
+  "key": "appt.reschedulePendingDesc",
+  "domain": "merchant:appointments",
+  "text": "客户把本单从 {from} 改到 {to}；点「确认预约」按新时间成行，或用「改期」代客调整",
+  "screen": "商家·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
+  "key": "appt.reschedulePendingTitle",
+  "domain": "merchant:appointments",
+  "text": "客户改期申请待确认",
+  "screen": "商家·预约详情",
+  "position": "AppointmentDetailPage 页面内文案"
+ },
+ {
   "key": "appt.reviewCancelBody",
   "domain": "merchant:appointments",
   "text": "客户在开始前 {hours} 小时内申请取消该预约。批准后槽位立即释放并通知客户；拒绝后预约恢复为「已确认」。",
@@ -9730,7 +9744,21 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "cashier.refundRequestSlaOverdue",
   "domain": "merchant:cashier",
-  "text": "超期",
+  "text": "超期待批",
+  "screen": "商家·退款单",
+  "position": "CashierRefundsPage 页面内文案"
+ },
+ {
+  "key": "cashier.refundRequestSlaOverdueDays",
+  "domain": "merchant:cashier",
+  "text": "已超 {n} 天",
+  "screen": "商家·退款单",
+  "position": "CashierRefundsPage 页面内文案"
+ },
+ {
+  "key": "cashier.refundRequestSlaOverdueHours",
+  "domain": "merchant:cashier",
+  "text": "已超 {n} 小时",
   "screen": "商家·退款单",
   "position": "CashierRefundsPage 页面内文案"
  },
@@ -13004,6 +13032,20 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "position": "DashboardPage 页面内文案"
  },
  {
+  "key": "dash.todoRefundRequestOverdueDays",
+  "domain": "merchant:dashboard",
+  "text": "超期 {n} 天待批",
+  "screen": "商家·经营总览",
+  "position": "DashboardPage 页面内文案"
+ },
+ {
+  "key": "dash.todoRefundRequestOverdueHours",
+  "domain": "merchant:dashboard",
+  "text": "超期 {n} 小时待批",
+  "screen": "商家·经营总览",
+  "position": "DashboardPage 页面内文案"
+ },
+ {
   "key": "dash.todoTicketHint",
   "domain": "merchant:dashboard",
   "text": "客户反馈待回复",
@@ -16010,36 +16052,36 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "mon.forceCompleteConfirm",
   "domain": "merchant:monitor",
   "text": "确认强制完成该单？留痕=操作人/时刻/前后状态在册可查",
-  "screen": "商家·在店监控",
-  "position": "MonitorHubPage 页面内文案"
+  "screen": "商家·在店监控 / 商家·服务监控",
+  "position": "MonitorHubPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "mon.forceCompleteCta",
   "domain": "merchant:monitor",
   "text": "强制完成",
-  "screen": "商家·在店监控",
-  "position": "MonitorHubPage 页面内文案"
+  "screen": "商家·在店监控 / 商家·服务监控",
+  "position": "MonitorHubPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "mon.forceCompleteFail",
   "domain": "merchant:monitor",
   "text": "强制完成失败，请稍后再试",
-  "screen": "商家·在店监控",
-  "position": "MonitorHubPage 页面内文案"
+  "screen": "商家·在店监控 / 商家·服务监控",
+  "position": "MonitorHubPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "mon.forceCompleteNote",
   "domain": "merchant:monitor",
   "text": "强制完成（异常待清清淤 · PD-22）",
-  "screen": "商家·在店监控",
-  "position": "MonitorHubPage 页面内文案"
+  "screen": "商家·在店监控 / 商家·服务监控",
+  "position": "MonitorHubPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "mon.forceCompleteToast",
   "domain": "merchant:monitor",
   "text": "已强制完成（留痕在册）",
-  "screen": "商家·在店监控",
-  "position": "MonitorHubPage 页面内文案"
+  "screen": "商家·在店监控 / 商家·服务监控",
+  "position": "MonitorHubPage 页面内文案（跨屏共用件，各屏组同列）"
  },
  {
   "key": "mon.hubBoardingOverdue",

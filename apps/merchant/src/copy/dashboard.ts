@@ -33,6 +33,9 @@ const DASH_COPY_TABLE = {
   /* 客户退款申请待办（批次 C5 审批缝 · 计数=refundRequest.listPending 独立查询挂角标） */
   'dash.todoRefundRequestLabel': '客户退款申请',
   'dash.todoRefundRequestHint': '客户申请退款，待审批',
+  /* PD-24 D-50：审批区退款行超期人话注（数据源=listPending.overdueHours；仅 slaOverdue 行追加） */
+  'dash.todoRefundRequestOverdueDays': '超期 {n} 天待批',
+  'dash.todoRefundRequestOverdueHours': '超期 {n} 小时待批',
   /* 超期样例小字片段（mono 数字位在 JSX 内拼装，静片段入键——同 staff me.ts 先例） */
   'dash.todoOverdueLead': '应退未退',
   'dash.todoOverdueUnit': '天',
