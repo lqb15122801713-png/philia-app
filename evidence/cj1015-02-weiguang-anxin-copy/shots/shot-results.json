@@ -1,0 +1,50 @@
+{
+  "checks": [
+    {
+      "name": "客户登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "F1 A1 客户端档名=「微光」（对外昵称 tierNameOf；免费档非付费第四档）",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "F1 A1 档名元素渲染=「微光」（tierNameOf 单源透出）",
+      "ok": true,
+      "detail": "badgeEls=1"
+    },
+    {
+      "name": "小美（前台）登录员工端",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "F2 A2 发放区：安心包库存行在列（种子 3 件）",
+      "ok": true,
+      "detail": "rows=3"
+    },
+    {
+      "name": "F2 A2 发放表单：数量/手机号/备注三字段+确认/取消",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "F3a A2 无号先发：库存扣减入流水+「身份可后补」toast（不绑 App 零拒发）",
+      "ok": true,
+      "detail": "after=27"
+    },
+    {
+      "name": "F3b A2 挂身份发放：权益台账 care_package 行挂到客户+toast 明示",
+      "ok": true,
+      "detail": "grant=01M4ZGKMSY16G4F3PEHK28B1ZV"
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\wa-evidence\\shots\\F1-member-weiguang-name.png",
+    "E:\\KIMI code\\tmp\\wa-evidence\\shots\\F2-issue-form.png",
+    "E:\\KIMI code\\tmp\\wa-evidence\\shots\\F3a-issue-walkin-toast.png",
+    "E:\\KIMI code\\tmp\\wa-evidence\\shots\\F3b-issue-attached-toast.png"
+  ]
+}
