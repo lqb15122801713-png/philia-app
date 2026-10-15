@@ -110,7 +110,8 @@ export function clerkGuideText(pathname: string): { title: string; hint: string 
     return { title: '权限矩阵由店长或店主查看', hint: '角色×权限矩阵属管理层视界；店员账号的工作面是收银台。' }
   }
   if (pathname.startsWith('/console')) {
-    return { title: '开发者管理端由店长或店主处理', hint: '端口配置与发布属管理层动作；店员账号的工作面是收银台。' }
+    // PD-25 D-56 A5：换名+去「店长或店主」歧义（店主为准）；角色矩阵不动
+    return { title: '运营后台端由店主处理', hint: '端口配置与发布属管理层动作；店员账号的工作面是收银台。' }
   }
   return { title: '该功能由店长或店主处理', hint: '店员账号的工作面是收银台；如需协助请找店长。' }
 }

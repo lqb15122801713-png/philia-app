@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-14T11:19:17.866Z；键数=4265；归屏率=96.6%（未归屏 147）
+ * 生成时间口径：2026-10-15T02:52:49.250Z；键数=4265；归屏率=96.6%（未归屏 147）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -10633,21 +10633,21 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "cadm.killArm",
   "domain": "merchant:consoleAdmin",
-  "text": "一键关停",
+  "text": "支付一键关停",
   "screen": "商家·开发者管理端",
   "position": "ConsolePage 页面内文案"
  },
  {
   "key": "cadm.killArmConfirm",
   "domain": "merchant:consoleAdmin",
-  "text": "确认一键关停？线上支付通道等可关参数将瞬时回落安全值。",
+  "text": "确认支付一键关停？线上支付通道等可关参数将瞬时回落安全值（与 Banner 槽位下线无关）。",
   "screen": "商家·开发者管理端",
   "position": "ConsolePage 页面内文案"
  },
  {
   "key": "cadm.killArmNote",
   "domain": "merchant:consoleAdmin",
-  "text": "一键关停：线上支付通道等可关参数瞬时回落安全值（全局）。",
+  "text": "支付一键关停（非 Banner）：线上支付通道等可关参数瞬时回落安全值（全局）。",
   "screen": "商家·开发者管理端",
   "position": "ConsolePage 页面内文案"
  },
@@ -10703,21 +10703,21 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "cadm.ownerOnlyTitle",
   "domain": "merchant:consoleAdmin",
-  "text": "开发者管理端仅店主可用",
+  "text": "运营后台端仅店主可用",
   "screen": "商家·开发者管理端",
   "position": "ConsolePage 页面内文案"
  },
  {
   "key": "cadm.pageSub",
   "domain": "merchant:consoleAdmin",
-  "text": "端口配置与发布 · 店主专属 · 共构不分叉",
+  "text": "内容与脸面 · 店主 · 钱权另闸",
   "screen": "商家·开发者管理端",
   "position": "ConsolePage 页面内文案"
  },
  {
   "key": "cadm.pageTitle",
   "domain": "merchant:consoleAdmin",
-  "text": "开发者管理端",
+  "text": "运营后台端",
   "screen": "商家·开发者管理端",
   "position": "ConsolePage 页面内文案"
  },
@@ -11158,7 +11158,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "wnav.footConsole",
   "domain": "merchant:console",
-  "text": "开发者管理端",
+  "text": "运营后台端",
   "screen": null,
   "position": "未在页面调用点命中（merchant:console 域键表，端口运营复核挂载屏）"
  },
