@@ -79,7 +79,7 @@ export default function PetPicker({
         <p className="mt-1 text-caption text-ink-secondary">{bkc('booking.noPetBodyPicker')}</p>
         <Link
           to="/philia/pets"
-          className="mt-4 inline-flex h-11 items-center rounded-card border-[1.5px] border-ink px-6 text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="mt-4 inline-flex h-11 items-center rounded-card border-[1.5px] border-[#5C5040] px-6 text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           {bkc('booking.noPetCtaPicker')}
         </Link>
@@ -159,14 +159,14 @@ export default function PetPicker({
             onClick={() => onSelect(p.id)}
             /* W1-D2：整行可点（含圆圈与文字区），行高 ≥44px，相邻间距 8px（space-y-2） */
             className={`flex min-h-[44px] w-full items-center gap-3 rounded-card border p-4 text-left transition active:scale-[0.99] ${
-              active ? 'border-[1.5px] border-ink' : 'border-line'
+              active ? 'border-[1.5px] border-[#5C5040]' : 'border-line'
             }`}
           >
             {p.avatarUrl ? (
               <img src={p.avatarUrl} alt={p.name} className="h-11 w-11 rounded-full object-cover" />
             ) : (
               /* U1-D：彩色 emoji 改 VI 线图标（全域禁彩色图标） */
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-sunken" aria-hidden="true">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F3EEE4]" aria-hidden="true">
                 <PawPrint className="h-5 w-5 text-ink" strokeWidth={1.5} />
               </span>
             )}
@@ -183,7 +183,7 @@ export default function PetPicker({
             </span>
             <span
               className={`flex h-5 w-5 items-center justify-center rounded-full ${
-                active ? 'bg-ink' : 'border-[1.5px] border-line-strong'
+                active ? 'bg-[#5C5040]' : 'border-[1.5px] border-line-strong'
               }`}
             >
               {active ? (

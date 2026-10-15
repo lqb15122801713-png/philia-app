@@ -15,8 +15,8 @@
  * 快速重试不产生重复单。服务端 create 现状无幂等键（本批不动服务端，已如实上报）。
  *
  * 视觉（设计语言规格 v3 减法）：去卡片化 hairline 分隔、无彩色图标底块、圆角
- * rounded-card(16∈14~18)、全屏唯一 accent 色块 = CTA（柠檬黄底 + 深棕墨字，
- * on-primary 深棕墨，不用反白字；CTA 保留 shadow-philia 浮起）。B9.3：面板本体
+ * rounded-card(16∈14~18)、全屏唯一 accent 色块 = CTA（片1 VI：cream #F2DC8C 底 +
+ * 深棕墨字，on-accent 深棕墨，不用反白字；CTA 保留 shadow-philia 浮起）。B9.3：面板本体
  * 按试样带一层软阴影（shadow-card，「全屏唯一白面板 + 一层软阴影」），去描边。
  */
 
@@ -99,7 +99,8 @@ export default function RebookPanel({
 
   const adjustTarget = `/booking/grooming?storeId=${encodeURIComponent(storeId)}&serviceId=${encodeURIComponent(serviceId)}&petId=${encodeURIComponent(petId)}`;
   const ROW = 'flex items-baseline justify-between gap-3 py-2';
-  const HAIRLINE = 'border-t border-[rgba(59,46,36,.09)]';
+  /* 片1-客户端脸 VI（READY §2.1）：发丝线=divider #E8E2D6 谱 rgba(44,40,34,.10) */
+  const HAIRLINE = 'border-t border-[rgba(44,40,34,.10)]';
 
   return (
     <section
@@ -113,7 +114,7 @@ export default function RebookPanel({
         <Link
           to={adjustTarget}
           data-testid="home-rebook-adjust"
-          className="text-caption font-medium text-brand-primary"
+          className="border-b border-[#A89779] pb-px text-caption font-medium text-ink"
         >
           调整服务或时间 ›
         </Link>
@@ -163,7 +164,8 @@ export default function RebookPanel({
           : '到店付'}
       </p>
 
-      {/* 全屏唯一 accent：一键提交 CTA（提交中禁用，幂等） */}
+      {/* 全屏唯一 accent：一键提交 CTA（提交中禁用，幂等）
+          片1 VI：主钮=cream #F2DC8C「此刻要做」（READY §2.1；片0 令牌合入后与 brand-primary 同值） */}
       <button
         type="button"
         onClick={onQuickBook}
@@ -175,7 +177,7 @@ export default function RebookPanel({
         className={`mt-3 h-12 w-full rounded-card text-body font-semibold transition-transform duration-120 ease-philia-spring ${
           submitting
             ? 'cursor-not-allowed bg-line text-ink-placeholder'
-            : 'bg-brand-primary text-ink shadow-philia active:scale-92'
+            : 'bg-[#F2DC8C] text-ink shadow-philia active:scale-92'
         }`}
       >
         {submitting ? '提交中…' : `预约并支付 · ${fenToYuan(priceFen)}`}

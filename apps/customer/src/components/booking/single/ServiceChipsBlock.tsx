@@ -10,10 +10,11 @@
  *
  * 换皮批片 2（定稿 B-01 / §4.4 工艺卡）：
  * - 二选一大卡 → selcard：一卡两列竖线分隔（圆角 20），列=icon 26 + 题 16/800 +
- *   mono 副题（项数 · 价格起）；选中列=深棕底 #2E2318 反白 #F6EFDD（副题 #C9BBA0）。
- *   VI 位图插槽退役：选中列深棕底上位图无法反白，定稿锚 selcard 即线图标 26。
- * - 服务项 chips → 胶囊 99：边 --line，选中=深棕底 #F6EFDD 字（旧柠檬底退役，
- *   淡黄点睛位让给时段栅格选中态）。
+ *   mono 副题（项数 · 价格起）；选中列=brand 深面 #5C5040 反白 #F6EFDD（副题 #C9BBA0）
+ *   （片1 VI，READY §2.1）。
+ *   VI 位图插槽退役：选中列深底上位图无法反白，定稿锚 selcard 即线图标 26。
+ * - 服务项 chips → 胶囊 99：边 --line，选中=brand 深面 #5C5040 反白字（片1 VI；
+ *   旧柠檬底退役，cream 点睛位让给时段栅格选中态）。
  * - 「更多服务 ▸」= 卡其下划线链（tfield 更改链同工艺）。
  */
 
@@ -94,7 +95,7 @@ export default function ServiceChipsBlock({
                 data-testid={c.testId}
                 data-active={active ? 'true' : 'false'}
                 className={`flex-1 px-2 pb-4 pt-[18px] text-center transition active:scale-[0.98] ${
-                  active ? 'bg-[#2E2318] text-[#F6EFDD]' : 'text-ink'
+                  active ? 'bg-[#5C5040] text-[#F6EFDD]' : 'text-ink'
                 } [&+&]:border-l [&+&]:border-line-divider`}
               >
                 <Icon
@@ -128,7 +129,7 @@ export default function ServiceChipsBlock({
               data-testid={`gs-service-chip-${s.id}`}
               data-active={active ? 'true' : 'false'}
               className={`rounded-full border px-[15px] py-[9px] text-left transition active:scale-95 ${
-                active ? 'border-transparent bg-[#2E2318] text-[#F6EFDD]' : 'border-line bg-card text-ink'
+                active ? 'border-transparent bg-[#5C5040] text-[#F6EFDD]' : 'border-line bg-card text-ink'
               }`}
             >
               <span className="block text-[12.5px] font-semibold leading-4">{s.name}</span>
@@ -148,7 +149,7 @@ export default function ServiceChipsBlock({
           type="button"
           onClick={() => setExpanded((v) => !v)}
           data-testid="gs-service-more"
-          className="mt-2 border-b border-brand-secondary pb-px text-caption font-medium text-ink"
+          className="mt-2 border-b border-[#A89779] pb-px text-caption font-medium text-ink"
         >
           {expanded ? '收起服务 ▾' : `更多服务 ▸（共 ${services.length} 项）`}
         </button>

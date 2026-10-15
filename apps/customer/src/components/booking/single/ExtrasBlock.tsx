@@ -116,7 +116,7 @@ export default function ExtrasBlock({
                 data-testid={`gs-payment-${m}`}
                 data-disabled={passDisabled ? 'true' : 'false'}
                 className={`flex w-full items-center justify-between rounded-control border p-3 text-left transition active:scale-[0.99] ${
-                  active ? 'border-[1.5px] border-ink' : 'border-line'
+                  active ? 'border-[1.5px] border-[#5C5040]' : 'border-line'
                 } ${passDisabled ? 'cursor-not-allowed opacity-50' : ''}`}
               >
                 <span>
@@ -125,7 +125,7 @@ export default function ExtrasBlock({
                 </span>
                 <span
                   className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
-                    active ? 'bg-ink' : 'border-[1.5px] border-line-strong'
+                    active ? 'bg-[#5C5040]' : 'border-[1.5px] border-line-strong'
                   }`}
                 >
                   {active ? (
@@ -170,7 +170,7 @@ export default function ExtrasBlock({
                     aria-pressed={on}
                     className={`rounded-full border px-3.5 py-2 text-caption transition active:scale-95 ${
                       on
-                        ? 'border-[1.5px] border-ink bg-brand-primary-light font-semibold text-ink'
+                        ? 'border-[1.5px] border-[#5C5040] bg-[#FBF3DC] font-semibold text-ink'
                         : 'border-line bg-card text-ink-secondary'
                     }`}
                   >

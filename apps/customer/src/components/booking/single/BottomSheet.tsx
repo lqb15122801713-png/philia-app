@@ -2,7 +2,7 @@
  * B4-1 单屏通用底部半屏弹层（换店 / 换宠物共用）：
  * 遮罩 + 底部圆角 sheet，点遮罩或「关闭」收起。
  * 换皮批片 2：补齐 §4.5 弹层三件套——抓握手柄 grab 42×4 + 可点遮罩（既有）+ 滚动锁；
- * 顶角 26、高度上限 82%（§4.5 实证），不新增 token。
+ * 高度上限 82%（§4.5 实证），不新增 token。片1-客户端脸：顶角 26→24（READY §2.3 sheet 顶 20-24）。
  */
 
 import { useEffect } from 'react';
@@ -37,7 +37,7 @@ export default function BottomSheet({
       data-testid={testId}
     >
       <div
-        className="max-h-[82vh] w-full max-w-lg overflow-y-auto rounded-t-[26px] bg-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-card"
+        className="max-h-[82vh] w-full max-w-lg overflow-y-auto rounded-t-[24px] bg-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-card"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 抓握手柄 grab 42×4（§4.5） */}

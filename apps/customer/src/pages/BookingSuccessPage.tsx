@@ -117,7 +117,7 @@ export default function BookingSuccessPage() {
             action={
               <Link
                 to="/appointments"
-                className="flex min-h-[44px] items-center rounded-full bg-brand-primary px-5 py-2 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                className="flex min-h-[44px] items-center rounded-[16px] bg-[#F2DC8C] px-5 py-2 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
               >
                 {bkc('booking.viewAppointments')}
               </Link>
@@ -172,7 +172,7 @@ export default function BookingSuccessPage() {
           </dl>
         </section>
       ) : detailQ.isError ? (
-        <div className="mt-5 rounded-card bg-sunken px-4 py-6 text-center">
+        <div className="mt-5 rounded-card bg-[#F3EEE4] px-4 py-6 text-center">
           <p className="text-caption text-ink-secondary">{bkc('booking.summaryLoadFail')}</p>
           <button
             type="button"
@@ -194,7 +194,7 @@ export default function BookingSuccessPage() {
           <div
             data-testid="success-agreement-entry"
             data-signed="true"
-            className="mt-5 flex items-center justify-between rounded-card bg-sunken px-4 py-3"
+            className="mt-5 flex items-center justify-between rounded-card bg-[#F3EEE4] px-4 py-3"
           >
             <span className="text-body text-ink-secondary">{bkc('booking.successSignEntry')}</span>
             <span className="rounded-chip bg-line px-2 py-1 text-caption-xs text-ink-secondary">
@@ -221,7 +221,7 @@ export default function BookingSuccessPage() {
           onClose={() => setAgreeSheetOpen(false)}
           testId="success-agreement-sheet"
         >
-          <p className="rounded-tag bg-sunken px-3 py-2 text-caption text-ink-secondary">
+          <p className="rounded-tag bg-[#F3EEE4] px-3 py-2 text-caption text-ink-secondary">
             {bkc('booking.signPendingNote')}
           </p>
           {BOARDING_AGREEMENTS.map((a) => (
@@ -241,7 +241,7 @@ export default function BookingSuccessPage() {
             disabled={signM.isPending}
             onClick={() => signM.mutate()}
             data-testid="success-agreement-sign"
-            className="mt-4 h-11 w-full rounded-full bg-[#2E2318] text-body-sm font-semibold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
+            className="mt-4 h-11 w-full rounded-[16px] bg-[#5C5040] text-body-sm font-semibold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
           >
             {signM.isPending ? '提交中…' : agc('agreement.agreeCta')}
           </button>
@@ -256,18 +256,19 @@ export default function BookingSuccessPage() {
         </div>
       </section>
 
-      {/* W1-D1 ③双出口：主=查看我的预约（淡黄点睛，唯一主动作）；次=返回首页（细线白底）。
-          ④改期快捷入口：真实落点=/appointments/:id 详情页改期面板（不造假钮） */}
+      {/* W1-D1 ③双出口：主=查看我的预约（cream 点睛 #F2DC8C，唯一主动作）；次=返回首页（细线白底）。
+          ④改期快捷入口：真实落点=/appointments/:id 详情页改期面板（不造假钮）。
+          片1 VI：按钮圆角走 READY §2.3 btn=16（旧胶囊档退役）；日历 icon=secondary #A89779 */}
       <div className="mt-5 space-y-2.5">
         <Link
           to="/appointments"
-          className="flex h-12 w-full items-center justify-center rounded-full bg-brand-primary text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="flex h-12 w-full items-center justify-center rounded-[16px] bg-[#F2DC8C] text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           {bkc('booking.viewAppointments')}
         </Link>
         <Link
           to="/home"
-          className="u1-ring flex h-12 w-full items-center justify-center rounded-full bg-card text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="u1-ring flex h-12 w-full items-center justify-center rounded-[16px] bg-card text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           {bkc('booking.backHome')}
         </Link>
@@ -275,9 +276,9 @@ export default function BookingSuccessPage() {
           type="button"
           onClick={addToCalendar}
           disabled={!d}
-          className="u1-ring flex h-12 w-full items-center justify-center gap-2 rounded-full bg-card text-body font-medium text-ink-secondary transition active:scale-[0.99] disabled:opacity-50"
+          className="u1-ring flex h-12 w-full items-center justify-center gap-2 rounded-[16px] bg-card text-body font-medium text-ink-secondary transition active:scale-[0.99] disabled:opacity-50"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-brand-primary" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-[#A89779]" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="4" width="18" height="18" rx="2" />
             <path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4" />
           </svg>

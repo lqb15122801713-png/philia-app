@@ -5,7 +5,7 @@
  * 1. r1 标题行：「{宠物} · 洗护中」（衬线展示位）+ SSE 真值状态点——
  *    connected 绿点「实时同步」/ 断线灰点「重连中」（useEventSource connected
  *    真值上行，不许常亮造假）；
- * 2. 进度条：2px 暖墨轨道 + 柠檬实底填充至「第 N/6 步」（active 步序优先，
+ * 2. 进度条：2px 暖墨轨道 + cream 实底填充至「第 N/6 步」（片1 VI #F2DC8C；active 步序优先，
  *    无 active 回退已完成步数；线上空白细线不可读已修）；
  * 3. r2 信息行：第 N / 6 步 · 步骤名 · 员工名（store.listStaffPublic 现成接口
  *    解析 staffId，零新接口）· 预计 HH:MM 完成（scheduledEnd 真字段）——
@@ -76,7 +76,7 @@ export default function InServicePanel({
           className="flex shrink-0 items-center gap-[5px] text-caption-xs leading-4 text-ink-secondary"
         >
           <i
-            className={`h-1.5 w-1.5 rounded-full ${sseConnected ? 'bg-brand-secondary' : 'bg-ink/30'}`}
+            className={`h-1.5 w-1.5 rounded-full ${sseConnected ? 'bg-[#A89779]' : 'bg-ink/30'}`}
             aria-hidden="true"
           />
           {sseConnected ? '实时同步' : '重连中'}
@@ -95,7 +95,8 @@ export default function InServicePanel({
         data-done-count={doneCount}
       >
         <div
-          className="h-full rounded-full bg-brand-primary transition-[width] duration-200"
+          /* 片1 VI：填充= cream #F2DC8C「此刻要做」（READY §2.1；片0 令牌合入后与 brand-primary 同值） */
+          className="h-full rounded-full bg-[#F2DC8C] transition-[width] duration-200"
           style={{ width: `${pct}%` }}
         />
       </div>

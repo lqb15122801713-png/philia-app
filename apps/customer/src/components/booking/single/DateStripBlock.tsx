@@ -54,8 +54,8 @@ export default function DateStripBlock({
 
   return (
     <div data-testid="gs-date-strip">
-      {/* 7 天横条（定稿 datechip 56 宽工艺：白卡细线；选中=深棕底 #F6EFDD 字——
-          chips 选中口径（§4.4），旧柠檬底退役（淡黄点睛位让给时段栅格）；
+      {/* 7 天横条（定稿 datechip 56 宽工艺：白卡细线；选中=brand 深面 #5C5040 + #F6EFDD 字——
+          片1 VI chips 选中口径（READY §2.1），圆角 12（§2.3 chip）；旧柠檬底退役（点睛位让给时段栅格）；
           约满/休息=0.45 半透明，约满附赭红字） */}
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {days.map((d) => {
@@ -69,8 +69,8 @@ export default function DateStripBlock({
               data-testid={`gs-day-${d.date.getFullYear()}-${d.date.getMonth() + 1}-${d.date.getDate()}`}
               data-active={active ? 'true' : 'false'}
               data-greyed={greyed ? 'true' : 'false'}
-              className={`flex w-14 shrink-0 flex-col items-center rounded-control px-1 pb-2 pt-2.5 transition active:scale-95 ${
-                active ? 'bg-[#2E2318] text-[#F6EFDD]' : 'u1-ring bg-card'
+              className={`flex w-14 shrink-0 flex-col items-center rounded-[12px] px-1 pb-2 pt-2.5 transition active:scale-95 ${
+                active ? 'bg-[#5C5040] text-[#F6EFDD]' : 'u1-ring bg-card'
               } ${greyed && !active ? 'opacity-[.45]' : ''}`}
             >
               <span className={`text-v2-trace ${active ? 'text-[#C9BBA0]' : 'text-ink-secondary'}`}>{stripLabel(d.date)}</span>
@@ -94,12 +94,12 @@ export default function DateStripBlock({
         })}
       </div>
 
-      {/* 二级：整月日历（卡其下划线链，tfield 更改链同工艺） */}
+      {/* 二级：整月日历（VI secondary 下划线链，tfield 更改链同工艺） */}
       <button
         type="button"
         onClick={() => setCalOpen((v) => !v)}
         data-testid="gs-calendar-toggle"
-        className="mt-2 border-b border-brand-secondary pb-px text-caption font-medium text-ink"
+        className="mt-2 border-b border-[#A89779] pb-px text-caption font-medium text-ink"
       >
         {calOpen ? '收起日历 ▾' : '展开整月日历 ▸'}
       </button>
@@ -141,7 +141,7 @@ export default function DateStripBlock({
                         data-in-window={inWindow ? 'true' : 'false'}
                         className={`flex h-9 items-center justify-center rounded-full font-number text-body-sm transition ${
                           active
-                            ? 'border-[1.5px] border-ink font-semibold text-ink'
+                            ? 'border-[1.5px] border-[#5C5040] font-semibold text-ink'
                             : !inWindow
                               ? 'cursor-not-allowed text-ink-placeholder/50'
                               : greyed
