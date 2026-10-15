@@ -1,10 +1,10 @@
 /**
  * 员工端登录页 /dev-login（批次 U2 任务 H · 试样屏 1 换肤；骨架批片 1 S-00 重排）
  *
- * S-00 骨架（UX 语言包 V1.1 §三）：主视觉槽 → wordmark → serif 宣言（刷底强调=淡黄，
- * inline linear-gradient(transparent 62%, #F2DFA6 62%)）→ G2 主钮（SkBtnAction 淡黄）→
- * 账号行 ×2 → 口令行 → 协议小字。淡黄=宣言刷底+主钮=2 处封顶；无 dock。
- * ⚠️ 内测现实：登录链路=dev-login 种子用户（服务端仅允许 seed_ 前缀）——淡黄主钮
+ * S-00 骨架（UX 语言包 V1.1 §三）：主视觉槽 → wordmark → serif 宣言（刷底强调=cream，
+ * inline linear-gradient(transparent 62%, #F2DC8C 62%)）→ G2 主钮（SkBtnAction cream）→
+ * 账号行 ×2 → 口令行 → 协议小字。cream=宣言刷底+主钮=2 处封顶；无 dock。
+ * ⚠️ 内测现实：登录链路=dev-login 种子用户（服务端仅允许 seed_ 前缀）——cream 主钮
  * 落到真实账号选择区（手机号登录上线前等价物，不造假）；口令钮展开内测口令门
  * （批次 6 B2 真实链路）。dev-login 种子登录链路不回归（种子钮/内测口令/userId 兜底/登出全保）。
  */
@@ -132,29 +132,29 @@ export default function DevLoginPage() {
         />
       </div>
 
-      {/* 2. wordmark + serif 宣言（刷底强调=淡黄，S-00 淡黄预算第 1 处）+ 门店行 + 角色签（仅展示——
+      {/* 2. wordmark + serif 宣言（刷底强调=cream，S-00 cream 预算第 1 处）+ 门店行 + 角色签（仅展示——
              角色由商家端员工管理分配，不可自选） */}
       <div className="px-[30px] pt-[26px] text-center">
-        <p className="font-number text-body-sm font-bold tracking-[.3em] text-[rgba(59,46,36,.42)]">
+        <p className="font-number text-body-sm font-bold tracking-[.3em] text-ink-placeholder">
           {LOGIN_COPY['login.wordmark']}
         </p>
         <h1 className="u1-serif mt-3 text-v2-screen">
           {LOGIN_COPY['login.manifesto.line1']}
           <br />
-          <span style={{ background: 'linear-gradient(transparent 62%, #F2DFA6 62%)' }}>
+          <span style={{ background: 'linear-gradient(transparent 62%, #F2DC8C 62%)' }}>
             {LOGIN_COPY['login.manifesto.line2']}
           </span>
         </h1>
-        <p className="mt-2 text-caption text-[rgba(59,46,36,.62)]">
+        <p className="mt-2 text-caption text-ink-secondary">
           {LOGIN_COPY['login.storeLine']}
         </p>
         <div className="mt-[18px] flex justify-center gap-2">
-          <span className="u1-ring rounded-full bg-card px-3 py-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">{LOGIN_COPY['login.role.frontdesk']}</span>
-          <span className="u1-ring rounded-full bg-card px-3 py-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">{LOGIN_COPY['login.role.groomer']}</span>
+          <span className="u1-ring rounded-full bg-card px-3 py-1.5 text-caption-xs font-semibold text-ink-secondary">{LOGIN_COPY['login.role.frontdesk']}</span>
+          <span className="u1-ring rounded-full bg-card px-3 py-1.5 text-caption-xs font-semibold text-ink-secondary">{LOGIN_COPY['login.role.groomer']}</span>
         </div>
       </div>
 
-      {/* 3. G2 淡黄主钮（S-00 淡黄预算第 2 处；真实落点=账号选择区，不造假） */}
+      {/* 3. G2 cream 主钮（S-00 cream 预算第 2 处；真实落点=账号选择区，不造假） */}
       <div className="px-[30px] pt-[22px]">
         <SkBtnAction
           testId="login-primary"
@@ -256,7 +256,7 @@ export default function DevLoginPage() {
           <p className="mt-3 rounded-control bg-danger-light px-4 py-3 text-caption text-danger-deep">{error}</p>
         ) : null}
 
-        <p className="mt-5 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
+        <p className="mt-5 text-caption-xs leading-relaxed text-ink-placeholder">
           {LOGIN_COPY['login.seed.tip']}
         </p>
       </div>
@@ -267,7 +267,7 @@ export default function DevLoginPage() {
           type="button"
           data-testid="login-gate"
           onClick={() => setGateOpen((v) => !v)}
-          className="u1-ring flex h-11 min-h-[44px] w-full items-center justify-center rounded-control bg-card text-caption font-semibold text-[rgba(59,46,36,.62)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+          className="u1-ring flex h-11 min-h-[44px] w-full items-center justify-center rounded-control bg-card text-caption font-semibold text-ink-secondary transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
         >
           {LOGIN_COPY['login.gateEntry']}
         </button>
@@ -301,7 +301,7 @@ export default function DevLoginPage() {
       ) : null}
 
       {/* 6. 协议小字 */}
-      <p className="mt-4 text-center text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
+      <p className="mt-4 text-center text-caption-xs leading-relaxed text-ink-placeholder">
         {LOGIN_COPY['login.agreement']}
       </p>
     </div>

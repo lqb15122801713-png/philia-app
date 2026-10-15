@@ -282,37 +282,55 @@ export function SkIdCard({ name, no, cells, photoUrl }: {
   );
 }
 
-/* ---- S3 班轴预约卡（含 S4 六步展开） ---- */
+/* ---- S3 班轴预约卡（S-02 官方三态：thin 薄行 / half 半展=dock 默认 / full 全展=六步只读） ---- */
 export function SkApptCard({
-  time, title, sub, stateLabel, state, expanded, onToggle, children, testId,
+  time, title, sub, stateLabel, state, level = 'thin', action, onToggleLevel, children, testId,
 }: {
   time: string;
   title: ReactNode;
   sub: string;
   stateLabel: string;
   state: 'done' | 'now' | 'future';
-  expanded?: boolean;
-  onToggle?: () => void;
+  /** 三态：thin=薄行；half=半展（摘要+主行动，dock 默认）；full=全展（六步全表） */
+  level?: 'thin' | 'half' | 'full';
+  /** 薄行右侧主行动（待接「开始」pill；互斥时 disabled 灰态） */
+  action?: { label: string; onClick: () => void; disabled?: boolean; testId?: string };
+  onToggleLevel?: () => void;
   children?: ReactNode;
   testId?: string;
 }) {
+  const open = level !== 'thin';
   return (
     <div className="dg">
       <div className="dg-time sk-mono">{time}</div>
       <div className="dg-rail">
         <span className={`dg-node ${state}`} aria-hidden />
-        <div className={`sk-appt ${state}`} data-testid={testId}>
+        <div className={`sk-appt ${state}`} data-testid={testId} data-level={level}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div className="t">{title}</div>
               <div className="s">{sub}</div>
             </div>
+            {action ? (
+              <button
+                type="button"
+                className="act"
+                data-testid={action.testId}
+                disabled={action.disabled}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  action.onClick();
+                }}
+              >
+                {action.label}
+              </button>
+            ) : null}
             <span className={`st2 ${state}`}>{stateLabel}</span>
-            {onToggle ? (
-              <button type="button" className={`caret${expanded ? ' open' : ''}`} aria-label="展开" aria-expanded={expanded} onClick={onToggle}>›</button>
+            {onToggleLevel ? (
+              <button type="button" className={`caret${level === 'full' ? ' open' : ''}`} aria-label="展开" aria-expanded={open} onClick={onToggleLevel}>›</button>
             ) : null}
           </div>
-          {expanded ? children : null}
+          {open ? children : null}
         </div>
       </div>
     </div>

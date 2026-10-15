@@ -17,10 +17,11 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { TRPCClientError } from '@trpc/client'
 import {
   AlertTriangle,
+  BedDouble,
   CheckCircle2,
   CircleSlash,
   Clock3,
-  PawPrint,
+  ScanLine,
   ShieldBan,
 } from 'lucide-react'
 import {
@@ -475,7 +476,7 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
 
   if (appointment.type === 'boarding') {
     return (
-      <GuidePage icon={PawPrint} title={EXECUTE_COPY['execute.guide.boarding.title']} description={EXECUTE_COPY['execute.guide.boarding.desc']} actionText={EXECUTE_COPY['execute.guide.boarding.action']} onAction={() => navigate(`/boarding/${aid}/checkin`)} />
+      <GuidePage icon={BedDouble} title={EXECUTE_COPY['execute.guide.boarding.title']} description={EXECUTE_COPY['execute.guide.boarding.desc']} actionText={EXECUTE_COPY['execute.guide.boarding.action']} onAction={() => navigate(`/boarding/${aid}/checkin`)} />
     )
   }
 
@@ -650,7 +651,7 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
           头像卡其环（无头像=E-补1 字圈：浅木底+衬线首字，与 MePage/deck 头像环同族）+ 服务中 livetag 同族签 +
           服务·时刻(mono)·员工 + 右 N/6 mono；本屏淡黄预算=active 步圆+吸底主钮=2 */}
       <section className="u1-card mx-[18px] mt-1.5 flex items-center gap-3.5 p-3.5" data-testid="execute-summary">
-        <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FFFDF6,0_0_0_3.5px_#B9A482]">
+        <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FFFFFF,0_0_0_3.5px_#A89779]">
           {pet?.avatarUrl ? (
             <img src={pet.avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
           ) : (
@@ -664,7 +665,7 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
             {pet?.name ?? '宠物'}
             <span className="rounded-chip bg-ink px-1.5 py-px text-caption-xs font-bold text-brand-primary">服务中</span>
           </p>
-          <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
+          <p className="mt-1 text-caption-xs text-ink-secondary">
             {service?.name ?? '服务'} ·{' '}
             <span className="u1-num whitespace-nowrap">
               {fmtHM(appointment.scheduledStart)}–{fmtHM(appointment.scheduledEnd)}
@@ -672,7 +673,7 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
             {staffName ? ` · ${staffName}` : ''}
           </p>
           {pendingAllCount > 0 ? (
-            <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+            <p className="mt-0.5 text-caption-xs text-ink-secondary">
               <span className="u1-num">{pendingAllCount}</span> 张照片上传中…
             </p>
           ) : null}
@@ -680,9 +681,9 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
         <div className="shrink-0 text-center">
           <p className="u1-num text-title font-bold">
             {activeRow?.def.stepOrder ?? 6}
-            <span className="text-caption-xs text-[rgba(59,46,36,.42)]">/6</span>
+            <span className="text-caption-xs text-ink-placeholder">/6</span>
           </p>
-          <p className="text-caption-xs text-[rgba(59,46,36,.42)]">当前步</p>
+          <p className="text-caption-xs text-ink-placeholder">当前步</p>
         </div>
       </section>
 
@@ -694,7 +695,7 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
           <p className="text-caption text-ink">
             {EXECUTE_COPY['exec.draft.banner'].replace('{time}', fmtHM(new Date(pendingDraft.savedAt)))}
           </p>
-          <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">{EXECUTE_COPY['exec.draft.localNote']}</p>
+          <p className="mt-0.5 text-caption-xs text-ink-placeholder">{EXECUTE_COPY['exec.draft.localNote']}</p>
           <div className="mt-2 flex gap-2">
             <button
               type="button"
@@ -751,7 +752,7 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
 
       {/* 吸底淡金主钮（文案随态；主钮 h≥56 员工端硬性要求；顶部 hairline） */}
       {activeRow ? (
-        <div className="sticky bottom-0 bg-card px-[18px] pb-[calc(14px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-1px_0_rgba(59,46,36,.06)]">
+        <div className="sticky bottom-0 bg-card px-[18px] pb-[calc(14px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-1px_0_rgba(44,40,34,.06)]">
           <button
             type="button"
             data-testid="execute-primary"
@@ -764,7 +765,7 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
             {primaryText}
           </button>
           {primarySub ? (
-            <p className="mt-1.5 text-center text-caption-xs text-[rgba(59,46,36,.42)]">{primarySub}</p>
+            <p className="mt-1.5 text-center text-caption-xs text-ink-placeholder">{primarySub}</p>
           ) : null}
         </div>
       ) : null}
@@ -772,7 +773,7 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
       {/* 删除照片二次确认弹层（动效纲领 §四.1 危险动作二次确认） */}
       {deleteTarget && (
         <div className="fixed inset-0 z-modal flex items-center justify-center px-8" role="dialog" aria-modal="true" aria-label="删除这张照片？">
-          <button type="button" aria-label="取消" className="absolute inset-0 bg-[rgba(59,46,36,.4)]" onClick={() => setDeleteTarget(null)} />
+          <button type="button" aria-label="取消" className="absolute inset-0 bg-[rgba(44,40,34,.4)]" onClick={() => setDeleteTarget(null)} />
           <div className="u1-card relative w-full max-w-xs p-4">
             <p className="text-title text-ink">删除这张照片？</p>
             <p className="mt-2 text-body-sm text-ink-secondary">删除后不可恢复，如影响步骤照片数下限需补拍。</p>
@@ -830,7 +831,7 @@ function ResolveCurrentExecute() {
 
   return (
     <GuidePage
-      icon={PawPrint}
+      icon={ScanLine}
       title={EXECUTE_COPY['execute.guide.noCurrent.title']}
       description={EXECUTE_COPY['execute.guide.noCurrent.desc']}
       actionText={EXECUTE_COPY['execute.guide.noCurrent.action']}

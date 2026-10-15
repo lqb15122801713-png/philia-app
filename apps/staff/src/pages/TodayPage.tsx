@@ -21,14 +21,13 @@ import {
   EventType,
   SERVICE_STEPS,
   Skeleton,
-  StepKeyLabel,
+  getStepDef,
   useMe,
   usePhiliaClient,
   useToast,
   type EventEnvelope,
 } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
-import { PawPrint } from 'lucide-react';
 import { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -219,7 +218,7 @@ export default function TodayPage() {
         case EventType.StepFlagged: {
           if (isFrontdesk) break;
           const stepKey = typeof data.stepKey === 'string' ? data.stepKey : '';
-          showToast(`商家要求重拍：${StepKeyLabel[stepKey] ?? (stepKey || '步骤')}`);
+          showToast(`商家要求重拍：${getStepDef(stepKey)?.name ?? (stepKey || '步骤')}`);
           invalidateAll();
           break;
         }
@@ -310,11 +309,14 @@ export default function TodayPage() {
   if (!user?.staffId) {
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
+        {/* 空态工艺（Ready §4：画布底+主说明+次要行，禁爪印占位）：浅木底+衬线首字字圈（E-补1 同族） */}
         <span
           aria-hidden
           className="flex h-24 w-24 items-center justify-center rounded-full bg-sunken"
         >
-          <PawPrint className="h-11 w-11 text-ink" strokeWidth={1.5} />
+          <span className="u1-serif text-detail font-semibold text-ink">
+            {(user?.nickname ?? user?.id ?? '员').slice(0, 1)}
+          </span>
         </span>
         <h1 className="u1-serif mt-5 text-title-lg font-bold">{TODAY_COPY['today.noRole.title']}</h1>
         <p className="mt-2 text-body-sm text-ink-secondary">
@@ -363,7 +365,7 @@ export default function TodayPage() {
       {todayQuery.isPending ? (
         // 加载 >300ms 骨架（禁转圈；骨架形状=内容轮廓）
         <div className="mx-[22px] mt-2" aria-label="加载中">
-          <Skeleton className="h-[200px] !rounded-[22px]" />
+          <Skeleton className="h-[200px] !rounded-[18px]" />
           <Skeleton className="mt-3 h-[56px] !rounded-[16px]" />
           <Skeleton className="mt-3 h-[44px] !rounded-[18px]" />
         </div>
@@ -514,10 +516,10 @@ export default function TodayPage() {
                       className={`u1-card mb-2 flex items-center gap-2 px-4 py-3 ${done ? 'opacity-60' : ''}`}
                     >
                       <div className="min-w-0 flex-1">
-                        <div className={`text-body-sm ${done ? 'text-[rgba(59,46,36,.62)] line-through' : 'font-semibold text-ink'}`}>
+                        <div className={`text-body-sm ${done ? 'text-ink-secondary line-through' : 'font-semibold text-ink'}`}>
                           {r.title}
                         </div>
-                        <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                        <div className="mt-0.5 text-caption-xs text-ink-placeholder">
                           <span className="sk-mono">{ttc('ttd.due', { hm: minToHm(r.dueMin) })}</span>
                           {r.detail ? ` · ${r.detail}` : ''}
                         </div>
@@ -532,7 +534,7 @@ export default function TodayPage() {
                           disabled={taskDoneBusy !== null}
                           onClick={() => void markTaskDone(r.id)}
                           data-testid={`task-done-${r.id}`}
-                          className="h-10 min-h-[44px] shrink-0 rounded-control bg-brand-primary px-4 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+                          className="h-10 min-h-[44px] shrink-0 rounded-control bg-ink px-4 text-body-sm font-semibold text-brand-primary transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
                         >
                           {taskDoneBusy === r.id ? ttc('ttd.doing') : ttc('ttd.doneCta')}
                         </button>

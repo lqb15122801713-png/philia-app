@@ -10,7 +10,7 @@
  */
 
 import { useMe } from '@philia/shared'
-import { PawPrint } from 'lucide-react'
+import { IdCard } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 
@@ -34,8 +34,9 @@ export default function RequireStaff({ children }: { children: ReactNode }) {
   if (!user.roles.includes('staff')) {
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
+        {/* 身份引导空态（Ready §4/§5：线性 icon，不用爪印冒充） */}
         <span className="flex h-16 w-16 items-center justify-center rounded-full bg-sunken">
-          <PawPrint className="h-7 w-7 text-ink" strokeWidth={1.5} />
+          <IdCard className="h-7 w-7 text-ink" strokeWidth={1.5} />
         </span>
         <h1 className="u1-serif mt-4 text-title-lg font-bold">需要员工账号</h1>
         <p className="mt-2 text-body-sm text-ink-secondary">

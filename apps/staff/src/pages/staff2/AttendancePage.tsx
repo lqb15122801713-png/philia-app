@@ -461,7 +461,7 @@ export default function AttendancePage() {
       {wifiList.length > 0 ? (
         <div className="px-[22px]">
           <div className="u1-card mt-3 p-4" data-testid="att-wifi">
-            <label className="block text-caption-xs font-semibold text-[rgba(59,46,36,.62)]" htmlFor="att-wifi-select">
+            <label className="block text-caption-xs font-semibold text-ink-secondary" htmlFor="att-wifi-select">
               {ATTENDANCE_COPY['attendance.wifi.title']}
             </label>
             <select
@@ -477,7 +477,7 @@ export default function AttendancePage() {
                 </option>
               ))}
             </select>
-            <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+            <p className="mt-1.5 text-caption-xs text-ink-placeholder">
               {ATTENDANCE_COPY['attendance.wifi.manual']}
             </p>
           </div>
@@ -489,7 +489,7 @@ export default function AttendancePage() {
         <div className="px-[22px]">
           <div className="u1-card mt-3 p-4" data-testid="att-field">
             <p className="text-body-sm font-semibold text-ink">{ATTENDANCE_COPY['attendance.field.tip']}</p>
-            <label className="mt-3 flex h-12 min-h-[44px] w-full cursor-pointer items-center justify-center rounded-control bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92">
+            <label className="mt-3 flex h-12 min-h-[44px] w-full cursor-pointer items-center justify-center rounded-control bg-ink px-8 text-body-sm font-semibold text-brand-primary transition-transform duration-120 ease-philia-spring active:scale-92">
               {uploading ? ATTENDANCE_COPY['attendance.field.uploading'] : ATTENDANCE_COPY['attendance.field.upload']}
               <input
                 type="file"
@@ -516,7 +516,7 @@ export default function AttendancePage() {
             <button
               type="button"
               onClick={() => punch(pendingKind)}
-              className="mt-3 h-12 min-h-[44px] min-w-[160px] rounded-control bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+              className="mt-3 h-12 min-h-[44px] min-w-[160px] rounded-control bg-ink px-8 text-body-sm font-semibold text-brand-primary transition-transform duration-120 ease-philia-spring active:scale-92"
             >
               重试打卡
             </button>
@@ -526,7 +526,7 @@ export default function AttendancePage() {
 
       {/* S7 周记录（SkRows/SkRow；异常标红；缺卡日透出） */}
       <section className="mt-5" data-testid="att-records">
-        <h2 className="px-[22px] pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">{skc('sk.punchWeek')}</h2>
+        <h2 className="px-[22px] pb-1.5 text-caption font-bold tracking-[.08em] text-ink-placeholder">{skc('sk.punchWeek')}</h2>
         {recordsQuery.isPending ? (
           <div className="space-y-2.5 px-[22px]" aria-label="加载中">
             {[0, 1, 2].map((i) => (
@@ -540,7 +540,7 @@ export default function AttendancePage() {
               <button
                 type="button"
                 onClick={() => void recordsQuery.refetch()}
-                className="mt-4 h-12 min-h-[44px] min-w-[160px] rounded-control bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                className="mt-4 h-12 min-h-[44px] min-w-[160px] rounded-control bg-ink px-8 text-body-sm font-semibold text-brand-primary transition-transform duration-120 ease-philia-spring active:scale-92"
               >
                 重新加载
               </button>
@@ -573,7 +573,7 @@ export default function AttendancePage() {
                         </b>
                       ) : null}
                       {makeup ? (
-                        <span className="ml-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">{ATTENDANCE_COPY['attendance.records.makeupPassed']}</span>
+                        <span className="ml-1.5 text-caption-xs text-ink-placeholder">{ATTENDANCE_COPY['attendance.records.makeupPassed']}</span>
                       ) : null}
                     </>
                   }
@@ -595,7 +595,7 @@ export default function AttendancePage() {
                 label={
                   <>
                     <span className="sk-mono">{ds.slice(5)}</span> {weekdayLabel(new Date(`${ds}T00:00:00`))}
-                    <span className="ml-1.5 text-caption-xs font-normal text-[rgba(59,46,36,.42)]">{ATTENDANCE_COPY['attendance.records.missingHint']}</span>
+                    <span className="ml-1.5 text-caption-xs font-normal text-ink-placeholder">{ATTENDANCE_COPY['attendance.records.missingHint']}</span>
                   </>
                 }
                 value={ATTENDANCE_COPY['attendance.records.missing']}
@@ -608,7 +608,7 @@ export default function AttendancePage() {
       {/* 片 2：今日打卡明细（B1-5 多对逐行 / B1-6 确认 / B1-7 申诉） */}
       {todayRows.length > 0 ? (
         <section className="mt-5" data-testid="att-today-detail">
-          <h2 className="px-[22px] pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">
+          <h2 className="px-[22px] pb-1.5 text-caption font-bold tracking-[.08em] text-ink-placeholder">
             {ATTENDANCE_COPY['attendance.today.detail']}
           </h2>
           <SkRows>
@@ -673,7 +673,7 @@ export default function AttendancePage() {
               className={`mt-3 h-12 min-h-[44px] w-full rounded-control text-body-sm font-bold transition-transform duration-120 ease-philia-spring ${
                 todayAllConfirmed || confirmMut.isPending
                   ? 'bg-sunken text-ink-placeholder'
-                  : 'bg-brand-primary text-ink active:scale-92'
+                  : 'bg-ink text-brand-primary active:scale-92'
               }`}
             >
               {todayAllConfirmed
@@ -705,7 +705,7 @@ export default function AttendancePage() {
               className={`mt-3 h-12 min-h-[44px] w-full rounded-control text-body-sm font-bold transition-transform duration-120 ease-philia-spring ${
                 appealMut.isPending || !appealReason.trim()
                   ? 'bg-sunken text-ink-placeholder'
-                  : 'bg-brand-primary text-ink active:scale-92'
+                  : 'bg-ink text-brand-primary active:scale-92'
               }`}
             >
               {ATTENDANCE_COPY['attendance.appeal.submit']}
@@ -719,11 +719,11 @@ export default function AttendancePage() {
 
       <div className="px-[22px]">
         <section className="mt-5" data-testid="att-makeup">
-          <h2 className="pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">
+          <h2 className="pb-1.5 text-caption font-bold tracking-[.08em] text-ink-placeholder">
             补卡申请 · 本月还可补 <span className="u1-num">{makeupLeft}</span> 次（每月限 <span className="u1-num">{MAKEUP_MONTHLY_LIMIT}</span> 次）
           </h2>
           <div className="u1-card p-4">
-            <label className="block text-caption-xs font-semibold text-[rgba(59,46,36,.62)]" htmlFor="mk-date">
+            <label className="block text-caption-xs font-semibold text-ink-secondary" htmlFor="mk-date">
               补卡日期（限当月）
             </label>
             <input
@@ -735,7 +735,7 @@ export default function AttendancePage() {
               onChange={(e) => setMkDate(e.target.value)}
               className="u1-ring mt-1.5 h-12 min-h-[44px] w-full rounded-input bg-card px-3 text-body-sm text-ink"
             />
-            <label className="mt-3 block text-caption-xs font-semibold text-[rgba(59,46,36,.62)]" htmlFor="mk-kind">
+            <label className="mt-3 block text-caption-xs font-semibold text-ink-secondary" htmlFor="mk-kind">
               班次
             </label>
             <select
@@ -747,7 +747,7 @@ export default function AttendancePage() {
               <option value="in">上班卡</option>
               <option value="out">下班卡</option>
             </select>
-            <label className="mt-3 block text-caption-xs font-semibold text-[rgba(59,46,36,.62)]" htmlFor="mk-time">
+            <label className="mt-3 block text-caption-xs font-semibold text-ink-secondary" htmlFor="mk-time">
               实际{mkKind === 'in' ? '上班' : '下班'}时间
             </label>
             <input
@@ -757,7 +757,7 @@ export default function AttendancePage() {
               onChange={(e) => setMkTime(e.target.value)}
               className="u1-ring mt-1.5 h-12 min-h-[44px] w-full rounded-input bg-card px-3 text-body-sm text-ink"
             />
-            <label className="mt-3 block text-caption-xs font-semibold text-[rgba(59,46,36,.62)]" htmlFor="mk-reason">
+            <label className="mt-3 block text-caption-xs font-semibold text-ink-secondary" htmlFor="mk-reason">
               补卡原因（必填）
             </label>
             <textarea
@@ -776,7 +776,7 @@ export default function AttendancePage() {
               className={`mt-3 h-14 min-h-[56px] w-full rounded-control text-body-lg font-bold transition-transform duration-120 ease-philia-spring ${
                 makeupMut.isPending || makeupLeft <= 0
                   ? 'bg-sunken text-ink-placeholder'
-                  : 'bg-brand-primary text-ink active:scale-92'
+                  : 'bg-ink text-brand-primary active:scale-92'
               }`}
               data-testid="att-makeup-submit"
             >
@@ -816,13 +816,13 @@ function ApprovalRow({ a }: { a: Approval }) {
           {a.type === 'makeup' ? '补卡' : '异常'}
         </b>
         <span className="u1-num text-body-sm font-bold">{a.date}</span>
-        <span className="text-caption-xs text-[rgba(59,46,36,.62)]">{a.kind === 'in' ? '上班卡' : '下班卡'}</span>
+        <span className="text-caption-xs text-ink-secondary">{a.kind === 'in' ? '上班卡' : '下班卡'}</span>
         {a.type === 'makeup' && a.requestedTs ? (
-          <span className="u1-num text-caption-xs text-[rgba(59,46,36,.62)]">{hhmm(a.requestedTs)}</span>
+          <span className="u1-num text-caption-xs text-ink-secondary">{hhmm(a.requestedTs)}</span>
         ) : null}
         <span className="ml-auto">{statusChip}</span>
       </div>
-      <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.62)]">原因：{a.reason}</p>
+      <p className="mt-1.5 text-caption-xs text-ink-secondary">原因：{a.reason}</p>
       {a.status === 'rejected' && a.reviewNote ? (
         <p className="mt-1 text-caption-xs text-danger-deep">驳回备注：{a.reviewNote}</p>
       ) : null}
