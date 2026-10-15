@@ -1,5 +1,6 @@
 /**
- * 菲丽亚宠物 Philia · Tailwind preset（换皮批片 1 · v2.0 色纪律落地）
+ * 菲丽亚宠物 Philia · Tailwind preset（换皮批片 1 · v2.0 色纪律落地；
+ * 产品-1015 换皮 片0-三端壳：令牌值对齐 READY-FOR-DEV-20261015 §2 成稿）
  *
  * 各端 app 的 tailwind.config 引用方式：
  *   module.exports = {
@@ -14,8 +15,11 @@
  *
  * 常用类速查：
  *   背景      bg-canvas / bg-card / bg-sunken / bg-oak / bg-oak-light
- *   品牌色    bg-brand-primary（淡黄点睛·每屏≤2）/ bg-brand-primary-hover / bg-brand-primary-pressed / bg-brand-primary-light
- *             bg-brand-secondary（卡其次阶）/ bg-brand-secondary-light / bg-brand-secondary-deep
+ *   品牌色    bg-brand-cta（深棕 #5C5040：CTA/深卡/dock 激活块/rail，Ready §2.1 brand）
+ *             / bg-brand-cta-pressed / text-brand-cta-on
+ *             bg-brand-primary（cream 点睛·仅「此刻要做」每屏≤2）/ bg-brand-primary-hover / bg-brand-primary-pressed / bg-brand-primary-light
+ *             bg-brand-secondary（次阶）/ bg-brand-secondary-light / bg-brand-secondary-deep
+ *   角标      bg-violet（活动角标紫 #A78BE8，≤10%，禁 CTA/Tab）/ text-violet-on
  *   文字      text-ink / text-ink-secondary / text-ink-placeholder
  *   边框      border-line / border-line-strong / divide-line-divider
  *   状态      bg-success（深棕墨·不设绿）/ bg-success-light / text-success-deep / bg-danger（赭红）/ bg-danger-light / text-danger-deep
@@ -24,7 +28,7 @@
  *   字号      text-title-lg(20) / text-title(17) / text-body(15) / text-caption(12) / text-body-lg(16) / text-price(20)
  *             v2 字阶梯（§2.1）：text-v2-manifesto(34) / text-v2-screen(27) / text-v2-card-title(26) / text-v2-topic(20)
  *             / text-v2-big-num(24) / text-v2-section(16) / text-v2-list-title(13.5) / text-v2-note(11) / text-v2-trace(9.5) / text-v2-micro(8)
- *   渐变      bg-philia-gradient（深棕谱系）/ bg-philia-gradient-hover
+ *   渐变      bg-philia-gradient（深棕 brand→pressed）/ bg-philia-gradient-hover / bg-philia-gradient-rail
  *   动效      animate-halo（呼吸光环 1.8s）/ scale-92 + duration-120（tab 按下）
  *             duration-300 + ease-philia-out（philial 页转场）
  */
@@ -35,44 +39,56 @@ module.exports = {
     extend: {
       colors: {
         brand: {
+          /* 深棕 CTA 族（Ready §2.1 brand/pressed）：CTA/深卡/dock 激活块/rail */
+          cta: {
+            DEFAULT: '#5C5040', // brand 深棕（禁改主色）
+            pressed: '#4A4034', // brand.pressed
+            on: '#FAF7F0', // CTA 面文字/图标（canvas 反白）
+          },
           primary: {
-            DEFAULT: '#F2DFA6', // 淡黄点睛（v2.0 §1.1 --gold，每屏 ≤2 处）
-            hover: '#E8CF8C', // 深一档淡金（--gold-deep 同族）
-            pressed: '#D9C08A', // 蜡封淡金（--t3-metal）
-            light: '#FBF5E4', // 提示卡暖底（§1.4）
+            DEFAULT: '#F2DC8C', // cream 点睛（Ready §2.1 cream，仅「此刻要做」每屏 ≤2；键名沿用 --gold）
+            hover: '#EFD471', // 推导：明度 −6
+            pressed: '#EBCA50', // 推导：明度 −13
+            light: '#F8F2DD', // 提示卡暖底（推导：S−12 L=92）
           },
           secondary: {
-            DEFAULT: '#B9A482', // 卡其次阶（v2.0 --khaki；薄荷绿已退役）
-            light: '#F1E9D6', // 分段开关底（§1.4）
-            deep: '#A08B62', // 卡其铜深端（--t2 同族）
+            DEFAULT: '#A89779', // 次阶（Ready §2.1 secondary：次要字/icon）
+            light: '#F3EEE4', // 软面板/未选 chip（Ready §2.1 surface）
+            deep: '#99845F', // 推导：S+2 L−8
           },
         },
-        canvas: '#FAF8F2', // 纸白页面底（v2.0 --paper，唯一页面底色）
+        canvas: '#FAF7F0', // canvas 页面底（Ready §2.1；唯一页面底色，禁 cream 代）
         card: '#FFFFFF', // 白卡面（只作卡片面，不作页面底）
-        sunken: '#F4EDDC', // 下沉区/圆章/头像底（§1.4）
+        sunken: '#F3EEE4', // 下沉区/圆章/头像底（并入 surface 族）
         oak: {
-          DEFAULT: '#B9A482', // 卡其空间色（次阶）
-          light: '#EDE4CE', // 环轨道同族（§1.4）
+          DEFAULT: '#A89779', // 次阶空间色（与 secondary 同值）
+          light: '#E9E1D2', // 环轨道同族（surface 同族 L−4 推导）
+        },
+        violet: {
+          DEFAULT: '#A78BE8', // 活动角标紫（Ready §2.1 violet，≤10%，禁 CTA/Tab）
+          on: '#2C2822', // 紫底文字
         },
         ink: {
-          DEFAULT: '#3B2E24', // 深棕墨（v2.0 --ink）
-          secondary: '#8A7D6B', // 暖灰同温（--muted，对比 ≥4.5:1）
-          placeholder: '#B9A98F',
+          DEFAULT: '#2C2822', // 深棕墨 body（Ready §2.1 body）
+          secondary: '#A89779', // 次要文字（Ready §2.1 secondary）
+          placeholder: '#B8AA96', // 弱标签（Ready §2.1 muted）
         },
         line: {
-          DEFAULT: 'rgba(59,46,36,.14)', // 发丝线（--line）
-          strong: 'rgba(59,46,36,.22)',
-          divider: 'rgba(59,46,36,.08)', // 更软发丝线（--line-soft）
+          DEFAULT: 'rgba(44,40,34,.14)', // 发丝线（基色随 body 换代）
+          strong: 'rgba(44,40,34,.22)',
+          divider: '#E8E2D6', // 行内分隔（Ready §2.1 divider 成稿实色）
           // 1px 暖墨细线 ring，替代投影做层级
-          ring: 'rgba(59,46,36,.09)',
+          ring: 'rgba(44,40,34,.09)',
         },
         success: {
-          DEFAULT: '#3B2E24', // 反馈件色纪律：成功不设绿色——深棕墨族（45 号档 P1-1②）
+          // 反馈件色纪律：成功不设绿色——深棕墨族（45 号档 P1-1②）；
+          // Ready §2.1「现网语义保留·勿换 brand」：片0 三值原样不动
+          DEFAULT: '#3B2E24',
           light: '#F1E9D6',
           deep: '#2E2318',
         },
         danger: {
-          DEFAULT: '#B4502E', // 暖调赭红（v2.0 §1.4，禁纯红）
+          DEFAULT: '#B4502E', // 暖调赭红（Ready §2.1 alert 同值，仅异常，禁纯红）
           light: '#F6E3DA',
           deep: '#8F3F22',
         },
@@ -149,9 +165,9 @@ module.exports = {
       },
 
       backgroundImage: {
-        'philia-gradient': 'linear-gradient(135deg, #3B2E24 0%, #2E2318 100%)', // 135° 深棕谱系（身份带 §1.2；柠檬黄渐变已退役）
-        'philia-gradient-hover': 'linear-gradient(135deg, #46382A 0%, #332A1E 100%)',
-        'philia-gradient-rail': 'linear-gradient(160deg, #3B2E24 0%, #2E2318 100%)', // 商家端 M1 导航轨 160°（tokens.gradients.philiaRail 同名同值）
+        'philia-gradient': 'linear-gradient(135deg, #5C5040 0%, #4A4034 100%)', // 深棕 brand→pressed（Ready §2.1；tokens.gradients.philia 同名同值）
+        'philia-gradient-hover': 'linear-gradient(135deg, #665947 0%, #504639 100%)',
+        'philia-gradient-rail': 'linear-gradient(160deg, #5C5040 0%, #4A4034 100%)', // 商家端 M1 导航轨 160°（tokens.gradients.philiaRail 同名同值）
       },
 
       keyframes: {

@@ -122,36 +122,36 @@
 @layer base {
   /* shadcn light 变量 · 对齐冻结表 4.1（docs/BRAND-TOKENS-v1.1.md §三） */
   :root {
-    --background: 45 47% 96%; /* 纸白 canvas #FAF8F2（v2.0 --paper） */
-    --foreground: 27 23% 19%; /* 深棕墨 ink #3B2E24（v2.0 --ink） */
+    --background: 42 50% 96%; /* canvas #FAF7F0（Ready §2.1；唯一页面底，禁 cream 代） */
+    --foreground: 36 13% 15%; /* 深棕墨 body #2C2822（Ready §2.1 body） */
     --card: 0 0% 100%; /* card 维持纯白 */
-    --card-foreground: 27 23% 19%;
+    --card-foreground: 36 13% 15%;
     --popover: 0 0% 100%;
-    --popover-foreground: 27 23% 19%;
-    --primary: 42 72% 80%; /* 淡黄点睛 #F2DFA6（v2.0 §1.1 --gold，每屏 ≤2 处） */
-    --primary-foreground: 27 23% 19%; /* on-gold 深棕墨 */
-    --secondary: 41 44% 89%; /* 卡其洗底 #F1E9D6（薄荷绿已退役） */
-    --secondary-foreground: 27 23% 19%;
-    --muted: 46 55% 90%;
-    --muted-foreground: 31 12% 48%; /* ink-secondary #8A7D6B（--muted） */
-    --accent: 41 44% 89%;
-    --accent-foreground: 27 23% 19%;
-    --destructive: 16 59% 44%; /* 暖调赭红 #B4502E（v2.0 §1.4，禁纯红） */
+    --popover-foreground: 36 13% 15%;
+    --primary: 47 80% 75%; /* cream 点睛 #F2DC8C（Ready §2.1 cream：仅「此刻要做」主钮/now/dock 短划，每屏 ≤2） */
+    --primary-foreground: 36 13% 15%; /* on-cream 深棕墨 */
+    --secondary: 40 39% 92%; /* 软面板/未选 chip surface #F3EEE4（Ready §2.1） */
+    --secondary-foreground: 36 13% 15%;
+    --muted: 40 39% 92%;
+    --muted-foreground: 38 21% 57%; /* ink-secondary #A89779（Ready §2.1 secondary 次要字/icon） */
+    --accent: 40 39% 92%;
+    --accent-foreground: 36 13% 15%;
+    --destructive: 16 59% 44%; /* 暖调赭红 #B4502E（Ready §2.1 alert 同值，仅异常，禁纯红） */
     --destructive-foreground: 40 60% 96%; /* 赭红/暖白字 */
-    --border: 24 9% 84%; /* 发丝线近值（rgba(59,46,36,.14) 纸白上等效） */
-    --input: 24 9% 84%;
-    --ring: 27 23% 19%; /* 深棕墨焦点环 */
+    --border: 42 13% 85%; /* 发丝线近值（rgba(44,40,34,.14) 于 canvas #FAF7F0 上等效 #DDDAD3） */
+    --input: 42 13% 85%;
+    --ring: 36 13% 15%; /* 深棕墨焦点环 */
     --radius: 0.625rem;
     /* sidebar-* 同祖推导：background←card 纯白；foreground/primary/accent/border/ring
        分别对齐同名主变量 */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 28 23% 24%;
-    --sidebar-primary: 42 72% 80%; /* 淡金点睛（柠檬黄清场） */
-    --sidebar-primary-foreground: 28 23% 24%;
-    --sidebar-accent: 34 18% 19%;
-    --sidebar-accent-foreground: 28 23% 24%;
-    --sidebar-border: 26 29% 89%;
-    --sidebar-ring: 28 23% 24%;
+    --sidebar-foreground: 36 13% 15%;
+    --sidebar-primary: 47 80% 75%; /* cream 点睛 */
+    --sidebar-primary-foreground: 36 13% 15%;
+    --sidebar-accent: 40 39% 92%;
+    --sidebar-accent-foreground: 36 13% 15%;
+    --sidebar-border: 42 13% 85%;
+    --sidebar-ring: 36 13% 15%;
   }
 
   /* shadcn dark 变量 · 全量替换为冻结表 4.2 dark 子表（确认书第 3 条：本批次开启） */

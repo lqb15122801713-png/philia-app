@@ -3,7 +3,9 @@
  * 依据=UX-02 两端定稿语言包 V1.1 §一总则+§二构件册（M1–M8/G1–G2）+34 号档 §一 token。
  * 色纪律：全部引 tokens 族——shadcn HSL var（--background/--card/--foreground/--primary/
  *   --muted-foreground/--destructive）+ tailwind preset theme() 键（brand/success/deep/
- *   danger/line），零新增字面量；淡黄=「此刻要做的」每屏 ≤2；赭红仅异常。
+ *   danger/line），零新增字面量；cream=「此刻要做的」每屏 ≤2；赭红仅异常。
+ *   （产品-1015 换皮 片0：随令牌层对齐 READY §2.1——--primary=cream #F2DC8C、
+ *   --foreground=body #2C2822、rail 渐变=brand #5C5040→pressed #4A4034；本文件零字面量改动。）
  * 作用域：.wsk=M 件族骨架件；.wrail=M1 导航轨（236px）；.wdock=手机 dock 五槽。
  * 断点口径（段 0 取舍）：桌面 rail/手机 dock 双形态互斥——<xl(1280) 只挂 dock、
  *   ≥xl 只挂 rail；语言包「xl 以下 56px 图标轨」变体本批不挂（dock 顶替手机导航），
@@ -201,7 +203,7 @@
 .wsk-note { font-family: var(--wsk-mono); font-size: 9px; color: var(--wsk-muted); letter-spacing: .04em; line-height: 1.8; }
 
 /* ============================================================================
- * M1 深棕导航轨 wrail（十五口冻结；236px；激活=淡金 3px 左条+浅金底；bd=赭红角标；
+ * M1 深棕导航轨 wrail（十五口冻结；236px；激活=cream 3px 左条+浅金底；bd=赭红角标；
  * foot=开发者管理端）。<xl 藏形（dock 顶替，双形态互斥），≥xl 236px 常驻。
  * ========================================================================== */
 .wrail {
@@ -222,7 +224,7 @@
 .wrail a.it svg { width: 18px; height: 18px; flex: none; }
 .wrail a.it .sub { display: block; font-family: var(--wsk-mono); font-size: 8px; color: hsl(var(--background) / .4); margin-top: 1px; }
 .wrail a.it.on { background: hsl(var(--primary) / .14); color: var(--wsk-gold-pale); font-weight: 600; }
-.wrail a.it.on::before { content: ''; position: absolute; left: 0; top: 9px; bottom: 9px; width: 3px; border-radius: 3px; background: var(--wsk-gold); }
+.wrail a.it.on::before { content: ''; position: absolute; left: 0; top: 9px; bottom: 9px; width: 3px; border-radius: 3px; background: var(--wsk-gold-pale); }
 .wrail a.it .bd {
   margin-left: auto; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 999px;
   background: var(--wsk-danger); color: hsl(var(--destructive-foreground));

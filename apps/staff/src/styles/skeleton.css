@@ -1,18 +1,23 @@
 /* ============================================================================
  * 员工端骨架样式库（员工端骨架整建批 · 片 1）
  * 依据=UX-2026-09-27-两端定稿语言包 V1.1 §一总则+§二构件册（S1–S8/G1–G2）+34 号档 §一 token
- * 色纪律：纸白 #FAF8F2/白卡/深棕墨 #3B2E24/深棕 #2E2318/淡黄 #F2DFA6/淡金 #E8CF8C/卡其 #B9A482/
- *        暖灰 #8A7D6B/赭红 #B4502E——零新色；淡黄=「此刻要做的」每屏 ≤2；赭红仅异常。
+ * 色纪律（产品-1015 换皮 片0 对齐 READY §2.1）：canvas #FAF7F0/白卡/body 深棕墨 #2C2822/
+ *        cream #F2DC8C 点睛（仅「此刻要做」每屏 ≤2）/cream hover #EFD471/次阶 #A89779/
+ *        赭红 #B4502E 仅异常——零新色；旧雾感四值禁止回退。
+ *        深棕主渐变随 tokens.gradients.philia 换代=brand #5C5040→pressed #4A4034。
  * 作用域=.sk（页根挂）；dock=S1 flatdock 四槽冻结「工位/预约/打卡/我的」。
  * ========================================================================== */
 
 .sk {
-  --paper: #FAF8F2; --card: #FFFFFF; --ink: #3B2E24; --ink-deep: #2E2318;
-  --gold-pale: #F2DFA6; --gold: #E8CF8C; --khaki: #B9A482; --muted: #8A7D6B;
-  --danger: #B4502E; --hairline: rgba(59, 46, 36, .14); --hairline-soft: rgba(59, 46, 36, .08);
+  /* 片0 换代注：--ink-deep 原 #2E2318 与 --ink 同收敛为 body #2C2822（Ready §2.1 无更深
+     文字档；其存量用法=cream 底上文字，新档即 body）；深棕面由 --grad-philia 的 brand 族承载。 */
+  --paper: #FAF7F0; --card: #FFFFFF; --ink: #2C2822; --ink-deep: #2C2822;
+  --gold-pale: #F2DC8C; --gold: #EFD471; --khaki: #A89779; --muted: #A89779;
+  --danger: #B4502E; --hairline: rgba(44, 40, 34, .14); --hairline-soft: #E8E2D6;
   /* 深棕主渐变=packages/shared tokens.gradients.philia 同帧（CSS 侧单一来源：
-     135° 同双色，工位大卡/身份卡两处引用此变量，禁字面量——复核意见书件 2 收编） */
-  --grad-philia: linear-gradient(135deg, #3B2E24 0%, #2E2318 100%);
+     135° 同双色，工位大卡/身份卡两处引用此变量，禁字面量——复核意见书件 2 收编）；
+     片0 换代=Ready §2.1 brand #5C5040→pressed #4A4034 */
+  --grad-philia: linear-gradient(135deg, #5C5040 0%, #4A4034 100%);
   --serif: var(--v2serif, "Noto Serif SC", "Songti SC", serif);
   --mono: var(--v2mono, "JetBrains Mono", ui-monospace, monospace);
   background: var(--paper); color: var(--ink); min-height: 100vh;

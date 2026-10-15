@@ -1,0 +1,69 @@
+{
+  "batch": "产品-1015 换皮 · 片0-三端壳",
+  "at": "2026-10-15T20:05:00+08:00",
+  "baseline": "main@a84397cc2503eb9c0ea67ff7cddf902372e9c9b9",
+  "branch": "feat/design-s0-shell",
+  "model": "K3 MAX",
+  "gates": {
+    "build_three_apps": { "cmd": "npm run build（customer+merchant+staff，各含 tsc -b）", "result": "pass" },
+    "server_typecheck": { "cmd": "server: npm run typecheck（tsc --noEmit）", "result": "pass" },
+    "smoke_routes": { "cmd": "node scripts/smoke-routes.mjs", "result": "110/110 通过", "json": "smoke-routes-片0.json" },
+    "nav_closure": { "cmd": "node scripts/check-nav-closure.mjs", "result": "126 路由 · 死胡同 0 · 弱 0 · 豁免 6", "json": "nav-closure-片0.json" },
+    "ban_grep": {
+      "scope": "git diff 基线→本片 新增行",
+      "珊瑚粉#FFAAA5": 0,
+      "text-white": 0,
+      "柠檬黄/薄荷绿（#FDC830/#7FD8BE）": 0,
+      "旧雾感四值（Ready §2.1 点名）": 0
+    },
+    "zero_new_deps": true,
+    "zero_new_migrations": true
+  },
+  "vi_tokens_alignment": {
+    "source_of_truth": ["packages/shared/src/tokens.ts", "packages/config/tailwind-preset.js", "apps/*/src/index.css :root", "apps/staff/src/styles/skeleton.css .sk", "apps/merchant/src/styles/console.css（全 theme()/var 引用，零字面量）"],
+    "map": {
+      "brand(cta/深卡/dock激活块/rail)": "新增 brand.cta #5C5040 / ctaPressed #4A4034 / onCta #FAF7F0；gradients.philia|rail 换代为 135°/160° #5C5040→#4A4034",
+      "cream(仅此刻要做≤2/屏)": "brand.primary #F2DFA6→#F2DC8C；hover/pressed/light 按冻结推导（L−6/L−13/S−12 L92）",
+      "secondary 次要字/icon": "#B9A482/#8A7D6B → #A89779",
+      "muted 弱标签": "#B9A98F → #B8AA96",
+      "canvas 页底": "#FAF8F2 → #FAF7F0",
+      "surface 软面板/未选chip": "secondaryLight/sunken 并入 #F3EEE4",
+      "body 正文": "#3B2E24 → #2C2822",
+      "divider 行内分隔": "rgba(59,46,36,.08) → #E8E2D6（成稿实色）",
+      "alert 仅异常": "#B4502E 同值不动（danger 族）",
+      "violet 活动角标≤10%": "新增 violet.base #A78BE8 / onBase #2C2822（禁 CTA/Tab）",
+      "success": "现网语义保留（Ready §2.1 勿换 brand）：三值原样不动",
+      "dark 域": "不随动（Ready §2 仅 light 终值；三端现网未启用 dark 壳），tokens.ts 头注记"
+    }
+  },
+  "shell_changes": {
+    "A1_client": {
+      "tab_order": "首页·预约·PHILIA·商城·我的（原已冻结一致，零改动）",
+      "label": "中央槽文字标「philia」→「PHILIA」",
+      "vi": "pill=brand.pressed 94%+blur；激活块=brand #5C5040 衬 canvas 图标；中央钮=cream（壳层 cream 唯一落点，给页面主钮留第 2 处额度）；未激活=muted",
+      "files": ["apps/customer/src/components/AppDock.tsx"]
+    },
+    "A2_staff": {
+      "dock": "工位·预约·打卡·我的 四槽、cream 顶短划、无爪印——基线已符，本片随令牌层（skeleton.css .sk 变量）对齐",
+      "files": ["apps/staff/src/styles/skeleton.css", "apps/staff/src/index.css"]
+    },
+    "A3_merchant": {
+      "rail": "十九口→十五口（经营6+商城3+管理6+脚开发者）；管理组 9→6：排班/薪资/XP审核 下轨（路由保留可直达，排班另经 /settings/schedules 挂设置域）；保留运营·审批中心（唯一 bd 角标口=壳层运营信号）",
+      "phone_dock": "五槽 总览·门店·收银·报表·我的；第五槽码内默认回「我的」（指向暂驻 /settings，W-我的真页属片3）；testid dock-settings→dock-me",
+      "files": ["apps/merchant/src/components/MerchantRail.tsx", "apps/merchant/src/components/ConsoleDock.tsx", "apps/merchant/src/copy/console.ts", "apps/merchant/src/styles/console.css"]
+    }
+  },
+  "judgment_calls_for_product": [
+    "rail 管理组第六口取舍：Ready W 帧表钉 5 口（员工/监控/报表/权限/设置），第六口保留「运营·审批中心」（唯一带待办角标口，下轨会藏待办）；排班/薪资/XP审核下轨但路由全保留",
+    "wnav.dockMe 运行值=copy_overrides active 行「设置」（迁移 0049）端口值优先；码内默认已回「我的」，翻牌须产品侧经文案端口/另批迁移（本片零新迁移不动 server）",
+    "客户端 dock 长按快捷弹层保留（用户触发非弹窗广告；「零弹窗壳层」按自发弹窗口径执行，壳层零新增弹窗）",
+    "员工端页面级爪印（RequireStaff 守卫页/页内容）属片2 脸面批未动；A2「无爪印」=Dock 本体无爪印（基线已符）",
+    "success 族三值未动（Ready「现网语义保留」）；dark 域未随动"
+  ],
+  "shots": {
+    "new": "shots/（14 张，全登录，实尺 390×844 手机 / 1440×900 桌面）",
+    "baseline": "shots-baseline/（同 14 镜头，基线 a84397cc 本地构建同栈对照）",
+    "tool": "scripts/capture-shell-shots.mjs（零依赖 CDP；基线跑法：CUSTOMER_URL=7110 系）"
+  },
+  "redlines": "账本口径/钱权/L2/脸面内容/判美=零触；A 禁合禁部；无新依赖/无新迁移；server/ 零改动"
+}
