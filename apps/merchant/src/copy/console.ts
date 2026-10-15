@@ -36,8 +36,8 @@ const CONSOLE_COPY_TABLE = {
   'wnav.payroll': '薪资',
   'wnav.xpAdmin': 'XP 审核',
 
-  /* ---- wnav foot 开发者管理端（owner-only 三端口收编为其子行） ---- */
-  'wnav.footConsole': '开发者管理端',
+  /* ---- wnav foot 运营后台端（owner-only 三端口收编为其子行；PD-25 D-56 展示改名，CJ-1014-01） ---- */
+  'wnav.footConsole': '运营后台端',
   'wnav.footRules': '规则配置',
 
   /* ---- wnav dock 五槽（UX-08 转正：总览/门店/收银/报表/设置） ---- */

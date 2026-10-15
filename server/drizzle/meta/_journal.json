@@ -568,6 +568,13 @@
       "when": 1792047300000,
       "tag": "0083_money_boarding_p1",
       "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "6",
+      "when": 1792048800000,
+      "tag": "0084_ops_console_rename_p0",
+      "breakpoints": true
     }
   ]
 }

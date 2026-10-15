@@ -13,8 +13,9 @@
 import { withCopyOverrides } from '@philia/shared';
 
 const CONSOLE_ADMIN_COPY_TABLE = {
-  'cadm.pageTitle': '开发者管理端',
-  'cadm.pageSub': '端口配置与发布 · 店主专属 · 共构不分叉',
+  'cadm.pageTitle': '运营后台端',
+  /* PD-25 D-56（CJ-1014-01）：pageSub 写死「内容与脸面 · 店主 · 钱权另闸」（不写运营角色） */
+  'cadm.pageSub': '内容与脸面 · 店主 · 钱权另闸',
 
   /* ---- 左端口目录（A–E 域章；seal=域码槽号） ---- */
   'cadm.groupA': 'A · 内容运营',
@@ -72,16 +73,17 @@ const CONSOLE_ADMIN_COPY_TABLE = {
   'cadm.coexistNote': '共构不分叉：右栏直接复用规则配置/文案端口/槽位端口三页内核；旧路由 /settings/rules · /settings/copy · /settings/slots 保留可直达。',
 
   /* ---- 非 owner 引导（manager；clerk 由 ClerkRouteGuard 拦） ---- */
-  'cadm.ownerOnlyTitle': '开发者管理端仅店主可用',
+  'cadm.ownerOnlyTitle': '运营后台端仅店主可用',
   'cadm.ownerOnlyBody': '端口配置与发布属店主专属（页内闸门 + server 硬闸门兜底）；请切换店主账号。',
 
-  /* ---- kill switch 显著态（端口批收尾片 1 · 件 4a：页顶横幅/小字行+双确认切换） ---- */
+  /* ---- kill switch 显著态（端口批收尾片 1 · 件 4a：页顶横幅/小字行+双确认切换） ----
+     PD-25 D-56 C3：arm 三键支付语义加强（明示支付+非 Banner；闸/端点/行为零改动） */
   'cadm.killBannerOn': 'KILL SWITCH 生效中：线上支付通道等可关参数已回落安全值（{by} · {updatedAt}）',
   'cadm.killRestore': '恢复',
   'cadm.killRestoreConfirm': '确认恢复？可关参数将解除安全值回落。',
-  'cadm.killArmNote': '一键关停：线上支付通道等可关参数瞬时回落安全值（全局）。',
-  'cadm.killArm': '一键关停',
-  'cadm.killArmConfirm': '确认一键关停？线上支付通道等可关参数将瞬时回落安全值。',
+  'cadm.killArmNote': '支付一键关停（非 Banner）：线上支付通道等可关参数瞬时回落安全值（全局）。',
+  'cadm.killArm': '支付一键关停',
+  'cadm.killArmConfirm': '确认支付一键关停？线上支付通道等可关参数将瞬时回落安全值（与 Banner 槽位下线无关）。',
   'cadm.killDone': '全局开关已切换',
 
   /* ---- D3 参数字典端口（端口批收尾片 1 · 件 5：config.dictionary 全量透出+服务端搜索） ---- */

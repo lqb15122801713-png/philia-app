@@ -158,7 +158,7 @@ const ROUTES = [
   { app: 'merchant', path: '/xp-admin', expect: 'sub', note: '片 4：XP 审核（owner|manager，墨轨「门店」组 rail-xp-admin 常驻）' },
   /* 商家端控制台骨架批 片 5 段 3 两条（expect=sub 照片 3/4 先例：rail≥xl/dock<xl 常驻导航即 dock 要素；clerk 守卫引导页） */
   { app: 'merchant', path: '/matrix', expect: 'sub', note: '片 5 段 3：权限矩阵 W-14 真页（rail 管理组 rail-matrix / 手机 dock 常驻）' },
-  { app: 'merchant', path: '/console', expect: 'sub', note: '片 5 段 3：开发者管理端 W-16 聚合真页（rail foot rail-console / 手机 dock 常驻；旧三端口路由保留直达）' },
+  { app: 'merchant', path: '/console', expect: 'sub', note: '片 5 段 3：运营后台端 W-16 聚合真页（rail foot rail-console / 手机 dock 常驻；旧三端口路由保留直达）；PD-25 D-56（CJ-1014-01）展示改名同步注记' },
   { app: 'merchant', path: '/cashier', expect: 'sub' },
   { app: 'merchant', path: '/cashier/records', expect: 'sub' },
   { app: 'merchant', path: '/cashier/close', expect: 'sub' },
