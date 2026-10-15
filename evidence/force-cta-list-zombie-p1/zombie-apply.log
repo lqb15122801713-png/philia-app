@@ -1,0 +1,23 @@
+[d47] 白名单（演示/走测标记）+超 24h 未翻步：命中 10 单（白名单在册 in_service 共 10 单）
+  FZA9491 fzshotA9491 checkedInAt=2026-10-13T11:46:49.000Z note=【测试】PD-26 探针僵尸A
+  FZM9491 fzshotM9491 checkedInAt=2026-09-10T03:46:49.000Z note=【测试】PD-26 探针僵尸M
+  FZA48660 fzshotA48660 checkedInAt=2026-10-13T11:47:28.000Z note=【测试】PD-26 探针僵尸A
+  FZM48660 fzshotM48660 checkedInAt=2026-09-10T03:47:28.000Z note=【测试】PD-26 探针僵尸M
+  FZA11938 fzshotA11938 checkedInAt=2026-10-13T11:55:11.000Z note=【测试】PD-26 探针僵尸A
+  FZM11938 fzshotM11938 checkedInAt=2026-09-10T03:55:11.000Z note=【测试】PD-26 探针僵尸M
+  FZA7478 fzshotA7478 checkedInAt=2026-10-13T11:56:47.000Z note=【测试】PD-26 探针僵尸A
+  FZM7478 fzshotM7478 checkedInAt=2026-09-10T03:56:47.000Z note=【测试】PD-26 探针僵尸M
+  FZA43220 fzshotA43220 checkedInAt=2026-10-13T11:59:03.000Z note=【测试】PD-26 探针僵尸A
+  FZM43220 fzshotM43220 checkedInAt=2026-09-10T03:59:03.000Z note=【测试】PD-26 探针僵尸M
+  ✓ FZA9491 → completed（留痕事件已发）
+  ✓ FZM9491 → completed（留痕事件已发）
+  ✓ FZA48660 → completed（留痕事件已发）
+  ✓ FZM48660 → completed（留痕事件已发）
+  ✓ FZA11938 → completed（留痕事件已发）
+  ✓ FZM11938 → completed（留痕事件已发）
+  ✓ FZA7478 → completed（留痕事件已发）
+  ✓ FZM7478 → completed（留痕事件已发）
+  ✓ FZA43220 → completed（留痕事件已发）
+  ✓ FZM43220 → completed（留痕事件已发）
+[d47] 报告=E:/KIMI code/tmp/fz-evidence/zombie-apply-report.json
+[d47] DONE(applied)

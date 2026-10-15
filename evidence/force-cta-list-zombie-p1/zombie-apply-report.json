@@ -1,0 +1,72 @@
+{
+  "at": "2026-10-15T04:07:36.677Z",
+  "dryRun": false,
+  "whitelist": [
+    "%【测试】%",
+    "%演示单%",
+    "wtshot%"
+  ],
+  "hitCount": 10,
+  "rows": [
+    {
+      "code": "FZA9491",
+      "id": "fzshotA9491",
+      "before": "in_service",
+      "after": "completed"
+    },
+    {
+      "code": "FZM9491",
+      "id": "fzshotM9491",
+      "before": "in_service",
+      "after": "completed"
+    },
+    {
+      "code": "FZA48660",
+      "id": "fzshotA48660",
+      "before": "in_service",
+      "after": "completed"
+    },
+    {
+      "code": "FZM48660",
+      "id": "fzshotM48660",
+      "before": "in_service",
+      "after": "completed"
+    },
+    {
+      "code": "FZA11938",
+      "id": "fzshotA11938",
+      "before": "in_service",
+      "after": "completed"
+    },
+    {
+      "code": "FZM11938",
+      "id": "fzshotM11938",
+      "before": "in_service",
+      "after": "completed"
+    },
+    {
+      "code": "FZA7478",
+      "id": "fzshotA7478",
+      "before": "in_service",
+      "after": "completed"
+    },
+    {
+      "code": "FZM7478",
+      "id": "fzshotM7478",
+      "before": "in_service",
+      "after": "completed"
+    },
+    {
+      "code": "FZA43220",
+      "id": "fzshotA43220",
+      "before": "in_service",
+      "after": "completed"
+    },
+    {
+      "code": "FZM43220",
+      "id": "fzshotM43220",
+      "before": "in_service",
+      "after": "completed"
+    }
+  ]
+}

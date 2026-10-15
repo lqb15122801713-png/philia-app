@@ -1,0 +1,15 @@
+✅ 夹具：白名单僵尸×3（30h/50h/40 天月级）落库
+✅ 店主登录
+✅ F1 D-49 预警行：「强制完成」次动作+「去处理」同框（列表语境零详情前置） —— 异常待清 3 单：服务中超 24 小时未翻步，点我定位排障3强制完成去处理
+shot: E:\KIMI code\tmp\fz-evidence\shots\F1-alert-row-force-cta.png
+✅ F2 D-49 预警行点「强制完成」：行目标（去处理同目标）completed+forced 留痕+桶计数可解释下降 —— target=fzshot2-260593 status=completed bucket=3→2
+shot: E:\KIMI code\tmp\fz-evidence\shots\F2-after-alert-force.png
+✅ F3 D-49 不回退：桶内单卡 CTA 仍在（剩余僵尸每卡 1 钮） —— cta=2 余桶=2
+shot: E:\KIMI code\tmp\fz-evidence\shots\F3-bucket-cards-cta.png
+✅ F3 桶卡点 CTA 出桶（留痕 completed，桶计数再降一） —— pick=fzshot2-060593 bucket=2→1
+shot: E:\KIMI code\tmp\fz-evidence\shots\F3b-bucket-after.png
+✅ F5 D-48 不回退：去处理仍真跳 /monitor/:id —— /monitor/fzshot2-160593
+✅ F4 D-49 不回退：详情快捷区「强制完成」仍在
+shot: E:\KIMI code\tmp\fz-evidence\shots\F4-detail-cta-intact.png
+
+全帧全绿 ✅
