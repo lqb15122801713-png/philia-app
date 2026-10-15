@@ -6143,7 +6143,12 @@ async function main(): Promise<void> {
   await db.update(schema.appointments).set({ status: 'completed', completedAt: new Date(), updatedAt: new Date() })
     .where(eq(schema.appointments.id, appt632.id));
   const bill632 = await settleBill2([{ kind: 'appointment', refId: appt632.id }], { note: '【测试】e2e 片4 协作拆分结账' });
-  await db.update(schema.cashierBills).set({ settledAt: new Date(`${currentMonth}-15T12:00:00`), updatedAt: new Date() })
+  /* PD-26 顺手拆雷（基建时间雷·主干既有 PD-21 钉程）：63.x 钉 settledAt=当月 15 日正午——
+     提成按「源单 settled_at × 规则 effective_from 时序」解析，每月 15 日正午过后跑批时
+     钉点早于 R9② 改率落账时刻 → 取率回落旧值（63.2/63.3 误红实证：2026-10-15 午后）。
+     修=钉点不得早于改率时刻：max（当月15正午托月界, 此刻+1.5s），断言目标不变 */
+  const settlePin63 = new Date(Math.max(new Date(`${currentMonth}-15T12:00:00`).getTime(), Date.now() + 1500));
+  await db.update(schema.cashierBills).set({ settledAt: settlePin63, updatedAt: new Date() })
     .where(eq(schema.cashierBills.id, bill632.billId)); // 63.x 钉时刻：账单归属月钉死（跨零点/跨月界同稳）
   const sumAq632 = await trpcQuery<S4Summary>('commission.mySummary', { cookie: groomerCookie, input: { month: currentMonth } });
   const sumLl632 = await trpcQuery<S4Summary>('commission.mySummary', { cookie: liliCookie, input: { month: currentMonth } });

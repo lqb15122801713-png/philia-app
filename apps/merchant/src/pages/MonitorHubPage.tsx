@@ -297,13 +297,20 @@ export default function MonitorHubPage() {
   }
   const alertItems: WAlertItem[] = [
     /* D-44：僵尸聚合预警置顶；PD-22 D-48：「去处理」=真跳到首只僵尸的可排障监视页（/monitor/:id），
-       不再原地切滤签（禁仍停 monitor）；滤签 chip 仍留（看全桶用） */
+       不再原地切滤签（禁仍停 monitor）；滤签 chip 仍留（看全桶用）
+       PD-26 D-49：预警行内补「强制完成」同语义次动作（作用=首只僵尸=去处理同目标；
+       端点复用 forceCompleteStale 单源零双轨；去处理真跳不回退；桶内单卡 CTA 不回退） */
     ...(serviceZombie.length > 0
       ? [{
           key: 'zombie-24h',
           text: oc('mon.zombieAlertLine', { n: serviceZombie.length }),
           count: serviceZombie.length,
           to: `/monitor/${serviceZombie[0]!.id}`,
+          extraAction: {
+            label: oc('mon.forceCompleteCta'),
+            testId: 'wsk-alert-zombie-force',
+            onClick: () => onForceComplete(serviceZombie[0]!),
+          },
         }]
       : []),
     ...serviceItems

@@ -32,6 +32,9 @@ export interface WAlertItem {
   count?: number;
   to?: string;
   onClick?: () => void;
+  /** PD-26 D-49：可选同语义次动作（如异常待清行内「强制完成」）——仅传入的行渲染，
+   *  主动作（去处理/跳转）不动；零 IA 改动（行内加钮非重做） */
+  extraAction?: { label: string; onClick: () => void; testId?: string };
 }
 export function WAlert({ items, testId }: { items: WAlertItem[]; testId?: string }) {
   return (
@@ -41,6 +44,19 @@ export function WAlert({ items, testId }: { items: WAlertItem[]; testId?: string
         <div className="row" key={it.key} data-testid={`wsk-alert-${it.key}`}>
           <span>{it.text}</span>
           {typeof it.count === 'number' ? <span className="n">{it.count}</span> : null}
+          {it.extraAction ? (
+            <button
+              type="button"
+              className="go"
+              data-testid={it.extraAction.testId ?? `wsk-alert-${it.key}-action`}
+              onClick={(e) => {
+                e.stopPropagation();
+                it.extraAction!.onClick();
+              }}
+            >
+              {it.extraAction.label}
+            </button>
+          ) : null}
           {it.to ? <Link className="go" to={it.to}>{cc('wsk.alertGo')}</Link> : null}
           {!it.to && it.onClick ? (
             <button type="button" className="go" onClick={it.onClick}>{cc('wsk.alertGo')}</button>
