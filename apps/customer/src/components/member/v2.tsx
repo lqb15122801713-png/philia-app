@@ -21,7 +21,9 @@ export const TIER_IDX: Record<string, 0 | 1 | 2 | 3> = {
   plan_zhuguang: 2,
   plan_nuanyang: 3,
 }
-const TIER_NAME = ['注册用户', '萤火', '烛光', '暖阳'] as const
+/* CJ-1015-02（开口①）：对外档名昵称=「微光」／对内=注册用户身份（双标并置；
+   身份模型不动：对内 label/端口=会员档·注册用户 沿用，非付费第四档） */
+const TIER_NAME = ['微光', '萤火', '烛光', '暖阳'] as const
 const TIER_CLAIM_KEY = [
   'card.claimWeiguang',
   'card.claimYinghuo',

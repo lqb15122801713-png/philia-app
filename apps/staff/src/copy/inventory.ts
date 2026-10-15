@@ -48,6 +48,21 @@ const INVENTORY_COPY_TABLE = {
   'inventory.expiry.leftLead': '剩',
   'inventory.expiry.leftTail': '天',
 
+  /* ---- 安心包到店发放（CJ-1015-02 A2：不绑 App · 可先发+店日库存记账+身份后补） ---- */
+  'inventory.issue.title': '安心包发放',
+  'inventory.issue.note': '到店全员可发，不绑 App——可先发后补身份；每次发放落库存流水（店日记账）。',
+  'inventory.issue.cta': '发放',
+  'inventory.issue.qtyLabel': '数量',
+  'inventory.issue.phoneLabel': '客户手机号（选填：挂上他的权益包）',
+  'inventory.issue.noteLabel': '备注（选填）',
+  'inventory.issue.confirm': '确认发放',
+  'inventory.issue.confirming': '发放中…',
+  'inventory.issue.cancel': '取消',
+  'inventory.issue.success': '已发放并入库存流水（身份可后补）',
+  'inventory.issue.successAttached': '已发放并挂到客户权益包',
+  'inventory.issue.loadFail': '安心包库存加载失败，请检查网络后重试',
+  'inventory.issue.empty': '本店暂无安心包库存商品',
+
   /* ---- 骨架帧（S-09 盘点录入：backbar + 录入卡 + 吸底 G2） ---- */
   'inventory.count.execSuffix': '执行',
   'inventory.count.fallbackTitle': '盘点执行',

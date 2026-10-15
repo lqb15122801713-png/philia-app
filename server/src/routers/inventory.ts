@@ -413,4 +413,100 @@ export const inventoryRouter = router({
   carePackageExpiryMerchant: merchantProcedure.query(async ({ ctx }) => {
     return loadCarePackageExpiry(ctx.db, ctx.user.storeId!);
   }),
+
+  /**
+   * 9. 安心包到店发放（CJ-1015-02 A2 · 任务书冻结版 V1.0）：
+   * 到店全员可发、不绑 App——**可先发**（无账号/无微光档不拒）＋**店日库存记账**
+   * （products.stock 扣减 + stock_movements manual 留痕：谁/何时/多少/备注）＋**身份后补**
+   * （手机号可选：命中在册客户则顺带挂 member_perk_grants care_package 权益行；
+   * 未命中/未填=先发放，身份后续补挂——非必须先建档再发）。
+   * 权限=staffProcedure 本店在职员工；库存不足=400 人话（不裸 500）。
+   */
+  carePackageStockStaff: staffProcedure.query(async ({ ctx }) => {
+    const rows = await ctx.db
+      .select({
+        id: schema.products.id,
+        name: schema.products.name,
+        stock: schema.products.stock,
+        expiresAt: schema.products.expiresAt,
+      })
+      .from(schema.products)
+      .where(and(eq(schema.products.storeId, ctx.user.storeId!), eq(schema.products.category, 'care_package')))
+      .orderBy(schema.products.createdAt);
+    return rows;
+  }),
+
+  issueCarePack: staffProcedure
+    .input(
+      z.object({
+        productId: z.string().min(1),
+        qty: z.number().int().min(1).max(99).default(1),
+        phone: z.string().trim().max(20).optional(),
+        note: z.string().trim().max(200).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const storeId = ctx.user.storeId!;
+      const product = await ctx.db
+        .select()
+        .from(schema.products)
+        .where(eq(schema.products.id, input.productId))
+        .get();
+      if (!product || product.storeId !== storeId) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: '安心包不存在' });
+      }
+      if (product.category !== 'care_package') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: '该商品不是安心包' });
+      }
+      if (product.stock < input.qty) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: `安心包库存不足（现余 ${product.stock}）` });
+      }
+      const noteText = `安心包发放（先发后补身份）${input.phone ? ` · 手机号 ${input.phone}` : ''}${input.note ? ` · ${input.note}` : ''}`;
+      const movement = await ctx.db.transaction(async (tx) => {
+        const before = product.stock;
+        const after = before - input.qty;
+        await tx
+          .update(schema.products)
+          .set({ stock: after, updatedAt: new Date() })
+          .where(eq(schema.products.id, product.id));
+        const [mov] = await tx
+          .insert(schema.stockMovements)
+          .values({
+            storeId,
+            productId: product.id,
+            sourceType: 'manual',
+            sourceId: null,
+            delta: -input.qty,
+            beforeStock: before,
+            afterStock: after,
+            operatorId: ctx.user.id,
+            note: noteText,
+          })
+          .returning();
+        return mov!;
+      });
+      /* 身份后补挂接：手机号命中在册客户 → 权益台账 care_package 行（先查后插幂等同 perks 口径） */
+      let attachedUser = false;
+      if (input.phone) {
+        const user = await ctx.db
+          .select({ id: schema.users.id })
+          .from(schema.users)
+          .where(eq(schema.users.phone, input.phone))
+          .get();
+        if (user) {
+          const { grantPerkIfAbsent } = await import('./perks');
+          await grantPerkIfAbsent(ctx.db, {
+            userId: user.id,
+            kind: 'care_package',
+            storeId,
+            totalCount: input.qty,
+            remainCount: input.qty,
+            sourceId: movement.id,
+            meta: { note: '安心包到店发放（CJ-1015-02：不绑 App，先发后补身份）', phone: input.phone },
+          });
+          attachedUser = true;
+        }
+      }
+      return { movementId: movement.id, stockAfter: movement.afterStock, attachedUser };
+    }),
 });

@@ -40,7 +40,9 @@ export const DAY_MS = 86_400_000
 
 /** 四档短名（共创会落槌档名，冻结版任务书 §二）；未知档回落 label 中「·名：」段 */
 const PLAN_SHORT_NAME: Record<string, string> = {
-  plan_weiguang: '注册用户',
+  /* CJ-1015-02（开口①）：对外档名昵称=「微光」／对内=注册用户身份（双标并置；
+     身份模型不动：plan_weiguang 免费档非付费第四档；对内 label/端口=会员档·注册用户 沿用） */
+  plan_weiguang: '微光',
   plan_yinghuo: '萤火',
   plan_zhuguang: '烛光',
   plan_nuanyang: '暖阳',
