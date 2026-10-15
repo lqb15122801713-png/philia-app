@@ -8,7 +8,7 @@
  * 两皮定稿口径差逐字保留：
  * - card（旧 4 屏向导）：随缘为首卡，96 宽白卡投影皮；
  * - flat（单屏族，定稿 B-01 / §4.4 gr-rail）：132 宽圆角 18 + scroll-snap 出血横滑，
- *   选中=1.5px 深棕边 + 字像变金；「随缘派单」为末卡（定稿口径：末卡=不指定 ·
+ *   选中=1.5px brand 深面边（片1 VI #5C5040）+ 字像变 cream #F2DC8C；「随缘派单」为末卡（定稿口径：末卡=不指定 ·
  *   门店安排），带最早可约时刻；gs-groomer-* testid 仅 flat 皮保留（e2e 契约）。
  * listStaffPublic 不透出头像字段（staff 表无 avatar，实证仅 id/name/skills）——
  * 无照片=圆章底字像，不造假图。
@@ -42,10 +42,10 @@ export default function StaffPicker({
   earliestLabel,
 }: StaffPickerProps) {
   if (variant === 'flat') {
-    /* grcard（定稿）：132 宽圆角 18；选中=1.5px 深棕边（替代旧 ring 体系） */
+    /* grcard（定稿）：132 宽圆角 18；选中=1.5px brand 边（片1 VI #5C5040）+ 字像变 cream */
     const cardCls = (active: boolean) =>
       `flex w-[132px] shrink-0 snap-center flex-col items-center rounded-[18px] border px-3 py-3.5 text-center transition active:scale-95 ${
-        active ? 'border-[1.5px] border-ink bg-card' : 'border-line bg-card'
+        active ? 'border-[1.5px] border-[#5C5040] bg-card' : 'border-line bg-card'
       }`;
 
     return (
@@ -65,10 +65,10 @@ export default function StaffPicker({
                 data-testid={`gs-groomer-${s.id}`}
                 className={cardCls(selectedId === s.id)}
               >
-                {/* 字像 56 圆：#F4EDDC 底 + 姓字 17/800；选中字像变金（定稿点睛口径） */}
+                {/* 字像 56 圆：#F4EDDC 底 + 姓字 17/800；选中字像变 cream（片1 VI #F2DC8C 点睛口径） */}
                 <span
                   className={`flex h-14 w-14 items-center justify-center rounded-full text-[17px] font-extrabold text-ink ${
-                    selectedId === s.id ? 'bg-brand-primary' : 'bg-sunken'
+                    selectedId === s.id ? 'bg-[#F2DC8C]' : 'bg-sunken'
                   }`}
                   aria-hidden="true"
                 >
@@ -90,7 +90,7 @@ export default function StaffPicker({
         >
           <span
             className={`flex h-14 w-14 items-center justify-center rounded-full ${
-              selectedId === null ? 'bg-brand-primary' : 'bg-sunken'
+              selectedId === null ? 'bg-[#F2DC8C]' : 'bg-sunken'
             }`}
             aria-hidden="true"
           >

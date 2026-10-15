@@ -36,7 +36,8 @@ import { hc } from '@/copy/home'
 import { ntf } from '@/copy/notify'
 
 const DAY_MS = 86_400_000
-const HAIRLINE = 'border-t border-[rgba(59,46,36,.09)]'
+/* 片1-客户端脸 VI（READY §2.1）：发丝线=divider #E8E2D6 谱 rgba(44,40,34,.10) */
+const HAIRLINE = 'border-t border-[rgba(44,40,34,.10)]'
 
 /** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
 const DEFAULT_ORDER = [
@@ -318,7 +319,7 @@ export default function HomePage() {
             ) : null}
             {bannerCopy.cta_text ? (
               <span
-                className="mt-2 inline-block rounded-full bg-brand-primary px-3 py-1 text-caption-xs font-bold text-ink"
+                className="mt-2 inline-block rounded-full bg-[#F2DC8C] px-3 py-1 text-caption-xs font-bold text-ink"
                 data-testid="home-banner-cta"
               >
                 {bannerCopy.cta_text}
@@ -347,7 +348,7 @@ export default function HomePage() {
             {unreadTotal > 0 ? (
               <span
                 data-testid="home-notify-badge"
-                className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-brand-primary px-1 font-number text-[9px] font-bold leading-none text-ink"
+                className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[#F2DC8C] px-1 font-number text-[9px] font-bold leading-none text-ink"
               >
                 {unreadTotal > 99 ? '99+' : unreadTotal}
               </span>
@@ -459,11 +460,12 @@ export default function HomePage() {
           {membership && plan && !plan.free ? (
             <Link to="/member/rebate" className="hv2-mc-row hv2-mc-ring" data-testid="home-rebate-ring">
               <svg width="68" height="68" viewBox="0 0 76 76" style={{ flex: 'none' }} aria-hidden="true">
-                <circle cx="38" cy="38" r="30" fill="none" stroke="#EDE4CE" strokeWidth="8" />
-                <circle cx="38" cy="38" r="30" fill="none" stroke="#F2DFA6" strokeWidth="8" strokeLinecap="round"
+                {/* 片1 VI：轨道=surface #F3EEE4；进度=cream #F2DC8C；字=body/secondary */}
+                <circle cx="38" cy="38" r="30" fill="none" stroke="#F3EEE4" strokeWidth="8" />
+                <circle cx="38" cy="38" r="30" fill="none" stroke="#F2DC8C" strokeWidth="8" strokeLinecap="round"
                   strokeDasharray="188.5" strokeDashoffset={188.5 * (1 - periodPct / 100)} transform="rotate(-90 38 38)" />
-                <text x="38" y="36" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="15" fontWeight="700" fill="#3B2E24">{periodPct}%</text>
-                <text x="38" y="49" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="7.5" fill="#8A7D6B">本周期</text>
+                <text x="38" y="36" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="15" fontWeight="700" fill="#2C2822">{periodPct}%</text>
+                <text x="38" y="49" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="7.5" fill="#A89779">本周期</text>
               </svg>
               <div>
                 <div className="big">{fenToYuan(grantedThisPeriod)}</div>
@@ -474,14 +476,14 @@ export default function HomePage() {
           ) : (
             <Link to={membership ? '/member/rebate' : '/member/open'} className="hv2-mc-row" data-testid="home-rebate-guide" style={{ textDecoration: 'none' }}>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: '#3B2E24' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#2C2822' }}>
                   {membership ? hc('home.rebateLedger') : hc('home.openMemberClaim')}
                 </div>
-                <div className="cap" style={{ fontSize: 11, color: '#8A7D6B', marginTop: 3 }}>
+                <div className="cap" style={{ fontSize: 11, color: '#A89779', marginTop: 3 }}>
                   {membership ? hc('home.rebateBalanceLine', { amt: fenToYuan(rebateBalance), day: settlementDay }) : hc('home.openMemberSub', { pcts: [2, 5, 10].join('/') })}
                 </div>
               </div>
-              <span style={{ marginLeft: 'auto', color: '#8A7D6B' }} aria-hidden="true">›</span>
+              <span style={{ marginLeft: 'auto', color: '#A89779' }} aria-hidden="true">›</span>
             </Link>
           )}
         </section>
@@ -492,8 +494,8 @@ export default function HomePage() {
       cases.length > 0 ? (
         <section data-testid="home-cases" aria-label="店里今天的故事" style={{ marginTop: 26 }}>
           <div className="flex items-baseline justify-between" style={{ marginBottom: 12 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 800, color: '#3B2E24' }}><CK k="home.casesTitle">{hc('home.casesTitle')}</CK></h3>
-            <Link to="/philia/moments" data-testid="home-cases-more" style={{ fontFamily: 'var(--v2mono)', fontSize: 11, color: '#8A7D6B' }}>
+            <h3 style={{ fontSize: 16, fontWeight: 800, color: '#2C2822' }}><CK k="home.casesTitle">{hc('home.casesTitle')}</CK></h3>
+            <Link to="/philia/moments" data-testid="home-cases-more" style={{ fontFamily: 'var(--v2mono)', fontSize: 11, color: '#A89779' }}>
               <CK k="home.casesMore">{hc('home.casesMore')}</CK>
             </Link>
           </div>
@@ -523,10 +525,10 @@ export default function HomePage() {
         <Link
           to="/member"
           data-testid="home-member-strip"
-          className="mt-4 flex items-center gap-3 rounded-panel bg-ink px-4 py-3 text-canvas transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+          className="mt-4 flex items-center gap-3 rounded-panel bg-[#5C5040] px-4 py-3 text-canvas transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-primary" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#3B2E24" strokeWidth="1.5" className="h-4 w-4"><rect x="3" y="8" width="18" height="13" rx="2" /><path d="M12 8v13M3 12h18M8 8c-2-2-1-5 1-5s3 2 3 5M16 8c2-2 1-5-1-5s-3 2-3 5" /></svg>
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F2DC8C]" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#2C2822" strokeWidth="1.5" className="h-4 w-4"><rect x="3" y="8" width="18" height="13" rx="2" /><path d="M12 8v13M3 12h18M8 8c-2-2-1-5 1-5s3 2 3 5M16 8c2-2 1-5-1-5s-3 2-3 5" /></svg>
           </span>
           <span className="min-w-0 flex-1 text-body-sm leading-5">
             <CK k="home.passStripPre">{hc('home.passStripPre')}</CK><span className="u1-num font-semibold">{passRemainTotal}</span><CK k="home.passStripPost">{hc('home.passStripPost')}</CK>
@@ -541,7 +543,7 @@ export default function HomePage() {
         <section
           data-testid="home-stats-row"
           aria-label="陪伴数据"
-          className={`mt-4 grid grid-cols-3 gap-2 py-3 ${HAIRLINE} border-b border-[rgba(59,46,36,.09)]`}
+          className={`mt-4 grid grid-cols-3 gap-2 py-3 ${HAIRLINE} border-b border-[rgba(44,40,34,.10)]`}
         >
           {[
             { key: 'home.statsDays', label: hc('home.statsDays'), value: joinDays !== null ? `${joinDays} 天` : null },
@@ -585,7 +587,7 @@ export default function HomePage() {
           <Link
             to="/philia/pets"
             data-testid="home-pets-empty"
-            className="mt-3 flex items-center justify-between rounded-control bg-sunken px-4 py-3 text-body-sm text-ink-secondary"
+            className="mt-3 flex items-center justify-between rounded-control bg-[#F3EEE4] px-4 py-3 text-body-sm text-ink-secondary"
           >
             <CK k="home.petsEmpty">{hc('home.petsEmpty')}</CK>
             <span aria-hidden="true">›</span>
@@ -604,10 +606,10 @@ export default function HomePage() {
                     src={pet.avatarUrl}
                     alt={pet.name ?? '毛孩子'}
                     loading="lazy"
-                    className="h-14 w-14 rounded-full bg-sunken object-cover"
+                    className="h-14 w-14 rounded-full bg-[#F3EEE4] object-cover"
                   />
                 ) : (
-                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-oak-light ring-1 ring-line-ring" aria-hidden="true">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#F3EEE4] ring-1 ring-line-ring" aria-hidden="true">
                     <span className="u1-serif text-title font-semibold text-ink">{(pet.name ?? '毛孩子').slice(0, 1)}</span>
                   </span>
                 )}

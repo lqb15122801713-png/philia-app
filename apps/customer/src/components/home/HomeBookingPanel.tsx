@@ -392,7 +392,7 @@ export default function HomeBookingPanel({
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
-        className="shrink-0 text-brand-primary"
+        className="shrink-0 text-[#A89779]"
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"

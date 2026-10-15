@@ -64,7 +64,7 @@ export default function PetCardBlock({
         <button
           type="button"
           onClick={() => navigate('/philia/pets')}
-          className="mt-4 flex h-11 items-center rounded-card border-[1.5px] border-ink px-8 text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="mt-4 flex h-11 items-center rounded-card border-[1.5px] border-[#5C5040] px-8 text-body font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           {bkc('booking.noPetCta')}
         </button>
@@ -115,8 +115,8 @@ export default function PetCardBlock({
                   [pet.weightKg ? `${pet.weightKg}kg` : null, pet.breed ?? null].filter(Boolean).join(' · ')}
               </span>
             </span>
-            {/* tfield 更改链工艺：卡其下划线 */}
-            <span className="border-b border-brand-secondary pb-px text-caption font-medium text-ink">更换 ▸</span>
+            {/* tfield 更改链工艺：VI secondary 下划线（片1 #A89779） */}
+            <span className="border-b border-[#A89779] pb-px text-caption font-medium text-ink">更换 ▸</span>
           </>
         ) : (
           <>
@@ -127,7 +127,7 @@ export default function PetCardBlock({
               <span className="block text-body font-semibold text-ink-secondary">{bkc('booking.choosePet')}</span>
               <span className="mt-0.5 block text-caption text-ink-placeholder">{pickerHint ?? bkc('booking.petPickHintGrooming')}</span>
             </span>
-            <span className="border-b border-brand-secondary pb-px text-caption font-medium text-ink">选择 ▸</span>
+            <span className="border-b border-[#A89779] pb-px text-caption font-medium text-ink">选择 ▸</span>
           </>
         )}
       </button>

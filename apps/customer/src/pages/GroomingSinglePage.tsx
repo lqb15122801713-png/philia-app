@@ -368,7 +368,7 @@ export default function GroomingSinglePage() {
             : null;
 
   /* ---- 渲染：单屏区块化（v4.1：留白 + hairline 分节，时段栅格紧贴日期横条） ---- */
-  // 节间 hairline：token 深棕墨 #3B2E24 的 9% 透明度（line.ring；换皮批片 2 换代旧暖墨谱系）
+  // 节间 hairline：token line.ring（VI 换代后随片0 全局令牌走 divider #E8E2D6 谱）
   // 截面题=sec-h 工艺（§4.1：16/800）
   const SECTION = 'mt-6 border-t border-line-ring pt-5';
   const SEC_H = 'text-v2-section';
@@ -472,7 +472,7 @@ export default function GroomingSinglePage() {
           {dayFull && fullAltQ.isSuccess ? (
             <p
               data-testid="gs-full-note"
-              className="mt-3 rounded-tag bg-sunken px-3 py-2 text-caption text-ink-placeholder"
+              className="mt-3 rounded-tag bg-[#F3EEE4] px-3 py-2 text-caption text-ink-placeholder"
             >
               {fullAltQ.data.note ?? <CK k="booking.fullSlotFallback">{bkc('booking.fullSlotFallback')}</CK>}
             </p>

@@ -269,7 +269,7 @@ export default function MemberCardPage() {
 
   return (
     <CanvasLayoutLoader pageKey="memberCard" storeId={q1StoreId}>
-      <div className="m2" data-testid="member-card-page" style={{ minHeight: '100vh' }}>
+      <div className="m2 m2--vi" data-testid="member-card-page" style={{ minHeight: '100vh' }}>
         {/* 返回=时间序回退，直访兜底=/member（PushBar 既有纪律）；页头不入块册 */}
         <PushBar label={mc('q1.pushLabel')} fallback="/member" />
 

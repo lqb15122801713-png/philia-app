@@ -7,7 +7,8 @@
  * U4-D1 逐格对照试样（.confirm-bar 骨架）：摘要行（左=宠物·服务·洗护师，右=日期
  * 时间，均为真实选择态，缺项如实写「未选」）→ 主钮 → 安心行。
  * 换皮批片 2（定稿 §4.1 ctabar）：衬底=paper 渐出（linear-gradient(transparent, paper 40%)），
- * 主钮=深棕底反白圆角 18（btn-primary 工艺；旧柠檬主钮退役，淡黄点睛让位时段栅格）。
+ * 主钮=深棕底反白（btn-primary 工艺；旧柠檬主钮退役，淡黄点睛让位时段栅格）。
+ * 片1-客户端脸（2026-10-15）：主钮=VI brand #5C5040 反白 #F6EFDD、圆角 16（READY §2.3 btn）。
  * 安心行只写真实口径：全程页六步可见 + 过程照片记录（live 页现成链路）+ 收款方式
  * （到店付/次卡扣次，随 paymentMode 真实切换），禁虚构承诺（不抄试样「不取消费」）。
  */
@@ -74,16 +75,15 @@ export default function ConfirmBar({
             )}
           </span>
         </div>
-        {/* 主钮（定稿 btn-primary：深棕底 #2E2318 反白，圆角 18；旧柠檬主钮退役，
-            淡黄点睛位让给时段栅格选中态） */}
+        {/* 主钮（片1 VI：brand #5C5040 反白 #F6EFDD，圆角 16=READY §2.3 btn 口径） */}
         <button
           type="button"
           disabled={!ready}
           onClick={onConfirm}
           data-testid="gs-confirm"
           data-state={submitting ? 'submitting' : missingLabel !== null ? 'disabled' : 'ready'}
-          className={`pointer-events-auto h-12 w-full rounded-[18px] text-body-sm font-semibold transition-transform duration-120 ease-philia-spring ${
-            ready ? 'bg-[#2E2318] text-[#F6EFDD] shadow-philia active:scale-92' : 'cursor-not-allowed bg-line text-ink-placeholder shadow-none'
+          className={`pointer-events-auto h-12 w-full rounded-[16px] text-body-sm font-semibold transition-transform duration-120 ease-philia-spring ${
+            ready ? 'bg-[#5C5040] text-[#F6EFDD] shadow-philia active:scale-92' : 'cursor-not-allowed bg-line text-ink-placeholder shadow-none'
           }`}
         >
           {label}
