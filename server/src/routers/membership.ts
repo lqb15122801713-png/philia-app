@@ -200,7 +200,9 @@ function planPublicShape(row: MemberPlanRow | undefined) {
 }
 
 /** 售卡/续费金额=档价+多宠附加费（含 included_pets 只，超出每只 +extra_pet_fen；max_pets 封顶硬校验）。
- *  批次 6 补缺大批：export 供 routers/pay.ts 线上开通 server 重算金额同源（前端金额一律不信）。 */
+ *  批次 6 补缺大批：export 供 routers/pay.ts 线上开通 server 重算金额同源（前端金额一律不信）。
+ *  CJ-1015-02 A3：注册用户（免费档）宠物数**正式不限**——免费档不套 max_pets 闸
+ *  （isFreePlanRow 判定与 planPublicShape 同源）；付费档 10 只封顶照旧（本批不翻案）。 */
 export function membershipChargeFen(
   plan: MemberPlanRow,
   petCount: number,
@@ -209,7 +211,9 @@ export function membershipChargeFen(
   const included = planNum(plan, 'included_pets', 3);
   const extraPetFen = planNum(plan, 'extra_pet_fen', 5900);
   const maxPets = planNum(plan, 'max_pets', 10);
-  if (petCount > maxPets) badRequest(`多宠封顶 ${maxPets} 只（第 ${included + 1} 只起 +¥${(extraPetFen / 100).toFixed(2)}/年/只）`);
+  if (!isFreePlanRow(plan) && petCount > maxPets) {
+    badRequest(`多宠封顶 ${maxPets} 只（第 ${included + 1} 只起 +¥${(extraPetFen / 100).toFixed(2)}/年/只）`);
+  }
   const extraCount = Math.max(0, petCount - included);
   return { amountFen: priceFen + extraCount * extraPetFen, extraCount, priceFen };
 }

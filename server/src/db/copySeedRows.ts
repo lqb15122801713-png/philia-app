@@ -1,7 +1,7 @@
 /**
  * 文案端口种子行（端口批片 B → 端口 V2 修正批 · 屏分组）——生成件，勿手改
  * （源=scripts/gen-copy-overrides-seed.mts；copy 键表增删键/屏名字典改口径后须重跑+新迁移落库）。
- * 生成时间口径：2026-10-15T02:52:49.250Z；键数=4265；归屏率=96.6%（未归屏 147）
+ * 生成时间口径：2026-10-15T09:39:26.879Z；键数=4278；归屏率=96.6%（未归屏 147）
  */
 export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; screen: string | null; position: string }> = [
  {
@@ -6020,7 +6020,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "j1.alreadyMemberFree",
   "domain": "member",
-  "text": "你当前是注册用户（账号在即在册，永不冻结）。选付费档开通即享回馈金与服务折扣——新购口径：全档价，有效期自开通重起算。",
+  "text": "你当前是微光（注册用户身份，账号在即在册，永不冻结）。选付费档开通即享回馈金与服务折扣——新购口径：全档价，有效期自开通重起算。",
   "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
@@ -6146,7 +6146,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "j1.freeOpenedTitle",
   "domain": "member",
-  "text": "注册用户已开通",
+  "text": "微光（注册用户）已开通",
   "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
@@ -6293,7 +6293,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "j1.toastOpenedFree",
   "domain": "member",
-  "text": "注册用户已开通，欢迎加入",
+  "text": "微光（注册用户）已开通，欢迎加入",
   "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
@@ -6846,7 +6846,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "q1.nonMemberGuide",
   "domain": "member",
-  "text": "还不是会员：注册用户免费在册，一键开通即享基础功能；付费档线上即可开通。",
+  "text": "还不是会员：微光（注册用户）免费在册，一键开通即享基础功能；付费档线上即可开通。",
   "screen": "客户·Philia 爪 / 客户·付了没开 / 客户·会员中心 / 客户·会员收银台 / 客户·会员码 / 客户·健康档案 / 客户·关于 / 客户·到期换档 / 客户·升级会员 / 客户·协议中心 / 客户·发票抬头 / 客户·发票详情 / 客户·商品订单 / 客户·商品详情 / 客户·商城 / 客户·回馈金 / 客户·安心证书 / 客户·宠物档案 / 客户·小棉花客服 / 客户·工单详情 / 客户·开发登录 / 客户·开通会员 / 客户·我的 / 客户·我的券 / 客户·我的发票 / 客户·我的预约 / 客户·换绑手机号 / 客户·换绑申诉 / 客户·支付状态 / 客户·收货地址 / 客户·服务相册 / 客户·权限与隐私 / 客户·注销账号 / 客户·洗护全程 / 客户·消息 / 客户·消费记录 / 客户·登录设备 / 客户·确认订单 / 客户·线上续费确认页 / 客户·编辑资料 / 客户·美容报告 / 客户·联系小棉花 / 客户·订阅管理 / 客户·设置 / 客户·购物车 / 客户·退款/售后 / 客户·预约寄养 / 客户·预约洗护 / 客户·预约详情",
   "position": "copy 组件内文案（跨屏共用件，各屏组同列）"
  },
@@ -26195,6 +26195,97 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
   "key": "inventory.expiry.until",
   "domain": "staff:inventory",
   "text": "效期至",
+  "screen": "员工·库存",
+  "position": "InventoryPage 页面内文案"
+ },
+ {
+  "key": "inventory.issue.cancel",
+  "domain": "staff:inventory",
+  "text": "取消",
+  "screen": "员工·库存",
+  "position": "InventoryPage 页面内文案"
+ },
+ {
+  "key": "inventory.issue.confirm",
+  "domain": "staff:inventory",
+  "text": "确认发放",
+  "screen": "员工·库存",
+  "position": "InventoryPage 页面内文案"
+ },
+ {
+  "key": "inventory.issue.confirming",
+  "domain": "staff:inventory",
+  "text": "发放中…",
+  "screen": "员工·库存",
+  "position": "InventoryPage 页面内文案"
+ },
+ {
+  "key": "inventory.issue.cta",
+  "domain": "staff:inventory",
+  "text": "发放",
+  "screen": "员工·库存",
+  "position": "InventoryPage 页面内文案"
+ },
+ {
+  "key": "inventory.issue.empty",
+  "domain": "staff:inventory",
+  "text": "本店暂无安心包库存商品",
+  "screen": "员工·库存",
+  "position": "InventoryPage 页面内文案"
+ },
+ {
+  "key": "inventory.issue.loadFail",
+  "domain": "staff:inventory",
+  "text": "安心包库存加载失败，请检查网络后重试",
+  "screen": "员工·库存",
+  "position": "InventoryPage 页面内文案"
+ },
+ {
+  "key": "inventory.issue.note",
+  "domain": "staff:inventory",
+  "text": "到店全员可发，不绑 App——可先发后补身份；每次发放落库存流水（店日记账）。",
+  "screen": "员工·库存",
+  "position": "InventoryPage 页面内文案"
+ },
+ {
+  "key": "inventory.issue.noteLabel",
+  "domain": "staff:inventory",
+  "text": "备注（选填）",
+  "screen": "员工·库存",
+  "position": "InventoryPage 页面内文案"
+ },
+ {
+  "key": "inventory.issue.phoneLabel",
+  "domain": "staff:inventory",
+  "text": "客户手机号（选填：挂上他的权益包）",
+  "screen": "员工·库存",
+  "position": "InventoryPage 页面内文案"
+ },
+ {
+  "key": "inventory.issue.qtyLabel",
+  "domain": "staff:inventory",
+  "text": "数量",
+  "screen": "员工·库存",
+  "position": "InventoryPage 页面内文案"
+ },
+ {
+  "key": "inventory.issue.success",
+  "domain": "staff:inventory",
+  "text": "已发放并入库存流水（身份可后补）",
+  "screen": "员工·库存",
+  "position": "InventoryPage 页面内文案"
+ },
+ {
+  "key": "inventory.issue.successAttached",
+  "domain": "staff:inventory",
+  "text": "已发放并挂到客户权益包",
+  "screen": "员工·库存",
+  "position": "InventoryPage 页面内文案"
+ },
+ {
+  "key": "inventory.issue.title",
+  "domain": "staff:inventory",
+  "text": "安心包发放",
   "screen": "员工·库存",
   "position": "InventoryPage 页面内文案"
  },

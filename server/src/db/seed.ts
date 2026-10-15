@@ -488,6 +488,9 @@ async function main() {
      * 会员链路片 3（任务-1008-2 两裁）：plan_weiguang 更名「注册用户」（label 正名）+
      * 宠物建档全员不限（included/max=100 语义=不限，extra=0）+预约提前 advance_book_days
      * 注册用户 3→7、萤火/烛光 7→14（暖阳 14 不动）；存量库同值回挂见迁移 0069。
+     * CJ-1015-02 A3：注册用户宠物数**正式不限**——「含 100」作废（included/max=0 语义=
+     * 不设闸；免费档不套 max_pets 硬校验，见 membership.membershipChargeFen）；存量库
+     * 同值回挂见迁移 0085。
      * 配置端口域 domain='member_plans'，保存即生效+版本化留痕，新值只管新单。
      * 既有种子客户「示例客户」不开会员（留 e2e 自造）。
      */
@@ -501,7 +504,7 @@ async function main() {
       createdBy: owner.id,
     });
     await tx.insert(schema.memberPlans).values([
-      planSeed('plan_weiguang', '会员档·注册用户：免费档（手机号即在册）；宠物建档不限；无回馈金、无服务折扣；安心包全员免费（钩子仅权益表述，注册用户不设钩子）', { free: true, price_fen: 0, rebate_bp: 0, service_discount_bp: 10000, included_pets: 100, extra_pet_fen: 0, max_pets: 100, renew_discount_bp: 10000, advance_book_days: 7 }),
+      planSeed('plan_weiguang', '会员档·注册用户：免费档（手机号即在册）；宠物建档不限；无回馈金、无服务折扣；安心包全员免费（钩子仅权益表述，注册用户不设钩子）', { free: true, price_fen: 0, rebate_bp: 0, service_discount_bp: 10000, included_pets: 0, extra_pet_fen: 0, max_pets: 0, renew_discount_bp: 10000, advance_book_days: 7 }),
       planSeed('plan_yinghuo', '会员档·萤火：¥199/年；商品消费回馈金 2%；服务 88 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 19900, rebate_bp: 200, service_discount_bp: 8800, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, renew_discount_bp: 10000, advance_book_days: 14 }),
       planSeed('plan_zhuguang', '会员档·烛光：¥299/年；商品消费回馈金 5%；服务 85 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 29900, rebate_bp: 500, service_discount_bp: 8500, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, renew_discount_bp: 10000, advance_book_days: 14 }),
       planSeed('plan_nuanyang', '会员档·暖阳：¥599/年；商品消费回馈金 10%；服务 8 折；含 3 只宠物，第 4 只起 +¥59/年/只，10 只封顶', { price_fen: 59900, rebate_bp: 1000, service_discount_bp: 8000, included_pets: 3, extra_pet_fen: 5900, max_pets: 10, renew_discount_bp: 10000, advance_book_days: 14 }),

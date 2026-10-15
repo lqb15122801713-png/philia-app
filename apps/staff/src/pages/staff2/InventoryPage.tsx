@@ -11,11 +11,11 @@
  *    处置走既有回收登记流程（本批只读展示，设计底稿 §六.2 在案）。
  */
 
-import { Skeleton, usePhiliaClient } from '@philia/shared';
+import { Skeleton, usePhiliaClient, useToast } from '@philia/shared';
 import type { inferRouterOutputs } from '@trpc/server';
 import type { AppRouter } from '@philia/shared';
-import { useQuery } from '@tanstack/react-query';
-import { useMemo, type CSSProperties } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { pad2, weekdayLabel } from '@/components/today/utils';
 import { INVENTORY_COPY } from '@/copy/inventory';
@@ -64,7 +64,8 @@ function StatusSign({ status }: { status: string }) {
 
 export default function InventoryPage() {
   const navigate = useNavigate();
-  const { trpc } = usePhiliaClient();
+  const { trpc, queryClient } = usePhiliaClient();
+  const { showToast, toastEl } = useToast({ durationMs: 2500 });
 
   const tasksQuery = useQuery({
     queryKey: ['inventory', 'myCountTasks'],
@@ -75,8 +76,33 @@ export default function InventoryPage() {
     queryFn: () => trpc.inventory.carePackageExpiryStaff.query(),
   });
 
+  /* ---- CJ-1015-02 A2：安心包到店发放（不绑 App · 可先发+店日库存记账+身份后补） ---- */
+  const stockQuery = useQuery({
+    queryKey: ['inventory', 'carePackageStockStaff'],
+    queryFn: () => trpc.inventory.carePackageStockStaff.query(),
+  });
+  const [issuingId, setIssuingId] = useState<string | null>(null);
+  const [issueQty, setIssueQty] = useState(1);
+  const [issuePhone, setIssuePhone] = useState('');
+  const [issueNote, setIssueNote] = useState('');
+  const issueM = useMutation({
+    mutationFn: (input: { productId: string; qty: number; phone?: string; note?: string }) =>
+      trpc.inventory.issueCarePack.mutate(input),
+    onSuccess: (r) => {
+      showToast(r.attachedUser ? INVENTORY_COPY['inventory.issue.successAttached'] : INVENTORY_COPY['inventory.issue.success']);
+      setIssuingId(null);
+      setIssueQty(1);
+      setIssuePhone('');
+      setIssueNote('');
+      void queryClient.invalidateQueries({ queryKey: ['inventory', 'carePackageStockStaff'] });
+      void queryClient.invalidateQueries({ queryKey: ['inventory', 'carePackageExpiryStaff'] });
+    },
+    onError: (err) => showToast(err instanceof Error ? err.message : '发放失败，请稍后再试'),
+  });
+
   const tasks: CountTask[] = useMemo(() => tasksQuery.data ?? [], [tasksQuery.data]);
   const expiry: ExpiryItem[] = useMemo(() => expiryQuery.data ?? [], [expiryQuery.data]);
+  const stockRows = useMemo(() => stockQuery.data ?? [], [stockQuery.data]);
 
   const now = new Date();
   const clockText = `${skc('sk.today')} ${ymd(now)} ${weekdayLabel(now)}${tasks.length ? ` · ${tasks.length} ${INVENTORY_COPY['inventory.aside.pending']}` : ''}`;
@@ -148,6 +174,124 @@ export default function InventoryPage() {
         )}
       </section>
 
+      {/* CJ-1015-02 A2：安心包发放（到店全员可发·不绑 App · 可先发+店日库存记账+身份后补） */}
+      <p style={{ margin: '20px 22px 0', fontSize: 11, fontWeight: 800, letterSpacing: '.08em', color: 'var(--muted)' }}>
+        {INVENTORY_COPY['inventory.issue.title']}
+      </p>
+      <section data-testid="inv-issue">
+        {stockQuery.isPending ? (
+          <div style={{ margin: '12px 22px 0' }} aria-label="加载中">
+            <Skeleton className="u1-card h-16 !rounded-panel" />
+          </div>
+        ) : stockQuery.isError ? (
+          <div style={{ ...cardSt, textAlign: 'center' }}>
+            <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.issue.loadFail']}</p>
+            <div style={{ marginTop: 12 }}>
+              <SkBtnAction onClick={() => void stockQuery.refetch()} testId="sk-inv-issue-retry">
+                {INVENTORY_COPY['inventory.retry']}
+              </SkBtnAction>
+            </div>
+          </div>
+        ) : stockRows.length === 0 ? (
+          <div data-testid="inv-issue-empty" style={{ paddingTop: 8 }}>
+            <SkEmpty title={INVENTORY_COPY['inventory.issue.empty']} />
+          </div>
+        ) : (
+          <>
+            <SkRows>
+              {stockRows.map((p) => (
+                <div className="row" key={p.id} data-testid={`inv-issue-row-${p.id}`}>
+                  <span className="lb" style={{ minWidth: 0, flex: 1 }}>
+                    <span style={{ display: 'block', fontWeight: 700 }}>{p.name}</span>
+                    <span style={{ display: 'block', marginTop: 2, fontFamily: 'var(--mono)', fontSize: 9.5, color: 'var(--muted)' }}>
+                      {INVENTORY_COPY['inventory.expiry.stock']} {p.stock}
+                    </span>
+                  </span>
+                  <span className="vl">
+                    <SkBtnAction
+                      testId={`inv-issue-cta-${p.id}`}
+                      onClick={() => {
+                        setIssuingId(issuingId === p.id ? null : p.id);
+                        setIssueQty(1);
+                      }}
+                    >
+                      {INVENTORY_COPY['inventory.issue.cta']}
+                    </SkBtnAction>
+                  </span>
+                </div>
+              ))}
+            </SkRows>
+            {issuingId ? (
+              <div style={{ ...cardSt }} data-testid="inv-issue-form">
+                <label style={{ display: 'block', fontSize: 11, color: 'var(--muted)' }}>
+                  {INVENTORY_COPY['inventory.issue.qtyLabel']}
+                  <input
+                    type="number"
+                    min={1}
+                    max={99}
+                    value={issueQty}
+                    onChange={(e) => setIssueQty(Math.max(1, Math.min(99, Number(e.target.value) || 1)))}
+                    data-testid="inv-issue-qty"
+                    style={{ display: 'block', marginTop: 4, width: '100%', padding: '10px 12px', borderRadius: 12, border: '1px solid var(--hairline)', background: 'var(--paper)', font: 'inherit' }}
+                  />
+                </label>
+                <label style={{ display: 'block', marginTop: 10, fontSize: 11, color: 'var(--muted)' }}>
+                  {INVENTORY_COPY['inventory.issue.phoneLabel']}
+                  <input
+                    type="tel"
+                    value={issuePhone}
+                    onChange={(e) => setIssuePhone(e.target.value)}
+                    data-testid="inv-issue-phone"
+                    style={{ display: 'block', marginTop: 4, width: '100%', padding: '10px 12px', borderRadius: 12, border: '1px solid var(--hairline)', background: 'var(--paper)', font: 'inherit' }}
+                  />
+                </label>
+                <label style={{ display: 'block', marginTop: 10, fontSize: 11, color: 'var(--muted)' }}>
+                  {INVENTORY_COPY['inventory.issue.noteLabel']}
+                  <input
+                    type="text"
+                    value={issueNote}
+                    onChange={(e) => setIssueNote(e.target.value)}
+                    data-testid="inv-issue-note"
+                    style={{ display: 'block', marginTop: 4, width: '100%', padding: '10px 12px', borderRadius: 12, border: '1px solid var(--hairline)', background: 'var(--paper)', font: 'inherit' }}
+                  />
+                </label>
+                <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+                  <span style={{ flex: 1 }}>
+                    <SkBtnAction
+                      testId="inv-issue-cancel"
+                      onClick={() => {
+                        setIssuingId(null);
+                        setIssuePhone('');
+                        setIssueNote('');
+                      }}
+                    >
+                      {INVENTORY_COPY['inventory.issue.cancel']}
+                    </SkBtnAction>
+                  </span>
+                  <span style={{ flex: 1 }}>
+                    <SkBtnAction
+                      testId="inv-issue-confirm"
+                      disabled={issueM.isPending}
+                      onClick={() =>
+                        issueM.mutate({
+                          productId: issuingId,
+                          qty: issueQty,
+                          ...(issuePhone.trim() ? { phone: issuePhone.trim() } : {}),
+                          ...(issueNote.trim() ? { note: issueNote.trim() } : {}),
+                        })
+                      }
+                    >
+                      {issueM.isPending ? INVENTORY_COPY['inventory.issue.confirming'] : INVENTORY_COPY['inventory.issue.confirm']}
+                    </SkBtnAction>
+                  </span>
+                </div>
+              </div>
+            ) : null}
+            <SkNote>{INVENTORY_COPY['inventory.issue.note']}</SkNote>
+          </>
+        )}
+      </section>
+
       {/* 口径注：日盘门槛 ≥¥100 · 盲盘不显系统库存 */}
       <SkNote>{INVENTORY_COPY['inventory.list.note']}</SkNote>
 
@@ -200,6 +344,7 @@ export default function InventoryPage() {
       </section>
 
       <div style={{ paddingBottom: 32 }} />
+      {toastEl}
     </div>
   );
 }
