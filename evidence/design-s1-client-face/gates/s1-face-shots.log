@@ -1,0 +1,30 @@
+片1 实尺截图脚本运行日志（gates 归档）
+=====================================
+命令：node apps/customer/scripts/s1-face-shots.mjs
+环境：CUSTOMER_URL=http://localhost:7120（本片 preview＝本片分支构建产物，VITE_API_BASE=http://localhost:7201）
+      API_BASE=http://localhost:7201（本片 server，库已先行 db:seed 复位）
+      CDP_PORT=9230 · headless Chrome · 视口 390×844 mobile（实尺）
+时点：2026-10-15（Asia/Shanghai）· 分支 feat/design-s1-client-face @ ac75a09
+说明：以下为本脚本该次运行的 stdout 原文（七帧 shots/0X-*.png 即本次运行产出）。
+
+✅ 浏览器 dev-login（种子客户） —— HTTP 200
+✅ A1 首页空闲态渲染 —— home-idband
+  📸 01-customer-home-idle.png
+✅ A2 预约单屏渲染 —— grooming-single
+  📸 02-customer-booking-default.png
+✅ A2 已选时段（真点可约槽） —— gs-slot-09:00
+  📸 03-customer-booking-selected.png
+✅ A2 选人态（真点洗护师卡） —— gs-groomer-01M4ZQT7NNCJAGJ6ZZT017VAEW
+  📸 04-customer-booking-staff.png
+✅ A2 确认钮可提交态 —— data-state=ready
+✅ A2 成功页（真单落库跳转） —— /booking/success?aid=01M4ZQW11M3YP1NVJQFF92NXK5
+  📸 05-customer-booking-success.png
+✅ A3 会员码屏渲染 —— member-card-page
+✅ A3 真 token 码区 —— membercard-token 在
+  📸 06-customer-member-card.png
+✅ A1 服务中单造出（checkin → in_service） —— id=01M4ZQW8FQHGDB6FAN0WCK2S38 status=in_service
+✅ A1 服务中态渲染 —— home-live-card
+  📸 07-customer-home-inservice.png
+
+===== 片1 实尺截图汇总：全绿 =====
+（脚本退出码 0；截图绝对路径前缀=E:\KIMI code\s1clientface\evidence\design-s1-client-face\shots\）
