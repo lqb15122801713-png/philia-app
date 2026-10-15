@@ -1,0 +1,305 @@
+
+E:\KIMI code\s2staffface\apps\staff\src\components\execute\ReportCard.tsx
+  33:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+  44:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\s2staffface\apps\staff\src\components\scan\QrScanner.tsx
+  202:3  error  Error: This value cannot be modified
+
+Modifying a value previously passed as an argument to a hook is not allowed. Consider moving the modification before calling the hook.
+
+E:\KIMI code\s2staffface\apps\staff\src\components\scan\QrScanner.tsx:202:3
+  200 |     }, JSQR_INTERVAL_MS);
+  201 |   }, [deadRef, onDecoded, stopStream]);
+> 202 |   startRef.current = start;
+      |   ^^^^^^^^ value cannot be modified
+  203 |
+  204 |   const handleClose = useCallback(() => {
+  205 |     deadRef.current = true;
+
+Hint: If this value is a Ref (value returned by `useRef()`), rename the variable to end in "Ref"                                                                                                                                                                                                                                                                                                                                                                                                                                                        react-hooks/immutability
+  202:3  error  Error: Cannot access refs during render
+
+React refs are values that are not needed for rendering. Refs should only be accessed outside of render, such as in event handlers or effects. Accessing a ref value (the `current` property) during render can cause your component not to update as expected (https://react.dev/reference/react/useRef).
+
+E:\KIMI code\s2staffface\apps\staff\src\components\scan\QrScanner.tsx:202:3
+  200 |     }, JSQR_INTERVAL_MS);
+  201 |   }, [deadRef, onDecoded, stopStream]);
+> 202 |   startRef.current = start;
+      |   ^^^^^^^^^^^^^^^^ Cannot update ref during render
+  203 |
+  204 |   const handleClose = useCallback(() => {
+  205 |     deadRef.current = true;                                                                                                                                                                                                                                                                                                                                                                    react-hooks/refs
+  215:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\s2staffface\apps\staff\src\components\scan\QrScanner.tsx:215:5
+  213 |     deadRef.current = false;
+  214 |     busyRef.current = false;
+> 215 |     setMode('scan');
+      |     ^^^^^^^ Avoid calling setState() directly within an effect
+  216 |     setStatus('starting');
+  217 |     void startRef.current?.();
+  218 |     return () => {  react-hooks/set-state-in-effect
+
+E:\KIMI code\s2staffface\apps\staff\src\components\today\deck\DayAxis.tsx
+  30:35  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\s2staffface\apps\staff\src\components\today\deck\DayAxis.tsx:30:35
+  28 |   const until = q.data?.pet?.vaccineValidUntil;
+  29 |   if (!until) return null;
+> 30 |   if (new Date(until).getTime() < Date.now()) return null;
+     |                                   ^^^^^^^^^^ Cannot call impure function
+  31 |   return <span> · 疫苗已齐 ✓</span>;
+  32 | }
+  33 |  react-hooks/purity
+
+E:\KIMI code\s2staffface\apps\staff\src\components\today\deck\ServiceCard.tsx
+  17:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\s2staffface\apps\staff\src\components\ui\badge.tsx
+  46:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\s2staffface\apps\staff\src\components\ui\button-group.tsx
+  82:3  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\s2staffface\apps\staff\src\components\ui\button.tsx
+  62:18  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\s2staffface\apps\staff\src\components\ui\carousel.tsx
+  96:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\s2staffface\apps\staff\src\components\ui\carousel.tsx:96:5
+  94 |   React.useEffect(() => {
+  95 |     if (!api) return
+> 96 |     onSelect(api)
+     |     ^^^^^^^^ Avoid calling setState() directly within an effect
+  97 |     api.on("reInit", onSelect)
+  98 |     api.on("select", onSelect)
+  99 |  react-hooks/set-state-in-effect
+
+E:\KIMI code\s2staffface\apps\staff\src\components\ui\form.tsx
+  159:3  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\s2staffface\apps\staff\src\components\ui\navigation-menu.tsx
+  167:3  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\s2staffface\apps\staff\src\components\ui\sidebar.tsx
+  611:26  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\s2staffface\apps\staff\src\components\ui\sidebar.tsx:611:26
+  609 |   // Random width between 50 to 90%.
+  610 |   const width = React.useMemo(() => {
+> 611 |     return `${Math.floor(Math.random() * 40) + 50}%`
+      |                          ^^^^^^^^^^^^^ Cannot call impure function
+  612 |   }, [])
+  613 |
+  614 |   return (  react-hooks/purity
+  725:3   error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react-refresh/only-export-components
+
+E:\KIMI code\s2staffface\apps\staff\src\components\ui\toggle.tsx
+  45:18  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+E:\KIMI code\s2staffface\apps\staff\src\hooks\use-mobile.ts
+  14:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\s2staffface\apps\staff\src\hooks\use-mobile.ts:14:5
+  12 |     }
+  13 |     mql.addEventListener("change", onChange)
+> 14 |     setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+     |     ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  15 |     return () => mql.removeEventListener("change", onChange)
+  16 |   }, [])
+  17 |  react-hooks/set-state-in-effect
+
+E:\KIMI code\s2staffface\apps\staff\src\pages\BoardingCheckinPage.tsx
+  266:7   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\s2staffface\apps\staff\src\pages\BoardingCheckinPage.tsx:266:7
+  264 |   useEffect(() => {
+  265 |     if (connected || !sseUrl) {
+> 266 |       setSseDown(false);
+      |       ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  267 |       return;
+  268 |     }
+  269 |     const t = window.setTimeout(() => setSseDown(true), 5000);  react-hooks/set-state-in-effect
+  323:35  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\s2staffface\apps\staff\src\pages\BoardingCheckinPage.tsx:323:35
+  321 |     appt?.status === 'in_boarding' &&
+  322 |     appt.scheduledEnd instanceof Date &&
+> 323 |     appt.scheduledEnd.getTime() < Date.now();
+      |                                   ^^^^^^^^^^ Cannot call impure function
+  324 |
+  325 |   /* ---------------- 渲染 ---------------- */
+  326 |                                                                                                                                                                                                                                                                                                                                                                      react-hooks/purity
+  391:29  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\s2staffface\apps\staff\src\pages\BoardingCheckinPage.tsx:391:29
+  389 |   const nightNow = Math.min(
+  390 |     nightsTotal,
+> 391 |     Math.max(1, Math.floor((Date.now() - appt.scheduledStart.getTime()) / 86_400_000) + 1),
+      |                             ^^^^^^^^^^ Cannot call impure function
+  392 |   );
+  393 |   const roomLabel = detailQuery.data?.service?.name ?? '寄养';
+  394 |   const nightNote = `${BOARDING_COPY['boarding.night.lead']} ${nightNow} ${BOARDING_COPY['boarding.night.mid']} ${nightsTotal} ${BOARDING_COPY['boarding.night.tail']}`;                                                                                                                                                                 react-hooks/purity
+
+E:\KIMI code\s2staffface\apps\staff\src\pages\DevLoginPage.tsx
+  85:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+E:\KIMI code\s2staffface\apps\staff\src\pages\ExecutePage.tsx
+  132:28  error  Error: Expected the first argument to be an inline function expression
+
+Expected the first argument to be an inline function expression.
+
+E:\KIMI code\s2staffface\apps\staff\src\pages\ExecutePage.tsx:132:28
+  130 |   const { trpc, queryClient } = usePhiliaClient()
+  131 |   const { user } = useMe()
+> 132 |   const clientId = useMemo(getClientId, [])
+      |                            ^^^^^^^^^^^ Expected the first argument to be an inline function expression
+  133 |
+  134 |   /* ---------------- toast ---------------- */
+  135 |   // 共享 useToast：bottom-28 避底钮（原执行页私有 toast 位）；durationMs=2500 与原页面计时一致                                                                                                                                                                                                                                                                                                                                                                                                                                 react-hooks/use-memo
+  179:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\s2staffface\apps\staff\src\pages\ExecutePage.tsx:179:5
+  177 |     }
+  178 |     previewRef.current = next
+> 179 |     setPreviewUrls(next)
+      |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  180 |   }, [pending])
+  181 |   useEffect(
+  182 |     () => () => {                               react-hooks/set-state-in-effect
+  224:10  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\s2staffface\apps\staff\src\pages\ExecutePage.tsx:224:10
+  222 |       },
+  223 |     })
+> 224 |     void refreshPending()
+      |          ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  225 |     return stop
+  226 |   }, [aid, trpc, queryClient, refreshPending, showToast, invalidateAll])
+  227 |  react-hooks/set-state-in-effect
+
+E:\KIMI code\s2staffface\apps\staff\src\pages\HistoryPage.tsx
+  69:39  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\s2staffface\apps\staff\src\pages\HistoryPage.tsx:69:39
+  67 |   const { trpc } = usePhiliaClient();
+  68 |   // 近 30 天（规格书 §6 口径）
+> 69 |   const from = useMemo(() => new Date(Date.now() - 30 * 86_400_000), []);
+     |                                       ^^^^^^^^^^ Cannot call impure function
+  70 |
+  71 |   const listQuery = useQuery({
+  72 |     queryKey: ['appointment', 'listForStaff', { from: from.getTime() }],  react-hooks/purity
+
+E:\KIMI code\s2staffface\apps\staff\src\pages\SchedulePage.tsx
+  236:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+
+E:\KIMI code\s2staffface\apps\staff\src\pages\staff2\AttendancePage.tsx
+  138:21  error  Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This value was memoized in source but not in compilation output.
+
+E:\KIMI code\s2staffface\apps\staff\src\pages\staff2\AttendancePage.tsx:138:21
+  136 |
+  137 |   /* 片 2 B1-5 多对打卡：当日全部行（ts 升序，server 已按 date/ts 排序）；下一击由末行推导 */
+> 138 |   const todayRows = useMemo(() => records.filter((r) => r.date === todayStr), [records, todayStr]);
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Could not preserve existing memoization
+  139 |   const lastToday = todayRows[todayRows.length - 1] ?? null;
+  140 |   const todayIn = todayRows.find((r) => r.kind === 'in') ?? null;
+  141 |   const todayOut = [...todayRows].reverse().find((r) => r.kind === 'out') ?? null; // 多对：下班取最后一击                       react-hooks/preserve-manual-memoization
+  138:89  error  Compilation Skipped: Existing memoization could not be preserved
+
+React Compiler has skipped optimizing this component because the existing manual memoization could not be preserved. This dependency may be mutated later, which could cause the value to change unexpectedly.
+
+E:\KIMI code\s2staffface\apps\staff\src\pages\staff2\AttendancePage.tsx:138:89
+  136 |
+  137 |   /* 片 2 B1-5 多对打卡：当日全部行（ts 升序，server 已按 date/ts 排序）；下一击由末行推导 */
+> 138 |   const todayRows = useMemo(() => records.filter((r) => r.date === todayStr), [records, todayStr]);
+      |                                                                                         ^^^^^^^^ This dependency may be modified later
+  139 |   const lastToday = todayRows[todayRows.length - 1] ?? null;
+  140 |   const todayIn = todayRows.find((r) => r.kind === 'in') ?? null;
+  141 |   const todayOut = [...todayRows].reverse().find((r) => r.kind === 'out') ?? null; // 多对：下班取最后一击  react-hooks/preserve-manual-memoization
+
+E:\KIMI code\s2staffface\apps\staff\src\pages\staff2\InventoryCountPage.tsx
+  60:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+E:\KIMI code\s2staffface\apps\staff\src\pages\staff2\InventoryCountPage.tsx:60:5
+  58 |       init[it.id] = it.actualStock !== null ? String(it.actualStock) : '';
+  59 |     }
+> 60 |     setValues(init);
+     |     ^^^^^^^^^ Avoid calling setState() directly within an effect
+  61 |   }, [count]);
+  62 |
+  63 |   const items = count?.items ?? [];  react-hooks/set-state-in-effect
+
+E:\KIMI code\s2staffface\apps\staff\src\pages\staff2\ManagerPage.tsx
+  532:17  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\s2staffface\apps\staff\src\pages\staff2\ManagerPage.tsx:532:17
+  530 |   const rows = (listQ.data ?? []).slice(0, 20);
+  531 |   const busy = settleM.isPending;
+> 532 |   const nowMs = Date.now();
+      |                 ^^^^^^^^^^ Cannot call impure function
+  533 |
+  534 |   return (
+  535 |     <>  react-hooks/purity
+
+✖ 30 problems (28 errors, 2 warnings)
+  0 errors and 2 warnings potentially fixable with the `--fix` option.
+
+exit=1

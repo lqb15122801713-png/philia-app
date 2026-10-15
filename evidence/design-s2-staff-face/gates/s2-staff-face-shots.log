@@ -1,0 +1,34 @@
+片2 实尺截图脚本运行日志（gates 归档）
+=====================================
+命令：node apps/staff/scripts/s2-staff-face-shots.mjs
+环境：STAFF_URL=http://localhost:7152（本片 preview＝本片分支构建产物，VITE_API_BASE=http://localhost:7231）
+      API_BASE=http://localhost:7231（本片 server，库已先行 migrate+seed 复位）
+      CDP_PORT=9232 · headless Edge/Chrome · 视口 390×844 mobile（实尺）
+时点：2026-10-16 01:53（Asia/Shanghai）· 分支 feat/design-s2-staff-face
+说明：以下为脚本本次运行 stdout 原文（shots/0X-*.png 即本次产出）。
+
+✅ 造单：A/B 两单 confirmed 且指派阿强 —— A=01M50B5NN7A6HJ5J7VH9EYEB3M B=01M50B5NPEE6J07ZTVGT9EYN6G
+✅ A1 S-00 登录页渲染 —— login-primary
+  📸 E:\KIMI code\s2staffface\evidence\design-s2-staff-face\shots\01-s00-login.png
+✅ 浏览器 dev-login（阿强） —— HTTP 200
+✅ A2 工位大卡渲染 —— sk-workcard
+✅ A2 六步硬序可视（stepgrid 六列） —— 列数=6
+  📸 E:\KIMI code\s2staffface\evidence\design-s2-staff-face\shots\02-s01-today-pending.png
+✅ A3 全薄态（202:2）＋待接开始 pill 可用 —— {"a":"thin","b":"thin","bBtn":true}
+  📸 E:\KIMI code\s2staffface\evidence\design-s2-staff-face\shots\04-s02-thin.png
+✅ A 单核销 → in_service —— status=in_service
+✅ A2 服务中 stepgrid now 态 —— st.now 在
+  📸 E:\KIMI code\s2staffface\evidence\design-s2-staff-face\shots\03-s01-today-inservice.png
+✅ A3 半展默认（202:137）＋继续执行主钮 —— {"a":"half","half":true,"cta":true,"bDisabled":true}
+✅ A3 待接「开始」互斥（在途一单 → B 单开始停用） —— bDisabled=true
+  📸 E:\KIMI code\s2staffface\evidence\design-s2-staff-face\shots\05-s02-half.png
+✅ A3 全展六步全表（202:272） —— {"a":"full","steps":6}
+  📸 E:\KIMI code\s2staffface\evidence\design-s2-staff-face\shots\06-s02-full.png
+✅ 执行页渲染（in_service 直通） —— execute-summary
+  📸 E:\KIMI code\s2staffface\evidence\design-s2-staff-face\shots\09-execute-sixsteps.png
+✅ A4 打卡卡渲染 —— sk-punch
+  📸 E:\KIMI code\s2staffface\evidence\design-s2-staff-face\shots\07-s03-attendance.png
+✅ A5 身份卡渲染 —— sk-idcard
+  📸 E:\KIMI code\s2staffface\evidence\design-s2-staff-face\shots\08-s04-me.png
+
+===== 片2 实尺截图汇总：全绿 =====
