@@ -1,16 +1,19 @@
 /**
- * AppDock · 客户端全局统一底部 dock（批次 U1 任务 A；换皮批片 2 落 v2.0 §4.1）。
+ * AppDock · 客户端全局统一底部 dock（批次 U1 任务 A；换皮批片 2 落 v2.0 §4.1；
+ * 产品-1015 换皮 片0 对齐 READY-FOR-DEV §2/§3）。
  *
  * 主级页面（/home /mall /me /philia）唯一 dock，五项槽位顺序锁定：
- *   首页 / 预约 / philia 中央悬浮钮 / 商城 / 我的（序不可错）。
+ *   首页 / 预约 / PHILIA 中央悬浮钮 / 商城 / 我的（序不可错，Ready §6 写死）。
  * - 形态（v2.0 §4.1 案 A 悬浮胶囊）：高 64 / 左右 16 / 底 14 / 圆角 99；
- *   深棕 rgba(46,35,24,.94) + blur(18px) saturate(140%)；激活态=淡黄圆底衬深棕
- *   图标（衬底实心形状，图标不变色）；未激活=深底弱文字 #B9A98F；
- * - 中央爪钮（客户端私有实心件）：58×58 淡黄圆底凸起 translateY(-16px)
- *   + 3px 纸白描边 + 深棕墨 paw；点击=philia 页；长按 500ms=快捷弹层
+ *   深棕 pill=brand.pressed 94%（Ready §2.1 #4A4034）+ blur(18px) saturate(140%)；
+ *   激活态=dock 激活块 brand #5C5040 衬 canvas 图标（衬底实心形状，图标不变色）；
+ *   未激活=深底弱文字 muted #B8AA96；
+ * - 中央爪钮（客户端私有实心件）：58×58 cream 圆底凸起 translateY(-16px)
+ *   + 3px canvas 描边 + 深棕墨 paw；点击=philia 页；长按 500ms=快捷弹层
  *   （会员码 / 一键预约 / 联系门店）——迁移旧 TabBar（ConvexTabBar 接线）
  *   长按交互：500ms 触发、10px 移动取消、长按后吞掉 click；
- *   W1 R-Nav-3：中位补「philia」文字标签（底栏五槽全件带文字，字号字重同槽对齐）；
+ *   W1 R-Nav-3：中位补「PHILIA」文字标签（底栏五槽全件带文字，字号字重同槽对齐）；
+ *   cream 预算注记：壳层 cream 仅中央钮 1 处，给页面主钮留第 2 处额度（≤2/屏）；
  * - 详情级页面不渲染本组件（App.tsx 按路径白名单渲染）。
  *
  * 「联系门店」沿用 ContactStore 契约——stores.phone 已在仓（0042 迁移），
@@ -99,8 +102,8 @@ const RIGHT_TABS: DockTab[] = [
 function DockTabButton({ tab, active }: { tab: DockTab; active: boolean }) {
   const navigate = useNavigate()
   const Icon = tab.icon
-  /* v2.0 §4.1 dock：激活态=淡黄圆底衬深棕图标（衬底实心形状，图标本身不变色）；
-     未激活=深底弱文字 #B9A98F；文字标签色随深底反白系 */
+  /* 片0（Ready §2.1/§3 ClientTabBar）：激活态=dock 激活块 brand #5C5040 圆底衬 canvas 图标
+     （衬底实心形状，图标本身不变色）；未激活=深底弱文字 muted；文字标签色随深底反白系 */
   return (
     <button
       type="button"
@@ -112,12 +115,12 @@ function DockTabButton({ tab, active }: { tab: DockTab; active: boolean }) {
     >
       <span
         className={`flex h-9 w-9 items-center justify-center rounded-full ${
-          active ? 'bg-[#F2DFA6] text-[#3B2E24]' : 'text-[#B9A98F]'
+          active ? 'bg-brand-cta text-brand-cta-on' : 'text-ink-placeholder'
         }`}
       >
         <Icon className="h-[22px] w-[22px]" strokeWidth={1.7} />
       </span>
-      <span className={`text-caption-xs leading-none ${active ? 'font-semibold text-[#F6EFDD]' : 'text-[#B9A98F]'}`}>
+      <span className={`text-caption-xs leading-none ${active ? 'font-semibold text-canvas' : 'text-ink-placeholder'}`}>
         {tab.label}
       </span>
     </button>
@@ -226,12 +229,11 @@ export default function AppDock() {
         aria-label="底部导航"
       >
         <div className="mx-auto max-w-lg px-4">
-          {/* v2.0 §4.1 dock（案 A 悬浮胶囊）：高 64 / 圆角 99 / 深棕 rgba(46,35,24,.94)
-              + blur(18px) saturate(140%) */}
+          {/* v2.0 §4.1 dock（案 A 悬浮胶囊）：高 64 / 圆角 99 / pill=brand.pressed 94%
+              （片0 Ready §2.1 #4A4034）+ blur(18px) saturate(140%) */}
           <div
-            className="grid h-16 grid-cols-5 items-center rounded-full px-2"
+            className="grid h-16 grid-cols-5 items-center rounded-full bg-brand-cta-pressed/[.94] px-2"
             style={{
-              background: 'rgba(46,35,24,.94)',
               backdropFilter: 'blur(18px) saturate(140%)',
               WebkitBackdropFilter: 'blur(18px) saturate(140%)',
             }}
@@ -240,9 +242,10 @@ export default function AppDock() {
               <DockTabButton key={tab.key} tab={tab} active={tab.isActive(pathname)} />
             ))}
 
-            {/* philia 中央爪钮（客户端私有）：58×58 淡黄圆底凸起 translateY(-16px)
-                + 3px 纸白描边 + 深棕墨爪；点击=philia 页，长按=快捷弹层。
-                W1 R-Nav-3：中位补文字标签（深底口径） */}
+            {/* PHILIA 中央爪钮（客户端私有）：58×58 cream 圆底凸起 translateY(-16px)
+                + 3px canvas 描边 + 深棕墨爪；点击=philia 页，长按=快捷弹层。
+                W1 R-Nav-3：中位补文字标签（深底口径）；
+                片0：cream 壳层唯一落点=本钮（Ready §2.1 cream≤2/屏） */}
             <span className="flex flex-col items-center justify-center gap-[3px] py-1">
               <button
                 type="button"
@@ -252,19 +255,19 @@ export default function AppDock() {
                 onPointerUp={cancelPressTimer}
                 onPointerCancel={cancelPressTimer}
                 onContextMenu={(e) => e.preventDefault()}
-                aria-label="Philia"
+                aria-label="PHILIA"
                 aria-current={philiaActive ? 'page' : undefined}
                 data-testid="app-dock-philia"
-                className="flex h-[58px] w-[58px] -translate-y-4 items-center justify-center rounded-full bg-[#F2DFA6] text-[#3B2E24] shadow-[0_0_0_3px_#FAF8F2] transition-transform duration-120 ease-philia-spring active:scale-92"
+                className="flex h-[58px] w-[58px] -translate-y-4 items-center justify-center rounded-full bg-brand-primary text-ink outline-[3px] outline-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
               >
                 <PawMark className="h-7 w-7" />
               </button>
               <span
                 className={`text-caption-xs leading-none ${
-                  philiaActive ? 'font-semibold text-[#F6EFDD]' : 'text-[#B9A98F]'
+                  philiaActive ? 'font-semibold text-canvas' : 'text-ink-placeholder'
                 }`}
               >
-                philia
+                PHILIA
               </span>
             </span>
 

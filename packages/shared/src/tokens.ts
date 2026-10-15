@@ -1,5 +1,6 @@
 /**
- * 菲丽亚宠物 Philia · 品牌设计 Token（换皮批片 1 · v2.0 色纪律落地）
+ * 菲丽亚宠物 Philia · 品牌设计 Token（换皮批片 1 · v2.0 色纪律落地；
+ * 产品-1015 换皮 片0-三端壳：令牌值对齐 READY-FOR-DEV-20261015 §2 成稿）
  *
  * 本文件是三端 PWA（客户端 / 商家端 / 员工端）唯一的设计常量来源。
  * Tailwind preset（@philia/config/tailwind-preset）与本文件保持同名同值，
@@ -9,17 +10,25 @@
  * 会签）+ PD-13 施工令。B5-0 v1.1 色板（柠檬黄主色时代）已退役——
  * docs/BRAND-TOKENS-v1.1.md 转历史档案。
  *
- * VI 色纪律（v2.0 §1.1）：纸白底 #FAF8F2 / 深棕墨 #3B2E24 主体 / 淡黄 #F2DFA6
- * 点睛（每屏 ≤2 处）/ 卡其 #B9A482 次阶；白卡 #FFFFFF 仅作卡片面（唯一的白）；
- * 禁用色（柠檬黄/暖阳橙/深绿/纯黑纯白底，值表见 34 号档 §1.5）一律禁入码（grep 级红线）。
+ * VI 色纪律（片0 起对齐 Ready §2.1）：canvas #FAF7F0 / body 深棕墨 #2C2822 /
+ * brand 深棕 #5C5040（CTA/深卡/dock 激活块/rail，禁改主色）/ cream #F2DC8C 点睛
+ * （仅「此刻要做」：主钮/now/dock 短划，每屏 ≤2）/ secondary #A89779 次阶 /
+ * 白卡 #FFFFFF 仅作卡片面；赭红 #B4502E 仅异常（禁纯红）；紫 #A78BE8 仅活动角标
+ * ≤10%（禁 CTA/Tab）。旧雾感四色（Ready §2.1 点名禁回退，值见该档）一律禁入码（grep 级红线）。
+ * 派生档沿用冻结推导规则：hover 明度 −6 / pressed −13 / 洗色 S−12 L=92 / deep S+2 L−8。
  *
  * 反馈件色纪律（45 号档 P1-1 改进方向②，产品侧补钉）：成功/正常不设绿色——
  * success 族=深棕墨族（✓+墨色呈现）；异常/扣减/红字=暖调赭红 #B4502E（禁纯红）。
+ * Ready §2.1「success green 现网语义绿保留·勿换 brand」=现网 success 族原样保留，
+ * 片0 不动 success 三值。
  *
  * 中文排版硬性规则：中文禁止使用 font-style: italic（机械伪斜体伤害可读性），
  * 强调请用字重 / 颜色 / 字号 / 字距；中文永远不落拉丁展示字体；
  * 字体自托管 woff2，禁外链 CDN。三轨字阶：屏题=serif（Noto Serif SC）/
  * 正文=sans（系统栈）/ 数字金额时间=mono（JetBrains Mono）——三轨不串（§二）。
+ *
+ * dark 域注记（片0）：Ready §2 仅给 light 域终值，三端现网未启用 dark 壳；
+ * darkColors 子表本片不随动（保留 v2.0 值），待设计侧出 dark 成稿另批对齐。
  */
 
 /* ------------------------------------------------------------------------ */
@@ -28,66 +37,81 @@
 
 export const colors = {
   brand: {
-    /** 淡黄 · 点睛色：选中态/角标/激活位/进度点（每屏 ≤2 处，铁律）。v2.0 §1.1 --gold。 */
-    primary: '#F2DFA6',
-    /** 点睛位前景（on-gold）：深棕墨（淡黄底上正文对比 ≥4.5:1）。 */
-    onPrimary: '#3B2E24',
-    /** 点睛 hover：深一档淡金（v2.0 §1.1 --gold-deep 同族）。 */
-    primaryHover: '#E8CF8C',
-    /** 点睛 pressed：蜡封淡金（--t3-metal）。 */
-    primaryPressed: '#D9C08A',
-    /** 点睛浅底：提示卡暖底（v2.0 §1.4）。 */
-    primaryLight: '#FBF5E4',
-    /** 卡其 · 次阶：分隔/次要标签（不作大面填充）。v2.0 §1.1 --khaki（薄荷绿已退役）。 */
-    secondary: '#B9A482',
-    /** 次阶浅底：分段开关底（v2.0 §1.4）。 */
-    secondaryLight: '#F1E9D6',
-    /** 次阶加深：卡其铜深端（--t2 同族）。 */
-    secondaryDeep: '#A08B62',
+    /** 深棕 · 主品牌色（Ready §2.1 brand #5C5040，禁改主色）：
+     *  CTA / 深卡 / dock 激活块 / rail。 */
+    cta: '#5C5040',
+    /** CTA pressed（Ready §2.1 brand.pressed）。 */
+    ctaPressed: '#4A4034',
+    /** 深棕 CTA 面上的文字/图标色：canvas 反白（cream 不铺字面，守 ≤2/屏）。 */
+    onCta: '#FAF7F0',
+    /** cream · 点睛色：仅「此刻要做」（主钮/now/dock 短划）+选中态/角标（每屏 ≤2 处，铁律）。
+     *  Ready §2.1 cream #F2DC8C（禁铺满画布）；键名沿用 v2.0 --gold 不更。 */
+    primary: '#F2DC8C',
+    /** 点睛位前景（on-cream）：深棕墨 body（cream 底上正文对比 ≥4.5:1）。 */
+    onPrimary: '#2C2822',
+    /** 点睛 hover（冻结推导：同 H 同 S、明度 −6）。 */
+    primaryHover: '#EFD471',
+    /** 点睛 pressed（冻结推导：明度 −13）。 */
+    primaryPressed: '#EBCA50',
+    /** 点睛浅底：提示卡暖底（冻结推导：同 H、S−12、L=92）。 */
+    primaryLight: '#F8F2DD',
+    /** secondary · 次阶：次要字/icon/分隔（不作大面填充）。Ready §2.1 secondary #A89779。 */
+    secondary: '#A89779',
+    /** 次阶浅底：软面板/未选 chip/分段开关底。Ready §2.1 surface #F3EEE4。 */
+    secondaryLight: '#F3EEE4',
+    /** 次阶加深（冻结推导：同 H、S+2、L−8）。 */
+    secondaryDeep: '#99845F',
   },
   bg: {
-    /** 纸白 · 全局页面背景（唯一页面底色，不用纯白）。v2.0 §1.1 --paper。 */
-    canvas: '#FAF8F2',
-    /** 白卡面（主卡=白卡+墨描边；只作卡片面，不作页面底）。v2.0 §1.1 --card。 */
+    /** canvas · 全局页面背景（唯一页面底色，不用纯白；禁止用 cream 代）。Ready §2.1。 */
+    canvas: '#FAF7F0',
+    /** 白卡面（主卡=白卡+墨描边；只作卡片面，不作页面底）。 */
     card: '#FFFFFF',
-    /** 下沉区底色：输入区/圆章/头像底（v2.0 §1.4 圆章底）。 */
-    sunken: '#F4EDDC',
-    /** 卡其 · 空间色（次阶辅助底，不大面填充）。 */
-    oak: '#B9A482',
-    /** 卡其洗色（回馈金环轨道同族，§1.4）。 */
-    oakLight: '#EDE4CE',
+    /** 下沉区底色：输入区/圆章/头像底——并入 surface 族（Ready 软面板同值）。 */
+    sunken: '#F3EEE4',
+    /** 次阶空间色（辅助底，不大面填充）——与 secondary 同值。 */
+    oak: '#A89779',
+    /** 次阶洗色（回馈金环轨道同族；surface 同族明度 −4 推导）。 */
+    oakLight: '#E9E1D2',
   },
   text: {
-    /** 深棕墨 · 一切正文与标题。v2.0 §1.1 --ink。 */
-    primary: '#3B2E24',
-    /** 次要文字（暖灰同温，正文对比 ≥4.5:1）。v2.0 §1.1 --muted。 */
-    secondary: '#8A7D6B',
-    /** 占位符 / 禁用文字（暖灰，hue 对齐深棕墨）。 */
-    placeholder: '#B9A98F',
+    /** body · 一切正文与标题。Ready §2.1 body #2C2822。 */
+    primary: '#2C2822',
+    /** 次要文字。Ready §2.1 secondary #A89779（次要字/icon）。 */
+    secondary: '#A89779',
+    /** 占位符 / 弱标签。Ready §2.1 muted #B8AA96。 */
+    placeholder: '#B8AA96',
     /** 深底上的反白文字。 */
     inverse: '#FFFFFF',
   },
   border: {
-    /** 发丝线（卡边/分隔，半透明染色，禁硬实色线）。v2.0 §1.1 --line。 */
-    default: 'rgba(59,46,36,.14)',
+    /** 发丝线（卡边/分隔，半透明染色，禁硬实色线）——基色随 body 换代（44,40,34）。 */
+    default: 'rgba(44,40,34,.14)',
     /** 强描边（染色加深档）。 */
-    strong: 'rgba(59,46,36,.22)',
-    /** 更软发丝线（行内分隔）。v2.0 §1.1 --line-soft。 */
-    divider: 'rgba(59,46,36,.08)',
+    strong: 'rgba(44,40,34,.22)',
+    /** 行内分隔线。Ready §2.1 divider #E8E2D6（成稿实色，弃半透明近似）。 */
+    divider: '#E8E2D6',
     /** 1px 暖墨细线 ring，替代投影做层级。 */
-    ring: 'rgba(59,46,36,.09)',
+    ring: 'rgba(44,40,34,.09)',
   },
-  /** 成功/正常 · 反馈件色纪律：不设绿色——深棕墨族（✓+墨色呈现，45 号档 P1-1②）。 */
+  /** 成功/正常 · 反馈件色纪律：不设绿色——深棕墨族（✓+墨色呈现，45 号档 P1-1②）。
+   *  Ready §2.1「现网语义绿保留·勿换 brand」：现网三值本片原样保留不随动。 */
   success: {
     base: '#3B2E24',
     light: '#F1E9D6',
     deep: '#2E2318',
   },
-  /** 异常/扣减/红字 · 暖调赭红（v2.0 §1.4，禁纯红）。 */
+  /** 异常/扣减/红字 · 暖调赭红（Ready §2.1 alert 同值 #B4502E，仅异常，禁纯红）。 */
   danger: {
     base: '#B4502E',
     light: '#F6E3DA',
     deep: '#8F3F22',
+  },
+  /** violet · 活动角标（Ready §2.1 violet #A78BE8，面积 ≤10%；禁 CTA/Tab/大面填充）。 */
+  violet: {
+    base: '#A78BE8',
+    /** 紫底上的文字：深棕墨 body（对比 ≈4.9:1）。 */
+    onBase: '#2C2822',
   },
 } as const;
 
@@ -157,17 +181,18 @@ export const darkColors = {
 /* ------------------------------------------------------------------------ */
 
 export const gradients = {
-  /** philia 主行动渐变：135° 深棕谱系（身份带 §1.2；柠檬黄→薄荷绿渐变已退役，
-   *  渐变按钮=反廉价黑名单件的合规形态=深棕渐变）。 */
-  philia: 'linear-gradient(135deg, #3B2E24 0%, #2E2318 100%)',
-  /** philia 渐变 hover：同谱系微提亮。 */
-  philiaHover: 'linear-gradient(135deg, #46382A 0%, #332A1E 100%)',
+  /** philia 主行动渐变：135° 深棕谱系（片0 对齐 Ready §2.1：brand #5C5040→pressed
+   *  #4A4034；CTA/深卡同帧。柠檬黄→薄荷绿渐变已退役，深棕渐变=反廉价黑名单件合规形态）。 */
+  philia: 'linear-gradient(135deg, #5C5040 0%, #4A4034 100%)',
+  /** philia 渐变 hover：同谱系微提亮（沿用换代前 ΔL 推导 +3.3/+2.2）。 */
+  philiaHover: 'linear-gradient(135deg, #665947 0%, #504639 100%)',
   /** BANNER 占位淡金渐变：165°（home-v2 .hv2-banner 同帧；槽位占位块共用——
-   *  端口批片 C 顺带件①：字面量收编唯一来源，三端引用不另写）。 */
+   *  端口批片 C 顺带件①：字面量收编唯一来源，三端引用不另写）。
+   *  片0 注：脸面槽位属片1 内容批，本值cream 同族相邻，令牌不随动。 */
   philiaBanner: 'linear-gradient(165deg, #EFDCAB 0%, #EBD398 52%, #F2E7CB 100%)',
-  /** 商家端 M1 导航轨深棕渐变：160° 同双色（UX-02 V1.1 §二 M1 wnav；同谱系不同角，
-   *  片 5 段 0 收编为 token 唯一来源，CSS/TSX 引用不另写字面量）。 */
-  philiaRail: 'linear-gradient(160deg, #3B2E24 0%, #2E2318 100%)',
+  /** 商家端 M1 导航轨深棕渐变：160° 同双色（UX-02 V1.1 §二 M1 wnav；片0 对齐 Ready
+   *  §2.1 rail=brand→pressed 同谱系；CSS/TSX 引用不另写字面量）。 */
+  philiaRail: 'linear-gradient(160deg, #5C5040 0%, #4A4034 100%)',
 } as const;
 
 /* ------------------------------------------------------------------------ */
@@ -367,6 +392,11 @@ export const cssVars = {
   '--brand-primary-light': colors.brand.primaryLight,
   '--brand-secondary': colors.brand.secondary,
   '--brand-secondary-light': colors.brand.secondaryLight,
+  /* 片0（Ready §2.1）：深棕 CTA 族 + violet 角标入运行时变量 */
+  '--brand-cta': colors.brand.cta,
+  '--brand-cta-pressed': colors.brand.ctaPressed,
+  '--brand-on-cta': colors.brand.onCta,
+  '--violet': colors.violet.base,
   '--bg-canvas': colors.bg.canvas,
   '--bg-card': colors.bg.card,
   '--bg-sunken': colors.bg.sunken,

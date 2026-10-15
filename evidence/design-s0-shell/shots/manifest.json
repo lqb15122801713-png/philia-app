@@ -1,0 +1,193 @@
+{
+  "at": "2026-10-15T11:47:09.843Z",
+  "env": {
+    "customer": "http://localhost:7100",
+    "merchant": "http://localhost:7101",
+    "staff": "http://localhost:7102",
+    "API_BASE": "http://localhost:7200"
+  },
+  "shots": [
+    {
+      "app": "customer",
+      "path": "/home",
+      "vp": "390x844",
+      "name": "customer-home",
+      "logged": true,
+      "state": {
+        "path": "/home",
+        "hasDock": true,
+        "textLen": 163
+      },
+      "file": "evidence\\design-s0-shell\\shots\\customer-home.png"
+    },
+    {
+      "app": "customer",
+      "path": "/mall",
+      "vp": "390x844",
+      "name": "customer-mall",
+      "logged": true,
+      "state": {
+        "path": "/mall",
+        "hasDock": true,
+        "textLen": 517
+      },
+      "file": "evidence\\design-s0-shell\\shots\\customer-mall.png"
+    },
+    {
+      "app": "customer",
+      "path": "/philia",
+      "vp": "390x844",
+      "name": "customer-philia",
+      "logged": true,
+      "state": {
+        "path": "/philia",
+        "hasDock": true,
+        "textLen": 470
+      },
+      "file": "evidence\\design-s0-shell\\shots\\customer-philia.png"
+    },
+    {
+      "app": "customer",
+      "path": "/me",
+      "vp": "390x844",
+      "name": "customer-me",
+      "logged": true,
+      "state": {
+        "path": "/me",
+        "hasDock": true,
+        "textLen": 251
+      },
+      "file": "evidence\\design-s0-shell\\shots\\customer-me.png"
+    },
+    {
+      "app": "staff",
+      "path": "/today",
+      "vp": "390x844",
+      "name": "staff-today",
+      "logged": true,
+      "state": {
+        "path": "/today",
+        "hasDock": true,
+        "textLen": 211
+      },
+      "file": "evidence\\design-s0-shell\\shots\\staff-today.png"
+    },
+    {
+      "app": "staff",
+      "path": "/schedule",
+      "vp": "390x844",
+      "name": "staff-schedule",
+      "logged": true,
+      "state": {
+        "path": "/schedule",
+        "hasDock": true,
+        "textLen": 101
+      },
+      "file": "evidence\\design-s0-shell\\shots\\staff-schedule.png"
+    },
+    {
+      "app": "staff",
+      "path": "/attendance",
+      "vp": "390x844",
+      "name": "staff-attendance",
+      "logged": true,
+      "state": {
+        "path": "/attendance",
+        "hasDock": true,
+        "textLen": 264
+      },
+      "file": "evidence\\design-s0-shell\\shots\\staff-attendance.png"
+    },
+    {
+      "app": "staff",
+      "path": "/me",
+      "vp": "390x844",
+      "name": "staff-me",
+      "logged": true,
+      "state": {
+        "path": "/me",
+        "hasDock": true,
+        "textLen": 415
+      },
+      "file": "evidence\\design-s0-shell\\shots\\staff-me.png"
+    },
+    {
+      "app": "merchant",
+      "path": "/dashboard",
+      "vp": "1440x900",
+      "name": "merchant-desk-dashboard",
+      "logged": true,
+      "state": {
+        "path": "/dashboard",
+        "hasDock": true,
+        "textLen": 462
+      },
+      "file": "evidence\\design-s0-shell\\shots\\merchant-desk-dashboard.png"
+    },
+    {
+      "app": "merchant",
+      "path": "/monitor",
+      "vp": "1440x900",
+      "name": "merchant-desk-monitor",
+      "logged": true,
+      "state": {
+        "path": "/monitor",
+        "hasDock": true,
+        "textLen": 195
+      },
+      "file": "evidence\\design-s0-shell\\shots\\merchant-desk-monitor.png"
+    },
+    {
+      "app": "merchant",
+      "path": "/finance",
+      "vp": "1440x900",
+      "name": "merchant-desk-finance",
+      "logged": true,
+      "state": {
+        "path": "/finance",
+        "hasDock": true,
+        "textLen": 796
+      },
+      "file": "evidence\\design-s0-shell\\shots\\merchant-desk-finance.png"
+    },
+    {
+      "app": "merchant",
+      "path": "/dashboard",
+      "vp": "390x844",
+      "name": "merchant-phone-dashboard",
+      "logged": true,
+      "state": {
+        "path": "/dashboard",
+        "hasDock": true,
+        "textLen": 351
+      },
+      "file": "evidence\\design-s0-shell\\shots\\merchant-phone-dashboard.png"
+    },
+    {
+      "app": "merchant",
+      "path": "/cashier",
+      "vp": "390x844",
+      "name": "merchant-phone-cashier",
+      "logged": true,
+      "state": {
+        "path": "/cashier",
+        "hasDock": true,
+        "textLen": 405
+      },
+      "file": "evidence\\design-s0-shell\\shots\\merchant-phone-cashier.png"
+    },
+    {
+      "app": "merchant",
+      "path": "/settings",
+      "vp": "390x844",
+      "name": "merchant-phone-me",
+      "logged": true,
+      "state": {
+        "path": "/settings",
+        "hasDock": true,
+        "textLen": 513
+      },
+      "file": "evidence\\design-s0-shell\\shots\\merchant-phone-me.png"
+    }
+  ]
+}
