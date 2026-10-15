@@ -1,0 +1,64 @@
+{
+  "checks": [
+    {
+      "name": "夹具：店长（merchant_manager+本店 staff）落库",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "店主登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "F1 A1 侧栏 foot=「运营后台端」",
+      "ok": true,
+      "detail": "运营后台端"
+    },
+    {
+      "name": "F1 A2 页顶 pageTitle=运营后台端 + pageSub 写死精确值「内容与脸面 · 店主 · 钱权另闸」",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "F1 C3 kill 区支付语义（支付一键关停（非 Banner））",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "F1 零残留：/console 页无「开发者管理端」",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "F1 path 未改：URL=/console",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "店长登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "F2 A4 拒访页=「运营后台端仅店主可用」（换名）+零旧名",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "店员登录",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "F3 A5 店员引导=「运营后台端由店主处理」（去「店长或店主」歧义）+零旧名",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "shots": [
+    "E:\\KIMI code\\tmp\\oc-evidence\\shots\\F1-console-owner.png",
+    "E:\\KIMI code\\tmp\\oc-evidence\\shots\\F2-console-manager-denied.png",
+    "E:\\KIMI code\\tmp\\oc-evidence\\shots\\F3-console-clerk-guide.png"
+  ]
+}
