@@ -74,9 +74,9 @@
 }
 .sk-btn-ghost:active { transform: scale(.94); }
 
-/* ---- S2 工位大卡 workcard（深棕渐变 150° 圆角 22+深件影） ---- */
+/* ---- S2 工位大卡 workcard（深棕渐变 150° 圆角 18（Ready §2.3 卡档 16–18）+深件影） ---- */
 .sk-workcard {
-  margin: 6px 22px 0; border-radius: 22px; padding: 18px 20px 16px; color: #F6EFDD;
+  margin: 6px 22px 0; border-radius: 18px; padding: 18px 20px 16px; color: #F6EFDD;
   background: var(--grad-philia);
   box-shadow: 0 10px 24px rgba(42, 31, 21, .28), 0 2px 6px rgba(42, 31, 21, .18);
 }
@@ -102,7 +102,7 @@
 .sk-stepgrid .st.done .pt { background: var(--gold); border-color: var(--gold); color: var(--ink-deep); }
 .sk-stepgrid .st.now .pt {
   background: var(--gold-pale); border-color: var(--gold-pale); color: var(--ink-deep);
-  box-shadow: 0 0 0 4px rgba(242, 223, 166, .22);
+  box-shadow: 0 0 0 4px rgba(242, 220, 140, .28);
 }
 .sk-workcard .wk-count { font-family: var(--mono); font-size: 9.5px; color: rgba(246, 239, 221, .72); margin-top: 12px; }
 .sk-workcard .sk-btn-action { margin-top: 10px; }
@@ -166,7 +166,7 @@
   transition: transform .12s cubic-bezier(.34, 1.56, .64, 1);
 }
 .sk-chip:active { transform: scale(.94); }
-.sk-chip.on { background: var(--ink); border-color: var(--ink); color: #FAF8F2; }
+.sk-chip.on { background: var(--ink); border-color: var(--ink); color: #FAF7F0; }
 
 /* ---- S3 班轴 daygrid + 预约卡 appt ---- */
 .sk-daygrid { margin: 12px 22px 0; position: relative; }
@@ -179,7 +179,7 @@
   background: var(--card); border: 1.5px solid var(--khaki);
 }
 .sk-daygrid .dg-node.done { background: var(--ink); border-color: var(--ink); }
-.sk-daygrid .dg-node.now { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(232, 207, 140, .3); background: var(--gold-pale); }
+.sk-daygrid .dg-node.now { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(242, 220, 140, .3); background: var(--gold-pale); }
 .sk-appt {
   background: var(--card); border-radius: 16px; padding: 12px 14px; margin-bottom: 10px;
   box-shadow: 0 1px 2px rgba(42, 31, 21, .05); position: relative;
@@ -201,12 +201,27 @@
   border: 1px dashed var(--hairline); border-radius: 14px; padding: 10px 14px; margin-bottom: 10px;
   font-family: var(--mono); font-size: 9px; color: var(--muted); text-align: center; background: transparent;
 }
+/* 待接「开始」pill（薄行行内主行动；深棕底 cream 字=34 号档 §4.11 深钮族，不占 cream 预算；
+   互斥停用=sunken 灰态——同时仅一单服务中） */
+.sk-appt .act {
+  margin-left: 2px; min-height: 30px; padding: 0 13px; border-radius: 999px; border: 0; flex: none;
+  background: var(--ink); color: var(--gold-pale); font-size: 11px; font-weight: 700;
+  cursor: pointer; font-family: inherit; transition: transform .12s cubic-bezier(.34, 1.56, .64, 1);
+}
+.sk-appt .act:active { transform: scale(.94); }
+.sk-appt .act:disabled { background: var(--paper); color: var(--muted); cursor: not-allowed; box-shadow: inset 0 0 0 1px var(--hairline); }
+/* 半展摘要条（服务中卡 dock 默认态：当前步+进度+继续执行主钮） */
+.sk-half { margin-top: 10px; border-top: 1px solid var(--hairline-soft); padding-top: 10px; }
+.sk-half .row { display: flex; align-items: center; gap: 8px; }
+.sk-half .cur { font-size: 12.5px; font-weight: 700; }
+.sk-half .cnt { margin-left: auto; font-family: var(--mono); font-size: 9.5px; color: var(--muted); }
+.sk-half .sk-btn-action { margin-top: 10px; }
 
 /* ---- S4 班轴操作清单 oplist/opstep（冻结六步逐行可执行；当前步唯一 oact） ---- */
 .sk-oplist { margin-top: 10px; border-top: 1px solid var(--hairline-soft); padding-top: 8px; }
 .sk-opstep { display: flex; align-items: center; gap: 9px; padding: 6px 0; }
 .sk-opstep .pt { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-family: var(--mono); font-size: 9px; flex: none; }
-.sk-opstep.done .pt { background: var(--ink); color: #FAF8F2; }
+.sk-opstep.done .pt { background: var(--ink); color: #FAF7F0; }
 .sk-opstep.now .pt { background: var(--gold-pale); color: var(--ink-deep); }
 .sk-opstep.future .pt { background: transparent; border: 1.5px solid var(--hairline); opacity: .55; }
 .sk-opstep .nm { font-size: 12.5px; font-weight: 700; }
@@ -217,8 +232,8 @@
   background: transparent; color: var(--ink); font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
 }
 
-/* ---- S6 打卡卡 punch（白卡 20：mono 大钟 34/700+班次 mono 9.5+围栏胶囊+btn-action） ---- */
-.sk-punch { margin: 8px 22px 0; background: var(--card); border-radius: 20px; padding: 20px; box-shadow: 0 1px 2px rgba(42, 31, 21, .05); text-align: center; }
+/* ---- S6 打卡卡 punch（白卡 18（Ready §2.3 卡档 16–18）：mono 大钟 34/700+班次 mono 9.5+围栏胶囊+btn-action） ---- */
+.sk-punch { margin: 8px 22px 0; background: var(--card); border-radius: 18px; padding: 20px; box-shadow: 0 1px 2px rgba(42, 31, 21, .05); text-align: center; }
 .sk-punch .clock { font-family: var(--mono); font-size: 34px; font-weight: 700; letter-spacing: .02em; }
 .sk-punch .shift { font-family: var(--mono); font-size: 9.5px; color: var(--muted); margin-top: 6px; }
 .sk-punch .fence { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; border-radius: 999px; padding: 5px 12px; background: var(--paper); font-family: var(--mono); font-size: 9.5px; color: var(--ink); }
@@ -226,8 +241,8 @@
 .sk-punch .fence.bad { color: var(--danger); }
 .sk-punch .sk-btn-action { margin-top: 14px; }
 
-/* ---- 工位台身份卡（S-04：字像金边+mono 工号+trio 三格账） ---- */
-.sk-idcard { margin: 6px 22px 0; background: var(--grad-philia); border-radius: 22px; padding: 18px 20px; color: #F6EFDD; box-shadow: 0 10px 24px rgba(42, 31, 21, .28); }
+/* ---- 我的身份卡（S-04：字像金边+mono 工号+trio 三格账；圆角 18=Ready §2.3 卡档） ---- */
+.sk-idcard { margin: 6px 22px 0; background: var(--grad-philia); border-radius: 18px; padding: 18px 20px; color: #F6EFDD; box-shadow: 0 10px 24px rgba(42, 31, 21, .28); }
 .sk-idcard .id-main { display: flex; align-items: center; gap: 12px; }
 .sk-idcard .av {
   width: 52px; height: 52px; border-radius: 50%; border: 1.5px solid var(--gold);
