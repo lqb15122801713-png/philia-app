@@ -115,6 +115,17 @@ class Cdp {
     await this.send('Page.navigate', { url });
     await sleep(waitMs);
   }
+  /** 内容落定等候：表达式为真即返，超时返回 false（实证预算 60s：重构机高负载时
+      headless 主线程解析大块 chunk 可卡顿十余秒，查询本身毫秒级——等真态不等死数） */
+  async waitFor(expression, timeoutMs = 60000) {
+    const t0 = Date.now();
+    for (;;) {
+      const ok = await this.eval(`!!(${expression})`);
+      if (ok) return true;
+      if (Date.now() - t0 > timeoutMs) return false;
+      await sleep(500);
+    }
+  }
   async viewport(width, height, mobile) {
     await this.send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile });
   }
@@ -133,6 +144,8 @@ async function main() {
   const args = [
     `--remote-debugging-port=${CDP_PORT}`, `--user-data-dir=${profile}`,
     '--no-first-run', '--no-default-browser-check', '--disable-extensions',
+    '--disable-background-timer-throttling', '--disable-renderer-backgrounding',
+    '--disable-backgrounding-occluded-windows',
   ];
   if (process.env.HEADFUL !== '1') args.push('--headless=new');
   const browser = spawn(BROWSER, args, { stdio: 'ignore' });
@@ -282,6 +295,7 @@ async function main() {
 
   /* ---- A2 · W-02 预约台账（203:39） ---- */
   await cdp.goto(`${MERCHANT_URL}/appointments`);
+  await cdp.waitFor(`document.querySelector('[data-testid="merchant-rail"]')`);
   const d02 = await cdp.eval(`({
     rail: !!document.querySelector('[data-testid="merchant-rail"]'),
     rows: document.querySelectorAll('tbody tr').length,
@@ -291,6 +305,7 @@ async function main() {
 
   /* ---- A2 · W-03 预约详情（203:125；A 单=in_service 真态） ---- */
   await cdp.goto(`${MERCHANT_URL}/appointments/${apptA}`);
+  await cdp.waitFor(`document.querySelector('[data-testid="detail-flow"]')`);
   const d03 = await cdp.eval(`({
     flow: !!document.querySelector('[data-testid="detail-flow"]'),
     info: !!document.querySelector('[data-testid="detail-info"]'),
@@ -300,7 +315,7 @@ async function main() {
 
   /* ---- A3 · W-04 监控 Hub（203:211；A 单服务中真卡；不重做 IA） ---- */
   await cdp.goto(`${MERCHANT_URL}/monitor`);
-  await sleep(1500);
+  await cdp.waitFor(`document.querySelector('[data-testid="merchant-rail"]') && document.body.innerText.includes('阿强')`);
   const d04 = await cdp.eval(`({
     rail: !!document.querySelector('[data-testid="merchant-rail"]'),
     cards: document.querySelectorAll('.mon-card').length,
@@ -311,6 +326,7 @@ async function main() {
 
   /* ---- A4 · W-05 寄养（203:297；寄养单在店真态） ---- */
   await cdp.goto(`${MERCHANT_URL}/boarding`);
+  await cdp.waitFor(`document.querySelector('[data-testid="board-m3"]')`);
   const d05 = await cdp.eval(`({
     m3: !!document.querySelector('[data-testid="board-m3"]'),
     stay: document.body.innerText.includes('在店') || document.body.innerText.includes('寄养'),
@@ -320,19 +336,14 @@ async function main() {
 
   /* ---- A5 · W-06 收银台桌面（203:383；Folio/PayChips/Redline 族明面） ---- */
   await cdp.goto(`${MERCHANT_URL}/cashier`);
+  await cdp.waitFor(`document.querySelector('[data-testid="cashier-page"]')`);
   const d06 = await cdp.eval(`!!document.querySelector('[data-testid="cashier-page"]')`);
   note(d06, 'A5 W-06 收银台渲染', 'cashier-page');
   await cdp.shot(join(OUT_DIR, 'd06-w06-cashier.png'));
 
   /* ---- A5 · W-07 日结（203:469；今日有真账；五查询页等候内容落定） ---- */
   await cdp.goto(`${MERCHANT_URL}/cashier/close`);
-  await cdp.eval(`(async () => {
-    for (let i = 0; i < 30; i++) {
-      if (document.body.innerText.includes('今日账面四分列') || document.body.innerText.includes('交接班（闭班）')) return true;
-      await new Promise((r) => setTimeout(r, 500));
-    }
-    return false;
-  })()`);
+  await cdp.waitFor(`document.body.innerText.includes('今日账面四分列') || document.body.innerText.includes('交接班（闭班）')`);
   const d07 = await cdp.eval(`({
     body: document.body.innerText.length > 400,
     money: document.body.innerText.includes('今日账面四分列') || document.body.innerText.includes('日结'),
@@ -342,6 +353,7 @@ async function main() {
 
   /* ---- A5 · W-08 退款（203:555；executed 待实退+settled 双态真行） ---- */
   await cdp.goto(`${MERCHANT_URL}/cashier/refunds`);
+  await cdp.waitFor(`document.querySelector('[data-testid="refund-policy-card"]')`);
   const d08 = await cdp.eval(`({
     policy: !!document.querySelector('[data-testid="refund-policy-card"]'),
     rows: document.querySelectorAll('tbody tr').length,
@@ -359,6 +371,7 @@ async function main() {
 
   /* ---- A6 · 槽一 总览（198:374 → /dashboard；owner=连锁视图 dash-m3-chain，单店口径=dash-m3） ---- */
   await cdp.goto(`${MERCHANT_URL}/dashboard`);
+  await cdp.waitFor(`document.querySelector('[data-testid="merchant-dock"]')`);
   const p01 = await dockOk();
   p01.m3 = await cdp.eval(`!!(document.querySelector('[data-testid="dash-m3-chain"]') || document.querySelector('[data-testid="dash-m3"]'))`);
   note(p01.dock && p01.m3, 'A6 手机总览（198:374）', JSON.stringify(p01));
@@ -366,6 +379,7 @@ async function main() {
 
   /* ---- A6 · 槽二 门店（203:5219 → /appointments 含寄养） ---- */
   await cdp.goto(`${MERCHANT_URL}/appointments`);
+  await cdp.waitFor(`document.querySelector('[data-testid="merchant-dock"]')`);
   const p02 = await dockOk();
   p02.rows = await cdp.eval(`document.querySelectorAll('tbody tr').length`);
   note(p02.dock && p02.rows >= 2, 'A6 手机门店（203:5219）', JSON.stringify(p02));
@@ -373,6 +387,7 @@ async function main() {
 
   /* ---- A6 · 槽三 收银（198:445 → /cashier） ---- */
   await cdp.goto(`${MERCHANT_URL}/cashier`);
+  await cdp.waitFor(`document.querySelector('[data-testid="cashier-page"]')`);
   const p03 = await dockOk();
   p03.cashier = await cdp.eval(`!!document.querySelector('[data-testid="cashier-page"]')`);
   note(p03.dock && p03.cashier, 'A6 手机收银（198:445）', JSON.stringify(p03));
@@ -380,6 +395,7 @@ async function main() {
 
   /* ---- A6 · 槽四 报表简（203:5365 → /finance） ---- */
   await cdp.goto(`${MERCHANT_URL}/finance`);
+  await cdp.waitFor(`document.querySelector('[data-testid="finance-received-card"]')`);
   const p04 = await dockOk();
   p04.quad = await cdp.eval(`!!document.querySelector('[data-testid="finance-received-card"]')`);
   note(p04.dock && p04.quad, 'A6 手机报表简（203:5365）', JSON.stringify(p04));
@@ -387,6 +403,7 @@ async function main() {
 
   /* ---- A6 · 槽五 我的（203:5480 → /settings 暂驻） ---- */
   await cdp.goto(`${MERCHANT_URL}/settings`);
+  await cdp.waitFor(`document.querySelector('[data-testid="settings-entries"]')`);
   const p05 = await dockOk();
   p05.entries = await cdp.eval(`!!document.querySelector('[data-testid="settings-entries"]')`);
   note(p05.dock && p05.entries, 'A6 手机我的（203:5480）', JSON.stringify(p05));
