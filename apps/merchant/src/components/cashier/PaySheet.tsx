@@ -3,7 +3,7 @@
  *
  * - 应收 Montserrat 32 墨大数字 + 副行（含次卡扣次 N 项 −¥X 已抵 / 储值 −¥X）；
  * - 支付胶囊七分列（M1-补2 R5 + R11a + 片 3）：现金 / 微信 / 支付宝 / 次卡扣次 /
- *   储值 / 回馈金 / 挂账——未选白底 ring、选中柠檬底墨字、禁用灰 + 原因行紧跟；
+ *   储值 / 回馈金 / 挂账——未选白底 ring、选中 cream 底墨字、禁用灰 + 原因行紧跟；
  *   片 3 挂账段（credit）=台账留痕不碰真钱（至多一段；server 落 credit_ledgers，
  *   computeDayTender 跳过不计已收；结清/核销走 /ledger 台账专页）；聚合扫码/外设
  *   留口注记行置灰明面（通道资质候/PWA 上限）；
@@ -16,7 +16,7 @@
  * - 次卡胶囊 = 行级扣次的整单开关：点选=全部洗护服务行标记扣次（金额自动
  *   派生 = Σ扣次行有效价，不可手填——服务端同口径强校验）；再点=取消；
  * - 选中胶囊展开金额输入（可组合支付）；现金带「实收」自动算找零
- *   （Montserrat 20）；Σ现金类 + 储值 = 展示应收 才放行「确认结账」柠檬钮；
+ *   （Montserrat 20）；Σ现金类 + 储值 = 展示应收 才放行「确认结账」cream 主钮；
  *   QA40-D13（急修三件 PD-03）：手输任一段即触发再平衡（改动段固定、末位选中段
  *   兜底差额）+差额提示行实时明示（还差/超出 ¥X）+「应收」标签归一（唯一真值=顶部
  *   dueFen 大数字，明细行分段额改称「现金承担」）+现金手输同步刷实收；
@@ -62,12 +62,12 @@ const capsuleCls = (state: 'on' | 'off' | 'disabled') =>
     state === 'on'
       ? 'bg-brand-primary text-ink'
       : state === 'off'
-        ? 'bg-[#FFFDF6] text-ink shadow-[0_0_0_1px_rgba(59,46,36,.09)]'
-        : 'cursor-not-allowed bg-[rgba(59,46,36,.05)] text-[rgba(59,46,36,.3)]'
+        ? 'bg-card text-ink shadow-[0_0_0_1px_rgba(44,40,34,.09)]'
+        : 'cursor-not-allowed bg-[rgba(44,40,34,.05)] text-[rgba(44,40,34,.3)]'
   }`
 
 const payInputCls =
-  'w-[110px] rounded-[6px] bg-[#FFFDF6] px-2.5 py-[7px] text-right font-number text-caption font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(59,46,36,.09)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.25)]'
+  'w-[110px] rounded-[6px] bg-card px-2.5 py-[7px] text-right font-number text-caption font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(44,40,34,.09)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.25)]'
 
 export default function PaySheet({
   open,
@@ -338,26 +338,26 @@ export default function PaySheet({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-stretch justify-center bg-[rgba(59,46,36,.28)] sm:items-end sm:px-4 sm:pb-6"
+      className="fixed inset-0 z-50 flex items-stretch justify-center bg-[rgba(44,40,34,.28)] sm:items-end sm:px-4 sm:pb-6"
       data-testid="cashier-pay-overlay"
     >
-      <div className="flex w-full flex-col overflow-y-auto bg-[#FFFDF6] p-6 shadow-[0_8px_40px_rgba(59,46,36,.18)] sm:w-[520px] sm:rounded-[20px]">
+      <div className="flex w-full flex-col overflow-y-auto bg-card p-6 shadow-[0_8px_40px_rgba(44,40,34,.18)] sm:w-[520px] sm:rounded-[20px]">
         {settledInfo ? (
           /* ---- 成功态：薄荷对勾 + 已收款 + 3s 自动回 ---- */
           <div className="flex flex-col items-center py-8" data-testid="cashier-pay-success">
-            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#2E2318]">
-              <CheckCircle2 size={28} strokeWidth={1.8} className="text-[#F2DFA6]" aria-hidden />
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-ink">
+              <CheckCircle2 size={28} strokeWidth={1.8} className="text-brand-primary" aria-hidden />
             </span>
             <div className="mt-4 whitespace-nowrap font-number text-detail-lg font-bold tabular-nums">
               已收款 ¥{fenToYuan(settledInfo.paidFen)}
             </div>
             {/* 片 3：单上抹零透出（真值以 server 单为准，>0 才显示） */}
             {(settledInfo.roundingFen ?? 0) > 0 ? (
-              <div className="mt-1 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]" data-testid="cashier-pay-rounding">
+              <div className="mt-1 font-number text-caption-xs tabular-nums text-ink-secondary" data-testid="cashier-pay-rounding">
                 {cc('cashier.roundingLabel')} −¥{fenToYuan(settledInfo.roundingFen!)}
               </div>
             ) : null}
-            <div className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+            <div className="mt-1.5 text-caption-xs text-ink-placeholder">
               单号 <span className="font-number tabular-nums">{settledInfo.billNo}</span> · {cc('cashier.paySuccessBack')}
             </div>
             <div className="mt-6 flex items-center gap-2">
@@ -366,7 +366,7 @@ export default function PaySheet({
                 type="button"
                 data-testid="cashier-pay-print"
                 onClick={() => navigate(`/cashier/receipt/${settledInfo.billNo}`)}
-                className="inline-flex items-center gap-1.5 rounded-full bg-[#FFFDF6] px-5 py-2.5 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+                className="inline-flex items-center gap-1.5 rounded-full bg-card px-5 py-2.5 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
               >
                 <Printer size={14} strokeWidth={1.8} aria-hidden />
                 {cc('cashier.receiptPrint')}
@@ -386,7 +386,7 @@ export default function PaySheet({
             {/* R4：离线提示行（确认=暂存待补传，非「结账中…」空转） */}
             {offline ? (
               <div
-                className="mb-3 flex items-center gap-1.5 rounded-[10px] bg-[#F2DFA6] px-3 py-2 text-caption-xs font-semibold text-[#3B2E24]"
+                className="mb-3 flex items-center gap-1.5 rounded-[10px] bg-brand-primary px-3 py-2 text-caption-xs font-semibold text-ink"
                 data-testid="cashier-pay-offline"
               >
                 <WifiOff size={13} strokeWidth={2} aria-hidden />
@@ -395,14 +395,14 @@ export default function PaySheet({
             ) : null}
             <div className="mb-1.5 flex items-center justify-between">
               <b className="text-body-sm">结账</b>
-              <span className="text-caption-xs text-[rgba(59,46,36,.42)]">
+              <span className="text-caption-xs text-ink-placeholder">
                 单号 <span className="font-number tabular-nums">{billNo ?? '结账后生成'}</span>
               </span>
             </div>
             <div className="whitespace-nowrap py-1.5 text-center font-number text-detail-lg font-bold tabular-nums" data-testid="cashier-pay-due">
               ¥{fenToYuan(dueFen)}
             </div>
-            <div className="mb-3.5 text-center font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
+            <div className="mb-3.5 text-center font-number text-caption-xs tabular-nums text-ink-placeholder">
               应收
               {passCoveredFen > 0
                 ? ` · 含次卡扣次 ${lines.filter((l) => l.paidByPass).length} 项（−¥${fenToYuan(passCoveredFen)} 已抵）`
@@ -454,7 +454,7 @@ export default function PaySheet({
                   {m.label}
                   <small
                     className={`mt-0.5 block text-caption-xs font-normal ${
-                      selected.includes(m.key) ? 'text-[rgba(59,46,36,.55)]' : 'text-[rgba(59,46,36,.42)]'
+                      selected.includes(m.key) ? 'text-ink-secondary' : 'text-ink-placeholder'
                     }`}
                   >
                     {selected.includes(m.key) ? '已选' : m.hint}
@@ -471,7 +471,7 @@ export default function PaySheet({
                 次卡扣次
                 <small
                   className={`mt-0.5 block font-number tabular-nums text-caption-xs font-normal ${
-                    passOn ? 'text-[rgba(59,46,36,.55)]' : 'text-[rgba(59,46,36,.42)]'
+                    passOn ? 'text-ink-secondary' : 'text-ink-placeholder'
                   }`}
                 >
                   {passOn
@@ -493,7 +493,7 @@ export default function PaySheet({
                   储值
                   <small
                     className={`mt-0.5 block font-number tabular-nums text-caption-xs font-normal ${
-                      svOn ? 'text-[rgba(59,46,36,.55)]' : 'text-[rgba(59,46,36,.42)]'
+                      svOn ? 'text-ink-secondary' : 'text-ink-placeholder'
                     }`}
                   >
                     余 ¥{fenToYuan(svBalance)}
@@ -514,7 +514,7 @@ export default function PaySheet({
                   回馈金
                   <small
                     className={`mt-0.5 block font-number tabular-nums text-caption-xs font-normal ${
-                      rbOn ? 'text-[rgba(59,46,36,.55)]' : 'text-[rgba(59,46,36,.42)]'
+                      rbOn ? 'text-ink-secondary' : 'text-ink-placeholder'
                     }`}
                   >
                     {rbOn ? `抵 ¥${fenToYuan(rbApplied)}` : rbBalance !== null ? `余 ¥${fenToYuan(rbBalance)}` : '仅抵商品'}
@@ -533,7 +533,7 @@ export default function PaySheet({
                 挂账
                 <small
                   className={`mt-0.5 block font-number tabular-nums text-caption-xs font-normal ${
-                    crOn ? 'text-[rgba(59,46,36,.55)]' : 'text-[rgba(59,46,36,.42)]'
+                    crOn ? 'text-ink-secondary' : 'text-ink-placeholder'
                   }`}
                 >
                   {crOn ? `挂 ¥${fenToYuan(crApplied)}` : '台账留痕'}
@@ -542,34 +542,34 @@ export default function PaySheet({
             </div>
             {/* 片 3 留口注记行（置灰明面：聚合扫码=通道资质候；外设=PWA 上限） */}
             <div className="mt-2 flex flex-col gap-1" data-testid="cashier-pay-placeholder-notes">
-              <p className="flex items-center gap-1.5 text-caption-xs text-[rgba(59,46,36,.3)]">
+              <p className="flex items-center gap-1.5 text-caption-xs text-[rgba(44,40,34,.3)]">
                 <ScanLine size={12} strokeWidth={1.8} aria-hidden />
                 {cc('cashier.scanPayNote')}
               </p>
-              <p className="flex items-center gap-1.5 text-caption-xs text-[rgba(59,46,36,.3)]">
+              <p className="flex items-center gap-1.5 text-caption-xs text-[rgba(44,40,34,.3)]">
                 <Printer size={12} strokeWidth={1.8} aria-hidden />
                 {cc('cashier.peripheralNote')}
               </p>
             </div>
             {passBlockReason ? (
-              <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="cashier-pass-block">
+              <p className="mt-1.5 text-caption-xs text-ink-placeholder" data-testid="cashier-pass-block">
                 {passBlockReason}
               </p>
             ) : null}
             {svBlockReason ? (
-              <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="cashier-sv-block">
+              <p className="mt-1.5 text-caption-xs text-ink-placeholder" data-testid="cashier-sv-block">
                 {svBlockReason}
               </p>
             ) : null}
             {rbBlockReason ? (
-              <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="cashier-rebate-block">
+              <p className="mt-1.5 text-caption-xs text-ink-placeholder" data-testid="cashier-rebate-block">
                 {rbBlockReason}
               </p>
             ) : null}
 
             {/* 选中胶囊金额输入（组合支付：现金类 + 储值段 + 回馈金段 + 挂账段） */}
             {selected.length > 0 || svOn || rbOn || crOn ? (
-              <div className="mt-3.5 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3" data-testid="cashier-pay-detail">
+              <div className="mt-3.5 rounded-[14px] bg-canvas px-3.5 py-3" data-testid="cashier-pay-detail">
                 {selected.map((m) => {
                   const label = MONEY_METHODS.find((x) => x.key === m)!.label
                   return (
@@ -590,7 +590,7 @@ export default function PaySheet({
                   <div className="flex items-center justify-between py-1 text-caption">
                     <span>
                       储值支付
-                      <small className="ml-1 font-number tabular-nums text-caption-xs text-[rgba(59,46,36,.42)]">
+                      <small className="ml-1 font-number tabular-nums text-caption-xs text-ink-placeholder">
                         余 ¥{fenToYuan(svBalance)}
                       </small>
                     </span>
@@ -614,7 +614,7 @@ export default function PaySheet({
                   <div className="flex items-center justify-between py-1 text-caption">
                     <span>
                       回馈金抵扣
-                      <small className="ml-1 font-number tabular-nums text-caption-xs text-[rgba(59,46,36,.42)]">
+                      <small className="ml-1 font-number tabular-nums text-caption-xs text-ink-placeholder">
                         {rbBalance !== null ? `余额 ¥${fenToYuan(rbBalance)} · ` : ''}上限 ¥{fenToYuan(rbCap)}
                       </small>
                     </span>
@@ -638,7 +638,7 @@ export default function PaySheet({
                   </p>
                 ) : null}
                 {rbOn ? (
-                  <p className="py-1 text-caption-xs text-[rgba(59,46,36,.42)]">
+                  <p className="py-1 text-caption-xs text-ink-placeholder">
                     {cc('cashier.payRebateNote')}
                   </p>
                 ) : null}
@@ -647,7 +647,7 @@ export default function PaySheet({
                   <div className="flex items-center justify-between py-1 text-caption">
                     <span>
                       挂账
-                      <small className="ml-1 font-number tabular-nums text-caption-xs text-[rgba(59,46,36,.42)]">
+                      <small className="ml-1 font-number tabular-nums text-caption-xs text-ink-placeholder">
                         上限 ¥{fenToYuan(crCap)}
                       </small>
                     </span>
@@ -667,7 +667,7 @@ export default function PaySheet({
                   </p>
                 ) : null}
                 {crOn ? (
-                  <p className="py-1 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="cashier-credit-note">
+                  <p className="py-1 text-caption-xs text-ink-placeholder" data-testid="cashier-credit-note">
                     {cc('cashier.creditNote')}
                   </p>
                 ) : null}
@@ -676,7 +676,7 @@ export default function PaySheet({
                     {/* QA40-D13 修法①：该位历史上把现金承担额误标「应收」（老板 9-24 亲测
                         「应收被回写 168→160」即此）——应收唯一真值=顶部大数字 dueFen，
                         任何位置不许把分段金额叫「应收」 */}
-                    <span className="font-number tabular-nums text-[rgba(59,46,36,.42)]">
+                    <span className="font-number tabular-nums text-ink-placeholder">
                       实收 ¥{cashReceivedFen !== null ? fenToYuan(cashReceivedFen) : '…'} − 现金承担 ¥
                       {fenToYuan(cashApplied)}
                     </span>
@@ -687,13 +687,13 @@ export default function PaySheet({
                         找零 ¥{fenToYuan(cashReceivedFen - cashApplied)}
                       </span>
                     ) : (
-                      <span className="text-caption-xs text-[rgba(59,46,36,.42)]">无找零</span>
+                      <span className="text-caption-xs text-ink-placeholder">无找零</span>
                     )}
                   </div>
                 ) : null}
                 {selected.includes('cash') && cashApplied > 0 ? (
                   <div className="flex items-center justify-between py-1 text-caption">
-                    <span className="text-[rgba(59,46,36,.42)]">现金实收</span>
+                    <span className="text-ink-placeholder">现金实收</span>
                     <input
                       className={payInputCls}
                       data-testid="cashier-pay-received"
@@ -716,16 +716,16 @@ export default function PaySheet({
                       : cc('cashier.payGapUnder', { amt: fenToYuan(moneyNeedFen - sumMoney) })}
                   </div>
                 ) : null}
-                <div className="py-1 text-caption-xs text-[rgba(59,46,36,.42)]">
+                <div className="py-1 text-caption-xs text-ink-placeholder">
                   {cc('cashier.payComboRule')}
                 </div>
                 {/* 副行口径（裁定①+R11a）：已收=现金类；次卡/储值/回馈金单列不计入已收 */}
-                <div className="border-t border-dashed border-[rgba(59,46,36,.12)] py-1 text-caption-xs text-[rgba(59,46,36,.42)]">
+                <div className="border-t border-dashed border-[rgba(44,40,34,.12)] py-1 text-caption-xs text-ink-placeholder">
                   {cc('cashier.payTenderNote')}
                 </div>
               </div>
             ) : passCoveredFen > 0 ? (
-              <div className="mt-3.5 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3 text-caption-xs text-[rgba(59,46,36,.62)]">
+              <div className="mt-3.5 rounded-[14px] bg-canvas px-3.5 py-3 text-caption-xs text-ink-secondary">
                 {cc('cashier.payPassOnly')}
               </div>
             ) : null}
@@ -735,7 +735,7 @@ export default function PaySheet({
                 type="button"
                 data-testid="cashier-pay-back"
                 onClick={onClose}
-                className="rounded-[14px] bg-[#FFFDF6] py-3 text-body-sm font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+                className="rounded-[14px] bg-card py-3 text-body-sm font-semibold text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
               >
                 返回改单
               </button>

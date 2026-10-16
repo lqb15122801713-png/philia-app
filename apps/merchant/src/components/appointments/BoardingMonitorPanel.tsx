@@ -8,7 +8,7 @@
  *   stayForStaff=staff），历史明细请在「寄养管理」页查看——汇报已标注。
  */
 
-import { PawPrint } from 'lucide-react';
+import { BedDouble } from 'lucide-react';
 import { oc } from '../../copy/monitor';
 import { fmtDateTime, type AppointmentGetResult, type StayBoardEntry } from './appt-utils';
 
@@ -65,7 +65,7 @@ export function BoardingMonitorPanel({
             </div>
           </div>
         ) : (
-          <p className="px-[17px] pb-4 text-caption text-[rgba(59,46,36,.62)]">
+          <p className="px-[17px] pb-4 text-caption text-ink-secondary">
             尚未办理入住登记。
           </p>
         )}
@@ -77,7 +77,7 @@ export function BoardingMonitorPanel({
           <h3>每日打卡</h3>
           {boardEntry?.overdue ? <span className="u3-st red">已超期</span> : null}
         </div>
-        <p className="px-[17px] text-caption-xs text-[rgba(59,46,36,.42)]">
+        <p className="px-[17px] text-caption-xs text-ink-placeholder">
           最近打卡：
           <span className="font-number tabular-nums">{boardEntry?.lastLogDate ?? '暂无'}</span>
         </p>
@@ -87,18 +87,19 @@ export function BoardingMonitorPanel({
             {liveLogs.map((l, i) => (
               <li
                 key={`${l.logDate}-${l.ts}-${i}`}
-                className="flex items-center gap-2 rounded-chip bg-[#FAF8F2] px-3 py-2"
+                className="flex items-center gap-2 rounded-chip bg-canvas px-3 py-2"
               >
-                <PawPrint className="h-4 w-4 shrink-0 text-[#3B2E24]" strokeWidth={1.5} />
-                <span className="text-caption text-[#3B2E24]">{l.logDate} 打卡已更新</span>
-                <span className="ml-auto font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
+                {/* 禁爪印占位口径（Ready §4）：BedDouble 线性 icon（寄养打卡同族） */}
+                <BedDouble className="h-4 w-4 shrink-0 text-ink" strokeWidth={1.5} />
+                <span className="text-caption text-ink">{l.logDate} 打卡已更新</span>
+                <span className="ml-auto font-number text-caption-xs tabular-nums text-ink-placeholder">
                   {fmtDateTime(new Date(l.ts))}
                 </span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="mt-2 px-[17px] pb-4 text-caption-xs text-[rgba(59,46,36,.42)]">
+          <p className="mt-2 px-[17px] pb-4 text-caption-xs text-ink-placeholder">
             {oc('mon.boardingLogsEmpty')}
           </p>
         )}

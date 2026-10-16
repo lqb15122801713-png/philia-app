@@ -363,7 +363,7 @@ export default function AppointmentsPage() {
               <tbody>
                 {visible.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-16 text-center text-[rgba(59,46,36,.42)]">
+                    <td colSpan={7} className="py-16 text-center text-ink-placeholder">
                       {ac('appt.listEmpty')}
                     </td>
                   </tr>
@@ -387,7 +387,7 @@ export default function AppointmentsPage() {
                         {/* 宠物 / 服务（副行：客户昵称·尾号） */}
                         <td>
                           <span className="font-semibold">{item.petName ?? '宠物'}</span>
-                          <span className="mt-0.5 block text-[11px] text-[rgba(59,46,36,.42)]">
+                          <span className="mt-0.5 block text-[11px] text-ink-placeholder">
                             {item.serviceName ?? '服务'} ·{' '}
                             {customerLabel(item.customerName, item.customerPhoneTail)}
                           </span>
@@ -396,7 +396,7 @@ export default function AppointmentsPage() {
                         <td>
                           {item.staffName ?? '未指派'}
                           {srcLabel ? (
-                            <span className="ml-1 text-[11px] text-[rgba(59,46,36,.42)]">
+                            <span className="ml-1 text-[11px] text-ink-placeholder">
                               {srcLabel}
                             </span>
                           ) : null}
@@ -414,7 +414,7 @@ export default function AppointmentsPage() {
                           <span className={`u3-st ${cap.cls}`}>{cap.text}</span>
                         </td>
                         {/* 操作：详情链 */}
-                        <td className="whitespace-nowrap text-[rgba(59,46,36,.42)]">
+                        <td className="whitespace-nowrap text-ink-placeholder">
                           {ac('appt.openDetail')} ›
                         </td>
                       </tr>
@@ -425,7 +425,7 @@ export default function AppointmentsPage() {
             </table>
             {/* 双归属口径注（语言包 §四 W-02 注记明面） */}
             <div className="wsk">
-              <p className="wsk-note border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5">
+              <p className="wsk-note border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5">
                 {ac('appt.dualOwnerNote')}
               </p>
             </div>

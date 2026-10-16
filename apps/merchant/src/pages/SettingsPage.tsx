@@ -125,10 +125,10 @@ function SetRow({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 border-t border-[rgba(59,46,36,.06)] px-[17px] py-[13px] text-caption">
+    <div className="flex items-center gap-3 border-t border-[rgba(44,40,34,.06)] px-[17px] py-[13px] text-caption">
       <div className="min-w-0 flex-1">
         <div className="text-ink">{title}</div>
-        {hint ? <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]">{hint}</div> : null}
+        {hint ? <div className="mt-[2px] text-caption-xs text-ink-placeholder">{hint}</div> : null}
       </div>
       {children}
     </div>
@@ -155,18 +155,18 @@ function ExpandRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border-t border-[rgba(59,46,36,.06)]">
+    <div className="border-t border-[rgba(44,40,34,.06)]">
       <button
         type="button"
         onClick={onToggle}
-        className="flex w-full items-center gap-3 px-[17px] py-[13px] text-left text-caption transition-colors duration-150 hover:bg-[rgba(59,46,36,.03)]"
+        className="flex w-full items-center gap-3 px-[17px] py-[13px] text-left text-caption transition-colors duration-150 hover:bg-[rgba(44,40,34,.03)]"
         aria-expanded={open}
       >
         <div className="min-w-0 flex-1">
           <div className="text-ink">{title}</div>
-          {hint ? <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]">{hint}</div> : null}
+          {hint ? <div className="mt-[2px] text-caption-xs text-ink-placeholder">{hint}</div> : null}
         </div>
-        <span className="shrink-0 text-caption font-bold text-[rgba(59,46,36,.62)]">
+        <span className="shrink-0 text-caption font-bold text-ink-secondary">
           {value ? <span className="u1-num mr-1.5">{value}</span> : null}
           {open ? '收起 ›' : actionLabel}
         </span>
@@ -366,7 +366,7 @@ export default function SettingsPage() {
                 <Skeleton className="h-4 w-16 rounded-chip" />
               </div>
               {widths.map((w, r) => (
-                <div key={r} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-4">
+                <div key={r} className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-4">
                   <Skeleton className={`h-3 rounded-chip ${w}`} />
                 </div>
               ))}
@@ -433,20 +433,20 @@ export default function SettingsPage() {
                             type="time"
                             value={d.open}
                             onChange={(e) => setHours((w) => ({ ...w, [k]: { ...d, open: e.target.value } }))}
-                            className="rounded-chip bg-[#FFFDF6] px-2 py-1 text-caption text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+                            className="rounded-chip bg-card px-2 py-1 text-caption text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
                             style={numStyle}
                           />
-                          <span className="text-caption-xs text-[rgba(59,46,36,.42)]">至</span>
+                          <span className="text-caption-xs text-ink-placeholder">至</span>
                           <input
                             type="time"
                             value={d.close}
                             onChange={(e) => setHours((w) => ({ ...w, [k]: { ...d, close: e.target.value } }))}
-                            className="rounded-chip bg-[#FFFDF6] px-2 py-1 text-caption text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+                            className="rounded-chip bg-card px-2 py-1 text-caption text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
                             style={numStyle}
                           />
                         </span>
                       ) : (
-                        <span className="text-caption-xs text-[rgba(59,46,36,.42)]">店休</span>
+                        <span className="text-caption-xs text-ink-placeholder">店休</span>
                       )}
                       <Switch
                         checked={d.on}
@@ -526,7 +526,7 @@ export default function SettingsPage() {
               ) : (
                 <>
                   {serviceList.length === 0 ? (
-                    <p className="py-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
+                    <p className="py-4 text-center text-caption-xs text-ink-placeholder">
                       {st('set.servicesEmpty')}
                     </p>
                   ) : (
@@ -534,7 +534,7 @@ export default function SettingsPage() {
                       {serviceList.map((s) => (
                         <div
                           key={s.id}
-                          className="flex items-center gap-3 border-t border-[rgba(59,46,36,.06)] py-2.5 first:border-t-0"
+                          className="flex items-center gap-3 border-t border-[rgba(44,40,34,.06)] py-2.5 first:border-t-0"
                         >
                           <div className="min-w-0 flex-1">
                             <span className="text-caption font-semibold text-ink">
@@ -544,12 +544,12 @@ export default function SettingsPage() {
                               ) : null}
                             </span>
                             <div
-                              className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]"
+                              className="mt-[2px] text-caption-xs text-ink-placeholder"
                               style={numStyle}
                             >
                               {s.type === 'boarding' ? '寄养' : '洗护美容'} ·{' '}
                               {s.durationMin != null ? `${s.durationMin} 分钟` : '时长 —'} ·{' '}
-                              <span className="text-[rgba(59,46,36,.62)]">{fmtMoney(s.priceFen)}</span>
+                              <span className="text-ink-secondary">{fmtMoney(s.priceFen)}</span>
                               {s.boardingRoomType ? ` · 房型 ${s.boardingRoomType}` : ''}
                             </div>
                           </div>
@@ -570,7 +570,7 @@ export default function SettingsPage() {
                     </div>
                   )}
                   <div className="mt-3 flex items-center justify-between gap-3">
-                    <p className="text-caption-xs text-[rgba(59,46,36,.42)]">
+                    <p className="text-caption-xs text-ink-placeholder">
                       {st('set.servicesOffNote')}
                     </p>
                     <QuietButton onClick={() => setEditorFor('new')}>＋ 新增服务</QuietButton>
@@ -618,13 +618,13 @@ export default function SettingsPage() {
                   key={to}
                   to={to}
                   data-testid={tid}
-                  className="flex items-center gap-3 border-t border-[rgba(59,46,36,.06)] px-[17px] py-[13px] text-caption transition-colors duration-150 hover:bg-[rgba(59,46,36,.03)]"
+                  className="flex items-center gap-3 border-t border-[rgba(44,40,34,.06)] px-[17px] py-[13px] text-caption transition-colors duration-150 hover:bg-[rgba(44,40,34,.03)]"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="text-ink">{title}</div>
-                    <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]">{hint}</div>
+                    <div className="mt-[2px] text-caption-xs text-ink-placeholder">{hint}</div>
                   </div>
-                  <span className="shrink-0 text-caption font-bold text-[rgba(59,46,36,.62)]">{st('set.entryGo')}</span>
+                  <span className="shrink-0 text-caption font-bold text-ink-secondary">{st('set.entryGo')}</span>
                 </Link>
               ))}
             </div>
@@ -647,16 +647,16 @@ export default function SettingsPage() {
                     key={to}
                     to={to}
                     data-testid={tid}
-                    className="flex items-center gap-3 border-t border-[rgba(59,46,36,.06)] px-[17px] py-[13px] text-caption transition-colors duration-150 hover:bg-[rgba(59,46,36,.03)]"
+                    className="flex items-center gap-3 border-t border-[rgba(44,40,34,.06)] px-[17px] py-[13px] text-caption transition-colors duration-150 hover:bg-[rgba(44,40,34,.03)]"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="text-ink">{title}</div>
-                      <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]">{hint}</div>
+                      <div className="mt-[2px] text-caption-xs text-ink-placeholder">{hint}</div>
                     </div>
-                    <span className="shrink-0 text-caption font-bold text-[rgba(59,46,36,.62)]">{st('set.entryGo')}</span>
+                    <span className="shrink-0 text-caption font-bold text-ink-secondary">{st('set.entryGo')}</span>
                   </Link>
                 ))}
-                <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5 text-caption-xs text-ink-placeholder">
                   {st('set.portBornNote')}
                 </div>
               </div>

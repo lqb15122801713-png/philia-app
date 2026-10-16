@@ -5,7 +5,7 @@
  * 文案由 clerkGuideText(pathname) 按页定制（日结/流水/总览/财务各有专属说法）。
  */
 
-import { PawPrint, Calculator } from 'lucide-react'
+import { IdCard, Calculator } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 export default function RoleGuidePage({ title, hint }: { title: string; hint: string }) {
@@ -15,9 +15,9 @@ export default function RoleGuidePage({ title, hint }: { title: string; hint: st
       className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center"
       data-testid="role-guide-page"
     >
-      {/* emoji 禁令口径（RequireMerchant 先例）：lucide 墨色线图标 + 沉底暖圆 */}
+      {/* 禁爪印占位口径（Ready §4，RequireMerchant 同族）：IdCard 线性 icon + 沉底暖圆 */}
       <span className="flex h-16 w-16 items-center justify-center rounded-full bg-oak-light">
-        <PawPrint className="h-7 w-7 text-ink" strokeWidth={1.6} />
+        <IdCard className="h-7 w-7 text-ink" strokeWidth={1.5} />
       </span>
       <h1 className="mt-4 text-title-lg">{title}</h1>
       <p className="mt-2 text-body-sm text-ink-secondary">{hint}</p>

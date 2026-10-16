@@ -77,11 +77,11 @@ function wallPhotosOf(steps: StepListItem[]): PhotoViewerPhoto[] {
 function ParentViewNote() {
   return (
     <>
-      <div className="u3-panel-head border-t border-[rgba(59,46,36,.06)]">
+      <div className="u3-panel-head border-t border-[rgba(44,40,34,.06)]">
         <h3>{oc('mon.parentViewTitle')}</h3>
         <span className="aside">{oc('mon.parentViewAside')}</span>
       </div>
-      <p className="px-[17px] pb-4 text-caption leading-[1.7] text-[rgba(59,46,36,.62)]">
+      <p className="px-[17px] pb-4 text-caption leading-[1.7] text-ink-secondary">
         {oc('mon.parentViewBody')}
       </p>
     </>
@@ -296,13 +296,13 @@ export default function AppointmentMonitorPage() {
         </div>
       ) : detailQuery.isError || !appt ? (
         <div className="u3-panel px-[17px] py-14 text-center">
-          <div className="text-body-sm font-semibold text-[rgba(59,46,36,.62)]">
+          <div className="text-body-sm font-semibold text-ink-secondary">
             打不开这个监视页
           </div>
-          <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
+          <div className="mt-1 text-caption-xs text-ink-placeholder">
             {detailQuery.error instanceof Error ? detailQuery.error.message : '预约不存在或无权限'}
           </div>
-          {/* W1 退回修：异常分支补第四件出口（柠檬主钮回预约管理，同详情页口径） */}
+          {/* W1 退回修：异常分支补第四件出口（cream 主钮回预约管理，同详情页口径） */}
           <div className="mt-4 flex items-center justify-center gap-2.5">
             <LemonButton testid="monitor-back" onClick={() => navigate('/appointments')}>
               返回预约管理
@@ -317,10 +317,10 @@ export default function AppointmentMonitorPage() {
       ) : !inLiveFlow ? (
         /* 尚未开始 / 已取消 */
         <div className="u3-panel px-[17px] py-14 text-center">
-          <div className="text-body-sm font-semibold text-[rgba(59,46,36,.62)]">
+          <div className="text-body-sm font-semibold text-ink-secondary">
             {appt.status === 'cancelled' ? oc('mon.cancelledTitle') : oc('mon.notStartedTitle')}
           </div>
-          <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
+          <div className="mt-1 text-caption-xs text-ink-placeholder">
             {appt.status === 'cancelled'
               ? oc('mon.cancelledBody')
               : oc('mon.notStartedBody')}
@@ -347,11 +347,11 @@ export default function AppointmentMonitorPage() {
                 ))}
               </div>
             ) : steps.length === 0 ? (
-              <p className="px-[17px] pb-4 text-caption text-[rgba(59,46,36,.62)]">
+              <p className="px-[17px] pb-4 text-caption text-ink-secondary">
                 {oc('mon.stepsEmpty')}
               </p>
             ) : wallPhotos.length === 0 ? (
-              <p className="px-[17px] pb-4 text-caption text-[rgba(59,46,36,.62)]">
+              <p className="px-[17px] pb-4 text-caption text-ink-secondary">
                 {oc('mon.wallEmpty')}
               </p>
             ) : (
@@ -361,7 +361,7 @@ export default function AppointmentMonitorPage() {
                     key={p.id}
                     type="button"
                     onClick={() => setViewer({ photos: wallPhotos, index: i })}
-                    className="block h-24 w-32 overflow-hidden rounded-chip bg-[#FAF8F2] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+                    className="block h-24 w-32 overflow-hidden rounded-chip bg-canvas transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
                     aria-label={`照片 ${i + 1}`}
                   >
                     <img
@@ -392,14 +392,14 @@ export default function AppointmentMonitorPage() {
                 ))}
               </div>
             ) : steps.length === 0 ? (
-              <p className="px-[17px] pb-4 text-caption text-[rgba(59,46,36,.62)]">
+              <p className="px-[17px] pb-4 text-caption text-ink-secondary">
                 {oc('mon.stepsEmpty')}
               </p>
             ) : (
               <MonitorTimeline steps={steps} />
             )}
 
-            <div className="u3-panel-head border-t border-[rgba(59,46,36,.06)]">
+            <div className="u3-panel-head border-t border-[rgba(44,40,34,.06)]">
               <h3>快捷操作</h3>
             </div>
             <div className="flex gap-2.5 px-[17px] pb-4">
@@ -434,29 +434,29 @@ export default function AppointmentMonitorPage() {
 
             {/* 联系员工：就地展开员工信息小卡（staffList 真值，无电话字段不编造） */}
             {staffOpen ? (
-              <div className="mx-[17px] mb-4 rounded-[14px] bg-[#FAF8F2] px-3.5 py-2.5">
+              <div className="mx-[17px] mb-4 rounded-[14px] bg-canvas px-3.5 py-2.5">
                 {staff ? (
                   <>
                     <div className="flex items-center justify-between py-1">
-                      <span className="text-caption-xs text-[rgba(59,46,36,.42)]">姓名</span>
+                      <span className="text-caption-xs text-ink-placeholder">姓名</span>
                       <span className="text-caption font-semibold">{staff.name}</span>
                     </div>
                     <div className="flex items-center justify-between py-1">
-                      <span className="text-caption-xs text-[rgba(59,46,36,.42)]">角色</span>
+                      <span className="text-caption-xs text-ink-placeholder">角色</span>
                       <span className="text-caption font-semibold">{roleLabel(staff.role)}</span>
                     </div>
                     <div className="flex items-center justify-between py-1">
-                      <span className="text-caption-xs text-[rgba(59,46,36,.42)]">今日排班</span>
+                      <span className="text-caption-xs text-ink-placeholder">今日排班</span>
                       <span className="font-number text-caption font-semibold tabular-nums">
                         {todayScheduleLabel(staff)}
                       </span>
                     </div>
-                    <p className="pt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                    <p className="pt-1.5 text-caption-xs text-ink-placeholder">
                       {oc('mon.staffContactNote')}
                     </p>
                   </>
                 ) : (
-                  <p className="py-1.5 text-caption text-[rgba(59,46,36,.62)]">
+                  <p className="py-1.5 text-caption text-ink-secondary">
                     {oc('mon.staffUnassigned')}
                   </p>
                 )}

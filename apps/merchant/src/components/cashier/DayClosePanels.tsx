@@ -68,9 +68,9 @@ export function ShiftCard({
       </div>
       <div className="flex flex-wrap items-center gap-3 px-[17px] pb-4">
         {shift === undefined ? (
-          <span className="text-caption text-[rgba(59,46,36,.42)]">加载中…</span>
+          <span className="text-caption text-ink-placeholder">加载中…</span>
         ) : shift === null ? (
-          <span className="text-caption text-[rgba(59,46,36,.62)]" data-testid="close-shift-none">
+          <span className="text-caption text-ink-secondary" data-testid="close-shift-none">
             {cc('cashier.shiftEmpty')}
           </span>
         ) : (
@@ -82,16 +82,16 @@ export function ShiftCard({
                 {cc('cashier.shiftFrozenBadge')}
               </span>
             ) : null}
-            <span className="text-caption text-[rgba(59,46,36,.62)]">
+            <span className="text-caption text-ink-secondary">
               开班 <b className="font-number tabular-nums text-ink">{fmtDateTime(shift.openedAt)}</b>
             </span>
             {/* 片 3：开班备用金透出（端口默认额留口，NULL=未配置） */}
             {shift.openingFloatFen != null ? (
-              <span className="text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="close-shift-float">
+              <span className="text-caption-xs text-ink-placeholder" data-testid="close-shift-float">
                 开班备用金 <b className="font-number tabular-nums text-ink">¥{fenToYuan(shift.openingFloatFen)}</b>
               </span>
             ) : null}
-            <span className="text-caption-xs text-[rgba(59,46,36,.42)]">
+            <span className="text-caption-xs text-ink-placeholder">
               今日收银单数（全日口径）：
               <b className="font-number tabular-nums text-ink">{todayCashierCount ?? '…'}</b>
               {' '}· 冻结口径以日结单为准
@@ -101,7 +101,7 @@ export function ShiftCard({
               data-testid="close-shift-btn"
               disabled={closing}
               onClick={onCloseShift}
-              className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-[#FFFDF6] px-4 py-2 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+              className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-card px-4 py-2 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
             >
               <LogOut size={13} strokeWidth={1.8} aria-hidden />
               {closing ? '交接中…' : '交接班（闭班）'}
@@ -150,15 +150,15 @@ export function TenderSplitPanel({
         </div>
         <div className="cell">
           <div className="cap">储值（参考）</div>
-          <div className="v text-[rgba(59,46,36,.62)]" data-testid="tender-split-sv">
+          <div className="v text-ink-secondary" data-testid="tender-split-sv">
             {tender ? `¥${fenToYuan(tender.tender.storedValueFen)}` : '…'}
           </div>
         </div>
       </div>
       {/* 次卡等值参考行（原 DayCloseForm 分列行迁此——裁定①口径小字不动） */}
-      <p className="px-[17px] pb-4 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]" data-testid="dayclose-split">
+      <p className="px-[17px] pb-4 text-caption-xs leading-relaxed text-ink-placeholder" data-testid="dayclose-split">
         {cc('cashier.tenderSplitRef')}{' '}
-        <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{tender ? fenToYuan(tender.tender.passFen) : '…'}</b>
+        <b className="font-number tabular-nums text-ink-secondary">¥{tender ? fenToYuan(tender.tender.passFen) : '…'}</b>
         {' ｜ 参考列（次卡/储值）永不计入已收'}
       </p>
     </div>
@@ -253,7 +253,7 @@ export function DayCloseForm({
           data-testid="dayclose-blind-toggle"
           onClick={() => onBlindChange(!blind)}
           className={`ml-auto rounded-full px-3 py-1 text-caption-xs font-semibold transition-colors ${
-            blind ? 'bg-[#3B2E24] text-[#FAF8F2]' : 'bg-[#FFFDF6] text-[rgba(59,46,36,.62)] shadow-[0_0_0_1px_rgba(59,46,36,.12)]'
+            blind ? 'bg-ink text-brand-cta-on' : 'bg-card text-ink-secondary shadow-[0_0_0_1px_rgba(44,40,34,.12)]'
           }`}
         >
           {cc('cashier.blindClose')}
@@ -262,7 +262,7 @@ export function DayCloseForm({
       </div>
       <div className="px-[17px] pb-4">
         {overrideShiftId ? (
-          <p className="mb-2.5 flex items-center gap-2 rounded-[10px] bg-[#F1E8D4] px-3 py-2 text-caption-xs text-[rgba(59,46,36,.62)]">
+          <p className="mb-2.5 flex items-center gap-2 rounded-[10px] bg-sunken px-3 py-2 text-caption-xs text-ink-secondary">
             拆箱后重新日结（全日口径；追溯班次 <b className="font-number tabular-nums">{overrideShiftId.slice(-6)}</b>）
             <button type="button" className="ml-auto font-semibold text-ink" onClick={onCancelOverride}>
               取消
@@ -270,7 +270,7 @@ export function DayCloseForm({
           </p>
         ) : null}
         {blind ? (
-          <p className="mb-2.5 rounded-[10px] bg-[#F1E8D4] px-3 py-2 text-caption-xs text-[rgba(59,46,36,.62)]" data-testid="dayclose-blind-note">
+          <p className="mb-2.5 rounded-[10px] bg-sunken px-3 py-2 text-caption-xs text-ink-secondary" data-testid="dayclose-blind-note">
             {cc('cashier.blindCloseNote')}
           </p>
         ) : null}
@@ -291,7 +291,7 @@ export function DayCloseForm({
                 placeholder="0.00"
                 value={actualInput}
                 onChange={(e) => setActualInput(e.target.value)}
-                className="w-full rounded-[8px] bg-[#FFFDF6] px-2.5 py-1.5 font-number text-[17px] font-bold tabular-nums text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+                className="w-full rounded-[8px] bg-card px-2.5 py-1.5 font-number text-[17px] font-bold tabular-nums text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
               />
             </div>
           </div>
@@ -308,7 +308,7 @@ export function DayCloseForm({
                 placeholder="未点"
                 value={actualWechatInput}
                 onChange={(e) => setActualWechatInput(e.target.value)}
-                className="w-full rounded-[8px] bg-[#FFFDF6] px-2.5 py-1.5 font-number text-caption font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+                className="w-full rounded-[8px] bg-card px-2.5 py-1.5 font-number text-caption font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
               />
             </div>
           </div>
@@ -321,15 +321,15 @@ export function DayCloseForm({
                 placeholder="未点"
                 value={actualAlipayInput}
                 onChange={(e) => setActualAlipayInput(e.target.value)}
-                className="w-full rounded-[8px] bg-[#FFFDF6] px-2.5 py-1.5 font-number text-caption font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+                className="w-full rounded-[8px] bg-card px-2.5 py-1.5 font-number text-caption font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
               />
             </div>
           </div>
         </div>
 
         {/* 差异（非零红字；盲交=提交后揭晓） */}
-        <div className="mt-2 flex items-baseline justify-between rounded-[10px] bg-[#FAF8F2] px-3 py-2">
-          <span className="text-caption text-[rgba(59,46,36,.62)]">差异（实点 − 账面）</span>
+        <div className="mt-2 flex items-baseline justify-between rounded-[10px] bg-canvas px-3 py-2">
+          <span className="text-caption text-ink-secondary">差异（实点 − 账面）</span>
           <b
             className={`font-number text-[17px] font-bold tabular-nums ${diff !== null && diff !== 0 ? 'text-danger-deep' : 'text-ink'}`}
             data-testid="dayclose-diff"
@@ -346,10 +346,10 @@ export function DayCloseForm({
           maxLength={200}
           value={diffNote}
           onChange={(e) => setDiffNote(e.target.value)}
-          className={`mt-2.5 w-full rounded-[10px] bg-[#FFFDF6] px-3 py-2 text-caption text-ink placeholder:text-[rgba(59,46,36,.3)] focus:outline-none ${
+          className={`mt-2.5 w-full rounded-[10px] bg-card px-3 py-2 text-caption text-ink placeholder:text-[rgba(44,40,34,.3)] focus:outline-none ${
             diffNoteRequired
               ? 'shadow-[0_0_0_1.5px_#B4502E] focus:shadow-[0_0_0_1.5px_#B4502E]'
-              : 'shadow-[0_0_0_1px_rgba(59,46,36,.12)] focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]'
+              : 'shadow-[0_0_0_1px_rgba(44,40,34,.12)] focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]'
           }`}
         />
         {diffNoteRequired ? (
@@ -367,7 +367,7 @@ export function DayCloseForm({
           maxLength={200}
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          className="mt-2.5 w-full rounded-[10px] bg-[#FFFDF6] px-3 py-2 text-caption text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+          className="mt-2.5 w-full rounded-[10px] bg-card px-3 py-2 text-caption text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] placeholder:text-[rgba(44,40,34,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
         />
         <button
           type="button"
@@ -389,7 +389,7 @@ export function DayCloseForm({
           {submitting ? '冻结中…' : overrideShiftId ? '重新日结并冻结' : '日结并冻结全日账目'}
         </button>
         {shift == null && overrideShiftId === null ? (
-          <p className="mt-1.5 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
+          <p className="mt-1.5 text-center text-caption-xs text-ink-placeholder">
             {cc('cashier.dayCloseFullNote')}
           </p>
         ) : null}
@@ -437,7 +437,7 @@ export function RefundDayPanel({
             ))}
           </div>
         ) : !stats ? (
-          <p className="py-2 text-caption text-[rgba(59,46,36,.62)]">退款统计暂不可用</p>
+          <p className="py-2 text-caption text-ink-secondary">退款统计暂不可用</p>
         ) : (
           <>
             <div className="u3-kv !px-0">
@@ -464,19 +464,19 @@ export function RefundDayPanel({
               </div>
             </div>
             {/* 支付段退款分列（V2 同法分列；次卡/储值回补不计现金口径） */}
-            <p className="mt-2 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]" data-testid="refund-day-split">
+            <p className="mt-2 text-caption-xs leading-relaxed text-ink-placeholder" data-testid="refund-day-split">
               退款分列：现金{' '}
-              <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(stats.segments.cashFen)}</b>
+              <b className="font-number tabular-nums text-ink-secondary">¥{fenToYuan(stats.segments.cashFen)}</b>
               {' · 微信 '}
-              <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(stats.segments.wechatFen)}</b>
+              <b className="font-number tabular-nums text-ink-secondary">¥{fenToYuan(stats.segments.wechatFen)}</b>
               {' · 支付宝 '}
-              <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(stats.segments.alipayFen)}</b>
+              <b className="font-number tabular-nums text-ink-secondary">¥{fenToYuan(stats.segments.alipayFen)}</b>
               {' ｜ 非现金回补：次卡次数折抵 '}
-              <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(stats.segments.passFen)}</b>
+              <b className="font-number tabular-nums text-ink-secondary">¥{fenToYuan(stats.segments.passFen)}</b>
               {' · 储值余额回补 '}
-              <b className="font-number tabular-nums text-[rgba(59,46,36,.62)]">¥{fenToYuan(stats.segments.storedValueFen)}</b>
+              <b className="font-number tabular-nums text-ink-secondary">¥{fenToYuan(stats.segments.storedValueFen)}</b>
             </p>
-            <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+            <p className="mt-1.5 text-caption-xs text-ink-placeholder">
               {cc('cashier.refundCrossDayNote')}
             </p>
           </>
@@ -527,7 +527,7 @@ export function CashMovePanel({ shift }: { shift: ShiftInfo | null | undefined }
       </div>
       <div className="px-[17px] pb-4">
         {shift === null ? (
-          <p className="mb-2 rounded-[10px] bg-[#F1E8D4] px-3 py-2 text-caption-xs text-[rgba(59,46,36,.62)]">
+          <p className="mb-2 rounded-[10px] bg-sunken px-3 py-2 text-caption-xs text-ink-secondary">
             {cc('cashier.cashMoveNoShift')}
           </p>
         ) : null}
@@ -547,7 +547,7 @@ export function CashMovePanel({ shift }: { shift: ShiftInfo | null | undefined }
                 data-testid={`cash-move-kind-${k}`}
                 onClick={() => setKind(k)}
                 className={`rounded-full px-3.5 py-[7px] text-caption transition-colors ${
-                  kind === k ? 'bg-[#3B2E24] font-semibold text-[#FAF8F2]' : 'text-[rgba(59,46,36,.6)]'
+                  kind === k ? 'bg-ink font-semibold text-brand-cta-on' : 'text-[rgba(44,40,34,.6)]'
                 }`}
               >
                 {label}
@@ -560,7 +560,7 @@ export function CashMovePanel({ shift }: { shift: ShiftInfo | null | undefined }
             placeholder="金额 ¥"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-[110px] rounded-[8px] bg-[#FFFDF6] px-2.5 py-[7px] text-right font-number text-caption font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+            className="w-[110px] rounded-[8px] bg-card px-2.5 py-[7px] text-right font-number text-caption font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] placeholder:text-[rgba(44,40,34,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
           />
           <input
             data-testid="cash-move-reason"
@@ -568,7 +568,7 @@ export function CashMovePanel({ shift }: { shift: ShiftInfo | null | undefined }
             placeholder="事由（必填）"
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            className="min-w-0 flex-1 rounded-[8px] bg-[#FFFDF6] px-2.5 py-[7px] text-caption text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+            className="min-w-0 flex-1 rounded-[8px] bg-card px-2.5 py-[7px] text-caption text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] placeholder:text-[rgba(44,40,34,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
           />
           <button
             type="button"
@@ -594,7 +594,7 @@ export function CashMovePanel({ shift }: { shift: ShiftInfo | null | undefined }
               ))}
             </div>
           ) : (listQ.data ?? []).length === 0 ? (
-            <p className="py-2 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="cash-move-empty">
+            <p className="py-2 text-caption-xs text-ink-placeholder" data-testid="cash-move-empty">
               {cc('cashier.cashMoveEmpty')}
             </p>
           ) : (
@@ -602,7 +602,7 @@ export function CashMovePanel({ shift }: { shift: ShiftInfo | null | undefined }
               <div
                 key={m.id}
                 data-testid={`cash-move-row-${m.id}`}
-                className="flex items-center gap-2 border-b border-dashed border-[rgba(59,46,36,.09)] py-1.5 text-caption-xs last:border-b-0"
+                className="flex items-center gap-2 border-b border-dashed border-[rgba(44,40,34,.09)] py-1.5 text-caption-xs last:border-b-0"
               >
                 <span className={`font-semibold ${m.kind === 'paid_out' ? 'text-danger-deep' : 'text-ink'}`}>
                   {m.kind === 'paid_in' ? '存入' : '取出'}
@@ -610,8 +610,8 @@ export function CashMovePanel({ shift }: { shift: ShiftInfo | null | undefined }
                 <b className="font-number tabular-nums text-ink">
                   {m.kind === 'paid_in' ? '+' : '−'}¥{fenToYuan(m.amountFen)}
                 </b>
-                <span className="min-w-0 flex-1 truncate text-[rgba(59,46,36,.62)]">{m.reason}</span>
-                <span className="font-number tabular-nums text-[rgba(59,46,36,.42)]">
+                <span className="min-w-0 flex-1 truncate text-ink-secondary">{m.reason}</span>
+                <span className="font-number tabular-nums text-ink-placeholder">
                   {fmtDateTime(m.createdAt)} · {m.operatorName ?? '—'}
                 </span>
               </div>
@@ -665,7 +665,7 @@ export function DayCloseList({
           ))}
         </div>
       ) : (rows ?? []).length === 0 ? (
-        <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-8 text-center text-body-sm text-[rgba(59,46,36,.62)]">
+        <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-8 text-center text-body-sm text-ink-secondary">
           {cc('cashier.dayCloseEmpty')}
         </p>
       ) : (
@@ -696,7 +696,7 @@ export function DayCloseList({
                     onClick={() => onDetail(r)}
                   >
                     <td className="u1-num font-semibold">{r.bizDate}</td>
-                    <td className="text-[rgba(59,46,36,.62)]">
+                    <td className="text-ink-secondary">
                       {isReversalRow ? (
                         <>
                           冲正单
@@ -729,7 +729,7 @@ export function DayCloseList({
                         <span className="u3-st live">冻结生效</span>
                       )}
                     </td>
-                    <td className="text-[rgba(59,46,36,.62)]">{r.createdByName ?? '—'}</td>
+                    <td className="text-ink-secondary">{r.createdByName ?? '—'}</td>
                     <td onClick={(e) => e.stopPropagation()}>
                       <span className="inline-flex items-center gap-2.5">
                         {/* 拆箱重结：reversed 的原单（close）可对同班次重新日结 */}
@@ -842,15 +842,15 @@ export function HandoverBlock({ shiftId }: { shiftId: string }) {
 
   return (
     <div className="mt-3" data-testid={`handover-log-${shiftId}`}>
-      <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{cc('cashier.handoverLogTitle')}</div>
+      <div className="mb-1 text-caption-xs font-semibold text-ink-placeholder">{cc('cashier.handoverLogTitle')}</div>
       {handoverQ.isPending ? (
         <Skeleton className="h-12" />
       ) : handoverQ.isError ? (
-        <p className="text-caption-xs text-[rgba(59,46,36,.42)]">{cc('cashier.handoverLogLoadFail')}</p>
+        <p className="text-caption-xs text-ink-placeholder">{cc('cashier.handoverLogLoadFail')}</p>
       ) : !h ? (
-        <p className="text-caption-xs text-[rgba(59,46,36,.42)]">{cc('cashier.handoverLogEmpty')}</p>
+        <p className="text-caption-xs text-ink-placeholder">{cc('cashier.handoverLogEmpty')}</p>
       ) : (
-        <div className="rounded-[10px] bg-[#FAF8F2] px-3 py-2 text-caption-xs text-[rgba(59,46,36,.62)]">
+        <div className="rounded-[10px] bg-canvas px-3 py-2 text-caption-xs text-ink-secondary">
           <div className="mb-1 font-semibold text-ink">
             {cc('cashier.handoverLogFromTo', {
               from: nameOf(h.fromUserId) ?? '—',
@@ -874,7 +874,7 @@ export function HandoverBlock({ shiftId }: { shiftId: string }) {
           {h.confirmedAt ? (
             <div className="mt-1.5 flex items-center gap-1.5 text-caption-xs" data-testid={`handover-confirmed-${shiftId}`}>
               <span className="u3-st live">{cc('cashier.handoverConfirmedNote')}</span>
-              <span className="text-[rgba(59,46,36,.62)]">
+              <span className="text-ink-secondary">
                 {nameOf(h.confirmedBy) ?? '—'} · <span className="font-number tabular-nums">{fmtDateTime(h.confirmedAt)}</span>
               </span>
             </div>
@@ -978,8 +978,8 @@ export function DayCloseDetailDialog({
         {/* 冲正前后值快照（裁定④：含操作人/时间/原因/前后值） */}
         {snapshot ? (
           <div className="mt-3">
-            <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">前后值快照</div>
-            <div className="rounded-[10px] bg-[#FAF8F2] px-3 py-2 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]">
+            <div className="mb-1 text-caption-xs font-semibold text-ink-placeholder">前后值快照</div>
+            <div className="rounded-[10px] bg-canvas px-3 py-2 font-number text-caption-xs tabular-nums text-ink-secondary">
               <div>冲正前状态：{(snapshot.before?.status as string) ?? '—'} · 账面 ¥{fenToYuan(fz((snapshot.before?.bookCashFen as number | null) ?? null))} · 实点 ¥{fenToYuan(fz((snapshot.before?.actualCashFen as number | null) ?? null))}</div>
               <div className="mt-1">冲正后：{(snapshot.after?.note as string) ?? (snapshot.after?.status as string) ?? '—'}</div>
               <div className="mt-1">操作人 {snapshot.operatorId ?? '—'} · {snapshot.at ? fmtDateTime(new Date(snapshot.at)) : '—'}</div>
@@ -990,10 +990,10 @@ export function DayCloseDetailDialog({
         {/* 片 3：现金收支调整额 + 明细（账面现金=流水现金+调整额，快照透出） */}
         {snapshot && (snapshot.cashAdjustFen ?? 0) !== 0 ? (
           <div className="mt-3">
-            <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+            <div className="mb-1 text-caption-xs font-semibold text-ink-placeholder">
               {cc('cashier.cashAdjustLabel')}
             </div>
-            <div className="rounded-[10px] bg-[#FAF8F2] px-3 py-2 text-caption-xs text-[rgba(59,46,36,.62)]">
+            <div className="rounded-[10px] bg-canvas px-3 py-2 text-caption-xs text-ink-secondary">
               <b className="font-number tabular-nums text-ink" data-testid="dayclose-cash-adjust">
                 {snapshot.cashAdjustFen! > 0 ? '+' : '−'}¥{fenToYuan(Math.abs(snapshot.cashAdjustFen!))}
               </b>
@@ -1009,15 +1009,15 @@ export function DayCloseDetailDialog({
         {/* 片 3：折扣/抹零单列（当日 settled 单聚合快照） */}
         {snapshot?.discountStats ? (
           <div className="mt-3">
-            <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+            <div className="mb-1 text-caption-xs font-semibold text-ink-placeholder">
               {cc('cashier.discountStatsTitle')}
             </div>
-            <div className="rounded-[10px] bg-[#FAF8F2] px-3 py-2 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]" data-testid="dayclose-discount-stats">
+            <div className="rounded-[10px] bg-canvas px-3 py-2 font-number text-caption-xs tabular-nums text-ink-secondary" data-testid="dayclose-discount-stats">
               折扣单 <b className="text-ink">{snapshot.discountStats.discountedBills}</b> 张
               {' · 折扣额 '}<b className="text-ink">¥{fenToYuan(snapshot.discountStats.discountFen)}</b>
               {' · 抹零额 '}<b className="text-ink">¥{fenToYuan(snapshot.discountStats.roundingFen)}</b>
               {snapshot.discountStats.freebieNote ? (
-                <div className="mt-1 font-sans text-[rgba(59,46,36,.42)]">{snapshot.discountStats.freebieNote}</div>
+                <div className="mt-1 font-sans text-ink-placeholder">{snapshot.discountStats.freebieNote}</div>
               ) : null}
             </div>
           </div>
@@ -1026,9 +1026,9 @@ export function DayCloseDetailDialog({
         {/* 调整记录（adjustDayClose 只增不改） */}
         {adjustments.length > 0 ? (
           <div className="mt-3">
-            <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">调整记录（{adjustments.length}）</div>
+            <div className="mb-1 text-caption-xs font-semibold text-ink-placeholder">调整记录（{adjustments.length}）</div>
             {adjustments.map((a, i) => (
-              <div key={i} className="rounded-[10px] bg-[#FAF8F2] px-3 py-2 text-caption-xs text-[rgba(59,46,36,.62)] [&+&]:mt-1.5">
+              <div key={i} className="rounded-[10px] bg-canvas px-3 py-2 text-caption-xs text-ink-secondary [&+&]:mt-1.5">
                 <span className="font-number tabular-nums">{fmtDateTime(new Date(a.at))}</span> · {a.note}
               </div>
             ))}
@@ -1092,24 +1092,24 @@ export function CloseReasonDialog({
         </>
       }
     >
-      <div className="rounded-[14px] bg-[#FAF8F2] px-3.5 py-3">
+      <div className="rounded-[14px] bg-canvas px-3.5 py-3">
         <div className="font-number text-caption font-semibold tabular-nums">
           {target.bizDate} · 班次 {target.shiftId.slice(-6)}
         </div>
-        <div className="mt-1 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]">
+        <div className="mt-1 font-number text-caption-xs tabular-nums text-ink-secondary">
           账面 ¥{fenToYuan(fz(target.bookCashFen))} · 实点 ¥{fenToYuan(fz(target.actualCashFen))} · 差异{' '}
           {fz(target.diffFen) === 0 ? '¥0' : `${fz(target.diffFen) > 0 ? '+' : '−'}¥${fenToYuan(Math.abs(fz(target.diffFen)))}`}
         </div>
       </div>
       <textarea
-        className="mt-3 min-h-[76px] w-full resize-none rounded-[14px] bg-[#FFFDF6] px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+        className="mt-3 min-h-[76px] w-full resize-none rounded-[14px] bg-card px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] placeholder:text-[rgba(44,40,34,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
         data-testid="dayclose-reason-input"
         placeholder={isReverse ? '冲正原因（必填，留痕）' : '调整备注（必填；只增不改，原冻结数字不涂改）'}
         maxLength={200}
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
-      <p className="mt-1.5 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
+      <p className="mt-1.5 text-caption-xs leading-relaxed text-ink-placeholder">
         {isReverse
           ? cc('cashier.reverseCloseNote')
           : cc('cashier.adjustNote')}

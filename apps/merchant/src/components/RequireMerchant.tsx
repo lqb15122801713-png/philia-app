@@ -11,7 +11,7 @@
  */
 
 import { useMe } from '@philia/shared'
-import { PawPrint } from 'lucide-react'
+import { IdCard } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 
@@ -40,9 +40,9 @@ export default function RequireMerchant({ children }: { children: ReactNode }) {
   if (!isMerchant) {
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center px-6 text-center">
-        {/* emoji 禁令口径（员工端 E-46 先例）：lucide 墨色线图标 + 沉底暖圆 */}
+        {/* 禁爪印占位口径（Ready §4，员工端片2 RequireStaff 先例）：IdCard 线性 icon + 沉底暖圆 */}
         <span className="flex h-16 w-16 items-center justify-center rounded-full bg-oak-light">
-          <PawPrint className="h-7 w-7 text-ink" strokeWidth={1.6} />
+          <IdCard className="h-7 w-7 text-ink" strokeWidth={1.5} />
         </span>
         <h1 className="mt-4 text-title-lg">需要商家账号</h1>
         <p className="mt-2 text-body-sm text-ink-secondary">

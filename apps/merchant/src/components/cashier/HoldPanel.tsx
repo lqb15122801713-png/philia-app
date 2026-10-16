@@ -3,7 +3,7 @@
  *
  * - P4 挂单卡：挂单号 Montserrat 12 + 会员名/散客 · 行数 + 备注行（有 note 才渲染，
  *   测试件标注醒目位，PR-3 C2b）+ 挂出时间 + 金额 +
- *   刚挂的右上角柠檬圆点；点卡=取单（resume 恢复整单）；⋯ = 撤单入口
+ *   刚挂的右上角 cream 圆点；点卡=取单（resume 恢复整单）；⋯ = 撤单入口
  *   （owner-only，manager 置灰 + title 原因）；空 = 浅木圆牌「无挂单」；
  * - P7 流水行：单号短显 Montserrat + 买家 + 金额右对齐 Montserrat + 状态/方式签
  *   （已收薄荷=首支付方式 / 撤单灰 / 挂单·开单浅木）；最近 5 条 + 全部 › 进
@@ -28,12 +28,12 @@ import {
 function PanelError({ onRetry, testid }: { onRetry: () => void; testid: string }) {
   return (
     <div className="py-4 text-center">
-      <p className="text-caption-xs text-[rgba(59,46,36,.62)]">加载失败</p>
+      <p className="text-caption-xs text-ink-secondary">加载失败</p>
       <button
         type="button"
         data-testid={testid}
         onClick={onRetry}
-        className="mt-2 rounded-full bg-[#FFFDF6] px-3 py-1.5 text-caption-xs font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.09)]"
+        className="mt-2 rounded-full bg-card px-3 py-1.5 text-caption-xs font-semibold text-ink shadow-[0_0_0_1px_rgba(44,40,34,.09)]"
       >
         重新加载
       </button>
@@ -59,7 +59,7 @@ export default function HoldPanel({
   loading: boolean
   error: boolean
   onRetry: () => void
-  /** 刚挂出的单号（柠檬点标记） */
+  /** 刚挂出的单号（cream 点标记） */
   freshHeldNo: string | null
   onResume: (bill: BillListRow) => void
   onVoid: (bill: BillListRow) => void
@@ -72,12 +72,12 @@ export default function HoldPanel({
     <>
       {/* ---- 挂单队列 ---- */}
       <section
-        className="rounded-[20px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(59,46,36,.09)]"
+        className="rounded-[20px] bg-card p-3.5 shadow-[0_0_0_1px_rgba(44,40,34,.09)]"
         data-testid="cashier-hold-queue"
       >
         <div className="mb-2.5 flex items-center justify-between">
           <b className="text-body-sm">挂单队列</b>
-          <span className="inline-flex items-center rounded-full bg-[#F1E8D4] px-2.5 py-[3px] font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]">
+          <span className="inline-flex items-center rounded-full bg-sunken px-2.5 py-[3px] font-number text-caption-xs tabular-nums text-ink-secondary">
             {held?.length ?? 0} 单
           </span>
         </div>
@@ -92,7 +92,7 @@ export default function HoldPanel({
           <PanelError onRetry={onRetry} testid="cashier-held-retry" />
         ) : (held ?? []).length === 0 ? (
           <div
-            className="rounded-[16px] bg-[#F1E8D4] px-3.5 py-[22px] text-center text-caption-xs text-[rgba(59,46,36,.42)]"
+            className="rounded-[16px] bg-sunken px-3.5 py-[22px] text-center text-caption-xs text-ink-placeholder"
             data-testid="cashier-held-empty"
           >
             {cc('cashier.holdEmpty')}
@@ -111,7 +111,7 @@ export default function HoldPanel({
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') onResume(b)
                 }}
-                className="relative cursor-pointer rounded-[16px] bg-[#FFFDF6] px-3.5 py-3 shadow-[0_0_0_1px_rgba(59,46,36,.09)] transition-shadow hover:shadow-[0_0_0_1px_rgba(59,46,36,.18)]"
+                className="relative cursor-pointer rounded-[16px] bg-card px-3.5 py-3 shadow-[0_0_0_1px_rgba(44,40,34,.09)] transition-shadow hover:shadow-[0_0_0_1px_rgba(44,40,34,.18)]"
               >
                 {b.billNo === freshHeldNo ? (
                   <span className="absolute right-3 top-2.5 h-[7px] w-[7px] rounded-full bg-brand-primary" />
@@ -133,11 +133,11 @@ export default function HoldPanel({
                 </div>
                 {/* PR-3 C2b：备注行（保留标测试件标注「测试件勿动」在队列即醒目，PD-02 反对意见①） */}
                 {b.note ? (
-                  <div className="mt-1 truncate text-caption-xs text-[rgba(59,46,36,.55)]" title={b.note}>
+                  <div className="mt-1 truncate text-caption-xs text-ink-secondary" title={b.note}>
                     {b.note}
                   </div>
                 ) : null}
-                <div className="mt-1.5 flex items-center justify-between text-caption-xs text-[rgba(59,46,36,.42)]">
+                <div className="mt-1.5 flex items-center justify-between text-caption-xs text-ink-placeholder">
                   <span>{b.heldAt ? <><span className="font-number tabular-nums">{hhmm(b.heldAt)}</span>{' 挂出'}</> : '—'}</span>
                   <span className="font-number font-semibold tabular-nums text-ink">
                     ¥{fenToYuan(b.payableFen)}
@@ -153,7 +153,7 @@ export default function HoldPanel({
                     e.stopPropagation()
                     onVoid(b)
                   }}
-                  className="absolute bottom-2 right-2 rounded-full p-1 text-[rgba(59,46,36,.3)] transition-colors hover:bg-[rgba(59,46,36,.05)] hover:text-[rgba(59,46,36,.6)]"
+                  className="absolute bottom-2 right-2 rounded-full p-1 text-[rgba(44,40,34,.3)] transition-colors hover:bg-[rgba(44,40,34,.05)] hover:text-ink-secondary"
                 >
                   <MoreHorizontal size={15} strokeWidth={1.8} aria-hidden />
                 </button>
@@ -164,7 +164,7 @@ export default function HoldPanel({
                 type="button"
                 data-testid="cashier-hold-expand"
                 onClick={() => setHoldExpanded(true)}
-                className="rounded-[16px] bg-[#F1E8D4] px-3.5 py-2.5 text-center text-caption-xs font-semibold text-[rgba(59,46,36,.62)] transition-colors hover:text-ink"
+                className="rounded-[16px] bg-sunken px-3.5 py-2.5 text-center text-caption-xs font-semibold text-ink-secondary transition-colors hover:text-ink"
               >
                 {cc('cashier.holdExpand', { n: (held ?? []).length })}
               </button>
@@ -174,25 +174,25 @@ export default function HoldPanel({
                 type="button"
                 data-testid="cashier-hold-collapse"
                 onClick={() => setHoldExpanded(false)}
-                className="rounded-[16px] bg-[#F1E8D4] px-3.5 py-2.5 text-center text-caption-xs font-semibold text-[rgba(59,46,36,.62)] transition-colors hover:text-ink"
+                className="rounded-[16px] bg-sunken px-3.5 py-2.5 text-center text-caption-xs font-semibold text-ink-secondary transition-colors hover:text-ink"
               >
                 {cc('cashier.holdCollapse')}
               </button>
             ) : null}
           </div>
         )}
-        <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]">{cc('cashier.holdFooter')}</p>
+        <p className="mt-2 text-caption-xs text-ink-placeholder">{cc('cashier.holdFooter')}</p>
       </section>
 
       {/* ---- 今日流水（最近 5 条；clerk 隐藏整块——矩阵总规则②） ---- */}
       {hideToday ? null : (
       <section
-        className="rounded-[20px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(59,46,36,.09)]"
+        className="rounded-[20px] bg-card p-3.5 shadow-[0_0_0_1px_rgba(44,40,34,.09)]"
         data-testid="cashier-today-flow"
       >
         <div className="mb-1.5 flex items-center justify-between">
           <b className="text-body-sm">今日流水</b>
-          <Link to="/cashier/records" className="text-caption-xs text-[rgba(59,46,36,.42)] hover:text-ink">
+          <Link to="/cashier/records" className="text-caption-xs text-ink-placeholder hover:text-ink">
             全部 ›
           </Link>
         </div>
@@ -206,7 +206,7 @@ export default function HoldPanel({
         ) : error ? (
           <PanelError onRetry={onRetry} testid="cashier-flow-retry" />
         ) : recent.length === 0 ? (
-          <p className="py-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">{cc('cashier.flowEmpty')}</p>
+          <p className="py-4 text-center text-caption-xs text-ink-placeholder">{cc('cashier.flowEmpty')}</p>
         ) : (
           <div>
             {recent.map((b) => {
@@ -217,23 +217,23 @@ export default function HoldPanel({
                   ? reversed
                     ? { cls: 'u3-st done', label: '已冲正' }
                     : {
-                        cls: 'bg-[#2E2318] text-[#F2DFA6]',
+                        cls: 'bg-ink text-brand-primary',
                         // R6-1：组合支付方式签全显（现金+微信），不再只显首方式
                         label: b.methods.length > 0 ? b.methods.map((m) => PAY_METHOD_LABEL[m] ?? m).join('+') : '已收',
                       }
                   : b.status === 'reversal'
                     ? { cls: 'u3-st done', label: '冲正' }
                     : voided
-                      ? { cls: 'bg-[rgba(59,46,36,.08)] text-[rgba(59,46,36,.42)]', label: '撤' }
-                      : { cls: 'bg-[#F1E8D4] text-[rgba(59,46,36,.62)]', label: BILL_STATUS_CHIP[b.status]?.label ?? b.status }
+                      ? { cls: 'bg-[rgba(44,40,34,.08)] text-ink-placeholder', label: '撤' }
+                      : { cls: 'bg-sunken text-ink-secondary', label: BILL_STATUS_CHIP[b.status]?.label ?? b.status }
               return (
                 <div
                   key={b.id}
                   data-testid={`cashier-flow-${b.billNo}`}
-                  className={`flex items-center gap-2 border-b border-dashed border-[rgba(59,46,36,.09)] py-[9px] text-caption-xs last:border-b-0 ${voided ? 'opacity-55' : ''}`}
+                  className={`flex items-center gap-2 border-b border-dashed border-[rgba(44,40,34,.09)] py-[9px] text-caption-xs last:border-b-0 ${voided ? 'opacity-55' : ''}`}
                 >
                   <span className="font-number font-semibold tabular-nums">{shortBillNo(b.billNo)}</span>
-                  <span className="min-w-0 flex-1 truncate text-[rgba(59,46,36,.6)]">
+                  <span className="min-w-0 flex-1 truncate text-ink-secondary">
                     {b.buyerName}
                     {voided ? ' · 已撤单' : ''}
                   </span>

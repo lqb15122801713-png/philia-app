@@ -2,8 +2,8 @@
  * 单约监控 · 六步进度（U3 任务 N · 规格书 §13 · 母本 754-814 行右栏）。
  *
  * 由 T4.2 的「共享 StepTimeline 视觉 + 行内打标钮」改为 U3 本地档 u3-stepv
- * 竖向步进（index.css 同义类：done 深棕墨圆点 / now 淡黄圆点 / future 纸面点，
- * 2px 墨灰连接线；future 点本组件补卡其描边 #B9A482，三态同客户端七节点），行内容：
+ * 竖向步进（index.css 同义类：done 深棕墨圆点 / now cream 圆点 / future 纸面点，
+ * 2px 墨灰连接线；future 点本组件补 line.strong 族描边 rgba(44,40,34,.22)，三态同客户端七节点），行内容：
  * - done：HH:MM · N 张；
  * - now：进行中 · X/Y 张（Y=maxPhotos，confirm 步 0-0 不显示张数）；
  * - 未到：「未到」；confirm 步补「完成后家长收到通知」；
@@ -69,7 +69,7 @@ export function MonitorTimeline({ steps }: { steps: StepListItem[] }) {
             <i
               className="dt"
               style={
-                rowCls === '' ? { boxShadow: '0 0 0 1px #B9A482' } : undefined
+                rowCls === '' ? { boxShadow: '0 0 0 1px rgba(44,40,34,.22)' } : undefined
               }
             />
             <div className="tx">

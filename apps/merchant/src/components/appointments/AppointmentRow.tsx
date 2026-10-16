@@ -89,7 +89,7 @@ export function AppointmentRow({
       {/* 宠物 + 客户（副行：昵称 · 尾号，customerPhoneTail 现成字段） */}
       <td>
         <span className="font-semibold">{item.petName ?? '宠物'}</span>
-        <span className="mt-0.5 block text-[11px] text-[rgba(59,46,36,.42)]">
+        <span className="mt-0.5 block text-[11px] text-ink-placeholder">
           {customerLabel(item.customerName, item.customerPhoneTail)}
         </span>
       </td>
@@ -101,7 +101,7 @@ export function AppointmentRow({
       <td>
         {item.staffName ?? '未指派'}
         {srcLabel ? (
-          <span className="ml-1 text-[11px] text-[rgba(59,46,36,.42)]">{srcLabel}</span>
+          <span className="ml-1 text-[11px] text-ink-placeholder">{srcLabel}</span>
         ) : null}
       </td>
 
@@ -114,7 +114,7 @@ export function AppointmentRow({
       </td>
 
       {/* › */}
-      <td className="text-[rgba(59,46,36,.42)]">›</td>
+      <td className="text-ink-placeholder">›</td>
     </tr>
   );
 }

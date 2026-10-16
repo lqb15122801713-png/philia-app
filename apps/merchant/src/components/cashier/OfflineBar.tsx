@@ -31,8 +31,8 @@ export default function OfflineBar({
       role="status"
       className={`mb-3 flex items-center gap-2 rounded-[14px] px-3.5 py-2.5 text-caption font-semibold ${
         offline
-          ? 'bg-[#F2DFA6] text-[#3B2E24]'
-          : 'bg-[#FFFDF6] text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)]'
+          ? 'bg-brand-primary text-ink'
+          : 'bg-card text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)]'
       }`}
     >
       <WifiOff size={15} strokeWidth={1.9} aria-hidden />
@@ -45,7 +45,7 @@ export default function OfflineBar({
       )}
       {pendingCount > 0 ? (
         <span
-          className="ml-auto inline-flex items-center rounded-full bg-[#3B2E24] px-2.5 py-[3px] font-number text-caption-xs tabular-nums text-[#FAF8F2]"
+          className="ml-auto inline-flex items-center rounded-full bg-ink px-2.5 py-[3px] font-number text-caption-xs tabular-nums text-brand-cta-on"
           data-testid="cashier-offline-count"
         >
           已暂存 {pendingCount} 单
@@ -53,7 +53,7 @@ export default function OfflineBar({
       ) : null}
       {failedCount > 0 ? (
         <span
-          className="inline-flex items-center rounded-full bg-danger-deep px-2.5 py-[3px] font-number text-caption-xs tabular-nums text-[#FFFDF6]"
+          className="inline-flex items-center rounded-full bg-danger-deep px-2.5 py-[3px] font-number text-caption-xs tabular-nums text-brand-cta-on"
           data-testid="cashier-offline-failed"
         >
           补传失败 {failedCount} 单

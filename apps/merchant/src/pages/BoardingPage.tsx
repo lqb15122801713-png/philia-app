@@ -21,7 +21,7 @@
  * 「今日打卡」= lastLogDate === 今日（YYYY-MM-DD 本地日界）；
  * 「今日退房」= scheduledEnd 日历日 = 今天；「今日入住」= stay.createdAt 日历日 = 今天。
  *
- * 柠檬钮真实落点说明：入住登记链路在员工端（boarding.checkinStay 为
+ * cream 主钮真实落点说明：入住登记链路在员工端（boarding.checkinStay 为
  * staffProcedure，商家端不可办；零新接口红线）——点击仅 toast 指引，不做假表单。
  *
  * SSE（store:{storeId} 频道，staff-admin useMerchantEvents 单页接线保留）：
@@ -261,7 +261,7 @@ export default function BoardingPage() {
               { key: 'overdue', label: bc('board.m3Overdue'), value: overdueCount, red: overdueCount > 0 },
             ].map((q) => (
               <div className="wsk-card" key={q.key} data-testid={`board-m3-${q.key}`}>
-                <div className="text-[11px] font-semibold text-[rgba(59,46,36,.42)]">{q.label}</div>
+                <div className="text-[11px] font-semibold text-ink-placeholder">{q.label}</div>
                 <div
                   className={`mt-1.5 font-number text-[26px] font-bold leading-8 tabular-nums${
                     q.red ? ' text-[#B4502E]' : ''
@@ -282,7 +282,7 @@ export default function BoardingPage() {
           {Array.from({ length: 4 }).map((_, i) => (
             <div
               key={i}
-              className="rounded-panel bg-[#FFFDF6] p-[15px_17px] shadow-[0_0_0_1px_rgba(59,46,36,.09)]"
+              className="rounded-panel bg-card p-[15px_17px] shadow-[0_0_0_1px_rgba(44,40,34,.09)]"
             >
               <Skeleton className="h-3 w-24 rounded-chip" />
               <Skeleton className="mt-2.5 h-6 w-16 rounded-chip" />
@@ -295,19 +295,19 @@ export default function BoardingPage() {
           {rooms.map((r) => (
             <div
               key={r.serviceId}
-              className="rounded-panel bg-[#FFFDF6] p-[15px_17px] shadow-[0_0_0_1px_rgba(59,46,36,.09)]"
+              className="rounded-panel bg-card p-[15px_17px] shadow-[0_0_0_1px_rgba(44,40,34,.09)]"
             >
-              <div className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+              <div className="text-caption-xs font-semibold text-ink-placeholder">
                 {r.name} ·{' '}
                 <span className="font-number tabular-nums">{fmtNightPrice(r.priceFen)}</span>/晚
               </div>
               <div className="mt-1.5 font-number text-title-lg font-bold leading-7 tabular-nums">
                 {r.stays.length}
-                <small className="text-caption font-semibold text-[rgba(59,46,36,.42)]">
+                <small className="text-caption font-semibold text-ink-placeholder">
                   /{r.roomCount} 间
                 </small>
               </div>
-              <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
+              <div className="mt-1 text-caption-xs text-ink-secondary">
                 {r.stays.length === 0
                   ? bc('board.roomVacant')
                   : r.stays.map((s, i) => (
@@ -342,7 +342,7 @@ export default function BoardingPage() {
               {Array.from({ length: 4 }).map((_, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-6 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3.5"
+                  className="flex items-center gap-6 border-t border-[rgba(44,40,34,.06)] px-[17px] py-3.5"
                 >
                   <Skeleton className="h-3.5 w-28 rounded-chip" />
                   <Skeleton className="h-3.5 w-16 rounded-chip" />
@@ -354,17 +354,17 @@ export default function BoardingPage() {
             </div>
           ) : boardQuery.isError ? (
             <div className="px-[17px] py-10 text-center">
-              <div className="text-caption text-[rgba(59,46,36,.62)]">寄养看板加载失败</div>
+              <div className="text-caption text-ink-secondary">寄养看板加载失败</div>
               <div className="mt-3 flex justify-center">
                 <QuietButton onClick={() => void boardQuery.refetch()}>重试</QuietButton>
               </div>
             </div>
           ) : sorted.length === 0 ? (
-            <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-14 text-center">
-              <div className="text-body-sm font-semibold text-[rgba(59,46,36,.62)]">
+            <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-14 text-center">
+              <div className="text-body-sm font-semibold text-ink-secondary">
                 {bc('board.emptyTitle')}
               </div>
-              <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
+              <div className="mt-1 text-caption-xs text-ink-placeholder">
                 {bc('board.emptyBody')}
               </div>
             </div>
@@ -407,7 +407,7 @@ export default function BoardingPage() {
           {selected ? (
             <BoardingStayDetail row={selected} />
           ) : (
-            <div className="flex h-64 items-center justify-center rounded-panel bg-[#FFFDF6] text-caption text-[rgba(59,46,36,.42)] shadow-[0_0_0_1px_rgba(59,46,36,.09)]">
+            <div className="flex h-64 items-center justify-center rounded-panel bg-card text-caption text-ink-placeholder shadow-[0_0_0_1px_rgba(44,40,34,.09)]">
               {bc('board.detailPlaceholder')}
             </div>
           )}
@@ -434,7 +434,7 @@ export default function BoardingPage() {
           </section>
         ) : calQuery.isError ? (
           <section className="wsk-card text-center">
-            <div className="text-caption text-[rgba(59,46,36,.62)]">{bc('board.capCalError')}</div>
+            <div className="text-caption text-ink-secondary">{bc('board.capCalError')}</div>
             <div className="mt-3 flex justify-center">
               <QuietButton onClick={() => void calQuery.refetch()}>重试</QuietButton>
             </div>

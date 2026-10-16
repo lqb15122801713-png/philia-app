@@ -94,12 +94,12 @@ function activityLine(staffName: string | null | undefined, steps: StepListItem[
 
 /** 卡面公共工艺：纸面 ring 20 圆角 overflow hidden + 按下 120ms scale */
 const cardCls =
-  'block w-full overflow-hidden rounded-panel bg-[#FFFDF6] text-left shadow-[0_0_0_1px_rgba(59,46,36,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]';
+  'block w-full overflow-hidden rounded-panel bg-card text-left shadow-[0_0_0_1px_rgba(44,40,34,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]';
 
 /** 照片头 + badge pill（试样 .mon-card：头高 120px 固定【规格书 §5「16:10」为裁切意图，
     试样落 120px 定值——从试样，1920 大屏亦紧凑】；无照片兜底=sunken 暖底
-    rgba(59,46,36,.06)（卡其不作大面填充 §1.1，同卡片骨架底色）；洗护 badge=纸面文字自足
-    （片 5 去淡黄点，文字「服务中 · 实时」已自足），寄养 badge=墨底米白字无点【试样
+    rgba(44,40,34,.06)（墨系浅洗不作大面填充 §1.1，同卡片骨架底色）；洗护 badge=纸面文字自足
+    （片 5 去 cream 点，文字「服务中 · 实时」已自足），寄养 badge=墨底米白字无点【试样
     inline 锁定，墨轨同族浅色字，仅此两式】） */
 function CardPhotoHead({
   thumbUrl,
@@ -112,15 +112,15 @@ function CardPhotoHead({
 }) {
   return (
     <div
-      className="relative h-[120px] w-full bg-[rgba(59,46,36,.06)] bg-cover [background-position:center_60%]"
+      className="relative h-[120px] w-full bg-[rgba(44,40,34,.06)] bg-cover [background-position:center_60%]"
       style={thumbUrl ? { backgroundImage: `url(${thumbUrl})` } : undefined}
     >
       {tone === 'service' ? (
-        <span className="absolute left-2.5 top-2.5 flex items-center rounded-full bg-[#FFFDF6] px-2.5 py-1 text-caption-xs font-bold">
+        <span className="absolute left-2.5 top-2.5 flex items-center rounded-full bg-card px-2.5 py-1 text-caption-xs font-bold">
           {badge}
         </span>
       ) : (
-        <span className="absolute left-2.5 top-2.5 flex items-center rounded-full bg-[#3B2E24] px-2.5 py-1 text-caption-xs font-bold text-[#FAF8F2]">
+        <span className="absolute left-2.5 top-2.5 flex items-center rounded-full bg-ink px-2.5 py-1 text-caption-xs font-bold text-brand-cta-on">
           {badge}
         </span>
       )}
@@ -128,7 +128,7 @@ function CardPhotoHead({
   );
 }
 
-/** 6 段步进（公共件 WStepDots；三态同客户端七节点：done 深棕/active 淡黄/todo 卡其描边） */
+/** 6 段步进（公共件 WStepDots；三态同客户端七节点：done 深棕/active cream/todo 墨系描边） */
 function stepDotStates(steps: StepListItem[] | undefined): WStepDotState[] {
   return Array.from({ length: 6 }).map((_, i) => {
     const st = steps?.[i]?.status;
@@ -378,10 +378,10 @@ export default function MonitorHubPage() {
         </div>
       ) : failed ? (
         <div className="u3-panel px-[17px] py-14 text-center">
-          <div className="text-body-sm font-semibold text-[rgba(59,46,36,.62)]">
+          <div className="text-body-sm font-semibold text-ink-secondary">
             监控列表加载失败
           </div>
-          <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">请检查网络后重试</div>
+          <div className="mt-1 text-caption-xs text-ink-placeholder">请检查网络后重试</div>
           <div className="mt-4 flex justify-center">
             <QuietButton
               onClick={() => {
@@ -396,7 +396,7 @@ export default function MonitorHubPage() {
         </div>
       ) : totalVisible === 0 ? (
         <div className="u3-panel px-[17px] py-16 text-center">
-          <div className="text-body-sm font-semibold text-[rgba(59,46,36,.62)]">
+          <div className="text-body-sm font-semibold text-ink-secondary">
             {oc('mon.hubEmpty')}
           </div>
         </div>
@@ -438,7 +438,7 @@ export default function MonitorHubPage() {
                       {doneCount}/{steps?.length ?? 6}
                     </span>
                   </div>
-                  <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
+                  <div className="mt-1 text-caption-xs text-ink-secondary">
                     {activityLine(it.staffName, steps)}
                   </div>
                   {stuck ? (
@@ -447,7 +447,7 @@ export default function MonitorHubPage() {
                     </div>
                   ) : null}
                   {/* ETA 行：预计完成=预约 scheduledEnd（现成字段，无伪造） */}
-                  <div className="mt-1 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
+                  <div className="mt-1 font-number text-caption-xs tabular-nums text-ink-placeholder">
                     {oc('mon.eta', { t: fmtTime(it.scheduledEnd) })}
                   </div>
                   <div className="mt-2.5">
@@ -463,7 +463,7 @@ export default function MonitorHubPage() {
                     data-testid={`zombie-force-${it.id}`}
                     disabled={forcing === it.id}
                     onClick={() => onForceComplete(it)}
-                    className="rounded-full bg-[#FFFDF6] px-4 py-2 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+                    className="rounded-full bg-card px-4 py-2 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
                   >
                     {forcing === it.id ? '处理中…' : oc('mon.forceCompleteCta')}
                   </button>
@@ -508,7 +508,7 @@ export default function MonitorHubPage() {
                         </span>
                       )}
                     </div>
-                    <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
+                    <div className="mt-1 text-caption-xs text-ink-secondary">
                       {entry.overdue
                         ? oc('mon.hubBoardingOverdue', { n: overdueDays(entry.appointment.scheduledEnd) })
                         : `第 ${n} 晚 · ${checkedToday ? '今日已打卡 ✓' : '今日未打卡'} · ${fmtCheckout(entry.appointment.scheduledEnd)} 退房`}

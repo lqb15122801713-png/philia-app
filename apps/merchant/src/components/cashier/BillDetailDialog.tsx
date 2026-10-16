@@ -153,19 +153,19 @@ export default function BillDetailDialog({
           ))}
         </div>
       ) : detailQ.isError || !d || !bill ? (
-        <p className="py-6 text-center text-caption text-[rgba(59,46,36,.62)]">单据加载失败</p>
+        <p className="py-6 text-center text-caption text-ink-secondary">单据加载失败</p>
       ) : (
         <div>
           {/* 冲正/被冲正横幅（双向可查 + 不计已收口径） */}
           {isReversal ? (
-            <div className="mb-3 rounded-[10px] bg-[#F1E8D4] px-3 py-2 text-caption-xs text-[rgba(59,46,36,.62)]" data-testid="cashier-detail-reversal-banner">
+            <div className="mb-3 rounded-[10px] bg-sunken px-3 py-2 text-caption-xs text-ink-secondary" data-testid="cashier-detail-reversal-banner">
               本单为冲正单 · 关联原单{' '}
               <b className="font-number tabular-nums text-ink">{bill.reversalOfBillNo ?? '—'}</b>
               {cc('cashier.billReversalNote')}
             </div>
           ) : null}
           {reversed ? (
-            <div className="mb-3 rounded-[10px] bg-[rgba(59,46,36,.06)] px-3 py-2 text-caption-xs text-[rgba(59,46,36,.62)]" data-testid="cashier-detail-reversed-banner">
+            <div className="mb-3 rounded-[10px] bg-[rgba(44,40,34,.06)] px-3 py-2 text-caption-xs text-ink-secondary" data-testid="cashier-detail-reversed-banner">
               本单已被反结账冲正 · 冲正单{' '}
               <b className="font-number tabular-nums text-ink">{bill.reversalBillNo ?? '—'}</b>
               {cc('cashier.billReversedNote')}
@@ -174,7 +174,7 @@ export default function BillDetailDialog({
 
           {/* R12 退款横幅：灰签+「退款 ¥X」红字标签+关联退款单号（双向可查，点开见 refund_bills 详情） */}
           {bill.refundStatus ? (
-            <div className="mb-3 rounded-[10px] bg-[rgba(59,46,36,.06)] px-3 py-2 text-caption-xs" data-testid="cashier-detail-refund-banner">
+            <div className="mb-3 rounded-[10px] bg-[rgba(44,40,34,.06)] px-3 py-2 text-caption-xs" data-testid="cashier-detail-refund-banner">
               <span className="u3-st done">{bill.refundStatus === 'refunded' ? '已退款' : '部分退款'}</span>
               {posted.rows.length > 0 ? (
                 <>
@@ -189,7 +189,7 @@ export default function BillDetailDialog({
                         data-testid={`cashier-detail-refund-link-${r.refundNo}`}
                         title="查看退款单详情（refund_bills）"
                         onClick={() => onShowRefund(r)}
-                        className="inline-flex min-h-[28px] items-center rounded-full bg-[#FFFDF6] px-2.5 font-number font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.95]"
+                        className="inline-flex min-h-[28px] items-center rounded-full bg-card px-2.5 font-number font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.95]"
                       >
                         {r.refundNo}
                       </button>
@@ -197,7 +197,7 @@ export default function BillDetailDialog({
                   </span>
                 </>
               ) : (
-                <span className="ml-2 text-[rgba(59,46,36,.62)]">
+                <span className="ml-2 text-ink-secondary">
                   退款单 <b className="font-number tabular-nums text-ink">{bill.refundBillNo ?? '—'}</b>
                   {cc('cashier.billRefundDetailLink')}
                 </span>
@@ -206,19 +206,19 @@ export default function BillDetailDialog({
           ) : null}
 
           {/* 行项 */}
-          <div className="rounded-[14px] bg-[#FAF8F2] px-3.5 py-2">
+          <div className="rounded-[14px] bg-canvas px-3.5 py-2">
             {d.items.map((it) => {
               const eff = it.adjustedPriceFen ?? it.unitPriceFen
               return (
                 <div
                   key={it.id}
-                  className="flex items-center gap-2 border-b border-dashed border-[rgba(59,46,36,.09)] py-2 last:border-b-0"
+                  className="flex items-center gap-2 border-b border-dashed border-[rgba(44,40,34,.09)] py-2 last:border-b-0"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="text-caption font-semibold">
                       {it.nameSnapshot}
                       {it.paidByPass ? (
-                        <span className="ml-1.5 inline-flex items-center rounded-full bg-[#2E2318] px-2 py-[2px] text-caption-xs leading-none text-[#F2DFA6]">
+                        <span className="ml-1.5 inline-flex items-center rounded-full bg-ink px-2 py-[2px] text-caption-xs leading-none text-brand-primary">
                           扣次
                         </span>
                       ) : null}
@@ -228,19 +228,19 @@ export default function BillDetailDialog({
                         </span>
                       ) : null}
                     </div>
-                    <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                    <div className="mt-0.5 text-caption-xs text-ink-placeholder">
                       {it.kind === 'appointment' ? '预约行' : it.kind === 'service' ? '服务' : it.kind === 'custom' ? '快捷收款' : '商品'}
                       {it.specSnapshot ? ` · ${it.specSnapshot}` : ''} · × <span className="font-number tabular-nums">{it.qty}</span>
                     </div>
                     {/* 片 3：单品备注透出（随小票打印同口径） */}
                     {it.note ? (
-                      <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.55)]">备注：{it.note}</div>
+                      <div className="mt-0.5 text-caption-xs text-ink-secondary">备注：{it.note}</div>
                     ) : null}
                   </div>
                   <span className="font-number text-caption font-semibold tabular-nums">
                     ¥{fenToYuan(eff * it.qty)}
                     {it.adjustedPriceFen != null ? (
-                      <span className="ml-1 text-caption-xs font-normal text-[rgba(59,46,36,.3)] line-through">
+                      <span className="ml-1 text-caption-xs font-normal text-ink-placeholder line-through">
                         ¥{fenToYuan(it.unitPriceFen * it.qty)}
                       </span>
                     ) : null}
@@ -248,12 +248,12 @@ export default function BillDetailDialog({
                 </div>
               )
             })}
-            <div className="flex justify-between py-2 text-caption text-[rgba(59,46,36,.62)]">
+            <div className="flex justify-between py-2 text-caption text-ink-secondary">
               <span>合计</span>
               <b className="font-number font-semibold tabular-nums text-ink">¥{fenToYuan(bill.subtotalFen)}</b>
             </div>
             {bill.discountFen !== 0 ? (
-              <div className="flex justify-between py-1 text-caption text-[rgba(59,46,36,.62)]">
+              <div className="flex justify-between py-1 text-caption text-ink-secondary">
                 <span>
                   整单优惠（{bill.discountType === 'percent' ? <span className="font-number tabular-nums">{bill.discountValue / 10} 折</span> : '立减'}）
                 </span>
@@ -262,12 +262,12 @@ export default function BillDetailDialog({
             ) : null}
             {/* 片 3：抹零透出（单上 roundingFen>0 才显示；规则=端口键 server 口径） */}
             {bill.roundingFen > 0 ? (
-              <div className="flex justify-between py-1 text-caption text-[rgba(59,46,36,.62)]" data-testid="cashier-detail-rounding">
+              <div className="flex justify-between py-1 text-caption text-ink-secondary" data-testid="cashier-detail-rounding">
                 <span>{cc('cashier.roundingLabel')}</span>
                 <b className="font-number font-semibold tabular-nums text-ink">−¥{fenToYuan(bill.roundingFen)}</b>
               </div>
             ) : null}
-            <div className="flex items-baseline justify-between border-t border-dashed border-[rgba(59,46,36,.12)] py-2">
+            <div className="flex items-baseline justify-between border-t border-dashed border-[rgba(44,40,34,.12)] py-2">
               <span className="text-body-sm font-semibold">应收</span>
               <b className="font-number text-title font-bold tabular-nums">¥{fenToYuan(bill.payableFen)}</b>
             </div>
@@ -276,16 +276,16 @@ export default function BillDetailDialog({
           {/* 支付明细（R6-1 五分列全显；次卡/储值单列不计已收） */}
           {d.payments.length > 0 ? (
             <div className="mt-3">
-              <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">支付明细</div>
+              <div className="mb-1 text-caption-xs font-semibold text-ink-placeholder">支付明细</div>
               {d.payments.map((p) => (
                 <div key={p.id} className="flex items-center justify-between py-1 text-caption">
                   <span>
                     {PAY_METHOD_LABEL[p.method] ?? p.method}
                     {p.method === 'pass' || p.method === 'stored_value' || p.method === 'credit' ? (
-                      <small className="ml-1 text-caption-xs text-[rgba(59,46,36,.42)]">（不计入已收）</small>
+                      <small className="ml-1 text-caption-xs text-ink-placeholder">（不计入已收）</small>
                     ) : null}
                   </span>
-                  <span className="text-[rgba(59,46,36,.42)]">
+                  <span className="text-ink-placeholder">
                     <span className="font-number tabular-nums">{fmtDateTime(p.createdAt)}</span>
                     <b className="ml-2 font-number font-semibold tabular-nums text-ink">
                       ¥{fenToYuan(p.amountFen)}
@@ -309,7 +309,7 @@ export default function BillDetailDialog({
               <span className="vl">
                 {d.buyerName}
                 {d.customerPhoneMasked ? (
-                  <span className="ml-1.5 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
+                  <span className="ml-1.5 font-number text-caption-xs tabular-nums text-ink-placeholder">
                     {d.customerPhoneMasked}
                   </span>
                 ) : null}
@@ -341,7 +341,7 @@ export default function BillDetailDialog({
                 <span className="vl">
                   <span className="font-number tabular-nums">{fmtDateTime(bill.voidedAt)}</span>
                   {bill.voidReason ? (
-                    <span className="ml-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">原因：{bill.voidReason}</span>
+                    <span className="ml-1.5 text-caption-xs text-ink-placeholder">原因：{bill.voidReason}</span>
                   ) : null}
                 </span>
               </div>

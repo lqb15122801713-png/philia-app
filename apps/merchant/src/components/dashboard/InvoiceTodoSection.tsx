@@ -25,9 +25,9 @@ const CHIP_CLS = 'rounded-md bg-sunken px-[7px] py-[2px] text-[11px] font-semibo
 /** 行内操作钮（QuietButton 同族缩小档） */
 const ROW_BTN_CLS =
   'u1-ring shrink-0 rounded-full bg-card px-3.5 py-2 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50'
-/* 弹层按钮（ghost / 柠檬 primary，与 cashier SheetBtn 同工艺） */
+/* 弹层按钮（ghost / cream primary，与 cashier SheetBtn 同工艺） */
 const DIALOG_BTN_GHOST =
-  'rounded-full bg-[#FFFDF6] px-4 py-2.5 text-caption text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50'
+  'rounded-full bg-card px-4 py-2.5 text-caption text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50'
 const DIALOG_BTN_PRIMARY =
   'rounded-full bg-brand-primary px-4 py-2.5 text-caption font-bold text-ink shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50'
 
@@ -54,7 +54,7 @@ export default function InvoiceTodoSection({
           <h3>{dc('dash.invoiceBlockTitle')}</h3>
         </div>
         <div className="flex items-center justify-between px-[17px] py-3">
-          <p className="text-[12px] text-[rgba(59,46,36,.62)]">{dc('dash.invoiceLoadFailed')}</p>
+          <p className="text-[12px] text-ink-secondary">{dc('dash.invoiceLoadFailed')}</p>
           <button type="button" className={ROW_BTN_CLS} onClick={onRetry} data-testid="invoice-todo-retry">
             {dc('dash.retry')}
           </button>
@@ -92,18 +92,18 @@ export default function InvoiceTodoSection({
         {items.map((r) => (
           <div
             key={r.id}
-            className="flex items-start gap-3 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3"
+            className="flex items-start gap-3 border-t border-[rgba(44,40,34,.06)] px-[17px] py-3"
             data-testid={`invoice-todo-row-${r.invoiceNo}`}
           >
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="font-number text-caption font-semibold tabular-nums">{r.invoiceNo}</span>
                 <span className={CHIP_CLS}>{titleTypeLabel(r.titleType)}</span>
-                <span className="ml-auto font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
+                <span className="ml-auto font-number text-caption-xs tabular-nums text-ink-placeholder">
                   {fmtDateTime(r.createdAt)}
                 </span>
               </div>
-              <div className="mt-1 flex items-baseline gap-2 text-caption-xs text-[rgba(59,46,36,.62)]">
+              <div className="mt-1 flex items-baseline gap-2 text-caption-xs text-ink-secondary">
                 <span className="truncate">
                   {dc('dash.invoiceBillLead')} <span className="font-number tabular-nums">{r.billNo}</span>
                   {' · '}
@@ -113,7 +113,7 @@ export default function InvoiceTodoSection({
                   ¥{fenToYuanGrouped(r.amountFen)}
                 </span>
               </div>
-              <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
+              <div className="mt-1 text-caption-xs text-ink-placeholder">
                 {r.delivery === 'email'
                   ? `${dc('dash.invoiceDeliveryEmail')} ${r.email ?? ''}`
                   : dc('dash.invoiceDeliveryPickup')}
@@ -174,15 +174,15 @@ function InvoiceRegisterDialog({
       {request ? (
         <div>
           {/* 申请摘要卡 */}
-          <div className="rounded-[14px] bg-[#FAF8F2] px-3.5 py-3">
+          <div className="rounded-[14px] bg-canvas px-3.5 py-3">
             <div className="flex items-center gap-2">
               <span className="font-number text-caption font-semibold tabular-nums">{request.invoiceNo}</span>
               <span className={CHIP_CLS}>{titleTypeLabel(request.titleType)}</span>
-              <span className="ml-auto font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
+              <span className="ml-auto font-number text-caption-xs tabular-nums text-ink-placeholder">
                 {fmtDateTime(request.createdAt)}
               </span>
             </div>
-            <div className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+            <div className="mt-1.5 text-caption-xs text-ink-secondary">
               {dc('dash.invoiceBillLead')} <span className="font-number tabular-nums">{request.billNo}</span>
               {' · '}
               {dc('dash.invoiceTitleLead')} {request.title}
@@ -193,7 +193,7 @@ function InvoiceRegisterDialog({
                 </>
               ) : null}
             </div>
-            <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
+            <div className="mt-1 text-caption-xs text-ink-placeholder">
               {request.delivery === 'email'
                 ? `${dc('dash.invoiceDeliveryEmail')} ${request.email ?? ''}`
                 : dc('dash.invoiceDeliveryPickup')}
@@ -201,15 +201,15 @@ function InvoiceRegisterDialog({
           </div>
 
           {/* R15 明面句复述：开票金额=订单实付（金额=服务端按来源单实付重算） */}
-          <p className="mt-3 rounded-[10px] bg-[#F1E8D4] px-3 py-2 text-caption-xs font-semibold text-[rgba(59,46,36,.75)]">
+          <p className="mt-3 rounded-[10px] bg-sunken px-3 py-2 text-caption-xs font-semibold text-ink">
             {dc('dash.invoiceAmountNote', { amount: fenToYuanGrouped(request.amountFen) })}
           </p>
 
-          <div className="mt-3 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+          <div className="mt-3 text-caption-xs font-semibold text-ink-placeholder">
             {dc('dash.invoiceNoLabel')}
           </div>
           <input
-            className="mt-1.5 w-full rounded-[14px] bg-[#FFFDF6] px-3 py-2 font-number text-body-sm font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:font-sans placeholder:font-normal placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)] disabled:opacity-50"
+            className="mt-1.5 w-full rounded-[14px] bg-card px-3 py-2 font-number text-body-sm font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] placeholder:font-sans placeholder:font-normal placeholder:text-[rgba(44,40,34,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)] disabled:opacity-50"
             data-testid="invoice-no-input"
             placeholder={dc('dash.invoiceNoPlaceholder')}
             maxLength={50}

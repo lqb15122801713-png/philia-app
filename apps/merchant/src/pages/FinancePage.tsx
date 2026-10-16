@@ -121,12 +121,12 @@ function SparkLine({ days }: { days: Array<{ date: string; totalFen: number }> }
       <polyline
         points={points}
         fill="none"
-        stroke="rgba(59,46,36,.85)"
+        stroke="rgba(44,40,34,.85)"
         strokeWidth={2.5}
         strokeLinejoin="round"
         strokeLinecap="round"
       />
-      <circle cx={last[0]} cy={last[1]} r={4} fill="rgba(59,46,36,.85)" />
+      <circle cx={last[0]} cy={last[1]} r={4} fill="rgba(44,40,34,.85)" />
     </svg>
   );
 }
@@ -400,7 +400,7 @@ export default function FinancePage() {
               <Skeleton className="h-4 w-20 rounded-chip" />
             </div>
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3.5">
+              <div key={i} className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-3.5">
                 <Skeleton className="h-3 w-full rounded-chip" />
               </div>
             ))}
@@ -408,7 +408,7 @@ export default function FinancePage() {
         </div>
       ) : statsQuery.isError ? (
         <div className="u3-panel px-[17px] py-12 text-center">
-          <p className="text-body-sm text-[rgba(59,46,36,.62)]">财务数据加载失败，请检查网络后重试</p>
+          <p className="text-body-sm text-ink-secondary">财务数据加载失败，请检查网络后重试</p>
           <div className="mt-4">
             <QuietButton onClick={() => void statsQuery.refetch()}>重新加载</QuietButton>
           </div>
@@ -481,7 +481,7 @@ export default function FinancePage() {
             <div className="u3-panel px-[17px] py-3.5" data-testid="finance-spark">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3">
                 <span className="text-caption font-semibold">{rpt('rpt.sparkTitle')}</span>
-                <span className="text-caption-xs text-[rgba(59,46,36,.42)]">{rpt('rpt.sparkNote')}</span>
+                <span className="text-caption-xs text-ink-placeholder">{rpt('rpt.sparkNote')}</span>
               </div>
               {sparkQ.data ? (
                 <SparkLine days={sparkQ.data.days} />
@@ -508,8 +508,8 @@ export default function FinancePage() {
                   {refundDayQ.data.totalFen > 0 ? `−¥${formatYuan(refundDayQ.data.totalFen)}` : '¥0'}
                 </b>
               </span>
-              <span className="text-[rgba(59,46,36,.42)]">｜</span>
-              <span className="text-[rgba(59,46,36,.62)]">
+              <span className="text-ink-placeholder">｜</span>
+              <span className="text-ink-secondary">
                 {fc('fin.refundNetLead')}
                 <b className="u1-num text-ink">
                   ¥{todayReceivedFen !== null ? formatYuan(todayReceivedFen) : '…'} − ¥
@@ -519,7 +519,7 @@ export default function FinancePage() {
                     : '…'}
                 </b>
               </span>
-              <span className="text-caption-xs text-[rgba(59,46,36,.42)]">
+              <span className="text-caption-xs text-ink-placeholder">
                 {fc('fin.refundStripNote', { amt: formatYuan(refundDayQ.data.segments.cashFen) })}
               </span>
             </div>
@@ -534,7 +534,7 @@ export default function FinancePage() {
                 <span className="aside">{rpt('rpt.ledgerAside')}</span>
               </div>
               {ledgerRows.length === 0 ? (
-                <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center text-body-sm text-[rgba(59,46,36,.62)]">
+                <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center text-body-sm text-ink-secondary">
                   {fc('fin.ledgerEmpty', { period: MODE_LABEL[mode] })}
                 </div>
               ) : (
@@ -564,8 +564,8 @@ export default function FinancePage() {
                           {r.item}
                         </td>
                         <td className="u1-num whitespace-nowrap text-right font-bold">¥{formatYuan(r.fen)}</td>
-                        <td className="text-[rgba(59,46,36,.62)]">{r.modeLabel}</td>
-                        <td className="u1-num text-[rgba(59,46,36,.62)]">{r.code ?? '—'}</td>
+                        <td className="text-ink-secondary">{r.modeLabel}</td>
+                        <td className="u1-num text-ink-secondary">{r.code ?? '—'}</td>
                         <td>
                           {r.pending ? (
                             <span className="u3-st amber">待收</span>

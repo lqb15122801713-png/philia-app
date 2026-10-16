@@ -117,14 +117,14 @@ export default function MemberSearch({
             if (e.key === 'Enter') void doSearch()
           }}
           placeholder="输入手机号找会员，留空=散客"
-          className="flex-1 rounded-full bg-[#FFFDF6] px-4 py-2.5 text-body-sm text-ink shadow-[0_0_0_1px_rgba(59,46,36,.09)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.25)]"
+          className="flex-1 rounded-full bg-card px-4 py-2.5 text-body-sm text-ink shadow-[0_0_0_1px_rgba(44,40,34,.09)] placeholder:text-[rgba(44,40,34,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.25)]"
         />
         <button
           type="button"
           data-testid="cashier-member-search-btn"
           disabled={phone.trim().length < 3 || searching}
           onClick={() => void doSearch()}
-          className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#FFFDF6] px-4 py-2.5 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+          className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-card px-4 py-2.5 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(44,40,34,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
         >
           <Search size={15} strokeWidth={1.8} aria-hidden />
           {searching ? '检索中…' : '检索'}
@@ -134,10 +134,10 @@ export default function MemberSearch({
       {member ? (
         /* 命中态：浅木底会员条 */
         <div
-          className="mt-2.5 flex items-center gap-2.5 rounded-[14px] bg-[#F1E8D4] px-3.5 py-2.5"
+          className="mt-2.5 flex items-center gap-2.5 rounded-[14px] bg-sunken px-3.5 py-2.5"
           data-testid="cashier-member-hit"
         >
-          <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-[#FFFDF6] text-body-sm font-bold shadow-[0_0_0_1px_rgba(59,46,36,.09)]">
+          <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full bg-card text-body-sm font-bold shadow-[0_0_0_1px_rgba(44,40,34,.09)]">
             {(member.nickname ?? '客').slice(0, 1)}
           </span>
           <div className="min-w-0 flex-1">
@@ -147,7 +147,7 @@ export default function MemberSearch({
               {effMembership ? (
                 <span
                   className={`ml-1.5 inline-flex items-center rounded-full px-2.5 py-[3px] text-caption-xs ${
-                    effMembership.status === 'active' ? 'bg-brand-primary text-ink' : 'bg-[rgba(59,46,36,.12)] text-[rgba(59,46,36,.62)]'
+                    effMembership.status === 'active' ? 'bg-brand-primary text-ink' : 'bg-[rgba(44,40,34,.12)] text-ink-secondary'
                   }`}
                   data-testid="cashier-member-plan"
                 >
@@ -159,11 +159,11 @@ export default function MemberSearch({
                 </span>
               ) : null}
               {member.passRemainTimes > 0 ? (
-                <span className="ml-1.5 inline-flex items-center rounded-full bg-[#2E2318] px-2.5 py-[3px] font-number text-caption-xs tabular-nums text-[#F2DFA6]">
+                <span className="ml-1.5 inline-flex items-center rounded-full bg-ink px-2.5 py-[3px] font-number text-caption-xs tabular-nums text-brand-primary">
                   次卡 · 余 {member.passRemainTimes} 次
                 </span>
               ) : null}
-              {/* M1-补2 R5：储值余额签（柠檬底；>0 才出。收银识别可见余额——矩阵⑥） */}
+              {/* M1-补2 R5：储值余额签（cream 底；>0 才出。收银识别可见余额——矩阵⑥） */}
               {member.storedValueBalanceFen > 0 ? (
                 <span
                   className="ml-1.5 inline-flex items-center rounded-full bg-brand-primary px-2.5 py-[3px] font-number tabular-nums text-caption-xs text-ink"
@@ -175,7 +175,7 @@ export default function MemberSearch({
               {/* R11a 补丁：回馈金余额签（forUser 真值；已到账可用，本期预计=次月到账口径小字；全 0 不出签） */}
               {effMembership && rebate && (rebate.balanceFen > 0 || rebate.pendingFen > 0) ? (
                 <span
-                  className="ml-1.5 inline-flex items-center rounded-full bg-[#FFFDF6] px-2.5 py-[3px] font-number tabular-nums text-caption-xs text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)]"
+                  className="ml-1.5 inline-flex items-center rounded-full bg-card px-2.5 py-[3px] font-number tabular-nums text-caption-xs text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)]"
                   data-testid="cashier-member-rebate"
                   title={rebate.pendingFen > 0 ? `本期预计 ¥${(rebate.pendingFen / 100).toFixed(2)} 次月到账` : undefined}
                 >
@@ -193,7 +193,7 @@ export default function MemberSearch({
                 </span>
               ) : null}
             </div>
-            <div className="mt-0.5 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
+            <div className="mt-0.5 font-number text-caption-xs tabular-nums text-ink-placeholder">
               {member.phoneMasked ?? '未留手机'}
               {member.appointmentCount > 0 ? ` · 在店预约 ${member.appointmentCount} 单` : ''}
               {effMembership
@@ -219,7 +219,7 @@ export default function MemberSearch({
               type="button"
               data-testid="cashier-member-service-entry"
               onClick={() => onOpenSell()}
-              className="inline-flex min-h-[44px] shrink-0 items-center gap-1 rounded-full bg-[#FFFDF6] px-3 py-1.5 text-caption-xs font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+              className="inline-flex min-h-[44px] shrink-0 items-center gap-1 rounded-full bg-card px-3 py-1.5 text-caption-xs font-semibold text-ink shadow-[0_0_0_1px_rgba(44,40,34,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
             >
               {cc('cashier.memberServiceEntry')}
             </button>
@@ -228,14 +228,14 @@ export default function MemberSearch({
             type="button"
             data-testid="cashier-member-remove"
             onClick={onRemove}
-            className="inline-flex min-h-[44px] items-center gap-1 rounded-full bg-[#FFFDF6] px-3 py-1.5 text-caption-xs font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            className="inline-flex min-h-[44px] items-center gap-1 rounded-full bg-card px-3 py-1.5 text-caption-xs font-semibold text-ink shadow-[0_0_0_1px_rgba(44,40,34,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
             <X size={12} strokeWidth={1.8} aria-hidden />
             移除
           </button>
         </div>
       ) : missed ? (
-        <p className="mt-2 flex items-center gap-1.5 px-1 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="cashier-member-miss">
+        <p className="mt-2 flex items-center gap-1.5 px-1 text-caption-xs text-ink-placeholder" data-testid="cashier-member-miss">
           {cc('cashier.memberSearchEmpty')}
           {/* R11a §四.6：新客快速开卡旁路（手机号建档+售卡一气呵成） */}
           <button
@@ -256,7 +256,7 @@ export default function MemberSearch({
           type="button"
           data-testid="cashier-sell-entry"
           onClick={() => onOpenSell()}
-          className="mt-2 inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-[#FFFDF6] px-3.5 py-2 text-caption-xs font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+          className="mt-2 inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-card px-3.5 py-2 text-caption-xs font-semibold text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
         >
           <CreditCard size={13} strokeWidth={1.8} aria-hidden />
           会员卡 · 售卡 / 续费
@@ -267,7 +267,7 @@ export default function MemberSearch({
           type="button"
           data-testid="cashier-sell-entry-member"
           onClick={() => onOpenSell()}
-          className="mt-2 inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-[#FFFDF6] px-3.5 py-2 text-caption-xs font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+          className="mt-2 inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-card px-3.5 py-2 text-caption-xs font-semibold text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
         >
           <CreditCard size={13} strokeWidth={1.8} aria-hidden />
           售卡 / 续费

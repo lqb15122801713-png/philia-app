@@ -54,7 +54,7 @@ type PaySegMethod = 'cash' | 'wechat' | 'alipay'
 const SEG_LABEL: Record<PaySegMethod, string> = { cash: '现金', wechat: '微信', alipay: '支付宝' }
 
 const segInputCls =
-  'w-[104px] rounded-[6px] bg-[#FFFDF6] px-2.5 py-[7px] text-right font-number text-caption font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(59,46,36,.09)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.25)]'
+  'w-[104px] rounded-[6px] bg-card px-2.5 py-[7px] text-right font-number text-caption font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(44,40,34,.09)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.25)]'
 
 /** 续费金额探测：解析 server 原文「须等于续费金额（X 元）」（读路径缺口报备口径） */
 const RENEW_QUOTE_RE = /续费金额（([\d.]+) 元/
@@ -418,7 +418,7 @@ export default function MembershipPanel({
           role="tab"
           aria-selected={mode === 'sell'}
           data-testid="membership-mode-sell"
-          className={`min-h-[44px] rounded-full px-4 py-2 text-caption ${mode === 'sell' ? 'bg-[#3B2E24] font-semibold text-[#FAF8F2]' : 'text-[rgba(59,46,36,.6)]'}`}
+          className={`min-h-[44px] rounded-full px-4 py-2 text-caption ${mode === 'sell' ? 'bg-ink font-semibold text-brand-cta-on' : 'text-ink-secondary'}`}
           onClick={() => setMode('sell')}
         >
           售卡
@@ -431,7 +431,7 @@ export default function MembershipPanel({
           data-testid="membership-mode-renew"
           disabled={member === null}
           title={member === null ? '续费须先检索识别会员' : undefined}
-          className={`min-h-[44px] rounded-full px-4 py-2 text-caption disabled:opacity-40 ${mode === 'renew' ? 'bg-[#3B2E24] font-semibold text-[#FAF8F2]' : 'text-[rgba(59,46,36,.6)]'}`}
+          className={`min-h-[44px] rounded-full px-4 py-2 text-caption disabled:opacity-40 ${mode === 'renew' ? 'bg-ink font-semibold text-brand-cta-on' : 'text-ink-secondary'}`}
           onClick={() => setMode('renew')}
         >
           续费
@@ -442,7 +442,7 @@ export default function MembershipPanel({
             role="tab"
             aria-selected={mode === 'upgrade'}
             data-testid="membership-mode-upgrade"
-            className={`min-h-[44px] rounded-full px-4 py-2 text-caption ${mode === 'upgrade' ? 'bg-[#3B2E24] font-semibold text-[#FAF8F2]' : 'text-[rgba(59,46,36,.6)]'}`}
+            className={`min-h-[44px] rounded-full px-4 py-2 text-caption ${mode === 'upgrade' ? 'bg-ink font-semibold text-brand-cta-on' : 'text-ink-secondary'}`}
             onClick={enterUpgradeMode}
           >
             {cc('cashier.upgradeModeTab')}
@@ -452,29 +452,29 @@ export default function MembershipPanel({
       ) : null}
 
       {/* 客户块 */}
-      <div className="mt-3 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3">
+      <div className="mt-3 rounded-[14px] bg-canvas px-3.5 py-3">
         {member ? (
           <div className="text-caption">
             <b>{member.nickname ?? '会员'}</b>
-            <span className="ml-2 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
+            <span className="ml-2 font-number text-caption-xs tabular-nums text-ink-placeholder">
               {member.phoneMasked ?? ''}
             </span>
             {effMembership ? (
-              <div className="mt-1 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]" data-testid="membership-current">
+              <div className="mt-1 font-number text-caption-xs tabular-nums text-ink-secondary" data-testid="membership-current">
                 当前档「{planShortLabel(effMembership.planKey)}」· {MEMBERSHIP_STATUS_LABEL[effMembership.status] ?? effMembership.status} · 含宠物{' '}
                 {effMembership.petCount} 只 · 到期 {effMembership.expiresAt.getFullYear()}年{effMembership.expiresAt.getMonth() + 1}月{effMembership.expiresAt.getDate()}日
               </div>
             ) : (
-              <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="membership-nonmember-note">
+              <div className="mt-1 text-caption-xs text-ink-placeholder" data-testid="membership-nonmember-note">
                 {cc('cashier.memberNonMember')}
               </div>
             )}
           </div>
         ) : (
           <>
-            <div className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">新客手机号（建档+售卡一气呵成）</div>
+            <div className="text-caption-xs font-semibold text-ink-placeholder">新客手机号（建档+售卡一气呵成）</div>
             <input
-              className="mt-1.5 w-full rounded-[10px] bg-[#FFFDF6] px-3 py-2.5 font-number text-body-sm font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:font-sans placeholder:font-normal placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+              className="mt-1.5 w-full rounded-[10px] bg-card px-3 py-2.5 font-number text-body-sm font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] placeholder:font-sans placeholder:font-normal placeholder:text-[rgba(44,40,34,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
               data-testid="membership-phone"
               inputMode="tel"
               maxLength={11}
@@ -488,11 +488,11 @@ export default function MembershipPanel({
 
       {upgradeDone ? (
         /* 升档成交留痕可视（补缺-3：补差单号 mono 明面，店员确认「完成」后关层） */
-        <div className="mt-3 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3" data-testid="membership-upgrade-done-note">
+        <div className="mt-3 rounded-[14px] bg-canvas px-3.5 py-3" data-testid="membership-upgrade-done-note">
           <p className="text-caption font-semibold text-ink">
             {cc('cashier.upgradeDoneTitle', { plan: planShortLabel(upgradeDone.planKey) })}
           </p>
-          <p className="mt-1 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]">
+          <p className="mt-1 font-number text-caption-xs tabular-nums text-ink-secondary">
             {cc('cashier.upgradeBillLabel')}：
             {upgradeDone.billNo ? (
               <b className="font-number tabular-nums" data-testid="membership-upgrade-bill-no">
@@ -509,7 +509,7 @@ export default function MembershipPanel({
           {/* 四档对照卡（价格/回馈/折扣/多宠明面——plans 透出真值） */}
           <div className="mt-3 grid grid-cols-2 gap-2" data-testid="membership-plans">
             {plansQ.isPending ? (
-              <p className="col-span-2 py-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">档位加载中…</p>
+              <p className="col-span-2 py-4 text-center text-caption-xs text-ink-placeholder">档位加载中…</p>
             ) : plans.length === 0 ? (
               <p className="col-span-2 py-4 text-center text-caption-xs text-danger-deep">
                 {cc('cashier.memberPlansMissing')}
@@ -525,7 +525,7 @@ export default function MembershipPanel({
                     data-testid={`membership-plan-${p.planKey}`}
                     onClick={() => setPlanKey(p.planKey)}
                     className={`min-h-[44px] rounded-[14px] px-3 py-2.5 text-left transition-transform duration-120 ease-philia-spring active:scale-[0.98] ${
-                      on ? 'bg-brand-primary text-ink shadow-hairline' : 'bg-[#FFFDF6] text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)]'
+                      on ? 'bg-brand-primary text-ink shadow-hairline' : 'bg-card text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)]'
                     }`}
                   >
                     <div className="flex items-baseline justify-between">
@@ -534,11 +534,11 @@ export default function MembershipPanel({
                         {p.free || p.priceFen === 0 ? '免费' : `¥${fenToYuan(p.priceFen)}/年`}
                       </b>
                     </div>
-                    <div className={`mt-1 text-caption-xs ${on ? 'text-[rgba(59,46,36,.62)]' : 'text-[rgba(59,46,36,.42)]'}`}>
+                    <div className={`mt-1 text-caption-xs ${on ? 'text-ink-secondary' : 'text-ink-placeholder'}`}>
                       {p.rebateBp > 0 ? `商品回馈 ${rebatePercentLabel(p.rebateBp)}` : '无回馈金'}
                       {disc ? ` · 服务 ${disc}` : ' · 服务无折扣'}
                     </div>
-                    <div className={`mt-0.5 font-number text-caption-xs tabular-nums ${on ? 'text-[rgba(59,46,36,.62)]' : 'text-[rgba(59,46,36,.42)]'}`}>
+                    <div className={`mt-0.5 font-number text-caption-xs tabular-nums ${on ? 'text-ink-secondary' : 'text-ink-placeholder'}`}>
                       含 {p.includedPets} 只宠物 · 超出 +¥{fenToYuan(p.extraPetFen)}/只 · {p.maxPets} 只封顶
                     </div>
                   </button>
@@ -549,7 +549,7 @@ export default function MembershipPanel({
 
           {/* 多宠数 */}
           <div className="mt-3 flex items-center justify-between">
-            <span className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">含宠物只数</span>
+            <span className="text-caption-xs font-semibold text-ink-placeholder">含宠物只数</span>
             <span className="flex items-center gap-2.5">
               <button
                 type="button"
@@ -557,7 +557,7 @@ export default function MembershipPanel({
                 data-testid="membership-pet-minus"
                 disabled={petCount <= 1}
                 onClick={() => setPetCount((n) => Math.max(1, n - 1))}
-                className="flex h-[44px] w-[44px] items-center justify-center rounded-full bg-[#FFFDF6] text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
+                className="flex h-[44px] w-[44px] items-center justify-center rounded-full bg-card text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
               >
                 <Minus size={14} strokeWidth={2} aria-hidden />
               </button>
@@ -570,14 +570,14 @@ export default function MembershipPanel({
                 data-testid="membership-pet-plus"
                 disabled={plan != null && petCount >= plan.maxPets}
                 onClick={() => setPetCount((n) => Math.min(plan?.maxPets ?? 10, n + 1))}
-                className="flex h-[44px] w-[44px] items-center justify-center rounded-full bg-[#FFFDF6] text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
+                className="flex h-[44px] w-[44px] items-center justify-center rounded-full bg-card text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
               >
                 <Plus size={14} strokeWidth={2} aria-hidden />
               </button>
             </span>
           </div>
           {extraCount > 0 ? (
-            <p className="mt-1 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]" data-testid="membership-extra-fee">
+            <p className="mt-1 font-number text-caption-xs tabular-nums text-ink-secondary" data-testid="membership-extra-fee">
               多宠附加：第 {plan!.includedPets + 1} 只起 +¥{fenToYuan(plan!.extraPetFen)}/年/只 × {extraCount} 只 = +¥
               {fenToYuan(extraFen)}
             </p>
@@ -587,8 +587,8 @@ export default function MembershipPanel({
           ) : null}
 
           {/* 应付合计 */}
-          <div className="mt-2.5 flex items-baseline justify-between rounded-[10px] bg-[#FAF8F2] px-3 py-2">
-            <span className="font-number text-caption tabular-nums text-[rgba(59,46,36,.62)]">
+          <div className="mt-2.5 flex items-baseline justify-between rounded-[10px] bg-canvas px-3 py-2">
+            <span className="font-number text-caption tabular-nums text-ink-secondary">
               应付{extraFen > 0 ? `（档价 ¥${fenToYuan(plan?.priceFen ?? 0)} + 附加 ¥${fenToYuan(extraFen)}）` : ''}
             </span>
             <b className="font-number text-title font-bold tabular-nums" data-testid="membership-amount">
@@ -603,7 +603,7 @@ export default function MembershipPanel({
                 setSellErrorHint(null)
                 if (member) setMode('renew')
               }}
-              className="mt-2 min-h-[44px] w-full rounded-[10px] bg-[#F1E8D4] px-3 py-2 text-caption-xs font-semibold text-ink"
+              className="mt-2 min-h-[44px] w-full rounded-[10px] bg-sunken px-3 py-2 text-caption-xs font-semibold text-ink"
             >
               {cc('cashier.memberAlreadyMember')}
             </button>
@@ -625,7 +625,7 @@ export default function MembershipPanel({
                       data-testid={`membership-upgrade-target-${t.planKey}`}
                       onClick={() => onSelectTarget(t.planKey, t.totalDiffFen)}
                       className={`min-h-[44px] rounded-[14px] px-3 py-2.5 text-left transition-transform duration-120 ease-philia-spring active:scale-[0.98] ${
-                        on ? 'bg-brand-primary text-ink shadow-hairline' : 'bg-[#FFFDF6] text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)]'
+                        on ? 'bg-brand-primary text-ink shadow-hairline' : 'bg-card text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)]'
                       }`}
                     >
                       <div className="flex items-baseline justify-between">
@@ -634,7 +634,7 @@ export default function MembershipPanel({
                           补差 ¥{fenToYuan(t.totalDiffFen)}
                         </b>
                       </div>
-                      <div className={`mt-1 text-caption-xs ${on ? 'text-[rgba(59,46,36,.62)]' : 'text-[rgba(59,46,36,.42)]'}`}>
+                      <div className={`mt-1 text-caption-xs ${on ? 'text-ink-secondary' : 'text-ink-placeholder'}`}>
                         {t.formula.newPurchase
                           ? cc('cashier.upgradeNewPurchaseTag')
                           : cc('cashier.upgradeDiffMonthsTag', { m: t.remainingMonths })}
@@ -645,17 +645,17 @@ export default function MembershipPanel({
               </div>
 
               {/* 试算区（R15 算式句族 + baseDiff/petDiff 分行 mono；值全部 server 透出） */}
-              <div className="mt-3 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3" data-testid="membership-upgrade-quote">
+              <div className="mt-3 rounded-[14px] bg-canvas px-3.5 py-3" data-testid="membership-upgrade-quote">
                 {selTarget.formula.newPurchase ? (
                   <p
-                    className="text-caption-xs leading-relaxed text-[rgba(59,46,36,.62)]"
+                    className="text-caption-xs leading-relaxed text-ink-secondary"
                     data-testid="membership-upgrade-newpurchase"
                   >
                     {cc('cashier.upgradeNewPurchaseNote')}
                   </p>
                 ) : (
                   <p
-                    className="font-number text-caption-xs tabular-nums leading-relaxed text-[rgba(59,46,36,.62)]"
+                    className="font-number text-caption-xs tabular-nums leading-relaxed text-ink-secondary"
                     data-testid="membership-upgrade-formula"
                   >
                     {cc('cashier.upgradeFormula', {
@@ -666,7 +666,7 @@ export default function MembershipPanel({
                     })}
                   </p>
                 )}
-                <div className="mt-1.5 font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.62)]">
+                <div className="mt-1.5 font-number text-caption-xs tabular-nums text-ink-secondary">
                   <p data-testid="membership-upgrade-diff-base">
                     {cc('cashier.upgradeDiffBase', { amount: fenToYuan(selTarget.baseDiffFen) })}
                   </p>
@@ -674,19 +674,19 @@ export default function MembershipPanel({
                     {cc('cashier.upgradeDiffPet', { amount: fenToYuan(selTarget.petDiffFen) })}
                   </p>
                 </div>
-                <div className="mt-2 flex items-baseline justify-between rounded-[10px] bg-[#FFFDF6] px-3 py-2">
-                  <span className="text-caption text-[rgba(59,46,36,.62)]">{cc('cashier.upgradeQuoteTotal')}</span>
+                <div className="mt-2 flex items-baseline justify-between rounded-[10px] bg-card px-3 py-2">
+                  <span className="text-caption text-ink-secondary">{cc('cashier.upgradeQuoteTotal')}</span>
                   <b className="font-number text-title font-bold tabular-nums" data-testid="membership-upgrade-amount">
                     ¥{fenToYuan(selTarget.totalDiffFen)}
                   </b>
                 </div>
-                <p className="mt-1.5 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
+                <p className="mt-1.5 text-caption-xs leading-relaxed text-ink-placeholder">
                   {cc('cashier.upgradeNoDowngradeNote', { days: upgradeQuote.windowDays })}
                 </p>
               </div>
             </>
           ) : (
-            <p className="mt-3 py-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
+            <p className="mt-3 py-4 text-center text-caption-xs text-ink-placeholder">
               {cc('cashier.upgradeQuoteLoading')}
             </p>
           )}
@@ -694,7 +694,7 @@ export default function MembershipPanel({
       ) : (
         /* 续费模式 */
         <>
-          <div className="mt-3 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3 text-caption-xs leading-relaxed text-[rgba(59,46,36,.62)]">
+          <div className="mt-3 rounded-[14px] bg-canvas px-3.5 py-3 text-caption-xs leading-relaxed text-ink-secondary">
             <p className="flex items-center gap-1.5">
               <RefreshCcw size={13} strokeWidth={1.8} aria-hidden />
               {cc('cashier.memberRenewNote', { days: validityDays })}
@@ -704,8 +704,8 @@ export default function MembershipPanel({
             </p>
           </div>
           {quoteFen !== null ? (
-            <div className="mt-2.5 flex items-baseline justify-between rounded-[10px] bg-[#FAF8F2] px-3 py-2">
-              <span className="text-caption text-[rgba(59,46,36,.62)]">续费应收（server 实算）</span>
+            <div className="mt-2.5 flex items-baseline justify-between rounded-[10px] bg-canvas px-3 py-2">
+              <span className="text-caption text-ink-secondary">续费应收（server 实算）</span>
               <b className="font-number text-title font-bold tabular-nums" data-testid="membership-renew-quote-amount">
                 ¥{fenToYuan(quoteFen)}
               </b>
@@ -718,8 +718,8 @@ export default function MembershipPanel({
       {((mode === 'sell' && !isFree && plan != null) ||
         (mode === 'renew' && quoteFen !== null) ||
         (mode === 'upgrade' && !upgradeDone && selTarget !== null && selTarget.totalDiffFen > 0)) ? (
-        <div className="mt-3 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3" data-testid="membership-pay-segs">
-          <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+        <div className="mt-3 rounded-[14px] bg-canvas px-3.5 py-3" data-testid="membership-pay-segs">
+          <div className="mb-1 text-caption-xs font-semibold text-ink-placeholder">
             {cc('cashier.memberPaySectionNote')}
           </div>
           {(['cash', 'wechat', 'alipay'] as const).map((m) => (
@@ -735,7 +735,7 @@ export default function MembershipPanel({
               />
             </div>
           ))}
-          <p className="py-1 text-caption-xs text-[rgba(59,46,36,.42)]">
+          <p className="py-1 text-caption-xs text-ink-placeholder">
             Σ支付 = 应收 才放行
             {targetFen > 0 && segSum !== targetFen ? (
               <span className="ml-1 font-number tabular-nums text-danger-deep">
@@ -746,7 +746,7 @@ export default function MembershipPanel({
         </div>
       ) : null}
 
-      <p className="mt-3 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
+      <p className="mt-3 text-caption-xs leading-relaxed text-ink-placeholder">
         <CreditCard size={12} strokeWidth={1.8} className="mr-1 inline" aria-hidden />
         {cc('cashier.memberRulesNote', { days: validityDays })}
       </p>

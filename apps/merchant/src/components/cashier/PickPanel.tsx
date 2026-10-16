@@ -2,11 +2,11 @@
  * 开单区选品面板（批次 M1）：tabs 三档（服务/商品/待收款，带计数小字）
  *
  * - P2 选品卡：试样 .good 工艺——圆角 14+ring、40px 圆角 10 浅木图标档 +
- *   名 14 + 规格小字 + 价 Montserrat；点击柠檬边反馈（active ring 1.5px）；
+ *   名 14 + 规格小字 + 价 Montserrat；点击 cream 边反馈（active ring 1.5px）；
  *   图标按类映射：洗护 shower-head / 造型·美容 scissors / 寄养 bed-double /
  *   商品 package（lucide，无彩图标）；
  * - 待收款 tab = 试样 .pull-card：字圈 + 「宠物·服务」+「预约到店付·时间·
- *   已完成待收款」+ 金额 + 柠檬「拉入」钮；已拉入的行置灰防重（幂等：
+ *   已完成待收款」+ 金额 + cream「拉入」钮；已拉入的行置灰防重（幂等：
  *   同一预约不重复入车）；
  * - 商品仅列在架（status='on'）；三态齐全（骨架 / 错误重试 / 空态安静灰字）。
  */
@@ -40,13 +40,13 @@ function GoodCard({
       type="button"
       data-testid={testid}
       onClick={onClick}
-      className="flex flex-col gap-2 rounded-[14px] bg-[#FFFDF6] p-3.5 text-left shadow-[0_0_0_1px_rgba(59,46,36,.09)] transition-[box-shadow,transform] duration-150 active:shadow-[0_0_0_1.5px_#E8CF8C]"
+      className="flex flex-col gap-2 rounded-[14px] bg-card p-3.5 text-left shadow-[0_0_0_1px_rgba(44,40,34,.09)] transition-[box-shadow,transform] duration-150 active:shadow-[0_0_0_1.5px_#E8CF8C]"
     >
-      <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[#F1E8D4] text-[rgba(59,46,36,.6)]">
+      <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-sunken text-ink-secondary">
         <Icon size={19} strokeWidth={1.6} aria-hidden />
       </span>
       <span className="text-body-sm font-medium leading-tight">{name}</span>
-      {spec ? <span className="text-caption-xs text-[rgba(59,46,36,.42)]">{spec}</span> : null}
+      {spec ? <span className="text-caption-xs text-ink-placeholder">{spec}</span> : null}
       <span className="font-number text-caption font-semibold tabular-nums">¥{fenToYuan(priceFen)}</span>
     </button>
   )
@@ -115,8 +115,8 @@ export default function PickPanel({
             onClick={() => onTab(t.key)}
             className={`rounded-full px-3.5 py-[7px] text-caption transition-colors ${
               tab === t.key
-                ? 'bg-[#3B2E24] font-semibold text-[#FAF8F2]'
-                : 'text-[rgba(59,46,36,.6)]'
+                ? 'bg-ink font-semibold text-brand-cta-on'
+                : 'text-ink-secondary'
             }`}
           >
             {t.label}
@@ -128,11 +128,11 @@ export default function PickPanel({
       </div>
 
       {/* 片 3 快捷收款入口（名目+金额 → custom 行；零依赖真接线 server cartItemSchema） */}
-      <div className="mt-2.5 rounded-[14px] bg-[#FAF8F2] px-3 py-2.5" data-testid="cashier-quick-collect">
-        <div className="mb-1.5 flex items-center gap-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">
+      <div className="mt-2.5 rounded-[14px] bg-canvas px-3 py-2.5" data-testid="cashier-quick-collect">
+        <div className="mb-1.5 flex items-center gap-1.5 text-caption-xs font-semibold text-ink-secondary">
           <Banknote size={13} strokeWidth={1.8} aria-hidden />
           {cc('cashier.quickCollect')}
-          <span className="font-normal text-[rgba(59,46,36,.42)]">{cc('cashier.quickCollectAside')}</span>
+          <span className="font-normal text-ink-placeholder">{cc('cashier.quickCollectAside')}</span>
         </div>
         <div className="flex items-center gap-2">
           <input
@@ -141,7 +141,7 @@ export default function PickPanel({
             placeholder={cc('cashier.quickNamePh')}
             value={quickName}
             onChange={(e) => setQuickName(e.target.value)}
-            className="min-w-0 flex-1 rounded-[8px] bg-[#FFFDF6] px-2.5 py-[7px] text-caption text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+            className="min-w-0 flex-1 rounded-[8px] bg-card px-2.5 py-[7px] text-caption text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] placeholder:text-[rgba(44,40,34,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
           />
           <input
             data-testid="cashier-quick-amount"
@@ -152,7 +152,7 @@ export default function PickPanel({
             onKeyDown={(e) => {
               if (e.key === 'Enter') submitQuick()
             }}
-            className="w-[92px] rounded-[8px] bg-[#FFFDF6] px-2.5 py-[7px] text-right font-number text-caption font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+            className="w-[92px] rounded-[8px] bg-card px-2.5 py-[7px] text-right font-number text-caption font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] placeholder:text-[rgba(44,40,34,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
           />
           <button
             type="button"
@@ -174,7 +174,7 @@ export default function PickPanel({
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="rounded-[14px] bg-[#FFFDF6] p-3.5 shadow-[0_0_0_1px_rgba(59,46,36,.09)]"
+                className="rounded-[14px] bg-card p-3.5 shadow-[0_0_0_1px_rgba(44,40,34,.09)]"
               >
                 <Skeleton className="h-10 w-10 rounded-[10px]" />
                 <Skeleton className="mt-2.5 h-3.5 w-3/4" />
@@ -183,20 +183,20 @@ export default function PickPanel({
             ))}
           </div>
         ) : error ? (
-          <div className="rounded-[14px] bg-[#FFFDF6] px-4 py-6 text-center shadow-[0_0_0_1px_rgba(59,46,36,.09)]">
-            <p className="text-caption text-[rgba(59,46,36,.62)]">{error}</p>
+          <div className="rounded-[14px] bg-card px-4 py-6 text-center shadow-[0_0_0_1px_rgba(44,40,34,.09)]">
+            <p className="text-caption text-ink-secondary">{error}</p>
             <button
               type="button"
               data-testid="cashier-pick-retry"
               onClick={onRetry}
-              className="mt-3 rounded-full bg-[#FFFDF6] px-4 py-2 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+              className="mt-3 rounded-full bg-card px-4 py-2 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(44,40,34,.09)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
             >
               重新加载
             </button>
           </div>
         ) : tab === 'service' ? (
           (services ?? []).length === 0 ? (
-            <p className="px-2 py-6 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
+            <p className="px-2 py-6 text-center text-caption-xs text-ink-placeholder">
               门店暂无在架服务，请到「设置」维护
             </p>
           ) : (
@@ -216,7 +216,7 @@ export default function PickPanel({
           )
         ) : tab === 'product' ? (
           (products ?? []).length === 0 ? (
-            <p className="px-2 py-6 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
+            <p className="px-2 py-6 text-center text-caption-xs text-ink-placeholder">
               暂无在架商品，请到「商品」上架
             </p>
           ) : (
@@ -235,7 +235,7 @@ export default function PickPanel({
             </div>
           )
         ) : (pending ?? []).length === 0 ? (
-          <p className="px-2 py-6 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
+          <p className="px-2 py-6 text-center text-caption-xs text-ink-placeholder">
             无待收款预约——服务完成后会出现在这里
           </p>
         ) : (
@@ -247,16 +247,16 @@ export default function PickPanel({
                 <div
                   key={a.id}
                   data-testid={`cashier-pull-${a.id}`}
-                  className="flex items-center gap-2.5 rounded-[14px] bg-[#FFFDF6] px-3.5 py-3 shadow-[0_0_0_1px_rgba(59,46,36,.09)]"
+                  className="flex items-center gap-2.5 rounded-[14px] bg-card px-3.5 py-3 shadow-[0_0_0_1px_rgba(44,40,34,.09)]"
                 >
-                  <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-[#F1E8D4] text-caption-xs font-bold shadow-[0_0_0_1px_rgba(59,46,36,.09)]">
+                  <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-sunken text-caption-xs font-bold shadow-[0_0_0_1px_rgba(44,40,34,.09)]">
                     {(a.petName ?? '宠').slice(0, 1)}
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-caption font-semibold">
                       {a.petName} · {a.serviceName}
                     </div>
-                    <div className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                    <div className="mt-0.5 text-caption-xs text-ink-placeholder">
                       预约到店付 · <span className="font-number tabular-nums">{a.completedAt ? fmtDateTime(a.completedAt) : '—'}</span> · 已完成待收款
                     </div>
                   </div>

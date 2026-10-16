@@ -2,8 +2,8 @@
  * U3 任务 A · MainScaffold 主区骨架（规格书 §0）
  *
  * 顶行（标题 20/700 serif 页面题点缀（v2.0 §八 serif 退为页面题）+
- * 副行 11/400 + 右动作区：搜索=纸面细线 14 圆角、主行动=淡黄点睛钮
- * （bg-brand-primary=#F2DFA6，每屏至多一处））+ 内容区。
+ * 副行 11/400 + 右动作区：搜索=纸面细线 14 圆角、主行动=cream 点睛钮
+ * （bg-brand-primary=#F2DC8C，每屏至多一处））+ 内容区。
  * 桌面档：主区内边距收紧至 16~18（§八 间距收紧一档），圆角 20/14/6，深度=ring+近零影；
  * 触件 ≥44（钮/搜索 py-3.5 达 44）。
  */
@@ -76,7 +76,7 @@ export function SearchInput({
       value={value}
       onChange={onChange ? (e) => onChange(e.target.value) : undefined}
       placeholder={placeholder}
-      className="u1-ring w-56 rounded-control bg-card px-3.5 py-3.5 text-caption text-ink placeholder:text-[rgba(59,46,36,.42)] focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+      className="u1-ring w-56 rounded-control bg-card px-3.5 py-3.5 text-caption text-ink placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
     />
   );
 }
@@ -99,7 +99,7 @@ export default function MainScaffold({
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <h1 className="font-serif-cn text-title-lg font-bold leading-7">{title}</h1>
-          {sub ? <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">{sub}</div> : null}
+          {sub ? <div className="mt-1 text-caption-xs text-ink-placeholder">{sub}</div> : null}
         </div>
         {actions ? <div className="flex shrink-0 items-center gap-2.5">{actions}</div> : null}
       </div>
