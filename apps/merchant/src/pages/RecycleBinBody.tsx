@@ -78,12 +78,12 @@ export function RecycleBinBody() {
             <div
               key={`${it.domain}-${it.id}`}
               data-testid={`recycle-row-${it.domain}-${it.id}`}
-              className="flex items-center gap-3 border-t border-[rgba(59,46,36,.06)] py-[11px] text-caption first:border-t-0"
+              className="flex items-center gap-3 border-t border-[rgba(44,40,34,.06)] py-[11px] text-caption first:border-t-0"
             >
               <Badge tone="muted">{DOMAIN_LABEL[it.domain] ?? it.domain}</Badge>
               <div className="min-w-0 flex-1">
                 <div className="font-semibold text-ink">{it.title}</div>
-                <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
+                <div className="mt-[2px] text-caption-xs text-[rgba(44,40,34,.42)]" style={numStyle}>
                   {it.subtitle ?? '—'} · {it.deletedByNickname ?? '—'} · {fmtDateTime(it.deletedAt)}
                 </div>
               </div>

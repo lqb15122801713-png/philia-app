@@ -26,7 +26,7 @@ const btnVariant: Record<BtnVariant, string> = {
   // U3 禁 text-white（仅 red 功能胶囊/墨轨例外）：淡黄点睛底=墨字；danger 底=纸面字
   primary: 'bg-brand-primary text-ink hover:bg-brand-primary-hover active:bg-brand-primary-pressed',
   ghost: 'border border-line-strong bg-card text-ink hover:bg-sunken',
-  danger: 'bg-danger text-[#FFFDF6] hover:bg-danger-deep',
+  danger: 'bg-danger text-card hover:bg-danger-deep',
   subtle: 'text-brand-primary hover:bg-brand-primary-light',
 }
 const btnSize: Record<BtnSize, string> = {

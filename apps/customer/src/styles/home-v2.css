@@ -137,8 +137,10 @@
 .hv2-case .src { font-family: var(--v2mono); font-size: 9px; color: #A89779; padding: 6px 12px 11px; }
 
 /* ---- A-4 我的页（山姆骨架：身份大卡置顶+订单五格+网格一层，禁多层卡片堆叠） ---- */
+/* 片4 令牌收敛：hero 渐变 → READY §2.1 brand→pressed（#5C5040→#4A4034）；
+   qrrow/五格/网格墨基底 #3B2E24/#2E2318/rgba(59,46,36) → body #2C2822 族；档签旧淡金 → cream */
 .me2-hero {
-  background: linear-gradient(150deg, #3B2E24, #2A1F15);
+  background: linear-gradient(135deg, #5C5040, #4A4034);
   border-radius: 24px; padding: 20px 18px 16px; color: #F6EFDD;
   min-height: 312px; display: flex; flex-direction: column;
   box-shadow: 0 22px 44px -20px rgba(46,35,24,.35);
@@ -148,7 +150,7 @@
 .me2-hero .nm { font-size: 18px; font-weight: 800; }
 .me2-hero .tier {
   display: inline-block; margin-top: 5px; font-family: var(--v2serif); font-weight: 900;
-  font-size: 12px; color: #F2DFA6; border: 1px solid rgba(217,192,138,.5); border-radius: 99px; padding: 3px 11px;
+  font-size: 12px; color: #F2DC8C; border: 1px solid rgba(217,192,138,.5); border-radius: 99px; padding: 3px 11px;
 }
 .me2-hero .renew { margin-left: auto; font-size: 12px; color: #C9BBA0; border-bottom: 1px solid rgba(217,192,138,.4); padding-bottom: 1px; background: none; border-top: 0; border-left: 0; border-right: 0; cursor: pointer; }
 .me2-hero .nums { display: grid; grid-template-columns: 1.2fr 1fr 1fr; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(217,192,138,.22); }
@@ -157,7 +159,7 @@
 .me2-hero .nums .k { font-size: 10px; color: #C9BBA0; margin-top: 5px; }
 .me2-hero .nums .dim .v { color: #B9A98F; }
 .me2-qrrow {
-  margin-top: auto; background: #FAF8F2; color: #2E2318; border-radius: 14px;
+  margin-top: auto; background: #FFFFFF; color: #2C2822; border-radius: 14px;
   padding: 13px 16px; display: flex; align-items: center; gap: 9px;
   font-size: 13.5px; font-weight: 800; text-decoration: none;
 }
@@ -166,10 +168,10 @@
 
 /* 订单五格（白卡 18 五列：icon 21 + 10.5 签） */
 .me2-orderrow {
-  margin-top: 12px; background: #FFFFFF; border: 1px solid rgba(59,46,36,.14);
+  margin-top: 12px; background: #FFFFFF; border: 1px solid rgba(44,40,34,.14);
   border-radius: 18px; display: grid; grid-template-columns: repeat(5, 1fr); padding: 13px 0;
 }
-.me2-orderrow .o { text-align: center; font-size: 10.5px; color: #3B2E24; text-decoration: none; display: block; }
+.me2-orderrow .o { text-align: center; font-size: 10.5px; color: #2C2822; text-decoration: none; display: block; }
 .me2-orderrow .o svg { width: 21px; height: 21px; stroke-width: 1.6; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; margin: 0 auto 5px; display: block; }
 .me2-orderrow .o.slot { opacity: .42; cursor: default; }
 .me2-orderrow .o.slot svg { stroke: #8A7D6B; }
@@ -178,8 +180,8 @@
 /* 功能网格（4 列×2：icon 23 stroke 1.55 + 11 签 + mono 8.5 副签；一层网格不再加层） */
 .me2-grid8 { margin-top: 14px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 4px; }
 .me2-grid8 .g { text-align: center; text-decoration: none; display: block; background: none; border: 0; cursor: pointer; padding: 0; }
-.me2-grid8 .g svg { width: 23px; height: 23px; stroke-width: 1.55; fill: none; stroke: #3B2E24; stroke-linecap: round; stroke-linejoin: round; margin: 0 auto 7px; display: block; }
-.me2-grid8 .g .t { font-size: 11px; color: #3B2E24; }
+.me2-grid8 .g svg { width: 23px; height: 23px; stroke-width: 1.55; fill: none; stroke: #2C2822; stroke-linecap: round; stroke-linejoin: round; margin: 0 auto 7px; display: block; }
+.me2-grid8 .g .t { font-size: 11px; color: #2C2822; }
 .me2-grid8 .g small { display: block; font-family: var(--v2mono); font-size: 8.5px; color: #8A7D6B; margin-top: 2px; }
 .me2-grid8 .g.slot { opacity: .42; cursor: default; }
 .me2-grid8 .g.slot svg { stroke: #8A7D6B; }

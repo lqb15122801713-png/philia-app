@@ -255,7 +255,7 @@ function CartInner() {
       cart.items.length > 0 ? (
         <div
           className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-sticky"
-          style={{ background: 'linear-gradient(transparent, #FAF8F2 40%)' }}
+          style={{ background: 'linear-gradient(transparent, #FAF7F0 40%)' }}
         >
           <div className="mx-auto max-w-lg px-4 pb-4 pt-3">
             <div className="mb-2.5 flex items-center justify-between">
@@ -276,7 +276,7 @@ function CartInner() {
               type="button"
               disabled={cart.checkedItems.length === 0}
               onClick={handleCheckout}
-              className="flex w-full flex-col items-center justify-center rounded-[18px] bg-[#2E2318] py-3 text-body-lg font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
+              className="flex w-full flex-col items-center justify-center rounded-[18px] bg-brand-cta py-3 text-body-lg font-bold text-brand-cta-on transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
             >
               <span>
                 <CK k="mall.cartCheckout">{mlc('mall.cartCheckout')}</CK>{cart.checkedItems.length > 0 ? `（${cart.checkedItems.reduce((n, it) => n + it.qty, 0)}）` : ''}

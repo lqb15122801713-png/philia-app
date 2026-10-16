@@ -31,7 +31,7 @@ export default function BoardingPetCard({
           <img src={pet.avatarUrl} alt={pet.name ?? '宠物'} className="h-full w-full object-cover" />
         ) : (
           <span className="flex h-full w-full items-center justify-center" aria-hidden>
-            <PawPrint className="h-12 w-12 text-[rgba(59,46,36,.42)]" strokeWidth={1.5} />
+            <PawPrint className="h-12 w-12 text-[rgba(44,40,34,.42)]" strokeWidth={1.5} />
           </span>
         )}
         <span className="absolute left-3 top-3 rounded-full bg-card px-3 py-1.5 text-caption-xs font-bold text-ink">
@@ -41,7 +41,7 @@ export default function BoardingPetCard({
       <div className="flex items-center gap-3 px-4 py-3.5">
         <div className="min-w-0 flex-1">
           <p className="text-body-lg font-bold">{pet?.name ?? '宠物'}</p>
-          <p className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
+          <p className="mt-1 text-caption-xs text-[rgba(44,40,34,.62)]">
             {pet?.breed || pet?.weightKg ? (
               <>
                 {pet?.breed}

@@ -124,12 +124,12 @@ export default function DailyLogForm({
     <>
       <section className="u1-card mx-4 mt-3 p-4" data-testid="daily-log-form">
         <h2 className="text-body-sm font-bold">今日打卡 · <span className="u1-num">{Number(today.slice(5, 7))}月{Number(today.slice(8, 10))}日</span></h2>
-        <p className="mb-3 mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">提交后实时推送给家长（照片+文字）</p>
+        <p className="mb-3 mt-1 text-caption-xs text-[rgba(44,40,34,.62)]">提交后实时推送给家长（照片+文字）</p>
 
         {/* 喂食 segment（墨底选中） */}
         <div className="mb-3">
           <p className="mb-2 text-caption-xs font-bold">
-            喂食 <small className="font-medium text-[rgba(59,46,36,.42)]">· 实际餐次</small>
+            喂食 <small className="font-medium text-[rgba(44,40,34,.42)]">· 实际餐次</small>
           </p>
           <div className="flex gap-2" role="group" aria-label="喂食餐次">
             {MEAL_SEGS.map((label, i) => (
@@ -140,7 +140,7 @@ export default function DailyLogForm({
                 onClick={() => setMealCount(i)}
                 /* W1-D2 触控量化：segment 整钮可点 + 目标高 ≥44px，相邻间距 8px（gap-2） */
                 className={`min-h-[44px] flex-1 rounded-control py-2.5 text-caption font-semibold transition-transform duration-120 ease-philia-spring active:scale-92 ${
-                  mealCount === i ? 'bg-ink text-[#FAF8F2]' : 'u1-ring bg-canvas text-[rgba(59,46,36,.62)]'
+                  mealCount === i ? 'bg-ink text-canvas' : 'u1-ring bg-canvas text-[rgba(44,40,34,.62)]'
                 }`}
               >
                 {label}
@@ -152,7 +152,7 @@ export default function DailyLogForm({
         {/* 遛狗 stepper */}
         <div className="mb-3">
           <p className="mb-2 text-caption-xs font-bold">
-            遛狗 <small className="font-medium text-[rgba(59,46,36,.42)]">· 实际次数</small>
+            遛狗 <small className="font-medium text-[rgba(44,40,34,.42)]">· 实际次数</small>
           </p>
           <div className="flex items-center gap-3.5">
             <button
@@ -174,14 +174,14 @@ export default function DailyLogForm({
             >
               <Plus className="h-4 w-4" strokeWidth={1.8} />
             </button>
-            <span className="text-caption-xs text-[rgba(59,46,36,.42)]">次 · 每次约 15 分钟</span>
+            <span className="text-caption-xs text-[rgba(44,40,34,.42)]">次 · 每次约 15 分钟</span>
           </div>
         </div>
 
         {/* 今日照片（≥1 张） */}
         <div className="mb-3">
           <p className="mb-2 text-caption-xs font-bold">
-            今日照片 <small className="font-medium text-[rgba(59,46,36,.42)]">· 至少 1 张</small>
+            今日照片 <small className="font-medium text-[rgba(44,40,34,.42)]">· 至少 1 张</small>
           </p>
           <div className="flex flex-wrap gap-1.5">
             {photos.map((url, i) => (
@@ -191,7 +191,7 @@ export default function DailyLogForm({
                   type="button"
                   aria-label={`删除照片 ${i + 1}`}
                   onClick={() => setPhotos((ps) => ps.filter((x) => x !== url))}
-                  className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-caption-xs text-[#FAF8F2] transition-transform duration-120 ease-philia-spring active:scale-92"
+                  className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-caption-xs text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
                 >
                   <X className="h-3 w-3" strokeWidth={2.5} />
                 </button>
@@ -202,7 +202,7 @@ export default function DailyLogForm({
                 type="button"
                 data-testid="daily-add-photo"
                 onClick={() => fileRef.current?.click()}
-                className="flex h-12 w-16 flex-col items-center justify-center rounded-chip bg-card text-caption-xs leading-tight text-[rgba(59,46,36,.42)] [border:1px_dashed_rgba(59,46,36,.25)] transition-transform duration-120 ease-philia-spring active:scale-92"
+                className="flex h-12 w-16 flex-col items-center justify-center rounded-chip bg-card text-caption-xs leading-tight text-[rgba(44,40,34,.42)] [border:1px_dashed_rgba(44,40,34,.25)] transition-transform duration-120 ease-philia-spring active:scale-92"
               >
                 <b className="text-title font-normal leading-none">＋</b>
                 拍照
@@ -217,13 +217,13 @@ export default function DailyLogForm({
         {/* 备注（选填，家长可见） */}
         <div>
           <p className="mb-2 text-caption-xs font-bold">
-            备注 <small className="font-medium text-[rgba(59,46,36,.42)]">· 选填，家长可见</small>
+            备注 <small className="font-medium text-[rgba(44,40,34,.42)]">· 选填，家长可见</small>
           </p>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value.slice(0, 500))}
             placeholder="今天胃口很好，中午在院子里跑了二十分钟…"
-            className="h-16 w-full resize-none rounded-control bg-canvas px-3.5 py-3 text-caption text-ink shadow-[inset_0_0_0_1px_rgba(59,46,36,.09)] placeholder:text-[rgba(59,46,36,.42)] focus:outline-none focus:shadow-[inset_0_0_0_1px_rgba(59,46,36,.25)]"
+            className="h-16 w-full resize-none rounded-control bg-canvas px-3.5 py-3 text-caption text-ink shadow-[inset_0_0_0_1px_rgba(44,40,34,.09)] placeholder:text-[rgba(44,40,34,.42)] focus:outline-none focus:shadow-[inset_0_0_0_1px_rgba(44,40,34,.25)]"
           />
         </div>
 
@@ -231,7 +231,7 @@ export default function DailyLogForm({
       </section>
 
       {/* 吸底淡黄主钮（幂等副行常驻；员工端 §八 页边距收紧至 16） */}
-      <div className="sticky bottom-0 mt-3 bg-card px-4 pb-[calc(14px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-1px_0_rgba(59,46,36,.06)]">
+      <div className="sticky bottom-0 mt-3 bg-card px-4 pb-[calc(14px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-1px_0_rgba(44,40,34,.06)]">
         <button
           type="button"
           data-testid="daily-submit"
@@ -242,7 +242,7 @@ export default function DailyLogForm({
           <Camera className="h-4 w-4" strokeWidth={1.8} />
           {submitting ? '提交中…' : todayLog ? '更新今日打卡' : '提交今日打卡'}
         </button>
-        <p className="mt-1.5 text-center text-caption-xs text-[rgba(59,46,36,.42)]">同日重复提交=更新当日记录（幂等）</p>
+        <p className="mt-1.5 text-center text-caption-xs text-[rgba(44,40,34,.42)]">同日重复提交=更新当日记录（幂等）</p>
       </div>
     </>
   );

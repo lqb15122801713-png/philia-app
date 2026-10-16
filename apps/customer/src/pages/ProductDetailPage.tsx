@@ -213,7 +213,7 @@ function ReviewSheet({
           disabled={!orderId || submitM.isPending || uploading}
           onClick={() => submitM.mutate()}
           data-testid="review-submit"
-          className="mt-4 flex w-full items-center justify-center rounded-[18px] bg-[#2E2318] py-3 text-body font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
+          className="mt-4 flex w-full items-center justify-center rounded-[18px] bg-brand-cta py-3 text-body font-bold text-brand-cta-on transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
         >
           {submitM.isPending ? <CK k="rev.submitting">{rvc('rev.submitting')}</CK> : <CK k="rev.submit">{rvc('rev.submit')}</CK>}
         </button>
@@ -653,7 +653,7 @@ function DetailInner() {
     'pdp.ctaBar': () => (
       <div
         className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-sticky"
-        style={{ background: 'linear-gradient(transparent, #FAF8F2 40%)' }}
+        style={{ background: 'linear-gradient(transparent, #FAF7F0 40%)' }}
       >
         <div className="mx-auto flex max-w-lg items-stretch gap-2.5 px-4 pb-4 pt-3">
           {!soldOut ? (
@@ -693,7 +693,7 @@ function DetailInner() {
             disabled={soldOut}
             onClick={handleBuyNow}
             data-testid="pdp-buy-now"
-            className="flex flex-[1.4] flex-col items-center justify-center rounded-[18px] bg-[#2E2318] py-3 text-body-lg font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
+            className="flex flex-[1.4] flex-col items-center justify-center rounded-[18px] bg-brand-cta py-3 text-body-lg font-bold text-brand-cta-on transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
           >
             <span>{soldOut ? <CK k="mall.soldOut">{mlc('mall.soldOut')}</CK> : <CK k="mall.pdpBuyNow">{mlc('mall.pdpBuyNow')}</CK>}</span>
             {!soldOut ? (

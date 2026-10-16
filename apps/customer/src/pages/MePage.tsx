@@ -139,7 +139,7 @@ export default function MePage() {
   const plan = myQ.data?.plan ?? null
   /* 补缺修复小批 P1-3：免费档永久有效（数据层 expiresAt=2099 同帧），倒计时格不上数字 */
   const isFreePlan = !!plan?.free
-  const tierLabel = plan ? plan.label.replace(/^会员档·/, '').replace(/：.*$/, '') : '菲丽亚宠友'
+  const tierLabel = plan ? plan.label.replace(/^会员档·/, '').replace(/：.*$/, '') : mc('me.tagGuest')
   const rebateBalance = myQ.data?.rebate?.balanceFen ?? 0
   /* 续费倒计时（PD-15：落地件=纯展示，membership.expiresAt 真值；非会员不上数；免费档=永久有效豁免） */
   const renewDaysLeft = membership
@@ -165,8 +165,8 @@ export default function MePage() {
           {avatarUrl ? (
             <img className="av" src={avatarUrl} alt={nickname} />
           ) : (
-            <span className="av" style={{ display: 'grid', placeItems: 'center', background: '#F4EDDC' }} aria-hidden="true">
-              <span style={{ fontFamily: 'var(--v2serif)', fontSize: 20, fontWeight: 900, color: '#3B2E24' }}>
+            <span className="av" style={{ display: 'grid', placeItems: 'center', background: '#F3EEE4' }} aria-hidden="true">
+              <span style={{ fontFamily: 'var(--v2serif)', fontSize: 20, fontWeight: 900, color: '#2C2822' }}>
                 {nickname.slice(0, 1)}
               </span>
             </span>

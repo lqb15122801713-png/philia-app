@@ -287,7 +287,7 @@ export default function ProductsPage() {
         title={disabled ? pd('prod.bulkPriceOwnerOnly') : undefined}
         value={bulkText(p, f)}
         onChange={(e) => setBulk(p.id, f, e.target.value)}
-        className={`w-20 rounded-control bg-card px-2 py-1.5 text-caption tabular-nums text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(59,46,36,.25)] ${disabled ? 'opacity-50' : ''}`}
+        className={`w-20 rounded-control bg-card px-2 py-1.5 text-caption tabular-nums text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(44,40,34,.25)] ${disabled ? 'opacity-50' : ''}`}
       />
     )
   }
@@ -351,14 +351,14 @@ export default function ProductsPage() {
             <h3>{pd('prod.csvImportTitle')}</h3>
             <button
               type="button"
-              className="text-caption-xs font-bold text-[rgba(59,46,36,.62)]"
+              className="text-caption-xs font-bold text-[rgba(44,40,34,.62)]"
               data-testid="csv-close"
               onClick={() => setImportOpen(false)}
             >
               {pd('prod.csvClose')}
             </button>
           </div>
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-4">
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-4">
             <div className="flex flex-wrap items-center gap-2">
               <QuietButton testid="csv-template" onClick={() => void downloadTemplate()}>
                 {pd('prod.csvTemplateCta')}
@@ -380,7 +380,7 @@ export default function ProductsPage() {
                 />
               </label>
               {csvName ? (
-                <span className="u1-num text-caption-xs text-[rgba(59,46,36,.62)]" data-testid="csv-filename">
+                <span className="u1-num text-caption-xs text-[rgba(44,40,34,.62)]" data-testid="csv-filename">
                   {csvName}
                 </span>
               ) : null}
@@ -408,7 +408,7 @@ export default function ProductsPage() {
               ) : null}
             </div>
             {/* 大批片 4 导入说明：可选尾列 进价(元)/库存下限/库存上限（server 已扩列兼容） */}
-            <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="csv-opt-cols-note">
+            <p className="mt-2 text-caption-xs text-[rgba(44,40,34,.42)]" data-testid="csv-opt-cols-note">
               {pd('prod.csvOptColsNote')}
             </p>
             {previewM.data ? (
@@ -460,11 +460,11 @@ export default function ProductsPage() {
       ) : listQuery.isError ? (
         <div className="u3-panel px-[17px] py-10 text-center">
           <p className="text-sm font-bold text-ink">加载失败</p>
-          <p className="mt-1 text-xs text-[rgba(59,46,36,.62)]">{errMsg(listQuery.error)}</p>
+          <p className="mt-1 text-xs text-[rgba(44,40,34,.62)]">{errMsg(listQuery.error)}</p>
         </div>
       ) : items.length === 0 ? (
         <div className="u3-panel flex flex-col items-center px-[17px] py-14">
-          <PackageOpen size={34} strokeWidth={1.2} className="text-[rgba(59,46,36,.42)]" />
+          <PackageOpen size={34} strokeWidth={1.2} className="text-[rgba(44,40,34,.42)]" />
           <p className="mt-3 text-sm font-bold text-ink">{pd('prod.emptyTitle')}</p>
           <div className="mt-4">
             <QuietButton testid="products-empty-create" onClick={() => openEditor(null)}>
@@ -504,14 +504,14 @@ export default function ProductsPage() {
                       <td>
                         <span className="font-bold text-ink">{p.name}</span>
                         {careRo ? (
-                          <span className="ml-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                          <span className="ml-1.5 text-caption-xs text-[rgba(44,40,34,.42)]">
                             {pd('prod.bulkCarePackageRo')}
                           </span>
                         ) : null}
                       </td>
-                      <td className="text-[rgba(59,46,36,.62)]">{p.category}</td>
+                      <td className="text-[rgba(44,40,34,.62)]">{p.category}</td>
                       {careRo ? (
-                        <td colSpan={5} className="text-caption-xs text-[rgba(59,46,36,.42)]">
+                        <td colSpan={5} className="text-caption-xs text-[rgba(44,40,34,.42)]">
                           {pd('prod.bulkCarePackageRo')}
                         </td>
                       ) : (
@@ -525,7 +525,7 @@ export default function ProductsPage() {
                               value={bulkText(p, 'description')}
                               maxLength={2000}
                               onChange={(e) => setBulk(p.id, 'description', e.target.value)}
-                              className="w-56 rounded-control bg-card px-2 py-1.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+                              className="w-56 rounded-control bg-card px-2 py-1.5 text-caption text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
                             />
                           </td>
                           <td className="text-right">{bulkNumInput(p, 'minStock', 'bulk-min')}</td>
@@ -533,7 +533,7 @@ export default function ProductsPage() {
                         </>
                       )}
                       {/* 成本列保持只读（涉账不进网格；clerk 视界 server 已置 null） */}
-                      <td className="whitespace-nowrap text-right font-number tabular-nums text-[rgba(59,46,36,.62)]">
+                      <td className="whitespace-nowrap text-right font-number tabular-nums text-[rgba(44,40,34,.62)]">
                         {role.canManage ? fmtMoney(p.costFen) : pd('prod.costClerkMask')}
                       </td>
                       <td className="text-right">{deleteBtn(p)}</td>
@@ -596,14 +596,14 @@ export default function ProductsPage() {
                       <td>
                         <span className="font-bold text-ink">{p.name}</span>
                       </td>
-                      <td className="text-[rgba(59,46,36,.62)]">{p.category}</td>
+                      <td className="text-[rgba(44,40,34,.62)]">{p.category}</td>
                       <td className="whitespace-nowrap text-right">
                         <span className="font-number font-bold tabular-nums text-ink">¥{fenToYuan(p.priceFen)}</span>
-                        <span className="ml-1 text-caption-xs text-[rgba(59,46,36,.42)]">/ 件</span>
+                        <span className="ml-1 text-caption-xs text-[rgba(44,40,34,.42)]">/ 件</span>
                       </td>
                       {/* 大批片 4 成本列：毛利视界=canManage 才有值（server 双层闸 clerk 零透出），clerk=「—」 */}
                       <td
-                        className="whitespace-nowrap text-right font-number tabular-nums text-[rgba(59,46,36,.62)]"
+                        className="whitespace-nowrap text-right font-number tabular-nums text-[rgba(44,40,34,.62)]"
                         data-testid={`product-cost-${p.id}`}
                       >
                         {role.canManage ? fmtMoney(p.costFen) : pd('prod.costClerkMask')}
@@ -623,7 +623,7 @@ export default function ProductsPage() {
                         {dailyCount ? (
                           <span className="u3-st amber">{pd('prod.dailyCountYes')}</span>
                         ) : (
-                          <span className="text-caption-xs text-[rgba(59,46,36,.3)]">—</span>
+                          <span className="text-caption-xs text-[rgba(44,40,34,.3)]">—</span>
                         )}
                       </td>
                       {/* 行内删除（owner；回收站软删；stopPropagation 不触发行点编辑弹层） */}
@@ -634,14 +634,14 @@ export default function ProductsPage() {
               </tbody>
             </table>
           </div>
-          <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="products-daily-count-note">
+          <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5 text-caption-xs text-[rgba(44,40,34,.42)]" data-testid="products-daily-count-note">
             {pd('prod.dailyCountNote')}
           </p>
         </div>
       )}
 
       {listQuery.data && listQuery.data.total > listQuery.data.items.length ? (
-        <p className="mt-2 text-[11px] text-[rgba(59,46,36,.42)]">
+        <p className="mt-2 text-[11px] text-[rgba(44,40,34,.42)]">
           结果较多，当前显示前 {listQuery.data.items.length} 条，请用分类 / 搜索缩小范围
         </p>
       ) : null}

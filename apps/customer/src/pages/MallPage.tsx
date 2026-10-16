@@ -16,7 +16,7 @@
  * （搜索防抖/无限流/快加购链路/跨店确认一字不动），data-testid 原值全保留。
  */
 
-import { BoardSkeleton, CanvasLayoutLoader, CK, useCanvasLayout, usePhiliaClient } from '@philia/shared';
+import { BoardSkeleton, CanvasLayoutLoader, CK, resolveSlotUrl, slotContentOf, useCanvasLayout, usePhiliaClient } from '@philia/shared';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Plus, Search, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -33,8 +33,23 @@ import { mlc } from '../copy/mall';
 import { fvc } from '../copy/favorites';
 import ProductImage from '../components/mall/ProductImage';
 
-const CATEGORIES = ['全部', '主粮', '零食', '玩具', '清洁', '其他'] as const;
+/* 类目 chip（片4 · 核对表行 9）：展示名=copy 键 A4 端口（mall.cat.*）；
+   查询值=码内枚举写死不抽键（对齐种子数据应用层枚举，label 改动不动查询契约） */
+const CATEGORIES = [
+  { value: '全部', labelKey: 'mall.cat.all' },
+  { value: '主粮', labelKey: 'mall.cat.staple' },
+  { value: '零食', labelKey: 'mall.cat.snack' },
+  { value: '玩具', labelKey: 'mall.cat.toy' },
+  { value: '清洁', labelKey: 'mall.cat.clean' },
+  { value: '其他', labelKey: 'mall.cat.other' },
+] as const;
+type CategoryValue = (typeof CATEGORIES)[number]['value'];
 const PAGE_SIZE = 12;
+
+/** 新品角标视窗（批D 商品角标 · 不含真券）：createdAt 距今 ≤14 天自动签；
+    violet 活动角标 ≤10% 纪律——每屏最多 NEW_BADGE_CAP 签（列表=server createdAt 倒序，取最新两件） */
+const NEW_PRODUCT_DAYS = 14;
+const NEW_BADGE_CAP = 2;
 
 /** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
 const MALL_DEFAULT_ORDER = [
@@ -54,6 +69,8 @@ type ProductItem = {
   priceFen: number;
   stock: number;
   images: string[] | null;
+  /** 上架时刻（listProducts 全列直出；批D 新品角标判据） */
+  createdAt?: string | Date | null;
 };
 
 function ProductCard({
@@ -61,6 +78,7 @@ function ProductCard({
   onQuickAdd,
   rebateBp,
   hookText,
+  showNewBadge,
 }: {
   item: ProductItem;
   /** U1-G 快加购（真加购链路 cartStore.addItem；售罄不渲染） */
@@ -69,6 +87,8 @@ function ProductCard({
   rebateBp: number;
   /** 体验急修批 B：rebateBp=0 时的规则钩子文案（读表拼好传入；空串=不渲染） */
   hookText: string;
+  /** 批D 新品角标（父级按序位+视窗双闸下发，守 ≤10% 帽） */
+  showNewBadge: boolean;
 }) {
   /* 片 2 M-01 定稿（§4.7）：图 4:3 + 名 12.5/700 两行 + 价 mono 14/700 + 右 mono 8.5
      「返 ¥x 回馈金」（APP-18 口径）+ qadd 30 圆深棕「＋」（:active scale .9） */
@@ -83,6 +103,15 @@ function ProductCard({
     <div className="u1-card relative overflow-hidden">
       <Link to={`/mall/product/${item.id}`} className="block transition active:scale-[0.99]">
         <ProductImage src={item.images?.[0]} alt={item.name} className="aspect-[4/3] w-full" />
+        {showNewBadge ? (
+          /* violet 活动角标（READY §2.1：≤10% 禁 CTA/Tab；不含真券） */
+          <span
+            data-testid={`mall-badge-new-${item.id}`}
+            className="absolute left-2 top-2 rounded-chip bg-violet px-1.5 py-0.5 text-[10px] font-bold text-violet-on"
+          >
+            {mlc('mall.badgeNew')}
+          </span>
+        ) : null}
         <div className="px-3 pb-3 pt-2.5">
           <p className="line-clamp-2 min-h-8 text-[12.5px] font-bold leading-4">{item.name}</p>
           <div className="mt-[7px] flex items-baseline pr-8">
@@ -123,7 +152,7 @@ function ProductCard({
             e.preventDefault();
             onQuickAdd(item);
           }}
-          className="absolute bottom-3 right-3 flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[#2E2318] text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-90"
+          className="absolute bottom-3 right-3 flex h-[30px] w-[30px] items-center justify-center rounded-full bg-brand-cta text-brand-cta-on transition-transform duration-120 ease-philia-spring active:scale-90"
         >
           <Plus className="h-4 w-4" strokeWidth={2.2} />
         </button>
@@ -132,11 +161,55 @@ function ProductCard({
   );
 }
 
+/** 批D 商城促销横幅（mall.hero 槽位 · A5 发布流：图/主副题/CTA 运营可调；
+    壳写死内容端口化；不含真券核销——CTA=平滑滚动到商品流，真动作不挂假链） */
+function MallHero() {
+  const slot = slotContentOf('mall.hero');
+  const title = slot?.title_main ?? mlc('mall.heroTitle');
+  const sub = slot?.title_sub ?? mlc('mall.heroSub');
+  const cta = slot?.cta_text ?? mlc('mall.heroCta');
+  const src = resolveSlotUrl(slot?.url ?? null);
+  const [imgOk, setImgOk] = useState(true);
+  return (
+    <section className="mt-3 overflow-hidden rounded-card bg-card shadow-card" data-testid="mall-hero">
+      <div className="relative">
+        {src && imgOk ? (
+          <img
+            src={src}
+            alt={slot?.alt ?? title}
+            onError={() => setImgOk(false)}
+            className="aspect-[21/9] w-full object-cover"
+          />
+        ) : (
+          /* url=null=品牌渐变占位（真图终摄非目标，R10 不落假图） */
+          <div role="img" aria-label={slot?.alt ?? title} className="aspect-[21/9] w-full bg-philia-gradient" />
+        )}
+        <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-[rgba(44,40,34,.55)] to-transparent px-4 pb-3 pt-8">
+          <p className="u1-serif text-[19px] font-black leading-snug text-canvas">{title}</p>
+          <p className="mt-0.5 font-number text-[9.5px] tracking-wide text-canvas/80">{sub}</p>
+        </div>
+        {cta ? (
+          <button
+            type="button"
+            data-testid="mall-hero-cta"
+            onClick={() =>
+              document.querySelector('[data-block-key="mall.productGrid"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+            className="absolute bottom-3 right-3 rounded-full bg-brand-primary px-3 py-1.5 text-caption-xs font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+          >
+            {cta}
+          </button>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
 function MallInner() {
   const { trpc } = usePhiliaClient();
   const cart = useCart();
   const { toastEl, showToast } = useToast({ durationMs: 3200 });
-  const [category, setCategory] = useState<(typeof CATEGORIES)[number]>('全部');
+  const [category, setCategory] = useState<CategoryValue>('全部');
   const [searchText, setSearchText] = useState('');
   const [keyword, setKeyword] = useState('');
   /** U1-G 快加购跨店冲突待确认（与 PDP 同链路） */
@@ -332,17 +405,17 @@ function MallInner() {
       <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {CATEGORIES.map((c) => (
           <button
-            key={c}
+            key={c.value}
             type="button"
-            onClick={() => setCategory(c)}
-            data-testid={`mall-cat-${c}`}
+            onClick={() => setCategory(c.value)}
+            data-testid={`mall-cat-${c.value}`}
             className={`shrink-0 rounded-full px-3.5 py-2 text-caption transition ${
-              category === c
+              category === c.value
                 ? 'bg-ink font-semibold text-canvas'
                 : 'bg-card font-medium text-ink-secondary ring-1 ring-line-ring'
             }`}
           >
-            {c}
+            {mlc(c.labelKey)}
           </button>
         ))}
       </div>
@@ -385,8 +458,20 @@ function MallInner() {
       ) : (
         <>
           <div className="mt-4 grid grid-cols-2 gap-3">
-            {items.map((it) => (
-              <ProductCard key={it.id} item={it} onQuickAdd={quickAdd} rebateBp={rebateBp} hookText={hookText} />
+            {items.map((it, idx) => (
+              <ProductCard
+                key={it.id}
+                item={it}
+                onQuickAdd={quickAdd}
+                rebateBp={rebateBp}
+                hookText={hookText}
+                /* 批D 新品角标双闸：视窗内 + 序位帽（列表=server createdAt 倒序） */
+                showNewBadge={
+                  idx < NEW_BADGE_CAP &&
+                  !!it.createdAt &&
+                  Date.now() - new Date(it.createdAt).getTime() < NEW_PRODUCT_DAYS * 86_400_000
+                }
+              />
             ))}
           </div>
           {/* 上拉加载哨兵 */}
@@ -430,6 +515,9 @@ function MallInner() {
           ) : null,
         )}
         <div className="px-[22px]">
+          {/* 批D mall.hero 促销横幅（槽位驱动；紧随页头，不入画布块流——
+              mall 块序现不在画布端口三屏页签内，内容发布走 A5 槽流已足） */}
+          <MallHero />
           {layout.map((b) =>
             b.visible && b.blockKey !== 'mall.head' ? (
               <section data-block-key={b.blockKey} key={b.blockKey}>

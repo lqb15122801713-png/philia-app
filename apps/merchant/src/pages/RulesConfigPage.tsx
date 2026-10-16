@@ -905,24 +905,24 @@ function NumInput({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-caption-xs text-[rgba(59,46,36,.62)]">{label}</span>
+      <span className="mb-1 block text-caption-xs text-[rgba(44,40,34,.62)]">{label}</span>
       <span className="flex items-center gap-1.5">
         <input
           className={`w-24 rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 focus:outline-none ${
             error
               ? 'ring-danger focus:ring-danger'
-              : 'ring-line-ring focus:ring-[rgba(59,46,36,.25)]'
+              : 'ring-line-ring focus:ring-[rgba(44,40,34,.25)]'
           }`}
           style={numStyle}
           inputMode="decimal"
           value={text}
           onChange={(e) => onChange(e.target.value)}
         />
-        {suffix ? <span className="shrink-0 text-caption-xs text-[rgba(59,46,36,.42)]">{suffix}</span> : null}
+        {suffix ? <span className="shrink-0 text-caption-xs text-[rgba(44,40,34,.42)]">{suffix}</span> : null}
       </span>
       {error ? <span className="mt-1 block text-caption-xs text-danger-deep">{error}</span> : null}
       {!error && hint ? (
-        <span className="mt-1 block text-caption-xs text-[rgba(59,46,36,.42)]">{hint}</span>
+        <span className="mt-1 block text-caption-xs text-[rgba(44,40,34,.42)]">{hint}</span>
       ) : null}
     </label>
   );
@@ -1196,7 +1196,7 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
           <Skeleton className="h-4 w-24 rounded-chip" />
         </div>
         {(['w-[46%]', 'w-[55%]', 'w-[64%]', 'w-[73%]', 'w-[82%]']).map((w, i) => (
-          <div key={i} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-4">
+          <div key={i} className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-4">
             <Skeleton className={`h-3 rounded-chip ${w}`} />
             <Skeleton className="mt-2 h-8 w-2/3 rounded-control" />
           </div>
@@ -1255,21 +1255,21 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
           const historyRows = historyByKey.get(r.ruleKey) ?? [];
           const historyOpen = openHistoryKey === r.ruleKey;
           return (
-            <div key={r.id} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-[13px]">
+            <div key={r.id} className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-[13px]">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="text-caption font-semibold text-ink">{shortLabel(r.label)}</div>
-                  <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]">{r.label}</div>
+                  <div className="mt-[2px] text-caption-xs text-[rgba(44,40,34,.42)]">{r.label}</div>
                   {/* 件 7 逐参数帮助（server 合成 helpText，cfghelp.* 覆盖优先） */}
                   {r.helpText ? (
                     <div
-                      className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]"
+                      className="mt-[2px] text-caption-xs text-[rgba(44,40,34,.42)]"
                       data-testid={`rules-help-${r.ruleKey}`}
                     >
                       {r.helpText}
                     </div>
                   ) : null}
-                  <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
+                  <div className="mt-[2px] text-caption-xs text-[rgba(44,40,34,.42)]" style={numStyle}>
                     自 {fmtDateTime(r.effectiveFrom)} 起生效
                     {r.creatorNickname ? ` · 由 ${r.creatorNickname} 设置` : ''}
                     {model.notes.length > 0 ? ` · ${model.notes.join(' · ')}` : ''}
@@ -1310,7 +1310,7 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
 
               {/* 件 2 定时行注 + 撤销（待生效登记行=同 key 新行 active=0 待生效） */}
               {schedRow ? (
-                <div className="mt-2 flex items-center gap-2 text-caption-xs text-[rgba(59,46,36,.62)]" style={numStyle}>
+                <div className="mt-2 flex items-center gap-2 text-caption-xs text-[rgba(44,40,34,.62)]" style={numStyle}>
                   <span>
                     {rc('rules.scheduledRowNote', {
                       version: schedRow.version,
@@ -1332,7 +1332,7 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
               {historyOpen ? (
                 <div className="mt-2 space-y-1.5 rounded-control bg-canvas px-3 py-2">
                   {historyRows.map((h) => (
-                    <div key={h.id} className="flex items-center gap-2 text-caption-xs text-[rgba(59,46,36,.62)]">
+                    <div key={h.id} className="flex items-center gap-2 text-caption-xs text-[rgba(44,40,34,.62)]">
                       <Badge tone={h.active ? 'success' : 'muted'}>
                         <span style={numStyle}>v{h.version}</span>
                       </Badge>
@@ -1376,11 +1376,11 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
                       return (
                         <div key={ed.key} className="min-w-0">
                           <div className="mb-1 flex items-baseline gap-2">
-                            <span className="text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">
+                            <span className="text-caption-xs font-semibold text-[rgba(44,40,34,.62)]">
                               {ed.mapLabel}
                             </span>
                             {ed.key === 'split_bp' ? (
-                              <span className="text-caption-xs text-[rgba(59,46,36,.42)]">{rc('rules.splitNote')}</span>
+                              <span className="text-caption-xs text-[rgba(44,40,34,.42)]">{rc('rules.splitNote')}</span>
                             ) : null}
                           </div>
                           <div className="flex flex-wrap items-start gap-3">
@@ -1405,11 +1405,11 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
                       return (
                         <div key={ed.key} className="min-w-0">
                           <div className="mb-1 flex items-baseline gap-2">
-                            <span className="text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">
+                            <span className="text-caption-xs font-semibold text-[rgba(44,40,34,.62)]">
                               {ed.nestedLabel}
                             </span>
                             {ed.unitHint ? (
-                              <span className="text-caption-xs text-[rgba(59,46,36,.42)]">单位：{ed.unitHint}</span>
+                              <span className="text-caption-xs text-[rgba(44,40,34,.42)]">单位：{ed.unitHint}</span>
                             ) : null}
                           </div>
                           <div className="flex flex-wrap items-start gap-3">
@@ -1430,18 +1430,18 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
                     if (ed.kind === 'keywords') {
                       return (
                         <div key={ed.key} className="min-w-0 flex-1 basis-full">
-                          <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">
+                          <div className="mb-1 text-caption-xs font-semibold text-[rgba(44,40,34,.62)]">
                             {ed.kwLabel}
                           </div>
                           <div className="space-y-2">
                             {ed.entries.map((e) => (
                               <label key={e.path} className="block">
-                                <span className="mb-1 block text-caption-xs text-[rgba(59,46,36,.62)]">
+                                <span className="mb-1 block text-caption-xs text-[rgba(44,40,34,.62)]">
                                   {e.subLabel}
-                                  <span className="ml-1 text-[rgba(59,46,36,.42)]">逗号分隔，可留空</span>
+                                  <span className="ml-1 text-[rgba(44,40,34,.42)]">逗号分隔，可留空</span>
                                 </span>
                                 <input
-                                  className="w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+                                  className="w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
                                   value={drafts[r.ruleKey]?.[e.path] ?? ''}
                                   placeholder="如：洗，浴，SPA"
                                   onChange={(ev) => setDraft(r.ruleKey, e.path, ev.target.value)}
@@ -1456,7 +1456,7 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
                       const cur = drafts[r.ruleKey]?.[ed.path] ?? ed.original;
                       return (
                         <div key={ed.key} className="min-w-0">
-                          <div className="mb-1 text-caption-xs text-[rgba(59,46,36,.62)]">{ed.label}</div>
+                          <div className="mb-1 text-caption-xs text-[rgba(44,40,34,.62)]">{ed.label}</div>
                           <div className="flex gap-1.5" role="radiogroup" aria-label={ed.label}>
                             {ed.options.map((o) => (
                               <button
@@ -1468,8 +1468,8 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
                                 onClick={() => setDraft(r.ruleKey, ed.path, o.value)}
                                 className={`rounded-full px-3.5 py-[7px] text-caption transition-colors ${
                                   cur === o.value
-                                    ? 'bg-[#3B2E24] font-semibold text-[#FAF8F2]'
-                                    : 'u1-ring bg-card text-[rgba(59,46,36,.6)]'
+                                    ? 'bg-ink font-semibold text-canvas'
+                                    : 'u1-ring bg-card text-[rgba(44,40,34,.6)]'
                                 }`}
                               >
                                 {o.label}
@@ -1481,12 +1481,12 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
                     }
                     return (
                       <label key={ed.path} className="block">
-                        <span className="mb-1 block text-caption-xs text-[rgba(59,46,36,.62)]">{ed.label}</span>
+                        <span className="mb-1 block text-caption-xs text-[rgba(44,40,34,.62)]">{ed.label}</span>
                         <input
                           className={`w-32 rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 focus:outline-none ${
                             rowErrors[ed.path]
                               ? 'ring-danger focus:ring-danger'
-                              : 'ring-line-ring focus:ring-[rgba(59,46,36,.25)]'
+                              : 'ring-line-ring focus:ring-[rgba(44,40,34,.25)]'
                           }`}
                           maxLength={20}
                           value={drafts[r.ruleKey]?.[ed.path] ?? ''}
@@ -1500,7 +1500,7 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
                   })}
                 </div>
               ) : (
-                <div className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]">无可调数值参数（口径见规则名）</div>
+                <div className="mt-2 text-caption-xs text-[rgba(44,40,34,.42)]">无可调数值参数（口径见规则名）</div>
               )}
             </div>
           );
@@ -1509,7 +1509,7 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
         {/* 置灰行（只读 + 状态 chip；件 6 搜索同滤） */}
         {visibleInactive.length > 0 ? (
           <>
-            <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] pb-1 pt-3 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+            <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] pb-1 pt-3 text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">
               已停用 / 备用 / 预留（只读，不参与计提与计分）
             </div>
             {visibleInactive.map((r) => {
@@ -1518,21 +1518,21 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
               return (
               <div
                 key={r.id}
-                className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-[13px] opacity-70"
+                className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-[13px] opacity-70"
               >
                 <div className="flex items-start gap-3">
                   <div className="min-w-0 flex-1">
-                    <div className="text-caption text-[rgba(59,46,36,.62)]">{shortLabel(r.label)}</div>
-                    <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]">{r.label}</div>
+                    <div className="text-caption text-[rgba(44,40,34,.62)]">{shortLabel(r.label)}</div>
+                    <div className="mt-[2px] text-caption-xs text-[rgba(44,40,34,.42)]">{r.label}</div>
                     {r.helpText ? (
                       <div
-                        className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]"
+                        className="mt-[2px] text-caption-xs text-[rgba(44,40,34,.42)]"
                         data-testid={`rules-help-${r.ruleKey}`}
                       >
                         {r.helpText}
                       </div>
                     ) : null}
-                    <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
+                    <div className="mt-[2px] text-caption-xs text-[rgba(44,40,34,.42)]" style={numStyle}>
                       {fmtValueSummary(r.valueJson)}
                     </div>
                   </div>
@@ -1556,7 +1556,7 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
                 </div>
                 {/* 件 2：置灰行本身即待生效登记件时给行注+撤销 */}
                 {r.scheduledPending && r.scheduledId ? (
-                  <div className="mt-2 flex items-center gap-2 text-caption-xs text-[rgba(59,46,36,.62)]" style={numStyle}>
+                  <div className="mt-2 flex items-center gap-2 text-caption-xs text-[rgba(44,40,34,.62)]" style={numStyle}>
                     <span>
                       {rc('rules.scheduledRowNote', {
                         version: r.version,
@@ -1577,7 +1577,7 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
                 {historyOpen ? (
                   <div className="mt-2 space-y-1.5 rounded-control bg-canvas px-3 py-2">
                     {historyRows.map((h) => (
-                      <div key={h.id} className="flex items-center gap-2 text-caption-xs text-[rgba(59,46,36,.62)]">
+                      <div key={h.id} className="flex items-center gap-2 text-caption-xs text-[rgba(44,40,34,.62)]">
                         <Badge tone={h.active ? 'success' : 'muted'}>
                           <span style={numStyle}>v{h.version}</span>
                         </Badge>
@@ -1662,30 +1662,30 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
             </button>
           </div>
         ) : (versionsQuery.data?.versions.length ?? 0) === 0 ? (
-          <div className="px-[17px] py-6 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
+          <div className="px-[17px] py-6 text-center text-caption-xs text-[rgba(44,40,34,.42)]">
             {rc('rules.versionsEmpty')}
           </div>
         ) : (
           versionsQuery.data!.versions.map((v: VersionRow) => {
             const open = openVersionId === v.id;
             return (
-              <div key={v.id} className="border-t border-[rgba(59,46,36,.06)]">
+              <div key={v.id} className="border-t border-[rgba(44,40,34,.06)]">
                 <button
                   type="button"
                   onClick={() => setOpenVersionId(open ? null : v.id)}
                   aria-expanded={open}
-                  className="flex w-full items-center gap-3 px-[17px] py-[13px] text-left transition-colors duration-150 hover:bg-[rgba(59,46,36,.03)]"
+                  className="flex w-full items-center gap-3 px-[17px] py-[13px] text-left transition-colors duration-150 hover:bg-[rgba(44,40,34,.03)]"
                 >
                   <Badge tone="brand"><span style={numStyle}>v{v.version}</span></Badge>
                   <div className="min-w-0 flex-1">
                     <div className="text-caption text-ink">
                       {v.changerNickname ?? '店主'} 修改了 {v.changesJson.length} 项参数
                     </div>
-                    <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
+                    <div className="mt-[2px] text-caption-xs text-[rgba(44,40,34,.42)]" style={numStyle}>
                       {fmtDateTime(v.createdAt)}
                     </div>
                   </div>
-                  <span className="shrink-0 text-caption-xs font-bold text-[rgba(59,46,36,.62)]">
+                  <span className="shrink-0 text-caption-xs font-bold text-[rgba(44,40,34,.62)]">
                     {open ? '收起 ›' : '前后值 ›'}
                   </span>
                 </button>
@@ -1696,7 +1696,7 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
                         <div className="text-caption font-semibold text-ink">
                           {shortLabel(labelByKey.get(ch.rule_key) ?? ch.rule_key)}
                         </div>
-                        <ul className="mt-1 space-y-0.5 text-caption-xs text-[rgba(59,46,36,.62)]" style={numStyle}>
+                        <ul className="mt-1 space-y-0.5 text-caption-xs text-[rgba(44,40,34,.62)]" style={numStyle}>
                           {ch.before === null ? (
                             <li>新增规则：{fmtValueSummary((ch.after ?? {}) as Record<string, unknown>)}</li>
                           ) : (
@@ -1730,16 +1730,16 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
             {rc('rules.approvalsError')}：{errMsg(approvalsQuery.error)}
           </div>
         ) : approvals.length === 0 ? (
-          <div className="px-[17px] py-6 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
+          <div className="px-[17px] py-6 text-center text-caption-xs text-[rgba(44,40,34,.42)]">
             {rc('rules.approvalsEmpty')}
           </div>
         ) : (
           approvals.map((it) => (
-            <div key={it.id} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-[13px]">
+            <div key={it.id} className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-[13px]">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="text-caption font-semibold text-ink">{it.summary}</div>
-                  <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
+                  <div className="mt-[2px] text-caption-xs text-[rgba(44,40,34,.42)]" style={numStyle}>
                     {it.proposerNickname ?? '—'} · {fmtDateTime(it.createdAt)}
                   </div>
                 </div>
@@ -1747,7 +1747,7 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
                   {approvalStatusLabel(it.status)}
                 </Badge>
               </div>
-              <ul className="mt-2 space-y-1 text-caption-xs text-[rgba(59,46,36,.62)]" style={numStyle}>
+              <ul className="mt-2 space-y-1 text-caption-xs text-[rgba(44,40,34,.62)]" style={numStyle}>
                 {it.changesJson.map((ch) => {
                   const cur = activeRules.find((r) => r.ruleKey === ch.ruleKey);
                   return (
@@ -1760,7 +1760,7 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
                 })}
               </ul>
               {it.reviewNote ? (
-                <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">{it.reviewNote}</div>
+                <div className="mt-1 text-caption-xs text-[rgba(44,40,34,.42)]">{it.reviewNote}</div>
               ) : null}
               {it.status === 'pending' ? (
                 <div className="mt-2 flex gap-2">
@@ -1788,7 +1788,7 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
       </div>
 
       {/* 口径小字（V1.3 冻结：不回溯） */}
-      <p className="mt-3 px-1 text-caption-xs text-[rgba(59,46,36,.42)]">
+      <p className="mt-3 px-1 text-caption-xs text-[rgba(44,40,34,.42)]">
         {rc('rules.caliberNote')}
       </p>
 
@@ -1824,7 +1824,7 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
             {modalPending.map((p) => (
               <div key={p.ruleKey} className="rounded-control bg-canvas px-3 py-2">
                 <div className="text-caption font-semibold text-ink">{p.short}</div>
-                <ul className="mt-1 space-y-0.5 text-caption-xs text-[rgba(59,46,36,.62)]" style={numStyle}>
+                <ul className="mt-1 space-y-0.5 text-caption-xs text-[rgba(44,40,34,.62)]" style={numStyle}>
                   {p.fields.map((f, i) => (
                     <li key={i}>
                       {f.label}：{f.beforeText} → <span className="font-semibold text-ink">{f.afterText}</span>
@@ -1836,13 +1836,13 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
           </div>
           {/* 件 2 定时生效可选区（留空=保存即生效；填未来时刻=定时件登记） */}
           <div className="rounded-control bg-canvas px-3 py-2">
-            <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">
+            <div className="mb-1 text-caption-xs font-semibold text-[rgba(44,40,34,.62)]">
               {rc('rules.effectiveSectionTitle')}
             </div>
             <Field label={rc('rules.effectiveAtLabel')} hint={rc('rules.effectiveAtHint')}>
               <input
                 type="datetime-local"
-                className="w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+                className="w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
                 data-testid="rules-effective-at"
                 value={effectiveAtInput}
                 onChange={(e) => setEffectiveAtInput(e.target.value)}
@@ -1852,7 +1852,7 @@ export function DomainPanel({ domain }: { domain: RulesDomain }) {
           </div>
           <Field label={`请输入「${CONFIRM_PHRASE}」以继续`} hint={rc('rules.confirmHint')}>
             <input
-              className="w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+              className="w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
               data-testid="rules-confirm-input"
               placeholder={CONFIRM_PHRASE}
               value={confirmText}
@@ -1889,7 +1889,7 @@ function OwnerRulesConfig() {
             data-testid={`rules-tab-${t.key}`}
             onClick={() => setDomain(t.key)}
             className={`rounded-full px-3.5 py-[7px] text-caption transition-colors ${
-              domain === t.key ? 'bg-[#3B2E24] font-semibold text-[#FAF8F2]' : 'text-[rgba(59,46,36,.6)]'
+              domain === t.key ? 'bg-ink font-semibold text-canvas' : 'text-[rgba(44,40,34,.6)]'
             }`}
           >
             {t.label}

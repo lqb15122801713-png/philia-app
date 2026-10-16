@@ -115,7 +115,7 @@ export default function ExitHandoffDialog({
                   value={toStaffId}
                   onChange={(e) => setToStaffId(e.target.value)}
                   data-testid="exit-to-staff"
-                  className="w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+                  className="w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
                 >
                   <option value="">{sf('staff.exitToStaffPh')}</option>
                   {candidates.map((s) => (
@@ -131,7 +131,7 @@ export default function ExitHandoffDialog({
                 placeholder={sf('staff.exitNotePh')}
                 maxLength={200}
                 data-testid="exit-note"
-                className="w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+                className="w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
               />
               <div className="flex justify-end">
                 <Btn variant="primary" size="sm" disabled={busy} onClick={() => void reassign()} data-testid="exit-reassign-submit">

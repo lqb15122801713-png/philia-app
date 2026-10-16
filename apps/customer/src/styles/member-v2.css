@@ -10,16 +10,18 @@
    ========================================================================== */
 
 .m2 {
-  --paper: #FAF8F2;
+  /* 片4-运营商城（产品-1015 换皮）令牌收敛：纸白/深棕墨/旧淡金 → READY §2.1 成稿档
+     （canvas #FAF7F0 / body #2C2822 / cream #F2DC8C 族；旧 #FAF8F2/#3B2E24/#2E2318/#F2DFA6 退役） */
+  --paper: #FAF7F0;
   --v2card: #FFFFFF;
-  --v2ink: #3B2E24;
-  --ink-deep: #2E2318;
-  --gold: #F2DFA6;
-  --gold-deep: #E8CF8C;
+  --v2ink: #2C2822;
+  --ink-deep: #2C2822;
+  --gold: #F2DC8C;
+  --gold-deep: #EFD471;
   --khaki: #B9A482;
   --v2muted: #8A7D6B;
-  --v2line: rgba(59, 46, 36, .14);
-  --v2line-soft: rgba(59, 46, 36, .08);
+  --v2line: rgba(44, 40, 34, .14);
+  --v2line-soft: rgba(44, 40, 34, .08);
   --t3-metal: #D9C08A;
   --ease: cubic-bezier(.32, .86, .28, 1);
   --v2serif: 'Noto Serif SC', "Songti SC", "SimSun", serif;

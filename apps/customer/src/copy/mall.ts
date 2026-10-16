@@ -100,6 +100,20 @@ const MALL_COPY_TABLE = {
   /* ---- 客户端体验大批 片 3：订单卡配送方式徽 + 物流注记 + 写评价入口 ---- */
   'mall.trackingNote': '轨迹以快递公司为准',
 
+  /* ---- 产品-1015 换皮 片4 · 批D：mall.hero 促销横幅（槽位缺省回退）+ 商品角标 + 类目 chip 展示名 ---- */
+  'mall.heroTitle': '本周上新',
+  'mall.heroSub': '给它囤点好的 · 门店同价',
+  'mall.heroCta': '去看看',
+  /* 商品角标（不含真券）：新品=createdAt 14 天视窗自动签（violet 活动角标 ≤10% 纪律） */
+  'mall.badgeNew': '新品',
+  /* 类目 chip 展示名（核对表行 9：A4 键覆盖展示名；类目真源/查询值=码内枚举写死不抽键） */
+  'mall.cat.all': '全部',
+  'mall.cat.staple': '主粮',
+  'mall.cat.snack': '零食',
+  'mall.cat.toy': '玩具',
+  'mall.cat.clean': '清洁',
+  'mall.cat.other': '其他',
+
   /* ---- 商品订单 /mall/orders（页面与订单卡） ---- */
   'mall.ordersTitle': '商品订单',
   'mall.ordersLoadFail': '订单加载失败，请稍后重试',

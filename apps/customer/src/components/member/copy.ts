@@ -413,6 +413,8 @@ const MEMBER_COPY_TABLE = {
   'me.gridCouponsSub': '领券 · 心愿单',
   'me.gridSettings': '设置',
   'me.gridSettingsSub': '账号 · 安全',
+  /* 产品-1015 换皮 片4 · 我的标签 A4 半端口：无档身份标签兜底字（付费档标签=member_plans 端口真源） */
+  'me.tagGuest': '菲丽亚宠友',
 } as const;
 
 export const MEMBER_COPY = withCopyOverrides(MEMBER_COPY_TABLE);

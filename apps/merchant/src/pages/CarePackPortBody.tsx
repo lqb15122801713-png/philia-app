@@ -41,7 +41,7 @@ export function CarePackPortBody() {
         </div>
       ) : prodQuery.isError ? (
         <div className="py-4 text-center">
-          <p className="text-caption text-[rgba(59,46,36,.62)]">加载失败，请重试</p>
+          <p className="text-caption text-[rgba(44,40,34,.62)]">加载失败，请重试</p>
           <div className="mt-3">
             <QuietButton testid="carepack-retry" onClick={() => void prodQuery.refetch()}>
               重新加载
@@ -49,7 +49,7 @@ export function CarePackPortBody() {
           </div>
         </div>
       ) : items.length === 0 ? (
-        <p className="py-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">—</p>
+        <p className="py-4 text-center text-caption-xs text-[rgba(44,40,34,.42)]">—</p>
       ) : (
         <table className="u3-tbl" data-testid="carepack-table">
           <thead>

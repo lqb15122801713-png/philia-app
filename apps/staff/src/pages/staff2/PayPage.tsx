@@ -403,7 +403,7 @@ function AppealModal({
 
   return (
     <div className="fixed inset-0 z-modal flex items-center justify-center px-6" role="dialog" aria-modal="true" aria-label={pcc('prl.appeal.title')}>
-      <button type="button" aria-label={pcc('prl.appeal.cancel')} className="absolute inset-0 bg-[rgba(59,46,36,.4)]" onClick={onClose} />
+      <button type="button" aria-label={pcc('prl.appeal.cancel')} className="absolute inset-0 bg-[rgba(44,40,34,.4)]" onClick={onClose} />
       <div className="u1-card relative w-full max-w-sm p-4" data-testid="pay-appeal-modal">
         <p className="text-title text-ink">{pcc('prl.appeal.title')}</p>
         <textarea
@@ -424,7 +424,7 @@ function AppealModal({
                 type="button"
                 aria-label="删除这张附图"
                 onClick={() => setPhotos((prev) => prev.filter((x) => x.url !== p.url))}
-                className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[11px] text-[#FAF8F2]"
+                className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[11px] text-canvas"
               >
                 ×
               </button>
@@ -436,7 +436,7 @@ function AppealModal({
               disabled={uploading}
               onClick={() => fileRef.current?.click()}
               data-testid="pay-appeal-photo-add"
-              className="flex h-12 items-center rounded-chip bg-card px-3 text-caption-xs text-[rgba(59,46,36,.42)] [border:1px_dashed_rgba(59,46,36,.25)] disabled:opacity-50"
+              className="flex h-12 items-center rounded-chip bg-card px-3 text-caption-xs text-[rgba(44,40,34,.42)] [border:1px_dashed_rgba(44,40,34,.25)] disabled:opacity-50"
             >
               {pcc('prl.appeal.photoCta', { max: MAX_APPEAL_PHOTOS })}
             </button>
@@ -458,7 +458,7 @@ function AppealModal({
           <button
             type="button"
             onClick={onClose}
-            className="h-11 min-h-[44px] flex-1 rounded-control bg-sunken text-body-sm font-semibold text-[rgba(59,46,36,.62)]"
+            className="h-11 min-h-[44px] flex-1 rounded-control bg-sunken text-body-sm font-semibold text-[rgba(44,40,34,.62)]"
           >
             {pcc('prl.appeal.cancel')}
           </button>

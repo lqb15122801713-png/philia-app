@@ -405,7 +405,7 @@ export function CanvasPortBody({ initialPageKey }: { initialPageKey?: CanvasPage
                 setPickedKey(null);
               }}
               className={`rounded-full px-3.5 py-[7px] text-caption transition-colors ${
-                pageKey === t.key ? 'bg-[#3B2E24] font-semibold text-[#FAF8F2]' : 'text-[rgba(59,46,36,.6)]'
+                pageKey === t.key ? 'bg-ink font-semibold text-canvas' : 'text-[rgba(44,40,34,.6)]'
               }`}
             >
               {t.label}
@@ -414,7 +414,7 @@ export function CanvasPortBody({ initialPageKey }: { initialPageKey?: CanvasPage
         </div>
 
         {!storeId ? (
-          <p className="py-3 text-center text-caption-xs text-[rgba(59,46,36,.42)]">{cv('canvas.noStore')}</p>
+          <p className="py-3 text-center text-caption-xs text-[rgba(44,40,34,.42)]">{cv('canvas.noStore')}</p>
         ) : layoutQ.isPending || blocksQ.isPending ? (
           <div className="space-y-3" aria-label="加载中">
             {[0, 1, 2].map((i) => (
@@ -431,7 +431,7 @@ export function CanvasPortBody({ initialPageKey }: { initialPageKey?: CanvasPage
             <div className="w-full min-w-0 flex-1" data-testid="canvas-block-list">
               <div className="mb-2 flex items-baseline gap-2">
                 <span className="text-caption font-semibold text-ink">{cv('canvas.blockListTitle')}</span>
-                <span className="text-caption-xs text-[rgba(59,46,36,.42)]">{cv('canvas.blockListAside')}</span>
+                <span className="text-caption-xs text-[rgba(44,40,34,.42)]">{cv('canvas.blockListAside')}</span>
               </div>
               {editBlocks.map((b, idx) => {
                 const reg: RegistryBlock | undefined = registryByKey.get(b.blockKey);
@@ -461,13 +461,13 @@ export function CanvasPortBody({ initialPageKey }: { initialPageKey?: CanvasPage
                         onPointerMove={onDragMove}
                         onPointerUp={onDragEnd}
                         onPointerCancel={onDragEnd}
-                        className="u1-ring shrink-0 cursor-grab touch-none rounded-chip bg-card px-2 py-1.5 text-caption-xs font-bold text-[rgba(59,46,36,.62)] active:cursor-grabbing"
+                        className="u1-ring shrink-0 cursor-grab touch-none rounded-chip bg-card px-2 py-1.5 text-caption-xs font-bold text-[rgba(44,40,34,.62)] active:cursor-grabbing"
                       >
                         ⠿
                       </button>
                       <div className="min-w-0 flex-1">
                         <div className="text-caption font-semibold text-ink">{reg?.label ?? b.blockKey}</div>
-                        <div className="mt-[1px] text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
+                        <div className="mt-[1px] text-caption-xs text-[rgba(44,40,34,.42)]" style={numStyle}>
                           {b.blockKey}
                         </div>
                         {/* 候裁清零批 件 5：二次确认弹层块「慎隐」警示徽（藏了=改单直接提交无确认弹层） */}
@@ -477,7 +477,7 @@ export function CanvasPortBody({ initialPageKey }: { initialPageKey?: CanvasPage
                           </div>
                         ) : null}
                       </div>
-                      <span className="flex shrink-0 items-center gap-1.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+                      <span className="flex shrink-0 items-center gap-1.5 text-caption-xs text-[rgba(44,40,34,.62)]">
                         {cv('canvas.visibleLabel')}
                         <span data-testid={`canvas-visible-${b.blockKey}`} className="inline-flex">
                           <Switch
@@ -491,7 +491,7 @@ export function CanvasPortBody({ initialPageKey }: { initialPageKey?: CanvasPage
 
                     {/* 槽位块：当前素材缩图 + 去槽位端口更换 */}
                     {slotKey ? (
-                      <div className="mt-2 flex items-center gap-2.5 border-t border-[rgba(59,46,36,.06)] pt-2">
+                      <div className="mt-2 flex items-center gap-2.5 border-t border-[rgba(44,40,34,.06)] pt-2">
                         {slotContentOf(slotKey)?.url ? (
                           <img
                             src={resolveSlotUrl(slotContentOf(slotKey)?.url) ?? ''}
@@ -500,9 +500,9 @@ export function CanvasPortBody({ initialPageKey }: { initialPageKey?: CanvasPage
                             data-testid={`canvas-slot-${slotKey}`}
                           />
                         ) : (
-                          <span className="text-caption-xs text-[rgba(59,46,36,.42)]">{cv('canvas.slotEmpty')}</span>
+                          <span className="text-caption-xs text-[rgba(44,40,34,.42)]">{cv('canvas.slotEmpty')}</span>
                         )}
-                        <span className="text-caption-xs text-[rgba(59,46,36,.42)]">{cv('canvas.slotCurrent')}</span>
+                        <span className="text-caption-xs text-[rgba(44,40,34,.42)]">{cv('canvas.slotCurrent')}</span>
                         <Link to="/settings/slots" className="ml-auto text-caption-xs font-bold text-ink underline underline-offset-2">
                           {cv('canvas.slotGoto')}
                         </Link>
@@ -518,8 +518,8 @@ export function CanvasPortBody({ initialPageKey }: { initialPageKey?: CanvasPage
                       const readOnly = READONLY_COPY_KEYS.has(k);
                       const longText = (cur?.text ?? '').length > LONG_TEXT_LEN || draft.length > LONG_TEXT_LEN;
                       return (
-                        <div key={k} className={`mt-2 flex gap-2 border-t border-[rgba(59,46,36,.06)] pt-2 ${longText ? 'flex-col items-stretch' : 'items-center'}`}>
-                          <span className="w-40 shrink-0 truncate text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
+                        <div key={k} className={`mt-2 flex gap-2 border-t border-[rgba(44,40,34,.06)] pt-2 ${longText ? 'flex-col items-stretch' : 'items-center'}`}>
+                          <span className="w-40 shrink-0 truncate text-caption-xs text-[rgba(44,40,34,.42)]" style={numStyle}>
                             {k}
                             {cur?.highRisk ? (
                               <Badge tone="danger">{cv('canvas.copyHighRiskWarn')}</Badge>
@@ -533,7 +533,7 @@ export function CanvasPortBody({ initialPageKey }: { initialPageKey?: CanvasPage
                             ) : null}
                           </span>
                           {readOnly ? (
-                            <span className="flex-1 text-caption-xs text-[rgba(59,46,36,.62)]" data-testid={`canvas-copy-readonly-${k}`}>
+                            <span className="flex-1 text-caption-xs text-[rgba(44,40,34,.62)]" data-testid={`canvas-copy-readonly-${k}`}>
                               {cur?.text ?? '—'}（版本号随发版走，这里只看不能改）
                             </span>
                           ) : longText ? (
@@ -579,10 +579,10 @@ export function CanvasPortBody({ initialPageKey }: { initialPageKey?: CanvasPage
                         图标白名单选换+格名/副签=copy 键行内编辑（perk.* 高危族口令复核照既有闸）+
                         数值面=档端口透出（跳口不改数） */}
                     {b.blockKey === 'mc.perksWall' && pageKey === 'memberCenter' ? (
-                      <div className="mt-2 border-t border-[rgba(59,46,36,.06)] pt-2" data-testid="canvas-perkwall-cells">
+                      <div className="mt-2 border-t border-[rgba(44,40,34,.06)] pt-2" data-testid="canvas-perkwall-cells">
                         <div className="mb-1.5 flex items-center gap-2">
-                          <span className="text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">权益墙格子（七格）</span>
-                          <span className="text-caption-xs text-[rgba(59,46,36,.42)]">格序/图标进布局；几折/几%/含几只=数值走会员档端口</span>
+                          <span className="text-caption-xs font-semibold text-[rgba(44,40,34,.62)]">权益墙格子（七格）</span>
+                          <span className="text-caption-xs text-[rgba(44,40,34,.42)]">格序/图标进布局；几折/几%/含几只=数值走会员档端口</span>
                           <Link to="/console?port=member_plans" className="ml-auto text-caption-xs font-bold text-ink underline underline-offset-2" data-testid="canvas-perkwall-goto-plans">
                             去会员档改数 ›
                           </Link>
@@ -593,11 +593,11 @@ export function CanvasPortBody({ initialPageKey }: { initialPageKey?: CanvasPage
                             <div key={cell.key} className="mb-2 rounded-control bg-card px-2 py-2 ring-1 ring-line-ring" data-testid={`canvas-perkcell-${cell.key}`}>
                               <div className="flex items-center gap-2">
                                 <span className="flex shrink-0 flex-col">
-                                  <button type="button" aria-label={`up ${cell.key}`} data-testid={`canvas-perkcell-up-${cell.key}`} disabled={ci === 0} onClick={() => moveWallCell(ci, -1)} className="text-caption-xs text-[rgba(59,46,36,.62)] disabled:opacity-30">▲</button>
-                                  <button type="button" aria-label={`down ${cell.key}`} data-testid={`canvas-perkcell-down-${cell.key}`} disabled={ci === wallCells.length - 1} onClick={() => moveWallCell(ci, 1)} className="text-caption-xs text-[rgba(59,46,36,.62)] disabled:opacity-30">▼</button>
+                                  <button type="button" aria-label={`up ${cell.key}`} data-testid={`canvas-perkcell-up-${cell.key}`} disabled={ci === 0} onClick={() => moveWallCell(ci, -1)} className="text-caption-xs text-[rgba(44,40,34,.62)] disabled:opacity-30">▲</button>
+                                  <button type="button" aria-label={`down ${cell.key}`} data-testid={`canvas-perkcell-down-${cell.key}`} disabled={ci === wallCells.length - 1} onClick={() => moveWallCell(ci, 1)} className="text-caption-xs text-[rgba(44,40,34,.62)] disabled:opacity-30">▼</button>
                                 </span>
                                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-chip bg-canvas">
-                                  <PerkIcon icon={cell.icon} className="h-4 w-4 text-[rgba(59,46,36,.75)]" />
+                                  <PerkIcon icon={cell.icon} className="h-4 w-4 text-[rgba(44,40,34,.75)]" />
                                 </span>
                                 <span className="text-caption-xs font-semibold text-ink">{def.label}</span>
                                 <select
@@ -617,7 +617,7 @@ export function CanvasPortBody({ initialPageKey }: { initialPageKey?: CanvasPage
                                 const changed = copyDrafts[k] !== undefined && copyDrafts[k] !== (cur?.text ?? '');
                                 return (
                                   <div key={k} className="mt-1.5 flex items-center gap-2">
-                                    <span className="w-40 shrink-0 truncate text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
+                                    <span className="w-40 shrink-0 truncate text-caption-xs text-[rgba(44,40,34,.42)]" style={numStyle}>
                                       {k}
                                       {cur?.highRisk ? <Badge tone="danger">{cv('canvas.copyHighRiskWarn')}</Badge> : null}
                                       {SHARED_COPY_PREFIX.some((p) => k.startsWith(p)) ? (
@@ -677,7 +677,7 @@ export function CanvasPortBody({ initialPageKey }: { initialPageKey?: CanvasPage
                   {cv('canvas.publishCta')}
                 </Btn>
                 {!draftVersion ? (
-                  <span className="text-caption-xs text-[rgba(59,46,36,.42)]">{cv('canvas.publishNoDraft')}</span>
+                  <span className="text-caption-xs text-[rgba(44,40,34,.42)]">{cv('canvas.publishNoDraft')}</span>
                 ) : null}
               </div>
 
@@ -690,17 +690,17 @@ export function CanvasPortBody({ initialPageKey }: { initialPageKey?: CanvasPage
                   </Btn>
                 </div>
                 {versions.length === 0 ? (
-                  <p className="py-3 text-center text-caption-xs text-[rgba(59,46,36,.42)]">{cv('canvas.versionsEmpty')}</p>
+                  <p className="py-3 text-center text-caption-xs text-[rgba(44,40,34,.42)]">{cv('canvas.versionsEmpty')}</p>
                 ) : (
                   versions.map((v: LayoutVersion) => (
-                    <div key={v.id} className="flex items-center gap-2 border-t border-[rgba(59,46,36,.06)] py-2 first:border-t-0">
+                    <div key={v.id} className="flex items-center gap-2 border-t border-[rgba(44,40,34,.06)] py-2 first:border-t-0">
                       <Badge tone={v.status === 'published' ? 'success' : v.status === 'draft' ? 'warn' : 'muted'}>
                         {STATUS_LABEL[v.status] ?? v.status}
                       </Badge>
                       <span className="text-caption font-semibold text-ink" style={numStyle}>
                         v{v.version}
                       </span>
-                      <span className="min-w-0 flex-1 truncate text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
+                      <span className="min-w-0 flex-1 truncate text-caption-xs text-[rgba(44,40,34,.42)]" style={numStyle}>
                         {v.creatorNickname ?? '—'} · {fmtDateTime(v.actedAt ?? v.createdAt)}
                       </span>
                     </div>

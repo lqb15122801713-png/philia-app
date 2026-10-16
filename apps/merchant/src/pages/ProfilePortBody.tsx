@@ -16,9 +16,9 @@ import { cadm } from '../copy/consoleAdmin';
 /** 只读行（.set-row 行式工艺：label 左 / 值右，墨 6% 顶线） */
 function InfoRow({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <div className="flex items-center gap-3 border-t border-[rgba(59,46,36,.06)] py-[11px] text-caption first:border-t-0">
+    <div className="flex items-center gap-3 border-t border-[rgba(44,40,34,.06)] py-[11px] text-caption first:border-t-0">
       <div className="min-w-0 flex-1 text-ink">{title}</div>
-      <span className="shrink-0 font-bold text-[rgba(59,46,36,.62)]">{children ?? '—'}</span>
+      <span className="shrink-0 font-bold text-[rgba(44,40,34,.62)]">{children ?? '—'}</span>
     </div>
   );
 }
@@ -146,7 +146,7 @@ export function ProfilePortBody() {
             ))}
           </div>
         ) : !store ? (
-          <p className="py-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">—</p>
+          <p className="py-4 text-center text-caption-xs text-[rgba(44,40,34,.42)]">—</p>
         ) : (
           <div className="space-y-3">
             <Field label="门店名称">
@@ -208,7 +208,7 @@ export function ProfilePortBody() {
               </Field>
             </div>
             <Field label="营业时间" hint="编辑走「设置」页原口（本口只读展示）">
-              <div className="u1-num rounded-control bg-[rgba(59,46,36,.04)] px-3 py-2 text-caption text-[rgba(59,46,36,.62)]">
+              <div className="u1-num rounded-control bg-[rgba(44,40,34,.04)] px-3 py-2 text-caption text-[rgba(44,40,34,.62)]">
                 {openHoursLabel(store.openHours, new Date())}
               </div>
             </Field>
@@ -257,7 +257,7 @@ export function ProfilePortBody() {
           <span className="t">{cadm('cadm.cloneSectionTitle')}</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="min-w-0 flex-1 text-caption-xs text-[rgba(59,46,36,.42)]">{cadm('cadm.cloneWarn')}</span>
+          <span className="min-w-0 flex-1 text-caption-xs text-[rgba(44,40,34,.42)]">{cadm('cadm.cloneWarn')}</span>
           <QuietButton testid="profile-clone-open" onClick={() => { setCloneName(''); setCloneOpen(true); }}>
             {cadm('cadm.cloneCta')}
           </QuietButton>

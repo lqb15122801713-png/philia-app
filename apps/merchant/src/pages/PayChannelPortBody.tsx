@@ -126,7 +126,7 @@ export function PayChannelPortBody() {
         {data.portProvider === null ? <Badge tone="muted">env 兜底（未在端口配置）</Badge> : null}
         {current !== 'mock' ? <Badge tone="warn">留口未接真钱</Badge> : null}
         {data.updatedAt ? (
-          <span className="ml-2 text-caption-xs text-[rgba(59,46,36,.62)]">
+          <span className="ml-2 text-caption-xs text-[rgba(44,40,34,.62)]">
             最近变更：{fmtDateTime(data.updatedAt)} {data.updatedBy ? `· ${data.updatedBy}` : ''}
           </span>
         ) : null}
@@ -147,7 +147,7 @@ export function PayChannelPortBody() {
               />
               <span>
                 <span className="text-body text-ink">{c.label}</span>
-                <span className="block text-caption-xs text-[rgba(59,46,36,.62)]">{c.desc}</span>
+                <span className="block text-caption-xs text-[rgba(44,40,34,.62)]">{c.desc}</span>
               </span>
             </label>
           ))}
@@ -160,7 +160,7 @@ export function PayChannelPortBody() {
           <div className="space-y-2" data-testid="pay-channel-credentials">
             {credFields.map((f) => (
               <div key={f.key}>
-                <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">{f.label}</div>
+                <div className="mb-1 text-caption-xs font-semibold text-[rgba(44,40,34,.62)]">{f.label}</div>
                 <input
                   type="password"
                   className={inputCls}
@@ -187,7 +187,7 @@ export function PayChannelPortBody() {
         >
           保存通道配置
         </Btn>
-        <span className="text-caption-xs text-[rgba(59,46,36,.62)]">涉钱高危件：保存须口令复核</span>
+        <span className="text-caption-xs text-[rgba(44,40,34,.62)]">涉钱高危件：保存须口令复核</span>
       </div>
 
       {/* D 套口令复核弹层（变更摘要+键入口令） */}
@@ -222,7 +222,7 @@ export function PayChannelPortBody() {
             <div>
               通道：{CHANNEL_LABEL[current]} → <span className="font-semibold">{CHANNEL_LABEL[sel]}</span>
             </div>
-            <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
+            <div className="mt-1 text-caption-xs text-[rgba(44,40,34,.62)]">
               凭据更新：{credPatchCount > 0 ? `${credPatchCount} 位（掩码留痕，真值不明文显示）` : '本次不变更凭据'}
             </div>
           </div>
