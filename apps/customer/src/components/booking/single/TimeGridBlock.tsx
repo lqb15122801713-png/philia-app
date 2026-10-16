@@ -62,7 +62,7 @@ export default function TimeGridBlock({
   }
 
   return (
-    <div className="space-y-3" data-testid="gs-time-grid">
+    <div className="scroll-mb-40 space-y-3" data-testid="gs-time-grid">
       {DAY_PART_ORDER.filter((p) => groups.has(p)).map((part) => (
         <div key={part} data-testid={`gs-time-group-${part}`}>
           {/* 组头 gh：mono 9（VI secondary #A89779，READY §2.1 次要字口径） */}

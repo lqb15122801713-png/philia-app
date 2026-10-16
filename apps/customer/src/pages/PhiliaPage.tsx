@@ -9,7 +9,7 @@
  * 槽行/字段缺省回退=copy 键 mag.*（与迁移 0086 槽种默认同帧）；
  * 图 url=null=品牌渐变占位（真图终摄非目标，R10 不落假图）。
  *
- * 主 CTA 纪律：封面「读本期」=平滑滚动到条目列（真实动作；条目无详情路由不挂假链）。
+ * 主 CTA 纪律：封面「读本期」与次卡分别进入对应阅读页，不放无导航的假按钮。
  *
  * 沿革（片4 换面）：旧 F-01 陪伴页（画布九块 + 下滑关闭手势 + fixed 全屏 dialog 形态）
  * 随本片退役——/philia 归位主级 Tab 常规页（dock 明面）；旧画布块 philia.* 注册表行
@@ -17,21 +17,10 @@
  * HomeBookingPanel 等共享件在首页继续使用，零触。
  */
 
-import { useRef, useState } from 'react'
-import { resolveSlotUrl, slotContentOf, type SlotContent } from '@philia/shared'
-import { mgc } from '../copy/magazine'
-
-/** 杂志条目槽读口：槽位 live 值 → copy 键缺省回退（字段级） */
-function entryOf(key: string, fallback: { title: string; sub: string; cta?: string }) {
-  const slot: SlotContent | undefined = slotContentOf(key)
-  return {
-    url: slot?.url ?? null,
-    alt: slot?.alt ?? fallback.title,
-    title: slot?.title_main ?? fallback.title,
-    sub: slot?.title_sub ?? fallback.sub,
-    cta: slot?.cta_text ?? fallback.cta ?? null,
-  }
-}
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { resolveSlotUrl } from '@philia/shared'
+import { MAGAZINE_ARTICLES, magazineEntryOf, mgc } from '../copy/magazine'
 
 /** 封面图（url 缺省/加载失败=品牌渐变占位；真图终摄非目标） */
 function CoverArt({ url, alt, className }: { url: string | null; alt: string; className: string }) {
@@ -50,16 +39,9 @@ function CoverArt({ url, alt, className }: { url: string | null; alt: string; cl
 }
 
 export default function PhiliaPage() {
-  const listRef = useRef<HTMLDivElement>(null)
-  const lead = entryOf('philia.magazine.lead', {
-    title: mgc('mag.leadTitle'),
-    sub: mgc('mag.leadSub'),
-    cta: mgc('mag.leadCta'),
-  })
-  const entries = [
-    entryOf('philia.magazine.02', { title: mgc('mag.e2Title'), sub: mgc('mag.e2Sub') }),
-    entryOf('philia.magazine.03', { title: mgc('mag.e3Title'), sub: mgc('mag.e3Sub') }),
-  ]
+  const leadArticle = MAGAZINE_ARTICLES[0]
+  const lead = magazineEntryOf(leadArticle)
+  const entries = MAGAZINE_ARTICLES.slice(1).map((article) => ({ article, entry: magazineEntryOf(article) }))
 
   return (
     <div className="pb-28" data-testid="philia-magazine">
@@ -70,7 +52,7 @@ export default function PhiliaPage() {
       </div>
 
       <div className="px-[22px]">
-        {/* 封面主打（策展位一：大图 + 主副题 + CTA 滚动到条目列） */}
+        {/* 封面主打（策展位一：大图 + 主副题 + CTA 进本期正文） */}
         <section className="mt-4 overflow-hidden rounded-card bg-card shadow-card" data-testid="philia-mag-lead">
           <div className="relative">
             <CoverArt url={lead.url} alt={lead.alt} className="aspect-[16/10] w-full object-cover" />
@@ -82,31 +64,32 @@ export default function PhiliaPage() {
           <div className="flex items-center gap-3 px-4 py-3.5">
             <p className="min-w-0 flex-1 text-caption leading-relaxed text-ink-secondary">{lead.sub}</p>
             {lead.cta ? (
-              <button
-                type="button"
+              <Link
+                to={`/philia/magazine/${leadArticle.slug}`}
                 data-testid="philia-mag-lead-cta"
-                onClick={() => listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                 className="shrink-0 rounded-full bg-brand-primary px-3.5 py-2 text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
               >
                 {lead.cta}
-              </button>
+              </Link>
             ) : null}
           </div>
         </section>
 
-        {/* 条目列（策展位二/三；无详情路由=展示卡不挂链） */}
-        <div ref={listRef} className="mt-4 flex flex-col gap-3">
-          {entries.map((e, i) => (
-            <article
-              key={i}
-              className="flex items-center gap-3 rounded-card bg-card p-3 shadow-card"
-              data-testid={`philia-mag-entry-${i + 2}`}
-            >
-              <CoverArt url={e.url} alt={e.alt} className="h-[72px] w-[96px] shrink-0 rounded-input object-cover" />
-              <div className="min-w-0 flex-1">
-                <h2 className="text-[13.5px] font-bold leading-snug text-ink">{e.title}</h2>
-                <p className="mt-1 font-number text-[9.5px] tracking-wide text-ink-placeholder">{e.sub}</p>
-              </div>
+        {/* 条目列（策展位二/三；整卡进入各自正文） */}
+        <div className="mt-4 flex flex-col gap-3">
+          {entries.map(({ article, entry }, i) => (
+            <article key={article.slug}>
+              <Link
+                to={`/philia/magazine/${article.slug}`}
+                className="flex items-center gap-3 rounded-card bg-card p-3 shadow-card transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+                data-testid={`philia-mag-entry-${i + 2}`}
+              >
+                <CoverArt url={entry.url} alt={entry.alt} className="h-[72px] w-[96px] shrink-0 rounded-input object-cover" />
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-[13.5px] font-bold leading-snug text-ink">{entry.title}</h2>
+                  <p className="mt-1 font-number text-[9.5px] tracking-wide text-ink-placeholder">{entry.sub}</p>
+                </div>
+              </Link>
             </article>
           ))}
         </div>

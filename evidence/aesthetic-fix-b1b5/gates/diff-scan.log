@@ -1,0 +1,52 @@
+--- git diff --cached --check ---
+--- staged added-line forbidden scan (#FFAAA5 / text-white / gradient) ---
+--- staged summary ---
+ 48 files changed, 5832 insertions(+), 52 deletions(-)
+A  apps/customer/scripts/magazine-copy-check.mts
+M  apps/customer/src/App.tsx
+M  apps/customer/src/components/booking/StaffPicker.tsx
+M  apps/customer/src/components/booking/single/ConfirmBar.tsx
+M  apps/customer/src/components/booking/single/TimeGridBlock.tsx
+M  apps/customer/src/copy/magazine.ts
+A  apps/customer/src/pages/MagazineArticlePage.tsx
+M  apps/customer/src/pages/PhiliaPage.tsx
+A  evidence/aesthetic-fix-b1b5/README.md
+A  evidence/aesthetic-fix-b1b5/before-d56-magazine-lead.png
+A  evidence/aesthetic-fix-b1b5/before-d57-magazine-entry.png
+A  evidence/aesthetic-fix-b1b5/before-layout-v2-d58-staff-rail.png
+A  evidence/aesthetic-fix-b1b5/before-layout-v2-d59-confirm-bar.png
+A  evidence/aesthetic-fix-b1b5/before-layout-v2-d59-time-grid.png
+A  evidence/aesthetic-fix-b1b5/before-layout-v2-d60-me-orderrow.png
+A  evidence/aesthetic-fix-b1b5/before-layout-v2-results.json
+A  evidence/aesthetic-fix-b1b5/before-results.json
+A  evidence/aesthetic-fix-b1b5/final-d56-magazine-lead.png
+A  evidence/aesthetic-fix-b1b5/final-d57-magazine-entry-03.png
+A  evidence/aesthetic-fix-b1b5/final-d57-magazine-entry.png
+A  evidence/aesthetic-fix-b1b5/final-d57-magazine-missing.png
+A  evidence/aesthetic-fix-b1b5/final-d58-staff-rail.png
+A  evidence/aesthetic-fix-b1b5/final-d59-confirm-bar.png
+A  evidence/aesthetic-fix-b1b5/final-d59-time-grid.png
+A  evidence/aesthetic-fix-b1b5/final-d60-me-orderrow-focus.png
+A  evidence/aesthetic-fix-b1b5/final-d60-me-orderrow.png
+A  evidence/aesthetic-fix-b1b5/final-results.json
+A  evidence/aesthetic-fix-b1b5/gates/aesthetic-check-final.log
+A  evidence/aesthetic-fix-b1b5/gates/aesthetic-check-invalid-scope.log
+A  evidence/aesthetic-fix-b1b5/gates/build-final.log
+A  evidence/aesthetic-fix-b1b5/gates/customer-lint-changed.log
+A  evidence/aesthetic-fix-b1b5/gates/customer-lint-source-final.log
+A  evidence/aesthetic-fix-b1b5/gates/customer-lint.log
+AM evidence/aesthetic-fix-b1b5/gates/diff-scan.log
+A  evidence/aesthetic-fix-b1b5/gates/e2e-nav-check-final.log
+A  evidence/aesthetic-fix-b1b5/gates/magazine-copy-check-before.log
+A  evidence/aesthetic-fix-b1b5/gates/magazine-copy-check.log
+A  evidence/aesthetic-fix-b1b5/gates/nav-closure-final.json
+A  evidence/aesthetic-fix-b1b5/gates/nav-closure-final.log
+A  evidence/aesthetic-fix-b1b5/gates/server-e2e.log
+A  evidence/aesthetic-fix-b1b5/gates/server-typecheck-final.log
+A  evidence/aesthetic-fix-b1b5/gates/smoke-deploy.log
+A  evidence/aesthetic-fix-b1b5/gates/smoke-routes-final.json
+A  evidence/aesthetic-fix-b1b5/gates/smoke-routes-final.log
+A  evidence/aesthetic-fix-b1b5/pr-body.md
+A  scripts/aesthetic-fix-b1b5-check.mjs
+M  scripts/check-nav-closure.mjs
+M  scripts/smoke-routes.mjs

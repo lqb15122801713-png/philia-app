@@ -6,8 +6,8 @@
  *
  * U4-D1 逐格对照试样（.confirm-bar 骨架）：摘要行（左=宠物·服务·洗护师，右=日期
  * 时间，均为真实选择态，缺项如实写「未选」）→ 主钮 → 安心行。
- * 换皮批片 2（定稿 §4.1 ctabar）：衬底=paper 渐出（linear-gradient(transparent, paper 40%)），
- * 主钮=深棕底反白（btn-primary 工艺；旧柠檬主钮退役，淡黄点睛让位时段栅格）。
+ * PD-27 D-59：衬底=canvas 不透明，避免摘要与下层服务卡叠字；主钮=深棕底反白
+ * （btn-primary 工艺；旧柠檬主钮退役，淡黄点睛让位时段栅格）。
  * 片1-客户端脸（2026-10-15）：主钮=VI brand #5C5040 反白 #F6EFDD、圆角 16（READY §2.3 btn）。
  * 安心行只写真实口径：全程页六步可见 + 过程照片记录（live 页现成链路）+ 收款方式
  * （到店付/次卡扣次，随 paymentMode 真实切换），禁虚构承诺（不抄试样「不取消费」）。
@@ -59,7 +59,7 @@ export default function ConfirmBar({
       className="pointer-events-none fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-sticky"
       data-testid="gs-confirm-bar"
     >
-      <div className="mx-auto max-w-lg bg-gradient-to-b from-canvas/0 via-canvas to-canvas px-4 pb-4 pt-3">
+      <div className="mx-auto max-w-lg bg-canvas px-4 pb-4 pt-3">
         {/* 摘要行（试样 .cb-meta：左 宠物·服务·人，右 日期 时间加粗） */}
         <div className="mb-2 flex items-center justify-between gap-3 text-caption-xs text-ink-secondary">
           <span className="min-w-0 truncate" data-testid="gs-confirm-summary">

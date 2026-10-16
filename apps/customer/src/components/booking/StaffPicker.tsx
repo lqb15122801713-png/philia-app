@@ -14,6 +14,7 @@
  * 无照片=圆章底字像，不造假图。
  */
 
+import { useLayoutEffect, useRef } from 'react';
 import { PawPrint } from 'lucide-react';
 import { Skeleton } from '@philia/shared';
 import { bkc } from '@/copy/booking';
@@ -41,6 +42,13 @@ export default function StaffPicker({
   loading,
   earliestLabel,
 }: StaffPickerProps) {
+  const railRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (variant !== 'flat' || loading || !railRef.current) return;
+    // snap 轨首渲染会停到末卡；数据到位后归零，避免真实员工首卡落在负 X，选择态保持不变。
+    railRef.current.scrollLeft = 0;
+  }, [variant, loading, staff]);
+
   if (variant === 'flat') {
     /* grcard（定稿）：132 宽圆角 18；选中=1.5px brand 边（片1 VI #5C5040）+ 字像变 cream */
     const cardCls = (active: boolean) =>
@@ -50,6 +58,7 @@ export default function StaffPicker({
 
     return (
       <div
+        ref={railRef}
         className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         data-testid="gs-groomer-rail"
       >
