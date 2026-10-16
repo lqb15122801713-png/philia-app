@@ -66,6 +66,7 @@ const ROUTES = [
   { app: 'customer', path: '/mall', expect: 'tab' },
   { app: 'customer', path: '/me', expect: 'tab' },
   { app: 'customer', path: '/philia', expect: 'tab' },
+  { app: 'customer', path: '/philia/magazine/lead', expect: 'sub', note: 'PD-27 D-56/D-57：杂志阅读页（动态段代表行）' },
   { app: 'customer', path: '/booking', expect: 'sub' },
   { app: 'customer', path: '/booking/grooming', expect: 'sub' },
   { app: 'customer', path: '/booking/grooming/wizard', expect: 'sub' },

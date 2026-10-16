@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-16T11:54:36.982Z",
+  "base": "http://127.0.0.1:7130",
+  "results": [
+    {
+      "id": "D-56 读本期进入本期正文",
+      "ok": false,
+      "detail": "path /philia → /philia；正文=false"
+    },
+    {
+      "id": "D-57 次卡进入对应篇正文",
+      "ok": false,
+      "detail": "path /philia → /philia；正文=false"
+    }
+  ]
+}

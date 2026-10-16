@@ -1,0 +1,51 @@
+{
+  "at": "2026-10-16T12:56:29.597Z",
+  "base": "http://127.0.0.1:7130",
+  "results": [
+    {
+      "id": "D-56 读本期进入本期正文",
+      "ok": true,
+      "detail": "path /philia → /philia/magazine/lead；篇题=秋日洗护季特刊"
+    },
+    {
+      "id": "D-57 次卡 02 进入对应篇正文",
+      "ok": true,
+      "detail": "path /philia → /philia/magazine/02；篇题=猫咪换季软便怎么办"
+    },
+    {
+      "id": "D-57 次卡 03 进入对应篇正文",
+      "ok": true,
+      "detail": "path /philia → /philia/magazine/03；篇题=狗狗脚掌护理入门"
+    },
+    {
+      "id": "D-57 未知篇显示说明与返回出口",
+      "ok": true,
+      "detail": "占位=true；返回出口=true"
+    },
+    {
+      "id": "D-58 首屏真实洗护师卡不负 X",
+      "ok": true,
+      "detail": "scrollLeft 0 → 0；小美 x=16，阿强 x=160，丽丽 x=304，小周 x=448；视口内=小美/阿强/丽丽"
+    },
+    {
+      "id": "D-59 摘要衬底不透明穿透服务卡",
+      "ok": true,
+      "detail": "background=rgb(250, 247, 240)"
+    },
+    {
+      "id": "D-59/O6 确认栏不压时段格且热区可点",
+      "ok": true,
+      "detail": "panelTop=722；完整视口时段=22；被压=0；可点=22"
+    },
+    {
+      "id": "D-60 微滚后订单五态行完整可见可点",
+      "ok": true,
+      "detail": "dockTop=766；五格=5；完整=5；被遮=0；可点=5"
+    },
+    {
+      "id": "D-60 聚焦后订单五态行完整可见可点",
+      "ok": true,
+      "detail": "dockTop=766；五格=5；完整=5；被遮=0；可点=5"
+    }
+  ]
+}

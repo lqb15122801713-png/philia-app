@@ -87,6 +87,8 @@ const ROUTES = [
   { app: 'customer', path: '/appointments', anchors: ['预约'] },
   { app: 'customer', path: `/appointments/${APPT_ID}`, anchors: ['预约', '核销'], serverDep: true, note: 'A1 白屏群' },
   { app: 'customer', path: '/philia', anchors: ['PHILIA', '编辑部出品'], note: '片4-运营商城（产品-1015 换皮）：PHILIA=PGC 杂志面（批C 槽位内容端口+mag.* 壳键；公开路由）' },
+  { app: 'customer', path: '/philia/magazine/lead', anchors: ['秋日洗护季特刊', 'PHILIA MAGAZINE'], note: 'PD-27 D-56：读本期进入本期正文' },
+  { app: 'customer', path: '/philia/magazine/02', anchors: ['猫咪换季软便怎么办', '饮食过渡七日法'], note: 'PD-27 D-57：次卡进入对应篇正文' },
   { app: 'customer', path: '/philia/pets', anchors: ['宠物'], note: 'A4 白屏群' },
   { app: 'customer', path: `/philia/pets/${INVALID_ID}/health`, anchors: ['健康档案'], serverDep: true, note: '体验批片 4 宠物健康档案（无效 id 异常态：页题+返回出口仍在）' },
   { app: 'customer', path: '/philia/moments', anchors: ['服务相册', '相册'], note: 'A4 白屏群' },

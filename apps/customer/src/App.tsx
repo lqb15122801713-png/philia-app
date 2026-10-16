@@ -48,6 +48,7 @@ import NotifyPrefsPage from './pages/NotifyPrefsPage'
 import PetsPage from './pages/PetsPage'
 import PetHealthPage from './pages/PetHealthPage'
 import PhiliaPage from './pages/PhiliaPage'
+import MagazineArticlePage from './pages/MagazineArticlePage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import RefundApplyPage from './pages/RefundApplyPage'
 import RefundDetailPage from './pages/RefundDetailPage'
@@ -95,6 +96,8 @@ function ProtectedRoutes() {
       <Route path="/refunds" element={<RefundListPage />} />
       <Route path="/refunds/:id" element={<RefundDetailPage />} />
       <Route path="/philia" element={<PhiliaPage />} />
+      {/* PD-27 D-56/D-57：主卡与次卡共用阅读页，按文章段取对应正文。 */}
+      <Route path="/philia/magazine/:articleId" element={<MagazineArticlePage />} />
       <Route path="/philia/pets" element={<PetsPage />} />
       {/* 体验批片 4：宠物健康档案（健康记录族+体重趋势；详情级无 dock；
           申报锚点=「健康档案」，双表已申报 check-nav-closure/smoke-routes） */}
