@@ -246,7 +246,7 @@ export default function CashierRefundsPage() {
                 data-testid="refunds-export-month"
                 value={exportMonth}
                 onChange={(e) => setExportMonth(e.target.value)}
-                className="u1-ring rounded-control bg-card px-3 py-2 font-number text-caption tabular-nums text-ink focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+                className="u1-ring rounded-control bg-card px-3 py-2 font-number text-caption tabular-nums text-ink focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
               />
               <QuietButton testid="refunds-export-btn" disabled={exporting} onClick={() => void doExport()}>
                 {exporting ? '导出中…' : '导出 CSV'}
@@ -263,7 +263,7 @@ export default function CashierRefundsPage() {
           data-testid="refunds-pending-bar"
         >
           <b><span className="font-number tabular-nums">{pendings.length}</span> {cc('cashier.refundsPendingBold')}</b>
-          <span className="ml-2 font-number tabular-nums text-[rgba(59,46,36,.62)]">
+          <span className="ml-2 font-number tabular-nums text-ink-secondary">
             {pendings
               .slice(0, 3)
               .map((p) => `${p.refundNo} ¥${fenToYuan(p.amountFen)}`)
@@ -287,7 +287,7 @@ export default function CashierRefundsPage() {
             <div
               key={r.id}
               data-testid={`refund-request-row-${r.requestNo}`}
-              className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3"
+              className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-3"
             >
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
@@ -308,7 +308,7 @@ export default function CashierRefundsPage() {
                     </span>
                   ) : null}
                 </div>
-                <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
+                <div className="mt-1 text-caption-xs text-ink-secondary">
                   {r.customerNickname ?? '—'}
                   {' · 原单 '}
                   <span className="font-number tabular-nums">{r.billNo}</span>
@@ -316,14 +316,14 @@ export default function CashierRefundsPage() {
                   {r.reasonLabel}
                 </div>
                 {r.description ? (
-                  <div className="mt-0.5 max-w-[420px] truncate text-caption-xs text-[rgba(59,46,36,.42)]" title={r.description}>
+                  <div className="mt-0.5 max-w-[420px] truncate text-caption-xs text-ink-placeholder" title={r.description}>
                     {r.description}
                   </div>
                 ) : null}
               </div>
               <div className="text-right">
                 <div className="u1-num font-bold text-danger-deep">−¥{fenToYuan(r.amountFen)}</div>
-                <div className="u1-num mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+                <div className="u1-num mt-0.5 text-caption-xs text-ink-placeholder">
                   {fmtDateTime(r.createdAt)}
                 </div>
               </div>
@@ -375,7 +375,7 @@ export default function CashierRefundsPage() {
           </div>
         ) : listQ.isError ? (
           <div className="px-[17px] py-10 text-center">
-            <p className="text-body-sm text-[rgba(59,46,36,.62)]">退款单加载失败：{errMsg(listQ.error)}</p>
+            <p className="text-body-sm text-ink-secondary">退款单加载失败：{errMsg(listQ.error)}</p>
             <div className="mt-4">
               <QuietButton testid="refunds-retry" onClick={() => void listQ.refetch()}>
                 重新加载
@@ -383,7 +383,7 @@ export default function CashierRefundsPage() {
             </div>
           </div>
         ) : rows.length === 0 ? (
-          <p className="px-[17px] py-10 text-center text-body-sm text-[rgba(59,46,36,.62)]">
+          <p className="px-[17px] py-10 text-center text-body-sm text-ink-secondary">
             {cc('cashier.refundsEmpty')}
           </p>
         ) : (
@@ -415,26 +415,26 @@ export default function CashierRefundsPage() {
                       onClick={() => setDetailRow(r)}
                     >
                       <td className="font-number font-semibold tabular-nums">{r.refundNo}</td>
-                      <td className="font-number tabular-nums text-[rgba(59,46,36,.62)]">{r.billNo}</td>
+                      <td className="font-number tabular-nums text-ink-secondary">{r.billNo}</td>
                       <td>{REFUND_TYPE_LABEL[r.type as RefundType] ?? r.type}</td>
                       <td className="u1-num text-right font-bold text-danger-deep">
                         −¥{fenToYuan(r.amountFen)}
                       </td>
-                      <td className="max-w-[180px] truncate text-[rgba(59,46,36,.62)]" title={r.reason}>
+                      <td className="max-w-[180px] truncate text-ink-secondary" title={r.reason}>
                         {r.reason}
                       </td>
-                      <td className="text-[rgba(59,46,36,.62)]">{r.operatorName ?? '—'}</td>
-                      <td className="text-[rgba(59,46,36,.62)]">{r.approverName ?? '—'}</td>
+                      <td className="text-ink-secondary">{r.operatorName ?? '—'}</td>
+                      <td className="text-ink-secondary">{r.approverName ?? '—'}</td>
                       <td>
                         <span className={chip.cls}>{chip.label}</span>
                         {r.refundMethod ? (
-                          <span className="block text-caption-xs text-[rgba(59,46,36,.42)]">
+                          <span className="block text-caption-xs text-ink-placeholder">
                             {REFUND_METHOD_LABEL[r.refundMethod] ?? r.refundMethod}
                           </span>
                         ) : null}
                         {/* W-08：executed 行「不可撤销」明面注（纠错=再开正单） */}
                         {r.status === 'executed' ? (
-                          <span className="block text-caption-xs text-[rgba(59,46,36,.42)]">
+                          <span className="block text-caption-xs text-ink-placeholder">
                             {cc('cashier.refundExecutedNote')}
                           </span>
                         ) : null}
@@ -484,7 +484,7 @@ export default function CashierRefundsPage() {
         <div className="u3-panel-head">
           <h3>{cc('cashier.refundPolicyTitle')}</h3>
         </div>
-        <ul className="space-y-1.5 px-[17px] pb-4 text-caption-xs leading-relaxed text-[rgba(59,46,36,.62)]">
+        <ul className="space-y-1.5 px-[17px] pb-4 text-caption-xs leading-relaxed text-ink-secondary">
           <li>· {cc('cashier.refundPolicyReject')}</li>
           <li>· {cc('cashier.refundSvNotice')}</li>
           <li>· {cc('cashier.refundExecuteNote')}</li>
@@ -545,11 +545,11 @@ export default function CashierRefundsPage() {
       >
         {approveReqTarget ? (
           <>
-            <div className="rounded-[14px] bg-[#FAF8F2] px-3.5 py-3">
+            <div className="rounded-[14px] bg-canvas px-3.5 py-3">
               <div className="font-number text-caption font-semibold tabular-nums">
                 {approveReqTarget.requestNo}
               </div>
-              <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
+              <div className="mt-1 text-caption-xs text-ink-secondary">
                 原单 <span className="font-number tabular-nums">{approveReqTarget.billNo}</span>
                 {' · '}
                 {approveReqTarget.type === 'return_refund'
@@ -563,7 +563,7 @@ export default function CashierRefundsPage() {
                 </b>
               </div>
             </div>
-            <p className="mt-3 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
+            <p className="mt-3 text-caption-xs leading-relaxed text-ink-placeholder">
               {cc('cashier.refundRequestApproveConfirmBody')}
             </p>
           </>
@@ -637,9 +637,9 @@ function RefundNoteDialog({
         </>
       }
     >
-      <div className="rounded-[14px] bg-[#FAF8F2] px-3.5 py-3">
+      <div className="rounded-[14px] bg-canvas px-3.5 py-3">
         <div className="font-number text-caption font-semibold tabular-nums">{row.refundNo}</div>
-        <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
+        <div className="mt-1 text-caption-xs text-ink-secondary">
           原单 <span className="font-number tabular-nums">{row.billNo}</span>
           {' · '}
           {REFUND_TYPE_LABEL[row.type as RefundType] ?? row.type}
@@ -648,14 +648,14 @@ function RefundNoteDialog({
         </div>
       </div>
       <textarea
-        className="mt-3 min-h-[76px] w-full resize-none rounded-[14px] bg-[#FFFDF6] px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+        className="mt-3 min-h-[76px] w-full resize-none rounded-[14px] bg-card px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] placeholder:text-ink-placeholder focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
         data-testid={isSettle ? 'refund-settle-note' : 'refund-reject-note'}
         placeholder={isSettle ? '实退备注（必填，如：已微信原路退回）' : '驳回原因（必填，留痕）'}
         maxLength={200}
         value={note}
         onChange={(e) => setNote(e.target.value)}
       />
-      <p className="mt-1.5 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
+      <p className="mt-1.5 text-caption-xs leading-relaxed text-ink-placeholder">
         {isSettle
           ? cc('cashier.refundSettleNote')
           : cc('cashier.refundRejectNote')}
@@ -718,9 +718,9 @@ function RefundRequestRejectDialog({
         </>
       }
     >
-      <div className="rounded-[14px] bg-[#FAF8F2] px-3.5 py-3">
+      <div className="rounded-[14px] bg-canvas px-3.5 py-3">
         <div className="font-number text-caption font-semibold tabular-nums">{row.requestNo}</div>
-        <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">
+        <div className="mt-1 text-caption-xs text-ink-secondary">
           原单 <span className="font-number tabular-nums">{row.billNo}</span>
           {' · '}
           {row.type === 'return_refund'
@@ -731,14 +731,14 @@ function RefundRequestRejectDialog({
         </div>
       </div>
       <textarea
-        className="mt-3 min-h-[76px] w-full resize-none rounded-[14px] bg-[#FFFDF6] px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+        className="mt-3 min-h-[76px] w-full resize-none rounded-[14px] bg-card px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] placeholder:text-ink-placeholder focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
         data-testid="refund-request-reject-reason"
         placeholder="驳回原因（必填，留痕；客户侧申请单可见）"
         maxLength={200}
         value={reason}
         onChange={(e) => setReason(e.target.value)}
       />
-      <p className="mt-1.5 text-caption-xs leading-relaxed text-[rgba(59,46,36,.42)]">
+      <p className="mt-1.5 text-caption-xs leading-relaxed text-ink-placeholder">
         {cc('cashier.refundRequestRejectNote')}
       </p>
       {!valid ? (

@@ -54,11 +54,11 @@ export default function ScanVerifyCard({ onIdentified }: { onIdentified: (m: Cas
   }
 
   return (
-    <div className="mt-3 border-t border-[rgba(59,46,36,.06)] pt-3" data-testid="cashier-scan-card">
+    <div className="mt-3 border-t border-[rgba(44,40,34,.06)] pt-3" data-testid="cashier-scan-card">
       <div className="mb-1.5 flex items-center gap-1.5">
         <ScanLine size={14} strokeWidth={1.8} className="text-ink" aria-hidden />
         <span className="text-caption font-semibold text-ink">{cc('cashier.scanTitle')}</span>
-        <span className="text-caption-xs text-[rgba(59,46,36,.42)]">{cc('cashier.scanHint')}</span>
+        <span className="text-caption-xs text-ink-placeholder">{cc('cashier.scanHint')}</span>
       </div>
       <div className="flex gap-2">
         <input
@@ -73,7 +73,7 @@ export default function ScanVerifyCard({ onIdentified }: { onIdentified: (m: Cas
             if (e.key === 'Enter') void verify()
           }}
           placeholder={cc('cashier.scanInputPh')}
-          className="flex-1 rounded-full bg-[#FFFDF6] px-4 py-2.5 text-body-sm text-ink shadow-[0_0_0_1px_rgba(59,46,36,.09)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.25)]"
+          className="flex-1 rounded-full bg-card px-4 py-2.5 text-body-sm text-ink shadow-[0_0_0_1px_rgba(44,40,34,.09)] placeholder:text-[rgba(44,40,34,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.25)]"
         />
         <button
           type="button"
@@ -90,7 +90,7 @@ export default function ScanVerifyCard({ onIdentified }: { onIdentified: (m: Cas
           {error}
         </p>
       ) : null}
-      <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">{cc('cashier.scanNote')}</p>
+      <p className="mt-1.5 text-caption-xs text-ink-placeholder">{cc('cashier.scanNote')}</p>
     </div>
   )
 }

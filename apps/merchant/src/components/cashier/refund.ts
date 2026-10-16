@@ -63,7 +63,7 @@ export const REFUND_TYPE_LABEL: Record<RefundType | 'membership_cancel', string>
   membership_cancel: '会员退会',
 }
 
-/** 退款单状态签（u3-st 工艺：draft=gold 审批位（W-08 · 淡黄=待办）/ 待实退 amber / 实退完成薄荷 / 已驳回灰） */
+/** 退款单状态签（u3-st 工艺：draft/待实退=amber cream 底（W-08 待办位）/ 实退完成=live 深棕墨底 cream 字（成功不设绿）/ 已驳回=done 描边灰） */
 export const REFUND_STATUS_CHIP: Record<string, { cls: string; label: string }> = {
   draft: { cls: 'u3-st amber', label: '草稿·待审批' },
   executed: { cls: 'u3-st amber', label: '待实退登记' },

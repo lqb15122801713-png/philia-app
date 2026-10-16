@@ -9,7 +9,7 @@
  *   右 = fdot 状态流五节点（确认→核销→服务中→完成→收款，按现状状态机映射；
  *       寄养单第三步=「寄养中」；已取消单=确认节点留痕其余封口）
  *       + 操作钮组（原 MainScaffold actions 全量迁入：改期/改派/服务监视/确认预约/
- *       审批取消申请/去收款，testid 不变，每屏至多一个柠檬钮口径不变）
+ *       审批取消申请/去收款，testid 不变，每屏至多一个 cream 主钮口径不变）
  *       + 提示卡（按态一句引导+改派覆盖 merchant 留痕注，语言包 W-03 注记明面）
  *       + 协作拆分块（段 4 既有 CollabSplitSection 原位保留）。
  * - 寄养单：六步卡不渲染（无 steps），换 boardingStay 信息块（房间/称重/物品/退住）+ 轨迹卡。
@@ -285,14 +285,14 @@ export default function AppointmentDetailPage() {
       <MainScaffold title="预约详情" sub={notFound ? '预约不存在' : '加载失败'}>
         <div className="u3-panel flex flex-col items-center px-6 py-12 text-center">
           {notFound ? (
-            <CalendarX className="h-9 w-9 text-[rgba(59,46,36,.35)]" strokeWidth={1.5} />
+            <CalendarX className="h-9 w-9 text-ink-placeholder" strokeWidth={1.5} />
           ) : (
-            <CircleX className="h-9 w-9 text-[rgba(59,46,36,.35)]" strokeWidth={1.5} />
+            <CircleX className="h-9 w-9 text-ink-placeholder" strokeWidth={1.5} />
           )}
           <p className="mt-3 text-[14px] font-bold">
             {notFound ? ac('appt.detailNotFoundTitle') : '打不开这个预约'}
           </p>
-          <p className="mt-1 text-[12px] text-[rgba(59,46,36,.62)]">
+          <p className="mt-1 text-[12px] text-ink-secondary">
             {notFound
               ? ac('appt.detailNotFoundBody')
               : detailQuery.error instanceof Error
@@ -372,7 +372,7 @@ export default function AppointmentDetailPage() {
 
   const live = appt.status === 'in_service' || appt.status === 'in_boarding';
 
-  /* ---------------- 动作区（按态切换，每屏至多一个柠檬钮） ---------------- */
+  /* ---------------- 动作区（按态切换，每屏至多一个 cream 主钮） ---------------- */
 
   const canReschedule = appt.status === 'pending' || appt.status === 'confirmed';
   // assign 服务端仅受理 pending/confirmed；寄养单不改派（无 staffId 口径）
@@ -531,7 +531,7 @@ export default function AppointmentDetailPage() {
             data-testid="reschedule-pending-banner"
           >
             <b>{ac('appt.reschedulePendingTitle')}</b>
-            <span className="ml-2 text-[rgba(59,46,36,.62)]">
+            <span className="ml-2 text-ink-secondary">
               {ac('appt.reschedulePendingDesc', {
                 from: `${fmtDate(lastCustomerReschedule.beforeStart)} ${fmtTime(lastCustomerReschedule.beforeStart)}`,
                 to: `${fmtDate(lastCustomerReschedule.afterStart)} ${fmtTime(lastCustomerReschedule.afterStart)}`,
@@ -600,7 +600,7 @@ export default function AppointmentDetailPage() {
                 {(appt.status === 'pending' || appt.status === 'confirmed') && !appt.checkedInAt ? (
                   <FieldRow label="核销码">
                     <span className="u1-num tracking-[0.2em]">{appt.code}</span>
-                    <span className="ml-2 text-[11px] font-normal text-[rgba(59,46,36,.42)]">
+                    <span className="ml-2 text-[11px] font-normal text-ink-placeholder">
                       {ac('appt.verifyCodeHint')}
                     </span>
                   </FieldRow>
@@ -683,7 +683,7 @@ export default function AppointmentDetailPage() {
                         key={def.key}
                         className={`row ${st === 'done' ? 'done' : st === 'active' ? 'now' : ''}`}
                       >
-                        {/* 试样同值锁定：done=纯薄荷圆点（无内嵌图标）/ now=柠檬 / 未到=描边 */}
+                        {/* 试样同值锁定：done=深棕墨圆点（无内嵌图标）/ now=cream / 未到=描边 */}
                         <i className="dt flex items-center justify-center" />
                         <div className="tx">
                           <b>{def.name}</b>
@@ -723,7 +723,7 @@ export default function AppointmentDetailPage() {
                 <span className="aside">{ac('appt.trailAside')}</span>
               </div>
               {trail.length === 0 ? (
-                <p className="px-[17px] pb-4 text-[12px] text-[rgba(59,46,36,.42)]">
+                <p className="px-[17px] pb-4 text-[12px] text-ink-placeholder">
                   {ac('appt.trailEmpty')}
                 </p>
               ) : (
@@ -831,7 +831,7 @@ export default function AppointmentDetailPage() {
         onClose={() => setReviewOpen(false)}
         widthClass="sm:max-w-md"
       >
-        <p className="text-[12px] leading-relaxed text-[rgba(59,46,36,.62)]">
+        <p className="text-[12px] leading-relaxed text-ink-secondary">
           {ac('appt.reviewCancelBody', { hours: 4 })}
         </p>
         {appt.cancelReason ? (
@@ -853,7 +853,7 @@ export default function AppointmentDetailPage() {
             disabled={reviewCancelMut.isPending}
             onClick={() => reviewCancelMut.mutate(true)}
             data-testid="detail-approve-cancel"
-            className="h-11 flex-1 rounded-control bg-[#B4502E] text-body-sm font-bold text-[#FFFDF6] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+            className="h-11 flex-1 rounded-control bg-destructive text-body-sm font-bold text-destructive-foreground transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
           >
             {reviewCancelMut.isPending ? '处理中…' : '批准取消'}
           </button>
@@ -916,7 +916,7 @@ function BoardingPanel({ stay, appt }: { stay: StayRow; appt: ApptRow }) {
           </FieldRow>
         </div>
       ) : (
-        <p className="px-[17px] pb-4 text-[12px] text-[rgba(59,46,36,.62)]">
+        <p className="px-[17px] pb-4 text-[12px] text-ink-secondary">
           {ac('appt.boardingStayEmpty')}
         </p>
       )}

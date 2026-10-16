@@ -445,7 +445,7 @@ export default function DashboardPage() {
 
         {hasError && (
           <div className="u3-panel mt-3.5 flex items-center justify-between px-[17px] py-3">
-            <p className="text-[12px] text-[rgba(59,46,36,.62)]">数据加载失败，请检查网络后重试</p>
+            <p className="text-[12px] text-ink-secondary">数据加载失败，请检查网络后重试</p>
             <QuietButton testid="dashboard-retry" onClick={refetchAll}>
               重新加载
             </QuietButton>
@@ -477,7 +477,7 @@ export default function DashboardPage() {
                 >
                   {CHAIN_CAPS.map((c) => (
                     <div key={c.key}>
-                      <div className="text-[11px] font-semibold text-[rgba(59,46,36,.42)]">
+                      <div className="text-[11px] font-semibold text-ink-placeholder">
                         {dc(c.cap)}
                       </div>
                       <div
@@ -498,13 +498,13 @@ export default function DashboardPage() {
                   {chain.stores.map((s) => (
                     <div
                       key={s.storeId}
-                      className="rounded-control bg-[rgba(59,46,36,.04)] p-3.5"
+                      className="rounded-control bg-[rgba(44,40,34,.04)] p-3.5"
                       data-testid={`dash-m3-chain-store-${s.storeId}`}
                     >
                       <div className="text-caption font-bold text-ink">
                         {s.name}
                         {s.groupName ? (
-                          <span className="ml-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+                          <span className="ml-1.5 text-caption-xs font-semibold text-ink-placeholder">
                             {s.groupName}
                           </span>
                         ) : null}
@@ -512,7 +512,7 @@ export default function DashboardPage() {
                       <div className="mt-2 space-y-1">
                         {CHAIN_CAPS.map((c) => (
                           <div key={c.key} className="flex items-center justify-between text-caption-xs">
-                            <span className="text-[rgba(59,46,36,.62)]">{dc(c.cap)}</span>
+                            <span className="text-ink-secondary">{dc(c.cap)}</span>
                             <span
                               className={`font-number font-bold tabular-nums${
                                 c.red && s[c.key] > 0 ? ' text-danger-deep' : ''
@@ -549,20 +549,20 @@ export default function DashboardPage() {
           ) : (
             <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
               <div>
-                <div className="text-[11px] font-semibold text-[rgba(59,46,36,.42)]">
+                <div className="text-[11px] font-semibold text-ink-placeholder">
                   {dc('dash.statCapAppt')}
                 </div>
                 <div className="mt-1 font-number text-[24px] font-bold tabular-nums">
                   {stats ? stats.todayCount : '—'}
                 </div>
-                <div className="mt-0.5 text-[11px] text-[rgba(59,46,36,.62)]">
+                <div className="mt-0.5 text-[11px] text-ink-secondary">
                   服务中 <b className="font-number tabular-nums">{serving}</b> · 待到店{' '}
                   <b className="font-number tabular-nums">{waiting}</b> · 已完成{' '}
                   <b className="font-number tabular-nums">{doneCount}</b>
                 </div>
               </div>
               <div>
-                <div className="text-[11px] font-semibold text-[rgba(59,46,36,.42)]">
+                <div className="text-[11px] font-semibold text-ink-placeholder">
                   {dc('dash.statCapRevenue')}
                 </div>
                 <div
@@ -571,7 +571,7 @@ export default function DashboardPage() {
                 >
                   {tender ? `¥${fenToYuanGrouped(tender.receivedTotalFen)}` : '—'}
                 </div>
-                <div className="mt-0.5 text-[11px] text-[rgba(59,46,36,.62)]">
+                <div className="mt-0.5 text-[11px] text-ink-secondary">
                   已收 <b className="font-number tabular-nums">{tenderPaidCount}</b> 笔 · 待收{' '}
                   <b className="font-number tabular-nums">{stats?.todo.unpaid ?? 0}</b> 笔
                 </div>
@@ -579,22 +579,22 @@ export default function DashboardPage() {
                 <AmortizationDashNote />
               </div>
               <div>
-                <div className="text-[11px] font-semibold text-[rgba(59,46,36,.42)]">
+                <div className="text-[11px] font-semibold text-ink-placeholder">
                   {dc('dash.statCapBoarding')}
                 </div>
                 <div className="mt-1 font-number text-[24px] font-bold tabular-nums">
                   {boardingItems ? boardingCount : '—'}
                 </div>
-                <div className="mt-0.5 text-[11px] text-[rgba(59,46,36,.62)]">{roomText}</div>
+                <div className="mt-0.5 text-[11px] text-ink-secondary">{roomText}</div>
               </div>
               <div>
-                <div className="text-[11px] font-semibold text-[rgba(59,46,36,.42)]">
+                <div className="text-[11px] font-semibold text-ink-placeholder">
                   {dc('dash.statCapMode')}
                 </div>
                 <div className="mt-1 text-[17px] font-semibold leading-8">
                   {dc('dash.statModeValue')}
                 </div>
-                <span className="mt-1 inline-block rounded-md bg-[#F2DFA6] px-[7px] py-[2px] text-[11px] font-bold text-[#3B2E24]">
+                <span className="mt-1 inline-block rounded-md bg-brand-primary px-[7px] py-[2px] text-[11px] font-bold text-ink">
                   {dc('dash.statModePill')}
                 </span>
               </div>

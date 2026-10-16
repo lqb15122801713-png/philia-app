@@ -278,7 +278,7 @@ export default function CashierClosePage() {
         {todayFrozen ? (
           <div className="rounded-[16px] bg-[#F4EDDC] px-4 py-3" data-testid="day-frozen-banner">
             <p className="text-body-sm font-semibold text-ink">{cc('cashier.dayFrozenBannerTitle')}</p>
-            <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+            <p className="mt-0.5 text-caption-xs text-ink-secondary">
               {cc('cashier.dayFrozenBannerBody', {
                 book: fenToYuan(todayFrozen.bookCashFen ?? 0),
                 actual: fenToYuan(todayFrozen.actualCashFen ?? 0),
@@ -350,21 +350,21 @@ export default function CashierClosePage() {
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           data-testid="close-shift-confirm"
         >
-          <div className="absolute inset-0 bg-[rgba(59,46,36,.28)]" onClick={() => setConfirmCloseShift(false)} aria-hidden />
-          <div className="relative flex max-h-[85vh] w-full max-w-[440px] flex-col overflow-hidden rounded-[20px] bg-[#FFFDF6] shadow-[0_8px_40px_rgba(59,46,36,.18)]">
+          <div className="absolute inset-0 bg-[rgba(44,40,34,.28)]" onClick={() => setConfirmCloseShift(false)} aria-hidden />
+          <div className="relative flex max-h-[85vh] w-full max-w-[440px] flex-col overflow-hidden rounded-[20px] bg-card shadow-[0_8px_40px_rgba(44,40,34,.18)]">
             <div className="px-5 pt-5">
               <h3 className="text-title font-semibold">{cc('cashier.closeShiftConfirmTitle')}</h3>
-              <p className="mt-2 text-caption leading-relaxed text-[rgba(59,46,36,.62)]">
+              <p className="mt-2 text-caption leading-relaxed text-ink-secondary">
                 {cc('cashier.closeShiftConfirmBody')}
               </p>
             </div>
             <div className="overflow-y-auto px-5 py-3">
-              <p className="mb-2 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{cc('cashier.handoverTitle')}</p>
+              <p className="mb-2 text-caption-xs font-semibold text-ink-placeholder">{cc('cashier.handoverTitle')}</p>
 
               {/* 在洗清单：只读快照透出（server 闭班时自动快照，本端不采） */}
-              <div className="rounded-[10px] bg-[#FAF8F2] px-3 py-2">
+              <div className="rounded-[10px] bg-canvas px-3 py-2">
                 <span className="text-caption-xs font-semibold text-ink">{cc('cashier.handoverWashingLabel')}</span>
-                <p className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]">{cc('cashier.handoverWashingNote')}</p>
+                <p className="mt-0.5 text-caption-xs text-ink-placeholder">{cc('cashier.handoverWashingNote')}</p>
               </div>
 
               {([
@@ -373,22 +373,22 @@ export default function CashierClosePage() {
                 [cc('cashier.handoverComplaintsLabel'), cc('cashier.handoverComplaintsPh'), hvComplaints, setHvComplaints, 'handover-complaints'],
               ] as const).map(([label, ph, val, setVal, tid]) => (
                 <label key={tid} className="mt-2.5 block">
-                  <span className="mb-1 block text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">{label}</span>
+                  <span className="mb-1 block text-caption-xs font-semibold text-ink-secondary">{label}</span>
                   <input
                     value={val}
                     onChange={(e) => setVal(e.target.value)}
                     placeholder={ph}
                     maxLength={200}
                     data-testid={tid}
-                    className="w-full rounded-[10px] bg-[#FFFDF6] px-3 py-2 text-caption text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+                    className="w-full rounded-[10px] bg-card px-3 py-2 text-caption text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] placeholder:text-ink-placeholder focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
                   />
                 </label>
               ))}
 
               <label className="mt-2.5 block">
-                <span className="mb-1 block text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">
+                <span className="mb-1 block text-caption-xs font-semibold text-ink-secondary">
                   {cc('cashier.floatLabel')}
-                  <span className="ml-1.5 font-normal text-[rgba(59,46,36,.42)]">{cc('cashier.floatNote')}</span>
+                  <span className="ml-1.5 font-normal text-ink-placeholder">{cc('cashier.floatNote')}</span>
                 </span>
                 <input
                   value={hvFloat}
@@ -396,17 +396,17 @@ export default function CashierClosePage() {
                   inputMode="decimal"
                   placeholder="500"
                   data-testid="handover-float"
-                  className="w-full rounded-[10px] bg-[#FFFDF6] px-3 py-2 font-number text-caption font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+                  className="w-full rounded-[10px] bg-card px-3 py-2 font-number text-caption font-semibold tabular-nums text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] placeholder:text-ink-placeholder focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
                 />
               </label>
 
               <label className="mt-2.5 block">
-                <span className="mb-1 block text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">{cc('cashier.handoverToLabel')}</span>
+                <span className="mb-1 block text-caption-xs font-semibold text-ink-secondary">{cc('cashier.handoverToLabel')}</span>
                 <select
                   value={hvToUserId}
                   onChange={(e) => setHvToUserId(e.target.value)}
                   data-testid="handover-to-user"
-                  className="w-full rounded-[10px] bg-[#FFFDF6] px-3 py-2 text-caption text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+                  className="w-full rounded-[10px] bg-card px-3 py-2 text-caption text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
                 >
                   <option value="">{cc('cashier.handoverToPh')}</option>
                   {(((staffQ.data?.staff ?? []) as StaffRow[]).filter((s) => s.status === 'active')).map((s) => (
@@ -421,7 +421,7 @@ export default function CashierClosePage() {
               <button
                 type="button"
                 onClick={() => setConfirmCloseShift(false)}
-                className="rounded-full bg-[#FFFDF6] px-4 py-2.5 text-caption text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)]"
+                className="rounded-full bg-card px-4 py-2.5 text-caption text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)]"
               >
                 取消
               </button>

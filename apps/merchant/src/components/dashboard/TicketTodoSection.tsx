@@ -24,9 +24,9 @@ const CHIP_CLS = 'rounded-md bg-sunken px-[7px] py-[2px] text-[11px] font-semibo
 /** 行内操作钮（QuietButton 同族缩小档） */
 const ROW_BTN_CLS =
   'u1-ring shrink-0 rounded-full bg-card px-3.5 py-2 text-caption font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50'
-/* 弹层按钮（ghost / 柠檬 primary，与 cashier SheetBtn 同工艺） */
+/* 弹层按钮（ghost / cream primary，与 cashier SheetBtn 同工艺） */
 const DIALOG_BTN_GHOST =
-  'rounded-full bg-[#FFFDF6] px-4 py-2.5 text-caption text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50'
+  'rounded-full bg-card px-4 py-2.5 text-caption text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50'
 const DIALOG_BTN_PRIMARY =
   'rounded-full bg-brand-primary px-4 py-2.5 text-caption font-bold text-ink shadow-hairline transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50'
 
@@ -63,7 +63,7 @@ export default function TicketTodoSection({
           <h3>{dc('dash.ticketBlockTitle')}</h3>
         </div>
         <div className="flex items-center justify-between px-[17px] py-3">
-          <p className="text-[12px] text-[rgba(59,46,36,.62)]">{dc('dash.ticketLoadFailed')}</p>
+          <p className="text-[12px] text-ink-secondary">{dc('dash.ticketLoadFailed')}</p>
           <button type="button" className={ROW_BTN_CLS} onClick={onRetry} data-testid="ticket-todo-retry">
             {dc('dash.retry')}
           </button>
@@ -101,19 +101,19 @@ export default function TicketTodoSection({
         {items.map((t) => (
           <div
             key={t.id}
-            className="flex items-start gap-3 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3"
+            className="flex items-start gap-3 border-t border-[rgba(44,40,34,.06)] px-[17px] py-3"
             data-testid={`ticket-todo-row-${t.ticketNo}`}
           >
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="font-number text-caption font-semibold tabular-nums">{t.ticketNo}</span>
                 <span className={CHIP_CLS}>{typeLabel(t.type)}</span>
-                <span className="ml-auto font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
+                <span className="ml-auto font-number text-caption-xs tabular-nums text-ink-placeholder">
                   {fmtDateTime(t.createdAt)}
                 </span>
               </div>
-              <p className="mt-1 truncate text-caption-xs text-[rgba(59,46,36,.62)]">{t.description}</p>
-              <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
+              <p className="mt-1 truncate text-caption-xs text-ink-secondary">{t.description}</p>
+              <div className="mt-1 text-caption-xs text-ink-placeholder">
                 {t.contactPhone ?? dc('dash.ticketContactNone')}
                 {t.photoUrls.length > 0 ? ` · ${dc('dash.ticketPhotoCount', { n: t.photoUrls.length })}` : ''}
               </div>
@@ -172,18 +172,18 @@ function TicketReplyDialog({
       {ticket ? (
         <div>
           {/* 工单摘要卡（全文展示，不截断） */}
-          <div className="rounded-[14px] bg-[#FAF8F2] px-3.5 py-3">
+          <div className="rounded-[14px] bg-canvas px-3.5 py-3">
             <div className="flex items-center gap-2">
               <span className="font-number text-caption font-semibold tabular-nums">{ticket.ticketNo}</span>
               <span className={CHIP_CLS}>{typeLabel(ticket.type)}</span>
-              <span className="ml-auto font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
+              <span className="ml-auto font-number text-caption-xs tabular-nums text-ink-placeholder">
                 {fmtDateTime(ticket.createdAt)}
               </span>
             </div>
-            <p className="mt-1.5 whitespace-pre-wrap text-caption-xs text-[rgba(59,46,36,.62)]">
+            <p className="mt-1.5 whitespace-pre-wrap text-caption-xs text-ink-secondary">
               {ticket.description}
             </p>
-            <div className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">
+            <div className="mt-1.5 text-caption-xs text-ink-placeholder">
               {ticket.contactPhone ?? dc('dash.ticketContactNone')}
               {ticket.photoUrls.length > 0
                 ? ` · ${dc('dash.ticketPhotoCount', { n: ticket.photoUrls.length })}`
@@ -191,11 +191,11 @@ function TicketReplyDialog({
             </div>
           </div>
 
-          <div className="mt-3 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+          <div className="mt-3 text-caption-xs font-semibold text-ink-placeholder">
             {dc('dash.ticketReplyLabel')}
           </div>
           <textarea
-            className="mt-1.5 min-h-[76px] w-full resize-none rounded-[14px] bg-[#FFFDF6] px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] placeholder:text-[rgba(59,46,36,.3)] focus:outline-none focus:shadow-[0_0_0_1px_rgba(59,46,36,.3)]"
+            className="mt-1.5 min-h-[76px] w-full resize-none rounded-[14px] bg-card px-3 py-2 text-body-sm text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] placeholder:text-ink-placeholder focus:outline-none focus:shadow-[0_0_0_1px_rgba(44,40,34,.3)]"
             data-testid="ticket-reply-input"
             placeholder={dc('dash.ticketReplyPlaceholder')}
             maxLength={1000}

@@ -24,10 +24,10 @@ export function showToast(text: string, kind: ToastKind = 'info'): void {
 }
 
 const KIND_CLASS: Record<ToastKind, string> = {
-  info: 'bg-[rgba(61,50,41,0.92)] text-[#FFFDF6]',
-  success: 'bg-[rgba(61,50,41,0.92)] text-[#FFFDF6]',
-  error: 'bg-danger text-[#FFFDF6]',
-  alert: 'bg-[rgba(61,50,41,0.92)] text-[#FFFDF6]',
+  info: 'bg-[rgba(61,50,41,0.92)] text-brand-cta-on',
+  success: 'bg-[rgba(61,50,41,0.92)] text-brand-cta-on',
+  error: 'bg-danger text-brand-cta-on',
+  alert: 'bg-[rgba(61,50,41,0.92)] text-brand-cta-on',
 };
 
 export function ToastHost() {

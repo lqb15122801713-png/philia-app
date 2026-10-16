@@ -177,21 +177,21 @@ export default function ImportLedgerPanel({ storeId }: { storeId: string | undef
             type="button"
             data-testid="sv-import-pick"
             onClick={() => fileRef.current?.click()}
-            className="inline-flex items-center gap-1.5 rounded-full bg-[#FFFDF6] px-4 py-2 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            className="inline-flex items-center gap-1.5 rounded-full bg-card px-4 py-2 text-caption font-semibold text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
             <FileUp size={13} strokeWidth={1.8} aria-hidden />
             {file ? `已选：${file.name}` : '选择台账 CSV'}
           </button>
           {file ? (
-            <span className="font-number text-caption-xs tabular-nums text-[rgba(59,46,36,.42)]">
+            <span className="font-number text-caption-xs tabular-nums text-ink-placeholder">
               {Math.round(file.text.length / 1024)} KB · 门店列 {Object.keys(mapping).length} 个店名
             </span>
           ) : null}
         </div>
 
         {file && Object.keys(mapping).length > 0 ? (
-          <div className="mt-3 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3" data-testid="sv-import-mapping">
-            <div className="mb-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+          <div className="mt-3 rounded-[14px] bg-canvas px-3.5 py-3" data-testid="sv-import-mapping">
+            <div className="mb-1.5 text-caption-xs font-semibold text-ink-placeholder">
               {cc('cashier.importMappingTitle')}
             </div>
             {Object.keys(mapping).map((name) => (
@@ -201,7 +201,7 @@ export default function ImportLedgerPanel({ storeId }: { storeId: string | undef
                   data-testid={`sv-import-map-${name}`}
                   value={mapping[name] ?? ''}
                   onChange={(e) => setMapping({ ...mapping, [name]: e.target.value })}
-                  className="rounded-[8px] bg-[#FFFDF6] px-2.5 py-1.5 text-caption text-ink shadow-[0_0_0_1px_rgba(59,46,36,.12)] focus:outline-none"
+                  className="rounded-[8px] bg-card px-2.5 py-1.5 text-caption text-ink shadow-[0_0_0_1px_rgba(44,40,34,.12)] focus:outline-none"
                 >
                   <option value={storeId ?? ''}>映射到本店（菲丽亚宠物·示例店）</option>
                   <option value="">不导入（失败留痕）</option>
@@ -218,7 +218,7 @@ export default function ImportLedgerPanel({ storeId }: { storeId: string | undef
               data-testid="sv-import-preview"
               disabled={!mappingReady || previewM.isPending}
               onClick={() => previewM.mutate()}
-              className="rounded-full bg-[#3B2E24] px-4 py-2 text-caption font-semibold text-[#FAF8F2] transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+              className="rounded-full bg-ink px-4 py-2 text-caption font-semibold text-brand-cta-on transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
             >
               {previewM.isPending ? '对账中…' : '生成对账报告（零写入）'}
             </button>
@@ -237,9 +237,9 @@ export default function ImportLedgerPanel({ storeId }: { storeId: string | undef
 
         {/* 对账报告（preview/execute 同构） */}
         {report ? (
-          <div className="mt-3 rounded-[14px] bg-[#FAF8F2] px-3.5 py-3" data-testid="sv-import-report">
-            <div className="mb-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">对账报告（源文件校验位）</div>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-caption-xs text-[rgba(59,46,36,.62)] sm:grid-cols-3">
+          <div className="mt-3 rounded-[14px] bg-canvas px-3.5 py-3" data-testid="sv-import-report">
+            <div className="mb-1.5 text-caption-xs font-semibold text-ink-placeholder">对账报告（源文件校验位）</div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-caption-xs text-ink-secondary sm:grid-cols-3">
               <span>数据行数 <b className="font-number tabular-nums text-ink">{report.sourceStats.totalRows}</b></span>
               <span>本金&gt;0 人数 <b className="font-number tabular-nums text-ink">{report.sourceStats.personsWithBalance}</b></span>
               <span>本金合计 <b className="font-number tabular-nums text-ink">¥{fenToYuan(report.sourceStats.principalTotalFen)}</b></span>
@@ -251,17 +251,17 @@ export default function ImportLedgerPanel({ storeId }: { storeId: string | undef
                 门店分布：{Object.entries(report.sourceStats.storeDist).map(([k, v]) => `${k} ${v}`).join(' · ') || '—'}
               </span>
             </div>
-            <div className="mt-2 border-t border-dashed border-[rgba(59,46,36,.12)] pt-2 text-caption-xs">
+            <div className="mt-2 border-t border-dashed border-[rgba(44,40,34,.12)] pt-2 text-caption-xs">
               可导 <b className="font-number tabular-nums text-ink">{report.importPlan.okRows}</b> 行 ·
               失败 <b className={`font-number tabular-nums ${report.importPlan.failRows > 0 ? 'text-danger-deep' : 'text-ink'}`}>{report.importPlan.failRows}</b> 行
               {Object.keys(report.importPlan.failReasons).length > 0 ? (
-                <span className="ml-1 text-[rgba(59,46,36,.62)]">
+                <span className="ml-1 text-ink-secondary">
                   （{Object.entries(report.importPlan.failReasons).map(([r, n]) => `${r} ×${n}`).join('；')}）
                 </span>
               ) : null}
             </div>
             {report.importPlan.failSamples.length > 0 ? (
-              <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
+              <div className="mt-1 text-caption-xs text-ink-placeholder">
                 失败样例：{report.importPlan.failSamples.slice(0, 5).map((s) => `行${s.line} ${s.reason}`).join('；')}
               </div>
             ) : null}
@@ -270,11 +270,11 @@ export default function ImportLedgerPanel({ storeId }: { storeId: string | undef
 
         {/* 批次列表（留痕可查） */}
         <div className="mt-4">
-          <div className="mb-1.5 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">导入批次（留痕可查 · 批次行永存）</div>
+          <div className="mb-1.5 text-caption-xs font-semibold text-ink-placeholder">导入批次（留痕可查 · 批次行永存）</div>
           {batchesQ.isPending ? (
             <Skeleton className="h-9" />
           ) : (batchesQ.data ?? []).length === 0 ? (
-            <p className="text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="sv-import-batches-empty">
+            <p className="text-caption-xs text-ink-placeholder" data-testid="sv-import-batches-empty">
               暂无导入批次
             </p>
           ) : (
@@ -282,7 +282,7 @@ export default function ImportLedgerPanel({ storeId }: { storeId: string | undef
               <div
                 key={b.id}
                 data-testid={`sv-import-batch-${b.id}`}
-                className="flex flex-wrap items-center gap-2 rounded-[10px] bg-[#FAF8F2] px-3 py-2 text-caption-xs text-[rgba(59,46,36,.62)] [&+&]:mt-1.5"
+                className="flex flex-wrap items-center gap-2 rounded-[10px] bg-canvas px-3 py-2 text-caption-xs text-ink-secondary [&+&]:mt-1.5"
               >
                 <b className="font-number tabular-nums text-ink">批次 {b.id.slice(-6)}</b>
                 <span>{b.filename ?? '未留文件名'}</span>
@@ -339,7 +339,7 @@ export default function ImportLedgerPanel({ storeId }: { storeId: string | undef
         <p className="py-2 text-body-sm leading-relaxed text-ink">
           {cc('cashier.importConfirmPre')} <b className="font-number tabular-nums">{report?.importPlan.okRows ?? 0}</b> {cc('cashier.importConfirmPost')}
         </p>
-        <p className="text-caption leading-relaxed text-[rgba(59,46,36,.62)]">
+        <p className="text-caption leading-relaxed text-ink-secondary">
           {cc('cashier.importConfirmNote')}
         </p>
       </CashierModal>
@@ -367,7 +367,7 @@ export default function ImportLedgerPanel({ storeId }: { storeId: string | undef
         <p className="py-2 text-body-sm leading-relaxed text-ink">
           {cc('cashier.importClearNote')}
         </p>
-        <p className="text-caption leading-relaxed text-[rgba(59,46,36,.62)]">
+        <p className="text-caption leading-relaxed text-ink-secondary">
           {cc('cashier.importClearReject')}
         </p>
       </CashierModal>
