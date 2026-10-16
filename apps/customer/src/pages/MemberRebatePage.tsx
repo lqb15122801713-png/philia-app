@@ -111,6 +111,7 @@ export default function MemberRebatePage() {
   const progress = Math.min(1, Math.max(0, (Date.now() - start.getTime()) / span))
   const pct = Math.round(progress * 100)
   const offset = (188.5 * (1 - progress)).toFixed(1)
+  const calendarOnly = plan?.free === true || (data?.rebate?.balanceFen ?? 0) === 0
   const frozen = data?.rebate?.status === 'frozen'
   const fmtMD = (d: Date) => `${d.getMonth() + 1}.${d.getDate()}`
   const allPcts = plans
@@ -133,10 +134,10 @@ export default function MemberRebatePage() {
               transform="rotate(-90 38 38)"
             />
             <text x="38" y="36" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="15" fontWeight="700" fill="#2C2822">
-              {pct}%
+              {calendarOnly ? mc(progress >= 0.5 ? 'w1.calendarPastHalf' : 'w1.calendarFirstHalf') : `${pct}%`}
             </text>
             <text x="38" y="49" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="7.5" fill="#8A7D6B">
-              {mc('w1.ringCenter')}
+              {calendarOnly ? mc('w1.calendarLabel') : mc('w1.ringCenter')}
             </text>
           </svg>
           <div>

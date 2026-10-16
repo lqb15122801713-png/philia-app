@@ -233,3 +233,11 @@
     @apply font-serif-cn;
   }
 }
+
+/* O14：洗护 dock 常驻时给既有确认栏让位，并扩大时段滚动安全区，避免回退 O6。 */
+.booking-with-dock [data-testid='gs-confirm-bar'] {
+  bottom: calc(78px + env(safe-area-inset-bottom));
+}
+.booking-with-dock [data-testid='gs-time-grid'] {
+  scroll-margin-bottom: 15rem;
+}

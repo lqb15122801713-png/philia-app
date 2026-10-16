@@ -272,40 +272,32 @@ function CartInner() {
                 <span className="u1-num text-[19px] font-bold text-ink">{fenToYuan(cart.checkedTotalFen)}</span>
               </p>
             </div>
-            <button
-              type="button"
-              disabled={cart.checkedItems.length === 0}
-              onClick={handleCheckout}
-              className="flex w-full flex-col items-center justify-center rounded-[18px] bg-brand-cta py-3 text-body-lg font-bold text-brand-cta-on transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
-            >
-              <span>
-                <CK k="mall.cartCheckout">{mlc('mall.cartCheckout')}</CK>{cart.checkedItems.length > 0 ? `（${cart.checkedItems.reduce((n, it) => n + it.qty, 0)}）` : ''}
-              </span>
-              {rebateFen > 0 ? (
-                <span className="mt-0.5 font-number text-[10.5px] font-normal text-[#C9BBA0]">
-                  <CK k="mall.rebateEarnCta">{mc('mall.rebateEarnCta', { amt: fenToYuan(rebateFen) })}</CK>
+            <div className="flex w-full flex-col">
+              <button
+                type="button"
+                disabled={cart.checkedItems.length === 0}
+                onClick={handleCheckout}
+                className="flex w-full flex-col items-center justify-center rounded-[18px] bg-brand-cta py-3 text-body-lg font-bold text-brand-cta-on transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
+              >
+                <span>
+                  <CK k="mall.cartCheckout">{mlc('mall.cartCheckout')}</CK>{cart.checkedItems.length > 0 ? `（${cart.checkedItems.reduce((n, it) => n + it.qty, 0)}）` : ''}
                 </span>
-              ) : hookPcts ? (
-                <span
-                  role="link"
-                  tabIndex={0}
+                {rebateFen > 0 ? (
+                  <span className="mt-0.5 font-number text-[10.5px] font-normal text-[#C9BBA0]">
+                    <CK k="mall.rebateEarnCta">{mc('mall.rebateEarnCta', { amt: fenToYuan(rebateFen) })}</CK>
+                  </span>
+                ) : null}
+              </button>
+              {rebateFen === 0 && hookPcts ? (
+                <Link
+                  to="/member/open"
                   data-testid="cart-rebate-hook"
-                  className="mt-0.5 font-number text-[10.5px] font-normal text-[#C9BBA0] underline underline-offset-2"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate('/member/open');
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.stopPropagation();
-                      navigate('/member/open');
-                    }
-                  }}
+                  className="mt-1 self-center font-number text-[10.5px] font-normal text-[#C9BBA0] underline underline-offset-2"
                 >
                   <CK k="mall.rebateHook">{mc('mall.rebateHook', { pcts: hookPcts })}</CK>
-                </span>
+                </Link>
               ) : null}
-            </button>
+            </div>
           </div>
         </div>
       ) : null,

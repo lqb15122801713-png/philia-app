@@ -1,27 +1,21 @@
 /**
  * B9a 任务 B · 首页主区双态面板容器（HomePage 主区，全屏唯一重点）。
  *
- * 双态（任务书口径）：
- * - 常态面板（RebookPanel）：B4-3 下单记忆驱动的「一键再约」，CTA 单次点击直接
- *   appointment.create（现入参不动）→ /booking/success；
+ * 双态：
+ * - 常态面板（RebookPanel）：B4-3 下单记忆驱动的上次预约配置摘要，主行动改为查看预约进度（O1 差异任务）；
  * - 服务中面板（InServicePanel）：存在 in_service 洗护预约时替换常态面板——
  *   当前步骤名 + 第 N 步/共 6 步 + 细线进度条 + 最新员工照片缩略 + 实时直播入口。
  *
- * 降级规则（不替用户猜，面板退化为「预约洗护 ›」入口卡，进单屏走 B4-3 预填）：
- * - 无下单记忆（localStorage 无 storeId）；
- * - 记忆中的门店失效（getWithServices NOT_FOUND/查询失败）；
- * - 多宠物未直选（resolvePetId 无法确定唯一宠物）；
- * - 记忆门店无可约洗护服务；
- * - 无可约槽（时长连续过滤后 7 天栅格为空）。
+ * O1 降级规则：无记忆、门店/服务/宠物/时段任一不可用时不再渲染同链第二入口，
+ * 只保留 megacard 的进洗护主路径，不替用户猜。
  *
  * 最早可约槽口径：与单屏完全同源——store.getWithServices(storeId, serviceId)
  * （服务端 +8 规范时区合成栅格、+1h 缓冲、容量、时长连续过滤），前端取
  * min(slotStart)，零新接口。两段式查询：先 (storeId) 取服务目录解析 B4-3
  * 服务预填，再 (storeId, serviceId) 取时长连续过滤槽（queryKey 与单屏一致，缓存共享）。
  *
- * paymentMode 口径（与单屏默认一致）：本人该店有可用次卡 → pass_deduct，
- * 否则 pay_at_store；面板脚注明示收款方式。CTA 在次卡查询未沉降前保持加载态
- * （避免「有卡却按到店付建单」的涉钱误提交）。
+ * paymentMode 仅作真实收款方式展示，与单屏默认一致：本人该店有可用次卡 → pass_deduct，
+ * 否则 pay_at_store；O1 主行动已改预约进度，不再直接建单。
  *
  * SSE（任务书：事件到达 invalidate 对应 query）：服务中态下 push.subscribe 登记后
  * 连 /api/events?watch=<aid>，step_updated/step_flagged/completed/reopened 等事件
@@ -34,9 +28,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
-  CK,
   EventType,
   getApiBase,
   getStepDef,
@@ -49,20 +41,11 @@ import {
 } from '@philia/shared';
 import type { AppointmentListItem } from '@/components/booking/types';
 import { readLastBooking, resolvePetId, resolveServiceId } from '@/lib/bookingPrefill';
-import { hc } from '@/copy/home';
 import RebookPanel from './RebookPanel';
 import InServicePanel from './InServicePanel';
 
-/** 面板模态：loading 数据沉降中 / rebook 一键再约 / in-service 服务中 / entry 降级入口卡 */
+/** 面板模态：loading 数据沉降中 / rebook 上次预约配置 / in-service 服务中 / entry 不渲染第二入口 */
 export type HomePanelMode = 'loading' | 'rebook' | 'in-service' | 'entry';
-
-/** 降级原因（实证断言锚点，data-reason 外露） */
-export type EntryReason =
-  | 'no-memory'
-  | 'store-unavailable'
-  | 'pet-undecided'
-  | 'no-service'
-  | 'no-slot';
 
 const CLIENT_ID_KEY = 'philia.sseClientId';
 
@@ -253,7 +236,7 @@ export default function HomeBookingPanel({
   type Derived =
     | { mode: 'loading' }
     | { mode: 'in-service' }
-    | { mode: 'entry'; reason: EntryReason }
+    | { mode: 'entry' }
     | {
         mode: 'rebook';
         earliest: Date;
@@ -267,22 +250,22 @@ export default function HomeBookingPanel({
   const derived = useMemo<Derived>(() => {
     if (mineQ.isPending) return { mode: 'loading' };
     if (inServiceAppt) return { mode: 'in-service' };
-    if (memoryStoreId === null) return { mode: 'entry', reason: 'no-memory' };
-    if (storeQ.isError || slotsQ.isError) return { mode: 'entry', reason: 'store-unavailable' };
+    if (memoryStoreId === null) return { mode: 'entry' };
+    if (storeQ.isError || slotsQ.isError) return { mode: 'entry' };
     if (storeQ.isPending || petsQ.isPending || passQ.isPending) return { mode: 'loading' };
-    if (!resolvedServiceId) return { mode: 'entry', reason: 'no-service' };
+    if (!resolvedServiceId) return { mode: 'entry' };
     if (slotsQ.isPending) return { mode: 'loading' };
     const pets = petsQ.data ?? [];
-    if (!resolvedPetId) return { mode: 'entry', reason: 'pet-undecided' };
+    if (!resolvedPetId) return { mode: 'entry' };
     const slots = slotsQ.data?.slots ?? [];
     const earliest = slots.reduce<Date | null>(
       (m, s) => (m === null || s.slotStart < m ? s.slotStart : m),
       null,
     );
-    if (!earliest) return { mode: 'entry', reason: 'no-slot' };
+    if (!earliest) return { mode: 'entry' };
     const serviceRow = groomingServices.find((s) => s.id === resolvedServiceId) ?? null;
     const pet = pets.find((p) => p.id === resolvedPetId) ?? null;
-    if (!serviceRow || !pet) return { mode: 'entry', reason: 'store-unavailable' };
+    if (!serviceRow || !pet) return { mode: 'entry' };
     // B9a 任务 C：「约 N 分钟」以时长引擎输出为准（serviceDurations），未输出回退默认
     const engineDurationMin = slotsQ.data?.serviceDurations?.[serviceRow.id]?.durationMin ?? null;
     return {
@@ -315,7 +298,6 @@ export default function HomeBookingPanel({
   ]);
 
   const mode: HomePanelMode = derived.mode;
-  const reason: EntryReason | null = derived.mode === 'entry' ? derived.reason : null;
 
   // 模态上报（GroomingReminder 共存控制；仅变化时触发，避免重复渲染）
   useEffect(() => {
@@ -367,7 +349,6 @@ export default function HomeBookingPanel({
         storeName={derived.storeName || '菲丽亚宠物'}
         serviceId={derived.service.id}
         serviceName={derived.service.name}
-        priceFen={derived.service.priceFen}
         durationMin={derived.service.durationMin}
         petId={derived.pet.id}
         petName={derived.pet.name}
@@ -378,39 +359,6 @@ export default function HomeBookingPanel({
     );
   }
 
-  // 降级入口卡：进单屏（B4-3 预填链在单屏内继续生效），不替用户猜
-  return (
-    <Link
-      to="/booking/grooming"
-      data-testid="home-booking-entry"
-      data-reason={reason ?? 'no-memory'}
-      className="flex items-center gap-3 rounded-card bg-card p-4 shadow-card transition-transform duration-120 ease-philia-spring active:scale-[0.97]"
-    >
-      <svg
-        width="22"
-        height="22"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        className="shrink-0 text-[#A89779]"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d="M7 21h10" />
-        <path d="M12 21v-3" />
-        <path d="M4 13c0-4.4 3.6-8 8-8s8 3.6 8 8c0 1.5-.4 2.9-1.1 4.1-.3.5-.9.9-1.6.9H6.7c-.7 0-1.3-.4-1.6-.9C4.4 15.9 4 14.5 4 13Z" />
-        <path d="M9 9.5c.8-.8 1.9-1.3 3-1.3" />
-      </svg>
-      <span className="min-w-0 flex-1">
-        {/* 画布端口（端口批收尾片 3）：copyKeys 键位挂 CK 锚（home.panelEntryTitle/Sub） */}
-        <span className="block text-body font-semibold"><CK k="home.panelEntryTitle">{hc('home.panelEntryTitle')}</CK></span>
-        <span className="block text-caption text-ink-secondary"><CK k="home.panelEntrySub">{hc('home.panelEntrySub')}</CK></span>
-      </span>
-      <span className="shrink-0 text-body text-ink-secondary" aria-hidden="true">
-        ›
-      </span>
-    </Link>
-  );
+  // O1：无下单记忆时只保留 megacard 主入口，不再渲染同链第二入口。
+  return null;
 }

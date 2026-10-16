@@ -20,7 +20,7 @@ import { BoardSkeleton, CanvasLayoutLoader, CK, resolveSlotUrl, slotContentOf, u
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Plus, Search, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { readLastBooking } from '@/lib/bookingPrefill';
 import CartLink from '../components/mall/CartLink';
 import { mc } from '../components/member/copy';
@@ -77,7 +77,6 @@ function ProductCard({
   item,
   onQuickAdd,
   rebateBp,
-  hookText,
   showNewBadge,
 }: {
   item: ProductItem;
@@ -85,20 +84,12 @@ function ProductCard({
   onQuickAdd: (item: ProductItem) => void;
   /** 回馈金返显（APP-18：全员同价+按档返；非会员/免费档=0 不渲染假数） */
   rebateBp: number;
-  /** 体验急修批 B：rebateBp=0 时的规则钩子文案（读表拼好传入；空串=不渲染） */
-  hookText: string;
   /** 批D 新品角标（父级按序位+视窗双闸下发，守 ≤10% 帽） */
   showNewBadge: boolean;
 }) {
   /* 片 2 M-01 定稿（§4.7）：图 4:3 + 名 12.5/700 两行 + 价 mono 14/700 + 右 mono 8.5
      「返 ¥x 回馈金」（APP-18 口径）+ qadd 30 圆深棕「＋」（:active scale .9） */
   const rebateFen = rebateBp > 0 ? Math.round((item.priceFen * rebateBp) / 10000) : 0;
-  const navigate = useNavigate();
-  const gotoHook = (e: { preventDefault(): void; stopPropagation(): void }) => {
-    e.preventDefault();
-    e.stopPropagation();
-    navigate('/member/open');
-  };
   return (
     <div className="u1-card relative overflow-hidden">
       <Link to={`/mall/product/${item.id}`} className="block transition active:scale-[0.99]">
@@ -119,20 +110,6 @@ function ProductCard({
             {rebateFen > 0 ? (
               <span className="ml-auto font-number text-[8.5px] tabular-nums text-ink-secondary">
                 {mlc('mall.rebateLine', { amt: fenToYuan(rebateFen) })}
-              </span>
-            ) : hookText ? (
-              /* 体验急修批 B：注册用户/非会员=规则钩子（不上假数），点击→/member/open（J-01） */
-              <span
-                role="link"
-                tabIndex={0}
-                data-testid="mall-rebate-hook"
-                className="ml-auto font-number text-[8.5px] tabular-nums text-ink-secondary underline decoration-[#B9A482] underline-offset-2"
-                onClick={gotoHook}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') gotoHook(e)
-                }}
-              >
-                {hookText}
               </span>
             ) : null}
           </div>
@@ -267,18 +244,6 @@ function MallInner() {
     staleTime: 60_000,
   });
   const rebateBp = (myQ.data?.plan as { rebateBp?: number } | null | undefined)?.rebateBp ?? 0;
-  /* 返显钩子（体验急修批 B）：付费档比例读表（member_plans public）；缺省不渲染（不上假数） */
-  const plansQ = useQuery({
-    queryKey: ['membership', 'plans'],
-    queryFn: () => trpc.membership.plans.query(),
-    staleTime: 300_000,
-  });
-  const hookPcts = (plansQ.data?.plans ?? [])
-    .filter((p) => p.rebateBp > 0)
-    .map((p) => p.rebateBp / 100)
-    .join('/');
-  const hookText = hookPcts ? mc('mall.rebateHook', { pcts: hookPcts }) : '';
-
   const items = productsQ.data?.pages.flatMap((p) => p.items) ?? [];
   const total = productsQ.data?.pages[0]?.total ?? 0;
 
@@ -464,7 +429,6 @@ function MallInner() {
                 item={it}
                 onQuickAdd={quickAdd}
                 rebateBp={rebateBp}
-                hookText={hookText}
                 /* 批D 新品角标双闸：视窗内 + 序位帽（列表=server createdAt 倒序） */
                 showNewBadge={
                   idx < NEW_BADGE_CAP &&

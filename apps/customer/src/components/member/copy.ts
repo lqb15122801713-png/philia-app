@@ -116,6 +116,10 @@ const MEMBER_COPY_TABLE = {
   /* ---- W-01 回馈金账本 ---- */
   'w1.pushLabel': '回馈金 · REBATE LEDGER',
   'w1.ringCenter': '本周期',
+  /* O13 静态 fallback：免费档／零余额只表达时间，不显示积累百分比。 */
+  'w1.calendarLabel': '本周期日历',
+  'w1.calendarPastHalf': '周期过半',
+  'w1.calendarFirstHalf': '周期未过半',
   'w1.balanceLabel': '可用余额',
   /* PR-4 UX P2-1：到账日改紧凑「M.D 前到账」——消灭 mono 溯源行折行孤字（45 号档修法①） */
   'w1.periodLine': '周期 {start} – {end} · {month}.{day} 前到账',
@@ -152,6 +156,10 @@ const MEMBER_COPY_TABLE = {
      （零新依赖：文本码 mono 大字；5min 时效自动刷新；核验=收银台 verifyCardToken） */
   'q1.tokenTitle': '会员码',
   'q1.verifyNote': '核验走收银台 · 店员扫录或核对码文本',
+  /* O11 静态 fallback（零迁移）：复制动作与反馈不承诺 QR 图形。 */
+  'q1.copyToken': '复制码',
+  'q1.copied': '已复制',
+  'q1.copyFailed': '复制失败，请长按码值复制',
   'q1.tokenFail': '会员码加载失败',
   'q1.tokenRetry': '重试',
 
@@ -397,6 +405,8 @@ const MEMBER_COPY_TABLE = {
   'me.openUnlock': '开通会员解锁',
   'me.qrTitle': '出示会员码',
   'me.qrSub': '到店即扫',
+  /* O11 静态 fallback：与文本码＋复制能力一致，不再使用「即扫」暗示。 */
+  'me.qrAction': '出示或复制',
   'me.orderConfirmed': '待到店',
   'me.orderServing': '服务中',
   'me.orderHistory': '待评价',

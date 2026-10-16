@@ -36,6 +36,27 @@ function chunkToken(token: string): string {
   return token.replace(/(.{4})/g, '$1 ').trim()
 }
 
+/** Clipboard API 被拒时用真实选区复制兜底；只有两条路径都失败才允许报错。 */
+async function writeTokenToClipboard(token: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(token)
+    return true
+  } catch {
+    const textarea = document.createElement('textarea')
+    textarea.value = token
+    textarea.setAttribute('readonly', '')
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    document.body.appendChild(textarea)
+    textarea.select()
+    try {
+      return document.execCommand('copy')
+    } finally {
+      textarea.remove()
+    }
+  }
+}
+
 /** 到期倒计时（mm/ss；到期自动刷新取新 token） */
 function useCountdown(expiresAt: Date | string | undefined): { mm: string; ss: string; expired: boolean } {
   const [now, setNow] = useState(() => Date.now())
@@ -97,6 +118,18 @@ export default function MemberCardPage() {
     return () => window.clearInterval(t)
   }, [isMember, issue])
   const countdown = useCountdown(tokenM.data?.expiresAt)
+  const [copyResult, setCopyResult] = useState<{ status: 'idle' | 'copied' | 'error'; token: string | null }>({ status: 'idle', token: null })
+  const copyToken = async () => {
+    const token = tokenM.data?.token
+    if (!token) return
+    try {
+      const ok = await writeTokenToClipboard(token)
+      setCopyResult({ status: ok ? 'copied' : 'error', token })
+    } catch {
+      setCopyResult({ status: 'error', token })
+    }
+  }
+  const copyStatus = copyResult.token === tokenM.data?.token && !countdown.expired ? copyResult.status : 'idle'
   /* 到期即换新码（双保险：5min 定时 + 到期触发） */
   useEffect(() => {
     if (countdown.expired) issue()
@@ -197,6 +230,16 @@ export default function MemberCardPage() {
               <p className="m2-mono" style={{ marginTop: 6, fontSize: 9, color: 'var(--v2muted)' }}>
                 <CK k="q1.verifyNote">{mc('q1.verifyNote')}</CK>
               </p>
+              <div className="mt-2 flex items-center justify-center gap-3">
+                <button type="button" className="m2-link" data-testid="membercard-copy" onClick={copyToken}>
+                  <CK k="q1.copyToken">{mc('q1.copyToken')}</CK>
+                </button>
+                {copyStatus !== 'idle' ? (
+                  <span className="m2-note" data-testid="membercard-copy-status" role="status" aria-live="polite">
+                    {copyStatus === 'copied' ? <CK k="q1.copied">{mc('q1.copied')}</CK> : <CK k="q1.copyFailed">{mc('q1.copyFailed')}</CK>}
+                  </span>
+                ) : null}
+              </div>
             </>
           ) : null
         ) : (

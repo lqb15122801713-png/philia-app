@@ -1,0 +1,55 @@
+{
+  "at": "2026-10-16T17:12:30.352Z",
+  "results": [
+    {
+      "id": "O1 首页仅一条进洗护主路径",
+      "ok": false,
+      "detail": "主入口可见=2；mega=/booking/grooming；panel=/booking/grooming"
+    },
+    {
+      "id": "O2+O12 回馈金／金额字阶统一可读",
+      "ok": false,
+      "detail": "home=9.5/9.5px；me=10/17px"
+    },
+    {
+      "id": "O3 毛孩子空态正文对比≥4.5",
+      "ok": false,
+      "detail": "对比=2.46；fg=rgb(168, 151, 121)；bg=rgb(243, 238, 228)"
+    },
+    {
+      "id": "O4 管理热区≥44×44",
+      "ok": false,
+      "detail": "29.0×15.0"
+    },
+    {
+      "id": "O5 预约禁用钮可读且锁因明确",
+      "ok": true,
+      "detail": "对比=6.44；text=请先建立宠物档案"
+    },
+    {
+      "id": "O9 商城漏斗仅一处规则主钩",
+      "ok": false,
+      "detail": "mall=10；pdp=1；cart=1"
+    },
+    {
+      "id": "O11 会员码入口与落地示能一致",
+      "ok": false,
+      "detail": "入口=出示会员码/到店即扫；复制钮=false；状态=无"
+    },
+    {
+      "id": "O13 免费档环不误读已攒进度",
+      "ok": false,
+      "detail": "70% / 本周期 / ¥0.00 / 可用余额 / 周期 9.26 – 10.25 · 11.5 前到账"
+    },
+    {
+      "id": "O14 预约进洗护 dock 常驻且选中",
+      "ok": false,
+      "detail": "path=/booking/grooming；dock=false；current=null；确认栏相交=false"
+    },
+    {
+      "id": "O6 回归：确认栏与 dock 均不压时段格",
+      "ok": true,
+      "detail": "视口时段=22；确认栏压=0；dock压=0"
+    }
+  ]
+}
