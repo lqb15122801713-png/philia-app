@@ -157,7 +157,7 @@ export default function OrdersPage() {
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="flex items-center gap-6 border-t border-[rgba(59,46,36,.06)] px-[17px] py-3.5"
+                className="flex items-center gap-6 border-t border-[rgba(44,40,34,.06)] px-[17px] py-3.5"
               >
                 <Skeleton className="h-3.5 w-32 rounded-chip" />
                 <Skeleton className="h-3.5 w-20 rounded-chip" />
@@ -169,7 +169,7 @@ export default function OrdersPage() {
           </div>
         ) : ordersQuery.isError ? (
           <div className="px-[17px] py-10 text-center">
-            <div className="text-caption text-[rgba(59,46,36,.62)]">
+            <div className="text-caption text-[rgba(44,40,34,.62)]">
               订单加载失败：{errMsg(ordersQuery.error)}
             </div>
             <div className="mt-3 flex justify-center">
@@ -178,7 +178,7 @@ export default function OrdersPage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="px-[17px] py-14 text-center">
-            <div className="text-body-sm font-semibold text-[rgba(59,46,36,.62)]">{emptyText}</div>
+            <div className="text-body-sm font-semibold text-[rgba(44,40,34,.62)]">{emptyText}</div>
           </div>
         ) : (
           <div className="u3-noscrollx overflow-x-auto">
@@ -213,7 +213,7 @@ export default function OrdersPage() {
       </div>
 
       {/* W-09 回馈金列口径注（片 5 段 4 已接真值 · 回馈金仅抵商品） */}
-      <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="orders-rebate-note">
+      <p className="mt-2 text-caption-xs text-[rgba(44,40,34,.42)]" data-testid="orders-rebate-note">
         {od('order.rebatePendingNote')}
       </p>
 

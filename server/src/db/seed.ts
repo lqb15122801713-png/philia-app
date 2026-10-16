@@ -867,7 +867,14 @@ async function main() {
       SLOT_SEED_ROWS.map((r) => ({
         slotKey: r.key,
         version: 1,
-        contentJson: { url: r.url, alt: r.alt },
+        /* D-42 三行文案随种子（片4 批C/批D 新槽；旧槽无字段=纯图版，与迁移 0086 同帧） */
+        contentJson: {
+          url: r.url,
+          alt: r.alt,
+          ...(r.title_main !== undefined ? { title_main: r.title_main } : {}),
+          ...(r.title_sub !== undefined ? { title_sub: r.title_sub } : {}),
+          ...(r.cta_text !== undefined ? { cta_text: r.cta_text } : {}),
+        },
         status: 'live' as const,
         createdBy: owner.id,
       })),

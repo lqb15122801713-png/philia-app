@@ -221,10 +221,10 @@ export function ConsoleSearch({ onPickPort, onPickCopyKey, onPickScreen, onPickS
         type="button"
         data-testid="console-search-open"
         onClick={() => setOpen(true)}
-        className="u1-ring flex items-center gap-2 rounded-input bg-card px-3 py-[7px] text-caption-xs text-[rgba(59,46,36,.42)] transition-colors hover:bg-canvas"
+        className="u1-ring flex items-center gap-2 rounded-input bg-card px-3 py-[7px] text-caption-xs text-[rgba(44,40,34,.42)] transition-colors hover:bg-canvas"
       >
         <span>{cadm('cadm.searchCta')}</span>
-        <kbd className="rounded-chip bg-canvas px-1.5 py-0.5 font-number text-[10px] text-[rgba(59,46,36,.42)]">⌘K</kbd>
+        <kbd className="rounded-chip bg-canvas px-1.5 py-0.5 font-number text-[10px] text-[rgba(44,40,34,.42)]">⌘K</kbd>
       </button>
 
       <Modal
@@ -232,7 +232,7 @@ export function ConsoleSearch({ onPickPort, onPickCopyKey, onPickScreen, onPickS
         onClose={() => setOpen(false)}
         title={cadm('cadm.searchTitle')}
         footer={
-          <span className="text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="console-search-perf">
+          <span className="text-caption-xs text-[rgba(44,40,34,.42)]" data-testid="console-search-perf">
             {index
               ? cadm('cadm.searchPerf', {
                   total: index.total,
@@ -253,21 +253,21 @@ export function ConsoleSearch({ onPickPort, onPickCopyKey, onPickScreen, onPickS
             maxLength={64}
             onChange={(e) => setQ(e.target.value)}
           />
-          <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">{cadm('cadm.searchHint')}</p>
+          <p className="mt-1.5 text-caption-xs text-[rgba(44,40,34,.42)]">{cadm('cadm.searchHint')}</p>
 
           <div className="mt-3 max-h-[420px] overflow-y-auto">
             {q.trim() !== '' && index && results.groups.length === 0 ? (
               /* 无命中=人话空态+近义词提示 chips */
               <div className="py-4 text-center" data-testid="console-search-empty">
                 <p className="text-body-sm text-ink-secondary">{cadm('cadm.searchEmpty', { q: q.trim() })}</p>
-                <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]">{cadm('cadm.searchEmptyTry')}</p>
+                <p className="mt-2 text-caption-xs text-[rgba(44,40,34,.42)]">{cadm('cadm.searchEmptyTry')}</p>
                 <div className="mt-2 flex flex-wrap justify-center gap-1.5">
                   {['提成', '回馈金', '押金', '文案', '画布'].map((w) => (
                     <button
                       key={w}
                       type="button"
                       data-testid={`console-search-try-${w}`}
-                      className="rounded-full bg-canvas px-3 py-1 text-caption-xs text-[rgba(59,46,36,.62)]"
+                      className="rounded-full bg-canvas px-3 py-1 text-caption-xs text-[rgba(44,40,34,.62)]"
                       onClick={() => setQ(w)}
                     >
                       {w}
@@ -279,7 +279,7 @@ export function ConsoleSearch({ onPickPort, onPickCopyKey, onPickScreen, onPickS
 
             {results.groups.map((g) => (
               <div key={g.kind} className="mb-3">
-                <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{KIND_LABEL[g.kind]}</div>
+                <div className="mb-1 text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">{KIND_LABEL[g.kind]}</div>
                 {g.items.map((it, i) => (
                   <button
                     key={`${it.kind}-${it.copyKey ?? it.pageKey ?? it.port ?? i}`}
@@ -290,7 +290,7 @@ export function ConsoleSearch({ onPickPort, onPickCopyKey, onPickScreen, onPickS
                   >
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-body-sm font-semibold text-ink">{it.title}</span>
-                      <span className="block truncate text-caption-xs text-[rgba(59,46,36,.42)]">{it.sub}</span>
+                      <span className="block truncate text-caption-xs text-[rgba(44,40,34,.42)]">{it.sub}</span>
                     </span>
                     <Badge tone="muted">{KIND_LABEL[it.kind]}</Badge>
                   </button>

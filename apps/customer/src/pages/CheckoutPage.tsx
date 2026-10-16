@@ -248,7 +248,7 @@ function CheckoutInner() {
         <div className="mt-5 space-y-2.5">
           <Link
             to="/mall/orders"
-            className="flex h-12 w-full items-center justify-center rounded-full bg-[#2E2318] text-body font-semibold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92"
+            className="flex h-12 w-full items-center justify-center rounded-full bg-brand-cta text-body font-semibold text-brand-cta-on transition-transform duration-120 ease-philia-spring active:scale-92"
           >
             {mlc('mall.viewOrders')}
           </Link>
@@ -413,7 +413,7 @@ function CheckoutInner() {
         </div>
         <div className="flex items-center justify-between border-t border-line-divider py-3">
           <span className="text-body-sm font-extrabold">合计（{lines.reduce((n, l) => n + l.qty, 0)} 件）</span>
-          <span className="font-number text-body-lg font-bold tabular-nums text-[#2E2318]">{fenToYuan(totalFen)}</span>
+          <span className="font-number text-body-lg font-bold tabular-nums text-ink">{fenToYuan(totalFen)}</span>
         </div>
         <p className="pb-2.5 text-right text-caption text-ink-placeholder">{mlc('mall.priceNote')}</p>
       </section>
@@ -466,7 +466,7 @@ function CheckoutInner() {
           详情级无 dock（App.tsx 白名单），落底 safe-area——修 bottom-14 悬空） */}
       <div
         className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-sticky"
-        style={{ background: 'linear-gradient(transparent, #FAF8F2 40%)' }}
+        style={{ background: 'linear-gradient(transparent, #FAF7F0 40%)' }}
       >
         <div className="mx-auto max-w-lg px-4 pb-4 pt-3">
           <div className="mb-2.5 flex items-baseline justify-between">
@@ -477,7 +477,7 @@ function CheckoutInner() {
             type="button"
             disabled={createOrderM.isPending}
             onClick={handleSubmit}
-            className="flex w-full flex-col items-center justify-center rounded-[18px] bg-[#2E2318] py-3 text-body-lg font-bold text-[#F6EFDD] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
+            className="flex w-full flex-col items-center justify-center rounded-[18px] bg-brand-cta py-3 text-body-lg font-bold text-brand-cta-on transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
           >
             <span>{createOrderM.isPending ? '提交中…' : mlc('mall.submitOrder')}</span>
             {rebateFen > 0 && !createOrderM.isPending ? (

@@ -263,7 +263,7 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
           <Skeleton className="h-4 w-24 rounded-chip" />
         </div>
         {['w-[46%]', 'w-[55%]', 'w-[64%]', 'w-[73%]', 'w-[82%]'].map((w, i) => (
-          <div key={i} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-4">
+          <div key={i} className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-4">
             <Skeleton className={`h-3 rounded-chip ${w}`} />
             <Skeleton className="mt-2 h-8 w-2/3 rounded-control" />
           </div>
@@ -274,8 +274,8 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
 
   if (listQuery.isError) {
     return (
-      <div className="rounded-panel bg-[#FFFDF6] py-12 text-center shadow-hairline ring-1 ring-line-ring">
-        <div className="text-body-sm text-[rgba(59,46,36,.62)]">{errMsg(listQuery.error)}</div>
+      <div className="rounded-panel bg-card py-12 text-center shadow-hairline ring-1 ring-line-ring">
+        <div className="text-body-sm text-[rgba(44,40,34,.62)]">{errMsg(listQuery.error)}</div>
         <Btn variant="ghost" size="sm" className="mt-3" onClick={() => void listQuery.refetch()}>
           {cp('copyport.loadFail')}
         </Btn>
@@ -297,7 +297,7 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
         />
         <select
           data-testid="copyport-screen-select"
-          className="u1-ring rounded-control bg-card px-3 py-3.5 text-caption text-ink focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+          className="u1-ring rounded-control bg-card px-3 py-3.5 text-caption text-ink focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
           value={screenFilter}
           onChange={(e) => setScreenFilter(e.target.value)}
         >
@@ -326,8 +326,8 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
 
       {/* 键列表（按屏分组；未归屏组排末+注记） */}
       {groups.length === 0 ? (
-        <div className="rounded-panel bg-[#FFFDF6] py-12 text-center shadow-hairline ring-1 ring-line-ring">
-          <div className="text-body-sm text-[rgba(59,46,36,.62)]">{cp('copyport.emptyDomain')}</div>
+        <div className="rounded-panel bg-card py-12 text-center shadow-hairline ring-1 ring-line-ring">
+          <div className="text-body-sm text-[rgba(44,40,34,.62)]">{cp('copyport.emptyDomain')}</div>
         </div>
       ) : (
         groups.map(([screen, rs]) => (
@@ -339,7 +339,7 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
               </span>
             </div>
             {screen === UNSCREENED ? (
-              <div className="border-t border-[rgba(59,46,36,.06)] bg-[rgba(242,223,166,.18)] px-[17px] py-2 text-caption-xs text-[rgba(59,46,36,.62)]" data-testid="copyport-unscreened-note">
+              <div className="border-t border-[rgba(44,40,34,.06)] bg-brand-primary-light px-[17px] py-2 text-caption-xs text-[rgba(44,40,34,.62)]" data-testid="copyport-unscreened-note">
                 {cp('copyport.unscreenedNote')}
               </div>
             ) : null}
@@ -353,11 +353,11 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
                 <div
                   key={r.ruleKey}
                   data-testid={`copyport-row-${r.ruleKey}`}
-                  className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-[13px]"
+                  className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-[13px]"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="text-caption-xs font-semibold text-[rgba(59,46,36,.72)]" data-testid={`copyport-pos-${r.ruleKey}`}>
+                      <div className="text-caption-xs font-semibold text-[rgba(44,40,34,.72)]" data-testid={`copyport-pos-${r.ruleKey}`}>
                         📍 {draftPos ?? (curPos || '—')}
                       </div>
                       <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
@@ -375,13 +375,13 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
                           </span>
                         ) : null}
                       </div>
-                      <div className="mt-1 truncate text-caption-xs text-[rgba(59,46,36,.62)]">
+                      <div className="mt-1 truncate text-caption-xs text-[rgba(44,40,34,.62)]">
                         {draft ?? cur}
                       </div>
                       {/* OP-03 P3-2：生效值双列——已改（version>1）=码内默认 vs 当前生效对照；
                           未改=码内默认单值（defaultText=server v1 种子原文，null 显「—」） */}
                       <div
-                        className="mt-0.5 text-caption-xs text-[rgba(59,46,36,.42)]"
+                        className="mt-0.5 text-caption-xs text-[rgba(44,40,34,.42)]"
                         data-testid={`copyport-default-${r.ruleKey}`}
                       >
                         {r.version > 1 ? (
@@ -408,10 +408,10 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
                   </div>
                   {open ? (
                     <>
-                      <label className="mt-2.5 block text-caption-xs text-[rgba(59,46,36,.62)]">
+                      <label className="mt-2.5 block text-caption-xs text-[rgba(44,40,34,.62)]">
                         {cp('copyport.positionLabel')}
                         <input
-                          className="mt-1 w-full rounded-control bg-card px-3 py-2 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+                          className="mt-1 w-full rounded-control bg-card px-3 py-2 text-caption text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
                           data-testid={`copyport-posedit-${r.ruleKey}`}
                           placeholder={cp('copyport.positionPlaceholder')}
                           value={draftPos ?? curPos}
@@ -419,7 +419,7 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
                         />
                       </label>
                       <textarea
-                        className="mt-2 min-h-[72px] w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+                        className="mt-2 min-h-[72px] w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
                         rows={3}
                         value={draft ?? cur}
                         onChange={(e) => setDraft(r.ruleKey, e.target.value)}
@@ -478,19 +478,19 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
             </button>
           </div>
         ) : (versionsQuery.data?.versions.length ?? 0) === 0 ? (
-          <div className="px-[17px] py-6 text-center text-caption-xs text-[rgba(59,46,36,.42)]">
+          <div className="px-[17px] py-6 text-center text-caption-xs text-[rgba(44,40,34,.42)]">
             {cp('copyport.historyEmpty')}
           </div>
         ) : (
           versionsQuery.data!.versions.map((v: VersionRow) => (
-            <div key={v.id} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-[13px]">
+            <div key={v.id} className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-[13px]">
               <div className="flex items-center gap-3">
                 <Badge tone="brand">{cp('copyport.historyVersion', { version: v.version })}</Badge>
                 <div className="min-w-0 flex-1">
                   <div className="text-caption text-ink">
                     {cp('copyport.historyBy', { name: v.changerNickname ?? '—' })}
                   </div>
-                  <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
+                  <div className="mt-[2px] text-caption-xs text-[rgba(44,40,34,.42)]" style={numStyle}>
                     {fmtDateTime(v.createdAt)}
                   </div>
                 </div>
@@ -499,7 +499,7 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
                 {v.changesJson.map((ch) => (
                   <div key={ch.rule_key} className="rounded-control bg-canvas px-3 py-2">
                     <div className="font-mono text-caption font-semibold text-ink">{ch.rule_key}</div>
-                    <div className="mt-1 break-all text-caption-xs text-[rgba(59,46,36,.62)]">
+                    <div className="mt-1 break-all text-caption-xs text-[rgba(44,40,34,.62)]">
                       {ch.before === null ? (
                         <span className="font-semibold text-ink">{textOf(ch.after) || '—'}</span>
                       ) : (
@@ -550,7 +550,7 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
                   <span className="font-mono text-caption font-semibold text-ink">{p.ruleKey}</span>
                   {p.highRisk ? <Badge tone="danger">{cp('copyport.highRiskBadge')}</Badge> : null}
                 </div>
-                <div className="mt-1 break-all text-caption-xs text-[rgba(59,46,36,.62)]">
+                <div className="mt-1 break-all text-caption-xs text-[rgba(44,40,34,.62)]">
                   {p.before || '—'} → <span className="font-semibold text-ink">{p.after || '—'}</span>
                 </div>
               </div>
@@ -567,7 +567,7 @@ export function CopyConfigBody({ initialSearch }: { initialSearch?: string } = {
                 hint={confirmText !== '' && !phraseOk ? cp('copyport.confirmMismatch') : undefined}
               >
                 <input
-                  className="w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+                  className="w-full rounded-control bg-card px-3 py-2 text-body text-ink shadow-hairline ring-1 ring-line-ring placeholder:text-ink-placeholder focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
                   data-testid="copyport-confirm-input"
                   placeholder={cp('copyport.confirmPlaceholder')}
                   value={confirmText}

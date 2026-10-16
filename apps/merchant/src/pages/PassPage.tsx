@@ -52,8 +52,9 @@ type LogRow = {
   appointmentCode: string | null;
 };
 
-/** 深墨（扣次 −1）/ 浅木（回补 +1、充次 +N）——试样 todo-row 色点口径（薄荷绿清场） */
-const DOT_INK = '#2E2318';
+/** 深墨（扣次 −1）/ 浅木（回补 +1、充次 +N）——试样 todo-row 色点口径（薄荷绿清场；
+ *  片4 令牌收敛：深墨原 #2E2318 随片0/片3 深棕收敛口径归 body #2C2822） */
+const DOT_INK = '#2C2822';
 const DOT_WOOD = '#B9A482';
 
 /** W-11 档色点（档色即身份 · 客户端 1.0 定稿 §1.3 档色谱：注册用户纸白/萤火淡金/烛光卡其铜/暖阳深棕） */
@@ -63,7 +64,7 @@ const PLAN_TIER_COLOR: Record<string, string> = {
   plan_zhuguang: '#A08B62',
   plan_nuanyang: '#34271C',
 };
-const TIER_DOT_LOADING = 'rgba(59,46,36,.15)';
+const TIER_DOT_LOADING = 'rgba(44,40,34,.15)';
 
 /** 档色点（行首身份点；loading/无档=灰点，不造档） */
 function TierDot({ planKey }: { planKey: string | null | undefined }) {
@@ -72,7 +73,7 @@ function TierDot({ planKey }: { planKey: string | null | undefined }) {
     <i
       aria-hidden
       className="inline-block h-2.5 w-2.5 flex-none rounded-full"
-      style={{ background: color, boxShadow: 'inset 0 0 0 1px rgba(59,46,36,.18)' }}
+      style={{ background: color, boxShadow: 'inset 0 0 0 1px rgba(44,40,34,.18)' }}
     />
   );
 }
@@ -312,12 +313,12 @@ export default function PassPage() {
         <div className="grid grid-cols-2 gap-[14px] lg:grid-cols-4">
           <div className="u3-stat" data-testid="pass-stat-cards">
             <div className="cap">{pc('pass.statCards')}</div>
-            <div className="v text-[rgba(59,46,36,.3)]">—</div>
+            <div className="v text-[rgba(44,40,34,.3)]">—</div>
             <div className="d" title={pc('pass.statPendingNote')}>{pc('pass.statPending')}</div>
           </div>
           <div className="u3-stat" data-testid="pass-stat-sv">
             <div className="cap">{pc('pass.statSv')}</div>
-            <div className="v text-[rgba(59,46,36,.3)]">—</div>
+            <div className="v text-[rgba(44,40,34,.3)]">—</div>
             <div className="d" title={pc('pass.statPendingNote')}>{pc('pass.statPending')}</div>
           </div>
           <div className="u3-stat" data-testid="pass-stat-pass">
@@ -327,11 +328,11 @@ export default function PassPage() {
           </div>
           <div className="u3-stat" data-testid="pass-stat-rebate">
             <div className="cap">{pc('pass.statRebate')}</div>
-            <div className="v text-[rgba(59,46,36,.3)]">—</div>
+            <div className="v text-[rgba(44,40,34,.3)]">—</div>
             <div className="d" title={pc('pass.statPendingNote')}>{pc('pass.statPending')}</div>
           </div>
         </div>
-        <p className="mt-2 text-[11px] text-[rgba(59,46,36,.42)]" data-testid="pass-three-books-note">
+        <p className="mt-2 text-[11px] text-[rgba(44,40,34,.42)]" data-testid="pass-three-books-note">
           {pc('pass.threeBooksNote')}
         </p>
       </div>
@@ -350,11 +351,11 @@ export default function PassPage() {
               ))}
             </div>
           ) : passesQ.isError ? (
-            <p className="px-[17px] pb-5 pt-2 text-xs text-[rgba(59,46,36,.62)]">
+            <p className="px-[17px] pb-5 pt-2 text-xs text-[rgba(44,40,34,.62)]">
               次卡列表加载失败：{errMsg(passesQ.error)}
             </p>
           ) : passes.length === 0 ? (
-            <p className="px-[17px] pb-8 pt-3 text-center text-xs text-[rgba(59,46,36,.62)]">
+            <p className="px-[17px] pb-8 pt-3 text-center text-xs text-[rgba(44,40,34,.62)]">
               {pc('pass.empty')}
             </p>
           ) : (
@@ -383,21 +384,21 @@ export default function PassPage() {
                           <TierDot planKey={tier} />
                           <span>
                             <span className="font-bold text-ink">{p.customerNickname ?? '未命名'}</span>
-                            <span className="ml-1.5 text-[11px] text-[rgba(59,46,36,.42)]">
+                            <span className="ml-1.5 text-[11px] text-[rgba(44,40,34,.42)]">
                               {tier ? planShortLabel(tier) : pc('pass.tierNone')}
                             </span>
                             {p.customerPhone ? (
-                              <div className="mt-0.5 font-number text-[11px] tabular-nums text-[rgba(59,46,36,.42)]">
+                              <div className="mt-0.5 font-number text-[11px] tabular-nums text-[rgba(44,40,34,.42)]">
                                 尾号 {p.customerPhone.slice(-4)}
                               </div>
                             ) : null}
                           </span>
                         </span>
                       </td>
-                      <td className="whitespace-nowrap font-number text-[11px] tabular-nums text-[rgba(59,46,36,.62)]" title={p.id}>
+                      <td className="whitespace-nowrap font-number text-[11px] tabular-nums text-[rgba(44,40,34,.62)]" title={p.id}>
                         #{p.id.slice(-8)}
                       </td>
-                      <td className="text-[rgba(59,46,36,.62)]">
+                      <td className="text-[rgba(44,40,34,.62)]">
                         次卡
                         <span className="ml-1 font-number tabular-nums">共 {p.totalTimes} 次</span>
                       </td>
@@ -405,9 +406,9 @@ export default function PassPage() {
                         <span className="font-number text-sm font-bold tabular-nums text-ink">
                           {p.remainTimes}
                         </span>
-                        <span className="ml-0.5 text-[11px] text-[rgba(59,46,36,.42)]">次</span>
+                        <span className="ml-0.5 text-[11px] text-[rgba(44,40,34,.42)]">次</span>
                       </td>
-                      <td className="whitespace-nowrap font-number tabular-nums text-[rgba(59,46,36,.62)]">
+                      <td className="whitespace-nowrap font-number tabular-nums text-[rgba(44,40,34,.62)]">
                         {isoDate(p.expiresAt)}
                       </td>
                       <td>
@@ -427,7 +428,7 @@ export default function PassPage() {
                             type="button"
                             data-testid={`pass-logs-${p.id}`}
                             onClick={() => setLogsFor(p)}
-                            className="text-[11px] font-semibold text-[rgba(59,46,36,.62)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+                            className="text-[11px] font-semibold text-[rgba(44,40,34,.62)] transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
                           >
                             记录
                           </button>
@@ -439,7 +440,7 @@ export default function PassPage() {
               </tbody>
             </table>
             {/* W-11 双归属注（售卡店/通用店口径明面） */}
-            <p className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5 text-[11px] text-[rgba(59,46,36,.42)]" data-testid="pass-dual-home-note">
+            <p className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5 text-[11px] text-[rgba(44,40,34,.42)]" data-testid="pass-dual-home-note">
               {pc('pass.dualHomeNote')}
             </p>
             </>
@@ -459,11 +460,11 @@ export default function PassPage() {
               ))}
             </div>
           ) : logsQ.isError ? (
-            <p className="px-[17px] pb-5 pt-2 text-xs text-[rgba(59,46,36,.62)]">
+            <p className="px-[17px] pb-5 pt-2 text-xs text-[rgba(44,40,34,.62)]">
               流水加载失败：{errMsg(logsQ.error)}
             </p>
           ) : logs.length === 0 ? (
-            <p className="px-[17px] pb-8 pt-3 text-center text-xs text-[rgba(59,46,36,.62)]">
+            <p className="px-[17px] pb-8 pt-3 text-center text-xs text-[rgba(44,40,34,.62)]">
               {pc('pass.logsEmpty')}
             </p>
           ) : (

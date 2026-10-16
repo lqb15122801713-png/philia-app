@@ -78,25 +78,25 @@ export function ConfigDictBody() {
             {cadm('cadm.dictError')}：{errMsg(dictQuery.error)}
           </p>
         ) : items.length === 0 ? (
-          <p className="py-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">{cadm('cadm.dictEmpty')}</p>
+          <p className="py-4 text-center text-caption-xs text-[rgba(44,40,34,.42)]">{cadm('cadm.dictEmpty')}</p>
         ) : (
           groups.map(([domain, list]) => (
             <div key={domain} className="mb-3 last:mb-0">
-              <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">
+              <div className="mb-1 text-caption-xs font-semibold text-[rgba(44,40,34,.62)]">
                 {DOMAIN_LABEL[domain] ?? domain}（{list.length}）
               </div>
               {list.map((it) => (
                 <div
                   key={it.ruleKey}
                   data-testid={`dict-row-${it.ruleKey}`}
-                  className="flex items-start gap-3 border-t border-[rgba(59,46,36,.06)] py-[11px] text-caption first:border-t-0"
+                  className="flex items-start gap-3 border-t border-[rgba(44,40,34,.06)] py-[11px] text-caption first:border-t-0"
                 >
                   <div className="w-44 shrink-0 font-semibold text-ink">{it.ruleKey}</div>
                   <div className="min-w-0 flex-1">
                     <div className="text-ink">{it.label}</div>
-                    <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]">{it.helpText}</div>
+                    <div className="mt-[2px] text-caption-xs text-[rgba(44,40,34,.42)]">{it.helpText}</div>
                     {it.fields.length > 0 ? (
-                      <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
+                      <div className="mt-[2px] text-caption-xs text-[rgba(44,40,34,.42)]" style={numStyle}>
                         {it.fields.map((f) => `${f.field}=${f.note}`).join('；')}
                       </div>
                     ) : null}

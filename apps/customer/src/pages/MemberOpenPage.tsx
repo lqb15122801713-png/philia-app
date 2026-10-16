@@ -376,7 +376,7 @@ export default function MemberOpenPage() {
                   className="sw"
                   style={{
                     background: TIER_SWATCH[p.planKey] ?? '#FBF6EA',
-                    border: p.planKey === 'plan_weiguang' ? '1px solid rgba(59,46,36,.14)' : p.planKey === 'plan_nuanyang' ? '1px solid rgba(217,192,138,.4)' : undefined,
+                    border: p.planKey === 'plan_weiguang' ? '1px solid rgba(44,40,34,.14)' : p.planKey === 'plan_nuanyang' ? '1px solid rgba(217,192,138,.4)' : undefined,
                   }}
                 />
                 <div style={{ flex: 1 }}>

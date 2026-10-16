@@ -348,7 +348,7 @@ function KillSwitchStrip() {
 
   return (
     <div className="mb-3.5 flex items-center gap-3 px-1">
-      <span className="min-w-0 flex-1 text-caption-xs text-[rgba(59,46,36,.42)]">{cadm('cadm.killArmNote')}</span>
+      <span className="min-w-0 flex-1 text-caption-xs text-[rgba(44,40,34,.42)]">{cadm('cadm.killArmNote')}</span>
       <Btn
         variant="danger"
         size="sm"
@@ -422,12 +422,12 @@ function OwnerConsole() {
                     <>
                       <div className="flex items-baseline gap-2">
                         <span className="text-body font-semibold text-ink">{cadm(card.titleKey)}</span>
-                        <span className="text-caption-xs text-[rgba(59,46,36,.42)]">
+                        <span className="text-caption-xs text-[rgba(44,40,34,.42)]">
                           {cadm('cadm.homePortBadge')} · {card.port}
                         </span>
                       </div>
-                      <p className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.62)]">{cadm(card.hintKey)}</p>
-                      <p className="mt-2 border-t border-[rgba(59,46,36,.06)] pt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
+                      <p className="mt-1.5 text-caption-xs text-[rgba(44,40,34,.62)]">{cadm(card.hintKey)}</p>
+                      <p className="mt-2 border-t border-[rgba(44,40,34,.06)] pt-1.5 text-caption-xs text-[rgba(44,40,34,.42)]" style={numStyle}>
                         {last ?? cadm('cadm.homeLastNone')}
                       </p>
                     </>
@@ -508,13 +508,13 @@ function OwnerConsole() {
                       <span className="t">{empty.title}</span>
                       <span className="a">{cadm('cadm.portPendingNote')}</span>
                     </div>
-                    <p className="text-caption text-[rgba(59,46,36,.62)]">{empty.body}</p>
+                    <p className="text-caption text-[rgba(44,40,34,.62)]">{empty.body}</p>
                   </section>
                 ) : null}
 
                 {/* 危险区（透出既有闸，不新建件） */}
                 <WDanger testId="console-danger">
-                  <ul className="space-y-1.5 text-caption text-[rgba(59,46,36,.78)]">
+                  <ul className="space-y-1.5 text-caption text-[rgba(44,40,34,.78)]">
                     <li>{cadm('cadm.dangerPin')}</li>
                     <li>{cadm('cadm.dangerFrozen')}</li>
                     <li>{cadm('cadm.dangerNoBackdate')}</li>

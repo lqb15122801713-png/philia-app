@@ -132,7 +132,7 @@ export default function MemberRebatePage() {
               strokeLinecap="round" strokeDasharray="188.5" strokeDashoffset={offset}
               transform="rotate(-90 38 38)"
             />
-            <text x="38" y="36" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="15" fontWeight="700" fill="#3B2E24">
+            <text x="38" y="36" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="15" fontWeight="700" fill="#2C2822">
               {pct}%
             </text>
             <text x="38" y="49" textAnchor="middle" fontFamily="JetBrains Mono" fontSize="7.5" fill="#8A7D6B">

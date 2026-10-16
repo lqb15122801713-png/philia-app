@@ -140,7 +140,7 @@ function XpAppModal({
       aria-modal="true"
       aria-label={mode === 'award' ? XP_COPY['xp.app.title'] : XP_COPY['xp.app.appealTitle']}
     >
-      <button type="button" aria-label={XP_COPY['xp.app.cancel']} className="absolute inset-0 bg-[rgba(59,46,36,.4)]" onClick={onClose} />
+      <button type="button" aria-label={XP_COPY['xp.app.cancel']} className="absolute inset-0 bg-[rgba(44,40,34,.4)]" onClick={onClose} />
       <div className="u1-card relative w-full max-w-sm p-4" data-testid="xp-app-modal">
         <p className="text-title text-ink">{mode === 'award' ? XP_COPY['xp.app.title'] : XP_COPY['xp.app.appealTitle']}</p>
         <input
@@ -165,7 +165,7 @@ function XpAppModal({
           <button
             type="button"
             onClick={onClose}
-            className="h-11 min-h-[44px] flex-1 rounded-control bg-sunken text-body-sm font-semibold text-[rgba(59,46,36,.62)]"
+            className="h-11 min-h-[44px] flex-1 rounded-control bg-sunken text-body-sm font-semibold text-[rgba(44,40,34,.62)]"
           >
             {XP_COPY['xp.app.cancel']}
           </button>

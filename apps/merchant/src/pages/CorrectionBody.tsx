@@ -253,7 +253,7 @@ export function CorrectionBody() {
         />
       </Field>
       {memberHits.length === 0 ? (
-        <p className="text-caption-xs text-[rgba(59,46,36,.42)]">{ck('corr.memberEmpty')}</p>
+        <p className="text-caption-xs text-[rgba(44,40,34,.42)]">{ck('corr.memberEmpty')}</p>
       ) : (
         <div className="flex flex-wrap gap-1.5">
           {memberHits.map((c) => (
@@ -263,7 +263,7 @@ export function CorrectionBody() {
               data-testid={`corr-member-${c.id}`}
               onClick={() => setMemberId(c.id)}
               className={`rounded-full px-3 py-[7px] text-caption transition-colors ${
-                memberId === c.id ? 'bg-[#3B2E24] font-semibold text-[#FAF8F2]' : 'u1-ring bg-card text-[rgba(59,46,36,.6)]'
+                memberId === c.id ? 'bg-ink font-semibold text-canvas' : 'u1-ring bg-card text-[rgba(44,40,34,.6)]'
               }`}
             >
               {c.nickname ?? '—'}（{c.phone ?? '—'}）
@@ -302,7 +302,7 @@ export function CorrectionBody() {
               data-testid={`corr-tab-${k}`}
               onClick={() => setKind(k)}
               className={`rounded-full px-3.5 py-[7px] text-caption transition-colors ${
-                kind === k ? 'bg-[#3B2E24] font-semibold text-[#FAF8F2]' : 'text-[rgba(59,46,36,.6)]'
+                kind === k ? 'bg-ink font-semibold text-canvas' : 'text-[rgba(44,40,34,.6)]'
               }`}
             >
               {TAB_LABEL[k]}
@@ -314,7 +314,7 @@ export function CorrectionBody() {
         <div className="mb-3 rounded-panel bg-canvas px-3.5 py-3">
           <div className="mb-2 flex items-baseline gap-2">
             <span className="text-caption font-semibold text-ink">{ck('corr.formTitle')}</span>
-            <span className="text-caption-xs text-[rgba(59,46,36,.42)]">{ck('corr.formAside')}</span>
+            <span className="text-caption-xs text-[rgba(44,40,34,.42)]">{ck('corr.formAside')}</span>
           </div>
           <div className="space-y-2.5">
             {kind !== 'work_hours' ? memberPicker : null}
@@ -390,7 +390,7 @@ export function CorrectionBody() {
                 </div>
                 {staffId && date ? (
                   <div>
-                    <div className="mb-1 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]">
+                    <div className="mb-1 text-caption-xs font-semibold text-[rgba(44,40,34,.62)]">
                       {ck('corr.recordPickLabel')}
                     </div>
                   {recordHits.length > 0 ? (
@@ -403,8 +403,8 @@ export function CorrectionBody() {
                           onClick={() => setRecordId(r.id)}
                           className={`rounded-full px-3 py-[7px] text-caption transition-colors ${
                             recordId === r.id
-                              ? 'bg-[#3B2E24] font-semibold text-[#FAF8F2]'
-                              : 'u1-ring bg-card text-[rgba(59,46,36,.6)]'
+                              ? 'bg-ink font-semibold text-canvas'
+                              : 'u1-ring bg-card text-[rgba(44,40,34,.6)]'
                           }`}
                         >
                           {r.kind} · {fmtAt(r.ts)}
@@ -412,7 +412,7 @@ export function CorrectionBody() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-caption-xs text-[rgba(59,46,36,.42)]">{ck('corr.recordEmpty')}</p>
+                    <p className="text-caption-xs text-[rgba(44,40,34,.42)]">{ck('corr.recordEmpty')}</p>
                   )}
                   </div>
                 ) : null}
@@ -475,28 +475,28 @@ export function CorrectionBody() {
               {ck('corr.loadFail')}：{errMsg(listQuery.error)}
             </p>
           ) : items.length === 0 ? (
-            <p className="py-4 text-center text-caption-xs text-[rgba(59,46,36,.42)]">{ck('corr.queueEmpty')}</p>
+            <p className="py-4 text-center text-caption-xs text-[rgba(44,40,34,.42)]">{ck('corr.queueEmpty')}</p>
           ) : (
             items.map((it) => (
-              <div key={it.correction.id} className="border-t border-[rgba(59,46,36,.06)] py-[11px] first:border-t-0">
+              <div key={it.correction.id} className="border-t border-[rgba(44,40,34,.06)] py-[11px] first:border-t-0">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
                       <Badge tone="brand">{KIND_BADGE[it.correction.kind as CorrKind]?.label ?? it.correction.kind}</Badge>
                       <span className="text-caption font-semibold text-ink">{targetLabel(it)}</span>
                     </div>
-                    <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.62)]" style={numStyle}>
+                    <div className="mt-[2px] text-caption-xs text-[rgba(44,40,34,.62)]" style={numStyle}>
                       {fmtPayload(it.correction.kind, it.correction.payloadJson?.before as Record<string, unknown>)}
                       {' → '}
                       <span className="font-semibold text-ink">
                         {fmtPayload(it.correction.kind, it.correction.payloadJson?.after as Record<string, unknown>)}
                       </span>
                     </div>
-                    <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]">
+                    <div className="mt-[2px] text-caption-xs text-[rgba(44,40,34,.42)]">
                       {it.correction.note} · {it.proposerNickname ?? '—'} · {fmtAt(it.correction.createdAt)}
                     </div>
                     {it.reviewNote ? (
-                      <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]">{it.reviewNote}</div>
+                      <div className="mt-[2px] text-caption-xs text-[rgba(44,40,34,.42)]">{it.reviewNote}</div>
                     ) : null}
                   </div>
                   <Badge

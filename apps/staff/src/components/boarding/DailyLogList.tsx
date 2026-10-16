@@ -39,9 +39,9 @@ export default function DailyLogList({ logs, today, stayStart, onPhotoClick }: D
             <div key={log.id} className="u1-card mb-2.5 flex items-center gap-3 px-3.5 py-3" data-testid={`log-${log.logDate}`}>
               <div className="w-11 shrink-0 text-center">
                 <div className="u1-num text-body-lg font-bold">{Number(log.logDate.slice(8, 10))}</div>
-                <div className="text-caption-xs text-[rgba(59,46,36,.42)]">周{WEEK[d.getDay()]}</div>
+                <div className="text-caption-xs text-[rgba(44,40,34,.42)]">周{WEEK[d.getDay()]}</div>
               </div>
-              <div className="min-w-0 flex-1 text-caption-xs leading-relaxed text-[rgba(59,46,36,.62)]">
+              <div className="min-w-0 flex-1 text-caption-xs leading-relaxed text-[rgba(44,40,34,.62)]">
                 <b className="text-caption text-ink">
                   {night ? <>第 <span className="u1-num">{night}</span> 晚</> : <span className="u1-num whitespace-nowrap">{log.logDate}</span>}
                   {log.logDate === today ? ' · 今天' : ''}

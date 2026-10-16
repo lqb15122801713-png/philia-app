@@ -110,7 +110,7 @@ function SlotCard({
         </span>
       </div>
 
-      <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-[13px]">
+      <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-[13px]">
         <div className="flex items-start gap-3">
           <SlotPreview
             url={slot.live?.contentJson.url ?? null}
@@ -130,7 +130,7 @@ function SlotCard({
               ) : null}
             </div>
             {slot.live && slot.live.contentJson.url === null ? (
-              <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">
+              <div className="mt-1 text-caption-xs text-[rgba(44,40,34,.42)]">
                 {cp('slotport.placeholderNote')}
               </div>
             ) : null}
@@ -168,11 +168,11 @@ function SlotCard({
               ) : null}
             </div>
             {/* D-42 文案与人群编辑区（选填；值随下次「上传替换」一并写入新 pending 版） */}
-            <div className="mt-3 rounded-input bg-[rgba(59,46,36,.03)] p-3" data-testid={`slotport-copyfields-${slot.slotKey}`}>
-              <p className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{cp('slotport.copyFieldsTitle')}</p>
+            <div className="mt-3 rounded-input bg-[rgba(44,40,34,.03)] p-3" data-testid={`slotport-copyfields-${slot.slotKey}`}>
+              <p className="text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">{cp('slotport.copyFieldsTitle')}</p>
               <div className="mt-2 grid grid-cols-1 gap-2 xl:grid-cols-3">
                 <label className="block">
-                  <span className="text-caption-xs text-[rgba(59,46,36,.62)]">{cp('slotport.fieldTitleMain')}</span>
+                  <span className="text-caption-xs text-[rgba(44,40,34,.62)]">{cp('slotport.fieldTitleMain')}</span>
                   <input
                     type="text"
                     value={copyFields.title_main}
@@ -182,7 +182,7 @@ function SlotCard({
                   />
                 </label>
                 <label className="block">
-                  <span className="text-caption-xs text-[rgba(59,46,36,.62)]">{cp('slotport.fieldTitleSub')}</span>
+                  <span className="text-caption-xs text-[rgba(44,40,34,.62)]">{cp('slotport.fieldTitleSub')}</span>
                   <input
                     type="text"
                     value={copyFields.title_sub}
@@ -192,7 +192,7 @@ function SlotCard({
                   />
                 </label>
                 <label className="block">
-                  <span className="text-caption-xs text-[rgba(59,46,36,.62)]">{cp('slotport.fieldCta')}</span>
+                  <span className="text-caption-xs text-[rgba(44,40,34,.62)]">{cp('slotport.fieldCta')}</span>
                   <input
                     type="text"
                     value={copyFields.cta_text}
@@ -202,7 +202,7 @@ function SlotCard({
                   />
                 </label>
                 <label className="block">
-                  <span className="text-caption-xs text-[rgba(59,46,36,.62)]">{cp('slotport.fieldAudience')}</span>
+                  <span className="text-caption-xs text-[rgba(44,40,34,.62)]">{cp('slotport.fieldAudience')}</span>
                   <select
                     value={copyFields.audience}
                     data-testid={`slotport-field-audience-${slot.slotKey}`}
@@ -216,7 +216,7 @@ function SlotCard({
                   </select>
                 </label>
                 <label className="block">
-                  <span className="text-caption-xs text-[rgba(59,46,36,.62)]">{cp('slotport.fieldPriority')}</span>
+                  <span className="text-caption-xs text-[rgba(44,40,34,.62)]">{cp('slotport.fieldPriority')}</span>
                   <input
                     type="number"
                     min={0}
@@ -250,21 +250,21 @@ function SlotCard({
       {/* 待审区（pending 非空才显） */}
       {slot.pending.length > 0 ? (
         <>
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] pb-1 pt-3 text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] pb-1 pt-3 text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">
             {cp('slotport.pendingTitle')}
           </div>
           {slot.pending.map((v: SlotVersion) => (
             <div
               key={v.id}
               data-testid={`slotport-pending-${v.id}`}
-              className="flex items-center gap-3 border-t border-[rgba(59,46,36,.06)] px-[17px] py-[13px]"
+              className="flex items-center gap-3 border-t border-[rgba(44,40,34,.06)] px-[17px] py-[13px]"
             >
               <SlotPreview url={v.contentJson.url} alt={v.contentJson.alt} className="h-12 w-12 shrink-0 rounded-tag" />
               <div className="min-w-0 flex-1">
                 <div className="text-caption text-ink" style={numStyle}>
                   v{v.version}
                 </div>
-                <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.42)]" style={numStyle}>
+                <div className="mt-[2px] text-caption-xs text-[rgba(44,40,34,.42)]" style={numStyle}>
                   {fmtDateTime(v.createdAt)}
                   {v.creatorNickname ? ` · ${cp('copyport.historyBy', { name: v.creatorNickname })}` : ''}
                 </div>
@@ -296,11 +296,11 @@ function SlotCard({
 
       {/* D-40 历史留痕区（archived 行透出：版本/操作人/时刻可查；物理删历史=禁令零触） */}
       {slot.archived.length > 0 ? (
-        <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3" data-testid={`slotport-history-${slot.slotKey}`}>
-          <div className="text-caption-xs font-semibold text-[rgba(59,46,36,.42)]">{cp('slotport.historyTitle')}</div>
+        <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-3" data-testid={`slotport-history-${slot.slotKey}`}>
+          <div className="text-caption-xs font-semibold text-[rgba(44,40,34,.42)]">{cp('slotport.historyTitle')}</div>
           <ul className="mt-1.5 space-y-1">
             {slot.archived.map((v) => (
-              <li key={v.id} className="text-caption-xs text-[rgba(59,46,36,.62)]" style={numStyle} data-testid={`slotport-history-row-${v.id}`}>
+              <li key={v.id} className="text-caption-xs text-[rgba(44,40,34,.62)]" style={numStyle} data-testid={`slotport-history-row-${v.id}`}>
                 {cp('slotport.historyLine', {
                   version: v.version,
                   time: fmtDateTime(v.actedAt ?? v.createdAt),
@@ -440,7 +440,7 @@ export function SlotPortBody() {
           <Skeleton className="h-4 w-24 rounded-chip" />
         </div>
         {['w-[46%]', 'w-[58%]', 'w-[70%]'].map((w, i) => (
-          <div key={i} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-4">
+          <div key={i} className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-4">
             <Skeleton className={`h-3 rounded-chip ${w}`} />
             <Skeleton className="mt-2 h-20 w-32 rounded-input" />
           </div>
@@ -451,8 +451,8 @@ export function SlotPortBody() {
 
   if (listQuery.isError) {
     return (
-      <div className="rounded-panel bg-[#FFFDF6] py-12 text-center shadow-hairline ring-1 ring-line-ring">
-        <div className="text-body-sm text-[rgba(59,46,36,.62)]">{errMsg(listQuery.error)}</div>
+      <div className="rounded-panel bg-card py-12 text-center shadow-hairline ring-1 ring-line-ring">
+        <div className="text-body-sm text-[rgba(44,40,34,.62)]">{errMsg(listQuery.error)}</div>
         <Btn variant="ghost" size="sm" className="mt-3" onClick={() => void listQuery.refetch()}>
           {cp('slotport.loadFail')}
         </Btn>
@@ -464,8 +464,8 @@ export function SlotPortBody() {
     <>
       <ToasterMount />
       {slots.length === 0 ? (
-        <div className="rounded-panel bg-[#FFFDF6] py-12 text-center shadow-hairline ring-1 ring-line-ring">
-          <div className="text-body-sm text-[rgba(59,46,36,.62)]">{cp('slotport.empty')}</div>
+        <div className="rounded-panel bg-card py-12 text-center shadow-hairline ring-1 ring-line-ring">
+          <div className="text-body-sm text-[rgba(44,40,34,.62)]">{cp('slotport.empty')}</div>
         </div>
       ) : (
         slots.map((slot) => (
@@ -492,7 +492,7 @@ export function SlotPortBody() {
             <h3 className="font-mono">{previewTarget.slotKey}</h3>
             <span className="aside">{cp('slotport.previewPanelTitle')}</span>
           </div>
-          <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-[13px]">
+          <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-[13px]">
             {previewSrc && previewStoreId ? (
               <iframe
                 key={previewTarget.versionId}
@@ -502,7 +502,7 @@ export function SlotPortBody() {
                 className="u1-ring h-[720px] w-full max-w-[420px] rounded-panel bg-card"
               />
             ) : (
-              <p className="text-caption text-[rgba(59,46,36,.62)]" data-testid="slotport-preview-no-store">
+              <p className="text-caption text-[rgba(44,40,34,.62)]" data-testid="slotport-preview-no-store">
                 {cp('slotport.previewNoStore')}
               </p>
             )}

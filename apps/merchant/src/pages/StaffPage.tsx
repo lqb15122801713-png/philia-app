@@ -188,7 +188,7 @@ export default function StaffPage() {
               {[0, 1, 2].map((i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-[13px] border-t border-[rgba(59,46,36,.06)] px-[17px] py-3"
+                  className="flex items-center gap-[13px] border-t border-[rgba(44,40,34,.06)] px-[17px] py-3"
                 >
                   <Skeleton className="h-[42px] w-[42px] rounded-full" />
                   <div className="flex-1">
@@ -200,15 +200,15 @@ export default function StaffPage() {
               ))}
             </div>
           ) : staffQuery.isError ? (
-            <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-              <p className="text-body-sm text-[rgba(59,46,36,.62)]">员工列表加载失败，请检查网络后重试</p>
+            <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+              <p className="text-body-sm text-[rgba(44,40,34,.62)]">员工列表加载失败，请检查网络后重试</p>
               <div className="mt-4">
                 <QuietButton onClick={() => void staffQuery.refetch()}>重新加载</QuietButton>
               </div>
             </div>
           ) : staff.length === 0 ? (
-            <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-12 text-center">
-              <p className="text-body-sm text-[rgba(59,46,36,.62)]">{sf('staff.empty')}</p>
+            <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-12 text-center">
+              <p className="text-body-sm text-[rgba(44,40,34,.62)]">{sf('staff.empty')}</p>
               <div className="mt-4">
                 <LemonButton onClick={() => setInviteOpen(true)}>{sf('staff.emptyCta')}</LemonButton>
               </div>
@@ -236,10 +236,10 @@ export default function StaffPage() {
                       {/* 员工（头像占位 + 名 + 入职/绩效行） */}
                       <td>
                         <div className="flex items-center gap-[13px]">
-                          <span className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-full bg-[rgba(59,46,36,.12)]" />
+                          <span className="flex h-[42px] w-[42px] flex-none items-center justify-center rounded-full bg-sunken" />
                           <div className="min-w-0">
                             <div className="text-body-sm font-bold text-ink">{s.name}</div>
-                            <div className="mt-[2px] text-caption-xs text-[rgba(59,46,36,.62)]">
+                            <div className="mt-[2px] text-caption-xs text-[rgba(44,40,34,.62)]">
                               {suspended ? (
                                 <>
                                   入职 <span className="u1-num">{joinMonth(s.createdAt)}</span> · {sf('staff.suspendedNote')}
@@ -264,7 +264,7 @@ export default function StaffPage() {
                         </WPill>
                       </td>
                       {/* 技能 */}
-                      <td className="text-[rgba(59,46,36,.62)]">
+                      <td className="text-[rgba(44,40,34,.62)]">
                         {s.skills && s.skills.length > 0
                           ? s.skills.map((k) => SKILL_LABEL[k] ?? k).join('、')
                           : '—'}
@@ -274,10 +274,10 @@ export default function StaffPage() {
                         <button
                           type="button"
                           onClick={() => setScheduleFor(s)}
-                          className="rounded-chip px-2 py-1 text-left transition-colors duration-150 hover:bg-[rgba(59,46,36,.04)]"
+                          className="rounded-chip px-2 py-1 text-left transition-colors duration-150 hover:bg-[rgba(44,40,34,.04)]"
                           aria-label={`编辑${s.name}的排班`}
                         >
-                          <span className="u1-num text-caption-xs text-[rgba(59,46,36,.62)]">
+                          <span className="u1-num text-caption-xs text-[rgba(44,40,34,.62)]">
                             {weekSummary(s.schedule)}
                           </span>
                         </button>
@@ -285,13 +285,13 @@ export default function StaffPage() {
                       {/* 考勤（在班态真值；当日打卡异常红字=flagged 真值） */}
                       <td>
                         {suspended ? (
-                          <span className="text-caption-xs text-[rgba(59,46,36,.42)]">—</span>
+                          <span className="text-caption-xs text-[rgba(44,40,34,.42)]">—</span>
                         ) : flagged ? (
                           <span className="text-caption-xs font-bold text-danger-deep">{sf('staff.attFlagged')}</span>
                         ) : (
                           <span
                             className={`u1-num text-caption-xs ${
-                              duty.onDuty ? 'font-semibold text-ink' : 'text-[rgba(59,46,36,.42)]'
+                              duty.onDuty ? 'font-semibold text-ink' : 'text-[rgba(44,40,34,.42)]'
                             }`}
                           >
                             {duty.label}
@@ -345,7 +345,7 @@ export default function StaffPage() {
             </table>
           )}
           {!staffQuery.isPending && !staffQuery.isError && staff.length > 0 ? (
-            <p className="wsk-note border-t border-[rgba(59,46,36,.06)] px-[17px] py-2.5">
+            <p className="wsk-note border-t border-[rgba(44,40,34,.06)] px-[17px] py-2.5">
               {sf('staff.attNote')}
             </p>
           ) : null}
@@ -359,7 +359,7 @@ export default function StaffPage() {
               {sf('staff.permLink')}
             </Link>
           </div>
-          <p className="text-caption text-[rgba(59,46,36,.62)]">{sf('staff.permBody')}</p>
+          <p className="text-caption text-[rgba(44,40,34,.62)]">{sf('staff.permBody')}</p>
         </section>
       </div>
 

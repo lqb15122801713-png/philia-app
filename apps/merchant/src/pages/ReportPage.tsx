@@ -120,7 +120,7 @@ function Panel({ title, aside, children, testid }: {
 /** 面板内居中明面空态 */
 function EmptyLine({ text }: { text?: string }) {
   return (
-    <div className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-10 text-center text-body-sm text-[rgba(59,46,36,.62)]">
+    <div className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-10 text-center text-body-sm text-[rgba(44,40,34,.62)]">
       {text ?? rpt('rpt.page.empty')}
     </div>
   );
@@ -130,7 +130,7 @@ function EmptyLine({ text }: { text?: string }) {
 function NoteRow({ note }: { note?: string }) {
   if (!note) return null;
   return (
-    <p className="mt-2 px-1 text-caption-xs text-[rgba(59,46,36,.42)]">
+    <p className="mt-2 px-1 text-caption-xs text-[rgba(44,40,34,.42)]">
       {rpt('rpt.page.noteLead')}
       {note}
     </p>
@@ -142,10 +142,10 @@ function RatioBar({ ratio, testid }: { ratio: number; testid?: string }) {
   return (
     <div
       className="h-2.5 overflow-hidden rounded-chip"
-      style={{ background: 'rgba(59,46,36,.08)' }}
+      style={{ background: 'rgba(44,40,34,.08)' }}
       data-testid={testid}
     >
-      <div style={{ width: `${Math.min(100, Math.max(0, ratio * 100))}%`, height: '100%', background: 'rgba(59,46,36,.85)' }} />
+      <div style={{ width: `${Math.min(100, Math.max(0, ratio * 100))}%`, height: '100%', background: 'rgba(44,40,34,.85)' }} />
     </div>
   );
 }
@@ -168,12 +168,12 @@ function MiniBars({ items, testid }: { items: Array<{ label: string; value: numb
         return (
           <g key={it.label}>
             {it.value > 0 ? (
-              <rect x={x} y={H - PADB - h} width={bw} height={h} rx={3} fill="rgba(59,46,36,.75)" />
+              <rect x={x} y={H - PADB - h} width={bw} height={h} rx={3} fill="rgba(44,40,34,.75)" />
             ) : null}
-            <text x={x + bw / 2} y={H - PADB - h - 4} textAnchor="middle" fontSize={11} fill="rgba(59,46,36,.75)">
+            <text x={x + bw / 2} y={H - PADB - h - 4} textAnchor="middle" fontSize={11} fill="rgba(44,40,34,.75)">
               {it.value}
             </text>
-            <text x={x + bw / 2} y={H - 5} textAnchor="middle" fontSize={11} fill="rgba(59,46,36,.55)">
+            <text x={x + bw / 2} y={H - 5} textAnchor="middle" fontSize={11} fill="rgba(44,40,34,.55)">
               {it.label}
             </text>
           </g>
@@ -212,11 +212,11 @@ function D1Body({ d }: { d: ReportOutputs['d1Revenue'] }) {
       <Panel title={rpt('rpt.d1.memberShareTitle')} testid="d1-member-share">
         <div className="px-[17px] py-4">
           {share === null ? (
-            <div className="text-center text-body-sm text-[rgba(59,46,36,.62)]">{rpt('rpt.page.empty')}</div>
+            <div className="text-center text-body-sm text-[rgba(44,40,34,.62)]">{rpt('rpt.page.empty')}</div>
           ) : (
             <>
               <RatioBar ratio={share} testid="d1-member-bar" />
-              <div className="mt-2 flex justify-between text-caption-xs text-[rgba(59,46,36,.62)]">
+              <div className="mt-2 flex justify-between text-caption-xs text-[rgba(44,40,34,.62)]">
                 <span>{rpt('rpt.d1.memberLabel')} {yuan(d.memberVsGuest.memberFen)} · {pct(share)}</span>
                 <span>{rpt('rpt.d1.guestLabel')} {yuan(d.memberVsGuest.nonMemberFen)} · {pct(1 - share)}</span>
               </div>
@@ -400,7 +400,7 @@ function D6Body({ d }: { d: ReportOutputs['d6Refunds'] }) {
           </span>
         </div>
       ) : (
-        <p className="mb-3.5 px-1 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="d6-spike-ok">
+        <p className="mb-3.5 px-1 text-caption-xs text-[rgba(44,40,34,.42)]" data-testid="d6-spike-ok">
           {d.spike.momBp === null
             ? rpt('rpt.d6.spikeNa')
             : rpt('rpt.d6.spikeOk', { pct: bpPct(d.spike.momBp), th: `${(d.spike.thresholdBp / 100).toFixed(0)}%` })}
@@ -508,7 +508,7 @@ function D7Body({ d }: { d: ReportOutputs['d7StaffPerf'] }) {
         )}
       </Panel>
       {/* 海底捞警示注记行（guard.note 透出） */}
-      <p className="mt-2 px-1 text-caption-xs text-[rgba(59,46,36,.42)]" data-testid="d7-guard-note">
+      <p className="mt-2 px-1 text-caption-xs text-[rgba(44,40,34,.42)]" data-testid="d7-guard-note">
         {d.guard.note}
       </p>
     </>
@@ -610,7 +610,7 @@ function D9TopSection({ month, scope, storeId }: { month: string; scope?: 'store
     return (
       <div aria-label="加载中">
         <Panel title={rpt('rpt.d9top.rankTitle')} testid="d9top-rank">
-          <div className="space-y-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-4">
+          <div className="space-y-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-4">
             {[0, 1, 2].map((i) => (
               <Skeleton key={i} className="h-9 rounded-chip" />
             ))}
@@ -622,7 +622,7 @@ function D9TopSection({ month, scope, storeId }: { month: string; scope?: 'store
   if (topQ.isError || !topQ.data) {
     return (
       <div className="u3-panel mt-3.5 px-[17px] py-12 text-center">
-        <p className="text-body-sm text-[rgba(59,46,36,.62)]">{rpt('rpt.page.loadError')}</p>
+        <p className="text-body-sm text-[rgba(44,40,34,.62)]">{rpt('rpt.page.loadError')}</p>
         <div className="mt-4">
           <QuietButton testid="d9top-retry" onClick={() => void topQ.refetch()}>
             {rpt('rpt.page.retry')}
@@ -713,7 +713,7 @@ function WeeklySection({ scope, storeId }: { scope?: 'store' | 'chain'; storeId?
   if (weekQ.isError || !weekQ.data) {
     return (
       <div className="u3-panel px-[17px] py-12 text-center">
-        <p className="text-body-sm text-[rgba(59,46,36,.62)]">{rpt('rpt.page.loadError')}</p>
+        <p className="text-body-sm text-[rgba(44,40,34,.62)]">{rpt('rpt.page.loadError')}</p>
         <div className="mt-4">
           <QuietButton testid="weekly-retry" onClick={() => void weekQ.refetch()}>
             {rpt('rpt.page.retry')}
@@ -745,7 +745,7 @@ function WeeklySection({ scope, storeId }: { scope?: 'store' | 'chain'; storeId?
           bp={d.wow === null ? null : Math.round(d.wow * 10000)}
           testid="weekly-wow-badge"
         />
-        <span className="text-caption-xs text-[rgba(59,46,36,.42)]">
+        <span className="text-caption-xs text-[rgba(44,40,34,.42)]">
           {rpt('rpt.weekly.title')} · {d.weekStart}
         </span>
       </div>
@@ -1066,7 +1066,7 @@ function N4Body({ d }: { d: ReportOutputs['n4ReviewDist'] }) {
       </div>
       {/* 纠错扣减明示行（correctedCount>0 时显示） */}
       {d.correctedCount > 0 ? (
-        <p className="mt-3 px-1 text-caption-xs font-semibold text-[rgba(59,46,36,.62)]" data-testid="n4-corrected-row">
+        <p className="mt-3 px-1 text-caption-xs font-semibold text-[rgba(44,40,34,.62)]" data-testid="n4-corrected-row">
           {rpt('rpt.n4.correctedRow', { n: d.correctedCount })}
         </p>
       ) : null}
@@ -1152,7 +1152,7 @@ function N4Body({ d }: { d: ReportOutputs['n4ReviewDist'] }) {
       {/* 差评列表 + 回复弹层（reviewReply 写口 owner|manager） */}
       <Panel title={rpt('rpt.n4.recentTitle')} aside={rpt('rpt.n4.recentAside')} testid="n4-recent">
         {badQ.isPending ? (
-          <div className="space-y-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-4" aria-label="加载中">
+          <div className="space-y-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-4" aria-label="加载中">
             {[0, 1, 2].map((i) => (
               <Skeleton key={i} className="h-9 rounded-chip" />
             ))}
@@ -1164,12 +1164,12 @@ function N4Body({ d }: { d: ReportOutputs['n4ReviewDist'] }) {
             {recent.map((r) => (
               <div
                 key={r.id}
-                className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3.5"
+                className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-3.5"
                 data-testid={`n4-review-${r.id}`}
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="u3-st amber">{r.rating} 星</span>
-                  <span className="text-caption-xs text-[rgba(59,46,36,.62)]">
+                  <span className="text-caption-xs text-[rgba(44,40,34,.62)]">
                     {r.staffName} · {r.customerLabel} · {formatDateTime(r.createdAt)}
                   </span>
                   {r.replied ? (
@@ -1191,12 +1191,12 @@ function N4Body({ d }: { d: ReportOutputs['n4ReviewDist'] }) {
                 </div>
                 <p className="mt-1.5 text-body-sm">{r.text}</p>
                 {r.replied && r.replyText ? (
-                  <p className="mt-1.5 rounded-control bg-[rgba(59,46,36,.04)] px-3 py-2 text-caption text-[rgba(59,46,36,.62)]">
+                  <p className="mt-1.5 rounded-control bg-[rgba(44,40,34,.04)] px-3 py-2 text-caption text-[rgba(44,40,34,.62)]">
                     {r.replyText}
                   </p>
                 ) : null}
                 {replyTarget === r.id ? (
-                  <div className="mt-2.5 rounded-control bg-[rgba(59,46,36,.04)] p-3" data-testid={`n4-replybox-${r.id}`}>
+                  <div className="mt-2.5 rounded-control bg-[rgba(44,40,34,.04)] p-3" data-testid={`n4-replybox-${r.id}`}>
                     <textarea
                       rows={3}
                       maxLength={500}
@@ -1204,9 +1204,9 @@ function N4Body({ d }: { d: ReportOutputs['n4ReviewDist'] }) {
                       onChange={(e) => setReplyText(e.target.value)}
                       placeholder={rpt('rpt.n4.replyPlaceholder')}
                       data-testid={`n4-replytext-${r.id}`}
-                      className="u1-ring w-full rounded-control bg-card px-3 py-2 text-caption text-ink focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+                      className="u1-ring w-full rounded-control bg-card px-3 py-2 text-caption text-ink focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
                     />
-                    <div className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]">{rpt('rpt.n4.replyTagsLabel')}</div>
+                    <div className="mt-2 text-caption-xs text-[rgba(44,40,34,.42)]">{rpt('rpt.n4.replyTagsLabel')}</div>
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
                       {REVIEW_TAGS.map((t) => (
                         <button
@@ -1318,10 +1318,10 @@ function N6Body({ d }: { d: ReportOutputs['n6StaffQuality'] }) {
       {/* 铁规两件在屏：①申诉通道说明卡（gate.appealEntry 透出） */}
       <div className="u3-panel mb-3.5 px-[17px] py-3.5" data-testid="n6-gate">
         <div className="text-caption font-semibold">{rpt('rpt.n6.gateTitle')}</div>
-        <div className="mt-1.5 text-caption-xs text-[rgba(59,46,36,.62)]">
+        <div className="mt-1.5 text-caption-xs text-[rgba(44,40,34,.62)]">
           ① {d.gate.appealEntry}
         </div>
-        <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.62)]">② {d.gate.note}</div>
+        <div className="mt-1 text-caption-xs text-[rgba(44,40,34,.62)]">② {d.gate.note}</div>
       </div>
       <Panel title={rpt('rpt.n6.tableTitle')} testid="n6-table">
         {d.rows.length === 0 ? (
@@ -1361,7 +1361,7 @@ function N6Body({ d }: { d: ReportOutputs['n6StaffQuality'] }) {
       </Panel>
       {/* 铁规②申诉队列入口：内嵌简表 + 去审批中心 Link */}
       <Panel title={rpt('rpt.n6.queueTitle')} testid="n6-appeals">
-        <div className="flex items-center justify-end border-t border-[rgba(59,46,36,.06)] px-[17px] py-2">
+        <div className="flex items-center justify-end border-t border-[rgba(44,40,34,.06)] px-[17px] py-2">
           <Link
             to="/ops"
             className="text-caption-xs font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.92]"
@@ -1371,7 +1371,7 @@ function N6Body({ d }: { d: ReportOutputs['n6StaffQuality'] }) {
           </Link>
         </div>
         {appealsQ.isPending ? (
-          <div className="space-y-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-4" aria-label="加载中">
+          <div className="space-y-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-4" aria-label="加载中">
             {[0, 1].map((i) => (
               <Skeleton key={i} className="h-9 rounded-chip" />
             ))}
@@ -1397,8 +1397,8 @@ function N6Body({ d }: { d: ReportOutputs['n6StaffQuality'] }) {
                     <td className="font-semibold">{a.staffName}</td>
                     <td className="max-w-56 truncate">{a.reason}</td>
                     <td>{statusBadge(a.status)}</td>
-                    <td className="max-w-48 truncate text-[rgba(59,46,36,.62)]">{a.reviewNote ?? '—'}</td>
-                    <td className="max-w-48 truncate text-caption-xs text-[rgba(59,46,36,.62)]">
+                    <td className="max-w-48 truncate text-[rgba(44,40,34,.62)]">{a.reviewNote ?? '—'}</td>
+                    <td className="max-w-48 truncate text-caption-xs text-[rgba(44,40,34,.62)]">
                       {a.correctionJson ? JSON.stringify(a.correctionJson) : '—'}
                     </td>
                     <td className="u1-num text-right text-caption-xs">
@@ -1442,14 +1442,14 @@ function EmbedBody() {
 
   return (
     <>
-      <div className="u3-panel px-[17px] py-4 text-body-sm text-[rgba(59,46,36,.62)]" data-testid="embed-intro">
+      <div className="u3-panel px-[17px] py-4 text-body-sm text-[rgba(44,40,34,.62)]" data-testid="embed-intro">
         {rpt('rpt.embed.intro')}
       </div>
       <Panel title={rpt('rpt.embed.eventsTitle')} testid="embed-events">
-        <ul className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3.5">
+        <ul className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-3.5">
           {EMBED_EVENT_COPY.map((e) => (
             <li key={e.eventType} className="py-1 text-caption">
-              <span className="u1-num text-[rgba(59,46,36,.62)]">{e.eventType}</span>
+              <span className="u1-num text-[rgba(44,40,34,.62)]">{e.eventType}</span>
               <span className="ml-2">{rpt(e.copyKey).replace(`${e.eventType} `, '')}</span>
             </li>
           ))}
@@ -1457,7 +1457,7 @@ function EmbedBody() {
       </Panel>
       <Panel title={rpt('rpt.embed.statsTitle')} testid="embed-stats">
         {statsQ.isPending ? (
-          <div className="space-y-2 border-t border-[rgba(59,46,36,.06)] px-[17px] py-4" aria-label="加载中">
+          <div className="space-y-2 border-t border-[rgba(44,40,34,.06)] px-[17px] py-4" aria-label="加载中">
             {[0, 1, 2].map((i) => (
               <Skeleton key={i} className="h-9 rounded-chip" />
             ))}
@@ -1484,7 +1484,7 @@ function EmbedBody() {
         )}
       </Panel>
       <NoteRow note={statsQ.data?.note} />
-      <p className="mt-1 px-1 text-caption-xs text-[rgba(59,46,36,.42)]">{rpt('rpt.embed.outNote')}</p>
+      <p className="mt-1 px-1 text-caption-xs text-[rgba(44,40,34,.42)]">{rpt('rpt.embed.outNote')}</p>
     </>
   );
 }
@@ -1508,7 +1508,7 @@ function SheetSkeleton() {
           <Skeleton className="h-4 w-24 rounded-chip" />
         </div>
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="border-t border-[rgba(59,46,36,.06)] px-[17px] py-3.5">
+          <div key={i} className="border-t border-[rgba(44,40,34,.06)] px-[17px] py-3.5">
             <Skeleton className="h-3 w-full rounded-chip" />
           </div>
         ))}
@@ -1574,7 +1574,7 @@ function SheetSection({ sheetKey, month, scope, storeId }: {
   if (sheetQ.isError || !sheetQ.data) {
     return (
       <div className="u3-panel px-[17px] py-12 text-center">
-        <p className="text-body-sm text-[rgba(59,46,36,.62)]">{rpt('rpt.page.loadError')}</p>
+        <p className="text-body-sm text-[rgba(44,40,34,.62)]">{rpt('rpt.page.loadError')}</p>
         <div className="mt-4">
           <QuietButton testid="report-retry" onClick={() => void sheetQ.refetch()}>
             {rpt('rpt.page.retry')}
@@ -1647,7 +1647,7 @@ export default function ReportPage() {
     return (
       <MainScaffold title={rpt('rpt.page.unknown')} testid="report-page-unknown">
         <div className="u3-panel px-[17px] py-12 text-center">
-          <p className="text-body-sm text-[rgba(59,46,36,.62)]">{rawKey}</p>
+          <p className="text-body-sm text-[rgba(44,40,34,.62)]">{rawKey}</p>
           <div className="mt-4">
             <Link to="/finance" className="text-caption font-bold text-ink" data-testid="report-back">
               {rpt('rpt.page.backToDir')}
@@ -1681,7 +1681,7 @@ export default function ReportPage() {
         <div data-testid="report-chain-view">
           <div className="mb-2 flex items-baseline gap-2 px-1">
             <h3 className="text-body-sm font-bold">{rpt('rpt.view.chain')}</h3>
-            <span className="text-caption-xs text-[rgba(59,46,36,.42)]">{rpt('rpt.view.chainAside')}</span>
+            <span className="text-caption-xs text-[rgba(44,40,34,.42)]">{rpt('rpt.view.chainAside')}</span>
           </div>
           <SheetSection sheetKey={key as SheetKey} month={month} scope="chain" />
         </div>
@@ -1728,7 +1728,7 @@ export default function ReportPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Link
             to="/finance"
-            className="text-caption font-semibold text-[rgba(59,46,36,.62)]"
+            className="text-caption font-semibold text-[rgba(44,40,34,.62)]"
             data-testid="report-back"
           >
             {rpt('rpt.page.backToDir')}
@@ -1746,7 +1746,7 @@ export default function ReportPage() {
             </button>
           ) : null}
           {isSheet ? (
-            <label className="flex items-center gap-2 text-caption text-[rgba(59,46,36,.62)]">
+            <label className="flex items-center gap-2 text-caption text-[rgba(44,40,34,.62)]">
               {rpt('rpt.page.monthLabel')}
               <input
                 type="month"
@@ -1755,7 +1755,7 @@ export default function ReportPage() {
                   if (e.target.value) setMonth(e.target.value);
                 }}
                 data-testid="report-month"
-                className="u1-ring rounded-control bg-card px-3 py-2 font-number text-caption tabular-nums text-ink focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+                className="u1-ring rounded-control bg-card px-3 py-2 font-number text-caption tabular-nums text-ink focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
               />
             </label>
           ) : null}
@@ -1785,13 +1785,13 @@ export default function ReportPage() {
           ) : null}
           {/* 单店视图门店下拉（listMine 店集合，选中店传 storeId；缺省=当前店） */}
           {role.isOwner && isSheet && view === 'store' ? (
-            <label className="flex items-center gap-2 text-caption text-[rgba(59,46,36,.62)]">
+            <label className="flex items-center gap-2 text-caption text-[rgba(44,40,34,.62)]">
               {rpt('rpt.view.storePick')}
               <select
                 value={effStoreId ?? ''}
                 onChange={(e) => setPickedStoreId(e.target.value || null)}
                 data-testid="report-store-pick"
-                className="u1-ring rounded-control bg-card px-3 py-2 text-caption text-ink focus:outline-none focus:ring-[rgba(59,46,36,.25)]"
+                className="u1-ring rounded-control bg-card px-3 py-2 text-caption text-ink focus:outline-none focus:ring-[rgba(44,40,34,.25)]"
               >
                 {mineStores.map((s) => (
                   <option key={s.id} value={s.id}>
