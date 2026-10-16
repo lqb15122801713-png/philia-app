@@ -1,0 +1,34 @@
+✅ 造单：A/B 洗护单 confirmed 且指派阿强 —— A=01M51B5XWQTNSKWNG1NWPPYA0X B=01M51B5XXN1EMP3NQTW1QYEJJB
+✅ A 单核销 → in_service —— status=in_service
+✅ 寄养单核销 → in_boarding —— status=in_boarding id=01M51B5XZ2XNCFWC3JGWHN6SAD
+✅ 收银 settle 两单 —— bill1=HD-20261016-001 bill2=HD-20261016-002
+✅ 退款 execute×2（一待实退一已实退） —— r1=01M51B5Y11QW97GXGY1PHQ0W2N r2=01M51B5Y1ED3SRQFXX8RXAGK38
+✅ A1 W-00 登录页渲染 —— login-primary
+  📸 E:\KIMI code\philia-app\evidence\design-s3-merchant-face\shots\d01-w00-login.png
+✅ 浏览器 dev-login（店主） —— HTTP 200
+✅ A2 W-02 台账渲染（真单≥2 行） —— {"rail":true,"rows":3}
+  📸 E:\KIMI code\philia-app\evidence\design-s3-merchant-face\shots\d02-w02-appointments.png
+✅ A2 W-03 详情渲染（状态流+信息区） —— {"flow":true,"info":true}
+  📸 E:\KIMI code\philia-app\evidence\design-s3-merchant-face\shots\d03-w03-appointment-detail.png
+✅ A3 W-04 监控 Hub 渲染（服务中真卡） —— {"rail":true,"cards":0,"text":true}
+  📸 E:\KIMI code\philia-app\evidence\design-s3-merchant-face\shots\d04-w04-monitor-hub.png
+✅ A4 W-05 寄养渲染（M3+在店台账） —— {"m3":true,"stay":true}
+  📸 E:\KIMI code\philia-app\evidence\design-s3-merchant-face\shots\d05-w05-boarding.png
+✅ A5 W-06 收银台渲染 —— cashier-page
+  📸 E:\KIMI code\philia-app\evidence\design-s3-merchant-face\shots\d06-w06-cashier.png
+✅ A5 W-07 日结渲染（今日真结两单在账） —— {"body":true,"money":true}
+  📸 E:\KIMI code\philia-app\evidence\design-s3-merchant-face\shots\d07-w07-close.png
+✅ A5 W-08 退款渲染（双态真行≥2） —— {"policy":true,"rows":2}
+  📸 E:\KIMI code\philia-app\evidence\design-s3-merchant-face\shots\d08-w08-refunds.png
+✅ A6 手机总览（198:374） —— {"dock":true,"slots":5,"m3":true}
+  📸 E:\KIMI code\philia-app\evidence\design-s3-merchant-face\shots\p01-phone-overview.png
+✅ A6 手机门店（203:5219） —— {"dock":true,"slots":5,"rows":3}
+  📸 E:\KIMI code\philia-app\evidence\design-s3-merchant-face\shots\p02-phone-store.png
+✅ A6 手机收银（198:445） —— {"dock":true,"slots":5,"cashier":true}
+  📸 E:\KIMI code\philia-app\evidence\design-s3-merchant-face\shots\p03-phone-cashier.png
+✅ A6 手机报表简（203:5365） —— {"dock":true,"slots":5,"quad":true}
+  📸 E:\KIMI code\philia-app\evidence\design-s3-merchant-face\shots\p04-phone-report.png
+✅ A6 手机我的（203:5480） —— {"dock":true,"slots":5,"entries":true}
+  📸 E:\KIMI code\philia-app\evidence\design-s3-merchant-face\shots\p05-phone-me.png
+
+===== 片3 实尺截图汇总：全绿 =====
