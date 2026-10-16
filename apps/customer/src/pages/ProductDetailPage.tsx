@@ -338,11 +338,6 @@ function DetailInner() {
   });
   const rebateBp = (myQ.data?.plan as { rebateBp?: number } | null | undefined)?.rebateBp ?? 0;
   const settleDay = plansQ.data?.rebateSettlementDay;
-  /* 返显钩子（体验急修批 B）：付费档比例读表拼「2/5/10」；缺省=空串不渲染 */
-  const hookPcts = (plansQ.data?.plans ?? [])
-    .filter((p) => p.rebateBp > 0)
-    .map((p) => p.rebateBp / 100)
-    .join('/');
   const rebateFen = product && rebateBp > 0 ? Math.round((product.priceFen * qty * rebateBp) / 10000) : 0;
 
   /* ---- 画布端口：注册表块序 + 有效布局（published→默认序尾补；空=默认序兜底常量） ---- */
@@ -520,8 +515,7 @@ function DetailInner() {
       </>
     ),
 
-    /* 3. pdp.rebateCard：回馈金返显卡（M-02 定稿：白卡 + 淡黄点睛圆点 8 + 12/600；
-          rebateBp=0 不渲染假数——体验急修批 B：改显示规则钩子，点击→/member/open（J-01）） */
+    /* 3. pdp.rebateCard：回馈金返显卡（rebateBp=0 不渲染；O9 规则主钩只留购物袋结算侧） */
     'pdp.rebateCard': () =>
       rebateFen > 0 ? (
         <div className="u1-card mt-3 flex items-center gap-2.5 px-3.5 py-3">
@@ -534,17 +528,6 @@ function DetailInner() {
             )}
           </p>
         </div>
-      ) : hookPcts ? (
-        <Link
-          to="/member/open"
-          data-testid="pdp-rebate-hook"
-          className="u1-card mt-3 flex items-center gap-2.5 px-3.5 py-3 transition-transform duration-120 ease-philia-spring active:scale-[0.99]"
-        >
-          <span className="h-2 w-2 shrink-0 rounded-full bg-brand-primary" aria-hidden="true" />
-          <p className="text-caption font-semibold text-ink-secondary">
-            <CK k="mall.rebateHook">{mc('mall.rebateHook', { pcts: hookPcts })}</CK>
-          </p>
-        </Link>
       ) : null,
 
     /* 4. pdp.detail：详情描述（真实字段；试样规格表无真实字段来源，不出——U4-D3 登记；

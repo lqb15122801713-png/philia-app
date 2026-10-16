@@ -1,39 +1,16 @@
 /**
- * B9a 任务 B · 首页主区常态面板 —— 一键再约（有 B4-3 下单记忆时）。
- *
- * 预填摘要四行（B4-3 记忆解析，与单屏同源）：宠物 / 服务（含约 N 分钟）/ 门店 /
- * 时间=最早可约槽（getWithServices 时长连续过滤后的首个未满槽，+8 规范时区 +1h 缓冲，
- * 与单屏栅格同一数据源同一口径，前端取 min(slotStart)，零新接口）。
- *
- * CTA「预约并支付 · ¥X」单次点击直接提交：appointment.create 现入参不动，
- * 与单屏同一组字段（storeId/petId/serviceId/type=grooming/scheduledStart/paymentMode，
- * 无备注故不带 note）；paymentMode 口径同单屏默认——本人该店有可用次卡则 pass_deduct，
- * 否则 pay_at_store（面板脚注明示收款方式，涉钱可知情）。
- * 成功进既有 /booking/success?aid=（同单屏），并回写 B4-3 下单记忆。
- *
- * 幂等：提交中禁用 CTA + submittingRef 同步锁（同一事件循环内的双击也被吞），
- * 快速重试不产生重复单。服务端 create 现状无幂等键（本批不动服务端，已如实上报）。
- *
- * 视觉（设计语言规格 v3 减法）：去卡片化 hairline 分隔、无彩色图标底块、圆角
- * rounded-card(16∈14~18)、全屏唯一 accent 色块 = CTA（片1 VI：cream #F2DC8C 底 +
- * 深棕墨字，on-accent 深棕墨，不用反白字；CTA 保留 shadow-philia 浮起）。B9.3：面板本体
- * 按试样带一层软阴影（shadow-card，「全屏唯一白面板 + 一层软阴影」），去描边。
+ * 首页上次预约配置面板：摘要与「调整服务或时间」保留，主行动改为查看预约进度（O1 差异任务），
+ * 不再与 megacard 的进洗护主路径重复创建预约。
  */
 
-import { useMutation } from '@tanstack/react-query';
-import { useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { usePhiliaClient } from '@philia/shared';
-import { friendlyError, useToast } from '@philia/shared';
-import { dayLabel, fenToYuan, fmtHM } from '@/components/booking/format';
-import { writeLastBooking } from '@/lib/bookingPrefill';
+import { Link } from 'react-router-dom';
+import { dayLabel, fmtHM } from '@/components/booking/format';
 
 export interface RebookPanelProps {
   storeId: string;
   storeName: string;
   serviceId: string;
   serviceName: string;
-  priceFen: number;
   durationMin: number | null;
   petId: string;
   petName: string;
@@ -49,7 +26,6 @@ export default function RebookPanel({
   storeName,
   serviceId,
   serviceName,
-  priceFen,
   durationMin,
   petId,
   petName,
@@ -57,46 +33,6 @@ export default function RebookPanel({
   paymentMode,
   passRemainTimes,
 }: RebookPanelProps) {
-  const navigate = useNavigate();
-  const { trpc, queryClient } = usePhiliaClient();
-  const { toastEl, showToast } = useToast({ durationMs: 3200 });
-  /** 幂等同步锁：disabled 等渲染间隙内的连击也只会放行第一次提交 */
-  const submittingRef = useRef(false);
-
-  const createM = useMutation({
-    mutationFn: () =>
-      // appointment.create 现入参不动：与单屏 ConfirmBar 提交同字段同口径
-      trpc.appointment.create.mutate({
-        storeId,
-        petId,
-        serviceId,
-        type: 'grooming',
-        scheduledStart: slot,
-        paymentMode,
-      }),
-    onSuccess: (appt) => {
-      writeLastBooking({ storeId, serviceId, petId });
-      void queryClient.invalidateQueries({ queryKey: ['appointment'] });
-      void queryClient.invalidateQueries({ queryKey: ['pass'] });
-      navigate(`/booking/success?aid=${encodeURIComponent(appt.id)}`, { replace: true });
-    },
-    onError: (err) => {
-      showToast(friendlyError(err, '预约失败，请稍后再试'), 'error');
-      // 满槽/冲突：刷新槽位数据（最早可约槽随之重算；无可约槽时面板按规则降级）
-      void queryClient.invalidateQueries({ queryKey: ['store', 'getWithServices'] });
-    },
-    onSettled: () => {
-      submittingRef.current = false;
-    },
-  });
-
-  const submitting = createM.isPending;
-  const onQuickBook = () => {
-    if (submittingRef.current) return; // 双击/快速重试：仅首击生效
-    submittingRef.current = true;
-    createM.mutate();
-  };
-
   const adjustTarget = `/booking/grooming?storeId=${encodeURIComponent(storeId)}&serviceId=${encodeURIComponent(serviceId)}&petId=${encodeURIComponent(petId)}`;
   const ROW = 'flex items-baseline justify-between gap-3 py-2';
   /* 片1-客户端脸 VI（READY §2.1）：发丝线=divider #E8E2D6 谱 rgba(44,40,34,.10) */
@@ -106,11 +42,10 @@ export default function RebookPanel({
     <section
       data-testid="home-rebook-panel"
       className="rounded-card bg-card p-4 shadow-card"
-      aria-label="一键再约"
+      aria-label="上次预约配置"
     >
-      {toastEl}
       <div className="flex items-baseline justify-between">
-        <h2 className="text-title">一键再约</h2>
+        <h2 className="text-title">上次预约配置</h2>
         <Link
           to={adjustTarget}
           data-testid="home-rebook-adjust"
@@ -166,22 +101,13 @@ export default function RebookPanel({
 
       {/* 全屏唯一 accent：一键提交 CTA（提交中禁用，幂等）
           片1 VI：主钮=cream #F2DC8C「此刻要做」（READY §2.1；片0 令牌合入后与 brand-primary 同值） */}
-      <button
-        type="button"
-        onClick={onQuickBook}
-        disabled={submitting}
+      <Link
+        to="/appointments"
         data-testid="home-rebook-cta"
-        data-state={submitting ? 'submitting' : 'ready'}
-        data-slot-start={slot.getTime()}
-        data-payment-mode={paymentMode}
-        className={`mt-3 h-12 w-full rounded-card text-body font-semibold transition-transform duration-120 ease-philia-spring ${
-          submitting
-            ? 'cursor-not-allowed bg-line text-ink-placeholder'
-            : 'bg-[#F2DC8C] text-ink shadow-philia active:scale-92'
-        }`}
+        className="mt-3 flex h-12 w-full items-center justify-center rounded-card bg-[#F2DC8C] text-body font-semibold text-ink shadow-philia transition-transform duration-120 ease-philia-spring active:scale-92"
       >
-        {submitting ? '提交中…' : `预约并支付 · ${fenToYuan(priceFen)}`}
-      </button>
+        查看我的预约 ›
+      </Link>
     </section>
   );
 }

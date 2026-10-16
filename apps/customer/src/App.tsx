@@ -180,18 +180,19 @@ function ProtectedRoutes() {
 export default function App() {
   const { pathname } = useLocation()
   const isDevLogin = pathname === '/dev-login'
-  // U1-A：全局 dock 统一为 <AppDock>，仅主级页面渲染（首页/商城/我的/philia）；
-  // 预约单屏等详情级页面一律不渲染 dock，走统一返回条（components/PageHeader）。
-  // 旧 ConvexTabBar（五栏凸起）与 9a.3 HomeDock（首页三栏 pill）已退役删除。
+  // U1-A：全局 dock 统一为 <AppDock>，主级页面 + O14 洗护单屏渲染；
+  // 其他详情级页面仍走统一返回条，不扩 dock 范围。
+  const isGroomingPath = pathname === '/booking/grooming' || pathname === '/booking/grooming/'
   const isMainPath =
     pathname === '/' ||
     pathname === '/home' ||
     pathname === '/mall' ||
     pathname === '/me' ||
-    pathname === '/philia'
+    pathname === '/philia' ||
+    isGroomingPath
 
   return (
-    <div className="min-h-screen bg-canvas text-ink">
+    <div className={isGroomingPath ? 'booking-with-dock min-h-screen bg-canvas text-ink' : 'min-h-screen bg-canvas text-ink'}>
       <main className="mx-auto max-w-lg pb-24">
         <Routes>
           {/* 开发登录页：守卫之外，且不显示 dock（T2.0 新增路由，已向主代理汇报） */}

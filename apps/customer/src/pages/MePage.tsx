@@ -220,7 +220,7 @@ export default function MePage() {
         <Link to={membership ? '/me/card' : '/member/open'} className="me2-qrrow" data-testid="me-qrrow">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><rect x="4" y="4" width="6" height="6" rx="1.2" /><rect x="14" y="4" width="6" height="6" rx="1.2" /><rect x="4" y="14" width="6" height="6" rx="1.2" /><path d="M14 14h2.5v2.5H14zM20 14v6M14 20h6" /></svg>
           <CK k="me.qrTitle">{mc('me.qrTitle')}</CK>
-          <span className="c"><CK k="me.qrSub">{mc('me.qrSub')}</CK></span>
+          <span className="c"><CK k="me.qrAction">{mc('me.qrAction')}</CK></span>
         </Link>
       </section>
     ),

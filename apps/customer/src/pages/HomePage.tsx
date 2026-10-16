@@ -6,7 +6,7 @@
  * 服务中态（A-2）：LIVE 卡压 BANNER 下沿，身份带降级为窄行 idline；备台行=消毒备台态。
  *
  * 四铁律执行：功能逻辑/数据源零改动（listMine/me/pet.list/pass.mine/serviceStep.list
- * 全部沿用）；入口不丢——会员码=idband/idlive qr 钮（/me/card）、一键再约=HomeBookingPanel
+ * 全部沿用）；入口不丢——会员码=idband/idlive qr 钮（/me/card）、上次预约配置=HomeBookingPanel
  * （RebookPanel 逻辑原样）、商城入口=保留件（见次级行）、我的毛孩子/统计行保留件后置。
  *
  * BANNER=槽位（§4.2/§七）：内容=A5 端口平面物料，现态=库内既有照片资产优先、
@@ -511,7 +511,7 @@ export default function HomePage() {
         </section>
       ) : null,
 
-    /* 6. 一键再约 / 降级入口卡（常态主行动区；服务中态已由 LIVE 卡承载） */
+    /* 6. 上次预约配置 / 降级入口卡（常态主行动区；服务中态已由 LIVE 卡承载） */
     'home.bookingPanel': () =>
       !inServiceAppt ? (
         <div className="mt-3">
@@ -569,7 +569,11 @@ export default function HomePage() {
       <section data-testid="home-pets-row" className="mt-5" aria-label="我的毛孩子">
         <div className="flex items-baseline justify-between">
           <h2 className="text-title"><CK k="home.petsTitle">{hc('home.petsTitle')}</CK></h2>
-          <Link to="/philia/pets" data-testid="home-pets-manage" className="text-caption-xs text-ink-secondary">
+          <Link
+            to="/philia/pets"
+            data-testid="home-pets-manage"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center text-caption-xs text-ink-secondary"
+          >
             管理 ›
           </Link>
         </div>
@@ -587,7 +591,7 @@ export default function HomePage() {
           <Link
             to="/philia/pets"
             data-testid="home-pets-empty"
-            className="mt-3 flex items-center justify-between rounded-control bg-[#F3EEE4] px-4 py-3 text-body-sm text-ink-secondary"
+            className="mt-3 flex items-center justify-between rounded-control bg-[#F3EEE4] px-4 py-3 text-body-sm text-ink"
           >
             <CK k="home.petsEmpty">{hc('home.petsEmpty')}</CK>
             <span aria-hidden="true">›</span>

@@ -47,7 +47,7 @@
 .hv2-idband .mini::after { content: ''; position: absolute; inset: 3px; border: 1px solid rgba(242,220,140,.32); border-radius: 3px; }
 .hv2-idband .mini svg { position: absolute; right: 3px; bottom: 2px; width: 9px; height: 9px; color: #F2DC8C; }
 .hv2-idband .nm { font-family: var(--v2serif); font-weight: 900; font-size: 13px; color: #F2DC8C; }
-.hv2-idband .ac { font-family: var(--v2mono); font-size: 9.5px; color: #C9BBA0; margin-top: 2px; }
+.hv2-idband .ac { font-family: var(--v2mono); font-size: 12.5px; color: #C9BBA0; margin-top: 2px; }
 .hv2-idband .ac b { color: #F6EFDD; font-weight: 700; }
 .hv2-idband .qr {
   margin-left: auto; flex: none; width: 36px; height: 36px; border-radius: 11px;
@@ -62,7 +62,7 @@
   padding: 8px 14px; font-size: 12px; color: #2C2822;
 }
 .hv2-idline .dot { width: 7px; height: 7px; border-radius: 99px; background: #5C5040; flex: none; }
-.hv2-idline .ac { font-family: var(--v2mono); font-size: 9.5px; color: #A89779; }
+.hv2-idline .ac { font-family: var(--v2mono); font-size: 12.5px; color: #A89779; }
 .hv2-idline .qr { margin-left: auto; font-size: 11px; color: #A89779; background: none; border: 0; cursor: pointer; }
 
 /* ---- 浮动大卡 megacard（margin:-16px 14px 0 压身份带下沿；上向影=「压」感来源不可省；VI 卡圆角 18） ---- */
@@ -156,7 +156,7 @@
 .me2-hero .nums { display: grid; grid-template-columns: 1.2fr 1fr 1fr; margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(217,192,138,.22); }
 .me2-hero .nums .v { font-family: var(--v2mono); font-size: 17px; font-weight: 700; color: #F6EFDD; letter-spacing: -.02em; }
 .me2-hero .nums .v em { font-style: normal; font-size: 10px; color: #C9BBA0; }
-.me2-hero .nums .k { font-size: 10px; color: #C9BBA0; margin-top: 5px; }
+.me2-hero .nums .k { font-size: 12px; color: #C9BBA0; margin-top: 5px; }
 .me2-hero .nums .dim .v { color: #B9A98F; }
 .me2-qrrow {
   margin-top: auto; background: #FFFFFF; color: #2C2822; border-radius: 14px;
