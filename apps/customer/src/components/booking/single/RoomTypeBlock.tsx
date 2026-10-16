@@ -4,8 +4,8 @@
  * - 多房型：选择器卡列表（现状向导屏2 同款，「余 N 间」透出保留）。
  * 余量口径沿用 B3-2：已选区间 = 区间内逐晚最小剩余；未选日期 = 今晚剩余。
  *
- * 换皮批片 2（定稿 H-01 / §4.10 roomcard 工艺卡）：实景图 150 高 + 右上房价胶囊
- * （纸白 mono 11/700 + 小影 §3.3 房价牌影）+ 底条名 14/800 + mono 9 卖点（余量行）。
+ * 换皮批片 2（定稿 H-01 / §4.10 roomcard 工艺卡）：实景图默认 150 高（短视口按 N2 避让规则收缩）
+ * + 右上房价胶囊（纸白 mono 11/700 + 小影 §3.3 房价牌影）+ 底条名 14/800 + mono 9 卖点（余量行）。
  * 实景照槽位：services 表无照片字段（schema 实证）——img 插槽指向拍摄清单资产位，
  * onError 回退下沉底 + VI 线图标（ic-board），资产到位即自动替换，不造假图。
  */
@@ -20,7 +20,7 @@ import type { ServiceItem } from '../types';
 function RoomPhoto({ name, priceFen }: { name: string; priceFen: number }) {
   const [imgOk, setImgOk] = useState(true);
   return (
-    <div className="relative h-[150px]">
+    <div className="booking-room-photo relative h-[150px]">
       {imgOk ? (
         <img
           src="/photos/room.jpg"

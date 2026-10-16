@@ -1,0 +1,3 @@
+PASS O1 首页仅一条进洗护主路径 —— 主入口可见=1；mega=/booking/grooming；panel=null
+PASS O2+O12 回馈金／金额字阶统一可读 —— home=12.5/12.5px；me=12/17px
+环境异常：页面未就绪：/home

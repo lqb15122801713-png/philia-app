@@ -1,0 +1,167 @@
+{
+  "at": "2026-10-16T22:38:38.849Z",
+  "base": "http://127.0.0.1:7130",
+  "viewports": [
+    "390x844",
+    "390x700"
+  ],
+  "results": [
+    {
+      "id": "N1 收款展开后次卡扣次完整可见可点",
+      "ok": false,
+      "detail": "option=631–697；barTop=644；命中=gs-payment-pass_deduct；文案被压=2",
+      "measurements": {
+        "scrollY": 1185,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "option": {
+          "top": 631.09375,
+          "bottom": 697.09375,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 644,
+          "bottom": 766
+        },
+        "disabled": false,
+        "fullyVisible": true,
+        "covered": true,
+        "clickable": true,
+        "hitTestId": "gs-payment-pass_deduct",
+        "textRects": [
+          {
+            "text": "次卡扣次",
+            "top": 644.09375,
+            "bottom": 666.09375,
+            "covered": true
+          },
+          {
+            "text": "剩余 2 次 · 预约确认后扣 1 次",
+            "top": 668.09375,
+            "bottom": 684.09375,
+            "covered": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "N2 寄养零滚标准间文案与热区不被确认栏压住（390×844）",
+      "ok": true,
+      "detail": "card=423–634；barTop=749；命中=bs-room-readonly；文案异常=0；dock=false",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "testId": "bs-room-readonly",
+        "card": {
+          "top": 422.5,
+          "bottom": 634,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 749,
+          "bottom": 844
+        },
+        "fullyVisible": true,
+        "covered": false,
+        "centerClickable": true,
+        "hitTestId": "bs-room-readonly",
+        "dockPresent": false,
+        "textRects": [
+          {
+            "text": "¥199 / 晚",
+            "top": 435.5,
+            "bottom": 462.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "标准间",
+            "top": 585.5,
+            "bottom": 605.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "标准间寄养（犬）",
+            "top": 607.5,
+            "bottom": 621,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "今晚剩余 2 间",
+            "top": 607.5,
+            "bottom": 621,
+            "covered": false,
+            "inViewport": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "N2 寄养零滚标准间文案与热区不被确认栏压住（390×700）",
+      "ok": false,
+      "detail": "card=423–634；barTop=605；命中=bs-room-readonly；文案异常=3；dock=false",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 700
+        },
+        "testId": "bs-room-readonly",
+        "card": {
+          "top": 422.5,
+          "bottom": 634,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 605,
+          "bottom": 700
+        },
+        "fullyVisible": true,
+        "covered": true,
+        "centerClickable": true,
+        "hitTestId": "bs-room-readonly",
+        "dockPresent": false,
+        "textRects": [
+          {
+            "text": "¥199 / 晚",
+            "top": 435.5,
+            "bottom": 462.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "标准间",
+            "top": 585.5,
+            "bottom": 605.5,
+            "covered": true,
+            "inViewport": true
+          },
+          {
+            "text": "标准间寄养（犬）",
+            "top": 607.5,
+            "bottom": 621,
+            "covered": true,
+            "inViewport": true
+          },
+          {
+            "text": "今晚剩余 2 间",
+            "top": 607.5,
+            "bottom": 621,
+            "covered": true,
+            "inViewport": true
+          }
+        ]
+      }
+    }
+  ]
+}
