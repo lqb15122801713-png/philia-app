@@ -1,0 +1,9 @@
+PASS O1 记忆态主行动只进进度且零新建预约 —— href=/appointments；预约数 0 → 0
+PASS O1 服务中面板保持原路径 —— home-live-card=true
+PASS O9 空车禁用结算时规则钩仍独立可达 —— 落点=/member/open；未触结算
+PASS O9 付费真实返显保留且不与规则钩重复 —— PDP购买返=true；Cart本单返=true；规则钩=0
+PASS O13 付费非零环保留周期百分比 —— 71% / 本周期 / ¥5.00 / 可用余额 / 周期 9.26 – 10.25 · 11.5 前到账
+PASS O11 剪贴板原文等于当前 token —— 原文匹配=true
+FAIL O11 换码后旧复制状态自动失效 —— 换码=false；旧状态隐藏=true
+PASS O13 非会员环同样不误读积累百分比 —— 周期过半 / 本周期日历 / ¥0.00 / 可用余额 / 周期 9.26 – 10.25 · 11.5 前到账
+汇总：7/8 通过；证据目录=evidence/aesthetic-fix-n1n2/regression-o-pd28-state

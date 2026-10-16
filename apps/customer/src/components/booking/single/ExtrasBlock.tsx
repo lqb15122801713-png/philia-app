@@ -7,7 +7,7 @@
  *   （v9.1 美容师横卡：置顶「随缘派单」默认卡 + 横滑员工卡），本组件不再含 staff。
  */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PAYMENT_MODE_META, fenToYuan } from '../format';
 import { bkc } from '@/copy/booking';
 
@@ -77,6 +77,12 @@ export default function ExtrasBlock({
   const [payOpen, setPayOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [addonOpen, setAddonOpen] = useState(true);
+  const paymentOptionsRef = useRef<HTMLDivElement>(null);
+
+  // 固定确认栏和 dock 不占文档流，展开后把选项滚到既有安全区内。
+  useEffect(() => {
+    if (payOpen) paymentOptionsRef.current?.scrollIntoView({ block: 'end' });
+  }, [payOpen]);
 
   const paySummary =
     paymentMode === 'pass_deduct' && usablePass
@@ -94,7 +100,12 @@ export default function ExtrasBlock({
         testId="gs-payment-toggle"
       />
       {payOpen ? (
-        <div className="space-y-2 pb-3" data-testid="gs-payment-options">
+        <div
+          ref={paymentOptionsRef}
+          className="space-y-2 pb-3"
+          style={{ scrollMarginBottom: '15rem' }}
+          data-testid="gs-payment-options"
+        >
           {(['pay_at_store', 'pass_deduct'] as const).map((m) => {
             const active = paymentMode === m;
             // B2-7（W-6）：次卡扣次需可用次卡；无卡/余额不足/过期 → 置灰 + 明确提示

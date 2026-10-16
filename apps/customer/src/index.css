@@ -241,3 +241,38 @@
 .booking-with-dock [data-testid='gs-time-grid'] {
   scroll-margin-bottom: 15rem;
 }
+
+/* N2：按零滚量尺收缩照片，保留房型底条与固定确认栏之间的 8px 安全间隙。 */
+@media (max-height: 736px) {
+  .booking-room-photo {
+    height: max(0px, min(150px, calc(100dvh - 587px)));
+  }
+}
+
+/* 疫苗警示会抬高确认栏；在需要避让的视口段同步收窄照片。 */
+@media (max-height: 822px) {
+  [data-testid='boarding-single']:has([data-testid='bs-vaccine-bar']) .booking-room-photo {
+    height: max(0px, min(150px, calc(100dvh - 673px)));
+  }
+}
+
+/* 更短视口还需收紧页首和房型前节距，才能保留价格胶囊与底条热区。 */
+@media (max-height: 700px) {
+  [data-testid='boarding-single'] {
+    padding-top: 16px;
+  }
+  [data-testid='boarding-single'] [data-block-key='bookingBoarding.petCard'] > section {
+    margin-top: 8px;
+  }
+  [data-testid='boarding-single'] [data-block-key='bookingBoarding.dates'] > section,
+  [data-testid='boarding-single'] [data-block-key='bookingBoarding.roomType'] > section {
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+  .booking-room-photo {
+    height: max(0px, min(150px, calc(100dvh - 531px)));
+  }
+  [data-testid='boarding-single']:has([data-testid='bs-vaccine-bar']) .booking-room-photo {
+    height: max(0px, min(150px, calc(100dvh - 617px)));
+  }
+}

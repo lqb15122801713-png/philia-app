@@ -1,0 +1,8 @@
+apps/customer/src/components/booking/single/ExtrasBlock.tsx
+apps/customer/src/components/booking/single/RoomTypeBlock.tsx
+apps/customer/src/index.css
+ M apps/customer/src/components/booking/single/ExtrasBlock.tsx
+ M apps/customer/src/components/booking/single/RoomTypeBlock.tsx
+ M apps/customer/src/index.css
+?? evidence/aesthetic-fix-n1n2/
+?? scripts/aesthetic-fix-n1n2-check.mjs
