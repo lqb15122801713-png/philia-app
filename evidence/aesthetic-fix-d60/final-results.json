@@ -1,0 +1,41 @@
+{
+  "at": "2026-10-16T15:20:05.894Z",
+  "base": "http://127.0.0.1:7130",
+  "results": [
+    {
+      "id": "D-60 零滚初屏五态完整无遮可点（390×844）",
+      "ok": true,
+      "detail": "scrollY=0；五格=5；完整=5；被遮=0；可点=5；dockTop=766"
+    },
+    {
+      "id": "D-60 零滚初屏五态完整无遮可点（390×700）",
+      "ok": true,
+      "detail": "scrollY=0；五格=5；完整=5；被遮=0；可点=5；dockTop=622"
+    },
+    {
+      "id": "D-60 入口 待到店 到达 /appointments?tab=confirmed",
+      "ok": true,
+      "detail": "href=/appointments?tab=confirmed；实际=/appointments?tab=confirmed；目标就绪=true"
+    },
+    {
+      "id": "D-60 入口 服务中 到达 /appointments?tab=serving",
+      "ok": true,
+      "detail": "href=/appointments?tab=serving；实际=/appointments?tab=serving；目标就绪=true"
+    },
+    {
+      "id": "D-60 入口 待评价 到达 /appointments?tab=history",
+      "ok": true,
+      "detail": "href=/appointments?tab=history；实际=/appointments?tab=history；目标就绪=true"
+    },
+    {
+      "id": "D-60 入口 退款售后 到达 /refunds",
+      "ok": true,
+      "detail": "href=/refunds；实际=/refunds；目标就绪=true"
+    },
+    {
+      "id": "D-60 入口 全部订单 到达 /appointments?tab=all",
+      "ok": true,
+      "detail": "href=/appointments?tab=all；实际=/appointments?tab=all；目标就绪=true；接口=5；渲染=5；去重=5"
+    }
+  ]
+}

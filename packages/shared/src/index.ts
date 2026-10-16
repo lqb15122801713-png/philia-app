@@ -39,6 +39,7 @@ export {
 } from './canvasLayout';
 export type { CanvasPageKey, CanvasBlockSpec } from './canvasLayout';
 export { CK } from './canvasLayout';
+export { ME_PAGE_DEFAULT_ORDER, ME_PAGE_BLOCK_RANK } from './meLayout';
 // 权益墙格清单写死件（产品-1010 片 1）：七格定义+图标白名单（形状数据）+格序解析（双端同源；渲染件 PerkIcon 在 canvasLayout）
 export {
   PERK_WALL_ITEMS,

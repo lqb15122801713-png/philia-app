@@ -135,12 +135,14 @@ const APPOINTMENTS_COPY_TABLE = {
   'appointments.assuranceEmptyBody': '店员办理入住后，房间、体重与物品清单会在这里更新',
 
   /* ---- 画布全屏批片 3（预约域三重屏入册抽键；默认值=改造前写死文案逐字） ---- */
-  /* 我的预约：五 Tab 名 + 卡内角标/数据兜底 */
+  /* 我的预约：全部 + 五状态 Tab 名 + 卡内角标/数据兜底 */
   'appointments.tabPending': '待确认',
   'appointments.tabConfirmed': '已确认',
   'appointments.tabServing': '服务中',
   'appointments.tabHistory': '已完成',
   'appointments.tabCancelled': '已取消',
+  /* D-60 静态 fallback（零迁移）：本键暂不宣称已入端口字典，后续允许迁移时再登记。 */
+  'appointments.tabAll': '全部',
   'appointments.cardServingBadge': '● 进行中',
   'appointments.cardStoreFallback': '门店',
   'appointments.cardPetFallback': '毛孩子',

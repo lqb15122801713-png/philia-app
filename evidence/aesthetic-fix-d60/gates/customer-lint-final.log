@@ -1,0 +1,16 @@
+
+E:\KIMI code\aesthetic-fix-b1b5\apps\customer\src\pages\MePage.tsx
+  143:73  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\aesthetic-fix-b1b5\apps\customer\src\pages\MePage.tsx:143:73
+  141 |   /* 续费倒计时（PD-15：落地件=纯展示，membership.expiresAt 真值；非会员不上数；免费档=永久有效豁免） */
+  142 |   const renewDaysLeft = membership
+> 143 |     ? Math.max(0, Math.ceil((new Date(membership.expiresAt).getTime() - Date.now()) / DAY_MS))
+      |                                                                         ^^^^^^^^^^ Cannot call impure function
+  144 |     : null
+  145 |   const petCount = (petsQ.data ?? []).length
+  146 |   const firstPetName = (petsQ.data ?? [])[0]?.name ?? null  react-hooks/purity
+
+✖ 1 problem (1 error, 0 warnings)

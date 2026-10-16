@@ -1,7 +1,8 @@
 /**
- * 我的预约（T2.2）：listMine 按状态分组 Tab：
- *   待确认(pending) / 已确认(confirmed + cancel_requested) / 服务中(in_service + in_boarding)
- *   / 已完成(completed) / 已取消(cancelled)。五 Tab 过滤互斥无交叉。
+ * 我的预约（T2.2）：listMine 全部 + 状态分组 Tab：
+ *   全部(all=全状态) / 待确认(pending) / 已确认(confirmed + cancel_requested)
+ *   / 服务中(in_service + in_boarding) / 已完成(completed) / 已取消(cancelled)。
+ *   状态分组过滤互斥，全部不重复计数；D-60「全部订单」落 all 真筛选。
  * 卡片：门店 / 服务 / 宠物 / 时间 / 状态胶囊 / 价格；服务中卡片带呼吸光环角标；点进详情。
  *
  * 画布化（产品-1010 画布全屏批片 3 · 预约域三重屏之一）：五块入册
@@ -11,7 +12,7 @@
  * + 候裁清零批件 6 预览兜底：预约列空/拉取失败时喂一条屏内合成示例单（假名「示例单·
  * 画布预览」系，零真数据零写库，真用户页零改动）。
  * 店锚=MePage 口径（?canvasStore= 预览店锚 > readLastBooking 记忆门店 > listNearby 首店）。
- * 块内逻辑/查询/滚动记忆链路零改动，data-testid 原值全保留；
+ * 查询/滚动记忆及未触块逻辑不变，D-60 新增 all 真筛选，data-testid 原值全保留；
  * 加载骨架/失败/空态与原三分支互斥口径逐字保留（各块自带渲染闸，默认序下 DOM 零差异）。
  */
 
@@ -41,12 +42,17 @@ interface TabDef {
   statuses: AppointmentStatus[];
 }
 
+const ALL_APPOINTMENT_STATUSES: AppointmentStatus[] = [
+  'pending', 'confirmed', 'cancel_requested', 'in_service', 'in_boarding', 'completed', 'cancelled',
+];
+
 const TABS: TabDef[] = [
   { key: 'pending', copyKey: 'appointments.tabPending', statuses: ['pending'] },
   { key: 'confirmed', copyKey: 'appointments.tabConfirmed', statuses: ['confirmed', 'cancel_requested'] },
   { key: 'serving', copyKey: 'appointments.tabServing', statuses: ['in_service', 'in_boarding'] },
   { key: 'history', copyKey: 'appointments.tabHistory', statuses: ['completed'] },
   { key: 'cancelled', copyKey: 'appointments.tabCancelled', statuses: ['cancelled'] },
+  { key: 'all', copyKey: 'appointments.tabAll', statuses: ALL_APPOINTMENT_STATUSES },
 ];
 
 const SERVING = new Set(['in_service', 'in_boarding']);
@@ -226,14 +232,14 @@ export default function AppointmentsPage() {
      件 6：exampleActive 合成示例态视同正常态（预览专属） */
   const showMain = ((!listQ.isPending && !listQ.isError) || exampleActive) && totalCount > 0;
 
-  /* 块渲染器（块内逻辑零改动——五块照改造前 JSX 逐字搬，文案走 copy 键 + CK 反查锚） */
+  /* 渲染器结构沿用；D-60 新增 all 筛选，文案走 copy 键 + CK 反查锚 */
   const renderers: Record<string, () => ReactNode> = {
     /* 1. appointments.header：统一返回条（U1-A：详情级页面不渲染 dock，←圆钮+标题） */
     'appointments.header': () => (
       <PageHeader title={<CK k="appointments.title">{apc('appointments.title')}</CK>} />
     ),
 
-    /* 2. appointments.tabs：状态分组 Tab（D-补2：横滑条隐藏）+ O-01 第六槽「退款售后」置灰 */
+    /* 2. appointments.tabs：全部 + 五状态签（D-60）+ 退款售后槽位随后 */
     'appointments.tabs': () =>
       showMain ? (
         <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -255,8 +261,7 @@ export default function AppointmentsPage() {
               </button>
             );
           })}
-          {/* O-01 第六槽「退款售后」（定稿 O-01 chips 含退款位；PD-15 三规：置灰
-              不上数 + 注记「即将点亮」+ data-testid；现有五 tab 与过滤逻辑零改动） */}
+          {/* 退款售后槽位（PD-15 置灰口径保留；D-60 不扩该槽状态机） */}
           <span
             data-testid="slot-refund-tab"
             aria-disabled="true"

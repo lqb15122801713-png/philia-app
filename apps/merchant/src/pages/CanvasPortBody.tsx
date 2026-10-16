@@ -26,7 +26,7 @@ import { Badge, Btn, Field, inputCls, Modal, numStyle, Switch, toast, ToasterMou
 import { cv } from '../copy/canvas';
 import { cadm } from '../copy/consoleAdmin';
 import { canvasPreviewUrl, parsePreviewPortMap } from './canvasPreviewUrl';
-import { PERK_WALL_ITEMS, PerkIcon, PERK_ICON_SET, resolvePerkWallCells, type CanvasBlockSpec, type CanvasPageKey, type PerkWallCellSpec } from '@philia/shared';
+import { ME_PAGE_BLOCK_RANK, PERK_WALL_ITEMS, PerkIcon, PERK_ICON_SET, resolvePerkWallCells, type CanvasBlockSpec, type CanvasPageKey, type PerkWallCellSpec } from '@philia/shared';
 
 type Trpc = PhiliaClient['trpc'];
 type BlocksOut = Awaited<ReturnType<Trpc['canvas']['blocks']['query']>>;
@@ -127,7 +127,9 @@ export function CanvasPortBody({ initialPageKey }: { initialPageKey?: CanvasPage
     retry: 1,
   });
   const registry = useMemo(
-    () => (blocksQ.data?.items ?? []).filter((b) => b.pageKey === pageKey).sort((a, b) => a.sortOrder - b.sortOrder),
+    () => (blocksQ.data?.items ?? [])
+      .filter((b) => b.pageKey === pageKey)
+      .sort((a, b) => (ME_PAGE_BLOCK_RANK.get(a.blockKey) ?? a.sortOrder) - (ME_PAGE_BLOCK_RANK.get(b.blockKey) ?? b.sortOrder)),
     [blocksQ.data, pageKey],
   );
   const registryByKey = useMemo(() => new Map(registry.map((b) => [b.blockKey, b])), [registry]);

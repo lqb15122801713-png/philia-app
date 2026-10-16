@@ -1,0 +1,2 @@
+FAIL D-60 商家默认编辑稿使用新订单行顺序 —— me.apphead → me.hero → me.notify → me.entries → me.orderrow → me.grid
+汇总：0/1 通过；证据目录=evidence\aesthetic-fix-d60
