@@ -1,0 +1,4 @@
+PASS D-60 商家默认编辑稿使用新订单行顺序 —— me.apphead → me.hero → me.notify → me.orderrow → me.entries → me.grid
+PASS D-60 liveLayout 与发布顺序一致 —— me.apphead → me.hero → me.notify → me.orderrow → me.entries → me.grid
+PASS D-60 默认稿发布后零滚仍无遮 —— scrollY=0；五格=5；完整=5；被遮=0
+汇总：3/3 通过；证据目录=evidence\aesthetic-fix-d60

@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-16T15:43:07.420Z",
+  "results": [
+    {
+      "id": "D-60 商家默认编辑稿使用新订单行顺序",
+      "ok": true,
+      "detail": "me.apphead → me.hero → me.notify → me.orderrow → me.entries → me.grid"
+    },
+    {
+      "id": "D-60 liveLayout 与发布顺序一致",
+      "ok": true,
+      "detail": "me.apphead → me.hero → me.notify → me.orderrow → me.entries → me.grid"
+    },
+    {
+      "id": "D-60 默认稿发布后零滚仍无遮",
+      "ok": true,
+      "detail": "scrollY=0；五格=5；完整=5；被遮=0"
+    }
+  ]
+}

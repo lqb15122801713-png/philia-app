@@ -8,15 +8,15 @@
  * 块序/显隐=useCanvasLayout('me')（published→注册表默认序尾补）；文案键行内可改=画布端口；
  * 点选反查=data-block-key/CK；预览=CanvasLayoutLoader+?canvasPreview=1 水印注记（零真会话零写库）。
  *
- * 槽位置灰（PD-15 V1.1 三规：不上数不上假件 + 注记 + data-testid）：
+ * 槽位与落地件：
  * - 今年已省：补缺批片 3 已点亮（mySavings 真值 + 构成明面弹层，testid me-saved-slot 保留）；
- * - 退款售后（orderrow）=置灰槽位；优惠券=片 3 点亮（→/me/coupons 券+心愿单双 tab，
- *   testid slot-coupons 原值保留）；
+ * - 退款售后（orderrow）→/refunds（PD-27.1 D-60 点亮既有出口）；优惠券=片 3 点亮
+ *   （→/me/coupons 券+心愿单双 tab，testid slot-coupons 原值保留）；
  * - 客户端体验大批 片 1 点亮：常用地址（→/settings/addresses，testid slot-address 原值保留），
  *   新增「编辑资料」（→/settings/profile，me-profile-entry）/「消费记录」（→/records，
  *   me-records-entry）双行入口卡；
  * - 补缺大批片 4 点亮：服务相册（→/philia/moments）/ 小棉花客服（→/support/new），
- *   testid 原值保留（slot-gallery / slot-concierge）；退款售后=片 1 挂接口，本片不动；
+ *   testid 原值保留（slot-gallery / slot-concierge）；
  * 落地件：档章/回馈金余额/续费倒计时（membership.my 真值）/会员码 qrrow/订单五态入口/
  * 宠物档案/寄养预约/设置（补缺大批片 2：设置钮改导航 /me/settings 独立设置页，
  * 退出登录收进设置页——LogoutConfirmDialog 移用 components/account，逻辑零改动）。
@@ -28,7 +28,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { CanvasLayoutLoader, CK, useCanvasLayout, useMe, usePhiliaClient } from '@philia/shared'
+import { CanvasLayoutLoader, CK, ME_PAGE_BLOCK_RANK, ME_PAGE_DEFAULT_ORDER, useCanvasLayout, useMe, usePhiliaClient } from '@philia/shared'
 import { fenToYuan } from '@/components/booking/format'
 import { sl } from '@/copy/serviceloop'
 import { mc } from '../components/member/copy'
@@ -40,9 +40,6 @@ import { adc } from '@/copy/addresses'
 import { readLastBooking } from '@/lib/bookingPrefill'
 
 const DAY_MS = 86_400_000
-
-/** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
-const ME_DEFAULT_ORDER = ['me.apphead', 'me.hero', 'me.notify', 'me.entries', 'me.orderrow', 'me.grid'] as const
 
 /* 定稿线图标（§五：24 网格 stroke 1.55 round；同屏同宽） */
 const I = {
@@ -128,8 +125,8 @@ export default function MePage() {
   const registryBlocks = useMemo(() => {
     const items = (blocksQ.data?.items ?? [])
       .filter((b) => b.pageKey === 'me')
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-    return items.length > 0 ? items : ME_DEFAULT_ORDER.map((blockKey) => ({ blockKey }))
+      .sort((a, b) => (ME_PAGE_BLOCK_RANK.get(a.blockKey) ?? a.sortOrder) - (ME_PAGE_BLOCK_RANK.get(b.blockKey) ?? b.sortOrder))
+    return items.length > 0 ? items : ME_PAGE_DEFAULT_ORDER.map((blockKey) => ({ blockKey }))
   }, [blocksQ.data])
   const layout = useCanvasLayout('me', meStoreId, registryBlocks)
 
@@ -148,7 +145,7 @@ export default function MePage() {
   const petCount = (petsQ.data ?? []).length
   const firstPetName = (petsQ.data ?? [])[0]?.name ?? null
 
-  /* 块渲染器（块内逻辑零改动——六块照改造前 JSX 逐字搬，文案走 copy 键） */
+  /* 渲染器沿用；D-60 仅调整默认块序与五态导航，文案走 copy 键 */
   const renderers: Record<string, () => ReactNode> = {
     /* 1. apphead：serif 27/900 大题 + mono 注记（§4.1） */
     'me.apphead': () => (
@@ -274,17 +271,14 @@ export default function MePage() {
       </div>
     ),
 
-    /* 5. 订单五格（五态入口；退款售后=槽位置灰 PD-15 V1.1 槽位 10） */
+    /* 5. 订单五格（D-60：五态均为真实导航；退款走既有售后页，全部走 all 真筛选） */
     'me.orderrow': () => (
       <nav className="me2-orderrow" data-testid="me-orderrow" aria-label="订单五态">
         <Link to="/appointments?tab=confirmed" className="o">{I.calendar}<CK k="me.orderConfirmed">{mc('me.orderConfirmed')}</CK></Link>
         <Link to="/appointments?tab=serving" className="o">{I.clock}<CK k="me.orderServing">{mc('me.orderServing')}</CK></Link>
         <Link to="/appointments?tab=history" className="o">{I.star}<CK k="me.orderHistory">{mc('me.orderHistory')}</CK></Link>
-        <span className="o slot" data-testid="slot-refund" aria-disabled="true">
-          {I.refund}<CK k="me.orderRefund">{mc('me.orderRefund')}</CK>
-          <span className="sk"><CK k="me.slotSoon">{mc('me.slotSoon')}</CK></span>
-        </span>
-        <Link to="/appointments?tab=history" className="o">{I.all}<CK k="me.orderAll">{mc('me.orderAll')}</CK></Link>
+        <Link to="/refunds" className="o" data-testid="slot-refund">{I.refund}<CK k="me.orderRefund">{mc('me.orderRefund')}</CK></Link>
+        <Link to="/appointments?tab=all" className="o">{I.all}<CK k="me.orderAll">{mc('me.orderAll')}</CK></Link>
       </nav>
     ),
 

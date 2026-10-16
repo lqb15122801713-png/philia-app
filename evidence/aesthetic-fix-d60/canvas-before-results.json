@@ -1,0 +1,10 @@
+{
+  "at": "2026-10-16T15:08:56.367Z",
+  "results": [
+    {
+      "id": "D-60 商家默认编辑稿使用新订单行顺序",
+      "ok": false,
+      "detail": "me.apphead → me.hero → me.notify → me.entries → me.orderrow → me.grid"
+    }
+  ]
+}

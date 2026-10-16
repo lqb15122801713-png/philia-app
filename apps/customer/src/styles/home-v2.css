@@ -173,9 +173,6 @@
 }
 .me2-orderrow .o { text-align: center; font-size: 10.5px; color: #2C2822; text-decoration: none; display: block; }
 .me2-orderrow .o svg { width: 21px; height: 21px; stroke-width: 1.6; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; margin: 0 auto 5px; display: block; }
-.me2-orderrow .o.slot { opacity: .42; cursor: default; }
-.me2-orderrow .o.slot svg { stroke: #8A7D6B; }
-.me2-orderrow .o .sk { display: block; font-family: var(--v2mono); font-size: 8px; color: #8A7D6B; margin-top: 3px; }
 
 /* 功能网格（4 列×2：icon 23 stroke 1.55 + 11 签 + mono 8.5 副签；一层网格不再加层） */
 .me2-grid8 { margin-top: 14px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 4px; }

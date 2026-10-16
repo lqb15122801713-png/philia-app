@@ -1,0 +1,42 @@
+--- git diff --cached --check ---
+--- staged added-line forbidden scan (#FFAAA5 / text-white / gradient) ---
+--- staged stat ---
+ 38 files changed, 3811 insertions(+), 31 deletions(-)
+M  apps/customer/src/copy/appointments.ts
+M  apps/customer/src/pages/AppointmentsPage.tsx
+M  apps/customer/src/pages/MePage.tsx
+M  apps/customer/src/styles/home-v2.css
+M  apps/merchant/src/pages/CanvasPortBody.tsx
+A  evidence/aesthetic-fix-d60/README.md
+A  evidence/aesthetic-fix-d60/before-d60-zero-700.png
+A  evidence/aesthetic-fix-d60/before-d60-zero-844.png
+A  evidence/aesthetic-fix-d60/before-results.json
+A  evidence/aesthetic-fix-d60/canvas-before-merchant-default-order.png
+A  evidence/aesthetic-fix-d60/canvas-before-results.json
+A  evidence/aesthetic-fix-d60/canvas-final-merchant-default-order.png
+A  evidence/aesthetic-fix-d60/canvas-final-published-zero-700.png
+A  evidence/aesthetic-fix-d60/canvas-final-results.json
+A  evidence/aesthetic-fix-d60/final-d60-zero-700.png
+A  evidence/aesthetic-fix-d60/final-d60-zero-844.png
+A  evidence/aesthetic-fix-d60/final-results.json
+A  evidence/aesthetic-fix-d60/gates/aesthetic-check-before.log
+A  evidence/aesthetic-fix-d60/gates/aesthetic-check-final.log
+A  evidence/aesthetic-fix-d60/gates/build-final.log
+A  evidence/aesthetic-fix-d60/gates/canvas-check-before.log
+A  evidence/aesthetic-fix-d60/gates/canvas-check-final.log
+A  evidence/aesthetic-fix-d60/gates/customer-lint-appointments-final.log
+A  evidence/aesthetic-fix-d60/gates/customer-lint-final.log
+AM evidence/aesthetic-fix-d60/gates/diff-scan.log
+A  evidence/aesthetic-fix-d60/gates/e2e-nav-check-final.log
+A  evidence/aesthetic-fix-d60/gates/merchant-lint-canvas-final.log
+A  evidence/aesthetic-fix-d60/gates/nav-closure-final.json
+A  evidence/aesthetic-fix-d60/gates/nav-closure-final.log
+A  evidence/aesthetic-fix-d60/gates/server-typecheck-final.log
+A  evidence/aesthetic-fix-d60/gates/smoke-deploy-final.log
+A  evidence/aesthetic-fix-d60/gates/smoke-routes-final.json
+A  evidence/aesthetic-fix-d60/gates/smoke-routes-final.log
+A  evidence/aesthetic-fix-d60/pr-body.md
+M  packages/shared/src/index.ts
+A  packages/shared/src/meLayout.ts
+A  scripts/aesthetic-fix-d60-canvas-check.mjs
+A  scripts/aesthetic-fix-d60-check.mjs
