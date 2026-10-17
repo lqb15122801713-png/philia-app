@@ -449,7 +449,7 @@ function DetailInner() {
           >
             {(images.length > 0 ? images : [null]).map((u, i) => (
               <div key={i} className="w-full shrink-0 snap-center">
-                <ProductImage src={u} alt={`${product.name} 图 ${i + 1}`} className="h-[270px] w-full" />
+                <ProductImage src={u} alt={`${product.name} 图 ${i + 1}`} className="pdp-gallery-media w-full" />
               </div>
             ))}
           </div>

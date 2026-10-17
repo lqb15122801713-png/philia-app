@@ -405,3 +405,10 @@
     object-fit: contain;
   }
 }
+
+/* N8：fixed 购买栏不占文档流；短视口收缩图区，评价空态才能在零滚时清出栏顶。
+   保留 270px 回退与高视口原高，不支持动态视口单位时也不塌陷。 */
+.pdp-gallery-media {
+  height: 270px;
+  height: clamp(140px, calc(100dvh - 498px), 270px);
+}

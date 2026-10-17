@@ -1,0 +1,15 @@
+PASS N6 商城首行价与已售罄清出 AppDock（390×844） —— scrollY=0；价净空=71；售罄净空=48；dockTop=732；fit=cover；安装条=false；命中=P
+PASS N6 商城首行价与已售罄清出 AppDock（390×804） —— scrollY=0；价净空=169；售罄净空=146；dockTop=692；fit=contain；安装条=false；命中=P
+PASS N6 商城首行价与已售罄清出 AppDock（390×803） —— scrollY=0；价净空=168；售罄净空=145；dockTop=691；fit=contain；安装条=false；命中=P
+PASS N6 商城首行价与已售罄清出 AppDock（390×751） —— scrollY=0；价净空=116；售罄净空=93；dockTop=639；fit=contain；安装条=false；命中=P
+PASS N6 商城首行价与已售罄清出 AppDock（390×750） —— scrollY=0；价净空=115；售罄净空=92；dockTop=638；fit=contain；安装条=false；命中=P
+PASS N6 商城首行价与已售罄清出 AppDock（390×700） —— scrollY=0；价净空=65；售罄净空=42；dockTop=588；fit=contain；安装条=false；命中=P
+PASS N6 商城首行价与已售罄清出 AppDock（390×667） —— scrollY=0；价净空=32；售罄净空=9；dockTop=555；fit=contain；安装条=false；命中=P
+PASS N7 首页空宠引导清出 AppDock 且管理仍可见（390×844） —— scrollY=0；净空=88；中央顶=717；管理命中=home-pets-manage；管理=44×44；安装条=false；命中=home-pets-empty
+PASS N7 首页空宠引导清出 AppDock 且管理仍可见（390×766） —— scrollY=0；净空=120；中央顶=639；管理命中=home-pets-manage；管理=44×44；安装条=false；命中=home-pets-empty
+PASS N7 首页空宠引导清出 AppDock 且管理仍可见（390×767） —— scrollY=0；净空=11；中央顶=640；管理命中=home-pets-manage；管理=44×44；安装条=false；命中=home-pets-empty
+PASS N7 首页空宠引导清出 AppDock 且管理仍可见（390×700） —— scrollY=0；净空=54；中央顶=573；管理命中=home-pets-manage；管理=44×44；安装条=false；命中=home-pets-empty
+PASS N7 首页空宠引导清出 AppDock 且管理仍可见（390×667） —— scrollY=0；净空=21；中央顶=540；管理命中=home-pets-manage；管理=44×44；安装条=false；命中=home-pets-empty
+PASS N7 有运营文案时 banner、引导与管理均不被遮 —— 文案=82–161；通知=46–82；引导净空=44；引导命中=home-pets-empty；管理命中=home-pets-manage；身份带命中=home-idband；ac叠=false；会员码叠=false；banner高=165
+PASS N7 有运营文案时 banner、引导与管理均不被遮 —— 文案=82–161；通知=46–82；引导净空=11；引导命中=home-pets-empty；管理命中=home-pets-manage；身份带命中=home-idband；ac叠=false；会员码叠=false；banner高=165
+汇总：14/14 通过；证据目录=evidence/aesthetic-fix-n8/regressions/n6n7

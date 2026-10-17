@@ -1,0 +1,180 @@
+{
+  "at": "2026-10-17T15:59:15.956Z",
+  "base": "http://127.0.0.1:7130",
+  "results": [
+    {
+      "id": "N8 幼犬奶糕粮 评价空态清出 sticky 购买栏（390×844）",
+      "ok": true,
+      "detail": "scrollY=0；评价=526–615；栏顶=708；净空=93；命中=pdp-reviews；图高=270；空态=true；售罄态=true",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "review": {
+          "top": 526.25,
+          "bottom": 615.25,
+          "height": 89,
+          "text": "还没有评价，收货后来写第一条\n\n确认收货后即可评价本商品"
+        },
+        "cta": {
+          "top": 708,
+          "bottom": 810,
+          "height": 102,
+          "text": "1\n加入购物袋\n立即购买\n共 ¥99"
+        },
+        "clearance": 92.75,
+        "reviewHitInside": true,
+        "hitTestId": "pdp-reviews",
+        "galleryHeight": 270,
+        "buyNowDisabled": false
+      }
+    },
+    {
+      "id": "N8 幼犬奶糕粮 评价空态清出 sticky 购买栏（390×700）",
+      "ok": false,
+      "detail": "scrollY=0；评价=526–615；栏顶=564；净空=-51；命中=DIV；图高=270；空态=true；售罄态=true",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 700
+        },
+        "review": {
+          "top": 526.25,
+          "bottom": 615.25,
+          "height": 89,
+          "text": "还没有评价，收货后来写第一条\n\n确认收货后即可评价本商品"
+        },
+        "cta": {
+          "top": 564,
+          "bottom": 666,
+          "height": 102,
+          "text": "1\n加入购物袋\n立即购买\n共 ¥99"
+        },
+        "clearance": -51.25,
+        "reviewHitInside": false,
+        "hitTestId": "DIV",
+        "galleryHeight": 270,
+        "buyNowDisabled": false
+      }
+    },
+    {
+      "id": "N8 幼犬奶糕粮 评价空态清出 sticky 购买栏（390×667）",
+      "ok": false,
+      "detail": "scrollY=0；评价=526–615；栏顶=531；净空=-84；命中=pdp-add-cart；图高=270；空态=true；售罄态=true",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 667
+        },
+        "review": {
+          "top": 526.25,
+          "bottom": 615.25,
+          "height": 89,
+          "text": "还没有评价，收货后来写第一条\n\n确认收货后即可评价本商品"
+        },
+        "cta": {
+          "top": 531,
+          "bottom": 633,
+          "height": 102,
+          "text": "1\n加入购物袋\n立即购买\n共 ¥99"
+        },
+        "clearance": -84.25,
+        "reviewHitInside": false,
+        "hitTestId": "pdp-add-cart",
+        "galleryHeight": 270,
+        "buyNowDisabled": false
+      }
+    },
+    {
+      "id": "N8 售罄成犬粮 评价空态清出 sticky 购买栏（390×844）",
+      "ok": true,
+      "detail": "scrollY=0；评价=545–634；栏顶=734；净空=100；命中=pdp-reviews；图高=270；空态=true；售罄态=true",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "review": {
+          "top": 545.25,
+          "bottom": 634.25,
+          "height": 89,
+          "text": "还没有评价，收货后来写第一条\n\n确认收货后即可评价本商品"
+        },
+        "cta": {
+          "top": 734,
+          "bottom": 810,
+          "height": 76,
+          "text": "加入购物袋\n已售罄"
+        },
+        "clearance": 99.75,
+        "reviewHitInside": true,
+        "hitTestId": "pdp-reviews",
+        "galleryHeight": 270,
+        "buyNowDisabled": true
+      }
+    },
+    {
+      "id": "N8 售罄成犬粮 评价空态清出 sticky 购买栏（390×700）",
+      "ok": false,
+      "detail": "scrollY=0；评价=545–634；栏顶=590；净空=-44；命中=DIV；图高=270；空态=true；售罄态=true",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 700
+        },
+        "review": {
+          "top": 545.25,
+          "bottom": 634.25,
+          "height": 89,
+          "text": "还没有评价，收货后来写第一条\n\n确认收货后即可评价本商品"
+        },
+        "cta": {
+          "top": 590,
+          "bottom": 666,
+          "height": 76,
+          "text": "加入购物袋\n已售罄"
+        },
+        "clearance": -44.25,
+        "reviewHitInside": false,
+        "hitTestId": "DIV",
+        "galleryHeight": 270,
+        "buyNowDisabled": true
+      }
+    },
+    {
+      "id": "N8 售罄成犬粮 评价空态清出 sticky 购买栏（390×667）",
+      "ok": false,
+      "detail": "scrollY=0；评价=545–634；栏顶=557；净空=-77；命中=pdp-buy-now；图高=270；空态=true；售罄态=true",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 667
+        },
+        "review": {
+          "top": 545.25,
+          "bottom": 634.25,
+          "height": 89,
+          "text": "还没有评价，收货后来写第一条\n\n确认收货后即可评价本商品"
+        },
+        "cta": {
+          "top": 557,
+          "bottom": 633,
+          "height": 76,
+          "text": "加入购物袋\n已售罄"
+        },
+        "clearance": -77.25,
+        "reviewHitInside": false,
+        "hitTestId": "pdp-buy-now",
+        "galleryHeight": 270,
+        "buyNowDisabled": true
+      }
+    }
+  ]
+}
