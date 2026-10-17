@@ -1,0 +1,18 @@
+FAIL N3/N4 避让不依赖 CSS max() —— N3max=true；N4max=true
+PASS N3 结算零滚合计一行不被提交栏遮（390×844） —— scrollY=0；inset=0；净空=94；合计=615–635；barTop=730；遮=false；命中=SPAN
+PASS N3 结算零滚合计一行不被提交栏遮（390×793） —— scrollY=0；inset=0；净空=43；合计=615–635；barTop=679；遮=false；命中=SPAN
+PASS N3 结算零滚合计一行不被提交栏遮（390×792） —— scrollY=0；inset=0；净空=100；合计=557–577；barTop=678；遮=false；命中=SPAN
+PASS N3 结算零滚合计一行不被提交栏遮（390×737） —— scrollY=0；inset=0；净空=45；合计=557–577；barTop=623；遮=false；命中=SPAN
+PASS N3 结算零滚合计一行不被提交栏遮（390×736） —— scrollY=0；inset=0；净空=44；合计=557–577；barTop=622；遮=false；命中=SPAN
+PASS N3 结算零滚合计一行不被提交栏遮（390×700） —— scrollY=0；inset=0；净空=8；合计=557–577；barTop=586；遮=false；命中=SPAN
+PASS N3 结算零滚合计一行不被提交栏遮（390×700） —— scrollY=0；inset=34；净空=14；合计=517–537；barTop=552；遮=false；命中=SPAN
+PASS N3 结算零滚合计一行不被提交栏遮（390×844） —— scrollY=0；inset=34；净空=60；合计=615–635；barTop=696；遮=false；命中=SPAN
+PASS N4 开通页零滚对比四档权益链完整可点（390×844） —— scrollY=0；inset=0；净空=122；链=566–586；barTop=708；遮=false；开对比=true；claim=true
+PASS N4 开通页零滚对比四档权益链完整可点（390×765） —— scrollY=0；inset=0；净空=43；链=566–586；barTop=629；遮=false；开对比=true；claim=true
+PASS N4 开通页零滚对比四档权益链完整可点（390×764） —— scrollY=0；inset=0；净空=74；链=534–554；barTop=628；遮=false；开对比=true；claim=true
+PASS N4 开通页零滚对比四档权益链完整可点（390×737） —— scrollY=0；inset=0；净空=47；链=534–554；barTop=601；遮=false；开对比=true；claim=true
+PASS N4 开通页零滚对比四档权益链完整可点（390×736） —— scrollY=0；inset=0；净空=46；链=534–554；barTop=600；遮=false；开对比=true；claim=true
+PASS N4 开通页零滚对比四档权益链完整可点（390×700） —— scrollY=0；inset=0；净空=10；链=534–554；barTop=564；遮=false；开对比=true；claim=true
+PASS N4 开通页零滚对比四档权益链完整可点（390×700） —— scrollY=0；inset=34；净空=10；链=500–520；barTop=530；遮=false；开对比=true；claim=true
+PASS N4 开通页零滚对比四档权益链完整可点（390×844） —— scrollY=0；inset=34；净空=88；链=566–586；barTop=674；遮=false；开对比=true；claim=true
+汇总：16/17 通过；证据目录=evidence\aesthetic-fix-n3n4-r2
