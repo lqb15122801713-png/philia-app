@@ -4,8 +4,8 @@
  * 疫苗硬校验不满足时：按钮置灰（保留晚数总价文案）+ 按钮上方红条
  * 「{宠物}的疫苗将于 X 到期，请先补录 ▸」（点击跳 /philia/pets 补录）；
  * 无疫苗记录时红条文案为「还没有疫苗有效期记录」。
- * fixed 落底 bottom: env(safe-area-inset-bottom)（B4-R1：单屏页隐藏 TabBar）；
- * 页面底部需留 padding（单屏页 pb-36）。
+ * fixed 默认落底 safe-area；Obs4 的 booking-with-dock 场景与洗护同族上移 78px，
+ * 页面底部由 index.css 按 dock 状态保留避让空间。
  */
 
 import { Link } from 'react-router-dom';

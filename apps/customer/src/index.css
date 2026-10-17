@@ -242,6 +242,11 @@
   scroll-margin-bottom: 15rem;
 }
 
+/* Obs4：寄养 dock 与洗护同族落位，ConfirmBar 同步移到 dock 上方。 */
+.booking-with-dock [data-testid='bs-confirm-bar'] {
+  bottom: calc(78px + env(safe-area-inset-bottom));
+}
+
 /* N2：按零滚量尺收缩照片，保留房型底条与固定确认栏之间的 8px 安全间隙。 */
 @media (max-height: 736px) {
   .booking-room-photo {
@@ -274,5 +279,71 @@
   }
   [data-testid='boarding-single']:has([data-testid='bs-vaccine-bar']) .booking-room-photo {
     height: max(0px, min(150px, calc(100dvh - 617px)));
+  }
+}
+
+/* Obs4：dock 占去底部 78px 后，沿用 N2 的 8px 安全间隙重新计算照片与节距。 */
+.booking-with-dock [data-testid='boarding-single'] {
+  padding-bottom: 14rem;
+}
+
+@media (max-height: 824px) {
+  .booking-with-dock [data-testid='boarding-single'] {
+    padding-top: 16px;
+  }
+  .booking-with-dock [data-testid='boarding-single'] [data-block-key='bookingBoarding.petCard'] > section {
+    margin-top: 8px;
+  }
+  .booking-with-dock [data-testid='boarding-single'] [data-block-key='bookingBoarding.dates'] > section,
+  .booking-with-dock [data-testid='boarding-single'] [data-block-key='bookingBoarding.roomType'] > section {
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+  .booking-with-dock .booking-room-photo {
+    height: max(0px, min(150px, calc(100dvh - 619px)));
+  }
+}
+
+@media (max-height: 814px) {
+  .booking-with-dock [data-testid='boarding-single']:has([data-testid='bs-vaccine-bar']) .booking-room-photo {
+    height: max(0px, min(150px, calc(100dvh - 695px)));
+  }
+}
+
+@media (min-height: 815px) and (max-height: 900px) {
+  .booking-with-dock [data-testid='boarding-single']:has([data-testid='bs-vaccine-bar']) .booking-room-photo {
+    height: max(0px, min(150px, calc(100dvh - 751px)));
+  }
+}
+
+/* 极短视口的疫苗警示不再压缩照片；价格移到既有底条同一行，信息和热区都保留。 */
+@media (max-height: 733px) {
+  .booking-with-dock [data-testid='boarding-single']:has([data-testid='bs-vaccine-bar']) .booking-room-photo {
+    display: none;
+  }
+  .booking-with-dock [data-testid='boarding-single']:has([data-testid='bs-vaccine-bar']) .booking-room-price-inline {
+    position: static;
+    display: block;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+    box-shadow: none;
+  }
+}
+
+@media (max-height: 700px) {
+  .booking-with-dock [data-testid='boarding-single'] {
+    padding-top: 8px;
+  }
+  .booking-with-dock [data-testid='boarding-single'] [data-block-key='bookingBoarding.petCard'] > section {
+    margin-top: 4px;
+  }
+  .booking-with-dock [data-testid='boarding-single'] [data-block-key='bookingBoarding.dates'] > section,
+  .booking-with-dock [data-testid='boarding-single'] [data-block-key='bookingBoarding.roomType'] > section {
+    margin-top: 6px;
+    padding-top: 6px;
+  }
+  .booking-with-dock .booking-room-photo {
+    height: max(0px, min(150px, calc(100dvh - 583px)));
   }
 }

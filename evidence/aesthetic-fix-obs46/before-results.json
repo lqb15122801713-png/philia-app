@@ -1,0 +1,148 @@
+{
+  "at": "2026-10-17T00:13:38.798Z",
+  "base": "http://127.0.0.1:7130",
+  "results": [
+    {
+      "id": "Obs4 寄养 dock 与 ConfirmBar 共存不挡关键操作（390×844）",
+      "ok": false,
+      "detail": "dock=false；family=false；active=null；栏dock叠=false；卡dock叠=false；卡栏叠=false",
+      "measurements": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "dockPresent": false,
+        "dockFamily": false,
+        "bookingActive": null,
+        "dockRect": null,
+        "confirmRect": {
+          "top": 749,
+          "bottom": 844
+        },
+        "cardRect": {
+          "top": 432.5,
+          "bottom": 644
+        },
+        "buttonRect": {
+          "top": 761,
+          "bottom": 809
+        },
+        "confirmDockOverlap": false,
+        "cardDockOverlap": false,
+        "cardConfirmOverlap": false,
+        "cardClickable": true,
+        "buttonClickable": true
+      }
+    },
+    {
+      "id": "Obs4 寄养 dock 与 ConfirmBar 共存不挡关键操作（390×700）",
+      "ok": false,
+      "detail": "dock=false；family=false；active=null；栏dock叠=false；卡dock叠=false；卡栏叠=false",
+      "measurements": {
+        "viewport": {
+          "width": 390,
+          "height": 700
+        },
+        "dockPresent": false,
+        "dockFamily": false,
+        "bookingActive": null,
+        "dockRect": null,
+        "confirmRect": {
+          "top": 605,
+          "bottom": 700
+        },
+        "cardRect": {
+          "top": 376.5,
+          "bottom": 588
+        },
+        "buttonRect": {
+          "top": 617,
+          "bottom": 665
+        },
+        "confirmDockOverlap": false,
+        "cardDockOverlap": false,
+        "cardConfirmOverlap": false,
+        "cardClickable": true,
+        "buttonClickable": true
+      }
+    },
+    {
+      "id": "Obs6 消息活动 chip 完整可见且可点",
+      "ok": false,
+      "detail": "chips=6；完整=5；活动right=428；视口=390；点击=false；页横溢=false",
+      "measurements": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "chipCount": 6,
+        "chips": [
+          {
+            "id": "notify-chip-all",
+            "left": 16,
+            "right": 78,
+            "top": 76,
+            "bottom": 114,
+            "fullyVisible": true
+          },
+          {
+            "id": "notify-chip-unread",
+            "left": 86,
+            "right": 148,
+            "top": 76,
+            "bottom": 114,
+            "fullyVisible": true
+          },
+          {
+            "id": "notify-chip-trade",
+            "left": 156,
+            "right": 218,
+            "top": 76,
+            "bottom": 114,
+            "fullyVisible": true
+          },
+          {
+            "id": "notify-chip-service",
+            "left": 226,
+            "right": 288,
+            "top": 76,
+            "bottom": 114,
+            "fullyVisible": true
+          },
+          {
+            "id": "notify-chip-account",
+            "left": 296,
+            "right": 358,
+            "top": 76,
+            "bottom": 114,
+            "fullyVisible": true
+          },
+          {
+            "id": "notify-chip-marketing",
+            "left": 366,
+            "right": 428,
+            "top": 76,
+            "bottom": 114,
+            "fullyVisible": false
+          }
+        ],
+        "rail": {
+          "left": 16,
+          "right": 374,
+          "scrollWidth": 412,
+          "clientWidth": 358,
+          "scrollLeft": 0
+        },
+        "last": {
+          "left": 366,
+          "right": 428,
+          "top": 76,
+          "bottom": 114
+        },
+        "hintPresent": false,
+        "pageHorizontalOverflow": false,
+        "clicked": false
+      }
+    }
+  ]
+}
