@@ -382,3 +382,26 @@
     padding-bottom: 8px;
   }
 }
+
+/* N6：短视口压缩商城横幅、区块间距与商品图比例，让首行价和售罄标清出 dock。 */
+@media (max-height: 804px) {
+  [data-testid='mall-hero'] {
+    margin-top: 8px;
+  }
+  .mall-hero-media {
+    aspect-ratio: 21 / 7;
+  }
+  [data-block-key='mall.deliverySlot'] > div,
+  [data-block-key='mall.entries'] .mt-3,
+  [data-block-key='mall.search'] > div,
+  [data-block-key='mall.categories'] > div,
+  [data-block-key='mall.productGrid'] .grid.grid-cols-2 {
+    margin-top: 8px;
+  }
+  .mall-product-image {
+    aspect-ratio: 3 / 1;
+  }
+  .mall-product-image > img {
+    object-fit: contain;
+  }
+}

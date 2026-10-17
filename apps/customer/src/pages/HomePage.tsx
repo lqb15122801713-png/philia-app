@@ -639,7 +639,7 @@ export default function HomePage() {
 
   return (
     <CanvasLayoutLoader pageKey="home" storeId={homeStoreId}>
-      <div className="pb-32">
+      <div className="pb-32" data-testid="home-page">
         {layout.map((b) => (
           <section
             data-block-key={b.blockKey}

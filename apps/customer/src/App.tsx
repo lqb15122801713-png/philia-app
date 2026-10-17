@@ -184,6 +184,9 @@ export default function App() {
   // 其他详情级页面仍走统一返回条，不扩 dock 范围。
   const isGroomingPath = pathname === '/booking/grooming' || pathname === '/booking/grooming/'
   const isBoardingPath = pathname === '/booking/boarding' || pathname === '/booking/boarding/'
+  const isMallPath = pathname === '/mall' || pathname === '/mall/'
+  const isHomePath = pathname === '/' || pathname === '/home'
+  const suppressInstallBanner = isBoardingPath || isMallPath || isHomePath
   const hasBookingDock = isGroomingPath || isBoardingPath
   const isMainPath =
     pathname === '/' ||
@@ -214,8 +217,8 @@ export default function App() {
       </main>
       {!isDevLogin && isMainPath && <AppDock />}
       {/* 体验批片 4：PWA 安装引导条（beforeinstallprompt 拦存+自定义条；
-          登录守卫内全页可出；Obs4 寄养下单关键路径除外，避免与 ConfirmBar 争用热区） */}
-      {!isDevLogin && !isBoardingPath && <InstallBanner />}
+          登录守卫内全页可出；Obs4 寄养下单关键路径与 N6／N7 商城／首页关键内容区除外，避免争用热区） */}
+      {!isDevLogin && !suppressInstallBanner && <InstallBanner />}
     </div>
   )
 }
