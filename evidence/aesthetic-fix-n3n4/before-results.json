@@ -1,0 +1,122 @@
+{
+  "at": "2026-10-17T04:13:48.734Z",
+  "base": "http://127.0.0.1:7130",
+  "results": [
+    {
+      "id": "N3 结算零滚合计一行不被提交栏遮（390×844）",
+      "ok": true,
+      "detail": "scrollY=0；合计=615–635；barTop=730；遮=false；命中=SPAN",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "total": {
+          "text": "合计（1 件）",
+          "top": 615.25,
+          "bottom": 635.25
+        },
+        "bar": {
+          "top": 729.5,
+          "bottom": 844
+        },
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "SPAN",
+        "submitExists": true
+      }
+    },
+    {
+      "id": "N3 结算零滚合计一行不被提交栏遮（390×700）",
+      "ok": false,
+      "detail": "scrollY=0；合计=615–635；barTop=586；遮=true；命中=DIV",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 700
+        },
+        "total": {
+          "text": "合计（1 件）",
+          "top": 615.25,
+          "bottom": 635.25
+        },
+        "bar": {
+          "top": 585.5,
+          "bottom": 700
+        },
+        "fullyVisible": true,
+        "covered": true,
+        "clickable": false,
+        "hitTestId": "DIV",
+        "submitExists": true
+      }
+    },
+    {
+      "id": "N4 开通页零滚对比四档权益链完整可点（390×844）",
+      "ok": true,
+      "detail": "scrollY=0；链=566–586；barTop=708；遮=false；开对比=true",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "compare": {
+          "text": "对比四档权益 ›",
+          "left": 155.15625,
+          "right": 234.84375,
+          "top": 566.109375,
+          "bottom": 586.109375
+        },
+        "bar": {
+          "top": 708.25,
+          "bottom": 844
+        },
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "member-open-page",
+        "point": {
+          "x": 195,
+          "y": 576.109375
+        },
+        "compareOpened": true
+      }
+    },
+    {
+      "id": "N4 开通页零滚对比四档权益链完整可点（390×700）",
+      "ok": false,
+      "detail": "scrollY=0；链=566–586；barTop=564；遮=true；开对比=false",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 700
+        },
+        "compare": {
+          "text": "对比四档权益 ›",
+          "left": 155.15625,
+          "right": 234.84375,
+          "top": 566.109375,
+          "bottom": 586.109375
+        },
+        "bar": {
+          "top": 564.25,
+          "bottom": 700
+        },
+        "fullyVisible": true,
+        "covered": true,
+        "clickable": false,
+        "hitTestId": "member-open-page",
+        "point": {
+          "x": 195,
+          "y": 576.109375
+        },
+        "compareOpened": false
+      }
+    }
+  ]
+}

@@ -306,20 +306,20 @@ function CheckoutInner() {
 
   /* ---------------- 表单 + 清单 ---------------- */
   return (
-    <div className="px-4 pb-32 pt-6">
+    <div className="checkout-page px-4 pb-32 pt-6">
       {toastEl}
       {/* U1-A：统一返回条（←圆钮+标题） */}
       <PageHeader title={mlc('mall.checkoutTitle')} />
 
       {/* 收货地址（§4.7 f-field 工艺：mono 9.5 签 + 纸白底细线输入框，:focus 深棕边；
           单地址能力保留，多地址簿无 UI 雏形不画假簿——PD-15 V1.1 槽位 3 不适用） */}
-      <section className="u1-card mt-4 p-4">
+      <section className="checkout-address-card u1-card mt-4 p-4">
         <p className="flex items-center gap-1.5 text-title">
           <MapPin className="h-4 w-4 text-ink" strokeWidth={1.5} />
           收货地址
         </p>
         {/* 片 3：配送方式三 chips（卡内首行；pickup/same_city 地址非必填+内测期免运费注记） */}
-        <div className="mt-3" data-testid="delivery-method">
+        <div className="checkout-delivery mt-3" data-testid="delivery-method">
           <p className="mb-1.5 font-number text-v2-trace text-ink-secondary">{mlc('mall.deliveryMethod')}</p>
           <div className="flex gap-2">
             {DELIVERY_METHODS.map((d) => (
@@ -343,7 +343,7 @@ function CheckoutInner() {
             {!addressRequired ? ` · ${mlc('mall.addrOptionalNote')}` : ''}
           </p>
         </div>
-        <div className="mt-3 space-y-3">
+        <div className="checkout-address-fields mt-3 flex flex-col gap-3">
           <div>
             <label className="mb-1 block font-number text-v2-trace text-ink-secondary" htmlFor="ck-name">
               收货人
@@ -354,7 +354,7 @@ function CheckoutInner() {
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
               placeholder="收货人姓名"
               maxLength={64}
-              className="h-11 w-full rounded-input border border-line bg-canvas px-3.5 text-body outline-none transition placeholder:text-ink-placeholder focus:border-ink"
+              className="checkout-input h-11 w-full rounded-input border border-line bg-canvas px-3.5 text-body outline-none transition placeholder:text-ink-placeholder focus:border-ink"
             />
             {errors.name ? <p className="mt-1 text-caption text-danger-deep">{errors.name}</p> : null}
           </div>
@@ -369,7 +369,7 @@ function CheckoutInner() {
               placeholder="手机号"
               inputMode="numeric"
               maxLength={11}
-              className="h-11 w-full rounded-input border border-line bg-canvas px-3.5 font-number text-body outline-none transition placeholder:text-ink-placeholder focus:border-ink"
+              className="checkout-input h-11 w-full rounded-input border border-line bg-canvas px-3.5 font-number text-body outline-none transition placeholder:text-ink-placeholder focus:border-ink"
             />
             {errors.phone ? <p className="mt-1 text-caption text-danger-deep">{errors.phone}</p> : null}
           </div>
@@ -392,14 +392,14 @@ function CheckoutInner() {
       </section>
 
       {/* 商品清单（§4.7 folio 费用明细：白卡 18；行 12.5 值 mono；合计行 14/800 + 值 mono 16 深棕） */}
-      <section className="u1-ring mt-3 rounded-[18px] bg-card px-4 py-1.5">
+      <section className="checkout-lines-card u1-ring mt-3 rounded-[18px] bg-card px-4 py-1.5">
         <div className="flex items-baseline justify-between py-2.5">
           <p className="text-title">商品清单</p>
           <p className="font-number text-v2-trace text-ink-secondary">{mlc('mall.listShip', { store: lines[0]?.storeName ?? '' })}</p>
         </div>
         <div className="divide-y divide-line-divider">
           {lines.map((l) => (
-            <div key={l.productId} className="flex items-center gap-3 py-2.5">
+            <div key={l.productId} className="checkout-line-item flex items-center gap-3 py-2.5">
               <ProductImage src={l.image} alt={l.name} className="h-14 w-14 shrink-0 rounded-[12px]" />
               <div className="min-w-0 flex-1">
                 <p className="line-clamp-1 text-[12.5px] font-semibold">{l.name}</p>
@@ -411,7 +411,7 @@ function CheckoutInner() {
             </div>
           ))}
         </div>
-        <div className="flex items-center justify-between border-t border-line-divider py-3">
+        <div className="checkout-total-row flex items-center justify-between border-t border-line-divider py-3">
           <span className="text-body-sm font-extrabold">合计（{lines.reduce((n, l) => n + l.qty, 0)} 件）</span>
           <span className="font-number text-body-lg font-bold tabular-nums text-ink">{fenToYuan(totalFen)}</span>
         </div>

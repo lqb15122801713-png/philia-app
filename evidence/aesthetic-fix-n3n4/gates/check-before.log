@@ -1,0 +1,5 @@
+PASS N3 结算零滚合计一行不被提交栏遮（390×844） —— scrollY=0；合计=615–635；barTop=730；遮=false；命中=SPAN
+FAIL N3 结算零滚合计一行不被提交栏遮（390×700） —— scrollY=0；合计=615–635；barTop=586；遮=true；命中=DIV
+PASS N4 开通页零滚对比四档权益链完整可点（390×844） —— scrollY=0；链=566–586；barTop=708；遮=false；开对比=true
+FAIL N4 开通页零滚对比四档权益链完整可点（390×700） —— scrollY=0；链=566–586；barTop=564；遮=true；开对比=false
+汇总：2/4 通过；证据目录=evidence\aesthetic-fix-n3n4

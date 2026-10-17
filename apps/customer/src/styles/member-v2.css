@@ -190,6 +190,17 @@
 }
 .m2-ctabar-in { max-width: 480px; margin: 0 auto; }
 
+/* N4：短视口收紧 deck 与对比链上方间距，保证链接零滚时不被吸底开通栏压住。
+   组件 height=204 必须保留以维持 claim 渲染阈值；此处只调整视觉高度，勿同步改属性。 */
+@media (max-height: 764px) {
+  [data-testid='member-open-page'] .m2-deck { margin-top: 8px; }
+  [data-testid='member-open-page'] .m2-deck .m2-cardface {
+    height: max(120px, calc(190px - env(safe-area-inset-bottom))) !important;
+  }
+  [data-testid='member-open-page'] .member-estimate-note { margin-top: 6px !important; }
+  [data-testid='member-open-page'] .member-compare-link { margin-top: 6px !important; }
+}
+
 /* ---- 底部弹层 sheet（§4.5 三件套：抓握手柄+可点遮罩+滚动锁） -------------------- */
 .m2-scrim {
   position: fixed; inset: 0; z-index: 40; background: rgba(42, 31, 21, .42);
