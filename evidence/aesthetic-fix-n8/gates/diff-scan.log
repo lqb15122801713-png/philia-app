@@ -1,0 +1,9 @@
+apps/customer/src/index.css
+apps/customer/src/pages/ProductDetailPage.tsx
+ apps/customer/src/index.css                   | 7 +++++++
+ apps/customer/src/pages/ProductDetailPage.tsx | 2 +-
+ 2 files changed, 8 insertions(+), 1 deletion(-)
+ M apps/customer/src/index.css
+ M apps/customer/src/pages/ProductDetailPage.tsx
+?? evidence/aesthetic-fix-n8/
+?? scripts/aesthetic-fix-n8-check.mjs

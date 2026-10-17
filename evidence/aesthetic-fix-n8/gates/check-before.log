@@ -1,0 +1,7 @@
+PASS N8 幼犬奶糕粮 评价空态清出 sticky 购买栏（390×844） —— scrollY=0；评价=526–615；栏顶=708；净空=93；命中=pdp-reviews；图高=270；空态=true；售罄态=true
+FAIL N8 幼犬奶糕粮 评价空态清出 sticky 购买栏（390×700） —— scrollY=0；评价=526–615；栏顶=564；净空=-51；命中=DIV；图高=270；空态=true；售罄态=true
+FAIL N8 幼犬奶糕粮 评价空态清出 sticky 购买栏（390×667） —— scrollY=0；评价=526–615；栏顶=531；净空=-84；命中=pdp-add-cart；图高=270；空态=true；售罄态=true
+PASS N8 售罄成犬粮 评价空态清出 sticky 购买栏（390×844） —— scrollY=0；评价=545–634；栏顶=734；净空=100；命中=pdp-reviews；图高=270；空态=true；售罄态=true
+FAIL N8 售罄成犬粮 评价空态清出 sticky 购买栏（390×700） —— scrollY=0；评价=545–634；栏顶=590；净空=-44；命中=DIV；图高=270；空态=true；售罄态=true
+FAIL N8 售罄成犬粮 评价空态清出 sticky 购买栏（390×667） —— scrollY=0；评价=545–634；栏顶=557；净空=-77；命中=pdp-buy-now；图高=270；空态=true；售罄态=true
+汇总：2/6 通过；证据目录=evidence\aesthetic-fix-n8
