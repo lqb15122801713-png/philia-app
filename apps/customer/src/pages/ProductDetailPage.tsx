@@ -646,7 +646,7 @@ function DetailInner() {
                 aria-label="减少数量"
                 disabled={qty <= 1}
                 onClick={() => setQty((q) => Math.max(1, q - 1))}
-                className="flex h-[30px] w-[30px] items-center justify-center rounded-full text-ink transition disabled:opacity-40"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-ink transition disabled:opacity-40"
               >
                 <Minus className="h-4 w-4" strokeWidth={2} />
               </button>
@@ -656,7 +656,7 @@ function DetailInner() {
                 aria-label="增加数量"
                 disabled={qty >= Math.min(stock, MAX_QTY)}
                 onClick={() => setQty((q) => Math.min(Math.min(stock, MAX_QTY), q + 1))}
-                className="flex h-[30px] w-[30px] items-center justify-center rounded-full text-ink transition disabled:opacity-40"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-full text-ink transition disabled:opacity-40"
               >
                 <Plus className="h-4 w-4" strokeWidth={2} />
               </button>

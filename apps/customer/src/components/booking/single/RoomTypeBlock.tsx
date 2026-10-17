@@ -5,7 +5,7 @@
  * 余量口径沿用 B3-2：已选区间 = 区间内逐晚最小剩余；未选日期 = 今晚剩余。
  *
  * 换皮批片 2（定稿 H-01 / §4.10 roomcard 工艺卡）：实景图默认 150 高（短视口按 N2／Obs4 避让规则收缩或隐藏）
- * + 右上房价胶囊（纸白 mono 11/700 + 小影 §3.3 房价牌影）+ 底条名 14/800 + mono 9 卖点（余量行）。
+ * + 右上房价胶囊（纸白 mono 11/700 + 小影 §3.3 房价牌影）+ 底条名 14/800 + mono 12 卖点（余量行）。
  * 实景照槽位：services 表无照片字段（schema 实证）——img 插槽指向拍摄清单资产位，
  * onError 回退下沉底 + VI 线图标（ic-board），资产到位即自动替换，不造假图。
  */
@@ -111,7 +111,7 @@ export default function RoomTypeBlock({
               {fenToYuan(s.priceFen)} / 晚
             </span>
           </div>
-          <span className="mt-0.5 flex flex-wrap gap-x-2 font-number text-[9px] text-ink-secondary">
+          <span className="mt-0.5 flex flex-wrap gap-x-2 font-number text-caption leading-3 text-ink-secondary">
             {s.boardingRoomType ? <span>{s.name}</span> : null}
             {remainLine(s.id)}
           </span>
@@ -136,7 +136,7 @@ export default function RoomTypeBlock({
           >
             <span>
               <span className="block text-body-sm font-extrabold">{s.boardingRoomType ?? s.name}</span>
-              <span className="mt-0.5 flex flex-wrap gap-x-2 font-number text-[9px] text-ink-secondary">
+              <span className="mt-0.5 flex flex-wrap gap-x-2 font-number text-caption leading-3 text-ink-secondary">
                 {s.boardingRoomType ? <span>{s.name}</span> : null}
                 {remainLine(s.id)}
               </span>

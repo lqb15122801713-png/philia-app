@@ -86,14 +86,14 @@ function CartRow({ item }: { item: CartItem }) {
         </div>
         <div className="flex items-center justify-between">
           <p className="u1-num text-[11px] text-ink-secondary">{fenToYuan(item.priceFen)}</p>
-          {/* 步进器（§4.7 stepper：26 圆 ± 钮 + mono 13 数；小件例外，钮间距 10px ≥8 无冲突区） */}
+          {/* 步进器（Obs5e：± 钮热区 ≥44px + mono 13 数；钮间距 10px 保留） */}
           <div className="flex items-center gap-2.5">
             <button
               type="button"
               aria-label="减少数量"
               disabled={item.qty <= 1}
               onClick={() => cart.setQty(item.productId, item.qty - 1)}
-              className="flex h-[26px] w-[26px] items-center justify-center rounded-full border border-line bg-card text-ink transition disabled:opacity-40"
+              className="flex min-h-11 min-w-11 items-center justify-center rounded-full border border-line bg-card text-ink transition disabled:opacity-40"
             >
               <Minus className="h-3.5 w-3.5" strokeWidth={1.5} />
             </button>
@@ -103,7 +103,7 @@ function CartRow({ item }: { item: CartItem }) {
               aria-label="增加数量"
               disabled={item.qty >= cap}
               onClick={() => cart.setQty(item.productId, item.qty + 1)}
-              className="flex h-[26px] w-[26px] items-center justify-center rounded-full border border-line bg-card text-ink transition disabled:opacity-40"
+              className="flex min-h-11 min-w-11 items-center justify-center rounded-full border border-line bg-card text-ink transition disabled:opacity-40"
             >
               <Plus className="h-3.5 w-3.5" strokeWidth={1.5} />
             </button>
