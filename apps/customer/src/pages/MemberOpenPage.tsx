@@ -217,7 +217,8 @@ export default function MemberOpenPage() {
             <CK k="j1.estimateNote">{mc('j1.estimateNote')}</CK>
           </p>
           <div className="member-compare-link" style={{ textAlign: 'center', marginTop: 14 }}>
-            <button type="button" className="m2-link" onClick={() => setCompareOpen(true)}>
+            {/* Obs5c：热区向上扩至 44px并保留下缘，避免回退 N4 sticky 净空。 */}
+            <button type="button" className="m2-link -mt-9 inline-flex min-h-11 -translate-y-3 items-center" onClick={() => setCompareOpen(true)}>
               <CK k="j1.compareLink">{mc('j1.compareLink')}</CK>
             </button>
           </div>

@@ -1,0 +1,144 @@
+{
+  "at": "2026-10-17T17:30:48.345Z",
+  "base": "http://127.0.0.1:7130",
+  "results": [
+    {
+      "id": "Obs5a 寄养房型副文 ≥12px 且 N2 避让不回退",
+      "ok": false,
+      "detail": "副文=1 处；最小字号=9px；房型卡底=509；栏顶=527；净空=18",
+      "measurements": {
+        "scrollY": 0,
+        "subtitles": [
+          {
+            "text": "标准间寄养（犬）\n今晚剩余 2 间",
+            "fontSize": 9
+          }
+        ],
+        "card": {
+          "bottom": 509
+        },
+        "barTop": 527,
+        "clearance": 18
+      }
+    },
+    {
+      "id": "Obs5c 对比四档权益热区 ≥44px 且 N4 避让不回退",
+      "ok": false,
+      "detail": "热区=80×20；链底=419；栏顶=530；净空=111；命中=true",
+      "measurements": {
+        "scrollY": 0,
+        "text": "对比四档权益 ›",
+        "width": 79.6875,
+        "height": 20,
+        "top": 398.9375,
+        "bottom": 418.9375,
+        "barTop": 530.25,
+        "clearance": 111.3125,
+        "hitInside": true
+      }
+    },
+    {
+      "id": "Obs5e 商城列表 quick-add 同族热区 ≥44px",
+      "ok": false,
+      "detail": "按钮=10 个；最小热区=30×30",
+      "measurements": {
+        "scrollY": 0,
+        "buttons": [
+          {
+            "id": "mall-quickadd-01M55E6B9BKY5FXK1KWEJJ218X",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "id": "mall-quickadd-01M55E6B9BSZCR0SFCSSBAWTQ5",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "id": "mall-quickadd-01M55E6B9C6XFJ9V29MF7WG9D4",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "id": "mall-quickadd-01M55E6B9CJE3MWA9F51Z69W85",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "id": "mall-quickadd-01M55E6B9CFM5BW73XGWRSRBX4",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "id": "mall-quickadd-01M55E6B9CKCBTB6QCEN183RBN",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "id": "mall-quickadd-01M55E6B9CZZ7669GPBCS2WAK7",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "id": "mall-quickadd-01M55E6B9CMT79VM2ESCHR796W",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "id": "mall-quickadd-01M55E6B9C56YRGYX1P4SSXCK5",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "id": "mall-quickadd-01M55E6B9CFA8NKV76J5XE5CEA",
+            "width": 30,
+            "height": 30
+          }
+        ]
+      }
+    },
+    {
+      "id": "Obs5e 商详加减热区 ≥44px 且 N8 避让不回退",
+      "ok": false,
+      "detail": "按钮=2 个；最小热区=30×30；评价净空=17",
+      "measurements": {
+        "scrollY": 0,
+        "buttons": [
+          {
+            "label": "减少数量",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "label": "增加数量",
+            "width": 30,
+            "height": 30
+          }
+        ],
+        "reviewBottom": 547.25,
+        "ctaTop": 564,
+        "reviewClearance": 16.75
+      }
+    },
+    {
+      "id": "Obs5e 购物列表加减热区 ≥44px",
+      "ok": false,
+      "detail": "按钮=2 个；最小热区=26×26",
+      "measurements": {
+        "scrollY": 0,
+        "buttons": [
+          {
+            "label": "减少数量",
+            "width": 26,
+            "height": 26
+          },
+          {
+            "label": "增加数量",
+            "width": 26,
+            "height": 26
+          }
+        ]
+      }
+    }
+  ]
+}

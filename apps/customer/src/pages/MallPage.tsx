@@ -87,8 +87,8 @@ function ProductCard({
   /** 批D 新品角标（父级按序位+视窗双闸下发，守 ≤10% 帽） */
   showNewBadge: boolean;
 }) {
-  /* 片 2 M-01 定稿（§4.7）：图 4:3 + 名 12.5/700 两行 + 价 mono 14/700 + 右 mono 8.5
-     「返 ¥x 回馈金」（APP-18 口径）+ qadd 30 圆深棕「＋」（:active scale .9） */
+  /* 图 4:3 + 名 12.5/700 两行 + 价 mono 14/700 + 右 mono 8.5「返 ¥x 回馈金」；
+     Obs5e：qadd 热区 44px，名称与价格／返显行预留 48px 右侧避让。 */
   const rebateFen = rebateBp > 0 ? Math.round((item.priceFen * rebateBp) / 10000) : 0;
   return (
     <div className="u1-card relative overflow-hidden">
@@ -104,8 +104,8 @@ function ProductCard({
           </span>
         ) : null}
         <div className="px-3 pb-3 pt-2.5">
-          <p className="line-clamp-2 min-h-8 text-[12.5px] font-bold leading-4">{item.name}</p>
-          <div className="mt-[7px] flex items-baseline pr-8">
+          <p className="line-clamp-2 min-h-8 pr-12 text-[12.5px] font-bold leading-4">{item.name}</p>
+          <div className="mt-[7px] flex items-baseline pr-12">
             <p className="u1-num text-body-sm font-bold text-ink">{fenToYuan(item.priceFen)}</p>
             {rebateFen > 0 ? (
               <span className="ml-auto font-number text-[8.5px] tabular-nums text-ink-secondary">
@@ -119,7 +119,7 @@ function ProductCard({
         </div>
       </Link>
       {/* 快加购：真链路（addItem → 角标/购物袋；跨店由页面 ConfirmSheet 处理）。
-          片 2 M-01：qadd=30px 深棕圆底「＋」（定稿 §4.7，:active scale(.9)） */}
+          Obs5e：qadd 热区 ≥44px，深棕圆底「＋」与 active scale(.9) 保留。 */}
       {item.stock > 0 ? (
         <button
           type="button"
@@ -129,7 +129,7 @@ function ProductCard({
             e.preventDefault();
             onQuickAdd(item);
           }}
-          className="absolute bottom-3 right-3 flex h-[30px] w-[30px] items-center justify-center rounded-full bg-brand-cta text-brand-cta-on transition-transform duration-120 ease-philia-spring active:scale-90"
+          className="absolute bottom-3 right-3 flex min-h-11 min-w-11 items-center justify-center rounded-full bg-brand-cta text-brand-cta-on transition-transform duration-120 ease-philia-spring active:scale-90"
         >
           <Plus className="h-4 w-4" strokeWidth={2.2} />
         </button>

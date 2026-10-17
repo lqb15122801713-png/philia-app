@@ -1,0 +1,18 @@
+apps/customer/src/components/booking/single/RoomTypeBlock.tsx
+apps/customer/src/pages/CartPage.tsx
+apps/customer/src/pages/MallPage.tsx
+apps/customer/src/pages/MemberOpenPage.tsx
+apps/customer/src/pages/ProductDetailPage.tsx
+ .../customer/src/components/booking/single/RoomTypeBlock.tsx |  6 +++---
+ apps/customer/src/pages/CartPage.tsx                         |  6 +++---
+ apps/customer/src/pages/MallPage.tsx                         | 12 ++++++------
+ apps/customer/src/pages/MemberOpenPage.tsx                   |  3 ++-
+ apps/customer/src/pages/ProductDetailPage.tsx                |  4 ++--
+ 5 files changed, 16 insertions(+), 15 deletions(-)
+ M apps/customer/src/components/booking/single/RoomTypeBlock.tsx
+ M apps/customer/src/pages/CartPage.tsx
+ M apps/customer/src/pages/MallPage.tsx
+ M apps/customer/src/pages/MemberOpenPage.tsx
+ M apps/customer/src/pages/ProductDetailPage.tsx
+?? evidence/aesthetic-fix-obs5ace/
+?? scripts/aesthetic-fix-obs5ace-check.mjs
