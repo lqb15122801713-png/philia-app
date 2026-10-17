@@ -1,0 +1,18 @@
+apps/customer/src/App.tsx
+apps/customer/src/index.css
+apps/customer/src/pages/HomePage.tsx
+apps/customer/src/pages/MallPage.tsx
+apps/customer/src/styles/home-v2.css
+ apps/customer/src/App.tsx            |  7 +++++--
+ apps/customer/src/index.css          | 23 +++++++++++++++++++++++
+ apps/customer/src/pages/HomePage.tsx |  2 +-
+ apps/customer/src/pages/MallPage.tsx |  6 +++---
+ apps/customer/src/styles/home-v2.css | 21 +++++++++++++++++++++
+ 5 files changed, 53 insertions(+), 6 deletions(-)
+ M apps/customer/src/App.tsx
+ M apps/customer/src/index.css
+ M apps/customer/src/pages/HomePage.tsx
+ M apps/customer/src/pages/MallPage.tsx
+ M apps/customer/src/styles/home-v2.css
+?? evidence/aesthetic-fix-n6n7/
+?? scripts/aesthetic-fix-n6n7-check.mjs

@@ -1,0 +1,471 @@
+{
+  "at": "2026-10-17T10:42:18.098Z",
+  "base": "http://127.0.0.1:7130",
+  "results": [
+    {
+      "id": "N6 商城首行价与已售罄清出 AppDock（390×844）",
+      "ok": true,
+      "detail": "scrollY=0；价净空=71；售罄净空=48；dockTop=732；命中=P",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "productName": "新品",
+        "price": {
+          "text": "¥129",
+          "top": 641.28125,
+          "bottom": 661.28125
+        },
+        "soldOut": {
+          "text": "已售罄",
+          "top": 665.28125,
+          "bottom": 684.28125
+        },
+        "dock": {
+          "top": 732,
+          "bottom": 796
+        },
+        "priceClearance": 70.71875,
+        "soldOutClearance": 47.71875,
+        "priceCovered": false,
+        "soldOutCovered": false,
+        "priceClickable": true,
+        "hitTestId": "P"
+      }
+    },
+    {
+      "id": "N6 商城首行价与已售罄清出 AppDock（390×804）",
+      "ok": false,
+      "detail": "scrollY=0；价净空=31；售罄净空=8；dockTop=692；命中=P",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 804
+        },
+        "productName": "新品",
+        "price": {
+          "text": "¥129",
+          "top": 641.28125,
+          "bottom": 661.28125
+        },
+        "soldOut": {
+          "text": "已售罄",
+          "top": 665.28125,
+          "bottom": 684.28125
+        },
+        "dock": {
+          "top": 692,
+          "bottom": 756
+        },
+        "priceClearance": 30.71875,
+        "soldOutClearance": 7.71875,
+        "priceCovered": false,
+        "soldOutCovered": false,
+        "priceClickable": true,
+        "hitTestId": "P"
+      }
+    },
+    {
+      "id": "N6 商城首行价与已售罄清出 AppDock（390×803）",
+      "ok": false,
+      "detail": "scrollY=0；价净空=30；售罄净空=7；dockTop=691；命中=P",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 803
+        },
+        "productName": "新品",
+        "price": {
+          "text": "¥129",
+          "top": 641.28125,
+          "bottom": 661.28125
+        },
+        "soldOut": {
+          "text": "已售罄",
+          "top": 665.28125,
+          "bottom": 684.28125
+        },
+        "dock": {
+          "top": 691,
+          "bottom": 755
+        },
+        "priceClearance": 29.71875,
+        "soldOutClearance": 6.71875,
+        "priceCovered": false,
+        "soldOutCovered": false,
+        "priceClickable": true,
+        "hitTestId": "P"
+      }
+    },
+    {
+      "id": "N6 商城首行价与已售罄清出 AppDock（390×751）",
+      "ok": false,
+      "detail": "scrollY=0；价净空=-22；售罄净空=-45；dockTop=639；命中=app-dock-home",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 751
+        },
+        "productName": "新品",
+        "price": {
+          "text": "¥129",
+          "top": 641.28125,
+          "bottom": 661.28125
+        },
+        "soldOut": {
+          "text": "已售罄",
+          "top": 665.28125,
+          "bottom": 684.28125
+        },
+        "dock": {
+          "top": 639,
+          "bottom": 703
+        },
+        "priceClearance": -22.28125,
+        "soldOutClearance": -45.28125,
+        "priceCovered": true,
+        "soldOutCovered": true,
+        "priceClickable": false,
+        "hitTestId": "app-dock-home"
+      }
+    },
+    {
+      "id": "N6 商城首行价与已售罄清出 AppDock（390×750）",
+      "ok": true,
+      "detail": "scrollY=0；价净空=87；售罄净空=64；dockTop=638；命中=P",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 750
+        },
+        "productName": "新品",
+        "price": {
+          "text": "¥129",
+          "top": 530.578125,
+          "bottom": 550.578125
+        },
+        "soldOut": {
+          "text": "已售罄",
+          "top": 554.578125,
+          "bottom": 573.578125
+        },
+        "dock": {
+          "top": 638,
+          "bottom": 702
+        },
+        "priceClearance": 87.421875,
+        "soldOutClearance": 64.421875,
+        "priceCovered": false,
+        "soldOutCovered": false,
+        "priceClickable": true,
+        "hitTestId": "P"
+      }
+    },
+    {
+      "id": "N6 商城首行价与已售罄清出 AppDock（390×700）",
+      "ok": true,
+      "detail": "scrollY=0；价净空=37；售罄净空=14；dockTop=588；命中=P",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 700
+        },
+        "productName": "新品",
+        "price": {
+          "text": "¥129",
+          "top": 530.578125,
+          "bottom": 550.578125
+        },
+        "soldOut": {
+          "text": "已售罄",
+          "top": 554.578125,
+          "bottom": 573.578125
+        },
+        "dock": {
+          "top": 588,
+          "bottom": 652
+        },
+        "priceClearance": 37.421875,
+        "soldOutClearance": 14.421875,
+        "priceCovered": false,
+        "soldOutCovered": false,
+        "priceClickable": true,
+        "hitTestId": "P"
+      }
+    },
+    {
+      "id": "N6 商城首行价与已售罄清出 AppDock（390×667）",
+      "ok": false,
+      "detail": "scrollY=0；价净空=4；售罄净空=-19；dockTop=555；命中=P",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 667
+        },
+        "productName": "新品",
+        "price": {
+          "text": "¥129",
+          "top": 530.578125,
+          "bottom": 550.578125
+        },
+        "soldOut": {
+          "text": "已售罄",
+          "top": 554.578125,
+          "bottom": 573.578125
+        },
+        "dock": {
+          "top": 555,
+          "bottom": 619
+        },
+        "priceClearance": 4.421875,
+        "soldOutClearance": -18.578125,
+        "priceCovered": false,
+        "soldOutCovered": true,
+        "priceClickable": true,
+        "hitTestId": "P"
+      }
+    },
+    {
+      "id": "N7 首页空宠引导清出 AppDock 且管理仍可见（390×844）",
+      "ok": true,
+      "detail": "scrollY=0；净空=88；中央顶=717；管理命中=home-pets-manage；管理=44×44；命中=home-pets-empty",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "guide": {
+          "text": "还没有毛孩子档案，去添加 TA 吧›",
+          "top": 585.5,
+          "bottom": 629.5
+        },
+        "manage": {
+          "width": 44,
+          "height": 44,
+          "top": 529.5,
+          "bottom": 573.5
+        },
+        "dock": {
+          "top": 732,
+          "bottom": 796
+        },
+        "central": {
+          "top": 720,
+          "bottom": 778,
+          "left": 165.984375,
+          "right": 223.984375
+        },
+        "obstructionTop": 717,
+        "clearance": 87.5,
+        "covered": false,
+        "guideClickable": true,
+        "manageClickable": true,
+        "manageVisible": true,
+        "manageGuideOverlap": false,
+        "distinctTargets": true,
+        "hitTestId": "home-pets-empty",
+        "manageHitTestId": "home-pets-manage"
+      }
+    },
+    {
+      "id": "N7 首页空宠引导清出 AppDock 且管理仍可见（390×766）",
+      "ok": true,
+      "detail": "scrollY=0；净空=10；中央顶=639；管理命中=home-pets-manage；管理=44×44；命中=home-pets-empty",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 766
+        },
+        "guide": {
+          "text": "还没有毛孩子档案，去添加 TA 吧›",
+          "top": 585.5,
+          "bottom": 629.5
+        },
+        "manage": {
+          "width": 44,
+          "height": 44,
+          "top": 529.5,
+          "bottom": 573.5
+        },
+        "dock": {
+          "top": 654,
+          "bottom": 718
+        },
+        "central": {
+          "top": 642,
+          "bottom": 700,
+          "left": 165.984375,
+          "right": 223.984375
+        },
+        "obstructionTop": 639,
+        "clearance": 9.5,
+        "covered": false,
+        "guideClickable": true,
+        "manageClickable": true,
+        "manageVisible": true,
+        "manageGuideOverlap": false,
+        "distinctTargets": true,
+        "hitTestId": "home-pets-empty",
+        "manageHitTestId": "home-pets-manage"
+      }
+    },
+    {
+      "id": "N7 首页空宠引导清出 AppDock 且管理仍可见（390×767）",
+      "ok": true,
+      "detail": "scrollY=0；净空=11；中央顶=640；管理命中=home-pets-manage；管理=44×44；命中=home-pets-empty",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 767
+        },
+        "guide": {
+          "text": "还没有毛孩子档案，去添加 TA 吧›",
+          "top": 585.5,
+          "bottom": 629.5
+        },
+        "manage": {
+          "width": 44,
+          "height": 44,
+          "top": 529.5,
+          "bottom": 573.5
+        },
+        "dock": {
+          "top": 655,
+          "bottom": 719
+        },
+        "central": {
+          "top": 643,
+          "bottom": 701,
+          "left": 165.984375,
+          "right": 223.984375
+        },
+        "obstructionTop": 640,
+        "clearance": 10.5,
+        "covered": false,
+        "guideClickable": true,
+        "manageClickable": true,
+        "manageVisible": true,
+        "manageGuideOverlap": false,
+        "distinctTargets": true,
+        "hitTestId": "home-pets-empty",
+        "manageHitTestId": "home-pets-manage"
+      }
+    },
+    {
+      "id": "N7 首页空宠引导清出 AppDock 且管理仍可见（390×700）",
+      "ok": false,
+      "detail": "scrollY=0；净空=4；中央顶=573；管理命中=home-pets-manage；管理=44×44；命中=home-pets-empty",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 700
+        },
+        "guide": {
+          "text": "还没有毛孩子档案，去添加 TA 吧›",
+          "top": 525.5,
+          "bottom": 569.5
+        },
+        "manage": {
+          "width": 44,
+          "height": 44,
+          "top": 469.5,
+          "bottom": 513.5
+        },
+        "dock": {
+          "top": 588,
+          "bottom": 652
+        },
+        "central": {
+          "top": 576,
+          "bottom": 634,
+          "left": 165.984375,
+          "right": 223.984375
+        },
+        "obstructionTop": 573,
+        "clearance": 3.5,
+        "covered": false,
+        "guideClickable": true,
+        "manageClickable": true,
+        "manageVisible": true,
+        "manageGuideOverlap": false,
+        "distinctTargets": true,
+        "hitTestId": "home-pets-empty",
+        "manageHitTestId": "home-pets-manage"
+      }
+    },
+    {
+      "id": "N7 首页空宠引导清出 AppDock 且管理仍可见（390×667）",
+      "ok": false,
+      "detail": "scrollY=0；净空=-29；中央顶=540；管理命中=home-pets-manage；管理=44×44；命中=app-dock-philia",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 667
+        },
+        "guide": {
+          "text": "还没有毛孩子档案，去添加 TA 吧›",
+          "top": 525.5,
+          "bottom": 569.5
+        },
+        "manage": {
+          "width": 44,
+          "height": 44,
+          "top": 469.5,
+          "bottom": 513.5
+        },
+        "dock": {
+          "top": 555,
+          "bottom": 619
+        },
+        "central": {
+          "top": 543,
+          "bottom": 601,
+          "left": 165.984375,
+          "right": 223.984375
+        },
+        "obstructionTop": 540,
+        "clearance": -29.5,
+        "covered": true,
+        "guideClickable": false,
+        "manageClickable": true,
+        "manageVisible": true,
+        "manageGuideOverlap": false,
+        "distinctTargets": true,
+        "hitTestId": "app-dock-philia",
+        "manageHitTestId": "home-pets-manage"
+      }
+    },
+    {
+      "id": "N7 有运营文案 banner 不重叠且通知可命中",
+      "ok": false,
+      "detail": "文案=67–146；通知=46–82；重叠=true；命中=home-notify-entry；banner高=150",
+      "measurements": {
+        "copy": {
+          "top": 67,
+          "bottom": 146
+        },
+        "notify": {
+          "top": 46,
+          "bottom": 82
+        },
+        "overlap": true,
+        "notifyClickable": true,
+        "hitTestId": "home-notify-entry",
+        "bannerSpaceHeight": 150
+      }
+    }
+  ]
+}

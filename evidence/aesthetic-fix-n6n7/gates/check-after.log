@@ -1,0 +1,5 @@
+PASS N6 商城首行价与已售罄清出 AppDock（390×844） —— scrollY=0；价净空=71；售罄净空=48；dockTop=732；命中=P
+FAIL N6 商城首行价与已售罄清出 AppDock（390×700） —— scrollY=0；价净空=27；售罄净空=4；dockTop=588；命中=P
+PASS N7 首页空宠引导清出 AppDock 且管理仍可见（390×844） —— scrollY=0；净空=103；dockTop=732；管理=44×44；命中=home-pets-empty
+PASS N7 首页空宠引导清出 AppDock 且管理仍可见（390×700） —— scrollY=0；净空=19；dockTop=588；管理=44×44；命中=home-pets-empty
+汇总：3/4 通过；证据目录=evidence\aesthetic-fix-n6n7

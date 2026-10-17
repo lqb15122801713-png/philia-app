@@ -1,0 +1,14 @@
+PASS N6 商城首行价与已售罄清出 AppDock（390×844） —— scrollY=0；价净空=71；售罄净空=48；dockTop=732；命中=P
+FAIL N6 商城首行价与已售罄清出 AppDock（390×804） —— scrollY=0；价净空=31；售罄净空=8；dockTop=692；命中=P
+FAIL N6 商城首行价与已售罄清出 AppDock（390×803） —— scrollY=0；价净空=30；售罄净空=7；dockTop=691；命中=P
+FAIL N6 商城首行价与已售罄清出 AppDock（390×751） —— scrollY=0；价净空=-22；售罄净空=-45；dockTop=639；命中=app-dock-home
+PASS N6 商城首行价与已售罄清出 AppDock（390×750） —— scrollY=0；价净空=87；售罄净空=64；dockTop=638；命中=P
+PASS N6 商城首行价与已售罄清出 AppDock（390×700） —— scrollY=0；价净空=37；售罄净空=14；dockTop=588；命中=P
+FAIL N6 商城首行价与已售罄清出 AppDock（390×667） —— scrollY=0；价净空=4；售罄净空=-19；dockTop=555；命中=P
+PASS N7 首页空宠引导清出 AppDock 且管理仍可见（390×844） —— scrollY=0；净空=88；中央顶=717；管理命中=home-pets-manage；管理=44×44；命中=home-pets-empty
+PASS N7 首页空宠引导清出 AppDock 且管理仍可见（390×766） —— scrollY=0；净空=10；中央顶=639；管理命中=home-pets-manage；管理=44×44；命中=home-pets-empty
+PASS N7 首页空宠引导清出 AppDock 且管理仍可见（390×767） —— scrollY=0；净空=11；中央顶=640；管理命中=home-pets-manage；管理=44×44；命中=home-pets-empty
+FAIL N7 首页空宠引导清出 AppDock 且管理仍可见（390×700） —— scrollY=0；净空=4；中央顶=573；管理命中=home-pets-manage；管理=44×44；命中=home-pets-empty
+FAIL N7 首页空宠引导清出 AppDock 且管理仍可见（390×667） —— scrollY=0；净空=-29；中央顶=540；管理命中=home-pets-manage；管理=44×44；命中=app-dock-philia
+FAIL N7 有运营文案 banner 不重叠且通知可命中 —— 文案=67–146；通知=46–82；重叠=true；命中=home-notify-entry；banner高=150
+汇总：6/13 通过；证据目录=evidence\aesthetic-fix-n6n7

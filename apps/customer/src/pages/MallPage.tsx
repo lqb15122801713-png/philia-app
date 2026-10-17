@@ -93,7 +93,7 @@ function ProductCard({
   return (
     <div className="u1-card relative overflow-hidden">
       <Link to={`/mall/product/${item.id}`} className="block transition active:scale-[0.99]">
-        <ProductImage src={item.images?.[0]} alt={item.name} className="aspect-[4/3] w-full" />
+        <ProductImage src={item.images?.[0]} alt={item.name} className="mall-product-image aspect-[4/3] w-full" />
         {showNewBadge ? (
           /* violet 活动角标（READY §2.1：≤10% 禁 CTA/Tab；不含真券） */
           <span
@@ -155,11 +155,11 @@ function MallHero() {
             src={src}
             alt={slot?.alt ?? title}
             onError={() => setImgOk(false)}
-            className="aspect-[21/9] w-full object-cover"
+            className="mall-hero-media aspect-[21/9] w-full object-cover"
           />
         ) : (
           /* url=null=品牌渐变占位（真图终摄非目标，R10 不落假图） */
-          <div role="img" aria-label={slot?.alt ?? title} className="aspect-[21/9] w-full bg-philia-gradient" />
+          <div role="img" aria-label={slot?.alt ?? title} className="mall-hero-media aspect-[21/9] w-full bg-philia-gradient" />
         )}
         <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-[rgba(44,40,34,.55)] to-transparent px-4 pb-3 pt-8">
           <p className="u1-serif text-[19px] font-black leading-snug text-canvas">{title}</p>

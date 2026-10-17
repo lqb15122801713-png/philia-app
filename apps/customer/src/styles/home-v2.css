@@ -182,3 +182,24 @@
 .me2-grid8 .g small { display: block; font-family: var(--v2mono); font-size: 8.5px; color: #8A7D6B; margin-top: 2px; }
 .me2-grid8 .g.slot { opacity: .42; cursor: default; }
 .me2-grid8 .g.slot svg { stroke: #8A7D6B; }
+
+/* N7：短视口压缩 BANNER 与统计／毛孩子区间距，空宠引导文须清出 dock。
+   有运营文案时同步压缩后续区间，避免文案层重叠，同时保住引导净空。 */
+@media (max-height: 766px) {
+  [data-testid='home-banner']:not(:has([data-testid='home-banner-copy'])) .hv2-banner-space { height: 100px; }
+  [data-testid='home-banner']:has([data-testid='home-banner-copy']) .hv2-banner-space { height: 165px; }
+  [data-testid='home-page']:has([data-testid='home-banner-copy']) .hv2-idband { padding-top: 0; }
+  [data-testid='home-page']:has([data-testid='home-banner-copy']) .hv2-idband .mini { height: 24px; }
+  [data-testid='home-page']:has([data-testid='home-banner-copy']) .hv2-idband .qr { height: 32px; }
+  [data-testid='home-page']:has([data-testid='home-banner-copy']) .hv2-megacard { padding-top: 0; }
+  [data-testid='home-page']:has([data-testid='home-banner-copy']) [data-block-key='home.passStrip'] > a { margin-top: 0; }
+  [data-testid='home-stats-row'] { margin-top: 8px; padding-top: 8px; padding-bottom: 8px; }
+  [data-testid='home-pets-row'] { margin-top: 12px; }
+  [data-testid='home-page']:has([data-testid='home-banner-copy']) [data-testid='home-stats-row'] {
+    margin-top: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  [data-testid='home-page']:has([data-testid='home-banner-copy']) [data-testid='home-pets-row'] { margin-top: 0; }
+  [data-testid='home-page']:has([data-testid='home-banner-copy']) [data-block-key='home.bookingPanel'] > div { margin-top: 0; }
+}
