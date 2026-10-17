@@ -362,14 +362,20 @@ async function checkN2(cdp, state, height, vaccineWarning = false) {
   const measurements = JSON.parse(await cdp.eval(`JSON.stringify((() => {
     const card = [...document.querySelectorAll('[data-testid="bs-room-readonly"], [data-testid^="bs-room-option-"]')].find((item) => item.innerText.includes('标准间'))
     const bar = document.querySelector('[data-testid="bs-confirm-bar"]').firstElementChild
+    const dock = document.querySelector('[data-testid="app-dock"]')
     const cardRect = card.getBoundingClientRect()
     const barRect = bar.getBoundingClientRect()
+    const dockRect = dock?.firstElementChild.firstElementChild.getBoundingClientRect() ?? null
     const x = cardRect.left + cardRect.width / 2
     const y = cardRect.top + cardRect.height / 2
     const hit = x >= 0 && x < innerWidth && y >= 0 && y < innerHeight ? document.elementFromPoint(x, y) : null
     const textRects = [...card.querySelectorAll('span')].filter((span) => span.children.length === 0 && span.textContent.trim()).map((span) => {
       const rect = span.getBoundingClientRect()
-      return { text: span.textContent.trim(), top: rect.top, bottom: rect.bottom, covered: rect.bottom > barRect.top && rect.top < barRect.bottom, inViewport: rect.top >= 0 && rect.bottom <= innerHeight }
+      return { text: span.textContent.trim(), top: rect.top, bottom: rect.bottom, covered: rect.bottom > barRect.top && rect.top < barRect.bottom, inViewport: rect.width > 0 && rect.height > 0 && rect.top >= 0 && rect.bottom <= innerHeight }
+    })
+    const priceRects = [...card.querySelectorAll('span')].filter((span) => span.children.length === 0 && span.textContent.includes('¥') && span.textContent.includes('/ 晚')).map((span) => {
+      const rect = span.getBoundingClientRect()
+      return { top: rect.top, bottom: rect.bottom, width: rect.width, height: rect.height, visible: rect.width > 0 && rect.height > 0 && rect.top >= 0 && rect.bottom <= innerHeight }
     })
     return {
       scrollY,
@@ -382,15 +388,19 @@ async function checkN2(cdp, state, height, vaccineWarning = false) {
       covered: cardRect.bottom > barRect.top && cardRect.top < barRect.bottom,
       centerClickable: hit === card || card.contains(hit),
       hitTestId: hit?.closest?.('[data-testid]')?.dataset.testid ?? hit?.tagName ?? null,
-      dockPresent: !!document.querySelector('[data-testid="app-dock"]'),
+      dockPresent: !!dock,
+      confirmDockOverlap: dockRect ? barRect.bottom > dockRect.top && barRect.top < dockRect.bottom : false,
       vaccineWarning: !!document.querySelector('[data-testid="bs-vaccine-bar"]'),
+      priceNodeCount: priceRects.length,
+      visiblePriceCount: priceRects.filter((rect) => rect.visible).length,
+      priceRects,
       textRects,
     }
   })())`))
   const textCovered = measurements.textRects.filter((rect) => rect.covered || !rect.inViewport)
-  const ok = measurements.scrollY === 0 && measurements.vaccineWarning === vaccineWarning && measurements.clearance >= 8 && measurements.fullyVisible && !measurements.covered && measurements.centerClickable && !measurements.dockPresent && textCovered.length === 0
+  const ok = measurements.scrollY === 0 && measurements.vaccineWarning === vaccineWarning && measurements.clearance >= 8 && measurements.fullyVisible && !measurements.covered && measurements.centerClickable && measurements.dockPresent && !measurements.confirmDockOverlap && measurements.priceNodeCount === 1 && measurements.visiblePriceCount === 1 && textCovered.length === 0
   const scenario = vaccineWarning ? '疫苗警示' : '初始'
-  record(`N2 寄养零滚标准间文案与热区不被确认栏压住（${scenario} 390×${height}）`, ok, `card=${Math.round(measurements.card.top)}–${Math.round(measurements.card.bottom)}；barTop=${Math.round(measurements.confirmBar.top)}；间隙=${Math.round(measurements.clearance)}；文案异常=${textCovered.length}；dock=${measurements.dockPresent}`, measurements)
+  record(`N2 寄养零滚标准间文案与热区不被确认栏压住（${scenario} 390×${height}）`, ok, `card=${Math.round(measurements.card.top)}–${Math.round(measurements.card.bottom)}；barTop=${Math.round(measurements.confirmBar.top)}；间隙=${Math.round(measurements.clearance)}；价格=${measurements.priceNodeCount}/${measurements.visiblePriceCount}；文案异常=${textCovered.length}；dock=${measurements.dockPresent}；栏dock叠=${measurements.confirmDockOverlap}`, measurements)
   await shot(cdp, `n2-boarding-standard-room-${vaccineWarning ? 'vaccine-' : ''}${height}`)
 }
 
@@ -402,21 +412,21 @@ async function main() {
   await cdp.open()
   await browserLogin(cdp, state.customer)
   await checkN1(cdp, state)
-  await checkN2(cdp, state, 844)
-  await checkN2(cdp, state, 700)
-  await checkN2(cdp, state, 667)
-  await checkN2(cdp, state, 700, true)
-  await checkN2(cdp, state, 667, true)
+  const initialHeights = [844, 825, 824, 815, 814, 701, 700, 667]
+  const vaccineHeights = [900, 901, 815, 814, 734, 733, 700, 667]
+  for (const height of initialHeights) await checkN2(cdp, state, height)
+  for (const height of vaccineHeights) await checkN2(cdp, state, height, true)
   cdp.close()
   writeFileSync(join(OUT_DIR, `${PREFIX}-results.json`), JSON.stringify({
     at: new Date().toISOString(),
     base: CUSTOMER_URL,
-    viewports: ['390x844', '390x700', '390x667'],
-    scenarios: ['initial', 'vaccine-warning'],
+    viewportWidth: 390,
+    initialHeights,
+    vaccineHeights,
     results,
   }, null, 2))
-  if (results.length !== 6) {
-    console.error(`检查数不符：期望 6，实际 ${results.length}；拒绝空跑假绿`)
+  if (results.length !== 17) {
+    console.error(`检查数不符：期望 17，实际 ${results.length}；拒绝空跑假绿`)
     process.exit(2)
   }
   const failures = results.filter((result) => !result.ok).length

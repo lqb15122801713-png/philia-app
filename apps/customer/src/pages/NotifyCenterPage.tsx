@@ -207,9 +207,9 @@ export default function NotifyCenterPage() {
       />
     ),
 
-    /* 2. ntf.chips：分类 chips（横滑条隐藏，同 AppointmentsPage 口径） */
+    /* 2. ntf.chips：分类 chips（窄屏自动换行，避免末项被视口裁切） */
     'ntf.chips': () => (
-      <div className="mt-4 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="mt-4 flex flex-wrap gap-2 pb-1">
         {CHIPS.map((c) => (
           <button
             key={c.key}

@@ -1,0 +1,18 @@
+PASS N1 收款展开后次卡扣次完整可见可点 —— option=526–592；barTop=644；到店付=true；次卡=true；文案被压=0
+FAIL N2 寄养零滚标准间文案与热区不被确认栏压住（初始 390×844） —— card=423–634；barTop=671；间隙=37；价格=2/1；文案异常=1；dock=true；栏dock叠=false
+FAIL N2 寄养零滚标准间文案与热区不被确认栏压住（初始 390×825） —— card=423–634；barTop=652；间隙=18；价格=2/1；文案异常=1；dock=true；栏dock叠=false
+FAIL N2 寄养零滚标准间文案与热区不被确认栏压住（初始 390×824） —— card=367–578；barTop=651；间隙=73；价格=2/1；文案异常=1；dock=true；栏dock叠=false
+FAIL N2 寄养零滚标准间文案与热区不被确认栏压住（初始 390×815） —— card=367–578；barTop=642；间隙=64；价格=2/1；文案异常=1；dock=true；栏dock叠=false
+FAIL N2 寄养零滚标准间文案与热区不被确认栏压住（初始 390×814） —— card=367–578；barTop=641；间隙=63；价格=2/1；文案异常=1；dock=true；栏dock叠=false
+FAIL N2 寄养零滚标准间文案与热区不被确认栏压住（初始 390×701） —— card=367–510；barTop=528；间隙=18；价格=2/1；文案异常=1；dock=true；栏dock叠=false
+FAIL N2 寄养零滚标准间文案与热区不被确认栏压住（初始 390×700） —— card=331–509；barTop=527；间隙=18；价格=2/1；文案异常=1；dock=true；栏dock叠=false
+FAIL N2 寄养零滚标准间文案与热区不被确认栏压住（初始 390×667） —— card=331–476；barTop=494；间隙=18；价格=2/1；文案异常=1；dock=true；栏dock叠=false
+FAIL N2 寄养零滚标准间文案与热区不被确认栏压住（疫苗警示 390×900） —— card=437–647；barTop=655；间隙=8；价格=2/1；文案异常=1；dock=true；栏dock叠=false
+FAIL N2 寄养零滚标准间文案与热区不被确认栏压住（疫苗警示 390×901） —— card=437–648；barTop=656；间隙=8；价格=2/1；文案异常=1；dock=true；栏dock叠=false
+FAIL N2 寄养零滚标准间文案与热区不被确认栏压住（疫苗警示 390×815） —— card=381–506；barTop=570；间隙=64；价格=2/1；文案异常=1；dock=true；栏dock叠=false
+FAIL N2 寄养零滚标准间文案与热区不被确认栏压住（疫苗警示 390×814） —— card=381–561；barTop=569；间隙=8；价格=2/1；文案异常=1；dock=true；栏dock叠=false
+FAIL N2 寄养零滚标准间文案与热区不被确认栏压住（疫苗警示 390×734） —— card=381–481；barTop=489；间隙=8；价格=2/1；文案异常=1；dock=true；栏dock叠=false
+FAIL N2 寄养零滚标准间文案与热区不被确认栏压住（疫苗警示 390×733） —— card=381–442；barTop=488；间隙=46；价格=2/1；文案异常=1；dock=true；栏dock叠=false
+FAIL N2 寄养零滚标准间文案与热区不被确认栏压住（疫苗警示 390×700） —— card=345–406；barTop=455；间隙=49；价格=2/1；文案异常=1；dock=true；栏dock叠=false
+FAIL N2 寄养零滚标准间文案与热区不被确认栏压住（疫苗警示 390×667） —— card=345–406；barTop=422；间隙=16；价格=2/1；文案异常=1；dock=true；栏dock叠=false
+汇总：1/17 通过；证据目录=evidence/aesthetic-fix-obs46/regression-n1n2-review-before

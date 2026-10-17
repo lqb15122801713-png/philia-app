@@ -1,0 +1,4 @@
+FAIL Obs4 寄养 dock 与 ConfirmBar 共存不挡关键操作（390×844） —— dock=false；family=false；active=null；栏dock叠=false；卡dock叠=false；卡栏叠=false
+FAIL Obs4 寄养 dock 与 ConfirmBar 共存不挡关键操作（390×700） —— dock=false；family=false；active=null；栏dock叠=false；卡dock叠=false；卡栏叠=false
+FAIL Obs6 消息活动 chip 完整可见且可点 —— chips=6；完整=5；活动right=428；视口=390；点击=false；页横溢=false
+汇总：0/3 通过；证据目录=evidence\aesthetic-fix-obs46

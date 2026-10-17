@@ -1,0 +1,7 @@
+PASS N1 收款展开后次卡扣次完整可见可点 —— option=526–592；barTop=644；到店付=true；次卡=true；文案被压=0
+PASS N2 寄养零滚标准间文案与热区不被确认栏压住（初始 390×844） —— card=423–634；barTop=671；间隙=37；文案异常=0；dock=true；栏dock叠=false
+PASS N2 寄养零滚标准间文案与热区不被确认栏压住（初始 390×700） —— card=331–509；barTop=527；间隙=18；文案异常=0；dock=true；栏dock叠=false
+PASS N2 寄养零滚标准间文案与热区不被确认栏压住（初始 390×667） —— card=331–476；barTop=494；间隙=18；文案异常=0；dock=true；栏dock叠=false
+PASS N2 寄养零滚标准间文案与热区不被确认栏压住（疫苗警示 390×700） —— card=345–406；barTop=455；间隙=49；文案异常=0；dock=true；栏dock叠=false
+PASS N2 寄养零滚标准间文案与热区不被确认栏压住（疫苗警示 390×667） —— card=345–406；barTop=422；间隙=16；文案异常=0；dock=true；栏dock叠=false
+汇总：6/6 通过；证据目录=evidence/aesthetic-fix-obs46/regression-n1n2

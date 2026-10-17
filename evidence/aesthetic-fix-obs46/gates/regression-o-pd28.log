@@ -1,0 +1,11 @@
+PASS O1 首页仅一条进洗护主路径 —— 主入口可见=1；mega=/booking/grooming；panel=null
+PASS O2+O12 回馈金／金额字阶统一可读 —— home=12.5/12.5px；me=12/17px
+PASS O3 毛孩子空态正文对比≥4.5 —— 对比=12.67；fg=rgb(44, 40, 34)；bg=rgb(243, 238, 228)
+PASS O4 管理热区≥44×44 —— 44.0×44.0
+PASS O5 预约禁用钮可读且锁因明确 —— 对比=6.44；text=请先建立宠物档案
+PASS O9 商城漏斗仅一处规则主钩 —— mall=0；pdp=0；cart=1
+PASS O11 会员码入口与落地示能一致 —— 入口=出示会员码/出示或复制；复制钮=true；状态=已复制
+PASS O13 免费档环不误读已攒进度 —— 周期过半 / 本周期日历 / ¥0.00 / 可用余额 / 周期 9.26 – 10.25 · 11.5 前到账
+PASS O14 预约进洗护 dock 常驻且选中 —— path=/booking/grooming；dock=true；current=page；确认栏相交=false
+PASS O6 回归：确认栏与 dock 均不压时段格 —— 视口时段=19；确认栏压=0；dock压=0
+汇总：10/10 通过；证据目录=evidence/aesthetic-fix-obs46/regression-o-pd28

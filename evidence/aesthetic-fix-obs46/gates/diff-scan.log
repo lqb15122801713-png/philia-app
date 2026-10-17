@@ -1,0 +1,14 @@
+apps/customer/src/App.tsx
+apps/customer/src/components/booking/single/BoardingConfirmBar.tsx
+apps/customer/src/components/booking/single/RoomTypeBlock.tsx
+apps/customer/src/index.css
+apps/customer/src/pages/NotifyCenterPage.tsx
+scripts/aesthetic-fix-n1n2-check.mjs
+ M apps/customer/src/App.tsx
+ M apps/customer/src/components/booking/single/BoardingConfirmBar.tsx
+ M apps/customer/src/components/booking/single/RoomTypeBlock.tsx
+ M apps/customer/src/index.css
+ M apps/customer/src/pages/NotifyCenterPage.tsx
+ M scripts/aesthetic-fix-n1n2-check.mjs
+?? evidence/aesthetic-fix-obs46/
+?? scripts/aesthetic-fix-obs46-check.mjs

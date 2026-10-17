@@ -4,7 +4,7 @@
  * - 多房型：选择器卡列表（现状向导屏2 同款，「余 N 间」透出保留）。
  * 余量口径沿用 B3-2：已选区间 = 区间内逐晚最小剩余；未选日期 = 今晚剩余。
  *
- * 换皮批片 2（定稿 H-01 / §4.10 roomcard 工艺卡）：实景图默认 150 高（短视口按 N2 避让规则收缩）
+ * 换皮批片 2（定稿 H-01 / §4.10 roomcard 工艺卡）：实景图默认 150 高（短视口按 N2／Obs4 避让规则收缩或隐藏）
  * + 右上房价胶囊（纸白 mono 11/700 + 小影 §3.3 房价牌影）+ 底条名 14/800 + mono 9 卖点（余量行）。
  * 实景照槽位：services 表无照片字段（schema 实证）——img 插槽指向拍摄清单资产位，
  * onError 回退下沉底 + VI 线图标（ic-board），资产到位即自动替换，不造假图。
@@ -17,7 +17,7 @@ import { fenToYuan } from '../format';
 import type { ServiceItem } from '../types';
 
 /** 实景照插槽：拍摄清单资产位（/photos/room.jpg），缺失时下沉底 + VI 图标占位 */
-function RoomPhoto({ name, priceFen }: { name: string; priceFen: number }) {
+function RoomPhoto({ name }: { name: string }) {
   const [imgOk, setImgOk] = useState(true);
   return (
     <div className="booking-room-photo relative h-[150px]">
@@ -33,10 +33,6 @@ function RoomPhoto({ name, priceFen }: { name: string; priceFen: number }) {
           <img src="/photos/icons/ic-board.png" alt="" className="h-12 w-12 object-contain" />
         </div>
       )}
-      {/* 右上房价胶囊：纸白 mono 11/700 + 小影（§3.3 房价牌） */}
-      <span className="absolute right-3 top-3 rounded-full bg-canvas px-3 py-1.5 font-number text-v2-note font-bold text-ink shadow-philia">
-        {fenToYuan(priceFen)} / 晚
-      </span>
     </div>
   );
 }
@@ -102,14 +98,19 @@ export default function RoomTypeBlock({
     const s = services[0]!;
     return (
       <div
-        className="w-full overflow-hidden rounded-panel border border-line bg-card"
+        className="relative w-full overflow-hidden rounded-panel border border-line bg-card"
         data-testid="bs-room-readonly"
         data-service-id={s.id}
       >
-        <RoomPhoto name={s.boardingRoomType ?? s.name} priceFen={s.priceFen} />
-        {/* 底条：名 14/800 + mono 9 卖点（副名/余量，真实数据） */}
+        <RoomPhoto name={s.boardingRoomType ?? s.name} />
+        {/* 同一价格节点默认落在照片胶囊，短视口隐藏照片时移回底条。 */}
         <div className="px-4 py-3">
-          <span className="block text-body-sm font-extrabold">{s.boardingRoomType ?? s.name}</span>
+          <div className="flex items-center justify-between gap-2">
+            <span className="block text-body-sm font-extrabold">{s.boardingRoomType ?? s.name}</span>
+            <span className="booking-room-price-inline absolute right-3 top-3 shrink-0 rounded-full bg-canvas px-3 py-1.5 font-number text-v2-note font-bold text-ink shadow-philia">
+              {fenToYuan(s.priceFen)} / 晚
+            </span>
+          </div>
           <span className="mt-0.5 flex flex-wrap gap-x-2 font-number text-[9px] text-ink-secondary">
             {s.boardingRoomType ? <span>{s.name}</span> : null}
             {remainLine(s.id)}

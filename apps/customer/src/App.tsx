@@ -180,19 +180,21 @@ function ProtectedRoutes() {
 export default function App() {
   const { pathname } = useLocation()
   const isDevLogin = pathname === '/dev-login'
-  // U1-A：全局 dock 统一为 <AppDock>，主级页面 + O14 洗护单屏渲染；
+  // U1-A：全局 dock 统一为 <AppDock>，主级页面 + O14 洗护／Obs4 寄养单屏渲染；
   // 其他详情级页面仍走统一返回条，不扩 dock 范围。
   const isGroomingPath = pathname === '/booking/grooming' || pathname === '/booking/grooming/'
+  const isBoardingPath = pathname === '/booking/boarding' || pathname === '/booking/boarding/'
+  const hasBookingDock = isGroomingPath || isBoardingPath
   const isMainPath =
     pathname === '/' ||
     pathname === '/home' ||
     pathname === '/mall' ||
     pathname === '/me' ||
     pathname === '/philia' ||
-    isGroomingPath
+    hasBookingDock
 
   return (
-    <div className={isGroomingPath ? 'booking-with-dock min-h-screen bg-canvas text-ink' : 'min-h-screen bg-canvas text-ink'}>
+    <div className={hasBookingDock ? 'booking-with-dock min-h-screen bg-canvas text-ink' : 'min-h-screen bg-canvas text-ink'}>
       <main className="mx-auto max-w-lg pb-24">
         <Routes>
           {/* 开发登录页：守卫之外，且不显示 dock（T2.0 新增路由，已向主代理汇报） */}
@@ -212,8 +214,8 @@ export default function App() {
       </main>
       {!isDevLogin && isMainPath && <AppDock />}
       {/* 体验批片 4：PWA 安装引导条（beforeinstallprompt 拦存+自定义条；
-          登录守卫内全页可出，自身持关闭/已装持久化，非主级页不吃 isMainPath 限制） */}
-      {!isDevLogin && <InstallBanner />}
+          登录守卫内全页可出；Obs4 寄养下单关键路径除外，避免与 ConfirmBar 争用热区） */}
+      {!isDevLogin && !isBoardingPath && <InstallBanner />}
     </div>
   )
 }
