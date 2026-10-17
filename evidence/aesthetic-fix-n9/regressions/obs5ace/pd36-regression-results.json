@@ -1,0 +1,197 @@
+{
+  "at": "2026-10-17T23:32:17.624Z",
+  "base": "http://127.0.0.1:7130",
+  "results": [
+    {
+      "id": "Obs5a 寄养房型副文 ≥12px 且 N2 避让不回退",
+      "ok": true,
+      "detail": "副文=1 处；最小字号=12px；房型卡底=508；栏顶=527；净空=20",
+      "measurements": {
+        "scrollY": 0,
+        "subtitles": [
+          {
+            "text": "标准间寄养（犬）\n今晚剩余 2 间",
+            "fontSize": 12
+          }
+        ],
+        "card": {
+          "bottom": 507.5
+        },
+        "barTop": 527,
+        "clearance": 19.5
+      }
+    },
+    {
+      "id": "Obs5c 对比四档权益热区 ≥44px 且 N4 避让不回退",
+      "ok": true,
+      "detail": "热区=80×44；链底=419；栏顶=530；净空=111；mt=-36px；命中=true",
+      "measurements": {
+        "scrollY": 0,
+        "marginTop": "-36px",
+        "marginBottom": "0px",
+        "display": "inline-flex",
+        "transform": "matrix(1, 0, 0, 1, 0, -12)",
+        "text": "对比四档权益 ›",
+        "width": 79.6875,
+        "height": 44,
+        "top": 374.9375,
+        "bottom": 418.9375,
+        "barTop": 530.25,
+        "clearance": 111.3125,
+        "hitInside": true
+      }
+    },
+    {
+      "id": "Obs5e 商城列表 quick-add 同族热区 ≥44px",
+      "ok": true,
+      "detail": "按钮=10 个；最小热区=44×44",
+      "measurements": {
+        "scrollY": 0,
+        "buttons": [
+          {
+            "id": "mall-quickadd-01M562XMZ8HXRNTCDQXFV7Z75V",
+            "width": 44,
+            "height": 44
+          },
+          {
+            "id": "mall-quickadd-01M562XMZ8G2VWHSBMD3ZY60EV",
+            "width": 44,
+            "height": 44
+          },
+          {
+            "id": "mall-quickadd-01M562XMZ8WARZ5RQ8RPY5G0R4",
+            "width": 44,
+            "height": 44
+          },
+          {
+            "id": "mall-quickadd-01M562XMZ8Z7ZZ1E5BTNV0Q880",
+            "width": 44,
+            "height": 44
+          },
+          {
+            "id": "mall-quickadd-01M562XMZ8MCS78ESH1CYQMDZ1",
+            "width": 44,
+            "height": 44
+          },
+          {
+            "id": "mall-quickadd-01M562XMZ9QG809EEYZCN04S3F",
+            "width": 44,
+            "height": 44
+          },
+          {
+            "id": "mall-quickadd-01M562XMZ98PK19E9XGZQ9JW1C",
+            "width": 44,
+            "height": 44
+          },
+          {
+            "id": "mall-quickadd-01M562XMZ9EV0AB0QYTMNCBZ7F",
+            "width": 44,
+            "height": 44
+          },
+          {
+            "id": "mall-quickadd-01M562XMZ9KNDC20M5H42VNAVG",
+            "width": 44,
+            "height": 44
+          },
+          {
+            "id": "mall-quickadd-01M562XMZ9M8YRZ5Q6QNXF8VVR",
+            "width": 44,
+            "height": 44
+          }
+        ]
+      }
+    },
+    {
+      "id": "Obs5e quick-add 与两行名称／付费返显零相交",
+      "ok": true,
+      "detail": "热区=44×44；名称叠=false；返显叠=false",
+      "measurements": {
+        "button": {
+          "left": 133,
+          "right": 177,
+          "top": 490.234375,
+          "bottom": 534.234375,
+          "width": 44,
+          "height": 44
+        },
+        "nameRects": [
+          {
+            "left": 34,
+            "right": 123.5,
+            "top": 463.734375,
+            "bottom": 479.734375
+          },
+          {
+            "left": 34,
+            "right": 121.5,
+            "top": 479.734375,
+            "bottom": 495.734375
+          },
+          {
+            "left": 34,
+            "right": 109,
+            "top": 479.734375,
+            "bottom": 495.734375
+          },
+          {
+            "left": 34,
+            "right": 84,
+            "top": 495.734375,
+            "bottom": 511.734375
+          }
+        ],
+        "nameOverlap": false,
+        "rebateRect": {
+          "left": 67.609375,
+          "right": 125.421875,
+          "top": 508.734375,
+          "bottom": 533.484375
+        },
+        "rebateOverlap": false
+      }
+    },
+    {
+      "id": "Obs5e 商详加减热区 ≥44px 且 N8 避让不回退",
+      "ok": true,
+      "detail": "按钮=2 个；最小热区=44×44；评价净空=17",
+      "measurements": {
+        "scrollY": 0,
+        "buttons": [
+          {
+            "label": "减少数量",
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "增加数量",
+            "width": 44,
+            "height": 44
+          }
+        ],
+        "reviewBottom": 547.25,
+        "ctaTop": 564,
+        "reviewClearance": 16.75
+      }
+    },
+    {
+      "id": "Obs5e 购物列表加减热区 ≥44px",
+      "ok": true,
+      "detail": "按钮=2 个；最小热区=44×44",
+      "measurements": {
+        "scrollY": 0,
+        "buttons": [
+          {
+            "label": "减少数量",
+            "width": 44,
+            "height": 44
+          },
+          {
+            "label": "增加数量",
+            "width": 44,
+            "height": 44
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+PASS Obs5a 寄养房型副文 ≥12px 且 N2 避让不回退 —— 副文=1 处；最小字号=12px；房型卡底=508；栏顶=527；净空=20
+PASS Obs5c 对比四档权益热区 ≥44px 且 N4 避让不回退 —— 热区=80×44；链底=419；栏顶=530；净空=111；mt=-36px；命中=true
+PASS Obs5e 商城列表 quick-add 同族热区 ≥44px —— 按钮=10 个；最小热区=44×44
+PASS Obs5e quick-add 与两行名称／付费返显零相交 —— 热区=44×44；名称叠=false；返显叠=false
+PASS Obs5e 商详加减热区 ≥44px 且 N8 避让不回退 —— 按钮=2 个；最小热区=44×44；评价净空=17
+PASS Obs5e 购物列表加减热区 ≥44px —— 按钮=2 个；最小热区=44×44
+汇总：6/6 通过；证据目录=evidence/aesthetic-fix-n9/regressions/obs5ace
