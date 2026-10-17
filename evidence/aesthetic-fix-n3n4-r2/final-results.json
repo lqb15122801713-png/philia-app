@@ -1,0 +1,892 @@
+{
+  "at": "2026-10-17T09:08:23.008Z",
+  "base": "http://127.0.0.1:7130",
+  "results": [
+    {
+      "id": "N3/N4 避让不依赖 CSS max()",
+      "ok": true,
+      "detail": "N3max=false；N4max=false",
+      "measurements": {
+        "n3UsesMax": false,
+        "n4UsesMax": false,
+        "blocksFound": {
+          "n3": true,
+          "n4": true
+        }
+      }
+    },
+    {
+      "id": "N3 结算零滚合计一行不被提交栏遮（390×844）",
+      "ok": true,
+      "detail": "scrollY=0；inset=0；净空=94；合计=615–635；barTop=730；遮=false；命中=SPAN",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "total": {
+          "text": "合计（1 件）",
+          "top": 615.25,
+          "bottom": 635.25
+        },
+        "bar": {
+          "top": 729.5,
+          "bottom": 844
+        },
+        "clearance": 94.25,
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "SPAN",
+        "submitExists": true,
+        "safeBottom": 0,
+        "styles": {
+          "page": {
+            "paddingTop": "24px"
+          },
+          "address": {
+            "marginTop": "16px",
+            "paddingTop": "16px",
+            "paddingBottom": "16px"
+          },
+          "delivery": {
+            "marginTop": "12px"
+          },
+          "fields": {
+            "marginTop": "12px",
+            "gap": "12px"
+          },
+          "input": {
+            "height": "44px"
+          },
+          "lines": {
+            "marginTop": "12px",
+            "paddingTop": "6px",
+            "paddingBottom": "6px"
+          },
+          "lineItem": {
+            "paddingTop": "10px",
+            "paddingBottom": "10px"
+          },
+          "totalRow": {
+            "paddingTop": "12px",
+            "paddingBottom": "12px"
+          }
+        }
+      }
+    },
+    {
+      "id": "N3 结算零滚合计一行不被提交栏遮（390×793）",
+      "ok": true,
+      "detail": "scrollY=0；inset=0；净空=43；合计=615–635；barTop=679；遮=false；命中=SPAN",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 793
+        },
+        "total": {
+          "text": "合计（1 件）",
+          "top": 615.25,
+          "bottom": 635.25
+        },
+        "bar": {
+          "top": 678.5,
+          "bottom": 793
+        },
+        "clearance": 43.25,
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "SPAN",
+        "submitExists": true,
+        "safeBottom": 0,
+        "styles": {
+          "page": {
+            "paddingTop": "24px"
+          },
+          "address": {
+            "marginTop": "16px",
+            "paddingTop": "16px",
+            "paddingBottom": "16px"
+          },
+          "delivery": {
+            "marginTop": "12px"
+          },
+          "fields": {
+            "marginTop": "12px",
+            "gap": "12px"
+          },
+          "input": {
+            "height": "44px"
+          },
+          "lines": {
+            "marginTop": "12px",
+            "paddingTop": "6px",
+            "paddingBottom": "6px"
+          },
+          "lineItem": {
+            "paddingTop": "10px",
+            "paddingBottom": "10px"
+          },
+          "totalRow": {
+            "paddingTop": "12px",
+            "paddingBottom": "12px"
+          }
+        }
+      }
+    },
+    {
+      "id": "N3 结算零滚合计一行不被提交栏遮（390×792）",
+      "ok": true,
+      "detail": "scrollY=0；inset=0；净空=140；合计=517–537；barTop=678；遮=false；命中=SPAN",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 792
+        },
+        "total": {
+          "text": "合计（1 件）",
+          "top": 517.25,
+          "bottom": 537.25
+        },
+        "bar": {
+          "top": 677.5,
+          "bottom": 792
+        },
+        "clearance": 140.25,
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "SPAN",
+        "submitExists": true,
+        "safeBottom": 0,
+        "styles": {
+          "page": {
+            "paddingTop": "16px"
+          },
+          "address": {
+            "marginTop": "12px",
+            "paddingTop": "4px",
+            "paddingBottom": "4px"
+          },
+          "delivery": {
+            "marginTop": "0px"
+          },
+          "fields": {
+            "marginTop": "8px",
+            "gap": "0px"
+          },
+          "input": {
+            "height": "40px"
+          },
+          "lines": {
+            "marginTop": "8px",
+            "paddingTop": "4px",
+            "paddingBottom": "4px"
+          },
+          "lineItem": {
+            "paddingTop": "8px",
+            "paddingBottom": "8px"
+          },
+          "totalRow": {
+            "paddingTop": "8px",
+            "paddingBottom": "8px"
+          }
+        }
+      }
+    },
+    {
+      "id": "N3 结算零滚合计一行不被提交栏遮（390×737）",
+      "ok": true,
+      "detail": "scrollY=0；inset=0；净空=85；合计=517–537；barTop=623；遮=false；命中=SPAN",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 737
+        },
+        "total": {
+          "text": "合计（1 件）",
+          "top": 517.25,
+          "bottom": 537.25
+        },
+        "bar": {
+          "top": 622.5,
+          "bottom": 737
+        },
+        "clearance": 85.25,
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "SPAN",
+        "submitExists": true,
+        "safeBottom": 0,
+        "styles": {
+          "page": {
+            "paddingTop": "16px"
+          },
+          "address": {
+            "marginTop": "12px",
+            "paddingTop": "4px",
+            "paddingBottom": "4px"
+          },
+          "delivery": {
+            "marginTop": "0px"
+          },
+          "fields": {
+            "marginTop": "8px",
+            "gap": "0px"
+          },
+          "input": {
+            "height": "40px"
+          },
+          "lines": {
+            "marginTop": "8px",
+            "paddingTop": "4px",
+            "paddingBottom": "4px"
+          },
+          "lineItem": {
+            "paddingTop": "8px",
+            "paddingBottom": "8px"
+          },
+          "totalRow": {
+            "paddingTop": "8px",
+            "paddingBottom": "8px"
+          }
+        }
+      }
+    },
+    {
+      "id": "N3 结算零滚合计一行不被提交栏遮（390×736）",
+      "ok": true,
+      "detail": "scrollY=0；inset=0；净空=84；合计=517–537；barTop=622；遮=false；命中=SPAN",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 736
+        },
+        "total": {
+          "text": "合计（1 件）",
+          "top": 517.25,
+          "bottom": 537.25
+        },
+        "bar": {
+          "top": 621.5,
+          "bottom": 736
+        },
+        "clearance": 84.25,
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "SPAN",
+        "submitExists": true,
+        "safeBottom": 0,
+        "styles": {
+          "page": {
+            "paddingTop": "16px"
+          },
+          "address": {
+            "marginTop": "12px",
+            "paddingTop": "4px",
+            "paddingBottom": "4px"
+          },
+          "delivery": {
+            "marginTop": "0px"
+          },
+          "fields": {
+            "marginTop": "8px",
+            "gap": "0px"
+          },
+          "input": {
+            "height": "40px"
+          },
+          "lines": {
+            "marginTop": "8px",
+            "paddingTop": "4px",
+            "paddingBottom": "4px"
+          },
+          "lineItem": {
+            "paddingTop": "8px",
+            "paddingBottom": "8px"
+          },
+          "totalRow": {
+            "paddingTop": "8px",
+            "paddingBottom": "8px"
+          }
+        }
+      }
+    },
+    {
+      "id": "N3 结算零滚合计一行不被提交栏遮（390×700）",
+      "ok": true,
+      "detail": "scrollY=0；inset=0；净空=48；合计=517–537；barTop=586；遮=false；命中=SPAN",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 700
+        },
+        "total": {
+          "text": "合计（1 件）",
+          "top": 517.25,
+          "bottom": 537.25
+        },
+        "bar": {
+          "top": 585.5,
+          "bottom": 700
+        },
+        "clearance": 48.25,
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "SPAN",
+        "submitExists": true,
+        "safeBottom": 0,
+        "styles": {
+          "page": {
+            "paddingTop": "16px"
+          },
+          "address": {
+            "marginTop": "12px",
+            "paddingTop": "4px",
+            "paddingBottom": "4px"
+          },
+          "delivery": {
+            "marginTop": "0px"
+          },
+          "fields": {
+            "marginTop": "8px",
+            "gap": "0px"
+          },
+          "input": {
+            "height": "40px"
+          },
+          "lines": {
+            "marginTop": "8px",
+            "paddingTop": "4px",
+            "paddingBottom": "4px"
+          },
+          "lineItem": {
+            "paddingTop": "8px",
+            "paddingBottom": "8px"
+          },
+          "totalRow": {
+            "paddingTop": "8px",
+            "paddingBottom": "8px"
+          }
+        }
+      }
+    },
+    {
+      "id": "N3 结算零滚合计一行不被提交栏遮（390×700）",
+      "ok": true,
+      "detail": "scrollY=0；inset=34；净空=14；合计=517–537；barTop=552；遮=false；命中=SPAN",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 700
+        },
+        "total": {
+          "text": "合计（1 件）",
+          "top": 517.25,
+          "bottom": 537.25
+        },
+        "bar": {
+          "top": 551.5,
+          "bottom": 666
+        },
+        "clearance": 14.25,
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "SPAN",
+        "submitExists": true,
+        "safeBottom": 34,
+        "styles": {
+          "page": {
+            "paddingTop": "16px"
+          },
+          "address": {
+            "marginTop": "12px",
+            "paddingTop": "4px",
+            "paddingBottom": "4px"
+          },
+          "delivery": {
+            "marginTop": "0px"
+          },
+          "fields": {
+            "marginTop": "8px",
+            "gap": "0px"
+          },
+          "input": {
+            "height": "40px"
+          },
+          "lines": {
+            "marginTop": "8px",
+            "paddingTop": "4px",
+            "paddingBottom": "4px"
+          },
+          "lineItem": {
+            "paddingTop": "8px",
+            "paddingBottom": "8px"
+          },
+          "totalRow": {
+            "paddingTop": "8px",
+            "paddingBottom": "8px"
+          }
+        }
+      }
+    },
+    {
+      "id": "N3 结算零滚合计一行不被提交栏遮（390×793）",
+      "ok": true,
+      "detail": "scrollY=0；inset=34；净空=9；合计=615–635；barTop=645；遮=false；命中=SPAN",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 793
+        },
+        "total": {
+          "text": "合计（1 件）",
+          "top": 615.25,
+          "bottom": 635.25
+        },
+        "bar": {
+          "top": 644.5,
+          "bottom": 759
+        },
+        "clearance": 9.25,
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "SPAN",
+        "submitExists": true,
+        "safeBottom": 34,
+        "styles": {
+          "page": {
+            "paddingTop": "24px"
+          },
+          "address": {
+            "marginTop": "16px",
+            "paddingTop": "16px",
+            "paddingBottom": "16px"
+          },
+          "delivery": {
+            "marginTop": "12px"
+          },
+          "fields": {
+            "marginTop": "12px",
+            "gap": "12px"
+          },
+          "input": {
+            "height": "44px"
+          },
+          "lines": {
+            "marginTop": "12px",
+            "paddingTop": "6px",
+            "paddingBottom": "6px"
+          },
+          "lineItem": {
+            "paddingTop": "10px",
+            "paddingBottom": "10px"
+          },
+          "totalRow": {
+            "paddingTop": "12px",
+            "paddingBottom": "12px"
+          }
+        }
+      }
+    },
+    {
+      "id": "N3 结算零滚合计一行不被提交栏遮（390×844）",
+      "ok": true,
+      "detail": "scrollY=0；inset=34；净空=60；合计=615–635；barTop=696；遮=false；命中=SPAN",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "total": {
+          "text": "合计（1 件）",
+          "top": 615.25,
+          "bottom": 635.25
+        },
+        "bar": {
+          "top": 695.5,
+          "bottom": 810
+        },
+        "clearance": 60.25,
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "SPAN",
+        "submitExists": true,
+        "safeBottom": 34,
+        "styles": {
+          "page": {
+            "paddingTop": "24px"
+          },
+          "address": {
+            "marginTop": "16px",
+            "paddingTop": "16px",
+            "paddingBottom": "16px"
+          },
+          "delivery": {
+            "marginTop": "12px"
+          },
+          "fields": {
+            "marginTop": "12px",
+            "gap": "12px"
+          },
+          "input": {
+            "height": "44px"
+          },
+          "lines": {
+            "marginTop": "12px",
+            "paddingTop": "6px",
+            "paddingBottom": "6px"
+          },
+          "lineItem": {
+            "paddingTop": "10px",
+            "paddingBottom": "10px"
+          },
+          "totalRow": {
+            "paddingTop": "12px",
+            "paddingBottom": "12px"
+          }
+        }
+      }
+    },
+    {
+      "id": "N4 开通页零滚对比四档权益链完整可点（390×844）",
+      "ok": true,
+      "detail": "scrollY=0；inset=0；净空=122；链=566–586；barTop=708；遮=false；开对比=true；claim=true",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "compare": {
+          "text": "对比四档权益 ›",
+          "left": 155.15625,
+          "right": 234.84375,
+          "top": 566.109375,
+          "bottom": 586.109375
+        },
+        "bar": {
+          "top": 708.25,
+          "bottom": 844
+        },
+        "clearance": 122.140625,
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "member-open-page",
+        "point": {
+          "x": 195,
+          "y": 576.109375
+        },
+        "safeBottom": 0,
+        "claimText": "多只毛孩子 · 都被叫得出名字",
+        "claimVisible": true,
+        "compareOpened": true
+      }
+    },
+    {
+      "id": "N4 开通页零滚对比四档权益链完整可点（390×765）",
+      "ok": true,
+      "detail": "scrollY=0；inset=0；净空=43；链=566–586；barTop=629；遮=false；开对比=true；claim=true",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 765
+        },
+        "compare": {
+          "text": "对比四档权益 ›",
+          "left": 155.15625,
+          "right": 234.84375,
+          "top": 566.109375,
+          "bottom": 586.109375
+        },
+        "bar": {
+          "top": 629.25,
+          "bottom": 765
+        },
+        "clearance": 43.140625,
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "member-open-page",
+        "point": {
+          "x": 195,
+          "y": 576.109375
+        },
+        "safeBottom": 0,
+        "claimText": "多只毛孩子 · 都被叫得出名字",
+        "claimVisible": true,
+        "compareOpened": true
+      }
+    },
+    {
+      "id": "N4 开通页零滚对比四档权益链完整可点（390×764）",
+      "ok": true,
+      "detail": "scrollY=0；inset=0；净空=108；链=500–520；barTop=628；遮=false；开对比=true；claim=true",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 764
+        },
+        "compare": {
+          "text": "对比四档权益 ›",
+          "left": 155.15625,
+          "right": 234.84375,
+          "top": 500.109375,
+          "bottom": 520.109375
+        },
+        "bar": {
+          "top": 628.25,
+          "bottom": 764
+        },
+        "clearance": 108.140625,
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "member-open-page",
+        "point": {
+          "x": 195,
+          "y": 510.109375
+        },
+        "safeBottom": 0,
+        "claimText": "多只毛孩子 · 都被叫得出名字",
+        "claimVisible": true,
+        "compareOpened": true
+      }
+    },
+    {
+      "id": "N4 开通页零滚对比四档权益链完整可点（390×737）",
+      "ok": true,
+      "detail": "scrollY=0；inset=0；净空=81；链=500–520；barTop=601；遮=false；开对比=true；claim=true",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 737
+        },
+        "compare": {
+          "text": "对比四档权益 ›",
+          "left": 155.15625,
+          "right": 234.84375,
+          "top": 500.109375,
+          "bottom": 520.109375
+        },
+        "bar": {
+          "top": 601.25,
+          "bottom": 737
+        },
+        "clearance": 81.140625,
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "member-open-page",
+        "point": {
+          "x": 195,
+          "y": 510.109375
+        },
+        "safeBottom": 0,
+        "claimText": "多只毛孩子 · 都被叫得出名字",
+        "claimVisible": true,
+        "compareOpened": true
+      }
+    },
+    {
+      "id": "N4 开通页零滚对比四档权益链完整可点（390×736）",
+      "ok": true,
+      "detail": "scrollY=0；inset=0；净空=80；链=500–520；barTop=600；遮=false；开对比=true；claim=true",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 736
+        },
+        "compare": {
+          "text": "对比四档权益 ›",
+          "left": 155.15625,
+          "right": 234.84375,
+          "top": 500.109375,
+          "bottom": 520.109375
+        },
+        "bar": {
+          "top": 600.25,
+          "bottom": 736
+        },
+        "clearance": 80.140625,
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "member-open-page",
+        "point": {
+          "x": 195,
+          "y": 510.109375
+        },
+        "safeBottom": 0,
+        "claimText": "多只毛孩子 · 都被叫得出名字",
+        "claimVisible": true,
+        "compareOpened": true
+      }
+    },
+    {
+      "id": "N4 开通页零滚对比四档权益链完整可点（390×700）",
+      "ok": true,
+      "detail": "scrollY=0；inset=0；净空=44；链=500–520；barTop=564；遮=false；开对比=true；claim=true",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 700
+        },
+        "compare": {
+          "text": "对比四档权益 ›",
+          "left": 155.15625,
+          "right": 234.84375,
+          "top": 500.109375,
+          "bottom": 520.109375
+        },
+        "bar": {
+          "top": 564.25,
+          "bottom": 700
+        },
+        "clearance": 44.140625,
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "member-open-page",
+        "point": {
+          "x": 195,
+          "y": 510.109375
+        },
+        "safeBottom": 0,
+        "claimText": "多只毛孩子 · 都被叫得出名字",
+        "claimVisible": true,
+        "compareOpened": true
+      }
+    },
+    {
+      "id": "N4 开通页零滚对比四档权益链完整可点（390×700）",
+      "ok": true,
+      "detail": "scrollY=0；inset=34；净空=10；链=500–520；barTop=530；遮=false；开对比=true；claim=true",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 700
+        },
+        "compare": {
+          "text": "对比四档权益 ›",
+          "left": 155.15625,
+          "right": 234.84375,
+          "top": 500.109375,
+          "bottom": 520.109375
+        },
+        "bar": {
+          "top": 530.25,
+          "bottom": 700
+        },
+        "clearance": 10.140625,
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "member-open-page",
+        "point": {
+          "x": 195,
+          "y": 510.109375
+        },
+        "safeBottom": 34,
+        "claimText": "多只毛孩子 · 都被叫得出名字",
+        "claimVisible": true,
+        "compareOpened": true
+      }
+    },
+    {
+      "id": "N4 开通页零滚对比四档权益链完整可点（390×765）",
+      "ok": true,
+      "detail": "scrollY=0；inset=34；净空=9；链=566–586；barTop=595；遮=false；开对比=true；claim=true",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 765
+        },
+        "compare": {
+          "text": "对比四档权益 ›",
+          "left": 155.15625,
+          "right": 234.84375,
+          "top": 566.109375,
+          "bottom": 586.109375
+        },
+        "bar": {
+          "top": 595.25,
+          "bottom": 765
+        },
+        "clearance": 9.140625,
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "member-open-page",
+        "point": {
+          "x": 195,
+          "y": 576.109375
+        },
+        "safeBottom": 34,
+        "claimText": "多只毛孩子 · 都被叫得出名字",
+        "claimVisible": true,
+        "compareOpened": true
+      }
+    },
+    {
+      "id": "N4 开通页零滚对比四档权益链完整可点（390×844）",
+      "ok": true,
+      "detail": "scrollY=0；inset=34；净空=88；链=566–586；barTop=674；遮=false；开对比=true；claim=true",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "compare": {
+          "text": "对比四档权益 ›",
+          "left": 155.15625,
+          "right": 234.84375,
+          "top": 566.109375,
+          "bottom": 586.109375
+        },
+        "bar": {
+          "top": 674.25,
+          "bottom": 844
+        },
+        "clearance": 88.140625,
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "member-open-page",
+        "point": {
+          "x": 195,
+          "y": 576.109375
+        },
+        "safeBottom": 34,
+        "claimText": "多只毛孩子 · 都被叫得出名字",
+        "claimVisible": true,
+        "compareOpened": true
+      }
+    }
+  ]
+}

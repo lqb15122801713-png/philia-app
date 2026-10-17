@@ -1,0 +1,182 @@
+{
+  "at": "2026-10-17T08:55:04.434Z",
+  "base": "http://127.0.0.1:7130",
+  "results": [
+    {
+      "id": "Obs4 寄养 dock 与 ConfirmBar 共存不挡关键操作（390×844）",
+      "ok": true,
+      "detail": "dock=true；family=true；active=page；栏dock叠=false；卡dock叠=false；卡栏叠=false",
+      "measurements": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "dockPresent": true,
+        "dockFamily": true,
+        "bookingActive": "page",
+        "dockRect": {
+          "x": 16,
+          "y": 766,
+          "width": 358,
+          "height": 64,
+          "top": 766,
+          "right": 374,
+          "bottom": 830,
+          "left": 16
+        },
+        "confirmRect": {
+          "top": 671,
+          "bottom": 766
+        },
+        "cardRect": {
+          "top": 432.5,
+          "bottom": 644
+        },
+        "buttonRect": {
+          "top": 683,
+          "bottom": 731
+        },
+        "confirmDockOverlap": false,
+        "cardDockOverlap": false,
+        "cardConfirmOverlap": false,
+        "cardClickable": true,
+        "buttonClickable": true
+      }
+    },
+    {
+      "id": "Obs4 寄养 dock 与 ConfirmBar 共存不挡关键操作（390×700）",
+      "ok": true,
+      "detail": "dock=true；family=true；active=page；栏dock叠=false；卡dock叠=false；卡栏叠=false",
+      "measurements": {
+        "viewport": {
+          "width": 390,
+          "height": 700
+        },
+        "dockPresent": true,
+        "dockFamily": true,
+        "bookingActive": "page",
+        "dockRect": {
+          "x": 16,
+          "y": 622,
+          "width": 358,
+          "height": 64,
+          "top": 622,
+          "right": 374,
+          "bottom": 686,
+          "left": 16
+        },
+        "confirmRect": {
+          "top": 527,
+          "bottom": 622
+        },
+        "cardRect": {
+          "top": 340.5,
+          "bottom": 519
+        },
+        "buttonRect": {
+          "top": 539,
+          "bottom": 587
+        },
+        "confirmDockOverlap": false,
+        "cardDockOverlap": false,
+        "cardConfirmOverlap": false,
+        "cardClickable": true,
+        "buttonClickable": true
+      }
+    },
+    {
+      "id": "Obs4 PWA 安装条不遮寄养确认按钮",
+      "ok": true,
+      "detail": "banner=false；叠=false；可点=true；命中=bs-confirm",
+      "measurements": {
+        "bannerPresent": false,
+        "bannerRect": null,
+        "buttonRect": {
+          "top": 683,
+          "bottom": 731
+        },
+        "overlap": false,
+        "buttonClickable": true,
+        "hitTestId": "bs-confirm"
+      }
+    },
+    {
+      "id": "Obs6 消息活动 chip 完整可见且可点",
+      "ok": true,
+      "detail": "chips=6；完整=6；活动right=78；视口=390；点击=true；页横溢=false",
+      "measurements": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "chipCount": 6,
+        "chips": [
+          {
+            "id": "notify-chip-all",
+            "left": 16,
+            "right": 78,
+            "top": 76,
+            "bottom": 114,
+            "fullyVisible": true
+          },
+          {
+            "id": "notify-chip-unread",
+            "left": 86,
+            "right": 148,
+            "top": 76,
+            "bottom": 114,
+            "fullyVisible": true
+          },
+          {
+            "id": "notify-chip-trade",
+            "left": 156,
+            "right": 218,
+            "top": 76,
+            "bottom": 114,
+            "fullyVisible": true
+          },
+          {
+            "id": "notify-chip-service",
+            "left": 226,
+            "right": 288,
+            "top": 76,
+            "bottom": 114,
+            "fullyVisible": true
+          },
+          {
+            "id": "notify-chip-account",
+            "left": 296,
+            "right": 358,
+            "top": 76,
+            "bottom": 114,
+            "fullyVisible": true
+          },
+          {
+            "id": "notify-chip-marketing",
+            "left": 16,
+            "right": 78,
+            "top": 122,
+            "bottom": 160,
+            "fullyVisible": true
+          }
+        ],
+        "rail": {
+          "left": 16,
+          "right": 374,
+          "scrollWidth": 358,
+          "clientWidth": 358,
+          "scrollLeft": 0
+        },
+        "last": {
+          "left": 16,
+          "right": 78,
+          "top": 122,
+          "bottom": 160
+        },
+        "hintPresent": false,
+        "pageHorizontalOverflow": false,
+        "clicked": true
+      }
+    }
+  ]
+}

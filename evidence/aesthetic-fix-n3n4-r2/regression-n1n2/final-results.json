@@ -1,0 +1,1222 @@
+{
+  "at": "2026-10-17T08:55:18.163Z",
+  "base": "http://127.0.0.1:7130",
+  "viewportWidth": 390,
+  "initialHeights": [
+    844,
+    825,
+    824,
+    815,
+    814,
+    701,
+    700,
+    667
+  ],
+  "vaccineHeights": [
+    900,
+    901,
+    815,
+    814,
+    734,
+    733,
+    700,
+    667
+  ],
+  "results": [
+    {
+      "id": "N1 收款展开后次卡扣次完整可见可点",
+      "ok": true,
+      "detail": "option=526–592；barTop=644；到店付=true；次卡=true；文案被压=0",
+      "measurements": {
+        "scrollY": 1290,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "option": {
+          "top": 526.09375,
+          "bottom": 592.09375,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 644,
+          "bottom": 766
+        },
+        "disabled": false,
+        "fullyVisible": true,
+        "covered": false,
+        "clickable": true,
+        "hitTestId": "gs-payment-pass_deduct",
+        "textRects": [
+          {
+            "text": "次卡扣次",
+            "top": 539.09375,
+            "bottom": 561.09375,
+            "covered": false
+          },
+          {
+            "text": "剩余 2 次 · 预约确认后扣 1 次",
+            "top": 563.09375,
+            "bottom": 579.09375,
+            "covered": false
+          }
+        ],
+        "switchedToStore": true,
+        "modeChanged": true
+      }
+    },
+    {
+      "id": "N2 寄养零滚标准间文案与热区不被确认栏压住（初始 390×844）",
+      "ok": true,
+      "detail": "card=423–634；barTop=671；间隙=37；价格=1/1；文案异常=0；dock=true；栏dock叠=false",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "testId": "bs-room-readonly",
+        "card": {
+          "top": 422.5,
+          "bottom": 634,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 671,
+          "bottom": 766
+        },
+        "clearance": 37,
+        "fullyVisible": true,
+        "covered": false,
+        "centerClickable": true,
+        "hitTestId": "bs-room-readonly",
+        "dockPresent": true,
+        "confirmDockOverlap": false,
+        "vaccineWarning": false,
+        "priceNodeCount": 1,
+        "visiblePriceCount": 1,
+        "priceRects": [
+          {
+            "top": 435.5,
+            "bottom": 462.5,
+            "width": 81.21875,
+            "height": 27,
+            "visible": true
+          }
+        ],
+        "textRects": [
+          {
+            "text": "标准间",
+            "top": 585.5,
+            "bottom": 605.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "¥199 / 晚",
+            "top": 435.5,
+            "bottom": 462.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "标准间寄养（犬）",
+            "top": 607.5,
+            "bottom": 621,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "今晚剩余 2 间",
+            "top": 607.5,
+            "bottom": 621,
+            "covered": false,
+            "inViewport": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "N2 寄养零滚标准间文案与热区不被确认栏压住（初始 390×825）",
+      "ok": true,
+      "detail": "card=423–634；barTop=652；间隙=18；价格=1/1；文案异常=0；dock=true；栏dock叠=false",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 825
+        },
+        "testId": "bs-room-readonly",
+        "card": {
+          "top": 422.5,
+          "bottom": 634,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 652,
+          "bottom": 747
+        },
+        "clearance": 18,
+        "fullyVisible": true,
+        "covered": false,
+        "centerClickable": true,
+        "hitTestId": "bs-room-readonly",
+        "dockPresent": true,
+        "confirmDockOverlap": false,
+        "vaccineWarning": false,
+        "priceNodeCount": 1,
+        "visiblePriceCount": 1,
+        "priceRects": [
+          {
+            "top": 435.5,
+            "bottom": 462.5,
+            "width": 81.21875,
+            "height": 27,
+            "visible": true
+          }
+        ],
+        "textRects": [
+          {
+            "text": "标准间",
+            "top": 585.5,
+            "bottom": 605.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "¥199 / 晚",
+            "top": 435.5,
+            "bottom": 462.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "标准间寄养（犬）",
+            "top": 607.5,
+            "bottom": 621,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "今晚剩余 2 间",
+            "top": 607.5,
+            "bottom": 621,
+            "covered": false,
+            "inViewport": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "N2 寄养零滚标准间文案与热区不被确认栏压住（初始 390×824）",
+      "ok": true,
+      "detail": "card=367–578；barTop=651；间隙=73；价格=1/1；文案异常=0；dock=true；栏dock叠=false",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 824
+        },
+        "testId": "bs-room-readonly",
+        "card": {
+          "top": 366.5,
+          "bottom": 578,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 651,
+          "bottom": 746
+        },
+        "clearance": 73,
+        "fullyVisible": true,
+        "covered": false,
+        "centerClickable": true,
+        "hitTestId": "bs-room-readonly",
+        "dockPresent": true,
+        "confirmDockOverlap": false,
+        "vaccineWarning": false,
+        "priceNodeCount": 1,
+        "visiblePriceCount": 1,
+        "priceRects": [
+          {
+            "top": 379.5,
+            "bottom": 406.5,
+            "width": 81.21875,
+            "height": 27,
+            "visible": true
+          }
+        ],
+        "textRects": [
+          {
+            "text": "标准间",
+            "top": 529.5,
+            "bottom": 549.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "¥199 / 晚",
+            "top": 379.5,
+            "bottom": 406.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "标准间寄养（犬）",
+            "top": 551.5,
+            "bottom": 565,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "今晚剩余 2 间",
+            "top": 551.5,
+            "bottom": 565,
+            "covered": false,
+            "inViewport": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "N2 寄养零滚标准间文案与热区不被确认栏压住（初始 390×815）",
+      "ok": true,
+      "detail": "card=367–578；barTop=642；间隙=64；价格=1/1；文案异常=0；dock=true；栏dock叠=false",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 815
+        },
+        "testId": "bs-room-readonly",
+        "card": {
+          "top": 366.5,
+          "bottom": 578,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 642,
+          "bottom": 737
+        },
+        "clearance": 64,
+        "fullyVisible": true,
+        "covered": false,
+        "centerClickable": true,
+        "hitTestId": "bs-room-readonly",
+        "dockPresent": true,
+        "confirmDockOverlap": false,
+        "vaccineWarning": false,
+        "priceNodeCount": 1,
+        "visiblePriceCount": 1,
+        "priceRects": [
+          {
+            "top": 379.5,
+            "bottom": 406.5,
+            "width": 81.21875,
+            "height": 27,
+            "visible": true
+          }
+        ],
+        "textRects": [
+          {
+            "text": "标准间",
+            "top": 529.5,
+            "bottom": 549.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "¥199 / 晚",
+            "top": 379.5,
+            "bottom": 406.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "标准间寄养（犬）",
+            "top": 551.5,
+            "bottom": 565,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "今晚剩余 2 间",
+            "top": 551.5,
+            "bottom": 565,
+            "covered": false,
+            "inViewport": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "N2 寄养零滚标准间文案与热区不被确认栏压住（初始 390×814）",
+      "ok": true,
+      "detail": "card=367–578；barTop=641；间隙=63；价格=1/1；文案异常=0；dock=true；栏dock叠=false",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 814
+        },
+        "testId": "bs-room-readonly",
+        "card": {
+          "top": 366.5,
+          "bottom": 578,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 641,
+          "bottom": 736
+        },
+        "clearance": 63,
+        "fullyVisible": true,
+        "covered": false,
+        "centerClickable": true,
+        "hitTestId": "bs-room-readonly",
+        "dockPresent": true,
+        "confirmDockOverlap": false,
+        "vaccineWarning": false,
+        "priceNodeCount": 1,
+        "visiblePriceCount": 1,
+        "priceRects": [
+          {
+            "top": 379.5,
+            "bottom": 406.5,
+            "width": 81.21875,
+            "height": 27,
+            "visible": true
+          }
+        ],
+        "textRects": [
+          {
+            "text": "标准间",
+            "top": 529.5,
+            "bottom": 549.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "¥199 / 晚",
+            "top": 379.5,
+            "bottom": 406.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "标准间寄养（犬）",
+            "top": 551.5,
+            "bottom": 565,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "今晚剩余 2 间",
+            "top": 551.5,
+            "bottom": 565,
+            "covered": false,
+            "inViewport": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "N2 寄养零滚标准间文案与热区不被确认栏压住（初始 390×701）",
+      "ok": true,
+      "detail": "card=367–510；barTop=528；间隙=18；价格=1/1；文案异常=0；dock=true；栏dock叠=false",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 701
+        },
+        "testId": "bs-room-readonly",
+        "card": {
+          "top": 366.5,
+          "bottom": 510,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 528,
+          "bottom": 623
+        },
+        "clearance": 18,
+        "fullyVisible": true,
+        "covered": false,
+        "centerClickable": true,
+        "hitTestId": "bs-room-readonly",
+        "dockPresent": true,
+        "confirmDockOverlap": false,
+        "vaccineWarning": false,
+        "priceNodeCount": 1,
+        "visiblePriceCount": 1,
+        "priceRects": [
+          {
+            "top": 379.5,
+            "bottom": 406.5,
+            "width": 81.21875,
+            "height": 27,
+            "visible": true
+          }
+        ],
+        "textRects": [
+          {
+            "text": "标准间",
+            "top": 461.5,
+            "bottom": 481.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "¥199 / 晚",
+            "top": 379.5,
+            "bottom": 406.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "标准间寄养（犬）",
+            "top": 483.5,
+            "bottom": 497,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "今晚剩余 2 间",
+            "top": 483.5,
+            "bottom": 497,
+            "covered": false,
+            "inViewport": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "N2 寄养零滚标准间文案与热区不被确认栏压住（初始 390×700）",
+      "ok": true,
+      "detail": "card=331–509；barTop=527；间隙=18；价格=1/1；文案异常=0；dock=true；栏dock叠=false",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 700
+        },
+        "testId": "bs-room-readonly",
+        "card": {
+          "top": 330.5,
+          "bottom": 509,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 527,
+          "bottom": 622
+        },
+        "clearance": 18,
+        "fullyVisible": true,
+        "covered": false,
+        "centerClickable": true,
+        "hitTestId": "bs-room-readonly",
+        "dockPresent": true,
+        "confirmDockOverlap": false,
+        "vaccineWarning": false,
+        "priceNodeCount": 1,
+        "visiblePriceCount": 1,
+        "priceRects": [
+          {
+            "top": 343.5,
+            "bottom": 370.5,
+            "width": 81.21875,
+            "height": 27,
+            "visible": true
+          }
+        ],
+        "textRects": [
+          {
+            "text": "标准间",
+            "top": 460.5,
+            "bottom": 480.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "¥199 / 晚",
+            "top": 343.5,
+            "bottom": 370.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "标准间寄养（犬）",
+            "top": 482.5,
+            "bottom": 496,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "今晚剩余 2 间",
+            "top": 482.5,
+            "bottom": 496,
+            "covered": false,
+            "inViewport": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "N2 寄养零滚标准间文案与热区不被确认栏压住（初始 390×667）",
+      "ok": true,
+      "detail": "card=331–476；barTop=494；间隙=18；价格=1/1；文案异常=0；dock=true；栏dock叠=false",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 667
+        },
+        "testId": "bs-room-readonly",
+        "card": {
+          "top": 330.5,
+          "bottom": 476,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 494,
+          "bottom": 589
+        },
+        "clearance": 18,
+        "fullyVisible": true,
+        "covered": false,
+        "centerClickable": true,
+        "hitTestId": "bs-room-readonly",
+        "dockPresent": true,
+        "confirmDockOverlap": false,
+        "vaccineWarning": false,
+        "priceNodeCount": 1,
+        "visiblePriceCount": 1,
+        "priceRects": [
+          {
+            "top": 343.5,
+            "bottom": 370.5,
+            "width": 81.21875,
+            "height": 27,
+            "visible": true
+          }
+        ],
+        "textRects": [
+          {
+            "text": "标准间",
+            "top": 427.5,
+            "bottom": 447.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "¥199 / 晚",
+            "top": 343.5,
+            "bottom": 370.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "标准间寄养（犬）",
+            "top": 449.5,
+            "bottom": 463,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "今晚剩余 2 间",
+            "top": 449.5,
+            "bottom": 463,
+            "covered": false,
+            "inViewport": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "N2 寄养零滚标准间文案与热区不被确认栏压住（疫苗警示 390×900）",
+      "ok": true,
+      "detail": "card=437–647；barTop=655；间隙=8；价格=1/1；文案异常=0；dock=true；栏dock叠=false",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 900
+        },
+        "testId": "bs-room-readonly",
+        "card": {
+          "top": 436.5,
+          "bottom": 647,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 655,
+          "bottom": 822
+        },
+        "clearance": 8,
+        "fullyVisible": true,
+        "covered": false,
+        "centerClickable": true,
+        "hitTestId": "bs-room-readonly",
+        "dockPresent": true,
+        "confirmDockOverlap": false,
+        "vaccineWarning": true,
+        "priceNodeCount": 1,
+        "visiblePriceCount": 1,
+        "priceRects": [
+          {
+            "top": 449.5,
+            "bottom": 476.5,
+            "width": 81.21875,
+            "height": 27,
+            "visible": true
+          }
+        ],
+        "textRects": [
+          {
+            "text": "标准间",
+            "top": 598.5,
+            "bottom": 618.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "¥199 / 晚",
+            "top": 449.5,
+            "bottom": 476.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "标准间寄养（犬）",
+            "top": 620.5,
+            "bottom": 634,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "剩余 2 间",
+            "top": 620.5,
+            "bottom": 634,
+            "covered": false,
+            "inViewport": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "N2 寄养零滚标准间文案与热区不被确认栏压住（疫苗警示 390×901）",
+      "ok": true,
+      "detail": "card=437–648；barTop=656；间隙=8；价格=1/1；文案异常=0；dock=true；栏dock叠=false",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 901
+        },
+        "testId": "bs-room-readonly",
+        "card": {
+          "top": 436.5,
+          "bottom": 648,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 656,
+          "bottom": 823
+        },
+        "clearance": 8,
+        "fullyVisible": true,
+        "covered": false,
+        "centerClickable": true,
+        "hitTestId": "bs-room-readonly",
+        "dockPresent": true,
+        "confirmDockOverlap": false,
+        "vaccineWarning": true,
+        "priceNodeCount": 1,
+        "visiblePriceCount": 1,
+        "priceRects": [
+          {
+            "top": 449.5,
+            "bottom": 476.5,
+            "width": 81.21875,
+            "height": 27,
+            "visible": true
+          }
+        ],
+        "textRects": [
+          {
+            "text": "标准间",
+            "top": 599.5,
+            "bottom": 619.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "¥199 / 晚",
+            "top": 449.5,
+            "bottom": 476.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "标准间寄养（犬）",
+            "top": 621.5,
+            "bottom": 635,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "剩余 2 间",
+            "top": 621.5,
+            "bottom": 635,
+            "covered": false,
+            "inViewport": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "N2 寄养零滚标准间文案与热区不被确认栏压住（疫苗警示 390×815）",
+      "ok": true,
+      "detail": "card=381–506；barTop=570；间隙=64；价格=1/1；文案异常=0；dock=true；栏dock叠=false",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 815
+        },
+        "testId": "bs-room-readonly",
+        "card": {
+          "top": 380.5,
+          "bottom": 506,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 570,
+          "bottom": 737
+        },
+        "clearance": 64,
+        "fullyVisible": true,
+        "covered": false,
+        "centerClickable": true,
+        "hitTestId": "bs-room-readonly",
+        "dockPresent": true,
+        "confirmDockOverlap": false,
+        "vaccineWarning": true,
+        "priceNodeCount": 1,
+        "visiblePriceCount": 1,
+        "priceRects": [
+          {
+            "top": 393.5,
+            "bottom": 420.5,
+            "width": 81.21875,
+            "height": 27,
+            "visible": true
+          }
+        ],
+        "textRects": [
+          {
+            "text": "标准间",
+            "top": 457.5,
+            "bottom": 477.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "¥199 / 晚",
+            "top": 393.5,
+            "bottom": 420.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "标准间寄养（犬）",
+            "top": 479.5,
+            "bottom": 493,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "剩余 2 间",
+            "top": 479.5,
+            "bottom": 493,
+            "covered": false,
+            "inViewport": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "N2 寄养零滚标准间文案与热区不被确认栏压住（疫苗警示 390×814）",
+      "ok": true,
+      "detail": "card=381–561；barTop=569；间隙=8；价格=1/1；文案异常=0；dock=true；栏dock叠=false",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 814
+        },
+        "testId": "bs-room-readonly",
+        "card": {
+          "top": 380.5,
+          "bottom": 561,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 569,
+          "bottom": 736
+        },
+        "clearance": 8,
+        "fullyVisible": true,
+        "covered": false,
+        "centerClickable": true,
+        "hitTestId": "bs-room-readonly",
+        "dockPresent": true,
+        "confirmDockOverlap": false,
+        "vaccineWarning": true,
+        "priceNodeCount": 1,
+        "visiblePriceCount": 1,
+        "priceRects": [
+          {
+            "top": 393.5,
+            "bottom": 420.5,
+            "width": 81.21875,
+            "height": 27,
+            "visible": true
+          }
+        ],
+        "textRects": [
+          {
+            "text": "标准间",
+            "top": 512.5,
+            "bottom": 532.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "¥199 / 晚",
+            "top": 393.5,
+            "bottom": 420.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "标准间寄养（犬）",
+            "top": 534.5,
+            "bottom": 548,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "剩余 2 间",
+            "top": 534.5,
+            "bottom": 548,
+            "covered": false,
+            "inViewport": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "N2 寄养零滚标准间文案与热区不被确认栏压住（疫苗警示 390×734）",
+      "ok": true,
+      "detail": "card=381–481；barTop=489；间隙=8；价格=1/1；文案异常=0；dock=true；栏dock叠=false",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 734
+        },
+        "testId": "bs-room-readonly",
+        "card": {
+          "top": 380.5,
+          "bottom": 481,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 489,
+          "bottom": 656
+        },
+        "clearance": 8,
+        "fullyVisible": true,
+        "covered": false,
+        "centerClickable": true,
+        "hitTestId": "bs-room-readonly",
+        "dockPresent": true,
+        "confirmDockOverlap": false,
+        "vaccineWarning": true,
+        "priceNodeCount": 1,
+        "visiblePriceCount": 1,
+        "priceRects": [
+          {
+            "top": 393.5,
+            "bottom": 420.5,
+            "width": 81.21875,
+            "height": 27,
+            "visible": true
+          }
+        ],
+        "textRects": [
+          {
+            "text": "标准间",
+            "top": 432.5,
+            "bottom": 452.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "¥199 / 晚",
+            "top": 393.5,
+            "bottom": 420.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "标准间寄养（犬）",
+            "top": 454.5,
+            "bottom": 468,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "剩余 2 间",
+            "top": 454.5,
+            "bottom": 468,
+            "covered": false,
+            "inViewport": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "N2 寄养零滚标准间文案与热区不被确认栏压住（疫苗警示 390×733）",
+      "ok": true,
+      "detail": "card=381–442；barTop=488；间隙=46；价格=1/1；文案异常=0；dock=true；栏dock叠=false",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 733
+        },
+        "testId": "bs-room-readonly",
+        "card": {
+          "top": 380.5,
+          "bottom": 442,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 488,
+          "bottom": 655
+        },
+        "clearance": 46,
+        "fullyVisible": true,
+        "covered": false,
+        "centerClickable": true,
+        "hitTestId": "bs-room-readonly",
+        "dockPresent": true,
+        "confirmDockOverlap": false,
+        "vaccineWarning": true,
+        "priceNodeCount": 1,
+        "visiblePriceCount": 1,
+        "priceRects": [
+          {
+            "top": 396,
+            "bottom": 411,
+            "width": 57.21875,
+            "height": 15,
+            "visible": true
+          }
+        ],
+        "textRects": [
+          {
+            "text": "标准间",
+            "top": 393.5,
+            "bottom": 413.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "¥199 / 晚",
+            "top": 396,
+            "bottom": 411,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "标准间寄养（犬）",
+            "top": 415.5,
+            "bottom": 429,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "剩余 2 间",
+            "top": 415.5,
+            "bottom": 429,
+            "covered": false,
+            "inViewport": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "N2 寄养零滚标准间文案与热区不被确认栏压住（疫苗警示 390×700）",
+      "ok": true,
+      "detail": "card=345–406；barTop=455；间隙=49；价格=1/1；文案异常=0；dock=true；栏dock叠=false",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 700
+        },
+        "testId": "bs-room-readonly",
+        "card": {
+          "top": 344.5,
+          "bottom": 406,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 455,
+          "bottom": 622
+        },
+        "clearance": 49,
+        "fullyVisible": true,
+        "covered": false,
+        "centerClickable": true,
+        "hitTestId": "bs-room-readonly",
+        "dockPresent": true,
+        "confirmDockOverlap": false,
+        "vaccineWarning": true,
+        "priceNodeCount": 1,
+        "visiblePriceCount": 1,
+        "priceRects": [
+          {
+            "top": 360,
+            "bottom": 375,
+            "width": 57.21875,
+            "height": 15,
+            "visible": true
+          }
+        ],
+        "textRects": [
+          {
+            "text": "标准间",
+            "top": 357.5,
+            "bottom": 377.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "¥199 / 晚",
+            "top": 360,
+            "bottom": 375,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "标准间寄养（犬）",
+            "top": 379.5,
+            "bottom": 393,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "剩余 2 间",
+            "top": 379.5,
+            "bottom": 393,
+            "covered": false,
+            "inViewport": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "N2 寄养零滚标准间文案与热区不被确认栏压住（疫苗警示 390×667）",
+      "ok": true,
+      "detail": "card=345–406；barTop=422；间隙=16；价格=1/1；文案异常=0；dock=true；栏dock叠=false",
+      "measurements": {
+        "scrollY": 0,
+        "viewport": {
+          "width": 390,
+          "height": 667
+        },
+        "testId": "bs-room-readonly",
+        "card": {
+          "top": 344.5,
+          "bottom": 406,
+          "left": 16,
+          "right": 374
+        },
+        "confirmBar": {
+          "top": 422,
+          "bottom": 589
+        },
+        "clearance": 16,
+        "fullyVisible": true,
+        "covered": false,
+        "centerClickable": true,
+        "hitTestId": "bs-room-readonly",
+        "dockPresent": true,
+        "confirmDockOverlap": false,
+        "vaccineWarning": true,
+        "priceNodeCount": 1,
+        "visiblePriceCount": 1,
+        "priceRects": [
+          {
+            "top": 360,
+            "bottom": 375,
+            "width": 57.21875,
+            "height": 15,
+            "visible": true
+          }
+        ],
+        "textRects": [
+          {
+            "text": "标准间",
+            "top": 357.5,
+            "bottom": 377.5,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "¥199 / 晚",
+            "top": 360,
+            "bottom": 375,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "标准间寄养（犬）",
+            "top": 379.5,
+            "bottom": 393,
+            "covered": false,
+            "inViewport": true
+          },
+          {
+            "text": "剩余 2 间",
+            "top": 379.5,
+            "bottom": 393,
+            "covered": false,
+            "inViewport": true
+          }
+        ]
+      }
+    }
+  ]
+}
