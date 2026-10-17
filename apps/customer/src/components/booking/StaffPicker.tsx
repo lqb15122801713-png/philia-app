@@ -84,7 +84,7 @@ export default function StaffPicker({
                   {s.name.slice(0, 1)}
                 </span>
                 <span className="mt-[9px] text-[13.5px] font-extrabold leading-5">{s.name}</span>
-                <span className="mt-1 font-number text-[8.5px] leading-[1.6] text-ink-secondary">
+                <span className="mt-1 font-number text-caption leading-[1.6] text-ink-secondary">
                   {(s.skills ?? []).map((k) => SKILL_LABEL[k] ?? k).join('·') || '店员'}
                 </span>
               </button>
@@ -106,7 +106,7 @@ export default function StaffPicker({
             <PawPrint className="h-6 w-6 text-ink" strokeWidth={1.5} />
           </span>
           <span className="mt-[9px] text-[13.5px] font-extrabold leading-5">{bkc('booking.staffAny')}</span>
-          <span className="mt-1 font-number text-[8.5px] leading-[1.6] text-ink-secondary">
+          <span className="mt-1 font-number text-caption leading-[1.6] text-ink-secondary">
             {earliestLabel ? bkc('booking.staffEarliest', { time: earliestLabel }) : bkc('booking.staffAnySub')}
           </span>
         </button>
