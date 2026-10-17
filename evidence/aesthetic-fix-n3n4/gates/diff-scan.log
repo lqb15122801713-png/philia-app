@@ -1,0 +1,10 @@
+apps/customer/src/index.css
+apps/customer/src/pages/CheckoutPage.tsx
+apps/customer/src/pages/MemberOpenPage.tsx
+apps/customer/src/styles/member-v2.css
+ M apps/customer/src/index.css
+ M apps/customer/src/pages/CheckoutPage.tsx
+ M apps/customer/src/pages/MemberOpenPage.tsx
+ M apps/customer/src/styles/member-v2.css
+?? evidence/aesthetic-fix-n3n4/
+?? scripts/aesthetic-fix-n3n4-check.mjs

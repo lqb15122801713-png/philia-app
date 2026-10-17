@@ -213,10 +213,10 @@ export default function MemberOpenPage() {
               { v: selected.free ? mc('j1.petsUnlimited') : mc('j1.petsIncluded', { n: selected.includedPets }), k: <CK k="j1.ledgerPets">{mc('j1.ledgerPets')}</CK>, key: 'pets' },
             ]}
           />
-          <p className="m2-note" style={{ marginTop: 10 }}>
+          <p className="m2-note member-estimate-note" style={{ marginTop: 10 }}>
             <CK k="j1.estimateNote">{mc('j1.estimateNote')}</CK>
           </p>
-          <div style={{ textAlign: 'center', marginTop: 14 }}>
+          <div className="member-compare-link" style={{ textAlign: 'center', marginTop: 14 }}>
             <button type="button" className="m2-link" onClick={() => setCompareOpen(true)}>
               <CK k="j1.compareLink">{mc('j1.compareLink')}</CK>
             </button>

@@ -1,0 +1,5 @@
+PASS Obs4 寄养 dock 与 ConfirmBar 共存不挡关键操作（390×844） —— dock=true；family=true；active=page；栏dock叠=false；卡dock叠=false；卡栏叠=false
+PASS Obs4 寄养 dock 与 ConfirmBar 共存不挡关键操作（390×700） —— dock=true；family=true；active=page；栏dock叠=false；卡dock叠=false；卡栏叠=false
+PASS Obs4 PWA 安装条不遮寄养确认按钮 —— banner=false；叠=false；可点=true；命中=bs-confirm
+PASS Obs6 消息活动 chip 完整可见且可点 —— chips=6；完整=6；活动right=78；视口=390；点击=true；页横溢=false
+汇总：4/4 通过；证据目录=evidence/aesthetic-fix-n3n4/regression-obs46
