@@ -1,0 +1,93 @@
+{
+  "at": "2026-10-18T04:27:36.784Z",
+  "base": "http://127.0.0.1:7130",
+  "results": [
+    {
+      "id": "N10 会员开通卡面 cf-claim 副标 ≥12px 且不溢出",
+      "ok": true,
+      "detail": "副标=4 处；最小字号=12px；均在卡内=true",
+      "measurements": {
+        "claims": [
+          {
+            "text": "在册即享基础功能",
+            "fontSize": 12,
+            "claimRect": {
+              "left": 40.220001220703125,
+              "top": 325.1656188964844,
+              "right": 323.77996826171875,
+              "bottom": 343.525634765625
+            },
+            "cardRect": {
+              "top": 200.72561645507812,
+              "bottom": 408.8056335449219,
+              "height": 208.08001708984375
+            },
+            "withinCard": true
+          },
+          {
+            "text": "一年，省下一顿火锅",
+            "fontSize": 12,
+            "claimRect": {
+              "left": 376,
+              "top": 323.765625,
+              "right": 656,
+              "bottom": 341.765625
+            },
+            "cardRect": {
+              "top": 202.765625,
+              "bottom": 406.765625,
+              "height": 204
+            },
+            "withinCard": true
+          },
+          {
+            "text": "每月一次眼耳甲，不用记",
+            "fontSize": 12,
+            "claimRect": {
+              "left": 710,
+              "top": 323.765625,
+              "right": 990,
+              "bottom": 341.765625
+            },
+            "cardRect": {
+              "top": 202.765625,
+              "bottom": 406.765625,
+              "height": 204
+            },
+            "withinCard": true
+          },
+          {
+            "text": "多只毛孩子 · 都被叫得出名字",
+            "fontSize": 12,
+            "claimRect": {
+              "left": 1045,
+              "top": 324.765625,
+              "right": 1323,
+              "bottom": 342.765625
+            },
+            "cardRect": {
+              "top": 202.765625,
+              "bottom": 406.765625,
+              "height": 204
+            },
+            "withinCard": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "N10 范围外持有卡副标保持 11px",
+      "ok": true,
+      "detail": "副标=1 处；字号=11px",
+      "measurements": {
+        "claims": [
+          {
+            "text": "在册即享基础功能",
+            "fontSize": 11,
+            "withinCard": true
+          }
+        ]
+      }
+    }
+  ]
+}

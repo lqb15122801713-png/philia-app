@@ -1,0 +1,56 @@
+{
+  "at": "2026-10-18T04:16:51.594Z",
+  "base": "http://127.0.0.1:7130",
+  "results": [
+    {
+      "id": "N11 首页双栏服务副文 ≥12px",
+      "ok": true,
+      "detail": "双栏=2；最小字号=12px",
+      "measurements": [
+        {
+          "id": "home-entry-grooming",
+          "text": "约 45 分钟起 · ¥68 起",
+          "fontSize": 12,
+          "rect": {
+            "left": 43,
+            "top": 332.25,
+            "right": 186.5,
+            "bottom": 350.25,
+            "width": 143.5,
+            "height": 18
+          }
+        },
+        {
+          "id": "home-entry-boarding",
+          "text": "¥199 起/晚",
+          "fontSize": 12,
+          "rect": {
+            "left": 203.5,
+            "top": 332.25,
+            "right": 347,
+            "bottom": 350.25,
+            "width": 143.5,
+            "height": 18
+          }
+        }
+      ]
+    },
+    {
+      "id": "N12 首页回馈金账本副文 ≥12px",
+      "ok": true,
+      "detail": "字号=12px；文案=余额 ¥0 · 每月 5 日到账",
+      "measurements": {
+        "text": "余额 ¥0 · 每月 5 日到账",
+        "fontSize": 12,
+        "rect": {
+          "left": 35,
+          "top": 400.75,
+          "right": 160.765625,
+          "bottom": 418.75,
+          "width": 125.765625,
+          "height": 18
+        }
+      }
+    }
+  ]
+}

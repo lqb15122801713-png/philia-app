@@ -1,0 +1,9 @@
+apps/customer/src/pages/HomePage.tsx
+apps/customer/src/styles/home-v2.css
+ apps/customer/src/pages/HomePage.tsx | 2 +-
+ apps/customer/src/styles/home-v2.css | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+ M apps/customer/src/pages/HomePage.tsx
+ M apps/customer/src/styles/home-v2.css
+?? evidence/aesthetic-fix-n11n12/
+?? scripts/aesthetic-fix-n11n12-check.mjs
