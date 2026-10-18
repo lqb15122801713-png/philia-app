@@ -173,7 +173,7 @@
 .m2-deck .m2-cardface { flex: none; width: 320px; height: 204px; scroll-snap-align: center; padding: 18px 20px; }
 .m2-deck .cf-name { font-size: 25px; margin-top: 16px; }
 .m2-deck .cf-price { font-size: 13px; margin-top: 6px; }
-.m2-deck .cf-claim { margin-top: 9px; }
+.m2-deck .cf-claim { margin-top: 9px; font-size: 12px; }
 .m2-cardface.selable { cursor: pointer; transition: transform .26s var(--ease), box-shadow .26s var(--ease); }
 .m2-cardface.sel { box-shadow: 0 0 0 2px var(--gold), 0 18px 40px -14px rgba(46, 35, 24, .5); transform: scale(1.02); }
 

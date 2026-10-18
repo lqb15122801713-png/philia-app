@@ -1,0 +1,60 @@
+{
+  "at": "2026-10-18T00:57:07.601Z",
+  "base": "http://127.0.0.1:7130",
+  "results": [
+    {
+      "id": "N9 StaffPicker「洗护·美容」角色副文 ≥12px",
+      "ok": true,
+      "detail": "角色卡=4；目标文案=true；最小字号=12px；轨scrollLeft=0",
+      "measurements": {
+        "roles": [
+          {
+            "id": "gs-groomer-01M566NF091BBM2P9KT4GTGKPS",
+            "text": "洗护·美容",
+            "fontSize": 12,
+            "rect": {
+              "left": 54.390625,
+              "top": 455,
+              "width": 55.203125,
+              "height": 19.1875
+            }
+          },
+          {
+            "id": "gs-groomer-01M566NF095PCA1SW6WC6RERZ5",
+            "text": "洗护·寄养",
+            "fontSize": 12,
+            "rect": {
+              "left": 198.390625,
+              "top": 455,
+              "width": 55.203125,
+              "height": 19.1875
+            }
+          },
+          {
+            "id": "gs-groomer-01M566NF092NG5P5NJQ5440PE5",
+            "text": "美容·寄养",
+            "fontSize": 12,
+            "rect": {
+              "left": 342.390625,
+              "top": 455,
+              "width": 55.203125,
+              "height": 19.1875
+            }
+          },
+          {
+            "id": "gs-groomer-01M566NF09JEW4MBAD169CD5NK",
+            "text": "洗护",
+            "fontSize": 12,
+            "rect": {
+              "left": 502,
+              "top": 455,
+              "width": 24,
+              "height": 19.1875
+            }
+          }
+        ],
+        "railScrollLeft": 0
+      }
+    }
+  ]
+}
