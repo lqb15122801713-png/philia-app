@@ -1,0 +1,79 @@
+{
+  "at": "2026-10-18T00:32:02.499Z",
+  "base": "http://127.0.0.1:7130",
+  "results": [
+    {
+      "id": "N10 会员开通卡面 cf-claim 副标 ≥12px 且不溢出",
+      "ok": false,
+      "detail": "副标=4 处；最小字号=11px；均在卡内=true",
+      "measurements": {
+        "claims": [
+          {
+            "text": "在册即享基础功能",
+            "fontSize": 11,
+            "claimRect": {
+              "left": 40.220001220703125,
+              "top": 223.99374389648438,
+              "right": 323.77996826171875,
+              "bottom": 240.82376098632812
+            },
+            "cardRect": {
+              "top": 99.55374908447266,
+              "bottom": 307.6337661743164,
+              "height": 208.08001708984375
+            },
+            "withinCard": true
+          },
+          {
+            "text": "一年，省下一顿火锅",
+            "fontSize": 11,
+            "claimRect": {
+              "left": 376,
+              "top": 222.59375,
+              "right": 656,
+              "bottom": 239.09375
+            },
+            "cardRect": {
+              "top": 101.59375,
+              "bottom": 305.59375,
+              "height": 204
+            },
+            "withinCard": true
+          },
+          {
+            "text": "每月一次眼耳甲，不用记",
+            "fontSize": 11,
+            "claimRect": {
+              "left": 710,
+              "top": 222.59375,
+              "right": 990,
+              "bottom": 239.09375
+            },
+            "cardRect": {
+              "top": 101.59375,
+              "bottom": 305.59375,
+              "height": 204
+            },
+            "withinCard": true
+          },
+          {
+            "text": "多只毛孩子 · 都被叫得出名字",
+            "fontSize": 11,
+            "claimRect": {
+              "left": 1045,
+              "top": 223.59375,
+              "right": 1323,
+              "bottom": 240.09375
+            },
+            "cardRect": {
+              "top": 101.59375,
+              "bottom": 305.59375,
+              "height": 204
+            },
+            "withinCard": true
+          }
+        ]
+      }
+    }
+  ]
+}

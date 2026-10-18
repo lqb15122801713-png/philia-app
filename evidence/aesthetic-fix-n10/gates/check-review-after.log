@@ -1,0 +1,3 @@
+PASS N10 会员开通卡面 cf-claim 副标 ≥12px 且不溢出 —— 副标=4 处；最小字号=12px；均在卡内=true
+PASS N10 范围外持有卡副标保持 11px —— 副标=1 处；字号=11px
+汇总：2/2 通过；证据目录=evidence\aesthetic-fix-n10
