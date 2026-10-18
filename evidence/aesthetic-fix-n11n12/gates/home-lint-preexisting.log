@@ -1,0 +1,29 @@
+
+E:\KIMI code\aesthetic-fix-b1b5\apps\customer\src\pages\HomePage.tsx
+  227:30  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\aesthetic-fix-b1b5\apps\customer\src\pages\HomePage.tsx:227:30
+  225 |   const periodPct = Math.min(
+  226 |     100,
+> 227 |     Math.max(0, Math.round(((Date.now() - pw.start.getTime()) / (pw.end.getTime() - pw.start.getTime())) * 100)),
+      |                              ^^^^^^^^^^ Cannot call impure function
+  228 |   )
+  229 |   const fmtMD = (d: Date) => `${d.getMonth() + 1}.${d.getDate()}`
+  230 |                                                                                                                                             react-hooks/purity
+  235:36  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+E:\KIMI code\aesthetic-fix-b1b5\apps\customer\src\pages\HomePage.tsx:235:36
+  233 |     const createdAt = meRawQ.data?.user?.createdAt
+  234 |     if (!createdAt) return null
+> 235 |     return Math.max(1, Math.floor((Date.now() - new Date(createdAt).getTime()) / DAY_MS) + 1)
+      |                                    ^^^^^^^^^^ Cannot call impure function
+  236 |   }, [meRawQ.data])
+  237 |   const completed = mineQ.data?.groups.completed ?? []
+  238 |   const statsReady = meRawQ.isSuccess && mineQ.isSuccess && (joinDays !== null || completed.length > 0)  react-hooks/purity
+
+✖ 2 problems (2 errors, 0 warnings)
+

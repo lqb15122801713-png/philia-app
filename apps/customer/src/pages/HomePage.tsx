@@ -479,7 +479,7 @@ export default function HomePage() {
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#2C2822' }}>
                   {membership ? hc('home.rebateLedger') : hc('home.openMemberClaim')}
                 </div>
-                <div className="cap" style={{ fontSize: 11, color: '#A89779', marginTop: 3 }}>
+                <div className="cap" style={{ fontSize: 12, lineHeight: 1, color: '#A89779', marginTop: 2 }}>
                   {membership ? hc('home.rebateBalanceLine', { amt: fenToYuan(rebateBalance), day: settlementDay }) : hc('home.openMemberSub', { pcts: [2, 5, 10].join('/') })}
                 </div>
               </div>

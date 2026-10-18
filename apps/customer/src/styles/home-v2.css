@@ -80,7 +80,7 @@
   stroke-linecap: round; stroke-linejoin: round; margin: 0 auto 9px; display: block;
 }
 .hv2-mc-col .t { font-size: 16px; font-weight: 800; color: #2C2822; }
-.hv2-mc-col .s { font-family: var(--v2mono); font-size: 9.5px; color: #A89779; margin-top: 4px; }
+.hv2-mc-col .s { font-family: var(--v2mono); font-size: 12px; line-height: 1; color: #A89779; margin-top: 2px; }
 .hv2-mc-div { height: 1px; background: rgba(44,40,34,.08); }
 .hv2-mc-row { display: flex; align-items: center; gap: 14px; padding: 13px 0; cursor: pointer; }
 .hv2-mc-ring .big { font-family: var(--v2mono); font-size: 20px; font-weight: 700; letter-spacing: -.02em; color: #2C2822; }
