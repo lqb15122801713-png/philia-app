@@ -7,7 +7,8 @@
  *   （listProducts 不返回店名，卡片规格要求展示）；
  * - 上拉加载更多：IntersectionObserver 哨兵 + page 递增（useInfiniteQuery）；
  * - 空态沿用品牌插画；右上购物车入口 + 角标（CartProvider 页面级挂载，
- *   localStorage 为跨页事实源）。
+ *   localStorage 为跨页事实源）；
+ * - ?channel=groupbuy=首页团购入口诚实待上线页（不落假商品/假活动）。
  *
  * 画布化（产品-1010 片 2 · 画布全屏批片 2）：七块入册（mall.head/deliverySlot/entries/
  * search/categories/productGrid/feedTail），块序/显隐=useCanvasLayout('mall')
@@ -20,7 +21,7 @@ import { BoardSkeleton, CanvasLayoutLoader, CK, resolveSlotUrl, slotContentOf, u
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { Plus, Search, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { readLastBooking } from '@/lib/bookingPrefill';
 import CartLink from '../components/mall/CartLink';
 import { mc } from '../components/member/copy';
@@ -185,12 +186,17 @@ function MallHero() {
 function MallInner() {
   const { trpc } = usePhiliaClient();
   const cart = useCart();
+  const { search } = useLocation();
   const { toastEl, showToast } = useToast({ durationMs: 3200 });
   const [category, setCategory] = useState<CategoryValue>('全部');
   const [searchText, setSearchText] = useState('');
   const [keyword, setKeyword] = useState('');
   /** U1-G 快加购跨店冲突待确认（与 PDP 同链路） */
   const [pendingAdd, setPendingAdd] = useState<AddInput | null>(null);
+  const isGroupbuyPending = useMemo(
+    () => new URLSearchParams(search).get('channel') === 'groupbuy',
+    [search],
+  );
 
   // U1-G 快加购（真链路）：成功 → toast；跨店 → ConfirmSheet 确认后 replaceWith
   const quickAdd = (item: ProductItem) => {
@@ -226,6 +232,7 @@ function MallInner() {
     initialPageParam: 1,
     getNextPageParam: (last) =>
       last.page * last.pageSize < last.total ? last.page + 1 : undefined,
+    enabled: !isGroupbuyPending,
   });
 
   // 店铺名映射（公开接口，一次拉取缓存 5 分钟）
@@ -233,6 +240,7 @@ function MallInner() {
     queryKey: ['store', 'listNearby'],
     queryFn: () => trpc.store.listNearby.query(),
     staleTime: 5 * 60_000,
+    enabled: !isGroupbuyPending,
   });
   const storeNameOf = (storeId: string) =>
     storesQ.data?.stores.find((s) => s.id === storeId)?.name ?? mlc('mall.storeFallback');
@@ -242,6 +250,7 @@ function MallInner() {
     queryKey: ['membership', 'my'],
     queryFn: () => trpc.membership.my.query(),
     staleTime: 60_000,
+    enabled: !isGroupbuyPending,
   });
   const rebateBp = (myQ.data?.plan as { rebateBp?: number } | null | undefined)?.rebateBp ?? 0;
   const items = productsQ.data?.pages.flatMap((p) => p.items) ?? [];
@@ -283,6 +292,7 @@ function MallInner() {
     queryFn: () => trpc.canvas.blocks.query(),
     staleTime: 300_000,
     retry: 1,
+    enabled: !isGroupbuyPending,
   });
   const registryBlocks = useMemo(() => {
     const items = (blocksQ.data?.items ?? [])
@@ -457,6 +467,26 @@ function MallInner() {
         </p>
       ) : null,
   };
+
+  if (isGroupbuyPending) {
+    return (
+      <div className="px-[22px] pb-28 pt-4" data-testid="mall-groupbuy-pending">
+        <EmptyState
+          title={mlc('mall.groupbuyTitle')}
+          desc={mlc('mall.groupbuyBody')}
+          icon={<Search className="h-[26px] w-[26px]" strokeWidth={1.6} />}
+          action={
+            <Link
+              to="/mall"
+              className="rounded-control bg-ink px-[30px] py-[13px] text-body-sm font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
+            >
+              {mlc('mall.groupbuyCta')}
+            </Link>
+          }
+        />
+      </div>
+    );
+  }
 
   return (
     /* 片 2 M-01：apphead（serif 27 大题+mono 注记）+ delbar 槽位置灰（PD-15 V1.1 槽位 13） */

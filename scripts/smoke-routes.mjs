@@ -70,8 +70,8 @@ const INVALID_ID = process.env.SMOKE_INVALID_ID ?? '01000000000000000000000000';
 const ROUTES = [
   /* ---- 客户端 ---- */
   { app: 'customer', path: '/dev-login', anchors: ['登录'] },
-  { app: 'customer', path: '/', anchors: ['预约洗澡美容', '菲丽亚宠友', '洗护进行中'], expectPath: '/home', note: 'F3（片 4）：换皮批片 2 新首页锚点——退役文案「守护每一次洗护」→实证值「预约洗澡美容」（浮动大卡双入口）/「菲丽亚宠友」（身份带非会员态）/服务中态 LIVE 卡「洗护进行中」' },
-  { app: 'customer', path: '/home', anchors: ['预约洗澡美容', '菲丽亚宠友', '洗护进行中'], note: 'F3（片 4）：片 2 新首页实证值（双入口/身份带/LIVE 卡）' },
+  { app: 'customer', path: '/', anchors: ['洗护预约', '精选服务', '服务进行中'], expectPath: '/home', note: 'PD-39 U1 首页 IA：三主入口/精选服务/服务中进度卡' },
+  { app: 'customer', path: '/home', anchors: ['洗护预约', '精选服务', '服务进行中'], note: 'PD-39 U1 首页 IA：三主入口/精选服务/服务中进度卡' },
   { app: 'customer', path: '/mall', anchors: ['商城', '商品'] },
   { app: 'customer', path: '/mall/cart', anchors: ['购物袋', '购物车'], note: 'U4-D3：购物袋口径（试样同词）' },
   { app: 'customer', path: '/mall/checkout', anchors: ['确认订单', '没有待结算'], note: 'B3 修复路由' },

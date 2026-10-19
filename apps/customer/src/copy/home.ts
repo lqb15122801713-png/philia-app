@@ -1,37 +1,24 @@
 /**
- * 首页域文案键表（copy key 一期硬约定 · 纪律同 components/member/copy.ts）
- *
- * 覆盖：HomePage（BANNER 槽 / 身份带 / LIVE 卡 / 浮动大卡 / 案例流 / 会员提醒条 /
- * 统计行 / 毛孩子行）+ home/HomeBookingPanel 降级入口卡。
- * 文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
- *
- * 数值不进本表：金额/次数/天数/比例等到渲染层读端口插值（{var} 模板）。
+ * 首页域文案键表：Banner、服务进度、主副入口、会员条、精选、活动、守护故事与 PWA 安装引导；
+ * 旧首页历史键暂作兼容保留，清理另册登记。端口值优先，码内默认值回退。
  */
 
 import { withCopyOverrides } from '@philia/shared';
 
 const HOME_COPY_TABLE = {
-  /* ---- A-2 服务中态 · LIVE 卡 ---- */
-  'home.liveTag': 'LIVE · 洗护进行中',
+  'home.liveTag': '服务进行中',
   'home.liveEta': '预计 {time} 完成',
   'home.liveViewAll': '查看全程 ›',
-  /* 备台行（消毒备台态，七节点步 1 完成时刻为真值） */
   'home.preprowTitle': '消毒备台 · 一客一消',
   'home.preprowDoneAt': '{time} 已完成',
   'home.preprowDone': '已完成',
-
-  /* ---- 身份带 idband / 窄行 idline ---- */
-  'home.idFallback': '菲丽亚宠友',
+  'home.idFallback': '微光',
   'home.rebateLabel': '回馈金',
   'home.idJoin': '开通会员 ›',
-  'home.memberCode': '会员码 ›',
-
-  /* ---- 浮动大卡 megacard（双入口） ---- */
+  'home.memberCode': '会员码',
   'home.entryGrooming': '预约洗澡美容',
   'home.entryBoarding': '预约寄养',
   'home.entryBoardingNote': '按晚 · 疫苗核验',
-
-  /* ---- 回馈金结算环行 / 引导行（规则明面） ---- */
   'home.ringPeriod': '本期已攒回馈金 · 周期 {start} – {end}',
   'home.ringArrive': '{month} 月 {day} 日到账',
   'home.ringRule': '买商品的 {pct}%，次月回到这里。',
@@ -39,36 +26,69 @@ const HOME_COPY_TABLE = {
   'home.openMemberClaim': '开通会员，买商品返回馈金',
   'home.rebateBalanceLine': '余额 {amt} · 每月 {day} 日到账',
   'home.openMemberSub': '付费档返 {pcts}%，次月到账',
-
-  /* ---- 案例流（MomentsPage 域真实数据） ---- */
   'home.casesTitle': '店里今天的故事',
   'home.casesMore': '每日更新 ›',
   'home.caseTitle': '{pet}的{service}日记',
-
-  /* ---- 会员提醒条（次卡余额） ---- */
   'home.passStripPre': '次卡共剩 ',
   'home.passStripPost': ' 次 · 到店出示会员码',
-
-  /* ---- 陪伴统计行 ---- */
   'home.statsDays': '陪伴天数',
   'home.statsServices': '服务次数',
   'home.statsSpend': '累计消费',
-
-  /* ---- 我的毛孩子行 ---- */
   'home.petsTitle': '我的毛孩子',
   'home.petsEmpty': '还没有毛孩子档案，去添加 TA 吧',
   'home.petsLoadFail': '毛孩子加载失败',
-
-  /* ---- HomeBookingPanel 降级入口卡 ---- */
   'home.panelEntryTitle': '预约洗护',
   'home.panelEntrySub': '选择门店、服务和时间',
 
-  /* ---- PWA 安装引导条（components/pwa/InstallBanner） ---- */
+  'home.bannerAlt': '首页品牌横幅',
+  'home.bannerSeason': '秋季洗护季',
+  'home.bannerSub': '满减进行中 · {store}可用',
+  'home.bannerCta': '立即预约',
+  'home.storeFallback': '附近门店',
+  'home.petFallback': '爱宠',
+  'home.serviceFallback': '洗护',
+  'home.pickup': '到店领',
+  'home.serviceSyncing': '当前步骤同步中',
+  'home.currentStep': '当前：{step}',
+  'home.primaryGrooming': '洗护预约',
+  'home.primaryGroomingSub': '到店洗护',
+  'home.primaryBoarding': '寄养',
+  'home.primaryBoardingSub': '日托／过夜',
+  'home.primaryMall': '商城',
+  'home.primaryMallSub': '精选好物',
+  'home.coupons': '券包',
+  'home.groupbuy': '团购',
+  'home.store': '门店',
+  'home.featuredTitle': '精选服务',
+  'home.featuredGrooming': '秋日洗护套餐',
+  'home.featuredGroomingSub': '含洗澡·吹干·基础护理',
+  'home.featuredBoarding': '日托寄养',
+  'home.featuredBoardingSub': '专业看护·视频同步',
+  'home.featuredServiceGeneric': '门店精选服务',
+  'home.goBooking': '去预约',
+  'home.activityLead': '回馈金加码 · 洗护满减叠加',
+  'home.activityLimited': '限时',
+  'home.activityView': '查看',
+  'home.activityStore': '门店礼遇',
+  'home.activityStoreSub': '到店首单洗护赠基础护理',
+  'home.activityClaim': '立即领取',
+  'home.activityDraw': '回馈抽奖',
+  'home.activityDrawSub': '积分换好礼',
+  'home.activityCoupons': '券包市集',
+  'home.activityCouponsSub': '叠加更划算',
+  'home.storiesTitle': '菲利亚守护每一天',
+  'home.storyMember': '会员体系',
+  'home.storyMemberSub': '银卡起阶 · 回馈金与专属礼遇',
+  'home.storyCare': '洗护 · 消毒洁净',
+  'home.storyCareSub': '每一步可追溯 · 让毛孩子安心',
+  'home.serviceLiveTag': '服务进行中',
+  'home.memberTierFallback': '微光',
+  'home.memberCodeAction': '会员码',
+
   'home.pwaInstallTitle': '把菲丽亚装到主屏',
   'home.pwaInstallAction': '安装',
   'home.pwaInstallDismiss': '暂不',
   'home.pwaInstallIosGuide': '用 Safari 分享 → 添加到主屏幕',
-  /* ---- PD-20 D-41：槽位预览旁路角标（预览角标=零营销弹窗口径特许件） ---- */
   'home.slotPreviewBadge': '预览中',
 } as const;
 
@@ -76,7 +96,6 @@ export const HOME_COPY = withCopyOverrides(HOME_COPY_TABLE);
 
 export type HomeCopyKey = keyof typeof HOME_COPY;
 
-/** 文案键取值 + 占位插值（{var}）；插值参数全部来自端口/数据，不经本表硬编码 */
 export function hc(key: HomeCopyKey, vars?: Record<string, string | number>): string {
   const tpl: string = HOME_COPY[key];
   if (!vars) return tpl;

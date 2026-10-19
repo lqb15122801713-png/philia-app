@@ -104,6 +104,9 @@ const MALL_COPY_TABLE = {
   'mall.heroTitle': '本周上新',
   'mall.heroSub': '给它囤点好的 · 门店同价',
   'mall.heroCta': '去看看',
+  'mall.groupbuyTitle': '团购活动待上线',
+  'mall.groupbuyBody': '团购频道正在筹备，先看看商城里的精选商品。',
+  'mall.groupbuyCta': '去逛逛商城',
   /* 商品角标（不含真券）：新品=createdAt 14 天视窗自动签（violet 活动角标 ≤10% 纪律） */
   'mall.badgeNew': '新品',
   /* 类目 chip 展示名（核对表行 9：A4 键覆盖展示名；类目真源/查询值=码内枚举写死不抽键） */
