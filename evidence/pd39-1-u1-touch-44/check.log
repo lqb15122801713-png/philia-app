@@ -1,0 +1,17 @@
+PASS B5 Banner 季主题、立即预约与门店 chip —— CTA=立即预约›//booking/grooming；门店=菲丽亚宠物·示例店
+PASS D1 Banner 待换标不与副文重叠 —— 待换=49~65；副文=80.203125~97
+PASS B1 三主入口 ×3 —— 洗护预约到店洗护→/booking/grooming；寄养日托／过夜→/booking/boarding；商城精选好物→/mall
+PASS C2 四次入口 ×4 —— 回馈金→/member/rebate；New券包→/me/coupons；团购→/mall?channel=groupbuy；门店→/booking/grooming?storeId=01M5ACF6Q8WT7829GGZ8ZHHF9A
+PASS C1 细会员条与会员码一键 —— 会员条=true；会员码=会员码//me/card；文本=微光回馈金 ¥0券包 ×0会员码
+PASS PD-39.1 空闲态触控热区 ≥44px —— M1:115.2×44.0；M2:76.0×44.0；M3:276.0×44.0；L1:141.9×44.0；L2:334.0×44.0
+PASS B2/B3/B4 精选、活动、守护结构 —— 精选=3；活动=3；守护=2
+PASS D2 空闲 IA 固定顺序且旧主轴退出 —— 顺序=true；旧块=0
+PASS 副文 ≥12px —— 副文=13；低于12px=0
+PASS U0 浅浮岛五栏、顺序与激活短划 —— 底=rgba(250, 247, 240, 0.96)；顺序=true；中央transform=none；短划={"background":"rgb(242, 220, 140)","height":3}
+PASS U0 五栏实点切换 —— booking→/booking/grooming/page；philia→/philia/page；mall→/mall/page；me→/me/page；home→/home/page
+PASS C2 团购落点诚实可见 —— 返回后=回馈金 ¥0 购物袋 推荐 粮 零食 洗护 玩具 出行 本周上新 给它囤点好的 · 门店同价 去逛逛 待换 精选好物 全部 首页 预约 PHILIA 商城 我的
+PASS B6 服务中首屏进度卡与同骨架 —— 同骨架=true；旧块=0；进度=服务进行中步骤 3 / 6旺财 · 基础洗护（小型犬）到店领当前：洗护 · 预计 01:29 完成
+PASS B6 六步步骤豆与到店领入口 —— 步骤豆=6；到店领=/appointments/pd39_home_ia_appointment；文案=服务进行中步骤 3 / 6旺财 · 基础洗护（小型犬）到店领当前：洗护 · 预计 01:29 完成
+PASS PD-39.1 服务中到店领热区 ≥44px —— M4:60.0×44.0
+PASS B6 Banner CTA 与进度卡无重叠 —— CTA底=154；进度卡顶=164
+汇总：16/16 通过；证据目录=evidence/pd39-1-u1-touch-44

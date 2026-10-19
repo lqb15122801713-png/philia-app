@@ -249,6 +249,18 @@ function inspectPageExpression() {
       range.selectNodeContents(node)
       return range.getBoundingClientRect()
     }
+    const touchRect = (selector) => {
+      const rect = document.querySelector(selector)?.getBoundingClientRect()
+      return rect ? { width: rect.width, height: rect.height } : null
+    }
+    const touchTargets = {
+      M1: touchRect('[data-testid="home-banner-cta"]'),
+      M2: touchRect('[data-testid="home-member-code"]'),
+      M3: touchRect('[data-testid="home-member-summary"]'),
+      M4: touchRect('[data-testid="home-service-pickup"]'),
+      L1: touchRect('[data-testid="home-store-chip"]'),
+      L2: touchRect('[data-testid="home-activity-lead"]'),
+    }
     const pendingRect = textRect(one('home-banner-img'), '待换')
     const subRect = one('home-banner-sub')?.getBoundingClientRect() ?? null
     return {
@@ -278,8 +290,15 @@ function inspectPageExpression() {
       progressTop: one('home-service-progress')?.getBoundingClientRect().top ?? null,
       progressDots: document.querySelectorAll('[data-testid="home-service-progress"] .hv2-progress-dot').length,
       pickup: link('home-service-pickup'),
+      touchTargets,
     }
   })())`
+}
+
+function checkTouchTargets(targets, ids, label) {
+  const rows = ids.map((id) => ({ id, ...(targets?.[id] ?? {}) }))
+  const bad = rows.filter((item) => typeof item.width !== 'number' || typeof item.height !== 'number' || item.width < 44 || item.height < 44)
+  record(label, bad.length === 0, bad.length ? `低于44或缺失=${bad.map((item) => `${item.id}:${item.width ?? '缺'}×${item.height ?? '缺'}`).join('；')}` : rows.map((item) => `${item.id}:${item.width.toFixed(1)}×${item.height.toFixed(1)}`).join('；'), rows)
 }
 
 function checkIdle(data) {
@@ -292,6 +311,7 @@ function checkIdle(data) {
   record('B1 三主入口 ×3', data.primary.map((item) => item.href).join('|') === '/booking/grooming|/booking/boarding|/mall', data.primary.map((item) => `${item.text}→${item.href}`).join('；'), data.primary)
   record('C2 四次入口 ×4', data.secondary.length === 4 && data.secondary.every((item) => item.text && item.href?.startsWith('/')), data.secondary.map((item) => `${item.text}→${item.href}`).join('；'), data.secondary)
   record('C1 细会员条与会员码一键', data.memberStrip && data.memberCode.href === '/me/card' && data.memberCode.text === '会员码' && data.memberText?.includes('微光'), `会员条=${data.memberStrip}；会员码=${data.memberCode.text}/${data.memberCode.href}；文本=${data.memberText}`)
+  checkTouchTargets(data.touchTargets, ['M1', 'M2', 'M3', 'L1', 'L2'], 'PD-39.1 空闲态触控热区 ≥44px')
   record('B2/B3/B4 精选、活动、守护结构', data.featured >= 2 && data.activities === 3 && data.stories === 2, `精选=${data.featured}；活动=${data.activities}；守护=${data.stories}`)
   record('D2 空闲 IA 固定顺序且旧主轴退出', orderOk && data.oldBlocks.length === 0 && !data.order.find((item) => item.id === 'home-service-progress')?.present, `顺序=${orderOk}；旧块=${data.oldBlocks.join(',') || 0}`, data.order)
   const badFonts = data.subFonts.filter((item) => item.size < 12)
@@ -310,6 +330,7 @@ function checkService(data) {
   const liveCopyOk = !!data.progress && data.progress.includes('服务进行中') && !data.progress.includes('LIVE')
   record('B6 服务中首屏进度卡与同骨架', skeletonOk && data.oldBlocks.length === 0 && data.featured >= 2 && data.activities === 3 && data.stories === 2 && liveCopyOk, `同骨架=${skeletonOk}；旧块=${data.oldBlocks.join(',') || 0}；进度=${data.progress}`, data.order)
   record('B6 六步步骤豆与到店领入口', data.progressDots === 6 && data.progress?.includes('3 / 6') && data.pickup.href?.startsWith('/appointments/'), `步骤豆=${data.progressDots}；到店领=${data.pickup.href}；文案=${data.progress}`, { dots: data.progressDots, pickup: data.pickup })
+  checkTouchTargets(data.touchTargets, ['M4'], 'PD-39.1 服务中到店领热区 ≥44px')
   record('B6 Banner CTA 与进度卡无重叠', typeof data.bannerCtaBottom === 'number' && typeof data.progressTop === 'number' && data.bannerCtaBottom <= data.progressTop, `CTA底=${data.bannerCtaBottom}；进度卡顶=${data.progressTop}`)
 }
 
@@ -371,8 +392,8 @@ async function main() {
   cdp.close()
   mkdirSync(OUT_DIR, { recursive: true })
   writeFileSync(join(OUT_DIR, `${PREFIX}-results.json`), JSON.stringify({ at: new Date().toISOString(), base: CUSTOMER_URL, results }, null, 2))
-  if (results.length !== 14) {
-    console.error(`检查数不符：期望 14，实际 ${results.length}`)
+  if (results.length !== 16) {
+    console.error(`检查数不符：期望 16，实际 ${results.length}`)
     process.exit(2)
   }
   const passed = results.filter((item) => item.ok).length
