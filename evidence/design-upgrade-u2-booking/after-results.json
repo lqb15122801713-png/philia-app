@@ -1,0 +1,128 @@
+{
+  "at": "2026-10-19T08:52:26.280Z",
+  "base": "http://localhost:7103",
+  "results": [
+    {
+      "id": "U2 Default 为预填 chips＋日期时段的 2-tap 画布",
+      "ok": true,
+      "detail": "title=预约；chips=u2-chip-pet/u2-chip-service/u2-chip-staff/u2-chip-store；旧区块=false；CTA=请先选择时段",
+      "measurements": {
+        "title": "预约",
+        "chips": [
+          "u2-chip-pet",
+          "u2-chip-service",
+          "u2-chip-staff",
+          "u2-chip-store"
+        ],
+        "staffRail": false,
+        "extras": false,
+        "petCard": false,
+        "confirmText": "请先选择时段",
+        "confirmDisabled": true,
+        "pawCount": 0,
+        "minFont": 12,
+        "smallText": [],
+        "columns": 4
+      }
+    },
+    {
+      "id": "U2 Default 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "U2 时段为定稿四列栅格",
+      "ok": true,
+      "detail": "列数=4"
+    },
+    {
+      "id": "U2 Half 为 Modal 选人详情且结构块齐全",
+      "ok": true,
+      "detail": "open=true；modal=true；hero=true；works=true；options=5",
+      "measurements": {
+        "open": true,
+        "modal": true,
+        "hero": true,
+        "works": true,
+        "confirm": true,
+        "confirmVisible": true,
+        "options": 5,
+        "pawCount": 0,
+        "backdropHit": true,
+        "minFont": 12,
+        "smallText": []
+      }
+    },
+    {
+      "id": "U2 Half 蒙层阻断底层点按",
+      "ok": true,
+      "detail": "backdropHit=true"
+    },
+    {
+      "id": "U2 Half 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "U2 Half 打开时底层页面不随滚轮滚动",
+      "ok": true,
+      "detail": "scrollY=120；open=true；body=hidden",
+      "measurements": {
+        "y": 120,
+        "open": true,
+        "bodyOverflow": "hidden"
+      }
+    },
+    {
+      "id": "U2 Half 点蒙层仅关闭不误触底层",
+      "ok": true,
+      "detail": "closed=true；CTA=请先选择时段；body=auto",
+      "measurements": {
+        "closed": true,
+        "confirmText": "请先选择时段",
+        "bodyOverflow": ""
+      }
+    },
+    {
+      "id": "U2 Half 支持 Esc 关闭",
+      "ok": true,
+      "detail": "closed=true"
+    },
+    {
+      "id": "U2 Half 选人后回画布并更新摘要",
+      "ok": true,
+      "detail": "picked=true；closed=true；chip=小美▾"
+    },
+    {
+      "id": "U2 已选态只待第二 tap，确认钮不携带多余文案",
+      "ok": true,
+      "detail": "CTA=确认预约；disabled=false；summary=已选 明天 09:00 · 约 150 分钟 · ¥88",
+      "measurements": {
+        "text": "确认预约",
+        "disabled": false,
+        "summary": "已选 明天 09:00 · 约 150 分钟 · ¥88"
+      }
+    },
+    {
+      "id": "U2 成功态对齐摘要＋服务过程入口锚＋完成出口",
+      "ok": true,
+      "detail": "root=true；copy=true；process=/appointments/u2-mock-success/live；done=true；dock=true；qr=false",
+      "measurements": {
+        "root": true,
+        "processHref": "/appointments/u2-mock-success/live",
+        "done": true,
+        "dock": true,
+        "qr": false,
+        "calendar": false
+      }
+    },
+    {
+      "id": "U2 验证全程无提交预约／支付请求",
+      "ok": true,
+      "detail": "命中=无",
+      "measurements": []
+    }
+  ]
+}

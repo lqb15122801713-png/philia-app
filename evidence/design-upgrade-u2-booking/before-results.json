@@ -1,0 +1,424 @@
+{
+  "at": "2026-10-18T09:31:16.609Z",
+  "base": "http://localhost:7100",
+  "results": [
+    {
+      "id": "U2 Default 为预填 chips＋日期时段的 2-tap 画布",
+      "ok": false,
+      "detail": "title=预约洗护；chips=缺；旧区块=true；CTA=请选择宠物",
+      "measurements": {
+        "title": "预约洗护",
+        "chips": [],
+        "staffRail": true,
+        "extras": true,
+        "petCard": true,
+        "confirmText": "请选择宠物",
+        "confirmDisabled": true,
+        "pawCount": 2,
+        "minFont": 9,
+        "smallText": [
+          {
+            "text": "5 项可选 · ¥68 起",
+            "size": 9.5
+          },
+          {
+            "text": "1 项可选 · ¥198 起",
+            "size": 9.5
+          },
+          {
+            "text": "约 60 分钟 · ¥88",
+            "size": 9.5
+          },
+          {
+            "text": "约 90 分钟 · ¥128",
+            "size": 9.5
+          },
+          {
+            "text": "约 90 分钟 · ¥168",
+            "size": 9.5
+          },
+          {
+            "text": "约 120 分钟 · ¥198",
+            "size": 9.5
+          },
+          {
+            "text": "当前仅 3 家门店可约，通用范围以门店列表为准",
+            "size": 11
+          },
+          {
+            "text": "指定洗护师会写在预约备注里传达给门店",
+            "size": 11
+          },
+          {
+            "text": "今天",
+            "size": 9.5
+          },
+          {
+            "text": "约满",
+            "size": 9.5
+          },
+          {
+            "text": "明天",
+            "size": 9.5
+          },
+          {
+            "text": "余 17",
+            "size": 9.5
+          },
+          {
+            "text": "周二",
+            "size": 9.5
+          },
+          {
+            "text": "余 17",
+            "size": 9.5
+          },
+          {
+            "text": "上午",
+            "size": 9
+          },
+          {
+            "text": "可约",
+            "size": 9
+          },
+          {
+            "text": "可约",
+            "size": 9
+          },
+          {
+            "text": "可约",
+            "size": 9
+          },
+          {
+            "text": "可约",
+            "size": 9
+          },
+          {
+            "text": "可约",
+            "size": 9
+          },
+          {
+            "text": "可约",
+            "size": 9
+          },
+          {
+            "text": "下午",
+            "size": 9
+          },
+          {
+            "text": "可约",
+            "size": 9
+          },
+          {
+            "text": "可约",
+            "size": 9
+          },
+          {
+            "text": "可约",
+            "size": 9
+          },
+          {
+            "text": "可约",
+            "size": 9
+          },
+          {
+            "text": "可约",
+            "size": 9
+          },
+          {
+            "text": "可约",
+            "size": 9
+          },
+          {
+            "text": "可约",
+            "size": 9
+          },
+          {
+            "text": "可约",
+            "size": 9
+          },
+          {
+            "text": "可约",
+            "size": 9
+          },
+          {
+            "text": "可约",
+            "size": 9
+          },
+          {
+            "text": "晚上",
+            "size": 9
+          },
+          {
+            "text": "可约",
+            "size": 9
+          },
+          {
+            "text": "已满",
+            "size": 9
+          },
+          {
+            "text": "已满",
+            "size": 9
+          },
+          {
+            "text": "已满",
+            "size": 9
+          },
+          {
+            "text": "已满",
+            "size": 9
+          },
+          {
+            "text": "已满",
+            "size": 9
+          },
+          {
+            "text": "未选宠物 · 基础洗护（小型犬） · 随缘派单",
+            "size": 11
+          },
+          {
+            "text": "未选时间",
+            "size": 11
+          },
+          {
+            "text": "全程可见 · 照片记录 · 次卡扣次",
+            "size": 11
+          }
+        ],
+        "columns": 3
+      }
+    },
+    {
+      "id": "U2 Default 可读副文全部 ≥12px",
+      "ok": false,
+      "detail": "最小=9px；低于 12px=5 项可选 · ¥68 起:9.5，1 项可选 · ¥198 起:9.5，约 60 分钟 · ¥88:9.5，约 90 分钟 · ¥128:9.5，约 90 分钟 · ¥168:9.5，约 120 分钟 · ¥198:9.5，当前仅 3 家门店可约，通用范围以门店列表为准:11，指定洗护师会写在预约备注里传达给门店:11，今天:9.5，约满:9.5，明天:9.5，余 17:9.5，周二:9.5，余 17:9.5，上午:9，可约:9，可约:9，可约:9，可约:9，可约:9，可约:9，下午:9，可约:9，可约:9，可约:9，可约:9，可约:9，可约:9，可约:9，可约:9，可约:9，可约:9，晚上:9，可约:9，已满:9，已满:9，已满:9，已满:9，已满:9，未选宠物 · 基础洗护（小型犬） · 随缘派单:11，未选时间:11，全程可见 · 照片记录 · 次卡扣次:11",
+      "measurements": [
+        {
+          "text": "5 项可选 · ¥68 起",
+          "size": 9.5
+        },
+        {
+          "text": "1 项可选 · ¥198 起",
+          "size": 9.5
+        },
+        {
+          "text": "约 60 分钟 · ¥88",
+          "size": 9.5
+        },
+        {
+          "text": "约 90 分钟 · ¥128",
+          "size": 9.5
+        },
+        {
+          "text": "约 90 分钟 · ¥168",
+          "size": 9.5
+        },
+        {
+          "text": "约 120 分钟 · ¥198",
+          "size": 9.5
+        },
+        {
+          "text": "当前仅 3 家门店可约，通用范围以门店列表为准",
+          "size": 11
+        },
+        {
+          "text": "指定洗护师会写在预约备注里传达给门店",
+          "size": 11
+        },
+        {
+          "text": "今天",
+          "size": 9.5
+        },
+        {
+          "text": "约满",
+          "size": 9.5
+        },
+        {
+          "text": "明天",
+          "size": 9.5
+        },
+        {
+          "text": "余 17",
+          "size": 9.5
+        },
+        {
+          "text": "周二",
+          "size": 9.5
+        },
+        {
+          "text": "余 17",
+          "size": 9.5
+        },
+        {
+          "text": "上午",
+          "size": 9
+        },
+        {
+          "text": "可约",
+          "size": 9
+        },
+        {
+          "text": "可约",
+          "size": 9
+        },
+        {
+          "text": "可约",
+          "size": 9
+        },
+        {
+          "text": "可约",
+          "size": 9
+        },
+        {
+          "text": "可约",
+          "size": 9
+        },
+        {
+          "text": "可约",
+          "size": 9
+        },
+        {
+          "text": "下午",
+          "size": 9
+        },
+        {
+          "text": "可约",
+          "size": 9
+        },
+        {
+          "text": "可约",
+          "size": 9
+        },
+        {
+          "text": "可约",
+          "size": 9
+        },
+        {
+          "text": "可约",
+          "size": 9
+        },
+        {
+          "text": "可约",
+          "size": 9
+        },
+        {
+          "text": "可约",
+          "size": 9
+        },
+        {
+          "text": "可约",
+          "size": 9
+        },
+        {
+          "text": "可约",
+          "size": 9
+        },
+        {
+          "text": "可约",
+          "size": 9
+        },
+        {
+          "text": "可约",
+          "size": 9
+        },
+        {
+          "text": "晚上",
+          "size": 9
+        },
+        {
+          "text": "可约",
+          "size": 9
+        },
+        {
+          "text": "已满",
+          "size": 9
+        },
+        {
+          "text": "已满",
+          "size": 9
+        },
+        {
+          "text": "已满",
+          "size": 9
+        },
+        {
+          "text": "已满",
+          "size": 9
+        },
+        {
+          "text": "已满",
+          "size": 9
+        },
+        {
+          "text": "未选宠物 · 基础洗护（小型犬） · 随缘派单",
+          "size": 11
+        },
+        {
+          "text": "未选时间",
+          "size": 11
+        },
+        {
+          "text": "全程可见 · 照片记录 · 次卡扣次",
+          "size": 11
+        }
+      ]
+    },
+    {
+      "id": "U2 时段为定稿四列栅格",
+      "ok": false,
+      "detail": "列数=3"
+    },
+    {
+      "id": "U2 Half 为 Modal 选人详情且结构块齐全",
+      "ok": false,
+      "detail": "open=false；modal=undefined；hero=undefined；works=undefined；options=undefined",
+      "measurements": {
+        "open": false
+      }
+    },
+    {
+      "id": "U2 Half 蒙层阻断底层点按",
+      "ok": false,
+      "detail": "backdropHit=undefined"
+    },
+    {
+      "id": "U2 Half 可读副文全部 ≥12px",
+      "ok": false,
+      "detail": "最小=undefinedpx；低于 12px=无"
+    },
+    {
+      "id": "U2 Half 点蒙层仅关闭不误触底层",
+      "ok": false,
+      "detail": "Half 未打开"
+    },
+    {
+      "id": "U2 Half 选人后回画布并更新摘要",
+      "ok": false,
+      "detail": "Half 未打开"
+    },
+    {
+      "id": "U2 已选态只待第二 tap，确认钮不携带多余文案",
+      "ok": false,
+      "detail": "CTA=请选择宠物；disabled=true；summary=",
+      "measurements": {
+        "text": "请选择宠物",
+        "disabled": true,
+        "summary": ""
+      }
+    },
+    {
+      "id": "U2 成功态对齐摘要＋服务过程入口锚＋完成出口",
+      "ok": false,
+      "detail": "root=false；copy=false；process=；done=false；dock=false；qr=true",
+      "measurements": {
+        "root": false,
+        "processHref": "",
+        "done": false,
+        "dock": false,
+        "qr": true,
+        "calendar": true
+      }
+    }
+  ]
+}
