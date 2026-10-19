@@ -239,7 +239,8 @@ async function checkDefault(cdp) {
   await sleep(500)
   const state = JSON.parse(await cdp.eval(`(() => {
     const root = document.querySelector('[data-testid="grooming-single"]')
-    const chips = [...document.querySelectorAll('[data-testid^="u2-chip-"]')].map((el) => el.dataset.testid).sort()
+    const chipRows = [...document.querySelectorAll('[data-testid^="u2-chip-"]')].map((el) => ({ id: el.dataset.testid, height: el.getBoundingClientRect().height }))
+    const chips = chipRows.map((el) => el.id).sort()
     const confirm = document.querySelector('[data-testid="gs-confirm"]')
     const font = ${FONT_PROBE}(root)
     const firstSlot = document.querySelector('[data-testid^="gs-slot-"]')
@@ -247,6 +248,7 @@ async function checkDefault(cdp) {
     return JSON.stringify({
       title: root.querySelector('h1')?.textContent.trim() ?? '',
       chips,
+      chipRows,
       staffRail: !!root.querySelector('[data-testid="gs-groomer-rail"]'),
       extras: !!root.querySelector('[data-testid="gs-extras"]'),
       petCard: !!root.querySelector('[data-testid="gs-pet-card"]'),
@@ -265,6 +267,8 @@ async function checkDefault(cdp) {
     && state.confirmText === '请先选择时段' && state.confirmDisabled
     && state.pawCount === 0
   record('U2 Default 为预填 chips＋日期时段的 2-tap 画布', structureOk, `title=${state.title}；chips=${state.chips.join('/') || '缺'}；旧区块=${state.staffRail || state.extras || state.petCard}；CTA=${state.confirmText}`, state)
+  const minChipHeight = state.chipRows.length ? Math.min(...state.chipRows.map((row) => row.height)) : 0
+  record('M1 预约 chips 触控高全部 ≥44px', minChipHeight >= 44, `最小高=${minChipHeight}px；${state.chipRows.map((row) => `${row.id}=${Math.round(row.height)}px`).join('，')}`, state.chipRows)
   record('U2 Default 可读副文全部 ≥12px', state.minFont >= 12, `最小=${state.minFont}px；低于 12px=${state.smallText.map((row) => `${row.text}:${row.size}`).join('，') || '无'}`, state.smallText)
   record('U2 时段为定稿四列栅格', state.columns === 4, `列数=${state.columns}`)
   await shot(cdp, 'default')
@@ -431,7 +435,7 @@ async function main() {
   record('U2 验证全程无提交预约／支付请求', forbiddenHits.length === 0, `命中=${forbiddenHits.join('，') || '无'}`, forbiddenHits)
   cdp.close()
   writeFileSync(join(OUT_DIR, `${PREFIX}-results.json`), JSON.stringify({ at: new Date().toISOString(), base: CUSTOMER_URL, results }, null, 2))
-  const expected = 13
+  const expected = 14
   if (results.length !== expected) {
     console.error(`检查数不符：期望 ${expected}，实际 ${results.length}；拒绝空跑假绿`)
     process.exit(2)

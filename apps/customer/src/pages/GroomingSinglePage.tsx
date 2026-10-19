@@ -184,7 +184,7 @@ export default function GroomingSinglePage() {
             ? '请先选择时段'
             : null;
 
-  const chipClass = 'flex min-h-10 shrink-0 items-center gap-1 rounded-full border border-line bg-card px-3.5 text-caption text-ink transition active:scale-95';
+  const chipClass = 'flex min-h-11 shrink-0 items-center gap-1 rounded-full border border-line bg-card px-3.5 text-caption text-ink transition active:scale-95';
   const renderers: Record<string, () => ReactNode> = {
     'bookingGrooming.header': () => (
       <header>
