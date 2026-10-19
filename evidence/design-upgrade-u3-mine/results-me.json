@@ -1,0 +1,30 @@
+{
+  "mode": "me",
+  "results": [
+    {
+      "name": "既有会员浏览器登录",
+      "ok": true,
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "我的页定稿四入口",
+      "ok": true,
+      "detail": "[[\"订单\",\"/appointments?tab=all\"],[\"预约\",\"/booking/grooming\"],[\"宠档\",\"/philia/pets\"],[\"地址\",\"/settings/addresses\"]]"
+    },
+    {
+      "name": "我的页定稿五列表",
+      "ok": true,
+      "detail": "[[\"回馈金明细购入账 / 抵扣流水›\",\"/member/rebate\"],[\"优惠券›\",\"/me/coupons\"],[\"收藏›\",\"/me/coupons?tab=favs\"],[\"客服›\",\"/support/new\"],[\"设置›\",\"/me/settings\"]]"
+    },
+    {
+      "name": "顶码与回馈金／券／毛孩子三格",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "我的页副文不小于 12px",
+      "ok": true,
+      "detail": "{\"count\":11,\"tooSmall\":[]}"
+    }
+  ]
+}
