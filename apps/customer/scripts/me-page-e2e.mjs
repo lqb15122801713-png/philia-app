@@ -1,27 +1,15 @@
 /**
  * MePage e2e（CDP 直连，无 puppeteer 依赖）
  *
- * 前置：server dev 已监听 7200、customer dev 已监听 7100（脚本只做可达性检查，不自起服务）。
- * 流程（补缺大批片 2 对齐版——换皮批片 2 新皮现码真值，属修复非删改）：
- *   1. 起 Chrome headless（remote-debugging-port=9223，390x844 移动视口）；
- *   2. GET /api/auth/dev-seed-users 动态取种子客户（禁止硬编码 ULID）→ dev-login → 导航 /me；
- *   3. Runtime.evaluate 断言 DOM：
- *      - 身份大卡 me-hero 渲染（登录态守卫放行）+ 回馈金格 me-rebate-cell；
- *      - 功能网格 me-grid8 链接入口（/philia/pets、/member/rebate、/booking/boarding）
- *        + 置灰槽位 testid（slot-gallery/coupons/address/concierge）+ me-qrrow；
- *      - 订单五格 me-orderrow（4 条 /appointments 链接 + slot-refund 槽位）；
- *      - 设置入口 me-settings 为 /me/settings 链接（R20 入口=出口）；
- *   4. 静态断言 MePage.tsx 源码含 me-grid8 网格与 /me/settings 导航（互证）；
- *   5. 截图 shots/me-page.png（登录态）；
- *   6. 退出流新路径：me-settings → /me/settings → settings-logout → 确认弹层
- *      （me-logout-confirm）→ /dev-login + auth.me 401 → 截图 shots/me-page-logout.png；
- *   7. 杀掉本脚本启动的 Chrome。
+ * 前置：server dev 与 customer dev 已监听（默认 7200／7100，可用环境变量覆盖）。
+ * 流程：动态取种子客户并登录，检查 PD42 U3 顶码、四入口、五列表与设置页退出流；
+ * 截图 shots/me-page.png 与 shots/me-page-logout.png，最后关闭本脚本启动的浏览器。
  *
  * 运行：node scripts/me-page-e2e.mjs（工作目录 apps/customer）
  */
 
 import { spawn, spawnSync } from 'node:child_process';
-import { readFileSync, rmSync, mkdirSync, existsSync } from 'node:fs';
+import { rmSync, mkdirSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { tmpdir } from 'node:os';
@@ -30,9 +18,9 @@ import { writeFileSync } from 'node:fs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PHILIA_ROOT = resolve(__dirname, '..', '..', '..');
 const SHOTS_DIR = resolve(PHILIA_ROOT, 'shots');
-const APP_PORT = 7100;
-const API_PORT = 7200;
-const DEBUG_PORT = 9223;
+const APP_PORT = Number(process.env.APP_PORT ?? 7100);
+const API_PORT = Number(process.env.API_PORT ?? 7200);
+const DEBUG_PORT = Number(process.env.DEBUG_PORT ?? 9223);
 // 浏览器自动探测：优先 Chrome，缺失时回退 Edge（同为 Chromium，CDP 行为一致）
 const BROWSER_CANDIDATES = [
   'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
@@ -182,32 +170,19 @@ async function main() {
   const qrrowHref = await evalJs(`document.querySelector('[data-testid="me-qrrow"]')?.getAttribute('href') ?? ''`);
   assert('会员码 qrrow 入口在案（/me/card 或 /member/open）', qrrowHref === '/me/card' || qrrowHref === '/member/open', qrrowHref);
 
-  /* ---------- 断言 2：功能网格 me-grid8 + 订单五格 me-orderrow（对照 App.tsx 路由表） ---------- */
-  const gridHrefs = await evalJs(`Array.from(document.querySelectorAll('[data-testid="me-grid8"] a')).map(a => a.getAttribute('href'))`);
-  const expectedGrid = ['/philia/pets', '/member/rebate', '/booking/boarding'];
-  for (const href of expectedGrid) {
-    assert(`网格入口存在：${href}`, gridHrefs.includes(href));
-  }
-  const slotIds = await evalJs(`['slot-gallery','slot-coupons','slot-address','slot-concierge'].filter(id => !!document.querySelector('[data-testid="'+id+'"]'))`);
-  assert('置灰槽位 4 件在案（PD-15 V1.1 三规）', slotIds.length === 4, slotIds.join(','));
+  /* ---------- 断言 2：PD42 U3 四入口 + 五列表（对照 App.tsx 路由表） ---------- */
+  const listHrefs = await evalJs(`Array.from(document.querySelectorAll('[data-testid="me-grid8"] a')).map(a => a.getAttribute('href'))`);
+  const expectedList = ['/member/rebate', '/me/coupons', '/me/coupons?tab=favs', '/support/new', '/me/settings'];
+  assert('我的页五列表链接齐', listHrefs.length === 5 && expectedList.every(h => listHrefs.includes(h)), JSON.stringify(listHrefs));
+  const quickHrefs = await evalJs(`Array.from(document.querySelectorAll('[data-testid="me-orderrow"] a')).map(a => a.getAttribute('href'))`);
+  const expectedQuick = ['/appointments?tab=all', '/booking/grooming', '/philia/pets', '/settings/addresses'];
+  assert('我的页四入口链接齐', quickHrefs.length === 4 && expectedQuick.every(h => quickHrefs.includes(h)), JSON.stringify(quickHrefs));
+  const slotIds = await evalJs(`['slot-coupons','slot-address','slot-concierge'].filter(id => !!document.querySelector('[data-testid="'+id+'"]'))`);
+  assert('券／地址／客服兼容锚在案', slotIds.length === 3, slotIds.join(','));
   const settingsHref = await evalJs(`document.querySelector('[data-testid="me-settings"]')?.getAttribute('href') ?? ''`);
-  assert('设置入口=/me/settings 链接（补缺批片 2：R20 入口=出口）', settingsHref === '/me/settings', settingsHref);
-  const orderHrefs = await evalJs(`Array.from(document.querySelectorAll('[data-testid="me-orderrow"] a')).map(a => a.getAttribute('href'))`);
-  assert('订单五格 4 链接均指 /appointments', orderHrefs.length === 4 && orderHrefs.every(h => (h ?? '').startsWith('/appointments')), JSON.stringify(orderHrefs));
-  const slotRefund = await evalJs(`!!document.querySelector('[data-testid="slot-refund"]')`);
-  assert('退款售后=置灰槽位（PD-15 V1.1 槽位 10）', slotRefund);
-
-  /* ---------- 断言 3：宠物档案入口（grid8 首格，含宠物名/去建档副签） ---------- */
-  const petCell = await evalJs(`(() => {
-    const el = document.querySelector('[data-testid="me-grid8"] a[href="/philia/pets"]');
-    return el ? el.textContent.trim() : null;
-  })()`);
-  assert('宠物档案入口渲染（含「宠物档案」签）', petCell !== null && petCell.includes('宠物档案'), petCell ?? '');
-
-  /* ---------- 断言 4：空态分支源码静态佐证（网格结构 + 设置导航互证） ---------- */
-  const src = readFileSync(resolve(__dirname, '..', 'src', 'pages', 'MePage.tsx'), 'utf8');
-  assert('源码含功能网格 me-grid8', /data-testid="me-grid8"/.test(src));
-  assert('源码含设置入口导航 /me/settings', /data-testid="me-settings"[\s\S]{0,200}?\/me\/settings|\/me\/settings[\s\S]{0,200}?data-testid="me-settings"/.test(src));
+  assert('设置入口=/me/settings 链接', settingsHref === '/me/settings', settingsHref);
+  const valueCells = await evalJs(`['me-rebate-cell','me-coupon-cell','me-pet-cell'].every(id => !!document.querySelector('[data-testid="'+id+'"]'))`);
+  assert('回馈金／券／毛孩子三格在案', valueCells);
 
   /* ---------- 截图 1：登录态 /me ---------- */
   await sleep(1200); // 图片等收尾渲染
