@@ -40,7 +40,20 @@ const MALL_COPY_TABLE = {
   'mall.otherStore': '其他门店',
   'mall.pullMore': '上拉加载更多',
   'mall.endLine': '共 {total} 件商品 · 到底啦',
-  /* 商品卡（M-01：回馈金返显 mono 8.5 + 售罄签） */
+  'mall.searchPlaceholderU4': '搜索粮 · 零食 · 用品',
+  'mall.rebatePill': '回馈金 {amt}',
+  'mall.featuredTitle': '精选好物',
+  'mall.all': '全部',
+  'mall.memberPrice': '会员 {amt}',
+  'mall.rebateLineU4': '购可得 {amt}',
+  'mall.storeSame': '门店同款',
+  'mall.pendingImage': '待换',
+  'mall.heroCtaU4': '去逛逛',
+  'mall.cat.recommend': '推荐',
+  'mall.cat.food': '粮',
+  'mall.cat.wash': '洗护',
+  'mall.cat.travel': '出行',
+  /* 商品卡：会员价信息位与现价同值（全员同价红线），回馈金按真实档位比例显示。 */
   'mall.rebateLine': '返 {amt} 回馈金',
   'mall.soldOut': '已售罄',
   /* 跨店加车确认（MallPage/PDP 同链路） */
@@ -55,6 +68,14 @@ const MALL_COPY_TABLE = {
   'mall.pdpDetailTitle': '商品详情',
   'mall.pdpAddCart': '加入购物袋',
   'mall.pdpBuyNow': '立即购买',
+  'mall.pdpBack': '返回',
+  'mall.pdpAddCartU4': '加入购物车',
+  'mall.pdpMemberPrice': '会员价 {amt}',
+  'mall.pdpMemberCta': '会员 {amt}',
+  'mall.rebateEarnStrip': '预计得回馈金 {amt} · 按实付约 {pct}%',
+  'mall.pdpSpecs': '规格',
+  'mall.pdpDescriptionLabel': '成分简述',
+  'mall.pdpAddRebate': '加购后预计得回馈金 {amt}',
 
   /* ---- 购物袋 /mall/cart（M-03 定稿） ---- */
   'mall.cartTitle': '购物袋',
@@ -64,6 +85,15 @@ const MALL_COPY_TABLE = {
   /* 单店限制提示（规则明面） */
   'mall.cartStoreNote': '当前为「{store}」的商品 · 一次下单仅支持同一门店',
   'mall.cartCheckout': '去结算',
+  'mall.cartManage': '管理',
+  'mall.cartManageClose': '收起',
+  'mall.cartMemberMeta': '会员价 · 门店同款',
+  'mall.rebateUse': '使用回馈金',
+  'mall.rebateBalanceLimit': '余额 {balance} · 本单抵 {amt}',
+  'mall.rebateDeduct': '本单抵扣',
+  'mall.cartEarnAfter': '支付后本单预计再得回馈金 {amt}',
+  'mall.cartRebateSaved': '已抵回馈金 {amt}',
+  'mall.cartPayable': '应付',
 
   /* ---- 确认订单 /mall/checkout ---- */
   'mall.checkoutTitle': '确认订单',
@@ -81,6 +111,17 @@ const MALL_COPY_TABLE = {
   'mall.listShip': '{store} · 门店发货',
   'mall.priceNote': '金额以提交时门店现价为准',
   'mall.submitOrder': '提交订单',
+  'mall.deliveryPickupU4': '到店自提',
+  'mall.deliveryHomeU4': '配送到家',
+  'mall.pickupReady': '按门店营业时间自取',
+  'mall.pickupContactFallback': '到店报预留手机号',
+  'mall.checkoutItems': '{count} 件商品',
+  'mall.feeSubtotal': '商品金额',
+  'mall.feeShipping': '运费',
+  'mall.feeRebate': '回馈金抵扣',
+  'mall.feePayable': '应付',
+  'mall.confirmPay': '确认支付 {amt}',
+  'mall.rebatePendingGate': '回馈金抵扣表面已开启，本片不发起线上结算',
 
   /* ---- 客户端体验大批 片 3：结算配送方式（createOrder 入参 deliveryMethod；
      pickup/same_city 时地址非必填 + 内测期免运费注记） ---- */

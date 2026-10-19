@@ -1,0 +1,229 @@
+{
+  "at": "2026-10-19T13:23:11.350Z",
+  "base": "http://127.0.0.1:7163",
+  "results": [
+    {
+      "id": "U4-187 杂志会员条、三入口与编辑前后对照",
+      "ok": true,
+      "detail": "会员条=萤火 · 回馈金 ¥86//已到账 · 商品消费可抵//会员码；入口=权益/券/任务；lead=true；图=2；副文最小=12px",
+      "state": {
+        "head": "PHILIA\n品牌杂志",
+        "member": "萤火 · 回馈金 ¥86\n\n已到账 · 商品消费可抵\n\n会员码",
+        "shortcuts": [
+          "权益",
+          "券",
+          "任务"
+        ],
+        "lead": true,
+        "leadImages": 2,
+        "leadText": "今日 · 菲丽亚宠物·示例店\n洗护前后 · 门店作品\n待换\n\n前\n\n待换\n\n后\n\n秋日洗护季特刊\n\n换季掉毛与皮肤干燥——给它一套入秋洗护方案\n\n去预约同款洗护",
+        "afterAlt": "洗护后效果图（待换）",
+        "pgc": "编辑部出品 · 精选内容（不开放投稿）",
+        "secondary": [
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12
+        ]
+      }
+    },
+    {
+      "id": "U4-188 商城定稿结构与洗护真实筛选",
+      "ok": true,
+      "detail": "结构齐；洗护筛选=true",
+      "state": {
+        "search": "搜索粮 · 零食 · 用品",
+        "rebate": "回馈金 ¥86",
+        "categories": [
+          "推荐",
+          "粮",
+          "零食",
+          "洗护",
+          "玩具",
+          "出行"
+        ],
+        "heroCopy": true,
+        "heroImages": 1,
+        "cards": [
+          "待换\n\n全价成犬粮 2kg\n\n门店同款\n\n¥129\n\n会员 ¥129\n\n购可得 ¥2.58",
+          "待换\n\n全价成猫粮 1.5kg\n\n门店同款\n\n¥119\n\n会员 ¥119\n\n购可得 ¥2.38",
+          "待换\n\n幼犬奶糕粮 1kg\n\n门店同款\n\n¥99\n\n会员 ¥99\n\n购可得 ¥1.98",
+          "待换\n\n风干鸡肉干 100g\n\n门店同款\n\n¥49\n\n会员 ¥49\n\n购可得 ¥0.98",
+          "待换\n\n猫条混合装 12 支\n\n门店同款\n\n¥29\n\n会员 ¥29\n\n购可得 ¥0.58",
+          "待换\n\n洁齿磨牙棒 7 支\n\n门店同款\n\n¥39\n\n会员 ¥39\n\n购可得 ¥0.78",
+          "待换\n\n发声橡胶球\n\n门店同款\n\n¥19\n\n会员 ¥19\n\n购可得 ¥0.38",
+          "待换\n\n羽毛逗猫棒\n\n门店同款\n\n¥15\n\n会员 ¥15\n\n购可得 ¥0.30",
+          "待换\n\n宠物通用香波 500ml\n\n门店同款\n\n¥59\n\n会员 ¥59\n\n购可得 ¥1.18",
+          "待换\n\n豆腐猫砂 6L\n\n门店同款\n\n¥49\n\n会员 ¥49\n\n购可得 ¥0.98"
+        ],
+        "imageStates": [
+          {
+            "generatedSvg": 0,
+            "pending": 1
+          },
+          {
+            "generatedSvg": 0,
+            "pending": 1
+          },
+          {
+            "generatedSvg": 0,
+            "pending": 1
+          },
+          {
+            "generatedSvg": 0,
+            "pending": 1
+          },
+          {
+            "generatedSvg": 0,
+            "pending": 1
+          },
+          {
+            "generatedSvg": 0,
+            "pending": 1
+          },
+          {
+            "generatedSvg": 0,
+            "pending": 1
+          },
+          {
+            "generatedSvg": 0,
+            "pending": 1
+          },
+          {
+            "generatedSvg": 0,
+            "pending": 1
+          },
+          {
+            "generatedSvg": 0,
+            "pending": 1
+          }
+        ],
+        "quickAdds": 0
+      }
+    },
+    {
+      "id": "U4-188D 商详信息、回馈金、规格与单一加购闸口",
+      "ok": true,
+      "detail": "会员价=true；回馈条=预计得回馈金 ¥2.58 · 按实付约 2%；规格=规格/2kg；CTA=1；立即购买=0；副文最小=12px",
+      "state": {
+        "info": "全价成犬粮 2kg\n\n鸡肉味全价犬粮\n\n¥129\n\n会员价 ¥129\n\n菲丽亚宠物·示例店 · 门店同价 · 正品保障",
+        "rebate": "预计得回馈金 ¥2.58 · 按实付约 2%",
+        "specs": "规格\n2kg",
+        "ctaButtons": 1,
+        "buyNow": 0,
+        "addText": "加入购物车",
+        "secondary": [
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12,
+          12
+        ]
+      }
+    },
+    {
+      "id": "U4-189C 购物车行、回馈金抵扣与管理态",
+      "ok": true,
+      "detail": "抵扣联动=true；管理展开=true；收起=true；默认态复位=true",
+      "state": {
+        "before": {
+          "manage": "管理",
+          "rows": 2,
+          "checkDots": 0,
+          "rebate": "使用回馈金\n\n余额 ¥86 · 本单抵 ¥86\n\n本单抵扣 -¥86",
+          "switchChecked": "true",
+          "deduction": "-¥86",
+          "payable": "¥162",
+          "checkout": "去结算",
+          "storeNote": "当前为「U4 隔离夹具门店」的商品 · 一次下单仅支持同一门店",
+          "secondary": [
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12
+          ]
+        },
+        "off": {
+          "deduction": "-¥0",
+          "payable": "¥248"
+        }
+      }
+    },
+    {
+      "id": "U4-189S 结算自提、汇总、费用与回馈金表面",
+      "ok": true,
+      "detail": "跨页继承=off；开启联动=true",
+      "state": {
+        "before": {
+          "head": true,
+          "delivery": [
+            "到店自提",
+            "配送到家"
+          ],
+          "pickupPressed": "true",
+          "store": "菲丽亚宠物·示例店\n\n杭州市西湖区文三路 100 号\n\n0571-88886666",
+          "summary": "待换\n待换\n\n2 件商品\n\n全价成犬粮 2kg · 全价成猫粮 1.5kg",
+          "fees": "商品金额\n¥248\n运费\n¥0\n回馈金抵扣\n-¥0\n应付\n¥248",
+          "rebate": "使用回馈金\n\n余额 ¥86 · 本单抵 ¥0",
+          "switchChecked": "false",
+          "deduction": "-¥0",
+          "payable": "¥248",
+          "submit": "确认支付 ¥248",
+          "addressInputs": 0,
+          "secondary": [
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12
+          ]
+        },
+        "on": {
+          "checked": "true",
+          "deduction": "-¥86",
+          "payable": "¥162"
+        }
+      }
+    },
+    {
+      "id": "U4-188G groupbuy 待上线分支不受商城定稿影响",
+      "ok": true,
+      "detail": "商品=0；类目=0；出口=true",
+      "state": {
+        "pending": "团购活动待上线\n\n团购频道正在筹备，先看看商城里的精选商品。\n\n去逛逛商城",
+        "products": 0,
+        "categories": 0,
+        "exit": true
+      }
+    }
+  ]
+}

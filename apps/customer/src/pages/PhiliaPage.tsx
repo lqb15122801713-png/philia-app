@@ -1,101 +1,161 @@
-/**
- * PhiliaPage · /philia PHILIA 杂志（产品-1015 换皮 片4-运营商城 · 对照 READY 帧 187:2）
- *
- * 口径写死（READY §6.9）：PHILIA＝PGC 杂志（编辑部出品），不做开放 Feed——
- * 无发帖器 / 无点赞评论 / 无无限流；条目=固定三条策展位。
- *
- * 端口轻批 批C（philia.magazine）：选题卡内容=槽位端口三槽
- * （philia.magazine.lead / .02 / .03，D-42 主副题/CTA 运营可调，壳写死）；
- * 槽行/字段缺省回退=copy 键 mag.*（与迁移 0086 槽种默认同帧）；
- * 图 url=null=品牌渐变占位（真图终摄非目标，R10 不落假图）。
- *
- * 主 CTA 纪律：封面「读本期」与次卡分别进入对应阅读页，不放无导航的假按钮。
- *
- * 沿革（片4 换面）：旧 F-01 陪伴页（画布九块 + 下滑关闭手势 + fixed 全屏 dialog 形态）
- * 随本片退役——/philia 归位主级 Tab 常规页（dock 明面）；旧画布块 philia.* 注册表行
- * 保留不删（服务端内容，清册另批报备）；f1.* copy 键保留在端口库（同报备）；
- * HomeBookingPanel 等共享件在首页继续使用，零触。
- */
-
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { resolveSlotUrl } from '@philia/shared'
+import { useQuery } from '@tanstack/react-query'
+import { BadgeCheck, ClipboardCheck, Ticket } from 'lucide-react'
+import { resolveSlotUrl, usePhiliaClient } from '@philia/shared'
 import { MAGAZINE_ARTICLES, magazineEntryOf, mgc } from '../copy/magazine'
+import { fenToYuan } from '../components/mall/format'
 
-/** 封面图（url 缺省/加载失败=品牌渐变占位；真图终摄非目标） */
-function CoverArt({ url, alt, className }: { url: string | null; alt: string; className: string }) {
+function CoverArt({
+  url,
+  alt,
+  className,
+  priority = false,
+}: {
+  url: string | null
+  alt: string
+  className: string
+  priority?: boolean
+}) {
   const [imgOk, setImgOk] = useState(true)
   const src = resolveSlotUrl(url)
   if (src && imgOk) {
-    return <img src={src} alt={alt} onError={() => setImgOk(false)} className={className} />
+    return (
+      <img
+        src={src}
+        alt={alt}
+        onError={() => setImgOk(false)}
+        className={className}
+        {...(priority ? { fetchPriority: 'high' } : { loading: 'lazy' })}
+      />
+    )
   }
   return (
     <div
       aria-label={alt}
       role="img"
-      className={`bg-philia-gradient ${className}`}
-    />
+      className={`flex items-center justify-center bg-[linear-gradient(135deg,#FAF7F0_0%,#F3EEE4_52%,#E9E1D2_100%)] ${className}`}
+    >
+      <span className="rounded-full bg-card/75 px-2.5 py-1 text-[12px] font-medium text-ink-secondary" data-u4-secondary>
+        {mgc('mag.pendingImage')}
+      </span>
+    </div>
   )
 }
 
+const SHORTCUTS = [
+  { labelKey: 'mag.shortcutBenefits', to: '/member', Icon: BadgeCheck },
+  { labelKey: 'mag.shortcutCoupons', to: '/me/coupons', Icon: Ticket },
+  { labelKey: 'mag.shortcutTasks', to: '/philia/magazine/lead', Icon: ClipboardCheck },
+] as const
+
 export default function PhiliaPage() {
+  const { trpc } = usePhiliaClient()
+  const myQ = useQuery({
+    queryKey: ['membership', 'my'],
+    queryFn: () => trpc.membership.my.query(),
+    staleTime: 60_000,
+    retry: false,
+  })
+  const storesQ = useQuery({
+    queryKey: ['store', 'listNearby'],
+    queryFn: () => trpc.store.listNearby.query(),
+    staleTime: 5 * 60_000,
+    retry: false,
+  })
   const leadArticle = MAGAZINE_ARTICLES[0]
   const lead = magazineEntryOf(leadArticle)
   const entries = MAGAZINE_ARTICLES.slice(1).map((article) => ({ article, entry: magazineEntryOf(article) }))
+  const storeName = storesQ.data?.stores[0]?.name ?? '门店'
+  const plan = myQ.data?.plan as { label?: string } | null | undefined
+  const tierName = plan?.label ? plan.label.replace(/^会员档·/, '').replace(/：.*$/, '') : mgc('mag.memberFallback')
+  const balanceFen = myQ.data?.rebate?.balanceFen ?? 0
+  const pendingFen = myQ.data?.rebate?.pendingFen ?? 0
+  const rebateTotal = balanceFen + pendingFen
+  const settledPct = rebateTotal > 0 ? Math.round((balanceFen / rebateTotal) * 100) : 0
 
   return (
     <div className="pb-28" data-testid="philia-magazine">
-      {/* 页头裸段（mall/me 同工艺：serif 27 大题 + mono 注记） */}
       <div className="m2-apphead">
         <span className="tt">{mgc('mag.headTitle')}</span>
-        <span className="no">{mgc('mag.headSub')}</span>
+        <span className="no">{mgc('mag.brandSub')}</span>
       </div>
 
+      <section className="mx-[22px] mt-3 rounded-[18px] bg-brand-cta px-4 py-3.5 text-brand-cta-on" data-testid="philia-member-strip">
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-body-sm font-bold">{tierName} · 回馈金 {fenToYuan(balanceFen)}</p>
+            <p className="mt-0.5 text-[12px] text-[#C9BBA0]" data-u4-secondary>{mgc('mag.rebateReady')}</p>
+          </div>
+          <Link to="/me/card" className="shrink-0 rounded-full bg-card px-3.5 py-1.5 text-[12px] font-bold text-ink">
+            {mgc('mag.memberCode')}
+          </Link>
+        </div>
+        <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-white/15" aria-hidden="true">
+          <div className="h-full rounded-full bg-brand-primary" style={{ width: `${settledPct}%` }} />
+        </div>
+      </section>
+
+      <nav className="mt-4 grid grid-cols-3 px-[22px]" aria-label="杂志快捷入口">
+        {SHORTCUTS.map(({ labelKey, to, Icon }) => (
+          <Link key={labelKey} to={to} data-testid={`philia-shortcut-${mgc(labelKey)}`} className="flex flex-col items-center gap-2 text-[12px] font-medium text-ink" data-u4-secondary>
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-secondary-light/55">
+              <Icon className="h-[18px] w-[18px] text-ink-secondary" strokeWidth={1.5} aria-hidden="true" />
+            </span>
+            {mgc(labelKey)}
+          </Link>
+        ))}
+      </nav>
+
       <div className="px-[22px]">
-        {/* 封面主打（策展位一：大图 + 主副题 + CTA 进本期正文） */}
-        <section className="mt-4 overflow-hidden rounded-card bg-card shadow-card" data-testid="philia-mag-lead">
-          <div className="relative">
-            <CoverArt url={lead.url} alt={lead.alt} className="aspect-[16/10] w-full object-cover" />
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[rgba(44,40,34,.72)] to-transparent px-4 pb-3.5 pt-12">
-              <p className="font-number text-[9.5px] uppercase tracking-[.22em] text-canvas/80">PHILIA MAGAZINE</p>
-              <h1 className="u1-serif mt-1 text-[22px] font-black leading-snug text-canvas">{lead.title}</h1>
+        <h2 className="mt-4 text-body font-extrabold text-ink">{mgc('mag.today')}</h2>
+        <section className="u1-card mt-3 p-3" data-testid="philia-editorial-lead">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="h-2 w-[108px] rounded-sm bg-violet" aria-hidden="true" />
+            <span className="ml-auto text-[12px] text-ink-secondary" data-u4-secondary>{mgc('mag.leadMetaDate', { store: storeName })}</span>
+            <span className="text-[12px] text-ink" data-u4-secondary>{mgc('mag.leadMetaType')}</span>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <div>
+              <CoverArt url={lead.url} alt={lead.alt} priority className="aspect-square w-full rounded-control object-cover" />
+              <p className="mt-1 text-[12px] text-ink-secondary" data-u4-secondary>{mgc('mag.before')}</p>
+            </div>
+            <div>
+              <CoverArt url={null} alt={mgc('mag.afterAlt')} className="aspect-square w-full rounded-control object-cover" />
+              <p className="mt-1 text-[12px] text-ink-secondary" data-u4-secondary>{mgc('mag.after')}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3 px-4 py-3.5">
-            <p className="min-w-0 flex-1 text-caption leading-relaxed text-ink-secondary">{lead.sub}</p>
-            {lead.cta ? (
-              <Link
-                to={`/philia/magazine/${leadArticle.slug}`}
-                data-testid="philia-mag-lead-cta"
-                className="shrink-0 rounded-full bg-brand-primary px-3.5 py-2 text-caption font-bold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
-              >
-                {lead.cta}
-              </Link>
-            ) : null}
-          </div>
+          <Link to={`/philia/magazine/${leadArticle.slug}`} aria-label={mgc('mag.readArticle', { title: lead.title })}>
+            <h3 className="mt-2 text-body-lg font-extrabold leading-snug text-ink">{lead.title}</h3>
+          </Link>
+          <p className="mt-1.5 text-[12px] leading-relaxed text-ink-secondary" data-u4-secondary>{lead.sub}</p>
+          {lead.cta ? (
+            <Link
+              to="/booking/grooming"
+              data-testid="philia-mag-lead-cta"
+              className="mt-3 inline-flex rounded-full bg-brand-secondary-light px-3.5 py-2 text-[12px] font-bold text-ink"
+            >
+              {mgc('mag.leadBookingCta')}
+            </Link>
+          ) : null}
         </section>
 
-        {/* 条目列（策展位二/三；整卡进入各自正文） */}
-        <div className="mt-4 flex flex-col gap-3">
+        <div className="mt-3 flex flex-col gap-3">
           {entries.map(({ article, entry }, i) => (
-            <article key={article.slug}>
-              <Link
-                to={`/philia/magazine/${article.slug}`}
-                className="flex items-center gap-3 rounded-card bg-card p-3 shadow-card transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
-                data-testid={`philia-mag-entry-${i + 2}`}
-              >
-                <CoverArt url={entry.url} alt={entry.alt} className="h-[72px] w-[96px] shrink-0 rounded-input object-cover" />
-                <div className="min-w-0 flex-1">
-                  <h2 className="text-[13.5px] font-bold leading-snug text-ink">{entry.title}</h2>
-                  <p className="mt-1 font-number text-[9.5px] tracking-wide text-ink-placeholder">{entry.sub}</p>
-                </div>
+            <section key={article.slug} className="u1-card p-3" data-testid={`philia-mag-entry-${i + 2}`}>
+              <div className="flex items-center justify-between gap-3">
+                <span className="h-2 w-14 rounded-sm bg-violet" aria-hidden="true" />
+                <p className="text-[12px] font-medium text-ink" data-u4-secondary>{i === 0 ? mgc('mag.boardingTag') : entry.sub}</p>
+              </div>
+              <Link to={`/philia/magazine/${article.slug}`} aria-label={mgc('mag.readArticle', { title: entry.title })}>
+                <CoverArt url={entry.url} alt={entry.alt} className="mt-3 aspect-[16/7] w-full rounded-control object-cover" />
+                <h3 className="mt-2 text-body font-bold text-ink">{entry.title}</h3>
+                <p className="mt-1 text-[12px] text-ink-secondary" data-u4-secondary>{entry.sub}</p>
               </Link>
-            </article>
+            </section>
           ))}
         </div>
-
-        {/* 口径注（PGC 写死明面；非开放 Feed） */}
-        <p className="mt-6 text-center font-number text-[9.5px] tracking-wide text-ink-placeholder" data-testid="philia-mag-note">
+        <p className="mt-4 text-center text-[12px] text-ink-secondary" data-testid="philia-mag-note" data-u4-secondary>
           {mgc('mag.pgcNote')}
         </p>
       </div>

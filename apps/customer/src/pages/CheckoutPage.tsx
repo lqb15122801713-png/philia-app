@@ -1,41 +1,24 @@
 /**
- * 确认订单 /mall/checkout（T5.3；换皮批片 2 落 M-03/§4.7 定稿：表单件 f-field
- * mono 9.5 签 + 纸白底细线输入框；清单=费用明细 folio 白卡 18（行 12.5 值 mono，
- * 合计行 14/800 + 值 mono 16 深棕）；吸底 ctabar 渐出底 + 合计 mono 19/700 +
- * 深棕主钮 16/700 + 回馈金返显 sub（APP-18））
- *
- * 商品来源（二选一）：
- * - 立即购买：location.state.buyNow（详情页带入的单品 AddInput）；
- * - 购物车结算：cart.checkedItems（localStorage 还原，跨页一致）。
- *
- * 流程：地址表单（姓名/手机号正则/详细地址，localStorage 'philia.address' 记忆）
- * → 清单确认 + 合计 →「提交订单」trpc.mall.createOrder
- *   （CONFLICT 库存不足 / BAD_REQUEST 下架·跨店 → 服务端 message toast）
- * → 自动打开 CashierModal（新链：内部 pay.createOrder → /api/pay/orders/mock-callback 三步演示流）
- * → 成功：清空已结算勾选项 + 支付成功页（订单号 + 查看订单）；
- * → 放弃：订单留 pending，跳 /mall/orders「待支付」可继续支付。
- *
- * 客户端体验大批 片 3：地址卡首行配送方式三 chips（express/same_city/pickup；
- * pickup/same_city 详细地址非必填+「内测期免运费」注记）+ 清单与吸底之间「可用券
- * 推荐」区（availableCoupons 按门槛过滤；核销=登记抵扣、线下结算出示口径注记；
- * 下单成功回 couponUse 登记 grantId）；createOrder 入参 deliveryMethod。
+ * 确认订单 /mall/checkout · U4 定稿面：默认到店自提、门店卡、商品汇总、
+ * 商品金额／运费／回馈金抵扣／应付明细、回馈金开关与单一确认支付闸口。
+ * 「配送到家」保留原有快递／同城与地址表单；回馈金抵扣仅为表面并在开启时拦住线上提交，
+ * 不改 createOrder 金额或服务端结算契约。支付成功、券登记与既有收银台流程保留。
  */
 
 import { usePhiliaClient } from '@philia/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { BadgeCheck, MapPin, Ticket } from 'lucide-react';
+import { BadgeCheck, Ticket } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import CashierModal, { type CashierOrder } from '../components/mall/CashierModal';
 import PageHeader from '../components/PageHeader';
 import { EmptyState } from '../components/home/common';
-import { CartProvider, useCart, type AddInput } from '../components/mall/cartStore';
+import { CartProvider, readRebatePreference, useCart, writeRebatePreference, type AddInput } from '../components/mall/cartStore';
 import { fenToYuan } from '../components/mall/format';
 import { friendlyError, useToast } from '@philia/shared';
 import ProductImage from '../components/mall/ProductImage';
 import { mlc } from '../copy/mall';
 import { cpc } from '../copy/coupons';
-import { mc } from '../components/member/copy';
 
 const ADDRESS_KEY = 'philia.address';
 const PHONE_RE = /^1[3-9]\d{9}$/;
@@ -73,6 +56,7 @@ function loadAddress(): AddressForm {
 
 interface CheckoutLine {
   productId: string;
+  storeId: string;
   name: string;
   priceFen: number;
   image: string | null;
@@ -88,7 +72,6 @@ function CheckoutInner() {
   const location = useLocation();
   const { toastEl, showToast } = useToast({ durationMs: 3200 });
 
-  // 立即购买单品（详情页 navigate state 带入）
   const buyNow = (location.state as { buyNow?: AddInput } | null)?.buyNow;
   const fromCart = !buyNow;
 
@@ -97,6 +80,7 @@ function CheckoutInner() {
       return [
         {
           productId: buyNow.productId,
+          storeId: buyNow.storeId,
           name: buyNow.name,
           priceFen: buyNow.priceFen,
           image: buyNow.image,
@@ -107,6 +91,7 @@ function CheckoutInner() {
     }
     return cart.checkedItems.map((it) => ({
       productId: it.productId,
+      storeId: it.storeId,
       name: it.name,
       priceFen: it.priceFen,
       image: it.image,
@@ -116,10 +101,6 @@ function CheckoutInner() {
   }, [buyNow, cart.checkedItems]);
 
   const totalFen = lines.reduce((sum, l) => sum + l.priceFen * l.qty, 0);
-
-  /* 回馈金返显（CTA sub「本单返 ¥x 回馈金」；口径 APP-18：membership.my 的
-     plan.rebateBp 万分比，返 Fen=round(totalFen*rebateBp/10000)；非会员/免费档=0
-     不渲染假数——MallPage 同款） */
   const myQ = useQuery({
     queryKey: ['membership', 'my'],
     queryFn: () => trpc.membership.my.query(),
@@ -128,15 +109,24 @@ function CheckoutInner() {
   });
   const rebateBp = (myQ.data?.plan as { rebateBp?: number } | null | undefined)?.rebateBp ?? 0;
   const rebateFen = rebateBp > 0 ? Math.round((totalFen * rebateBp) / 10000) : 0;
+  const balanceFen = myQ.data?.rebate?.balanceFen ?? 0;
 
   const [form, setForm] = useState<AddressForm>(loadAddress);
   const [errors, setErrors] = useState<Partial<AddressForm>>({});
   const [cashierOrder, setCashierOrder] = useState<CashierOrder | null>(null);
   const [paidOrder, setPaidOrder] = useState<CashierOrder | null>(null);
-  /* 片 3：配送方式（默认快递；pickup/same_city 地址非必填）+ 选中券（登记抵扣口径） */
-  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('express');
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('pickup');
   const [pickedCoupon, setPickedCoupon] = useState<AvailableCoupon | null>(null);
+  const [useRebate, setUseRebate] = useState(() => readRebatePreference());
   const addressRequired = deliveryMethod === 'express';
+  const deductionFen = useRebate ? Math.min(balanceFen, totalFen) : 0;
+  const payableFen = Math.max(0, totalFen - deductionFen);
+  const storesQ = useQuery({
+    queryKey: ['store', 'listNearby'],
+    queryFn: () => trpc.store.listNearby.query(),
+    staleTime: 5 * 60_000,
+  });
+  const pickupStore = storesQ.data?.stores.find((s) => s.id === lines[0]?.storeId) ?? storesQ.data?.stores[0] ?? null;
 
   /* 片 3：可用券推荐（availableCoupons 按本单合计门槛过滤；核销=登记抵扣口径） */
   const couponsQ = useQuery({
@@ -184,8 +174,11 @@ function CheckoutInner() {
   });
 
   const validate = (): boolean => {
+    if (deliveryMethod === 'pickup') {
+      setErrors({});
+      return true;
+    }
     const next: Partial<AddressForm> = {};
-    /* 片 3：pickup/same_city 地址非必填（姓名/电话留作联系口径仍必填） */
     if (!form.name.trim()) next.name = '请填写收货人姓名';
     if (!PHONE_RE.test(form.phone.trim())) next.phone = '请填写正确的 11 位手机号';
     if (addressRequired && !form.detail.trim()) next.detail = '请填写详细收货地址';
@@ -195,9 +188,12 @@ function CheckoutInner() {
 
   const handleSubmit = () => {
     if (lines.length === 0) return;
+    if (deductionFen > 0) {
+      showToast(mlc('mall.rebatePendingGate'), 'info');
+      return;
+    }
     if (!validate()) return;
     const addr = { name: form.name.trim(), phone: form.phone.trim(), detail: form.detail.trim() };
-    /* 片 3：pickup/same_city 且详细地址留空 → 不带 address（server 契约：express 必传硬校验） */
     const withAddress = addressRequired || !!addr.detail;
     createOrderM.mutate({
       items: lines.map((l) => ({ productId: l.productId, qty: l.qty })),
@@ -311,111 +307,119 @@ function CheckoutInner() {
       {/* U1-A：统一返回条（←圆钮+标题） */}
       <PageHeader title={mlc('mall.checkoutTitle')} />
 
-      {/* 收货地址（§4.7 f-field 工艺：mono 9.5 签 + 纸白底细线输入框，:focus 深棕边；
-          单地址能力保留，多地址簿无 UI 雏形不画假簿——PD-15 V1.1 槽位 3 不适用） */}
-      <section className="checkout-address-card u1-card mt-4 p-4">
-        <p className="flex items-center gap-1.5 text-title">
-          <MapPin className="h-4 w-4 text-ink" strokeWidth={1.5} />
-          收货地址
-        </p>
-        {/* 片 3：配送方式三 chips（卡内首行；pickup/same_city 地址非必填+内测期免运费注记） */}
-        <div className="checkout-delivery mt-3" data-testid="delivery-method">
-          <p className="mb-1.5 font-number text-v2-trace text-ink-secondary">{mlc('mall.deliveryMethod')}</p>
-          <div className="flex gap-2">
-            {DELIVERY_METHODS.map((d) => (
-              <button
-                key={d.key}
-                type="button"
-                onClick={() => setDeliveryMethod(d.key)}
-                data-testid={`delivery-${d.key}`}
-                className={`flex-1 rounded-full px-3 py-2 text-caption transition ${
-                  deliveryMethod === d.key
-                    ? 'bg-ink font-semibold text-canvas'
-                    : 'bg-card font-medium text-ink-secondary ring-1 ring-line-ring'
-                }`}
-              >
-                {d.label}
-              </button>
-            ))}
-          </div>
-          <p className="mt-1.5 font-number text-[9.5px] text-ink-placeholder">
-            {mlc('mall.deliveryFreeNote')}
-            {!addressRequired ? ` · ${mlc('mall.addrOptionalNote')}` : ''}
-          </p>
+      <section className="u1-card mt-4 p-3">
+        <div className="grid grid-cols-2 gap-1 rounded-full bg-brand-secondary-light p-1">
+          <button
+            type="button"
+            aria-pressed={deliveryMethod === 'pickup'}
+            data-testid="checkout-delivery-pickup"
+            onClick={() => setDeliveryMethod('pickup')}
+            className={`rounded-full px-3 py-2 text-[12px] font-semibold transition ${deliveryMethod === 'pickup' ? 'bg-brand-cta text-brand-cta-on' : 'text-ink-secondary'}`}
+          >
+            {mlc('mall.deliveryPickupU4')}
+          </button>
+          <button
+            type="button"
+            aria-pressed={deliveryMethod !== 'pickup'}
+            data-testid="checkout-delivery-home"
+            onClick={() => setDeliveryMethod('express')}
+            className={`rounded-full px-3 py-2 text-[12px] font-semibold transition ${deliveryMethod !== 'pickup' ? 'bg-brand-cta text-brand-cta-on' : 'text-ink-secondary'}`}
+          >
+            {mlc('mall.deliveryHomeU4')}
+          </button>
         </div>
-        <div className="checkout-address-fields mt-3 flex flex-col gap-3">
-          <div>
-            <label className="mb-1 block font-number text-v2-trace text-ink-secondary" htmlFor="ck-name">
-              收货人
-            </label>
-            <input
-              id="ck-name"
-              value={form.name}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-              placeholder="收货人姓名"
-              maxLength={64}
-              className="checkout-input h-11 w-full rounded-input border border-line bg-canvas px-3.5 text-body outline-none transition placeholder:text-ink-placeholder focus:border-ink"
-            />
-            {errors.name ? <p className="mt-1 text-caption text-danger-deep">{errors.name}</p> : null}
+        {deliveryMethod === 'pickup' ? (
+          <div className="mt-3 px-1 pb-1" data-testid="checkout-pickup-store">
+            <p className="text-body-sm font-bold">{pickupStore?.name ?? lines[0]?.storeName}</p>
+            <p className="mt-1 text-[12px] text-ink-secondary" data-u4-secondary>{pickupStore?.address ?? mlc('mall.pickupReady')}</p>
+            <p className="mt-1 text-[12px] text-ink-secondary" data-u4-secondary>{pickupStore?.phone ?? mlc('mall.pickupContactFallback')}</p>
           </div>
-          <div>
-            <label className="mb-1 block font-number text-v2-trace text-ink-secondary" htmlFor="ck-phone">
-              手机号
-            </label>
-            <input
-              id="ck-phone"
-              value={form.phone}
-              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value.replace(/\D/g, '').slice(0, 11) }))}
-              placeholder="手机号"
-              inputMode="numeric"
-              maxLength={11}
-              className="checkout-input h-11 w-full rounded-input border border-line bg-canvas px-3.5 font-number text-body outline-none transition placeholder:text-ink-placeholder focus:border-ink"
-            />
-            {errors.phone ? <p className="mt-1 text-caption text-danger-deep">{errors.phone}</p> : null}
+        ) : (
+          <div className="checkout-address-fields mt-3 flex flex-col gap-3">
+            <div className="checkout-delivery" data-testid="delivery-method">
+              <div className="flex gap-2">
+                {DELIVERY_METHODS.filter((d) => d.key !== 'pickup').map((d) => (
+                  <button
+                    key={d.key}
+                    type="button"
+                    onClick={() => setDeliveryMethod(d.key)}
+                    data-testid={`delivery-${d.key}`}
+                    className={`flex-1 rounded-full px-3 py-2 text-[12px] transition ${deliveryMethod === d.key ? 'bg-ink font-semibold text-canvas' : 'bg-card font-medium text-ink-secondary ring-1 ring-line-ring'}`}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1.5 font-number text-[12px] text-ink-placeholder" data-u4-secondary>
+                {mlc('mall.deliveryFreeNote')}{!addressRequired ? ` · ${mlc('mall.addrOptionalNote')}` : ''}
+              </p>
+            </div>
+            <div>
+              <label className="mb-1 block font-number text-[12px] text-ink-secondary" htmlFor="ck-name">收货人</label>
+              <input id="ck-name" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="收货人姓名" maxLength={64} className="checkout-input h-11 w-full rounded-input border border-line bg-canvas px-3.5 text-body outline-none transition placeholder:text-ink-placeholder focus:border-ink" />
+              {errors.name ? <p className="mt-1 text-[12px] text-danger-deep">{errors.name}</p> : null}
+            </div>
+            <div>
+              <label className="mb-1 block font-number text-[12px] text-ink-secondary" htmlFor="ck-phone">手机号</label>
+              <input id="ck-phone" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value.replace(/\D/g, '').slice(0, 11) }))} placeholder="手机号" inputMode="numeric" maxLength={11} className="checkout-input h-11 w-full rounded-input border border-line bg-canvas px-3.5 font-number text-body outline-none transition placeholder:text-ink-placeholder focus:border-ink" />
+              {errors.phone ? <p className="mt-1 text-[12px] text-danger-deep">{errors.phone}</p> : null}
+            </div>
+            <div>
+              <label className="mb-1 block font-number text-[12px] text-ink-secondary" htmlFor="ck-detail">详细地址{!addressRequired ? '（选填）' : ''}</label>
+              <textarea id="ck-detail" value={form.detail} onChange={(e) => setForm((f) => ({ ...f, detail: e.target.value }))} placeholder="小区 / 楼栋 / 门牌号" maxLength={255} rows={2} className="w-full resize-none rounded-input border border-line bg-canvas px-3.5 py-2.5 text-body outline-none transition placeholder:text-ink-placeholder focus:border-ink" />
+              {errors.detail ? <p className="mt-1 text-[12px] text-danger-deep">{errors.detail}</p> : null}
+            </div>
           </div>
-          <div>
-            <label className="mb-1 block font-number text-v2-trace text-ink-secondary" htmlFor="ck-detail">
-              详细地址{!addressRequired ? '（选填）' : ''}
-            </label>
-            <textarea
-              id="ck-detail"
-              value={form.detail}
-              onChange={(e) => setForm((f) => ({ ...f, detail: e.target.value }))}
-              placeholder="小区 / 楼栋 / 门牌号"
-              maxLength={255}
-              rows={2}
-              className="w-full resize-none rounded-input border border-line bg-canvas px-3.5 py-2.5 text-body outline-none transition placeholder:text-ink-placeholder focus:border-ink"
-            />
-            {errors.detail ? <p className="mt-1 text-caption text-danger-deep">{errors.detail}</p> : null}
+        )}
+      </section>
+
+      <section className="u1-card mt-3 p-3" data-testid="checkout-items-summary">
+        <div className="flex items-center gap-3">
+          <div className="flex shrink-0 -space-x-2">
+            {lines.slice(0, 2).map((l) => <ProductImage key={l.productId} src={l.image} alt={l.name} className="h-12 w-12 rounded-control ring-2 ring-card" />)}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-body-sm font-bold">{mlc('mall.checkoutItems', { count: lines.reduce((n, l) => n + l.qty, 0) })}</p>
+            <p className="mt-0.5 line-clamp-1 text-[12px] text-ink-secondary" data-u4-secondary>{lines.map((l) => l.name).join(' · ')}</p>
           </div>
         </div>
       </section>
 
-      {/* 商品清单（§4.7 folio 费用明细：白卡 18；行 12.5 值 mono；合计行 14/800 + 值 mono 16 深棕） */}
-      <section className="checkout-lines-card u1-ring mt-3 rounded-[18px] bg-card px-4 py-1.5">
-        <div className="flex items-baseline justify-between py-2.5">
-          <p className="text-title">商品清单</p>
-          <p className="font-number text-v2-trace text-ink-secondary">{mlc('mall.listShip', { store: lines[0]?.storeName ?? '' })}</p>
+      <section className="u1-card mt-3 px-4 py-2" data-testid="checkout-fees">
+        <div className="flex items-center justify-between py-2 text-[12px] text-ink-secondary" data-u4-secondary>
+          <span>{mlc('mall.feeSubtotal')}</span>
+          <span className="font-number tabular-nums">{fenToYuan(totalFen)}</span>
         </div>
-        <div className="divide-y divide-line-divider">
-          {lines.map((l) => (
-            <div key={l.productId} className="checkout-line-item flex items-center gap-3 py-2.5">
-              <ProductImage src={l.image} alt={l.name} className="h-14 w-14 shrink-0 rounded-[12px]" />
-              <div className="min-w-0 flex-1">
-                <p className="line-clamp-1 text-[12.5px] font-semibold">{l.name}</p>
-                <p className="mt-0.5 font-number text-[12.5px] tabular-nums text-ink-secondary">
-                  {fenToYuan(l.priceFen)} × {l.qty}
-                </p>
-              </div>
-              <p className="font-number text-[12.5px] font-bold tabular-nums">{fenToYuan(l.priceFen * l.qty)}</p>
-            </div>
-          ))}
+        <div className="flex items-center justify-between py-2 text-[12px] text-ink-secondary" data-u4-secondary>
+          <span>{mlc('mall.feeShipping')}</span>
+          <span className="font-number tabular-nums">{fenToYuan(0)}</span>
         </div>
-        <div className="checkout-total-row flex items-center justify-between border-t border-line-divider py-3">
-          <span className="text-body-sm font-extrabold">合计（{lines.reduce((n, l) => n + l.qty, 0)} 件）</span>
-          <span className="font-number text-body-lg font-bold tabular-nums text-ink">{fenToYuan(totalFen)}</span>
+        <div className="flex items-center justify-between py-2 text-[12px] text-ink-secondary" data-u4-secondary>
+          <span>{mlc('mall.feeRebate')}</span>
+          <span data-testid="checkout-deduction" className="font-number tabular-nums">-{fenToYuan(deductionFen)}</span>
         </div>
-        <p className="pb-2.5 text-right text-caption text-ink-placeholder">{mlc('mall.priceNote')}</p>
+        <div className="flex items-center justify-between border-t border-line-divider py-3">
+          <span className="text-body-sm font-extrabold">{mlc('mall.feePayable')}</span>
+          <span data-testid="checkout-payable" className="font-number text-[19px] font-bold tabular-nums text-ink">{fenToYuan(payableFen)}</span>
+        </div>
+      </section>
+
+      <section className="u1-card mt-3 p-4" data-testid="checkout-rebate-card">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-body-sm font-bold">{mlc('mall.rebateUse')}</p>
+            <p className="mt-1 text-[12px] text-ink-secondary" data-u4-secondary>
+              {mlc('mall.rebateBalanceLimit', { balance: fenToYuan(balanceFen), amt: fenToYuan(deductionFen) })}
+            </p>
+          </div>
+          <button type="button" role="switch" aria-checked={useRebate} aria-label={mlc('mall.rebateUse')} data-testid="checkout-rebate-switch" onClick={() => {
+              const next = !useRebate;
+              writeRebatePreference(next);
+              setUseRebate(next);
+            }} className={`relative h-8 w-14 shrink-0 rounded-full transition ${useRebate ? 'bg-brand-cta' : 'bg-brand-secondary-light'}`}>
+            <span className={`absolute top-1 h-6 w-6 rounded-full bg-card transition ${useRebate ? 'left-7' : 'left-1'}`} />
+          </button>
+        </div>
       </section>
 
       {/* 片 3：可用券推荐区（availableCoupons 按门槛过滤；选中=登记抵扣口径注记，
@@ -462,30 +466,25 @@ function CheckoutInner() {
         </section>
       ) : null}
 
-      {/* 吸底提交栏（片 2 M-03 定稿 ctabar：渐出底 + 合计 mono 19/700 + 深棕主钮 16/700；
-          详情级无 dock（App.tsx 白名单），落底 safe-area——修 bottom-14 悬空） */}
       <div
         className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-sticky"
         style={{ background: 'linear-gradient(transparent, #FAF7F0 40%)' }}
       >
         <div className="mx-auto max-w-lg px-4 pb-4 pt-3">
-          <div className="mb-2.5 flex items-baseline justify-between">
-            <span className="text-caption-xs text-ink-secondary">合计</span>
-            <span className="u1-num text-[19px] font-bold text-ink">{fenToYuan(totalFen)}</span>
-          </div>
           <button
             type="button"
             disabled={createOrderM.isPending}
             onClick={handleSubmit}
-            className="flex w-full flex-col items-center justify-center rounded-[18px] bg-brand-cta py-3 text-body-lg font-bold text-brand-cta-on transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
+            data-testid="checkout-submit"
+            className="w-full rounded-full bg-brand-cta py-3.5 text-body-lg font-bold text-brand-cta-on transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
           >
-            <span>{createOrderM.isPending ? '提交中…' : mlc('mall.submitOrder')}</span>
-            {rebateFen > 0 && !createOrderM.isPending ? (
-              <span className="mt-0.5 font-number text-[10.5px] font-normal text-[#C9BBA0]">
-                {mc('mall.rebateEarnCta', { amt: fenToYuan(rebateFen) })}
-              </span>
-            ) : null}
+            {createOrderM.isPending ? '提交中…' : mlc('mall.confirmPay', { amt: fenToYuan(payableFen) })}
           </button>
+          {rebateFen > 0 && !createOrderM.isPending ? (
+            <p className="mt-1.5 text-center text-[12px] text-ink-secondary" data-u4-secondary>
+              {mlc('mall.cartEarnAfter', { amt: fenToYuan(rebateFen) })}
+            </p>
+          ) : null}
         </div>
       </div>
 
