@@ -138,7 +138,10 @@ const MEMBER_COPY_TABLE = {
 
   /* ---- Q-01 会员码屏 ---- */
   'q1.pushLabel': '会员码 · MEMBER CODE',
+  'q1.close': '关闭',
   'q1.hint': '到店出示 · 店员扫码',
+  'q1.scanHint': '到店出示给店员扫描',
+  'q1.autoFooter': '亮度已调高 · 自动刷新',
   'q1.refreshNote': '{mm}:{ss} 后自动刷新',
   'q1.codeFooter': '码面白底墨码，识别率优先 · 码每 5 分钟自动刷新',
   'q1.pendingTitle': '会员码扫码核销升级中',
