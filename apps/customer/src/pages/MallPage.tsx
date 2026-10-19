@@ -81,7 +81,7 @@ function MallHero() {
           type="button"
           data-testid="mall-hero-cta"
           onClick={() => document.querySelector('[data-block-key="mall.productGrid"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-          className="mt-2.5 rounded-full bg-brand-cta px-3.5 py-1.5 text-[12px] font-bold text-brand-cta-on"
+          className="mt-2.5 inline-flex min-h-[44px] items-center rounded-full bg-brand-cta px-3.5 py-1.5 text-[12px] font-bold text-brand-cta-on"
         >
           {mlc('mall.heroCtaU4')}
         </button>
