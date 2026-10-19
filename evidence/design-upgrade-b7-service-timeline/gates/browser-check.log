@@ -1,0 +1,12 @@
+PASS C3 预约成功查看服务过程入口 —— {"exists":true,"href":"/appointments/preview/live","text":"查看服务过程","visible":true,"top":768,"bottom":800}
+PASS C3 入口落到现有 live 路由 —— /appointments/preview/live
+PASS B7 not-started —— 存在=true；态=not-started；节点=active/locked/locked/locked/locked/locked；首屏节点=6；报告CTA=false；cream=2；五栏=5；小字=[]
+PASS B7 in-progress —— 存在=true；态=in-progress；节点=done/done/active/locked/locked/locked；首屏节点=6；报告CTA=false；cream=2；五栏=5；小字=[]
+PASS B7 expanded —— 存在=true；态=in-progress；节点=done/done/active/locked/locked/locked；首屏节点=6；报告CTA=false；cream=2；五栏=5；小字=[]
+PASS B7 step-empty —— 存在=true；态=in-progress；节点=done/done/done/active/locked/locked；首屏节点=6；报告CTA=false；cream=2；五栏=5；小字=[]
+PASS B7 completed —— 存在=true；态=completed；节点=done/done/done/done/done/done；首屏节点=6；报告CTA=true；cream=0；五栏=5；小字=[]
+PASS B7 34px 安全区报告 CTA 不被浮岛遮挡 —— {"ctaBottom":736,"dockTop":740,"overlap":false}
+PASS B7 live 不叠加 PWA 安装条 —— 安装条可见=false
+PASS B7 当前步可展开并收起 —— {"initial":"false","expanded":{"expanded":"true","empty":true},"collapsed":{"expanded":"false","empty":false}}
+PASS B7 空态稍后再看可收起 —— 空态仍在=false
+B7 浏览器检查：11/11 项通过

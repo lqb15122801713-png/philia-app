@@ -1,0 +1,43 @@
+✔ confirmed order renders the six customer nodes in the not-started state (1.2544ms)
+✔ active grooming aggregates the internal wash steps into one customer node (0.3558ms)
+✔ active detail advances to the styling node and exposes its honest empty state (0.1419ms)
+✔ delivery checks map to the pickup node rather than a seventh step (0.092ms)
+✔ completed appointment closes all six nodes without a current cream target (0.0904ms)
+✔ final step done before the completed event keeps the six-of-six count (0.0724ms)
+✔ preview parser accepts only the five deterministic B7 states (0.8196ms)
+✔ preview fixtures resolve to the intended customer journey states (0.4983ms)
+✔ explicit B7 preview ignores a cached real appointment id (0.0803ms)
+✔ preview uses the real service photo requirements (0.0855ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 85.4474
+✔ full not-started page has the arrival notice, two cream accents and the light five-tab shell (5.8853ms)
+✔ expanded preview uses the delivery-photo summary language (1.8115ms)
+✔ step-empty preview explains that styling photos are pending (1.0453ms)
+✔ completed page includes the done strip and beauty report without cream accents (1.5156ms)
+✔ styling summary stops saying photos are missing once the requirement is met (1.2677ms)
+✔ step query failure renders an honest retry state instead of fake locked progress (0.5355ms)
+✔ published canvas layout still controls B7 block order and visibility (0.7676ms)
+✔ not-started summary exposes the first current node and one cream chip (2.3728ms)
+✔ expanded wash state shows step guidance and three honest photo placeholders (2.8035ms)
+✔ expanded styling without photos renders the honest empty card (0.8549ms)
+✔ completed summary and timeline have no current cream target (1.0157ms)
+✔ light ClientTabBar exposes five ordered links with booking active and no paw control (2.1748ms)
+✔ completed wash photos remain expandable after styling starts (1.245ms)
+✔ completed before and after photos remain available in the finished journey (1.5111ms)
+✔ missing after photo renders an honest placeholder instead of duplicating the before photo (0.7245ms)
+✔ B7 review uses neutral accents while the default review keeps cream (0.9257ms)
+✔ only after photo stays in the after slot while the before slot stays empty (0.6461ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 299.7407

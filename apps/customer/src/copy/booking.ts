@@ -22,6 +22,7 @@ const BOOKING_COPY_TABLE = {
   'booking.backHome': '返回首页',
   'booking.addCalendar': '添加到日历',
   'booking.rescheduleLink': '需要改期？前往预约详情改期 ›',
+  'booking.viewServiceProcess': '查看服务过程',
   'booking.cancelNote': '{week}见 · 如需取消请提前 4 小时',
 
   /* ---- 页题（向导 / 单屏共用） ---- */
