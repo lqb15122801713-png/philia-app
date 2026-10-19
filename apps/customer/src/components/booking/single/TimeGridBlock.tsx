@@ -1,20 +1,6 @@
-/**
- * B4-1 单屏 · 时段栅格区块：
- * 选中日的 30min 栅格按 上午/下午/晚上 分组展示；可约槽高亮可选，
- * 满槽/已过/「当前+1h 缓冲」内一律灰显禁用（批次 3 统一口径：可约集由
- * getWithServices 服务端过滤供给，集合外全部禁用，前后端同拦）。
- *
- * 换皮批片 2（定稿 B-01 / §4.4 slots 工艺卡）：3 列 gap 9；片=白卡圆角 14，
- * mono 13/700 时刻 + 9 状态行；禁用=0.4 整片
- * 半透明（定稿 .slot.dis 口径，覆盖旧「墨 25% 字」）；组头=mono 9 次阶（sh-group gh）。
- * 片1-客户端脸（2026-10-15）：选中=cream #F2DC8C（本屏点睛位，READY §2.1）；片圆角 12（§2.3 chip）。
- * 状态行口径：可约集内=「可约」，集外=「已满」（含已过/临近缓冲，底部注记保留说明）。
- */
-
 import type { SlotItem } from '../types';
 import { fmtHM } from '../format';
-import { mc } from '@/components/member/copy';
-import { availableSetOf, DAY_PART_LABEL, DAY_PART_ORDER, dayPartOf, type DayGrid, type DayPart } from './slotGrid';
+import { availableSetOf, type DayGrid } from './slotGrid';
 
 export default function TimeGridBlock({
   day,
@@ -23,7 +9,6 @@ export default function TimeGridBlock({
   onSelect,
   loading,
 }: {
-  /** 选中日栅格（含灰显格）；null = 未选日 */
   day: DayGrid | null;
   slots: SlotItem[];
   selected: Date | null;
@@ -54,55 +39,47 @@ export default function TimeGridBlock({
   }
 
   const available = availableSetOf(slots);
-  const groups = new Map<DayPart, Date[]>();
-  for (const t of day.grid) {
-    const part = dayPartOf(t);
-    if (!groups.has(part)) groups.set(part, []);
-    groups.get(part)!.push(t);
-  }
+  const nextTime = Math.min(...day.grid.filter((t) => available.has(t.getTime())).map((t) => t.getTime()));
 
   return (
-    <div className="scroll-mb-40 space-y-3" data-testid="gs-time-grid">
-      {DAY_PART_ORDER.filter((p) => groups.has(p)).map((part) => (
-        <div key={part} data-testid={`gs-time-group-${part}`}>
-          {/* 组头 gh：mono 9（VI secondary #A89779，READY §2.1 次要字口径） */}
-          <p className="font-number text-[9px] tracking-[.14em] text-[#A89779]">{DAY_PART_LABEL[part]}</p>
-          <div className="mt-2 grid grid-cols-3 gap-[9px]">
-            {groups.get(part)!.map((t) => {
-              const ok = available.has(t.getTime());
-              const active = selected?.getTime() === t.getTime();
-              return (
-                <button
-                  key={t.getTime()}
-                  type="button"
-                  disabled={!ok}
-                  onClick={() => onSelect(t)}
-                  data-testid={`gs-slot-${fmtHM(t)}`}
-                  data-available={ok ? 'true' : 'false'}
-                  data-slot-start={t.getTime()}
-                  className={`rounded-[12px] border px-1 py-[11px] text-center transition ${
-                    active
-                      ? 'border-transparent bg-[#F2DC8C] text-ink'
-                      : ok
-                        ? 'border-line bg-card text-ink active:scale-95'
-                        : 'cursor-not-allowed border-line bg-card opacity-40'
-                  }`}
-                >
-                  <span className="block font-number text-[13px] font-bold leading-4">{fmtHM(t)}</span>
-                  <span
-                    className={`mt-[3px] block text-[9px] leading-3 ${
-                      active ? 'text-ink' : 'text-ink-secondary'
-                    }`}
-                  >
-                    {ok ? mc('bk.slotOpen') : mc('bk.slotFull')}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-      <p className="text-caption text-ink-placeholder">浅色为已约满或 1 小时内的临近时段</p>
+    <div className="scroll-mb-40" data-testid="gs-time-grid">
+      <div className="grid grid-cols-4 gap-x-3 gap-y-3">
+        {day.grid.map((t) => {
+          const time = t.getTime();
+          const ok = available.has(time);
+          const active = selected?.getTime() === time;
+          const next = ok && time === nextTime;
+          return (
+            <button
+              key={time}
+              type="button"
+              disabled={!ok}
+              onClick={() => onSelect(t)}
+              data-testid={`gs-slot-${fmtHM(t)}`}
+              data-available={ok ? 'true' : 'false'}
+              data-slot-start={time}
+              data-next={next ? 'true' : 'false'}
+              aria-label={ok ? fmtHM(t) : `${fmtHM(t)} 已满`}
+              className={`flex h-11 items-center justify-center rounded-[14px] border px-1 text-body-sm font-medium transition ${
+                active
+                  ? 'border-transparent bg-brand-cta text-brand-cta-on'
+                  : ok
+                    ? next
+                      ? 'border-brand-secondary bg-card text-ink'
+                      : 'border-line-ring bg-card text-ink active:scale-95'
+                    : 'cursor-not-allowed border-transparent bg-transparent text-caption text-ink-placeholder opacity-70'
+              }`}
+            >
+              {ok ? fmtHM(t) : '已满'}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-4 flex items-center gap-2 text-caption text-ink-secondary" data-testid="u2-time-legend">
+        <span aria-hidden="true">{selected ? '●' : '○'}</span>
+        <span>{selected ? '已选时段' : '下一可约提示'}</span>
+        <span className="text-ink-placeholder">灰 = 已满</span>
+      </p>
     </div>
   );
 }

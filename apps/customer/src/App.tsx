@@ -76,6 +76,7 @@ function BookingRedirect() {
 
 // 受登录保护的主内容路由（P0 路由表原样保留）
 function ProtectedRoutes() {
+  const { search } = useLocation()
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/home" replace />} />
@@ -120,7 +121,7 @@ function ProtectedRoutes() {
       {/* B9.3 任务 B：hub 退役，/booking 直达洗护单屏（?type=boarding 兼容深链寄养） */}
       <Route path="/booking" element={<BookingRedirect />} />
       {/* B4-1：默认路由换新单屏；旧 4 屏向导保留隐藏路由 /wizard（回滚保障，下批次再删） */}
-      <Route path="/booking/grooming" element={<GroomingSinglePage />} />
+      <Route path="/booking/grooming" element={<GroomingSinglePage key={search} />} />
       <Route path="/booking/grooming/wizard" element={<BookingGroomingPage />} />
       {/* B4-2：寄养同上——默认路由换单屏，旧向导保留隐藏路由 /booking/boarding/wizard */}
       <Route path="/booking/boarding" element={<BoardingSinglePage />} />
@@ -180,15 +181,16 @@ function ProtectedRoutes() {
 export default function App() {
   const { pathname } = useLocation()
   const isDevLogin = pathname === '/dev-login'
-  // U1-A：全局 dock 统一为 <AppDock>，主级页面 + O14 洗护／Obs4 寄养单屏渲染；
+  // U1-A：全局 dock 统一为 <AppDock>，主级页面 + 洗护／寄养单屏与预约成功页渲染；
   // 其他详情级页面仍走统一返回条，不扩 dock 范围。
   const isGroomingPath = pathname === '/booking/grooming' || pathname === '/booking/grooming/'
   const isBoardingPath = pathname === '/booking/boarding' || pathname === '/booking/boarding/'
+  const isBookingSuccessPath = pathname === '/booking/success' || pathname === '/booking/success/'
   const isMallPath = pathname === '/mall' || pathname === '/mall/'
   const isHomePath = pathname === '/' || pathname === '/home'
   const isLiveProcessPath = pathname.startsWith('/appointments/') && pathname.endsWith('/live')
-  const suppressInstallBanner = isBoardingPath || isMallPath || isHomePath || isLiveProcessPath
-  const hasBookingDock = isGroomingPath || isBoardingPath
+  const suppressInstallBanner = isBoardingPath || isBookingSuccessPath || isMallPath || isHomePath || isLiveProcessPath
+  const hasBookingDock = isGroomingPath || isBoardingPath || isBookingSuccessPath
   const isMainPath =
     pathname === '/' ||
     pathname === '/home' ||
