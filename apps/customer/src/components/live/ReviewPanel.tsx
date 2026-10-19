@@ -14,24 +14,28 @@ export interface ReviewPanelProps {
   submitting: boolean
   onSubmit: (rating: number, text: string, anonymous: boolean) => void
   onShare: () => void
+  accent?: 'cream' | 'neutral'
 }
 
 function Stars({
   value,
   onChange,
   size = 'h-8 w-8',
+  accent = 'cream',
 }: {
   value: number
   onChange?: (v: number) => void
   size?: string
+  accent?: 'cream' | 'neutral'
 }) {
+  const activeClass = accent === 'neutral' ? 'fill-brand-cta text-brand-cta' : 'fill-brand-primary text-brand-primary'
   return (
     <div className="flex items-center gap-1" role={onChange ? 'radiogroup' : undefined} aria-label="评分">
       {[1, 2, 3, 4, 5].map((n) => {
         const active = n <= value
         const star = (
           <Star
-            className={`${size} ${active ? 'fill-brand-primary text-brand-primary' : 'text-line-strong'}`}
+            className={`${size} ${active ? activeClass : 'text-line-strong'}`}
             strokeWidth={1.5}
           />
         )
@@ -61,6 +65,7 @@ export default function ReviewPanel({
   submitting,
   onSubmit,
   onShare,
+  accent = 'cream',
 }: ReviewPanelProps) {
   const [rating, setRating] = useState(0)
   const [text, setText] = useState('')
@@ -73,7 +78,7 @@ export default function ReviewPanel({
         <>
           <h2 className="text-title">我的评价</h2>
           <div className="mt-2">
-            <Stars value={existingRating} size="h-5 w-5" />
+            <Stars value={existingRating} size="h-5 w-5" accent={accent} />
           </div>
           {existingReview ? (
             <p className="mt-2 text-body text-ink-secondary">{existingReview}</p>
@@ -84,7 +89,7 @@ export default function ReviewPanel({
           <h2 className="text-title">服务还满意吗？</h2>
           <p className="mt-1 text-caption text-ink-secondary">给个星星，鼓励一下洗护师吧</p>
           <div className="mt-2">
-            <Stars value={rating} onChange={setRating} />
+            <Stars value={rating} onChange={setRating} accent={accent} />
           </div>
           <textarea
             value={text}
@@ -112,7 +117,7 @@ export default function ReviewPanel({
               className={`relative h-6 w-11 shrink-0 rounded-full transition ${anonymous ? 'bg-[#2E2318]' : 'bg-line'}`}
             >
               <span
-                className={`absolute top-0.5 h-5 w-5 rounded-full shadow-card transition-all ${anonymous ? 'left-[22px] bg-brand-primary' : 'left-0.5 bg-card'}`}
+                className={`absolute top-0.5 h-5 w-5 rounded-full shadow-card transition-all ${anonymous ? 'left-[22px]' : 'left-0.5'} ${anonymous ? (accent === 'neutral' ? 'bg-brand-cta' : 'bg-brand-primary') : 'bg-card'}`}
               />
             </button>
           </div>

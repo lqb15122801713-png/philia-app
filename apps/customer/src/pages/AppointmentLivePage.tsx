@@ -13,33 +13,23 @@
  * - 兜底（§7.4）：onReconnect 全量 refetch；connected=false 超 5s 显示
  *   「连接中…」细条并启用 30s progressSummary 轮询（数据变化时全量对齐，
  *   主查询同时挂 30s refetchInterval）；visibilitychange 回前台全量对齐一次。
- * - 异常态：非本人/不存在 → 友好错误页；pending/confirmed → 预约码引导；
- *   cancel_requested/cancelled → 取消提示。
+ * - 异常态：非本人/不存在 → 友好错误页；寄养 pending/confirmed 与取消两态保留原提示；
+ *   洗护 pending/confirmed/in_service/completed → B7 客户六节点五态。
  *
- * U4-D2（试样 05 逐格收口）+ 换皮批片 2（S-01 洗护全程 / H-02 寄养日报取齐）：
- * - 返回条补题「洗护全程/寄养全程」（PageHeader 全域统一返回条，U1-A 形态）；
- * - 摘要卡（LiveHeader）：淡黄细环头像 +「{宠物} · {服务}」+ 美容师行
- *   「{员工}服务中 · 预计 HH:MM 完成」（员工名=store.listStaffPublic 按 staffId
- *   解析，U4-B 同口径现成接口零新增；ETA=scheduledEnd 真字段；缺真值段隐去）+
- *   SSE 真值签（connected → 淡黄点「实时同步」/ 灰点「重连中」，禁常亮）；
- * - stepper 去卡壳直上画布，六步清单 stepx 工艺（步号 22 圆三态 / 右 mono 9
- *   状态 / 照片 3 列方格 + 空位虚线框，件级样式落 styles/live-v2.css）；
- * - 「联系门店」条：stores.phone 已在仓（0042 迁移）——有值渲染 tel: 直拨，
- *   无值隐藏（ContactStore 防御保持）。
- * - 异常通报条（体验批片 4）：incident.listForAppointment 拉取本单异常，
- *   LiveHeader 后挂高亮条——未处置=赭红卡（类型+描述+发生时刻+「门店处理中」），
- *   全部已处置=暖底细条（最近处置说明），零异常不渲染；
+ * B7（PD-40）与寄养既有模块：
+ * - 洗护：内部六步聚合为已下单/已到店/洗护中/美容造型/待接回/已完成；
+ *   支持未开始/进行中/展开/步骤空态/已完成，照片可展开查看，页内浅浮岛五栏。
+ * - 寄养：保留 PageHeader、LiveHeader、BoardingLive 与每日打卡；联系门店有电话才显示。
+ * - 异常通报：incident.listForAppointment 拉取本单异常，未处置=赭红卡，全部已处置=暖底细条；
  *   SSE incident.reported/incident.handled/boarding.unsealed → toast + 精确 invalidate。
  *
  * 画布化（产品-1010 画布全屏批片 3 · 预约域三重屏之三 · 特别裁 §五.2 实时页）：
  * 六块入册（apptLive.header/incident/stepper/boardingStay/review/contact），
  * 块序/显隐=useCanvasLayout('apptLive')（published→注册表默认序尾补，空=APPT_LIVE_DEFAULT_ORDER
- * 兜底）；画布只控区块壳（排序/显隐/文案）——实时数据与五态分支状态机不接区块 props，
- * SSE/断线轮询逻辑一行不动；加载/错误/未开始/已取消四分支不入块流，照改造前位置早退。
- * 带参路由预览特例：canvasPreview=1 且 id='preview' 时用预约列表既有查询
- * （appointment.listMine，与我的预约列表同 queryKey 缓存共享，零新增查询）首条顶替；
- * 查不到=候裁清零批件 6 屏内合成示例单（in_service 洗护中六步流）顶替渲染块流
- * （预览专属，零真数据零写库，水印注记已有），不再落「打不开这个进度页」空态。
+ * 兜底）；洗护 B7 与寄养均接入该块流，实时数据与状态机不接区块 props，SSE/轮询不改；
+ * 加载/错误/寄养未开始/已取消分支不入块流。
+ * 带参路由预览特例：显式 b7State 直接使用五态只读夹具并强制隔离真实预约缓存；
+ * 未显式给态时沿用预约列表首条，查不到再以洗护中合成单顶替（零写库，水印注记已有）。
  * 店锚=?canvasStore= 预览店锚 > 本单门店（appointment.get 透出 store.id，零新增查询）。
  */
 
@@ -57,6 +47,15 @@ import {
   type PhotoWallPhoto,
 } from '@philia/shared'
 import LiveStepper, { type LiveStepperStep } from '../components/live/LiveStepper'
+import GroomingServiceProcess from '../components/live/GroomingServiceProcess'
+import {
+  parseServiceProcessPreviewState,
+  resolveServiceProcessRouteAid,
+  serviceProcessPreviewAppointment,
+  serviceProcessPreviewSteps,
+  type ServiceProcessPreviewState,
+} from '../components/live/serviceProcessPreview'
+import type { ServiceProcessStep } from '../components/live/serviceProcessModel'
 import type { AppointmentDetail } from '@/components/booking/types'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
@@ -92,16 +91,13 @@ const APPT_LIVE_DEFAULT_ORDER = [
   'apptLive.contact',
 ] as const
 
-/* 候裁清零批 件 6（预览兜底示例·客户端合成件）：canvasPreview=1 且 'preview' 顶替查不到
-   真预约时，用屏内合成示例单渲染块流（假名「示例单·画布预览」系，时刻=固定示例值；
-   状态定 in_service 洗护中——SSE/寄养/异常通报查询带 id 闸天然不拉取，零真数据零写库，
-   水印注记页首已有）。真用户页零改动（previewMiss 以外路径一行不动） */
-function exampleApptLiveOf(): AppointmentDetail {
-  const start = new Date('2026-10-12T14:00:00')
-  const end = new Date('2026-10-12T15:30:00')
+/* 预览合成单：B7 显式 b7State 时使用五态只读夹具；未显式给态时保持洗护中。
+   查询带 id 闸不拉取，零真数据零写库；真用户页不使用该夹具。 */
+function exampleApptLiveOf(state: ServiceProcessPreviewState): AppointmentDetail {
+  const preview = serviceProcessPreviewAppointment(state)
   return {
     appointment: {
-      id: 'canvas-example-appt',
+      id: preview.id,
       code: 'EXAMPL',
       customerId: 'canvas-example-customer',
       storeId: 'canvas-example-store',
@@ -110,9 +106,9 @@ function exampleApptLiveOf(): AppointmentDetail {
       petId: 'canvas-example-pet',
       serviceId: 'canvas-example-service',
       type: 'grooming',
-      scheduledStart: start,
-      scheduledEnd: end,
-      status: 'in_service',
+      scheduledStart: preview.scheduledStart,
+      scheduledEnd: preview.scheduledEnd,
+      status: preview.status,
       priceFen: 12800,
       paymentMode: 'pay_at_store',
       paidAt: null,
@@ -123,19 +119,19 @@ function exampleApptLiveOf(): AppointmentDetail {
       emergencyContactJson: null,
       medicalAuthJson: null,
       walkTimesPerDay: null,
-      checkedInAt: start,
-      completedAt: null,
+      checkedInAt: preview.checkedInAt,
+      completedAt: preview.completedAt,
       rating: null,
       review: null,
       receptionistId: null,
-      createdAt: new Date('2026-10-10T10:00:00'),
-      updatedAt: start,
+      createdAt: preview.createdAt,
+      updatedAt: preview.checkedInAt ?? preview.createdAt,
     },
-    pet: { id: 'canvas-example-pet', name: '示例宠物·画布预览', avatarUrl: null },
-    service: { id: 'canvas-example-service', name: '示例洗护·画布预览' },
+    pet: { id: 'canvas-example-pet', name: '豆豆', avatarUrl: null },
+    service: { id: 'canvas-example-service', name: '标准洗护' },
     store: {
       id: 'canvas-example-store',
-      name: '示例门店·画布预览',
+      name: '静安寺店',
       address: '示例路 1 号·画布预览',
       lat: null,
       lng: null,
@@ -333,24 +329,29 @@ export default function AppointmentLivePage() {
   /* 画布预览探针参识别（?canvasPreview=1）+ 预览店锚（?canvasStore=） */
   const isCanvasPreview = useMemo(() => new URLSearchParams(window.location.search).get('canvasPreview') === '1', [])
   const previewStoreId = useMemo(() => new URLSearchParams(window.location.search).get('canvasStore'), [])
+  const b7PreviewState = useMemo(
+    () => parseServiceProcessPreviewState(new URLSearchParams(window.location.search).get('b7State')),
+    [],
+  )
+  const explicitB7Preview = isCanvasPreview && routeAid === 'preview' && b7PreviewState !== null
 
-  /* 带参路由预览特例（片 0 §五.2）：canvasPreview=1 且 id='preview' 时用预约列表既有查询
-     （appointment.listMine，与我的预约列表同 queryKey 缓存共享，零新增查询）首条顶替；
-     查不到=件 6 合成示例单顶替（exampleD），各带 id 查询不拉取 */
+  /* canvasPreview=1 且 id='preview'：显式 b7State 直接用五态夹具；否则沿用预约列表首条，
+     查不到再以洗护中合成单顶替。各带 id 查询在 previewMiss 下不拉取。 */
   const previewListQ = useQuery({
     queryKey: ['appointment', 'listMine'],
     queryFn: () => trpc.appointment.listMine.query(),
-    enabled: isCanvasPreview && routeAid === 'preview',
+    enabled: isCanvasPreview && routeAid === 'preview' && !explicitB7Preview,
   })
   const previewFirstId = useMemo(() => {
     const g = previewListQ.data?.groups
     return g ? (Object.values(g).flat()[0]?.id ?? null) : null
   }, [previewListQ.data])
-  const aid = isCanvasPreview && routeAid === 'preview' ? (previewFirstId ?? '') : (routeAid ?? '')
-  /** 预览顶替未命中（列表查询已完成但首条为空）：跳过加载态，直走件 6 合成示例单 */
-  const previewMiss = isCanvasPreview && routeAid === 'preview' && !previewListQ.isPending && aid === ''
-  /* 件 6：previewMiss 不再落空态——屏内合成示例单渲染块流（零真数据零写库） */
-  const exampleD = useMemo(() => (previewMiss ? exampleApptLiveOf() : null), [previewMiss])
+  const aid = resolveServiceProcessRouteAid({ explicitB7Preview, isCanvasPreview, routeAid, previewFirstId })
+  const previewMiss = explicitB7Preview || (isCanvasPreview && routeAid === 'preview' && !previewListQ.isPending && aid === '')
+  const exampleD = useMemo(
+    () => (previewMiss ? exampleApptLiveOf(b7PreviewState ?? 'in-progress') : null),
+    [previewMiss, b7PreviewState],
+  )
 
   /* ---------------- 查询 ---------------- */
 
@@ -380,6 +381,7 @@ export default function AppointmentLivePage() {
     refetchInterval: sseDown ? 30_000 : false,
   })
   const steps = (exampleD ? EXAMPLE_LIVE_STEPS : stepsQuery.data) as StepCache[] | undefined
+  const processSteps = (exampleD ? serviceProcessPreviewSteps(b7PreviewState ?? 'in-progress') : stepsQuery.data) as ServiceProcessStep[] | undefined
 
   const myStayQuery = useQuery({
     queryKey: ['boarding', 'myStay', aid],
@@ -489,7 +491,7 @@ export default function AppointmentLivePage() {
 
   const [subscribed, setSubscribed] = useState(false)
   useEffect(() => {
-    if (!user) return
+    if (!user || explicitB7Preview) return
     let cancelled = false
     let timer: number | undefined
     const attempt = () => {
@@ -508,7 +510,7 @@ export default function AppointmentLivePage() {
       cancelled = true
       window.clearTimeout(timer)
     }
-  }, [trpc, clientId, user])
+  }, [trpc, clientId, user, explicitB7Preview])
 
   const sseUrl =
     subscribed && aid
@@ -543,6 +545,9 @@ export default function AppointmentLivePage() {
             mergeStepUpdate(old, data),
           )
           void queryClient.invalidateQueries({ queryKey: ['serviceStep', 'list', aid] })
+          if (data.stepKey === 'confirm' && data.status === 'done') {
+            void queryClient.invalidateQueries({ queryKey: ['appointment', 'get', aid] })
+          }
           break
         case EventType.StepFlagged:
           // 打标重拍：旧照片服务端已作废，必须全量对齐
@@ -827,7 +832,68 @@ export default function AppointmentLivePage() {
     />
   )
 
-  // 预约 pending / confirmed / cancel_requested：服务尚未开始 → 预约码引导（状态机分支不入块流）
+  if (!isBoarding && appt.status !== 'cancel_requested' && appt.status !== 'cancelled') {
+    return (
+      <>
+        <ConnectionBar visible={sseDown} />
+        <LiveToast message={toast} />
+        <CelebrationOverlay visible={celebrating} petName={pet?.name} />
+        {viewer ? (
+          <PhotoViewer
+            photos={viewer.photos}
+            index={viewer.index}
+            onClose={() => setViewer(null)}
+            onNavigate={(i) => setViewer((v) => (v ? { ...v, index: i } : v))}
+            keyboard={false}
+          />
+        ) : null}
+        <CanvasLayoutLoader pageKey="apptLive" storeId={liveStoreId}>
+          <GroomingServiceProcess
+            layout={layout}
+            appointment={appt}
+          petName={pet?.name ?? apc('appointments.livePetFallback')}
+          serviceName={service?.name ?? apc('appointments.liveServiceGrooming')}
+          storeName={store?.name ?? apc('appointments.liveShareStoreFallback')}
+          steps={processSteps ?? []}
+          stepsLoading={stepsQuery.isPending && !previewMiss && (appt.status === 'in_service' || completed)}
+          stepsError={stepsQuery.isError && !previewMiss && (appt.status === 'in_service' || completed)}
+          onRetrySteps={() => void stepsQuery.refetch()}
+          previewState={explicitB7Preview ? (b7PreviewState ?? undefined) : undefined}
+          isPreview={isCanvasPreview}
+          fallbackPath={aid ? `/appointments/${aid}` : '/appointments'}
+          previewNote={isCanvasPreview ? (
+            <p className="mb-2 text-center text-caption-xs text-ink-secondary" data-testid="appt-live-canvas-preview-note">
+              {mc('mc.canvasExampleNote')}
+            </p>
+          ) : undefined}
+          incident={<IncidentBanner incidents={incidents} largeText />}
+          review={completed ? (
+            <div className="mt-4">
+              <ReviewPanel
+                accent="neutral"
+                existingRating={appt.rating}
+                existingReview={appt.review}
+                submitting={reviewMutation.isPending}
+                onSubmit={(rating, text, anonymous) =>
+                  reviewMutation.mutate({ rating, review: text.length > 0 ? text : undefined, anonymous })
+                }
+                onShare={() => void share()}
+              />
+            </div>
+          ) : null}
+          contact={!completed ? (
+            <div className="mt-3">
+              <ContactStore phone={store?.phone ?? null} />
+            </div>
+          ) : null}
+          onOpenPhotos={(photos, index) => setViewer({ photos, index })}
+          />
+        </CanvasLayoutLoader>
+      </>
+    )
+  }
+
+  // 寄养 pending / confirmed 与取消审核：保留原预约码引导；洗护正常五态已在上行进入 B7。
   if (appt.status === 'pending' || appt.status === 'confirmed' || appt.status === 'cancel_requested') {
     const cancelRequested = appt.status === 'cancel_requested'
     return (
@@ -1019,8 +1085,9 @@ function completedAtLine(completedAt: Date | null) {
  * 异常通报条（体验批片 4）：未处置=赭红高亮卡（类型+描述+发生时刻+「门店处理中」签）；
  * 全部已处置=暖底细条（最近一条处置说明，缺说明兜底描述原文）；零异常不渲染。
  */
-function IncidentBanner({ incidents }: { incidents: IncidentRow[] }) {
+function IncidentBanner({ incidents, largeText = false }: { incidents: IncidentRow[]; largeText?: boolean }) {
   if (incidents.length === 0) return null
+  const captionClass = largeText ? 'text-caption' : 'text-caption-xs'
   const open = incidents.filter((i) => !i.handledAt)
   if (open.length > 0) {
     return (
@@ -1036,12 +1103,12 @@ function IncidentBanner({ incidents }: { incidents: IncidentRow[] }) {
                 <CK k={INCIDENT_TYPE_KEY[i.type] ?? 'appointments.incidentTypeStress'}>
                   {apc(INCIDENT_TYPE_KEY[i.type] ?? 'appointments.incidentTypeStress')}
                 </CK>
-                <span className="rounded-chip bg-danger px-1.5 py-0.5 text-caption-xs font-semibold text-destructive-foreground">
+                <span className={`rounded-chip bg-danger px-1.5 py-0.5 ${captionClass} font-semibold text-destructive-foreground`}>
                   <CK k="appointments.incidentHandling">{apc('appointments.incidentHandling')}</CK>
                 </span>
               </p>
               <p className="mt-0.5 text-body-sm text-ink">{i.description}</p>
-              <p className="u1-num mt-0.5 text-caption-xs text-ink-secondary">
+              <p className={`u1-num mt-0.5 ${captionClass} text-ink-secondary`}>
                 <CK k="appointments.incidentOccurredAt">{apc('appointments.incidentOccurredAt', { time: format(i.occurredAt, 'M月d日 HH:mm') })}</CK>
               </p>
             </li>

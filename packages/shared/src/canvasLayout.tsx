@@ -148,6 +148,7 @@ export function CanvasProbeMount() {
     if (!active) return;
     /* ①点选反查：捕获阶段命中 data-copy-key/data-block-key → 回挂画布页+阻断真跳转 */
     const onClick = (e: MouseEvent) => {
+      if ((e.target as HTMLElement | null)?.closest?.('[data-canvas-interactive]')) return;
       const el = (e.target as HTMLElement | null)?.closest?.('[data-copy-key],[data-block-key]') as HTMLElement | null;
       if (!el) return;
       const copyKey = el.getAttribute('data-copy-key');

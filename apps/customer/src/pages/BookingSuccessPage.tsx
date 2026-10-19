@@ -290,6 +290,13 @@ export default function BookingSuccessPage() {
         >
           {bkc('booking.rescheduleLink')}
         </Link>
+        <Link
+          to={`/appointments/${aid}/live`}
+          data-testid="booking-view-service-process"
+          className="flex w-full items-center justify-center gap-1 py-2 text-caption font-medium text-ink-secondary underline-offset-2 hover:underline"
+        >
+          {bkc('booking.viewServiceProcess')}
+        </Link>
       </div>
 
       {d ? (

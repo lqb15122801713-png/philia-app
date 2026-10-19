@@ -186,7 +186,8 @@ export default function App() {
   const isBoardingPath = pathname === '/booking/boarding' || pathname === '/booking/boarding/'
   const isMallPath = pathname === '/mall' || pathname === '/mall/'
   const isHomePath = pathname === '/' || pathname === '/home'
-  const suppressInstallBanner = isBoardingPath || isMallPath || isHomePath
+  const isLiveProcessPath = pathname.startsWith('/appointments/') && pathname.endsWith('/live')
+  const suppressInstallBanner = isBoardingPath || isMallPath || isHomePath || isLiveProcessPath
   const hasBookingDock = isGroomingPath || isBoardingPath
   const isMainPath =
     pathname === '/' ||
