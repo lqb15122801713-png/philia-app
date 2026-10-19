@@ -87,7 +87,7 @@ export default function PhiliaPage() {
             <p className="text-body-sm font-bold">{tierName} · 回馈金 {fenToYuan(balanceFen)}</p>
             <p className="mt-0.5 text-[12px] text-[#C9BBA0]" data-u4-secondary>{mgc('mag.rebateReady')}</p>
           </div>
-          <Link to="/me/card" className="shrink-0 rounded-full bg-card px-3.5 py-1.5 text-[12px] font-bold text-ink">
+          <Link to="/me/card" className="inline-flex min-h-[44px] shrink-0 items-center rounded-full bg-card px-3.5 py-1.5 text-[12px] font-bold text-ink">
             {mgc('mag.memberCode')}
           </Link>
         </div>
@@ -133,7 +133,7 @@ export default function PhiliaPage() {
             <Link
               to="/booking/grooming"
               data-testid="philia-mag-lead-cta"
-              className="mt-3 inline-flex rounded-full bg-brand-secondary-light px-3.5 py-2 text-[12px] font-bold text-ink"
+              className="mt-3 inline-flex min-h-[44px] items-center rounded-full bg-brand-secondary-light px-3.5 py-2 text-[12px] font-bold text-ink"
             >
               {mgc('mag.leadBookingCta')}
             </Link>

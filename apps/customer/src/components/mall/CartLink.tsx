@@ -30,7 +30,7 @@ export default function CartLink({ className = '' }: { className?: string }) {
     <Link
       to="/mall/cart"
       aria-label={`购物袋，共 ${count} 件商品`}
-      className={`flex items-center gap-1.5 rounded-full bg-card px-3 py-1.5 text-caption-xs font-semibold text-ink-secondary ring-1 ring-line-ring transition-transform duration-120 ease-philia-spring active:scale-92 ${className}`}
+      className={`flex min-h-[44px] items-center gap-1.5 rounded-full bg-card px-3 py-1.5 text-caption-xs font-semibold text-ink-secondary ring-1 ring-line-ring transition-transform duration-120 ease-philia-spring active:scale-92 ${className}`}
     >
       <ShoppingBag className="h-3 w-3" strokeWidth={1.8} />
       购物袋
