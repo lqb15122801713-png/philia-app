@@ -6,11 +6,14 @@
  * - 随身物品 belongings 动态行（≥0 行，≤20 行）：物品名 + 拍照 1 张
  *   （uploadImage → boarding/<aid>/belongings），可增删行
  * - 提交由页面层 mutation 完成；编辑模式带「取消」返回信息卡
+ * - PD-44 U5：卡面/表单件进 sk 语言（sk-panel + sk-label/sk-input/sk-select），
+ *   提交主钮 cream→SkBtnInk（cream 预算让位今日打卡提交）；隐藏 file input 原样不动
  */
 
 import { getApiBase, safeUuid, uploadImage } from '@philia/shared';
 import { Camera, Loader2, Plus, Trash2 } from 'lucide-react';
 import { useRef, useState, type ChangeEvent } from 'react';
+import { SkBtnInk } from '../skeleton';
 
 export interface BelongingDraft {
   key: string;
@@ -149,48 +152,45 @@ export default function CheckinForm({
   };
 
   return (
-    <section className="u1-card p-4">
+    <section className="sk-panel">
       <h2 className="text-title">入住登记</h2>
       <p className="mt-1 text-body-sm text-ink-secondary">称重、分房、登记随身物品，完成后开始每日打卡。</p>
 
       {/* 房间/笼位号 */}
-      <label className="mt-4 block">
-        <span className="text-body-sm font-semibold text-ink">房间 / 笼位号</span>
-        <input
-          type="text"
-          value={roomNo}
-          onChange={(e) => setRoomNo(e.target.value.slice(0, 32))}
-          placeholder="如：A-03（可稍后由商家分配）"
-          className="mt-1.5 h-staff-btn w-full rounded-control border border-line bg-canvas px-3 text-body-sm text-ink placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
-        />
-      </label>
+      <span className="sk-label">房间 / 笼位号</span>
+      <input
+        type="text"
+        value={roomNo}
+        onChange={(e) => setRoomNo(e.target.value.slice(0, 32))}
+        placeholder="如：A-03（可稍后由商家分配）"
+        className="sk-input"
+      />
 
       {/* 入住称重 */}
-      <label className="mt-4 block">
-        <span className="text-body-sm font-semibold text-ink">
-          入住称重 <span className="text-danger-deep">*</span>
-        </span>
-        <div className="mt-1.5 flex items-center gap-2">
-          <input
-            type="text"
-            inputMode="decimal"
-            value={weightText}
-            onChange={(e) => setWeightText(sanitizeWeight(e.target.value))}
-            placeholder="0.0"
-            className="h-staff-btn w-32 rounded-control border border-line bg-canvas px-3 u1-num text-body-sm text-ink placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
-          />
-          <span className="text-body-sm text-ink-secondary">kg（一位小数）</span>
-        </div>
-      </label>
+      <span className="sk-label">
+        入住称重 <span className="text-danger-deep">*</span>
+      </span>
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
+          inputMode="decimal"
+          value={weightText}
+          onChange={(e) => setWeightText(sanitizeWeight(e.target.value))}
+          placeholder="0.0"
+          className="sk-input u1-num"
+          style={{ width: 128 }}
+        />
+        <span className="text-body-sm text-ink-secondary">kg（一位小数）</span>
+      </div>
 
       {/* 寄养负责人（PR-2 A5：未指派单首次指派；已指派锁定+改派引导店长） */}
       {leadStaff ? (
-        <label className="mt-4 block">
-          <span className="text-body-sm font-semibold text-ink">
+        <>
+          <span className="sk-label">
             寄养负责人 <span className="text-danger-deep">*</span>
           </span>
           {leadStaff.assignedId ? (
-            <p className="mt-1.5 rounded-control bg-sunken px-3 py-2.5 text-body-sm text-ink">
+            <p className="rounded-control bg-sunken px-3 py-2.5 text-body-sm text-ink">
               {leadStaff.options.find((s) => s.id === leadStaff.assignedId)?.name ?? '已指派'}
               <span className="ml-2 text-caption text-ink-secondary">改派请找店长</span>
             </p>
@@ -199,7 +199,7 @@ export default function CheckinForm({
               <select
                 value={leadStaffId}
                 onChange={(e) => setLeadStaffId(e.target.value)}
-                className="mt-1.5 h-staff-btn w-full rounded-control border border-line bg-canvas px-3 text-body-sm text-ink focus:border-brand-primary focus:outline-none"
+                className="sk-select"
                 data-testid="boarding-lead-select"
               >
                 {leadStaff.options.map((s) => (
@@ -211,13 +211,13 @@ export default function CheckinForm({
               <p className="mt-1 text-caption text-ink-secondary">默认=核销人本人；差评扣分归属该负责人（改派找店长）</p>
             </>
           )}
-        </label>
+        </>
       ) : null}
 
       {/* 随身物品动态行 */}
       <div className="mt-4">
-        <span className="text-body-sm font-semibold text-ink">随身物品（可空）</span>
-        <ul className="mt-1.5 space-y-2">
+        <span className="sk-label" style={{ marginTop: 0 }}>随身物品（可空）</span>
+        <ul className="space-y-2">
           {rows.map((row) => (
             <li key={row.key} className="flex items-center gap-2">
               <input
@@ -225,7 +225,8 @@ export default function CheckinForm({
                 value={row.name}
                 onChange={(e) => patchRow(row.key, { name: e.target.value.slice(0, 64) })}
                 placeholder="物品名称，如：食盆 / 玩具"
-                className="h-staff-btn min-w-0 flex-1 rounded-control border border-line bg-canvas px-3 text-body-sm text-ink placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none"
+                className="sk-input"
+                style={{ minWidth: 0, flex: 1 }}
               />
               <button
                 type="button"
@@ -257,7 +258,7 @@ export default function CheckinForm({
           <button
             type="button"
             onClick={() => setRows((rs) => [...rs, newRow()])}
-            className="mt-2 flex h-staff-btn items-center gap-1.5 rounded-full bg-brand-primary-light px-4 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            className="sk-btn-ghost mt-2 gap-1.5"
           >
             <Plus className="h-5 w-5" strokeWidth={1.5} />
             添加物品
@@ -265,22 +266,20 @@ export default function CheckinForm({
         ) : null}
       </div>
 
-      {/* 提交 */}
+      {/* 提交（SkBtnInk 深棕主钮：不占 cream 预算，cream 让位今日打卡提交） */}
       <div className="mt-5 space-y-2">
-        <button
-          type="button"
-          onClick={submit}
+        <SkBtnInk
           disabled={submitting || anyUploading}
-          className="h-staff-btn w-full rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98] disabled:opacity-50"
+          onClick={submit}
         >
           {submitting ? '提交中…' : initial ? '保存登记信息' : '完成入住登记'}
-        </button>
+        </SkBtnInk>
         {onCancel ? (
           <button
             type="button"
             onClick={onCancel}
             disabled={submitting}
-            className="h-staff-btn w-full rounded-full bg-sunken text-body-sm text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            className="sk-btn-ghost w-full"
           >
             取消
           </button>

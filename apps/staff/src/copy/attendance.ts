@@ -4,10 +4,11 @@
  * 纪律：打卡页说明文（围栏口径/定位失败引导/记录空态）一律经本表取值，
  * 组件内零硬编码；文案端口已落（端口批片 B）：本表经 withCopyOverrides 代理——端口值优先、码内默认 fallback。
  *
- * 不抽：通用 UI 词（重试打卡/提交补卡申请）、状态签（正常/迟到/早退/补卡/缺卡）、
- * 表单 label、server 拒写原文透出（「不在门店范围，无法打卡」）、
+ * 不抽：通用 UI 词（重试打卡/重新加载）、状态签（正常/迟到/早退/补卡/缺卡）、
+ * server 拒写原文透出（「不在门店范围，无法打卡」）、
  * 非安全源提示（@/lib/secureContext 既有常量 INSECURE_CONTEXT_GEO_MESSAGE）。
- * 片 2 增量（B1 WiFi/外勤/断网/确认/申诉）：新 UI 文案一律入键（禁硬编码），见表尾分节。
+ * 片 2 增量（B1 WiFi/外勤/断网/确认/申诉）与 U5 增量（补卡申请区/审批结果行）：
+ * 新 UI 文案一律入键（禁硬编码），见表尾分节。
  * 数值口径：围栏「300 米」为冻结业务口径，随句入键逐字保留。
  */
 
@@ -72,6 +73,34 @@ const ATTENDANCE_COPY_TABLE = {
   /* ---- 走查修复批 D-31：定位不可用放行（端口 attendance_allow_insecure_http，迁移由主代理统一写） ---- */
   'attendance.geo.noGeoNote': '当前环境无法获取定位，本次打卡将以「未取到定位」留痕提交',
   'attendance.source.nogeo': '未取到定位',
+
+  /* ---- U5 定稿升档：补卡申请区 + 审批结果行（原码内硬编码收键；动态数原位保留 u1-num 轨） ---- */
+  'attendance.records.loadFail': '考勤记录加载失败，请检查网络后重试',
+  'attendance.punch.ok': '已打卡，辛苦了',
+  'attendance.punch.duplicated': '今日已打过卡，无需重复操作',
+  'attendance.makeup.titleLead': '补卡申请 · 本月还可补',
+  'attendance.makeup.titleMid': '次（每月限',
+  'attendance.makeup.titleTail': '次）',
+  'attendance.makeup.date': '补卡日期（限当月）',
+  'attendance.makeup.kind': '班次',
+  'attendance.makeup.kindIn': '上班卡',
+  'attendance.makeup.kindOut': '下班卡',
+  'attendance.makeup.timeIn': '实际上班时间',
+  'attendance.makeup.timeOut': '实际下班时间',
+  'attendance.makeup.reason': '补卡原因（必填）',
+  'attendance.makeup.reasonPh': '例如：到店后忙于接待忘记打卡',
+  'attendance.makeup.submit': '提交补卡申请',
+  'attendance.makeup.submitting': '提交中…',
+  'attendance.makeup.exhausted': '本月补卡次数已用完',
+  'attendance.makeup.toast': '补卡申请已提交，待店长审批',
+  'attendance.makeup.needReason': '请填写补卡原因',
+  'attendance.approval.pending': '待审批',
+  'attendance.approval.approved': '已通过',
+  'attendance.approval.rejected': '已驳回',
+  'attendance.approval.makeup': '补卡',
+  'attendance.approval.abnormal': '异常',
+  'attendance.approval.reason': '原因：{reason}',
+  'attendance.approval.rejectNote': '驳回备注：{note}',
 } as const;
 
 export const ATTENDANCE_COPY = withCopyOverrides(ATTENDANCE_COPY_TABLE);

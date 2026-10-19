@@ -1,0 +1,450 @@
+{
+  "at": "2026-10-19T19:57:50.074Z",
+  "base": "http://localhost:7102",
+  "results": [
+    {
+      "id": "S-00 登录结构（主视觉/serif 宣言/cream 主钮/账号区）",
+      "ok": true,
+      "detail": "{\"hero\":true,\"serif\":true,\"cta\":true,\"accounts\":true,\"ctaText\":\"选择员工账号登录\"}",
+      "measurements": {
+        "hero": true,
+        "serif": true,
+        "cta": true,
+        "accounts": true,
+        "ctaText": "选择员工账号登录"
+      }
+    },
+    {
+      "id": "S-00 主钮文案不冒充（选择员工账号登录）",
+      "ok": true,
+      "detail": "CTA=选择员工账号登录"
+    },
+    {
+      "id": "S-00 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "S-00 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "S-00 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=1"
+    },
+    {
+      "id": "S-01 Workcard 六步 now（done=2/now=1/cream 主钮在）",
+      "ok": true,
+      "detail": "steps=6 done=2 now=1 cta=true",
+      "measurements": {
+        "workcard": true,
+        "steps": 6,
+        "now": 1,
+        "done": 2,
+        "cta": true,
+        "dockLinks": [
+          "工位",
+          "预约",
+          "打卡",
+          "我的"
+        ],
+        "dockActive": "dock-work",
+        "dockDash": "rgb(242, 220, 140)",
+        "dockPaw": 0
+      }
+    },
+    {
+      "id": "StaffDock 四槽冻结「工位/预约/打卡/我的」＋cream 短划激活",
+      "ok": true,
+      "detail": "tabs=工位/预约/打卡/我的 active=dock-work dash=rgb(242, 220, 140)",
+      "measurements": {
+        "workcard": true,
+        "steps": 6,
+        "now": 1,
+        "done": 2,
+        "cta": true,
+        "dockLinks": [
+          "工位",
+          "预约",
+          "打卡",
+          "我的"
+        ],
+        "dockActive": "dock-work",
+        "dockDash": "rgb(242, 220, 140)",
+        "dockPaw": 0
+      }
+    },
+    {
+      "id": "S-01 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "S-01 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "S-01 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=1"
+    },
+    {
+      "id": "S-02 G1 日期片（昨/今/明＋日历 chip 同一行）",
+      "ok": true,
+      "detail": "chips=昨天/今天/明天/",
+      "measurements": {
+        "chipRow": true,
+        "chips": [
+          "昨天",
+          "今天",
+          "明天",
+          ""
+        ],
+        "half": true,
+        "halfPanel": true,
+        "continueCta": true,
+        "startPills": [
+          {
+            "disabled": true
+          }
+        ],
+        "thinDone": 2
+      }
+    },
+    {
+      "id": "S-02 半展=dock 默认（服务中卡 half＋摘要＋继续执行）",
+      "ok": true,
+      "detail": "{\"half\":true,\"halfPanel\":true,\"continueCta\":true}",
+      "measurements": {
+        "chipRow": true,
+        "chips": [
+          "昨天",
+          "今天",
+          "明天",
+          ""
+        ],
+        "half": true,
+        "halfPanel": true,
+        "continueCta": true,
+        "startPills": [
+          {
+            "disabled": true
+          }
+        ],
+        "thinDone": 2
+      }
+    },
+    {
+      "id": "S-02 互斥：待接「开始」pill 停用（同时仅一单服务中）",
+      "ok": true,
+      "detail": "pills=[{\"disabled\":true}]",
+      "measurements": [
+        {
+          "disabled": true
+        }
+      ]
+    },
+    {
+      "id": "S-02 已完成/待接保持薄行",
+      "ok": true,
+      "detail": "thin=2"
+    },
+    {
+      "id": "S-02 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "S-02 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "S-02 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=1"
+    },
+    {
+      "id": "S-02 全展=六步只读全表",
+      "ok": true,
+      "detail": "full=true opstep=6",
+      "measurements": {
+        "full": true,
+        "oplist": 6
+      }
+    },
+    {
+      "id": "S-12 切日历史（全薄行＋班结行）",
+      "ok": true,
+      "detail": "{\"dayfoot\":true,\"thin\":2,\"half\":0}",
+      "measurements": {
+        "dayfoot": true,
+        "thin": 2,
+        "half": 0
+      }
+    },
+    {
+      "id": "S-12 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "S-12 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "S-12 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=0"
+    },
+    {
+      "id": "S-03 打卡卡（大钟＋主钮；dock 打卡激活）",
+      "ok": true,
+      "detail": "{\"punch\":true,\"clock\":true,\"dockActive\":\"dock-punch\"}",
+      "measurements": {
+        "punch": true,
+        "clock": true,
+        "dockActive": "dock-punch"
+      }
+    },
+    {
+      "id": "S-03 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "S-03 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "S-03 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=1"
+    },
+    {
+      "id": "S-04 身份卡＋三格账（dock 我的激活）",
+      "ok": true,
+      "detail": "{\"idcard\":true,\"trio\":3,\"dockActive\":\"dock-me\"}",
+      "measurements": {
+        "idcard": true,
+        "trio": 3,
+        "dockActive": "dock-me"
+      }
+    },
+    {
+      "id": "S-04 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "S-04 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "S-04 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=0"
+    },
+    {
+      "id": "S-05 脸面（backbar＋sk 体系）",
+      "ok": true,
+      "detail": "backbar=true"
+    },
+    {
+      "id": "S-05 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "S-05 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "S-05 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=0"
+    },
+    {
+      "id": "S-06 脸面（backbar＋sk 体系）",
+      "ok": true,
+      "detail": "backbar=true"
+    },
+    {
+      "id": "S-06 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "S-06 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "S-06 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=1"
+    },
+    {
+      "id": "S-07 脸面（backbar＋sk 体系）",
+      "ok": true,
+      "detail": "backbar=true"
+    },
+    {
+      "id": "S-07 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "S-07 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "S-07 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=0"
+    },
+    {
+      "id": "S-08 脸面（backbar＋sk 体系）",
+      "ok": true,
+      "detail": "backbar=true"
+    },
+    {
+      "id": "S-08 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "S-08 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "S-08 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=0"
+    },
+    {
+      "id": "执行页脸面（backbar＋六步清单）",
+      "ok": true,
+      "detail": "{\"backbar\":true,\"steps\":6,\"hiddenFileInputs\":1}",
+      "measurements": {
+        "backbar": true,
+        "steps": 6,
+        "hiddenFileInputs": 1
+      }
+    },
+    {
+      "id": "执行页拍照隐藏 input 保持原样（待证项未动）",
+      "ok": true,
+      "detail": "hidden=1"
+    },
+    {
+      "id": "EXEC 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "EXEC 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "EXEC cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=0"
+    },
+    {
+      "id": "S-10 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "S-10 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "S-10 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=0"
+    },
+    {
+      "id": "S-01 前台核销大卡（扫码主钮＋待核销分组）",
+      "ok": true,
+      "detail": "{\"workcard\":true,\"scanCta\":true,\"waiting\":true}",
+      "measurements": {
+        "workcard": true,
+        "scanCta": true,
+        "waiting": true
+      }
+    },
+    {
+      "id": "S-01-FD 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "S-01-FD 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "S-01-FD cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=1"
+    },
+    {
+      "id": "S-11 店长审批脸面（考勤审批等分区）",
+      "ok": true,
+      "detail": "{\"backbar\":true,\"attendance\":true,\"noNative\":true}",
+      "measurements": {
+        "backbar": true,
+        "attendance": true,
+        "noNative": true
+      }
+    },
+    {
+      "id": "S-11 可读副文全部 ≥12px",
+      "ok": true,
+      "detail": "最小=12px；低于 12px=无",
+      "measurements": []
+    },
+    {
+      "id": "S-11 无爪印冒充",
+      "ok": true,
+      "detail": "paw=0"
+    },
+    {
+      "id": "S-11 cream 主钮 ≤2/屏",
+      "ok": true,
+      "detail": "cream=0"
+    },
+    {
+      "id": "U5 验证全程无提交预约／支付请求",
+      "ok": true,
+      "detail": "命中=无",
+      "measurements": []
+    }
+  ]
+}

@@ -75,7 +75,7 @@ export default function NotificationsPage() {
 
       {/* 未读计数 + 全部已读 */}
       <div className="flex items-center gap-2 px-[22px] pt-3">
-        <span className="text-caption-xs text-[rgba(59,46,36,.62)]" data-testid="ntf-unread-count">
+        <span className="text-caption text-ink-secondary" data-testid="ntf-unread-count">
           {nfc('snt.unreadLead', { n: unreadCount })}
         </span>
         <button
@@ -127,12 +127,12 @@ export default function NotificationsPage() {
                   {unread ? (
                     <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-danger" />
                   ) : null}
-                  <span className={`min-w-0 flex-1 truncate text-body-sm ${unread ? 'font-bold text-ink' : 'text-[rgba(59,46,36,.62)]'}`}>
+                  <span className={`min-w-0 flex-1 truncate text-body-sm ${unread ? 'font-bold text-ink' : 'text-ink-secondary'}`}>
                     {n.title}
                   </span>
-                  <span className="sk-mono shrink-0 text-caption-xs text-[rgba(59,46,36,.42)]">{fmtMdHm(n.createdAt)}</span>
+                  <span className="sk-mono shrink-0 text-caption text-ink-placeholder">{fmtMdHm(n.createdAt)}</span>
                 </div>
-                <p className={`mt-1 line-clamp-2 text-caption-xs ${unread ? 'text-ink' : 'text-[rgba(59,46,36,.42)]'}`}>{n.body}</p>
+                <p className={`mt-1 line-clamp-2 text-caption ${unread ? 'text-ink' : 'text-ink-placeholder'}`}>{n.body}</p>
               </button>
             );
           })

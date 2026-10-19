@@ -53,7 +53,7 @@ export default function NoticesPage() {
       <SkBackBar title={ncc('ntc.title')} note={ncc('ntc.no')} fallback="/me" />
 
       <div className="px-[22px] pt-3">
-        <span className="text-caption-xs text-[rgba(59,46,36,.62)]" data-testid="ntc-unread-count">
+        <span className="text-caption text-ink-secondary" data-testid="ntc-unread-count">
           {ncc('ntc.unreadLead', { n: unreadCount })}
         </span>
       </div>
@@ -96,25 +96,25 @@ export default function NoticesPage() {
                 >
                   <div className="flex items-center gap-2">
                     {r.pinned ? (
-                      <span className="shrink-0 rounded-chip bg-brand-primary-light px-1.5 py-px text-caption-xs font-bold text-ink">
+                      <span className="shrink-0 rounded-chip bg-brand-primary-light px-1.5 py-px text-caption font-bold text-ink">
                         {ncc('ntc.pinned')}
                       </span>
                     ) : null}
-                    <span className={`min-w-0 flex-1 truncate text-body-sm ${unread ? 'font-bold text-ink' : 'text-[rgba(59,46,36,.62)]'}`}>
+                    <span className={`min-w-0 flex-1 truncate text-body-sm ${unread ? 'font-bold text-ink' : 'text-ink-secondary'}`}>
                       {r.title}
                     </span>
                     <span
-                      className={`shrink-0 rounded-chip px-1.5 py-px text-caption-xs font-bold ${
-                        unread ? 'bg-danger-light text-danger-deep' : 'bg-sunken text-[rgba(59,46,36,.42)]'
+                      className={`shrink-0 rounded-chip px-1.5 py-px text-caption font-bold ${
+                        unread ? 'bg-danger-light text-danger-deep' : 'bg-sunken text-ink-placeholder'
                       }`}
                     >
                       {unread ? ncc('ntc.badgeUnread') : ncc('ntc.badgeRead')}
                     </span>
                   </div>
-                  <div className="sk-mono mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">{fmtMdHm(r.publishedAt)}</div>
+                  <div className="sk-mono mt-1 text-caption text-ink-placeholder">{fmtMdHm(r.publishedAt)}</div>
                 </button>
                 {open ? (
-                  <p className="mt-2 whitespace-pre-wrap border-t border-[rgba(59,46,36,.06)] pt-2 text-body-sm text-ink" data-testid={`ntc-body-${r.id}`}>
+                  <p className="mt-2 whitespace-pre-wrap border-t border-line pt-2 text-body-sm text-ink" data-testid={`ntc-body-${r.id}`}>
                     {r.body}
                   </p>
                 ) : null}

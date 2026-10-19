@@ -1,11 +1,13 @@
 /* ============================================================================
- * 员工端骨架样式库（员工端骨架整建批 · 片 1）
+ * 员工端骨架样式库（员工端骨架整建批 · 片 1；PD-44 U5 员工脸升档：可读文字全量 ≥12px）
  * 依据=UX-2026-09-27-两端定稿语言包 V1.1 §一总则+§二构件册（S1–S8/G1–G2）+34 号档 §一 token
  * 色纪律（产品-1015 换皮 片0 对齐 READY §2.1）：canvas #FAF7F0/白卡/body 深棕墨 #2C2822/
  *        cream #F2DC8C 点睛（仅「此刻要做」每屏 ≤2）/cream hover #EFD471/次阶 #A89779/
  *        赭红 #B4502E 仅异常——零新色；旧雾感四值禁止回退。
  *        深棕主渐变随 tokens.gradients.philia 换代=brand #5C5040→pressed #4A4034。
  * 作用域=.sk（页根挂）；dock=S1 flatdock 四槽冻结「工位/预约/打卡/我的」。
+ * U5 字阶闸：凡承载可读内容的文字（含 mono 轨中文/数字注）一律 ≥12px（Ready §2.2 辅助 12–13；
+ *        装饰性字距签同步抬到 12，低于 12 的字档全库不再出现）。
  * ========================================================================== */
 
 .sk {
@@ -25,20 +27,20 @@
 .sk * { box-sizing: border-box; }
 .sk-mono { font-family: var(--mono); }
 
-/* ---- apphead（serif 屏题 27/900 + mono 注；员工端页边距 22） ---- */
+/* ---- apphead（serif 屏题 27/900 + mono 注 12；员工端页边距 22） ---- */
 .sk-apphead { display: flex; align-items: baseline; justify-content: space-between; padding: 20px 22px 10px; }
 .sk-apphead .tt { font-family: var(--serif); font-size: 27px; font-weight: 900; letter-spacing: .01em; }
-.sk-apphead .no { font-family: var(--mono); font-size: 9px; letter-spacing: .22em; color: var(--muted); text-transform: uppercase; }
+.sk-apphead .no { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; color: var(--muted); text-transform: uppercase; }
 
-/* ---- S1 平铺 dock flatdock（四槽冻结；高 58+safe-area；激活=深棕字+顶 22×3 淡黄短划） ---- */
+/* ---- S1 平铺 dock flatdock（四槽冻结；高 58+safe-area；激活=深棕字+顶 22×3 淡黄短划；签 12） ---- */
 .sk-dock {
   position: fixed; inset-inline: 0; bottom: 0; z-index: 40; background: var(--card);
   box-shadow: 0 -1px 0 var(--hairline-soft); padding-bottom: env(safe-area-inset-bottom);
 }
 .sk-dock .row { display: grid; grid-template-columns: repeat(4, 1fr); height: 58px; max-width: 512px; margin: 0 auto; }
 .sk-dock a {
-  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-  color: var(--muted); font-size: 10.5px; font-weight: 500; text-decoration: none;
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  color: var(--muted); font-size: 12px; font-weight: 500; text-decoration: none;
   transition: transform .12s cubic-bezier(.34, 1.56, .64, 1);
 }
 .sk-dock a:active { transform: scale(.92); }
@@ -50,12 +52,12 @@
 }
 /* 未读徽数（片 3：dock 槽红点计数，如「我的」槽 push.unreadCount） */
 .sk-dock .bdg {
-  position: absolute; top: 4px; right: calc(50% - 22px); min-width: 15px; height: 15px;
+  position: absolute; top: 3px; right: calc(50% - 24px); min-width: 18px; height: 18px;
   padding: 0 4px; border-radius: 999px; background: var(--danger); color: var(--card);
-  font-family: var(--mono); font-size: 9px; font-weight: 700; line-height: 15px; text-align: center;
+  font-family: var(--mono); font-size: 12px; font-weight: 700; line-height: 18px; text-align: center;
 }
 
-/* ---- G2 淡黄主行动钮（语义=此刻要做的，每屏至多 1 颗；淡黄底深棕字 15.5/800 圆角 16+mono 9.5 副行） ---- */
+/* ---- G2 淡黄主行动钮（语义=此刻要做的，每屏至多 1 颗；淡黄底深棕字 15.5/800 圆角 16+mono 12 副行） ---- */
 .sk-btn-action {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   width: 100%; min-height: 52px; border: 0; border-radius: 16px; cursor: pointer;
@@ -65,7 +67,7 @@
 }
 .sk-btn-action:active { transform: scale(.97); }
 .sk-btn-action:disabled { opacity: .55; cursor: not-allowed; }
-.sk-btn-action .sub { font-family: var(--mono); font-size: 9.5px; font-weight: 500; opacity: .72; }
+.sk-btn-action .sub { font-family: var(--mono); font-size: 12px; font-weight: 500; opacity: .72; }
 .sk-btn-ghost {
   display: inline-flex; align-items: center; justify-content: center; min-height: 44px;
   border: 1px solid var(--hairline); border-radius: 999px; background: transparent; color: var(--ink);
@@ -73,14 +75,25 @@
   transition: transform .12s cubic-bezier(.34, 1.56, .64, 1);
 }
 .sk-btn-ghost:active { transform: scale(.94); }
+/* 深棕主行动钮（U5：不占 cream 预算的提交/主行动；形随 G2，深棕底米白字） */
+.sk-btn-ink {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  width: 100%; min-height: 52px; border: 0; border-radius: 16px; cursor: pointer;
+  background: var(--ink); color: #FAF7F0;
+  font-size: 15.5px; font-weight: 800; font-family: inherit;
+  transition: transform .12s cubic-bezier(.34, 1.56, .64, 1);
+}
+.sk-btn-ink:active { transform: scale(.97); }
+.sk-btn-ink:disabled { opacity: .55; cursor: not-allowed; }
+.sk-btn-ink .sub { font-family: var(--mono); font-size: 12px; font-weight: 500; opacity: .72; }
 
-/* ---- S2 工位大卡 workcard（深棕渐变 150° 圆角 18（Ready §2.3 卡档 16–18）+深件影） ---- */
+/* ---- S2 工位大卡 workcard（深棕渐变 135° 圆角 18（Ready §2.3 卡档 16–18）+深件影） ---- */
 .sk-workcard {
   margin: 6px 22px 0; border-radius: 18px; padding: 18px 20px 16px; color: #F6EFDD;
   background: var(--grad-philia);
   box-shadow: 0 10px 24px rgba(42, 31, 21, .28), 0 2px 6px rgba(42, 31, 21, .18);
 }
-.sk-workcard .wk-tag { display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 9.5px; letter-spacing: .12em; color: rgba(246, 239, 221, .72); }
+.sk-workcard .wk-tag { display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 12px; letter-spacing: .08em; color: rgba(246, 239, 221, .72); }
 .sk-workcard .wk-tag .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold-pale); animation: sk-breathe 2s ease-in-out infinite; }
 @keyframes sk-breathe { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 .sk-workcard .wk-main { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
@@ -90,21 +103,21 @@
   display: grid; place-items: center; font-weight: 800; font-size: 17px; color: var(--gold-pale); overflow: hidden;
 }
 .sk-workcard .wk-name { font-size: 17px; font-weight: 800; }
-.sk-workcard .wk-sub { font-family: var(--mono); font-size: 9.5px; color: rgba(246, 239, 221, .66); margin-top: 2px; }
-/* stepgrid 六列（圆点 26：done 淡金填/now 淡黄填+光晕/future 金线描边；名 mono 7.5） */
+.sk-workcard .wk-sub { font-family: var(--mono); font-size: 12px; color: rgba(246, 239, 221, .66); margin-top: 2px; }
+/* stepgrid 六列（圆点 26：done 淡金填/now 淡黄填+光晕/future 金线描边；短标 12） */
 .sk-stepgrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-top: 14px; }
 .sk-stepgrid .st { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .sk-stepgrid .st .pt {
   width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
-  font-family: var(--mono); font-size: 10px; border: 1.5px solid var(--gold); color: var(--gold);
+  font-family: var(--mono); font-size: 12px; border: 1.5px solid var(--gold); color: var(--gold);
 }
-.sk-stepgrid .st .nm { font-family: var(--mono); font-size: 7.5px; letter-spacing: .04em; color: rgba(246, 239, 221, .66); text-align: center; }
+.sk-stepgrid .st .nm { font-family: var(--mono); font-size: 12px; color: rgba(246, 239, 221, .66); text-align: center; }
 .sk-stepgrid .st.done .pt { background: var(--gold); border-color: var(--gold); color: var(--ink-deep); }
 .sk-stepgrid .st.now .pt {
   background: var(--gold-pale); border-color: var(--gold-pale); color: var(--ink-deep);
   box-shadow: 0 0 0 4px rgba(242, 220, 140, .28);
 }
-.sk-workcard .wk-count { font-family: var(--mono); font-size: 9.5px; color: rgba(246, 239, 221, .72); margin-top: 12px; }
+.sk-workcard .wk-count { font-family: var(--mono); font-size: 12px; color: rgba(246, 239, 221, .72); margin-top: 12px; }
 .sk-workcard .sk-btn-action { margin-top: 10px; }
 
 /* ---- 下一单 nextrow / 排队行 que / 今日胶囊 clockrow / 班结行 dayfoot ---- */
@@ -116,13 +129,13 @@
 }
 .sk-nextrow:active { transform: scale(.98); }
 .sk-nextrow .t { font-size: 13.5px; font-weight: 800; }
-.sk-nextrow .s { font-family: var(--mono); font-size: 9.5px; color: var(--muted); margin-top: 2px; }
+.sk-nextrow .s { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-top: 2px; }
 .sk-nextrow .caret { margin-left: auto; width: 26px; height: 26px; border-radius: 50%; background: var(--paper); display: grid; place-items: center; color: var(--ink); flex: none; }
-.sk-que { margin: 10px 22px 0; display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 9.5px; color: var(--muted); }
+.sk-que { margin: 10px 22px 0; display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
 .sk-que .qchip { background: var(--card); border-radius: 999px; padding: 5px 10px; color: var(--ink); }
-.sk-clockrow { display: inline-flex; align-items: center; gap: 7px; background: var(--card); border-radius: 999px; padding: 6px 12px; font-family: var(--mono); font-size: 10px; color: var(--ink); }
+.sk-clockrow { display: inline-flex; align-items: center; gap: 7px; background: var(--card); border-radius: 999px; padding: 6px 12px; font-family: var(--mono); font-size: 12px; color: var(--ink); }
 .sk-clockrow .pt { width: 7px; height: 7px; border-radius: 50%; background: var(--gold-pale); }
-.sk-dayfoot { margin: 18px 22px 0; padding-bottom: 88px; font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: .06em; text-align: center; }
+.sk-dayfoot { margin: 18px 22px 0; padding-bottom: 88px; font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: .04em; text-align: center; }
 
 /* ---- S5 功能三格 trio（白卡圆角 18 三等分竖线分隔；红点 dotr=赭红 7 圆） ---- */
 .sk-trio { margin: 12px 22px 0; background: var(--card); border-radius: 18px; display: grid; grid-template-columns: repeat(3, 1fr); box-shadow: 0 1px 2px rgba(42, 31, 21, .05); overflow: hidden; }
@@ -133,20 +146,20 @@
 }
 .sk-trio a:active, .sk-trio button:active { transform: scale(.95); }
 .sk-trio a + a, .sk-trio button + button, .sk-trio a + button, .sk-trio button + a { box-shadow: inset 1px 0 0 var(--hairline-soft); }
-.sk-trio .t { font-size: 11.5px; font-weight: 800; }
-.sk-trio .s { font-family: var(--mono); font-size: 8.5px; color: var(--muted); }
+.sk-trio .t { font-size: 12.5px; font-weight: 800; }
+.sk-trio .s { font-family: var(--mono); font-size: 12px; color: var(--muted); }
 .sk-trio .dotr { position: absolute; top: 10px; right: calc(50% - 22px); width: 7px; height: 7px; border-radius: 50%; background: var(--danger); }
 
-/* ---- S7 清单行 rows/row（白卡 18；行 12.5+右值 mono 11.5/700；红字=.red） ---- */
+/* ---- S7 清单行 rows/row（白卡 18；行 12.5+右值 mono 12/700；红字=.red） ---- */
 .sk-rows { margin: 12px 22px 0; background: var(--card); border-radius: 18px; padding: 4px 16px; box-shadow: 0 1px 2px rgba(42, 31, 21, .05); }
 .sk-rows .row { display: flex; align-items: center; gap: 10px; padding: 11px 0; font-size: 12.5px; }
 .sk-rows .row + .row { box-shadow: inset 0 1px 0 var(--hairline-soft); }
 .sk-rows .row .lb { color: var(--ink); }
-.sk-rows .row .vl { margin-left: auto; font-family: var(--mono); font-size: 11.5px; font-weight: 700; }
+.sk-rows .row .vl { margin-left: auto; font-family: var(--mono); font-size: 12px; font-weight: 700; }
 .sk-rows .row .vl.red { color: var(--danger); }
 .sk-rows .row .vl.mut { color: var(--muted); font-weight: 500; }
 
-/* ---- S8 返回条 backbar（二级页专用；圆钮 34 白卡+墨描边+题 14/800+右 mono 9 注） ---- */
+/* ---- S8 返回条 backbar（二级页专用；圆钮 34 白卡+墨描边+题 14/800+右 mono 12 注） ---- */
 .sk-backbar { display: flex; align-items: center; gap: 10px; padding: 16px 22px 8px; }
 .sk-backbar .bk {
   width: 34px; height: 34px; border-radius: 50%; background: var(--card); border: 1px solid var(--hairline);
@@ -155,7 +168,7 @@
 }
 .sk-backbar .bk:active { transform: scale(.9); }
 .sk-backbar .tt { font-size: 14px; font-weight: 800; }
-.sk-backbar .no { margin-left: auto; font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: .12em; }
+.sk-backbar .no { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: .08em; }
 
 /* ---- G1 选择片 wchip（胶囊 99 边 line；选中=深棕底反白；筛选/日期切换通用） ---- */
 .sk-chips { display: flex; gap: 8px; padding: 4px 22px 0; overflow-x: auto; scrollbar-width: none; }
@@ -171,7 +184,7 @@
 /* ---- S3 班轴 daygrid + 预约卡 appt ---- */
 .sk-daygrid { margin: 12px 22px 0; position: relative; }
 .sk-daygrid .dg { display: grid; grid-template-columns: 46px 1fr; gap: 0 12px; position: relative; }
-.sk-daygrid .dg-time { font-family: var(--mono); font-size: 10px; color: var(--muted); text-align: right; padding-top: 3px; }
+.sk-daygrid .dg-time { font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: right; padding-top: 3px; }
 .sk-daygrid .dg-rail { position: relative; padding-left: 14px; }
 .sk-daygrid .dg-rail::before { content: ''; position: absolute; left: 4px; top: 6px; bottom: 6px; width: 1px; background: var(--hairline); }
 .sk-daygrid .dg-node {
@@ -185,8 +198,8 @@
   box-shadow: 0 1px 2px rgba(42, 31, 21, .05); position: relative;
 }
 .sk-appt .t { font-size: 13.5px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
-.sk-appt .s { font-family: var(--mono); font-size: 9.5px; color: var(--muted); margin-top: 3px; }
-.sk-appt .st2 { margin-left: auto; font-family: var(--mono); font-size: 9.5px; font-weight: 700; flex: none; }
+.sk-appt .s { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-top: 3px; }
+.sk-appt .st2 { margin-left: auto; font-family: var(--mono); font-size: 12px; font-weight: 700; flex: none; }
 .sk-appt .st2.now { color: var(--ink-deep); background: var(--gold-pale); border-radius: 6px; padding: 2px 7px; }
 .sk-appt .st2.done { color: var(--muted); }
 .sk-appt .caret {
@@ -199,13 +212,13 @@
 .sk-appt.done { opacity: .62; }
 .sk-appt .dg-gap, .sk-daygrid .dg-gap {
   border: 1px dashed var(--hairline); border-radius: 14px; padding: 10px 14px; margin-bottom: 10px;
-  font-family: var(--mono); font-size: 9px; color: var(--muted); text-align: center; background: transparent;
+  font-family: var(--mono); font-size: 12px; color: var(--muted); text-align: center; background: transparent;
 }
 /* 待接「开始」pill（薄行行内主行动；深棕底 cream 字=34 号档 §4.11 深钮族，不占 cream 预算；
    互斥停用=sunken 灰态——同时仅一单服务中） */
 .sk-appt .act {
   margin-left: 2px; min-height: 30px; padding: 0 13px; border-radius: 999px; border: 0; flex: none;
-  background: var(--ink); color: var(--gold-pale); font-size: 11px; font-weight: 700;
+  background: var(--ink); color: var(--gold-pale); font-size: 12px; font-weight: 700;
   cursor: pointer; font-family: inherit; transition: transform .12s cubic-bezier(.34, 1.56, .64, 1);
 }
 .sk-appt .act:active { transform: scale(.94); }
@@ -214,29 +227,29 @@
 .sk-half { margin-top: 10px; border-top: 1px solid var(--hairline-soft); padding-top: 10px; }
 .sk-half .row { display: flex; align-items: center; gap: 8px; }
 .sk-half .cur { font-size: 12.5px; font-weight: 700; }
-.sk-half .cnt { margin-left: auto; font-family: var(--mono); font-size: 9.5px; color: var(--muted); }
+.sk-half .cnt { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--muted); }
 .sk-half .sk-btn-action { margin-top: 10px; }
 
 /* ---- S4 班轴操作清单 oplist/opstep（冻结六步逐行可执行；当前步唯一 oact） ---- */
 .sk-oplist { margin-top: 10px; border-top: 1px solid var(--hairline-soft); padding-top: 8px; }
 .sk-opstep { display: flex; align-items: center; gap: 9px; padding: 6px 0; }
-.sk-opstep .pt { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-family: var(--mono); font-size: 9px; flex: none; }
+.sk-opstep .pt { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-family: var(--mono); font-size: 12px; flex: none; }
 .sk-opstep.done .pt { background: var(--ink); color: #FAF7F0; }
 .sk-opstep.now .pt { background: var(--gold-pale); color: var(--ink-deep); }
 .sk-opstep.future .pt { background: transparent; border: 1.5px solid var(--hairline); opacity: .55; }
 .sk-opstep .nm { font-size: 12.5px; font-weight: 700; }
 .sk-opstep.future .nm { opacity: .55; }
-.sk-opstep .st { margin-left: auto; font-family: var(--mono); font-size: 9px; color: var(--muted); }
+.sk-opstep .st { margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--muted); }
 .sk-opstep .oact {
   margin-left: auto; min-height: 30px; padding: 0 13px; border-radius: 999px; border: 1px solid var(--hairline);
-  background: transparent; color: var(--ink); font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
+  background: transparent; color: var(--ink); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
 }
 
-/* ---- S6 打卡卡 punch（白卡 18（Ready §2.3 卡档 16–18）：mono 大钟 34/700+班次 mono 9.5+围栏胶囊+btn-action） ---- */
+/* ---- S6 打卡卡 punch（白卡 18（Ready §2.3 卡档 16–18）：mono 大钟 34/700+班次 mono 12+围栏胶囊+btn-action） ---- */
 .sk-punch { margin: 8px 22px 0; background: var(--card); border-radius: 18px; padding: 20px; box-shadow: 0 1px 2px rgba(42, 31, 21, .05); text-align: center; }
 .sk-punch .clock { font-family: var(--mono); font-size: 34px; font-weight: 700; letter-spacing: .02em; }
-.sk-punch .shift { font-family: var(--mono); font-size: 9.5px; color: var(--muted); margin-top: 6px; }
-.sk-punch .fence { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; border-radius: 999px; padding: 5px 12px; background: var(--paper); font-family: var(--mono); font-size: 9.5px; color: var(--ink); }
+.sk-punch .shift { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-top: 6px; }
+.sk-punch .fence { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; border-radius: 999px; padding: 5px 12px; background: var(--paper); font-family: var(--mono); font-size: 12px; color: var(--ink); }
 .sk-punch .fence.ok { color: var(--ink-deep); }
 .sk-punch .fence.bad { color: var(--danger); }
 .sk-punch .sk-btn-action { margin-top: 14px; }
@@ -250,12 +263,12 @@
   background: rgba(246, 239, 221, .12); overflow: hidden; flex: none;
 }
 .sk-idcard .nm { font-size: 17px; font-weight: 800; }
-.sk-idcard .no { font-family: var(--mono); font-size: 9.5px; color: rgba(246, 239, 221, .66); margin-top: 3px; }
+.sk-idcard .no { font-family: var(--mono); font-size: 12px; color: rgba(246, 239, 221, .66); margin-top: 3px; }
 .sk-idcard .trio { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 14px; border-top: 1px solid rgba(246, 239, 221, .16); padding-top: 12px; }
 .sk-idcard .trio .c { text-align: center; }
 .sk-idcard .trio .c + .c { box-shadow: inset 1px 0 0 rgba(246, 239, 221, .12); }
 .sk-idcard .trio .v { font-family: var(--mono); font-size: 15px; font-weight: 700; }
-.sk-idcard .trio .k { font-size: 10px; color: rgba(246, 239, 221, .66); margin-top: 2px; }
+.sk-idcard .trio .k { font-size: 12px; color: rgba(246, 239, 221, .66); margin-top: 2px; }
 
 /* ---- 扫码框色样（9-27 拍：深棕框+淡黄角标） ---- */
 .sk-scanframe {
@@ -270,6 +283,32 @@
 .sk-scanframe .ck::before { left: -3px; bottom: -3px; border-right: 0; border-top: 0; border-radius: 0 0 0 16px; }
 .sk-scanframe .ck::after { right: -3px; bottom: -3px; border-left: 0; border-top: 0; border-radius: 0 0 16px 0; }
 
+/* ---- U5 面板/表单件（各屏表单与段落统一脸面；白卡 18+近零影） ---- */
+.sk-panel { margin: 12px 22px 0; background: var(--card); border-radius: 18px; padding: 14px 16px; box-shadow: 0 1px 2px rgba(42, 31, 21, .05); }
+.sk-sec { margin: 18px 22px 0; font-size: 12px; font-weight: 700; letter-spacing: .06em; color: var(--muted); }
+.sk-label { display: block; font-size: 12px; font-weight: 700; color: var(--ink); margin: 10px 0 6px; }
+.sk-input, .sk-select, .sk-textarea {
+  width: 100%; min-height: 44px; border: 1px solid var(--hairline); border-radius: 12px;
+  background: var(--paper); color: var(--ink); font-size: 14px; font-family: inherit; padding: 0 12px;
+}
+.sk-textarea { min-height: 84px; padding: 10px 12px; resize: vertical; line-height: 1.6; }
+.sk-input:focus, .sk-select:focus, .sk-textarea:focus { outline: 2px solid rgba(44, 40, 34, .28); outline-offset: 1px; }
+
+/* ---- U5 弹层（替代 window.prompt/confirm；底 sheet 形，蒙层+滚锁） ---- */
+.sk-modal-mask {
+  position: fixed; inset: 0; z-index: 60; background: rgba(28, 22, 16, .42);
+  display: grid; place-items: end center;
+}
+.sk-modal {
+  width: 100%; max-width: 512px; max-height: 82vh; overflow: auto;
+  background: var(--card); border-radius: 20px 20px 0 0; padding: 18px 20px 16px;
+  box-shadow: 0 -8px 24px rgba(42, 31, 21, .18); padding-bottom: calc(16px + env(safe-area-inset-bottom));
+}
+.sk-modal .mt { font-size: 16px; font-weight: 800; }
+.sk-modal .mb { margin-top: 8px; font-size: 13px; line-height: 1.7; }
+.sk-modal .acts { display: flex; gap: 10px; margin-top: 16px; }
+.sk-modal .acts > * { flex: 1; }
+
 /* ---- 工具行 ---- */
-.sk-note { margin: 10px 22px 0; font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: .04em; line-height: 1.8; }
+.sk-note { margin: 10px 22px 0; font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: .02em; line-height: 1.8; }
 .sk-empty { margin: 24px 22px 0; text-align: center; color: var(--muted); font-size: 12.5px; line-height: 2; }

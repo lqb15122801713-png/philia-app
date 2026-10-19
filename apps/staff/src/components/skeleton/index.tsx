@@ -5,7 +5,7 @@
  * 文案一律走 copy/skeleton.ts 键（凡内容皆留口）；dock 四槽冻结「工位/预约/打卡/我的」。
  */
 
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { skc, type SkeletonCopyKey } from '../../copy/skeleton';
 
@@ -50,11 +50,68 @@ export function SkBtnAction({
   );
 }
 
-/* ---- G1 选择片 chips ---- */
-export function SkChips<T extends string>({
-  options, value, onChange, testId,
+/* ---- 深棕主行动钮（U5：不占 cream 预算的提交/主行动；同 G2 形） ---- */
+export function SkBtnInk({
+  children, sub, onClick, disabled, testId,
 }: {
-  options: Array<{ key: T; label: string }>; value: T; onChange: (k: T) => void; testId?: string;
+  children: ReactNode; sub?: string; onClick?: () => void; disabled?: boolean; testId?: string;
+}) {
+  return (
+    <button type="button" className="sk-btn-ink" onClick={onClick} disabled={disabled} data-testid={testId}>
+      {children}
+      {sub ? <span className="sub">{sub}</span> : null}
+    </button>
+  );
+}
+
+/* ---- U5 面板/段题（各屏表单与段落统一脸面） ---- */
+export function SkPanel({ children, testId }: { children: ReactNode; testId?: string }) {
+  return <section className="sk-panel" data-testid={testId}>{children}</section>;
+}
+export function SkSec({ children, testId }: { children: ReactNode; testId?: string }) {
+  return <p className="sk-sec" data-testid={testId}>{children}</p>;
+}
+
+/* ---- U5 弹层（替代 window.prompt/confirm；蒙层点按=取消、Esc=取消、开时锁底层滚动） ---- */
+export function SkModal({
+  title, children, onClose, testId,
+}: {
+  title: ReactNode; children: ReactNode; onClose: () => void; testId?: string;
+}) {
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [onClose]);
+  return (
+    <div
+      className="sk-modal-mask"
+      data-testid={testId}
+      role="presentation"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="sk-modal" role="dialog" aria-modal="true">
+        <div className="mt">{title}</div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ---- G1 选择片 chips（trailing=行尾追加件，如 S-02 的日历 input chip） ---- */
+export function SkChips<T extends string>({
+  options, value, onChange, testId, trailing,
+}: {
+  options: Array<{ key: T; label: string }>; value: T; onChange: (k: T) => void; testId?: string; trailing?: ReactNode;
 }) {
   return (
     <div className="sk-chips" data-testid={testId} role="tablist">
@@ -71,6 +128,7 @@ export function SkChips<T extends string>({
           {o.label}
         </button>
       ))}
+      {trailing ?? null}
     </div>
   );
 }
@@ -377,7 +435,7 @@ export function SkEmpty({ title, body }: { title: string; body?: string }) {
   return (
     <div className="sk-empty">
       <div style={{ fontWeight: 700, color: 'var(--ink)' }}>{title}</div>
-      {body ? <div style={{ fontSize: 11 }}>{body}</div> : null}
+      {body ? <div style={{ fontSize: 12 }}>{body}</div> : null}
     </div>
   );
 }

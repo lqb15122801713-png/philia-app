@@ -2,7 +2,7 @@
  * 批次 员工端2.0（R7~R10）· 店长视图 /manager
  * （任务书 V1.1 §六「店长视图」行 + docs/staff2/R7-R10-DESIGN.md §三/§四）
  * 骨架批片 1（S-11 补卡审批·店长视界）：外框换骨架——SkBackBar（二级页无 dock）→
- * 考勤异常卡 ×N（理由 + 批准 SkBtnAction / 驳回 sk-btn-ghost，左 3px 赭红）→
+ * 考勤异常卡 ×N（理由 + 批准 SkBtnInk / 驳回 sk-btn-ghost，左 3px 赭红）→
  * S7 留痕行（防代打只读）→ 口径注（驳回强制原因 · 全留痕）。数据流/权限零回退。
  *
  * 闸门（双闸口径）：页内角色校验——roles 含 merchant_manager / merchant_owner 才渲染数据面；
@@ -11,7 +11,7 @@
  *
  * 区块（全部复用既有端点，零新接口）：
  * 1. 考勤审批：attendance.exceptionQueue（pending 异常/补卡双流 + 本月防代打 flagged 只读）
- *    → attendance.resolveApproval（驳回备注必填，prompt 收集）；
+ *    → attendance.resolveApproval（驳回备注必填，SkModal 弹层收集）；
  * 2. 取消审批：appointment.listForStore({status:'cancel_requested'})（商家端待办同查询）
  *    → appointment.reviewCancel（商家端同 mutation，批准/驳回）；
  * 3. 日结确认（手机通道）：cashier.dayClosePreview（预览=冻结同源同值，UI 只展示不自算）
@@ -35,7 +35,7 @@ import { useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { hhmm, mmdd } from '@/components/today/utils';
 import { MANAGER_COPY } from '@/copy/manager';
-import { SkBackBar, SkBtnAction, SkNote, SkRows } from '../../components/skeleton';
+import { SkBackBar, SkBtnInk, SkModal, SkNote, SkRows } from '../../components/skeleton';
 import '../../styles/skeleton.css';
 
 /* ------------------------------------------------------------------ */
@@ -84,28 +84,29 @@ const cardSt: CSSProperties = {
   padding: '14px 16px',
   boxShadow: '0 1px 2px rgba(42, 31, 21, .05)',
 };
-const monoSm: CSSProperties = { fontFamily: 'var(--mono)', fontSize: 9.5, color: 'var(--muted)' };
+const monoSm: CSSProperties = { fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)' };
 
-/** 淡黄主钮（页内区行动；G2 全宽主行动走 SkBtnAction） */
-const GOLD_BTN: CSSProperties = {
+/** 深棕出口钮（非授权引导页；34 号档 §4.11 空态件=深棕钮） */
+const GUIDE_BTN: CSSProperties = {
   minHeight: 44, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-  borderRadius: 999, background: 'var(--gold-pale)', color: 'var(--ink-deep)',
+  borderRadius: 999, background: 'var(--ink-deep)', color: 'var(--gold-pale)',
   fontSize: 12.5, fontWeight: 700, padding: '0 18px', border: 0, cursor: 'pointer', fontFamily: 'inherit',
 };
-/** 深棕出口钮（非授权引导页；34 号档 §4.11 空态件=深棕钮） */
-const GUIDE_BTN: CSSProperties = { ...GOLD_BTN, background: 'var(--ink-deep)', color: 'var(--gold-pale)' };
 
 function Chip({ tone = 'plain', children }: { tone?: 'plain' | 'warn' | 'danger' | 'ok'; children: ReactNode }) {
   const st: CSSProperties =
-    tone === 'danger'
-      ? { background: 'rgba(180, 80, 46, .12)', color: 'var(--danger)' }
-      : tone === 'warn'
-        ? { background: 'var(--gold-pale)', color: 'var(--ink-deep)' }
-        : tone === 'ok'
-          ? { background: 'var(--gold)', color: 'var(--ink-deep)' }
-          : { background: 'var(--paper)', color: 'var(--muted)' };
+    tone === 'warn'
+      ? { background: 'var(--gold-pale)', color: 'var(--ink-deep)' }
+      : tone === 'ok'
+        ? { background: 'var(--gold)', color: 'var(--ink-deep)' }
+        : tone === 'plain'
+          ? { background: 'var(--paper)', color: 'var(--muted)' }
+          : {};
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', borderRadius: 999, padding: '2px 8px', fontSize: 9.5, fontWeight: 700, ...st }}>
+    <span
+      className={tone === 'danger' ? 'bg-danger-light text-danger-deep' : undefined}
+      style={{ display: 'inline-flex', alignItems: 'center', borderRadius: 999, padding: '2px 8px', fontSize: 12, fontWeight: 700, ...st }}
+    >
       {children}
     </span>
   );
@@ -116,7 +117,7 @@ function SecTitle({ title, aside }: { title: string; aside?: ReactNode }) {
   return (
     <p style={{ margin: '18px 22px 0', display: 'flex', alignItems: 'baseline', gap: 8, fontSize: 12.5, fontWeight: 800 }}>
       {title}
-      {aside ? <span className="sk-mono" style={{ marginLeft: 'auto', fontSize: 9.5, fontWeight: 500, color: 'var(--muted)' }}>{aside}</span> : null}
+      {aside ? <span className="sk-mono" style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 500, color: 'var(--muted)' }}>{aside}</span> : null}
     </p>
   );
 }
@@ -137,7 +138,7 @@ function QueryState({ pending, error, empty, emptyText }: { pending: boolean; er
   return null;
 }
 
-/** 批准（SkBtnAction 淡黄）+ 驳回（sk-btn-ghost 描边）双钮行 */
+/** 批准（SkBtnInk 深棕）+ 驳回（sk-btn-ghost 描边）双钮行 */
 function ApproveRejectRow({
   approveText,
   rejectText,
@@ -158,9 +159,9 @@ function ApproveRejectRow({
   return (
     <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
       <div style={{ flex: 1 }}>
-        <SkBtnAction onClick={onApprove} disabled={busy} testId={approveTestId}>
+        <SkBtnInk onClick={onApprove} disabled={busy} testId={approveTestId}>
           {approveText}
-        </SkBtnAction>
+        </SkBtnInk>
       </div>
       <button type="button" className="sk-btn-ghost" style={{ flex: 1 }} disabled={busy} onClick={onReject} data-testid={rejectTestId}>
         {rejectText}
@@ -219,14 +220,21 @@ function AttendanceSection({
     onError: (e) => showToast(errMsg(e)),
   });
 
-  const reject = (approvalId: string) => {
-    const note = window.prompt('请填写驳回备注（必填）');
-    if (note === null) return;
-    if (!note.trim()) {
+  /* 驳回备注收集（SkModal 弹层，代原生 prompt 弹窗；备注必填口径不变） */
+  const [rejectFor, setRejectFor] = useState<string | null>(null);
+  const [rejectNote, setRejectNote] = useState('');
+  const openReject = (approvalId: string) => {
+    setRejectFor(approvalId);
+    setRejectNote('');
+  };
+  const confirmReject = () => {
+    if (rejectFor === null) return;
+    if (!rejectNote.trim()) {
       showToast('驳回需填写备注');
       return;
     }
-    resolveM.mutate({ approvalId, approve: false, note: note.trim() });
+    resolveM.mutate({ approvalId: rejectFor, approve: false, note: rejectNote.trim() });
+    setRejectFor(null);
   };
 
   const approvals = q.data?.approvals ?? [];
@@ -254,10 +262,10 @@ function AttendanceSection({
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
                 <Chip tone={a.type === 'makeup' ? 'warn' : 'danger'}>{a.type === 'makeup' ? '补卡' : '异常'}</Chip>
                 <span style={{ fontSize: 12.5, fontWeight: 800 }}>{staffNameOf(a.staffId)}</span>
-                <span className="sk-mono" style={{ fontSize: 9.5, color: 'var(--muted)' }}>{a.date}</span>
-                <span style={{ fontSize: 10, color: 'var(--muted)' }}>· {KIND_LABEL[a.kind] ?? a.kind}</span>
+                <span className="sk-mono" style={{ fontSize: 12, color: 'var(--muted)' }}>{a.date}</span>
+                <span style={{ fontSize: 12, color: 'var(--muted)' }}>· {KIND_LABEL[a.kind] ?? a.kind}</span>
               </div>
-              <p style={{ marginTop: 6, fontSize: 11, color: 'var(--muted)', lineHeight: 1.7 }}>{a.reason}</p>
+              <p style={{ marginTop: 6, fontSize: 12, color: 'var(--muted)', lineHeight: 1.7 }}>{a.reason}</p>
               {a.type === 'makeup' && a.requestedTs ? (
                 <p style={{ ...monoSm, marginTop: 2 }}>
                   申请补卡时间 {hhmm(a.requestedTs)}
@@ -268,7 +276,7 @@ function AttendanceSection({
                 rejectText={MANAGER_COPY['manager.reject']}
                 busy={busy}
                 onApprove={() => resolveM.mutate({ approvalId: a.id, approve: true })}
-                onReject={() => reject(a.id)}
+                onReject={() => openReject(a.id)}
                 approveTestId={`manager-attendance-approve-${a.id}`}
                 rejectTestId={`manager-attendance-reject-${a.id}`}
               />
@@ -278,14 +286,14 @@ function AttendanceSection({
         {/* S7 留痕记录（防代打标记 · 本月 · 只读） */}
         {flagged.length > 0 ? (
           <>
-            <p style={{ margin: '14px 22px 0', fontSize: 10, fontWeight: 800, color: 'var(--muted)' }}>{MANAGER_COPY['manager.sec.flagged']}</p>
+            <p style={{ margin: '14px 22px 0', fontSize: 12, fontWeight: 800, color: 'var(--muted)' }}>{MANAGER_COPY['manager.sec.flagged']}</p>
             <SkRows>
               {flagged.map((r) => (
                 <div className="row" key={r.id} data-testid={`manager-flagged-row-${r.id}`}>
                   <span className="lb" style={{ minWidth: 0, flex: 1, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
                     <Chip tone="danger">防代打</Chip>
                     <span style={{ fontWeight: 700 }}>{staffNameOf(r.staffId)}</span>
-                    <span className="sk-mono" style={{ fontSize: 9.5, color: 'var(--muted)' }}>
+                    <span className="sk-mono" style={{ fontSize: 12, color: 'var(--muted)' }}>
                       {r.date} · {KIND_LABEL[r.kind] ?? r.kind} · {RECORD_STATUS_LABEL[r.status] ?? r.status} · {hhmm(r.ts)}
                     </span>
                   </span>
@@ -297,6 +305,27 @@ function AttendanceSection({
       </div>
       {/* 口径注：驳回强制原因 · 全留痕 */}
       <SkNote>{MANAGER_COPY['manager.attendance.note']}</SkNote>
+      {/* 驳回备注弹层（onClose=取消） */}
+      {rejectFor !== null ? (
+        <SkModal title="请填写驳回备注（必填）" onClose={() => setRejectFor(null)} testId="manager-attendance-reject-modal">
+          <textarea
+            className="sk-textarea"
+            style={{ marginTop: 12 }}
+            value={rejectNote}
+            onChange={(e) => setRejectNote(e.target.value)}
+            placeholder="驳回备注"
+            data-testid="manager-attendance-reject-note"
+          />
+          <div className="acts">
+            <button type="button" className="sk-btn-ghost" onClick={() => setRejectFor(null)}>
+              取消
+            </button>
+            <SkBtnInk onClick={confirmReject} disabled={busy} testId="manager-attendance-reject-confirm">
+              确认驳回
+            </SkBtnInk>
+          </div>
+        </SkModal>
+      ) : null}
     </>
   );
 }
@@ -338,12 +367,12 @@ function CancelSection({ showToast }: { showToast: (m: string) => void }) {
             <li key={a.id} style={{ ...cardSt, borderLeft: '3px solid var(--danger)' }} data-testid={`manager-cancel-row-${a.id}`}>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
                 <span style={{ fontSize: 12.5, fontWeight: 800 }}>{a.petName ?? '宠物'}</span>
-                <span style={{ fontSize: 10, color: 'var(--muted)' }}>{a.serviceName ?? ''}</span>
-                <span className="sk-mono" style={{ fontSize: 9.5, color: 'var(--muted)' }}>
+                <span style={{ fontSize: 12, color: 'var(--muted)' }}>{a.serviceName ?? ''}</span>
+                <span className="sk-mono" style={{ fontSize: 12, color: 'var(--muted)' }}>
                   预约 {`${mmdd(a.scheduledStart)} ${hhmm(a.scheduledStart)}`}
                 </span>
               </div>
-              <p style={{ marginTop: 6, fontSize: 11, color: 'var(--muted)', lineHeight: 1.7 }}>
+              <p style={{ marginTop: 6, fontSize: 12, color: 'var(--muted)', lineHeight: 1.7 }}>
                 客户 {a.customerName ?? '—'}
                 {a.customerPhoneTail ? `（尾号 ${a.customerPhoneTail}）` : ''} · 原因：{a.cancelReason ?? '（未填）'}
               </p>
@@ -395,20 +424,23 @@ function DayCloseSection({ showToast }: { showToast: (m: string) => void }) {
   const actualFen = parseYuanToFen(cashText);
   const diffFen = actualFen !== null ? actualFen - bookCashFen : null;
 
+  /* 冻结确认（SkModal 弹层，代原生 confirm 弹窗；确认文案不变） */
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const submit = () => {
     if (!p) return;
     if (actualFen === null) {
       showToast('请输入正确的实点现金金额（元，最多两位小数）');
       return;
     }
-    const ok = window.confirm(
-      `确认冻结 ${p.bizDate} 全日账目？\n账面现金 ${yuan(bookCashFen)} · 实点 ${yuan(actualFen)} · 差异 ${signedYuan(actualFen - bookCashFen)}\n冻结后仅店主可反结账拆箱。`,
-    );
-    if (!ok) return;
+    setConfirmOpen(true);
+  };
+  const confirmClose = () => {
+    if (actualFen === null) return;
+    setConfirmOpen(false);
     closeM.mutate({ actualCashFen: actualFen });
   };
 
-  const dlRow: CSSProperties = { display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--muted)' };
+  const dlRow: CSSProperties = { display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--muted)' };
 
   return (
     <>
@@ -445,7 +477,7 @@ function DayCloseSection({ showToast }: { showToast: (m: string) => void }) {
             </dl>
             {p.existingFrozenCloseId ? null : (
               <div style={{ marginTop: 12, borderTop: '1px solid var(--hairline-soft)', paddingTop: 12 }}>
-                <label style={{ display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--muted)' }} htmlFor="manager-dayclose-cash">
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: 'var(--muted)' }} htmlFor="manager-dayclose-cash">
                   实点现金（元）· 账面 <span className="sk-mono">{yuan(bookCashFen)}</span>
                 </label>
                 <input
@@ -462,20 +494,36 @@ function DayCloseSection({ showToast }: { showToast: (m: string) => void }) {
                   }}
                 />
                 {diffFen !== null ? (
-                  <p className="sk-mono" style={{ marginTop: 6, fontSize: 10, fontWeight: 700, color: diffFen === 0 ? 'var(--muted)' : diffFen < 0 ? 'var(--danger)' : 'var(--ink-deep)' }}>
+                  <p className="sk-mono" style={{ marginTop: 6, fontSize: 12, fontWeight: 700, color: diffFen === 0 ? 'var(--muted)' : diffFen < 0 ? 'var(--danger)' : 'var(--ink-deep)' }}>
                     差异 {signedYuan(diffFen)}
                   </p>
                 ) : null}
                 <div style={{ marginTop: 10 }}>
-                  <SkBtnAction onClick={submit} disabled={closeM.isPending} testId="manager-dayclose-submit">
+                  <SkBtnInk onClick={submit} disabled={closeM.isPending} testId="manager-dayclose-submit">
                     {closeM.isPending ? '冻结中…' : '确认日结（冻结全日账目）'}
-                  </SkBtnAction>
+                  </SkBtnInk>
                 </div>
               </div>
             )}
           </div>
         ) : null}
       </Sec>
+      {/* 冻结确认弹层（onClose=取消） */}
+      {confirmOpen && p && actualFen !== null ? (
+        <SkModal title="确认日结" onClose={() => setConfirmOpen(false)} testId="manager-dayclose-confirm-modal">
+          <p className="mb" style={{ whiteSpace: 'pre-line' }}>
+            {`确认冻结 ${p.bizDate} 全日账目？\n账面现金 ${yuan(bookCashFen)} · 实点 ${yuan(actualFen)} · 差异 ${signedYuan(actualFen - bookCashFen)}\n冻结后仅店主可反结账拆箱。`}
+          </p>
+          <div className="acts">
+            <button type="button" className="sk-btn-ghost" onClick={() => setConfirmOpen(false)}>
+              取消
+            </button>
+            <SkBtnInk onClick={confirmClose} disabled={closeM.isPending} testId="manager-dayclose-confirm">
+              确认冻结
+            </SkBtnInk>
+          </div>
+        </SkModal>
+      ) : null}
     </>
   );
 }
@@ -519,11 +567,17 @@ function RefundSection({ showToast }: { showToast: (m: string) => void }) {
     onError: (e) => showToast(errMsg(e)),
   });
 
-  /** 实退登记：备注可填（留空按「实退完成」登记——server settleActual 口径备注必填） */
-  const settle = (refundId: string) => {
-    const note = window.prompt('实退登记备注（可填，留空按「实退完成」登记）');
-    if (note === null) return;
-    settleM.mutate({ refundId, note: note.trim() || '实退完成' });
+  /* 实退登记备注（SkModal 弹层，代原生 prompt 弹窗；备注留空按「实退完成」登记——server 口径不变） */
+  const [settleFor, setSettleFor] = useState<string | null>(null);
+  const [settleNote, setSettleNote] = useState('');
+  const openSettle = (refundId: string) => {
+    setSettleFor(refundId);
+    setSettleNote('');
+  };
+  const confirmSettle = () => {
+    if (settleFor === null) return;
+    settleM.mutate({ refundId: settleFor, note: settleNote.trim() || '实退完成' });
+    setSettleFor(null);
   };
 
   const pending = pendingQ.data ?? [];
@@ -542,33 +596,29 @@ function RefundSection({ showToast }: { showToast: (m: string) => void }) {
         <QueryState pending={pendingQ.isPending} error={pendingQ.error} empty={false} emptyText="" />
         {pending.length > 0 ? (
           <div style={{ borderRadius: 14, background: 'var(--gold-pale)', padding: 12 }}>
-            <p style={{ fontSize: 10, fontWeight: 800, color: 'var(--ink-deep)' }}>{MANAGER_COPY['manager.refund.pendingNote']}</p>
+            <p style={{ fontSize: 12, fontWeight: 800, color: 'var(--ink-deep)' }}>{MANAGER_COPY['manager.refund.pendingNote']}</p>
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
               {pending.map((r) => {
                 const overdueH = Math.max(1, Math.floor((nowMs - r.createdAt.getTime()) / 3_600_000));
                 return (
-                  <li key={r.id} style={{ padding: '10px 0', boxShadow: 'inset 0 1px 0 rgba(59, 46, 36, .08)' }} data-testid={`manager-refund-pending-${r.id}`}>
+                  <li key={r.id} style={{ padding: '10px 0', boxShadow: 'inset 0 1px 0 var(--hairline-soft)' }} data-testid={`manager-refund-pending-${r.id}`}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
                       <Chip>超 24h</Chip>
                       <span className="sk-mono" style={{ fontSize: 12.5, fontWeight: 700 }}>{r.refundNo}</span>
-                      <span style={{ fontSize: 10, color: 'var(--ink)' }}>
+                      <span style={{ fontSize: 12, color: 'var(--ink)' }}>
                         原单 <span className="sk-mono">{r.billNo}</span>
                       </span>
                     </div>
-                    <p style={{ marginTop: 4, fontSize: 10, color: 'var(--ink)' }}>
+                    <p style={{ marginTop: 4, fontSize: 12, color: 'var(--ink)' }}>
                       金额 <span className="sk-mono" style={{ fontWeight: 700, color: 'var(--danger)' }}>−{yuan(r.amountFen)}</span> · 执行{' '}
                       <span className="sk-mono">{`${mmdd(r.createdAt)} ${hhmm(r.createdAt)}`}</span> · 已超时{' '}
                       <span className="sk-mono" style={{ fontWeight: 700, color: 'var(--danger)' }}>{overdueH} 小时</span>
                     </p>
-                    <button
-                      type="button"
-                      style={{ ...GOLD_BTN, marginTop: 8, background: 'var(--card)' }}
-                      disabled={busy}
-                      onClick={() => settle(r.id)}
-                      data-testid={`manager-refund-settle-${r.id}`}
-                    >
-                      实退完成
-                    </button>
+                    <div style={{ marginTop: 8 }}>
+                      <SkBtnInk onClick={() => openSettle(r.id)} disabled={busy} testId={`manager-refund-settle-${r.id}`}>
+                        实退完成
+                      </SkBtnInk>
+                    </div>
                   </li>
                 );
               })}
@@ -577,7 +627,7 @@ function RefundSection({ showToast }: { showToast: (m: string) => void }) {
         ) : null}
 
         {/* 本店退款单（最近 20 条）：店长可办 executed 实退登记；draft 只读提示须店主（驳回权仅店主，不渲染驳回钮） */}
-        <p style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', marginTop: pending.length > 0 ? 12 : 0 }}>
+        <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', marginTop: pending.length > 0 ? 12 : 0 }}>
           {MANAGER_COPY['manager.refund.listNote']}
         </p>
         <QueryState pending={listQ.isPending} error={listQ.error} empty={rows.length === 0} emptyText={MANAGER_COPY['manager.refund.empty']} />
@@ -587,7 +637,7 @@ function RefundSection({ showToast }: { showToast: (m: string) => void }) {
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
                 <Chip>{REFUND_TYPE_LABEL[r.type] ?? r.type}</Chip>
                 <span className="sk-mono" style={{ fontSize: 12.5, fontWeight: 700 }}>{r.refundNo}</span>
-                <span style={{ fontSize: 10, color: 'var(--muted)' }}>
+                <span style={{ fontSize: 12, color: 'var(--muted)' }}>
                   原单 <span className="sk-mono">{r.billNo}</span>
                 </span>
                 <span style={{ marginLeft: 'auto' }}>
@@ -600,7 +650,7 @@ function RefundSection({ showToast }: { showToast: (m: string) => void }) {
                   </Chip>
                 </span>
               </div>
-              <p style={{ marginTop: 4, fontSize: 10, color: 'var(--muted)' }}>
+              <p style={{ marginTop: 4, fontSize: 12, color: 'var(--muted)' }}>
                 金额 <span className="sk-mono" style={{ fontWeight: 700, color: 'var(--danger)' }}>−{yuan(r.amountFen)}</span> · 退款日{' '}
                 <span className="sk-mono">{r.bizDate}</span>
                 {r.settledAt ? (
@@ -609,29 +659,46 @@ function RefundSection({ showToast }: { showToast: (m: string) => void }) {
                   </>
                 ) : null}
               </p>
-              <p style={{ marginTop: 2, fontSize: 10, color: 'var(--muted)' }}>
+              <p style={{ marginTop: 2, fontSize: 12, color: 'var(--muted)' }}>
                 原因：{r.reason} · 发起 {r.operatorName ?? '—'} · 审批 {r.approverName ?? '—'}
               </p>
               {r.status === 'draft' ? (
-                <p style={{ marginTop: 4, fontSize: 10, fontWeight: 700, color: 'var(--muted)' }}>
+                <p style={{ marginTop: 4, fontSize: 12, fontWeight: 700, color: 'var(--muted)' }}>
                   {MANAGER_COPY['manager.refund.draftNote']}
                 </p>
               ) : null}
               {r.status === 'executed' ? (
-                <button
-                  type="button"
-                  style={{ ...GOLD_BTN, marginTop: 8 }}
-                  disabled={busy}
-                  onClick={() => settle(r.id)}
-                  data-testid={`manager-refund-settle-${r.id}`}
-                >
-                  实退完成
-                </button>
+                <div style={{ marginTop: 8 }}>
+                  <SkBtnInk onClick={() => openSettle(r.id)} disabled={busy} testId={`manager-refund-settle-${r.id}`}>
+                    实退完成
+                  </SkBtnInk>
+                </div>
               ) : null}
             </li>
           ))}
         </ul>
       </Sec>
+      {/* 实退备注弹层（onClose=取消） */}
+      {settleFor !== null ? (
+        <SkModal title="实退登记备注（可填，留空按「实退完成」登记）" onClose={() => setSettleFor(null)} testId="manager-refund-settle-modal">
+          <textarea
+            className="sk-textarea"
+            style={{ marginTop: 12 }}
+            value={settleNote}
+            onChange={(e) => setSettleNote(e.target.value)}
+            placeholder="实退登记备注"
+            data-testid="manager-refund-settle-note"
+          />
+          <div className="acts">
+            <button type="button" className="sk-btn-ghost" onClick={() => setSettleFor(null)}>
+              取消
+            </button>
+            <SkBtnInk onClick={confirmSettle} disabled={busy} testId="manager-refund-settle-confirm">
+              确认
+            </SkBtnInk>
+          </div>
+        </SkModal>
+      ) : null}
     </>
   );
 }
@@ -677,14 +744,21 @@ function InventorySection({ showToast }: { showToast: (m: string) => void }) {
     onError: (e) => showToast(errMsg(e)),
   });
 
-  const reject = (countId: string) => {
-    const note = window.prompt('驳回必须填写说明（退回重盘）');
-    if (note === null) return;
-    if (!note.trim()) {
+  /* 驳回说明收集（SkModal 弹层，代原生 prompt 弹窗；说明必填口径不变） */
+  const [rejectFor, setRejectFor] = useState<string | null>(null);
+  const [rejectNote, setRejectNote] = useState('');
+  const openReject = (countId: string) => {
+    setRejectFor(countId);
+    setRejectNote('');
+  };
+  const confirmReject = () => {
+    if (rejectFor === null) return;
+    if (!rejectNote.trim()) {
       showToast('驳回必须填写说明');
       return;
     }
-    rejectM.mutate({ countId, note: note.trim() });
+    rejectM.mutate({ countId: rejectFor, note: rejectNote.trim() });
+    setRejectFor(null);
   };
 
   const counted = countedQ.data ?? [];
@@ -711,7 +785,7 @@ function InventorySection({ showToast }: { showToast: (m: string) => void }) {
               data-testid={`manager-assign-${t}`}
             >
               <span>{COUNT_TYPE_LABEL[t]}</span>
-              <span className="sk-mono" style={{ fontSize: 8.5, fontWeight: 400, color: 'var(--muted)' }}>
+              <span className="sk-mono" style={{ fontSize: 12, fontWeight: 400, color: 'var(--muted)' }}>
                 {t === 'daily' ? '单价≥100元' : t === 'weekly' ? '全量' : '盲盘'}
               </span>
             </button>
@@ -719,7 +793,7 @@ function InventorySection({ showToast }: { showToast: (m: string) => void }) {
         </div>
 
         {/* counted 确认队列 */}
-        <p style={{ marginTop: 12, fontSize: 10, fontWeight: 700, color: 'var(--muted)' }}>{MANAGER_COPY['manager.inventory.countedNote']}</p>
+        <p style={{ marginTop: 12, fontSize: 12, fontWeight: 700, color: 'var(--muted)' }}>{MANAGER_COPY['manager.inventory.countedNote']}</p>
         <QueryState pending={countedQ.isPending} error={countedQ.error} empty={counted.length === 0} emptyText={MANAGER_COPY['manager.inventory.countedEmpty']} />
         <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
           {counted.map((c) => {
@@ -729,19 +803,19 @@ function InventorySection({ showToast }: { showToast: (m: string) => void }) {
               <li key={c.id} style={{ padding: '12px 0', boxShadow: 'inset 0 1px 0 var(--hairline-soft)' }} data-testid={`manager-count-row-${c.id}`}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
                   <Chip tone="warn">{COUNT_TYPE_LABEL[c.type] ?? c.type}</Chip>
-                  <span className="sk-mono" style={{ fontSize: 9.5, color: 'var(--muted)' }}>
+                  <span className="sk-mono" style={{ fontSize: 12, color: 'var(--muted)' }}>
                     建单 {`${mmdd(c.createdAt)} ${hhmm(c.createdAt)}`} · 共 {c.items.length} 项 · 差异 {diffs.length} 项
                   </span>
                 </div>
                 {unfilled > 0 ? (
-                  <p style={{ marginTop: 4, fontSize: 10, color: 'var(--danger)' }}>有 {unfilled} 项未录入实盘，确认将被 server 拒绝</p>
+                  <p style={{ marginTop: 4, fontSize: 12, color: 'var(--danger)' }}>有 {unfilled} 项未录入实盘，确认将被 server 拒绝</p>
                 ) : null}
                 {diffs.length > 0 ? (
                   <ul style={{ listStyle: 'none', margin: '6px 0 0', padding: 0, display: 'grid', gap: 4 }}>
                     {diffs.map((it) => {
                       const d = it.actualStock! - it.systemStock;
                       return (
-                        <li key={it.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 10 }}>
+                        <li key={it.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12 }}>
                           <span style={{ minWidth: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{it.productName ?? '（商品已删）'}</span>
                           <span className="sk-mono" style={{ flex: 'none', color: 'var(--muted)' }}>
                             {it.systemStock} → {it.actualStock}
@@ -754,14 +828,14 @@ function InventorySection({ showToast }: { showToast: (m: string) => void }) {
                     })}
                   </ul>
                 ) : (
-                  <p style={{ marginTop: 4, fontSize: 10, color: 'var(--muted)' }}>账实一致，无差异</p>
+                  <p style={{ marginTop: 4, fontSize: 12, color: 'var(--muted)' }}>账实一致，无差异</p>
                 )}
                 <ApproveRejectRow
                   approveText="确认入账"
                   rejectText={MANAGER_COPY['manager.reject']}
                   busy={busy}
                   onApprove={() => confirmM.mutate(c.id)}
-                  onReject={() => reject(c.id)}
+                  onReject={() => openReject(c.id)}
                   approveTestId={`manager-count-confirm-${c.id}`}
                   rejectTestId={`manager-count-reject-${c.id}`}
                 />
@@ -771,19 +845,40 @@ function InventorySection({ showToast }: { showToast: (m: string) => void }) {
         </ul>
 
         {/* 最近已入账 */}
-        <p style={{ marginTop: 12, fontSize: 10, fontWeight: 700, color: 'var(--muted)' }}>{MANAGER_COPY['manager.sec.posted']}</p>
+        <p style={{ marginTop: 12, fontSize: 12, fontWeight: 700, color: 'var(--muted)' }}>{MANAGER_COPY['manager.sec.posted']}</p>
         <QueryState pending={postedQ.isPending} error={postedQ.error} empty={posted.length === 0} emptyText={MANAGER_COPY['manager.inventory.postedEmpty']} />
         <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
           {posted.map((c) => (
             <li key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 0', boxShadow: 'inset 0 1px 0 var(--hairline-soft)' }} data-testid={`manager-count-posted-${c.id}`}>
               <Chip tone="ok">{COUNT_TYPE_LABEL[c.type] ?? c.type}</Chip>
-              <span className="sk-mono" style={{ fontSize: 9.5, color: 'var(--muted)' }}>
+              <span className="sk-mono" style={{ fontSize: 12, color: 'var(--muted)' }}>
                 入账 {c.postedAt ? `${mmdd(c.postedAt)} ${hhmm(c.postedAt)}` : '—'} · 共 {c.items.length} 项
               </span>
             </li>
           ))}
         </ul>
       </Sec>
+      {/* 盘点驳回弹层（onClose=取消） */}
+      {rejectFor !== null ? (
+        <SkModal title="驳回必须填写说明（退回重盘）" onClose={() => setRejectFor(null)} testId="manager-count-reject-modal">
+          <textarea
+            className="sk-textarea"
+            style={{ marginTop: 12 }}
+            value={rejectNote}
+            onChange={(e) => setRejectNote(e.target.value)}
+            placeholder="驳回说明"
+            data-testid="manager-count-reject-note"
+          />
+          <div className="acts">
+            <button type="button" className="sk-btn-ghost" onClick={() => setRejectFor(null)}>
+              取消
+            </button>
+            <SkBtnInk onClick={confirmReject} disabled={busy} testId="manager-count-reject-confirm">
+              确认驳回
+            </SkBtnInk>
+          </div>
+        </SkModal>
+      ) : null}
     </>
   );
 }
@@ -810,15 +905,15 @@ function ReviewsSection() {
             <li key={r.id} style={{ padding: '10px 0', boxShadow: 'inset 0 1px 0 var(--hairline-soft)' }} data-testid={`manager-review-row-${r.id}`}>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
                 <span style={{ fontSize: 12.5, fontWeight: 800 }}>{r.staffName ?? '—'}</span>
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--danger)' }} aria-label={`${r.rating} 星`}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--danger)' }} aria-label={`${r.rating} 星`}>
                   {'★'.repeat(r.rating)}
                 </span>
                 {r.anonymous ? <Chip>匿名</Chip> : null}
-                <span className="sk-mono" style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--muted)' }}>
+                <span className="sk-mono" style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--muted)' }}>
                   {`${mmdd(r.createdAt)} ${hhmm(r.createdAt)}`}
                 </span>
               </div>
-              <p style={{ marginTop: 2, fontSize: 11, color: 'var(--muted)' }}>{r.text ?? '（未留文字）'}</p>
+              <p style={{ marginTop: 2, fontSize: 12, color: 'var(--muted)' }}>{r.text ?? '（未留文字）'}</p>
             </li>
           ))}
         </ul>
@@ -848,13 +943,13 @@ function MovementsSection({ operatorNameOf }: { operatorNameOf: (userId: string)
           {rows.map((m) => (
             <li key={m.id} style={{ padding: '10px 0', boxShadow: 'inset 0 1px 0 var(--hairline-soft)' }} data-testid={`manager-movement-row-${m.id}`}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span className="sk-mono" style={{ fontSize: 9, color: 'var(--muted)' }}>{`${mmdd(m.createdAt)} ${hhmm(m.createdAt)}`}</span>
+                <span className="sk-mono" style={{ fontSize: 12, color: 'var(--muted)' }}>{`${mmdd(m.createdAt)} ${hhmm(m.createdAt)}`}</span>
                 <span style={{ minWidth: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 12.5, fontWeight: 700 }}>{m.productName ?? '（商品已删）'}</span>
                 <span className="sk-mono" style={{ flex: 'none', fontSize: 12.5, fontWeight: 700, color: m.delta < 0 ? 'var(--danger)' : 'var(--ink-deep)' }}>
                   {m.delta > 0 ? `+${m.delta}` : `−${Math.abs(m.delta)}`}
                 </span>
               </div>
-              <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, fontSize: 10, color: 'var(--muted)' }}>
+              <div style={{ marginTop: 4, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--muted)' }}>
                 <Chip>{SOURCE_TYPE_LABEL[m.sourceType] ?? m.sourceType}</Chip>
                 <span className="sk-mono">
                   {m.beforeStock} → {m.afterStock}

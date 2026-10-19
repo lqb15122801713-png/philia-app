@@ -36,8 +36,9 @@ interface BarcodeDetectorCtor {
 }
 
 const JSQR_INTERVAL_MS = 200; // 5fps ≥ 4fps 要求
-/** 扫描框角标=淡黄点睛（v2.0 §1.1 --gold；UX-01 口径：深棕框+淡黄角标——柠檬黄已清场） */
-const BRAND = '#F2DFA6';
+/** 扫描框角标=淡黄点睛（PD-44 U5 归正 cream 正值 #F2DC8C=var(--gold-pale)，同 .sk-scanframe 角标；
+ *  UX-01 口径：深棕框+淡黄角标——柠檬黄已清场） */
+const BRAND = 'var(--gold-pale, #F2DC8C)';
 
 type CamStatus = 'starting' | 'scanning' | 'processing' | 'error';
 
@@ -227,12 +228,12 @@ export default function QrScanner({ open, onClose, onCheckedIn }: QrScannerProps
     <div className="fixed inset-0 z-[100] flex flex-col bg-black" role="dialog" aria-modal="true" aria-label="扫码核销">
       {/* 顶栏 */}
       <div className="flex items-center justify-between px-4 pt-[max(env(safe-area-inset-top),12px)]">
-        <span className="text-base font-medium text-[#FAF8F2]">扫码核销</span>
+        <span className="text-base font-medium text-canvas">扫码核销</span>
         <button
           type="button"
           onClick={handleClose}
           aria-label="关闭"
-          className="flex h-11 w-11 items-center justify-center rounded-full text-[#FAF8F2]/80 active:bg-[#FAF8F2]/10"
+          className="flex h-11 w-11 items-center justify-center rounded-full text-canvas/80 active:bg-canvas/10"
         >
           <X className="h-6 w-6" />
         </button>
@@ -248,7 +249,7 @@ export default function QrScanner({ open, onClose, onCheckedIn }: QrScannerProps
               setStatus('starting');
               void startRef.current?.();
             }}
-            className="mx-6 flex h-14 min-h-[56px] items-center justify-center gap-2 rounded-xl border border-[#FAF8F2]/30 text-base text-[#FAF8F2] active:bg-[#FAF8F2]/10"
+            className="mx-6 flex h-14 min-h-[56px] items-center justify-center gap-2 rounded-xl border border-canvas/30 text-base text-canvas active:bg-canvas/10"
           >
             <SwitchCamera className="h-5 w-5" />
             返回扫码
@@ -262,30 +263,30 @@ export default function QrScanner({ open, onClose, onCheckedIn }: QrScannerProps
 
             {status === 'error' ? (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 px-8 text-center">
-                <p className="text-base leading-relaxed text-[#FAF8F2]/90">{errorMsg}</p>
+                <p className="text-base leading-relaxed text-canvas/90">{errorMsg}</p>
                 <button
                   type="button"
                   onClick={() => void startRef.current?.()}
-                  className="flex h-14 min-h-[56px] w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-[#2E2318] text-base font-medium text-[#F6EFDD] active:bg-[#3B2E24]"
+                  className="flex h-14 min-h-[56px] w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-ink text-base font-medium text-[#F6EFDD] transition-opacity active:opacity-85"
                 >
                   <SwitchCamera className="h-5 w-5" />
                   重试摄像头
                 </button>
-                <p className="text-sm text-[#FAF8F2]/60">摄像头不可用？点底部「手动输入核销码」报 6 位码照样核销。</p>
+                <p className="text-sm text-canvas/60">摄像头不可用？点底部「手动输入核销码」报 6 位码照样核销。</p>
               </div>
             ) : (
               <>
                 {/* 中央扫描框：深棕框+淡黄角标（9-27 拍色样，照 .sk-scanframe：22px 角标 3px 淡黄描边，
                     深棕 2px 框 20 圆角；功能/解码逻辑不动） */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative h-60 w-60 rounded-[20px] border-2 border-[#3B2E24]">
+                  <div className="relative h-60 w-60 rounded-[20px] border-2 border-ink">
                     <span className="absolute -left-[3px] -top-[3px] h-[22px] w-[22px] rounded-tl-[16px] border-l-[3px] border-t-[3px]" style={{ borderColor: BRAND }} />
                     <span className="absolute -right-[3px] -top-[3px] h-[22px] w-[22px] rounded-tr-[16px] border-r-[3px] border-t-[3px]" style={{ borderColor: BRAND }} />
                     <span className="absolute -bottom-[3px] -left-[3px] h-[22px] w-[22px] rounded-bl-[16px] border-b-[3px] border-l-[3px]" style={{ borderColor: BRAND }} />
                     <span className="absolute -bottom-[3px] -right-[3px] h-[22px] w-[22px] rounded-br-[16px] border-b-[3px] border-r-[3px]" style={{ borderColor: BRAND }} />
                   </div>
                 </div>
-                <p className="absolute inset-x-0 bottom-16 text-center text-base text-[#FAF8F2]/90">
+                <p className="absolute inset-x-0 bottom-16 text-center text-base text-canvas/90">
                   {status === 'processing' ? '核销中…' : '对准客户预约码'}
                 </p>
               </>
@@ -300,7 +301,7 @@ export default function QrScanner({ open, onClose, onCheckedIn }: QrScannerProps
                 stopStream();
                 setMode('manual');
               }}
-              className="flex h-14 min-h-[56px] w-full items-center justify-center gap-2 rounded-xl border border-[#FAF8F2]/30 text-base text-[#FAF8F2] active:bg-[#FAF8F2]/10"
+              className="flex h-14 min-h-[56px] w-full items-center justify-center gap-2 rounded-xl border border-canvas/30 text-base text-canvas active:bg-canvas/10"
             >
               <Keyboard className="h-5 w-5" />
               手动输入核销码

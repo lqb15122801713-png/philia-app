@@ -16,11 +16,15 @@
  * 历史快照展开时才懒查对应月份（同一端点带 month）。
  *
  * 金额：库内 integer 分，显示一律 fenToYuan；比例 bp → %；系数 bp → 倍。
+ *
+ * PD-44 U5 脸升档：结构全走 SkPanel/SkSec/SkRows/SkRow/SkModal/SkNote（一次性
+ * 内联样式件全撤）；可读文字 ≥12px；色只取 .sk token；
+ * 主行动非 cream（重试/提交申诉=SkBtnInk，行内申诉=ghost 小 pill，三屏同款）。
  */
 
 import { getApiBase, Skeleton, uploadImage, usePhiliaClient, useToast } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type CSSProperties } from 'react';
 import { fenToYuan } from '@/components/today/utils';
 import { PAY_COPY } from '@/copy/pay';
 import { pcc } from '@/copy/payroll';
@@ -30,7 +34,16 @@ import {
   readAppealSlaHours,
   type AppealTargetKind,
 } from '@/lib/payrollPort';
-import { SkBackBar, SkBtnAction, SkNote, SkRows } from '../../components/skeleton';
+import {
+  SkBackBar,
+  SkBtnInk,
+  SkModal,
+  SkNote,
+  SkPanel,
+  SkRow,
+  SkRows,
+  SkSec,
+} from '../../components/skeleton';
 import '../../styles/skeleton.css';
 
 /* ---------------- 与 server computeMonth 载荷同构的本地类型 ---------------- */
@@ -140,38 +153,26 @@ function pickPool(p: MonthPayload): { label: string; pool: PerfPool } {
     : { label: PAY_COPY['pay.pool.frontdesk'], pool: p.performance.frontdeskPool };
 }
 
-/* ---------------- 骨架内联样（.sk 作用域 token，一次性件不新造构件） ---------------- */
+/* ---------------- 行内碎样（只取 .sk token；可读文字 ≥12px） ---------------- */
 
-const cardSt: CSSProperties = {
-  margin: '12px 22px 0',
-  background: 'var(--card)',
-  borderRadius: 18,
-  padding: '14px 16px',
-  boxShadow: '0 1px 2px rgba(42, 31, 21, .05)',
-};
-const monoSm: CSSProperties = { fontFamily: 'var(--mono)', fontSize: 9.5, color: 'var(--muted)' };
-const chipSt: CSSProperties = {
-  marginLeft: 4, borderRadius: 999, padding: '1px 6px', fontSize: 9, whiteSpace: 'nowrap',
+/** 行内 mono 注（行内次行；12px 同 .vl 档） */
+const monoNote: CSSProperties = {
+  display: 'block', marginTop: 2, fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)',
 };
 
-/** S7 分组题（12.5/800 + 右 mono 注） */
-function SecTitle({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
-  return (
-    <p style={{ margin: '16px 22px 0', display: 'flex', alignItems: 'baseline', gap: 8, fontSize: 12.5, fontWeight: 800 }}>
-      {children}
-      {aside ? <span className="sk-mono" style={{ marginLeft: 'auto', fontSize: 9.5, fontWeight: 500, color: 'var(--muted)' }}>{aside}</span> : null}
-    </p>
-  );
-}
+/** 行内小徽章（12px；bg/fg 只取 token 变量） */
+const tagSt = (bg: string, fg: string): CSSProperties => ({
+  marginLeft: 6, borderRadius: 999, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap',
+  background: bg, color: fg,
+});
 
-/** SkRows 内的空态/说明行（muted） */
-function EmptyRow({ text }: { text: string }) {
-  return (
-    <div className="row">
-      <span className="lb" style={{ color: 'var(--muted)', fontSize: 11 }}>{text}</span>
-    </div>
-  );
-}
+/** 行内申诉小钮（三屏同款：ghost 形 30 高，不占 cream 预算） */
+const rowAppealSt: CSSProperties = {
+  flex: 'none', minHeight: 30, padding: '0 12px', fontSize: 12, marginRight: 8,
+};
+
+/** SkSec 段题内右挂 mono 注（小计/季度） */
+const secAsideSt: CSSProperties = { marginLeft: 'auto', fontWeight: 500 };
 
 /* ---------------- 提成单列 ---------------- */
 
@@ -180,23 +181,23 @@ function LineRow({ line, probation }: { line: CommissionLine; probation: boolean
     <div className="row">
       <span className="lb" style={{ minWidth: 0, flex: 1 }}>
         <span style={{ display: 'block', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{line.name}</span>
-        <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
+        <span style={monoNote}>
           {line.date.slice(5)} · {PAY_COPY['pay.line.billNo']} {line.billNo}
           {line.pendingApproval ? (
-            <span style={{ ...chipSt, background: 'var(--gold-pale)', color: 'var(--ink-deep)' }}>{PAY_COPY['pay.line.pending']}</span>
+            <span style={tagSt('var(--gold-pale)', 'var(--ink-deep)')}>{PAY_COPY['pay.line.pending']}</span>
           ) : line.overwork ? (
-            <span style={{ ...chipSt, background: 'var(--gold)', color: 'var(--ink-deep)' }}>{PAY_COPY['pay.line.overwork']}</span>
+            <span style={tagSt('var(--gold)', 'var(--ink-deep)')}>{PAY_COPY['pay.line.overwork']}</span>
           ) : null}
           {probation && line.multiplierBp !== 10000 ? (
-            <span style={{ ...chipSt, background: 'var(--paper)', color: 'var(--muted)' }}>{PAY_COPY['pay.line.probation']}</span>
+            <span style={tagSt('var(--paper)', 'var(--muted)')}>{PAY_COPY['pay.line.probation']}</span>
           ) : null}
           {line.splitBp != null ? (
-            <span style={{ ...chipSt, background: 'var(--paper)', color: 'var(--ink)' }}>
+            <span style={tagSt('var(--paper)', 'var(--ink)')}>
               {pcc('prl.line.splitLead')} {bpToPct(line.splitBp)}
             </span>
           ) : null}
         </span>
-        <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
+        <span style={monoNote}>
           {PAY_COPY['pay.line.base']} {fenToYuan(line.baseFen)} × {bpToPct(line.rateBp)}
         </span>
       </span>
@@ -222,10 +223,17 @@ function Section({
   const total = lines.reduce((s, l) => s + l.amountFen, 0);
   return (
     <>
-      <SecTitle aside={<>{PAY_COPY['pay.sec.subtotal']} {fenToYuan(total)}</>}>{title}</SecTitle>
+      <SkSec>
+        <span style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+          {title}
+          <span className="sk-mono" style={secAsideSt}>{PAY_COPY['pay.sec.subtotal']} {fenToYuan(total)}</span>
+        </span>
+      </SkSec>
       <SkRows testId={testid}>
         {lines.length === 0 ? (
-          <EmptyRow text={emptyNote ?? PAY_COPY['pay.empty.default']} />
+          <div className="row">
+            <span className="lb" style={{ color: 'var(--muted)' }}>{emptyNote ?? PAY_COPY['pay.empty.default']}</span>
+          </div>
         ) : (
           lines.map((l) => <LineRow key={l.itemId} line={l} probation={probation} />)
         )}
@@ -255,12 +263,12 @@ function SnapshotRow({ period, kind, totalFen }: { period: string; kind: string;
       <span className="lb" style={{ minWidth: 0, flex: 1 }}>
         <span style={{ display: 'block', fontWeight: 700 }}>
           <span className="sk-mono">{period}</span>
-          <span style={{ marginLeft: 6, fontSize: 10, fontWeight: 400, color: 'var(--muted)' }}>
+          <span style={{ marginLeft: 6, fontSize: 12, fontWeight: 400, color: 'var(--muted)' }}>
             {kind === 'commission' ? PAY_COPY['pay.history.kind.commission'] : PAY_COPY['pay.history.kind.perf']}
           </span>
         </span>
-        <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
-          <span style={{ ...chipSt, marginLeft: 0, background: 'var(--paper)', color: 'var(--ink)' }}>{PAY_COPY['pay.history.settled']}</span>
+        <span style={monoNote}>
+          <span style={{ ...tagSt('var(--paper)', 'var(--ink)'), marginLeft: 0 }}>{PAY_COPY['pay.history.settled']}</span>
           {expandable ? '' : ` · ${PAY_COPY['pay.history.quarterTag']}`}
         </span>
       </span>
@@ -302,7 +310,7 @@ function SnapshotRow({ period, kind, totalFen }: { period: string; kind: string;
         <div className="row">{inner}</div>
       )}
       {open && expandable ? (
-        <div className="sk-mono" style={{ padding: '0 0 11px', fontSize: 9.5, color: 'var(--muted)', lineHeight: 1.8 }}>
+        <div className="sk-mono" style={{ padding: '0 0 11px', fontSize: 12, color: 'var(--muted)', lineHeight: 1.8 }}>
           {detailQuery.isPending ? (
             PAY_COPY['pay.history.loading']
           ) : detailQuery.isError || !detail ? (
@@ -324,7 +332,7 @@ function SnapshotRow({ period, kind, totalFen }: { period: string; kind: string;
   );
 }
 
-/* ---------------- 申诉弹层（reason 必填 + 附图选传 ≤3；弹层三件套之滚动锁） ---------------- */
+/* ---------------- 申诉弹层（reason 必填 + 附图选传 ≤3；SkModal=蒙层点按/Esc 取消+滚锁） ---------------- */
 
 const MAX_APPEAL_PHOTOS = 3;
 const APPEALS_KEY = ['payroll', 'myAppeals'] as const;
@@ -348,15 +356,6 @@ function AppealModal({
   const [photos, setPhotos] = useState<Array<{ url: string; thumbUrl: string }>>([]);
   const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState(false);
-
-  /* 弹层打开期间锁底层 body 滚动 */
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, []);
 
   const onFiles = async (files: FileList) => {
     const room = MAX_APPEAL_PHOTOS - photos.length;
@@ -402,78 +401,77 @@ function AppealModal({
   };
 
   return (
-    <div className="fixed inset-0 z-modal flex items-center justify-center px-6" role="dialog" aria-modal="true" aria-label={pcc('prl.appeal.title')}>
-      <button type="button" aria-label={pcc('prl.appeal.cancel')} className="absolute inset-0 bg-[rgba(44,40,34,.4)]" onClick={onClose} />
-      <div className="u1-card relative w-full max-w-sm p-4" data-testid="pay-appeal-modal">
-        <p className="text-title text-ink">{pcc('prl.appeal.title')}</p>
-        <textarea
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          rows={3}
-          maxLength={500}
-          placeholder={pcc('prl.appeal.reasonPh')}
-          data-testid="pay-appeal-reason"
-          className="u1-ring mt-2 w-full rounded-input bg-card px-3 py-2.5 text-body-sm text-ink placeholder:text-ink-placeholder"
-        />
-        {/* 附图（选传 ≤3，现场拍） */}
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          {photos.map((p) => (
-            <span key={p.url} className="relative inline-block h-12 w-16 shrink-0">
-              <img src={p.thumbUrl} alt="附图" className="h-full w-full rounded-chip object-cover" />
-              <button
-                type="button"
-                aria-label="删除这张附图"
-                onClick={() => setPhotos((prev) => prev.filter((x) => x.url !== p.url))}
-                className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[11px] text-canvas"
-              >
-                ×
-              </button>
-            </span>
-          ))}
-          {photos.length < MAX_APPEAL_PHOTOS ? (
+    <SkModal title={pcc('prl.appeal.title')} onClose={onClose} testId="pay-appeal-modal">
+      <textarea
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        rows={3}
+        maxLength={500}
+        placeholder={pcc('prl.appeal.reasonPh')}
+        data-testid="pay-appeal-reason"
+        className="sk-textarea"
+        style={{ marginTop: 10 }}
+      />
+      {/* 附图（选传 ≤3，现场拍） */}
+      <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+        {photos.map((p) => (
+          <span key={p.url} style={{ position: 'relative', display: 'inline-block', width: 64, height: 48, flex: 'none' }}>
+            <img src={p.thumbUrl} alt="附图" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 8 }} />
             <button
               type="button"
-              disabled={uploading}
-              onClick={() => fileRef.current?.click()}
-              data-testid="pay-appeal-photo-add"
-              className="flex h-12 items-center rounded-chip bg-card px-3 text-caption-xs text-[rgba(44,40,34,.42)] [border:1px_dashed_rgba(44,40,34,.25)] disabled:opacity-50"
+              aria-label="删除这张附图"
+              onClick={() => setPhotos((prev) => prev.filter((x) => x.url !== p.url))}
+              style={{
+                position: 'absolute', top: -6, right: -6, width: 22, height: 22, borderRadius: '50%',
+                background: 'var(--ink)', color: 'var(--paper)', fontSize: 12, lineHeight: 1,
+                border: 0, cursor: 'pointer', display: 'grid', placeItems: 'center',
+              }}
             >
-              {pcc('prl.appeal.photoCta', { max: MAX_APPEAL_PHOTOS })}
+              ×
             </button>
-          ) : null}
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            multiple
-            className="hidden"
-            onChange={(e) => {
-              if (e.target.files?.length) void onFiles(e.target.files);
-              e.target.value = '';
+          </span>
+        ))}
+        {photos.length < MAX_APPEAL_PHOTOS ? (
+          <button
+            type="button"
+            disabled={uploading}
+            onClick={() => fileRef.current?.click()}
+            data-testid="pay-appeal-photo-add"
+            style={{
+              height: 48, borderRadius: 8, padding: '0 12px', background: 'var(--card)',
+              border: '1px dashed var(--hairline)', color: 'var(--muted)', fontSize: 12,
+              cursor: 'pointer', fontFamily: 'inherit',
             }}
-          />
-        </div>
-        <div className="mt-3 flex gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-11 min-h-[44px] flex-1 rounded-control bg-sunken text-body-sm font-semibold text-[rgba(44,40,34,.62)]"
           >
-            {pcc('prl.appeal.cancel')}
+            {pcc('prl.appeal.photoCta', { max: MAX_APPEAL_PHOTOS })}
           </button>
-          <button
-            type="button"
-            disabled={busy || uploading}
-            onClick={() => void submit()}
-            data-testid="pay-appeal-submit"
-            className="h-11 min-h-[44px] flex-1 rounded-control bg-brand-primary text-body-sm font-semibold text-ink disabled:opacity-50"
-          >
-            {busy ? pcc('prl.appeal.submitting') : pcc('prl.appeal.submit')}
-          </button>
-        </div>
+        ) : null}
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            if (e.target.files?.length) void onFiles(e.target.files);
+            e.target.value = '';
+          }}
+        />
       </div>
-    </div>
+      <div className="acts">
+        <button type="button" className="sk-btn-ghost" onClick={onClose}>
+          {pcc('prl.appeal.cancel')}
+        </button>
+        <SkBtnInk
+          disabled={busy || uploading}
+          onClick={() => void submit()}
+          testId="pay-appeal-submit"
+        >
+          {busy ? pcc('prl.appeal.submitting') : pcc('prl.appeal.submit')}
+        </SkBtnInk>
+      </div>
+    </SkModal>
   );
 }
 
@@ -539,57 +537,61 @@ export default function PayPage() {
       {summaryQuery.isPending ? (
         <div style={{ margin: '12px 22px 0', display: 'grid', gap: 10 }} aria-label="加载中">
           {[0, 1, 2].map((i) => (
-            <div key={i} style={cardSt}>
+            <SkPanel key={i}>
               <Skeleton className="h-5 w-28 !rounded-chip" />
               <Skeleton className="mt-2 h-4 w-44 !rounded-chip" />
-            </div>
+            </SkPanel>
           ))}
         </div>
       ) : summaryQuery.isError || !data || !payload || !perf || !my ? (
-        <div style={{ ...cardSt, textAlign: 'center' }}>
-          <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>{PAY_COPY['pay.load.fail']}</p>
-          <div style={{ marginTop: 12 }}>
-            <SkBtnAction onClick={() => void summaryQuery.refetch()} testId="sk-pay-retry">
-              {PAY_COPY['pay.retry']}
-            </SkBtnAction>
+        <SkPanel>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>{PAY_COPY['pay.load.fail']}</p>
+            <div style={{ marginTop: 12 }}>
+              <SkBtnInk onClick={() => void summaryQuery.refetch()} testId="sk-pay-retry">
+                {PAY_COPY['pay.retry']}
+              </SkBtnInk>
+            </div>
           </div>
-        </div>
+        </SkPanel>
       ) : (
         <>
           {/* 大数字卡（mono 34 合计 + trio 分项） */}
-          <section style={{ ...cardSt, borderRadius: 20, padding: '18px 20px', textAlign: 'center' }} data-testid="pay-total">
-            <p className="sk-mono" style={{ fontSize: 9.5, letterSpacing: '.12em', color: 'var(--muted)' }}>
-              {PAY_COPY['pay.total.label']}
-            </p>
-            <p className="sk-mono" style={{ marginTop: 4, fontSize: 34, fontWeight: 700, letterSpacing: '.02em' }}>
-              {fenToYuan(payload.commissionTotalFen)}
-            </p>
-            {payload.probation ? (
-              <p style={{ marginTop: 4, fontSize: 10, color: 'var(--muted)' }}>{PAY_COPY['pay.probation.note']}</p>
-            ) : null}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', marginTop: 14, borderTop: '1px solid var(--hairline-soft)', paddingTop: 12 }}>
-              {trioCells.map((c, i) => (
-                <div key={c.k} style={i > 0 ? { boxShadow: 'inset 1px 0 0 var(--hairline-soft)' } : undefined}>
-                  <div className="sk-mono" style={{ fontSize: 13, fontWeight: 700 }}>{c.v}</div>
-                  <div style={{ marginTop: 2, fontSize: 10, color: 'var(--muted)' }}>{c.k}</div>
-                </div>
-              ))}
-            </div>
-            {/* 双轨注记：劳动业绩/销售业绩（快照月份无字段=不渲染） */}
-            {payload.laborTotalFen != null || payload.salesTotalFen != null ? (
-              <div style={{ marginTop: 12, borderTop: '1px solid var(--hairline-soft)', paddingTop: 10 }} data-testid="pay-dual-track">
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', fontSize: 11 }}>
-                  <span style={{ color: 'var(--muted)' }}>{pcc('prl.track.labor')}</span>
-                  <span className="sk-mono" style={{ fontWeight: 700 }}>{fenToYuan(payload.laborTotalFen ?? 0)}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 4, fontSize: 11 }}>
-                  <span style={{ color: 'var(--muted)' }}>{pcc('prl.track.sales')}</span>
-                  <span className="sk-mono" style={{ fontWeight: 700 }}>{fenToYuan(payload.salesTotalFen ?? 0)}</span>
-                </div>
-                <p style={{ ...monoSm, marginTop: 6 }}>{pcc('prl.track.note')}</p>
+          <SkPanel testId="pay-total">
+            <div style={{ textAlign: 'center' }}>
+              <p className="sk-mono" style={{ fontSize: 12, letterSpacing: '.12em', color: 'var(--muted)' }}>
+                {PAY_COPY['pay.total.label']}
+              </p>
+              <p className="sk-mono" style={{ marginTop: 4, fontSize: 34, fontWeight: 700, letterSpacing: '.02em' }}>
+                {fenToYuan(payload.commissionTotalFen)}
+              </p>
+              {payload.probation ? (
+                <p style={{ marginTop: 4, fontSize: 12, color: 'var(--muted)' }}>{PAY_COPY['pay.probation.note']}</p>
+              ) : null}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', marginTop: 14, borderTop: '1px solid var(--hairline-soft)', paddingTop: 12 }}>
+                {trioCells.map((c, i) => (
+                  <div key={c.k} style={i > 0 ? { boxShadow: 'inset 1px 0 0 var(--hairline-soft)' } : undefined}>
+                    <div className="sk-mono" style={{ fontSize: 13, fontWeight: 700 }}>{c.v}</div>
+                    <div style={{ marginTop: 2, fontSize: 12, color: 'var(--muted)' }}>{c.k}</div>
+                  </div>
+                ))}
               </div>
-            ) : null}
-          </section>
+              {/* 双轨注记：劳动业绩/销售业绩（快照月份无字段=不渲染） */}
+              {payload.laborTotalFen != null || payload.salesTotalFen != null ? (
+                <div style={{ marginTop: 12, borderTop: '1px solid var(--hairline-soft)', paddingTop: 10 }} data-testid="pay-dual-track">
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', fontSize: 12 }}>
+                    <span style={{ color: 'var(--muted)' }}>{pcc('prl.track.labor')}</span>
+                    <span className="sk-mono" style={{ fontWeight: 700 }}>{fenToYuan(payload.laborTotalFen ?? 0)}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 4, fontSize: 12 }}>
+                    <span style={{ color: 'var(--muted)' }}>{pcc('prl.track.sales')}</span>
+                    <span className="sk-mono" style={{ fontWeight: 700 }}>{fenToYuan(payload.salesTotalFen ?? 0)}</span>
+                  </div>
+                  <p style={{ ...monoNote, marginTop: 6 }}>{pcc('prl.track.note')}</p>
+                </div>
+              ) : null}
+            </div>
+          </SkPanel>
 
           {/* S7 明细：服务 / 售卡 / 商品 */}
           <Section
@@ -617,13 +619,13 @@ export default function PayPage() {
           {/* 全店提成（G4/P3 档才出；计入口径随行 label 明示） */}
           {payload.storeLines.length > 0 ? (
             <>
-              <SecTitle>{PAY_COPY['pay.sec.store']}</SecTitle>
+              <SkSec>{PAY_COPY['pay.sec.store']}</SkSec>
               <SkRows testId="pay-store">
                 {payload.storeLines.map((l) => (
                   <div className="row" key={l.kind}>
                     <span className="lb" style={{ minWidth: 0, flex: 1 }}>
                       <span style={{ display: 'block', fontWeight: 700 }}>{l.label}</span>
-                      <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
+                      <span style={monoNote}>
                         {PAY_COPY['pay.line.base']} {fenToYuan(l.baseFen)} × {bpToPct(l.rateBp)}
                       </span>
                     </span>
@@ -635,43 +637,45 @@ export default function PayPage() {
           ) : null}
 
           {/* 绩效区：当季基数/档位/系数/预估绩效，仅本人适用池（两池不并显） */}
-          <SecTitle aside={`${perf.quarter} ${PAY_COPY['pay.perf.quarterTail']}`}>{PAY_COPY['pay.sec.perf']}</SecTitle>
+          <SkSec>
+            <span style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+              {PAY_COPY['pay.sec.perf']}
+              <span className="sk-mono" style={secAsideSt}>{perf.quarter} {PAY_COPY['pay.perf.quarterTail']}</span>
+            </span>
+          </SkSec>
           <SkRows testId="pay-performance">
             {!perf.applicable ? (
-              <EmptyRow text={perf.note ?? PAY_COPY['pay.perf.na']} />
+              <div className="row">
+                <span className="lb" style={{ color: 'var(--muted)' }}>{perf.note ?? PAY_COPY['pay.perf.na']}</span>
+              </div>
             ) : (
               <>
                 <div className="row">
-                  <span className="lb" style={{ color: 'var(--muted)', fontSize: 11 }}>{my.label}</span>
+                  <span className="lb" style={{ color: 'var(--muted)' }}>{my.label}</span>
                 </div>
-                <div className="row">
-                  <span className="lb">{PAY_COPY['pay.perf.base']}</span>
-                  <span className="vl">{fenToYuan(my.pool.baseFen)}</span>
-                </div>
-                <div className="row">
-                  <span className="lb">{PAY_COPY['pay.perf.grade']}</span>
-                  <span className="vl">{perf.grade}</span>
-                </div>
-                <div className="row">
-                  <span className="lb">{PAY_COPY['pay.perf.coeff']}</span>
-                  <span className="vl">{perf.coeffBp === null ? '—' : `×${bpToCoeff(perf.coeffBp)}`}</span>
-                </div>
-                <div className="row">
-                  <span className="lb" style={{ fontSize: 11 }}>
-                    {PAY_COPY['pay.perf.estimateLead']} {bpToPct(my.pool.rateBp)} {PAY_COPY['pay.perf.estimateTail']}
-                  </span>
-                  <span className="vl">{fenToYuan(perf.payableFen)}</span>
-                </div>
-                {perf.coeffBp === null ? <EmptyRow text={PAY_COPY['pay.perf.noGrade']} /> : null}
+                <SkRow label={PAY_COPY['pay.perf.base']} value={fenToYuan(my.pool.baseFen)} />
+                <SkRow label={PAY_COPY['pay.perf.grade']} value={perf.grade} />
+                <SkRow label={PAY_COPY['pay.perf.coeff']} value={perf.coeffBp === null ? '—' : `×${bpToCoeff(perf.coeffBp)}`} />
+                <SkRow
+                  label={`${PAY_COPY['pay.perf.estimateLead']} ${bpToPct(my.pool.rateBp)} ${PAY_COPY['pay.perf.estimateTail']}`}
+                  value={fenToYuan(perf.payableFen)}
+                />
+                {perf.coeffBp === null ? (
+                  <div className="row">
+                    <span className="lb" style={{ color: 'var(--muted)' }}>{PAY_COPY['pay.perf.noGrade']}</span>
+                  </div>
+                ) : null}
               </>
             )}
           </SkRows>
 
           {/* 扣减记录（只扣绩效不扣提成；active 行行内申诉，reverted 灰态已返还） */}
-          <SecTitle>{PAY_COPY['pay.sec.deductions']}</SecTitle>
+          <SkSec>{PAY_COPY['pay.sec.deductions']}</SkSec>
           <SkRows testId="pay-deductions">
             {payload.deductions.length === 0 ? (
-              <EmptyRow text={PAY_COPY['pay.deductions.empty']} />
+              <div className="row">
+                <span className="lb" style={{ color: 'var(--muted)' }}>{PAY_COPY['pay.deductions.empty']}</span>
+              </div>
             ) : (
               payload.deductions.map((d) => {
                 const reverted = d.status === 'reverted';
@@ -681,22 +685,20 @@ export default function PayPage() {
                       <span style={{ display: 'block', fontWeight: 700 }}>
                         {d.reason}
                         {reverted ? (
-                          <span style={{ ...chipSt, background: 'var(--paper)', color: 'var(--muted)' }}>{pcc('prl.deduction.reverted')}</span>
+                          <span style={tagSt('var(--paper)', 'var(--muted)')}>{pcc('prl.deduction.reverted')}</span>
                         ) : null}
                       </span>
-                      <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
+                      <span style={monoNote}>
                         {fmtTs(d.createdAt)} · {PAY_COPY['pay.deductions.creatorLead']} {d.createdBy.slice(-6)}
                       </span>
                     </span>
                     {!reverted ? (
                       <button
                         type="button"
+                        className="sk-btn-ghost"
+                        style={rowAppealSt}
                         onClick={() => setAppealTarget({ kind: 'deduction', targetId: d.id })}
                         data-testid={`pay-appeal-${d.id}`}
-                        style={{
-                          flex: 'none', marginRight: 8, borderRadius: 999, background: 'var(--paper)',
-                          padding: '3px 10px', fontSize: 10, color: 'var(--ink)', border: 0, cursor: 'pointer',
-                        }}
                       >
                         {pcc('prl.deduction.appeal')}
                       </button>
@@ -712,19 +714,20 @@ export default function PayPage() {
           {/* 回冲与调整（refundClawbackTotalFen/adjustments；负=跨月回冲红、正=补调） */}
           {(payload.refundClawbackTotalFen ?? 0) !== 0 || (payload.adjustments?.length ?? 0) > 0 ? (
             <>
-              <SecTitle>{pcc('prl.sec.refund')}</SecTitle>
+              <SkSec>{pcc('prl.sec.refund')}</SkSec>
               <SkRows testId="pay-refunds">
                 {(payload.refundClawbackTotalFen ?? 0) !== 0 ? (
-                  <div className="row">
-                    <span className="lb" style={{ fontWeight: 700 }}>{pcc('prl.refund.row')}</span>
-                    <span className="vl red">−{fenToYuan(Math.abs(payload.refundClawbackTotalFen ?? 0))}</span>
-                  </div>
+                  <SkRow
+                    label={<span style={{ fontWeight: 700 }}>{pcc('prl.refund.row')}</span>}
+                    value={`−${fenToYuan(Math.abs(payload.refundClawbackTotalFen ?? 0))}`}
+                    tone="red"
+                  />
                 ) : null}
                 {(payload.adjustments ?? []).map((a, i) => (
                   <div className="row" key={`${a.label}-${a.sourceMonth}-${i}`}>
                     <span className="lb" style={{ minWidth: 0, flex: 1 }}>
                       <span style={{ display: 'block', fontWeight: 700 }}>{a.label}</span>
-                      <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
+                      <span style={monoNote}>
                         {pcc('prl.adjust.sourceLead')} {a.sourceMonth}
                       </span>
                     </span>
@@ -739,12 +742,14 @@ export default function PayPage() {
           ) : null}
 
           {/* 工资条（payroll.mySlip；发放=标记留痕，不碰真钱口径） */}
-          <SecTitle>{pcc('prl.sec.slip')}</SecTitle>
+          <SkSec>{pcc('prl.sec.slip')}</SkSec>
           <SkRows testId="pay-slip">
             {slipQuery.isPending ? (
               <div className="row"><span className="lb"><Skeleton className="h-4 w-40 !rounded-chip" /></span></div>
             ) : !slip ? (
-              <EmptyRow text={`${pcc('prl.slip.empty')}——${pcc('prl.slip.emptyBody')}`} />
+              <div className="row">
+                <span className="lb" style={{ color: 'var(--muted)' }}>{pcc('prl.slip.empty')}——{pcc('prl.slip.emptyBody')}</span>
+              </div>
             ) : (
               <>
                 <div className="row" style={{ display: 'block' }}>
@@ -757,31 +762,29 @@ export default function PayPage() {
                     ] as Array<[string, number]>).map(([k, v], i) => (
                       <div key={k} style={i > 0 ? { boxShadow: 'inset 1px 0 0 var(--hairline-soft)' } : undefined}>
                         <div className="sk-mono" style={{ fontSize: 12, fontWeight: 700 }}>{fenToYuan(v)}</div>
-                        <div style={{ marginTop: 2, fontSize: 9.5, color: 'var(--muted)' }}>{k}</div>
+                        <div style={{ marginTop: 2, fontSize: 12, color: 'var(--muted)' }}>{k}</div>
                       </div>
                     ))}
                   </div>
                   <div style={{ marginTop: 10, borderTop: '1px solid var(--hairline-soft)', paddingTop: 10, textAlign: 'center' }}>
-                    <span style={{ fontSize: 10, color: 'var(--muted)' }}>{pcc('prl.slip.netLabel')}</span>
+                    <span style={{ fontSize: 12, color: 'var(--muted)' }}>{pcc('prl.slip.netLabel')}</span>
                     <span className="sk-mono" style={{ marginLeft: 8, fontSize: 24, fontWeight: 700 }}>{fenToYuan(slip.netFen)}</span>
                     {slip.markedAt ? (
-                      <span style={{ ...chipSt, background: 'var(--gold-pale)', color: 'var(--ink-deep)', fontWeight: 700 }}>
+                      <span style={{ ...tagSt('var(--gold-pale)', 'var(--ink-deep)'), fontWeight: 700 }}>
                         {pcc('prl.slip.marked')} {fmtTs(slip.markedAt)}
                       </span>
                     ) : (
-                      <span style={{ ...chipSt, background: 'var(--paper)', color: 'var(--muted)' }}>{pcc('prl.slip.unmarked')}</span>
+                      <span style={tagSt('var(--paper)', 'var(--muted)')}>{pcc('prl.slip.unmarked')}</span>
                     )}
                   </div>
                 </div>
                 <div className="row" style={{ justifyContent: 'center' }}>
                   <button
                     type="button"
+                    className="sk-btn-ghost"
+                    style={{ minHeight: 30, padding: '0 14px', fontSize: 12 }}
                     onClick={() => setAppealTarget({ kind: 'slip_line', targetId: slip.id ?? slip.month })}
                     data-testid="pay-slip-appeal"
-                    style={{
-                      borderRadius: 999, background: 'var(--paper)', padding: '4px 14px',
-                      fontSize: 10.5, color: 'var(--ink)', border: 0, cursor: 'pointer',
-                    }}
                   >
                     {pcc('prl.slip.appeal')}
                   </button>
@@ -792,14 +795,18 @@ export default function PayPage() {
           <SkNote>{pcc('prl.slip.markNote')}</SkNote>
 
           {/* 我的申诉（状态/复核注/返还额透出 + 复核时限注记） */}
-          <SecTitle>{pcc('prl.sec.myAppeals')}</SecTitle>
+          <SkSec>{pcc('prl.sec.myAppeals')}</SkSec>
           <SkRows testId="pay-appeals">
             {appealsQuery.isPending ? (
               <div className="row"><span className="lb"><Skeleton className="h-4 w-40 !rounded-chip" /></span></div>
             ) : appealsQuery.isError ? (
-              <EmptyRow text={pcc('prl.appeals.loadFail')} />
+              <div className="row">
+                <span className="lb" style={{ color: 'var(--muted)' }}>{pcc('prl.appeals.loadFail')}</span>
+              </div>
             ) : appeals.length === 0 ? (
-              <EmptyRow text={pcc('prl.appeals.empty')} />
+              <div className="row">
+                <span className="lb" style={{ color: 'var(--muted)' }}>{pcc('prl.appeals.empty')}</span>
+              </div>
             ) : (
               appeals.map((a) => {
                 const targetLabel =
@@ -814,11 +821,11 @@ export default function PayPage() {
                       <span style={{ display: 'block', fontWeight: 700 }}>
                         {targetLabel}
                         <span
-                          style={{
-                            ...chipSt,
-                            background: a.status === 'approved' ? 'var(--gold-pale)' : 'var(--paper)',
-                            color: a.status === 'approved' ? 'var(--ink-deep)' : 'var(--muted)',
-                          }}
+                          style={
+                            a.status === 'approved'
+                              ? tagSt('var(--gold-pale)', 'var(--ink-deep)')
+                              : tagSt('var(--paper)', 'var(--muted)')
+                          }
                         >
                           {a.status === 'approved'
                             ? pcc('prl.appeals.statusApproved')
@@ -827,14 +834,14 @@ export default function PayPage() {
                               : pcc('prl.appeals.statusPending')}
                         </span>
                       </span>
-                      <span style={{ display: 'block', marginTop: 2, fontSize: 11, color: 'var(--ink)', fontWeight: 400 }}>{a.reason}</span>
-                      <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
+                      <span style={{ display: 'block', marginTop: 2, fontSize: 12, color: 'var(--ink)', fontWeight: 400 }}>{a.reason}</span>
+                      <span style={monoNote}>
                         <span className="sk-mono">{a.month}</span> · {fmtTs(a.createdAt)}
                         {a.reviewNote ? ` · ${pcc('prl.appeals.reviewLead')}：${a.reviewNote}` : ''}
                       </span>
                     </span>
                     {a.refundFen != null && a.refundFen > 0 ? (
-                      <span className="vl" style={{ color: 'var(--ink-deep)' }}>
+                      <span className="vl">
                         {pcc('prl.appeals.refundLead')} {fenToYuan(a.refundFen)}
                       </span>
                     ) : null}
@@ -846,10 +853,12 @@ export default function PayPage() {
           <SkNote>{pcc('prl.appeals.slaNote', { h: slaHours })}</SkNote>
 
           {/* 历史月份快照（新→旧；提成月结点展开分列明细） */}
-          <SecTitle>{PAY_COPY['pay.sec.history']}</SecTitle>
+          <SkSec>{PAY_COPY['pay.sec.history']}</SkSec>
           <SkRows testId="pay-history">
             {data.snapshots.length === 0 ? (
-              <EmptyRow text={PAY_COPY['pay.history.empty']} />
+              <div className="row">
+                <span className="lb" style={{ color: 'var(--muted)' }}>{PAY_COPY['pay.history.empty']}</span>
+              </div>
             ) : (
               data.snapshots.map((s) => (
                 <SnapshotRow key={`${s.period}-${s.kind}`} period={s.period} kind={s.kind} totalFen={s.totalFen} />

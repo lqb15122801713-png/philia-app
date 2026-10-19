@@ -41,7 +41,7 @@ export default function ManualCodeInput({ onCheckedIn }: ManualCodeInputProps) {
 
   return (
     <div className="flex w-full flex-col gap-4 px-6 pb-6">
-      <label htmlFor="manual-code" className="text-base text-[#FAF8F2]/80">
+      <label htmlFor="manual-code" className="text-base text-canvas/80">
         输入 6 位人工核销码
       </label>
       <input
@@ -63,16 +63,16 @@ export default function ManualCodeInput({ onCheckedIn }: ManualCodeInputProps) {
         maxLength={6}
         placeholder="例如 3K7M9P"
         aria-label="人工核销码"
-        className="h-14 w-full rounded-xl border-2 border-[#3B2E24] bg-[#1d1712] text-center font-mono text-2xl font-semibold tracking-[0.5em] text-[#FAF8F2] placeholder:text-[#FAF8F2]/30 focus:border-[#F2DFA6] focus:outline-none"
+        className="h-14 w-full rounded-xl border-2 border-ink bg-[#1d1712] text-center font-mono text-2xl font-semibold tracking-[0.5em] text-canvas placeholder:text-canvas/30 focus:border-brand-primary focus:outline-none"
       />
-      <p className="text-sm text-[#FAF8F2]/60">
+      <p className="text-sm text-canvas/60">
         核销码为 6 位字母数字，不含易混淆的 0/O、1/I/L；可在预约详情页查看，或按手机号核对。
       </p>
       <button
         type="button"
         onClick={() => void submit()}
         disabled={!ready || loading}
-        className="flex h-14 min-h-[56px] w-full items-center justify-center gap-2 rounded-xl bg-[#2E2318] text-base font-medium text-[#F6EFDD] transition-opacity disabled:opacity-40 active:bg-[#3B2E24]"
+        className="flex h-14 min-h-[56px] w-full items-center justify-center gap-2 rounded-xl bg-ink text-base font-medium text-[#F6EFDD] transition-opacity disabled:opacity-40 active:opacity-85"
       >
         {loading && <Loader2 className="h-5 w-5 animate-spin" />}
         {loading ? '核销中…' : '确认核销'}

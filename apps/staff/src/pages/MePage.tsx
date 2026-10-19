@@ -167,7 +167,7 @@ export default function MePage() {
           label={
             <span>
               {mc('me.row.pay')}
-              <small className="mt-0.5 block text-caption-xs text-ink-placeholder">{mc('me.row.paySub')}</small>
+              <small className="mt-0.5 block text-caption text-ink-placeholder">{mc('me.row.paySub')}</small>
             </span>
           }
           value="›"
@@ -178,7 +178,7 @@ export default function MePage() {
           label={
             <span>
               {mc('me.row.xp')}
-              <small className="mt-0.5 block text-caption-xs text-ink-placeholder">{mc('me.row.xpSub')}</small>
+              <small className="mt-0.5 block text-caption text-ink-placeholder">{mc('me.row.xpSub')}</small>
             </span>
           }
           value="›"
@@ -189,7 +189,7 @@ export default function MePage() {
           label={
             <span>
               {ME_COPY['me.myReviews']}
-              <small className="mt-0.5 block text-caption-xs text-ink-placeholder">{ME_COPY['me.myReviewsSub']}</small>
+              <small className="mt-0.5 block text-caption text-ink-placeholder">{ME_COPY['me.myReviewsSub']}</small>
             </span>
           }
           value={`${ME_COPY['me.reviewMonthLead']} ${perf.ratedCount} ${ME_COPY['me.reviewSummaryUnit']}${perf.avg !== null ? ` · ${ME_COPY['me.reviewSummaryAvg']} ${perf.avg.toFixed(1)}` : ''}`}
@@ -209,7 +209,7 @@ export default function MePage() {
             {SCHEDULE_DAYS.map(({ key, label }) => {
               const ranges = schedule?.[key] ?? [];
               return (
-                <li key={key} className={`flex items-center justify-between py-1.5 text-caption-xs ${key === todayKey ? 'font-bold text-ink' : 'text-ink-secondary'}`}>
+                <li key={key} className={`flex items-center justify-between py-1.5 text-caption ${key === todayKey ? 'font-bold text-ink' : 'text-ink-secondary'}`}>
                   <span>{label}{key === todayKey ? '（今天）' : ''}</span>
                   <span className="u1-num">{ranges.length ? ranges.map((r) => `${r.start}–${r.end}`).join(' / ') : '休'}</span>
                 </li>
@@ -217,7 +217,7 @@ export default function MePage() {
             })}
             {/* 骨架批片 2：保留就地展开（周模板只读）+ 链接进 /my-schedule（按日实例/换班/请假） */}
             <li className="pt-1">
-              <Link to="/my-schedule" data-testid="me-schedule-full" className="text-caption-xs font-bold text-ink underline underline-offset-2">
+              <Link to="/my-schedule" data-testid="me-schedule-full" className="text-caption font-bold text-ink underline underline-offset-2">
                 {sdc('sched.meFullLink')}
               </Link>
             </li>
@@ -229,7 +229,7 @@ export default function MePage() {
           label={
             <span>
               {mc('me.row.inventory')}
-              <small className="mt-0.5 block text-caption-xs text-ink-placeholder">{mc('me.row.inventorySub')}</small>
+              <small className="mt-0.5 block text-caption text-ink-placeholder">{mc('me.row.inventorySub')}</small>
             </span>
           }
           value="›"
@@ -242,7 +242,7 @@ export default function MePage() {
             label={
               <span>
                 {mc('me.row.manager')}
-                <small className="mt-0.5 block text-caption-xs text-ink-placeholder">{mc('me.row.managerSub')}</small>
+                <small className="mt-0.5 block text-caption text-ink-placeholder">{mc('me.row.managerSub')}</small>
               </span>
             }
             value={pendingApprovals > 0 ? `${pendingApprovals} 待审` : '›'}
@@ -260,21 +260,21 @@ export default function MePage() {
           label={
             <span>
               {mc('me.row.settings')}
-              <small className="mt-0.5 block text-caption-xs text-ink-placeholder">{mc('me.row.settingsSub')}</small>
+              <small className="mt-0.5 block text-caption text-ink-placeholder">{mc('me.row.settingsSub')}</small>
             </span>
           }
           value={expandKey === 'settings' ? '⌄' : '›'}
         />
         {expandKey === 'settings' ? (
-          <div className="px-1 pb-3 text-caption-xs leading-relaxed text-ink-secondary">
+          <div className="px-1 pb-3 text-caption leading-relaxed text-ink-secondary">
             <p>{ME_COPY['me.settings.sync']}</p>
-            <p className="mt-1">通知权限：{typeof Notification !== 'undefined' ? (Notification.permission === 'granted' ? '已开启' : Notification.permission === 'denied' ? '已拒绝（浏览器地址栏可改）' : '未开启') : '当前环境不支持'}</p>
+            <p className="mt-1">{ME_COPY['me.settings.notifLead']}{typeof Notification !== 'undefined' ? (Notification.permission === 'granted' ? ME_COPY['me.settings.notifOn'] : Notification.permission === 'denied' ? ME_COPY['me.settings.notifDenied'] : ME_COPY['me.settings.notifOff']) : ME_COPY['me.settings.notifUnsupported']}</p>
           </div>
         ) : null}
       </SkRows>
 
       {/* 片 3：协作入口卡区（通知/公告/心声/自检/问题上报；通知行红点=push.unreadCount） */}
-      <p className="px-1 pb-1.5 pt-3 text-caption-xs text-ink-placeholder">{mc('me.groupCollab')}</p>
+      <p className="px-1 pb-1.5 pt-3 text-caption text-ink-placeholder">{mc('me.groupCollab')}</p>
       <SkRows testId="me-list-collab">
         <SkRow
           to="/notifications"
@@ -283,7 +283,7 @@ export default function MePage() {
           label={
             <span>
               {mc('me.row.notifications')}
-              <small className="mt-0.5 block text-caption-xs text-ink-placeholder">{mc('me.row.notificationsSub')}</small>
+              <small className="mt-0.5 block text-caption text-ink-placeholder">{mc('me.row.notificationsSub')}</small>
             </span>
           }
           value={unreadTotal > 0 ? <span className="sk-mono">{unreadTotal}</span> : '›'}
@@ -294,7 +294,7 @@ export default function MePage() {
           label={
             <span>
               {mc('me.row.notices')}
-              <small className="mt-0.5 block text-caption-xs text-ink-placeholder">{mc('me.row.noticesSub')}</small>
+              <small className="mt-0.5 block text-caption text-ink-placeholder">{mc('me.row.noticesSub')}</small>
             </span>
           }
           value="›"
@@ -305,7 +305,7 @@ export default function MePage() {
           label={
             <span>
               {mc('me.row.voice')}
-              <small className="mt-0.5 block text-caption-xs text-ink-placeholder">{mc('me.row.voiceSub')}</small>
+              <small className="mt-0.5 block text-caption text-ink-placeholder">{mc('me.row.voiceSub')}</small>
             </span>
           }
           value="›"
@@ -316,7 +316,7 @@ export default function MePage() {
           label={
             <span>
               {mc('me.row.selfCheck')}
-              <small className="mt-0.5 block text-caption-xs text-ink-placeholder">{mc('me.row.selfCheckSub')}</small>
+              <small className="mt-0.5 block text-caption text-ink-placeholder">{mc('me.row.selfCheckSub')}</small>
             </span>
           }
           value="›"
@@ -327,7 +327,7 @@ export default function MePage() {
           label={
             <span>
               {mc('me.row.pdca')}
-              <small className="mt-0.5 block text-caption-xs text-ink-placeholder">{mc('me.row.pdcaSub')}</small>
+              <small className="mt-0.5 block text-caption text-ink-placeholder">{mc('me.row.pdcaSub')}</small>
             </span>
           }
           value="›"
@@ -342,13 +342,13 @@ export default function MePage() {
           label={
             <span>
               {mc('me.row.help')}
-              <small className="mt-0.5 block text-caption-xs text-ink-placeholder">{mc('me.row.helpSub')}</small>
+              <small className="mt-0.5 block text-caption text-ink-placeholder">{mc('me.row.helpSub')}</small>
             </span>
           }
           value={expandKey === 'help' ? '⌄' : '›'}
         />
         {expandKey === 'help' ? (
-          <div className="px-1 pb-3 text-caption-xs leading-relaxed text-ink-secondary">
+          <div className="px-1 pb-3 text-caption leading-relaxed text-ink-secondary">
             <p className="font-bold text-ink">{ME_COPY['me.help.specTitle']}</p>
             <p className="mt-1">{ME_COPY['me.help.specBody']}</p>
             <p className="mt-2 font-bold text-ink">{ME_COPY['me.help.flowTitle']}</p>

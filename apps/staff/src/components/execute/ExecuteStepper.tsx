@@ -8,13 +8,14 @@
  *   （已传缩略 +「＋拍照/相册」虚线槽 64×48 + 提示「过程照实时同步给家长」）；
  * - 前后对比步（第 5 步）before/after 双槽并排（各 ≥1 强校验——张数口径由页面按钮链与服务端双重保证）；
  * - 未到步 45% 透明；打标重拍步带红旗签。
- * 工艺：字阶 11/12/14 档；圆角缩略 6/操作区 14；按下 scale 0.92 duration-120 ease-philia-spring。
+ * 工艺：字阶 12/14 档（PD-44 U5：11px 档全抬 12）；圆角缩略 6/操作区 14；按下 scale 0.92 duration-120 ease-philia-spring；
+ * 角标/虚线色走 .sk 变量（var(--ink)/var(--paper)/var(--hairline)）。
  */
 
 import { useRef } from 'react';
 import { Flag } from 'lucide-react';
 import { StepNode, type ServiceStepDef } from '@philia/shared';
-import { STEP_NAME } from '../today/deck/ServiceCard';
+import { STEP_NAME } from '../today/deck/deckUtils';
 import { EXECUTE_COPY } from '@/copy/execute';
 
 export interface StepPhotoItem {
@@ -64,12 +65,18 @@ function Thumb({
         <img src={photo.url} alt={photo.tagLabel ?? '过程照'} loading="lazy" className={`h-full w-full object-cover ${photo.uploading ? 'animate-pulse opacity-80' : ''}`} />
       </button>
       {photo.tagLabel ? (
-        <span className="pointer-events-none absolute left-0.5 top-0.5 rounded-chip bg-[rgba(44,40,34,.72)] px-1 py-px text-[11px] text-[#FAF7F0]">
+        <span
+          className="pointer-events-none absolute left-0.5 top-0.5 rounded-chip px-1 py-px text-[12px]"
+          style={{ background: 'var(--ink)', color: 'var(--paper)' }}
+        >
           {photo.tagLabel}
         </span>
       ) : null}
       {photo.uploading ? (
-        <span className="pointer-events-none absolute right-0.5 top-0.5 rounded-chip bg-[rgba(44,40,34,.72)] px-1 py-px text-[11px] text-[#FAF7F0]">
+        <span
+          className="pointer-events-none absolute right-0.5 top-0.5 rounded-chip px-1 py-px text-[12px]"
+          style={{ background: 'var(--ink)', color: 'var(--paper)' }}
+        >
           上传中
         </span>
       ) : null}
@@ -78,7 +85,8 @@ function Thumb({
           type="button"
           aria-label="删除这张照片"
           onClick={() => onDelete(photo.serverId!)}
-          className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[11px] text-[#FAF7F0] transition-transform duration-120 ease-philia-spring active:scale-92"
+          className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full transition-transform duration-120 ease-philia-spring active:scale-92"
+          style={{ background: 'var(--ink)', color: 'var(--paper)', fontSize: 12 }}
         >
           ×
         </button>
@@ -97,7 +105,8 @@ function AddSlot({ onFiles, disabled }: { onFiles: (files: FileList) => void; di
         disabled={disabled}
         onClick={() => inputRef.current?.click()}
         data-testid="step-add-photo"
-        className="flex h-12 w-16 shrink-0 flex-col items-center justify-center rounded-chip bg-card text-caption-xs leading-tight text-ink-placeholder [border:1px_dashed_rgba(44,40,34,.25)] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+        className="flex h-12 w-16 shrink-0 flex-col items-center justify-center rounded-chip bg-card text-caption leading-tight text-ink-placeholder transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+        style={{ border: '1px dashed var(--hairline)' }}
       >
         <b className="text-title font-normal leading-none">＋</b>
         拍照/相册
@@ -145,9 +154,19 @@ function DualSlot({
           className="relative block h-16 w-full overflow-hidden rounded-chip bg-sunken transition-transform duration-120 ease-philia-spring active:scale-92"
         >
           <img src={slot.url} alt={label} className={`h-full w-full object-cover ${slot.uploading ? 'animate-pulse opacity-80' : ''}`} />
-          <span className="absolute left-1 top-1 rounded-chip bg-[rgba(44,40,34,.72)] px-1.5 py-px text-[11px] text-[#FAF7F0]">{label}</span>
+          <span
+            className="absolute left-1 top-1 rounded-chip px-1.5 py-px text-[12px]"
+            style={{ background: 'var(--ink)', color: 'var(--paper)' }}
+          >
+            {label}
+          </span>
           {slot.uploading ? (
-            <span className="absolute right-1 top-1 rounded-chip bg-[rgba(44,40,34,.72)] px-1.5 py-px text-[11px] text-[#FAF7F0]">上传中</span>
+            <span
+              className="absolute right-1 top-1 rounded-chip px-1.5 py-px text-[12px]"
+              style={{ background: 'var(--ink)', color: 'var(--paper)' }}
+            >
+              上传中
+            </span>
           ) : null}
         </button>
       ) : (
@@ -156,7 +175,8 @@ function DualSlot({
           data-testid={testid}
           disabled={readOnly}
           onClick={() => inputRef.current?.click()}
-          className="flex h-16 w-full items-center justify-center rounded-chip bg-card text-caption-xs text-ink-placeholder [border:1px_dashed_rgba(44,40,34,.25)] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+          className="flex h-16 w-full items-center justify-center rounded-chip bg-card text-caption text-ink-placeholder transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+          style={{ border: '1px dashed var(--hairline)' }}
         >
           {label} 待拍
         </button>
@@ -190,7 +210,7 @@ export default function ExecuteStepper({
   onPhotoTap: (url: string) => void;
 }) {
   return (
-    <ol className="flex flex-col px-[18px] pb-5 pt-4" data-testid="execute-stepper">
+    <ol className="flex flex-col px-[22px] pb-5 pt-4" data-testid="execute-stepper">
       {rows.map((row, idx) => {
         const { def, status, flagged } = row;
         const name = STEP_NAME[def.stepKey] ?? def.name;
@@ -222,9 +242,9 @@ export default function ExecuteStepper({
             <div className="min-w-0 flex-1">
               <p className={`flex items-center gap-2 text-body-sm font-bold ${status === 'done' ? 'text-ink-secondary' : 'text-ink'}`}>
                 {name}
-                <span className="u1-num text-caption-xs font-medium text-ink-placeholder">{req}</span>
+                <span className="u1-num text-caption font-medium text-ink-placeholder">{req}</span>
                 {flagged ? (
-                  <span className="flex items-center gap-1 rounded-chip bg-danger-light px-1.5 py-px text-caption-xs font-bold text-danger-deep">
+                  <span className="flex items-center gap-1 rounded-chip bg-danger-light px-1.5 py-px text-caption font-bold text-danger-deep">
                     <Flag className="h-3 w-3" strokeWidth={2} />
                     待重拍
                   </span>
@@ -233,7 +253,7 @@ export default function ExecuteStepper({
 
               {status === 'done' ? (
                 <>
-                  <p className="mt-0.5 text-caption-xs text-ink-secondary">
+                  <p className="mt-0.5 text-caption text-ink-secondary">
                     {row.doneAt ? (
                       <>
                         <span className="u1-num whitespace-nowrap">{fmtHM(row.doneAt)}</span> 完成 ·{' '}
@@ -260,9 +280,9 @@ export default function ExecuteStepper({
               {status === 'active' ? (
                 <>
                   {isConfirm ? (
-                    <p className="mt-0.5 text-caption-xs text-ink-secondary">确认后预约完成 · 家长收到通知</p>
+                    <p className="mt-0.5 text-caption text-ink-secondary">确认后预约完成 · 家长收到通知</p>
                   ) : (
-                    <p className="mt-0.5 text-caption-xs text-ink-secondary">
+                    <p className="mt-0.5 text-caption text-ink-secondary">
                       已传 <span className="u1-num">{row.serverCount}/{def.minPhotos}</span> 张
                       {lack > 0 ? (
                         <>
@@ -291,9 +311,9 @@ export default function ExecuteStepper({
                           ) : null}
                         </div>
                       )}
-                      <p className="mt-2 text-caption-xs text-ink-secondary">过程照实时同步给家长（服务中全程页）</p>
+                      <p className="mt-2 text-caption text-ink-secondary">过程照实时同步给家长（服务中全程页）</p>
                       {/* 片 3 B5-2：拍照只许现场拍（诚实口径注记：服务端校验拍摄时刻，不吹「防住」） */}
-                      <p className="mt-1 text-caption-xs text-ink-placeholder">{EXECUTE_COPY['exec.photo.onsiteNote']}</p>
+                      <p className="mt-1 text-caption text-ink-placeholder">{EXECUTE_COPY['exec.photo.onsiteNote']}</p>
                     </div>
                   ) : null}
                 </>
@@ -301,7 +321,7 @@ export default function ExecuteStepper({
 
               {status === 'locked' ? (
                 <>
-                  <p className="mt-0.5 text-caption-xs text-ink-secondary">
+                  <p className="mt-0.5 text-caption text-ink-secondary">
                     {isConfirm ? (
                       '确认后预约完成 · 家长收到通知'
                     ) : isBA ? (
@@ -315,10 +335,16 @@ export default function ExecuteStepper({
                   {/* 试样构图：locked 前后对比步也画出双槽（随父级 45% 透明；纯展示不挂交互） */}
                   {isBA ? (
                     <div className="mt-2 flex gap-1.5" aria-hidden>
-                      <span className="flex h-16 flex-1 items-center justify-center rounded-chip bg-card text-caption-xs text-ink-placeholder [border:1px_dashed_rgba(44,40,34,.25)]">
+                      <span
+                        className="flex h-16 flex-1 items-center justify-center rounded-chip bg-card text-caption text-ink-placeholder"
+                        style={{ border: '1px dashed var(--hairline)' }}
+                      >
                         before 待拍
                       </span>
-                      <span className="flex h-16 flex-1 items-center justify-center rounded-chip bg-card text-caption-xs text-ink-placeholder [border:1px_dashed_rgba(44,40,34,.25)]">
+                      <span
+                        className="flex h-16 flex-1 items-center justify-center rounded-chip bg-card text-caption text-ink-placeholder"
+                        style={{ border: '1px dashed var(--hairline)' }}
+                      >
                         after 待拍
                       </span>
                     </div>

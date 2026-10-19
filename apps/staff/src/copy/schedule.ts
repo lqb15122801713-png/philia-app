@@ -31,6 +31,8 @@ const SCHEDULE_COPY_TABLE = {
   'sched.avail.invalid': '请选择周日并填对起止时间',
   'sched.avail.empty': '还没有填过可用时间',
   'sched.avail.notePh': '备注（可空，如 只能晚班）',
+  'sched.avail.start': '开始时间',
+  'sched.avail.end': '结束时间',
 
   /* ---- 请假/调休 ---- */
   'sched.leave.title': '请假 / 调休申请',

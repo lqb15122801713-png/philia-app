@@ -61,10 +61,11 @@ const STATUS_LABEL: Record<ReportVitalStatus, string> = {
   abnormal: EXECUTE_COPY['exec.report.status.abnormal'],
 };
 
-/** chip 选中态色（全走 preset token：normal=success 族 / attention=淡金提示底 / abnormal=danger 族） */
+/** chip 选中态色（全走 preset token：normal=success 族 / attention=淡金提示底 / abnormal=danger 族）；
+ *  PD-44 U5：触控高 36→44（h-11） */
 function chipClass(status: ReportVitalStatus, selected: boolean): string {
   const base =
-    'flex h-9 items-center rounded-full border px-3.5 text-body-sm transition-transform duration-120 ease-philia-spring active:scale-92';
+    'flex h-11 items-center rounded-full border px-3.5 text-body-sm transition-transform duration-120 ease-philia-spring active:scale-92';
   if (!selected) return `${base} border-line bg-card text-ink-secondary`;
   switch (status) {
     case 'normal':
@@ -92,7 +93,7 @@ export default function ReportCard({
     onChange({ ...draft, vitals: { ...draft.vitals, [key]: { ...draft.vitals[key], ...patch } } });
 
   return (
-    <section className="u1-card p-4" data-testid="exec-report-card">
+    <section className="sk-panel" data-testid="exec-report-card">
       <h2 className="text-title">{EXECUTE_COPY['exec.report.title']}</h2>
       <p className="mt-1 text-caption text-ink-secondary">{EXECUTE_COPY['exec.report.delivery']}</p>
 
@@ -133,7 +134,7 @@ export default function ReportCard({
                 data-testid={`exec-report-note-${key}`}
                 onChange={(e) => patchVital(key, { note: e.target.value.slice(0, 200) })}
                 placeholder={EXECUTE_COPY['exec.report.note.placeholder']}
-                className="mt-2 h-staff-btn w-full rounded-control border border-line bg-canvas px-3 text-body-sm text-ink placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none disabled:opacity-50"
+                className="sk-input mt-2 disabled:opacity-50"
               />
             ) : null}
           </div>
@@ -150,7 +151,8 @@ export default function ReportCard({
           onChange={(e) => onChange({ ...draft, nextAdvice: e.target.value.slice(0, 500) })}
           placeholder={EXECUTE_COPY['exec.report.advice.placeholder']}
           rows={2}
-          className="mt-1.5 w-full rounded-control border border-line bg-canvas px-3 py-2.5 text-body-sm text-ink placeholder:text-ink-placeholder focus:border-brand-primary focus:outline-none disabled:opacity-50"
+          className="sk-textarea mt-1.5 disabled:opacity-50"
+          style={{ minHeight: 64 }}
         />
       </label>
     </section>

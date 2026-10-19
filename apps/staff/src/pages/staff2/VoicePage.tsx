@@ -12,7 +12,7 @@
 import { getApiBase, Skeleton, uploadImage, usePhiliaClient, useToast } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useRef, useState } from 'react';
-import { SkBackBar, SkEmpty, SkNote } from '@/components/skeleton';
+import { SkBackBar, SkBtnInk, SkEmpty, SkNote } from '@/components/skeleton';
 import { vcc } from '@/copy/voice';
 import { collabOf, fmtMdHm, readVoiceSlaHours, type VoiceTicket } from '@/lib/collabPort';
 
@@ -102,10 +102,10 @@ export default function VoicePage() {
 
       {/* 提交单 */}
       <section className="mt-3" data-testid="voice-form">
-        <h2 className="px-[22px] pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">{vcc('vce.formTitle')}</h2>
+        <h2 className="px-[22px] pb-1.5 text-caption font-bold tracking-[.08em] text-ink-placeholder">{vcc('vce.formTitle')}</h2>
         <div className="px-[22px]">
           <div className="u1-card p-4">
-            <p className="text-caption-xs text-[rgba(59,46,36,.62)]">{vcc('vce.formAside')}</p>
+            <p className="text-caption text-ink-secondary">{vcc('vce.formAside')}</p>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -113,7 +113,7 @@ export default function VoicePage() {
               maxLength={500}
               placeholder={vcc('vce.descPh')}
               data-testid="voice-desc"
-              className="u1-ring mt-2 w-full rounded-input bg-card px-3 py-2.5 text-body-sm text-ink placeholder:text-ink-placeholder"
+              className="sk-textarea mt-2 placeholder:text-ink-placeholder"
             />
             {/* 附图（选传 ≤3，现场拍） */}
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
@@ -124,7 +124,8 @@ export default function VoicePage() {
                     type="button"
                     aria-label="删除这张附图"
                     onClick={() => setPhotos((prev) => prev.filter((x) => x.url !== p.url))}
-                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[11px] text-[#FAF8F2] transition-transform duration-120 ease-philia-spring active:scale-92"
+                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[12px] transition-transform duration-120 ease-philia-spring active:scale-92"
+                    style={{ color: 'var(--paper)' }}
                   >
                     ×
                   </button>
@@ -136,7 +137,8 @@ export default function VoicePage() {
                   disabled={uploading}
                   onClick={() => fileRef.current?.click()}
                   data-testid="voice-photo-add"
-                  className="flex h-12 items-center rounded-chip bg-card px-3 text-caption-xs text-[rgba(59,46,36,.42)] [border:1px_dashed_rgba(59,46,36,.25)] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+                  className="flex h-12 items-center rounded-chip bg-card px-3 text-caption text-ink-placeholder transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+                  style={{ border: '1px dashed var(--hairline)' }}
                 >
                   {vcc('vce.photoCta', { max: MAX_PHOTOS })}
                 </button>
@@ -160,17 +162,13 @@ export default function VoicePage() {
               maxLength={20}
               placeholder={vcc('vce.phonePh')}
               data-testid="voice-phone"
-              className="u1-ring mt-2 h-12 min-h-[44px] w-full rounded-input bg-card px-3 text-body-sm text-ink placeholder:text-ink-placeholder"
+              className="sk-input mt-2 placeholder:text-ink-placeholder"
             />
-            <button
-              type="button"
-              disabled={busy || uploading}
-              onClick={() => void submit()}
-              data-testid="voice-submit"
-              className="mt-2.5 h-12 min-h-[44px] w-full rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
-            >
-              {busy ? vcc('vce.submitting') : vcc('vce.submit')}
-            </button>
+            <div className="mt-2.5">
+              <SkBtnInk onClick={() => void submit()} disabled={busy || uploading} testId="voice-submit">
+                {busy ? vcc('vce.submitting') : vcc('vce.submit')}
+              </SkBtnInk>
+            </div>
           </div>
         </div>
         <SkNote>{vcc('vce.slaNote', { h: slaHours })}</SkNote>
@@ -178,7 +176,7 @@ export default function VoicePage() {
 
       {/* 我的心声列表 */}
       <section className="mt-4" data-testid="voice-list">
-        <h2 className="px-[22px] pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">{vcc('vce.myList')}</h2>
+        <h2 className="px-[22px] pb-1.5 text-caption font-bold tracking-[.08em] text-ink-placeholder">{vcc('vce.myList')}</h2>
         <div className="px-[22px]">
           {listQ.isPending ? (
             <div className="space-y-2.5" aria-label="加载中">
@@ -203,13 +201,13 @@ export default function VoicePage() {
             tickets.map((t) => (
               <div key={t.id} className="u1-card mb-2 px-4 py-3" data-testid={`voice-row-${t.id}`}>
                 <div className="flex items-center gap-2">
-                  <span className="sk-mono text-caption-xs text-[rgba(59,46,36,.42)]">{t.ticketNo}</span>
+                  <span className="sk-mono text-caption text-ink-placeholder">{t.ticketNo}</span>
                   <span
-                    className={`ml-auto rounded-chip px-1.5 py-px text-caption-xs font-bold ${
+                    className={`ml-auto rounded-chip px-1.5 py-px text-caption font-bold ${
                       t.status === 'replied'
                         ? 'bg-success-light text-success-deep'
                         : t.status === 'closed'
-                          ? 'bg-sunken text-[rgba(59,46,36,.42)]'
+                          ? 'bg-sunken text-ink-placeholder'
                           : 'bg-brand-primary-light text-ink'
                     }`}
                   >
@@ -225,12 +223,12 @@ export default function VoicePage() {
                   </div>
                 ) : null}
                 {t.replyText ? (
-                  <p className="mt-2 rounded-chip bg-canvas px-2.5 py-2 text-caption-xs text-[rgba(59,46,36,.62)]">
+                  <p className="mt-2 rounded-chip bg-canvas px-2.5 py-2 text-caption text-ink-secondary">
                     <b className="text-ink">{vcc('vce.replyLead')}：</b>
                     {t.replyText}
                   </p>
                 ) : null}
-                <div className="sk-mono mt-1.5 text-caption-xs text-[rgba(59,46,36,.42)]">{fmtMdHm(t.createdAt)}</div>
+                <div className="sk-mono mt-1.5 text-caption text-ink-placeholder">{fmtMdHm(t.createdAt)}</div>
               </div>
             ))
           )}

@@ -2,7 +2,7 @@
  * 员工端登录页 /dev-login（批次 U2 任务 H · 试样屏 1 换肤；骨架批片 1 S-00 重排）
  *
  * S-00 骨架（UX 语言包 V1.1 §三）：主视觉槽 → wordmark → serif 宣言（刷底强调=cream，
- * inline linear-gradient(transparent 62%, #F2DC8C 62%)）→ G2 主钮（SkBtnAction cream）→
+ * linear-gradient(transparent 62%, var(--gold-pale) 62%)）→ G2 主钮（SkBtnAction cream）→
  * 账号行 ×2 → 口令行 → 协议小字。cream=宣言刷底+主钮=2 处封顶；无 dock。
  * ⚠️ 内测现实：登录链路=dev-login 种子用户（服务端仅允许 seed_ 前缀）——cream 主钮
  * 落到真实账号选择区（手机号登录上线前等价物，不造假）；口令钮展开内测口令门
@@ -141,7 +141,7 @@ export default function DevLoginPage() {
         <h1 className="u1-serif mt-3 text-v2-screen">
           {LOGIN_COPY['login.manifesto.line1']}
           <br />
-          <span style={{ background: 'linear-gradient(transparent 62%, #F2DC8C 62%)' }}>
+          <span style={{ background: 'linear-gradient(transparent 62%, var(--gold-pale) 62%)' }}>
             {LOGIN_COPY['login.manifesto.line2']}
           </span>
         </h1>
@@ -149,8 +149,8 @@ export default function DevLoginPage() {
           {LOGIN_COPY['login.storeLine']}
         </p>
         <div className="mt-[18px] flex justify-center gap-2">
-          <span className="u1-ring rounded-full bg-card px-3 py-1.5 text-caption-xs font-semibold text-ink-secondary">{LOGIN_COPY['login.role.frontdesk']}</span>
-          <span className="u1-ring rounded-full bg-card px-3 py-1.5 text-caption-xs font-semibold text-ink-secondary">{LOGIN_COPY['login.role.groomer']}</span>
+          <span className="u1-ring rounded-full bg-card px-3 py-1.5 text-caption font-semibold text-ink-secondary">{LOGIN_COPY['login.role.frontdesk']}</span>
+          <span className="u1-ring rounded-full bg-card px-3 py-1.5 text-caption font-semibold text-ink-secondary">{LOGIN_COPY['login.role.groomer']}</span>
         </div>
       </div>
 
@@ -170,7 +170,7 @@ export default function DevLoginPage() {
           <p className="text-body-sm">
             {LOGIN_COPY['login.loggedIn.lead']}：<span className="font-semibold">{user.nickname ?? user.id}</span>
           </p>
-          <p className="mt-1 text-caption-xs text-ink-secondary">角色：{user.roles.join(' / ')}</p>
+          <p className="mt-1 text-caption text-ink-secondary">角色：{user.roles.join(' / ')}</p>
           <div className="mt-3 flex gap-2">
             <button
               type="button"
@@ -217,7 +217,7 @@ export default function DevLoginPage() {
                 >
                   <span>
                     <span className="block text-body-sm font-semibold">{u.nickname}</span>
-                    <span className="block text-caption-xs text-ink-secondary">{roleLabel(u.roles)}</span>
+                    <span className="block text-caption text-ink-secondary">{roleLabel(u.roles)}</span>
                   </span>
                   <span className="text-caption text-ink-secondary">
                     {pendingId === u.id ? '登录中…' : '登录 ›'}
@@ -227,7 +227,7 @@ export default function DevLoginPage() {
             ))}
           </ul>
         ) : (
-          <p className="mt-2.5 rounded-control bg-danger-light px-4 py-3 text-caption-xs text-danger-deep">
+          <p className="mt-2.5 rounded-control bg-danger-light px-4 py-3 text-caption text-danger-deep">
             {seedsError
               ? LOGIN_COPY['login.seed.loadFailed'].replace('{error}', seedsError)
               : LOGIN_COPY['login.seed.empty']}
@@ -256,7 +256,7 @@ export default function DevLoginPage() {
           <p className="mt-3 rounded-control bg-danger-light px-4 py-3 text-caption text-danger-deep">{error}</p>
         ) : null}
 
-        <p className="mt-5 text-caption-xs leading-relaxed text-ink-placeholder">
+        <p className="mt-5 text-caption leading-relaxed text-ink-placeholder">
           {LOGIN_COPY['login.seed.tip']}
         </p>
       </div>
@@ -275,7 +275,7 @@ export default function DevLoginPage() {
       {gateOpen || (gateRequired && seeds === null) ? (
         <div className="u1-card mx-8 mt-4 p-4" data-testid="gate-panel">
           <p className="text-body-sm font-semibold">{LOGIN_COPY['login.gate.title']}</p>
-          <p className="mt-1 text-caption-xs text-ink-secondary">{LOGIN_COPY['login.gate.hint']}</p>
+          <p className="mt-1 text-caption text-ink-secondary">{LOGIN_COPY['login.gate.hint']}</p>
           <div className="mt-2.5 flex gap-2">
             <Input
               type="password"
@@ -296,12 +296,12 @@ export default function DevLoginPage() {
               确认
             </button>
           </div>
-          {gateError ? <p className="mt-2 text-caption-xs text-danger-deep">{gateError}</p> : null}
+          {gateError ? <p className="mt-2 text-caption text-danger-deep">{gateError}</p> : null}
         </div>
       ) : null}
 
       {/* 6. 协议小字 */}
-      <p className="mt-4 text-center text-caption-xs leading-relaxed text-ink-placeholder">
+      <p className="mt-4 text-center text-caption leading-relaxed text-ink-placeholder">
         {LOGIN_COPY['login.agreement']}
       </p>
     </div>
