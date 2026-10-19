@@ -27,7 +27,8 @@ const LOGIN_COPY_TABLE = {
   'login.gate.required': '需先输入内测口令',
 
   /* ---- 骨架批片 1（S-00 重排）：主钮/次级口令行/已登录态（原码内硬编码收键） ---- */
-  'login.primaryCta': '手机号一键登录',
+  /* PD-44 U5：主钮文案对齐真实行为（滚动落账号选择区），不冒充手机号一键登录 */
+  'login.primaryCta': '选择员工账号登录',
   'login.gateEntry': '口令入内测',
   'login.loggedIn.lead': '当前已登录',
   'login.loggedIn.enter': '进入任务台',

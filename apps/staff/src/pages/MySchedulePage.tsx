@@ -14,7 +14,7 @@
 import { Skeleton, usePhiliaClient, useToast } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { SkBackBar, SkChips, SkEmpty, SkRow, SkRows } from '@/components/skeleton';
+import { SkBackBar, SkBtnInk, SkChips, SkEmpty, SkRow, SkRows } from '@/components/skeleton';
 import { weekdayLabel } from '@/components/today/utils';
 import { sdc } from '@/copy/schedule';
 import {
@@ -211,7 +211,7 @@ export default function MySchedulePage() {
             {sdc('sched.myweek.next')}
           </button>
           <span
-            className={`ml-auto rounded-chip px-1.5 py-0.5 text-caption-xs font-bold ${
+            className={`ml-auto rounded-chip px-1.5 py-0.5 text-caption font-bold ${
               weekPublished ? 'bg-success-light text-success-deep' : 'bg-brand-primary-light text-ink'
             }`}
           >
@@ -232,7 +232,7 @@ export default function MySchedulePage() {
               <button
                 type="button"
                 onClick={() => void weekQuery.refetch()}
-                className="mt-4 h-12 min-h-[44px] min-w-[160px] rounded-control bg-brand-primary px-8 text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
+                className="sk-btn-ghost mt-4 min-w-[160px]"
               >
                 {sdc('sched.common.retry')}
               </button>
@@ -244,11 +244,11 @@ export default function MySchedulePage() {
               const rows = (dayMap.get(d) ?? []).sort((a, b) => a.startMin - b.startMin);
               return (
                 <div key={d} className="u1-card mb-2 px-4 py-3" data-testid={`mysched-day-${d}`}>
-                  <div className="text-caption-xs text-[rgba(59,46,36,.62)]">
+                  <div className="text-caption text-ink-secondary">
                     <span className="sk-mono">{d.slice(5)}</span> {weekdayLabel(new Date(`${d}T00:00:00`))}
                   </div>
                   {rows.length === 0 ? (
-                    <div className="mt-1 text-caption-xs text-[rgba(59,46,36,.42)]">{sdc('sched.week.rest')}</div>
+                    <div className="mt-1 text-caption text-ink-placeholder">{sdc('sched.week.rest')}</div>
                   ) : (
                     rows.map((a) => {
                       const mine = a.staffId === myStaffId;
@@ -257,7 +257,7 @@ export default function MySchedulePage() {
                           key={a.id}
                           data-testid={mine ? `mysched-shift-${a.id}` : undefined}
                           className={`mt-1.5 flex items-center gap-2 rounded-chip px-2 py-1.5 text-caption ${
-                            mine ? 'bg-brand-primary-light font-semibold text-ink' : 'text-[rgba(59,46,36,.62)]'
+                            mine ? 'bg-brand-primary-light font-semibold text-ink' : 'text-ink-secondary'
                           }`}
                         >
                           <span className="sk-mono">
@@ -265,7 +265,7 @@ export default function MySchedulePage() {
                           </span>
                           <span>{mine ? `${a.staffName}（${sdc('sched.week.mine')}）` : a.staffName}</span>
                           {!a.published ? (
-                            <span className="ml-auto text-caption-xs text-[rgba(59,46,36,.42)]">{sdc('sched.myweek.draft')}</span>
+                            <span className="ml-auto text-caption text-ink-placeholder">{sdc('sched.myweek.draft')}</span>
                           ) : null}
                         </div>
                       );
@@ -281,19 +281,19 @@ export default function MySchedulePage() {
       {/* 换班发起（我的班次卡 → 选接手员工 + 理由） */}
       {myAssignments.length > 0 ? (
         <section className="mt-4" data-testid="mysched-swap">
-          <h2 className="px-[22px] pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">{sdc('sched.swap.cta')}</h2>
+          <h2 className="px-[22px] pb-1.5 text-caption font-bold tracking-[.08em] text-ink-placeholder">{sdc('sched.swap.cta')}</h2>
           <div className="px-[22px]">
             {myAssignments.map((a) => (
               <div key={a.id} className="u1-card mb-2 px-4 py-3">
                 <div className="flex items-center gap-2 text-caption">
                   <span className="sk-mono font-bold text-ink">{a.date.slice(5)}</span>
                   <span>{weekdayLabel(new Date(`${a.date}T00:00:00`))}</span>
-                  <span className="sk-mono text-[rgba(59,46,36,.62)]">
+                  <span className="sk-mono text-ink-secondary">
                     {minToHm(a.startMin)}–{minToHm(a.endMin)}
                   </span>
                   <button
                     type="button"
-                    className="ml-auto text-caption font-bold text-ink"
+                    className="ml-auto inline-flex min-h-[44px] items-center text-caption font-bold text-ink"
                     data-testid={`mysched-swap-open-${a.id}`}
                     onClick={() => setSwapFor((v) => (v === a.id ? null : a.id))}
                   >
@@ -301,13 +301,13 @@ export default function MySchedulePage() {
                   </button>
                 </div>
                 {swapFor === a.id ? (
-                  <div className="mt-2.5 border-t border-[rgba(59,46,36,.06)] pt-2.5">
+                  <div className="mt-2.5 border-t border-line pt-2.5">
                     <select
                       value={swapTarget}
                       onChange={(e) => setSwapTarget(e.target.value)}
                       aria-label={sdc('sched.swap.pickTarget')}
                       data-testid={`mysched-swap-target-${a.id}`}
-                      className="u1-ring h-12 min-h-[44px] w-full rounded-input bg-card px-3 text-body-sm text-ink"
+                      className="sk-select"
                     >
                       <option value="">{sdc('sched.swap.openPool')}</option>
                       {colleagues.map((c) => (
@@ -323,17 +323,17 @@ export default function MySchedulePage() {
                       maxLength={200}
                       placeholder={sdc('sched.swap.reasonPh')}
                       data-testid={`mysched-swap-reason-${a.id}`}
-                      className="u1-ring mt-2 w-full rounded-input bg-card px-3 py-2.5 text-body-sm text-ink placeholder:text-ink-placeholder"
+                      className="sk-textarea mt-2 placeholder:text-ink-placeholder"
                     />
-                    <button
-                      type="button"
-                      disabled={swapBusy}
-                      onClick={() => void submitSwap()}
-                      data-testid={`mysched-swap-submit-${a.id}`}
-                      className="mt-2 h-12 min-h-[44px] w-full rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
-                    >
-                      {sdc('sched.swap.submitCta')}
-                    </button>
+                    <div className="mt-2">
+                      <SkBtnInk
+                        disabled={swapBusy}
+                        onClick={() => void submitSwap()}
+                        testId={`mysched-swap-submit-${a.id}`}
+                      >
+                        {sdc('sched.swap.submitCta')}
+                      </SkBtnInk>
+                    </div>
                   </div>
                 ) : null}
               </div>
@@ -344,42 +344,42 @@ export default function MySchedulePage() {
 
       {/* 可用时间维护（周日×时段 chips 编辑器 + 既有列表） */}
       <section className="mt-4" data-testid="mysched-avail">
-        <h2 className="px-[22px] pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">{sdc('sched.avail.title')}</h2>
+        <h2 className="px-[22px] pb-1.5 text-caption font-bold tracking-[.08em] text-ink-placeholder">{sdc('sched.avail.title')}</h2>
         <div className="px-[22px]">
           <div className="u1-card p-4">
-            <p className="text-caption-xs text-[rgba(59,46,36,.62)]">{sdc('sched.avail.aside')}</p>
+            <p className="text-caption text-ink-secondary">{sdc('sched.avail.aside')}</p>
             <div className="mt-2">
               <SkChips testId="mysched-avail-day" value={avWeekday} onChange={setAvWeekday} options={WEEKDAY_OPTIONS} />
             </div>
             <div className="mt-2 flex items-center gap-2">
-              <input type="time" value={avStart} onChange={(e) => setAvStart(e.target.value)} aria-label="开始" data-testid="mysched-avail-start"
-                className="u1-ring h-12 min-h-[44px] flex-1 rounded-input bg-card px-3 text-body-sm text-ink" />
-              <input type="time" value={avEnd} onChange={(e) => setAvEnd(e.target.value)} aria-label="结束" data-testid="mysched-avail-end"
-                className="u1-ring h-12 min-h-[44px] flex-1 rounded-input bg-card px-3 text-body-sm text-ink" />
+              <input type="time" value={avStart} onChange={(e) => setAvStart(e.target.value)} aria-label={sdc('sched.avail.start')} data-testid="mysched-avail-start"
+                className="sk-input flex-1" />
+              <input type="time" value={avEnd} onChange={(e) => setAvEnd(e.target.value)} aria-label={sdc('sched.avail.end')} data-testid="mysched-avail-end"
+                className="sk-input flex-1" />
             </div>
             <input
               value={avNote}
               onChange={(e) => setAvNote(e.target.value)}
               placeholder={sdc('sched.avail.notePh')}
               data-testid="mysched-avail-note"
-              className="u1-ring mt-2 h-12 min-h-[44px] w-full rounded-input bg-card px-3 text-body-sm text-ink placeholder:text-ink-placeholder"
+              className="sk-input mt-2 placeholder:text-ink-placeholder"
             />
-            <button
-              type="button"
-              disabled={avBusy}
-              onClick={() => void saveAvailability()}
-              data-testid="mysched-avail-save"
-              className="mt-2.5 h-12 min-h-[44px] w-full rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
-            >
-              {sdc('sched.avail.saveCta')}
-            </button>
+            <div className="mt-2.5">
+              <SkBtnInk
+                disabled={avBusy}
+                onClick={() => void saveAvailability()}
+                testId="mysched-avail-save"
+              >
+                {sdc('sched.avail.saveCta')}
+              </SkBtnInk>
+            </div>
           </div>
           {availQuery.isPending ? (
             <div className="mt-2" aria-label="加载中">
               <Skeleton className="u1-card h-12 !rounded-panel" />
             </div>
           ) : availRows.length === 0 ? (
-            <p className="mt-2 text-caption-xs text-[rgba(59,46,36,.42)]">{sdc('sched.avail.empty')}</p>
+            <p className="mt-2 text-caption text-ink-placeholder">{sdc('sched.avail.empty')}</p>
           ) : (
             <SkRows testId="mysched-avail-list">
               {availRows.map((r) => (
@@ -401,7 +401,7 @@ export default function MySchedulePage() {
 
       {/* 请假/调休申请 + 我的申请列表 */}
       <section className="mt-4" data-testid="mysched-leave">
-        <h2 className="px-[22px] pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">{sdc('sched.leave.title')}</h2>
+        <h2 className="px-[22px] pb-1.5 text-caption font-bold tracking-[.08em] text-ink-placeholder">{sdc('sched.leave.title')}</h2>
         <div className="px-[22px]">
           <div className="u1-card p-4">
             <SkChips
@@ -415,9 +415,9 @@ export default function MySchedulePage() {
             />
             <div className="mt-2 flex items-center gap-2">
               <input type="date" value={lvStart} onChange={(e) => setLvStart(e.target.value)} aria-label={sdc('sched.leave.start')} data-testid="mysched-leave-start"
-                className="u1-ring h-12 min-h-[44px] flex-1 rounded-input bg-card px-3 text-body-sm text-ink" />
+                className="sk-input flex-1" />
               <input type="date" value={lvEnd} onChange={(e) => setLvEnd(e.target.value)} aria-label={sdc('sched.leave.end')} data-testid="mysched-leave-end"
-                className="u1-ring h-12 min-h-[44px] flex-1 rounded-input bg-card px-3 text-body-sm text-ink" />
+                className="sk-input flex-1" />
             </div>
             <textarea
               value={lvReason}
@@ -426,20 +426,20 @@ export default function MySchedulePage() {
               maxLength={200}
               placeholder={sdc('sched.leave.reasonPh')}
               data-testid="mysched-leave-reason"
-              className="u1-ring mt-2 w-full rounded-input bg-card px-3 py-2.5 text-body-sm text-ink placeholder:text-ink-placeholder"
+              className="sk-textarea mt-2 placeholder:text-ink-placeholder"
             />
-            <button
-              type="button"
-              disabled={lvBusy}
-              onClick={() => void submitLeave()}
-              data-testid="mysched-leave-submit"
-              className="mt-2.5 h-12 min-h-[44px] w-full rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
-            >
-              {lvBusy ? sdc('sched.leave.submitting') : sdc('sched.leave.submitCta')}
-            </button>
+            <div className="mt-2.5">
+              <SkBtnInk
+                disabled={lvBusy}
+                onClick={() => void submitLeave()}
+                testId="mysched-leave-submit"
+              >
+                {lvBusy ? sdc('sched.leave.submitting') : sdc('sched.leave.submitCta')}
+              </SkBtnInk>
+            </div>
           </div>
 
-          <h3 className="pb-1.5 pt-3 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">{sdc('sched.leave.myList')}</h3>
+          <h3 className="pb-1.5 pt-3 text-caption font-bold tracking-[.08em] text-ink-placeholder">{sdc('sched.leave.myList')}</h3>
           {leavesQuery.isPending ? (
             <div aria-label="加载中">
               <Skeleton className="u1-card h-12 !rounded-panel" />
@@ -456,7 +456,7 @@ export default function MySchedulePage() {
                   label={
                     <span>
                       {l.kind === 'comp_off' ? sdc('sched.leave.kindCompOff') : sdc('sched.leave.kindLeave')}
-                      <small className="mt-0.5 block text-caption-xs text-[rgba(59,46,36,.42)]">
+                      <small className="mt-0.5 block text-caption text-ink-placeholder">
                         <span className="sk-mono">{l.startDate}</span> ~ <span className="sk-mono">{l.endDate}</span> · {l.reason}
                         {l.status === 'rejected' && l.decideNote ? ` · ${l.decideNote}` : ''}
                       </small>
@@ -478,7 +478,7 @@ export default function MySchedulePage() {
 
       {/* 调休余额（大字 + 流水 SkRows） */}
       <section className="mt-4" data-testid="mysched-comp">
-        <h2 className="px-[22px] pb-1.5 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">{sdc('sched.comp.title')}</h2>
+        <h2 className="px-[22px] pb-1.5 text-caption font-bold tracking-[.08em] text-ink-placeholder">{sdc('sched.comp.title')}</h2>
         <div className="px-[22px]">
           <div className="u1-card p-4 text-center">
             {compQuery.isPending ? (
@@ -489,7 +489,7 @@ export default function MySchedulePage() {
               </div>
             )}
           </div>
-          <h3 className="pb-1.5 pt-3 text-caption font-bold tracking-[.08em] text-[rgba(59,46,36,.42)]">{sdc('sched.comp.entries')}</h3>
+          <h3 className="pb-1.5 pt-3 text-caption font-bold tracking-[.08em] text-ink-placeholder">{sdc('sched.comp.entries')}</h3>
           {compQuery.isPending ? (
             <div aria-label="加载中">
               <Skeleton className="u1-card h-12 !rounded-panel" />

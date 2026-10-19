@@ -64,6 +64,16 @@ const BUS_QUERY_KEY = ['staffTask', 'listMy'] as const;
 const TASK_TODAY_KEY = ['taskExec', 'listToday'] as const;
 const UNREAD_QUERY_KEY = ['push', 'unreadCount'] as const;
 
+/* 六步短标（Ready §3 Stepdots6 短标口径；Workcard 六列窄格用，全称见 SchedulePage 全展） */
+const STEP_SHORT: Record<string, string> = {
+  disinfection: '消毒',
+  precheck: '预检',
+  grooming: '洗护',
+  detail: '精修',
+  before_after: '交付',
+  confirm: '完成',
+};
+
 export default function TodayPage() {
   const navigate = useNavigate();
   const { user, loading } = useMe();
@@ -246,12 +256,14 @@ export default function TodayPage() {
   }, [staffPublicQ.data]);
 
   // 六步三态（在途=serviceStep 真数据推导；待开始=冻结六步全 future）
+  // U5：Workcard stepgrid 用短标（Ready §3 Stepdots6 短标口径，六列窄格不折行）；
+  // 全展六步表仍走 SERVICE_STEPS 全称（SchedulePage oplist），两档并存不冲突。
   const workSteps = useMemo((): SkStep[] => {
     return SERVICE_STEPS.map((def) => {
       const rec = inServiceItem ? stepsQ.data?.find((s) => s.stepKey === def.stepKey) : undefined;
       const state: SkStep['state'] =
         rec?.status === 'done' ? 'done' : rec?.status === 'active' ? 'now' : 'future';
-      return { key: def.stepKey, name: def.name, state };
+      return { key: def.stepKey, name: STEP_SHORT[def.stepKey] ?? def.name, state };
     });
   }, [inServiceItem, stepsQ.data]);
   const doneCount = workSteps.filter((s) => s.state === 'done').length;
@@ -348,7 +360,7 @@ export default function TodayPage() {
             </SkBtnAction>
           </div>
           {bindError ? (
-            <p className="mt-2 text-caption-xs font-semibold text-danger-deep" data-testid="bind-code-error">
+            <p className="mt-2 text-caption font-semibold text-danger-deep" data-testid="bind-code-error">
               {bindError}
             </p>
           ) : null}
@@ -519,13 +531,13 @@ export default function TodayPage() {
                         <div className={`text-body-sm ${done ? 'text-ink-secondary line-through' : 'font-semibold text-ink'}`}>
                           {r.title}
                         </div>
-                        <div className="mt-0.5 text-caption-xs text-ink-placeholder">
+                        <div className="mt-0.5 text-caption text-ink-placeholder">
                           <span className="sk-mono">{ttc('ttd.due', { hm: minToHm(r.dueMin) })}</span>
                           {r.detail ? ` · ${r.detail}` : ''}
                         </div>
                       </div>
                       {done ? (
-                        <span className="shrink-0 rounded-chip bg-success-light px-1.5 py-px text-caption-xs font-bold text-success-deep">
+                        <span className="shrink-0 rounded-chip bg-success-light px-1.5 py-px text-caption font-bold text-success-deep">
                           {doneAt ? ttc('ttd.doneAt', { hm: `${String(doneAt.getHours()).padStart(2, '0')}:${String(doneAt.getMinutes()).padStart(2, '0')}` }) : ttc('ttd.statusDone')}
                         </span>
                       ) : (

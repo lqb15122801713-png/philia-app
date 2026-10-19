@@ -12,7 +12,7 @@
 import { getApiBase, Skeleton, uploadImage, usePhiliaClient, useToast } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useRef, useState } from 'react';
-import { SkBackBar, SkEmpty, SkNote } from '@/components/skeleton';
+import { SkBackBar, SkBtnInk, SkEmpty, SkNote } from '@/components/skeleton';
 import { scc } from '@/copy/selfcheck';
 import { collabOf, type SelfCheckRun } from '@/lib/collabPort';
 
@@ -141,7 +141,7 @@ export default function SelfCheckPage() {
               <p className="sk-mono mt-1 text-[28px] font-bold leading-9 text-ink" data-testid="sck-score">
                 {scc('sck.score', { score: todayRun.score })}
               </p>
-              <span className="mt-1 inline-block rounded-chip bg-brand-primary-light px-1.5 py-px text-caption-xs font-bold text-ink" data-testid="sck-audit">
+              <span className="mt-1 inline-block rounded-chip bg-brand-primary-light px-1.5 py-px text-caption font-bold text-ink" data-testid="sck-audit">
                 {auditLabel(todayRun)}
               </span>
             </div>
@@ -151,9 +151,9 @@ export default function SelfCheckPage() {
                 return (
                   <div key={it.key} className="u1-card flex items-center gap-2 px-4 py-3" data-testid={`sck-ro-${it.key}`}>
                     <span className="min-w-0 flex-1 text-body-sm text-ink">{it.label}</span>
-                    {r?.note ? <span className="text-caption-xs text-[rgba(59,46,36,.42)]">{r.note}</span> : null}
+                    {r?.note ? <span className="text-caption text-ink-placeholder">{r.note}</span> : null}
                     <span
-                      className={`shrink-0 rounded-chip px-1.5 py-px text-caption-xs font-bold ${
+                      className={`shrink-0 rounded-chip px-1.5 py-px text-caption font-bold ${
                         r?.pass ? 'bg-success-light text-success-deep' : 'bg-danger-light text-danger-deep'
                       }`}
                     >
@@ -181,7 +181,7 @@ export default function SelfCheckPage() {
                         data-testid={`sck-pass-${it.key}`}
                         onClick={() => patch(it.key, { pass: true })}
                         className={`h-9 rounded-chip px-3 text-caption font-bold transition-transform duration-120 ease-philia-spring active:scale-92 ${
-                          d.pass === true ? 'bg-success-light text-success-deep' : 'bg-sunken text-[rgba(59,46,36,.62)]'
+                          d.pass === true ? 'bg-success-light text-success-deep' : 'bg-sunken text-ink-secondary'
                         }`}
                       >
                         {scc('sck.pass')}
@@ -192,7 +192,7 @@ export default function SelfCheckPage() {
                         data-testid={`sck-fail-${it.key}`}
                         onClick={() => patch(it.key, { pass: false })}
                         className={`h-9 rounded-chip px-3 text-caption font-bold transition-transform duration-120 ease-philia-spring active:scale-92 ${
-                          d.pass === false ? 'bg-danger-light text-danger-deep' : 'bg-sunken text-[rgba(59,46,36,.62)]'
+                          d.pass === false ? 'bg-danger-light text-danger-deep' : 'bg-sunken text-ink-secondary'
                         }`}
                       >
                         {scc('sck.fail')}
@@ -207,7 +207,8 @@ export default function SelfCheckPage() {
                           fileRef.current?.click();
                         }}
                         data-testid={`sck-photo-${it.key}`}
-                        className="flex h-9 items-center rounded-chip bg-card px-3 text-caption-xs text-[rgba(59,46,36,.42)] [border:1px_dashed_rgba(59,46,36,.25)] transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+                        className="flex h-9 items-center rounded-chip bg-card px-3 text-caption text-ink-placeholder transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
+                        style={{ border: '1px dashed var(--hairline)' }}
                       >
                         {d.photoUrl ? scc('sck.photoOn') : scc('sck.photoCta')}
                       </button>
@@ -217,22 +218,18 @@ export default function SelfCheckPage() {
                         maxLength={100}
                         placeholder={scc('sck.notePh')}
                         data-testid={`sck-note-${it.key}`}
-                        className="u1-ring h-9 min-w-0 flex-1 rounded-input bg-card px-3 text-caption text-ink placeholder:text-ink-placeholder"
+                        className="sk-input min-w-0 flex-1 placeholder:text-ink-placeholder"
                       />
                     </div>
                   </div>
                 );
               })}
             </div>
-            <button
-              type="button"
-              disabled={busy || uploading || unmarked > 0}
-              onClick={() => void submit()}
-              data-testid="sck-submit"
-              className="mt-3 h-12 min-h-[44px] w-full rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-50"
-            >
-              {busy ? scc('sck.submitting') : unmarked > 0 ? scc('sck.unmarked', { n: unmarked }) : scc('sck.submit')}
-            </button>
+            <div className="mt-3">
+              <SkBtnInk onClick={() => void submit()} disabled={busy || uploading || unmarked > 0} testId="sck-submit">
+                {busy ? scc('sck.submitting') : unmarked > 0 ? scc('sck.unmarked', { n: unmarked }) : scc('sck.submit')}
+              </SkBtnInk>
+            </div>
           </>
         )}
       </div>

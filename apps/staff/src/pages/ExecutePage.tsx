@@ -61,8 +61,9 @@ import ReportCard, {
   type ReportVitalStatus,
 } from '../components/execute/ReportCard'
 import ExecuteStepper, { type ExecuteStepRow, type StepPhotoItem } from '../components/execute/ExecuteStepper'
-import PageHeader from '../components/PageHeader'
-import { STEP_NAME } from '../components/today/deck/ServiceCard'
+import { SkBackBar, SkBtnInk, SkModal } from '../components/skeleton'
+import '../styles/skeleton.css'
+import { STEP_NAME } from '../components/today/deck/deckUtils'
 import { EXECUTE_COPY } from '@/copy/execute'
 
 const CLIENT_ID_KEY = 'philia.sseClientId'
@@ -379,17 +380,8 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
     },
   })
 
-  /* ---------------- 删除照片（二次确认 → deletePhoto） ---------------- */
+  /* ---------------- 删除照片（二次确认 → deletePhoto；弹层=SkModal，蒙层/Esc 取消+滚锁随件） ---------------- */
   const [deleteTarget, setDeleteTarget] = useState<{ photoId: string; stepKey: string } | null>(null)
-  /* 弹层三件套之滚动锁：确认层打开期间锁底层 body（§4.5；遮罩可点已在 JSX） */
-  useEffect(() => {
-    if (!deleteTarget) return
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = prev
-    }
-  }, [deleteTarget])
   const deletePhotoMutation = useMutation({
     mutationFn: (t: { photoId: string; stepKey: string }) =>
       trpc.serviceStep.deletePhoto.mutate({
@@ -445,7 +437,7 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
   if (!appt || !steps) {
     // 加载 >300ms 骨架（禁转圈，动效纲领 §四.2）
     return (
-      <div className="px-[18px] pt-3">
+      <div className="px-[22px] pt-3">
         <div className="flex items-center gap-2.5">
           <Skeleton className="h-9 w-9 !rounded-full" />
           <Skeleton className="h-6 w-24 !rounded-chip" />
@@ -644,18 +636,22 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
   const staffName = user?.nickname ?? null
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-canvas">
-      <PageHeader title="服务执行" aside={`${pet?.name ?? '宠物'} · ${service?.name ?? '服务'}`} backTo="/today" />
+    <div className="sk flex min-h-[100dvh] flex-col">
+      {/* U5：PageHeader→SkBackBar（二级页制=backbar，fallback=/today；右注=宠物·服务） */}
+      <SkBackBar title="服务执行" note={`${pet?.name ?? '宠物'} · ${service?.name ?? '服务'}`} fallback="/today" />
 
-      {/* 摘要卡（试样 .ex-sum；页边距按 §八 效率密度收紧档 18）：
-          头像卡其环（无头像=E-补1 字圈：浅木底+衬线首字，与 MePage/deck 头像环同族）+ 服务中 livetag 同族签 +
+      {/* 摘要卡（U5=sk-panel 白卡 18/边距 22）：
+          头像环（无头像=字圈：浅木底+衬线首字，与 MePage/deck 头像环同族）+ 服务中 livetag 同族签 +
           服务·时刻(mono)·员工 + 右 N/6 mono；本屏淡黄预算=active 步圆+吸底主钮=2 */}
-      <section className="u1-card mx-[18px] mt-1.5 flex items-center gap-3.5 p-3.5" data-testid="execute-summary">
-        <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-sunken shadow-[0_0_0_2px_#FFFFFF,0_0_0_3.5px_#A89779]">
+      <section className="sk-panel" style={{ display: 'flex', alignItems: 'center', gap: 14 }} data-testid="execute-summary">
+        <span
+          className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-sunken"
+          style={{ boxShadow: '0 0 0 2px var(--card), 0 0 0 3.5px var(--muted)' }}
+        >
           {pet?.avatarUrl ? (
             <img src={pet.avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
           ) : (
-            <span className="flex h-full w-full items-center justify-center rounded-full bg-oak-light" aria-hidden>
+            <span className="flex h-full w-full items-center justify-center rounded-full bg-sunken" aria-hidden>
               <span className="u1-serif text-title font-semibold text-ink">{(pet?.name ?? '宠').slice(0, 1)}</span>
             </span>
           )}
@@ -663,9 +659,14 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-2 text-body-lg font-bold">
             {pet?.name ?? '宠物'}
-            <span className="rounded-chip bg-ink px-1.5 py-px text-caption-xs font-bold text-brand-primary">服务中</span>
+            <span
+              className="rounded-chip px-1.5 py-px text-caption font-bold"
+              style={{ background: 'var(--ink)', color: 'var(--gold-pale)' }}
+            >
+              服务中
+            </span>
           </p>
-          <p className="mt-1 text-caption-xs text-ink-secondary">
+          <p className="mt-1 text-caption text-ink-secondary">
             {service?.name ?? '服务'} ·{' '}
             <span className="u1-num whitespace-nowrap">
               {fmtHM(appointment.scheduledStart)}–{fmtHM(appointment.scheduledEnd)}
@@ -673,7 +674,7 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
             {staffName ? ` · ${staffName}` : ''}
           </p>
           {pendingAllCount > 0 ? (
-            <p className="mt-0.5 text-caption-xs text-ink-secondary">
+            <p className="mt-0.5 text-caption text-ink-secondary">
               <span className="u1-num">{pendingAllCount}</span> 张照片上传中…
             </p>
           ) : null}
@@ -681,44 +682,47 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
         <div className="shrink-0 text-center">
           <p className="u1-num text-title font-bold">
             {activeRow?.def.stepOrder ?? 6}
-            <span className="text-caption-xs text-ink-placeholder">/6</span>
+            <span className="text-caption text-ink-placeholder">/6</span>
           </p>
-          <p className="text-caption-xs text-ink-placeholder">当前步</p>
+          <p className="text-caption text-ink-placeholder">当前步</p>
         </div>
       </section>
 
       {flaggedNames.length > 0 && <FlaggedBanner stepNames={flaggedNames} />}
 
-      {/* 片 3 B5-3：草稿恢复条（继续上次填写 / 一键丢弃；暂存仅本机明面注记） */}
+      {/* 片 3 B5-3：草稿恢复条（继续上次填写 / 一键丢弃；暂存仅本机明面注记；
+          U5：恢复钮 cream→SkBtnInk，本屏 cream 预算=active 步圆+吸底主钮） */}
       {pendingDraft ? (
-        <div className="u1-card mx-[18px] mt-2 p-3" data-testid="exec-draft-banner">
+        <div className="sk-panel" data-testid="exec-draft-banner">
           <p className="text-caption text-ink">
             {EXECUTE_COPY['exec.draft.banner'].replace('{time}', fmtHM(new Date(pendingDraft.savedAt)))}
           </p>
-          <p className="mt-0.5 text-caption-xs text-ink-placeholder">{EXECUTE_COPY['exec.draft.localNote']}</p>
+          <p className="mt-0.5 text-caption text-ink-placeholder">{EXECUTE_COPY['exec.draft.localNote']}</p>
           <div className="mt-2 flex gap-2">
-            <button
-              type="button"
-              data-testid="exec-draft-restore"
-              onClick={() => {
-                setReportDraft(fieldsToReport(pendingDraft.fields))
-                setPendingDraft(null)
-              }}
-              className="h-10 min-h-[44px] flex-1 rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
-            >
-              {EXECUTE_COPY['exec.draft.restore']}
-            </button>
-            <button
-              type="button"
-              data-testid="exec-draft-discard"
-              onClick={() => {
-                clearDraft(aid)
-                setPendingDraft(null)
-              }}
-              className="h-10 min-h-[44px] flex-1 rounded-control bg-sunken text-body-sm text-ink-secondary transition-transform duration-120 ease-philia-spring active:scale-92"
-            >
-              {EXECUTE_COPY['exec.draft.discard']}
-            </button>
+            <span className="flex-1">
+              <SkBtnInk
+                testId="exec-draft-restore"
+                onClick={() => {
+                  setReportDraft(fieldsToReport(pendingDraft.fields))
+                  setPendingDraft(null)
+                }}
+              >
+                {EXECUTE_COPY['exec.draft.restore']}
+              </SkBtnInk>
+            </span>
+            <span className="flex-1">
+              <button
+                type="button"
+                data-testid="exec-draft-discard"
+                onClick={() => {
+                  clearDraft(aid)
+                  setPendingDraft(null)
+                }}
+                className="sk-btn-ghost w-full"
+              >
+                {EXECUTE_COPY['exec.draft.discard']}
+              </button>
+            </span>
           </div>
         </div>
       ) : null}
@@ -739,7 +743,7 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
         {/* 补缺大批片 4：第六步 active 时照片区下方附加「美容报告卡」（完成确认主流程不动，
             报告随吸底主钮 confirmStep 同事务提交；未动不传参=server 缺省口径） */}
         {activeRow?.def.stepKey === 'confirm' ? (
-          <div className="px-[18px] pb-5">
+          <div className="pb-5">
             <ReportCard
               draft={reportDraft}
               weightKg={pet?.weightKg}
@@ -750,9 +754,9 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
         ) : null}
       </div>
 
-      {/* 吸底淡金主钮（文案随态；主钮 h≥56 员工端硬性要求；顶部 hairline） */}
+      {/* 吸底淡金主钮（=本屏「此刻要做」，cream 保留；主钮 h≥56 员工端硬性要求；顶部 hairline；边距 22） */}
       {activeRow ? (
-        <div className="sticky bottom-0 bg-card px-[18px] pb-[calc(14px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-1px_0_rgba(44,40,34,.06)]">
+        <div className="sticky bottom-0 bg-card px-[22px] pb-[calc(14px+env(safe-area-inset-bottom))] pt-3 shadow-[0_-1px_0_rgba(44,40,34,.06)]">
           <button
             type="button"
             data-testid="execute-primary"
@@ -765,37 +769,40 @@ function ExecutePageCore({ appointmentId }: { appointmentId: string }) {
             {primaryText}
           </button>
           {primarySub ? (
-            <p className="mt-1.5 text-center text-caption-xs text-ink-placeholder">{primarySub}</p>
+            <p className="mt-1.5 text-center text-caption text-ink-placeholder">{primarySub}</p>
           ) : null}
         </div>
       ) : null}
 
-      {/* 删除照片二次确认弹层（动效纲领 §四.1 危险动作二次确认） */}
+      {/* 删除照片二次确认弹层（动效纲领 §四.1 危险动作二次确认；U5=SkModal 工艺，
+          蒙层点按/Esc=取消、滚锁随件，行为不变） */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-modal flex items-center justify-center px-8" role="dialog" aria-modal="true" aria-label="删除这张照片？">
-          <button type="button" aria-label="取消" className="absolute inset-0 bg-[rgba(44,40,34,.4)]" onClick={() => setDeleteTarget(null)} />
-          <div className="u1-card relative w-full max-w-xs p-4">
-            <p className="text-title text-ink">删除这张照片？</p>
-            <p className="mt-2 text-body-sm text-ink-secondary">删除后不可恢复，如影响步骤照片数下限需补拍。</p>
-            <div className="mt-5 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setDeleteTarget(null)}
-                className="h-11 flex-1 rounded-control bg-sunken text-body-sm text-ink-secondary transition-transform duration-120 ease-philia-spring active:scale-92"
-              >
-                再想想
-              </button>
-              <button
-                type="button"
-                disabled={deletePhotoMutation.isPending}
-                onClick={() => deletePhotoMutation.mutate(deleteTarget)}
-                className="h-11 flex-1 rounded-control bg-danger text-body-sm font-semibold text-destructive-foreground transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
-              >
-                {deletePhotoMutation.isPending ? '删除中…' : '确认删除'}
-              </button>
-            </div>
+        <SkModal title="删除这张照片？" onClose={() => setDeleteTarget(null)} testId="exec-delete-confirm">
+          <p className="mb">删除后不可恢复，如影响步骤照片数下限需补拍。</p>
+          <div className="acts">
+            <button
+              type="button"
+              onClick={() => setDeleteTarget(null)}
+              className="sk-btn-ghost"
+              style={{ width: '100%' }}
+            >
+              再想想
+            </button>
+            <button
+              type="button"
+              disabled={deletePhotoMutation.isPending}
+              onClick={() => deletePhotoMutation.mutate(deleteTarget)}
+              style={{
+                minHeight: 44, width: '100%', border: 0, borderRadius: 999, cursor: 'pointer',
+                background: 'var(--danger)', color: 'var(--card)',
+                font: 'inherit', fontSize: 13, fontWeight: 700,
+                transition: 'transform .12s cubic-bezier(.34, 1.56, .64, 1)',
+              }}
+            >
+              {deletePhotoMutation.isPending ? '删除中…' : '确认删除'}
+            </button>
           </div>
-        </div>
+        </SkModal>
       )}
 
       {viewer ? (

@@ -19,21 +19,17 @@
 
 import { Skeleton, usePhiliaClient, useToast } from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { INVENTORY_COPY } from '@/copy/inventory';
-import { SkBackBar, SkBtnAction, SkEmpty, SkNote } from '../../components/skeleton';
+import { SkBackBar, SkBtnAction, SkEmpty, SkNote, SkPanel } from '../../components/skeleton';
 import '../../styles/skeleton.css';
 
 const TYPE_LABEL: Record<string, string> = { daily: '日盘', weekly: '周盘', blind: '盲盘' };
 
-const cardSt: CSSProperties = {
-  margin: '12px 22px 0',
-  background: 'var(--card)',
-  borderRadius: 18,
-  padding: '14px 16px',
-  boxShadow: '0 1px 2px rgba(42, 31, 21, .05)',
-};
+/** 异常/状态横幅卡=sk-panel + 左 3px 变量条（var(--danger)/var(--gold) 存量合规） */
+const barDanger = { borderLeft: '3px solid var(--danger)' } as const;
+const barGold = { borderLeft: '3px solid var(--gold)' } as const;
 
 export default function InventoryCountPage() {
   const { id = '' } = useParams();
@@ -99,14 +95,16 @@ export default function InventoryCountPage() {
           ))}
         </div>
       ) : tasksQuery.isError ? (
-        <div style={{ ...cardSt, textAlign: 'center' }}>
-          <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.count.loadFail']}</p>
-          <div style={{ marginTop: 12 }}>
-            <SkBtnAction onClick={() => void tasksQuery.refetch()} testId="sk-inv-count-retry">
-              {INVENTORY_COPY['inventory.retry']}
-            </SkBtnAction>
+        <SkPanel testId="inv-count-error">
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.count.loadFail']}</p>
+            <div style={{ marginTop: 12 }}>
+              <SkBtnAction onClick={() => void tasksQuery.refetch()} testId="sk-inv-count-retry">
+                {INVENTORY_COPY['inventory.retry']}
+              </SkBtnAction>
+            </div>
           </div>
-        </div>
+        </SkPanel>
       ) : !count ? (
         <div data-testid="inv-count-missing" style={{ paddingTop: 16 }}>
           <SkEmpty title={INVENTORY_COPY['inventory.count.missing']} />
@@ -123,15 +121,16 @@ export default function InventoryCountPage() {
             <div
               role="alert"
               data-testid="inv-count-rejected"
-              style={{ ...cardSt, borderLeft: '3px solid var(--danger)' }}
+              className="sk-panel"
+              style={barDanger}
             >
               <p style={{ fontSize: 12.5, fontWeight: 800, color: 'var(--danger)' }}>{INVENTORY_COPY['inventory.count.rejected.title']}</p>
-              <p style={{ marginTop: 4, fontSize: 11, color: 'var(--danger)' }}>{INVENTORY_COPY['inventory.count.rejected.desc']}</p>
+              <p style={{ marginTop: 4, fontSize: 12, color: 'var(--danger)' }}>{INVENTORY_COPY['inventory.count.rejected.desc']}</p>
             </div>
           ) : count.status === 'counted' ? (
-            <div data-testid="inv-count-counted" style={{ ...cardSt, borderLeft: '3px solid var(--gold)' }}>
+            <div data-testid="inv-count-counted" className="sk-panel" style={barGold}>
               <p style={{ fontSize: 12.5, fontWeight: 800 }}>{INVENTORY_COPY['inventory.count.counted.title']}</p>
-              <p style={{ marginTop: 4, fontSize: 11, color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.count.counted.desc']}</p>
+              <p style={{ marginTop: 4, fontSize: 12, color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.count.counted.desc']}</p>
             </div>
           ) : (
             <SkNote>
@@ -142,9 +141,9 @@ export default function InventoryCountPage() {
 
           {/* 录入卡 ×N（品名 + 货号 mono + 系统量 + 实盘输入位） */}
           {items.length === 0 ? (
-            <div style={{ ...cardSt, textAlign: 'center' }}>
-              <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.count.noItems']}</p>
-            </div>
+            <SkPanel testId="inv-count-noitems">
+              <p style={{ textAlign: 'center', fontSize: 12.5, color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.count.noItems']}</p>
+            </SkPanel>
           ) : (
             <ul style={{ listStyle: 'none', margin: 0, padding: 0 }} data-testid="inv-count-items">
               {items.map((it) => {
@@ -155,21 +154,21 @@ export default function InventoryCountPage() {
                   : it.actualStock;
                 const diff = actual !== null ? actual - it.systemStock : null;
                 return (
-                  <li key={it.id} style={cardSt} data-testid={`inv-item-${it.id}`}>
+                  <li key={it.id} className="sk-panel" data-testid={`inv-item-${it.id}`}>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                       <p style={{ minWidth: 0, flex: 1, fontSize: 13.5, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {it.productName ?? INVENTORY_COPY['inventory.count.productFallback']}
                       </p>
                       {it.productCategory ? (
-                        <span style={{ flex: 'none', fontSize: 9.5, color: 'var(--muted)' }}>{it.productCategory}</span>
+                        <span style={{ flex: 'none', fontSize: 12, color: 'var(--muted)' }}>{it.productCategory}</span>
                       ) : null}
                     </div>
-                    <p className="sk-mono" style={{ marginTop: 3, fontSize: 9, color: 'var(--muted)', letterSpacing: '.06em' }}>
+                    <p className="sk-mono" style={{ marginTop: 3, fontSize: 12, color: 'var(--muted)', letterSpacing: '.06em' }}>
                       SKU …{it.productId.slice(-6)}
                     </p>
                     <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
                       {!isBlind ? (
-                        <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+                        <span style={{ fontSize: 12, color: 'var(--muted)' }}>
                           {INVENTORY_COPY['inventory.count.systemStock']}{' '}
                           <b className="sk-mono" style={{ fontSize: 13, color: 'var(--ink)' }}>{it.systemStock}</b>
                         </span>
@@ -184,16 +183,14 @@ export default function InventoryCountPage() {
                           aria-label={`${it.productName ?? INVENTORY_COPY['inventory.count.productFallback']}${INVENTORY_COPY['inventory.count.inputPlaceholder']}`}
                           value={values[it.id] ?? ''}
                           onChange={(e) => setValues((v) => ({ ...v, [it.id]: e.target.value }))}
-                          className="sk-mono"
+                          className="sk-input sk-mono"
                           style={{
-                            marginLeft: 'auto', height: 48, minHeight: 44, width: 128, borderRadius: 14,
-                            border: '1px solid var(--hairline)', background: 'var(--card)',
-                            padding: '0 12px', textAlign: 'right', fontSize: 17, fontWeight: 700, color: 'var(--ink)',
-                            outline: 'none',
+                            marginLeft: 'auto', height: 48, width: 128,
+                            textAlign: 'right', fontSize: 17, fontWeight: 700,
                           }}
                         />
                       ) : (
-                        <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' }}>
+                        <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--muted)' }}>
                           {INVENTORY_COPY['inventory.count.actualStock']}{' '}
                           <b className="sk-mono" style={{ fontSize: 13, color: 'var(--ink)' }}>{it.actualStock ?? '—'}</b>
                         </span>
@@ -201,7 +198,7 @@ export default function InventoryCountPage() {
                     </div>
                     {/* 提交后差异预览（盲盘不透出差异） */}
                     {!isBlind && !editable && diff !== null ? (
-                      <p style={{ marginTop: 6, fontSize: 11 }}>
+                      <p style={{ marginTop: 6, fontSize: 12 }}>
                         {diff === 0 ? (
                           <span style={{ color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.count.diffSame']}</span>
                         ) : diff < 0 ? (

@@ -15,7 +15,7 @@
  * - 互斥：同时仅一单服务中——有在途单时其余待接「开始」停用（灰态）；
  *   已完成/待接保持薄行，仅服务中卡可展。
  *
- * 数据：appointment.listForStaff（from/to 闭区间，员工视界=本店且指派本人，HistoryPage 同口径）
+ * 数据：appointment.listForStaff（from/to 闭区间，员工视界=本店且指派本人，原 HistoryPage 同口径）
  * + auth.me（本人排班，clockrow 班次段）+ serviceStep.list（服务中卡六步只读展开，ExecutePage 同接口）。
  * 纯预约零噪音：无统计/无提成/无导出；功能零回退（执行入口/接口不动）。
  */
@@ -195,7 +195,7 @@ export default function SchedulePage() {
     staleTime: 60_000,
   });
 
-  /* ---- 本人排班（clockrow 班次段；auth.me 周模板，MePage/GroomerDesk 同口径） ---- */
+  /* ---- 本人排班（clockrow 班次段；auth.me 周模板，MePage 同口径） ---- */
   const meQuery = useQuery({
     queryKey: ['auth', 'me', 'staffDetail'],
     queryFn: () => trpc.auth.me.query(),
@@ -251,15 +251,11 @@ export default function SchedulePage() {
     <div className="sk" data-testid="sk-schedule">
       <SkAppHead title={skc('sk.apptTitle')} no={skc('sk.apptNo')} />
 
-      {/* G1 日期切换（昨天/今天/明天 + 日历任意日；切过去=历史单唯一入口） */}
+      {/* G1 日期切换（昨天/今天/明天 + 日历 chip 任意日；切过去=历史单唯一入口） */}
       <SkChips
         testId="sk-daychip"
         value={chipValue}
         onChange={(k) => {
-          if (k === 'pick') {
-            document.querySelector<HTMLInputElement>('[data-testid="sk-datepick"]')?.focus();
-            return;
-          }
           const d = new Date(today);
           d.setDate(d.getDate() + (k === 'yesterday' ? -1 : k === 'tomorrow' ? 1 : 0));
           setPicked(dateStr(d));
@@ -268,21 +264,21 @@ export default function SchedulePage() {
           { key: 'yesterday', label: skc('sk.yesterday') },
           { key: 'today', label: skc('sk.today') },
           { key: 'tomorrow', label: skc('sk.tomorrow') },
-          { key: 'pick', label: skc('sk.pickDate') },
         ]}
+        trailing={
+          <input
+            type="date"
+            aria-label={skc('sk.pickDate')}
+            data-testid="sk-datepick"
+            className={`sk-chip sk-mono${chipValue === 'pick' ? ' on' : ''}`}
+            style={{ width: 148, colorScheme: chipValue === 'pick' ? 'dark' : 'light' }}
+            value={picked}
+            onChange={(e) => {
+              if (e.target.value) setPicked(e.target.value);
+            }}
+          />
+        }
       />
-      <div className="sk-chips" style={{ paddingTop: 8 }}>
-        <input
-          type="date"
-          aria-label={skc('sk.pickDate')}
-          data-testid="sk-datepick"
-          className="sk-chip sk-mono"
-          value={picked}
-          onChange={(e) => {
-            if (e.target.value) setPicked(e.target.value);
-          }}
-        />
-      </div>
 
       {/* 今日胶囊（mono 当前时刻+班次，仅当天态） */}
       {isToday ? <SkClockRow text={clockText} /> : null}

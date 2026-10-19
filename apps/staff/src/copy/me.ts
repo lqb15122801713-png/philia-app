@@ -28,6 +28,11 @@ const ME_COPY_TABLE = {
   'me.help.flowTitle': '核销流程',
   'me.help.flowBody': '客户到店出示预约码 → 前台扫码（无摄像头走手动 6 位码）→ 核销成功自动开单；寄养单核销后办理入住登记。',
   'me.settings.sync': '实时同步：派单/改期/取消即时推送（SSE 长连接，断线自动重连 + 60s 轮询兜底）。',
+  'me.settings.notifLead': '通知权限：',
+  'me.settings.notifOn': '已开启',
+  'me.settings.notifDenied': '已拒绝（浏览器地址栏可改）',
+  'me.settings.notifOff': '未开启',
+  'me.settings.notifUnsupported': '当前环境不支持',
 
   /* ---- 骨架批片 1（S-04 重排）：身份卡/两组链接行/三格账（原码内硬编码收键） ---- */
   'me.idcard.no': '工号 {no}',

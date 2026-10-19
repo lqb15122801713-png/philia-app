@@ -31,11 +31,11 @@ function ProtectedRoutes() {
       <Route path="/today" element={<TodayPage />} />
       <Route path="/execute/:appointmentId" element={<ExecutePage />} />
       <Route path="/boarding/:id/checkin" element={<BoardingCheckinPage />} />
-      {/* 骨架批片 1：历史单回看并入 S-02 切日态（S-12），/history 重定向 /schedule；HistoryPage 文件保留 */}
+      {/* 骨架批片 1：历史单回看并入 S-02 切日态（S-12），/history 重定向 /schedule；HistoryPage 死件已随 PD-44 U5 摘除 */}
       <Route path="/schedule" element={<SchedulePage />} />
       <Route path="/history" element={<Navigate to="/schedule" replace />} />
       <Route path="/me" element={<MePage />} />
-      {/* 批次 员工端2.0（R7~R10）：子页统一 PageHeader 返回条（W1 导航闭环） */}
+      {/* 批次 员工端2.0（R7~R10）：子页统一返回条（W1 导航闭环；PD-44 U5 起=SkBackBar，旧 PageHeader 转发件已摘） */}
       <Route path="/attendance" element={<AttendancePage />} />
       <Route path="/inventory" element={<InventoryPage />} />
       <Route path="/inventory/:id" element={<InventoryCountPage />} />

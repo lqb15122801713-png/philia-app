@@ -17,15 +17,28 @@
  * - 我的申请列表（xp.myApplications：状态/审核注透出；approved 且已落分=回链注记）；
  * - copy 注记：审核由店长/老板在管理端处理（员工不可自审）。
  * 数据口=payrollPort（server xp 申报口由 coder J 并行施工，签名冻结）。
+ *
+ * PD-44 U5 脸升档：结构全走 SkPanel/SkSec/SkRows/SkModal/SkNote（一次性
+ * 内联样式件全撤）；可读文字 ≥12px；色只取 .sk token；
+ * cream 预算=「申报积分」SkBtnAction 唯一，其余主行动 SkBtnInk/ghost。
  */
 
 import { ListSkeleton, Skeleton, usePhiliaClient, useToast } from '@philia/shared';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { XP_COPY } from '@/copy/xp';
 import { listApplications, payrollOf, type XpAppKind } from '@/lib/payrollPort';
-import { SkBackBar, SkBtnAction, SkNote, SkRows } from '../../components/skeleton';
+import {
+  SkBackBar,
+  SkBtnAction,
+  SkBtnInk,
+  SkModal,
+  SkNote,
+  SkPanel,
+  SkRows,
+  SkSec,
+} from '../../components/skeleton';
 import '../../styles/skeleton.css';
 
 /** XP 来源中文标签（schema xp_events.source） */
@@ -47,33 +60,25 @@ function fmtTs(d: Date): string {
 
 type EventCursor = { createdAt: Date; id: string };
 
-/* ---------------- 骨架内联样（.sk 作用域 token） ---------------- */
+/* ---------------- 行内碎样（只取 .sk token；可读文字 ≥12px） ---------------- */
 
-const cardSt: CSSProperties = {
-  margin: '12px 22px 0',
-  background: 'var(--card)',
-  borderRadius: 18,
-  padding: '14px 16px',
-  boxShadow: '0 1px 2px rgba(42, 31, 21, .05)',
-};
-const monoSm: CSSProperties = { fontFamily: 'var(--mono)', fontSize: 9.5, color: 'var(--muted)' };
-const chipSt: CSSProperties = {
-  marginLeft: 6, borderRadius: 999, padding: '1px 6px', fontSize: 9, whiteSpace: 'nowrap',
+/** 行内 mono 注（行内次行；12px 同 .vl 档） */
+const monoNote: CSSProperties = {
+  display: 'block', marginTop: 2, fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)',
 };
 
-function SecTitle({ children }: { children: ReactNode }) {
-  return <p style={{ margin: '16px 22px 0', fontSize: 12.5, fontWeight: 800 }}>{children}</p>;
-}
+/** 行内小徽章（12px；bg/fg 只取 token 变量） */
+const tagSt = (bg: string, fg: string): CSSProperties => ({
+  marginLeft: 6, borderRadius: 999, padding: '2px 8px', fontSize: 12, whiteSpace: 'nowrap',
+  background: bg, color: fg,
+});
 
-function EmptyRow({ text }: { text: string }) {
-  return (
-    <div className="row">
-      <span className="lb" style={{ color: 'var(--muted)', fontSize: 11 }}>{text}</span>
-    </div>
-  );
-}
+/** 行内异议小钮（三屏同款：ghost 形 30 高，不占 cream 预算） */
+const rowAppealSt: CSSProperties = {
+  flex: 'none', minHeight: 30, padding: '0 12px', fontSize: 12, marginRight: 8,
+};
 
-/* ---------------- 申报/异议弹层（分值+理由；弹层三件套之滚动锁） ---------------- */
+/* ---------------- 申报/异议弹层（分值+理由；SkModal=蒙层点按/Esc 取消+滚锁） ---------------- */
 
 const APPS_KEY = ['xp', 'myApplications'] as const;
 
@@ -96,14 +101,6 @@ function XpAppModal({
   const [points, setPoints] = useState(defaultPoints && defaultPoints > 0 ? String(defaultPoints) : '');
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, []);
 
   const submit = async () => {
     const n = Number(points);
@@ -134,53 +131,44 @@ function XpAppModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-modal flex items-center justify-center px-6"
-      role="dialog"
-      aria-modal="true"
-      aria-label={mode === 'award' ? XP_COPY['xp.app.title'] : XP_COPY['xp.app.appealTitle']}
+    <SkModal
+      title={mode === 'award' ? XP_COPY['xp.app.title'] : XP_COPY['xp.app.appealTitle']}
+      onClose={onClose}
+      testId="xp-app-modal"
     >
-      <button type="button" aria-label={XP_COPY['xp.app.cancel']} className="absolute inset-0 bg-[rgba(44,40,34,.4)]" onClick={onClose} />
-      <div className="u1-card relative w-full max-w-sm p-4" data-testid="xp-app-modal">
-        <p className="text-title text-ink">{mode === 'award' ? XP_COPY['xp.app.title'] : XP_COPY['xp.app.appealTitle']}</p>
-        <input
-          value={points}
-          onChange={(e) => setPoints(e.target.value.replace(/[^\d]/g, ''))}
-          inputMode="numeric"
-          maxLength={6}
-          placeholder={XP_COPY['xp.app.pointsPh']}
-          data-testid="xp-app-points"
-          className="u1-ring mt-2 h-12 min-h-[44px] w-full rounded-input bg-card px-3 text-body-sm text-ink placeholder:text-ink-placeholder"
-        />
-        <textarea
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          rows={3}
-          maxLength={500}
-          placeholder={mode === 'award' ? XP_COPY['xp.app.reasonPh'] : XP_COPY['xp.app.appealReasonPh']}
-          data-testid="xp-app-reason"
-          className="u1-ring mt-2 w-full rounded-input bg-card px-3 py-2.5 text-body-sm text-ink placeholder:text-ink-placeholder"
-        />
-        <div className="mt-3 flex gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-11 min-h-[44px] flex-1 rounded-control bg-sunken text-body-sm font-semibold text-[rgba(44,40,34,.62)]"
-          >
-            {XP_COPY['xp.app.cancel']}
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void submit()}
-            data-testid="xp-app-submit"
-            className="h-11 min-h-[44px] flex-1 rounded-control bg-brand-primary text-body-sm font-semibold text-ink disabled:opacity-50"
-          >
-            {busy ? XP_COPY['xp.app.submitting'] : XP_COPY['xp.app.submit']}
-          </button>
-        </div>
+      <input
+        value={points}
+        onChange={(e) => setPoints(e.target.value.replace(/[^\d]/g, ''))}
+        inputMode="numeric"
+        maxLength={6}
+        placeholder={XP_COPY['xp.app.pointsPh']}
+        data-testid="xp-app-points"
+        className="sk-input"
+        style={{ marginTop: 10 }}
+      />
+      <textarea
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        rows={3}
+        maxLength={500}
+        placeholder={mode === 'award' ? XP_COPY['xp.app.reasonPh'] : XP_COPY['xp.app.appealReasonPh']}
+        data-testid="xp-app-reason"
+        className="sk-textarea"
+        style={{ marginTop: 8 }}
+      />
+      <div className="acts">
+        <button type="button" className="sk-btn-ghost" onClick={onClose}>
+          {XP_COPY['xp.app.cancel']}
+        </button>
+        <SkBtnInk
+          disabled={busy}
+          onClick={() => void submit()}
+          testId="xp-app-submit"
+        >
+          {busy ? XP_COPY['xp.app.submitting'] : XP_COPY['xp.app.submit']}
+        </SkBtnInk>
       </div>
-    </div>
+    </SkModal>
   );
 }
 
@@ -240,7 +228,7 @@ export default function XpPage() {
       />
 
       {/* XP 卡（mono 30 累计 + 段位五段条） */}
-      <section style={{ ...cardSt, borderRadius: 20, padding: '18px 20px' }} data-testid="xp-level">
+      <SkPanel testId="xp-level">
         {summaryQuery.isPending ? (
           <div>
             <Skeleton className="h-6 w-24 !rounded-chip" />
@@ -250,9 +238,9 @@ export default function XpPage() {
           <div style={{ textAlign: 'center' }}>
             <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>{XP_COPY['xp.load.fail']}</p>
             <div style={{ marginTop: 12 }}>
-              <SkBtnAction onClick={() => void summaryQuery.refetch()} testId="sk-xp-retry">
+              <SkBtnInk onClick={() => void summaryQuery.refetch()} testId="sk-xp-retry">
                 {XP_COPY['xp.retry']}
-              </SkBtnAction>
+              </SkBtnInk>
             </div>
           </div>
         ) : (
@@ -261,7 +249,7 @@ export default function XpPage() {
               <p style={{ fontSize: 15, fontWeight: 800 }}>
                 {s.level.name}
                 {s.examUnlock.unlocked ? (
-                  <span style={{ ...chipSt, background: 'var(--gold-pale)', color: 'var(--ink-deep)', fontWeight: 700, verticalAlign: 'middle' }}>
+                  <span style={{ ...tagSt('var(--gold-pale)', 'var(--ink-deep)'), fontWeight: 700, verticalAlign: 'middle' }}>
                     {s.examUnlock.label}
                   </span>
                 ) : null}
@@ -292,21 +280,21 @@ export default function XpPage() {
                 );
               })}
             </div>
-            <p style={{ marginTop: 8, fontSize: 11, color: 'var(--muted)' }}>
+            <p style={{ marginTop: 8, fontSize: 12, color: 'var(--muted)' }}>
               {s.nextLevel
                 ? <>{XP_COPY['xp.level.gapLead']} <b>{s.nextLevel.name}</b> {XP_COPY['xp.level.gapMid']} <b className="sk-mono">{s.nextLevel.gap}</b> {XP_COPY['xp.level.gapTail']}</>
                 : XP_COPY['xp.level.max']}
             </p>
-            <p style={{ ...monoSm, marginTop: 4 }}>
+            <p style={{ ...monoNote, marginTop: 4 }}>
               {s.retention.monthlyXp > 0
                 ? <>{XP_COPY['xp.retention.lead']} {s.retention.monthlyXp} {XP_COPY['xp.retention.mid']} <b style={{ color: 'var(--ink)' }}>{s.monthGained}</b></>
                 : XP_COPY['xp.retention.none']}
             </p>
           </>
         )}
-      </section>
+      </SkPanel>
 
-      {/* 申报积分入口（award；审核由店长/老板在管理端处理） */}
+      {/* 申报积分入口（award；审核由店长/老板在管理端处理）=本屏唯一 cream */}
       <div style={{ margin: '10px 22px 0' }}>
         <SkBtnAction onClick={() => setAppModal({ mode: 'award' })} testId="xp-app-cta">
           {XP_COPY['xp.app.cta']}
@@ -318,12 +306,12 @@ export default function XpPage() {
         <div className="row">
           <span className="lb" style={{ minWidth: 0, flex: 1 }}>
             <span style={{ display: 'block', fontWeight: 700 }}>{XP_COPY['xp.sec.today']}</span>
-            <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
+            <span style={monoNote}>
               {full ? XP_COPY['xp.today.fullHint'] : <>{XP_COPY['xp.today.capLead']} {s?.today.cap ?? '…'}{XP_COPY['xp.today.capTail']}</>}
             </span>
           </span>
           {full ? (
-            <span style={{ ...chipSt, marginLeft: 0, background: 'var(--gold-pale)', color: 'var(--ink-deep)', fontWeight: 700 }}>
+            <span style={{ ...tagSt('var(--gold-pale)', 'var(--ink-deep)'), marginLeft: 0, fontWeight: 700 }}>
               {XP_COPY['xp.today.fullBadge']}
             </span>
           ) : null}
@@ -334,52 +322,56 @@ export default function XpPage() {
       {/* 徽章墙 4 列（段位=徽章，未得 0.38 透明；与 rulesView.levels 同源） */}
       {levels.length > 0 && s ? (
         <>
-          <SecTitle>{XP_COPY['xp.sec.badges']}</SecTitle>
-          <div style={{ ...cardSt, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }} data-testid="sk-xp-badges">
-            {levels.map((lv) => {
-              const earned = lv.level <= s.level.index;
-              return (
-                <div
-                  key={lv.level}
-                  data-testid={`sk-xp-badge-${lv.level}`}
-                  style={{
-                    borderRadius: 14, background: 'var(--paper)', padding: '10px 6px', textAlign: 'center',
-                    opacity: earned ? 1 : 0.38,
-                  }}
-                >
-                  <div style={{ fontSize: 11.5, fontWeight: 800 }}>{lv.name}</div>
-                  <div className="sk-mono" style={{ marginTop: 3, fontSize: 8.5, color: 'var(--muted)' }}>
-                    {XP_COPY['xp.badge.thresholdLead']} {lv.threshold}
+          <SkSec>{XP_COPY['xp.sec.badges']}</SkSec>
+          <SkPanel testId="sk-xp-badges">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+              {levels.map((lv) => {
+                const earned = lv.level <= s.level.index;
+                return (
+                  <div
+                    key={lv.level}
+                    data-testid={`sk-xp-badge-${lv.level}`}
+                    style={{
+                      borderRadius: 14, background: 'var(--paper)', padding: '10px 6px', textAlign: 'center',
+                      opacity: earned ? 1 : 0.38,
+                    }}
+                  >
+                    <div style={{ fontSize: 12, fontWeight: 800 }}>{lv.name}</div>
+                    <div className="sk-mono" style={{ marginTop: 3, fontSize: 12, color: 'var(--muted)' }}>
+                      {XP_COPY['xp.badge.thresholdLead']} {lv.threshold}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          </SkPanel>
         </>
       ) : null}
 
       {/* 本店榜（server 裁剪：前三+自己+前一名，原样渲染不补全） */}
-      <SecTitle>{XP_COPY['xp.sec.board']}</SecTitle>
+      <SkSec>{XP_COPY['xp.sec.board']}</SkSec>
       <SkRows testId="xp-board">
         {boardQuery.isPending ? (
           <div style={{ padding: '8px 0' }}><ListSkeleton rows={3} /></div>
         ) : boardQuery.isError ? (
-          <EmptyRow text={XP_COPY['xp.board.loadFail']} />
+          <div className="row">
+            <span className="lb" style={{ color: 'var(--muted)' }}>{XP_COPY['xp.board.loadFail']}</span>
+          </div>
         ) : (
           boardQuery.data.rows.map((r) => (
             <div
               key={r.staffId}
               className="row"
               data-testid={r.isSelf ? 'xp-board-self' : undefined}
-              style={r.isSelf ? { background: 'rgba(242, 223, 166, .35)', borderRadius: 10, marginInline: -8, paddingInline: 8 } : undefined}
+              style={r.isSelf ? { background: 'rgba(242, 220, 140, .35)', borderRadius: 10, marginInline: -8, paddingInline: 8 } : undefined}
             >
-              <span className="sk-mono" style={{ width: 24, flex: 'none', textAlign: 'center', fontSize: 11.5, fontWeight: 700, color: 'var(--muted)' }}>
+              <span className="sk-mono" style={{ width: 24, flex: 'none', textAlign: 'center', fontSize: 12, fontWeight: 700, color: 'var(--muted)' }}>
                 {r.rank}
               </span>
               <span className="lb" style={{ minWidth: 0, flex: 1, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {r.name}
-                {r.isSelf ? <span style={{ marginLeft: 4, fontSize: 10, fontWeight: 400, color: 'var(--muted)' }}>{XP_COPY['xp.board.self']}</span> : null}
-                <span style={{ ...chipSt, background: 'var(--paper)', color: 'var(--muted)' }}>{r.levelName}</span>
+                {r.isSelf ? <span style={{ marginLeft: 4, fontSize: 12, fontWeight: 400, color: 'var(--muted)' }}>{XP_COPY['xp.board.self']}</span> : null}
+                <span style={tagSt('var(--paper)', 'var(--muted)')}>{r.levelName}</span>
               </span>
               <span className="vl">{r.totalXp}</span>
             </div>
@@ -389,11 +381,11 @@ export default function XpPage() {
       <SkNote>{XP_COPY['xp.board.note']}</SkNote>
 
       {/* 规则一句话 + 六来源分值 */}
-      <section style={cardSt} data-testid="xp-rules">
+      <SkPanel testId="xp-rules">
         {rulesQuery.isPending ? (
           <Skeleton className="h-16 !rounded-chip" />
         ) : rulesQuery.isError || !rulesQuery.data ? (
-          <p style={{ padding: '4px 0', fontSize: 11, color: 'var(--muted)' }}>{XP_COPY['xp.rules.loadFail']}</p>
+          <p style={{ padding: '4px 0', fontSize: 12, color: 'var(--muted)' }}>{XP_COPY['xp.rules.loadFail']}</p>
         ) : (
           <>
             <p style={{ fontSize: 12.5, fontWeight: 800, lineHeight: 1.7 }}>{rulesQuery.data.oneLiner}</p>
@@ -410,10 +402,10 @@ export default function XpPage() {
                     <span className="lb" style={{ minWidth: 0, flex: 1 }}>
                       {src.label}
                       {'channel' in src && src.channel === 'learning' ? (
-                        <span style={{ ...chipSt, background: 'var(--gold)', color: 'var(--ink-deep)' }}>{XP_COPY['xp.rules.learningTag']}</span>
+                        <span style={tagSt('var(--gold)', 'var(--ink-deep)')}>{XP_COPY['xp.rules.learningTag']}</span>
                       ) : null}
                       {disabled ? (
-                        <span style={{ ...chipSt, background: 'var(--paper)', color: 'var(--muted)' }}>
+                        <span style={tagSt('var(--paper)', 'var(--muted)')}>
                           {('disabledNote' in src && src.disabledNote) || XP_COPY['xp.rules.disabledFallback']}
                         </span>
                       ) : null}
@@ -427,22 +419,26 @@ export default function XpPage() {
                 );
               })}
             </div>
-            <p style={{ ...monoSm, paddingTop: 6 }}>
+            <p style={{ ...monoNote, paddingTop: 6 }}>
               {XP_COPY['xp.rules.footCap']} {rulesQuery.data.dailyCap} · {XP_COPY['xp.rules.footReview']} {rulesQuery.data.antiFraud.reviewDailyLimitPerCustomer} {XP_COPY['xp.rules.footExamMid']} {rulesQuery.data.antiFraud.examMonthlyLimit} {XP_COPY['xp.rules.footExamTail']}
             </p>
           </>
         )}
-      </section>
+      </SkPanel>
 
       {/* S7 近期事件（dropped 行划线+超出日上限） */}
-      <SecTitle>{XP_COPY['xp.sec.events']}</SecTitle>
+      <SkSec>{XP_COPY['xp.sec.events']}</SkSec>
       <SkRows testId="xp-events">
         {eventsQuery.isPending ? (
           <div style={{ padding: '8px 0' }}><ListSkeleton rows={3} /></div>
         ) : eventsQuery.isError ? (
-          <EmptyRow text={XP_COPY['xp.events.loadFail']} />
+          <div className="row">
+            <span className="lb" style={{ color: 'var(--muted)' }}>{XP_COPY['xp.events.loadFail']}</span>
+          </div>
         ) : events.length === 0 ? (
-          <EmptyRow text={XP_COPY['xp.events.empty']} />
+          <div className="row">
+            <span className="lb" style={{ color: 'var(--muted)' }}>{XP_COPY['xp.events.empty']}</span>
+          </div>
         ) : (
           events.map((ev) => (
             <div className="row" key={ev.id}>
@@ -450,14 +446,14 @@ export default function XpPage() {
                 <span style={{ display: 'block', fontWeight: 700, ...(ev.dropped ? { color: 'var(--muted)', textDecoration: 'line-through' } : {}) }}>
                   {SOURCE_LABEL[ev.source] ?? ev.source}
                   {ev.channel === 'learning' ? (
-                    <span style={{ ...chipSt, background: 'var(--gold)', color: 'var(--ink-deep)' }}>{XP_COPY['xp.events.learningTag']}</span>
+                    <span style={tagSt('var(--gold)', 'var(--ink-deep)')}>{XP_COPY['xp.events.learningTag']}</span>
                   ) : null}
                 </span>
-                <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
+                <span style={monoNote}>
                   {fmtTs(ev.createdAt)}
                   {/* A4 标注粒度：寄养晚数行区分（「完成服务 +6」=寄养 3 晚×2 不再误读） */}
                   {ev.ruleKey === 'xp_service_boarding_night' && ev.boardingNights !== null ? (
-                    <span style={{ ...chipSt, background: 'var(--paper)', color: 'var(--muted)' }}>
+                    <span style={tagSt('var(--paper)', 'var(--muted)')}>
                       {XP_COPY['xp.events.boardingLead']} {ev.boardingNights} {XP_COPY['xp.events.boardingTail']}
                     </span>
                   ) : null}
@@ -473,7 +469,7 @@ export default function XpPage() {
                     </Link>
                   ) : null}
                   {ev.dropped ? (
-                    <span style={{ ...chipSt, background: 'var(--paper)', color: 'var(--muted)' }}>{XP_COPY['xp.events.droppedTag']}</span>
+                    <span style={tagSt('var(--paper)', 'var(--muted)')}>{XP_COPY['xp.events.droppedTag']}</span>
                   ) : null}
                 </span>
               </span>
@@ -481,12 +477,10 @@ export default function XpPage() {
               {ev.source === 'penalty' && ev.points < 0 && !ev.dropped ? (
                 <button
                   type="button"
+                  className="sk-btn-ghost"
+                  style={rowAppealSt}
                   onClick={() => setAppModal({ mode: 'revoke_appeal', eventId: ev.id, points: Math.abs(ev.points) })}
                   data-testid={`xp-appeal-${ev.id}`}
-                  style={{
-                    flex: 'none', marginRight: 8, borderRadius: 999, background: 'var(--paper)',
-                    padding: '3px 10px', fontSize: 10, color: 'var(--ink)', border: 0, cursor: 'pointer',
-                  }}
                 >
                   {XP_COPY['xp.app.appealCta']}
                 </button>
@@ -514,14 +508,18 @@ export default function XpPage() {
       ) : null}
 
       {/* 我的申请（申报/扣分异议：状态/审核注透出；approved 且已落分=回链注记） */}
-      <SecTitle>{XP_COPY['xp.app.sec.list']}</SecTitle>
+      <SkSec>{XP_COPY['xp.app.sec.list']}</SkSec>
       <SkRows testId="xp-apps">
         {appsQuery.isPending ? (
           <div style={{ padding: '8px 0' }}><ListSkeleton rows={2} /></div>
         ) : appsQuery.isError ? (
-          <EmptyRow text={XP_COPY['xp.app.loadFail']} />
+          <div className="row">
+            <span className="lb" style={{ color: 'var(--muted)' }}>{XP_COPY['xp.app.loadFail']}</span>
+          </div>
         ) : applications.length === 0 ? (
-          <EmptyRow text={XP_COPY['xp.app.empty']} />
+          <div className="row">
+            <span className="lb" style={{ color: 'var(--muted)' }}>{XP_COPY['xp.app.empty']}</span>
+          </div>
         ) : (
           applications.map((a) => {
             const resolved = a.status === 'approved' && (a.resolvedEventId != null || a.resolvedAt != null);
@@ -534,11 +532,11 @@ export default function XpPage() {
                       {XP_COPY['xp.app.pointsLead']} {a.pointsRequested}
                     </span>
                     <span
-                      style={{
-                        ...chipSt,
-                        background: a.status === 'approved' ? 'var(--gold-pale)' : 'var(--paper)',
-                        color: a.status === 'approved' ? 'var(--ink-deep)' : 'var(--muted)',
-                      }}
+                      style={
+                        a.status === 'approved'
+                          ? tagSt('var(--gold-pale)', 'var(--ink-deep)')
+                          : tagSt('var(--paper)', 'var(--muted)')
+                      }
                     >
                       {a.status === 'approved'
                         ? XP_COPY['xp.app.statusApproved']
@@ -547,13 +545,13 @@ export default function XpPage() {
                           : XP_COPY['xp.app.statusPending']}
                     </span>
                     {resolved ? (
-                      <span style={{ ...chipSt, background: 'var(--gold)', color: 'var(--ink-deep)' }}>
+                      <span style={tagSt('var(--gold)', 'var(--ink-deep)')}>
                         {XP_COPY['xp.app.resolvedNote']}
                       </span>
                     ) : null}
                   </span>
-                  <span style={{ display: 'block', marginTop: 2, fontSize: 11, fontWeight: 400 }}>{a.reason}</span>
-                  <span style={{ ...monoSm, display: 'block', marginTop: 2 }}>
+                  <span style={{ display: 'block', marginTop: 2, fontSize: 12, fontWeight: 400 }}>{a.reason}</span>
+                  <span style={monoNote}>
                     {fmtTs(a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt))}
                     {a.reviewNote ? ` · ${XP_COPY['xp.app.reviewLead']}：${a.reviewNote}` : ''}
                   </span>

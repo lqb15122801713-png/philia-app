@@ -33,7 +33,7 @@ import type { inferRouterOutputs } from '@trpc/server';
 import type { AppRouter } from '@philia/shared';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { SkAppHead, SkNote, SkPunchCard, SkRow, SkRows } from '@/components/skeleton';
+import { SkAppHead, SkBtnInk, SkNote, SkPanel, SkPunchCard, SkRow, SkRows } from '@/components/skeleton';
 import { dayKeyOf, hhmm, pad2, weekdayLabel } from '@/components/today/utils';
 import { isSecureContextOk } from '@/lib/secureContext';
 import {
@@ -81,18 +81,18 @@ function deviceId(): string {
 function StatusChip({ r }: { r: AttRecord }) {
   if (r.makeup) {
     return (
-      <b className="rounded-chip bg-brand-secondary-light px-1.5 py-0.5 text-caption-xs font-bold text-ink">
+      <b className="rounded-chip bg-brand-secondary-light px-1.5 py-0.5 text-caption font-bold text-ink">
         {ATTENDANCE_COPY['attendance.status.makeup']}
       </b>
     );
   }
   if (r.status === 'late') {
-    return <b className="rounded-chip bg-danger-light px-1.5 py-0.5 text-caption-xs font-bold text-danger-deep">{ATTENDANCE_COPY['attendance.status.late']}</b>;
+    return <b className="rounded-chip bg-danger-light px-1.5 py-0.5 text-caption font-bold text-danger-deep">{ATTENDANCE_COPY['attendance.status.late']}</b>;
   }
   if (r.status === 'early') {
-    return <b className="rounded-chip bg-danger-light px-1.5 py-0.5 text-caption-xs font-bold text-danger-deep">{ATTENDANCE_COPY['attendance.status.early']}</b>;
+    return <b className="rounded-chip bg-danger-light px-1.5 py-0.5 text-caption font-bold text-danger-deep">{ATTENDANCE_COPY['attendance.status.early']}</b>;
   }
-  return <b className="rounded-chip bg-success-light px-1.5 py-0.5 text-caption-xs font-bold text-success-deep">{ATTENDANCE_COPY['attendance.status.normal']}</b>;
+  return <b className="rounded-chip bg-success-light px-1.5 py-0.5 text-caption font-bold text-success-deep">{ATTENDANCE_COPY['attendance.status.normal']}</b>;
 }
 
 /** attendance 域 copy 取值 + {var} 插值 */
@@ -219,7 +219,7 @@ export default function AttendancePage() {
   const markMut = useMutation({
     mutationFn: (input: MarkInput) => trpc.attendance.mark.mutate(input),
     onSuccess: (r) => {
-      showToast(r.duplicated ? '今日已打过卡，无需重复操作' : '已打卡，辛苦了');
+      showToast(r.duplicated ? ATTENDANCE_COPY['attendance.punch.duplicated'] : ATTENDANCE_COPY['attendance.punch.ok']);
       setGeoError(null);
       setFieldNeeded(false);
       setFieldPhotoUrl(null);
@@ -379,7 +379,7 @@ export default function AttendancePage() {
     mutationFn: (input: { date: string; kind: 'in' | 'out'; requestedTs: Date; reason: string }) =>
       trpc.attendance.requestMakeup.mutate(input),
     onSuccess: () => {
-      showToast('补卡申请已提交，待店长审批');
+      showToast(ATTENDANCE_COPY['attendance.makeup.toast']);
       setMkReason('');
       void queryClient.invalidateQueries({ queryKey: ['attendance'] });
     },
@@ -388,7 +388,7 @@ export default function AttendancePage() {
 
   const submitMakeup = () => {
     if (!mkReason.trim()) {
-      showToast('请填写补卡原因');
+      showToast(ATTENDANCE_COPY['attendance.makeup.needReason']);
       return;
     }
     const [h, m] = mkTime.split(':').map((s) => parseInt(s, 10));
@@ -461,14 +461,14 @@ export default function AttendancePage() {
       {wifiList.length > 0 ? (
         <div className="px-[22px]">
           <div className="u1-card mt-3 p-4" data-testid="att-wifi">
-            <label className="block text-caption-xs font-semibold text-ink-secondary" htmlFor="att-wifi-select">
+            <label className="sk-label" htmlFor="att-wifi-select">
               {ATTENDANCE_COPY['attendance.wifi.title']}
             </label>
             <select
               id="att-wifi-select"
               value={selectedBssid}
               onChange={(e) => setSelectedBssid(e.target.value)}
-              className="u1-ring mt-1.5 h-12 min-h-[44px] w-full rounded-input bg-card px-3 text-body-sm text-ink"
+              className="sk-select"
             >
               <option value="">{ATTENDANCE_COPY['attendance.wifi.none']}</option>
               {wifiList.map((w) => (
@@ -477,7 +477,7 @@ export default function AttendancePage() {
                 </option>
               ))}
             </select>
-            <p className="mt-1.5 text-caption-xs text-ink-placeholder">
+            <p className="mt-1.5 text-caption text-ink-placeholder">
               {ATTENDANCE_COPY['attendance.wifi.manual']}
             </p>
           </div>
@@ -536,7 +536,7 @@ export default function AttendancePage() {
         ) : recordsQuery.isError ? (
           <div className="px-[22px]">
             <div className="u1-card p-4 text-center">
-              <p className="text-body-sm text-ink-secondary">考勤记录加载失败，请检查网络后重试</p>
+              <p className="text-body-sm text-ink-secondary">{ATTENDANCE_COPY['attendance.records.loadFail']}</p>
               <button
                 type="button"
                 onClick={() => void recordsQuery.refetch()}
@@ -568,12 +568,12 @@ export default function AttendancePage() {
                     <>
                       <span className="sk-mono">{d.date.slice(5)}</span> {weekdayLabel(dateObj)}
                       {flagged ? (
-                        <b className="ml-1.5 rounded-chip bg-danger-light px-1.5 py-0.5 text-caption-xs font-bold text-danger-deep">
+                        <b className="ml-1.5 rounded-chip bg-danger-light px-1.5 py-0.5 text-caption font-bold text-danger-deep">
                           {ATTENDANCE_COPY['attendance.records.flagged']}
                         </b>
                       ) : null}
                       {makeup ? (
-                        <span className="ml-1.5 text-caption-xs text-ink-placeholder">{ATTENDANCE_COPY['attendance.records.makeupPassed']}</span>
+                        <span className="ml-1.5 text-caption text-ink-placeholder">{ATTENDANCE_COPY['attendance.records.makeupPassed']}</span>
                       ) : null}
                     </>
                   }
@@ -595,7 +595,7 @@ export default function AttendancePage() {
                 label={
                   <>
                     <span className="sk-mono">{ds.slice(5)}</span> {weekdayLabel(new Date(`${ds}T00:00:00`))}
-                    <span className="ml-1.5 text-caption-xs font-normal text-ink-placeholder">{ATTENDANCE_COPY['attendance.records.missingHint']}</span>
+                    <span className="ml-1.5 text-caption font-normal text-ink-placeholder">{ATTENDANCE_COPY['attendance.records.missingHint']}</span>
                   </>
                 }
                 value={ATTENDANCE_COPY['attendance.records.missing']}
@@ -624,22 +624,22 @@ export default function AttendancePage() {
                       ? ATTENDANCE_COPY['attendance.records.in']
                       : ATTENDANCE_COPY['attendance.records.out']}
                     {r.source === 'field' ? (
-                      <b className="ml-1.5 rounded-chip bg-brand-primary-light px-1.5 py-0.5 text-caption-xs font-bold text-ink">
+                      <b className="ml-1.5 rounded-chip bg-brand-primary-light px-1.5 py-0.5 text-caption font-bold text-ink">
                         {ATTENDANCE_COPY['attendance.source.field']}
                       </b>
                     ) : null}
                     {r.source === 'offline_relay' ? (
-                      <b className="ml-1.5 rounded-chip bg-brand-primary-light px-1.5 py-0.5 text-caption-xs font-bold text-ink">
+                      <b className="ml-1.5 rounded-chip bg-brand-primary-light px-1.5 py-0.5 text-caption font-bold text-ink">
                         {ATTENDANCE_COPY['attendance.source.offline']}
                       </b>
                     ) : null}
                     {r.source === 'no_geo' ? (
-                      <b className="ml-1.5 rounded-chip bg-brand-primary-light px-1.5 py-0.5 text-caption-xs font-bold text-ink">
+                      <b className="ml-1.5 rounded-chip bg-brand-primary-light px-1.5 py-0.5 text-caption font-bold text-ink">
                         {ATTENDANCE_COPY['attendance.source.nogeo']}
                       </b>
                     ) : null}
                     {r.confirmedAt ? (
-                      <b className="ml-1.5 rounded-chip bg-success-light px-1.5 py-0.5 text-caption-xs font-bold text-success-deep">
+                      <b className="ml-1.5 rounded-chip bg-success-light px-1.5 py-0.5 text-caption font-bold text-success-deep">
                         {ATTENDANCE_COPY['attendance.confirmed.chip']}
                       </b>
                     ) : null}
@@ -655,7 +655,7 @@ export default function AttendancePage() {
                         setAppealFor(r.id);
                         setAppealReason('');
                       }}
-                      className="rounded-chip bg-sunken px-2 py-1 text-caption-xs font-bold text-ink-secondary"
+                      className="inline-flex min-h-[44px] items-center rounded-chip bg-sunken px-2 py-1 text-caption font-bold text-ink-secondary"
                     >
                       {ATTENDANCE_COPY['attendance.appeal.cta']}
                     </button>
@@ -695,21 +695,17 @@ export default function AttendancePage() {
               rows={3}
               maxLength={200}
               placeholder={ATTENDANCE_COPY['attendance.appeal.placeholder']}
-              className="u1-ring mt-2 w-full rounded-input bg-card px-3 py-2.5 text-body-sm text-ink placeholder:text-ink-placeholder"
+              className="sk-textarea mt-2 placeholder:text-ink-placeholder"
             />
-            <button
-              type="button"
-              data-testid="att-appeal-submit"
-              disabled={appealMut.isPending || !appealReason.trim()}
-              onClick={submitAppeal}
-              className={`mt-3 h-12 min-h-[44px] w-full rounded-control text-body-sm font-bold transition-transform duration-120 ease-philia-spring ${
-                appealMut.isPending || !appealReason.trim()
-                  ? 'bg-sunken text-ink-placeholder'
-                  : 'bg-ink text-brand-primary active:scale-92'
-              }`}
-            >
-              {ATTENDANCE_COPY['attendance.appeal.submit']}
-            </button>
+            <div className="mt-3">
+              <SkBtnInk
+                testId="att-appeal-submit"
+                disabled={appealMut.isPending || !appealReason.trim()}
+                onClick={submitAppeal}
+              >
+                {ATTENDANCE_COPY['attendance.appeal.submit']}
+              </SkBtnInk>
+            </div>
           </div>
         </div>
       ) : null}
@@ -717,83 +713,83 @@ export default function AttendancePage() {
       {/* 补卡口径注（SkNote；补卡申请真功能保留在下方） */}
       <SkNote>{skc('sk.punchFixNote')}</SkNote>
 
-      <div className="px-[22px]">
-        <section className="mt-5" data-testid="att-makeup">
-          <h2 className="pb-1.5 text-caption font-bold tracking-[.08em] text-ink-placeholder">
-            补卡申请 · 本月还可补 <span className="u1-num">{makeupLeft}</span> 次（每月限 <span className="u1-num">{MAKEUP_MONTHLY_LIMIT}</span> 次）
-          </h2>
-          <div className="u1-card p-4">
-            <label className="block text-caption-xs font-semibold text-ink-secondary" htmlFor="mk-date">
-              补卡日期（限当月）
-            </label>
-            <input
-              id="mk-date"
-              type="date"
-              value={mkDate}
-              min={`${monthStr}-01`}
-              max={todayStr}
-              onChange={(e) => setMkDate(e.target.value)}
-              className="u1-ring mt-1.5 h-12 min-h-[44px] w-full rounded-input bg-card px-3 text-body-sm text-ink"
-            />
-            <label className="mt-3 block text-caption-xs font-semibold text-ink-secondary" htmlFor="mk-kind">
-              班次
-            </label>
-            <select
-              id="mk-kind"
-              value={mkKind}
-              onChange={(e) => setMkKind(e.target.value as 'in' | 'out')}
-              className="u1-ring mt-1.5 h-12 min-h-[44px] w-full rounded-input bg-card px-3 text-body-sm text-ink"
-            >
-              <option value="in">上班卡</option>
-              <option value="out">下班卡</option>
-            </select>
-            <label className="mt-3 block text-caption-xs font-semibold text-ink-secondary" htmlFor="mk-time">
-              实际{mkKind === 'in' ? '上班' : '下班'}时间
-            </label>
-            <input
-              id="mk-time"
-              type="time"
-              value={mkTime}
-              onChange={(e) => setMkTime(e.target.value)}
-              className="u1-ring mt-1.5 h-12 min-h-[44px] w-full rounded-input bg-card px-3 text-body-sm text-ink"
-            />
-            <label className="mt-3 block text-caption-xs font-semibold text-ink-secondary" htmlFor="mk-reason">
-              补卡原因（必填）
-            </label>
-            <textarea
-              id="mk-reason"
-              value={mkReason}
-              onChange={(e) => setMkReason(e.target.value)}
-              rows={3}
-              maxLength={200}
-              placeholder="例如：到店后忙于接待忘记打卡"
-              className="u1-ring mt-1.5 w-full rounded-input bg-card px-3 py-2.5 text-body-sm text-ink placeholder:text-ink-placeholder"
-            />
-            <button
-              type="button"
+      <section className="mt-5" data-testid="att-makeup">
+        <h2 className="px-[22px] pb-1.5 text-caption font-bold tracking-[.08em] text-ink-placeholder">
+          {ATTENDANCE_COPY['attendance.makeup.titleLead']} <span className="u1-num">{makeupLeft}</span> {ATTENDANCE_COPY['attendance.makeup.titleMid']} <span className="u1-num">{MAKEUP_MONTHLY_LIMIT}</span> {ATTENDANCE_COPY['attendance.makeup.titleTail']}
+        </h2>
+        <SkPanel>
+          <label className="sk-label" htmlFor="mk-date">
+            {ATTENDANCE_COPY['attendance.makeup.date']}
+          </label>
+          <input
+            id="mk-date"
+            type="date"
+            value={mkDate}
+            min={`${monthStr}-01`}
+            max={todayStr}
+            onChange={(e) => setMkDate(e.target.value)}
+            className="sk-input"
+          />
+          <label className="sk-label" htmlFor="mk-kind">
+            {ATTENDANCE_COPY['attendance.makeup.kind']}
+          </label>
+          <select
+            id="mk-kind"
+            value={mkKind}
+            onChange={(e) => setMkKind(e.target.value as 'in' | 'out')}
+            className="sk-select"
+          >
+            <option value="in">{ATTENDANCE_COPY['attendance.makeup.kindIn']}</option>
+            <option value="out">{ATTENDANCE_COPY['attendance.makeup.kindOut']}</option>
+          </select>
+          <label className="sk-label" htmlFor="mk-time">
+            {mkKind === 'in' ? ATTENDANCE_COPY['attendance.makeup.timeIn'] : ATTENDANCE_COPY['attendance.makeup.timeOut']}
+          </label>
+          <input
+            id="mk-time"
+            type="time"
+            value={mkTime}
+            onChange={(e) => setMkTime(e.target.value)}
+            className="sk-input"
+          />
+          <label className="sk-label" htmlFor="mk-reason">
+            {ATTENDANCE_COPY['attendance.makeup.reason']}
+          </label>
+          <textarea
+            id="mk-reason"
+            value={mkReason}
+            onChange={(e) => setMkReason(e.target.value)}
+            rows={3}
+            maxLength={200}
+            placeholder={ATTENDANCE_COPY['attendance.makeup.reasonPh']}
+            className="sk-textarea placeholder:text-ink-placeholder"
+          />
+          <div className="mt-3">
+            <SkBtnInk
+              testId="att-makeup-submit"
               disabled={makeupMut.isPending || makeupLeft <= 0}
               onClick={submitMakeup}
-              className={`mt-3 h-14 min-h-[56px] w-full rounded-control text-body-lg font-bold transition-transform duration-120 ease-philia-spring ${
-                makeupMut.isPending || makeupLeft <= 0
-                  ? 'bg-sunken text-ink-placeholder'
-                  : 'bg-ink text-brand-primary active:scale-92'
-              }`}
-              data-testid="att-makeup-submit"
             >
-              {makeupMut.isPending ? '提交中…' : makeupLeft <= 0 ? '本月补卡次数已用完' : '提交补卡申请'}
-            </button>
+              {makeupMut.isPending
+                ? ATTENDANCE_COPY['attendance.makeup.submitting']
+                : makeupLeft <= 0
+                  ? ATTENDANCE_COPY['attendance.makeup.exhausted']
+                  : ATTENDANCE_COPY['attendance.makeup.submit']}
+            </SkBtnInk>
           </div>
+        </SkPanel>
 
-          {/* 申请结果（审批状态 + 备注） */}
-          {approvals.length > 0 ? (
+        {/* 申请结果（审批状态 + 备注） */}
+        {approvals.length > 0 ? (
+          <div className="px-[22px]">
             <ul className="mt-2.5">
               {approvals.map((a) => (
                 <ApprovalRow key={a.id} a={a} />
               ))}
             </ul>
-          ) : null}
-        </section>
-      </div>
+          </div>
+        ) : null}
+      </section>
 
       {toastEl}
     </div>
@@ -803,28 +799,28 @@ export default function AttendancePage() {
 function ApprovalRow({ a }: { a: Approval }) {
   const statusChip =
     a.status === 'pending' ? (
-      <b className="rounded-chip bg-brand-primary-light px-1.5 py-0.5 text-caption-xs font-bold text-ink">待审批</b>
+      <b className="rounded-chip bg-brand-primary-light px-1.5 py-0.5 text-caption font-bold text-ink">{ATTENDANCE_COPY['attendance.approval.pending']}</b>
     ) : a.status === 'approved' ? (
-      <b className="rounded-chip bg-success-light px-1.5 py-0.5 text-caption-xs font-bold text-success-deep">已通过</b>
+      <b className="rounded-chip bg-success-light px-1.5 py-0.5 text-caption font-bold text-success-deep">{ATTENDANCE_COPY['attendance.approval.approved']}</b>
     ) : (
-      <b className="rounded-chip bg-danger-light px-1.5 py-0.5 text-caption-xs font-bold text-danger-deep">已驳回</b>
+      <b className="rounded-chip bg-danger-light px-1.5 py-0.5 text-caption font-bold text-danger-deep">{ATTENDANCE_COPY['attendance.approval.rejected']}</b>
     );
   return (
     <li className="u1-card mb-2.5 px-4 py-3.5" data-testid={`att-approval-${a.id}`}>
       <div className="flex items-center gap-2">
-        <b className="rounded-chip bg-sunken px-1.5 py-0.5 text-caption-xs font-bold text-ink">
-          {a.type === 'makeup' ? '补卡' : '异常'}
+        <b className="rounded-chip bg-sunken px-1.5 py-0.5 text-caption font-bold text-ink">
+          {a.type === 'makeup' ? ATTENDANCE_COPY['attendance.approval.makeup'] : ATTENDANCE_COPY['attendance.approval.abnormal']}
         </b>
         <span className="u1-num text-body-sm font-bold">{a.date}</span>
-        <span className="text-caption-xs text-ink-secondary">{a.kind === 'in' ? '上班卡' : '下班卡'}</span>
+        <span className="text-caption text-ink-secondary">{a.kind === 'in' ? ATTENDANCE_COPY['attendance.makeup.kindIn'] : ATTENDANCE_COPY['attendance.makeup.kindOut']}</span>
         {a.type === 'makeup' && a.requestedTs ? (
-          <span className="u1-num text-caption-xs text-ink-secondary">{hhmm(a.requestedTs)}</span>
+          <span className="u1-num text-caption text-ink-secondary">{hhmm(a.requestedTs)}</span>
         ) : null}
         <span className="ml-auto">{statusChip}</span>
       </div>
-      <p className="mt-1.5 text-caption-xs text-ink-secondary">原因：{a.reason}</p>
+      <p className="mt-1.5 text-caption text-ink-secondary">{ac('attendance.approval.reason', { reason: a.reason })}</p>
       {a.status === 'rejected' && a.reviewNote ? (
-        <p className="mt-1 text-caption-xs text-danger-deep">驳回备注：{a.reviewNote}</p>
+        <p className="mt-1 text-caption text-danger-deep">{ac('attendance.approval.rejectNote', { note: a.reviewNote })}</p>
       ) : null}
     </li>
   );

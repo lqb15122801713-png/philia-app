@@ -59,7 +59,7 @@ import DailyLogForm, { type DailyLogSubmit } from '../components/boarding/DailyL
 import DailyLogList from '../components/boarding/DailyLogList';
 import BoardingPetCard from '../components/boarding/BoardingPetCard';
 import StayInfoCard from '../components/boarding/StayInfoCard';
-import { SkBackBar } from '../components/skeleton';
+import { SkBackBar, SkBtnInk } from '../components/skeleton';
 import '../styles/skeleton.css';
 import type { BelongingItem, BoardingLogRow, BoardingStayRow } from '../components/boarding/types';
 import { BOARDING_COPY } from '@/copy/boarding';
@@ -327,7 +327,7 @@ export default function BoardingCheckinPage() {
   if (detailQuery.isPending) {
     // 加载 >300ms 骨架（禁转圈，动效纲领 §四.2）
     return (
-      <div className="sk px-4 pt-3">
+      <div className="sk px-[22px] pt-3">
         <div className="flex items-center gap-2.5">
           <Skeleton className="h-9 w-9 !rounded-full" />
           <Skeleton className="h-6 w-24 !rounded-chip" />
@@ -345,10 +345,10 @@ export default function BoardingCheckinPage() {
 
   if (detailQuery.isError || !appt) {
     return (
-      <div className="sk px-4 py-6">
+      <div className="sk pb-6">
         <SkBackBar title={BOARDING_COPY['boarding.title']} fallback="/today" />
         {/* D-37（走查P2修复批）：人话不可用收口——明说「当前不可打卡」+可回退；不透出技术错误文（禁裸 404/403 口径） */}
-        <section className="u1-card p-4" data-testid="boarding-unavailable">
+        <section className="sk-panel" data-testid="boarding-unavailable">
           <p className="text-body-sm text-ink">{BOARDING_COPY['boarding.error.title']}</p>
           <p className="mt-1 text-caption text-ink-secondary">
             {BOARDING_COPY['boarding.error.fallbackDesc']}
@@ -368,9 +368,9 @@ export default function BoardingCheckinPage() {
 
   if (!isBoarding) {
     return (
-      <div className="sk px-4 py-6">
+      <div className="sk pb-6">
         <SkBackBar title={BOARDING_COPY['boarding.title']} fallback="/today" />
-        <section className="u1-card p-4">
+        <section className="sk-panel">
           <p className="text-body-sm text-ink">{BOARDING_COPY['boarding.error.notBoarding']}</p>
           {/* W1-D2 弱出口按钮化：同上，唯一主出口=按钮化；P3-3 出口钮深棕归色 */}
           <Link
@@ -400,7 +400,7 @@ export default function BoardingCheckinPage() {
       <div className="sk pb-6">
         <SkBackBar title={BOARDING_COPY['boarding.title']} note={nightNote} fallback="/today" />
         <BoardingPetCard pet={pet} roomLabel={roomLabel} scheduledStart={appt.scheduledStart} scheduledEnd={appt.scheduledEnd} overdue={false} />
-        <section className="u1-card mx-4 mt-3 p-4">
+        <section className="sk-panel">
           <p className="flex items-center gap-2 text-body-sm font-semibold text-ink">
             <QrCode className="h-5 w-5 text-ink" strokeWidth={1.5} />
             {BOARDING_COPY['boarding.preCheckin.title']}
@@ -426,7 +426,7 @@ export default function BoardingCheckinPage() {
       <div className="sk pb-6">
         <SkBackBar title={BOARDING_COPY['boarding.title']} note={nightNote} fallback="/today" />
         <BoardingPetCard pet={pet} roomLabel={roomLabel} scheduledStart={appt.scheduledStart} scheduledEnd={appt.scheduledEnd} overdue={false} />
-        <section className="u1-card mx-4 mt-3 p-4">
+        <section className="sk-panel">
           <p className="text-body-sm text-ink">
             {appt.status === 'cancelled' ? BOARDING_COPY['boarding.cancelled.title'] : BOARDING_COPY['boarding.cancelRequested.title']}
           </p>
@@ -463,7 +463,7 @@ export default function BoardingCheckinPage() {
       {overdue ? (
         <p
           role="alert"
-          className="mx-4 mt-3 flex items-start gap-2 rounded-control border border-danger bg-danger-light px-4 py-3 text-body-sm font-semibold text-danger-deep"
+          className="mx-[22px] mt-3 flex items-start gap-2 rounded-control bg-danger-light px-4 py-3 text-body-sm font-semibold text-danger-deep"
         >
           <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" strokeWidth={1.5} />
           <span>
@@ -476,49 +476,43 @@ export default function BoardingCheckinPage() {
       ) : null}
 
       {completed ? (
-        <p className="mx-4 mt-3 flex items-center gap-2 rounded-control bg-success-light px-4 py-3 text-body-sm font-semibold text-success-deep">
+        <p className="mx-[22px] mt-3 flex items-center gap-2 rounded-control bg-success-light px-4 py-3 text-body-sm font-semibold text-success-deep">
           <CheckCircle2 className="h-5 w-5 shrink-0" strokeWidth={1.5} />
           {BOARDING_COPY['boarding.completed.banner']}
         </p>
       ) : null}
 
-      {/* 入住登记段 */}
+      {/* 入住登记段（组件已带 sk 卡面与 22 页边距，页层不再包 px） */}
       {stayQuery.isPending ? (
-        <section className="u1-card mx-4 mt-3 p-4">
+        <section className="sk-panel">
           <Skeleton className="h-5 w-28 !rounded-chip" />
           <Skeleton className="mt-2 h-4 w-44 !rounded-chip" />
         </section>
       ) : stay === null ? (
-        <div className="px-4">
-          <CheckinForm
-            appointmentId={aid!}
-            leadStaff={leadStaffProps}
-            submitting={checkinMutation.isPending}
-            onSubmit={(input) => checkinMutation.mutate(input)}
-            onError={showToast}
-          />
-        </div>
+        <CheckinForm
+          appointmentId={aid!}
+          leadStaff={leadStaffProps}
+          submitting={checkinMutation.isPending}
+          onSubmit={(input) => checkinMutation.mutate(input)}
+          onError={showToast}
+        />
       ) : editingStay && !completed ? (
-        <div className="px-4">
-          <CheckinForm
-            key={`edit-${stay.id}`}
-            appointmentId={aid!}
-            initial={stayToInitial(stay)}
-            leadStaff={leadStaffProps}
-            submitting={checkinMutation.isPending}
-            onSubmit={(input) => checkinMutation.mutate(input)}
-            onCancel={() => setEditingStay(false)}
-            onError={showToast}
-          />
-        </div>
+        <CheckinForm
+          key={`edit-${stay.id}`}
+          appointmentId={aid!}
+          initial={stayToInitial(stay)}
+          leadStaff={leadStaffProps}
+          submitting={checkinMutation.isPending}
+          onSubmit={(input) => checkinMutation.mutate(input)}
+          onCancel={() => setEditingStay(false)}
+          onError={showToast}
+        />
       ) : (
-        <div className="px-4">
-          <StayInfoCard
-            stay={stay}
-            onEdit={completed ? undefined : () => setEditingStay(true)}
-            onPhotoClick={openViewer}
-          />
-        </div>
+        <StayInfoCard
+          stay={stay}
+          onEdit={completed ? undefined : () => setEditingStay(true)}
+          onPhotoClick={openViewer}
+        />
       )}
 
       {/* 每日打卡段（stay 已登记后显示；已完成为只读历史） */}
@@ -539,37 +533,39 @@ export default function BoardingCheckinPage() {
         </>
       ) : null}
 
-      {/* 退房（员工权限，内联二次确认，幂等） */}
+      {/* 退房（员工权限，内联二次确认，幂等；U5：确认主行动 cream→SkBtnInk，cream 让位今日打卡提交） */}
       {!completed && stay !== null && appt.status === 'in_boarding' ? (
         confirmingCheckout ? (
-          <div className="u1-card mx-4 mt-3 p-4">
+          <div className="sk-panel">
             <p className="text-body-sm font-semibold text-ink">{BOARDING_COPY['boarding.checkout.confirmTitle']}</p>
             <p className="mt-1 text-caption text-ink-secondary">
               {BOARDING_COPY['boarding.checkout.confirmDesc']}
             </p>
             <div className="mt-3 flex gap-2">
-              <button
-                type="button"
-                onClick={() => setConfirmingCheckout(false)}
-                className="h-staff-btn flex-1 rounded-control bg-sunken text-body-sm font-medium text-ink transition-transform duration-120 ease-philia-spring active:scale-92"
-              >
-                {BOARDING_COPY['boarding.checkout.cancel']}
-              </button>
-              <button
-                type="button"
-                disabled={checkoutMutation.isPending}
-                onClick={() => checkoutMutation.mutate()}
-                className="h-staff-btn flex-1 rounded-control bg-brand-primary text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-60"
-              >
-                {checkoutMutation.isPending ? BOARDING_COPY['boarding.checkout.pending'] : BOARDING_COPY['boarding.checkout.confirm']}
-              </button>
+              <span className="flex-1">
+                <button
+                  type="button"
+                  onClick={() => setConfirmingCheckout(false)}
+                  className="sk-btn-ghost w-full"
+                >
+                  {BOARDING_COPY['boarding.checkout.cancel']}
+                </button>
+              </span>
+              <span className="flex-1">
+                <SkBtnInk
+                  disabled={checkoutMutation.isPending}
+                  onClick={() => checkoutMutation.mutate()}
+                >
+                  {checkoutMutation.isPending ? BOARDING_COPY['boarding.checkout.pending'] : BOARDING_COPY['boarding.checkout.confirm']}
+                </SkBtnInk>
+              </span>
             </div>
           </div>
         ) : (
           <button
             type="button"
             onClick={() => setConfirmingCheckout(true)}
-            className="u1-ring mx-4 mt-3 flex h-staff-btn w-[calc(100%-32px)] items-center justify-center gap-2 rounded-control bg-card text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
+            className="u1-ring mx-[22px] mt-3 flex h-staff-btn w-[calc(100%-44px)] items-center justify-center gap-2 rounded-control bg-card text-body-sm font-semibold text-ink transition-transform duration-120 ease-philia-spring active:scale-[0.98]"
           >
             <DoorOpen className="h-4 w-4" strokeWidth={1.5} />
             {BOARDING_COPY['boarding.checkout.action']}

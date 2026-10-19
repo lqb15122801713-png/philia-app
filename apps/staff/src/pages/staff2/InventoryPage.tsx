@@ -1,8 +1,8 @@
 /**
  * 盘点任务 /inventory（批次 员工端2.0 · R8，docs/staff2/R7-R10-DESIGN.md §一.3/§三）
- * 骨架批片 1（S-08）：外框换骨架——SkAppHead → 今日胶囊（SkClockRow）→ appt 卡列
- * （草稿=淡金左条 / 待确认=done 淡化 / 退回=赭红左条）→ 口径注（SkNote）。
- * 二级页无 dock；数据流/权限零回退。
+ * 骨架批片 1（S-08）：外框换骨架——SkAppHead → 今日胶囊（SkClockRow）→ appt 卡列 → 口径注（SkNote）。
+ * PD-44 U5 升档：卡面统一 SkRows/SkPanel + sk-label/sk-input，TypeChip/StatusSign token 化，
+ * 可读文字全量 ≥12px；段题走 SkSec。二级页无 dock；数据流/权限零回退。
  *
  * 两区结构：
  * 1. 待办盘点单（inventory.myCountTasks：draft 待盘 / counted 待确认 / rejected 退回重盘）——
@@ -20,7 +20,7 @@ import { useNavigate } from 'react-router-dom';
 import { pad2, weekdayLabel } from '@/components/today/utils';
 import { INVENTORY_COPY } from '@/copy/inventory';
 import { skc } from '@/copy/skeleton';
-import { SkBackBar, SkBtnAction, SkClockRow, SkEmpty, SkNote, SkRows } from '../../components/skeleton';
+import { SkBackBar, SkBtnAction, SkClockRow, SkEmpty, SkNote, SkPanel, SkRows, SkSec } from '../../components/skeleton';
 import '../../styles/skeleton.css';
 
 type RouterOutputs = inferRouterOutputs<AppRouter>;
@@ -34,32 +34,34 @@ function ymd(d: Date): string {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }
 
-const cardSt: CSSProperties = {
-  margin: '12px 22px 0',
-  background: 'var(--card)',
-  borderRadius: 18,
-  padding: '14px 16px',
-  boxShadow: '0 1px 2px rgba(42, 31, 21, .05)',
-};
+const panelCenter: CSSProperties = { textAlign: 'center' };
 
+/** 类型 chip（日盘/周盘/盲盘）：色走 .sk 变量（var(--gold) 存量合规），字档 12 */
 function TypeChip({ type }: { type: string }) {
   const st: CSSProperties =
     type === 'blind'
       ? { background: 'var(--ink)', color: 'var(--paper)' }
       : type === 'daily'
-        ? { background: 'var(--gold-pale)', color: 'var(--ink-deep)' }
-        : { background: 'var(--gold)', color: 'var(--ink-deep)' };
-  return <b style={{ borderRadius: 999, padding: '2px 8px', fontSize: 9.5, ...st }}>{TYPE_LABEL[type] ?? type}</b>;
+        ? { background: 'var(--gold-pale)', color: 'var(--ink)' }
+        : { background: 'var(--gold)', color: 'var(--ink)' };
+  return <b style={{ borderRadius: 999, padding: '3px 9px', fontSize: 12, ...st }}>{TYPE_LABEL[type] ?? type}</b>;
 }
 
+/** 状态签：rejected=赭红族 / counted= sunken 弱化 / draft=sunken 墨字（全走 token 类） */
 function StatusSign({ status }: { status: string }) {
-  if (status === 'rejected') {
-    return <b style={{ borderRadius: 999, padding: '2px 8px', fontSize: 9.5, background: 'rgba(180, 80, 46, .12)', color: 'var(--danger)' }}>{INVENTORY_COPY['inventory.status.rejected']}</b>;
-  }
-  if (status === 'counted') {
-    return <b style={{ borderRadius: 999, padding: '2px 8px', fontSize: 9.5, background: 'var(--paper)', color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.status.counted']}</b>;
-  }
-  return <b style={{ borderRadius: 999, padding: '2px 8px', fontSize: 9.5, background: 'var(--paper)', color: 'var(--ink)' }}>{INVENTORY_COPY['inventory.status.draft']}</b>;
+  const cls =
+    status === 'rejected'
+      ? 'bg-danger-light text-danger-deep'
+      : status === 'counted'
+        ? 'bg-sunken text-ink-secondary'
+        : 'bg-sunken text-ink';
+  const label =
+    status === 'rejected'
+      ? INVENTORY_COPY['inventory.status.rejected']
+      : status === 'counted'
+        ? INVENTORY_COPY['inventory.status.counted']
+        : INVENTORY_COPY['inventory.status.draft'];
+  return <b className={`rounded-full px-2 py-0.5 text-[12px] font-bold ${cls}`}>{label}</b>;
 }
 
 export default function InventoryPage() {
@@ -114,7 +116,7 @@ export default function InventoryPage() {
       <SkBackBar title={INVENTORY_COPY['inventory.title']} note={INVENTORY_COPY['inventory.no']} fallback="/me" />
       <SkClockRow text={clockText} />
 
-      {/* 待办盘点单（appt 卡列：草稿 gold 左条 / counted done 淡化 / rejected 赭红左条） */}
+      {/* 待办盘点单（SkRows 行列：类型 chip + 状态签；counted 淡化 0.62；rejected 签走赭红族） */}
       <section data-testid="inv-tasks">
         {tasksQuery.isPending ? (
           <div style={{ margin: '12px 22px 0', display: 'grid', gap: 10 }} aria-label="加载中">
@@ -123,75 +125,71 @@ export default function InventoryPage() {
             ))}
           </div>
         ) : tasksQuery.isError ? (
-          <div style={{ ...cardSt, textAlign: 'center' }}>
-            <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.load.fail']}</p>
-            <div style={{ marginTop: 12 }}>
-              <SkBtnAction onClick={() => void tasksQuery.refetch()} testId="sk-inv-retry">
-                {INVENTORY_COPY['inventory.retry']}
-              </SkBtnAction>
+          <SkPanel testId="inv-tasks-error">
+            <div style={panelCenter}>
+              <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.load.fail']}</p>
+              <div style={{ marginTop: 12 }}>
+                <SkBtnAction onClick={() => void tasksQuery.refetch()} testId="sk-inv-retry">
+                  {INVENTORY_COPY['inventory.retry']}
+                </SkBtnAction>
+              </div>
             </div>
-          </div>
+          </SkPanel>
         ) : tasks.length === 0 ? (
           <div data-testid="inv-tasks-empty" style={{ paddingTop: 16 }}>
             <SkEmpty title={INVENTORY_COPY['inventory.tasks.empty']} />
           </div>
         ) : (
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-            {tasks.map((c) => {
-              const bar =
-                c.status === 'rejected' ? 'var(--danger)' : c.status === 'draft' ? 'var(--gold)' : 'var(--hairline)';
-              return (
-                <li key={c.id}>
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/inventory/${c.id}`)}
-                    style={{
-                      ...cardSt,
-                      display: 'flex', alignItems: 'center', gap: 10, width: 'calc(100% - 44px)',
-                      border: 0, borderLeft: `3px solid ${bar}`, textAlign: 'left', cursor: 'pointer',
-                      font: 'inherit', color: 'inherit',
-                      opacity: c.status === 'counted' ? 0.62 : 1,
-                    }}
-                    data-testid={`inv-task-${c.id}`}
-                  >
-                    <span style={{ minWidth: 0, flex: 1 }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <TypeChip type={c.type} />
-                        <StatusSign status={c.status} />
-                      </span>
-                      <span style={{ display: 'block', marginTop: 6, fontFamily: 'var(--mono)', fontSize: 9.5, color: 'var(--muted)' }}>
-                        {INVENTORY_COPY['inventory.task.created']} {ymd(c.createdAt)} · {INVENTORY_COPY['inventory.task.countLead']}{' '}
-                        {c.items.length} {INVENTORY_COPY['inventory.task.countTail']}
-                        {c.status === 'rejected' ? ` · ${INVENTORY_COPY['inventory.task.rejectedEditable']}` : ''}
-                      </span>
-                    </span>
-                    <span aria-hidden style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--paper)', display: 'grid', placeItems: 'center', color: 'var(--ink)', flex: 'none' }}>›</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+          <SkRows>
+            {tasks.map((c) => (
+              <button
+                type="button"
+                key={c.id}
+                className="row"
+                onClick={() => navigate(`/inventory/${c.id}`)}
+                style={{
+                  width: '100%', background: 'none', border: 0, cursor: 'pointer',
+                  font: 'inherit', textAlign: 'left',
+                  opacity: c.status === 'counted' ? 0.62 : 1,
+                }}
+                data-testid={`inv-task-${c.id}`}
+              >
+                <span className="lb" style={{ minWidth: 0, flex: 1 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <TypeChip type={c.type} />
+                    <StatusSign status={c.status} />
+                  </span>
+                  <span className="sk-mono" style={{ display: 'block', marginTop: 4, fontSize: 12, color: 'var(--muted)' }}>
+                    {INVENTORY_COPY['inventory.task.created']} {ymd(c.createdAt)} · {INVENTORY_COPY['inventory.task.countLead']}{' '}
+                    {c.items.length} {INVENTORY_COPY['inventory.task.countTail']}
+                    {c.status === 'rejected' ? ` · ${INVENTORY_COPY['inventory.task.rejectedEditable']}` : ''}
+                  </span>
+                </span>
+                <span className="vl" aria-hidden>›</span>
+              </button>
+            ))}
+          </SkRows>
         )}
       </section>
 
       {/* CJ-1015-02 A2：安心包发放（到店全员可发·不绑 App · 可先发+店日库存记账+身份后补） */}
-      <p style={{ margin: '20px 22px 0', fontSize: 11, fontWeight: 800, letterSpacing: '.08em', color: 'var(--muted)' }}>
-        {INVENTORY_COPY['inventory.issue.title']}
-      </p>
+      <SkSec>{INVENTORY_COPY['inventory.issue.title']}</SkSec>
       <section data-testid="inv-issue">
         {stockQuery.isPending ? (
           <div style={{ margin: '12px 22px 0' }} aria-label="加载中">
             <Skeleton className="u1-card h-16 !rounded-panel" />
           </div>
         ) : stockQuery.isError ? (
-          <div style={{ ...cardSt, textAlign: 'center' }}>
-            <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.issue.loadFail']}</p>
-            <div style={{ marginTop: 12 }}>
-              <SkBtnAction onClick={() => void stockQuery.refetch()} testId="sk-inv-issue-retry">
-                {INVENTORY_COPY['inventory.retry']}
-              </SkBtnAction>
+          <SkPanel testId="inv-issue-error">
+            <div style={panelCenter}>
+              <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.issue.loadFail']}</p>
+              <div style={{ marginTop: 12 }}>
+                <SkBtnAction onClick={() => void stockQuery.refetch()} testId="sk-inv-issue-retry">
+                  {INVENTORY_COPY['inventory.retry']}
+                </SkBtnAction>
+              </div>
             </div>
-          </div>
+          </SkPanel>
         ) : stockRows.length === 0 ? (
           <div data-testid="inv-issue-empty" style={{ paddingTop: 8 }}>
             <SkEmpty title={INVENTORY_COPY['inventory.issue.empty']} />
@@ -203,62 +201,61 @@ export default function InventoryPage() {
                 <div className="row" key={p.id} data-testid={`inv-issue-row-${p.id}`}>
                   <span className="lb" style={{ minWidth: 0, flex: 1 }}>
                     <span style={{ display: 'block', fontWeight: 700 }}>{p.name}</span>
-                    <span style={{ display: 'block', marginTop: 2, fontFamily: 'var(--mono)', fontSize: 9.5, color: 'var(--muted)' }}>
+                    <span className="sk-mono" style={{ display: 'block', marginTop: 2, fontSize: 12, color: 'var(--muted)' }}>
                       {INVENTORY_COPY['inventory.expiry.stock']} {p.stock}
                     </span>
                   </span>
                   <span className="vl">
-                    <SkBtnAction
-                      testId={`inv-issue-cta-${p.id}`}
+                    <button
+                      type="button"
+                      className="sk-btn-ghost"
+                      data-testid={`inv-issue-cta-${p.id}`}
                       onClick={() => {
                         setIssuingId(issuingId === p.id ? null : p.id);
                         setIssueQty(1);
                       }}
                     >
                       {INVENTORY_COPY['inventory.issue.cta']}
-                    </SkBtnAction>
+                    </button>
                   </span>
                 </div>
               ))}
             </SkRows>
             {issuingId ? (
-              <div style={{ ...cardSt }} data-testid="inv-issue-form">
-                <label style={{ display: 'block', fontSize: 11, color: 'var(--muted)' }}>
-                  {INVENTORY_COPY['inventory.issue.qtyLabel']}
-                  <input
-                    type="number"
-                    min={1}
-                    max={99}
-                    value={issueQty}
-                    onChange={(e) => setIssueQty(Math.max(1, Math.min(99, Number(e.target.value) || 1)))}
-                    data-testid="inv-issue-qty"
-                    style={{ display: 'block', marginTop: 4, width: '100%', padding: '10px 12px', borderRadius: 12, border: '1px solid var(--hairline)', background: 'var(--paper)', font: 'inherit' }}
-                  />
-                </label>
-                <label style={{ display: 'block', marginTop: 10, fontSize: 11, color: 'var(--muted)' }}>
-                  {INVENTORY_COPY['inventory.issue.phoneLabel']}
-                  <input
-                    type="tel"
-                    value={issuePhone}
-                    onChange={(e) => setIssuePhone(e.target.value)}
-                    data-testid="inv-issue-phone"
-                    style={{ display: 'block', marginTop: 4, width: '100%', padding: '10px 12px', borderRadius: 12, border: '1px solid var(--hairline)', background: 'var(--paper)', font: 'inherit' }}
-                  />
-                </label>
-                <label style={{ display: 'block', marginTop: 10, fontSize: 11, color: 'var(--muted)' }}>
-                  {INVENTORY_COPY['inventory.issue.noteLabel']}
-                  <input
-                    type="text"
-                    value={issueNote}
-                    onChange={(e) => setIssueNote(e.target.value)}
-                    data-testid="inv-issue-note"
-                    style={{ display: 'block', marginTop: 4, width: '100%', padding: '10px 12px', borderRadius: 12, border: '1px solid var(--hairline)', background: 'var(--paper)', font: 'inherit' }}
-                  />
-                </label>
+              <SkPanel testId="inv-issue-form">
+                <span className="sk-label" style={{ marginTop: 0 }}>{INVENTORY_COPY['inventory.issue.qtyLabel']}</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={99}
+                  value={issueQty}
+                  onChange={(e) => setIssueQty(Math.max(1, Math.min(99, Number(e.target.value) || 1)))}
+                  data-testid="inv-issue-qty"
+                  className="sk-input"
+                />
+                <span className="sk-label">{INVENTORY_COPY['inventory.issue.phoneLabel']}</span>
+                <input
+                  type="tel"
+                  value={issuePhone}
+                  onChange={(e) => setIssuePhone(e.target.value)}
+                  data-testid="inv-issue-phone"
+                  className="sk-input"
+                />
+                <span className="sk-label">{INVENTORY_COPY['inventory.issue.noteLabel']}</span>
+                <input
+                  type="text"
+                  value={issueNote}
+                  onChange={(e) => setIssueNote(e.target.value)}
+                  data-testid="inv-issue-note"
+                  className="sk-input"
+                />
                 <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
                   <span style={{ flex: 1 }}>
-                    <SkBtnAction
-                      testId="inv-issue-cancel"
+                    <button
+                      type="button"
+                      className="sk-btn-ghost"
+                      style={{ width: '100%' }}
+                      data-testid="inv-issue-cancel"
                       onClick={() => {
                         setIssuingId(null);
                         setIssuePhone('');
@@ -266,7 +263,7 @@ export default function InventoryPage() {
                       }}
                     >
                       {INVENTORY_COPY['inventory.issue.cancel']}
-                    </SkBtnAction>
+                    </button>
                   </span>
                   <span style={{ flex: 1 }}>
                     <SkBtnAction
@@ -285,7 +282,7 @@ export default function InventoryPage() {
                     </SkBtnAction>
                   </span>
                 </div>
-              </div>
+              </SkPanel>
             ) : null}
             <SkNote>{INVENTORY_COPY['inventory.issue.note']}</SkNote>
           </>
@@ -296,23 +293,23 @@ export default function InventoryPage() {
       <SkNote>{INVENTORY_COPY['inventory.list.note']}</SkNote>
 
       {/* 安心包效期（只读 · 处置走回收登记流程） */}
-      <p style={{ margin: '20px 22px 0', fontSize: 11, fontWeight: 800, letterSpacing: '.08em', color: 'var(--muted)' }}>
-        {INVENTORY_COPY['inventory.expiry.title']}
-      </p>
+      <SkSec>{INVENTORY_COPY['inventory.expiry.title']}</SkSec>
       <section data-testid="inv-expiry">
         {expiryQuery.isPending ? (
           <div style={{ margin: '12px 22px 0' }} aria-label="加载中">
             <Skeleton className="u1-card h-16 !rounded-panel" />
           </div>
         ) : expiryQuery.isError ? (
-          <div style={{ ...cardSt, textAlign: 'center' }}>
-            <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.expiry.loadFail']}</p>
-            <div style={{ marginTop: 12 }}>
-              <SkBtnAction onClick={() => void expiryQuery.refetch()} testId="sk-inv-expiry-retry">
-                {INVENTORY_COPY['inventory.retry']}
-              </SkBtnAction>
+          <SkPanel testId="inv-expiry-error">
+            <div style={panelCenter}>
+              <p style={{ fontSize: 12.5, color: 'var(--muted)' }}>{INVENTORY_COPY['inventory.expiry.loadFail']}</p>
+              <div style={{ marginTop: 12 }}>
+                <SkBtnAction onClick={() => void expiryQuery.refetch()} testId="sk-inv-expiry-retry">
+                  {INVENTORY_COPY['inventory.retry']}
+                </SkBtnAction>
+              </div>
             </div>
-          </div>
+          </SkPanel>
         ) : expiry.length === 0 ? (
           <div data-testid="inv-expiry-empty" style={{ paddingTop: 8 }}>
             <SkEmpty title={INVENTORY_COPY['inventory.expiry.empty']} />
@@ -327,7 +324,7 @@ export default function InventoryPage() {
                   <div className="row" key={p.id} data-testid={`inv-expiry-${p.id}`}>
                     <span className="lb" style={{ minWidth: 0, flex: 1 }}>
                       <span style={{ display: 'block', fontWeight: 700 }}>{p.name}</span>
-                      <span style={{ display: 'block', marginTop: 2, fontFamily: 'var(--mono)', fontSize: 9.5, color: 'var(--muted)' }}>
+                      <span className="sk-mono" style={{ display: 'block', marginTop: 2, fontSize: 12, color: 'var(--muted)' }}>
                         {INVENTORY_COPY['inventory.expiry.until']} {ymd(p.expiresAt)} · {INVENTORY_COPY['inventory.expiry.stock']} {p.stock}
                       </span>
                     </span>

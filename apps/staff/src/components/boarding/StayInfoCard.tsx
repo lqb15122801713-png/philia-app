@@ -30,7 +30,7 @@ export default function StayInfoCard({ stay, onEdit, onPhotoClick }: StayInfoCar
   }));
 
   return (
-    <section className="u1-card p-4">
+    <section className="sk-panel">
       <div className="flex items-center justify-between">
         <h2 className="text-title">入住信息</h2>
         <span className="flex items-center gap-2">
