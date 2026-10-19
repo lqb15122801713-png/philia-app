@@ -114,6 +114,19 @@ class Cdp {
       await sleep(400);
     }
   }
+  async click(selector) {
+    const point = await this.eval(`(() => {
+      const el = document.querySelector('${selector}');
+      if (!el) return null;
+      el.scrollIntoView({ block: 'center', inline: 'center' });
+      const rect = el.getBoundingClientRect();
+      return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    })()`);
+    if (!point) return false;
+    await this.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: point.x, y: point.y, button: 'left', clickCount: 1 });
+    await this.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: point.x, y: point.y, button: 'left', clickCount: 1 });
+    return true;
+  }
   async shot(path) {
     const shot = await this.send('Page.captureScreenshot', { format: 'png' });
     mkdirSync(dirname(path), { recursive: true });
@@ -230,7 +243,7 @@ async function main() {
     note(surface?.close && surface?.copy, '关闭与复制兜底');
     note(surface?.scrollHeight <= surface?.innerHeight + 2, '会员码单屏无额外滚动', `${surface?.scrollHeight}/${surface?.innerHeight}`);
     if (surface?.copy) {
-      await cdp.eval(`document.querySelector('[data-testid="membercard-copy"]').click()`);
+      await cdp.click('[data-testid="membercard-copy"]');
       await sleep(500);
       const copyText = await cdp.eval(`document.querySelector('[data-testid="membercard-copy-status"]')?.textContent ?? ''`);
       note(copyText.includes('已复制'), '条码保留复制反馈', copyText);
