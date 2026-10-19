@@ -1,0 +1,299 @@
+{
+  "at": "2026-10-19T15:17:38.834Z",
+  "base": "http://localhost:7174",
+  "results": [
+    {
+      "id": "B5 Banner 季主题、立即预约与门店 chip",
+      "ok": true,
+      "detail": "CTA=立即预约›//booking/grooming；门店=菲丽亚宠物·示例店",
+      "measurements": {
+        "banner": {
+          "text": "立即预约›",
+          "href": "/booking/grooming"
+        },
+        "storeChip": "菲丽亚宠物·示例店"
+      }
+    },
+    {
+      "id": "D1 Banner 待换标不与副文重叠",
+      "ok": true,
+      "detail": "待换=49~65；副文=86.203125~103"
+    },
+    {
+      "id": "B1 三主入口 ×3",
+      "ok": true,
+      "detail": "洗护预约到店洗护→/booking/grooming；寄养日托／过夜→/booking/boarding；商城精选好物→/mall",
+      "measurements": [
+        {
+          "text": "洗护预约到店洗护",
+          "href": "/booking/grooming"
+        },
+        {
+          "text": "寄养日托／过夜",
+          "href": "/booking/boarding"
+        },
+        {
+          "text": "商城精选好物",
+          "href": "/mall"
+        }
+      ]
+    },
+    {
+      "id": "C2 四次入口 ×4",
+      "ok": true,
+      "detail": "回馈金→/member/rebate；New券包→/me/coupons；团购→/mall?channel=groupbuy；门店→/booking/grooming?storeId=01M5ABSD2RXFCF348V8TWFSB6M",
+      "measurements": [
+        {
+          "text": "回馈金",
+          "href": "/member/rebate"
+        },
+        {
+          "text": "New券包",
+          "href": "/me/coupons"
+        },
+        {
+          "text": "团购",
+          "href": "/mall?channel=groupbuy"
+        },
+        {
+          "text": "门店",
+          "href": "/booking/grooming?storeId=01M5ABSD2RXFCF348V8TWFSB6M"
+        }
+      ]
+    },
+    {
+      "id": "C1 细会员条与会员码一键",
+      "ok": true,
+      "detail": "会员条=true；会员码=会员码//me/card；文本=微光回馈金 ¥0券包 ×0会员码"
+    },
+    {
+      "id": "PD-39.1 空闲态触控热区 ≥44px",
+      "ok": false,
+      "detail": "低于44或缺失=M1:38；M2:32；M3:38；L1:32；L2:34",
+      "measurements": [
+        {
+          "id": "M1",
+          "width": 115.171875,
+          "height": 38
+        },
+        {
+          "id": "M2",
+          "width": 76,
+          "height": 32
+        },
+        {
+          "id": "M3",
+          "width": 276,
+          "height": 38
+        },
+        {
+          "id": "L1",
+          "width": 141.890625,
+          "height": 32
+        },
+        {
+          "id": "L2",
+          "width": 334,
+          "height": 34
+        }
+      ]
+    },
+    {
+      "id": "B2/B3/B4 精选、活动、守护结构",
+      "ok": true,
+      "detail": "精选=3；活动=3；守护=2"
+    },
+    {
+      "id": "D2 空闲 IA 固定顺序且旧主轴退出",
+      "ok": true,
+      "detail": "顺序=true；旧块=0",
+      "measurements": [
+        {
+          "id": "home-banner",
+          "present": true,
+          "top": 0
+        },
+        {
+          "id": "home-service-progress",
+          "present": false,
+          "top": null
+        },
+        {
+          "id": "home-primary-actions",
+          "present": true,
+          "top": 200
+        },
+        {
+          "id": "home-secondary-actions",
+          "present": true,
+          "top": 332
+        },
+        {
+          "id": "home-member-strip",
+          "present": true,
+          "top": 412
+        },
+        {
+          "id": "home-featured",
+          "present": true,
+          "top": 478
+        },
+        {
+          "id": "home-activities",
+          "present": true,
+          "top": 743.296875
+        },
+        {
+          "id": "home-stories",
+          "present": true,
+          "top": 1012.6875
+        }
+      ]
+    },
+    {
+      "id": "副文 ≥12px",
+      "ok": true,
+      "detail": "副文=13；低于12px=0",
+      "measurements": []
+    },
+    {
+      "id": "U0 浅浮岛五栏、顺序与激活短划",
+      "ok": true,
+      "detail": "底=rgba(250, 247, 240, 0.96)；顺序=true；中央transform=none；短划={\"background\":\"rgb(242, 220, 140)\",\"height\":3}",
+      "measurements": {
+        "tabs": [
+          {
+            "key": "home",
+            "text": "首页",
+            "current": "page",
+            "left": 25,
+            "top": 767,
+            "transform": "none"
+          },
+          {
+            "key": "booking",
+            "text": "预约",
+            "current": null,
+            "left": 93,
+            "top": 767,
+            "transform": "none"
+          },
+          {
+            "key": "philia",
+            "text": "PHILIA",
+            "current": null,
+            "left": 161,
+            "top": 767,
+            "transform": "none"
+          },
+          {
+            "key": "mall",
+            "text": "商城",
+            "current": null,
+            "left": 229,
+            "top": 767,
+            "transform": "none"
+          },
+          {
+            "key": "me",
+            "text": "我的",
+            "current": null,
+            "left": 297,
+            "top": 767,
+            "transform": "none"
+          }
+        ],
+        "indicator": {
+          "background": "rgb(242, 220, 140)",
+          "height": 3
+        }
+      }
+    },
+    {
+      "id": "U0 五栏实点切换",
+      "ok": true,
+      "detail": "booking→/booking/grooming/page；philia→/philia/page；mall→/mall/page；me→/me/page；home→/home/page"
+    },
+    {
+      "id": "C2 团购落点诚实可见",
+      "ok": true,
+      "detail": "返回后=商城 MALL · 给它买点好的 本周上新 给它囤点好的 · 门店同价 去看看 配送方式 · 结算页可选 快递 / 同城 / 自提 · 内测期免运费 · 时效属后期端口 › 心愿单 购物袋 全部 主粮 零食 玩具 清洁 其他 首页 预约 PHILIA 商城 我的"
+    },
+    {
+      "id": "B6 服务中首屏进度卡与同骨架",
+      "ok": true,
+      "detail": "同骨架=true；旧块=0；进度=服务进行中步骤 3 / 6旺财 · 基础洗护（小型犬）到店领当前：洗护 · 预计 00:47 完成",
+      "measurements": [
+        {
+          "id": "home-banner",
+          "present": true,
+          "top": 0
+        },
+        {
+          "id": "home-service-progress",
+          "present": true,
+          "top": 164
+        },
+        {
+          "id": "home-primary-actions",
+          "present": true,
+          "top": 282.390625
+        },
+        {
+          "id": "home-secondary-actions",
+          "present": true,
+          "top": 414.390625
+        },
+        {
+          "id": "home-member-strip",
+          "present": true,
+          "top": 494.390625
+        },
+        {
+          "id": "home-featured",
+          "present": true,
+          "top": 560.390625
+        },
+        {
+          "id": "home-activities",
+          "present": true,
+          "top": 825.6875
+        },
+        {
+          "id": "home-stories",
+          "present": true,
+          "top": 1095.078125
+        }
+      ]
+    },
+    {
+      "id": "B6 六步步骤豆与到店领入口",
+      "ok": true,
+      "detail": "步骤豆=6；到店领=/appointments/pd39_home_ia_appointment；文案=服务进行中步骤 3 / 6旺财 · 基础洗护（小型犬）到店领当前：洗护 · 预计 00:47 完成",
+      "measurements": {
+        "dots": 6,
+        "pickup": {
+          "text": "到店领",
+          "href": "/appointments/pd39_home_ia_appointment"
+        }
+      }
+    },
+    {
+      "id": "PD-39.1 服务中到店领热区 ≥44px",
+      "ok": false,
+      "detail": "低于44或缺失=M4:32",
+      "measurements": [
+        {
+          "id": "M4",
+          "width": 60,
+          "height": 32
+        }
+      ]
+    },
+    {
+      "id": "B6 Banner CTA 与进度卡无重叠",
+      "ok": true,
+      "detail": "CTA底=154；进度卡顶=164"
+    }
+  ]
+}

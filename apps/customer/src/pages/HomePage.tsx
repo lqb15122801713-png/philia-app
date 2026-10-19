@@ -224,7 +224,7 @@ export default function HomePage() {
       </nav>
 
       <section className="hv2-member-strip" data-testid="home-member-strip" aria-label="会员摘要">
-        <Link to="/member/rebate" className="hv2-member-summary" aria-label="查看会员与回馈金">
+        <Link to="/member/rebate" className="hv2-member-summary" data-testid="home-member-summary" aria-label="查看会员与回馈金">
           <span>{tierName}</span><i aria-hidden="true" /><span>{hc('home.rebateLabel')} {fenToYuan(rebateBalance)}</span><i aria-hidden="true" /><span>{hc('home.coupons')} ×{couponCount}</span>
         </Link>
         <Link to="/me/card" className="hv2-member-code" data-testid="home-member-code" aria-label="打开会员码">

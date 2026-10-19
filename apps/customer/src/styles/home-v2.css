@@ -24,7 +24,7 @@
 .hv2-banner-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(44,40,34,.62) 0%, rgba(44,40,34,.18) 62%, rgba(44,40,34,.02) 100%); }
 .hv2-store-chip {
   position: absolute; z-index: 2; top: 16px; right: 16px; max-width: 48%;
-  display: flex; align-items: center; gap: 5px; min-height: 32px; padding: 6px 12px;
+  display: flex; align-items: center; gap: 5px; min-height: 44px; padding: 6px 12px;
   border-radius: 999px; background: rgba(250,247,240,.92); color: var(--hv2-brand);
   font-size: 12px; backdrop-filter: blur(10px);
 }
@@ -34,7 +34,7 @@
 .hv2-banner-content h1 { margin-top: 2px; font-size: 25px; font-weight: 800; line-height: 1.2; letter-spacing: -.02em; }
 .hv2-banner-sub { margin-top: 4px; font-size: 12px; line-height: 1.4; color: rgba(250,247,240,.78); }
 .hv2-banner-cta {
-  display: inline-flex; align-items: center; gap: 20px; min-height: 38px; margin-top: 13px;
+  display: inline-flex; align-items: center; gap: 20px; min-height: 44px; margin-top: 13px;
   padding: 8px 17px; border-radius: 999px; background: #FAF7F0; color: var(--hv2-brand);
   font-size: 14px; font-weight: 700;
 }
@@ -52,7 +52,7 @@
 .hv2-step-count { color: var(--hv2-body); font-family: var(--v2mono); font-size: 12px; }
 .hv2-progress-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 7px; }
 .hv2-progress-title-row h2 { min-width: 0; font-size: 16px; font-weight: 800; line-height: 1.35; }
-.hv2-pickup { flex: none; padding: 7px 12px; border-radius: 999px; background: var(--hv2-body); color: var(--hv2-canvas); font-size: 12px; font-weight: 700; }
+.hv2-pickup { display: inline-flex; align-items: center; flex: none; min-height: 44px; padding: 7px 12px; border-radius: 999px; background: var(--hv2-body); color: var(--hv2-canvas); font-size: 12px; font-weight: 700; }
 .hv2-progress-card > .hv2-sub { display: block; margin-top: 2px; }
 .hv2-progress-dots { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 6px; margin-top: 11px; }
 .hv2-progress-dot { height: 4px; border-radius: 999px; background: var(--hv2-divider); }
@@ -78,10 +78,10 @@
   display: flex; align-items: center; min-height: 44px; margin: 14px 16px 0;
   border-radius: 12px; background: var(--hv2-brand); color: #F3EEE4;
 }
-.hv2-member-summary { display: flex; min-width: 0; flex: 1; align-items: center; gap: 8px; padding: 10px 6px 10px 12px; font-size: 12px; white-space: nowrap; }
+.hv2-member-summary { display: flex; min-width: 0; min-height: 44px; flex: 1; align-items: center; gap: 8px; padding: 10px 6px 10px 12px; font-size: 12px; white-space: nowrap; }
 .hv2-member-summary span { overflow: hidden; text-overflow: ellipsis; }
 .hv2-member-summary i { width: 1px; height: 12px; flex: none; background: rgba(250,247,240,.25); }
-.hv2-member-code { display: inline-flex; flex: none; align-items: center; gap: 4px; margin-right: 6px; padding: 7px 11px; border-radius: 999px; background: var(--hv2-canvas); color: var(--hv2-brand); font-size: 12px; font-weight: 700; }
+.hv2-member-code { display: inline-flex; flex: none; align-items: center; gap: 4px; min-height: 44px; margin-right: 6px; padding: 7px 11px; border-radius: 999px; background: var(--hv2-canvas); color: var(--hv2-brand); font-size: 12px; font-weight: 700; }
 
 .hv2-section { margin: 22px 16px 0; }
 .hv2-section > h2 { margin-bottom: 12px; font-size: 18px; font-weight: 800; line-height: 1.35; }
@@ -98,7 +98,7 @@
 .hv2-book-link { display: inline-flex; align-items: center; gap: 5px; margin-top: 5px; color: var(--hv2-body); font-size: 13px; }
 
 .hv2-activity-shell { padding: 12px; border-radius: 16px; background: #FFFFFF; }
-.hv2-activity-lead { display: flex; min-height: 34px; align-items: center; gap: 8px; }
+.hv2-activity-lead { display: flex; min-height: 44px; align-items: center; gap: 8px; }
 .hv2-activity-mark { width: 28px; height: 20px; flex: none; border-radius: 6px; background: #A78BE8; }
 .hv2-activity-lead-title { font-size: 13px; font-weight: 650; }
 .hv2-activity-tag { color: var(--hv2-secondary); font-size: 12px; }
