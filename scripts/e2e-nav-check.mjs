@@ -302,7 +302,7 @@ async function main() {
     const wrap = c?.parentElement;
     return wrap ? (wrap.textContent || '').trim() : null;
   })()`);
-  check('R-Nav-3 底栏中位爪印带文字标签', /philia/i.test(dockLabel ?? ''), `label=${dockLabel}`);
+  check('R-Nav-3 底栏中位带文字标签', /philia/i.test(dockLabel ?? ''), `label=${dockLabel}`);
 
   console.log(failures === 0 ? '\ne2e-nav-check 全绿 🎉' : `\n${failures} 项失败`);
   cdp.close();

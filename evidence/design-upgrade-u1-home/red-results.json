@@ -1,0 +1,232 @@
+{
+  "at": "2026-10-18T09:38:01.238Z",
+  "base": "http://127.0.0.1:7129",
+  "results": [
+    {
+      "id": "B5 Banner 季主题、立即预约与门店 chip",
+      "ok": false,
+      "detail": "CTA=null/null；门店=null",
+      "measurements": {
+        "banner": {
+          "text": null,
+          "href": null
+        },
+        "storeChip": null
+      }
+    },
+    {
+      "id": "B1 三主入口 ×3",
+      "ok": false,
+      "detail": "null→null；null→null；null→null",
+      "measurements": [
+        {
+          "text": null,
+          "href": null
+        },
+        {
+          "text": null,
+          "href": null
+        },
+        {
+          "text": null,
+          "href": null
+        }
+      ]
+    },
+    {
+      "id": "C2 四次入口 ×4",
+      "ok": false,
+      "detail": "null→null；null→null；null→null；null→null",
+      "measurements": [
+        {
+          "text": null,
+          "href": null
+        },
+        {
+          "text": null,
+          "href": null
+        },
+        {
+          "text": null,
+          "href": null
+        },
+        {
+          "text": null,
+          "href": null
+        }
+      ]
+    },
+    {
+      "id": "C1 细会员条与会员码一键",
+      "ok": false,
+      "detail": "会员条=false；会员码=/member/open"
+    },
+    {
+      "id": "B2/B3/B4 精选、活动、守护结构",
+      "ok": false,
+      "detail": "精选=0；活动=0；守护=0"
+    },
+    {
+      "id": "D2 空闲 IA 固定顺序且旧主轴退出",
+      "ok": false,
+      "detail": "顺序=false；旧块=home-entry-card,home-idband,home-stats-row,home-pets-row",
+      "measurements": [
+        {
+          "id": "home-banner",
+          "present": true,
+          "top": 0
+        },
+        {
+          "id": "home-service-progress",
+          "present": false,
+          "top": null
+        },
+        {
+          "id": "home-primary-actions",
+          "present": false,
+          "top": null
+        },
+        {
+          "id": "home-secondary-actions",
+          "present": false,
+          "top": null
+        },
+        {
+          "id": "home-member-strip",
+          "present": false,
+          "top": null
+        },
+        {
+          "id": "home-featured",
+          "present": false,
+          "top": null
+        },
+        {
+          "id": "home-activities",
+          "present": false,
+          "top": null
+        },
+        {
+          "id": "home-stories",
+          "present": false,
+          "top": null
+        }
+      ]
+    },
+    {
+      "id": "副文 ≥12px",
+      "ok": false,
+      "detail": "副文=0；低于12px=0",
+      "measurements": []
+    },
+    {
+      "id": "U0 浅浮岛五栏、顺序与激活短划",
+      "ok": false,
+      "detail": "底=rgba(74, 64, 52, 0.94)；顺序=true；中央transform=matrix(1, 0, 0, 1, 0, -16)；短划=null",
+      "measurements": {
+        "tabs": [
+          {
+            "key": "home",
+            "text": "首页",
+            "current": "page",
+            "left": 24,
+            "top": 777,
+            "transform": "none"
+          },
+          {
+            "key": "booking",
+            "text": "预约",
+            "current": null,
+            "left": 92.390625,
+            "top": 777,
+            "transform": "none"
+          },
+          {
+            "key": "philia",
+            "text": "",
+            "current": null,
+            "left": 165.984375,
+            "top": 754,
+            "transform": "matrix(1, 0, 0, 1, 0, -16)"
+          },
+          {
+            "key": "mall",
+            "text": "商城",
+            "current": null,
+            "left": 229.1875,
+            "top": 777,
+            "transform": "none"
+          },
+          {
+            "key": "me",
+            "text": "我的",
+            "current": null,
+            "left": 297.59375,
+            "top": 777,
+            "transform": "none"
+          }
+        ],
+        "indicator": null
+      }
+    },
+    {
+      "id": "B6 服务中首屏进度卡与同骨架",
+      "ok": false,
+      "detail": "同骨架=false；旧块=home-stats-row,home-pets-row；进度=null",
+      "measurements": [
+        {
+          "id": "home-banner",
+          "present": true,
+          "top": 0
+        },
+        {
+          "id": "home-service-progress",
+          "present": false,
+          "top": null
+        },
+        {
+          "id": "home-primary-actions",
+          "present": false,
+          "top": null
+        },
+        {
+          "id": "home-secondary-actions",
+          "present": false,
+          "top": null
+        },
+        {
+          "id": "home-member-strip",
+          "present": false,
+          "top": null
+        },
+        {
+          "id": "home-featured",
+          "present": false,
+          "top": null
+        },
+        {
+          "id": "home-activities",
+          "present": false,
+          "top": null
+        },
+        {
+          "id": "home-stories",
+          "present": false,
+          "top": null
+        }
+      ]
+    },
+    {
+      "id": "B6 六步步骤豆与到店领入口",
+      "ok": false,
+      "detail": "步骤豆=0；到店领=null；文案=null",
+      "measurements": {
+        "dots": 0,
+        "pickup": {
+          "text": null,
+          "href": null
+        }
+      }
+    }
+  ]
+}
