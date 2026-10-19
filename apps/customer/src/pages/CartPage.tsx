@@ -1,27 +1,9 @@
-/**
- * 购物车 /mall/cart（T5.3 · client 状态，localStorage 持久化；换皮批片 2 落 M-03 定稿：
- * 行件=图 56 圆角 12 + 名 13/700 + 价 mono 11 muted + 步进器 stepper 26 圆 ±/mono 13 数；
- * 吸底 ctabar 渐出底 + 合计 mono 19/700 + 深棕主钮 16/700 + 回馈金返显 sub（APP-18））
- *
- * - 商品行：勾选 / 图 / 名 / 单价 / 数量步进器（上限 min(stock, 99)）/ 删除；
- * - 全选 / 单选；底部吸底结算栏（详情级无 dock，落底 safe-area）：合计（勾选口径）+「去结算」；
- * - 单店限制：车内商品必为同一门店（加车时已拦），页头展示当前门店提示；
- * - 去结算 → /mall/checkout（结算页从 localStorage 还原勾选商品，跨页一致）。
- *
- * 画布化（产品-1010 画布全屏批 片 3 末片 · 商城域，工艺照 MePage/MallPage）：
- * 五块入册（cart.head/empty/storeNote/rows/ctaBar），块序/显隐=useCanvasLayout('cart')
- * （published→注册表默认序尾补，空=CART_DEFAULT_ORDER 兜底）；店锚=?canvasStore= 预览店锚
- * > 车内门店（cart.items[0].storeId 既有状态）> 记忆门店（readLastBooking，零新增查询）；
- * ?canvasPreview=1=页首水印注记（cart-canvas-preview-note）；文案键挂 CK 点选反查锚；
- * 空态/非空态块互斥门控照改造前条件逐字；块内逻辑零改动，data-testid 原值全保留。
- */
-
-import { Fragment, useMemo, type ReactNode } from 'react';
+import { Fragment, useMemo, useState, type ReactNode } from 'react';
 import { CanvasLayoutLoader, CK, useCanvasLayout, usePhiliaClient } from '@philia/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Check, Minus, Plus, Trash2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CartProvider, MAX_QTY, useCart, type CartItem } from '../components/mall/cartStore';
+import { CartProvider, MAX_QTY, readRebatePreference, useCart, writeRebatePreference, type CartItem } from '../components/mall/cartStore';
 import { EmptyState } from '../components/home/common';
 import { fenToYuan } from '../components/mall/format';
 import { mlc } from '../copy/mall';
@@ -31,91 +13,62 @@ import ProductImage from '../components/mall/ProductImage';
 import { mc } from '../components/member/copy';
 import { readLastBooking } from '@/lib/bookingPrefill';
 
-/** 画布注册表默认序兜底（=改造前 JSX 序；canvas.blocks 失败/空时用） */
 const CART_DEFAULT_ORDER = ['cart.head', 'cart.empty', 'cart.storeNote', 'cart.rows', 'cart.ctaBar'] as const;
 
-/** 圆形勾选钮：品牌色实心圆 + 深棕墨 ✓（v1.1 冻结 on-primary 语义）
- *  W1-D2 触控量化：视觉圆点 24px 不变，命中区扩至 44×44px（负边距补偿布局零视觉变化） */
 function CheckDot({ checked, onToggle, label }: { checked: boolean; onToggle: () => void; label: string }) {
   return (
-    <button
-      type="button"
-      role="checkbox"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={onToggle}
-      className="-m-2.5 flex h-11 w-11 shrink-0 items-center justify-center"
-    >
-      <span
-        className={`flex h-6 w-6 items-center justify-center rounded-full transition ${
-          checked ? 'bg-brand-primary' : 'border-[1.5px] border-line-strong bg-card'
-        }`}
-      >
+    <button type="button" role="checkbox" aria-checked={checked} aria-label={label} onClick={onToggle} className="-m-2.5 flex h-11 w-11 shrink-0 items-center justify-center">
+      <span className={`flex h-6 w-6 items-center justify-center rounded-full transition ${checked ? 'bg-brand-primary' : 'border-[1.5px] border-line-strong bg-card'}`}>
         {checked ? <Check className="h-3.5 w-3.5 text-ink" strokeWidth={2.5} /> : null}
       </span>
     </button>
   );
 }
 
-function CartRow({ item }: { item: CartItem }) {
+function CartRow({ item, managing }: { item: CartItem; managing: boolean }) {
   const cart = useCart();
   const cap = Math.max(1, Math.min(item.stock, MAX_QTY));
-  /* 片 2 M-03 定稿 .cart-row：图 56 圆角 12 + 名 13/700 + 价 mono 11 muted +
-     步进器 26 圆 ±（细线白卡）+ mono 13 数；勾选/删除能力保留 */
   return (
-    <div className="flex gap-3 py-3.5">
-      <div className="flex items-center">
-        <CheckDot checked={item.checked} onToggle={() => cart.toggle(item.productId)} label={`选择 ${item.name}`} />
-      </div>
+    <article className="flex gap-3 py-3.5" data-testid={`cart-row-${item.productId}`}>
+      {managing ? (
+        <div className="flex items-center">
+          <CheckDot checked={item.checked} onToggle={() => cart.toggle(item.productId)} label={`选择 ${item.name}`} />
+        </div>
+      ) : null}
       <Link to={`/mall/product/${item.productId}`} className="shrink-0">
         <ProductImage src={item.image} alt={item.name} className="h-14 w-14 rounded-[12px]" />
       </Link>
       <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
         <div className="flex items-start justify-between gap-2">
           <Link to={`/mall/product/${item.productId}`} className="min-w-0">
-            <p className="line-clamp-2 text-[13px] font-bold leading-[18px]">{item.name}</p>
+            <p className="line-clamp-1 text-[13px] font-bold leading-[18px]">{item.name}</p>
+            <p className="mt-0.5 text-[12px] text-ink-secondary" data-u4-secondary>{mlc('mall.cartMemberMeta')}</p>
           </Link>
-          <button
-            type="button"
-            aria-label={`删除 ${item.name}`}
-            onClick={() => cart.remove(item.productId)}
-            className="shrink-0 p-1 text-ink-placeholder transition hover:text-danger"
-          >
-            <Trash2 className="h-4 w-4" strokeWidth={1.5} />
-          </button>
+          {managing ? (
+            <button type="button" aria-label={`删除 ${item.name}`} onClick={() => cart.remove(item.productId)} className="shrink-0 p-1 text-ink-placeholder transition hover:text-danger">
+              <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+          ) : null}
         </div>
-        <div className="flex items-center justify-between">
-          <p className="u1-num text-[11px] text-ink-secondary">{fenToYuan(item.priceFen)}</p>
-          {/* 步进器（Obs5e：± 钮热区 ≥44px + mono 13 数；钮间距 10px 保留） */}
+        <div className="mt-1 flex items-center justify-between">
+          <p className="u1-num text-body-sm font-bold text-ink">{fenToYuan(item.priceFen)}</p>
           <div className="flex items-center gap-2.5">
-            <button
-              type="button"
-              aria-label="减少数量"
-              disabled={item.qty <= 1}
-              onClick={() => cart.setQty(item.productId, item.qty - 1)}
-              className="flex min-h-11 min-w-11 items-center justify-center rounded-full border border-line bg-card text-ink transition disabled:opacity-40"
-            >
+            <button type="button" aria-label="减少数量" disabled={item.qty <= 1} onClick={() => cart.setQty(item.productId, item.qty - 1)} className="flex min-h-11 min-w-11 items-center justify-center rounded-full bg-brand-secondary-light text-ink transition disabled:opacity-40">
               <Minus className="h-3.5 w-3.5" strokeWidth={1.5} />
             </button>
             <span className="min-w-[18px] text-center font-number text-[13px] font-bold tabular-nums">{item.qty}</span>
-            <button
-              type="button"
-              aria-label="增加数量"
-              disabled={item.qty >= cap}
-              onClick={() => cart.setQty(item.productId, item.qty + 1)}
-              className="flex min-h-11 min-w-11 items-center justify-center rounded-full border border-line bg-card text-ink transition disabled:opacity-40"
-            >
+            <button type="button" aria-label="增加数量" disabled={item.qty >= cap} onClick={() => cart.setQty(item.productId, item.qty + 1)} className="flex min-h-11 min-w-11 items-center justify-center rounded-full bg-brand-secondary-light text-ink transition disabled:opacity-40">
               <Plus className="h-3.5 w-3.5" strokeWidth={1.5} />
             </button>
           </div>
         </div>
         {item.qty >= cap && item.stock < MAX_QTY ? (
-          <p className="mt-0.5 text-right text-caption-xs text-ink-placeholder">
+          <p className="mt-0.5 text-right text-[12px] text-ink-placeholder" data-u4-secondary>
             <CK k="mall.cartStockNote">{mlc('mall.cartStockNote', { n: item.stock })}</CK>
           </p>
         ) : null}
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -124,10 +77,9 @@ function CartInner() {
   const navigate = useNavigate();
   const { trpc } = usePhiliaClient();
   const { toastEl, showToast } = useToast({ durationMs: 3200 });
+  const [managing, setManaging] = useState(false);
+  const [useRebate, setUseRebate] = useState(() => readRebatePreference());
 
-  /* 回馈金返显（M-03 定稿 CTA sub「本单返 ¥x 回馈金」；口径 APP-18：
-     membership.my 的 plan.rebateBp 万分比，返 Fen=round(勾选合计*rebateBp/10000)；
-     非会员/免费档=0 不渲染假数——MallPage 同款） */
   const myQ = useQuery({
     queryKey: ['membership', 'my'],
     queryFn: () => trpc.membership.my.query(),
@@ -135,31 +87,15 @@ function CartInner() {
     retry: false,
   });
   const rebateBp = (myQ.data?.plan as { rebateBp?: number } | null | undefined)?.rebateBp ?? 0;
+  const balanceFen = myQ.data?.rebate?.balanceFen ?? 0;
   const rebateFen = rebateBp > 0 ? Math.round((cart.checkedTotalFen * rebateBp) / 10000) : 0;
-  /* 返显钩子（体验急修批 B）：注册用户/非会员 CTA sub=规则钩子，点击→/member/open（J-01）；
-     付费档比例读表拼「2/5/10」，缺省不渲染（不上假数） */
-  const hookPctsQ = useQuery({
-    queryKey: ['membership', 'plans'],
-    queryFn: () => trpc.membership.plans.query(),
-    staleTime: 300_000,
-  });
-  const hookPcts = (hookPctsQ.data?.plans ?? [])
-    .filter((p) => p.rebateBp > 0)
-    .map((p) => p.rebateBp / 100)
-    .join('/');
+  const deductionFen = useRebate ? Math.min(balanceFen, cart.checkedTotalFen) : 0;
+  const payableFen = Math.max(0, cart.checkedTotalFen - deductionFen);
 
-  /* ---- 画布全屏批 片 3 画布化入册：探针参 + 店锚 + 注册表块序/有效布局（同 MePage 工艺） ---- */
-  /* 画布预览探针参识别（?canvasPreview=1；微光正名批工艺三件套之一） */
-  const isCanvasPreview = useMemo(
-    () => new URLSearchParams(window.location.search).get('canvasPreview') === '1',
-    [],
-  );
-  /* 画布布局店锚（?canvasStore= 预览店锚 > 车内门店既有状态 > 记忆门店，零新增查询） */
+  const isCanvasPreview = useMemo(() => new URLSearchParams(window.location.search).get('canvasPreview') === '1', []);
   const previewStoreId = useMemo(() => new URLSearchParams(window.location.search).get('canvasStore'), []);
   const memoryStoreId = useMemo(() => readLastBooking()?.storeId ?? null, []);
   const cartStoreId = previewStoreId ?? cart.items[0]?.storeId ?? memoryStoreId ?? null;
-
-  /* 画布端口：注册表块序 + 有效布局（published→默认序尾补；空=默认序兜底常量） */
   const blocksQ = useQuery({
     queryKey: ['canvas', 'blocks'],
     queryFn: () => trpc.canvas.blocks.query(),
@@ -167,9 +103,7 @@ function CartInner() {
     retry: 1,
   });
   const registryBlocks = useMemo(() => {
-    const items = (blocksQ.data?.items ?? [])
-      .filter((b) => b.pageKey === 'cart')
-      .sort((a, b) => a.sortOrder - b.sortOrder);
+    const items = (blocksQ.data?.items ?? []).filter((b) => b.pageKey === 'cart').sort((a, b) => a.sortOrder - b.sortOrder);
     return items.length > 0 ? items : CART_DEFAULT_ORDER.map((blockKey) => ({ blockKey }));
   }, [blocksQ.data]);
   const layout = useCanvasLayout('cart', cartStoreId, registryBlocks);
@@ -182,156 +116,102 @@ function CartInner() {
     navigate('/mall/checkout');
   };
 
-  /* 块渲染器（块内逻辑零改动——五块照改造前 JSX 逐字搬，空态/非空态互斥门控保留，
-     文案走 copy 键 + CK 反查锚） */
   const renderers: Record<string, () => ReactNode> = {
-    /* 1. cart.head：页头（U1-A 统一返回条 ←圆钮+标题，件数紧随标题保持原位） */
     'cart.head': () => (
       <PageHeader
-        title={
-          <>
-            <CK k="mall.cartTitle">{mlc('mall.cartTitle')}</CK>
-            {cart.items.length > 0 ? (
-              <span className="u1-num ml-1 text-caption font-normal text-ink-secondary">{cart.count} 件</span>
-            ) : null}
-          </>
-        }
+        title={<CK k="mall.cartTitle">{mlc('mall.cartTitle')}</CK>}
+        right={cart.items.length > 0 ? (
+          <button type="button" data-testid="cart-manage" onClick={() => setManaging((v) => !v)} className="text-[12px] font-medium text-ink-secondary" data-u4-secondary>
+            {managing ? mlc('mall.cartManageClose') : mlc('mall.cartManage')}
+          </button>
+        ) : null}
       />
     ),
-
-    /* 2. cart.empty：空态（U1-I 全域统一空态组件；U4-D3 文案对齐试样 12，余白区垂直居中；
-          EmptyState title 为 string 位挂不上 CK，desc/action 挂 CK） */
     'cart.empty': () =>
       cart.items.length === 0 ? (
         <div className="flex min-h-[56vh] flex-col justify-center">
           <EmptyState
             title={mlc('mall.cartEmptyTitle')}
-            desc={
-              <CK k="mall.cartEmptyBody">
-                {mlc('mall.cartEmptyBody')
-                  .split('\n')
-                  .map((line, i, arr) => (
-                    <Fragment key={i}>
-                      {line}
-                      {i < arr.length - 1 ? <br /> : null}
-                    </Fragment>
-                  ))}
-              </CK>
-            }
-            action={
-              <Link
-                to="/mall"
-                className="inline-flex items-center rounded-control bg-ink px-[30px] py-[13px] text-body-sm font-semibold text-canvas transition-transform duration-120 ease-philia-spring active:scale-92"
-              >
-                <CK k="mall.cartEmptyCta">{mlc('mall.cartEmptyCta')}</CK>
-              </Link>
-            }
+            desc={<CK k="mall.cartEmptyBody">{mlc('mall.cartEmptyBody').split('\n').map((line, i, arr) => <Fragment key={i}>{line}{i < arr.length - 1 ? <br /> : null}</Fragment>)}</CK>}
+            action={<Link to="/mall" className="inline-flex items-center rounded-control bg-brand-cta px-[30px] py-[13px] text-body-sm font-semibold text-brand-cta-on"><CK k="mall.cartEmptyCta">{mlc('mall.cartEmptyCta')}</CK></Link>}
           />
         </div>
       ) : null,
-
-    /* 3. cart.storeNote：单店限制提示（规则明面） */
     'cart.storeNote': () =>
       cart.items.length > 0 ? (
-        <p className="mt-3 rounded-control bg-brand-primary-light px-3.5 py-2.5 text-caption text-ink">
+        <p className="mt-2 text-[12px] text-ink-secondary" data-testid="cart-store-note" data-u4-secondary>
           <CK k="mall.cartStoreNote">{mlc('mall.cartStoreNote', { store: cart.items[0]?.storeName ?? '' })}</CK>
         </p>
       ) : null,
-
-    /* 4. cart.rows：行件组（M-03 定稿：单张白卡内发丝线分隔多行） */
     'cart.rows': () =>
       cart.items.length > 0 ? (
-        <div className="u1-card mt-3 divide-y divide-line-divider px-4">
-          {cart.items.map((it) => (
-            <CartRow key={it.productId} item={it} />
-          ))}
-        </div>
-      ) : null,
-
-    /* 5. cart.ctaBar：吸底结算栏（片 2 M-03 定稿 ctabar：渐出底 + 合计 mono 19/700 +
-          深棕主钮 16/700（sub mono 返显）；详情级无 dock，落底 safe-area；
-          fixed 条包无样式 section 不影响落位） */
-    'cart.ctaBar': () =>
-      cart.items.length > 0 ? (
-        <div
-          className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-sticky"
-          style={{ background: 'linear-gradient(transparent, #FAF7F0 40%)' }}
-        >
-          <div className="mx-auto max-w-lg px-4 pb-4 pt-3">
-            <div className="mb-2.5 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <CheckDot
-                  checked={cart.allChecked}
-                  onToggle={() => cart.toggleAll(!cart.allChecked)}
-                  label={mlc('mall.cartCheckAll')}
-                />
-                <span className="text-body-sm text-ink-secondary"><CK k="mall.cartCheckAll">{mlc('mall.cartCheckAll')}</CK></span>
+        <>
+          <div className="u1-card mt-3 divide-y divide-line-divider px-4">
+            {cart.items.map((it) => <CartRow key={it.productId} item={it} managing={managing} />)}
+          </div>
+          <section className="u1-card mt-3 p-4" data-testid="cart-rebate-card">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-body-sm font-bold">{mlc('mall.rebateUse')}</p>
+                <p className="mt-1 text-[12px] text-ink-secondary" data-u4-secondary>
+                  {mlc('mall.rebateBalanceLimit', { balance: fenToYuan(balanceFen), amt: fenToYuan(deductionFen) })}
+                </p>
+                <p className="mt-1 text-[12px] text-ink-secondary" data-u4-secondary>
+                  {mlc('mall.rebateDeduct')} <span data-testid="cart-deduction" className="font-number tabular-nums">-{fenToYuan(deductionFen)}</span>
+                </p>
               </div>
-              <p className="flex items-baseline gap-1.5">
-                <span className="text-caption-xs text-ink-secondary"><CK k="mall.cartTotalLabel">{mlc('mall.cartTotalLabel')}</CK></span>
-                <span className="u1-num text-[19px] font-bold text-ink">{fenToYuan(cart.checkedTotalFen)}</span>
-              </p>
-            </div>
-            <div className="flex w-full flex-col">
               <button
                 type="button"
-                disabled={cart.checkedItems.length === 0}
-                onClick={handleCheckout}
-                className="flex w-full flex-col items-center justify-center rounded-[18px] bg-brand-cta py-3 text-body-lg font-bold text-brand-cta-on transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40"
+                role="switch"
+                aria-checked={useRebate}
+                aria-label={mlc('mall.rebateUse')}
+                data-testid="cart-rebate-switch"
+                onClick={() => {
+                  const next = !useRebate;
+                  writeRebatePreference(next);
+                  setUseRebate(next);
+                }}
+                className={`relative h-8 w-14 shrink-0 rounded-full transition ${useRebate ? 'bg-brand-cta' : 'bg-brand-secondary-light'}`}
               >
-                <span>
-                  <CK k="mall.cartCheckout">{mlc('mall.cartCheckout')}</CK>{cart.checkedItems.length > 0 ? `（${cart.checkedItems.reduce((n, it) => n + it.qty, 0)}）` : ''}
-                </span>
-                {rebateFen > 0 ? (
-                  <span className="mt-0.5 font-number text-[10.5px] font-normal text-[#C9BBA0]">
-                    <CK k="mall.rebateEarnCta">{mc('mall.rebateEarnCta', { amt: fenToYuan(rebateFen) })}</CK>
-                  </span>
-                ) : null}
+                <span className={`absolute top-1 h-6 w-6 rounded-full bg-card transition ${useRebate ? 'left-7' : 'left-1'}`} />
               </button>
-              {rebateFen === 0 && hookPcts ? (
-                <Link
-                  to="/member/open"
-                  data-testid="cart-rebate-hook"
-                  className="mt-1 self-center font-number text-[10.5px] font-normal text-[#C9BBA0] underline underline-offset-2"
-                >
-                  <CK k="mall.rebateHook">{mc('mall.rebateHook', { pcts: hookPcts })}</CK>
-                </Link>
-              ) : null}
             </div>
+          </section>
+          {rebateFen > 0 ? (
+            <p className="mt-2 text-[12px] text-ink-secondary" data-u4-secondary>{mlc('mall.cartEarnAfter', { amt: fenToYuan(rebateFen) })}</p>
+          ) : null}
+        </>
+      ) : null,
+    'cart.ctaBar': () =>
+      cart.items.length > 0 ? (
+        <div className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-sticky" style={{ background: 'linear-gradient(transparent, #FAF7F0 40%)' }}>
+          <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 pb-4 pt-3">
+            <div className="min-w-0">
+              <p className="text-[12px] text-ink-secondary" data-u4-secondary><CK k="mall.cartTotalLabel">{mlc('mall.cartTotalLabel')}</CK></p>
+              <p className="flex items-baseline gap-2">
+                <span data-testid="cart-payable" className="u1-num text-[19px] font-bold text-ink">{fenToYuan(payableFen)}</span>
+                {deductionFen > 0 ? <span className="text-[12px] text-ink-secondary" data-u4-secondary>{mlc('mall.cartRebateSaved', { amt: fenToYuan(deductionFen) })}</span> : null}
+              </p>
+            </div>
+            <button type="button" disabled={cart.checkedItems.length === 0} onClick={handleCheckout} data-testid="cart-checkout" className="shrink-0 rounded-full bg-brand-cta px-6 py-3 text-body-sm font-bold text-brand-cta-on transition-transform duration-120 ease-philia-spring active:scale-92 disabled:opacity-40">
+              <CK k="mall.cartCheckout">{mlc('mall.cartCheckout')}</CK>
+            </button>
           </div>
         </div>
       ) : null,
   };
 
   return (
-    /* U4-D3：页边距 22px */
     <CanvasLayoutLoader pageKey="cart" storeId={cartStoreId}>
       <div className="px-[22px] pb-32 pt-4">
         {toastEl}
-        {/* 画布预览水印（?canvasPreview=1 探针模式；零真会话零写库口径注记） */}
-        {isCanvasPreview ? (
-          <div style={{ marginTop: 10 }}>
-            <p className="text-center text-caption-xs text-ink-secondary" data-testid="cart-canvas-preview-note">{mc('mc.canvasExampleNote')}</p>
-          </div>
-        ) : null}
-        {/* 块流：五块按有效布局渲染（隐藏块整段不渲染）；空态/非空态块内互斥门控照改造前，
-            默认序下 DOM 结构零差异；ctaBar=fixed 吸底条包无样式 section 不影响落位 */}
-        {layout.map((b) =>
-          b.visible ? (
-            <section data-block-key={b.blockKey} key={b.blockKey}>
-              {renderers[b.blockKey]?.() ?? null}
-            </section>
-          ) : null,
-        )}
+        {isCanvasPreview ? <p className="mb-2 text-center text-[12px] text-ink-secondary" data-testid="cart-canvas-preview-note">{mc('mc.canvasExampleNote')}</p> : null}
+        {layout.map((b) => b.visible ? <section data-block-key={b.blockKey} key={b.blockKey}>{renderers[b.blockKey]?.() ?? null}</section> : null)}
       </div>
     </CanvasLayoutLoader>
   );
 }
 
 export default function CartPage() {
-  return (
-    <CartProvider>
-      <CartInner />
-    </CartProvider>
-  );
+  return <CartProvider><CartInner /></CartProvider>;
 }

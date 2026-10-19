@@ -24,6 +24,24 @@ import {
 } from 'react';
 
 const STORAGE_KEY = 'philia.cart';
+const REBATE_PREF_KEY = 'philia.rebateUse';
+
+/** 回馈金抵扣表面偏好在购物车与结算间共享；缺省按定稿开启。 */
+export function readRebatePreference(): boolean {
+  try {
+    return window.localStorage.getItem(REBATE_PREF_KEY) !== 'false';
+  } catch {
+    return true;
+  }
+}
+
+export function writeRebatePreference(useRebate: boolean): void {
+  try {
+    window.localStorage.setItem(REBATE_PREF_KEY, useRebate ? 'true' : 'false');
+  } catch {
+    // 隐私模式写失败时仅保留当前页内存态。
+  }
+}
 
 /** 单行最大数量（与服务端 createOrder qty ≤ 99 对齐） */
 export const MAX_QTY = 99;

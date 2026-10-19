@@ -13,11 +13,28 @@ import { slotContentOf, withCopyOverrides, type SlotContent } from '@philia/shar
 const MAGAZINE_COPY_TABLE = {
   /* ---- 壳层（页头 + 口径注 + 阅读页出口） ---- */
   'mag.headTitle': 'PHILIA',
-  'mag.headSub': '杂志 · 给它，也给自己',
+  'mag.headSub': '品牌杂志',
+  'mag.brandSub': '品牌杂志',
   'mag.pgcNote': '编辑部出品 · 精选内容（不开放投稿）',
   'mag.articleMissingTitle': '这篇内容还在整理中',
   'mag.articleMissingSub': '返回杂志首页，看看已经发布的文章。',
   'mag.backToMagazine': '返回杂志首页',
+  'mag.memberCode': '会员码',
+  'mag.memberFallback': '注册用户',
+  'mag.rebateReady': '已到账 · 商品消费可抵',
+  'mag.shortcutBenefits': '权益',
+  'mag.shortcutCoupons': '券',
+  'mag.shortcutTasks': '任务',
+  'mag.today': '今日编辑精选',
+  'mag.leadMetaDate': '今日 · {store}',
+  'mag.leadMetaType': '洗护前后 · 门店作品',
+  'mag.before': '前',
+  'mag.after': '后',
+  'mag.afterAlt': '洗护后效果图（待换）',
+  'mag.leadBookingCta': '去预约同款洗护',
+  'mag.boardingTag': '寄养现场',
+  'mag.pendingImage': '待换',
+  'mag.readArticle': '阅读：{title}',
 
   /* ---- 槽位与正文缺省回退（槽行无对应字段时显示；与迁移 0086 槽种默认同帧） ---- */
   'mag.leadTitle': '秋日洗护季特刊',
@@ -39,9 +56,11 @@ export const MAGAZINE_COPY = withCopyOverrides(MAGAZINE_COPY_TABLE);
 
 export type MagazineCopyKey = keyof typeof MAGAZINE_COPY;
 
-/** 文案键取值（本表无插值位；保留 helper 形态与各端 copy 表同族） */
-export function mgc(key: MagazineCopyKey): string {
-  return MAGAZINE_COPY[key];
+/** 文案键取值 + 可选插值（端口值优先，缺省回退同帧）。 */
+export function mgc(key: MagazineCopyKey, vars?: Record<string, string | number>): string {
+  const tpl: string = MAGAZINE_COPY[key];
+  if (!vars) return tpl;
+  return tpl.replace(/\{(\w+)\}/g, (_, k: string) => (k in vars ? String(vars[k]) : `{${k}}`));
 }
 
 /** getter 延迟到渲染读取，避免模块加载时冻结尚未到达的 copy 覆盖值。 */
