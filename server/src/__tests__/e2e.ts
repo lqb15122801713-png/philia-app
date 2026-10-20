@@ -5855,6 +5855,16 @@ async function main(): Promise<void> {
         summary60.closedLast30d >= 1,
       summary60);
 
+    /* ---- 60.7 PD-47 M1：/ops 商家读口 pdca.listForOps（修 pdca.list staff 闸对商家 403 开挂） ---- */
+    const opsListOwner60 = await trpcQuery<{ issues: Pdca60[] }>('pdca.listForOps', { cookie: ownerCookie });
+    const opsListMgr60 = await trpcQuery<{ issues: Pdca60[] }>('pdca.listForOps', { cookie: managerCookie });
+    const opsListStaff60 = await asErr(trpcQuery('pdca.listForOps', { cookie: liliCookie }));
+    check('60.7 PD-47 M1：listForOps 店主/店长 200 含本店已闭环问题（非 403）；staff 身份越界仍 403',
+      opsListOwner60.issues.some((i) => i.id === raise60.issue.id) &&
+        opsListMgr60.issues.some((i) => i.id === raise60.issue.id) &&
+        opsListStaff60 instanceof TrpcHttpError && opsListStaff60.code === 'FORBIDDEN',
+      { owner: opsListOwner60.issues.length, mgr: opsListMgr60.issues.length, staffErr: opsListStaff60?.code });
+
     /* ---- 61.1 公告定向发布：groomer 可见+通知+事件；frontdesk 不可见 ---- */
     interface Ann61 { id: string; title: string; targetRole: string; status: string; pinned: boolean; readAt?: Date | null; readCount?: number }
     const pub61 = await trpcMutate<{ announcement: Ann61 }>('announce.publish', {

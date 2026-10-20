@@ -1,0 +1,15 @@
+== PD-47 读回记录（本窗栈 server@7221 + merchant@7121，2026-10-20 17:0x 本机） ==
+
+-- A. 店主 cookie GET /trpc/pdca.listForOps → HTTP 200（修后，/ops 数据源）
+http_status=200
+{"result":{"data":{"json":{"issues":[{"id":"01M5C8G9WPGP7MRQ5ZKWX3PMEG","storeId":"01M5C8BE9PF070MKMXQ2SQSFGQ","title":"美容室地板水渍","detail":"吹水区积水，客人宠物易滑倒","category":"卫生","status":"recheck",…}]}}}}
+
+-- B. 店主 cookie GET /trpc/pdca.list（旧 staff 档端点）→ 仍 403（契约不动，员工端零回归）
+http_status=403
+{"error":{"json":{"message":"需要员工身份（未绑定 staff 记录）","code":-32003,"data":{"code":"FORBIDDEN","httpStatus":403,…}}}}
+
+-- C. 未登录 GET /trpc/pdca.listForOps → 401（未登录不透出）
+http_status=401
+
+-- D. DB copy_overrides active 行读回（0088 迁移实证）
+[{"rule_key":"dash.m3ChainNote","text":"合计+分栏并列（三店真值）","active":1}]

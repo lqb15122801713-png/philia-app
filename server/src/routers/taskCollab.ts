@@ -459,6 +459,30 @@ export const pdcaRouter = router({
       return { issues: rows };
     }),
 
+  /**
+   * listForOps（店主/店长，PD-47 M1）：商家端 /ops 问题闭环读口。
+   * 与 list 同店域同返回形状（本店全量+status 过滤），闸门换 merchantManager——
+   * list 是 staff 档（员工端 PdcaPage），商家身份无 staffId 被 403 卡死属开挂，
+   * 故管理端读口单列（同 selfCheck.listPending / pdca.summary 之 merchantManager 档）。
+   */
+  listForOps: merchantManagerProcedure
+    .input(
+      z
+        .object({ status: z.enum(['open', 'fixing', 'recheck', 'closed']).optional() })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const conds = [eq(schema.pdcaIssues.storeId, ctx.user.storeId!)];
+      if (input?.status) conds.push(eq(schema.pdcaIssues.status, input.status));
+      const rows = await ctx.db
+        .select()
+        .from(schema.pdcaIssues)
+        .where(and(...conds))
+        .orderBy(desc(schema.pdcaIssues.createdAt))
+        .limit(100);
+      return { issues: rows };
+    }),
+
   /** startFix（assignee 本人或 manager+）：open→fixing；未指派时领取=指派给自己 */
   startFix: staffProcedure
     .input(z.object({ issueId: z.string().min(1) }))
