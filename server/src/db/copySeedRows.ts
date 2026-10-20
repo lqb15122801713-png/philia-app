@@ -26621,7 +26621,7 @@ export const COPY_SEED_ROWS: Array<{ key: string; domain: string; text: string; 
  {
   "key": "login.primaryCta",
   "domain": "staff:login",
-  "text": "手机号一键登录",
+  "text": "选择员工账号登录",
   "screen": "员工·开发登录",
   "position": "DevLoginPage 页面内文案"
  },
